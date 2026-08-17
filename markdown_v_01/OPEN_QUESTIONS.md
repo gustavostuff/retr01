@@ -7,34 +7,40 @@
 | Name / order | **Retr01**; **A -> C -> H** |
 | Worlds / screens / banks | **8 x 64**; **4 banks/world**; screen = **32x30** |
 | Bank layout | Page0 BG + page1 sprites = **512** patterns |
-| System RAM | **32 KB**, CPU-only |
-| VRAM | **32 KB**, interleaved; **CHR from cartridge** |
-| Scroll live set | **4 nametable slots** (2x2) + ~5-tile stream margin |
-| BG palettes | **Per-tile** (not 2x2) |
-| Bank binding | **Separate** BG vs sprite banks; **mid-frame** changes allowed |
-| APU | **NES-style**: 2 pulse + triangle + noise + DMC |
-| Near-term software | **Low-level C emulator** only (no PPUX/cc65 focus yet) |
-| CPU map | **`$0000-$7EFF` RAM / `$7Fxx` I/O / `$8000-$FFFF` PRG** - [08_memory_map.md](08_memory_map.md) |
+| Authored vs runtime banks | Screen authored vs one BG bank; runtime BG/sprite banks independent; mid-frame OK |
+| System RAM | **32 KB** full chip at `$0000-$7FFF` |
+| VRAM | **32 KB**, interleaved; CHR from cart; OAM not in VRAM |
+| Scroll | `scroll_x` / `scroll_y` one byte each (0-255 wrap); 1/2/4 screens via NT arrange |
+| Stream margin | ~5-tile perimeter cue to refill seams |
+| Palettes | **8** (4 BG + 4 sprite); **shared BG color 0** |
+| BG attributes | **Per tile** (960 bytes/NT); low 2 bits = BG palette 0-3; finer than NES 2x2 |
+| Sprite OAM attr | NES-like byte (palette / flip / priority) |
+| Master palette | Custom Retr01; **32 min / 64 likely** - RGB table TBD |
+| APU | NES-style: 2 pulse + triangle + noise + DMC |
+| CPU clock | **8.000 MHz** |
+| Dot clock / frame | **5.369318 MHz**; **341x262**; **~60.098 Hz** NMI |
+| MAP access | **`$FE90` MAP port** |
+| PRG mapper | **`$FE80` only** |
+| CPU map | `$0000-$7FFF` RAM / `$FE00-$FEFF` I/O / PRG elsewhere |
+| Near-term software | Low-level C emulator only |
 
-## B. Still open (does not block emulator skeleton)
+## B. Still open
 
 | # | Topic | Notes |
 |---|--------|------|
-| B1 | Attribute bitfield | Planning default = 1 attribute byte/tile; may pack later |
-| B2 | Master palette size | How many global RGB entries; how many live BG/sprite palettes |
-| B3 | Sprite attribute scheme | Mirror BG per-sprite palette bits? |
-| B4 | MAP CPU access path | How MAP-ROM is banked for decompression into VRAM |
-| B5 | Exact `$7Fxx` register bits | Block layout frozen; bitfields per reg still TBD |
-| B6 | Clock / dot clock / RGBS timing sheet | ~8 MHz class called out historically |
-| B7 | Arcade IDC pinout | |
-| B8 | Retr01-C primary controller port | DB-9 vs USB |
-| B9 | OAM byte format | NES-like 4 bytes/sprite is a reasonable default |
-| B10 | Repo folder still named GameNerd | Rename when ready |
+| B1 | Exact master palette RGB table | 32 vs 64 entries + colors |
+| B2 | Exact `$FExx` register bitfields | Block layout frozen |
+| B3 | RGBS sync polarity / analog levels | Digital timing locked above |
+| B4 | Arcade IDC pinout | |
+| B5 | Retr01-C primary controller | DB-9 vs USB |
+| B6 | OAM byte field order | NES-like Y,tile,attr,X default |
+| B7 | Repo folder still named GameNerd | Rename when ready |
 
-## C. Emulator defaults (change only deliberately)
+## C. Emulator defaults
 
 | Topic | Default |
 |-------|---------|
 | Wrong-phase VRAM access | **Hard error** in debug |
 | Sprite vs BG | Non-transparent sprite wins |
 | Tile / page size | 8x8; 256 patterns/page |
+| Attributes | Per-tile BG attr plane (960 bytes); NES-like sprite OAM attr |

@@ -37,13 +37,13 @@ Foundation of the family: cabinet-ready board, first silicon target.
 
 - 40-pin IDC header
 - ~24 pins player inputs (2 sticks, up to 8 buttons each); rest power/ground/coin/start/reset
-- Pinout TBD; CPU sees inputs under `$7F60`
+- Pinout TBD; CPU sees inputs under `$FE60`
 
 ### Video & audio
 
 - Primary: analog **RGBS**
 - Optional: S-Video / composite encoder pads
-- Audio: NES-style mix via `$7F40-$7F5F`
+- Audio: NES-style mix via `$FE40-$FE5F`
 
 ### Validation
 
@@ -65,7 +65,7 @@ Internal 256x240 2bpp. Nearest-neighbor upscale toward HDMI/DVI; legacy analog p
 
 ### Controllers
 
-DB-9 and/or USB - **primary port TBD**. Latched each frame (`$7F60`-class I/O).
+DB-9 and/or USB - **primary port TBD**. Latched each frame (`$FE60`-class I/O).
 
 ### Power
 

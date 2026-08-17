@@ -23,7 +23,7 @@ retr01_emu/
   cart/         /* prg[], chr[], map[] + mapper regs */
   ppu/          /* beam, nametable fetch, OAM eval, framebuffer */
   apu/          /* NES-style channels -> host PCM */
-  host/         /* SDL window, audio callback, input -> $7F6x */
+  host/         /* SDL window, audio callback, input -> $FE6x */
   main.c        /* load ROM, reset, run loop */
 ```
 
@@ -36,13 +36,13 @@ Rule of thumb: **the CPU never indexes `system_ram` or `vram` directly.** Every 
 Hardware chips map cleanly to fixed buffers - no `malloc` in the hot path.
 
 ```c
-uint8_t system_ram[0x7F00];   /* $0000-$7EFF; I/O page is not RAM */
+uint8_t system_ram[0x8000];   /* $0000-$7FFF full 32 KB */
 uint8_t vram[0x8000];         /* 32 KB video SRAM */
-uint8_t io_regs[0x100];       /* $7F00-$7FFF shadow / decode aids */
+uint8_t io_regs[0x100];       /* $FE00-$FEFF shadow / decode aids */
 
 /* Cartridge (sizes = planning ceilings; load what the image provides) */
-uint8_t *prg;   size_t prg_size;   /* <= 512 KiB */
-uint8_t *chr;   size_t chr_size;   /* <= 256 KiB */
+uint8_t *prg;   size_t prg_size;   /* <= 512 KB */
+uint8_t *chr;   size_t chr_size;   /* <= 256 KB */
 uint8_t *map;   size_t map_size;   /* compressed screens */
 ```
 
@@ -109,27 +109,27 @@ NMI: when PPU finishes a frame, set a line; CPU samples it like silicon (edge in
 
 ```c
 uint8_t bus_read(Emu *e, uint16_t addr) {
-    if (addr >= 0x8000)
-        return cart_prg_read(e, addr);
-    if (addr >= 0x7F00)
+    if (addr < 0x8000)
+        return e->system_ram[addr];
+    if (addr >= 0xFE00 && addr <= 0xFEFF)
         return io_read(e, (uint8_t)addr);
-    return e->system_ram[addr];
+    return cart_prg_read(e, addr); /* $8000-$FDFF and $FF00-$FFFF */
 }
 
 void bus_write(Emu *e, uint16_t addr, uint8_t data) {
-    if (addr >= 0x8000) {
-        cart_mapper_write(e, addr, data); /* optional */
+    if (addr < 0x8000) {
+        e->system_ram[addr] = data;
         return;
     }
-    if (addr >= 0x7F00) {
+    if (addr >= 0xFE00 && addr <= 0xFEFF) {
         io_write(e, (uint8_t)addr, data);
         return;
     }
-    e->system_ram[addr] = data;
+    /* PRG window: ignore - banking only via $FE80 */
 }
 ```
 
-`io_write` dispatches on `addr >> 4` (the 16-byte blocks in the memory map).
+`io_write` dispatches on `(addr & 0xFF) >> 4` (the 16-byte blocks in the memory map).
 
 ### VRAM port (interleave)
 
@@ -157,8 +157,8 @@ Same gate on reads. PPU fetch paths call `vram_ppu_read(e, addr)` only when `!cp
 typedef struct {
     uint16_t vram_addr;
     uint8_t  vram_addr_hi_next;  /* two-write latch */
-    uint8_t  scroll_x, scroll_y;
-    uint8_t  nt_base;            /* which of 4 slots is origin */
+    uint8_t  scroll_x, scroll_y; /* 0-255 wrap; fine scroll over 1/2/4 NT field */
+    uint8_t  nt_arrange;         /* mirroring / which slots are distinct */
     uint8_t  bg_bank;            /* 0-3 within world */
     uint8_t  spr_bank;
     uint8_t  world;
@@ -166,11 +166,11 @@ typedef struct {
     int      scanline;           /* -1 pre-render ... 239 visible ... VBlank */
     int      dot;                /* 0 ... dots_per_line-1 */
 
-    uint8_t  oam[256];           /* 64 sprites x 4 bytes (NES-like) */
+    uint8_t  oam[256];           /* 64 sprites x 4 bytes (NES-like); NOT in vram[] */
     uint8_t  oam_addr;
 
-    /* Per-scanline sprite pipeline */
-    uint8_t  secondary_oam[32];  /* up to 8 NES-style; we allow 16 -> size 64 */
+    /* Per-scanline sprite pipeline: 16 sprites x 4 bytes */
+    uint8_t  secondary_oam[64];
     int      sprites_on_line;
 
     uint32_t framebuffer[256 * 240]; /* host RGB for SDL */
@@ -183,17 +183,18 @@ Do not allocate four separate C arrays unless you want aliases:
 
 ```c
 /* Slot s: tiles at base, attrs immediately after (planning layout) */
-enum { NT_SLOT_BYTES = 0x800 }; /* 2 KiB aligned */
+enum { NT_SLOT_BYTES = 0x800 }; /* 2 KB: 960 tiles + 960 attrs + pad */
 
 static uint8_t *nt_tiles(Emu *e, int slot) {
     return &e->vram[slot * NT_SLOT_BYTES];
 }
 static uint8_t *nt_attrs(Emu *e, int slot) {
-    return &e->vram[slot * NT_SLOT_BYTES + 960];
+    /* +0x3C0 = right after 960 tile bytes; 960 attr bytes (one per tile) */
+    return &e->vram[slot * NT_SLOT_BYTES + 0x3C0];
 }
 ```
 
-Scrolling across four screens: compute coarse X/Y from scroll + counters, pick slot from the 2x2 arrangement, index `nt_tiles[ty * 32 + tx]`, then attr byte for that tile.
+Scrolling: `scroll_x`/`scroll_y` wrap 0-255. Combine with `nt_arrange` to sample the correct slot(s) so the viewport shows portions of **1, 2, or 4** screens. Index `nt_tiles[ty * 32 + tx]`. BG palette from `nt_attrs[ty * 32 + tx]` (per-tile; low 2 bits = palette 0-3).
 
 ### 6.3 CHR fetch (cart, not VRAM)
 
@@ -210,7 +211,12 @@ Sprites use `spr_bank` and page `1`. Mid-frame bank writes just mutate `ppu.bg_b
 
 ### 2bpp -> color index
 
-For each pixel, combine two bitplanes into `0..3`. Index `0` = transparent for sprites (and often BG backdrop rules). Map through palette regs + master palette table (`uint32_t master_palette[N]` of host RGB) into `framebuffer[y * 256 + x]`.
+For each pixel, combine two bitplanes into `0..3`.  
+- Sprites: index `0` = transparent.  
+- BG: index `0` uses the **shared backdrop**; indices 1-3 come from the BG palette selected by **that tile's** attribute byte (per-tile).  
+Map through palette regs + master palette (`uint32_t master_palette[32 or 64]` TBD) into `framebuffer[y * 256 + x]`.
+
+PPU timing: advance `dot`/`scanline` on the **5.369318 MHz** domain (341x262); run CPU ticks on the **8 MHz** domain. Host presents one framebuffer per VBlank (~60.1 Hz).
 
 ### 6.4 Sprite evaluation (scan -> secondary buffer)
 
@@ -231,7 +237,7 @@ During the visible line, for each x, scan the <=16 active sprites' shift-registe
 
 ## 7. OAM DMA
 
-When guest writes the DMA trigger in `$7F2x`:
+When guest writes the DMA trigger in `$FE2x`:
 
 ```c
 uint16_t src = (uint16_t)page << 8; /* page in system RAM */
@@ -248,17 +254,17 @@ DMA reads system RAM (always legal); it must still burn cycles so games cannot p
 
 ```c
 typedef struct {
-    uint8_t prg_bank;     /* which 32 KB slice at $8000 */
-    /* optional: separate 16K lo/hi later */
+    uint8_t prg_bank;     /* which slice at $8000-$FDFF / $FF00-$FFFF; set only via $FE80 */
 } Mapper;
 
 uint8_t cart_prg_read(Emu *e, uint16_t addr) {
-    size_t off = (size_t)e->mapper.prg_bank * 0x8000 + (addr - 0x8000);
+    /* Map CPU addr into banked PRG; skip the $FExx hole (never called for I/O) */
+    size_t off = (size_t)e->mapper.prg_bank * 0x8000 + (addr & 0x7FFF);
     return e->prg[off % e->prg_size];
 }
 ```
 
-MAP decompression for bring-up can be a **host-side helper** (inflate a screen into `vram[]` nametable slots) until guest code does it. That does not weaken PPU accuracy; it only stubs the missing game toolchain.
+MAP decompression: guest (or host helper during bring-up) reads bytes through **`$FE90` MAP port** and writes nametables through **`$FE1x`**. Do not bank MAP over system RAM.
 
 ---
 
@@ -279,7 +285,7 @@ typedef struct {
 } Apu;
 ```
 
-- `io_write` to `$7F40-$7F5F` updates channel regs (NES-like layout recommended).
+- `io_write` to `$FE40-$FE5F` updates channel regs (NES-like layout recommended).
 - Each `emu_tick` (or every N ticks) runs channel timers and pushes a mixed sample into `pcm[]`.
 - SDL audio callback only **pops** from the ring - no PPU work on the audio thread.
 
@@ -287,7 +293,7 @@ typedef struct {
 
 ## 10. Input & board I/O
 
-Host keyboard/joystick -> bits latched into `$7F6x` registers once per frame (or on read strobe, if you mimic shift-register controllers later). EEPROM (`$7F7x`) can be a small `uint8_t eeprom[size]` file-backed array.
+Host keyboard/joystick -> bits latched into `$FE6x` registers once per frame (or on read strobe, if you mimic shift-register controllers later). EEPROM (`$FE7x`) can be a small `uint8_t eeprom[size]` file-backed array.
 
 ---
 

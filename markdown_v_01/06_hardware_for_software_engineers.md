@@ -1,6 +1,6 @@
 # Hardware for Software Engineers - Retr01 Architecture
 
-A software-engineer translation of the discrete logic on **Retr01-A**. Concepts match the locked architecture in this folder (two 32 KB SRAMs, interleaved **VRAM only**, CHR from cartridge, `$7Fxx` I/O page). Older Gemini drafts said "Retro2-A" / NES-copied addresses - those names are retired here.
+A software-engineer translation of the discrete logic on **Retr01-A**. Concepts match the locked architecture in this folder (two 32 KB SRAMs, interleaved **VRAM only**, CHR from cartridge, `$FExx` I/O page). Older Gemini drafts said "Retro2-A" / NES-copied addresses - those names are retired here.
 
 ---
 
@@ -22,8 +22,9 @@ Software equivalent: `return (A && B);`
 
 If 74-series parts are the stdlib, a **GAL** (Generic Array Logic) is a custom compiled function. A GAL22V10 has up to 10 outputs among 22 logic-capable pins, with an internal AND/OR fabric connected by fuses.
 
-1. Write boolean equations (e.g. CUPL):  
-   `ROM_ENABLE = ADDRESS_15 & !ADDRESS_14;`
+1. Write boolean equations (e.g. CUPL) that decode ranges such as
+   "A15 low -> RAM CS", "A15..A8 == $FE -> I/O CS", "else if A15 high -> PRG OE".
+   Exact fuse equations belong with the schematic; the GAL is just a compiled router.
 2. Compile to a `.jed` file.
 3. A programmer burns fuses so the chip permanently implements that logic.
 
@@ -37,9 +38,9 @@ Canonical Retr01 ranges (see [08_memory_map.md](08_memory_map.md)):
 
 | CPU sees | GAL wakes |
 |----------|-----------|
-| `$0000-$7EFF` | System RAM |
-| `$7F00-$7FFF` | I/O latches / ports (PPU, VRAM port, APU, ...) |
-| `$8000-$FFFF` | Cartridge PRG |
+| `$0000-$7FFF` | System RAM (full 32 KB) |
+| `$FE00-$FEFF` | I/O latches / ports (PPU, VRAM port, APU, ...) |
+| `$8000-$FDFF`, `$FF00-$FFFF` | Cartridge PRG (I/O hole at `$FExx`) |
 
 ### Recommended learning
 
@@ -67,7 +68,7 @@ There are **two** chips:
 
 | Chip | Role |
 |------|------|
-| System RAM | CPU-only engine state (`$0000-$7EFF`) |
+| System RAM | CPU-only engine state (`$0000-$7FFF`) |
 | VRAM | Live nametables / attrs / scratch - **interleaved** with the PPU |
 
 ### 2. Bus contention (hardware race)
@@ -93,9 +94,9 @@ Wire the CPU clock phase to mux Select / transceiver Enable on the **VRAM** path
 | Clock phase | VRAM owner |
 |-------------|------------|
 | Phase A | PPU fetches nametable/attr for the beam |
-| Phase B | CPU may R/W VRAM via the `$7F1x` data port |
+| Phase B | CPU may R/W VRAM via the `$FE1x` data port |
 
-This "context switch" can happen millions of times per second. To game code it feels like continuous VRAM access; the hardware is trading ownership every tick. **CHR patterns are not in this SRAM** - the PPU reads them from **cartridge CHR-ROM**.
+This "context switch" happens at the CPU clock (planning **8 MHz**, vs ~1.79 MHz on a stock NES). To game code there is **no VBlank lockout** - you may touch VRAM any time the CPU owns its phase - but the CPU does **not** own every bus cycle; ownership still alternates. **CHR patterns are not in this SRAM** - the PPU reads them from **cartridge CHR-ROM**.
 
 ---
 
@@ -107,7 +108,7 @@ A **74HC573** (octal latch) holds a byte after you stop writing - e.g. scroll X/
 
 ### 2. Memory-mapped I/O (hardware API)
 
-The 6502 has no USB API - only load/store. Retr01 maps devices into **`$7Fxx`**. Example: store scroll via a PPU control register in `$7F0x`; the GAL enables a latch instead of system RAM. Same pattern for APU (`$7F4x-$7F5x`), banks (`$7F3x`), controllers (`$7F6x`).
+The 6502 has no USB API - only load/store. Retr01 maps devices into **`$FExx`**. Example: store scroll via a PPU control register in `$FE0x`; the GAL enables a latch instead of system RAM. Same pattern for APU (`$FE4x-$FE5x`), banks (`$FE3x`), controllers (`$FE6x`).
 
 ### 3. Binary counters (hardware `for`)
 
@@ -131,7 +132,7 @@ VRAM holds up to **four** 32x30 nametable slots (2x2 scroll field). Each byte is
 
 ### 3. Attributes and palettes (hardware CSS)
 
-2bpp patterns pick among 3 colors + transparency. **Retr01 selects BG palette per tile** (not NES 2x2 attribute blocks). Attribute bytes live beside nametable data in VRAM; mux logic combines pattern bits + palette -> DAC color index.
+2bpp patterns pick among 3 colors + transparency. **8 palettes** (4 BG + 4 sprite). **Per-tile BG attributes:** one palette select for each of the 960 nametable tiles (960 attr bytes at `+0x3C0` in each VRAM slot) - finer than NES 2x2 groups. Shared universal **BG color 0 / backdrop**. Sprite OAM attr byte is NES-like. Mux logic combines pattern bits + palette -> DAC color index.
 
 ### 4. Sprite compositor (hardware z-index)
 
@@ -139,7 +140,7 @@ OAM holds 64 sprites (Y, tile, attr, X - NES-like grouping). During HBlank, hard
 
 ### 5. Final multiplexer (pixel priority)
 
-For each pixel: if the sprite sample is transparent (typically index 0), output BG; else output sprite. Entire pipeline runs without the CPU; the CPU only updates nametables/OAM/banks through interleaved access and `$7Fxx`.
+For each pixel: if the sprite sample is transparent (typically index 0), output BG; else output sprite. Entire pipeline runs without the CPU; the CPU only updates nametables/OAM/banks through interleaved access and `$FExx`.
 
 ---
 
@@ -147,11 +148,11 @@ For each pixel: if the sprite sample is transparent (typically index 0), output 
 
 ### 1. The "calm" NMI
 
-On a stock NES, VBlank NMI is a panic window to shove graphics before lockout. With interleaved VRAM, the CPU is not locked out of video memory for most of the frame. NMI becomes a **60 Hz metronome** (`frame_ready = true`) for pacing - not the only legal time to touch graphics.
+On a stock NES, VBlank NMI is a panic window to shove graphics before lockout. With interleaved VRAM, the CPU is never forced to wait for VBlank to use the VRAM port (it still shares the chip on alternating phases). NMI becomes a **60 Hz metronome** (`frame_ready = true`) for pacing.
 
 ### 2. ATmega APU (audio microservice)
 
-Waveform math would eat the 6502. An **ATmega** runs its own loop and timers, synthesizing **NES-style** channels: 2 pulse + triangle + noise + DMC. The 6502 writes command/status bytes in `$7F40-$7F5F` and continues physics/AABB.
+Waveform math would eat the 6502. An **ATmega** runs its own loop and timers, synthesizing **NES-style** channels: 2 pulse + triangle + noise + DMC. The 6502 writes command/status bytes in `$FE40-$FE5F` and continues physics/AABB.
 
 ### 3. Main loop shape
 
@@ -169,15 +170,15 @@ void main(void) {
             continue;
         frame_ready = false;
 
-        uint8_t p1 = read_controllers();   /* $7F6x */
+        uint8_t p1 = read_controllers();   /* $FE6x */
         calculate_aabb_collisions();
         update_player_state(p1);
 
-        update_oam();                      /* via $7F2x / DMA */
-        update_nametable_seams();          /* VRAM port $7F1x, interleaved */
+        update_oam();                      /* via $FE2x / DMA */
+        update_nametable_seams();          /* VRAM port $FE1x, interleaved */
 
         if (player_jumped)
-            apu_write(CMD_PLAY_JUMP);      /* $7F4x */
+            apu_write(CMD_PLAY_JUMP);      /* $FE4x */
     }
 }
 ```

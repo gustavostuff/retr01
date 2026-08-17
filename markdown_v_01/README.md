@@ -23,9 +23,10 @@ Canonical rewrite of the scattered Gemini drafts under `gemini_docs/`. This fold
 ## Locked in this revision
 
 1. Family name **Retr01**; ship path starts at **Retr01-A**.
-2. Cart: **8 worlds x 64 screens**; screen = **32x30** nametable from **one of 4 banks per world**.
-3. Bank = **BG page + sprite page** -> **512 patterns** (256 + 256).
-4. **Two** 32 KB SRAMs: CPU-only system RAM + **interleaved VRAM**; **CHR fetched from cartridge**.
-5. Per-tile BG palettes; BG and sprite pattern banks may differ; bank changes allowed mid-frame.
-6. NES-style APU on ATmega (2 pulse + triangle + noise + DMC).
-7. Near-term engineering focus: **low-level C emulator**, not cc65/PPUX productization.
+2. Cart: **8 worlds x 64 screens**; screen = **32x30** nametable **authored** against one BG bank per world bank set.
+3. Bank = **BG page + sprite page** -> **512 patterns**; runtime BG/sprite banks may differ; mid-frame OK.
+4. **Two** 32 KB SRAMs: full system RAM at `$0000-$7FFF`; interleaved VRAM; CHR from cart; I/O at `$FExx`.
+5. **Per-tile** BG palette attrs (960 bytes/screen); **8 palettes**; shared BG color 0; master palette 32-64 TBD.
+6. Scroll X/Y = one byte each (0-255 wrap) over 1/2/4 live screens.
+7. NES-style APU; CPU **8.000 MHz**; dot **5.369318 MHz** (341x262, ~60.1 Hz); MAP via `$FE90`; PRG bank via `$FE80` only.
+8. Near-term focus: **low-level C emulator**.
