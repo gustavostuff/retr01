@@ -4,7 +4,7 @@ How a Retr01 cart lays out maps. Graphics timing, pattern banks, palettes, and l
 
 A **world** is a cart chapter: 4 CHR banks plus a sparse atlas of screens. A cart has up to **8** worlds (0-7). `$FE30` world select picks which chapter's CHR the PPU is drawing. Software `world` in RAM should match when you change chapter.
 
-A **screen** is one **32x30** nametable plus packed attrs (1200 bytes uncompressed). It has a **(col, row)** on that world's virtual grid. Only stored screens occupy MAP bytes.
+A **screen** is one **32x30** nametable plus packed attrs (1200 bytes uncompressed). It has a **(col, row)** on that world's virtual grid. Only stored screens occupy MAP bytes. Most screens are **playfield** (you walk them). A world may also store **parallax** cells (repeating strips, not enterable). Camera axis is H, V, or both (`set_camera_axis`). A plane forces H or V. See [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8.
 
 The **virtual grid** is up to **64 x 64** cells. At most **64** cells hold a real screen. The rest are holes. Holes are not stored. Connectivity is optional: a world may be a packed rectangle, a corridor, a blob, several islands, or a single room.
 
@@ -38,13 +38,13 @@ The visualizer currently draws **seven** shapes. You can invent more (ring, two 
 
 | Example | This shot | What it proves |
 |---------|-----------|----------------|
-| **1x1 Single** | grid 1x1, 1 screen | Isolated room. All four neighbors are empty. Pixel-scroll still works. You see the empty template around the edges. |
-| **Linear Horiz** | grid 14x1, 14 screens | Side scroller. East/west are real screens. North/south are empty. |
-| **Linear Vert** | grid 1x13, 13 screens | Tower or pit. North/south real. East/west empty. |
-| **Snake Path** | grid 29x16, 64 screens | Hits the 64-screen cap on a much larger grid. Most cells have **two** neighbors (the path). Ends have one. Corners still pixel-scroll into empty on the open sides. |
-| **Packed Grid** | grid 8x8, 64 screens | Dense rectangle. 8x8 is the largest full rectangle that fits 64 screens. Interior cells have all four neighbors. |
-| **Hole Grid** | grid 8x8, 39 screens | Same bounding box as packed, with cells omitted. A screen may have 4, 3, 2, 1, or 0 stored neighbors. Holes draw the empty template. They do not consume MAP. |
-| **Random Cluster** | grid 10x14, 64 screens | Irregular blob, 64 screens, not a rectangle. Outline cells have missing neighbors. Interior is packed. |
+| **1x1 Single** | grid 1x1, 1 screen | Isolated room. H or V parallax OK. Camera has nowhere to go anyway. |
+| **Linear Horiz** | grid 14x1, 14 screens | Side scroller. Natural fit for **H** parallax (X camera). |
+| **Linear Vert** | grid 1x13, 13 screens | Tower. Natural fit for **V** parallax (Y camera). |
+| **Snake Path** | grid 29x16, 64 screens | 2D path. Parallax OK **per stretch**: H while you only pixel-scroll east-west, then `clear_parallax` at a corner. |
+| **Packed Grid** | grid 8x8, 64 screens | 2D. Parallax OK on a vista row/col. No 2-axis pixel-scroll until `clear_parallax`. |
+| **Hole Grid** | grid 8x8, 39 screens | Same camera rule as packed. |
+| **Random Cluster** | grid 10x14, 64 screens | Same camera rule as packed. |
 
 Blue cells are stored screens. Dark cells are holes (or past `grid_w` x `grid_h`). The PPU never sees this diagram. It only sees the live VRAM slots.
 
@@ -54,7 +54,8 @@ Blue cells are stored screens. Dark cells are holes (or past `grid_w` x `grid_h`
 
 Pixel-scroll is **always** allowed, even if the current screen has 4, 3, 2, 1, or **zero** stored neighbors. The live 2x2 VRAM field still gets a nametable in the incoming slot:
 
-- Directory **hit:** decompress that screen.
+- Directory **hit** on a **playfield** cell: decompress that screen.
+- Directory **hit** on a **parallax** cell: treat as a miss for the camera (empty template). You cannot walk, warp, or seam-stream into it. `set_parallax` is the only loader that uses that payload.
 - Directory **miss** (in-grid hole, or a neighbor past `grid_w`/`grid_h`): fill the slot with the world's **empty template**.
 - Default empty template: **solid black** (tile 0 / backdrop). No extra MAP bytes.
 - Optional later: one per-world empty nametable (rocks, mountains, void art). Stored **once** in that world's MAP (`empty_off`). Not once per hole.
@@ -72,9 +73,9 @@ Warps (`load_screen` to a new col/row) are for doors and teleports. They are not
 | Place | Holds | Does not hold |
 |-------|-------|----------------|
 | **MAP-ROM** | World headers, screen directory, compressed screens | Game logic |
-| **PRG** | `load_screen` / seam-stream code. Tiny table of MAP base offsets if you want labels in ASM | The nametable pixels |
+| **PRG** | `load_screen`, `set_parallax`, seam-stream. Tiny table of MAP base offsets if you want labels in ASM | The nametable pixels |
 | **System RAM** | `world`, `map_x`, `map_y`. Optional cached copy of the current world's directory | |
-| **VRAM** | Only the 1-4 screens under the camera | The 64x64 atlas |
+| **VRAM** | Camera slots 0-3, plus plane slots 4-5 if parallax is on | The 64x64 atlas |
 
 ```
 Cartridge
@@ -82,7 +83,7 @@ Cartridge
     +-- Pattern banks 0..3
     |     bank: BG patterns (256) + sprite patterns (256) = 512
     +-- Virtual grid up to 64 x 64 (sparse)
-          +-- at most 64 screens, each with (col, row) + compressed NT/attrs
+          +-- at most 64 stored nametables: playfield + optional linear parallax cells
 ```
 
 ## MAP-ROM layout (planning)
@@ -100,6 +101,7 @@ MAP-ROM
       empty_off               ; 24-bit MAP offset to optional empty nametable, 0 = solid black
       directory[screen_count]:
           col, row            ; position on the virtual grid
+          flags               ; 0 = playfield, 1 = parallax (not enterable)
           data_off            ; 24-bit MAP offset to payload
       payloads...
           optional copy of col, row (so a .bin is self-describing)
@@ -114,27 +116,28 @@ world_01:
     .byte 12, 8     ; virtual grid 12 cols x 8 rows
     .byte 15        ; 15 real screens (the rest of 12x8 is empty)
     .byte 0, 0, 0   ; empty_off = 0 (solid black)
-    ; directory bytes may be emitted by a macro from the includes below
+    ; directory: col, row, flags, then 24-bit data_off (macro from includes)
 
-    .incbin "hub.bin"     ; file starts with col, row, then RLE tiles, then attrs
+    .incbin "hub.bin"     ; playfield. file starts with col, row, flags=0, then RLE, attrs
     .incbin "cave.bin"
-    .incbin "boss.bin"    ; isolated cell. still pixel-scrolls into empty fill
+    .incbin "sky_a.bin"   ; flags=1. H span=2 with sky_b, not enterable
+    .incbin "sky_b.bin"
 ```
 
 ### `load_screen`
 
 1. Seek `$FE90` to `world_base[world]`, read `grid_w`, `grid_h`, `screen_count`, `empty_off`.
-2. Scan the directory for `(map_x, map_y)`. At 8 MHz, 64 rows is cheap. You may cache the directory in system RAM on world enter (~64 * 5 bytes).
-3. On miss (in-grid hole, or neighbor past the grid): fill the VRAM slot with the empty template (`empty_off == 0` = solid black, else that nametable). Do not invent a dummy screen in MAP.
-4. On hit: seek to `data_off`, read RLE tiles then attrs, write the live nametable through `$FE1x`.
+2. Scan the directory for `(map_x, map_y)`. At 8 MHz, 64 rows is cheap. You may cache the directory in system RAM on world enter (~64 * 6 bytes).
+3. On miss, or on hit with **parallax** flag: fill the VRAM **camera** slot with the empty template (`empty_off == 0` = solid black, else that nametable). Do not use a parallax cell as a room.
+4. On playfield hit: seek to `data_off`, read RLE tiles then attrs, write a camera nametable through `$FE1x`.
 5. Coords outside 0-63: optional lettered EMPTY debug fill.
 
-Seam fill is the same lookup for a neighbor cell.
+Seam fill is the same lookup. A parallax neighbor is a miss (empty / blocked). `set_parallax` is a separate call: same directory lookup, but it decompresses into plane slot 4 or 5. See [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8.
 
 How to poke `$FE90` (24-bit address, auto-inc read): [08_memory_map.md](08_memory_map.md).
 
 ### Why 24-bit offsets
 
-MAP-ROM is up to **~1.17 MB**. A 16-bit absolute address only covers 64 KB, so it cannot point at the whole MAP. `$FE90` is already a 24-bit seek, so `world_base`, `empty_off`, and `data_off` are the same width: poke the three bytes and read. The extra byte vs 16-bit is 64 directory rows * 1 = 64 bytes per world.
+MAP-ROM is up to **~1.17 MB**. A 16-bit absolute address only covers 64 KB, so it cannot point at the whole MAP. `$FE90` is already a 24-bit seek, so `world_base`, `empty_off`, and `data_off` are the same width: poke the three bytes and read. The extra byte vs 16-bit is 64 directory rows * 1 = 64 bytes per world. Directory row is 6 bytes (`col`, `row`, `flags`, 24-bit `data_off`).
 
 A 16-bit **world-relative** `data_off` would work only if each world's MAP blob stays under 64 KB. Uncompressed, 64 screens * 1200 bytes is already 76.8 KB, so that cap forces compression and a hard per-world limit. Not worth it. Keep 24-bit.

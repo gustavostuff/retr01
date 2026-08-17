@@ -180,7 +180,7 @@ void nmi_handler(void) {
 }
 
 void irq_handler(void) {
-    /* optional: bank / scroll split, then ack raster_hit and set next raster_y */
+    /* set_parallax arms this: restore playfield camera, ack raster_hit */
 }
 
 void main(void) {

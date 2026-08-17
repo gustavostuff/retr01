@@ -137,9 +137,11 @@ CPU touches VRAM only through **`$FE10-$FE1F`**. CHR comes from cartridge CHR-RO
 | `$1000-$17FF` | 2 KB | Nametable slot 2 |
 | `$1800-$1FFF` | 2 KB | Nametable slot 3 |
 | `$2000-$2FFF` | 4 KB | Streaming scratch (decompress temps) |
-| `$3000-$7FFF` | 20 KB | Reserved |
+| `$3000-$37FF` | 2 KB | Plane slot 4 (repeating parallax, optional) |
+| `$3800-$3FFF` | 2 KB | Plane slot 5 (second band / hills, optional) |
+| `$4000-$7FFF` | 16 KB | Reserved |
 
-Each slot (2 KB): tiles at `+0x000` (960 bytes), packed attributes at `+0x3C0` (240 bytes). One attr byte is a 2x2 cell with **four** 2-bit palette IDs (one per tile), not NES's shared 2x2. Remaining bytes in the slot are pad. Slots 0-3 form the live 1/2/4-screen field.
+Each slot (2 KB): tiles at `+0x000` (960 bytes), packed attributes at `+0x3C0` (240 bytes). One attr byte is a 2x2 cell with **four** 2-bit palette IDs (one per tile), not NES's shared 2x2. Remaining bytes in the slot are pad. Slots 0-3 form the live 1/2/4-screen **camera**. Slots 4-5 are **planes** (repeating parallax). Do not use 4-5 as south/east camera screens. Raster split: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8.
 
 ---
 

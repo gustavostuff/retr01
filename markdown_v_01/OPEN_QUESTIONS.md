@@ -8,7 +8,7 @@
 | Worlds / screens / banks | **8 worlds**. Each: **64 screens max** on a sparse virtual grid up to **64 x 64**. 4 CHR banks/world. Screen = **32x30**. Spec: [04_worlds_and_screens.md](04_worlds_and_screens.md) |
 | Bank layout | Page0 BG + page1 sprites = **512** patterns |
 | Authored vs runtime banks | `load_screen` sets authored BG bank. Runtime BG/sprite banks independent. Mid-frame OK via raster IRQ |
-| Raster | **Scanline compare + IRQ** (`raster_y`, `raster_hit`, `beam_y`). Not NES sprite-0. Spec: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8 |
+| Raster | **Scanline compare + IRQ**. `set_camera_axis(H/V/BOTH)`. `set_parallax` forces matching 1-axis camera. Spec: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8 |
 | System RAM | **32 KB** full chip at `$0000-$7FFF` |
 | VRAM | **32 KB**, interleaved, CHR from cart, OAM not in VRAM |
 | Scroll | `scroll_x` / `scroll_y` one byte each (0-255 wrap), 1/2/4 screens via NT arrange. Always pixel-scroll, even with 0 stored neighbors |
@@ -41,7 +41,7 @@
 | B5 | Retr01-C 3-wire pad protocol | Pinned: 3 wires + MCU in pad, same `$FE6x` bytes. Connector shell TBD |
 | B6 | OAM byte field order | NES-like Y,tile,attr,X default |
 | B7 | Repo folder still named GameNerd | Rename when ready |
-| B9 | MAP RLE exact format | Tile plane then attrs. Directory row is 5 bytes (col, row, 24-bit `data_off`). `empty_off` 0 = black |
+| B9 | MAP RLE exact format | Tile plane then attrs. Directory row is 6 bytes (col, row, flags, 24-bit `data_off`). flags 0=playfield, 1=parallax. `empty_off` 0 = black |
 
 ## C. Emulator defaults
 

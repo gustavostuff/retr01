@@ -84,7 +84,8 @@ These are two fetch paths. Scroll only affects which nametable byte is under the
 
 | Contents | Planning size |
 |----------|----------------|
-| 4 nametable slots x (960 tiles + 240 attrs), 2 KB-aligned | 4 x 2 KB = **8 KB** |
+| 4 nametable slots x (960 tiles + 240 attrs), 2 KB-aligned | 4 x 2 KB = **8 KB** (2x2 camera) |
+| 2 parallax **plane** slots (same 2 KB format) | **4 KB** |
 | Streaming / decompress scratch | ~4 KB |
 | Reserved / future | remainder of 32 KB |
 
@@ -94,6 +95,7 @@ OAM lives in dedicated registers / `$FE2x`, not in the VRAM chip.
 
 - `scroll_x` and `scroll_y` are **one byte each** (0-255, wrap). That is the pixel camera inside the live field.
 - Live field: up to **four** nametable slots (2x2). Arrangement/mirroring chooses **1, 2, or 4** distinct screens. As the window crosses a slot boundary, those neighbor tiles **are** on screen. That is how pixel scrolling looks continuous.
+- **Planes:** two extra slots (see section 8). Not part of the 2x2 camera. Raster IRQ may point the top (or other) scanline band at a plane.
 - **Streaming cue:** software, **2 tiles (16 px)** before a seam. Neighbor lookup, empty-template fill, and `load_screen` are in [04_worlds_and_screens.md](04_worlds_and_screens.md).
 
 ## 7. Cartridge ROM budget (~2 MB)
@@ -152,15 +154,139 @@ Sprite bank may switch on the same IRQ (boss art, HUD icons) independently of BG
 
 `$FE30` world select may also change mid-frame (legal, next CHR fetch). Usually leave it. It is a whole chapter of CHR, not a small tile set.
 
-### Parallax
+### Parallax (special cells + `set_parallax`)
 
-The four VRAM nametable slots are the **2x2 camera field**, not four background layers. Parallax is software:
+**What it is.** Distant hills crawl, the ground races. Retr01 fakes that with a Y-band: top of the frame samples a **plane** nametable, below that the normal playfield camera.
 
-1. **Scroll split:** write a new `scroll_x` / `scroll_y` in HBlank at a raster line (sky vs ground, status bar locked, etc.).
-2. **Several bands:** re-arm `raster_y` in each IRQ (near / mid / far).
-3. **Sprite layer:** 16 sprites per line can carry a foreground strip. OAM does not use scroll, so it already parallaxes against the BG camera if you move it differently.
+**Camera axis (H, V, or both).** Pixel-scroll is a software policy, not a PPU bit. PRG keeps a mode:
 
-You may also rewrite nametable bytes during the visible frame (interleaved VRAM). NES generally could not. That updates **which** of the 256 tiles are shown. It does not add a new CHR page. Combine with a bank switch if you need new art.
+```
+#define CAM_H     0   /* scroll_x, east/west seams only */
+#define CAM_V     1   /* scroll_y, north/south seams only */
+#define CAM_BOTH  2   /* 1/2/4 field, both axes (default) */
 
-Do not steal a nametable slot as a second layer. That breaks 2x2 scrolling.
+void set_camera_axis(uint8_t axis);
+uint8_t get_camera_axis(void);
+```
+
+Use this even **without** a plane (a side-scroller with no sky still wants `CAM_H`). The player may still walk 4/8 ways. This only limits the **camera**.
+
+**Parallax vs `CAM_BOTH`.** A plane cannot run with a 2-axis camera (sky glued to the CRT would become a HUD). Do **not** treat that as a compile error: `set_parallax` is a runtime call, and 6502 has no exceptions. The helper **sets the camera to match** and remembers the old mode:
+
+- `set_parallax(..., PARALLAX_H, ...)` -> `set_camera_axis(CAM_H)` (saves previous)
+- `set_parallax(..., PARALLAX_V, ...)` -> `set_camera_axis(CAM_V)`
+- `clear_parallax()` -> restore the saved axis (often `CAM_BOTH`)
+
+If game code then calls `set_camera_axis(CAM_BOTH)` **while a plane is still on**: ignore BOTH, keep the 1-axis lock. In the emulator, **debug warning** (same class as wrong-phase VRAM: loud in debug, not a crash on silicon). Shipping games just no-op that store.
+
+| Camera mode | Playfield pixel camera | Seam streaming |
+|-------------|------------------------|----------------|
+| `CAM_H` | `scroll_x` only. `scroll_y` frozen | East / west only |
+| `CAM_V` | `scroll_y` only. `scroll_x` frozen | North / south only |
+| `CAM_BOTH` | both | all 4 (and empty-neighbor peeks) |
+
+Live playfield field is 1 or 2 nametable slots on the live axis when H or V (not the 2x2). Plane still uses slot 4 or 4+5. VRAM is not the reason for the lock. The lock is the compositor.
+
+**Not locked:** warps and `load_screen` to another col/row (doors, stairs). After a warp you may keep the plane (camera stays 1-axis) or `clear_parallax()`.
+
+**Not locked:** the player. They may walk in 4 or 8 directions. Walking does not always move the camera. Example: walk north in an H-parallax vista, the sprite moves, `scroll_y` stays put. Game code decides when the camera actually scrolls (edge of the window, rail, etc.).
+
+**Authoring.** Parallax nametables are normal 32x30 .bins with directory `flags = 1`. Not enterable: `load_screen`, warp, and seam lookup treat them as holes. They still count toward the 64 stored nametables.
+
+**Span** is how many of those cells make **one looping plane** (not two depth layers).
+
+| `span` | Period | VRAM |
+|--------|--------|------|
+| 1 | 256 px (H) or 240 px (V) | slot 4 only |
+| 2 | 512 px (H) or 480 px (V) | slots 4 and 5 as **one** 2-screen field |
+
+`span` is 1 or 2. That is the two plane slots. A 768 px loop would need a third slot or streaming the plane. Not v1.
+
+Cells are consecutive from `(col, row)` along the axis, all `flags = 1`:
+
+- H, span 2: `(col, row)` and `(col+1, row)` -> slot 4 left, slot 5 right
+- V, span 2: `(col, row)` and `(col, row+1)` -> slot 4 top, slot 5 bottom
+
+Park them off the playfield line (e.g. row 0 while the stage is row 5). The flag is what blocks walking, not the coordinates.
+
+`set_parallax_height` is the **visible band** in scanlines (how much sky you see). Independent of span. Span is the loop period. Height is the raster split.
+
+**Runtime is a PRG helper**, not a PPU register.
+
+```
+#define PARALLAX_H       0   /* loop scroll_x */
+#define PARALLAX_V       1   /* loop scroll_y */
+
+#define PARALLAX_CAMERA  0   /* factor = camera divisor (2 = half, 4 = quarter) */
+#define PARALLAX_AUTO    1   /* factor = signed pixels per frame, ignores camera */
+
+void set_parallax(uint8_t col, uint8_t row, uint8_t axis,
+                  uint8_t drive, int8_t factor, uint8_t span);
+void set_parallax_height(uint8_t scanlines); /* from top, default 80, multiple of 8 */
+void clear_parallax(void);
+```
+
+`set_parallax` also calls `set_camera_axis` to match `axis` (see above). It fails (no-op) if `span` is not 1 or 2, or a needed cell is missing / not `flags = 1`.
+
+```
+set_camera_axis(CAM_BOTH);      /* overworld, no plane */
+load_screen();
+set_parallax_height(80);
+set_parallax(0, 0, PARALLAX_H, PARALLAX_CAMERA, 4, 2);  /* forces CAM_H */
+/* ... vista ... */
+clear_parallax();               /* CAM_BOTH again */
+```
+
+v1 is **one** plane (one raster split). Do not call `set_parallax` twice for sky-then-hills. That would need more plane slots.
+
+**Drive** is one choice, not two knobs at once.
+
+| `drive` | `factor` | When |
+|---------|----------|------|
+| `PARALLAX_CAMERA` | Divisor of **camera** delta on that axis (1 = lock, 2 = half, 4 = quarter). Plane only moves when the camera moves. | On the ground: distant trees / clouds crawl as you walk. Stand still, they stand still. |
+| `PARALLAX_AUTO` | Signed pixels **per frame**. Ignores camera. | In the air: clouds always drift, even if the camera is parked. |
+
+Pick one. Ground vs flying is the usual split. (A later helper could add both at once. Not v1.)
+
+For `span = 2`, keep `plane_x` / `plane_y` in RAM wider than a byte (0-511 H, 0-479 V). Hardware `scroll_x` / `scroll_y` stay one byte. The library writes the low 8 bits to the scroll latch and uses `nt_arrange` so slots 4-5 are a 2-wide (H) or 2-tall (V) field, origin from the high bit. Same idea as playfield pixel scroll over two screens. Wrap at the span period so the pattern loops.
+
+6502: zeropage `par_col`, `par_row`, `par_axis`, `par_drive`, `par_factor`, `par_span`, then `jsr set_parallax`. Guest PRG, not an emulator syscall.
+
+```
+ scanline
+    0  +------------------------------+
+       | plane (1 or 2 cells, looping)|  slots 4 / 4+5, scroll = plane
+   80  +------------------------------+
+       | playfield camera (1 axis)    |  slots 0-1 (H) or 0+2 (V), other axis frozen
+  240  +------------------------------+
+```
+
+NMI (library):
+
+```
+nmi:
+    if drive == PARALLAX_AUTO
+        plane += factor                  ; constant wind
+    else
+        plane += camera_delta / factor   ; CAMERA, factor is divisor
+    plane wrap 0 .. (span * period - 1)
+    nt_arrange = plane field (1 or 2 slots)
+    scroll = plane low 8 bits
+    raster_y = par_height
+    enable raster IRQ
+    ...
+irq:
+    nt_arrange = PLAYFIELD_CAMERA
+    scroll_x = camera_x
+    scroll_y = camera_y
+    disable raster IRQ
+    ack raster_hit
+    rti
+```
+
+**What this is not.** Full-screen two-layer parallax (far *and* near at every pixel). Pixel-scrolling X *and* Y while a plane is on. A third span cell. Left/right wallpaper columns (mid-line X split). H and V planes at the same time.
+
+**What not to do.** Do not steal camera slots 0-3. Do not `load_screen` onto a parallax cell. Do not omit `flags`. Do not seam-stream the perpendicular axis until `clear_parallax`. The emulator should debug-warn if guest writes the frozen scroll while a plane is active.
+
+
 
