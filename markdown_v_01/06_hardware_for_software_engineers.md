@@ -201,5 +201,6 @@ Collision stays in software. The electrical timing stays under the GAL, muxes, a
 ## See also
 
 - [08_memory_map.md](08_memory_map.md): addresses to memorize
-- [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md): worlds / banks / screens
+- [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md): banks / patterns / palettes
+- [04_worlds_and_screens.md](04_worlds_and_screens.md): worlds / screens / MAP atlas
 - [07_emulator_specification.md](07_emulator_specification.md): what the C emulator must enforce

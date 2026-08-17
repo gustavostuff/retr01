@@ -5,7 +5,7 @@
 | Topic | Decision |
 |-------|----------|
 | Name / order | **Retr01**, **A -> C -> H** |
-| Worlds / screens / banks | **8 worlds**. Each: **64 screens max** on a sparse virtual grid up to **64 x 64**. 4 CHR banks/world. Screen = **32x30** |
+| Worlds / screens / banks | **8 worlds**. Each: **64 screens max** on a sparse virtual grid up to **64 x 64**. 4 CHR banks/world. Screen = **32x30**. Spec: [04_worlds_and_screens.md](04_worlds_and_screens.md) |
 | Bank layout | Page0 BG + page1 sprites = **512** patterns |
 | Authored vs runtime banks | Screen authored vs one BG bank, runtime BG/sprite banks independent, mid-frame OK |
 | System RAM | **32 KB** full chip at `$0000-$7FFF` |

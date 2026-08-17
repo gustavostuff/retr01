@@ -34,6 +34,7 @@ Formerly GameNerd / Retr02. Those names are retired.
 | Dot / frame | **5.369318 MHz**, 341x262, ~60.1 Hz |
 
 Graphics: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md).  
+Worlds: [04_worlds_and_screens.md](04_worlds_and_screens.md).  
 Map: [08_memory_map.md](08_memory_map.md).
 
 ## 4. Near-term software focus

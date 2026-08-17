@@ -11,8 +11,9 @@ Canonical rewrite of the scattered Gemini drafts under `gemini_docs/`. This fold
 | File | Purpose |
 |------|---------|
 | [01_system_overview.md](01_system_overview.md) | Vision, principles, onboard memory |
-| [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) | Worlds, screens, banks, patterns, ROM budget |
+| [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) | Timing, banks, patterns, palettes, ROM budget |
 | [03_hardware_variants.md](03_hardware_variants.md) | Retr01-A / C / H form factors |
+| [04_worlds_and_screens.md](04_worlds_and_screens.md) | Sparse world atlas, layouts, `load_screen`, MAP directory |
 | [06_hardware_for_software_engineers.md](06_hardware_for_software_engineers.md) | Discrete-logic architecture for software people |
 | [07_emulator_specification.md](07_emulator_specification.md) | Low-level C emulator design |
 | [08_memory_map.md](08_memory_map.md) | CPU + VRAM map **and** GAL / bus decode |
@@ -24,7 +25,7 @@ Canonical rewrite of the scattered Gemini drafts under `gemini_docs/`. This fold
 ## Locked in this revision
 
 1. Family name **Retr01**. Ship path starts at **Retr01-A**.
-2. Cart: **8 worlds**. Each world has a sparse grid up to **64 x 64** and at most **64** stored screens. A screen is a **32x30** nametable **authored** against one BG bank.
+2. Cart: **8 worlds**, sparse grid up to **64 x 64**, **64 screens max** each. Details: [04_worlds_and_screens.md](04_worlds_and_screens.md).
 3. Bank = **BG page + sprite page** -> **512 patterns**. Runtime BG/sprite banks may differ. Mid-frame changes are OK.
 4. **Two** 32 KB SRAMs: full system RAM at `$0000-$7FFF`, interleaved VRAM, CHR from cart, I/O at `$FExx`.
 5. **Per-tile** BG palettes packed in **240 bytes/screen** (1 byte per 2x2 cell). **8 palettes**, shared BG color 0, master palette 32-64 TBD.
