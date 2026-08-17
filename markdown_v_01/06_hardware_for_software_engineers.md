@@ -148,10 +148,13 @@ OAM holds 64 sprites (Y, tile, attr, X, NES-like grouping). During HBlank, hardw
 
 For each pixel the PPU already has a BG sample and (maybe) a sprite sample:
 
-1. If the sprite pixel is index 0, it is transparent. Output the BG pixel.
-2. Otherwise output the sprite pixel.
+1. If the sprite pixel is pattern color 0, it is transparent. Output the BG pixel.
+2. Else if the OAM **priority** bit is set and the BG pixel is not backdrop (BG color 0), output the BG pixel (sprite behind).
+3. Otherwise output the sprite pixel.
 
-The 6502 does **not** plot pixels. Counters, nametable fetch, CHR from cart, attr unpack, sprite line buffer, this mux, and RGBS all run in hardware every dot. The CPU only *prepares* the next frame: nametables through the interleaved VRAM port, OAM via `$FE2x`, scroll/banks and other `$FExx` latches. NMI means "a frame finished," not "hurry, graphics are locked."
+Pattern color 0 is not OAM sprite #0. OAM entry 0 is a normal sprite. There is **no** NES sprite-0 hit flag. Raster splits use `raster_y` + IRQ ([02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8).
+
+The 6502 does **not** plot pixels. Counters, nametable fetch, CHR from cart, attr unpack, sprite line buffer, this mux, and RGBS all run in hardware every dot. The CPU prepares nametables through the interleaved VRAM port, OAM via `$FE2x`, and `$FExx` latches. It may also write those latches **mid-frame** (bank, scroll) from a raster IRQ. NMI means "a frame finished." IRQ (optional) means "the beam hit `raster_y`."
 
 ---
 
@@ -160,6 +163,8 @@ The 6502 does **not** plot pixels. Counters, nametable fetch, CHR from cart, att
 ### 1. The "calm" NMI
 
 On a stock NES, VBlank NMI is a panic window to shove graphics before lockout. With interleaved VRAM, the CPU is never forced to wait for VBlank to use the VRAM port (it still shares the chip on alternating phases). NMI becomes a **60 Hz metronome** (`frame_ready = true`) for pacing.
+
+Mid-frame bank and scroll tricks do **not** use NMI and do **not** use sprite-0. They use a **raster IRQ** when the beam reaches `raster_y`. The NMI handler stays dumb. The IRQ handler writes `$FE30` / scroll and re-arms the next line.
 
 ### 2. ATmega APU (audio microservice)
 
@@ -172,6 +177,10 @@ volatile bool frame_ready = false;
 
 void nmi_handler(void) {
     frame_ready = true;
+}
+
+void irq_handler(void) {
+    /* optional: bank / scroll split, then ack raster_hit and set next raster_y */
 }
 
 void main(void) {

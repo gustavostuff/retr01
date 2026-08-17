@@ -14,7 +14,7 @@ Formerly GameNerd / Retr02. Those names are retired.
 2. **Interleaved VRAM only:** The CPU and PPU share Video SRAM on alternating clock phases. Because the 6502 only transfers data on the high phase (Phase 2), the PPU safely fetches graphics on the low phase (Phase 1). This grants the CPU 100% continuous logical access to VRAM with zero VBLANK lockout delays. System RAM remains entirely CPU-exclusive.
 3. **Strict 2bpp:** 3 colors + transparency per draw unit, **8 palettes** (4 BG + 4 sprite), shared BG backdrop, **per-tile** BG palette select packed 4 tiles per attr byte (NES shares one select across a 2x2).
 4. **Binary-first data:** Fixed-size layouts, with no dynamic allocation on target.
-5. **Software collision:** AABB (or equivalent) in game code, with no hardware collision flags.
+5. **Software collision:** AABB (or equivalent) in game code. No hardware sprite-vs-BG collision for gameplay. Beam timing uses a **raster compare / IRQ**, not NES sprite-0 hit.
 6. **CHR from cartridge:** PPU reads pattern bytes from cart CHR-ROM (banked). VRAM holds live nametables/attrs only.
 
 ## 3. Shared capability snapshot

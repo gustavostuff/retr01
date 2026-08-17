@@ -113,6 +113,7 @@ Authoring sketch (assembled **into MAP**, not into PRG). Labels are for the map 
 world_01:
     .byte 12, 8     ; virtual grid 12 cols x 8 rows
     .byte 15        ; 15 real screens (the rest of 12x8 is empty)
+    .byte 0, 0, 0   ; empty_off = 0 (solid black)
     ; directory bytes may be emitted by a macro from the includes below
 
     .incbin "hub.bin"     ; file starts with col, row, then RLE tiles, then attrs

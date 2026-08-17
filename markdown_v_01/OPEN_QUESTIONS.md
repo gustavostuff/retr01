@@ -7,7 +7,8 @@
 | Name / order | **Retr01**, **A -> C -> H** |
 | Worlds / screens / banks | **8 worlds**. Each: **64 screens max** on a sparse virtual grid up to **64 x 64**. 4 CHR banks/world. Screen = **32x30**. Spec: [04_worlds_and_screens.md](04_worlds_and_screens.md) |
 | Bank layout | Page0 BG + page1 sprites = **512** patterns |
-| Authored vs runtime banks | Screen authored vs one BG bank, runtime BG/sprite banks independent, mid-frame OK |
+| Authored vs runtime banks | `load_screen` sets authored BG bank. Runtime BG/sprite banks independent. Mid-frame OK via raster IRQ |
+| Raster | **Scanline compare + IRQ** (`raster_y`, `raster_hit`, `beam_y`). Not NES sprite-0. Spec: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8 |
 | System RAM | **32 KB** full chip at `$0000-$7FFF` |
 | VRAM | **32 KB**, interleaved, CHR from cart, OAM not in VRAM |
 | Scroll | `scroll_x` / `scroll_y` one byte each (0-255 wrap), 1/2/4 screens via NT arrange. Always pixel-scroll, even with 0 stored neighbors |
@@ -34,7 +35,7 @@
 | # | Topic | Notes |
 |---|--------|------|
 | B1 | Exact master palette RGB table | 32 vs 64 entries + colors |
-| B2 | Exact `$FExx` register bitfields | Block layout frozen |
+| B2 | Exact `$FExx` register bitfields | Block layout frozen. `$FE0x` must include `raster_y`, `beam_y`, `raster_hit`, `raster_irq_enable`, ack |
 | B3 | RGBS sync polarity / analog levels | Digital timing locked above |
 | B4 | Arcade IDC pinout | Parallel switches into `$FE60-$FE63`. Bitfields TBD |
 | B5 | Retr01-C 3-wire pad protocol | Pinned: 3 wires + MCU in pad, same `$FE6x` bytes. Connector shell TBD |
@@ -47,6 +48,6 @@
 | Topic | Default |
 |-------|---------|
 | Wrong-phase VRAM access | **Hard error** in debug |
-| Sprite vs BG | Non-transparent sprite wins |
+| Sprite vs BG | Opaque sprite wins unless OAM priority puts it behind opaque BG |
 | Tile / page size | 8x8, 256 patterns/page |
 | Attributes | Packed 240-byte BG attr plane (2 bits/tile), NES-like sprite OAM attr |

@@ -101,7 +101,7 @@ void emu_tick(Emu *e) {
 }
 ```
 
-NMI: when PPU finishes a frame, set a line. CPU samples it like silicon (edge into the core's interrupt pin). Handler is just guest code. The emulator only raises the pin.
+NMI: when PPU enters VBlank (scanline 240), set the NMI pin. Raster: when `scanline == raster_y` at dot 0, set `raster_hit` and optionally IRQ. CPU samples both pins like silicon. Handlers are guest code.
 
 ---
 
@@ -162,6 +162,9 @@ typedef struct {
     uint8_t  bg_bank;            /* 0-3 within world */
     uint8_t  spr_bank;
     uint8_t  world;
+    uint8_t  raster_y;           /* 0-255, compare at start of scanline */
+    uint8_t  raster_hit;
+    uint8_t  raster_irq_enable;
 
     int      scanline;           /* -1 pre-render ... 239 visible ... VBlank */
     int      dot;                /* 0 ... dots_per_line-1 */
@@ -207,7 +210,7 @@ uint8_t chr_read_bg(Emu *e, uint8_t tile, uint8_t row /*0-7*/, int bitplane) {
 }
 ```
 
-Sprites use `spr_bank` and page `1`. Mid-frame bank writes just mutate `ppu.bg_bank` / `spr_bank`. The next fetch sees the new value (accurate and simple).
+Sprites use `spr_bank` and page `1`. Mid-frame bank writes just mutate `ppu.bg_bank` / `spr_bank`. The next fetch sees the new value (accurate and simple). Raster IRQ: when `scanline` becomes `raster_y` at dot 0, set `raster_hit`. If `raster_irq_enable`, assert CPU IRQ until guest acks. Do **not** emulate NES sprite-0 hit.
 
 ### 2bpp -> color index
 
@@ -227,7 +230,7 @@ During HBlank (or the dots reserved for eval):
 3. If sprite Y hits this scanline and `sprites_on_line < 16`, copy the 4 bytes into secondary storage and increment.
 4. If more would qualify, **drop** them (do not draw). That matches hardware accuracy.
 
-During the visible line, for each x, scan the <=16 active sprites' shift-register state (or recompute from X + row) and pick the first non-transparent pixel (or proper priority rule). A small `uint8_t line_spr_idx[256]` / color buffer is a fine software stand-in for hardware shift registers.
+During the visible line, for each x, scan the <=16 active sprites and pick the front-most non-transparent pixel, honoring the OAM **priority** bit (behind opaque BG). A small `uint8_t line_spr_idx[256]` / color buffer is a fine software stand-in for hardware shift registers.
 
 ### 6.5 Framebuffer
 
@@ -327,6 +330,7 @@ For debugging: run a fixed number of ticks, or break when `scanline == Y && dot 
 6. NMI metronome + simple guest "wait for frame" loop.
 7. APU pulse tone.
 8. Mapper / multi-bank CHR / four NT scroll.
+9. Raster Y compare + IRQ, mid-frame bank/scroll split.
 
 ---
 
@@ -346,6 +350,7 @@ For debugging: run a fixed number of ticks, or break when `scanline == Y && dot 
 | SRAM chip | `uint8_t buf[size]` |
 | 6502 stack | bytes at `$0100+sp` in `system_ram` |
 | Latch | `uint8_t` / `uint16_t` field updated on MMIO write |
+| Raster IRQ | `raster_y` vs `scanline` at dot 0, optional IRQ pin |
 | Counter (beam) | `int scanline`, `int dot` |
 | GAL | `bus_read` / `bus_write` branching |
 | Mux / phase | `cpu.phase` gate around VRAM |

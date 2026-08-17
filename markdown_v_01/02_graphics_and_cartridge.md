@@ -38,8 +38,8 @@ World / grid / screen atlas: [04_worlds_and_screens.md](04_worlds_and_screens.md
 
 1. Each world has **4** pattern banks.
 2. Each bank: **first 256 patterns BG**, **second 256 sprites** -> **512** patterns / bank (8 KB @ 16 bytes/pattern).
-3. **Authored bank:** each screen's nametable tile indices assume one of the world's 4 banks.
-4. **Runtime banks:** PPU may select **BG bank** and **sprite bank** independently. Either may change **mid-frame**.
+3. **Authored bank:** `load_screen` sets the BG bank that screen was drawn against. That is the default at the start of the frame. Software may still switch banks mid-frame (see section 8).
+4. **Runtime banks:** PPU may select **BG bank** and **sprite bank** independently. Either may change **mid-frame**. Nametable bytes stay 0-255 into whichever BG page is **currently** latched.
 5. PPU fetches CHR **from cartridge CHR-ROM** (not from VRAM).
 
 ## 3. Pattern math
@@ -58,7 +58,7 @@ These are two fetch paths. Scroll only affects which nametable byte is under the
 - **BG:** scroll picks a pixel in the live nametable field. That byte is a tile index **0-255** into the **active BG pattern set** (the BG half of the BG bank on cart).
 - **Sprites:** OAM (64 entries) holds tile indices into the **active sprite pattern set** (the sprite half of the sprite bank). OAM does not use scroll.
 - Max **16 sprites per scanline**. Extras are dropped.
-- Non-transparent sprite pixel wins over BG (compositor default). Sprite index 0 never wins, it is transparent.
+- Compositor: if the sprite pixel is pattern color 0, skip it (transparent). Else if the OAM **priority** bit is set, opaque BG wins. Else the sprite wins. Pattern color 0 is **not** OAM sprite #0. OAM entry 0 is a normal sprite.
 
 ## 5. Palettes and attributes
 
@@ -73,7 +73,7 @@ These are two fetch paths. Scroll only affects which nametable byte is under the
   - bits 4-5: bottom-left tile
   - bits 6-7: bottom-right tile
   Index: `attrs[(ty / 2) * 16 + (tx / 2)]`, then shift by `((ty & 1) * 2 + (tx & 1)) * 2`.
-- Sprite attributes: **NES-like OAM attr byte** (palette, flips, priority). Index 0 = transparent.
+- Sprite attributes: **NES-like OAM attr byte** (palette, flips, priority). Pattern color 0 = transparent. The priority bit puts the sprite behind opaque BG.
 - **Master palette:** custom Retr01 ramp (not stock NES colors). **32 min / 64 likely**, RGB table TBD.
 
 ## 6. Live VRAM vs cartridge maps
@@ -106,3 +106,61 @@ OAM lives in dedicated registers / `$FE2x`, not in the VRAM chip.
 | **Total** | Example parallel flash | **~2 MB** |
 
 Uncompressed map upper bound: `8 x 64 x (960 + 240) = 600 KB` before RLE (tile plane + packed attr plane).
+
+## 8. Mid-frame banks, parallax, and raster IRQ
+
+Nametable indices are always **one byte** (0-255). You do not store a bank number per tile. More unique tiles on screen, parallax, and status-bar splits are the same class of trick as the NES: change a latch **while the beam is running**.
+
+Retr01 makes that latch change **easier** than the NES. We do **not** use sprite-0 hit.
+
+### Why not NES sprite-0
+
+NES games wait until a non-transparent pixel of OAM sprite 0 overlaps opaque BG, then spin until that flag, then write scroll or CHR banks. That burns a sprite, depends on art, and races the PPU. Retr01 also cannot copy NES cycle-counted waits: CPU clock (8.000 MHz) and dot clock (5.369318 MHz) are **independent**, not a 3:1 pair.
+
+Gameplay collision stays AABB in PRG ([01_system_overview.md](01_system_overview.md) principle 5). Raster timing is a beam compare, not a compositor collision.
+
+### Raster compare (the sprite-0 replacement)
+
+In `$FE0x` (exact bytes still `B2`):
+
+| Field | Role |
+|-------|------|
+| `raster_y` | Scanline to match (**0-255**). Visible splits are 0-239. Write this. |
+| `beam_y` | Live beam Y. Read-only. Fine for debug. Do not spin on this for splits. |
+| `raster_hit` | Status bit. Sets when `beam_y == raster_y` at **start of that scanline** (dot 0). Sticky until software acks. |
+| `raster_irq_enable` | If set, that match asserts **IRQ** (W65C02S `IRQB`), not NMI. |
+
+NMI stays the VBlank metronome (start of line 240). IRQ is optional and only for raster. Ack the hit in the IRQ handler, then write the **next** `raster_y` if you have another split this frame.
+
+Hardware is a compare of the existing Y counters (74HC161) against one latch. A GAL or a 74HC688 is enough. No extra sprite.
+
+### When a write shows up on screen
+
+`$FE30` (banks / world) and scroll latches are live. The **next PPU pattern fetch** uses the new value. Shift registers already hold the current tile, so expect up to **8 px (one tile)** of delay. For a clean split, write during **HBlank** (85 dots, ~126 CPU cycles at 8 MHz). The IRQ at dot 0 of line N is early enough to prepare the next line, or fire the compare on line N-1 and write in that HBlank.
+
+### More than 256 unique BG tiles
+
+One nametable still names tiles 0-255. The active BG page is whichever bank `$FE30` currently selects.
+
+- At `load_screen`, set the **authored** BG bank (the set that nametable was drawn against).
+- In a raster IRQ, switch to another of the world's **4** BG banks. From that scanline down, the same 0-255 indices are a **different** 256 pictures.
+- Four horizontal bands => up to **1024** unique BG tiles on one frame, still one nametable.
+- Status bar vs playfield is the one-split version of the same trick.
+- This is **not** MMC3 1 KB CHR granules. A bank switch replaces the whole 256-tile BG page. Splits are horizontal bands, not per-column banks. Per-tile bank IDs would need another attr plane. We are not adding that.
+
+Sprite bank may switch on the same IRQ (boss art, HUD icons) independently of BG.
+
+`$FE30` world select may also change mid-frame (legal, next CHR fetch). Usually leave it. It is a whole chapter of CHR, not a small tile set.
+
+### Parallax
+
+The four VRAM nametable slots are the **2x2 camera field**, not four background layers. Parallax is software:
+
+1. **Scroll split:** write a new `scroll_x` / `scroll_y` in HBlank at a raster line (sky vs ground, status bar locked, etc.).
+2. **Several bands:** re-arm `raster_y` in each IRQ (near / mid / far).
+3. **Sprite layer:** 16 sprites per line can carry a foreground strip. OAM does not use scroll, so it already parallaxes against the BG camera if you move it differently.
+
+You may also rewrite nametable bytes during the visible frame (interleaved VRAM). NES generally could not. That updates **which** of the 256 tiles are shown. It does not add a new CHR page. Combine with a bank switch if you need new art.
+
+Do not steal a nametable slot as a second layer. That breaks 2x2 scrolling.
+

@@ -38,7 +38,7 @@ Grouped in **16-byte blocks** (high nibble of the low byte = device family):
 
 | Range | Block | Device |
 |-------|-------|--------|
-| `$FE00-$FE0F` | `0` | **PPU control:** mode, status, scroll X/Y (one byte each), nametable arrangement, NMI |
+| `$FE00-$FE0F` | `0` | **PPU control:** mode, status, scroll X/Y, nametable arrangement, NMI, **raster Y / IRQ** |
 | `$FE10-$FE1F` | `1` | **VRAM port:** address latch + data R/W into 32 KB VRAM (**interleaved**) |
 | `$FE20-$FE2F` | `2` | **OAM:** address, data, DMA from system RAM (dedicated, not stored in VRAM chip) |
 | `$FE30-$FE3F` | `3` | **Bank / world:** BG bank, sprite bank, world select |
@@ -54,6 +54,21 @@ Grouped in **16-byte blocks** (high nibble of the low byte = device family):
 - **`scroll_x`**, **`scroll_y`**: one byte each, values **0-255**, wrap naturally.
 - They fine-scroll the 256x240 viewport across the live nametable field (1, 2, or 4 screens arranged/mirrored in the four VRAM slots). Neighbor slots are visible as the camera crosses a seam.
 - There is no 16-bit map camera in hardware. Seam refill and empty neighbors: [04_worlds_and_screens.md](04_worlds_and_screens.md). `$FE30` world select stays put unless the game changes chapter.
+
+### Raster (`$FE0x`), not sprite-0
+
+NES sprite-0 hit is **not** the raster API. Gameplay collision is AABB. Beam timing is a compare against the Y counters.
+
+| Field | Role |
+|-------|------|
+| `raster_y` | Line to match (0-255, visible splits 0-239) |
+| `beam_y` | Live Y, read-only |
+| `raster_hit` | Sets at start of matching scanline (dot 0). Ack in software |
+| `raster_irq_enable` | Match asserts **IRQ**, not NMI |
+
+NMI remains VBlank only. Exact bytes: `B2` in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). Mid-frame bank and scroll splits: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8.
+
+Write scroll and `$FE30` during **HBlank** for a clean split (next fetch, up to 8 px delay if you write mid-tile).
 
 ### APU (`$FE40-$FE5F`), NES-style
 
@@ -78,7 +93,7 @@ This latch answers **which pictures** the PPU is using. It does **not** scroll a
 | BG bank 0-3 | Which of that world's 4 banks supplies the **256 BG patterns** nametable indices point at |
 | Sprite bank 0-3 | Same for OAM tile numbers. May differ from the BG bank |
 
-Writable **mid-frame**. The next CHR fetch uses the new value (raster tricks, boss art). Hardware: bits in `$FE30`. Emulator: on write, set `ppu.world`, `ppu.bg_bank`, `ppu.spr_bank`.
+Writable **mid-frame**. The next CHR fetch uses the new value. Shift registers may still show the current tile (up to 8 px). Raster IRQ + HBlank writes: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8. Emulator: on write, set `ppu.world`, `ppu.bg_bank`, `ppu.spr_bank`.
 
 ### Controllers / cabinet (`$FE60-$FE6F`)
 
