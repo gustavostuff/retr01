@@ -35,9 +35,9 @@ Foundation of the family: cabinet-ready board, first silicon target.
 
 ### Cabinet I/O
 
-- 40-pin IDC header
+- 40-pin IDC header, **parallel switches** (no MCU in the stick)
 - ~24 pins player inputs (2 sticks, up to 8 buttons each). Rest are power/ground/coin/start/reset
-- Pinout TBD. CPU sees inputs under `$FE60`
+- Pinout TBD. CPU sees **four bytes** under `$FE60-$FE63` (see [08_memory_map.md](08_memory_map.md))
 
 ### Video & audio
 
@@ -65,7 +65,9 @@ Internal 256x240 2bpp. Nearest-neighbor upscale toward HDMI/DVI. Legacy analog p
 
 ### Controllers
 
-DB-9 and/or USB, **primary port TBD**. Latched each frame (`$FE60`-class I/O).
+**Pinned:** 3-wire serial pads (N64-style idea), one small chip in each controller to shift bits. Goal is a tough, thin cable, not USB and not a first-pass DB-9.
+
+Software still reads `$FE60-$FE63` (same four bytes as Retr01-A). Only the board-side shifter changes. Protocol and connector shell TBD.
 
 ### Power
 

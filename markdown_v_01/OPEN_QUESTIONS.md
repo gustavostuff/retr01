@@ -20,6 +20,7 @@
 | CPU clock | **8.000 MHz** |
 | Dot clock / frame | **5.369318 MHz**, **341x262**, **~60.098 Hz** NMI |
 | MAP access | **`$FE90` MAP port** |
+| Controllers | CPU sees **`$FE60-$FE63`** (4 bytes, 2 players). A: parallel IDC. C: 3-wire pad (pinned) |
 | PRG mapper | **`$FE80` only** |
 | CPU map | `$0000-$7FFF` RAM / `$FE00-$FEFF` I/O / PRG elsewhere |
 | Near-term software | Low-level C emulator only |
@@ -31,8 +32,8 @@
 | B1 | Exact master palette RGB table | 32 vs 64 entries + colors |
 | B2 | Exact `$FExx` register bitfields | Block layout frozen |
 | B3 | RGBS sync polarity / analog levels | Digital timing locked above |
-| B4 | Arcade IDC pinout | |
-| B5 | Retr01-C primary controller | DB-9 vs USB |
+| B4 | Arcade IDC pinout | Parallel switches into `$FE60-$FE63`. Bitfields TBD |
+| B5 | Retr01-C 3-wire pad protocol | Pinned: 3 wires + MCU in pad, same `$FE6x` bytes. Connector shell TBD |
 | B6 | OAM byte field order | NES-like Y,tile,attr,X default |
 | B7 | Repo folder still named GameNerd | Rename when ready |
 | B8 | Screen grid inside a world | How neighbors are stored in MAP/PRG. Labels like `world_01:` are a sketch only |

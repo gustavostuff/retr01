@@ -163,7 +163,7 @@ On a stock NES, VBlank NMI is a panic window to shove graphics before lockout. W
 
 ### 2. ATmega APU (audio microservice)
 
-Waveform math would eat the 6502. An **ATmega** runs its own loop and timers, synthesizing **NES-style** channels: 2 pulse + triangle + noise + DMC. The 6502 writes command/status bytes in `$FE40-$FE5F` and continues physics/AABB.
+Waveform math would eat the 6502. An **ATmega** runs its own loop and timers, synthesizing **NES-style** channels: 2 pulse + triangle + noise + DMC. The 6502 writes command/status bytes in `$FE40-$FE5F` (the sound contract, bitfields TBD) and continues physics/AABB. The APU is a coprocessor, not extra 6502 work.
 
 ### 3. Main loop shape
 

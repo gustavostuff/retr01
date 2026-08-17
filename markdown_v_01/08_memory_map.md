@@ -57,6 +57,8 @@ Grouped in **16-byte blocks** (high nibble of the low byte = device family):
 
 ### APU (`$FE40-$FE5F`), NES-style
 
+Sound *contract* is NES-like. The 6502 only writes registers. It does not synthesize samples.
+
 | Channels | Role |
 |----------|------|
 | Pulse 1, Pulse 2 | Square / duty |
@@ -64,18 +66,42 @@ Grouped in **16-byte blocks** (high nibble of the low byte = device family):
 | Noise | Noise |
 | DMC | Samples / bits |
 
+An **ATmega** (or similar) on the board runs the timers and mix. Game code pokes `$FE4x-$FE5x` and keeps going. Exact bitfields are still open (`B2` in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)). The emulator should treat this page as NES-style channel regs and emit host PCM.
+
 ### Banks (`$FE30`)
 
-Separate **BG bank** and **sprite bank** (0-3 within world) plus world select. Writable mid-frame.
+This latch answers **which pictures** the PPU is using. It does **not** scroll and it is **not** a nametable slot.
+
+| Field | Meaning |
+|-------|---------|
+| World 0-7 | Cart chapter. CHR (and, in software, which MAP set you stream) |
+| BG bank 0-3 | Which of that world's 4 banks supplies the **256 BG patterns** nametable indices point at |
+| Sprite bank 0-3 | Same for OAM tile numbers. May differ from the BG bank |
+
+Writable **mid-frame**. The next CHR fetch uses the new value (raster tricks, boss art). Hardware: bits in `$FE30`. Emulator: on write, set `ppu.world`, `ppu.bg_bank`, `ppu.spr_bank`.
+
+### Controllers / cabinet (`$FE60-$FE6F`)
+
+CPU view is **four bytes**, latched (Retr01-A) or filled by a shifter (Retr01-C). Bitfields inside the bytes still TBD with the IDC pinout (`B4`).
+
+| Addr | Planning |
+|------|----------|
+| `$FE60` | Player 1 stick / d-pad (4 bits) + buttons 0-3 |
+| `$FE61` | Player 1 buttons 4-7, plus coin/start bits as needed |
+| `$FE62` | Player 2, same as `$FE60` |
+| `$FE63` | Player 2, same as `$FE61` |
+
+Retr01-A reads parallel switches on the 40-pin IDC into these bytes. Retr01-C may use a 3-wire pad (see variants) but **software still sees `$FE6x`**.
 
 ### MAP port (`$FE90`): cart map reads
 
-Canonical way for the CPU to read compressed MAP-ROM while decompressing into VRAM:
+MAP-ROM holds compressed screens on the cart. It is **not** in the 6502 address space. You cannot `LDA` a nametable off the cart.
 
-1. Write 24-bit (or lo/hi + bank) MAP address into `$FE90`...
+1. Write a 24-bit MAP address into `$FE90` (lo / mid / hi, exact regs TBD).
 2. Read `$FE92` (data). Hardware auto-increments the address.
+3. Decompress in software. Write live tiles/attrs through the VRAM port (`$FE1x`).
 
-No MAP window carved out of system RAM or PRG. Decompress into nametable slots via the VRAM data port (`$FE1x`).
+That is the 2-tile seam fill: pull a strip from MAP, poke it into the incoming nametable slot. No MAP window over RAM or PRG. PRG banking stays `$FE80` only.
 
 ### PRG mapper (`$FE80`): canonical only
 

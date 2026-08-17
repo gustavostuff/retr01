@@ -293,7 +293,7 @@ typedef struct {
 
 ## 10. Input & board I/O
 
-Host keyboard/joystick -> bits latched into `$FE6x` registers once per frame (or on read strobe, if you mimic shift-register controllers later). EEPROM (`$FE7x`) can be a small `uint8_t eeprom[size]` file-backed array.
+Host keyboard/joystick maps into **four bytes** `$FE60-$FE63` (P1 stick+btns, P1 extra, P2, P2 extra). Retr01-A: latch once per frame from parallel bits. Retr01-C later: clock a 3-wire pad into the same regs. EEPROM (`$FE7x`) can be a small `uint8_t eeprom[size]` file-backed array.
 
 ---
 
