@@ -25,10 +25,10 @@ Full **32 KB** system SRAM is mapped with no wasted bytes. I/O sits in a 256-byt
 
 | Range | Size | Region | Notes |
 |-------|------|--------|-------|
-| `$0000-$7FFF` | 32 KB | **System RAM** | Entire AS6C62256; CPU-only; no interleave |
+| `$0000-$7FFF` | 32 KB | **System RAM** | Entire AS6C62256, CPU-only, no interleave |
 | `$8000-$FDFF` | 32 256 B | **PRG-ROM window** | Banked cart PRG |
 | `$FE00-$FEFF` | 256 B | **I/O page** | PPU, VRAM port, OAM, banks, APU, MAP port, cabinet, mapper |
-| `$FF00-$FFFF` | 256 B | **PRG (high)** | Same mapper window family; holds `$FFFA-$FFFF` vectors |
+| `$FF00-$FFFF` | 256 B | **PRG (high)** | Same mapper window family, holds `$FFFA-$FFFF` vectors |
 
 ---
 
@@ -38,24 +38,24 @@ Grouped in **16-byte blocks** (high nibble of the low byte = device family):
 
 | Range | Block | Device |
 |-------|-------|--------|
-| `$FE00-$FE0F` | `0` | **PPU control** - mode, status, scroll X/Y (one byte each), nametable arrangement, NMI |
-| `$FE10-$FE1F` | `1` | **VRAM port** - address latch + data R/W into 32 KB VRAM (**interleaved**) |
-| `$FE20-$FE2F` | `2` | **OAM** - address, data, DMA from system RAM (dedicated; not stored in VRAM chip) |
-| `$FE30-$FE3F` | `3` | **Bank / world** - BG bank, sprite bank, world select |
-| `$FE40-$FE5F` | `4-5` | **APU** - NES-style channels |
+| `$FE00-$FE0F` | `0` | **PPU control:** mode, status, scroll X/Y (one byte each), nametable arrangement, NMI |
+| `$FE10-$FE1F` | `1` | **VRAM port:** address latch + data R/W into 32 KB VRAM (**interleaved**) |
+| `$FE20-$FE2F` | `2` | **OAM:** address, data, DMA from system RAM (dedicated, not stored in VRAM chip) |
+| `$FE30-$FE3F` | `3` | **Bank / world:** BG bank, sprite bank, world select |
+| `$FE40-$FE5F` | `4-5` | **APU:** NES-style channels |
 | `$FE60-$FE6F` | `6` | **Cabinet / controllers** |
 | `$FE70-$FE7F` | `7` | **Board EEPROM / DIP** |
-| `$FE80-$FE8F` | `8` | **PRG mapper** - only official PRG bank control |
-| `$FE90-$FE9F` | `9` | **MAP port** - address latch + data read from cart MAP-ROM |
+| `$FE80-$FE8F` | `8` | **PRG mapper:** only official PRG bank control |
+| `$FE90-$FE9F` | `9` | **MAP port:** address latch + data read from cart MAP-ROM |
 | `$FEA0-$FEFF` | `A-F` | **Reserved** |
 
 ### Scroll (`$FE0x`)
 
 - **`scroll_x`**, **`scroll_y`**: one byte each, values **0-255**, wrap naturally.
 - They fine-scroll the 256x240 viewport across the live nametable field (1, 2, or 4 screens arranged/mirrored in the four VRAM slots).
-- You do **not** scroll across an entire world with a larger coordinate; the CPU streams new strips into nametable slots as the camera approaches seams (5-tile margin).
+- You do **not** scroll across an entire world with a larger coordinate. The CPU streams new strips into nametable slots as the camera approaches seams (5-tile margin).
 
-### APU (`$FE40-$FE5F`) - NES-style
+### APU (`$FE40-$FE5F`), NES-style
 
 | Channels | Role |
 |----------|------|
@@ -68,16 +68,16 @@ Grouped in **16-byte blocks** (high nibble of the low byte = device family):
 
 Separate **BG bank** and **sprite bank** (0-3 within world) plus world select. Writable mid-frame.
 
-### MAP port (`$FE90`) - cart map reads
+### MAP port (`$FE90`): cart map reads
 
 Canonical way for the CPU to read compressed MAP-ROM while decompressing into VRAM:
 
 1. Write 24-bit (or lo/hi + bank) MAP address into `$FE90`...
-2. Read `$FE92` (data); hardware auto-increments the address.
+2. Read `$FE92` (data). Hardware auto-increments the address.
 
 No MAP window carved out of system RAM or PRG. Decompress into nametable slots via the VRAM data port (`$FE1x`).
 
-### PRG mapper (`$FE80`) - canonical only
+### PRG mapper (`$FE80`): canonical only
 
 **Only** `$FE80` block selects which PRG slice appears at `$8000-$FDFF` / `$FF00-$FFFF`.  
 Writes into `$8000-$FFFF` do **not** change banks (ignored / open bus). Keeps GAL decode simple.
@@ -106,7 +106,7 @@ Each slot (2 KB): tiles at `+0x000` (960 bytes), per-tile attributes at `+0x3C0`
 | Region | Budget | Access |
 |--------|--------|--------|
 | PRG | <=512 KB | `$8000-$FDFF` + `$FF00-$FFFF` via `$FE80` |
-| CHR | <=256 KB | PPU fetches; banked by `$FE30` |
+| CHR | <=256 KB | PPU fetches, banked by `$FE30` |
 | MAP | <=~1.17 MB | CPU reads via **`$FE90` MAP port** only |
 
 ---
@@ -164,7 +164,7 @@ Wrong-phase CPU VRAM access: **hard error in emulator debug builds**.
 | Scanlines / frame | **262** (240 active + 22 VBlank) |
 | Frame / NMI rate | **~60.098 Hz** |
 
-Interleave muxes toggle on the **CPU** clock phases. The beam and fetch sequencer advance on the **dot** clock. Line buffers / shift registers sit between those domains (same idea as a real PPU). Full RGBS sync polarity can still be tuned on the bench; the numbers above are the locked digital timing.
+Interleave muxes toggle on the **CPU** clock phases. The beam and fetch sequencer advance on the **dot** clock. Line buffers / shift registers sit between those domains (same idea as a real PPU). Full RGBS sync polarity can still be tuned on the bench. The numbers above are the locked digital timing.
 
 Graphics overview: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md).  
 Emulator: [07_emulator_specification.md](07_emulator_specification.md).

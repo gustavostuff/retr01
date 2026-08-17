@@ -6,18 +6,18 @@ One architecture (CPU, interleaved 32 KB VRAM, 32 KB system RAM, CHR from cart, 
 |---------|------|-----------|--------|
 | **Retr01-A** | Arcade motherboard | Through-hole (DIP) | **Initial / primary** |
 | **Retr01-C** | Home console | Through-hole (DIP) | After A proves the core |
-| **Retr01-H** | Handheld | SMD | Later; do not block A |
+| **Retr01-H** | Handheld | SMD | Later, do not block A |
 
 ---
 
-## Retr01-A - Arcade
+## Retr01-A: Arcade
 
 Foundation of the family: cabinet-ready board, first silicon target.
 
 ### Goals
 
 - Through-hole bring-up and repair
-- Dense cabinet I/O; analog RGBS; optional encoder pads
+- Dense cabinet I/O, analog RGBS, optional encoder pads
 - EEPROM for scores / operator settings
 
 ### Core silicon
@@ -27,7 +27,7 @@ Foundation of the family: cabinet-ready board, first silicon target.
 | CPU | W65C02S (DIP-40) |
 | Glue | GAL22V10 array (DIP-24) |
 | System RAM | **32 KB**, CPU-only |
-| VRAM | **32 KB**, interleaved CPU<->PPU; CHR from cart |
+| VRAM | **32 KB**, interleaved CPU<->PPU, CHR from cart |
 | Mux / bus | 74HC157 / 74HC245 (+ latches/counters) |
 | Board NVRAM | Parallel EEPROM (e.g. AT28C64B) |
 | Cart | ~2 MB parallel flash (PRG + CHR + MAP) |
@@ -36,8 +36,8 @@ Foundation of the family: cabinet-ready board, first silicon target.
 ### Cabinet I/O
 
 - 40-pin IDC header
-- ~24 pins player inputs (2 sticks, up to 8 buttons each); rest power/ground/coin/start/reset
-- Pinout TBD; CPU sees inputs under `$FE60`
+- ~24 pins player inputs (2 sticks, up to 8 buttons each). Rest are power/ground/coin/start/reset
+- Pinout TBD. CPU sees inputs under `$FE60`
 
 ### Video & audio
 
@@ -51,21 +51,21 @@ Prove ROMs on the **low-level C emulator**, then flash cart / program EEPROM. Au
 
 ---
 
-## Retr01-C - Console
+## Retr01-C: Console
 
-Living-room shell; same core as A. Differences are home displays and controllers.
+Living-room shell, same core as A. Differences are home displays and controllers.
 
 ### Board
 
-Through-hole / socketed DIP for early revisions; 2-4 layer PCB; mini-ITX or custom shell.
+Through-hole / socketed DIP for early revisions, 2-4 layer PCB, mini-ITX or custom shell.
 
 ### Video
 
-Internal 256x240 2bpp. Nearest-neighbor upscale toward HDMI/DVI; legacy analog paths as needed.
+Internal 256x240 2bpp. Nearest-neighbor upscale toward HDMI/DVI. Legacy analog paths as needed.
 
 ### Controllers
 
-DB-9 and/or USB - **primary port TBD**. Latched each frame (`$FE60`-class I/O).
+DB-9 and/or USB, **primary port TBD**. Latched each frame (`$FE60`-class I/O).
 
 ### Power
 
@@ -73,18 +73,18 @@ Barrel jack and/or USB-C PD -> 5V / 3.3V rails.
 
 ---
 
-## Retr01-H - Handheld
+## Retr01-H: Handheld
 
 Portable SMD edition with architectural parity (same map, VRAM model, CHR-from-cart, 2bpp).
 
 ### Packaging
 
-Dense CPU package; SMD SRAM/logic; 4-6 layer PCB. Decode may move from GAL22V10 to a denser CPLD - **same** CPU map.
+Dense CPU package, SMD SRAM/logic, 4-6 layer PCB. Decode may move from GAL22V10 to a denser CPLD, with the **same** CPU map.
 
 ### Power
 
-Static-core clock halt; Li-Po + USB-C PMIC.
+Static-core clock halt, Li-Po + USB-C PMIC.
 
 ### Display & controls
 
-Raw LCD/OLED; nearest-neighbor from 256x240. Thin platform layer for buttons, sleep, brightness.
+Raw LCD/OLED, nearest-neighbor from 256x240. Thin platform layer for buttons, sleep, brightness.

@@ -11,12 +11,12 @@ Canonical description of Retr01 tile graphics and cartridge layout.
 | Nametable | **32x30** tile indices (960 bytes) + **960-byte** per-tile attribute plane |
 | Color depth | 2 bpp (3 colors + transparency per draw unit) |
 | CPU clock | **8.000 MHz** |
-| Dot clock | **5.369318 MHz** (NTSC PPU-rate; same class as NES) |
+| Dot clock | **5.369318 MHz** (NTSC PPU-rate, same class as NES) |
 | Dots per scanline | **341** (256 visible + 85 HBlank) |
 | Scanlines per frame | **262** (240 visible + 22 VBlank) |
 | Frame rate | **~60.098 Hz** (NMI metronome) |
 
-CPU and dot clocks are **independent**: the W65C02S runs at 8 MHz for game logic and interleaved VRAM phases; the video beam advances on the 5.369318 MHz dot clock (standard NTSC PPU timing, friendly to arcade RGBS / encoders).
+CPU and dot clocks are **independent**. The W65C02S runs at 8 MHz for game logic and interleaved VRAM phases. The video beam advances on the 5.369318 MHz dot clock (standard NTSC PPU timing, friendly to arcade RGBS / encoders).
 
 PPU VRAM fetches occur only on PPU-owned CPU phases (with line buffers / shift registers bridging the two domains as on real hardware). In other words, even though the PPU only accesses VRAM 50% of the time, the display never flickers. The hardware uses shift registers to cache the graphics data during the PPU's phase, continuously streaming pixels to the screen while the CPU executes game logic during its phase.
 
@@ -36,11 +36,11 @@ Cartridge
 
 ### Rules
 
-1. Up to **8** worlds; up to **64** screens each -> **512** screens max per cart.
+1. Up to **8** worlds, up to **64** screens each -> **512** screens max per cart.
 2. Each world has **4** pattern banks.
 3. Each bank: **first page BG**, **second page sprites** -> **512** patterns / bank (8 KB @ 16 bytes/pattern).
 4. **Authored bank:** each screen's nametable tile indices assume one of the world's 4 banks.
-5. **Runtime banks:** PPU may select **BG bank** and **sprite bank** independently; either may change **mid-frame**.
+5. **Runtime banks:** PPU may select **BG bank** and **sprite bank** independently. Either may change **mid-frame**.
 6. PPU fetches CHR **from cartridge CHR-ROM** (not from VRAM).
 
 ## 3. Pattern math
@@ -56,17 +56,17 @@ Cartridge
 
 - BG: nametable + scroll -> indices into **BG bank** page.
 - Sprites: OAM (64) -> indices into **sprite bank** page.
-- Max **16 sprites per scanline**; extras dropped.
+- Max **16 sprites per scanline**. Extras are dropped.
 - Non-transparent sprite pixel wins over BG (compositor default).
 
 ## 5. Palettes and attributes
 
 - **8 palettes** total: **4 background + 4 sprite** (each 4 entries at 2bpp: index 0 + 3 colors).
-- **Shared backdrop / color 0** across BG palettes (NES rule); any master-palette index.
+- **Shared backdrop / color 0** across BG palettes (NES rule), any master-palette index.
 - **BG attributes are per tile:** each of the 960 nametable entries has its own palette select (which of the 4 BG palettes). This is **finer than NES** (NES shares one select across a 2x2 tile group).
-- Storage: **960 attribute bytes** per screen/slot (1 byte per tile; low 2 bits = palette 0-3; upper bits reserved). Same byte width as the tile-index plane for simple addressing.
+- Storage: **960 attribute bytes** per screen/slot (1 byte per tile, low 2 bits = palette 0-3, upper bits reserved). Same byte width as the tile-index plane for simple addressing.
 - Sprite attributes: **NES-like OAM attr byte** (palette, flips, priority). Index 0 = transparent.
-- **Master palette:** custom Retr01 ramp (not stock NES colors); **32 min / 64 likely** - RGB table TBD.
+- **Master palette:** custom Retr01 ramp (not stock NES colors). **32 min / 64 likely**, RGB table TBD.
 
 ## 6. Live VRAM vs cartridge maps
 

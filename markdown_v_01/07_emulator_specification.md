@@ -18,7 +18,7 @@ Keep hardware boundaries as C modules so the "virtual GAL" stays obvious:
 ```text
 retr01_emu/
   cpu/          /* W65C02S core: regs, step one cycle / one instruction */
-  bus/          /* system_bus_read / write - only entry to memory */
+  bus/          /* system_bus_read / write, only entry to memory */
   mem/          /* system_ram[], vram[], io_page state */
   cart/         /* prg[], chr[], map[] + mapper regs */
   ppu/          /* beam, nametable fetch, OAM eval, framebuffer */
@@ -33,14 +33,14 @@ Rule of thumb: **the CPU never indexes `system_ram` or `vram` directly.** Every 
 
 ## 3. Core data: arrays that *are* the chips
 
-Hardware chips map cleanly to fixed buffers - no `malloc` in the hot path.
+Hardware chips map cleanly to fixed buffers. There is no `malloc` in the hot path.
 
 ```c
 uint8_t system_ram[0x8000];   /* $0000-$7FFF full 32 KB */
 uint8_t vram[0x8000];         /* 32 KB video SRAM */
 uint8_t io_regs[0x100];       /* $FE00-$FEFF shadow / decode aids */
 
-/* Cartridge (sizes = planning ceilings; load what the image provides) */
+/* Cartridge (sizes = planning ceilings. Load what the image provides) */
 uint8_t *prg;   size_t prg_size;   /* <= 512 KB */
 uint8_t *chr;   size_t chr_size;   /* <= 256 KB */
 uint8_t *map;   size_t map_size;   /* compressed screens */
@@ -67,7 +67,7 @@ Optional: keep `io_regs[256]` as the raw MMIO image **and** mirror important bit
 typedef struct {
     uint16_t pc;
     uint8_t  a, x, y;
-    uint8_t  sp;      /* stack pointer - indexes page $0100 in system_ram */
+    uint8_t  sp;      /* stack pointer, indexes page $0100 in system_ram */
     uint8_t  p;       /* status flags */
     /* cycle / phase bookkeeping */
     uint64_t cycles;
@@ -92,7 +92,7 @@ Prefer **cycle-accurate** stepping (or instruction step that advances N cycles a
 
 ```c
 void emu_tick(Emu *e) {
-    /* One half-cycle or one full CPU cycle - pick a convention and stick to it */
+    /* One half-cycle or one full CPU cycle. Pick a convention and stick to it */
     e->cpu.phase = /* derive from e->cpu.cycles */;
     ppu_dot(e);          /* may read vram[] / chr[] on PPU phase */
     cpu_cycle(e);        /* may bus_read/write on CPU phase */
@@ -101,7 +101,7 @@ void emu_tick(Emu *e) {
 }
 ```
 
-NMI: when PPU finishes a frame, set a line; CPU samples it like silicon (edge into the core's interrupt pin). Handler is just guest code - emulator only raises the pin.
+NMI: when PPU finishes a frame, set a line. CPU samples it like silicon (edge into the core's interrupt pin). Handler is just guest code. The emulator only raises the pin.
 
 ---
 
@@ -125,7 +125,7 @@ void bus_write(Emu *e, uint16_t addr, uint8_t data) {
         io_write(e, (uint8_t)addr, data);
         return;
     }
-    /* PRG window: ignore - banking only via $FE80 */
+    /* PRG window: ignore. Banking only via $FE80 */
 }
 ```
 
@@ -145,7 +145,7 @@ void vram_data_write(Emu *e, uint8_t data) {
 }
 ```
 
-Same gate on reads. PPU fetch paths call `vram_ppu_read(e, addr)` only when `!cpu_owns_vram(e)` (or the opposite polarity - match the board).
+Same gate on reads. PPU fetch paths call `vram_ppu_read(e, addr)` only when `!cpu_owns_vram(e)` (or the opposite polarity, match the board).
 
 ---
 
@@ -157,7 +157,7 @@ Same gate on reads. PPU fetch paths call `vram_ppu_read(e, addr)` only when `!cp
 typedef struct {
     uint16_t vram_addr;
     uint8_t  vram_addr_hi_next;  /* two-write latch */
-    uint8_t  scroll_x, scroll_y; /* 0-255 wrap; fine scroll over 1/2/4 NT field */
+    uint8_t  scroll_x, scroll_y; /* 0-255 wrap, fine scroll over 1/2/4 NT field */
     uint8_t  nt_arrange;         /* mirroring / which slots are distinct */
     uint8_t  bg_bank;            /* 0-3 within world */
     uint8_t  spr_bank;
@@ -166,7 +166,7 @@ typedef struct {
     int      scanline;           /* -1 pre-render ... 239 visible ... VBlank */
     int      dot;                /* 0 ... dots_per_line-1 */
 
-    uint8_t  oam[256];           /* 64 sprites x 4 bytes (NES-like); NOT in vram[] */
+    uint8_t  oam[256];           /* 64 sprites x 4 bytes (NES-like), NOT in vram[] */
     uint8_t  oam_addr;
 
     /* Per-scanline sprite pipeline: 16 sprites x 4 bytes */
@@ -189,12 +189,12 @@ static uint8_t *nt_tiles(Emu *e, int slot) {
     return &e->vram[slot * NT_SLOT_BYTES];
 }
 static uint8_t *nt_attrs(Emu *e, int slot) {
-    /* +0x3C0 = right after 960 tile bytes; 960 attr bytes (one per tile) */
+    /* +0x3C0 = right after 960 tile bytes, 960 attr bytes (one per tile) */
     return &e->vram[slot * NT_SLOT_BYTES + 0x3C0];
 }
 ```
 
-Scrolling: `scroll_x`/`scroll_y` wrap 0-255. Combine with `nt_arrange` to sample the correct slot(s) so the viewport shows portions of **1, 2, or 4** screens. Index `nt_tiles[ty * 32 + tx]`. BG palette from `nt_attrs[ty * 32 + tx]` (per-tile; low 2 bits = palette 0-3).
+Scrolling: `scroll_x`/`scroll_y` wrap 0-255. Combine with `nt_arrange` to sample the correct slot(s) so the viewport shows portions of **1, 2, or 4** screens. Index `nt_tiles[ty * 32 + tx]`. BG palette from `nt_attrs[ty * 32 + tx]` (per-tile, low 2 bits = palette 0-3).
 
 ### 6.3 CHR fetch (cart, not VRAM)
 
@@ -207,16 +207,16 @@ uint8_t chr_read_bg(Emu *e, uint8_t tile, uint8_t row /*0-7*/, int bitplane) {
 }
 ```
 
-Sprites use `spr_bank` and page `1`. Mid-frame bank writes just mutate `ppu.bg_bank` / `spr_bank`; the next fetch sees the new value (accurate and simple).
+Sprites use `spr_bank` and page `1`. Mid-frame bank writes just mutate `ppu.bg_bank` / `spr_bank`. The next fetch sees the new value (accurate and simple).
 
 ### 2bpp -> color index
 
 For each pixel, combine two bitplanes into `0..3`.  
 - Sprites: index `0` = transparent.  
-- BG: index `0` uses the **shared backdrop**; indices 1-3 come from the BG palette selected by **that tile's** attribute byte (per-tile).  
+- BG: index `0` uses the **shared backdrop**. Indices 1-3 come from the BG palette selected by **that tile's** attribute byte (per-tile).  
 Map through palette regs + master palette (`uint32_t master_palette[32 or 64]` TBD) into `framebuffer[y * 256 + x]`.
 
-PPU timing: advance `dot`/`scanline` on the **5.369318 MHz** domain (341x262); run CPU ticks on the **8 MHz** domain. Host presents one framebuffer per VBlank (~60.1 Hz).
+PPU timing: advance `dot`/`scanline` on the **5.369318 MHz** domain (341x262). Run CPU ticks on the **8 MHz** domain. Host presents one framebuffer per VBlank (~60.1 Hz).
 
 ### 6.4 Sprite evaluation (scan -> secondary buffer)
 
@@ -225,7 +225,7 @@ During HBlank (or the dots reserved for eval):
 1. Clear `secondary_oam` / `sprites_on_line = 0`.
 2. Walk primary `oam[0..255]` in steps of 4 (Y at `oam[i]`).
 3. If sprite Y hits this scanline and `sprites_on_line < 16`, copy the 4 bytes into secondary storage and increment.
-4. If more would qualify, **drop** them (do not draw) - hardware accuracy.
+4. If more would qualify, **drop** them (do not draw). That matches hardware accuracy.
 
 During the visible line, for each x, scan the <=16 active sprites' shift-register state (or recompute from X + row) and pick the first non-transparent pixel (or proper priority rule). A small `uint8_t line_spr_idx[256]` / color buffer is a fine software stand-in for hardware shift registers.
 
@@ -246,7 +246,7 @@ for (int i = 0; i < 256; i++)
 /* Advance CPU cycles by the real DMA cost so timing stays honest */
 ```
 
-DMA reads system RAM (always legal); it must still burn cycles so games cannot pretend DMA is free.
+DMA reads system RAM (always legal). It must still burn cycles so games cannot pretend DMA is free.
 
 ---
 
@@ -254,11 +254,11 @@ DMA reads system RAM (always legal); it must still burn cycles so games cannot p
 
 ```c
 typedef struct {
-    uint8_t prg_bank;     /* which slice at $8000-$FDFF / $FF00-$FFFF; set only via $FE80 */
+    uint8_t prg_bank;     /* which slice at $8000-$FDFF / $FF00-$FFFF, set only via $FE80 */
 } Mapper;
 
 uint8_t cart_prg_read(Emu *e, uint16_t addr) {
-    /* Map CPU addr into banked PRG; skip the $FExx hole (never called for I/O) */
+    /* Map CPU addr into banked PRG. Skip the $FExx hole (never called for I/O) */
     size_t off = (size_t)e->mapper.prg_bank * 0x8000 + (addr & 0x7FFF);
     return e->prg[off % e->prg_size];
 }
@@ -274,7 +274,7 @@ Model channels as structs + a ring buffer of PCM for SDL:
 
 ```c
 typedef struct {
-    /* pulse x2, triangle, noise, dmc - timers, volume, length counters, ... */
+    /* pulse x2, triangle, noise, dmc: timers, volume, length counters, ... */
     Pulse  pulse1, pulse2;
     Tri    triangle;
     Noise  noise;
@@ -287,7 +287,7 @@ typedef struct {
 
 - `io_write` to `$FE40-$FE5F` updates channel regs (NES-like layout recommended).
 - Each `emu_tick` (or every N ticks) runs channel timers and pushes a mixed sample into `pcm[]`.
-- SDL audio callback only **pops** from the ring - no PPU work on the audio thread.
+- SDL audio callback only **pops** from the ring. No PPU work on the audio thread.
 
 ---
 
@@ -339,7 +339,7 @@ For debugging: run a fixed number of ticks, or break when `scanline == Y && dot 
 
 ---
 
-## 14. Quick reference - hardware -> C
+## 14. Quick reference: hardware to C
 
 | Silicon idea | C idea |
 |--------------|--------|
