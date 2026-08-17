@@ -19,7 +19,7 @@ Prefer a **digital** simulator (not SPICE) for whole-board logic.
 | 32 KB system RAM + 32 KB VRAM | Two SRAM blocks; mux VRAM by clock phase |
 | GAL | LUT / truth-table or explicit AND/OR subcircuit |
 | CHR | Model as ROM the PPU reads; not in VRAM |
-| Video | Tap digital X/Y + color → matrix widget (256×240) |
+| Video | Tap digital X/Y + color -> matrix widget (256x240) |
 | Audio | Log PCM from APU model; listen offline |
 
-Gate-level sims are slow vs 8 MHz silicon — use for bus correctness; use the [C emulator](07_emulator_specification.md) for ROM behavior.
+Gate-level sims are slow vs 8 MHz silicon - use for bus correctness; use the [C emulator](07_emulator_specification.md) for ROM behavior.

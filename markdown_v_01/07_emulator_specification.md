@@ -4,52 +4,348 @@
 
 A **hardware-restricted emulator in C** whose job is architectural validation, not max host FPS. Behavior that passes here should match Retr01-A silicon for: memory decode, interleaved VRAM phases, sprite drop rules, bank timing, and NES-style APU register traffic.
 
-**In scope now:** emulator core + host display/audio glue.  
+**In scope now:** emulator core + host display/audio glue (e.g. SDL2).  
 **Out of scope now:** PPUX, cc65, and other asset/game authoring toolchains.
 
-## 2. Components
+Canonical map + bus decode: [08_memory_map.md](08_memory_map.md).
 
-### 2.1 CPU core
+---
 
-- Cycle-accurate 6502 core with **W65C02S** ops as needed.
-- Two-phase clock model drives VRAM ownership (polarity frozen with the schematic).
+## 2. Suggested module layout
 
-### 2.2 Memory
+Keep hardware boundaries as C modules so the "virtual GAL" stays obvious:
 
-| Store | Emulation rule |
-|-------|----------------|
-| System RAM 32 KB | Always CPU-accessible at `$0000–$7EFF` |
-| I/O page | `$7F00–$7FFF` register file |
-| VRAM 32 KB | Only via `$7F1x`; **phase-locked** with PPU |
-| PRG / CHR / MAP | Cart image; PRG at `$8000–$FFFF`; CHR PPU-fetched |
+```text
+retr01_emu/
+  cpu/          /* W65C02S core: regs, step one cycle / one instruction */
+  bus/          /* system_bus_read / write - only entry to memory */
+  mem/          /* system_ram[], vram[], io_page state */
+  cart/         /* prg[], chr[], map[] + mapper regs */
+  ppu/          /* beam, nametable fetch, OAM eval, framebuffer */
+  apu/          /* NES-style channels -> host PCM */
+  host/         /* SDL window, audio callback, input -> $7F6x */
+  main.c        /* load ROM, reset, run loop */
+```
 
-See [08_memory_map.md](08_memory_map.md) and [09_address_decoding.md](09_address_decoding.md).
+Rule of thumb: **the CPU never indexes `system_ram` or `vram` directly.** Every load/store goes through `bus`.
 
-### 2.3 Interleaved VRAM
+---
 
-- PPU phase: background/sprite nametable & attr fetches (CHR from cart).
-- CPU phase: VRAM port R/W legal.
-- Debug: **hard fail** on wrong-phase CPU VRAM access.
+## 3. Core data: arrays that *are* the chips
 
-### 2.4 Virtual PPU
+Hardware chips map cleanly to fixed buffers - no `malloc` in the hot path.
 
-- 2bpp; per-tile BG attributes; 32×30 × up to 4 slots.
-- Independent BG / sprite banks; allow mid-frame bank writes.
-- 64 OAM; **16 sprites/scanline** drop.
-- Sprite non-transparent pixel over BG.
+```c
+uint8_t system_ram[0x7F00];   /* $0000-$7EFF; I/O page is not RAM */
+uint8_t vram[0x8000];         /* 32 KB video SRAM */
+uint8_t io_regs[0x100];       /* $7F00-$7FFF shadow / decode aids */
 
-### 2.5 APU
+/* Cartridge (sizes = planning ceilings; load what the image provides) */
+uint8_t *prg;   size_t prg_size;   /* <= 512 KiB */
+uint8_t *chr;   size_t chr_size;   /* <= 256 KiB */
+uint8_t *map;   size_t map_size;   /* compressed screens */
+```
 
-Trap `$7F40–$7F5F` writes; synthesize **NES-style** channels (2 pulse + triangle + noise + DMC) on the host (e.g. SDL2).
+| Hardware | Emulator representation |
+|----------|-------------------------|
+| AS6C62256 system | `system_ram[]` |
+| AS6C62256 VRAM | `vram[]` |
+| GAL decode | `if`/`switch` in `bus` (not a separate array) |
+| Cart flash regions | `prg[]` / `chr[]` / `map[]` |
+| Latches (scroll, banks) | fields in a `PpuState` / `MapperState` struct, updated when `io_regs` written |
+| 74HC161 beam counters | `uint16_t dot`, `uint16_t scanline` (or x/y) in `PpuState` |
 
-## 3. Bring-up workflow
+Optional: keep `io_regs[256]` as the raw MMIO image **and** mirror important bits into typed structs after each write (easier PPU code, still inspectable from a debugger).
 
-1. Assemble or generate a minimal ROM image (hand-made is fine).
-2. Run under the C emulator; iterate on core accuracy.
-3. Later: flash the same image class to hardware.
+---
 
-## 4. Non-goals
+## 4. CPU core
+
+### 4.1 Registers (not a "stack chip")
+
+```c
+typedef struct {
+    uint16_t pc;
+    uint8_t  a, x, y;
+    uint8_t  sp;      /* stack pointer - indexes page $0100 in system_ram */
+    uint8_t  p;       /* status flags */
+    /* cycle / phase bookkeeping */
+    uint64_t cycles;
+    int      phase;   /* 0 = PPU owns VRAM, 1 = CPU owns VRAM (name to match schematic) */
+} Cpu;
+```
+
+### 4.2 Hardware stack -> byte array
+
+The 6502 stack is **not** a C `stack<>`. It is bytes in system RAM:
+
+```text
+Push -> system_ram[0x0100 + sp], then sp--
+Pull -> sp++, then read system_ram[0x0100 + sp]
+```
+
+Implement `push`/`pull` as bus writes/reads to `$0100|$sp` so stack traffic still goes through decode (and so a future watchpoint on RAM works).
+
+### 4.3 Stepping
+
+Prefer **cycle-accurate** stepping (or instruction step that advances N cycles and runs PPU/APU for each):
+
+```c
+void emu_tick(Emu *e) {
+    /* One half-cycle or one full CPU cycle - pick a convention and stick to it */
+    e->cpu.phase = /* derive from e->cpu.cycles */;
+    ppu_dot(e);          /* may read vram[] / chr[] on PPU phase */
+    cpu_cycle(e);        /* may bus_read/write on CPU phase */
+    apu_tick(e);
+    e->cpu.cycles++;
+}
+```
+
+NMI: when PPU finishes a frame, set a line; CPU samples it like silicon (edge into the core's interrupt pin). Handler is just guest code - emulator only raises the pin.
+
+---
+
+## 5. Bus / virtual GAL
+
+```c
+uint8_t bus_read(Emu *e, uint16_t addr) {
+    if (addr >= 0x8000)
+        return cart_prg_read(e, addr);
+    if (addr >= 0x7F00)
+        return io_read(e, (uint8_t)addr);
+    return e->system_ram[addr];
+}
+
+void bus_write(Emu *e, uint16_t addr, uint8_t data) {
+    if (addr >= 0x8000) {
+        cart_mapper_write(e, addr, data); /* optional */
+        return;
+    }
+    if (addr >= 0x7F00) {
+        io_write(e, (uint8_t)addr, data);
+        return;
+    }
+    e->system_ram[addr] = data;
+}
+```
+
+`io_write` dispatches on `addr >> 4` (the 16-byte blocks in the memory map).
+
+### VRAM port (interleave)
+
+```c
+void vram_data_write(Emu *e, uint8_t data) {
+    if (!cpu_owns_vram(e)) {
+        /* debug builds */
+        abort_or_log("VRAM write on PPU phase");
+        return;
+    }
+    e->vram[e->ppu.vram_addr & 0x7FFF] = data;
+    e->ppu.vram_addr += e->ppu.vram_increment; /* 1 or 32, etc. */
+}
+```
+
+Same gate on reads. PPU fetch paths call `vram_ppu_read(e, addr)` only when `!cpu_owns_vram(e)` (or the opposite polarity - match the board).
+
+---
+
+## 6. PPU implementation sketch
+
+### 6.1 State
+
+```c
+typedef struct {
+    uint16_t vram_addr;
+    uint8_t  vram_addr_hi_next;  /* two-write latch */
+    uint8_t  scroll_x, scroll_y;
+    uint8_t  nt_base;            /* which of 4 slots is origin */
+    uint8_t  bg_bank;            /* 0-3 within world */
+    uint8_t  spr_bank;
+    uint8_t  world;
+
+    int      scanline;           /* -1 pre-render ... 239 visible ... VBlank */
+    int      dot;                /* 0 ... dots_per_line-1 */
+
+    uint8_t  oam[256];           /* 64 sprites x 4 bytes (NES-like) */
+    uint8_t  oam_addr;
+
+    /* Per-scanline sprite pipeline */
+    uint8_t  secondary_oam[32];  /* up to 8 NES-style; we allow 16 -> size 64 */
+    int      sprites_on_line;
+
+    uint32_t framebuffer[256 * 240]; /* host RGB for SDL */
+} Ppu;
+```
+
+### 6.2 Nametable as arrays inside `vram[]`
+
+Do not allocate four separate C arrays unless you want aliases:
+
+```c
+/* Slot s: tiles at base, attrs immediately after (planning layout) */
+enum { NT_SLOT_BYTES = 0x800 }; /* 2 KiB aligned */
+
+static uint8_t *nt_tiles(Emu *e, int slot) {
+    return &e->vram[slot * NT_SLOT_BYTES];
+}
+static uint8_t *nt_attrs(Emu *e, int slot) {
+    return &e->vram[slot * NT_SLOT_BYTES + 960];
+}
+```
+
+Scrolling across four screens: compute coarse X/Y from scroll + counters, pick slot from the 2x2 arrangement, index `nt_tiles[ty * 32 + tx]`, then attr byte for that tile.
+
+### 6.3 CHR fetch (cart, not VRAM)
+
+```c
+uint8_t chr_read_bg(Emu *e, uint8_t tile, uint8_t row /*0-7*/, int bitplane) {
+    size_t bank = e->ppu.world * 4 + e->ppu.bg_bank;
+    size_t page = 0; /* BG page first in bank */
+    size_t off = bank * 0x2000 + page * 0x1000 + tile * 16 + row + bitplane * 8;
+    return e->chr[off % e->chr_size]; /* or hard fault if OOB */
+}
+```
+
+Sprites use `spr_bank` and page `1`. Mid-frame bank writes just mutate `ppu.bg_bank` / `spr_bank`; the next fetch sees the new value (accurate and simple).
+
+### 2bpp -> color index
+
+For each pixel, combine two bitplanes into `0..3`. Index `0` = transparent for sprites (and often BG backdrop rules). Map through palette regs + master palette table (`uint32_t master_palette[N]` of host RGB) into `framebuffer[y * 256 + x]`.
+
+### 6.4 Sprite evaluation (scan -> secondary buffer)
+
+During HBlank (or the dots reserved for eval):
+
+1. Clear `secondary_oam` / `sprites_on_line = 0`.
+2. Walk primary `oam[0..255]` in steps of 4 (Y at `oam[i]`).
+3. If sprite Y hits this scanline and `sprites_on_line < 16`, copy the 4 bytes into secondary storage and increment.
+4. If more would qualify, **drop** them (do not draw) - hardware accuracy.
+
+During the visible line, for each x, scan the <=16 active sprites' shift-register state (or recompute from X + row) and pick the first non-transparent pixel (or proper priority rule). A small `uint8_t line_spr_idx[256]` / color buffer is a fine software stand-in for hardware shift registers.
+
+### 6.5 Framebuffer
+
+`uint32_t framebuffer[256*240]` (or `uint8_t[256*240]` color indices + palette expand in the host). Present once per frame to SDL. No need to emulate DAC analog levels.
+
+---
+
+## 7. OAM DMA
+
+When guest writes the DMA trigger in `$7F2x`:
+
+```c
+uint16_t src = (uint16_t)page << 8; /* page in system RAM */
+for (int i = 0; i < 256; i++)
+    e->ppu.oam[i] = bus_read(e, src + i);
+/* Advance CPU cycles by the real DMA cost so timing stays honest */
+```
+
+DMA reads system RAM (always legal); it must still burn cycles so games cannot pretend DMA is free.
+
+---
+
+## 8. Cartridge & mapper
+
+```c
+typedef struct {
+    uint8_t prg_bank;     /* which 32 KB slice at $8000 */
+    /* optional: separate 16K lo/hi later */
+} Mapper;
+
+uint8_t cart_prg_read(Emu *e, uint16_t addr) {
+    size_t off = (size_t)e->mapper.prg_bank * 0x8000 + (addr - 0x8000);
+    return e->prg[off % e->prg_size];
+}
+```
+
+MAP decompression for bring-up can be a **host-side helper** (inflate a screen into `vram[]` nametable slots) until guest code does it. That does not weaken PPU accuracy; it only stubs the missing game toolchain.
+
+---
+
+## 9. APU
+
+Model channels as structs + a ring buffer of PCM for SDL:
+
+```c
+typedef struct {
+    /* pulse x2, triangle, noise, dmc - timers, volume, length counters, ... */
+    Pulse  pulse1, pulse2;
+    Tri    triangle;
+    Noise  noise;
+    Dmc    dmc;
+    float  sample_accum;
+    int16_t pcm[APU_RING];
+    size_t  pcm_w, pcm_r;
+} Apu;
+```
+
+- `io_write` to `$7F40-$7F5F` updates channel regs (NES-like layout recommended).
+- Each `emu_tick` (or every N ticks) runs channel timers and pushes a mixed sample into `pcm[]`.
+- SDL audio callback only **pops** from the ring - no PPU work on the audio thread.
+
+---
+
+## 10. Input & board I/O
+
+Host keyboard/joystick -> bits latched into `$7F6x` registers once per frame (or on read strobe, if you mimic shift-register controllers later). EEPROM (`$7F7x`) can be a small `uint8_t eeprom[size]` file-backed array.
+
+---
+
+## 11. Main loop (host)
+
+```c
+load_cart("game.retr01");
+cpu_reset(&emu);          /* PC from $FFFC vector via bus_read */
+
+while (running) {
+    while (!frame_complete)
+        emu_tick(&emu);
+
+    sdl_present(emu.ppu.framebuffer);
+    sdl_poll_input_into_io(&emu);
+    frame_complete = false;
+}
+```
+
+For debugging: run a fixed number of ticks, or break when `scanline == Y && dot == X`.
+
+---
+
+## 12. Bring-up order (practical)
+
+1. Bus + `system_ram` + PRG window + CPU smoke test (NOP loop in hand-assembled ROM).
+2. I/O page writes that only set struct fields (scroll, banks).
+3. VRAM port + phase checks (write nametable, read back).
+4. BG renderer -> framebuffer (no sprites).
+5. OAM + 16-sprite cap.
+6. NMI metronome + simple guest "wait for frame" loop.
+7. APU pulse tone.
+8. Mapper / multi-bank CHR / four NT scroll.
+
+---
+
+## 13. Non-goals
 
 - Analog DAC / encoder simulation.
-- Gate-level GAL fuse simulation (use Digital/Logisim for that — [10_hardware_simulators.md](10_hardware_simulators.md)).
-- Full game toolchain integration in this phase.
+- Gate-level GAL fuse simulation ([10_hardware_simulators.md](10_hardware_simulators.md)).
+- Full game/asset toolchain integration in this phase.
+- Dynamic allocation in the tick path.
+
+---
+
+## 14. Quick reference - hardware -> C
+
+| Silicon idea | C idea |
+|--------------|--------|
+| SRAM chip | `uint8_t buf[size]` |
+| 6502 stack | bytes at `$0100+sp` in `system_ram` |
+| Latch | `uint8_t` / `uint16_t` field updated on MMIO write |
+| Counter (beam) | `int scanline`, `int dot` |
+| GAL | `bus_read` / `bus_write` branching |
+| Mux / phase | `cpu.phase` gate around VRAM |
+| OAM | `uint8_t oam[256]` |
+| Line sprite limit | secondary array capped at 16 |
+| CHR-ROM | `chr[]` indexed by world/bank/tile/row |
+| Frame | `framebuffer[256*240]` |
+| APU | channel structs + PCM ring buffer |
+| Cart mapper | bank index + modular offset into `prg[]` |

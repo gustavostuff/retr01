@@ -4,17 +4,17 @@
 
 | Topic | Decision |
 |-------|----------|
-| Name / order | **Retr01**; **A → C → H** |
-| Worlds / screens / banks | **8 × 64**; **4 banks/world**; screen = **32×30** |
+| Name / order | **Retr01**; **A -> C -> H** |
+| Worlds / screens / banks | **8 x 64**; **4 banks/world**; screen = **32x30** |
 | Bank layout | Page0 BG + page1 sprites = **512** patterns |
 | System RAM | **32 KB**, CPU-only |
 | VRAM | **32 KB**, interleaved; **CHR from cartridge** |
-| Scroll live set | **4 nametable slots** (2×2) + ~5-tile stream margin |
-| BG palettes | **Per-tile** (not 2×2) |
+| Scroll live set | **4 nametable slots** (2x2) + ~5-tile stream margin |
+| BG palettes | **Per-tile** (not 2x2) |
 | Bank binding | **Separate** BG vs sprite banks; **mid-frame** changes allowed |
 | APU | **NES-style**: 2 pulse + triangle + noise + DMC |
 | Near-term software | **Low-level C emulator** only (no PPUX/cc65 focus yet) |
-| CPU map | **`$0000–$7EFF` RAM / `$7Fxx` I/O / `$8000–$FFFF` PRG** — [08_memory_map.md](08_memory_map.md) |
+| CPU map | **`$0000-$7EFF` RAM / `$7Fxx` I/O / `$8000-$FFFF` PRG** - [08_memory_map.md](08_memory_map.md) |
 
 ## B. Still open (does not block emulator skeleton)
 
@@ -37,4 +37,4 @@
 |-------|---------|
 | Wrong-phase VRAM access | **Hard error** in debug |
 | Sprite vs BG | Non-transparent sprite wins |
-| Tile / page size | 8×8; 256 patterns/page |
+| Tile / page size | 8x8; 256 patterns/page |
