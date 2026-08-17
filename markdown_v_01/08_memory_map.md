@@ -52,8 +52,8 @@ Grouped in **16-byte blocks** (high nibble of the low byte = device family):
 ### Scroll (`$FE0x`)
 
 - **`scroll_x`**, **`scroll_y`**: one byte each, values **0-255**, wrap naturally.
-- They fine-scroll the 256x240 viewport across the live nametable field (1, 2, or 4 screens arranged/mirrored in the four VRAM slots). Neighbor slots are visible as the camera crosses a seam. That is pixel-level smooth scrolling.
-- There is no 16-bit map camera in hardware. To walk a large area, the CPU copies the next **screen** from MAP-ROM into the incoming VRAM slot when the camera is within **2 tiles** of a seam. `$FE30` world select stays put unless the game changes chapter.
+- They fine-scroll the 256x240 viewport across the live nametable field (1, 2, or 4 screens arranged/mirrored in the four VRAM slots). Neighbor slots are visible as the camera crosses a seam. That is pixel-level smooth scrolling, including when a neighbor is missing (empty template, default black).
+- There is no 16-bit map camera in hardware. To walk a large area, the CPU copies the next **screen** (or the empty template) into the incoming VRAM slot when the camera is within **2 tiles** of a seam. `$FE30` world select stays put unless the game changes chapter.
 
 ### APU (`$FE40-$FE5F`), NES-style
 
@@ -95,13 +95,24 @@ Retr01-A reads parallel switches on the 40-pin IDC into these bytes. Retr01-C ma
 
 ### MAP port (`$FE90`): cart map reads
 
-MAP-ROM holds compressed screens on the cart. It is **not** in the 6502 address space. You cannot `LDA` a nametable off the cart.
+MAP-ROM holds the **world atlas** (headers + screen directory) and compressed screens. It is **not** in the 6502 address space. You cannot `LDA` a nametable off the cart. Layout: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 2.
+
+**Reload API (software):** RAM holds `world`, `map_x`, `map_y` (one byte each). `load_screen` does:
+
+1. Seek `$FE90` to `world_base[world]`, read `grid_w`, `grid_h`, `screen_count`, `empty_off`.
+2. Scan the directory for `(map_x, map_y)`.
+3. On miss (in-grid hole, or neighbor past the grid): fill the VRAM slot with the world's empty template (`empty_off == 0` = solid black, else that nametable). Do not invent a dummy screen in MAP.
+4. On hit: seek to `data_off`, read RLE tiles then attrs, write the live nametable through `$FE1x`.
+5. Coords outside 0-63: optional lettered EMPTY debug fill (programmer error).
+
+Seam fill is the same lookup for a neighbor cell. Pixel-scroll always. Missing neighbors get the empty template, not a warp.
+
+Typical MAP access:
 
 1. Write a 24-bit MAP address into `$FE90` (lo / mid / hi, exact regs TBD).
 2. Read `$FE92` (data). Hardware auto-increments the address.
-3. Decompress in software. Write live tiles/attrs through the VRAM port (`$FE1x`).
 
-That is the 2-tile seam fill: pull a strip from MAP, poke it into the incoming nametable slot. No MAP window over RAM or PRG. PRG banking stays `$FE80` only.
+No MAP window over RAM or PRG. PRG banking stays `$FE80` only.
 
 ### PRG mapper (`$FE80`): canonical only
 

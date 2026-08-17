@@ -24,7 +24,7 @@ Canonical rewrite of the scattered Gemini drafts under `gemini_docs/`. This fold
 ## Locked in this revision
 
 1. Family name **Retr01**. Ship path starts at **Retr01-A**.
-2. Cart: **8 worlds x 64 screens**. A screen is a **32x30** nametable **authored** against one BG bank per world bank set.
+2. Cart: **8 worlds**. Each world has a sparse grid up to **64 x 64** and at most **64** stored screens. A screen is a **32x30** nametable **authored** against one BG bank.
 3. Bank = **BG page + sprite page** -> **512 patterns**. Runtime BG/sprite banks may differ. Mid-frame changes are OK.
 4. **Two** 32 KB SRAMs: full system RAM at `$0000-$7FFF`, interleaved VRAM, CHR from cart, I/O at `$FExx`.
 5. **Per-tile** BG palettes packed in **240 bytes/screen** (1 byte per 2x2 cell). **8 palettes**, shared BG color 0, master palette 32-64 TBD.

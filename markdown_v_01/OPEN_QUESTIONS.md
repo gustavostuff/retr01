@@ -5,13 +5,14 @@
 | Topic | Decision |
 |-------|----------|
 | Name / order | **Retr01**, **A -> C -> H** |
-| Worlds / screens / banks | **8 x 64**, **4 banks/world**, screen = **32x30** |
+| Worlds / screens / banks | **8 worlds**. Each: **64 screens max** on a sparse virtual grid up to **64 x 64**. 4 CHR banks/world. Screen = **32x30** |
 | Bank layout | Page0 BG + page1 sprites = **512** patterns |
 | Authored vs runtime banks | Screen authored vs one BG bank, runtime BG/sprite banks independent, mid-frame OK |
 | System RAM | **32 KB** full chip at `$0000-$7FFF` |
 | VRAM | **32 KB**, interleaved, CHR from cart, OAM not in VRAM |
-| Scroll | `scroll_x` / `scroll_y` one byte each (0-255 wrap), 1/2/4 screens via NT arrange |
-| Stream margin | **2 tiles (16 px)** software cue to refill seams |
+| Scroll | `scroll_x` / `scroll_y` one byte each (0-255 wrap), 1/2/4 screens via NT arrange. Always pixel-scroll, even with 0 stored neighbors |
+| Stream margin | **2 tiles (16 px)** software cue to refill seams. Miss = empty template (default black, optional per-world nametable) |
+| MAP offsets | **24-bit** (`world_base`, `data_off`, `empty_off`). Matches `$FE90`. MAP is ~1.17 MB, so 16-bit is not enough |
 | Palettes | **8** (4 BG + 4 sprite), **shared BG color 0** |
 | BG attributes | **Per tile**, packed **240 bytes/NT** (1 byte = 2x2 cell, 2 bits/tile). Not NES shared 2x2 |
 | Sprite OAM attr | NES-like byte (palette / flip / priority) |
@@ -19,7 +20,7 @@
 | APU | NES-style: 2 pulse + triangle + noise + DMC |
 | CPU clock | **8.000 MHz** |
 | Dot clock / frame | **5.369318 MHz**, **341x262**, **~60.098 Hz** NMI |
-| MAP access | **`$FE90` MAP port** |
+| MAP access | **`$FE90` MAP port**. Atlas + compressed screens in MAP-ROM. RAM `world`,`map_x`,`map_y` then `load_screen` |
 | Controllers | CPU sees **`$FE60-$FE63`** (4 bytes, 2 players). A: parallel IDC. C: 3-wire pad (pinned) |
 | PRG mapper | **`$FE80` only** |
 | CPU map | `$0000-$7FFF` RAM / `$FE00-$FEFF` I/O / PRG elsewhere |
@@ -39,7 +40,7 @@
 | B5 | Retr01-C 3-wire pad protocol | Pinned: 3 wires + MCU in pad, same `$FE6x` bytes. Connector shell TBD |
 | B6 | OAM byte field order | NES-like Y,tile,attr,X default |
 | B7 | Repo folder still named GameNerd | Rename when ready |
-| B8 | Screen grid inside a world | How neighbors are stored in MAP/PRG. Labels like `world_01:` are a sketch only |
+| B9 | MAP RLE exact format | Tile plane then attrs. Directory row is 5 bytes (col, row, 24-bit `data_off`). `empty_off` 0 = black |
 
 ## C. Emulator defaults
 
