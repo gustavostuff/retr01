@@ -18,6 +18,7 @@ Canonical rewrite of the scattered Gemini drafts under `gemini_docs/`. This fold
 | [08_memory_map.md](08_memory_map.md) | CPU + VRAM map **and** GAL / bus decode |
 | [10_hardware_simulators.md](10_hardware_simulators.md) | Gate-level digital simulation options |
 | [11_pitch_draft.md](11_pitch_draft.md) | Marketing-oriented pitch |
+| [12_part_prices_and_cost.md](12_part_prices_and_cost.md) | Retr01-A motherboard + cart BOM prices |
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | What is still undecided |
 
 ## Locked in this revision
