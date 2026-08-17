@@ -18,17 +18,17 @@ Software equivalent: `return (A && B);`
 
 1970s/80s arcade boards often wired dozens of these chips into huge physical `if` statements (e.g. "X == 255 **and** Y == 240").
 
-### 2. GAL22V10 (programmable glue)
+### 2. ATF22V10 (programmable glue)
 
-If 74-series parts are the stdlib, a **GAL** (Generic Array Logic) is a custom compiled function. A GAL22V10 has up to 10 outputs among 22 logic-capable pins, with an internal AND/OR fabric connected by fuses.
+If 74-series parts are the stdlib, a **GAL / ATF** is a custom compiled function. Lattice **GAL22V10** DIP is EOL. Retr01 uses Microchip **ATF22V10** (same 24-pin, 10 outputs among 22 logic-capable pins, flash instead of old fuses).
 
 1. Write boolean equations (e.g. CUPL) that decode ranges such as
    "A15 low -> RAM CS", "A15..A8 == $FE -> I/O CS", "else if A15 high -> PRG OE".
-   Exact fuse equations belong with the schematic. The GAL is just a compiled router.
+   Exact equations belong with the schematic. The ATF is just a compiled router.
 2. Compile to a `.jed` file.
-3. A programmer burns fuses so the chip permanently implements that logic.
+3. A programmer burns the chip so it implements that logic.
 
-One 24-pin GAL can replace on the order of **~20** discrete 74-series chips. Retr01 uses GALs to glue CPU <-> memory <-> video timing without a wire jungle.
+One 24-pin 22V10 can replace on the order of **~20** discrete gate chips (AND/OR decode). It does **not** replace wide buses: VRAM address mux stays **74HC157**, data isolation stays **74HC245**, beam counters stay **74HC161**, byte latches stay **74HC573**. Retr01-A uses ATFs to cut random 74HC00/08/32-type parts **without** changing timing, interleave, or the CPU map.
 
 ### 3. Address decoding (6502 + GAL as router)
 

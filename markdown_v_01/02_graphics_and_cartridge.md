@@ -18,7 +18,7 @@ Canonical description of Retr01 tile graphics and cartridge layout.
 
 CPU and dot clocks are **independent**. The W65C02S runs at 8 MHz for game logic and interleaved VRAM phases. The video beam advances on the 5.369318 MHz dot clock.
 
-That dot clock **is** the CRT refresh if Retr01-A drives analog **RGBS** into a 15.7 kHz arcade/CGA monitor: 341 dots per line gives ~15.7 kHz horizontal, 262 lines gives **~60.1 Hz** vertical. NMI fires at that same rate. A modern HDMI TV is different. The panel has its own 60 Hz. A scaler in between resamples our RGBS. The PPU still runs 341x262 either way. Game code is paced by NMI, not by the TV.
+That dot clock **is** the CRT refresh if Retr01-A drives analog **RGBS** into a 15.7 kHz arcade/CGA monitor: 341 dots per line gives ~15.7 kHz horizontal, 262 lines gives **~60.1 Hz** vertical. NMI fires at that same rate. A modern TV is different. The panel has its own 60 Hz. An external analog-to-HDMI (or similar) converter on the RGBS pads resamples our output. The PPU still runs 341x262 either way. Game code is paced by NMI, not by the TV.
 
 PPU VRAM fetches occur only on PPU-owned CPU phases (with line buffers / shift registers bridging the two domains as on real hardware). In other words, even though the PPU only accesses VRAM 50% of the time, the display never flickers. The hardware uses shift registers to cache the graphics data during the PPU's phase, continuously streaming pixels to the screen while the CPU executes game logic during its phase.
 

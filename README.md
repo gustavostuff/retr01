@@ -20,7 +20,7 @@ Think: **NES-era aesthetics with room to actually build ambitious games.**
 
 ## What you get (in plain terms)
 
-- **A real arcade-first board:** sticks, buttons, coin/start, analog RGB for cabinet monitors
+- **A real arcade-first board:** sticks, buttons, coin/start, analog RGBS for cabinet monitors. RGBS pads can feed an off-the-shelf analog-to-HDMI converter if you want a modern TV
 - **A bold but readable look:** limited color per tile/sprite on purpose, with clarity over mush
 - **Big cartridge worlds:** multiple "worlds," dozens of screens each, packed into a standard-size cart
 - **Smooth multi-screen scrolling:** cameras that cross screen borders without the classic flicker tax

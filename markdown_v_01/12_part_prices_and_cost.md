@@ -10,7 +10,7 @@ This is not a quote. Distributor stock moves. Shipping, tax, and tariffs are ext
 
 Scope is **motherboard + cart** only: chips, passives, PCBs, sockets, connectors.
 
-**74-series count** is the big unknown. A discrete PPU with interleaved VRAM, sprites, and RGBS is dozens of glue chips. The table uses a **~50 DIP 74HC** planning count plus **4x 22V10** glue. If the PPU is denser, add chips. If more goes into GALs, subtract 74HC and maybe add a GAL.
+**74-series count** is the big unknown. A discrete PPU with interleaved VRAM, sprites, and RGBS is dozens of glue chips. The table uses a **~50 DIP 74HC** planning count plus **4x ATF22V10**. Extra ATFs may shrink the mixed-gate bucket. Muxes, transceivers, and counters stay 74HC.
 
 Lattice **GAL22V10** DIP is obsolete. The buyable through-hole stand-in is Microchip **ATF22V10CQZ-20PU** (same 24-pin idea, flash, still made).
 

@@ -25,10 +25,10 @@ Foundation of the family: cabinet-ready board, first silicon target.
 | Block | Specification |
 |-------|----------------|
 | CPU | W65C02S (DIP-40) |
-| Glue | GAL22V10 array (DIP-24) |
+| Glue | **ATF22V10** array (DIP-24). Lattice GAL22V10 is EOL. Same 22V10 idea |
 | System RAM | **32 KB**, CPU-only |
 | VRAM | **32 KB**, interleaved CPU<->PPU, CHR from cart |
-| Mux / bus | 74HC157 / 74HC245 (+ latches/counters) |
+| Mux / bus | **74HC157** / **74HC245**, plus **74HC573** latches and **74HC161** counters. GALs eat random gate chips only. Do not GAL-away wide buses |
 | Board NVRAM | Parallel EEPROM (e.g. AT28C64B) |
 | Cart | ~2 MB parallel flash (PRG + CHR + MAP) |
 | Audio | ATmega APU, NES-style channels |
@@ -41,9 +41,16 @@ Foundation of the family: cabinet-ready board, first silicon target.
 
 ### Video & audio
 
-- Primary: analog **RGBS**
+- Primary: analog **RGBS** (15.7 kHz class, see [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md))
 - Optional: S-Video / composite encoder pads
+- No on-board HDMI. RGBS pads are there so someone can wire an external analog-to-HDMI converter
 - Audio: NES-style mix via `$FE40-$FE5F`
+
+### Power (bench / cabinet)
+
+- **Female 5.5 mm x 2.1 mm barrel**, 5 V (same jack as Retr01-C, handy on the bench)
+- In a cabinet, 5 V may instead come from the cab PSU
+- **Unpopulated solder pads** for a small off-the-shelf USB-C female breakout PCB, if the builder wants that jack. Not a USB-C PD design on our board
 
 ### Validation
 
@@ -61,7 +68,7 @@ Through-hole / socketed DIP for early revisions, 2-4 layer PCB, mini-ITX or cust
 
 ### Video
 
-Internal 256x240 2bpp. Nearest-neighbor upscale toward HDMI/DVI. Legacy analog paths as needed.
+Internal 256x240 2bpp, analog **RGBS** out (same PPU as A). No on-board HDMI or DVI.
 
 ### Controllers
 
@@ -71,7 +78,8 @@ Software still reads `$FE60-$FE63` (same four bytes as Retr01-A). Only the board
 
 ### Power
 
-Barrel jack and/or USB-C PD -> 5V / 3.3V rails.
+- **Female 5.5 mm x 2.1 mm barrel**, 5 V. On-board regulator for 3.3 V if a chip needs it
+- **Unpopulated solder pads** for a small USB-C female breakout PCB (builder wires 5 V / GND). Not USB-C PD on this board
 
 ---
 
@@ -81,7 +89,7 @@ Portable SMD edition with architectural parity (same map, VRAM model, CHR-from-c
 
 ### Packaging
 
-Dense CPU package, SMD SRAM/logic, 4-6 layer PCB. Decode may move from GAL22V10 to a denser CPLD, with the **same** CPU map.
+Dense CPU package, SMD SRAM/logic, 4-6 layer PCB. Decode may move from ATF22V10 to a denser CPLD, with the **same** CPU map.
 
 ### Power
 

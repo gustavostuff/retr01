@@ -192,7 +192,7 @@ Wrong-phase CPU VRAM access: **hard error in emulator debug builds**.
 
 Interleave muxes toggle on the **CPU** clock phases. The beam and fetch sequencer advance on the **dot** clock. Line buffers / shift registers sit between those domains (same idea as a real PPU).
 
-On analog **RGBS** into a 15.7 kHz arcade/CGA CRT, this timing **is** the monitor refresh (~15.7 kHz H, ~60.1 Hz V). NMI is that same vertical rate. A later HDMI scaler would resample into a TV's own 60 Hz. The PPU still counts 341x262. Full RGBS sync polarity can still be tuned on the bench. The numbers above are the locked digital timing.
+On analog **RGBS** into a 15.7 kHz arcade/CGA CRT, this timing **is** the monitor refresh (~15.7 kHz H, ~60.1 Hz V). NMI is that same vertical rate. An off-board analog-to-HDMI converter would resample into a TV's own 60 Hz. The PPU still counts 341x262. Full RGBS sync polarity can still be tuned on the bench. The numbers above are the locked digital timing.
 
 Graphics overview: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md).  
 Emulator: [07_emulator_specification.md](07_emulator_specification.md).
