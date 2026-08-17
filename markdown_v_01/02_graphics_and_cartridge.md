@@ -16,7 +16,9 @@ Canonical description of Retr01 tile graphics and cartridge layout.
 | Scanlines per frame | **262** (240 visible + 22 VBlank) |
 | Frame rate | **~60.098 Hz** (NMI metronome) |
 
-CPU and dot clocks are **independent**: the W65C02S runs at 8 MHz for game logic and interleaved VRAM phases; the video beam advances on the 5.369318 MHz dot clock (standard NTSC PPU timing, friendly to arcade RGBS / encoders). PPU VRAM fetches occur only on PPU-owned CPU phases (with line buffers / shift registers bridging the two domains as on real hardware).
+CPU and dot clocks are **independent**: the W65C02S runs at 8 MHz for game logic and interleaved VRAM phases; the video beam advances on the 5.369318 MHz dot clock (standard NTSC PPU timing, friendly to arcade RGBS / encoders).
+
+PPU VRAM fetches occur only on PPU-owned CPU phases (with line buffers / shift registers bridging the two domains as on real hardware). In other words, even though the PPU only accesses VRAM 50% of the time, the display never flickers. The hardware uses shift registers to cache the graphics data during the PPU's phase, continuously streaming pixels to the screen while the CPU executes game logic during its phase.
 
 See also [08_memory_map.md](08_memory_map.md) for the VRAM port and interleave rules.
 
