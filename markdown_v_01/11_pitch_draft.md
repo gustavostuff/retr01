@@ -16,7 +16,7 @@ Discrete-logic 8-bit arcade hardware for developers and cabinet builders. First 
 
 ### Cabinet (Retr01-A)
 
-- 40-pin IDC controls, analog RGBS, optional encoder pads (external analog-to-HDMI converter if you want a TV), EEPROM scores/settings, through-hole bring-up.
+- 40-pin IDC controls, analog RGBS / S-Video / composite pads (external analog-to-HDMI converter if you want a TV), EEPROM scores/settings, through-hole bring-up.
 
 ### Prove it in software first
 

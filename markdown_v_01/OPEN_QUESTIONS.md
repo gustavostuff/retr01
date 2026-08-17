@@ -25,7 +25,7 @@
 | CPU map | `$0000-$7FFF` RAM / `$FE00-$FEFF` I/O / PRG elsewhere |
 | Near-term software | Low-level C emulator only |
 | Glue | **ATF22V10** for decode/timing. **74HC157/245/161/573** for buses, counters, latches. Cut gate chips only |
-| Video out | Analog **RGBS**. HDMI is an external converter on those pads, not on-board |
+| Video out | **A/C:** RGBS + S-Video + composite pads. **H:** RGBS only. HDMI is an external converter, not on-board |
 | Power (A/C) | Female **5.5 mm x 2.1 mm** barrel, 5 V. Optional pads for a USB-C breakout PCB |
 
 ## B. Still open

@@ -17,7 +17,7 @@ Foundation of the family: cabinet-ready board, first silicon target.
 ### Goals
 
 - Through-hole bring-up and repair
-- Dense cabinet I/O, analog RGBS, optional encoder pads
+- Dense cabinet I/O, analog outs (RGBS, S-Video, composite pads)
 - EEPROM for scores / operator settings
 
 ### Core silicon
@@ -41,9 +41,8 @@ Foundation of the family: cabinet-ready board, first silicon target.
 
 ### Video & audio
 
-- Primary: analog **RGBS** (15.7 kHz class, see [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md))
-- Optional: S-Video / composite encoder pads
-- No on-board HDMI. RGBS pads are there so someone can wire an external analog-to-HDMI converter
+- Analog pads on the board: **RGBS**, **S-Video**, and **composite** (15.7 kHz class, see [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md))
+- No on-board HDMI. The RGBS pads can feed an external analog-to-HDMI converter
 - Audio: NES-style mix via `$FE40-$FE5F`
 
 ### Power (bench / cabinet)
@@ -68,7 +67,7 @@ Through-hole / socketed DIP for early revisions, 2-4 layer PCB, mini-ITX or cust
 
 ### Video
 
-Internal 256x240 2bpp, analog **RGBS** out (same PPU as A). No on-board HDMI or DVI.
+Internal 256x240 2bpp (same PPU as A). Analog pads: **RGBS**, **S-Video**, and **composite**. No on-board HDMI or DVI. RGBS pads can feed an external analog-to-HDMI converter.
 
 ### Controllers
 
@@ -97,4 +96,4 @@ Static-core clock halt, Li-Po + USB-C PMIC.
 
 ### Display & controls
 
-Raw LCD/OLED, nearest-neighbor from 256x240. Thin platform layer for buttons, sleep, brightness.
+Raw LCD/OLED, nearest-neighbor from 256x240. Analog out is **RGBS pads only** (no S-Video or composite on H). Thin platform layer for buttons, sleep, brightness.
