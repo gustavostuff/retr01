@@ -52,8 +52,8 @@ Grouped in **16-byte blocks** (high nibble of the low byte = device family):
 ### Scroll (`$FE0x`)
 
 - **`scroll_x`**, **`scroll_y`**: one byte each, values **0-255**, wrap naturally.
-- They fine-scroll the 256x240 viewport across the live nametable field (1, 2, or 4 screens arranged/mirrored in the four VRAM slots).
-- You do **not** scroll across an entire world with a larger coordinate. The CPU streams new strips into nametable slots as the camera approaches seams (5-tile margin).
+- They fine-scroll the 256x240 viewport across the live nametable field (1, 2, or 4 screens arranged/mirrored in the four VRAM slots). Neighbor slots are visible as the camera crosses a seam. That is pixel-level smooth scrolling.
+- There is no 16-bit map camera in hardware. To walk a large area, the CPU copies the next **screen** from MAP-ROM into the incoming VRAM slot when the camera is within **2 tiles** of a seam. `$FE30` world select stays put unless the game changes chapter.
 
 ### APU (`$FE40-$FE5F`), NES-style
 
@@ -90,14 +90,14 @@ CPU touches VRAM only through **`$FE10-$FE1F`**. CHR comes from cartridge CHR-RO
 
 | VRAM offset | Size | Contents |
 |-------------|------|----------|
-| `$0000-$07FF` | 2 KB | Nametable slot 0: 960 tiles + 960 per-tile attrs (+ pad) |
+| `$0000-$07FF` | 2 KB | Nametable slot 0: 960 tiles + 240 packed attrs (+ pad) |
 | `$0800-$0FFF` | 2 KB | Nametable slot 1 |
 | `$1000-$17FF` | 2 KB | Nametable slot 2 |
 | `$1800-$1FFF` | 2 KB | Nametable slot 3 |
-| `$2000-$2FFF` | 4 KB | Streaming scratch (5-tile perimeter, decompress temps) |
+| `$2000-$2FFF` | 4 KB | Streaming scratch (decompress temps) |
 | `$3000-$7FFF` | 20 KB | Reserved |
 
-Each slot (2 KB): tiles at `+0x000` (960 bytes), per-tile attributes at `+0x3C0` (960 bytes). Offset `+0x3C0` is where NES puts attrs, but Retr01 keeps **960** attribute bytes (one palette select per tile), not 64. Slots 0-3 form the live 1/2/4-screen field.
+Each slot (2 KB): tiles at `+0x000` (960 bytes), packed attributes at `+0x3C0` (240 bytes). One attr byte is a 2x2 cell with **four** 2-bit palette IDs (one per tile), not NES's shared 2x2. Remaining bytes in the slot are pad. Slots 0-3 form the live 1/2/4-screen field.
 
 ---
 

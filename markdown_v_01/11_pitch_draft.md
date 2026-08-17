@@ -7,7 +7,7 @@ Discrete-logic 8-bit arcade hardware for developers and cabinet builders. First 
 ### Graphics
 
 - **16 sprites per scanline** (64 OAM). NES had 8.
-- **2bpp** (3 colors + transparency). **8 palettes** (4 BG + 4 sprite) with shared BG backdrop. **Per-tile** background palette select (finer than NES 2x2 attribute blocks).
+- **2bpp** (3 colors + transparency). **8 palettes** (4 BG + 4 sprite) with shared BG backdrop. **Per-tile** background palette select, 4 tiles packed in each attr byte (NES shares one select across a 2x2).
 - **8 worlds x 64 screens**. Each screen is a **32x30** nametable. **4 pattern banks per world**, each bank **512** patterns (256 BG + 256 sprites). Up to **512** screens per ~**2 MB** cart.
 
 ### Interleaved VRAM

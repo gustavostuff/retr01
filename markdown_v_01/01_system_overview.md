@@ -12,7 +12,7 @@ Formerly GameNerd / Retr02. Those names are retired.
 
 1. **Unified CPU:** W65C02S on every variant, planning clock **8 MHz** (~4.5x a stock NES 6502).
 2. **Interleaved VRAM only:** The CPU and PPU share Video SRAM on alternating clock phases. Because the 6502 only transfers data on the high phase (Phase 2), the PPU safely fetches graphics on the low phase (Phase 1). This grants the CPU 100% continuous logical access to VRAM with zero VBLANK lockout delays. System RAM remains entirely CPU-exclusive.
-3. **Strict 2bpp:** 3 colors + transparency per draw unit, **8 palettes** (4 BG + 4 sprite), shared BG backdrop, **per-tile** BG palette select (finer than NES 2x2 attrs).
+3. **Strict 2bpp:** 3 colors + transparency per draw unit, **8 palettes** (4 BG + 4 sprite), shared BG backdrop, **per-tile** BG palette select packed 4 tiles per attr byte (NES shares one select across a 2x2).
 4. **Binary-first data:** Fixed-size layouts, with no dynamic allocation on target.
 5. **Software collision:** AABB (or equivalent) in game code, with no hardware collision flags.
 6. **CHR from cartridge:** PPU reads pattern bytes from cart CHR-ROM (banked). VRAM holds live nametables/attrs only.
@@ -22,7 +22,7 @@ Formerly GameNerd / Retr02. Those names are retired.
 | Area | Spec |
 |------|------|
 | Resolution | 256x240 (32x30 x 8x8 tiles) |
-| Color | 2bpp, 8 palettes, **per-tile** BG attrs, master palette 32-64 TBD |
+| Color | 2bpp, 8 palettes, **per-tile** BG attrs (240 bytes/screen), master palette 32-64 TBD |
 | Sprites | 64 OAM, **16 / scanline** max |
 | Worlds / screens | **8 x 64** |
 | Banks / world | **4** (each 512 patterns: 256 BG + 256 sprites) |

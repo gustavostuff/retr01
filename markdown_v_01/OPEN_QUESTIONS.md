@@ -11,9 +11,9 @@
 | System RAM | **32 KB** full chip at `$0000-$7FFF` |
 | VRAM | **32 KB**, interleaved, CHR from cart, OAM not in VRAM |
 | Scroll | `scroll_x` / `scroll_y` one byte each (0-255 wrap), 1/2/4 screens via NT arrange |
-| Stream margin | ~5-tile perimeter cue to refill seams |
+| Stream margin | **2 tiles (16 px)** software cue to refill seams |
 | Palettes | **8** (4 BG + 4 sprite), **shared BG color 0** |
-| BG attributes | **Per tile** (960 bytes/NT), low 2 bits = BG palette 0-3, finer than NES 2x2 |
+| BG attributes | **Per tile**, packed **240 bytes/NT** (1 byte = 2x2 cell, 2 bits/tile). Not NES shared 2x2 |
 | Sprite OAM attr | NES-like byte (palette / flip / priority) |
 | Master palette | Custom Retr01, **32 min / 64 likely**, RGB table TBD |
 | APU | NES-style: 2 pulse + triangle + noise + DMC |
@@ -35,6 +35,7 @@
 | B5 | Retr01-C primary controller | DB-9 vs USB |
 | B6 | OAM byte field order | NES-like Y,tile,attr,X default |
 | B7 | Repo folder still named GameNerd | Rename when ready |
+| B8 | Screen grid inside a world | How neighbors are stored in MAP/PRG. Labels like `world_01:` are a sketch only |
 
 ## C. Emulator defaults
 
@@ -43,4 +44,4 @@
 | Wrong-phase VRAM access | **Hard error** in debug |
 | Sprite vs BG | Non-transparent sprite wins |
 | Tile / page size | 8x8, 256 patterns/page |
-| Attributes | Per-tile BG attr plane (960 bytes), NES-like sprite OAM attr |
+| Attributes | Packed 240-byte BG attr plane (2 bits/tile), NES-like sprite OAM attr |

@@ -183,18 +183,18 @@ Do not allocate four separate C arrays unless you want aliases:
 
 ```c
 /* Slot s: tiles at base, attrs immediately after (planning layout) */
-enum { NT_SLOT_BYTES = 0x800 }; /* 2 KB: 960 tiles + 960 attrs + pad */
+enum { NT_SLOT_BYTES = 0x800 }; /* 2 KB: 960 tiles + 240 packed attrs + pad */
 
 static uint8_t *nt_tiles(Emu *e, int slot) {
     return &e->vram[slot * NT_SLOT_BYTES];
 }
 static uint8_t *nt_attrs(Emu *e, int slot) {
-    /* +0x3C0 = right after 960 tile bytes, 960 attr bytes (one per tile) */
+    /* +0x3C0 = after 960 tile bytes, 240 packed attr bytes (2x2 cell, 2 bits/tile) */
     return &e->vram[slot * NT_SLOT_BYTES + 0x3C0];
 }
 ```
 
-Scrolling: `scroll_x`/`scroll_y` wrap 0-255. Combine with `nt_arrange` to sample the correct slot(s) so the viewport shows portions of **1, 2, or 4** screens. Index `nt_tiles[ty * 32 + tx]`. BG palette from `nt_attrs[ty * 32 + tx]` (per-tile, low 2 bits = palette 0-3).
+Scrolling: `scroll_x`/`scroll_y` wrap 0-255. Combine with `nt_arrange` to sample the correct slot(s) so the viewport shows portions of **1, 2, or 4** screens. Index `nt_tiles[ty * 32 + tx]`. BG palette from packed attrs: byte `nt_attrs[(ty / 2) * 16 + (tx / 2)]`, then `((byte >> (((ty & 1) * 2 + (tx & 1)) * 2)) & 3)`.
 
 ### 6.3 CHR fetch (cart, not VRAM)
 
@@ -213,7 +213,7 @@ Sprites use `spr_bank` and page `1`. Mid-frame bank writes just mutate `ppu.bg_b
 
 For each pixel, combine two bitplanes into `0..3`.  
 - Sprites: index `0` = transparent.  
-- BG: index `0` uses the **shared backdrop**. Indices 1-3 come from the BG palette selected by **that tile's** attribute byte (per-tile).  
+- BG: index `0` uses the **shared backdrop**. Indices 1-3 come from the BG palette selected by **that tile's** 2-bit field in the packed attr byte.  
 Map through palette regs + master palette (`uint32_t master_palette[32 or 64]` TBD) into `framebuffer[y * 256 + x]`.
 
 PPU timing: advance `dot`/`scanline` on the **5.369318 MHz** domain (341x262). Run CPU ticks on the **8 MHz** domain. Host presents one framebuffer per VBlank (~60.1 Hz).

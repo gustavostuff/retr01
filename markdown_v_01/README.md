@@ -27,7 +27,7 @@ Canonical rewrite of the scattered Gemini drafts under `gemini_docs/`. This fold
 2. Cart: **8 worlds x 64 screens**. A screen is a **32x30** nametable **authored** against one BG bank per world bank set.
 3. Bank = **BG page + sprite page** -> **512 patterns**. Runtime BG/sprite banks may differ. Mid-frame changes are OK.
 4. **Two** 32 KB SRAMs: full system RAM at `$0000-$7FFF`, interleaved VRAM, CHR from cart, I/O at `$FExx`.
-5. **Per-tile** BG palette attrs (960 bytes/screen), **8 palettes**, shared BG color 0, master palette 32-64 TBD.
-6. Scroll X/Y = one byte each (0-255 wrap) over 1/2/4 live screens.
+5. **Per-tile** BG palettes packed in **240 bytes/screen** (1 byte per 2x2 cell). **8 palettes**, shared BG color 0, master palette 32-64 TBD.
+6. Scroll X/Y = one byte each (0-255 wrap) over 1/2/4 live screens. Software streams the next screen at a **2-tile** seam cue. `$FE30` world select is a chapter, not the camera.
 7. NES-style APU. CPU **8.000 MHz**. Dot **5.369318 MHz** (341x262, ~60.1 Hz). MAP via `$FE90`. PRG bank via `$FE80` only.
 8. Near-term focus: **low-level C emulator**.

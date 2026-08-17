@@ -124,15 +124,15 @@ Latches + MMIO + counters = the skeleton of an independent video pipeline.
 
 ### 1. Nametable (pointer grid)
 
-VRAM holds up to **four** 32x30 nametable slots (2x2 scroll field). Each byte is a tile index (0-255 into the active **BG page**). Beam counters fetch the index under the current pixel.
+VRAM holds up to **four** 32x30 nametable slots (2x2 scroll field). Each nametable byte is a tile index 0-255 into the **active BG pattern set** on cart (not a bank number, not a VRAM page). Beam counters fetch that index under the current pixel. `scroll_x`/`scroll_y` pick where the 256x240 window sits on those slots.
 
 ### 2. Pattern tables (asset library on cart)
 
-**CHR-ROM** on the cartridge holds 8x8 2bpp patterns. Hardware concatenates tile index + fine Y (row 0-7) into a CHR address. The cart outputs that row's bits, with no CPU math. Banks: 4 per world, each bank = BG page (256) + sprite page (256). BG bank and sprite bank may differ and may change mid-frame.
+**CHR-ROM** on the cartridge holds 8x8 2bpp patterns. Hardware concatenates tile index + fine Y (row 0-7) into a CHR address. The cart outputs that row's bits, with no CPU math. Banks: 4 per world, each bank = 256 BG patterns + 256 sprite patterns. `$FE30` selects BG bank and sprite bank independently. Mid-frame changes are OK. Scroll does not touch these registers.
 
 ### 3. Attributes and palettes (hardware CSS)
 
-2bpp patterns pick among 3 colors + transparency. **8 palettes** (4 BG + 4 sprite). **Per-tile BG attributes:** one palette select for each of the 960 nametable tiles (960 attr bytes at `+0x3C0` in each VRAM slot). That is finer than NES 2x2 groups. Shared universal **BG color 0 / backdrop**. Sprite OAM attr byte is NES-like. Mux logic combines pattern bits + palette -> DAC color index.
+2bpp patterns pick among 3 colors + transparency. **8 palettes** (4 BG + 4 sprite). **Per-tile BG attributes:** 240 bytes at `+0x3C0` in each VRAM slot. One byte is a 2x2 cell with four 2-bit palette selects (one per tile). NES instead uses one select for a whole 2x2. Shared universal **BG color 0 / backdrop**. Sprite OAM attr byte is NES-like. Mux logic combines pattern bits + palette -> DAC color index.
 
 ### 4. Sprite compositor (hardware z-index)
 
