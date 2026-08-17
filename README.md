@@ -4,7 +4,7 @@
 
 Retr01 is a family of purpose-built retro game hardware. Same creative rules, same feel, three form factors over time:
 
-| | |
+| Model | Description |
 |---|---|
 | **Retr01-A** | Arcade motherboard - the first build |
 | **Retr01-C** | Home console |
