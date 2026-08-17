@@ -11,7 +11,7 @@ Formerly GameNerd / Retr02 - those names are retired.
 ## 2. Core principles
 
 1. **Unified CPU:** W65C02S on every variant, planning clock **8 MHz** (~4.5x a stock NES 6502).
-2. **Interleaved VRAM only:** CPU and PPU share the **video SRAM** on alternating clock phases (CPU still gets continuous *logical* access without a VBlank lockout; bus ownership is half the phases). System RAM is CPU-exclusive.
+2. **Interleaved VRAM only:** The CPU and PPU share Video SRAM on alternating clock phases. Because the 6502 only transfers data on the high phase (Phase 2), the PPU safely fetches graphics on the low phase (Phase 1). This grants the CPU 100% continuous logical access to VRAM with zero VBLANK lockout delays. System RAM remains entirely CPU-exclusive.
 3. **Strict 2bpp:** 3 colors + transparency per draw unit; **8 palettes** (4 BG + 4 sprite); shared BG backdrop; **per-tile** BG palette select (finer than NES 2x2 attrs).
 4. **Binary-first data:** Fixed-size layouts; no dynamic allocation on target.
 5. **Software collision:** AABB (or equivalent) in game code - no hardware collision flags.
