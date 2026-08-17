@@ -72,6 +72,7 @@ sequenceDiagram
 - [ ] RLE encode/decode — **close B9** in docs
 - [ ] MAP builder: header, world blocks, 6-byte directory rows
 - [ ] CHR 2bpp read/write
+- [ ] `retr01_palette_load_v01()` — parse [`retr01_palette_v_01.txt`](../retr01_palette_v_01.txt)
 - [ ] `.r01proj` schema + load/save + validate
 - [ ] `cart_writer.c` with placeholder PRG
 - [ ] Unit tests (see [06_data_formats.md](06_data_formats.md))
@@ -154,6 +155,7 @@ Golden `.r01proj` fixtures in `retr01_world_studio/tests/fixtures/`.
 
 - Add `markdown_v_01/13_world_studio.md` (tool ↔ MAP/CHR contract)
 - Close **B9** with exact RLE bytes in OPEN_QUESTIONS
+- Palette locked: [`retr01_palette_v_01.txt`](../retr01_palette_v_01.txt) + [09_master_palette.md](09_master_palette.md)
 - Update [07_emulator_specification.md](../markdown_v_01/07_emulator_specification.md) toolchain section
 - Document `.retr01` container in [05_cart_assembly.md](05_cart_assembly.md) → spec
 

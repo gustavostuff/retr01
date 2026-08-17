@@ -17,7 +17,7 @@
 | Palettes | **8** (4 BG + 4 sprite), **shared BG color 0** |
 | BG attributes | **Per tile**, packed **240 bytes/NT** (1 byte = 2x2 cell, 2 bits/tile). Not NES shared 2x2 |
 | Sprite OAM attr | NES-like byte (palette / flip / priority) |
-| Master palette | Custom Retr01, **32 min / 64 likely**, RGB table TBD |
+| Master palette | **64-entry RGB table** — [`retr01_world_studio/retr01_palette_v_01.txt`](../retr01_world_studio/retr01_palette_v_01.txt). Studio doc: [09_master_palette.md](../retr01_world_studio/planning/09_master_palette.md) |
 | APU | NES-style: 2 pulse + triangle + noise + DMC |
 | CPU clock | **8.000 MHz** |
 | Dot clock / frame | **5.369318 MHz**, **341x262**, **~60.098 Hz** NMI |
@@ -34,7 +34,7 @@
 
 | # | Topic | Notes |
 |---|--------|------|
-| B1 | Exact master palette RGB table | 32 vs 64 entries + colors |
+| B1 | ~~Exact master palette RGB table~~ | **Resolved for v0.1:** 64 entries in [`retr01_world_studio/retr01_palette_v_01.txt`](../retr01_world_studio/retr01_palette_v_01.txt) |
 | B2 | Exact `$FExx` register bitfields | Block layout frozen. `$FE0x` must include `raster_y`, `beam_y`, `raster_hit`, `raster_irq_enable`, ack |
 | B3 | RGBS sync polarity / analog levels | Digital timing locked above |
 | B4 | Arcade IDC pinout | Parallel switches into `$FE60-$FE63`. Bitfields TBD |

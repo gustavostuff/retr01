@@ -18,6 +18,7 @@ The `.r01proj` file is JSON — the **single source of truth** the build pipelin
   "modified": "2026-08-17T00:00:00Z",
 
   "master_palette": { ... },
+  "master_palette_source": "retr01_palette_v_01",
   "world_mode": { ... },
   "worlds": [ ... ],
   "screens": [ ... ],
@@ -38,7 +39,8 @@ The `.r01proj` file is JSON — the **single source of truth** the build pipelin
 |-------|----------|-------------|
 | `format_version` | yes | Integer; bump on breaking schema changes |
 | `title` | yes | Display name; default cart output stem |
-| `master_palette` | yes | RGB master table + BG/sprite palette assignments |
+| `master_palette` | yes | RGB master table + BG/sprite palette assignments (default from [`retr01_palette_v_01.txt`](../retr01_palette_v_01.txt)) |
+| `master_palette_source` | no | Provenance tag, e.g. `retr01_palette_v_01` |
 | `world_mode` | yes | Pack id + axis overrides |
 | `worlds` | yes | 1–8 world definitions |
 | `screens` | yes | All nametable payloads (logical, may reference CHR by id) |
@@ -70,7 +72,8 @@ The `.r01proj` file is JSON — the **single source of truth** the build pipelin
 }
 ```
 
-- `entries`: 32–64 RGB triples (B1 final count TBD; v1 uses 32 from default asset)
+- `entries`: **64** RGB triples loaded from [`retr01_palette_v_01.txt`](../retr01_palette_v_01.txt) on new project (see [09_master_palette.md](09_master_palette.md))
+- Default `bg_palettes` / `sprite_palettes` index tables: defined in [09_master_palette.md](09_master_palette.md)
 - Index 0 in every BG palette must equal `backdrop_index` (shared backdrop)
 - Sprite index 0 = transparent at draw time
 

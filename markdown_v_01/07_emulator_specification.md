@@ -217,7 +217,7 @@ Sprites use `spr_bank` and page `1`. Mid-frame bank writes just mutate `ppu.bg_b
 For each pixel, combine two bitplanes into `0..3`. Same NES rule:
 - **Sprites:** index `0` = transparent (do not draw, show BG).
 - **BG:** index `0` = shared **backdrop** color (opaque). Indices 1-3 come from the BG palette selected by **that tile's** 2-bit field in the packed attr byte.  
-Map through palette regs + master palette (`uint32_t master_palette[32 or 64]` TBD) into `framebuffer[y * 256 + x]`.
+Map through palette regs + master palette (`uint32_t master_palette[64]` — see [`retr01_world_studio/retr01_palette_v_01.txt`](../retr01_world_studio/retr01_palette_v_01.txt)) into `framebuffer[y * 256 + x]`.
 
 PPU timing: advance `dot`/`scanline` on the **5.369318 MHz** domain (341x262). Run CPU ticks on the **8 MHz** domain. Host presents one framebuffer per VBlank (~60.1 Hz).
 

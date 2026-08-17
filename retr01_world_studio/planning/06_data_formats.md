@@ -139,10 +139,13 @@ Adapt PPUX sketch algorithm:
 
 ## Palette conversion
 
-Master palette → hardware format TBD (B1). v1:
+Canonical source: [`retr01_palette_v_01.txt`](../retr01_palette_v_01.txt) — 64 × `#RRGGBB`, tab-separated, 4×16 grid. Full index table and default 8-palette assignment: [09_master_palette.md](09_master_palette.md).
 
-- Store RGB in `.r01proj`
-- Export phase converts to emulator PPU palette entries via shared table from `imgs/retr01_palette_bank_0.png`
+v1:
+
+- New projects: `core/palette_io.c` parses v01 file → `master_palette.entries`
+- Store RGB in `.r01proj`; optional `master_palette_source` tag for provenance
+- Emulator and preview use the same 64-entry table (host expands to framebuffer RGB)
 
 ## `.r01proj` I/O
 

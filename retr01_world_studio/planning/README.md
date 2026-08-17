@@ -16,6 +16,7 @@ These docs sit beside the hardware specification in [`markdown_v_01/`](../markdo
 | [06_data_formats.md](06_data_formats.md) | Screen layout, MAP-ROM, RLE codec, CHR packing — shared `core/` library |
 | [07_build_pipeline.md](07_build_pipeline.md) | End-to-end build steps, cc65 integration, validation, phases |
 | [08_preview_and_testing.md](08_preview_and_testing.md) | Live preview, emulator embed, test ROMs, lint rules |
+| [09_master_palette.md](09_master_palette.md) | Canonical 64-color RGB ramp (`retr01_palette_v_01.txt`) |
 
 ## Quick reference
 
@@ -31,7 +32,8 @@ These docs sit beside the hardware specification in [`markdown_v_01/`](../markdo
 - Worlds, MAP directory, `load_screen`: [`markdown_v_01/04_worlds_and_screens.md`](../markdown_v_01/04_worlds_and_screens.md)
 - Memory map, VRAM slots, `$FE90` MAP port: [`markdown_v_01/08_memory_map.md`](../markdown_v_01/08_memory_map.md)
 - Emulator contract: [`markdown_v_01/07_emulator_specification.md`](../markdown_v_01/07_emulator_specification.md)
-- Open items (B9 RLE, B1 palette): [`markdown_v_01/OPEN_QUESTIONS.md`](../markdown_v_01/OPEN_QUESTIONS.md)
+- Open items (B9 RLE): [`markdown_v_01/OPEN_QUESTIONS.md`](../markdown_v_01/OPEN_QUESTIONS.md)
+- Master palette: [`retr01_palette_v_01.txt`](../retr01_palette_v_01.txt) — see [09_master_palette.md](09_master_palette.md)
 
 ## Implementation status
 

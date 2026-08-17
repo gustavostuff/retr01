@@ -74,7 +74,7 @@ These are two fetch paths. Scroll only affects which nametable byte is under the
   - bits 6-7: bottom-right tile
   Index: `attrs[(ty / 2) * 16 + (tx / 2)]`, then shift by `((ty & 1) * 2 + (tx & 1)) * 2`.
 - Sprite attributes: **NES-like OAM attr byte** (palette, flips, priority). Pattern color 0 = transparent. The priority bit puts the sprite behind opaque BG.
-- **Master palette:** custom Retr01 ramp (not stock NES colors). **32 min / 64 likely**, RGB table TBD.
+- **Master palette:** 64-entry custom Retr01 ramp — [`retr01_world_studio/retr01_palette_v_01.txt`](../retr01_world_studio/retr01_palette_v_01.txt) (see [planning/09_master_palette.md](../retr01_world_studio/planning/09_master_palette.md)).
 
 ## 6. Live VRAM vs cartridge maps
 
