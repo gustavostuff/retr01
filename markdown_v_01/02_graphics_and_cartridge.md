@@ -16,9 +16,12 @@ Canonical description of Retr01 tile graphics and cartridge layout.
 | Scanlines per frame | **262** (240 visible + 22 VBlank) |
 | Frame rate | **~60.098 Hz** (NMI metronome) |
 
-CPU and dot clocks are **independent**. The W65C02S runs at 8 MHz for game logic and interleaved VRAM phases. The video beam advances on the 5.369318 MHz dot clock (standard NTSC PPU timing, friendly to arcade RGBS / encoders).
+CPU and dot clocks are **independent**. The W65C02S runs at 8 MHz for game logic and interleaved VRAM phases. The video beam advances on the 5.369318 MHz dot clock.
+
+That dot clock **is** the CRT refresh if Retr01-A drives analog **RGBS** into a 15.7 kHz arcade/CGA monitor: 341 dots per line gives ~15.7 kHz horizontal, 262 lines gives **~60.1 Hz** vertical. NMI fires at that same rate. A modern HDMI TV is different. The panel has its own 60 Hz. A scaler in between resamples our RGBS. The PPU still runs 341x262 either way. Game code is paced by NMI, not by the TV.
 
 PPU VRAM fetches occur only on PPU-owned CPU phases (with line buffers / shift registers bridging the two domains as on real hardware). In other words, even though the PPU only accesses VRAM 50% of the time, the display never flickers. The hardware uses shift registers to cache the graphics data during the PPU's phase, continuously streaming pixels to the screen while the CPU executes game logic during its phase.
+
 
 See also [08_memory_map.md](08_memory_map.md) for the VRAM port and interleave rules.
 
@@ -81,12 +84,14 @@ These are two fetch paths. Scroll only affects which nametable byte is under the
 - **BG:** scroll picks a pixel in the live nametable field. That byte is a tile index **0-255** into the **active BG pattern set** (the BG half of the BG bank on cart).
 - **Sprites:** OAM (64 entries) holds tile indices into the **active sprite pattern set** (the sprite half of the sprite bank). OAM does not use scroll.
 - Max **16 sprites per scanline**. Extras are dropped.
-- Non-transparent sprite pixel wins over BG (compositor default).
+- Non-transparent sprite pixel wins over BG (compositor default). Sprite index 0 never wins, it is transparent.
 
 ## 5. Palettes and attributes
 
-- **8 palettes** total: **4 background + 4 sprite** (each 4 entries at 2bpp: index 0 + 3 colors).
-- **Shared backdrop / color 0** across BG palettes (NES rule), any master-palette index.
+- **8 palettes** total: **4 background + 4 sprite**. Each palette has 4 entries because the art is 2bpp (pattern bits 00, 01, 10, 11).
+- **Index 0 means two different things**, same as the NES:
+  - **Background:** index 0 is a real color, the **shared backdrop**. All 4 BG palettes use the same color 0. A "transparent" hole in a BG tile just shows that backdrop. Normal screens are opaque.
+  - **Sprites:** index 0 is **true transparency**. That sprite pixel is skipped. You see whatever BG (or backdrop) is behind it.
 - **BG attributes are per tile:** each of the 960 nametable tiles has its own 2-bit palette select (which of the 4 BG palettes). NES instead shares one select across a 2x2 tile group.
 - **Storage:** **240 bytes** per screen/slot. One byte covers a **2x2 cell of tiles** (16x15 cells on a 32x30 screen). Four 2-bit fields, one per tile:
   - bits 0-1: top-left tile

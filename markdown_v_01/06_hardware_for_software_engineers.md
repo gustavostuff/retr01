@@ -132,7 +132,13 @@ VRAM holds up to **four** 32x30 nametable slots (2x2 scroll field). Each nametab
 
 ### 3. Attributes and palettes (hardware CSS)
 
-2bpp patterns pick among 3 colors + transparency. **8 palettes** (4 BG + 4 sprite). **Per-tile BG attributes:** 240 bytes at `+0x3C0` in each VRAM slot. One byte is a 2x2 cell with four 2-bit palette selects (one per tile). NES instead uses one select for a whole 2x2. Shared universal **BG color 0 / backdrop**. Sprite OAM attr byte is NES-like. Mux logic combines pattern bits + palette -> DAC color index.
+2bpp patterns pick among 4 indices (00, 01, 10, 11). **8 palettes** (4 BG + 4 sprite). **Per-tile BG attributes:** 240 bytes at `+0x3C0` in each VRAM slot. One byte is a 2x2 cell with four 2-bit palette selects (one per tile). NES instead uses one select for a whole 2x2.
+
+**Color 0 is NES-like, two jobs:**
+- On **BG**, index 0 is the shared **backdrop** color (opaque playfield). All BG palettes share that one color 0.
+- On **sprites**, index 0 is **transparent**. The mux does not draw that sprite pixel.
+
+Sprite OAM attr byte is NES-like (which of the 4 sprite palettes, flips, priority). Mux logic combines pattern bits + palette -> DAC color index.
 
 ### 4. Sprite compositor (hardware z-index)
 
@@ -140,7 +146,12 @@ OAM holds 64 sprites (Y, tile, attr, X, NES-like grouping). During HBlank, hardw
 
 ### 5. Final multiplexer (pixel priority)
 
-For each pixel: if the sprite sample is transparent (typically index 0), output BG. Otherwise output sprite. Entire pipeline runs without the CPU. The CPU only updates nametables/OAM/banks through interleaved access and `$FExx`.
+For each pixel the PPU already has a BG sample and (maybe) a sprite sample:
+
+1. If the sprite pixel is index 0, it is transparent. Output the BG pixel.
+2. Otherwise output the sprite pixel.
+
+The 6502 does **not** plot pixels. Counters, nametable fetch, CHR from cart, attr unpack, sprite line buffer, this mux, and RGBS all run in hardware every dot. The CPU only *prepares* the next frame: nametables through the interleaved VRAM port, OAM via `$FE2x`, scroll/banks and other `$FExx` latches. NMI means "a frame finished," not "hurry, graphics are locked."
 
 ---
 
