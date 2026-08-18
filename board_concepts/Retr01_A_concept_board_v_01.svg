@@ -1,0 +1,206 @@
+<svg width="100%" height="100%" viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg" style="background-color: #0c2a46;">
+  <style>
+    .board { fill: none; stroke: #4ea8de; stroke-width: 1.5; rx: 4; ry: 4; }
+    .grid { stroke: #1a426b; stroke-width: 0.5; }
+    .grid-major { stroke: #235587; stroke-width: 0.8; }
+    .chip { fill: #0c2a46; stroke: #ffffff; stroke-width: 0.6; rx: 0.5; ry: 0.5; }
+    .pin { stroke: #5bc0eb; stroke-width: 1.2; stroke-dasharray: 0.8 1.54; }
+    .notch { fill: none; stroke: #ffffff; stroke-width: 0.6; }
+    .label { fill: #ffffff; font-family: monospace; font-size: 2.5px; font-weight: bold; }
+    .label-sm { fill: #5bc0eb; font-family: monospace; font-size: 1.8px; }
+    .zone-box { fill: none; stroke: #5bc0eb; stroke-width: 0.3; stroke-dasharray: 2 2; rx: 2; ry: 2; }
+    .zone-text { fill: #5bc0eb; font-family: sans-serif; font-size: 3px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+  </style>
+
+  <!-- Background Blueprint Grid -->
+  <pattern id="grid-small" width="2" height="2" patternUnits="userSpaceOnUse">
+    <path d="M 2 0 L 0 0 0 2" fill="none" class="grid"/>
+  </pattern>
+  <pattern id="grid-large" width="10" height="10" patternUnits="userSpaceOnUse">
+    <rect width="10" height="10" fill="url(#grid-small)"/>
+    <path d="M 10 0 L 0 0 0 10" fill="none" class="grid-major"/>
+  </pattern>
+  <rect width="100%" height="100%" fill="url(#grid-large)" />
+
+  <!-- PCB Outline -->
+  <rect x="2" y="2" width="256" height="216" class="board" />
+  <circle cx="8" cy="8" r="2" fill="none" stroke="#4ea8de" stroke-width="1"/>
+  <circle cx="252" cy="8" r="2" fill="none" stroke="#4ea8de" stroke-width="1"/>
+  <circle cx="8" cy="212" r="2" fill="none" stroke="#4ea8de" stroke-width="1"/>
+  <circle cx="252" cy="212" r="2" fill="none" stroke="#4ea8de" stroke-width="1"/>
+
+  <defs>
+    <g id="dip40">
+      <line x1="-0.5" y1="2" x2="-0.5" y2="50" class="pin" />
+      <line x1="15.7" y1="2" x2="15.7" y2="50" class="pin" />
+      <rect x="0" y="0" width="15.2" height="52" class="chip" />
+      <path d="M 5.6 0 A 2 2 0 0 0 9.6 0" class="notch" />
+    </g>
+    <g id="dip32W">
+      <line x1="-0.5" y1="2" x2="-0.5" y2="40" class="pin" />
+      <line x1="15.7" y1="2" x2="15.7" y2="40" class="pin" />
+      <rect x="0" y="0" width="15.2" height="42" class="chip" />
+      <path d="M 5.6 0 A 2 2 0 0 0 9.6 0" class="notch" />
+    </g>
+    <g id="dip28">
+      <line x1="-0.5" y1="2" x2="-0.5" y2="33" class="pin" />
+      <line x1="8.1" y1="2" x2="8.1" y2="33" class="pin" />
+      <rect x="0" y="0" width="7.6" height="34.8" class="chip" />
+      <path d="M 2.8 0 A 1 1 0 0 0 4.8 0" class="notch" />
+    </g>
+    <g id="dip24">
+      <line x1="-0.5" y1="2" x2="-0.5" y2="30" class="pin" />
+      <line x1="8.1" y1="2" x2="8.1" y2="30" class="pin" />
+      <rect x="0" y="0" width="7.6" height="32" class="chip" />
+      <path d="M 2.8 0 A 1 1 0 0 0 4.8 0" class="notch" />
+    </g>
+    <g id="dip20">
+      <line x1="-0.5" y1="2" x2="-0.5" y2="24" class="pin" />
+      <line x1="8.1" y1="2" x2="8.1" y2="24" class="pin" />
+      <rect x="0" y="0" width="7.6" height="26" class="chip" />
+      <path d="M 2.8 0 A 1 1 0 0 0 4.8 0" class="notch" />
+    </g>
+    <g id="dip16">
+      <line x1="-0.5" y1="2" x2="-0.5" y2="18" class="pin" />
+      <line x1="8.1" y1="2" x2="8.1" y2="18" class="pin" />
+      <rect x="0" y="0" width="7.6" height="19.5" class="chip" />
+      <path d="M 2.8 0 A 1 1 0 0 0 4.8 0" class="notch" />
+    </g>
+    <g id="dip14">
+      <line x1="-0.5" y1="2" x2="-0.5" y2="16" class="pin" />
+      <line x1="8.1" y1="2" x2="8.1" y2="16" class="pin" />
+      <rect x="0" y="0" width="7.6" height="17.5" class="chip" />
+      <path d="M 2.8 0 A 1 1 0 0 0 4.8 0" class="notch" />
+    </g>
+  </defs>
+
+  <!-- ===================================== -->
+  <!-- ZONE: PROCESSING & COPROCESSORS       -->
+  <!-- ===================================== -->
+  <rect x="35" y="15" width="60" height="95" class="zone-box"/>
+  <text x="37" y="20" class="zone-text">PROCESSING CORE</text>
+  
+  <!-- CPU -->
+  <use href="#dip40" x="42" y="25" />
+  <text x="49.6" y="51" class="label" transform="rotate(-90 49.6 51)">W65C02S CPU</text>
+  <text x="49.6" y="65" class="label-sm" transform="rotate(-90 49.6 65)">8.000 MHz</text>
+
+  <!-- Sprite/Input Coprocessor -->
+  <use href="#dip40" x="70" y="25" />
+  <text x="77.6" y="51" class="label" transform="rotate(-90 77.6 51)">ATMEGA1284P</text>
+  <text x="77.6" y="65" class="label-sm" transform="rotate(-90 77.6 65)">SPRITE / I/O MCU</text>
+
+  <!-- ===================================== -->
+  <!-- ZONE: MEMORY & STORAGE                -->
+  <!-- ===================================== -->
+  <rect x="105" y="15" width="145" height="65" class="zone-box"/>
+  <text x="107" y="20" class="zone-text">SYSTEM MEMORY & OAM</text>
+
+  <!-- SRAM / VRAM / OAM / EEPROM -->
+  <use href="#dip28" x="115" y="30" />
+  <text x="118.8" y="47" class="label" transform="rotate(-90 118.8 47)">32KB SYS RAM</text>
+  
+  <use href="#dip28" x="135" y="30" />
+  <text x="138.8" y="47" class="label" transform="rotate(-90 138.8 47)">32KB VRAM</text>
+
+  <use href="#dip28" x="155" y="30" />
+  <text x="158.8" y="47" class="label" transform="rotate(-90 158.8 47)">2KB OAM/BUFFER</text>
+
+  <use href="#dip28" x="175" y="30" />
+  <text x="178.8" y="47" class="label" transform="rotate(-90 178.8 47)">EEPROM</text>
+
+  <!-- Audio Coprocessor (Moved near memory for layout) -->
+  <use href="#dip28" x="195" y="30" />
+  <text x="198.8" y="47" class="label" transform="rotate(-90 198.8 47)">ATMEGA328P</text>
+  <text x="201.8" y="47" class="label-sm" transform="rotate(-90 201.8 47)">AUDIO APU</text>
+
+  <!-- Cartridge ROM Socket -->
+  <use href="#dip32W" x="225" y="30" />
+  <text x="232.6" y="51" class="label" transform="rotate(-90 232.6 51)">FLASH CART</text>
+
+  <!-- ===================================== -->
+  <!-- ZONE: BUS, DECODING & VIDEO PIPELINE  -->
+  <!-- ===================================== -->
+  <rect x="105" y="90" width="145" height="115" class="zone-box"/>
+  <text x="107" y="95" class="zone-text">VIDEO LOGIC & BUS ROUTING</text>
+
+  <!-- Address Decoders -->
+  <use href="#dip24" x="115" y="105" />
+  <use href="#dip24" x="130" y="105" />
+  <use href="#dip24" x="145" y="105" />
+  <text x="115" y="142" class="label-sm">GAL22V10 (x3)</text>
+
+  <!-- Transceivers -->
+  <use href="#dip20" x="170" y="105" />
+  <use href="#dip20" x="185" y="105" />
+  <use href="#dip20" x="200" y="105" />
+  <text x="170" y="136" class="label-sm">74HC245 (x3)</text>
+
+  <!-- Latches -->
+  <use href="#dip20" x="115" y="150" />
+  <use href="#dip20" x="130" y="150" />
+  <use href="#dip20" x="145" y="150" />
+  <use href="#dip20" x="160" y="150" />
+  <use href="#dip20" x="175" y="150" />
+  <use href="#dip20" x="190" y="150" />
+  <use href="#dip20" x="205" y="150" />
+  <text x="115" y="181" class="label-sm">74HC573 LATCHES (x7)</text>
+
+  <!-- Counters / Muxes -->
+  <use href="#dip16" x="225" y="105" />
+  <use href="#dip16" x="225" y="130" />
+  <use href="#dip16" x="225" y="155" />
+  <use href="#dip16" x="225" y="180" />
+  <text x="215" y="205" class="label-sm">74HC161 (x4)</text>
+
+  <!-- ===================================== -->
+  <!-- ZONE: GLUE LOGIC (OPTIMIZED)          -->
+  <!-- ===================================== -->
+  <rect x="15" y="120" width="80" height="85" class="zone-box"/>
+  <text x="17" y="125" class="zone-text">GLUE LOGIC (~20 CHIPS)</text>
+  
+  <!-- 20 Chips Organized in Rows -->
+  <use href="#dip14" x="20" y="135" />
+  <use href="#dip14" x="32" y="135" />
+  <use href="#dip14" x="44" y="135" />
+  <use href="#dip14" x="56" y="135" />
+  <use href="#dip14" x="68" y="135" />
+  <use href="#dip14" x="80" y="135" />
+
+  <use href="#dip14" x="20" y="158" />
+  <use href="#dip14" x="32" y="158" />
+  <use href="#dip14" x="44" y="158" />
+  <use href="#dip14" x="56" y="158" />
+  <use href="#dip14" x="68" y="158" />
+  <use href="#dip14" x="80" y="158" />
+
+  <use href="#dip14" x="20" y="181" />
+  <use href="#dip14" x="32" y="181" />
+  <use href="#dip14" x="44" y="181" />
+  <use href="#dip14" x="56" y="181" />
+  <use href="#dip14" x="68" y="181" />
+  <use href="#dip14" x="80" y="181" />
+
+  <use href="#dip16" x="80" y="90" />
+  <use href="#dip16" x="80" y="112" />
+  
+  <!-- ===================================== -->
+  <!-- I/O & POWER                           -->
+  <!-- ===================================== -->
+  <!-- Power -->
+  <rect x="15" y="20" width="10" height="15" fill="none" stroke="#5bc0eb" stroke-width="1" />
+  <text x="15" y="40" class="label-sm">5V DC</text>
+  
+  <rect x="15" y="45" width="10" height="8" fill="none" stroke="#ffffff" stroke-width="0.8" />
+  <text x="15" y="58" class="label-sm">REG</text>
+
+  <!-- Clocks -->
+  <rect x="15" y="70" width="12" height="12" fill="none" stroke="#ffffff" stroke-width="0.8" />
+  <rect x="15" y="85" width="12" height="12" fill="none" stroke="#ffffff" stroke-width="0.8" />
+  <text x="15" y="102" class="label-sm">CLOCKS</text>
+  
+  <!-- Controller Header (Direct to ATmega1284P) -->
+  <rect x="242" y="30" width="6" height="50" fill="none" stroke="#5bc0eb" stroke-width="1"/>
+  <text x="250" y="55" class="label" transform="rotate(-90 250 55)">40-PIN IO</text>
+
+</svg>

@@ -20,6 +20,8 @@ Canonical rewrite of the scattered Gemini drafts under `gemini_docs/`. This fold
 | [10_hardware_simulators.md](10_hardware_simulators.md) | Gate-level digital simulation options |
 | [11_pitch_draft.md](11_pitch_draft.md) | Marketing-oriented pitch |
 | [12_part_prices_and_cost.md](12_part_prices_and_cost.md) | Retr01-A motherboard + cart BOM prices |
+| [13_pcb_schematic_brief.md](13_pcb_schematic_brief.md) | Prompt to paste into a schematic-generation AI (Retr01-A proto) |
+| [14_reduced_number_of_chips.md](14_reduced_number_of_chips.md) | Sprite/input AVR coprocessor, 8-bit pads, motherboard IC count |
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | What is still undecided |
 
 ## Locked in this revision
