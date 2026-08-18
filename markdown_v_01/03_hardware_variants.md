@@ -1,6 +1,6 @@
 # Retr01 Hardware Variants
 
-One architecture (CPU, interleaved 32 KB VRAM, 32 KB system RAM, CHR from cart, 2bpp, shared memory map). Three shells. Shared rules: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md), [08_memory_map.md](08_memory_map.md).
+One architecture (CPU, interleaved 32 KB VRAM, 32 KB system RAM, sprite line-buffer SRAM, 1284 sprite/input coprocessor, CHR from cart, 2bpp, shared memory map). Three shells. Shared rules: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md), [08_memory_map.md](08_memory_map.md). Coprocessor / chip count: [14_reduced_number_of_chips.md](14_reduced_number_of_chips.md).
 
 | Variant | Role | Packaging | Status |
 |---------|------|-----------|--------|
@@ -25,19 +25,21 @@ Foundation of the family: cabinet-ready board, first silicon target.
 | Block | Specification |
 |-------|----------------|
 | CPU | W65C02S (DIP-40) |
-| Glue | **ATF22V10** array (DIP-24). Lattice GAL22V10 is EOL. Same 22V10 idea |
+| Glue | **3× ATF22V10CQZ-20PU** (DIP-24). Lattice GAL22V10 and ATF1508/1504 are EOL. Overflow → 4th 22V10, not a CPLD |
 | System RAM | **32 KB**, CPU-only |
 | VRAM | **32 KB**, interleaved CPU<->PPU, CHR from cart |
+| Line buffer | Third **32 KB** SRAM (512 B used). OAM is in the 1284 |
+| Sprite + input | **ATmega1284P-PU** (DIP-40) |
 | Mux / bus | **74HC157** / **74HC245**, plus **74HC573** latches and **74HC161** counters. GALs eat random gate chips only. Do not GAL-away wide buses |
 | Board NVRAM | Parallel EEPROM (e.g. AT28C64B) |
 | Cart | ~2 MB parallel flash (PRG + CHR + MAP) |
-| Audio | ATmega APU, NES-style channels |
+| Audio | **ATmega328P-PU**, NES-style channels. Do not merge with the 1284 |
 
 ### Cabinet I/O
 
 - 40-pin IDC header, **parallel switches** (no MCU in the stick)
-- ~24 pins player inputs (2 sticks, up to 8 buttons each). Rest are power/ground/coin/start/reset
-- Pinout TBD. CPU sees **four bytes** under `$FE60-$FE63` (see [08_memory_map.md](08_memory_map.md))
+- Two players: UDLR + A + B + Coin + Start each. Rest of the header is power/ground/reset/speaker/optional CSYNC
+- Pinout TBD. CPU sees **two bytes**: `$FE60` = P1, `$FE61` = P2 (see [08_memory_map.md](08_memory_map.md))
 
 ### Video & audio
 
@@ -71,9 +73,9 @@ Internal 256x240 2bpp (same PPU as A). Analog pads: **RGBS**, **S-Video**, and *
 
 ### Controllers
 
-**Pinned:** 3-wire serial pads (N64-style idea), one small chip in each controller to shift bits. Goal is a tough, thin cable, not USB and not a first-pass DB-9.
+**Pinned:** 3-wire serial pads (clock / data / latch or equivalent), MCU **inside each controller** serializes 8 bits. Goal is a tough, thin cable, not USB and not a first-pass DB-9.
 
-Software still reads `$FE60-$FE63` (same four bytes as Retr01-A). Only the board-side shifter changes. Protocol and connector shell TBD.
+Software still reads `$FE60` / `$FE61` (same two bytes as Retr01-A). The board 1284 reconstructs those bytes. Bit protocol and connector shell TBD (`B5`).
 
 ### Power
 
@@ -88,7 +90,7 @@ Portable SMD edition with architectural parity (same map, VRAM model, CHR-from-c
 
 ### Packaging
 
-Dense CPU package, SMD SRAM/logic, 4-6 layer PCB. Decode may move from ATF22V10 to a denser CPLD, with the **same** CPU map.
+Dense CPU package, SMD SRAM/logic, 4-6 layer PCB. Decode may move from ATF22V10 to a denser **in-production** CPLD, with the **same** CPU map. Do not plan H around ATF1508/1504 (EOL).
 
 ### Power
 
@@ -96,4 +98,4 @@ Static-core clock halt, Li-Po + USB-C PMIC.
 
 ### Display & controls
 
-Raw LCD/OLED, nearest-neighbor from 256x240. Analog out is **RGBS pads only** (no S-Video or composite on H). Thin platform layer for buttons, sleep, brightness.
+Raw LCD/OLED, nearest-neighbor from 256x240. Analog out is **RGBS pads only** (no S-Video or composite on H). Buttons still present as `$FE60` / `$FE61` (same 8-bit layout). Thin platform layer for sleep and brightness.

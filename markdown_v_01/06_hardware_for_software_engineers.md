@@ -1,6 +1,6 @@
 # Hardware for Software Engineers: Retr01 Architecture
 
-A software-engineer translation of the discrete logic on **Retr01-A**. Concepts match the locked architecture in this folder (two 32 KB SRAMs, interleaved **VRAM only**, CHR from cartridge, `$FExx` I/O page). Older Gemini drafts said "Retro2-A" / NES-copied addresses. Those names are retired here.
+A software-engineer translation of the discrete logic on **Retr01-A**. Concepts match the locked architecture in this folder (three 32 KB SRAMs, interleaved **VRAM only**, sprite OAM in a **1284**, CHR from cartridge, `$FExx` I/O page). Older Gemini drafts said "Retro2-A" / NES-copied addresses. Those names are retired here.
 
 ---
 
@@ -64,12 +64,13 @@ Retr01 uses **AS6C62256-class 32 KB** SRAMs:
 | D0-D7 | Byte value |
 | WE | The `=` (write) vs read |
 
-There are **two** chips:
+There are **three** chips (same PN):
 
 | Chip | Role |
 |------|------|
 | System RAM | CPU-only engine state (`$0000-$7FFF`) |
 | VRAM | Live nametables / attrs / scratch, **interleaved** with the PPU |
+| Line buffer | Sprite ping-pong (512 bytes used). Beam reads with X. OAM is **not** here — it is RAM inside the 1284 |
 
 ### 2. Bus contention (hardware race)
 
@@ -108,7 +109,7 @@ A **74HC573** (octal latch) holds a byte after you stop writing, for example scr
 
 ### 2. Memory-mapped I/O (hardware API)
 
-The 6502 has no USB API, only load/store. Retr01 maps devices into **`$FExx`**. Example: store scroll via a PPU control register in `$FE0x`. The GAL enables a latch instead of system RAM. Same pattern for APU (`$FE4x-$FE5x`), banks (`$FE3x`), controllers (`$FE6x`).
+The 6502 has no USB API, only load/store. Retr01 maps devices into **`$FExx`**. Example: store scroll via a PPU control register in `$FE0x`. The GAL enables a latch instead of system RAM. Same pattern for APU (`$FE4x-$FE5x`), banks (`$FE3x`), pads (`$FE60`/`$FE61`), OAM port (`$FE20`/`$FE21`).
 
 ### 3. Binary counters (hardware `for`)
 
@@ -142,7 +143,7 @@ Sprite OAM attr byte is NES-like (which of the 4 sprite palettes, flips, priorit
 
 ### 4. Sprite compositor (hardware z-index)
 
-OAM holds 64 sprites (Y, tile, attr, X, NES-like grouping). During HBlank, hardware scans Y values, fills a line buffer for at most **16** sprites on the next scanline, fetches rows from the **sprite** CHR page on cart.
+OAM holds 64 sprites (Y, tile, attr, X, NES-like grouping) **inside the ATmega1284P**. The 6502 uploads with a store loop to `$FE21` (auto-inc). There is **no** hardware DMA. During the current scanline the 1284 evaluates the **next** line (Y match, cap **16**), fetches sprite CHR from cart, and writes the other ping-pong bank of the line-buffer SRAM. The beam indexes that buffer with X. Same one-line delay as the old discrete HBlank eval — not an extra frame.
 
 ### 5. Final multiplexer (pixel priority)
 
@@ -154,7 +155,7 @@ For each pixel the PPU already has a BG sample and (maybe) a sprite sample:
 
 Pattern color 0 is not OAM sprite #0. OAM entry 0 is a normal sprite. There is **no** NES sprite-0 hit flag. Raster splits use `raster_y` + IRQ ([02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8).
 
-The 6502 does **not** plot pixels. Counters, nametable fetch, CHR from cart, attr unpack, sprite line buffer, this mux, and RGBS all run in hardware every dot. The CPU prepares nametables through the interleaved VRAM port, OAM via `$FE2x`, and `$FExx` latches. It may also write those latches **mid-frame** (bank, scroll) from a raster IRQ. NMI means "a frame finished." IRQ (optional) means "the beam hit `raster_y`."
+The 6502 does **not** plot pixels. Counters, nametable fetch, CHR from cart, attr unpack, the 1284 + line buffer, compositor mux, and RGBS all run every dot. The CPU prepares nametables through the interleaved VRAM port, OAM via `$FE20`/`$FE21`, and `$FExx` latches. It may also write those latches **mid-frame** (bank, scroll) from a raster IRQ. NMI means "a frame finished." IRQ (optional) means "the beam hit `raster_y`."
 
 ---
 
@@ -168,7 +169,7 @@ Mid-frame bank and scroll tricks do **not** use NMI and do **not** use sprite-0.
 
 ### 2. ATmega APU (audio microservice)
 
-Waveform math would eat the 6502. An **ATmega** runs its own loop and timers, synthesizing **NES-style** channels: 2 pulse + triangle + noise + DMC. The 6502 writes command/status bytes in `$FE40-$FE5F` (the sound contract, bitfields TBD) and continues physics/AABB. The APU is a coprocessor, not extra 6502 work.
+Waveform math would eat the 6502. A separate **ATmega328P** runs its own loop and timers, synthesizing **NES-style** channels: 2 pulse + triangle + noise + DMC. Do not merge this with the **1284** (sprites + pads). The 6502 writes command/status bytes in `$FE40-$FE5F` (the sound contract, bitfields TBD) and continues physics/AABB.
 
 ### 3. Main loop shape
 
@@ -190,11 +191,11 @@ void main(void) {
             continue;
         frame_ready = false;
 
-        uint8_t p1 = read_controllers();   /* $FE6x */
+        uint8_t p1 = read_controllers();   /* $FE60 */
         calculate_aabb_collisions();
         update_player_state(p1);
 
-        update_oam();                      /* via $FE2x / DMA */
+        update_oam();                      /* store loop to $FE21, no DMA */
         update_nametable_seams();          /* VRAM port $FE1x, interleaved */
 
         if (player_jumped)
@@ -203,13 +204,14 @@ void main(void) {
 }
 ```
 
-Collision stays in software. The electrical timing stays under the GAL, muxes, and ATmega. The engine stays readable C (or later, whatever compiles to 6502).
+Collision stays in software. The electrical timing stays under the GAL, muxes, 1284 (sprites + pads), and 328P (APU). The engine stays readable C (or later, whatever compiles to 6502).
 
 ---
 
 ## See also
 
 - [08_memory_map.md](08_memory_map.md): addresses to memorize
+- [14_reduced_number_of_chips.md](14_reduced_number_of_chips.md): 1284 coprocessor, pads, 53-chip v0
 - [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md): banks / patterns / palettes
 - [04_worlds_and_screens.md](04_worlds_and_screens.md): worlds / screens / MAP atlas
 - [07_emulator_specification.md](07_emulator_specification.md): what the C emulator must enforce

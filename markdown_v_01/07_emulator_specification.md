@@ -41,6 +41,9 @@ Hardware chips map cleanly to fixed buffers. There is no `malloc` in the hot pat
 uint8_t system_ram[0x8000];   /* $0000-$7FFF full 32 KB */
 uint8_t vram[0x8000];         /* 32 KB video SRAM */
 uint8_t io_regs[0x100];       /* $FE00-$FEFF shadow / decode aids */
+/* Line buffer is 512 used bytes of a third SRAM. Emulator can just keep
+ * a 256-wide sprite color/priority buffer per scanline — no need to
+ * model the unused 32 KB. */
 
 /* Cartridge (sizes = planning ceilings. Load what the image provides) */
 uint8_t *prg;   size_t prg_size;   /* <= 512 KB */
@@ -52,6 +55,8 @@ uint8_t *map;   size_t map_size;   /* compressed screens */
 |----------|-------------------------|
 | AS6C62256 system | `system_ram[]` |
 | AS6C62256 VRAM | `vram[]` |
+| Line-buffer SRAM | per-scanline sprite color/priority buffer (next-line) |
+| 1284 OAM | `ppu.oam[256]` (guest writes `$FE20`/`$FE21`) |
 | GAL decode | `if`/`switch` in `bus` (not a separate array) |
 | Cart flash regions | `prg[]` / `chr[]` / `map[]` |
 | Latches (scroll, banks) | fields in a `PpuState` / `MapperState` struct, updated when `io_regs` written |
@@ -223,16 +228,18 @@ Map through palette regs + master palette (`uint32_t master_palette[64]` — see
 
 PPU timing: advance `dot`/`scanline` on the **5.369318 MHz** domain (341x262). Run CPU ticks on the **8 MHz** domain. Host presents one framebuffer per VBlank (~60.1 Hz).
 
-### 6.4 Sprite evaluation (scan -> secondary buffer)
+### 6.4 Sprite evaluation (next-line, coprocessor-equivalent)
 
-During HBlank (or the dots reserved for eval):
+Hardware evaluates for the **next** scanline while the current line is drawn (1284 + ping-pong line buffer). The emulator should match that observable delay: line *N* uses the buffer built while drawing line *N−1*. Do not add an extra frame of latency.
+
+During eval for scanline `y+1`:
 
 1. Clear `secondary_oam` / `sprites_on_line = 0`.
 2. Walk primary `oam[0..255]` in steps of 4 (Y at `oam[i]`).
-3. If sprite Y hits this scanline and `sprites_on_line < 16`, copy the 4 bytes into secondary storage and increment.
+3. If sprite Y hits scanline `y+1` and `sprites_on_line < 16`, copy the 4 bytes into secondary storage and increment.
 4. If more would qualify, **drop** them (do not draw). That matches hardware accuracy.
 
-During the visible line, for each x, scan the <=16 active sprites and pick the front-most non-transparent pixel, honoring the OAM **priority** bit (behind opaque BG). A small `uint8_t line_spr_idx[256]` / color buffer is a fine software stand-in for hardware shift registers.
+During the visible line, for each x, scan the <=16 active sprites and pick the front-most non-transparent pixel, honoring the OAM **priority** bit (behind opaque BG). A small `uint8_t line_spr_idx[256]` / color buffer is a fine software stand-in for the line-buffer SRAM. Do not model 16 discrete shifter chips.
 
 ### 6.5 Framebuffer
 
@@ -240,18 +247,24 @@ During the visible line, for each x, scan the <=16 active sprites and pick the f
 
 ---
 
-## 7. OAM DMA
+## 7. OAM upload (no DMA)
 
-When guest writes the DMA trigger in `$FE2x`:
+Guest copies 256 bytes with a store loop. Typical:
 
 ```c
-uint16_t src = (uint16_t)page << 8; /* page in system RAM */
-for (int i = 0; i < 256; i++)
-    e->ppu.oam[i] = bus_read(e, src + i);
-/* Advance CPU cycles by the real DMA cost so timing stays honest */
+/* Guest: STA $FE20 once, then 256x STA $FE21 (hardware auto-inc). */
+void io_write_oam(Emu *e, uint8_t offset, uint8_t data) {
+    if (offset == 0x20)
+        e->ppu.oam_addr = data;
+    else if (offset == 0x21) {
+        e->ppu.oam[e->ppu.oam_addr] = data;
+        e->ppu.oam_addr++; /* wraps naturally as uint8_t */
+    }
+    /* $FE22: ignore. There is no DMA trigger. */
+}
 ```
 
-DMA reads system RAM (always legal). It must still burn cycles so games cannot pretend DMA is free.
+Do **not** steal ~512 CPU cycles on a page write. Cost is whatever the 6502 loop actually takes.
 
 ---
 
@@ -298,7 +311,7 @@ typedef struct {
 
 ## 10. Input & board I/O
 
-Host keyboard/joystick maps into **four bytes** `$FE60-$FE63` (P1 stick+btns, P1 extra, P2, P2 extra). Retr01-A: latch once per frame from parallel bits. Retr01-C later: clock a 3-wire pad into the same regs. EEPROM (`$FE7x`) can be a small `uint8_t eeprom[size]` file-backed array.
+Host keyboard/joystick maps into **two bytes** `$FE60` / `$FE61` (P1, P2). Bit layout: 0 R, 1 L, 2 D, 3 U, 4 A, 5 B, 6 Select/Coin, 7 Start. **1 = pressed.** Retr01-A: latch from parallel bits. Retr01-C: same two bytes after the 3-wire pad is deserialized. EEPROM (`$FE7x`) can be a small `uint8_t eeprom[size]` file-backed array.
 
 ---
 
@@ -328,7 +341,7 @@ For debugging: run a fixed number of ticks, or break when `scanline == Y && dot 
 2. I/O page writes that only set struct fields (scroll, banks).
 3. VRAM port + phase checks (write nametable, read back).
 4. BG renderer -> framebuffer (no sprites).
-5. OAM + 16-sprite cap.
+5. OAM via `$FE20`/`$FE21` + 16-sprite cap (next-line buffer).
 6. NMI metronome + simple guest "wait for frame" loop.
 7. APU pulse tone.
 8. Mapper / multi-bank CHR / four NT scroll.
@@ -356,7 +369,7 @@ For debugging: run a fixed number of ticks, or break when `scanline == Y && dot 
 | Counter (beam) | `int scanline`, `int dot` |
 | GAL | `bus_read` / `bus_write` branching |
 | Mux / phase | `cpu.phase` gate around VRAM |
-| OAM | `uint8_t oam[256]` |
+| OAM | `uint8_t oam[256]` via `$FE20`/`$FE21` loop |
 | Line sprite limit | secondary array capped at 16 |
 | CHR-ROM | `chr[]` indexed by world/bank/tile/row |
 | Frame | `framebuffer[256*240]` |

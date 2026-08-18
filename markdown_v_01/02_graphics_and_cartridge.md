@@ -89,7 +89,7 @@ These are two fetch paths. Scroll only affects which nametable byte is under the
 | Streaming / decompress scratch | ~4 KB |
 | Reserved / future | remainder of 32 KB |
 
-OAM lives in dedicated registers / `$FE2x`, not in the VRAM chip.
+OAM lives in the **ATmega1284P** (internal RAM), reached via `$FE20`/`$FE21`. It is not in the VRAM chip. Visible sprite pixels come from a **line-buffer SRAM** (third AS6C62256, ping-pong). Coprocessor: [14_reduced_number_of_chips.md](14_reduced_number_of_chips.md).
 
 ### Scrolling model
 

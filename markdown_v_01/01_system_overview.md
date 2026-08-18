@@ -23,13 +23,15 @@ Formerly GameNerd / Retr02. Those names are retired.
 |------|------|
 | Resolution | 256x240 (32x30 x 8x8 tiles) |
 | Color | 2bpp, 8 palettes, **per-tile** BG attrs (240 bytes/screen), **64-entry** master palette ([`retr01_palette_v_01.txt`](../retr01_world_studio/retr01_palette_v_01.txt)) |
-| Sprites | 64 OAM, **16 / scanline** max |
+| Sprites | 64 OAM in **1284**, **16 / scanline** max, next-line line buffer |
 | Worlds / screens | **8 worlds**, sparse grid up to **64 x 64**, **64 screens max** each |
 | Banks / world | **4** (each 512 patterns: 256 BG + 256 sprites) |
 | System RAM | **32 KB** CPU-only (`$0000-$7FFF`) |
 | VRAM | **32 KB** interleaved, 4 x 2 KB nametable slots |
+| Line buffer | Third **32 KB** SRAM (512 bytes used) |
 | Cart | ~**2 MB** flash (PRG + CHR + MAP) |
-| Audio | ATmega, NES-style (2x pulse, triangle, noise, DMC) |
+| Input | **1 byte / player** (`$FE60`, `$FE61`) |
+| Audio | ATmega328P, NES-style (2x pulse, triangle, noise, DMC) |
 | CPU clock | **8.000 MHz** |
 | Dot / frame | **5.369318 MHz**, 341x262, ~60.1 Hz |
 
@@ -39,9 +41,9 @@ Map: [08_memory_map.md](08_memory_map.md).
 
 ## 4. Near-term software focus
 
-**Primary deliverable:** a hardware-faithful **low-level emulator written in C**.
+**Primary deliverable:** lock the architecture docs, then rewrite the **low-level C emulator** to match. Do not treat the current emu tree as source of truth until that rewrite.
 
-Asset editors and 6502 game toolchains are **out of scope for now**. The emulator can ingest hand-built or script-generated ROM images for bring-up.
+Asset editors and 6502 game toolchains stay **out of scope** until the map and schematic settle.
 
 ## 5. On-board memory (locked)
 
@@ -49,5 +51,6 @@ Asset editors and 6502 game toolchains are **out of scope for now**. The emulato
 |------|------|------|
 | System SRAM | 32 KB | Engine state, full chip at `$0000-$7FFF` |
 | Video SRAM | 32 KB | Live nametables (up to 4), attrs, scratch, CPU<->PPU interleaved |
+| Line-buffer SRAM | 32 KB chip, 512 B used | Sprite ping-pong (not OAM). OAM is in the 1284 |
 | Cart flash | ~2 MB | PRG + CHR + MAP |
-| Board EEPROM | small | High scores / operator settings (Retr01-A) |
+| Board EEPROM | 8 KB | High scores / operator settings (Retr01-A) |

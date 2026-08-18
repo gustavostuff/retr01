@@ -2,7 +2,7 @@
 
 Motherboard IC plan after offloading **sprites and player input** to a dedicated AVR. Through-hole only. Planning total is the table sum at the bottom (~**53** ICs vs the old ~63 discrete-sprite estimate).
 
-This file is the coprocessor / input / chip-count source of truth until `03` / `08` / `12` are revised to match.
+This file is the coprocessor / input / chip-count source of truth. CPU map: [08_memory_map.md](08_memory_map.md). Variants: [03_hardware_variants.md](03_hardware_variants.md). Cost: [12_part_prices_and_cost.md](12_part_prices_and_cost.md). Schematic prompt: [15_schematic_prompt_coprocessor.md](15_schematic_prompt_coprocessor.md).
 
 ---
 

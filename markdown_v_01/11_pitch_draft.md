@@ -12,12 +12,12 @@ Discrete-logic 8-bit arcade hardware for developers and cabinet builders. First 
 
 ### Interleaved VRAM
 
-32 KB video SRAM shared on clock phases between CPU and PPU, so there is no VBlank-only graphics prison. Separate 32 KB system RAM for game state. CHR streams from the cartridge.
+32 KB video SRAM shared on clock phases between CPU and PPU, so there is no VBlank-only graphics prison. Separate 32 KB system RAM for game state. Sprite OAM in an ATmega1284P; a third SRAM is the scanline line buffer. CHR streams from the cartridge.
 
 ### Cabinet (Retr01-A)
 
-- 40-pin IDC controls, analog RGBS / S-Video / composite pads (external analog-to-HDMI converter if you want a TV), EEPROM scores/settings, through-hole bring-up.
+- 40-pin IDC, **one byte per player** (`$FE60` / `$FE61`: UDLR, A, B, Coin, Start), analog RGBS / S-Video / composite pads (external analog-to-HDMI converter if you want a TV), EEPROM scores/settings, through-hole bring-up.
 
 ### Prove it in software first
 
-A hardware-faithful **low-level C emulator** enforces the memory map, interleave, and sprite rules before flash.
+A hardware-faithful **low-level C emulator** (to be rewritten to this map) enforces the memory map, interleave, and sprite rules before flash.

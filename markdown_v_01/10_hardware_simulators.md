@@ -16,7 +16,8 @@ Prefer a **digital** simulator (not SPICE) for whole-board logic.
 | Block | Approach |
 |-------|----------|
 | W65C02S | Drop-in cycle-accurate CPU component |
-| 32 KB system RAM + 32 KB VRAM | Two SRAM blocks, mux VRAM by clock phase |
+| 3× 32 KB SRAM | System + interleaved VRAM + line-buffer (512 B used) |
+| ATmega1284P | Firmware block: OAM eval + pad latch (or treat as opaque next-line sprite buffer) |
 | GAL | LUT / truth-table or explicit AND/OR subcircuit |
 | CHR | Model as ROM the PPU reads, not in VRAM |
 | Video | Tap digital X/Y + color -> matrix widget (256x240) |

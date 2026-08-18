@@ -40,7 +40,7 @@ Grouped in **16-byte blocks** (high nibble of the low byte = device family):
 |-------|-------|--------|
 | `$FE00-$FE0F` | `0` | **PPU control:** mode, status, scroll X/Y, nametable arrangement, NMI, **raster Y / IRQ** |
 | `$FE10-$FE1F` | `1` | **VRAM port:** address latch + data R/W into 32 KB VRAM (**interleaved**) |
-| `$FE20-$FE2F` | `2` | **OAM:** address, data, DMA from system RAM (dedicated, not stored in VRAM chip) |
+| `$FE20-$FE2F` | `2` | **OAM port:** address + data into the **1284** (no hardware DMA; `$FE22` unused) |
 | `$FE30-$FE3F` | `3` | **Bank / world:** BG bank, sprite bank, world select |
 | `$FE40-$FE5F` | `4-5` | **APU:** NES-style channels |
 | `$FE60-$FE6F` | `6` | **Cabinet / controllers** |
@@ -70,6 +70,18 @@ NMI remains VBlank only. Exact bytes: `B2` in [OPEN_QUESTIONS.md](OPEN_QUESTIONS
 
 Write scroll and `$FE30` during **HBlank** for a clean split (next fetch, up to 8 px delay if you write mid-tile).
 
+### OAM (`$FE20-$FE2F`)
+
+OAM (64 × 4 bytes) lives in the **ATmega1284P**, not in VRAM and not in a dedicated SRAM. The 6502 writes a store loop; there is **no** hardware DMA / `RDY` steal.
+
+| Addr | Role |
+|------|------|
+| `$FE20` | OAM address (auto-inc after data write) |
+| `$FE21` | OAM data |
+| `$FE22` | Unused (NC). Do not implement a DMA trigger |
+
+Default entry order: Y, tile, attr, X ([OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) B6). Coprocessor + line buffer: [14_reduced_number_of_chips.md](14_reduced_number_of_chips.md).
+
 ### APU (`$FE40-$FE5F`), NES-style
 
 Sound *contract* is NES-like. The 6502 only writes registers. It does not synthesize samples.
@@ -97,16 +109,28 @@ Writable **mid-frame**. The next CHR fetch uses the new value. Shift registers m
 
 ### Controllers / cabinet (`$FE60-$FE6F`)
 
-CPU view is **four bytes**, latched (Retr01-A) or filled by a shifter (Retr01-C). Bitfields inside the bytes still TBD with the IDC pinout (`B4`).
+CPU view is **one byte per player**. Reads only. Same layout on A, C, and H. Bit numbers are locked; physical IDC pin numbers are still free as long as they match this byte.
 
-| Addr | Planning |
-|------|----------|
-| `$FE60` | Player 1 stick / d-pad (4 bits) + buttons 0-3 |
-| `$FE61` | Player 1 buttons 4-7, plus coin/start bits as needed |
-| `$FE62` | Player 2, same as `$FE60` |
-| `$FE63` | Player 2, same as `$FE61` |
+| Addr | Byte |
+|------|------|
+| `$FE60` | Player 1 |
+| `$FE61` | Player 2 |
+| `$FE62+` | Unused |
 
-Retr01-A reads parallel switches on the 40-pin IDC into these bytes. Retr01-C may use a 3-wire pad (see variants) but **software still sees `$FE6x`**.
+| Bit | Name | Arcade | Console / handheld |
+|-----|------|--------|--------------------|
+| 0 | Right | stick | d-pad |
+| 1 | Left | stick | d-pad |
+| 2 | Down | stick | d-pad |
+| 3 | Up | stick | d-pad |
+| 4 | A | button | button |
+| 5 | B | button | button |
+| 6 | Select / Coin | Coin (P1=`Coin1`, P2=`Coin2`) | Select |
+| 7 | Start | Start | Start |
+
+**1 = pressed.** No extra cabinet byte. Arcade Coin/Start **are** Select/Start.
+
+Retr01-A: parallel switches on the 40-pin IDC. Retr01-C: 3-wire pad with an MCU **in the controller**; the board 1284 reconstructs the same two bytes. Details: [14_reduced_number_of_chips.md](14_reduced_number_of_chips.md), [03_hardware_variants.md](03_hardware_variants.md).
 
 ### MAP port (`$FE90`): cart map reads
 
@@ -194,6 +218,7 @@ void system_bus_write(uint16_t address, uint8_t data) {
 |--------|-----------|
 | System RAM `$0000-$7FFF` | CPU always |
 | VRAM chip | PPU phase vs CPU phase (via `$FE1x`) |
+| Line-buffer SRAM | Beam vs 1284 (ping-pong; not in CPU space) |
 | CHR-ROM | PPU fetch path only |
 
 Wrong-phase CPU VRAM access: **hard error in emulator debug builds**.
