@@ -32,12 +32,18 @@ static retr01_rgb_t sample_bg(const retr01_ppu_t *ppu, int x, int y)
     tile_idx = ppu->screen.tiles[ty * RETR01_NT_W + tx];
     pal_id = retr01_attr_get(ppu->screen.attrs, tx, ty);
 
-    if (!ppu->chr || ppu->chr_size < (size_t)(tile_idx + 1) * 16) {
-        retr01_rgb_t magenta = {255, 0, 255};
-        return magenta;
+    {
+        size_t bank_off =
+            ((size_t)(ppu->world & 7) * 4u + (ppu->bg_bank & 3)) * 0x2000u + (size_t)tile_idx * 16u;
+        if (!ppu->chr || ppu->chr_size < bank_off + 16) {
+            bank_off = (size_t)tile_idx * 16u;
+        }
+        if (!ppu->chr || ppu->chr_size < bank_off + 16) {
+            retr01_rgb_t magenta = {255, 0, 255};
+            return magenta;
+        }
+        tile = ppu->chr + bank_off;
     }
-
-    tile = ppu->chr + (size_t)tile_idx * 16;
     plane0 = tile[py];
     plane1 = tile[8 + py];
     bit = 7 - px;

@@ -15,6 +15,9 @@ typedef struct retr01_ppu {
     size_t chr_size;
     uint8_t scroll_x;
     uint8_t scroll_y;
+    uint8_t world;
+    uint8_t bg_bank;
+    uint8_t spr_bank;
 } retr01_ppu_t;
 
 void retr01_ppu_init(retr01_ppu_t *ppu);
