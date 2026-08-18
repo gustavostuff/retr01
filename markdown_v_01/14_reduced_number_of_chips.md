@@ -29,7 +29,7 @@ This file is the coprocessor / input / chip-count source of truth until `03` / `
 | **APU** | 1 | ATmega328P-PU (DIP-28) | NES-style pulse / triangle / noise / DMC. `$FE40–$FE5F`. |
 | **Sprite + input** | 1 | **ATmega1284P-PU (DIP-40)** | OAM in internal RAM; eval + CHR fetch; writes next line-buffer bank; latches P1/P2 bytes. |
 | **System + VRAM** | 2 | AS6C62256-55PCN (DIP-28) | 32 KB CPU RAM + 32 KB interleaved VRAM. Unchanged. |
-| **Line buffer** | 1 | 2 KB-class SRAM (6116 DIP-24 if buyable, else another 62256) | Two 256-byte banks. Visible: PPU reads `{bank, X}`. HBlank: 1284 writes the other bank. **Not OAM.** |
+| **Line buffer** | 1 | AS6C62256-55PCN (DIP-28) | Third 32 KB SRAM. Only 512 bytes used (two 256-byte banks). Visible: PPU reads `{bank, X}`. HBlank: 1284 writes the other bank. **Not OAM.** Same PN as system/VRAM so the BOM stays in production. |
 | **EEPROM** | 1 | AT28C64B-15PU (DIP-28) | High scores / operator settings. |
 | **GAL** | 3 | ATF22V10CQZ-20PU (DIP-24) | Decode, beam/NMI/IRQ, CHR/VRAM `/CE`. (Was 4; sprite-eval GAL is gone.) |
 | **Beam counters** | 4 | 74HC161 (DIP-16) | Dot X and line Y (341 × 262). No sprite-X 161s. |
@@ -43,6 +43,19 @@ This file is the coprocessor / input / chip-count source of truth until `03` / `
 | **Total** | **53** | | Planning motherboard ICs (not sockets, not cart flash). |
 
 Band if a proto grows muxes or glue: **48–56**. Cart flash chips sit on the **cartridge**, not in this total.
+
+**v0 freeze:** this 53-chip DIP list is the first schematic. Do **not** swap in ATF1502/1508, dual-port SRAM, or 6116. If GAL equations overflow, a **4th ATF22V10CQZ-20PU** is the only extra PLD allowed.
+
+**EOL — do not put on the BOM.** These were considered for chip-count and rejected because they are obsolete or NRND at the manufacturer:
+
+| Part | Why it was tempting | Why it is out |
+|------|---------------------|---------------|
+| Lattice **GAL22V10** DIP | Original GAL | EOL. Use **ATF22V10CQZ-20PU** (Microchip, in production). |
+| **HM6116** / generic 2 KB DIP SRAM | Right size for the line buffer | DIP 2 KB SRAM is gone from majors. Use another **AS6C62256**. |
+| **ATF1508AS** / **ATF1504AS** (PLCC CPLD) | One fat CPLD instead of 3× 22V10 + glue | **ATF1508AS is EOL.** Do not plan the board around ATF15xx. |
+| **IDT7130** dual-port 1K×8 | Drop the two line-buffer 157s | Dual-port DIP SRAM is a surplus/EOL hunt, not a buyable proto part. |
+
+Glue stays **ATF22V10CQZ-20PU**. If a 4th 22V10 is needed for equations, add that — still a live DIP — rather than an EOL CPLD.
 
 ---
 

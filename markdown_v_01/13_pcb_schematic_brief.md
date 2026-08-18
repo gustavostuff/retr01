@@ -1,5 +1,7 @@
 # Retr01-A — PCB schematic generation brief
 
+> **Superseded** for new work: use [15_schematic_prompt_coprocessor.md](15_schematic_prompt_coprocessor.md) (53-chip board, 1284 sprite/input coprocessor). This file is the older discrete-sprite prompt.
+
 You are a PCB / schematic designer. Your job is to emit a **complete** KiCad 8 (preferred), EasyEDA, or Altium schematic from this file alone.
 
 This file is self-contained. Do not wait for missing specs. **Draw the whole machine.** If a bitfield, analog level, or sprite pipeline detail is ugly, pick the default in this document and keep going.
