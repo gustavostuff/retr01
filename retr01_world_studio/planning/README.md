@@ -17,6 +17,8 @@ These docs sit beside the hardware specification in [`markdown_v_01/`](../markdo
 | [07_build_pipeline.md](07_build_pipeline.md) | End-to-end build steps, cc65 integration, validation, phases |
 | [08_preview_and_testing.md](08_preview_and_testing.md) | Live preview, emulator embed, test ROMs, lint rules |
 | [09_master_palette.md](09_master_palette.md) | Canonical 64-color RGB ramp (`retr01_palette_v_01.txt`) |
+| [10_emulator_development.md](10_emulator_development.md) | When to build `retr01_emu` (E0/E1/E2) vs Studio — **start E0 after Phase 0** |
+| [11_testing_policy.md](11_testing_policy.md) | **Unit/integration tests with every feature** — required per phase |
 
 ## Quick reference
 
@@ -37,4 +39,4 @@ These docs sit beside the hardware specification in [`markdown_v_01/`](../markdo
 
 ## Implementation status
 
-Not started. See [07_build_pipeline.md](07_build_pipeline.md) for phased delivery (Phase 0–4).
+Not started. Delivery order: **Phase 0** → **E0** → Studio 1–4, with **E1** / **E2** as documented. **Tests ship with each step** ([11_testing_policy.md](11_testing_policy.md)).

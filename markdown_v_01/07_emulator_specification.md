@@ -5,7 +5,9 @@
 A **hardware-restricted emulator in C** whose job is architectural validation, not max host FPS. Behavior that passes here should match Retr01-A silicon for: memory decode, interleaved VRAM phases, sprite drop rules, bank timing, and NES-style APU register traffic.
 
 **In scope now:** emulator core + host display/audio glue (e.g. SDL2).  
-**Out of scope now:** PPUX, cc65, and other asset/game authoring toolchains.
+**Out of scope for the emulator itself:** PPUX, cc65, World Studio UI (separate repo folders).
+
+**Bootstrap plan (World Studio):** implement in layers — **E0** PPU viewer (no CPU) → **E1** CPU + cart → **E2** full spec. E0 is deliberately smaller than World Studio and should ship right after shared format code. Details: [retr01_world_studio/planning/10_emulator_development.md](../retr01_world_studio/planning/10_emulator_development.md).
 
 Canonical map + bus decode: [08_memory_map.md](08_memory_map.md).
 

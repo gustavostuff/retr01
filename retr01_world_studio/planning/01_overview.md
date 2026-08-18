@@ -76,24 +76,16 @@ The tool must stay faithful to locked caps in [04_worlds_and_screens.md](../mark
 New top-level folder inside the `retr01` repository:
 
 ```text
-retr01_world_studio/
-  planning/          ← these docs
-  core/              # C: RLE, MAP/CHR builders, .r01proj I/O, validation
-  pack/              # C: canvas → tiles → CHR, attr plane, dedupe
-  runtime/           # 6502/asm templates + pack manifests (cc65)
-    packs/
-      side_platformer/
-      topdown_8way/
-      single_screen/
-      vertical_climb/
-      paddle_2way/
-    generated/       # build output: world_init.s, config tables (gitignored)
-  app/               # SDL2 + Dear ImGui UI
-  third_party/       # imgui, optional stb
-  build/             # output: <project>.retr01 (gitignored)
+retr01/
+  retr01_world_studio/
+    planning/
+    core/              # SHARED with emulator: RLE, MAP, cart I/O, palette
+    pack/              # Studio-only
+    app/               # Studio-only (ImGui)
+    runtime/           # Studio-only (6502 templates)
+  retr01_emu/          # Start E0 after core/ — see planning/10_emulator_development.md
+    ppu/ host/ test/   # E0 first; cpu/ bus/ apu/ in E1/E2
 ```
-
-`retr01_emu/` may live as a sibling directory or submodule; preview links against shared `core/` format code where possible.
 
 ## Prerequisites before coding export
 
@@ -101,6 +93,11 @@ retr01_world_studio/
 2. **Master palette** — v1 loads [`retr01_palette_v_01.txt`](../retr01_palette_v_01.txt) (64 RGB entries). See [09_master_palette.md](09_master_palette.md). Editable in-app; embedded in `.r01proj`.
 
 No silicon blockers remain for an MVP.
+
+## Development practices
+
+- **Tests with the code** — each phase adds unit/integration tests before the phase gate clears. See [11_testing_policy.md](planning/11_testing_policy.md).
+- Shared `core/` is the highest test priority (RLE, MAP, cart I/O, palette).
 
 ## Success criteria (v1)
 
@@ -114,4 +111,4 @@ No silicon blockers remain for an MVP.
 - UI details: [02_ui.md](02_ui.md)
 - ASM generation: [04_world_mode_packs.md](04_world_mode_packs.md)
 - Cart binary: [05_cart_assembly.md](05_cart_assembly.md)
-- Phases: [07_build_pipeline.md](07_build_pipeline.md)
+- Phases + emulator gates: [07_build_pipeline.md](07_build_pipeline.md), [10_emulator_development.md](10_emulator_development.md)

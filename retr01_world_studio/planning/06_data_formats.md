@@ -236,13 +236,19 @@ Full layout: [05_cart_assembly.md](05_cart_assembly.md).
 
 ## Tests (Phase 0)
 
+Add when each module lands — full matrix in [11_testing_policy.md](11_testing_policy.md):
+
 | Test | Module |
 |------|--------|
 | attr round-trip | `core/screen.c` |
 | RLE round-trip (960 + 240) | `core/rle.c` |
 | MAP build 1 world 3 screens | `core/map_builder.c` |
-| CHR dedupe cap | `pack/chr_pack.c` |
+| `.retr01` load/write RETR01 magic | `core/cart_io.c` |
+| palette v01 parse → 64 entries | `core/palette_io.c` |
+| CHR dedupe cap | `pack/chr_pack.c` (Phase 1) |
 | project JSON load/save | `core/project_io.c` |
+
+Run via **`ctest`** after every build.
 
 ## Related docs
 

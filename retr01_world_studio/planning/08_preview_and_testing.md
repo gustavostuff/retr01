@@ -2,7 +2,17 @@
 
 How World Studio validates work in `retr01_emu` before hardware exists, and what “done” means for each feature.
 
-## Preview architecture
+**Unit tests:** add tests **alongside every feature** — not in a later cleanup pass. Full policy, layout, and per-phase matrix: **[11_testing_policy.md](11_testing_policy.md)**.
+
+**Build order:** emulator is **not** last. Minimal viewer **E0** (no CPU) lands after shared `core/` and **before** the Screen Painter; **E1** before PRG Build; **E2** before embedded preview. See [10_emulator_development.md](10_emulator_development.md).
+
+| Milestone | Used for |
+|-----------|----------|
+| **E0** | Verify CHR + MAP + palette from Studio exports (static screen) |
+| **E1** | Run built `.retr01`, headless CI, “Play in emulator” button |
+| **E2** | Embedded live preview panel (Phase 4) |
+
+## Preview architecture (Phase 4 target)
 
 ```mermaid
 flowchart LR
