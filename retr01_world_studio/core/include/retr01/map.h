@@ -6,6 +6,10 @@
 
 #include "retr01/types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct retr01_map_build_screen {
     retr01_screen_t screen;
 } retr01_map_build_screen_t;
@@ -23,5 +27,9 @@ int retr01_map_build(const retr01_map_build_world_t *worlds, size_t world_count,
 /* Find playfield screen at (col,row) in world_index; decode into screen_out. */
 int retr01_map_load_screen(const retr01_cart_t *cart, int world_index,
                            uint8_t col, uint8_t row, retr01_screen_t *screen_out);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

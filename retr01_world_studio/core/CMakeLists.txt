@@ -4,6 +4,7 @@ add_library(retr01_core STATIC
     src/palette.c
     src/cart.c
     src/map.c
+    src/project_io.c
 )
 
 target_include_directories(retr01_core PUBLIC

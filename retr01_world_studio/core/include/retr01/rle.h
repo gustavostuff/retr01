@@ -6,6 +6,10 @@
 
 #include "retr01/types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Two back-to-back RLE sections: 960 tile bytes + 240 attr bytes. */
 int retr01_screen_rle_encode(const uint8_t tiles[RETR01_SCREEN_TILE_BYTES],
                              const uint8_t attrs[RETR01_SCREEN_ATTR_BYTES],
@@ -14,5 +18,9 @@ int retr01_screen_rle_encode(const uint8_t tiles[RETR01_SCREEN_TILE_BYTES],
 int retr01_screen_rle_decode(const uint8_t *in, size_t in_len,
                              uint8_t tiles[RETR01_SCREEN_TILE_BYTES],
                              uint8_t attrs[RETR01_SCREEN_ATTR_BYTES]);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

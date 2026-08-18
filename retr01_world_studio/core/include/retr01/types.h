@@ -4,6 +4,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define RETR01_SCREEN_TILE_BYTES 960
 #define RETR01_SCREEN_ATTR_BYTES 240
 #define RETR01_SCREEN_BYTES 1200
@@ -67,5 +71,9 @@ typedef struct retr01_master_palette {
     uint8_t sprite_palettes[4][4];
     uint8_t backdrop_index;
 } retr01_master_palette_t;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
