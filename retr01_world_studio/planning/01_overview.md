@@ -97,7 +97,7 @@ retr01_world_studio/
 
 ## Prerequisites before coding export
 
-1. **B9 MAP RLE** — canonical byte codec (recommendation: length-prefixed runs + literal blocks; tile plane then raw 240-byte attrs). Studio implements it; emulator shares the same decoder. See [06_data_formats.md](06_data_formats.md).
+1. **B9 MAP RLE** — canonical byte codec: length-prefixed runs + literal blocks; **two RLE sections per screen** (960 tile bytes + 240 attr bytes → **1200 bytes** decoded). Studio implements it; emulator shares the same decoder. See [06_data_formats.md](06_data_formats.md).
 2. **Master palette** — v1 loads [`retr01_palette_v_01.txt`](../retr01_palette_v_01.txt) (64 RGB entries). See [09_master_palette.md](09_master_palette.md). Editable in-app; embedded in `.r01proj`.
 
 No silicon blockers remain for an MVP.

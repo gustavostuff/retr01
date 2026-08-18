@@ -32,7 +32,7 @@ These docs sit beside the hardware specification in [`markdown_v_01/`](../markdo
 - Worlds, MAP directory, `load_screen`: [`markdown_v_01/04_worlds_and_screens.md`](../markdown_v_01/04_worlds_and_screens.md)
 - Memory map, VRAM slots, `$FE90` MAP port: [`markdown_v_01/08_memory_map.md`](../markdown_v_01/08_memory_map.md)
 - Emulator contract: [`markdown_v_01/07_emulator_specification.md`](../markdown_v_01/07_emulator_specification.md)
-- Open items (B9 RLE): [`markdown_v_01/OPEN_QUESTIONS.md`](../markdown_v_01/OPEN_QUESTIONS.md)
+- Open items: [`markdown_v_01/OPEN_QUESTIONS.md`](../markdown_v_01/OPEN_QUESTIONS.md) (B9 RLE locked in [06_data_formats.md](06_data_formats.md))
 - Master palette: [`retr01_palette_v_01.txt`](../retr01_palette_v_01.txt) — see [09_master_palette.md](09_master_palette.md)
 
 ## Implementation status

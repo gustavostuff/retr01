@@ -22,6 +22,7 @@
 | CPU clock | **8.000 MHz** |
 | Dot clock / frame | **5.369318 MHz**, **341x262**, **~60.098 Hz** NMI |
 | MAP access | **`$FE90` MAP port**. Atlas + compressed screens in MAP-ROM. RAM `world`,`map_x`,`map_y` then `load_screen` |
+| MAP RLE | **Byte RLE**, two sections per screen: **960** tile bytes + **240** attr bytes (**1200** decoded). Spec: [retr01_world_studio/planning/06_data_formats.md](../retr01_world_studio/planning/06_data_formats.md) |
 | Controllers | CPU sees **`$FE60-$FE63`** (4 bytes, 2 players). A: parallel IDC. C: 3-wire pad (pinned) |
 | PRG mapper | **`$FE80` only** |
 | CPU map | `$0000-$7FFF` RAM / `$FE00-$FEFF` I/O / PRG elsewhere |
@@ -41,7 +42,6 @@
 | B5 | Retr01-C 3-wire pad protocol | Pinned: 3 wires + MCU in pad, same `$FE6x` bytes. Connector shell TBD |
 | B6 | OAM byte field order | NES-like Y,tile,attr,X default |
 | B7 | Repo folder still named GameNerd | Rename when ready |
-| B9 | MAP RLE exact format | Tile plane then attrs. Directory row is 6 bytes (col, row, flags, 24-bit `data_off`). flags 0=playfield, 1=parallax. `empty_off` 0 = black |
 
 ## C. Emulator defaults
 

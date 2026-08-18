@@ -104,9 +104,10 @@ MAP-ROM
           flags               ; 0 = playfield, 1 = parallax (not enterable)
           data_off            ; 24-bit MAP offset to payload
       payloads...
-          optional copy of col, row (so a .bin is self-describing)
-          RLE (or similar) tile plane (960 bytes uncompressed)
-          packed attr plane (240 bytes uncompressed)
+          optional copy of col, row (self-describing)
+          RLE tile section (960 bytes uncompressed)
+          RLE attr section (240 bytes uncompressed)
+          ; decoded total = 1200 bytes per screen
 ```
 
 Authoring sketch (assembled **into MAP**, not into PRG). Labels are for the map build. The 6502 never JMPs here.
@@ -118,7 +119,7 @@ world_01:
     .byte 0, 0, 0   ; empty_off = 0 (solid black)
     ; directory: col, row, flags, then 24-bit data_off (macro from includes)
 
-    .incbin "hub.bin"     ; playfield. file starts with col, row, flags=0, then RLE, attrs
+    .incbin "hub.bin"     ; playfield: optional col,row,flags + RLE×2 → 1200 bytes
     .incbin "cave.bin"
     .incbin "sky_a.bin"   ; flags=1. H span=2 with sky_b, not enterable
     .incbin "sky_b.bin"
@@ -129,7 +130,7 @@ world_01:
 1. Seek `$FE90` to `world_base[world]`, read `grid_w`, `grid_h`, `screen_count`, `empty_off`.
 2. Scan the directory for `(map_x, map_y)`. At 8 MHz, 64 rows is cheap. You may cache the directory in system RAM on world enter (~64 * 6 bytes).
 3. On miss, or on hit with **parallax** flag: fill the VRAM **camera** slot with the empty template (`empty_off == 0` = solid black, else that nametable). Do not use a parallax cell as a room.
-4. On playfield hit: seek to `data_off`, read RLE tiles then attrs, write a camera nametable through `$FE1x`.
+4. On playfield hit: seek to `data_off`, RLE-decode tile section (960 bytes) then attr section (240 bytes), write **1200 bytes** into a camera nametable through `$FE1x`.
 5. Coords outside 0-63: optional lettered EMPTY debug fill.
 
 Seam fill is the same lookup. A parallax neighbor is a miss (empty / blocked). `set_parallax` is a separate call: same directory lookup, but it decompresses into plane slot 4 or 5. See [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8.

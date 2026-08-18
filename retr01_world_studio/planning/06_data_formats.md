@@ -53,38 +53,83 @@ Self-describing blob (optional header + compressed body):
 
 ```
 [optional] col, row, flags   ; 3 bytes if embedded in payload
-RLE tile data                ; decodes to 960 bytes
-raw attr plane               ; 240 bytes literal (no RLE v1)
+RLE tile section             ; decodes to exactly 960 bytes (32×30 tile indices)
+RLE attr section             ; decodes to exactly 240 bytes (packed attr plane)
 ```
+
+**Uncompressed size is always 1200 bytes** (960 + 240). Both sections use the same byte RLE codec (see below). The attr plane is **not** stored raw.
 
 Directory `data_off` points at payload start. Directory already has `col`, `row`, `flags` — payload header is redundant but aids debugging when extracted as `.bin`.
 
-## RLE codec (close B9)
+## RLE codec (B9 — canonical)
 
-**Status:** Open in [OPEN_QUESTIONS.md](../markdown_v_01/OPEN_QUESTIONS.md); studio Phase 0 **implements and documents** this as canonical.
+**Status:** Locked for World Studio v1; studio Phase 0 implements; emulator shares `core/rle.c`.
 
-### Recommended format: byte RLE
+### Uncompressed screen layout (decode target)
+
+| Region | Bytes | Content |
+|--------|-------|---------|
+| Tile plane | **960** | Nametable tile indices, row-major `tiles[ty * 32 + tx]` |
+| Attr plane | **240** | Packed 2-bit palette IDs per tile |
+| **Total** | **1200** | Written to VRAM slot: tiles at `+0x000`, attrs at `+0x3C0` |
+
+Decoder **must** reject payloads where the tile section ≠ 960 bytes or the attr section ≠ 240 bytes.
+
+### Compressed payload layout
+
+One MAP screen blob is **two back-to-back RLE streams** (same codec, no separator byte):
+
+```
++-- RLE stream #1  → 960 bytes → out.tiles[0..959]
++-- RLE stream #2  → 240 bytes → out.attrs[0..239]
+```
+
+Encoder order:
+
+1. RLE-compress `tiles[960]`
+2. Immediately append RLE-compress `attrs[240]`
+
+### Byte RLE (per section)
 
 Control bytes:
 
 | Lead byte | Meaning |
 |-----------|---------|
-| `0x00` | Run: next byte = `len` (1–255), next byte = `val` → emit `len` copies of `val` |
-| `0x01`–`0x7F` | Literal: copy next `(lead)` bytes literally |
-| `0x80`–`0xFF` | Reserved / escape (unused v1) |
+| `0x00` | **Run:** next byte = `len` (1–255), next byte = `val` → emit `len` copies of `val` |
+| `0x01`–`0x7F` | **Literal:** copy next `(lead)` bytes literally from input |
+| `0x80`–`0xFF` | Reserved (unused v1) |
 
-Encode order for one screen:
+Rules per section:
 
-1. RLE compress `tiles[960]`
-2. Append `attrs[240]` uncompressed
+- Decoding stops when the section byte count reaches its target (960 or 240).
+- If the target is reached with unconsumed run/literal state mid-instruction, **error**.
+- If the stream ends before the target is reached, **error**.
+- If the target is reached but extra RLE ops remain before the next section boundary, **error** (tile section); same for attr section at end of blob.
 
-Decoder in emulator MAP loader and studio share `core/rle.c`.
+### C API (planning)
+
+```c
+#define RETR01_SCREEN_TILE_BYTES 960
+#define RETR01_SCREEN_ATTR_BYTES 240
+#define RETR01_SCREEN_BYTES      1200
+
+/* Encode tiles[960] + attrs[240] → single blob (two RLE sections). */
+int retr01_screen_rle_encode(const uint8_t tiles[960], const uint8_t attrs[240],
+                             uint8_t *out, size_t out_cap, size_t *out_len);
+
+/* Decode blob → tiles[960] + attrs[240]. Fails unless output is exactly 1200 bytes. */
+int retr01_screen_rle_decode(const uint8_t *in, size_t in_len,
+                             uint8_t tiles[960], uint8_t attrs[240]);
+```
+
+Emulator `load_screen` and studio MAP builder call the same decode path.
 
 ### Round-trip requirements
 
-- Unit tests: random tiles → encode → decode → memcmp
-- Worst case expansion handled (literal path if run not profitable)
-- Empty screen (all tile 0): should compress well
+- Unit tests: random `tiles` + `attrs` → encode → decode → `memcmp` both planes
+- Fixed cases: all-zero screen, all unique literals, single long run
+- Corrupt/truncated blob → decode error (not partial VRAM)
+- Worst-case expansion: encoder falls back to literal chunks when run unprofitable
 
 ## MAP-ROM builder structures
 
@@ -194,7 +239,7 @@ Full layout: [05_cart_assembly.md](05_cart_assembly.md).
 | Test | Module |
 |------|--------|
 | attr round-trip | `core/screen.c` |
-| RLE round-trip | `core/rle.c` |
+| RLE round-trip (960 + 240) | `core/rle.c` |
 | MAP build 1 world 3 screens | `core/map_builder.c` |
 | CHR dedupe cap | `pack/chr_pack.c` |
 | project JSON load/save | `core/project_io.c` |

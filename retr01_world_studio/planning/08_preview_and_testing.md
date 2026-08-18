@@ -122,7 +122,7 @@ Each fixture has expected:
 
 ### Unit (`core/`, `pack/`)
 
-- RLE round-trip
+- RLE round-trip (960 tile + 240 attr → 1200 bytes)
 - attr get/set edge tiles (0,0), (31,29)
 - MAP directory 64 entries max
 - JSON load corrupt file → error

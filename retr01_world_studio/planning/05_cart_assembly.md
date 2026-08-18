@@ -62,8 +62,8 @@ MAP-ROM
           col, row, flags, data_off (24-bit)
       payloads[]
           [optional col, row header in payload]
-          RLE tile plane (960 bytes uncompressed)
-          raw attr plane (240 bytes)
+          RLE tile section (960 bytes uncompressed)
+          RLE attr section (240 bytes uncompressed)
 ```
 
 Directory row: **6 bytes** (`col`, `row`, `flags`, 24-bit `data_off`).
@@ -111,7 +111,7 @@ PRG must include **MAP loader helpers** (`load_screen`, seam fill) or link again
 flowchart TD
   A[Load .r01proj] --> B[Validate schema + linter]
   B --> C[Export screen payloads to .bin]
-  C --> D[RLE encode tiles + attach attrs]
+  C --> D[RLE encode tiles 960B + attrs 240B]
   D --> E[Build MAP-ROM blob]
   E --> F[Flatten CHR banks to chr.bin]
   F --> G[Generate ASM includes]
@@ -124,7 +124,7 @@ flowchart TD
 ### Step detail
 
 1. **Validate** — errors block build (see [03_project_format.md](03_project_format.md))
-2. **Screen `.bin`** — per payload: optional `(col, row, flags)` + RLE + 240 attr bytes
+2. **Screen `.bin`** — per payload: optional `(col, row, flags)` + RLE tile section (960) + RLE attr section (240)
 3. **MAP builder** — assign `world_base[]`, `data_off`, pack directory
 4. **CHR flatten** — dedupe already done at Generate time in editor
 5. **ASM gen** — [04_world_mode_packs.md](04_world_mode_packs.md)
