@@ -29,7 +29,7 @@ Living snapshot. When hardware or software decisions change, **update this file*
 | Controllers | **One byte per player**, all form factors. `$FE60` = P1, `$FE61` = P2. Bits: 0 R, 1 L, 2 D, 3 U, 4 A, 5 B, 6 Select/**Coin**, 7 Start. No extra cabinet byte. A: parallel IDC. C: 3-wire + MCU **in the controller**, same two bytes on the board |
 | PRG mapper | **`$FE80` only** |
 | CPU map | `$0000-$7FFF` RAM / `$FE00-$FEFF` I/O / PRG elsewhere |
-| Glue (Retr01-A v0) | **3× ATF22V10CQZ-20PU** + 74HC157/245/161/573. Planning **53** motherboard ICs. No EOL CPLDs (ATF1508/1504). Spec: [14](14_reduced_number_of_chips.md) |
+| Glue (Retr01-A v0) | **3× ATF22V10CQZ-20PU** (Microchip DIP, in production Aug 2026) + 74HC157/245/161/573. Planning **53** motherboard ICs. Not Lattice GAL (that family is EOL). Not ATF15xx. Spec: [14](14_reduced_number_of_chips.md) |
 | Video out | **A/C:** RGBS + S-Video + composite pads. **H:** RGBS only. HDMI is an external converter |
 | Power (A/C) | Female **5.5 mm × 2.1 mm** barrel, 5 V. Optional pads for a USB-C breakout PCB |
 | Schematic prompt | [15_schematic_prompt_coprocessor.md](15_schematic_prompt_coprocessor.md) (not 13) |

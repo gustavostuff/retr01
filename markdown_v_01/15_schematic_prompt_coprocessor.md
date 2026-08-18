@@ -1,14 +1,27 @@
 Retr01-A schematic generation prompt (coprocessor v0)
 
-You are a PCB / schematic designer. Emit a complete KiCad 8 (preferred), EasyEDA, or Altium schematic from this file alone.
+You are Protoflow (or another schematic AI). Emit a complete schematic from this file alone. KiCad 8 export is fine.
 
-This brief supersedes 13_pcb_schematic_brief.md. Do not draw a discrete 16-sprite shifter farm. Do not use EOL parts (ATF1508, 6116, Lattice GAL22V10, IDT7130).
+This brief supersedes 13_pcb_schematic_brief.md. Do not draw a discrete 16-sprite shifter farm. Do not use EOL parts (Lattice GAL16V8 / GAL20V8 / GAL22V10, ATF1508 PLCC-84, HM6116, IDT7130).
 
 Do not wait for missing specs. Draw the whole machine. Ugly-but-wired beats a block diagram. Mark guesses FIXME, but do not omit nets.
 
 Product: Retr01-A arcade motherboard + plug-in cart. 5 V through-hole. W65C02S game CPU, discrete BG PPU, ATmega1284P sprite+input coprocessor, ATmega328P APU, analog RGBS.
 
 Planning IC count: 53 on the motherboard (see section 2). Stay on that list. A 4th ATF22V10CQZ-20PU is the only extra PLD allowed.
+
+
+HOW TO PICK PARTS (PROTOFLOW / LCSC)
+
+Search LCSC first with the exact manufacturer PN in section 2. DigiKey or Mouser is also fine. If the catalog has no hit, generate a custom symbol + DIP footprint from the datasheet URL. Then keep going. Never stall the schematic because a PN is missing from LCSC.
+
+Lock the package. Through-hole DIP only for every IC in the 53. Reject SOIC, TSSOP, TQFP, QFN, AU, PW, DR, APWR, SCN, SIN. Example: SN74HC573APWR is wrong (TSSOP). SN74HC573N or CD74HC573E DIP-20 is right.
+
+Do not "helpfully" swap families. Never replace the CPU with MOS 6502, Z80, 6809, 8051, STM32, or ESP32. Never replace ATF22V10CQZ-20PU with a Lattice GAL, ATF16V8, or ATF1504/1508. Never replace ATmega1284P-PU with a 328P, 644P, or 2560. Never merge the two AVRs onto one chip. Never use 74LS or 74HCT when 74HC DIP exists.
+
+Same function, different maker, same DIP pinout is OK for 74HC only (TI SN74HCxxxN, NXP 74HCxxxN, CD74HCxxxE). Prefer TI SN74HC*N when LCSC has it.
+
+LCSC C-numbers below were checked August 2026. Stock moves; the manufacturer PN and DIP package are the lock, not the C-number.
 
 
 0. DELIVERABLES
@@ -20,7 +33,9 @@ Planning IC count: 53 on the motherboard (see section 2). Stay on that list. A 4
 5. 1284 pin map + firmware notes (what the MCU must do; you do not have to write C).
 6. Clock/reset/bus-contention notes. Board about 250 x 160 mm, 4-layer. No HDMI.
 
-Forbidden symbols: empty "FPGA PPU", ATF1504/1508, HM6116, dual-port IDT7130, Lattice GAL22V10, merging APU into the 1284.
+Forbidden symbols: empty "FPGA PPU"; Lattice GAL16V8, GAL20V8, or GAL22V10 (all Lattice GAL DIP/PLCC are discontinued); ATF1504/1508 as the v0 glue plan; HM6116; dual-port IDT7130; merging APU into the 1284.
+
+PLD silicon (checked August 2026): use Microchip ATF22V10CQZ-20PU only (DIP-24, 5 V). Microchip: In Production. Distributors: Active. Manufacturer projected EOL 2040-11-02. Names GAL-DEC / GAL-TIM / GAL-PPU are sheet roles, not Lattice part numbers. Do not put a Lattice GAL on the BOM. Do not swap in ATF22V10CQZ-20XC or other SMD grades unless you re-check that exact SKU.
 
 
 1. DESIGN RULES
@@ -29,7 +44,7 @@ Through-hole, 5 V. DIP W65C02S, AS6C62256, ATF22V10CQZ, AVR, 74HC.
 
 Wide buses are 74HC. VRAM mux = 4x 74HC157. Line-buffer mux = 2x 74HC157. Data = 74HC245. Latches = 74HC573. Beam = 74HC161.
 
-GALs are decode/timing only. Do not GAL-away 8-bit buses.
+ATF22V10s (labeled GAL-DEC/TIM/PPU on sheets) are decode/timing only. Do not eat 8-bit buses into the PLD.
 
 Three 32 KB SRAMs. Chip 1 = CPU RAM $0000-$7FFF. Chip 2 = interleaved VRAM. Chip 3 = sprite line buffer (not OAM).
 
@@ -48,21 +63,53 @@ Power: barrel 5.5 x 2.1 mm, center positive, 5 V. Polyfuse, reverse diode. Optio
 
 2. MOTHERBOARD IC LIST (DRAW THESE)
 
-1x W65C02S6TPG-14 DIP-40 — CPU
-1x ATmega328P-PU DIP-28 — APU, 16 MHz crystal
-1x ATmega1284P-PU DIP-40 — sprites + pads, 20 MHz crystal
-3x AS6C62256-55PCN DIP-28 — sys RAM, VRAM, line buffer
-1x AT28C64B-15PU DIP-28 — scores / operator
-3x ATF22V10CQZ-20PU DIP-24 — GAL-DEC, GAL-TIM, GAL-PPU
-4x 74HC161 DIP-16 — beam X/Y
-7x 74HC573 DIP-20 — scroll, banks, OAM capture, pad capture, MAP addr
-6x 74HC157 DIP-16 — 4 VRAM addr mux + 2 line-buffer addr mux
-3x 74HC245 DIP-20 — CPU / VRAM / cart (or 1284 data isolation)
-16x 74HC00/04/08/32/86/688 mix — interleave, HBlank, CHR /CE mux, compositor, 341/262 decode assist
-2x oscillators — 8.000 MHz; 21.47727 MHz
-1x 5 V regulator module — counted; omit on schematic only if barrel is dedicated 5 V and you note it
+Search / place using these strings. Qty is for the 53-chip total.
 
-Total 53. Sockets, passives, headers, DACs (resistors) are extra, not in 53.
+CPU (1) — W65C02S6TPG-14, DIP-40 0.6 inch (15.24 mm), Western Design Center.
+LCSC: none expected. Mouser / Jameco sell it.
+Action: generate a custom DIP-40 from https://www.westerndesigncenter.com/wdc/documentation/w65c02s.pdf
+Pins that differ from NMOS 6502: pin 1 VPB (output, NC or pull-up), pin 5 MLB (NC), pin 36 BE (pull high to +5). Clock input is PHI2 (not PHI0). VDD pin 8, VSS pin 21.
+BOM still says W65C02S6TPG-14. Do not place a MOS 6502 symbol.
+
+APU AVR (1) — ATMEGA328P-PU, DIP-28. LCSC C33901. 16 MHz HC-49 crystal, not counted in 53.
+Do not use ATMEGA328-PU, ATMEGA328P-AU, or Arduino module.
+
+Sprite/input AVR (1) — ATMEGA1284P-PU, DIP-40. LCSC C116839. 20 MHz HC-49 crystal, not counted in 53.
+Do not use ATMEGA644P, ATMEGA2560, ATMEGA1284P-AU.
+
+SRAM (3) — AS6C62256-55PCN, DIP-28 0.6 inch. Alliance Memory. LCSC C5569983.
+Chip 1 system RAM, chip 2 VRAM, chip 3 line buffer. Same PN three times. Do not use AS6C62256-55SCN (SOIC) or 6116.
+
+EEPROM (1) — AT28C64B-15PU, DIP-28 0.6 inch. LCSC C41982.
+
+PLD (3) — ATF22V10CQZ-20PU, DIP-24. Microchip. LCSC C1519030. Also on DigiKey / Mouser.
+Sheet names GAL-DEC, GAL-TIM, GAL-PPU are roles. Silicon is this ATF DIP. Do not place Lattice GAL22V10 / GAL16V8 / GAL20V8. Do not place ATF16V8, ATF1502, ATF1504, ATF1508. Do not use ATF22V10CQZ-20SU or -20XC (SMD). Overflow: 4th ATF22V10CQZ-20PU only.
+
+Beam counters (4) — SN74HC161N, DIP-16. LCSC C273647.
+
+Latches (7) — SN74HC573N or CD74HC573E, DIP-20. Search "SN74HC573N DIP-20". Reject SN74HC573APWR (TSSOP).
+
+VRAM mux (4) + line-buffer mux (2) = 6 — SN74HC157N, DIP-16. Search "SN74HC157N DIP-16". Reject SOIC.
+
+Transceivers (3) — SN74HC245N, DIP-20. LCSC C2899.
+
+Glue mix (16), all DIP, 74HC (not LS, not HCT):
+SN74HC00N DIP-14 NAND  LCSC C2902
+SN74HC04N DIP-14 inverter  LCSC C2886
+SN74HC08N DIP-14 AND  LCSC C2887
+SN74HC32N DIP-14 OR  LCSC C2894
+SN74HC86N DIP-14 XOR  LCSC C2903
+SN74HC688N DIP-20 identity compare  (raster Y). Search "SN74HC688N DIP-20"
+Pick a mix that totals 16 ICs. Extra NAND/inverter is better than inventing a 17th type.
+
+Oscillators (2 of the 53) — canned DIP-8 or DIP-14 clock oscillators, 5 V:
+8.000 MHz (CPU PHI2)
+21.47727 MHz (NTSC 4x; divide by 4 for dot). 21.477 MHz is OK if 21.47727 is missing.
+Do not use a microcontroller as a clock.
+
+Regulator (1 of the 53) — any 5 V through-hole module or TO-220 LDO if the barrel is not already a clean 5 V. Omit only if you note barrel = dedicated 5 V.
+
+Total 53. Sockets, passives, crystals, headers, R-2R resistors are extra, not in 53.
 
 
 3. SHEETS
@@ -312,4 +359,4 @@ A human can see: 65C02 + 32 KB RAM + $FExx; VRAM behind 4x 157; 341x262 + NMI; 1
 
 Video wrong on day one is OK. A box labeled "sprites" with no pins is not.
 
-Draw it now. Use section 2 parts only. Freeze TBDs with this file.
+Draw it now. Use section 2 parts only. If LCSC misses the CPU, generate it and continue. Freeze TBDs with this file.

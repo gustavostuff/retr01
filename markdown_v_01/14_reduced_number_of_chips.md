@@ -31,7 +31,7 @@ This file is the coprocessor / input / chip-count source of truth. CPU map: [08_
 | **System + VRAM** | 2 | AS6C62256-55PCN (DIP-28) | 32 KB CPU RAM + 32 KB interleaved VRAM. Unchanged. |
 | **Line buffer** | 1 | AS6C62256-55PCN (DIP-28) | Third 32 KB SRAM. Only 512 bytes used (two 256-byte banks). Visible: PPU reads `{bank, X}`. HBlank: 1284 writes the other bank. **Not OAM.** Same PN as system/VRAM so the BOM stays in production. |
 | **EEPROM** | 1 | AT28C64B-15PU (DIP-28) | High scores / operator settings. |
-| **GAL** | 3 | ATF22V10CQZ-20PU (DIP-24) | Decode, beam/NMI/IRQ, CHR/VRAM `/CE`. (Was 4; sprite-eval GAL is gone.) |
+| **PLD (role name GAL-DEC/TIM/PPU)** | 3 | **ATF22V10CQZ-20PU** (DIP-24) | Decode, beam/NMI/IRQ, CHR/VRAM `/CE`. Not a Lattice GAL. |
 | **Beam counters** | 4 | 74HC161 (DIP-16) | Dot X and line Y (341 × 262). No sprite-X 161s. |
 | **Latches** | 7 | 74HC573 (DIP-20) | Scroll, banks, I/O, 6502→1284 OAM write capture. |
 | **VRAM mux** | 4 | 74HC157 (DIP-16) | 15-bit VRAM address CPU vs PPU. **Do not cut this to 2** — one 157 is only 4 bits. |
@@ -46,16 +46,19 @@ Band if a proto grows muxes or glue: **48–56**. Cart flash chips sit on the **
 
 **v0 freeze:** this 53-chip DIP list is the first schematic. Do **not** swap in ATF1502/1508, dual-port SRAM, or 6116. If GAL equations overflow, a **4th ATF22V10CQZ-20PU** is the only extra PLD allowed.
 
-**EOL — do not put on the BOM.** These were considered for chip-count and rejected because they are obsolete or NRND at the manufacturer:
+**PLD check (August 2026):** “GAL-DEC / GAL-TIM / GAL-PPU” in these docs are **role names**. The silicon is Microchip **ATF22V10CQZ-20PU** (24-pin DIP, 5 V). Microchip lists the family **In Production**; the DIP SKU is **Active** at distributors, manufacturer projected EOL **2040-11-02**. Do not substitute a Lattice **GAL**\* part, and do not pick a random ATF22V10CQZ suffix (some SMD grades, e.g. **-20XC** TSSOP, are already obsolete).
+
+**EOL / do not put on the BOM** (checked August 2026):
 
 | Part | Why it was tempting | Why it is out |
 |------|---------------------|---------------|
-| Lattice **GAL22V10** DIP | Original GAL | EOL. Use **ATF22V10CQZ-20PU** (Microchip, in production). |
+| Lattice **GAL22V10**, **GAL16V8**, **GAL20V8** (any package) | Classic 22V10 / smaller GAL | Lattice discontinued the GAL family (PCNs ~2006–2013; 22V10D last ship ~2011). Surplus only. |
+| Other **ATF22V10CQZ** packages / speed grades | Same family, smaller board | Lock **-20PU** DIP. Do not assume every CQZ ordering code is still made. |
 | **HM6116** / generic 2 KB DIP SRAM | Right size for the line buffer | DIP 2 KB SRAM is gone from majors. Use another **AS6C62256**. |
-| **ATF1508AS** / **ATF1504AS** (PLCC CPLD) | One fat CPLD instead of 3× 22V10 + glue | **ATF1508AS is EOL.** Do not plan the board around ATF15xx. |
+| **ATF1508AS** / **ATF1504AS** PLCC-84 SKUs | One fat CPLD instead of 3× 22V10 | Several catalog PNs EOL (last ship **31 Oct 2025**). Family pages may still say “In Production” for other packages. **v0 stays on 22V10 DIP.** |
 | **IDT7130** dual-port 1K×8 | Drop the two line-buffer 157s | Dual-port DIP SRAM is a surplus/EOL hunt, not a buyable proto part. |
 
-Glue stays **ATF22V10CQZ-20PU**. If a 4th 22V10 is needed for equations, add that — still a live DIP — rather than an EOL CPLD.
+Glue stays **ATF22V10CQZ-20PU**. If equations overflow, add a **4th** of that same DIP — not a Lattice GAL and not an ATF15xx.
 
 ---
 

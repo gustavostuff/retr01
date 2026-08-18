@@ -25,7 +25,7 @@ Foundation of the family: cabinet-ready board, first silicon target.
 | Block | Specification |
 |-------|----------------|
 | CPU | W65C02S (DIP-40) |
-| Glue | **3× ATF22V10CQZ-20PU** (DIP-24). Lattice GAL22V10 and ATF1508/1504 are EOL. Overflow → 4th 22V10, not a CPLD |
+| Glue | **3× ATF22V10CQZ-20PU** (DIP-24, Microchip, in production as of Aug 2026). Lattice **GAL16V8 / GAL20V8 / GAL22V10** are discontinued. Overflow → 4th **ATF22V10CQZ-20PU**, not a Lattice GAL and not ATF15xx |
 | System RAM | **32 KB**, CPU-only |
 | VRAM | **32 KB**, interleaved CPU<->PPU, CHR from cart |
 | Line buffer | Third **32 KB** SRAM (512 B used). OAM is in the 1284 |

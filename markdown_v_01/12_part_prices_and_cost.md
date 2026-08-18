@@ -10,7 +10,7 @@ This is not a quote. Distributor stock moves. Shipping, tax, and tariffs are ext
 
 Scope is **motherboard + cart** only: chips, passives, PCBs, sockets, connectors.
 
-Glue is **3× ATF22V10CQZ-20PU** plus listed 74HC. Lattice **GAL22V10** DIP is obsolete; ATF1508/1504 CPLDs are EOL and are **not** on this BOM.
+Glue is **3× ATF22V10CQZ-20PU** plus listed 74HC. That Microchip DIP is **In Production** (checked August 2026; manufacturer projected EOL 2040-11-02). Lattice **GAL16V8 / GAL20V8 / GAL22V10** are discontinued. ATF1508/1504 PLCC-84 catalog numbers were EOL’d 2025 and are **not** on this BOM.
 
 ## 1. Core ICs (motherboard)
 

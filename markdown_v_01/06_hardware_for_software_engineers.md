@@ -20,7 +20,7 @@ Software equivalent: `return (A && B);`
 
 ### 2. ATF22V10 (programmable glue)
 
-If 74-series parts are the stdlib, a **GAL / ATF** is a custom compiled function. Lattice **GAL22V10** DIP is EOL. Retr01 uses Microchip **ATF22V10** (same 24-pin, 10 outputs among 22 logic-capable pins, flash instead of old fuses).
+If 74-series parts are the stdlib, a **22V10 PLD** is a custom compiled function. Lattice **GAL** chips (**GAL16V8**, **GAL20V8**, **GAL22V10**) are discontinued. Retr01 uses Microchip **ATF22V10CQZ-20PU** (same 24-pin 22V10 idea, flash instead of old fuses, still in production as of August 2026). Sheet names like GAL-DEC are roles, not Lattice PNs.
 
 1. Write boolean equations (e.g. CUPL) that decode ranges such as
    "A15 low -> RAM CS", "A15..A8 == $FE -> I/O CS", "else if A15 high -> PRG OE".
