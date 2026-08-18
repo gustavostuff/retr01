@@ -14,6 +14,9 @@ TEST(load_v01)
     ASSERT_EQ(pal.entries[48].g, 0xFF);
     ASSERT_EQ(pal.entries[48].b, 0xFF);
     ASSERT_EQ(pal.bg_palettes[0][0], 0);
+    ASSERT_EQ(pal.bg_palettes[0][1], 20);
+    ASSERT_EQ(pal.bg_palettes[0][3], 52);
+    ASSERT_EQ(pal.bg_palettes[1][1], 23);
 }
 
 TEST_RUNNER_BEGIN("test_palette")

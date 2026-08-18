@@ -26,6 +26,16 @@ TEST(project_save_load_roundtrip)
     ASSERT_EQ(strcmp(a.title, b.title), 0);
     ASSERT_EQ(b.screens[0].screen.tiles[0], 2);
     ASSERT_EQ(b.chr_used[0], 3);
+    ASSERT(a.screens[0].canvas != NULL);
+    a.screens[0].canvas[10] = 3;
+    ASSERT_EQ(retr01_project_save(&a, path), 0);
+    retr01_project_free(&b);
+    ASSERT_EQ(retr01_project_load(&b, path), 0);
+    ASSERT(b.screens[0].canvas != NULL);
+    ASSERT_EQ(b.screens[0].canvas[10], 3);
+
+    retr01_project_free(&a);
+    retr01_project_free(&b);
 }
 
 TEST(project_export_cart)
@@ -50,6 +60,7 @@ TEST(project_export_cart)
     ASSERT_EQ(loaded.tiles[0], 1);
 
     retr01_cart_free(&cart);
+    retr01_project_free(&proj);
 }
 
 TEST_RUNNER_BEGIN("test_project_io")

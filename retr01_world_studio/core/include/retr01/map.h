@@ -24,9 +24,21 @@ typedef struct retr01_map_build_world {
 int retr01_map_build(const retr01_map_build_world_t *worlds, size_t world_count,
                      uint8_t **out, size_t *out_len);
 
-/* Find playfield screen at (col,row) in world_index; decode into screen_out. */
+/* Find screen at (col,row) in world_index; decode into screen_out. */
 int retr01_map_load_screen(const retr01_cart_t *cart, int world_index,
                            uint8_t col, uint8_t row, retr01_screen_t *screen_out);
+
+typedef struct retr01_map_cell {
+    uint8_t col;
+    uint8_t row;
+    uint8_t flags;
+} retr01_map_cell_t;
+
+/* List directory cells for a world. Returns 0 and writes *out_count. */
+int retr01_map_list_cells(const retr01_cart_t *cart, int world_index, retr01_map_cell_t *out,
+                          int max_out, int *out_count);
+
+int retr01_map_world_count(const retr01_cart_t *cart);
 
 #ifdef __cplusplus
 }

@@ -6,6 +6,7 @@
 
 #include <SDL.h>
 #include <stdio.h>
+#include <string.h>
 
 #ifndef RETR01_PALETTE_V01_PATH
 #define RETR01_PALETTE_V01_PATH "retr01_world_studio/retr01_palette_v_01.txt"
@@ -26,10 +27,10 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 
     window = SDL_CreateWindow("retr01 World Studio", SDL_WINDOWPOS_CENTERED,
-                              SDL_WINDOWPOS_CENTERED, 1280, 800,
+                              SDL_WINDOWPOS_CENTERED, 1480, 900,
                               SDL_WINDOW_RESIZABLE);
     if (!window) {
         fprintf(stderr, "SDL_CreateWindow: %s\n", SDL_GetError());
@@ -58,11 +59,19 @@ int main(int argc, char **argv)
     ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer2_Init(renderer);
 
-    retr01_studio_init(&app, RETR01_PALETTE_V01_PATH);
+    retr01_studio_init(&app, renderer, RETR01_PALETTE_V01_PATH);
 
     if (argc > 1) {
-        if (retr01_project_load(&app.project, argv[1]) == 0) {
-            snprintf(app.project.path, sizeof(app.project.path), "%s", argv[1]);
+        retr01_project_t loaded;
+        memset(&loaded, 0, sizeof(loaded));
+        if (retr01_project_load(&loaded, argv[1]) == 0) {
+            retr01_project_free(&app.project);
+            app.project = loaded;
+            retr01_palette_load_v01(RETR01_PALETTE_V01_PATH, &app.project.palette);
+            app.sketch_tex_dirty = true;
+            app.preview_tex_dirty = true;
+        } else {
+            retr01_project_free(&loaded);
         }
     }
 

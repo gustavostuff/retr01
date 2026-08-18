@@ -1,4 +1,4 @@
-find_package(SDL2 QUIET)
+find_package(SDL2 REQUIRED)
 
 add_library(retr01_emu_core STATIC
     src/ppu.c
@@ -11,7 +11,7 @@ target_include_directories(retr01_emu_core PUBLIC
 target_link_libraries(retr01_emu_core PUBLIC retr01_core)
 
 add_executable(retr01_emu src/main.c)
-target_link_libraries(retr01_emu PRIVATE retr01_emu_core)
+target_link_libraries(retr01_emu PRIVATE retr01_emu_core SDL2::SDL2)
 target_compile_definitions(retr01_emu PRIVATE
     RETR01_PALETTE_V01_PATH="${CMAKE_SOURCE_DIR}/retr01_world_studio/retr01_palette_v_01.txt"
 )
@@ -26,9 +26,4 @@ if(RETR01_BUILD_TESTS)
         RETR01_PALETTE_V01_PATH="${CMAKE_SOURCE_DIR}/retr01_world_studio/retr01_palette_v_01.txt"
     )
     add_test(NAME test_ppu_blit COMMAND test_ppu_blit)
-endif()
-
-if(SDL2_FOUND AND TARGET SDL2::SDL2)
-    target_link_libraries(retr01_emu PRIVATE SDL2::SDL2)
-    target_compile_definitions(retr01_emu PRIVATE RETR01_EMU_HAS_SDL=1)
 endif()

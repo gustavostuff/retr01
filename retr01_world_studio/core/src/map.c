@@ -151,7 +151,6 @@ int retr01_map_build(const retr01_map_build_world_t *worlds, size_t world_count,
     map_hdr[2] = RETR01_MAP_MAGIC_2;
     map_hdr[3] = RETR01_MAP_MAGIC_3;
     map_hdr[4] = 1; /* version */
-    map_hdr[5] = (uint8_t)world_count;
 
     if (buf_append(&map, map_hdr, 6) != 0) {
         free(map.data);
@@ -165,12 +164,25 @@ int retr01_map_build(const retr01_map_build_world_t *worlds, size_t world_count,
     }
     map.len += 24;
 
-    for (i = 0; i < world_count; i++) {
-        world_base[i] = (uint32_t)map.len;
-        if (build_world_blob(&worlds[i], &map) != 0) {
+    {
+        uint8_t present = 0;
+        for (i = 0; i < world_count && i < RETR01_MAX_WORLDS; i++) {
+            if (worlds[i].screen_count == 0) {
+                world_base[i] = 0;
+                continue;
+            }
+            world_base[i] = (uint32_t)map.len;
+            if (build_world_blob(&worlds[i], &map) != 0) {
+                free(map.data);
+                return -1;
+            }
+            present++;
+        }
+        if (present == 0) {
             free(map.data);
             return -1;
         }
+        map.data[5] = present;
     }
 
     for (i = 0; i < RETR01_MAX_WORLDS; i++) {
@@ -256,7 +268,7 @@ int retr01_map_load_screen(const retr01_cart_t *cart, int world_index,
 
     for (i = 0; i < screen_count; i++) {
         const uint8_t *e = dir + i * 6;
-        if (e[0] == col && e[1] == row && e[2] == 0) {
+        if (e[0] == col && e[1] == row) {
             uint32_t data_off = read_u24(e + 3);
             const uint8_t *payload = world + data_off;
             size_t payload_len;
@@ -287,7 +299,7 @@ int retr01_map_load_screen(const retr01_cart_t *cart, int world_index,
             memset(screen_out, 0, sizeof(*screen_out));
             screen_out->col = col;
             screen_out->row = row;
-            screen_out->flags = 0;
+            screen_out->flags = e[2];
 
             if (retr01_screen_rle_decode(payload, payload_len, screen_out->tiles,
                                          screen_out->attrs) != 0) {
@@ -298,4 +310,53 @@ int retr01_map_load_screen(const retr01_cart_t *cart, int world_index,
     }
 
     return -1;
+}
+
+int retr01_map_world_count(const retr01_cart_t *cart)
+{
+    if (!cart || !cart->map || cart->map_size < MAP_HDR_SIZE) {
+        return -1;
+    }
+    if (cart->map[0] != RETR01_MAP_MAGIC_0 || cart->map[1] != RETR01_MAP_MAGIC_1 ||
+        cart->map[2] != RETR01_MAP_MAGIC_2 || cart->map[3] != RETR01_MAP_MAGIC_3) {
+        return -1;
+    }
+    return (int)cart->map[5];
+}
+
+int retr01_map_list_cells(const retr01_cart_t *cart, int world_index, retr01_map_cell_t *out,
+                          int max_out, int *out_count)
+{
+    uint8_t grid_w, grid_h, screen_count;
+    uint32_t empty_off;
+    const uint8_t *dir;
+    const uint8_t *world;
+    int i;
+    int n;
+
+    if (!cart || !out_count) {
+        return -1;
+    }
+
+    world = map_world_ptr(cart->map, cart->map_size, world_index, &grid_w, &grid_h, &screen_count,
+                          &empty_off, &dir);
+    if (!world) {
+        *out_count = 0;
+        return -1;
+    }
+
+    n = (int)screen_count;
+    if (n > max_out) {
+        n = max_out;
+    }
+    if (out) {
+        for (i = 0; i < n; i++) {
+            const uint8_t *e = dir + i * 6;
+            out[i].col = e[0];
+            out[i].row = e[1];
+            out[i].flags = e[2];
+        }
+    }
+    *out_count = (int)screen_count;
+    return 0;
 }

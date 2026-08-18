@@ -20,17 +20,19 @@ static int parse_hex_color(const char *s, retr01_rgb_t *rgb)
 
 void retr01_palette_set_defaults(retr01_master_palette_t *out)
 {
+    /* Usable ramps: slot 0 is shared backdrop (master 0). Slots 1–3 walk
+     * mid → highlight so a new sketch is readable, not row-0 near-blacks. */
     static const uint8_t bg0[4][4] = {
-        {0, 1, 2, 3},
-        {4, 5, 6, 7},
-        {8, 9, 10, 11},
-        {12, 13, 14, 15},
+        {0, 20, 36, 52}, /* earth */
+        {0, 23, 39, 55}, /* grass */
+        {0, 27, 43, 59}, /* sky */
+        {0, 18, 34, 50}, /* fire */
     };
     static const uint8_t sp0[4][4] = {
-        {0, 32, 33, 34},
-        {0, 35, 36, 37},
-        {0, 38, 39, 40},
-        {0, 41, 42, 43},
+        {0, 32, 48, 49}, /* grey → white */
+        {0, 35, 51, 50}, /* orange */
+        {0, 39, 55, 54}, /* green */
+        {0, 43, 59, 58}, /* blue */
     };
 
     memset(out, 0, sizeof(*out));
