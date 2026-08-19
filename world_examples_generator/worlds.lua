@@ -1,4 +1,4 @@
--- World layout generation. Capped at a 64x64 grid footprint.
+-- World layout generation. Capped at a 16x16 grid footprint.
 
 local Worlds = {}
 
@@ -6,7 +6,9 @@ local maxScreens = 64
 local startX, startY = 128, 128
 
 local function inBounds(x, y)
-  return math.abs(x - startX) < 32 and math.abs(y - startY) < 32
+  -- Generate only within a 16x16 virtual-grid footprint.
+  -- (The bounds clamp below is what guarantees the final grid size.)
+  return math.abs(x - startX) <= 8 and math.abs(y - startY) <= 8
 end
 
 local function computeBounds(world)
@@ -23,11 +25,11 @@ local function computeBounds(world)
     if cell.y > world.bounds.maxY then world.bounds.maxY = cell.y end
   end
 
-  if (world.bounds.maxX - world.bounds.minX + 1) > 64 then
-    world.bounds.maxX = world.bounds.minX + 63
+  if (world.bounds.maxX - world.bounds.minX + 1) > 16 then
+    world.bounds.maxX = world.bounds.minX + 15
   end
-  if (world.bounds.maxY - world.bounds.minY + 1) > 64 then
-    world.bounds.maxY = world.bounds.minY + 63
+  if (world.bounds.maxY - world.bounds.minY + 1) > 16 then
+    world.bounds.maxY = world.bounds.minY + 15
   end
 end
 

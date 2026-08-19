@@ -147,11 +147,11 @@ Door/warp metadata for INSTANT/FADE transitions. Smooth scrolling uses grid adja
 | Field | Description |
 |-------|-------------|
 | `id` | 0–7 |
-| `grid_w`, `grid_h` | Virtual grid dimensions (1–64) |
+| `grid_w`, `grid_h` | Virtual grid dimensions (1–16) |
 | `empty_template` | `null` = solid black; or `screen_id` for optional empty nametable |
 | `parallax` | Runtime `set_parallax` args + editor screen references |
 
-Parallax cells must have `flags=1` in directory export. Row/col may reference cells outside playfield grid (e.g. sky row above y=0) if within 0–63 MAP coords.
+Parallax cells must have `flags=1` in directory export. Row/col may reference cells outside playfield grid (e.g. sky row above y=0) if within 0–15 MAP coords.
 
 ## `screens[]`
 

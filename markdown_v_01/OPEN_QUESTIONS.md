@@ -7,7 +7,7 @@ Living snapshot. When hardware or software decisions change, **update this file*
 | Topic | Decision |
 |-------|----------|
 | Name / order | **Retr01**, **A → C → H** |
-| Worlds / screens / banks | **8 worlds**. Each: **64 screens max** on a sparse virtual grid up to **64 × 64**. 4 CHR banks/world. Screen = **32×30**. Spec: [04_worlds_and_screens.md](04_worlds_and_screens.md) |
+| Worlds / screens / banks | **8 worlds**. Each: **64 screens max** on a sparse virtual grid up to **16 × 16**. 4 CHR banks/world. Screen = **32×30**. Spec: [04_worlds_and_screens.md](04_worlds_and_screens.md) |
 | Bank layout | Page0 BG + page1 sprites = **512** patterns |
 | Authored vs runtime banks | `load_screen` sets authored BG bank. Runtime BG/sprite banks independent. Mid-frame OK via raster IRQ |
 | Raster | **Scanline compare + IRQ**. `set_camera_axis(H/V/BOTH)`. `set_parallax` forces matching 1-axis camera. Spec: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8 |

@@ -117,18 +117,31 @@ CPU view is **one byte per player**. Reads only. Same layout on A, C, and H. Bit
 | `$FE61` | Player 2 |
 | `$FE62+` | Unused |
 
-| Bit | Name | Arcade | Console / handheld |
+| Bit | Name (default) | Arcade | Console / handheld |
 |-----|------|--------|--------------------|
-| 0 | Right | stick | d-pad |
-| 1 | Left | stick | d-pad |
-| 2 | Down | stick | d-pad |
-| 3 | Up | stick | d-pad |
-| 4 | A | button | button |
-| 5 | B | button | button |
-| 6 | Select / Coin | Coin (P1=`Coin1`, P2=`Coin2`) | Select |
+| 0 | Dpad Right | stick | d-pad |
+| 1 | Dpad Left | stick | d-pad |
+| 2 | Dpad Down | stick | d-pad |
+| 3 | Dpad Up | stick | d-pad |
+| 4 | X | button | button |
+| 5 | Y | button | button |
+| 6 | Coin (Select on console) | Coin (P1=`Coin1`, P2=`Coin2`) | Select |
 | 7 | Start | Start | Start |
 
 **1 = pressed.** No extra cabinet byte. Arcade Coin/Start **are** Select/Start.
+
+**Default names, not restrictions:** the board exposes *bits*, not artwork. On an arcade control panel you can label and wire any physical switch to any bit position (and in Retr01-C, the controller MCU just has to report the same bits). User-facing labeling is therefore free-form; the software only cares that `$FE60`/`$FE61` reflect the intended gameplay inputs.
+
+Example mappings you might see on real cabinets (these are just examples; your wiring can differ):
+
+- **Buttons-only, 8-button panel:**  
+  `1, 2, 3, 4` map to `Dpad (U/D/L/R)` in whatever order you want, `A/B` map to `X/Y`, `C` maps to `Coin` (bit 6), and `D` maps to `Start`.
+- **Stick + Coin + A/B/C (no dedicated Start button):**  
+  stick drives `Dpad (bits 0–3)`, coin drives `Coin (bit 6)`, and you choose *one* of the remaining `A/B/C` buttons to wire to `Start (bit 7)`. (From a player’s point of view: “any of these buttons starts the game once you’ve inserted a coin.”)
+- **Keyboard-style panel:**  
+  arrow keys map to `Dpad`, `Space` maps to `X`, `Enter` maps to `Y`, `C` maps to `Coin` (bit 6), and `Esc` maps to `Start`.
+- **6-button “one action” panel:**  
+  keep `Dpad (4) + Coin/Select + Start`, and wire a single extra action button to *both* `X (bit 4)` and `Y (bit 5)` so the cabinet only needs one action switch.
 
 Retr01-A: parallel switches on the 40-pin IDC. Retr01-C: 3-wire pad with an MCU **in the controller**; the board 1284 reconstructs the same two bytes. Details: [14_reduced_number_of_chips.md](14_reduced_number_of_chips.md), [03_hardware_variants.md](03_hardware_variants.md).
 

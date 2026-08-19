@@ -5,7 +5,7 @@
 Retr01 World Studio is a **visual authoring application** for the Retr01 8-bit arcade platform. It lets you:
 
 1. Paint **32×30** nametables (256×240 px) with per-tile palette selection
-2. Lay out **sparse world atlases** on a up-to-64×64 grid (max 64 stored screens per world)
+2. Lay out **sparse world atlases** on a up-to-16×16 grid (max 64 stored screens per world)
 3. Assign **CHR pattern banks** (256 BG + 256 sprite tiles per bank, 4 banks per world)
 4. Configure **parallax cells**, camera axis, and **world-mode packs** (platformer, top-down, etc.)
 5. **Build** a runnable `.retr01` virtual cartridge and preview it in `retr01_emu`

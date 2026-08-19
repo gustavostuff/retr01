@@ -32,7 +32,7 @@ You write 6502. You do not allocate a framebuffer. You fill **nametables** and *
 
 **64 sprites**, **16 per scanline** (NES had 8). OAM lives in the 1284. A third SRAM is a one-line **ping-pong buffer** (the beam reads last line’s sprites while the 1284 draws the next; objects show up one line late, not a frame late).
 
-**8 worlds** on a sparse grid up to 64×64, at most 64 stored screens each. A screen is 32×30 tiles. Four pattern banks per world, 512 patterns each (256 BG + 256 sprites). A ~2 MB cart can hold on the order of **512** screens if you pack the atlas. **MAP** is a directory the CPU reads through `$FE90` (you do not mmap the whole world; you ask for a room and stream it).
+**8 worlds** on a sparse grid up to 16×16, at most 64 stored screens each. A screen is 32×30 tiles. Four pattern banks per world, 512 patterns each (256 BG + 256 sprites). A ~2 MB cart can hold on the order of **512** screens if you pack the atlas. **MAP** is a directory the CPU reads through `$FE90` (you do not mmap the whole world; you ask for a room and stream it).
 
 **Raster IRQ** on a scanline compare (an interrupt on a line you pick). Split the screen, swap CHR banks, run a parallax band. No burned sprite-0 pixel.
 
