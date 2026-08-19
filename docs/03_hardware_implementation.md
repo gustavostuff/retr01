@@ -90,17 +90,39 @@ This removes the NES-style "VBlank-only VRAM write prison" while still using one
 2. scroll + arrangement choose nametable slot
 3. slot tile byte and attr come from VRAM
 4. slot BG bank latch picks CHR bank
-5. tile row fetch returns 2bpp data
-6. shifters output BG pixel
+5. active BG palette buffer maps the tile's 2-bit color through the selected BG palette
+6. tile row fetch returns 2bpp data
+7. shifters output BG pixel
 
 ### Sprites
 
 1. CPU uploads OAM through `$FE20/$FE21`
 2. 1284 scans OAM for the **next** line
-3. during HBlank, 1284 fetches sprite CHR and fills the next line-buffer half
-4. visible line reads last-filled half
+3. active sprite palette buffer maps sprite color indices through the selected sprite palette
+4. during HBlank, 1284 fetches sprite CHR and fills the next line-buffer half
+5. visible line reads last-filled half
 
 This is a **one-line** pipeline, not a full-frame delay.
+
+## Palette hardware model
+
+Each cart may store sparse **palette banks** in flash:
+
+- cart-global minimum: **1 BG palette + 1 sprite palette**
+- optional per world: **BG palette bank** and/or **sprite palette bank**, each up to **8 palette rows x 4 palettes**
+
+Runtime selection is always by **palette row**, and **BG palette row N** and **sprite palette row N** are locked together.
+
+When palette row `N` is active, the **active palette buffer** holds **8 palettes**:
+
+- 4 BG palettes from BG palette row `N`
+- 4 sprite palettes from sprite palette row `N`
+
+All 8 share the same **color 0** master index (universal backdrop for that row).
+
+The hardware-facing model is dedicated palette registers or palette RAM. It is **not** nametable VRAM. **Fallback resolution is not hardware logic.** Boot code or Retr01 Studio export/runtime code chooses the source palette bank entry and copies the selected row into registers.
+
+No extra ICs are required for palette banks, synced row selection, or fallback rules. That is cartridge encoding plus a burst of CPU stores when the palette row changes.
 
 ## Timing-facing rules
 
@@ -108,6 +130,7 @@ This is a **one-line** pipeline, not a full-frame delay.
 - allow up to **8 px** delay if a write lands mid-tile
 - clean splits should write during **HBlank**
 - raster IRQ is the intended split mechanism
+- palette-buffer rewrites follow the same rule: safest in VBlank, possible mid-frame with raster timing
 
 ## Input contract
 
@@ -153,5 +176,6 @@ For software people:
 - write game state in system RAM
 - stream screens through MAP and VRAM
 - write OAM through the 1284 port
+- treat palette changes as writes to an active palette buffer
 - treat `$FExx` as the hardware API
 - let the board resolve tiles to pixels

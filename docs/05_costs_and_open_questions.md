@@ -12,6 +12,13 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Screen format | **32×30** tiles + **240-byte** packed attr plane |
 | CHR layout | **4 BG banks + 4 sprite banks** per world |
 | Bank sizes | **256 tiles** per bank, **4 KB** each |
+| Master palette | one **64-color** table for Retr01-A/C/H |
+| Cart global palette banks | minimum **1 BG palette + 1 sprite palette** for the whole cart |
+| World palette banks | optional **BG palette bank** and/or **sprite palette bank**, sparse, up to **8 rows x 4 palettes** each |
+| Active palette buffer | **4 BG + 4 sprite palettes** from one selected **palette row** |
+| Palette row selection | BG palette row **N** and sprite palette row **N** are always selected together |
+| Shared backdrop | all **8** active palettes use the same **color 0** master index |
+| Palette fallback | world palette bank -> cart global -> system default; resolved in software at load time |
 | Runtime BG banking | per **nametable slot** |
 | Runtime sprite banking | separate **global latch** |
 | VRAM | **32 KB**, interleaved |
@@ -28,6 +35,8 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Raster | scanline compare + IRQ |
 | Glue | **ATF22V10CQZ-20PU** + 74HC family |
 | APU | separate **ATmega328P** |
+| Near-term software | **Retr01 Studio** only (visual authoring + compile) |
+| Future software | low-level hardware emulator (planned, not current work) |
 
 ## Cost snapshot
 
@@ -56,17 +65,19 @@ Depends on final flash strategy, but motherboard + cart proto still targets roug
 
 | ID | Topic | Note |
 |----|-------|------|
-| Q1 | exact `$FE0x` and `$FE4x` bitfields | block families are fixed, byte-level details still need freezing |
+| Q1 | exact `$FE0x` and palette-register bitfields | block families are fixed, byte-level details still need freezing |
 | Q2 | RGBS analog levels / sync polarity tuning | digital timing is locked; bench tuning still needed |
 | Q3 | Retr01-C 3-wire controller bit protocol | software-visible byte contract is fixed, transport details are not |
 | Q4 | OAM byte order final confirmation | default remains NES-like `Y, tile, attr, X` |
 | Q5 | root-level old names and paths | some legacy `GameNerd` / old-folder references still exist |
+| Q6 | exact cartridge encoding for palette banks and palette-row IDs | terminology and row-sync rules are locked; field layout still needs freezing |
 
 ## Practical next decisions
 
 The highest-value open work is:
 
-1. freeze exact `$FE0x` and `$FE4x` bytes
-2. rewrite the emulator against the reduced doc set
-3. lock cart flash packaging
-4. tune RGBS on real hardware
+1. freeze exact `$FE0x` and palette-register bytes
+2. define Retr01 Studio phase 0 project/format layout
+3. lock palette-bank encoding and palette-row IDs in cartridge data
+4. lock cart flash packaging
+5. tune RGBS on real hardware

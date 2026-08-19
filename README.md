@@ -24,13 +24,13 @@ Think: **NES-era aesthetics with room to actually build ambitious games.**
 - **A bold but readable look:** limited color per tile/sprite on purpose, with clarity over mush
 - **Big cartridge worlds:** multiple "worlds," dozens of screens each, packed into a standard-size cart
 - **Smooth multi-screen scrolling:** cameras that cross screen borders without the classic flicker tax
-- **A path from software to silicon:** prove a game in a strict low-level emulator, then flash it to hardware
+- **Retr01 Studio:** visual tool to author worlds and compile `.retr01` cart images
 
 Later editions (console and handheld) share the same soul: one architecture, different shells.
 
 ## Project status
 
-Retr01 is in **architecture & documentation** phase. The living spec lives in [`docs/`](docs/). Hardware bring-up and the low-level emulator come next. Polished toolchains and sample games follow once the core is solid.
+Retr01 is in **architecture & documentation** phase. The living spec lives in [`docs/`](docs/). **Retr01 Studio** — the visual authoring and compile tool — is the next coding focus. A low-level hardware emulator is planned later, not in active development yet.
 
 ## Name note
 

@@ -28,9 +28,14 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 | **Grid position** | One `(col, row)` coordinate in a world's sparse virtual grid |
 | **Camera nametable slots** | VRAM slots **0–3**: the live 2×2 playfield field |
 | **Plane nametable slots** | VRAM slots **4–5**: optional parallax-only storage |
-| **BG bank** | **256 BG tiles**, arranged as a **16×16** tile grid, **4 KB** |
-| **Sprite bank** | **256 sprite tiles**, arranged as a **16×16** tile grid, **4 KB** |
-| **BG bank latch** | Per-slot register selecting which BG bank CHR fetch uses |
+| **BG bank** | **256 BG tiles**, arranged as a **16×16** tile grid, **4 KB** (CHR) |
+| **Sprite bank** | **256 sprite tiles**, arranged as a **16×16** tile grid, **4 KB** (CHR) |
+| **BG bank latch** | Per-slot register selecting which CHR BG bank fetch uses |
+| **BG palette bank** | Cartridge store of up to **32 BG palettes** (**8 palette rows x 4 palettes**) |
+| **Sprite palette bank** | Cartridge store of up to **32 sprite palettes** (**8 palette rows x 4 palettes**) |
+| **Palette row** | **4 palettes** in one plane; index **0-7**; BG row N and sprite row N are selected together |
+| **Palette** | One 4-color set (**4 master indices**) |
+| **Active palette buffer** | **8 palettes** on screen: **4 BG + 4 sprite** from the currently selected palette row |
 
 ## High-level hardware
 
@@ -49,7 +54,7 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 |------|------|
 | Resolution | **256×240** |
 | Tile size | **8×8** |
-| Color | **2bpp**, **8 palettes** total (4 BG + 4 sprite) |
+| Color | **2bpp**, **64-color master palette**, **BG/sprite palette banks** (8 rows x 4 palettes each, sparse), **one synced palette row active** (4 BG + 4 sprite) |
 | Worlds | **8** max |
 | Screens per world | **64** max on sparse **16×16** virtual grid |
 | CHR per world | **4 BG banks + 4 sprite banks**, **256 tiles each** |
@@ -90,9 +95,19 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 - BG banks per nametable slot
 - Sprite bank independent of BG banks
 
+## Near-term software focus
+
+**Retr01 Studio** is the only tool in active development. See `04_retr01_studio.md`.
+
+Studio authors worlds, screens, palettes, and CHR, then compiles them into a `.retr01` cart image.
+
+## Future software (planned)
+
+A **low-level hardware emulator** is planned later, not built now. It should simulate cycles, memory decode, and `$FExx` hardware behavior faithfully enough to validate carts before silicon exists.
+
 ## Where to look next
 
 - Graphics, worlds, scrolling, banks, VRAM, and MAP: `02_graphics_worlds_memory.md`
 - Board structure, buses, chips, and timing: `03_hardware_implementation.md`
-- Emulator and bring-up path: `04_emulation_and_bringup.md`
+- Retr01 Studio (current tool): `04_retr01_studio.md`
 - Costs and unresolved items: `05_costs_and_open_questions.md`
