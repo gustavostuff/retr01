@@ -105,6 +105,8 @@ This latch answers **which pictures** the PPU is using. It does **not** scroll a
 | BG bank 0-3 | Which of that world's 4 banks supplies the **256 BG patterns** nametable indices point at |
 | Sprite bank 0-3 | Same for OAM tile numbers. May differ from the BG bank |
 
+The **BG bank field is global for the active BG fetch path**. It is not stored per VRAM slot. If slots 0-3 form a 2x2 smooth-scroll camera, all visible playfield slots on that scanline band use this same BG bank. To use a different BG bank, change `$FE30` at a raster split so the next scanline band uses the new bank.
+
 Writable **mid-frame**. The next CHR fetch uses the new value. Shift registers may still show the current tile (up to 8 px). Raster IRQ + HBlank writes: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8. Emulator: on write, set `ppu.world`, `ppu.bg_bank`, `ppu.spr_bank`.
 
 ### Controllers / cabinet (`$FE60-$FE6F`)

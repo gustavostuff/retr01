@@ -6,6 +6,8 @@ A **world** is a cart chapter: 4 CHR banks plus a sparse atlas of screens. A car
 
 A **screen** is one **32x30** nametable plus packed attrs (1200 bytes uncompressed). It has a **(col, row)** on that world's virtual grid. Only stored screens occupy MAP bytes. Most screens are **playfield** (you walk them). A world may also store **parallax** cells (repeating strips, not enterable). Camera axis is H, V, or both (`set_camera_axis`). A plane forces H or V. See [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8.
 
+Important: a screen does **not** carry its own live BG bank at render time. During drawing, the playfield fetch path uses the one BG bank currently latched in `$FE30`. So if smooth scrolling shows multiple playfield screens at once, those visible slots must all be authored to work with the same BG bank for that scanline band.
+
 The **virtual grid** is up to **16 x 16** cells. At most **64** cells hold a real screen. The rest are holes. Holes are not stored. Connectivity is optional: a world may be a packed rectangle, a corridor, a blob, several islands, or a single room.
 
 Hardware has no map camera. RAM holds `world`, `map_x`, `map_y` (one byte each). Set those and call `load_screen`. Pixel scroll is `scroll_x` / `scroll_y` over the live 1/2/4 nametable slots in VRAM.
@@ -65,6 +67,8 @@ The player should not walk into empty. That is **collision in PRG**, not a camer
 Warps (`load_screen` to a new col/row) are for doors and teleports. They are not required just because a screen is isolated.
 
 **Streaming cue (software, not a PPU register):** when the camera is within **2 tiles (16 px)** of a seam, look up neighbor `(map_x±1, map_y)` or `(map_x, map_y±1)`. Hit: decompress into the incoming slot. Miss: empty template.
+
+Because BG banking is global per scanline band, seam neighbors that may be visible together in the camera should normally be authored against the **same BG bank**. If a different bank is needed, switch banks by **raster split** so the different bank appears in a different horizontal band, not in another simultaneously visible playfield slot.
 
 **Out-of-grid debug:** if `load_screen` is given coords outside 0-15, software may paint a lettered **EMPTY** pattern so the bug is obvious. That is not the same as an in-world hole (black / mountains).
 
@@ -131,7 +135,8 @@ world_01:
 2. Scan the directory for `(map_x, map_y)`. At 8 MHz, 64 rows is cheap. You may cache the directory in system RAM on world enter (~64 * 6 bytes).
 3. On miss, or on hit with **parallax** flag: fill the VRAM **camera** slot with the empty template (`empty_off == 0` = solid black, else that nametable). Do not use a parallax cell as a room.
 4. On playfield hit: seek to `data_off`, RLE-decode tile section (960 bytes) then attr section (240 bytes), write **1200 bytes** into a camera nametable through `$FE1x`.
-5. Coords outside 0-15: optional lettered EMPTY debug fill.
+5. Use that screen's authored BG bank as the default for the playfield band, but remember the hardware fetch path still has only **one live BG bank latch** for all camera slots visible in that band.
+6. Coords outside 0-15: optional lettered EMPTY debug fill.
 
 Seam fill is the same lookup. A parallax neighbor is a miss (empty / blocked). `set_parallax` is a separate call: same directory lookup, but it decompresses into plane slot 4 or 5. See [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8.
 

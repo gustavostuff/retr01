@@ -36,13 +36,16 @@ World / grid / screen atlas: [04_worlds_and_screens.md](04_worlds_and_screens.md
 
 Retr01 does **not** define NES-style **pattern tables/pages** as an extra runtime layer. Software sees a **BG bank** and a **sprite bank**. The screen's tile bytes are just **0-255** into the selected BG bank's BG half.
 
+Important consequence: the **BG bank latch is global for the current BG fetch path**. It is **not** stored per nametable slot. If the camera is showing 1, 2, or 4 playfield screens at once, all visible playfield slots are interpreted through the same currently latched BG bank.
+
 ### Bank rules
 
 1. Each world has **4** pattern banks.
 2. Each bank: **first 256 patterns BG**, **second 256 sprites** -> **512** patterns / bank (8 KB @ 16 bytes/pattern).
 3. **Authored bank:** `load_screen` sets the BG bank that screen was drawn against. That is the default at the start of the frame. Software may still switch banks mid-frame (see section 8).
 4. **Runtime banks:** PPU may select **BG bank** and **sprite bank** independently. Either may change **mid-frame**. Nametable bytes stay 0-255 into whichever BG bank's BG half is **currently** latched.
-5. PPU fetches CHR **from cartridge CHR-ROM** (not from VRAM).
+5. **No per-slot BG banks:** the 2x2 camera does **not** carry 4 independent BG bank IDs for slots 0-3. A four-screen smooth-scroll view therefore cannot show four different BG banks simultaneously. If all four slots are on screen together, they must be compatible with the same BG bank for that scanline band.
+6. PPU fetches CHR **from cartridge CHR-ROM** (not from VRAM).
 
 ## 3. CHR size math
 
@@ -97,6 +100,7 @@ OAM lives in the **ATmega1284P** (internal RAM), reached via `$FE20`/`$FE21`. It
 
 - `scroll_x` and `scroll_y` are **one byte each** (0-255, wrap). That is the pixel camera inside the live field.
 - Live field: up to **four** nametable slots (2x2). Arrangement/mirroring chooses **1, 2, or 4** distinct screens. As the window crosses a slot boundary, those neighbor tiles **are** on screen. That is how pixel scrolling looks continuous.
+- The BG bank used for that live field is still **one global latch** for the current scanline band. Smooth scrolling does **not** imply four simultaneous BG banks.
 - **Planes:** two extra slots (see section 8). Not part of the 2x2 camera. Raster IRQ may point the top (or other) scanline band at a plane.
 - **Streaming cue:** software, **2 tiles (16 px)** before a seam. Neighbor lookup, empty-template fill, and `load_screen` are in [04_worlds_and_screens.md](04_worlds_and_screens.md).
 
@@ -147,6 +151,7 @@ Hardware is a compare of the existing Y counters (74HC161) against one latch. A 
 One nametable still names tiles 0-255. The active BG tile set is whichever BG bank `$FE30` currently selects.
 
 - At `load_screen`, set the **authored** BG bank (the set that nametable was drawn against).
+- That BG bank selection is **global for the current BG band**, not per screen slot. Four visible playfield screens do **not** mean four simultaneous BG banks.
 - In a raster IRQ, switch to another of the world's **4** BG banks. From that scanline down, the same 0-255 indices are a **different** 256 pictures.
 - Four horizontal bands => up to **1024** unique BG tiles on one frame, still one nametable.
 - Status bar vs playfield is the one-split version of the same trick.
@@ -188,6 +193,8 @@ If game code then calls `set_camera_axis(CAM_BOTH)` **while a plane is still on*
 | `CAM_BOTH` | both | all 4 (and empty-neighbor peeks) |
 
 Live playfield field is 1 or 2 nametable slots on the live axis when H or V (not the 2x2). Plane still uses slot 4 or 4+5. VRAM is not the reason for the lock. The lock is the compositor.
+
+This does **not** collide with the BG-bank rule above. The plane band and playfield band happen on **different scanline ranges**, so software may restore a different BG bank in the raster IRQ together with `nt_arrange` and scroll. Constraint: one BG bank per band, not one BG bank for the whole frame.
 
 **Not locked:** warps and `load_screen` to another col/row (doors, stairs). After a warp you may keep the plane (camera stays 1-axis) or `clear_parallax()`.
 
@@ -279,6 +286,7 @@ nmi:
     ...
 irq:
     nt_arrange = PLAYFIELD_CAMERA
+    bg_bank = playfield_bg_bank
     scroll_x = camera_x
     scroll_y = camera_y
     disable raster IRQ

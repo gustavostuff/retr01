@@ -133,6 +133,8 @@ VRAM holds up to **four** 32x30 nametable slots (2x2 scroll field). Each nametab
 
 Retr01 does **not** expose NES-style **pattern tables/pages** as a separate concept between CHR bytes and screens. A screen's nametable simply names tiles **0-255** in the **currently selected BG bank's BG half**. That is enough indirection already: `world -> BG bank -> tile index -> pixels`. Extra "pattern table/page" terminology would only duplicate what the bank latch already does.
 
+That bank latch is **global for the current BG fetch path**, not one latch per nametable slot. So if smooth scrolling shows 2 or 4 playfield screens at once, those visible slots are all decoded through the same BG bank unless software changes `$FE30` on a later raster split.
+
 ### 3. Attributes and palettes (hardware CSS)
 
 2bpp patterns pick among 4 indices (00, 01, 10, 11). **8 palettes** (4 BG + 4 sprite). **Per-tile BG attributes:** 240 bytes at `+0x3C0` in each VRAM slot. One byte is a 2x2 cell with four 2-bit palette selects (one per tile). NES instead uses one select for a whole 2x2.
