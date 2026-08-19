@@ -33,7 +33,7 @@ This file is the coprocessor / input / chip-count source of truth. CPU map: [08_
 | **EEPROM** | 1 | AT28C64B-15PU (DIP-28) | High scores / operator settings. |
 | **PLD (role name GAL-DEC/TIM/PPU)** | 3 | **ATF22V10CQZ-20PU** (DIP-24) | Decode, beam/NMI/IRQ, CHR/VRAM `/CE`. Not a Lattice GAL. |
 | **Beam counters** | 4 | 74HC161 (DIP-16) | Dot X and line Y (341 × 262). No sprite-X 161s. |
-| **Latches** | 7 | 74HC573 (DIP-20) | Scroll, CHR cell latches, I/O, 6502→1284 OAM write capture. |
+| **Latches** | 7 | 74HC573 (DIP-20) | Scroll, CHR bank latches, I/O, 6502→1284 OAM write capture. |
 | **VRAM mux** | 4 | 74HC157 (DIP-16) | 15-bit VRAM address CPU vs PPU. **Do not cut this to 2** — one 157 is only 4 bits. |
 | **Line-buffer mux** | 2 | 74HC157 (DIP-16) | Buffer address: beam X vs 1284. |
 | **Transceivers** | 3 | 74HC245 (DIP-20) | CPU / VRAM / cart isolation. |
@@ -117,7 +117,7 @@ Already specified:
 - [06_hardware_for_software_engineers.md](06_hardware_for_software_engineers.md): during **HBlank**, scan OAM Y, fill a line buffer for at most **16** sprites on the **next** scanline, fetch sprite CHR.
 - [07_emulator_specification.md](07_emulator_specification.md): same secondary-OAM / next-line model.
 
-That **is** a one-line pipeline: pixels on line *N* were chosen at the end of line *N−1*. Not an extra frame of lag. BG cell/scroll still have the documented **up to 8 px** fetch delay; that is separate.
+That **is** a one-line pipeline: pixels on line *N* were chosen at the end of line *N−1*. Not an extra frame of lag. BG bank/scroll still have the documented **up to 8 px** fetch delay; that is separate.
 
 The 1284 cannot finish a 64-sprite scan in 85 HBlank dots (~16 µs). It uses the **whole current line** (~63.5 µs visible + HBlank) to build the **next** line’s buffer:
 

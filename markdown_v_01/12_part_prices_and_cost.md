@@ -26,7 +26,7 @@ Qty-1 authorized-distributor ballpark unless noted.
 | 1 | ATmega328P-PU (DIP-28) | NES-style APU | $2.90 | $2.90 |
 | 6 | 74HC157 (DIP-16) | 4× VRAM addr mux + 2× line-buffer addr mux | $1.20 | $7.20 |
 | 3 | 74HC245 (DIP-20) | Data bus isolation | $0.90 | $2.70 |
-| 7 | 74HC573 (DIP-20) | Scroll, CHR cell latches, I/O, 6502→1284 OAM capture | $1.00 | $7.00 |
+| 7 | 74HC573 (DIP-20) | Scroll, CHR bank latches, I/O, 6502→1284 OAM capture | $1.00 | $7.00 |
 | 4 | 74HC161 (DIP-16) | Beam X/Y (341 × 262) | $1.00 | $4.00 |
 | 16 | 3×HC00, 2×HC04, 1×HC14, 3×HC08, 3×HC32, 2×HC86, 2×HC688 | PHI2, HBlank, compositor, RESB | $0.80 | $12.80 |
 | 3 | Crystals / canned oscillators | 8.000 MHz CPU, 21.477 MHz class dot, 20 MHz 1284, 16 MHz 328P | $2.50 | $7.50 |

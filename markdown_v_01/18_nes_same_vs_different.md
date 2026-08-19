@@ -2,7 +2,7 @@
 
 Retr01 borrows the NES-era *programming mental model* (nametables + CHR tiles + an OAM-like sprite list + an APU-style sound chip + VBlank/NMI as a frame boundary). But the silicon is discrete and the buses/registers are not the NES PPU.
 
-These tables are for alignment while writing the emulator and authoring tools. Canonical Retr01 terms (world, screen, BG cell, sprite cell, nametable slot): [README.md](README.md).
+These tables are for alignment while writing the emulator and authoring tools. Canonical Retr01 terms (world, screen, BG bank, sprite bank, nametable slot): [README.md](README.md).
 
 ## What is the same as NES
 
@@ -12,7 +12,7 @@ These tables are for alignment while writing the emulator and authoring tools. C
 | NMI as “frame boundary” | VBlank/NMI is used as the “a frame finished” metronome. |
 | Tile graphics are 2bpp + transparency | Tiles/pixels are effectively “3 colors + transparent” per 2-bit pixel. |
 | Nametable background layout | Background is organized as a 32×30 nametable of 8×8 tile indices. |
-| CHR tile data is cartridge-backed | Tile pattern bytes come from the cartridge’s CHR cells. |
+| CHR tile data is cartridge-backed | Tile pattern bytes come from the cartridge’s CHR banks. |
 | OAM-like sprites | Sprites are defined by a list of bytes (Y, tile index, attributes, X) and compose with background using priority + palette rules. |
 | Palettes exist | Pixels reference palette indices which map through a master RGB table. |
 | NES-style sound channels | Audio is generated using the NES channel set (pulse / triangle / noise / DMC concept). |
@@ -30,7 +30,7 @@ These tables are for alignment while writing the emulator and authoring tools. C
 | Sprite-vs-BG gameplay assumptions | Retr01 is designed for strict software collision (AABB in PRG). Sprite-vs-BG “hits” are not a gameplay trigger. |
 | No integrated PPU datapath | Retr01’s BG “PPU” is built from 74HC + counters + muxes (discrete compositor), not a unified console PPU chip. |
 | World atlas / MAP streaming | NES loads level data from cartridge/PPU name tables directly. Retr01 adds a `MAP-ROM` + streaming directory (`$FE90`) so “worlds + screens + streaming seams” are first-class. |
-| More explicit mid-frame controls | Retr01 supports raster IRQ-driven mid-frame changes (e.g. switching BG/sprite cells) via its own latch set and interrupt sources. |
-| No programmer-visible pattern tables/pages | NES discussions often talk about pattern tables, 4 KB pages, or CHR **banks**. Retr01 uses **BG cells** and **sprite cells** instead (256 patterns each, 4 per world). Screens index tiles 0-255 and carry a BG cell in MAP metadata; loaders copy that into the slot's BG cell latch. Sprites index tiles 0-255 in the separately selected sprite cell. |
-| Where “bank” still appears on Retr01 | **PRG banking** only (`$FE80`). Not used for CHR tile art. The sprite line buffer uses **ping-pong halves** (hardware term, not a CHR cell). NES CHR **bank** talk maps to Retr01 **cells**. |
+| More explicit mid-frame controls | Retr01 supports raster IRQ-driven mid-frame changes (e.g. switching BG/sprite banks) via its own latch set and interrupt sources. |
+| No programmer-visible pattern tables/pages | NES discussions often talk about pattern tables, 4 KB pages, or CHR **banks**. Retr01 uses **BG banks** and **sprite banks** instead (256 patterns each, 4 per world). Screens index tiles 0-255 and carry a BG bank in MAP metadata; loaders copy that into the slot's BG bank latch. Sprites index tiles 0-255 in the separately selected sprite bank. |
+| Where “bank” appears on Retr01 | **CHR:** **BG bank** / **sprite bank** (4 each per world). **PRG:** `$FE80` only. **Hardware:** sprite line-buffer **ping-pong halves** (not CHR). Retr01 has no NES-style pattern-table layer; a NES “CHR bank” maps to a Retr01 BG or sprite bank. |
 

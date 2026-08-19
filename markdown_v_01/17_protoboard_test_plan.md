@@ -90,7 +90,7 @@ If the monitor will not lock, fix sync **before** connecting VRAM.
 
 ## Island I — Background tiles (05 §5.10)
 
-**Board:** H + G + CHR ROM (or a second flash) + attr unpack + 2bpp shifters + `$FE30` CHR-cell 573s. GAL-PPU CHR `/CE` = BG only (1284 not present).
+**Board:** H + G + CHR ROM (or a second flash) + attr unpack + 2bpp shifters + `$FE30` CHR-bank 573s. GAL-PPU CHR `/CE` = BG only (1284 not present).
 
 **Test:** bake a nametable in VRAM (via `$FE1x` or a programmer). Known tile 0 in CHR. Screen shows an 8×8 pattern, scroll `$FE02/03` moves it. Wrong-phase CPU VRAM access should glitch; right-phase should not.
 
@@ -100,7 +100,7 @@ If the monitor will not lock, fix sync **before** connecting VRAM.
 
 **Board:** 1284, SRAM #3, 2× 157, HBLANK from island H (or an AVR timer approximating 63.5 µs / 16 µs). ISP header. CHR ROM on the 1284 data bus **only** during a fake HBlank.
 
-**Test:** firmware fills sprite cell 1 with a solid color at X=32–40. Beam (or a 161 from H) reads `{linebuf_half, X}`. Scope `/WE` of SRAM #3 during HBlank only. CPU `$FE21` path: 573 + `OAM_WR` ISR stores 256 bytes; dump OAM over UART if you want.
+**Test:** firmware fills sprite bank 1 with a solid color at X=32–40. Beam (or a 161 from H) reads `{linebuf_half, X}`. Scope `/WE` of SRAM #3 during HBlank only. CPU `$FE21` path: 573 + `OAM_WR` ISR stores 256 bytes; dump OAM over UART if you want.
 
 Do **not** share CHR with island I until GAL-PPU exclusive `/CE` is tested on a **third** small board (two `/CE` probes: never both low).
 

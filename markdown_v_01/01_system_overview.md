@@ -15,7 +15,7 @@ Formerly GameNerd / Retr02. Those names are retired.
 3. **Strict 2bpp:** 3 colors + transparency per draw unit, **8 palettes** (4 BG + 4 sprite), shared BG backdrop, **per-tile** BG palette select packed 4 tiles per attr byte (NES shares one select across a 2x2).
 4. **Binary-first data:** Fixed-size layouts, with no dynamic allocation on target.
 5. **Software collision:** AABB (or equivalent) in game code. No hardware sprite-vs-BG collision for gameplay. Beam timing uses a **raster compare / IRQ**, not NES sprite-0 hit.
-6. **CHR from cartridge:** PPU reads pattern bytes from cart CHR-ROM (organized as **BG cells** and **sprite cells** per world). VRAM holds live nametables/attrs only.
+6. **CHR from cartridge:** PPU reads pattern bytes from cart CHR-ROM (organized as **BG banks** and **sprite banks** per world). VRAM holds live nametables/attrs only.
 
 ## 3. Shared capability snapshot
 
@@ -25,9 +25,9 @@ Formerly GameNerd / Retr02. Those names are retired.
 | Color | 2bpp, 8 palettes, **per-tile** BG attrs (240 bytes/screen), **64-entry** master palette ([`retr01_palette_v_01.txt`](../retr01_world_studio/retr01_palette_v_01.txt)) |
 | Sprites | 64 OAM in **1284**, **16 / scanline** max, next-line line buffer |
 | Worlds / screens | **8 worlds**, sparse grid up to **16 x 16**, **64 screens max** each |
-| CHR cells / world | **8** total: **4 BG + 4 sprite** (256 patterns each) |
+| CHR banks / world | **8** total: **4 BG + 4 sprite** (256 tiles each, **16×16** grid per bank) |
 | System RAM | **32 KB** CPU-only (`$0000-$7FFF`) |
-| VRAM | **32 KB** interleaved, 4 x 2 KB nametable slots |
+| VRAM | **32 KB** interleaved; camera slots **0–3** (2×2 field) + optional plane slots **4–5** |
 | Line buffer | Third **32 KB** SRAM (512 bytes used) |
 | Cart | ~**2 MB** flash (PRG + CHR + MAP) |
 | Input | **1 byte / player** (`$FE60`, `$FE61`) |

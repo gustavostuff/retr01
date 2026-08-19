@@ -52,7 +52,7 @@ Do **not** treat this file as a full architecture spec. Ignore the older “draw
 | `03_decode` | ATF22V10 #1 (GAL-DEC): RAM / I/O / PRG / EEPROM chip selects |
 | `04_ram_eeprom` | AS6C62256 system RAM, AT28C64B operator EEPROM |
 | `05_vram` | AS6C62256 VRAM, 74HC157 address mux, 74HC245 data transceiver, phase select |
-| `06_io_latches` | `$FExx` latches: PPU ctrl, scroll, CHR cells, mapper, MAP addr, pads |
+| `06_io_latches` | `$FExx` latches: PPU ctrl, scroll, CHR banks, mapper, MAP addr, pads |
 | `07_ppu_timing` | Dot clock, 74HC161 X/Y counters (341×262), HBlank/VBlank, NMI, raster IRQ, ATF #2 (GAL-TIM) |
 | `08_ppu_bg` | Nametable fetch, attr unpack, CHR address for BG, shift registers, 2bpp combine |
 | `09_ppu_spr` | OAM SRAM, HBlank evaluate (max 16), sprite CHR fetch, X counters, compositor mux |
@@ -173,29 +173,29 @@ VRAM is 32 KB. Address 15-bit. **CHR is not this chip.**
 OAM format (NES-like, **locked for proto**): 64 sprites × 4 bytes: **Y, tile, attr, X**.  
 Attr: bits 1–0 palette, bit 5 priority (1 = behind opaque BG), bit 6 H-flip, bit 7 V-flip.
 
-### `$FE30-$FE3F` CHR cells / world
+### `$FE30-$FE3F` CHR banks / world
 
 | Offset | Name | Function |
 |--------|------|----------|
 | `$FE30` | WORLD | bits 2–0 world 0–7 (CHR chapter) |
-| `$FE31` | SPR_CELL | bits 1–0 sprite cell 0–3 within world |
-| `$FE32` | BG_CELL0 | bits 1–0 for camera slot 0 |
-| `$FE33` | BG_CELL1 | bits 1–0 for camera slot 1 |
-| `$FE34` | BG_CELL2 | bits 1–0 for camera slot 2 |
-| `$FE35` | BG_CELL3 | bits 1–0 for camera slot 3 |
-| `$FE36` | BG_CELL4 | bits 1–0 for plane slot 4 |
-| `$FE37` | BG_CELL5 | bits 1–0 for plane slot 5 |
+| `$FE31` | SPR_BANK | bits 1–0 sprite bank 0–3 within world |
+| `$FE32` | BG_BANK0 | bits 1–0 for camera slot 0 |
+| `$FE33` | BG_BANK1 | bits 1–0 for camera slot 1 |
+| `$FE34` | BG_BANK2 | bits 1–0 for camera slot 2 |
+| `$FE35` | BG_BANK3 | bits 1–0 for camera slot 3 |
+| `$FE36` | BG_BANK4 | bits 1–0 for plane slot 4 |
+| `$FE37` | BG_BANK5 | bits 1–0 for plane slot 5 |
 
 CHR byte address (BG):
 
 ```text
-off = world*0x8000 + bg_cell_for_current_slot*0x1000 + tile*16 + row + plane*8
+off = world*0x8000 + bg_bank_for_current_slot*0x1000 + tile*16 + row + plane*8
 ```
 
 Sprite byte address:
 
 ```text
-off = world*0x8000 + 0x4000 + spr_cell*0x1000 + tile*16 + row + plane*8
+off = world*0x8000 + 0x4000 + spr_bank*0x1000 + tile*16 + row + plane*8
 ```
 
 ### `$FE40-$FE5F` APU (ATmega)
@@ -312,8 +312,8 @@ tx = sx / 8;  ty = sy / 8
 fine_x = sx % 8;  fine_y = sy % 8
 tile = vram[slot_base + ty*32 + tx]
 attr = unpack 2 bits from vram[slot_base + 0x3C0 + (ty/2)*16 + (tx/2)]
-chr  = cart_chr[ world*0x8000 + bg_cell_for_slot*0x1000 + tile*16 + fine_y ]     /* plane 0 */
-chr2 = cart_chr[ world*0x8000 + bg_cell_for_slot*0x1000 + tile*16 + 8 + fine_y ] /* plane 1 */
+chr  = cart_chr[ world*0x8000 + bg_bank_for_slot*0x1000 + tile*16 + fine_y ]     /* plane 0 */
+chr2 = cart_chr[ world*0x8000 + bg_bank_for_slot*0x1000 + tile*16 + 8 + fine_y ] /* plane 1 */
 ci   = 2bpp pixel from chr/chr2 at fine_x (bit 7 is left)
 ```
 
@@ -323,7 +323,7 @@ Shift registers hold 8 pixels so CHR fetch can happen during HBlank/early dots. 
 
 ### 8.3 Sprites (simplify if needed, but draw chips)
 
-**Full intent:** during HBlank, scan 64 OAM Y values; copy up to **16** that hit the next scanline into secondary OAM; fetch 16 sprite rows from the active **sprite cell**; during visible dots, X-match and mux.
+**Full intent:** during HBlank, scan 64 OAM Y values; copy up to **16** that hit the next scanline into secondary OAM; fetch 16 sprite rows from the active **sprite bank**; during visible dots, X-match and mux.
 
 **Allowed proto shortcut:** scan OAM every line with a small state machine in GAL-TIM + 74HC163; drop sprites after 16; no MMC3-style A12 clock. 8×8 sprites only (no 8×16).
 
@@ -394,7 +394,7 @@ True 2 MB DIP NOR is basically gone. **Default proto cart:** 4 × **SST39SF040**
 **Address mux on cart / GAL-CART:**
 
 - **PRG:** CPU A0–A14 + `PRG_BANK` as A15–A18 into PRG flash. `/CE_PRG` from GAL-DEC when PRG window. `/OE` = RWB (read). `/WE` = 1 (ROM).
-- **CHR:** PPU-built 18-bit CHR address (world, cell, tile, row, plane). `/CE_CHR` during PPU CHR fetch only.
+- **CHR:** PPU-built 18-bit CHR address (world, bank, tile, row, plane). `/CE_CHR` during PPU CHR fetch only.
 - **MAP:** 24-bit MAP latch A0–A18 into MAP flashes (two 512 KB chips: A19 selects). `/CE_MAP` on `$FE93` read.
 
 Do **not** bus-fight PRG vs CHR vs MAP: only one `/CE` at a time. CHR fetch is PPU-phase; MAP/PRG are CPU-phase. If both could overlap, gate CHR `/CE` with `!PHI2`.
@@ -444,7 +444,7 @@ From the cost doc, plus this brief:
 |-----|------|------|
 | 4–6 | 74HC157 | VRAM (and maybe CHR) address mux |
 | 2–4 | 74HC245 | CPU data isolation, cart data, VRAM data |
-| 10–16 | 74HC573 | Scroll, CHR cell latches, MAP addr, pads, palette addr, PPUCTRL |
+| 10–16 | 74HC573 | Scroll, CHR bank latches, MAP addr, pads, palette addr, PPUCTRL |
 | 6–10 | 74HC161 | Dot X, line Y, sprite X, DMA count |
 | 2–4 | 74HC166 / 74HC595 / 74HC299 | BG + sprite pixel shift |
 | 4–8 | 74HC00/04/08/32/86 | leftover gates if GAL full |

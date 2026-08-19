@@ -7,9 +7,9 @@ Living snapshot. When hardware or software decisions change, **update this file*
 | Topic | Decision |
 |-------|----------|
 | Name / order | **Retr01**, **A → C → H** |
-| Worlds / screens / CHR cells | **8 worlds**. Each: **64 screens max** on a sparse virtual grid up to **16 × 16**. Each world has **4 BG cells + 4 sprite cells**. Screen = **32×30**. Terminology: [README.md](README.md). Spec: [04_worlds_and_screens.md](04_worlds_and_screens.md) |
-| CHR layout | 4 BG cells + 4 sprite cells, **256** patterns each |
-| Authored vs runtime cells | Each screen stores **BG cell 0-3** in MAP flags. Loader copies it into the destination slot's BG cell latch (slots 0-5). Sprite cell stays separate/global. Raster IRQ still available for mid-frame changes |
+| Worlds / screens / CHR banks | **8 worlds**. Each: **64 screens max** on a sparse virtual grid up to **16 × 16**. Each world has **4 BG banks + 4 sprite banks**. Screen = **32×30**. Terminology: [README.md](README.md). Spec: [04_worlds_and_screens.md](04_worlds_and_screens.md) |
+| CHR layout | 4 BG banks + 4 sprite banks, **256 tiles** each (**16×16** grid per bank) |
+| Authored vs runtime banks | Each screen stores **BG bank 0-3** in MAP flags. Loader copies it into the destination slot's BG bank latch (camera 0–3, plane 4–5). Sprite bank stays separate/global. Raster IRQ still available for mid-frame changes |
 | Raster | **Scanline compare + IRQ**. `set_camera_axis(H/V/BOTH)`. `set_parallax` forces matching 1-axis camera. Spec: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8 |
 | System RAM | **32 KB** full chip at `$0000-$7FFF` |
 | VRAM | **32 KB**, interleaved, CHR from cart. OAM is **not** in VRAM |
@@ -18,7 +18,7 @@ Living snapshot. When hardware or software decisions change, **update this file*
 | Stream margin | **2 tiles (16 px)** software cue to refill seams. Miss = empty template (default black, optional per-world nametable) |
 | MAP offsets | **24-bit** (`world_base`, `data_off`, `empty_off`). Matches `$FE90`. MAP is ~1.17 MB, so 16-bit is not enough |
 | Palettes | **8** (4 BG + 4 sprite), **shared BG color 0** |
-| BG attributes | **Per tile**, packed **240 bytes/NT** (1 byte = 2×2 cell, 2 bits/tile). Not NES shared 2×2 |
+| BG attributes | **Per tile**, packed **240 bytes/NT** (1 byte = 2×2 attr quadrant, 2 bits/tile). Not NES shared 2×2 |
 | Sprite OAM attr | NES-like byte (palette / flip / priority) |
 | Master palette | **64-entry RGB table** — [`retr01_world_studio/retr01_palette_v_01.txt`](../retr01_world_studio/retr01_palette_v_01.txt) |
 | APU | Separate **ATmega328P**. NES-style: 2 pulse + triangle + noise + DMC. Do not merge with the sprite MCU |
@@ -55,5 +55,5 @@ Living snapshot. When hardware or software decisions change, **update this file*
 | Sprite timing | **Next-line** eval (line *N* uses buffer built on line *N−1*), same as 1284 ping-pong |
 | OAM upload | Guest loop to `$FE21`; **no** `$FE22` DMA steal |
 | Pads | Two bytes `$FE60/$FE61`, bit layout in §A |
-| Tile / cell size | 8×8, 256 patterns/cell |
+| Tile / bank size | 8×8 px, **256 tiles/bank** (**16×16** tile grid) |
 | Attributes | Packed 240-byte BG attr plane (2 bits/tile), NES-like sprite OAM attr |

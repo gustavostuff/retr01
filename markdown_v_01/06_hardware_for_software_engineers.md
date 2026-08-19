@@ -105,11 +105,11 @@ This "context switch" happens at the CPU clock (planning **8 MHz**, vs ~1.79 MHz
 
 ### 1. Latches (hardware variables)
 
-A **74HC573** (octal latch) holds a byte after you stop writing, for example scroll X/Y and CHR cell selects. Software equivalent: a variable that survives after the store instruction finishes.
+A **74HC573** (octal latch) holds a byte after you stop writing, for example scroll X/Y and CHR bank selects. Software equivalent: a variable that survives after the store instruction finishes.
 
 ### 2. Memory-mapped I/O (hardware API)
 
-The 6502 has no USB API, only load/store. Retr01 maps devices into **`$FExx`**. Example: store scroll via a PPU control register in `$FE0x`. The GAL enables a latch instead of system RAM. Same pattern for APU (`$FE4x-$FE5x`), CHR cell latches (`$FE3x`), pads (`$FE60`/`$FE61`), OAM port (`$FE20`/`$FE21`).
+The 6502 has no USB API, only load/store. Retr01 maps devices into **`$FExx`**. Example: store scroll via a PPU control register in `$FE0x`. The GAL enables a latch instead of system RAM. Same pattern for APU (`$FE4x-$FE5x`), CHR bank latches (`$FE3x`), pads (`$FE60`/`$FE61`), OAM port (`$FE20`/`$FE21`).
 
 ### 3. Binary counters (hardware `for`)
 
@@ -125,19 +125,19 @@ Latches + MMIO + counters = the skeleton of an independent video pipeline.
 
 ### 1. Nametable (pointer grid)
 
-VRAM holds up to **four** 32x30 nametable slots (2x2 scroll field). Each nametable byte is a tile index 0-255 into the **active BG tile set** on cart (the nametable byte is not a BG-cell index; the slot's **BG cell latch** picks the CHR region). Beam counters fetch that index under the current pixel. `scroll_x`/`scroll_y` pick where the 256x240 window sits on those slots.
+VRAM holds up to **four** camera nametable slots (2x2 scroll field). Each nametable byte is a tile index 0-255 into the **active BG tile set** on cart (the nametable byte is not a BG-bank index; the slot's **BG bank latch** picks the CHR region). Beam counters fetch that index under the current pixel. `scroll_x`/`scroll_y` pick where the 256x240 window sits on those slots.
 
-### 2. CHR cells and tile sets (asset library on cart)
+### 2. CHR banks and tile sets (asset library on cart)
 
-**CHR-ROM** on the cartridge holds 8x8 2bpp patterns. Hardware concatenates tile index + fine Y (row 0-7) into a CHR address. The cart outputs that row's bits, with no CPU math. Each world exposes **4 BG cells + 4 sprite cells**, 256 patterns each. BG uses a cell latch **per live nametable slot**; sprites still use a separate sprite-cell latch. Mid-frame changes are OK. Scroll does not touch these registers.
+**CHR-ROM** on the cartridge holds 8x8 2bpp patterns. Hardware concatenates tile index + fine Y (row 0-7) into a CHR address. The cart outputs that row's bits, with no CPU math. Each world exposes **4 BG banks + 4 sprite banks**, 256 tiles each (**16×16** grid per bank). BG uses a **BG bank latch** per nametable slot; sprites use a separate **sprite-bank latch**. Mid-frame changes are OK. Scroll does not touch these registers.
 
-Retr01 does **not** expose NES-style **pattern tables/pages** as a separate concept between CHR bytes and screens. A screen's nametable simply names tiles **0-255**, and that screen's MAP metadata says which **BG cell 0-3** those tile numbers use. The loader copies that value into the destination nametable slot's **BG cell latch**. Extra "pattern table/page" terminology would only duplicate what the BG cell latch already does.
+Retr01 does **not** expose NES-style **pattern tables/pages** as a separate concept between CHR bytes and screens. A screen's nametable simply names tiles **0-255**, and that screen's MAP metadata says which **BG bank 0-3** those tile numbers use. The loader copies that value into the destination nametable slot's **BG bank latch**. Extra "pattern table/page" terminology would only duplicate what the BG bank latch already does.
 
-That means smooth scrolling may show 2 or 4 playfield screens at once, each using a different BG cell, because the fetch logic first determines **which slot** the current pixel belongs to and then applies **that slot's** BG cell.
+That means smooth scrolling may show 2 or 4 playfield screens at once, each using a different BG bank, because the fetch logic first determines **which slot** the current pixel belongs to and then applies **that slot's** BG bank.
 
 ### 3. Attributes and palettes (hardware CSS)
 
-2bpp patterns pick among 4 indices (00, 01, 10, 11). **8 palettes** (4 BG + 4 sprite). **Per-tile BG attributes:** 240 bytes at `+0x3C0` in each VRAM slot. One byte is a 2x2 cell with four 2-bit palette selects (one per tile). NES instead uses one select for a whole 2x2.
+2bpp patterns pick among 4 indices (00, 01, 10, 11). **8 palettes** (4 BG + 4 sprite). **Per-tile BG attributes:** 240 bytes at `+0x3C0` in each VRAM slot. One byte is a 2×2 attr quadrant with four 2-bit palette selects (one per tile). NES instead uses one select for a whole 2x2.
 
 **Color 0 is NES-like, two jobs:**
 - On **BG**, index 0 is the shared **backdrop** color (opaque playfield). All BG palettes share that one color 0.
@@ -159,7 +159,7 @@ For each pixel the PPU already has a BG sample and (maybe) a sprite sample:
 
 Pattern color 0 is not OAM sprite #0. OAM entry 0 is a normal sprite. There is **no** NES sprite-0 hit flag. Raster splits use `raster_y` + IRQ ([02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8).
 
-The 6502 does **not** plot pixels. Counters, nametable fetch, CHR from cart, attr unpack, the 1284 + line buffer, compositor mux, and RGBS all run every dot. The CPU prepares nametables through the interleaved VRAM port, OAM via `$FE20`/`$FE21`, and `$FExx` latches. It may also write those latches **mid-frame** (cell, scroll) from a raster IRQ. NMI means "a frame finished." IRQ (optional) means "the beam hit `raster_y`."
+The 6502 does **not** plot pixels. Counters, nametable fetch, CHR from cart, attr unpack, the 1284 + line buffer, compositor mux, and RGBS all run every dot. The CPU prepares nametables through the interleaved VRAM port, OAM via `$FE20`/`$FE21`, and `$FExx` latches. It may also write those latches **mid-frame** (bank, scroll) from a raster IRQ. NMI means "a frame finished." IRQ (optional) means "the beam hit `raster_y`."
 
 ---
 
@@ -169,7 +169,7 @@ The 6502 does **not** plot pixels. Counters, nametable fetch, CHR from cart, att
 
 On a stock NES, VBlank NMI is a panic window to shove graphics before lockout. With interleaved VRAM, the CPU is never forced to wait for VBlank to use the VRAM port (it still shares the chip on alternating phases). NMI becomes a **60 Hz metronome** (`frame_ready = true`) for pacing.
 
-Mid-frame cell and scroll tricks do **not** use NMI and do **not** use sprite-0. They use a **raster IRQ** when the beam reaches `raster_y`. The NMI handler stays dumb. The IRQ handler writes `$FE30` / scroll and re-arms the next line.
+Mid-frame bank and scroll tricks do **not** use NMI and do **not** use sprite-0. They use a **raster IRQ** when the beam reaches `raster_y`. The NMI handler stays dumb. The IRQ handler writes `$FE30` / scroll and re-arms the next line.
 
 ### 2. ATmega APU (audio microservice)
 
@@ -217,6 +217,6 @@ Collision stays in software. The electrical timing stays under the GAL, muxes, 1
 - [05_how_the_machine_works.md](05_how_the_machine_works.md): buses, who may R/W whom, interleave
 - [08_memory_map.md](08_memory_map.md): addresses to memorize
 - [14_reduced_number_of_chips.md](14_reduced_number_of_chips.md): 1284 coprocessor, pads, 49-chip v0
-- [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md): CHR cells / patterns / palettes
+- [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md): CHR banks / patterns / palettes
 - [04_worlds_and_screens.md](04_worlds_and_screens.md): worlds / screens / MAP atlas
 - [07_emulator_specification.md](07_emulator_specification.md): what the C emulator must enforce

@@ -27,7 +27,7 @@ Full **32 KB** system SRAM is mapped with no wasted bytes. I/O sits in a 256-byt
 |-------|------|--------|-------|
 | `$0000-$7FFF` | 32 KB | **System RAM** | Entire AS6C62256, CPU-only, no interleave |
 | `$8000-$FDFF` | 32 256 B | **PRG-ROM window** | Banked cart PRG |
-| `$FE00-$FEFF` | 256 B | **I/O page** | PPU, VRAM port, OAM, CHR cell latches, APU, MAP port, cabinet, mapper |
+| `$FE00-$FEFF` | 256 B | **I/O page** | PPU, VRAM port, OAM, CHR bank latches, APU, MAP port, cabinet, mapper |
 | `$FF00-$FFFF` | 256 B | **PRG (high)** | Same mapper window family, holds `$FFFA-$FFFF` vectors |
 
 ---
@@ -41,7 +41,7 @@ Grouped in **16-byte blocks** (high nibble of the low byte = device family):
 | `$FE00-$FE0F` | `0` | **PPU control:** mode, status, scroll X/Y, nametable arrangement, NMI, **raster Y / IRQ** |
 | `$FE10-$FE1F` | `1` | **VRAM port:** address latch + data R/W into 32 KB VRAM (**interleaved**) |
 | `$FE20-$FE2F` | `2` | **OAM port:** address + data into the **1284** (no hardware DMA; `$FE22` unused) |
-| `$FE30-$FE3F` | `3` | **CHR cell / world:** BG cell latches, sprite cell, world select |
+| `$FE30-$FE3F` | `3` | **CHR bank / world:** BG bank latches, sprite bank, world select |
 | `$FE40-$FE5F` | `4-5` | **APU:** NES-style channels |
 | `$FE60-$FE6F` | `6` | **Cabinet / controllers** |
 | `$FE70-$FE7F` | `7` | **Board EEPROM / DIP** |
@@ -66,7 +66,7 @@ NES sprite-0 hit is **not** the raster API. Gameplay collision is AABB. Beam tim
 | `raster_hit` | Sets at start of matching scanline (dot 0). Ack in software |
 | `raster_irq_enable` | Match asserts **IRQ**, not NMI |
 
-NMI remains VBlank only. Exact bytes: `B2` in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). Mid-frame cell and scroll splits: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8.
+NMI remains VBlank only. Exact bytes: `B2` in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). Mid-frame bank and scroll splits: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8.
 
 Write scroll and `$FE30` during **HBlank** for a clean split (next fetch, up to 8 px delay if you write mid-tile).
 
@@ -95,19 +95,19 @@ Sound *contract* is NES-like. The 6502 only writes registers. It does not synthe
 
 An **ATmega** (or similar) on the board runs the timers and mix. Game code pokes `$FE4x-$FE5x` and keeps going. Exact bitfields are still open (`B2` in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)). The emulator should treat this page as NES-style channel regs and emit host PCM.
 
-### CHR cells (`$FE30`)
+### CHR banks (`$FE30`)
 
-These latches answer **which pictures** the PPU is using. They do **not** scroll, and BG cell selection is tied to the live nametable slots rather than treated as one playfield-wide value.
+These latches answer **which pictures** the PPU is using. They do **not** scroll, and BG bank selection is tied to the live nametable slots rather than treated as one playfield-wide value.
 
 | Field | Meaning |
 |-------|---------|
 | World 0-7 | Cart chapter. CHR (and, in software, which MAP set you stream) |
-| BG cell latch (per slot) | Which of that world's 4 **BG cells** supplies tile patterns for one **nametable slot** (0–5) |
-| Sprite cell | Which of that world's 4 **sprite cells** supplies OAM tile patterns. Global latch within the selected world |
+| BG bank latch (per slot) | Which of that world's 4 **BG banks** supplies tile patterns for one **nametable slot** (0–5) |
+| Sprite bank | Which of that world's 4 **sprite banks** supplies OAM tile patterns. Global latch within the selected world |
 
-Slots **0-3** (camera) and **4-5** (plane) each carry their own **BG cell latch**. When the BG fetch path resolves which nametable slot the current pixel belongs to, it also selects that slot's BG cell. The **sprite cell** is a **separate latch**: changing any BG cell latch does **not** change the sprite cell, and changing the sprite cell does **not** rewrite any BG cell latch. To show a different sprite cell, or to change slot arrangement / scroll for another scanline band, use raster IRQ as before.
+Slots **0-3** (camera) and **4-5** (plane) each carry their own **BG bank latch**. When the BG fetch path resolves which nametable slot the current pixel belongs to, it also selects that slot's BG bank. The **sprite bank** is a **separate latch**: changing any BG bank latch does **not** change the sprite bank, and changing the sprite bank does **not** rewrite any BG bank latch. To show a different sprite bank, or to change slot arrangement / scroll for another scanline band, use raster IRQ as before.
 
-Writable **mid-frame**. The next CHR fetch uses the new value. Shift registers may still show the current tile (up to 8 px). Raster IRQ + HBlank writes: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8. Emulator: on write, set `ppu.world`, `ppu.bg_slot_cell[slot]`, and `ppu.spr_cell` as appropriate.
+Writable **mid-frame**. The next CHR fetch uses the new value. Shift registers may still show the current tile (up to 8 px). Raster IRQ + HBlank writes: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8. Emulator: on write, set `ppu.world`, `ppu.bg_slot_bank[slot]`, and `ppu.spr_bank` as appropriate.
 
 ### Controllers / cabinet (`$FE60-$FE6F`)
 
@@ -180,7 +180,7 @@ CPU touches VRAM only through **`$FE10-$FE1F`**. CHR comes from cartridge CHR-RO
 | `$3800-$3FFF` | 2 KB | Plane slot 5 (second band / hills, optional) |
 | `$4000-$7FFF` | 16 KB | Reserved |
 
-Each slot (2 KB): tiles at `+0x000` (960 bytes), packed attributes at `+0x3C0` (240 bytes). One attr byte is a 2x2 cell with **four** 2-bit palette IDs (one per tile), not NES's shared 2x2. Remaining bytes in the slot are pad. Slots 0-3 form the live 1/2/4-screen **camera**. Slots 4-5 are **planes** (repeating parallax). Do not use 4-5 as south/east camera screens. Raster split: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8.
+Each slot (2 KB): tiles at `+0x000` (960 bytes), packed attributes at `+0x3C0` (240 bytes). One attr byte is a **2×2 attr quadrant** with **four** 2-bit palette IDs (one per tile), not NES's shared 2x2. Remaining bytes in the slot are pad. Slots **0–3** form the live 1/2/4-screen **camera**. Slots **4–5** are **parallax planes** only (not part of the 4-screen camera). Raster split: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8.
 
 ---
 
@@ -189,7 +189,7 @@ Each slot (2 KB): tiles at `+0x000` (960 bytes), packed attributes at `+0x3C0` (
 | Region | Budget | Access |
 |--------|--------|--------|
 | PRG | <=512 KB | `$8000-$FDFF` + `$FF00-$FFFF` via `$FE80` |
-| CHR | <=256 KB | PPU fetches; world + BG/sprite **cells** via `$FE30` latches |
+| CHR | <=256 KB | PPU fetches; world + BG/sprite **banks** via `$FE30` latches |
 | MAP | <=~1.17 MB | CPU reads via **`$FE90` MAP port** only |
 
 ---
@@ -202,7 +202,7 @@ Each slot (2 KB): tiles at `+0x000` (960 bytes), packed attributes at `+0x3C0` (
 | I/O / latch enables | `$FE00-$FEFF` |
 | PRG OE | `$8000-$FDFF` and `$FF00-$FFFF` |
 | VRAM CS + mux | VRAM data-port cycles, qualified by **clock phase** |
-| CHR OE | PPU fetch cycles; CHR address from world + slot BG cell or global sprite cell |
+| CHR OE | PPU fetch cycles; CHR address from world + slot BG bank or global sprite bank |
 | MAP OE | MAP data-port reads |
 
 ```c
