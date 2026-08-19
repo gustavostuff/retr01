@@ -1,6 +1,6 @@
 # How Retr01-A Hardware Fits Together
 
-A walkthrough of **every kind of part** on the arcade board: chips, clocks, buses, connectors, passives, video, pads. Start here if 14/15 feel like a parts list and 06 feels like metaphors. Exact addresses: [08](08_memory_map.md). Chip counts: [14](14_reduced_number_of_chips.md). Build order: [16](16_simulation_and_bringup_plan.md).
+A walkthrough of **every kind of part** on the arcade board: chips, clocks, buses, connectors, passives, video, pads. Start here if 14/15 feel like a parts list and 06 feels like metaphors. Exact addresses: [08](08_memory_map.md). Chip counts: [14](14_reduced_number_of_chips.md). Simulator build order: [16](16_simulation_and_bringup_plan.md). Proto-board islands: [17](17_protoboard_test_plan.md).
 
 ---
 

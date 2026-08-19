@@ -149,7 +149,7 @@ Draw from the **working Digital circuit**, not from Celus CUBOs. Passives from s
 
 ### Stage 9 — Breadboard / proto PCB
 
-CPU island first (stage 1 on copper), then pads, then BG video into a 15.7 kHz RGBS monitor. Sprites after the 1284 firmware from stage 5 exists.
+CPU island first (stage 1 on copper), then pads, then BG video into a 15.7 kHz RGBS monitor. Sprites after the 1284 firmware from stage 5 exists. Island-by-island checks: [17](17_protoboard_test_plan.md).
 
 ---
 
