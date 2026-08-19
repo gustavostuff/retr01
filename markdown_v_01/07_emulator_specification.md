@@ -311,7 +311,7 @@ typedef struct {
 
 ## 10. Input & board I/O
 
-Host keyboard/joystick maps into **two bytes** `$FE60` / `$FE61` (P1, P2). Bit layout: 0 R, 1 L, 2 D, 3 U, 4 A, 5 B, 6 Select/Coin, 7 Start. **1 = pressed.** Retr01-A: latch from parallel bits. Retr01-C: same two bytes after the 3-wire pad is deserialized. EEPROM (`$FE7x`) can be a small `uint8_t eeprom[size]` file-backed array.
+Host keyboard/joystick maps into **two bytes** `$FE60` / `$FE61` (P1, P2). Bit layout: 0 Dpad Right, 1 Dpad Left, 2 Dpad Down, 3 Dpad Up, 4 X, 5 Y, 6 Coin (Select on console), 7 Start. **1 = pressed.** Retr01-A: latch from parallel bits. Retr01-C: same two bytes after the 3-wire pad is deserialized. EEPROM (`$FE7x`) can be a small `uint8_t eeprom[size]` file-backed array.
 
 ---
 

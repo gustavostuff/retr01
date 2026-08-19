@@ -48,7 +48,7 @@ Through-hole bring-up should socket the big ICs.
 |------|----------|------|
 | DIP sockets (40 / 28 / 24 / 20 / 16 pin mix, ~49 pcs) | $0.20 to $1.00 each | $25 |
 | Caps, resistors, resistor-DAC for RGB, decoupling, reset | bulk | $15 |
-| 40-pin IDC header + ribbon (cabinet I/O) | | $6 |
+| 20-pin IDC header + ribbon (controller I/O) | | $6 |
 | Power barrel / screw terminal, headers, crystal load caps | | $8 |
 | Optional JAMMA edge (if you go that route later) | | $8 |
 

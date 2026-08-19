@@ -60,7 +60,7 @@ This file is self-contained. Do not wait for missing specs. **Draw the whole mac
 | `10_palette_video` | Palette RAM, 64-color lookup, R/G/B resistor DACs, CSYNC, S-Video/composite stubs |
 | `11_cart` | Motherboard cart connector, PRG/CHR/MAP OE, `$FE80` bank, `$FE90` MAP port |
 | `12_apu` | ATmega328P (or 1284 if you need space), `$FE40-$FE5F`, analog mix, audio jack |
-| `13_cabinet` | 40-pin IDC, `$FE60-$FE63` latches, pull-ups, coin/start |
+| `13_cabinet` | 20-pin controller IDC, `$FE60-$FE63` latches, pull-ups, coin/start |
 | `14_cart_pcb` | Cartridge: 4× 512 KB flash (or 1× 2 MB SMD + DIP adapter), same connector |
 
 ---
@@ -211,10 +211,10 @@ CPU **reads** these. CPU **writes ignored**. Motherboard latches parallel IDC sw
 
 | Offset | Byte |
 |--------|------|
-| `$FE60` | P1: bit0 Right, 1 Left, 2 Down, 3 Up, 4 A, 5 B, 6 Select, 7 Start |
-| `$FE61` | P1 extra: bit0–3 buttons 4–7, bit4 coin1, bit5 coin2, bit6 service, bit7 tilt |
-| `$FE62` | P2 same as `$FE60` |
-| `$FE63` | P2 extra same as `$FE61` minus coins if you run out of IDC pins |
+| `$FE60` | P1: bit0 Dpad Right, 1 Dpad Left, 2 Dpad Down, 3 Dpad Up, 4 X, 5 Y, 6 Coin, 7 Start |
+| `$FE61` | P2: same mapping as `$FE60` |
+| `$FE62` | Unused |
+| `$FE63` | Unused |
 
 Active **low** switches on the harness, inverted on the board so CPU sees **1 = pressed**. 10 kΩ pull-ups on IDC inputs.
 
@@ -461,32 +461,22 @@ Audio jack: stereo OK (same mono on both). Also route to IDC for cabinet speaker
 
 ---
 
-## 14. Cabinet IDC (40-pin, freeze pinout)
+## 14. Cabinet IDC (20-pin, freeze pinout)
 
-Standard 0.1" 2×20 IDC. Active-low inputs.
+Standard 0.1" 2×10 IDC (controller header). Active-low inputs.
 
 | Pin | Signal | Pin | Signal |
 |-----|--------|-----|--------|
-| 1 | +5V | 2 | +5V |
-| 3 | GND | 4 | GND |
-| 5 | P1 Up | 6 | P1 Down |
-| 7 | P1 Left | 8 | P1 Right |
-| 9 | P1 A (btn0) | 10 | P1 B (btn1) |
-| 11 | P1 C (btn2) | 12 | P1 D (btn3) |
-| 13 | P1 E (btn4) | 14 | P1 F (btn5) |
-| 15 | P1 G (btn6) | 16 | P1 H (btn7) |
-| 17 | P1 Start | 18 | P1 Select |
-| 19 | P2 Up | 20 | P2 Down |
-| 21 | P2 Left | 22 | P2 Right |
-| 23 | P2 A | 24 | P2 B |
-| 25 | P2 C | 26 | P2 D |
-| 27 | P2 E | 28 | P2 F |
-| 29 | P2 Start | 30 | P2 Select |
-| 31 | Coin 1 | 32 | Coin 2 |
-| 33 | Service | 34 | Tilt |
-| 35 | /RESET in | 36 | Speaker+ |
-| 37 | Speaker− | 38 | CSYNC out |
-| 39 | +5V | 40 | GND |
+| 1 | +5V | 2 | GND |
+| 3 | P1 Right (bit0) | 4 | P1 Left (bit1) |
+| 5 | P1 Down (bit2) | 6 | P1 Up (bit3) |
+| 7 | P1 X (bit4) | 8 | P1 Y (bit5) |
+| 9 | P1 Coin (bit6) | 10 | P1 Start (bit7) |
+| 11 | P2 Right (bit0) | 12 | P2 Left (bit1) |
+| 13 | P2 Down (bit2) | 14 | P2 Up (bit3) |
+| 15 | P2 X (bit4) | 16 | P2 Y (bit5) |
+| 17 | P2 Coin (bit6) | 18 | P2 Start (bit7) |
+| 19 | /RESET in (optional) | 20 | Service/Tilt (optional / unused in v1) |
 
 RGBS video is **not** on this IDC (use a separate 5-pin 0.1" header: R, G, B, CSYNC, GND, each 75 Ω series).
 
@@ -500,7 +490,7 @@ RGBS video is **not** on this IDC (use a separate 5-pin 0.1" header: R, G, B, CS
 - **Unpopulated** 4 pads: USB-C breakout `VBUS, GND, GND, GND` (no CC resistors on our PCB).  
 - Target draw guess: 800 mA–1.5 A. Size fuse 2 A.
 
-Reset: 10 kΩ + 10 µF on RESB, 74HC14, momentary to GND, also IDC `/RESET`.
+Reset: 10 kΩ + 10 µF on RESB, 74HC14, momentary to GND (and optionally via cabinet IDC pin 19 `/RESET`).
 
 ---
 

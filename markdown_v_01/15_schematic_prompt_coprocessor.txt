@@ -134,7 +134,7 @@ Sockets, passives, crystals, headers, R-2R resistors are extra, not in 49.
 10_palette_video — Palette path, R/G/B R-2R, CSYNC, S-Video/composite pads (encoder optional unpopulated)
 11_cart — 40-pin header, PRG/CHR/MAP /CE, $FE80, $FE90
 12_apu — 328P, $FE40-$FE5F write capture, PWM mix, 3.5 mm jack
-13_cabinet — 40-pin IDC to 16 switch lines to 1284 (via 573s). Not four pad bytes.
+13_cabinet — 20-pin controller IDC (2×10) to 16 switch lines to 1284 (via 573s). Not four pad bytes.
 14_cart_pcb — Flash + same 40-pin
 
 
@@ -210,7 +210,7 @@ $FE60 pads (CPU read-only)
 $FE60 = P1
 $FE61 = P2
 
-Bit0 Right, bit1 Left, bit2 Down, bit3 Up, bit4 A, bit5 B, bit6 Select/Coin, bit7 Start. 1 = pressed. $FE62 and up unused.
+Bit0 Dpad Right, bit1 Dpad Left, bit2 Dpad Down, bit3 Dpad Up, bit4 X, bit5 Y, bit6 Coin (Select on console), bit7 Start. 1 = pressed. $FE62 and up unused.
 
 1284 (or 573s it updates) drives these onto the CPU bus when GAL selects $FE60/$FE61.
 
@@ -342,11 +342,11 @@ One /CE at a time. CHR /CE only when !PHI2 or HBlank-1284 as GAL says. MAP /CE o
 Cart PCB: 4x 512 KB 5 V parallel flash DIP-32 (SST39SF040-class if still in stock). If that family is unavailable, one 16 Mbit 5 V/3.3 V TSOP + documented adapter — do not block the motherboard schematic. Regions: PRG 512 KB, CHR 256 KB (half a 512 KB chip), MAP rest.
 
 
-12. CABINET IDC (40-pin)
+12. CABINET IDC (20-pin, 2×10)
 
 16 player switches + power.
 
-P1: Right Left Down Up A B Coin Start. P2 same. Two 573s / $FE60 / $FE61. Remaining IDC: +5V, GND, /RESET, speaker, CSYNC optional. No extra CPU bits for service/tilt.
+P1: Dpad Right Left Down Up, X, Y, Coin, Start. P2 same. Two 573s / $FE60 / $FE61. Controller IDC carries +5V and GND plus 16 input lines; speaker and RGBS sync are separate.
 
 RGBS on a separate 5-pin header: R G B CSYNC GND.
 

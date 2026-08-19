@@ -141,9 +141,9 @@ Example mappings you might see on real cabinets (these are just examples; your w
 - **Keyboard-style panel:**  
   arrow keys map to `Dpad`, `Space` maps to `X`, `Enter` maps to `Y`, `C` maps to `Coin` (bit 6), and `Esc` maps to `Start`.
 - **6-button “one action” panel:**  
-  keep `Dpad (4) + Coin/Select + Start`, and wire a single extra action button to *both* `X (bit 4)` and `Y (bit 5)` so the cabinet only needs one action switch.
+  keep `Dpad (4) + Coin + Start`, and wire a single extra action button to *both* `X (bit 4)` and `Y (bit 5)` so the cabinet only needs one action switch.
 
-Retr01-A: parallel switches on the 40-pin IDC. Retr01-C: 3-wire pad with an MCU **in the controller**; the board 1284 reconstructs the same two bytes. Details: [14_reduced_number_of_chips.md](14_reduced_number_of_chips.md), [03_hardware_variants.md](03_hardware_variants.md).
+Retr01-A: parallel switches on the 20-pin controller IDC. Retr01-C: 3-wire pad with an MCU **in the controller**; the board 1284 reconstructs the same two bytes. Details: [14_reduced_number_of_chips.md](14_reduced_number_of_chips.md), [03_hardware_variants.md](03_hardware_variants.md).
 
 ### MAP port (`$FE90`): cart map reads
 

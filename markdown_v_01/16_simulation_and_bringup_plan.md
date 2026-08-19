@@ -26,7 +26,7 @@ Tool notes: [10_hardware_simulators.md](10_hardware_simulators.md).
 - DIP **74HC** at 5 V. Never 74LV, 74HCT, 74LS, VQFN, SOT-363, or ATF1504.
 - CPU is **W65C02S**. Clock pin is **PHI2**. Pin 36 **BE** high. Pin 1 **VPB** NC. Pin 5 **MLB** NC. Do not use a MOS 6502 pinout.
 - Three `AS6C62256`. OAM is inside the 1284, not SRAM.
-- Pads: two bytes `$FE60` / `$FE61`. Bits 0 R, 1 L, 2 D, 3 U, 4 A, 5 B, 6 Coin/Select, 7 Start. 1 = pressed.
+- Pads: two bytes `$FE60` / `$FE61`. Bits 0 Dpad Right, 1 Dpad Left, 2 Dpad Down, 3 Dpad Up, 4 X, 5 Y, 6 Coin (Select on console), 7 Start. 1 = pressed.
 - Passives below are **v0 defaults**. Change them only by editing this file.
 
 ---

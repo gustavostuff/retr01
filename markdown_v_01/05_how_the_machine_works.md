@@ -250,7 +250,7 @@ This is analog. Digital sim stops at the 6-bit index.
 
 **Alone:** connectors. Not logic.
 
-**With the rest:** 40-pin IDC = 16 player switches + power/GND/reset/speaker. RGBS is a **separate** 5-pin header (R G B CSYNC GND). Coin/Start **are** bits 6–7 of the two pad bytes, not extra CPU registers.
+**With the rest:** 20-pin controller IDC = 16 player switches + shared power/GND (cabinet-dependent: optional `/RESET` on a spare pin). Speaker connects via the normal audio output/jack; RGBS is a **separate** 5-pin header (R G B CSYNC GND). Coin/Start **are** bits 6–7 of the two pad bytes, not extra CPU registers.
 
 ### 5.17 Glue 74HC00/04/14/08/32/86/688
 

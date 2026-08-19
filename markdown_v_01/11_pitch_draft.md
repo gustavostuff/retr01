@@ -8,7 +8,7 @@ This is not a Raspberry Pi in a JAMMA shell, and it is not an FPGA pretending to
 
 ## Who it is for
 
-**Cabinet builders** who want RGBS into a 15.7 kHz monitor, a 40-pin IDC for two players, Coin/Start as ordinary bits, and EEPROM for scores — without reverse-engineering a 1988 board.
+**Cabinet builders** who want RGBS into a 15.7 kHz monitor, a 20-pin IDC for two players, Coin/Start as ordinary bits, and EEPROM for scores — without reverse-engineering a 1988 board.
 
 **Developers** who want a NES-class programming model that is *stricter and kinder*: per-tile palettes, 16 sprites per line, no VBlank lockout on VRAM, raster IRQ instead of sprite-0.
 
@@ -42,7 +42,7 @@ You write 6502. You do not allocate a framebuffer. You fill **nametables** and *
 
 NES-style channels on the 328P: two pulse, triangle, noise, DMC. The 6502 pokes `$FE40–$FE5F` and keeps running physics (the sound chip is a second MCU; the game never bit-bangs a speaker).
 
-Two players, **one byte each** (`$FE60`, `$FE61`): Right, Left, Down, Up, A, B, Coin/Select, Start. Arcade Coin *is* Select. No 12-button layout, no extra cabinet byte. Retr01-C will use a 3-wire pad with an MCU in the controller; software still reads those two bytes.
+Two players, **one byte each** (`$FE60`, `$FE61`): Right, Left, Down, Up, X, Y, Coin, Start. Arcade Coin *is* Select. No 12-button layout, no extra cabinet byte. Retr01-C will use a 3-wire pad with an MCU in the controller; software still reads those two bytes.
 
 ---
 
@@ -51,7 +51,7 @@ Two players, **one byte each** (`$FE60`, `$FE61`): Right, Left, Down, Up, A, B, 
 - Through-hole, socket the expensive ICs.
 - 5 V barrel (5.5 × 2.1 mm), or the cab PSU. Pads for a USB-C breakout if you want that jack — not USB Power Delivery.
 - Analog **RGBS** (red, green, blue, and composite sync on four wires), plus S-Video and composite pads. No HDMI on the board; hang a converter on RGBS if the venue is a TV.
-- 40-pin IDC to the control panel. RGBS on its own 5-pin header.
+- 20-pin IDC to the control panel. RGBS on its own 5-pin header.
 
 Clocking is honest about 1980s CRTs: CPU **8.000 MHz**, dot **5.369318 MHz**, 341×262, ~60.1 Hz. (That dot rate is NES-class. On a 15.7 kHz arcade/CGA tube, our digital timing *is* the refresh. A modern TV is doing its own 60 Hz; the converter resamples.)
 

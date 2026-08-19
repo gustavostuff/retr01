@@ -78,17 +78,17 @@ Glue stays **ATF22V10CQZ-20PU**. If equations overflow, add a **4th** of that sa
 
 ## 3. Input — one byte per player (A / C / H)
 
-Eight bits including directions. **No extra action buttons. No separate cabinet byte.** Select/Start **are** Coin/Start on arcade.
+Eight bits including directions. **No extra action buttons. No separate cabinet byte.** Coin/Start **are** the same inputs across form factors; the console/handheld uses the name Select/Start.
 
-| Bit | Name | Arcade | Console (Retr01-C) | Handheld (Retr01-H) |
+| Bit | Name (default) | Arcade | Console (Retr01-C) | Handheld (Retr01-H) |
 |-----|------|--------|--------------------|---------------------|
-| 0 | Right | stick | d-pad | d-pad |
-| 1 | Left | stick | d-pad | d-pad |
-| 2 | Down | stick | d-pad | d-pad |
-| 3 | Up | stick | d-pad | d-pad |
-| 4 | A | button | button | button |
-| 5 | B | button | button | button |
-| 6 | Select / Coin | **Coin** (P1=`Coin1`, P2=`Coin2`) | Select | Select |
+| 0 | Dpad Right | stick | d-pad | d-pad |
+| 1 | Dpad Left | stick | d-pad | d-pad |
+| 2 | Dpad Down | stick | d-pad | d-pad |
+| 3 | Dpad Up | stick | d-pad | d-pad |
+| 4 | X | button | button | button |
+| 5 | Y | button | button | button |
+| 6 | Coin (Select on console) | **Coin** (P1=`Coin1`, P2=`Coin2`) | Select | Select |
 | 7 | Start | **Start** | Start | Start |
 
 CPU view (6502):
