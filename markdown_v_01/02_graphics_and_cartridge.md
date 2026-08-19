@@ -34,19 +34,21 @@ World / grid / screen atlas: [04_worlds_and_screens.md](04_worlds_and_screens.md
 | **Scroll** | `scroll_x` / `scroll_y`, one byte each (0-255). Pixel offset of the 256x240 window across the live VRAM slots. PPU latches (`$FE0x`). |
 | **CHR bank** | 512 patterns (256 BG + 256 sprites). 4 banks per world. `$FE30` picks BG bank and sprite bank separately. |
 
+Retr01 does **not** define NES-style **pattern tables/pages** as an extra runtime layer. Software sees a **BG bank** and a **sprite bank**. The screen's tile bytes are just **0-255** into the selected BG bank's BG half.
+
 ### Bank rules
 
 1. Each world has **4** pattern banks.
 2. Each bank: **first 256 patterns BG**, **second 256 sprites** -> **512** patterns / bank (8 KB @ 16 bytes/pattern).
 3. **Authored bank:** `load_screen` sets the BG bank that screen was drawn against. That is the default at the start of the frame. Software may still switch banks mid-frame (see section 8).
-4. **Runtime banks:** PPU may select **BG bank** and **sprite bank** independently. Either may change **mid-frame**. Nametable bytes stay 0-255 into whichever BG page is **currently** latched.
+4. **Runtime banks:** PPU may select **BG bank** and **sprite bank** independently. Either may change **mid-frame**. Nametable bytes stay 0-255 into whichever BG bank's BG half is **currently** latched.
 5. PPU fetches CHR **from cartridge CHR-ROM** (not from VRAM).
 
-## 3. Pattern math
+## 3. CHR size math
 
 | Unit | Patterns | Bytes |
 |------|----------|-------|
-| Page | 256 | 4 KB |
+| BG half or sprite half | 256 | 4 KB |
 | Bank | 512 | 8 KB |
 | World (4 banks) | 2048 | 32 KB |
 | Cart max (8 worlds) | 16384 | **256 KB** CHR |
@@ -55,8 +57,8 @@ World / grid / screen atlas: [04_worlds_and_screens.md](04_worlds_and_screens.md
 
 These are two fetch paths. Scroll only affects which nametable byte is under the beam.
 
-- **BG:** scroll picks a pixel in the live nametable field. That byte is a tile index **0-255** into the **active BG pattern set** (the BG half of the BG bank on cart).
-- **Sprites:** OAM (64 entries) holds tile indices into the **active sprite pattern set** (the sprite half of the sprite bank). OAM does not use scroll.
+- **BG:** scroll picks a pixel in the live nametable field. That byte is a tile index **0-255** into the **active BG tile set** (the BG half of the BG bank on cart).
+- **Sprites:** OAM (64 entries) holds tile indices into the **active sprite tile set** (the sprite half of the sprite bank). OAM does not use scroll.
 - Max **16 sprites per scanline**. Extras are dropped.
 - Compositor: if the sprite pixel is pattern color 0, skip it (transparent). Else if the OAM **priority** bit is set, opaque BG wins. Else the sprite wins. Pattern color 0 is **not** OAM sprite #0. OAM entry 0 is a normal sprite.
 
@@ -142,13 +144,13 @@ Hardware is a compare of the existing Y counters (74HC161) against one latch. A 
 
 ### More than 256 unique BG tiles
 
-One nametable still names tiles 0-255. The active BG page is whichever bank `$FE30` currently selects.
+One nametable still names tiles 0-255. The active BG tile set is whichever BG bank `$FE30` currently selects.
 
 - At `load_screen`, set the **authored** BG bank (the set that nametable was drawn against).
 - In a raster IRQ, switch to another of the world's **4** BG banks. From that scanline down, the same 0-255 indices are a **different** 256 pictures.
 - Four horizontal bands => up to **1024** unique BG tiles on one frame, still one nametable.
 - Status bar vs playfield is the one-split version of the same trick.
-- This is **not** MMC3 1 KB CHR granules. A bank switch replaces the whole 256-tile BG page. Splits are horizontal bands, not per-column banks. Per-tile bank IDs would need another attr plane. We are not adding that.
+- This is **not** MMC3 1 KB CHR granules. A bank switch replaces the whole 256-tile BG half. Splits are horizontal bands, not per-column banks. Per-tile bank IDs would need another attr plane. We are not adding that.
 
 Sprite bank may switch on the same IRQ (boss art, HUD icons) independently of BG.
 

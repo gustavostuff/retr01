@@ -125,11 +125,13 @@ Latches + MMIO + counters = the skeleton of an independent video pipeline.
 
 ### 1. Nametable (pointer grid)
 
-VRAM holds up to **four** 32x30 nametable slots (2x2 scroll field). Each nametable byte is a tile index 0-255 into the **active BG pattern set** on cart (not a bank number, not a VRAM page). Beam counters fetch that index under the current pixel. `scroll_x`/`scroll_y` pick where the 256x240 window sits on those slots.
+VRAM holds up to **four** 32x30 nametable slots (2x2 scroll field). Each nametable byte is a tile index 0-255 into the **active BG tile set** on cart (not a bank number, not a VRAM page). Beam counters fetch that index under the current pixel. `scroll_x`/`scroll_y` pick where the 256x240 window sits on those slots.
 
-### 2. Pattern tables (asset library on cart)
+### 2. CHR banks and tile sets (asset library on cart)
 
 **CHR-ROM** on the cartridge holds 8x8 2bpp patterns. Hardware concatenates tile index + fine Y (row 0-7) into a CHR address. The cart outputs that row's bits, with no CPU math. Banks: 4 per world, each bank = 256 BG patterns + 256 sprite patterns. `$FE30` selects BG bank and sprite bank independently. Mid-frame changes are OK. Scroll does not touch these registers.
+
+Retr01 does **not** expose NES-style **pattern tables/pages** as a separate concept between CHR bytes and screens. A screen's nametable simply names tiles **0-255** in the **currently selected BG bank's BG half**. That is enough indirection already: `world -> BG bank -> tile index -> pixels`. Extra "pattern table/page" terminology would only duplicate what the bank latch already does.
 
 ### 3. Attributes and palettes (hardware CSS)
 

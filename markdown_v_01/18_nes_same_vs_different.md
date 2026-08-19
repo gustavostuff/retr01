@@ -31,4 +31,5 @@ These tables are for alignment while writing the emulator and authoring tools.
 | No integrated PPU datapath | Retr01’s BG “PPU” is built from 74HC + counters + muxes (discrete compositor), not a unified console PPU chip. |
 | World atlas / MAP streaming | NES loads level data from cartridge/PPU name tables directly. Retr01 adds a `MAP-ROM` + streaming directory (`$FE90`) so “worlds + screens + streaming seams” are first-class. |
 | More explicit mid-frame controls | Retr01 supports raster IRQ-driven mid-frame changes (e.g. switching BG/sprite banks) via its own latch set and interrupt sources. |
+| No programmer-visible pattern tables/pages | NES discussions often talk about pattern tables or 4 KB pages. Retr01 does not need that extra layer: screens index tiles 0-255 in the currently selected BG bank half, and sprites index tiles 0-255 in the selected sprite bank half. |
 
