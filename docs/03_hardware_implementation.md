@@ -99,7 +99,7 @@ The key architectural trick:
 - CPU phase: CPU may use `$FE1x` VRAM port
 - PPU phase: BG fetch reads nametable and attrs
 
-This removes the NES-style "VBlank-only VRAM write prison" while still using one VRAM chip.
+This removes the VBlank-only VRAM update bottleneck common on classic consoles like the NES, while still using one VRAM chip. See [`07_pitch.md`](07_pitch.md) for NES comparison.
 
 ## Rendering pipeline
 

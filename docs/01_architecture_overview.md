@@ -184,6 +184,7 @@ A **low-level hardware emulator** is planned later, not built now. It should sim
 
 ## Where to look next
 
+- Product pitch and NES comparison: `07_pitch.md`
 - Graphics, worlds, scrolling, banks, VRAM, and MAP: `02_graphics_worlds_memory.md`
 - Board structure, buses, chips, and timing: `03_hardware_implementation.md`
 - Protoboard module tests (island bring-up): `06_protoboard_module_tests.md`

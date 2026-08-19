@@ -10,20 +10,22 @@ Retr01 is a family of purpose-built retro game hardware. Same creative rules, sa
 | **Retr01-C** | Home console. We'll have to mind the board size for this one, have different control ports, among other things |
 | **Retr01-H** | Handheld. This is the most challenging task. Will use SMD components and probably more than one board |
 
-We're starting with the arcade board: something you can drop into a cabinet, wire to real controls, and run games that look and play like classic 8-bit, without the usual "wait for blanking or your graphics explode" pain.
+We're starting with the arcade board: something you can drop into a cabinet, wire to real controls, and run games that look and play like classic 8-bit tile/sprite games - with a world model and CPU budget built for larger designs.
+
+For the full product pitch and **NES comparison tables**, see [`docs/07_pitch.md`](docs/07_pitch.md).
 
 ## Why it exists
 
-Most retro projects either emulate the past or trap you in its worst limits. Retr01 keeps the charm: crisp tile art, tight sprites, that unmistakable low-bit look. It redesigns the plumbing underneath so developers get a full frame of breathing room for game logic, scrolling, and streaming levels from the cartridge.
+Most retro projects either emulate the past exactly or leave the aesthetic behind. Retr01 keeps the 8-bit look (8x8 tiles, 2bpp art, cartridge games) and redesigns the plumbing for multi-screen worlds, smoother scrolling, and parallax without VBlank-only nametable updates.
 
-Think: **NES-era aesthetics with room to actually build ambitious games.**
+Details and fair NES comparisons: [`docs/07_pitch.md`](docs/07_pitch.md).
 
 ## What you get (in plain terms)
 
 - **A real arcade-first board:** sticks, buttons, coin/start, analog RGBS / S-Video / composite pads for cabinet monitors. RGBS pads can also feed an off-the-shelf analog-to-HDMI converter if you want a modern TV
 - **A bold but readable look:** limited color per tile/sprite on purpose, with clarity over mush
 - **Big cartridge worlds:** multiple "worlds," dozens of screens each, packed into a standard-size cart
-- **Smooth multi-screen scrolling:** cameras that cross screen borders without the classic flicker tax
+- **Smooth multi-screen scrolling:** cameras that cross screen borders using a 2x2 live nametable window (see pitch doc)
 - **Retr01 Studio:** visual tool to author worlds and compile `.retr01` cart images
 
 Later editions (console and handheld) share the same soul: one architecture, different shells.

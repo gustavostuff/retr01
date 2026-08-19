@@ -286,7 +286,7 @@ Recommended MAP directory row:
 
 ## Raster and parallax
 
-Retr01 uses **raster IRQ**, not NES sprite-0 hit.
+Retr01 uses **raster IRQ**, not NES sprite-0 hit (see [`07_pitch.md`](07_pitch.md) for NES comparison).
 
 - `raster_y`: target scanline
 - `raster_hit`: status
