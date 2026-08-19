@@ -38,7 +38,7 @@ Foundation of the family: cabinet-ready board, first silicon target.
 ### Cabinet I/O
 
 - 20-pin IDC header (2×10), **parallel switches** for controller inputs (no MCU in the stick)
-- Two players: UDLR + A + B + Coin + Start each. Rest of the header is power/ground/reset/speaker/optional CSYNC
+- Two players: UDLR + X + Y + Coin + Start each. Shared +5V/GND are on the same IDC; controller inputs only.
 - Pinout TBD. CPU sees **two bytes**: `$FE60` = P1, `$FE61` = P2 (see [08_memory_map.md](08_memory_map.md))
 
 ### Video & audio

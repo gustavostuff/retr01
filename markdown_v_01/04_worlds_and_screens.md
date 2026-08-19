@@ -96,7 +96,7 @@ MAP-ROM
 |     magic, version, world_count
 |     world_base[8]: 24-bit offset to each world (0 = unused)
 +-- world N
-      grid_w, grid_h          ; 1..64 each
+      grid_w, grid_h          ; 1..16 each
       screen_count            ; 1..64
       empty_off               ; 24-bit MAP offset to optional empty nametable, 0 = solid black
       directory[screen_count]:

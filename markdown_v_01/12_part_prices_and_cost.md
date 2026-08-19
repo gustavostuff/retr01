@@ -29,7 +29,7 @@ Qty-1 authorized-distributor ballpark unless noted.
 | 7 | 74HC573 (DIP-20) | Scroll, banks, I/O, 6502→1284 OAM capture | $1.00 | $7.00 |
 | 4 | 74HC161 (DIP-16) | Beam X/Y (341 × 262) | $1.00 | $4.00 |
 | 16 | 3×HC00, 2×HC04, 1×HC14, 3×HC08, 3×HC32, 2×HC86, 2×HC688 | PHI2, HBlank, compositor, RESB | $0.80 | $12.80 |
-| 3 | Crystals / canned oscillators | 8.000 MHz CPU, 21.477 MHz class dot, 20 MHz 1284 | $2.50 | $7.50 |
+| 3 | Crystals / canned oscillators | 8.000 MHz CPU, 21.477 MHz class dot, 20 MHz 1284, 16 MHz 328P | $2.50 | $7.50 |
 | 1 | 5 V regulator module or LDO | Board-local 5 V | $3.00 | $3.00 |
 
 **Core IC subtotal: about $108**

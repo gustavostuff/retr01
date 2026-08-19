@@ -1,25 +1,24 @@
 # Retr01-A — PCB schematic generation brief
 
 > **Superseded** for new work: use [15_schematic_prompt_coprocessor.txt](15_schematic_prompt_coprocessor.txt) (49-chip board, 1284 sprite/input coprocessor). This file is the older discrete-sprite prompt.
+>
+> **ARCHITECTURE IS STALE (archival reference only):** the remainder of this file may describe the older discrete-sprite era (e.g. `OAM_DMA` at `$FE22`, `6116` SRAM, extra GALs, RDY stalls, larger 74HC counts). Treat it as legacy notes only.
+> For the frozen Retr01-A v0 build, use `15_schematic_prompt_coprocessor.txt` plus `[14](14_reduced_number_of_chips.md)` and `[16](16_simulation_and_bringup_plan.md)`.
 
-You are a PCB / schematic designer. Your job is to emit a **complete** KiCad 8 (preferred), EasyEDA, or Altium schematic from this file alone.
+You are a PCB / schematic designer. This file is archival: use it only for the cabinet/controller connector pinout and any leftover “wiring contract” notes you trust. For the full Retr01-A v0 architecture, use `15_schematic_prompt_coprocessor.txt`.
 
-This file is self-contained. Do not wait for missing specs. **Draw the whole machine.** If a bitfield, analog level, or sprite pipeline detail is ugly, pick the default in this document and keep going.
+Do **not** treat this file as a full architecture spec. Ignore the older “draw the whole machine” instructions here; the frozen 49-chip v0 schematic lives in `15_schematic_prompt_coprocessor.txt`.
 
 **Product:** Retr01-A arcade motherboard + plug-in cartridge. Discrete 8-bit computer (W65C02S) with a custom 2bpp tile PPU, NES-style APU on an AVR, analog RGBS video.
 
-**Your output:** a **v0 schematic that could be ordered as a first proto**, not a block diagram. Include every sheet, every connector pin, every GAL equation sketch, and a BOM. Mark guesses with `FIXME` in the net name or a note, but **do not omit the circuit**.
+**Your output:** only what you still need from this legacy doc—primarily the cabinet/controller connector pinout and the `$FE60/$FE61` pad-bit contract. For the frozen Retr01-A v0 architecture schematic, use `15_schematic_prompt_coprocessor.txt`.
 
 ---
 
 ## 0. What you must deliver
 
-1. **Full schematic** of Retr01-A motherboard (all sheets below).
-2. **Cartridge schematic** (flash + edge / header matching the motherboard cart connector).
-3. **BOM** with manufacturer PN, package, qty. Prefer DIP through-hole for bring-up.
-4. **ATF22V10 equations** (CUPL, WinCUPL, or equivalent) for all four GALs. If a GAL overflows, add a 5th ATF22V10 instead of stalling.
-5. **Netlist sanity notes:** clocks, resets, bus contention rules, power budget.
-6. **Board outline suggestion:** ~250 × 160 mm, **4-layer** (signal / GND / +5V / signal). JAMMA-ish area. Do **not** put HDMI on this board.
+1. Cabinet/controller connector pinout (20-pin IDC) and `$FE60` / `$FE61` pad-bit contract.
+2. Everything else (full schematic, GAL/ATF equations, BOM, bus contention rules) should be generated from `15_schematic_prompt_coprocessor.txt` and verified against `14_reduced_number_of_chips.md` + `16_simulation_and_bringup_plan.md`.
 
 **CAD:** KiCad 8 preferred (`.kicad_sch` + hierarchical sheets). EasyEDA is acceptable if that is all you can emit. Use **hierarchical sheets**, not one 10-meter page.
 
