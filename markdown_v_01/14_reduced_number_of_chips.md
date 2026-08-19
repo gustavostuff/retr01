@@ -56,7 +56,7 @@ Glue 16, frozen:
 
 If a tool cannot place HC14, use a 3rd HC04 and swap later.
 
-1+1+1+2+1+1+3+4+7+4+2+3+16+2+1 = **49**. Band if a proto grows muxes or glue: **48–56**. Cart flash chips sit on the **cartridge**, not in this total.
+1+1+1+2+1+1+3+4+7+4+2+3+16+2+1 = **49**. This is the **v0** motherboard IC total. If a future proto genuinely needs extra glue/mux parts, that becomes a **revision beyond v0** and the count would increase above 49 (the v0 emulator/bus contract still targets the 49-chip list).
 
 **v0 freeze:** this 49-chip DIP list is the first schematic. Do **not** swap in ATF1502/1508, dual-port SRAM, or 6116. If GAL equations overflow, a **4th ATF22V10CQZ-20PU** is the only extra PLD allowed (50). Do not add chips to recreate an old “53” total.
 
@@ -145,17 +145,18 @@ The **328P stays the APU**. Two AVRs, two jobs.
 ---
 
 ## 6. What this removes / adds
+This section is explanatory (what changes from older “discrete sprite” drafts), not a second source of truth.
 
-| Change | Approx. chips |
-|--------|----------------|
-| Removed discrete sprite scanner (161 X-units, eval comparators, sprite shift farm) | −12 to −15 |
-| Removed input shift registers (`74HC165`) | −2 |
-| Added 1284P | +1 |
-| Kept VRAM 157s at 4 (was wrongly cut to 2 in the first draft of this file) | 0 vs old VRAM mux |
-| Added 2× 157 for line-buffer address mux | +2 |
-| Line-buffer SRAM instead of “OAM SRAM” | same 1 SRAM, different job |
+| Change | v0 impact |
+|--------|-----------|
+| Discrete sprite scanner / shift farm | Removed from the design. Sprites are handled by the **ATmega1284P** + the line-buffer SRAM pipeline. |
+| Input shift registers (`74HC165`) | Not used in the v0 motherboard. Inputs arrive as the latched P1/P2 bytes. |
+| Sprite + input MCU | Present exactly once: **ATmega1284P-PU** (1×). |
+| VRAM mux | Fixed at **4× 74HC157** (do not reduce to 2). |
+| Line-buffer address mux | Fixed at **2× 74HC157**. |
+| Line-buffer SRAM | Uses **1× AS6C62256** (the “sprite line buffer only” job). |
 
-Net vs original ~63: about **−14**, landing at **49** in the table. Still a smaller board than a full discrete sprite PPU.
+Net result: the motherboard IC plan is the table above, summing to **49** ICs for v0.
 
 **Not removed:** BG nametable fetch, attr unpack, VRAM interleave, beam counters, RGB DAC, cart PRG/CHR/MAP decode. Those stay 74HC + GAL.
 

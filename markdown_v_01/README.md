@@ -26,6 +26,7 @@ Canonical rewrite of the scattered Gemini drafts under `gemini_docs/`. This fold
 | [15_schematic_prompt_coprocessor.txt](15_schematic_prompt_coprocessor.txt) | Prompt for a schematic AI later (Retr01-A v0, 49-chip) |
 | [16_simulation_and_bringup_plan.md](16_simulation_and_bringup_plan.md) | Step-by-step Digital / simavr / passives / KiCad — **current build path** |
 | [17_protoboard_test_plan.md](17_protoboard_test_plan.md) | Physical proto-board islands (power, CPU, VRAM, PPU, 1284, APU) |
+| [18_nes_same_vs_different.md](18_nes_same_vs_different.md) | NES compatibility comparison (same mental model vs real differences) |
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Living decision log (locked + still open) |
 
 ## Locked in this revision
