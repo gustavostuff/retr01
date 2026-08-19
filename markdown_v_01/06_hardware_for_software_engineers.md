@@ -210,6 +210,7 @@ Collision stays in software. The electrical timing stays under the GAL, muxes, 1
 
 ## See also
 
+- [05_how_the_machine_works.md](05_how_the_machine_works.md): buses, who may R/W whom, interleave
 - [08_memory_map.md](08_memory_map.md): addresses to memorize
 - [14_reduced_number_of_chips.md](14_reduced_number_of_chips.md): 1284 coprocessor, pads, 49-chip v0
 - [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md): banks / patterns / palettes

@@ -2,7 +2,7 @@
 
 Stop using schematic AIs (Celus, Protoflow, and similar) as the source of truth. They can guess nets. They cannot freeze every resistor, capacitor, crystal load, and DAC ladder, and they will silently swap DIP 74HC for SMD 74LV.
 
-This file is the build sequence. Architecture stays in [14](14_reduced_number_of_chips.md) and [08](08_memory_map.md). The schematic prompt ([15](15_schematic_prompt_coprocessor.txt)) waits until a simulator circuit is known-good.
+This file is the build sequence. How the parts fit together: [05](05_how_the_machine_works.md). Architecture/chip count: [14](14_reduced_number_of_chips.md). CPU map: [08](08_memory_map.md). The schematic prompt ([15](15_schematic_prompt_coprocessor.txt)) waits until a simulator circuit is known-good.
 
 No single free program simulates a 49-chip 5 V arcade board with analog RGBS, two AVR firmwares, a 6502, **and** every 100 nF cap. Split the work:
 

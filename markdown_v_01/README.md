@@ -14,6 +14,7 @@ Canonical rewrite of the scattered Gemini drafts under `gemini_docs/`. This fold
 | [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) | Timing, banks, patterns, palettes, ROM budget |
 | [03_hardware_variants.md](03_hardware_variants.md) | Retr01-A / C / H form factors |
 | [04_worlds_and_screens.md](04_worlds_and_screens.md) | Sparse world atlas, layouts, `load_screen`, MAP directory |
+| [05_how_the_machine_works.md](05_how_the_machine_works.md) | Big picture: buses, who R/W whom, interleave, each block |
 | [06_hardware_for_software_engineers.md](06_hardware_for_software_engineers.md) | Discrete-logic architecture for software people |
 | [07_emulator_specification.md](07_emulator_specification.md) | Low-level C emulator design |
 | [08_memory_map.md](08_memory_map.md) | CPU + VRAM map **and** GAL / bus decode |
