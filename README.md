@@ -30,7 +30,7 @@ Later editions (console and handheld) share the same soul: one architecture, dif
 
 ## Project status
 
-Retr01 is in **architecture & documentation** phase. The living spec lives in [`markdown_v_01/`](markdown_v_01/). Hardware bring-up and the low-level emulator come next. Polished toolchains and sample games follow once the core is solid.
+Retr01 is in **architecture & documentation** phase. The living spec lives in [`docs/`](docs/). Hardware bring-up and the low-level emulator come next. Polished toolchains and sample games follow once the core is solid.
 
 ## Name note
 
