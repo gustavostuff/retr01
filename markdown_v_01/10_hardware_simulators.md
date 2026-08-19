@@ -24,3 +24,5 @@ Prefer a **digital** simulator (not SPICE) for whole-board logic.
 | Audio | Log PCM from APU model, listen offline |
 
 Gate-level sims are slow vs 8 MHz silicon. Use them for bus correctness. Use the [C emulator](07_emulator_specification.md) for ROM behavior.
+
+**Sequence:** which simulator when, plus frozen passives: [16_simulation_and_bringup_plan.md](16_simulation_and_bringup_plan.md). Do not start from a schematic-AI BOM.

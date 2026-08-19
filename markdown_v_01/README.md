@@ -4,7 +4,7 @@ Canonical rewrite of the scattered Gemini drafts under `gemini_docs/`. This fold
 
 **Project name:** Retr01 (formerly GameNerd / Retr02).  
 **Initial hardware target:** Retr01-A (arcade board).  
-**Near-term software focus:** architecture docs first, then rewrite the low-level C emulator to match.
+**Near-term software focus:** architecture docs, then **Digital (HNeemann) bring-up** ([16](16_simulation_and_bringup_plan.md)), then rewrite the low-level C emulator. Schematic AIs wait.
 
 ## Document map
 
@@ -21,8 +21,9 @@ Canonical rewrite of the scattered Gemini drafts under `gemini_docs/`. This fold
 | [11_pitch_draft.md](11_pitch_draft.md) | Marketing-oriented pitch |
 | [12_part_prices_and_cost.md](12_part_prices_and_cost.md) | Retr01-A motherboard + cart BOM prices |
 | [13_pcb_schematic_brief.md](13_pcb_schematic_brief.md) | Older schematic prompt (discrete sprites) — **superseded by 15** |
-| [14_reduced_number_of_chips.md](14_reduced_number_of_chips.md) | Sprite/input AVR coprocessor, 8-bit pads, 53-chip v0 BOM |
-| [15_schematic_prompt_coprocessor.md](15_schematic_prompt_coprocessor.md) | Prompt to paste into a schematic AI (Retr01-A v0, 53-chip) |
+| [14_reduced_number_of_chips.md](14_reduced_number_of_chips.md) | Sprite/input AVR coprocessor, 8-bit pads, 49-chip v0 BOM |
+| [15_schematic_prompt_coprocessor.txt](15_schematic_prompt_coprocessor.txt) | Prompt for a schematic AI later (Retr01-A v0, 49-chip) |
+| [16_simulation_and_bringup_plan.md](16_simulation_and_bringup_plan.md) | Step-by-step Digital / simavr / passives / KiCad — **current build path** |
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Living decision log (locked + still open) |
 
 ## Locked in this revision
@@ -34,4 +35,4 @@ Canonical rewrite of the scattered Gemini drafts under `gemini_docs/`. This fold
 5. **Per-tile** BG palettes packed in **240 bytes/screen** (1 byte per 2x2 cell). **8 palettes**, shared BG color 0, **64-entry** master palette in [`retr01_world_studio/retr01_palette_v_01.txt`](../retr01_world_studio/retr01_palette_v_01.txt).
 6. Scroll X/Y = one byte each (0-255 wrap) over 1/2/4 live screens. Software streams the next screen at a **2-tile** seam cue. `$FE30` world select is a chapter, not the camera.
 7. NES-style APU on a **328P**. Sprites + pads on a **1284P**. CPU **8.000 MHz**. Dot **5.369318 MHz** (341x262, ~60.1 Hz). MAP via `$FE90`. PRG bank via `$FE80` only. Pads: **one byte per player**.
-8. Near-term focus: architecture docs, then rewrite the low-level C emulator to match.
+8. Near-term focus: **Digital bring-up** ([16_simulation_and_bringup_plan.md](16_simulation_and_bringup_plan.md)), then rewrite the C emulator. Do not generate a PCB from Celus/Protoflow.

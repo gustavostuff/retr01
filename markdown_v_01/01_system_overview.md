@@ -41,9 +41,7 @@ Map: [08_memory_map.md](08_memory_map.md).
 
 ## 4. Near-term software focus
 
-**Primary deliverable:** lock the architecture docs, then rewrite the **low-level C emulator** to match. Do not treat the current emu tree as source of truth until that rewrite.
-
-Asset editors and 6502 game toolchains stay **out of scope** until the map and schematic settle.
+**Primary deliverable:** [16_simulation_and_bringup_plan.md](16_simulation_and_bringup_plan.md) — Digital circuit, then C emu rewrite. Schematic AIs are not the next step.
 
 ## 5. On-board memory (locked)
 

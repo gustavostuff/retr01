@@ -1,6 +1,6 @@
 # Retr01-A Part Prices and Build Cost
 
-Planning estimate for one **Retr01-A** motherboard plus cartridge. Chip list matches [14_reduced_number_of_chips.md](14_reduced_number_of_chips.md) (**53** motherboard ICs, sprite/input **1284**, APU **328P**). Schematic, board size, and exact mixed-gate SKUs are **not frozen**. Numbers below are reasonable qty-1 street prices in **USD**, snapshot **August 2026**.
+Planning estimate for one **Retr01-A** motherboard plus cartridge. Chip list matches [14_reduced_number_of_chips.md](14_reduced_number_of_chips.md) (**49** motherboard ICs, sprite/input **1284**, APU **328P**). Schematic and board size are **not frozen**. Glue SKUs are frozen in doc 14. Numbers below are reasonable qty-1 street prices in **USD**, snapshot **August 2026**.
 
 This is not a quote. Distributor stock moves. Shipping, tax, and tariffs are extra.
 
@@ -28,7 +28,7 @@ Qty-1 authorized-distributor ballpark unless noted.
 | 3 | 74HC245 (DIP-20) | Data bus isolation | $0.90 | $2.70 |
 | 7 | 74HC573 (DIP-20) | Scroll, banks, I/O, 6502→1284 OAM capture | $1.00 | $7.00 |
 | 4 | 74HC161 (DIP-16) | Beam X/Y (341 × 262) | $1.00 | $4.00 |
-| 16 | Mix of 74HC00/04/08/32/86/688 | PHI2 interleave, HBlank, compositor | $0.80 | $12.80 |
+| 16 | 3×HC00, 2×HC04, 1×HC14, 3×HC08, 3×HC32, 2×HC86, 2×HC688 | PHI2, HBlank, compositor, RESB | $0.80 | $12.80 |
 | 3 | Crystals / canned oscillators | 8.000 MHz CPU, 21.477 MHz class dot, 20 MHz 1284 | $2.50 | $7.50 |
 | 1 | 5 V regulator module or LDO | Board-local 5 V | $3.00 | $3.00 |
 
@@ -46,7 +46,7 @@ Through-hole bring-up should socket the big ICs.
 
 | Item | Planning | Ext. |
 |------|----------|------|
-| DIP sockets (40 / 28 / 24 / 20 / 16 pin mix, ~53 pcs) | $0.20 to $1.00 each | $25 |
+| DIP sockets (40 / 28 / 24 / 20 / 16 pin mix, ~49 pcs) | $0.20 to $1.00 each | $25 |
 | Caps, resistors, resistor-DAC for RGB, decoupling, reset | bulk | $15 |
 | 40-pin IDC header + ribbon (cabinet I/O) | | $6 |
 | Power barrel / screw terminal, headers, crystal load caps | | $8 |
@@ -101,7 +101,7 @@ First unit also wants a programmer (TL866-class, often programs ATF22V10 too): *
 
 ## 6. What actually moves the number
 
-1. **Glue mix.** The 53-chip coprocessor list already dropped the discrete sprite farm. Extra 157s or a 4th 22V10 still move the board a little; 30 vs 80 of random 74HC used to be the swing.
+1. **Glue mix.** The 49-chip coprocessor list already dropped the discrete sprite farm. Extra 157s or a 4th 22V10 still move the board a little; 30 vs 80 of random 74HC used to be the swing.
 2. **Authorized DIP 74HC vs hobby stock.** Same silicon, 2x price difference at qty 1.
 3. **2 MB cart in 2026.** Budget $20 and accept a PLCC/TSOP flash. Do not assume a single DIP 2 MB part stays in the catalog.
 4. **Video output on the board.** A resistor DAC is cheap. A dedicated video DAC IC is optional.
@@ -110,4 +110,4 @@ First unit also wants a programmer (TL866-class, often programs ATF22V10 too): *
 
 Until the schematic exists, pitch **Retr01-A motherboard + cart, proto qty 1** as **$200** (band $150 to $280).
 
-Revisit this file when the first real BOM (exact 74HC list and board outline) lands from [15_schematic_prompt_coprocessor.md](15_schematic_prompt_coprocessor.md).
+Revisit this file when the first real BOM (exact 74HC list and board outline) lands from [15_schematic_prompt_coprocessor.txt](15_schematic_prompt_coprocessor.txt).

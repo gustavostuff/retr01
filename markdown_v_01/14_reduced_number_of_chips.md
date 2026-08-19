@@ -1,8 +1,8 @@
 # Retr01-A Core IC Layout (Coprocessor Architecture)
 
-Motherboard IC plan after offloading **sprites and player input** to a dedicated AVR. Through-hole only. Planning total is the table sum at the bottom (~**53** ICs vs the old ~63 discrete-sprite estimate).
+Motherboard IC plan after offloading **sprites and player input** to a dedicated AVR. Through-hole only. Planning total is the table sum at the bottom (**49** ICs vs the old ~63 discrete-sprite estimate). An earlier “53” figure was a mis-add of this same table.
 
-This file is the coprocessor / input / chip-count source of truth. CPU map: [08_memory_map.md](08_memory_map.md). Variants: [03_hardware_variants.md](03_hardware_variants.md). Cost: [12_part_prices_and_cost.md](12_part_prices_and_cost.md). Schematic prompt: [15_schematic_prompt_coprocessor.md](15_schematic_prompt_coprocessor.md).
+This file is the coprocessor / input / chip-count source of truth. CPU map: [08_memory_map.md](08_memory_map.md). Variants: [03_hardware_variants.md](03_hardware_variants.md). Cost: [12_part_prices_and_cost.md](12_part_prices_and_cost.md). Schematic prompt: [15_schematic_prompt_coprocessor.txt](15_schematic_prompt_coprocessor.txt).
 
 ---
 
@@ -37,14 +37,28 @@ This file is the coprocessor / input / chip-count source of truth. CPU map: [08_
 | **VRAM mux** | 4 | 74HC157 (DIP-16) | 15-bit VRAM address CPU vs PPU. **Do not cut this to 2** — one 157 is only 4 bits. |
 | **Line-buffer mux** | 2 | 74HC157 (DIP-16) | Buffer address: beam X vs 1284. |
 | **Transceivers** | 3 | 74HC245 (DIP-20) | CPU / VRAM / cart isolation. |
-| **Glue** | 16 | 74HC00/04/08/32/86/688 mix | PHI2 interleave, HBlank, CHR BG vs sprite `/CE`, compositor (BG vs line-buffer pixel). |
+| **Glue** | 16 | See breakdown below | PHI2 interleave, HBlank, CHR `/CE`, compositor, reset Schmitt |
 | **Clocks** | 2 | Canned oscillators | 8.000 MHz CPU; 21.477 MHz ÷ 4 → ~5.369 MHz dot. |
 | **Power** | 1 | 5 V regulator module | Optional if the barrel is already a clean 5 V. Counted for cabinet-tolerant builds. |
-| **Total** | **53** | | Planning motherboard ICs (not sockets, not cart flash). |
+| **Total** | **49** | | Motherboard ICs (not sockets, not cart flash, not AVR crystals). |
 
-Band if a proto grows muxes or glue: **48–56**. Cart flash chips sit on the **cartridge**, not in this total.
+Glue 16, frozen:
 
-**v0 freeze:** this 53-chip DIP list is the first schematic. Do **not** swap in ATF1502/1508, dual-port SRAM, or 6116. If GAL equations overflow, a **4th ATF22V10CQZ-20PU** is the only extra PLD allowed.
+| Qty | Part | Role |
+|-----|------|------|
+| 3 | SN74HC00N | NAND: `/CE` qualify, exclusive CHR, HBlank windows |
+| 2 | SN74HC04N | Invert: PHI2, polarities |
+| 1 | SN74HC14N | Schmitt: CPU `RESB` |
+| 3 | SN74HC08N | AND: CS AND PHI2, WE |
+| 3 | SN74HC32N | OR: combine enables |
+| 2 | SN74HC86N | XOR: compositor / clock |
+| 2 | SN74HC688N | Identity compare: raster Y; spare for 341 |
+
+If a tool cannot place HC14, use a 3rd HC04 and swap later.
+
+1+1+1+2+1+1+3+4+7+4+2+3+16+2+1 = **49**. Band if a proto grows muxes or glue: **48–56**. Cart flash chips sit on the **cartridge**, not in this total.
+
+**v0 freeze:** this 49-chip DIP list is the first schematic. Do **not** swap in ATF1502/1508, dual-port SRAM, or 6116. If GAL equations overflow, a **4th ATF22V10CQZ-20PU** is the only extra PLD allowed (50). Do not add chips to recreate an old “53” total.
 
 **PLD check (August 2026):** “GAL-DEC / GAL-TIM / GAL-PPU” in these docs are **role names**. The silicon is Microchip **ATF22V10CQZ-20PU** (24-pin DIP, 5 V). Microchip lists the family **In Production**; the DIP SKU is **Active** at distributors, manufacturer projected EOL **2040-11-02**. Do not substitute a Lattice **GAL**\* part, and do not pick a random ATF22V10CQZ suffix (some SMD grades, e.g. **-20XC** TSSOP, are already obsolete).
 
@@ -141,7 +155,7 @@ The **328P stays the APU**. Two AVRs, two jobs.
 | Added 2× 157 for line-buffer address mux | +2 |
 | Line-buffer SRAM instead of “OAM SRAM” | same 1 SRAM, different job |
 
-Net vs original ~63: about **−10**, landing at **53** in the table. Still a smaller board than a full discrete sprite PPU.
+Net vs original ~63: about **−14**, landing at **49** in the table. Still a smaller board than a full discrete sprite PPU.
 
 **Not removed:** BG nametable fetch, attr unpack, VRAM interleave, beam counters, RGB DAC, cart PRG/CHR/MAP decode. Those stay 74HC + GAL.
 

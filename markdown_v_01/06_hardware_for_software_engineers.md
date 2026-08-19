@@ -211,7 +211,7 @@ Collision stays in software. The electrical timing stays under the GAL, muxes, 1
 ## See also
 
 - [08_memory_map.md](08_memory_map.md): addresses to memorize
-- [14_reduced_number_of_chips.md](14_reduced_number_of_chips.md): 1284 coprocessor, pads, 53-chip v0
+- [14_reduced_number_of_chips.md](14_reduced_number_of_chips.md): 1284 coprocessor, pads, 49-chip v0
 - [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md): banks / patterns / palettes
 - [04_worlds_and_screens.md](04_worlds_and_screens.md): worlds / screens / MAP atlas
 - [07_emulator_specification.md](07_emulator_specification.md): what the C emulator must enforce

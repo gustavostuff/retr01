@@ -1,6 +1,6 @@
 Retr01-A schematic generation prompt (coprocessor v0)
 
-You are Protoflow (or another schematic AI). Emit a complete schematic from this file alone. KiCad 8 export is fine.
+You are a schematic / BOM agent (Celus, Protoflow, or similar). Emit a complete schematic from this file alone. KiCad 8 export is fine.
 
 This brief supersedes 13_pcb_schematic_brief.md. Do not draw a discrete 16-sprite shifter farm. Do not use EOL parts (Lattice GAL16V8 / GAL20V8 / GAL22V10, ATF1508 PLCC-84, HM6116, IDT7130).
 
@@ -8,14 +8,14 @@ Do not wait for missing specs. Draw the whole machine. Ugly-but-wired beats a bl
 
 Product: Retr01-A arcade motherboard + plug-in cart. 5 V through-hole. W65C02S game CPU, discrete BG PPU, ATmega1284P sprite+input coprocessor, ATmega328P APU, analog RGBS.
 
-Planning IC count: 53 on the motherboard (see section 2). Stay on that list. A 4th ATF22V10CQZ-20PU is the only extra PLD allowed.
+Planning IC count: 49 on the motherboard (see section 2 arithmetic). Stay on that list. A 4th ATF22V10CQZ-20PU is the only extra PLD allowed (then 50). Do not add chips to force an old "53" total.
 
 
-HOW TO PICK PARTS (PROTOFLOW / LCSC)
+HOW TO PICK PARTS (CELUS / PROTOFLOW / LCSC)
 
 Search LCSC first with the exact manufacturer PN in section 2. DigiKey or Mouser is also fine. If the catalog has no hit, generate a custom symbol + DIP footprint from the datasheet URL. Then keep going. Never stall the schematic because a PN is missing from LCSC.
 
-Lock the package. Through-hole DIP only for every IC in the 53. Reject SOIC, TSSOP, TQFP, QFN, AU, PW, DR, APWR, SCN, SIN. Example: SN74HC573APWR is wrong (TSSOP). SN74HC573N or CD74HC573E DIP-20 is right.
+Lock the package. Through-hole DIP only for every IC in the 49. Reject SOIC, TSSOP, TQFP, QFN, AU, PW, DR, APWR, SCN, SIN. Example: SN74HC573APWR is wrong (TSSOP). SN74HC573N or CD74HC573E DIP-20 is right.
 
 Do not "helpfully" swap families. Never replace the CPU with MOS 6502, Z80, 6809, 8051, STM32, or ESP32. Never replace ATF22V10CQZ-20PU with a Lattice GAL, ATF16V8, or ATF1504/1508. Never replace ATmega1284P-PU with a 328P, 644P, or 2560. Never merge the two AVRs onto one chip. Never use 74LS or 74HCT when 74HC DIP exists.
 
@@ -48,7 +48,7 @@ ATF22V10s (labeled GAL-DEC/TIM/PPU on sheets) are decode/timing only. Do not eat
 
 Three 32 KB SRAMs. Chip 1 = CPU RAM $0000-$7FFF. Chip 2 = interleaved VRAM. Chip 3 = sprite line buffer (not OAM).
 
-Two PPU/CPU clocks: CPU 8.000 MHz PHI2. Dot about 5.369 MHz (21.47727 MHz divided by 4). Independent. The 1284 also needs a 20 MHz crystal. The 328P needs a 16 MHz crystal. Those crystals are extra parts, not extra ICs in the 53.
+Two PPU/CPU clocks: CPU 8.000 MHz PHI2. Dot about 5.369 MHz (21.47727 MHz divided by 4). Independent. The 1284 also needs a 20 MHz crystal. The 328P needs a 16 MHz crystal. Those crystals are extra parts, not extra ICs in the 49.
 
 Sprites: 1284 firmware + ping-pong line buffer. Max 16 per line. Next-line eval.
 
@@ -63,7 +63,7 @@ Power: barrel 5.5 x 2.1 mm, center positive, 5 V. Polyfuse, reverse diode. Optio
 
 2. MOTHERBOARD IC LIST (DRAW THESE)
 
-Search / place using these strings. Qty is for the 53-chip total.
+Search / place using these strings. Qty is for the 49-chip total. Do not pad.
 
 CPU (1) — W65C02S6TPG-14, DIP-40 0.6 inch (15.24 mm), Western Design Center.
 LCSC: none expected. Mouser / Jameco sell it.
@@ -71,10 +71,10 @@ Action: generate a custom DIP-40 from https://www.westerndesigncenter.com/wdc/do
 Pins that differ from NMOS 6502: pin 1 VPB (output, NC or pull-up), pin 5 MLB (NC), pin 36 BE (pull high to +5). Clock input is PHI2 (not PHI0). VDD pin 8, VSS pin 21.
 BOM still says W65C02S6TPG-14. Do not place a MOS 6502 symbol.
 
-APU AVR (1) — ATMEGA328P-PU, DIP-28. LCSC C33901. 16 MHz HC-49 crystal, not counted in 53.
+APU AVR (1) — ATMEGA328P-PU, DIP-28. LCSC C33901. 16 MHz HC-49 crystal, not counted in 49.
 Do not use ATMEGA328-PU, ATMEGA328P-AU, or Arduino module.
 
-Sprite/input AVR (1) — ATMEGA1284P-PU, DIP-40. LCSC C116839. 20 MHz HC-49 crystal, not counted in 53.
+Sprite/input AVR (1) — ATMEGA1284P-PU, DIP-40. LCSC C116839. 20 MHz HC-49 crystal, not counted in 49.
 Do not use ATMEGA644P, ATMEGA2560, ATMEGA1284P-AU.
 
 SRAM (3) — AS6C62256-55PCN, DIP-28 0.6 inch. Alliance Memory. LCSC C5569983.
@@ -93,28 +93,35 @@ VRAM mux (4) + line-buffer mux (2) = 6 — SN74HC157N, DIP-16. Search "SN74HC157
 
 Transceivers (3) — SN74HC245N, DIP-20. LCSC C2899.
 
-Glue mix (16), all DIP, 74HC (not LS, not HCT):
-SN74HC00N DIP-14 NAND  LCSC C2902
-SN74HC04N DIP-14 inverter  LCSC C2886
-SN74HC08N DIP-14 AND  LCSC C2887
-SN74HC32N DIP-14 OR  LCSC C2894
-SN74HC86N DIP-14 XOR  LCSC C2903
-SN74HC688N DIP-20 identity compare  (raster Y). Search "SN74HC688N DIP-20"
-Pick a mix that totals 16 ICs. Extra NAND/inverter is better than inventing a 17th type.
+Glue (16), all DIP, 74HC (not LS, not HCT). Exact qty, do not pick a mix:
 
-Oscillators (2 of the 53) — canned DIP-8 or DIP-14 clock oscillators, 5 V:
+3x SN74HC00N DIP-14 NAND     LCSC C2902   /CE qualify, exclusive CHR, HBlank windows
+2x SN74HC04N DIP-14 inverter LCSC C2886   PHI2 invert, polarities
+1x SN74HC14N DIP-14 Schmitt  search SN74HC14N DIP-14   RESB (RC + Schmitt). If the tool only allows the six types below, use a 3rd HC04 here and swap to HC14 on the canvas.
+3x SN74HC08N DIP-14 AND      LCSC C2887   CS AND PHI2, WE qualify
+3x SN74HC32N DIP-14 OR       LCSC C2894   combine enables
+2x SN74HC86N DIP-14 XOR      LCSC C2903   compositor / clock XOR
+2x SN74HC688N DIP-20 compare search SN74HC688N DIP-20   raster Y vs beam Y; spare for 341 if GAL-TIM is tight
+
+3+2+1+3+3+2+2 = 16. If the tool forbids HC14, use 3x HC00, 3x HC04, 3x HC08, 3x HC32, 2x HC86, 2x HC688 (still 16) and note FIXME_HC14 on reset.
+
+Oscillators (2 of the 49) — canned DIP-8 or DIP-14 clock oscillators, 5 V:
 8.000 MHz (CPU PHI2)
 21.47727 MHz (NTSC 4x; divide by 4 for dot). 21.477 MHz is OK if 21.47727 is missing.
 Do not use a microcontroller as a clock.
 
-Regulator (1 of the 53) — any 5 V through-hole module or TO-220 LDO if the barrel is not already a clean 5 V. Omit only if you note barrel = dedicated 5 V.
+Regulator (1 of the 49) — any 5 V through-hole module or TO-220 LDO if the barrel is not already a clean 5 V. Omit only if you note barrel = dedicated 5 V.
 
-Total 53. Sockets, passives, crystals, headers, R-2R resistors are extra, not in 53.
+Arithmetic (must equal 49):
+1 CPU + 1 328P + 1 1284 + 3 SRAM + 1 EEPROM + 3 ATF + 4 HC161 + 7 HC573 + 6 HC157 + 3 HC245 + 16 glue + 2 osc + 1 regulator = 49.
+Do not add a 4th ATF to close a "53" gap. 4th ATF is overflow-only (50).
+
+Sockets, passives, crystals, headers, R-2R resistors are extra, not in 49.
 
 
 3. SHEETS
 
-00_cover — Title Retr01-A rev B0, block diagram (CPU / BG PPU / 1284 / 328P / cart), 53-chip note
+00_cover — Title Retr01-A rev B0, block diagram (CPU / BG PPU / 1284 / 328P / cart), 49-chip note
 01_power — Barrel, fuse, reverse diode, bulk, 100 nF per IC, LED, USB-C pads
 02_cpu — W65C02S, PHI2, RESB Schmitt, RDY/BE/SOB pulled up, NMIB, IRQB
 03_decode — GAL-DEC: RAM_CS, IO_CS, PRG_OE, $FExx strobes, EE_CS
