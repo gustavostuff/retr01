@@ -23,7 +23,7 @@ The CPU never writes a framebuffer. It fills nametables, OAM, and latches.
 | Line buffer | AS6C62256 | sprite ping-pong storage |
 | Sprite/input MCU | ATmega1284P-PU | OAM + sprite pipeline + pads |
 | Audio MCU | ATmega328P-PU | NES-style APU |
-| PLD | 3× ATF22V10CQZ-20PU | decode, timing, CHR/VRAM gating |
+| PLD | 3x ATF22V10CQZ-20PU | decode, timing, CHR/VRAM gating |
 | 74HC157 | muxes | VRAM and line-buffer address mux |
 | 74HC245 | transceivers | data isolation |
 | 74HC573 | latches | scroll, banks, MAP address, OAM capture |
@@ -31,7 +31,7 @@ The CPU never writes a framebuffer. It fills nametables, OAM, and latches.
 
 ### Datasheets and pin wiring
 
-Official PDFs and **Retr01-A v0 breadboard pin tables** (which pins to strap, bus connections, module-by-module checklist) live in [`06_protoboard_module_tests.md` §3](06_protoboard_module_tests.md#3-ic-reference--datasheets-and-pins).
+Official PDFs and **Retr01-A v0 breadboard pin tables** (which pins to strap, bus connections, module-by-module checklist) live in [`06_protoboard_module_tests.md` section 3](06_protoboard_module_tests.md#3-ic-reference--datasheets-and-pins).
 
 Quick links for the main silicon:
 
@@ -44,15 +44,15 @@ Quick links for the main silicon:
 | ATmega328P | [Microchip PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/ATmega328P-DS-DS40002061A.pdf) |
 | AT28C64B | [Microchip PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/doc4428.pdf) |
 | SST39SF040 (cart flash) | [Microchip PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/20005051C.pdf) |
-| SN74HC157 / 245 / 573 / 161 | [TI 74HC family](https://www.ti.com/logic-circuit/standard-logic/74hc-family/overview.html) — use the part-specific PDF linked in §3 |
+| SN74HC157 / 245 / 573 / 161 | [TI 74HC family](https://www.ti.com/logic-circuit/standard-logic/74hc-family/overview.html) - use the part-specific PDF linked in section 3 |
 
-For **74HC glue** (00, 04, 08, 14, 32, 86, 688), see the full index in §3.1 of the protoboard doc.
+For **74HC glue** (00, 04, 08, 14, 32, 86, 688), see the full index in section 3.1 of the protoboard doc.
 
 ## Frozen v0 board plan
 
 - through-hole only
 - planning total: **49 motherboard ICs**
-- 3× ATF22V10, not Lattice GAL
+- 3x ATF22V10, not Lattice GAL
 - if PLD equations overflow, add a **4th ATF22V10**, not a different family
 
 ## Clocks
@@ -199,4 +199,4 @@ For software people:
 - treat `$FExx` as the hardware API
 - let the board resolve tiles to pixels
 
-Protoboard bring-up: [`06_protoboard_module_tests.md`](06_protoboard_module_tests.md) — test ICs in separate islands before full integration. **Pin-level wiring:** [§3 IC reference](06_protoboard_module_tests.md#3-ic-reference--datasheets-and-pins).
+Protoboard bring-up: [`06_protoboard_module_tests.md`](06_protoboard_module_tests.md) - test ICs in separate islands before full integration. **Pin-level wiring:** [section 3 IC reference](06_protoboard_module_tests.md#3-ic-reference--datasheets-and-pins).

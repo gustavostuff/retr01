@@ -30,7 +30,7 @@ Later editions (console and handheld) share the same soul: one architecture, dif
 
 ## Project status
 
-Retr01 is in **architecture & documentation** phase. The living spec lives in [`docs/`](docs/). **Retr01 Studio** — the visual authoring and compile tool — is the next coding focus. A low-level hardware emulator is planned later, not in active development yet.
+Retr01 is in **architecture & documentation** phase. The living spec lives in [`docs/`](docs/). **Retr01 Studio** - the visual authoring and compile tool - is the next coding focus. A low-level hardware emulator is planned later, not in active development yet.
 
 ## Name note
 

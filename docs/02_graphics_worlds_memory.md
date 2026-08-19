@@ -6,8 +6,8 @@ This doc is the merged source for the graphics model, world layout, VRAM layout,
 
 | Item | Value |
 |------|-------|
-| Visible resolution | **256×240** |
-| Tile size | **8×8** |
+| Visible resolution | **256x240** |
+| Tile size | **8x8** |
 | Dot clock | **5.369318 MHz** |
 | Dots per scanline | **341** |
 | Scanlines per frame | **262** |
@@ -18,9 +18,9 @@ CPU and dot clocks are **independent**. The CPU runs at **8.000 MHz**. The beam 
 ## Worlds and screens
 
 - A cart has up to **8 worlds**
-- A world uses a sparse virtual grid up to **16×16**
+- A world uses a sparse virtual grid up to **16x16**
 - A world may store up to **64 screens**
-- A screen is **32×30** tile indices plus packed attrs
+- A screen is **32x30** tile indices plus packed attrs
 - A screen is stored in MAP-ROM and identified by `(col, row)`
 
 ### What a world contains
@@ -33,7 +33,7 @@ CPU and dot clocks are **independent**. The CPU runs at **8.000 MHz**. The beam 
 
 - tile plane: **960 bytes**
 - attr plane: **240 bytes**
-- flags with **BG bank 0–3**
+- flags with **BG bank 0-3**
 - MAP payload offset
 
 Parallax screens use the same screen format but are marked non-enterable.
@@ -44,8 +44,8 @@ These are **CHR tile banks**, not palette banks.
 
 | Term | Meaning |
 |------|---------|
-| **BG bank** | **256 BG tiles**, **16×16** tile grid, **4 KB** |
-| **Sprite bank** | **256 sprite tiles**, **16×16** tile grid, **4 KB** |
+| **BG bank** | **256 BG tiles**, **16x16** tile grid, **4 KB** |
+| **Sprite bank** | **256 sprite tiles**, **16x16** tile grid, **4 KB** |
 
 Per world:
 
@@ -61,7 +61,7 @@ Across the full cart:
 
 1. Each screen names an **authored BG bank** in MAP metadata.
 2. When software loads or seam-streams a screen into a nametable slot, it also copies that screen's BG bank into that slot's **BG bank latch**.
-3. **Camera slots 0–3** and **plane slots 4–5** each have their own BG bank latch.
+3. **Camera slots 0-3** and **plane slots 4-5** each have their own BG bank latch.
 4. **Sprite bank** is separate and global within the current world.
 5. Changing a BG bank does **not** change the sprite bank, and vice versa.
 
@@ -69,16 +69,16 @@ Across the full cart:
 
 ### Camera
 
-- `scroll_x` and `scroll_y` are **one byte each** (`0–255`, wrap)
-- The camera can sample **1, 2, or 4** live screens from VRAM slots **0–3**
+- `scroll_x` and `scroll_y` are **one byte each** (`0-255`, wrap)
+- The camera can sample **1, 2, or 4** live screens from VRAM slots **0-3**
 - Smooth scrolling means multiple neighboring screens may be visible at once
 
 ### Why VRAM has six slots
 
-- **Slots 0–3**: live **camera** field, up to four playfield screens
-- **Slots 4–5**: optional **parallax plane** only
+- **Slots 0-3**: live **camera** field, up to four playfield screens
+- **Slots 4-5**: optional **parallax plane** only
 
-Slots 4–5 are **not** fifth and sixth playfield screens.
+Slots 4-5 are **not** fifth and sixth playfield screens.
 
 ### VRAM layout
 
@@ -98,7 +98,7 @@ Each 2 KB slot holds:
 - tiles at `+0x000` (**960 bytes**)
 - packed attrs at `+0x3C0` (**240 bytes**)
 
-One attr byte is a **2×2 attr quadrant** with four 2-bit palette fields, one per tile.
+One attr byte is a **2x2 attr quadrant** with four 2-bit palette fields, one per tile.
 
 ## Palettes and compositing
 
@@ -108,10 +108,10 @@ Use these words consistently. Do **not** mix them with CHR **tile banks**.
 
 | Term | Meaning | Not the same as |
 |------|---------|-----------------|
-| **Master palette** | 64 global RGB colors; source of all color indices | A palette row or palette bank |
+| **Master palette** | 64 global RGB colors, source of all color indices | A palette row or palette bank |
 | **BG palette bank** | BG-side cartridge store of up to **32 palettes** in **8 palette rows x 4 palettes** | CHR **BG bank** (tile patterns) |
 | **Sprite palette bank** | Sprite-side cartridge store of up to **32 palettes** in **8 palette rows x 4 palettes** | CHR **sprite bank** (tile patterns) |
-| **Palette row** | One row of **4 palettes** inside a palette bank; row index **0-7** | A screen row or attr row |
+| **Palette row** | One row of **4 palettes** inside a palette bank, row index **0-7** | A screen row or attr row |
 | **Palette** | One 4-color set: **4 master-color indices** | The whole palette bank |
 | **Active palette buffer** | The **8 palettes** currently on screen: **4 BG + 4 sprite** copied from one selected palette row | VRAM or nametable data |
 
@@ -119,10 +119,10 @@ Layout of one palette bank:
 
 ```text
 Palette bank (BG or Sprite)
-+-- Palette row 0:  [Palette] [Palette] [Palette] [Palette]
-+-- Palette row 1:  [Palette] [Palette] [Palette] [Palette]
++-- Palette row 0: [Palette] [Palette] [Palette] [Palette]
++-- Palette row 1: [Palette] [Palette] [Palette] [Palette]
 +-- ...
-+-- Palette row 7:  [Palette] [Palette] [Palette] [Palette]
++-- Palette row 7: [Palette] [Palette] [Palette] [Palette]
 ```
 
 Each **Palette** is 4 bytes (4 master indices). A full bank is **32 palettes = 128 bytes** if every slot is authored.
@@ -132,10 +132,10 @@ Each **Palette** is 4 bytes (4 master indices). A full bank is **32 palettes = 1
 Retr01-A, C, and H all share one **master palette** of **64 unique colors**. It is the source of all color indices used by the system.
 
 ```text
-#000000  #290514  #2A0507  #230F06  #1E1306  #1A1605  #141807  #061A07  #051A13  #071918  #08181C  #071722  #030B3D  #16033A  #20052D  #260420
-#363636  #740A40  #77091A  #693512  #5D3F0E  #514617  #424C19  #13511A  #16503F  #114E4D  #164D58  #164A66  #163794  #472990  #5F167D  #6C115F
-#949494  #C04A7A  #C54A4D  #B8601B  #A27326  #8F7E2F  #77872D  #209030  #2E8E72  #318B89  #1F889C  #2483B5  #4D77D7  #7E6AD3  #9D5DBF  #B352A0
-#FFFFFF  #F1A2BB  #F1A6A1  #F1A983  #EEAC44  #D4BA33  #B0C841  #73D275  #22D0A6  #3BCDC9  #48C9E4  #88C4ED  #A4BDEF  #BBB5F1  #D5A9EF  #F09BDD
+#000000 #290514 #2A0507 #230F06 #1E1306 #1A1605 #141807 #061A07 #051A13 #071918 #08181C #071722 #030B3D #16033A #20052D #260420
+#363636 #740A40 #77091A #693512 #5D3F0E #514617 #424C19 #13511A #16503F #114E4D #164D58 #164A66 #163794 #472990 #5F167D #6C115F
+#949494 #C04A7A #C54A4D #B8601B #A27326 #8F7E2F #77872D #209030 #2E8E72 #318B89 #1F889C #2483B5 #4D77D7 #7E6AD3 #9D5DBF #B352A0
+#FFFFFF #F1A2BB #F1A6A1 #F1A983 #EEAC44 #D4BA33 #B0C841 #73D275 #22D0A6 #3BCDC9 #48C9E4 #88C4ED #A4BDEF #BBB5F1 #D5A9EF #F09BDD
 ```
 
 This table belongs in cartridge data and is the canonical color source for the whole family.
@@ -148,7 +148,7 @@ Three layers exist:
 
 | Layer | What it holds | Required? |
 |-------|---------------|-----------|
-| **Master palette** | 64 RGB colors | optional in cart; system default exists |
+| **Master palette** | 64 RGB colors | optional in cart, system default exists |
 | **Cart global palette banks** | at least **1 BG palette + 1 sprite palette** shared across worlds | minimum authoring contract |
 | **World palette banks** | optional **BG palette bank** and/or **sprite palette bank** for that world | optional per world |
 
@@ -159,9 +159,9 @@ Within each palette bank, storage is **sparse**: only authored palettes occupy c
 Resolution happens in **software at load time** (boot, world enter, or `load_screen`), not in the PPU per pixel. The hardware always reads whatever is already in the **active palette buffer**.
 
 ```text
-1. world palette bank entry      (if the world defines one)
+1. world palette bank entry (if the world defines one)
 2. else cart global palette bank (at least 1 BG + 1 sprite palette for a valid cart)
-3. else system default palettes  (baked into Retr01 Studio / system startup)
+3. else system default palettes (baked into Retr01 Studio / system startup)
 ```
 
 This needs **no extra chips**. The CPU copies the resolved active row into palette registers when the palette row changes.
@@ -292,18 +292,18 @@ Retr01 uses **raster IRQ**, not NES sprite-0 hit.
 - `raster_hit`: status
 - `raster_irq_enable`: IRQ gate
 
-Parallax is implemented as a **separate scanline band** that points to plane slots **4–5**.
+Parallax is implemented as a **separate scanline band** that points to plane slots **4-5**.
 
 Rules:
 
 - parallax forces a **1-axis camera**
-- plane slots are not part of the 2×2 camera
+- plane slots are not part of the 2x2 camera
 - BG banks stay per slot
 - sprite bank remains separate/global
 
 ## What software should remember
 
-- nametable bytes are tile indices `0–255`
+- nametable bytes are tile indices `0-255`
 - tile bytes do **not** store a bank number
 - the slot's BG bank latch chooses the CHR bank
 - MAP chooses which screen to load

@@ -8,8 +8,8 @@ This doc merges the old cost sheet and decision log into one planning file.
 |------|----------|
 | Name / family | **Retr01**, rollout **A -> C -> H** |
 | Worlds | **8** max |
-| World layout | sparse virtual grid up to **16×16**, **64 screens max** per world |
-| Screen format | **32×30** tiles + **240-byte** packed attr plane |
+| World layout | sparse virtual grid up to **16x16**, **64 screens max** per world |
+| Screen format | **32x30** tiles + **240-byte** packed attr plane |
 | CHR layout | **4 BG banks + 4 sprite banks** per world |
 | Bank sizes | **256 tiles** per bank, **4 KB** each |
 | Master palette | one **64-color** table for Retr01-A/C/H |
@@ -18,7 +18,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Active palette buffer | **4 BG + 4 sprite palettes** from one selected **palette row** |
 | Palette row selection | BG palette row **N** and sprite palette row **N** are always selected together |
 | Shared backdrop | all **8** active palettes use the same **color 0** master index |
-| Palette fallback | world palette bank -> cart global -> system default; resolved in software at load time |
+| Palette fallback | world palette bank -> cart global -> system default. Resolved in software at load time |
 | Runtime BG banking | per **nametable slot** |
 | Runtime sprite banking | separate **global latch** |
 | VRAM | **32 KB**, interleaved |
@@ -66,11 +66,11 @@ Depends on final flash strategy, but motherboard + cart proto still targets roug
 | ID | Topic | Note |
 |----|-------|------|
 | Q1 | exact `$FE0x` and palette-register bitfields | block families are fixed, byte-level details still need freezing |
-| Q2 | RGBS analog levels / sync polarity tuning | digital timing is locked; bench tuning still needed |
+| Q2 | RGBS analog levels / sync polarity tuning | digital timing is locked. Bench tuning still needed |
 | Q3 | Retr01-C 3-wire controller bit protocol | software-visible byte contract is fixed, transport details are not |
 | Q4 | OAM byte order final confirmation | default remains NES-like `Y, tile, attr, X` |
 | Q5 | root-level old names and paths | some legacy `GameNerd` / old-folder references still exist |
-| Q6 | exact cartridge encoding for palette banks and palette-row IDs | terminology and row-sync rules are locked; field layout still needs freezing |
+| Q6 | exact cartridge encoding for palette banks and palette-row IDs | terminology and row-sync rules are locked. Field layout still needs freezing |
 
 ## Practical next decisions
 
