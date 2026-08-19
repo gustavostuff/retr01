@@ -1,6 +1,6 @@
 # Graphics & Cartridge Architecture
 
-Canonical description of Retr01 tile graphics, pattern banks, and cartridge ROM budget. Worlds, the sparse screen atlas, and `load_screen` live in [04_worlds_and_screens.md](04_worlds_and_screens.md).
+Canonical description of Retr01 tile graphics, CHR cells, and cartridge ROM budget. Worlds, the sparse screen atlas, and `load_screen` live in [04_worlds_and_screens.md](04_worlds_and_screens.md).
 
 ## 1. Display geometry and timing
 
@@ -25,43 +25,45 @@ PPU VRAM fetches occur only on PPU-owned CPU phases (with line buffers / shift r
 
 See also [08_memory_map.md](08_memory_map.md) for the VRAM port and interleave rules.
 
-## 2. Scroll, banks, and CHR
+## 2. Scroll, cells, and CHR
 
 World / grid / screen atlas: [04_worlds_and_screens.md](04_worlds_and_screens.md). Do not mix those with the PPU camera.
 
 | Word | What it is here |
 |------|-----------------|
 | **Scroll** | `scroll_x` / `scroll_y`, one byte each (0-255). Pixel offset of the 256x240 window across the live VRAM slots. PPU latches (`$FE0x`). |
-| **CHR bank** | 512 patterns (256 BG + 256 sprites). 4 banks per world. `$FE30` picks BG bank and sprite bank separately. |
+| **BG cell** | 256 BG patterns (4 KB). Each world has 4 BG cells. Screens choose among cells 0-3. |
+| **Sprite cell** | 256 sprite patterns (4 KB). Each world has its own 4 sprite cells. OAM tile indices use the currently selected sprite cell from the current world. |
 
-Retr01 does **not** define NES-style **pattern tables/pages** as an extra runtime layer. Software sees a **BG bank** and a **sprite bank**. The screen's tile bytes are just **0-255** into the selected BG bank's BG half.
+Retr01 does **not** define NES-style **pattern tables/pages** as an extra runtime layer. Software sees **BG cells** and **sprite cells**. Each screen's tile bytes are still just **0-255**, but now the screen's MAP metadata names which BG cell those bytes should use.
 
-Important consequence: the **BG bank latch is global for the current BG fetch path**. It is **not** stored per nametable slot. If the camera is showing 1, 2, or 4 playfield screens at once, all visible playfield slots are interpreted through the same currently latched BG bank.
+At runtime, BG cell selection is **per live nametable slot**, not one global latch for the whole playfield. When the camera samples slot 0/1/2/3 (or plane slot 4/5), the PPU uses that slot's BG cell latch to choose the BG CHR region.
 
-### Bank rules
+### Cell rules
 
-1. Each world has **4** pattern banks.
-2. Each bank: **first 256 patterns BG**, **second 256 sprites** -> **512** patterns / bank (8 KB @ 16 bytes/pattern).
-3. **Authored bank:** `load_screen` sets the BG bank that screen was drawn against. That is the default at the start of the frame. Software may still switch banks mid-frame (see section 8).
-4. **Runtime banks:** PPU may select **BG bank** and **sprite bank** independently. Either may change **mid-frame**. Nametable bytes stay 0-255 into whichever BG bank's BG half is **currently** latched.
-5. **No per-slot BG banks:** the 2x2 camera does **not** carry 4 independent BG bank IDs for slots 0-3. A four-screen smooth-scroll view therefore cannot show four different BG banks simultaneously. If all four slots are on screen together, they must be compatible with the same BG bank for that scanline band.
-6. PPU fetches CHR **from cartridge CHR-ROM** (not from VRAM).
+1. Each world has **4 BG cells + 4 sprite cells**.
+2. Each cell holds **256 patterns** -> **4 KB** at 16 bytes/pattern.
+3. **Authored BG cell:** each stored screen records a **BG cell 0-3** in MAP metadata. `load_screen` / seam streaming copy that value into the destination slot's BG cell latch together with the nametable bytes.
+4. **Runtime BG cells:** slots **0-3** (camera) and **4-5** (parallax plane) each have their own BG cell latch. Nametable bytes stay 0-255, and the fetch logic chooses the cell from the slot currently being sampled.
+5. **Runtime sprite cell:** sprite cell is still a **separate global latch**. Sprites are not tied to nametable slots. Software may switch the sprite cell at any time; a common pattern is "select enemy sprite cell, draw enemies; select player sprite cell, draw player."
+6. **BG and sprite independence:** changing a BG cell latch for any slot does **not** change the current sprite cell. Changing the sprite cell does **not** rewrite any BG slot cells.
+7. PPU fetches CHR **from cartridge CHR-ROM** (not from VRAM).
 
 ## 3. CHR size math
 
 | Unit | Patterns | Bytes |
 |------|----------|-------|
-| BG half or sprite half | 256 | 4 KB |
-| Bank | 512 | 8 KB |
-| World (4 banks) | 2048 | 32 KB |
+| BG cell or sprite cell | 256 | 4 KB |
+| 4 BG + 4 sprite cells | 2048 | 32 KB |
+| World | 2048 | 32 KB |
 | Cart max (8 worlds) | 16384 | **256 KB** CHR |
 
 ## 4. Sprites vs background
 
 These are two fetch paths. Scroll only affects which nametable byte is under the beam.
 
-- **BG:** scroll picks a pixel in the live nametable field. That byte is a tile index **0-255** into the **active BG tile set** (the BG half of the BG bank on cart).
-- **Sprites:** OAM (64 entries) holds tile indices into the **active sprite tile set** (the sprite half of the sprite bank). OAM does not use scroll.
+- **BG:** scroll picks a pixel in the live nametable field. That byte is a tile index **0-255** into the **active BG tile set** (the BG cell chosen by that slot).
+- **Sprites:** OAM (64 entries) holds tile indices into the **active sprite tile set** (the currently selected sprite cell of the current world). OAM does not use scroll.
 - Max **16 sprites per scanline**. Extras are dropped.
 - Compositor: if the sprite pixel is pattern color 0, skip it (transparent). Else if the OAM **priority** bit is set, opaque BG wins. Else the sprite wins. Pattern color 0 is **not** OAM sprite #0. OAM entry 0 is a normal sprite.
 
@@ -100,7 +102,7 @@ OAM lives in the **ATmega1284P** (internal RAM), reached via `$FE20`/`$FE21`. It
 
 - `scroll_x` and `scroll_y` are **one byte each** (0-255, wrap). That is the pixel camera inside the live field.
 - Live field: up to **four** nametable slots (2x2). Arrangement/mirroring chooses **1, 2, or 4** distinct screens. As the window crosses a slot boundary, those neighbor tiles **are** on screen. That is how pixel scrolling looks continuous.
-- The BG bank used for that live field is still **one global latch** for the current scanline band. Smooth scrolling does **not** imply four simultaneous BG banks.
+- Each live slot carries its own **BG cell latch**, so smooth scrolling may show 1, 2, or 4 screens that use different BG cells at the same time.
 - **Planes:** two extra slots (see section 8). Not part of the 2x2 camera. Raster IRQ may point the top (or other) scanline band at a plane.
 - **Streaming cue:** software, **2 tiles (16 px)** before a seam. Neighbor lookup, empty-template fill, and `load_screen` are in [04_worlds_and_screens.md](04_worlds_and_screens.md).
 
@@ -109,21 +111,21 @@ OAM lives in the **ATmega1284P** (internal RAM), reached via `$FE20`/`$FE21`. It
 | Region | Role | Ceiling |
 |--------|------|---------|
 | PRG-ROM | Game code | ~512 KB |
-| CHR-ROM | Pattern banks | ~256 KB |
+| CHR-ROM | BG cells + sprite cells | ~256 KB |
 | MAP-ROM | Compressed nametables + attributes | ~1.17 MB |
 | **Total** | Example parallel flash | **~2 MB** |
 
 Uncompressed map upper bound: `8 x 64 x (960 + 240) = 600 KB` before RLE (tile plane + packed attr plane).
 
-## 8. Mid-frame banks, parallax, and raster IRQ
+## 8. Mid-frame cell changes, parallax, and raster IRQ
 
-Nametable indices are always **one byte** (0-255). You do not store a bank number per tile. More unique tiles on screen, parallax, and status-bar splits are the same class of trick as the NES: change a latch **while the beam is running**.
+Nametable indices are always **one byte** (0-255). You do not store a cell number per tile. More unique tiles on screen, parallax, and status-bar splits are the same class of trick as the NES: change a latch **while the beam is running**.
 
 Retr01 makes that latch change **easier** than the NES. We do **not** use sprite-0 hit.
 
 ### Why not NES sprite-0
 
-NES games wait until a non-transparent pixel of OAM sprite 0 overlaps opaque BG, then spin until that flag, then write scroll or CHR banks. That burns a sprite, depends on art, and races the PPU. Retr01 also cannot copy NES cycle-counted waits: CPU clock (8.000 MHz) and dot clock (5.369318 MHz) are **independent**, not a 3:1 pair.
+NES games wait until a non-transparent pixel of OAM sprite 0 overlaps opaque BG, then spin until that flag, then write scroll or CHR selection. That burns a sprite, depends on art, and races the PPU. Retr01 also cannot copy NES cycle-counted waits: CPU clock (8.000 MHz) and dot clock (5.369318 MHz) are **independent**, not a 3:1 pair.
 
 Gameplay collision stays AABB in PRG ([01_system_overview.md](01_system_overview.md) principle 5). Raster timing is a beam compare, not a compositor collision.
 
@@ -144,22 +146,22 @@ Hardware is a compare of the existing Y counters (74HC161) against one latch. A 
 
 ### When a write shows up on screen
 
-`$FE30` (banks / world) and scroll latches are live. The **next PPU pattern fetch** uses the new value. Shift registers already hold the current tile, so expect up to **8 px (one tile)** of delay. For a clean split, write during **HBlank** (85 dots, ~126 CPU cycles at 8 MHz). The IRQ at dot 0 of line N is early enough to prepare the next line, or fire the compare on line N-1 and write in that HBlank.
+`$FE30` (world / cell latches) and scroll latches are live. The **next PPU pattern fetch** uses the new value. Shift registers already hold the current tile, so expect up to **8 px (one tile)** of delay. For a clean split, write during **HBlank** (85 dots, ~126 CPU cycles at 8 MHz). The IRQ at dot 0 of line N is early enough to prepare the next line, or fire the compare on line N-1 and write in that HBlank.
 
 ### More than 256 unique BG tiles
 
-One nametable still names tiles 0-255. The active BG tile set is whichever BG bank `$FE30` currently selects.
+One nametable still names tiles 0-255. The active BG tile set comes from the **BG cell latch of the slot currently being fetched**.
 
-- At `load_screen`, set the **authored** BG bank (the set that nametable was drawn against).
-- That BG bank selection is **global for the current BG band**, not per screen slot. Four visible playfield screens do **not** mean four simultaneous BG banks.
-- In a raster IRQ, switch to another of the world's **4** BG banks. From that scanline down, the same 0-255 indices are a **different** 256 pictures.
-- Four horizontal bands => up to **1024** unique BG tiles on one frame, still one nametable.
+- At `load_screen` / seam fill time, set the destination slot's **authored** BG cell from screen metadata.
+- If the camera shows 4 playfield screens at once, those 4 slots may use **4 different BG cells**.
+- With 4 camera slots plus 2 plane slots, the frame may reference up to **6** live BG-cell selections at once, drawn from the world's 4 BG-cell pool.
+- Raster IRQ still matters for switching **which slots / scroll / sprite cell / plane band** are active on later scanlines.
 - Status bar vs playfield is the one-split version of the same trick.
-- This is **not** MMC3 1 KB CHR granules. A bank switch replaces the whole 256-tile BG half. Splits are horizontal bands, not per-column banks. Per-tile bank IDs would need another attr plane. We are not adding that.
+- This is **not** MMC3 1 KB CHR granules. Cell choice is per **live slot**, not per column or per tile. We are not adding per-tile cell IDs.
 
-Sprite bank may switch on the same IRQ (boss art, HUD icons) independently of BG.
+Sprite cell may switch on the same IRQ (boss art, HUD icons) independently of BG.
 
-`$FE30` world select may also change mid-frame (legal, next CHR fetch). Usually leave it. It is a whole chapter of CHR, not a small tile set.
+`$FE30` world select may also change mid-frame (legal, next CHR fetch). Usually leave it. It is a whole 32 KB world CHR chapter, not a small tile set.
 
 ### Parallax (special cells + `set_parallax`)
 
@@ -194,7 +196,7 @@ If game code then calls `set_camera_axis(CAM_BOTH)` **while a plane is still on*
 
 Live playfield field is 1 or 2 nametable slots on the live axis when H or V (not the 2x2). Plane still uses slot 4 or 4+5. VRAM is not the reason for the lock. The lock is the compositor.
 
-This does **not** collide with the BG-bank rule above. The plane band and playfield band happen on **different scanline ranges**, so software may restore a different BG bank in the raster IRQ together with `nt_arrange` and scroll. Constraint: one BG bank per band, not one BG bank for the whole frame.
+This does **not** collide with per-slot BG cells. Plane slots 4-5 simply have their **own** BG cell latches, just like camera slots 0-3. The raster IRQ still restores `nt_arrange` and scroll for the playfield band; it does **not** need to rewrite every BG cell just to make parallax work.
 
 **Not locked:** warps and `load_screen` to another col/row (doors, stairs). After a warp you may keep the plane (camera stays 1-axis) or `clear_parallax()`.
 
@@ -286,7 +288,6 @@ nmi:
     ...
 irq:
     nt_arrange = PLAYFIELD_CAMERA
-    bg_bank = playfield_bg_bank
     scroll_x = camera_x
     scroll_y = camera_y
     disable raster IRQ

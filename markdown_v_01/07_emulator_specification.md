@@ -2,7 +2,7 @@
 
 ## 1. Objective
 
-A **hardware-restricted emulator in C** whose job is architectural validation, not max host FPS. Behavior that passes here should match Retr01-A silicon for: memory decode, interleaved VRAM phases, sprite drop rules, bank timing, and NES-style APU register traffic.
+A **hardware-restricted emulator in C** whose job is architectural validation, not max host FPS. Behavior that passes here should match Retr01-A silicon for: memory decode, interleaved VRAM phases, sprite drop rules, CHR cell timing, and NES-style APU register traffic.
 
 **In scope now:** emulator core + host display/audio glue (e.g. SDL2).  
 **Out of scope for the emulator itself:** PPUX, cc65, World Studio UI (separate repo folders).
@@ -59,7 +59,7 @@ uint8_t *map;   size_t map_size;   /* compressed screens */
 | 1284 OAM | `ppu.oam[256]` (guest writes `$FE20`/`$FE21`) |
 | GAL decode | `if`/`switch` in `bus` (not a separate array) |
 | Cart flash regions | `prg[]` / `chr[]` / `map[]` |
-| Latches (scroll, banks) | fields in a `PpuState` / `MapperState` struct, updated when `io_regs` written |
+| Latches (scroll, CHR cells) | fields in a `PpuState` / `MapperState` struct, updated when `io_regs` written |
 | 74HC161 beam counters | `uint16_t dot`, `uint16_t scanline` (or x/y) in `PpuState` |
 
 Optional: keep `io_regs[256]` as the raw MMIO image **and** mirror important bits into typed structs after each write (easier PPU code, still inspectable from a debugger).
@@ -166,8 +166,8 @@ typedef struct {
     uint8_t  vram_addr_hi_next;  /* two-write latch */
     uint8_t  scroll_x, scroll_y; /* 0-255 wrap, fine scroll over 1/2/4 NT field */
     uint8_t  nt_arrange;         /* mirroring / which slots are distinct */
-    uint8_t  bg_bank;            /* 0-3 within world */
-    uint8_t  spr_bank;
+    uint8_t  bg_slot_cell[6];    /* slots 0-3 camera, 4-5 plane */
+    uint8_t  spr_cell;
     uint8_t  world;
     uint8_t  raster_y;           /* 0-255, compare at start of scanline */
     uint8_t  raster_hit;
@@ -204,20 +204,19 @@ static uint8_t *nt_attrs(Emu *e, int slot) {
 }
 ```
 
-Scrolling: `scroll_x`/`scroll_y` wrap 0-255. Combine with `nt_arrange` to sample the correct slot(s) so the viewport shows portions of **1, 2, or 4** screens. Index `nt_tiles[ty * 32 + tx]`. BG palette from packed attrs: byte `nt_attrs[(ty / 2) * 16 + (tx / 2)]`, then `((byte >> (((ty & 1) * 2 + (tx & 1)) * 2)) & 3)`.
+Scrolling: `scroll_x`/`scroll_y` wrap 0-255. Combine with `nt_arrange` to sample the correct slot(s) so the viewport shows portions of **1, 2, or 4** screens. Index `nt_tiles[ty * 32 + tx]`. BG palette from packed attrs: byte `nt_attrs[(ty / 2) * 16 + (tx / 2)]`, then `((byte >> (((ty & 1) * 2 + (tx & 1)) * 2)) & 3)`. The same slot lookup also tells the CHR fetch which `bg_slot_cell[slot]` to use.
 
 ### 6.3 CHR fetch (cart, not VRAM)
 
 ```c
-uint8_t chr_read_bg(Emu *e, uint8_t tile, uint8_t row /*0-7*/, int bitplane) {
-    size_t bank = e->ppu.world * 4 + e->ppu.bg_bank;
-    size_t page = 0; /* BG page first in bank */
-    size_t off = bank * 0x2000 + page * 0x1000 + tile * 16 + row + bitplane * 8;
+uint8_t chr_read_bg(Emu *e, int slot, uint8_t tile, uint8_t row /*0-7*/, int bitplane) {
+    size_t world_base = e->ppu.world * 0x8000;
+    size_t off = world_base + e->ppu.bg_slot_cell[slot] * 0x1000 + tile * 16 + row + bitplane * 8;
     return e->chr[off % e->chr_size]; /* or hard fault if OOB */
 }
 ```
 
-Sprites use `spr_bank` and page `1`. Mid-frame bank writes just mutate `ppu.bg_bank` / `spr_bank`. The next fetch sees the new value (accurate and simple). Raster IRQ: when `scanline` becomes `raster_y` at dot 0, set `raster_hit`. If `raster_irq_enable`, assert CPU IRQ until guest acks. Do **not** emulate NES sprite-0 hit.
+Sprites use `spr_cell` and the sprite-cell region starting at `world_base + 0x4000`. Mid-frame cell writes just mutate `ppu.bg_slot_cell[slot]` / `spr_cell`. The next fetch sees the new value (accurate and simple). Raster IRQ: when `scanline` becomes `raster_y` at dot 0, set `raster_hit`. If `raster_irq_enable`, assert CPU IRQ until guest acks. Do **not** emulate NES sprite-0 hit.
 
 ### 2bpp -> color index
 
@@ -338,14 +337,14 @@ For debugging: run a fixed number of ticks, or break when `scanline == Y && dot 
 ## 12. Bring-up order (practical)
 
 1. Bus + `system_ram` + PRG window + CPU smoke test (NOP loop in hand-assembled ROM).
-2. I/O page writes that only set struct fields (scroll, banks).
+2. I/O page writes that only set struct fields (scroll, CHR cells).
 3. VRAM port + phase checks (write nametable, read back).
 4. BG renderer -> framebuffer (no sprites).
 5. OAM via `$FE20`/`$FE21` + 16-sprite cap (next-line buffer).
 6. NMI metronome + simple guest "wait for frame" loop.
 7. APU pulse tone.
-8. Mapper / multi-bank CHR / four NT scroll.
-9. Raster Y compare + IRQ, mid-frame bank/scroll split.
+8. Mapper / multi-cell CHR / four NT scroll.
+9. Raster Y compare + IRQ, mid-frame cell/scroll split.
 
 ---
 
@@ -371,7 +370,7 @@ For debugging: run a fixed number of ticks, or break when `scanline == Y && dot 
 | Mux / phase | `cpu.phase` gate around VRAM |
 | OAM | `uint8_t oam[256]` via `$FE20`/`$FE21` loop |
 | Line sprite limit | secondary array capped at 16 |
-| CHR-ROM | `chr[]` indexed by world/bank/tile/row |
+| CHR-ROM | `chr[]` indexed by world/cell/tile/row |
 | Frame | `framebuffer[256*240]` |
 | APU | channel structs + PCM ring buffer |
 | Cart mapper | bank index + modular offset into `prg[]` |

@@ -12,7 +12,7 @@ These tables are for alignment while writing the emulator and authoring tools.
 | NMI as “frame boundary” | VBlank/NMI is used as the “a frame finished” metronome. |
 | Tile graphics are 2bpp + transparency | Tiles/pixels are effectively “3 colors + transparent” per 2-bit pixel. |
 | Nametable background layout | Background is organized as a 32×30 nametable of 8×8 tile indices. |
-| CHR tile data is cartridge-backed | Tile pattern bytes come from the cartridge’s CHR bank (banked). |
+| CHR tile data is cartridge-backed | Tile pattern bytes come from the cartridge’s CHR cells. |
 | OAM-like sprites | Sprites are defined by a list of bytes (Y, tile index, attributes, X) and compose with background using priority + palette rules. |
 | Palettes exist | Pixels reference palette indices which map through a master RGB table. |
 | NES-style sound channels | Audio is generated using the NES channel set (pulse / triangle / noise / DMC concept). |
@@ -30,6 +30,6 @@ These tables are for alignment while writing the emulator and authoring tools.
 | Sprite-vs-BG gameplay assumptions | Retr01 is designed for strict software collision (AABB in PRG). Sprite-vs-BG “hits” are not a gameplay trigger. |
 | No integrated PPU datapath | Retr01’s BG “PPU” is built from 74HC + counters + muxes (discrete compositor), not a unified console PPU chip. |
 | World atlas / MAP streaming | NES loads level data from cartridge/PPU name tables directly. Retr01 adds a `MAP-ROM` + streaming directory (`$FE90`) so “worlds + screens + streaming seams” are first-class. |
-| More explicit mid-frame controls | Retr01 supports raster IRQ-driven mid-frame changes (e.g. switching BG/sprite banks) via its own latch set and interrupt sources. |
-| No programmer-visible pattern tables/pages | NES discussions often talk about pattern tables or 4 KB pages. Retr01 does not need that extra layer: screens index tiles 0-255 in the currently selected BG bank half, and sprites index tiles 0-255 in the selected sprite bank half. |
+| More explicit mid-frame controls | Retr01 supports raster IRQ-driven mid-frame changes (e.g. switching BG/sprite cells) via its own latch set and interrupt sources. |
+| No programmer-visible pattern tables/pages | NES discussions often talk about pattern tables or 4 KB pages. Retr01 does not need that extra layer: screens index tiles 0-255 and carry a BG cell in MAP metadata; loaders copy that cell into the live slot's BG cell latch. Sprites still index tiles 0-255 in a separate sprite cell. |
 

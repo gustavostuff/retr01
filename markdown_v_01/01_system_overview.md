@@ -25,7 +25,7 @@ Formerly GameNerd / Retr02. Those names are retired.
 | Color | 2bpp, 8 palettes, **per-tile** BG attrs (240 bytes/screen), **64-entry** master palette ([`retr01_palette_v_01.txt`](../retr01_world_studio/retr01_palette_v_01.txt)) |
 | Sprites | 64 OAM in **1284**, **16 / scanline** max, next-line line buffer |
 | Worlds / screens | **8 worlds**, sparse grid up to **16 x 16**, **64 screens max** each |
-| Banks / world | **4** (each 512 patterns: 256 BG + 256 sprites) |
+| CHR cells / world | **8** total: **4 BG + 4 sprite** (256 patterns each) |
 | System RAM | **32 KB** CPU-only (`$0000-$7FFF`) |
 | VRAM | **32 KB** interleaved, 4 x 2 KB nametable slots |
 | Line buffer | Third **32 KB** SRAM (512 bytes used) |

@@ -9,7 +9,7 @@ No single free program simulates a 49-chip 5 V arcade board with analog RGBS, tw
 | Job | Program | What you get |
 |-----|---------|----------------|
 | See every logic chip wired, clocks, SRAM, pads, digital video | **[Digital](https://github.com/hneemann/Digital)** (HNeemann) | 74HC library, custom CPU/AVR/GAL, switches, 256×240 view |
-| Guest ROM, banks, MAP, NMI loop | C emulator (rewrite later, [07](07_emulator_specification.md)) | Fast, not gate-level |
+| Guest ROM, CHR cells, MAP, NMI loop | C emulator (rewrite later, [07](07_emulator_specification.md)) | Fast, not gate-level |
 | 328P APU firmware alone | **simavr** or **Wokwi** | PWM / timer audio, not the 6502 bus |
 | 1284 sprite firmware alone | **simavr** or **Wokwi** | OAM eval + line-buffer fill, not analog video |
 | Reset RC, R-2R DAC, regulator | Tiny **Falstad** or paper + this file | Analog only. Do not put the whole machine in SPICE |

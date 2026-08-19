@@ -30,7 +30,7 @@ Retr01-A is three computers sharing one 5 V board, plus a pile of 74HC that draw
 | **ATmega1284P** | 20 MHz crystal | OAM, sprite CHR, next-line buffer, pad bytes |
 | **ATmega328P** | 16 MHz crystal | NES-style sound from `$FE40` writes |
 
-The 6502 **never** writes a framebuffer. It prepares nametables, OAM, scroll, banks. Video silicon turns that into RGB every dot.
+The 6502 **never** writes a framebuffer. It prepares nametables, OAM, scroll, and CHR cell selects. Video silicon turns that into RGB every dot.
 
 ---
 
@@ -153,7 +153,7 @@ PPU path: 161 X/Y + scroll + NT_ARRANGE → nametable index → VRAM A. PPU read
 | `/CE` | Who addresses it | When |
 |-------|------------------|------|
 | PRG | CPU A0–A14 + `$FE80` bank bits | CPU reads `$8000–$FDFF` / `$FF00–$FFFF` |
-| CHR | PPU or 1284 (tile, row, plane, `$FE30` banks) | Visible = BG; HBlank = sprites |
+| CHR | PPU or 1284 (tile, row, plane, `$FE30` world/cell latches) | Visible = BG; HBlank = sprites |
 | MAP | `$FE90` 24-bit latch auto-inc | CPU read of MAP data |
 
 `/WE` tied high on ROM carts (program off-board with a TL866).
@@ -177,7 +177,7 @@ The 6502 does not increment these. It only reads `BEAM_Y` if you expose it on `$
 
 **Alone:** 8 D-flip-flops with a transparent latch enable. Capture a byte, hold it forever after `/LE` goes inactive.
 
-**With the rest:** scroll X/Y, NT arrange, `$FE30` banks, MAP address, OAM addr/data capture toward the 1284, pad bytes toward the CPU. Software “variable.” Hardware “register.”
+**With the rest:** scroll X/Y, NT arrange, `$FE30` world/cell latches, MAP address, OAM addr/data capture toward the 1284, pad bytes toward the CPU. Software “variable.” Hardware “register.”
 
 ### 5.10 BG fetch, attrs, 2bpp shifters (74HC + GAL-PPU)
 
@@ -320,7 +320,7 @@ Think of `$FExx` as the only API:
 | `$FE02/03` scroll | 573s → BG fetch address math |
 | `$FE1x` VRAM | 157/245/SRAM #2 |
 | `$FE21` OAM | 573 → 1284 internal RAM |
-| `$FE30` banks | 573s → CHR address (BG and sprite halves) |
+| `$FE30` world/cell latches | 573s → CHR address (BG cells and sprite cells) |
 | `$FE4x` | 573 → 328P |
 | `$FE80` | 573 → cart PRG A15+ |
 | `$FE90` | 573 → cart MAP address, then read data |

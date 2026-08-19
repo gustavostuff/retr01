@@ -27,7 +27,7 @@ Full **32 KB** system SRAM is mapped with no wasted bytes. I/O sits in a 256-byt
 |-------|------|--------|-------|
 | `$0000-$7FFF` | 32 KB | **System RAM** | Entire AS6C62256, CPU-only, no interleave |
 | `$8000-$FDFF` | 32 256 B | **PRG-ROM window** | Banked cart PRG |
-| `$FE00-$FEFF` | 256 B | **I/O page** | PPU, VRAM port, OAM, banks, APU, MAP port, cabinet, mapper |
+| `$FE00-$FEFF` | 256 B | **I/O page** | PPU, VRAM port, OAM, CHR cell latches, APU, MAP port, cabinet, mapper |
 | `$FF00-$FFFF` | 256 B | **PRG (high)** | Same mapper window family, holds `$FFFA-$FFFF` vectors |
 
 ---
@@ -41,7 +41,7 @@ Grouped in **16-byte blocks** (high nibble of the low byte = device family):
 | `$FE00-$FE0F` | `0` | **PPU control:** mode, status, scroll X/Y, nametable arrangement, NMI, **raster Y / IRQ** |
 | `$FE10-$FE1F` | `1` | **VRAM port:** address latch + data R/W into 32 KB VRAM (**interleaved**) |
 | `$FE20-$FE2F` | `2` | **OAM port:** address + data into the **1284** (no hardware DMA; `$FE22` unused) |
-| `$FE30-$FE3F` | `3` | **Bank / world:** BG bank, sprite bank, world select |
+| `$FE30-$FE3F` | `3` | **CHR cell / world:** BG cell latches, sprite cell, world select |
 | `$FE40-$FE5F` | `4-5` | **APU:** NES-style channels |
 | `$FE60-$FE6F` | `6` | **Cabinet / controllers** |
 | `$FE70-$FE7F` | `7` | **Board EEPROM / DIP** |
@@ -66,7 +66,7 @@ NES sprite-0 hit is **not** the raster API. Gameplay collision is AABB. Beam tim
 | `raster_hit` | Sets at start of matching scanline (dot 0). Ack in software |
 | `raster_irq_enable` | Match asserts **IRQ**, not NMI |
 
-NMI remains VBlank only. Exact bytes: `B2` in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). Mid-frame bank and scroll splits: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8.
+NMI remains VBlank only. Exact bytes: `B2` in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). Mid-frame cell and scroll splits: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8.
 
 Write scroll and `$FE30` during **HBlank** for a clean split (next fetch, up to 8 px delay if you write mid-tile).
 
@@ -95,19 +95,19 @@ Sound *contract* is NES-like. The 6502 only writes registers. It does not synthe
 
 An **ATmega** (or similar) on the board runs the timers and mix. Game code pokes `$FE4x-$FE5x` and keeps going. Exact bitfields are still open (`B2` in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)). The emulator should treat this page as NES-style channel regs and emit host PCM.
 
-### Banks (`$FE30`)
+### CHR cells (`$FE30`)
 
-This latch answers **which pictures** the PPU is using. It does **not** scroll and it is **not** a nametable slot.
+These latches answer **which pictures** the PPU is using. They do **not** scroll, and BG cell selection is tied to the live nametable slots rather than treated as one playfield-wide value.
 
 | Field | Meaning |
 |-------|---------|
 | World 0-7 | Cart chapter. CHR (and, in software, which MAP set you stream) |
-| BG bank 0-3 | Which of that world's 4 banks supplies the **256 BG patterns** nametable indices point at |
-| Sprite bank 0-3 | Same for OAM tile numbers. May differ from the BG bank |
+| BG slot cell 0-3 | Which of that world's 4 BG cells supplies the **256 BG patterns** for one live nametable slot |
+| Sprite cell 0-3 | Which of that world's 4 sprite cells supplies OAM tile numbers. Still global within the selected world |
 
-The **BG bank field is global for the active BG fetch path**. It is not stored per VRAM slot. If slots 0-3 form a 2x2 smooth-scroll camera, all visible playfield slots on that scanline band use this same BG bank. To use a different BG bank, change `$FE30` at a raster split so the next scanline band uses the new bank.
+Slots **0-3** (camera) and **4-5** (plane) each carry their own BG cell latch. When the BG fetch path resolves which slot the current pixel belongs to, it also selects that slot's cell. The sprite cell is a **separate latch**: changing any BG slot cell does **not** change the sprite cell, and changing the sprite cell does **not** rewrite any BG slot cell. To show a different sprite cell, or to change slot arrangement / scroll for another scanline band, use raster IRQ as before.
 
-Writable **mid-frame**. The next CHR fetch uses the new value. Shift registers may still show the current tile (up to 8 px). Raster IRQ + HBlank writes: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8. Emulator: on write, set `ppu.world`, `ppu.bg_bank`, `ppu.spr_bank`.
+Writable **mid-frame**. The next CHR fetch uses the new value. Shift registers may still show the current tile (up to 8 px). Raster IRQ + HBlank writes: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8. Emulator: on write, set `ppu.world`, `ppu.bg_slot_cell[slot]`, and `ppu.spr_cell` as appropriate.
 
 ### Controllers / cabinet (`$FE60-$FE6F`)
 
