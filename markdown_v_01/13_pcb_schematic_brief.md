@@ -57,7 +57,7 @@ Do **not** treat this file as a full architecture spec. Ignore the older “draw
 | `08_ppu_bg` | Nametable fetch, attr unpack, CHR address for BG, shift registers, 2bpp combine |
 | `09_ppu_spr` | OAM SRAM, HBlank evaluate (max 16), sprite CHR fetch, X counters, compositor mux |
 | `10_palette_video` | Palette RAM, 64-color lookup, R/G/B resistor DACs, CSYNC, S-Video/composite stubs |
-| `11_cart` | Motherboard cart connector, PRG/CHR/MAP OE, `$FE80` bank, `$FE90` MAP port |
+| `11_cart` | Motherboard cart connector, PRG/CHR/MAP OE, `$FE80` PRG bank, `$FE90` MAP port |
 | `12_apu` | ATmega328P (or 1284 if you need space), `$FE40-$FE5F`, analog mix, audio jack |
 | `13_cabinet` | 20-pin controller IDC, `$FE60-$FE63` latches, pull-ups, coin/start |
 | `14_cart_pcb` | Cartridge: 4× 512 KB flash (or 1× 2 MB SMD + DIP adapter), same connector |
@@ -312,18 +312,18 @@ tx = sx / 8;  ty = sy / 8
 fine_x = sx % 8;  fine_y = sy % 8
 tile = vram[slot_base + ty*32 + tx]
 attr = unpack 2 bits from vram[slot_base + 0x3C0 + (ty/2)*16 + (tx/2)]
-chr  = cart_chr[ bg_bank_base + tile*16 + fine_y ]     /* plane 0 */
-chr2 = cart_chr[ bg_bank_base + tile*16 + 8 + fine_y ] /* plane 1 */
+chr  = cart_chr[ world*0x8000 + bg_cell_for_slot*0x1000 + tile*16 + fine_y ]     /* plane 0 */
+chr2 = cart_chr[ world*0x8000 + bg_cell_for_slot*0x1000 + tile*16 + 8 + fine_y ] /* plane 1 */
 ci   = 2bpp pixel from chr/chr2 at fine_x (bit 7 is left)
 ```
 
 **NT_ARRANGE** selects which of slots 0–3 (or 4–5 for plane) supply that tile. Implement 1 / 2H / 2V / 4-screen like NES nametable mirroring, but 2 KB slots instead of NES 1 KB.
 
-Shift registers hold 8 pixels so CHR fetch can happen during HBlank/early dots. **Bank/scroll writes take effect on the next tile fetch** (up to 8 px delay). That is correct.
+Shift registers hold 8 pixels so CHR fetch can happen during HBlank/early dots. **Cell/scroll writes take effect on the next tile fetch** (up to 8 px delay). That is correct.
 
 ### 8.3 Sprites (simplify if needed, but draw chips)
 
-**Full intent:** during HBlank, scan 64 OAM Y values; copy up to **16** that hit the next scanline into secondary OAM; fetch 16 sprite rows from CHR sprite page; during visible dots, X-match and mux.
+**Full intent:** during HBlank, scan 64 OAM Y values; copy up to **16** that hit the next scanline into secondary OAM; fetch 16 sprite rows from the active **sprite cell**; during visible dots, X-match and mux.
 
 **Allowed proto shortcut:** scan OAM every line with a small state machine in GAL-TIM + 74HC163; drop sprites after 16; no MMC3-style A12 clock. 8×8 sprites only (no 8×16).
 

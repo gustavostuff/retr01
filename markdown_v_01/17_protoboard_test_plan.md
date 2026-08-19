@@ -100,7 +100,7 @@ If the monitor will not lock, fix sync **before** connecting VRAM.
 
 **Board:** 1284, SRAM #3, 2× 157, HBLANK from island H (or an AVR timer approximating 63.5 µs / 16 µs). ISP header. CHR ROM on the 1284 data bus **only** during a fake HBlank.
 
-**Test:** firmware fills sprite cell 1 with a solid color at X=32–40. Beam (or a 161 from H) reads `{linebuf_bank, X}`. Scope `/WE` of SRAM #3 during HBlank only. CPU `$FE21` path: 573 + `OAM_WR` ISR stores 256 bytes; dump OAM over UART if you want.
+**Test:** firmware fills sprite cell 1 with a solid color at X=32–40. Beam (or a 161 from H) reads `{linebuf_half, X}`. Scope `/WE` of SRAM #3 during HBlank only. CPU `$FE21` path: 573 + `OAM_WR` ISR stores 256 bytes; dump OAM over UART if you want.
 
 Do **not** share CHR with island I until GAL-PPU exclusive `/CE` is tested on a **third** small board (two `/CE` probes: never both low).
 

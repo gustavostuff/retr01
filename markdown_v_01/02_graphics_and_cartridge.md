@@ -27,7 +27,7 @@ See also [08_memory_map.md](08_memory_map.md) for the VRAM port and interleave r
 
 ## 2. Scroll, cells, and CHR
 
-World / grid / screen atlas: [04_worlds_and_screens.md](04_worlds_and_screens.md). Do not mix those with the PPU camera.
+World / grid / screen atlas: [04_worlds_and_screens.md](04_worlds_and_screens.md). Canonical terms: [README.md](README.md). Do not mix world/screen vocabulary with nametable slots or CHR cells.
 
 | Word | What it is here |
 |------|-----------------|
@@ -44,9 +44,9 @@ At runtime, BG cell selection is **per live nametable slot**, not one global lat
 1. Each world has **4 BG cells + 4 sprite cells**.
 2. Each cell holds **256 patterns** -> **4 KB** at 16 bytes/pattern.
 3. **Authored BG cell:** each stored screen records a **BG cell 0-3** in MAP metadata. `load_screen` / seam streaming copy that value into the destination slot's BG cell latch together with the nametable bytes.
-4. **Runtime BG cells:** slots **0-3** (camera) and **4-5** (parallax plane) each have their own BG cell latch. Nametable bytes stay 0-255, and the fetch logic chooses the cell from the slot currently being sampled.
+4. **Runtime BG cells:** nametable slots **0-3** (camera) and **4-5** (parallax plane) each have their own **BG cell latch**. Nametable bytes stay 0-255; the fetch logic chooses the **BG cell** from the slot currently being sampled.
 5. **Runtime sprite cell:** sprite cell is still a **separate global latch**. Sprites are not tied to nametable slots. Software may switch the sprite cell at any time; a common pattern is "select enemy sprite cell, draw enemies; select player sprite cell, draw player."
-6. **BG and sprite independence:** changing a BG cell latch for any slot does **not** change the current sprite cell. Changing the sprite cell does **not** rewrite any BG slot cells.
+6. **BG and sprite independence:** changing a **BG cell latch** for any nametable slot does **not** change the current **sprite cell**. Changing the **sprite cell** does **not** rewrite any BG cell latches.
 7. PPU fetches CHR **from cartridge CHR-ROM** (not from VRAM).
 
 ## 3. CHR size math
@@ -102,7 +102,7 @@ OAM lives in the **ATmega1284P** (internal RAM), reached via `$FE20`/`$FE21`. It
 
 - `scroll_x` and `scroll_y` are **one byte each** (0-255, wrap). That is the pixel camera inside the live field.
 - Live field: up to **four** nametable slots (2x2). Arrangement/mirroring chooses **1, 2, or 4** distinct screens. As the window crosses a slot boundary, those neighbor tiles **are** on screen. That is how pixel scrolling looks continuous.
-- Each live slot carries its own **BG cell latch**, so smooth scrolling may show 1, 2, or 4 screens that use different BG cells at the same time.
+- Each nametable slot carries its own **BG cell latch**, so smooth scrolling may show 1, 2, or 4 screens that use different BG cells at the same time.
 - **Planes:** two extra slots (see section 8). Not part of the 2x2 camera. Raster IRQ may point the top (or other) scanline band at a plane.
 - **Streaming cue:** software, **2 tiles (16 px)** before a seam. Neighbor lookup, empty-template fill, and `load_screen` are in [04_worlds_and_screens.md](04_worlds_and_screens.md).
 
@@ -119,7 +119,7 @@ Uncompressed map upper bound: `8 x 64 x (960 + 240) = 600 KB` before RLE (tile p
 
 ## 8. Mid-frame cell changes, parallax, and raster IRQ
 
-Nametable indices are always **one byte** (0-255). You do not store a cell number per tile. More unique tiles on screen, parallax, and status-bar splits are the same class of trick as the NES: change a latch **while the beam is running**.
+Nametable indices are always **one byte** (0-255). You do not store a BG cell index per tile byte. More unique tiles on screen, parallax, and status-bar splits are the same class of trick as the NES: change a latch **while the beam is running**.
 
 Retr01 makes that latch change **easier** than the NES. We do **not** use sprite-0 hit.
 
@@ -157,7 +157,7 @@ One nametable still names tiles 0-255. The active BG tile set comes from the **B
 - With 4 camera slots plus 2 plane slots, the frame may reference up to **6** live BG-cell selections at once, drawn from the world's 4 BG-cell pool.
 - Raster IRQ still matters for switching **which slots / scroll / sprite cell / plane band** are active on later scanlines.
 - Status bar vs playfield is the one-split version of the same trick.
-- This is **not** MMC3 1 KB CHR granules. Cell choice is per **live slot**, not per column or per tile. We are not adding per-tile cell IDs.
+- This is **not** MMC3 1 KB CHR granules. BG cell choice is per **nametable slot**, not per column or per tile. We are not adding per-tile BG cell IDs.
 
 Sprite cell may switch on the same IRQ (boss art, HUD icons) independently of BG.
 
@@ -204,7 +204,7 @@ This does **not** collide with per-slot BG cells. Plane slots 4-5 simply have th
 
 **Authoring.** Parallax nametables are normal 32x30 .bins with directory `flags = 1`. Not enterable: `load_screen`, warp, and seam lookup treat them as holes. They still count toward the 64 stored nametables.
 
-**Span** is how many of those cells make **one looping plane** (not two depth layers).
+**Span** is how many **parallax screens** on the grid make **one looping plane** (not two depth layers).
 
 | `span` | Period | VRAM |
 |--------|--------|------|
@@ -213,7 +213,7 @@ This does **not** collide with per-slot BG cells. Plane slots 4-5 simply have th
 
 `span` is 1 or 2. That is the two plane slots. A 768 px loop would need a third slot or streaming the plane. Not v1.
 
-Cells are consecutive from `(col, row)` along the axis, all `flags = 1`:
+Parallax screens are consecutive grid positions from `(col, row)` along the axis, all with `flags = 1`:
 
 - H, span 2: `(col, row)` and `(col+1, row)` -> slot 4 left, slot 5 right
 - V, span 2: `(col, row)` and `(col, row+1)` -> slot 4 top, slot 5 bottom
@@ -297,7 +297,7 @@ irq:
 
 **What this is not.** Full-screen two-layer parallax (far *and* near at every pixel). Pixel-scrolling X *and* Y while a plane is on. A third span cell. Left/right wallpaper columns (mid-line X split). H and V planes at the same time.
 
-**What not to do.** Do not steal camera slots 0-3. Do not `load_screen` onto a parallax cell. Do not omit `flags`. Do not seam-stream the perpendicular axis until `clear_parallax`. The emulator should debug-warn if guest writes the frozen scroll while a plane is active.
+**What not to do.** Do not steal camera nametable slots 0-3. Do not `load_screen` onto a parallax screen. Do not omit `flags`. Do not seam-stream the perpendicular axis until `clear_parallax`. The emulator should debug-warn if guest writes the frozen scroll while a plane is active.
 
 
 

@@ -2,7 +2,7 @@
 
 Retr01 borrows the NES-era *programming mental model* (nametables + CHR tiles + an OAM-like sprite list + an APU-style sound chip + VBlank/NMI as a frame boundary). But the silicon is discrete and the buses/registers are not the NES PPU.
 
-These tables are for alignment while writing the emulator and authoring tools.
+These tables are for alignment while writing the emulator and authoring tools. Canonical Retr01 terms (world, screen, BG cell, sprite cell, nametable slot): [README.md](README.md).
 
 ## What is the same as NES
 
@@ -31,5 +31,6 @@ These tables are for alignment while writing the emulator and authoring tools.
 | No integrated PPU datapath | Retr01’s BG “PPU” is built from 74HC + counters + muxes (discrete compositor), not a unified console PPU chip. |
 | World atlas / MAP streaming | NES loads level data from cartridge/PPU name tables directly. Retr01 adds a `MAP-ROM` + streaming directory (`$FE90`) so “worlds + screens + streaming seams” are first-class. |
 | More explicit mid-frame controls | Retr01 supports raster IRQ-driven mid-frame changes (e.g. switching BG/sprite cells) via its own latch set and interrupt sources. |
-| No programmer-visible pattern tables/pages | NES discussions often talk about pattern tables or 4 KB pages. Retr01 does not need that extra layer: screens index tiles 0-255 and carry a BG cell in MAP metadata; loaders copy that cell into the live slot's BG cell latch. Sprites still index tiles 0-255 in a separate sprite cell. |
+| No programmer-visible pattern tables/pages | NES discussions often talk about pattern tables, 4 KB pages, or CHR **banks**. Retr01 uses **BG cells** and **sprite cells** instead (256 patterns each, 4 per world). Screens index tiles 0-255 and carry a BG cell in MAP metadata; loaders copy that into the slot's BG cell latch. Sprites index tiles 0-255 in the separately selected sprite cell. |
+| Where “bank” still appears on Retr01 | **PRG banking** only (`$FE80`). Not used for CHR tile art. The sprite line buffer uses **ping-pong halves** (hardware term, not a CHR cell). NES CHR **bank** talk maps to Retr01 **cells**. |
 

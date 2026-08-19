@@ -102,10 +102,10 @@ These latches answer **which pictures** the PPU is using. They do **not** scroll
 | Field | Meaning |
 |-------|---------|
 | World 0-7 | Cart chapter. CHR (and, in software, which MAP set you stream) |
-| BG slot cell 0-3 | Which of that world's 4 BG cells supplies the **256 BG patterns** for one live nametable slot |
-| Sprite cell 0-3 | Which of that world's 4 sprite cells supplies OAM tile numbers. Still global within the selected world |
+| BG cell latch (per slot) | Which of that world's 4 **BG cells** supplies tile patterns for one **nametable slot** (0–5) |
+| Sprite cell | Which of that world's 4 **sprite cells** supplies OAM tile patterns. Global latch within the selected world |
 
-Slots **0-3** (camera) and **4-5** (plane) each carry their own BG cell latch. When the BG fetch path resolves which slot the current pixel belongs to, it also selects that slot's cell. The sprite cell is a **separate latch**: changing any BG slot cell does **not** change the sprite cell, and changing the sprite cell does **not** rewrite any BG slot cell. To show a different sprite cell, or to change slot arrangement / scroll for another scanline band, use raster IRQ as before.
+Slots **0-3** (camera) and **4-5** (plane) each carry their own **BG cell latch**. When the BG fetch path resolves which nametable slot the current pixel belongs to, it also selects that slot's BG cell. The **sprite cell** is a **separate latch**: changing any BG cell latch does **not** change the sprite cell, and changing the sprite cell does **not** rewrite any BG cell latch. To show a different sprite cell, or to change slot arrangement / scroll for another scanline band, use raster IRQ as before.
 
 Writable **mid-frame**. The next CHR fetch uses the new value. Shift registers may still show the current tile (up to 8 px). Raster IRQ + HBlank writes: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8. Emulator: on write, set `ppu.world`, `ppu.bg_slot_cell[slot]`, and `ppu.spr_cell` as appropriate.
 
@@ -189,7 +189,7 @@ Each slot (2 KB): tiles at `+0x000` (960 bytes), packed attributes at `+0x3C0` (
 | Region | Budget | Access |
 |--------|--------|--------|
 | PRG | <=512 KB | `$8000-$FDFF` + `$FF00-$FFFF` via `$FE80` |
-| CHR | <=256 KB | PPU fetches, banked by `$FE30` |
+| CHR | <=256 KB | PPU fetches; world + BG/sprite **cells** via `$FE30` latches |
 | MAP | <=~1.17 MB | CPU reads via **`$FE90` MAP port** only |
 
 ---
@@ -202,7 +202,7 @@ Each slot (2 KB): tiles at `+0x000` (960 bytes), packed attributes at `+0x3C0` (
 | I/O / latch enables | `$FE00-$FEFF` |
 | PRG OE | `$8000-$FDFF` and `$FF00-$FFFF` |
 | VRAM CS + mux | VRAM data-port cycles, qualified by **clock phase** |
-| CHR OE | PPU fetch cycles with mapper bank |
+| CHR OE | PPU fetch cycles; CHR address from world + slot BG cell or global sprite cell |
 | MAP OE | MAP data-port reads |
 
 ```c

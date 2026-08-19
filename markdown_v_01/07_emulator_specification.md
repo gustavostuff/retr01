@@ -281,7 +281,7 @@ uint8_t cart_prg_read(Emu *e, uint16_t addr) {
 }
 ```
 
-MAP decompression: guest (or host helper during bring-up) reads bytes through **`$FE90` MAP port** and writes nametables through **`$FE1x`**. Do not bank MAP over system RAM.
+MAP decompression: guest (or host helper during bring-up) reads bytes through **`$FE90` MAP port** and writes nametables through **`$FE1x`**. Do not map MAP over system RAM.
 
 ---
 

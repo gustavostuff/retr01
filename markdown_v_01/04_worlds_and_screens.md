@@ -4,11 +4,11 @@ How a Retr01 cart lays out maps. Graphics timing, CHR cells, palettes, and live 
 
 A **world** is a cart chapter: **4 BG cells + 4 sprite cells** plus a sparse atlas of screens. A cart has up to **8** worlds (0-7). `$FE30` world select picks which chapter's CHR the PPU is drawing. Software `world` in RAM should match when you change chapter.
 
-A **screen** is one **32x30** nametable plus packed attrs (1200 bytes uncompressed). It has a **(col, row)** on that world's virtual grid. Only stored screens occupy MAP bytes. Most screens are **playfield** (you walk them). A world may also store **parallax** cells (repeating strips, not enterable). Camera axis is H, V, or both (`set_camera_axis`). A plane forces H or V. See [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8.
+A **screen** is one **32x30** nametable plus packed attrs (1200 bytes uncompressed). It has a **(col, row)** **grid position** on that world's virtual grid. Only stored screens occupy MAP bytes. Most screens are **playfield** (you walk them). A world may also store **parallax screens** (repeating strips, not enterable). Terminology: [README.md](README.md). Camera axis is H, V, or both (`set_camera_axis`). A plane forces H or V. See [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8.
 
-Each stored screen also carries a **BG cell 0-3** in its MAP metadata. When software loads that screen into a live VRAM slot, it copies both the nametable bytes **and** the screen's BG cell into that slot's cell latch.
+Each stored screen also carries a **BG cell 0-3** in its MAP metadata. When software loads that screen into a live VRAM **nametable slot**, it copies both the nametable bytes **and** the screen's BG cell into that slot's **BG cell latch**.
 
-The **virtual grid** is up to **16 x 16** cells. At most **64** cells hold a real screen. The rest are holes. Holes are not stored. Connectivity is optional: a world may be a packed rectangle, a corridor, a blob, several islands, or a single room.
+The **virtual grid** is up to **16 x 16** grid positions. At most **64** positions hold a stored screen. The rest are holes. Holes are not stored. Connectivity is optional: a world may be a packed rectangle, a corridor, a blob, several islands, or a single room.
 
 Hardware has no map camera. RAM holds `world`, `map_x`, `map_y` (one byte each). Set those and call `load_screen`. Pixel scroll is `scroll_x` / `scroll_y` over the live 1/2/4 nametable slots in VRAM.
 
@@ -48,7 +48,7 @@ The visualizer currently draws **seven** shapes. You can invent more (ring, two 
 | **Hole Grid** | grid 8x8, 39 screens | Same camera rule as packed. |
 | **Random Cluster** | grid 10x14, 64 screens | Same camera rule as packed. |
 
-Blue cells are stored screens. Dark cells are holes (or past `grid_w` x `grid_h`). The PPU never sees this diagram. It only sees the live VRAM slots.
+Blue squares are stored screens (grid positions with MAP data). Dark squares are holes (or past `grid_w` x `grid_h`). The PPU never sees this diagram. It only sees the live nametable slots.
 
 **Neighbors are 4-way** (N/E/S/W). Diagonals are not seam partners. Two screens that only touch on a corner are not adjacent for streaming.
 
@@ -66,7 +66,7 @@ The player should not walk into empty. That is **collision in PRG**, not a camer
 
 Warps (`load_screen` to a new col/row) are for doors and teleports. They are not required just because a screen is isolated.
 
-**Streaming cue (software, not a PPU register):** when the camera is within **2 tiles (16 px)** of a seam, look up neighbor `(map_x±1, map_y)` or `(map_x, map_y±1)`. Hit: decompress into the incoming slot and copy that screen's BG cell into the same slot's cell latch. Miss: empty template.
+**Streaming cue (software, not a PPU register):** when the camera is within **2 tiles (16 px)** of a seam, look up neighbor `(map_x±1, map_y)` or `(map_x, map_y±1)`. Hit: decompress into the incoming nametable slot and copy that screen's BG cell into the same slot's **BG cell latch**. Miss: empty template.
 
 **Out-of-grid debug:** if `load_screen` is given coords outside 0-15, software may paint a lettered **EMPTY** pattern so the bug is obvious. That is not the same as an in-world hole (black / mountains).
 
@@ -85,7 +85,7 @@ Cartridge
     +-- BG cells 0..3
     +-- Sprite cells 0..3
     +-- Virtual grid up to 16 x 16 (sparse)
-          +-- at most 64 stored nametables: playfield + optional linear parallax cells
+          +-- at most 64 stored screens: playfield + optional linear parallax screens
 ```
 
 ## MAP-ROM layout (planning)
@@ -131,12 +131,12 @@ world_01:
 
 1. Seek `$FE90` to `world_base[world]`, read `grid_w`, `grid_h`, `screen_count`, `empty_off`.
 2. Scan the directory for `(map_x, map_y)`. At 8 MHz, 64 rows is cheap. You may cache the directory in system RAM on world enter (~64 * 6 bytes).
-3. On miss, or on hit with **parallax** flag: fill the VRAM **camera** slot with the empty template (`empty_off == 0` = solid black, else that nametable). Do not use a parallax cell as a room.
+3. On miss, or on hit with **parallax** flag: fill the VRAM **camera** nametable slot with the empty template (`empty_off == 0` = solid black, else that nametable). Do not use a parallax screen as a walkable room.
 4. On playfield hit: seek to `data_off`, RLE-decode tile section (960 bytes) then attr section (240 bytes), write **1200 bytes** into a camera nametable through `$FE1x`.
 5. Copy that directory row's **BG cell bits** into the destination slot's BG cell latch.
 6. Coords outside 0-15: optional lettered EMPTY debug fill.
 
-Seam fill is the same lookup. A parallax neighbor is a miss (empty / blocked). `set_parallax` is a separate call: same directory lookup, but it decompresses into plane slot 4 or 5 **and** copies the plane screen's BG cell into that plane slot's cell latch. See [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8.
+Seam fill is the same lookup. A parallax neighbor is a miss (empty / blocked). `set_parallax` is a separate call: same directory lookup, but it decompresses into plane nametable slot 4 or 5 **and** copies the plane screen's BG cell into that slot's **BG cell latch**. See [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8.
 
 How to poke `$FE90` (24-bit address, auto-inc read): [08_memory_map.md](08_memory_map.md).
 

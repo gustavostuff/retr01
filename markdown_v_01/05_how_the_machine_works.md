@@ -46,7 +46,7 @@ Everything that is not a dedicated point-to-point net hangs off a few shared bus
 | VRAM **data** | 8 | CPU (via 245) **or** PPU | VRAM SRAM; never both |
 | Cart **address** | A0–A18 class | CPU (PRG/MAP) **or** PPU/1284 (CHR) | flash `/CE` picks which chip |
 | Cart **data** | 8 | flash output | CPU or PPU/1284 |
-| Line-buffer **address** | 8+bank | **Mux:** beam X **or** 1284 | SRAM #3 |
+| Line-buffer **address** | 8+ping-pong bit | **Mux:** beam X **or** 1284 | SRAM #3 |
 | Line-buffer **data** | 8 | 1284 (HBlank write) **or** SRAM (visible read) | compositor |
 
 **Chip select (`/CE`, `/CS`, `/OE`, `/WE`)** is how you pick a listener. GAL-DEC looks at A15–A8 (and PHI2, R/W) and pulls **one** chip’s `/CS` low.
@@ -88,7 +88,7 @@ Rows are the **actor**. Columns are the **memory or port**. R = read, W = write,
 |-------|------------|-----------|-------------|----------|----------|----------|-------------|--------------|--------|----------|
 | **6502** | R/W always | R/W only via `$FE1x` on CPU phase | — | R (`$8000`/`$FF`) | — | R via `$FE90` | W `$FE20/21` | R `$FE60/61` | R/W `$FE7x` | W `$FE4x` |
 | **BG PPU** | — | R on PPU phase | R visible (X) | — | R visible | — | — | — | — | — |
-| **1284** | — | — | W next bank (HBlank) | — | R HBlank only | — | R/W internal | samples pads | — | — |
+| **1284** | — | — | W next ping-pong half (HBlank) | — | R HBlank only | — | R/W internal | samples pads | — | — |
 | **328P** | — | — | — | — | — | — | — | — | — | owns synthesis |
 | **Cart** | — | — | — | driven | driven | driven | — | — | — | — |
 
@@ -189,7 +189,7 @@ The 6502 does not increment these. It only reads `BEAM_Y` if you expose it on `$
 2. Pick nametable slot from `NT_ARRANGE`.  
 3. Read tile index from VRAM (PPU phase).  
 4. Read 2-bit palette from packed attr (`+0x3C0` in the slot).  
-5. Address cart CHR: `(world*4+bg_bank)*0x2000 + tile*16 + fineY + plane*8`.  
+5. Address cart CHR: `world*0x8000 + bg_cell_for_slot*0x1000 + tile*16 + fineY + plane*8`.  
 6. Shift out 8 pixels. Color 0 = shared backdrop.
 
 GAL-PPU owns VRAM `/OE` `/WE` vs PHI2, and CHR `/CE` vs HBlank.
@@ -202,7 +202,7 @@ GAL-PPU owns VRAM `/OE` `/WE` vs PHI2, and CHR `/CE` vs HBlank.
 
 - **OAM:** 256 bytes inside the 1284. CPU `STA $FE21` → GAL `OAM_WR` → 1284 copies into OAM[addr].  
 - **Eval:** during the **visible** line (~63.5 µs), scan 64 Y values, keep ≤16 for line *N+1*.  
-- **Blit:** during **HBlank**, take CHR bus, 16×2 plane reads, write SRAM #3 next bank.  
+- **Blit:** during **HBlank**, take CHR bus, 16×2 plane reads, write SRAM #3 next ping-pong half.  
 - **Pads:** IDC switches (active low, 10 kΩ pull-ups) into 573s; 1284 and/or GAL present inverted bytes on `$FE60`/`$FE61`.
 
 It does **not** drive RGB. It only fills the line buffer the compositor already knows how to read.
@@ -218,7 +218,7 @@ It does **not** drive RGB. It only fills the line buffer the compositor already 
 | Visible | `{display_bank, BEAM_X[7:0]}` | SRAM `/OE` → compositor. `/WE` high |
 | HBlank | 1284 A0–A7 | 1284 `/WE` pulses. Rest of the line left transparent (color 0) |
 
-Swap banks at start of HBlank / next line. Byte packing (planning): bits 1–0 color, 3–2 sprite pal, 4 priority.
+Swap ping-pong halves at start of HBlank / next line. Byte packing (planning): bits 1–0 color, 3–2 sprite pal, 4 priority.
 
 ### 5.13 Compositor + palette + RGBS
 
@@ -293,15 +293,15 @@ Line-buffer SRAM is a **third** mutex: beam vs 1284, switched on HBlank, not on 
 Visible dots 0–255:
 
 - 161s count X.  
-- BG PPU: VRAM on PPU phases, shift pixels, compositor reads line-buffer[X] (the bank filled **last** HBlank).  
+- BG PPU: VRAM on PPU phases, shift pixels, compositor reads line-buffer[X] (the half filled **last** HBlank).  
 - 1284: **not** on CHR. Scanning OAM for **next** line.  
 - 6502: running game code; may hit VRAM port on CPU phases; may write scroll in HBlank if you wait.
 
 HBlank dots 256–340:
 
 - Compositor idle (or border).  
-- 1284 owns CHR, writes next line-buffer bank.  
-- Banks swap so the buffer just filled becomes the display bank on the next line.
+- 1284 owns CHR, writes next line-buffer ping-pong half.
+- Halves swap so the buffer just filled becomes the display half on the next line.
 
 VBlank lines 240–261:
 

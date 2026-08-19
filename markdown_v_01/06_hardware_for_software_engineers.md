@@ -125,13 +125,13 @@ Latches + MMIO + counters = the skeleton of an independent video pipeline.
 
 ### 1. Nametable (pointer grid)
 
-VRAM holds up to **four** 32x30 nametable slots (2x2 scroll field). Each nametable byte is a tile index 0-255 into the **active BG tile set** on cart (not a bank number, not a VRAM page). Beam counters fetch that index under the current pixel. `scroll_x`/`scroll_y` pick where the 256x240 window sits on those slots.
+VRAM holds up to **four** 32x30 nametable slots (2x2 scroll field). Each nametable byte is a tile index 0-255 into the **active BG tile set** on cart (the nametable byte is not a BG-cell index; the slot's **BG cell latch** picks the CHR region). Beam counters fetch that index under the current pixel. `scroll_x`/`scroll_y` pick where the 256x240 window sits on those slots.
 
 ### 2. CHR cells and tile sets (asset library on cart)
 
 **CHR-ROM** on the cartridge holds 8x8 2bpp patterns. Hardware concatenates tile index + fine Y (row 0-7) into a CHR address. The cart outputs that row's bits, with no CPU math. Each world exposes **4 BG cells + 4 sprite cells**, 256 patterns each. BG uses a cell latch **per live nametable slot**; sprites still use a separate sprite-cell latch. Mid-frame changes are OK. Scroll does not touch these registers.
 
-Retr01 does **not** expose NES-style **pattern tables/pages** as a separate concept between CHR bytes and screens. A screen's nametable simply names tiles **0-255**, and that screen's MAP metadata says which **BG cell 0-3** those tile numbers use. The loader copies that cell number into the destination VRAM slot's cell latch. Extra "pattern table/page" terminology would only duplicate what the slot cell latch already does.
+Retr01 does **not** expose NES-style **pattern tables/pages** as a separate concept between CHR bytes and screens. A screen's nametable simply names tiles **0-255**, and that screen's MAP metadata says which **BG cell 0-3** those tile numbers use. The loader copies that value into the destination nametable slot's **BG cell latch**. Extra "pattern table/page" terminology would only duplicate what the BG cell latch already does.
 
 That means smooth scrolling may show 2 or 4 playfield screens at once, each using a different BG cell, because the fetch logic first determines **which slot** the current pixel belongs to and then applies **that slot's** BG cell.
 
@@ -147,7 +147,7 @@ Sprite OAM attr byte is NES-like (which of the 4 sprite palettes, flips, priorit
 
 ### 4. Sprite compositor (hardware z-index)
 
-OAM holds 64 sprites (Y, tile, attr, X, NES-like grouping) **inside the ATmega1284P**. The 6502 uploads with a store loop to `$FE21` (auto-inc). There is **no** hardware DMA. During the current scanline the 1284 evaluates the **next** line (Y match, cap **16**), fetches sprite CHR from cart, and writes the other ping-pong bank of the line-buffer SRAM. The beam indexes that buffer with X. Same one-line delay as the old discrete HBlank eval — not an extra frame.
+OAM holds 64 sprites (Y, tile, attr, X, NES-like grouping) **inside the ATmega1284P**. The 6502 uploads with a store loop to `$FE21` (auto-inc). There is **no** hardware DMA. During the current scanline the 1284 evaluates the **next** line (Y match, cap **16**), fetches sprite CHR from cart, and writes the other ping-pong half of the line-buffer SRAM. The beam indexes that buffer with X. Same one-line delay as the old discrete HBlank eval — not an extra frame.
 
 ### 5. Final multiplexer (pixel priority)
 

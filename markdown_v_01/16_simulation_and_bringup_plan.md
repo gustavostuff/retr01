@@ -125,7 +125,7 @@ Do **not** add 16 sprite shifters.
 
 ### Stage 4 — Sprites as a box (Digital)
 
-Third SRAM line buffer, 2× 157, compositor vs BG. 1284 is a box that, during the visible line, fills the **next** bank (max 16 sprites). Guest writes `$FE20` / `$FE21` into that box’s OAM.
+Third SRAM line buffer, 2× 157, compositor vs BG. 1284 is a box that, during the visible line, fills the **next ping-pong half** (max 16 sprites). Guest writes `$FE20` / `$FE21` into that box’s OAM.
 
 Pass: one sprite appears one line late, same as silicon.
 

@@ -7,7 +7,7 @@ Living snapshot. When hardware or software decisions change, **update this file*
 | Topic | Decision |
 |-------|----------|
 | Name / order | **Retr01**, **A → C → H** |
-| Worlds / screens / CHR cells | **8 worlds**. Each: **64 screens max** on a sparse virtual grid up to **16 × 16**. Each world has **4 BG cells + 4 sprite cells**. Screen = **32×30**. Spec: [04_worlds_and_screens.md](04_worlds_and_screens.md) |
+| Worlds / screens / CHR cells | **8 worlds**. Each: **64 screens max** on a sparse virtual grid up to **16 × 16**. Each world has **4 BG cells + 4 sprite cells**. Screen = **32×30**. Terminology: [README.md](README.md). Spec: [04_worlds_and_screens.md](04_worlds_and_screens.md) |
 | CHR layout | 4 BG cells + 4 sprite cells, **256** patterns each |
 | Authored vs runtime cells | Each screen stores **BG cell 0-3** in MAP flags. Loader copies it into the destination slot's BG cell latch (slots 0-5). Sprite cell stays separate/global. Raster IRQ still available for mid-frame changes |
 | Raster | **Scanline compare + IRQ**. `set_camera_axis(H/V/BOTH)`. `set_parallax` forces matching 1-axis camera. Spec: [02_graphics_and_cartridge.md](02_graphics_and_cartridge.md) section 8 |

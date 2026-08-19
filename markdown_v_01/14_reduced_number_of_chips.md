@@ -27,9 +27,9 @@ This file is the coprocessor / input / chip-count source of truth. CPU map: [08_
 |-----------|-----|-------------------------|------|
 | **CPU** | 1 | W65C02S6TPG-14 (DIP-40) | Game logic, MAP stream, BG VRAM via `$FE1x`. 8.000 MHz PHI2. |
 | **APU** | 1 | ATmega328P-PU (DIP-28) | NES-style pulse / triangle / noise / DMC. `$FE40–$FE5F`. |
-| **Sprite + input** | 1 | **ATmega1284P-PU (DIP-40)** | OAM in internal RAM; eval + CHR fetch; writes next line-buffer bank; latches P1/P2 bytes. |
+| **Sprite + input** | 1 | **ATmega1284P-PU (DIP-40)** | OAM in internal RAM; eval + CHR fetch; writes next line-buffer ping-pong half; latches P1/P2 bytes. |
 | **System + VRAM** | 2 | AS6C62256-55PCN (DIP-28) | 32 KB CPU RAM + 32 KB interleaved VRAM. Unchanged. |
-| **Line buffer** | 1 | AS6C62256-55PCN (DIP-28) | Third 32 KB SRAM. Only 512 bytes used (two 256-byte banks). Visible: PPU reads `{bank, X}`. HBlank: 1284 writes the other bank. **Not OAM.** Same PN as system/VRAM so the BOM stays in production. |
+| **Line buffer** | 1 | AS6C62256-55PCN (DIP-28) | Third 32 KB SRAM. Only 512 bytes used (two 256-byte ping-pong halves). Visible: PPU reads `{display_half, X}`. HBlank: 1284 writes the other half. **Not OAM.** Same PN as system/VRAM so the BOM stays in production. |
 | **EEPROM** | 1 | AT28C64B-15PU (DIP-28) | High scores / operator settings. |
 | **PLD (role name GAL-DEC/TIM/PPU)** | 3 | **ATF22V10CQZ-20PU** (DIP-24) | Decode, beam/NMI/IRQ, CHR/VRAM `/CE`. Not a Lattice GAL. |
 | **Beam counters** | 4 | 74HC161 (DIP-16) | Dot X and line Y (341 × 262). No sprite-X 161s. |
@@ -121,9 +121,9 @@ That **is** a one-line pipeline: pixels on line *N* were chosen at the end of li
 
 The 1284 cannot finish a 64-sprite scan in 85 HBlank dots (~16 µs). It uses the **whole current line** (~63.5 µs visible + HBlank) to build the **next** line’s buffer:
 
-1. **Visible dots:** compositor clocks the **current** SRAM bank with beam X. 1284 scans internal OAM, keeps ≤16 hits for line *N+1*.
-2. **HBlank:** 1284 owns cart **CHR** (`/CE_CHR` exclusive vs BG), reads 16 × 2 bitplane bytes, expands 2bpp, writes the **next** SRAM bank (only sprite pixels; rest transparent / cleared).
-3. **Start of next line:** banks swap.
+1. **Visible dots:** compositor clocks the **current** ping-pong half with beam X. 1284 scans internal OAM, keeps ≤16 hits for line *N+1*.
+2. **HBlank:** 1284 owns cart **CHR** (`/CE_CHR` exclusive vs BG), reads 16 × 2 bitplane bytes, expands 2bpp, writes the **next** ping-pong half (only sprite pixels; rest transparent / cleared).
+3. **Start of next line:** halves swap.
 
 Guest 6502 code does not see a new delay beyond what 06/07 already described. The emulator (when rewritten) should keep **next-line sprite eval**, not same-line 74HC magic.
 
