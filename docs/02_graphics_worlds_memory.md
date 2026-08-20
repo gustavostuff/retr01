@@ -41,13 +41,15 @@ Max CHR if every world is full: **16 x 32 KB = 512 KB** (fills an SST39SF040 by 
 
 ## Camera, VRAM, and scroll
 
-- `scroll_x` wraps **0-127**, `scroll_y` wraps **0-95**
+- `scroll_x` is **0-127**, `scroll_y` is **0-95** (logical pixels inside the live 2x2 field)
 - Camera samples **1, 2, or 4** live screens from slots **0-3**
 - Slots **4-5** are optional **parallax** only (not extra walkable rooms)
 
-MAP holds the whole chapter. VRAM only holds what is live: up to **four** camera screens + **two** parallax screens. Software streams new rooms from MAP as the player moves.
+MAP holds the whole chapter. VRAM only holds what is live: up to **four** camera screens + **two** parallax screens.
 
 Each slot is a **full screen** (192 tile + 48 attr), aligned to **256 bytes**. Not "one room plus a tile strip at the edge."
+
+Hardware does **not** auto-load neighbors when you scroll. Software writes slots from MAP. Changing `scroll_x`/`scroll_y` only moves the 128x96 window over whatever is already in the four slots. That part is cheap.
 
 ```text
 +-------------+-------------+
@@ -70,6 +72,68 @@ Studio **dead zone** / **hybrid** camera rules in `04` are software policy on to
 
 **Parallax (4-5):** full 16x12 nametables drawn behind the playfield (optional scanline band). Own BG bank latches. Enabling any H/V band locks the main camera to that axis for the **whole frame** (see Raster and parallax).
 
+### Worked example: 3x3 world, standing on the center room
+
+World MAP (nine rooms). Player is on room **E**, scroll at **(0, 0)** so the viewport shows E exactly.
+
+```text
+MAP (atlas)                         VRAM slots (workbench), 4-slot mode
++---+---+---+                       +---------+---------+
+| A | B | C |                       | Slot 0  | Slot 1  |
++---+---+---+                       |   E     |   F     |
+| D | E | F |   player here ------> +---------+---------+
++---+---+---+                       | Slot 2  | Slot 3  |
+| G | H | I |                       |   H     |   I     |
++---+---+---+                       +---------+---------+
+                                           [====E====]  viewport at scroll (0,0)
+```
+
+So yes: with a SE-biased 2x2, VRAM holds **E + F + H + I** (center, right, bottom, bottom-right). A/B/C/D/G are still only in MAP.
+
+Scroll right a few pixels (still inside the loaded field). **No MAP load.** Hardware just samples a bit of F:
+
+```text
+VRAM unchanged: E F / H I
+
+scroll_x = 0          scroll_x = a few
+[====E====]           [==E==|==F==]
+```
+
+Same idea scrolling down into H, or diagonally toward I. Still no load until the viewport would need a room that is not in the four slots.
+
+### What about 1 px left from scroll (0, 0)?
+
+At scroll_x **0** you are already on the **left edge** of the live 2x2. One more pixel west is not "hardware loads A/D/G." It is a **software camera shift**: rewrite some slots from MAP, then set scroll so the picture keeps moving left.
+
+Typical pattern (shift west by one column):
+
+```text
+Before (need to go left)              After software reload
++-----+-----+                         +-----+-----+
+|  E  |  F  |                         |  D  |  E  |
++-----+-----+                         +-----+-----+
+|  H  |  I  |                         |  G  |  H  |
++-----+-----+                         +-----+-----+
+[====E====]  scroll (0,0)             [==D==|==E==]  scroll near right
+                                      (viewport still shows mostly E,
+                                       now with D peeking from the left)
+```
+
+You do **not** unload F/H/I and load three brand-new rooms on every pixel. You reload when the **workbench must slide** (often a whole column or row: **two** screens, sometimes **three** if you also fix a corner). Studio dead-zone / hybrid policies try to do that **before** the player hits the edge, during VBlank, so gameplay never stalls.
+
+### Why this is not too much work
+
+| Action | Cost |
+|--------|------|
+| Change scroll by 1 px | a couple of register writes. No VRAM stream |
+| Stream **one** screen from MAP | about **240** bytes (192+48) into one slot |
+| Shift a column (2 screens) | about **480** bytes |
+| Worst corner prep (3 screens) | about **720** bytes |
+
+That streaming happens on **room-boundary events**, not every frame and not every pixel. Spread across one or more VBlanks at ~60 Hz with an **8 MHz** CPU it is normal engine work. Scratch at `$0600+` can hold a decompress/copy buffer if MAP payloads are packed.
+
+Worry about **when** software schedules the shift (dead zone, hybrid), not about the PPU choking on per-pixel loads. It does not do those.
+
 ### VRAM layout
 
 | Offset | Size | Purpose |
@@ -84,6 +148,39 @@ Studio **dead zone** / **hybrid** camera rules in `04` are software policy on to
 | `$4000-$7FFF` | 16 KB | reserved (not live camera/plane) |
 
 Per slot: tiles at `+0x000` (192 B), packed attrs at `+0xC0` (48 B). One attr byte = one **2x2** tile group with four 2-bit palette fields.
+
+## Sprite line buffer (not VRAM nametables)
+
+BG nametable slots and the sprite line buffer are different memories. Slots 0-5 hold **tile maps**. Sprites never get painted into those maps by the 6502.
+
+OAM (64 sprites: Y, tile, attr, X) lives with the **ATmega1284P**. Each logical scanline, the 1284 builds **one 128-pixel strip** of sprite color into a small SRAM, then the compositor reads it. Two halves ping-pong so display and prepare overlap. Full pin/timing story: [`03_hardware_implementation.md`](03_hardware_implementation.md).
+
+```text
+Logical frame (sprites), one row at a time:
+
+  row 0  ################################  (128 px)
+  row 1  ################################
+  ...
+  row 50 ########....####################  <- beam showing this row
+  row 51 (being written into the other half during HBlank)
+  ...
+  row 95 ################################
+
+Line-buffer SRAM (only two rows of storage, not a full framebuffer):
+
+         Half A ($000-$07F)          Half B ($080-$0FF)
+        +------------------+        +------------------+
+Line N  | SHOW (beam read) |        | fill next row    |  1284 writes
+        +------------------+        +------------------+
+Line N+1| fill next row    |        | SHOW (beam read) |
+        +------------------+        +------------------+
+                    \____ swap roles every logical scanline ____/
+```
+
+- Cap: **16** sprites contributing to one logical row.
+- Latency: **one scanline** ahead, not a full-frame double buffer.
+- CPU job: keep OAM updated (`$FE20`/`$FE21`). 1284 job: evaluate Y, fetch CHR in HBlank, pack the strip.
+- SCALE still happens later on the raster path. The line buffer stays **128** wide either way.
 
 ## Palettes
 
@@ -270,4 +367,5 @@ Parallax = scanline band pointing at plane slots **4-5**.
 
 - Nametable bytes are tile indices **0-255**. Bank lives in the slot latch, not in the tile byte.
 - MAP picks which screen to load. World picks which 32 KB CHR chapter is active.
-- Camera slots hold **whole screens**. Sprites use a ping-pong line buffer one scanline ahead (`03`).
+- Camera slots hold **whole screens**. Scroll moves the window; MAP loads happen on software slot shifts (`02` worked example).
+- Sprites use a ping-pong line buffer one scanline ahead (`02` diagram, `03` detail).

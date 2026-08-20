@@ -131,49 +131,44 @@ Sprites are **not** drawn by the 6502 into a framebuffer. The **ATmega1284P** ow
 | Half B | `$080-$0FF` - one logical row of sprite data (128 pixels) |
 | Roles | **Ping-pong:** while the beam **displays** one half, the 1284 **writes** the other |
 | Latency | **One scanline** pipeline, **not** a full-frame delay |
-| Scale | Compositor **duplicates** logical pixels/lines when SCALE=2. Borders are blanked when SCALE=1. Filling only 128 bytes/line leaves more **HBlank** for the 1284 |
+| Scale | Raster path only: duplicate or center into 256x240. Line buffer stays 128-wide |
 
 Per scanline timeline:
 
-1. **Visible line N:** compositor reads sprite pixels for line **N** from the half that was filled during the **previous** HBlank.
-2. **HBlank after line N:** 1284 scans OAM for sprites on line **N+1**, fetches CHR from cart, writes line **N+1** into the **idle** half.
-3. **Visible line N+1:** halves have **swapped** - display uses the half just written, 1284 prepares the next row in the other half.
+1. **Visible line N:** compositor reads sprite pixels for line **N** from the half filled in the previous HBlank.
+2. **HBlank after line N:** 1284 scans OAM for sprites on line **N+1**, fetches CHR, writes that row into the idle half.
+3. **Visible line N+1:** halves swap.
 
 ```text
-         Half A                    Half B
-    +----------------+        +----------------+
-    | row of sprites |        | row of sprites |
-    +----------------+        +----------------+
-           |                          |
-    Line N:   READ (show)              WRITE (prepare N+1)
-    Line N+1: WRITE (prepare N+2)      READ (show)
-           |                          |
-           +-------- swap every line --+
+Logical rows (full frame is NOT stored):
+
+  ... 49 50 51 52 ... 95
+         ^  ^
+      show  prepare during HBlank
+
+SRAM (two trays only):
+
+      Half A                 Half B
+   +-------------+        +-------------+
+   | 128 px row  |        | 128 px row  |
+   +-------------+        +-------------+
+    show N / fill N+1      fill N+1 / show N
+         (roles swap every logical line)
 ```
 
-The 6502 maintains **who** is on screen (OAM positions, tiles, attrs). The 1284 does **per-row** work: which sprites hit this Y, fetch tile bits, pack one horizontal strip. That work happens in **HBlank**, the short gap after each drawn line.
+The 6502 maintains **who** is on screen (OAM). The 1284 does **per-row** work in HBlank. CHR: BG owns the cart during visible dots; 1284 may own CHR in HBlank.
 
-CHR bus note: during the visible line, the **BG path** owns CHR for tile fetch. During **HBlank**, the **1284** may own CHR for sprite tile fetch into the line buffer (see CHR ownership above).
-
-### Plain English
-
-Imagine **two narrow trays**, each holding exactly **one logical horizontal row** of sprite pixels (**128** pixels wide).
-
-- While the TV paints **logical row 50**, it uses the tray that was filled **just before** that row started (with SCALE applied toward the 256x240 raster).
-- In the **short gap** after that row finishes, the sprite chip fills the **other** tray with everything needed for logical row **51**.
-- When row 51 starts, the TV uses that tray, and the chip goes back to preparing row **52** in the first tray.
-
-So the system is always **one row ahead in preparation**: show this line/prepare the next line, **swap trays every line**. The CPU does not paint sprites pixel by pixel each frame - it updates the **sprite list**, and the 1284 handles rows in the gaps between scanlines.
-
-This is **not** "draw the whole frame while calculating the next frame" (that would be double buffering entire screens). It is **one scanline of delay** between preparing a row and displaying it - enough time to fetch CHR and respect the 16-sprites-per-logical-line limit without blocking the 6502.
+This is **not** a full-frame framebuffer. It is one scanline of pipeline delay.
 
 ### How BG and sprites meet on screen
 
-Each output pixel is roughly:
+Each **logical** pixel is roughly:
 
-1. **BG path:** pick tile from VRAM camera slots + scroll, fetch CHR, apply active BG palette index -> Color PROM -> DAC
-2. **Sprite path:** read line buffer at current X -> sprite palette index (or transparent)
-3. **Compositor:** transparency and priority rules -> final **6-bit master index** into Color PROM -> RGBS
+1. **BG path:** VRAM camera slots + scroll -> CHR -> BG palette index
+2. **Sprite path:** line buffer at logical X (`0..127`) -> sprite palette index (or transparent)
+3. **Compositor:** priority -> **6-bit** master index
+
+Then the **raster path** (SCALE DIP) places that pixel into the 256x240 field. Color PROM + DAC follow.
 
 Full sprite pipeline steps (same frame, different jobs):
 
