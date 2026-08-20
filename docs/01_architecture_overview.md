@@ -185,8 +185,8 @@ A **low-level hardware emulator** is planned later, not built now. It should sim
 ## Where to look next
 
 - Product pitch and NES comparison: `07_pitch.md`
-- Graphics, worlds, scrolling, banks, VRAM, and MAP: `02_graphics_worlds_memory.md`
-- Board structure, buses, chips, and timing: `03_hardware_implementation.md`
+- Graphics, worlds, scrolling, banks, VRAM, and MAP: `02_graphics_worlds_memory.md` (includes **what VRAM holds** for scroll modes)
+- Board structure, buses, chips, and timing: `03_hardware_implementation.md` (includes **sprite line buffer**)
 - Protoboard module tests (island bring-up): `06_protoboard_module_tests.md`
 - Retr01 Studio (current tool): `04_retr01_studio.md`
 - Costs and unresolved items: `05_costs_and_open_questions.md`

@@ -92,6 +92,74 @@ CPU and dot clocks are **independent**.
 - 1284 writes the other half during HBlank
 - halves swap each scanline
 
+See **Sprite line buffer (how it works)** below for a full explanation. BG scrolling and VRAM slots are in [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) section *What VRAM holds*.
+
+## Sprite line buffer (how it works)
+
+Sprites are **not** drawn by the 6502 into a framebuffer. The **ATmega1284P** owns sprite evaluation and fills a **line buffer** in SRAM. The BG path reads that buffer when compositing each scanline.
+
+### Technical summary
+
+| Item | Detail |
+|------|--------|
+| OAM | **64** sprites, uploaded by CPU via **`$FE20` / `$FE21`** |
+| Per scanline cap | **16** sprites on one row |
+| Line buffer SRAM | **512 bytes** on the third AS6C62256: two **256-byte halves** |
+| Half A | `$000-$0FF` - one row of sprite data (256 pixels) |
+| Half B | `$100-$1FF` - one row of sprite data (256 pixels) |
+| Roles | **Ping-pong:** while the beam **displays** one half, the 1284 **writes** the other |
+| Latency | **One scanline** pipeline, **not** a full-frame delay |
+
+Per scanline timeline:
+
+1. **Visible line N:** compositor reads sprite pixels for line **N** from the half that was filled during the **previous** HBlank.
+2. **HBlank after line N:** 1284 scans OAM for sprites on line **N+1**, fetches CHR from cart, writes line **N+1** into the **idle** half.
+3. **Visible line N+1:** halves have **swapped** - display uses the half just written, 1284 prepares the next row in the other half.
+
+```text
+         Half A                    Half B
+    +----------------+        +----------------+
+    | row of sprites |        | row of sprites |
+    +----------------+        +----------------+
+           |                          |
+    Line N:   READ (show)              WRITE (prepare N+1)
+    Line N+1: WRITE (prepare N+2)      READ (show)
+           |                          |
+           +-------- swap every line --+
+```
+
+The 6502 maintains **who** is on screen (OAM positions, tiles, attrs). The 1284 does **per-row** work: which sprites hit this Y, fetch tile bits, pack one horizontal strip. That work happens in **HBlank**, the short gap after each drawn line.
+
+CHR bus note: during the visible line, the **BG path** owns CHR for tile fetch. During **HBlank**, the **1284** may own CHR for sprite tile fetch into the line buffer (see CHR ownership above).
+
+### Plain English
+
+Imagine **two narrow trays**, each holding exactly **one horizontal row** of sprite pixels (256 pixels wide - one per column on the screen).
+
+- While the TV paints **row 100**, it uses the tray that was filled **just before** row 100 started.
+- In the **short gap** after row 100 finishes, the sprite chip fills the **other** tray with everything needed for row **101**.
+- When row 101 starts, the TV uses that tray, and the chip goes back to preparing row **102** in the first tray.
+
+So the system is always **one row ahead in preparation**: show this line / prepare the next line, **swap trays every line**. The CPU does not paint sprites pixel by pixel each frame - it updates the **sprite list**, and the 1284 handles rows in the gaps between scanlines.
+
+This is **not** "draw the whole frame while calculating the next frame" (that would be double buffering entire screens). It is **one scanline of delay** between preparing a row and displaying it - enough time to fetch CHR and respect the 16-sprites-per-line limit without blocking the 6502.
+
+### How BG and sprites meet on screen
+
+Each output pixel is roughly:
+
+1. **BG path:** pick tile from VRAM camera slots + scroll, fetch CHR, apply palette -> BG color
+2. **Sprite path:** read line buffer at current X -> sprite color (or transparent)
+3. **Compositor:** transparency and priority rules -> final pixel
+
+Full sprite pipeline steps (same frame, different jobs):
+
+1. CPU uploads OAM through **`$FE20` / `$FE21`**
+2. 1284 scans OAM for the **next** line
+3. active sprite palette buffer maps indices through the selected sprite palette
+4. during HBlank, 1284 fetches sprite CHR and fills the next line-buffer half
+5. visible line reads the last-filled half
+
 ## Interleaved VRAM model
 
 The key architectural trick:
@@ -115,13 +183,15 @@ This removes the VBlank-only VRAM update bottleneck common on classic consoles l
 
 ### Sprites
 
+See **Sprite line buffer (how it works)** above. Short version:
+
 1. CPU uploads OAM through `$FE20/$FE21`
 2. 1284 scans OAM for the **next** line
 3. active sprite palette buffer maps sprite color indices through the selected sprite palette
 4. during HBlank, 1284 fetches sprite CHR and fills the next line-buffer half
-5. visible line reads last-filled half
+5. visible line reads the last-filled half
 
-This is a **one-line** pipeline, not a full-frame delay.
+One-line pipeline, not a full-frame delay.
 
 ## Palette hardware model
 

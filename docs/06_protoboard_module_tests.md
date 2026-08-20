@@ -783,8 +783,8 @@ When **A-E**, **G**, **H**, **I**, **J**, **K**, **L**, **M**, **N**, and **O** 
 
 | Doc | Content |
 |-----|---------|
-| [`03_hardware_implementation.md`](03_hardware_implementation.md) | Block diagram, chip list, pipelines |
-| [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) | `$FExx` map, VRAM layout, timing |
+| [`03_hardware_implementation.md`](03_hardware_implementation.md) | Block diagram, chip list, pipelines, sprite line buffer |
+| [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) | `$FExx` map, VRAM layout, scroll modes, timing |
 | [`05_costs_and_open_questions.md`](05_costs_and_open_questions.md) | Open register bitfields, RGBS tuning |
 | **section 3 above** | Datasheet links + Retr01 pin wiring for every island IC |
 

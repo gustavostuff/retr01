@@ -80,6 +80,77 @@ Across the full cart:
 
 Slots 4-5 are **not** fifth and sixth playfield screens.
 
+### What VRAM holds (camera and scroll modes)
+
+This section answers a common design question: when the camera scrolls or switches rooms, **how much tile data is actually in VRAM?**
+
+#### Technical summary
+
+| Storage | Size per slot | What it is |
+|---------|---------------|------------|
+| Camera slots **0-3** | **2 KB** each (32x30 tiles + attrs) | Up to **four full screens** in a 2x2 camera field |
+| Plane slots **4-5** | **2 KB** each | Up to **two full parallax backgrounds** (not walkable) |
+| Scratch `$2000-$2FFF` | **4 KB** | Streaming temp, not part of the live picture |
+
+Each camera slot holds a **complete screen** (960 tile bytes + 240 attr bytes). It is **not** one screen plus a small tile border or "2-tile perimeter" around a single room.
+
+The TV always shows **256x240 pixels**. `scroll_x` and `scroll_y` slide a **viewport** over whatever tile field is active in slots 0-3. The hardware can use **1, 2, or 4** of those slots for the live camera (see scroll modes below).
+
+**MAP-ROM** can store up to **64 screens per world**. **VRAM** only holds the **live** set: up to four camera screens plus two optional parallax screens. Software streams new screens from MAP into slots when the player moves through the world.
+
+#### Camera slot arrangement (4-screen / pixel scroll)
+
+When all four camera slots are in use, they form a fixed **2x2 grid** of whole rooms:
+
+```text
++-------------+-------------+
+|  Slot 0     |  Slot 1     |   top row
+|  full screen|  full screen|
++-------------+-------------+
+|  Slot 2     |  Slot 3     |   bottom row
+|  full screen|  full screen|
++-------------+-------------+
+        ^
+        |
+   256x240 viewport (scroll_x, scroll_y pick the window)
+```
+
+Smooth scrolling moves that viewport across the **internal seams** between these full screens. When the player crosses a room boundary, both neighboring rooms are already loaded - the picture slides, it does not wait for a one-tile-wide strip to be filled in at the edge.
+
+#### Scroll modes (camera)
+
+| Mode | Slots 0-3 in use | Scroll | What the player sees |
+|------|------------------|--------|----------------------|
+| **Pixel scroll, 1 slot** | One full screen | `scroll_x` / `scroll_y` pan inside that room | One room, camera pans within 256x240 |
+| **Pixel scroll, 2 slots** | Two full adjacent screens (horizontal or vertical pair) | Scroll across the seam | Viewport can show part of room A and part of room B |
+| **Pixel scroll, 4 slots** | Four full screens in 2x2 | Scroll across any internal seam, including corners | Viewport can straddle up to four rooms at once |
+| **Instant screen switch** | New screen(s) loaded into slot(s) | Jump to **0** (or fixed position), no smooth pan | Picture **cuts** to the new room(s) - doors, warps, screen-at-a-time movement |
+
+Instant switch uses the **same VRAM slots** as pixel scroll. The difference is **behavior**: no sliding viewport. Software loads the next room(s), resets scroll, and the image jumps.
+
+Studio game constraints (see `04_retr01_studio.md`) name these as scroll modes: pixel, dead zone, instant, hybrid, etc. The hardware contract is the same: **full screens in slots**, scroll or cut the viewport.
+
+#### Parallax slots (4-5)
+
+Slots **4** and **5** are also **full 32x30 nametables**, but they are **background-only**:
+
+- not part of the walkable 2x2 camera
+- drawn **behind** the main playfield (optional **scanline band** chooses when they appear)
+- use their own **BG bank latches**
+- parallax setup forces a **1-axis camera** on the main field (see Raster and parallax below)
+
+So at maximum, VRAM can hold **four whole camera screens + two whole parallax screens** at once. The visible frame is still 256x240; parallax layers sit under (or in a band under) the camera view.
+
+#### Plain English: VRAM vs the world map
+
+Think of **MAP** as the atlas of every room in the chapter. **VRAM** is the **workbench** with only the rooms you need **right now**.
+
+- **Pixel scroll (up to 4 slots):** tape up to **four complete room blueprints** in a 2x2 square on the bench. The TV is a **fixed-size window** you slide over that square. Walking off the right edge of a room means you see **the right side of one full room and the left side of the next**, because both were already on the bench.
+- **Instant switch:** swap the blueprint(s), put the window back at the start, **no sliding** - like turning a page.
+- **Parallax (slots 4-5):** two **backdrop paintings** the same size as a room, hung **behind** the bench. The player does not walk on them; they add depth (sky, far hills). They scroll or appear in bands separately from the main camera.
+
+This is **not** "one room plus a couple of extra tiles pasted on the edge." That pattern appears on some older hardware. Retr01 loads **whole screens** into named slots so seams are predictable.
+
 ### VRAM layout
 
 | VRAM offset | Size | Purpose |
@@ -308,3 +379,5 @@ Rules:
 - the slot's BG bank latch chooses the CHR bank
 - MAP chooses which screen to load
 - the current world chooses which 32 KB CHR chapter is active
+- **VRAM camera slots hold full screens**, not single-room plus a tile border (see *What VRAM holds*)
+- **sprites use a ping-pong line buffer**, one scanline ahead (see `03_hardware_implementation.md` *Sprite line buffer*)
