@@ -67,7 +67,7 @@ Detail: [`03_hardware_implementation.md`](03_hardware_implementation.md).
   Package │ Count │ Parts
   ────────┼───────┼────────────────────────────────────────────────────────────
   [40]    │   2   │ W65C02S, ATmega1284P
-  [32]    │   1   │ SST39SF040 (v0 on-board cart-flash socket; final cart packaging open — Q9)
+  [32]    │   1   │ SST39SF040 (v0 on-board cart-flash socket; moves to cart later)
   [28]    │   5   │ 3× AS6C62256, ATmega328P, AT28C64B
   [24]    │   3   │ ATF22V10 (decode · timing · PPU/CHR gating)
   [20]    │  ~18  │ HC573 latches, HC245 transceivers, HC688 compare
@@ -131,7 +131,7 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 |------|------|
 | Resolution | **256x240** |
 | Tile size | **8x8** |
-| Color | **2bpp**, **64-color master palette**, **BG/sprite palette banks** (8 rows x 4 palettes each, sparse), **one synced palette row active** (4 BG + 4 sprite) |
+| Color | **2bpp**, **64-color master palette**, **BG/sprite palette banks** (pointer table -> raw blobs), **one synced palette row active** (4 BG + 4 sprite) |
 | Worlds | **8** max |
 | Screens per world | **64** max on sparse **16x16** virtual grid |
 | CHR per world | **4 BG banks + 4 sprite banks**, **256 tiles each** |
@@ -155,8 +155,8 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 ### Retr01-C
 
 - Same core architecture
-- 3-wire controllers with MCU in the pad
-- Same `$FE60/$FE61` software contract
+- 3-wire controllers with **ATtiny85** (draft) in the pad -> `$FE60/$FE61`
+- Same software contract
 
 ### Retr01-H
 

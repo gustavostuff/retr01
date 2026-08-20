@@ -34,10 +34,6 @@ Later editions (console and handheld) share the same soul: one architecture, dif
 
 Retr01 is in **architecture & documentation** phase. The living spec lives in [`docs/`](docs/). **Retr01 Studio** - the visual authoring and compile tool - is the next coding focus. A low-level hardware emulator is planned later, not in active development yet.
 
-## Name note
-
-You may still see the older working title **GameNerd** in paths or early notes. The project name is **Retr01**.
-
 ---
 
 Built for people who want to *make* 8-bit games, not only play them.

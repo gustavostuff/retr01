@@ -102,7 +102,7 @@ Sprites are **not** drawn by the 6502 into a framebuffer. The **ATmega1284P** ow
 
 | Item | Detail |
 |------|--------|
-| OAM | **64** sprites, uploaded by CPU via **`$FE20` / `$FE21`** |
+| OAM | **64** sprites. CPU: write index to **`$FE20`**, data to **`$FE21`** (auto-inc). Entry order `Y, tile, attr, X` |
 | Per scanline cap | **16** sprites on one row |
 | Line buffer SRAM | **512 bytes** on the third AS6C62256: two **256-byte halves** |
 | Half A | `$000-$0FF` - one row of sprite data (256 pixels) |
@@ -154,7 +154,7 @@ Each output pixel is roughly:
 
 Full sprite pipeline steps (same frame, different jobs):
 
-1. CPU uploads OAM through **`$FE20` / `$FE21`**
+1. CPU uploads OAM through **`$FE20` (addr) / `$FE21` (data, auto-inc)**
 2. 1284 scans OAM for the **next** line
 3. active sprite palette buffer maps indices through the selected sprite palette
 4. during HBlank, 1284 fetches sprite CHR and fills the next line-buffer half
@@ -164,7 +164,7 @@ Full sprite pipeline steps (same frame, different jobs):
 
 The key architectural trick:
 
-- CPU phase: CPU may use `$FE1x` VRAM port
+- CPU phase: CPU may use `$FE10`/`$FE12` VRAM port
 - PPU phase: BG fetch reads nametable and attrs
 
 This removes the VBlank-only VRAM update bottleneck common on classic consoles like the NES, while still using one VRAM chip. See [`07_pitch.md`](07_pitch.md) for NES comparison.
@@ -185,7 +185,7 @@ This removes the VBlank-only VRAM update bottleneck common on classic consoles l
 
 See **Sprite line buffer (how it works)** above. Short version:
 
-1. CPU uploads OAM through `$FE20/$FE21`
+1. CPU uploads OAM through `$FE20` (addr) / `$FE21` (data)
 2. 1284 scans OAM for the **next** line
 3. active sprite palette buffer maps sprite color indices through the selected sprite palette
 4. during HBlank, 1284 fetches sprite CHR and fills the next line-buffer half
@@ -195,7 +195,7 @@ One-line pipeline, not a full-frame delay.
 
 ## Palette hardware model
 
-Each cart may store sparse **palette banks** in flash:
+Each cart may store palette blobs in flash, located by a **pointer table** (no palette compression / special packing):
 
 - cart-global minimum: **1 BG Palette + 1 sprite Palette** (one 4-color set each)
 - optional per world: **BG palette bank** and/or **sprite palette bank**, each up to **8 palette rows x 4 palettes**
@@ -209,9 +209,9 @@ When palette row `N` is active, the **active palette buffer** holds **8 palettes
 
 All 8 share the same **color 0** master index (universal backdrop for that row). Software must write that shared index into every slot when loading the row (see `02_graphics_worlds_memory.md`).
 
-The hardware-facing model is dedicated palette registers or palette RAM. It is **not** nametable VRAM. **Fallback resolution is not hardware logic.** Boot code or Retr01 Studio export/runtime code chooses the source palette bank entry and copies the selected row into registers.
+The hardware-facing model is dedicated palette registers via **`$FE08`/`$FE09`** (see draft map in `02`). It is **not** nametable VRAM. **Fallback resolution is not hardware logic.** Boot code or Retr01 Studio export/runtime code follows cart pointers, chooses the source blob, and copies the selected row into registers.
 
-No extra ICs are required for palette banks, synced row selection, or fallback rules. That is cartridge encoding plus a burst of CPU stores when the palette row changes.
+No extra ICs are required for palette banks, synced row selection, or fallback rules. That is cartridge directory pointers plus a burst of CPU stores when the palette row changes.
 
 ## Timing-facing rules
 
@@ -243,7 +243,9 @@ Bits:
 ### Retr01-C
 
 - same architecture
-- 3-wire controllers with MCU in pad
+- **3-wire controllers** with **ATtiny85** (draft) MCU in each pad
+- wires: **VCC, GND, DATA** (open-drain DATA). Console **ATmega1284P** is master: poll, then read one button byte
+- software-visible bytes stay **`$FE60` / `$FE61`** with the same bit layout as Retr01-A
 
 ### Retr01-H
 

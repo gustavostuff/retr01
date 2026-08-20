@@ -14,8 +14,9 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Bank sizes | **256 tiles** per bank, **4 KB** each |
 | Master palette | one **64-color** table for Retr01-A/C/H |
 | Cart global palette banks | minimum **1 BG Palette + 1 sprite Palette** (one 4-color set each) for the whole cart |
-| World palette banks | optional **BG palette bank** and/or **sprite palette bank**, sparse, up to **8 rows x 4 palettes** each |
-| Active palette buffer | **4 BG + 4 sprite palettes** from one selected **palette row** |
+| World palette banks | optional **BG palette bank** and/or **sprite palette bank**, up to **8 rows x 4 palettes** each |
+| Palette cart storage | **uncompressed** raw master indices; **pointer table** locates blobs in cart ROM (no palette RLE/special packing) |
+| Active palette buffer | **4 BG + 4 sprite palettes** from one selected **palette row** via `$FE08`/`$FE09` |
 | Palette row selection | BG palette row **N** and sprite palette row **N** are always selected together |
 | Shared backdrop | all **8** active palettes use the same **color 0** master index (software must write it into every slot when loading a row) |
 | Palette fallback | world palette bank -> cart global -> system default. Resolved in software at load time |
@@ -24,18 +25,24 @@ This doc merges the old cost sheet and decision log into one planning file.
 | VRAM | **32 KB**, interleaved |
 | System RAM | **32 KB**, CPU-only |
 | Line buffer | third **32 KB** SRAM, sprite ping-pong |
-| OAM | in **ATmega1284P**, no DMA |
+| OAM | in **ATmega1284P**, no DMA. **`$FE20`** = addr, **`$FE21`** = data (auto-inc). Entry `Y, tile, attr, X` |
 | Sprite cap | **16 / scanline** |
-| MAP access | **`$FE90`** only |
+| `$FExx` byte map | **draft v0 frozen** in [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) (PPU, VRAM, OAM, banks, EEPROM, MAP) |
+| MAP access | **`$FE90`-`$FE92`** addr, **`$FE93`** data + auto-inc |
 | PRG banking | **`$FE80`** only |
+| Board EEPROM | **AT28C64B on every Retr01-A v0**. Port **`$FE70`/`$FE71`** addr, **`$FE72`** data |
+| Cart flash | **SST39SF040 class**: **on-board 32-pin socket for v0 bring-up**; **on cartridge later**. Same image format |
+| Parallax camera lock | if **any** H or V parallax band is enabled, main camera locks to that axis for the **whole frame** |
 | CPU map | RAM at `$0000-$7FFF`, I/O at `$FE00-$FEFF` |
 | Controls | one byte per player at `$FE60/$FE61` |
+| Retr01-C pad transport | **draft:** **ATtiny85** in pad; **VCC, GND, DATA**; 1284 master-polls; same `$FE60/$FE61` bytes |
 | CPU clock | **8.000 MHz** |
 | Dot clock | **5.369318 MHz** |
 | Raster | scanline compare + IRQ |
 | Glue | **ATF22V10CQZ-20PU** + 74HC family |
 | APU | separate **ATmega328P** |
-| Near-term software | **Retr01 Studio** only (visual authoring + compile) |
+| Near-term software | **Retr01 Studio** only (visual authoring + later compile) |
+| Studio project files | **JSON** OK; **schema/structure deferred** until Studio coding |
 | Future software | low-level hardware emulator (planned, not current work) |
 
 ## Cost snapshot
@@ -52,11 +59,11 @@ Qty-1 planning numbers, not a quote.
 
 ### Cartridge
 
-Depends on final flash strategy, but motherboard + cart proto still targets roughly the old **~$200** band.
+v0 uses on-board flash socket; cart PCB comes later. Motherboard + cart proto still targets roughly the **~$200** band.
 
 ## Why cost is still approximate
 
-- final cart flash packaging is not frozen
+- cart PCB / connector not drawn yet (flash moves off-board later)
 - board dimensions may still move
 - analog output details may still shift resistor and connector choices
 - distributor pricing changes
@@ -65,24 +72,15 @@ Depends on final flash strategy, but motherboard + cart proto still targets roug
 
 | ID | Topic | Note |
 |----|-------|------|
-| Q1 | exact `$FE0x` and palette-register bitfields | block families are fixed, byte-level details still need freezing |
 | Q2 | RGBS analog levels / sync polarity tuning | digital timing is locked. Bench tuning still needed |
-| Q3 | Retr01-C 3-wire controller bit protocol | software-visible byte contract is fixed, transport details are not |
-| Q4 | OAM port bytes + entry layout | Default entry order remains NES-like `Y, tile, attr, X`. Which of `$FE20`/`$FE21` is address vs data (and any auto-inc) still needs freezing |
-| Q5 | root-level old names and paths | some legacy `GameNerd` / old-folder references still exist |
-| Q6 | exact cartridge encoding for palette banks and palette-row IDs | terminology and row-sync rules are locked. Field layout still needs freezing |
-| Q7 | board EEPROM at `$FE70-$FE7F` | AT28C64B is in the v0 chip plan. Exact decode nibble, size window, and whether it ships on every board still open |
-| Q8 | parallax vs 1-axis camera gating | docs require 1-axis main camera when parallax planes are used; whether that is whole-frame or band-only still open |
-| Q9 | SST39SF040 ownership (on-board socket vs cart package) | v0 ASCII plans a 32-pin flash footprint for bring-up; final cart BOM packaging still open |
+| Q10 | OAM attr bitfields | entry order locked; flip / priority / palette bits inside attr byte still micro-rev |
+| Q11 | `$FE07` plane band end / dual-band detail | start scanline drafted; end-of-band pairing may need a second latch |
+| Q12 | PRG / CHR / MAP offsets inside 512 KB flash | socket-now / cart-later locked; exact region map still flexible |
+| Q13 | Retr01-C pad bit timing | ATtiny85 + 3-wire draft locked; baud / poll edge details later |
 
 ## Practical next decisions
 
-The highest-value open work is:
-
-1. freeze exact `$FE0x`, OAM `$FE20`/`$FE21` roles, and palette-register bytes
-2. define Retr01 Studio phase 0 project/format layout
-3. lock palette-bank encoding and palette-row IDs in cartridge data
-4. lock cart flash packaging (on-board socket vs cart BOM) and PRG/MAP vs CHR split
-5. freeze board EEPROM `$FE7x` decode or drop it from v0
-6. tune RGBS on real hardware
-7. decide parallax 1-axis gating (whole-frame vs band-only)
+1. tune RGBS on real hardware (Q2)
+2. start Retr01 Studio Phase 0/1 (JSON project files; freeze schema when code needs it)
+3. sketch PRG/CHR/MAP flash region map (Q12)
+4. flesh out ATtiny85 poll timing when Retr01-C work starts (Q13)

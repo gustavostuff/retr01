@@ -358,7 +358,7 @@ Phases 0 and 1 can overlap: Phase 0 libraries land first. Phase 1 UI consumes th
 #### Data / persistence (minimal)
 
 - [ ] In-memory project model: worlds, sparse screens, 4 BG CHR banks per world
-- [ ] Save/load project file (format can be minimal JSON or binary - freeze in Phase 1 if needed)
+- [ ] Save/load project file (**JSON**; schema frozen when Phase 0/1 code needs it)
 - [ ] Export debug artifacts optional: raw `.bin` tile plane, CHR bank blob (full MAP RLE can wait for Phase 0 hardening)
 
 #### Stub cells (visible, non-functional)

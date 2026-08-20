@@ -55,7 +55,7 @@ You get a board you can breadboard in islands, bring up module by module, then i
 Same CPU map, same graphics model, same carts. Intended differences are **industrial design**, not software:
 
 - Smaller PCB / enclosure constraints
-- **3-wire controllers** with an MCU in the pad (transport TBD, but **`$FE60` / `$FE61`** stay the same two bytes per player)
+- **3-wire controllers** with an **ATtiny85** (draft) MCU in the pad (**VCC, GND, DATA**); **`$FE60` / `$FE61`** stay the same two bytes per player
 - Consumer-facing AV and power
 
 Games built for A should port to C with recompilation, not re-architecture.
@@ -97,7 +97,7 @@ For designers, this means Metroidvania-scale layouts without rewriting the engin
 
 ### Parallax without sprite-0 hacks
 
-Two extra VRAM slots (**4-5**) are **parallax plane storage only** - not fifth and sixth playfield screens. A **scanline band** can point at those slots for layered backgrounds while the main camera uses slots 0-3.
+Two extra VRAM slots (**4-5**) are **parallax plane storage only** - not fifth and sixth playfield screens. A **scanline band** can point at those slots for layered backgrounds while the main camera uses slots 0-3. Enabling any H or V parallax band **locks camera movement to that axis for the whole frame**.
 
 Combined with **raster IRQ** (scanline compare), you get status bars, split layers, and parallax bands through a **documented register model** - not through counting cycles until sprite 0 hits the beam.
 
@@ -185,7 +185,7 @@ Retr01 deliberately rhymes with the NES where it helps learning and art directio
 | Screen tile grid | **32x30** tiles (960 bytes) | **32x30** tiles (960 bytes) per stored screen |
 | Attribute plane | Packed palette bits per tile group | **240-byte** packed attr plane per screen |
 | Sprite list | **64** OAM entries | **64** OAM entries |
-| OAM entry layout | **Y, tile, attr, X** (planned default) | **Y, tile, attr, X** (planned default) |
+| OAM entry layout | **Y, tile, attr, X** | **Y, tile, attr, X** (`$FE20` addr / `$FE21` data) |
 | Frame rate class | **~60.098 Hz** (262 lines) | **~60.098 Hz** (341x262 timing) |
 | Game media | **Cartridge** | **Cartridge** (`.retr01`) |
 | Background + sprites | Tile BG + movable sprites | Tile BG + movable sprites |

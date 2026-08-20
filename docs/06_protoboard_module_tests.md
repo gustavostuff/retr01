@@ -163,18 +163,18 @@ Octal D latch. Used for scroll, VRAM addr, `$FExx` latches, palette.
 | 2-9 | D0-D7 | CPU data bus (write) |
 | 10 | GND | |
 | 11-18 | Q0-Q7 | To register / PPU inputs |
-| 19 | **LE** | **Latch enable** (active **high**, not `/LE`): high = transparent, **high→low** latches |
+| 19 | **LE** | **Latch enable** (active **high**, not `/LE`): high = transparent, **high->low** latches |
 | 20 | VCC | +5 V |
 
 **Module D example (`$FE02` scroll X):** `LE` <- decode(`$FE02`) AND write AND PHI2. D0-7 <- CPU D0-7. Q0-7 -> scroll X bits.
 
 ### 3.5 SN74HC245 - DIP-20 (module G)
 
-8-bit bus transceiver. **`DIR`** high = A→B (CPU→VRAM for writes in the usual island wiring). **`/OE`** low = active.
+8-bit bus transceiver. **`DIR`** high = A->B (CPU->VRAM for writes in the usual island wiring). **`/OE`** low = active.
 
 | Pin | Name | Retr01 VRAM island |
 |-----|------|---------------------|
-| 1 | **DIR** | Direction (not `/DIR`). High = A→B toward VRAM for CPU writes |
+| 1 | **DIR** | Direction (not `/DIR`). High = A->B toward VRAM for CPU writes |
 | 2-9 | **A0-A7** | To CPU D0-D7 |
 | 10 | **GND** | |
 | 11-18 | **B0-B7** | To VRAM I/O |
@@ -198,7 +198,7 @@ Quad 2-input mux. **One IC = 4 bits.** VRAM needs **4x 157** for 15-bit address 
 | 15 | VCC | |
 | 8 | GND | |
 
-**Module G:** S <- PHI2 polarity so CPU phase selects latched `$FE1x` address. PPU phase selects beam/nametable address.
+**Module G:** S <- PHI2 polarity so CPU phase selects latched `$FE10`/`$FE11` address. PPU phase selects beam/nametable address.
 
 ### 3.7 SN74HC161 - DIP-16 (module H)
 
@@ -252,7 +252,7 @@ Arduino pinout charts **do not** match DIP-40 1284P 1:1 - use **40002047A** pin 
 
 ### 3.10 AT28C64B - DIP-28 (module F)
 
-Parallel EEPROM. `/CE`, `/OE`, `/WE` with **`$FE7x`** decode. Address/data tie to CPU bus when `/CE` active. See [AT28C64B PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/doc4428.pdf) for write pulse timing (long `/WE`).
+Parallel EEPROM. Port **`$FE70`/`$FE71`** address, **`$FE72`** data. Address/data tie to CPU bus when `/CE` active. See [AT28C64B PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/doc4428.pdf) for write pulse timing (long `/WE`).
 
 ### 3.11 Cart flash - SST39SF040 class (modules C, J)
 
@@ -485,7 +485,7 @@ Bit layout matches [`03_hardware_implementation.md`](03_hardware_implementation.
 
 ### Parts
 
-Island **D** plus **AT28C64B** (8 KB), decode for **`$FE70-$FE7F`** (exact nibble TBD — open question **Q7**).
+Island **D** plus **AT28C64B** (8 KB). Decode port: **`$FE70`/`$FE71`** address, **`$FE72`** data (ships on every v0 board - see [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md)).
 
 **Pin reference:** AT28C64B **section 3.10**
 
@@ -512,7 +512,7 @@ Non-volatile read/write. Stays off the video path.
 | AS6C62256 #2 | VRAM |
 | 4x 74HC157 | 15-bit address mux (CPU vs "PPU side") |
 | 74HC245 | CPU data to VRAM (CPU phase only) |
-| 74HC573 | VRAM address latch from **`$FE11`/`$FE12`**, data **`$FE13`** |
+| 74HC573 | VRAM address latch from **`$FE10`/`$FE11`**, data **`$FE12`** |
 | Island **C** or **D** | CPU to run test code |
 
 **Pin reference:** AS6C62256 **section 3.3**, HC157 **section 3.6**, HC245 **section 3.5**, HC573 **section 3.4**
@@ -520,20 +520,20 @@ Non-volatile read/write. Stays off the video path.
 ### Wiring
 
 - **PHI2** (or inverted PHI2 - document your choice) selects mux:
-  - **CPU phase**: latched **`$FE1x`** address on VRAM **A**, 245 connects CPU **D** to VRAM **D**.
+  - **CPU phase**: latched **`$FE10`/`$FE11`** address on VRAM **A**, 245 connects CPU **D** to VRAM **D** via **`$FE12`**.
  - **PPU phase**: PPU side of 157s tied to a **fixed** address (all 0) or DIP switch for manual poke.
 - VRAM **`/WE`**, **`/OE`** qualified so CPU and PPU never drive **D** at once.
 
 ### Test
 
-1. CPU writes **`$AA`** to VRAM offset **`$0000`** via **`$FE1x`** port.
+1. CPU writes **`$AA`** to VRAM offset **`$0000`** via **`$FE10`/`$FE11`/`$FE12`**.
 2. CPU reads back **`$AA`**.
 3. Scope **245 `/OE`** or VRAM **D**: high-Z on opposite phase from CPU write.
 4. (Optional) Halt **PHI2** single-step if your setup allows - only one driver on **D**.
 
 ### Pass
 
-Read/write through **`$FE1x`**, no bus contention on VRAM data.
+Read/write through **`$FE10`/`$FE12`**, no bus contention on VRAM data.
 
 ### Common failures
 
@@ -580,7 +580,7 @@ Islands **G** + **H** plus:
 
 ### Test
 
-1. CPU fills VRAM nametable slot 0 with a checkerboard tile pattern via **`$FE1x`**.
+1. CPU fills VRAM nametable slot 0 with a checkerboard tile pattern via **`$FE10`/`$FE12`**.
 2. With dot counters running, scope/logic-analyzer VRAM **A** during PPU phase - addresses walk the nametable region.
 3. (Optional) latch tile bytes sequentially.
 
@@ -607,7 +607,7 @@ PPU phase reads expected nametable range. CPU can still write on CPU phase.
 |--------|------|
 | **PRG** | Island **C** already uses this |
 | **CHR** | CPU **does not** read CHR directly. Toggle **`/CE_CHR`** with BG fetch or 1284 only |
-| **MAP** | CPU writes 24-bit addr through **`$FE90`** block, reads data (bring-up often uses **`$FE92`** as the data byte - exact offsets TBD with Q1), verify auto-inc against known flash image |
+| **MAP** | CPU writes 24-bit addr to **`$FE90`/`$FE91`/`$FE92`**, reads **`$FE93`**, verify auto-inc against known flash image |
 
 ### Pass
 
@@ -692,7 +692,7 @@ Islands **L** + **M** + CHR bus from **J** (flash with known tile bytes).
 
 ### Test
 
-1. Load OAM test list into 1284 (via **`$FE20`/`$FE21`** path or direct firmware load; which byte is addr vs data is still open - see [`05_costs_and_open_questions.md`](05_costs_and_open_questions.md) Q4).
+1. Load OAM test list into 1284 (via **`$FE20`** addr / **`$FE21`** data, or direct firmware load).
 2. One known sprite tile in CHR flash.
 3. After one frame time, line-buffer half contains non-transparent sprite pixels at expected **X**.
 
@@ -706,8 +706,8 @@ One-line delay behavior: buffer filled for line **N+1** while line **N** would d
 
 ### Parts
 
-- 74HC573 palette latches (**`$FE08`/`$FE09`** or block assignment TBD).
-- LUT: for this **island only**, master-palette lookup may live in leftover SRAM (e.g. unused region of the line-buffer chip) as a proto convenience. Final Retr01-A still targets **dedicated palette registers / palette RAM**, not nametable VRAM (see [`03_hardware_implementation.md`](03_hardware_implementation.md)).
+- 74HC573 palette latches (**`$FE08`/`$FE09`** - see draft map in [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md)).
+- LUT: for this **island only**, master-palette lookup may live in leftover SRAM (e.g. unused region of the line-buffer chip) as a proto convenience. Final Retr01-A still targets **dedicated palette registers** via `$FE08`/`$FE09`, not nametable VRAM (see [`03_hardware_implementation.md`](03_hardware_implementation.md)).
 - Compositor mux: BG vs line-buffer pixel (start with **BG only**, add sprite later).
 - **R-2R** + **75 ohm** + **CSYNC**.
 
@@ -752,7 +752,7 @@ C + D + E + G + H + I + J + O -> BG + CPU + cart + video
 2. Write scroll / palette / nametable via **`$FExx`**.
 3. Read **`$FE60`**, react on loop.
 4. Wait for **NMI**. Increment frame counter in RAM.
-5. (Later) OAM upload loop to **`$FE20`/`$FE21`**.
+5. (Later) OAM upload loop: `$FE20` addr, `$FE21` data.
 
 ### Pass
 
@@ -771,11 +771,12 @@ When **A-E**, **G**, **H**, **I**, **J**, **K**, **L**, **M**, **N**, and **O** 
 | Port | Island | Quick test |
 |------|--------|------------|
 | **`$FE02/03`** scroll | D | Store **`$55`**, probe latch |
-| **`$FE1x`** VRAM | G | Write/read **`$AA`** at VRAM **0** |
-| **`$FE20`/`$FE21`** OAM | N | Upload into 1284. Exact addr/data roles TBD (Q4) |
+| **`$FE10-$FE12`** VRAM | G | Write/read **`$AA`** at VRAM **0** via addr lo/hi + data |
+| **`$FE20`/`$FE21`** OAM | N | `$FE20`=addr, `$FE21`=data auto-inc |
 | **`$FE60/61`** pads | E | Switch -> bit set |
+| **`$FE70-$FE72`** EEPROM | F | Addr + data R/W on AT28C64B |
 | **`$FE80`** PRG bank | J | Bank change moves **`$8000`** window |
-| **`$FE90`** MAP | J | 24-bit seek + read known byte |
+| **`$FE90-$FE93`** MAP | J | 24-bit seek + read known byte |
 
 ---
 

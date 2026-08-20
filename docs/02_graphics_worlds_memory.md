@@ -55,8 +55,8 @@ Per world:
 
 Across the full cart:
 
-- max CHR budget: about **256 KB** (8 worlds × 32 KB)
-- planning flash class **SST39SF040** is **512 KB**, so PRG + MAP share the remaining space after CHR (exact packing still open — Q9 / flash strategy in `05_costs_and_open_questions.md`)
+- max CHR budget: about **256 KB** (8 worlds x 32 KB)
+- planning flash class **SST39SF040** is **512 KB**. **v0:** parallel flash in an on-board **32-pin socket** for bring-up. **Later:** same image lives on the **cartridge**. Max CHR is about **256 KB** (8x32 KB). PRG + MAP share the rest (exact bank map still flexible)
 
 ### Runtime bank rules
 
@@ -138,7 +138,7 @@ Slots **4** and **5** are also **full 32x30 nametables**, but they are **backgro
 - not part of the walkable 2x2 camera
 - drawn **behind** the main playfield (optional **scanline band** chooses when they appear)
 - use their own **BG bank latches**
-- parallax setup forces a **1-axis camera** on the main field (see Raster and parallax below)
+- parallax setup locks the main camera to **one axis for the whole frame** when any H/V band is enabled (see Raster and parallax below)
 
 So at maximum, VRAM can hold **four whole camera screens + two whole parallax screens** at once. The visible frame is still 256x240; parallax layers sit under (or in a band under) the camera view.
 
@@ -212,19 +212,25 @@ Retr01-A, C, and H all share one **master palette** of **64 unique colors**. It 
 
 This table is the canonical **64-color** source for the whole family. Carts may embed a copy; if omitted, Studio / system startup supplies the same default table (see storage layers below).
 
-### Cart palette storage (sparse)
+### Cart palette storage (pointer table, uncompressed)
 
-Palettes are stored in cartridge data. Programmers do **not** need to define every palette in every palette bank for every world.
+Palettes live in cart ROM as **raw** byte blobs. Do **not** RLE/compress or pack palette data in a special encoding.
+
+Directory model:
+
+- a **pointer table** (cart header / world directory) holds offsets to palette blobs
+- each blob is plain **master-color indices** (4 bytes per Palette, rows as authored)
+- software follows the pointer, copies the needed row into `$FE08`/`$FE09`
+
+Programmers do **not** need to author every palette in every bank for every world - omit pointers / leave unused.
 
 Three layers exist:
 
 | Layer | What it holds | Required? |
 |-------|---------------|-----------|
-| **Master palette** | 64 RGB colors | optional in cart, system default exists |
+| **Master palette** | 64 RGB colors | optional in cart (pointer may be null); system default exists |
 | **Cart global palette banks** | at least **1 BG Palette + 1 sprite Palette** (one **4-color** set each) shared across worlds | minimum authoring contract |
 | **World palette banks** | optional **BG palette bank** and/or **sprite palette bank** for that world | optional per world |
-
-Within each palette bank, storage is **sparse**: only authored palettes occupy cart bytes.
 
 ### Palette fallback chain
 
@@ -325,8 +331,8 @@ MAP-ROM is **not** directly memory-mapped into the CPU space.
 
 Software reads MAP through **`$FE90`**:
 
-1. write 24-bit MAP address
-2. read MAP data
+1. write 24-bit MAP address (`$FE90`/`$FE91`/`$FE92`)
+2. read MAP data at **`$FE93`**
 3. hardware auto-increments
 
 Recommended MAP directory row:
@@ -349,15 +355,101 @@ Recommended MAP directory row:
 
 | Range | Purpose |
 |-------|---------|
-| `$FE00-$FE0F` | PPU control, scroll, raster compare |
-| `$FE10-$FE1F` | VRAM port |
-| `$FE20-$FE2F` | OAM port into 1284 (`$FE20`/`$FE21` in docs; addr vs data roles TBD — Q4) |
+| `$FE00-$FE0F` | PPU control, scroll, raster, parallax band, palette port (**draft** below) |
+| `$FE10-$FE1F` | VRAM port (**draft** below) |
+| `$FE20-$FE2F` | OAM port into 1284 |
 | `$FE30-$FE3F` | world select + BG bank latches + sprite bank |
 | `$FE40-$FE5F` | APU |
 | `$FE60-$FE6F` | controllers / cabinet |
-| `$FE70-$FE7F` | board EEPROM (AT28C64B), optional; exact decode TBD (Q7) |
+| `$FE70-$FE7F` | board EEPROM (AT28C64B) - **ships on every Retr01-A v0** |
 | `$FE80-$FE8F` | PRG bank |
 | `$FE90-$FE9F` | MAP port |
+
+### `$FExx` register map (draft v0)
+
+Byte-level layout below is a **frozen draft** for Studio, firmware, and proto bring-up. Bit meanings may gain reserved fields later; do not renumber ports without a doc rev.
+
+#### `$FE00-$FE0F` - PPU / raster / palette
+
+| Addr | R/W | Name | Draft function |
+|------|-----|------|----------------|
+| `$FE00` | W | `PPUCTRL` | bit0 BG enable, bit1 sprites enable, bit2 NMI enable, bit3-4 camera slot mode (`00`=1 slot, `01`=2 H, `10`=2 V, `11`=4), bit5-7 reserved |
+| `$FE01` | R | `PPUSTATUS` | bit0 VBlank, bit1 sprite overflow (optional), bit2 raster hit sticky, bit3-7 reserved. Read clears raster hit |
+| `$FE02` | W | `SCROLL_X` | camera `scroll_x` (0-255 wrap) |
+| `$FE03` | W | `SCROLL_Y` | camera `scroll_y` (0-255 wrap) |
+| `$FE04` | W | `RASTER_Y` | compare scanline (0-261) |
+| `$FE05` | W | `RASTER_CTRL` | bit0 IRQ enable, bit1-7 reserved |
+| `$FE06` | W | `PLANE_CTRL` | bit0 enable plane slot 4 band, bit1 enable plane slot 5 band, bit2 band axis (`0`=H scroll lock, `1`=V scroll lock), bit3-7 reserved. **Any** band enable locks main camera to that axis for the **whole frame** (see Raster and parallax) |
+| `$FE07` | W | `PLANE_BAND` | bits0-7 = band start scanline (end = next VBlank or paired latch in a later rev) |
+| `$FE08` | W | `PAL_ADDR` | index into active palette buffer, **0-31** (8 palettes x 4 colors). Write sets pointer |
+| `$FE09` | W | `PAL_DATA` | master-color index 0-63; write stores and **auto-increments** `PAL_ADDR` |
+| `$FE0A-$FE0F` | - | reserved | leave unimplemented on v0 |
+
+#### `$FE10-$FE1F` - VRAM port
+
+| Addr | R/W | Name | Draft function |
+|------|-----|------|----------------|
+| `$FE10` | W | `VRAM_ADDR_LO` | VRAM address bits 7-0 |
+| `$FE11` | W | `VRAM_ADDR_HI` | VRAM address bits 14-8 (15-bit space) |
+| `$FE12` | R/W | `VRAM_DATA` | read/write data; **auto-increment** address after each access |
+| `$FE13-$FE1F` | - | reserved | |
+
+(Proto Module G historically used `$FE11`/`$FE12`/`$FE13` naming - treat this table as canonical going forward.)
+
+#### `$FE20-$FE2F` - OAM (1284)
+
+| Addr | R/W | Name | Draft function |
+|------|-----|------|----------------|
+| `$FE20` | W | `OAM_ADDR` | byte index into 256-byte OAM (0-255) |
+| `$FE21` | W | `OAM_DATA` | write byte at `OAM_ADDR`, then **auto-increment** addr |
+| `$FE22-$FE2F` | - | reserved | |
+
+OAM entry layout (NES-like), 4 bytes x 64 sprites:
+
+| Offset | Field |
+|--------|--------|
+| `4n + 0` | Y |
+| `4n + 1` | tile index |
+| `4n + 2` | attr (palette, flip, priority - bitfields TBD in a later micro-rev) |
+| `4n + 3` | X |
+
+#### `$FE30-$FE3F` - world / CHR banks
+
+| Addr | R/W | Name | Draft function |
+|------|-----|------|----------------|
+| `$FE30` | W | `WORLD` | world select 0-7 |
+| `$FE31` | W | `BG_BANK_0` | BG bank latch for nametable slot 0 (0-3) |
+| `$FE32` | W | `BG_BANK_1` | slot 1 |
+| `$FE33` | W | `BG_BANK_2` | slot 2 |
+| `$FE34` | W | `BG_BANK_3` | slot 3 |
+| `$FE35` | W | `BG_BANK_4` | plane slot 4 |
+| `$FE36` | W | `BG_BANK_5` | plane slot 5 |
+| `$FE37` | W | `SPR_BANK` | global sprite CHR bank 0-3 |
+| `$FE38` | W | `PAL_ROW` | selected palette row 0-7 (BG and sprite together). Software still copies the row into `$FE08`/`$FE09` |
+| `$FE39-$FE3F` | - | reserved | |
+
+#### `$FE70-$FE7F` - board EEPROM (AT28C64B)
+
+Ships on **every** Retr01-A v0 board (settings / high scores / operator data - not cart).
+
+| Addr | R/W | Name | Draft function |
+|------|-----|------|----------------|
+| `$FE70` | W | `EE_ADDR_LO` | EEPROM A7-A0 |
+| `$FE71` | W | `EE_ADDR_HI` | EEPROM A12-A8 (8 KB device) |
+| `$FE72` | R/W | `EE_DATA` | data; respect AT28C64B write timing on write |
+| `$FE73-$FE7F` | - | reserved | |
+
+#### `$FE80` / `$FE90` - PRG and MAP
+
+| Addr | R/W | Name | Draft function |
+|------|-----|------|----------------|
+| `$FE80` | W | `PRG_BANK` | PRG window bank select |
+| `$FE90` | W | `MAP_ADDR_LO` | MAP address bits 7-0 |
+| `$FE91` | W | `MAP_ADDR_MID` | bits 15-8 |
+| `$FE92` | W | `MAP_ADDR_HI` | bits 23-16 |
+| `$FE93` | R | `MAP_DATA` | read MAP byte; **auto-increment** 24-bit MAP address |
+
+(`$FE40-$FE5F` APU and `$FE60`/`$FE61` pads stay as previously specified.)
 
 Controller bytes (software contract; **1 = pressed**):
 
@@ -372,7 +464,7 @@ Controller bytes (software contract; **1 = pressed**):
 | 6 | coin / select |
 | 7 | start |
 
-Same layout on Retr01-A (cabinet IDC) and Retr01-C (pad MCU → these two bytes).
+Same layout on Retr01-A (cabinet IDC -> 1284) and Retr01-C (pad MCU -> these two bytes).
 
 ## Raster and parallax
 
@@ -386,7 +478,7 @@ Parallax is implemented as a **separate scanline band** that points to plane slo
 
 Rules:
 
-- enabling a parallax band forces a **1-axis camera** on the **main** playfield for that setup (software must not ask the PPU for free 2-axis camera scroll while planes 4-5 are active - exact band vs whole-frame gating is still open)
+- if **any** H or V parallax band is enabled (`PLANE_CTRL` bits), main **camera movement locks to that axis for the whole frame** (not band-only). Software must not scroll the unlocked axis while a band is active
 - plane slots are not part of the 2x2 camera
 - BG banks stay per slot
 - sprite bank remains separate/global
