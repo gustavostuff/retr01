@@ -12,14 +12,15 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Screen format | **32x30** tiles + **240-byte** packed attr plane |
 | CHR layout | **4 BG banks + 4 sprite banks** per world |
 | Bank sizes | **256 tiles** per bank, **4 KB** each |
-| Master palette | one **64-color** table for Retr01-A/C/H |
-| Cart global palette banks | minimum **1 BG Palette + 1 sprite Palette** (one 4-color set each) for the whole cart |
+| Master palette | **64 colors** in board **Color PROM** (**3x AT28C16** R/G/B). Same image on Retr01-A/C/H. **Not** in cart |
+| Cart global palette banks | minimum **1 BG Palette + 1 sprite Palette** (indices 0-63 only) for the whole cart |
 | World palette banks | optional **BG palette bank** and/or **sprite palette bank**, up to **8 rows x 4 palettes** each |
-| Palette cart storage | **uncompressed** raw master indices; **pointer table** locates blobs in cart ROM (no palette RLE/special packing) |
-| Active palette buffer | **4 BG + 4 sprite palettes** from one selected **palette row** via `$FE08`/`$FE09` |
+| Palette cart storage | **uncompressed** master **indices**; **pointer table** locates blobs. **No** master RGB in cart |
+| Active palette buffer | **4 BG + 4 sprite palettes** from one selected **palette row** via `$FE08`/`$FE09` (indices into Color PROM) |
 | Palette row selection | BG palette row **N** and sprite palette row **N** are always selected together |
 | Shared backdrop | all **8** active palettes use the same **color 0** master index (software must write it into every slot when loading a row) |
-| Palette fallback | world palette bank -> cart global -> system default. Resolved in software at load time |
+| Palette fallback | world palette bank -> cart global -> system default **indices**. Master RGB always from Color PROM |
+| Color PROM | **3x AT28C16** on every board; 6-bit index -> R/G/B DACs; programmed once |
 | Runtime BG banking | per **nametable slot** |
 | Runtime sprite banking | separate **global latch** |
 | VRAM | **32 KB**, interleaved |
@@ -53,7 +54,7 @@ Qty-1 planning numbers, not a quote.
 
 | Item | Ballpark |
 |------|----------|
-| CPU, SRAMs, AVRs, PLDs, glue | about **$108** |
+| CPU, SRAMs, AVRs, PLDs, Color PROMs, glue | about **$115** |
 | sockets, passives, connectors | about **$50-$60** |
 | proto motherboard PCB share | about **$20** |
 
@@ -77,6 +78,7 @@ v0 uses on-board flash socket; cart PCB comes later. Motherboard + cart proto st
 | Q11 | `$FE07` plane band end / dual-band detail | start scanline drafted; end-of-band pairing may need a second latch |
 | Q12 | PRG / CHR / MAP offsets inside 512 KB flash | socket-now / cart-later locked; exact region map still flexible |
 | Q13 | Retr01-C pad bit timing | ATtiny85 + 3-wire draft locked; baud / poll edge details later |
+| Q14 | Color PROM byte width per gun | AT28C16 is 8-bit wide; how many MSBs feed each R-2R (6-bit vs 8-bit DAC) still bench-tunable |
 
 ## Practical next decisions
 

@@ -24,6 +24,7 @@ The CPU never writes a framebuffer. It fills nametables, OAM, and latches.
 | Sprite/input MCU | ATmega1284P-PU | OAM + sprite pipeline + pads |
 | Audio MCU | ATmega328P-PU | NES-style APU |
 | PLD | 3x ATF22V10CQZ-20PU | decode, timing, CHR/VRAM gating |
+| Color PROM | 3x AT28C16 | master palette R/G/B (6-bit index -> DAC) |
 | 74HC157 | muxes | VRAM and line-buffer address mux |
 | 74HC245 | transceivers | data isolation |
 | 74HC573 | latches | scroll, banks, MAP address, OAM capture |
@@ -43,6 +44,7 @@ Quick links for the main silicon:
 | ATmega1284P | [Microchip PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/40002047A.pdf) |
 | ATmega328P | [Microchip PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/ATmega328P-DS-DS40002061A.pdf) |
 | AT28C64B | [Microchip PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/doc4428.pdf) |
+| AT28C16 (Color PROM) | [Microchip AT28C16 PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/doc0006.pdf) |
 | SST39SF040 (cart flash) | [Microchip PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/20005051C.pdf) |
 | SN74HC157 / 245 / 573 / 161 | [TI 74HC family](https://www.ti.com/logic-circuit/standard-logic/74hc-family/overview.html) - use the part-specific PDF linked in section 3 |
 
@@ -51,9 +53,22 @@ For **74HC glue** (00, 04, 08, 14, 32, 86, 688), see the full index in section 3
 ## Frozen v0 board plan
 
 - through-hole only
-- planning total: **49 motherboard ICs**
+- planning total: **52 motherboard ICs** (was 49 before Color PROMs)
+- **3x AT28C16** Color PROM (R/G/B), programmed once with the family master palette
 - 3x ATF22V10, not Lattice GAL
 - if PLD equations overflow, add a **4th ATF22V10**, not a different family
+
+## Color PROM (master palette)
+
+The **64-color master palette** is hardware on every Retr01 board:
+
+- part: **AT28C16** class parallel EEPROM (DIP-24), **three** devices
+- address: **6-bit** master index from the compositor (colors 0-63)
+- data: each PROM drives one gun (**R**, **G**, or **B**) into that gun's R-2R DAC
+- not on the 6502 data bus during gameplay (video path only)
+- not stored in the cartridge; carts only reference indices 0-63
+
+Studio keeps a software copy of the same RGB table for preview only. Changing the look of the family means reburning the Color PROMs (and updating the doc table), not shipping a new cart header field.
 
 ## Clocks
 
@@ -148,9 +163,9 @@ This is **not** "draw the whole frame while calculating the next frame" (that wo
 
 Each output pixel is roughly:
 
-1. **BG path:** pick tile from VRAM camera slots + scroll, fetch CHR, apply palette -> BG color
-2. **Sprite path:** read line buffer at current X -> sprite color (or transparent)
-3. **Compositor:** transparency and priority rules -> final pixel
+1. **BG path:** pick tile from VRAM camera slots + scroll, fetch CHR, apply active BG palette index -> Color PROM -> DAC
+2. **Sprite path:** read line buffer at current X -> sprite palette index (or transparent)
+3. **Compositor:** transparency and priority rules -> final **6-bit master index** into Color PROM -> RGBS
 
 Full sprite pipeline steps (same frame, different jobs):
 
@@ -177,9 +192,9 @@ This removes the VBlank-only VRAM update bottleneck common on classic consoles l
 2. scroll + arrangement choose nametable slot
 3. slot tile byte and attr come from VRAM
 4. slot BG bank latch picks CHR bank
-5. active BG palette buffer maps the tile's 2-bit color through the selected BG palette
+5. active BG palette buffer maps the tile's 2-bit color to a **master index 0-63**
 6. tile row fetch returns 2bpp data
-7. shifters output BG pixel
+7. shifters output that master index into the **Color PROM** -> R/G/B DAC
 
 ### Sprites
 
@@ -187,17 +202,19 @@ See **Sprite line buffer (how it works)** above. Short version:
 
 1. CPU uploads OAM through `$FE20` (addr) / `$FE21` (data)
 2. 1284 scans OAM for the **next** line
-3. active sprite palette buffer maps sprite color indices through the selected sprite palette
+3. active sprite palette buffer maps sprite 2bpp to a **master index 0-63** (or transparent)
 4. during HBlank, 1284 fetches sprite CHR and fills the next line-buffer half
-5. visible line reads the last-filled half
+5. visible line reads the last-filled half; compositor resolves BG vs sprite, then **Color PROM** -> DAC
 
 One-line pipeline, not a full-frame delay.
 
 ## Palette hardware model
 
-Each cart may store palette blobs in flash, located by a **pointer table** (no palette compression / special packing):
+**Master RGB** comes from the **Color PROM** (see above). Carts never carry those RGB bytes.
 
-- cart-global minimum: **1 BG Palette + 1 sprite Palette** (one 4-color set each)
+Each cart may store palette **index** blobs in flash, located by a **pointer table** (no palette compression / special packing):
+
+- cart-global minimum: **1 BG Palette + 1 sprite Palette** (one 4-color set of indices each)
 - optional per world: **BG palette bank** and/or **sprite palette bank**, each up to **8 palette rows x 4 palettes**
 
 Runtime selection is always by **palette row**, and **BG palette row N** and **sprite palette row N** are locked together.
@@ -209,9 +226,9 @@ When palette row `N` is active, the **active palette buffer** holds **8 palettes
 
 All 8 share the same **color 0** master index (universal backdrop for that row). Software must write that shared index into every slot when loading the row (see `02_graphics_worlds_memory.md`).
 
-The hardware-facing model is dedicated palette registers via **`$FE08`/`$FE09`** (see draft map in `02`). It is **not** nametable VRAM. **Fallback resolution is not hardware logic.** Boot code or Retr01 Studio export/runtime code follows cart pointers, chooses the source blob, and copies the selected row into registers.
+The CPU-facing model is dedicated palette **index** registers via **`$FE08`/`$FE09`**. Those indices address the Color PROM each pixel. **Fallback resolution for which indices to load is not hardware logic.** Boot / Studio runtime follows cart pointers and copies the selected row into registers.
 
-No extra ICs are required for palette banks, synced row selection, or fallback rules. That is cartridge directory pointers plus a burst of CPU stores when the palette row changes.
+No extra ICs are required for palette **banks**, synced row selection, or fallback rules beyond the Color PROMs already on the board.
 
 ## Timing-facing rules
 

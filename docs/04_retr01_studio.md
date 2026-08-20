@@ -160,7 +160,7 @@ Terminology alignment with hardware:
 - Each tab shows **4 BG palettes** + **4 sprite palettes** in that row (the strips)
 - User can select one **Palette** in a strip and edit individual color indices (master palette 0-63)
 
-**Phase 1:** **Hidden or read-only stub.** No attr mode -> no palette assignment workflow yet. Screen painting uses fixed grayscale indices 0-3. Default master palette may still load for future preview.
+**Phase 1:** **Hidden or read-only stub.** No attr mode -> no palette assignment workflow yet. Screen painting uses fixed grayscale indices 0-3. Preview may use a software mirror of the board Color PROM table (same 64 RGB values as docs); that table is **not** a cart asset.
 
 ### 3.6 Painting colors (global rule)
 
@@ -387,7 +387,7 @@ Phases 0 and 1 can overlap: Phase 0 libraries land first. Phase 1 UI consumes th
 | Screen MAP flags | CHR BG bank number = bank chosen at generate time, parallax bit = 0 |
 | CHR BG banks | Up to **4 x 256** unique 8x8 2bpp tiles per world (from generate) |
 | CHR sprite banks | Empty |
-| Palette banks | Default row 0 only (hardcoded). Not editable in UI |
+| Palette banks | Default row 0 **indices** only (hardcoded). Not editable in UI. Master RGB is Color PROM / preview mirror, not project data |
 
 ### 10.4 Phase 1 user flow
 

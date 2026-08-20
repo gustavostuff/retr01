@@ -1,6 +1,6 @@
 # Retr01-A Protoboard Module Tests
 
-Step-by-step bring-up for **Retr01-A v0** on solderless protoboards (or small proto PCBs). Each section is one **island**: a subset of ICs you can test **before** wiring the full 49-chip motherboard.
+Step-by-step bring-up for **Retr01-A v0** on solderless protoboards (or small proto PCBs). Each section is one **island**: a subset of ICs you can test **before** wiring the full 52-chip motherboard.
 
 Hardware context: [`03_hardware_implementation.md`](03_hardware_implementation.md). Memory map and `$FExx` ports: [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md).
 
@@ -58,7 +58,7 @@ K ATmega328P APU alone [simavr/Wokwi first]
 L ATmega1284P alone [simavr/Wokwi first]
 M Line-buffer SRAM
 N 1284 + line buffer + CHR stub
-O Palette + compositor + RGBS [minimal DAC]
+O Palette + Color PROM + compositor + RGBS [minimal DAC]
 P Integration board
 ```
 
@@ -81,7 +81,8 @@ Use the **official PDF** for timing and AC specs. This section lists **Retr01-A 
 | **ATF22V10CQZ-20PU** | DIP-24 | PLD decode / timing / PPU gating | [Microchip ATF22V10 PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/ATF22V10-Datasheet-DS50002239D.pdf) |
 | **ATmega1284P-PU** | DIP-40 | Sprites + pads | [Microchip ATmega1284P PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/40002047A.pdf) |
 | **ATmega328P-PU** | DIP-28 | APU | [Microchip ATmega328P PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/ATmega328P-DS-DS40002061A.pdf) |
-| **AT28C64B-15PU** | DIP-28 | 8 KB EEPROM | [Microchip AT28C64B PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/doc4428.pdf) |
+| **AT28C64B-15PU** | DIP-28 | 8 KB board EEPROM | [Microchip AT28C64B PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/doc4428.pdf) |
+| **AT28C16** (class) | DIP-24 | Color PROM x3 (R/G/B master palette) | [Microchip AT28C16 PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/doc0006.pdf) |
 | **SST39SF040** (class) | DIP-32 | Cart parallel flash (planning) | [Microchip SST39SF040 PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/20005051C.pdf) |
 | **SN74HC157N** | DIP-16 | 2:1 address mux | [TI SN74HC157 PDF](https://www.ti.com/lit/ds/symlink/sn74hc157.pdf) |
 | **SN74HC245N** | DIP-20 | Bus transceiver | [TI SN74HC245 PDF](https://www.ti.com/lit/ds/symlink/sn74hc245.pdf) |
@@ -254,6 +255,21 @@ Arduino pinout charts **do not** match DIP-40 1284P 1:1 - use **40002047A** pin 
 
 Parallel EEPROM. Port **`$FE70`/`$FE71`** address, **`$FE72`** data. Address/data tie to CPU bus when `/CE` active. See [AT28C64B PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/doc4428.pdf) for write pulse timing (long `/WE`).
 
+### 3.10b AT28C16 Color PROM - DIP-24 (module O)
+
+Three chips: **PROM_R**, **PROM_G**, **PROM_B**. Same wiring pattern; only the programmed RGB bytes differ.
+
+| Signal | Retr01 wiring |
+|--------|----------------|
+| A0-A5 | **6-bit master color index** from compositor |
+| A6-A10 | tie **GND** (only 64 entries used) |
+| I/O0-7 | to that gun's R-2R DAC (use top bits per Q14) |
+| `/CE` | GND (always selected) or gated with video blank if desired |
+| `/OE` | active during visible dots |
+| `/WE` | tie **high** (read-only in circuit; program off-board) |
+
+Burn the canonical 64-color table from [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) once. Not on the 6502 bus.
+
 ### 3.11 Cart flash - SST39SF040 class (modules C, J)
 
 32-pin DIP parallel NOR. Typical signals:
@@ -284,7 +300,7 @@ Parallel EEPROM. Port **`$FE70`/`$FE71`** address, **`$FE72`** data. Address/dat
 | L | ATmega1284P |
 | M | AS6C62256, 2x HC157 |
 | N | 1284 + M + J CHR path |
-| O | HC573, HC157/86 (mux), R-2R |
+| O | HC573, **3x AT28C16** Color PROM, R-2R |
 
 ---
 
@@ -702,24 +718,27 @@ One-line delay behavior: buffer filled for line **N+1** while line **N** would d
 
 ---
 
-## 19. Module O - Palette + compositor + RGBS (minimal)
+## 19. Module O - Palette + Color PROM + compositor + RGBS (minimal)
 
 ### Parts
 
-- 74HC573 palette latches (**`$FE08`/`$FE09`** - see draft map in [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md)).
-- LUT: for this **island only**, master-palette lookup may live in leftover SRAM (e.g. unused region of the line-buffer chip) as a proto convenience. Final Retr01-A still targets **dedicated palette registers** via `$FE08`/`$FE09`, not nametable VRAM (see [`03_hardware_implementation.md`](03_hardware_implementation.md)).
-- Compositor mux: BG vs line-buffer pixel (start with **BG only**, add sprite later).
-- **R-2R** + **75 ohm** + **CSYNC**.
+- 74HC573 palette **index** latches (**`$FE08`/`$FE09`** - see draft map in [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md)).
+- **3x AT28C16** Color PROM (R/G/B), pre-programmed with the master 64-color table. See **section 3.10b**.
+- Compositor mux: BG vs line-buffer pixel (start with **BG only**, add sprite later) -> **6-bit** master index into all three PROMs.
+- **R-2R** + **75 ohm** + **CSYNC** on each PROM data bus.
+
+Do **not** put the master RGB table in line-buffer SRAM for the final design. A temporary resistor ladder without PROMs is OK only as a pre-PROM smoke test.
 
 ### Test
 
-1. Solid BG color via palette latch -> stable voltage on **R/G/B**.
-2. Module **I** nametable + CHR stub -> checkerboard on RGBS monitor or scope line view.
-3. Add line-buffer input from **N** -> sprite dots appear.
+1. Force master index **0** and **63** on PROM address pins -> expected black / white-ish DAC levels.
+2. Solid BG color via `$FE08`/`$FE09` index -> stable voltage on **R/G/B**.
+3. Module **I** nametable + CHR stub -> checkerboard on RGBS monitor or scope line view.
+4. Add line-buffer input from **N** -> sprite dots appear.
 
 ### Pass
 
-256x240-ish stable image, **~15.7 kHz** horizontal rate class. No illegal bus contention.
+256x240-ish stable image, **~15.7 kHz** horizontal rate class. Color PROM outputs match burned table. No illegal bus contention.
 
 ---
 

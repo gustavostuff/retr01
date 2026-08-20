@@ -1,7 +1,7 @@
 # Retr01 Architecture Overview
 
 **Retr01-A motherboard - estimated PCB layout (not to scale).** 
-49 through-hole ICs, ~160 x 220 mm planning envelope, DIP widths shown as pin count. 
+52 through-hole ICs, ~160 x 220 mm planning envelope, DIP widths shown as pin count. 
 Detail: [`03_hardware_implementation.md`](03_hardware_implementation.md).
 
 ```text
@@ -47,13 +47,13 @@ Detail: [`03_hardware_implementation.md`](03_hardware_implementation.md).
   │   └───────────────────────────────────────────────────────────────────────────────┘   │
   │                                                                                       │
   │   ┌─ CART + CONFIG ──────────────────────┐   ┌─ VIDEO OUT (analog pads) ──────────┐   │
-  │   │  ┌────────────────────────────┐      │   │  R-2R DAC ×3 (RGB) + CSYNC         │   │
+  │   │  ┌────────────────────────────┐      │   │  Color PROM AT28C16 x3 + R-2R      │   │
   │   │  │  SST39SF040 parallel  [32] │      │   │  ┌────┐ ┌────┐ ┌────┐  J RGBS      │   │
   │   │  │  PRG · CHR · MAP (gated)   │      │   │  │ 75Ω│ │ 75Ω│ │ 75Ω│  J S-VIDEO   │   │
   │   │  └────────────────────────────┘      │   │  └────┘ └────┘ └────┘  J COMPOSITE │   │
   │   │  ┌──────────────┐  HC245 [20]        │   └────────────────────────────────────┘   │
   │   │  │ AT28C64B     │  cart data isol    │                                            │
-  │   │  │ board E² [28]│                    │   HC157×2 [16]  line-buffer addr mux       │
+  │   │  │ board E2 [28]│                    │   HC157x2 [16]  line-buffer addr mux       │
   │   │  └──────────────┘                    │   (1284 writer vs beam reader)             │
   │   │         ┌── CART EDGE (planning) ────┤                                            │
   │   │         │ 32-pin ROM socket / IDC    │                                            │
@@ -68,13 +68,13 @@ Detail: [`03_hardware_implementation.md`](03_hardware_implementation.md).
   ────────┼───────┼────────────────────────────────────────────────────────────
   [40]    │   2   │ W65C02S, ATmega1284P
   [32]    │   1   │ SST39SF040 (v0 on-board cart-flash socket; moves to cart later)
-  [28]    │   5   │ 3× AS6C62256, ATmega328P, AT28C64B
-  [24]    │   3   │ ATF22V10 (decode · timing · PPU/CHR gating)
+  [28]    │   5   │ 3x AS6C62256, ATmega328P, AT28C64B
+  [24]    │   6   │ 3x ATF22V10 (decode / timing / PPU) + 3x AT28C16 Color PROM (R/G/B)
   [20]    │  ~18  │ HC573 latches, HC245 transceivers, HC688 compare
-  [16]    │   6   │ HC157 mux (4× VRAM + 2× line buffer)
-  [14]    │  ~14  │ HC161×4, HC14, HC00/04/08/32/86 glue
+  [16]    │   6   │ HC157 mux (4x VRAM + 2x line buffer)
+  [14]    │  ~14  │ HC161x4, HC14, HC00/04/08/32/86 glue
   ────────┼───────┼────────────────────────────────────────────────────────────
-          │  49   │ motherboard ICs (v0 frozen plan; +4th PLD if equations overflow)
+          │  52   │ motherboard ICs (v0 frozen plan; +4th PLD if equations overflow)
 ```
 
 This folder is the current architecture spec for **Retr01**.
@@ -95,6 +95,7 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 4. **Software collision**: gameplay collision stays in game code, not hardware sprite-vs-BG hit logic
 5. **Raster IRQ, not sprite-0**: mid-frame effects use scanline compare
 6. **Binary-first data**: fixed layouts, no runtime allocation assumptions on target
+7. **Master palette in Color PROM**: 64 RGB colors live on the motherboard (AT28C16), not in the cart
 
 ## Canonical terminology
 
@@ -111,8 +112,9 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 | **BG palette bank** | Cartridge store of up to **32 BG palettes** (**8 palette rows x 4 palettes**) |
 | **Sprite palette bank** | Cartridge store of up to **32 sprite palettes** (**8 palette rows x 4 palettes**) |
 | **Palette row** | **4 palettes** in one plane, index **0-7**. BG row N and sprite row N are selected together |
-| **Palette** | One 4-color set (**4 master indices**) |
+| **Palette** | One 4-color set (**4 master indices** into the Color PROM) |
 | **Active palette buffer** | **8 palettes** on screen: **4 BG + 4 sprite** from the currently selected palette row |
+| **Color PROM** | Board-resident **64-color** master RGB table (not in cart) |
 
 ## High-level hardware
 
@@ -123,6 +125,7 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 | **ATmega1284P** | OAM storage, sprite evaluation, sprite line-buffer fill, controller bytes |
 | **ATmega328P** | NES-style APU |
 | **3x AS6C62256** | System RAM, VRAM, sprite line buffer |
+| **3x AT28C16** | Color PROM (R/G/B master palette -> DACs) |
 | **ATF22V10 + 74HC glue** | Decode, timing, muxing, chip enables |
 
 ## Shared capability snapshot
@@ -131,7 +134,7 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 |------|------|
 | Resolution | **256x240** |
 | Tile size | **8x8** |
-| Color | **2bpp**, **64-color master palette**, **BG/sprite palette banks** (pointer table -> raw blobs), **one synced palette row active** (4 BG + 4 sprite) |
+| Color | **2bpp**, **64-color Color PROM** on board, **BG/sprite palette banks** in cart (indices only), **one synced palette row active** (4 BG + 4 sprite) |
 | Worlds | **8** max |
 | Screens per world | **64** max on sparse **16x16** virtual grid |
 | CHR per world | **4 BG banks + 4 sprite banks**, **256 tiles each** |

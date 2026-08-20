@@ -71,7 +71,7 @@ Same contract again, SMD build, likely multi-board layout. Battery, display, and
 ### Look and feel
 
 - **256x240** visible field, **8x8** tiles, **2bpp** patterns
-- **64-color master palette**, with **4 BG + 4 sprite palettes** active at once from one synced palette row
+- **64-color master palette** in board **Color PROM**, with **4 BG + 4 sprite palettes** active at once from one synced palette row
 - Crisp, readable pixel art - limits on purpose, not accidental mush
 
 ### Worlds, not just levels
@@ -189,7 +189,7 @@ Retr01 deliberately rhymes with the NES where it helps learning and art directio
 | Frame rate class | **~60.098 Hz** (262 lines) | **~60.098 Hz** (341x262 timing) |
 | Game media | **Cartridge** | **Cartridge** (`.retr01`) |
 | Background + sprites | Tile BG + movable sprites | Tile BG + movable sprites |
-| Palette model | Indices into system colors | **Master palette** + per-plane palette rows |
+| Palette model | Indices into system colors | **Color PROM** (64 RGB on board) + cart palette **index** rows |
 | Audio direction | Period-accurate square/noise/DPCM style | **NES-style APU** on dedicated MCU |
 | Developer culture | Asm, fixed layouts, no heap | Asm-friendly, **binary-first** layouts |
 
@@ -206,7 +206,7 @@ If you know how NES tiles, attrs, and sprites work, most Retr01 art pipelines wi
 | Video RAM | **2 KB** PPU internal | **32 KB** interleaved VRAM + separate line-buffer SRAM |
 | CPU access to nametables | Mostly **VBlank / forced blank** | **Interleaved CPU phases** every frame |
 | Sprites per scanline | **8** | **16** |
-| On-screen palette slots | **4 BG + 4 sprite** (with shared backdrop rules) | **4 BG + 4 sprite** active row, **64** master colors, optional **palette banks** in cart |
+| On-screen palette slots | **4 BG + 4 sprite** (with shared backdrop rules) | **4 BG + 4 sprite** active row; **64** master colors in **Color PROM**; cart holds **index** banks only |
 | Nametables live at once | **2** for scroll tricks | **6 slots**: **4** camera + **2** parallax plane |
 | World / map hardware | None (game code) | **MAP-ROM**, **8 worlds**, **64 screens / world** |
 | CHR banking | Mapper-dependent, game-defined | **4 BG + 4 sprite banks / world**, **per-slot BG bank latches** |

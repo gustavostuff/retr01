@@ -26,7 +26,7 @@ CPU and dot clocks are **independent**. The CPU runs at **8.000 MHz**. The beam 
 ### What a world contains
 
 - **4 CHR BG banks** and **4 CHR sprite banks** (tile patterns)
-- optional **BG palette bank** and **sprite palette bank** (color data)
+- optional **BG palette bank** and **sprite palette bank** (master **indices** 0-63, not RGB bytes)
 - MAP directory + compressed screen payloads
 
 ### What a screen stores
@@ -180,7 +180,7 @@ Use these words consistently. Do **not** mix them with CHR **tile banks**.
 
 | Term | Meaning | Not the same as |
 |------|---------|-----------------|
-| **Master palette** | 64 global RGB colors, source of all color indices | A palette row or palette bank |
+| **Master palette** | 64 global RGB colors in **board Color PROM**; all game colors are indices 0-63 into it | A palette row or palette bank |
 | **BG palette bank** | BG-side cartridge store of up to **32 palettes** in **8 palette rows x 4 palettes** | CHR **BG bank** (tile patterns) |
 | **Sprite palette bank** | Sprite-side cartridge store of up to **32 palettes** in **8 palette rows x 4 palettes** | CHR **sprite bank** (tile patterns) |
 | **Palette row** | One row of **4 palettes** inside a palette bank, row index **0-7** | A screen row or attr row |
@@ -199,9 +199,20 @@ Palette bank (BG or Sprite)
 
 Each **Palette** is 4 bytes (4 master indices). A full bank is **32 palettes = 128 bytes** if every slot is authored.
 
-### Global master palette
+### Global master palette (Color PROM)
 
-Retr01-A, C, and H all share one **master palette** of **64 unique colors**. It is the source of all color indices used by the system.
+Retr01-A, C, and H all share one **master palette** of **64 unique colors**. It is **not** stored in the cartridge and is **not** loaded by the CPU.
+
+Hardware:
+
+- **3x AT28C16** parallel EEPROMs act as **Color PROMs** (one each for R, G, B)
+- compositor outputs a **6-bit** master color index on the PROM address pins
+- each PROM's data bus feeds that gun's **R-2R DAC** (no CPU cycles per pixel)
+- the same image is programmed once at board build for A, C, and H
+
+Why three chips: one 8-bit PROM cannot drive three gun DACs at pixel rate. Same 6-bit index on all three; each holds that gun's level for colors 0-63.
+
+Canonical RGB values (documentation / Studio preview mirror of what is burned into the PROMs):
 
 ```text
 #000000 #290514 #2A0507 #230F06 #1E1306 #1A1605 #141807 #061A07 #051A13 #071918 #08181C #071722 #030B3D #16033A #20052D #260420
@@ -210,26 +221,27 @@ Retr01-A, C, and H all share one **master palette** of **64 unique colors**. It 
 #FFFFFF #F1A2BB #F1A6A1 #F1A983 #EEAC44 #D4BA33 #B0C841 #73D275 #22D0A6 #3BCDC9 #48C9E4 #88C4ED #A4BDEF #BBB5F1 #D5A9EF #F09BDD
 ```
 
-This table is the canonical **64-color** source for the whole family. Carts may embed a copy; if omitted, Studio / system startup supplies the same default table (see storage layers below).
+Games and carts only ever store **indices 0-63** into this table (inside BG/sprite Palettes). They never ship the RGB bytes.
 
 ### Cart palette storage (pointer table, uncompressed)
 
-Palettes live in cart ROM as **raw** byte blobs. Do **not** RLE/compress or pack palette data in a special encoding.
+Cart ROM stores **palette banks of master indices only** (which of the 64 Color PROM colors each slot uses). Do **not** put the 64 RGB master table in the cart. Do **not** RLE/compress palette index blobs.
 
 Directory model:
 
-- a **pointer table** (cart header / world directory) holds offsets to palette blobs
+- a **pointer table** (cart header / world directory) holds offsets to palette-index blobs
 - each blob is plain **master-color indices** (4 bytes per Palette, rows as authored)
 - software follows the pointer, copies the needed row into `$FE08`/`$FE09`
+- `$FE08`/`$FE09` hold indices; the Color PROM turns those indices into RGB at the DAC
 
 Programmers do **not** need to author every palette in every bank for every world - omit pointers / leave unused.
 
-Three layers exist:
+Layers:
 
 | Layer | What it holds | Required? |
 |-------|---------------|-----------|
-| **Master palette** | 64 RGB colors | optional in cart (pointer may be null); system default exists |
-| **Cart global palette banks** | at least **1 BG Palette + 1 sprite Palette** (one **4-color** set each) shared across worlds | minimum authoring contract |
+| **Color PROM (board)** | 64 RGB colors | always present on A/C/H motherboards |
+| **Cart global palette banks** | at least **1 BG Palette + 1 sprite Palette** (indices into 0-63) | minimum authoring contract |
 | **World palette banks** | optional **BG palette bank** and/or **sprite palette bank** for that world | optional per world |
 
 ### Palette fallback chain
@@ -239,7 +251,9 @@ Resolution happens in **software at load time** (boot, world enter, or `load_scr
 ```text
 1. world palette bank entry (if the world defines one)
 2. else cart global palette bank (at least 1 BG + 1 sprite palette for a valid cart)
-3. else system default palettes (baked into Retr01 Studio / system startup)
+3. else system default **index** palettes (baked into Retr01 Studio / system startup)
+
+Master RGB always comes from the board Color PROM, never from this chain.
 ```
 
 This needs **no extra chips**. The CPU copies the resolved active row into palette registers when the palette row changes.
@@ -382,7 +396,7 @@ Byte-level layout below is a **frozen draft** for Studio, firmware, and proto br
 | `$FE06` | W | `PLANE_CTRL` | bit0 enable plane slot 4 band, bit1 enable plane slot 5 band, bit2 band axis (`0`=H scroll lock, `1`=V scroll lock), bit3-7 reserved. **Any** band enable locks main camera to that axis for the **whole frame** (see Raster and parallax) |
 | `$FE07` | W | `PLANE_BAND` | bits0-7 = band start scanline (end = next VBlank or paired latch in a later rev) |
 | `$FE08` | W | `PAL_ADDR` | index into active palette buffer, **0-31** (8 palettes x 4 colors). Write sets pointer |
-| `$FE09` | W | `PAL_DATA` | master-color index 0-63; write stores and **auto-increments** `PAL_ADDR` |
+| `$FE09` | W | `PAL_DATA` | **master color index 0-63** (Color PROM address); write stores and **auto-increments** `PAL_ADDR` |
 | `$FE0A-$FE0F` | - | reserved | leave unimplemented on v0 |
 
 #### `$FE10-$FE1F` - VRAM port
