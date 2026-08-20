@@ -16,7 +16,7 @@ For the full product pitch and **NES comparison tables**, see [`docs/07_pitch.md
 
 ## Why it exists
 
-Most retro projects either emulate the past exactly or leave the aesthetic behind. Retr01 keeps the 8-bit look (8x8 tiles, 2bpp art, cartridge games) and redesigns the plumbing for multi-screen worlds, smoother scrolling, and parallax without VBlank-only nametable updates.
+Most retro projects either emulate the past exactly or leave the aesthetic behind. Retr01 keeps the 8-bit look (8x8 tiles, 2bpp art, cartridge games) and redesigns the plumbing for easily navigable, multi-world games, multi-screen worlds, smoother scrolling and simple parallax integration, without VBlank-only nametable updates.
 
 Details and fair NES comparisons: [`docs/07_pitch.md`](docs/07_pitch.md).
 
