@@ -228,6 +228,8 @@ Canonical RGB (docs / Studio preview mirror of what is burned into the PROMs):
 #FFFFFF #F1A2BB #F1A6A1 #F1A983 #EEAC44 #D4BA33 #B0C841 #73D275 #22D0A6 #3BCDC9 #48C9E4 #88C4ED #A4BDEF #BBB5F1 #D5A9EF #F09BDD
 ```
 
+<img src="img/palette_autogen_80pert_saturation.png" alt="Palette" />
+
 ### Cart storage and fallback
 
 Cart holds **palette banks of indices only** (pointer table -> uncompressed blobs). Never the 64 RGB values. Never RLE on palette blobs. Copy a row into `$FE08`/`$FE09` when needed.
