@@ -77,33 +77,43 @@ Studio **dead zone** / **hybrid** camera rules in `04` are software policy on to
 World MAP (nine rooms). Player is on room **E**, scroll at **(0, 0)** so the viewport shows E exactly.
 
 ```text
-MAP (atlas)                         VRAM slots (workbench), 4-slot mode
-+---+---+---+                       +---------+---------+
-| A | B | C |                       | Slot 0  | Slot 1  |
-+---+---+---+                       |   E     |   F     |
-| D | E | F |   player here ------> +---------+---------+
-+---+---+---+                       | Slot 2  | Slot 3  |
-| G | H | I |                       |   H     |   I     |
-+---+---+---+                       +---------+---------+
-                                           [====E====]  viewport at scroll (0,0)
+MAP (1 world)                             VRAM slots (workbench), 4-slot mode
++-----+-----+-----+                       +---------+---------+
+|  A  |  B  |  C  |   player here ------> | Slot 0  | Slot 1  |
++-----+-----+-----+                       |   E     |   F     |
+|  D  |  E  |  F  |                       +---------+---------+
++-----+-----+-----+                       | Slot 2  | Slot 3  |
+|  G  |  H  |  I  |                       |   H     |   I     |
++-----+-----+-----+                       +---------+---------+
+
+What the screen actually renders: all the 128x96 pixels that belong to screen E, and only that.
 ```
 
-So yes: with a SE-biased 2x2, VRAM holds **E + F + H + I** (center, right, bottom, bottom-right). A/B/C/D/G are still only in MAP.
+VRAM holds **E + F + H + I** (center, right, bottom, bottom-right). A/B/C/D/G are still only in cart MAP.
 
-Scroll right a few pixels (still inside the loaded field). **No MAP load.** Hardware just samples a bit of F:
+Scroll right and the hardware just samples a bit of F (**no cart/MAP load.**):
 
 ```text
 VRAM unchanged: E F / H I
+This is what the TV renders:
 
-scroll_x = 0          scroll_x = a few
-[====E====]           [==E==|==F==]
+scroll_x = 0                     scroll_x = 32 px (for instance)
++-----------------------+        +-----------------------+
+|                       |        |                 |     |
+|                       |        |                 |     |
+|                       |        |                 |     |
+|           E           |        |         E       |  F  |
+|                       |        |                 |     |
+|                       |        |                 |     |
+|                       |        |                 |     |
++-----------------------+        +-----------------------+
 ```
 
 Same idea scrolling down into H, or diagonally toward I. Still no load until the viewport would need a room that is not in the four slots.
 
 ### What about 1 px left from scroll (0, 0)?
 
-At scroll_x **0** you are already on the **left edge** of the live 2x2. One more pixel west is not "hardware loads A/D/G." It is a **software camera shift**: rewrite some slots from MAP, then set scroll so the picture keeps moving left.
+At scroll_x **0** you are already on the **left edge** of the live 2x2 VRAM slots. One more pixel west is not "hardware loads A/D/G." It is a **software camera shift**: rewrite some slots from MAP, then set scroll so the **resulting** picture keeps moving left.
 
 Typical pattern (shift west by one column):
 
@@ -114,25 +124,33 @@ Before (need to go left)              After software reload
 +-----+-----+                         +-----+-----+
 |  H  |  I  |                         |  G  |  H  |
 +-----+-----+                         +-----+-----+
-[====E====]  scroll (0,0)             [==D==|==E==]  scroll near right
-                                      (viewport still shows mostly E,
-                                       now with D peeking from the left)
+scroll (0,0)                          scroll near right, viewport still shows mostly E,
+                                      now with D peeking from the left
 ```
 
-You do **not** unload F/H/I and load three brand-new rooms on every pixel. You reload when the **workbench must slide** (often a whole column or row: **two** screens, sometimes **three** if you also fix a corner). Studio dead-zone / hybrid policies try to do that **before** the player hits the edge, during VBlank, so gameplay never stalls.
+You do **not** unload F/H/I and load three brand-new rooms on every pixel. You reload when the **workbench must reload slots**.
 
 ### Why this is not too much work
 
-| Action | Cost |
-|--------|------|
-| Change scroll by 1 px | a couple of register writes. No VRAM stream |
-| Stream **one** screen from MAP | about **240** bytes (192+48) into one slot |
-| Shift a column (2 screens) | about **480** bytes |
-| Worst corner prep (3 screens) | about **720** bytes |
+Two different CPU jobs. Do not mix them up:
 
-That streaming happens on **room-boundary events**, not every frame and not every pixel. Spread across one or more VBlanks at ~60 Hz with an **8 MHz** CPU it is normal engine work. Scratch at `$0600+` can hold a decompress/copy buffer if MAP payloads are packed.
+| Action | What the CPU does |
+|--------|-------------------|
+| Pan inside the already-loaded 2x2 | Write `$FE02`/`$FE03` (scroll). **No** nametable rewrite. BG hardware keeps fetching the slots on its own |
+| Stream a room into a slot (boundary / shift) | Point `$FE10`/`$FE11` at the slot start (or a run inside it), then poke ~**240** bytes through `$FE12`. **Auto-inc** means you do **not** rewrite the address for every tile. Usually: set addr once per contiguous run, then `STA $FE12` in a loop. Attr plane is the same idea at `slot+0xC0` |
 
-Worry about **when** software schedules the shift (dead zone, hybrid), not about the PPU choking on per-pixel loads. It does not do those.
+So for a full screen load you are pushing **192 tile bytes + 48 attr bytes**, not "192 separate address setups." A column shift is that pattern times two (~480 data writes), still only when software slides the workbench, not every pixel.
+
+| Action | Rough cost |
+|--------|------------|
+| Change scroll by 1 px | 1-2 register writes. No VRAM stream |
+| Stream **one** screen from MAP | ~240 `$FE12` writes (+ a few addr setup writes) |
+| Shift a column (2 screens) | ~480 data writes |
+| Worst corner prep (3 screens) | ~720 data writes |
+
+Spread across one or more VBlanks at ~60 Hz with an **8 MHz** CPU that is normal engine work. Scratch at `$0600+` can hold a decompress/copy buffer if MAP payloads are packed. After a slot is filled, the CPU can leave it alone until the next shift.
+
+Worry about **when** software schedules the shift (dead zone, hybrid), not about rewriting VRAM every frame.
 
 ### VRAM layout
 
