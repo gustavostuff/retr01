@@ -5,7 +5,7 @@
 Detail: [`03_hardware_implementation.md`](03_hardware_implementation.md).
 
 ```text
-  NORTH (I/O edge — cabinet / bench)
+  NORTH (I/O edge — cabinet/bench)
   ┌───────────────────────────────────────────────────────────────────────────────────────┐
   │ [5V IN]  (o) PWR LED   ┌──────────────── IDC-20 CABINET ────────────────┐  [ISP 6]    │
   │      │                 │ START COIN P1-P2 … (to 1284 pad glue)          │  328P APU   │
@@ -43,7 +43,7 @@ Detail: [`03_hardware_implementation.md`](03_hardware_implementation.md).
   │   │  HC161 HC161 HC161 HC161  [16] ×4  → 341×262 dot clock ~5.37 MHz              │   │
   │   │                                                                               │   │
   │   │  HC573×6  scroll · slot banks · MAP addr  [20]     HC14 [14] reset Schmitt    │   │
-  │   │  HC573    palette / compositor latches   [20]     HC00·04·08·32·86  [14] glue │   │
+  │   │  HC573    palette/compositor latches     [20]     HC00·04·08·32·86  [14] glue │   │
   │   └───────────────────────────────────────────────────────────────────────────────┘   │
   │                                                                                       │
   │   ┌─ CART + CONFIG ──────────────────────┐   ┌─ VIDEO OUT (analog pads) ──────────┐   │
@@ -56,7 +56,7 @@ Detail: [`03_hardware_implementation.md`](03_hardware_implementation.md).
   │   │  │ board E2 [28]│                    │   HC157x2 [16]  line-buffer addr mux       │
   │   │  └──────────────┘                    │   (1284 writer vs beam reader)             │
   │   │         ┌── CART EDGE (planning) ────┤                                            │
-  │   │         │ 32-pin ROM socket / IDC    │                                            │
+  │   │         │ 32-pin ROM socket/IDC      │                                            │
   │   └─────────┴────────────────────────────┘                                            │
   │                                                                                       │
   SOUTH (component side — tallest sockets ~15 mm clearance below board)                   │
@@ -67,14 +67,14 @@ Detail: [`03_hardware_implementation.md`](03_hardware_implementation.md).
   Package │ Count │ Parts
   ────────┼───────┼────────────────────────────────────────────────────────────
   [40]    │   2   │ W65C02S, ATmega1284P
-  [32]    │   1   │ SST39SF040 (v0 on-board cart-flash socket; moves to cart later)
+  [32]    │   1   │ SST39SF040 (v0 on-board cart-flash socket, moves to cart later)
   [28]    │   5   │ 3x AS6C62256, ATmega328P, AT28C64B
-  [24]    │   6   │ 3x ATF22V10 (decode / timing / PPU) + 3x AT28C16 Color PROM (R/G/B)
+  [24]    │   6   │ 3x ATF22V10 (decode/timing/PPU) + 3x AT28C16 Color PROM (R/G/B)
   [20]    │  ~18  │ HC573 latches, HC245 transceivers, HC688 compare
   [16]    │   6   │ HC157 mux (4x VRAM + 2x line buffer)
   [14]    │  ~14  │ HC161x4, HC14, HC00/04/08/32/86 glue
   ────────┼───────┼────────────────────────────────────────────────────────────
-          │  52   │ motherboard ICs (v0 frozen plan; +4th PLD if equations overflow)
+          │  52   │ motherboard ICs (v0 frozen plan, +4th PLD if equations overflow)
 ```
 
 This folder is the current architecture spec for **Retr01**.

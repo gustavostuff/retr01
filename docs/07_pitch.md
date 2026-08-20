@@ -54,8 +54,8 @@ You get a board you can breadboard in islands, bring up module by module, then i
 
 Same CPU map, same graphics model, same carts. Intended differences are **industrial design**, not software:
 
-- Smaller PCB / enclosure constraints
-- **3-wire controllers** with an **ATtiny85** (draft) MCU in the pad (**VCC, GND, DATA**); **`$FE60` / `$FE61`** stay the same two bytes per player
+- Smaller PCB/enclosure constraints
+- **3-wire controllers** with an **ATtiny85** (draft) MCU in the pad (**VCC, GND, DATA**). **`$FE60`/`$FE61`** stay the same two bytes per player
 - Consumer-facing AV and power
 
 Games built for A should port to C with recompilation, not re-architecture.
@@ -89,7 +89,7 @@ That is the difference between "we drew 32 rooms in CHR and hope the level loade
 
 The live camera uses **four VRAM nametable slots (0-3)** as a **2x2 playfield window**. Smooth pixel scroll can show **multiple neighboring screens at once** without the classic "reload everything at the seam" dance.
 
-- **`scroll_x` / `scroll_y`**: one byte each, wrapping
+- **`scroll_x`/`scroll_y`**: one byte each, wrapping
 - **Per-slot BG bank latches**: each visible screen can pull from its own CHR BG bank
 - **Sprite bank**: separate global latch within the world
 
@@ -105,7 +105,7 @@ Combined with **raster IRQ** (scanline compare), you get status bars, split laye
 
 The **W65C02S runs at 8.000 MHz**. VRAM is **interleaved**: the CPU gets dedicated phases to stream nametables and attrs **during the frame**, not only in a short VBlank window. System RAM (**32 KB**, CPU-only) is separate from video SRAM.
 
-Sprites are evaluated and line-buffered by an **ATmega1284P**; audio runs on a **ATmega328P** with a **NES-style APU** model. The 6502 writes game state, OAM, and latches - it does not paint pixels.
+Sprites are evaluated and line-buffered by an **ATmega1284P**. Audio runs on a **ATmega328P** with a **NES-style APU** model. The 6502 writes game state, OAM, and latches - it does not paint pixels.
 
 ### Collision and effects (honest scope)
 
@@ -122,7 +122,7 @@ Retr01 gives you hooks that match how 8-bit games actually implement physics and
 | Platform | CPU | Approx. clock | Notes |
 |----------|-----|---------------|-------|
 | **NES (NTSC)** | Ricoh 2A03 (6502-based) | **~1.79 MHz** | Iconic library, tight VBlank budget |
-| **Retr01-A** | W65C02S | **8.000 MHz** | ~**4.5x** NES clock; CMOS 6502 ISA |
+| **Retr01-A** | W65C02S | **8.000 MHz** | ~**4.5x** NES clock, CMOS 6502 ISA |
 | **SNES** | W65C816 | **~3.58 MHz** | 16-bit successor era (different generation) |
 
 Clock ratio alone is not "4.5x the game." Video timing, DMA absence, and your own code matter. The point is practical: Retr01 targets **headroom for world streaming, AI, and FX** while staying in an 8-bit programming model - not squeezing every opcode into VBlank.
@@ -134,7 +134,7 @@ Clock ratio alone is not "4.5x the game." Video timing, DMA absence, and your ow
 | Idea | Classic NES-style approach | Retr01 approach |
 |------|---------------------------|-----------------|
 | Map storage | Often ad-hoc tables in PRG, manual pointers | **MAP-ROM** directory + compressed screens |
-| Room grid | Engine-specific | Up to **64 screens / world** on a **16x16** sparse grid |
+| Room grid | Engine-specific | Up to **64 screens/world** on a **16x16** sparse grid |
 | CHR organization | Banks and swaps per game | **4 BG + 4 sprite banks per world** (256 tiles each) |
 | Crossing a seam | Reload nametable, bank CHR, hide flicker | **2x2 live slots** + scroll bytes |
 | Parallax layer | Status bar tricks, CHR abuse, IRQ hacks | **Dedicated plane slots 4-5** + raster band |
@@ -158,7 +158,7 @@ None of this makes NES games bad. Many masterpieces worked within tighter rules.
 
 - **Homebrew developers** who want a documented map format and scroll model, not a blank 6502 board
 - **Arcade builders** who want RGBS, IDC controls, and cart-based games
-- **Artists** who like 8x8 / 2bpp constraints but need **multi-screen worlds**
+- **Artists** who like 8x8/2bpp constraints but need **multi-screen worlds**
 - **Future console/handheld ports** without rewriting the game twice
 
 ---
@@ -185,7 +185,7 @@ Retr01 deliberately rhymes with the NES where it helps learning and art directio
 | Screen tile grid | **32x30** tiles (960 bytes) | **32x30** tiles (960 bytes) per stored screen |
 | Attribute plane | Packed palette bits per tile group | **240-byte** packed attr plane per screen |
 | Sprite list | **64** OAM entries | **64** OAM entries |
-| OAM entry layout | **Y, tile, attr, X** | **Y, tile, attr, X** (`$FE20` addr / `$FE21` data) |
+| OAM entry layout | **Y, tile, attr, X** | **Y, tile, attr, X** (`$FE20` addr/`$FE21` data) |
 | Frame rate class | **~60.098 Hz** (262 lines) | **~60.098 Hz** (341x262 timing) |
 | Game media | **Cartridge** | **Cartridge** (`.retr01`) |
 | Background + sprites | Tile BG + movable sprites | Tile BG + movable sprites |
@@ -204,17 +204,17 @@ If you know how NES tiles, attrs, and sprites work, most Retr01 art pipelines wi
 | CPU clock | **~1.79 MHz** | **8.000 MHz** |
 | Work RAM | **2 KB** | **32 KB** system RAM (CPU-only) |
 | Video RAM | **2 KB** PPU internal | **32 KB** interleaved VRAM + separate line-buffer SRAM |
-| CPU access to nametables | Mostly **VBlank / forced blank** | **Interleaved CPU phases** every frame |
+| CPU access to nametables | Mostly **VBlank/forced blank** | **Interleaved CPU phases** every frame |
 | Sprites per scanline | **8** | **16** |
-| On-screen palette slots | **4 BG + 4 sprite** (with shared backdrop rules) | **4 BG + 4 sprite** active row; **64** master colors in **Color PROM**; cart holds **index** banks only |
+| On-screen palette slots | **4 BG + 4 sprite** (with shared backdrop rules) | **4 BG + 4 sprite** active row. **64** master colors in **Color PROM**. Cart holds **index** banks only |
 | Nametables live at once | **2** for scroll tricks | **6 slots**: **4** camera + **2** parallax plane |
-| World / map hardware | None (game code) | **MAP-ROM**, **8 worlds**, **64 screens / world** |
-| CHR banking | Mapper-dependent, game-defined | **4 BG + 4 sprite banks / world**, **per-slot BG bank latches** |
+| World/map hardware | None (game code) | **MAP-ROM**, **8 worlds**, **64 screens/world** |
+| CHR banking | Mapper-dependent, game-defined | **4 BG + 4 sprite banks/world**, **per-slot BG bank latches** |
 | Mid-frame effects | **Sprite 0 hit** + timed code | **Raster compare IRQ** |
 | Gameplay collision | Software (same) | Software (explicit - **no** hardware sprite-BG hit) |
 | PPU integration | Single Ricoh PPU | **74HC BG path** + **ATmega1284P** sprite line buffer + **ATmega328P** APU |
-| CPU vs video clock | Derived / coupled | **Independent** CPU and dot clocks |
-| Output | RF / composite (retail) | **RGBS**, S-Video, composite **pads** (arcade-first) |
+| CPU vs video clock | Derived/coupled | **Independent** CPU and dot clocks |
+| Output | RF/composite (retail) | **RGBS**, S-Video, composite **pads** (arcade-first) |
 | Form factor | Consumer console | **Retr01-A** arcade, **Retr01-C** console, **Retr01-H** handheld |
 | Authoring tool | Historical third-party | **Retr01 Studio** (in development) |
 

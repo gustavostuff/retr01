@@ -11,7 +11,7 @@ This doc is the merged source for the graphics model, world layout, VRAM layout,
 | Dot clock | **5.369318 MHz** |
 | Dots per scanline | **341** |
 | Scanlines per frame | **262** |
-| Frame rate / NMI | about **60.098 Hz** |
+| Frame rate/NMI | about **60.098 Hz** |
 
 CPU and dot clocks are **independent**. The CPU runs at **8.000 MHz**. The beam and BG path run on the dot clock.
 
@@ -99,7 +99,7 @@ The TV always shows **256x240 pixels**. `scroll_x` and `scroll_y` slide a **view
 
 **MAP-ROM** can store up to **64 screens per world**. **VRAM** only holds the **live** set: up to four camera screens plus two optional parallax screens. Software streams new screens from MAP into slots when the player moves through the world.
 
-#### Camera slot arrangement (4-screen / pixel scroll)
+#### Camera slot arrangement (4-screen/pixel scroll)
 
 When all four camera slots are in use, they form a fixed **2x2 grid** of whole rooms:
 
@@ -122,14 +122,14 @@ Smooth scrolling moves that viewport across the **internal seams** between these
 
 | Mode | Slots 0-3 in use | Scroll | What the player sees |
 |------|------------------|--------|----------------------|
-| **Pixel scroll, 1 slot** | One full screen | `scroll_x` / `scroll_y` pan inside that room | One room, camera pans within 256x240 |
+| **Pixel scroll, 1 slot** | One full screen | `scroll_x`/`scroll_y` pan inside that room | One room, camera pans within 256x240 |
 | **Pixel scroll, 2 slots** | Two full adjacent screens (horizontal or vertical pair) | Scroll across the seam | Viewport can show part of room A and part of room B |
 | **Pixel scroll, 4 slots** | Four full screens in 2x2 | Scroll across any internal seam, including corners | Viewport can straddle up to four rooms at once |
 | **Instant screen switch** | New screen(s) loaded into slot(s) | Reset `scroll_x`/`scroll_y` to **0** (or another fixed position), no smooth pan | Picture **cuts** to the new room(s) - doors, warps, screen-at-a-time movement |
 
 Instant switch uses the **same VRAM slots** as pixel scroll. The difference is **behavior**: no sliding viewport. Software loads the next room(s), resets scroll registers, and the image jumps.
 
-Hardware scroll contract is only the rows above: **1 / 2 / 4 live slots** with pixel scroll, or **instant cut**. Studio constraints such as **dead zone** and **hybrid** (see `04_retr01_studio.md`) are **software camera policy** on top of those modes - they do not add new PPU scroll hardware.
+Hardware scroll contract is only the rows above: **1/2/4 live slots** with pixel scroll, or **instant cut**. Studio constraints such as **dead zone** and **hybrid** (see `04_retr01_studio.md`) are **software camera policy** on top of those modes - they do not add new PPU scroll hardware.
 
 #### Parallax slots (4-5)
 
@@ -140,7 +140,7 @@ Slots **4** and **5** are also **full 32x30 nametables**, but they are **backgro
 - use their own **BG bank latches**
 - parallax setup locks the main camera to **one axis for the whole frame** when any H/V band is enabled (see Raster and parallax below)
 
-So at maximum, VRAM can hold **four whole camera screens + two whole parallax screens** at once. The visible frame is still 256x240; parallax layers sit under (or in a band under) the camera view.
+So at maximum, VRAM can hold **four whole camera screens + two whole parallax screens** at once. The visible frame is still 256x240. Parallax layers sit under (or in a band under) the camera view.
 
 #### Plain English: VRAM vs the world map
 
@@ -148,7 +148,7 @@ Think of **MAP** as the atlas of every room in the chapter. **VRAM** is the **wo
 
 - **Pixel scroll (up to 4 slots):** tape up to **four complete room blueprints** in a 2x2 square on the bench. The TV is a **fixed-size window** you slide over that square. Walking off the right edge of a room means you see **the right side of one full room and the left side of the next**, because both were already on the bench.
 - **Instant switch:** swap the blueprint(s), put the window back at the start, **no sliding** - like turning a page.
-- **Parallax (slots 4-5):** two **backdrop paintings** the same size as a room, hung **behind** the bench. The player does not walk on them; they add depth (sky, far hills). They scroll or appear in bands separately from the main camera.
+- **Parallax (slots 4-5):** two **backdrop paintings** the same size as a room, hung **behind** the bench. The player does not walk on them. They add depth (sky, far hills). They scroll or appear in bands separately from the main camera.
 
 This is **not** "one room plus a couple of extra tiles pasted on the edge." That pattern appears on some older hardware. Retr01 loads **whole screens** into named slots so seams are predictable.
 
@@ -160,10 +160,10 @@ This is **not** "one room plus a couple of extra tiles pasted on the edge." That
 | `$0800-$0FFF` | 2 KB | nametable slot 1 |
 | `$1000-$17FF` | 2 KB | nametable slot 2 |
 | `$1800-$1FFF` | 2 KB | nametable slot 3 |
-| `$2000-$2FFF` | 4 KB | scratch / streaming temp |
+| `$2000-$2FFF` | 4 KB | scratch/streaming temp |
 | `$3000-$37FF` | 2 KB | plane slot 4 |
 | `$3800-$3FFF` | 2 KB | plane slot 5 |
-| `$4000-$7FFF` | 16 KB | reserved / future - **not** part of the live camera or plane contract. Do not rely on this region in software until a later rev assigns it |
+| `$4000-$7FFF` | 16 KB | reserved/future - **not** part of the live camera or plane contract. Do not rely on this region in software until a later rev assigns it |
 
 Each 2 KB slot holds:
 
@@ -180,7 +180,7 @@ Use these words consistently. Do **not** mix them with CHR **tile banks**.
 
 | Term | Meaning | Not the same as |
 |------|---------|-----------------|
-| **Master palette** | 64 global RGB colors in **board Color PROM**; all game colors are indices 0-63 into it | A palette row or palette bank |
+| **Master palette** | 64 global RGB colors in **board Color PROM**. All game colors are indices 0-63 into it | A palette row or palette bank |
 | **BG palette bank** | BG-side cartridge store of up to **32 palettes** in **8 palette rows x 4 palettes** | CHR **BG bank** (tile patterns) |
 | **Sprite palette bank** | Sprite-side cartridge store of up to **32 palettes** in **8 palette rows x 4 palettes** | CHR **sprite bank** (tile patterns) |
 | **Palette row** | One row of **4 palettes** inside a palette bank, row index **0-7** | A screen row or attr row |
@@ -210,9 +210,9 @@ Hardware:
 - each PROM's data bus feeds that gun's **R-2R DAC** (no CPU cycles per pixel)
 - the same image is programmed once at board build for A, C, and H
 
-Why three chips: one 8-bit PROM cannot drive three gun DACs at pixel rate. Same 6-bit index on all three; each holds that gun's level for colors 0-63.
+Why three chips: one 8-bit PROM cannot drive three gun DACs at pixel rate. Same 6-bit index on all three. Each holds that gun's level for colors 0-63.
 
-Canonical RGB values (documentation / Studio preview mirror of what is burned into the PROMs):
+Canonical RGB values (documentation/Studio preview mirror of what is burned into the PROMs):
 
 ```text
 #000000 #290514 #2A0507 #230F06 #1E1306 #1A1605 #141807 #061A07 #051A13 #071918 #08181C #071722 #030B3D #16033A #20052D #260420
@@ -229,12 +229,12 @@ Cart ROM stores **palette banks of master indices only** (which of the 64 Color 
 
 Directory model:
 
-- a **pointer table** (cart header / world directory) holds offsets to palette-index blobs
+- a **pointer table** (cart header/world directory) holds offsets to palette-index blobs
 - each blob is plain **master-color indices** (4 bytes per Palette, rows as authored)
 - software follows the pointer, copies the needed row into `$FE08`/`$FE09`
-- `$FE08`/`$FE09` hold indices; the Color PROM turns those indices into RGB at the DAC
+- `$FE08`/`$FE09` hold indices. The Color PROM turns those indices into RGB at the DAC
 
-Programmers do **not** need to author every palette in every bank for every world - omit pointers / leave unused.
+Programmers do **not** need to author every palette in every bank for every world - omit pointers/leave unused.
 
 Layers:
 
@@ -251,7 +251,7 @@ Resolution happens in **software at load time** (boot, world enter, or `load_scr
 ```text
 1. world palette bank entry (if the world defines one)
 2. else cart global palette bank (at least 1 BG + 1 sprite palette for a valid cart)
-3. else system default **index** palettes (baked into Retr01 Studio / system startup)
+3. else system default **index** palettes (baked into Retr01 Studio/system startup)
 
 Master RGB always comes from the board Color PROM, never from this chain.
 ```
@@ -262,7 +262,7 @@ This needs **no extra chips**. The CPU copies the resolved active row into palet
 
 The PPU can only show **4 BG palettes** and **4 sprite palettes** at one time. Together that is **8 palettes** in the **active palette buffer**.
 
-That buffer is dedicated **palette registers / palette RAM**. It is **not** nametable VRAM.
+That buffer is dedicated **palette registers/palette RAM**. It is **not** nametable VRAM.
 
 Selection rule:
 
@@ -314,7 +314,7 @@ Sprite priority rule:
 2. sprite-behind bit + opaque BG -> show BG
 3. otherwise show sprite
 
-### Screen / MAP metadata
+### Screen/MAP metadata
 
 Screens may optionally name a **palette row** index **0-7** in MAP metadata, similar to how they already name a CHR BG bank.
 
@@ -374,16 +374,16 @@ Recommended MAP directory row:
 | `$FE20-$FE2F` | OAM port into 1284 |
 | `$FE30-$FE3F` | world select + BG bank latches + sprite bank |
 | `$FE40-$FE5F` | APU |
-| `$FE60-$FE6F` | controllers / cabinet |
+| `$FE60-$FE6F` | controllers/cabinet |
 | `$FE70-$FE7F` | board EEPROM (AT28C64B) - **ships on every Retr01-A v0** |
 | `$FE80-$FE8F` | PRG bank |
 | `$FE90-$FE9F` | MAP port |
 
 ### `$FExx` register map (draft v0)
 
-Byte-level layout below is a **frozen draft** for Studio, firmware, and proto bring-up. Bit meanings may gain reserved fields later; do not renumber ports without a doc rev.
+Byte-level layout below is a **frozen draft** for Studio, firmware, and proto bring-up. Bit meanings may gain reserved fields later. Do not renumber ports without a doc rev.
 
-#### `$FE00-$FE0F` - PPU / raster / palette
+#### `$FE00-$FE0F` - PPU/raster/palette
 
 | Addr | R/W | Name | Draft function |
 |------|-----|------|----------------|
@@ -396,7 +396,7 @@ Byte-level layout below is a **frozen draft** for Studio, firmware, and proto br
 | `$FE06` | W | `PLANE_CTRL` | bit0 enable plane slot 4 band, bit1 enable plane slot 5 band, bit2 band axis (`0`=H scroll lock, `1`=V scroll lock), bit3-7 reserved. **Any** band enable locks main camera to that axis for the **whole frame** (see Raster and parallax) |
 | `$FE07` | W | `PLANE_BAND` | bits0-7 = band start scanline (end = next VBlank or paired latch in a later rev) |
 | `$FE08` | W | `PAL_ADDR` | index into active palette buffer, **0-31** (8 palettes x 4 colors). Write sets pointer |
-| `$FE09` | W | `PAL_DATA` | **master color index 0-63** (Color PROM address); write stores and **auto-increments** `PAL_ADDR` |
+| `$FE09` | W | `PAL_DATA` | **master color index 0-63** (Color PROM address). Write stores and **auto-increments** `PAL_ADDR` |
 | `$FE0A-$FE0F` | - | reserved | leave unimplemented on v0 |
 
 #### `$FE10-$FE1F` - VRAM port
@@ -405,7 +405,7 @@ Byte-level layout below is a **frozen draft** for Studio, firmware, and proto br
 |------|-----|------|----------------|
 | `$FE10` | W | `VRAM_ADDR_LO` | VRAM address bits 7-0 |
 | `$FE11` | W | `VRAM_ADDR_HI` | VRAM address bits 14-8 (15-bit space) |
-| `$FE12` | R/W | `VRAM_DATA` | read/write data; **auto-increment** address after each access |
+| `$FE12` | R/W | `VRAM_DATA` | read/write data. **Auto-increment** address after each access |
 | `$FE13-$FE1F` | - | reserved | |
 
 (Proto Module G historically used `$FE11`/`$FE12`/`$FE13` naming - treat this table as canonical going forward.)
@@ -427,7 +427,7 @@ OAM entry layout (NES-like), 4 bytes x 64 sprites:
 | `4n + 2` | attr (palette, flip, priority - bitfields TBD in a later micro-rev) |
 | `4n + 3` | X |
 
-#### `$FE30-$FE3F` - world / CHR banks
+#### `$FE30-$FE3F` - world/CHR banks
 
 | Addr | R/W | Name | Draft function |
 |------|-----|------|----------------|
@@ -444,16 +444,16 @@ OAM entry layout (NES-like), 4 bytes x 64 sprites:
 
 #### `$FE70-$FE7F` - board EEPROM (AT28C64B)
 
-Ships on **every** Retr01-A v0 board (settings / high scores / operator data - not cart).
+Ships on **every** Retr01-A v0 board (settings/high scores/operator data - not cart).
 
 | Addr | R/W | Name | Draft function |
 |------|-----|------|----------------|
 | `$FE70` | W | `EE_ADDR_LO` | EEPROM A7-A0 |
 | `$FE71` | W | `EE_ADDR_HI` | EEPROM A12-A8 (8 KB device) |
-| `$FE72` | R/W | `EE_DATA` | data; respect AT28C64B write timing on write |
+| `$FE72` | R/W | `EE_DATA` | data. Respect AT28C64B write timing on write |
 | `$FE73-$FE7F` | - | reserved | |
 
-#### `$FE80` / `$FE90` - PRG and MAP
+#### `$FE80`/`$FE90` - PRG and MAP
 
 | Addr | R/W | Name | Draft function |
 |------|-----|------|----------------|
@@ -461,13 +461,13 @@ Ships on **every** Retr01-A v0 board (settings / high scores / operator data - n
 | `$FE90` | W | `MAP_ADDR_LO` | MAP address bits 7-0 |
 | `$FE91` | W | `MAP_ADDR_MID` | bits 15-8 |
 | `$FE92` | W | `MAP_ADDR_HI` | bits 23-16 |
-| `$FE93` | R | `MAP_DATA` | read MAP byte; **auto-increment** 24-bit MAP address |
+| `$FE93` | R | `MAP_DATA` | read MAP byte. **Auto-increment** 24-bit MAP address |
 
 (`$FE40-$FE5F` APU and `$FE60`/`$FE61` pads stay as previously specified.)
 
-Controller bytes (software contract; **1 = pressed**):
+Controller bytes (software contract, **1 = pressed**):
 
-| Bit | `$FE60` / `$FE61` |
+| Bit | `$FE60`/`$FE61` |
 |-----|-------------------|
 | 0 | right |
 | 1 | left |
@@ -475,7 +475,7 @@ Controller bytes (software contract; **1 = pressed**):
 | 3 | up |
 | 4 | X |
 | 5 | Y |
-| 6 | coin / select |
+| 6 | coin/select |
 | 7 | start |
 
 Same layout on Retr01-A (cabinet IDC -> 1284) and Retr01-C (pad MCU -> these two bytes).

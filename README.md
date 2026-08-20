@@ -22,11 +22,11 @@ Details and fair NES comparisons: [`docs/07_pitch.md`](docs/07_pitch.md).
 
 ## What you get (in plain terms)
 
-- **A real arcade-first board:** sticks, buttons, coin/start, analog RGBS / S-Video / composite pads for cabinet monitors. RGBS pads can also feed an off-the-shelf analog-to-HDMI converter if you want a modern TV
+- **A real arcade-first board:** sticks, buttons, coin/start, analog RGBS/S-Video/composite pads for cabinet monitors. RGBS pads can also feed an off-the-shelf analog-to-HDMI converter if you want a modern TV
 - **A bold but readable look:** limited color per tile/sprite on purpose, with clarity over mush
 - **Big cartridge worlds:** multiple "worlds," dozens of screens each, packed into a standard-size cart
 - **Smooth multi-screen scrolling:** cameras that cross screen borders using a 2x2 live nametable window (see pitch doc)
-- **Retr01 Studio:** visual tool to author worlds; later phases compile `.retr01` cart images
+- **Retr01 Studio:** visual tool to author worlds. Later phases compile `.retr01` cart images
 
 Later editions (console and handheld) share the same soul: one architecture, different shells.
 

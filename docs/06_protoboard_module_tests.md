@@ -53,7 +53,7 @@ F Board EEPROM ($FE7x) [optional early]
 G VRAM port + interleave mux [critical - no PPU yet]
 H Dot clock + beam counters
 I BG nametable fetch (minimal) [uses G + H]
-J Cart flash stub (PRG/CHR/MAP) [can split from C / I]
+J Cart flash stub (PRG/CHR/MAP) [can split from C/I]
 K ATmega328P APU alone [simavr/Wokwi first]
 L ATmega1284P alone [simavr/Wokwi first]
 M Line-buffer SRAM
@@ -78,7 +78,7 @@ Use the **official PDF** for timing and AC specs. This section lists **Retr01-A 
 |----|---------|------|-----------|
 | **W65C02S6TPG-14** | DIP-40 | CPU | [WDC W65C02S PDF](https://westerndesigncenter.com/wdc/documentation/w65c02s.pdf) |
 | **AS6C62256-55PCN** | DIP-28 | 32 KB SRAM (x3) | [Alliance AS6C62256 PDF](https://www.alliancememory.com/wp-content/uploads/pdf/datasheets/AS6C62256.pdf) |
-| **ATF22V10CQZ-20PU** | DIP-24 | PLD decode / timing / PPU gating | [Microchip ATF22V10 PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/ATF22V10-Datasheet-DS50002239D.pdf) |
+| **ATF22V10CQZ-20PU** | DIP-24 | PLD decode/timing/PPU gating | [Microchip ATF22V10 PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/ATF22V10-Datasheet-DS50002239D.pdf) |
 | **ATmega1284P-PU** | DIP-40 | Sprites + pads | [Microchip ATmega1284P PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/40002047A.pdf) |
 | **ATmega328P-PU** | DIP-28 | APU | [Microchip ATmega328P PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/ATmega328P-DS-DS40002061A.pdf) |
 | **AT28C64B-15PU** | DIP-28 | 8 KB board EEPROM | [Microchip AT28C64B PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/doc4428.pdf) |
@@ -119,7 +119,7 @@ KiCad symbols (community): [Alarm-Siren 6502 library](https://github.com/Alarm-S
 | 21 | VSS | GND |
 | 22-25 | A12-A15 | Address bus |
 | 26-33 | D7-D0 | Data bus (D7 = pin 26) |
-| 34 | RWB | To decode / RAM `/WE` qualify |
+| 34 | RWB | To decode/RAM `/WE` qualify |
 | 35 | NC | - |
 | 36 | BE | **3.3 k ohm -> +5 V** (always enabled) |
 | 37 | **PHI2** | **8 MHz oscillator out** |
@@ -142,7 +142,7 @@ One chip = **32 K x 8** (address **A0-A14**). Three chips on Retr01-A: system RA
 | 18 | `/CE` | From GAL decode (active **low**) |
 | 19 | A10 | Address |
 | 20 | `/OE` | Read strobe (active **low**) |
-| 21 | `/WE` | Write strobe (active **low**. On VRAM, qualify with PHI2 / GAL-PPU) |
+| 21 | `/WE` | Write strobe (active **low**. On VRAM, qualify with PHI2/GAL-PPU) |
 | 22-27 | A9, A8, A11-A14 | Address |
 | 28 | VCC | +5 V + **100 nF** |
 
@@ -163,7 +163,7 @@ Octal D latch. Used for scroll, VRAM addr, `$FExx` latches, palette.
 | 1 | `/OE` | Tie **GND** (outputs always enabled) or CPU read gating |
 | 2-9 | D0-D7 | CPU data bus (write) |
 | 10 | GND | |
-| 11-18 | Q0-Q7 | To register / PPU inputs |
+| 11-18 | Q0-Q7 | To register/PPU inputs |
 | 19 | **LE** | **Latch enable** (active **high**, not `/LE`): high = transparent, **high->low** latches |
 | 20 | VCC | +5 V |
 
@@ -234,7 +234,7 @@ Pin numbers vary by fuse map - after programming, print a **pinout report** from
 
 **Module C stub without PLD:** replace with 74HC688 (`A8-A15` compare to `$00` for RAM) + 74HC00 for `/CE` combine.
 
-### 3.9 ATmega328P / ATmega1284P (modules K, L)
+### 3.9 ATmega328P/ATmega1284P (modules K, L)
 
 Standard AVR **PDIP** pinouts in Microchip PDFs. Retr01 minimum:
 
@@ -242,7 +242,7 @@ Standard AVR **PDIP** pinouts in Microchip PDFs. Retr01 minimum:
 |--------|------|-------|
 | VCC | +5 V | +5 V |
 | GND | GND | GND |
-| AVCC / AREF | per PDF | per PDF |
+| AVCC/AREF | per PDF | per PDF |
 | **XTAL1/2** | 16 MHz + 22 pF | 20 MHz + 22 pF |
 | `/RESET` | 10 k ohm pull-up + ISP | same |
 | ISP | MISO/MOSI/SCK | same |
@@ -257,7 +257,7 @@ Parallel EEPROM. Port **`$FE70`/`$FE71`** address, **`$FE72`** data. Address/dat
 
 ### 3.10b AT28C16 Color PROM - DIP-24 (module O)
 
-Three chips: **PROM_R**, **PROM_G**, **PROM_B**. Same wiring pattern; only the programmed RGB bytes differ.
+Three chips: **PROM_R**, **PROM_G**, **PROM_B**. Same wiring pattern. Only the programmed RGB bytes differ.
 
 | Signal | Retr01 wiring |
 |--------|----------------|
@@ -266,7 +266,7 @@ Three chips: **PROM_R**, **PROM_G**, **PROM_B**. Same wiring pattern; only the p
 | I/O0-7 | to that gun's R-2R DAC (use top bits per Q14) |
 | `/CE` | GND (always selected) or gated with video blank if desired |
 | `/OE` | active during visible dots |
-| `/WE` | tie **high** (read-only in circuit; program off-board) |
+| `/WE` | tie **high** (read-only in circuit, program off-board) |
 
 Burn the canonical 64-color table from [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) once. Not on the 6502 bus.
 
@@ -339,7 +339,7 @@ Use the same values on every island that needs them.
 | Signal | Source |
 |--------|--------|
 | CPU `PHI2` | **8.000 MHz** canned oscillator (or 1-2 MHz for first tests) |
-| Dot | **21.477 MHz** can / **4** -> ~**5.369 MHz** (74HC161 or 393) |
+| Dot | **21.477 MHz** can/**4** -> ~**5.369 MHz** (74HC161 or 393) |
 | 1284 | **20 MHz** HC-49 + **22 pF** x2 to GND |
 | 328P | **16 MHz** HC-49 + **22 pF** x2 to GND |
 
@@ -347,7 +347,7 @@ Use the same values on every island that needs them.
 
 ### Video DAC (island O, real silicon)
 
-- **6-bit R-2R** per gun (1 k ohm / 2 k ohm), **75 ohm** series to output.
+- **6-bit R-2R** per gun (1 k ohm/2 k ohm), **75 ohm** series to output.
 - Target ~**0.7 V** into 75 ohm. Tune on bench.
 - **CSYNC** negative.
 
@@ -440,7 +440,7 @@ CPU fetches from ROM, system RAM read/write works, no bus fight.
 
 - Wrong CPU pinout (W65C02S vs NMOS 6502).
 - **`BE`** or **`RDY`** floating.
-- ROM `/CE` or `/OE` wrong -> open bus / `$FF` reads.
+- ROM `/CE` or `/OE` wrong -> open bus/`$FF` reads.
 
 ---
 
@@ -565,9 +565,9 @@ Read/write through **`$FE10`/`$FE12`**, no bus contention on VRAM data.
 
 ### Parts
 
-- **21.477 MHz** can / **4** -> dot clock.
+- **21.477 MHz** can/**4** -> dot clock.
 - **4x 74HC161** (or equivalent) for **X** and **Y**.
-- ATF22V10 **GAL-TIM** or 74HC688 for wrap at **341** / **262**.
+- ATF22V10 **GAL-TIM** or 74HC688 for wrap at **341**/**262**.
 - LEDs or scope on **HBlank**, **VBlank**, **NMI** stub.
 
 **Pin reference:** HC161 **section 3.7**, HC688 **section 3.1**, ATF22V10 **section 3.8**
@@ -608,12 +608,12 @@ PPU phase reads expected nametable range. CPU can still write on CPU phase.
 
 ---
 
-## 14. Module J - Cart flash stub (PRG / CHR / MAP)
+## 14. Module J - Cart flash stub (PRG/CHR/MAP)
 
 ### Parts
 
 - Parallel flash (or 4x 512 KB DIP) on a **cart connector** or breadboard "cart."
-- **`/CE_PRG`**, **`/CE_CHR`**, **`/CE_MAP`** - **only one active** at a time (GAL-DEC / GAL-PPU).
+- **`/CE_PRG`**, **`/CE_CHR`**, **`/CE_MAP`** - **only one active** at a time (GAL-DEC/GAL-PPU).
 - **`$FE80`** -> PRG bank latch (573).
 - **`$FE90`** -> MAP address latch + read data.
 
@@ -638,7 +638,7 @@ Develop firmware in **simavr** or **Wokwi** first, then breadboard.
 ### Parts
 
 - ATmega328P, 16 MHz crystal, ISP header.
-- **`$FE40-$FE5F`** can be simulated with switches or a 573 fed by a second MCU / pattern generator for now.
+- **`$FE40-$FE5F`** can be simulated with switches or a 573 fed by a second MCU/pattern generator for now.
 
 **Pin reference:** ATmega328P **section 3.9**, [full PDF pinout](https://ww1.microchip.com/downloads/en/DeviceDoc/ATmega328P-DS-DS40002061A.pdf)
 
@@ -708,7 +708,7 @@ Islands **L** + **M** + CHR bus from **J** (flash with known tile bytes).
 
 ### Test
 
-1. Load OAM test list into 1284 (via **`$FE20`** addr / **`$FE21`** data, or direct firmware load).
+1. Load OAM test list into 1284 (via **`$FE20`** addr/**`$FE21`** data, or direct firmware load).
 2. One known sprite tile in CHR flash.
 3. After one frame time, line-buffer half contains non-transparent sprite pixels at expected **X**.
 
@@ -731,7 +731,7 @@ Do **not** put the master RGB table in line-buffer SRAM for the final design. A 
 
 ### Test
 
-1. Force master index **0** and **63** on PROM address pins -> expected black / white-ish DAC levels.
+1. Force master index **0** and **63** on PROM address pins -> expected black/white-ish DAC levels.
 2. Solid BG color via `$FE08`/`$FE09` index -> stable voltage on **R/G/B**.
 3. Module **I** nametable + CHR stub -> checkerboard on RGBS monitor or scope line view.
 4. Add line-buffer input from **N** -> sprite dots appear.
@@ -768,7 +768,7 @@ C + D + E + G + H + I + J + O -> BG + CPU + cart + video
 ### System smoke test (6502 ROM)
 
 1. Init stack, RAM test **`$0000`-`00FF`**.
-2. Write scroll / palette / nametable via **`$FExx`**.
+2. Write scroll/palette/nametable via **`$FExx`**.
 3. Read **`$FE60`**, react on loop.
 4. Wait for **NMI**. Increment frame counter in RAM.
 5. (Later) OAM upload loop: `$FE20` addr, `$FE21` data.

@@ -18,7 +18,7 @@ Studio is **not** the low-level hardware emulator. A separate emulator project i
 |------|------------------------|
 | **Authoring** | Worlds, screens, CHR patterns, palettes, attrs, sprites, meta-sprites |
 | **Generation** | Turn painted screens into CHR BG/sprite banks and MAP screen payloads |
-| **Build** | Assemble project data into cart binaries / full ROM (later phases) |
+| **Build** | Assemble project data into cart binaries/full ROM (later phases) |
 | **Lightweight play** | Fast in-app preview of current project state (later, not low-level emu) |
 
 ### What Studio does not do (for now)
@@ -56,7 +56,7 @@ Content **inside** a cell may scroll, zoom, or pan within that cell's viewport. 
 |  [ Worlds map ]          |                                       |
 |  (tabs, grid)            |                                       |
 +--------------------------+ [ Screen ] |
-|  [ BG banks ]            |      (BG / Sprite paint)              |
+|  [ BG banks ]            |      (BG/Sprite paint)              |
 |  (4 tabs, 16x16 each)    |                                       |
 +--------------------------+ |
 |  [ Sprite banks ]        |                                       |
@@ -111,7 +111,7 @@ Each cell represents one **8x8** BG tile index (0-255) in that CHR bank.
 | View toggle | **Right-click menu** on tab or tab content: **8x8** vs **8x16** layout |
 | Toggle effect | **Visualization only** - reorders how tiles are drawn in the grid to preview 8x16 meta-tiles. Does not change hardware tile size (always 8x8 in CHR) |
 
-**Phase 1:** cell visible but **disabled / empty** (no sprite authoring yet).
+**Phase 1:** cell visible but **disabled/empty** (no sprite authoring yet).
 
 ### 3.4 Screen (right column, primary workspace)
 
@@ -140,7 +140,7 @@ If unique tiles exceed 256, Studio reports an error and does not silently trunca
 | Mode | Input | Phase 1 |
 |------|-------|---------|
 | **Pixel edit** | 4 paint colors (grayscale preview of 2bpp indices 0-3) | **Yes** |
-| **Attr / tile mode** | Assign palette 0-3 per tile via palette strip | **No** (Phase 2+) |
+| **Attr/tile mode** | Assign palette 0-3 per tile via palette strip | **No** (Phase 2+) |
 
 In pixel edit mode, the user paints **pattern bits** only. Palette assignment happens in attr mode (later). While painting pixels, the UI may **preview** a palette (e.g. map gray levels through the active palette row) but does not write attr bytes yet.
 
@@ -152,7 +152,7 @@ In pixel edit mode, the user paints **pattern bits** only. Palette assignment ha
 
 ### 3.5 Palettes (bottom-left)
 
-**Purpose:** Edit **palette rows** for the current world / cart.
+**Purpose:** Edit **palette rows** for the current world/cart.
 
 Terminology alignment with hardware:
 
@@ -160,7 +160,7 @@ Terminology alignment with hardware:
 - Each tab shows **4 BG palettes** + **4 sprite palettes** in that row (the strips)
 - User can select one **Palette** in a strip and edit individual color indices (master palette 0-63)
 
-**Phase 1:** **Hidden or read-only stub.** No attr mode -> no palette assignment workflow yet. Screen painting uses fixed grayscale indices 0-3. Preview may use a software mirror of the board Color PROM table (same 64 RGB values as docs); that table is **not** a cart asset.
+**Phase 1:** **Hidden or read-only stub.** No attr mode -> no palette assignment workflow yet. Screen painting uses fixed grayscale indices 0-3. Preview may use a software mirror of the board Color PROM table (same 64 RGB values as docs). That table is **not** a cart asset.
 
 ### 3.6 Painting colors (global rule)
 
@@ -190,7 +190,7 @@ Open design space - capture now, implement incrementally:
 
 | ID | Constraint | Questions to resolve |
 |----|------------|---------------------|
-| **C1** | **Player composition** | Is the player built from sprite layer tiles? How many sprites / OAM entries? Fixed meta-sprite layout? |
+| **C1** | **Player composition** | Is the player built from sprite layer tiles? How many sprites/OAM entries? Fixed meta-sprite layout? |
 | **C2** | **Meta-sprites & animation** | Where are enemy/player meta-sprites defined? Frame sequences, flip bits, bank per character? |
 | **C3** | **BG tile animation** | Swap nametable indices at runtime (independent of static ROM screen)? Waterfalls, torches, etc. |
 | **C4** | **Scroll mode: pixel** | Does moving the player always use **pixel-level** scrolling? |
@@ -212,20 +212,20 @@ When Studio generates full-featured games, **MAP and CHR data** are unlikely to 
 ### Pipeline (Phase 5+)
 
 ```text
-Studio constraints / behaviors
+Studio constraints/behaviors
         |
  v
  Intermediate representation (IR)
  (state tables, jump tables, behavior graphs - not raw asm strings)
         |
  v
- Codegen backend --> ca65 / .s (readable, boring, testable)
+ Codegen backend --> ca65/.s (readable, boring, testable)
         |
  v
- cc65 assemble with -O / -O2
+ cc65 assemble with -O/-O2
         |
  v
- Optional retr01-opt (second-pass peephole / size optimizer on asm)
+ Optional retr01-opt (second-pass peephole/size optimizer on asm)
         |
  v
  PRG binary
@@ -249,7 +249,7 @@ Unit tests are added **alongside development**, not deferred to the end of a pha
 ### Principles
 
 - Every **`libretr01_studio_core`** module (RLE, MAP, CHR pack, project I/O, screen buffers) gets tests **when the module lands**.
-- Codegen / IR backend gets tests **before** Studio depends on it for builds.
+- Codegen/IR backend gets tests **before** Studio depends on it for builds.
 - Prefer **small, deterministic tests** with golden binary blobs (tile plane, CHR bank, RLE round-trip).
 - UI cells may use lighter tests early (model/state tests without full SDL render). Core format code code must be fully covered.
 
@@ -260,7 +260,7 @@ retr01_studio/
  core/ # library under test
  tests/
  unit/ # test_rle.c, test_chr_pack.c, test_map.c, ...
- fixtures/ # golden .bin / .json projects
+ fixtures/ # golden .bin/.json projects
 ```
 
 Run tests via **CTest** (CMake) or equivalent on every change. Phase 1 is not done until core paths used by Generate bank and save/load have passing unit tests.
@@ -281,7 +281,7 @@ Overall the UI plan is **sound** and matches the hardware model. A few clarifica
 ### Aligns well
 
 - **640x360 shell + integer scale** - good for a crisp retro-tool feel. Keep game resolution (256x240) inside the Screen cell only.
-- **Sparse world grid + Ctrl+click** - matches MAP directory / hole model in `02_graphics_worlds_memory.md`.
+- **Sparse world grid + Ctrl+click** - matches MAP directory/hole model in `02_graphics_worlds_memory.md`.
 - **4 BG bank tabs x 256 tiles** - matches CHR BG bank layout (16x16).
 - **Generate bank -> pick bank 0-3** - matches per-screen CHR BG bank metadata and bank latches.
 - **4-color pixel paint** - matches 2bpp patterns. Attrs deferred is correct for Phase 1.
@@ -309,7 +309,7 @@ No blocking issues. Phase 1 as scoped below is a good first slice.
 |-------|--------|
 | **0** | Shared C/C++ core: screen buffers, MAP directory, RLE, CHR pack, project file skeleton + **unit tests** |
 | **1** | **UI shell + world grid + BG screen paint + BG Generate bank** (section 10) + tests for pack/save/load |
-| **2** | Attr / tile mode, palette row editor, per-tile palette assignment |
+| **2** | Attr/tile mode, palette row editor, per-tile palette assignment |
 | **3** | Sprite layer, sprite banks, meta-sprites, Generate sprite bank |
 | **4** | Game constraints panel, Play preview (high-level) |
 | **5** | Full cart build: IR -> asm -> cc65 -> optional **retr01-opt** -> PRG + CHR + MAP |
@@ -355,10 +355,10 @@ Phases 0 and 1 can overlap: Phase 0 libraries land first. Phase 1 UI consumes th
 - [ ] **16x16** read-only tile grid per tab (256 cells)
 - [ ] Reflect tiles written by Generate bank
 
-#### Data / persistence (minimal)
+#### Data/persistence (minimal)
 
 - [ ] In-memory project model: worlds, sparse screens, 4 BG CHR banks per world
-- [ ] Save/load project file (**JSON**; schema frozen when Phase 0/1 code needs it)
+- [ ] Save/load project file (**JSON**. Schema frozen when Phase 0/1 code needs it)
 - [ ] Export debug artifacts optional: raw `.bin` tile plane, CHR bank blob (full MAP RLE can wait for Phase 0 hardening)
 
 #### Stub cells (visible, non-functional)
@@ -369,12 +369,12 @@ Phases 0 and 1 can overlap: Phase 0 libraries land first. Phase 1 UI consumes th
 ### 10.2 Out of scope (explicit)
 
 - Sprite layer painting
-- Attr / tile mode and palette strip assignment
+- Attr/tile mode and palette strip assignment
 - Palette row editor tabs
 - Meta-sprites and animation authoring
 - Game constraints panel
 - **Play** preview button
-- PRG / full `.retr01` cart build
+- PRG/full `.retr01` cart build
 - Parallax screen flags
 - Low-level emulator hookup
 
@@ -387,7 +387,7 @@ Phases 0 and 1 can overlap: Phase 0 libraries land first. Phase 1 UI consumes th
 | Screen MAP flags | CHR BG bank number = bank chosen at generate time, parallax bit = 0 |
 | CHR BG banks | Up to **4 x 256** unique 8x8 2bpp tiles per world (from generate) |
 | CHR sprite banks | Empty |
-| Palette banks | Default row 0 **indices** only (hardcoded). Not editable in UI. Master RGB is Color PROM / preview mirror, not project data |
+| Palette banks | Default row 0 **indices** only (hardcoded). Not editable in UI. Master RGB is Color PROM/preview mirror, not project data |
 
 ### 10.4 Phase 1 user flow
 
@@ -398,7 +398,7 @@ Phases 0 and 1 can overlap: Phase 0 libraries land first. Phase 1 UI consumes th
 5. Paint BG in Screen cell (grayscale 4 levels).
 6. Choose CHR BG bank **0-3**, click **Generate bank**.
 7. Inspect packed tiles in BG banks cell tabs.
-8. Repeat for other grid cells / worlds.
+8. Repeat for other grid cells/worlds.
 9. Save project.
 
 ### 10.5 Phase 1 success criteria
@@ -415,7 +415,7 @@ Phases 0 and 1 can overlap: Phase 0 libraries land first. Phase 1 UI consumes th
 | Piece | Choice |
 |-------|--------|
 | Language | **C/C++** |
-| Window / input | SDL2 (or equivalent) |
+| Window/input | SDL2 (or equivalent) |
 | UI rendering | Custom immediate-mode or lightweight retained UI drawn into 640x360 framebuffer |
 | Core library | Static `libretr01_studio_core` - screen buffers, CHR pack, project I/O (shared with future build pipeline) |
 

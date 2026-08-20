@@ -46,7 +46,7 @@ Quick links for the main silicon:
 | AT28C64B | [Microchip PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/doc4428.pdf) |
 | AT28C16 (Color PROM) | [Microchip AT28C16 PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/doc0006.pdf) |
 | SST39SF040 (cart flash) | [Microchip PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/20005051C.pdf) |
-| SN74HC157 / 245 / 573 / 161 | [TI 74HC family](https://www.ti.com/logic-circuit/standard-logic/74hc-family/overview.html) - use the part-specific PDF linked in section 3 |
+| SN74HC157/245/573/161 | [TI 74HC family](https://www.ti.com/logic-circuit/standard-logic/74hc-family/overview.html) - use the part-specific PDF linked in section 3 |
 
 For **74HC glue** (00, 04, 08, 14, 32, 86, 688), see the full index in section 3.1 of the protoboard doc.
 
@@ -66,7 +66,7 @@ The **64-color master palette** is hardware on every Retr01 board:
 - address: **6-bit** master index from the compositor (colors 0-63)
 - data: each PROM drives one gun (**R**, **G**, or **B**) into that gun's R-2R DAC
 - not on the 6502 data bus during gameplay (video path only)
-- not stored in the cartridge; carts only reference indices 0-63
+- not stored in the cartridge. Carts only reference indices 0-63
 
 Studio keeps a software copy of the same RGB table for preview only. Changing the look of the family means reburning the Color PROMs (and updating the doc table), not shipping a new cart header field.
 
@@ -155,7 +155,7 @@ Imagine **two narrow trays**, each holding exactly **one horizontal row** of spr
 - In the **short gap** after row 100 finishes, the sprite chip fills the **other** tray with everything needed for row **101**.
 - When row 101 starts, the TV uses that tray, and the chip goes back to preparing row **102** in the first tray.
 
-So the system is always **one row ahead in preparation**: show this line / prepare the next line, **swap trays every line**. The CPU does not paint sprites pixel by pixel each frame - it updates the **sprite list**, and the 1284 handles rows in the gaps between scanlines.
+So the system is always **one row ahead in preparation**: show this line/prepare the next line, **swap trays every line**. The CPU does not paint sprites pixel by pixel each frame - it updates the **sprite list**, and the 1284 handles rows in the gaps between scanlines.
 
 This is **not** "draw the whole frame while calculating the next frame" (that would be double buffering entire screens). It is **one scanline of delay** between preparing a row and displaying it - enough time to fetch CHR and respect the 16-sprites-per-line limit without blocking the 6502.
 
@@ -169,7 +169,7 @@ Each output pixel is roughly:
 
 Full sprite pipeline steps (same frame, different jobs):
 
-1. CPU uploads OAM through **`$FE20` (addr) / `$FE21` (data, auto-inc)**
+1. CPU uploads OAM through **`$FE20` (addr)/`$FE21` (data, auto-inc)**
 2. 1284 scans OAM for the **next** line
 3. active sprite palette buffer maps indices through the selected sprite palette
 4. during HBlank, 1284 fetches sprite CHR and fills the next line-buffer half
@@ -200,11 +200,11 @@ This removes the VBlank-only VRAM update bottleneck common on classic consoles l
 
 See **Sprite line buffer (how it works)** above. Short version:
 
-1. CPU uploads OAM through `$FE20` (addr) / `$FE21` (data)
+1. CPU uploads OAM through `$FE20` (addr)/`$FE21` (data)
 2. 1284 scans OAM for the **next** line
 3. active sprite palette buffer maps sprite 2bpp to a **master index 0-63** (or transparent)
 4. during HBlank, 1284 fetches sprite CHR and fills the next line-buffer half
-5. visible line reads the last-filled half; compositor resolves BG vs sprite, then **Color PROM** -> DAC
+5. visible line reads the last-filled half. Compositor resolves BG vs sprite, then **Color PROM** -> DAC
 
 One-line pipeline, not a full-frame delay.
 
@@ -212,7 +212,7 @@ One-line pipeline, not a full-frame delay.
 
 **Master RGB** comes from the **Color PROM** (see above). Carts never carry those RGB bytes.
 
-Each cart may store palette **index** blobs in flash, located by a **pointer table** (no palette compression / special packing):
+Each cart may store palette **index** blobs in flash, located by a **pointer table** (no palette compression/special packing):
 
 - cart-global minimum: **1 BG Palette + 1 sprite Palette** (one 4-color set of indices each)
 - optional per world: **BG palette bank** and/or **sprite palette bank**, each up to **8 palette rows x 4 palettes**
@@ -226,7 +226,7 @@ When palette row `N` is active, the **active palette buffer** holds **8 palettes
 
 All 8 share the same **color 0** master index (universal backdrop for that row). Software must write that shared index into every slot when loading the row (see `02_graphics_worlds_memory.md`).
 
-The CPU-facing model is dedicated palette **index** registers via **`$FE08`/`$FE09`**. Those indices address the Color PROM each pixel. **Fallback resolution for which indices to load is not hardware logic.** Boot / Studio runtime follows cart pointers and copies the selected row into registers.
+The CPU-facing model is dedicated palette **index** registers via **`$FE08`/`$FE09`**. Those indices address the Color PROM each pixel. **Fallback resolution for which indices to load is not hardware logic.** Boot/Studio runtime follows cart pointers and copies the selected row into registers.
 
 No extra ICs are required for palette **banks**, synced row selection, or fallback rules beyond the Color PROMs already on the board.
 
@@ -262,7 +262,7 @@ Bits:
 - same architecture
 - **3-wire controllers** with **ATtiny85** (draft) MCU in each pad
 - wires: **VCC, GND, DATA** (open-drain DATA). Console **ATmega1284P** is master: poll, then read one button byte
-- software-visible bytes stay **`$FE60` / `$FE61`** with the same bit layout as Retr01-A
+- software-visible bytes stay **`$FE60`/`$FE61`** with the same bit layout as Retr01-A
 
 ### Retr01-H
 
