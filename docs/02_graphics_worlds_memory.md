@@ -1,235 +1,110 @@
 # Retr01 Graphics, Worlds, and Memory
 
-This doc is the merged source for the graphics model, world layout, VRAM layout, and CPU-visible memory map.
+Display model, world/MAP layout, VRAM, palettes, and the CPU-visible memory map. Hardware pipelines live in [`03_hardware_implementation.md`](03_hardware_implementation.md).
 
 ## Display and timing
 
 | Item | Value |
 |------|-------|
-| Logical resolution | **128x96** (**16x12** tiles, exact **4:3** with square pixels) |
-| Output raster (RGBS path) | **256x240** active inside **341x262** timing |
+| Logical resolution | **128x96** (**16x12** tiles, exact **4:3**) |
+| RGBS active field | **256x240** inside **341x262** timing |
 | Tile size | **8x8** |
 | Dot clock | **5.369318 MHz** |
-| Dots per scanline | **341** |
-| Scanlines per frame | **262** |
-| Frame rate/NMI | about **60.098 Hz** |
-| Default scale | **1x** (board DIP open) |
-| Optional scale | **2x** (board DIP closed) |
+| Frame / NMI | about **60.098 Hz** |
+| CPU clock | **8.000 MHz** (independent of dot) |
+| SCALE DIP | **1x** default (centered 128x96: 64 px sides, 72 lines top/bottom). **2x** doubles to **256x192** with **24+24** letterbox |
 
-CPU and dot clocks are **independent**. The CPU runs at **8.000 MHz**. The beam and BG path run on the dot clock.
-
-### Output scale (board DIP)
-
-The CRT/RGBS **raster is always** the same: **341x262** timing with a **256x240** active field. Scale only changes how the **128x96** logical framebuffer is painted inside that field.
-
-| SCALE DIP | Mapping inside the 256x240 active field |
-|-----------|------------------------------------------|
-| **1x** (default) | Centered **128x96**. Margins: **64** px left/right, **72** lines top/bottom. Borders force backdrop/black |
-| **2x** | Pixel-double and line-double to **256x192**, then letterbox with **24** black lines top and **24** bottom |
-
-Games always author **128x96**. The DIP selects display mapping only. No cart bit required for v0.
-
-Logical scroll and sprite positions stay in **128x96** space. The compositor applies scale and centering toward the 256x240 raster.
+Games, scroll, OAM, and Studio all stay in **128x96**. SCALE is board glue on the raster only (no `$FExx` bit, no cart bit). See `03` for the scale-agnostic rule.
 
 ## Worlds and screens
 
-- A cart has up to **16 worlds**
-- A world uses a sparse virtual grid up to **16x16**
-- A world may store up to **64 screens**
-- A screen is **16x12** tile indices plus packed attrs (**128x96** pixels)
-- A screen is stored in MAP-ROM and identified by `(col, row)`
+- Cart: up to **16 worlds**
+- World: sparse grid up to **16x16**, up to **64 screens**
+- Screen: **16x12** tiles + packed attrs (**192** + **48** bytes), stored in MAP as `(col, row)`
+- Parallax screens use the same format, marked non-enterable
 
-### What a world contains
+Each world also carries:
 
-- **4 CHR BG banks** and **4 CHR sprite banks** (tile patterns)
-- optional **BG palette bank** and **sprite palette bank** (master **indices** 0-63, not RGB bytes)
-- MAP directory + compressed screen payloads
+- **4 BG** + **4 sprite** CHR banks (**256** tiles / **4 KB** each -> **32 KB** CHR per world)
+- optional **BG** and **sprite palette banks** (master indices 0-63, never RGB bytes)
+- MAP directory + screen payloads
 
-### What a screen stores
-
-- tile plane: **192 bytes** (16x12)
-- attr plane: **48 bytes** (8x6 of 2x2 tile groups)
-- flags with **BG bank 0-3**
-- MAP payload offset
-
-Parallax screens use the same screen format but are marked non-enterable.
-
-## BG banks and sprite banks (CHR)
-
-These are **CHR tile banks**, not palette banks.
-
-| Term | Meaning |
-|------|---------|
-| **BG bank** | **256 BG tiles**, **16x16** tile grid, **4 KB** |
-| **Sprite bank** | **256 sprite tiles**, **16x16** tile grid, **4 KB** |
-
-Per world:
-
-- **4 BG banks**
-- **4 sprite banks**
-- total CHR per world: **32 KB**
-
-Across the full cart:
-
-- max CHR if every world used a full chapter: **16 x 32 KB = 512 KB** (fills a SST39SF040 alone, so real carts share flash with PRG/MAP or leave some worlds lighter)
-- planning flash class **SST39SF040** is **512 KB**. **v0:** parallel flash in an on-board **32-pin socket** for bring-up. **Later:** same image lives on the **cartridge**
+Max CHR if every world is full: **16 x 32 KB = 512 KB** (fills an SST39SF040 by itself). Real carts share flash with PRG/MAP or keep some worlds lighter. **v0:** parallel flash in an on-board 32-pin socket. Later: same image on the cart.
 
 ### Runtime bank rules
 
-1. Each screen names an **authored BG bank** in MAP metadata.
-2. When software loads or seam-streams a screen into a nametable slot, it also copies that screen's BG bank into that slot's **BG bank latch**.
-3. **Camera slots 0-3** and **plane slots 4-5** each have their own BG bank latch.
-4. **Sprite bank** is separate and global within the current world.
-5. Changing a BG bank does **not** change the sprite bank, and vice versa.
+1. Each screen names a **BG bank** in MAP metadata.
+2. Loading a screen into a nametable slot also sets that slot's **BG bank latch**.
+3. Camera slots **0-3** and plane slots **4-5** each have their own BG bank latch.
+4. **Sprite bank** is separate and global for the current world.
+5. Changing BG bank does not change the sprite bank, and vice versa.
 
-## Scrolling and live VRAM
+## Camera, VRAM, and scroll
 
-### Camera
+- `scroll_x` wraps **0-127**, `scroll_y` wraps **0-95**
+- Camera samples **1, 2, or 4** live screens from slots **0-3**
+- Slots **4-5** are optional **parallax** only (not extra walkable rooms)
 
-- `scroll_x` wraps in **0-127** (logical pixels)
-- `scroll_y` wraps in **0-95** (logical pixels)
-- The camera can sample **1, 2, or 4** live screens from VRAM slots **0-3**
-- Smooth scrolling means multiple neighboring screens may be visible at once
+MAP holds the whole chapter. VRAM only holds what is live: up to **four** camera screens + **two** parallax screens. Software streams new rooms from MAP as the player moves.
 
-### Why VRAM has six slots
-
-- **Slots 0-3**: live **camera** field, up to four playfield screens
-- **Slots 4-5**: optional **parallax plane** only
-
-Slots 4-5 are **not** fifth and sixth playfield screens.
-
-### What VRAM holds (camera and scroll modes)
-
-This section answers a common design question: when the camera scrolls or switches rooms, **how much tile data is actually in VRAM?**
-
-#### Technical summary
-
-| Storage | Size per slot | What it is |
-|---------|---------------|------------|
-| Camera slots **0-3** | **256 bytes** aligned (**192** tile + **48** attr used) | Up to **four full screens** in a 2x2 camera field |
-| Plane slots **4-5** | **256 bytes** aligned (same) | Up to **two full parallax backgrounds** (not walkable) |
-| Scratch `$0600+` | remainder of low VRAM | Streaming temp, not part of the live picture |
-
-Each camera slot holds a **complete screen** (192 tile bytes + 48 attr bytes). It is **not** one screen plus a small tile border or "2-tile perimeter" around a single room.
-
-The RGBS path always lights a **256x240** active raster. Inside that field, SCALE paints the **128x96** logical viewport (centered at 1x, or doubled to 256x192 with 24+24 letterbox at 2x). `scroll_x`/`scroll_y` move that logical viewport over the live camera slots.
-
-**MAP-ROM** can store up to **64 screens per world**. **VRAM** only holds the **live** set: up to four camera screens plus two optional parallax screens. Software streams new screens from MAP into slots when the player moves through the world.
-
-#### Camera slot arrangement (4-screen/pixel scroll)
-
-When all four camera slots are in use, they form a fixed **2x2 grid** of whole rooms:
+Each slot is a **full screen** (192 tile + 48 attr), aligned to **256 bytes**. Not "one room plus a tile strip at the edge."
 
 ```text
 +-------------+-------------+
-|  Slot 0     |  Slot 1     |   top row
-|  full screen|  full screen|
+|  Slot 0     |  Slot 1     |   top
 +-------------+-------------+
-|  Slot 2     |  Slot 3     |   bottom row
-|  full screen|  full screen|
+|  Slot 2     |  Slot 3     |   bottom
 +-------------+-------------+
         ^
-        |
-   128x96 logical viewport (scroll_x, scroll_y pick the window)
+   128x96 viewport (scroll_x / scroll_y)
 ```
 
-Smooth scrolling moves that viewport across the **internal seams** between these full screens. When the player crosses a room boundary, both neighboring rooms are already loaded - the picture slides, it does not wait for a one-tile-wide strip to be filled in at the edge.
+| Mode | Slots | What you see |
+|------|-------|--------------|
+| Pixel scroll, 1 slot | one room | pan inside 128x96 |
+| Pixel scroll, 2 slots | H or V pair | viewport can straddle the seam |
+| Pixel scroll, 4 slots | 2x2 | up to four rooms at once, including corners |
+| Instant switch | load new room(s), reset scroll | hard cut (doors, warps). Same slots, no slide |
 
-#### Scroll modes (camera)
+Studio **dead zone** / **hybrid** camera rules in `04` are software policy on top of these modes. They do not add PPU scroll hardware.
 
-| Mode | Slots 0-3 in use | Scroll | What the player sees |
-|------|------------------|--------|----------------------|
-| **Pixel scroll, 1 slot** | One full screen | `scroll_x`/`scroll_y` pan inside that room | One room, camera pans within 128x96 |
-| **Pixel scroll, 2 slots** | Two full adjacent screens (horizontal or vertical pair) | Scroll across the seam | Viewport can show part of room A and part of room B |
-| **Pixel scroll, 4 slots** | Four full screens in 2x2 | Scroll across any internal seam, including corners | Viewport can straddle up to four rooms at once |
-| **Instant screen switch** | New screen(s) loaded into slot(s) | Reset `scroll_x`/`scroll_y` to **0** (or another fixed position), no smooth pan | Picture **cuts** to the new room(s) - doors, warps, screen-at-a-time movement |
-
-Instant switch uses the **same VRAM slots** as pixel scroll. The difference is **behavior**: no sliding viewport. Software loads the next room(s), resets scroll registers, and the image jumps.
-
-Hardware scroll contract is only the rows above: **1/2/4 live slots** with pixel scroll, or **instant cut**. Studio constraints such as **dead zone** and **hybrid** (see `04_retr01_studio.md`) are **software camera policy** on top of those modes - they do not add new PPU scroll hardware.
-
-#### Parallax slots (4-5)
-
-Slots **4** and **5** are also **full 16x12 nametables**, but they are **background-only**:
-
-- not part of the walkable 2x2 camera
-- drawn **behind** the main playfield (optional **scanline band** chooses when they appear)
-- use their own **BG bank latches**
-- parallax setup locks the main camera to **one axis for the whole frame** when any H/V band is enabled (see Raster and parallax below)
-
-So at maximum, VRAM can hold **four whole camera screens + two whole parallax screens** at once. The RGBS active field is still 256x240. Parallax layers sit under (or in a band under) the scaled camera view.
-
-#### Plain English: VRAM vs the world map
-
-Think of **MAP** as the atlas of every room in the chapter. **VRAM** is the **workbench** with only the rooms you need **right now**.
-
-- **Pixel scroll (up to 4 slots):** tape up to **four complete room blueprints** in a 2x2 square on the bench. The TV is a **fixed-size window** you slide over that square. Walking off the right edge of a room means you see **the right side of one full room and the left side of the next**, because both were already on the bench.
-- **Instant switch:** swap the blueprint(s), put the window back at the start, **no sliding** - like turning a page.
-- **Parallax (slots 4-5):** two **backdrop paintings** the same size as a room, hung **behind** the bench. The player does not walk on them. They add depth (sky, far hills). They scroll or appear in bands separately from the main camera.
-
-This is **not** "one room plus a couple of extra tiles pasted on the edge." That pattern appears on some older hardware. Retr01 loads **whole screens** into named slots so seams are predictable.
+**Parallax (4-5):** full 16x12 nametables drawn behind the playfield (optional scanline band). Own BG bank latches. Enabling any H/V band locks the main camera to that axis for the **whole frame** (see Raster and parallax).
 
 ### VRAM layout
 
-| VRAM offset | Size | Purpose |
-|-------------|------|---------|
-| `$0000-$00FF` | 256 B | nametable slot 0 (192+48 used) |
-| `$0100-$01FF` | 256 B | nametable slot 1 |
-| `$0200-$02FF` | 256 B | nametable slot 2 |
-| `$0300-$03FF` | 256 B | nametable slot 3 |
+| Offset | Size | Purpose |
+|--------|------|---------|
+| `$0000-$00FF` | 256 B | camera slot 0 (192+48 used) |
+| `$0100-$01FF` | 256 B | camera slot 1 |
+| `$0200-$02FF` | 256 B | camera slot 2 |
+| `$0300-$03FF` | 256 B | camera slot 3 |
 | `$0400-$04FF` | 256 B | plane slot 4 |
 | `$0500-$05FF` | 256 B | plane slot 5 |
-| `$0600-$3FFF` | rest of low half | scratch/streaming temp |
-| `$4000-$7FFF` | 16 KB | reserved/future - **not** part of the live camera or plane contract |
+| `$0600-$3FFF` | rest of low half | scratch / stream temp |
+| `$4000-$7FFF` | 16 KB | reserved (not live camera/plane) |
 
-Each slot holds:
+Per slot: tiles at `+0x000` (192 B), packed attrs at `+0xC0` (48 B). One attr byte = one **2x2** tile group with four 2-bit palette fields.
 
-- tiles at `+0x000` (**192 bytes**)
-- packed attrs at `+0xC0` (**48 bytes**)
+## Palettes
 
-One attr byte is a **2x2 attr quadrant** with four 2-bit palette fields, one per tile.
+Do not mix these with CHR **tile banks**.
 
-## Palettes and compositing
+| Term | Meaning |
+|------|---------|
+| **Master palette** | 64 RGB colors in board **Color PROM**. Games only use indices **0-63** |
+| **BG / sprite palette bank** | Cart store: up to **32** palettes (**8 rows x 4**). Indices only |
+| **Palette row** | One row of 4 palettes (index **0-7**) |
+| **Palette** | 4 master indices (4 bytes) |
+| **Active palette buffer** | The **8** palettes on screen now: **4 BG + 4 sprite** |
 
-### Palette terminology
+### Color PROM (board)
 
-Use these words consistently. Do **not** mix them with CHR **tile banks**.
+A/C/H share one master table. Not in the cart. Not loaded by the CPU.
 
-| Term | Meaning | Not the same as |
-|------|---------|-----------------|
-| **Master palette** | 64 global RGB colors in **board Color PROM**. All game colors are indices 0-63 into it | A palette row or palette bank |
-| **BG palette bank** | BG-side cartridge store of up to **32 palettes** in **8 palette rows x 4 palettes** | CHR **BG bank** (tile patterns) |
-| **Sprite palette bank** | Sprite-side cartridge store of up to **32 palettes** in **8 palette rows x 4 palettes** | CHR **sprite bank** (tile patterns) |
-| **Palette row** | One row of **4 palettes** inside a palette bank, row index **0-7** | A screen row or attr row |
-| **Palette** | One 4-color set: **4 master-color indices** | The whole palette bank |
-| **Active palette buffer** | The **8 palettes** currently on screen: **4 BG + 4 sprite** copied from one selected palette row | VRAM or nametable data |
+- **3x AT28C16** (R, G, B). Compositor puts a **6-bit** index on all three address buses. Each PROM feeds that gun's R-2R DAC.
+- Three chips because one 8-bit PROM cannot drive three guns at pixel rate.
 
-Layout of one palette bank:
-
-```text
-Palette bank (BG or Sprite)
-+-- Palette row 0: [Palette] [Palette] [Palette] [Palette]
-+-- Palette row 1: [Palette] [Palette] [Palette] [Palette]
-+-- ...
-+-- Palette row 7: [Palette] [Palette] [Palette] [Palette]
-```
-
-Each **Palette** is 4 bytes (4 master indices). A full bank is **32 palettes = 128 bytes** if every slot is authored.
-
-### Global master palette (Color PROM)
-
-Retr01-A, C, and H all share one **master palette** of **64 unique colors**. It is **not** stored in the cartridge and is **not** loaded by the CPU.
-
-Hardware:
-
-- **3x AT28C16** parallel EEPROMs act as **Color PROMs** (one each for R, G, B)
-- compositor outputs a **6-bit** master color index on the PROM address pins
-- each PROM's data bus feeds that gun's **R-2R DAC** (no CPU cycles per pixel)
-- the same image is programmed once at board build for A, C, and H
-
-Why three chips: one 8-bit PROM cannot drive three gun DACs at pixel rate. Same 6-bit index on all three. Each holds that gun's level for colors 0-63.
-
-Canonical RGB values (documentation/Studio preview mirror of what is burned into the PROMs):
+Canonical RGB (docs / Studio preview mirror of what is burned into the PROMs):
 
 ```text
 #000000 #290514 #2A0507 #230F06 #1E1306 #1A1605 #141807 #061A07 #051A13 #071918 #08181C #071722 #030B3D #16033A #20052D #260420
@@ -238,254 +113,140 @@ Canonical RGB values (documentation/Studio preview mirror of what is burned into
 #FFFFFF #F1A2BB #F1A6A1 #F1A983 #EEAC44 #D4BA33 #B0C841 #73D275 #22D0A6 #3BCDC9 #48C9E4 #88C4ED #A4BDEF #BBB5F1 #D5A9EF #F09BDD
 ```
 
-Games and carts only ever store **indices 0-63** into this table (inside BG/sprite Palettes). They never ship the RGB bytes.
+### Cart storage and fallback
 
-### Cart palette storage (pointer table, uncompressed)
+Cart holds **palette banks of indices only** (pointer table -> uncompressed blobs). Never the 64 RGB values. Never RLE on palette blobs. Copy a row into `$FE08`/`$FE09` when needed.
 
-Cart ROM stores **palette banks of master indices only** (which of the 64 Color PROM colors each slot uses). Do **not** put the 64 RGB master table in the cart. Do **not** RLE/compress palette index blobs.
+Layers: Color PROM always on the board. Cart needs at least **1 BG + 1 sprite** palette. World palette banks are optional.
 
-Directory model:
-
-- a **pointer table** (cart header/world directory) holds offsets to palette-index blobs
-- each blob is plain **master-color indices** (4 bytes per Palette, rows as authored)
-- software follows the pointer, copies the needed row into `$FE08`/`$FE09`
-- `$FE08`/`$FE09` hold indices. The Color PROM turns those indices into RGB at the DAC
-
-Programmers do **not** need to author every palette in every bank for every world - omit pointers/leave unused.
-
-Layers:
-
-| Layer | What it holds | Required? |
-|-------|---------------|-----------|
-| **Color PROM (board)** | 64 RGB colors | always present on A/C/H motherboards |
-| **Cart global palette banks** | at least **1 BG Palette + 1 sprite Palette** (indices into 0-63) | minimum authoring contract |
-| **World palette banks** | optional **BG palette bank** and/or **sprite palette bank** for that world | optional per world |
-
-### Palette fallback chain
-
-Resolution happens in **software at load time** (boot, world enter, or `load_screen`), not in the PPU per pixel. The hardware always reads whatever is already in the **active palette buffer**.
+Resolve at load time (boot / world enter / `load_screen`), not per pixel:
 
 ```text
-1. world palette bank entry (if the world defines one)
-2. else cart global palette bank (at least 1 BG + 1 sprite palette for a valid cart)
-3. else system default **index** palettes (baked into Retr01 Studio/system startup)
+1. world palette bank (if present)
+2. else cart global palette bank
+3. else Studio/system default index palettes
 
-Master RGB always comes from the board Color PROM, never from this chain.
+Master RGB always from Color PROM.
 ```
 
-This needs **no extra chips**. The CPU copies the resolved active row into palette registers when the palette row changes.
+### Active buffer
 
-### Active palette buffer
+PPU shows **4 BG + 4 sprite** palettes at once (dedicated palette RAM, not nametable VRAM).
 
-The PPU can only show **4 BG palettes** and **4 sprite palettes** at one time. Together that is **8 palettes** in the **active palette buffer**.
+- Software picks palette row **0-7**. BG and sprite rows are always the **same** index (no BG-4 / sprite-2 mix).
+- Tile attrs and OAM attrs still only pick **0-3** inside that row.
+- Screens may optionally name a palette row in MAP (like they name a BG bank). Switching rows means reload `$FE08`/`$FE09`.
 
-That buffer is dedicated **palette registers/palette RAM**. It is **not** nametable VRAM.
+**Shared color 0:** all 8 active palettes use the same master index at color 0 (universal backdrop). Software writes that into every slot when loading a row. On BG, color 0 is the backdrop. On sprites, pattern color 0 stays **transparent**.
 
-Selection rule:
+Sprite priority: transparent sprite -> BG. Sprite-behind + opaque BG -> BG. Else sprite.
 
-- software selects a **palette row** index **0-7**
-- **BG palette row N** and **sprite palette row N** are always selected together
-- there is no independent "BG row 4 + sprite row 2" mode
+Palette fades, interpolates, and cycles are **runtime library** helpers that rewrite the active buffer (rotate inside a 4-color set, or step to another row).
 
-When palette row `N` is selected, the active buffer loads:
+## MAP-ROM
 
-- all **4 BG palettes** from BG palette row `N`
-- all **4 sprite palettes** from sprite palette row `N`
+Not memory-mapped into CPU space. Read through `$FE90`:
 
-At runtime inside that active row:
+1. write 24-bit address (`$FE90`/`$FE91`/`$FE92`)
+2. read data at `$FE93` (auto-inc)
 
-- BG tile attrs choose among **BG palettes 0-3** in the active buffer
-- sprite OAM attrs choose among **sprite palettes 0-3** in the active buffer
-- software may rewrite the active palette buffer during VBlank, or mid-frame with raster timing if needed
-
-To use palette row 4 instead of row 0, software changes the selected palette row and reloads the active buffer. Tile attrs and OAM attrs still only ever index **0-3** within the current row.
-
-### Shared backdrop across the active buffer
-
-All **8 palettes** in the active buffer share the same **color 0** master index.
-
-That gives one universal backdrop color for the current palette row, NES-style, across both BG and sprite planes.
-
-This is a **software load rule**, not a separate backdrop IC: when the CPU (or Studio runtime) copies a palette row into the active buffer, it must write the **same** master index into color 0 of all **8** palette slots. Hardware does not auto-tie eight independent color-0 fields unless a later rev adds that.
-
-Rules:
-
-- every **Palette** in the active row uses that same master index at color 0
-- on **BG**, color 0 is the visible shared backdrop
-- on **sprites**, pattern color 0 is still **transparent**
-
-So the shared color is a palette-definition and selection rule, not a rule that forces visible sprite pixels to draw color 0.
-
-### Practical authoring rule
-
-A screen may effectively use only part of the active row. For example:
-
-- one screen may only use BG palettes 0-1 inside the active row
-- another may use all 4 BG palettes in that row
-
-That is fine. The hardware contract stays **one synced palette row** -> **4 BG + 4 sprite palettes active**.
-
-Sprite priority rule:
-
-1. transparent sprite pixel -> show BG
-2. sprite-behind bit + opaque BG -> show BG
-3. otherwise show sprite
-
-### Screen/MAP metadata
-
-Screens may optionally name a **palette row** index **0-7** in MAP metadata, similar to how they already name a CHR BG bank.
-
-Because attrs only index **0-3**, reaching another palette row means **changing the selected palette row** and reloading the active buffer, not widening attr bits.
-
-### Palette effects
-
-These should be exposed as software routines in the Retr01 runtime library (used by Studio-generated games and future tooling), backed by active-palette-buffer writes:
-
-1. **Fade all active palettes to black**
-2. **Fade all active palettes to white**
-3. **Interpolate active palettes toward another palette row**
-4. **Cycle colors or palette rows** for effects such as waterfalls, power-ups, warning flashes, and glowing objects
-
-Recommended scope:
-
-- hardware provides the active palette buffer and the ability to rewrite it
-- Retr01 Studio and the runtime library provide helpers that compute and upload the new palette contents
-
-Palette cycling may work in two useful ways:
-
-- rotate colors **inside** one 4-color palette
-- step to another **palette row** (BG and sprite together)
-
-## MAP-ROM model
-
-MAP-ROM is **not** directly memory-mapped into the CPU space.
-
-Software reads MAP through **`$FE90`**:
-
-1. write 24-bit MAP address (`$FE90`/`$FE91`/`$FE92`)
-2. read MAP data at **`$FE93`**
-3. hardware auto-increments
-
-Recommended MAP directory row:
-
-- `col`
-- `row`
-- `flags` (`bit0 = parallax`, `bits1-2 = CHR BG bank`, `bits3-5 = palette row 0-7`)
-- `data_off` (24-bit)
+Directory row sketch: `col`, `row`, `flags` (`bit0` parallax, `bits1-2` BG bank, `bits3-5` palette row), `data_off` (24-bit).
 
 ## CPU memory map
 
-| Range | Region | Notes |
-|-------|--------|-------|
-| `$0000-$7FFF` | System RAM | CPU-only |
-| `$8000-$FDFF` | PRG window | banked through `$FE80` |
-| `$FE00-$FEFF` | I/O page | PPU, VRAM port, OAM, CHR bank latches, APU, MAP, input |
-| `$FF00-$FFFF` | PRG high | vectors included |
+| Range | Region |
+|-------|--------|
+| `$0000-$7FFF` | System RAM (CPU-only) |
+| `$8000-$FDFF` | PRG window (banked via `$FE80`) |
+| `$FE00-$FEFF` | I/O |
+| `$FF00-$FFFF` | PRG high + vectors |
 
-### Important I/O blocks
-
-| Range | Purpose |
+| Block | Purpose |
 |-------|---------|
-| `$FE00-$FE0F` | PPU control, scroll, raster, parallax band, palette port (**draft** below) |
-| `$FE10-$FE1F` | VRAM port (**draft** below) |
-| `$FE20-$FE2F` | OAM port into 1284 |
-| `$FE30-$FE3F` | world select + BG bank latches + sprite bank |
+| `$FE00-$FE0F` | PPU, scroll, raster, parallax, palette |
+| `$FE10-$FE1F` | VRAM port |
+| `$FE20-$FE2F` | OAM (1284) |
+| `$FE30-$FE3F` | world + BG/sprite bank latches |
 | `$FE40-$FE5F` | APU |
-| `$FE60-$FE6F` | controllers/cabinet |
-| `$FE70-$FE7F` | board EEPROM (AT28C64B) - **ships on every Retr01-A v0** |
+| `$FE60-$FE6F` | controllers / cabinet |
+| `$FE70-$FE7F` | board EEPROM (AT28C64B, every v0 board) |
 | `$FE80-$FE8F` | PRG bank |
 | `$FE90-$FE9F` | MAP port |
 
-### `$FExx` register map (draft v0)
+### `$FExx` draft v0
 
-Byte-level layout below is a **frozen draft** for Studio, firmware, and proto bring-up. Bit meanings may gain reserved fields later. Do not renumber ports without a doc rev.
+Frozen draft for Studio, firmware, and proto. Bitfields may grow reserved bits later. Do not renumber ports without a doc rev.
 
-#### `$FE00-$FE0F` - PPU/raster/palette
+#### `$FE00-$FE0F` PPU / raster / palette
 
-| Addr | R/W | Name | Draft function |
-|------|-----|------|----------------|
-| `$FE00` | W | `PPUCTRL` | bit0 BG enable, bit1 sprites enable, bit2 NMI enable, bit3-4 camera slot mode (`00`=1 slot, `01`=2 H, `10`=2 V, `11`=4), bit5-7 reserved |
-| `$FE01` | R | `PPUSTATUS` | bit0 VBlank, bit1 sprite overflow (optional), bit2 raster hit sticky, bit3-7 reserved. Read clears raster hit |
-| `$FE02` | W | `SCROLL_X` | camera `scroll_x` (0-127 wrap) |
-| `$FE03` | W | `SCROLL_Y` | camera `scroll_y` (0-95 wrap) |
-| `$FE04` | W | `RASTER_Y` | compare scanline (0-261) |
-| `$FE05` | W | `RASTER_CTRL` | bit0 IRQ enable, bit1-7 reserved |
-| `$FE06` | W | `PLANE_CTRL` | bit0 enable plane slot 4 band, bit1 enable plane slot 5 band, bit2 band axis (`0`=H scroll lock, `1`=V scroll lock), bit3-7 reserved. **Any** band enable locks main camera to that axis for the **whole frame** (see Raster and parallax) |
-| `$FE07` | W | `PLANE_BAND` | bits0-7 = band start scanline (end = next VBlank or paired latch in a later rev) |
-| `$FE08` | W | `PAL_ADDR` | index into active palette buffer, **0-31** (8 palettes x 4 colors). Write sets pointer |
-| `$FE09` | W | `PAL_DATA` | **master color index 0-63** (Color PROM address). Write stores and **auto-increments** `PAL_ADDR` |
-| `$FE0A-$FE0F` | - | reserved | leave unimplemented on v0 |
+| Addr | R/W | Name | Function |
+|------|-----|------|----------|
+| `$FE00` | W | `PPUCTRL` | bit0 BG, bit1 sprites, bit2 NMI, bit3-4 camera mode (`00`=1, `01`=2H, `10`=2V, `11`=4), bit5-7 reserved |
+| `$FE01` | R | `PPUSTATUS` | bit0 VBlank, bit1 sprite overflow (opt), bit2 raster hit sticky. Read clears hit |
+| `$FE02` | W | `SCROLL_X` | 0-127 wrap |
+| `$FE03` | W | `SCROLL_Y` | 0-95 wrap |
+| `$FE04` | W | `RASTER_Y` | compare scanline 0-261 |
+| `$FE05` | W | `RASTER_CTRL` | bit0 IRQ enable |
+| `$FE06` | W | `PLANE_CTRL` | bit0/1 plane 4/5 band, bit2 axis (`0`=H lock, `1`=V lock). Any band locks camera to that axis for the whole frame |
+| `$FE07` | W | `PLANE_BAND` | band start scanline (end = next VBlank or later paired latch) |
+| `$FE08` | W | `PAL_ADDR` | active buffer index 0-31 |
+| `$FE09` | W | `PAL_DATA` | master index 0-63, auto-inc addr |
+| `$FE0A-$FE0F` | - | reserved | |
 
-#### `$FE10-$FE1F` - VRAM port
+#### `$FE10-$FE1F` VRAM
 
-| Addr | R/W | Name | Draft function |
-|------|-----|------|----------------|
-| `$FE10` | W | `VRAM_ADDR_LO` | VRAM address bits 7-0 |
-| `$FE11` | W | `VRAM_ADDR_HI` | VRAM address bits 14-8 (15-bit space) |
-| `$FE12` | R/W | `VRAM_DATA` | read/write data. **Auto-increment** address after each access |
+| Addr | R/W | Name | Function |
+|------|-----|------|----------|
+| `$FE10` | W | `VRAM_ADDR_LO` | bits 7-0 |
+| `$FE11` | W | `VRAM_ADDR_HI` | bits 14-8 |
+| `$FE12` | R/W | `VRAM_DATA` | auto-inc after access |
 | `$FE13-$FE1F` | - | reserved | |
 
-(Proto Module G historically used `$FE11`/`$FE12`/`$FE13` naming - treat this table as canonical going forward.)
+#### `$FE20-$FE2F` OAM
 
-#### `$FE20-$FE2F` - OAM (1284)
-
-| Addr | R/W | Name | Draft function |
-|------|-----|------|----------------|
-| `$FE20` | W | `OAM_ADDR` | byte index into 256-byte OAM (0-255) |
-| `$FE21` | W | `OAM_DATA` | write byte at `OAM_ADDR`, then **auto-increment** addr |
+| Addr | R/W | Name | Function |
+|------|-----|------|----------|
+| `$FE20` | W | `OAM_ADDR` | 0-255 |
+| `$FE21` | W | `OAM_DATA` | write + auto-inc |
 | `$FE22-$FE2F` | - | reserved | |
 
-OAM entry layout (NES-like), 4 bytes x 64 sprites:
+Entry: `Y, tile, attr, X` x 64. Attr bitfields (palette / flip / priority) TBD.
 
-| Offset | Field |
-|--------|--------|
-| `4n + 0` | Y |
-| `4n + 1` | tile index |
-| `4n + 2` | attr (palette, flip, priority - bitfields TBD in a later micro-rev) |
-| `4n + 3` | X |
+#### `$FE30-$FE3F` world / CHR
 
-#### `$FE30-$FE3F` - world/CHR banks
-
-| Addr | R/W | Name | Draft function |
-|------|-----|------|----------------|
-| `$FE30` | W | `WORLD` | world select 0-15 |
-| `$FE31` | W | `BG_BANK_0` | BG bank latch for nametable slot 0 (0-3) |
-| `$FE32` | W | `BG_BANK_1` | slot 1 |
-| `$FE33` | W | `BG_BANK_2` | slot 2 |
-| `$FE34` | W | `BG_BANK_3` | slot 3 |
-| `$FE35` | W | `BG_BANK_4` | plane slot 4 |
-| `$FE36` | W | `BG_BANK_5` | plane slot 5 |
+| Addr | R/W | Name | Function |
+|------|-----|------|----------|
+| `$FE30` | W | `WORLD` | 0-15 |
+| `$FE31`-`$FE36` | W | `BG_BANK_0`..`5` | latches for slots 0-5 (0-3) |
 | `$FE37` | W | `SPR_BANK` | global sprite CHR bank 0-3 |
-| `$FE38` | W | `PAL_ROW` | selected palette row 0-7 (BG and sprite together). Software still copies the row into `$FE08`/`$FE09` |
+| `$FE38` | W | `PAL_ROW` | row 0-7 (BG+sprite). Still copy into `$FE08`/`$FE09` |
 | `$FE39-$FE3F` | - | reserved | |
 
-#### `$FE70-$FE7F` - board EEPROM (AT28C64B)
+#### `$FE70-$FE7F` board EEPROM
 
-Ships on **every** Retr01-A v0 board (settings/high scores/operator data - not cart).
-
-| Addr | R/W | Name | Draft function |
-|------|-----|------|----------------|
-| `$FE70` | W | `EE_ADDR_LO` | EEPROM A7-A0 |
-| `$FE71` | W | `EE_ADDR_HI` | EEPROM A12-A8 (8 KB device) |
-| `$FE72` | R/W | `EE_DATA` | data. Respect AT28C64B write timing on write |
+| Addr | R/W | Name | Function |
+|------|-----|------|----------|
+| `$FE70` | W | `EE_ADDR_LO` | A7-A0 |
+| `$FE71` | W | `EE_ADDR_HI` | A12-A8 |
+| `$FE72` | R/W | `EE_DATA` | respect AT28C64B write timing |
 | `$FE73-$FE7F` | - | reserved | |
 
-#### `$FE80`/`$FE90` - PRG and MAP
+#### `$FE80` / `$FE90` PRG and MAP
 
-| Addr | R/W | Name | Draft function |
-|------|-----|------|----------------|
-| `$FE80` | W | `PRG_BANK` | PRG window bank select |
-| `$FE90` | W | `MAP_ADDR_LO` | MAP address bits 7-0 |
+| Addr | R/W | Name | Function |
+|------|-----|------|----------|
+| `$FE80` | W | `PRG_BANK` | PRG window |
+| `$FE90` | W | `MAP_ADDR_LO` | bits 7-0 |
 | `$FE91` | W | `MAP_ADDR_MID` | bits 15-8 |
 | `$FE92` | W | `MAP_ADDR_HI` | bits 23-16 |
-| `$FE93` | R | `MAP_DATA` | read MAP byte. **Auto-increment** 24-bit MAP address |
+| `$FE93` | R | `MAP_DATA` | read + auto-inc |
 
-(`$FE40-$FE5F` APU and `$FE60`/`$FE61` pads stay as previously specified.)
+`$FE40-$FE5F` APU and `$FE60`/`$FE61` pads use the contracts below / in `03`.
 
-Controller bytes (software contract, **1 = pressed**):
+Controller bytes (**1 = pressed**), same on Retr01-A IDC and Retr01-C pad MCU:
 
 | Bit | `$FE60`/`$FE61` |
-|-----|-------------------|
+|-----|-----------------|
 | 0 | right |
 | 1 | left |
 | 2 | down |
@@ -495,31 +256,18 @@ Controller bytes (software contract, **1 = pressed**):
 | 6 | coin/select |
 | 7 | start |
 
-Same layout on Retr01-A (cabinet IDC -> 1284) and Retr01-C (pad MCU -> these two bytes).
-
 ## Raster and parallax
 
-Retr01 uses **raster IRQ**, not NES sprite-0 hit (see [`07_pitch.md`](07_pitch.md) for NES comparison).
+Raster IRQ (not NES sprite-0 hit). Registers: `RASTER_Y`, hit sticky in `PPUSTATUS`, `RASTER_CTRL` IRQ gate.
 
-- `raster_y`: target scanline
-- `raster_hit`: status
-- `raster_irq_enable`: IRQ gate
+Parallax = scanline band pointing at plane slots **4-5**.
 
-Parallax is implemented as a **separate scanline band** that points to plane slots **4-5**.
+- Any H/V band enable locks main camera scroll to that axis for the **whole frame**. Do not scroll the unlocked axis while a band is active.
+- Plane slots are not part of the 2x2 camera.
+- BG banks stay per slot. Sprite bank stays global.
 
-Rules:
+## Software cheat sheet
 
-- if **any** H or V parallax band is enabled (`PLANE_CTRL` bits), main **camera movement locks to that axis for the whole frame** (not band-only). Software must not scroll the unlocked axis while a band is active
-- plane slots are not part of the 2x2 camera
-- BG banks stay per slot
-- sprite bank remains separate/global
-
-## What software should remember
-
-- nametable bytes are tile indices `0-255`
-- tile bytes do **not** store a bank number
-- the slot's BG bank latch chooses the CHR bank
-- MAP chooses which screen to load
-- the current world chooses which 32 KB CHR chapter is active
-- **VRAM camera slots hold full screens**, not single-room plus a tile border (see *What VRAM holds*)
-- **sprites use a ping-pong line buffer**, one scanline ahead (see `03_hardware_implementation.md` *Sprite line buffer*)
+- Nametable bytes are tile indices **0-255**. Bank lives in the slot latch, not in the tile byte.
+- MAP picks which screen to load. World picks which 32 KB CHR chapter is active.
+- Camera slots hold **whole screens**. Sprites use a ping-pong line buffer one scanline ahead (`03`).

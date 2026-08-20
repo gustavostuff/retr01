@@ -30,11 +30,9 @@ The CPU never writes a framebuffer. It fills nametables, OAM, and latches.
 | 74HC573 | latches | scroll, banks, MAP address, OAM capture |
 | 74HC161 | counters | beam X/Y |
 
-### Datasheets and pin wiring
+### Datasheets
 
-Official PDFs and **Retr01-A v0 breadboard pin tables** (which pins to strap, bus connections, module-by-module checklist) live in [`06_protoboard_module_tests.md` section 3](06_protoboard_module_tests.md#3-ic-reference--datasheets-and-pins).
-
-Quick links for the main silicon:
+Official PDFs for the main silicon:
 
 | Part | Datasheet |
 |------|-----------|
@@ -46,9 +44,9 @@ Quick links for the main silicon:
 | AT28C64B | [Microchip PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/doc4428.pdf) |
 | AT28C16 (Color PROM) | [Microchip AT28C16 PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/doc0006.pdf) |
 | SST39SF040 (cart flash) | [Microchip PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/20005051C.pdf) |
-| SN74HC157/245/573/161 | [TI 74HC family](https://www.ti.com/logic-circuit/standard-logic/74hc-family/overview.html) - use the part-specific PDF linked in section 3 |
+| SN74HC157/245/573/161/00/04/08/14/32/86/688 | [TI 74HC family](https://www.ti.com/logic-circuit/standard-logic/74hc-family/overview.html) (part-specific PDF) |
 
-For **74HC glue** (00, 04, 08, 14, 32, 86, 688), see the full index in section 3.1 of the protoboard doc.
+Island bring-up order and pass criteria: [`06_protoboard_module_tests.md`](06_protoboard_module_tests.md).
 
 ## Frozen v0 board plan
 
@@ -116,7 +114,7 @@ CPU and dot clocks are **independent**.
 - 1284 writes the other half during HBlank
 - halves swap each scanline
 
-See **Sprite line buffer (how it works)** below for a full explanation. BG scrolling and VRAM slots are in [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) section *What VRAM holds*.
+See **Sprite line buffer (how it works)** below for a full explanation. BG scrolling and VRAM slots are in [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) (*Camera, VRAM, and scroll*).
 
 ## Sprite line buffer (how it works)
 
@@ -298,4 +296,4 @@ For software people:
 - treat `$FExx` as the hardware API
 - let the board resolve tiles to pixels
 
-Protoboard bring-up: [`06_protoboard_module_tests.md`](06_protoboard_module_tests.md) - test ICs in separate islands before full integration. **Pin-level wiring:** [section 3 IC reference](06_protoboard_module_tests.md#3-ic-reference--datasheets-and-pins).
+Protoboard bring-up: [`06_protoboard_module_tests.md`](06_protoboard_module_tests.md) (island map, interactions, pass criteria).
