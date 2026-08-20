@@ -96,13 +96,14 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 5. **Raster IRQ, not sprite-0**: mid-frame effects use scanline compare
 6. **Binary-first data**: fixed layouts, no runtime allocation assumptions on target
 7. **Master palette in Color PROM**: 64 RGB colors live on the motherboard (AT28C16), not in the cart
+8. **Logical 128x96, fixed RGBS raster**: games use **16x12** screens. The RGBS path keeps a **256x240** active field. Board **SCALE** selects 1x or 2x mapping
 
 ## Canonical terminology
 
 | Term | Meaning |
 |------|---------|
 | **World** | One cart chapter: sparse MAP atlas + **4 BG banks + 4 sprite banks** in CHR |
-| **Screen** | One stored **32x30** tilemap (+ attrs) in MAP-ROM |
+| **Screen** | One stored **16x12** tilemap (**128x96**) + attrs in MAP-ROM |
 | **Grid position** | One `(col, row)` coordinate in a world's sparse virtual grid |
 | **Camera nametable slots** | VRAM slots **0-3**: the live 2x2 playfield field |
 | **Plane nametable slots** | VRAM slots **4-5**: optional parallax-only storage |
@@ -115,13 +116,14 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 | **Palette** | One 4-color set (**4 master indices** into the Color PROM) |
 | **Active palette buffer** | **8 palettes** on screen: **4 BG + 4 sprite** from the currently selected palette row |
 | **Color PROM** | Board-resident **64-color** master RGB table (not in cart) |
+| **SCALE** | Board DIP: **1x** (default) or **2x** mapping of 128x96 into the 256x240 RGBS field |
 
 ## High-level hardware
 
 | Block | Role |
 |------|------|
 | **W65C02S** | Game logic, streaming, register writes |
-| **74HC BG path** | Beam counters, VRAM fetch, BG compositing |
+| **74HC BG path** | Beam counters, VRAM fetch, BG compositing, scale/border |
 | **ATmega1284P** | OAM storage, sprite evaluation, sprite line-buffer fill, controller bytes |
 | **ATmega328P** | NES-style APU |
 | **3x AS6C62256** | System RAM, VRAM, sprite line buffer |
@@ -132,16 +134,17 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 
 | Area | Spec |
 |------|------|
-| Resolution | **256x240** |
+| Logical resolution | **128x96** (**16x12** tiles, **4:3**) |
+| RGBS active field | **256x240** (SCALE 1x centered, or 2x = 256x192 + letterbox) |
 | Tile size | **8x8** |
 | Color | **2bpp**, **64-color Color PROM** on board, **BG/sprite palette banks** in cart (indices only), **one synced palette row active** (4 BG + 4 sprite) |
-| Worlds | **8** max |
+| Worlds | **16** max |
 | Screens per world | **64** max on sparse **16x16** virtual grid |
 | CHR per world | **4 BG banks + 4 sprite banks**, **256 tiles each** |
-| Sprites | **64 OAM**, **16 per scanline** max |
+| Sprites | **64 OAM**, **16 per logical scanline** max |
 | VRAM | **32 KB**, interleaved |
 | System RAM | **32 KB**, CPU-only |
-| Line buffer | third **32 KB** SRAM, **512 bytes** used |
+| Line buffer | third **32 KB** SRAM, **128 px**/half used |
 | CPU clock | **8.000 MHz** |
 | Dot clock | **5.369318 MHz** |
 | Frame timing | **341x262**, about **60.098 Hz** |
@@ -152,6 +155,7 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 
 - Through-hole motherboard
 - RGBS + S-Video + composite pads
+- **SCALE** DIP (1x default / 2x)
 - 20-pin IDC for cabinet controls
 - 5 V barrel power
 

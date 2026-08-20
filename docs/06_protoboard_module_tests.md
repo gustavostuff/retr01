@@ -150,7 +150,7 @@ One chip = **32 K x 8** (address **A0-A14**). Three chips on Retr01-A: system RA
 
 **VRAM (module G):** A0-A14 <- **4x 74HC157** mux (CPU latched addr vs PPU addr). I/O <-> **74HC245** to CPU on CPU phase only. `/CE`, `/OE`, `/WE` qualified by GAL-PPU + PHI2.
 
-**Line buffer (module M):** Same SRAM pinout. Only addresses **$000-$1FF** used. A8 <- ping-pong half bit. A0-7 <- beam X or 1284 writer.
+**Line buffer (module M):** Same SRAM pinout. Only **128+128** ping-pong bytes used. A7 <- half select. A0-6 <- logical X or 1284 writer.
 
 Full pin-to-pin order is on **PDF page 1** - match **PCN** silkscreen, not generic 62256 clones, if labels differ.
 
@@ -680,8 +680,8 @@ Same as **K**: sim first, then proto.
 
 ### Parts
 
-- AS6C62256 #3 (only **512 bytes** used: **`$000-$0FF`**, **`$100-$1FF`** ping-pong).
-- **2x 74HC157**: address = **`{display_half, X[7:0]}`** vs 1284 address.
+- AS6C62256 #3 (only **256 bytes** used for ping-pong: two **128-byte** halves).
+- **2x 74HC157**: address = **`{display_half, X[6:0]}`** vs 1284 address.
 
 ### Test
 
@@ -724,7 +724,7 @@ One-line delay behavior: buffer filled for line **N+1** while line **N** would d
 
 - 74HC573 palette **index** latches (**`$FE08`/`$FE09`** - see draft map in [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md)).
 - **3x AT28C16** Color PROM (R/G/B), pre-programmed with the master 64-color table. See **section 3.10b**.
-- Compositor mux: BG vs line-buffer pixel (start with **BG only**, add sprite later) -> **6-bit** master index into all three PROMs.
+- Compositor mux: BG vs line-buffer pixel (start with **BG only**, add sprite later) -> **6-bit** master index into all three PROMs. Honor **SCALE** DIP: 1x center window or 2x double + 24+24 letterbox inside the **256x240** active field.
 - **R-2R** + **75 ohm** + **CSYNC** on each PROM data bus.
 
 Do **not** put the master RGB table in line-buffer SRAM for the final design. A temporary resistor ladder without PROMs is OK only as a pre-PROM smoke test.
@@ -738,7 +738,7 @@ Do **not** put the master RGB table in line-buffer SRAM for the final design. A 
 
 ### Pass
 
-256x240-ish stable image, **~15.7 kHz** horizontal rate class. Color PROM outputs match burned table. No illegal bus contention.
+256x240-class stable RGBS image (~15.7 kHz H). Color PROM outputs match burned table. SCALE 1x shows centered 128x96. SCALE 2x shows 256x192 with letterbox. No illegal bus contention.
 
 ---
 

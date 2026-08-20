@@ -70,17 +70,20 @@ Same contract again, SMD build, likely multi-board layout. Battery, display, and
 
 ### Look and feel
 
-- **256x240** visible field, **8x8** tiles, **2bpp** patterns
+- Logical playfield **128x96** (**16x12** tiles) - **half the linear resolution of a classic NES screen**, exact **4:3**
+- That is a feature: **larger, crisp pixels**, less MAP/VRAM per room, and art that stays readable on cabinet CRTs
+- RGBS path still uses a stable **256x240** active raster. Board **SCALE** DIP: **1x** centers 128x96, **2x** doubles to **256x192** with 24-line letterbox
+- **8x8** tiles, **2bpp** patterns
 - **64-color master palette** in board **Color PROM**, with **4 BG + 4 sprite palettes** active at once from one synced palette row
-- Crisp, readable pixel art - limits on purpose, not accidental mush
+- Limits on purpose, not accidental mush
 
 ### Worlds, not just levels
 
 Retr01 treats **worlds** as a first-class cart concept:
 
-- Up to **8 worlds** per game
+- Up to **16 worlds** per game
 - Each world: sparse **16x16** grid, up to **64 stored screens**
-- Each screen: **32x30** tilemap + attributes (same tile grid size class as a NES nametable)
+- Each screen: **16x12** tilemap + attributes (**128x96**)
 - **MAP-ROM** streams screen data through a dedicated port (`$FE90`) - the CPU does not fake a filesystem in PRG
 
 That is the difference between "we drew 32 rooms in CHR and hope the level loader keeps up" and **hardware-backed map chapters** with CHR banks per world.
@@ -89,7 +92,7 @@ That is the difference between "we drew 32 rooms in CHR and hope the level loade
 
 The live camera uses **four VRAM nametable slots (0-3)** as a **2x2 playfield window**. Smooth pixel scroll can show **multiple neighboring screens at once** without the classic "reload everything at the seam" dance.
 
-- **`scroll_x`/`scroll_y`**: one byte each, wrapping
+- **`scroll_x`/`scroll_y`**: wrap in **0-127** / **0-95** (logical pixels)
 - **Per-slot BG bank latches**: each visible screen can pull from its own CHR BG bank
 - **Sprite bank**: separate global latch within the world
 
@@ -134,7 +137,7 @@ Clock ratio alone is not "4.5x the game." Video timing, DMA absence, and your ow
 | Idea | Classic NES-style approach | Retr01 approach |
 |------|---------------------------|-----------------|
 | Map storage | Often ad-hoc tables in PRG, manual pointers | **MAP-ROM** directory + compressed screens |
-| Room grid | Engine-specific | Up to **64 screens/world** on a **16x16** sparse grid |
+| Room grid | Engine-specific | Up to **64 screens/world** on a **16x16** sparse grid (**16** worlds) |
 | CHR organization | Banks and swaps per game | **4 BG + 4 sprite banks per world** (256 tiles each) |
 | Crossing a seam | Reload nametable, bank CHR, hide flicker | **2x2 live slots** + scroll bytes |
 | Parallax layer | Status bar tricks, CHR abuse, IRQ hacks | **Dedicated plane slots 4-5** + raster band |
@@ -178,12 +181,10 @@ Retr01 deliberately rhymes with the NES where it helps learning and art directio
 | Topic | NES (NTSC) | Retr01-A |
 |-------|------------|----------|
 | CPU family | 6502-derived (2A03) | **6502-derived (W65C02S)** |
-| Visible resolution | **256x240** | **256x240** |
 | Tile size | **8x8** | **8x8** |
 | Tile depth | **2bpp** (4 colors per tile) | **2bpp** (4 colors per tile) |
 | Pattern storage | **CHR in cartridge** | **CHR in cartridge** |
-| Screen tile grid | **32x30** tiles (960 bytes) | **32x30** tiles (960 bytes) per stored screen |
-| Attribute plane | Packed palette bits per tile group | **240-byte** packed attr plane per screen |
+| Attribute idea | Packed palette bits per tile group | Packed **2x2** tile attrs (**48 bytes**/screen) |
 | Sprite list | **64** OAM entries | **64** OAM entries |
 | OAM entry layout | **Y, tile, attr, X** | **Y, tile, attr, X** (`$FE20` addr/`$FE21` data) |
 | Frame rate class | **~60.098 Hz** (262 lines) | **~60.098 Hz** (341x262 timing) |
@@ -193,7 +194,7 @@ Retr01 deliberately rhymes with the NES where it helps learning and art directio
 | Audio direction | Period-accurate square/noise/DPCM style | **NES-style APU** on dedicated MCU |
 | Developer culture | Asm, fixed layouts, no heap | Asm-friendly, **binary-first** layouts |
 
-If you know how NES tiles, attrs, and sprites work, most Retr01 art pipelines will feel familiar.
+If you know how NES tiles, attrs, and sprites work, Retr01 art pipelines will feel familiar - just on a **tighter, chunkier** playfield.
 
 ---
 
@@ -201,14 +202,17 @@ If you know how NES tiles, attrs, and sprites work, most Retr01 art pipelines wi
 
 | Topic | NES (NTSC) | Retr01-A |
 |-------|------------|----------|
+| Logical playfield | **256x240** (32x30 tiles) | **128x96** (16x12 tiles) - **half** the linear size, exact **4:3** |
+| RGBS/CRT active field | **256x240** | **256x240** raster. Board **SCALE**: 1x centered or 2x to **256x192** + letterbox |
+| Why smaller logical | - | **Bigger pixels**, cheaper rooms, more worlds in flash |
 | CPU clock | **~1.79 MHz** | **8.000 MHz** |
 | Work RAM | **2 KB** | **32 KB** system RAM (CPU-only) |
 | Video RAM | **2 KB** PPU internal | **32 KB** interleaved VRAM + separate line-buffer SRAM |
 | CPU access to nametables | Mostly **VBlank/forced blank** | **Interleaved CPU phases** every frame |
-| Sprites per scanline | **8** | **16** |
+| Sprites per scanline | **8** | **16** (logical lines) |
 | On-screen palette slots | **4 BG + 4 sprite** (with shared backdrop rules) | **4 BG + 4 sprite** active row. **64** master colors in **Color PROM**. Cart holds **index** banks only |
 | Nametables live at once | **2** for scroll tricks | **6 slots**: **4** camera + **2** parallax plane |
-| World/map hardware | None (game code) | **MAP-ROM**, **8 worlds**, **64 screens/world** |
+| World/map hardware | None (game code) | **MAP-ROM**, **16 worlds**, **64 screens/world** |
 | CHR banking | Mapper-dependent, game-defined | **4 BG + 4 sprite banks/world**, **per-slot BG bank latches** |
 | Mid-frame effects | **Sprite 0 hit** + timed code | **Raster compare IRQ** |
 | Gameplay collision | Software (same) | Software (explicit - **no** hardware sprite-BG hit) |

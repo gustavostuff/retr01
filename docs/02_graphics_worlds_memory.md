@@ -6,21 +6,37 @@ This doc is the merged source for the graphics model, world layout, VRAM layout,
 
 | Item | Value |
 |------|-------|
-| Visible resolution | **256x240** |
+| Logical resolution | **128x96** (**16x12** tiles, exact **4:3** with square pixels) |
+| Output raster (RGBS path) | **256x240** active inside **341x262** timing |
 | Tile size | **8x8** |
 | Dot clock | **5.369318 MHz** |
 | Dots per scanline | **341** |
 | Scanlines per frame | **262** |
 | Frame rate/NMI | about **60.098 Hz** |
+| Default scale | **1x** (board DIP open) |
+| Optional scale | **2x** (board DIP closed) |
 
 CPU and dot clocks are **independent**. The CPU runs at **8.000 MHz**. The beam and BG path run on the dot clock.
 
+### Output scale (board DIP)
+
+The CRT/RGBS **raster is always** the same: **341x262** timing with a **256x240** active field. Scale only changes how the **128x96** logical framebuffer is painted inside that field.
+
+| SCALE DIP | Mapping inside the 256x240 active field |
+|-----------|------------------------------------------|
+| **1x** (default) | Centered **128x96**. Margins: **64** px left/right, **72** lines top/bottom. Borders force backdrop/black |
+| **2x** | Pixel-double and line-double to **256x192**, then letterbox with **24** black lines top and **24** bottom |
+
+Games always author **128x96**. The DIP selects display mapping only. No cart bit required for v0.
+
+Logical scroll and sprite positions stay in **128x96** space. The compositor applies scale and centering toward the 256x240 raster.
+
 ## Worlds and screens
 
-- A cart has up to **8 worlds**
+- A cart has up to **16 worlds**
 - A world uses a sparse virtual grid up to **16x16**
 - A world may store up to **64 screens**
-- A screen is **32x30** tile indices plus packed attrs
+- A screen is **16x12** tile indices plus packed attrs (**128x96** pixels)
 - A screen is stored in MAP-ROM and identified by `(col, row)`
 
 ### What a world contains
@@ -31,8 +47,8 @@ CPU and dot clocks are **independent**. The CPU runs at **8.000 MHz**. The beam 
 
 ### What a screen stores
 
-- tile plane: **960 bytes**
-- attr plane: **240 bytes**
+- tile plane: **192 bytes** (16x12)
+- attr plane: **48 bytes** (8x6 of 2x2 tile groups)
 - flags with **BG bank 0-3**
 - MAP payload offset
 
@@ -55,8 +71,8 @@ Per world:
 
 Across the full cart:
 
-- max CHR budget: about **256 KB** (8 worlds x 32 KB)
-- planning flash class **SST39SF040** is **512 KB**. **v0:** parallel flash in an on-board **32-pin socket** for bring-up. **Later:** same image lives on the **cartridge**. Max CHR is about **256 KB** (8x32 KB). PRG + MAP share the rest (exact bank map still flexible)
+- max CHR if every world used a full chapter: **16 x 32 KB = 512 KB** (fills a SST39SF040 alone, so real carts share flash with PRG/MAP or leave some worlds lighter)
+- planning flash class **SST39SF040** is **512 KB**. **v0:** parallel flash in an on-board **32-pin socket** for bring-up. **Later:** same image lives on the **cartridge**
 
 ### Runtime bank rules
 
@@ -70,7 +86,8 @@ Across the full cart:
 
 ### Camera
 
-- `scroll_x` and `scroll_y` are **one byte each** (`0-255`, wrap)
+- `scroll_x` wraps in **0-127** (logical pixels)
+- `scroll_y` wraps in **0-95** (logical pixels)
 - The camera can sample **1, 2, or 4** live screens from VRAM slots **0-3**
 - Smooth scrolling means multiple neighboring screens may be visible at once
 
@@ -89,13 +106,13 @@ This section answers a common design question: when the camera scrolls or switch
 
 | Storage | Size per slot | What it is |
 |---------|---------------|------------|
-| Camera slots **0-3** | **2 KB** each (32x30 tiles + attrs) | Up to **four full screens** in a 2x2 camera field |
-| Plane slots **4-5** | **2 KB** each | Up to **two full parallax backgrounds** (not walkable) |
-| Scratch `$2000-$2FFF` | **4 KB** | Streaming temp, not part of the live picture |
+| Camera slots **0-3** | **256 bytes** aligned (**192** tile + **48** attr used) | Up to **four full screens** in a 2x2 camera field |
+| Plane slots **4-5** | **256 bytes** aligned (same) | Up to **two full parallax backgrounds** (not walkable) |
+| Scratch `$0600+` | remainder of low VRAM | Streaming temp, not part of the live picture |
 
-Each camera slot holds a **complete screen** (960 tile bytes + 240 attr bytes). It is **not** one screen plus a small tile border or "2-tile perimeter" around a single room.
+Each camera slot holds a **complete screen** (192 tile bytes + 48 attr bytes). It is **not** one screen plus a small tile border or "2-tile perimeter" around a single room.
 
-The TV always shows **256x240 pixels**. `scroll_x` and `scroll_y` slide a **viewport** over whatever tile field is active in slots 0-3. The hardware can use **1, 2, or 4** of those slots for the live camera (see scroll modes below).
+The RGBS path always lights a **256x240** active raster. Inside that field, SCALE paints the **128x96** logical viewport (centered at 1x, or doubled to 256x192 with 24+24 letterbox at 2x). `scroll_x`/`scroll_y` move that logical viewport over the live camera slots.
 
 **MAP-ROM** can store up to **64 screens per world**. **VRAM** only holds the **live** set: up to four camera screens plus two optional parallax screens. Software streams new screens from MAP into slots when the player moves through the world.
 
@@ -113,7 +130,7 @@ When all four camera slots are in use, they form a fixed **2x2 grid** of whole r
 +-------------+-------------+
         ^
         |
-   256x240 viewport (scroll_x, scroll_y pick the window)
+   128x96 logical viewport (scroll_x, scroll_y pick the window)
 ```
 
 Smooth scrolling moves that viewport across the **internal seams** between these full screens. When the player crosses a room boundary, both neighboring rooms are already loaded - the picture slides, it does not wait for a one-tile-wide strip to be filled in at the edge.
@@ -122,7 +139,7 @@ Smooth scrolling moves that viewport across the **internal seams** between these
 
 | Mode | Slots 0-3 in use | Scroll | What the player sees |
 |------|------------------|--------|----------------------|
-| **Pixel scroll, 1 slot** | One full screen | `scroll_x`/`scroll_y` pan inside that room | One room, camera pans within 256x240 |
+| **Pixel scroll, 1 slot** | One full screen | `scroll_x`/`scroll_y` pan inside that room | One room, camera pans within 128x96 |
 | **Pixel scroll, 2 slots** | Two full adjacent screens (horizontal or vertical pair) | Scroll across the seam | Viewport can show part of room A and part of room B |
 | **Pixel scroll, 4 slots** | Four full screens in 2x2 | Scroll across any internal seam, including corners | Viewport can straddle up to four rooms at once |
 | **Instant screen switch** | New screen(s) loaded into slot(s) | Reset `scroll_x`/`scroll_y` to **0** (or another fixed position), no smooth pan | Picture **cuts** to the new room(s) - doors, warps, screen-at-a-time movement |
@@ -133,14 +150,14 @@ Hardware scroll contract is only the rows above: **1/2/4 live slots** with pixel
 
 #### Parallax slots (4-5)
 
-Slots **4** and **5** are also **full 32x30 nametables**, but they are **background-only**:
+Slots **4** and **5** are also **full 16x12 nametables**, but they are **background-only**:
 
 - not part of the walkable 2x2 camera
 - drawn **behind** the main playfield (optional **scanline band** chooses when they appear)
 - use their own **BG bank latches**
 - parallax setup locks the main camera to **one axis for the whole frame** when any H/V band is enabled (see Raster and parallax below)
 
-So at maximum, VRAM can hold **four whole camera screens + two whole parallax screens** at once. The visible frame is still 256x240. Parallax layers sit under (or in a band under) the camera view.
+So at maximum, VRAM can hold **four whole camera screens + two whole parallax screens** at once. The RGBS active field is still 256x240. Parallax layers sit under (or in a band under) the scaled camera view.
 
 #### Plain English: VRAM vs the world map
 
@@ -156,19 +173,19 @@ This is **not** "one room plus a couple of extra tiles pasted on the edge." That
 
 | VRAM offset | Size | Purpose |
 |-------------|------|---------|
-| `$0000-$07FF` | 2 KB | nametable slot 0 |
-| `$0800-$0FFF` | 2 KB | nametable slot 1 |
-| `$1000-$17FF` | 2 KB | nametable slot 2 |
-| `$1800-$1FFF` | 2 KB | nametable slot 3 |
-| `$2000-$2FFF` | 4 KB | scratch/streaming temp |
-| `$3000-$37FF` | 2 KB | plane slot 4 |
-| `$3800-$3FFF` | 2 KB | plane slot 5 |
-| `$4000-$7FFF` | 16 KB | reserved/future - **not** part of the live camera or plane contract. Do not rely on this region in software until a later rev assigns it |
+| `$0000-$00FF` | 256 B | nametable slot 0 (192+48 used) |
+| `$0100-$01FF` | 256 B | nametable slot 1 |
+| `$0200-$02FF` | 256 B | nametable slot 2 |
+| `$0300-$03FF` | 256 B | nametable slot 3 |
+| `$0400-$04FF` | 256 B | plane slot 4 |
+| `$0500-$05FF` | 256 B | plane slot 5 |
+| `$0600-$3FFF` | rest of low half | scratch/streaming temp |
+| `$4000-$7FFF` | 16 KB | reserved/future - **not** part of the live camera or plane contract |
 
-Each 2 KB slot holds:
+Each slot holds:
 
-- tiles at `+0x000` (**960 bytes**)
-- packed attrs at `+0x3C0` (**240 bytes**)
+- tiles at `+0x000` (**192 bytes**)
+- packed attrs at `+0xC0` (**48 bytes**)
 
 One attr byte is a **2x2 attr quadrant** with four 2-bit palette fields, one per tile.
 
@@ -389,8 +406,8 @@ Byte-level layout below is a **frozen draft** for Studio, firmware, and proto br
 |------|-----|------|----------------|
 | `$FE00` | W | `PPUCTRL` | bit0 BG enable, bit1 sprites enable, bit2 NMI enable, bit3-4 camera slot mode (`00`=1 slot, `01`=2 H, `10`=2 V, `11`=4), bit5-7 reserved |
 | `$FE01` | R | `PPUSTATUS` | bit0 VBlank, bit1 sprite overflow (optional), bit2 raster hit sticky, bit3-7 reserved. Read clears raster hit |
-| `$FE02` | W | `SCROLL_X` | camera `scroll_x` (0-255 wrap) |
-| `$FE03` | W | `SCROLL_Y` | camera `scroll_y` (0-255 wrap) |
+| `$FE02` | W | `SCROLL_X` | camera `scroll_x` (0-127 wrap) |
+| `$FE03` | W | `SCROLL_Y` | camera `scroll_y` (0-95 wrap) |
 | `$FE04` | W | `RASTER_Y` | compare scanline (0-261) |
 | `$FE05` | W | `RASTER_CTRL` | bit0 IRQ enable, bit1-7 reserved |
 | `$FE06` | W | `PLANE_CTRL` | bit0 enable plane slot 4 band, bit1 enable plane slot 5 band, bit2 band axis (`0`=H scroll lock, `1`=V scroll lock), bit3-7 reserved. **Any** band enable locks main camera to that axis for the **whole frame** (see Raster and parallax) |
@@ -431,7 +448,7 @@ OAM entry layout (NES-like), 4 bytes x 64 sprites:
 
 | Addr | R/W | Name | Draft function |
 |------|-----|------|----------------|
-| `$FE30` | W | `WORLD` | world select 0-7 |
+| `$FE30` | W | `WORLD` | world select 0-15 |
 | `$FE31` | W | `BG_BANK_0` | BG bank latch for nametable slot 0 (0-3) |
 | `$FE32` | W | `BG_BANK_1` | slot 1 |
 | `$FE33` | W | `BG_BANK_2` | slot 2 |

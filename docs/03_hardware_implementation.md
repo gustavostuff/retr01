@@ -53,7 +53,7 @@ For **74HC glue** (00, 04, 08, 14, 32, 86, 688), see the full index in section 3
 ## Frozen v0 board plan
 
 - through-hole only
-- planning total: **52 motherboard ICs** (was 49 before Color PROMs)
+- planning total: **52 motherboard ICs**
 - **3x AT28C16** Color PROM (R/G/B), programmed once with the family master palette
 - 3x ATF22V10, not Lattice GAL
 - if PLD equations overflow, add a **4th ATF22V10**, not a different family
@@ -69,6 +69,15 @@ The **64-color master palette** is hardware on every Retr01 board:
 - not stored in the cartridge. Carts only reference indices 0-63
 
 Studio keeps a software copy of the same RGB table for preview only. Changing the look of the family means reburning the Color PROMs (and updating the doc table), not shipping a new cart header field.
+
+## Output scale (board DIP)
+
+Retr01-A ships with a **SCALE** DIP (or jumper):
+
+- **open = 1x** (default): center **128x96** in the **256x240** active RGBS field (64 px side margins, 72 line top/bottom margins)
+- **closed = 2x**: double to **256x192**, letterbox with **24** lines top and **24** bottom inside the same **256x240** active field
+
+The beam counters and **341x262** timing do not change with the DIP. Only logical-to-raster mapping and border blanking change.
 
 ## Clocks
 
@@ -117,13 +126,14 @@ Sprites are **not** drawn by the 6502 into a framebuffer. The **ATmega1284P** ow
 
 | Item | Detail |
 |------|--------|
-| OAM | **64** sprites. CPU: write index to **`$FE20`**, data to **`$FE21`** (auto-inc). Entry order `Y, tile, attr, X` |
-| Per scanline cap | **16** sprites on one row |
-| Line buffer SRAM | **512 bytes** on the third AS6C62256: two **256-byte halves** |
-| Half A | `$000-$0FF` - one row of sprite data (256 pixels) |
-| Half B | `$100-$1FF` - one row of sprite data (256 pixels) |
+| OAM | **64** sprites. CPU: write index to **`$FE20`**, data to **`$FE21`** (auto-inc). Entry order `Y, tile, attr, X`. Positions are **logical** (128x96 space) |
+| Per scanline cap | **16** sprites on one **logical** row |
+| Line buffer SRAM | **256 bytes** used on the third AS6C62256: two **128-byte** halves |
+| Half A | `$000-$07F` - one logical row of sprite data (128 pixels) |
+| Half B | `$080-$0FF` - one logical row of sprite data (128 pixels) |
 | Roles | **Ping-pong:** while the beam **displays** one half, the 1284 **writes** the other |
 | Latency | **One scanline** pipeline, **not** a full-frame delay |
+| Scale | Compositor **duplicates** logical pixels/lines when SCALE=2. Borders are blanked when SCALE=1. Filling only 128 bytes/line leaves more **HBlank** for the 1284 |
 
 Per scanline timeline:
 
@@ -149,15 +159,15 @@ CHR bus note: during the visible line, the **BG path** owns CHR for tile fetch. 
 
 ### Plain English
 
-Imagine **two narrow trays**, each holding exactly **one horizontal row** of sprite pixels (256 pixels wide - one per column on the screen).
+Imagine **two narrow trays**, each holding exactly **one logical horizontal row** of sprite pixels (**128** pixels wide).
 
-- While the TV paints **row 100**, it uses the tray that was filled **just before** row 100 started.
-- In the **short gap** after row 100 finishes, the sprite chip fills the **other** tray with everything needed for row **101**.
-- When row 101 starts, the TV uses that tray, and the chip goes back to preparing row **102** in the first tray.
+- While the TV paints **logical row 50**, it uses the tray that was filled **just before** that row started (with SCALE applied toward the 256x240 raster).
+- In the **short gap** after that row finishes, the sprite chip fills the **other** tray with everything needed for logical row **51**.
+- When row 51 starts, the TV uses that tray, and the chip goes back to preparing row **52** in the first tray.
 
 So the system is always **one row ahead in preparation**: show this line/prepare the next line, **swap trays every line**. The CPU does not paint sprites pixel by pixel each frame - it updates the **sprite list**, and the 1284 handles rows in the gaps between scanlines.
 
-This is **not** "draw the whole frame while calculating the next frame" (that would be double buffering entire screens). It is **one scanline of delay** between preparing a row and displaying it - enough time to fetch CHR and respect the 16-sprites-per-line limit without blocking the 6502.
+This is **not** "draw the whole frame while calculating the next frame" (that would be double buffering entire screens). It is **one scanline of delay** between preparing a row and displaying it - enough time to fetch CHR and respect the 16-sprites-per-logical-line limit without blocking the 6502.
 
 ### How BG and sprites meet on screen
 

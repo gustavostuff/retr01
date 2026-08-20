@@ -43,7 +43,7 @@ The entire app UI is drawn to a fixed **640x360** logical canvas.
 | Scaling rule | **Sharp integer scale only** (1x, 2x, 3x, ... - no fractional blur) |
 | Fullscreen | **Ctrl+F** toggles fullscreen. Still integer-scaled to fit the display |
 
-Implementation note: distinguish **UI canvas** (640x360 layout space) from **game screen resolution** (256x240). The Screen cell shows a 256x240 edit viewport inside the larger UI.
+Implementation note: distinguish **UI canvas** (640x360 layout space) from **game screen resolution** (128x96). The Screen cell shows a 128x96 edit viewport inside the larger UI.
 
 ### Cell manager (not floating windows)
 
@@ -79,7 +79,7 @@ Exact pixel sizes for each cell are an implementation detail. The **right column
 
 | Feature | Behavior |
 |---------|----------|
-| World tabs | Dynamic tabs to add/remove worlds. **Min 1**, **max 8** tabs |
+| World tabs | Dynamic tabs to add/remove worlds. **Min 1**, **max 16** tabs |
 | Grid | Interactive sparse grid per world |
 | Resize grid | Add/remove **columns** and **rows** (hardware cap: **16x16** virtual grid) |
 | Select screen | **Click** a cell -> select that grid position |
@@ -115,7 +115,7 @@ Each cell represents one **8x8** BG tile index (0-255) in that CHR bank.
 
 ### 3.4 Screen (right column, primary workspace)
 
-**Purpose:** Paint one **32x30** nametable screen (256x240 px) at **8x8** tile resolution.
+**Purpose:** Paint one **16x12** nametable screen (128x96 px) at **8x8** tile resolution.
 
 #### Layers
 
@@ -267,10 +267,10 @@ Run tests via **CTest** (CMake) or equivalent on every change. Phase 1 is not do
 
 ### Phase 1 minimum test coverage
 
-- [ ] Screen tile plane encode/decode (32x30)
+- [ ] Screen tile plane encode/decode (16x12)
 - [ ] CHR BG pack: dedupe identical 8x8 tiles, assign indices
 - [ ] Project save/load round-trip (at least one world, sparse grid, one screen, one bank)
-- [ ] Grid caps: reject >64 screens per world, >16 grid dimension
+- [ ] Grid caps: reject >64 screens per world, >16 grid dimension, >16 worlds
 
 ---
 
@@ -280,7 +280,7 @@ Overall the UI plan is **sound** and matches the hardware model. A few clarifica
 
 ### Aligns well
 
-- **640x360 shell + integer scale** - good for a crisp retro-tool feel. Keep game resolution (256x240) inside the Screen cell only.
+- **640x360 shell + integer scale** - good for a crisp retro-tool feel. Keep game resolution (128x96) inside the Screen cell only.
 - **Sparse world grid + Ctrl+click** - matches MAP directory/hole model in `02_graphics_worlds_memory.md`.
 - **4 BG bank tabs x 256 tiles** - matches CHR BG bank layout (16x16).
 - **Generate bank -> pick bank 0-3** - matches per-screen CHR BG bank metadata and bank latches.
@@ -294,7 +294,7 @@ Overall the UI plan is **sound** and matches the hardware model. A few clarifica
 | **Palette tabs vs palette rows** | Each tab should be one **palette row** (4 BG + 4 sprite palettes), not an arbitrary grouping. Name it that way in UI labels to avoid confusion with CHR banks. |
 | **Sprite 8x16 toggle** | Display-only reorder is fine. Document that CHR is always 8x8 tiles and 8x16 sprites are **two tile rows** in hardware. |
 | **Generate bank scope** | Phase 1: BG layer only. Packing is per **selected CHR bank** for the **current world**. |
-| **Attr-less export** | Phase 1 screens should export **960-byte tile plane** + **240-byte attr plane stub** (e.g. all palette 0) so MAP format stays valid. |
+| **Attr-less export** | Phase 1 screens should export **192-byte tile plane** + **48-byte attr plane stub** (e.g. all palette 0) so MAP format stays valid. |
 | **World vs screen selection** | Screen cell edits **one grid position** at a time. Switching world tab or grid selection should prompt save/discard if dirty. |
 | **64-screen cap** | Grid UI must enforce max stored screens per world. |
 | **Constraint numbering** | Many scroll modes can coexist as a **project default + per-area overrides**. Avoid making them mutually exclusive enums too early. |
@@ -333,7 +333,7 @@ Phases 0 and 1 can overlap: Phase 0 libraries land first. Phase 1 UI consumes th
 
 #### Worlds map cell
 
-- [ ] **1-8** world tabs (add/remove)
+- [ ] **1-16** world tabs (add/remove)
 - [ ] Resizable grid per world (**1-16** cols, **1-16** rows)
 - [ ] **Click** -> select grid cell
 - [ ] **Ctrl+click** -> create/remove stored screen at that cell
@@ -342,7 +342,7 @@ Phases 0 and 1 can overlap: Phase 0 libraries land first. Phase 1 UI consumes th
 
 #### Screen cell
 
-- [ ] Edit **one screen** for the selected world grid position (32x30 tiles, 256x240 px)
+- [ ] Edit **one screen** for the selected world grid position (16x12 tiles, 128x96 px)
 - [ ] **BG layer only** - 8x8 pixel grid painting
 - [ ] **4 grayscale paint colors** (indices 0-3)
 - [ ] Zoom and pan **inside Screen cell only**
@@ -382,8 +382,8 @@ Phases 0 and 1 can overlap: Phase 0 libraries land first. Phase 1 UI consumes th
 
 | Data | Phase 1 behavior |
 |------|------------------|
-| Screen tile plane | **960 bytes** from BG paint + generate (indices into CHR bank) |
-| Screen attr plane | **Stub**: all tiles palette **0** (240 packed bytes) |
+| Screen tile plane | **192 bytes** from BG paint + generate (indices into CHR bank) |
+| Screen attr plane | **Stub**: all tiles palette **0** (48 packed bytes) |
 | Screen MAP flags | CHR BG bank number = bank chosen at generate time, parallax bit = 0 |
 | CHR BG banks | Up to **4 x 256** unique 8x8 2bpp tiles per world (from generate) |
 | CHR sprite banks | Empty |
@@ -404,7 +404,7 @@ Phases 0 and 1 can overlap: Phase 0 libraries land first. Phase 1 UI consumes th
 ### 10.5 Phase 1 success criteria
 
 - Can lay out a sparse world grid consistent with hardware caps.
-- Can paint at least one full 32x30 BG screen.
+- Can paint at least one full 16x12 BG screen.
 - **Generate bank** produces correct unique tile set and nametable indices for the chosen CHR BG bank.
 - BG banks cell displays the packed result accurately.
 - Project survives save/load without losing worlds, grid shape, screens, or CHR data.
@@ -425,8 +425,8 @@ Phases 0 and 1 can overlap: Phase 0 libraries land first. Phase 1 UI consumes th
 
 | Studio concept | Hardware doc |
 |---------------|--------------|
-| World grid | `02_graphics_worlds_memory.md` - sparse 16x16, 64 screens |
-| Screen 32x30 | Same - 960 tile bytes + 240 attr bytes |
+| World grid | `02_graphics_worlds_memory.md` - sparse 16x16, 64 screens, 16 worlds |
+| Screen 16x12 | Same - 192 tile bytes + 48 attr bytes |
 | CHR BG bank 0-3 | Same - 256 tiles, 16x16 grid, per-world |
 | Generate bank | Fills CHR, screen flags record bank for `load_screen` |
 | Palette rows | Same - Phase 2+ |
