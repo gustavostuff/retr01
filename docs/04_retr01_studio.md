@@ -55,13 +55,13 @@ Content **inside** a cell may scroll, zoom, or pan within that cell's viewport. 
 +------------------------------------------------------------------+
 |  [ Worlds map ]          |                                       |
 |  (tabs, grid)            |                                       |
-+--------------------------+ [ Screen ] |
-|  [ BG banks ]            |      (BG/Sprite paint)              |
++--------------------------+             [ Screen ]                |
+|  [ BG banks ]            |         (BG/Sprite paint)             |
 |  (4 tabs, 16x16 each)    |                                       |
-+--------------------------+ |
++--------------------------+                                       |
 |  [ Sprite banks ]        |                                       |
 |  (4 tabs, 8x8/8x16 view) |                                       |
-+--------------------------+ |
++--------------------------+                                       |
 |  [ Palettes ]            |                                       |
 |  (palette row tabs)      |                                       |
 +------------------------------------------------------------------+
