@@ -67,7 +67,7 @@ Detail: [`03_hardware_implementation.md`](03_hardware_implementation.md).
   Package │ Count │ Parts
   ────────┼───────┼────────────────────────────────────────────────────────────
   [40]    │   2   │ W65C02S, ATmega1284P
-  [32]    │   1   │ SST39SF040 (cart flash on board)
+  [32]    │   1   │ SST39SF040 (v0 on-board cart-flash socket; final cart packaging open — Q9)
   [28]    │   5   │ 3× AS6C62256, ATmega328P, AT28C64B
   [24]    │   3   │ ATF22V10 (decode · timing · PPU/CHR gating)
   [20]    │  ~18  │ HC573 latches, HC245 transceivers, HC688 compare
@@ -176,7 +176,7 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 
 **Retr01 Studio** is the only tool in active development. See `04_retr01_studio.md` for UI layout, game constraints, phased delivery, ASM optimization pipeline, and testing policy.
 
-Studio authors worlds, screens, palettes, and CHR, then compiles them into a `.retr01` cart image.
+Studio authors worlds, screens, palettes, and CHR. Full `.retr01` cart compile (PRG + CHR + MAP) lands in later Studio phases - see `04_retr01_studio.md`.
 
 ## Future software (planned)
 

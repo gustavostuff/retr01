@@ -4,7 +4,7 @@ This doc merges the board walkthrough, software-engineer explanation, chip-count
 
 ## Board-level picture
 
-Retr01-A is three active compute domains on one 5 V board:
+Retr01-A is four active compute domains on one 5 V board:
 
 - **W65C02S**: game logic
 - **74HC BG path**: beam timing, VRAM fetch, BG pixels
@@ -197,7 +197,7 @@ One-line pipeline, not a full-frame delay.
 
 Each cart may store sparse **palette banks** in flash:
 
-- cart-global minimum: **1 BG palette + 1 sprite palette**
+- cart-global minimum: **1 BG Palette + 1 sprite Palette** (one 4-color set each)
 - optional per world: **BG palette bank** and/or **sprite palette bank**, each up to **8 palette rows x 4 palettes**
 
 Runtime selection is always by **palette row**, and **BG palette row N** and **sprite palette row N** are locked together.
@@ -207,7 +207,7 @@ When palette row `N` is active, the **active palette buffer** holds **8 palettes
 - 4 BG palettes from BG palette row `N`
 - 4 sprite palettes from sprite palette row `N`
 
-All 8 share the same **color 0** master index (universal backdrop for that row).
+All 8 share the same **color 0** master index (universal backdrop for that row). Software must write that shared index into every slot when loading the row (see `02_graphics_worlds_memory.md`).
 
 The hardware-facing model is dedicated palette registers or palette RAM. It is **not** nametable VRAM. **Fallback resolution is not hardware logic.** Boot code or Retr01 Studio export/runtime code chooses the source palette bank entry and copies the selected row into registers.
 

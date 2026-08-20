@@ -4,7 +4,7 @@ Retr01 Studio is the **only software tool in active development** for now.
 
 It is a **C/C++** desktop application for visually authoring Retr01 games: pixel patterns, CHR banks, nametables, screens, worlds, and (later) game behavior - not just graphics.
 
-It produces cartridge-ready output aligned with the hardware docs in this folder: **PRG + CHR + MAP** in a `.retr01` cart image.
+It produces cartridge-aligned project data and, in later phases, cartridge-ready **PRG + CHR + MAP** in a `.retr01` cart image.
 
 Studio is **not** the low-level hardware emulator. A separate emulator project is planned later for cycle-accurate validation.
 

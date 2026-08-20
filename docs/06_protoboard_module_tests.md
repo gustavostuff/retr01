@@ -141,7 +141,7 @@ One chip = **32 K x 8** (address **A0-A14**). Three chips on Retr01-A: system RA
 | 18 | `/CE` | From GAL decode (active **low**) |
 | 19 | A10 | Address |
 | 20 | `/OE` | Read strobe (active **low**) |
-| 21 | `/WE` | Write strobe (active **low**. Qualify with PHI2 on VRAM on VRAM) |
+| 21 | `/WE` | Write strobe (active **low**. On VRAM, qualify with PHI2 / GAL-PPU) |
 | 22-27 | A9, A8, A11-A14 | Address |
 | 28 | VCC | +5 V + **100 nF** |
 
@@ -163,25 +163,25 @@ Octal D latch. Used for scroll, VRAM addr, `$FExx` latches, palette.
 | 2-9 | D0-D7 | CPU data bus (write) |
 | 10 | GND | |
 | 11-18 | Q0-Q7 | To register / PPU inputs |
-| 19 | `/LE` | **Latch enable** - high = transparent, **high->low** latches |
+| 19 | **LE** | **Latch enable** (active **high**, not `/LE`): high = transparent, **high→low** latches |
 | 20 | VCC | +5 V |
 
-**Module D example (`$FE02` scroll X):** `/LE` <- decode(`$FE02`) AND write AND PHI2. D0-7 <- CPU D0-7. Q0-7 -> scroll X bits.
+**Module D example (`$FE02` scroll X):** `LE` <- decode(`$FE02`) AND write AND PHI2. D0-7 <- CPU D0-7. Q0-7 -> scroll X bits.
 
 ### 3.5 SN74HC245 - DIP-20 (module G)
 
-8-bit bus transceiver. **`DIR`** = CPU->SRAM when high (check your wiring convention). **`/OE`** low = active.
+8-bit bus transceiver. **`DIR`** high = A→B (CPU→VRAM for writes in the usual island wiring). **`/OE`** low = active.
 
 | Pin | Name | Retr01 VRAM island |
 |-----|------|---------------------|
-| 1 | `/DIR` | CPU->bus direction for writes |
-| 2-9 | B0-B7 | To VRAM I/O |
-| 10 | B7 | (continues bus - see PDF) |
-| 11-18 | A0-A7 | To CPU D0-D7 |
-| 19 | `/OE` | **High = high-Z** on CPU side. Enable only on CPU VRAM phase |
+| 1 | **DIR** | Direction (not `/DIR`). High = A→B toward VRAM for CPU writes |
+| 2-9 | **A0-A7** | To CPU D0-D7 |
+| 10 | **GND** | |
+| 11-18 | **B0-B7** | To VRAM I/O |
+| 19 | `/OE` | **High = high-Z**. Enable only on CPU VRAM phase |
 | 20 | VCC | |
 
-See [SN74HC245 PDF](https://www.ti.com/lit/ds/symlink/sn74hc245.pdf) for complete pin map - **A** side vs **B** side follows TI numbering.
+See [SN74HC245 PDF](https://www.ti.com/lit/ds/symlink/sn74hc245.pdf) for the complete pin map.
 
 ### 3.6 SN74HC157 - DIP-16 (modules G, M)
 
@@ -208,13 +208,13 @@ Quad 2-input mux. **One IC = 4 bits.** VRAM needs **4x 157** for 15-bit address 
 |-----|------|-----|
 | 1 | `/CLR` | High run, GAL sync at frame/line start |
 | 2 | CLK | **Dot clock** ~5.369 MHz |
-| 3-6 | Q0-Q3 | Counter bits |
+| 3-6 | **A, B, C, D** | Parallel **load inputs** (not outputs). Tie or drive only if `/LOAD` used |
 | 7 | ENP | Count enable |
-| 8 | VSS | GND |
+| 8 | GND | |
 | 9 | `/LOAD` | High (don't parallel load in basic island) |
 | 10 | ENT | Count enable |
-| 11-14 | Q0-Q3 | (duplicate label in some drawings - use PDF) |
-| 15 | RCO | Ripple carry **out** -> next 161 CLK or EN |
+| 11-14 | **QA-QD** | Counter **outputs** (Q0-Q3) |
+| 15 | RCO | Ripple carry **out** -> next 161 ENT/ENP or GAL wrap |
 | 16 | VCC | |
 
 Wrap at **341** (X) and **262** (Y) via **74HC688** compare or GAL-TIM, not by letting 161 free-run forever.
@@ -278,7 +278,7 @@ Parallel EEPROM. `/CE`, `/OE`, `/WE` with **`$FE7x`** decode. Address/data tie t
 | F | + AT28C64B |
 | G | + AS6C62256, 4x HC157, HC245, HC573 |
 | H | + 4x HC161, ATF22V10, HC688 |
-| I | + HC573 (scroll), glue from section 3.7 |
+| I | + HC573 (scroll), glue from section 3.4 |
 | J | + flash, HC573 (mapper), ATF22V10 |
 | K | ATmega328P |
 | L | ATmega1284P |
@@ -477,7 +477,7 @@ Guest: **`LDA $FE60`**. Press **Right** (bit 0): result has bit 0 set. No keys: 
 
 ### Pass
 
-Bit layout matches [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) - **1 = pressed**.
+Bit layout matches [`03_hardware_implementation.md`](03_hardware_implementation.md) (also listed under `$FE60` in [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md)) - **1 = pressed**.
 
 ---
 
@@ -485,7 +485,7 @@ Bit layout matches [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md
 
 ### Parts
 
-Island **D** plus **AT28C64B** (8 KB), decode for **`$FE70-$FE7F`** (exact nibble TBD in open questions).
+Island **D** plus **AT28C64B** (8 KB), decode for **`$FE70-$FE7F`** (exact nibble TBD — open question **Q7**).
 
 **Pin reference:** AT28C64B **section 3.10**
 
@@ -607,7 +607,7 @@ PPU phase reads expected nametable range. CPU can still write on CPU phase.
 |--------|------|
 | **PRG** | Island **C** already uses this |
 | **CHR** | CPU **does not** read CHR directly. Toggle **`/CE_CHR`** with BG fetch or 1284 only |
-| **MAP** | CPU writes 24-bit addr to **`$FE90`**, reads **`$FE92`**, verify auto-inc against known flash image |
+| **MAP** | CPU writes 24-bit addr through **`$FE90`** block, reads data (bring-up often uses **`$FE92`** as the data byte - exact offsets TBD with Q1), verify auto-inc against known flash image |
 
 ### Pass
 
@@ -692,7 +692,7 @@ Islands **L** + **M** + CHR bus from **J** (flash with known tile bytes).
 
 ### Test
 
-1. Load OAM test list into 1284 (via **`$FE21`** path or direct firmware load).
+1. Load OAM test list into 1284 (via **`$FE20`/`$FE21`** path or direct firmware load; which byte is addr vs data is still open - see [`05_costs_and_open_questions.md`](05_costs_and_open_questions.md) Q4).
 2. One known sprite tile in CHR flash.
 3. After one frame time, line-buffer half contains non-transparent sprite pixels at expected **X**.
 
@@ -707,7 +707,7 @@ One-line delay behavior: buffer filled for line **N+1** while line **N** would d
 ### Parts
 
 - 74HC573 palette latches (**`$FE08`/`$FE09`** or block assignment TBD).
-- LUT: master palette in **SRAM** (line-buffer chip unused region) or resistor DAC from latched index.
+- LUT: for this **island only**, master-palette lookup may live in leftover SRAM (e.g. unused region of the line-buffer chip) as a proto convenience. Final Retr01-A still targets **dedicated palette registers / palette RAM**, not nametable VRAM (see [`03_hardware_implementation.md`](03_hardware_implementation.md)).
 - Compositor mux: BG vs line-buffer pixel (start with **BG only**, add sprite later).
 - **R-2R** + **75 ohm** + **CSYNC**.
 
@@ -752,7 +752,7 @@ C + D + E + G + H + I + J + O -> BG + CPU + cart + video
 2. Write scroll / palette / nametable via **`$FExx`**.
 3. Read **`$FE60`**, react on loop.
 4. Wait for **NMI**. Increment frame counter in RAM.
-5. (Later) OAM upload loop to **`$FE21`**.
+5. (Later) OAM upload loop to **`$FE20`/`$FE21`**.
 
 ### Pass
 
@@ -772,7 +772,7 @@ When **A-E**, **G**, **H**, **I**, **J**, **K**, **L**, **M**, **N**, and **O** 
 |------|--------|------------|
 | **`$FE02/03`** scroll | D | Store **`$55`**, probe latch |
 | **`$FE1x`** VRAM | G | Write/read **`$AA`** at VRAM **0** |
-| **`$FE21`** OAM | N | 256-byte upload. 1284 RAM mirrors |
+| **`$FE20`/`$FE21`** OAM | N | Upload into 1284. Exact addr/data roles TBD (Q4) |
 | **`$FE60/61`** pads | E | Switch -> bit set |
 | **`$FE80`** PRG bank | J | Bank change moves **`$8000`** window |
 | **`$FE90`** MAP | J | 24-bit seek + read known byte |

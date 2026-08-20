@@ -44,7 +44,7 @@ Retr01-A is meant to drop into a cabinet:
 
 You get a board you can breadboard in islands, bring up module by module, then integrate - not a black-box FPGA mystery.
 
-**Retr01 Studio** (in development) authors worlds, screens, tile art, and palettes, then compiles cart data. A low-level cycle emulator is planned later for validation before silicon is final.
+**Retr01 Studio** (in development) authors worlds, screens, tile art, and palettes. Later Studio phases compile full `.retr01` cart images. A low-level cycle emulator is planned later for validation before silicon is final.
 
 ---
 
@@ -148,7 +148,7 @@ None of this makes NES games bad. Many masterpieces worked within tighter rules.
 
 | Piece | Role |
 |-------|------|
-| **Retr01 Studio** | Visual authoring: worlds, screens, CHR banks, palettes (phased), `.retr01` export |
+| **Retr01 Studio** | Visual authoring: worlds, screens, CHR banks, palettes (phased). Full `.retr01` export in later phases |
 | **Future emulator** | Cycle-level validation of `$FExx` and carts (planned, not active yet) |
 | **Retr01-A board** | Reference hardware and cabinet deploy target |
 
@@ -230,6 +230,7 @@ Different does not mean better for every game. A tight NES-style single screen i
 | [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) | Worlds, VRAM, MAP, palettes, scrolling |
 | [`03_hardware_implementation.md`](03_hardware_implementation.md) | Chips, buses, pipelines |
 | [`04_retr01_studio.md`](04_retr01_studio.md) | Authoring tool roadmap |
+| [`05_costs_and_open_questions.md`](05_costs_and_open_questions.md) | Locked decisions, costs, open questions |
 | [`06_protoboard_module_tests.md`](06_protoboard_module_tests.md) | Hardware bring-up |
 
 ---

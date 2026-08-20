@@ -55,7 +55,8 @@ Per world:
 
 Across the full cart:
 
-- max CHR budget: about **256 KB**
+- max CHR budget: about **256 KB** (8 worlds × 32 KB)
+- planning flash class **SST39SF040** is **512 KB**, so PRG + MAP share the remaining space after CHR (exact packing still open — Q9 / flash strategy in `05_costs_and_open_questions.md`)
 
 ### Runtime bank rules
 
@@ -124,11 +125,11 @@ Smooth scrolling moves that viewport across the **internal seams** between these
 | **Pixel scroll, 1 slot** | One full screen | `scroll_x` / `scroll_y` pan inside that room | One room, camera pans within 256x240 |
 | **Pixel scroll, 2 slots** | Two full adjacent screens (horizontal or vertical pair) | Scroll across the seam | Viewport can show part of room A and part of room B |
 | **Pixel scroll, 4 slots** | Four full screens in 2x2 | Scroll across any internal seam, including corners | Viewport can straddle up to four rooms at once |
-| **Instant screen switch** | New screen(s) loaded into slot(s) | Jump to **0** (or fixed position), no smooth pan | Picture **cuts** to the new room(s) - doors, warps, screen-at-a-time movement |
+| **Instant screen switch** | New screen(s) loaded into slot(s) | Reset `scroll_x`/`scroll_y` to **0** (or another fixed position), no smooth pan | Picture **cuts** to the new room(s) - doors, warps, screen-at-a-time movement |
 
-Instant switch uses the **same VRAM slots** as pixel scroll. The difference is **behavior**: no sliding viewport. Software loads the next room(s), resets scroll, and the image jumps.
+Instant switch uses the **same VRAM slots** as pixel scroll. The difference is **behavior**: no sliding viewport. Software loads the next room(s), resets scroll registers, and the image jumps.
 
-Studio game constraints (see `04_retr01_studio.md`) name these as scroll modes: pixel, dead zone, instant, hybrid, etc. The hardware contract is the same: **full screens in slots**, scroll or cut the viewport.
+Hardware scroll contract is only the rows above: **1 / 2 / 4 live slots** with pixel scroll, or **instant cut**. Studio constraints such as **dead zone** and **hybrid** (see `04_retr01_studio.md`) are **software camera policy** on top of those modes - they do not add new PPU scroll hardware.
 
 #### Parallax slots (4-5)
 
@@ -162,7 +163,7 @@ This is **not** "one room plus a couple of extra tiles pasted on the edge." That
 | `$2000-$2FFF` | 4 KB | scratch / streaming temp |
 | `$3000-$37FF` | 2 KB | plane slot 4 |
 | `$3800-$3FFF` | 2 KB | plane slot 5 |
-| remainder | reserved | future |
+| `$4000-$7FFF` | 16 KB | reserved / future - **not** part of the live camera or plane contract. Do not rely on this region in software until a later rev assigns it |
 
 Each 2 KB slot holds:
 
@@ -209,7 +210,7 @@ Retr01-A, C, and H all share one **master palette** of **64 unique colors**. It 
 #FFFFFF #F1A2BB #F1A6A1 #F1A983 #EEAC44 #D4BA33 #B0C841 #73D275 #22D0A6 #3BCDC9 #48C9E4 #88C4ED #A4BDEF #BBB5F1 #D5A9EF #F09BDD
 ```
 
-This table belongs in cartridge data and is the canonical color source for the whole family.
+This table is the canonical **64-color** source for the whole family. Carts may embed a copy; if omitted, Studio / system startup supplies the same default table (see storage layers below).
 
 ### Cart palette storage (sparse)
 
@@ -220,7 +221,7 @@ Three layers exist:
 | Layer | What it holds | Required? |
 |-------|---------------|-----------|
 | **Master palette** | 64 RGB colors | optional in cart, system default exists |
-| **Cart global palette banks** | at least **1 BG palette + 1 sprite palette** shared across worlds | minimum authoring contract |
+| **Cart global palette banks** | at least **1 BG Palette + 1 sprite Palette** (one **4-color** set each) shared across worlds | minimum authoring contract |
 | **World palette banks** | optional **BG palette bank** and/or **sprite palette bank** for that world | optional per world |
 
 Within each palette bank, storage is **sparse**: only authored palettes occupy cart bytes.
@@ -267,6 +268,8 @@ To use palette row 4 instead of row 0, software changes the selected palette row
 All **8 palettes** in the active buffer share the same **color 0** master index.
 
 That gives one universal backdrop color for the current palette row, NES-style, across both BG and sprite planes.
+
+This is a **software load rule**, not a separate backdrop IC: when the CPU (or Studio runtime) copies a palette row into the active buffer, it must write the **same** master index into color 0 of all **8** palette slots. Hardware does not auto-tie eight independent color-0 fields unless a later rev adds that.
 
 Rules:
 
@@ -348,12 +351,28 @@ Recommended MAP directory row:
 |-------|---------|
 | `$FE00-$FE0F` | PPU control, scroll, raster compare |
 | `$FE10-$FE1F` | VRAM port |
-| `$FE20-$FE2F` | OAM port into 1284 |
+| `$FE20-$FE2F` | OAM port into 1284 (`$FE20`/`$FE21` in docs; addr vs data roles TBD — Q4) |
 | `$FE30-$FE3F` | world select + BG bank latches + sprite bank |
 | `$FE40-$FE5F` | APU |
 | `$FE60-$FE6F` | controllers / cabinet |
+| `$FE70-$FE7F` | board EEPROM (AT28C64B), optional; exact decode TBD (Q7) |
 | `$FE80-$FE8F` | PRG bank |
 | `$FE90-$FE9F` | MAP port |
+
+Controller bytes (software contract; **1 = pressed**):
+
+| Bit | `$FE60` / `$FE61` |
+|-----|-------------------|
+| 0 | right |
+| 1 | left |
+| 2 | down |
+| 3 | up |
+| 4 | X |
+| 5 | Y |
+| 6 | coin / select |
+| 7 | start |
+
+Same layout on Retr01-A (cabinet IDC) and Retr01-C (pad MCU → these two bytes).
 
 ## Raster and parallax
 
@@ -367,7 +386,7 @@ Parallax is implemented as a **separate scanline band** that points to plane slo
 
 Rules:
 
-- parallax forces a **1-axis camera**
+- enabling a parallax band forces a **1-axis camera** on the **main** playfield for that setup (software must not ask the PPU for free 2-axis camera scroll while planes 4-5 are active - exact band vs whole-frame gating is still open)
 - plane slots are not part of the 2x2 camera
 - BG banks stay per slot
 - sprite bank remains separate/global
