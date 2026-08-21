@@ -28,7 +28,8 @@ This doc merges the old cost sheet and decision log into one planning file.
 | BG attr byte | per tile: `PAL`/`FLIP_*`/`BANK` **hardware**; `SOLID`/`ANIM` **software** - see [`02`](02_graphics_worlds_memory.md) |
 | BG living tiles | `ANIM=1`: **4** consecutive CHR indices `B..B+3`, `B` 4-aligned; software advances nametable |
 | BG collision | `SOLID` bit + **RAM shadow**; video ignores `SOLID` |
-| Runtime sprite banking | separate **global latch** |
+| Runtime sprite banking | per **OAM entry** (attr `BANK` bits); `$FE37` optional stamp only |
+| OAM attr byte | `BANK` (1-0), `PAL` (3-2), `FLIP_H` (4), `FLIP_V` (5), `PRIORITY` (6), `SIZE` (7) - see [`02`](02_graphics_worlds_memory.md) |
 | VRAM | **32 KB**, interleaved. Slots **512 B** aligned (240+240 used) |
 | System RAM | **32 KB**, CPU-only |
 | Line buffer | third **32 KB** SRAM, sprite ping-pong, **128 px**/half used |
@@ -81,7 +82,7 @@ v0 uses on-board flash socket. Cart PCB comes later. Motherboard + cart proto st
 | ID | Topic | Note |
 |----|-------|------|
 | Q2 | RGBS analog levels/sync polarity tuning | digital timing is locked. Bench tuning still needed |
-| Q10 | OAM attr bitfields | entry order locked. Flip/priority/palette bits inside attr byte still micro-rev |
+| Q10 | OAM attr bitfields | **Locked:** bank/pal/flip/priority/size in [`02`](02_graphics_worlds_memory.md). 8x16 tile-pair fetch detail on 1284 firmware still micro-rev |
 | Q11 | `$FE07` plane band end/dual-band detail | start scanline drafted. End-of-band pairing may need a second latch |
 | Q12 | PRG/CHR/MAP offsets inside 512 KB flash | socket-now/cart-later locked. Exact region map still flexible. Full CHR for all 16 worlds is 512 KB alone |
 | Q13 | Retr01-C pad bit timing | ATtiny85 + 3-wire draft locked. Baud/poll edge details later |

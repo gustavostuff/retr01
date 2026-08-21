@@ -40,8 +40,8 @@ Max CHR if every world is full: **16 x 32 KB = 512 KB** (fills an SST39SF040 by 
 3. Slot registers `$FE31`-`$FE36` are optional **bulk helpers** (e.g. stamp a bank into a slot's attrs). They are **not** the live fetch source.
 4. Camera slots **0-3** and plane slots **4-5** hold nametable+attr data; mixed banks in one screen are normal.
 5. **BG bank needs no mid-frame latch split.** Each tile already carries `BANK`, so a room can mix banks 0-3 in one nametable without raster/line IRQ bank flips. Raster IRQ stays available for status bars, parallax bands, palette row changes, and other splits.
-6. **Sprite bank** is separate and **global** for the current world (`$FE37`).
-7. Changing BG tile banks does not change the sprite bank, and vice versa.
+6. **Sprite CHR bank is per OAM entry** (attr bits **1-0**). Mixed sprite banks in one frame are normal. `$FE37` is an optional bulk stamp helper, not the live fetch source.
+7. BG tile banks and sprite banks are independent (different CHR halves / bank spaces).
 
 ## BG tile attributes
 
@@ -297,6 +297,34 @@ Line N+1| fill next row    |        | SHOW (beam read) |
 - CPU job: keep OAM updated (`$FE20`/`$FE21`). 1284 job: evaluate Y, fetch CHR in HBlank, pack the strip.
 - SCALE still happens later on the raster path. The line buffer stays **128** wide either way.
 
+### OAM sprite attributes
+
+Entry order: `Y, tile, attr, X` x **64**. Positions are logical (**128x120**). CHR patterns are always **8x8**; `SIZE` selects how many rows one OAM entry spans.
+
+```text
+7 6 5 4 3 2 1 0
+1 0 0 1 0 1 0 1
+| | | | | | |_|__ Bank index (0-3)
+| | | | | |
+| | | | |_|______ Palette (0-3)
+| | | |
+| | | |__________ H flip
+| | |____________ V flip
+| |______________ Priority (0 = in front of BG, 1 = behind opaque BG)
+|________________ Size (0 = 8x8, 1 = 8x16)
+```
+
+| Bits | Name | Owner | Role |
+|------|------|-------|------|
+| 1-0 | `BANK` | **Hardware** (1284 CHR fetch) | sprite CHR bank 0-3 |
+| 3-2 | `PAL` | **Hardware** | sprite palette 0-3 |
+| 4 | `FLIP_H` | **Hardware** | horizontal mirror |
+| 5 | `FLIP_V` | **Hardware** | vertical mirror |
+| 6 | `PRIORITY` | **Hardware** | `0` = in front of BG; `1` = behind opaque BG |
+| 7 | `SIZE` | **Hardware** | `0` = 8x8; `1` = 8x16 (two stacked 8x8 tiles) |
+
+`SIZE=1`: one OAM entry covers **16** logical rows. Tile byte is the base index `B` (**even** / 2-aligned); the 1284 fetches top `B` and bottom `B+1` (or `B|1`) for the matching row. `SIZE=0` uses a single tile at `B` for rows `Y..Y+7`. Mixed 8x8 and 8x16 entries in the same frame are normal. An 8x16 sprite counts as **one** toward the **16**-per-line cap on each line it covers.
+
 ## Palettes
 
 Do not mix these with CHR **tile banks**.
@@ -424,7 +452,7 @@ Frozen draft for Studio, firmware, and proto. Bitfields may grow reserved bits l
 | `$FE21` | W | `OAM_DATA` | write + auto-inc |
 | `$FE22-$FE2F` | - | reserved | |
 
-Entry: `Y, tile, attr, X` x 64. Attr bitfields (palette / flip / priority) TBD.
+Entry: `Y, tile, attr, X` x 64. Attr bitfields: see **OAM sprite attributes** above.
 
 #### `$FE30-$FE3F` world / CHR
 
@@ -432,7 +460,7 @@ Entry: `Y, tile, attr, X` x 64. Attr bitfields (palette / flip / priority) TBD.
 |------|-----|------|----------|
 | `$FE30` | W | `WORLD` | 0-15 |
 | `$FE31`-`$FE36` | W | `BG_BANK_0`..`5` | optional bulk helpers for slots 0-5 (0-3); **not** live BG fetch source |
-| `$FE37` | W | `SPR_BANK` | global sprite CHR bank 0-3 |
+| `$FE37` | W | `SPR_BANK` | optional bulk stamp into OAM attrs (0-3); **not** live sprite CHR fetch source |
 | `$FE38` | W | `PAL_ROW` | row 0-7 (BG+sprite). Still copy into `$FE08`/`$FE09` |
 | `$FE39-$FE3F` | - | reserved | |
 
@@ -478,14 +506,15 @@ Parallax = scanline band pointing at plane slots **4-5**.
 
 - Any H/V band enable locks main camera scroll to that axis for the **whole frame**. Do not scroll the unlocked axis while a band is active.
 - Plane slots are not part of the 2x2 camera.
-- BG CHR bank is **per 8x8 tile** (attr `BANK`). Sprite bank stays global.
+- BG CHR bank is **per 8x8 tile** (attr `BANK`). Sprite CHR bank is **per OAM entry** (attr `BANK`).
 - Plane attrs share the playfield's **4 BG palettes** (locked to the active row). Scrolling the band does not unlock new colors.
 
 ## Software cheat sheet
 
 - Nametable bytes are tile indices **0-255** inside the bank named by that tile's attr `BANK` bits.
 - Screens are **not** hardware-tied to one BG bank; mixed banks in one screen are normal.
-- Per-tile `BANK` covers mixed art in one frame (no mid-frame bank-latch split needed for BG CHR).
+- Per-tile `BANK` covers mixed BG art in one frame (no mid-frame bank-latch split needed for BG CHR).
+- Sprite attr carries bank, palette, flips, priority, and size; mixed 8x8/8x16 in one frame is normal.
 - MAP picks which screen to load. World picks which 32 KB CHR chapter is active.
 - Camera slots hold **whole screens**. Scroll moves the window; MAP loads happen on software slot shifts (`02` worked example).
 - Sprites use a ping-pong line buffer one scanline ahead (`02` diagram, `03` detail).

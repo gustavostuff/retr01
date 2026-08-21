@@ -124,7 +124,7 @@ These are **physical latches on the PCB**, not VRAM and not "variables in the 12
 | `$FE06`/`$FE07` | plane band | which plane, axis lock, band start | HC573 | BG path (slot 4/5 vs 0-3) | When enabling/moving a parallax band |
 | `$FE30` | `WORLD` | 0-15 | HC573 | CHR/MAP region select glue | World change (rare) |
 | `$FE31`-`$FE36` | `BG_BANK_0`..`5` | bank **0-3** (optional helpers) | HC573 (may share packages with scroll/MAP) | Software / load helpers; **not** live BG CHR mux | Optional bulk stamp into slot attrs. Live bank is **per-tile attr** |
-| `$FE37` | `SPR_BANK` | bank **0-3** global | HC573 | 1284 sprite CHR fetch in HBlank | When sprite art set changes |
+| `$FE37` | `SPR_BANK` | bank **0-3** (optional helper) | HC573 | Software / load helpers; **not** live sprite CHR mux | Optional bulk stamp into OAM attrs. Live bank is **per-sprite attr** |
 | `$FE38` | `PAL_ROW` | row 0-7 (hint) | optional latch / software convention | Software still **must** copy indices into `$FE08`/`$FE09` | Row change |
 | `$FE80` | `PRG_BANK` | PRG window | HC573 | PRG `/CE` + high address | Bank switch |
 | `$FE90`-`$FE92` | `MAP_ADDR_*` | 24-bit MAP cursor | HC573x3 (or packed) | MAP `/CE` + flash A[23:0] | Seek before streaming a screen |
@@ -191,7 +191,8 @@ Sprites are **not** drawn by the 6502 into a framebuffer. The **ATmega1284P** ow
 
 | Item | Detail |
 |------|--------|
-| OAM | **64** sprites. CPU: write index to **`$FE20`**, data to **`$FE21`** (auto-inc). Entry order `Y, tile, attr, X`. Positions are **logical** (128x120 space) |
+| OAM | **64** sprites. CPU: write index to **`$FE20`**, data to **`$FE21`** (auto-inc). Entry order `Y, tile, attr, X`. Positions are **logical** (128x120 space). Attr: `BANK`/`PAL`/`FLIP_*`/`PRIORITY`/`SIZE` (see `02`) |
+
 | Per scanline cap | **16** sprites on one **logical** row |
 | Line buffer SRAM | **256 bytes** used on the third AS6C62256: two **128-byte** halves |
 | Half A | `$000-$07F` - one logical row of sprite data (128 pixels) |
@@ -303,7 +304,8 @@ No extra ICs are required for palette **banks**, synced row selection, or fallba
 
 ## Timing-facing rules
 
-- mid-frame **scroll** / `SPR_BANK` writes take effect on the **next tile fetch** (allow up to **8 px** delay if a write lands mid-tile)
+- mid-frame **scroll** writes take effect on the **next tile fetch** (allow up to **8 px** delay if a write lands mid-tile)
+- mid-frame OAM / sprite-attr changes are sampled on the **next** line eval (1284); attr `BANK`/`SIZE`/`PRIORITY`/`FLIP_*`/`PAL` live in OAM, not `$FE37`
 - mid-frame **attr `BANK`** (or other attr) changes follow nametable tear rules below - they are VRAM, not a slot latch
 - clean splits should write during **HBlank**
 - raster IRQ is the intended split mechanism

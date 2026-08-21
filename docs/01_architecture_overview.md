@@ -110,7 +110,9 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 | **BG bank** | **256 BG tiles**, arranged as a **16x16** tile grid, **4 KB** (CHR) |
 | **Sprite bank** | **256 sprite tiles**, arranged as a **16x16** tile grid, **4 KB** (CHR) |
 | **BG bank (runtime)** | Per **8x8 tile**: attr bits select CHR BG bank **0-3** (not per screen) |
+| **Sprite bank (runtime)** | Per **OAM entry**: attr bits select CHR sprite bank **0-3** |
 | **BG bank helper** | Optional `$FE31`-`$FE36` bulk stamp into slot attrs; not the live fetch source |
+| **Sprite bank helper** | Optional `$FE37` bulk stamp into OAM attrs; not the live fetch source |
 | **BG palette bank** | Cartridge store of up to **32 BG palettes** (**8 palette rows x 4 palettes**) |
 | **Sprite palette bank** | Cartridge store of up to **32 sprite palettes** (**8 palette rows x 4 palettes**) |
 | **Palette row** | **4 palettes** in one plane, index **0-7**. BG row N and sprite row N are selected together |
@@ -178,7 +180,7 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 - PRG elsewhere, banked only through `$FE80`
 - World/MAP streaming through `$FE90`
 - BG banks per **8x8 tile** (attr `BANK`); screens may only stamp a default at load
-- Sprite bank independent of BG banks (global `$FE37`)
+- Sprite bank independent of BG banks (per OAM attr `BANK`; `$FE37` optional stamp)
 
 ## Near-term software focus
 

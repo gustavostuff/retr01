@@ -109,7 +109,7 @@ Each cell represents one **8x8** BG tile index (0-255) in that CHR bank.
 | Tabs | **4 tabs** (sprite banks 0-3) |
 | Grid | **256 cells** per tab |
 | View toggle | **Right-click menu** on tab or tab content: **8x8** vs **8x16** layout |
-| Toggle effect | **Visualization only** - reorders how tiles are drawn in the grid to preview 8x16 meta-tiles. Does not change hardware tile size (always 8x8 in CHR) |
+| Toggle effect | Preview packing for tall sprites. CHR tiles stay **8x8**; hardware `SIZE=1` uses two stacked tiles per OAM entry |
 
 **Phase 1:** cell visible but **disabled/empty** (no sprite authoring yet).
 
@@ -294,7 +294,7 @@ Overall the UI plan is **sound** and matches the hardware model. A few clarifica
 | Topic | Note |
 |-------|------|
 | **Palette tabs vs palette rows** | Each tab should be one **palette row** (4 BG + 4 sprite palettes), not an arbitrary grouping. Name it that way in UI labels to avoid confusion with CHR banks. |
-| **Sprite 8x16 toggle** | Display-only reorder is fine. Document that CHR is always 8x8 tiles and 8x16 sprites are **two tile rows** in hardware. |
+| **Sprite 8x16** | Per-OAM `SIZE` bit; CHR stays 8x8 tiles (two stacked for tall). Mixed 8x8/8x16 in one frame is normal. |
 | **Generate bank scope** | Phase 1: BG layer only. Packing is per **selected CHR bank** for the **current world**. |
 | **Attr-less export** | Phase 1 screens should export **240-byte tile plane** + **240-byte** attr plane stub (e.g. all palette 0 / bank from generate) so MAP format stays valid. |
 | **World vs screen selection** | Screen cell edits **one grid position** at a time. Switching world tab or grid selection should prompt save/discard if dirty. |

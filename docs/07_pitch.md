@@ -214,7 +214,7 @@ If you know how NES tiles, attrs, and sprites work, Retr01 art pipelines will fe
 | On-screen palette slots | **4 BG + 4 sprite** (with shared backdrop rules) | **4 BG + 4 sprite** active row. **64** master colors in **Color PROM**. Cart holds **index** banks only |
 | Nametables live at once | **2** for scroll tricks | **6 slots**: **4** camera + **2** parallax plane |
 | World/map hardware | None (game code) | **MAP-ROM**, **16 worlds**, **64 screens/world** |
-| CHR banking | Mapper-dependent, game-defined | **4 BG + 4 sprite banks/world**, **per-tile** BG bank (attr), global sprite bank |
+| CHR banking | Mapper-dependent, game-defined | **4 BG + 4 sprite banks/world**, **per-tile** BG bank, **per-sprite** bank (attrs) |
 | Mid-frame effects | **Sprite 0 hit** + timed code | **Raster compare IRQ** |
 | Gameplay collision | Software (same) | Software (explicit - **no** hardware sprite-BG hit) |
 | PPU integration | Single Ricoh PPU | **74HC BG path** + **ATmega1284P** sprite line buffer + **ATmega328P** APU |
