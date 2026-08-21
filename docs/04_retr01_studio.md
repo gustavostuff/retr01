@@ -79,12 +79,12 @@ Exact pixel sizes for each cell are an implementation detail. The **right column
 
 | Feature | Behavior |
 |---------|----------|
-| World tabs | Dynamic tabs to add/remove worlds. **Min 1**, **max 16** tabs |
+| World tabs | Dynamic tabs to add/remove worlds. **Min 1**, **max 8** tabs |
 | Grid | Interactive sparse grid per world |
-| Resize grid | Add/remove **columns** and **rows** (hardware cap: **16x16** virtual grid) |
+| Resize grid | Add/remove **columns** and **rows** (hardware cap: **8x8** virtual grid) |
 | Select screen | **Click** a cell -> select that grid position |
 | Create/remove screen | **Ctrl+click** toggles a stored screen at that grid position |
-| Caps | At most **64 stored screens** per world (per hardware spec) |
+| Caps | At most **32 stored screens** per world (per hardware spec) |
 
 Empty grid positions are holes (not stored in MAP). Selected position drives which screen the Screen cell edits.
 
@@ -272,7 +272,7 @@ Run tests via **CTest** (CMake) or equivalent on every change. Phase 1 is not do
 - [ ] Screen tile plane encode/decode (16x15)
 - [ ] CHR BG pack: dedupe identical 8x8 tiles, assign indices
 - [ ] Project save/load round-trip (at least one world, sparse grid, one screen, one bank)
-- [ ] Grid caps: reject >64 screens per world, >16 grid dimension, >16 worlds
+- [ ] Grid caps: reject >32 screens per world, >8 grid dimension, >8 worlds
 
 ---
 
@@ -298,7 +298,7 @@ Overall the UI plan is **sound** and matches the hardware model. A few clarifica
 | **Generate bank scope** | Phase 1: BG layer only. Packing is per **selected CHR bank** for the **current world**. |
 | **Attr-less export** | Phase 1 screens should export **240-byte tile plane** + **240-byte** attr plane stub (e.g. all palette 0 / bank from generate) so MAP format stays valid. |
 | **World vs screen selection** | Screen cell edits **one grid position** at a time. Switching world tab or grid selection should prompt save/discard if dirty. |
-| **64-screen cap** | Grid UI must enforce max stored screens per world. |
+| **32-screen cap** | Grid UI must enforce max stored screens per world. |
 | **Constraint numbering** | Many scroll modes can coexist as a **project default + per-area overrides**. Avoid making them mutually exclusive enums too early. |
 
 No blocking issues. Phase 1 as scoped below is a good first slice.
@@ -335,11 +335,11 @@ Phases 0 and 1 can overlap: Phase 0 libraries land first. Phase 1 UI consumes th
 
 #### Worlds map cell
 
-- [ ] **1-16** world tabs (add/remove)
-- [ ] Resizable grid per world (**1-16** cols, **1-16** rows)
+- [ ] **1-8** world tabs (add/remove)
+- [ ] Resizable grid per world (**1-8** cols, **1-8** rows)
 - [ ] **Click** -> select grid cell
 - [ ] **Ctrl+click** -> create/remove stored screen at that cell
-- [ ] Enforce **64 screens max** per world
+- [ ] Enforce **32 screens max** per world
 - [ ] Show selection state (stored vs hole, selected)
 
 #### Screen cell
@@ -429,7 +429,7 @@ Phases 0 and 1 can overlap: Phase 0 libraries land first. Phase 1 UI consumes th
 
 | Studio concept | Hardware doc |
 |---------------|--------------|
-| World grid | `02_graphics_worlds_memory.md` - sparse 16x16, 64 screens, 16 worlds |
+| World grid | `02_graphics_worlds_memory.md` - sparse 8x8, 32 screens, 8 worlds |
 | Screen 16x15 | Same - **240** tile bytes + **240** attr bytes (one attr/tile; includes `BANK`) |
 | CHR BG bank 0-3 | Same - 256 tiles, 16x16 grid, per-world; runtime bank is per-tile attr |
 | Generate bank | Fills CHR; stamps default `BANK` into attrs / optional MAP default flag |

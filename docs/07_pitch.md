@@ -40,7 +40,7 @@ Retr01-A is meant to drop into a cabinet:
 - **5 V** barrel power, through-hole build, repair-friendly sockets
 - **20-pin IDC** for coin, start, and player controls
 - **RGBS**, S-Video, and composite output pads (cabinet monitors today, converters for modern displays tomorrow)
-- Real **cartridge** plan: **2 MB** standard image (PRG + CHR + MAP). Devs need not fill it; size covers full world/CHR caps plus complex PRG
+- Real **cartridge** plan: **512 KB** standard image (PRG + CHR + MAP). Full caps + **~96 KB** PRG ~**478 KB**, ~**34 KB** free
 
 You get a board you can breadboard in islands, bring up module by module, then integrate - not a black-box FPGA mystery.
 
@@ -83,8 +83,8 @@ Same contract again, SMD build, likely multi-board layout. Battery, display, and
 
 Retr01 treats **worlds** as a first-class cart concept:
 
-- Up to **16 worlds** per game
-- Each world: sparse **16x16** grid, up to **64 stored screens**
+- Up to **8 worlds** per game
+- Each world: sparse **8x8** grid, up to **32 stored screens**
 - Each screen: **16x15** tilemap + attributes (**128x120**) - **480 B** raw in MAP (**one byte per tile index, one byte per attr**)
 - **MAP-ROM** streams that blob through `$FE90` - seek, then copy. No compression step on the hot path
 
@@ -149,7 +149,7 @@ Clock ratio alone is not "4.5x the game." Video timing, DMA absence, and your ow
 | Idea | Classic NES-style approach | Retr01 approach |
 |------|---------------------------|-----------------|
 | Map storage | Often ad-hoc tables in PRG, manual pointers | **Self-describing cart**: header + **pointer table** + worlds/screens (**480 B** raw) |
-| Room grid | Engine-specific | Up to **64 screens/world** on a **16x16** sparse grid (**16** worlds) |
+| Room grid | Engine-specific | Up to **32 screens/world** on an **8x8** sparse grid (**8** worlds) |
 | CHR organization | Banks and swaps per game | **4 BG + 4 sprite banks per world** (256 tiles each) |
 | Crossing a seam | Reload nametable in VBlank; flicker or stall | **2x2 live slots** + scroll; interleaved stream (~**11** CRT lines/screen) |
 | Parallax layer | Status bar tricks, CHR abuse, IRQ hacks | **Dedicated plane slots 4-5** + raster band |
@@ -217,7 +217,7 @@ If you know how NES tiles, attrs, and sprites work, Retr01 art pipelines will fe
 | Logical playfield | **256x240** (32x30 tiles) | **128x120** (16x15 tiles) - chunky; **2x** fills CRT |
 | Why smaller logical | - | **Bigger pixels**, cheaper rooms, more worlds in flash |
 | RGBS/CRT active field | **256x240** | **256x240** raster. Board **SCALE**: **2x** = full field, or **1x** centered |
-| Cart / ROM size | Often 128-512 KB class | **2 MB** standard (caps ~1.2 MB + slack); same `.retr01` format |
+| Cart / ROM size | Often 128-512 KB class | **512 KB** standard (~**478 KB** full fill + slack); same `.retr01` format |
 | CPU clock | **~1.79 MHz** | **8.000 MHz** |
 | Work RAM | **2 KB** | **32 KB** system RAM (CPU-only) |
 | Video RAM | **2 KB** PPU internal | **32 KB** interleaved VRAM + separate line-buffer SRAM |
@@ -225,7 +225,7 @@ If you know how NES tiles, attrs, and sprites work, Retr01 art pipelines will fe
 | Sprites per scanline | **8** | **16** (logical lines) |
 | On-screen palette slots | **4 BG + 4 sprite** (with shared backdrop rules) | **4 BG + 4 sprite** active row. **64** master colors in **Color PROM**. Cart holds **index** banks only |
 | Nametables live at once | **2** for scroll tricks | **6 slots**: **4** camera + **2** parallax plane |
-| World/map hardware | None (game code) | **MAP-ROM**, **16 worlds**, **64 screens/world**, **480 B**/screen raw |
+| World/map hardware | None (game code) | **MAP-ROM**, **8 worlds**, **32 screens/world**, **480 B**/screen raw |
 | CHR banking | Mapper-dependent, game-defined | **4 BG + 4 sprite banks/world**, **per-tile** BG bank, **per-sprite** bank (attrs) |
 | Mid-frame effects | **Sprite 0 hit** + timed code | **Raster compare IRQ** |
 | Gameplay collision | Software (same) | Software (explicit - **no** hardware sprite-BG hit) |

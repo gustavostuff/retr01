@@ -7,8 +7,8 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Topic | Decision |
 |------|----------|
 | Name/family | **Retr01**, rollout **A -> C -> H** |
-| Worlds | **16** max |
-| World layout | sparse virtual grid up to **16x16**, **64 screens max** per world |
+| Worlds | **8** max |
+| World layout | sparse virtual grid up to **8x8**, **32 screens max** per world |
 | Screen format | **16x15** tiles (**128x120**), **240-byte** tile plane + **240-byte** attr plane (one attr/tile) |
 | MAP screen format | **480 B** raw per screen (**240** tile indices + **240** attrs, one byte each). **No RLE** required |
 | Pixel aspect | square logical pixels; storage **16:15**; **2x** fills **256x240** RGBS with no letterbox |
@@ -42,10 +42,10 @@ This doc merges the old cost sheet and decision log into one planning file.
 | `$FExx` byte map | **draft v0 frozen** in [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) (PPU, VRAM, OAM, banks, EEPROM, MAP) |
 | MAP access | **`$FE90`-`$FE92`** addr, **`$FE93`** data + auto-inc |
 | PRG layout | **One global PRG section** per cart (not per world). `$FE80` optional window if needed |
-| PRG size (planning) | **128-256 KB** for logic-heavy games; **~192 KB** default reserve |
-| Cart fit | **Standard cart 2 MB**. All caps ~**1.17 MB** + slack. Complex average ~**541 KB** - see [`02`](02_graphics_worlds_memory.md) |
+| PRG size (planning) | **~96 KB** default reserve (fits full world/CHR/MAP caps on 512 KB with ~34 KB free) |
+| Cart fit | **Standard cart 512 KB**. Full caps + 96 KB PRG ~**478 KB** - see [`02`](02_graphics_worlds_memory.md) |
 | Board EEPROM | **AT28C64B on every Retr01-A v0**. Port **`$FE70`/`$FE71`** addr, **`$FE72`** data |
-| Cart flash | **2 MB (16 Mbit x8) parallel NOR** standard. On-board socket for v0, then on cartridge. Same `.retr01` image. **512 KB** parts OK for early bring-up only |
+| Cart flash | **512 KB (4 Mbit x8) parallel NOR** standard (**SST39SF040**). On-board socket for v0, then on cartridge. Same `.retr01` image |
 | Parallax camera lock | if **any** H or V parallax band is enabled, main camera locks to that axis for the **whole frame** |
 | CPU map | RAM at `$0000-$7FFF`, I/O at `$FE00-$FEFF` |
 | Controls | one byte per player at `$FE60/$FE61` |
@@ -89,18 +89,18 @@ v0 uses on-board flash socket. Cart PCB comes later. Motherboard + cart proto st
 | Q2 | RGBS analog levels/sync polarity tuning | digital timing is locked. Bench tuning still needed |
 | Q10 | OAM attr bitfields | **Locked:** bank/pal/flip/priority/size in [`02`](02_graphics_worlds_memory.md). 8x16 tile-pair fetch detail on 1284 firmware still micro-rev |
 | Q11 | `$FE07` plane band end/dual-band detail | start scanline drafted. End-of-band pairing may need a second latch |
-| Q12 | PRG/CHR/MAP offsets inside **2 MB** flash | **Direction set:** cart header + pointer table in [`02`](02_graphics_worlds_memory.md). Byte-level packing still micro-rev |
+| Q12 | PRG/CHR/MAP offsets inside **512 KB** flash | **Direction set:** cart header + pointer table in [`02`](02_graphics_worlds_memory.md). Byte-level packing still micro-rev |
 | Q13 | Retr01-C pad bit timing | ATtiny85 + 3-wire draft locked. Baud/poll edge details later |
 | Q14 | Color PROM byte width per gun | AT28C16 is 8-bit wide. How many MSBs feed each R-2R (6-bit vs 8-bit DAC) still bench-tunable |
 | Q15 | Color PROM part (AT28C16 vs faster OTP) | **Pinned candidate:** **AT27C256R / AT27C256R-70PU** (70 ns, In Production, DIP-28). Current plan still AT28C16. Revisit if EOL/stock or a higher dot clock needs <150 ns |
 | Q16 | Default living-tile list cap | Recommend **32** vs **64** cells per camera workbench (`RETR01_ANIM_MAX`) |
 | Q17 | BG anim rate | Fixed global `rate_shift`, or per-game constant only? |
 | Q18 | BG flip+bank silicon timing | Prove on BG fetch island before locking Studio Phase 2 attr UI |
-| Q19 | 2 MB parallel flash part / package | 16 Mbit x8 NOR, socket-friendly for v0 if possible. SST39SF040 (512 KB) bring-up only |
+| Q19 | Cart flash part | **Locked:** **SST39SF040** (512 KB, DIP-32). Same part for v0 socket and cart |
 
 ## Practical next decisions
 
 1. tune RGBS on real hardware (Q2)
 2. start Retr01 Studio Phase 0/1 (JSON project files. Freeze schema when code needs it)
-3. freeze cart pointer packing; pick 2 MB flash part (Q12 / Q19)
+3. freeze cart pointer packing (Q12); flash part locked SST39SF040 (Q19)
 4. flesh out ATtiny85 poll timing when Retr01-C work starts (Q13)

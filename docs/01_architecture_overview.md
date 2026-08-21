@@ -48,7 +48,7 @@ Detail: [`03_hardware_implementation.md`](03_hardware_implementation.md).
   │                                                                                         │
   │   ┌─ CART + CONFIG ──────────────────────┐   ┌─ VIDEO OUT (analog pads) ─────────────┐  │
   │   │  ┌────────────────────────────┐      │   │  Color PROM AT28C16 x3 + R-2R         │  │
-  │   │  │  2 MB parallel NOR  [32+]  │      │   │  ┌─────┐ ┌─────┐ ┌─────┐  J RGBS      │  │
+  │   │  │  512 KB NOR (SST39SF040)   │      │   │  ┌─────┐ ┌─────┐ ┌─────┐  J RGBS      │  │
   │   │  │  PRG · CHR · MAP (gated)   │      │   │  │ 75Ω │ │ 75Ω │ │ 75Ω │  J S-VIDEO   │  │
   │   │  └────────────────────────────┘      │   │  └─────┘ └─────┘ └─────┘  J COMPOSITE │  │
   │   │  ┌──────────────┐  HC245 [20]        │   └───────────────────────────────────────┘  │
@@ -67,7 +67,7 @@ Detail: [`03_hardware_implementation.md`](03_hardware_implementation.md).
   Package │ Count │ Parts
   ────────┼───────┼────────────────────────────────────────────────────────────
   [40]    │   2   │ W65C02S, ATmega1284P
-  [32+]   │   1   │ 2 MB parallel NOR cart flash (v0 on-board socket; 512 KB OK for bring-up)
+  [32]    │   1   │ 512 KB parallel NOR cart flash (SST39SF040; v0 on-board socket)
   [28]    │   5   │ 3x AS6C62256, ATmega328P, AT28C64B
   [24]    │   6   │ 3x ATF22V10 (decode/timing/PPU) + 3x AT28C16 Color PROM (R/G/B)
   [20]    │  ~18  │ HC573 latches, HC245 transceivers, HC688 compare
@@ -141,8 +141,9 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 | RGBS active field | **256x240** (SCALE **2x** fills field; **1x** = centered 128x120) |
 | Tile size | **8x8** |
 | Color | **2bpp**, **64-color Color PROM** on board, **BG/sprite palette banks** in cart (indices only), **one synced palette row active** (4 BG + 4 sprite) |
-| Worlds | **16** max |
-| Screens per world | **64** max on sparse **16x16** virtual grid |
+| Worlds | **8** max |
+| Screens per world | **32** max on sparse **8x8** virtual grid |
+| Cart / PRG | **512 KB** flash; planning **~96 KB** PRG (~**478 KB** full fill) |
 | CHR per world | **4 BG banks + 4 sprite banks**, **256 tiles each** |
 | Sprites | **64 OAM**, **16 per logical scanline** max |
 | VRAM | **32 KB**, interleaved |

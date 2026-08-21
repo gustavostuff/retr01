@@ -20,8 +20,8 @@ Games, scroll, OAM, and Studio all stay in **128x120**. SCALE is board glue on t
 
 ## Worlds and screens
 
-- Cart: up to **16 worlds**
-- World: sparse grid up to **16x16**, up to **64 screens**
+- Cart: up to **8 worlds**
+- World: sparse grid up to **8x8**, up to **32 screens**
 - Screen: **16x15** tiles + **one attr byte per tile** (**240** + **240** bytes = **480 B**), stored in MAP as `(col, row)`
 - Parallax screens use the same format, marked non-enterable
 
@@ -43,44 +43,27 @@ Each stored screen in flash is a flat **480-byte** blob:
 
 **In other words:** tile index bytes and attr bytes do **not** need compression. A game *can* compress them, but then the developer must ship a decompress step and pay extra CPU (decompress, then copy into VRAM). The simple path is a direct cart-to-VRAM copy: each plane is **240** bytes, which fits in a single-byte counter (**240 < 255**), so the loader is just "read `$FE93`, write `$FE12`, count to 240" for tiles, then the same for attrs.
 
-### Cart flash budget (standard = 2 MB)
+### Cart flash budget (standard = 512 KB)
 
-**Standard cart / image size: 2 MB (16 Mbit x8 parallel NOR).** Devs will not always fill it; the size is chosen so architecture caps plus complex PRG fit with slack.
+**Standard cart / image size: 512 KB (4 Mbit x8 parallel NOR, SST39SF040 class).** Caps below are chosen so a full game (worlds + CHR + MAP + pals + PRG) fits with a little slack.
 
-**Why 2 MB (not 512 KB):** all-caps content is already **~1.2 MB** (see A). A **512 KB** part cannot hold max CHR and max MAP together, and leaves no room for a logic-heavy PRG. **2 MB** covers full caps + **192-256 KB** PRG and still has hundreds of KB free for iteration, voice/tables, or unused worlds. Smaller images (e.g. early bring-up on a 512 KB SST39SF040) remain valid subsets of the same `.retr01` format.
+MAP `$FE90`-`$FE92` is **24-bit**; **512 KB** only needs A0-A18.
 
-MAP `$FE90`-`$FE92` is already **24-bit**, so addressing **2 MB** needs no format change (A0-A20 on the flash).
-
-#### A) Everything at architecture caps
+#### Caps at full fill (planning max)
 
 | Asset | Cap math | Size |
 |-------|----------|------|
-| CHR | 16 worlds x 32 KB (4 BG + 4 sprite banks full) | **512 KB** |
-| MAP screens | 16 x 64 x 480 B | **480 KB** |
-| World palette banks | 16 x (8 rows x 4 BG pals + 8 x 4 sprite pals) x 4 B = 16 x 256 B | **4 KB** |
+| CHR | 8 worlds x 32 KB (4 BG + 4 sprite banks full) | **256 KB** |
+| MAP screens | 8 x 32 x 480 B | **120 KB** |
+| World palette banks | 8 x 256 B (8 rows x 4 BG + 8 x 4 sprite) | **2 KB** |
 | Cart global palettes | 4 BG + 4 sprite pals x 4 B | **32 B** |
-| Directories / headers | ~12 B x 1024 screen rows + world table/headers + cart pointer table | **~13 KB** |
-| PRG (complex) | planning reserve | **192 KB** (or **256 KB** headroom) |
-| **Total** | | **~1201 KB (~1.17 MB)** with 192 KB PRG |
+| Directories / headers | ~12 B x 256 screen rows + world table/headers + cart pointer table | **~4 KB** |
+| PRG (planning) | default reserve | **96 KB** |
+| **Total** | | **~478 KB** |
 
-**On a 2 MB cart:** ~**1.17 MB** used, ~**0.83 MB** free (or ~**0.77 MB** free with 256 KB PRG). Full caps fit.
+**On a 512 KB cart:** ~**478 KB** used, ~**34 KB** free. Full architecture caps + **96 KB** PRG fit with comfortable slack for padding and small growth.
 
-#### B) Complex average (typical large game)
-
-Assumptions: lots of logic, large but not maxed atlas, most CHR banks used but not every world filled to 32 KB, every *used* world still takes **max** optional palette banks.
-
-| Asset | Assumption | Size |
-|-------|------------|------|
-| PRG | complex logic | **192 KB** |
-| CHR | 8 worlds x ~24 KB used | **192 KB** |
-| MAP | 8 worlds x 40 screens x 480 B | **150 KB** |
-| World palette banks | 8 worlds x 256 B | **2 KB** |
-| Global pals + dirs/headers | | **~5 KB** |
-| **Total** | | **~541 KB** |
-
-Comfortable on **2 MB** (~**1.5 MB** free). No need to trim for flash pressure.
-
-**Planning rule of thumb:** reserve **~192 KB** PRG for complex logic; treat **16 worlds / 64 screens** as real limits you may fill; leave the rest of the **2 MB** for CHR/MAP growth and tools slack. **v0:** on-board flash socket (2 MB class when available; 512 KB OK for island bring-up). Later: same image on the cart.
+**Planning rule of thumb:** **8 worlds / 32 screens / 8x8 grid**; reserve **~96 KB** PRG; treat **~478 KB** as the filled-cart target on **SST39SF040**. **v0:** on-board flash socket, same image later on the cart.
 
 ### Runtime bank rules
 
@@ -496,14 +479,14 @@ Addresses below are **byte offsets in the cart image** (24-bit, same width as `$
 |  CART HEADER (fixed, starts at offset 0)                       |
 |    magic[4]          e.g. 'R','0','1',0x00                     |
 |    format_ver        u8                                        |
-|    world_count       u8 (1..16)                                |
+|    world_count       u8 (1..8)                                 |
 |    flags             u8 (reserved)                             |
 |    reserved...                                                 |
 |    POINTER TABLE (24-bit offsets + optional lengths)           |
 |      off_prg / len_prg                                         |
 |      off_global_pal_bg     -> 4 BG palettes (16 bytes)         |
 |      off_global_pal_spr    -> 4 sprite palettes (16 bytes)     |
-|      off_world_table       -> 16 world slots                   |
+|      off_world_table       -> 8 world slots                    |
 |      (optional off_strings / off_extra)                        |
 +----------------------------------------------------------------+
 |  GLOBAL PALETTES (cart-wide fallback)                          |
@@ -515,7 +498,7 @@ Addresses below are **byte offsets in the cart image** (24-bit, same width as `$
 |    game code / data - not split per world                      |
 |    appears in CPU space at $8000+ (see memory map)             |
 +----------------------------------------------------------------+
-|  WORLD TABLE (up to 16 entries)                                |
+|  WORLD TABLE (up to 8 entries)                                 |
 |    each slot: present u8, off_world u24, len_world u24         |
 |    empty slots: present=0                                      |
 +----------------------------------------------------------------+
@@ -665,7 +648,7 @@ Entry: `Y, tile, attr, X` x 64. Attr bitfields: see **OAM sprite attributes** ab
 
 | Addr | R/W | Name | Function |
 |------|-----|------|----------|
-| `$FE30` | W | `WORLD` | 0-15 |
+| `$FE30` | W | `WORLD` | 0-7 |
 | `$FE31`-`$FE36` | W | `BG_BANK_0`..`5` | optional bulk helpers for slots 0-5 (0-3); **not** live BG fetch source |
 | `$FE37` | W | `SPR_BANK` | optional bulk stamp into OAM attrs (0-3); **not** live sprite CHR fetch source |
 | `$FE38` | W | `PAL_ROW` | row 0-7 (BG+sprite). Still copy into `$FE08`/`$FE09` |
