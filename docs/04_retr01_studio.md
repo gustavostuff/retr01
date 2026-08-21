@@ -140,9 +140,11 @@ If unique tiles exceed 256, Studio reports an error and does not silently trunca
 | Mode | Input | Phase 1 |
 |------|-------|---------|
 | **Pixel edit** | 4 paint colors (grayscale preview of 2bpp indices 0-3) | **Yes** |
-| **Attr/tile mode** | Assign palette 0-3 per tile via palette strip | **No** (Phase 2+) |
+| **Attr/tile mode** | Per-tile: palette 0-3, flip H/V, bank 0-3, solid, anim | **No** (Phase 2+) |
 
-In pixel edit mode, the user paints **pattern bits** only. Palette assignment happens in attr mode (later). While painting pixels, the UI may **preview** a palette (e.g. map gray levels through the active palette row) but does not write attr bytes yet.
+In pixel edit mode, the user paints **pattern bits** only. Attr assignment happens in attr mode (Phase 2+). While painting pixels, the UI may **preview** a palette (e.g. map gray levels through the active palette row) but does not write attr bytes yet.
+
+**Generate bank** / packer (Phase 2+ when `ANIM` is set): require four unique frames packed at `B..B+3` (`B` 4-aligned), rewrite nametable to `B`, stamp matching attr bits. **Flips reduce unique BG patterns** - prefer mirror attrs over duplicate CHR.
 
 #### Viewport (Phase 1 only cell with zoom/pan)
 
@@ -166,7 +168,7 @@ Terminology alignment with hardware:
 
 Internal paint buffer always uses **4 colors** (2bpp indices 0-3). UI shows them as **grayscale** in pixel edit mode.
 
-Palette strip selection is allowed **only in attr mode** (not Phase 1). In attr mode, selecting a palette for a tile updates attr bytes. Preview colors update to match real in-game appearance.
+Palette strip selection is allowed **only in attr mode** (not Phase 1). In attr mode, selecting a palette (and other attr fields) for a tile updates that tile's attr byte. Preview colors update to match real in-game appearance. Living tiles (`ANIM`) preview at 4 frames in the editor.
 
 ---
 
@@ -309,7 +311,7 @@ No blocking issues. Phase 1 as scoped below is a good first slice.
 |-------|--------|
 | **0** | Shared C/C++ core: screen buffers, MAP directory, RLE, CHR pack, project file skeleton + **unit tests** |
 | **1** | **UI shell + world grid + BG screen paint + BG Generate bank** (section 10) + tests for pack/save/load |
-| **2** | Attr/tile mode, palette row editor, per-tile palette assignment |
+| **2** | Attr/tile mode (palette, flip, bank, solid, anim), palette row editor, 4-frame `ANIM` pack/preview |
 | **3** | Sprite layer, sprite banks, meta-sprites, Generate sprite bank |
 | **4** | Game constraints panel, Play preview (high-level) |
 | **5** | Full cart build: IR -> asm -> cc65 -> optional **retr01-opt** -> PRG + CHR + MAP |

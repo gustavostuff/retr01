@@ -132,6 +132,8 @@ These are **physical latches on the PCB**, not VRAM and not "variables in the 12
 
 **BG bank in one sentence:** each nametable tile byte is an index **0-255** inside a CHR BG bank; that bank is selected by **attr bits 5-4** for that **8x8 tile**. Screens are not hardware-tied to one bank. `$FE31`-`$FE36` may still exist as optional stamp helpers. **Do not** mid-frame rewrite a BG bank latch on a raster IRQ to "split" the screen by bank - mixed banks are already per-tile in attrs.
 
+**BG attr bits on silicon:** `PAL` and `BANK` feed the compositor / CHR address mux every tile. `FLIP_H` / `FLIP_V` need shifter reverse and fine-Y XOR (0-1 PLD; contingency 4th ATF22V10 if glue runs short). `SOLID` and `ANIM` are software-only. Measure `BANK` mux timing on the BG island (critical path). Dot clock / CRT / sprite HBlank unchanged vs denser attr streams (~480 B/screen) - those only affect CPU load cost.
+
 **Parallax and palettes:** plane slots have their **own** nametable+attr data (per-tile `BANK` like the camera). Attrs still index the **same** active BG palette buffer as the playfield (`$FE08`/`$FE09`). No second set of 4 BG colors for parallax. MAP "palette row" on a parallax-flagged screen is **ignored / inherited** from the playfield (see `02`).
 
 Package count note: planning shows roughly **HC573x6** in the "scroll / optional bank helpers / MAP addr" cluster plus more for palette/compositor - bits are packed across chips; schematic will assign exact pin maps. The **address -> latch -> consumer** contract above is what software and Studio must assume.
@@ -250,10 +252,11 @@ This removes the VBlank-only VRAM update bottleneck common on classic consoles l
 1. beam counters determine visible position
 2. scroll + arrangement choose nametable slot
 3. slot tile byte and attr come from VRAM
-4. attr `BANK` bits (5-4) pick that tile's CHR BG bank
-5. active BG palette buffer maps the tile's 2-bit color to a **master index 0-63**
-6. tile row fetch returns 2bpp data
-7. shifters output that master index into the **Color PROM** -> R/G/B DAC
+4. attr `BANK` bits (5-4) pick that tile's CHR BG bank; `FLIP_H` / `FLIP_V` reverse the shifter / fine-Y as needed
+5. attr `PAL` bits (1-0) pick BG palette 0-3; `SOLID` / `ANIM` are ignored by video
+6. active BG palette buffer maps the tile's 2-bit color to a **master index 0-63**
+7. tile row fetch returns 2bpp data
+8. shifters output that master index into the **Color PROM** -> R/G/B DAC
 
 ### Sprites
 
@@ -360,3 +363,32 @@ For software people:
 - let the board resolve tiles to pixels
 
 Protoboard bring-up: [`06_protoboard_module_tests.md`](06_protoboard_module_tests.md) (island map, interactions, pass criteria).
+
+
+## Extra: Summary of parts needed.
+
+~52 ICs on the Retr01-A motherboard (v0 plan). Optional +1 ATF22V10 if equations overflow.
+
+Compute
+
+- 1x W65C02S -- game CPU (8 MHz)
+- 1x ATmega1284P -- OAM, sprite eval, line-buffer fill, pad bytes
+- 1x ATmega328P -- NES-style APU
+
+Memory
+
+- 3x AS6C62256 (32 KB each) -- system RAM, interleaved VRAM, sprite line buffer
+- 1x AT28C64B -- board EEPROM (save/config)
+- 1x SST39SF040 (v0 socket) -- cart image: PRG / CHR / MAP
+- 3x AT28C16 -- Color PROM (R/G/B master palette to DACs)
+
+Glue / video
+
+- 3x ATF22V10 -- decode, timing, CHR/VRAM gating (4th if needed for flip/bank)
+- 74HC157 -- VRAM / line-buffer address mux
+- 74HC245 -- data bus isolation
+- 74HC573 -- scroll, MAP addr, optional bank helpers, OAM capture, other $FExx latches
+- 74HC161 -- beam X/Y counters
+- Plus more 74HC gates/comparators (00/04/08/14/32/86/688 class) for compositing, raster compare, SCALE, etc. -- most of the rest of the ~52
+
+Roles in one line: 6502 runs the game; discrete 74HC+PLD draws BG; 1284 draws sprites into a line buffer; 328P makes sound; three SRAMs split CPU / nametables / sprites; three Color PROMs turn palette indices into RGB.

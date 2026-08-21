@@ -185,7 +185,7 @@ Retr01 deliberately rhymes with the NES where it helps learning and art directio
 | Tile size | **8x8** | **8x8** |
 | Tile depth | **2bpp** (4 colors per tile) | **2bpp** (4 colors per tile) |
 | Pattern storage | **CHR in cartridge** | **CHR in cartridge** |
-| Attribute idea | Packed palette bits per tile group | **One attr byte per 8x8 tile** (**240** bytes/screen; includes `BANK`) |
+| Attribute idea | Packed palette bits per tile group | **One attr byte per 8x8 tile** (palette, flip, bank, solid, anim) |
 | Sprite list | **64** OAM entries | **64** OAM entries |
 | OAM entry layout | **Y, tile, attr, X** | **Y, tile, attr, X** (`$FE20` addr/`$FE21` data) |
 | Frame rate class | **~60.098 Hz** (262 lines) | **~60.098 Hz** (341x262 timing) |

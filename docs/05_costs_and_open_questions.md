@@ -25,6 +25,9 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Palette fallback | world palette bank -> cart global -> system default **indices**. Master RGB always from Color PROM |
 | Color PROM | **3x AT28C16** on every board. 6-bit index -> R/G/B DACs. Programmed once |
 | Runtime BG banking | per **8x8 tile** (attr `BANK` bits); screens may stamp a default only at load |
+| BG attr byte | per tile: `PAL` (1-0), `FLIP_H` (2), `FLIP_V` (3), `BANK` (5-4), `SOLID` (6), `ANIM` (7) - see [`02`](02_graphics_worlds_memory.md) |
+| BG living tiles | `ANIM=1`: **4** consecutive CHR indices `B..B+3`, `B` 4-aligned; software advances nametable |
+| BG collision | `SOLID` bit + **RAM shadow**; video ignores `SOLID` |
 | Runtime sprite banking | separate **global latch** |
 | VRAM | **32 KB**, interleaved. Slots **512 B** aligned (240+240 used) |
 | System RAM | **32 KB**, CPU-only |
@@ -84,7 +87,9 @@ v0 uses on-board flash socket. Cart PCB comes later. Motherboard + cart proto st
 | Q13 | Retr01-C pad bit timing | ATtiny85 + 3-wire draft locked. Baud/poll edge details later |
 | Q14 | Color PROM byte width per gun | AT28C16 is 8-bit wide. How many MSBs feed each R-2R (6-bit vs 8-bit DAC) still bench-tunable |
 | Q15 | Color PROM part (AT28C16 vs faster OTP) | **Pinned candidate:** **AT27C256R / AT27C256R-70PU** (70 ns, In Production, DIP-28). Current plan still AT28C16. Revisit if EOL/stock or a higher dot clock needs <150 ns |
-| Q16 | BG per-tile attrs (anim/collision/bank) | **Locked direction:** per-tile attrs + per-tile `BANK`; 4-frame strips. Detail: [`08_bg_attr_extensions.md`](08_bg_attr_extensions.md). Studio Phase 2 UI still open |
+| Q16 | Default living-tile list cap | Recommend **32** vs **64** cells per camera workbench (`RETR01_ANIM_MAX`) |
+| Q17 | BG anim rate | Fixed global `rate_shift`, or per-game constant only? |
+| Q18 | BG flip+bank silicon timing | Prove on BG fetch island before locking Studio Phase 2 attr UI |
 
 ## Practical next decisions
 

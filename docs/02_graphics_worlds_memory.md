@@ -37,13 +37,81 @@ Max CHR if every world is full: **16 x 32 KB = 512 KB** (fills an SST39SF040 by 
 
 1. **BG CHR bank is per 8x8 tile**, not per screen. Bits **5-4** of that tile's attr byte select bank **0-3**. Hardware CHR fetch reads `BANK` from the attr fetched with the nametable byte.
 2. A screen (or MAP directory flag) may carry a **default BG bank** for authoring only. Loaders/Studio may **stamp** that value into every attr on export or load; that does **not** bind the screen in hardware.
-3. Slot registers `$FE31`-`$FE36` are optional **bulk helpers** (e.g. stamp a bank into a slot's attrs). They are **not** the live fetch source once per-tile `BANK` is wired.
+3. Slot registers `$FE31`-`$FE36` are optional **bulk helpers** (e.g. stamp a bank into a slot's attrs). They are **not** the live fetch source.
 4. Camera slots **0-3** and plane slots **4-5** hold nametable+attr data; mixed banks in one screen are normal.
 5. **No mid-frame BG bank switch.** Do not use raster/line IRQs (or beam-Y counting) to flip a bank latch partway down the screen. Because each tile already carries its bank, a room can mix banks 0-3 in one nametable without timed splits. Raster IRQ remains for other splits (status bars, parallax bands, palette row changes) - not for BG CHR banking.
 6. **Sprite bank** is separate and **global** for the current world (`$FE37`).
 7. Changing BG tile banks does not change the sprite bank, and vice versa.
 
-Attr bitfield (palette, flip, bank, solid, anim): [`08_bg_attr_extensions.md`](08_bg_attr_extensions.md).
+## BG tile attributes
+
+One **attr byte per 8x8 BG tile**. Screen payload: **240** tile bytes + **240** attr bytes = **480 B** (fits a **512 B** VRAM slot with **32 B** pad).
+
+| Bits | Name | Meaning |
+|------|------|---------|
+| 1-0 | `PAL` | BG palette 0-3 |
+| 2 | `FLIP_H` | horizontal mirror |
+| 3 | `FLIP_V` | vertical mirror |
+| 5-4 | `BANK` | BG CHR bank 0-3 |
+| 6 | `SOLID` | 0 = empty / pass, 1 = solid (software only; video ignores) |
+| 7 | `ANIM` | 0 = static, 1 = living (4-frame cycle; software advances nametable index) |
+
+Attr **bitfields** and the `ANIM=1` CHR strip rule are a **platform contract**. Studio, MAP, and the BG fetch path assume them. Games may use custom anim rates, collision response, and living-tile lists, but must not redefine these bits or the 4-frame layout when `ANIM=1`.
+
+### Living tiles (`ANIM=1`)
+
+Exactly **4** frames as consecutive indices in one BG bank:
+
+```text
+index:  ... | B | B+1 | B+2 | B+3 | ...
+              f0   f1    f2    f3
+```
+
+- Base index `B` is **4-aligned** (`B & 3 == 0`).
+- All four frames share the same `BANK`, `PAL`, flips, and `SOLID`.
+- Runtime nametable byte is `B + phase` with `phase` in `0..3`.
+- Studio / packer places strips on a bank row (16 tiles wide): up to **4** strips per row.
+- Static tiles (`ANIM=0`) use a single index; no alignment rule.
+
+`FLIP_H` / `FLIP_V` cut duplicate mirrored patterns (water edges, grass tips, etc.).
+
+### Load / anim / collision (software)
+
+**On slot load**
+
+1. Stream **240** tiles + **240** attrs into the VRAM slot.
+2. Build a **collision shadow** in system RAM from `SOLID` (**30** packed bits/screen, or **32** aligned).
+3. Build an **anim list**: each `ANIM=1` cell -> `{vram_tile_addr, base_index}` with `base_index = tile & ~3`. Cap length (recommend **32** or **64** living cells per camera workbench).
+
+**Each NMI (or every 2nd frame)**
+
+1. `phase = (frame_counter >> rate_shift) & 3`
+2. For each anim entry, write `base_index + phase` via `$FE10`-`$FE12` (tear-safe: VBlank or beam-Y gate).
+3. Do not rewrite attrs every frame.
+
+**Collision**
+
+Physics reads **only** the RAM shadow (never `$FE12` on the hot path). Breakable tiles update VRAM tile/attr **and** the shadow together.
+
+Recommended default: **axis-separated** move (X then resolve, Y then resolve); probe only tiles overlapping the hitbox (**~2-6** lookups), not all **240** cells. Collide **entities** (one AABB per metasprite), not every OAM piece. Rough budget at **8 MHz** / ~**133k** cycles/frame: **~16** active bodies ≈ **under 10%** of a frame for collide+response if the shadow stays in system RAM.
+
+When scroll straddles rooms, map camera-local pixels into the right slot's shadow (or a stitched buffer updated on tile-boundary scroll). Shadow covers **loaded slots** only; rebuild/blit on slot reload.
+
+### Dev kit (optional)
+
+Cart-linkable C/ASM helpers (cc65 + `.s`) are convenience, not required:
+
+| Module | Role |
+|--------|------|
+| `retr01_bg_attr` | Bit masks / pack-unpack |
+| `retr01_bg_load` | MAP -> VRAM slot + bank stamp |
+| `retr01_bg_collide` | Build/query solid shadow; `phys_move_xy` |
+| `retr01_bg_anim` | Living-cell list + NMI step |
+| `retr01_bg_vram` | Tear-safe nametable/attr poke |
+
+Masks: `PAL` `0x03`, `FLIP_H` `0x04`, `FLIP_V` `0x08`, `BANK` `0x30` (shift 4), `SOLID` `0x40`, `ANIM` `0x80`.
+
+Kit should **not** ship a full physics engine, arbitrary-length anim strips (v0 = **4** frames only), or ungated mid-frame VRAM spam.
 
 ## Camera, VRAM, and scroll
 
@@ -177,7 +245,7 @@ If the CPU changes a **tile index** (or that tile's attr) while the beam is stil
 
 **Still fine mid-frame without gating:** large streams scheduled in VBlank; physics against RAM solid maps; OAM; scroll / sprite-bank latches (those follow the separate "next tile fetch" rule in `03`). Changing attr `BANK` is a VRAM write - gate it like other attrs.
 
-Dev-kit anim (`ANIM` cells) should use the same gate or VBlank commit so 4-frame updates never split a tile mid-cell. See also [`08_bg_attr_extensions.md`](08_bg_attr_extensions.md).
+Dev-kit anim (`ANIM` cells) should use the same gate or VBlank commit so 4-frame updates never split a tile mid-cell.
 
 ### VRAM layout
 
@@ -192,7 +260,7 @@ Dev-kit anim (`ANIM` cells) should use the same gate or VBlank commit so 4-frame
 | `$0C00-$3FFF` | rest of low half | scratch / stream temp |
 | `$4000-$7FFF` | 16 KB | reserved (not live camera/plane) |
 
-Per slot: tiles at `+0x000` (**240** B), attrs at `+0xF0` (**240** B), **32 B** pad to 512. **One attr byte per 8x8 tile** (not a 2x2 NES-style pack). Bitfields: [`08_bg_attr_extensions.md`](08_bg_attr_extensions.md). **`BANK` in each attr selects that tile's BG CHR bank** - banks are not tied to whole screens.
+Per slot: tiles at `+0x000` (**240** B), attrs at `+0xF0` (**240** B), **32 B** pad to 512. **One attr byte per 8x8 tile** (see **BG tile attributes** above). Attr `BANK` selects that tile's BG CHR bank.
 
 ## Sprite line buffer (not VRAM nametables)
 
