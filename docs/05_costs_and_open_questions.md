@@ -9,10 +9,10 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Name/family | **Retr01**, rollout **A -> C -> H** |
 | Worlds | **16** max |
 | World layout | sparse virtual grid up to **16x16**, **64 screens max** per world |
-| Screen format | **16x12** tiles (**128x96**), **192-byte** tile plane + **48-byte** attr plane |
-| Pixel aspect | exact **4:3** (square pixels) |
+| Screen format | **16x15** tiles (**128x120**), **240-byte** tile plane + **64-byte** attr plane |
+| Pixel aspect | square logical pixels; storage **16:15**; **2x** fills **256x240** RGBS with no letterbox |
 | RGBS active field | always **256x240** inside **341x262** timing |
-| Scale | board **SCALE** DIP: **1x** default (centered 128x96), **2x** optional (256x192 + 24+24 letterbox) |
+| Scale | board **SCALE** DIP: **2x** default (**256x240**), **1x** optional (centered **128x120**) |
 | CHR layout | **4 BG banks + 4 sprite banks** per world |
 | Bank sizes | **256 tiles** per bank, **4 KB** each |
 | Master palette | **64 colors** in board **Color PROM** (**3x AT28C16** R/G/B). Same image on Retr01-A/C/H. **Not** in cart |
@@ -26,12 +26,12 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Color PROM | **3x AT28C16** on every board. 6-bit index -> R/G/B DACs. Programmed once |
 | Runtime BG banking | per **nametable slot** |
 | Runtime sprite banking | separate **global latch** |
-| VRAM | **32 KB**, interleaved. Slots **256 B** aligned (192+48 used) |
+| VRAM | **32 KB**, interleaved. Slots **512 B** aligned (240+64 used) |
 | System RAM | **32 KB**, CPU-only |
 | Line buffer | third **32 KB** SRAM, sprite ping-pong, **128 px**/half used |
 | OAM | in **ATmega1284P**, no DMA. **`$FE20`** = addr, **`$FE21`** = data (auto-inc). Entry `Y, tile, attr, X` in logical space |
 | Sprite cap | **16** per **logical** scanline |
-| Scroll | `scroll_x` **0-127**, `scroll_y` **0-95**, wrap |
+| Scroll | `scroll_x` **0-127**, `scroll_y` **0-119**, wrap |
 | `$FExx` byte map | **draft v0 frozen** in [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) (PPU, VRAM, OAM, banks, EEPROM, MAP) |
 | MAP access | **`$FE90`-`$FE92`** addr, **`$FE93`** data + auto-inc |
 | PRG banking | **`$FE80`** only |
@@ -83,6 +83,7 @@ v0 uses on-board flash socket. Cart PCB comes later. Motherboard + cart proto st
 | Q12 | PRG/CHR/MAP offsets inside 512 KB flash | socket-now/cart-later locked. Exact region map still flexible. Full CHR for all 16 worlds is 512 KB alone |
 | Q13 | Retr01-C pad bit timing | ATtiny85 + 3-wire draft locked. Baud/poll edge details later |
 | Q14 | Color PROM byte width per gun | AT28C16 is 8-bit wide. How many MSBs feed each R-2R (6-bit vs 8-bit DAC) still bench-tunable |
+| Q15 | Color PROM part (AT28C16 vs faster OTP) | **Pinned candidate:** **AT27C256R / AT27C256R-70PU** (70 ns, In Production, DIP-28). Current plan still AT28C16. Revisit if EOL/stock or a higher dot clock needs <150 ns |
 
 ## Practical next decisions
 

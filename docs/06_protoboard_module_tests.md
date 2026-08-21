@@ -86,7 +86,7 @@ P Integration
 | **L** 1284 alone | ATmega1284P alone (sim OK first) | Runs at 20 MHz. Firmware loads. Loopback pattern OK |
 | **M** Line buffer | Third SRAM, two 128-byte halves, HC157 mux | Halves independent. Mux picks display vs writer cleanly |
 | **N** Sprites | L + M + CHR during HBlank | Line buffer shows expected sprite pixels. One-line prepare/display pipeline |
-| **O** Video out | Palette indices, 3x AT28C16, compositor, R-2R, SCALE DIP | Stable RGBS (~15.7 kHz H). 1x centered 128x96 or 2x 256x192 + 24+24 letterbox |
+| **O** Video out | Palette indices, 3x AT28C16, compositor, R-2R, SCALE DIP | Stable RGBS (~15.7 kHz H). **2x** = 256x240 (fills field) or **1x** centered 128x120 |
 | **P** Integration | Proven islands on one board | Stable video, pads, NMI ~60 Hz, audio optional, no hot chips |
 
 ## Integration sketch (island P)

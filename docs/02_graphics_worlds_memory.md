@@ -6,21 +6,23 @@ Display model, world/MAP layout, VRAM, palettes, and the CPU-visible memory map.
 
 | Item | Value |
 |------|-------|
-| Logical resolution | **128x96** (**16x12** tiles, exact **4:3**) |
+| Logical resolution | **128x120** (**16x15** tiles, **16:15** storage aspect) |
 | RGBS active field | **256x240** inside **341x262** timing |
 | Tile size | **8x8** |
 | Dot clock | **5.369318 MHz** |
 | Frame / NMI | about **60.098 Hz** |
 | CPU clock | **8.000 MHz** (independent of dot) |
-| SCALE DIP | **1x** default (centered 128x96: 64 px sides, 72 lines top/bottom). **2x** doubles to **256x192** with **24+24** letterbox |
+| SCALE DIP | **2x** default: doubles to **256x240** (fills the RGBS field, **no** letterbox). **1x** optional: center **128x120** (**64** px sides, **60** lines top/bottom) |
 
-Games, scroll, OAM, and Studio all stay in **128x96**. SCALE is board glue on the raster only (no `$FExx` bit, no cart bit). See `03` for the scale-agnostic rule.
+Games, scroll, OAM, and Studio all stay in **128x120**. SCALE is board glue on the raster only (no `$FExx` bit, no cart bit). See `03` for the scale-agnostic rule.
+
+**Outputs:** CRT cabinets use **2x** for a full **256x240** picture. A **640x640** LCD can integer-scale **5x** to **640x600** (thin letterbox) without changing game resolution.
 
 ## Worlds and screens
 
 - Cart: up to **16 worlds**
 - World: sparse grid up to **16x16**, up to **64 screens**
-- Screen: **16x12** tiles + packed attrs (**192** + **48** bytes), stored in MAP as `(col, row)`
+- Screen: **16x15** tiles + packed attrs (**240** + **64** bytes), stored in MAP as `(col, row)`
 - Parallax screens use the same format, marked non-enterable
 
 Each world also carries:
@@ -41,15 +43,15 @@ Max CHR if every world is full: **16 x 32 KB = 512 KB** (fills an SST39SF040 by 
 
 ## Camera, VRAM, and scroll
 
-- `scroll_x` is **0-127**, `scroll_y` is **0-95** (logical pixels inside the live 2x2 field)
+- `scroll_x` is **0-127**, `scroll_y` is **0-119** (logical pixels inside the live 2x2 field)
 - Camera samples **1, 2, or 4** live screens from slots **0-3**
 - Slots **4-5** are optional **parallax** only (not extra walkable rooms)
 
 MAP holds the whole chapter. VRAM only holds what is live: up to **four** camera screens + **two** parallax screens.
 
-Each slot is a **full screen** (192 tile + 48 attr), aligned to **256 bytes**. Not "one room plus a tile strip at the edge."
+Each slot is a **full screen** (**240** tile + **64** attr), aligned to **512 bytes**. Not "one room plus a tile strip at the edge."
 
-Hardware does **not** auto-load neighbors when you scroll. Software writes slots from MAP. Changing `scroll_x`/`scroll_y` only moves the 128x96 window over whatever is already in the four slots. That part is cheap.
+Hardware does **not** auto-load neighbors when you scroll. Software writes slots from MAP. Changing `scroll_x`/`scroll_y` only moves the **128x120** window over whatever is already in the four slots. That part is cheap.
 
 ```text
 +-------------+-------------+
@@ -58,19 +60,19 @@ Hardware does **not** auto-load neighbors when you scroll. Software writes slots
 |  Slot 2     |  Slot 3     |   bottom
 +-------------+-------------+
         ^
-   128x96 viewport (scroll_x / scroll_y)
+   128x120 viewport (scroll_x / scroll_y)
 ```
 
 | Mode | Slots | What you see |
 |------|-------|--------------|
-| Pixel scroll, 1 slot | one room | pan inside 128x96 |
+| Pixel scroll, 1 slot | one room | pan inside 128x120 |
 | Pixel scroll, 2 slots | H or V pair | viewport can straddle the seam |
 | Pixel scroll, 4 slots | 2x2 | up to four rooms at once, including corners |
 | Instant switch | load new room(s), reset scroll | hard cut (doors, warps). Same slots, no slide |
 
 Studio **dead zone** / **hybrid** camera rules in `04` are software policy on top of these modes. They do not add PPU scroll hardware.
 
-**Parallax (4-5):** full 16x12 nametables drawn behind the playfield (optional scanline band). Own **BG bank latches** and own nametable attrs, but **no private BG palettes** - attrs index the same active BG palette buffer as the playfield (`$FE08`/`$FE09`). MAP palette-row on a parallax-flagged screen is **ignored / inherited**. Enabling any H/V band locks the main camera to that axis for the **whole frame** (see Raster and parallax). Physical latch / ownership detail: [`03`](03_hardware_implementation.md).
+**Parallax (4-5):** full **16x15** nametables drawn behind the playfield (optional scanline band). Own **BG bank latches** and own nametable attrs, but **no private BG palettes** - attrs index the same active BG palette buffer as the playfield (`$FE08`/`$FE09`). MAP palette-row on a parallax-flagged screen is **ignored / inherited**. Enabling any H/V band locks the main camera to that axis for the **whole frame** (see Raster and parallax). Physical latch / ownership detail: [`03`](03_hardware_implementation.md).
 
 ### Worked example: 3x3 world, standing on the center room
 
@@ -86,7 +88,7 @@ MAP (1 world)                             VRAM slots (workbench), 4-slot mode
 |  G  |  H  |  I  |                       |   H     |   I     |
 +-----+-----+-----+                       +---------+---------+
 
-What the screen actually renders: all the 128x96 pixels that belong to screen E, and only that.
+What the screen actually renders: all the 128x120 pixels that belong to screen E, and only that.
 ```
 
 VRAM holds **E + F + H + I** (center, right, bottom, bottom-right). A/B/C/D/G are still only in cart MAP.
@@ -137,16 +139,16 @@ Two different CPU jobs. Do not mix them up:
 | Action | What the CPU does |
 |--------|-------------------|
 | Pan inside the already-loaded 2x2 | Write `$FE02`/`$FE03` (scroll). **No** nametable rewrite. BG hardware keeps fetching the slots on its own |
-| Stream a room into a slot (boundary / shift) | Point `$FE10`/`$FE11` at the slot start (or a run inside it), then poke ~**240** bytes through `$FE12`. **Auto-inc** means you do **not** rewrite the address for every tile. Usually: set addr once per contiguous run, then `STA $FE12` in a loop. Attr plane is the same idea at `slot+0xC0` |
+| Stream a room into a slot (boundary / shift) | Point `$FE10`/`$FE11` at the slot start (or a run inside it), then poke ~**304** bytes through `$FE12`. **Auto-inc** means you do **not** rewrite the address for every tile. Usually: set addr once per contiguous run, then `STA $FE12` in a loop. Attr plane is the same idea at `slot+0xF0` |
 
-So for a full screen load you are pushing **192 tile bytes + 48 attr bytes**, not "192 separate address setups." A column shift is that pattern times two (~480 data writes), still only when software slides the workbench, not every pixel.
+So for a full screen load you are pushing **240 tile bytes + 64 attr bytes**, not "240 separate address setups." A column shift is that pattern times two (~608 data writes), still only when software slides the workbench, not every pixel.
 
 | Action | Rough cost |
 |--------|------------|
 | Change scroll by 1 px | 1-2 register writes. No VRAM stream |
-| Stream **one** screen from MAP | ~240 `$FE12` writes (+ a few addr setup writes) |
-| Shift a column (2 screens) | ~480 data writes |
-| Worst corner prep (3 screens) | ~720 data writes |
+| Stream **one** screen from MAP | ~304 `$FE12` writes (+ a few addr setup writes) |
+| Shift a column (2 screens) | ~608 data writes |
+| Worst corner prep (3 screens) | ~912 data writes |
 
 Spread across one or more VBlanks at ~60 Hz with an **8 MHz** CPU that is normal engine work. Scratch at `$0600+` can hold a decompress/copy buffer if MAP payloads are packed. After a slot is filled, the CPU can leave it alone until the next shift.
 
@@ -156,16 +158,16 @@ Worry about **when** software schedules the shift (dead zone, hybrid), not about
 
 | Offset | Size | Purpose |
 |--------|------|---------|
-| `$0000-$00FF` | 256 B | camera slot 0 (192+48 used) |
-| `$0100-$01FF` | 256 B | camera slot 1 |
-| `$0200-$02FF` | 256 B | camera slot 2 |
-| `$0300-$03FF` | 256 B | camera slot 3 |
-| `$0400-$04FF` | 256 B | plane slot 4 |
-| `$0500-$05FF` | 256 B | plane slot 5 |
-| `$0600-$3FFF` | rest of low half | scratch / stream temp |
+| `$0000-$01FF` | 512 B | camera slot 0 (**240** tiles + **64** attrs used) |
+| `$0200-$03FF` | 512 B | camera slot 1 |
+| `$0400-$05FF` | 512 B | camera slot 2 |
+| `$0600-$07FF` | 512 B | camera slot 3 |
+| `$0800-$09FF` | 512 B | plane slot 4 |
+| `$0A00-$0BFF` | 512 B | plane slot 5 |
+| `$0C00-$3FFF` | rest of low half | scratch / stream temp |
 | `$4000-$7FFF` | 16 KB | reserved (not live camera/plane) |
 
-Per slot: tiles at `+0x000` (192 B), packed attrs at `+0xC0` (48 B). One attr byte = one **2x2** tile group with four 2-bit palette fields.
+Per slot: tiles at `+0x000` (**240** B), packed attrs at `+0xF0` (**64** B). One attr byte = one **2x2** tile group with four 2-bit palette fields. Attr grid is **8x8** (covers a **16x16** tile area); with **16x15** screens the last attr row is partly unused - that is fine for v0.
 
 ## Sprite line buffer (not VRAM nametables)
 
@@ -182,7 +184,7 @@ Logical frame (sprites), one row at a time:
   row 50 ########....####################  <- beam showing this row
   row 51 (being written into the other half during HBlank)
   ...
-  row 95 ################################
+  row 119 ################################
 
 Line-buffer SRAM (only two rows of storage, not a full framebuffer):
 
@@ -301,7 +303,7 @@ Frozen draft for Studio, firmware, and proto. Bitfields may grow reserved bits l
 | `$FE00` | W | `PPUCTRL` | bit0 BG, bit1 sprites, bit2 NMI, bit3-4 camera mode (`00`=1, `01`=2H, `10`=2V, `11`=4), bit5-7 reserved |
 | `$FE01` | R | `PPUSTATUS` | bit0 VBlank, bit1 sprite overflow (opt), bit2 raster hit sticky. Read clears hit |
 | `$FE02` | W | `SCROLL_X` | 0-127 wrap |
-| `$FE03` | W | `SCROLL_Y` | 0-95 wrap |
+| `$FE03` | W | `SCROLL_Y` | 0-119 wrap |
 | `$FE04` | W | `RASTER_Y` | compare scanline 0-261 |
 | `$FE05` | W | `RASTER_CTRL` | bit0 IRQ enable |
 | `$FE06` | W | `PLANE_CTRL` | bit0/1 plane 4/5 band, bit2 axis (`0`=H lock, `1`=V lock). Any band locks camera to that axis for the whole frame |

@@ -70,9 +70,10 @@ Same contract again, SMD build, likely multi-board layout. Battery, display, and
 
 ### Look and feel
 
-- Logical playfield **128x96** (**16x12** tiles) - **half the linear resolution of a classic NES screen**, exact **4:3**
-- That is a feature: **larger, crisp pixels**, less MAP/VRAM per room, and art that stays readable on cabinet CRTs
-- RGBS path still uses a stable **256x240** active raster. Board **SCALE** DIP: **1x** centers 128x96, **2x** doubles to **256x192** with 24-line letterbox
+- Logical playfield **128x120** (**16x15** tiles) - chunky pixels; **2x** fills the **256x240** CRT field
+- That is a feature: **larger, crisp pixels**, less MAP/VRAM per room than NES density, art that stays readable on cabinet CRTs
+- RGBS path uses a stable **256x240** active raster. Board **SCALE** DIP: **2x** default doubles to **256x240** (no letterbox); **1x** centers **128x120**
+- A **640x640** handheld LCD can show the same games at **5x** (**640x600**, thin letterbox) without a second game resolution
 - **8x8** tiles, **2bpp** patterns
 - **64-color master palette** in board **Color PROM**, with **4 BG + 4 sprite palettes** active at once from one synced palette row
 - Limits on purpose, not accidental mush
@@ -83,7 +84,7 @@ Retr01 treats **worlds** as a first-class cart concept:
 
 - Up to **16 worlds** per game
 - Each world: sparse **16x16** grid, up to **64 stored screens**
-- Each screen: **16x12** tilemap + attributes (**128x96**)
+- Each screen: **16x15** tilemap + attributes (**128x120**)
 - **MAP-ROM** streams screen data through a dedicated port (`$FE90`) - the CPU does not fake a filesystem in PRG
 
 That is the difference between "we drew 32 rooms in CHR and hope the level loader keeps up" and **hardware-backed map chapters** with CHR banks per world.
@@ -92,7 +93,7 @@ That is the difference between "we drew 32 rooms in CHR and hope the level loade
 
 The live camera uses **four VRAM nametable slots (0-3)** as a **2x2 playfield window**. Smooth pixel scroll can show **multiple neighboring screens at once** without the classic "reload everything at the seam" dance.
 
-- **`scroll_x`/`scroll_y`**: wrap in **0-127** / **0-95** (logical pixels)
+- **`scroll_x`/`scroll_y`**: wrap in **0-127** / **0-119** (logical pixels)
 - **Per-slot BG bank latches**: each visible screen can pull from its own CHR BG bank
 - **Sprite bank**: separate global latch within the world
 
@@ -184,7 +185,7 @@ Retr01 deliberately rhymes with the NES where it helps learning and art directio
 | Tile size | **8x8** | **8x8** |
 | Tile depth | **2bpp** (4 colors per tile) | **2bpp** (4 colors per tile) |
 | Pattern storage | **CHR in cartridge** | **CHR in cartridge** |
-| Attribute idea | Packed palette bits per tile group | Packed **2x2** tile attrs (**48 bytes**/screen) |
+| Attribute idea | Packed palette bits per tile group | Packed **2x2** tile attrs (**64 bytes**/screen; last row partly unused on 16x15) |
 | Sprite list | **64** OAM entries | **64** OAM entries |
 | OAM entry layout | **Y, tile, attr, X** | **Y, tile, attr, X** (`$FE20` addr/`$FE21` data) |
 | Frame rate class | **~60.098 Hz** (262 lines) | **~60.098 Hz** (341x262 timing) |
@@ -202,8 +203,8 @@ If you know how NES tiles, attrs, and sprites work, Retr01 art pipelines will fe
 
 | Topic | NES (NTSC) | Retr01-A |
 |-------|------------|----------|
-| Logical playfield | **256x240** (32x30 tiles) | **128x96** (16x12 tiles) - **half** the linear size, exact **4:3** |
-| RGBS/CRT active field | **256x240** | **256x240** raster. Board **SCALE**: 1x centered or 2x to **256x192** + letterbox |
+| Logical playfield | **256x240** (32x30 tiles) | **128x120** (16x15 tiles) - chunky; **2x** fills CRT |
+| RGBS/CRT active field | **256x240** | **256x240** raster. Board **SCALE**: **2x** = full field, or **1x** centered |
 | Why smaller logical | - | **Bigger pixels**, cheaper rooms, more worlds in flash |
 | CPU clock | **~1.79 MHz** | **8.000 MHz** |
 | Work RAM | **2 KB** | **32 KB** system RAM (CPU-only) |

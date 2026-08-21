@@ -96,14 +96,14 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 5. **Raster IRQ, not sprite-0**: mid-frame effects use scanline compare
 6. **Binary-first data**: fixed layouts, no runtime allocation assumptions on target
 7. **Master palette in Color PROM**: 64 RGB colors live on the motherboard (AT28C16), not in the cart
-8. **Logical 128x96, fixed RGBS raster**: games use **16x12** screens. The RGBS path keeps a **256x240** active field. Board **SCALE** selects 1x or 2x mapping
+8. **Logical 128x120, fixed RGBS raster**: games use **16x15** screens. The RGBS path keeps a **256x240** active field. Board **SCALE** selects 1x or 2x mapping
 
 ## Canonical terminology
 
 | Term | Meaning |
 |------|---------|
 | **World** | One cart chapter: sparse MAP atlas + **4 BG banks + 4 sprite banks** in CHR |
-| **Screen** | One stored **16x12** tilemap (**128x96**) + attrs in MAP-ROM |
+| **Screen** | One stored **16x15** tilemap (**128x120**) + attrs in MAP-ROM |
 | **Grid position** | One `(col, row)` coordinate in a world's sparse virtual grid |
 | **Camera nametable slots** | VRAM slots **0-3**: the live 2x2 playfield field |
 | **Plane nametable slots** | VRAM slots **4-5**: optional parallax-only storage |
@@ -116,7 +116,7 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 | **Palette** | One 4-color set (**4 master indices** into the Color PROM) |
 | **Active palette buffer** | **8 palettes** on screen: **4 BG + 4 sprite** from the currently selected palette row |
 | **Color PROM** | Board-resident **64-color** master RGB table (not in cart) |
-| **SCALE** | Board DIP: **1x** (default) or **2x** mapping of 128x96 into the 256x240 RGBS field |
+| **SCALE** | Board DIP: **2x** default (**128x120** -> **256x240**, fills CRT) or **1x** (centered **128x120**) |
 
 ## High-level hardware
 
@@ -134,8 +134,8 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 
 | Area | Spec |
 |------|------|
-| Logical resolution | **128x96** (**16x12** tiles, **4:3**) |
-| RGBS active field | **256x240** (SCALE 1x centered, or 2x = 256x192 + letterbox) |
+| Logical resolution | **128x120** (**16x15** tiles, **16:15**) |
+| RGBS active field | **256x240** (SCALE **2x** fills field; **1x** = centered 128x120) |
 | Tile size | **8x8** |
 | Color | **2bpp**, **64-color Color PROM** on board, **BG/sprite palette banks** in cart (indices only), **one synced palette row active** (4 BG + 4 sprite) |
 | Worlds | **16** max |

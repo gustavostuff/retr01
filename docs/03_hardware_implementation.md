@@ -70,12 +70,14 @@ The **64-color master palette** is hardware on every Retr01 board:
 
 Studio keeps a software copy of the same RGB table for preview only. Changing the look of the family means reburning the Color PROMs (and updating the doc table), not shipping a new cart header field.
 
+**Pin (not decided):** if AT28C16 supply or access time becomes a problem (obsolete listings; **150 ns** is tight if dot clock rises), candidate replacement is Microchip **AT27C256R / AT27C256R-70PU** - **70 ns** OTP EPROM, **In Production**, DIP-28. Tradeoffs: OTP (not EEPROM), different footprint, still three chips for R/G/B unless packing changes. See `05` Q15.
+
 ## Output scale (board DIP)
 
 Retr01-A ships with a **SCALE** DIP (or jumper):
 
-- **open = 1x** (default): center **128x96** in the **256x240** active RGBS field (64 px side margins, 72 line top/bottom margins)
-- **closed = 2x**: double to **256x192**, letterbox with **24** lines top and **24** bottom inside the same **256x240** active field
+- **closed = 2x** (cabinet default): double **128x120** to **256x240** - fills the RGBS active field with **no** letterbox
+- **open = 1x**: center **128x120** in the **256x240** active field (**64** px side margins, **60** lines top/bottom)
 
 The beam counters and **341x262** timing do not change with the DIP. Only logical-to-raster mapping and border blanking change.
 
@@ -101,13 +103,13 @@ Read each row as: *CPU poke -> physical hold -> video/audio/input consumer*.
 | What | CPU view | Physical store | Who writes | Who reads | How often it changes |
 |------|----------|----------------|------------|-----------|----------------------|
 | Game state, code scratch | `$0000-$7FFF` | **AS6C62256** system RAM | 6502 | 6502 only | Every frame / as game needs. **Never** on the video bus |
-| Live nametables (slots 0-5) | `$FE10`/`$FE11` addr, `$FE12` data | **AS6C62256** VRAM | 6502 on **CPU phase** | BG fetch on **PPU phase** | Slot fill on camera/plane load or seam shift (~240 B/screen). Idle while panning inside the workbench |
+| Live nametables (slots 0-5) | `$FE10`/`$FE11` addr, `$FE12` data | **AS6C62256** VRAM | 6502 on **CPU phase** | BG fetch on **PPU phase** | Slot fill on camera/plane load or seam shift (~304 B/screen). Idle while panning inside the workbench |
 | Sprite line buffer | (no CPU port) | **AS6C62256** line buffer, halves `$000-$07F` / `$080-$0FF` | **1284** in HBlank | BG compositor on visible dots | **Every logical scanline** (ping-pong). Not a framebuffer |
 | Cart PRG / CHR / MAP | `$8000+` PRG window; CHR via fetch; MAP `$FE90`-`$FE93` | **SST39SF040** (v0 socket) | Programmer / cart build | 6502 (PRG, MAP), BG path + 1284 (CHR) | Image is fixed at burn time. Runtime only **banks** and **MAP seek** |
 | Master RGB (64 colors) | (no CPU port in gameplay) | **3x AT28C16** Color PROM | Once at board program | Compositor every pixel | Never at runtime. Carts only store **indices 0-63** |
 | Board save / config | `$FE70`-`$FE72` | **AT28C64B** | 6502 (slow write timing) | 6502 | Rare (options, high scores). Not video |
 
-VRAM slot layout (same chip, CPU and BG share by PHI2 phase): slots **0-3** camera, **4-5** parallax planes, then scratch - see `02`. Each slot is **256 B** aligned (**192** tiles + **48** attrs used).
+VRAM slot layout (same chip, CPU and BG share by PHI2 phase): slots **0-3** camera, **4-5** parallax planes, then scratch - see `02`. Each slot is **512 B** aligned (**240** tiles + **64** attrs used).
 
 ### Latched `$FExx` controls (74HC573 class + decode PLD)
 
@@ -116,7 +118,7 @@ These are **physical latches on the PCB**, not VRAM and not "variables in the 12
 | Addr | Name | Typical bits held | Physical hold | Who reads | How often / why |
 |------|------|-------------------|---------------|-----------|-----------------|
 | `$FE02` | `SCROLL_X` | 0-127 | HC573 (+ glue) | BG fetch (slot pick + fine scroll) | Every pan frame, or less. **No** nametable rewrite |
-| `$FE03` | `SCROLL_Y` | 0-95 | HC573 | BG fetch | Same |
+| `$FE03` | `SCROLL_Y` | 0-119 | HC573 | BG fetch | Same |
 | `$FE00` | `PPUCTRL` | BG/sprite enable, NMI, camera mode | HC573 / PLD | BG path, NMI gate | Mode changes, room transitions |
 | `$FE04`/`$FE05` | raster compare / IRQ | scanline + enable | HC573 + compare (`HC688` class) | IRQ logic vs beam Y | Setup once per split effect; hit is sticky in `PPUSTATUS` |
 | `$FE06`/`$FE07` | plane band | which plane, axis lock, band start | HC573 | BG path (slot 4/5 vs 0-3) | When enabling/moving a parallax band |
@@ -178,7 +180,7 @@ Sprites are **not** drawn by the 6502 into a framebuffer. The **ATmega1284P** ow
 
 | Item | Detail |
 |------|--------|
-| OAM | **64** sprites. CPU: write index to **`$FE20`**, data to **`$FE21`** (auto-inc). Entry order `Y, tile, attr, X`. Positions are **logical** (128x96 space) |
+| OAM | **64** sprites. CPU: write index to **`$FE20`**, data to **`$FE21`** (auto-inc). Entry order `Y, tile, attr, X`. Positions are **logical** (128x120 space) |
 | Per scanline cap | **16** sprites on one **logical** row |
 | Line buffer SRAM | **256 bytes** used on the third AS6C62256: two **128-byte** halves |
 | Half A | `$000-$07F` - one logical row of sprite data (128 pixels) |
