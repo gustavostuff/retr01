@@ -130,15 +130,15 @@ These are **physical latches on the PCB**, not VRAM and not "variables in the 12
 | `$FE90`-`$FE92` | `MAP_ADDR_*` | 24-bit MAP cursor | HC573x3 (or packed) | MAP `/CE` + flash A[23:0] | Seek before streaming a screen |
 | `$FE10`/`$FE11` | `VRAM_ADDR_*` | 15-bit VRAM cursor | HC573 | VRAM mux on CPU phase | Before each VRAM run |
 
-**BG bank in one sentence:** each nametable tile byte is an index **0-255** inside a CHR BG bank; that bank is selected by **attr bits 5-4** for that **8x8 tile**. Screens are not hardware-tied to one bank. `$FE31`-`$FE36` may still exist as optional stamp helpers. Mixed banks in one frame come from per-tile attrs (no mid-frame bank-latch split required).
+**BG bank in one sentence:** each nametable tile byte is an index **0-255** inside a CHR BG bank; that bank is selected by **attr bits 1-0** for that **8x8 tile**. Screens are not hardware-tied to one bank. `$FE31`-`$FE36` may still exist as optional stamp helpers. Mixed banks in one frame come from per-tile attrs (no mid-frame bank-latch split required).
 
-**BG attr bits (hardware vs software):**
+**BG attr bits (hardware vs software):** same low nibble layout as OAM (`BANK` / `PAL` / `FLIP_*`); high bits differ.
 
 | Bits | Name | Path |
 |------|------|------|
-| 1-0 | `PAL` | Hardware -- compositor |
-| 2-3 | `FLIP_H` / `FLIP_V` | Hardware -- shifter reverse / fine-Y XOR (leftover PLD/74HC, or 4th ATF22V10 if equations run short) |
-| 5-4 | `BANK` | Hardware -- CHR address mux (measure timing on BG island) |
+| 1-0 | `BANK` | Hardware -- CHR address mux (measure timing on BG island) |
+| 3-2 | `PAL` | Hardware -- compositor |
+| 4-5 | `FLIP_H` / `FLIP_V` | Hardware -- shifter reverse / fine-Y XOR (leftover PLD/74HC, or 4th ATF22V10 if equations run short) |
 | 6-7 | `SOLID` / `ANIM` | Software -- video ignores; CPU / kit drive collision and living-tile nametable updates |
 
 Full bit table and software model: [`02`](02_graphics_worlds_memory.md). Dot clock / CRT / sprite HBlank unchanged vs denser attr streams (~480 B/screen); those only affect CPU load cost.
@@ -262,8 +262,8 @@ This removes the VBlank-only VRAM update bottleneck common on classic consoles l
 1. beam counters determine visible position
 2. scroll + arrangement choose nametable slot
 3. slot tile byte and attr come from VRAM
-4. attr `BANK` bits (5-4) pick that tile's CHR BG bank; `FLIP_H` / `FLIP_V` reverse the shifter / fine-Y as needed
-5. attr `PAL` bits (1-0) pick BG palette 0-3; `SOLID` / `ANIM` are software-only (not wired into video)
+4. attr `BANK` bits (1-0) pick that tile's CHR BG bank; `FLIP_H` / `FLIP_V` (4-5) reverse the shifter / fine-Y as needed
+5. attr `PAL` bits (3-2) pick BG palette 0-3; `SOLID` / `ANIM` are software-only (not wired into video)
 6. active BG palette buffer maps the tile's 2-bit color to a **master index 0-63**
 7. tile row fetch returns 2bpp data
 8. shifters output that master index into the **Color PROM** -> R/G/B DAC

@@ -11,6 +11,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | World layout | sparse virtual grid up to **16x16**, **64 screens max** per world |
 | Screen format | **16x15** tiles (**128x120**), **240-byte** tile plane + **240-byte** attr plane (one attr/tile) |
 | MAP screen format | **480 B** raw per screen (**240** tile indices + **240** attrs, one byte each). **No RLE** required |
+| MAP world header | `start_col`/`start_row` (default screen), `default_bg_bank`, `default_spr_bank`, optional `default_pal_row` |
 | Pixel aspect | square logical pixels; storage **16:15**; **2x** fills **256x240** RGBS with no letterbox |
 | RGBS active field | always **256x240** inside **341x262** timing |
 | Scale | board **SCALE** DIP: **2x** default (**256x240**), **1x** optional (centered **128x120**) |
@@ -26,7 +27,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Palette fallback | world palette bank -> cart global -> system default **indices**. Master RGB always from Color PROM |
 | Color PROM | **3x AT28C16** on every board. 6-bit index -> R/G/B DACs. Programmed once |
 | Runtime BG banking | per **8x8 tile** (attr `BANK` bits); screens may stamp a default only at load |
-| BG attr byte | per tile: `PAL`/`FLIP_*`/`BANK` **hardware**; `SOLID`/`ANIM` **software** - see [`02`](02_graphics_worlds_memory.md) |
+| BG attr byte | per tile: `BANK` (1-0), `PAL` (3-2), `FLIP_H` (4), `FLIP_V` (5) **hardware**; `SOLID` (6), `ANIM` (7) **software** - same low fields as OAM; see [`02`](02_graphics_worlds_memory.md) |
 | BG living tiles | `ANIM=1`: **4** consecutive CHR indices `B..B+3`, `B` 4-aligned; software advances nametable |
 | BG collision | `SOLID` bit + **RAM shadow**; video ignores `SOLID` |
 | Runtime sprite banking | per **OAM entry** (attr `BANK` bits); `$FE37` optional stamp only |

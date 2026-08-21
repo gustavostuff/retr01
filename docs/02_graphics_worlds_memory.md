@@ -50,7 +50,8 @@ v0 image is one parallel flash (**512 KB** = **0.5 MB**): PRG + CHR + MAP + pale
 |-------|------|------|
 | CHR (all worlds full) | 16 x 32 KB | **512 KB** |
 | MAP screens (all slots full, raw) | 16 x 64 x **480** B | **~480 KB** |
-| MAP directory | ~8 B x 1024 | **~8 KB** |
+| MAP directory | ~8 B x 1024 + small per-world headers | **~8 KB** + headers |
+
 | Palette banks (max) | ~16 x 256 B + cart global | **~4 KB** |
 | PRG | game code | variable |
 
@@ -58,8 +59,8 @@ A typical sparse game uses far fewer than **1024** screens, so raw MAP stays com
 
 ### Runtime bank rules
 
-1. **BG CHR bank is per 8x8 tile**, not per screen. Bits **5-4** of that tile's attr byte select bank **0-3**. Hardware CHR fetch reads `BANK` from the attr fetched with the nametable byte.
-2. A screen (or MAP directory flag) may carry a **default BG bank** for authoring only. Loaders/Studio may **stamp** that value into every attr on export or load; that does **not** bind the screen in hardware.
+1. **BG CHR bank is per 8x8 tile**. Bits **1-0** of that tile's attr byte select bank **0-3**. Hardware CHR fetch reads `BANK` from the attr fetched with the nametable byte.
+2. MAP **metadata** may name a **default BG bank** and **default sprite bank** (world and/or per screen). Loaders/Studio may **stamp** those into attrs / OAM on export or load; live fetch still uses per-tile / per-sprite attr `BANK`. See **MAP-ROM** below.
 3. Slot registers `$FE31`-`$FE36` are optional **bulk helpers** (e.g. stamp a bank into a slot's attrs). They are **not** the live fetch source.
 4. Camera slots **0-3** and plane slots **4-5** hold nametable+attr data; mixed banks in one screen are normal.
 5. **BG bank needs no mid-frame latch split.** Each tile already carries `BANK`, so a room can mix banks 0-3 in one nametable without raster/line IRQ bank flips. Raster IRQ stays available for status bars, parallax bands, palette row changes, and other splits.
@@ -70,12 +71,27 @@ A typical sparse game uses far fewer than **1024** screens, so raw MAP stays com
 
 One **attr byte per 8x8 BG tile**. Screen payload: **240** tile bytes + **240** attr bytes = **480 B** (fits a **512 B** VRAM slot with **32 B** pad).
 
+Shared low fields match **OAM sprite attrs** (`BANK` / `PAL` / `FLIP_H` / `FLIP_V`). High bits are BG-only (`SOLID` / `ANIM`).
+
+```text
+7 6 5 4 3 2 1 0
+1 0 0 1 0 1 0 1
+| | | | | | |_|__ Bank index (0-3)
+| | | | | |
+| | | | |_|______ Palette (0-3)
+| | | |
+| | | |__________ H flip
+| | |____________ V flip
+| |______________ Solid (physics flag; software)
+|________________ Animation flag (software; 4-frame strip)
+```
+
 | Bits | Name | Owner | Role |
 |------|------|-------|------|
-| 1-0 | `PAL` | **Hardware** | BG palette 0-3 (compositor) |
-| 2 | `FLIP_H` | **Hardware** | horizontal mirror (pixel shifter) |
-| 3 | `FLIP_V` | **Hardware** | vertical mirror (fine-Y / row) |
-| 5-4 | `BANK` | **Hardware** | BG CHR bank 0-3 (CHR address mux) |
+| 1-0 | `BANK` | **Hardware** | BG CHR bank 0-3 (CHR address mux) |
+| 3-2 | `PAL` | **Hardware** | BG palette 0-3 (compositor) |
+| 4 | `FLIP_H` | **Hardware** | horizontal mirror (pixel shifter) |
+| 5 | `FLIP_V` | **Hardware** | vertical mirror (fine-Y / row) |
 | 6 | `SOLID` | **Software** | collision hint; video path does not read it |
 | 7 | `ANIM` | **Software** | living-tile mark; CPU advances the nametable index |
 
@@ -134,7 +150,7 @@ Cart-linkable C/ASM helpers (cc65 + `.s`) are convenience, not required:
 | `retr01_bg_anim` | Living-cell list + NMI step |
 | `retr01_bg_vram` | Tear-safe nametable/attr poke |
 
-Masks: `PAL` `0x03`, `FLIP_H` `0x04`, `FLIP_V` `0x08`, `BANK` `0x30` (shift 4), `SOLID` `0x40`, `ANIM` `0x80`.
+Masks: `BANK` `0x03`, `PAL` `0x0C` (shift 2), `FLIP_H` `0x10`, `FLIP_V` `0x20`, `SOLID` `0x40`, `ANIM` `0x80`.
 
 v0 kit scope: solid queries + 4-frame anim helpers + tear-safe VRAM pokes (not a full physics engine).
 
@@ -358,6 +374,8 @@ Line N+1| fill next row    |        | SHOW (beam read) |
 
 Entry order: `Y, tile, attr, X` x **64**. Positions are logical (**128x120**). CHR patterns are always **8x8**; `SIZE` selects how many rows one OAM entry spans.
 
+Shared low fields match **BG tile attrs** (`BANK` / `PAL` / `FLIP_H` / `FLIP_V`). High bits are sprite-only (`PRIORITY` / `SIZE`).
+
 ```text
 7 6 5 4 3 2 1 0
 1 0 0 1 0 1 0 1
@@ -434,7 +452,7 @@ PPU shows **4 BG + 4 sprite** palettes at once (dedicated palette RAM, not namet
 
 - Software picks palette row **0-7**. BG and sprite rows are always the **same** index (no BG-4 / sprite-2 mix).
 - Tile attrs and OAM attrs still only pick **0-3** inside that row.
-- Screens may optionally name a palette row in MAP (authoring default, like optional default BG bank stamp). Switching rows means reload `$FE08`/`$FE09`.
+- Screens may optionally name a palette row in MAP (directory flags / world `default_pal_row`). Switching rows means reload `$FE08`/`$FE09`.
 
 **Shared color 0:** all 8 active palettes use the same master index at color 0 (universal backdrop). Software writes that into every slot when loading a row. On BG, color 0 is the backdrop. On sprites, pattern color 0 stays **transparent**.
 
@@ -449,9 +467,35 @@ Not memory-mapped into CPU space. Read through `$FE90`:
 1. write 24-bit address (`$FE90`/`$FE91`/`$FE92`)
 2. read data at `$FE93` (auto-inc)
 
-Directory row sketch: `col`, `row`, `flags` (`bit0` parallax, `bits1-2` optional **default** BG bank stamp for loaders, `bits3-5` palette row), `data_off` (24-bit). Live CHR bank still comes from **per-tile** attr `BANK`, not from this flag alone.
+### World header (per world chapter)
+
+Cart ROM carries a small **world header** so boot / world-enter code knows what to load without hardcoding PRG constants. Sketch (exact layout flexible; fields are locked in meaning):
+
+| Field | Meaning |
+|-------|---------|
+| `start_col`, `start_row` | **Default screen to load** when entering this world (sparse grid position). Must name a stored screen (or a defined fallback hole policy). |
+| `default_bg_bank` | **0-3**. Authoring / loader stamp into BG attrs when a screen does not override. Not the live BG fetch source. |
+| `default_spr_bank` | **0-3**. Authoring / loader stamp into OAM attrs (and optional `$FE37` helper) when spawning or bulk-filling sprites. Not the live per-sprite fetch source once OAM attrs are set. |
+| `default_pal_row` | **0-7**. Optional starting palette row (BG+sprite locked together). |
+| `dir_off` / `screen_count` | Where the sparse directory lives and how many entries. |
+
+**In other words:** the cart says "start on this room, prefer these BG/sprite banks and this palette row." Hardware still banks from attrs at draw time; the header just gives the game and Studio a standard place to read start-up metadata.
+
+### Directory row (per stored screen)
+
+One row per existing `(col, row)` hole-fill:
+
+| Field | Meaning |
+|-------|---------|
+| `col`, `row` | Grid position |
+| `flags` | `bit0` parallax (non-enterable plane art). `bits1-2` **default BG bank** for this screen (0-3; stamp on load / export). `bits3-5` **palette row** hint (0-7). Remaining bits reserved. |
+| `data_off` | 24-bit offset to the **480 B** screen payload |
+
+Live BG CHR bank still comes from **per-tile** attr `BANK`, not from the directory flag alone. A screen's `bits1-2` may override the world `default_bg_bank` when that screen is loaded.
 
 Screen payload at `data_off`: **240** tile bytes + **240** attr bytes (raw). Loader copies into the VRAM slot - no RLE.
+
+On world enter (typical kit path): read world header -> seek directory for (`start_col`,`start_row`) -> stream that screen (and neighbors if using 2x2) -> stamp `default_spr_bank` / load `default_pal_row` as needed.
 
 ## CPU memory map
 
@@ -574,6 +618,7 @@ Parallax = scanline band pointing at plane slots **4-5**.
 - Screens are **not** hardware-tied to one BG bank; mixed banks in one screen are normal.
 - Per-tile `BANK` covers mixed BG art in one frame (no mid-frame bank-latch split needed for BG CHR).
 - Sprite attr carries bank, palette, flips, priority, and size; mixed 8x8/8x16 in one frame is normal.
-- MAP picks which screen to load. World picks which 32 KB CHR chapter is active.
+- MAP picks which screen to load (world header names the **default start screen**; directory locates payloads). World picks which 32 KB CHR chapter is active.
+- World header also carries **default BG bank**, **default sprite bank**, and optional **palette row** for loaders to stamp / apply at enter.
 - Camera slots hold **whole screens**. Scroll moves the window; MAP loads happen on software slot shifts (`02` worked example).
 - Sprites use a ping-pong line buffer one scanline ahead (`02` diagram, `03` detail).
