@@ -1,4 +1,4 @@
-<img src="docs/img/logo_v1.png" alt="Logo V1" />
+<img src="img/logo_v1.png" alt="Logo V1" />
 
 **A modern discrete-logic 8-bit hardware family, built to be understood, hacked, and shipped.**
 
