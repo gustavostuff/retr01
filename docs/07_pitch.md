@@ -109,6 +109,16 @@ Combined with **raster IRQ** (scanline compare), you get status bars, split laye
 
 The **W65C02S runs at 8.000 MHz**. VRAM is **interleaved**: the CPU gets dedicated phases to stream nametables and attrs **during the frame**, not only in a short VBlank window. System RAM (**32 KB**, CPU-only) is separate from video SRAM.
 
+**Why that matters at a seam:** each screen is **480** bytes in VRAM (240 tiles + 240 attrs). A tight copy into `$FE12` is about **12** CPU cycles/byte. With **341**-dot lines at the board clocks, that is about **508** CPU cycles per CRT line:
+
+| Camera workbench reload | VRAM bytes | Beam time while streaming (interleaved) |
+|-------------------------|------------|------------------------------------------|
+| 1 screen | 480 | **~11** CRT lines (~5% of the 240-line active field) |
+| 2 screens (column) | 960 | **~23** CRT lines (~9%) |
+| 3 screens (corner) | 1440 | **~34** CRT lines (~14%) |
+
+VBlank is only about **22** CRT lines. VBlank-only streaming can fit **one** screen per blank, but a **2**-screen column already burns roughly an entire VBlank, and a **3**-screen corner needs **multiple** blanks (multi-frame hitch or stalled camera). Interleave finishes that same corner in well under one active frame of beam time - seamless scrolling stays realistic and smooth, every frame.
+
 Sprites are evaluated and line-buffered by an **ATmega1284P**. Audio runs on a **ATmega328P** with a **NES-style APU** model. The 6502 writes game state, OAM, and latches - it does not paint pixels.
 
 ### Collision and effects (honest scope)
@@ -140,7 +150,7 @@ Clock ratio alone is not "4.5x the game." Video timing, DMA absence, and your ow
 | Map storage | Often ad-hoc tables in PRG, manual pointers | **MAP-ROM** directory + **RLE** tile planes + raw attrs |
 | Room grid | Engine-specific | Up to **64 screens/world** on a **16x16** sparse grid (**16** worlds) |
 | CHR organization | Banks and swaps per game | **4 BG + 4 sprite banks per world** (256 tiles each) |
-| Crossing a seam | Reload nametable, bank CHR, hide flicker | **2x2 live slots** + scroll bytes |
+| Crossing a seam | Reload nametable in VBlank; flicker or stall | **2x2 live slots** + scroll; interleaved stream (~**11** CRT lines/screen) |
 | Parallax layer | Status bar tricks, CHR abuse, IRQ hacks | **Dedicated plane slots 4-5** + raster band |
 | Mid-frame splits | Sprite 0 hit timing | **Raster compare IRQ** |
 

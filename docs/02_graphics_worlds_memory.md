@@ -40,7 +40,7 @@ In flash, each stored screen is:
 | Tile indices (**240** B decoded) | **RLE** | about **50%** size -> ~**120** B/screen |
 | Attr bytes (**240** B) | **raw** (no RLE) | **240** B/screen |
 
-Typical packed screen ≈ **360** B (vs **480** B raw). CPU expands tiles into VRAM (or a scratch buffer) on load; attrs copy straight through. Palette blobs stay uncompressed indices (see palettes).
+Typical packed screen ~ **360** B (vs **480** B raw). CPU expands tiles into VRAM (or a scratch buffer) on load; attrs copy straight through. Palette blobs stay uncompressed indices (see palettes).
 
 ### Cart flash budget (SST39SF040 = 512 KB)
 
@@ -231,12 +231,14 @@ You do **not** unload F/H/I and load three brand-new rooms on every pixel. You r
 
 ### Why this is not too much work
 
-Two different CPU jobs. Do not mix them up:
+Two different CPU jobs:
 
 | Action | What the CPU does |
 |--------|-------------------|
 | Pan inside the already-loaded 2x2 | Write `$FE02`/`$FE03` (scroll). **No** nametable rewrite. BG hardware keeps fetching the slots on its own |
 | Stream a room into a slot (boundary / shift) | Point `$FE10`/`$FE11` at the slot start (or a run inside it), then poke ~**480** bytes through `$FE12`. **Auto-inc** means you do **not** rewrite the address for every tile. Usually: set addr once per contiguous run, then `STA $FE12` in a loop. Attr plane follows tiles at `slot+0xF0` |
+
+**In other words:** walking around inside rooms you already loaded is cheap (just move the camera). The expensive job is only when you cross into a room that is not in the four live slots yet - then you copy that room's tiles into VRAM once.
 
 So for a full screen load you are pushing **240 tile bytes + 240 attr bytes**, not "240 separate address setups." A column shift is that pattern times two (~960 data writes), still only when software slides the workbench, not every pixel.
 
@@ -247,7 +249,37 @@ So for a full screen load you are pushing **240 tile bytes + 240 attr bytes**, n
 | Shift a column (2 screens) | ~960 data writes |
 | Worst corner prep (3 screens) | ~1440 data writes |
 
-Spread across one or more VBlanks at ~60 Hz with an **8 MHz** CPU that is normal engine work. Scratch at `$0600+` can hold a decompress/copy buffer if MAP payloads are packed. After a slot is filled, the CPU can leave it alone until the next shift.
+**In other words:** one new room ~ half a kilobyte into VRAM. Two rooms side-by-side ~ 1 KB. The nasty corner case (three new rooms) ~ 1.5 KB. You do that when the workbench slides, not every frame.
+
+#### How long that takes while the CRT draws
+
+**VRAM commit timing (planning math):** clocks are **8.000 MHz** CPU and **5.369318 MHz** dot, **341** dots/line -> about **508** CPU cycles per CRT line. Active field **240** lines; VBlank region about **22** lines (~**11.2k** CPU cycles). Assume a tight ASM copy from a system-RAM buffer into `$FE12` at about **12** cycles/byte (auto-inc). Interleave lets those writes run while the beam is drawing (CPU phase); PPU keeps fetching on the other phase.
+
+| Screens written | Bytes | CPU cycles (@12/B) | CRT lines | Share of 240-line active field |
+|-----------------|-------|--------------------|-----------|--------------------------------|
+| 1 | 480 | ~5760 | **~11** | ~5% |
+| 2 | 960 | ~11520 | **~23** | ~9% |
+| 3 | 1440 | ~17280 | **~34** | ~14% |
+
+**In other words:** while the picture is on screen, the electron beam paints **240** horizontal lines, then rests for about **22** lines (VBlank). If the CPU may only touch VRAM during that short rest:
+
+- **1** room usually fits in one blank.
+- **2** rooms take about as long as the **entire** blank - you are out of time in a single VBlank.
+- **3** rooms need **two or more** blanks - the camera hitch lasts more than one frame.
+
+With **interleaved** VRAM, the CPU can copy into VRAM on its phases **while those 240 picture lines are being drawn**. Same copies then look like:
+
+- **1** room ~ **11** picture lines of beam time (a thin slice of the frame).
+- **2** rooms ~ **23** lines (still under **10%** of the visible frame).
+- **3** rooms ~ **34** lines (about **one seventh** of the visible frame) - done in the **same** frame the seam happens, instead of waiting through multiple VBlanks.
+
+That is the practical difference: VBlank-only makes big camera shifts feel like a stall; interleave makes them a short background copy during normal drawing.
+
+MAP read + RLE expand into scratch is extra CPU work (full speed on system RAM / `$FE93`) and can run before or overlapped with the commit; the table above is the **VRAM port** cost that interleave unlocks during active display.
+
+**In other words:** unpacking the cart (MAP + RLE) is separate homework in normal RAM. The table is only "how long to pour the finished room into video memory." Prefer pouring into slots the beam is **not** currently showing (or use the tear gates below).
+
+Scratch at `$0600+` can hold a decompress/copy buffer. After a slot is filled, the CPU can leave it alone until the next shift.
 
 Worry about **when** software schedules the shift (dead zone, hybrid), not about rewriting VRAM every frame.
 
@@ -256,6 +288,8 @@ Worry about **when** software schedules the shift (dead zone, hybrid), not about
 Interleave allows `$FE12` writes **during active display**. That does **not** mean every poke is visually safe.
 
 If the CPU changes a **tile index** (or that tile's attr) while the beam is still drawing that tile's **8 logical rows**, the screen can show a **tear**: some lines of the cell use the old CHR fetch, later lines use the new one.
+
+**In other words:** you can write VRAM while the TV is drawing, but if you rewrite the exact tile under the beam mid-draw, that one cell can flicker between old and new art for a moment. Copy into **off-screen** slots (the rooms beside/behind the camera) and you avoid that; or only poke visible cells in VBlank / after the beam has passed.
 
 **Platform rule (software / dev kit):** provide a mechanism so games do not update VRAM for a cell that is **currently under the beam**. Preferred approaches (any one is enough):
 
@@ -268,7 +302,7 @@ If the CPU changes a **tile index** (or that tile's attr) while the beam is stil
 
 **Not required in hardware:** no shadow nametable chip. Tear avoidance is a **CPU/kit contract**.
 
-**Still fine mid-frame without gating:** large streams scheduled in VBlank; physics against RAM solid maps; OAM; scroll / sprite-bank latches (those follow the separate "next tile fetch" rule in `03`). Changing attr `BANK` is a VRAM write - gate it like other attrs.
+**Still fine mid-frame without gating:** large streams into non-visible slots; physics against RAM solid maps; OAM; scroll latches (those follow the separate "next tile fetch" rule in `03`). Changing a **visible** cell's attr `BANK` is a VRAM write - gate it like other visible attrs.
 
 Dev-kit anim (`ANIM` cells) should use the same gate or VBlank commit so 4-frame updates never split a tile mid-cell.
 
