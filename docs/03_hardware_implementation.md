@@ -130,9 +130,18 @@ These are **physical latches on the PCB**, not VRAM and not "variables in the 12
 | `$FE90`-`$FE92` | `MAP_ADDR_*` | 24-bit MAP cursor | HC573x3 (or packed) | MAP `/CE` + flash A[23:0] | Seek before streaming a screen |
 | `$FE10`/`$FE11` | `VRAM_ADDR_*` | 15-bit VRAM cursor | HC573 | VRAM mux on CPU phase | Before each VRAM run |
 
-**BG bank in one sentence:** each nametable tile byte is an index **0-255** inside a CHR BG bank; that bank is selected by **attr bits 5-4** for that **8x8 tile**. Screens are not hardware-tied to one bank. `$FE31`-`$FE36` may still exist as optional stamp helpers. **Do not** mid-frame rewrite a BG bank latch on a raster IRQ to "split" the screen by bank - mixed banks are already per-tile in attrs.
+**BG bank in one sentence:** each nametable tile byte is an index **0-255** inside a CHR BG bank; that bank is selected by **attr bits 5-4** for that **8x8 tile**. Screens are not hardware-tied to one bank. `$FE31`-`$FE36` may still exist as optional stamp helpers. Mixed banks in one frame come from per-tile attrs (no mid-frame bank-latch split required).
 
-**BG attr bits on silicon:** `PAL` and `BANK` feed the compositor / CHR address mux every tile. `FLIP_H` / `FLIP_V` need shifter reverse and fine-Y XOR (0-1 PLD; contingency 4th ATF22V10 if glue runs short). `SOLID` and `ANIM` are software-only. Measure `BANK` mux timing on the BG island (critical path). Dot clock / CRT / sprite HBlank unchanged vs denser attr streams (~480 B/screen) - those only affect CPU load cost.
+**BG attr bits (hardware vs software):**
+
+| Bits | Name | Path |
+|------|------|------|
+| 1-0 | `PAL` | Hardware -- compositor |
+| 2-3 | `FLIP_H` / `FLIP_V` | Hardware -- shifter reverse / fine-Y XOR (leftover PLD/74HC, or 4th ATF22V10 if equations run short) |
+| 5-4 | `BANK` | Hardware -- CHR address mux (measure timing on BG island) |
+| 6-7 | `SOLID` / `ANIM` | Software -- video ignores; CPU / kit drive collision and living-tile nametable updates |
+
+Full bit table and software model: [`02`](02_graphics_worlds_memory.md). Dot clock / CRT / sprite HBlank unchanged vs denser attr streams (~480 B/screen); those only affect CPU load cost.
 
 **Parallax and palettes:** plane slots have their **own** nametable+attr data (per-tile `BANK` like the camera). Attrs still index the **same** active BG palette buffer as the playfield (`$FE08`/`$FE09`). No second set of 4 BG colors for parallax. MAP "palette row" on a parallax-flagged screen is **ignored / inherited** from the playfield (see `02`).
 
@@ -253,7 +262,7 @@ This removes the VBlank-only VRAM update bottleneck common on classic consoles l
 2. scroll + arrangement choose nametable slot
 3. slot tile byte and attr come from VRAM
 4. attr `BANK` bits (5-4) pick that tile's CHR BG bank; `FLIP_H` / `FLIP_V` reverse the shifter / fine-Y as needed
-5. attr `PAL` bits (1-0) pick BG palette 0-3; `SOLID` / `ANIM` are ignored by video
+5. attr `PAL` bits (1-0) pick BG palette 0-3; `SOLID` / `ANIM` are software-only (not wired into video)
 6. active BG palette buffer maps the tile's 2-bit color to a **master index 0-63**
 7. tile row fetch returns 2bpp data
 8. shifters output that master index into the **Color PROM** -> R/G/B DAC

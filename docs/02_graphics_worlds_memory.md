@@ -39,7 +39,7 @@ Max CHR if every world is full: **16 x 32 KB = 512 KB** (fills an SST39SF040 by 
 2. A screen (or MAP directory flag) may carry a **default BG bank** for authoring only. Loaders/Studio may **stamp** that value into every attr on export or load; that does **not** bind the screen in hardware.
 3. Slot registers `$FE31`-`$FE36` are optional **bulk helpers** (e.g. stamp a bank into a slot's attrs). They are **not** the live fetch source.
 4. Camera slots **0-3** and plane slots **4-5** hold nametable+attr data; mixed banks in one screen are normal.
-5. **No mid-frame BG bank switch.** Do not use raster/line IRQs (or beam-Y counting) to flip a bank latch partway down the screen. Because each tile already carries its bank, a room can mix banks 0-3 in one nametable without timed splits. Raster IRQ remains for other splits (status bars, parallax bands, palette row changes) - not for BG CHR banking.
+5. **BG bank needs no mid-frame latch split.** Each tile already carries `BANK`, so a room can mix banks 0-3 in one nametable without raster/line IRQ bank flips. Raster IRQ stays available for status bars, parallax bands, palette row changes, and other splits.
 6. **Sprite bank** is separate and **global** for the current world (`$FE37`).
 7. Changing BG tile banks does not change the sprite bank, and vice versa.
 
@@ -47,20 +47,22 @@ Max CHR if every world is full: **16 x 32 KB = 512 KB** (fills an SST39SF040 by 
 
 One **attr byte per 8x8 BG tile**. Screen payload: **240** tile bytes + **240** attr bytes = **480 B** (fits a **512 B** VRAM slot with **32 B** pad).
 
-| Bits | Name | Meaning |
-|------|------|---------|
-| 1-0 | `PAL` | BG palette 0-3 |
-| 2 | `FLIP_H` | horizontal mirror |
-| 3 | `FLIP_V` | vertical mirror |
-| 5-4 | `BANK` | BG CHR bank 0-3 |
-| 6 | `SOLID` | 0 = empty / pass, 1 = solid (software only; video ignores) |
-| 7 | `ANIM` | 0 = static, 1 = living (4-frame cycle; software advances nametable index) |
+| Bits | Name | Owner | Role |
+|------|------|-------|------|
+| 1-0 | `PAL` | **Hardware** | BG palette 0-3 (compositor) |
+| 2 | `FLIP_H` | **Hardware** | horizontal mirror (pixel shifter) |
+| 3 | `FLIP_V` | **Hardware** | vertical mirror (fine-Y / row) |
+| 5-4 | `BANK` | **Hardware** | BG CHR bank 0-3 (CHR address mux) |
+| 6 | `SOLID` | **Software** | collision hint; video path does not read it |
+| 7 | `ANIM` | **Software** | living-tile mark; CPU advances the nametable index |
 
-Attr **bitfields** and the `ANIM=1` CHR strip rule are a **platform contract**. Studio, MAP, and the BG fetch path assume them. Games may use custom anim rates, collision response, and living-tile lists, but must not redefine these bits or the 4-frame layout when `ANIM=1`.
+Studio, MAP, and the BG fetch path use this layout. Games choose how to drive `SOLID` / `ANIM` (rates, lists, physics). The optional kit follows the same bits.
+
+`FLIP_H` / `FLIP_V` need shifter reverse and fine-Y XOR in the BG path (fit in leftover PLD/74HC if possible; otherwise a 4th ATF22V10). Silicon detail: [`03`](03_hardware_implementation.md).
 
 ### Living tiles (`ANIM=1`)
 
-Exactly **4** frames as consecutive indices in one BG bank:
+Convention for Studio packer and kit anim: **4** frames as consecutive indices in one BG bank:
 
 ```text
 index:  ... | B | B+1 | B+2 | B+3 | ...
@@ -73,7 +75,7 @@ index:  ... | B | B+1 | B+2 | B+3 | ...
 - Studio / packer places strips on a bank row (16 tiles wide): up to **4** strips per row.
 - Static tiles (`ANIM=0`) use a single index; no alignment rule.
 
-`FLIP_H` / `FLIP_V` cut duplicate mirrored patterns (water edges, grass tips, etc.).
+Flips cut duplicate mirrored patterns (water edges, grass tips, etc.).
 
 ### Load / anim / collision (software)
 
@@ -87,13 +89,13 @@ index:  ... | B | B+1 | B+2 | B+3 | ...
 
 1. `phase = (frame_counter >> rate_shift) & 3`
 2. For each anim entry, write `base_index + phase` via `$FE10`-`$FE12` (tear-safe: VBlank or beam-Y gate).
-3. Do not rewrite attrs every frame.
+3. Attrs stay as loaded unless the cell itself changes (breakable, etc.).
 
 **Collision**
 
-Physics reads **only** the RAM shadow (never `$FE12` on the hot path). Breakable tiles update VRAM tile/attr **and** the shadow together.
+Physics reads the RAM shadow (keep the hot path off `$FE12`). Breakable tiles update VRAM tile/attr and the shadow together.
 
-Recommended default: **axis-separated** move (X then resolve, Y then resolve); probe only tiles overlapping the hitbox (**~2-6** lookups), not all **240** cells. Collide **entities** (one AABB per metasprite), not every OAM piece. Rough budget at **8 MHz** / ~**133k** cycles/frame: **~16** active bodies ≈ **under 10%** of a frame for collide+response if the shadow stays in system RAM.
+Recommended default: **axis-separated** move (X then resolve, Y then resolve); probe only tiles overlapping the hitbox (**~2-6** lookups), not all **240** cells. Collide **entities** (one AABB per metasprite), not every OAM piece. Rough budget at **8 MHz** / ~**133k** cycles/frame: **~16** active bodies is roughly **under 10%** of a frame for collide+response if the shadow stays in system RAM.
 
 When scroll straddles rooms, map camera-local pixels into the right slot's shadow (or a stitched buffer updated on tile-boundary scroll). Shadow covers **loaded slots** only; rebuild/blit on slot reload.
 
@@ -111,7 +113,7 @@ Cart-linkable C/ASM helpers (cc65 + `.s`) are convenience, not required:
 
 Masks: `PAL` `0x03`, `FLIP_H` `0x04`, `FLIP_V` `0x08`, `BANK` `0x30` (shift 4), `SOLID` `0x40`, `ANIM` `0x80`.
 
-Kit should **not** ship a full physics engine, arbitrary-length anim strips (v0 = **4** frames only), or ungated mid-frame VRAM spam.
+v0 kit scope: solid queries + 4-frame anim helpers + tear-safe VRAM pokes (not a full physics engine).
 
 ## Camera, VRAM, and scroll
 
@@ -483,7 +485,7 @@ Parallax = scanline band pointing at plane slots **4-5**.
 
 - Nametable bytes are tile indices **0-255** inside the bank named by that tile's attr `BANK` bits.
 - Screens are **not** hardware-tied to one BG bank; mixed banks in one screen are normal.
-- **No** mid-frame BG bank switch via line IRQ / beam counting - per-tile `BANK` already covers mixed art in one frame.
+- Per-tile `BANK` covers mixed art in one frame (no mid-frame bank-latch split needed for BG CHR).
 - MAP picks which screen to load. World picks which 32 KB CHR chapter is active.
 - Camera slots hold **whole screens**. Scroll moves the window; MAP loads happen on software slot shifts (`02` worked example).
 - Sprites use a ping-pong line buffer one scanline ahead (`02` diagram, `03` detail).

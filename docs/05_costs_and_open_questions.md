@@ -25,7 +25,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Palette fallback | world palette bank -> cart global -> system default **indices**. Master RGB always from Color PROM |
 | Color PROM | **3x AT28C16** on every board. 6-bit index -> R/G/B DACs. Programmed once |
 | Runtime BG banking | per **8x8 tile** (attr `BANK` bits); screens may stamp a default only at load |
-| BG attr byte | per tile: `PAL` (1-0), `FLIP_H` (2), `FLIP_V` (3), `BANK` (5-4), `SOLID` (6), `ANIM` (7) - see [`02`](02_graphics_worlds_memory.md) |
+| BG attr byte | per tile: `PAL`/`FLIP_*`/`BANK` **hardware**; `SOLID`/`ANIM` **software** - see [`02`](02_graphics_worlds_memory.md) |
 | BG living tiles | `ANIM=1`: **4** consecutive CHR indices `B..B+3`, `B` 4-aligned; software advances nametable |
 | BG collision | `SOLID` bit + **RAM shadow**; video ignores `SOLID` |
 | Runtime sprite banking | separate **global latch** |
