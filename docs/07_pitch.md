@@ -137,7 +137,7 @@ Clock ratio alone is not "4.5x the game." Video timing, DMA absence, and your ow
 
 | Idea | Classic NES-style approach | Retr01 approach |
 |------|---------------------------|-----------------|
-| Map storage | Often ad-hoc tables in PRG, manual pointers | **MAP-ROM** directory + compressed screens |
+| Map storage | Often ad-hoc tables in PRG, manual pointers | **MAP-ROM** directory + **RLE** tile planes + raw attrs |
 | Room grid | Engine-specific | Up to **64 screens/world** on a **16x16** sparse grid (**16** worlds) |
 | CHR organization | Banks and swaps per game | **4 BG + 4 sprite banks per world** (256 tiles each) |
 | Crossing a seam | Reload nametable, bank CHR, hide flicker | **2x2 live slots** + scroll bytes |
