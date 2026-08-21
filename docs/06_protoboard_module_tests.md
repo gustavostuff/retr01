@@ -112,7 +112,7 @@ Stop breadboarding and draw KiCad when **A-E**, **G-J**, and **K-O** pass on sep
 | `$FE20`/`$FE21` | N | OAM addr + data auto-inc |
 | `$FE60`/`$FE61` | E | Switch sets matching bit |
 | `$FE70`-`$FE72` | F | EEPROM R/W survives power-cycle |
-| `$FE80` | J | `PRG_WINDOW` remaps `$8000` into the single PRG section |
+| `$FE80` | J | reserved (`PRG_WINDOW` unused in v0, leave 0) |
 | `$FE90`-`$FE93` | J | MAP seek + read known byte |
 
 ## Related docs

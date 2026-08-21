@@ -105,7 +105,7 @@ Read each row as: *CPU poke -> physical hold -> video/audio/input consumer*.
 | Game state, code scratch | `$0000-$7FFF` | **AS6C62256** system RAM | 6502 | 6502 only | Every frame / as game needs. **Never** on the video bus |
 | Live nametables (slots 0-5) | `$FE10`/`$FE11` addr, `$FE12` data | **AS6C62256** VRAM | 6502 on **CPU phase** | BG fetch on **PPU phase** | Slot fill on camera/plane load or seam shift (~480 B/screen). Idle while panning inside the workbench |
 | Sprite line buffer | (no CPU port) | **AS6C62256** line buffer, halves `$000-$07F` / `$080-$0FF` | **1284** in HBlank | BG compositor on visible dots | **Every logical scanline** (ping-pong). Not a framebuffer |
-| Cart PRG / CHR / MAP | `$8000+` PRG window; CHR via fetch; MAP `$FE90`-`$FE93` | **512 KB** parallel NOR (SST39SF040; v0 socket) | Programmer / cart build | 6502 (PRG, MAP), BG path + 1284 (CHR) | Image is fixed at burn time. Runtime only **banks** and **MAP seek** |
+| Cart PRG / CHR / MAP | `$8000+` PRG. CHR via fetch. MAP `$FE90`-`$FE93` | **512 KB** parallel NOR (SST39SF040, v0 socket) | Programmer / cart build | 6502 (PRG, MAP), BG path + 1284 (CHR) | Image is fixed at burn time. Runtime only **banks** and **MAP seek** |
 | Master RGB (64 colors) | (no CPU port in gameplay) | **3x AT28C16** Color PROM | Once at board program | Compositor every pixel | Never at runtime. Carts only store **indices 0-63** |
 | Board save / config | `$FE70`-`$FE72` | **AT28C64B** | 6502 (slow write timing) | 6502 | Rare (options, high scores). Not video |
 
@@ -126,7 +126,7 @@ These are **physical latches on the PCB**, not VRAM and not "variables in the 12
 | `$FE31`-`$FE36` | `BG_BANK_0`..`5` | bank **0-3** (optional helpers) | HC573 (may share packages with scroll/MAP) | Software / load helpers; **not** live BG CHR mux | Optional bulk stamp into slot attrs. Live bank is **per-tile attr** |
 | `$FE37` | `SPR_BANK` | bank **0-3** (optional helper) | HC573 | Software / load helpers; **not** live sprite CHR mux | Optional bulk stamp into OAM attrs. Live bank is **per-sprite attr** |
 | `$FE38` | `PAL_ROW` | row 0-7 (hint) | optional latch / software convention | Software still **must** copy indices into `$FE08`/`$FE09` | Row change |
-| `$FE80` | `PRG_WINDOW` | window into single PRG | HC573 | PRG `/CE` + high address | Required when `len_prg` exceeds the ~32 KB `$8000` window (planning **~96 KB** PRG uses this) |
+| `$FE80` | `PRG_WINDOW` | reserved | HC573 (optional) | - | **Unused in v0** (PRG is contiguous 32 KB). Leave at 0 |
 | `$FE90`-`$FE92` | `MAP_ADDR_*` | 24-bit MAP cursor | HC573x3 (or packed) | MAP `/CE` + flash A[23:0] | Seek before streaming a screen |
 | `$FE10`/`$FE11` | `VRAM_ADDR_*` | 15-bit VRAM cursor | HC573 | VRAM mux on CPU phase | Before each VRAM run |
 
@@ -176,10 +176,10 @@ OAM capture may use an **HC573** (or equivalent) on the data path into the 1284;
 | Bus / resource | Owner rules |
 |----------------|-------------|
 | System RAM | CPU-only. No interleave |
-| VRAM | CPU on CPU phase; BG fetch on PPU phase |
-| CHR (cart) | BG fetch on visible dots; **1284** may own in HBlank for sprites |
-| Line buffer | Beam reads show half; 1284 writes fill half; swap each logical line |
-| Color PROM | Video path only; not on 6502 D-bus during play |
+| VRAM | CPU on CPU phase. BG fetch on PPU phase |
+| CHR (cart) | BG fetch on visible dots. **1284** may own in HBlank for sprites |
+| Line buffer | Beam reads show half. 1284 writes fill half. Swap each logical line |
+| Color PROM | Video path only. Not on 6502 D-bus during play |
 
 See **Sprite line buffer (how it works)** below. Camera / VRAM slot semantics: [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md).
 
@@ -391,7 +391,7 @@ Memory
 
 - 3x AS6C62256 (32 KB each) -- system RAM, interleaved VRAM, sprite line buffer
 - 1x AT28C64B -- board EEPROM (save/config)
-- 1x **SST39SF040** 512 KB parallel NOR (v0 socket; later on cart) -- cart image: PRG / CHR / MAP
+- 1x **SST39SF040** 512 KB parallel NOR (v0 socket, later on cart) -- cart image: PRG / CHR / MAP
 - 3x AT28C16 -- Color PROM (R/G/B master palette to DACs)
 
 Glue / video
@@ -406,4 +406,4 @@ Glue / video
 
 Planning total: **52** ICs (see motherboard map in [`01`](01_architecture_overview.md)).
 
-Roles in one line: 6502 runs the game; discrete 74HC+PLD draws BG; 1284 draws sprites into a line buffer; 328P makes sound; three SRAMs split CPU / nametables / sprites; three Color PROMs turn palette indices into RGB.
+Roles in one line: 6502 runs the game. Discrete 74HC+PLD draws BG. 1284 draws sprites into a line buffer. 328P makes sound. Three SRAMs split CPU / nametables / sprites. Three Color PROMs turn palette indices into RGB.

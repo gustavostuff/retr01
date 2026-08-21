@@ -52,7 +52,7 @@ Detail: [`03_hardware_implementation.md`](03_hardware_implementation.md).
   |  |  |[14]   | |[14]   | |[14]   | |[14]   |                                                           |  |
   |  |  +-------+ +-------+ +-------+ +-------+                                                           |  |
   |  |                                                                                                    |  |
-  |  |  $FExx latches HC573 x8 (scroll, PPUCTRL, raster, plane, WORLD, banks, PRG_WINDOW, MAP, ...)       |  |
+  |  |  $FExx latches HC573 x8 (scroll, PPUCTRL, raster, plane, WORLD, banks, MAP, ...)                   |  |
   |  |  +-----------+ +-----------+ +-----------+ +-----------+                                           |  |
   |  |  | HC573[20] | | HC573[20] | | HC573[20] | | HC573[20] |                                           |  |
   |  |  +-----------+ +-----------+ +-----------+ +-----------+                                           |  |
@@ -147,8 +147,8 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 | **Sprite bank** | **256 sprite tiles**, arranged as a **16x16** tile grid, **4 KB** (CHR) |
 | **BG bank (runtime)** | Per **8x8 tile**: attr bits select CHR BG bank **0-3** (not per screen) |
 | **Sprite bank (runtime)** | Per **OAM entry**: attr bits select CHR sprite bank **0-3** |
-| **BG bank helper** | Optional `$FE31`-`$FE36` bulk stamp into slot attrs; not the live fetch source |
-| **Sprite bank helper** | Optional `$FE37` bulk stamp into OAM attrs; not the live fetch source |
+| **BG bank helper** | Optional `$FE31`-`$FE36` bulk stamp into slot attrs. Not the live fetch source |
+| **Sprite bank helper** | Optional `$FE37` bulk stamp into OAM attrs. Not the live fetch source |
 | **BG palette bank** | Cartridge store of up to **32 BG palettes** (**8 palette rows x 4 palettes**) |
 | **Sprite palette bank** | Cartridge store of up to **32 sprite palettes** (**8 palette rows x 4 palettes**) |
 | **Palette row** | **4 palettes** in one plane, index **0-7**. BG row N and sprite row N are selected together |
@@ -174,12 +174,12 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 | Area | Spec |
 |------|------|
 | Logical resolution | **128x120** (**16x15** tiles, **16:15**) |
-| RGBS active field | **256x240** (SCALE **2x** fills field; **1x** = centered 128x120) |
+| RGBS active field | **256x240** (SCALE **2x** fills field, **1x** = centered 128x120) |
 | Tile size | **8x8** |
 | Color | **2bpp**, **64-color Color PROM** on board, **BG/sprite palette banks** in cart (indices only), **one synced palette row active** (4 BG + 4 sprite) |
 | Worlds | **8** max |
 | Screens per world | **32** max on sparse **8x8** virtual grid |
-| Cart / PRG | **512 KB** flash; planning **~96 KB** PRG (~**478 KB** full fill) |
+| Cart / PRG | **512 KB** flash. **32 KB** PRG (one region, no paging). ~**414 KB** full fill |
 | CHR per world | **4 BG banks + 4 sprite banks**, **256 tiles each**, **32 KB** |
 | Sprites | **64 OAM**, **16 per logical scanline** max |
 | VRAM | **32 KB**, interleaved |
@@ -214,7 +214,7 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 
 - RAM at `$0000-$7FFF`
 - I/O page at `$FE00-$FEFF`
-- PRG as **one global section** in the cart (not per-world PRG banks)
+- PRG as **one contiguous 32 KB section** in the cart. It maps at `$8000`, with no runtime paging, and is not split per world.
 - World/MAP streaming through `$FE90`
 - BG banks per **8x8 tile** (attr `BANK`); screens may only stamp a default at load
 - Sprite bank independent of BG banks (per OAM attr `BANK`; `$FE37` optional stamp)

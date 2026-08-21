@@ -29,7 +29,7 @@ Each world also carries:
 
 - **4 BG** + **4 sprite** CHR banks (**256** tiles / **4 KB** each -> **32 KB** CHR per world)
 - **default BG bank** and **default sprite bank** (0-3) for loaders to stamp
-- optional **world** BG/sprite palette banks (up to 8 rows each; override cart globals when present; if absent, that world uses cart globals)
+- optional **world** BG/sprite palette banks (up to 8 rows each). Override cart globals when present. If absent, that world uses cart globals
 - sparse screen directory + **480 B** screen payloads (see cart map below)
 
 ### MAP screen format (no RLE required)
@@ -58,12 +58,12 @@ MAP `$FE90`-`$FE92` is **24-bit**; **512 KB** only needs A0-A18.
 | World palette banks | 8 x 256 B (8 rows x 4 BG + 8 x 4 sprite) | **2 KB** |
 | Cart global palettes | 4 BG + 4 sprite pals x 4 B | **32 B** |
 | Directories / headers | ~12 B x 256 screen rows + world table/headers + cart pointer table | **~4 KB** |
-| PRG (planning) | default reserve (~32 KB `$8000` window + `$FE80` pages) | **96 KB** |
-| **Total** | | **~478 KB** |
+| PRG (planning) | single region, fits `$8000` window (no paging) | **32 KB** |
+| **Total** | | **~414 KB** |
 
-**On a 512 KB cart:** ~**478 KB** used, ~**34 KB** free. Full architecture caps + **96 KB** PRG fit with comfortable slack for padding and small growth.
+**On a 512 KB cart:** ~**414 KB** used, ~**98 KB** free. Full architecture caps + **32 KB** PRG fit with plenty of slack.
 
-**Planning rule of thumb:** **8 worlds / 32 screens / 8x8 grid**; reserve **~96 KB** PRG; treat **~478 KB** as the filled-cart target on **SST39SF040**. **v0:** on-board flash socket, same image later on the cart.
+**Planning rule of thumb:** **8 worlds / 32 screens / 8x8 grid**. **One 32 KB PRG** (no `$FE80` paging). Treat **~414 KB** as the filled-cart target on **SST39SF040**. **v0:** on-board flash socket, same image later on the cart.
 
 ### Runtime bank rules
 
@@ -277,7 +277,7 @@ So for a full screen load you are pushing **240 tile bytes + 240 attr bytes**, n
 
 #### How long that takes while the CRT draws
 
-**VRAM commit timing (planning math):** clocks are **8.000 MHz** CPU and **5.369318 MHz** dot, **341** dots/line -> about **508** CPU cycles per CRT line. Active field **240** lines; VBlank region about **22** lines (~**11.2k** CPU cycles). Assume a tight ASM copy from a system-RAM buffer into `$FE12` at about **12** cycles/byte (auto-inc). Interleave lets those writes run while the beam is drawing (CPU phase); PPU keeps fetching on the other phase.
+**VRAM commit timing (planning math):** clocks are **8.000 MHz** CPU and **5.369318 MHz** dot, **341** dots/line -> about **508** CPU cycles per CRT line. Active field **240** lines. VBlank region about **22** lines (~**11.2k** CPU cycles). Assume a tight ASM copy from a system-RAM buffer into `$FE12` at about **12** cycles/byte (auto-inc). Interleave lets those writes run while the beam is drawing (CPU phase). PPU keeps fetching on the other phase.
 
 | Screens written | Bytes | CPU cycles (@12/B) | CRT lines | Share of 240-line active field |
 |-----------------|-------|--------------------|-----------|--------------------------------|
@@ -326,7 +326,7 @@ If the CPU changes a **tile index** (or that tile's attr) while the beam is stil
 
 **Not required in hardware:** no shadow nametable chip. Tear avoidance is a **CPU/kit contract**.
 
-**Still fine mid-frame without gating:** large streams into non-visible slots; physics against RAM solid maps; OAM; scroll latches (those follow the separate "next tile fetch" rule in `03`). Changing a **visible** cell's attr `BANK` is a VRAM write - gate it like other visible attrs.
+**Still fine mid-frame without gating:** large streams into non-visible slots, physics against RAM solid maps, OAM, and scroll latches (those follow the separate "next tile fetch" rule in `03`). Changing a **visible** cell's attr `BANK` is a VRAM write - gate it like other visible attrs.
 
 Dev-kit anim (`ANIM` cells) should use the same gate or VBlank commit so 4-frame updates never split a tile mid-cell.
 
@@ -504,21 +504,21 @@ Addresses below are **byte offsets in the cart image** (24-bit, same width as `$
 |      off_world_table       -> 8 world slots                    |
 |      (optional off_strings / off_extra)                        |
 +----------------------------------------------------------------+
-|  GLOBAL PALETTES (cart-wide; 8 pals = 4 BG + 4 sprite)         |
+| GLOBAL PALETTES (cart-wide, 8 pals = 4 BG + 4 sprite)         |
 |    BG set:    4 palettes x 4 master indices = 16 B             |
 |    Sprite set: 4 palettes x 4 master indices = 16 B             |
 |    Worlds without their own banks use these for all rendering  |
 |    (Color PROM stays on board)                                 |
 +----------------------------------------------------------------+
-|  PRG (one global section for the whole cart)                   |
-|    game code / data - not split per world                      |
-|    appears in CPU space at $8000+ (see memory map)             |
+|  PRG (one global section, max 32 KB, contiguous at $8000)       |
+|    game code / data - not split per world, no runtime paging   |
+|    appears in CPU space at $8000-$FDFF + $FF00-$FFFF           |
 +----------------------------------------------------------------+
 |  WORLD TABLE (up to 8 entries)                                 |
 |    each slot: present u8, off_world u24, len_world u24         |
 |    empty slots: present=0                                      |
 +----------------------------------------------------------------+
-|  WORLD 0 BLOB (example; worlds 1..N follow same shape)         |
+|  WORLD 0 BLOB (example, worlds 1..N follow same shape)         |
 |  +------------------------------------------------------------+|
 |  | WORLD HEADER                                               ||
 |  |   start_col, start_row     default screen to load          ||
@@ -528,8 +528,8 @@ Addresses below are **byte offsets in the cart image** (24-bit, same width as `$
 |  |   screen_count             u8 (0..32)                      ||
 |  |   off_chr                  -> 4 BG + 4 sprite banks        ||
 |  |   off_screen_dir           -> sparse directory             ||
-|  |   off_world_pal_bg         0 = none; else optional bank    ||
-|  |   off_world_pal_spr        0 = none; else optional bank    ||
+|  |   off_world_pal_bg         0 = none, else optional bank    ||
+|  |   off_world_pal_spr        0 = none, else optional bank    ||
 |  +------------------------------------------------------------+|
 |  | CHR (this world)                                           ||
 |  |   BG banks 0..3     4 KB each                              ||
@@ -565,7 +565,7 @@ Addresses below are **byte offsets in the cart image** (24-bit, same width as `$
 **How the CPU finds things**
 
 1. Seek MAP to **0**, read magic + version + **pointer table**.
-2. Use `off_global_pal_*` for cart-wide palette sets; `off_prg` for the **single** PRG section.
+2. Use `off_global_pal_*` for cart-wide palette sets. Use `off_prg` for the **single** PRG section.
 3. Use `off_world_table[N]` to open world N's header.
 4. From that header: `off_chr`, `off_screen_dir`, defaults (`default_bg_bank`, `default_spr_bank`, `start_col`/`start_row`).
 5. Directory entry -> `off_payload` for the **480 B** screen; optional `off_screen_meta` for extras.
@@ -599,14 +599,14 @@ Not memory-mapped into CPU space. Read any cart offset through `$FE90`:
 1. write 24-bit address (`$FE90`/`$FE91`/`$FE92`)
 2. read data at `$FE93` (auto-inc)
 
-PRG is **one global section** in the image (`off_prg` / `len_prg`). It is not banked per world and not stored as multiple PRG chapters. The CPU executes through the `$8000-$FDFF` window (~**32 KB** visible) plus `$FF00-$FFFF` (vectors). Planning **~96 KB** PRG is still one section in flash; software pages it with **`$FE80` `PRG_WINDOW`** (high address bits into that section). Small bring-up images that fit in the window may leave `$FE80` at 0.
+PRG is **one global section** in the image (`off_prg` / `len_prg`), capped at **32 KB** so it maps contiguously into `$8000-$FDFF` plus `$FF00-$FFFF` (vectors). It is not banked per world and not paged at runtime. **`$FE80` `PRG_WINDOW` is reserved / unused** in the v0 contract (future headroom only). Normal carts leave it at 0.
 
 ## CPU memory map
 
 | Range | Region |
 |-------|--------|
 | `$0000-$7FFF` | System RAM (CPU-only) |
-| `$8000-$FDFF` | PRG window (single cart PRG section) |
+| `$8000-$FDFF` | PRG (single **32 KB** cart section, contiguous) |
 | `$FE00-$FEFF` | I/O |
 | `$FF00-$FFFF` | PRG high + vectors |
 
@@ -619,7 +619,7 @@ PRG is **one global section** in the image (`off_prg` / `len_prg`). It is not ba
 | `$FE40-$FE5F` | APU |
 | `$FE60-$FE6F` | controllers / cabinet |
 | `$FE70-$FE7F` | board EEPROM (AT28C64B, every v0 board) |
-| `$FE80-$FE8F` | PRG window (`$FE80`); needed when PRG exceeds ~32 KB |
+| `$FE80-$FE8F` | reserved (`$FE80` unused in v0, no PRG paging) |
 | `$FE90-$FE9F` | MAP port |
 
 ### `$FExx` draft v0
@@ -666,8 +666,8 @@ Entry: `Y, tile, attr, X` x 64. Attr bitfields: see **OAM sprite attributes** ab
 | Addr | R/W | Name | Function |
 |------|-----|------|----------|
 | `$FE30` | W | `WORLD` | 0-7 |
-| `$FE31`-`$FE36` | W | `BG_BANK_0`..`5` | optional bulk helpers for slots 0-5 (0-3); **not** live BG fetch source |
-| `$FE37` | W | `SPR_BANK` | optional bulk stamp into OAM attrs (0-3); **not** live sprite CHR fetch source |
+| `$FE31`-`$FE36` | W | `BG_BANK_0`..`5` | optional bulk helpers for slots 0-5 (0-3). **Not** live BG fetch source |
+| `$FE37` | W | `SPR_BANK` | optional bulk stamp into OAM attrs (0-3). **Not** live sprite CHR fetch source |
 | `$FE38` | W | `PAL_ROW` | row 0-7 (BG+sprite). Still copy into `$FE08`/`$FE09` |
 | `$FE39-$FE3F` | - | reserved | |
 
@@ -684,7 +684,7 @@ Entry: `Y, tile, attr, X` x 64. Attr bitfields: see **OAM sprite attributes** ab
 
 | Addr | R/W | Name | Function |
 |------|-----|------|----------|
-| `$FE80` | W | `PRG_WINDOW` | high-bits / window into the **single** PRG section when `len_prg` exceeds the ~32 KB `$8000` map (planning ~96 KB uses this) |
+| `$FE80` | W | `PRG_WINDOW` | **reserved / unused in v0.** PRG is a single contiguous **32 KB** section. Leave at 0. |
 | `$FE90` | W | `MAP_ADDR_LO` | bits 7-0 |
 | `$FE91` | W | `MAP_ADDR_MID` | bits 15-8 |
 | `$FE92` | W | `MAP_ADDR_HI` | bits 23-16 |

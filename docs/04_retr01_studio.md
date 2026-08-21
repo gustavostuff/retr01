@@ -386,7 +386,7 @@ Phases 0 and 1 can overlap: Phase 0 libraries land first. Phase 1 UI consumes th
 |------|------------------|
 | Screen tile plane | **240 bytes** from BG paint + generate (indices into CHR bank) |
 | Screen attr plane | **Stub**: **240** bytes (one/tile); palette **0**, `BANK` = generate radio, other bits 0 |
-| Screen MAP flags | parallax; per-screen default BG bank; palette row hint |
+| Screen MAP flags | parallax, per-screen default BG bank, palette row hint |
 | World MAP header | `start_col`/`start_row`, **default_bg_bank**, **default_spr_bank**, `default_pal_row` |
 | Cart image | header + **pointer table** + global pal sets + PRG + world table/blobs (`02` cart map) |
 | CHR BG banks | Up to **4 x 256** unique 8x8 2bpp tiles per world (from generate) |
