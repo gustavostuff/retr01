@@ -43,19 +43,44 @@ Each stored screen in flash is a flat **480-byte** blob:
 
 **In other words:** tile index bytes and attr bytes do **not** need compression. A game *can* compress them, but then the developer must ship a decompress step and pay extra CPU (decompress, then copy into VRAM). The simple path is a direct cart-to-VRAM copy: each plane is **240** bytes, which fits in a single-byte counter (**240 < 255**), so the loader is just "read `$FE93`, write `$FE12`, count to 240" for tiles, then the same for attrs.
 
-### Cart flash budget (SST39SF040 = 512 KB)
+### Cart flash budget (standard = 2 MB)
 
-v0 image is one parallel flash (**512 KB** = **0.5 MB**): full `.retr01` layout below (PRG + CHR + MAP + palettes + pointer tables). Caps at once do not all fit; planning sizes:
+**Standard cart / image size: 2 MB (16 Mbit x8 parallel NOR).** Devs will not always fill it; the size is chosen so architecture caps plus complex PRG fit with slack.
 
-| Asset | Math | Size |
-|-------|------|------|
-| CHR (all worlds full) | 16 x 32 KB | **512 KB** |
-| MAP screens (all slots full, raw) | 16 x 64 x **480** B | **~480 KB** |
-| Directories / headers / pointer tables | world table + per-world dirs + cart header | **~8-16 KB** |
-| Palette banks (global + optional world) | global 32 B min; worlds up to ~4 KB total | **~4 KB** |
-| PRG | game code | variable |
+**Why 2 MB (not 512 KB):** all-caps content is already **~1.2 MB** (see A). A **512 KB** part cannot hold max CHR and max MAP together, and leaves no room for a logic-heavy PRG. **2 MB** covers full caps + **192-256 KB** PRG and still has hundreds of KB free for iteration, voice/tables, or unused worlds. Smaller images (e.g. early bring-up on a 512 KB SST39SF040) remain valid subsets of the same `.retr01` format.
 
-A typical sparse game uses far fewer than **1024** screens, so raw MAP stays comfortable beside CHR and PRG inside **512 KB**. **v0:** on-board 32-pin socket; later the same image on the cart.
+MAP `$FE90`-`$FE92` is already **24-bit**, so addressing **2 MB** needs no format change (A0-A20 on the flash).
+
+#### A) Everything at architecture caps
+
+| Asset | Cap math | Size |
+|-------|----------|------|
+| CHR | 16 worlds x 32 KB (4 BG + 4 sprite banks full) | **512 KB** |
+| MAP screens | 16 x 64 x 480 B | **480 KB** |
+| World palette banks | 16 x (8 rows x 4 BG pals + 8 x 4 sprite pals) x 4 B = 16 x 256 B | **4 KB** |
+| Cart global palettes | 4 BG + 4 sprite pals x 4 B | **32 B** |
+| Directories / headers | ~12 B x 1024 screen rows + world table/headers + cart pointer table | **~13 KB** |
+| PRG (complex) | planning reserve | **192 KB** (or **256 KB** headroom) |
+| **Total** | | **~1201 KB (~1.17 MB)** with 192 KB PRG |
+
+**On a 2 MB cart:** ~**1.17 MB** used, ~**0.83 MB** free (or ~**0.77 MB** free with 256 KB PRG). Full caps fit.
+
+#### B) Complex average (typical large game)
+
+Assumptions: lots of logic, large but not maxed atlas, most CHR banks used but not every world filled to 32 KB, every *used* world still takes **max** optional palette banks.
+
+| Asset | Assumption | Size |
+|-------|------------|------|
+| PRG | complex logic | **192 KB** |
+| CHR | 8 worlds x ~24 KB used | **192 KB** |
+| MAP | 8 worlds x 40 screens x 480 B | **150 KB** |
+| World palette banks | 8 worlds x 256 B | **2 KB** |
+| Global pals + dirs/headers | | **~5 KB** |
+| **Total** | | **~541 KB** |
+
+Comfortable on **2 MB** (~**1.5 MB** free). No need to trim for flash pressure.
+
+**Planning rule of thumb:** reserve **~192 KB** PRG for complex logic; treat **16 worlds / 64 screens** as real limits you may fill; leave the rest of the **2 MB** for CHR/MAP growth and tools slack. **v0:** on-board flash socket (2 MB class when available; 512 KB OK for island bring-up). Later: same image on the cart.
 
 ### Runtime bank rules
 

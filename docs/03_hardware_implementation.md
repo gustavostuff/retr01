@@ -45,7 +45,7 @@ Official PDFs for the main silicon:
 | ATmega328P | [Microchip PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/ATmega328P-DS-DS40002061A.pdf) |
 | AT28C64B | [Microchip PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/doc4428.pdf) |
 | AT28C16 (Color PROM) | [Microchip AT28C16 PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/doc0006.pdf) |
-| SST39SF040 (cart flash) | [Microchip PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/20005051C.pdf) |
+| SST39SF040 (512 KB bring-up) / 2 MB parallel NOR (cart standard) | [Microchip SST39SF0x0 PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/20005051C.pdf) (family); exact 2 MB part TBD (Q19) |
 | SN74HC157/245/573/161/00/04/08/14/32/86/688 | [TI 74HC family](https://www.ti.com/logic-circuit/standard-logic/74hc-family/overview.html) (part-specific PDF) |
 
 Island bring-up order and pass criteria: [`06_protoboard_module_tests.md`](06_protoboard_module_tests.md).
@@ -105,7 +105,7 @@ Read each row as: *CPU poke -> physical hold -> video/audio/input consumer*.
 | Game state, code scratch | `$0000-$7FFF` | **AS6C62256** system RAM | 6502 | 6502 only | Every frame / as game needs. **Never** on the video bus |
 | Live nametables (slots 0-5) | `$FE10`/`$FE11` addr, `$FE12` data | **AS6C62256** VRAM | 6502 on **CPU phase** | BG fetch on **PPU phase** | Slot fill on camera/plane load or seam shift (~480 B/screen). Idle while panning inside the workbench |
 | Sprite line buffer | (no CPU port) | **AS6C62256** line buffer, halves `$000-$07F` / `$080-$0FF` | **1284** in HBlank | BG compositor on visible dots | **Every logical scanline** (ping-pong). Not a framebuffer |
-| Cart PRG / CHR / MAP | `$8000+` PRG window; CHR via fetch; MAP `$FE90`-`$FE93` | **SST39SF040** (v0 socket) | Programmer / cart build | 6502 (PRG, MAP), BG path + 1284 (CHR) | Image is fixed at burn time. Runtime only **banks** and **MAP seek** |
+| Cart PRG / CHR / MAP | `$8000+` PRG window; CHR via fetch; MAP `$FE90`-`$FE93` | **2 MB** parallel NOR (v0 socket; 512 KB OK for bring-up) | Programmer / cart build | 6502 (PRG, MAP), BG path + 1284 (CHR) | Image is fixed at burn time. Runtime only **banks** and **MAP seek** |
 | Master RGB (64 colors) | (no CPU port in gameplay) | **3x AT28C16** Color PROM | Once at board program | Compositor every pixel | Never at runtime. Carts only store **indices 0-63** |
 | Board save / config | `$FE70`-`$FE72` | **AT28C64B** | 6502 (slow write timing) | 6502 | Rare (options, high scores). Not video |
 
@@ -390,7 +390,7 @@ Memory
 
 - 3x AS6C62256 (32 KB each) -- system RAM, interleaved VRAM, sprite line buffer
 - 1x AT28C64B -- board EEPROM (save/config)
-- 1x SST39SF040 (v0 socket) -- cart image: PRG / CHR / MAP
+- 1x **2 MB** parallel NOR (v0 socket; SST39SF040 512 KB OK for early bring-up) -- cart image: PRG / CHR / MAP
 - 3x AT28C16 -- Color PROM (R/G/B master palette to DACs)
 
 Glue / video

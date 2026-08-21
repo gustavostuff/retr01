@@ -48,7 +48,7 @@ Detail: [`03_hardware_implementation.md`](03_hardware_implementation.md).
   │                                                                                         │
   │   ┌─ CART + CONFIG ──────────────────────┐   ┌─ VIDEO OUT (analog pads) ─────────────┐  │
   │   │  ┌────────────────────────────┐      │   │  Color PROM AT28C16 x3 + R-2R         │  │
-  │   │  │  SST39SF040 parallel  [32] │      │   │  ┌─────┐ ┌─────┐ ┌─────┐  J RGBS      │  │
+  │   │  │  2 MB parallel NOR  [32+]  │      │   │  ┌─────┐ ┌─────┐ ┌─────┐  J RGBS      │  │
   │   │  │  PRG · CHR · MAP (gated)   │      │   │  │ 75Ω │ │ 75Ω │ │ 75Ω │  J S-VIDEO   │  │
   │   │  └────────────────────────────┘      │   │  └─────┘ └─────┘ └─────┘  J COMPOSITE │  │
   │   │  ┌──────────────┐  HC245 [20]        │   └───────────────────────────────────────┘  │
@@ -67,7 +67,7 @@ Detail: [`03_hardware_implementation.md`](03_hardware_implementation.md).
   Package │ Count │ Parts
   ────────┼───────┼────────────────────────────────────────────────────────────
   [40]    │   2   │ W65C02S, ATmega1284P
-  [32]    │   1   │ SST39SF040 (v0 on-board cart-flash socket, moves to cart later)
+  [32+]   │   1   │ 2 MB parallel NOR cart flash (v0 on-board socket; 512 KB OK for bring-up)
   [28]    │   5   │ 3x AS6C62256, ATmega328P, AT28C64B
   [24]    │   6   │ 3x ATF22V10 (decode/timing/PPU) + 3x AT28C16 Color PROM (R/G/B)
   [20]    │  ~18  │ HC573 latches, HC245 transceivers, HC688 compare

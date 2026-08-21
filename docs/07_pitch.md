@@ -40,7 +40,7 @@ Retr01-A is meant to drop into a cabinet:
 - **5 V** barrel power, through-hole build, repair-friendly sockets
 - **20-pin IDC** for coin, start, and player controls
 - **RGBS**, S-Video, and composite output pads (cabinet monitors today, converters for modern displays tomorrow)
-- Real **cartridge slot** plan: PRG + CHR + MAP in one `.retr01` image
+- Real **cartridge** plan: **2 MB** standard image (PRG + CHR + MAP). Devs need not fill it; size covers full world/CHR caps plus complex PRG
 
 You get a board you can breadboard in islands, bring up module by module, then integrate - not a black-box FPGA mystery.
 
@@ -215,8 +215,9 @@ If you know how NES tiles, attrs, and sprites work, Retr01 art pipelines will fe
 | Topic | NES (NTSC) | Retr01-A |
 |-------|------------|----------|
 | Logical playfield | **256x240** (32x30 tiles) | **128x120** (16x15 tiles) - chunky; **2x** fills CRT |
-| RGBS/CRT active field | **256x240** | **256x240** raster. Board **SCALE**: **2x** = full field, or **1x** centered |
 | Why smaller logical | - | **Bigger pixels**, cheaper rooms, more worlds in flash |
+| RGBS/CRT active field | **256x240** | **256x240** raster. Board **SCALE**: **2x** = full field, or **1x** centered |
+| Cart / ROM size | Often 128-512 KB class | **2 MB** standard (caps ~1.2 MB + slack); same `.retr01` format |
 | CPU clock | **~1.79 MHz** | **8.000 MHz** |
 | Work RAM | **2 KB** | **32 KB** system RAM (CPU-only) |
 | Video RAM | **2 KB** PPU internal | **32 KB** interleaved VRAM + separate line-buffer SRAM |
