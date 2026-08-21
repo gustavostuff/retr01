@@ -250,10 +250,10 @@ Unit tests are added **alongside development**, not deferred to the end of a pha
 
 ### Principles
 
-- Every **`libretr01_studio_core`** module (RLE, MAP, CHR pack, project I/O, screen buffers) gets tests **when the module lands**.
+- Every **`libretr01_studio_core`** module (MAP, CHR pack, project I/O, screen buffers) gets tests **when the module lands**.
 - Codegen/IR backend gets tests **before** Studio depends on it for builds.
-- Prefer **small, deterministic tests** with golden binary blobs (tile plane, CHR bank, RLE round-trip).
-- UI cells may use lighter tests early (model/state tests without full SDL render). Core format code code must be fully covered.
+- Prefer **small, deterministic tests** with golden binary blobs (tile plane, attr plane, CHR bank, MAP round-trip).
+- UI cells may use lighter tests early (model/state tests without full SDL render). Core format code must be fully covered.
 
 ### Suggested layout
 
@@ -261,7 +261,7 @@ Unit tests are added **alongside development**, not deferred to the end of a pha
 retr01_studio/
  core/ # library under test
  tests/
- unit/ # test_rle.c, test_chr_pack.c, test_map.c, ...
+ unit/ # test_map.c, test_chr_pack.c, ...
  fixtures/ # golden .bin/.json projects
 ```
 
@@ -309,7 +309,7 @@ No blocking issues. Phase 1 as scoped below is a good first slice.
 
 | Phase | Focus |
 |-------|--------|
-| **0** | Shared C/C++ core: screen buffers, MAP directory, RLE, CHR pack, project file skeleton + **unit tests** |
+| **0** | Shared C/C++ core: screen buffers, MAP directory, CHR pack, project file skeleton + **unit tests** |
 | **1** | **UI shell + world grid + BG screen paint + BG Generate bank** (section 10) + tests for pack/save/load |
 | **2** | Attr/tile mode (palette, flip, bank, solid, anim), palette row editor, 4-frame `ANIM` pack/preview |
 | **3** | Sprite layer, sprite banks, meta-sprites, Generate sprite bank |
@@ -361,7 +361,7 @@ Phases 0 and 1 can overlap: Phase 0 libraries land first. Phase 1 UI consumes th
 
 - [ ] In-memory project model: worlds, sparse screens, 4 BG CHR banks per world
 - [ ] Save/load project file (**JSON**. Schema frozen when Phase 0/1 code needs it)
-- [ ] Export debug artifacts optional: raw `.bin` tile plane, CHR bank blob (full MAP RLE can wait for Phase 0 hardening)
+- [ ] Export debug artifacts optional: raw `.bin` tile plane + attr plane, CHR bank blob (MAP 480 B screen format)
 
 #### Stub cells (visible, non-functional)
 

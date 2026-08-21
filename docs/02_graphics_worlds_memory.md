@@ -22,7 +22,7 @@ Games, scroll, OAM, and Studio all stay in **128x120**. SCALE is board glue on t
 
 - Cart: up to **16 worlds**
 - World: sparse grid up to **16x16**, up to **64 screens**
-- Screen (decoded / VRAM): **16x15** tiles + **one attr byte per tile** (**240** + **240** bytes)
+- Screen: **16x15** tiles + **one attr byte per tile** (**240** + **240** bytes = **480 B**), stored in MAP as `(col, row)`
 - Parallax screens use the same format, marked non-enterable
 
 Each world also carries:
@@ -31,16 +31,16 @@ Each world also carries:
 - optional **BG** and **sprite palette banks** (master indices 0-63, never RGB bytes)
 - MAP directory + screen payloads
 
-### MAP screen packing
+### MAP screen format (no RLE required)
 
-In flash, each stored screen is:
+Each stored screen in flash is a flat **480-byte** blob:
 
-| Plane | On disk | Planning assumption |
-|-------|---------|---------------------|
-| Tile indices (**240** B decoded) | **RLE** | about **50%** size -> ~**120** B/screen |
-| Attr bytes (**240** B) | **raw** (no RLE) | **240** B/screen |
+| Order | Bytes | Contents |
+|-------|-------|----------|
+| 1 | **240** | tile indices, **one byte per tile** (row-major 16x15) |
+| 2 | **240** | attr bytes, **one byte per tile** (same order) |
 
-Typical packed screen ~ **360** B (vs **480** B raw). CPU expands tiles into VRAM (or a scratch buffer) on load; attrs copy straight through. Palette blobs stay uncompressed indices (see palettes).
+**In other words:** tile index bytes and attr bytes do **not** need compression. A game *can* compress them, but then the developer must ship a decompress step and pay extra CPU (decompress, then copy into VRAM). The simple path is a direct cart-to-VRAM copy: each plane is **240** bytes, which fits in a single-byte counter (**240 < 255**), so the loader is just "read `$FE93`, write `$FE12`, count to 240" for tiles, then the same for attrs.
 
 ### Cart flash budget (SST39SF040 = 512 KB)
 
@@ -49,12 +49,12 @@ v0 image is one parallel flash (**512 KB** = **0.5 MB**): PRG + CHR + MAP + pale
 | Asset | Math | Size |
 |-------|------|------|
 | CHR (all worlds full) | 16 x 32 KB | **512 KB** |
-| MAP screens (all slots full, RLE tiles @ ~50%) | 16 x 64 x ~360 B | **~360 KB** |
+| MAP screens (all slots full, raw) | 16 x 64 x **480** B | **~480 KB** |
 | MAP directory | ~8 B x 1024 | **~8 KB** |
 | Palette banks (max) | ~16 x 256 B + cart global | **~4 KB** |
 | PRG | game code | variable |
 
-With tile RLE, a full MAP atlas is ~**360 KB** instead of ~**480 KB** raw. Real carts still trade CHR depth, screen count, and PRG inside the **512 KB** part. **v0:** on-board 32-pin socket; later the same image on the cart.
+A typical sparse game uses far fewer than **1024** screens, so raw MAP stays comfortable beside CHR and PRG inside **512 KB**. **v0:** on-board 32-pin socket; later the same image on the cart.
 
 ### Runtime bank rules
 
@@ -275,11 +275,11 @@ With **interleaved** VRAM, the CPU can copy into VRAM on its phases **while thos
 
 That is the practical difference: VBlank-only makes big camera shifts feel like a stall; interleave makes them a short background copy during normal drawing.
 
-MAP read + RLE expand into scratch is extra CPU work (full speed on system RAM / `$FE93`) and can run before or overlapped with the commit; the table above is the **VRAM port** cost that interleave unlocks during active display.
+MAP read into scratch (or straight MAP -> `$FE12`) is ordinary byte copying at full CPU speed on `$FE93` / system RAM; the table above is the **VRAM port** cost that interleave unlocks during active display.
 
-**In other words:** unpacking the cart (MAP + RLE) is separate homework in normal RAM. The table is only "how long to pour the finished room into video memory." Prefer pouring into slots the beam is **not** currently showing (or use the tear gates below).
+**In other words:** there is no decompress step. Cart bytes are already the tile indices and attrs. Prefer pouring into slots the beam is **not** currently showing (or use the tear gates below).
 
-Scratch at `$0600+` can hold a decompress/copy buffer. After a slot is filled, the CPU can leave it alone until the next shift.
+Scratch at `$0600+` can hold a copy buffer if you stage before commit. After a slot is filled, the CPU can leave it alone until the next shift.
 
 Worry about **when** software schedules the shift (dead zone, hybrid), not about rewriting VRAM every frame.
 
@@ -451,7 +451,7 @@ Not memory-mapped into CPU space. Read through `$FE90`:
 
 Directory row sketch: `col`, `row`, `flags` (`bit0` parallax, `bits1-2` optional **default** BG bank stamp for loaders, `bits3-5` palette row), `data_off` (24-bit). Live CHR bank still comes from **per-tile** attr `BANK`, not from this flag alone.
 
-Screen payload at `data_off`: **RLE tile plane** then **raw attr plane** (see **MAP screen packing** above). Loader decompresses tiles to **240** B, then writes **240** + **240** into the VRAM slot.
+Screen payload at `data_off`: **240** tile bytes + **240** attr bytes (raw). Loader copies into the VRAM slot - no RLE.
 
 ## CPU memory map
 

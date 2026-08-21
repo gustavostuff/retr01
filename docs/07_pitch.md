@@ -72,6 +72,7 @@ Same contract again, SMD build, likely multi-board layout. Battery, display, and
 
 - Logical playfield **128x120** (**16x15** tiles) - chunky pixels; **2x** fills the **256x240** CRT field
 - That is a feature: **larger, crisp pixels**, less MAP/VRAM per room than NES density, art that stays readable on cabinet CRTs
+- Each room is only **16x15** tiles: **240** tile bytes + **240** attr bytes (**480 B** total). Loaders copy bytes as-is - **no RLE / decompress** required
 - RGBS path uses a stable **256x240** active raster. Board **SCALE** DIP: **2x** default doubles to **256x240** (no letterbox); **1x** centers **128x120**
 - A **640x640** handheld LCD can show the same games at **5x** (**640x600**, thin letterbox) without a second game resolution
 - **8x8** tiles, **2bpp** patterns
@@ -84,10 +85,10 @@ Retr01 treats **worlds** as a first-class cart concept:
 
 - Up to **16 worlds** per game
 - Each world: sparse **16x16** grid, up to **64 stored screens**
-- Each screen: **16x15** tilemap + attributes (**128x120**)
-- **MAP-ROM** streams screen data through a dedicated port (`$FE90`) - the CPU does not fake a filesystem in PRG
+- Each screen: **16x15** tilemap + attributes (**128x120**) - **480 B** raw in MAP (**one byte per tile index, one byte per attr**)
+- **MAP-ROM** streams that blob through `$FE90` - seek, then copy. No compression step on the hot path
 
-That is the difference between "we drew 32 rooms in CHR and hope the level loader keeps up" and **hardware-backed map chapters** with CHR banks per world.
+That is the difference between "we drew 32 rooms in CHR and hope the level loader keeps up" and **hardware-backed map chapters** with CHR banks per world - and room data simple enough that streaming is a straight byte copy.
 
 ### Scrolling that matches how games are designed
 
@@ -95,7 +96,7 @@ The live camera uses **four VRAM nametable slots (0-3)** as a **2x2 playfield wi
 
 - **`scroll_x`/`scroll_y`**: wrap in **0-127** / **0-119** (logical pixels)
 - **Per-tile BG bank**: each **8x8** cell's attr selects CHR BG bank **0-3** (screens are not locked to one bank)
-- **Sprite bank**: separate global latch within the world
+- **Per-sprite bank / size / priority**: OAM attr bits (mixed banks and 8x8/8x16 in one frame)
 
 For designers, this means Metroidvania-scale layouts without rewriting the engine every time the camera crosses a room boundary.
 
@@ -147,7 +148,7 @@ Clock ratio alone is not "4.5x the game." Video timing, DMA absence, and your ow
 
 | Idea | Classic NES-style approach | Retr01 approach |
 |------|---------------------------|-----------------|
-| Map storage | Often ad-hoc tables in PRG, manual pointers | **MAP-ROM** directory + **RLE** tile planes + raw attrs |
+| Map storage | Often ad-hoc tables in PRG, manual pointers | **MAP-ROM** directory + **raw** 480 B screens (240 tiles + 240 attrs) |
 | Room grid | Engine-specific | Up to **64 screens/world** on a **16x16** sparse grid (**16** worlds) |
 | CHR organization | Banks and swaps per game | **4 BG + 4 sprite banks per world** (256 tiles each) |
 | Crossing a seam | Reload nametable in VBlank; flicker or stall | **2x2 live slots** + scroll; interleaved stream (~**11** CRT lines/screen) |
@@ -223,7 +224,7 @@ If you know how NES tiles, attrs, and sprites work, Retr01 art pipelines will fe
 | Sprites per scanline | **8** | **16** (logical lines) |
 | On-screen palette slots | **4 BG + 4 sprite** (with shared backdrop rules) | **4 BG + 4 sprite** active row. **64** master colors in **Color PROM**. Cart holds **index** banks only |
 | Nametables live at once | **2** for scroll tricks | **6 slots**: **4** camera + **2** parallax plane |
-| World/map hardware | None (game code) | **MAP-ROM**, **16 worlds**, **64 screens/world** |
+| World/map hardware | None (game code) | **MAP-ROM**, **16 worlds**, **64 screens/world**, **480 B**/screen raw |
 | CHR banking | Mapper-dependent, game-defined | **4 BG + 4 sprite banks/world**, **per-tile** BG bank, **per-sprite** bank (attrs) |
 | Mid-frame effects | **Sprite 0 hit** + timed code | **Raster compare IRQ** |
 | Gameplay collision | Software (same) | Software (explicit - **no** hardware sprite-BG hit) |

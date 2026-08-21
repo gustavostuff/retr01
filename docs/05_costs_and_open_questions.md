@@ -10,7 +10,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Worlds | **16** max |
 | World layout | sparse virtual grid up to **16x16**, **64 screens max** per world |
 | Screen format | **16x15** tiles (**128x120**), **240-byte** tile plane + **240-byte** attr plane (one attr/tile) |
-| MAP screen packing | tile indices **RLE** (~**50%** planning rate); attrs **raw**; typical packed screen ~**360** B |
+| MAP screen format | **480 B** raw per screen (**240** tile indices + **240** attrs, one byte each). **No RLE** required |
 | Pixel aspect | square logical pixels; storage **16:15**; **2x** fills **256x240** RGBS with no letterbox |
 | RGBS active field | always **256x240** inside **341x262** timing |
 | Scale | board **SCALE** DIP: **2x** default (**256x240**), **1x** optional (centered **128x120**) |
@@ -85,7 +85,7 @@ v0 uses on-board flash socket. Cart PCB comes later. Motherboard + cart proto st
 | Q2 | RGBS analog levels/sync polarity tuning | digital timing is locked. Bench tuning still needed |
 | Q10 | OAM attr bitfields | **Locked:** bank/pal/flip/priority/size in [`02`](02_graphics_worlds_memory.md). 8x16 tile-pair fetch detail on 1284 firmware still micro-rev |
 | Q11 | `$FE07` plane band end/dual-band detail | start scanline drafted. End-of-band pairing may need a second latch |
-| Q12 | PRG/CHR/MAP offsets inside 512 KB flash | socket-now/cart-later locked. Exact region map still flexible. Full CHR = 512 KB alone; MAP screens plan ~360 B each with tile RLE |
+| Q12 | PRG/CHR/MAP offsets inside 512 KB flash | socket-now/cart-later locked. Exact region map still flexible. Full CHR = 512 KB alone; MAP screens **480 B** raw each |
 | Q13 | Retr01-C pad bit timing | ATtiny85 + 3-wire draft locked. Baud/poll edge details later |
 | Q14 | Color PROM byte width per gun | AT28C16 is 8-bit wide. How many MSBs feed each R-2R (6-bit vs 8-bit DAC) still bench-tunable |
 | Q15 | Color PROM part (AT28C16 vs faster OTP) | **Pinned candidate:** **AT27C256R / AT27C256R-70PU** (70 ns, In Production, DIP-28). Current plan still AT28C16. Revisit if EOL/stock or a higher dot clock needs <150 ns |
