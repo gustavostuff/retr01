@@ -397,10 +397,13 @@ Memory
 Glue / video
 
 - 3x ATF22V10 -- decode, timing, CHR/VRAM gating (4th if needed for flip/bank)
-- 74HC157 -- VRAM / line-buffer address mux
-- 74HC245 -- data bus isolation
-- 74HC573 -- scroll, MAP addr, optional bank helpers, OAM capture, other $FExx latches
-- 74HC161 -- beam X/Y counters
-- Plus more 74HC gates/comparators (00/04/08/14/32/86/688 class) for compositing, raster compare, SCALE, etc. -- most of the rest of the ~52
+- 6x 74HC157 -- VRAM addr mux x4 + line-buffer addr mux x2
+- 3x 74HC245 -- CPU bus / OAM path / cart data isolation
+- 14x 74HC573 -- $FExx latches (scroll, MAP, banks, palette, OAM capture, ...)
+- 1x 74HC688 -- raster compare
+- 4x 74HC161 -- beam X/Y counters
+- 10x DIP-14 glue -- HC14 x1, HC00 x2, HC04 x2, HC08 x2, HC32 x2, HC86 x1 (compositing, SCALE, reset, ...)
+
+Planning total: **52** ICs (see motherboard map in [`01`](01_architecture_overview.md)).
 
 Roles in one line: 6502 runs the game; discrete 74HC+PLD draws BG; 1284 draws sprites into a line buffer; 328P makes sound; three SRAMs split CPU / nametables / sprites; three Color PROMs turn palette indices into RGB.
