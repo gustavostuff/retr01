@@ -94,7 +94,7 @@ That is the difference between "we drew 32 rooms in CHR and hope the level loade
 The live camera uses **four VRAM nametable slots (0-3)** as a **2x2 playfield window**. Smooth pixel scroll can show **multiple neighboring screens at once** without the classic "reload everything at the seam" dance.
 
 - **`scroll_x`/`scroll_y`**: wrap in **0-127** / **0-119** (logical pixels)
-- **Per-slot BG bank latches**: each visible screen can pull from its own CHR BG bank
+- **Per-tile BG bank**: each **8x8** cell's attr selects CHR BG bank **0-3** (screens are not locked to one bank)
 - **Sprite bank**: separate global latch within the world
 
 For designers, this means Metroidvania-scale layouts without rewriting the engine every time the camera crosses a room boundary.
@@ -185,7 +185,7 @@ Retr01 deliberately rhymes with the NES where it helps learning and art directio
 | Tile size | **8x8** | **8x8** |
 | Tile depth | **2bpp** (4 colors per tile) | **2bpp** (4 colors per tile) |
 | Pattern storage | **CHR in cartridge** | **CHR in cartridge** |
-| Attribute idea | Packed palette bits per tile group | Packed **2x2** tile attrs (**64 bytes**/screen; last row partly unused on 16x15) |
+| Attribute idea | Packed palette bits per tile group | **One attr byte per 8x8 tile** (**240** bytes/screen; includes `BANK`) |
 | Sprite list | **64** OAM entries | **64** OAM entries |
 | OAM entry layout | **Y, tile, attr, X** | **Y, tile, attr, X** (`$FE20` addr/`$FE21` data) |
 | Frame rate class | **~60.098 Hz** (262 lines) | **~60.098 Hz** (341x262 timing) |
@@ -214,7 +214,7 @@ If you know how NES tiles, attrs, and sprites work, Retr01 art pipelines will fe
 | On-screen palette slots | **4 BG + 4 sprite** (with shared backdrop rules) | **4 BG + 4 sprite** active row. **64** master colors in **Color PROM**. Cart holds **index** banks only |
 | Nametables live at once | **2** for scroll tricks | **6 slots**: **4** camera + **2** parallax plane |
 | World/map hardware | None (game code) | **MAP-ROM**, **16 worlds**, **64 screens/world** |
-| CHR banking | Mapper-dependent, game-defined | **4 BG + 4 sprite banks/world**, **per-slot BG bank latches** |
+| CHR banking | Mapper-dependent, game-defined | **4 BG + 4 sprite banks/world**, **per-tile** BG bank (attr), global sprite bank |
 | Mid-frame effects | **Sprite 0 hit** + timed code | **Raster compare IRQ** |
 | Gameplay collision | Software (same) | Software (explicit - **no** hardware sprite-BG hit) |
 | PPU integration | Single Ricoh PPU | **74HC BG path** + **ATmega1284P** sprite line buffer + **ATmega328P** APU |

@@ -103,13 +103,14 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 | Term | Meaning |
 |------|---------|
 | **World** | One cart chapter: sparse MAP atlas + **4 BG banks + 4 sprite banks** in CHR |
-| **Screen** | One stored **16x15** tilemap (**128x120**) + attrs in MAP-ROM |
+| **Screen** | One stored **16x15** tilemap (**128x120**) + **per-tile** attrs in MAP-ROM |
 | **Grid position** | One `(col, row)` coordinate in a world's sparse virtual grid |
 | **Camera nametable slots** | VRAM slots **0-3**: the live 2x2 playfield field |
 | **Plane nametable slots** | VRAM slots **4-5**: optional parallax-only storage |
 | **BG bank** | **256 BG tiles**, arranged as a **16x16** tile grid, **4 KB** (CHR) |
 | **Sprite bank** | **256 sprite tiles**, arranged as a **16x16** tile grid, **4 KB** (CHR) |
-| **BG bank latch** | Per-slot register selecting which CHR BG bank fetch uses |
+| **BG bank (runtime)** | Per **8x8 tile**: attr bits select CHR BG bank **0-3** (not per screen) |
+| **BG bank helper** | Optional `$FE31`-`$FE36` bulk stamp into slot attrs; not the live fetch source |
 | **BG palette bank** | Cartridge store of up to **32 BG palettes** (**8 palette rows x 4 palettes**) |
 | **Sprite palette bank** | Cartridge store of up to **32 sprite palettes** (**8 palette rows x 4 palettes**) |
 | **Palette row** | **4 palettes** in one plane, index **0-7**. BG row N and sprite row N are selected together |
@@ -176,8 +177,8 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 - I/O page at `$FE00-$FEFF`
 - PRG elsewhere, banked only through `$FE80`
 - World/MAP streaming through `$FE90`
-- BG banks per nametable slot
-- Sprite bank independent of BG banks
+- BG banks per **8x8 tile** (attr `BANK`); screens may only stamp a default at load
+- Sprite bank independent of BG banks (global `$FE37`)
 
 ## Near-term software focus
 
@@ -197,3 +198,4 @@ A **low-level hardware emulator** is planned later, not built now. It should sim
 - Protoboard module tests (island bring-up): `06_protoboard_module_tests.md`
 - Retr01 Studio (current tool): `04_retr01_studio.md`
 - Costs and unresolved items: `05_costs_and_open_questions.md`
+- BG per-tile attrs (flip, anim, collision, bank): `08_bg_attr_extensions.md`

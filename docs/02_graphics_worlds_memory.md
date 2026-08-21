@@ -22,7 +22,7 @@ Games, scroll, OAM, and Studio all stay in **128x120**. SCALE is board glue on t
 
 - Cart: up to **16 worlds**
 - World: sparse grid up to **16x16**, up to **64 screens**
-- Screen: **16x15** tiles + packed attrs (**240** + **64** bytes), stored in MAP as `(col, row)`
+- Screen: **16x15** tiles + **one attr byte per tile** (**240** + **240** bytes), stored in MAP as `(col, row)`
 - Parallax screens use the same format, marked non-enterable
 
 Each world also carries:
@@ -35,11 +35,15 @@ Max CHR if every world is full: **16 x 32 KB = 512 KB** (fills an SST39SF040 by 
 
 ### Runtime bank rules
 
-1. Each screen names a **BG bank** in MAP metadata.
-2. Loading a screen into a nametable slot also sets that slot's **BG bank latch**.
-3. Camera slots **0-3** and plane slots **4-5** each have their own BG bank latch.
-4. **Sprite bank** is separate and global for the current world.
-5. Changing BG bank does not change the sprite bank, and vice versa.
+1. **BG CHR bank is per 8x8 tile**, not per screen. Bits **5-4** of that tile's attr byte select bank **0-3**. Hardware CHR fetch reads `BANK` from the attr fetched with the nametable byte.
+2. A screen (or MAP directory flag) may carry a **default BG bank** for authoring only. Loaders/Studio may **stamp** that value into every attr on export or load; that does **not** bind the screen in hardware.
+3. Slot registers `$FE31`-`$FE36` are optional **bulk helpers** (e.g. stamp a bank into a slot's attrs). They are **not** the live fetch source once per-tile `BANK` is wired.
+4. Camera slots **0-3** and plane slots **4-5** hold nametable+attr data; mixed banks in one screen are normal.
+5. **No mid-frame BG bank switch.** Do not use raster/line IRQs (or beam-Y counting) to flip a bank latch partway down the screen. Because each tile already carries its bank, a room can mix banks 0-3 in one nametable without timed splits. Raster IRQ remains for other splits (status bars, parallax bands, palette row changes) - not for BG CHR banking.
+6. **Sprite bank** is separate and **global** for the current world (`$FE37`).
+7. Changing BG tile banks does not change the sprite bank, and vice versa.
+
+Attr bitfield (palette, flip, bank, solid, anim): [`08_bg_attr_extensions.md`](08_bg_attr_extensions.md).
 
 ## Camera, VRAM, and scroll
 
@@ -49,7 +53,7 @@ Max CHR if every world is full: **16 x 32 KB = 512 KB** (fills an SST39SF040 by 
 
 MAP holds the whole chapter. VRAM only holds what is live: up to **four** camera screens + **two** parallax screens.
 
-Each slot is a **full screen** (**240** tile + **64** attr), aligned to **512 bytes**. Not "one room plus a tile strip at the edge."
+Each slot is a **full screen** (**240** tile + **240** attr), aligned to **512 bytes**. Not "one room plus a tile strip at the edge."
 
 Hardware does **not** auto-load neighbors when you scroll. Software writes slots from MAP. Changing `scroll_x`/`scroll_y` only moves the **128x120** window over whatever is already in the four slots. That part is cheap.
 
@@ -72,7 +76,7 @@ Hardware does **not** auto-load neighbors when you scroll. Software writes slots
 
 Studio **dead zone** / **hybrid** camera rules in `04` are software policy on top of these modes. They do not add PPU scroll hardware.
 
-**Parallax (4-5):** full **16x15** nametables drawn behind the playfield (optional scanline band). Own **BG bank latches** and own nametable attrs, but **no private BG palettes** - attrs index the same active BG palette buffer as the playfield (`$FE08`/`$FE09`). MAP palette-row on a parallax-flagged screen is **ignored / inherited**. Enabling any H/V band locks the main camera to that axis for the **whole frame** (see Raster and parallax). Physical latch / ownership detail: [`03`](03_hardware_implementation.md).
+**Parallax (4-5):** full **16x15** nametables drawn behind the playfield (optional scanline band). Own nametable+attr data (per-tile `BANK` like the camera). Attrs index the same active BG palette buffer as the playfield (`$FE08`/`$FE09`). MAP palette-row on a parallax-flagged screen is **ignored / inherited**. Enabling any H/V band locks the main camera to that axis for the **whole frame** (see Raster and parallax). Physical latch / ownership detail: [`03`](03_hardware_implementation.md).
 
 ### Worked example: 3x3 world, standing on the center room
 
@@ -139,26 +143,47 @@ Two different CPU jobs. Do not mix them up:
 | Action | What the CPU does |
 |--------|-------------------|
 | Pan inside the already-loaded 2x2 | Write `$FE02`/`$FE03` (scroll). **No** nametable rewrite. BG hardware keeps fetching the slots on its own |
-| Stream a room into a slot (boundary / shift) | Point `$FE10`/`$FE11` at the slot start (or a run inside it), then poke ~**304** bytes through `$FE12`. **Auto-inc** means you do **not** rewrite the address for every tile. Usually: set addr once per contiguous run, then `STA $FE12` in a loop. Attr plane is the same idea at `slot+0xF0` |
+| Stream a room into a slot (boundary / shift) | Point `$FE10`/`$FE11` at the slot start (or a run inside it), then poke ~**480** bytes through `$FE12`. **Auto-inc** means you do **not** rewrite the address for every tile. Usually: set addr once per contiguous run, then `STA $FE12` in a loop. Attr plane follows tiles at `slot+0xF0` |
 
-So for a full screen load you are pushing **240 tile bytes + 64 attr bytes**, not "240 separate address setups." A column shift is that pattern times two (~608 data writes), still only when software slides the workbench, not every pixel.
+So for a full screen load you are pushing **240 tile bytes + 240 attr bytes**, not "240 separate address setups." A column shift is that pattern times two (~960 data writes), still only when software slides the workbench, not every pixel.
 
 | Action | Rough cost |
 |--------|------------|
 | Change scroll by 1 px | 1-2 register writes. No VRAM stream |
-| Stream **one** screen from MAP | ~304 `$FE12` writes (+ a few addr setup writes) |
-| Shift a column (2 screens) | ~608 data writes |
-| Worst corner prep (3 screens) | ~912 data writes |
+| Stream **one** screen from MAP | ~480 `$FE12` writes (+ a few addr setup writes) |
+| Shift a column (2 screens) | ~960 data writes |
+| Worst corner prep (3 screens) | ~1440 data writes |
 
 Spread across one or more VBlanks at ~60 Hz with an **8 MHz** CPU that is normal engine work. Scratch at `$0600+` can hold a decompress/copy buffer if MAP payloads are packed. After a slot is filled, the CPU can leave it alone until the next shift.
 
 Worry about **when** software schedules the shift (dead zone, hybrid), not about rewriting VRAM every frame.
 
+### Live VRAM updates and tear avoidance
+
+Interleave allows `$FE12` writes **during active display**. That does **not** mean every poke is visually safe.
+
+If the CPU changes a **tile index** (or that tile's attr) while the beam is still drawing that tile's **8 logical rows**, the screen can show a **tear**: some lines of the cell use the old CHR fetch, later lines use the new one.
+
+**Platform rule (software / dev kit):** provide a mechanism so games do not update VRAM for a cell that is **currently under the beam**. Preferred approaches (any one is enough):
+
+| Approach | Behavior |
+|----------|----------|
+| **VBlank / early NMI only** for visible nametable/attr writes | Simplest. No race with the playfield |
+| **HBlank-only** queues | Fine for small bursts; still avoid the tile row being fetched on the upcoming line if unsure |
+| **Deferred / double-buffer intent** | Build new indices in system RAM; commit to VRAM only in VBlank, or only for cells whose max Y is **above** the current beam (already drawn -> shows next frame, no tear) or **below** (not yet drawn -> clean this frame) |
+| **Beam-Y gate** | Kit helper: given tile `(tx,ty)`, refuse or defer write if beam logical Y is inside `[ty*8, ty*8+7]` (and X span if you also care about horizontal mid-tile fetch) |
+
+**Not required in hardware:** no shadow nametable chip. Tear avoidance is a **CPU/kit contract**.
+
+**Still fine mid-frame without gating:** large streams scheduled in VBlank; physics against RAM solid maps; OAM; scroll / sprite-bank latches (those follow the separate "next tile fetch" rule in `03`). Changing attr `BANK` is a VRAM write - gate it like other attrs.
+
+Dev-kit anim (`ANIM` cells) should use the same gate or VBlank commit so 4-frame updates never split a tile mid-cell. See also [`08_bg_attr_extensions.md`](08_bg_attr_extensions.md).
+
 ### VRAM layout
 
 | Offset | Size | Purpose |
 |--------|------|---------|
-| `$0000-$01FF` | 512 B | camera slot 0 (**240** tiles + **64** attrs used) |
+| `$0000-$01FF` | 512 B | camera slot 0 (**240** tiles + **240** attrs used) |
 | `$0200-$03FF` | 512 B | camera slot 1 |
 | `$0400-$05FF` | 512 B | camera slot 2 |
 | `$0600-$07FF` | 512 B | camera slot 3 |
@@ -167,7 +192,7 @@ Worry about **when** software schedules the shift (dead zone, hybrid), not about
 | `$0C00-$3FFF` | rest of low half | scratch / stream temp |
 | `$4000-$7FFF` | 16 KB | reserved (not live camera/plane) |
 
-Per slot: tiles at `+0x000` (**240** B), packed attrs at `+0xF0` (**64** B). One attr byte = one **2x2** tile group with four 2-bit palette fields. Attr grid is **8x8** (covers a **16x16** tile area); with **16x15** screens the last attr row is partly unused - that is fine for v0.
+Per slot: tiles at `+0x000` (**240** B), attrs at `+0xF0` (**240** B), **32 B** pad to 512. **One attr byte per 8x8 tile** (not a 2x2 NES-style pack). Bitfields: [`08_bg_attr_extensions.md`](08_bg_attr_extensions.md). **`BANK` in each attr selects that tile's BG CHR bank** - banks are not tied to whole screens.
 
 ## Sprite line buffer (not VRAM nametables)
 
@@ -254,7 +279,7 @@ PPU shows **4 BG + 4 sprite** palettes at once (dedicated palette RAM, not namet
 
 - Software picks palette row **0-7**. BG and sprite rows are always the **same** index (no BG-4 / sprite-2 mix).
 - Tile attrs and OAM attrs still only pick **0-3** inside that row.
-- Screens may optionally name a palette row in MAP (like they name a BG bank). Switching rows means reload `$FE08`/`$FE09`.
+- Screens may optionally name a palette row in MAP (authoring default, like optional default BG bank stamp). Switching rows means reload `$FE08`/`$FE09`.
 
 **Shared color 0:** all 8 active palettes use the same master index at color 0 (universal backdrop). Software writes that into every slot when loading a row. On BG, color 0 is the backdrop. On sprites, pattern color 0 stays **transparent**.
 
@@ -269,7 +294,7 @@ Not memory-mapped into CPU space. Read through `$FE90`:
 1. write 24-bit address (`$FE90`/`$FE91`/`$FE92`)
 2. read data at `$FE93` (auto-inc)
 
-Directory row sketch: `col`, `row`, `flags` (`bit0` parallax, `bits1-2` BG bank, `bits3-5` palette row), `data_off` (24-bit).
+Directory row sketch: `col`, `row`, `flags` (`bit0` parallax, `bits1-2` optional **default** BG bank stamp for loaders, `bits3-5` palette row), `data_off` (24-bit). Live CHR bank still comes from **per-tile** attr `BANK`, not from this flag alone.
 
 ## CPU memory map
 
@@ -285,7 +310,7 @@ Directory row sketch: `col`, `row`, `flags` (`bit0` parallax, `bits1-2` BG bank,
 | `$FE00-$FE0F` | PPU, scroll, raster, parallax, palette |
 | `$FE10-$FE1F` | VRAM port |
 | `$FE20-$FE2F` | OAM (1284) |
-| `$FE30-$FE3F` | world + BG/sprite bank latches |
+| `$FE30-$FE3F` | world + optional BG bank helpers / sprite bank |
 | `$FE40-$FE5F` | APU |
 | `$FE60-$FE6F` | controllers / cabinet |
 | `$FE70-$FE7F` | board EEPROM (AT28C64B, every v0 board) |
@@ -336,7 +361,7 @@ Entry: `Y, tile, attr, X` x 64. Attr bitfields (palette / flip / priority) TBD.
 | Addr | R/W | Name | Function |
 |------|-----|------|----------|
 | `$FE30` | W | `WORLD` | 0-15 |
-| `$FE31`-`$FE36` | W | `BG_BANK_0`..`5` | latches for slots 0-5 (0-3) |
+| `$FE31`-`$FE36` | W | `BG_BANK_0`..`5` | optional bulk helpers for slots 0-5 (0-3); **not** live BG fetch source |
 | `$FE37` | W | `SPR_BANK` | global sprite CHR bank 0-3 |
 | `$FE38` | W | `PAL_ROW` | row 0-7 (BG+sprite). Still copy into `$FE08`/`$FE09` |
 | `$FE39-$FE3F` | - | reserved | |
@@ -383,12 +408,14 @@ Parallax = scanline band pointing at plane slots **4-5**.
 
 - Any H/V band enable locks main camera scroll to that axis for the **whole frame**. Do not scroll the unlocked axis while a band is active.
 - Plane slots are not part of the 2x2 camera.
-- BG banks stay per slot. Sprite bank stays global.
+- BG CHR bank is **per 8x8 tile** (attr `BANK`). Sprite bank stays global.
 - Plane attrs share the playfield's **4 BG palettes** (locked to the active row). Scrolling the band does not unlock new colors.
 
 ## Software cheat sheet
 
-- Nametable bytes are tile indices **0-255**. Bank lives in the slot latch, not in the tile byte.
+- Nametable bytes are tile indices **0-255** inside the bank named by that tile's attr `BANK` bits.
+- Screens are **not** hardware-tied to one BG bank; mixed banks in one screen are normal.
+- **No** mid-frame BG bank switch via line IRQ / beam counting - per-tile `BANK` already covers mixed art in one frame.
 - MAP picks which screen to load. World picks which 32 KB CHR chapter is active.
 - Camera slots hold **whole screens**. Scroll moves the window; MAP loads happen on software slot shifts (`02` worked example).
 - Sprites use a ping-pong line buffer one scanline ahead (`02` diagram, `03` detail).

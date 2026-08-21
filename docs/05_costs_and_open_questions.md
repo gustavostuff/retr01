@@ -9,7 +9,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Name/family | **Retr01**, rollout **A -> C -> H** |
 | Worlds | **16** max |
 | World layout | sparse virtual grid up to **16x16**, **64 screens max** per world |
-| Screen format | **16x15** tiles (**128x120**), **240-byte** tile plane + **64-byte** attr plane |
+| Screen format | **16x15** tiles (**128x120**), **240-byte** tile plane + **240-byte** attr plane (one attr/tile) |
 | Pixel aspect | square logical pixels; storage **16:15**; **2x** fills **256x240** RGBS with no letterbox |
 | RGBS active field | always **256x240** inside **341x262** timing |
 | Scale | board **SCALE** DIP: **2x** default (**256x240**), **1x** optional (centered **128x120**) |
@@ -24,9 +24,9 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Shared backdrop | all **8** active palettes use the same **color 0** master index (software must write it into every slot when loading a row) |
 | Palette fallback | world palette bank -> cart global -> system default **indices**. Master RGB always from Color PROM |
 | Color PROM | **3x AT28C16** on every board. 6-bit index -> R/G/B DACs. Programmed once |
-| Runtime BG banking | per **nametable slot** |
+| Runtime BG banking | per **8x8 tile** (attr `BANK` bits); screens may stamp a default only at load |
 | Runtime sprite banking | separate **global latch** |
-| VRAM | **32 KB**, interleaved. Slots **512 B** aligned (240+64 used) |
+| VRAM | **32 KB**, interleaved. Slots **512 B** aligned (240+240 used) |
 | System RAM | **32 KB**, CPU-only |
 | Line buffer | third **32 KB** SRAM, sprite ping-pong, **128 px**/half used |
 | OAM | in **ATmega1284P**, no DMA. **`$FE20`** = addr, **`$FE21`** = data (auto-inc). Entry `Y, tile, attr, X` in logical space |
@@ -84,6 +84,7 @@ v0 uses on-board flash socket. Cart PCB comes later. Motherboard + cart proto st
 | Q13 | Retr01-C pad bit timing | ATtiny85 + 3-wire draft locked. Baud/poll edge details later |
 | Q14 | Color PROM byte width per gun | AT28C16 is 8-bit wide. How many MSBs feed each R-2R (6-bit vs 8-bit DAC) still bench-tunable |
 | Q15 | Color PROM part (AT28C16 vs faster OTP) | **Pinned candidate:** **AT27C256R / AT27C256R-70PU** (70 ns, In Production, DIP-28). Current plan still AT28C16. Revisit if EOL/stock or a higher dot clock needs <150 ns |
+| Q16 | BG per-tile attrs (anim/collision/bank) | **Locked direction:** per-tile attrs + per-tile `BANK`; 4-frame strips. Detail: [`08_bg_attr_extensions.md`](08_bg_attr_extensions.md). Studio Phase 2 UI still open |
 
 ## Practical next decisions
 

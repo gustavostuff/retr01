@@ -283,7 +283,7 @@ Overall the UI plan is **sound** and matches the hardware model. A few clarifica
 - **640x360 shell + integer scale** - good for a crisp retro-tool feel. Keep game resolution (128x120) inside the Screen cell only.
 - **Sparse world grid + Ctrl+click** - matches MAP directory/hole model in `02_graphics_worlds_memory.md`.
 - **4 BG bank tabs x 256 tiles** - matches CHR BG bank layout (16x16).
-- **Generate bank -> pick bank 0-3** - matches per-screen CHR BG bank metadata and bank latches.
+- **Generate bank -> pick bank 0-3** - packs into that CHR bank and stamps default `BANK` into attrs (or Phase 1 stub); **not** a hardware screen lock.
 - **4-color pixel paint** - matches 2bpp patterns. Attrs deferred is correct for Phase 1.
 - **Play vs emulator split** - correct division of responsibility.
 
@@ -294,7 +294,7 @@ Overall the UI plan is **sound** and matches the hardware model. A few clarifica
 | **Palette tabs vs palette rows** | Each tab should be one **palette row** (4 BG + 4 sprite palettes), not an arbitrary grouping. Name it that way in UI labels to avoid confusion with CHR banks. |
 | **Sprite 8x16 toggle** | Display-only reorder is fine. Document that CHR is always 8x8 tiles and 8x16 sprites are **two tile rows** in hardware. |
 | **Generate bank scope** | Phase 1: BG layer only. Packing is per **selected CHR bank** for the **current world**. |
-| **Attr-less export** | Phase 1 screens should export **240-byte tile plane** + **64-byte attr plane stub** (e.g. all palette 0) so MAP format stays valid. |
+| **Attr-less export** | Phase 1 screens should export **240-byte tile plane** + **240-byte** attr plane stub (e.g. all palette 0 / bank from generate) so MAP format stays valid. |
 | **World vs screen selection** | Screen cell edits **one grid position** at a time. Switching world tab or grid selection should prompt save/discard if dirty. |
 | **64-screen cap** | Grid UI must enforce max stored screens per world. |
 | **Constraint numbering** | Many scroll modes can coexist as a **project default + per-area overrides**. Avoid making them mutually exclusive enums too early. |
@@ -383,8 +383,8 @@ Phases 0 and 1 can overlap: Phase 0 libraries land first. Phase 1 UI consumes th
 | Data | Phase 1 behavior |
 |------|------------------|
 | Screen tile plane | **240 bytes** from BG paint + generate (indices into CHR bank) |
-| Screen attr plane | **Stub**: all tiles palette **0** (64 packed bytes) |
-| Screen MAP flags | CHR BG bank number = bank chosen at generate time, parallax bit = 0 |
+| Screen attr plane | **Stub**: **240** bytes (one/tile); palette **0**, `BANK` = generate radio, other bits 0 |
+| Screen MAP flags | optional **default** BG bank stamp = bank chosen at generate time, parallax bit = 0 |
 | CHR BG banks | Up to **4 x 256** unique 8x8 2bpp tiles per world (from generate) |
 | CHR sprite banks | Empty |
 | Palette banks | Default row 0 **indices** only (hardcoded). Not editable in UI. Master RGB is Color PROM/preview mirror, not project data |
@@ -426,9 +426,9 @@ Phases 0 and 1 can overlap: Phase 0 libraries land first. Phase 1 UI consumes th
 | Studio concept | Hardware doc |
 |---------------|--------------|
 | World grid | `02_graphics_worlds_memory.md` - sparse 16x16, 64 screens, 16 worlds |
-| Screen 16x15 | Same - 240 tile bytes + 64 attr bytes |
-| CHR BG bank 0-3 | Same - 256 tiles, 16x16 grid, per-world |
-| Generate bank | Fills CHR, screen flags record bank for `load_screen` |
+| Screen 16x15 | Same - **240** tile bytes + **240** attr bytes (one attr/tile; includes `BANK`) |
+| CHR BG bank 0-3 | Same - 256 tiles, 16x16 grid, per-world; runtime bank is per-tile attr |
+| Generate bank | Fills CHR; stamps default `BANK` into attrs / optional MAP default flag |
 | Palette rows | Same - Phase 2+ |
 | Play preview | Not hardware-accurate, emulator later |
 

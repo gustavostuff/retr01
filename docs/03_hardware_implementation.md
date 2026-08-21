@@ -103,13 +103,13 @@ Read each row as: *CPU poke -> physical hold -> video/audio/input consumer*.
 | What | CPU view | Physical store | Who writes | Who reads | How often it changes |
 |------|----------|----------------|------------|-----------|----------------------|
 | Game state, code scratch | `$0000-$7FFF` | **AS6C62256** system RAM | 6502 | 6502 only | Every frame / as game needs. **Never** on the video bus |
-| Live nametables (slots 0-5) | `$FE10`/`$FE11` addr, `$FE12` data | **AS6C62256** VRAM | 6502 on **CPU phase** | BG fetch on **PPU phase** | Slot fill on camera/plane load or seam shift (~304 B/screen). Idle while panning inside the workbench |
+| Live nametables (slots 0-5) | `$FE10`/`$FE11` addr, `$FE12` data | **AS6C62256** VRAM | 6502 on **CPU phase** | BG fetch on **PPU phase** | Slot fill on camera/plane load or seam shift (~480 B/screen). Idle while panning inside the workbench |
 | Sprite line buffer | (no CPU port) | **AS6C62256** line buffer, halves `$000-$07F` / `$080-$0FF` | **1284** in HBlank | BG compositor on visible dots | **Every logical scanline** (ping-pong). Not a framebuffer |
 | Cart PRG / CHR / MAP | `$8000+` PRG window; CHR via fetch; MAP `$FE90`-`$FE93` | **SST39SF040** (v0 socket) | Programmer / cart build | 6502 (PRG, MAP), BG path + 1284 (CHR) | Image is fixed at burn time. Runtime only **banks** and **MAP seek** |
 | Master RGB (64 colors) | (no CPU port in gameplay) | **3x AT28C16** Color PROM | Once at board program | Compositor every pixel | Never at runtime. Carts only store **indices 0-63** |
 | Board save / config | `$FE70`-`$FE72` | **AT28C64B** | 6502 (slow write timing) | 6502 | Rare (options, high scores). Not video |
 
-VRAM slot layout (same chip, CPU and BG share by PHI2 phase): slots **0-3** camera, **4-5** parallax planes, then scratch - see `02`. Each slot is **512 B** aligned (**240** tiles + **64** attrs used).
+VRAM slot layout (same chip, CPU and BG share by PHI2 phase): slots **0-3** camera, **4-5** parallax planes, then scratch - see `02`. Each slot is **512 B** aligned (**240** tiles + **240** attrs used).
 
 ### Latched `$FExx` controls (74HC573 class + decode PLD)
 
@@ -123,18 +123,18 @@ These are **physical latches on the PCB**, not VRAM and not "variables in the 12
 | `$FE04`/`$FE05` | raster compare / IRQ | scanline + enable | HC573 + compare (`HC688` class) | IRQ logic vs beam Y | Setup once per split effect; hit is sticky in `PPUSTATUS` |
 | `$FE06`/`$FE07` | plane band | which plane, axis lock, band start | HC573 | BG path (slot 4/5 vs 0-3) | When enabling/moving a parallax band |
 | `$FE30` | `WORLD` | 0-15 | HC573 | CHR/MAP region select glue | World change (rare) |
-| `$FE31`-`$FE36` | `BG_BANK_0`..`5` | bank **0-3** per slot | HC573 (slot-bank group; may share packages with scroll/MAP) | BG CHR address when that **slot** is fetched | When loading/shifting a slot from MAP. Plane slots **4-5** included |
+| `$FE31`-`$FE36` | `BG_BANK_0`..`5` | bank **0-3** (optional helpers) | HC573 (may share packages with scroll/MAP) | Software / load helpers; **not** live BG CHR mux | Optional bulk stamp into slot attrs. Live bank is **per-tile attr** |
 | `$FE37` | `SPR_BANK` | bank **0-3** global | HC573 | 1284 sprite CHR fetch in HBlank | When sprite art set changes |
 | `$FE38` | `PAL_ROW` | row 0-7 (hint) | optional latch / software convention | Software still **must** copy indices into `$FE08`/`$FE09` | Row change |
 | `$FE80` | `PRG_BANK` | PRG window | HC573 | PRG `/CE` + high address | Bank switch |
 | `$FE90`-`$FE92` | `MAP_ADDR_*` | 24-bit MAP cursor | HC573x3 (or packed) | MAP `/CE` + flash A[23:0] | Seek before streaming a screen |
 | `$FE10`/`$FE11` | `VRAM_ADDR_*` | 15-bit VRAM cursor | HC573 | VRAM mux on CPU phase | Before each VRAM run |
 
-**BG bank latches in one sentence:** tile bytes in VRAM are indices **0-255** inside a bank; **`$FE31`-`$FE36`** select which of the world's **4** BG CHR banks that slot uses. Hardware does not store the bank inside the nametable.
+**BG bank in one sentence:** each nametable tile byte is an index **0-255** inside a CHR BG bank; that bank is selected by **attr bits 5-4** for that **8x8 tile**. Screens are not hardware-tied to one bank. `$FE31`-`$FE36` may still exist as optional stamp helpers. **Do not** mid-frame rewrite a BG bank latch on a raster IRQ to "split" the screen by bank - mixed banks are already per-tile in attrs.
 
-**Parallax and palettes:** plane slots have their **own** `BG_BANK_4`/`5` and their **own** VRAM attrs, but attrs still index the **same** active BG palette buffer as the playfield (`$FE08`/`$FE09`). No second set of 4 BG colors for parallax. MAP "palette row" on a parallax-flagged screen is **ignored / inherited** from the playfield (see `02`).
+**Parallax and palettes:** plane slots have their **own** nametable+attr data (per-tile `BANK` like the camera). Attrs still index the **same** active BG palette buffer as the playfield (`$FE08`/`$FE09`). No second set of 4 BG colors for parallax. MAP "palette row" on a parallax-flagged screen is **ignored / inherited** from the playfield (see `02`).
 
-Package count note: planning shows roughly **HC573x6** in the "scroll / slot banks / MAP addr" cluster plus more for palette/compositor - bits are packed across chips; schematic will assign exact pin maps. The **address -> latch -> consumer** contract above is what software and Studio must assume.
+Package count note: planning shows roughly **HC573x6** in the "scroll / optional bank helpers / MAP addr" cluster plus more for palette/compositor - bits are packed across chips; schematic will assign exact pin maps. The **address -> latch -> consumer** contract above is what software and Studio must assume.
 
 ### Active palette buffer (small dedicated RAM / latches)
 
@@ -250,7 +250,7 @@ This removes the VBlank-only VRAM update bottleneck common on classic consoles l
 1. beam counters determine visible position
 2. scroll + arrangement choose nametable slot
 3. slot tile byte and attr come from VRAM
-4. slot BG bank latch picks CHR bank
+4. attr `BANK` bits (5-4) pick that tile's CHR BG bank
 5. active BG palette buffer maps the tile's 2-bit color to a **master index 0-63**
 6. tile row fetch returns 2bpp data
 7. shifters output that master index into the **Color PROM** -> R/G/B DAC
@@ -291,11 +291,23 @@ No extra ICs are required for palette **banks**, synced row selection, or fallba
 
 ## Timing-facing rules
 
-- mid-frame bank/scroll writes take effect on the **next tile fetch**
-- allow up to **8 px** delay if a write lands mid-tile
+- mid-frame **scroll** / `SPR_BANK` writes take effect on the **next tile fetch** (allow up to **8 px** delay if a write lands mid-tile)
+- mid-frame **attr `BANK`** (or other attr) changes follow nametable tear rules below - they are VRAM, not a slot latch
 - clean splits should write during **HBlank**
 - raster IRQ is the intended split mechanism
 - palette-buffer rewrites follow the same rule: safest in VBlank, possible mid-frame with raster timing
+
+### Nametable / attr tear avoidance
+
+Changing a tile index or attr in VRAM while the beam is drawing that cell can produce a **torn tile** (mixed old/new pattern lines). Hardware does **not** latch a whole cell for the frame.
+
+**Required software policy** (document for games + implement in the dev kit):
+
+1. Do **not** commit nametable/attr writes for a cell whose logical Y range overlaps the current beam scanline, unless you accept tear.
+2. Safe defaults: commit visible BG updates in **VBlank**, or defer until the beam has **passed** the cell (effect next frame) or has **not reached** it yet (effect this frame, clean).
+3. Optional helper: `vram_poke_tile_safe(addr, data)` that compares beam Y to the cell's tile row and either writes, queues, or waits for NMI.
+
+Big MAP streams stay VBlank-oriented for CPU budget; tear policy is about **small live pokes** (anim, damage tiles, HUD cells). Full write-up: [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) (*Live VRAM updates and tear avoidance*).
 
 ## Input contract
 
@@ -342,7 +354,7 @@ For software people:
 
 - treat `$FExx` as the hardware API; see **Where state lives** for which poke hits SRAM vs HC573 vs MCU
 - write game state in system RAM
-- stream screens through MAP -> VRAM; set that slot's `BG_BANK_n` when you load
+- stream screens through MAP -> VRAM (attrs already carry per-tile `BANK`); optional `$FE31`-`$FE36` only if you use bulk stamp helpers
 - write OAM through the 1284 port; sprites do not touch nametable VRAM
 - treat palette changes as writes to one shared active buffer (parallax included)
 - let the board resolve tiles to pixels

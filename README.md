@@ -1,6 +1,6 @@
-# Retr01
+<img src="docs/img/logo_v1.png" alt="Logo V1" />
 
-**A modern discrete-logic 8-bit arcade platform, built to be understood, hacked, and shipped.**
+**A modern discrete-logic 8-bit hardware family, built to be understood, hacked, and shipped.**
 
 Retr01 is a family of purpose-built retro game hardware. Same creative rules, same feel, three form factors over time:
 
