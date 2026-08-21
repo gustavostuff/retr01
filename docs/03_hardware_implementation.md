@@ -126,7 +126,7 @@ These are **physical latches on the PCB**, not VRAM and not "variables in the 12
 | `$FE31`-`$FE36` | `BG_BANK_0`..`5` | bank **0-3** (optional helpers) | HC573 (may share packages with scroll/MAP) | Software / load helpers; **not** live BG CHR mux | Optional bulk stamp into slot attrs. Live bank is **per-tile attr** |
 | `$FE37` | `SPR_BANK` | bank **0-3** (optional helper) | HC573 | Software / load helpers; **not** live sprite CHR mux | Optional bulk stamp into OAM attrs. Live bank is **per-sprite attr** |
 | `$FE38` | `PAL_ROW` | row 0-7 (hint) | optional latch / software convention | Software still **must** copy indices into `$FE08`/`$FE09` | Row change |
-| `$FE80` | `PRG_WINDOW` | optional window into single PRG | HC573 | PRG `/CE` + high address | Only if PRG exceeds `$8000` window; v0 often unused |
+| `$FE80` | `PRG_WINDOW` | window into single PRG | HC573 | PRG `/CE` + high address | Required when `len_prg` exceeds the ~32 KB `$8000` window (planning **~96 KB** PRG uses this) |
 | `$FE90`-`$FE92` | `MAP_ADDR_*` | 24-bit MAP cursor | HC573x3 (or packed) | MAP `/CE` + flash A[23:0] | Seek before streaming a screen |
 | `$FE10`/`$FE11` | `VRAM_ADDR_*` | 15-bit VRAM cursor | HC573 | VRAM mux on CPU phase | Before each VRAM run |
 
@@ -286,8 +286,9 @@ One-line pipeline, not a full-frame delay.
 
 Each cart may store palette **index** blobs in flash, located by a **pointer table** (no palette compression/special packing):
 
-- cart-global minimum: **1 BG Palette + 1 sprite Palette** (one 4-color set of indices each)
-- optional per world: **BG palette bank** and/or **sprite palette bank**, each up to **8 palette rows x 4 palettes**
+- cart-global: **2 sets of 4** = **8 palettes** (**1 BG set + 1 sprite set**, 16 B + 16 B). Default for every world
+- optional per world: **BG palette bank** and/or **sprite palette bank**, each up to **8 palette rows x 4 palettes**. Present = override globals for that world/plane; absent = that world uses cart globals
+- if neither globals nor world banks are authored: **kit/Studio/boot helper** may load system default indices; **bare metal with no `$FE08`/`$FE09` writes = undefined/garbage colors** (no hardware auto-load)
 
 Runtime selection is always by **palette row**, and **BG palette row N** and **sprite palette row N** are locked together.
 

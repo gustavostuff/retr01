@@ -98,7 +98,7 @@ The live camera uses **four VRAM nametable slots (0-3)** as a **2x2 playfield wi
 - **Per-tile BG bank**: each **8x8** cell's attr selects CHR BG bank **0-3** (screens are not locked to one bank)
 - **Per-sprite bank / size / priority**: OAM attr bits (mixed banks and 8x8/8x16 in one frame)
 
-For designers, this means Metroidvania-scale layouts without rewriting the engine every time the camera crosses a room boundary.
+For designers, this means multi-screen chapter layouts without rewriting the engine every time the camera crosses a room boundary.
 
 ### Parallax without sprite-0 hacks
 

@@ -29,7 +29,7 @@ Each world also carries:
 
 - **4 BG** + **4 sprite** CHR banks (**256** tiles / **4 KB** each -> **32 KB** CHR per world)
 - **default BG bank** and **default sprite bank** (0-3) for loaders to stamp
-- optional **world** BG/sprite palette banks (extra rows beyond the cart globals)
+- optional **world** BG/sprite palette banks (up to 8 rows each; override cart globals when present; if absent, that world uses cart globals)
 - sparse screen directory + **480 B** screen payloads (see cart map below)
 
 ### MAP screen format (no RLE required)
@@ -58,7 +58,7 @@ MAP `$FE90`-`$FE92` is **24-bit**; **512 KB** only needs A0-A18.
 | World palette banks | 8 x 256 B (8 rows x 4 BG + 8 x 4 sprite) | **2 KB** |
 | Cart global palettes | 4 BG + 4 sprite pals x 4 B | **32 B** |
 | Directories / headers | ~12 B x 256 screen rows + world table/headers + cart pointer table | **~4 KB** |
-| PRG (planning) | default reserve | **96 KB** |
+| PRG (planning) | default reserve (~32 KB `$8000` window + `$FE80` pages) | **96 KB** |
 | **Total** | | **~478 KB** |
 
 **On a 512 KB cart:** ~**478 KB** used, ~**34 KB** free. Full architecture caps + **96 KB** PRG fit with comfortable slack for padding and small growth.
@@ -442,18 +442,33 @@ Canonical RGB (docs / Studio preview mirror of what is burned into the PROMs):
 
 Cart holds **palette banks of indices only** (see **Cart image map**). Never the 64 RGB values. Never RLE on palette blobs. Copy a row into `$FE08`/`$FE09` when needed.
 
-Layers: Color PROM always on the board. Cart always has **global BG set (4 palettes)** + **global sprite set (4 palettes)**. World palette banks are optional extras.
+**Cart globals (always present in a normal image):** two sets, **8 palettes** total:
 
-Resolve at load time (boot / world enter / `load_screen`), not per pixel:
+- **1 BG set** = **4** BG palettes (16 B)
+- **1 sprite set** = **4** sprite palettes (16 B)
+
+That is one active "palette row" worth, shared by every world that does not override.
+
+**World palette banks (optional, larger):** each world may ship a **BG palette bank** and/or a **sprite palette bank**, each up to **8 rows x 4 palettes** (32 palettes / 128 B per plane). When a world bank is present for a plane, loads for that world use it and **override** the cart global set for that plane. When a world has **no** bank for a plane (`off_world_pal_* = 0`), **all rendering for that world on that plane uses the cart global set**.
+
+Resolve at load time (boot / world enter / `load_screen`), not per pixel. BG and sprite planes resolve independently:
 
 ```text
-1. world palette bank (if present for this row)
-2. else cart global BG/sprite sets (pointer table)
-3. else Studio/system default index palettes
+For BG (and the same ladder for sprites):
+
+1. world BG palette bank (if off_world_pal_bg != 0) -> pick row
+2. else cart global BG set (off_global_pal_bg)
+3. else system default BG indices (kit / Studio / boot ROM helper)
 
 Master RGB always from Color PROM.
 ```
 
+**If the author defines no palettes at all** (no useful global sets and no world banks):
+
+- **With kit / Studio / a boot helper:** that software writes **system default** master indices into `$FE08`/`$FE09`. You get a boring but stable look.
+- **Bare ASM/C with no palette writes:** the active buffer is **not** reset by hardware to a known table. Power-on contents are **undefined** (latches/RAM garbage) -> **random / garbage colors** until your code (or a cart loader you wrote) fills `$FE08`/`$FE09`. Color PROM RGB is always valid; the missing piece is which indices sit in the 8 active palettes.
+
+Hardware never auto-loads cart globals into the buffer. Fallback steps above are **software** conventions. Studio export should normally always emit valid global sets (copying system defaults into the cart image if the user left them blank).
 ### Active buffer
 
 PPU shows **4 BG + 4 sprite** palettes at once (dedicated palette RAM, not nametable VRAM).
@@ -489,10 +504,11 @@ Addresses below are **byte offsets in the cart image** (24-bit, same width as `$
 |      off_world_table       -> 8 world slots                    |
 |      (optional off_strings / off_extra)                        |
 +----------------------------------------------------------------+
-|  GLOBAL PALETTES (cart-wide fallback)                          |
+|  GLOBAL PALETTES (cart-wide; 8 pals = 4 BG + 4 sprite)         |
 |    BG set:    4 palettes x 4 master indices = 16 B             |
-|    Sprite set: 4 palettes x 4 master indices = 16 B            |
-|    (one active "palette row" worth; Color PROM stays on board) |
+|    Sprite set: 4 palettes x 4 master indices = 16 B             |
+|    Worlds without their own banks use these for all rendering  |
+|    (Color PROM stays on board)                                 |
 +----------------------------------------------------------------+
 |  PRG (one global section for the whole cart)                   |
 |    game code / data - not split per world                      |
@@ -509,7 +525,7 @@ Addresses below are **byte offsets in the cart image** (24-bit, same width as `$
 |  |   default_bg_bank          0-3  (world default BG CHR)     ||
 |  |   default_spr_bank         0-3  (world default sprite CHR) ||
 |  |   default_pal_row          0-7  (optional start row)       ||
-|  |   screen_count             u8                              ||
+|  |   screen_count             u8 (0..32)                      ||
 |  |   off_chr                  -> 4 BG + 4 sprite banks        ||
 |  |   off_screen_dir           -> sparse directory             ||
 |  |   off_world_pal_bg         0 = none; else optional bank    ||
@@ -522,7 +538,8 @@ Addresses below are **byte offsets in the cart image** (24-bit, same width as `$
 |  | OPTIONAL WORLD PALETTE BANKS                               ||
 |  |   up to 8 rows x 4 BG palettes                             ||
 |  |   up to 8 rows x 4 sprite palettes                         ||
-|  |   (fallback: cart global sets above)                       ||
+|  |   if present: overrides cart globals for this world        ||
+|  |   if absent (0): this world uses cart global sets          ||
 |  +------------------------------------------------------------+|
 |  | SCREEN DIRECTORY (sparse, screen_count entries)            ||
 |  |   per stored screen:                                       ||
@@ -582,7 +599,7 @@ Not memory-mapped into CPU space. Read any cart offset through `$FE90`:
 1. write 24-bit address (`$FE90`/`$FE91`/`$FE92`)
 2. read data at `$FE93` (auto-inc)
 
-PRG is **one global section** in the image (`off_prg` / `len_prg`). It is not banked per world and not stored as multiple PRG chapters. The CPU fetches it from the `$8000` window (and high vectors). `$FE80` is reserved if a later cart needs a window into a PRG larger than that window; v0 games treat PRG as a single contiguous program image.
+PRG is **one global section** in the image (`off_prg` / `len_prg`). It is not banked per world and not stored as multiple PRG chapters. The CPU executes through the `$8000-$FDFF` window (~**32 KB** visible) plus `$FF00-$FFFF` (vectors). Planning **~96 KB** PRG is still one section in flash; software pages it with **`$FE80` `PRG_WINDOW`** (high address bits into that section). Small bring-up images that fit in the window may leave `$FE80` at 0.
 
 ## CPU memory map
 
@@ -602,7 +619,7 @@ PRG is **one global section** in the image (`off_prg` / `len_prg`). It is not ba
 | `$FE40-$FE5F` | APU |
 | `$FE60-$FE6F` | controllers / cabinet |
 | `$FE70-$FE7F` | board EEPROM (AT28C64B, every v0 board) |
-| `$FE80-$FE8F` | PRG window helper (optional; unused if PRG fits) |
+| `$FE80-$FE8F` | PRG window (`$FE80`); needed when PRG exceeds ~32 KB |
 | `$FE90-$FE9F` | MAP port |
 
 ### `$FExx` draft v0
@@ -667,7 +684,7 @@ Entry: `Y, tile, attr, X` x 64. Attr bitfields: see **OAM sprite attributes** ab
 
 | Addr | R/W | Name | Function |
 |------|-----|------|----------|
-| `$FE80` | W | `PRG_WINDOW` | optional high-bits / window into the **single** PRG section if it exceeds the `$8000` map; v0 may leave unused |
+| `$FE80` | W | `PRG_WINDOW` | high-bits / window into the **single** PRG section when `len_prg` exceeds the ~32 KB `$8000` map (planning ~96 KB uses this) |
 | `$FE90` | W | `MAP_ADDR_LO` | bits 7-0 |
 | `$FE91` | W | `MAP_ADDR_MID` | bits 15-8 |
 | `$FE92` | W | `MAP_ADDR_HI` | bits 23-16 |

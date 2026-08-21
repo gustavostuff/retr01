@@ -144,7 +144,7 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 | Worlds | **8** max |
 | Screens per world | **32** max on sparse **8x8** virtual grid |
 | Cart / PRG | **512 KB** flash; planning **~96 KB** PRG (~**478 KB** full fill) |
-| CHR per world | **4 BG banks + 4 sprite banks**, **256 tiles each** |
+| CHR per world | **4 BG banks + 4 sprite banks**, **256 tiles each**, **32 KB** |
 | Sprites | **64 OAM**, **16 per logical scanline** max |
 | VRAM | **32 KB**, interleaved |
 | System RAM | **32 KB**, CPU-only |
@@ -159,7 +159,7 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 
 - Through-hole motherboard
 - RGBS + S-Video + composite pads
-- **SCALE** DIP (1x default / 2x)
+- **SCALE** DIP (**2x** default / **1x** optional)
 - 20-pin IDC for cabinet controls
 - 5 V barrel power
 
