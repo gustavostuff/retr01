@@ -28,8 +28,9 @@ Games, scroll, OAM, and Studio all stay in **128x120**. SCALE is board glue on t
 Each world also carries:
 
 - **4 BG** + **4 sprite** CHR banks (**256** tiles / **4 KB** each -> **32 KB** CHR per world)
-- optional **BG** and **sprite palette banks** (master indices 0-63, never RGB bytes)
-- MAP directory + screen payloads
+- **default BG bank** and **default sprite bank** (0-3) for loaders to stamp
+- optional **world** BG/sprite palette banks (extra rows beyond the cart globals)
+- sparse screen directory + **480 B** screen payloads (see cart map below)
 
 ### MAP screen format (no RLE required)
 
@@ -44,15 +45,14 @@ Each stored screen in flash is a flat **480-byte** blob:
 
 ### Cart flash budget (SST39SF040 = 512 KB)
 
-v0 image is one parallel flash (**512 KB** = **0.5 MB**): PRG + CHR + MAP + palette banks. Caps at once do not all fit; planning sizes:
+v0 image is one parallel flash (**512 KB** = **0.5 MB**): full `.retr01` layout below (PRG + CHR + MAP + palettes + pointer tables). Caps at once do not all fit; planning sizes:
 
 | Asset | Math | Size |
 |-------|------|------|
 | CHR (all worlds full) | 16 x 32 KB | **512 KB** |
 | MAP screens (all slots full, raw) | 16 x 64 x **480** B | **~480 KB** |
-| MAP directory | ~8 B x 1024 + small per-world headers | **~8 KB** + headers |
-
-| Palette banks (max) | ~16 x 256 B + cart global | **~4 KB** |
+| Directories / headers / pointer tables | world table + per-world dirs + cart header | **~8-16 KB** |
+| Palette banks (global + optional world) | global 32 B min; worlds up to ~4 KB total | **~4 KB** |
 | PRG | game code | variable |
 
 A typical sparse game uses far fewer than **1024** screens, so raw MAP stays comfortable beside CHR and PRG inside **512 KB**. **v0:** on-board 32-pin socket; later the same image on the cart.
@@ -60,7 +60,7 @@ A typical sparse game uses far fewer than **1024** screens, so raw MAP stays com
 ### Runtime bank rules
 
 1. **BG CHR bank is per 8x8 tile**. Bits **1-0** of that tile's attr byte select bank **0-3**. Hardware CHR fetch reads `BANK` from the attr fetched with the nametable byte.
-2. MAP **metadata** may name a **default BG bank** and **default sprite bank** (world and/or per screen). Loaders/Studio may **stamp** those into attrs / OAM on export or load; live fetch still uses per-tile / per-sprite attr `BANK`. See **MAP-ROM** below.
+2. Each **world** names a **default BG bank** and **default sprite bank** (0-3). Screens may override BG stamp in their metadata. Loaders/Studio stamp into attrs / OAM; live fetch still uses per-tile / per-sprite attr `BANK`. See **Cart image map** below.
 3. Slot registers `$FE31`-`$FE36` are optional **bulk helpers** (e.g. stamp a bank into a slot's attrs). They are **not** the live fetch source.
 4. Camera slots **0-3** and plane slots **4-5** hold nametable+attr data; mixed banks in one screen are normal.
 5. **BG bank needs no mid-frame latch split.** Each tile already carries `BANK`, so a room can mix banks 0-3 in one nametable without raster/line IRQ bank flips. Raster IRQ stays available for status bars, parallax bands, palette row changes, and other splits.
@@ -432,15 +432,15 @@ Canonical RGB (docs / Studio preview mirror of what is burned into the PROMs):
 
 ### Cart storage and fallback
 
-Cart holds **palette banks of indices only** (pointer table -> uncompressed blobs). Never the 64 RGB values. Never RLE on palette blobs. Copy a row into `$FE08`/`$FE09` when needed.
+Cart holds **palette banks of indices only** (see **Cart image map**). Never the 64 RGB values. Never RLE on palette blobs. Copy a row into `$FE08`/`$FE09` when needed.
 
-Layers: Color PROM always on the board. Cart needs at least **1 BG + 1 sprite** palette. World palette banks are optional.
+Layers: Color PROM always on the board. Cart always has **global BG set (4 palettes)** + **global sprite set (4 palettes)**. World palette banks are optional extras.
 
 Resolve at load time (boot / world enter / `load_screen`), not per pixel:
 
 ```text
-1. world palette bank (if present)
-2. else cart global palette bank
+1. world palette bank (if present for this row)
+2. else cart global BG/sprite sets (pointer table)
 3. else Studio/system default index palettes
 
 Master RGB always from Color PROM.
@@ -460,49 +460,128 @@ Sprite priority: transparent sprite -> BG. Sprite-behind + opaque BG -> BG. Else
 
 Palette fades, interpolates, and cycles are **runtime library** helpers that rewrite the active buffer (rotate inside a 4-color set, or step to another row).
 
-## MAP-ROM
+## Cart image map (`.retr01` / flash)
 
-Not memory-mapped into CPU space. Read through `$FE90`:
+Everything the CPU finds through the **MAP port** (`$FE90`-`$FE93`) or the **PRG window** lives in one image. The cart starts with a **fixed header + pointer table** so boot code does not hardcode region addresses.
 
-1. write 24-bit address (`$FE90`/`$FE91`/`$FE92`)
-2. read data at `$FE93` (auto-inc)
+Addresses below are **byte offsets in the cart image** (24-bit, same width as `$FE90`-`$FE92`). Exact packing may pad for alignment; field order is the contract.
 
-### World header (per world chapter)
+```text
++----------------------------------------------------------------+
+|  CART HEADER (fixed, starts at offset 0)                       |
+|    magic[4]          e.g. 'R','0','1',0x00                     |
+|    format_ver        u8                                        |
+|    world_count       u8 (1..16)                                |
+|    flags             u8 (reserved)                             |
+|    reserved...                                                 |
+|    POINTER TABLE (24-bit offsets + optional lengths)           |
+|      off_prg / len_prg                                         |
+|      off_global_pal_bg     -> 4 BG palettes (16 bytes)         |
+|      off_global_pal_spr    -> 4 sprite palettes (16 bytes)     |
+|      off_world_table       -> 16 world slots                   |
+|      (optional off_strings / off_extra)                        |
++----------------------------------------------------------------+
+|  GLOBAL PALETTES (cart-wide fallback)                          |
+|    BG set:    4 palettes x 4 master indices = 16 B             |
+|    Sprite set: 4 palettes x 4 master indices = 16 B            |
+|    (one active "palette row" worth; Color PROM stays on board) |
++----------------------------------------------------------------+
+|  PRG (one global section for the whole cart)                   |
+|    game code / data - not split per world                      |
+|    appears in CPU space at $8000+ (see memory map)             |
++----------------------------------------------------------------+
+|  WORLD TABLE (up to 16 entries)                                |
+|    each slot: present u8, off_world u24, len_world u24         |
+|    empty slots: present=0                                      |
++----------------------------------------------------------------+
+|  WORLD 0 BLOB (example; worlds 1..N follow same shape)         |
+|  +------------------------------------------------------------+|
+|  | WORLD HEADER                                               ||
+|  |   start_col, start_row     default screen to load          ||
+|  |   default_bg_bank          0-3  (world default BG CHR)     ||
+|  |   default_spr_bank         0-3  (world default sprite CHR) ||
+|  |   default_pal_row          0-7  (optional start row)       ||
+|  |   screen_count             u8                              ||
+|  |   off_chr                  -> 4 BG + 4 sprite banks        ||
+|  |   off_screen_dir           -> sparse directory             ||
+|  |   off_world_pal_bg         0 = none; else optional bank    ||
+|  |   off_world_pal_spr        0 = none; else optional bank    ||
+|  +------------------------------------------------------------+|
+|  | CHR (this world)                                           ||
+|  |   BG banks 0..3     4 KB each                              ||
+|  |   SPR banks 0..3    4 KB each                              ||
+|  +------------------------------------------------------------+|
+|  | OPTIONAL WORLD PALETTE BANKS                               ||
+|  |   up to 8 rows x 4 BG palettes                             ||
+|  |   up to 8 rows x 4 sprite palettes                         ||
+|  |   (fallback: cart global sets above)                       ||
+|  +------------------------------------------------------------+|
+|  | SCREEN DIRECTORY (sparse, screen_count entries)            ||
+|  |   per stored screen:                                       ||
+|  |     col, row                                               ||
+|  |     flags (parallax, per-screen default_bg_bank,           ||
+|  |            pal_row hint, ...)                              ||
+|  |     off_payload            -> 480 B tiles+attrs            ||
+|  |     off_screen_meta        optional extra blob (0=none)    ||
+|  +------------------------------------------------------------+|
+|  | SCREEN PAYLOADS                                            ||
+|  |   240 tile index bytes + 240 attr bytes (raw)              ||
+|  +------------------------------------------------------------+|
+|  | OPTIONAL PER-SCREEN META / PALETTE OVERRIDES               ||
+|  |   (spawn hints, local pal row blob, etc. - Studio later)   ||
+|  +------------------------------------------------------------+|
++----------------------------------------------------------------+
+|  WORLD 1 BLOB ...                                              |
++----------------------------------------------------------------+
+|  ...                                                           |
++----------------------------------------------------------------+
+```
 
-Cart ROM carries a small **world header** so boot / world-enter code knows what to load without hardcoding PRG constants. Sketch (exact layout flexible; fields are locked in meaning):
+**How the CPU finds things**
 
-| Field | Meaning |
-|-------|---------|
-| `start_col`, `start_row` | **Default screen to load** when entering this world (sparse grid position). Must name a stored screen (or a defined fallback hole policy). |
-| `default_bg_bank` | **0-3**. Authoring / loader stamp into BG attrs when a screen does not override. Not the live BG fetch source. |
-| `default_spr_bank` | **0-3**. Authoring / loader stamp into OAM attrs (and optional `$FE37` helper) when spawning or bulk-filling sprites. Not the live per-sprite fetch source once OAM attrs are set. |
-| `default_pal_row` | **0-7**. Optional starting palette row (BG+sprite locked together). |
-| `dir_off` / `screen_count` | Where the sparse directory lives and how many entries. |
+1. Seek MAP to **0**, read magic + version + **pointer table**.
+2. Use `off_global_pal_*` for cart-wide palette sets; `off_prg` for the **single** PRG section.
+3. Use `off_world_table[N]` to open world N's header.
+4. From that header: `off_chr`, `off_screen_dir`, defaults (`default_bg_bank`, `default_spr_bank`, `start_col`/`start_row`).
+5. Directory entry -> `off_payload` for the **480 B** screen; optional `off_screen_meta` for extras.
 
-**In other words:** the cart says "start on this room, prefer these BG/sprite banks and this palette row." Hardware still banks from attrs at draw time; the header just gives the game and Studio a standard place to read start-up metadata.
+**In other words:** the cart is self-describing. Boot reads a small directory of pointers, then walks world -> screens. No "remember that CHR starts at $3F000" baked into every game.
+
+### World defaults vs live banks
+
+| Item | Where | Role |
+|------|-------|------|
+| `default_bg_bank` | world header | World-wide default BG CHR bank **0-3** for stamps / Generate bank |
+| `default_spr_bank` | world header | World-wide default sprite CHR bank **0-3** for stamps / `$FE37` helper |
+| Per-screen `default_bg_bank` in directory flags | screen dir | Optional override when loading that screen |
+| Live BG / sprite `BANK` | tile attr / OAM attr | What hardware actually fetches |
 
 ### Directory row (per stored screen)
-
-One row per existing `(col, row)` hole-fill:
 
 | Field | Meaning |
 |-------|---------|
 | `col`, `row` | Grid position |
-| `flags` | `bit0` parallax (non-enterable plane art). `bits1-2` **default BG bank** for this screen (0-3; stamp on load / export). `bits3-5` **palette row** hint (0-7). Remaining bits reserved. |
-| `data_off` | 24-bit offset to the **480 B** screen payload |
+| `flags` | `bit0` parallax. `bits1-2` per-screen **default BG bank** (0-3). `bits3-5` **palette row** hint (0-7). Rest reserved. |
+| `off_payload` | 24-bit offset to **480 B** screen data |
+| `off_screen_meta` | 24-bit offset to optional screen metadata (0 = none) |
 
-Live BG CHR bank still comes from **per-tile** attr `BANK`, not from the directory flag alone. A screen's `bits1-2` may override the world `default_bg_bank` when that screen is loaded.
+On world enter (typical kit path): cart pointers -> world header -> directory (`start_col`,`start_row`) -> copy payload to VRAM -> apply `default_spr_bank` / palette row as needed.
 
-Screen payload at `data_off`: **240** tile bytes + **240** attr bytes (raw). Loader copies into the VRAM slot - no RLE.
+## MAP port (hardware access)
 
-On world enter (typical kit path): read world header -> seek directory for (`start_col`,`start_row`) -> stream that screen (and neighbors if using 2x2) -> stamp `default_spr_bank` / load `default_pal_row` as needed.
+Not memory-mapped into CPU space. Read any cart offset through `$FE90`:
+
+1. write 24-bit address (`$FE90`/`$FE91`/`$FE92`)
+2. read data at `$FE93` (auto-inc)
+
+PRG is **one global section** in the image (`off_prg` / `len_prg`). It is not banked per world and not stored as multiple PRG chapters. The CPU fetches it from the `$8000` window (and high vectors). `$FE80` is reserved if a later cart needs a window into a PRG larger than that window; v0 games treat PRG as a single contiguous program image.
 
 ## CPU memory map
 
 | Range | Region |
 |-------|--------|
 | `$0000-$7FFF` | System RAM (CPU-only) |
-| `$8000-$FDFF` | PRG window (banked via `$FE80`) |
+| `$8000-$FDFF` | PRG window (single cart PRG section) |
 | `$FE00-$FEFF` | I/O |
 | `$FF00-$FFFF` | PRG high + vectors |
 
@@ -515,7 +594,7 @@ On world enter (typical kit path): read world header -> seek directory for (`sta
 | `$FE40-$FE5F` | APU |
 | `$FE60-$FE6F` | controllers / cabinet |
 | `$FE70-$FE7F` | board EEPROM (AT28C64B, every v0 board) |
-| `$FE80-$FE8F` | PRG bank |
+| `$FE80-$FE8F` | PRG window helper (optional; unused if PRG fits) |
 | `$FE90-$FE9F` | MAP port |
 
 ### `$FExx` draft v0
@@ -580,7 +659,7 @@ Entry: `Y, tile, attr, X` x 64. Attr bitfields: see **OAM sprite attributes** ab
 
 | Addr | R/W | Name | Function |
 |------|-----|------|----------|
-| `$FE80` | W | `PRG_BANK` | PRG window |
+| `$FE80` | W | `PRG_WINDOW` | optional high-bits / window into the **single** PRG section if it exceeds the `$8000` map; v0 may leave unused |
 | `$FE90` | W | `MAP_ADDR_LO` | bits 7-0 |
 | `$FE91` | W | `MAP_ADDR_MID` | bits 15-8 |
 | `$FE92` | W | `MAP_ADDR_HI` | bits 23-16 |
@@ -618,7 +697,6 @@ Parallax = scanline band pointing at plane slots **4-5**.
 - Screens are **not** hardware-tied to one BG bank; mixed banks in one screen are normal.
 - Per-tile `BANK` covers mixed BG art in one frame (no mid-frame bank-latch split needed for BG CHR).
 - Sprite attr carries bank, palette, flips, priority, and size; mixed 8x8/8x16 in one frame is normal.
-- MAP picks which screen to load (world header names the **default start screen**; directory locates payloads). World picks which 32 KB CHR chapter is active.
-- World header also carries **default BG bank**, **default sprite bank**, and optional **palette row** for loaders to stamp / apply at enter.
+- MAP / cart pointer table locates PRG, global palettes, worlds, CHR, and screens. World header names the **default start screen**, **default BG bank**, and **default sprite bank**.
 - Camera slots hold **whole screens**. Scroll moves the window; MAP loads happen on software slot shifts (`02` worked example).
 - Sprites use a ping-pong line buffer one scanline ahead (`02` diagram, `03` detail).

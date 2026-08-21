@@ -6,61 +6,61 @@ Detail: [`03_hardware_implementation.md`](03_hardware_implementation.md).
 
 ```text
   NORTH (I/O edge — cabinet/bench)
-  ┌───────────────────────────────────────────────────────────────────────────────────────┐
-  │ [5V IN]  (o) PWR LED   ┌──────────────── IDC-20 CABINET ────────────────┐  [ISP 6]    │
-  │      │                 │ START COIN P1-P2 … (to 1284 pad glue)          │  328P APU   │
-  ├──────┴─────────────────┴────────────────────────────────────────────────┴─────────────┤
-  │                                                                                       │
-  │   ┌─ CPU + DECODE ──────────────────────┐    ┌─ SRAM TRIO (32 KB each) ─────────────┐ │
-  │   │                                     │    │                                      │ │
-  │   │   ┌────────────────────────────┐    │    │  ┌──────────────┐  ┌──────────────┐  │ │
-  │   │   │      W65C02S      [40]     │    │    │  │  SYS RAM     │  │    VRAM      │  │ │
-  │   │   │      8 MHz PHI2            │    │    │  │  62256 [28]  │  │  62256 [28]  │  │ │
-  │   │   └────────────────────────────┘    │    │  └──────────────┘  └──────────────┘  │ │
-  │   │                                     │    │                                      │ │
-  │   │  ┌─────────┐ ┌─────────┐ ┌─────────┐│    │         ┌──────────────┐             │ │
-  │   │  │ ATF22V10│ │ ATF22V10│ │ ATF22V10││    │         │  LINE BUFFER │             │ │
-  │   │  │ GAL-DEC │ │ GAL-TIM │ │ GAL-PPU ││    │         │  62256  [28] │             │ │
-  │   │  │   [24]  │ │   [24]  │ │   [24]  ││    │         └──────────────┘             │ │
-  │   │  └─────────┘ └─────────┘ └─────────┘│    └──────────────────────────────────────┘ │
-  │   │                                     │                                             │
-  │   │  ┌──────┐ ┌──────┐  HC688 [20]      │    ┌─ MCU DOMAIN ─────────────────────────┐ │
-  │   │  │HC573 │ │HC573 │  compare/wrap    │    │                                      │ │
-  │   │  │ [20] │ │ [20] │  (beam + decode) │    │  ┌────────────────────────────┐      │ │
-  │   │  └──────┘ └──────┘                  │    │  │   ATmega1284P      [40]    │      │ │
-  │   └─────────────────────────────────────┘    │  │   sprites · OAM · pads     │      │ │
-  │                                              │  └────────────────────────────┘      │ │
-  │   ┌─ VRAM INTERLEAVE + BUS ────────────────┐ │                                      │ │
-  │   │  HC157 HC157 HC157 HC157   [16] ×4     │ │  ┌──────────────┐  20 MHz xtal       │ │
-  │   │  addr mux (CPU latched vs BG fetch)    │ │  │ ATmega328P   │  16 MHz xtal       │ │
-  │   │  ┌──────────┐  HC573 [20] latch        │ │  │ APU    [28]  │                    │ │
-  │   │  │ HC245    │  HC573 [20] data path    │ │  └──────────────┘                    │ │
-  │   │  │ trcv [20]│                          │ └──────────────────────────────────────┘ │
-  │   │  └──────────┘                          │                                          │
-  │   └────────────────────────────────────────┘                                          │
-  │                                                                                       │
-  │   ┌─ BG BEAM + FETCH GLUE ────────────────────────────────────────────────────────┐   │
-  │   │  HC161 HC161 HC161 HC161  [16] ×4  → 341×262 dot clock ~5.37 MHz              │   │
-  │   │                                                                               │   │
-  │   │  HC573×6  scroll · slot banks · MAP addr  [20]     HC14 [14] reset Schmitt    │   │
-  │   │  HC573    palette/compositor latches     [20]     HC00·04·08·32·86  [14] glue │   │
-  │   └───────────────────────────────────────────────────────────────────────────────┘   │
-  │                                                                                       │
-  │   ┌─ CART + CONFIG ──────────────────────┐   ┌─ VIDEO OUT (analog pads) ──────────┐   │
-  │   │  ┌────────────────────────────┐      │   │  Color PROM AT28C16 x3 + R-2R      │   │
-  │   │  │  SST39SF040 parallel  [32] │      │   │  ┌────┐ ┌────┐ ┌────┐  J RGBS      │   │
-  │   │  │  PRG · CHR · MAP (gated)   │      │   │  │ 75Ω│ │ 75Ω│ │ 75Ω│  J S-VIDEO   │   │
-  │   │  └────────────────────────────┘      │   │  └────┘ └────┘ └────┘  J COMPOSITE │   │
-  │   │  ┌──────────────┐  HC245 [20]        │   └────────────────────────────────────┘   │
-  │   │  │ AT28C64B     │  cart data isol    │                                            │
-  │   │  │ board E2 [28]│                    │   HC157x2 [16]  line-buffer addr mux       │
-  │   │  └──────────────┘                    │   (1284 writer vs beam reader)             │
-  │   │         ┌── CART EDGE (planning) ────┤                                            │
-  │   │         │ 32-pin ROM socket/IDC      │                                            │
-  │   └─────────┴────────────────────────────┘                                            │
-  │                                                                                       │
-  SOUTH (component side — tallest sockets ~15 mm clearance below board)                   │
-  └───────────────────────────────────────────────────────────────────────────────────────┘
+  ┌─────────────────────────────────────────────────────────────────────────────────────────┐
+  │ [5V IN]  (o) PWR LED   ┌──────────────── IDC-20 CABINET ────────────────┐  [ISP 6]      │
+  │      │                 │ START COIN P1-P2 … (to 1284 pad glue)          │  328P APU     │
+  ├──────┴─────────────────┴────────────────────────────────────────────────┴───────────────┤
+  │                                                                                         │
+  │   ┌─ CPU + DECODE ────────────────────────┐    ┌─ SRAM TRIO (32 KB each) ─────────────┐ │
+  │   │                                       │    │                                      │ │
+  │   │   ┌────────────────────────────┐      │    │  ┌──────────────┐  ┌──────────────┐  │ │
+  │   │   │      W65C02S      [40]     │      │    │  │  SYS RAM     │  │    VRAM      │  │ │
+  │   │   │      8 MHz PHI2            │      │    │  │  62256 [28]  │  │  62256 [28]  │  │ │
+  │   │   └────────────────────────────┘      │    │  └──────────────┘  └──────────────┘  │ │
+  │   │                                       │    │                                      │ │
+  │   │  ┌─────────┐ ┌─────────┐ ┌─────────┐  │    │         ┌──────────────┐             │ │
+  │   │  │ ATF22V10│ │ ATF22V10│ │ ATF22V10│  │    │         │  LINE BUFFER │             │ │
+  │   │  │ GAL-DEC │ │ GAL-TIM │ │ GAL-PPU │  │    │         │  62256  [28] │             │ │
+  │   │  │   [24]  │ │   [24]  │ │   [24]  │  │    │         └──────────────┘             │ │
+  │   │  └─────────┘ └─────────┘ └─────────┘  │    └──────────────────────────────────────┘ │
+  │   │                                       │                                             │
+  │   │  ┌──────┐ ┌──────┐  HC688 [20]        │    ┌─ MCU DOMAIN ─────────────────────────┐ │
+  │   │  │HC573 │ │HC573 │  compare/wrap      │    │                                      │ │
+  │   │  │ [20] │ │ [20] │  (beam + decode)   │    │  ┌────────────────────────────┐      │ │
+  │   │  └──────┘ └──────┘                    │    │  │   ATmega1284P      [40]    │      │ │
+  │   └───────────────────────────────────────┘    │  │   sprites · OAM · pads     │      │ │
+  │                                                │  └────────────────────────────┘      │ │
+  │   ┌─ VRAM INTERLEAVE + BUS ────────────────┐   │                                      │ │
+  │   │  HC157 HC157 HC157 HC157   [16] ×4     │   │  ┌──────────────┐  20 MHz xtal       │ │
+  │   │  addr mux (CPU latched vs BG fetch)    │   │  │ ATmega328P   │  16 MHz xtal       │ │
+  │   │  ┌──────────┐  HC573 [20] latch        │   │  │ APU    [28]  │                    │ │
+  │   │  │ HC245    │  HC573 [20] data path    │   │  └──────────────┘                    │ │
+  │   │  │ trcv [20]│                          │   └──────────────────────────────────────┘ │
+  │   │  └──────────┘                          │                                            │
+  │   └────────────────────────────────────────┘                                            │
+  │                                                                                         │
+  │   ┌─ BG BEAM + FETCH GLUE ────────────────────────────────────────────────────────┐     │
+  │   │  HC161 HC161 HC161 HC161  [16] ×4  → 341×262 dot clock ~5.37 MHz              │     │
+  │   │                                                                               │     │
+  │   │  HC573×6  scroll · slot banks · MAP addr  [20]     HC14 [14] reset Schmitt    │     │
+  │   │  HC573    palette/compositor latches     [20]     HC00·04·08·32·86  [14] glue │     │
+  │   └───────────────────────────────────────────────────────────────────────────────┘     │
+  │                                                                                         │
+  │   ┌─ CART + CONFIG ──────────────────────┐   ┌─ VIDEO OUT (analog pads) ─────────────┐  │
+  │   │  ┌────────────────────────────┐      │   │  Color PROM AT28C16 x3 + R-2R         │  │
+  │   │  │  SST39SF040 parallel  [32] │      │   │  ┌─────┐ ┌─────┐ ┌─────┐  J RGBS      │  │
+  │   │  │  PRG · CHR · MAP (gated)   │      │   │  │ 75Ω │ │ 75Ω │ │ 75Ω │  J S-VIDEO   │  │
+  │   │  └────────────────────────────┘      │   │  └─────┘ └─────┘ └─────┘  J COMPOSITE │  │
+  │   │  ┌──────────────┐  HC245 [20]        │   └───────────────────────────────────────┘  │
+  │   │  │ AT28C64B     │  cart data isol    │                                              │
+  │   │  │ board E2 [28]│                    │   HC157x2 [16]  line-buffer addr mux         │
+  │   │  └──────────────┘                    │   (1284 writer vs beam reader)               │
+  │   │         ┌── CART EDGE (planning) ────┤                                              │
+  │   │         │ 32-pin ROM socket/IDC      │                                              │
+  │   └─────────┴────────────────────────────┘                                              │
+  │                                                                                         │
+  SOUTH (component side — tallest sockets ~15 mm clearance below board)                     │
+  └─────────────────────────────────────────────────────────────────────────────────────────┘
 
   LEGEND (planning totals — see 03_hardware_implementation.md)
   ───────────────────────────────────────────────────────────
@@ -177,7 +177,7 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 
 - RAM at `$0000-$7FFF`
 - I/O page at `$FE00-$FEFF`
-- PRG elsewhere, banked only through `$FE80`
+- PRG as **one global section** in the cart (not per-world PRG banks)
 - World/MAP streaming through `$FE90`
 - BG banks per **8x8 tile** (attr `BANK`); screens may only stamp a default at load
 - Sprite bank independent of BG banks (per OAM attr `BANK`; `$FE37` optional stamp)
@@ -195,7 +195,7 @@ A **low-level hardware emulator** is planned later, not built now. It should sim
 ## Where to look next
 
 - Product pitch and NES comparison: `07_pitch.md`
-- Graphics, worlds, scrolling, banks, VRAM, MAP, BG attrs: `02_graphics_worlds_memory.md`
+- Graphics, worlds, scrolling, banks, VRAM, MAP, **cart image map**, BG attrs: `02_graphics_worlds_memory.md`
 - Board structure, buses, chips, and timing: `03_hardware_implementation.md` (includes **sprite line buffer**)
 - Protoboard module tests (island bring-up): `06_protoboard_module_tests.md`
 - Retr01 Studio (current tool): `04_retr01_studio.md`
