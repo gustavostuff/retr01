@@ -70,7 +70,7 @@ Hardware does **not** auto-load neighbors when you scroll. Software writes slots
 
 Studio **dead zone** / **hybrid** camera rules in `04` are software policy on top of these modes. They do not add PPU scroll hardware.
 
-**Parallax (4-5):** full 16x12 nametables drawn behind the playfield (optional scanline band). Own BG bank latches. Enabling any H/V band locks the main camera to that axis for the **whole frame** (see Raster and parallax).
+**Parallax (4-5):** full 16x12 nametables drawn behind the playfield (optional scanline band). Own **BG bank latches** and own nametable attrs, but **no private BG palettes** - attrs index the same active BG palette buffer as the playfield (`$FE08`/`$FE09`). MAP palette-row on a parallax-flagged screen is **ignored / inherited**. Enabling any H/V band locks the main camera to that axis for the **whole frame** (see Raster and parallax). Physical latch / ownership detail: [`03`](03_hardware_implementation.md).
 
 ### Worked example: 3x3 world, standing on the center room
 
@@ -192,7 +192,7 @@ Line N  | SHOW (beam read) |        | fill next row    |  1284 writes
         +------------------+        +------------------+
 Line N+1| fill next row    |        | SHOW (beam read) |
         +------------------+        +------------------+
-                    \____ swap roles every logical scanline ____/
+          \____ swap roles every logical scanline ____/
 ```
 
 - Cap: **16** sprites contributing to one logical row.
@@ -382,6 +382,7 @@ Parallax = scanline band pointing at plane slots **4-5**.
 - Any H/V band enable locks main camera scroll to that axis for the **whole frame**. Do not scroll the unlocked axis while a band is active.
 - Plane slots are not part of the 2x2 camera.
 - BG banks stay per slot. Sprite bank stays global.
+- Plane attrs share the playfield's **4 BG palettes** (locked to the active row). Scrolling the band does not unlock new colors.
 
 ## Software cheat sheet
 
