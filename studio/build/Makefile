@@ -455,6 +455,30 @@ core/src/play.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_core.dir/build.make CMakeFiles/retr01_studio_core.dir/core/src/play.c.s
 .PHONY : core/src/play.c.s
 
+core/src/png_import.o: core/src/png_import.c.o
+.PHONY : core/src/png_import.o
+
+# target to build an object file
+core/src/png_import.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_core.dir/build.make CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.o
+.PHONY : core/src/png_import.c.o
+
+core/src/png_import.i: core/src/png_import.c.i
+.PHONY : core/src/png_import.i
+
+# target to preprocess a source file
+core/src/png_import.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_core.dir/build.make CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.i
+.PHONY : core/src/png_import.c.i
+
+core/src/png_import.s: core/src/png_import.c.s
+.PHONY : core/src/png_import.s
+
+# target to generate assembly for a file
+core/src/png_import.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_core.dir/build.make CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.s
+.PHONY : core/src/png_import.c.s
+
 core/src/project.o: core/src/project.c.o
 .PHONY : core/src/project.o
 
@@ -574,6 +598,9 @@ help:
 	@echo "... core/src/play.o"
 	@echo "... core/src/play.i"
 	@echo "... core/src/play.s"
+	@echo "... core/src/png_import.o"
+	@echo "... core/src/png_import.i"
+	@echo "... core/src/png_import.s"
 	@echo "... core/src/project.o"
 	@echo "... core/src/project.i"
 	@echo "... core/src/project.s"

@@ -38,6 +38,19 @@ int r01_world_toggle_screen(R01World *w, int col, int row);
 /* Find screen index by col/row, or -1. */
 int r01_world_find_screen(const R01World *w, int col, int row);
 
+/* Set virtual atlas size (1..R01_GRID_SIZE). Drops screens outside the new bounds. */
+int r01_world_set_grid(R01World *w, int cols, int rows);
+
+/* Remove all grid screens (planes untouched). */
+void r01_world_clear_screens(R01World *w);
+
+/*
+ * Import an indexed (≤4 color) PNG whose size is a multiple of 128×120.
+ * Sets world grid to PNG cell layout; skips fully transparent cells; replaces screens.
+ * Returns 0 ok, -1 on validation/IO error (message in err_buf).
+ */
+int r01_world_import_png(R01World *w, const char *path, char *err_buf, size_t err_cap);
+
 /* Toggle parallax plane slot 0..1. Returns 0 ok, -1 bad args. */
 int r01_world_toggle_plane(R01World *w, int slot);
 

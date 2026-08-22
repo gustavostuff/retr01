@@ -569,6 +569,11 @@ test_e2e: /usr/lib/Scrt1.o \
   /usr/lib/libSDL2.so \
   /usr/lib/libc.so.6 \
   /usr/lib/libc_nonshared.a \
+  /usr/lib/libm.so.6 \
+  /usr/lib/libpng16.so \
+  /usr/lib/libz.so.1 \
+  /usr/lib32/libm.so.6 \
+  /usr/lib32/libz.so.1 \
   CMakeFiles/test_e2e.dir/app/tests/e2e_harness.c.o \
   CMakeFiles/test_e2e.dir/app/tests/test_e2e.c.o \
   libretr01_studio_app.a \
@@ -578,6 +583,12 @@ test_e2e: /usr/lib/Scrt1.o \
 libretr01_studio_app.a:
 
 CMakeFiles/test_e2e.dir/app/tests/e2e_harness.c.o:
+
+/usr/lib32/libz.so.1:
+
+/usr/lib/libpng16.so:
+
+/usr/lib/libm.so.6:
 
 /usr/lib/libc.so.6:
 
@@ -598,6 +609,8 @@ CMakeFiles/test_e2e.dir/app/tests/e2e_harness.c.o:
 /usr/include/bits/unistd_ext.h:
 
 /usr/include/bits/types/struct_tm.h:
+
+/usr/lib32/libm.so.6:
 
 /usr/include/bits/timex.h:
 
@@ -956,6 +969,8 @@ libretr01_studio_core.a:
 /usr/include/SDL2/close_code.h:
 
 /usr/include/SDL2/SDL_system.h:
+
+/usr/lib/libz.so.1:
 
 /usr/include/SDL2/begin_code.h:
 

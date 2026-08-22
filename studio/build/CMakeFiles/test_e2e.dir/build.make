@@ -114,6 +114,7 @@ test_e2e: CMakeFiles/test_e2e.dir/build.make
 test_e2e: CMakeFiles/test_e2e.dir/compiler_depend.ts
 test_e2e: libretr01_studio_app.a
 test_e2e: libretr01_studio_core.a
+test_e2e: /usr/lib/libpng16.so
 test_e2e: /usr/lib/libSDL2.so
 test_e2e: CMakeFiles/test_e2e.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/g/Repos/retr01/studio/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking C executable test_e2e"

@@ -13,19 +13,22 @@ add_library(retr01_studio_core
   core/src/spr_pack.c
   core/src/play.c
   core/src/cart.c
+  core/src/png_import.c
 )
 target_include_directories(retr01_studio_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include
 )
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBPNG REQUIRED IMPORTED_TARGET libpng)
+pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
+target_link_libraries(retr01_studio_core PUBLIC PkgConfig::LIBPNG)
 
 enable_testing()
 add_executable(test_core core/tests/test_core.c)
 target_link_libraries(test_core PRIVATE retr01_studio_core)
 add_test(NAME core COMMAND test_core)
 set_tests_properties(core PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 
 add_library(retr01_studio_app
   app/src/app_shell.c

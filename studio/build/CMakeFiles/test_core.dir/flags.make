@@ -4,7 +4,7 @@
 # compile C with /usr/bin/cc
 C_DEFINES = 
 
-C_INCLUDES = -I/home/g/Repos/retr01/studio/core/include
+C_INCLUDES = -I/home/g/Repos/retr01/studio/core/include -isystem /usr/include/libpng16
 
 C_FLAGS = -g -std=gnu11 -Wall -Wextra -Wpedantic
 

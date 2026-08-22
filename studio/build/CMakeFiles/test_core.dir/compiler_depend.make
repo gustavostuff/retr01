@@ -18,10 +18,16 @@ CMakeFiles/test_core.dir/core/tests/test_core.c.o: /home/g/Repos/retr01/studio/c
   /usr/include/bits/floatn-common.h \
   /usr/include/bits/floatn.h \
   /usr/include/bits/libc-header-start.h \
+  /usr/include/bits/local_lim.h \
   /usr/include/bits/long-double.h \
+  /usr/include/bits/posix1_lim.h \
+  /usr/include/bits/posix2_lim.h \
+  /usr/include/bits/pthread_stack_min-dynamic.h \
+  /usr/include/bits/pthread_stack_min.h \
   /usr/include/bits/pthreadtypes-arch.h \
   /usr/include/bits/pthreadtypes.h \
   /usr/include/bits/select.h \
+  /usr/include/bits/setjmp.h \
   /usr/include/bits/stdint-intn.h \
   /usr/include/bits/stdint-least.h \
   /usr/include/bits/stdint-uintn.h \
@@ -30,6 +36,7 @@ CMakeFiles/test_core.dir/core/tests/test_core.c.o: /home/g/Repos/retr01/studio/c
   /usr/include/bits/struct_mutex.h \
   /usr/include/bits/struct_rwlock.h \
   /usr/include/bits/thread-shared-types.h \
+  /usr/include/bits/time.h \
   /usr/include/bits/time64.h \
   /usr/include/bits/timesize.h \
   /usr/include/bits/types.h \
@@ -46,8 +53,11 @@ CMakeFiles/test_core.dir/core/tests/test_core.c.o: /home/g/Repos/retr01/studio/c
   /usr/include/bits/types/locale_t.h \
   /usr/include/bits/types/sigset_t.h \
   /usr/include/bits/types/struct_FILE.h \
+  /usr/include/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/bits/types/struct_itimerspec.h \
   /usr/include/bits/types/struct_timespec.h \
   /usr/include/bits/types/struct_timeval.h \
+  /usr/include/bits/types/struct_tm.h \
   /usr/include/bits/types/time_t.h \
   /usr/include/bits/types/timer_t.h \
   /usr/include/bits/typesizes.h \
@@ -61,6 +71,12 @@ CMakeFiles/test_core.dir/core/tests/test_core.c.o: /home/g/Repos/retr01/studio/c
   /usr/include/features.h \
   /usr/include/gnu/stubs-64.h \
   /usr/include/gnu/stubs.h \
+  /usr/include/libpng16/png.h \
+  /usr/include/libpng16/pngconf.h \
+  /usr/include/libpng16/pnglibconf.h \
+  /usr/include/limits.h \
+  /usr/include/linux/limits.h \
+  /usr/include/setjmp.h \
   /usr/include/stdc-predef.h \
   /usr/include/stdint.h \
   /usr/include/stdio.h \
@@ -70,9 +86,12 @@ CMakeFiles/test_core.dir/core/tests/test_core.c.o: /home/g/Repos/retr01/studio/c
   /usr/include/sys/cdefs.h \
   /usr/include/sys/select.h \
   /usr/include/sys/types.h \
+  /usr/include/time.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/limits.h \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdarg.h \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stddef.h \
-  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdint.h
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdint.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/syslimits.h
 
 test_core: /usr/lib/Scrt1.o \
   /usr/lib/crti.o \
@@ -89,13 +108,20 @@ test_core: /usr/lib/Scrt1.o \
   /usr/lib/ld-linux-x86-64.so.2 \
   /usr/lib/libc.so.6 \
   /usr/lib/libc_nonshared.a \
+  /usr/lib/libm.so.6 \
+  /usr/lib/libpng16.so \
+  /usr/lib/libz.so.1 \
+  /usr/lib32/libm.so.6 \
+  /usr/lib32/libz.so.1 \
   CMakeFiles/test_core.dir/core/tests/test_core.c.o \
   libretr01_studio_core.a
 
 
 libretr01_studio_core.a:
 
-/usr/lib/libc.so.6:
+/usr/lib32/libm.so.6:
+
+/usr/lib/libz.so.1:
 
 /usr/lib/ld-linux-x86-64.so.2:
 
@@ -111,19 +137,23 @@ libretr01_studio_core.a:
 
 /usr/lib/libgcc_s.so.1:
 
-/usr/lib/libc.so:
-
 /usr/lib/crti.o:
 
-/usr/lib/Scrt1.o:
+/usr/lib/libc.so.6:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/syslimits.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdint.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdarg.h:
 
-/usr/include/sys/types.h:
+/usr/include/time.h:
+
+/usr/lib/libm.so.6:
 
 /usr/include/sys/select.h:
+
+/usr/lib32/libz.so.1:
 
 /usr/include/sys/cdefs.h:
 
@@ -133,33 +163,51 @@ libretr01_studio_core.a:
 
 /usr/include/stdint.h:
 
+/usr/include/setjmp.h:
+
+/usr/include/libpng16/pnglibconf.h:
+
+/usr/include/libpng16/png.h:
+
 /usr/include/gnu/stubs.h:
 
-/usr/include/bits/thread-shared-types.h:
+/usr/include/gnu/stubs-64.h:
 
-/usr/include/bits/wchar.h:
+CMakeFiles/test_core.dir/core/tests/test_core.c.o:
+
+/usr/include/features.h:
+
+/usr/include/features-time64.h:
+
+/usr/include/bits/wordsize.h:
+
+/usr/include/bits/waitstatus.h:
+
+/usr/include/bits/waitflags.h:
+
+/usr/include/bits/uintn-identity.h:
+
+/usr/include/bits/typesizes.h:
+
+/usr/include/bits/stdint-intn.h:
+
+/usr/include/stdc-predef.h:
+
+/usr/include/bits/pthreadtypes-arch.h:
 
 /usr/include/bits/stdint-least.h:
 
 /usr/include/alloca.h:
 
-/usr/include/bits/stdint-intn.h:
+/usr/include/bits/posix2_lim.h:
 
-/usr/include/bits/struct_mutex.h:
+/usr/include/linux/limits.h:
 
-/usr/include/gnu/stubs-64.h:
+/usr/include/bits/types/clock_t.h:
 
-/usr/include/bits/select.h:
+/usr/lib/libc.so:
 
-/home/g/Repos/retr01/studio/core/include/retr01_studio/json_io.h:
-
-/usr/include/bits/types/__fpos64_t.h:
-
-/usr/include/features-time64.h:
-
-/usr/include/stdc-predef.h:
-
-/usr/include/bits/pthreadtypes-arch.h:
+/usr/include/bits/posix1_lim.h:
 
 /usr/include/bits/long-double.h:
 
@@ -171,13 +219,17 @@ libretr01_studio_core.a:
 
 /home/g/Repos/retr01/studio/core/include/retr01_studio/play.h:
 
+/usr/include/bits/select.h:
+
+/home/g/Repos/retr01/studio/core/include/retr01_studio/json_io.h:
+
+/usr/include/bits/types/__fpos64_t.h:
+
+/usr/include/bits/pthread_stack_min.h:
+
 /usr/include/bits/pthreadtypes.h:
 
 /usr/include/bits/floatn.h:
-
-/home/g/Repos/retr01/studio/core/include/retr01_studio/chr_pack.h:
-
-/usr/include/bits/types/sigset_t.h:
 
 /usr/include/bits/floatn-common.h:
 
@@ -187,7 +239,13 @@ libretr01_studio_core.a:
 
 /usr/include/bits/endianness.h:
 
+/home/g/Repos/retr01/studio/core/include/retr01_studio/chr_pack.h:
+
+/usr/include/bits/types/sigset_t.h:
+
 /usr/include/bits/byteswap.h:
+
+/usr/include/bits/time.h:
 
 /usr/include/string.h:
 
@@ -199,21 +257,35 @@ libretr01_studio_core.a:
 
 /usr/include/bits/types/struct_FILE.h:
 
+/usr/lib/Scrt1.o:
+
+/usr/include/libpng16/pngconf.h:
+
+/usr/include/bits/pthread_stack_min-dynamic.h:
+
 /home/g/Repos/retr01/studio/core/include/retr01_studio/types.h:
 
-/usr/include/bits/waitstatus.h:
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/limits.h:
 
-/usr/include/bits/types/__sigset_t.h:
-
-/usr/include/bits/waitflags.h:
+/usr/include/bits/timesize.h:
 
 /usr/include/bits/endian.h:
 
-/usr/include/bits/timesize.h:
+/usr/include/bits/types/__sigset_t.h:
+
+/usr/include/sys/types.h:
+
+/usr/include/bits/types/struct_itimerspec.h:
+
+/usr/include/bits/struct_mutex.h:
+
+/usr/include/bits/thread-shared-types.h:
 
 /usr/lib/libc_nonshared.a:
 
 /usr/include/bits/types.h:
+
+/usr/include/limits.h:
 
 /usr/include/bits/types/FILE.h:
 
@@ -223,15 +295,17 @@ libretr01_studio_core.a:
 
 /usr/include/bits/types/__fpos_t.h:
 
-/usr/include/bits/wordsize.h:
+/usr/include/bits/setjmp.h:
+
+/usr/include/bits/types/struct___jmp_buf_tag.h:
 
 /usr/include/bits/types/__locale_t.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stddef.h:
 
-/usr/include/bits/types/__mbstate_t.h:
+/usr/include/bits/local_lim.h:
 
-/usr/include/bits/types/clock_t.h:
+/usr/include/bits/types/__mbstate_t.h:
 
 /home/g/Repos/retr01/studio/core/include/retr01_studio/palette.h:
 
@@ -239,9 +313,13 @@ libretr01_studio_core.a:
 
 /usr/include/bits/types/clockid_t.h:
 
-/usr/include/bits/uintn-identity.h:
+/usr/include/endian.h:
 
-/usr/include/bits/typesizes.h:
+/home/g/Repos/retr01/studio/core/tests/test_core.c:
+
+/usr/include/bits/stdint-uintn.h:
+
+/usr/include/bits/types/cookie_io_functions_t.h:
 
 /usr/include/bits/types/locale_t.h:
 
@@ -251,22 +329,16 @@ libretr01_studio_core.a:
 
 /usr/include/bits/types/struct_timeval.h:
 
+/usr/include/bits/wchar.h:
+
+/usr/include/bits/types/struct_tm.h:
+
 /usr/include/bits/struct_rwlock.h:
 
 /usr/include/bits/types/time_t.h:
 
+/usr/lib/libpng16.so:
+
 /usr/include/stdio.h:
 
 /usr/include/bits/types/timer_t.h:
-
-/usr/include/bits/stdint-uintn.h:
-
-/home/g/Repos/retr01/studio/core/tests/test_core.c:
-
-/usr/include/bits/types/cookie_io_functions_t.h:
-
-/usr/include/endian.h:
-
-CMakeFiles/test_core.dir/core/tests/test_core.c.o:
-
-/usr/include/features.h:

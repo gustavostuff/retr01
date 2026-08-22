@@ -97,6 +97,7 @@ test_core: CMakeFiles/test_core.dir/core/tests/test_core.c.o
 test_core: CMakeFiles/test_core.dir/build.make
 test_core: CMakeFiles/test_core.dir/compiler_depend.ts
 test_core: libretr01_studio_core.a
+test_core: /usr/lib/libpng16.so
 test_core: CMakeFiles/test_core.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/g/Repos/retr01/studio/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking C executable test_core"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/test_core.dir/link.txt --verbose=$(VERBOSE)

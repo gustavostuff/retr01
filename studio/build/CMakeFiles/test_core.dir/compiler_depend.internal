@@ -19,10 +19,16 @@ CMakeFiles/test_core.dir/core/tests/test_core.c.o
  /usr/include/bits/floatn-common.h
  /usr/include/bits/floatn.h
  /usr/include/bits/libc-header-start.h
+ /usr/include/bits/local_lim.h
  /usr/include/bits/long-double.h
+ /usr/include/bits/posix1_lim.h
+ /usr/include/bits/posix2_lim.h
+ /usr/include/bits/pthread_stack_min-dynamic.h
+ /usr/include/bits/pthread_stack_min.h
  /usr/include/bits/pthreadtypes-arch.h
  /usr/include/bits/pthreadtypes.h
  /usr/include/bits/select.h
+ /usr/include/bits/setjmp.h
  /usr/include/bits/stdint-intn.h
  /usr/include/bits/stdint-least.h
  /usr/include/bits/stdint-uintn.h
@@ -31,6 +37,7 @@ CMakeFiles/test_core.dir/core/tests/test_core.c.o
  /usr/include/bits/struct_mutex.h
  /usr/include/bits/struct_rwlock.h
  /usr/include/bits/thread-shared-types.h
+ /usr/include/bits/time.h
  /usr/include/bits/time64.h
  /usr/include/bits/timesize.h
  /usr/include/bits/types.h
@@ -47,8 +54,11 @@ CMakeFiles/test_core.dir/core/tests/test_core.c.o
  /usr/include/bits/types/locale_t.h
  /usr/include/bits/types/sigset_t.h
  /usr/include/bits/types/struct_FILE.h
+ /usr/include/bits/types/struct___jmp_buf_tag.h
+ /usr/include/bits/types/struct_itimerspec.h
  /usr/include/bits/types/struct_timespec.h
  /usr/include/bits/types/struct_timeval.h
+ /usr/include/bits/types/struct_tm.h
  /usr/include/bits/types/time_t.h
  /usr/include/bits/types/timer_t.h
  /usr/include/bits/typesizes.h
@@ -62,6 +72,12 @@ CMakeFiles/test_core.dir/core/tests/test_core.c.o
  /usr/include/features.h
  /usr/include/gnu/stubs-64.h
  /usr/include/gnu/stubs.h
+ /usr/include/libpng16/png.h
+ /usr/include/libpng16/pngconf.h
+ /usr/include/libpng16/pnglibconf.h
+ /usr/include/limits.h
+ /usr/include/linux/limits.h
+ /usr/include/setjmp.h
  /usr/include/stdc-predef.h
  /usr/include/stdint.h
  /usr/include/stdio.h
@@ -71,9 +87,12 @@ CMakeFiles/test_core.dir/core/tests/test_core.c.o
  /usr/include/sys/cdefs.h
  /usr/include/sys/select.h
  /usr/include/sys/types.h
+ /usr/include/time.h
+ /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/limits.h
  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdarg.h
  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stddef.h
  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdint.h
+ /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/syslimits.h
 
 test_core
  /usr/lib/Scrt1.o
@@ -91,6 +110,11 @@ test_core
  /usr/lib/ld-linux-x86-64.so.2
  /usr/lib/libc.so.6
  /usr/lib/libc_nonshared.a
+ /usr/lib/libm.so.6
+ /usr/lib/libpng16.so
+ /usr/lib/libz.so.1
+ /usr/lib32/libm.so.6
+ /usr/lib32/libz.so.1
  /home/g/Repos/retr01/studio/build/CMakeFiles/test_core.dir/core/tests/test_core.c.o
  /home/g/Repos/retr01/studio/build/libretr01_studio_core.a
 

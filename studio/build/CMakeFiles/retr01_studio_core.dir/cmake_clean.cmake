@@ -9,6 +9,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/retr01_studio_core.dir/core/src/palette.c.o.d"
   "CMakeFiles/retr01_studio_core.dir/core/src/play.c.o"
   "CMakeFiles/retr01_studio_core.dir/core/src/play.c.o.d"
+  "CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.o"
+  "CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.o.d"
   "CMakeFiles/retr01_studio_core.dir/core/src/project.c.o"
   "CMakeFiles/retr01_studio_core.dir/core/src/project.c.o.d"
   "CMakeFiles/retr01_studio_core.dir/core/src/spr_pack.c.o"

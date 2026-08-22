@@ -6,6 +6,7 @@
 #include "retr01_studio/project.h"
 #include "retr01_studio/spr_pack.h"
 
+#include <png.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -205,6 +206,8 @@ static void test_roundtrip(void) {
     a->worlds[0].use_constraints = 1;
     a->worlds[0].constraints.scroll_mode = R01_SCROLL_INSTANT;
     a->worlds[0].constraints.player_meta = 0;
+    a->worlds[0].grid_cols = 4;
+    a->worlds[0].grid_rows = 3;
     expect_true(r01_chr_pack_world_bank(&a->worlds[0], 2) == R01_CHR_OK, "pack before save");
     expect_true(r01_project_save_json(a, path, err, sizeof(err)) == 0, "save");
     expect_true(r01_project_load_json(b, path, err, sizeof(err)) == 0, "load");
@@ -217,6 +220,7 @@ static void test_roundtrip(void) {
     expect_true(b->worlds[0].use_constraints == 1, "world use_constraints");
     expect_true(b->worlds[0].constraints.scroll_mode == R01_SCROLL_INSTANT, "world scroll");
     expect_true(b->worlds[0].constraints.player_meta == 0, "world player_meta");
+    expect_true(b->worlds[0].grid_cols == 4 && b->worlds[0].grid_rows == 3, "grid size");
     expect_true(b->global_pal_bg[0].idx[0] == 12 && b->global_pal_bg[0].idx[3] == 55, "global pal");
     expect_true(b->worlds[0].default_bg_bank == 2, "default_bg_bank");
     expect_true(b->worlds[0].default_pal_row == 1, "default_pal_row");
@@ -395,6 +399,112 @@ static void test_cart_export(void) {
     free(p);
 }
 
+static int write_test_indexed_png(const char *path, int cols, int rows, int transparent_cell_col,
+                                  int transparent_cell_row) {
+    FILE *fp;
+    png_structp png;
+    png_infop info;
+    png_color pal[4];
+    png_byte trans[4];
+    int w = cols * R01_SCREEN_PX_W;
+    int h = rows * R01_SCREEN_PX_H;
+    png_bytep *rows_ptr;
+    int y, x;
+    uint8_t *buf;
+
+    fp = fopen(path, "wb");
+    if (!fp) {
+        return -1;
+    }
+    png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    info = png ? png_create_info_struct(png) : NULL;
+    if (!png || !info) {
+        fclose(fp);
+        return -1;
+    }
+    if (setjmp(png_jmpbuf(png))) {
+        png_destroy_write_struct(&png, &info);
+        fclose(fp);
+        return -1;
+    }
+    png_init_io(png, fp);
+    png_set_IHDR(png, info, (png_uint_32)w, (png_uint_32)h, 8, PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+    pal[0].red = 0;
+    pal[0].green = 0;
+    pal[0].blue = 0;
+    pal[1].red = 255;
+    pal[1].green = 0;
+    pal[1].blue = 0;
+    pal[2].red = 0;
+    pal[2].green = 255;
+    pal[2].blue = 0;
+    pal[3].red = 0;
+    pal[3].green = 0;
+    pal[3].blue = 255;
+    png_set_PLTE(png, info, pal, 4);
+    trans[0] = 0; /* index 0 fully transparent for hole cell fill */
+    trans[1] = 255;
+    trans[2] = 255;
+    trans[3] = 255;
+    png_set_tRNS(png, info, trans, 4, NULL);
+    png_write_info(png, info);
+
+    buf = (uint8_t *)malloc((size_t)w * (size_t)h);
+    rows_ptr = (png_bytep *)malloc((size_t)h * sizeof(png_bytep));
+    if (!buf || !rows_ptr) {
+        free(buf);
+        free(rows_ptr);
+        png_destroy_write_struct(&png, &info);
+        fclose(fp);
+        return -1;
+    }
+    for (y = 0; y < h; y++) {
+        rows_ptr[y] = buf + (size_t)y * (size_t)w;
+        for (x = 0; x < w; x++) {
+            int c = x / R01_SCREEN_PX_W;
+            int r = y / R01_SCREEN_PX_H;
+            if (c == transparent_cell_col && r == transparent_cell_row) {
+                buf[y * w + x] = 0; /* transparent */
+            } else {
+                buf[y * w + x] = (uint8_t)(1 + ((c + r) & 2)); /* opaque 1 or 3 */
+            }
+        }
+    }
+    png_write_image(png, rows_ptr);
+    png_write_end(png, NULL);
+    free(buf);
+    free(rows_ptr);
+    png_destroy_write_struct(&png, &info);
+    fclose(fp);
+    return 0;
+}
+
+static void test_png_import(void) {
+    R01World *w = (R01World *)calloc(1, sizeof(R01World));
+    char err[128];
+    const char *path = "studio_test_import.png";
+    expect_true(w != NULL, "alloc");
+    w->present = 1;
+    w->grid_cols = R01_GRID_SIZE;
+    w->grid_rows = R01_GRID_SIZE;
+    expect_true(write_test_indexed_png(path, 3, 2, 1, 0) == 0, "write png");
+    /* 3x2 with hole at (1,0) -> 5 screens */
+    expect_true(r01_world_import_png(w, path, err, sizeof(err)) == 0, "import");
+    expect_true(w->grid_cols == 3 && w->grid_rows == 2, "grid sized to png");
+    expect_true(w->screen_count == 5, "skip transparent cell");
+    expect_true(r01_world_find_screen(w, 1, 0) < 0, "hole empty");
+    expect_true(r01_world_find_screen(w, 0, 0) >= 0, "cell 0,0 present");
+    expect_true(r01_world_find_screen(w, 2, 1) >= 0, "cell 2,1 present");
+    {
+        int si = r01_world_find_screen(w, 0, 0);
+        expect_true(si >= 0 && r01_screen_get_pixel(&w->screens[si], 0, 0) == 1, "pixel color");
+    }
+    /* reject non-multiple size via bad path already covered; reject >4 colors would need another file */
+    remove(path);
+    free(w);
+}
+
 int main(void) {
     g_fails = 0;
     test_grid_caps();
@@ -408,6 +518,7 @@ int main(void) {
     test_spr_oam_meta();
     test_play_scroll();
     test_cart_export();
+    test_png_import();
     test_roundtrip();
     if (g_fails) {
         fprintf(stderr, "%d test(s) failed\n", g_fails);

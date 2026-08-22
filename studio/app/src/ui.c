@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 static const SDL_Color GRAY[4] = {
     {20, 20, 24, 255},
@@ -187,16 +188,23 @@ static void draw_worlds(UiState *ui, SDL_Renderer *r) {
             font_draw(r, x + 8, 18 + oy, buf, 230, 230, 240);
         }
     }
-    font_draw(r, 4, 28 + oy, "CTRL+CLICK TOGGLE", 120, 120, 130);
-    for (row = 0; row < R01_GRID_SIZE; row++) {
-        for (c = 0; c < R01_GRID_SIZE; c++) {
-            int x = UI_WORLD_GRID_X + c * UI_WORLD_CELL;
-            int y = UI_WORLD_GRID_Y + row * UI_WORLD_CELL + oy;
-            int idx = w ? r01_world_find_screen(w, c, row) : -1;
-            int active = (ui->project->active_screen >= 0 && idx == ui->project->active_screen);
-            int cs = UI_WORLD_CELL - 1;
-            fill_rect(r, x, y, cs, cs, idx >= 0 ? (active ? 180 : 100) : 45,
-                      idx >= 0 ? (active ? 140 : 110) : 50, idx >= 0 ? (active ? 60 : 90) : 58);
+    font_draw(r, 4, 28 + oy, "CTRL+CLICK  CTRL+I PNG", 120, 120, 130);
+    {
+        int gc = (w && w->grid_cols > 0) ? w->grid_cols : R01_GRID_SIZE;
+        int gr = (w && w->grid_rows > 0) ? w->grid_rows : R01_GRID_SIZE;
+        char gbuf[24];
+        snprintf(gbuf, sizeof(gbuf), "%dx%d", gc, gr);
+        font_draw(r, 140, 28 + oy, gbuf, 140, 160, 140);
+        for (row = 0; row < gr; row++) {
+            for (c = 0; c < gc; c++) {
+                int x = UI_WORLD_GRID_X + c * UI_WORLD_CELL;
+                int y = UI_WORLD_GRID_Y + row * UI_WORLD_CELL + oy;
+                int idx = w ? r01_world_find_screen(w, c, row) : -1;
+                int active = (ui->project->active_screen >= 0 && idx == ui->project->active_screen);
+                int cs = UI_WORLD_CELL - 1;
+                fill_rect(r, x, y, cs, cs, idx >= 0 ? (active ? 180 : 100) : 45,
+                          idx >= 0 ? (active ? 140 : 110) : 50, idx >= 0 ? (active ? 60 : 90) : 58);
+            }
         }
     }
 }
@@ -844,6 +852,47 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
             }
             return 1;
         }
+        if (k == SDLK_i && (mod & KMOD_CTRL)) {
+            char err[128];
+            char png_path[R01_PATH_MAX];
+            char stem[R01_PATH_MAX];
+            w = cur_world(ui);
+            strncpy(stem, ui->project_path, R01_PATH_MAX - 1);
+            stem[R01_PATH_MAX - 1] = 0;
+            {
+                char *dot = strrchr(stem, '.');
+                if (dot && (strcmp(dot, ".json") == 0)) {
+                    *dot = 0;
+                }
+            }
+            {
+                size_t n = strlen(stem);
+                if (n + 4 < sizeof(png_path)) {
+                    memcpy(png_path, stem, n);
+                    memcpy(png_path + n, ".png", 5);
+                } else {
+                    strncpy(png_path, "import.png", sizeof(png_path) - 1);
+                    png_path[sizeof(png_path) - 1] = 0;
+                }
+            }
+            if (access(png_path, R_OK) != 0) {
+                strncpy(png_path, "import.png", sizeof(png_path) - 1);
+                png_path[sizeof(png_path) - 1] = 0;
+            }
+            if (!w) {
+                snprintf(ui->status, sizeof(ui->status), "no world");
+                return 1;
+            }
+            if (r01_world_import_png(w, png_path, err, sizeof(err)) == 0) {
+                ui->project->active_screen = w->screen_count > 0 ? 0 : -1;
+                ui->project->active_plane = -1;
+                snprintf(ui->status, sizeof(ui->status), "imported %dx%d (%d scr)", w->grid_cols, w->grid_rows,
+                         w->screen_count);
+            } else {
+                snprintf(ui->status, sizeof(ui->status), "import fail");
+            }
+            return 1;
+        }
         if (k == SDLK_o && (mod & KMOD_CTRL)) {
             char err[128];
             if (r01_project_load_json(ui->project, ui->project_path, err, sizeof(err)) == 0) {
@@ -1039,6 +1088,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
 
         if (in_left_viewport(logic_x, logic_y)) {
             cy = left_cy(ui, logic_y);
+            w = cur_world(ui);
 
             /* Constraints panel */
             if (cy >= UI_CONSTRAINTS_Y && cy < UI_CONSTRAINTS_Y + UI_CONSTRAINTS_H) {
@@ -1157,12 +1207,15 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
                 }
             }
 
-            if (hit(logic_x, cy, UI_WORLD_GRID_X, UI_WORLD_GRID_Y, R01_GRID_SIZE * UI_WORLD_CELL,
-                    R01_GRID_SIZE * UI_WORLD_CELL)) {
+            if (hit(logic_x, cy, UI_WORLD_GRID_X, UI_WORLD_GRID_Y,
+                    (w && w->grid_cols > 0 ? w->grid_cols : R01_GRID_SIZE) * UI_WORLD_CELL,
+                    (w && w->grid_rows > 0 ? w->grid_rows : R01_GRID_SIZE) * UI_WORLD_CELL)) {
+                int gc = w && w->grid_cols > 0 ? w->grid_cols : R01_GRID_SIZE;
+                int gr = w && w->grid_rows > 0 ? w->grid_rows : R01_GRID_SIZE;
                 int c = (logic_x - UI_WORLD_GRID_X) / UI_WORLD_CELL;
                 int row = (cy - UI_WORLD_GRID_Y) / UI_WORLD_CELL;
                 w = cur_world(ui);
-                if (c >= 0 && c < 8 && row >= 0 && row < 8 && w) {
+                if (c >= 0 && c < gc && row >= 0 && row < gr && w) {
                     if (ctrl) {
                         if (r01_world_toggle_screen(w, c, row) != 0) {
                             snprintf(ui->status, sizeof(ui->status), "screen cap 32 reached");

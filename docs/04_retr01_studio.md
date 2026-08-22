@@ -35,7 +35,7 @@ Right column = Screen (most width). Left = scrollable stack of Worlds, **Planes*
 
 | Cell | Behavior |
 |------|----------|
-| **Worlds** | Tabs labeled **1-8** in the UI = hardware worlds **0-7** (`$FE30`). Sparse grid **1-8** cols/rows (UI). Click = select. **Ctrl+click** = toggle stored screen. Max **32** screens/world. Holes = not in MAP. **Grid only** — no parallax markers |
+| **Worlds** | Tabs **1-8** = HW worlds **0-7**. Virtual grid **1–8** cols/rows (sized by PNG import or default 8×8). Click = select. **Ctrl+click** = toggle screen. Max **32** screens. **Ctrl+I** imports indexed PNG → screens |
 | **Planes** | Up to **2** parallax planes per world (HW VRAM slots **4-5**). Not on the world grid. Toggle present / select to edit in Screen. Same 480 B payload shape as a screen |
 | **BG banks** | 4 tabs (0-3), 16x16 read-only tiles. Filled by **Generate bank** |
 | **Sprite banks** | 4 tabs, 8x8 / 8x16 toggle. Paint tiles (**TILE** tool), place OAM on Screen (**PLACE**). **Ctrl+G** on SPR layer packs/dedupes sprite CHR |

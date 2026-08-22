@@ -170,6 +170,20 @@ CMakeFiles/retr01_studio_core.dir/core/src/cart.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_studio_core.dir/core/src/cart.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/studio/core/src/cart.c -o CMakeFiles/retr01_studio_core.dir/core/src/cart.c.s
 
+CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.o: CMakeFiles/retr01_studio_core.dir/flags.make
+CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.o: /home/g/Repos/retr01/studio/core/src/png_import.c
+CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.o: CMakeFiles/retr01_studio_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/studio/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building C object CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.o -MF CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.o.d -o CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.o -c /home/g/Repos/retr01/studio/core/src/png_import.c
+
+CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/g/Repos/retr01/studio/core/src/png_import.c > CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.i
+
+CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/studio/core/src/png_import.c -o CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.s
+
 # Object files for target retr01_studio_core
 retr01_studio_core_OBJECTS = \
 "CMakeFiles/retr01_studio_core.dir/core/src/project.c.o" \
@@ -178,7 +192,8 @@ retr01_studio_core_OBJECTS = \
 "CMakeFiles/retr01_studio_core.dir/core/src/palette.c.o" \
 "CMakeFiles/retr01_studio_core.dir/core/src/spr_pack.c.o" \
 "CMakeFiles/retr01_studio_core.dir/core/src/play.c.o" \
-"CMakeFiles/retr01_studio_core.dir/core/src/cart.c.o"
+"CMakeFiles/retr01_studio_core.dir/core/src/cart.c.o" \
+"CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.o"
 
 # External object files for target retr01_studio_core
 retr01_studio_core_EXTERNAL_OBJECTS =
@@ -190,9 +205,10 @@ libretr01_studio_core.a: CMakeFiles/retr01_studio_core.dir/core/src/palette.c.o
 libretr01_studio_core.a: CMakeFiles/retr01_studio_core.dir/core/src/spr_pack.c.o
 libretr01_studio_core.a: CMakeFiles/retr01_studio_core.dir/core/src/play.c.o
 libretr01_studio_core.a: CMakeFiles/retr01_studio_core.dir/core/src/cart.c.o
+libretr01_studio_core.a: CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.o
 libretr01_studio_core.a: CMakeFiles/retr01_studio_core.dir/build.make
 libretr01_studio_core.a: CMakeFiles/retr01_studio_core.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/g/Repos/retr01/studio/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking C static library libretr01_studio_core.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/g/Repos/retr01/studio/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Linking C static library libretr01_studio_core.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/retr01_studio_core.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/retr01_studio_core.dir/link.txt --verbose=$(VERBOSE)
 

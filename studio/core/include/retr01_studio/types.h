@@ -13,7 +13,7 @@
 #define R01_MAX_WORLDS 8
 #define R01_MAX_SCREENS_PER_WORLD 32
 #define R01_MAX_PARALLAX_PLANES 2 /* HW VRAM slots 4-5 */
-#define R01_GRID_SIZE 8
+#define R01_GRID_SIZE 8 /* max cols/rows (hardware atlas) */
 #define R01_BG_BANKS 4
 #define R01_SPR_BANKS 4
 #define R01_TILES_PER_BANK 256
@@ -125,6 +125,8 @@ typedef struct R01Constraints {
 
 typedef struct R01World {
     int present;
+    int grid_cols; /* 1..R01_GRID_SIZE — virtual atlas width */
+    int grid_rows; /* 1..R01_GRID_SIZE — virtual atlas height */
     int default_bg_bank; /* 0..3 */
     int default_pal_row; /* 0..3 BG row hint */
     int use_world_pals;  /* 1 = world pal_* override globals */

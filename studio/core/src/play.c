@@ -36,6 +36,8 @@ static int screen_present_at(const R01World *w, int col, int row) {
 
 static void clamp_player_to_world(const R01World *w, int *px, int *py) {
     int col, row, lx, ly;
+    int gc = w->grid_cols > 0 ? w->grid_cols : R01_GRID_SIZE;
+    int gr = w->grid_rows > 0 ? w->grid_rows : R01_GRID_SIZE;
     if (*px < 0) {
         *px = 0;
     }
@@ -46,12 +48,12 @@ static void clamp_player_to_world(const R01World *w, int *px, int *py) {
     row = *py / R01_SCREEN_PX_H;
     lx = *px - col * R01_SCREEN_PX_W;
     ly = *py - row * R01_SCREEN_PX_H;
-    if (col >= R01_GRID_SIZE) {
-        col = R01_GRID_SIZE - 1;
+    if (col >= gc) {
+        col = gc - 1;
         lx = R01_SCREEN_PX_W - 1;
     }
-    if (row >= R01_GRID_SIZE) {
-        row = R01_GRID_SIZE - 1;
+    if (row >= gr) {
+        row = gr - 1;
         ly = R01_SCREEN_PX_H - 1;
     }
     if (!screen_present_at(w, col, row)) {
@@ -192,9 +194,10 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
         int nrow = ny / R01_SCREEN_PX_H;
         int ocol = pl->player_x / R01_SCREEN_PX_W;
         int orow = pl->player_y / R01_SCREEN_PX_H;
+        int gc = w->grid_cols > 0 ? w->grid_cols : R01_GRID_SIZE;
+        int gr = w->grid_rows > 0 ? w->grid_rows : R01_GRID_SIZE;
         if (ncol != ocol || nrow != orow) {
-            if (ncol < 0 || nrow < 0 || ncol >= R01_GRID_SIZE || nrow >= R01_GRID_SIZE ||
-                !screen_present_at(w, ncol, nrow)) {
+            if (ncol < 0 || nrow < 0 || ncol >= gc || nrow >= gr || !screen_present_at(w, ncol, nrow)) {
                 nx = pl->player_x;
                 ny = pl->player_y;
             } else if (c && c->transition == R01_XITION_FADE) {

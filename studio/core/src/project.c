@@ -21,6 +21,8 @@ void r01_project_init(R01Project *p, const char *name) {
     r01_project_init_default_pals(p);
     p->worlds[0].present = 1;
     for (wi = 0; wi < R01_MAX_WORLDS; wi++) {
+        p->worlds[wi].grid_cols = R01_GRID_SIZE;
+        p->worlds[wi].grid_rows = R01_GRID_SIZE;
         p->worlds[wi].default_bg_bank = 0;
         p->worlds[wi].default_pal_row = 0;
         p->worlds[wi].use_world_pals = 0;
@@ -226,7 +228,13 @@ int r01_world_find_screen(const R01World *w, int col, int row) {
 
 int r01_world_toggle_screen(R01World *w, int col, int row) {
     int idx;
-    if (!w || col < 0 || col >= R01_GRID_SIZE || row < 0 || row >= R01_GRID_SIZE) {
+    int gc, gr;
+    if (!w) {
+        return -1;
+    }
+    gc = w->grid_cols > 0 ? w->grid_cols : R01_GRID_SIZE;
+    gr = w->grid_rows > 0 ? w->grid_rows : R01_GRID_SIZE;
+    if (col < 0 || col >= gc || row < 0 || row >= gr) {
         return -1;
     }
     idx = r01_world_find_screen(w, col, row);

@@ -275,6 +275,11 @@ retr01_studio: /usr/lib/Scrt1.o \
   /usr/lib/libSDL2.so \
   /usr/lib/libc.so.6 \
   /usr/lib/libc_nonshared.a \
+  /usr/lib/libm.so.6 \
+  /usr/lib/libpng16.so \
+  /usr/lib/libz.so.1 \
+  /usr/lib32/libm.so.6 \
+  /usr/lib32/libz.so.1 \
   CMakeFiles/retr01_studio.dir/app/src/main.c.o \
   libretr01_studio_app.a \
   libretr01_studio_core.a
@@ -283,6 +288,14 @@ retr01_studio: /usr/lib/Scrt1.o \
 libretr01_studio_app.a:
 
 CMakeFiles/retr01_studio.dir/app/src/main.c.o:
+
+/usr/lib32/libz.so.1:
+
+/usr/lib32/libm.so.6:
+
+/usr/lib/libpng16.so:
+
+/usr/lib/libm.so.6:
 
 /usr/lib/libc.so.6:
 
@@ -597,6 +610,8 @@ libretr01_studio_core.a:
 /usr/include/bits/stdint-intn.h:
 
 /usr/include/bits/types/clockid_t.h:
+
+/usr/lib/libz.so.1:
 
 /usr/include/bits/uintn-identity.h:
 

@@ -578,13 +578,17 @@ CMakeFiles/retr01_studio_app.dir/app/src/ui.c.o: /home/g/Repos/retr01/studio/app
   /usr/include/alloca.h \
   /usr/include/bits/atomic_wide_counter.h \
   /usr/include/bits/byteswap.h \
+  /usr/include/bits/confname.h \
   /usr/include/bits/endian.h \
   /usr/include/bits/endianness.h \
+  /usr/include/bits/environments.h \
   /usr/include/bits/floatn-common.h \
   /usr/include/bits/floatn.h \
   /usr/include/bits/flt-eval-method.h \
   /usr/include/bits/fp-fast.h \
   /usr/include/bits/fp-logb.h \
+  /usr/include/bits/getopt_core.h \
+  /usr/include/bits/getopt_posix.h \
   /usr/include/bits/iscanonical.h \
   /usr/include/bits/libc-header-start.h \
   /usr/include/bits/libm-simd-decl-stubs.h \
@@ -597,6 +601,7 @@ CMakeFiles/retr01_studio_app.dir/app/src/ui.c.o: /home/g/Repos/retr01/studio/app
   /usr/include/bits/mathcalls.h \
   /usr/include/bits/posix1_lim.h \
   /usr/include/bits/posix2_lim.h \
+  /usr/include/bits/posix_opt.h \
   /usr/include/bits/pthread_stack_min-dynamic.h \
   /usr/include/bits/pthreadtypes-arch.h \
   /usr/include/bits/pthreadtypes.h \
@@ -635,6 +640,7 @@ CMakeFiles/retr01_studio_app.dir/app/src/ui.c.o: /home/g/Repos/retr01/studio/app
   /usr/include/bits/typesizes.h \
   /usr/include/bits/uintn-identity.h \
   /usr/include/bits/uio_lim.h \
+  /usr/include/bits/unistd_ext.h \
   /usr/include/bits/waitflags.h \
   /usr/include/bits/waitstatus.h \
   /usr/include/bits/wchar.h \
@@ -648,6 +654,7 @@ CMakeFiles/retr01_studio_app.dir/app/src/ui.c.o: /home/g/Repos/retr01/studio/app
   /usr/include/gnu/stubs.h \
   /usr/include/inttypes.h \
   /usr/include/limits.h \
+  /usr/include/linux/close_range.h \
   /usr/include/linux/limits.h \
   /usr/include/math.h \
   /usr/include/stdc-predef.h \
@@ -659,6 +666,7 @@ CMakeFiles/retr01_studio_app.dir/app/src/ui.c.o: /home/g/Repos/retr01/studio/app
   /usr/include/sys/cdefs.h \
   /usr/include/sys/select.h \
   /usr/include/sys/types.h \
+  /usr/include/unistd.h \
   /usr/include/wchar.h \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/adxintrin.h \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/amxavx512intrin.h \
@@ -776,6 +784,20 @@ CMakeFiles/retr01_studio_app.dir/app/src/ui.c.o: /home/g/Repos/retr01/studio/app
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/xsavesintrin.h \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/xtestintrin.h
 
+
+/usr/include/unistd.h:
+
+/usr/include/linux/close_range.h:
+
+/usr/include/bits/unistd_ext.h:
+
+/usr/include/bits/posix_opt.h:
+
+/usr/include/bits/getopt_posix.h:
+
+/usr/include/bits/getopt_core.h:
+
+/usr/include/bits/confname.h:
 
 /home/g/Repos/retr01/studio/core/include/retr01_studio/spr_pack.h:
 
@@ -910,6 +932,8 @@ CMakeFiles/retr01_studio_app.dir/app/src/ui.c.o: /home/g/Repos/retr01/studio/app
 /usr/include/bits/types/struct_timespec.h:
 
 /usr/include/SDL2/SDL_hidapi.h:
+
+/usr/include/bits/environments.h:
 
 /usr/include/bits/types/struct_FILE.h:
 

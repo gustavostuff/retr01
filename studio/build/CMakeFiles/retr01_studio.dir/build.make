@@ -98,6 +98,7 @@ retr01_studio: CMakeFiles/retr01_studio.dir/build.make
 retr01_studio: CMakeFiles/retr01_studio.dir/compiler_depend.ts
 retr01_studio: libretr01_studio_app.a
 retr01_studio: libretr01_studio_core.a
+retr01_studio: /usr/lib/libpng16.so
 retr01_studio: /usr/lib/libSDL2.so
 retr01_studio: CMakeFiles/retr01_studio.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/g/Repos/retr01/studio/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking C executable retr01_studio"

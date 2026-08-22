@@ -277,6 +277,11 @@ retr01_studio
  /usr/lib/libSDL2.so
  /usr/lib/libc.so.6
  /usr/lib/libc_nonshared.a
+ /usr/lib/libm.so.6
+ /usr/lib/libpng16.so
+ /usr/lib/libz.so.1
+ /usr/lib32/libm.so.6
+ /usr/lib32/libz.so.1
  /home/g/Repos/retr01/studio/build/CMakeFiles/retr01_studio.dir/app/src/main.c.o
  /home/g/Repos/retr01/studio/build/libretr01_studio_app.a
  /home/g/Repos/retr01/studio/build/libretr01_studio_core.a

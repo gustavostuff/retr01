@@ -195,4 +195,8 @@ CMakeFiles/retr01_studio_app.dir/app/src/ui.c.o: \
  /home/g/Repos/retr01/studio/core/include/retr01_studio/chr_pack.h \
  /home/g/Repos/retr01/studio/core/include/retr01_studio/json_io.h \
  /home/g/Repos/retr01/studio/core/include/retr01_studio/palette.h \
- /home/g/Repos/retr01/studio/core/include/retr01_studio/spr_pack.h
+ /home/g/Repos/retr01/studio/core/include/retr01_studio/spr_pack.h \
+ /usr/include/unistd.h /usr/include/bits/posix_opt.h \
+ /usr/include/bits/environments.h /usr/include/bits/confname.h \
+ /usr/include/bits/getopt_posix.h /usr/include/bits/getopt_core.h \
+ /usr/include/bits/unistd_ext.h /usr/include/linux/close_range.h

@@ -255,7 +255,7 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
 
     fprintf(f, "{\n");
     fprintf(f, "  \"format\": \"retr01_studio_project\",\n");
-    fprintf(f, "  \"version\": 6,\n");
+    fprintf(f, "  \"version\": 7,\n");
     fprintf(f, "  \"name\": \"%s\",\n", p->name);
     fprintf(f, "  \"active_world\": %d,\n", p->active_world);
     fprintf(f, "  \"active_screen\": %d,\n", p->active_screen);
@@ -292,6 +292,8 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
         int si, bi;
         fprintf(f, "    {\n");
         fprintf(f, "      \"present\": %d,\n", w->present ? 1 : 0);
+        fprintf(f, "      \"grid_cols\": %d,\n", w->grid_cols > 0 ? w->grid_cols : R01_GRID_SIZE);
+        fprintf(f, "      \"grid_rows\": %d,\n", w->grid_rows > 0 ? w->grid_rows : R01_GRID_SIZE);
         fprintf(f, "      \"default_bg_bank\": %d,\n", w->default_bg_bank);
         fprintf(f, "      \"default_pal_row\": %d,\n", w->default_pal_row);
         fprintf(f, "      \"use_world_pals\": %d,\n", w->use_world_pals ? 1 : 0);
@@ -447,7 +449,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
 
     r01_project_init(p, "loaded");
     pcur = find_key(json, "version");
-    if (parse_int_after(pcur, &version) != 0 || version < 1 || version > 6) {
+    if (parse_int_after(pcur, &version) != 0 || version < 1 || version > 7) {
         free(json);
         set_err(err_buf, err_cap, "unsupported version");
         return -1;
@@ -542,11 +544,31 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
 
             memset(w, 0, sizeof(*w));
             r01_constraints_init_default(&w->constraints);
+            w->grid_cols = R01_GRID_SIZE;
+            w->grid_rows = R01_GRID_SIZE;
             pcur = find_key(wblock, "present");
             {
                 int pr = 0;
                 parse_int_after(pcur, &pr);
                 w->present = pr ? 1 : 0;
+            }
+            pcur = find_key(wblock, "grid_cols");
+            {
+                int gc = R01_GRID_SIZE;
+                parse_int_after(pcur, &gc);
+                if (gc < 1 || gc > R01_GRID_SIZE) {
+                    gc = R01_GRID_SIZE;
+                }
+                w->grid_cols = gc;
+            }
+            pcur = find_key(wblock, "grid_rows");
+            {
+                int gr = R01_GRID_SIZE;
+                parse_int_after(pcur, &gr);
+                if (gr < 1 || gr > R01_GRID_SIZE) {
+                    gr = R01_GRID_SIZE;
+                }
+                w->grid_rows = gr;
             }
             pcur = find_key(wblock, "default_bg_bank");
             parse_int_after(pcur, &w->default_bg_bank);
