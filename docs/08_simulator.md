@@ -1,6 +1,6 @@
 # Retr01 Board Simulator
 
-**Status:** Planning. Code will live under `sim/` (not started). IC behavior references: [`hw/md/`](../hw/md/). Hardware islands: [`03`](03_hardware_implementation.md). Compact BOM proposal: [`06`](06_hardware_v1_29ic.md).
+**Status:** Planning. Code will live under `sim/` (not started). IC behavior references: [`hw/md/`](../hw/md/). Hardware islands: [`03`](03_hardware_implementation.md). Compact BOM proposal: [`06`](06_hardware_v1_32ic.md).
 
 ## Goal
 
@@ -83,4 +83,4 @@ Full Retr01-A netlist (v0 reference or later v1 BOM):
 | [`hw/md/README.md`](../hw/md/README.md) | Index of IC markdown references |
 | [`03_hardware_implementation.md`](03_hardware_implementation.md) | Chip list, islands, clocks |
 | [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) | Memory map, `$FExx`, cart |
-| [`06_hardware_v1_29ic.md`](06_hardware_v1_29ic.md) | Proposed smaller BOM (same software model) |
+| [`06_hardware_v1_32ic.md`](06_hardware_v1_32ic.md) | Proposed smaller BOM (~32 IC, same software model) |

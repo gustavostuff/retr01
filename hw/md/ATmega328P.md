@@ -18,7 +18,7 @@ AVR 8-bit MCU. For **ATmega328P** specifically: **32 KB Flash**, **2 KB SRAM**, 
 | Output | Timer PWM (or dual PWM) to RC / amp -- board analog TBD |
 | Isolation | Own time domain; may be developed in **sim first** (island **K**) while CPU video islands proceed |
 
-v1: same **CPU address band** may remain, but **1284 firmware** services it during VBlank ([`06`](../../docs/06_hardware_v1_29ic.md)).
+v1: same **CPU address band**; **328P retained** as dedicated APU ([`06`](../../docs/06_hardware_v1_32ic.md)).
 
 ## On-chip memory (328P)
 

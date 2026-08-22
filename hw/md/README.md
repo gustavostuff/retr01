@@ -17,4 +17,4 @@ Keyboard-friendly notes for each motherboard IC: what it is, package/pins, speed
 - Active-low signals keep the datasheet **B** / **#** suffix (`IRQB`, `CE#`).
 - Retr01 clocks: CPU **8.000 MHz** PHI2, dot **5.369318 MHz**, 1284 **20 MHz**, 328P **16 MHz** (v0).
 - Accuracy level for sim timing is not frozen; docs list datasheet numbers so models can tighten later.
-- v1 BOM ([`06`](../../docs/06_hardware_v1_29ic.md)) may merge 328P audio into 1284 and drop AT28C64B; v0 docs here still describe the **discrete** parts.
+- v1 BOM ([`06`](../../docs/06_hardware_v1_32ic.md)) keeps 328P APU and 3x HC245, drops AT28C64B (1284 EEPROM + cart I2C); v0 docs here still describe the **discrete** parts.
