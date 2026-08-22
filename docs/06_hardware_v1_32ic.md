@@ -1,10 +1,19 @@
 # Retr01-A Hardware v1 (32-IC Revision)
 
-**Status:** Proposed system BOM (motherboard + cart). Does **not** replace the v0 (~52 IC) reference in [`03_hardware_implementation.md`](03_hardware_implementation.md) until bench validation passes the gates in [Bring-up strategy](#bring-up-strategy-v0-islands-vs-v1-pcb).
+**Status:** Proposed **product** system BOM (motherboard + cart). Does **not** replace the v0 (~52 IC) bring-up reference in [`03`](03_hardware_implementation.md) until validation gates pass.
 
-This doc captures the compact Retr01-A bill of materials: programmable logic and MCU silicon absorb discrete glue, counters, and comparators, while **keeping** a dedicated APU MCU and full bus isolation. Target: **through-hole DIP**, compact **12 x 12 cm** 4-layer PCB, **same software-visible memory and video model** as v0 (32 KB sys / VRAM / linebuf, 512 KB cart, interleaved VRAM, 341x262 timing).
+**Authority (read this first):**
 
-**Related:** graphics and `$FExx` contract in [`02`](02_graphics_worlds_memory.md). Costs and open questions in [`05`](05_costs_and_open_questions.md).
+| This doc owns | This doc does **not** own |
+|---------------|---------------------------|
+| v1 chip list, IC count, PCB size target, which merges are in/out of silicon | Software-visible `$FExx` **logical** map, cart image, worlds/VRAM -- those stay in [`02`](02_graphics_worlds_memory.md) |
+| HW-only pathways (PLD roles, bus HC245 split, PROM packaging) | Promoting proposed port changes -- that happens only when `02` v1 deltas are frozen and [`05`](05_costs_and_open_questions.md) moves them to Locked |
+
+v1 keeps the **same game-visible graphics model** as v0 (32 KB sys / VRAM / linebuf, 512 KB cart, interleaved VRAM, 341x262, `$FE4x` APU on 328P). It does **not** claim full binary identity for board EEPROM or latch packing -- see [`02` v1 deltas](02_graphics_worlds_memory.md#v1-deltas-proposed-with-06).
+
+Target: **through-hole DIP**, compact **12 x 12 cm** 4-layer PCB.
+
+**Related:** software contract [`02`](02_graphics_worlds_memory.md). Decisions log [`05`](05_costs_and_open_questions.md). Overview SoT table [`01`](01_architecture_overview.md).
 
 ---
 
@@ -119,7 +128,8 @@ How ~20 ICs come off compared to v0, and what stays for risk mitigation.
 | Keep 328P, 3x HC245 | 0 |
 | Add beam + compositor PLDs (vs v0's 3) | +2 |
 | Add cart I2C EEPROM | +1 |
-| **Net vs ~52** | **~-20 -> 32** |
+| Absorb HC14 / remaining glue into PLDs or passives | ~-1 (vs -9 glue line above) |
+| **Net vs ~52** | **-> 32** (authoritative count is the [BOM table](#ic-count), not this approx tally) |
 
 ---
 
@@ -222,14 +232,16 @@ Three HC245s keep CPU, video-fetch, and cart/OAM domains from fighting. PLD `/OE
 
 ## Register map deltas vs v0
 
-| Topic | v0 | v1 |
-|-------|----|----|
-| `$FE40-$FE5F` APU | ATmega328P hardware | **Unchanged** -- still 328P |
-| `$FE70-$FE72` board EEPROM | AT28C64B parallel port | **Removed** -- machine config via **1284 EEPROM handshake** (new `$FExx` or mailbox -- TBD) |
-| `$FE00` etc. | One flag per latch byte (14x HC573) | **Bit-packed** bytes (9x HC573) -- freeze bitfield table in `02` when adopted |
-| Cart saves | Not specified on mobo | **Cart I2C EEPROM** + `$FExx` access helper / HAL |
+Software-facing detail lives in [`02` v1 deltas](02_graphics_worlds_memory.md#v1-deltas-proposed-with-06). Summary only:
 
-Games targeting **v0** and **v1** can share the **same cart image** (PRG/CHR/MAP) if PRG uses a HAL for saves and machine EEPROM; APU port stays binary-compatible with v0. Machine EEPROM layout is **not** binary compatible with AT28C64B without a migration tool.
+| Topic | v0 | v1 (proposed) |
+|-------|----|---------------|
+| `$FE40-$FE5F` APU | ATmega328P | **Unchanged** |
+| `$FE70-$FE72` board EEPROM | AT28C64B | **Removed** -- 1284 EEPROM handshake (ports TBD in `02`) |
+| Latch silicon | 14x HC573 | **9x** bit-packed (bitfield table TBD in `02` before freeze) |
+| Cart saves | Not specified | **Cart I2C EEPROM** (HAL / port TBD in `02`) |
+
+Games can share the **same `.retr01` image** (PRG/CHR/MAP) across v0/v1 if PRG uses a HAL for machine EEPROM and cart saves. APU `$FE4x` stays compatible. Do not claim `$FE70` compatibility.
 
 ---
 
@@ -301,6 +313,6 @@ Only if **sim + CPLD fixtures** already pass gates G3-G4 and G6-G7. Otherwise yo
 | Doc | Content |
 |-----|---------|
 | [`03_hardware_implementation.md`](03_hardware_implementation.md) | v0 ~52 IC reference, island bring-up order |
-| [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) | Worlds, VRAM, `$FExx` (update when v1 map freezes) |
-| [`05_costs_and_open_questions.md`](05_costs_and_open_questions.md) | Locked decisions; add v1 entries when adopted |
-| [`01_architecture_overview.md`](01_architecture_overview.md) | Capability snapshot (unchanged for games) |
+| [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) | Software SoT; v1 deltas proposed until frozen |
+| [`05_costs_and_open_questions.md`](05_costs_and_open_questions.md) | Locked vs proposed-v1 decisions |
+| [`01_architecture_overview.md`](01_architecture_overview.md) | Sources-of-truth table + capability snapshot |

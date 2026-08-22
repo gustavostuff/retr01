@@ -42,7 +42,7 @@ Retr01-A is meant to drop into a cabinet:
 - **RGBS**, S-Video, and composite output pads (cabinet monitors today, converters for modern displays tomorrow)
 - Real **cartridge** plan: **512 KB** standard image (PRG + CHR + MAP). Full caps + **32 KB** PRG ~**414 KB**, ~**98 KB** free
 
-You get a board you can breadboard in islands, bring up module by module, then integrate - not a black-box FPGA mystery.
+You get a board you can breadboard in islands, bring up module by module, then integrate - not a black-box FPGA mystery. Product target is a compact **~32 IC** Retr01-A ([`06`](06_hardware_v1_32ic.md)); the ~52 IC list is the island bring-up reference ([`03`](03_hardware_implementation.md)).
 
 **Retr01 Studio** (in development) authors worlds, screens, tile art, and palettes. Later Studio phases compile full `.retr01` cart images. A low-level cycle emulator is planned later for validation before silicon is final.
 
@@ -229,7 +229,7 @@ If you know how NES tiles, attrs, and sprites work, Retr01 art pipelines will fe
 | CHR banking | Mapper-dependent, game-defined | **4 BG + 4 sprite banks/world**, **per-tile** BG bank, **per-sprite** bank (attrs) |
 | Mid-frame effects | **Sprite 0 hit** + timed code | **Raster compare IRQ** |
 | Gameplay collision | Software (same) | Software (explicit - **no** hardware sprite-BG hit) |
-| PPU integration | Single Ricoh PPU | **74HC BG path** + **ATmega1284P** sprite line buffer + **ATmega328P** APU |
+| PPU integration | Single Ricoh PPU | **BG/beam path** + **ATmega1284P** sprite line buffer + **ATmega328P** APU (v0 discrete HC; v1 more in PLDs -- [`06`](06_hardware_v1_32ic.md)) |
 | CPU vs video clock | Derived/coupled | **Independent** CPU and dot clocks |
 | Output | RF/composite (retail) | **RGBS**, S-Video, composite **pads** (arcade-first) |
 | Form factor | Consumer console | **Retr01-A** arcade, **Retr01-C** console, **Retr01-H** handheld |
@@ -243,8 +243,9 @@ Different does not mean better for every game. A tight NES-style single screen i
 
 | Doc | Content |
 |-----|---------|
-| [`01_architecture_overview.md`](01_architecture_overview.md) | Terminology, capability snapshot, variants |
-| [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) | Worlds, VRAM, MAP, palettes, scrolling |
-| [`03_hardware_implementation.md`](03_hardware_implementation.md) | Chips, buses, protoboard islands |
+| [`01_architecture_overview.md`](01_architecture_overview.md) | Sources of truth, terminology, capability snapshot |
+| [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) | Worlds, VRAM, MAP, palettes, `$FExx` (software SoT) |
+| [`03_hardware_implementation.md`](03_hardware_implementation.md) | v0 chips, buses, protoboard islands |
 | [`04_retr01_studio.md`](04_retr01_studio.md) | Authoring tool roadmap |
-| [`05_costs_and_open_questions.md`](05_costs_and_open_questions.md) | Locked decisions, costs, open questions |
+| [`05_costs_and_open_questions.md`](05_costs_and_open_questions.md) | Locked vs proposed decisions, costs |
+| [`06_hardware_v1_32ic.md`](06_hardware_v1_32ic.md) | v1 32-IC product BOM |

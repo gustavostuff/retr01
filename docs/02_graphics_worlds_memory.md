@@ -1,6 +1,8 @@
 # Retr01 Graphics, Worlds, and Memory
 
-Display, worlds, VRAM, palettes, cart image, and `$FExx`. Chips / islands: [`03`](03_hardware_implementation.md).
+Display, worlds, VRAM, palettes, cart image, and `$FExx`.
+
+**Authority:** this file is the **software-visible** source of truth (see [`01`](01_architecture_overview.md) *Sources of truth*). Chip lists: v0 [`03`](03_hardware_implementation.md), v1 product BOM [`06`](06_hardware_v1_32ic.md). HW may not invent CPU ports here; proposed v1 port changes live only in [v1 deltas (proposed)](#v1-deltas-proposed-with-06) until promoted into the main tables.
 
 ## Display
 
@@ -107,7 +109,16 @@ Line N+1| fill N+1         |        | SHOW             |
 
 ## Palettes
 
-**Color PROM** (board, 64 RGB). Carts store **indices only**. Active buffer: **4 BG + 4 sprite** via `$FE08`/`$FE09`. Shared color 0. BG+sprite row index always locked together.
+**Color PROM** (board): **64 master indices**. Carts store **indices only**. Active buffer: **4 BG + 4 sprite** via `$FE08`/`$FE09`. Shared color 0. BG+sprite row index always locked together.
+
+**How the PROM stores RGB is HW-revision-specific** (does not change the 64-index cart model):
+
+| Revision | Encoding | Authority |
+|----------|----------|-----------|
+| v0 | **3x AT28C16** -- separate R/G/B bytes per index | [`03`](03_hardware_implementation.md) |
+| v1 (proposed) | **1x** PROM/OTP -- packed `{RRRGGGBB}` (R3 G3 B2) per index; 1-dot pipeline | [`06`](06_hardware_v1_32ic.md) |
+
+Kit / Studio **logical** swatches below are full 24-bit reference colors. On v1 silicon, Studio and burn tools must **quantize** to R3G3B2 when building the PROM image (see [`04`](04_retr01_studio.md)).
 
 ```text
 #000000 #290514 #2A0507 #230F06 #1E1306 #1A1605 #141807 #061A07 #051A13 #071918 #08181C #071722 #030B3D #16033A #20052D #260420
@@ -170,12 +181,16 @@ Boot: magic -> pointers -> world header -> dir -> `off_payload`. MAP port: `$FE9
 
 ## CPU map and `$FExx`
 
+**v0 draft (current software SoT for addresses below).** Physical latch packing on a v1 PCB may share HC573 bytes; that does **not** change these **logical** addresses until a packing table is promoted here. See [v1 deltas](#v1-deltas-proposed-with-06).
+
 | Range | Region |
 |-------|--------|
 | `$0000-$7FFF` | System RAM |
-| `$8000-$FDFF` | PRG (32 KB) |
+| `$8000-$FDFF` | PRG (low image; I/O hole at `$FE00-$FEFF`) |
 | `$FE00-$FEFF` | I/O |
 | `$FF00-$FFFF` | PRG high + vectors |
+
+PRG planning cap is **32 KB** total in the cart image; the CPU sees the classic 6502 hole at `$FE00-$FEFF`.
 
 | Addr | Name | Notes |
 |------|------|-------|
@@ -190,8 +205,25 @@ Boot: magic -> pointers -> world header -> dir -> `off_payload`. MAP port: `$FE9
 | `$FE30` | `WORLD` | 0-7 |
 | `$FE31`-`$FE37` | bank helpers | optional stamps, not live fetch |
 | `$FE38` | `PAL_ROW` | hint. Still copy `$FE08`/`$FE09` |
-| `$FE40`-`$FE5F` | APU | |
+| `$FE40`-`$FE5F` | APU | **ATmega328P** (v0 and v1) |
 | `$FE60`/`$FE61` | pads | bits: R L D U X Y coin start (**1=pressed**) |
-| `$FE70`-`$FE72` | board EEPROM | |
+| `$FE70`-`$FE72` | board EEPROM | **v0 only** (AT28C64B). v1: see deltas |
 | `$FE80` | reserved | unused v0 |
 | `$FE90`-`$FE93` | MAP | 24-bit seek + read auto-inc |
+
+## v1 deltas (proposed with 06)
+
+Status: **proposed** with the 32-IC BOM in [`06`](06_hardware_v1_32ic.md). Not frozen. Do not treat as SoT for shipped carts until this section is promoted (and [`05`](05_costs_and_open_questions.md) moves rows from Proposed -> Locked).
+
+| Topic | v0 (tables above) | v1 proposal | Open before freeze |
+|-------|-------------------|-------------|--------------------|
+| APU `$FE40-$FE5F` | 328P | **Unchanged** (328P kept) | None |
+| Board EEPROM `$FE70-$FE72` | AT28C64B parallel | **Removed**. Machine config via **1284 internal EEPROM** handshake (mailbox / new `$FExx` -- TBD) | Exact CPU port + protocol |
+| Game saves | Not specified | **Cart I2C EEPROM** (in 32-IC count). Access via HAL (6502 bit-bang or 1284 TWI behind `$FExx` -- TBD) | Port map + HAL API |
+| `$FExx` latch silicon | One flag-ish byte per HC573 (14 chips) | **9x HC573**, bit-packed | **Bitfield packing table** must land in this doc before adoption |
+| Color PROM encoding | 3x 8-bit R/G/B | 1x `{RRRGGGBB}` | Studio/PROM burn quantize (see Palettes) |
+| Worlds / VRAM / MAP / OAM / scroll | As above | **Unchanged** | -- |
+
+**HAL guidance (until ports freeze):** PRG should call thin `machine_eeprom_*` and `cart_save_*` helpers so carts are not welded to AT28C64B or a specific I2C master. APU may keep direct `$FE4x` stores (stable across v0/v1).
+
+**Not changed by v1 BOM alone:** cart flash layout (`.retr01`), 128x120 model, interleaved VRAM, MAP `$FE90`, OAM `$FE20`.

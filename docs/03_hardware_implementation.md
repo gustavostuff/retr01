@@ -1,6 +1,14 @@
 # Retr01 Hardware Implementation
 
-Preliminary chip list, bus ownership, and protoboard bring-up for Retr01-A. Software contracts and `$FExx` bitfields live in [`02`](02_graphics_worlds_memory.md). Motherboard layout sketch: [`01`](01_architecture_overview.md). Proposed compact BOM (~32 IC): [`06`](06_hardware_v1_32ic.md).
+**Scope:** Retr01-A **v0** chip list, bus ownership, and protoboard islands (~52 IC). This is the **bring-up / de-risking** reference, not the product BOM.
+
+| | |
+|--|--|
+| **Product HW BOM (v1, proposed)** | [`06`](06_hardware_v1_32ic.md) -- **32 IC** system |
+| **Software-visible map** | [`02`](02_graphics_worlds_memory.md) -- never invent CPU ports here |
+| **Sources of truth** | [`01`](01_architecture_overview.md) |
+
+Software contracts and `$FExx` bitfields live in [`02`](02_graphics_worlds_memory.md). Motherboard layout sketch (v0): [`01`](01_architecture_overview.md).
 
 ## Domains
 
@@ -38,7 +46,7 @@ Datasheets: [W65C02S](https://westerndesigncenter.com/wdc/documentation/w65c02s.
 
 **SCALE DIP:** **2x** default (128x120 -> 256x240, fills RGBS). **1x** centers 128x120. Beam timing stays **341x262**.
 
-**Color PROM:** 6-bit master index -> R/G/B. Not on the 6502 bus during play. Carts store indices only. Q15 in [`05`](05_costs_and_open_questions.md) if AT28C16 stock/speed becomes a problem.
+**Color PROM (v0):** 6-bit master index -> R/G/B via **3x AT28C16**. Not on the 6502 bus during play. Carts store indices only. v1 packed PROM: [`06`](06_hardware_v1_32ic.md) / [`02`](02_graphics_worlds_memory.md). Q14/Q15 in [`05`](05_costs_and_open_questions.md).
 
 ## Where state lives (short)
 
@@ -48,7 +56,7 @@ Datasheets: [W65C02S](https://westerndesigncenter.com/wdc/documentation/w65c02s.
 | Nametables | `$FE10`/`$FE11`/`$FE12` | AS6C62256 VRAM (CPU phase write, PPU phase fetch) |
 | Sprite line buffer | (no CPU port) | AS6C62256 (1284 writes HBlank, beam reads visible) |
 | Cart | `$8000+` PRG, MAP `$FE90`-`$FE93`, CHR via fetch | SST39SF040 |
-| Master RGB | (none in play) | 3x AT28C16 |
+| Master RGB | (none in play) | 3x AT28C16 (v0). v1: 1x packed -- see `06` |
 | Board EEPROM | `$FE70`-`$FE72` | AT28C64B |
 | `$FExx` controls | scroll, PPUCTRL, MAP addr, ... | HC573 + PLD decode |
 | OAM / pads | `$FE20`/`$FE21`, `$FE60`/`$FE61` | ATmega1284P |

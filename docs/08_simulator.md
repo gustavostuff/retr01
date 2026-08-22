@@ -44,13 +44,13 @@ Examples:
 | C | W65C02S + system AS6C62256 + tiny PRG | Fetch, RAM R/W, no bus fight |
 | G | CPU + VRAM + interleave mux/PLD | `$FE10`-`$FE12` interleaved R/W |
 | N | ATmega1284P + line-buffer SRAM | OAM port, line fill |
-| K | ATmega328P (or 1284 APU path) | Tone / `$FE4x` |
+| K | ATmega328P APU | Tone / `$FE4x` |
 
 **Pass:** same criteria as the hardware island checklist in `03`.
 
 ### 3. System tests (whole board)
 
-Full Retr01-A netlist (v0 reference or later v1 BOM):
+Full Retr01-A netlist: choose **v0** ([`03`](03_hardware_implementation.md)) or **v1** ([`06`](06_hardware_v1_32ic.md)) explicitly. Software ports always from [`02`](02_graphics_worlds_memory.md).
 
 - Cart image (`.retr01` / PRG+CHR+MAP)
 - Pad bytes (`$FE60`/`$FE61`) from host input
@@ -65,7 +65,7 @@ Full Retr01-A netlist (v0 reference or later v1 BOM):
 2. **Netlist second:** islands and the full board are graphs of pin connections.
 3. **Retr01-only:** no generic multi-board sandbox; contracts and clocks match this project.
 4. **Tests before polish:** unit -> island -> system. Visual DIP widgets are Phase 2+ UI (see earlier plan); Layer 1 does not require a GUI.
-5. **Sources of truth:** `hw/*.pdf` + `hw/md/*.md` for pin/behavior; `docs/02` for `$FExx` software map.
+5. **Sources of truth:** `hw/*.pdf` + `hw/md/*.md` for pin/behavior; `docs/02` for `$FExx` software map; `docs/03` or `docs/06` for which BOM the netlist follows ([`01`](01_architecture_overview.md)).
 
 ## Near-term focus
 
@@ -83,4 +83,4 @@ Full Retr01-A netlist (v0 reference or later v1 BOM):
 | [`hw/md/README.md`](../hw/md/README.md) | Index of IC markdown references |
 | [`03_hardware_implementation.md`](03_hardware_implementation.md) | Chip list, islands, clocks |
 | [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) | Memory map, `$FExx`, cart |
-| [`06_hardware_v1_32ic.md`](06_hardware_v1_32ic.md) | Proposed smaller BOM (~32 IC, same software model) |
+| [`06_hardware_v1_32ic.md`](06_hardware_v1_32ic.md) | Proposed product BOM (~32 IC). Does not override `02` |
