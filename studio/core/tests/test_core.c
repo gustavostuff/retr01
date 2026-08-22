@@ -226,6 +226,29 @@ static void test_plane_pack(void) {
     free(w);
 }
 
+static void test_select_bg_bank(void) {
+    R01Project *p = (R01Project *)calloc(1, sizeof(R01Project));
+    expect_true(p != NULL, "alloc project");
+    r01_project_init(p, "banks");
+    expect_true(r01_project_select_bg_bank(p, 2) == 2, "select bank 2");
+    expect_true(p->generate_bank == 2, "generate_bank is 2");
+    expect_true(r01_project_select_bg_bank(p, -1) == -1, "reject negative");
+    expect_true(r01_project_select_bg_bank(p, 4) == -1, "reject out of range");
+    expect_true(p->generate_bank == 2, "unchanged after reject");
+
+    p->worlds[0].present = 1;
+    r01_world_toggle_screen(&p->worlds[0], 0, 0);
+    r01_screen_clear_pixels(&p->worlds[0].screens[0], 0);
+    r01_screen_plot(&p->worlds[0].screens[0], 0, 0, 3);
+    expect_true(r01_chr_pack_world_bank(&p->worlds[0], p->generate_bank) == R01_CHR_OK, "pack selected");
+    expect_true(p->worlds[0].bg_banks[2].tile_count > 0, "tiles in bank 2");
+    expect_true(p->worlds[0].bg_banks[0].tile_count == 0, "bank 0 still empty");
+
+    expect_true(r01_project_select_bg_bank(p, 1) == 1, "switch to bank 1");
+    expect_true(p->generate_bank == 1, "generate_bank follows select");
+    free(p);
+}
+
 int main(void) {
     g_fails = 0;
     test_grid_caps();
@@ -235,6 +258,7 @@ int main(void) {
     test_chr_overflow();
     test_palette_quantize();
     test_plane_pack();
+    test_select_bg_bank();
     test_roundtrip();
     if (g_fails) {
         fprintf(stderr, "%d test(s) failed\n", g_fails);

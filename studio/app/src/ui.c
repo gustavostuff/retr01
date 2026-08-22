@@ -60,8 +60,9 @@ int ui_init(UiState *ui) {
     ui->attr_ty = 0;
     ui->pal_row_tab = 0;
     ui->pal_slot = 0;
+    ui->show_grid = 1;
     snprintf(ui->status, sizeof(ui->status),
-             "Tab=pixel/attr | wheel=scroll left | G=gen | S/O=save/load");
+             "Tab=pix/attr | G=grid | Ctrl+G=gen | wheel=scroll left | S/O=save/load");
     strncpy(ui->project_path, "project.json", R01_PATH_MAX - 1);
     return 0;
 }
@@ -332,7 +333,7 @@ static void draw_screen(UiState *ui, SDL_Renderer *r) {
             font_draw(r, bx + 4, 4, buf, 230, 230, 240);
         }
     }
-    font_draw(r, UI_LEFT_W + 420, 4, "G", 140, 200, 140);
+    font_draw(r, UI_LEFT_W + 420, 4, "C-G", 140, 200, 140);
 
     fill_rect(r, view_x, view_y, R01_SCREEN_PX_W * zx, R01_SCREEN_PX_H * zx, 10, 10, 12);
     if (!has_surf) {
@@ -344,6 +345,18 @@ static void draw_screen(UiState *ui, SDL_Renderer *r) {
                 uint8_t cr, cg, cb;
                 r01_tilemap_pixel_rgb(ui->project, w, surf.pixels, surf.attrs, x, y, &cr, &cg, &cb);
                 fill_rect(r, view_x + x * zx, view_y + y * zx, zx, zx, cr, cg, cb);
+            }
+        }
+        if (ui->show_grid) {
+            int gx, gy;
+            SDL_SetRenderDrawColor(r, 55, 58, 68, 255);
+            for (gx = 0; gx <= R01_SCREEN_TILES_X; gx++) {
+                int lx = view_x + gx * 8 * zx;
+                SDL_RenderDrawLine(r, lx, view_y, lx, view_y + R01_SCREEN_PX_H * zx);
+            }
+            for (gy = 0; gy <= R01_SCREEN_TILES_Y; gy++) {
+                int ly = view_y + gy * 8 * zx;
+                SDL_RenderDrawLine(r, view_x, ly, view_x + R01_SCREEN_PX_W * zx, ly);
             }
         }
         if (ui->edit_mode == UI_MODE_ATTR) {
@@ -469,7 +482,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
             }
             return 1;
         }
-        if (k == SDLK_g) {
+        if (k == SDLK_g && (mod & KMOD_CTRL)) {
             R01ChrPackStatus st;
             w = cur_world(ui);
             st = r01_chr_pack_world_bank(w, ui->project->generate_bank);
@@ -482,6 +495,11 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
             } else {
                 snprintf(ui->status, sizeof(ui->status), "generate failed");
             }
+            return 1;
+        }
+        if (k == SDLK_g) {
+            ui->show_grid = !ui->show_grid;
+            snprintf(ui->status, sizeof(ui->status), ui->show_grid ? "grid on" : "grid off");
             return 1;
         }
         if (k == SDLK_f && (mod & KMOD_CTRL)) {
@@ -627,7 +645,9 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
                 for (b = 0; b < 4; b++) {
                     int x = 68 + b * 22;
                     if (hit(logic_x, cy, x, UI_BG_Y + 2, 20, 12)) {
-                        ui->bg_bank_tab = b;
+                        if (r01_project_select_bg_bank(ui->project, b) == b) {
+                            ui->bg_bank_tab = b;
+                        }
                         return 1;
                     }
                 }
@@ -689,7 +709,9 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
             for (b = 0; b < 4; b++) {
                 int bx = UI_LEFT_W + 350 + b * 16;
                 if (hit(logic_x, logic_y, bx, 2, 14, 12)) {
-                    ui->project->generate_bank = b;
+                    if (r01_project_select_bg_bank(ui->project, b) == b) {
+                        ui->bg_bank_tab = b;
+                    }
                     return 1;
                 }
             }

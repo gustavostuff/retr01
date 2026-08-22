@@ -52,6 +52,7 @@ typedef struct UiState {
     int attr_ty;
     int pal_row_tab; /* 0..7 = BG0-3 + SPR0-3 */
     int pal_slot;    /* 0..3 within row */
+    int show_grid;   /* faint tile grid over Screen canvas */
 } UiState;
 
 int ui_init(UiState *ui);

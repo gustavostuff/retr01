@@ -33,8 +33,9 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 | Pixel / attr mode | **Tab** or **PIX** / **ATTR** buttons |
 | Paint | Pixel mode: click/drag (colors 0-3, keys **1-4**) |
 | Edit tile attrs | Attr mode: click tile, then **B** bank, **P** pal, **H**/**V** flip, **O** solid, **N** anim |
-| Generate bank radio | Toolbar BANK 0-3 |
-| Generate CHR | **G** — dedupe (prefer flips); `ANIM` tiles get 4-aligned strips |
+| Generate bank radio | Toolbar BANK 0-3 **or** left BG bank tabs (same target via `select_bg_bank`) |
+| Generate CHR | **Ctrl+G** — packs into selected bank; view stays on that bank |
+| Tile grid overlay | **G** — toggle faint 8x8 grid on Screen |
 | Palettes | Scroll left column; tabs **B0-B3** / **S0-S3**; click swatch + master grid or **-**/**=** |
 | Save / load | **Ctrl+S** / **Ctrl+O** → `project.json` (format v3) |
 | Scroll left column | **Mouse wheel** over left panel |

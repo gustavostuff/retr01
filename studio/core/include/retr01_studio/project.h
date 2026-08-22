@@ -12,6 +12,9 @@ R01ParallaxPlane *r01_project_active_plane(R01Project *p);
 /* Active paint/attr target: plane if active_plane >= 0, else grid screen. */
 int r01_project_edit_surface(R01Project *p, R01EditSurface *out);
 
+/* Set generate_bank (0..3). Returns bank, or -1 if bad args (unchanged). */
+int r01_project_select_bg_bank(R01Project *p, int bank);
+
 /* UI world tab 1..8 <-> hardware 0..7 */
 static inline int r01_ui_world_to_hw(int ui_tab_1_based) {
     return ui_tab_1_based - 1;

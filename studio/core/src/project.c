@@ -98,6 +98,14 @@ int r01_project_edit_surface(R01Project *p, R01EditSurface *out) {
     return -1;
 }
 
+int r01_project_select_bg_bank(R01Project *p, int bank) {
+    if (!p || bank < 0 || bank >= R01_BG_BANKS) {
+        return -1;
+    }
+    p->generate_bank = bank;
+    return bank;
+}
+
 int r01_world_find_screen(const R01World *w, int col, int row) {
     int i;
     if (!w) {
