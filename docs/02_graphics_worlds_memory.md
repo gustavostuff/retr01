@@ -15,32 +15,34 @@ Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 
 ## Worlds, screens, cart budget
 
-- **8** worlds max. Sparse **8x8** grid, **32** screens/world
-- Screen: **480 B** raw (**240** tiles + **240** attrs). Direct MAP `$FE93` -> VRAM `$FE12` (no RLE required)
-- Per world: **4 BG + 4 sprite** CHR banks (**32 KB**), optional palette banks, screen directory
+- **8** worlds max. Sparse **8x8** grid, **32** screens/world (camera / playfield only)
+- Per world: up to **2 parallax planes** (same 480 B payload as a screen). **Not** on the world grid — separate MAP directory. Maps to VRAM slots **4-5**
+- Screen / plane payload: **480 B** raw (**240** tiles + **240** attrs). Direct MAP `$FE93` -> VRAM `$FE12` (no RLE required)
+- Per world: **4 BG + 4 sprite** CHR banks (**32 KB**), optional palette banks, screen dir + parallax dir
 - Cart: **512 KB** (SST39SF040). **32 KB** PRG at `$8000` (I/O hole at `$FE00-$FEFF`; no `$FE80` paging)
 
 | Asset | Size at caps |
 |-------|----------------|
 | CHR (8 x 32 KB) | **256 KB** |
-| MAP (8 x 32 x 480 B) | **120 KB** |
+| MAP screens (8 x 32 x 480 B) | **120 KB** |
+| MAP parallax (8 x 2 x 480 B) | **~7.5 KB** |
 | Pals + dirs/headers | **~6 KB** |
 | PRG | **32 KB** |
-| **Total / free** | **~414 KB** used, **~98 KB** free |
+| **Total / free** | **~422 KB** used, **~90 KB** free |
 
 **Banks:** live BG bank = per-tile attr bits 1-0. Live sprite bank = per-OAM attr bits 1-0. `$FE31`-`$FE37` are optional stamp helpers only.
 
 ## BG and sprite attributes
 
 ```text
-BG attr                          OAM attr
-7 6 5 4 3 2 1 0                  7 6 5 4 3 2 1 0
-| | | | | | |_| BANK 0-3         | | | | | | |_| BANK 0-3
-| | | | |_|____ PAL 0-3          | | | | |_|____ PAL 0-3
-| | | |________ FLIP_H           | | | |________ FLIP_H
-| | |__________ FLIP_V           | | |__________ FLIP_V
-| |____________ SOLID (soft)     | |____________ PRIORITY
-|______________ ANIM (soft)      |______________ SIZE (0=8x8, 1=8x16)
+BG attr                            OAM attr
+7 6 5 4 3 2 1 0                    7 6 5 4 3 2 1 0
+| | | | | | |_|__ BANK 0-3         | | | | | | |_|__ BANK 0-3
+| | | | |_|______ PAL 0-3          | | | | |_|______ PAL 0-3
+| | | |__________ FLIP_H           | | | |__________ FLIP_H
+| | |____________ FLIP_V           | | |____________ FLIP_V
+| |______________ SOLID (soft)     | |______________ PRIORITY
+|________________ ANIM (soft)      |________________ SIZE (0=8x8, 1=8x16)
 ```
 
 Hardware uses BANK/PAL/FLIP (and sprite PRIORITY/SIZE). Video ignores SOLID/ANIM. `ANIM=1`: 4-frame strip, base `B` 4-aligned (`B..B+3`). `SIZE=1`: even base tile `B`, top `B` / bottom `B+1`. Cap **16** sprites/logical line.
@@ -158,21 +160,24 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 |  | WORLD HEADER                                               ||
 |  |   start_col, start_row, default_bg_bank, default_spr_bank  ||
 |  |   default_pal_row, screen_count (0..32)                    ||
-|  |   off_chr, off_screen_dir                                  ||
+|  |   parallax_count (0..2)                                    ||
+|  |   off_chr, off_screen_dir, off_parallax_dir                ||
 |  |   off_world_pal_bg / off_world_pal_spr (0 = use globals)   ||
 |  +------------------------------------------------------------+|
 |  | CHR: BG 0..3 + SPR 0..3 (4 KB each)                        ||
 |  | optional world pal banks (up to 8 rows x 4 each plane)     ||
 |  | SCREEN DIR: col,row,flags, off_payload, off_screen_meta    ||
-|  |   flags: parallax, default BG bank, pal row hint           ||
-|  | PAYLOADS: 240 tile + 240 attr bytes                        ||
+|  |   flags: default BG bank, pal row hint (not parallax)      ||
+|  | PARALLAX DIR: slot (0..1 -> VRAM 4..5), flags, off_payload ||
+|  | SCREEN PAYLOADS: 240 tile + 240 attr each                  ||
+|  | PARALLAX PAYLOADS: same 480 B shape (after screens)        ||
 |  +------------------------------------------------------------+|
 +----------------------------------------------------------------+
 |  WORLD 1 .. N                                                  |
 +----------------------------------------------------------------+
 ```
 
-Boot: magic -> pointers -> world header -> dir -> `off_payload`. MAP port: `$FE90`-`$FE92` addr, `$FE93` data auto-inc.
+Boot: magic -> pointers -> world header -> screen dir / parallax dir -> `off_payload`. Load grid screens into VRAM slots 0-3; load parallax dir entries into slots 4-5. MAP port: `$FE90`-`$FE92` addr, `$FE93` data auto-inc.
 
 ## CPU map and `$FExx`
 

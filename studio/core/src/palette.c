@@ -93,12 +93,12 @@ const R01PalRow *r01_world_spr_pals(const R01Project *p, const R01World *w) {
     return p ? p->global_pal_spr : NULL;
 }
 
-void r01_screen_pixel_rgb(const R01Project *p, const R01World *w, const R01Screen *s, int px, int py,
-                          uint8_t *r, uint8_t *g, uint8_t *b) {
+void r01_tilemap_pixel_rgb(const R01Project *p, const R01World *w, const uint8_t *pixels, const uint8_t *attrs,
+                           int px, int py, uint8_t *r, uint8_t *g, uint8_t *b) {
     int tx, ty, sx, sy, cell;
     uint8_t attr, color, master;
     const R01PalRow *rows;
-    if (!s || px < 0 || py < 0 || px >= R01_SCREEN_PX_W || py >= R01_SCREEN_PX_H) {
+    if (!pixels || !attrs || px < 0 || py < 0 || px >= R01_SCREEN_PX_W || py >= R01_SCREEN_PX_H) {
         if (r) {
             *r = 0;
         }
@@ -115,15 +115,24 @@ void r01_screen_pixel_rgb(const R01Project *p, const R01World *w, const R01Scree
     sx = px % 8;
     sy = py % 8;
     cell = ty * R01_SCREEN_TILES_X + tx;
-    attr = s->attrs[cell];
+    attr = attrs[cell];
     if (r01_attr_flip_h(attr)) {
         sx = 7 - sx;
     }
     if (r01_attr_flip_v(attr)) {
         sy = 7 - sy;
     }
-    color = s->pixels[(ty * 8 + sy) * R01_SCREEN_PX_W + (tx * 8 + sx)] & 3u;
+    color = pixels[(ty * 8 + sy) * R01_SCREEN_PX_W + (tx * 8 + sx)] & 3u;
     rows = r01_world_bg_pals(p, w);
     master = rows ? rows[r01_attr_pal(attr)].idx[color] : color;
     r01_kit_rgb(master, r, g, b);
+}
+
+void r01_screen_pixel_rgb(const R01Project *p, const R01World *w, const R01Screen *s, int px, int py,
+                          uint8_t *r, uint8_t *g, uint8_t *b) {
+    if (!s) {
+        r01_tilemap_pixel_rgb(p, w, NULL, NULL, px, py, r, g, b);
+        return;
+    }
+    r01_tilemap_pixel_rgb(p, w, s->pixels, s->attrs, px, py, r, g, b);
 }

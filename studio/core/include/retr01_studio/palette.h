@@ -17,7 +17,10 @@ void r01_project_init_default_pals(R01Project *p);
 const R01PalRow *r01_world_bg_pals(const R01Project *p, const R01World *w);
 const R01PalRow *r01_world_spr_pals(const R01Project *p, const R01World *w);
 
-/* Screen pixel -> kit RGB using tile attr PAL row. */
+/* Tilemap pixel -> kit RGB using tile attr PAL row. */
+void r01_tilemap_pixel_rgb(const R01Project *p, const R01World *w, const uint8_t *pixels, const uint8_t *attrs,
+                           int px, int py, uint8_t *r, uint8_t *g, uint8_t *b);
+
 void r01_screen_pixel_rgb(const R01Project *p, const R01World *w, const R01Screen *s, int px, int py,
                           uint8_t *r, uint8_t *g, uint8_t *b);
 

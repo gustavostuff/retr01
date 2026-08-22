@@ -185,10 +185,12 @@ static void test_roundtrip(void) {
     a->global_pal_bg[0].idx[3] = 55;
     r01_world_toggle_screen(&a->worlds[0], 2, 3);
     r01_screen_plot(&a->worlds[0].screens[0], 10, 20, 3);
-    a->worlds[0].screens[0].parallax = 1;
     a->worlds[0].screens[0].attrs[5] =
         r01_attr_pack(2, 1, 1, 0, 1, 0);
+    r01_world_toggle_plane(&a->worlds[0], 0);
+    r01_tilemap_plot(a->worlds[0].planes[0].pixels, 4, 4, 2);
     a->active_screen = 0;
+    a->active_plane = -1;
     a->generate_bank = 2;
     expect_true(r01_chr_pack_world_bank(&a->worlds[0], 2) == R01_CHR_OK, "pack before save");
     expect_true(r01_project_save_json(a, path, err, sizeof(err)) == 0, "save");
@@ -200,13 +202,28 @@ static void test_roundtrip(void) {
     expect_true(b->worlds[0].default_pal_row == 1, "default_pal_row");
     expect_true(b->worlds[0].screen_count == 1, "screen_count");
     expect_true(b->worlds[0].screens[0].col == 2 && b->worlds[0].screens[0].row == 3, "screen pos");
-    expect_true(b->worlds[0].screens[0].parallax == 1, "parallax");
     expect_true(r01_screen_get_pixel(&b->worlds[0].screens[0], 10, 20) == 3, "pixel");
     expect_true(b->worlds[0].screens[0].attrs[5] == a->worlds[0].screens[0].attrs[5], "attrs");
+    expect_true(b->worlds[0].planes[0].present == 1, "plane present");
+    expect_true(b->worlds[0].planes[0].slot == 0, "plane slot");
+    expect_true(r01_tilemap_get_pixel(b->worlds[0].planes[0].pixels, 4, 4) == 2, "plane pixel");
     expect_true(b->worlds[0].bg_banks[2].tile_count == a->worlds[0].bg_banks[2].tile_count, "chr count");
     remove(path);
     free(a);
     free(b);
+}
+
+static void test_plane_pack(void) {
+    R01World *w = (R01World *)calloc(1, sizeof(R01World));
+    expect_true(w != NULL, "alloc world");
+    w->present = 1;
+    r01_world_toggle_plane(w, 1);
+    r01_tilemap_clear_pixels(w->planes[1].pixels, 0);
+    r01_tilemap_plot(w->planes[1].pixels, 0, 0, 3);
+    expect_true(r01_chr_pack_world_bank(w, 0) == R01_CHR_OK, "plane-only pack");
+    expect_true(w->bg_banks[0].tile_count >= 1, "plane contributed tiles");
+    expect_true(w->planes[1].present == 1 && w->planes[1].slot == 1, "slot preserved");
+    free(w);
 }
 
 int main(void) {
@@ -217,6 +234,7 @@ int main(void) {
     test_chr_anim_strip();
     test_chr_overflow();
     test_palette_quantize();
+    test_plane_pack();
     test_roundtrip();
     if (g_fails) {
         fprintf(stderr, "%d test(s) failed\n", g_fails);

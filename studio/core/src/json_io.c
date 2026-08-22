@@ -197,10 +197,11 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
 
     fprintf(f, "{\n");
     fprintf(f, "  \"format\": \"retr01_studio_project\",\n");
-    fprintf(f, "  \"version\": 2,\n");
+    fprintf(f, "  \"version\": 3,\n");
     fprintf(f, "  \"name\": \"%s\",\n", p->name);
     fprintf(f, "  \"active_world\": %d,\n", p->active_world);
     fprintf(f, "  \"active_screen\": %d,\n", p->active_screen);
+    fprintf(f, "  \"active_plane\": %d,\n", p->active_plane);
     fprintf(f, "  \"generate_bank\": %d,\n", p->generate_bank);
     fprintf(f, "  \"paint_color\": %d,\n", p->paint_color);
 
@@ -258,7 +259,6 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
             fprintf(f, "          \"col\": %d,\n", s->col);
             fprintf(f, "          \"row\": %d,\n", s->row);
             fprintf(f, "          \"present\": %d,\n", s->present ? 1 : 0);
-            fprintf(f, "          \"parallax\": %d,\n", s->parallax ? 1 : 0);
             fprintf(f, "          \"pixels_hex\": \"");
             write_hex(f, s->pixels, sizeof(s->pixels));
             fprintf(f, "\",\n");
@@ -269,6 +269,24 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
             write_hex(f, s->attrs, sizeof(s->attrs));
             fprintf(f, "\"\n");
             fprintf(f, "        }%s\n", si + 1 < w->screen_count ? "," : "");
+        }
+        fprintf(f, "      ],\n");
+        fprintf(f, "      \"planes\": [\n");
+        for (si = 0; si < R01_MAX_PARALLAX_PLANES; si++) {
+            const R01ParallaxPlane *pl = &w->planes[si];
+            fprintf(f, "        {\n");
+            fprintf(f, "          \"present\": %d,\n", pl->present ? 1 : 0);
+            fprintf(f, "          \"slot\": %d,\n", pl->slot);
+            fprintf(f, "          \"pixels_hex\": \"");
+            write_hex(f, pl->pixels, sizeof(pl->pixels));
+            fprintf(f, "\",\n");
+            fprintf(f, "          \"tiles_hex\": \"");
+            write_hex(f, pl->tiles, sizeof(pl->tiles));
+            fprintf(f, "\",\n");
+            fprintf(f, "          \"attrs_hex\": \"");
+            write_hex(f, pl->attrs, sizeof(pl->attrs));
+            fprintf(f, "\"\n");
+            fprintf(f, "        }%s\n", si + 1 < R01_MAX_PARALLAX_PLANES ? "," : "");
         }
         fprintf(f, "      ],\n");
         fprintf(f, "      \"bg_banks\": [\n");
@@ -323,7 +341,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
 
     r01_project_init(p, "loaded");
     pcur = find_key(json, "version");
-    if (parse_int_after(pcur, &version) != 0 || version < 1 || version > 2) {
+    if (parse_int_after(pcur, &version) != 0 || version < 1 || version > 3) {
         free(json);
         set_err(err_buf, err_cap, "unsupported version");
         return -1;
@@ -340,6 +358,9 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
     parse_int_after(pcur, &p->active_world);
     pcur = find_key(json, "active_screen");
     parse_int_after(pcur, &p->active_screen);
+    p->active_plane = -1;
+    pcur = find_key(json, "active_plane");
+    parse_int_after(pcur, &p->active_plane);
     pcur = find_key(json, "generate_bank");
     parse_int_after(pcur, &p->generate_bank);
     pcur = find_key(json, "paint_color");
@@ -520,12 +541,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                             parse_int_after(pcur, &pr);
                             s->present = pr ? 1 : 0;
                         }
-                        pcur = find_key(sblock, "parallax");
-                        {
-                            int prx = 0;
-                            parse_int_after(pcur, &prx);
-                            s->parallax = prx ? 1 : 0;
-                        }
+                        /* legacy v2 "parallax" on screens is ignored */
                         pcur = find_key(sblock, "pixels_hex");
                         if (pcur && parse_string_after(pcur, hex, hexcap) == 0) {
                             if (parse_hex(hex, s->pixels, sizeof(s->pixels)) != 0) {
@@ -550,6 +566,109 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         free(sblock);
                         free(hex);
                         scur = send;
+                    }
+                }
+            }
+
+            {
+                const char *planes = strstr(wblock, "\"planes\"");
+                const char *p_arr;
+                const char *p_end = NULL;
+                const char *pcur2;
+                int pi;
+                if (planes) {
+                    p_arr = strchr(planes, '[');
+                    if (p_arr) {
+                        int depth = 0;
+                        const char *q = p_arr;
+                        for (; *q; q++) {
+                            if (*q == '[') {
+                                depth++;
+                            } else if (*q == ']') {
+                                depth--;
+                                if (depth == 0) {
+                                    p_end = q;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    pcur2 = p_arr ? p_arr + 1 : NULL;
+                    if (pcur2 && p_end) {
+                        for (pi = 0; pi < R01_MAX_PARALLAX_PLANES; pi++) {
+                            const char *pobj = NULL;
+                            const char *scan;
+                            const char *pend;
+                            char *pblock;
+                            size_t plen;
+                            R01ParallaxPlane *pl;
+                            char *hex;
+                            size_t hexcap = R01_SCREEN_PX_W * R01_SCREEN_PX_H * 2 + 8;
+
+                            for (scan = pcur2; scan < p_end; scan++) {
+                                if (*scan == '{') {
+                                    pobj = scan;
+                                    break;
+                                }
+                            }
+                            if (!pobj) {
+                                break;
+                            }
+                            pend = pobj + 1;
+                            {
+                                int depth = 1;
+                                while (pend < p_end && depth > 0) {
+                                    if (*pend == '{') {
+                                        depth++;
+                                    } else if (*pend == '}') {
+                                        depth--;
+                                    }
+                                    pend++;
+                                }
+                            }
+                            plen = (size_t)(pend - pobj);
+                            pblock = (char *)malloc(plen + 1);
+                            hex = (char *)malloc(hexcap);
+                            if (!pblock || !hex) {
+                                free(pblock);
+                                free(hex);
+                                free(wblock);
+                                free(json);
+                                set_err(err_buf, err_cap, "oom");
+                                return -1;
+                            }
+                            memcpy(pblock, pobj, plen);
+                            pblock[plen] = 0;
+                            pl = &w->planes[pi];
+                            memset(pl, 0, sizeof(*pl));
+                            pl->slot = pi;
+                            pcur = find_key(pblock, "present");
+                            {
+                                int pr = 0;
+                                parse_int_after(pcur, &pr);
+                                pl->present = pr ? 1 : 0;
+                            }
+                            pcur = find_key(pblock, "slot");
+                            parse_int_after(pcur, &pl->slot);
+                            if (pl->slot < 0 || pl->slot >= R01_MAX_PARALLAX_PLANES) {
+                                pl->slot = pi;
+                            }
+                            pcur = find_key(pblock, "pixels_hex");
+                            if (pcur && parse_string_after(pcur, hex, hexcap) == 0) {
+                                parse_hex(hex, pl->pixels, sizeof(pl->pixels));
+                            }
+                            pcur = find_key(pblock, "tiles_hex");
+                            if (pcur && parse_string_after(pcur, hex, hexcap) == 0) {
+                                parse_hex(hex, pl->tiles, sizeof(pl->tiles));
+                            }
+                            pcur = find_key(pblock, "attrs_hex");
+                            if (pcur && parse_string_after(pcur, hex, hexcap) == 0) {
+                                parse_hex(hex, pl->attrs, sizeof(pl->attrs));
+                            }
+                            free(pblock);
+                            free(hex);
+                            pcur2 = pend;
+                        }
                     }
                 }
             }

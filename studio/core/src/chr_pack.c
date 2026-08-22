@@ -124,10 +124,56 @@ static int ensure_slots(uint8_t unique[][R01_TILE_BYTES], int *unique_count, int
     return 0;
 }
 
+static R01ChrPackStatus pack_tilemap(uint8_t unique[][R01_TILE_BYTES], int *unique_count, uint8_t *pixels,
+                                     uint8_t *tiles, uint8_t *attrs, int bank) {
+    int ty, tx;
+    for (ty = 0; ty < R01_SCREEN_TILES_Y; ty++) {
+        for (tx = 0; tx < R01_SCREEN_TILES_X; tx++) {
+            uint8_t tile[R01_TILE_BYTES];
+            int cell = ty * R01_SCREEN_TILES_X + tx;
+            uint8_t prev = attrs[cell];
+            uint8_t keep = (uint8_t)(prev & (R01_ATTR_PAL_MASK | R01_ATTR_SOLID | R01_ATTR_ANIM));
+            int flips = 0;
+            int found;
+
+            r01_tile_from_pixels(pixels, tx, ty, tile);
+
+            if (r01_attr_anim(prev)) {
+                int base = (*unique_count + 3) & ~3;
+                if (ensure_slots(unique, unique_count, base + 4) != 0) {
+                    return R01_CHR_TOO_MANY_TILES;
+                }
+                memcpy(unique[base], tile, R01_TILE_BYTES);
+                memcpy(unique[base + 1], tile, R01_TILE_BYTES);
+                memcpy(unique[base + 2], tile, R01_TILE_BYTES);
+                memcpy(unique[base + 3], tile, R01_TILE_BYTES);
+                tiles[cell] = (uint8_t)base;
+                attrs[cell] = (uint8_t)(keep | (uint8_t)(bank & R01_ATTR_BANK_MASK) | R01_ATTR_ANIM);
+                continue;
+            }
+
+            found = find_unique(unique, *unique_count, tile, &flips);
+            if (found < 0) {
+                if (*unique_count >= R01_TILES_PER_BANK) {
+                    return R01_CHR_TOO_MANY_TILES;
+                }
+                memcpy(unique[*unique_count], tile, R01_TILE_BYTES);
+                found = *unique_count;
+                (*unique_count)++;
+                flips = 0;
+            }
+            tiles[cell] = (uint8_t)found;
+            attrs[cell] = (uint8_t)(keep | (uint8_t)(bank & R01_ATTR_BANK_MASK) | (uint8_t)flips);
+        }
+    }
+    return R01_CHR_OK;
+}
+
 R01ChrPackStatus r01_chr_pack_world_bank(R01World *w, int bank) {
     uint8_t unique[R01_TILES_PER_BANK][R01_TILE_BYTES];
     int unique_count = 0;
-    int si, ty, tx;
+    int si, pi;
+    R01ChrPackStatus st;
 
     if (!w || bank < 0 || bank >= R01_BG_BANKS) {
         return R01_CHR_BAD_ARGS;
@@ -141,47 +187,19 @@ R01ChrPackStatus r01_chr_pack_world_bank(R01World *w, int bank) {
         if (!s->present) {
             continue;
         }
-        for (ty = 0; ty < R01_SCREEN_TILES_Y; ty++) {
-            for (tx = 0; tx < R01_SCREEN_TILES_X; tx++) {
-                uint8_t tile[R01_TILE_BYTES];
-                int cell = ty * R01_SCREEN_TILES_X + tx;
-                uint8_t prev = s->attrs[cell];
-                uint8_t keep = (uint8_t)(prev & (R01_ATTR_PAL_MASK | R01_ATTR_SOLID | R01_ATTR_ANIM));
-                int flips = 0;
-                int found;
-
-                r01_tile_from_pixels(s->pixels, tx, ty, tile);
-
-                if (r01_attr_anim(prev)) {
-                    /* 4-frame strip at 4-aligned base; frames 1-3 copy frame 0 until authored. */
-                    int base = (unique_count + 3) & ~3;
-                    if (ensure_slots(unique, &unique_count, base + 4) != 0) {
-                        return R01_CHR_TOO_MANY_TILES;
-                    }
-                    memcpy(unique[base], tile, R01_TILE_BYTES);
-                    memcpy(unique[base + 1], tile, R01_TILE_BYTES);
-                    memcpy(unique[base + 2], tile, R01_TILE_BYTES);
-                    memcpy(unique[base + 3], tile, R01_TILE_BYTES);
-                    s->tiles[cell] = (uint8_t)base;
-                    s->attrs[cell] =
-                        (uint8_t)(keep | (uint8_t)(bank & R01_ATTR_BANK_MASK) | R01_ATTR_ANIM);
-                    continue;
-                }
-
-                found = find_unique(unique, unique_count, tile, &flips);
-                if (found < 0) {
-                    if (unique_count >= R01_TILES_PER_BANK) {
-                        return R01_CHR_TOO_MANY_TILES;
-                    }
-                    memcpy(unique[unique_count], tile, R01_TILE_BYTES);
-                    found = unique_count;
-                    unique_count++;
-                    flips = 0;
-                }
-                s->tiles[cell] = (uint8_t)found;
-                s->attrs[cell] =
-                    (uint8_t)(keep | (uint8_t)(bank & R01_ATTR_BANK_MASK) | (uint8_t)flips);
-            }
+        st = pack_tilemap(unique, &unique_count, s->pixels, s->tiles, s->attrs, bank);
+        if (st != R01_CHR_OK) {
+            return st;
+        }
+    }
+    for (pi = 0; pi < R01_MAX_PARALLAX_PLANES; pi++) {
+        R01ParallaxPlane *pl = &w->planes[pi];
+        if (!pl->present) {
+            continue;
+        }
+        st = pack_tilemap(unique, &unique_count, pl->pixels, pl->tiles, pl->attrs, bank);
+        if (st != R01_CHR_OK) {
+            return st;
         }
     }
 

@@ -17,11 +17,13 @@
  */
 #define UI_WORLDS_Y 0
 #define UI_WORLDS_H 110
-#define UI_BG_Y 110
+#define UI_PLANES_Y 110
+#define UI_PLANES_H 40
+#define UI_BG_Y 150
 #define UI_BG_H 150
-#define UI_SPR_Y 260
+#define UI_SPR_Y 300
 #define UI_SPR_H 90
-#define UI_PAL_Y 350
+#define UI_PAL_Y 390
 #define UI_PAL_H 160
 #define UI_LEFT_CONTENT_H (UI_PAL_Y + UI_PAL_H)
 

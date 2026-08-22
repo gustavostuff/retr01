@@ -130,10 +130,27 @@ static void draw_worlds(UiState *ui, SDL_Renderer *r) {
             int cs = UI_WORLD_CELL - 1;
             fill_rect(r, x, y, cs, cs, idx >= 0 ? (active ? 180 : 100) : 45,
                       idx >= 0 ? (active ? 140 : 110) : 50, idx >= 0 ? (active ? 60 : 90) : 58);
-            if (idx >= 0 && w->screens[idx].parallax) {
-                draw_rect(r, x, y, cs, cs, 80, 180, 220);
-            }
         }
+    }
+}
+
+static void draw_planes(UiState *ui, SDL_Renderer *r) {
+    R01World *w = cur_world(ui);
+    int p;
+    int oy = -ui->left_scroll_y;
+    fill_rect(r, 0, UI_PLANES_Y + oy, UI_LEFT_W, UI_PLANES_H, 26, 30, 36);
+    font_draw(r, 4, UI_PLANES_Y + 4 + oy, "PLANES", 200, 200, 210);
+    font_draw(r, 70, UI_PLANES_Y + 4 + oy, "CTRL+CLICK", 110, 110, 120);
+    for (p = 0; p < R01_MAX_PARALLAX_PLANES; p++) {
+        int x = 4 + p * 48;
+        int y = UI_PLANES_Y + 18 + oy;
+        int present = w && w->planes[p].present;
+        int sel = (ui->project->active_plane == p);
+        char buf[8];
+        fill_rect(r, x, y, 44, 16, present ? (sel ? 70 : 50) : 36, present ? (sel ? 110 : 70) : 40,
+                  present ? (sel ? 140 : 100) : 48);
+        snprintf(buf, sizeof(buf), "P%d", p);
+        font_draw(r, x + 14, y + 4, buf, 230, 230, 240);
     }
 }
 
@@ -261,7 +278,9 @@ static void screen_to_pixel(UiState *ui, int lx, int ly, int *ox, int *oy) {
 
 static void draw_screen(UiState *ui, SDL_Renderer *r) {
     R01World *w = cur_world(ui);
-    R01Screen *s = r01_project_active_screen(ui->project);
+    R01EditSurface surf;
+    int has_surf = r01_project_edit_surface(ui->project, &surf) == 0;
+    R01Screen *grid = r01_project_active_screen(ui->project);
     int view_x = UI_LEFT_W + 8;
     int view_y = 28;
     int zx = ui->screen_zoom;
@@ -271,7 +290,6 @@ static void draw_screen(UiState *ui, SDL_Renderer *r) {
     fill_rect(r, UI_LEFT_W, 0, UI_LOGIC_W - UI_LEFT_W, UI_LOGIC_H, 18, 20, 26);
     font_draw(r, UI_LEFT_W + 4, 4, "SCREEN", 200, 200, 210);
 
-    /* mode toggle */
     {
         int mx = UI_LEFT_W + 52;
         fill_rect(r, mx, 2, 40, 12, ui->edit_mode == UI_MODE_PIXEL ? 80 : 40,
@@ -295,8 +313,8 @@ static void draw_screen(UiState *ui, SDL_Renderer *r) {
                 }
             }
         }
-    } else if (s) {
-        uint8_t a = r01_screen_get_attr(s, ui->attr_tx, ui->attr_ty);
+    } else if (has_surf) {
+        uint8_t a = r01_tilemap_get_attr(surf.attrs, ui->attr_tx, ui->attr_ty);
         snprintf(buf, sizeof(buf), "T%d.%d B%d P%d%s%s%s%s", ui->attr_tx, ui->attr_ty, r01_attr_bank(a),
                  r01_attr_pal(a), r01_attr_flip_h(a) ? " H" : "", r01_attr_flip_v(a) ? " V" : "",
                  r01_attr_solid(a) ? " S" : "", r01_attr_anim(a) ? " A" : "");
@@ -317,14 +335,14 @@ static void draw_screen(UiState *ui, SDL_Renderer *r) {
     font_draw(r, UI_LEFT_W + 420, 4, "G", 140, 200, 140);
 
     fill_rect(r, view_x, view_y, R01_SCREEN_PX_W * zx, R01_SCREEN_PX_H * zx, 10, 10, 12);
-    if (!s) {
-        font_draw(r, view_x + 20, view_y + 50, "NO SCREEN SELECTED", 120, 120, 130);
-        font_draw(r, view_x + 20, view_y + 62, "CTRL+CLICK WORLD GRID", 100, 100, 110);
+    if (!has_surf) {
+        font_draw(r, view_x + 20, view_y + 50, "NO TARGET SELECTED", 120, 120, 130);
+        font_draw(r, view_x + 20, view_y + 62, "GRID OR PLANE P0/P1", 100, 100, 110);
     } else {
         for (y = 0; y < R01_SCREEN_PX_H; y++) {
             for (x = 0; x < R01_SCREEN_PX_W; x++) {
                 uint8_t cr, cg, cb;
-                r01_screen_pixel_rgb(ui->project, w, s, x, y, &cr, &cg, &cb);
+                r01_tilemap_pixel_rgb(ui->project, w, surf.pixels, surf.attrs, x, y, &cr, &cg, &cb);
                 fill_rect(r, view_x + x * zx, view_y + y * zx, zx, zx, cr, cg, cb);
             }
         }
@@ -332,11 +350,16 @@ static void draw_screen(UiState *ui, SDL_Renderer *r) {
             draw_rect(r, view_x + ui->attr_tx * 8 * zx, view_y + ui->attr_ty * 8 * zx, 8 * zx, 8 * zx, 255, 220,
                       80);
         }
-        snprintf(buf, sizeof(buf), "CELL %d.%d%s", s->col, s->row, s->parallax ? " PARALLAX" : "");
+        if (surf.is_plane) {
+            snprintf(buf, sizeof(buf), "PLANE P%d  VRAM %d", surf.index, 4 + surf.index);
+        } else if (grid) {
+            snprintf(buf, sizeof(buf), "CELL %d.%d", grid->col, grid->row);
+        } else {
+            snprintf(buf, sizeof(buf), "SCREEN");
+        }
         font_draw(r, view_x, view_y + R01_SCREEN_PX_H * zx + 4, buf, 160, 160, 170);
         if (ui->edit_mode == UI_MODE_ATTR) {
-            font_draw(r, view_x, view_y + R01_SCREEN_PX_H * zx + 14, "B P H V O N ATTR  X=PARALLAX", 110, 110,
-                      120);
+            font_draw(r, view_x, view_y + R01_SCREEN_PX_H * zx + 14, "B P H V O N ATTR", 110, 110, 120);
         }
     }
 
@@ -351,6 +374,7 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
 
     SDL_RenderSetClipRect(r, &clip);
     draw_worlds(ui, r);
+    draw_planes(ui, r);
     draw_bg_banks(ui, r);
     draw_sprite_stub(ui, r);
     draw_palettes(ui, r);
@@ -365,37 +389,37 @@ static int hit(int x, int y, int rx, int ry, int rw, int rh) {
 }
 
 static void paint_at(UiState *ui, int lx, int ly) {
-    R01Screen *s = r01_project_active_screen(ui->project);
+    R01EditSurface surf;
     int px, py;
-    if (!s || ui->edit_mode != UI_MODE_PIXEL) {
+    if (r01_project_edit_surface(ui->project, &surf) != 0 || ui->edit_mode != UI_MODE_PIXEL) {
         return;
     }
     screen_to_pixel(ui, lx, ly, &px, &py);
-    r01_screen_plot(s, px, py, (uint8_t)ui->project->paint_color);
+    r01_tilemap_plot(surf.pixels, px, py, (uint8_t)ui->project->paint_color);
 }
 
 static void toggle_attr_flag(UiState *ui, uint8_t flag) {
-    R01Screen *s = r01_project_active_screen(ui->project);
+    R01EditSurface surf;
     uint8_t a;
-    if (!s) {
+    if (r01_project_edit_surface(ui->project, &surf) != 0) {
         return;
     }
-    a = r01_screen_get_attr(s, ui->attr_tx, ui->attr_ty);
+    a = r01_tilemap_get_attr(surf.attrs, ui->attr_tx, ui->attr_ty);
     if (a & flag) {
-        r01_screen_set_attr_bits(s, ui->attr_tx, ui->attr_ty, 0, flag);
+        r01_tilemap_set_attr_bits(surf.attrs, ui->attr_tx, ui->attr_ty, 0, flag);
     } else {
-        r01_screen_set_attr_bits(s, ui->attr_tx, ui->attr_ty, flag, 0);
+        r01_tilemap_set_attr_bits(surf.attrs, ui->attr_tx, ui->attr_ty, flag, 0);
     }
 }
 
 static void cycle_attr_field(UiState *ui, int which) {
-    R01Screen *s = r01_project_active_screen(ui->project);
+    R01EditSurface surf;
     uint8_t a;
     int bank, pal;
-    if (!s) {
+    if (r01_project_edit_surface(ui->project, &surf) != 0) {
         return;
     }
-    a = r01_screen_get_attr(s, ui->attr_tx, ui->attr_ty);
+    a = r01_tilemap_get_attr(surf.attrs, ui->attr_tx, ui->attr_ty);
     bank = r01_attr_bank(a);
     pal = r01_attr_pal(a);
     if (which == 0) {
@@ -403,7 +427,7 @@ static void cycle_attr_field(UiState *ui, int which) {
     } else {
         pal = (pal + 1) & 3;
     }
-    s->attrs[ui->attr_ty * R01_SCREEN_TILES_X + ui->attr_tx] =
+    surf.attrs[ui->attr_ty * R01_SCREEN_TILES_X + ui->attr_tx] =
         r01_attr_pack(bank, pal, r01_attr_flip_h(a), r01_attr_flip_v(a), r01_attr_solid(a), r01_attr_anim(a));
 }
 
@@ -489,14 +513,6 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
                 toggle_attr_flag(ui, R01_ATTR_ANIM);
                 return 1;
             }
-            if (k == SDLK_x) {
-                R01Screen *s = r01_project_active_screen(ui->project);
-                if (s) {
-                    s->parallax = !s->parallax;
-                    snprintf(ui->status, sizeof(ui->status), s->parallax ? "parallax on" : "parallax off");
-                }
-                return 1;
-            }
         }
         if (k == SDLK_MINUS || k == SDLK_EQUALS || k == SDLK_LEFTBRACKET || k == SDLK_RIGHTBRACKET) {
             R01PalRow *row = cur_pal_row(ui);
@@ -547,6 +563,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
                     ui->world_tab = t;
                     ui->project->active_world = r01_ui_world_to_hw(t);
                     ui->project->active_screen = -1;
+                    ui->project->active_plane = -1;
                     return 1;
                 }
             }
@@ -563,14 +580,46 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
                         } else {
                             int idx = r01_world_find_screen(w, c, row);
                             ui->project->active_screen = idx;
+                            ui->project->active_plane = -1;
                             snprintf(ui->status, sizeof(ui->status), "toggled screen %d,%d", c, row);
                         }
                     } else {
                         int idx = r01_world_find_screen(w, c, row);
                         ui->project->active_screen = idx;
+                        ui->project->active_plane = -1;
                     }
                 }
                 return 1;
+            }
+
+            /* parallax planes */
+            for (t = 0; t < R01_MAX_PARALLAX_PLANES; t++) {
+                int x = 4 + t * 48;
+                int y = UI_PLANES_Y + 18;
+                if (hit(logic_x, cy, x, y, 44, 16)) {
+                    w = cur_world(ui);
+                    if (!w) {
+                        return 1;
+                    }
+                    if (ctrl) {
+                        r01_world_toggle_plane(w, t);
+                        if (w->planes[t].present) {
+                            ui->project->active_plane = t;
+                            ui->project->active_screen = -1;
+                            snprintf(ui->status, sizeof(ui->status), "plane P%d on", t);
+                        } else {
+                            if (ui->project->active_plane == t) {
+                                ui->project->active_plane = -1;
+                            }
+                            snprintf(ui->status, sizeof(ui->status), "plane P%d off", t);
+                        }
+                    } else if (w->planes[t].present) {
+                        ui->project->active_plane = t;
+                        ui->project->active_screen = -1;
+                        snprintf(ui->status, sizeof(ui->status), "editing plane P%d", t);
+                    }
+                    return 1;
+                }
             }
 
             {

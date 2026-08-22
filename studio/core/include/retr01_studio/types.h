@@ -12,6 +12,7 @@
 #define R01_ATTRS_PER_SCREEN 240
 #define R01_MAX_WORLDS 8
 #define R01_MAX_SCREENS_PER_WORLD 32
+#define R01_MAX_PARALLAX_PLANES 2 /* HW VRAM slots 4-5 */
 #define R01_GRID_SIZE 8
 #define R01_BG_BANKS 4
 #define R01_TILES_PER_BANK 256
@@ -41,11 +42,19 @@ typedef struct R01Screen {
     int col; /* 0..7 grid */
     int row;
     int present;
-    int parallax; /* dir entry flag */
     uint8_t pixels[R01_SCREEN_PX_W * R01_SCREEN_PX_H]; /* 0..3 */
     uint8_t tiles[R01_TILES_PER_SCREEN];
     uint8_t attrs[R01_ATTRS_PER_SCREEN];
 } R01Screen;
+
+/* Same 480 B payload as a screen; not placed on the world grid. */
+typedef struct R01ParallaxPlane {
+    int present;
+    int slot; /* 0..1 -> HW VRAM slots 4..5 */
+    uint8_t pixels[R01_SCREEN_PX_W * R01_SCREEN_PX_H];
+    uint8_t tiles[R01_TILES_PER_SCREEN];
+    uint8_t attrs[R01_ATTRS_PER_SCREEN];
+} R01ParallaxPlane;
 
 typedef struct R01BgBank {
     int tile_count; /* 0..256 */
@@ -61,6 +70,7 @@ typedef struct R01World {
     R01PalRow pal_spr[R01_PAL_ROWS];
     R01Screen screens[R01_MAX_SCREENS_PER_WORLD];
     int screen_count;
+    R01ParallaxPlane planes[R01_MAX_PARALLAX_PLANES];
     R01BgBank bg_banks[R01_BG_BANKS];
 } R01World;
 
@@ -68,12 +78,22 @@ typedef struct R01Project {
     char name[R01_NAME_MAX];
     int active_world;  /* 0..7 */
     int active_screen; /* index into worlds[aw].screens, or -1 */
+    int active_plane;  /* 0..1 when editing a plane; -1 = grid screen */
     int generate_bank; /* 0..3 radio */
     int paint_color;   /* 0..3 */
     R01PalRow global_pal_bg[R01_PAL_ROWS];
     R01PalRow global_pal_spr[R01_PAL_ROWS];
     R01World worlds[R01_MAX_WORLDS];
 } R01Project;
+
+/* Mutable view of the buffers currently under the paint/attr tools. */
+typedef struct R01EditSurface {
+    uint8_t *pixels;
+    uint8_t *tiles;
+    uint8_t *attrs;
+    int is_plane; /* 1 = parallax plane, 0 = grid screen */
+    int index;
+} R01EditSurface;
 
 static inline int r01_attr_bank(uint8_t a) {
     return (int)(a & R01_ATTR_BANK_MASK);

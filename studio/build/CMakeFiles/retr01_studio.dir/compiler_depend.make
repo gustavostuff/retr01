@@ -516,6 +516,7 @@ CMakeFiles/retr01_studio.dir/app/src/ui.c.o: /home/g/Repos/retr01/studio/app/src
   /home/g/Repos/retr01/studio/app/src/ui.h \
   /home/g/Repos/retr01/studio/core/include/retr01_studio/chr_pack.h \
   /home/g/Repos/retr01/studio/core/include/retr01_studio/json_io.h \
+  /home/g/Repos/retr01/studio/core/include/retr01_studio/palette.h \
   /home/g/Repos/retr01/studio/core/include/retr01_studio/project.h \
   /home/g/Repos/retr01/studio/core/include/retr01_studio/types.h \
   /usr/include/SDL2/SDL.h \
@@ -805,6 +806,8 @@ CMakeFiles/retr01_studio.dir/app/src/main.c.o:
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/libgcc.a:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/libatomic_asneeded.so:
+
+/home/g/Repos/retr01/studio/core/include/retr01_studio/palette.h:
 
 /home/g/Repos/retr01/studio/core/include/retr01_studio/json_io.h:
 

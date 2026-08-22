@@ -11,37 +11,40 @@
 
 Fixed **640x360** canvas. Default **2x** window (1280x720). Integer scale only. **Ctrl+F** fullscreen (still integer). Cells are fixed regions (not floating / not user-resizable). Only **Screen** zooms/pans in Phase 1.
 
-**Left column** is a fixed-width **viewport** (full canvas height). Worlds / BG banks / Sprite banks / Palettes stack in **scrollable content** taller than the viewport (mouse wheel over the left column; thin scrollbar). Panel heights are content-sized — do not squeeze later cells to fit 360px.
+**Left column** is a fixed-width **viewport** (full canvas height). Worlds / Planes / BG banks / Sprite banks / Palettes stack in **scrollable content** taller than the viewport (mouse wheel over the left column; thin scrollbar). Panel heights are content-sized — do not squeeze later cells to fit 360px.
 
 ```text
 +------------------------------------------------------------------+
 |  [ Worlds map ]     ^    |                                       |
 |  (tabs, grid)       |    |                                       |
 +-------------------- | ---+             [ Screen ]                |
-|  [ BG banks ]     scroll |         (BG/Sprite paint)             |
+|  [ Planes P0/P1 ] scroll |     (grid screen or parallax plane)   |
++-------------------- | ---+                                       |
+|  [ BG banks ]       |    |                                       |
 |  (4 tabs, 16x16)    |    |                                       |
 +-------------------- | ---+                                       |
 |  [ Sprite banks ]   |    |                                       |
-|  (4 tabs, …)        |    |                                       |
 +-------------------- | ---+                                       |
 |  [ Palettes ]       v    |                                       |
-|  (palette row tabs)      |                                       |
 +------------------------------------------------------------------+
 ```
 
-Right column = Screen (most width). Left = scrollable stack of Worlds, BG banks, Sprite banks, Palettes.
+Right column = Screen (most width). Left = scrollable stack of Worlds, **Planes**, BG banks, Sprite banks, Palettes.
 
 ## Cells
 
 | Cell | Behavior |
 |------|----------|
-| **Worlds** | Tabs labeled **1-8** in the UI = hardware worlds **0-7** (`$FE30`). Sparse grid **1-8** cols/rows (UI). Click = select. **Ctrl+click** = toggle stored screen. Max **32** screens/world. Holes = not in MAP |
+| **Worlds** | Tabs labeled **1-8** in the UI = hardware worlds **0-7** (`$FE30`). Sparse grid **1-8** cols/rows (UI). Click = select. **Ctrl+click** = toggle stored screen. Max **32** screens/world. Holes = not in MAP. **Grid only** — no parallax markers |
+| **Planes** | Up to **2** parallax planes per world (HW VRAM slots **4-5**). Not on the world grid. Toggle present / select to edit in Screen. Same 480 B payload shape as a screen |
 | **BG banks** | 4 tabs (0-3), 16x16 read-only tiles. Filled by **Generate bank** |
-| **Sprite banks** | Same shape, 8x8/8x16 preview toggle. Phase 1: visible but disabled |
-| **Screen** | One **16x15** BG paint (128x120). **Pixel** mode: indices 0-3. **Attr** mode: `BANK`/`PAL`/`FLIP_*`/`SOLID`/`ANIM` per tile. Generate bank 0-3 (flip-prefer + ANIM strips). Color preview via palettes |
+| **Sprite banks** | Same shape, 8x8/8x16 preview toggle. Phase 3 |
+| **Screen** | Edits the active **grid screen** or **parallax plane**. **Pixel** mode: indices 0-3. **Attr** mode: `BANK`/`PAL`/`FLIP_*`/`SOLID`/`ANIM` per tile. Generate bank 0-3 (flip-prefer + ANIM strips). Color preview via palettes |
 | **Palettes** | Tabs = palette rows **0-7** (4 BG + 4 sprite strips). Edit master indices **0-63**. Preview uses kit Color PROM RGB; burn path quantizes to **R3G3B2** ([`02`](02_graphics_worlds_memory.md) / [`06`](06_hardware_v1_32ic.md)) |
 
 Paint always stores indices **0-3**. Palette assignment only in attr mode.
+
+MAP layout (see [`02`](02_graphics_worlds_memory.md)): per world, **screen dir + payloads**, then **parallax dir + payloads** (own index; not a screen-dir flag).
 
 ## Phases
 
@@ -61,7 +64,7 @@ Paint always stores indices **0-3**. Palette assignment only in attr mode.
 
 **In:** shell + worlds + Screen BG paint + Generate bank + BG bank view + JSON project + unit tests (tile plane, CHR pack, round-trip, grid caps).
 
-**Out:** sprite layer, attr/palette editors, meta-sprites, constraints, Play, `.retr01` build, parallax flags, emulator.
+**Out:** sprite layer, attr/palette editors, meta-sprites, constraints, Play, `.retr01` build, emulator.
 
 | Data | Phase 1 |
 |------|---------|
@@ -85,7 +88,7 @@ Paint always stores indices **0-3**. Palette assignment only in attr mode.
 - **Palettes** cell live: up to 8 row tabs, 4 BG + 4 sprite strips, edit master indices 0-63
 - Preview through Color PROM mirror (not grayscale-only)
 - **Generate bank** + `ANIM`: pack 4 frames at `B..B+3` (4-aligned), stamp attrs. Prefer flips over duplicate CHR
-- World / screen defaults: `default_bg_bank`, `default_pal_row`, optional parallax flag on dir entries
+- World / screen defaults: `default_bg_bank`, `default_pal_row`
 - Attr plane is real data (no stub zeros except unused bits)
 
 **Out:** sprite authoring, Play, full PRG build.
@@ -93,6 +96,8 @@ Paint always stores indices **0-3**. Palette assignment only in attr mode.
 **Done when:** round-trip keeps attrs + palette banks. Editor previews `ANIM` strips.
 
 **Status:** done in `studio/` — pixel/attr modes, kit Color PROM preview, palettes cell, flip-preferring generate + ANIM strips, project JSON v2.
+
+**Follow-up (docs + Studio):** parallax is **not** a screen-dir flag. Separate **Planes** cell + MAP parallax directory (cap 2/world → VRAM 4-5). See Cells above and [`02`](02_graphics_worlds_memory.md).
 
 ### Phase 3 - sprites
 
@@ -155,9 +160,10 @@ Studio follows [`02`](02_graphics_worlds_memory.md) for data meaning. Board BOM:
 
 | Studio | Spec (`02`) |
 |--------|-------------|
-| World grid | 8x8 sparse, 32 screens, 8 worlds |
-| Screen | 240 tile + 240 attr |
+| World grid | 8x8 sparse, 32 screens, 8 worlds (camera only) |
+| Planes | up to 2 parallax payloads/world → VRAM slots 4-5; own MAP dir |
+| Screen / plane | 240 tile + 240 attr each |
 | BG banks 0-3 | 256 tiles each. Live bank = per-tile attr |
-| Generate bank | Fills CHR, stamps default `BANK` |
+| Generate bank | Fills CHR from grid screens **and** planes; stamps `BANK` |
 | Color PROM preview | 64 indices -> packed **R3G3B2** for burn |
 | Play | High-level only. Board sim / cycle check later load `.retr01` |

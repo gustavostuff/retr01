@@ -29,14 +29,14 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 | World tab | Click 1-8 (UI) = hardware worlds 0-7 |
 | Place / remove screen | **Ctrl+click** world grid cell |
 | Select screen | Click cell with a screen |
+| Parallax plane | **Ctrl+click** **P0**/**P1** to toggle; click to edit (not on grid) |
 | Pixel / attr mode | **Tab** or **PIX** / **ATTR** buttons |
 | Paint | Pixel mode: click/drag (colors 0-3, keys **1-4**) |
 | Edit tile attrs | Attr mode: click tile, then **B** bank, **P** pal, **H**/**V** flip, **O** solid, **N** anim |
-| Parallax flag | Attr mode: **X** on active screen |
 | Generate bank radio | Toolbar BANK 0-3 |
 | Generate CHR | **G** — dedupe (prefer flips); `ANIM` tiles get 4-aligned strips |
 | Palettes | Scroll left column; tabs **B0-B3** / **S0-S3**; click swatch + master grid or **-**/**=** |
-| Save / load | **Ctrl+S** / **Ctrl+O** → `project.json` (format v2) |
+| Save / load | **Ctrl+S** / **Ctrl+O** → `project.json` (format v3) |
 | Scroll left column | **Mouse wheel** over left panel |
 | Fullscreen | **Ctrl+F** (integer scale) |
 
@@ -44,4 +44,4 @@ Sprite banks remain Phase 3 stubs.
 
 ## Layout
 
-Fixed logical canvas **640x360**, integer-scaled window (default 2x). Left column is a scrollable viewport so Worlds / BG / Sprite / Palette panels keep natural heights.
+Fixed logical canvas **640x360**, integer-scaled window (default 2x). Left column is a scrollable viewport so Worlds / Planes / BG / Sprite / Palette panels keep natural heights.
