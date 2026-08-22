@@ -1,6 +1,6 @@
 # Retr01 Pitch
 
-**Discrete-logic 8-bit hardware for people who love the look of the classics and want room to build bigger games.**
+**Discrete-logic 8-bit hardware for people who love the look of the classics and want room to build large games.**
 
 Retr01 is a family of purpose-built 2D game machines. One architecture, one cartridge format, one software contract - three shells:
 
@@ -16,7 +16,7 @@ This document is the **product pitch**. Technical specs live in the other `docs/
 
 ## The one-line pitch
 
-**Retr01-A is an arcade-ready 6502 platform that keeps NES-era tile/sprite aesthetics while giving developers faster CPU time, bigger worlds, smoother scrolling, and parallax that does not fight the hardware.**
+**Retr01-A is an arcade-ready 6502 platform that keeps NES-era tile/sprite aesthetics while giving developers faster CPU time, large worlds, smoother scrolling, and parallax that does not fight the hardware.**
 
 ---
 
@@ -248,7 +248,3 @@ Different does not mean better for every game. A tight NES-style single screen i
 | [`03_hardware_implementation.md`](03_hardware_implementation.md) | Chips, buses, protoboard islands |
 | [`04_retr01_studio.md`](04_retr01_studio.md) | Authoring tool roadmap |
 | [`05_costs_and_open_questions.md`](05_costs_and_open_questions.md) | Locked decisions, costs, open questions |
-
----
-
-*Retr01: classic pixels, room for bigger worlds.*
