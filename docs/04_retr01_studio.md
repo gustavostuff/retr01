@@ -11,23 +11,25 @@
 
 Fixed **640x360** canvas. Default **2x** window (1280x720). Integer scale only. **Ctrl+F** fullscreen (still integer). Cells are fixed regions (not floating / not user-resizable). Only **Screen** zooms/pans in Phase 1.
 
+**Left column** is a fixed-width **viewport** (full canvas height). Worlds / BG banks / Sprite banks / Palettes stack in **scrollable content** taller than the viewport (mouse wheel over the left column; thin scrollbar). Panel heights are content-sized — do not squeeze later cells to fit 360px.
+
 ```text
 +------------------------------------------------------------------+
-|  [ Worlds map ]          |                                       |
-|  (tabs, grid)            |                                       |
-+--------------------------+             [ Screen ]                |
-|  [ BG banks ]            |         (BG/Sprite paint)             |
-|  (4 tabs, 16x16 each)    |                                       |
-+--------------------------+                                       |
-|  [ Sprite banks ]        |                                       |
-|  (4 tabs, 8x8/8x16 view) |                                       |
-+--------------------------+                                       |
-|  [ Palettes ]            |                                       |
+|  [ Worlds map ]     ^    |                                       |
+|  (tabs, grid)       |    |                                       |
++-------------------- | ---+             [ Screen ]                |
+|  [ BG banks ]     scroll |         (BG/Sprite paint)             |
+|  (4 tabs, 16x16)    |    |                                       |
++-------------------- | ---+                                       |
+|  [ Sprite banks ]   |    |                                       |
+|  (4 tabs, …)        |    |                                       |
++-------------------- | ---+                                       |
+|  [ Palettes ]       v    |                                       |
 |  (palette row tabs)      |                                       |
 +------------------------------------------------------------------+
 ```
 
-Right column = Screen (most width). Left = Worlds, BG banks, Sprite banks, Palettes.
+Right column = Screen (most width). Left = scrollable stack of Worlds, BG banks, Sprite banks, Palettes.
 
 ## Cells
 
@@ -36,8 +38,8 @@ Right column = Screen (most width). Left = Worlds, BG banks, Sprite banks, Palet
 | **Worlds** | Tabs labeled **1-8** in the UI = hardware worlds **0-7** (`$FE30`). Sparse grid **1-8** cols/rows (UI). Click = select. **Ctrl+click** = toggle stored screen. Max **32** screens/world. Holes = not in MAP |
 | **BG banks** | 4 tabs (0-3), 16x16 read-only tiles. Filled by **Generate bank** |
 | **Sprite banks** | Same shape, 8x8/8x16 preview toggle. Phase 1: visible but disabled |
-| **Screen** | One **16x15** BG paint (128x120). 4 grayscale colors (2bpp 0-3). **Generate bank** + radio bank **0-3**: dedupe 8x8 -> CHR (error if >256). Attr mode Phase 2+ |
-| **Palettes** | Tabs = palette rows **0-7** (4 BG + 4 sprite strips). Phase 1: hidden/stub. Master RGB = Color PROM preview; **quantize to R3G3B2** for PROM burn ([`02`](02_graphics_worlds_memory.md) / [`06`](06_hardware_v1_32ic.md)). Logical kit swatches stay 24-bit in the editor |
+| **Screen** | One **16x15** BG paint (128x120). **Pixel** mode: indices 0-3. **Attr** mode: `BANK`/`PAL`/`FLIP_*`/`SOLID`/`ANIM` per tile. Generate bank 0-3 (flip-prefer + ANIM strips). Color preview via palettes |
+| **Palettes** | Tabs = palette rows **0-7** (4 BG + 4 sprite strips). Edit master indices **0-63**. Preview uses kit Color PROM RGB; burn path quantizes to **R3G3B2** ([`02`](02_graphics_worlds_memory.md) / [`06`](06_hardware_v1_32ic.md)) |
 
 Paint always stores indices **0-3**. Palette assignment only in attr mode.
 
@@ -51,9 +53,9 @@ Paint always stores indices **0-3**. Palette assignment only in attr mode.
 
 **Out:** SDL UI, paint tools, cart binary emit.
 
-**Done when:** pack + encode/decode + save/load round-trip tests are green.
+**Status:** done (CTest green: pack + encode/decode + save/load).
 
-### Phase 1 - implement now
+### Phase 1 - shell and BG paint
 
 **Goal:** sparse world grid, paint BG, pack CHR BG banks, save/load. No attrs UI, sprites, Play, or full cart build.
 
@@ -72,6 +74,8 @@ Paint always stores indices **0-3**. Palette assignment only in attr mode.
 
 **Stack:** C/C++, SDL2 (or equiv), custom UI into 640x360, `libretr01_studio_core` (buffers, CHR pack, I/O).
 
+**Status:** done (Phase 0+1).
+
 ### Phase 2 - attrs and palettes
 
 **Goal:** real per-tile attrs and editable palette rows. MAP payloads match hardware.
@@ -87,6 +91,8 @@ Paint always stores indices **0-3**. Palette assignment only in attr mode.
 **Out:** sprite authoring, Play, full PRG build.
 
 **Done when:** round-trip keeps attrs + palette banks. Editor previews `ANIM` strips.
+
+**Status:** done in `studio/` — pixel/attr modes, kit Color PROM preview, palettes cell, flip-preferring generate + ANIM strips, project JSON v2.
 
 ### Phase 3 - sprites
 
