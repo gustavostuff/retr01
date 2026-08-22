@@ -3,6 +3,8 @@
 Official / vendor datasheets for the v0 IC plan in `docs/03_hardware_implementation.md`.
 These are reference PDFs (pinouts, AC timing, package drawings). They are **not** Retr01 schematics.
 
+**Markdown IC notes (sim / bring-up):** [`md/`](md/) -- start with CPU/MCU. Simulator overview: [`../docs/08_simulator.md`](../docs/08_simulator.md).
+
 Swap / alternate parts live in [`candidates/`](candidates/).
 
 | File | Part | Role |

@@ -236,3 +236,6 @@ A **low-level hardware emulator** is planned later, not built now. It should sim
 - Board structure, chips, buses, and protoboard islands: `03_hardware_implementation.md`
 - Retr01 Studio (current tool): `04_retr01_studio.md`
 - Costs and unresolved items: `05_costs_and_open_questions.md`
+- Hardware v1 29-IC proposal: `06_hardware_v1_29ic.md`
+- Board simulator goals: `08_simulator.md`
+- IC markdown notes: `hw/md/`

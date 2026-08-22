@@ -1,6 +1,6 @@
 # Retr01 Hardware Implementation
 
-Preliminary chip list, bus ownership, and protoboard bring-up for Retr01-A. Software contracts and `$FExx` bitfields live in [`02`](02_graphics_worlds_memory.md). Motherboard layout sketch: [`01`](01_architecture_overview.md).
+Preliminary chip list, bus ownership, and protoboard bring-up for Retr01-A. Software contracts and `$FExx` bitfields live in [`02`](02_graphics_worlds_memory.md). Motherboard layout sketch: [`01`](01_architecture_overview.md). Proposed compact BOM (~29 IC): [`06`](06_hardware_v1_29ic.md).
 
 ## Domains
 
