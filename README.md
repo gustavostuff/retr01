@@ -6,11 +6,11 @@ Retr01 is a family of purpose-built retro game hardware. Same creative rules, sa
 
 | Device/PCB | Description |
 |---|---|
-| **Retr01-A** | Arcade motherboard, the first build. Uses THT components and doesn't worry too much about board/PCB size  |
-| **Retr01-C** | Home console. We'll have to mind the board size for this one, have different control ports, among other things |
-| **Retr01-H** | Handheld. This is the most challenging task. Will use SMD components and probably more than one board |
+| **Retr01-A** | Arcade motherboard, the first build. Uses THT components and doesn't worry too much about PCB size  |
+| **Retr01-C** | Home console. We'll have to mind the board size for this one and use controllers (3-cable line planned) |
+| **Retr01-H** | Handheld. This is the most challenging task. Will use SMD components, multiple boards, cod, battery, etc. Pipe dream honestly |
 
-We're starting with the arcade board: something you can drop into a cabinet, wire to sticks and butons, and run games that look and play like classic 8-bit tile/sprite games - with a world model and CPU budget built for large designs.
+We're starting with the arcade board: something you can drop into a cabinet, wire to sticks and buttons, and run games that look and play like classic 8-bit tile/sprite games - with a world model and CPU budget built for large designs.
 
 For the full product pitch and **NES comparison tables**, see [`docs/07_pitch.md`](docs/07_pitch.md).
 
