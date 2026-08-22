@@ -503,8 +503,93 @@ static void test_png_import(void) {
         expect_true(si0 >= 0 && r01_screen_get_pixel(&w->screens[si0], 0, 0) == 0, "first color → 0");
         expect_true(si2 >= 0 && r01_screen_get_pixel(&w->screens[si2], 0, 0) == 1, "second color → 1");
     }
+    expect_true(w->bg_banks[0].tile_count > 0, "png auto-packed bank 0");
+    {
+        int cell0_bank = r01_attr_bank(w->screens[0].attrs[0]);
+        expect_true(cell0_bank == 0, "attrs bank stamped");
+        expect_true(w->bg_banks[0].tile_count >= 1, "at least empty+pattern tiles");
+    }
     remove(path);
     free(w);
+}
+
+static void test_chr_spill(void) {
+    R01World *w = (R01World *)calloc(1, sizeof(R01World));
+    int tx, ty, id;
+    expect_true(w != NULL, "alloc");
+    w->present = 1;
+    w->grid_cols = R01_GRID_SIZE;
+    w->grid_rows = R01_GRID_SIZE;
+    /* Screen 0: 240 unique tiles (fits bank 0 with room). */
+    r01_world_toggle_screen(w, 0, 0);
+    r01_screen_clear_pixels(&w->screens[0], 0);
+    for (ty = 0; ty < R01_SCREEN_TILES_Y; ty++) {
+        for (tx = 0; tx < R01_SCREEN_TILES_X; tx++) {
+            id = ty * R01_SCREEN_TILES_X + tx;
+            {
+                int base = (ty * 8) * R01_SCREEN_PX_W + (tx * 8);
+                w->screens[0].pixels[base + 0] = (uint8_t)(id % 4);
+                w->screens[0].pixels[base + 1] = (uint8_t)((id / 4) % 4);
+                w->screens[0].pixels[base + 2] = (uint8_t)((id / 16) % 4);
+                w->screens[0].pixels[base + 3] = (uint8_t)((id / 64) % 4);
+            }
+        }
+    }
+    /* Screen 1: 20 more unique → spill into bank 1. */
+    r01_world_toggle_screen(w, 1, 0);
+    r01_screen_clear_pixels(&w->screens[1], 0);
+    for (ty = 0; ty < 2; ty++) {
+        for (tx = 0; tx < 10; tx++) {
+            id = 240 + ty * 10 + tx;
+            {
+                int base = (ty * 8) * R01_SCREEN_PX_W + (tx * 8);
+                w->screens[1].pixels[base + 0] = (uint8_t)(id % 4);
+                w->screens[1].pixels[base + 1] = (uint8_t)((id / 4) % 4);
+                w->screens[1].pixels[base + 2] = (uint8_t)((id / 16) % 4);
+                w->screens[1].pixels[base + 3] = (uint8_t)((id / 64) % 4);
+                w->screens[1].pixels[base + 4] = 3;
+            }
+        }
+    }
+    expect_true(r01_chr_pack_world_spill(w) == R01_CHR_OK, "spill ok");
+    expect_true(w->bg_banks[0].tile_count == 256, "bank 0 full");
+    expect_true(w->bg_banks[1].tile_count > 0, "bank 1 used");
+    expect_true(r01_attr_bank(w->screens[1].attrs[0]) == 1 || r01_attr_bank(w->screens[0].attrs[0]) == 0,
+                "banks stamped across screens");
+    expect_true(r01_attr_bank(w->screens[0].attrs[0]) == 0, "screen0 uses bank 0");
+    free(w);
+}
+
+static void test_hex_rle_roundtrip(void) {
+    R01Project *a = (R01Project *)calloc(1, sizeof(R01Project));
+    R01Project *b = (R01Project *)calloc(1, sizeof(R01Project));
+    char err[128];
+    const char *path = "studio_test_rle.json";
+    FILE *f;
+    long sz;
+    expect_true(a && b, "alloc");
+    r01_project_init(a, "rle");
+    a->worlds[0].present = 1;
+    r01_world_toggle_screen(&a->worlds[0], 0, 0);
+    /* mostly zeros → RLE should shrink pixels_hex well below raw 30720 */
+    r01_screen_plot(&a->worlds[0].screens[0], 1, 1, 2);
+    r01_screen_plot(&a->worlds[0].screens[0], 2, 1, 2);
+    expect_true(r01_chr_pack_world_spill(&a->worlds[0]) == R01_CHR_OK, "pack");
+    expect_true(r01_project_save_json(a, path, err, sizeof(err)) == 0, "save");
+    f = fopen(path, "rb");
+    expect_true(f != NULL, "open saved");
+    fseek(f, 0, SEEK_END);
+    sz = ftell(f);
+    fclose(f);
+    /* v7 raw pixels alone are 30k+ hex chars; RLE file for near-empty screen is much smaller */
+    expect_true(sz > 0 && sz < 20000, "rle shrinks project json");
+    expect_true(r01_project_load_json(b, path, err, sizeof(err)) == 0, "load");
+    expect_true(r01_screen_get_pixel(&b->worlds[0].screens[0], 1, 1) == 2, "pixel survives rle");
+    expect_true(b->worlds[0].screens[0].tiles[0] == a->worlds[0].screens[0].tiles[0], "tiles rle");
+    expect_true(b->worlds[0].screens[0].attrs[0] == a->worlds[0].screens[0].attrs[0], "attrs rle");
+    remove(path);
+    free(a);
+    free(b);
 }
 
 int main(void) {
@@ -521,6 +606,8 @@ int main(void) {
     test_play_scroll();
     test_cart_export();
     test_png_import();
+    test_chr_spill();
+    test_hex_rle_roundtrip();
     test_roundtrip();
     if (g_fails) {
         fprintf(stderr, "%d test(s) failed\n", g_fails);

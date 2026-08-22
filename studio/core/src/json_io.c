@@ -40,6 +40,65 @@ static int write_hex(FILE *f, const uint8_t *data, size_t n) {
     return 0;
 }
 
+/* Byte RLE: pairs (count 1..255, value). Falls back to raw hex if RLE is not smaller. */
+static size_t rle_encode(const uint8_t *in, size_t n, uint8_t *out, size_t out_cap) {
+    size_t i = 0, o = 0;
+    while (i < n) {
+        uint8_t v = in[i];
+        size_t run = 1;
+        while (i + run < n && in[i + run] == v && run < 255) {
+            run++;
+        }
+        if (o + 2 > out_cap) {
+            return 0;
+        }
+        out[o++] = (uint8_t)run;
+        out[o++] = v;
+        i += run;
+    }
+    return o;
+}
+
+static int rle_decode(const uint8_t *in, size_t in_n, uint8_t *out, size_t out_len) {
+    size_t i = 0, o = 0;
+    if ((in_n & 1u) != 0) {
+        return -1;
+    }
+    while (i + 1 < in_n) {
+        uint8_t run = in[i++];
+        uint8_t v = in[i++];
+        size_t k;
+        if (run == 0 || o + run > out_len) {
+            return -1;
+        }
+        for (k = 0; k < run; k++) {
+            out[o++] = v;
+        }
+    }
+    return o == out_len ? 0 : -1;
+}
+
+static int write_hex_rle(FILE *f, const uint8_t *data, size_t n) {
+    uint8_t *enc;
+    size_t enc_n;
+    int rc;
+    if (n == 0) {
+        return 0;
+    }
+    enc = (uint8_t *)malloc(n * 2u);
+    if (!enc) {
+        return write_hex(f, data, n);
+    }
+    enc_n = rle_encode(data, n, enc, n * 2u);
+    if (enc_n > 0 && enc_n < n) {
+        rc = write_hex(f, enc, enc_n);
+    } else {
+        rc = write_hex(f, data, n);
+    }
+    free(enc);
+    return rc;
+}
+
 static int parse_hex(const char *hex, uint8_t *out, size_t out_len) {
     size_t i;
     size_t hex_len = strlen(hex);
@@ -55,6 +114,42 @@ static int parse_hex(const char *hex, uint8_t *out, size_t out_len) {
         out[i] = (uint8_t)((hi << 4) | lo);
     }
     return 0;
+}
+
+/* Raw hex (len == 2*out_len) or RLE hex (compressed stream). */
+static int parse_hex_field(const char *hex, uint8_t *out, size_t out_len) {
+    size_t hex_len;
+    uint8_t *raw;
+    size_t raw_n;
+    size_t i;
+    int rc;
+    if (!hex) {
+        return -1;
+    }
+    hex_len = strlen(hex);
+    if (hex_len == out_len * 2u) {
+        return parse_hex(hex, out, out_len);
+    }
+    if (hex_len < 2 || (hex_len & 1u) != 0) {
+        return -1;
+    }
+    raw_n = hex_len / 2u;
+    raw = (uint8_t *)malloc(raw_n);
+    if (!raw) {
+        return -1;
+    }
+    for (i = 0; i < raw_n; i++) {
+        int hi = hex_nibble(hex[i * 2]);
+        int lo = hex_nibble(hex[i * 2 + 1]);
+        if (hi < 0 || lo < 0) {
+            free(raw);
+            return -1;
+        }
+        raw[i] = (uint8_t)((hi << 4) | lo);
+    }
+    rc = rle_decode(raw, raw_n, out, out_len);
+    free(raw);
+    return rc;
 }
 
 static char *read_file(const char *path, size_t *out_len) {
@@ -255,7 +350,7 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
 
     fprintf(f, "{\n");
     fprintf(f, "  \"format\": \"retr01_studio_project\",\n");
-    fprintf(f, "  \"version\": 7,\n");
+    fprintf(f, "  \"version\": 8,\n");
     fprintf(f, "  \"name\": \"%s\",\n", p->name);
     fprintf(f, "  \"active_world\": %d,\n", p->active_world);
     fprintf(f, "  \"active_screen\": %d,\n", p->active_screen);
@@ -326,13 +421,13 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
             fprintf(f, "          \"row\": %d,\n", s->row);
             fprintf(f, "          \"present\": %d,\n", s->present ? 1 : 0);
             fprintf(f, "          \"pixels_hex\": \"");
-            write_hex(f, s->pixels, sizeof(s->pixels));
+            write_hex_rle(f, s->pixels, sizeof(s->pixels));
             fprintf(f, "\",\n");
             fprintf(f, "          \"tiles_hex\": \"");
-            write_hex(f, s->tiles, sizeof(s->tiles));
+            write_hex_rle(f, s->tiles, sizeof(s->tiles));
             fprintf(f, "\",\n");
             fprintf(f, "          \"attrs_hex\": \"");
-            write_hex(f, s->attrs, sizeof(s->attrs));
+            write_hex_rle(f, s->attrs, sizeof(s->attrs));
             fprintf(f, "\",\n");
             fprintf(f, "          \"oam\": [\n");
             {
@@ -354,13 +449,13 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
             fprintf(f, "          \"present\": %d,\n", pl->present ? 1 : 0);
             fprintf(f, "          \"slot\": %d,\n", pl->slot);
             fprintf(f, "          \"pixels_hex\": \"");
-            write_hex(f, pl->pixels, sizeof(pl->pixels));
+            write_hex_rle(f, pl->pixels, sizeof(pl->pixels));
             fprintf(f, "\",\n");
             fprintf(f, "          \"tiles_hex\": \"");
-            write_hex(f, pl->tiles, sizeof(pl->tiles));
+            write_hex_rle(f, pl->tiles, sizeof(pl->tiles));
             fprintf(f, "\",\n");
             fprintf(f, "          \"attrs_hex\": \"");
-            write_hex(f, pl->attrs, sizeof(pl->attrs));
+            write_hex_rle(f, pl->attrs, sizeof(pl->attrs));
             fprintf(f, "\"\n");
             fprintf(f, "        }%s\n", si + 1 < R01_MAX_PARALLAX_PLANES ? "," : "");
         }
@@ -449,7 +544,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
 
     r01_project_init(p, "loaded");
     pcur = find_key(json, "version");
-    if (parse_int_after(pcur, &version) != 0 || version < 1 || version > 7) {
+    if (parse_int_after(pcur, &version) != 0 || version < 1 || version > 8) {
         free(json);
         set_err(err_buf, err_cap, "unsupported version");
         return -1;
@@ -687,7 +782,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         /* legacy v2 "parallax" on screens is ignored */
                         pcur = find_key(sblock, "pixels_hex");
                         if (pcur && parse_string_after(pcur, hex, hexcap) == 0) {
-                            if (parse_hex(hex, s->pixels, sizeof(s->pixels)) != 0) {
+                            if (parse_hex_field(hex, s->pixels, sizeof(s->pixels)) != 0) {
                                 free(hex);
                                 free(sblock);
                                 free(wblock);
@@ -698,11 +793,11 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         }
                         pcur = find_key(sblock, "tiles_hex");
                         if (pcur && parse_string_after(pcur, hex, hexcap) == 0) {
-                            parse_hex(hex, s->tiles, sizeof(s->tiles));
+                            parse_hex_field(hex, s->tiles, sizeof(s->tiles));
                         }
                         pcur = find_key(sblock, "attrs_hex");
                         if (pcur && parse_string_after(pcur, hex, hexcap) == 0) {
-                            parse_hex(hex, s->attrs, sizeof(s->attrs));
+                            parse_hex_field(hex, s->attrs, sizeof(s->attrs));
                         }
                         {
                             const char *oam = strstr(sblock, "\"oam\"");
@@ -857,15 +952,15 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                             }
                             pcur = find_key(pblock, "pixels_hex");
                             if (pcur && parse_string_after(pcur, hex, hexcap) == 0) {
-                                parse_hex(hex, pl->pixels, sizeof(pl->pixels));
+                                parse_hex_field(hex, pl->pixels, sizeof(pl->pixels));
                             }
                             pcur = find_key(pblock, "tiles_hex");
                             if (pcur && parse_string_after(pcur, hex, hexcap) == 0) {
-                                parse_hex(hex, pl->tiles, sizeof(pl->tiles));
+                                parse_hex_field(hex, pl->tiles, sizeof(pl->tiles));
                             }
                             pcur = find_key(pblock, "attrs_hex");
                             if (pcur && parse_string_after(pcur, hex, hexcap) == 0) {
-                                parse_hex(hex, pl->attrs, sizeof(pl->attrs));
+                                parse_hex_field(hex, pl->attrs, sizeof(pl->attrs));
                             }
                             free(pblock);
                             free(hex);

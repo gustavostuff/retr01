@@ -1,4 +1,5 @@
 #include "retr01_studio/project.h"
+#include "retr01_studio/chr_pack.h"
 
 #include <png.h>
 #include <stdio.h>
@@ -264,6 +265,22 @@ int r01_world_import_png(R01World *w, const char *path, char *err_buf, size_t er
             fill_screen_from_cell(s, rgba, (int)width, col, row, colors, ncolors, w->default_bg_bank,
                                   w->default_pal_row);
             w->screen_count++;
+        }
+    }
+
+    /* Auto-pack unique 8×8 patterns into BG banks 0→3. */
+    {
+        R01ChrPackStatus st = r01_chr_pack_world_spill(w);
+        if (st != R01_CHR_OK) {
+            int bi;
+            r01_world_clear_screens(w);
+            for (bi = 0; bi < R01_BG_BANKS; bi++) {
+                memset(w->bg_banks[bi].chr, 0, R01_BANK_CHR_BYTES);
+                w->bg_banks[bi].tile_count = 0;
+            }
+            set_err(err_buf, err_cap,
+                    st == R01_CHR_TOO_MANY_TILES ? "too many unique tiles (>4 BG banks)" : "chr pack failed");
+            goto fail;
         }
     }
 

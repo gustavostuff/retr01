@@ -207,3 +207,134 @@ R01ChrPackStatus r01_chr_pack_world_bank(R01World *w, int bank) {
     w->bg_banks[bank].tile_count = unique_count;
     return R01_CHR_OK;
 }
+
+typedef struct {
+    uint8_t chr[R01_TILES_PER_BANK][R01_TILE_BYTES];
+    int count;
+} SpillBank;
+
+static int spill_find(SpillBank banks[R01_BG_BANKS], const uint8_t tile[R01_TILE_BYTES], int *out_bank,
+                      int *out_flips) {
+    int b;
+    for (b = 0; b < R01_BG_BANKS; b++) {
+        int found = find_unique(banks[b].chr, banks[b].count, tile, out_flips);
+        if (found >= 0) {
+            *out_bank = b;
+            return found;
+        }
+    }
+    return -1;
+}
+
+static int spill_alloc(SpillBank banks[R01_BG_BANKS], int need_slots, int align4, int *out_bank, int *out_base) {
+    int b;
+    for (b = 0; b < R01_BG_BANKS; b++) {
+        int base = banks[b].count;
+        if (align4) {
+            base = (base + 3) & ~3;
+        }
+        if (base + need_slots <= R01_TILES_PER_BANK) {
+            while (banks[b].count < base) {
+                memset(banks[b].chr[banks[b].count], 0, R01_TILE_BYTES);
+                banks[b].count++;
+            }
+            *out_bank = b;
+            *out_base = base;
+            return 0;
+        }
+    }
+    return -1;
+}
+
+static R01ChrPackStatus pack_tilemap_spill(SpillBank banks[R01_BG_BANKS], uint8_t *pixels, uint8_t *tiles,
+                                           uint8_t *attrs) {
+    int ty, tx;
+    for (ty = 0; ty < R01_SCREEN_TILES_Y; ty++) {
+        for (tx = 0; tx < R01_SCREEN_TILES_X; tx++) {
+            uint8_t tile[R01_TILE_BYTES];
+            int cell = ty * R01_SCREEN_TILES_X + tx;
+            uint8_t prev = attrs[cell];
+            uint8_t keep = (uint8_t)(prev & (R01_ATTR_PAL_MASK | R01_ATTR_SOLID | R01_ATTR_ANIM));
+            int flips = 0;
+            int bank = 0;
+            int found;
+
+            r01_tile_from_pixels(pixels, tx, ty, tile);
+
+            if (r01_attr_anim(prev)) {
+                int base = 0;
+                int i;
+                if (spill_alloc(banks, 4, 1, &bank, &base) != 0) {
+                    return R01_CHR_TOO_MANY_TILES;
+                }
+                for (i = 0; i < 4; i++) {
+                    memcpy(banks[bank].chr[base + i], tile, R01_TILE_BYTES);
+                }
+                banks[bank].count = base + 4;
+                tiles[cell] = (uint8_t)base;
+                attrs[cell] = (uint8_t)(keep | (uint8_t)(bank & R01_ATTR_BANK_MASK) | R01_ATTR_ANIM);
+                continue;
+            }
+
+            found = spill_find(banks, tile, &bank, &flips);
+            if (found < 0) {
+                int base = 0;
+                if (spill_alloc(banks, 1, 0, &bank, &base) != 0) {
+                    return R01_CHR_TOO_MANY_TILES;
+                }
+                memcpy(banks[bank].chr[base], tile, R01_TILE_BYTES);
+                banks[bank].count = base + 1;
+                found = base;
+                flips = 0;
+            }
+            tiles[cell] = (uint8_t)found;
+            attrs[cell] = (uint8_t)(keep | (uint8_t)(bank & R01_ATTR_BANK_MASK) | (uint8_t)flips);
+        }
+    }
+    return R01_CHR_OK;
+}
+
+R01ChrPackStatus r01_chr_pack_world_spill(R01World *w) {
+    SpillBank banks[R01_BG_BANKS];
+    int bi, si, pi;
+    R01ChrPackStatus st;
+
+    if (!w) {
+        return R01_CHR_BAD_ARGS;
+    }
+
+    memset(banks, 0, sizeof(banks));
+    for (bi = 0; bi < R01_BG_BANKS; bi++) {
+        memset(w->bg_banks[bi].chr, 0, R01_BANK_CHR_BYTES);
+        w->bg_banks[bi].tile_count = 0;
+    }
+
+    for (si = 0; si < w->screen_count; si++) {
+        R01Screen *s = &w->screens[si];
+        if (!s->present) {
+            continue;
+        }
+        st = pack_tilemap_spill(banks, s->pixels, s->tiles, s->attrs);
+        if (st != R01_CHR_OK) {
+            return st;
+        }
+    }
+    for (pi = 0; pi < R01_MAX_PARALLAX_PLANES; pi++) {
+        R01ParallaxPlane *pl = &w->planes[pi];
+        if (!pl->present) {
+            continue;
+        }
+        st = pack_tilemap_spill(banks, pl->pixels, pl->tiles, pl->attrs);
+        if (st != R01_CHR_OK) {
+            return st;
+        }
+    }
+
+    for (bi = 0; bi < R01_BG_BANKS; bi++) {
+        if (banks[bi].count > 0) {
+            memcpy(w->bg_banks[bi].chr, banks[bi].chr, (size_t)banks[bi].count * R01_TILE_BYTES);
+        }
+        w->bg_banks[bi].tile_count = banks[bi].count;
+    }
+    return R01_CHR_OK;
+}

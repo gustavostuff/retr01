@@ -35,9 +35,9 @@ Right column = Screen (most width). Left = scrollable stack of Worlds, **Planes*
 
 | Cell | Behavior |
 |------|----------|
-| **Worlds** | Tabs **1-8** = HW worlds **0-7**. Virtual grid **1–8** cols/rows (sized by PNG import or default 8×8). Click = select. **Ctrl+click** = toggle screen. Max **32** screens. **Drop PNG** on this panel to import an atlas |
+| **Worlds** | Tabs **1-8** = HW worlds **0-7**. Virtual grid **1–8** cols/rows (sized by PNG import or default 8×8). Click = select. **Ctrl+click** = toggle screen. Max **32** screens. **Drop PNG** on this panel to import an atlas (auto-packs BG banks 0→3; aborts if >1024 unique tiles) |
 | **Planes** | Up to **2** parallax planes per world (HW VRAM slots **4-5**). Not on the world grid. Toggle present / select to edit in Screen. Same 480 B payload shape as a screen |
-| **BG banks** | 4 tabs (0-3), 16x16 read-only tiles. Filled by **Generate bank** |
+| **BG banks** | 4 tabs (0-3), 16x16 read-only tiles. Filled by **Generate bank** (single bank) or PNG import (spill across banks) |
 | **Sprite banks** | 4 tabs, 8x8 / 8x16 toggle. Paint tiles (**TILE** tool), place OAM on Screen (**PLACE**). **Ctrl+G** on SPR layer packs/dedupes sprite CHR |
 | **Screen** | Edits active **grid screen** or **parallax plane**. Layers **BG** / **SPR**. BG: pixel + attr. SPR: place OAM (composited over BG) or edit selected CHR tile. Generate (**Ctrl+G**) targets BG or SPR bank by layer |
 | **Palettes** | Tabs = palette rows **0-7** (4 BG + 4 sprite strips). Edit master indices **0-63**. Preview uses kit Color PROM RGB; burn path quantizes to **R3G3B2** ([`02`](02_graphics_worlds_memory.md) / [`06`](06_hardware_v1_32ic.md)) |
@@ -175,5 +175,7 @@ Studio follows [`02`](02_graphics_worlds_memory.md) for data meaning. Board BOM:
 | OAM / metas | up to 64 OAM/screen; world meta-sprites (parts + frames) |
 | BG / SPR banks 0-3 | 256 tiles each. Live bank = per-tile / per-OAM attr |
 | Generate bank | Fills CHR from grid screens **and** planes; stamps `BANK` |
+| PNG import | Spill-pack unique tiles into banks 0→3; toast if overflow |
+| Project JSON | **v8**: RLE on `pixels_hex` / `tiles_hex` / `attrs_hex` (raw hex still loads) |
 | Color PROM preview | 64 indices -> packed **R3G3B2** for burn |
 | Play | High-level only. Board sim / cycle check later load `.retr01` |

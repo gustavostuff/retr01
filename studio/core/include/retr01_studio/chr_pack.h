@@ -26,4 +26,11 @@ void r01_tile_flip(const uint8_t in16[R01_TILE_BYTES], int flip_h, int flip_v, u
  */
 R01ChrPackStatus r01_chr_pack_world_bank(R01World *w, int bank);
 
+/*
+ * Pack all screens + planes into BG banks 0..3 in order: fill bank 0, then 1, …
+ * Dedupes across banks (exact + flips). Clears all four banks first.
+ * Returns R01_CHR_TOO_MANY_TILES if unique tiles exceed 4×256.
+ */
+R01ChrPackStatus r01_chr_pack_world_spill(R01World *w);
+
 #endif

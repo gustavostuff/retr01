@@ -164,9 +164,15 @@ int ui_try_import_png(UiState *ui, const char *path) {
     ui->project->active_screen = w->screen_count > 0 ? 0 : -1;
     ui->project->active_plane = -1;
     ui->left_scroll_y = 0;
+    ui->bg_bank_tab = 0;
     {
         char ok[UI_TOAST_MAX];
-        snprintf(ok, sizeof(ok), "imported %dx%d · %d screens", w->grid_cols, w->grid_rows, w->screen_count);
+        int bi, tiles = 0;
+        for (bi = 0; bi < R01_BG_BANKS; bi++) {
+            tiles += w->bg_banks[bi].tile_count;
+        }
+        snprintf(ok, sizeof(ok), "imported %dx%d · %d scr · %d tiles", w->grid_cols, w->grid_rows,
+                 w->screen_count, tiles);
         ui_toast(ui, ok, 0);
     }
     snprintf(ui->status, sizeof(ui->status), "imported %dx%d (%d scr)", w->grid_cols, w->grid_rows,

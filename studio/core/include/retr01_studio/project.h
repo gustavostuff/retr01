@@ -45,9 +45,10 @@ int r01_world_set_grid(R01World *w, int cols, int rows);
 void r01_world_clear_screens(R01World *w);
 
 /*
- * Import an indexed (≤4 color) PNG whose size is a multiple of 128×120.
+ * Import an indexed/RGB (≤4 opaque colors) PNG whose size is a multiple of 128×120.
  * Sets world grid to PNG cell layout; skips fully transparent cells; replaces screens.
- * Returns 0 ok, -1 on validation/IO error (message in err_buf).
+ * Auto-packs unique tiles into BG banks 0..3 (spill). Fails if >1024 unique tiles.
+ * Returns 0 ok, -1 on validation/IO/pack error (message in err_buf).
  */
 int r01_world_import_png(R01World *w, const char *path, char *err_buf, size_t err_cap);
 

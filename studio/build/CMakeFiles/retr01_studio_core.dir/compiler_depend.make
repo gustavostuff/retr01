@@ -229,6 +229,7 @@ CMakeFiles/retr01_studio_core.dir/core/src/play.c.o: /home/g/Repos/retr01/studio
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdint.h
 
 CMakeFiles/retr01_studio_core.dir/core/src/png_import.c.o: /home/g/Repos/retr01/studio/core/src/png_import.c \
+  /home/g/Repos/retr01/studio/core/include/retr01_studio/chr_pack.h \
   /home/g/Repos/retr01/studio/core/include/retr01_studio/project.h \
   /home/g/Repos/retr01/studio/core/include/retr01_studio/types.h \
   /usr/include/alloca.h \
