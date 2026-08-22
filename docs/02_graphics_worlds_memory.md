@@ -277,7 +277,7 @@ So for a full screen load you are pushing **240 tile bytes + 240 attr bytes**, n
 
 #### How long that takes while the CRT draws
 
-**VRAM commit timing (planning math):** clocks are **8.000 MHz** CPU and **5.369318 MHz** dot, **341** dots/line -> about **508** CPU cycles per CRT line. Active field **240** lines. VBlank region about **22** lines (~**11.2k** CPU cycles). Assume a tight ASM copy from a system-RAM buffer into `$FE12` at about **12** cycles/byte (auto-inc). Interleave lets those writes run while the beam is drawing (CPU phase). PPU keeps fetching on the other phase.
+**VRAM commit timing (planning math):** clocks are **8.000 MHz** CPU and **5.369318 MHz** dot, **341** dots/line -> about **508** CPU cycles per CRT line. Active field **240** lines. VBlank region about **22** lines (~**11.2k** CPU cycles). Normal path is **direct MAP -> VRAM**: `LDA $FE93` / `STA $FE12` in a loop (no system-RAM staging required). A scratch buffer in system RAM is optional (e.g. decompress first). Planning estimate ~**12** cycles/byte into `$FE12` with auto-inc. Interleave lets those writes run while the beam is drawing (CPU phase). PPU keeps fetching on the other phase.
 
 | Screens written | Bytes | CPU cycles (@12/B) | CRT lines | Share of 240-line active field |
 |-----------------|-------|--------------------|-----------|--------------------------------|
