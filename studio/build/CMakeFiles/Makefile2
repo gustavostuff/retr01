@@ -91,12 +91,12 @@ clean: CMakeFiles/retr01_studio.dir/clean
 CMakeFiles/retr01_studio_core.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_core.dir/build.make CMakeFiles/retr01_studio_core.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_core.dir/build.make CMakeFiles/retr01_studio_core.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/studio/build/CMakeFiles --progress-num=5,6,7,8,9 "Built target retr01_studio_core"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/studio/build/CMakeFiles --progress-num=5,6,7,8,9,10,11,12 "Built target retr01_studio_core"
 .PHONY : CMakeFiles/retr01_studio_core.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/retr01_studio_core.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/studio/build/CMakeFiles 5
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/studio/build/CMakeFiles 8
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/retr01_studio_core.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/studio/build/CMakeFiles 0
 .PHONY : CMakeFiles/retr01_studio_core.dir/rule
@@ -108,7 +108,7 @@ retr01_studio_core: CMakeFiles/retr01_studio_core.dir/rule
 # codegen rule for target.
 CMakeFiles/retr01_studio_core.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_core.dir/build.make CMakeFiles/retr01_studio_core.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/studio/build/CMakeFiles --progress-num=5,6,7,8,9 "Finished codegen for target retr01_studio_core"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/studio/build/CMakeFiles --progress-num=5,6,7,8,9,10,11,12 "Finished codegen for target retr01_studio_core"
 .PHONY : CMakeFiles/retr01_studio_core.dir/codegen
 
 # clean rule for target.
@@ -123,12 +123,12 @@ CMakeFiles/retr01_studio_core.dir/clean:
 CMakeFiles/test_core.dir/all: CMakeFiles/retr01_studio_core.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_core.dir/build.make CMakeFiles/test_core.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_core.dir/build.make CMakeFiles/test_core.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/studio/build/CMakeFiles --progress-num=10,11 "Built target test_core"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/studio/build/CMakeFiles --progress-num=13,14 "Built target test_core"
 .PHONY : CMakeFiles/test_core.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_core.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/studio/build/CMakeFiles 7
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/studio/build/CMakeFiles 10
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_core.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/studio/build/CMakeFiles 0
 .PHONY : CMakeFiles/test_core.dir/rule
@@ -140,7 +140,7 @@ test_core: CMakeFiles/test_core.dir/rule
 # codegen rule for target.
 CMakeFiles/test_core.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_core.dir/build.make CMakeFiles/test_core.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/studio/build/CMakeFiles --progress-num=10,11 "Finished codegen for target test_core"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/studio/build/CMakeFiles --progress-num=13,14 "Finished codegen for target test_core"
 .PHONY : CMakeFiles/test_core.dir/codegen
 
 # clean rule for target.
@@ -160,7 +160,7 @@ CMakeFiles/retr01_studio.dir/all: CMakeFiles/retr01_studio_core.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/retr01_studio.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/studio/build/CMakeFiles 9
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/studio/build/CMakeFiles 12
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/retr01_studio.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/studio/build/CMakeFiles 0
 .PHONY : CMakeFiles/retr01_studio.dir/rule

@@ -1,5 +1,7 @@
 #include "retr01_studio/palette.h"
 
+#include "retr01_studio/chr_pack.h"
+
 #include <string.h>
 
 /* docs/02 kit swatches, row-major 16x4 */
@@ -135,4 +137,38 @@ void r01_screen_pixel_rgb(const R01Project *p, const R01World *w, const R01Scree
         return;
     }
     r01_tilemap_pixel_rgb(p, w, s->pixels, s->attrs, px, py, r, g, b);
+}
+
+void r01_spr_chr_rgb(const R01Project *p, const R01World *w, int bank, int tile, uint8_t attr, int px, int py,
+                     uint8_t *r, uint8_t *g, uint8_t *b, int *opaque) {
+    uint8_t pix[64];
+    int sx = px, sy = py;
+    uint8_t color, master;
+    const R01PalRow *rows;
+    if (opaque) {
+        *opaque = 0;
+    }
+    if (!w || bank < 0 || bank >= R01_SPR_BANKS || tile < 0 || tile >= w->spr_banks[bank].tile_count) {
+        return;
+    }
+    if (r01_attr_flip_h(attr)) {
+        sx = 7 - sx;
+    }
+    if (r01_attr_flip_v(attr)) {
+        sy = 7 - sy;
+    }
+    if (sx < 0 || sy < 0 || sx >= 8 || sy >= 8) {
+        return;
+    }
+    r01_tile_to_pixels(&w->spr_banks[bank].chr[tile * R01_TILE_BYTES], pix);
+    color = pix[sy * 8 + sx] & 3u;
+    if (color == 0) {
+        return;
+    }
+    rows = r01_world_spr_pals(p, w);
+    master = rows ? rows[r01_attr_pal(attr)].idx[color] : color;
+    r01_kit_rgb(master, r, g, b);
+    if (opaque) {
+        *opaque = 1;
+    }
 }

@@ -1,5 +1,6 @@
 #include "retr01_studio/project.h"
 #include "retr01_studio/palette.h"
+#include "retr01_studio/play.h"
 
 #include <string.h>
 
@@ -16,12 +17,15 @@ void r01_project_init(R01Project *p, const char *name) {
     p->active_plane = -1;
     p->generate_bank = 0;
     p->paint_color = 3;
+    r01_constraints_init_default(&p->constraints);
     r01_project_init_default_pals(p);
     p->worlds[0].present = 1;
     for (wi = 0; wi < R01_MAX_WORLDS; wi++) {
         p->worlds[wi].default_bg_bank = 0;
         p->worlds[wi].default_pal_row = 0;
         p->worlds[wi].use_world_pals = 0;
+        p->worlds[wi].use_constraints = 0;
+        r01_constraints_init_default(&p->worlds[wi].constraints);
         for (i = 0; i < R01_PAL_ROWS; i++) {
             r01_pal_row_init_default(&p->worlds[wi].pal_bg[i], i);
             r01_pal_row_init_default(&p->worlds[wi].pal_spr[i], i);
@@ -104,6 +108,107 @@ int r01_project_select_bg_bank(R01Project *p, int bank) {
     }
     p->generate_bank = bank;
     return bank;
+}
+
+int r01_screen_oam_add(R01Screen *s, uint8_t x, uint8_t y, uint8_t tile, uint8_t attr) {
+    R01Oam *o;
+    if (!s || s->oam_count >= R01_MAX_OAM_PER_SCREEN) {
+        return -1;
+    }
+    o = &s->oam[s->oam_count];
+    o->x = x;
+    o->y = y;
+    o->tile = tile;
+    o->attr = attr;
+    return s->oam_count++;
+}
+
+int r01_screen_oam_remove(R01Screen *s, int index) {
+    int i;
+    if (!s || index < 0 || index >= s->oam_count) {
+        return -1;
+    }
+    for (i = index; i < s->oam_count - 1; i++) {
+        s->oam[i] = s->oam[i + 1];
+    }
+    s->oam_count--;
+    memset(&s->oam[s->oam_count], 0, sizeof(R01Oam));
+    return 0;
+}
+
+int r01_screen_oam_hit(const R01Screen *s, int px, int py) {
+    int i;
+    if (!s) {
+        return -1;
+    }
+    for (i = s->oam_count - 1; i >= 0; i--) {
+        const R01Oam *o = &s->oam[i];
+        int w = 8;
+        int h = r01_oam_size_16(o->attr) ? 16 : 8;
+        if (px >= o->x && px < o->x + w && py >= o->y && py < o->y + h) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int r01_meta_create_from_oam(R01World *w, const R01Screen *s, const int *indices, int count) {
+    R01MetaSprite *m;
+    int i;
+    int ox, oy;
+    if (!w || !s || !indices || count <= 0 || count > R01_MAX_META_PARTS) {
+        return -1;
+    }
+    if (w->meta_count >= R01_MAX_METASPRITES) {
+        return -1;
+    }
+    for (i = 0; i < count; i++) {
+        if (indices[i] < 0 || indices[i] >= s->oam_count) {
+            return -1;
+        }
+    }
+    ox = s->oam[indices[0]].x;
+    oy = s->oam[indices[0]].y;
+    m = &w->metas[w->meta_count];
+    memset(m, 0, sizeof(*m));
+    m->present = 1;
+    m->frame_count = 1;
+    m->part_count = count;
+    for (i = 0; i < count; i++) {
+        const R01Oam *o = &s->oam[indices[i]];
+        m->parts[i].dx = (int8_t)(o->x - ox);
+        m->parts[i].dy = (int8_t)(o->y - oy);
+        m->parts[i].tile = o->tile;
+        m->parts[i].attr = o->attr;
+    }
+    return w->meta_count++;
+}
+
+int r01_meta_stamp(R01Screen *s, const R01MetaSprite *meta, int origin_x, int origin_y) {
+    int i;
+    if (!s || !meta || !meta->present) {
+        return -1;
+    }
+    for (i = 0; i < meta->part_count; i++) {
+        int x = origin_x + meta->parts[i].dx;
+        int y = origin_y + meta->parts[i].dy;
+        if (x < 0) {
+            x = 0;
+        }
+        if (y < 0) {
+            y = 0;
+        }
+        if (x > 255) {
+            x = 255;
+        }
+        if (y > 255) {
+            y = 255;
+        }
+        if (r01_screen_oam_add(s, (uint8_t)x, (uint8_t)y, meta->parts[i].tile, meta->parts[i].attr) < 0) {
+            return -1;
+        }
+    }
+    return 0;
 }
 
 int r01_world_find_screen(const R01World *w, int col, int row) {

@@ -259,6 +259,7 @@ CMakeFiles/retr01_studio.dir/app/src/font.c.o
 CMakeFiles/retr01_studio.dir/app/src/main.c.o
  /home/g/Repos/retr01/studio/app/src/main.c
  /home/g/Repos/retr01/studio/app/src/ui.h
+ /home/g/Repos/retr01/studio/core/include/retr01_studio/play.h
  /home/g/Repos/retr01/studio/core/include/retr01_studio/project.h
  /home/g/Repos/retr01/studio/core/include/retr01_studio/types.h
  /usr/include/SDL2/SDL.h
@@ -517,10 +518,13 @@ CMakeFiles/retr01_studio.dir/app/src/ui.c.o
  /home/g/Repos/retr01/studio/app/src/ui.c
  /home/g/Repos/retr01/studio/app/src/font.h
  /home/g/Repos/retr01/studio/app/src/ui.h
+ /home/g/Repos/retr01/studio/core/include/retr01_studio/cart.h
  /home/g/Repos/retr01/studio/core/include/retr01_studio/chr_pack.h
  /home/g/Repos/retr01/studio/core/include/retr01_studio/json_io.h
  /home/g/Repos/retr01/studio/core/include/retr01_studio/palette.h
+ /home/g/Repos/retr01/studio/core/include/retr01_studio/play.h
  /home/g/Repos/retr01/studio/core/include/retr01_studio/project.h
+ /home/g/Repos/retr01/studio/core/include/retr01_studio/spr_pack.h
  /home/g/Repos/retr01/studio/core/include/retr01_studio/types.h
  /usr/include/SDL2/SDL.h
  /usr/include/SDL2/SDL_assert.h

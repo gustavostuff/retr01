@@ -38,9 +38,10 @@ Right column = Screen (most width). Left = scrollable stack of Worlds, **Planes*
 | **Worlds** | Tabs labeled **1-8** in the UI = hardware worlds **0-7** (`$FE30`). Sparse grid **1-8** cols/rows (UI). Click = select. **Ctrl+click** = toggle stored screen. Max **32** screens/world. Holes = not in MAP. **Grid only** — no parallax markers |
 | **Planes** | Up to **2** parallax planes per world (HW VRAM slots **4-5**). Not on the world grid. Toggle present / select to edit in Screen. Same 480 B payload shape as a screen |
 | **BG banks** | 4 tabs (0-3), 16x16 read-only tiles. Filled by **Generate bank** |
-| **Sprite banks** | Same shape, 8x8/8x16 preview toggle. Phase 3 |
-| **Screen** | Edits the active **grid screen** or **parallax plane**. **Pixel** mode: indices 0-3. **Attr** mode: `BANK`/`PAL`/`FLIP_*`/`SOLID`/`ANIM` per tile. Generate bank 0-3 (flip-prefer + ANIM strips). Color preview via palettes |
+| **Sprite banks** | 4 tabs, 8x8 / 8x16 toggle. Paint tiles (**TILE** tool), place OAM on Screen (**PLACE**). **Ctrl+G** on SPR layer packs/dedupes sprite CHR |
+| **Screen** | Edits active **grid screen** or **parallax plane**. Layers **BG** / **SPR**. BG: pixel + attr. SPR: place OAM (composited over BG) or edit selected CHR tile. Generate (**Ctrl+G**) targets BG or SPR bank by layer |
 | **Palettes** | Tabs = palette rows **0-7** (4 BG + 4 sprite strips). Edit master indices **0-63**. Preview uses kit Color PROM RGB; burn path quantizes to **R3G3B2** ([`02`](02_graphics_worlds_memory.md) / [`06`](06_hardware_v1_32ic.md)) |
+| **Constraints** | Project defaults + optional per-world override. Scroll C4–C7, transition C8, ANIM rates, player meta. **I2C SAV** flags cart EEPROM. **Play** / **Space** = walk preview. **Ctrl+E** exports `.retr01` |
 
 Paint always stores indices **0-3**. Palette assignment only in attr mode.
 
@@ -114,6 +115,8 @@ MAP layout (see [`02`](02_graphics_worlds_memory.md)): per world, **screen dir +
 
 **Done when:** a screen can show BG + sprites in the editor with packed sprite CHR.
 
+**Status:** done in `studio/` — sprite banks, OAM place/edit, meta-from-OAM, spr pack, composite preview, project JSON v4.
+
 ### Phase 4 - constraints and Play
 
 **Goal:** project behavior knobs + fast feel-test without emulating silicon.
@@ -130,6 +133,8 @@ MAP layout (see [`02`](02_graphics_worlds_memory.md)): per world, **screen dir +
 **Out:** shipping `.retr01`, `retr01-opt`, cycle emu.
 
 **Done when:** Play walks a multi-screen world using authored data + chosen scroll mode.
+
+**Status:** done in `studio/` — constraints (project + world override), Play preview (pixel/deadzone/instant/hybrid + fade stub), JSON **v5**.
 
 ### Phase 5 - cart build
 
@@ -154,6 +159,8 @@ Generate correct boring asm first. Optimize in toolchain, not inside the UI.
 
 **Done when:** a Phase 4 project builds a `.retr01` that boots on kit/hardware checklist (PRG + one world + screens).
 
+**Status:** done in `studio/` — cart pack (`RETR01` header + pointers + pals + 32 KB stub PRG + world CHR/MAP), Color PROM **R3G3B2** emit, ca65 boot `.s` equates, 512 KB flash pad, **Ctrl+E** export, JSON **v6** (`has_cart_save`). Full constraints→cc65/`retr01-opt` pipeline remains a later toolchain pass (Studio embeds a boring stub today).
+
 ## Hardware map
 
 Studio follows [`02`](02_graphics_worlds_memory.md) for data meaning. Board BOM: [`06`](06_hardware_v1_32ic.md).
@@ -163,7 +170,8 @@ Studio follows [`02`](02_graphics_worlds_memory.md) for data meaning. Board BOM:
 | World grid | 8x8 sparse, 32 screens, 8 worlds (camera only) |
 | Planes | up to 2 parallax payloads/world → VRAM slots 4-5; own MAP dir |
 | Screen / plane | 240 tile + 240 attr each |
-| BG banks 0-3 | 256 tiles each. Live bank = per-tile attr |
+| OAM / metas | up to 64 OAM/screen; world meta-sprites (parts + frames) |
+| BG / SPR banks 0-3 | 256 tiles each. Live bank = per-tile / per-OAM attr |
 | Generate bank | Fills CHR from grid screens **and** planes; stamps `BANK` |
 | Color PROM preview | 64 indices -> packed **R3G3B2** for burn |
 | Play | High-level only. Board sim / cycle check later load `.retr01` |

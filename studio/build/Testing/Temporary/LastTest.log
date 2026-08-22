@@ -1,10 +1,10 @@
-Start testing: Aug 22 12:02 MST
+Start testing: Aug 22 12:31 MST
 ----------------------------------------------------------
 1/1 Testing: core
 1/1 Test: core
 Command: "/home/g/Repos/retr01/studio/build/test_core"
 Directory: /home/g/Repos/retr01/studio/build
-"core" start time: Aug 22 12:02 MST
+"core" start time: Aug 22 12:31 MST
 Output:
 ----------------------------------------------------------
 all tests passed
@@ -12,8 +12,8 @@ all tests passed
 Test time =   0.04 sec
 ----------------------------------------------------------
 Test Passed.
-"core" end time: Aug 22 12:02 MST
+"core" end time: Aug 22 12:31 MST
 "core" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-End testing: Aug 22 12:02 MST
+End testing: Aug 22 12:31 MST

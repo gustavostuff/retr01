@@ -1,2 +1,2 @@
-/usr/bin/ar qc libretr01_studio_core.a CMakeFiles/retr01_studio_core.dir/core/src/project.c.o CMakeFiles/retr01_studio_core.dir/core/src/chr_pack.c.o CMakeFiles/retr01_studio_core.dir/core/src/json_io.c.o CMakeFiles/retr01_studio_core.dir/core/src/palette.c.o
+/usr/bin/ar qc libretr01_studio_core.a CMakeFiles/retr01_studio_core.dir/core/src/project.c.o CMakeFiles/retr01_studio_core.dir/core/src/chr_pack.c.o CMakeFiles/retr01_studio_core.dir/core/src/json_io.c.o CMakeFiles/retr01_studio_core.dir/core/src/palette.c.o CMakeFiles/retr01_studio_core.dir/core/src/spr_pack.c.o CMakeFiles/retr01_studio_core.dir/core/src/play.c.o CMakeFiles/retr01_studio_core.dir/core/src/cart.c.o
 /usr/bin/ranlib libretr01_studio_core.a

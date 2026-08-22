@@ -1,4 +1,5 @@
 #include "retr01_studio/json_io.h"
+#include "retr01_studio/play.h"
 #include "retr01_studio/project.h"
 
 #include <ctype.h>
@@ -182,6 +183,63 @@ static int parse_pal_rows(const char *p, R01PalRow rows[R01_PAL_ROWS]) {
     return 0;
 }
 
+static void write_constraints(FILE *f, const char *indent, const R01Constraints *c) {
+    fprintf(f, "%s\"constraints\": {\n", indent);
+    fprintf(f, "%s  \"player_meta\": %d,\n", indent, c->player_meta);
+    fprintf(f, "%s  \"enemy_anim_rate\": %d,\n", indent, c->enemy_anim_rate);
+    fprintf(f, "%s  \"anim_rate\": %d,\n", indent, c->anim_rate);
+    fprintf(f, "%s  \"scroll_mode\": %d,\n", indent, c->scroll_mode);
+    fprintf(f, "%s  \"deadzone_x\": %d,\n", indent, c->deadzone_x);
+    fprintf(f, "%s  \"deadzone_y\": %d,\n", indent, c->deadzone_y);
+    fprintf(f, "%s  \"transition\": %d\n", indent, c->transition);
+    fprintf(f, "%s}", indent);
+}
+
+static void parse_constraints_obj(const char *obj, R01Constraints *c) {
+    const char *pcur;
+    if (!obj || !c) {
+        return;
+    }
+    pcur = find_key(obj, "player_meta");
+    parse_int_after(pcur, &c->player_meta);
+    pcur = find_key(obj, "enemy_anim_rate");
+    parse_int_after(pcur, &c->enemy_anim_rate);
+    pcur = find_key(obj, "anim_rate");
+    parse_int_after(pcur, &c->anim_rate);
+    pcur = find_key(obj, "scroll_mode");
+    parse_int_after(pcur, &c->scroll_mode);
+    pcur = find_key(obj, "deadzone_x");
+    parse_int_after(pcur, &c->deadzone_x);
+    pcur = find_key(obj, "deadzone_y");
+    parse_int_after(pcur, &c->deadzone_y);
+    pcur = find_key(obj, "transition");
+    parse_int_after(pcur, &c->transition);
+    if (c->enemy_anim_rate < 1) {
+        c->enemy_anim_rate = 1;
+    }
+    if (c->anim_rate < 1) {
+        c->anim_rate = 1;
+    }
+    if (c->scroll_mode < 0 || c->scroll_mode > R01_SCROLL_HYBRID) {
+        c->scroll_mode = R01_SCROLL_PIXEL;
+    }
+    if (c->transition != R01_XITION_FADE) {
+        c->transition = R01_XITION_CUT;
+    }
+}
+
+static void parse_constraints_key(const char *block, R01Constraints *c) {
+    const char *pcur = find_key(block, "constraints");
+    const char *brace;
+    if (!pcur) {
+        return;
+    }
+    brace = strchr(pcur, '{');
+    if (brace) {
+        parse_constraints_obj(brace, c);
+    }
+}
+
 int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, size_t err_cap) {
     FILE *f;
     int wi, i, c;
@@ -197,13 +255,16 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
 
     fprintf(f, "{\n");
     fprintf(f, "  \"format\": \"retr01_studio_project\",\n");
-    fprintf(f, "  \"version\": 3,\n");
+    fprintf(f, "  \"version\": 6,\n");
     fprintf(f, "  \"name\": \"%s\",\n", p->name);
     fprintf(f, "  \"active_world\": %d,\n", p->active_world);
     fprintf(f, "  \"active_screen\": %d,\n", p->active_screen);
     fprintf(f, "  \"active_plane\": %d,\n", p->active_plane);
     fprintf(f, "  \"generate_bank\": %d,\n", p->generate_bank);
     fprintf(f, "  \"paint_color\": %d,\n", p->paint_color);
+    fprintf(f, "  \"has_cart_save\": %d,\n", p->has_cart_save ? 1 : 0);
+    write_constraints(f, "  ", &p->constraints);
+    fprintf(f, ",\n");
 
     fprintf(f, "  \"global_pal_bg\": [");
     for (i = 0; i < R01_PAL_ROWS; i++) {
@@ -234,6 +295,9 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
         fprintf(f, "      \"default_bg_bank\": %d,\n", w->default_bg_bank);
         fprintf(f, "      \"default_pal_row\": %d,\n", w->default_pal_row);
         fprintf(f, "      \"use_world_pals\": %d,\n", w->use_world_pals ? 1 : 0);
+        fprintf(f, "      \"use_constraints\": %d,\n", w->use_constraints ? 1 : 0);
+        write_constraints(f, "      ", &w->constraints);
+        fprintf(f, ",\n");
         fprintf(f, "      \"pal_bg\": [");
         for (i = 0; i < R01_PAL_ROWS; i++) {
             fprintf(f, "[");
@@ -267,7 +331,17 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
             fprintf(f, "\",\n");
             fprintf(f, "          \"attrs_hex\": \"");
             write_hex(f, s->attrs, sizeof(s->attrs));
-            fprintf(f, "\"\n");
+            fprintf(f, "\",\n");
+            fprintf(f, "          \"oam\": [\n");
+            {
+                int oi;
+                for (oi = 0; oi < s->oam_count; oi++) {
+                    const R01Oam *o = &s->oam[oi];
+                    fprintf(f, "            {\"x\":%d,\"y\":%d,\"tile\":%d,\"attr\":%d}%s\n", o->x, o->y, o->tile,
+                            o->attr, oi + 1 < s->oam_count ? "," : "");
+                }
+            }
+            fprintf(f, "          ]\n");
             fprintf(f, "        }%s\n", si + 1 < w->screen_count ? "," : "");
         }
         fprintf(f, "      ],\n");
@@ -299,6 +373,38 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
             write_hex(f, b->chr, chr_n);
             fprintf(f, "\"\n");
             fprintf(f, "        }%s\n", bi + 1 < R01_BG_BANKS ? "," : "");
+        }
+        fprintf(f, "      ],\n");
+        fprintf(f, "      \"spr_banks\": [\n");
+        for (bi = 0; bi < R01_SPR_BANKS; bi++) {
+            const R01SprBank *b = &w->spr_banks[bi];
+            size_t chr_n = (size_t)b->tile_count * R01_TILE_BYTES;
+            fprintf(f, "        {\n");
+            fprintf(f, "          \"tile_count\": %d,\n", b->tile_count);
+            fprintf(f, "          \"chr_hex\": \"");
+            write_hex(f, b->chr, chr_n);
+            fprintf(f, "\"\n");
+            fprintf(f, "        }%s\n", bi + 1 < R01_SPR_BANKS ? "," : "");
+        }
+        fprintf(f, "      ],\n");
+        fprintf(f, "      \"metas\": [\n");
+        {
+            int mi;
+            for (mi = 0; mi < w->meta_count; mi++) {
+                const R01MetaSprite *m = &w->metas[mi];
+                int pi;
+                fprintf(f, "        {\n");
+                fprintf(f, "          \"present\": %d,\n", m->present ? 1 : 0);
+                fprintf(f, "          \"frame_count\": %d,\n", m->frame_count);
+                fprintf(f, "          \"parts\": [\n");
+                for (pi = 0; pi < m->part_count; pi++) {
+                    const R01MetaPart *part = &m->parts[pi];
+                    fprintf(f, "            {\"dx\":%d,\"dy\":%d,\"tile\":%d,\"attr\":%d}%s\n", part->dx, part->dy,
+                            part->tile, part->attr, pi + 1 < m->part_count ? "," : "");
+                }
+                fprintf(f, "          ]\n");
+                fprintf(f, "        }%s\n", mi + 1 < w->meta_count ? "," : "");
+            }
         }
         fprintf(f, "      ]\n");
         fprintf(f, "    }%s\n", wi + 1 < R01_MAX_WORLDS ? "," : "");
@@ -341,7 +447,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
 
     r01_project_init(p, "loaded");
     pcur = find_key(json, "version");
-    if (parse_int_after(pcur, &version) != 0 || version < 1 || version > 3) {
+    if (parse_int_after(pcur, &version) != 0 || version < 1 || version > 6) {
         free(json);
         set_err(err_buf, err_cap, "unsupported version");
         return -1;
@@ -365,6 +471,13 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
     parse_int_after(pcur, &p->generate_bank);
     pcur = find_key(json, "paint_color");
     parse_int_after(pcur, &p->paint_color);
+    pcur = find_key(json, "has_cart_save");
+    {
+        int hs = 0;
+        parse_int_after(pcur, &hs);
+        p->has_cart_save = hs ? 1 : 0;
+    }
+    parse_constraints_key(json, &p->constraints);
 
     pcur = find_key(json, "global_pal_bg");
     if (pcur) {
@@ -428,6 +541,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
             wblock[wlen] = 0;
 
             memset(w, 0, sizeof(*w));
+            r01_constraints_init_default(&w->constraints);
             pcur = find_key(wblock, "present");
             {
                 int pr = 0;
@@ -444,6 +558,13 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                 parse_int_after(pcur, &u);
                 w->use_world_pals = u ? 1 : 0;
             }
+            pcur = find_key(wblock, "use_constraints");
+            {
+                int u = 0;
+                parse_int_after(pcur, &u);
+                w->use_constraints = u ? 1 : 0;
+            }
+            parse_constraints_key(wblock, &w->constraints);
             pcur = find_key(wblock, "pal_bg");
             if (pcur) {
                 parse_pal_rows(pcur, w->pal_bg);
@@ -560,6 +681,65 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         pcur = find_key(sblock, "attrs_hex");
                         if (pcur && parse_string_after(pcur, hex, hexcap) == 0) {
                             parse_hex(hex, s->attrs, sizeof(s->attrs));
+                        }
+                        {
+                            const char *oam = strstr(sblock, "\"oam\"");
+                            const char *ocur;
+                            const char *oend = NULL;
+                            if (oam) {
+                                ocur = strchr(oam, '[');
+                                if (ocur) {
+                                    int depth = 0;
+                                    const char *q = ocur;
+                                    for (; *q; q++) {
+                                        if (*q == '[') {
+                                            depth++;
+                                        } else if (*q == ']') {
+                                            depth--;
+                                            if (depth == 0) {
+                                                oend = q;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    ocur++;
+                                    while (ocur && oend && ocur < oend && s->oam_count < R01_MAX_OAM_PER_SCREEN) {
+                                        const char *obrace = NULL;
+                                        const char *scan;
+                                        for (scan = ocur; scan < oend; scan++) {
+                                            if (*scan == '{') {
+                                                obrace = scan;
+                                                break;
+                                            }
+                                        }
+                                        if (!obrace) {
+                                            break;
+                                        }
+                                        {
+                                            int x = 0, y = 0, tile = 0, attr = 0;
+                                            const char *k;
+                                            k = find_key(obrace, "x");
+                                            parse_int_after(k, &x);
+                                            k = find_key(obrace, "y");
+                                            parse_int_after(k, &y);
+                                            k = find_key(obrace, "tile");
+                                            parse_int_after(k, &tile);
+                                            k = find_key(obrace, "attr");
+                                            parse_int_after(k, &attr);
+                                            s->oam[s->oam_count].x = (uint8_t)x;
+                                            s->oam[s->oam_count].y = (uint8_t)y;
+                                            s->oam[s->oam_count].tile = (uint8_t)tile;
+                                            s->oam[s->oam_count].attr = (uint8_t)attr;
+                                            s->oam_count++;
+                                        }
+                                        ocur = strchr(obrace, '}');
+                                        if (!ocur) {
+                                            break;
+                                        }
+                                        ocur++;
+                                    }
+                                }
+                            }
                         }
 
                         w->screen_count++;
@@ -746,6 +926,189 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                             free(bblock);
                             free(hexbuf);
                             bcur = bend;
+                        }
+                    }
+                }
+            }
+
+            {
+                const char *banks = strstr(wblock, "\"spr_banks\"");
+                const char *bcur;
+                if (banks) {
+                    bcur = strchr(banks, '[');
+                    if (bcur) {
+                        bcur++;
+                        for (bi = 0; bi < R01_SPR_BANKS; bi++) {
+                            const char *bobj = strchr(bcur, '{');
+                            const char *bend;
+                            char *bblock;
+                            size_t blen;
+                            char *hexbuf;
+                            size_t hexcap = R01_BANK_CHR_BYTES * 2 + 8;
+                            R01SprBank *b;
+
+                            if (!bobj) {
+                                break;
+                            }
+                            bend = bobj + 1;
+                            {
+                                int depth = 1;
+                                while (*bend && depth > 0) {
+                                    if (*bend == '{') {
+                                        depth++;
+                                    } else if (*bend == '}') {
+                                        depth--;
+                                    }
+                                    bend++;
+                                }
+                            }
+                            blen = (size_t)(bend - bobj);
+                            bblock = (char *)malloc(blen + 1);
+                            hexbuf = (char *)malloc(hexcap);
+                            if (!bblock || !hexbuf) {
+                                free(bblock);
+                                free(hexbuf);
+                                free(wblock);
+                                free(json);
+                                set_err(err_buf, err_cap, "oom");
+                                return -1;
+                            }
+                            memcpy(bblock, bobj, blen);
+                            bblock[blen] = 0;
+                            b = &w->spr_banks[bi];
+                            memset(b, 0, sizeof(*b));
+                            pcur = find_key(bblock, "tile_count");
+                            parse_int_after(pcur, &b->tile_count);
+                            if (b->tile_count < 0) {
+                                b->tile_count = 0;
+                            }
+                            if (b->tile_count > R01_TILES_PER_BANK) {
+                                b->tile_count = R01_TILES_PER_BANK;
+                            }
+                            pcur = find_key(bblock, "chr_hex");
+                            if (pcur && parse_string_after(pcur, hexbuf, hexcap) == 0) {
+                                size_t need = (size_t)b->tile_count * R01_TILE_BYTES;
+                                if (need > 0) {
+                                    parse_hex(hexbuf, b->chr, need);
+                                }
+                            }
+                            free(bblock);
+                            free(hexbuf);
+                            bcur = bend;
+                        }
+                    }
+                }
+            }
+
+            {
+                const char *metas = strstr(wblock, "\"metas\"");
+                const char *mcur;
+                const char *mend = NULL;
+                if (metas) {
+                    mcur = strchr(metas, '[');
+                    if (mcur) {
+                        int depth = 0;
+                        const char *q = mcur;
+                        for (; *q; q++) {
+                            if (*q == '[') {
+                                depth++;
+                            } else if (*q == ']') {
+                                depth--;
+                                if (depth == 0) {
+                                    mend = q;
+                                    break;
+                                }
+                            }
+                        }
+                        mcur++;
+                        while (mcur && mend && mcur < mend && w->meta_count < R01_MAX_METASPRITES) {
+                            const char *mobj = NULL;
+                            const char *scan;
+                            const char *mobj_end;
+                            R01MetaSprite *m;
+                            for (scan = mcur; scan < mend; scan++) {
+                                if (*scan == '{') {
+                                    mobj = scan;
+                                    break;
+                                }
+                            }
+                            if (!mobj) {
+                                break;
+                            }
+                            mobj_end = mobj + 1;
+                            {
+                                int d = 1;
+                                while (mobj_end < mend && d > 0) {
+                                    if (*mobj_end == '{') {
+                                        d++;
+                                    } else if (*mobj_end == '}') {
+                                        d--;
+                                    }
+                                    mobj_end++;
+                                }
+                            }
+                            m = &w->metas[w->meta_count];
+                            memset(m, 0, sizeof(*m));
+                            {
+                                int pr = 1, fc = 1;
+                                const char *k = find_key(mobj, "present");
+                                parse_int_after(k, &pr);
+                                m->present = pr ? 1 : 0;
+                                k = find_key(mobj, "frame_count");
+                                parse_int_after(k, &fc);
+                                m->frame_count = fc < 1 ? 1 : (fc > R01_MAX_META_FRAMES ? R01_MAX_META_FRAMES : fc);
+                            }
+                            {
+                                const char *parts = strstr(mobj, "\"parts\"");
+                                const char *pcur2;
+                                const char *pend = mobj_end;
+                                if (parts && parts < mobj_end) {
+                                    pcur2 = strchr(parts, '[');
+                                    if (pcur2) {
+                                        pcur2++;
+                                        while (pcur2 < pend && m->part_count < R01_MAX_META_PARTS) {
+                                            const char *pobj = NULL;
+                                            const char *ps;
+                                            for (ps = pcur2; ps < pend; ps++) {
+                                                if (*ps == '{') {
+                                                    pobj = ps;
+                                                    break;
+                                                }
+                                                if (*ps == ']') {
+                                                    pobj = NULL;
+                                                    break;
+                                                }
+                                            }
+                                            if (!pobj) {
+                                                break;
+                                            }
+                                            {
+                                                int dx = 0, dy = 0, tile = 0, attr = 0;
+                                                const char *k = find_key(pobj, "dx");
+                                                parse_int_after(k, &dx);
+                                                k = find_key(pobj, "dy");
+                                                parse_int_after(k, &dy);
+                                                k = find_key(pobj, "tile");
+                                                parse_int_after(k, &tile);
+                                                k = find_key(pobj, "attr");
+                                                parse_int_after(k, &attr);
+                                                m->parts[m->part_count].dx = (int8_t)dx;
+                                                m->parts[m->part_count].dy = (int8_t)dy;
+                                                m->parts[m->part_count].tile = (uint8_t)tile;
+                                                m->parts[m->part_count].attr = (uint8_t)attr;
+                                                m->part_count++;
+                                            }
+                                            pcur2 = strchr(pobj, '}');
+                                            if (!pcur2) {
+                                                break;
+                                            }
+                                            pcur2++;
+                                        }
+                                    }
+                                }
+                            }
+                            w->meta_count++;
+                            mcur = mobj_end;
                         }
                     }
                 }

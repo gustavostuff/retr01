@@ -1,14 +1,8 @@
 # Retr01 Studio
 
-Phase 0–2 authoring tool for Retr01 worlds / screens / BG CHR / attrs / palettes.
+Phase 0–5 authoring tool for Retr01 worlds / screens / CHR / palettes / OAM / constraints / Play / cart export.
 
-**Stack:** C11 + SDL2 (not Love2D). Shared `libretr01_studio_core` + thin SDL shell — matches [`docs/04_retr01_studio.md`](../docs/04_retr01_studio.md).
-
-## Why C + SDL2 (not Love2D + C)
-
-- Docs already specify C/C++ and CTest for the core.
-- One language for pack/JSON and later cart emit / tooling.
-- Love2D is fine for prototypes; FFI + dual runtime is extra cost for a long-lived Studio.
+**Stack:** C11 + SDL2. Shared `libretr01_studio_core` + thin SDL shell — matches [`docs/04_retr01_studio.md`](../docs/04_retr01_studio.md).
 
 ## Build
 
@@ -26,23 +20,31 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 
 | Action | How |
 |--------|-----|
-| World tab | Click 1-8 (UI) = hardware worlds 0-7 |
-| Place / remove screen | **Ctrl+click** world grid cell |
-| Select screen | Click cell with a screen |
-| Parallax plane | **Ctrl+click** **P0**/**P1** to toggle; click to edit (not on grid) |
-| Pixel / attr mode | **Tab** or **PIX** / **ATTR** buttons |
-| Paint | Pixel mode: click/drag (colors 0-3, keys **1-4**) |
-| Edit tile attrs | Attr mode: click tile, then **B** bank, **P** pal, **H**/**V** flip, **O** solid, **N** anim |
-| Generate bank radio | Toolbar BANK 0-3 **or** left BG bank tabs (same target via `select_bg_bank`) |
-| Generate CHR | **Ctrl+G** — packs into selected bank; view stays on that bank |
-| Tile grid overlay | **G** — toggle faint 8x8 grid on Screen |
-| Palettes | Scroll left column; tabs **B0-B3** / **S0-S3**; click swatch + master grid or **-**/**=** |
-| Save / load | **Ctrl+S** / **Ctrl+O** → `project.json` (format v3) |
-| Scroll left column | **Mouse wheel** over left panel |
-| Fullscreen | **Ctrl+F** (integer scale) |
+| World / planes | Ctrl+click grid or **P0/P1** |
+| Layer | **L** or **BG** / **SPR** buttons |
+| Pixel / attr (BG) | **Tab** or **PIX** / **ATTR** |
+| Paint BG | BG layer + PIX: drag (colors **1-4**) |
+| BG attrs | ATTR: **B P H V O N** |
+| Sprite tile paint | SPR + **TILE**: paint 8x8 CHR (**1-4**) |
+| Place OAM | SPR + **PLACE**: click screen |
+| Generate | **Ctrl+G** — BG or SPR bank by layer |
+| Grid overlay | **G** |
+| Constraints / Play | Scroll left; **Space** / **PLAY**; arrows / WASD |
+| Cart I2C save flag | **I2C SAV** in Constraints |
+| Export cart | **Ctrl+E** → `project.retr01`, `_prom.bin`, `_boot.s`, `_flash.bin` |
+| Save / load | **Ctrl+S** / **Ctrl+O** → `project.json` (v6) |
 
-Sprite banks remain Phase 3 stubs.
+## Export
+
+**Ctrl+E** writes next to the project stem:
+
+| File | Contents |
+|------|----------|
+| `*.retr01` | Packed cart (magic `RETR01`, pals, 32 KB stub PRG, worlds/CHR/MAP) |
+| `*_prom.bin` | 64-byte Color PROM (R3G3B2) |
+| `*_boot.s` | Readable ca65 stub + constraint equates |
+| `*_flash.bin` | Same image padded to **512 KB** (SST39SF040) |
 
 ## Layout
 
-Fixed logical canvas **640x360**, integer-scaled window (default 2x). Left column is a scrollable viewport so Worlds / Planes / BG / Sprite / Palette panels keep natural heights.
+Fixed **640x360** logical canvas, integer scale. Left column scrolls (Worlds / Planes / BG / Sprite / Palettes / Constraints).

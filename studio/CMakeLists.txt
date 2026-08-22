@@ -10,6 +10,9 @@ add_library(retr01_studio_core
   core/src/chr_pack.c
   core/src/json_io.c
   core/src/palette.c
+  core/src/spr_pack.c
+  core/src/play.c
+  core/src/cart.c
 )
 target_include_directories(retr01_studio_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include

@@ -237,6 +237,30 @@ app/src/ui.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio.dir/build.make CMakeFiles/retr01_studio.dir/app/src/ui.c.s
 .PHONY : app/src/ui.c.s
 
+core/src/cart.o: core/src/cart.c.o
+.PHONY : core/src/cart.o
+
+# target to build an object file
+core/src/cart.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_core.dir/build.make CMakeFiles/retr01_studio_core.dir/core/src/cart.c.o
+.PHONY : core/src/cart.c.o
+
+core/src/cart.i: core/src/cart.c.i
+.PHONY : core/src/cart.i
+
+# target to preprocess a source file
+core/src/cart.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_core.dir/build.make CMakeFiles/retr01_studio_core.dir/core/src/cart.c.i
+.PHONY : core/src/cart.c.i
+
+core/src/cart.s: core/src/cart.c.s
+.PHONY : core/src/cart.s
+
+# target to generate assembly for a file
+core/src/cart.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_core.dir/build.make CMakeFiles/retr01_studio_core.dir/core/src/cart.c.s
+.PHONY : core/src/cart.c.s
+
 core/src/chr_pack.o: core/src/chr_pack.c.o
 .PHONY : core/src/chr_pack.o
 
@@ -309,6 +333,30 @@ core/src/palette.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_core.dir/build.make CMakeFiles/retr01_studio_core.dir/core/src/palette.c.s
 .PHONY : core/src/palette.c.s
 
+core/src/play.o: core/src/play.c.o
+.PHONY : core/src/play.o
+
+# target to build an object file
+core/src/play.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_core.dir/build.make CMakeFiles/retr01_studio_core.dir/core/src/play.c.o
+.PHONY : core/src/play.c.o
+
+core/src/play.i: core/src/play.c.i
+.PHONY : core/src/play.i
+
+# target to preprocess a source file
+core/src/play.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_core.dir/build.make CMakeFiles/retr01_studio_core.dir/core/src/play.c.i
+.PHONY : core/src/play.c.i
+
+core/src/play.s: core/src/play.c.s
+.PHONY : core/src/play.s
+
+# target to generate assembly for a file
+core/src/play.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_core.dir/build.make CMakeFiles/retr01_studio_core.dir/core/src/play.c.s
+.PHONY : core/src/play.c.s
+
 core/src/project.o: core/src/project.c.o
 .PHONY : core/src/project.o
 
@@ -332,6 +380,30 @@ core/src/project.s: core/src/project.c.s
 core/src/project.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_core.dir/build.make CMakeFiles/retr01_studio_core.dir/core/src/project.c.s
 .PHONY : core/src/project.c.s
+
+core/src/spr_pack.o: core/src/spr_pack.c.o
+.PHONY : core/src/spr_pack.o
+
+# target to build an object file
+core/src/spr_pack.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_core.dir/build.make CMakeFiles/retr01_studio_core.dir/core/src/spr_pack.c.o
+.PHONY : core/src/spr_pack.c.o
+
+core/src/spr_pack.i: core/src/spr_pack.c.i
+.PHONY : core/src/spr_pack.i
+
+# target to preprocess a source file
+core/src/spr_pack.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_core.dir/build.make CMakeFiles/retr01_studio_core.dir/core/src/spr_pack.c.i
+.PHONY : core/src/spr_pack.c.i
+
+core/src/spr_pack.s: core/src/spr_pack.c.s
+.PHONY : core/src/spr_pack.s
+
+# target to generate assembly for a file
+core/src/spr_pack.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_core.dir/build.make CMakeFiles/retr01_studio_core.dir/core/src/spr_pack.c.s
+.PHONY : core/src/spr_pack.c.s
 
 core/tests/test_core.o: core/tests/test_core.c.o
 .PHONY : core/tests/test_core.o
@@ -378,6 +450,9 @@ help:
 	@echo "... app/src/ui.o"
 	@echo "... app/src/ui.i"
 	@echo "... app/src/ui.s"
+	@echo "... core/src/cart.o"
+	@echo "... core/src/cart.i"
+	@echo "... core/src/cart.s"
 	@echo "... core/src/chr_pack.o"
 	@echo "... core/src/chr_pack.i"
 	@echo "... core/src/chr_pack.s"
@@ -387,9 +462,15 @@ help:
 	@echo "... core/src/palette.o"
 	@echo "... core/src/palette.i"
 	@echo "... core/src/palette.s"
+	@echo "... core/src/play.o"
+	@echo "... core/src/play.i"
+	@echo "... core/src/play.s"
 	@echo "... core/src/project.o"
 	@echo "... core/src/project.i"
 	@echo "... core/src/project.s"
+	@echo "... core/src/spr_pack.o"
+	@echo "... core/src/spr_pack.i"
+	@echo "... core/src/spr_pack.s"
 	@echo "... core/tests/test_core.o"
 	@echo "... core/tests/test_core.i"
 	@echo "... core/tests/test_core.s"

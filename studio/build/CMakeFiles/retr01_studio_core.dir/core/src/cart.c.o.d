@@ -1,6 +1,5 @@
-CMakeFiles/test_core.dir/core/tests/test_core.c.o: \
- /home/g/Repos/retr01/studio/core/tests/test_core.c \
- /usr/include/stdc-predef.h \
+CMakeFiles/retr01_studio_core.dir/core/src/cart.c.o: \
+ /home/g/Repos/retr01/studio/core/src/cart.c /usr/include/stdc-predef.h \
  /home/g/Repos/retr01/studio/core/include/retr01_studio/cart.h \
  /home/g/Repos/retr01/studio/core/include/retr01_studio/types.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stddef.h \
@@ -15,10 +14,7 @@ CMakeFiles/test_core.dir/core/tests/test_core.c.o: \
  /usr/include/bits/stdint-intn.h /usr/include/bits/stdint-uintn.h \
  /usr/include/bits/stdint-least.h \
  /home/g/Repos/retr01/studio/core/include/retr01_studio/chr_pack.h \
- /home/g/Repos/retr01/studio/core/include/retr01_studio/json_io.h \
  /home/g/Repos/retr01/studio/core/include/retr01_studio/palette.h \
- /home/g/Repos/retr01/studio/core/include/retr01_studio/play.h \
- /home/g/Repos/retr01/studio/core/include/retr01_studio/project.h \
  /home/g/Repos/retr01/studio/core/include/retr01_studio/spr_pack.h \
  /usr/include/stdio.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdarg.h \

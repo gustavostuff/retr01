@@ -112,6 +112,8 @@ int main(int argc, char **argv) {
             dst.x = (ww - dst.w) / 2;
             dst.y = (wh - dst.h) / 2;
 
+            ui_tick(&ui);
+
             SDL_SetRenderTarget(ren, target);
             ui_draw(&ui, ren);
             SDL_SetRenderTarget(ren, NULL);

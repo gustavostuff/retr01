@@ -257,6 +257,7 @@ CMakeFiles/retr01_studio.dir/app/src/font.c.o: /home/g/Repos/retr01/studio/app/s
 
 CMakeFiles/retr01_studio.dir/app/src/main.c.o: /home/g/Repos/retr01/studio/app/src/main.c \
   /home/g/Repos/retr01/studio/app/src/ui.h \
+  /home/g/Repos/retr01/studio/core/include/retr01_studio/play.h \
   /home/g/Repos/retr01/studio/core/include/retr01_studio/project.h \
   /home/g/Repos/retr01/studio/core/include/retr01_studio/types.h \
   /usr/include/SDL2/SDL.h \
@@ -514,10 +515,13 @@ CMakeFiles/retr01_studio.dir/app/src/main.c.o: /home/g/Repos/retr01/studio/app/s
 CMakeFiles/retr01_studio.dir/app/src/ui.c.o: /home/g/Repos/retr01/studio/app/src/ui.c \
   /home/g/Repos/retr01/studio/app/src/font.h \
   /home/g/Repos/retr01/studio/app/src/ui.h \
+  /home/g/Repos/retr01/studio/core/include/retr01_studio/cart.h \
   /home/g/Repos/retr01/studio/core/include/retr01_studio/chr_pack.h \
   /home/g/Repos/retr01/studio/core/include/retr01_studio/json_io.h \
   /home/g/Repos/retr01/studio/core/include/retr01_studio/palette.h \
+  /home/g/Repos/retr01/studio/core/include/retr01_studio/play.h \
   /home/g/Repos/retr01/studio/core/include/retr01_studio/project.h \
+  /home/g/Repos/retr01/studio/core/include/retr01_studio/spr_pack.h \
   /home/g/Repos/retr01/studio/core/include/retr01_studio/types.h \
   /usr/include/SDL2/SDL.h \
   /usr/include/SDL2/SDL_assert.h \
@@ -807,11 +811,17 @@ CMakeFiles/retr01_studio.dir/app/src/main.c.o:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/libatomic_asneeded.so:
 
+/home/g/Repos/retr01/studio/core/include/retr01_studio/spr_pack.h:
+
 /home/g/Repos/retr01/studio/core/include/retr01_studio/palette.h:
 
 /home/g/Repos/retr01/studio/core/include/retr01_studio/json_io.h:
 
 /home/g/Repos/retr01/studio/core/include/retr01_studio/chr_pack.h:
+
+/home/g/Repos/retr01/studio/core/include/retr01_studio/cart.h:
+
+/home/g/Repos/retr01/studio/core/include/retr01_studio/types.h:
 
 /usr/include/bits/endianness.h:
 
@@ -1019,6 +1029,8 @@ libretr01_studio_core.a:
 
 /usr/include/bits/mathcalls-macros.h:
 
+/home/g/Repos/retr01/studio/core/include/retr01_studio/play.h:
+
 /usr/include/stdlib.h:
 
 /usr/include/SDL2/SDL_config.h:
@@ -1196,8 +1208,6 @@ libretr01_studio_core.a:
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx512ifmavlintrin.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/raointintrin.h:
-
-/home/g/Repos/retr01/studio/core/include/retr01_studio/types.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx512vbmi2intrin.h:
 

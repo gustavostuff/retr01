@@ -1,9 +1,12 @@
 #include "ui.h"
 #include "font.h"
 
+#include "retr01_studio/cart.h"
 #include "retr01_studio/chr_pack.h"
 #include "retr01_studio/json_io.h"
 #include "retr01_studio/palette.h"
+#include "retr01_studio/play.h"
+#include "retr01_studio/spr_pack.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,6 +56,13 @@ int ui_init(UiState *ui) {
     ui->scale = 2;
     ui->world_tab = 1;
     ui->bg_bank_tab = 0;
+    ui->spr_bank_tab = 0;
+    ui->spr_tile = 0;
+    ui->spr_tool = UI_SPR_TOOL_PLACE;
+    ui->spr_size16 = 0;
+    ui->oam_sel = -1;
+    ui->meta_sel = -1;
+    ui->layer = UI_LAYER_BG;
     ui->screen_zoom = 2;
     ui->left_scroll_y = 0;
     ui->edit_mode = UI_MODE_PIXEL;
@@ -61,8 +71,10 @@ int ui_init(UiState *ui) {
     ui->pal_row_tab = 0;
     ui->pal_slot = 0;
     ui->show_grid = 1;
+    ui->play_last_tick = 0;
+    memset(&ui->play, 0, sizeof(ui->play));
     snprintf(ui->status, sizeof(ui->status),
-             "Tab=pix/attr | G=grid | Ctrl+G=gen | wheel=scroll left | S/O=save/load");
+             "Space=Play | Ctrl+E=export | Ctrl+G=gen | wheel=scroll");
     strncpy(ui->project_path, "project.json", R01_PATH_MAX - 1);
     return 0;
 }
@@ -70,6 +82,60 @@ int ui_init(UiState *ui) {
 void ui_shutdown(UiState *ui) {
     free(ui->project);
     ui->project = NULL;
+}
+
+static R01Constraints *edit_constraints(UiState *ui) {
+    R01World *w = &ui->project->worlds[ui->project->active_world];
+    if (w->present && w->use_constraints) {
+        return &w->constraints;
+    }
+    return &ui->project->constraints;
+}
+
+static const char *scroll_mode_name(int mode) {
+    switch (mode) {
+    case R01_SCROLL_DEADZONE:
+        return "DEADZ";
+    case R01_SCROLL_INSTANT:
+        return "INST";
+    case R01_SCROLL_HYBRID:
+        return "HYBRID";
+    default:
+        return "PIXEL";
+    }
+}
+
+void ui_tick(UiState *ui) {
+    const Uint8 *keys;
+    Uint32 now;
+    int dx = 0, dy = 0;
+    if (!ui->play.active) {
+        return;
+    }
+    now = SDL_GetTicks();
+    if (ui->play_last_tick == 0) {
+        ui->play_last_tick = now;
+        return;
+    }
+    /* ~60 Hz soft tick */
+    if (now - ui->play_last_tick < 16) {
+        return;
+    }
+    ui->play_last_tick = now;
+    keys = SDL_GetKeyboardState(NULL);
+    if (keys[SDL_SCANCODE_LEFT] || keys[SDL_SCANCODE_A]) {
+        dx = -1;
+    }
+    if (keys[SDL_SCANCODE_RIGHT] || keys[SDL_SCANCODE_D]) {
+        dx = 1;
+    }
+    if (keys[SDL_SCANCODE_UP] || keys[SDL_SCANCODE_W]) {
+        dy = -1;
+    }
+    if (keys[SDL_SCANCODE_DOWN] || keys[SDL_SCANCODE_S]) {
+        dy = 1;
+    }
+    r01_play_tick(&ui->play, ui->project, dx, dy);
 }
 
 static void fill_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B) {
@@ -205,11 +271,51 @@ static void draw_bg_banks(UiState *ui, SDL_Renderer *r) {
     }
 }
 
-static void draw_sprite_stub(UiState *ui, SDL_Renderer *r) {
+static void draw_sprite_banks(UiState *ui, SDL_Renderer *r) {
+    R01World *w = cur_world(ui);
+    int b, ty, tx;
     int oy = -ui->left_scroll_y;
+    const int sheet_x = 4;
+    const int sheet_y = UI_SPR_Y + 34 + oy;
     fill_rect(r, 0, UI_SPR_Y + oy, UI_LEFT_W, UI_SPR_H, 22, 24, 28);
-    font_draw(r, 4, UI_SPR_Y + 4 + oy, "SPRITE BANKS", 90, 90, 100);
-    font_draw(r, 4, UI_SPR_Y + 16 + oy, "PHASE 3", 70, 70, 80);
+    font_draw(r, 4, UI_SPR_Y + 2 + oy, "SPRITE BANKS", 200, 200, 210);
+    for (b = 0; b < 4; b++) {
+        int x = 4 + b * 22;
+        int sel = (b == ui->spr_bank_tab);
+        fill_rect(r, x, UI_SPR_Y + 14 + oy, 20, 12, sel ? 70 : 40, sel ? 90 : 48, sel ? 120 : 60);
+        {
+            char buf[4];
+            snprintf(buf, sizeof(buf), "%d", b);
+            font_draw(r, x + 7, UI_SPR_Y + 16 + oy, buf, 230, 230, 240);
+        }
+    }
+    {
+        int x = 100;
+        fill_rect(r, x, UI_SPR_Y + 14 + oy, 40, 12, ui->spr_size16 ? 80 : 40, ui->spr_size16 ? 100 : 48,
+                  ui->spr_size16 ? 70 : 55);
+        font_draw(r, x + 4, UI_SPR_Y + 16 + oy, ui->spr_size16 ? "8X16" : "8X8", 230, 230, 240);
+    }
+    if (w) {
+        R01SprBank *bank = &w->spr_banks[ui->spr_bank_tab];
+        char buf[24];
+        for (ty = 0; ty < 8; ty++) {
+            for (tx = 0; tx < 16; tx++) {
+                int ti = ty * 16 + tx;
+                int x = sheet_x + tx * 8;
+                int y = sheet_y + ty * 8;
+                if (ti >= bank->tile_count) {
+                    fill_rect(r, x, y, 8, 8, 32, 34, 40);
+                } else {
+                    draw_chr_tile(r, x, y, &bank->chr[ti * R01_TILE_BYTES]);
+                }
+                if (ti == ui->spr_tile) {
+                    draw_rect(r, x, y, 8, 8, 255, 200, 80);
+                }
+            }
+        }
+        snprintf(buf, sizeof(buf), "T%d/%d", ui->spr_tile, bank->tile_count);
+        font_draw(r, 150, UI_SPR_Y + 16 + oy, buf, 160, 160, 170);
+    }
 }
 
 static void draw_palettes(UiState *ui, SDL_Renderer *r) {
@@ -253,6 +359,62 @@ static void draw_palettes(UiState *ui, SDL_Renderer *r) {
     }
 }
 
+static void draw_constraints(UiState *ui, SDL_Renderer *r) {
+    int oy = -ui->left_scroll_y;
+    R01World *w = cur_world(ui);
+    R01Constraints *c = edit_constraints(ui);
+    char buf[48];
+    int y0 = UI_CONSTRAINTS_Y + oy;
+    fill_rect(r, 0, y0, UI_LEFT_W, UI_CONSTRAINTS_H, 18, 20, 24);
+    font_draw(r, 4, y0 + 4, "CONSTRAINTS", 200, 200, 210);
+    fill_rect(r, 120, y0 + 2, 36, 12, ui->play.active ? 90 : 40, ui->play.active ? 120 : 48,
+              ui->play.active ? 70 : 55);
+    font_draw(r, 124, y0 + 4, "PLAY", 230, 230, 240);
+
+    fill_rect(r, 4, y0 + 20, 48, 12, (w && w->use_constraints) ? 80 : 40,
+              (w && w->use_constraints) ? 100 : 48, (w && w->use_constraints) ? 70 : 55);
+    font_draw(r, 8, y0 + 22, w && w->use_constraints ? "WORLD" : "PROJ", 230, 230, 240);
+
+    snprintf(buf, sizeof(buf), "SCROLL %s", scroll_mode_name(c->scroll_mode));
+    fill_rect(r, 56, y0 + 20, 80, 12, 40, 48, 60);
+    font_draw(r, 60, y0 + 22, buf, 230, 230, 240);
+
+    fill_rect(r, 140, y0 + 20, 44, 12, 40, 48, 60);
+    font_draw(r, 144, y0 + 22, c->transition == R01_XITION_FADE ? "FADE" : "CUT", 230, 230, 240);
+
+    snprintf(buf, sizeof(buf), "ANIM %d  ENEMY %d", c->anim_rate, c->enemy_anim_rate);
+    font_draw(r, 4, y0 + 40, buf, 160, 160, 170);
+    fill_rect(r, 4, y0 + 52, 20, 12, 40, 48, 60);
+    font_draw(r, 8, y0 + 54, "A-", 230, 230, 240);
+    fill_rect(r, 28, y0 + 52, 20, 12, 40, 48, 60);
+    font_draw(r, 32, y0 + 54, "A+", 230, 230, 240);
+    fill_rect(r, 56, y0 + 52, 20, 12, 40, 48, 60);
+    font_draw(r, 60, y0 + 54, "E-", 230, 230, 240);
+    fill_rect(r, 80, y0 + 52, 20, 12, 40, 48, 60);
+    font_draw(r, 84, y0 + 54, "E+", 230, 230, 240);
+
+    snprintf(buf, sizeof(buf), "DZ %d,%d  META %d", c->deadzone_x, c->deadzone_y, c->player_meta);
+    font_draw(r, 4, y0 + 72, buf, 160, 160, 170);
+    fill_rect(r, 4, y0 + 84, 28, 12, 40, 48, 60);
+    font_draw(r, 6, y0 + 86, "DX-", 230, 230, 240);
+    fill_rect(r, 36, y0 + 84, 28, 12, 40, 48, 60);
+    font_draw(r, 38, y0 + 86, "DX+", 230, 230, 240);
+    fill_rect(r, 68, y0 + 84, 28, 12, 40, 48, 60);
+    font_draw(r, 70, y0 + 86, "DY-", 230, 230, 240);
+    fill_rect(r, 100, y0 + 84, 28, 12, 40, 48, 60);
+    font_draw(r, 102, y0 + 86, "DY+", 230, 230, 240);
+    fill_rect(r, 132, y0 + 84, 28, 12, 40, 48, 60);
+    font_draw(r, 134, y0 + 86, "M-", 230, 230, 240);
+    fill_rect(r, 164, y0 + 84, 28, 12, 40, 48, 60);
+    font_draw(r, 166, y0 + 86, "M+", 230, 230, 240);
+
+    font_draw(r, 4, y0 + 108, "ARROWS MOVE IN PLAY", 110, 110, 120);
+    fill_rect(r, 4, y0 + 120, 52, 12, ui->project->has_cart_save ? 80 : 40,
+              ui->project->has_cart_save ? 100 : 48, ui->project->has_cart_save ? 70 : 55);
+    font_draw(r, 8, y0 + 122, "I2C SAV", 230, 230, 240);
+    font_draw(r, 60, y0 + 122, "CTRL+E EXPORT", 110, 110, 120);
+}
+
 static void draw_left_scrollbar(UiState *ui, SDL_Renderer *r) {
     int max = left_scroll_max();
     int track_x = UI_LEFT_W - UI_LEFT_SCROLLBAR_W;
@@ -277,6 +439,70 @@ static void screen_to_pixel(UiState *ui, int lx, int ly, int *ox, int *oy) {
     *oy = (ly - view_y) / zx + ui->screen_pan_y;
 }
 
+static void draw_oam_sprite(UiState *ui, SDL_Renderer *r, R01World *w, const R01Oam *o, int view_x, int view_y,
+                            int zx, int selected) {
+    int row, h = r01_oam_size_16(o->attr) ? 2 : 1;
+    int bank = r01_attr_bank(o->attr);
+    for (row = 0; row < h; row++) {
+        int ty, tx;
+        uint8_t tile = (uint8_t)(o->tile + row);
+        if (r01_oam_size_16(o->attr)) {
+            tile = (uint8_t)((o->tile & 0xFE) + row);
+        }
+        for (ty = 0; ty < 8; ty++) {
+            for (tx = 0; tx < 8; tx++) {
+                uint8_t cr, cg, cb;
+                int opaque = 0;
+                r01_spr_chr_rgb(ui->project, w, bank, tile, o->attr, tx, ty, &cr, &cg, &cb, &opaque);
+                if (!opaque) {
+                    continue;
+                }
+                fill_rect(r, view_x + (o->x + tx) * zx, view_y + (o->y + row * 8 + ty) * zx, zx, zx, cr, cg, cb);
+            }
+        }
+    }
+    if (selected) {
+        int hh = h * 8 * zx;
+        draw_rect(r, view_x + o->x * zx, view_y + o->y * zx, 8 * zx, hh, 255, 220, 80);
+    }
+}
+
+static void draw_play_view(UiState *ui, SDL_Renderer *r) {
+    int view_x = UI_LEFT_W + 8;
+    int view_y = 28;
+    int zx = ui->screen_zoom;
+    int x, y;
+    char buf[64];
+    const R01Constraints *c = r01_project_constraints(ui->project);
+
+    fill_rect(r, UI_LEFT_W, 0, UI_LOGIC_W - UI_LEFT_W, UI_LOGIC_H, 18, 20, 26);
+    font_draw(r, UI_LEFT_W + 4, 4, "PLAY", 200, 255, 180);
+    fill_rect(r, UI_LEFT_W + 52, 2, 40, 12, 90, 120, 70);
+    font_draw(r, UI_LEFT_W + 56, 4, "STOP", 230, 230, 240);
+    snprintf(buf, sizeof(buf), "%s  CAM %d,%d", scroll_mode_name(c ? c->scroll_mode : 0), ui->play.cam_x,
+             ui->play.cam_y);
+    font_draw(r, UI_LEFT_W + 100, 4, buf, 160, 200, 160);
+
+    for (y = 0; y < R01_SCREEN_PX_H; y++) {
+        for (x = 0; x < R01_SCREEN_PX_W; x++) {
+            uint8_t cr, cg, cb;
+            r01_play_sample(ui->project, &ui->play, x, y, &cr, &cg, &cb);
+            fill_rect(r, view_x + x * zx, view_y + y * zx, zx, zx, cr, cg, cb);
+        }
+    }
+    {
+        int px = ui->play.player_x - ui->play.cam_x;
+        int py = ui->play.player_y - ui->play.cam_y;
+        if (px >= 0 && py >= 0 && px < R01_SCREEN_PX_W && py < R01_SCREEN_PX_H) {
+            fill_rect(r, view_x + px * zx - zx, view_y + py * zx - zx, zx * 3, zx * 3, 80, 220, 255);
+            fill_rect(r, view_x + px * zx, view_y + py * zx, zx, zx, 255, 255, 255);
+        }
+    }
+    snprintf(buf, sizeof(buf), "PLAYER %d,%d  FADE %d", ui->play.player_x, ui->play.player_y, ui->play.fade);
+    font_draw(r, view_x, view_y + R01_SCREEN_PX_H * zx + 4, buf, 160, 200, 160);
+    font_draw(r, UI_LEFT_W + 4, UI_LOGIC_H - 12, ui->status, 130, 130, 140);
+}
+
 static void draw_screen(UiState *ui, SDL_Renderer *r) {
     R01World *w = cur_world(ui);
     R01EditSurface surf;
@@ -287,26 +513,53 @@ static void draw_screen(UiState *ui, SDL_Renderer *r) {
     int zx = ui->screen_zoom;
     int x, y;
     char buf[64];
+    int spr_tile_edit = (ui->layer == UI_LAYER_SPR && ui->spr_tool == UI_SPR_TOOL_TILE);
+
+    if (ui->play.active) {
+        draw_play_view(ui, r);
+        return;
+    }
 
     fill_rect(r, UI_LEFT_W, 0, UI_LOGIC_W - UI_LEFT_W, UI_LOGIC_H, 18, 20, 26);
     font_draw(r, UI_LEFT_W + 4, 4, "SCREEN", 200, 200, 210);
 
     {
         int mx = UI_LEFT_W + 52;
-        fill_rect(r, mx, 2, 40, 12, ui->edit_mode == UI_MODE_PIXEL ? 80 : 40,
+        fill_rect(r, mx, 2, 28, 12, ui->layer == UI_LAYER_BG ? 80 : 40, ui->layer == UI_LAYER_BG ? 100 : 48,
+                  ui->layer == UI_LAYER_BG ? 70 : 55);
+        font_draw(r, mx + 6, 4, "BG", 230, 230, 240);
+        fill_rect(r, mx + 30, 2, 32, 12, ui->layer == UI_LAYER_SPR ? 80 : 40, ui->layer == UI_LAYER_SPR ? 100 : 48,
+                  ui->layer == UI_LAYER_SPR ? 70 : 55);
+        font_draw(r, mx + 34, 4, "SPR", 230, 230, 240);
+        fill_rect(r, mx + 68, 2, 32, 12, ui->edit_mode == UI_MODE_PIXEL ? 80 : 40,
                   ui->edit_mode == UI_MODE_PIXEL ? 100 : 48, ui->edit_mode == UI_MODE_PIXEL ? 70 : 55);
-        font_draw(r, mx + 4, 4, "PIX", 230, 230, 240);
-        fill_rect(r, mx + 42, 2, 40, 12, ui->edit_mode == UI_MODE_ATTR ? 80 : 40,
+        font_draw(r, mx + 72, 4, "PIX", 230, 230, 240);
+        fill_rect(r, mx + 102, 2, 36, 12, ui->edit_mode == UI_MODE_ATTR ? 80 : 40,
                   ui->edit_mode == UI_MODE_ATTR ? 100 : 48, ui->edit_mode == UI_MODE_ATTR ? 70 : 55);
-        font_draw(r, mx + 46, 4, "ATTR", 230, 230, 240);
+        font_draw(r, mx + 106, 4, "ATTR", 230, 230, 240);
     }
 
-    if (ui->edit_mode == UI_MODE_PIXEL) {
-        font_draw(r, UI_LEFT_W + 140, 4, "COLOR", 140, 140, 150);
+    if (ui->layer == UI_LAYER_SPR) {
+        int mx = UI_LEFT_W + 200;
+        fill_rect(r, mx, 2, 40, 12, ui->spr_tool == UI_SPR_TOOL_PLACE ? 80 : 40,
+                  ui->spr_tool == UI_SPR_TOOL_PLACE ? 100 : 48, ui->spr_tool == UI_SPR_TOOL_PLACE ? 70 : 55);
+        font_draw(r, mx + 4, 4, "PLACE", 230, 230, 240);
+        fill_rect(r, mx + 44, 2, 40, 12, ui->spr_tool == UI_SPR_TOOL_TILE ? 80 : 40,
+                  ui->spr_tool == UI_SPR_TOOL_TILE ? 100 : 48, ui->spr_tool == UI_SPR_TOOL_TILE ? 70 : 55);
+        font_draw(r, mx + 50, 4, "TILE", 230, 230, 240);
+        if (ui->oam_sel >= 0 && grid && ui->oam_sel < grid->oam_count) {
+            uint8_t a = grid->oam[ui->oam_sel].attr;
+            snprintf(buf, sizeof(buf), "OAM B%d P%d%s%s%s%s", r01_attr_bank(a), r01_attr_pal(a),
+                     r01_attr_flip_h(a) ? " H" : "", r01_attr_flip_v(a) ? " V" : "",
+                     r01_oam_priority(a) ? " PR" : "", r01_oam_size_16(a) ? " 16" : "");
+            font_draw(r, UI_LEFT_W + 290, 4, buf, 180, 200, 160);
+        }
+    } else if (ui->edit_mode == UI_MODE_PIXEL) {
+        font_draw(r, UI_LEFT_W + 200, 4, "COLOR", 140, 140, 150);
         {
             int c;
             for (c = 0; c < 4; c++) {
-                int bx = UI_LEFT_W + 180 + c * 18;
+                int bx = UI_LEFT_W + 240 + c * 18;
                 SDL_Color col = GRAY[c];
                 fill_rect(r, bx, 2, 16, 12, col.r, col.g, col.b);
                 if (c == ui->project->paint_color) {
@@ -319,24 +572,39 @@ static void draw_screen(UiState *ui, SDL_Renderer *r) {
         snprintf(buf, sizeof(buf), "T%d.%d B%d P%d%s%s%s%s", ui->attr_tx, ui->attr_ty, r01_attr_bank(a),
                  r01_attr_pal(a), r01_attr_flip_h(a) ? " H" : "", r01_attr_flip_v(a) ? " V" : "",
                  r01_attr_solid(a) ? " S" : "", r01_attr_anim(a) ? " A" : "");
-        font_draw(r, UI_LEFT_W + 140, 4, buf, 180, 200, 160);
+        font_draw(r, UI_LEFT_W + 200, 4, buf, 180, 200, 160);
     }
 
-    font_draw(r, UI_LEFT_W + 320, 4, "BANK", 140, 140, 150);
+    font_draw(r, UI_LEFT_W + 400, 4, "BK", 140, 140, 150);
     {
         int b;
         for (b = 0; b < 4; b++) {
-            int bx = UI_LEFT_W + 350 + b * 16;
+            int bx = UI_LEFT_W + 418 + b * 14;
             int sel = (b == ui->project->generate_bank);
-            fill_rect(r, bx, 2, 14, 12, sel ? 80 : 40, sel ? 100 : 48, sel ? 70 : 55);
+            fill_rect(r, bx, 2, 12, 12, sel ? 80 : 40, sel ? 100 : 48, sel ? 70 : 55);
             snprintf(buf, sizeof(buf), "%d", b);
-            font_draw(r, bx + 4, 4, buf, 230, 230, 240);
+            font_draw(r, bx + 3, 4, buf, 230, 230, 240);
         }
     }
-    font_draw(r, UI_LEFT_W + 420, 4, "C-G", 140, 200, 140);
 
     fill_rect(r, view_x, view_y, R01_SCREEN_PX_W * zx, R01_SCREEN_PX_H * zx, 10, 10, 12);
-    if (!has_surf) {
+
+    if (spr_tile_edit && w) {
+        int scale = 12;
+        int ox = view_x + 16;
+        int oy = view_y + 16;
+        font_draw(r, view_x + 4, view_y + 4, "SPR TILE EDIT", 160, 160, 170);
+        for (y = 0; y < 8; y++) {
+            for (x = 0; x < 8; x++) {
+                uint8_t c = r01_spr_tile_get_pixel(w, ui->spr_bank_tab, ui->spr_tile, x, y);
+                SDL_Color col = GRAY[c & 3];
+                fill_rect(r, ox + x * scale, oy + y * scale, scale - 1, scale - 1, col.r, col.g, col.b);
+            }
+        }
+        draw_rect(r, ox - 1, oy - 1, 8 * scale + 1, 8 * scale + 1, 90, 95, 110);
+        snprintf(buf, sizeof(buf), "BANK %d TILE %d", ui->spr_bank_tab, ui->spr_tile);
+        font_draw(r, ox, oy + 8 * scale + 6, buf, 160, 160, 170);
+    } else if (!has_surf) {
         font_draw(r, view_x + 20, view_y + 50, "NO TARGET SELECTED", 120, 120, 130);
         font_draw(r, view_x + 20, view_y + 62, "GRID OR PLANE P0/P1", 100, 100, 110);
     } else {
@@ -345,6 +613,12 @@ static void draw_screen(UiState *ui, SDL_Renderer *r) {
                 uint8_t cr, cg, cb;
                 r01_tilemap_pixel_rgb(ui->project, w, surf.pixels, surf.attrs, x, y, &cr, &cg, &cb);
                 fill_rect(r, view_x + x * zx, view_y + y * zx, zx, zx, cr, cg, cb);
+            }
+        }
+        if (grid && !surf.is_plane) {
+            int oi;
+            for (oi = 0; oi < grid->oam_count; oi++) {
+                draw_oam_sprite(ui, r, w, &grid->oam[oi], view_x, view_y, zx, oi == ui->oam_sel);
             }
         }
         if (ui->show_grid) {
@@ -359,21 +633,18 @@ static void draw_screen(UiState *ui, SDL_Renderer *r) {
                 SDL_RenderDrawLine(r, view_x, ly, view_x + R01_SCREEN_PX_W * zx, ly);
             }
         }
-        if (ui->edit_mode == UI_MODE_ATTR) {
+        if (ui->layer == UI_LAYER_BG && ui->edit_mode == UI_MODE_ATTR) {
             draw_rect(r, view_x + ui->attr_tx * 8 * zx, view_y + ui->attr_ty * 8 * zx, 8 * zx, 8 * zx, 255, 220,
                       80);
         }
         if (surf.is_plane) {
-            snprintf(buf, sizeof(buf), "PLANE P%d  VRAM %d", surf.index, 4 + surf.index);
+            snprintf(buf, sizeof(buf), "PLANE P%d", surf.index);
         } else if (grid) {
-            snprintf(buf, sizeof(buf), "CELL %d.%d", grid->col, grid->row);
+            snprintf(buf, sizeof(buf), "CELL %d.%d  OAM %d", grid->col, grid->row, grid->oam_count);
         } else {
             snprintf(buf, sizeof(buf), "SCREEN");
         }
         font_draw(r, view_x, view_y + R01_SCREEN_PX_H * zx + 4, buf, 160, 160, 170);
-        if (ui->edit_mode == UI_MODE_ATTR) {
-            font_draw(r, view_x, view_y + R01_SCREEN_PX_H * zx + 14, "B P H V O N ATTR", 110, 110, 120);
-        }
     }
 
     font_draw(r, UI_LEFT_W + 4, UI_LOGIC_H - 12, ui->status, 130, 130, 140);
@@ -389,8 +660,9 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
     draw_worlds(ui, r);
     draw_planes(ui, r);
     draw_bg_banks(ui, r);
-    draw_sprite_stub(ui, r);
+    draw_sprite_banks(ui, r);
     draw_palettes(ui, r);
+    draw_constraints(ui, r);
     SDL_RenderSetClipRect(r, NULL);
 
     draw_left_scrollbar(ui, r);
@@ -404,11 +676,34 @@ static int hit(int x, int y, int rx, int ry, int rw, int rh) {
 static void paint_at(UiState *ui, int lx, int ly) {
     R01EditSurface surf;
     int px, py;
-    if (r01_project_edit_surface(ui->project, &surf) != 0 || ui->edit_mode != UI_MODE_PIXEL) {
+    if (ui->layer != UI_LAYER_BG || ui->edit_mode != UI_MODE_PIXEL) {
+        return;
+    }
+    if (r01_project_edit_surface(ui->project, &surf) != 0) {
         return;
     }
     screen_to_pixel(ui, lx, ly, &px, &py);
     r01_tilemap_plot(surf.pixels, px, py, (uint8_t)ui->project->paint_color);
+}
+
+static void paint_spr_tile_at(UiState *ui, int lx, int ly) {
+    R01World *w = cur_world(ui);
+    int view_x = UI_LEFT_W + 8;
+    int view_y = 28;
+    int scale = 12;
+    int ox = view_x + 16;
+    int oy = view_y + 16;
+    int px, py;
+    if (!w || ui->spr_tool != UI_SPR_TOOL_TILE) {
+        return;
+    }
+    px = (lx - ox) / scale;
+    py = (ly - oy) / scale;
+    if (px < 0 || py < 0 || px >= 8 || py >= 8) {
+        return;
+    }
+    r01_spr_tile_plot(w, ui->spr_bank_tab, ui->spr_tile, px, py, (uint8_t)ui->project->paint_color);
+    ui->project->generate_bank = ui->spr_bank_tab;
 }
 
 static void toggle_attr_flag(UiState *ui, uint8_t flag) {
@@ -458,6 +753,65 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
     if (e->type == SDL_KEYDOWN) {
         SDL_Keycode k = e->key.keysym.sym;
         SDL_Keymod mod = e->key.keysym.mod;
+        if (k == SDLK_SPACE) {
+            if (ui->play.active) {
+                r01_play_stop(&ui->play);
+                ui->play_last_tick = 0;
+                snprintf(ui->status, sizeof(ui->status), "play stopped");
+            } else {
+                r01_play_start(&ui->play, ui->project);
+                ui->play_last_tick = 0;
+                snprintf(ui->status, sizeof(ui->status), "play — arrows/WASD move");
+            }
+            return 1;
+        }
+        if (ui->play.active) {
+            if (k == SDLK_ESCAPE) {
+                r01_play_stop(&ui->play);
+                ui->play_last_tick = 0;
+                snprintf(ui->status, sizeof(ui->status), "play stopped");
+                return 1;
+            }
+            if (k == SDLK_s && (mod & KMOD_CTRL)) {
+                char err[128];
+                if (r01_project_save_json(ui->project, ui->project_path, err, sizeof(err)) == 0) {
+                    snprintf(ui->status, sizeof(ui->status), "saved");
+                } else {
+                    snprintf(ui->status, sizeof(ui->status), "save failed");
+                }
+                return 1;
+            }
+            if (k == SDLK_e && (mod & KMOD_CTRL)) {
+                char err[128];
+                char stem[R01_PATH_MAX];
+                strncpy(stem, ui->project_path, R01_PATH_MAX - 1);
+                stem[R01_PATH_MAX - 1] = 0;
+                {
+                    char *dot = strrchr(stem, '.');
+                    if (dot && (strcmp(dot, ".json") == 0)) {
+                        *dot = 0;
+                    }
+                }
+                if (r01_export_bundle(ui->project, stem, err, sizeof(err)) == 0) {
+                    snprintf(ui->status, sizeof(ui->status), "exported .retr01");
+                } else {
+                    snprintf(ui->status, sizeof(ui->status), "export failed");
+                }
+                return 1;
+            }
+            if (k == SDLK_o && (mod & KMOD_CTRL)) {
+                char err[128];
+                if (r01_project_load_json(ui->project, ui->project_path, err, sizeof(err)) == 0) {
+                    ui->world_tab = r01_hw_world_to_ui(ui->project->active_world);
+                    r01_play_stop(&ui->play);
+                    snprintf(ui->status, sizeof(ui->status), "loaded");
+                } else {
+                    snprintf(ui->status, sizeof(ui->status), "load failed");
+                }
+                return 1;
+            }
+            return 1;
+        }
         if (k == SDLK_TAB) {
             ui->edit_mode = ui->edit_mode == UI_MODE_PIXEL ? UI_MODE_ATTR : UI_MODE_PIXEL;
             snprintf(ui->status, sizeof(ui->status), ui->edit_mode == UI_MODE_ATTR ? "attr mode" : "pixel mode");
@@ -469,6 +823,24 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
                 snprintf(ui->status, sizeof(ui->status), "saved");
             } else {
                 snprintf(ui->status, sizeof(ui->status), "save failed");
+            }
+            return 1;
+        }
+        if (k == SDLK_e && (mod & KMOD_CTRL)) {
+            char err[128];
+            char stem[R01_PATH_MAX];
+            strncpy(stem, ui->project_path, R01_PATH_MAX - 1);
+            stem[R01_PATH_MAX - 1] = 0;
+            {
+                char *dot = strrchr(stem, '.');
+                if (dot && (strcmp(dot, ".json") == 0)) {
+                    *dot = 0;
+                }
+            }
+            if (r01_export_bundle(ui->project, stem, err, sizeof(err)) == 0) {
+                snprintf(ui->status, sizeof(ui->status), "exported .retr01");
+            } else {
+                snprintf(ui->status, sizeof(ui->status), "export failed");
             }
             return 1;
         }
@@ -485,15 +857,26 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
         if (k == SDLK_g && (mod & KMOD_CTRL)) {
             R01ChrPackStatus st;
             w = cur_world(ui);
-            st = r01_chr_pack_world_bank(w, ui->project->generate_bank);
-            if (st == R01_CHR_OK) {
-                ui->bg_bank_tab = ui->project->generate_bank;
-                snprintf(ui->status, sizeof(ui->status), "generated bank %d (%d tiles)",
-                         ui->project->generate_bank, w->bg_banks[ui->project->generate_bank].tile_count);
-            } else if (st == R01_CHR_TOO_MANY_TILES) {
-                snprintf(ui->status, sizeof(ui->status), "generate failed: >256 unique tiles");
+            if (ui->layer == UI_LAYER_SPR) {
+                st = r01_spr_pack_world_bank(w, ui->project->generate_bank);
+                if (st == R01_CHR_OK) {
+                    ui->spr_bank_tab = ui->project->generate_bank;
+                    snprintf(ui->status, sizeof(ui->status), "spr bank %d (%d tiles)",
+                             ui->project->generate_bank, w->spr_banks[ui->project->generate_bank].tile_count);
+                } else {
+                    snprintf(ui->status, sizeof(ui->status), "spr generate failed");
+                }
             } else {
-                snprintf(ui->status, sizeof(ui->status), "generate failed");
+                st = r01_chr_pack_world_bank(w, ui->project->generate_bank);
+                if (st == R01_CHR_OK) {
+                    ui->bg_bank_tab = ui->project->generate_bank;
+                    snprintf(ui->status, sizeof(ui->status), "generated bank %d (%d tiles)",
+                             ui->project->generate_bank, w->bg_banks[ui->project->generate_bank].tile_count);
+                } else if (st == R01_CHR_TOO_MANY_TILES) {
+                    snprintf(ui->status, sizeof(ui->status), "generate failed: >256 unique tiles");
+                } else {
+                    snprintf(ui->status, sizeof(ui->status), "generate failed");
+                }
             }
             return 1;
         }
@@ -502,11 +885,40 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
             snprintf(ui->status, sizeof(ui->status), ui->show_grid ? "grid on" : "grid off");
             return 1;
         }
+        if (k == SDLK_l) {
+            ui->layer = ui->layer == UI_LAYER_BG ? UI_LAYER_SPR : UI_LAYER_BG;
+            snprintf(ui->status, sizeof(ui->status), ui->layer == UI_LAYER_SPR ? "sprite layer" : "bg layer");
+            return 1;
+        }
+        if (k == SDLK_DELETE || k == SDLK_BACKSPACE) {
+            R01Screen *s = r01_project_active_screen(ui->project);
+            if (ui->layer == UI_LAYER_SPR && s && ui->oam_sel >= 0) {
+                r01_screen_oam_remove(s, ui->oam_sel);
+                ui->oam_sel = -1;
+                snprintf(ui->status, sizeof(ui->status), "oam deleted");
+                return 1;
+            }
+        }
+        if (k == SDLK_m && ui->layer == UI_LAYER_SPR) {
+            R01Screen *s = r01_project_active_screen(ui->project);
+            w = cur_world(ui);
+            if (s && w && ui->oam_sel >= 0) {
+                int idx = ui->oam_sel;
+                int mid = r01_meta_create_from_oam(w, s, &idx, 1);
+                if (mid >= 0) {
+                    ui->meta_sel = mid;
+                    snprintf(ui->status, sizeof(ui->status), "meta %d from oam", mid);
+                } else {
+                    snprintf(ui->status, sizeof(ui->status), "meta create failed");
+                }
+                return 1;
+            }
+        }
         if (k == SDLK_f && (mod & KMOD_CTRL)) {
             ui->fullscreen = !ui->fullscreen;
             return 2;
         }
-        if (ui->edit_mode == UI_MODE_ATTR) {
+        if (ui->edit_mode == UI_MODE_ATTR && ui->layer == UI_LAYER_BG) {
             if (k == SDLK_b) {
                 cycle_attr_field(ui, 0);
                 return 1;
@@ -530,6 +942,43 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
             if (k == SDLK_n) {
                 toggle_attr_flag(ui, R01_ATTR_ANIM);
                 return 1;
+            }
+        }
+        if (ui->layer == UI_LAYER_SPR && ui->oam_sel >= 0) {
+            R01Screen *s = r01_project_active_screen(ui->project);
+            if (s && ui->oam_sel < s->oam_count) {
+                R01Oam *o = &s->oam[ui->oam_sel];
+                uint8_t a = o->attr;
+                if (k == SDLK_b) {
+                    o->attr = r01_oam_pack((r01_attr_bank(a) + 1) & 3, r01_attr_pal(a), r01_attr_flip_h(a),
+                                           r01_attr_flip_v(a), r01_oam_priority(a), r01_oam_size_16(a));
+                    return 1;
+                }
+                if (k == SDLK_p) {
+                    o->attr = r01_oam_pack(r01_attr_bank(a), (r01_attr_pal(a) + 1) & 3, r01_attr_flip_h(a),
+                                           r01_attr_flip_v(a), r01_oam_priority(a), r01_oam_size_16(a));
+                    return 1;
+                }
+                if (k == SDLK_h) {
+                    o->attr = r01_oam_pack(r01_attr_bank(a), r01_attr_pal(a), !r01_attr_flip_h(a), r01_attr_flip_v(a),
+                                           r01_oam_priority(a), r01_oam_size_16(a));
+                    return 1;
+                }
+                if (k == SDLK_v) {
+                    o->attr = r01_oam_pack(r01_attr_bank(a), r01_attr_pal(a), r01_attr_flip_h(a), !r01_attr_flip_v(a),
+                                           r01_oam_priority(a), r01_oam_size_16(a));
+                    return 1;
+                }
+                if (k == SDLK_o) {
+                    o->attr = r01_oam_pack(r01_attr_bank(a), r01_attr_pal(a), r01_attr_flip_h(a), r01_attr_flip_v(a),
+                                           !r01_oam_priority(a), r01_oam_size_16(a));
+                    return 1;
+                }
+                if (k == SDLK_n) {
+                    o->attr = r01_oam_pack(r01_attr_bank(a), r01_attr_pal(a), r01_attr_flip_h(a), r01_attr_flip_v(a),
+                                           r01_oam_priority(a), !r01_oam_size_16(a));
+                    return 1;
+                }
             }
         }
         if (k == SDLK_MINUS || k == SDLK_EQUALS || k == SDLK_LEFTBRACKET || k == SDLK_RIGHTBRACKET) {
@@ -562,8 +1011,16 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
         return 1;
     }
 
+    if (ui->play.active && e->type == SDL_MOUSEMOTION) {
+        return 0;
+    }
+
     if (e->type == SDL_MOUSEMOTION && ui->brush_down) {
-        paint_at(ui, logic_x, logic_y);
+        if (ui->layer == UI_LAYER_SPR && ui->spr_tool == UI_SPR_TOOL_TILE) {
+            paint_spr_tile_at(ui, logic_x, logic_y);
+        } else {
+            paint_at(ui, logic_x, logic_y);
+        }
         return 1;
     }
 
@@ -572,8 +1029,122 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
         int t;
         int cy;
 
+        /* PLAY / STOP toolbar */
+        if (hit(logic_x, logic_y, UI_LEFT_W + 52, 2, 40, 12) && ui->play.active) {
+            r01_play_stop(&ui->play);
+            ui->play_last_tick = 0;
+            snprintf(ui->status, sizeof(ui->status), "play stopped");
+            return 1;
+        }
+
         if (in_left_viewport(logic_x, logic_y)) {
             cy = left_cy(ui, logic_y);
+
+            /* Constraints panel */
+            if (cy >= UI_CONSTRAINTS_Y && cy < UI_CONSTRAINTS_Y + UI_CONSTRAINTS_H) {
+                R01Constraints *c = edit_constraints(ui);
+                w = cur_world(ui);
+                if (hit(logic_x, cy, 120, UI_CONSTRAINTS_Y + 2, 36, 12)) {
+                    if (ui->play.active) {
+                        r01_play_stop(&ui->play);
+                        ui->play_last_tick = 0;
+                        snprintf(ui->status, sizeof(ui->status), "play stopped");
+                    } else {
+                        r01_play_start(&ui->play, ui->project);
+                        ui->play_last_tick = 0;
+                        snprintf(ui->status, sizeof(ui->status), "play — arrows/WASD move");
+                    }
+                    return 1;
+                }
+                if (hit(logic_x, cy, 4, UI_CONSTRAINTS_Y + 20, 48, 12) && w) {
+                    w->use_constraints = !w->use_constraints;
+                    snprintf(ui->status, sizeof(ui->status),
+                             w->use_constraints ? "world constraints" : "project constraints");
+                    return 1;
+                }
+                if (hit(logic_x, cy, 56, UI_CONSTRAINTS_Y + 20, 80, 12)) {
+                    c->scroll_mode = (c->scroll_mode + 1) % 4;
+                    snprintf(ui->status, sizeof(ui->status), "scroll %s", scroll_mode_name(c->scroll_mode));
+                    return 1;
+                }
+                if (hit(logic_x, cy, 140, UI_CONSTRAINTS_Y + 20, 44, 12)) {
+                    c->transition = c->transition == R01_XITION_CUT ? R01_XITION_FADE : R01_XITION_CUT;
+                    snprintf(ui->status, sizeof(ui->status),
+                             c->transition == R01_XITION_FADE ? "fade" : "cut");
+                    return 1;
+                }
+                if (hit(logic_x, cy, 4, UI_CONSTRAINTS_Y + 52, 20, 12)) {
+                    if (c->anim_rate > 1) {
+                        c->anim_rate--;
+                    }
+                    return 1;
+                }
+                if (hit(logic_x, cy, 28, UI_CONSTRAINTS_Y + 52, 20, 12)) {
+                    if (c->anim_rate < 120) {
+                        c->anim_rate++;
+                    }
+                    return 1;
+                }
+                if (hit(logic_x, cy, 56, UI_CONSTRAINTS_Y + 52, 20, 12)) {
+                    if (c->enemy_anim_rate > 1) {
+                        c->enemy_anim_rate--;
+                    }
+                    return 1;
+                }
+                if (hit(logic_x, cy, 80, UI_CONSTRAINTS_Y + 52, 20, 12)) {
+                    if (c->enemy_anim_rate < 120) {
+                        c->enemy_anim_rate++;
+                    }
+                    return 1;
+                }
+                if (hit(logic_x, cy, 4, UI_CONSTRAINTS_Y + 84, 28, 12)) {
+                    if (c->deadzone_x > 0) {
+                        c->deadzone_x--;
+                    }
+                    return 1;
+                }
+                if (hit(logic_x, cy, 36, UI_CONSTRAINTS_Y + 84, 28, 12)) {
+                    if (c->deadzone_x < 56) {
+                        c->deadzone_x++;
+                    }
+                    return 1;
+                }
+                if (hit(logic_x, cy, 68, UI_CONSTRAINTS_Y + 84, 28, 12)) {
+                    if (c->deadzone_y > 0) {
+                        c->deadzone_y--;
+                    }
+                    return 1;
+                }
+                if (hit(logic_x, cy, 100, UI_CONSTRAINTS_Y + 84, 28, 12)) {
+                    if (c->deadzone_y < 52) {
+                        c->deadzone_y++;
+                    }
+                    return 1;
+                }
+                if (hit(logic_x, cy, 132, UI_CONSTRAINTS_Y + 84, 28, 12)) {
+                    if (c->player_meta > -1) {
+                        c->player_meta--;
+                    }
+                    return 1;
+                }
+                if (hit(logic_x, cy, 164, UI_CONSTRAINTS_Y + 84, 28, 12)) {
+                    if (c->player_meta < R01_MAX_METASPRITES - 1) {
+                        c->player_meta++;
+                    }
+                    return 1;
+                }
+                if (hit(logic_x, cy, 4, UI_CONSTRAINTS_Y + 120, 52, 12)) {
+                    ui->project->has_cart_save = !ui->project->has_cart_save;
+                    snprintf(ui->status, sizeof(ui->status),
+                             ui->project->has_cart_save ? "cart I2C save on" : "cart I2C save off");
+                    return 1;
+                }
+                return 1;
+            }
+
+            if (ui->play.active) {
+                return 1;
+            }
 
             for (t = 1; t <= 8; t++) {
                 int x = 4 + (t - 1) * 24;
@@ -653,6 +1224,36 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
                 }
             }
 
+            /* sprite banks */
+            for (t = 0; t < 4; t++) {
+                int x = 4 + t * 22;
+                if (hit(logic_x, cy, x, UI_SPR_Y + 14, 20, 12)) {
+                    ui->spr_bank_tab = t;
+                    ui->project->generate_bank = t;
+                    ui->layer = UI_LAYER_SPR;
+                    return 1;
+                }
+            }
+            if (hit(logic_x, cy, 100, UI_SPR_Y + 14, 40, 12)) {
+                ui->spr_size16 = !ui->spr_size16;
+                return 1;
+            }
+            if (hit(logic_x, cy, 4, UI_SPR_Y + 34, 16 * 8, 8 * 8)) {
+                int tx = (logic_x - 4) / 8;
+                int ty = (cy - (UI_SPR_Y + 34)) / 8;
+                int ti = ty * 16 + tx;
+                if (ti >= 0 && ti < R01_TILES_PER_BANK) {
+                    ui->spr_tile = ti;
+                    w = cur_world(ui);
+                    if (w) {
+                        r01_spr_ensure_tile(w, ui->spr_bank_tab, ti);
+                    }
+                    ui->layer = UI_LAYER_SPR;
+                    ui->spr_tool = UI_SPR_TOOL_TILE;
+                }
+                return 1;
+            }
+
             /* palette row tabs */
             for (t = 0; t < 8; t++) {
                 int x = 4 + (t % 4) * 24;
@@ -684,20 +1285,42 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
             return 1;
         }
 
-        /* PIX / ATTR mode buttons */
-        if (hit(logic_x, logic_y, UI_LEFT_W + 52, 2, 40, 12)) {
-            ui->edit_mode = UI_MODE_PIXEL;
-            return 1;
-        }
-        if (hit(logic_x, logic_y, UI_LEFT_W + 94, 2, 40, 12)) {
-            ui->edit_mode = UI_MODE_ATTR;
+        if (ui->play.active) {
             return 1;
         }
 
-        if (ui->edit_mode == UI_MODE_PIXEL) {
+        /* layer / mode buttons */
+        if (hit(logic_x, logic_y, UI_LEFT_W + 52, 2, 28, 12)) {
+            ui->layer = UI_LAYER_BG;
+            return 1;
+        }
+        if (hit(logic_x, logic_y, UI_LEFT_W + 82, 2, 32, 12)) {
+            ui->layer = UI_LAYER_SPR;
+            return 1;
+        }
+        if (hit(logic_x, logic_y, UI_LEFT_W + 120, 2, 32, 12)) {
+            ui->edit_mode = UI_MODE_PIXEL;
+            return 1;
+        }
+        if (hit(logic_x, logic_y, UI_LEFT_W + 154, 2, 36, 12)) {
+            ui->edit_mode = UI_MODE_ATTR;
+            return 1;
+        }
+        if (ui->layer == UI_LAYER_SPR) {
+            if (hit(logic_x, logic_y, UI_LEFT_W + 200, 2, 40, 12)) {
+                ui->spr_tool = UI_SPR_TOOL_PLACE;
+                return 1;
+            }
+            if (hit(logic_x, logic_y, UI_LEFT_W + 244, 2, 40, 12)) {
+                ui->spr_tool = UI_SPR_TOOL_TILE;
+                return 1;
+            }
+        }
+
+        if (ui->layer == UI_LAYER_BG && ui->edit_mode == UI_MODE_PIXEL) {
             int c;
             for (c = 0; c < 4; c++) {
-                int bx = UI_LEFT_W + 180 + c * 18;
+                int bx = UI_LEFT_W + 240 + c * 18;
                 if (hit(logic_x, logic_y, bx, 2, 16, 12)) {
                     ui->project->paint_color = c;
                     return 1;
@@ -707,26 +1330,66 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
         {
             int b;
             for (b = 0; b < 4; b++) {
-                int bx = UI_LEFT_W + 350 + b * 16;
-                if (hit(logic_x, logic_y, bx, 2, 14, 12)) {
+                int bx = UI_LEFT_W + 418 + b * 14;
+                if (hit(logic_x, logic_y, bx, 2, 12, 12)) {
                     if (r01_project_select_bg_bank(ui->project, b) == b) {
-                        ui->bg_bank_tab = b;
+                        if (ui->layer == UI_LAYER_SPR) {
+                            ui->spr_bank_tab = b;
+                        } else {
+                            ui->bg_bank_tab = b;
+                        }
                     }
                     return 1;
                 }
             }
         }
 
+        if (ui->layer == UI_LAYER_SPR && ui->spr_tool == UI_SPR_TOOL_TILE) {
+            if (hit(logic_x, logic_y, UI_LEFT_W + 8 + 16, 28 + 16, 8 * 12, 8 * 12)) {
+                ui->brush_down = 1;
+                paint_spr_tile_at(ui, logic_x, logic_y);
+                return 1;
+            }
+        }
+
         if (hit(logic_x, logic_y, UI_LEFT_W + 8, 28, R01_SCREEN_PX_W * ui->screen_zoom,
                 R01_SCREEN_PX_H * ui->screen_zoom)) {
-            if (ui->edit_mode == UI_MODE_ATTR) {
+            if (ui->layer == UI_LAYER_SPR && ui->spr_tool == UI_SPR_TOOL_PLACE) {
+                R01Screen *s = r01_project_active_screen(ui->project);
+                int px, py, hit_i;
+                if (!s) {
+                    snprintf(ui->status, sizeof(ui->status), "select a grid screen for oam");
+                    return 1;
+                }
+                screen_to_pixel(ui, logic_x, logic_y, &px, &py);
+                hit_i = r01_screen_oam_hit(s, px, py);
+                if (hit_i >= 0) {
+                    ui->oam_sel = hit_i;
+                } else {
+                    uint8_t attr = r01_oam_pack(ui->spr_bank_tab, 0, 0, 0, 0, ui->spr_size16);
+                    int idx;
+                    if (ui->spr_size16) {
+                        ui->spr_tile = (int)(ui->spr_tile & ~1);
+                    }
+                    w = cur_world(ui);
+                    if (w) {
+                        r01_spr_ensure_tile(w, ui->spr_bank_tab, ui->spr_tile + (ui->spr_size16 ? 1 : 0));
+                    }
+                    idx = r01_screen_oam_add(s, (uint8_t)px, (uint8_t)py, (uint8_t)ui->spr_tile, attr);
+                    ui->oam_sel = idx;
+                    ui->project->generate_bank = ui->spr_bank_tab;
+                    snprintf(ui->status, sizeof(ui->status), idx >= 0 ? "oam placed" : "oam full");
+                }
+                return 1;
+            }
+            if (ui->layer == UI_LAYER_BG && ui->edit_mode == UI_MODE_ATTR) {
                 int px, py;
                 screen_to_pixel(ui, logic_x, logic_y, &px, &py);
                 if (px >= 0 && py >= 0 && px < R01_SCREEN_PX_W && py < R01_SCREEN_PX_H) {
                     ui->attr_tx = px / 8;
                     ui->attr_ty = py / 8;
                 }
-            } else {
+            } else if (ui->layer == UI_LAYER_BG) {
                 ui->brush_down = 1;
                 paint_at(ui, logic_x, logic_y);
             }

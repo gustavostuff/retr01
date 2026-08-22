@@ -27,13 +27,13 @@ Details and fair NES comparisons: [`docs/07_pitch.md`](docs/07_pitch.md).
 - **Big cartridge worlds:** up to **8 worlds**, **32 screens** each, on a **512 KB** cart
 - **Chunky 128x120** playfields (**16x15** tiles) with board **2x** into a **256x240** RGBS raster (fills CRT, no letterbox)
 - **Smooth multi-screen scrolling:** cameras that cross screen borders using a 2x2 live nametable window (see pitch doc)
-- **Retr01 Studio:** visual tool to author worlds. Later phases compile `.retr01` cart images
+- **Retr01 Studio:** visual tool to author worlds and export `.retr01` cart images
 
 Later editions (console and handheld) share the same soul: one architecture, different shells.
 
 ## Project status
 
-Retr01 is in **architecture & documentation** phase. The living spec lives in [`docs/`](docs/). **Retr01 Studio** - the visual authoring and compile tool - is the next coding focus. A low-level hardware emulator is planned later, not in active development yet.
+Retr01 is in **architecture & documentation** phase with **Retr01 Studio** (Phases 0–5) as the active coding focus. A board IC simulator is planned later ([`docs/08_simulator.md`](docs/08_simulator.md)).
 
 ---
 

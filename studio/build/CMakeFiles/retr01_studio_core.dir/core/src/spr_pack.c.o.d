@@ -1,7 +1,8 @@
-CMakeFiles/retr01_studio_core.dir/core/src/project.c.o: \
- /home/g/Repos/retr01/studio/core/src/project.c \
+CMakeFiles/retr01_studio_core.dir/core/src/spr_pack.c.o: \
+ /home/g/Repos/retr01/studio/core/src/spr_pack.c \
  /usr/include/stdc-predef.h \
- /home/g/Repos/retr01/studio/core/include/retr01_studio/project.h \
+ /home/g/Repos/retr01/studio/core/include/retr01_studio/spr_pack.h \
+ /home/g/Repos/retr01/studio/core/include/retr01_studio/chr_pack.h \
  /home/g/Repos/retr01/studio/core/include/retr01_studio/types.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stddef.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdint.h \
@@ -13,8 +14,6 @@ CMakeFiles/retr01_studio_core.dir/core/src/project.c.o: \
  /usr/include/bits/types.h /usr/include/bits/typesizes.h \
  /usr/include/bits/time64.h /usr/include/bits/wchar.h \
  /usr/include/bits/stdint-intn.h /usr/include/bits/stdint-uintn.h \
- /usr/include/bits/stdint-least.h \
- /home/g/Repos/retr01/studio/core/include/retr01_studio/palette.h \
- /home/g/Repos/retr01/studio/core/include/retr01_studio/play.h \
- /usr/include/string.h /usr/include/bits/types/locale_t.h \
- /usr/include/bits/types/__locale_t.h /usr/include/strings.h
+ /usr/include/bits/stdint-least.h /usr/include/string.h \
+ /usr/include/bits/types/locale_t.h /usr/include/bits/types/__locale_t.h \
+ /usr/include/strings.h

@@ -1,7 +1,10 @@
+#include "retr01_studio/cart.h"
 #include "retr01_studio/chr_pack.h"
 #include "retr01_studio/json_io.h"
 #include "retr01_studio/palette.h"
+#include "retr01_studio/play.h"
 #include "retr01_studio/project.h"
+#include "retr01_studio/spr_pack.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -189,14 +192,31 @@ static void test_roundtrip(void) {
         r01_attr_pack(2, 1, 1, 0, 1, 0);
     r01_world_toggle_plane(&a->worlds[0], 0);
     r01_tilemap_plot(a->worlds[0].planes[0].pixels, 4, 4, 2);
+    r01_spr_tile_plot(&a->worlds[0], 0, 3, 2, 2, 1);
+    r01_screen_oam_add(&a->worlds[0].screens[0], 40, 50, 3, r01_oam_pack(0, 1, 0, 0, 0, 0));
     a->active_screen = 0;
     a->active_plane = -1;
     a->generate_bank = 2;
+    a->constraints.scroll_mode = R01_SCROLL_DEADZONE;
+    a->constraints.deadzone_x = 30;
+    a->constraints.anim_rate = 7;
+    a->constraints.transition = R01_XITION_FADE;
+    a->has_cart_save = 1;
+    a->worlds[0].use_constraints = 1;
+    a->worlds[0].constraints.scroll_mode = R01_SCROLL_INSTANT;
+    a->worlds[0].constraints.player_meta = 0;
     expect_true(r01_chr_pack_world_bank(&a->worlds[0], 2) == R01_CHR_OK, "pack before save");
     expect_true(r01_project_save_json(a, path, err, sizeof(err)) == 0, "save");
     expect_true(r01_project_load_json(b, path, err, sizeof(err)) == 0, "load");
     expect_true(strcmp(b->name, "roundtrip") == 0, "name");
     expect_true(b->generate_bank == 2, "generate_bank");
+    expect_true(b->constraints.scroll_mode == R01_SCROLL_DEADZONE, "proj scroll");
+    expect_true(b->constraints.deadzone_x == 30 && b->constraints.anim_rate == 7, "proj constraints");
+    expect_true(b->constraints.transition == R01_XITION_FADE, "proj xition");
+    expect_true(b->has_cart_save == 1, "has_cart_save");
+    expect_true(b->worlds[0].use_constraints == 1, "world use_constraints");
+    expect_true(b->worlds[0].constraints.scroll_mode == R01_SCROLL_INSTANT, "world scroll");
+    expect_true(b->worlds[0].constraints.player_meta == 0, "world player_meta");
     expect_true(b->global_pal_bg[0].idx[0] == 12 && b->global_pal_bg[0].idx[3] == 55, "global pal");
     expect_true(b->worlds[0].default_bg_bank == 2, "default_bg_bank");
     expect_true(b->worlds[0].default_pal_row == 1, "default_pal_row");
@@ -207,6 +227,9 @@ static void test_roundtrip(void) {
     expect_true(b->worlds[0].planes[0].present == 1, "plane present");
     expect_true(b->worlds[0].planes[0].slot == 0, "plane slot");
     expect_true(r01_tilemap_get_pixel(b->worlds[0].planes[0].pixels, 4, 4) == 2, "plane pixel");
+    expect_true(b->worlds[0].screens[0].oam_count == 1, "oam count");
+    expect_true(b->worlds[0].screens[0].oam[0].x == 40 && b->worlds[0].screens[0].oam[0].tile == 3, "oam");
+    expect_true(b->worlds[0].spr_banks[0].tile_count >= 4, "spr tiles");
     expect_true(b->worlds[0].bg_banks[2].tile_count == a->worlds[0].bg_banks[2].tile_count, "chr count");
     remove(path);
     free(a);
@@ -249,6 +272,129 @@ static void test_select_bg_bank(void) {
     free(p);
 }
 
+static void test_spr_oam_meta(void) {
+    R01World *w = (R01World *)calloc(1, sizeof(R01World));
+    int idx, mid;
+    expect_true(w != NULL, "alloc world");
+    w->present = 1;
+    r01_world_toggle_screen(w, 0, 0);
+    r01_spr_tile_plot(w, 1, 0, 0, 0, 3);
+    r01_spr_tile_plot(w, 1, 0, 1, 0, 2);
+    r01_spr_tile_plot(w, 1, 1, 0, 0, 1);
+    expect_true(w->spr_banks[1].tile_count >= 2, "tiles ensured");
+    idx = r01_screen_oam_add(&w->screens[0], 10, 20, 0, r01_oam_pack(1, 0, 0, 0, 0, 0));
+    expect_true(idx == 0, "oam add");
+    expect_true(r01_screen_oam_hit(&w->screens[0], 12, 22) == 0, "oam hit");
+    mid = r01_meta_create_from_oam(w, &w->screens[0], &idx, 1);
+    expect_true(mid == 0 && w->meta_count == 1, "meta create");
+    expect_true(r01_spr_pack_world_bank(w, 1) == R01_CHR_OK, "spr pack");
+    expect_true(w->spr_banks[1].tile_count >= 1, "spr packed");
+    free(w);
+}
+
+static void test_play_scroll(void) {
+    R01Project *p = (R01Project *)calloc(1, sizeof(R01Project));
+    R01PlayState pl;
+    const R01Constraints *c;
+    expect_true(p != NULL, "alloc project");
+    r01_project_init(p, "play");
+    p->worlds[0].present = 1;
+    r01_world_toggle_screen(&p->worlds[0], 0, 0);
+    r01_world_toggle_screen(&p->worlds[0], 1, 0);
+    r01_screen_clear_pixels(&p->worlds[0].screens[0], 1);
+    r01_screen_clear_pixels(&p->worlds[0].screens[1], 2);
+    p->active_screen = 0;
+    p->constraints.scroll_mode = R01_SCROLL_PIXEL;
+    r01_play_start(&pl, p);
+    expect_true(pl.active == 1, "play active");
+    expect_true(pl.player_x == R01_SCREEN_PX_W / 2, "start x");
+    expect_true(pl.cam_x == 0, "start cam");
+
+    /* walk into second screen */
+    {
+        int i;
+        for (i = 0; i < R01_SCREEN_PX_W; i++) {
+            r01_play_tick(&pl, p, 1, 0);
+        }
+    }
+    expect_true(pl.player_x / R01_SCREEN_PX_W == 1, "crossed into col 1");
+    expect_true(pl.cam_x > 0, "pixel cam followed");
+
+    /* block empty neighbor */
+    {
+        int blocked = pl.player_x;
+        r01_play_tick(&pl, p, 0, -1); /* up into empty */
+        expect_true(pl.player_y == R01_SCREEN_PX_H / 2 || pl.player_y >= 0, "y ok");
+        (void)blocked;
+        r01_play_tick(&pl, p, 0, -R01_SCREEN_PX_H);
+        expect_true(r01_world_find_screen(&p->worlds[0], pl.player_x / R01_SCREEN_PX_W,
+                                         pl.player_y / R01_SCREEN_PX_H) >= 0,
+                    "stayed on present screen");
+    }
+
+    p->constraints.scroll_mode = R01_SCROLL_INSTANT;
+    r01_play_start(&pl, p);
+    {
+        int i;
+        for (i = 0; i < R01_SCREEN_PX_W; i++) {
+            r01_play_tick(&pl, p, 1, 0);
+        }
+    }
+    expect_true(pl.cam_x == R01_SCREEN_PX_W, "instant cam snaps");
+
+    p->constraints.scroll_mode = R01_SCROLL_DEADZONE;
+    p->constraints.deadzone_x = 40;
+    r01_play_start(&pl, p);
+    expect_true(pl.cam_x == 0, "dz start cam");
+    r01_play_tick(&pl, p, 1, 0);
+    expect_true(pl.cam_x == 0, "dz hold while inside");
+
+    p->worlds[0].use_constraints = 1;
+    p->worlds[0].constraints.scroll_mode = R01_SCROLL_HYBRID;
+    c = r01_project_constraints(p);
+    expect_true(c == &p->worlds[0].constraints, "world override");
+    expect_true(c->scroll_mode == R01_SCROLL_HYBRID, "hybrid");
+    free(p);
+}
+
+static void test_cart_export(void) {
+    R01Project *p = (R01Project *)calloc(1, sizeof(R01Project));
+    uint8_t *img = NULL;
+    size_t len = 0;
+    char err[128];
+    int wc = 0;
+    uint32_t poff = 0, plen = 0;
+    uint8_t prom[64];
+    expect_true(p != NULL, "alloc");
+    r01_project_init(p, "cart");
+    p->has_cart_save = 1;
+    p->worlds[0].present = 1;
+    r01_world_toggle_screen(&p->worlds[0], 0, 0);
+    r01_world_toggle_screen(&p->worlds[0], 1, 0);
+    r01_screen_clear_pixels(&p->worlds[0].screens[0], 1);
+    r01_screen_plot(&p->worlds[0].screens[0], 0, 0, 3);
+    r01_screen_clear_pixels(&p->worlds[0].screens[1], 2);
+    expect_true(r01_cart_build(p, &img, &len, err, sizeof(err)) == 0, "build");
+    expect_true(img != NULL && len > 32768, "size");
+    expect_true(r01_cart_peek_header(img, len, &wc, &poff, &plen) == 0, "peek");
+    expect_true(wc == 1, "world_count");
+    expect_true(plen == R01_PRG_BYTES, "prg len");
+    expect_true(memcmp(img, "RETR01", 6) == 0, "magic");
+    expect_true((img[8] & R01_CART_FLAG_I2C_SAVE) != 0, "i2c flag");
+    expect_true(img[poff + 0x7FFC] == 0x00 && img[poff + 0x7FFD] == 0x80, "reset vector");
+    expect_true(r01_cart_write(p, "studio_test_cart.retr01", err, sizeof(err)) == 0, "write");
+    expect_true(r01_prom_write("studio_test_prom.bin", err, sizeof(err)) == 0, "prom");
+    expect_true(r01_prg_write_asm(p, "studio_test_boot.s", err, sizeof(err)) == 0, "asm");
+    r01_prom_fill(prom);
+    expect_true(prom[0] == r01_quantize_r3g3b2(0, 0, 0), "prom black");
+    expect_true(prom[48] == 0xFF, "prom white");
+    remove("studio_test_cart.retr01");
+    remove("studio_test_prom.bin");
+    remove("studio_test_boot.s");
+    free(img);
+    free(p);
+}
+
 int main(void) {
     g_fails = 0;
     test_grid_caps();
@@ -259,6 +405,9 @@ int main(void) {
     test_palette_quantize();
     test_plane_pack();
     test_select_bg_bank();
+    test_spr_oam_meta();
+    test_play_scroll();
+    test_cart_export();
     test_roundtrip();
     if (g_fails) {
         fprintf(stderr, "%d test(s) failed\n", g_fails);

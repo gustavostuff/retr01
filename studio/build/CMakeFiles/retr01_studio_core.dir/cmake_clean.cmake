@@ -1,12 +1,18 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/retr01_studio_core.dir/core/src/cart.c.o"
+  "CMakeFiles/retr01_studio_core.dir/core/src/cart.c.o.d"
   "CMakeFiles/retr01_studio_core.dir/core/src/chr_pack.c.o"
   "CMakeFiles/retr01_studio_core.dir/core/src/chr_pack.c.o.d"
   "CMakeFiles/retr01_studio_core.dir/core/src/json_io.c.o"
   "CMakeFiles/retr01_studio_core.dir/core/src/json_io.c.o.d"
   "CMakeFiles/retr01_studio_core.dir/core/src/palette.c.o"
   "CMakeFiles/retr01_studio_core.dir/core/src/palette.c.o.d"
+  "CMakeFiles/retr01_studio_core.dir/core/src/play.c.o"
+  "CMakeFiles/retr01_studio_core.dir/core/src/play.c.o.d"
   "CMakeFiles/retr01_studio_core.dir/core/src/project.c.o"
   "CMakeFiles/retr01_studio_core.dir/core/src/project.c.o.d"
+  "CMakeFiles/retr01_studio_core.dir/core/src/spr_pack.c.o"
+  "CMakeFiles/retr01_studio_core.dir/core/src/spr_pack.c.o.d"
   "libretr01_studio_core.a"
   "libretr01_studio_core.pdb"
 )

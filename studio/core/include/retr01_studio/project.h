@@ -15,6 +15,15 @@ int r01_project_edit_surface(R01Project *p, R01EditSurface *out);
 /* Set generate_bank (0..3). Returns bank, or -1 if bad args (unchanged). */
 int r01_project_select_bg_bank(R01Project *p, int bank);
 
+/* OAM on a grid screen (not planes). Returns index or -1. */
+int r01_screen_oam_add(R01Screen *s, uint8_t x, uint8_t y, uint8_t tile, uint8_t attr);
+int r01_screen_oam_remove(R01Screen *s, int index);
+int r01_screen_oam_hit(const R01Screen *s, int px, int py);
+
+/* Meta-sprites (world-level). */
+int r01_meta_create_from_oam(R01World *w, const R01Screen *s, const int *indices, int count);
+int r01_meta_stamp(R01Screen *s, const R01MetaSprite *meta, int origin_x, int origin_y);
+
 /* UI world tab 1..8 <-> hardware 0..7 */
 static inline int r01_ui_world_to_hw(int ui_tab_1_based) {
     return ui_tab_1_based - 1;
