@@ -14,7 +14,22 @@ ctest --test-dir build --output-on-failure
 ./build/retr01_studio
 ```
 
-Needs: CMake, a C compiler, SDL2 (`sdl2` package).
+Or use the helper scripts:
+
+| Script | What it does |
+|--------|----------------|
+| `scripts/run.sh` | Run the app (build must already exist) |
+| `scripts/build-run.sh` | Configure if needed, build, run |
+| `scripts/test-unit.sh` | Build + run **core** unit tests only |
+| `scripts/test-e2e-watch.sh [speed]` | Visual E2E (`E2E_WATCH`); `speed` defaults to `1` (higher = faster) |
+
+```bash
+./scripts/build-run.sh
+./scripts/test-unit.sh
+./scripts/test-e2e-watch.sh 2    # ~2× faster stepping
+```
+
+Needs: CMake, a C compiler, SDL2 (`sdl2` package), libpng.
 
 ## Tests
 

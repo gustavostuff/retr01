@@ -22,9 +22,9 @@ SDL_VIDEODRIVER=offscreen ./build/test_e2e
 
 ```bash
 cd studio
-cmake --build build
-E2E_WATCH=1 ./build/test_e2e
-# slower/faster stepping:
+./scripts/test-e2e-watch.sh      # 1× pacing
+./scripts/test-e2e-watch.sh 2    # ~2× faster
+# or:
 E2E_WATCH=1 E2E_WATCH_MS=250 ./build/test_e2e
 ```
 
