@@ -57,7 +57,7 @@ UPDATE_GOLDENS=1 SDL_VIDEODRIVER=offscreen ./build/test_e2e
 | Action | How |
 |--------|-----|
 | World / planes | Ctrl+click grid or **P0/P1** |
-| Import PNG atlas | **Ctrl+I** → `project.png` or `import.png` (indexed ≤4 colors, size multiple of 128×120) |
+| Import PNG atlas | **Drop** `.png` on the **Worlds** panel only (or **Ctrl+I** → `project.png` / `import.png`). ≤4 colors; size multiple of 128×120; transparent cells skipped. Failures show a short error toast |
 | Layer | **L** or **BG** / **SPR** buttons |
 | Pixel / attr (BG) | **Tab** or **PIX** / **ATTR** |
 | Paint BG | BG layer + PIX: drag (colors **1-4**) |

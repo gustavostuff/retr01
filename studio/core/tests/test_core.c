@@ -497,10 +497,12 @@ static void test_png_import(void) {
     expect_true(r01_world_find_screen(w, 0, 0) >= 0, "cell 0,0 present");
     expect_true(r01_world_find_screen(w, 2, 1) >= 0, "cell 2,1 present");
     {
-        int si = r01_world_find_screen(w, 0, 0);
-        expect_true(si >= 0 && r01_screen_get_pixel(&w->screens[si], 0, 0) == 1, "pixel color");
+        int si0 = r01_world_find_screen(w, 0, 0);
+        int si2 = r01_world_find_screen(w, 2, 0);
+        /* remapped by first-seen opaque RGB: red→0, blue→1 */
+        expect_true(si0 >= 0 && r01_screen_get_pixel(&w->screens[si0], 0, 0) == 0, "first color → 0");
+        expect_true(si2 >= 0 && r01_screen_get_pixel(&w->screens[si2], 0, 0) == 1, "second color → 1");
     }
-    /* reject non-multiple size via bad path already covered; reject >4 colors would need another file */
     remove(path);
     free(w);
 }

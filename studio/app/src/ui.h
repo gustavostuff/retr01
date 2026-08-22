@@ -38,11 +38,17 @@
 #define UI_SPR_TOOL_PLACE 0
 #define UI_SPR_TOOL_TILE 1
 
+#define UI_TOAST_MAX 96
+#define UI_TOAST_MS 2800
+
 typedef struct UiState {
     R01Project *project;
     R01PlayState play;
     char project_path[R01_PATH_MAX];
     char status[128];
+    char toast_text[UI_TOAST_MAX];
+    Uint32 toast_until;
+    int toast_error; /* 1 = error style */
     int scale;
     int fullscreen;
     int brush_down;
@@ -73,5 +79,10 @@ void ui_shutdown(UiState *ui);
 void ui_tick(UiState *ui);
 void ui_draw(UiState *ui, SDL_Renderer *r);
 int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y);
+
+/* Drop / import helpers (Worlds panel). */
+void ui_toast(UiState *ui, const char *msg, int is_error);
+int ui_try_import_png(UiState *ui, const char *path);
+int ui_handle_drop_file(UiState *ui, const char *path, int logic_x, int logic_y);
 
 #endif

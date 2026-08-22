@@ -8,9 +8,11 @@
 #include "retr01_studio/play.h"
 #include "retr01_studio/spr_pack.h"
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 
 static const SDL_Color GRAY[4] = {
@@ -47,6 +49,8 @@ static int in_left_viewport(int lx, int ly) {
     return lx >= 0 && lx < UI_LEFT_W && ly >= 0 && ly < UI_LOGIC_H;
 }
 
+static R01World *cur_world(UiState *ui);
+
 int ui_init(UiState *ui) {
     memset(ui, 0, sizeof(*ui));
     ui->project = (R01Project *)calloc(1, sizeof(R01Project));
@@ -73,11 +77,122 @@ int ui_init(UiState *ui) {
     ui->pal_slot = 0;
     ui->show_grid = 1;
     ui->play_last_tick = 0;
+    ui->toast_text[0] = 0;
+    ui->toast_until = 0;
+    ui->toast_error = 0;
     memset(&ui->play, 0, sizeof(ui->play));
     snprintf(ui->status, sizeof(ui->status),
-             "Space=Play | Ctrl+E=export | Ctrl+G=gen | wheel=scroll");
+             "Drop PNG on Worlds | Space=Play | Ctrl+E=export");
     strncpy(ui->project_path, "project.json", R01_PATH_MAX - 1);
     return 0;
+}
+
+void ui_toast(UiState *ui, const char *msg, int is_error) {
+    if (!ui) {
+        return;
+    }
+    strncpy(ui->toast_text, msg ? msg : "", UI_TOAST_MAX - 1);
+    ui->toast_text[UI_TOAST_MAX - 1] = 0;
+    ui->toast_error = is_error ? 1 : 0;
+    ui->toast_until = SDL_GetTicks() + UI_TOAST_MS;
+}
+
+static int path_is_png(const char *path) {
+    size_t n;
+    if (!path) {
+        return 0;
+    }
+    n = strlen(path);
+    if (n < 4) {
+        return 0;
+    }
+    return strcasecmp(path + n - 4, ".png") == 0;
+}
+
+static void normalize_drop_path(const char *in, char *out, size_t cap) {
+    const char *src = in;
+    size_t oi = 0;
+    if (!in || !out || cap == 0) {
+        return;
+    }
+    if (strncmp(src, "file://", 7) == 0) {
+        src += 7;
+        if (strncmp(src, "localhost", 9) == 0) {
+            src += 9;
+        }
+        /* file:///path → ///path; keep a single leading slash */
+        while (src[0] == '/' && src[1] == '/') {
+            src++;
+        }
+    }
+    while (*src && oi + 1 < cap) {
+        if (src[0] == '%' && isxdigit((unsigned char)src[1]) && isxdigit((unsigned char)src[2])) {
+            char h[3] = {src[1], src[2], 0};
+            unsigned int v = 0;
+            if (sscanf(h, "%x", &v) == 1) {
+                out[oi++] = (char)v;
+                src += 3;
+                continue;
+            }
+        }
+        out[oi++] = *src++;
+    }
+    out[oi] = 0;
+}
+
+int ui_try_import_png(UiState *ui, const char *path) {
+    R01World *w;
+    char err[128];
+    char norm[R01_PATH_MAX];
+    if (!ui || !path) {
+        return -1;
+    }
+    normalize_drop_path(path, norm, sizeof(norm));
+    if (!path_is_png(norm)) {
+        ui_toast(ui, "not a .png file", 1);
+        return -1;
+    }
+    w = cur_world(ui);
+    if (!w) {
+        ui_toast(ui, "no world selected", 1);
+        return -1;
+    }
+    if (r01_world_import_png(w, norm, err, sizeof(err)) != 0) {
+        ui_toast(ui, err[0] ? err : "import failed", 1);
+        return -1;
+    }
+    ui->project->active_screen = w->screen_count > 0 ? 0 : -1;
+    ui->project->active_plane = -1;
+    ui->left_scroll_y = 0;
+    {
+        char ok[UI_TOAST_MAX];
+        snprintf(ok, sizeof(ok), "imported %dx%d · %d screens", w->grid_cols, w->grid_rows, w->screen_count);
+        ui_toast(ui, ok, 0);
+    }
+    snprintf(ui->status, sizeof(ui->status), "imported %dx%d (%d scr)", w->grid_cols, w->grid_rows,
+             w->screen_count);
+    return 0;
+}
+
+static int in_worlds_panel(const UiState *ui, int lx, int ly) {
+    int cy;
+    if (!in_left_viewport(lx, ly)) {
+        return 0;
+    }
+    cy = left_cy(ui, ly);
+    return cy >= UI_WORLDS_Y && cy < UI_WORLDS_Y + UI_WORLDS_H;
+}
+
+int ui_handle_drop_file(UiState *ui, const char *path, int logic_x, int logic_y) {
+    if (!ui || !path) {
+        return 0;
+    }
+    if (!in_worlds_panel(ui, logic_x, logic_y)) {
+        ui_toast(ui, "drop PNG on Worlds panel", 1);
+        return 1;
+    }
+    ui_try_import_png(ui, path);
+    return 1;
 }
 
 void ui_shutdown(UiState *ui) {
@@ -188,7 +303,7 @@ static void draw_worlds(UiState *ui, SDL_Renderer *r) {
             font_draw(r, x + 8, 18 + oy, buf, 230, 230, 240);
         }
     }
-    font_draw(r, 4, 28 + oy, "CTRL+CLICK  CTRL+I PNG", 120, 120, 130);
+    font_draw(r, 4, 28 + oy, "DROP PNG HERE", 140, 180, 140);
     {
         int gc = (w && w->grid_cols > 0) ? w->grid_cols : R01_GRID_SIZE;
         int gr = (w && w->grid_rows > 0) ? w->grid_rows : R01_GRID_SIZE;
@@ -658,6 +773,33 @@ static void draw_screen(UiState *ui, SDL_Renderer *r) {
     font_draw(r, UI_LEFT_W + 4, UI_LOGIC_H - 12, ui->status, 130, 130, 140);
 }
 
+static void draw_toast(UiState *ui, SDL_Renderer *r) {
+    int tw, th, x, y;
+    if (!ui->toast_text[0]) {
+        return;
+    }
+    if (SDL_GetTicks() >= ui->toast_until) {
+        ui->toast_text[0] = 0;
+        return;
+    }
+    tw = (int)strlen(ui->toast_text) * 6 + 16;
+    if (tw > UI_LOGIC_W - UI_LEFT_W - 16) {
+        tw = UI_LOGIC_W - UI_LEFT_W - 16;
+    }
+    th = 20;
+    x = UI_LEFT_W + (UI_LOGIC_W - UI_LEFT_W - tw) / 2;
+    y = UI_LOGIC_H - 40;
+    if (ui->toast_error) {
+        fill_rect(r, x, y, tw, th, 90, 28, 32);
+        draw_rect(r, x, y, tw, th, 200, 80, 80);
+        font_draw(r, x + 8, y + 6, ui->toast_text, 255, 200, 200);
+    } else {
+        fill_rect(r, x, y, tw, th, 28, 70, 40);
+        draw_rect(r, x, y, tw, th, 80, 180, 100);
+        font_draw(r, x + 8, y + 6, ui->toast_text, 220, 255, 220);
+    }
+}
+
 void ui_draw(UiState *ui, SDL_Renderer *r) {
     SDL_Rect clip = {0, 0, UI_LEFT_W, UI_LOGIC_H};
     clamp_left_scroll(ui);
@@ -675,6 +817,7 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
 
     draw_left_scrollbar(ui, r);
     draw_screen(ui, r);
+    draw_toast(ui, r);
 }
 
 static int hit(int x, int y, int rx, int ry, int rw, int rh) {
@@ -853,10 +996,8 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
             return 1;
         }
         if (k == SDLK_i && (mod & KMOD_CTRL)) {
-            char err[128];
             char png_path[R01_PATH_MAX];
             char stem[R01_PATH_MAX];
-            w = cur_world(ui);
             strncpy(stem, ui->project_path, R01_PATH_MAX - 1);
             stem[R01_PATH_MAX - 1] = 0;
             {
@@ -879,17 +1020,10 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
                 strncpy(png_path, "import.png", sizeof(png_path) - 1);
                 png_path[sizeof(png_path) - 1] = 0;
             }
-            if (!w) {
-                snprintf(ui->status, sizeof(ui->status), "no world");
-                return 1;
-            }
-            if (r01_world_import_png(w, png_path, err, sizeof(err)) == 0) {
-                ui->project->active_screen = w->screen_count > 0 ? 0 : -1;
-                ui->project->active_plane = -1;
-                snprintf(ui->status, sizeof(ui->status), "imported %dx%d (%d scr)", w->grid_cols, w->grid_rows,
-                         w->screen_count);
+            if (access(png_path, R_OK) != 0) {
+                ui_toast(ui, "no project.png / import.png", 1);
             } else {
-                snprintf(ui->status, sizeof(ui->status), "import fail");
+                ui_try_import_png(ui, png_path);
             }
             return 1;
         }

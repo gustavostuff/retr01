@@ -57,6 +57,7 @@ int app_shell_init(AppShell *app, int headless) {
         SDL_Quit();
         return -1;
     }
+    SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
 
     if (headless) {
         app->ren = SDL_CreateRenderer(app->win, -1, SDL_RENDERER_SOFTWARE);
@@ -136,6 +137,13 @@ void app_shell_frame(AppShell *app) {
 
 int app_shell_handle_event(AppShell *app, const SDL_Event *e) {
     int wx = 0, wy = 0, lx = 0, ly = 0, rc;
+    if (e->type == SDL_DROPFILE) {
+        SDL_GetMouseState(&wx, &wy);
+        logic_from_window(app, wx, wy, &lx, &ly);
+        rc = ui_handle_drop_file(&app->ui, e->drop.file, lx, ly);
+        SDL_free(e->drop.file);
+        return rc;
+    }
     if (e->type == SDL_MOUSEMOTION) {
         wx = e->motion.x;
         wy = e->motion.y;

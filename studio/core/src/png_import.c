@@ -26,7 +26,6 @@ int r01_world_set_grid(R01World *w, int cols, int rows) {
     }
     w->grid_cols = cols;
     w->grid_rows = rows;
-    /* Drop screens outside the new atlas. */
     for (i = w->screen_count - 1; i >= 0; i--) {
         R01Screen *s = &w->screens[i];
         if (s->col < 0 || s->row < 0 || s->col >= cols || s->row >= rows) {
@@ -41,14 +40,22 @@ int r01_world_set_grid(R01World *w, int cols, int rows) {
     return 0;
 }
 
-static int cell_fully_transparent(const uint8_t *idx, const uint8_t *alpha, int png_w, int col, int row) {
+typedef struct {
+    uint8_t r, g, b;
+} Rgb;
+
+static int rgb_eq(Rgb a, Rgb b) {
+    return a.r == b.r && a.g == b.g && a.b == b.b;
+}
+
+static int cell_fully_transparent(const uint8_t *rgba, int png_w, int col, int row) {
     int y, x;
     int ox = col * R01_SCREEN_PX_W;
     int oy = row * R01_SCREEN_PX_H;
     for (y = 0; y < R01_SCREEN_PX_H; y++) {
         for (x = 0; x < R01_SCREEN_PX_W; x++) {
-            uint8_t pi = idx[(oy + y) * png_w + (ox + x)];
-            if (alpha[pi] != 0) {
+            const uint8_t *p = rgba + ((size_t)(oy + y) * (size_t)png_w + (size_t)(ox + x)) * 4u;
+            if (p[3] != 0) {
                 return 0;
             }
         }
@@ -56,8 +63,59 @@ static int cell_fully_transparent(const uint8_t *idx, const uint8_t *alpha, int 
     return 1;
 }
 
-static void fill_screen_from_cell(R01Screen *s, const uint8_t *idx, int png_w, int col, int row, int default_bank,
-                                  int default_pal) {
+static int collect_opaque_colors(const uint8_t *rgba, size_t npx, Rgb out[4], int *out_n, char *err_buf,
+                                 size_t err_cap) {
+    size_t i;
+    int n = 0;
+    for (i = 0; i < npx; i++) {
+        const uint8_t *p = rgba + i * 4u;
+        Rgb c;
+        int j, found;
+        if (p[3] == 0) {
+            continue;
+        }
+        c.r = p[0];
+        c.g = p[1];
+        c.b = p[2];
+        found = 0;
+        for (j = 0; j < n; j++) {
+            if (rgb_eq(out[j], c)) {
+                found = 1;
+                break;
+            }
+        }
+        if (found) {
+            continue;
+        }
+        if (n >= 4) {
+            set_err(err_buf, err_cap, "need ≤4 colors (indexed or flat RGB)");
+            return -1;
+        }
+        out[n++] = c;
+    }
+    *out_n = n;
+    return 0;
+}
+
+static uint8_t map_pixel(const uint8_t *p, const Rgb colors[4], int ncolors) {
+    Rgb c;
+    int j;
+    if (p[3] == 0) {
+        return 0;
+    }
+    c.r = p[0];
+    c.g = p[1];
+    c.b = p[2];
+    for (j = 0; j < ncolors; j++) {
+        if (rgb_eq(colors[j], c)) {
+            return (uint8_t)j;
+        }
+    }
+    return 0;
+}
+
+static void fill_screen_from_cell(R01Screen *s, const uint8_t *rgba, int png_w, int col, int row,
+                                  const Rgb colors[4], int ncolors, int default_bank, int default_pal) {
     int y, x, cell;
     int ox = col * R01_SCREEN_PX_W;
     int oy = row * R01_SCREEN_PX_H;
@@ -67,8 +125,8 @@ static void fill_screen_from_cell(R01Screen *s, const uint8_t *idx, int png_w, i
     s->present = 1;
     for (y = 0; y < R01_SCREEN_PX_H; y++) {
         for (x = 0; x < R01_SCREEN_PX_W; x++) {
-            uint8_t pi = idx[(oy + y) * png_w + (ox + x)];
-            s->pixels[y * R01_SCREEN_PX_W + x] = (uint8_t)(pi & 3u);
+            const uint8_t *p = rgba + ((size_t)(oy + y) * (size_t)png_w + (size_t)(ox + x)) * 4u;
+            s->pixels[y * R01_SCREEN_PX_W + x] = map_pixel(p, colors, ncolors);
         }
     }
     for (cell = 0; cell < R01_TILES_PER_SCREEN; cell++) {
@@ -81,18 +139,16 @@ int r01_world_import_png(R01World *w, const char *path, char *err_buf, size_t er
     png_structp png = NULL;
     png_infop info = NULL;
     png_uint_32 width = 0, height = 0;
-    int bit_depth = 0, color_type = 0;
-    png_colorp palette = NULL;
-    int num_palette = 0;
-    png_bytep trans = NULL;
-    int num_trans = 0;
+    int bit_depth = 0;
     png_bytep *row_ptrs = NULL;
-    uint8_t *idx = NULL;
-    uint8_t alpha[256];
+    uint8_t *rgba = NULL;
+    Rgb colors[4];
+    int ncolors = 0;
     int cols, rows, col, row, present_cells;
     png_uint_32 y;
+    size_t rowbytes;
 
-    if (!w || !path) {
+    if (!w || !path || !path[0]) {
         set_err(err_buf, err_cap, "bad args");
         return -1;
     }
@@ -116,85 +172,78 @@ int r01_world_import_png(R01World *w, const char *path, char *err_buf, size_t er
 
     png_init_io(png, fp);
     png_read_info(png, info);
-    png_get_IHDR(png, info, &width, &height, &bit_depth, &color_type, NULL, NULL, NULL);
+    png_get_IHDR(png, info, &width, &height, &bit_depth, NULL, NULL, NULL, NULL);
 
-    if (color_type != PNG_COLOR_TYPE_PALETTE) {
-        set_err(err_buf, err_cap, "png must be indexed (palette) color");
-        goto fail;
-    }
-    if (bit_depth > 8) {
-        set_err(err_buf, err_cap, "png bit depth must be <= 8");
-        goto fail;
-    }
     if ((width % (png_uint_32)R01_SCREEN_PX_W) != 0 || (height % (png_uint_32)R01_SCREEN_PX_H) != 0) {
-        set_err(err_buf, err_cap, "size must be multiple of 128x120");
+        set_err(err_buf, err_cap, "size must be multiple of 128×120");
         goto fail;
     }
     cols = (int)(width / (png_uint_32)R01_SCREEN_PX_W);
     rows = (int)(height / (png_uint_32)R01_SCREEN_PX_H);
     if (cols < 1 || rows < 1 || cols > R01_GRID_SIZE || rows > R01_GRID_SIZE) {
-        set_err(err_buf, err_cap, "grid must be 1..8 screens on each axis");
+        set_err(err_buf, err_cap, "grid must be 1..8 screens per axis");
         goto fail;
     }
 
-    if (!png_get_PLTE(png, info, &palette, &num_palette) || num_palette < 1) {
-        set_err(err_buf, err_cap, "png missing palette");
-        goto fail;
+    /* Expand to 8-bit RGBA for a single validation path. */
+    png_set_expand(png); /* palette / tRNS / low-bit gray → 8-bit */
+    if (bit_depth == 16) {
+        png_set_strip_16(png);
     }
-    if (num_palette > 4) {
-        set_err(err_buf, err_cap, "png must use at most 4 palette colors");
-        goto fail;
-    }
-
-    memset(alpha, 255, sizeof(alpha));
-    if (png_get_tRNS(png, info, &trans, &num_trans, NULL) && trans && num_trans > 0) {
-        int i;
-        for (i = 0; i < num_trans && i < 256; i++) {
-            alpha[i] = trans[i];
-        }
-    }
-
-    if (bit_depth < 8) {
-        png_set_packing(png);
-    }
+    png_set_gray_to_rgb(png);
+    png_set_filler(png, 0xFF, PNG_FILLER_AFTER); /* RGB → RGBA if no alpha yet */
     png_read_update_info(png, info);
+    rowbytes = png_get_rowbytes(png, info);
+    if (png_get_channels(png, info) != 4 || rowbytes < (size_t)width * 4u) {
+        set_err(err_buf, err_cap, "png expand failed");
+        goto fail;
+    }
 
     row_ptrs = (png_bytep *)calloc((size_t)height, sizeof(png_bytep));
-    idx = (uint8_t *)malloc((size_t)width * (size_t)height);
-    if (!row_ptrs || !idx) {
+    rgba = (uint8_t *)malloc((size_t)height * rowbytes);
+    if (!row_ptrs || !rgba) {
         set_err(err_buf, err_cap, "oom");
         goto fail;
     }
     for (y = 0; y < height; y++) {
-        row_ptrs[y] = idx + (size_t)y * (size_t)width;
+        row_ptrs[y] = rgba + (size_t)y * rowbytes;
     }
     png_read_image(png, row_ptrs);
     png_read_end(png, NULL);
 
-    /* Remap any index >= num_palette (shouldn't happen) and clamp to 0..3. */
-    {
-        size_t n = (size_t)width * (size_t)height;
-        size_t i;
-        for (i = 0; i < n; i++) {
-            if (idx[i] >= (uint8_t)num_palette) {
-                idx[i] = 0;
-            }
-            if (idx[i] > 3) {
-                idx[i] = 3;
-            }
+    /* Pack tightly to RGBA if rowbytes has padding. */
+    if (rowbytes != (size_t)width * 4u) {
+        uint8_t *tight = (uint8_t *)malloc((size_t)width * (size_t)height * 4u);
+        png_uint_32 yy;
+        if (!tight) {
+            set_err(err_buf, err_cap, "oom");
+            goto fail;
         }
+        for (yy = 0; yy < height; yy++) {
+            memcpy(tight + (size_t)yy * (size_t)width * 4u, row_ptrs[yy], (size_t)width * 4u);
+        }
+        free(rgba);
+        rgba = tight;
+    }
+
+    if (collect_opaque_colors(rgba, (size_t)width * (size_t)height, colors, &ncolors, err_buf, err_cap) != 0) {
+        goto fail;
     }
 
     present_cells = 0;
     for (row = 0; row < rows; row++) {
         for (col = 0; col < cols; col++) {
-            if (!cell_fully_transparent(idx, alpha, (int)width, col, row)) {
+            if (!cell_fully_transparent(rgba, (int)width, col, row)) {
                 present_cells++;
             }
         }
     }
+    if (present_cells == 0) {
+        set_err(err_buf, err_cap, "no opaque screens in png");
+        goto fail;
+    }
     if (present_cells > R01_MAX_SCREENS_PER_WORLD) {
-        set_err(err_buf, err_cap, "too many non-transparent screens (max 32)");
+        set_err(err_buf, err_cap, "too many screens (max 32)");
         goto fail;
     }
 
@@ -208,23 +257,24 @@ int r01_world_import_png(R01World *w, const char *path, char *err_buf, size_t er
     for (row = 0; row < rows; row++) {
         for (col = 0; col < cols; col++) {
             R01Screen *s;
-            if (cell_fully_transparent(idx, alpha, (int)width, col, row)) {
+            if (cell_fully_transparent(rgba, (int)width, col, row)) {
                 continue;
             }
             s = &w->screens[w->screen_count];
-            fill_screen_from_cell(s, idx, (int)width, col, row, w->default_bg_bank, w->default_pal_row);
+            fill_screen_from_cell(s, rgba, (int)width, col, row, colors, ncolors, w->default_bg_bank,
+                                  w->default_pal_row);
             w->screen_count++;
         }
     }
 
-    free(idx);
+    free(rgba);
     free(row_ptrs);
     png_destroy_read_struct(&png, &info, NULL);
     fclose(fp);
     return 0;
 
 fail:
-    free(idx);
+    free(rgba);
     free(row_ptrs);
     if (png) {
         png_destroy_read_struct(&png, &info, NULL);
