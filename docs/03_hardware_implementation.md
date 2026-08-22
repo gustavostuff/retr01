@@ -1,409 +1,140 @@
 # Retr01 Hardware Implementation
 
-This doc merges the board walkthrough, software-engineer explanation, chip-count plan, and schematic-facing hardware notes.
+Preliminary chip list, bus ownership, and protoboard bring-up for Retr01-A. Software contracts and `$FExx` bitfields live in [`02`](02_graphics_worlds_memory.md). Motherboard layout sketch: [`01`](01_architecture_overview.md).
 
-**Start here if you write game code or Studio:** [*Where state lives (address to silicon)*](#where-state-lives-address-to-silicon) - which address hits which chip, what byte is stored, who reads it, and how often it changes. Register bitfields: [`02`](02_graphics_worlds_memory.md). Island bring-up: [`06`](06_protoboard_module_tests.md).
+## Domains
 
-## Board-level picture
+Four active compute domains on one **5 V** board:
 
-Retr01-A is four active compute domains on one 5 V board:
+- **W65C02S** -- game logic (fills nametables, OAM, latches -- never a framebuffer)
+- **74HC + PLD BG path** -- beam, VRAM fetch, BG pixels
+- **ATmega1284P** -- OAM, sprite line-buffer fill, pad bytes
+- **ATmega328P** -- audio
 
-- **W65C02S**: game logic
-- **74HC BG path**: beam timing, VRAM fetch, BG pixels
-- **ATmega1284P**: OAM, sprite evaluation, line-buffer fill, pad bytes
-- **ATmega328P**: audio
+## IC plan (v0, ~52 parts)
 
-The CPU never writes a framebuffer. It fills nametables, OAM, and latches.
+Through-hole. Exact pin maps come later with schematics. Optional **+1 ATF22V10** if equations overflow.
 
-## Main chips
+| Part | Qty | Role |
+|------|-----|------|
+| W65C02S | 1 | CPU, 8 MHz |
+| ATmega1284P | 1 | sprites / OAM / pads, 20 MHz |
+| ATmega328P | 1 | APU, 16 MHz |
+| AS6C62256 | 3 | system RAM, interleaved VRAM, sprite line buffer |
+| SST39SF040 | 1 | 512 KB cart flash (PRG/CHR/MAP), v0 on-board socket |
+| AT28C64B | 1 | board EEPROM |
+| AT28C16 | 3 | Color PROM R/G/B (master palette -> DACs) |
+| ATF22V10 | 3 | decode, timing, CHR/VRAM gating |
+| 74HC157 | 6 | VRAM mux x4 + line-buffer mux x2 |
+| 74HC245 | 3 | CPU bus / OAM / cart isolation |
+| 74HC573 | 14 | `$FExx` latches |
+| 74HC688 | 1 | raster compare |
+| 74HC161 | 4 | beam X/Y |
+| DIP-14 glue | 10 | HC14 x1, HC00 x2, HC04 x2, HC08 x2, HC32 x2, HC86 x1 |
 
-| Block | Part | Role |
-|------|------|------|
-| CPU | W65C02S | game logic |
-| System RAM | AS6C62256 | `$0000-$7FFF` |
-| VRAM | AS6C62256 | interleaved video SRAM |
-| Line buffer | AS6C62256 | sprite ping-pong storage |
-| Sprite/input MCU | ATmega1284P-PU | OAM + sprite pipeline + pads |
-| Audio MCU | ATmega328P-PU | NES-style APU |
-| PLD | 3x ATF22V10CQZ-20PU | decode, timing, CHR/VRAM gating |
-| Color PROM | 3x AT28C16 | master palette R/G/B (6-bit index -> DAC) |
-| 74HC157 | muxes | VRAM and line-buffer address mux |
-| 74HC245 | transceivers | data isolation |
-| 74HC573 | latches | scroll, banks, MAP address, OAM capture |
-| 74HC161 | counters | beam X/Y |
+Datasheets: [W65C02S](https://westerndesigncenter.com/wdc/documentation/w65c02s.pdf), [AS6C62256](https://www.alliancememory.com/wp-content/uploads/pdf/datasheets/AS6C62256.pdf), [ATF22V10](https://ww1.microchip.com/downloads/en/DeviceDoc/ATF22V10-Datasheet-DS50002239D.pdf), [ATmega1284P](https://ww1.microchip.com/downloads/en/DeviceDoc/40002047A.pdf), [ATmega328P](https://ww1.microchip.com/downloads/en/DeviceDoc/ATmega328P-DS-DS40002061A.pdf), [AT28C64B](https://ww1.microchip.com/downloads/en/DeviceDoc/doc4428.pdf), [AT28C16](https://ww1.microchip.com/downloads/en/DeviceDoc/doc0006.pdf), [SST39SF040](https://ww1.microchip.com/downloads/en/DeviceDoc/20005051C.pdf), [74HC family](https://www.ti.com/logic-circuit/standard-logic/74hc-family/overview.html).
 
-### Datasheets
+**Clocks:** CPU **8.000 MHz**, dot **5.369318 MHz** (independent), 1284 **20 MHz**, 328P **16 MHz**.
 
-Official PDFs for the main silicon:
+**SCALE DIP:** **2x** default (128x120 -> 256x240, fills RGBS). **1x** centers 128x120. Beam timing stays **341x262**.
 
-| Part | Datasheet |
-|------|-----------|
-| W65C02S | [WDC PDF](https://westerndesigncenter.com/wdc/documentation/w65c02s.pdf) |
-| AS6C62256 | [Alliance PDF](https://www.alliancememory.com/wp-content/uploads/pdf/datasheets/AS6C62256.pdf) |
-| ATF22V10 | [Microchip PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/ATF22V10-Datasheet-DS50002239D.pdf) |
-| ATmega1284P | [Microchip PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/40002047A.pdf) |
-| ATmega328P | [Microchip PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/ATmega328P-DS-DS40002061A.pdf) |
-| AT28C64B | [Microchip PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/doc4428.pdf) |
-| AT28C16 (Color PROM) | [Microchip AT28C16 PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/doc0006.pdf) |
-| SST39SF040 (512 KB parallel NOR, cart standard) | [Microchip SST39SF0x0 PDF](https://ww1.microchip.com/downloads/en/DeviceDoc/20005051C.pdf) |
-| SN74HC157/245/573/161/00/04/08/14/32/86/688 | [TI 74HC family](https://www.ti.com/logic-circuit/standard-logic/74hc-family/overview.html) (part-specific PDF) |
+**Color PROM:** 6-bit master index -> R/G/B. Not on the 6502 bus during play. Carts store indices only. Q15 in [`05`](05_costs_and_open_questions.md) if AT28C16 stock/speed becomes a problem.
 
-Island bring-up order and pass criteria: [`06_protoboard_module_tests.md`](06_protoboard_module_tests.md).
+## Where state lives (short)
 
-## Frozen v0 board plan
+| What | CPU view | Chip |
+|------|----------|------|
+| Game RAM | `$0000-$7FFF` | AS6C62256 (CPU-only) |
+| Nametables | `$FE10`/`$FE11`/`$FE12` | AS6C62256 VRAM (CPU phase write, PPU phase fetch) |
+| Sprite line buffer | (no CPU port) | AS6C62256 (1284 writes HBlank, beam reads visible) |
+| Cart | `$8000+` PRG, MAP `$FE90`-`$FE93`, CHR via fetch | SST39SF040 |
+| Master RGB | (none in play) | 3x AT28C16 |
+| Board EEPROM | `$FE70`-`$FE72` | AT28C64B |
+| `$FExx` controls | scroll, PPUCTRL, MAP addr, ... | HC573 + PLD decode |
+| OAM / pads | `$FE20`/`$FE21`, `$FE60`/`$FE61` | ATmega1284P |
+| APU | `$FE40`-`$FE5F` | ATmega328P |
+| Active palettes | `$FE08`/`$FE09` | small palette RAM / latches -> Color PROM |
 
-- through-hole only
-- planning total: **52 motherboard ICs**
-- **3x AT28C16** Color PROM (R/G/B), programmed once with the family master palette
-- 3x ATF22V10, not Lattice GAL
-- if PLD equations overflow, add a **4th ATF22V10**, not a different family
+Full register map: [`02`](02_graphics_worlds_memory.md).
 
-## Color PROM (master palette)
+**Bus rules:** system RAM = CPU only. VRAM = interleaved on PHI2. CHR = BG on visible dots, 1284 may own in HBlank. Color PROM = video path only.
 
-The **64-color master palette** is hardware on every Retr01 board:
+**Sprites:** 1284 fills a ping-pong **128 px** line buffer one scanline ahead. Not a framebuffer. Cap **16** sprites per logical line.
 
-- part: **AT28C16** class parallel EEPROM (DIP-24), **three** devices
-- address: **6-bit** master index from the compositor (colors 0-63)
-- data: each PROM drives one gun (**R**, **G**, or **B**) into that gun's R-2R DAC
-- not on the 6502 data bus during gameplay (video path only)
-- not stored in the cartridge. Carts only reference indices 0-63
+**BG:** beam + scroll -> VRAM tile/attr -> CHR (attr `BANK`) -> active palette -> Color PROM. Mid-frame scroll takes effect on the next tile fetch. Visible nametable/attr pokes follow tear rules in `02`.
 
-Studio keeps a software copy of the same RGB table for preview only. Changing the look of the family means reburning the Color PROMs (and updating the doc table), not shipping a new cart header field.
+**Input:** `$FE60` / `$FE61`, bits 0-7 = right, left, down, up, X, Y, coin/select, start.
 
-**Pin (not decided):** if AT28C16 supply or access time becomes a problem (obsolete listings; **150 ns** is tight if dot clock rises), candidate replacement is Microchip **AT27C256R / AT27C256R-70PU** - **70 ns** OTP EPROM, **In Production**, DIP-28. Tradeoffs: OTP (not EEPROM), different footprint, still three chips for R/G/B unless packing changes. See `05` Q15.
+**Not in hardware:** framebuffer, sprite-0 hit, sprite-vs-BG collision, sprite DMA, on-board HDMI.
 
-## Output scale (board DIP)
+## Protoboard islands (Retr01-A v0)
 
-Retr01-A ships with a **SCALE** DIP (or jumper):
+Do not breadboard all **52** ICs at once. Prove **islands**, then merge. **Pass** = island checks below, not a full game.
 
-- **closed = 2x** (cabinet default): double **128x120** to **256x240** - fills the RGBS active field with **no** letterbox
-- **open = 1x**: center **128x120** in the **256x240** active field (**64** px side margins, **60** lines top/bottom)
-
-The beam counters and **341x262** timing do not change with the DIP. Only logical-to-raster mapping and border blanking change.
-
-## Clocks
-
-| Clock | Value | Job |
-|------|-------|-----|
-| CPU | **8.000 MHz** | W65C02S + VRAM ownership phase |
-| Dot | **5.369318 MHz** | beam counters, fetch, compositor |
-| 1284 | **20 MHz** | sprite/input firmware |
-| 328P | **16 MHz** | APU firmware |
-
-CPU and dot clocks are **independent**.
-
-## Where state lives (address to silicon)
-
-This is the software-engineer map of the board: **which `$FExx` / memory hits which chip**, what byte lives there, **who reads it**, and **how often it should change**. Full register bitfields stay in [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md). Pin-level PLD equations come later with schematics.
-
-Read each row as: *CPU poke -> physical hold -> video/audio/input consumer*.
-
-### Big memories (SRAM / flash / PROM)
-
-| What | CPU view | Physical store | Who writes | Who reads | How often it changes |
-|------|----------|----------------|------------|-----------|----------------------|
-| Game state, code scratch | `$0000-$7FFF` | **AS6C62256** system RAM | 6502 | 6502 only | Every frame / as game needs. **Never** on the video bus |
-| Live nametables (slots 0-5) | `$FE10`/`$FE11` addr, `$FE12` data | **AS6C62256** VRAM | 6502 on **CPU phase** | BG fetch on **PPU phase** | Slot fill on camera/plane load or seam shift (~480 B/screen). Idle while panning inside the workbench |
-| Sprite line buffer | (no CPU port) | **AS6C62256** line buffer, halves `$000-$07F` / `$080-$0FF` | **1284** in HBlank | BG compositor on visible dots | **Every logical scanline** (ping-pong). Not a framebuffer |
-| Cart PRG / CHR / MAP | `$8000+` PRG. CHR via fetch. MAP `$FE90`-`$FE93` | **512 KB** parallel NOR (SST39SF040, v0 socket) | Programmer / cart build | 6502 (PRG, MAP), BG path + 1284 (CHR) | Image is fixed at burn time. Runtime only **banks** and **MAP seek** |
-| Master RGB (64 colors) | (no CPU port in gameplay) | **3x AT28C16** Color PROM | Once at board program | Compositor every pixel | Never at runtime. Carts only store **indices 0-63** |
-| Board save / config | `$FE70`-`$FE72` | **AT28C64B** | 6502 (slow write timing) | 6502 | Rare (options, high scores). Not video |
-
-VRAM slot layout (same chip, CPU and BG share by PHI2 phase): slots **0-3** camera, **4-5** parallax planes, then scratch - see `02`. Each slot is **512 B** aligned (**240** tiles + **240** attrs used).
-
-### Latched `$FExx` controls (74HC573 class + decode PLD)
-
-These are **physical latches on the PCB**, not VRAM and not "variables in the 1284." Decode (`ATF22V10` + glue) pulses `/LE` on the right **74HC573** when the 6502 writes that address. The latch holds the byte (or packed fields) until the next write. Video logic samples the Q outputs continuously.
-
-| Addr | Name | Typical bits held | Physical hold | Who reads | How often / why |
-|------|------|-------------------|---------------|-----------|-----------------|
-| `$FE02` | `SCROLL_X` | 0-127 | HC573 (+ glue) | BG fetch (slot pick + fine scroll) | Every pan frame, or less. **No** nametable rewrite |
-| `$FE03` | `SCROLL_Y` | 0-119 | HC573 | BG fetch | Same |
-| `$FE00` | `PPUCTRL` | BG/sprite enable, NMI, camera mode | HC573 / PLD | BG path, NMI gate | Mode changes, room transitions |
-| `$FE04`/`$FE05` | raster compare / IRQ | scanline + enable | HC573 + compare (`HC688` class) | IRQ logic vs beam Y | Setup once per split effect; hit is sticky in `PPUSTATUS` |
-| `$FE06`/`$FE07` | plane band | which plane, axis lock, band start | HC573 | BG path (slot 4/5 vs 0-3) | When enabling/moving a parallax band |
-| `$FE30` | `WORLD` | 0-7 | HC573 | CHR/MAP region select glue | World change (rare) |
-| `$FE31`-`$FE36` | `BG_BANK_0`..`5` | bank **0-3** (optional helpers) | HC573 (may share packages with scroll/MAP) | Software / load helpers; **not** live BG CHR mux | Optional bulk stamp into slot attrs. Live bank is **per-tile attr** |
-| `$FE37` | `SPR_BANK` | bank **0-3** (optional helper) | HC573 | Software / load helpers; **not** live sprite CHR mux | Optional bulk stamp into OAM attrs. Live bank is **per-sprite attr** |
-| `$FE38` | `PAL_ROW` | row 0-7 (hint) | optional latch / software convention | Software still **must** copy indices into `$FE08`/`$FE09` | Row change |
-| `$FE80` | `PRG_WINDOW` | reserved | HC573 (optional) | - | **Unused in v0** (PRG is contiguous 32 KB). Leave at 0 |
-| `$FE90`-`$FE92` | `MAP_ADDR_*` | 24-bit MAP cursor | HC573x3 (or packed) | MAP `/CE` + flash A[23:0] | Seek before streaming a screen |
-| `$FE10`/`$FE11` | `VRAM_ADDR_*` | 15-bit VRAM cursor | HC573 | VRAM mux on CPU phase | Before each VRAM run |
-
-**BG bank in one sentence:** each nametable tile byte is an index **0-255** inside a CHR BG bank; that bank is selected by **attr bits 1-0** for that **8x8 tile**. Screens are not hardware-tied to one bank. `$FE31`-`$FE36` may still exist as optional stamp helpers. Mixed banks in one frame come from per-tile attrs (no mid-frame bank-latch split required).
-
-**BG attr bits (hardware vs software):** same low nibble layout as OAM (`BANK` / `PAL` / `FLIP_*`); high bits differ.
-
-| Bits | Name | Path |
-|------|------|------|
-| 1-0 | `BANK` | Hardware -- CHR address mux (measure timing on BG island) |
-| 3-2 | `PAL` | Hardware -- compositor |
-| 4-5 | `FLIP_H` / `FLIP_V` | Hardware -- shifter reverse / fine-Y XOR (leftover PLD/74HC, or 4th ATF22V10 if equations run short) |
-| 6-7 | `SOLID` / `ANIM` | Software -- video ignores; CPU / kit drive collision and living-tile nametable updates |
-
-Full bit table and software model: [`02`](02_graphics_worlds_memory.md). Dot clock / CRT / sprite HBlank unchanged vs denser attr streams (~480 B/screen); those only affect CPU load cost.
-
-**Parallax and palettes:** plane slots have their **own** nametable+attr data (per-tile `BANK` like the camera). Attrs still index the **same** active BG palette buffer as the playfield (`$FE08`/`$FE09`). No second set of 4 BG colors for parallax. MAP "palette row" on a parallax-flagged screen is **ignored / inherited** from the playfield (see `02`).
-
-Package count note: planning shows roughly **HC573x6** in the "scroll / optional bank helpers / MAP addr" cluster plus more for palette/compositor - bits are packed across chips; schematic will assign exact pin maps. The **address -> latch -> consumer** contract above is what software and Studio must assume.
-
-### Active palette buffer (small dedicated RAM / latches)
-
-| What | CPU view | Physical store | Who reads | How often |
-|------|----------|----------------|-----------|-----------|
-| 8 palettes x 4 master indices (32 bytes), shared color 0 | `$FE08` addr, `$FE09` data | Palette RAM or HC573 bank on the board (not nametable VRAM) | BG + sprite compositor every pixel | Load a row in VBlank (or mid-frame with raster timing). Same buffer for camera **and** plane BG |
-
-Max unique colors without mid-frame reload: **25** (1 shared backdrop + 8x3). Master pool is still **64** in the Color PROM.
-
-### ATmega1284P domain (not HC573)
-
-| What | CPU view | Physical store | Who writes | Who reads | How often |
-|------|----------|----------------|------------|-----------|-----------|
-| OAM (64 x Y,tile,attr,X) | `$FE20`/`$FE21` | **1284 internal SRAM** | 6502 (captured into 1284) | 1284 sprite eval | Typically once per frame in VBlank; can update sooner |
-| Pad bytes | `$FE60`/`$FE61` | 1284 (poll -> hold) | 1284 firmware | 6502 | Every frame / poll rate |
-| Sprite pixels for next line | (none) | Line-buffer SRAM (above) | 1284 | Compositor | Every HBlank |
-
-OAM capture may use an **HC573** (or equivalent) on the data path into the 1284; the **authoritative OAM image** lives in the MCU, not in VRAM.
-
-### ATmega328P domain
-
-| What | CPU view | Physical store | How often |
-|------|----------|----------------|-----------|
-| APU regs / sound | `$FE40`-`$FE5F` (contract) | **328P** firmware state + DAC/PWM path | Game writes; 328P synthesizes at audio rate |
-
-### Ownership and buses (summary)
-
-| Bus / resource | Owner rules |
-|----------------|-------------|
-| System RAM | CPU-only. No interleave |
-| VRAM | CPU on CPU phase. BG fetch on PPU phase |
-| CHR (cart) | BG fetch on visible dots. **1284** may own in HBlank for sprites |
-| Line buffer | Beam reads show half. 1284 writes fill half. Swap each logical line |
-| Color PROM | Video path only. Not on 6502 D-bus during play |
-
-See **Sprite line buffer (how it works)** below. Camera / VRAM slot semantics: [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md).
-
-## Sprite line buffer (how it works)
-
-Sprites are **not** drawn by the 6502 into a framebuffer. The **ATmega1284P** owns sprite evaluation and fills a **line buffer** in SRAM. The BG path reads that buffer when compositing each scanline.
-
-### Technical summary
-
-| Item | Detail |
-|------|--------|
-| OAM | **64** sprites. CPU: write index to **`$FE20`**, data to **`$FE21`** (auto-inc). Entry order `Y, tile, attr, X`. Positions are **logical** (128x120 space). Attr: `BANK`/`PAL`/`FLIP_*`/`PRIORITY`/`SIZE` (see `02`) |
-
-| Per scanline cap | **16** sprites on one **logical** row |
-| Line buffer SRAM | **256 bytes** used on the third AS6C62256: two **128-byte** halves |
-| Half A | `$000-$07F` - one logical row of sprite data (128 pixels) |
-| Half B | `$080-$0FF` - one logical row of sprite data (128 pixels) |
-| Roles | **Ping-pong:** while the beam **displays** one half, the 1284 **writes** the other |
-| Latency | **One scanline** pipeline, **not** a full-frame delay |
-| Scale | Raster path only: duplicate or center into 256x240. Line buffer stays 128-wide |
-
-Per scanline timeline:
-
-1. **Visible line N:** compositor reads sprite pixels for line **N** from the half filled in the previous HBlank.
-2. **HBlank after line N:** 1284 scans OAM for sprites on line **N+1**, fetches CHR, writes that row into the idle half.
-3. **Visible line N+1:** halves swap.
+**Ground rules:** 5 V only, 100 nF per IC. One bus driver at a time. Start CPU at **1-2 MHz** if wires ring, then **8 MHz**. Do not share CHR between BG and 1284 until each side works alone. W65C02S: **`BE` high**, **`RDY` high**, clock = **`PHI2`**.
 
 ```text
-Logical rows (full frame is NOT stored):
-
-  ... 49 50 51 52 ... 95
-         ^  ^
-      show  prepare during HBlank
-
-SRAM (two trays only):
-
-      Half A                 Half B
-   +-------------+        +-------------+
-   | 128 px row  |        | 128 px row  |
-   +-------------+        +-------------+
-    show N / fill N+1      fill N+1 / show N
-         (roles swap every logical line)
+A Power
+B Clocks + reset
+C CPU + system RAM + tiny PRG
+D $FExx decode + one latch
+E Pads ($FE60/$FE61)
+F Board EEPROM ($FE7x)          [optional early]
+G VRAM port + PHI2 interleave   [critical before video]
+H Dot clock + beam counters
+I BG nametable fetch            [needs G + H]
+J Cart flash stub (PRG/CHR/MAP)
+K ATmega328P APU                [sim first OK]
+L ATmega1284P                   [sim first OK]
+M Line-buffer SRAM
+N 1284 + line buffer + CHR      [needs L + M + J]
+O Color PROM + compositor + RGBS
+P Integration
 ```
 
-The 6502 maintains **who** is on screen (OAM). The 1284 does **per-row** work in HBlank. CHR: BG owns the cart during visible dots; 1284 may own CHR in HBlank.
-
-This is **not** a full-frame framebuffer. It is one scanline of pipeline delay.
-
-### How BG and sprites meet on screen
-
-Each **logical** pixel is roughly:
-
-1. **BG path:** VRAM camera slots + scroll -> CHR -> BG palette index
-2. **Sprite path:** line buffer at logical X (`0..127`) -> sprite palette index (or transparent)
-3. **Compositor:** priority -> **6-bit** master index
-
-Then the **raster path** (SCALE DIP) places that pixel into the 256x240 field. Color PROM + DAC follow.
-
-Full sprite pipeline steps (same frame, different jobs):
-
-1. CPU uploads OAM through **`$FE20` (addr)/`$FE21` (data, auto-inc)**
-2. 1284 scans OAM for the **next** line
-3. active sprite palette buffer maps indices through the selected sprite palette
-4. during HBlank, 1284 fetches sprite CHR and fills the next line-buffer half
-5. visible line reads the last-filled half
-
-## Interleaved VRAM model
-
-The key architectural trick:
-
-- CPU phase: CPU may use `$FE10`/`$FE12` VRAM port
-- PPU phase: BG fetch reads nametable and attrs
-
-This removes the VBlank-only VRAM update bottleneck common on classic consoles like the NES, while still using one VRAM chip. See [`07_pitch.md`](07_pitch.md) for NES comparison.
-
-## Rendering pipeline
-
-### BG
-
-1. beam counters determine visible position
-2. scroll + arrangement choose nametable slot
-3. slot tile byte and attr come from VRAM
-4. attr `BANK` bits (1-0) pick that tile's CHR BG bank; `FLIP_H` / `FLIP_V` (4-5) reverse the shifter / fine-Y as needed
-5. attr `PAL` bits (3-2) pick BG palette 0-3; `SOLID` / `ANIM` are software-only (not wired into video)
-6. active BG palette buffer maps the tile's 2-bit color to a **master index 0-63**
-7. tile row fetch returns 2bpp data
-8. shifters output that master index into the **Color PROM** -> R/G/B DAC
-
-### Sprites
-
-See **Sprite line buffer (how it works)** above. Short version:
-
-1. CPU uploads OAM through `$FE20` (addr)/`$FE21` (data)
-2. 1284 scans OAM for the **next** line
-3. active sprite palette buffer maps sprite 2bpp to a **master index 0-63** (or transparent)
-4. during HBlank, 1284 fetches sprite CHR and fills the next line-buffer half
-5. visible line reads the last-filled half. Compositor resolves BG vs sprite, then **Color PROM** -> DAC
-
-One-line pipeline, not a full-frame delay.
-
-## Palette hardware model
-
-**Master RGB** comes from the **Color PROM** (see above). Carts never carry those RGB bytes.
-
-Each cart may store palette **index** blobs in flash, located by a **pointer table** (no palette compression/special packing):
-
-- cart-global: **2 sets of 4** = **8 palettes** (**1 BG set + 1 sprite set**, 16 B + 16 B). Default for every world
-- optional per world: **BG palette bank** and/or **sprite palette bank**, each up to **8 palette rows x 4 palettes**. Present = override globals for that world/plane; absent = that world uses cart globals
-- if neither globals nor world banks are authored: **kit/Studio/boot helper** may load system default indices; **bare metal with no `$FE08`/`$FE09` writes = undefined/garbage colors** (no hardware auto-load)
-
-Runtime selection is always by **palette row**, and **BG palette row N** and **sprite palette row N** are locked together.
-
-When palette row `N` is active, the **active palette buffer** holds **8 palettes**:
-
-- 4 BG palettes from BG palette row `N`
-- 4 sprite palettes from sprite palette row `N`
-
-All 8 share the same **color 0** master index (universal backdrop for that row). Software must write that shared index into every slot when loading the row (see `02_graphics_worlds_memory.md`).
-
-The CPU-facing model is dedicated palette **index** registers via **`$FE08`/`$FE09`**. Those indices address the Color PROM each pixel. **Fallback resolution for which indices to load is not hardware logic.** Boot/Studio runtime follows cart pointers and copies the selected row into registers.
-
-No extra ICs are required for palette **banks**, synced row selection, or fallback rules beyond the Color PROMs already on the board.
-
-## Timing-facing rules
-
-- mid-frame **scroll** writes take effect on the **next tile fetch** (allow up to **8 px** delay if a write lands mid-tile)
-- mid-frame OAM / sprite-attr changes are sampled on the **next** line eval (1284); attr `BANK`/`SIZE`/`PRIORITY`/`FLIP_*`/`PAL` live in OAM, not `$FE37`
-- mid-frame **attr `BANK`** (or other attr) changes follow nametable tear rules below - they are VRAM, not a slot latch
-- clean splits should write during **HBlank**
-- raster IRQ is the intended split mechanism
-- palette-buffer rewrites follow the same rule: safest in VBlank, possible mid-frame with raster timing
-
-### Nametable / attr tear avoidance
-
-Changing a tile index or attr in VRAM while the beam is drawing that cell can produce a **torn tile** (mixed old/new pattern lines). Hardware does **not** latch a whole cell for the frame.
-
-**Required software policy** (document for games + implement in the dev kit):
-
-1. Do **not** commit nametable/attr writes for a cell whose logical Y range overlaps the current beam scanline, unless you accept tear.
-2. Safe defaults: commit visible BG updates in **VBlank**, or defer until the beam has **passed** the cell (effect next frame) or has **not reached** it yet (effect this frame, clean).
-3. Optional helper: `vram_poke_tile_safe(addr, data)` that compares beam Y to the cell's tile row and either writes, queues, or waits for NMI.
-
-Big MAP streams stay VBlank-oriented for CPU budget; tear policy is about **small live pokes** (anim, damage tiles, HUD cells). Full write-up: [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) (*Live VRAM updates and tear avoidance*).
-
-## Input contract
-
-Two bytes only:
-
-- `$FE60` = player 1
-- `$FE61` = player 2
-
-Bits:
-
-0 right, 1 left, 2 down, 3 up, 4 X, 5 Y, 6 coin/select, 7 start
-
-## Variant notes
-
-### Retr01-A
-
-- through-hole
-- cabinet IDC
-- RGBS + S-Video + composite pads
-
-### Retr01-C
-
-- same architecture
-- **3-wire controllers** with **ATtiny85** (draft) MCU in each pad
-- wires: **VCC, GND, DATA** (open-drain DATA). Console **ATmega1284P** is master: poll, then read one button byte
-- software-visible bytes stay **`$FE60`/`$FE61`** with the same bit layout as Retr01-A
-
-### Retr01-H
-
-- later SMD handheld
-- same software-facing map
-
-## What is intentionally not in hardware
-
-- no framebuffer
-- no sprite-0 hit API
-- no sprite-vs-BG gameplay collision
-- no hardware sprite DMA
-- no on-board HDMI
-
-## Practical takeaway
-
-For software people:
-
-- treat `$FExx` as the hardware API; see **Where state lives** for which poke hits SRAM vs HC573 vs MCU
-- write game state in system RAM
-- stream screens through MAP -> VRAM (attrs already carry per-tile `BANK`); optional `$FE31`-`$FE36` only if you use bulk stamp helpers
-- write OAM through the 1284 port; sprites do not touch nametable VRAM
-- treat palette changes as writes to one shared active buffer (parallax included)
-- let the board resolve tiles to pixels
-
-Protoboard bring-up: [`06_protoboard_module_tests.md`](06_protoboard_module_tests.md) (island map, interactions, pass criteria).
-
-
-## Extra: Summary of parts needed.
-
-~52 ICs on the Retr01-A motherboard (v0 plan). Optional +1 ATF22V10 if equations overflow.
-
-Compute
-
-- 1x W65C02S -- game CPU (8 MHz)
-- 1x ATmega1284P -- OAM, sprite eval, line-buffer fill, pad bytes
-- 1x ATmega328P -- NES-style APU
-
-Memory
-
-- 3x AS6C62256 (32 KB each) -- system RAM, interleaved VRAM, sprite line buffer
-- 1x AT28C64B -- board EEPROM (save/config)
-- 1x **SST39SF040** 512 KB parallel NOR (v0 socket, later on cart) -- cart image: PRG / CHR / MAP
-- 3x AT28C16 -- Color PROM (R/G/B master palette to DACs)
-
-Glue / video
-
-- 3x ATF22V10 -- decode, timing, CHR/VRAM gating (4th if needed for flip/bank)
-- 6x 74HC157 -- VRAM addr mux x4 + line-buffer addr mux x2
-- 3x 74HC245 -- CPU bus / OAM path / cart data isolation
-- 14x 74HC573 -- $FExx latches (scroll, MAP, banks, palette, OAM capture, ...)
-- 1x 74HC688 -- raster compare
-- 4x 74HC161 -- beam X/Y counters
-- 10x DIP-14 glue -- HC14 x1, HC00 x2, HC04 x2, HC08 x2, HC32 x2, HC86 x1 (compositing, SCALE, reset, ...)
-
-Planning total: **52** ICs (see motherboard map in [`01`](01_architecture_overview.md)).
-
-Roles in one line: 6502 runs the game. Discrete 74HC+PLD draws BG. 1284 draws sprites into a line buffer. 328P makes sound. Three SRAMs split CPU / nametables / sprites. Three Color PROMs turn palette indices into RGB.
+Parallel: develop **K** and **L** in sim while breadboarding **A-I**. Merge at **N** and **P**.
+
+```text
+        A --> B --> C --> D --> E
+                     |     |
+                     |     +--> F (optional)
+                     |
+                     +--> G --> I --> O --\
+                     |     ^              |
+                     +--> H -/            +--> P
+                                          |
+        J --------------------------------+
+        K --------------------------------+
+        L --> M --> N --------------------+
+```
+
+| Island | Success |
+|--------|---------|
+| **A** Power | Clean 5 V, no smoke |
+| **B** Clocks + reset | Stable `PHI2` (later ~5.37 MHz dot). `RESB` low then high |
+| **C** CPU + RAM + PRG | Fetches PRG, RAM R/W, no bus fight |
+| **D** `$FExx` + latch | `STA $FExx` hits only the latch |
+| **E** Pads | `$FE60`/`$FE61`, **1 = pressed** |
+| **F** EEPROM | Write, power-cycle, read back |
+| **G** VRAM interleave | `$FE10`-`$FE12` R/W, no PHI2 contention |
+| **H** Beam | **341x262**, sane HBlank/VBlank/NMI stubs |
+| **I** BG fetch | PPU phase walks nametable addrs, CPU still writes on CPU phase |
+| **J** Cart stub | One of PRG/CHR/MAP `/CE` at a time. MAP reads test image |
+| **K** 328P | Independent tone (sim OK first) |
+| **L** 1284 | Runs at 20 MHz (sim OK first) |
+| **M** Line buffer | Two 128-byte halves, clean mux |
+| **N** Sprites | Expected pixels in line buffer, one-line pipeline |
+| **O** Video | Stable RGBS. **2x** = 256x240 or **1x** centered |
+| **P** Integration | Stable video, pads, NMI ~60 Hz, no hot chips |
+
+**Integration order:** A,B -> C,D -> G -> E -> H,I,O -> J -> K -> L,M,N -> full compositor. Stop breadboarding and draw KiCad when **A-E**, **G-J**, and **K-O** pass.
+
+| Port | Island | Smoke check |
+|------|--------|-------------|
+| `$FE02`/`$FE03` | D | Store `$55`, probe latch |
+| `$FE10`-`$FE12` | G | Write/read `$AA` at VRAM 0 |
+| `$FE20`/`$FE21` | N | OAM addr + data auto-inc |
+| `$FE60`/`$FE61` | E | Switch sets matching bit |
+| `$FE70`-`$FE72` | F | EEPROM survives power-cycle |
+| `$FE80` | J | unused in v0, leave 0 |
+| `$FE90`-`$FE93` | J | MAP seek + read known byte |

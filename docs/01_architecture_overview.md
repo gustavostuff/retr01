@@ -221,7 +221,7 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 
 ## Near-term software focus
 
-**Retr01 Studio** is the only tool in active development. See `04_retr01_studio.md` for UI layout, game constraints, phased delivery, ASM optimization pipeline, and testing policy.
+**Retr01 Studio** is the only tool in active development. See `04_retr01_studio.md` for UI layout, Phase 1 scope, and roadmap.
 
 Studio authors worlds, screens, palettes, and CHR. Full `.retr01` cart compile (PRG + CHR + MAP) lands in later Studio phases - see `04_retr01_studio.md`.
 
@@ -233,7 +233,6 @@ A **low-level hardware emulator** is planned later, not built now. It should sim
 
 - Product pitch and NES comparison: `07_pitch.md`
 - Graphics, worlds, scrolling, banks, VRAM, MAP, **cart image map**, BG attrs: `02_graphics_worlds_memory.md`
-- Board structure, buses, chips, and timing: `03_hardware_implementation.md` (includes **sprite line buffer**)
-- Protoboard module tests (island bring-up): `06_protoboard_module_tests.md`
+- Board structure, chips, buses, and protoboard islands: `03_hardware_implementation.md`
 - Retr01 Studio (current tool): `04_retr01_studio.md`
 - Costs and unresolved items: `05_costs_and_open_questions.md`

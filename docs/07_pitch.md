@@ -245,10 +245,9 @@ Different does not mean better for every game. A tight NES-style single screen i
 |-----|---------|
 | [`01_architecture_overview.md`](01_architecture_overview.md) | Terminology, capability snapshot, variants |
 | [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) | Worlds, VRAM, MAP, palettes, scrolling |
-| [`03_hardware_implementation.md`](03_hardware_implementation.md) | Chips, buses, pipelines |
+| [`03_hardware_implementation.md`](03_hardware_implementation.md) | Chips, buses, protoboard islands |
 | [`04_retr01_studio.md`](04_retr01_studio.md) | Authoring tool roadmap |
 | [`05_costs_and_open_questions.md`](05_costs_and_open_questions.md) | Locked decisions, costs, open questions |
-| [`06_protoboard_module_tests.md`](06_protoboard_module_tests.md) | Hardware bring-up |
 
 ---
 
