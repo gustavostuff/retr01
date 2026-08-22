@@ -1,6 +1,6 @@
 # Retr01 Board Simulator
 
-**Status:** Planning. Code will live under `sim/` (not started). IC behavior references: [`hw/md/`](../hw/md/). Hardware islands: [`03`](03_hardware_implementation.md). Compact BOM proposal: [`06`](06_hardware_v1_32ic.md).
+**Status:** Planning. Code will live under `sim/` (not started). IC behavior references: [`hw/md/`](../hw/md/). Current BOM: [`06`](06_hardware_v1_32ic.md). Island checklist: [`03`](03_hardware_implementation.md).
 
 ## Goal
 
@@ -50,7 +50,7 @@ Examples:
 
 ### 3. System tests (whole board)
 
-Full Retr01-A netlist: choose **v0** ([`03`](03_hardware_implementation.md)) or **v1** ([`06`](06_hardware_v1_32ic.md)) explicitly. Software ports always from [`02`](02_graphics_worlds_memory.md).
+Full Retr01-A netlist: **current BOM** [`06`](06_hardware_v1_32ic.md) (**32 IC**). Optional legacy ~52 netlist only if explicitly testing that path ([`03`](03_hardware_implementation.md)). Software ports always from [`02`](02_graphics_worlds_memory.md).
 
 - Cart image (`.retr01` / PRG+CHR+MAP)
 - Pad bytes (`$FE60`/`$FE61`) from host input
@@ -65,7 +65,7 @@ Full Retr01-A netlist: choose **v0** ([`03`](03_hardware_implementation.md)) or 
 2. **Netlist second:** islands and the full board are graphs of pin connections.
 3. **Retr01-only:** no generic multi-board sandbox; contracts and clocks match this project.
 4. **Tests before polish:** unit -> island -> system. Visual DIP widgets are Phase 2+ UI (see earlier plan); Layer 1 does not require a GUI.
-5. **Sources of truth:** `hw/*.pdf` + `hw/md/*.md` for pin/behavior; `docs/02` for `$FExx` software map; `docs/03` or `docs/06` for which BOM the netlist follows ([`01`](01_architecture_overview.md)).
+5. **Sources of truth:** `hw/*.pdf` + `hw/md/*.md` for pin/behavior; `docs/02` for `$FExx`; `docs/06` for the board netlist ([`01`](01_architecture_overview.md)).
 
 ## Near-term focus
 
@@ -81,6 +81,6 @@ Full Retr01-A netlist: choose **v0** ([`03`](03_hardware_implementation.md)) or 
 | Doc | Role |
 |-----|------|
 | [`hw/md/README.md`](../hw/md/README.md) | Index of IC markdown references |
-| [`03_hardware_implementation.md`](03_hardware_implementation.md) | Chip list, islands, clocks |
 | [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) | Memory map, `$FExx`, cart |
-| [`06_hardware_v1_32ic.md`](06_hardware_v1_32ic.md) | Proposed product BOM (~32 IC). Does not override `02` |
+| [`06_hardware_v1_32ic.md`](06_hardware_v1_32ic.md) | Current Retr01-A BOM (**32 IC**) |
+| [`03_hardware_implementation.md`](03_hardware_implementation.md) | Island checklist / legacy ~52 notes |

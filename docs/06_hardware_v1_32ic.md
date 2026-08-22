@@ -1,46 +1,46 @@
-# Retr01-A Hardware v1 (32-IC Revision)
+# Retr01-A Hardware (32 IC)
 
-**Status:** Proposed **product** system BOM (motherboard + cart). Does **not** replace the v0 (~52 IC) bring-up reference in [`03`](03_hardware_implementation.md) until validation gates pass.
+**Status:** **Current** Retr01-A system BOM (motherboard + cart). This is the normative board architecture on this branch.
 
-**Authority (read this first):**
+**Authority:**
 
 | This doc owns | This doc does **not** own |
 |---------------|---------------------------|
-| v1 chip list, IC count, PCB size target, which merges are in/out of silicon | Software-visible `$FExx` **logical** map, cart image, worlds/VRAM -- those stay in [`02`](02_graphics_worlds_memory.md) |
-| HW-only pathways (PLD roles, bus HC245 split, PROM packaging) | Promoting proposed port changes -- that happens only when `02` v1 deltas are frozen and [`05`](05_costs_and_open_questions.md) moves them to Locked |
+| Chip list, IC count, PCB size, silicon merges | Software-visible `$FExx` **logical** map, cart image, worlds/VRAM -- [`02`](02_graphics_worlds_memory.md) |
+| HW pathways (PLD roles, bus HC245 split, PROM packaging) | Exact mailbox/I2C `$FExx` bit protocols -- land those in `02` when frozen |
 
-v1 keeps the **same game-visible graphics model** as v0 (32 KB sys / VRAM / linebuf, 512 KB cart, interleaved VRAM, 341x262, `$FE4x` APU on 328P). It does **not** claim full binary identity for board EEPROM or latch packing -- see [`02` v1 deltas](02_graphics_worlds_memory.md#v1-deltas-proposed-with-06).
+Same **game-visible graphics model** as the older ~52 IC sketch on `main` (32 KB sys / VRAM / linebuf, 512 KB cart, interleaved VRAM, 341x262, `$FE4x` APU on 328P). Differences that matter for software: no parallel board EEPROM at `$FE70`, packed Color PROM, bit-packed latches, cart I2C saves -- see [`02`](02_graphics_worlds_memory.md).
 
 Target: **through-hole DIP**, compact **12 x 12 cm** 4-layer PCB.
 
-**Related:** software contract [`02`](02_graphics_worlds_memory.md). Decisions log [`05`](05_costs_and_open_questions.md). Overview SoT table [`01`](01_architecture_overview.md).
+**Related:** software [`02`](02_graphics_worlds_memory.md). Decisions [`05`](05_costs_and_open_questions.md). Overview [`01`](01_architecture_overview.md). Optional discrete island checklist [`03`](03_hardware_implementation.md) (legacy ~52 path / bench fallback).
 
 ---
 
 ## Summary
 
-| Item | v0 (~52 IC) | v1 (this doc) |
-|------|-------------|---------------|
-| **System IC count** | ~52 | **32** (31 motherboard + 1 cart save) |
-| CPU / RAM / VRAM / cart flash | W65C02S + 3x AS6C62256 + SST39SF040 | **Unchanged** |
-| Video timing | 341x262, ~5.37 MHz dot | **Unchanged** |
-| Audio MCU | ATmega328P | **ATmega328P retained** (dedicated APU) |
-| Sprite / pads / machine EEPROM | ATmega1284P | **ATmega1284P** (no APU time-share) |
-| Board config storage | AT28C64B @ `$FE70` | **1284P internal 4 KB EEPROM** (handshake) |
-| Color PROM | 3x AT28C16 (R/G/B) | **1x AT28C16** (packed R3-G3-B2; 1-dot pipeline) |
-| Beam / raster | 4x HC161 + HC688 | **2x ATF22V10** (X/Y state machines + compare) |
-| Glue logic | ~10x 74HC DIP-14 | **Absorbed into PLDs** |
-| `$FExx` latches | 14x HC573 | **9x HC573** (bit-packed bytes) |
-| Bus transceivers | 3x HC245 | **3x HC245 retained** (CPU / video / cart-OAM paths) |
-| Cart game saves | (not in v0 mobo spec) | **1x I2C EEPROM on cart** (in the 32) |
+| Item | Spec |
+|------|------|
+| **System IC count** | **32** (31 motherboard + 1 cart save). Escape **+1 PLD** -> 33 if compositor overflow |
+| CPU / RAM / VRAM / cart flash | W65C02S + 3x AS6C62256 + SST39SF040 |
+| Video timing | 341x262, ~5.37 MHz dot |
+| Audio MCU | **ATmega328P** (dedicated APU) |
+| Sprite / pads / machine EEPROM | **ATmega1284P** (no APU time-share) |
+| Board config storage | **1284P internal 4 KB EEPROM** (handshake; no AT28C64B) |
+| Color PROM | **1x AT28C16** (or faster OTP): packed R3-G3-B2; 1-dot pipeline |
+| Beam / raster | **2x ATF22V10** (X/Y state machines + compare) |
+| Glue logic | Absorbed into PLDs |
+| `$FExx` latches | **9x HC573** (bit-packed bytes) |
+| Bus transceivers | **3x HC245** (CPU / video / cart-OAM) |
+| Cart game saves | **1x I2C EEPROM on cart** (in the 32) |
 
-Net: **~20 ICs removed** vs v0. Hope: **32 is enough**; escape hatch is **+1 ATF22V10** if compositor equations overflow (same as v0).
+vs the older ~52 IC architecture (preserved on `main` / documented in [`03`](03_hardware_implementation.md)): about **20 ICs** removed by packing latches, absorbing glue/beam into PLDs, consolidating Color PROM, and dropping parallel board EEPROM -- while keeping 328P and 3x HC245.
 
 ---
 
-## Part 1: Optimization path (52 ICs toward 32)
+## Part 1: What changed vs the ~52 IC sketch
 
-How ~20 ICs come off compared to v0, and what stays for risk mitigation.
+Historical reduction notes (why 32, not 52). Product BOM is [Part 2](#part-2-bill-of-materials).
 
 ### 1. Board EEPROM eliminated (-1 IC)
 
@@ -48,100 +48,82 @@ How ~20 ICs come off compared to v0, and what stays for risk mitigation.
 |--|--|
 | **Removed** | 1x AT28C64B (28-pin DIP) |
 | **Replaced by** | ATmega1284P **internal 4 KB EEPROM** |
-| **Reason** | Cabinet config and high scores are low-frequency writes. A 28-pin parallel EEPROM is oversized for that role. |
-| **Caveat** | **4 KB** (not 8 KB). Frequent **game** saves belong on **cart EEPROM**, not 1284 wear. CPU writes via a **software handshake** to 1284 firmware (see [Register map deltas](#register-map-deltas-vs-v0)). |
+| **Reason** | Cabinet config and high scores are low-frequency writes. |
+| **Caveat** | **4 KB**. Game saves on **cart EEPROM**. CPU handshake TBD in `02`. |
 
-### 2. Audio MCU retained (0 IC delta vs v0)
+### 2. Audio MCU retained
 
 | | |
 |--|--|
-| **Kept** | 1x ATmega328P (28-pin DIP) |
-| **Role** | NES-style APU @ 16 MHz; owns `$FE40-$FE5F` as in v0 |
-| **Reason** | Merging APU into the 1284 (VBlank synth + sprites) is the highest MCU scheduling risk. v1 keeps a **dedicated** audio MCU so the 1284 stays on sprites, OAM, pads, and machine EEPROM. |
-| **Not done** | Do **not** plan 1284 APU time-share for the first PCB spin. |
+| **Kept** | 1x ATmega328P |
+| **Role** | NES-style APU @ 16 MHz; `$FE40-$FE5F` |
+| **Reason** | Dedicated APU; 1284 stays on sprites, OAM, pads, machine EEPROM. |
 
 ### 3. Color PROMs consolidated (-2 ICs)
 
 | | |
 |--|--|
 | **Removed** | 2x AT28C16 (of 3) |
-| **Replaced by** | 1x AT28C16: **6-bit index in**, **8-bit packed out** `{RRRGGGBB}` (R3, G3, B2) to three R-2R ladders |
-| **Reason** | 64-color master palette does not need three parallel 8-bit-wide PROM chips. |
-| **Timing** | **1-dot pipeline** (latch index on pixel N, PROM drives DACs on N+1). Prefer **faster OTP** (e.g. AT27C256R-70 class) if 150 ns is tight at ~5.37 MHz. |
-| **Quality** | Blue is **2 bits** (4 levels). Studio Color PROM preview must match packed layout. Revert to 3x PROM only if art quality forces it (+2 ICs). |
+| **Replaced by** | 1x AT28C16: **6-bit index in**, **8-bit** `{RRRGGGBB}` out |
+| **Timing** | **1-dot pipeline**. Prefer faster OTP (e.g. AT27C256R-70) if 150 ns is tight. |
+| **Quality** | Blue is **2 bits**. Studio must quantize to R3G3B2. |
 
-### 4. Discrete glue logic absorbed (-9 ICs net)
+### 4. Discrete glue absorbed (-9 ICs net)
 
 | | |
 |--|--|
-| **Removed** | ~10x 74HC glue (HC00/04/08/32/86, etc.) |
-| **Replaced by** | Equations in existing / added **ATF22V10** devices (decode, `/CE`, clock gating, direction) |
-| **Caveat** | Watch **product-term** limits per PLD; v0 already allowed +1 PLD on overflow. v1 uses **5 PLDs** total (hope); **6th** only if fit fails. |
+| **Removed** | ~10x 74HC glue |
+| **Replaced by** | Equations in **ATF22V10** devices |
+| **Caveat** | **5 PLDs** total; **6th** only if fit fails. |
 
 ### 5. Beam counters and raster compare (-5 ICs net)
 
 | | |
 |--|--|
 | **Removed** | 4x HC161 + 1x HC688 |
-| **Replaced by** | 2x ATF22V10: **X machine** (0-340, 9 bits), **Y machine** (0-261, 9 bits) + **combinatorial compare** vs `$FE04` raster latch -> IRQ |
-| **Caveat** | **9 FFs + wrap** per axis fits one ATF22V10 (10 macrocells). Must clock at **dot rate** (~5.37 MHz). ATF22V10 speed grade is adequate. |
+| **Replaced by** | 2x ATF22V10: X (0-340), Y (0-261) + compare vs `$FE04` -> IRQ |
 
 ### 6. Hardware latches packed (-5 ICs)
 
 | | |
 |--|--|
-| **Removed** | 5x HC573 |
-| **Replaced by** | **9x HC573** with **bit-packed** `$FExx` bytes (PPUCTRL, plane, flags share bytes) |
-| **Caveat** | **Logical** map can stay 6502-friendly (ORA/AND + Zero Page shadows). **Spec revision** vs frozen v0 `$FExx` table in `02` -- freeze a v1 map + thin PRG HAL for saves/APU before shipping carts. |
+| **Replaced by** | **9x HC573** bit-packed `$FExx` bytes |
+| **Caveat** | Logical addresses in `02`; **bitfield packing table** still open (Q21). |
 
-### 7. Bus transceivers retained (0 IC delta vs v0)
-
-| | |
-|--|--|
-| **Kept** | **3x HC245**: CPU vs video data path, cart isolation, OAM / helper path (same roles as v0) |
-| **Reason** | Cutting to 1x HC245 and relying only on PLD `/OE` is a high contention risk. v1 keeps full isolation within the 32-IC budget. |
-
-### 8. Compositor moved to PLD (v0 used HC573 + glue)
+### 7. Bus transceivers retained
 
 | | |
 |--|--|
-| **Added** | Dedicated **compositor ATF22V10** (5th PLD; part of the +2 PLDs vs v0's 3) |
-| **Scope (recommended)** | **Late-stage priority mux only**: pick final **6-bit Color PROM index** from pre-resolved BG vs sprite indices + priority / transparency. **Not** full CHR fetch, palette row mux, and tile pipeline in one PLD. |
-| **Caveat** | Highest PLD integration risk. Define I/O and pipeline stages before locking PCB. Escape: **+1 ATF22V10** (33 ICs). |
+| **Kept** | **3x HC245** |
 
-### 9. Cart save EEPROM (+1 IC vs v0 mobo, in the 32)
+### 8. Compositor in PLD
+
+| | |
+|--|--|
+| **Added** | Compositor ATF22V10 (5th PLD): **priority mux only** -> 6-bit Color PROM index |
+| **Escape** | +1 ATF22V10 (33 ICs) |
+
+### 9. Cart save EEPROM (+1 IC, in the 32)
 
 | | |
 |--|--|
 | **Added** | 1x I2C EEPROM on cartridge (e.g. 24C64) |
-| **Reason** | Game saves must not wear 1284 internal EEPROM; `$FExx` / save map churn is mitigated by a **frozen register map + HAL**, not by bringing AT28C64B back. |
 
 ### Net tally (approx.)
 
-| Change | Delta |
-|--------|------:|
-| Drop AT28C64B | -1 |
-| Drop 2x Color PROM | -2 |
-| Absorb glue into PLDs | -9 |
-| Beam PLDs replace HC161/HC688 | -5 |
-| Pack HC573 | -5 |
-| Keep 328P, 3x HC245 | 0 |
-| Add beam + compositor PLDs (vs v0's 3) | +2 |
-| Add cart I2C EEPROM | +1 |
-| Absorb HC14 / remaining glue into PLDs or passives | ~-1 (vs -9 glue line above) |
-| **Net vs ~52** | **-> 32** (authoritative count is the [BOM table](#ic-count), not this approx tally) |
+Authoritative count is the [BOM table](#ic-count) (**32**). Approx deltas vs ~52: -1 EEPROM -2 PROM -9 glue -5 beam -5 latches +2 PLDs +1 cart save, with HC14 absorbed.
 
 ---
 
-## Part 2: v1 bill of materials
+## Part 2: Bill of materials
 
 ### Processors and MCUs (3 ICs)
 
 | Qty | Part | Role |
 |-----|------|------|
-| 1 | W65C02S (DIP-40) | 8 MHz game CPU: logic, MAP streaming, latch writes |
-| 1 | ATmega1284P (DIP-40) | 20 MHz: sprite/OAM line buffer, pads, **machine EEPROM** |
-| 1 | ATmega328P (DIP-28) | 16 MHz: **NES-style APU**, `$FE40-$FE5F` |
+| 1 | W65C02S (DIP-40) | 8 MHz game CPU |
+| 1 | ATmega1284P (DIP-40) | 20 MHz: sprites/OAM, pads, **machine EEPROM** |
+| 1 | ATmega328P (DIP-28) | 16 MHz: **APU**, `$FE40-$FE5F` |
 
 ### Memory and storage (4 ICs)
 
@@ -162,29 +144,27 @@ How ~20 ICs come off compared to v0, and what stays for risk mitigation.
 | 1 | ATF22V10 | Y-beam state machine (0-261) + raster IRQ compare |
 | 1 | ATF22V10 | BG/sprite **priority mux** -> 6-bit Color PROM address |
 
-**Note:** A **6th PLD** is **not** in the 32; add only if equation fit fails (system becomes 33).
-
 ### Registers and latches (9 ICs)
 
 | Qty | Part | Role |
 |-----|------|------|
-| 9 | 74HC573 (DIP-20) | Packed `$FExx` state: scroll, PPU, raster, plane bands, MAP addr, etc. |
+| 9 | 74HC573 (DIP-20) | Packed `$FExx` state |
 
 ### Video mux, bus, and output (10 ICs)
 
 | Qty | Part | Role |
 |-----|------|------|
-| 6 | 74HC157 (DIP-16) | VRAM / line-buffer address mux (CPU phase vs video phase) |
-| 1 | AT28C16 (DIP-24) | Consolidated Color PROM (6-bit index -> 8-bit R3-G3-B2) |
-| 3 | 74HC245 (DIP-20) | CPU / video / cart-OAM bus isolation |
+| 6 | 74HC157 (DIP-16) | VRAM / line-buffer address mux |
+| 1 | AT28C16 (DIP-24) | Color PROM (6-bit index -> R3-G3-B2) |
+| 3 | 74HC245 (DIP-20) | CPU / video / cart-OAM isolation |
 
 ### Cart save (+1 IC, on cartridge)
 
 | Qty | Part | Role |
 |-----|------|------|
-| 1 | I2C EEPROM (e.g. 24C64, SOIC-8 or DIP-8) | **Per-game saves** (4 wires: VCC, GND, SDA, SCL) |
+| 1 | I2C EEPROM (e.g. 24C64) | Per-game saves (VCC, GND, SDA, SCL) |
 
-Interface: 6502 bit-bang or 1284 as I2C master behind a `$FExx` window (TBD).
+Interface: 6502 bit-bang or 1284 as I2C master behind a `$FExx` window (TBD in `02`).
 
 ### IC count
 
@@ -198,113 +178,100 @@ Interface: 6502 bit-bang or 1284 as I2C master behind a `$FExx` window (TBD).
 | Cart I2C EEPROM | 1 |
 | **System total** | **32** |
 
-**Split:** **31** on motherboard (including cart flash in socket) + **1** cart save IC. If cart flash lives only on the cartridge PCB, count is still **32** system ICs (30 soldered mobo + flash + EEPROM).
+**Split:** **31** motherboard (incl. cart flash in socket) + **1** cart save. If flash lives only on the cart PCB: still **32** (30 soldered mobo + flash + EEPROM).
 
-**Not in the 32:** reset / clock conditioner (**74HC14**) -- absorb into PLD / discrete passives if possible; add only if bring-up needs it (+1 -> 33).
+**Not in the 32:** **74HC14** reset/clock -- absorb if possible; else +1 -> 33.
 
 ---
 
-## Part 3: Inter-chip pathways (v1)
+## Part 3: Inter-chip pathways
 
 ### APU path (328P)
 
-1. W65C02S writes sound triggers to **`$FE40-$FE5F`** (same address band as v0).
-2. ATmega328P services the APU map continuously; PWM / analog out as in v0 planning.
-3. ATmega1284P does **not** synthesize audio; it stays on sprites, OAM, pads, and machine EEPROM.
+1. W65C02S writes `$FE40-$FE5F`.
+2. ATmega328P services APU continuously.
+3. ATmega1284P does **not** synthesize audio.
 
 ### PLD beam and raster IRQ
 
-1. W65C02S writes split scanline to **`$FE04`** (latched in HC573).
-2. Y-beam PLD compares registered Y counter to latched value **combinationally**.
-3. Match drives **IRQB** (same idea as v0 HC688, no external comparator IC).
+1. `$FE04` latched in HC573.
+2. Y-beam PLD compares to Y counter.
+3. Match drives **IRQB**.
 
 ### 8-bit color DAC path
 
-1. Compositor PLD outputs **6-bit master palette index** (pipelined one dot if needed).
-2. AT28C16 (or faster OTP substitute) outputs **8-bit** `{RRRGGGBB}`.
-3. Three R-2R ladders (3 + 3 + 2 pins) -> **RGBS** pads (sync generation unchanged from v0 planning).
+1. Compositor PLD -> 6-bit palette index (pipelined one dot if needed).
+2. PROM/OTP -> `{RRRGGGBB}`.
+3. R-2R ladders -> **RGBS**.
 
 ### Bus isolation
 
-Three HC245s keep CPU, video-fetch, and cart/OAM domains from fighting. PLD `/OE` still enforces **one driver at a time** within each domain.
+Three HC245s + PLD `/OE`: one driver at a time per domain.
 
 ---
 
-## Register map deltas vs v0
+## Software map notes
 
-Software-facing detail lives in [`02` v1 deltas](02_graphics_worlds_memory.md#v1-deltas-proposed-with-06). Summary only:
+Detail in [`02`](02_graphics_worlds_memory.md). Short:
 
-| Topic | v0 | v1 (proposed) |
-|-------|----|---------------|
-| `$FE40-$FE5F` APU | ATmega328P | **Unchanged** |
-| `$FE70-$FE72` board EEPROM | AT28C64B | **Removed** -- 1284 EEPROM handshake (ports TBD in `02`) |
-| Latch silicon | 14x HC573 | **9x** bit-packed (bitfield table TBD in `02` before freeze) |
-| Cart saves | Not specified | **Cart I2C EEPROM** (HAL / port TBD in `02`) |
+| Topic | Norm |
+|-------|------|
+| `$FE40-$FE5F` APU | ATmega328P |
+| Machine config | 1284 internal EEPROM (handshake; **not** AT28C64B `$FE70`) |
+| Latch silicon | 9x HC573 bit-packed (bitfields open in `02`) |
+| Cart saves | Cart I2C EEPROM + HAL |
 
-Games can share the **same `.retr01` image** (PRG/CHR/MAP) across v0/v1 if PRG uses a HAL for machine EEPROM and cart saves. APU `$FE4x` stays compatible. Do not claim `$FE70` compatibility.
+PRG should use `machine_eeprom_*` / `cart_save_*` helpers. APU may use direct `$FE4x` stores.
 
 ---
 
-## Validation gates (v1 adoption)
+## Validation gates
 
-Do **not** treat v1 as production-ready until:
+Bench/sim gates before locking schematics / first PCB spin:
 
 | Gate | Pass criteria |
 |------|----------------|
-| **G1 CPU + RAM** | Same as v0 island C |
-| **G2 VRAM interleave** | Same as v0 island G |
-| **G3 Beam PLDs** | Stable 341x262; HBlank/VBlank/NMI stubs; raster IRQ on `$FE04` |
-| **G4 Compositor PLD** | Correct BG/sprite priority @ dot rate with pipelined PROM |
-| **G5 328P APU** | Stable output; APU register smoke tests (same bar as v0 island K) |
-| **G6 Bus** | No fights with 3x HC245 + PLD `/OE`; cart + CPU + video never clash |
-| **G7 Color** | 64-entry PROM programmed; RGBS levels tuned; 1-dot pipeline verified (extends v0 Q2) |
-| **G8 Saves** | Machine config in 1284 EEPROM survives power cycle; cart EEPROM R/W |
+| **G1 CPU + RAM** | Island C style |
+| **G2 VRAM interleave** | Island G style |
+| **G3 Beam PLDs** | Stable 341x262; HBlank/VBlank/NMI stubs; raster IRQ |
+| **G4 Compositor PLD** | BG/sprite priority @ dot rate; pipelined PROM |
+| **G5 328P APU** | Stable output; `$FE4x` smoke |
+| **G6 Bus** | No fights with 3x HC245 + PLD `/OE` |
+| **G7 Color** | 64-entry PROM; RGBS tuned; 1-dot pipeline |
+| **G8 Saves** | 1284 machine EEPROM + cart EEPROM R/W |
 
 ---
 
-## Bring-up strategy: v0 islands vs v1 PCB
-
-### Do you need to build the full 52-IC v0 motherboard?
-
-**No -- not as a product goal.** The ~52 IC plan in `03` is a **de-risking reference** and **island bring-up checklist**, not a requirement that the first shipped board populate every discrete chip.
-
-### Recommended path
+## Bring-up strategy
 
 ```text
-Phase A -- Prove behavior (v0 island order from 03)
-  Use breadboard / sim islands for: CPU+RAM, VRAM interleave, beam, BG fetch,
-  1284 sprites, 328P APU, Color PROM + RGBS (pipelined).
+Phase A -- Prove behavior (island order from 03, adapted to this BOM)
+  CPU+RAM, VRAM interleave, beam PLDs, BG fetch, 1284 sprites,
+  328P APU, Color PROM + RGBS (pipelined).
 
-Phase B -- Prove v1-specific merges (before 32-IC PCB)
-  - Compositor PLD (priority mux only) at dot rate
-  - Packed HC573 / `$FExx` map in emulator or FPGA/CPLD fixture
-  - 1284 machine-EEPROM handshake (no AT28C64B)
+Phase B -- Board-specific merges
+  - Compositor PLD at dot rate
+  - Packed HC573 / $FExx (as bitfields land in 02)
+  - 1284 machine-EEPROM handshake
   - Cart I2C save path
 
 Phase C -- First integrated PCB
-  Target **v1 32 IC** system (12 x 12 cm mobo + cart) once Phase A core + Phase B merges pass.
+  32 IC system (12 x 12 cm mobo + cart)
 ```
 
-### When v0 discrete chips still help
-
-Use **discrete** HC161 + HC688 on the bench when a beam PLD fails -- swap one island back to v0 parts to localize bugs. You do not need all 52 ICs soldered at once; `03` explicitly says **do not breadboard all 52 at once**.
-
-### When to skip straight to v1 PCB
-
-Only if **sim + CPLD fixtures** already pass gates G3-G4 and G6-G7. Otherwise you debug compositor and packed `$FExx` on a 4-layer board with less fallback.
+**Optional:** use discrete HC161 + HC688 on the bench if a beam PLD fails (legacy parts from the ~52 path). Do not breadboard 52 ICs as a product goal. Full ~52 IC architecture remains on `main` / [`03`](03_hardware_implementation.md).
 
 ---
 
 ## Risk summary
 
-| Area | Risk | Mitigation in 32-IC BOM |
-|------|------|-------------------------|
-| 1284 APU time-share | VBlank budget, underrun | **Not used** -- 328P kept |
-| Compositor PLD | I/O and timing fit | Priority-mux-only scope; escape +1 PLD |
-| Bus contention | Driver fights | **3x HC245** retained |
-| Color PROM | 150 ns / R3G3B2 | 1-dot pipeline; faster OTP swap; Studio match |
-| `$FExx` / saves | Spec drift | Freeze map in `02`; PRG HAL; cart I2C for game saves |
-| IC count | Overflow | Hope **32**; +1 PLD or +HC14 only if bring-up demands |
+| Area | Risk | Mitigation |
+|------|------|------------|
+| Compositor PLD | I/O and timing fit | Priority-mux-only; escape +1 PLD |
+| Bus contention | Driver fights | 3x HC245 |
+| Color PROM | 150 ns / R3G3B2 | 1-dot pipeline; faster OTP; Studio match |
+| `$FExx` / saves | Spec gaps | Freeze mailbox + I2C + bitfields in `02` |
+| IC count | Overflow | Norm **32**; +1 PLD or +HC14 only if needed |
 
 ---
 
@@ -312,7 +279,7 @@ Only if **sim + CPLD fixtures** already pass gates G3-G4 and G6-G7. Otherwise yo
 
 | Doc | Content |
 |-----|---------|
-| [`03_hardware_implementation.md`](03_hardware_implementation.md) | v0 ~52 IC reference, island bring-up order |
-| [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) | Software SoT; v1 deltas proposed until frozen |
-| [`05_costs_and_open_questions.md`](05_costs_and_open_questions.md) | Locked vs proposed-v1 decisions |
-| [`01_architecture_overview.md`](01_architecture_overview.md) | Sources-of-truth table + capability snapshot |
+| [`02`](02_graphics_worlds_memory.md) | Software SoT |
+| [`03`](03_hardware_implementation.md) | Legacy ~52 / optional island checklist |
+| [`05`](05_costs_and_open_questions.md) | Locked decisions + open Qs |
+| [`01`](01_architecture_overview.md) | Sources of truth + snapshot |

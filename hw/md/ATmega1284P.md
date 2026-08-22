@@ -7,18 +7,19 @@
 
 ## What it is
 
-AVR 8-bit MCU: **128 KB Flash**, **16 KB SRAM**, **4 KB EEPROM**, 32 GPIO lines on four ports (A/B/C/D), timers with PWM, USART, SPI, TWI, ADC, JTAG. Retr01 uses it as a **dedicated helper MCU**, not the game CPU: it owns **OAM**, **sprite line-buffer fill**, and **controller bytes**. Proposed v1 also puts **machine EEPROM** here (APU stays on 328P) ([`06`](../../docs/06_hardware_v1_32ic.md)).
+AVR 8-bit MCU: **128 KB Flash**, **16 KB SRAM**, **4 KB EEPROM**, 32 GPIO lines on four ports (A/B/C/D), timers with PWM, USART, SPI, TWI, ADC, JTAG. Retr01 uses it as a **dedicated helper MCU**, not the game CPU: it owns **OAM**, **sprite line-buffer fill**, **controller bytes**, and **machine EEPROM**. APU stays on **328P** ([`06`](../../docs/06_hardware_v1_32ic.md)).
 
-## Retr01 role (v0)
+## Retr01 role
 
 | Port / duty | Retr01 map |
 |-------------|------------|
 | OAM storage + evaluate | CPU writes via `$FE20` (addr) / `$FE21` (data), auto-inc; 64 entries `Y,tile,attr,X` |
 | Sprite line buffer | During **HBlank**, write next line into AS6C62256 line-buffer SRAM (ping-pong 128 px halves) |
 | Pads | Present `$FE60` / `$FE61` (R L D U X Y coin start, **1 = pressed**) |
+| Machine EEPROM | Internal 4 KB; CPU handshake via `$FE70` band (protocol TBD in `02`) |
 | CHR in HBlank | May own cart CHR bus while BG path is idle (do not share until island N proven) |
 
-**Not** the BG beam path. **Not** (v0) the APU -- that is ATmega328P.
+**Not** the BG beam path. **Not** the APU -- that is ATmega328P.
 
 Cap: **16 sprites per logical scanline**. Pipeline is one line ahead; not a framebuffer.
 
@@ -26,9 +27,9 @@ Cap: **16 sprites per logical scanline**. Pipeline is one line ahead; not a fram
 
 | Space | Size | Notes |
 |-------|------|-------|
-| Flash | 128 KB | Firmware (sprite eval, OAM port, pads) |
+| Flash | 128 KB | Firmware (sprite eval, OAM port, pads, machine EEPROM) |
 | SRAM | 16 KB | OAM shadow, line work, stacks |
-| EEPROM | 4 KB | Unused for game in v0 (board uses AT28C64B). v1: machine config |
+| EEPROM | 4 KB | **Machine config** (not game saves -- those are cart I2C) |
 
 Endurance (typical datasheet): Flash 10k, EEPROM 100k write cycles.
 
@@ -101,15 +102,15 @@ Beam / PLD -------- HBlank / line sync ----------> 1284 IRQ or GPIO
 
 Full AVR cycle accuracy is **not** required on day one. Prefer:
 
-1. **Contract model:** OAM RAM + `$FE20/$FE21` + line-buffer writer + pad bytes
-2. Later: real AVR ISA / timer PWM if audio moves here (v1)
+1. **Contract model:** OAM RAM + `$FE20/$FE21` + line-buffer writer + pad bytes + machine-EEPROM mailbox
+2. Later: fuller AVR ISA if sim needs it
 
 Tests: OAM auto-inc wrap, sprite Y match, ping-pong half select, pad bit polarity.
 
-## v0 vs v1
+## Current vs legacy
 
-| Topic | v0 | v1 proposal |
-|-------|----|-------------|
-| Audio | Separate 328P | Same chip, VBlank synth + PWM |
-| Board EEPROM | AT28C64B | Internal 4 KB EEPROM |
+| Topic | Current (32 IC) | Legacy (~52 / main) |
+|-------|-----------------|---------------------|
+| Audio | Separate **328P** | Separate 328P |
+| Machine EEPROM | Internal **4 KB** EEPROM | AT28C64B parallel |
 | Clock | 20 MHz | 20 MHz |

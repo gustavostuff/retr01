@@ -1,14 +1,16 @@
 # Retr01 Hardware Implementation
 
-**Scope:** Retr01-A **v0** chip list, bus ownership, and protoboard islands (~52 IC). This is the **bring-up / de-risking** reference, not the product BOM.
+**Scope:** Optional **protoboard island** checklist and the **legacy ~52 IC** chip list (also on `main`). Useful for discrete bring-up and bench fallback.
 
 | | |
 |--|--|
-| **Product HW BOM (v1, proposed)** | [`06`](06_hardware_v1_32ic.md) -- **32 IC** system |
-| **Software-visible map** | [`02`](02_graphics_worlds_memory.md) -- never invent CPU ports here |
+| **Current Retr01-A HW BOM** | [`06`](06_hardware_v1_32ic.md) -- **32 IC** (norm) |
+| **Software-visible map** | [`02`](02_graphics_worlds_memory.md) |
 | **Sources of truth** | [`01`](01_architecture_overview.md) |
 
-Software contracts and `$FExx` bitfields live in [`02`](02_graphics_worlds_memory.md). Motherboard layout sketch (v0): [`01`](01_architecture_overview.md).
+Adapt islands below to the 32-IC parts (beam PLDs instead of HC161/HC688, one Color PROM, no AT28C64B, keep 328P). Do not treat the 52-IC table as the product BOM.
+
+Software contracts live in [`02`](02_graphics_worlds_memory.md). Legacy layout sketch: [`01`](01_architecture_overview.md).
 
 ## Domains
 
@@ -19,9 +21,9 @@ Four active compute domains on one **5 V** board:
 - **ATmega1284P** -- OAM, sprite line-buffer fill, pad bytes
 - **ATmega328P** -- audio
 
-## IC plan (v0, ~52 parts)
+## IC plan (legacy ~52 parts)
 
-Through-hole. Exact pin maps come later with schematics. Optional **+1 ATF22V10** if equations overflow.
+Through-hole reference from the older architecture. **Current BOM:** [`06`](06_hardware_v1_32ic.md). Optional **+1 ATF22V10** if equations overflow on either path.
 
 | Part | Qty | Role |
 |------|-----|------|
@@ -46,7 +48,7 @@ Datasheets: [W65C02S](https://westerndesigncenter.com/wdc/documentation/w65c02s.
 
 **SCALE DIP:** **2x** default (128x120 -> 256x240, fills RGBS). **1x** centers 128x120. Beam timing stays **341x262**.
 
-**Color PROM (v0):** 6-bit master index -> R/G/B via **3x AT28C16**. Not on the 6502 bus during play. Carts store indices only. v1 packed PROM: [`06`](06_hardware_v1_32ic.md) / [`02`](02_graphics_worlds_memory.md). Q14/Q15 in [`05`](05_costs_and_open_questions.md).
+**Color PROM:** current board uses **1x** packed R3G3B2 ([`06`](06_hardware_v1_32ic.md)). Table below lists the legacy **3x AT28C16** path. Carts store indices only. Q14/Q15 in [`05`](05_costs_and_open_questions.md).
 
 ## Where state lives (short)
 
@@ -56,8 +58,8 @@ Datasheets: [W65C02S](https://westerndesigncenter.com/wdc/documentation/w65c02s.
 | Nametables | `$FE10`/`$FE11`/`$FE12` | AS6C62256 VRAM (CPU phase write, PPU phase fetch) |
 | Sprite line buffer | (no CPU port) | AS6C62256 (1284 writes HBlank, beam reads visible) |
 | Cart | `$8000+` PRG, MAP `$FE90`-`$FE93`, CHR via fetch | SST39SF040 |
-| Master RGB | (none in play) | 3x AT28C16 (v0). v1: 1x packed -- see `06` |
-| Board EEPROM | `$FE70`-`$FE72` | AT28C64B |
+| Master RGB | (none in play) | Color PROM (current: 1x packed -- `06`; legacy table: 3x AT28C16) |
+| Board / machine EEPROM | `$FE70`-`$FE72` | Current: 1284 internal EEPROM handshake. Legacy table: AT28C64B |
 | `$FExx` controls | scroll, PPUCTRL, MAP addr, ... | HC573 + PLD decode |
 | OAM / pads | `$FE20`/`$FE21`, `$FE60`/`$FE61` | ATmega1284P |
 | APU | `$FE40`-`$FE5F` | ATmega328P |
@@ -75,9 +77,9 @@ Full register map: [`02`](02_graphics_worlds_memory.md).
 
 **Not in hardware:** framebuffer, sprite-0 hit, sprite-vs-BG collision, sprite DMA, on-board HDMI.
 
-## Protoboard islands (Retr01-A v0)
+## Protoboard islands
 
-Do not breadboard all **52** ICs at once. Prove **islands**, then merge. **Pass** = island checks below, not a full game.
+Do not breadboard all **52** legacy ICs at once. Prove **islands**, then merge -- preferably against the **32 IC** netlist in `06`. **Pass** = island checks below, not a full game.
 
 **Ground rules:** 5 V only, 100 nF per IC. One bus driver at a time. Start CPU at **1-2 MHz** if wires ring, then **8 MHz**. Do not share CHR between BG and 1284 until each side works alone. W65C02S: **`BE` high**, **`RDY` high**, clock = **`PHI2`**.
 
@@ -87,7 +89,7 @@ B Clocks + reset
 C CPU + system RAM + tiny PRG
 D $FExx decode + one latch
 E Pads ($FE60/$FE61)
-F Board EEPROM ($FE7x)          [optional early]
+F Machine EEPROM (1284 handshake) [optional early; legacy F used AT28C64B]
 G VRAM port + PHI2 interleave   [critical before video]
 H Dot clock + beam counters
 I BG nametable fetch            [needs G + H]
@@ -123,7 +125,7 @@ Parallel: develop **K** and **L** in sim while breadboarding **A-I**. Merge at *
 | **C** CPU + RAM + PRG | Fetches PRG, RAM R/W, no bus fight |
 | **D** `$FExx` + latch | `STA $FExx` hits only the latch |
 | **E** Pads | `$FE60`/`$FE61`, **1 = pressed** |
-| **F** EEPROM | Write, power-cycle, read back |
+| **F** Machine EEPROM | Write, power-cycle, read back (1284 path) |
 | **G** VRAM interleave | `$FE10`-`$FE12` R/W, no PHI2 contention |
 | **H** Beam | **341x262**, sane HBlank/VBlank/NMI stubs |
 | **I** BG fetch | PPU phase walks nametable addrs, CPU still writes on CPU phase |
@@ -143,6 +145,6 @@ Parallel: develop **K** and **L** in sim while breadboarding **A-I**. Merge at *
 | `$FE10`-`$FE12` | G | Write/read `$AA` at VRAM 0 |
 | `$FE20`/`$FE21` | N | OAM addr + data auto-inc |
 | `$FE60`/`$FE61` | E | Switch sets matching bit |
-| `$FE70`-`$FE72` | F | EEPROM survives power-cycle |
-| `$FE80` | J | unused in v0, leave 0 |
+| `$FE70`-`$FE72` | F | Machine EEPROM survives power-cycle |
+| `$FE80` | J | unused, leave 0 |
 | `$FE90`-`$FE93` | J | MAP seek + read known byte |

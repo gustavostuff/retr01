@@ -1,15 +1,15 @@
-# ATmega328P -- APU MCU (v0)
+# ATmega328P -- APU MCU
 
 **PDF:** [`../ATmega328P_mcu.pdf`](../ATmega328P_mcu.pdf) (family sheet includes 48/88/168/328).  
 **Package (Retr01-A):** 28-pin PDIP.  
-**Qty:** 1 (v0). **Removed in proposed v1** (audio merges into ATmega1284P).  
+**Qty:** **1** (current 32-IC BOM -- dedicated APU).  
 **Clock (Retr01):** **16 MHz** (5 V).
 
 ## What it is
 
-AVR 8-bit MCU. For **ATmega328P** specifically: **32 KB Flash**, **2 KB SRAM**, **1 KB EEPROM**, 23 I/O lines, timers/PWM, USART, SPI, TWI, ADC. Retr01 v0 dedicates it to a **NES-style APU**: the 6502 writes register-like bytes in `$FE40-$FE5F`; this chip synthesizes audio (PWM or similar analog-friendly output).
+AVR 8-bit MCU. For **ATmega328P** specifically: **32 KB Flash**, **2 KB SRAM**, **1 KB EEPROM**, 23 I/O lines, timers/PWM, USART, SPI, TWI, ADC. Retr01 dedicates it to a **NES-style APU**: the 6502 writes register-like bytes in `$FE40-$FE5F`; this chip synthesizes audio (PWM or similar analog-friendly output).
 
-## Retr01 role (v0)
+## Retr01 role
 
 | Duty | Detail |
 |------|--------|
@@ -18,7 +18,7 @@ AVR 8-bit MCU. For **ATmega328P** specifically: **32 KB Flash**, **2 KB SRAM**, 
 | Output | Timer PWM (or dual PWM) to RC / amp -- board analog TBD |
 | Isolation | Own time domain; may be developed in **sim first** (island **K**) while CPU video islands proceed |
 
-v1: same **CPU address band**; **328P retained** as dedicated APU ([`06`](../../docs/06_hardware_v1_32ic.md)).
+Current BOM: [`06`](../../docs/06_hardware_v1_32ic.md).
 
 ## On-chip memory (328P)
 

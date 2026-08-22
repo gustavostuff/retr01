@@ -2,20 +2,20 @@
 
 ## Sources of truth
 
-When docs disagree, use this order. Do not invent contracts in pitch, cost notes, or HW BOMs.
+When docs disagree, use this order.
 
 | Concern | Authority | Notes |
 |---------|-----------|-------|
-| Software-visible behavior (CPU map, `$FExx` **logical** ports, cart image, worlds/VRAM/palettes) | [`02`](02_graphics_worlds_memory.md) | v0 table is the current draft. **v1 deltas** in `02` are proposed until promoted |
-| Locked vs proposed product decisions | [`05`](05_costs_and_open_questions.md) | "Locked" means agreed for the family; "Proposed v1" tracks [`06`](06_hardware_v1_32ic.md) until gates pass |
-| Product Retr01-A HW BOM (target PCB) | [`06`](06_hardware_v1_32ic.md) | **32-IC** system proposal. Does not override `02` by itself |
-| v0 chip list + protoboard islands | [`03`](03_hardware_implementation.md) | Bring-up / de-risking reference (~52 IC), not the product BOM |
-| Studio data model / phases | [`04`](04_retr01_studio.md) | Must follow `02` for on-cart and `$FExx` meaning |
+| Software-visible behavior (CPU map, `$FExx` **logical** ports, cart image, worlds/VRAM/palettes) | [`02`](02_graphics_worlds_memory.md) | Current draft. Open bitfields/mailbox/I2C ports called out there |
+| Locked decisions + open questions | [`05`](05_costs_and_open_questions.md) | Does not replace `02` for register text |
+| Retr01-A **HW BOM** (current) | [`06`](06_hardware_v1_32ic.md) | **32 IC** system. Does not invent `$FExx` |
+| Optional discrete islands / legacy ~52 sketch | [`03`](03_hardware_implementation.md) | Bench fallback; full ~52 architecture also on `main` |
+| Studio data model / phases | [`04`](04_retr01_studio.md) | Follows `02` |
 | IC pin/behavior detail | [`hw/md/`](../hw/md/) + datasheet PDFs | Sim and schematics |
 
-**Retr01-A motherboard diagram below is the v0 (~52 IC) planning sketch**, not the v1 product BOM. Product target: [`06`](06_hardware_v1_32ic.md) (**~12 x 12 cm**, **32 ICs** including cart save). Island bring-up: [`03`](03_hardware_implementation.md).
+**Current product board:** [`06`](06_hardware_v1_32ic.md) -- **32 ICs**, ~**12 x 12 cm**. Diagram below is the **legacy ~52 IC** planning sketch (also on `main`) for orientation only.
 
-**v0 layout (not to scale).** 52 through-hole ICs, ~160 x 220 mm planning envelope. Each box is one IC; box width tracks DIP pin count.
+**Legacy ~52 layout (not to scale).** Historical planning envelope ~160 x 220 mm. Each box is one IC; box width tracks DIP pin count.
 
 ```text
   NORTH (I/O edge - cabinet / bench)   ~160 x 220 mm planning envelope (not to scale)
@@ -110,7 +110,7 @@ When docs disagree, use this order. Do not invent contracts in pitch, cost notes
   SOUTH (component side - tallest sockets ~15 mm clearance below board)                                      |
   +----------------------------------------------------------------------------------------------------------+
 
-  LEGEND (exact v0 planning count - see 03_hardware_implementation.md)
+  LEGEND (legacy ~52 planning count - see 03; current BOM is 06)
   Box width ~ pin count (DIP-40 widest, DIP-14 narrowest). Each box = one IC.
 
   Package | Count | Parts
@@ -123,7 +123,7 @@ When docs disagree, use this order. Do not invent contracts in pitch, cost notes
   [16]    |   6   | HC157 x4 (VRAM mux) + HC157 x2 (line-buffer mux)
   [14]    |  14   | HC161 x4, HC14 x1, HC00 x2, HC04 x2, HC08 x2, HC32 x2, HC86 x1
   --------+-------+------------------------------------------------------------------
-          |  52   | motherboard ICs (optional +1 ATF22V10 if equations overflow)
+          |  52   | legacy sketch (optional +1 ATF22V10). Current: 32 IC in 06
 ```
 
 This folder is the current architecture spec for **Retr01**.
@@ -144,7 +144,7 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 4. **Software collision**: gameplay collision stays in game code, not hardware sprite-vs-BG hit logic
 5. **Raster IRQ, not sprite-0**: mid-frame effects use scanline compare
 6. **Binary-first data**: fixed layouts, no runtime allocation assumptions on target
-7. **Master palette in Color PROM**: **64 indices** on the motherboard, not in the cart. PROM **RGB encoding** is HW-revision-specific (`02` / `06`)
+7. **Master palette in Color PROM**: **64 indices** on the motherboard (packed **R3G3B2**), not in the cart
 8. **Logical 128x120, fixed RGBS raster**: games use **16x15** screens. The RGBS path keeps a **256x240** active field. Board **SCALE** selects 1x or 2x mapping
 
 ## Canonical terminology
@@ -172,17 +172,19 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 
 ## High-level hardware
 
-Roles below are stable for software. Chip counts and packaging follow **v0** in [`03`](03_hardware_implementation.md) or **v1** in [`06`](06_hardware_v1_32ic.md) -- do not mix them in one BOM.
+Current chip list: [`06`](06_hardware_v1_32ic.md) (**32 IC**). Roles:
 
 | Block | Role |
 |------|------|
 | **W65C02S** | Game logic, streaming, register writes |
-| **BG / beam / compositor path** | Beam, VRAM fetch, BG pixels, scale/border (v0: 74HC+PLD; v1: more in PLDs) |
-| **ATmega1284P** | OAM storage, sprite evaluation, sprite line-buffer fill, controller bytes; v1 also **machine EEPROM** |
-| **ATmega328P** | NES-style APU (`$FE40-$FE5F`) -- kept on v0 and v1 |
+| **BG / beam / compositor (PLD + HC157)** | Beam, VRAM fetch, BG pixels, priority mux, scale/border |
+| **ATmega1284P** | OAM, sprite line-buffer fill, pads, **machine EEPROM** |
+| **ATmega328P** | NES-style APU (`$FE40-$FE5F`) |
 | **3x AS6C62256** | System RAM, VRAM, sprite line buffer |
-| **Color PROM** | 64 master colors -> DACs (v0: **3x AT28C16** R/G/B; v1 proposed: **1x** packed R3G3B2 -- see `02` / `06`) |
-| **ATF22V10 (+ glue on v0)** | Decode, timing, muxing, chip enables |
+| **Color PROM** | **1x** packed R3G3B2 (64 indices) -> DACs |
+| **5x ATF22V10** | Decode, interleave, beam X/Y, compositor |
+| **9x HC573 + 3x HC245** | `$FExx` latches + bus isolation |
+| **Cart** | SST39SF040 flash + I2C save EEPROM |
 
 ## Shared capability snapshot
 
@@ -191,7 +193,7 @@ Roles below are stable for software. Chip counts and packaging follow **v0** in 
 | Logical resolution | **128x120** (**16x15** tiles, **16:15**) |
 | RGBS active field | **256x240** (SCALE **2x** fills field, **1x** = centered 128x120) |
 | Tile size | **8x8** |
-| Color | **2bpp**, **64-entry Color PROM** on board (indices only in cart), **one synced palette row active** (4 BG + 4 sprite). PROM **byte encoding** is HW-revision-specific (`02` / `06`) |
+| Color | **2bpp**, **64-entry Color PROM** on board (packed **R3G3B2**), cart holds indices only, **one synced palette row active** (4 BG + 4 sprite) |
 | Worlds | **8** max |
 | Screens per world | **32** max on sparse **8x8** virtual grid |
 | Cart / PRG | **512 KB** flash. **32 KB** PRG (one region, no paging). ~**414 KB** full fill |
@@ -208,11 +210,12 @@ Roles below are stable for software. Chip counts and packaging follow **v0** in 
 
 ### Retr01-A
 
-- Through-hole motherboard
+- Through-hole motherboard, **~32 IC** system ([`06`](06_hardware_v1_32ic.md)), ~**12 x 12 cm** target
 - RGBS + S-Video + composite pads
 - **SCALE** DIP (**2x** default / **1x** optional)
 - 20-pin IDC for cabinet controls
 - 5 V barrel power
+- Cart: 512 KB flash + I2C game-save EEPROM
 
 ### Retr01-C
 
@@ -249,9 +252,9 @@ A **low-level hardware emulator** is planned later, not built now. It should sim
 - **Sources of truth:** table at top of this doc
 - Product pitch and NES comparison: `07_pitch.md`
 - Graphics, worlds, `$FExx`, cart image (software SoT): `02_graphics_worlds_memory.md`
-- v0 chips / protoboard islands: `03_hardware_implementation.md`
+- Current 32-IC HW BOM: `06_hardware_v1_32ic.md`
+- Optional islands / legacy ~52: `03_hardware_implementation.md`
 - Retr01 Studio: `04_retr01_studio.md`
-- Locked vs proposed decisions: `05_costs_and_open_questions.md`
-- v1 32-IC product BOM: `06_hardware_v1_32ic.md`
+- Locked decisions + open Qs: `05_costs_and_open_questions.md`
 - Board simulator: `08_simulator.md`
 - IC markdown notes: `hw/md/`

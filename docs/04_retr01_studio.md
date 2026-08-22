@@ -37,7 +37,7 @@ Right column = Screen (most width). Left = Worlds, BG banks, Sprite banks, Palet
 | **BG banks** | 4 tabs (0-3), 16x16 read-only tiles. Filled by **Generate bank** |
 | **Sprite banks** | Same shape, 8x8/8x16 preview toggle. Phase 1: visible but disabled |
 | **Screen** | One **16x15** BG paint (128x120). 4 grayscale colors (2bpp 0-3). **Generate bank** + radio bank **0-3**: dedupe 8x8 -> CHR (error if >256). Attr mode Phase 2+ |
-| **Palettes** | Tabs = palette rows **0-7** (4 BG + 4 sprite strips). Phase 1: hidden/stub. Master RGB = Color PROM preview mirror, not cart data. **v1 PROM:** when targeting the 32-IC board, preview/quantize to **R3G3B2** packed bytes ([`02`](02_graphics_worlds_memory.md) / [`06`](06_hardware_v1_32ic.md)); logical kit swatches stay 24-bit until then |
+| **Palettes** | Tabs = palette rows **0-7** (4 BG + 4 sprite strips). Phase 1: hidden/stub. Master RGB = Color PROM preview; **quantize to R3G3B2** for PROM burn ([`02`](02_graphics_worlds_memory.md) / [`06`](06_hardware_v1_32ic.md)). Logical kit swatches stay 24-bit in the editor |
 
 Paint always stores indices **0-3**. Palette assignment only in attr mode.
 
@@ -143,7 +143,7 @@ Generate correct boring asm first. Optimize in toolchain, not inside the UI.
 
 ## Hardware map
 
-Studio follows [`02`](02_graphics_worlds_memory.md) for data meaning. Chip BOM is not Studio's job ([`06`](06_hardware_v1_32ic.md) for product HW).
+Studio follows [`02`](02_graphics_worlds_memory.md) for data meaning. Board BOM: [`06`](06_hardware_v1_32ic.md).
 
 | Studio | Spec (`02`) |
 |--------|-------------|
@@ -151,5 +151,5 @@ Studio follows [`02`](02_graphics_worlds_memory.md) for data meaning. Chip BOM i
 | Screen | 240 tile + 240 attr |
 | BG banks 0-3 | 256 tiles each. Live bank = per-tile attr |
 | Generate bank | Fills CHR, stamps default `BANK` |
-| Color PROM preview | 64 indices; encoding per HW revision (v0 3x RGB vs v1 R3G3B2) |
+| Color PROM preview | 64 indices -> packed **R3G3B2** for burn |
 | Play | High-level only. Emulator later loads `.retr01` |
