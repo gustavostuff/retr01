@@ -52,5 +52,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
 set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/retr01_studio_core.dir/DependInfo.cmake"
   "CMakeFiles/test_core.dir/DependInfo.cmake"
+  "CMakeFiles/retr01_studio_app.dir/DependInfo.cmake"
   "CMakeFiles/retr01_studio.dir/DependInfo.cmake"
+  "CMakeFiles/test_e2e.dir/DependInfo.cmake"
   )

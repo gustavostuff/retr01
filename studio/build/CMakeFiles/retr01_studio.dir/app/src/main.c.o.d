@@ -1,5 +1,6 @@
 CMakeFiles/retr01_studio.dir/app/src/main.c.o: \
  /home/g/Repos/retr01/studio/app/src/main.c /usr/include/stdc-predef.h \
+ /home/g/Repos/retr01/studio/app/src/app_shell.h \
  /home/g/Repos/retr01/studio/app/src/ui.h \
  /home/g/Repos/retr01/studio/core/include/retr01_studio/play.h \
  /home/g/Repos/retr01/studio/core/include/retr01_studio/types.h \

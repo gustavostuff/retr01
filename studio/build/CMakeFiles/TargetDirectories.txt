@@ -1,6 +1,8 @@
 /home/g/Repos/retr01/studio/build/CMakeFiles/retr01_studio_core.dir
 /home/g/Repos/retr01/studio/build/CMakeFiles/test_core.dir
+/home/g/Repos/retr01/studio/build/CMakeFiles/retr01_studio_app.dir
 /home/g/Repos/retr01/studio/build/CMakeFiles/retr01_studio.dir
+/home/g/Repos/retr01/studio/build/CMakeFiles/test_e2e.dir
 /home/g/Repos/retr01/studio/build/CMakeFiles/test.dir
 /home/g/Repos/retr01/studio/build/CMakeFiles/edit_cache.dir
 /home/g/Repos/retr01/studio/build/CMakeFiles/rebuild_cache.dir

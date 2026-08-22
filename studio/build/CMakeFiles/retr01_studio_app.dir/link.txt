@@ -1,0 +1,2 @@
+/usr/bin/ar qc libretr01_studio_app.a CMakeFiles/retr01_studio_app.dir/app/src/app_shell.c.o CMakeFiles/retr01_studio_app.dir/app/src/ui.c.o CMakeFiles/retr01_studio_app.dir/app/src/font.c.o
+/usr/bin/ranlib libretr01_studio_app.a

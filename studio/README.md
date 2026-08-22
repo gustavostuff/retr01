@@ -16,6 +16,27 @@ ctest --test-dir build --output-on-failure
 
 Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 
+## Tests
+
+```bash
+ctest --test-dir build --output-on-failure   # headless (no window)
+```
+
+- **core** — unit tests for pack / JSON / play / cart  
+- **e2e** — visual + functional UI tests ([app/tests/README.md](app/tests/README.md)); uses [greatest](https://github.com/silentbicycle/greatest) + golden BMPs
+
+Watch the suite drive a real window:
+
+```bash
+E2E_WATCH=1 ./build/test_e2e
+```
+
+Update UI goldens after intentional layout changes:
+
+```bash
+UPDATE_GOLDENS=1 SDL_VIDEODRIVER=offscreen ./build/test_e2e
+```
+
 ## Controls
 
 | Action | How |

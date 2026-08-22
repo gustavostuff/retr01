@@ -3,8 +3,7 @@ retr01_studio: \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/../../../../lib/crti.o \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/crtbeginS.o \
   CMakeFiles/retr01_studio.dir/app/src/main.c.o \
-  CMakeFiles/retr01_studio.dir/app/src/ui.c.o \
-  CMakeFiles/retr01_studio.dir/app/src/font.c.o \
+  libretr01_studio_app.a \
   libretr01_studio_core.a \
   /usr/lib/libSDL2.so \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/libgcc.a \
@@ -47,9 +46,7 @@ retr01_studio: \
 
 CMakeFiles/retr01_studio.dir/app/src/main.c.o:
 
-CMakeFiles/retr01_studio.dir/app/src/ui.c.o:
-
-CMakeFiles/retr01_studio.dir/app/src/font.c.o:
+libretr01_studio_app.a:
 
 libretr01_studio_core.a:
 

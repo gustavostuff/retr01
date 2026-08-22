@@ -153,6 +153,19 @@ test_core/fast:
 .PHONY : test_core/fast
 
 #=============================================================================
+# Target rules for targets named retr01_studio_app
+
+# Build rule for target.
+retr01_studio_app: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 retr01_studio_app
+.PHONY : retr01_studio_app
+
+# fast build rule for target.
+retr01_studio_app/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_app.dir/build.make CMakeFiles/retr01_studio_app.dir/build
+.PHONY : retr01_studio_app/fast
+
+#=============================================================================
 # Target rules for targets named retr01_studio
 
 # Build rule for target.
@@ -165,12 +178,49 @@ retr01_studio/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio.dir/build.make CMakeFiles/retr01_studio.dir/build
 .PHONY : retr01_studio/fast
 
+#=============================================================================
+# Target rules for targets named test_e2e
+
+# Build rule for target.
+test_e2e: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_e2e
+.PHONY : test_e2e
+
+# fast build rule for target.
+test_e2e/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_e2e.dir/build.make CMakeFiles/test_e2e.dir/build
+.PHONY : test_e2e/fast
+
+app/src/app_shell.o: app/src/app_shell.c.o
+.PHONY : app/src/app_shell.o
+
+# target to build an object file
+app/src/app_shell.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_app.dir/build.make CMakeFiles/retr01_studio_app.dir/app/src/app_shell.c.o
+.PHONY : app/src/app_shell.c.o
+
+app/src/app_shell.i: app/src/app_shell.c.i
+.PHONY : app/src/app_shell.i
+
+# target to preprocess a source file
+app/src/app_shell.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_app.dir/build.make CMakeFiles/retr01_studio_app.dir/app/src/app_shell.c.i
+.PHONY : app/src/app_shell.c.i
+
+app/src/app_shell.s: app/src/app_shell.c.s
+.PHONY : app/src/app_shell.s
+
+# target to generate assembly for a file
+app/src/app_shell.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_app.dir/build.make CMakeFiles/retr01_studio_app.dir/app/src/app_shell.c.s
+.PHONY : app/src/app_shell.c.s
+
 app/src/font.o: app/src/font.c.o
 .PHONY : app/src/font.o
 
 # target to build an object file
 app/src/font.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio.dir/build.make CMakeFiles/retr01_studio.dir/app/src/font.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_app.dir/build.make CMakeFiles/retr01_studio_app.dir/app/src/font.c.o
 .PHONY : app/src/font.c.o
 
 app/src/font.i: app/src/font.c.i
@@ -178,7 +228,7 @@ app/src/font.i: app/src/font.c.i
 
 # target to preprocess a source file
 app/src/font.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio.dir/build.make CMakeFiles/retr01_studio.dir/app/src/font.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_app.dir/build.make CMakeFiles/retr01_studio_app.dir/app/src/font.c.i
 .PHONY : app/src/font.c.i
 
 app/src/font.s: app/src/font.c.s
@@ -186,7 +236,7 @@ app/src/font.s: app/src/font.c.s
 
 # target to generate assembly for a file
 app/src/font.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio.dir/build.make CMakeFiles/retr01_studio.dir/app/src/font.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_app.dir/build.make CMakeFiles/retr01_studio_app.dir/app/src/font.c.s
 .PHONY : app/src/font.c.s
 
 app/src/main.o: app/src/main.c.o
@@ -218,7 +268,7 @@ app/src/ui.o: app/src/ui.c.o
 
 # target to build an object file
 app/src/ui.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio.dir/build.make CMakeFiles/retr01_studio.dir/app/src/ui.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_app.dir/build.make CMakeFiles/retr01_studio_app.dir/app/src/ui.c.o
 .PHONY : app/src/ui.c.o
 
 app/src/ui.i: app/src/ui.c.i
@@ -226,7 +276,7 @@ app/src/ui.i: app/src/ui.c.i
 
 # target to preprocess a source file
 app/src/ui.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio.dir/build.make CMakeFiles/retr01_studio.dir/app/src/ui.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_app.dir/build.make CMakeFiles/retr01_studio_app.dir/app/src/ui.c.i
 .PHONY : app/src/ui.c.i
 
 app/src/ui.s: app/src/ui.c.s
@@ -234,8 +284,56 @@ app/src/ui.s: app/src/ui.c.s
 
 # target to generate assembly for a file
 app/src/ui.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio.dir/build.make CMakeFiles/retr01_studio.dir/app/src/ui.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_studio_app.dir/build.make CMakeFiles/retr01_studio_app.dir/app/src/ui.c.s
 .PHONY : app/src/ui.c.s
+
+app/tests/e2e_harness.o: app/tests/e2e_harness.c.o
+.PHONY : app/tests/e2e_harness.o
+
+# target to build an object file
+app/tests/e2e_harness.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_e2e.dir/build.make CMakeFiles/test_e2e.dir/app/tests/e2e_harness.c.o
+.PHONY : app/tests/e2e_harness.c.o
+
+app/tests/e2e_harness.i: app/tests/e2e_harness.c.i
+.PHONY : app/tests/e2e_harness.i
+
+# target to preprocess a source file
+app/tests/e2e_harness.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_e2e.dir/build.make CMakeFiles/test_e2e.dir/app/tests/e2e_harness.c.i
+.PHONY : app/tests/e2e_harness.c.i
+
+app/tests/e2e_harness.s: app/tests/e2e_harness.c.s
+.PHONY : app/tests/e2e_harness.s
+
+# target to generate assembly for a file
+app/tests/e2e_harness.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_e2e.dir/build.make CMakeFiles/test_e2e.dir/app/tests/e2e_harness.c.s
+.PHONY : app/tests/e2e_harness.c.s
+
+app/tests/test_e2e.o: app/tests/test_e2e.c.o
+.PHONY : app/tests/test_e2e.o
+
+# target to build an object file
+app/tests/test_e2e.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_e2e.dir/build.make CMakeFiles/test_e2e.dir/app/tests/test_e2e.c.o
+.PHONY : app/tests/test_e2e.c.o
+
+app/tests/test_e2e.i: app/tests/test_e2e.c.i
+.PHONY : app/tests/test_e2e.i
+
+# target to preprocess a source file
+app/tests/test_e2e.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_e2e.dir/build.make CMakeFiles/test_e2e.dir/app/tests/test_e2e.c.i
+.PHONY : app/tests/test_e2e.c.i
+
+app/tests/test_e2e.s: app/tests/test_e2e.c.s
+.PHONY : app/tests/test_e2e.s
+
+# target to generate assembly for a file
+app/tests/test_e2e.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_e2e.dir/build.make CMakeFiles/test_e2e.dir/app/tests/test_e2e.c.s
+.PHONY : app/tests/test_e2e.c.s
 
 core/src/cart.o: core/src/cart.c.o
 .PHONY : core/src/cart.o
@@ -439,8 +537,13 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... retr01_studio"
+	@echo "... retr01_studio_app"
 	@echo "... retr01_studio_core"
 	@echo "... test_core"
+	@echo "... test_e2e"
+	@echo "... app/src/app_shell.o"
+	@echo "... app/src/app_shell.i"
+	@echo "... app/src/app_shell.s"
 	@echo "... app/src/font.o"
 	@echo "... app/src/font.i"
 	@echo "... app/src/font.s"
@@ -450,6 +553,12 @@ help:
 	@echo "... app/src/ui.o"
 	@echo "... app/src/ui.i"
 	@echo "... app/src/ui.s"
+	@echo "... app/tests/e2e_harness.o"
+	@echo "... app/tests/e2e_harness.i"
+	@echo "... app/tests/e2e_harness.s"
+	@echo "... app/tests/test_e2e.o"
+	@echo "... app/tests/test_e2e.i"
+	@echo "... app/tests/test_e2e.s"
 	@echo "... core/src/cart.o"
 	@echo "... core/src/cart.i"
 	@echo "... core/src/cart.s"

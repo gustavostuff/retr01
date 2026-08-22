@@ -1,11 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/retr01_studio.dir/link.d"
-  "CMakeFiles/retr01_studio.dir/app/src/font.c.o"
-  "CMakeFiles/retr01_studio.dir/app/src/font.c.o.d"
   "CMakeFiles/retr01_studio.dir/app/src/main.c.o"
   "CMakeFiles/retr01_studio.dir/app/src/main.c.o.d"
-  "CMakeFiles/retr01_studio.dir/app/src/ui.c.o"
-  "CMakeFiles/retr01_studio.dir/app/src/ui.c.o.d"
   "retr01_studio"
   "retr01_studio.pdb"
 )

@@ -8,9 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/g/Repos/retr01/studio/app/src/font.c" "CMakeFiles/retr01_studio.dir/app/src/font.c.o" "gcc" "CMakeFiles/retr01_studio.dir/app/src/font.c.o.d"
   "/home/g/Repos/retr01/studio/app/src/main.c" "CMakeFiles/retr01_studio.dir/app/src/main.c.o" "gcc" "CMakeFiles/retr01_studio.dir/app/src/main.c.o.d"
-  "/home/g/Repos/retr01/studio/app/src/ui.c" "CMakeFiles/retr01_studio.dir/app/src/ui.c.o" "gcc" "CMakeFiles/retr01_studio.dir/app/src/ui.c.o.d"
   "" "retr01_studio" "gcc" "CMakeFiles/retr01_studio.dir/link.d"
   )
 
