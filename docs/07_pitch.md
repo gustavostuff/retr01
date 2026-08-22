@@ -44,7 +44,7 @@ Retr01-A is meant to drop into a cabinet:
 
 You get a board you can breadboard in islands, bring up module by module, then integrate - not a black-box FPGA mystery. Retr01-A is a compact **32 IC** system ([`06`](06_hardware_v1_32ic.md)).
 
-**Retr01 Studio** (in development) authors worlds, screens, tile art, and palettes. Later Studio phases compile full `.retr01` cart images. A low-level cycle emulator is planned later for validation before silicon is final.
+**Retr01 Studio** (in development) authors worlds, screens, tile art, and palettes. Later Studio phases compile full `.retr01` cart images. A **board IC simulator** ([`08`](08_simulator.md)) is planned for silicon validation; an optional tighter cycle-level cart check may follow.
 
 ---
 
@@ -76,7 +76,7 @@ Same contract again, SMD build, likely multi-board layout. Battery, display, and
 - RGBS path uses a stable **256x240** active raster. Board **SCALE** DIP: **2x** default doubles to **256x240** (no letterbox); **1x** centers **128x120**
 - A **640x640** handheld LCD can show the same games at **5x** (**640x600**, thin letterbox) without a second game resolution
 - **8x8** tiles, **2bpp** patterns
-- **64-color master palette** in board **Color PROM**, with **4 BG + 4 sprite palettes** active at once from one synced palette row
+- **64 master palette indices** in board **Color PROM** (packed **R3G3B2** on current boards), with **4 BG + 4 sprite palettes** active at once from one synced palette row
 - Limits on purpose, not accidental mush
 
 ### Worlds, not just levels
@@ -164,7 +164,8 @@ None of this makes NES games bad. Many masterpieces worked within tighter rules.
 | Piece | Role |
 |-------|------|
 | **Retr01 Studio** | Visual authoring: worlds, screens, CHR banks, palettes (phased). Full `.retr01` export in later phases |
-| **Future emulator** | Cycle-level validation of `$FExx` and carts (planned, not active yet) |
+| **Board IC simulator** ([`08`](08_simulator.md)) | Pin/netlist validation of the 32-IC BOM (planned) |
+| **Optional cycle-level cart check** | Later tighter `$FExx` / timing check for game images (planned, may share code with board sim) |
 | **Retr01-A board** | Reference hardware and cabinet deploy target |
 
 ---
@@ -202,7 +203,7 @@ Retr01 deliberately rhymes with the NES where it helps learning and art directio
 | Frame rate class | **~60.098 Hz** (262 lines) | **~60.098 Hz** (341x262 timing) |
 | Game media | **Cartridge** | **Cartridge** (`.retr01`) |
 | Background + sprites | Tile BG + movable sprites | Tile BG + movable sprites |
-| Palette model | Indices into system colors | **Color PROM** (64 RGB on board) + cart palette **index** rows |
+| Palette model | Indices into system colors | **Color PROM** (**64 indices**, packed **R3G3B2** on board) + cart palette **index** rows |
 | Audio direction | Period-accurate square/noise/DPCM style | **NES-style APU** on dedicated MCU |
 | Developer culture | Asm, fixed layouts, no heap | Asm-friendly, **binary-first** layouts |
 
@@ -223,7 +224,7 @@ If you know how NES tiles, attrs, and sprites work, Retr01 art pipelines will fe
 | Video RAM | **2 KB** PPU internal | **32 KB** interleaved VRAM + separate line-buffer SRAM |
 | CPU access to nametables | Mostly **VBlank/forced blank** | **Interleaved CPU phases** every frame |
 | Sprites per scanline | **8** | **16** (logical lines) |
-| On-screen palette slots | **4 BG + 4 sprite** (with shared backdrop rules) | **4 BG + 4 sprite** active row. **64** master colors in **Color PROM**. Cart holds **index** banks only |
+| On-screen palette slots | **4 BG + 4 sprite** (with shared backdrop rules) | **4 BG + 4 sprite** active row. **64** master indices in **Color PROM** (R3G3B2). Cart holds **index** banks only |
 | Nametables live at once | **2** for scroll tricks | **6 slots**: **4** camera + **2** parallax plane |
 | World/map hardware | None (game code) | **MAP-ROM**, **8 worlds**, **32 screens/world**, **480 B**/screen raw |
 | CHR banking | Mapper-dependent, game-defined | **4 BG + 4 sprite banks/world**, **per-tile** BG bank, **per-sprite** bank (attrs) |

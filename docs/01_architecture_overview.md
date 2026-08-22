@@ -65,7 +65,7 @@ When docs disagree, use this order.
   |  |  |[14]   | |[14]   | |[14]   | |[14]   |                                                           |  |
   |  |  +-------+ +-------+ +-------+ +-------+                                                           |  |
   |  |                                                                                                    |  |
-  |  |  $FExx latches HC573 x8 (scroll, PPUCTRL, raster, plane, WORLD, banks, MAP, ...)                   |  |
+  |  |  $FExx latches HC573 (14 total in legend; boxes below are representative)                            |  |
   |  |  +-----------+ +-----------+ +-----------+ +-----------+                                           |  |
   |  |  | HC573[20] | | HC573[20] | | HC573[20] | | HC573[20] |                                           |  |
   |  |  +-----------+ +-----------+ +-----------+ +-----------+                                           |  |
@@ -73,10 +73,10 @@ When docs disagree, use this order.
   |  |  | HC573[20] | | HC573[20] | | HC573[20] | | HC573[20] |                                           |  |
   |  |  +-----------+ +-----------+ +-----------+ +-----------+                                           |  |
   |  |                                                                                                    |  |
-  |  |  palette / compositor / OAM-capture path                                                           |  |
+  |  |  more $FExx / path latches (HC573) + OAM path                                                      |  |
   |  |  +-----------+ +-----------+ +-----------+                                                         |  |
   |  |  | HC573[20] | | HC573[20] | | HC245[20] |                                                         |  |
-  |  |  | pal buf   | | compositor| | OAM path  |                                                         |  |
+  |  |  | (latches) | | (latches) | | OAM path  |                                                         |  |
   |  |  +-----------+ +-----------+ +-----------+                                                         |  |
   |  |                                                                                                    |  |
   |  |  glue + reset (DIP-14)                                                                             |  |
@@ -167,7 +167,7 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 | **Palette row** | **4 palettes** in one plane, index **0-7**. BG row N and sprite row N are selected together |
 | **Palette** | One 4-color set (**4 master indices** into the Color PROM) |
 | **Active palette buffer** | **8 palettes** on screen: **4 BG + 4 sprite** from the currently selected palette row |
-| **Color PROM** | Board-resident **64-color** master RGB table (not in cart) |
+| **Color PROM** | Board-resident **64-entry** master palette (packed **R3G3B2** on current boards; not in cart) |
 | **SCALE** | Board DIP: **2x** default (**128x120** -> **256x240**, fills CRT) or **1x** (centered **128x120**) |
 
 ## High-level hardware
@@ -232,7 +232,7 @@ Current chip list: [`06`](06_hardware_v1_32ic.md) (**32 IC**). Roles:
 
 - RAM at `$0000-$7FFF`
 - I/O page at `$FE00-$FEFF`
-- PRG as **one contiguous 32 KB section** in the cart. It maps at `$8000`, with no runtime paging, and is not split per world.
+- PRG as **one global section** in the cart (**32 KB** max). It maps at `$8000` with the classic I/O hole at `$FE00-$FEFF` (see [`02`](02_graphics_worlds_memory.md)); not split per world.
 - World/MAP streaming through `$FE90`
 - BG banks per **8x8 tile** (attr `BANK`); screens may only stamp a default at load
 - Sprite bank independent of BG banks (per OAM attr `BANK`; `$FE37` optional stamp)
@@ -245,7 +245,10 @@ Studio authors worlds, screens, palettes, and CHR. Full `.retr01` cart compile (
 
 ## Future software (planned)
 
-A **low-level hardware emulator** is planned later, not built now. It should simulate cycles, memory decode, and `$FExx` hardware behavior faithfully enough to validate carts before silicon exists.
+Two validation tracks (not Studio):
+
+- **Board IC simulator** ([`08`](08_simulator.md)) -- pin/netlist models of the 32-IC BOM; islands then full board
+- **Optional later cycle-level cart check** -- tighter `$FExx` / timing fidelity for game images (may share code with the board sim or stay separate; not started)
 
 ## Where to look next
 

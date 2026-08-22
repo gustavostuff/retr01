@@ -33,7 +33,7 @@ Right column = Screen (most width). Left = Worlds, BG banks, Sprite banks, Palet
 
 | Cell | Behavior |
 |------|----------|
-| **Worlds** | Tabs **1-8**. Sparse grid **1-8** cols/rows. Click = select. **Ctrl+click** = toggle stored screen. Max **32** screens/world. Holes = not in MAP |
+| **Worlds** | Tabs labeled **1-8** in the UI = hardware worlds **0-7** (`$FE30`). Sparse grid **1-8** cols/rows (UI). Click = select. **Ctrl+click** = toggle stored screen. Max **32** screens/world. Holes = not in MAP |
 | **BG banks** | 4 tabs (0-3), 16x16 read-only tiles. Filled by **Generate bank** |
 | **Sprite banks** | Same shape, 8x8/8x16 preview toggle. Phase 1: visible but disabled |
 | **Screen** | One **16x15** BG paint (128x120). 4 grayscale colors (2bpp 0-3). **Generate bank** + radio bank **0-3**: dedupe 8x8 -> CHR (error if >256). Attr mode Phase 2+ |
@@ -130,6 +130,8 @@ Paint always stores indices **0-3**. Palette assignment only in attr mode.
 - Optional **`retr01-opt`** peephole/size pass
 - Link PRG + pack CHR/MAP/pals into one flash image
 - Export / burn helper for SST39SF040
+- Color PROM image emit: quantize kit swatches to packed **R3G3B2** ([`02`](02_graphics_worlds_memory.md))
+- Note cart **I2C save** presence in project/cart metadata when saves are used (port/HAL from `02`)
 
 ```text
 constraints/behaviors -> IR -> ca65 .s -> cc65 -O2 -> optional retr01-opt -> .retr01
@@ -137,7 +139,7 @@ constraints/behaviors -> IR -> ca65 .s -> cc65 -O2 -> optional retr01-opt -> .re
 
 Generate correct boring asm first. Optimize in toolchain, not inside the UI.
 
-**Out:** cycle-accurate emulator (separate project, loads Studio carts later).
+**Out:** separate validation tools -- **board IC simulator** ([`08`](08_simulator.md)) and optional later cycle-level cart check. Not part of Studio Phase 5.
 
 **Done when:** a Phase 4 project builds a `.retr01` that boots on kit/hardware checklist (PRG + one world + screens).
 
@@ -152,4 +154,4 @@ Studio follows [`02`](02_graphics_worlds_memory.md) for data meaning. Board BOM:
 | BG banks 0-3 | 256 tiles each. Live bank = per-tile attr |
 | Generate bank | Fills CHR, stamps default `BANK` |
 | Color PROM preview | 64 indices -> packed **R3G3B2** for burn |
-| Play | High-level only. Emulator later loads `.retr01` |
+| Play | High-level only. Board sim / cycle check later load `.retr01` |

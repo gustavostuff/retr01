@@ -8,7 +8,7 @@ Reliably simulate the **Retr01-A motherboard** as a system of discrete ICs: each
 
 **Accuracy** (cycle-exact PHI2, ns-level AC margins, full AVR peripheral set, etc.) is **defined as we go**. Start with behavior that is correct enough to validate islands and catch bus fights; tighten timing and ISA coverage when tests demand it.
 
-This simulator is **not** Retr01 Studio (authoring). It is the **hardware validation** path before / beside silicon.
+This simulator is **not** Retr01 Studio (authoring). It is the **board IC / netlist validation** path. A separate tighter cycle-level cart check may appear later; do not conflate the two names.
 
 ## Three test layers
 
@@ -64,7 +64,7 @@ Full Retr01-A netlist: **current BOM** [`06`](06_hardware_v1_32ic.md) (**32 IC**
 1. **IC-first:** one module per part number; pins named after the datasheet.
 2. **Netlist second:** islands and the full board are graphs of pin connections.
 3. **Retr01-only:** no generic multi-board sandbox; contracts and clocks match this project.
-4. **Tests before polish:** unit -> island -> system. Visual DIP widgets are Phase 2+ UI (see earlier plan); Layer 1 does not require a GUI.
+4. **Tests before polish:** unit -> island -> system. Layer 1 does not require a GUI.
 5. **Sources of truth:** `hw/*.pdf` + `hw/md/*.md` for pin/behavior; `docs/02` for `$FExx`; `docs/06` for the board netlist ([`01`](01_architecture_overview.md)).
 
 ## Near-term focus

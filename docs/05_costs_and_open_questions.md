@@ -63,7 +63,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | APU | separate **ATmega328P** (`$FE40-$FE5F`) |
 | Near-term software | **Retr01 Studio** only (visual authoring + later compile) |
 | Studio project files | **JSON** OK. **Schema/structure deferred** until Studio coding |
-| Future software | low-level hardware emulator (planned, not current work) |
+| Future software | board IC simulator ([`08`](08_simulator.md)); optional later cycle-level cart check (not current work) |
 | Legacy ~52 IC path | Preserved on **`main`** and as optional island notes in [`03`](03_hardware_implementation.md) -- not the product BOM |
 
 ## Cost snapshot

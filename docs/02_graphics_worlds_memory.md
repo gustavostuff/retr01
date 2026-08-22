@@ -18,7 +18,7 @@ Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 - **8** worlds max. Sparse **8x8** grid, **32** screens/world
 - Screen: **480 B** raw (**240** tiles + **240** attrs). Direct MAP `$FE93` -> VRAM `$FE12` (no RLE required)
 - Per world: **4 BG + 4 sprite** CHR banks (**32 KB**), optional palette banks, screen directory
-- Cart: **512 KB** (SST39SF040). **32 KB** PRG contiguous at `$8000` (no `$FE80` paging)
+- Cart: **512 KB** (SST39SF040). **32 KB** PRG at `$8000` (I/O hole at `$FE00-$FEFF`; no `$FE80` paging)
 
 | Asset | Size at caps |
 |-------|----------------|
@@ -109,7 +109,7 @@ Line N+1| fill N+1         |        | SHOW             |
 
 ## Palettes
 
-**Color PROM** (board): **64 master indices**, packed **`{RRRGGGBB}`** (R3 G3 B2) in **one** PROM/OTP chip, 1-dot pipeline ([`06`](06_hardware_v1_32ic.md)). Carts store **indices only**. Active buffer: **4 BG + 4 sprite** via `$FE08`/`$FE09`. Shared color 0. BG+sprite row index always locked together.
+**Color PROM** (board): **64 master indices**, packed **`{RRRGGGBB}`** (R3 G3 B2) in **one** PROM/OTP chip, 1-dot pipeline ([`06`](06_hardware_v1_32ic.md)). Active buffer: **4 BG + 4 sprite** via `$FE08`/`$FE09` (indices held in packed HC573 / decode path on the 32-IC board -- no separate palette RAM IC). Shared color 0. BG+sprite row index always locked together.
 
 Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio and burn tools **quantize** to R3G3B2 when building the PROM image ([`04`](04_retr01_studio.md)).
 
@@ -148,7 +148,7 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 |    Sprite set: 4 palettes x 4 master indices = 16 B            |
 |    Worlds without their own banks use these for all rendering  |
 +----------------------------------------------------------------+
-|  PRG (one global section, max 32 KB, contiguous at $8000)      |
+|  PRG (one global section, max 32 KB at $8000; I/O hole $FE00)   |
 +----------------------------------------------------------------+
 |  WORLD TABLE (up to 8 entries)                                 |
 |    each slot: present u8, off_world u24, len_world u24         |
@@ -189,10 +189,10 @@ PRG planning cap is **32 KB** total in the cart image; the CPU sees the classic 
 
 | Addr | Name | Notes |
 |------|------|-------|
-| `$FE00` | `PPUCTRL` | BG/sprites/NMI, camera mode 1/2H/2V/4 |
+| `$FE00` | `PPUCTRL` | BG/sprites/NMI enable bits; camera slot mode (**1 / 2H / 2V / 4** -- bitfield TBD) |
 | `$FE01` | `PPUSTATUS` | VBlank, raster hit (read clears) |
 | `$FE02`/`$FE03` | scroll X/Y | 0-127 / 0-119 |
-| `$FE04`/`$FE05` | raster Y / IRQ | |
+| `$FE04`/`$FE05` | raster Y / IRQ | `$FE04` = compare scanline (latched). `$FE05` = enable/ack/control (**bitfield TBD**) |
 | `$FE06`/`$FE07` | plane band | any band locks camera axis for the frame |
 | `$FE08`/`$FE09` | pal addr/data | active indices 0-63, auto-inc |
 | `$FE10`-`$FE12` | VRAM addr/data | auto-inc |
@@ -201,7 +201,7 @@ PRG planning cap is **32 KB** total in the cart image; the CPU sees the classic 
 | `$FE31`-`$FE37` | bank helpers | optional stamps, not live fetch |
 | `$FE38` | `PAL_ROW` | hint. Still copy `$FE08`/`$FE09` |
 | `$FE40`-`$FE5F` | APU | **ATmega328P** |
-| `$FE60`/`$FE61` | pads | bits: R L D U X Y coin start (**1=pressed**) |
+| `$FE60`/`$FE61` | pads | bits 0-7: right, left, down, up, X, Y, **coin** (cabinet) / **select** (console draft), start (**1=pressed**) |
 | `$FE70`-`$FE72` | machine EEPROM | **1284 internal EEPROM** handshake (protocol TBD). **Not** parallel AT28C64B |
 | `$FE80` | reserved | unused |
 | `$FE90`-`$FE93` | MAP | 24-bit seek + read auto-inc |

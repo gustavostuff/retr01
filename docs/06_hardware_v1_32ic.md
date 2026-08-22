@@ -9,7 +9,7 @@
 | Chip list, IC count, PCB size, silicon merges | Software-visible `$FExx` **logical** map, cart image, worlds/VRAM -- [`02`](02_graphics_worlds_memory.md) |
 | HW pathways (PLD roles, bus HC245 split, PROM packaging) | Exact mailbox/I2C `$FExx` bit protocols -- land those in `02` when frozen |
 
-Same **game-visible graphics model** as the older ~52 IC sketch on `main` (32 KB sys / VRAM / linebuf, 512 KB cart, interleaved VRAM, 341x262, `$FE4x` APU on 328P). Differences that matter for software: no parallel board EEPROM at `$FE70`, packed Color PROM, bit-packed latches, cart I2C saves -- see [`02`](02_graphics_worlds_memory.md).
+Same **game-visible graphics model** as the older ~52 IC sketch on `main` (32 KB sys / VRAM / linebuf, 512 KB cart, interleaved VRAM, 341x262, `$FE4x` APU on 328P). Differences that matter for software: **`$FE70-$FE72` is a 1284 EEPROM handshake** (not parallel AT28C64B), packed Color PROM, bit-packed latches, cart I2C saves -- see [`02`](02_graphics_worlds_memory.md).
 
 Target: **through-hole DIP**, compact **12 x 12 cm** 4-layer PCB.
 
@@ -217,7 +217,7 @@ Detail in [`02`](02_graphics_worlds_memory.md). Short:
 | Topic | Norm |
 |-------|------|
 | `$FE40-$FE5F` APU | ATmega328P |
-| Machine config | 1284 internal EEPROM (handshake; **not** AT28C64B `$FE70`) |
+| Machine config | 1284 internal EEPROM via **`$FE70-$FE72` handshake** (same address band as legacy parallel EEPROM; **not** AT28C64B silicon) |
 | Latch silicon | 9x HC573 bit-packed (bitfields open in `02`) |
 | Cart saves | Cart I2C EEPROM + HAL |
 

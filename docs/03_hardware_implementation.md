@@ -17,8 +17,8 @@ Software contracts live in [`02`](02_graphics_worlds_memory.md). Legacy layout s
 Four active compute domains on one **5 V** board:
 
 - **W65C02S** -- game logic (fills nametables, OAM, latches -- never a framebuffer)
-- **74HC + PLD BG path** -- beam, VRAM fetch, BG pixels
-- **ATmega1284P** -- OAM, sprite line-buffer fill, pad bytes
+- **BG / beam path** -- PLD + HC157 (current BOM); legacy used more discrete HC beam/glue
+- **ATmega1284P** -- OAM, sprite line-buffer fill, pad bytes, machine EEPROM handshake
 - **ATmega328P** -- audio
 
 ## IC plan (legacy ~52 parts)
@@ -42,7 +42,7 @@ Through-hole reference from the older architecture. **Current BOM:** [`06`](06_h
 | 74HC161 | 4 | beam X/Y |
 | DIP-14 glue | 10 | HC14 x1, HC00 x2, HC04 x2, HC08 x2, HC32 x2, HC86 x1 |
 
-Datasheets: [W65C02S](https://westerndesigncenter.com/wdc/documentation/w65c02s.pdf), [AS6C62256](https://www.alliancememory.com/wp-content/uploads/pdf/datasheets/AS6C62256.pdf), [ATF22V10](https://ww1.microchip.com/downloads/en/DeviceDoc/ATF22V10-Datasheet-DS50002239D.pdf), [ATmega1284P](https://ww1.microchip.com/downloads/en/DeviceDoc/40002047A.pdf), [ATmega328P](https://ww1.microchip.com/downloads/en/DeviceDoc/ATmega328P-DS-DS40002061A.pdf), [AT28C64B](https://ww1.microchip.com/downloads/en/DeviceDoc/doc4428.pdf), [AT28C16](https://ww1.microchip.com/downloads/en/DeviceDoc/doc0006.pdf), [SST39SF040](https://ww1.microchip.com/downloads/en/DeviceDoc/20005051C.pdf), [74HC family](https://www.ti.com/logic-circuit/standard-logic/74hc-family/overview.html).
+Datasheets: [W65C02S](https://westerndesigncenter.com/wdc/documentation/w65c02s.pdf), [AS6C62256](https://www.alliancememory.com/wp-content/uploads/pdf/datasheets/AS6C62256.pdf), [ATF22V10](https://ww1.microchip.com/downloads/en/DeviceDoc/ATF22V10-Datasheet-DS50002239D.pdf), [ATmega1284P](https://ww1.microchip.com/downloads/en/DeviceDoc/40002047A.pdf), [ATmega328P](https://ww1.microchip.com/downloads/en/DeviceDoc/ATmega328P-DS-DS40002061A.pdf), [AT28C64B](https://ww1.microchip.com/downloads/en/DeviceDoc/doc4428.pdf), [AT28C16](https://ww1.microchip.com/downloads/en/DeviceDoc/doc0540.pdf), [SST39SF040](https://ww1.microchip.com/downloads/en/DeviceDoc/20005051C.pdf), [74HC family](https://www.ti.com/logic-circuit/standard-logic/74hc-family/overview.html).
 
 **Clocks:** CPU **8.000 MHz**, dot **5.369318 MHz** (independent), 1284 **20 MHz**, 328P **16 MHz**.
 
@@ -63,7 +63,7 @@ Datasheets: [W65C02S](https://westerndesigncenter.com/wdc/documentation/w65c02s.
 | `$FExx` controls | scroll, PPUCTRL, MAP addr, ... | HC573 + PLD decode |
 | OAM / pads | `$FE20`/`$FE21`, `$FE60`/`$FE61` | ATmega1284P |
 | APU | `$FE40`-`$FE5F` | ATmega328P |
-| Active palettes | `$FE08`/`$FE09` | small palette RAM / latches -> Color PROM |
+| Active palettes | `$FE08`/`$FE09` | **Current (32 IC):** indices held in packed **HC573** / decode path, then Color PROM (no separate palette RAM IC). Legacy ~52 also used latch/buffer parts for the same ports |
 
 Full register map: [`02`](02_graphics_worlds_memory.md).
 
@@ -73,7 +73,7 @@ Full register map: [`02`](02_graphics_worlds_memory.md).
 
 **BG:** beam + scroll -> VRAM tile/attr -> CHR (attr `BANK`) -> active palette -> Color PROM. Mid-frame scroll takes effect on the next tile fetch. Visible nametable/attr pokes follow tear rules in `02`.
 
-**Input:** `$FE60` / `$FE61`, bits 0-7 = right, left, down, up, X, Y, coin/select, start.
+**Input:** `$FE60` / `$FE61`, bits 0-7 = right, left, down, up, X, Y, coin (cabinet) / select (console draft), start.
 
 **Not in hardware:** framebuffer, sprite-0 hit, sprite-vs-BG collision, sprite DMA, on-board HDMI.
 
