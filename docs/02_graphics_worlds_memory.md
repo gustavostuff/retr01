@@ -116,8 +116,6 @@ Line N+1| fill N+1         |        | SHOW             |
 #FFFFFF #F1A2BB #F1A6A1 #F1A983 #EEAC44 #D4BA33 #B0C841 #73D275 #22D0A6 #3BCDC9 #48C9E4 #88C4ED #A4BDEF #BBB5F1 #D5A9EF #F09BDD
 ```
 
-<img src="../img/palette_autogen_80pert_saturation.png" alt="Palette" />
-
 **Fallback (software, load time):** world bank if present -> else cart globals (4 BG + 4 sprite) -> else kit defaults. Bare metal with no `$FE08`/`$FE09` writes = **garbage colors**. Hardware never auto-loads.
 
 ## Cart image (`.retr01`)
