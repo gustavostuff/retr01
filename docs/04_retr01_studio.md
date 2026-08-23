@@ -41,7 +41,7 @@ Right column = Screen (most width). Left = scrollable stack of Worlds, **Planes*
 | **Sprite banks** | 4 tabs, 8x8 / 8x16 toggle. Paint tiles (**TILE** tool), place OAM on Screen (**PLACE**). **Ctrl+G** on SPR layer packs/dedupes sprite CHR |
 | **Screen** | Edits active **grid screen** or **parallax plane**. Layers **BG** / **SPR**. BG: pixel + attr. SPR: place OAM (composited over BG) or edit selected CHR tile. Generate (**Ctrl+G**) targets BG or SPR bank by layer |
 | **Palettes** | Tabs = palette rows **0-7** (4 BG + 4 sprite strips). Edit master indices **0-63**. Preview uses kit Color PROM RGB; burn path quantizes to **R3G3B2** ([`02`](02_graphics_worlds_memory.md) / [`06`](06_hardware_v1_32ic.md)) |
-| **Constraints** | Project defaults + optional per-world override. Scroll C4–C7, transition C8, ANIM rates, player meta. **I2C SAV** flags cart EEPROM. **Play** / **Space** = walk preview. **Ctrl+E** exports `.retr01` |
+| **Constraints** | Project defaults + optional per-world override. Scroll C4–C7 (default **DEADZONE**, free box **32×30**), transition C8, ANIM rates, player meta. **I2C SAV** flags cart EEPROM. **Play** / **Space** = walk preview with an 8×8 player square. **Ctrl+E** exports `.retr01` |
 
 Paint always stores indices **0-3**. Palette assignment only in attr mode.
 
@@ -178,4 +178,4 @@ Studio follows [`02`](02_graphics_worlds_memory.md) for data meaning. Board BOM:
 | PNG import | Spill-pack unique tiles into banks 0→3; toast if overflow |
 | Project JSON | **v8**: RLE on `pixels_hex` / `tiles_hex` / `attrs_hex` (raw hex still loads) |
 | Color PROM preview | 64 indices -> packed **R3G3B2** for burn |
-| Play | High-level only. Board sim / cycle check later load `.retr01` |
+| Play | High-level only: 8×8 player, DEADZONE scroll (32×30 free box). Board sim later |

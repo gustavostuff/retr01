@@ -311,7 +311,8 @@ static void test_play_scroll(void) {
     p->constraints.scroll_mode = R01_SCROLL_PIXEL;
     r01_play_start(&pl, p);
     expect_true(pl.active == 1, "play active");
-    expect_true(pl.player_x == R01_SCREEN_PX_W / 2, "start x");
+    expect_true(pl.player_x == R01_SCREEN_PX_W / 2 - R01_PLAY_PLAYER_SIZE / 2, "start x");
+    expect_true(pl.player_y == R01_SCREEN_PX_H / 2 - R01_PLAY_PLAYER_SIZE / 2, "start y");
     expect_true(pl.cam_x == 0, "start cam");
 
     /* walk into second screen */
@@ -328,7 +329,7 @@ static void test_play_scroll(void) {
     {
         int blocked = pl.player_x;
         r01_play_tick(&pl, p, 0, -1); /* up into empty */
-        expect_true(pl.player_y == R01_SCREEN_PX_H / 2 || pl.player_y >= 0, "y ok");
+        expect_true(pl.player_y >= 0, "y ok");
         (void)blocked;
         r01_play_tick(&pl, p, 0, -R01_SCREEN_PX_H);
         expect_true(r01_world_find_screen(&p->worlds[0], pl.player_x / R01_SCREEN_PX_W,
@@ -346,18 +347,41 @@ static void test_play_scroll(void) {
     }
     expect_true(pl.cam_x == R01_SCREEN_PX_W, "instant cam snaps");
 
+    /* Default-style 32×30 free box (insets 48,45): walk inside without scrolling, then push edge. */
     p->constraints.scroll_mode = R01_SCROLL_DEADZONE;
-    p->constraints.deadzone_x = 40;
+    p->constraints.deadzone_x = R01_PLAY_DZ_INSET_X;
+    p->constraints.deadzone_y = R01_PLAY_DZ_INSET_Y;
     r01_play_start(&pl, p);
-    expect_true(pl.cam_x == 0, "dz start cam");
-    r01_play_tick(&pl, p, 1, 0);
-    expect_true(pl.cam_x == 0, "dz hold while inside");
+    expect_true(pl.cam_x == 0 && pl.cam_y == 0, "dz start cam");
+    {
+        int i;
+        int cam0 = pl.cam_x;
+        /* free box is x∈[48,80]; player center starts at 64 — stay inside */
+        for (i = 0; i < 10; i++) {
+            r01_play_tick(&pl, p, 1, 0);
+        }
+        expect_true(pl.cam_x == cam0, "dz hold while inside free box");
+        /* push past right edge of free box → camera scrolls */
+        for (i = 0; i < 40; i++) {
+            r01_play_tick(&pl, p, 1, 0);
+        }
+        expect_true(pl.cam_x > cam0, "dz scroll when leaving free box");
+    }
 
     p->worlds[0].use_constraints = 1;
     p->worlds[0].constraints.scroll_mode = R01_SCROLL_HYBRID;
     c = r01_project_constraints(p);
     expect_true(c == &p->worlds[0].constraints, "world override");
     expect_true(c->scroll_mode == R01_SCROLL_HYBRID, "hybrid");
+
+    /* Fresh defaults: DEADZONE + 32×30 free box */
+    {
+        R01Constraints def;
+        r01_constraints_init_default(&def);
+        expect_true(def.scroll_mode == R01_SCROLL_DEADZONE, "default scroll deadzone");
+        expect_true(def.deadzone_x == R01_PLAY_DZ_INSET_X && def.deadzone_y == R01_PLAY_DZ_INSET_Y,
+                    "default 32x30 free box insets");
+    }
     free(p);
 }
 

@@ -12,9 +12,9 @@ void r01_constraints_init_default(R01Constraints *c) {
     c->player_meta = -1;
     c->enemy_anim_rate = 8;
     c->anim_rate = 12;
-    c->scroll_mode = R01_SCROLL_PIXEL;
-    c->deadzone_x = 24;
-    c->deadzone_y = 20;
+    c->scroll_mode = R01_SCROLL_DEADZONE;
+    c->deadzone_x = R01_PLAY_DZ_INSET_X;
+    c->deadzone_y = R01_PLAY_DZ_INSET_Y;
     c->transition = R01_XITION_CUT;
 }
 
@@ -38,11 +38,25 @@ static void clamp_player_to_world(const R01World *w, int *px, int *py) {
     int col, row, lx, ly;
     int gc = w->grid_cols > 0 ? w->grid_cols : R01_GRID_SIZE;
     int gr = w->grid_rows > 0 ? w->grid_rows : R01_GRID_SIZE;
+    int max_x = gc * R01_SCREEN_PX_W - R01_PLAY_PLAYER_SIZE;
+    int max_y = gr * R01_SCREEN_PX_H - R01_PLAY_PLAYER_SIZE;
     if (*px < 0) {
         *px = 0;
     }
     if (*py < 0) {
         *py = 0;
+    }
+    if (max_x < 0) {
+        max_x = 0;
+    }
+    if (max_y < 0) {
+        max_y = 0;
+    }
+    if (*px > max_x) {
+        *px = max_x;
+    }
+    if (*py > max_y) {
+        *py = max_y;
     }
     col = *px / R01_SCREEN_PX_W;
     row = *py / R01_SCREEN_PX_H;
@@ -50,11 +64,11 @@ static void clamp_player_to_world(const R01World *w, int *px, int *py) {
     ly = *py - row * R01_SCREEN_PX_H;
     if (col >= gc) {
         col = gc - 1;
-        lx = R01_SCREEN_PX_W - 1;
+        lx = R01_SCREEN_PX_W - R01_PLAY_PLAYER_SIZE;
     }
     if (row >= gr) {
         row = gr - 1;
-        ly = R01_SCREEN_PX_H - 1;
+        ly = R01_SCREEN_PX_H - R01_PLAY_PLAYER_SIZE;
     }
     if (!screen_present_at(w, col, row)) {
         int i;
@@ -62,8 +76,8 @@ static void clamp_player_to_world(const R01World *w, int *px, int *py) {
             if (w->screens[i].present) {
                 col = w->screens[i].col;
                 row = w->screens[i].row;
-                lx = R01_SCREEN_PX_W / 2;
-                ly = R01_SCREEN_PX_H / 2;
+                lx = R01_SCREEN_PX_W / 2 - R01_PLAY_PLAYER_SIZE / 2;
+                ly = R01_SCREEN_PX_H / 2 - R01_PLAY_PLAYER_SIZE / 2;
                 break;
             }
         }
@@ -74,18 +88,21 @@ static void clamp_player_to_world(const R01World *w, int *px, int *py) {
 
 static void update_camera(R01PlayState *pl, const R01Constraints *c) {
     int target_x, target_y;
-    int mode = c ? c->scroll_mode : R01_SCROLL_PIXEL;
-    int dzx = c ? c->deadzone_x : 24;
-    int dzy = c ? c->deadzone_y : 20;
+    int mode = c ? c->scroll_mode : R01_SCROLL_DEADZONE;
+    int dzx = c ? c->deadzone_x : R01_PLAY_DZ_INSET_X;
+    int dzy = c ? c->deadzone_y : R01_PLAY_DZ_INSET_Y;
+    /* Camera tracks the center of the 8×8 player. */
+    int ax = pl->player_x + R01_PLAY_PLAYER_SIZE / 2;
+    int ay = pl->player_y + R01_PLAY_PLAYER_SIZE / 2;
 
     if (mode == R01_SCROLL_INSTANT) {
-        pl->cam_x = (pl->player_x / R01_SCREEN_PX_W) * R01_SCREEN_PX_W;
-        pl->cam_y = (pl->player_y / R01_SCREEN_PX_H) * R01_SCREEN_PX_H;
+        pl->cam_x = (ax / R01_SCREEN_PX_W) * R01_SCREEN_PX_W;
+        pl->cam_y = (ay / R01_SCREEN_PX_H) * R01_SCREEN_PX_H;
         return;
     }
 
-    target_x = pl->player_x - R01_SCREEN_PX_W / 2;
-    target_y = pl->player_y - R01_SCREEN_PX_H / 2;
+    target_x = ax - R01_SCREEN_PX_W / 2;
+    target_y = ay - R01_SCREEN_PX_H / 2;
     if (target_x < 0) {
         target_x = 0;
     }
@@ -99,21 +116,21 @@ static void update_camera(R01PlayState *pl, const R01Constraints *c) {
         return;
     }
 
-    /* DEADZONE and HYBRID: keep player inside deadzone box relative to cam */
+    /* DEADZONE / HYBRID: free box is inset by deadzone_* from viewport edges. */
     {
         int left = pl->cam_x + dzx;
         int right = pl->cam_x + R01_SCREEN_PX_W - dzx;
         int top = pl->cam_y + dzy;
         int bot = pl->cam_y + R01_SCREEN_PX_H - dzy;
-        if (pl->player_x < left) {
-            pl->cam_x -= (left - pl->player_x);
-        } else if (pl->player_x > right) {
-            pl->cam_x += (pl->player_x - right);
+        if (ax < left) {
+            pl->cam_x -= (left - ax);
+        } else if (ax > right) {
+            pl->cam_x += (ax - right);
         }
-        if (pl->player_y < top) {
-            pl->cam_y -= (top - pl->player_y);
-        } else if (pl->player_y > bot) {
-            pl->cam_y += (pl->player_y - bot);
+        if (ay < top) {
+            pl->cam_y -= (top - ay);
+        } else if (ay > bot) {
+            pl->cam_y += (ay - bot);
         }
         if (pl->cam_x < 0) {
             pl->cam_x = 0;
@@ -124,9 +141,8 @@ static void update_camera(R01PlayState *pl, const R01Constraints *c) {
     }
 
     if (mode == R01_SCROLL_HYBRID) {
-        /* Snap camera to screen origin when player crosses into another screen cell */
-        int pcol = pl->player_x / R01_SCREEN_PX_W;
-        int prow = pl->player_y / R01_SCREEN_PX_H;
+        int pcol = ax / R01_SCREEN_PX_W;
+        int prow = ay / R01_SCREEN_PX_H;
         int ccol = pl->cam_x / R01_SCREEN_PX_W;
         int crow = pl->cam_y / R01_SCREEN_PX_H;
         if (pcol != ccol || prow != crow) {
@@ -158,8 +174,8 @@ void r01_play_start(R01PlayState *pl, const R01Project *p) {
     }
     pl->active = 1;
     if (s && s->present) {
-        pl->player_x = s->col * R01_SCREEN_PX_W + R01_SCREEN_PX_W / 2;
-        pl->player_y = s->row * R01_SCREEN_PX_H + R01_SCREEN_PX_H / 2;
+        pl->player_x = s->col * R01_SCREEN_PX_W + R01_SCREEN_PX_W / 2 - R01_PLAY_PLAYER_SIZE / 2;
+        pl->player_y = s->row * R01_SCREEN_PX_H + R01_SCREEN_PX_H / 2 - R01_PLAY_PLAYER_SIZE / 2;
         pl->cam_x = s->col * R01_SCREEN_PX_W;
         pl->cam_y = s->row * R01_SCREEN_PX_H;
     }

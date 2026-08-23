@@ -3,9 +3,18 @@
 
 #include "retr01_studio/types.h"
 
+/* Flat Play player sprite (world pixels). */
+#define R01_PLAY_PLAYER_SIZE 8
+
+/* Default centered free box for DEADZONE scroll (viewport 128×120). */
+#define R01_PLAY_DZ_FREE_W 32
+#define R01_PLAY_DZ_FREE_H 30
+#define R01_PLAY_DZ_INSET_X ((R01_SCREEN_PX_W - R01_PLAY_DZ_FREE_W) / 2) /* 48 */
+#define R01_PLAY_DZ_INSET_Y ((R01_SCREEN_PX_H - R01_PLAY_DZ_FREE_H) / 2) /* 45 */
+
 typedef struct R01PlayState {
     int active;
-    int player_x; /* world pixels */
+    int player_x; /* world pixels — top-left of 8×8 player */
     int player_y;
     int cam_x;
     int cam_y;

@@ -522,7 +522,8 @@ static void draw_constraints(UiState *ui, SDL_Renderer *r) {
     fill_rect(r, 80, y0 + 52, 20, 12, 40, 48, 60);
     font_draw(r, 84, y0 + 54, "E+", 230, 230, 240);
 
-    snprintf(buf, sizeof(buf), "DZ %d,%d  META %d", c->deadzone_x, c->deadzone_y, c->player_meta);
+    snprintf(buf, sizeof(buf), "DZ %d,%d (%dx%d)  META %d", c->deadzone_x, c->deadzone_y,
+             R01_SCREEN_PX_W - 2 * c->deadzone_x, R01_SCREEN_PX_H - 2 * c->deadzone_y, c->player_meta);
     font_draw(r, 4, y0 + 72, buf, 160, 160, 170);
     fill_rect(r, 4, y0 + 84, 28, 12, 40, 48, 60);
     font_draw(r, 6, y0 + 86, "DX-", 230, 230, 240);
@@ -622,9 +623,20 @@ static void draw_play_view(UiState *ui, SDL_Renderer *r) {
     {
         int px = ui->play.player_x - ui->play.cam_x;
         int py = ui->play.player_y - ui->play.cam_y;
-        if (px >= 0 && py >= 0 && px < R01_SCREEN_PX_W && py < R01_SCREEN_PX_H) {
-            fill_rect(r, view_x + px * zx - zx, view_y + py * zx - zx, zx * 3, zx * 3, 80, 220, 255);
-            fill_rect(r, view_x + px * zx, view_y + py * zx, zx, zx, 255, 255, 255);
+        int dzx = c ? c->deadzone_x : R01_PLAY_DZ_INSET_X;
+        int dzy = c ? c->deadzone_y : R01_PLAY_DZ_INSET_Y;
+        int free_w = R01_SCREEN_PX_W - 2 * dzx;
+        int free_h = R01_SCREEN_PX_H - 2 * dzy;
+        if (free_w > 0 && free_h > 0 &&
+            (c ? c->scroll_mode : R01_SCROLL_DEADZONE) == R01_SCROLL_DEADZONE) {
+            draw_rect(r, view_x + dzx * zx, view_y + dzy * zx, free_w * zx, free_h * zx, 60, 90, 70);
+        }
+        if (px + R01_PLAY_PLAYER_SIZE > 0 && py + R01_PLAY_PLAYER_SIZE > 0 && px < R01_SCREEN_PX_W &&
+            py < R01_SCREEN_PX_H) {
+            fill_rect(r, view_x + px * zx, view_y + py * zx, R01_PLAY_PLAYER_SIZE * zx,
+                      R01_PLAY_PLAYER_SIZE * zx, 80, 220, 255);
+            draw_rect(r, view_x + px * zx, view_y + py * zx, R01_PLAY_PLAYER_SIZE * zx,
+                      R01_PLAY_PLAYER_SIZE * zx, 255, 255, 255);
         }
     }
     snprintf(buf, sizeof(buf), "PLAYER %d,%d  FADE %d", ui->play.player_x, ui->play.player_y, ui->play.fade);

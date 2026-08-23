@@ -118,7 +118,7 @@ typedef struct R01Constraints {
     int enemy_anim_rate; /* C2: ticks per meta frame (1..120) */
     int anim_rate;       /* C3: ticks per BG ANIM frame (1..120) */
     int scroll_mode;     /* C4-C7: PIXEL / DEADZONE / INSTANT / HYBRID */
-    int deadzone_x;      /* half-width of dead zone in px (deadzone/hybrid) */
+    int deadzone_x;      /* edge inset px; free box = (128-2x)×(120-2y), default 48/45 → 32×30 */
     int deadzone_y;
     int transition;      /* C8: CUT / FADE */
 } R01Constraints;

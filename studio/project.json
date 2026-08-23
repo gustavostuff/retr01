@@ -7,14 +7,14 @@
   "active_plane": -1,
   "generate_bank": 0,
   "paint_color": 3,
-  "has_cart_save": 0,
+  "has_cart_save": 1,
   "constraints": {
     "player_meta": -1,
     "enemy_anim_rate": 8,
     "anim_rate": 12,
-    "scroll_mode": 0,
-    "deadzone_x": 24,
-    "deadzone_y": 20,
+    "scroll_mode": 1,
+    "deadzone_x": 48,
+    "deadzone_y": 45,
     "transition": 0
   },
   "global_pal_bg": [[43,0,48,19],[16,21,26,31],[32,37,42,47],[48,53,58,63]],

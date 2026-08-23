@@ -66,7 +66,7 @@ UPDATE_GOLDENS=1 SDL_VIDEODRIVER=offscreen ./build/test_e2e
 | Place OAM | SPR + **PLACE**: click screen |
 | Generate | **Ctrl+G** — BG or SPR bank by layer |
 | Grid overlay | **G** |
-| Constraints / Play | Scroll left; **Space** / **PLAY**; arrows / WASD |
+| Constraints / Play | Scroll left; **Space** / **PLAY**; arrows / WASD move an **8×8** player. Default scroll = **DEADZONE** with a **32×30** free box (insets 48,45) |
 | Cart I2C save flag | **I2C SAV** in Constraints |
 | Export cart | **Ctrl+E** → `project.retr01`, `_prom.bin`, `_boot.s`, `_flash.bin` |
 | Save / load | **Ctrl+S** / **Ctrl+O** → `project.json` (v8; RLE on pixels/tiles/attrs hex) |
