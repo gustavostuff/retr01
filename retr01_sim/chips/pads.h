@@ -22,4 +22,7 @@ R01sEntity *r01s_pads_entity(R01sPads *chip);
 void r01s_pads_set(R01sPads *chip, int port, uint8_t bits);
 uint8_t r01s_pads_get(const R01sPads *chip, int port);
 
+/* Sim UI: reflect host port[] on DQ pins when the chip is not selected on the bus. */
+void r01s_pads_refresh_preview(R01sPads *chip);
+
 #endif

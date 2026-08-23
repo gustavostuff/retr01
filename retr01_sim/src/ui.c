@@ -234,6 +234,17 @@ static void draw_led(SDL_Renderer *r, int x, int y, int on, Uint8 R, Uint8 G, Ui
     font_draw(r, x + 14, y + 2, label, 180, 180, 170);
 }
 
+static void draw_pad_bits(SDL_Renderer *r, int x, int y, uint8_t bits) {
+    static const char *names[8] = {"R", "L", "D", "U", "X", "Y", "C", "S"};
+    int i;
+    for (i = 0; i < 8; i++) {
+        int on = (bits & (1u << i)) != 0;
+        fill_rect(r, x + i * 14, y, 12, 12, on ? 80 : 30, on ? 200 : 30, on ? 100 : 30);
+        draw_rect(r, x + i * 14, y, 12, 12, 120, 130, 120);
+        font_draw(r, x + i * 14 + 3, y + 2, names[i], 200, 210, 200);
+    }
+}
+
 static void clamp_chip_in_island(R01sUi *ui, R01sEntity *e, int island_index) {
     const R01sIsland *island;
     int min_x, min_y, max_x, max_y;
@@ -411,7 +422,7 @@ static void draw_gamepad_panel(SDL_Renderer *r, const R01sUi *ui, int player) {
         draw_btn(r, &brc, pressed, labels[b]);
     }
 
-    bits = r01s_ui_gamepad_port(ui, player);
+    bits = r01s_gamepad_encode(&ui->gamepad[player]);
     snprintf(hex, sizeof(hex), "%02X", bits);
     font_draw(r, px + 8, py + GP_PANEL_H - 14, hex, 140, 160, 140);
 }
@@ -507,13 +518,17 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     font_draw(r, 8, 7, "RETR01 SIM  ISLANDS A-E", 200, 210, 220);
     font_draw(r, R01S_LOGIC_W - 560, 7, "SHIFT+ARROWS PAN  STICKS FE60/61", 120, 130, 140);
 
-    fill_rect(r, R01S_LOGIC_W - 200, 36, 184, 110, 16, 22, 18);
-    draw_rect(r, R01S_LOGIC_W - 200, 36, 184, 110, 80, 90, 70);
+    fill_rect(r, R01S_LOGIC_W - 200, 36, 184, 168, 16, 22, 18);
+    draw_rect(r, R01S_LOGIC_W - 200, 36, 184, 168, 80, 90, 70);
     font_draw(r, R01S_LOGIC_W - 192, 42, "LIVE PROBE", 200, 210, 180);
     draw_led(r, R01S_LOGIC_W - 192, 60, ui->probe_vdd, 80, 220, 100, "VDD");
     draw_led(r, R01S_LOGIC_W - 192, 78, ui->probe_phi2, 220, 200, 60, "PHI2");
     draw_led(r, R01S_LOGIC_W - 192, 96, ui->probe_resb_low, 220, 80, 80, "RESB LO");
-    font_draw(r, R01S_LOGIC_W - 192, 118, "PINS GLOW = LEVEL", 120, 130, 120);
+    font_draw(r, R01S_LOGIC_W - 192, 118, "P1 FE60", 160, 180, 160);
+    draw_pad_bits(r, R01S_LOGIC_W - 192, 128, ui->probe_pad_p1);
+    font_draw(r, R01S_LOGIC_W - 192, 148, "P2 FE61", 160, 180, 160);
+    draw_pad_bits(r, R01S_LOGIC_W - 192, 158, ui->probe_pad_p2);
+    font_draw(r, R01S_LOGIC_W - 192, 178, "PINS GLOW = LEVEL", 120, 130, 120);
 
     draw_gamepad_panel(r, ui, 0);
     draw_gamepad_panel(r, ui, 1);

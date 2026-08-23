@@ -92,12 +92,16 @@ static void wire_io(R01sBoard *ctx) {
     r01s_entity_drive(latch, "LE", R01S_LVL_L);
     r01s_entity_drive(pads, "CE#", R01S_LVL_H);
     r01s_entity_drive(pads, "OE#", R01S_LVL_H);
-    r01s_entity_drive(pads, "A0", (addr & 1u) ? R01S_LVL_H : R01S_LVL_L);
+    r01s_entity_drive(pads, "A0", R01S_LVL_L);
 
     if (!be || !addr_is_io(addr)) {
         r01s_entity_eval(latch);
         r01s_entity_eval(pads);
         return;
+    }
+
+    if (hit_pads) {
+        r01s_entity_drive(pads, "A0", (addr == 0xFE61u) ? R01S_LVL_H : R01S_LVL_L);
     }
 
     if (hit_latch) {
@@ -228,8 +232,8 @@ static void island_clock_init(R01sIsland *island) {
 
 static void island_cpu_mem_init(R01sIsland *island) {
     R01sIslandCpuMemImpl *impl = (R01sIslandCpuMemImpl *)island->impl;
-    /* LDA #$55 / STA $FE02 / LDA $FE60 / JMP $8000 */
-    uint8_t prog[] = {0xA9, 0x55, 0x8D, 0x02, 0xFE, 0xAD, 0x60, 0xFE, 0x4C, 0x00, 0x80};
+    /* Boot: STA $FE02 = $55 once, then loop LDA $FE60 (live pad read into A). */
+    uint8_t prog[] = {0xA9, 0x55, 0x8D, 0x02, 0xFE, 0xAD, 0x60, 0xFE, 0x4C, 0x06, 0x80};
 
     r01s_w65c02s_init(impl->cpu, "U1");
     r01s_as6c62256_init(impl->ram, "U3");

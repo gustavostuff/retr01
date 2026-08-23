@@ -128,6 +128,9 @@ void r01s_app_frame(R01sApp *app) {
     if (board) {
         r01s_pads_set(&board->pads, 0, r01s_ui_gamepad_port(&app->ui, 0));
         r01s_pads_set(&board->pads, 1, r01s_ui_gamepad_port(&app->ui, 1));
+        r01s_pads_refresh_preview(&board->pads);
+        app->ui.probe_pad_p1 = r01s_pads_get(&board->pads, 0);
+        app->ui.probe_pad_p2 = r01s_pads_get(&board->pads, 1);
     }
     if (group) {
         r01s_island_group_frame(group);

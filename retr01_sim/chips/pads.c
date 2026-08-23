@@ -4,6 +4,18 @@
 
 #include <string.h>
 
+static int pads_port_select(const R01sEntity *e) {
+    return r01s_level_is_high(r01s_entity_sense(e, "A0")) ? 1 : 0;
+}
+
+static void pads_drive_dq(R01sEntity *e, uint8_t bits) {
+    r01s_bus_write(e, "DQ", 8, bits);
+}
+
+static void pads_preview_dq(R01sEntity *e, R01sPads *c) {
+    pads_drive_dq(e, c->port[pads_port_select(e)]);
+}
+
 static void pads_reset(R01sEntity *e) {
     R01sPads *c = (R01sPads *)e;
     c->port[0] = 0;
@@ -16,11 +28,12 @@ static void pads_eval(R01sEntity *e) {
     int sel;
 
     if (!r01s_level_is_low(r01s_entity_sense(e, "CE#")) || !r01s_level_is_low(r01s_entity_sense(e, "OE#"))) {
-        r01s_bus_hiz(e, "DQ", 8);
+        /* Not on the CPU bus — still show live host input on package pins (sim preview). */
+        pads_preview_dq(e, c);
         return;
     }
-    sel = r01s_level_is_high(r01s_entity_sense(e, "A0")) ? 1 : 0;
-    r01s_bus_write(e, "DQ", 8, c->port[sel]);
+    sel = pads_port_select(e);
+    pads_drive_dq(e, c->port[sel]);
 }
 
 static void pads_tick(R01sEntity *e) {
@@ -75,4 +88,13 @@ uint8_t r01s_pads_get(const R01sPads *chip, int port) {
         return 0;
     }
     return chip->port[port];
+}
+
+void r01s_pads_refresh_preview(R01sPads *chip) {
+    R01sEntity *e;
+    if (!chip) {
+        return;
+    }
+    e = r01s_pads_entity(chip);
+    r01s_entity_eval(e);
 }

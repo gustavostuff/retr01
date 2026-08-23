@@ -30,6 +30,8 @@ typedef struct R01sUi {
     int probe_vdd;
     int probe_phi2;
     int probe_resb_low;
+    uint8_t probe_pad_p1;
+    uint8_t probe_pad_p2;
     R01sGamepadInput gamepad[R01S_UI_GAMEPAD_COUNT];
     int drag_stick; /* player index or -1 */
     int drag_btn;   /* player*4 + btn index, or -1 */

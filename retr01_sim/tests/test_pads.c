@@ -26,8 +26,9 @@ int main(void) {
     expect_true(r01s_bus_read(e, "DQ", 8) == 0x5A, "read FE61");
 
     r01s_entity_drive(e, "CE#", R01S_LVL_H);
+    r01s_entity_drive(e, "A0", R01S_LVL_L);
     r01s_entity_eval(e);
-    expect_true(r01s_entity_sense(e, "DQ0") == R01S_LVL_Z, "Hi-Z when CE# high");
+    expect_true(r01s_bus_read(e, "DQ", 8) == 0xA5, "preview when CE# high");
 
     return test_done("test_pads");
 }
