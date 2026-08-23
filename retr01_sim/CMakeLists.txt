@@ -44,6 +44,7 @@ add_library(retr01_sim_core
   chips/atmega328p.c
   chips/atmega1284p.c
   chips/sprite_fetch.c
+  chips/integration.c
 )
 target_include_directories(retr01_sim_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -93,5 +94,5 @@ r01s_unit_test(test_sst39sf040)
 r01s_unit_test(test_w65c02s)
 r01s_unit_test(test_atmega328p)
 r01s_unit_test(test_atmega1284p)
-r01s_unit_test(test_island_abcdeghiojklmn)
+r01s_unit_test(test_island_abcdeghiojklmnp)
 r01s_unit_test(test_pads)

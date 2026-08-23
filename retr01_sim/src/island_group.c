@@ -3,7 +3,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#define R01S_GROUP_HALF_STEPS_PER_FRAME 8
+/*
+ * UI board steps per display frame (~60 Hz). Keep modest — beam catch-up is
+ * handled inside board_step (DOT burst), not by multiplying full PHI2 settles.
+ */
+#define R01S_GROUP_HALF_STEPS_PER_FRAME 32
 
 void r01s_island_group_init(R01sIslandGroup *group) {
     if (!group) {

@@ -19,6 +19,7 @@
 #include "sn74hc157.h"
 #include "sn74hc573.h"
 #include "sn74hc688.h"
+#include "integration.h"
 #include "sprite_fetch.h"
 #include "sst39sf040.h"
 #include "video_sink.h"
@@ -44,6 +45,7 @@ enum {
     R01S_ISLAND_MCU1284 = 11,
     R01S_ISLAND_LINEBUF = 12,
     R01S_ISLAND_SPRITES = 13,
+    R01S_ISLAND_INTEGRATION = 14,
 };
 
 typedef struct R01sIslandPowerImpl {
@@ -113,7 +115,11 @@ typedef struct R01sIslandSpritesImpl {
     R01sSpriteFetch *fetch; /* OAM→linebuf fill stats (Island N) */
 } R01sIslandSpritesImpl;
 
-/* Bring-up board: islands A–E + G + H + I + O + J + K + L + M + N (F deferred). */
+typedef struct R01sIslandIntegrationImpl {
+    R01sIntegration *integ; /* NMI / system-ok stats (Island P) */
+} R01sIslandIntegrationImpl;
+
+/* Bring-up board: islands A–E + G + H + I + O + J + K + L + M + N + P (F deferred). */
 typedef struct R01sBoard {
     R01sPwr5v pwr;
     R01sOsc8m osc;
@@ -140,6 +146,7 @@ typedef struct R01sBoard {
     R01sAs6c62256 linebuf;
     R01sSn74hc157 linebuf_mux;
     R01sSpriteFetch sprite_fetch;
+    R01sIntegration integration;
     R01sIslandPowerImpl power_impl;
     R01sIslandClockImpl clock_impl;
     R01sIslandCpuMemImpl cpu_mem_impl;
@@ -154,6 +161,7 @@ typedef struct R01sBoard {
     R01sIslandMcu1284Impl mcu1284_impl;
     R01sIslandLinebufImpl linebuf_impl;
     R01sIslandSpritesImpl sprites_impl;
+    R01sIslandIntegrationImpl integration_impl;
     /* Soft $FE10/$FE11 latch + $FE12 auto-inc (pre-full PLD). */
     uint16_t vram_addr;
     int vram_fe12_armed;
@@ -181,12 +189,20 @@ typedef struct R01sBoard {
     uint8_t health_saw_oam;
     uint8_t health_saw_linebuf;
     uint8_t health_saw_sprites;
+    uint8_t health_saw_nmi;
+    R01sLevel nmi_prev; /* beam NMI# edge detect */
+    uint32_t nmi_pulses;
     /* Island M ping-pong state (no CPU port; filled by Island N OAM eval). */
     uint8_t linebuf_show_half; /* 0 = $000–$07F showing, 1 = $080–$0FF */
     uint8_t linebuf_prev_hblank;
     uint8_t linebuf_saw_mux_mcu;
     uint8_t linebuf_saw_mux_beam;
     uint32_t health_phi2_edges;
+    /* Host soft-boot (runner convenience, like emu): CHR + pals + start screen in VRAM. */
+    uint8_t soft_chr[8][4096];
+    uint8_t soft_pal[32];
+    uint8_t soft_chr_loaded;
+    uint8_t soft_boot_restored;
 } R01sBoard;
 
 int r01s_board_build(R01sBoard *board, R01sIslandBuilder *builder);

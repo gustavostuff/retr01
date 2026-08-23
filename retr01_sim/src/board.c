@@ -12,6 +12,12 @@
 #define R01S_CART_HDR_SIZE 16
 #define R01S_CART_PTR_SIZE 24
 #define R01S_CART_PRG_BYTES 0x8000u
+/*
+ * DOT/beam ticks per board step. Real silicon runs DOT ≈ PHI2 order; the UI
+ * only does ~32 board steps/frame, so without a burst first VBlank takes minutes.
+ * 128 dots/step * 32 steps/frame ≈ 4k dots/frame → VBlank in ~1 s wall.
+ */
+#define R01S_BEAM_DOTS_PER_STEP 128
 
 /*
  * Bring-up smoke PRG (overlay into cart PRG window — not Studio game code).
@@ -160,7 +166,7 @@ static int board_integrated(const R01sBoard *ctx) {
     return ctx->health_saw_latch && ctx->health_saw_vram && ctx->health_saw_vram_read && ctx->health_saw_pad &&
            ctx->health_saw_beam && ctx->health_saw_bg_fetch && ctx->health_saw_video && ctx->health_saw_map &&
            ctx->health_saw_apu && ctx->health_saw_oam && ctx->health_saw_linebuf &&
-           ctx->health_saw_sprites;
+           ctx->health_saw_sprites && ctx->health_saw_nmi;
 }
 
 
@@ -573,6 +579,33 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_sprite_fetch_last_hit_color(sf));
     }
 
+    /* Island P — integration: pads + video + NMI ~60 Hz class + no bus fight */
+    {
+        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_INTEGRATION];
+        R01sIntegration *ig = ctx->integration_impl.integ;
+        unsigned pulses = (unsigned)r01s_integration_nmi_pulses(ig);
+        int ok = board_integrated(ctx) && conflicts == 0;
+        ih->letter = 'P';
+        if (booting) {
+            ih->health = R01S_HEALTH_BOOT;
+            snprintf(ih->activity, sizeof(ih->activity), "integration idle");
+        } else if (ok) {
+            ih->health = R01S_HEALTH_OK;
+            snprintf(ih->activity, sizeof(ih->activity), "NMI x%u pads+video ok", pulses);
+        } else if (ctx->health_saw_nmi) {
+            ih->health = R01S_HEALTH_WARN;
+            snprintf(ih->activity, sizeof(ih->activity), "NMI x%u await islands", pulses);
+        } else {
+            int by = r01s_beam_xy_y(ctx->beam_impl.beam);
+            ih->health = R01S_HEALTH_WARN;
+            /* Show scan progress — first VBlank is Y=240 (slow if UI steps/frame is tiny). */
+            snprintf(ih->activity, sizeof(ih->activity), "beam Y=%d/240 await NMI", by);
+        }
+        snprintf(ih->debug, sizeof(ih->debug),
+                 "island=P INTEGRATION health=%s saw_nmi=%d pulses=%u conflicts=%u integrated=%d",
+                 r01s_health_tag(ih->health), ctx->health_saw_nmi, pulses, conflicts, integrated);
+    }
+
     for (i = 0; i < out->island_count; i++) {
 
         system = r01s_health_worst(system, out->islands[i].health);
@@ -594,13 +627,14 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
         out->system = R01S_HEALTH_WARN;
         snprintf(out->system_label, sizeof(out->system_label), "BRING-UP");
         snprintf(out->system_detail, sizeof(out->system_detail),
-                 "L=%s V=%s P=%s B=%s BG=%s O=%s J=%s K=%s 1284=%s M=%s N=%s",
+                 "L=%s V=%s P=%s B=%s BG=%s O=%s J=%s K=%s 1284=%s M=%s N=%s NMI=%s",
                  ctx->health_saw_latch ? "ok" : "-", ctx->health_saw_vram_read ? "ok" : "-",
                  ctx->health_saw_pad ? "ok" : "-", ctx->health_saw_beam ? "ok" : "-",
                  ctx->health_saw_bg_fetch ? "ok" : "-", ctx->health_saw_video ? "ok" : "-",
                  ctx->health_saw_map ? "ok" : "-", ctx->health_saw_apu ? "ok" : "-",
                  ctx->health_saw_oam ? "ok" : "-", ctx->health_saw_linebuf ? "ok" : "-",
-                 ctx->health_saw_sprites ? "ok" : "-");
+                 ctx->health_saw_sprites ? "ok" : "-", ctx->health_saw_nmi ? "ok" : "-");
+
 
     } else if (system == R01S_HEALTH_WARN) {
         out->system = R01S_HEALTH_WARN;
@@ -619,13 +653,13 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
         int n = snprintf(out->system_debug, sizeof(out->system_debug),
                          "retr01_sim health system=%s label=%s detail=%s running=%d powered=%d cyc=%u "
                          "conflicts=%u milestones latch=%d vram_w=%d vram_r=%d pad=%d beam=%d bg=%d video=%d "
-                         "map=%d apu=%d oam=%d linebuf=%d sprites=%d\n",
+                         "map=%d apu=%d oam=%d linebuf=%d sprites=%d nmi=%d\n",
                          r01s_health_tag(out->system), out->system_label, out->system_detail,
                          group->running, group->powered, (unsigned)ctx->cycles, conflicts,
                          ctx->health_saw_latch, ctx->health_saw_vram, ctx->health_saw_vram_read,
                          ctx->health_saw_pad, ctx->health_saw_beam, ctx->health_saw_bg_fetch,
                          ctx->health_saw_video, ctx->health_saw_map, ctx->health_saw_apu,
-                         ctx->health_saw_oam, ctx->health_saw_linebuf, ctx->health_saw_sprites);
+                         ctx->health_saw_oam, ctx->health_saw_linebuf, ctx->health_saw_sprites, ctx->health_saw_nmi);
 
         if (n > 0) {
             used = (size_t)n;
@@ -1403,7 +1437,7 @@ static void wire_power_clock_reset(R01sBoard *ctx, R01sIslandGroup *group) {
     r01s_entity_drive(cpu, "BE", R01S_LVL_H);
     r01s_entity_drive(cpu, "RDY", R01S_LVL_H);
     r01s_entity_drive(cpu, "IRQB", R01S_LVL_H);
-    r01s_entity_drive(cpu, "NMIB", R01S_LVL_H);
+    /* NMIB driven from beam NMI# in wire_beam / board_step */
 
     phi2 = r01s_entity_sense(osc, "PHI2");
     r01s_entity_drive(hc, "1A", phi2 == R01S_LVL_Z ? R01S_LVL_L : phi2);
@@ -1535,6 +1569,12 @@ static void island_sprites_init(R01sIsland *island) {
     r01s_island_add_entity(island, r01s_sprite_fetch_entity(impl->fetch));
 }
 
+static void island_integration_init(R01sIsland *island) {
+    R01sIslandIntegrationImpl *impl = (R01sIslandIntegrationImpl *)island->impl;
+    r01s_integration_init(impl->integ, "UPLDP");
+    r01s_island_add_entity(island, r01s_integration_entity(impl->integ));
+}
+
 
 static const R01sIslandVTable ISLAND_POWER_VT = {island_power_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CLOCK_VT = {island_clock_init, NULL, NULL, NULL, NULL};
@@ -1550,6 +1590,7 @@ static const R01sIslandVTable ISLAND_APU_VT = {island_apu_init, NULL, NULL, NULL
 static const R01sIslandVTable ISLAND_MCU1284_VT = {island_mcu1284_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_LINEBUF_VT = {island_linebuf_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_SPRITES_VT = {island_sprites_init, NULL, NULL, NULL, NULL};
+static const R01sIslandVTable ISLAND_INTEGRATION_VT = {island_integration_init, NULL, NULL, NULL, NULL};
 
 
 static void board_install_bringup_prg(R01sBoard *board) {
@@ -1719,6 +1760,9 @@ static void board_reset(R01sIslandGroup *group) {
     ctx->health_saw_oam = 0;
     ctx->health_saw_linebuf = 0;
     ctx->health_saw_sprites = 0;
+    ctx->health_saw_nmi = 0;
+    ctx->nmi_prev = R01S_LVL_H;
+    ctx->nmi_pulses = 0;
     ctx->linebuf_show_half = 0;
 
     ctx->linebuf_prev_hblank = 0;
@@ -1772,17 +1816,31 @@ static void board_step(R01sIslandGroup *group) {
 
     board_settle(ctx, group);
     r01s_entity_tick(osc);
-    r01s_entity_tick(r01s_osc_dot_entity(ctx->beam_impl.osc_dot));
     r01s_entity_tick(r01s_atmega328p_entity(ctx->apu_impl.apu));
     r01s_entity_tick(r01s_atmega1284p_entity(ctx->mcu1284_impl.mcu));
     board_settle(ctx, group);
-    /* Beam senses DOT edges itself (domain independent of PHI2). */
+    /* Beam/DOT domain: burst so interactive UI reaches VBlank without minutes of wait. */
     {
         R01sEntity *dot_osc = r01s_osc_dot_entity(ctx->beam_impl.osc_dot);
         R01sEntity *beam = r01s_beam_xy_entity(ctx->beam_impl.beam);
-        r01s_entity_drive(beam, "DOT", r01s_entity_sense(dot_osc, "DOT"));
-        r01s_entity_tick(beam);
-        wire_video_dot(ctx);
+        R01sEntity *cpu_e = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
+        int di;
+        for (di = 0; di < R01S_BEAM_DOTS_PER_STEP; di++) {
+            r01s_entity_tick(dot_osc);
+            r01s_entity_drive(beam, "DOT", r01s_entity_sense(dot_osc, "DOT"));
+            r01s_entity_tick(beam);
+            {
+                R01sLevel nmi = r01s_entity_sense(beam, "NMI#");
+                r01s_entity_drive(cpu_e, "NMIB", nmi);
+                if (nmi == R01S_LVL_L && ctx->nmi_prev != R01S_LVL_L) {
+                    ctx->nmi_pulses++;
+                    ctx->health_saw_nmi = 1;
+                    r01s_integration_note_nmi(ctx->integration_impl.integ);
+                }
+                ctx->nmi_prev = nmi;
+            }
+            wire_video_dot(ctx);
+        }
     }
     board_settle(ctx, group);
 
@@ -1910,6 +1968,7 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     board->linebuf_impl.sram = &board->linebuf;
     board->linebuf_impl.mux = &board->linebuf_mux;
     board->sprites_impl.fetch = &board->sprite_fetch;
+    board->integration_impl.integ = &board->integration;
 
 
     if (r01s_island_builder_add(b, &ISLAND_POWER_VT, "ISLAND A  POWER", 0, 0, 1, 1, &board->power_impl) < 0) {
@@ -1961,6 +2020,10 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     }
     if (r01s_island_builder_add(b, &ISLAND_SPRITES_VT, "ISLAND N  SPRITES", 0, 0, 1, 1,
                                 &board->sprites_impl) < 0) {
+        return -1;
+    }
+    if (r01s_island_builder_add(b, &ISLAND_INTEGRATION_VT, "ISLAND P  INTEGRATION", 0, 0, 1, 1,
+                                &board->integration_impl) < 0) {
         return -1;
     }
 
@@ -2048,6 +2111,8 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         r01s_island_builder_mount_rel(b, mux_e, R01S_ISLAND_LINEBUF, lb_e->body_w + R01S_CHIP_GAP, mux_y);
     }
     r01s_island_builder_mount_rel(b, r01s_sprite_fetch_entity(&board->sprite_fetch), R01S_ISLAND_SPRITES, 0,
+                                  0);
+    r01s_island_builder_mount_rel(b, r01s_integration_entity(&board->integration), R01S_ISLAND_INTEGRATION, 0,
                                   0);
 
 

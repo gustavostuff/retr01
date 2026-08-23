@@ -17,8 +17,8 @@
 #include <stdio.h>
 
 /*
- * Layer-2 islands A–E + G + H + I + O + J + K + L + M + N smoke:
- *   prior milestones + linebuf ping-pong + OAM→linebuf sprite pixels on compositor.
+ * Layer-2 islands A–E + G + H + I + O + J + K + L + M + N + P smoke:
+ *   prior milestones + sprites + VBlank NMI (~60 Hz class) + no bus fight (Island P).
  */
 int main(void) {
     R01sBoard board;
@@ -41,12 +41,13 @@ int main(void) {
     int saw_oam = 0;
     int saw_linebuf = 0;
     int saw_sprites = 0;
+    int saw_nmi = 0;
 
     r01s_island_builder_init(&builder);
     expect_true(r01s_board_build(&board, &builder) == 0, "board build");
     group = r01s_island_builder_group(&builder);
     expect_true(group != NULL, "group");
-    expect_true(r01s_island_group_count(group) == 14, "14 islands A-E+G+H+I+O+J+K+L+M+N");
+    expect_true(r01s_island_group_count(group) == 15, "15 islands A-E+G+H+I+O+J+K+L+M+N+P");
 
     b = r01s_board_from_group(group);
     expect_true(b != NULL, "board ctx");
@@ -69,7 +70,7 @@ int main(void) {
         r01s_entity_drive(raster, "LE", R01S_LVL_L);
     }
 
-    for (i = 0; i < 60000; i++) {
+    for (i = 0; i < 250000; i++) {
         r01s_island_group_step(group);
         if (r01s_sn74hc573_peek_q(&b->latch) == 0x55) {
             saw_latch = 1;
@@ -120,9 +121,12 @@ int main(void) {
             r01s_as6c62256_peek(&b->linebuf, 0xA0) == 0x01) {
             saw_sprites = 1;
         }
+        if (b->health_saw_nmi || b->nmi_pulses >= 1) {
+            saw_nmi = 1;
+        }
         if (saw_latch && saw_vram && saw_vram_read && saw_pad && saw_beam_hblank && saw_beam_line &&
             saw_raster_hit && saw_bg_tile && saw_bg_attr && saw_video && saw_map && saw_apu && saw_oam &&
-            saw_linebuf && saw_sprites) {
+            saw_linebuf && saw_sprites && saw_nmi) {
             break;
         }
     }
@@ -142,6 +146,9 @@ int main(void) {
     expect_true(saw_oam, "island L OAM $FE21 readback + clk");
     expect_true(saw_linebuf, "island M linebuf mux both paths");
     expect_true(saw_sprites, "island N sprite pixels in linebuf");
+    expect_true(saw_nmi, "island P VBlank NMI pulse");
+    expect_true(b->health_saw_nmi, "health saw NMI");
+    expect_true(b->nmi_pulses >= 1, "NMI pulse count");
     expect_true(r01s_atmega1284p_oam_peek(&b->mcu1284, 0) == 0x10, "OAM Y=$10");
     expect_true(r01s_atmega1284p_oam_peek(&b->mcu1284, 1) == 0x01, "OAM tile=$01");
     expect_true(r01s_atmega1284p_oam_peek(&b->mcu1284, 3) == 0x20, "OAM X=$20");
@@ -169,5 +176,5 @@ int main(void) {
     }
 
     r01s_island_builder_shutdown(&builder);
-    return test_done("test_island_abcdeghiojklmn");
+    return test_done("test_island_abcdeghiojklmnp");
 }
