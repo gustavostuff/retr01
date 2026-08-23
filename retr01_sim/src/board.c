@@ -15,7 +15,7 @@
 
 /*
  * Bring-up smoke PRG (overlay into cart PRG window — not Studio game code).
- * Ends with MAP seek 0 + LDA $FE93 (expect 'R'), then pad poll loop.
+ * Ends with MAP seek 0 + LDA $FE93 (expect 'R'), APU tone enable, then pad poll loop.
  */
 static const uint8_t R01S_BRINGUP_PRG[] = {
     0xA9, 0x55,       /* LDA #$55 */
@@ -48,8 +48,14 @@ static const uint8_t R01S_BRINGUP_PRG[] = {
     0x8D, 0x91, 0xFE, /* STA $FE91 */
     0x8D, 0x92, 0xFE, /* STA $FE92 */
     0xAD, 0x93, 0xFE, /* LDA $FE93 expect $52 'R' @ $804C */
-    0xAD, 0x60, 0xFE, /* LDA $FE60 @ $804F */
-    0x4C, 0x4F, 0x80, /* JMP $804F */
+    0xA9, 0x10,       /* LDA #$10 — APU period lo */
+    0x8D, 0x41, 0xFE, /* STA $FE41 */
+    0xA9, 0x00,       /* LDA #$00 — APU period hi */
+    0x8D, 0x42, 0xFE, /* STA $FE42 */
+    0xA9, 0x8F,       /* LDA #$8F — enable + vol 8 */
+    0x8D, 0x40, 0xFE, /* STA $FE40 */
+    0xAD, 0x60, 0xFE, /* LDA $FE60 @ $805E */
+    0x4C, 0x5E, 0x80, /* JMP $805E */
 };
 
 static void put_u24(uint8_t *p, uint32_t v) {
@@ -120,6 +126,9 @@ static void board_update_milestones(R01sBoard *ctx) {
     if (r01s_video_sink_lit_pixels(ctx->video_impl.sink) > 64) {
         ctx->health_saw_video = 1;
     }
+    if (r01s_atmega328p_enabled(ctx->apu_impl.apu) && r01s_atmega328p_pwm_edges(ctx->apu_impl.apu) >= 2) {
+        ctx->health_saw_apu = 1;
+    }
 }
 
 static int board_integrated(const R01sBoard *ctx) {
@@ -127,7 +136,8 @@ static int board_integrated(const R01sBoard *ctx) {
         return 0;
     }
     return ctx->health_saw_latch && ctx->health_saw_vram && ctx->health_saw_vram_read && ctx->health_saw_pad &&
-           ctx->health_saw_beam && ctx->health_saw_bg_fetch && ctx->health_saw_video && ctx->health_saw_map;
+           ctx->health_saw_beam && ctx->health_saw_bg_fetch && ctx->health_saw_video && ctx->health_saw_map &&
+           ctx->health_saw_apu;
 }
 
 static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
@@ -425,6 +435,34 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  ctx->health_saw_map, r01s_sst39sf040_peek(ctx->cart_impl.flash, 0));
     }
 
+    /* Island K — ATmega328P APU */
+    {
+        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_APU];
+        R01sAtmega328p *apu = ctx->apu_impl.apu;
+        ih->letter = 'K';
+        if (booting) {
+            ih->health = R01S_HEALTH_BOOT;
+            snprintf(ih->activity, sizeof(ih->activity), "APU idle");
+        } else if (ctx->health_saw_apu) {
+            ih->health = R01S_HEALTH_OK;
+            snprintf(ih->activity, sizeof(ih->activity), "tone PWM edges=%u",
+                     (unsigned)r01s_atmega328p_pwm_edges(apu));
+        } else if (r01s_atmega328p_enabled(apu)) {
+            ih->health = R01S_HEALTH_WARN;
+            snprintf(ih->activity, sizeof(ih->activity), "enabled period=%u",
+                     (unsigned)r01s_atmega328p_period(apu));
+        } else {
+            ih->health = R01S_HEALTH_WARN;
+            snprintf(ih->activity, sizeof(ih->activity), "await STA $FE40");
+        }
+        snprintf(ih->debug, sizeof(ih->debug),
+                 "island=K APU health=%s saw=%d en=%d FE40=$%02X period=%u edges=%u hi=%u PWM=%s",
+                 r01s_health_tag(ih->health), ctx->health_saw_apu, r01s_atmega328p_enabled(apu),
+                 r01s_atmega328p_peek(apu, 0), (unsigned)r01s_atmega328p_period(apu),
+                 (unsigned)r01s_atmega328p_pwm_edges(apu), (unsigned)r01s_atmega328p_pwm_hi_samples(apu),
+                 r01s_level_name(r01s_entity_sense(r01s_atmega328p_entity(apu), "PWM")));
+    }
+
     for (i = 0; i < out->island_count; i++) {
         system = r01s_health_worst(system, out->islands[i].health);
     }
@@ -445,11 +483,11 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
         out->system = R01S_HEALTH_WARN;
         snprintf(out->system_label, sizeof(out->system_label), "BRING-UP");
         snprintf(out->system_detail, sizeof(out->system_detail),
-                 "boot latch=%s vram=%s pads=%s beam=%s bg=%s video=%s map=%s",
-                 ctx->health_saw_latch ? "ok" : "wait", ctx->health_saw_vram_read ? "ok" : "wait",
-                 ctx->health_saw_pad ? "ok" : "wait", ctx->health_saw_beam ? "ok" : "wait",
-                 ctx->health_saw_bg_fetch ? "ok" : "wait", ctx->health_saw_video ? "ok" : "wait",
-                 ctx->health_saw_map ? "ok" : "wait");
+                 "L=%s V=%s P=%s B=%s BG=%s O=%s J=%s K=%s",
+                 ctx->health_saw_latch ? "ok" : "-", ctx->health_saw_vram_read ? "ok" : "-",
+                 ctx->health_saw_pad ? "ok" : "-", ctx->health_saw_beam ? "ok" : "-",
+                 ctx->health_saw_bg_fetch ? "ok" : "-", ctx->health_saw_video ? "ok" : "-",
+                 ctx->health_saw_map ? "ok" : "-", ctx->health_saw_apu ? "ok" : "-");
     } else if (system == R01S_HEALTH_WARN) {
         out->system = R01S_HEALTH_WARN;
         snprintf(out->system_label, sizeof(out->system_label), "PAUSED");
@@ -467,12 +505,12 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
         int n = snprintf(out->system_debug, sizeof(out->system_debug),
                          "retr01_sim health system=%s label=%s detail=%s running=%d powered=%d cyc=%u "
                          "conflicts=%u milestones latch=%d vram_w=%d vram_r=%d pad=%d beam=%d bg=%d video=%d "
-                         "map=%d\n",
+                         "map=%d apu=%d\n",
                          r01s_health_tag(out->system), out->system_label, out->system_detail,
                          group->running, group->powered, (unsigned)ctx->cycles, conflicts,
                          ctx->health_saw_latch, ctx->health_saw_vram, ctx->health_saw_vram_read,
                          ctx->health_saw_pad, ctx->health_saw_beam, ctx->health_saw_bg_fetch,
-                         ctx->health_saw_video, ctx->health_saw_map);
+                         ctx->health_saw_video, ctx->health_saw_map, ctx->health_saw_apu);
         if (n > 0) {
             used = (size_t)n;
         }
@@ -526,7 +564,7 @@ static int addr_is_io(uint16_t addr) {
     return addr >= 0xFE00u && addr <= 0xFEFFu;
 }
 
-/* Soft PLD: $FE02 / $FE03 / $FE04 latches + $FE60/$FE61 pads + $FE90-$FE93 MAP. */
+/* Soft PLD: $FE02–$FE04 latches + $FE40–$FE5F APU + $FE60/$FE61 pads + $FE90–$FE93 MAP. */
 static void flash_deselect(R01sEntity *flash) {
     r01s_entity_drive(flash, "CE#", R01S_LVL_H);
     r01s_entity_drive(flash, "OE#", R01S_LVL_H);
@@ -560,6 +598,7 @@ static void wire_io(R01sBoard *ctx) {
     R01sEntity *scroll_y = r01s_sn74hc573_entity(ctx->io_latch_impl.scroll_y);
     R01sEntity *raster = r01s_sn74hc573_entity(ctx->io_latch_impl.raster);
     R01sEntity *pads = r01s_pads_entity(ctx->pads_impl.pads);
+    R01sEntity *apu = r01s_atmega328p_entity(ctx->apu_impl.apu);
     R01sEntity *flash = r01s_sst39sf040_entity(ctx->cart_impl.flash);
     uint16_t addr = (uint16_t)r01s_bus_read(cpu, "A", 16);
     int read = r01s_level_is_high(r01s_entity_sense(cpu, "RWB"));
@@ -567,11 +606,13 @@ static void wire_io(R01sBoard *ctx) {
     int hit_latch = (addr == 0xFE02u);
     int hit_scroll_y = (addr == 0xFE03u);
     int hit_raster = (addr == 0xFE04u);
+    int hit_apu = (addr >= 0xFE40u && addr <= 0xFE5Fu);
     int hit_pads = (addr == 0xFE60u || addr == 0xFE61u);
     int hit_map_lo = (addr == 0xFE90u);
     int hit_map_mid = (addr == 0xFE91u);
     int hit_map_hi = (addr == 0xFE92u);
     int hit_map_data = (addr == 0xFE93u);
+    int ai;
 
     /* Default: I/O devices idle */
     r01s_entity_drive(latch, "OE", R01S_LVL_L); /* Q visible */
@@ -583,17 +624,31 @@ static void wire_io(R01sBoard *ctx) {
     r01s_entity_drive(pads, "CE#", R01S_LVL_H);
     r01s_entity_drive(pads, "OE#", R01S_LVL_H);
     r01s_entity_drive(pads, "A0", R01S_LVL_L);
+    r01s_entity_drive(apu, "CE#", R01S_LVL_H);
+    r01s_entity_drive(apu, "OE#", R01S_LVL_H);
+    r01s_entity_drive(apu, "WE#", R01S_LVL_H);
+    r01s_entity_drive(apu, "RESET#", (ctx->reset_hold > 0) ? R01S_LVL_L : R01S_LVL_H);
 
     if (!be || !addr_is_io(addr)) {
         r01s_entity_eval(latch);
         r01s_entity_eval(scroll_y);
         r01s_entity_eval(raster);
         r01s_entity_eval(pads);
+        r01s_entity_eval(apu);
         return;
     }
 
     if (hit_pads) {
         r01s_entity_drive(pads, "A0", (addr == 0xFE61u) ? R01S_LVL_H : R01S_LVL_L);
+    }
+
+    if (hit_apu) {
+        unsigned reg = (unsigned)(addr - 0xFE40u);
+        for (ai = 0; ai < 5; ai++) {
+            char an[4];
+            snprintf(an, sizeof(an), "A%d", ai);
+            r01s_entity_drive(apu, an, (reg & (1u << ai)) ? R01S_LVL_H : R01S_LVL_L);
+        }
     }
 
     if (hit_latch) {
@@ -633,6 +688,25 @@ static void wire_io(R01sBoard *ctx) {
         }
     } else {
         r01s_entity_eval(raster);
+    }
+
+    if (hit_apu) {
+        r01s_entity_drive(apu, "CE#", R01S_LVL_L);
+        if (read) {
+            r01s_entity_drive(apu, "OE#", R01S_LVL_L);
+            r01s_entity_drive(apu, "WE#", R01S_LVL_H);
+            r01s_entity_eval(apu);
+            copy_bus_named(cpu, "D", apu, "DQ", 8);
+        } else {
+            r01s_entity_drive(apu, "OE#", R01S_LVL_H);
+            r01s_entity_drive(apu, "WE#", R01S_LVL_L);
+            copy_bus_named(apu, "DQ", cpu, "D", 8);
+            r01s_entity_eval(apu);
+            r01s_entity_drive(apu, "WE#", R01S_LVL_H);
+            r01s_entity_eval(apu);
+        }
+    } else {
+        r01s_entity_eval(apu);
     }
 
     if (hit_pads && read) {
@@ -1111,6 +1185,12 @@ static void island_cart_init(R01sIsland *island) {
     r01s_island_add_entity(island, r01s_sst39sf040_entity(impl->flash));
 }
 
+static void island_apu_init(R01sIsland *island) {
+    R01sIslandApuImpl *impl = (R01sIslandApuImpl *)island->impl;
+    r01s_atmega328p_init(impl->apu, "U328");
+    r01s_island_add_entity(island, r01s_atmega328p_entity(impl->apu));
+}
+
 static const R01sIslandVTable ISLAND_POWER_VT = {island_power_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CLOCK_VT = {island_clock_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CPU_VT = {island_cpu_mem_init, NULL, NULL, NULL, NULL};
@@ -1121,6 +1201,7 @@ static const R01sIslandVTable ISLAND_BEAM_VT = {island_beam_init, NULL, NULL, NU
 static const R01sIslandVTable ISLAND_BG_FETCH_VT = {island_bg_fetch_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_VIDEO_VT = {island_video_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CART_VT = {island_cart_init, NULL, NULL, NULL, NULL};
+static const R01sIslandVTable ISLAND_APU_VT = {island_apu_init, NULL, NULL, NULL, NULL};
 
 static void board_install_bringup_prg(R01sBoard *board) {
     uint32_t base;
@@ -1285,6 +1366,7 @@ static void board_reset(R01sIslandGroup *group) {
     ctx->health_saw_bg_fetch = 0;
     ctx->health_saw_video = 0;
     ctx->health_saw_map = 0;
+    ctx->health_saw_apu = 0;
     ctx->health_phi2_edges = 0;
     r01s_bus_clear_conflicts();
     r01s_entity_reset(r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu));
@@ -1303,6 +1385,7 @@ static void board_reset(R01sIslandGroup *group) {
     r01s_entity_reset(r01s_at28c16_entity(ctx->video_impl.prom));
     r01s_entity_reset(r01s_video_sink_entity(ctx->video_impl.sink));
     r01s_entity_reset(r01s_sst39sf040_entity(ctx->cart_impl.flash));
+    r01s_entity_reset(r01s_atmega328p_entity(ctx->apu_impl.apu));
     board_settle(ctx, group);
     r01s_entity_eval(r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu));
     board_settle(ctx, group);
@@ -1330,6 +1413,7 @@ static void board_step(R01sIslandGroup *group) {
     board_settle(ctx, group);
     r01s_entity_tick(osc);
     r01s_entity_tick(r01s_osc_dot_entity(ctx->beam_impl.osc_dot));
+    r01s_entity_tick(r01s_atmega328p_entity(ctx->apu_impl.apu));
     board_settle(ctx, group);
     /* Beam senses DOT edges itself (domain independent of PHI2). */
     {
@@ -1460,6 +1544,7 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     board->video_impl.prom = &board->color_prom;
     board->video_impl.sink = &board->video_sink;
     board->cart_impl.flash = &board->cart_flash;
+    board->apu_impl.apu = &board->apu;
 
     if (r01s_island_builder_add(b, &ISLAND_POWER_VT, "ISLAND A  POWER", 0, 0, 1, 1, &board->power_impl) < 0) {
         return -1;
@@ -1495,6 +1580,9 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     }
     if (r01s_island_builder_add(b, &ISLAND_CART_VT, "ISLAND J  CART FLASH", 0, 0, 1, 1,
                                 &board->cart_impl) < 0) {
+        return -1;
+    }
+    if (r01s_island_builder_add(b, &ISLAND_APU_VT, "ISLAND K  APU 328P", 0, 0, 1, 1, &board->apu_impl) < 0) {
         return -1;
     }
 
@@ -1568,6 +1656,7 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         r01s_island_builder_mount_rel(b, sink_e, R01S_ISLAND_VIDEO, x, 0);
     }
     r01s_island_builder_mount_rel(b, r01s_sst39sf040_entity(&board->cart_flash), R01S_ISLAND_CART, 0, 0);
+    r01s_island_builder_mount_rel(b, r01s_atmega328p_entity(&board->apu), R01S_ISLAND_APU, 0, 0);
 
     r01s_island_builder_fit_all(b);
     r01s_island_builder_arrange_rows(b, 40, 40, R01S_ISLAND_GAP, R01S_ISLAND_GAP, R01S_ISLAND_ROW_MAX_W);

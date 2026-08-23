@@ -1,3 +1,4 @@
+#include "atmega328p.h"
 #include "as6c62256.h"
 #include "at28c16.h"
 #include "beam_xy.h"
@@ -15,8 +16,8 @@
 #include <stdio.h>
 
 /*
- * Layer-2 islands A–E + G + H + I + O + J smoke:
- *   prior milestones + MAP $FE90–$FE93 read cart magic 'R'.
+ * Layer-2 islands A–E + G + H + I + O + J + K smoke:
+ *   prior milestones + MAP $FE93 'R' + APU $FE4x tone PWM edges.
  */
 int main(void) {
     R01sBoard board;
@@ -35,12 +36,13 @@ int main(void) {
     int saw_bg_attr = 0;
     int saw_video = 0;
     int saw_map = 0;
+    int saw_apu = 0;
 
     r01s_island_builder_init(&builder);
     expect_true(r01s_board_build(&board, &builder) == 0, "board build");
     group = r01s_island_builder_group(&builder);
     expect_true(group != NULL, "group");
-    expect_true(r01s_island_group_count(group) == 10, "10 islands A-E+G+H+I+O+J");
+    expect_true(r01s_island_group_count(group) == 11, "11 islands A-E+G+H+I+O+J+K");
 
     b = r01s_board_from_group(group);
     expect_true(b != NULL, "board ctx");
@@ -63,7 +65,7 @@ int main(void) {
         r01s_entity_drive(raster, "LE", R01S_LVL_L);
     }
 
-    for (i = 0; i < 12000; i++) {
+    for (i = 0; i < 14000; i++) {
         r01s_island_group_step(group);
         if (r01s_sn74hc573_peek_q(&b->latch) == 0x55) {
             saw_latch = 1;
@@ -98,8 +100,11 @@ int main(void) {
         if (b->health_saw_map) {
             saw_map = 1;
         }
+        if (b->health_saw_apu || r01s_atmega328p_pwm_edges(&b->apu) >= 2) {
+            saw_apu = 1;
+        }
         if (saw_latch && saw_vram && saw_vram_read && saw_pad && saw_beam_hblank && saw_beam_line &&
-            saw_raster_hit && saw_bg_tile && saw_bg_attr && saw_video && saw_map) {
+            saw_raster_hit && saw_bg_tile && saw_bg_attr && saw_video && saw_map && saw_apu) {
             break;
         }
     }
@@ -115,6 +120,9 @@ int main(void) {
     expect_true(saw_bg_attr, "island I latched nametable attr $07");
     expect_true(saw_video, "island O lit logical pixels from PROM");
     expect_true(saw_map, "island J MAP $FE93 read cart magic R");
+    expect_true(saw_apu, "island K APU PWM tone edges");
+    expect_true(r01s_atmega328p_peek(&b->apu, 0) == 0x8F, "APU $FE40 enable+vol");
+    expect_true(r01s_atmega328p_period(&b->apu) == 0x10, "APU period $10");
     expect_true(r01s_as6c62256_peek(&b->vram, 0) == 0x42, "VRAM[0] final tile");
     expect_true(b->cycles > 0, "CPU cycles advanced");
     expect_true(r01s_bus_conflict_count() == 0, "no bus fight");
@@ -134,5 +142,5 @@ int main(void) {
     }
 
     r01s_island_builder_shutdown(&builder);
-    return test_done("test_island_abcdeghioj");
+    return test_done("test_island_abcdeghiojk");
 }

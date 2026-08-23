@@ -65,7 +65,7 @@ When docs disagree, use this order.
   |  |  |[14]   | |[14]   | |[14]   | |[14]   |                                                           |  |
   |  |  +-------+ +-------+ +-------+ +-------+                                                           |  |
   |  |                                                                                                    |  |
-  |  |  $FExx latches HC573 (14 total in legend; boxes below are representative)                            |  |
+  |  |  $FExx latches HC573 (14 total in legend; boxes below are representative)                          |  |
   |  |  +-----------+ +-----------+ +-----------+ +-----------+                                           |  |
   |  |  | HC573[20] | | HC573[20] | | HC573[20] | | HC573[20] |                                           |  |
   |  |  +-----------+ +-----------+ +-----------+ +-----------+                                           |  |

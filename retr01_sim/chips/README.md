@@ -22,8 +22,9 @@ Each IC is a struct that **starts with** an `R01sEntity`, plus an `R01sEntityVTa
 | O | `compositor.c` | COMPOSITOR | BG/sprite priority mux PLD stub |
 | O | `at28c16.c` | AT28C16 | Color PROM (kit R3G3B2, 64 entries) |
 | O | `video_sink.c` | LCD_SINK | 128×120 RGBS playfield preview |
-| bus | `sn74hc245.c` | SN74HC245 | Octal transceiver (DIR + OE) |
 | J | `sst39sf040.c` | SST39SF040 | 512 KB flash, **read-only stub** |
+| K | `atmega328p.c` | ATmega328P | APU regs `$FE40–$FE5F` + PWM square stub |
+| bus | `sn74hc245.c` | SN74HC245 | Octal transceiver (DIR + OE) |
 | glue | `sn74hc00.c` | SN74HC00 | Quad NAND |
 | glue | `sn74hc08.c` | SN74HC08 | Quad AND |
 | glue | `sn74hc32.c` | SN74HC32 | Quad OR |
