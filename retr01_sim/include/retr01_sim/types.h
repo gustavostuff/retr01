@@ -5,8 +5,12 @@
 #include <stdint.h>
 
 /* Logical UI canvas (integer-scaled window). */
-#define R01S_LOGIC_W 960
-#define R01S_LOGIC_H 540
+#define R01S_LOGIC_W 1280
+#define R01S_LOGIC_H 720
+
+/* Scrollable board world (may exceed canvas). */
+#define R01S_BOARD_W 1600
+#define R01S_BOARD_H 900
 
 /* Max pins on a single package we care about for now (40-pin DIP CPU). */
 #define R01S_MAX_PINS 64

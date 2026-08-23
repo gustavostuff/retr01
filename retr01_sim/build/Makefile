@@ -496,6 +496,30 @@ src/entity.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/src/entity.c.s
 .PHONY : src/entity.c.s
 
+src/island_abc.o: src/island_abc.c.o
+.PHONY : src/island_abc.o
+
+# target to build an object file
+src/island_abc.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_app.dir/build.make CMakeFiles/retr01_sim_app.dir/src/island_abc.c.o
+.PHONY : src/island_abc.c.o
+
+src/island_abc.i: src/island_abc.c.i
+.PHONY : src/island_abc.i
+
+# target to preprocess a source file
+src/island_abc.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_app.dir/build.make CMakeFiles/retr01_sim_app.dir/src/island_abc.c.i
+.PHONY : src/island_abc.c.i
+
+src/island_abc.s: src/island_abc.c.s
+.PHONY : src/island_abc.s
+
+# target to generate assembly for a file
+src/island_abc.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_app.dir/build.make CMakeFiles/retr01_sim_app.dir/src/island_abc.c.s
+.PHONY : src/island_abc.c.s
+
 src/main.o: src/main.c.o
 .PHONY : src/main.o
 
@@ -543,6 +567,30 @@ src/pin.s: src/pin.c.s
 src/pin.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/src/pin.c.s
 .PHONY : src/pin.c.s
+
+src/traces.o: src/traces.c.o
+.PHONY : src/traces.o
+
+# target to build an object file
+src/traces.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_app.dir/build.make CMakeFiles/retr01_sim_app.dir/src/traces.c.o
+.PHONY : src/traces.c.o
+
+src/traces.i: src/traces.c.i
+.PHONY : src/traces.i
+
+# target to preprocess a source file
+src/traces.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_app.dir/build.make CMakeFiles/retr01_sim_app.dir/src/traces.c.i
+.PHONY : src/traces.c.i
+
+src/traces.s: src/traces.c.s
+.PHONY : src/traces.s
+
+# target to generate assembly for a file
+src/traces.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_app.dir/build.make CMakeFiles/retr01_sim_app.dir/src/traces.c.s
+.PHONY : src/traces.c.s
 
 src/ui.o: src/ui.c.o
 .PHONY : src/ui.o
@@ -785,12 +833,18 @@ help:
 	@echo "... src/entity.o"
 	@echo "... src/entity.i"
 	@echo "... src/entity.s"
+	@echo "... src/island_abc.o"
+	@echo "... src/island_abc.i"
+	@echo "... src/island_abc.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
 	@echo "... src/pin.o"
 	@echo "... src/pin.i"
 	@echo "... src/pin.s"
+	@echo "... src/traces.o"
+	@echo "... src/traces.i"
+	@echo "... src/traces.s"
 	@echo "... src/ui.o"
 	@echo "... src/ui.i"
 	@echo "... src/ui.s"

@@ -3,11 +3,17 @@
 
 CMakeFiles/retr01_sim.dir/src/main.c.o
  /home/g/Repos/retr01/retr01_sim/src/main.c
- /home/g/Repos/retr01/retr01_sim/chips/stub14.h
+ /home/g/Repos/retr01/retr01_sim/chips/as6c62256.h
+ /home/g/Repos/retr01/retr01_sim/chips/osc8m.h
+ /home/g/Repos/retr01/retr01_sim/chips/prg_rom.h
+ /home/g/Repos/retr01/retr01_sim/chips/pwr5v.h
+ /home/g/Repos/retr01/retr01_sim/chips/sn74hc14.h
+ /home/g/Repos/retr01/retr01_sim/chips/w65c02s.h
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/entity.h
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/pin.h
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/types.h
  /home/g/Repos/retr01/retr01_sim/src/app.h
+ /home/g/Repos/retr01/retr01_sim/src/island_abc.h
  /home/g/Repos/retr01/retr01_sim/src/ui.h
  /usr/include/SDL2/SDL.h
  /usr/include/SDL2/SDL_assert.h

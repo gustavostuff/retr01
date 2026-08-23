@@ -5,13 +5,11 @@
 
 /* Minimal 5x7 digits/letters for labels (subset). */
 static const uint8_t FONT[36][7] = {
-    /* 0-9 */
     {0x0E, 0x11, 0x13, 0x15, 0x19, 0x11, 0x0E}, {0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E},
     {0x0E, 0x11, 0x01, 0x06, 0x08, 0x10, 0x1F}, {0x0E, 0x11, 0x01, 0x06, 0x01, 0x11, 0x0E},
     {0x02, 0x06, 0x0A, 0x12, 0x1F, 0x02, 0x02}, {0x1F, 0x10, 0x1E, 0x01, 0x01, 0x11, 0x0E},
     {0x06, 0x08, 0x10, 0x1E, 0x11, 0x11, 0x0E}, {0x1F, 0x01, 0x02, 0x04, 0x08, 0x08, 0x08},
     {0x0E, 0x11, 0x11, 0x0E, 0x11, 0x11, 0x0E}, {0x0E, 0x11, 0x11, 0x0F, 0x01, 0x02, 0x0C},
-    /* A-Z */
     {0x0E, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11}, {0x1E, 0x11, 0x11, 0x1E, 0x11, 0x11, 0x1E},
     {0x0E, 0x11, 0x10, 0x10, 0x10, 0x11, 0x0E}, {0x1E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x1E},
     {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x1F}, {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x10},
@@ -58,7 +56,7 @@ static void font_draw(SDL_Renderer *r, int x, int y, const char *text, Uint8 R, 
     for (; text && *text; text++) {
         int gi = glyph_ix(*text);
         int row, col;
-        if (*text == ' ') {
+        if (*text == ' ' || *text == '/' || *text == '+' || *text == '-' || *text == '#' || *text == ':') {
             cx += 6;
             continue;
         }
@@ -84,7 +82,8 @@ int r01s_ui_init(R01sUi *ui) {
     }
     memset(ui, 0, sizeof(*ui));
     ui->selected = -1;
-    snprintf(ui->status, sizeof(ui->status), "retr01_sim scaffold — stub DIP on board");
+    r01s_traces_clear(&ui->traces);
+    snprintf(ui->status, sizeof(ui->status), "islands A+B+C — wheel/drag pan");
     return 0;
 }
 
@@ -102,26 +101,76 @@ int r01s_ui_add_chip(R01sUi *ui, R01sEntity *chip) {
     return 0;
 }
 
+void r01s_ui_clamp_pan(R01sUi *ui) {
+    int max_x = R01S_BOARD_W - R01S_LOGIC_W;
+    int max_y = R01S_BOARD_H - R01S_LOGIC_H;
+    if (max_x < 0) {
+        max_x = 0;
+    }
+    if (max_y < 0) {
+        max_y = 0;
+    }
+    if (ui->pan_x < 0) {
+        ui->pan_x = 0;
+    }
+    if (ui->pan_y < 0) {
+        ui->pan_y = 0;
+    }
+    if (ui->pan_x > max_x) {
+        ui->pan_x = max_x;
+    }
+    if (ui->pan_y > max_y) {
+        ui->pan_y = max_y;
+    }
+}
+
+static void pin_level_rgb(R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg, Uint8 *pb) {
+    if (dir == R01S_PIN_PWR) {
+        *pr = 200;
+        *pg = 80;
+        *pb = 80;
+        return;
+    }
+    switch (lvl) {
+    case R01S_LVL_H:
+        *pr = 80;
+        *pg = 220;
+        *pb = 100;
+        break;
+    case R01S_LVL_L:
+        *pr = 40;
+        *pg = 50;
+        *pb = 45;
+        break;
+    case R01S_LVL_X:
+        *pr = 220;
+        *pg = 80;
+        *pb = 200;
+        break;
+    default:
+        *pr = 110;
+        *pg = 110;
+        *pb = 90;
+        break;
+    }
+}
+
 static void draw_chip(SDL_Renderer *r, const R01sEntity *e, int pan_x, int pan_y, int selected) {
     int x = e->board_x - pan_x;
     int y = e->board_y - pan_y;
     int rows = (e->pin_count + 1) / 2;
     int i;
-    int pitch = rows > 1 ? (e->body_h - 8) / (rows - 1) : 0;
+    int pitch = rows > 1 ? (e->body_h - 16) / (rows - 1) : 0;
+    int label_y;
 
-    /* Pin stubs — left 1..N/2, right N..N/2+1 (DIP). */
     for (i = 0; i < e->pin_count; i++) {
         int num = e->pins[i].number;
         int side_left = num <= rows;
         int idx = side_left ? (num - 1) : (e->pin_count - num);
-        int py = y + 4 + idx * pitch;
+        int py = y + 8 + idx * pitch;
         int px0, px1;
-        Uint8 pr = 180, pg = 160, pb = 60;
-        if (e->pins[i].dir == R01S_PIN_PWR) {
-            pr = 200;
-            pg = 80;
-            pb = 80;
-        }
+        Uint8 pr, pg, pb;
+        pin_level_rgb(e->pins[i].level, e->pins[i].dir, &pr, &pg, &pb);
         if (side_left) {
             px0 = x - 10;
             px1 = x;
@@ -137,40 +186,74 @@ static void draw_chip(SDL_Renderer *r, const R01sEntity *e, int pan_x, int pan_y
     fill_rect(r, x, y, e->body_w, e->body_h, 28, 32, 28);
     draw_rect(r, x, y, e->body_w, e->body_h, selected ? 255 : 140, selected ? 220 : 140,
               selected ? 80 : 120);
-    /* Pin-1 notch */
     fill_rect(r, x + e->body_w / 2 - 4, y - 2, 8, 4, 20, 22, 20);
 
+    /* Labels inset below notch / top edge */
+    label_y = y + 14;
     if (e->refdes) {
-        font_draw(r, x + 4, y + 8, e->refdes, 220, 220, 200);
+        font_draw(r, x + 6, label_y, e->refdes, 220, 220, 200);
     }
     if (e->part) {
-        font_draw(r, x + 4, y + 20, e->part, 160, 180, 140);
+        font_draw(r, x + 6, label_y + 12, e->part, 160, 180, 140);
     }
 }
 
+static void draw_led(SDL_Renderer *r, int x, int y, int on, Uint8 R, Uint8 G, Uint8 B, const char *label) {
+    fill_rect(r, x, y, 10, 10, on ? R : 30, on ? G : 30, on ? B : 30);
+    draw_rect(r, x, y, 10, 10, 200, 200, 200);
+    font_draw(r, x + 14, y + 2, label, 180, 180, 170);
+}
+
+static void draw_island_frame(SDL_Renderer *r, int bx, int by, int bw, int bh, const char *title, int pan_x,
+                              int pan_y) {
+    int x = bx - pan_x;
+    int y = by - pan_y;
+    fill_rect(r, x + 2, y + 2, bw - 4, 16, 22, 48, 32);
+    font_draw(r, x + 8, y + 6, title, 180, 220, 160);
+    draw_rect(r, x, y, bw, bh, 60, 100, 70);
+}
+
 void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
-    int i;
-    /* PCB-ish field */
+    int i, gx, gy;
+    int ox = -ui->pan_x % 32;
+    int oy = -ui->pan_y % 32;
+
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_LOGIC_H, 18, 42, 28);
-    /* faint grid */
     SDL_SetRenderDrawColor(r, 24, 52, 34, 255);
-    for (i = 0; i < R01S_LOGIC_W; i += 32) {
-        SDL_RenderDrawLine(r, i, 0, i, R01S_LOGIC_H);
+    for (gx = ox; gx < R01S_LOGIC_W; gx += 32) {
+        SDL_RenderDrawLine(r, gx, 0, gx, R01S_LOGIC_H);
     }
-    for (i = 0; i < R01S_LOGIC_H; i += 32) {
-        SDL_RenderDrawLine(r, 0, i, R01S_LOGIC_W, i);
+    for (gy = oy; gy < R01S_LOGIC_H; gy += 32) {
+        SDL_RenderDrawLine(r, 0, gy, R01S_LOGIC_W, gy);
     }
 
-    fill_rect(r, 0, 0, R01S_LOGIC_W, 18, 12, 14, 16);
-    font_draw(r, 8, 5, "RETR01 SIM  BOARD VIEW", 200, 210, 220);
-    font_draw(r, R01S_LOGIC_W - 200, 5, "ESC QUIT  CLICK SELECT", 120, 130, 140);
+    /* Board island frames (world space) */
+    draw_island_frame(r, 40, 40, 220, 160, "ISLAND A  POWER", ui->pan_x, ui->pan_y);
+    draw_island_frame(r, 40, 220, 220, 420, "ISLAND B  CLK RST", ui->pan_x, ui->pan_y);
+    draw_island_frame(r, 300, 40, 1000, 560, "ISLAND C  CPU RAM PRG", ui->pan_x, ui->pan_y);
+
+    r01s_traces_rebuild(&ui->traces);
+    r01s_traces_draw(&ui->traces, r, ui->pan_x, ui->pan_y);
 
     for (i = 0; i < ui->chip_count; i++) {
         draw_chip(r, ui->chips[i], ui->pan_x, ui->pan_y, i == ui->selected);
     }
 
-    fill_rect(r, 0, R01S_LOGIC_H - 16, R01S_LOGIC_W, 16, 12, 14, 16);
-    font_draw(r, 8, R01S_LOGIC_H - 12, ui->status, 160, 170, 160);
+    /* Fixed HUD */
+    fill_rect(r, 0, 0, R01S_LOGIC_W, 22, 12, 14, 16);
+    font_draw(r, 8, 7, "RETR01 SIM  ISLANDS A+B+C", 200, 210, 220);
+    font_draw(r, R01S_LOGIC_W - 420, 7, "SPC PAUSE  R RESET  . STEP  WHEEL PAN  ESC", 120, 130, 140);
+
+    fill_rect(r, R01S_LOGIC_W - 200, 36, 184, 110, 16, 22, 18);
+    draw_rect(r, R01S_LOGIC_W - 200, 36, 184, 110, 80, 90, 70);
+    font_draw(r, R01S_LOGIC_W - 192, 42, "LIVE PROBE", 200, 210, 180);
+    draw_led(r, R01S_LOGIC_W - 192, 60, ui->probe_vdd, 80, 220, 100, "VDD");
+    draw_led(r, R01S_LOGIC_W - 192, 78, ui->probe_phi2, 220, 200, 60, "PHI2");
+    draw_led(r, R01S_LOGIC_W - 192, 96, ui->probe_resb_low, 220, 80, 80, "RESB LO");
+    font_draw(r, R01S_LOGIC_W - 192, 118, "U JUMP = CROSS", 120, 130, 120);
+
+    fill_rect(r, 0, R01S_LOGIC_H - 22, R01S_LOGIC_W, 22, 12, 14, 16);
+    font_draw(r, 8, R01S_LOGIC_H - 15, ui->status, 160, 170, 160);
 }
 
 static int hit_chip(const R01sEntity *e, int lx, int ly, int pan_x, int pan_y) {
@@ -184,6 +267,55 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
     if (!ui || !e) {
         return 0;
     }
+    if (e->type == SDL_MOUSEWHEEL) {
+        ui->pan_x -= e->wheel.x * 32;
+        ui->pan_y -= e->wheel.y * 32;
+        r01s_ui_clamp_pan(ui);
+        return 1;
+    }
+    if (e->type == SDL_MOUSEBUTTONDOWN &&
+        (e->button.button == SDL_BUTTON_MIDDLE || e->button.button == SDL_BUTTON_RIGHT)) {
+        ui->drag_pan = 1;
+        ui->drag_last_x = logic_x;
+        ui->drag_last_y = logic_y;
+        return 1;
+    }
+    if (e->type == SDL_MOUSEBUTTONUP &&
+        (e->button.button == SDL_BUTTON_MIDDLE || e->button.button == SDL_BUTTON_RIGHT)) {
+        ui->drag_pan = 0;
+        return 1;
+    }
+    if (e->type == SDL_MOUSEMOTION && ui->drag_pan) {
+        ui->pan_x -= (logic_x - ui->drag_last_x);
+        ui->pan_y -= (logic_y - ui->drag_last_y);
+        ui->drag_last_x = logic_x;
+        ui->drag_last_y = logic_y;
+        r01s_ui_clamp_pan(ui);
+        return 1;
+    }
+    if (e->type == SDL_KEYDOWN) {
+        int step = 48;
+        if (e->key.keysym.sym == SDLK_LEFT) {
+            ui->pan_x -= step;
+            r01s_ui_clamp_pan(ui);
+            return 1;
+        }
+        if (e->key.keysym.sym == SDLK_RIGHT) {
+            ui->pan_x += step;
+            r01s_ui_clamp_pan(ui);
+            return 1;
+        }
+        if (e->key.keysym.sym == SDLK_UP) {
+            ui->pan_y -= step;
+            r01s_ui_clamp_pan(ui);
+            return 1;
+        }
+        if (e->key.keysym.sym == SDLK_DOWN) {
+            ui->pan_y += step;
+            r01s_ui_clamp_pan(ui);
+            return 1;
+        }
+    }
     if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT) {
         ui->selected = -1;
         for (i = ui->chip_count - 1; i >= 0; i--) {
@@ -195,7 +327,6 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 return 1;
             }
         }
-        snprintf(ui->status, sizeof(ui->status), "board click %d,%d", logic_x, logic_y);
         return 1;
     }
     return 0;

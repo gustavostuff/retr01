@@ -1,9 +1,8 @@
 #ifndef RETR01_SIM_APP_H
 #define RETR01_SIM_APP_H
 
+#include "island_abc.h"
 #include "ui.h"
-
-#include "stub14.h"
 
 #include <SDL.h>
 
@@ -14,7 +13,7 @@ typedef struct R01sApp {
     int scale;
     int running;
     R01sUi ui;
-    R01sStub14 demo_chip;
+    R01sIslandAbc island;
 } R01sApp;
 
 int r01s_app_init(R01sApp *app, int headless);

@@ -100,19 +100,51 @@ CMakeFiles/retr01_sim_app.dir/src/app.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_sim_app.dir/src/app.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/retr01_sim/src/app.c -o CMakeFiles/retr01_sim_app.dir/src/app.c.s
 
+CMakeFiles/retr01_sim_app.dir/src/island_abc.c.o: CMakeFiles/retr01_sim_app.dir/flags.make
+CMakeFiles/retr01_sim_app.dir/src/island_abc.c.o: /home/g/Repos/retr01/retr01_sim/src/island_abc.c
+CMakeFiles/retr01_sim_app.dir/src/island_abc.c.o: CMakeFiles/retr01_sim_app.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/retr01_sim_app.dir/src/island_abc.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_app.dir/src/island_abc.c.o -MF CMakeFiles/retr01_sim_app.dir/src/island_abc.c.o.d -o CMakeFiles/retr01_sim_app.dir/src/island_abc.c.o -c /home/g/Repos/retr01/retr01_sim/src/island_abc.c
+
+CMakeFiles/retr01_sim_app.dir/src/island_abc.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/retr01_sim_app.dir/src/island_abc.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/g/Repos/retr01/retr01_sim/src/island_abc.c > CMakeFiles/retr01_sim_app.dir/src/island_abc.c.i
+
+CMakeFiles/retr01_sim_app.dir/src/island_abc.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_sim_app.dir/src/island_abc.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/retr01_sim/src/island_abc.c -o CMakeFiles/retr01_sim_app.dir/src/island_abc.c.s
+
+CMakeFiles/retr01_sim_app.dir/src/traces.c.o: CMakeFiles/retr01_sim_app.dir/flags.make
+CMakeFiles/retr01_sim_app.dir/src/traces.c.o: /home/g/Repos/retr01/retr01_sim/src/traces.c
+CMakeFiles/retr01_sim_app.dir/src/traces.c.o: CMakeFiles/retr01_sim_app.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/retr01_sim_app.dir/src/traces.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_app.dir/src/traces.c.o -MF CMakeFiles/retr01_sim_app.dir/src/traces.c.o.d -o CMakeFiles/retr01_sim_app.dir/src/traces.c.o -c /home/g/Repos/retr01/retr01_sim/src/traces.c
+
+CMakeFiles/retr01_sim_app.dir/src/traces.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/retr01_sim_app.dir/src/traces.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/g/Repos/retr01/retr01_sim/src/traces.c > CMakeFiles/retr01_sim_app.dir/src/traces.c.i
+
+CMakeFiles/retr01_sim_app.dir/src/traces.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_sim_app.dir/src/traces.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/retr01_sim/src/traces.c -o CMakeFiles/retr01_sim_app.dir/src/traces.c.s
+
 # Object files for target retr01_sim_app
 retr01_sim_app_OBJECTS = \
 "CMakeFiles/retr01_sim_app.dir/src/ui.c.o" \
-"CMakeFiles/retr01_sim_app.dir/src/app.c.o"
+"CMakeFiles/retr01_sim_app.dir/src/app.c.o" \
+"CMakeFiles/retr01_sim_app.dir/src/island_abc.c.o" \
+"CMakeFiles/retr01_sim_app.dir/src/traces.c.o"
 
 # External object files for target retr01_sim_app
 retr01_sim_app_EXTERNAL_OBJECTS =
 
 libretr01_sim_app.a: CMakeFiles/retr01_sim_app.dir/src/ui.c.o
 libretr01_sim_app.a: CMakeFiles/retr01_sim_app.dir/src/app.c.o
+libretr01_sim_app.a: CMakeFiles/retr01_sim_app.dir/src/island_abc.c.o
+libretr01_sim_app.a: CMakeFiles/retr01_sim_app.dir/src/traces.c.o
 libretr01_sim_app.a: CMakeFiles/retr01_sim_app.dir/build.make
 libretr01_sim_app.a: CMakeFiles/retr01_sim_app.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking C static library libretr01_sim_app.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking C static library libretr01_sim_app.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/retr01_sim_app.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/retr01_sim_app.dir/link.txt --verbose=$(VERBOSE)
 

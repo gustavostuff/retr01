@@ -28,12 +28,14 @@ target_include_directories(retr01_sim_core PUBLIC
 add_library(retr01_sim_app
   src/ui.c
   src/app.c
+  src/island_abc.c
+  src/traces.c
 )
 target_include_directories(retr01_sim_app PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src
   ${CMAKE_CURRENT_SOURCE_DIR}/chips
 )
-target_link_libraries(retr01_sim_app PUBLIC retr01_sim_core PkgConfig::SDL2)
+target_link_libraries(retr01_sim_app PUBLIC retr01_sim_core PkgConfig::SDL2 m)
 
 add_executable(retr01_sim src/main.c)
 target_link_libraries(retr01_sim PRIVATE retr01_sim_app)

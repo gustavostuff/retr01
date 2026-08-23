@@ -24,7 +24,15 @@ ctest --test-dir build --output-on-failure
 ./build/retr01_sim
 ```
 
-Needs: CMake, C11 compiler, SDL2.
+## Run
+
+```bash
+./build/retr01_sim
+```
+
+**Controls:** `Space` pause/resume · `R` reset · `.` single-step (while paused) · `Esc` quit · click a chip to select · **mouse wheel / arrows / right-drag** to pan the 1600×900 board inside the **1280×720** view.
+
+Live probe (top-right) shows **VDD / PHI2 / RESB**. Pin stubs glow by level. Traces use schematic **U-jumps** where nets cross. Status bar shows CPU `PC` / `AB` / phase / cycle count.
 
 ## Layout
 
