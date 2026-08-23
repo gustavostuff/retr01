@@ -352,99 +352,34 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
     update_camera(pl, c);
 }
 
-static int pick_warp_neighbor(const R01World *w, const R01PlayState *pl, int *out_col, int *out_row) {
-    int dirs[4][2];
-    int n = 0;
-    int i;
-    int cx = pl->player_x + R01_PLAY_PLAYER_SIZE / 2;
-    int cy = pl->player_y + R01_PLAY_PLAYER_SIZE / 2;
-    int lx = cx - pl->home_col * R01_SCREEN_PX_W;
-    int ly = cy - pl->home_row * R01_SCREEN_PX_H;
-
-    if (pl->facing_dx || pl->facing_dy) {
-        dirs[n][0] = pl->facing_dx;
-        dirs[n][1] = pl->facing_dy;
-        n++;
-    }
-    {
-        int dist_l = lx;
-        int dist_r = R01_SCREEN_PX_W - 1 - lx;
-        int dist_t = ly;
-        int dist_b = R01_SCREEN_PX_H - 1 - ly;
-        int best = dist_l;
-        int bdx = -1, bdy = 0;
-        if (dist_r < best) {
-            best = dist_r;
-            bdx = 1;
-            bdy = 0;
-        }
-        if (dist_t < best) {
-            best = dist_t;
-            bdx = 0;
-            bdy = -1;
-        }
-        if (dist_b < best) {
-            bdx = 0;
-            bdy = 1;
-        }
-        dirs[n][0] = bdx;
-        dirs[n][1] = bdy;
-        n++;
-    }
-    dirs[n][0] = 1;
-    dirs[n][1] = 0;
-    n++;
-    dirs[n][0] = -1;
-    dirs[n][1] = 0;
-    n++;
-    for (i = 0; i < n; i++) {
-        int ncol = pl->home_col + dirs[i][0];
-        int nrow = pl->home_row + dirs[i][1];
-        if (dirs[i][0] == 0 && dirs[i][1] == 0) {
-            continue;
-        }
-        if (screen_present_at(w, ncol, nrow)) {
-            *out_col = ncol;
-            *out_row = nrow;
-            return 1;
-        }
-    }
-    if (screen_present_at(w, pl->home_col, pl->home_row - 1)) {
-        *out_col = pl->home_col;
-        *out_row = pl->home_row - 1;
-        return 1;
-    }
-    if (screen_present_at(w, pl->home_col, pl->home_row + 1)) {
-        *out_col = pl->home_col;
-        *out_row = pl->home_row + 1;
-        return 1;
-    }
-    return 0;
-}
+/* Studio test-game hub: Enter warps to world screen (0,0). */
+#define R01_PLAY_HUB_COL 0
+#define R01_PLAY_HUB_ROW 0
 
 int r01_play_button(R01PlayState *pl, const R01Project *p, int button) {
     const R01World *w;
     const R01Constraints *c;
-    int ncol, nrow;
+    int ncol = R01_PLAY_HUB_COL;
+    int nrow = R01_PLAY_HUB_ROW;
     if (!pl || !pl->active || !p) {
         return 0;
     }
     if (pl->fade_phase != R01_PLAY_FADE_IDLE) {
         return 0;
     }
-    w = &p->worlds[p->active_world];
-    c = r01_project_constraints(p);
-
-    if (button != R01_PLAY_BTN_COIN && button != R01_PLAY_BTN_START) {
+    /* Enter/START only — Shift/COIN does not warp. */
+    if (button != R01_PLAY_BTN_START) {
         return 0;
     }
+    w = &p->worlds[p->active_world];
+    c = r01_project_constraints(p);
     if (!c || c->scroll_mode != R01_SCROLL_HYBRID) {
         return 0;
     }
-    if (!pick_warp_neighbor(w, pl, &ncol, &nrow)) {
+    if (!screen_present_at(w, ncol, nrow)) {
         return 0;
     }
-    if (ncol == pl->home_col && nrow == pl->home_row) {
+    if (pl->home_col == ncol && pl->home_row == nrow) {
         return 0;
     }
 

@@ -234,7 +234,7 @@ static const char *scroll_mode_hint(int mode) {
     case R01_SCROLL_INSTANT:
         return "cam snaps per screen cell";
     case R01_SCROLL_HYBRID:
-        return "smooth in-screen; Enter/Shift warp";
+        return "smooth in-screen; Enter→(0,0)";
     default:
         return "cam locked on player center";
     }
@@ -566,7 +566,7 @@ static void draw_constraints(UiState *ui, SDL_Renderer *r) {
     font_draw(r, 100, y0 + 138, "Ctrl+E export", 110, 110, 120);
 
     font_draw(r, 4, y0 + 154, "MOVE WASD/ARROWS", 110, 120, 110);
-    font_draw(r, 4, y0 + 166, "Z=X  X=Y  SHIFT=COIN  ENTER=START", 110, 120, 110);
+    font_draw(r, 4, y0 + 166, "Z=X  X=Y  ENTER=HUB (0,0)", 110, 120, 110);
     font_draw(r, 4, y0 + 178, "SPACE play/stop", 100, 100, 110);
 }
 
@@ -987,7 +987,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
                 r01_play_start(&ui->play, ui->project);
                 ui->play_last_tick = 0;
                 snprintf(ui->status, sizeof(ui->status),
-                         "play — WASD move; Z/X; Shift=coin Enter=start");
+                         "play — WASD move; Z/X; Enter→hub (0,0)");
             }
             return 1;
         }
@@ -998,7 +998,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
                 snprintf(ui->status, sizeof(ui->status), "play stopped");
                 return 1;
             }
-            /* Pad: Z=X, X=Y, Shift=coin, Enter=start */
+            /* Pad: Z=X, X=Y; Enter=hub (0,0). Shift unused for warp. */
             if (k == SDLK_z) {
                 r01_play_button(&ui->play, ui->project, R01_PLAY_BTN_X);
                 snprintf(ui->status, sizeof(ui->status), "pad X (Z)");
@@ -1009,19 +1009,11 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
                 snprintf(ui->status, sizeof(ui->status), "pad Y (X)");
                 return 1;
             }
-            if (k == SDLK_LSHIFT || k == SDLK_RSHIFT) {
-                if (r01_play_button(&ui->play, ui->project, R01_PLAY_BTN_COIN)) {
-                    snprintf(ui->status, sizeof(ui->status), "coin → warp screen");
-                } else {
-                    snprintf(ui->status, sizeof(ui->status), "coin (DZ+WARP to change screen)");
-                }
-                return 1;
-            }
             if (k == SDLK_RETURN || k == SDLK_KP_ENTER) {
                 if (r01_play_button(&ui->play, ui->project, R01_PLAY_BTN_START)) {
-                    snprintf(ui->status, sizeof(ui->status), "start → warp screen");
+                    snprintf(ui->status, sizeof(ui->status), "enter → hub (0,0)");
                 } else {
-                    snprintf(ui->status, sizeof(ui->status), "start (DZ+WARP to change screen)");
+                    snprintf(ui->status, sizeof(ui->status), "enter (already at hub / need DZ+WARP)");
                 }
                 return 1;
             }
@@ -1339,7 +1331,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
                         r01_play_start(&ui->play, ui->project);
                         ui->play_last_tick = 0;
                         snprintf(ui->status, sizeof(ui->status),
-                                 "play — WASD move; Z/X; Shift=coin Enter=start");
+                                 "play — WASD move; Z/X; Enter→hub (0,0)");
                     }
                     return 1;
                 }

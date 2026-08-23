@@ -64,8 +64,8 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy);
 
 /*
  * Pad button press (edge-triggered from UI).
- * COIN / START in HYBRID: warp to a neighbor screen (facing / nearest edge).
- * With C8 FADE: starts fade-out; swap happens when pal slots hit master 0.
+ * START in HYBRID: warp to hub screen (0,0) if present and not already there.
+ * COIN does not warp. With FADE: fade-out → swap at master 0 → fade-in.
  * Returns 1 if something happened, 0 otherwise.
  */
 int r01_play_button(R01PlayState *pl, const R01Project *p, int button);

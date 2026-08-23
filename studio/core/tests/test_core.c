@@ -376,7 +376,7 @@ static void test_play_scroll(void) {
     expect_true(c == &p->worlds[0].constraints, "world override");
     expect_true(c->scroll_mode == R01_SCROLL_HYBRID, "hybrid");
 
-    /* HYBRID: locked to home screen until Start/Coin warp — no auto snap while walking. */
+    /* HYBRID: locked to home until Enter → hub (0,0). Shift/COIN does not warp. */
     r01_play_start(&pl, p);
     expect_true(pl.home_col == 0 && pl.home_row == 0, "hybrid home");
     {
@@ -389,24 +389,32 @@ static void test_play_scroll(void) {
         expect_true(pl.player_x > start_x, "moved right inside home");
         expect_true(pl.player_x + R01_PLAY_PLAYER_SIZE - 1 < R01_SCREEN_PX_W, "AABB stays in screen 0");
     }
-    expect_true(r01_play_button(&pl, p, R01_PLAY_BTN_START) == 1, "start warps");
-    expect_true(pl.home_col == 1 && pl.home_row == 0, "warped to neighbor");
-    expect_true(pl.player_x == R01_SCREEN_PX_W + R01_SCREEN_PX_W / 2 - R01_PLAY_PLAYER_SIZE / 2, "centered");
-    expect_true(pl.cam_x == R01_SCREEN_PX_W, "cam snapped on warp");
+    expect_true(r01_play_button(&pl, p, R01_PLAY_BTN_START) == 0, "enter no-op on hub");
+    expect_true(r01_play_button(&pl, p, R01_PLAY_BTN_COIN) == 0, "coin never warps");
 
-    /* FADE: kit-legal BG+SPR slots → master 0 → swap → fade in. */
+    /* Start on screen (1,0); Enter warps to hub (0,0). */
+    p->active_screen = 1;
+    r01_play_start(&pl, p);
+    expect_true(pl.home_col == 1 && pl.home_row == 0, "start on col 1");
+    expect_true(r01_play_button(&pl, p, R01_PLAY_BTN_START) == 1, "enter warps to hub");
+    expect_true(pl.home_col == 0 && pl.home_row == 0, "at hub");
+    expect_true(pl.player_x == R01_SCREEN_PX_W / 2 - R01_PLAY_PLAYER_SIZE / 2, "centered on hub");
+    expect_true(pl.cam_x == 0, "cam on hub");
+
+    /* FADE: kit-legal BG+SPR slots → master 0 → swap to hub → fade in. */
     {
         int i, row, slot;
         uint8_t r, g, b;
         int all_zero;
         p->worlds[0].constraints.transition = R01_XITION_FADE;
+        p->active_screen = 1;
         r01_play_start(&pl, p);
         expect_true(pl.fade_step == 0 && pl.fade_phase == R01_PLAY_FADE_IDLE, "fade idle");
-        expect_true(r01_play_button(&pl, p, R01_PLAY_BTN_START) == 1, "start queues fade");
+        expect_true(pl.home_col == 1, "fade starts off hub");
+        expect_true(r01_play_button(&pl, p, R01_PLAY_BTN_START) == 1, "enter queues fade");
         expect_true(pl.fade_phase == R01_PLAY_FADE_OUT, "fade out");
-        expect_true(pl.home_col == 0, "still on old screen during fade-out");
-        expect_true(pl.pending_col == 1, "pending neighbor");
-        /* Drain fade-out until all slots are 0 and swap fires */
+        expect_true(pl.home_col == 1, "still on old screen during fade-out");
+        expect_true(pl.pending_col == 0 && pl.pending_row == 0, "pending hub");
         for (i = 0; i < R01_PLAY_FADE_FRAMES + 2; i++) {
             r01_play_tick(&pl, p, 0, 0);
             if (pl.fade_phase == R01_PLAY_FADE_IN) {
@@ -414,7 +422,7 @@ static void test_play_scroll(void) {
             }
         }
         expect_true(pl.fade_phase == R01_PLAY_FADE_IN, "entered fade-in");
-        expect_true(pl.home_col == 1, "swapped at black");
+        expect_true(pl.home_col == 0 && pl.home_row == 0, "swapped to hub at black");
         expect_true(pl.fade_step == 0, "step 0 at swap");
         all_zero = 1;
         for (row = 0; row < R01_PAL_ROWS; row++) {

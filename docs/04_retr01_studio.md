@@ -41,7 +41,7 @@ Right column = Screen (most width). Left = scrollable stack of Worlds, **Planes*
 | **Sprite CHR** | 4 CHR banks (0–3). Click a cell to select/edit that 8×8 tile (**TILE** tool). **OAM 8×8/8×16** = default size when **PLACE**ing. Empty = unused; yellow = selected. **Ctrl+G** packs/dedupes |
 | **Screen** | Edits active **grid screen** or **parallax plane**. Layers **BG** / **SPR**. BG: pixel + attr. SPR: place OAM (composited over BG) or edit selected CHR tile. Generate (**Ctrl+G**) targets BG or SPR bank by layer |
 | **Palettes** | Tabs = palette rows **0-7** (4 BG + 4 sprite strips). Edit master indices **0-63**. Preview uses kit Color PROM RGB; burn path quantizes to **R3G3B2** ([`02`](02_graphics_worlds_memory.md) / [`06`](06_hardware_v1_32ic.md)) |
-| **Constraints** | Project defaults + optional per-world override. Scroll: cam-lock / smooth dead-zone / screen-snap / **DZ+WARP**. Transition **CUT** or **FADE-BLK** (BG+SPR kit indices lerp → master 0 over 10 frames → swap → fade in). **Play** = 8×8 player. **Ctrl+E** exports |
+| **Constraints** | Project defaults + optional per-world override. Scroll: cam-lock / smooth dead-zone / screen-snap / **DZ+WARP**. Transition **CUT** or **FADE-BLK**. **Enter** in Play → hub screen **(0,0)** (no-op if already there). **Play** = 8×8 player. **Ctrl+E** exports |
 
 Paint always stores indices **0-3**. Palette assignment only in attr mode.
 
