@@ -27,6 +27,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/g/Repos/retr01/retr01_sim/src/board.c" "CMakeFiles/retr01_sim_core.dir/src/board.c.o" "gcc" "CMakeFiles/retr01_sim_core.dir/src/board.c.o.d"
   "/home/g/Repos/retr01/retr01_sim/src/bus.c" "CMakeFiles/retr01_sim_core.dir/src/bus.c.o" "gcc" "CMakeFiles/retr01_sim_core.dir/src/bus.c.o.d"
   "/home/g/Repos/retr01/retr01_sim/src/entity.c" "CMakeFiles/retr01_sim_core.dir/src/entity.c.o" "gcc" "CMakeFiles/retr01_sim_core.dir/src/entity.c.o.d"
+  "/home/g/Repos/retr01/retr01_sim/src/gamepad.c" "CMakeFiles/retr01_sim_core.dir/src/gamepad.c.o" "gcc" "CMakeFiles/retr01_sim_core.dir/src/gamepad.c.o.d"
   "/home/g/Repos/retr01/retr01_sim/src/island.c" "CMakeFiles/retr01_sim_core.dir/src/island.c.o" "gcc" "CMakeFiles/retr01_sim_core.dir/src/island.c.o.d"
   "/home/g/Repos/retr01/retr01_sim/src/island_builder.c" "CMakeFiles/retr01_sim_core.dir/src/island_builder.c.o" "gcc" "CMakeFiles/retr01_sim_core.dir/src/island_builder.c.o.d"
   "/home/g/Repos/retr01/retr01_sim/src/island_group.c" "CMakeFiles/retr01_sim_core.dir/src/island_group.c.o" "gcc" "CMakeFiles/retr01_sim_core.dir/src/island_group.c.o.d"

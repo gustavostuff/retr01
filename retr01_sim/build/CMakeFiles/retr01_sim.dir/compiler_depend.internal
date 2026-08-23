@@ -13,6 +13,7 @@ CMakeFiles/retr01_sim.dir/src/main.c.o
  /home/g/Repos/retr01/retr01_sim/chips/w65c02s.h
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/board.h
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/entity.h
+ /home/g/Repos/retr01/retr01_sim/include/retr01_sim/gamepad.h
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island.h
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_builder.h
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_group.h

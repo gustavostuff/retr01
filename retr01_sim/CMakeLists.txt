@@ -12,6 +12,7 @@ add_library(retr01_sim_core
   src/pin.c
   src/entity.c
   src/bus.c
+  src/gamepad.c
   src/island.c
   src/island_group.c
   src/island_builder.c
@@ -62,6 +63,7 @@ endfunction()
 
 r01s_unit_test(test_entity)
 r01s_unit_test(test_bus)
+r01s_unit_test(test_gamepad)
 r01s_unit_test(test_pwr5v)
 r01s_unit_test(test_osc8m)
 r01s_unit_test(test_sn74hc14)

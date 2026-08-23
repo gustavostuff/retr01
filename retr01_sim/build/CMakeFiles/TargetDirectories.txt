@@ -3,6 +3,7 @@
 /home/g/Repos/retr01/retr01_sim/build/CMakeFiles/retr01_sim.dir
 /home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_entity.dir
 /home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_bus.dir
+/home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_gamepad.dir
 /home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_pwr5v.dir
 /home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_osc8m.dir
 /home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_sn74hc14.dir

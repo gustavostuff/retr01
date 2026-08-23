@@ -341,7 +341,7 @@ static void board_status(R01sIslandGroup *group, char *buf, size_t buf_len) {
     pwr = r01s_pwr5v_entity(ctx->power_impl.pwr);
     osc = r01s_osc8m_entity(ctx->clock_impl.osc);
     snprintf(buf, buf_len,
-             "%s  VDD=%c PHI2=%c RESB=%c  PC=%04X A=%02X AB=%04X IR=%02X %s  LE=%02X PAD=%02X  cyc=%u",
+             "%s  VDD=%c PHI2=%c RESB=%c  PC=%04X A=%02X AB=%04X IR=%02X %s  LE=%02X P1=%02X P2=%02X  cyc=%u",
              group->running ? "RUN" : "PAUSE",
              r01s_level_is_high(r01s_entity_sense(pwr, "VDD")) ? 'H' : 'L',
              r01s_level_is_high(r01s_entity_sense(osc, "PHI2")) ? 'H' : 'L',
@@ -349,7 +349,8 @@ static void board_status(R01sIslandGroup *group, char *buf, size_t buf_len) {
              r01s_w65c02s_pc(ctx->cpu_mem_impl.cpu), r01s_w65c02s_a(ctx->cpu_mem_impl.cpu),
              (unsigned)r01s_bus_read(cpu, "A", 16), ctx->cpu.ir,
              phase_name(r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu)),
-             r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch), r01s_pads_get(ctx->pads_impl.pads, 0),
+             r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch),
+             r01s_pads_get(ctx->pads_impl.pads, 0), r01s_pads_get(ctx->pads_impl.pads, 1),
              (unsigned)ctx->cycles);
 }
 

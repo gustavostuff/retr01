@@ -87,7 +87,9 @@ int r01s_ui_init(R01sUi *ui) {
     memset(ui, 0, sizeof(*ui));
     ui->selected = -1;
     ui->drag_chip = -1;
-    snprintf(ui->status, sizeof(ui->status), "islands A-E — drag chips, wheel/drag pan");
+    ui->drag_stick = -1;
+    ui->drag_btn = -1;
+    snprintf(ui->status, sizeof(ui->status), "islands A-E — P1 arrows Z/X/1/RET  P2 WASD N/M/2/BKSP");
     return 0;
 }
 
@@ -285,6 +287,193 @@ static void draw_island_frame(SDL_Renderer *r, const R01sIsland *island, int pan
     draw_rect(r, x, y, island->board_w, island->board_h, 60, 100, 70);
 }
 
+#define GP_PANEL_W 156
+#define GP_PANEL_H 132
+#define GP_PANEL_Y (R01S_LOGIC_H - 22 - GP_PANEL_H - 6)
+
+static void gp_panel_origin(int player, int *px, int *py) {
+    *px = 8 + player * (GP_PANEL_W + 8);
+    *py = GP_PANEL_Y;
+}
+
+static void gp_stick_center(int player, int *cx, int *cy) {
+    int px, py;
+    gp_panel_origin(player, &px, &py);
+    *cx = px + 36;
+    *cy = py + 56;
+}
+
+static void gp_btn_rect(int player, int btn, SDL_Rect *rc) {
+    int px, py;
+    gp_panel_origin(player, &px, &py);
+    rc->x = px + 88 + (btn % 2) * 28;
+    rc->y = py + 28 + (btn / 2) * 28;
+    rc->w = 24;
+    rc->h = 24;
+}
+
+static int gp_hit_stick(int player, int lx, int ly) {
+    int cx, cy;
+    int dx, dy;
+    gp_stick_center(player, &cx, &cy);
+    dx = lx - cx;
+    dy = ly - cy;
+    return dx * dx + dy * dy <= (R01S_GAMEPAD_STICK_RADIUS + 8) * (R01S_GAMEPAD_STICK_RADIUS + 8);
+}
+
+static int gp_hit_btn(int player, int lx, int ly) {
+    int b;
+    for (b = 0; b < 4; b++) {
+        SDL_Rect rc;
+        gp_btn_rect(player, b, &rc);
+        if (lx >= rc.x && lx < rc.x + rc.w && ly >= rc.y && ly < rc.y + rc.h) {
+            return b;
+        }
+    }
+    return -1;
+}
+
+static int gp_hit_any(int lx, int ly, int *player_out, int *btn_out) {
+    int p;
+    for (p = 0; p < R01S_UI_GAMEPAD_COUNT; p++) {
+        int b = gp_hit_btn(p, lx, ly);
+        if (b >= 0) {
+            *player_out = p;
+            *btn_out = b;
+            return 2;
+        }
+        if (gp_hit_stick(p, lx, ly)) {
+            *player_out = p;
+            *btn_out = -1;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static void gp_stick_from_point(R01sGamepadInput *gp, int player, int lx, int ly) {
+    int cx, cy;
+    gp_stick_center(player, &cx, &cy);
+    gp->stick_x = lx - cx;
+    gp->stick_y = ly - cy;
+    r01s_gamepad_stick_clamp(&gp->stick_x, &gp->stick_y, R01S_GAMEPAD_STICK_RADIUS);
+}
+
+static void draw_stick(SDL_Renderer *r, int cx, int cy, int sx, int sy) {
+    fill_rect(r, cx - R01S_GAMEPAD_STICK_RADIUS, cy - R01S_GAMEPAD_STICK_RADIUS,
+              R01S_GAMEPAD_STICK_RADIUS * 2, R01S_GAMEPAD_STICK_RADIUS * 2, 24, 28, 32);
+    draw_rect(r, cx - R01S_GAMEPAD_STICK_RADIUS, cy - R01S_GAMEPAD_STICK_RADIUS,
+              R01S_GAMEPAD_STICK_RADIUS * 2, R01S_GAMEPAD_STICK_RADIUS * 2, 70, 80, 90);
+    fill_rect(r, cx + sx - 6, cy + sy - 6, 12, 12, 180, 190, 200);
+    draw_rect(r, cx + sx - 6, cy + sy - 6, 12, 12, 240, 240, 240);
+}
+
+static void draw_btn(SDL_Renderer *r, const SDL_Rect *rc, int pressed, const char *label) {
+    fill_rect(r, rc->x, rc->y, rc->w, rc->h, pressed ? 90 : 40, pressed ? 120 : 48, pressed ? 160 : 56);
+    draw_rect(r, rc->x, rc->y, rc->w, rc->h, 120, 130, 140);
+    font_draw(r, rc->x + 4, rc->y + 8, label, 210, 210, 200);
+}
+
+static void draw_gamepad_panel(SDL_Renderer *r, const R01sUi *ui, int player) {
+    int px, py, cx, cy, b;
+    char hex[8];
+    uint8_t bits;
+    SDL_Rect brc;
+
+    gp_panel_origin(player, &px, &py);
+    fill_rect(r, px, py, GP_PANEL_W, GP_PANEL_H, 16, 20, 24);
+    draw_rect(r, px, py, GP_PANEL_W, GP_PANEL_H, 60, 70, 80);
+    font_draw(r, px + 8, py + 6, player == 0 ? "P1 FE60" : "P2 FE61", 180, 200, 220);
+
+    gp_stick_center(player, &cx, &cy);
+    draw_stick(r, cx, cy, ui->gamepad[player].stick_x, ui->gamepad[player].stick_y);
+
+    for (b = 0; b < 4; b++) {
+        const char *labels[4] = {"X", "Y", "C", "S"};
+        int pressed = 0;
+        gp_btn_rect(player, b, &brc);
+        switch (b) {
+        case 0:
+            pressed = ui->gamepad[player].btn_x;
+            break;
+        case 1:
+            pressed = ui->gamepad[player].btn_y;
+            break;
+        case 2:
+            pressed = ui->gamepad[player].btn_coin;
+            break;
+        case 3:
+            pressed = ui->gamepad[player].btn_start;
+            break;
+        default:
+            break;
+        }
+        draw_btn(r, &brc, pressed, labels[b]);
+    }
+
+    bits = r01s_ui_gamepad_port(ui, player);
+    snprintf(hex, sizeof(hex), "%02X", bits);
+    font_draw(r, px + 8, py + GP_PANEL_H - 14, hex, 140, 160, 140);
+}
+
+void r01s_ui_sync_gamepads(R01sUi *ui) {
+    const Uint8 *keys;
+    if (!ui) {
+        return;
+    }
+    keys = SDL_GetKeyboardState(NULL);
+
+    if (ui->drag_stick != 0) {
+        ui->gamepad[0].stick_x = 0;
+        ui->gamepad[0].stick_y = 0;
+        if (keys[SDL_SCANCODE_UP]) {
+            ui->gamepad[0].stick_y = -20;
+        }
+        if (keys[SDL_SCANCODE_DOWN]) {
+            ui->gamepad[0].stick_y = 20;
+        }
+        if (keys[SDL_SCANCODE_LEFT]) {
+            ui->gamepad[0].stick_x = -20;
+        }
+        if (keys[SDL_SCANCODE_RIGHT]) {
+            ui->gamepad[0].stick_x = 20;
+        }
+    }
+    if (ui->drag_stick != 1) {
+        ui->gamepad[1].stick_x = 0;
+        ui->gamepad[1].stick_y = 0;
+        if (keys[SDL_SCANCODE_W]) {
+            ui->gamepad[1].stick_y = -20;
+        }
+        if (keys[SDL_SCANCODE_S]) {
+            ui->gamepad[1].stick_y = 20;
+        }
+        if (keys[SDL_SCANCODE_A]) {
+            ui->gamepad[1].stick_x = -20;
+        }
+        if (keys[SDL_SCANCODE_D]) {
+            ui->gamepad[1].stick_x = 20;
+        }
+    }
+
+    ui->gamepad[0].btn_x = ui->mouse_btn[0][0] || keys[SDL_SCANCODE_Z];
+    ui->gamepad[0].btn_y = ui->mouse_btn[0][1] || keys[SDL_SCANCODE_X];
+    ui->gamepad[0].btn_coin = ui->mouse_btn[0][2] || keys[SDL_SCANCODE_1];
+    ui->gamepad[0].btn_start = ui->mouse_btn[0][3] || keys[SDL_SCANCODE_RETURN];
+
+    ui->gamepad[1].btn_x = ui->mouse_btn[1][0] || keys[SDL_SCANCODE_N];
+    ui->gamepad[1].btn_y = ui->mouse_btn[1][1] || keys[SDL_SCANCODE_M];
+    ui->gamepad[1].btn_coin = ui->mouse_btn[1][2] || keys[SDL_SCANCODE_2];
+    ui->gamepad[1].btn_start = ui->mouse_btn[1][3] || keys[SDL_SCANCODE_BACKSPACE];
+}
+
+uint8_t r01s_ui_gamepad_port(const R01sUi *ui, int player) {
+    if (!ui || player < 0 || player >= R01S_UI_GAMEPAD_COUNT) {
+        return 0;
+    }
+    return r01s_gamepad_encode(&ui->gamepad[player]);
+}
+
 void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     int i, gx, gy;
     int ox = -ui->pan_x % 32;
@@ -316,7 +505,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     /* Fixed HUD */
     fill_rect(r, 0, 0, R01S_LOGIC_W, 22, 12, 14, 16);
     font_draw(r, 8, 7, "RETR01 SIM  ISLANDS A-E", 200, 210, 220);
-    font_draw(r, R01S_LOGIC_W - 500, 7, "SPC PAUSE  R RESET  . STEP  DRAG CHIP  WHEEL PAN  ESC", 120, 130, 140);
+    font_draw(r, R01S_LOGIC_W - 560, 7, "SHIFT+ARROWS PAN  STICKS FE60/61", 120, 130, 140);
 
     fill_rect(r, R01S_LOGIC_W - 200, 36, 184, 110, 16, 22, 18);
     draw_rect(r, R01S_LOGIC_W - 200, 36, 184, 110, 80, 90, 70);
@@ -325,6 +514,9 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     draw_led(r, R01S_LOGIC_W - 192, 78, ui->probe_phi2, 220, 200, 60, "PHI2");
     draw_led(r, R01S_LOGIC_W - 192, 96, ui->probe_resb_low, 220, 80, 80, "RESB LO");
     font_draw(r, R01S_LOGIC_W - 192, 118, "PINS GLOW = LEVEL", 120, 130, 120);
+
+    draw_gamepad_panel(r, ui, 0);
+    draw_gamepad_panel(r, ui, 1);
 
     fill_rect(r, 0, R01S_LOGIC_H - 22, R01S_LOGIC_W, 22, 12, 14, 16);
     font_draw(r, 8, R01S_LOGIC_H - 15, ui->status, 160, 170, 160);
@@ -369,38 +561,69 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         r01s_ui_clamp_pan(ui);
         return 1;
     }
+    if (e->type == SDL_MOUSEMOTION && ui->drag_stick >= 0) {
+        gp_stick_from_point(&ui->gamepad[ui->drag_stick], ui->drag_stick, logic_x, logic_y);
+        return 1;
+    }
     if (e->type == SDL_MOUSEMOTION && ui->drag_chip >= 0) {
         move_chip_drag(ui, ui->drag_chip, board_mx, board_my);
         return 1;
     }
     if (e->type == SDL_KEYDOWN) {
+        const Uint8 *mods = SDL_GetKeyboardState(NULL);
         int step = 48;
-        if (e->key.keysym.sym == SDLK_LEFT) {
-            ui->pan_x -= step;
-            r01s_ui_clamp_pan(ui);
-            return 1;
-        }
-        if (e->key.keysym.sym == SDLK_RIGHT) {
-            ui->pan_x += step;
-            r01s_ui_clamp_pan(ui);
-            return 1;
-        }
-        if (e->key.keysym.sym == SDLK_UP) {
-            ui->pan_y -= step;
-            r01s_ui_clamp_pan(ui);
-            return 1;
-        }
-        if (e->key.keysym.sym == SDLK_DOWN) {
-            ui->pan_y += step;
-            r01s_ui_clamp_pan(ui);
-            return 1;
+        if (mods[SDL_SCANCODE_LSHIFT] || mods[SDL_SCANCODE_RSHIFT]) {
+            if (e->key.keysym.sym == SDLK_LEFT) {
+                ui->pan_x -= step;
+                r01s_ui_clamp_pan(ui);
+                return 1;
+            }
+            if (e->key.keysym.sym == SDLK_RIGHT) {
+                ui->pan_x += step;
+                r01s_ui_clamp_pan(ui);
+                return 1;
+            }
+            if (e->key.keysym.sym == SDLK_UP) {
+                ui->pan_y -= step;
+                r01s_ui_clamp_pan(ui);
+                return 1;
+            }
+            if (e->key.keysym.sym == SDLK_DOWN) {
+                ui->pan_y += step;
+                r01s_ui_clamp_pan(ui);
+                return 1;
+            }
         }
     }
     if (e->type == SDL_MOUSEBUTTONUP && e->button.button == SDL_BUTTON_LEFT) {
+        if (ui->drag_stick >= 0) {
+            ui->gamepad[ui->drag_stick].stick_x = 0;
+            ui->gamepad[ui->drag_stick].stick_y = 0;
+            ui->drag_stick = -1;
+            return 1;
+        }
+        if (ui->drag_btn >= 0) {
+            ui->mouse_btn[ui->drag_btn / 4][ui->drag_btn % 4] = 0;
+            ui->drag_btn = -1;
+            return 1;
+        }
         ui->drag_chip = -1;
         return ui->selected >= 0;
     }
     if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT) {
+        int gp_player = 0;
+        int gp_btn = -1;
+        int hit = gp_hit_any(logic_x, logic_y, &gp_player, &gp_btn);
+        if (hit == 2) {
+            ui->drag_btn = gp_player * 4 + gp_btn;
+            ui->mouse_btn[gp_player][gp_btn] = 1;
+            return 1;
+        }
+        if (hit == 1) {
+            ui->drag_stick = gp_player;
+            gp_stick_from_point(&ui->gamepad[gp_player], gp_player, logic_x, logic_y);
+            return 1;
+        }
         ui->selected = -1;
         ui->drag_chip = -1;
         for (i = ui->chip_count - 1; i >= 0; i--) {

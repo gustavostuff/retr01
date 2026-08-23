@@ -12,6 +12,7 @@ CMakeFiles/retr01_sim.dir/src/main.c.o: /home/g/Repos/retr01/retr01_sim/src/main
   /home/g/Repos/retr01/retr01_sim/chips/w65c02s.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/board.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/entity.h \
+  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/gamepad.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_builder.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_group.h \
@@ -320,6 +321,8 @@ libretr01_sim_core.a:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/uintrintrin.h:
 
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/tsxldtrkintrin.h:
+
 /usr/include/bits/types/mbstate_t.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/amxint8intrin.h:
@@ -370,8 +373,6 @@ libretr01_sim_core.a:
 
 /usr/include/bits/posix2_lim.h:
 
-/usr/include/bits/types/timer_t.h:
-
 /usr/include/bits/struct_rwlock.h:
 
 /usr/include/bits/mathcalls-helper-functions.h:
@@ -379,10 +380,6 @@ libretr01_sim_core.a:
 /usr/include/string.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/amxmovrsintrin.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/float.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/fmaintrin.h:
 
 /usr/include/bits/long-double.h:
 
@@ -395,8 +392,6 @@ libretr01_sim_core.a:
 /usr/include/bits/libm-simd-decl-stubs.h:
 
 /usr/include/bits/libc-header-start.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/tsxldtrkintrin.h:
 
 /usr/include/bits/iscanonical.h:
 
@@ -466,10 +461,6 @@ libretr01_sim_core.a:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx10_2satcvtintrin.h:
 
-/usr/include/SDL2/SDL_error.h:
-
-/usr/include/SDL2/SDL_mouse.h:
-
 /usr/lib/Scrt1.o:
 
 /usr/include/SDL2/SDL_clipboard.h:
@@ -503,10 +494,6 @@ libretr01_sim_core.a:
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/libatomic.so:
 
 /usr/include/bits/mathcalls-macros.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/waitpkgintrin.h:
-
-/usr/include/SDL2/SDL_events.h:
 
 /usr/include/bits/stdint-least.h:
 
@@ -548,8 +535,6 @@ libretr01_sim_core.a:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdint.h:
 
-/usr/include/bits/typesizes.h:
-
 /usr/include/bits/types/cookie_io_functions_t.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stddef.h:
@@ -568,7 +553,23 @@ libretr01_sim_core.a:
 
 /home/g/Repos/retr01/retr01_sim/include/retr01_sim/board.h:
 
+/usr/include/bits/types/time_t.h:
+
+/usr/include/SDL2/SDL_endian.h:
+
+/home/g/Repos/retr01/retr01_sim/chips/sn74hc573.h:
+
 /usr/include/SDL2/SDL_mutex.h:
+
+/usr/include/bits/typesizes.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/waitpkgintrin.h:
+
+/usr/include/SDL2/SDL_events.h:
+
+/usr/include/SDL2/SDL_mouse.h:
+
+/usr/include/SDL2/SDL_error.h:
 
 /usr/include/SDL2/SDL_pixels.h:
 
@@ -604,12 +605,6 @@ libretr01_sim_core.a:
 
 /home/g/Repos/retr01/retr01_sim/chips/as6c62256.h:
 
-/usr/include/bits/types/time_t.h:
-
-/home/g/Repos/retr01/retr01_sim/chips/sn74hc573.h:
-
-/usr/include/SDL2/SDL_endian.h:
-
 /usr/include/bits/types/__sigset_t.h:
 
 CMakeFiles/retr01_sim.dir/src/main.c.o:
@@ -633,6 +628,12 @@ CMakeFiles/retr01_sim.dir/src/main.c.o:
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/vaesintrin.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx512bmmvlintrin.h:
+
+/usr/include/bits/types/timer_t.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/fmaintrin.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/float.h:
 
 /usr/include/bits/types/wint_t.h:
 
@@ -665,6 +666,8 @@ CMakeFiles/retr01_sim.dir/src/main.c.o:
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/x86gprintrin.h:
 
 /usr/include/inttypes.h:
+
+/home/g/Repos/retr01/retr01_sim/include/retr01_sim/gamepad.h:
 
 /usr/include/limits.h:
 

@@ -18,11 +18,12 @@ CMakeFiles/retr01_sim_app.dir/src/app.c.o: \
  /usr/include/bits/stdint-intn.h /usr/include/bits/stdint-uintn.h \
  /usr/include/bits/stdint-least.h \
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_group.h \
- /home/g/Repos/retr01/retr01_sim/src/ui.h /usr/include/SDL2/SDL.h \
- /usr/include/SDL2/SDL_main.h /usr/include/SDL2/SDL_stdinc.h \
- /usr/include/SDL2/SDL_config.h /usr/include/SDL2/SDL_platform.h \
- /usr/include/SDL2/begin_code.h /usr/include/SDL2/close_code.h \
- /usr/include/SDL2/SDL_config_unix.h \
+ /home/g/Repos/retr01/retr01_sim/src/ui.h \
+ /home/g/Repos/retr01/retr01_sim/include/retr01_sim/gamepad.h \
+ /usr/include/SDL2/SDL.h /usr/include/SDL2/SDL_main.h \
+ /usr/include/SDL2/SDL_stdinc.h /usr/include/SDL2/SDL_config.h \
+ /usr/include/SDL2/SDL_platform.h /usr/include/SDL2/begin_code.h \
+ /usr/include/SDL2/close_code.h /usr/include/SDL2/SDL_config_unix.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/limits.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/syslimits.h \
  /usr/include/limits.h /usr/include/bits/posix1_lim.h \
@@ -195,4 +196,13 @@ CMakeFiles/retr01_sim_app.dir/src/app.c.o: \
  /usr/include/SDL2/SDL_render.h /usr/include/SDL2/SDL_shape.h \
  /usr/include/SDL2/SDL_system.h /usr/include/SDL2/SDL_timer.h \
  /usr/include/SDL2/SDL_version.h /usr/include/SDL2/SDL_locale.h \
- /usr/include/SDL2/SDL_misc.h
+ /usr/include/SDL2/SDL_misc.h \
+ /home/g/Repos/retr01/retr01_sim/include/retr01_sim/board.h \
+ /home/g/Repos/retr01/retr01_sim/chips/as6c62256.h \
+ /home/g/Repos/retr01/retr01_sim/chips/osc8m.h \
+ /home/g/Repos/retr01/retr01_sim/chips/pads.h \
+ /home/g/Repos/retr01/retr01_sim/chips/prg_rom.h \
+ /home/g/Repos/retr01/retr01_sim/chips/pwr5v.h \
+ /home/g/Repos/retr01/retr01_sim/chips/sn74hc14.h \
+ /home/g/Repos/retr01/retr01_sim/chips/sn74hc573.h \
+ /home/g/Repos/retr01/retr01_sim/chips/w65c02s.h

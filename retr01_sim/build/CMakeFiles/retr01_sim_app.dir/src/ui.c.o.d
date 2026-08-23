@@ -15,6 +15,7 @@ CMakeFiles/retr01_sim_app.dir/src/ui.c.o: \
  /usr/include/bits/time64.h /usr/include/bits/wchar.h \
  /usr/include/bits/stdint-intn.h /usr/include/bits/stdint-uintn.h \
  /usr/include/bits/stdint-least.h \
+ /home/g/Repos/retr01/retr01_sim/include/retr01_sim/gamepad.h \
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_group.h \
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island.h \
  /usr/include/SDL2/SDL.h /usr/include/SDL2/SDL_main.h \

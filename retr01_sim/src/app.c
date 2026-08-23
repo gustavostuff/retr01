@@ -1,5 +1,8 @@
 #include "app.h"
 
+#include "retr01_sim/board.h"
+#include "pads.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -117,8 +120,15 @@ void r01s_app_frame(R01sApp *app) {
     int ww, wh, scale, draw_w, draw_h;
     SDL_Rect dst;
     R01sIslandGroup *group;
+    R01sBoard *board;
 
     group = r01s_island_builder_group(&app->builder);
+    r01s_ui_sync_gamepads(&app->ui);
+    board = r01s_board_from_group(group);
+    if (board) {
+        r01s_pads_set(&board->pads, 0, r01s_ui_gamepad_port(&app->ui, 0));
+        r01s_pads_set(&board->pads, 1, r01s_ui_gamepad_port(&app->ui, 1));
+    }
     if (group) {
         r01s_island_group_frame(group);
         r01s_island_group_fill_status(group, app->ui.status, sizeof(app->ui.status));

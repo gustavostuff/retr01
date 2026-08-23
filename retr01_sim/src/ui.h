@@ -2,6 +2,7 @@
 #define RETR01_SIM_UI_H
 
 #include "retr01_sim/entity.h"
+#include "retr01_sim/gamepad.h"
 #include "retr01_sim/island_group.h"
 #include "retr01_sim/types.h"
 
@@ -9,6 +10,7 @@
 #include <stdint.h>
 
 #define R01S_BOARD_MAX_CHIPS 32
+#define R01S_UI_GAMEPAD_COUNT 2
 
 typedef struct R01sUi {
     R01sIslandGroup *group;
@@ -28,6 +30,10 @@ typedef struct R01sUi {
     int probe_vdd;
     int probe_phi2;
     int probe_resb_low;
+    R01sGamepadInput gamepad[R01S_UI_GAMEPAD_COUNT];
+    int drag_stick; /* player index or -1 */
+    int drag_btn;   /* player*4 + btn index, or -1 */
+    int mouse_btn[R01S_UI_GAMEPAD_COUNT][4]; /* X Y COIN START held by mouse */
 } R01sUi;
 
 int r01s_ui_init(R01sUi *ui);
@@ -37,6 +43,8 @@ void r01s_ui_bind_group(R01sUi *ui, R01sIslandGroup *group);
 int r01s_ui_add_chip(R01sUi *ui, R01sEntity *chip, int island_index);
 
 void r01s_ui_clamp_pan(R01sUi *ui);
+void r01s_ui_sync_gamepads(R01sUi *ui);
+uint8_t r01s_ui_gamepad_port(const R01sUi *ui, int player);
 void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r);
 int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_y);
 

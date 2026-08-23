@@ -37,6 +37,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/retr01_sim_core.dir/src/bus.c.o.d"
   "CMakeFiles/retr01_sim_core.dir/src/entity.c.o"
   "CMakeFiles/retr01_sim_core.dir/src/entity.c.o.d"
+  "CMakeFiles/retr01_sim_core.dir/src/gamepad.c.o"
+  "CMakeFiles/retr01_sim_core.dir/src/gamepad.c.o.d"
   "CMakeFiles/retr01_sim_core.dir/src/island.c.o"
   "CMakeFiles/retr01_sim_core.dir/src/island.c.o.d"
   "CMakeFiles/retr01_sim_core.dir/src/island_builder.c.o"

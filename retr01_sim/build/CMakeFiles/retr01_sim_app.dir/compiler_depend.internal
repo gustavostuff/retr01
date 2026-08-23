@@ -3,7 +3,17 @@
 
 CMakeFiles/retr01_sim_app.dir/src/app.c.o
  /home/g/Repos/retr01/retr01_sim/src/app.c
+ /home/g/Repos/retr01/retr01_sim/chips/as6c62256.h
+ /home/g/Repos/retr01/retr01_sim/chips/osc8m.h
+ /home/g/Repos/retr01/retr01_sim/chips/pads.h
+ /home/g/Repos/retr01/retr01_sim/chips/prg_rom.h
+ /home/g/Repos/retr01/retr01_sim/chips/pwr5v.h
+ /home/g/Repos/retr01/retr01_sim/chips/sn74hc14.h
+ /home/g/Repos/retr01/retr01_sim/chips/sn74hc573.h
+ /home/g/Repos/retr01/retr01_sim/chips/w65c02s.h
+ /home/g/Repos/retr01/retr01_sim/include/retr01_sim/board.h
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/entity.h
+ /home/g/Repos/retr01/retr01_sim/include/retr01_sim/gamepad.h
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island.h
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_builder.h
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_group.h
@@ -269,6 +279,7 @@ CMakeFiles/retr01_sim_app.dir/src/ui.c.o
  /home/g/Repos/retr01/retr01_sim/src/ui.c
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/board_layout.h
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/entity.h
+ /home/g/Repos/retr01/retr01_sim/include/retr01_sim/gamepad.h
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island.h
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_group.h
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/pin.h

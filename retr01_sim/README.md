@@ -50,7 +50,16 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 # or: ./build/retr01_sim
 ```
 
-**Controls:** `Space` pause/resume · `R` reset · `.` single-step (while paused) · **left-drag** move chip within its island · `Esc` quit · click a chip to select · **mouse wheel / arrows / right-drag** to pan the 1600×900 board inside the **1280×720** view.
+**Controls:** `Space` pause/resume · `R` reset · `.` single-step (while paused) · **left-drag** move chip within its island · **Shift+arrows / wheel / right-drag** pan · `Esc` quit.
+
+**Gamepads (island E → `$FE60`/`$FE61`):** bottom-left panels or keyboard:
+
+| | Stick | X | Y | Coin | Start |
+|--|-------|---|---|------|-------|
+| **P1** | Arrows (8-way) | Z | X | 1 | Enter |
+| **P2** | WASD (8-way) | N | M | 2 | Backspace |
+
+Drag the on-screen stick for diagonals (two direction bits). Buttons are momentary.
 
 Live probe (top-right) shows **VDD / PHI2 / RESB**. Pin stubs glow by level (no schematic wires drawn). Status bar shows CPU `PC` / `AB` / phase / cycle count.
 

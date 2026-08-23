@@ -192,6 +192,19 @@ test_bus/fast:
 .PHONY : test_bus/fast
 
 #=============================================================================
+# Target rules for targets named test_gamepad
+
+# Build rule for target.
+test_gamepad: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_gamepad
+.PHONY : test_gamepad
+
+# fast build rule for target.
+test_gamepad/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gamepad.dir/build.make CMakeFiles/test_gamepad.dir/build
+.PHONY : test_gamepad/fast
+
+#=============================================================================
 # Target rules for targets named test_pwr5v
 
 # Build rule for target.
@@ -840,6 +853,30 @@ src/entity.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/src/entity.c.s
 .PHONY : src/entity.c.s
 
+src/gamepad.o: src/gamepad.c.o
+.PHONY : src/gamepad.o
+
+# target to build an object file
+src/gamepad.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/src/gamepad.c.o
+.PHONY : src/gamepad.c.o
+
+src/gamepad.i: src/gamepad.c.i
+.PHONY : src/gamepad.i
+
+# target to preprocess a source file
+src/gamepad.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/src/gamepad.c.i
+.PHONY : src/gamepad.c.i
+
+src/gamepad.s: src/gamepad.c.s
+.PHONY : src/gamepad.s
+
+# target to generate assembly for a file
+src/gamepad.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/src/gamepad.c.s
+.PHONY : src/gamepad.c.s
+
 src/island.o: src/island.c.o
 .PHONY : src/island.o
 
@@ -1055,6 +1092,30 @@ tests/test_entity.s: tests/test_entity.c.s
 tests/test_entity.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_entity.dir/build.make CMakeFiles/test_entity.dir/tests/test_entity.c.s
 .PHONY : tests/test_entity.c.s
+
+tests/test_gamepad.o: tests/test_gamepad.c.o
+.PHONY : tests/test_gamepad.o
+
+# target to build an object file
+tests/test_gamepad.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gamepad.dir/build.make CMakeFiles/test_gamepad.dir/tests/test_gamepad.c.o
+.PHONY : tests/test_gamepad.c.o
+
+tests/test_gamepad.i: tests/test_gamepad.c.i
+.PHONY : tests/test_gamepad.i
+
+# target to preprocess a source file
+tests/test_gamepad.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gamepad.dir/build.make CMakeFiles/test_gamepad.dir/tests/test_gamepad.c.i
+.PHONY : tests/test_gamepad.c.i
+
+tests/test_gamepad.s: tests/test_gamepad.c.s
+.PHONY : tests/test_gamepad.s
+
+# target to generate assembly for a file
+tests/test_gamepad.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gamepad.dir/build.make CMakeFiles/test_gamepad.dir/tests/test_gamepad.c.s
+.PHONY : tests/test_gamepad.c.s
 
 tests/test_island_abcde.o: tests/test_island_abcde.c.o
 .PHONY : tests/test_island_abcde.o
@@ -1359,6 +1420,7 @@ help:
 	@echo "... test_as6c62256"
 	@echo "... test_bus"
 	@echo "... test_entity"
+	@echo "... test_gamepad"
 	@echo "... test_island_abcde"
 	@echo "... test_osc8m"
 	@echo "... test_pads"
@@ -1431,6 +1493,9 @@ help:
 	@echo "... src/entity.o"
 	@echo "... src/entity.i"
 	@echo "... src/entity.s"
+	@echo "... src/gamepad.o"
+	@echo "... src/gamepad.i"
+	@echo "... src/gamepad.s"
 	@echo "... src/island.o"
 	@echo "... src/island.i"
 	@echo "... src/island.s"
@@ -1458,6 +1523,9 @@ help:
 	@echo "... tests/test_entity.o"
 	@echo "... tests/test_entity.i"
 	@echo "... tests/test_entity.s"
+	@echo "... tests/test_gamepad.o"
+	@echo "... tests/test_gamepad.i"
+	@echo "... tests/test_gamepad.s"
 	@echo "... tests/test_island_abcde.o"
 	@echo "... tests/test_island_abcde.i"
 	@echo "... tests/test_island_abcde.s"
