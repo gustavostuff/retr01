@@ -26,7 +26,7 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 | N Sprites | `SPRITE_FETCH` stub — OAM→linebuf fill + compositor sprite path (CHR stub) |
 | P Integration | `INTEGRATION` stub — beam NMI#→CPU, pads+video+NMI smoke |
 
-**Cart load:** `./sim run -- path/to/project.retr01` (or auto-finds `retr01_studio/project.retr01`). Sim applies a **bring-up PRG overlay** into the cart PRG window so island smoke still runs — that overlay is **not** Studio ROM content ([triage](../docs/08_simulator.md#cart-rom-vs-runners-triage)).
+**Cart load:** `./sim run -- path/to/project.retr01` (or auto-finds `retr01_studio/project.retr01`). Sim applies a **bring-up PRG overlay** into the cart PRG window so island smoke still runs — that overlay is **not** Studio ROM content ([triage](../docs/08_simulator.md#cart-rom-vs-runners-triage)). Cart flash still holds the Studio `.retr01` image for PRG/MAP/`$FE93` reads; there is **no** host soft-boot of MAP/CHR into VRAM (chip/netlist only).
 
 Next: optional **F** machine EEPROM (1284 path).
 

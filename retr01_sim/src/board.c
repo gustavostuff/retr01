@@ -1254,6 +1254,7 @@ static void wire_bg_fetch(R01sBoard *ctx) {
     r01s_entity_eval(r01s_bg_fetch_entity(bg));
 }
 
+
 /* Nametable tile byte at logical pixel (pre-CHR: tile low 6 bits -> PROM index). */
 static uint8_t board_vram_tile_at(const R01sBoard *ctx, int lx, int ly) {
     uint8_t sx;
@@ -1442,6 +1443,11 @@ static void wire_power_clock_reset(R01sBoard *ctx, R01sIslandGroup *group) {
     phi2 = r01s_entity_sense(osc, "PHI2");
     r01s_entity_drive(hc, "1A", phi2 == R01S_LVL_Z ? R01S_LVL_L : phi2);
     r01s_entity_drive(hc, "2A", resb);
+    /* Unused Schmitt gates: tie inputs (real boards do this; avoids X on 3Y–6Y). */
+    r01s_entity_drive(hc, "3A", R01S_LVL_H);
+    r01s_entity_drive(hc, "4A", R01S_LVL_H);
+    r01s_entity_drive(hc, "5A", R01S_LVL_H);
+    r01s_entity_drive(hc, "6A", R01S_LVL_H);
     r01s_entity_eval(hc);
 
     r01s_entity_drive(cpu, "PHI2", phi2 == R01S_LVL_H ? R01S_LVL_H : R01S_LVL_L);

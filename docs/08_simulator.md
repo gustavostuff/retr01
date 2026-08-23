@@ -118,7 +118,7 @@ Verified against Studio pack (`r01_cart_build`) and the checked-in `retr01_studi
 
 **Island P wired.** Beam `NMI#` → CPU `NMIB` on VBlank entry; integration health wants pads + video + sprites + ≥1 NMI pulse and zero bus conflicts. Optional **F** (machine EEPROM) still deferred.
 
-Still missing for “cart looks like Play”: CHR fetch into Island O, real game PRG (no overlay), MAP streaming of screens (stub hangs). Use emu soft-boot for atlas viewing; use sim for bus/island validation.
+Still missing for “cart looks like Play”: CHR fetch from cart into Island O, real game PRG (no overlay), MAP streaming of screens (stub hangs). Sim stays chip/netlist-only — **no** emu-style host soft-boot into VRAM. Use emu soft-boot for atlas viewing; use sim for bus/island validation.
 
 ## Modeling principles
 

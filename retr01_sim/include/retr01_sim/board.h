@@ -198,11 +198,6 @@ typedef struct R01sBoard {
     uint8_t linebuf_saw_mux_mcu;
     uint8_t linebuf_saw_mux_beam;
     uint32_t health_phi2_edges;
-    /* Host soft-boot (runner convenience, like emu): CHR + pals + start screen in VRAM. */
-    uint8_t soft_chr[8][4096];
-    uint8_t soft_pal[32];
-    uint8_t soft_chr_loaded;
-    uint8_t soft_boot_restored;
 } R01sBoard;
 
 int r01s_board_build(R01sBoard *board, R01sIslandBuilder *builder);
