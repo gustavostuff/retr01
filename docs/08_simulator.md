@@ -48,7 +48,7 @@ Examples:
 
 **Pass:** same criteria as the hardware island checklist in `03`.
 
-Layer-2 bring-up for **A–E + G + H + I + O** lives in `retr01_sim/tests/test_island_abcdeghio.c` (`STA $FE02`, VRAM `$FE12`, `LDA $FE60`, beam HBlank / line advance, HC688 vs `$FE04`, BG fetch latches tile `$42` / attr `$07`, Color PROM pixels on 128×120 sink).
+Layer-2 bring-up for **A–E + G + H + I + O + J** lives in `retr01_sim/tests/test_island_abcdeghioj.c` (`STA $FE02`, VRAM `$FE12`, `LDA $FE60`, beam HBlank / line advance, HC688 vs `$FE04`, BG fetch latches tile `$42` / attr `$07`, Color PROM pixels on 128×120 sink, MAP `$FE93` reads cart magic `'R'`).
 
 ### 3. System tests (whole board)
 
@@ -74,7 +74,7 @@ When something looks wrong on screen, **do not assume the `.retr01` is bad** and
 | **Color PROM burn** | `project_prom.bin` | **Yes** (motherboard) | **Not inside the cart.** Kit → R3G3B2; board AT28C16. |
 | **Boot asm listing** | `project_boot.s` | **Human-readable only** | Equates + stub source. The **binary stub inside `.retr01`** is what runners execute (Studio embeds it; asm can drift — treat binary as SoT). |
 | **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Today also **soft-boots** world CHR/MAP into VRAM and **host-pans** the atlas — Studio stub PRG does **not** stream MAP. |
-| **Board sim** | `retr01_sim` | IC / island netlist | Bring-up islands A–E+G+H+I+O. **Island J (cart flash) not wired yet**; still uses Island C `PRG_ROM` smoke program. |
+| **Board sim** | `retr01_sim` | IC / island netlist | Islands A–E+G+H+I+O+**J**. Cart flash loads `.retr01`; **bring-up PRG overlay** replaces cart PRG for island smoke (call it out — not Studio ROM). CHR→video still stubbed. |
 
 ### What is actually in `project.retr01` today
 
@@ -106,9 +106,9 @@ Verified against Studio pack (`r01_cart_build`) and the checked-in `retr01_studi
 
 ### Sim readiness to load `project.retr01`
 
-**Not yet for end-to-end cart play.** Chip model `SST39SF040` exists (unit-tested) but Island **J** is not on the board. Island O still approximates BG color from nametable tile low bits (no CHR fetch). Next step for cart bring-up: Island **J** — load `project_flash.bin` or pad `.retr01` into flash, map PRG `$8000+`, MAP `$FE90`–`$FE93`, then CHR into the video path.
+**Island J wired.** Load with `./sim run -- retr01_studio/project.retr01` (or auto-detect). Flash owns PRG `$8000+` and MAP `$FE90`–`$FE93` (one `/CE` context at a time). Sim **overlays bring-up smoke PRG** into the cart PRG window so A–O island checks still pass — dump flash/`off_prg` to see overlay vs Studio stub.
 
-Until then, keep using the Island C smoke PRG for board health; use **emu** + hex dumps to validate `project.retr01` content.
+Still missing for “cart looks like Play”: CHR fetch into Island O, real game PRG (no overlay), MAP streaming of screens (stub hangs). Use emu soft-boot for atlas viewing; use sim for bus/island validation.
 
 ## Modeling principles
 
@@ -175,8 +175,9 @@ Current pin-level code is intentional for catching PCB bugs early.
 | 4 | Island **H** beam (**done** — `OSC_DOT` + `BEAM_XY` PLD stub + `HC688` / `$FE04`) |
 | 5 | Island **I** BG fetch (**done** — `BG_FETCH` nametable VA + PPU-phase VRAM read) |
 | 6 | Island **O** video (**done** — compositor + AT28C16 + 128×120 sink; CHR still stubbed) |
-| Next | Island **J** cart flash — load `.retr01` / `*_flash.bin`; see [Cart ROM vs runners](#cart-rom-vs-runners-triage) |
-| Later | Remaining ICs, pads→1284, real CHR fetch; then optimization passes |
+| 7 | Island **J** cart (**done** — SST39SF040, PRG + MAP `$FE90`–`$FE93`, `.retr01` load + bring-up PRG overlay) |
+| Next | CHR from cart into video path; retire bring-up PRG overlay when real PRG streams MAP |
+| Later | Remaining ICs, pads→1284; then optimization passes |
 
 ## Related docs
 

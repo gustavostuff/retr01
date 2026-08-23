@@ -17,6 +17,7 @@
 #include "sn74hc157.h"
 #include "sn74hc573.h"
 #include "sn74hc688.h"
+#include "sst39sf040.h"
 #include "video_sink.h"
 #include "w65c02s.h"
 
@@ -35,6 +36,7 @@ enum {
     R01S_ISLAND_BEAM = 6,
     R01S_ISLAND_BG_FETCH = 7,
     R01S_ISLAND_VIDEO = 8,
+    R01S_ISLAND_CART = 9,
 };
 
 typedef struct R01sIslandPowerImpl {
@@ -49,7 +51,7 @@ typedef struct R01sIslandClockImpl {
 typedef struct R01sIslandCpuMemImpl {
     R01sW65C02S *cpu;
     R01sAs6c62256 *ram;
-    R01sPrgRom *prg;
+    R01sPrgRom *prg; /* breadboard leftover; deselected when cart owns $8000+ */
 } R01sIslandCpuMemImpl;
 
 typedef struct R01sIslandIoLatchImpl {
@@ -83,7 +85,11 @@ typedef struct R01sIslandVideoImpl {
     R01sVideoSink *sink;
 } R01sIslandVideoImpl;
 
-/* Bring-up board: islands A–E + G + H + I + O (F/J deferred). */
+typedef struct R01sIslandCartImpl {
+    R01sSst39sf040 *flash;
+} R01sIslandCartImpl;
+
+/* Bring-up board: islands A–E + G + H + I + O + J (F deferred). */
 typedef struct R01sBoard {
     R01sPwr5v pwr;
     R01sOsc8m osc;
@@ -104,6 +110,7 @@ typedef struct R01sBoard {
     R01sCompositor compositor;
     R01sAt28c16 color_prom;
     R01sVideoSink video_sink;
+    R01sSst39sf040 cart_flash;
     R01sIslandPowerImpl power_impl;
     R01sIslandClockImpl clock_impl;
     R01sIslandCpuMemImpl cpu_mem_impl;
@@ -113,9 +120,18 @@ typedef struct R01sBoard {
     R01sIslandBeamImpl beam_impl;
     R01sIslandBgFetchImpl bg_fetch_impl;
     R01sIslandVideoImpl video_impl;
+    R01sIslandCartImpl cart_impl;
     /* Soft $FE10/$FE11 latch + $FE12 auto-inc (pre-full PLD). */
     uint16_t vram_addr;
     int vram_fe12_armed;
+    /* Soft MAP $FE90-$FE92 seek + $FE93 data auto-inc. */
+    uint32_t map_addr;
+    int map_fe93_armed;
+    /* Cart image metadata (flash absolute offsets). */
+    uint32_t cart_off_prg;
+    uint32_t cart_len_prg;
+    int cart_loaded;
+    char cart_label[48];
     int reset_hold;
     uint32_t cycles;
     R01sLevel phi2_prev;
@@ -127,10 +143,15 @@ typedef struct R01sBoard {
     uint8_t health_saw_beam;
     uint8_t health_saw_bg_fetch;
     uint8_t health_saw_video;
+    uint8_t health_saw_map;
     uint32_t health_phi2_edges;
 } R01sBoard;
 
 int r01s_board_build(R01sBoard *board, R01sIslandBuilder *builder);
+
+/* Load `.retr01` or 512 KB flash image into Island J. Re-applies bring-up smoke PRG
+ * into the cart PRG window so A–O island checks still run (overlay — not Studio ROM). */
+int r01s_board_load_cart(R01sBoard *board, const char *path);
 
 R01sBoard *r01s_board_from_group(R01sIslandGroup *group);
 
