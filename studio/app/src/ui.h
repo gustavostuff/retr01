@@ -16,12 +16,12 @@
 #define UI_PLANES_Y 110
 #define UI_PLANES_H 40
 #define UI_BG_Y 150
-#define UI_BG_H 150
-#define UI_SPR_Y 300
+#define UI_BG_H 170
+#define UI_SPR_Y 320
 #define UI_SPR_H 150
-#define UI_PAL_Y 450
+#define UI_PAL_Y 470
 #define UI_PAL_H 160
-#define UI_CONSTRAINTS_Y 610
+#define UI_CONSTRAINTS_Y 630
 #define UI_CONSTRAINTS_H 200
 #define UI_LEFT_CONTENT_H (UI_CONSTRAINTS_Y + UI_CONSTRAINTS_H)
 

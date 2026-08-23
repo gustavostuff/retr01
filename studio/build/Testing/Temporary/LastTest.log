@@ -1,10 +1,10 @@
-Start testing: Aug 22 17:55 MST
+Start testing: Aug 22 18:07 MST
 ----------------------------------------------------------
 1/2 Testing: core
 1/2 Test: core
 Command: "/home/g/Repos/retr01/studio/build/test_core"
 Directory: /home/g/Repos/retr01/studio/build
-"core" start time: Aug 22 17:55 MST
+"core" start time: Aug 22 18:07 MST
 Output:
 ----------------------------------------------------------
 all tests passed
@@ -12,8 +12,30 @@ all tests passed
 Test time =   0.06 sec
 ----------------------------------------------------------
 Test Passed.
-"core" end time: Aug 22 17:55 MST
+"core" end time: Aug 22 18:07 MST
 "core" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-End testing: Aug 22 17:55 MST
+2/2 Testing: e2e
+2/2 Test: e2e
+Command: "/home/g/Repos/retr01/studio/build/test_e2e"
+Directory: /home/g/Repos/retr01/studio/build
+"e2e" start time: Aug 22 18:07 MST
+Output:
+----------------------------------------------------------
+
+* Suite studio_e2e:
+...........
+11 tests - 11 passed, 0 failed, 0 skipped (365898 ticks, 0.366 sec)
+
+Total: 11 tests (428522 ticks, 0.429 sec), 42 assertions
+Pass: 11, fail: 0, skip: 0.
+<end of output>
+Test time =   0.35 sec
+----------------------------------------------------------
+Test Passed.
+"e2e" end time: Aug 22 18:07 MST
+"e2e" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Aug 22 18:07 MST

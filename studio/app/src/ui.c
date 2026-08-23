@@ -380,22 +380,23 @@ static void draw_bg_banks(UiState *ui, SDL_Renderer *r) {
     int b, ty, tx;
     int oy = -ui->left_scroll_y;
     const int sheet_x = 4;
-    const int sheet_y = UI_BG_Y + 22 + oy;
+    const int sheet_y = UI_BG_Y + 34 + oy;
     fill_rect(r, 0, UI_BG_Y + oy, UI_LEFT_W, UI_BG_H, 24, 28, 34);
-    font_draw(r, 4, UI_BG_Y + 2 + oy, "BG BANKS", 200, 200, 210);
+    font_draw(r, 4, UI_BG_Y + 2 + oy, "BG CHR BANKS", 200, 200, 210);
+    font_draw(r, 4, UI_BG_Y + 14 + oy, "BANK", 120, 120, 130);
     for (b = 0; b < 4; b++) {
-        int x = 68 + b * 22;
+        int x = 36 + b * 22;
         int sel = (b == ui->bg_bank_tab);
-        fill_rect(r, x, UI_BG_Y + 2 + oy, 20, 12, sel ? 70 : 40, sel ? 90 : 48, sel ? 120 : 60);
+        fill_rect(r, x, UI_BG_Y + 12 + oy, 20, 12, sel ? 70 : 40, sel ? 90 : 48, sel ? 120 : 60);
         {
             char buf[4];
             snprintf(buf, sizeof(buf), "%d", b);
-            font_draw(r, x + 7, UI_BG_Y + 4 + oy, buf, 230, 230, 240);
+            font_draw(r, x + 7, UI_BG_Y + 14 + oy, buf, 230, 230, 240);
         }
     }
     if (w) {
         R01BgBank *bank = &w->bg_banks[ui->bg_bank_tab];
-        char buf[24];
+        char buf[32];
         for (ty = 0; ty < 16; ty++) {
             for (tx = 0; tx < 16; tx++) {
                 int ti = ty * 16 + tx;
@@ -408,8 +409,8 @@ static void draw_bg_banks(UiState *ui, SDL_Renderer *r) {
                 draw_chr_tile(r, x, y, &bank->chr[ti * R01_TILE_BYTES]);
             }
         }
-        snprintf(buf, sizeof(buf), "%d", bank->tile_count);
-        font_draw(r, 168, UI_BG_Y + 4 + oy, buf, 160, 160, 170);
+        snprintf(buf, sizeof(buf), "%d/256 TILES", bank->tile_count);
+        font_draw(r, 130, UI_BG_Y + 14 + oy, buf, 160, 160, 170);
     }
 }
 
@@ -418,28 +419,29 @@ static void draw_sprite_banks(UiState *ui, SDL_Renderer *r) {
     int b, ty, tx;
     int oy = -ui->left_scroll_y;
     const int sheet_x = 4;
-    const int sheet_y = UI_SPR_Y + 34 + oy;
+    const int sheet_y = UI_SPR_Y + 48 + oy;
     fill_rect(r, 0, UI_SPR_Y + oy, UI_LEFT_W, UI_SPR_H, 22, 24, 28);
-    font_draw(r, 4, UI_SPR_Y + 2 + oy, "SPRITE BANKS", 200, 200, 210);
+    font_draw(r, 4, UI_SPR_Y + 2 + oy, "SPRITE CHR", 200, 200, 210);
+    font_draw(r, 4, UI_SPR_Y + 14 + oy, "BANK", 120, 120, 130);
     for (b = 0; b < 4; b++) {
-        int x = 4 + b * 22;
+        int x = 36 + b * 22;
         int sel = (b == ui->spr_bank_tab);
-        fill_rect(r, x, UI_SPR_Y + 14 + oy, 20, 12, sel ? 70 : 40, sel ? 90 : 48, sel ? 120 : 60);
+        fill_rect(r, x, UI_SPR_Y + 12 + oy, 20, 12, sel ? 70 : 40, sel ? 90 : 48, sel ? 120 : 60);
         {
             char buf[4];
             snprintf(buf, sizeof(buf), "%d", b);
-            font_draw(r, x + 7, UI_SPR_Y + 16 + oy, buf, 230, 230, 240);
+            font_draw(r, x + 7, UI_SPR_Y + 14 + oy, buf, 230, 230, 240);
         }
     }
     {
-        int x = 100;
-        fill_rect(r, x, UI_SPR_Y + 14 + oy, 40, 12, ui->spr_size16 ? 80 : 40, ui->spr_size16 ? 100 : 48,
+        int x = 132;
+        fill_rect(r, x, UI_SPR_Y + 12 + oy, 60, 12, ui->spr_size16 ? 80 : 40, ui->spr_size16 ? 100 : 48,
                   ui->spr_size16 ? 70 : 55);
-        font_draw(r, x + 4, UI_SPR_Y + 16 + oy, ui->spr_size16 ? "8X16" : "8X8", 230, 230, 240);
+        font_draw(r, x + 4, UI_SPR_Y + 14 + oy, ui->spr_size16 ? "OAM 8X16" : "OAM 8X8", 230, 230, 240);
     }
     if (w) {
         R01SprBank *bank = &w->spr_banks[ui->spr_bank_tab];
-        char buf[24];
+        char buf[40];
         for (ty = 0; ty < 8; ty++) {
             for (tx = 0; tx < 16; tx++) {
                 int ti = ty * 16 + tx;
@@ -455,8 +457,9 @@ static void draw_sprite_banks(UiState *ui, SDL_Renderer *r) {
                 }
             }
         }
-        snprintf(buf, sizeof(buf), "T%d/%d", ui->spr_tile, bank->tile_count);
-        font_draw(r, 150, UI_SPR_Y + 16 + oy, buf, 160, 160, 170);
+        snprintf(buf, sizeof(buf), "TILE %d  USED %d/256", ui->spr_tile, bank->tile_count);
+        font_draw(r, 4, UI_SPR_Y + 28 + oy, buf, 160, 170, 160);
+        font_draw(r, 4, UI_SPR_Y + 38 + oy, "CLICK TILE: EDIT   CTRL+G: PACK", 100, 110, 100);
     }
 }
 
@@ -693,16 +696,16 @@ static void draw_screen(UiState *ui, SDL_Renderer *r) {
         int mx = UI_LEFT_W + 52;
         fill_rect(r, mx, 2, 28, 12, ui->layer == UI_LAYER_BG ? 80 : 40, ui->layer == UI_LAYER_BG ? 100 : 48,
                   ui->layer == UI_LAYER_BG ? 70 : 55);
-        font_draw(r, mx + 6, 4, "BG", 230, 230, 240);
-        fill_rect(r, mx + 30, 2, 32, 12, ui->layer == UI_LAYER_SPR ? 80 : 40, ui->layer == UI_LAYER_SPR ? 100 : 48,
+        font_draw(r, mx + 4, 4, "BG", 230, 230, 240);
+        fill_rect(r, mx + 30, 2, 40, 12, ui->layer == UI_LAYER_SPR ? 80 : 40, ui->layer == UI_LAYER_SPR ? 100 : 48,
                   ui->layer == UI_LAYER_SPR ? 70 : 55);
         font_draw(r, mx + 34, 4, "SPR", 230, 230, 240);
-        fill_rect(r, mx + 68, 2, 32, 12, ui->edit_mode == UI_MODE_PIXEL ? 80 : 40,
+        fill_rect(r, mx + 74, 2, 44, 12, ui->edit_mode == UI_MODE_PIXEL ? 80 : 40,
                   ui->edit_mode == UI_MODE_PIXEL ? 100 : 48, ui->edit_mode == UI_MODE_PIXEL ? 70 : 55);
-        font_draw(r, mx + 72, 4, "PIX", 230, 230, 240);
-        fill_rect(r, mx + 102, 2, 36, 12, ui->edit_mode == UI_MODE_ATTR ? 80 : 40,
+        font_draw(r, mx + 78, 4, "PIXEL", 230, 230, 240);
+        fill_rect(r, mx + 122, 2, 36, 12, ui->edit_mode == UI_MODE_ATTR ? 80 : 40,
                   ui->edit_mode == UI_MODE_ATTR ? 100 : 48, ui->edit_mode == UI_MODE_ATTR ? 70 : 55);
-        font_draw(r, mx + 106, 4, "ATTR", 230, 230, 240);
+        font_draw(r, mx + 126, 4, "ATTR", 230, 230, 240);
     }
 
     if (ui->layer == UI_LAYER_SPR) {
@@ -1474,8 +1477,8 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
             {
                 int b;
                 for (b = 0; b < 4; b++) {
-                    int x = 68 + b * 22;
-                    if (hit(logic_x, cy, x, UI_BG_Y + 2, 20, 12)) {
+                    int x = 36 + b * 22;
+                    if (hit(logic_x, cy, x, UI_BG_Y + 12, 20, 12)) {
                         if (r01_project_select_bg_bank(ui->project, b) == b) {
                             ui->bg_bank_tab = b;
                         }
@@ -1486,21 +1489,21 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
 
             /* sprite banks */
             for (t = 0; t < 4; t++) {
-                int x = 4 + t * 22;
-                if (hit(logic_x, cy, x, UI_SPR_Y + 14, 20, 12)) {
+                int x = 36 + t * 22;
+                if (hit(logic_x, cy, x, UI_SPR_Y + 12, 20, 12)) {
                     ui->spr_bank_tab = t;
                     ui->project->generate_bank = t;
                     ui->layer = UI_LAYER_SPR;
                     return 1;
                 }
             }
-            if (hit(logic_x, cy, 100, UI_SPR_Y + 14, 40, 12)) {
+            if (hit(logic_x, cy, 132, UI_SPR_Y + 12, 60, 12)) {
                 ui->spr_size16 = !ui->spr_size16;
                 return 1;
             }
-            if (hit(logic_x, cy, 4, UI_SPR_Y + 34, 16 * 8, 8 * 8)) {
+            if (hit(logic_x, cy, 4, UI_SPR_Y + 48, 16 * 8, 8 * 8)) {
                 int tx = (logic_x - 4) / 8;
-                int ty = (cy - (UI_SPR_Y + 34)) / 8;
+                int ty = (cy - (UI_SPR_Y + 48)) / 8;
                 int ti = ty * 16 + tx;
                 if (ti >= 0 && ti < R01_TILES_PER_BANK) {
                     ui->spr_tile = ti;
@@ -1554,15 +1557,15 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
             ui->layer = UI_LAYER_BG;
             return 1;
         }
-        if (hit(logic_x, logic_y, UI_LEFT_W + 82, 2, 32, 12)) {
+        if (hit(logic_x, logic_y, UI_LEFT_W + 82, 2, 40, 12)) {
             ui->layer = UI_LAYER_SPR;
             return 1;
         }
-        if (hit(logic_x, logic_y, UI_LEFT_W + 120, 2, 32, 12)) {
+        if (hit(logic_x, logic_y, UI_LEFT_W + 126, 2, 44, 12)) {
             ui->edit_mode = UI_MODE_PIXEL;
             return 1;
         }
-        if (hit(logic_x, logic_y, UI_LEFT_W + 154, 2, 36, 12)) {
+        if (hit(logic_x, logic_y, UI_LEFT_W + 174, 2, 36, 12)) {
             ui->edit_mode = UI_MODE_ATTR;
             return 1;
         }

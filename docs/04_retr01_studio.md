@@ -37,8 +37,8 @@ Right column = Screen (most width). Left = scrollable stack of Worlds, **Planes*
 |------|----------|
 | **Worlds** | Tabs **1-8** = HW worlds **0-7**. Virtual grid **1–8** cols/rows (sized by PNG import or default 8×8). Click = select. **Ctrl+click** = toggle screen. Max **32** screens. **Drop PNG** on this panel to import an atlas (auto-packs BG banks 0→3; aborts if >1024 unique tiles) |
 | **Planes** | Up to **2** parallax planes per world (HW VRAM slots **4-5**). Not on the world grid. Toggle present / select to edit in Screen. Same 480 B payload shape as a screen |
-| **BG banks** | 4 tabs (0-3), 16x16 read-only tiles. Filled by **Generate bank** (single bank) or PNG import (spill across banks) |
-| **Sprite banks** | 4 tabs, 8x8 / 8x16 toggle. Paint tiles (**TILE** tool), place OAM on Screen (**PLACE**). **Ctrl+G** on SPR layer packs/dedupes sprite CHR |
+| **BG banks** | 4 CHR banks from **Ctrl+G** / PNG import (read-only 16×16 sheet) |
+| **Sprite CHR** | 4 CHR banks (0–3). Click a cell to select/edit that 8×8 tile (**TILE** tool). **OAM 8×8/8×16** = default size when **PLACE**ing. Empty = unused; yellow = selected. **Ctrl+G** packs/dedupes |
 | **Screen** | Edits active **grid screen** or **parallax plane**. Layers **BG** / **SPR**. BG: pixel + attr. SPR: place OAM (composited over BG) or edit selected CHR tile. Generate (**Ctrl+G**) targets BG or SPR bank by layer |
 | **Palettes** | Tabs = palette rows **0-7** (4 BG + 4 sprite strips). Edit master indices **0-63**. Preview uses kit Color PROM RGB; burn path quantizes to **R3G3B2** ([`02`](02_graphics_worlds_memory.md) / [`06`](06_hardware_v1_32ic.md)) |
 | **Constraints** | Project defaults + optional per-world override. Scroll: cam-lock / smooth dead-zone / screen-snap / **DZ+WARP** (smooth in-screen; **Enter**/ **Shift** warp). Transition cut/fade. **Play** = 8×8 player. **Ctrl+E** exports `.retr01` |
