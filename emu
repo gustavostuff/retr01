@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Retr01 Emulator — one action at a time.
+#
+# Usage:
+#   ./emu build
+#   ./emu run [cart.retr01]
+#   ./emu build-run [cart.retr01]
+#   ./emu unit
+#   ./emu help
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=scripts/r01-common.sh
+source "$ROOT/scripts/r01-common.sh"
+
+PROJ="$ROOT/retr01_emu"
+BIN="$PROJ/build/retr01_emu"
+DEFAULT_CART="$ROOT/retr01_studio/project.retr01"
+CMD="${1:-}"
+[[ -n "$CMD" ]] || r01_usage_die "usage: $0 <build|run|build-run|unit|help> ..."
+shift || true
+
+case "$CMD" in
+  help|-h|--help)
+    cat <<'EOF'
+Retr01 Emulator
+
+  build                 configure (if needed) + build
+  run [cart.retr01]     run emu (default: retr01_studio/project.retr01)
+  build-run [cart...]   build then run
+  unit                  build + ctest
+  help                  this text
+EOF
+    ;;
+  build)
+    cd "$PROJ"
+    r01_build "$PROJ"
+    ;;
+  run)
+    [[ -x "$BIN" ]] || r01_die "not built — run: $0 build"
+    CART="${1:-$DEFAULT_CART}"
+    exec "$BIN" "$CART"
+    ;;
+  build-run|br)
+    CART="${1:-$DEFAULT_CART}"
+    cd "$PROJ"
+    r01_build "$PROJ"
+    exec "$BIN" "$CART"
+    ;;
+  unit|test)
+    cd "$PROJ"
+    r01_build "$PROJ"
+    r01_ctest "$PROJ"
+    ;;
+  *)
+    r01_usage_die "unknown command: $CMD (try: $0 help)"
+    ;;
+esac

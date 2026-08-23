@@ -1,1 +1,0 @@
-/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/test_cart.dir/link.d CMakeFiles/test_cart.dir/tests/test_cart.c.o -o test_cart  libretr01_emu_core.a

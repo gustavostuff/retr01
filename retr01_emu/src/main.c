@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
     if (argc >= 2) {
         path = argv[1];
     } else {
-        path = "../studio/project.retr01";
+        path = "../retr01_studio/project.retr01";
     }
 
     if (r01e_machine_init(&machine, path, err, sizeof(err)) != 0) {
@@ -145,7 +145,7 @@ int main(int argc, char **argv) {
             }
         }
     }
-    printf("Note: Studio stub STA $FE30 with project active_world (often not world 0).\n");
+    printf("Note: stub boots START_WORLD=0 (editor active_world is not a cart field).\n");
     printf("Controls: Arrows = atlas pan · 0-7 = select world · ZX/1/Enter = P1 · Space pause · R reset · Esc quit\n");
 
     last_ticks = SDL_GetTicks();

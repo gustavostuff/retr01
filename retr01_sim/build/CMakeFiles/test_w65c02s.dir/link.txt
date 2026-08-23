@@ -1,1 +1,0 @@
-/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/test_w65c02s.dir/link.d CMakeFiles/test_w65c02s.dir/tests/test_w65c02s.c.o -o test_w65c02s  libretr01_sim_core.a

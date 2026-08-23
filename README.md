@@ -35,6 +35,22 @@ Later editions (console and handheld) share the same soul: one architecture, dif
 
 Retr01 is in **architecture & documentation** phase with **Retr01 Studio** (Phases 0–5) as the active coding focus. Board IC simulator: [`retr01_sim/`](retr01_sim/) ([`docs/08_simulator.md`](docs/08_simulator.md)). Software-visible emulator: [`retr01_emu/`](retr01_emu/).
 
+### Root helpers
+
+One action per invocation:
+
+| Script | Examples |
+|--------|----------|
+| [`./studio`](studio) | `build` · `run` · `build-run` · `unit` · `e2e` · `e2e-watch [speed]` |
+| [`./emu`](emu) | `build` · `run [cart]` · `build-run` · `unit` |
+| [`./sim`](sim) | `build` · `run` · `build-run` · `unit` |
+
+```bash
+./studio help
+./emu build-run
+./sim unit
+```
+
 ---
 
 Built for people who want to *make* 8-bit games, not only play them.

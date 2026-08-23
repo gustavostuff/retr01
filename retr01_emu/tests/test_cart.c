@@ -4,7 +4,7 @@
 #include <string.h>
 
 int main(int argc, char **argv) {
-    const char *path = argc > 1 ? argv[1] : "../studio/project.retr01";
+    const char *path = argc > 1 ? argv[1] : "../retr01_studio/project.retr01";
     R01eCart cart;
     R01eWorldView wv;
     char err[256];

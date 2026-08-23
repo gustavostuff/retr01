@@ -1,1 +1,0 @@
-/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/test_island_abcdeg.dir/link.d CMakeFiles/test_island_abcdeg.dir/tests/test_island_abcdeg.c.o -o test_island_abcdeg  libretr01_sim_core.a

@@ -1,1 +1,0 @@
-/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/retr01_emu.dir/link.d CMakeFiles/retr01_emu.dir/src/main.c.o -o retr01_emu  libretr01_emu_core.a /usr/lib/libSDL2.so

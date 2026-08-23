@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 int main(int argc, char **argv) {
-    const char *path = argc > 1 ? argv[1] : "../studio/project.retr01";
+    const char *path = argc > 1 ? argv[1] : "../retr01_studio/project.retr01";
     R01eMachine m;
     char err[256];
     R01eWorldView wv;

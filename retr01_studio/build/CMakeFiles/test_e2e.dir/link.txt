@@ -1,1 +1,0 @@
-/usr/bin/cc -g -Wl,--dependency-file=CMakeFiles/test_e2e.dir/link.d CMakeFiles/test_e2e.dir/app/tests/test_e2e.c.o CMakeFiles/test_e2e.dir/app/tests/e2e_harness.c.o -o test_e2e  libretr01_studio_app.a libretr01_studio_core.a /usr/lib/libpng16.so /usr/lib/libSDL2.so

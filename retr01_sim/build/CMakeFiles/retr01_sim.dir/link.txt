@@ -1,1 +1,0 @@
-/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/retr01_sim.dir/link.d CMakeFiles/retr01_sim.dir/src/main.c.o -o retr01_sim  libretr01_sim_app.a libretr01_sim_core.a /usr/lib/libSDL2.so

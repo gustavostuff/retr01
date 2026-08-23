@@ -120,7 +120,7 @@ void r01_prg_fill_stub(uint8_t prg[R01_PRG_BYTES], const R01Project *p) {
         0xD8,             /* cld */
         0xA2, 0xFF,       /* ldx #$ff */
         0x9A,             /* txs */
-        0xA9, 0x00,       /* lda #world */
+        0xA9, 0x00,       /* lda #START_WORLD (always 0; no cart header field yet) */
         0x8D, 0x30, 0xFE, /* sta $FE30 */
         0xA9, 0x00,       /* lda #0 */
         0x8D, 0x02, 0xFE, /* sta $FE02 */
@@ -131,7 +131,8 @@ void r01_prg_fill_stub(uint8_t prg[R01_PRG_BYTES], const R01Project *p) {
     memset(prg, 0xEA, R01_PRG_BYTES);
     memcpy(prg, code, sizeof(code));
     if (p) {
-        prg[6] = (uint8_t)(p->active_world & 7);
+        /* Boot world is fixed at 0 — active_world is an editor UI tab, not a cart field. */
+        prg[6] = 0;
         prg[0x0100] = (uint8_t)p->constraints.scroll_mode;
         prg[0x0101] = (uint8_t)p->constraints.transition;
         prg[0x0102] = (uint8_t)(p->has_cart_save ? 1 : 0);
@@ -182,7 +183,7 @@ int r01_prg_write_asm(const R01Project *p, const char *path, char *err_buf, size
     fprintf(f, "C_DEADZONE_Y      = %d\n", c->deadzone_y);
     fprintf(f, "C_TRANSITION      = %d\n", c->transition);
     fprintf(f, "CART_HAS_I2C_SAVE = %d\n", p->has_cart_save ? 1 : 0);
-    fprintf(f, "START_WORLD       = %d\n\n", p->active_world & 7);
+    fprintf(f, "START_WORLD       = 0\n\n"); /* fixed until a cart header start-world field exists */
     fprintf(f, "SCROLL_X  = $FE02\n");
     fprintf(f, "SCROLL_Y  = $FE03\n");
     fprintf(f, "WORLD     = $FE30\n\n");

@@ -26,9 +26,9 @@ enable_testing()
 add_executable(test_cart tests/test_cart.c)
 target_link_libraries(test_cart PRIVATE retr01_emu_core)
 add_test(NAME test_cart COMMAND test_cart
-  ${CMAKE_SOURCE_DIR}/../studio/project.retr01)
+  ${CMAKE_SOURCE_DIR}/../retr01_studio/project.retr01)
 
 add_executable(test_boot tests/test_boot.c)
 target_link_libraries(test_boot PRIVATE retr01_emu_core)
 add_test(NAME test_boot COMMAND test_boot
-  ${CMAKE_SOURCE_DIR}/../studio/project.retr01)
+  ${CMAKE_SOURCE_DIR}/../retr01_studio/project.retr01)

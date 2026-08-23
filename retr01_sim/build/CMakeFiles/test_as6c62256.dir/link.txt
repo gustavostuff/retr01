@@ -1,1 +1,0 @@
-/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/test_as6c62256.dir/link.d CMakeFiles/test_as6c62256.dir/tests/test_as6c62256.c.o -o test_as6c62256  libretr01_sim_core.a

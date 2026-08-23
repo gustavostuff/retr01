@@ -1,2 +1,0 @@
-/usr/bin/ar qc libretr01_emu_core.a CMakeFiles/retr01_emu_core.dir/src/cart.c.o CMakeFiles/retr01_emu_core.dir/src/cpu.c.o CMakeFiles/retr01_emu_core.dir/src/ppu.c.o CMakeFiles/retr01_emu_core.dir/src/machine.c.o
-/usr/bin/ranlib libretr01_emu_core.a
