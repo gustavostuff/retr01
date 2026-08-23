@@ -43,6 +43,7 @@ void r01s_island_group_update_probes(R01sIslandGroup *group, int *probe_vdd, int
                                      int *probe_resb_low);
 
 const R01sIsland *r01s_island_group_at(const R01sIslandGroup *group, int index);
+R01sIsland *r01s_island_group_at_mut(R01sIslandGroup *group, int index);
 int r01s_island_group_count(const R01sIslandGroup *group);
 
 #endif

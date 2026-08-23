@@ -87,9 +87,11 @@ int r01s_ui_init(R01sUi *ui) {
     memset(ui, 0, sizeof(*ui));
     ui->selected = -1;
     ui->drag_chip = -1;
+    ui->drag_island = -1;
+    ui->resize_island = -1;
     ui->drag_stick = -1;
     ui->drag_btn = -1;
-    snprintf(ui->status, sizeof(ui->status), "islands A-E — P1 arrows Z/X/1/RET  P2 WASD N/M/2/BKSP");
+    snprintf(ui->status, sizeof(ui->status), "islands A-E+G — drag empty / resize BR — sticks FE60/61");
     return 0;
 }
 
@@ -290,12 +292,135 @@ static void move_chip_drag(R01sUi *ui, int chip_i, int board_mx, int board_my) {
     clamp_chip_in_island(ui, e, ui->chip_island[chip_i]);
 }
 
-static void draw_island_frame(SDL_Renderer *r, const R01sIsland *island, int pan_x, int pan_y) {
+static void island_content_min_size(const R01sUi *ui, int island_index, int *min_w, int *min_h) {
+    const R01sIsland *island = r01s_island_group_at(ui->group, island_index);
+    int i;
+    int need_w = R01S_ISLAND_MIN_W;
+    int need_h = R01S_ISLAND_MIN_H;
+
+    if (!island) {
+        *min_w = R01S_ISLAND_MIN_W;
+        *min_h = R01S_ISLAND_MIN_H;
+        return;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        R01sEntity *e;
+        int right, bottom;
+        if (ui->chip_island[i] != (uint8_t)island_index) {
+            continue;
+        }
+        e = ui->chips[i];
+        right = (e->board_x - island->board_x) + e->body_w + R01S_CHIP_PIN_OUT + R01S_ISLAND_PAD_X;
+        bottom = (e->board_y - island->board_y) + e->body_h + R01S_ISLAND_PAD_BOTTOM;
+        if (right > need_w) {
+            need_w = right;
+        }
+        if (bottom > need_h) {
+            need_h = bottom;
+        }
+    }
+    *min_w = need_w;
+    *min_h = need_h;
+}
+
+static void move_island_drag(R01sUi *ui, int island_index, int board_mx, int board_my) {
+    R01sIsland *island = r01s_island_group_at_mut(ui->group, island_index);
+    int nx, ny, dx, dy, i;
+
+    if (!island) {
+        return;
+    }
+    nx = board_mx - ui->drag_grab_bx;
+    ny = board_my - ui->drag_grab_by;
+    if (nx < 0) {
+        nx = 0;
+    }
+    if (ny < 0) {
+        ny = 0;
+    }
+    if (nx + island->board_w > R01S_BOARD_W) {
+        nx = R01S_BOARD_W - island->board_w;
+    }
+    if (ny + island->board_h > R01S_BOARD_H) {
+        ny = R01S_BOARD_H - island->board_h;
+    }
+    if (nx < 0) {
+        nx = 0;
+    }
+    if (ny < 0) {
+        ny = 0;
+    }
+    dx = nx - island->board_x;
+    dy = ny - island->board_y;
+    if (dx == 0 && dy == 0) {
+        return;
+    }
+    island->board_x = nx;
+    island->board_y = ny;
+    for (i = 0; i < ui->chip_count; i++) {
+        R01sEntity *e;
+        if (ui->chip_island[i] != (uint8_t)island_index) {
+            continue;
+        }
+        e = ui->chips[i];
+        r01s_entity_place(e, e->board_x + dx, e->board_y + dy);
+    }
+}
+
+static void resize_island_drag(R01sUi *ui, int island_index, int board_mx, int board_my) {
+    R01sIsland *island = r01s_island_group_at_mut(ui->group, island_index);
+    int min_w, min_h, nw, nh, i;
+
+    if (!island) {
+        return;
+    }
+    island_content_min_size(ui, island_index, &min_w, &min_h);
+    nw = board_mx - island->board_x;
+    nh = board_my - island->board_y;
+    if (nw < min_w) {
+        nw = min_w;
+    }
+    if (nh < min_h) {
+        nh = min_h;
+    }
+    if (island->board_x + nw > R01S_BOARD_W) {
+        nw = R01S_BOARD_W - island->board_x;
+    }
+    if (island->board_y + nh > R01S_BOARD_H) {
+        nh = R01S_BOARD_H - island->board_y;
+    }
+    if (nw < min_w) {
+        nw = min_w;
+    }
+    if (nh < min_h) {
+        nh = min_h;
+    }
+    island->board_w = nw;
+    island->board_h = nh;
+    for (i = 0; i < ui->chip_count; i++) {
+        if (ui->chip_island[i] == (uint8_t)island_index) {
+            clamp_chip_in_island(ui, ui->chips[i], island_index);
+        }
+    }
+}
+
+static void draw_island_frame(SDL_Renderer *r, const R01sIsland *island, int pan_x, int pan_y, int active) {
     int x = island->board_x - pan_x;
     int y = island->board_y - pan_y;
+    int hx = x + island->board_w - R01S_ISLAND_RESIZE_HANDLE;
+    int hy = y + island->board_h - R01S_ISLAND_RESIZE_HANDLE;
     fill_rect(r, x + 2, y + 2, island->board_w - 4, 16, 22, 48, 32);
     font_draw(r, x + 8, y + 6, island->title ? island->title : "ISLAND", 180, 220, 160);
-    draw_rect(r, x, y, island->board_w, island->board_h, 60, 100, 70);
+    draw_rect(r, x, y, island->board_w, island->board_h, active ? 140 : 60, active ? 200 : 100,
+              active ? 120 : 70);
+    /* Bottom-right resize grip */
+    fill_rect(r, hx, hy, R01S_ISLAND_RESIZE_HANDLE, R01S_ISLAND_RESIZE_HANDLE, 40, 70, 50);
+    draw_rect(r, hx, hy, R01S_ISLAND_RESIZE_HANDLE, R01S_ISLAND_RESIZE_HANDLE, 120, 160, 130);
+    SDL_SetRenderDrawColor(r, 160, 200, 170, 255);
+    SDL_RenderDrawLine(r, hx + 3, hy + R01S_ISLAND_RESIZE_HANDLE - 3, hx + R01S_ISLAND_RESIZE_HANDLE - 3,
+                       hy + 3);
+    SDL_RenderDrawLine(r, hx + 6, hy + R01S_ISLAND_RESIZE_HANDLE - 3, hx + R01S_ISLAND_RESIZE_HANDLE - 3,
+                       hy + 6);
 }
 
 #define GP_PANEL_W 156
@@ -503,8 +628,9 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     if (ui->group) {
         for (i = 0; i < r01s_island_group_count(ui->group); i++) {
             const R01sIsland *island = r01s_island_group_at(ui->group, i);
+            int active = (i == ui->drag_island || i == ui->resize_island);
             if (island) {
-                draw_island_frame(r, island, ui->pan_x, ui->pan_y);
+                draw_island_frame(r, island, ui->pan_x, ui->pan_y, active);
             }
         }
     }
@@ -516,7 +642,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     /* Fixed HUD */
     fill_rect(r, 0, 0, R01S_LOGIC_W, 22, 12, 14, 16);
     font_draw(r, 8, 7, "RETR01 SIM  ISLANDS A-E+G", 200, 210, 220);
-    font_draw(r, R01S_LOGIC_W - 560, 7, "SHIFT+ARROWS PAN  STICKS FE60/61", 120, 130, 140);
+    font_draw(r, R01S_LOGIC_W - 560, 7, "DRAG EMPTY / RESIZE BR  SHIFT+ARROWS PAN", 120, 130, 140);
 
     fill_rect(r, R01S_LOGIC_W - 200, 36, 184, 168, 16, 22, 18);
     draw_rect(r, R01S_LOGIC_W - 200, 36, 184, 168, 80, 90, 70);
@@ -541,6 +667,33 @@ static int hit_chip(const R01sEntity *e, int lx, int ly, int pan_x, int pan_y) {
     int x = e->board_x - pan_x;
     int y = e->board_y - pan_y;
     return lx >= x - 12 && lx < x + e->body_w + 12 && ly >= y - 4 && ly < y + e->body_h + 4;
+}
+
+static int hit_island_frame(const R01sIsland *island, int lx, int ly, int pan_x, int pan_y) {
+    int x = island->board_x - pan_x;
+    int y = island->board_y - pan_y;
+    return lx >= x && lx < x + island->board_w && ly >= y && ly < y + island->board_h;
+}
+
+static int hit_island_resize(const R01sIsland *island, int lx, int ly, int pan_x, int pan_y) {
+    int x = island->board_x - pan_x;
+    int y = island->board_y - pan_y;
+    int hx = x + island->board_w - R01S_ISLAND_RESIZE_HANDLE;
+    int hy = y + island->board_h - R01S_ISLAND_RESIZE_HANDLE;
+    return lx >= hx && lx < x + island->board_w && ly >= hy && ly < y + island->board_h;
+}
+
+static int island_has_chip_at(const R01sUi *ui, int island_index, int lx, int ly) {
+    int i;
+    for (i = 0; i < ui->chip_count; i++) {
+        if (ui->chip_island[i] != (uint8_t)island_index) {
+            continue;
+        }
+        if (hit_chip(ui->chips[i], lx, ly, ui->pan_x, ui->pan_y)) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_y) {
@@ -578,6 +731,14 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
     }
     if (e->type == SDL_MOUSEMOTION && ui->drag_stick >= 0) {
         gp_stick_from_point(&ui->gamepad[ui->drag_stick], ui->drag_stick, logic_x, logic_y);
+        return 1;
+    }
+    if (e->type == SDL_MOUSEMOTION && ui->resize_island >= 0) {
+        resize_island_drag(ui, ui->resize_island, board_mx, board_my);
+        return 1;
+    }
+    if (e->type == SDL_MOUSEMOTION && ui->drag_island >= 0) {
+        move_island_drag(ui, ui->drag_island, board_mx, board_my);
         return 1;
     }
     if (e->type == SDL_MOUSEMOTION && ui->drag_chip >= 0) {
@@ -623,6 +784,8 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             return 1;
         }
         ui->drag_chip = -1;
+        ui->drag_island = -1;
+        ui->resize_island = -1;
         return ui->selected >= 0;
     }
     if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT) {
@@ -641,6 +804,22 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         }
         ui->selected = -1;
         ui->drag_chip = -1;
+        ui->drag_island = -1;
+        ui->resize_island = -1;
+
+        /* Resize handle wins over chips (bottom-right grip). */
+        if (ui->group) {
+            for (i = r01s_island_group_count(ui->group) - 1; i >= 0; i--) {
+                const R01sIsland *island = r01s_island_group_at(ui->group, i);
+                if (island && hit_island_resize(island, logic_x, logic_y, ui->pan_x, ui->pan_y)) {
+                    ui->resize_island = i;
+                    snprintf(ui->status, sizeof(ui->status), "resize %s",
+                             island->title ? island->title : "ISLAND");
+                    return 1;
+                }
+            }
+        }
+
         for (i = ui->chip_count - 1; i >= 0; i--) {
             if (hit_chip(ui->chips[i], logic_x, logic_y, ui->pan_x, ui->pan_y)) {
                 ui->selected = i;
@@ -650,6 +829,25 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 snprintf(ui->status, sizeof(ui->status), "drag %s (%s)  pins=%d",
                          ui->chips[i]->refdes ? ui->chips[i]->refdes : "?",
                          ui->chips[i]->part ? ui->chips[i]->part : "?", ui->chips[i]->pin_count);
+                return 1;
+            }
+        }
+
+        /* Empty island area (including title bar) moves the frame + chips. */
+        if (ui->group) {
+            for (i = r01s_island_group_count(ui->group) - 1; i >= 0; i--) {
+                const R01sIsland *island = r01s_island_group_at(ui->group, i);
+                if (!island || !hit_island_frame(island, logic_x, logic_y, ui->pan_x, ui->pan_y)) {
+                    continue;
+                }
+                if (island_has_chip_at(ui, i, logic_x, logic_y)) {
+                    continue;
+                }
+                ui->drag_island = i;
+                ui->drag_grab_bx = board_mx - island->board_x;
+                ui->drag_grab_by = board_my - island->board_y;
+                snprintf(ui->status, sizeof(ui->status), "move %s",
+                         island->title ? island->title : "ISLAND");
                 return 1;
             }
         }

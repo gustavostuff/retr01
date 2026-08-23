@@ -113,6 +113,13 @@ const R01sIsland *r01s_island_group_at(const R01sIslandGroup *group, int index) 
     return group->islands[index];
 }
 
+R01sIsland *r01s_island_group_at_mut(R01sIslandGroup *group, int index) {
+    if (!group || index < 0 || index >= group->island_count) {
+        return NULL;
+    }
+    return group->islands[index];
+}
+
 int r01s_island_group_count(const R01sIslandGroup *group) {
     return group ? group->island_count : 0;
 }

@@ -1,10 +1,10 @@
-Start testing: Aug 23 12:06 MST
+Start testing: Aug 23 12:11 MST
 ----------------------------------------------------------
 1/16 Testing: test_entity
 1/16 Test: test_entity
 Command: "/home/g/Repos/retr01/retr01_sim/build/test_entity"
 Directory: /home/g/Repos/retr01/retr01_sim/build
-"test_entity" start time: Aug 23 12:06 MST
+"test_entity" start time: Aug 23 12:11 MST
 Output:
 ----------------------------------------------------------
 test_entity: ok
@@ -12,7 +12,7 @@ test_entity: ok
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"test_entity" end time: Aug 23 12:06 MST
+"test_entity" end time: Aug 23 12:11 MST
 "test_entity" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -20,7 +20,7 @@ Test Passed.
 2/16 Test: test_bus
 Command: "/home/g/Repos/retr01/retr01_sim/build/test_bus"
 Directory: /home/g/Repos/retr01/retr01_sim/build
-"test_bus" start time: Aug 23 12:06 MST
+"test_bus" start time: Aug 23 12:11 MST
 Output:
 ----------------------------------------------------------
 test_bus: ok
@@ -28,7 +28,7 @@ test_bus: ok
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"test_bus" end time: Aug 23 12:06 MST
+"test_bus" end time: Aug 23 12:11 MST
 "test_bus" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -36,7 +36,7 @@ Test Passed.
 3/16 Test: test_gamepad
 Command: "/home/g/Repos/retr01/retr01_sim/build/test_gamepad"
 Directory: /home/g/Repos/retr01/retr01_sim/build
-"test_gamepad" start time: Aug 23 12:06 MST
+"test_gamepad" start time: Aug 23 12:11 MST
 Output:
 ----------------------------------------------------------
 test_gamepad: ok
@@ -44,7 +44,7 @@ test_gamepad: ok
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"test_gamepad" end time: Aug 23 12:06 MST
+"test_gamepad" end time: Aug 23 12:11 MST
 "test_gamepad" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -52,7 +52,7 @@ Test Passed.
 4/16 Test: test_pwr5v
 Command: "/home/g/Repos/retr01/retr01_sim/build/test_pwr5v"
 Directory: /home/g/Repos/retr01/retr01_sim/build
-"test_pwr5v" start time: Aug 23 12:06 MST
+"test_pwr5v" start time: Aug 23 12:11 MST
 Output:
 ----------------------------------------------------------
 test_pwr5v: ok
@@ -60,7 +60,7 @@ test_pwr5v: ok
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"test_pwr5v" end time: Aug 23 12:06 MST
+"test_pwr5v" end time: Aug 23 12:11 MST
 "test_pwr5v" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -68,7 +68,7 @@ Test Passed.
 5/16 Test: test_osc8m
 Command: "/home/g/Repos/retr01/retr01_sim/build/test_osc8m"
 Directory: /home/g/Repos/retr01/retr01_sim/build
-"test_osc8m" start time: Aug 23 12:06 MST
+"test_osc8m" start time: Aug 23 12:11 MST
 Output:
 ----------------------------------------------------------
 test_osc8m: ok
@@ -76,7 +76,7 @@ test_osc8m: ok
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"test_osc8m" end time: Aug 23 12:06 MST
+"test_osc8m" end time: Aug 23 12:11 MST
 "test_osc8m" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -84,7 +84,7 @@ Test Passed.
 6/16 Test: test_sn74hc14
 Command: "/home/g/Repos/retr01/retr01_sim/build/test_sn74hc14"
 Directory: /home/g/Repos/retr01/retr01_sim/build
-"test_sn74hc14" start time: Aug 23 12:06 MST
+"test_sn74hc14" start time: Aug 23 12:11 MST
 Output:
 ----------------------------------------------------------
 test_sn74hc14: ok
@@ -92,7 +92,7 @@ test_sn74hc14: ok
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"test_sn74hc14" end time: Aug 23 12:06 MST
+"test_sn74hc14" end time: Aug 23 12:11 MST
 "test_sn74hc14" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -100,7 +100,7 @@ Test Passed.
 7/16 Test: test_sn74hc_glue
 Command: "/home/g/Repos/retr01/retr01_sim/build/test_sn74hc_glue"
 Directory: /home/g/Repos/retr01/retr01_sim/build
-"test_sn74hc_glue" start time: Aug 23 12:06 MST
+"test_sn74hc_glue" start time: Aug 23 12:11 MST
 Output:
 ----------------------------------------------------------
 test_sn74hc_glue: ok
@@ -108,7 +108,7 @@ test_sn74hc_glue: ok
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"test_sn74hc_glue" end time: Aug 23 12:06 MST
+"test_sn74hc_glue" end time: Aug 23 12:11 MST
 "test_sn74hc_glue" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -116,7 +116,7 @@ Test Passed.
 8/16 Test: test_sn74hc573
 Command: "/home/g/Repos/retr01/retr01_sim/build/test_sn74hc573"
 Directory: /home/g/Repos/retr01/retr01_sim/build
-"test_sn74hc573" start time: Aug 23 12:06 MST
+"test_sn74hc573" start time: Aug 23 12:11 MST
 Output:
 ----------------------------------------------------------
 test_sn74hc573: ok
@@ -124,7 +124,7 @@ test_sn74hc573: ok
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"test_sn74hc573" end time: Aug 23 12:06 MST
+"test_sn74hc573" end time: Aug 23 12:11 MST
 "test_sn74hc573" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -132,7 +132,7 @@ Test Passed.
 9/16 Test: test_sn74hc245
 Command: "/home/g/Repos/retr01/retr01_sim/build/test_sn74hc245"
 Directory: /home/g/Repos/retr01/retr01_sim/build
-"test_sn74hc245" start time: Aug 23 12:06 MST
+"test_sn74hc245" start time: Aug 23 12:11 MST
 Output:
 ----------------------------------------------------------
 test_sn74hc245: ok
@@ -140,7 +140,7 @@ test_sn74hc245: ok
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"test_sn74hc245" end time: Aug 23 12:06 MST
+"test_sn74hc245" end time: Aug 23 12:11 MST
 "test_sn74hc245" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -148,7 +148,7 @@ Test Passed.
 10/16 Test: test_sn74hc157
 Command: "/home/g/Repos/retr01/retr01_sim/build/test_sn74hc157"
 Directory: /home/g/Repos/retr01/retr01_sim/build
-"test_sn74hc157" start time: Aug 23 12:06 MST
+"test_sn74hc157" start time: Aug 23 12:11 MST
 Output:
 ----------------------------------------------------------
 test_sn74hc157: ok
@@ -156,7 +156,7 @@ test_sn74hc157: ok
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"test_sn74hc157" end time: Aug 23 12:06 MST
+"test_sn74hc157" end time: Aug 23 12:11 MST
 "test_sn74hc157" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -164,7 +164,7 @@ Test Passed.
 11/16 Test: test_as6c62256
 Command: "/home/g/Repos/retr01/retr01_sim/build/test_as6c62256"
 Directory: /home/g/Repos/retr01/retr01_sim/build
-"test_as6c62256" start time: Aug 23 12:06 MST
+"test_as6c62256" start time: Aug 23 12:11 MST
 Output:
 ----------------------------------------------------------
 test_as6c62256: ok
@@ -172,7 +172,7 @@ test_as6c62256: ok
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"test_as6c62256" end time: Aug 23 12:06 MST
+"test_as6c62256" end time: Aug 23 12:11 MST
 "test_as6c62256" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -180,7 +180,7 @@ Test Passed.
 12/16 Test: test_prg_rom
 Command: "/home/g/Repos/retr01/retr01_sim/build/test_prg_rom"
 Directory: /home/g/Repos/retr01/retr01_sim/build
-"test_prg_rom" start time: Aug 23 12:06 MST
+"test_prg_rom" start time: Aug 23 12:11 MST
 Output:
 ----------------------------------------------------------
 test_prg_rom: ok
@@ -188,7 +188,7 @@ test_prg_rom: ok
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"test_prg_rom" end time: Aug 23 12:06 MST
+"test_prg_rom" end time: Aug 23 12:11 MST
 "test_prg_rom" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -196,7 +196,7 @@ Test Passed.
 13/16 Test: test_sst39sf040
 Command: "/home/g/Repos/retr01/retr01_sim/build/test_sst39sf040"
 Directory: /home/g/Repos/retr01/retr01_sim/build
-"test_sst39sf040" start time: Aug 23 12:06 MST
+"test_sst39sf040" start time: Aug 23 12:11 MST
 Output:
 ----------------------------------------------------------
 test_sst39sf040: ok
@@ -204,7 +204,7 @@ test_sst39sf040: ok
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"test_sst39sf040" end time: Aug 23 12:06 MST
+"test_sst39sf040" end time: Aug 23 12:11 MST
 "test_sst39sf040" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -212,7 +212,7 @@ Test Passed.
 14/16 Test: test_w65c02s
 Command: "/home/g/Repos/retr01/retr01_sim/build/test_w65c02s"
 Directory: /home/g/Repos/retr01/retr01_sim/build
-"test_w65c02s" start time: Aug 23 12:06 MST
+"test_w65c02s" start time: Aug 23 12:11 MST
 Output:
 ----------------------------------------------------------
 test_w65c02s: ok
@@ -220,7 +220,7 @@ test_w65c02s: ok
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"test_w65c02s" end time: Aug 23 12:06 MST
+"test_w65c02s" end time: Aug 23 12:11 MST
 "test_w65c02s" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -228,15 +228,15 @@ Test Passed.
 15/16 Test: test_island_abcdeg
 Command: "/home/g/Repos/retr01/retr01_sim/build/test_island_abcdeg"
 Directory: /home/g/Repos/retr01/retr01_sim/build
-"test_island_abcdeg" start time: Aug 23 12:06 MST
+"test_island_abcdeg" start time: Aug 23 12:11 MST
 Output:
 ----------------------------------------------------------
 test_island_abcdeg: ok
 <end of output>
-Test time =   0.03 sec
+Test time =   0.02 sec
 ----------------------------------------------------------
 Test Passed.
-"test_island_abcdeg" end time: Aug 23 12:06 MST
+"test_island_abcdeg" end time: Aug 23 12:11 MST
 "test_island_abcdeg" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -244,7 +244,7 @@ Test Passed.
 16/16 Test: test_pads
 Command: "/home/g/Repos/retr01/retr01_sim/build/test_pads"
 Directory: /home/g/Repos/retr01/retr01_sim/build
-"test_pads" start time: Aug 23 12:06 MST
+"test_pads" start time: Aug 23 12:11 MST
 Output:
 ----------------------------------------------------------
 test_pads: ok
@@ -252,8 +252,8 @@ test_pads: ok
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"test_pads" end time: Aug 23 12:06 MST
+"test_pads" end time: Aug 23 12:11 MST
 "test_pads" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-End testing: Aug 23 12:06 MST
+End testing: Aug 23 12:11 MST

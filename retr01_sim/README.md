@@ -51,7 +51,7 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 # or: ./build/retr01_sim
 ```
 
-**Controls:** `Space` pause/resume · `R` reset · `.` single-step (while paused) · **left-drag** move chip within its island · **Shift+arrows / wheel / right-drag** pan · `Esc` quit.
+**Controls:** `Space` pause/resume · `R` reset · `.` single-step (while paused) · **left-drag chip** move within island · **left-drag empty island** move frame · **bottom-right grip** resize island · **Shift+arrows / wheel / right-drag** pan · `Esc` quit.
 
 **Gamepads (island E → `$FE60`/`$FE61`):** bottom-left panels or keyboard:
 

@@ -11,4 +11,9 @@
 #define R01S_CHIP_GAP 28
 #define R01S_ISLAND_GAP 32
 
+/* UI: bottom-right resize grip. */
+#define R01S_ISLAND_RESIZE_HANDLE 12
+#define R01S_ISLAND_MIN_W 96
+#define R01S_ISLAND_MIN_H 56
+
 #endif
