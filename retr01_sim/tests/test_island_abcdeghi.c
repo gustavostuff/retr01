@@ -1,5 +1,6 @@
 #include "as6c62256.h"
 #include "beam_xy.h"
+#include "bg_fetch.h"
 #include "retr01_sim/board.h"
 #include "retr01_sim/bus.h"
 #include "retr01_sim/island_builder.h"
@@ -11,8 +12,8 @@
 #include <stdio.h>
 
 /*
- * Layer-2 islands A–E + G + H smoke:
- *   D $FE02 / $FE04 latches, E pads, G VRAM, H beam 341x262 + HC688 compare.
+ * Layer-2 islands A–E + G + H + I smoke:
+ *   D $FE02 / $FE04 latches, E pads, G VRAM, H beam, I BG nametable fetch.
  */
 int main(void) {
     R01sBoard board;
@@ -27,25 +28,25 @@ int main(void) {
     int saw_beam_hblank = 0;
     int saw_beam_line = 0;
     int saw_raster_hit = 0;
+    int saw_bg_tile = 0;
+    int saw_bg_attr = 0;
 
     r01s_island_builder_init(&builder);
     expect_true(r01s_board_build(&board, &builder) == 0, "board build");
     group = r01s_island_builder_group(&builder);
     expect_true(group != NULL, "group");
-    expect_true(r01s_island_group_count(group) == 7, "7 islands A-E+G+H");
+    expect_true(r01s_island_group_count(group) == 8, "8 islands A-E+G+H+I");
 
     b = r01s_board_from_group(group);
     expect_true(b != NULL, "board ctx");
     r01s_pads_set(&b->pads, 0, 0xA5);
-    /* Preload raster compare to Y=0 so EQ# hits at start of each frame line 0. */
-    /* After boot, poke FE04 via peek — set latch Q directly for smoke. */
     {
         R01sEntity *raster = r01s_sn74hc573_entity(&b->raster_latch);
         int bi;
         char dn[8];
         for (bi = 0; bi < 8; bi++) {
             snprintf(dn, sizeof(dn), "%dD", bi + 1);
-            r01s_entity_drive(raster, dn, R01S_LVL_L); /* compare Y==0 */
+            r01s_entity_drive(raster, dn, R01S_LVL_L);
         }
         r01s_entity_drive(raster, "OE", R01S_LVL_L);
         r01s_entity_drive(raster, "LE", R01S_LVL_H);
@@ -53,7 +54,7 @@ int main(void) {
         r01s_entity_drive(raster, "LE", R01S_LVL_L);
     }
 
-    for (i = 0; i < 2000; i++) {
+    for (i = 0; i < 8000; i++) {
         r01s_island_group_step(group);
         if (r01s_sn74hc573_peek_q(&b->latch) == 0x55) {
             saw_latch = 1;
@@ -76,8 +77,14 @@ int main(void) {
         if (r01s_entity_sense(r01s_sn74hc688_entity(&b->raster_cmp), "EQ#") == R01S_LVL_L) {
             saw_raster_hit = 1;
         }
+        if (r01s_bg_fetch_last_tile(&b->bg_fetch) == 0x42) {
+            saw_bg_tile = 1;
+        }
+        if (r01s_bg_fetch_last_attr(&b->bg_fetch) == 0x07) {
+            saw_bg_attr = 1;
+        }
         if (saw_latch && saw_vram && saw_vram_read && saw_pad && saw_beam_hblank && saw_beam_line &&
-            saw_raster_hit) {
+            saw_raster_hit && saw_bg_tile && saw_bg_attr) {
             break;
         }
     }
@@ -89,9 +96,13 @@ int main(void) {
     expect_true(saw_beam_hblank, "island H HBlank");
     expect_true(saw_beam_line, "island H advanced past line 0");
     expect_true(saw_raster_hit, "HC688 EQ# on Y vs $FE04");
+    expect_true(saw_bg_tile, "island I latched nametable tile $42");
+    expect_true(saw_bg_attr, "island I latched nametable attr $07");
+    expect_true(r01s_as6c62256_peek(&b->vram, 0) == 0x42, "VRAM[0] final tile");
+    expect_true(r01s_as6c62256_peek(&b->vram, 0xF0) == 0x07, "VRAM[0xF0] attr");
     expect_true(b->cycles > 0, "CPU cycles advanced");
     expect_true(r01s_bus_conflict_count() == 0, "no bus fight");
 
     r01s_island_builder_shutdown(&builder);
-    return test_done("test_island_abcdegh");
+    return test_done("test_island_abcdeghi");
 }

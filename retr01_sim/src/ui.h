@@ -50,6 +50,8 @@ typedef struct R01sUi {
     int drag_stick; /* player index or -1 */
     int drag_btn;   /* player*4 + btn index, or -1 */
     int mouse_btn[R01S_UI_GAMEPAD_COUNT][4]; /* X Y COIN START held by mouse */
+    int mouse_lx; /* last logic-space mouse (for tooltips) */
+    int mouse_ly;
 } R01sUi;
 
 int r01s_ui_init(R01sUi *ui);

@@ -37,6 +37,7 @@ add_library(retr01_sim_core
   chips/w65c02s.c
   chips/osc_dot.c
   chips/beam_xy.c
+  chips/bg_fetch.c
 )
 target_include_directories(retr01_sim_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -78,9 +79,10 @@ r01s_unit_test(test_sn74hc157)
 r01s_unit_test(test_sn74hc161)
 r01s_unit_test(test_sn74hc688)
 r01s_unit_test(test_beam_xy)
+r01s_unit_test(test_bg_fetch)
 r01s_unit_test(test_as6c62256)
 r01s_unit_test(test_prg_rom)
 r01s_unit_test(test_sst39sf040)
 r01s_unit_test(test_w65c02s)
-r01s_unit_test(test_island_abcdegh)
+r01s_unit_test(test_island_abcdeghi)
 r01s_unit_test(test_pads)

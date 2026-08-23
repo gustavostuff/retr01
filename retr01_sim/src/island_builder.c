@@ -149,6 +149,60 @@ void r01s_island_builder_arrange(R01sIslandBuilder *builder, int start_x, int st
     }
 }
 
+void r01s_island_builder_arrange_rows(R01sIslandBuilder *builder, int start_x, int start_y, int gap_x,
+                                      int gap_y, int max_row_w) {
+    int i;
+    int x = start_x;
+    int y = start_y;
+    int row_h = 0;
+    int limit;
+
+    if (!builder) {
+        return;
+    }
+    if (max_row_w < 64) {
+        max_row_w = 64;
+    }
+    limit = start_x + max_row_w;
+
+    for (i = 0; i < builder->island_count; i++) {
+        R01sIsland *island = &builder->islands[i];
+        int dx;
+        int dy;
+        int j;
+
+        if (i > 0 && x > start_x && x + island->board_w > limit) {
+            x = start_x;
+            y += row_h + gap_y;
+            row_h = 0;
+        }
+
+        dx = x - island->board_x;
+        dy = y - island->board_y;
+        if (dx != 0 || dy != 0) {
+            island->board_x = x;
+            island->board_y = y;
+            for (j = 0; j < builder->mount_count; j++) {
+                struct R01sIslandBuilderMount *m = &builder->mounts[j];
+                if (m->island_index != i || !m->entity) {
+                    continue;
+                }
+                m->board_x += dx;
+                m->board_y += dy;
+                r01s_entity_place(m->entity, m->board_x, m->board_y);
+            }
+        } else {
+            island->board_x = x;
+            island->board_y = y;
+        }
+
+        if (island->board_h > row_h) {
+            row_h = island->board_h;
+        }
+        x += island->board_w + gap_x;
+    }
+}
+
 int r01s_island_builder_finish(R01sIslandBuilder *builder) {
     int i;
     if (!builder || builder->island_count == 0) {

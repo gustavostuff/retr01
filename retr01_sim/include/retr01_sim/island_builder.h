@@ -50,6 +50,14 @@ void r01s_island_builder_fit_all(R01sIslandBuilder *builder);
  */
 void r01s_island_builder_arrange(R01sIslandBuilder *builder, int start_x, int start_y, int gap, int horizontal);
 
+/*
+ * Pack left-to-right, wrapping to the next row when the next island would exceed
+ * start_x + max_row_w. Prefer this for the default board so islands stay visible
+ * with vertical pan instead of one long horizontal strip.
+ */
+void r01s_island_builder_arrange_rows(R01sIslandBuilder *builder, int start_x, int start_y, int gap_x,
+                                      int gap_y, int max_row_w);
+
 /* Adds all islands to the group and runs group reset. Returns 0 ok, -1 if empty. */
 int r01s_island_builder_finish(R01sIslandBuilder *builder);
 

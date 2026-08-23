@@ -12,11 +12,14 @@ typedef enum R01sHealth {
 
 #define R01S_HEALTH_MAX_ISLANDS 8
 #define R01S_HEALTH_ACTIVITY_LEN 44
+#define R01S_HEALTH_DEBUG_LEN 192
+#define R01S_HEALTH_SYSTEM_DEBUG_LEN 1024
 
 typedef struct R01sIslandHealth {
     char letter;
     R01sHealth health;
     char activity[R01S_HEALTH_ACTIVITY_LEN];
+    char debug[R01S_HEALTH_DEBUG_LEN]; /* paste-friendly dump for WARN/FAIL */
 } R01sIslandHealth;
 
 typedef struct R01sSystemHealth {
@@ -25,6 +28,7 @@ typedef struct R01sSystemHealth {
     R01sHealth system;
     char system_label[24];
     char system_detail[64];
+    char system_debug[R01S_HEALTH_SYSTEM_DEBUG_LEN];
 } R01sSystemHealth;
 
 static inline const char *r01s_health_tag(R01sHealth h) {

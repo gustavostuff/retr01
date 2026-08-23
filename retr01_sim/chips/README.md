@@ -18,6 +18,7 @@ Each IC is a struct that **starts with** an `R01sEntity`, plus an `R01sEntityVTa
 | H | `beam_xy.c` | BEAM_XY | ATF22V10 X/Y beam stub (341×262, H/VBlank, NMI#) |
 | H | `sn74hc161.c` | SN74HC161 | Discrete counter (layer-1; optional bench path) |
 | H | `sn74hc688.c` | SN74HC688 | Raster Y vs `$FE04` |
+| I | `bg_fetch.c` | BG_FETCH | Nametable VA from beam+scroll; tile/attr latch |
 | bus | `sn74hc245.c` | SN74HC245 | Octal transceiver (DIR + OE) |
 | J | `sst39sf040.c` | SST39SF040 | 512 KB flash, **read-only stub** |
 | glue | `sn74hc00.c` | SN74HC00 | Quad NAND |
