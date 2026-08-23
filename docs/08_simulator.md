@@ -1,6 +1,6 @@
 # Retr01 Board Simulator
 
-**Status:** Planning. Code will live under `sim/` (not started). IC behavior references: [`hw/md/`](../hw/md/). Current BOM: [`06`](06_hardware_v1_32ic.md). Island checklist: [`03`](03_hardware_implementation.md).
+**Status:** Scaffold under [`retr01_sim/`](../retr01_sim/). IC behavior references: [`hw/md/`](../hw/md/). Current BOM: [`06`](06_hardware_v1_32ic.md). Island checklist: [`03`](03_hardware_implementation.md).
 
 ## Goal
 
@@ -72,7 +72,7 @@ Full Retr01-A netlist: **current BOM** [`06`](06_hardware_v1_32ic.md) (**32 IC**
 | Priority | Work |
 |----------|------|
 | 1 | `hw/md/` IC reference docs (batches: CPU/MCU, memory, glue/video) |
-| 2 | `sim/` scaffolding + **W65C02S** + **AS6C62256** unit tests (system RAM role) |
+| 2 | `retr01_sim/` scaffolding + **W65C02S** + **AS6C62256** unit tests (system RAM role) |
 | 3 | Link CPU + RAM island (island C) |
 | Later | Remaining ICs, video, cart, pads, screen |
 

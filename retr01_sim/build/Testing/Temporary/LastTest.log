@@ -1,0 +1,19 @@
+Start testing: Aug 22 19:08 MST
+----------------------------------------------------------
+1/1 Testing: entity
+1/1 Test: entity
+Command: "/home/g/Repos/retr01/retr01_sim/build/test_entity"
+Directory: /home/g/Repos/retr01/retr01_sim/build
+"entity" start time: Aug 22 19:08 MST
+Output:
+----------------------------------------------------------
+test_entity: ok
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"entity" end time: Aug 22 19:08 MST
+"entity" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Aug 22 19:08 MST

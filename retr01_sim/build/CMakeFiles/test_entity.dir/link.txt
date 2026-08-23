@@ -1,0 +1,1 @@
+/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/test_entity.dir/link.d CMakeFiles/test_entity.dir/tests/test_entity.c.o -o test_entity  libretr01_sim_core.a

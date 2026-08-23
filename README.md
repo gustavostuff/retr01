@@ -33,7 +33,7 @@ Later editions (console and handheld) share the same soul: one architecture, dif
 
 ## Project status
 
-Retr01 is in **architecture & documentation** phase with **Retr01 Studio** (Phases 0–5) as the active coding focus. A board IC simulator is planned later ([`docs/08_simulator.md`](docs/08_simulator.md)).
+Retr01 is in **architecture & documentation** phase with **Retr01 Studio** (Phases 0–5) as the active coding focus. Board IC simulator scaffold: [`retr01_sim/`](retr01_sim/) ([`docs/08_simulator.md`](docs/08_simulator.md)).
 
 ---
 
