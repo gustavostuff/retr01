@@ -289,6 +289,67 @@ CMakeFiles/retr01_sim_core.dir/src/entity.c.o: /home/g/Repos/retr01/retr01_sim/s
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stddef.h \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdint.h
 
+CMakeFiles/retr01_sim_core.dir/src/island.c.o: /home/g/Repos/retr01/retr01_sim/src/island.c \
+  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/entity.h \
+  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island.h \
+  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/pin.h \
+  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/types.h \
+  /usr/include/bits/libc-header-start.h \
+  /usr/include/bits/long-double.h \
+  /usr/include/bits/stdint-intn.h \
+  /usr/include/bits/stdint-least.h \
+  /usr/include/bits/stdint-uintn.h \
+  /usr/include/bits/time64.h \
+  /usr/include/bits/timesize.h \
+  /usr/include/bits/types.h \
+  /usr/include/bits/types/__locale_t.h \
+  /usr/include/bits/types/locale_t.h \
+  /usr/include/bits/typesizes.h \
+  /usr/include/bits/wchar.h \
+  /usr/include/bits/wordsize.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/gnu/stubs-64.h \
+  /usr/include/gnu/stubs.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/sys/cdefs.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stddef.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdint.h
+
+CMakeFiles/retr01_sim_core.dir/src/island_group.c.o: /home/g/Repos/retr01/retr01_sim/src/island_group.c \
+  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/entity.h \
+  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island.h \
+  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_group.h \
+  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/pin.h \
+  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/types.h \
+  /usr/include/bits/libc-header-start.h \
+  /usr/include/bits/long-double.h \
+  /usr/include/bits/stdint-intn.h \
+  /usr/include/bits/stdint-least.h \
+  /usr/include/bits/stdint-uintn.h \
+  /usr/include/bits/time64.h \
+  /usr/include/bits/timesize.h \
+  /usr/include/bits/types.h \
+  /usr/include/bits/types/__locale_t.h \
+  /usr/include/bits/types/locale_t.h \
+  /usr/include/bits/typesizes.h \
+  /usr/include/bits/wchar.h \
+  /usr/include/bits/wordsize.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/gnu/stubs-64.h \
+  /usr/include/gnu/stubs.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/sys/cdefs.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stddef.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdint.h
+
 CMakeFiles/retr01_sim_core.dir/src/pin.c.o: /home/g/Repos/retr01/retr01_sim/src/pin.c \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/pin.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/types.h \
@@ -314,118 +375,126 @@ CMakeFiles/retr01_sim_core.dir/src/pin.c.o: /home/g/Repos/retr01/retr01_sim/src/
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdint.h
 
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdarg.h:
-
-/usr/include/stdio.h:
-
-/usr/include/bits/types/struct_FILE.h:
-
 /home/g/Repos/retr01/retr01_sim/src/pin.c:
 
-/usr/include/bits/floatn-common.h:
+/home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_group.h:
 
-/usr/include/bits/floatn.h:
-
-/home/g/Repos/retr01/retr01_sim/chips/w65c02s.c:
-
-/home/g/Repos/retr01/retr01_sim/chips/stub14.h:
-
-/home/g/Repos/retr01/retr01_sim/chips/sn74hc14.h:
-
-/home/g/Repos/retr01/retr01_sim/chips/sn74hc14.c:
-
-/home/g/Repos/retr01/retr01_sim/chips/pwr5v.h:
-
-/home/g/Repos/retr01/retr01_sim/chips/pwr5v.c:
-
-/home/g/Repos/retr01/retr01_sim/src/entity.c:
-
-/usr/include/bits/types/__mbstate_t.h:
-
-/home/g/Repos/retr01/retr01_sim/chips/prg_rom.h:
-
-/usr/include/bits/types/__FILE.h:
-
-/usr/include/bits/types/FILE.h:
-
-/home/g/Repos/retr01/retr01_sim/chips/osc8m.h:
-
-/home/g/Repos/retr01/retr01_sim/chips/osc8m.c:
-
-/home/g/Repos/retr01/retr01_sim/src/bus.c:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdint.h:
-
-/home/g/Repos/retr01/retr01_sim/chips/as6c62256.c:
-
-/usr/include/gnu/stubs-64.h:
-
-/usr/include/bits/types/locale_t.h:
-
-/home/g/Repos/retr01/retr01_sim/include/retr01_sim/types.h:
-
-/usr/include/bits/stdint-intn.h:
-
-/usr/include/bits/stdint-least.h:
-
-/usr/include/bits/stdio_lim.h:
-
-/home/g/Repos/retr01/retr01_sim/chips/w65c02s.h:
-
-/usr/include/bits/wchar.h:
-
-/home/g/Repos/retr01/retr01_sim/include/retr01_sim/entity.h:
-
-/usr/include/bits/types/__fpos64_t.h:
-
-/usr/include/features-time64.h:
-
-/usr/include/stdint.h:
-
-/home/g/Repos/retr01/retr01_sim/include/retr01_sim/bus.h:
-
-/home/g/Repos/retr01/retr01_sim/include/retr01_sim/pin.h:
-
-/usr/include/bits/long-double.h:
-
-/home/g/Repos/retr01/retr01_sim/chips/stub14.c:
-
-/usr/include/bits/time64.h:
-
-/home/g/Repos/retr01/retr01_sim/chips/as6c62256.h:
-
-/usr/include/bits/types.h:
-
-/home/g/Repos/retr01/retr01_sim/chips/prg_rom.c:
-
-/usr/include/bits/types/__locale_t.h:
-
-/usr/include/bits/types/__fpos_t.h:
-
-/usr/include/bits/wordsize.h:
-
-/usr/include/bits/stdio.h:
-
-/usr/include/features.h:
-
-/usr/include/gnu/stubs.h:
-
-/usr/include/bits/types/cookie_io_functions_t.h:
-
-/usr/include/bits/typesizes.h:
-
-/usr/include/string.h:
-
-/usr/include/bits/libc-header-start.h:
-
-/usr/include/strings.h:
-
-/usr/include/bits/timesize.h:
-
-/usr/include/stdc-predef.h:
+/home/g/Repos/retr01/retr01_sim/src/island_group.c:
 
 /usr/include/sys/cdefs.h:
 
-/usr/include/bits/stdint-uintn.h:
+/usr/include/stdc-predef.h:
+
+/usr/include/bits/timesize.h:
+
+/usr/include/strings.h:
+
+/usr/include/bits/libc-header-start.h:
+
+/usr/include/gnu/stubs.h:
+
+/usr/include/features.h:
+
+/usr/include/bits/stdio.h:
+
+/usr/include/bits/wordsize.h:
+
+/usr/include/bits/types/__fpos_t.h:
+
+/usr/include/bits/types/__locale_t.h:
+
+/home/g/Repos/retr01/retr01_sim/chips/prg_rom.c:
+
+/usr/include/string.h:
+
+/usr/include/bits/time64.h:
+
+/home/g/Repos/retr01/retr01_sim/chips/stub14.c:
+
+/usr/include/bits/long-double.h:
+
+/home/g/Repos/retr01/retr01_sim/include/retr01_sim/pin.h:
+
+/usr/include/stdint.h:
+
+/usr/include/features-time64.h:
+
+/usr/include/bits/types/__fpos64_t.h:
+
+/home/g/Repos/retr01/retr01_sim/include/retr01_sim/entity.h:
+
+/usr/include/bits/wchar.h:
+
+/usr/include/bits/stdio_lim.h:
+
+/usr/include/bits/stdint-least.h:
+
+/usr/include/bits/stdint-intn.h:
+
+/home/g/Repos/retr01/retr01_sim/include/retr01_sim/types.h:
+
+/usr/include/bits/types/locale_t.h:
+
+/usr/include/gnu/stubs-64.h:
+
+/home/g/Repos/retr01/retr01_sim/include/retr01_sim/bus.h:
+
+/home/g/Repos/retr01/retr01_sim/chips/as6c62256.c:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdint.h:
+
+/home/g/Repos/retr01/retr01_sim/src/bus.c:
+
+/home/g/Repos/retr01/retr01_sim/chips/osc8m.c:
+
+/home/g/Repos/retr01/retr01_sim/chips/osc8m.h:
+
+/usr/include/bits/types/FILE.h:
+
+/usr/include/bits/types/__FILE.h:
+
+/home/g/Repos/retr01/retr01_sim/chips/prg_rom.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stddef.h:
+
+/usr/include/bits/types/__mbstate_t.h:
+
+/usr/include/bits/typesizes.h:
+
+/home/g/Repos/retr01/retr01_sim/src/entity.c:
+
+/home/g/Repos/retr01/retr01_sim/chips/pwr5v.c:
+
+/home/g/Repos/retr01/retr01_sim/chips/pwr5v.h:
+
+/home/g/Repos/retr01/retr01_sim/chips/sn74hc14.c:
+
+/home/g/Repos/retr01/retr01_sim/chips/sn74hc14.h:
+
+/home/g/Repos/retr01/retr01_sim/chips/stub14.h:
+
+/home/g/Repos/retr01/retr01_sim/chips/w65c02s.c:
+
+/usr/include/bits/floatn.h:
+
+/usr/include/bits/floatn-common.h:
+
+/usr/include/bits/types.h:
+
+/home/g/Repos/retr01/retr01_sim/src/island.c:
+
+/usr/include/bits/types/struct_FILE.h:
+
+/usr/include/stdio.h:
+
+/home/g/Repos/retr01/retr01_sim/chips/as6c62256.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdarg.h:
+
+/usr/include/bits/stdint-uintn.h:
+
+/usr/include/bits/types/cookie_io_functions_t.h:
+
+/home/g/Repos/retr01/retr01_sim/chips/w65c02s.h:
+
+/home/g/Repos/retr01/retr01_sim/include/retr01_sim/island.h:

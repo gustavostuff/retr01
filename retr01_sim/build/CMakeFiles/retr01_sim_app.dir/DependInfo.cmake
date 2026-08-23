@@ -9,8 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/g/Repos/retr01/retr01_sim/src/app.c" "CMakeFiles/retr01_sim_app.dir/src/app.c.o" "gcc" "CMakeFiles/retr01_sim_app.dir/src/app.c.o.d"
-  "/home/g/Repos/retr01/retr01_sim/src/island_abc.c" "CMakeFiles/retr01_sim_app.dir/src/island_abc.c.o" "gcc" "CMakeFiles/retr01_sim_app.dir/src/island_abc.c.o.d"
-  "/home/g/Repos/retr01/retr01_sim/src/traces.c" "CMakeFiles/retr01_sim_app.dir/src/traces.c.o" "gcc" "CMakeFiles/retr01_sim_app.dir/src/traces.c.o.d"
+  "/home/g/Repos/retr01/retr01_sim/src/islands/bringup_abc.c" "CMakeFiles/retr01_sim_app.dir/src/islands/bringup_abc.c.o" "gcc" "CMakeFiles/retr01_sim_app.dir/src/islands/bringup_abc.c.o.d"
   "/home/g/Repos/retr01/retr01_sim/src/ui.c" "CMakeFiles/retr01_sim_app.dir/src/ui.c.o" "gcc" "CMakeFiles/retr01_sim_app.dir/src/ui.c.o.d"
   )
 

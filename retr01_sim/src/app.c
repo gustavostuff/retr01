@@ -1,7 +1,5 @@
 #include "app.h"
 
-#include "retr01_sim/bus.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,15 +14,6 @@ static void logic_from_window(const R01sApp *app, int win_x, int win_y, int *lx,
     oy = (wh - draw_h) / 2;
     *lx = (win_x - ox) / scale;
     *ly = (win_y - oy) / scale;
-}
-
-static void update_probes(R01sApp *app) {
-    R01sEntity *pwr = r01s_pwr5v_entity(&app->island.pwr);
-    R01sEntity *osc = r01s_osc8m_entity(&app->island.osc);
-    R01sEntity *cpu = r01s_w65c02s_entity(&app->island.cpu);
-    app->ui.probe_vdd = r01s_level_is_high(r01s_entity_sense(pwr, "VDD"));
-    app->ui.probe_phi2 = r01s_level_is_high(r01s_entity_sense(osc, "PHI2"));
-    app->ui.probe_resb_low = r01s_level_is_low(r01s_entity_sense(cpu, "RESB"));
 }
 
 int r01s_app_init(R01sApp *app, int headless) {
@@ -50,8 +39,8 @@ int r01s_app_init(R01sApp *app, int headless) {
         return -1;
     }
 
-    r01s_island_abc_init(&app->island);
-    r01s_island_abc_mount(&app->island, &app->ui);
+    r01s_bringup_abc_setup(&app->bringup, &app->group);
+    r01s_bringup_abc_mount(&app->bringup, &app->group, &app->ui);
 
     flags = SDL_WINDOW_ALLOW_HIGHDPI;
     if (headless) {
@@ -64,7 +53,7 @@ int r01s_app_init(R01sApp *app, int headless) {
                                 R01S_LOGIC_W, R01S_LOGIC_H, flags);
     if (!app->win) {
         fprintf(stderr, "window: %s\n", SDL_GetError());
-        r01s_island_abc_shutdown(&app->island);
+        r01s_island_group_shutdown(&app->group);
         r01s_ui_shutdown(&app->ui);
         SDL_Quit();
         return -1;
@@ -77,7 +66,7 @@ int r01s_app_init(R01sApp *app, int headless) {
     if (!app->ren) {
         fprintf(stderr, "renderer: %s\n", SDL_GetError());
         SDL_DestroyWindow(app->win);
-        r01s_island_abc_shutdown(&app->island);
+        r01s_island_group_shutdown(&app->group);
         r01s_ui_shutdown(&app->ui);
         SDL_Quit();
         return -1;
@@ -89,7 +78,7 @@ int r01s_app_init(R01sApp *app, int headless) {
         fprintf(stderr, "texture: %s\n", SDL_GetError());
         SDL_DestroyRenderer(app->ren);
         SDL_DestroyWindow(app->win);
-        r01s_island_abc_shutdown(&app->island);
+        r01s_island_group_shutdown(&app->group);
         r01s_ui_shutdown(&app->ui);
         SDL_Quit();
         return -1;
@@ -102,7 +91,7 @@ void r01s_app_shutdown(R01sApp *app) {
     if (!app) {
         return;
     }
-    r01s_island_abc_shutdown(&app->island);
+    r01s_island_group_shutdown(&app->group);
     r01s_ui_shutdown(&app->ui);
     if (app->target) {
         SDL_DestroyTexture(app->target);
@@ -121,8 +110,9 @@ void r01s_app_frame(R01sApp *app) {
     int ww, wh, scale, draw_w, draw_h;
     SDL_Rect dst;
 
-    r01s_island_abc_frame(&app->island, &app->ui);
-    update_probes(app);
+    r01s_island_group_frame(&app->group);
+    r01s_island_group_fill_status(&app->group, app->ui.status, sizeof(app->ui.status));
+    r01s_island_group_update_probes(&app->group, &app->ui.probe_vdd, &app->ui.probe_phi2, &app->ui.probe_resb_low);
 
     SDL_SetRenderTarget(app->ren, app->target);
     r01s_ui_draw(&app->ui, app->ren);
@@ -166,14 +156,14 @@ void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
             app->running = 0;
             return;
         case SDLK_SPACE:
-            app->island.running = !app->island.running;
+            app->group.running = !app->group.running;
             return;
         case SDLK_r:
-            r01s_island_abc_reset(&app->island);
+            r01s_island_group_reset(&app->group);
             return;
         case SDLK_PERIOD:
-            if (!app->island.running) {
-                r01s_island_abc_step(&app->island);
+            if (!app->group.running) {
+                r01s_island_group_step(&app->group);
             }
             return;
         default:

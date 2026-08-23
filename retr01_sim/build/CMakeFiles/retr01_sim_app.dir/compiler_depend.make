@@ -8,12 +8,13 @@ CMakeFiles/retr01_sim_app.dir/src/app.c.o: /home/g/Repos/retr01/retr01_sim/src/a
   /home/g/Repos/retr01/retr01_sim/chips/pwr5v.h \
   /home/g/Repos/retr01/retr01_sim/chips/sn74hc14.h \
   /home/g/Repos/retr01/retr01_sim/chips/w65c02s.h \
-  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/bus.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/entity.h \
+  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island.h \
+  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_group.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/pin.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/types.h \
   /home/g/Repos/retr01/retr01_sim/src/app.h \
-  /home/g/Repos/retr01/retr01_sim/src/island_abc.h \
+  /home/g/Repos/retr01/retr01_sim/src/islands/bringup_abc.h \
   /home/g/Repos/retr01/retr01_sim/src/ui.h \
   /usr/include/SDL2/SDL.h \
   /usr/include/SDL2/SDL_assert.h \
@@ -269,7 +270,7 @@ CMakeFiles/retr01_sim_app.dir/src/app.c.o: /home/g/Repos/retr01/retr01_sim/src/a
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/xsavesintrin.h \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/xtestintrin.h
 
-CMakeFiles/retr01_sim_app.dir/src/island_abc.c.o: /home/g/Repos/retr01/retr01_sim/src/island_abc.c \
+CMakeFiles/retr01_sim_app.dir/src/islands/bringup_abc.c.o: /home/g/Repos/retr01/retr01_sim/src/islands/bringup_abc.c \
   /home/g/Repos/retr01/retr01_sim/chips/as6c62256.h \
   /home/g/Repos/retr01/retr01_sim/chips/osc8m.h \
   /home/g/Repos/retr01/retr01_sim/chips/prg_rom.h \
@@ -278,9 +279,11 @@ CMakeFiles/retr01_sim_app.dir/src/island_abc.c.o: /home/g/Repos/retr01/retr01_si
   /home/g/Repos/retr01/retr01_sim/chips/w65c02s.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/bus.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/entity.h \
+  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island.h \
+  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_group.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/pin.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/types.h \
-  /home/g/Repos/retr01/retr01_sim/src/island_abc.h \
+  /home/g/Repos/retr01/retr01_sim/src/islands/bringup_abc.h \
   /home/g/Repos/retr01/retr01_sim/src/ui.h \
   /usr/include/SDL2/SDL.h \
   /usr/include/SDL2/SDL_assert.h \
@@ -538,6 +541,8 @@ CMakeFiles/retr01_sim_app.dir/src/island_abc.c.o: /home/g/Repos/retr01/retr01_si
 
 CMakeFiles/retr01_sim_app.dir/src/ui.c.o: /home/g/Repos/retr01/retr01_sim/src/ui.c \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/entity.h \
+  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island.h \
+  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_group.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/pin.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/types.h \
   /home/g/Repos/retr01/retr01_sim/src/ui.h \
@@ -796,7 +801,7 @@ CMakeFiles/retr01_sim_app.dir/src/ui.c.o: /home/g/Repos/retr01/retr01_sim/src/ui
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/xtestintrin.h
 
 
-/home/g/Repos/retr01/retr01_sim/src/island_abc.c:
+/home/g/Repos/retr01/retr01_sim/src/islands/bringup_abc.c:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/xsaveoptintrin.h:
 
@@ -825,6 +830,8 @@ CMakeFiles/retr01_sim_app.dir/src/ui.c.o: /home/g/Repos/retr01/retr01_sim/src/ui
 /usr/include/bits/types/__locale_t.h:
 
 /usr/include/bits/types/__fpos64_t.h:
+
+/home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_group.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/lzcntintrin.h:
 
@@ -886,9 +893,9 @@ CMakeFiles/retr01_sim_app.dir/src/ui.c.o: /home/g/Repos/retr01/retr01_sim/src/ui
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/tsxldtrkintrin.h:
 
-/usr/include/bits/iscanonical.h:
-
 /usr/include/bits/fp-logb.h:
+
+/home/g/Repos/retr01/retr01_sim/include/retr01_sim/island.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx512bwintrin.h:
 
@@ -922,23 +929,23 @@ CMakeFiles/retr01_sim_app.dir/src/ui.c.o: /home/g/Repos/retr01/retr01_sim/src/ui
 
 /usr/include/SDL2/SDL_log.h:
 
+/usr/include/SDL2/SDL_thread.h:
+
 /usr/include/SDL2/SDL_config_unix.h:
 
 /usr/include/alloca.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx512dqintrin.h:
 
+/home/g/Repos/retr01/retr01_sim/include/retr01_sim/bus.h:
+
+/home/g/Repos/retr01/retr01_sim/chips/pwr5v.h:
+
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx10_2satcvtintrin.h:
 
 /usr/include/SDL2/SDL_error.h:
 
 /usr/include/SDL2/SDL_mouse.h:
-
-/usr/include/SDL2/SDL_clipboard.h:
-
-/usr/include/SDL2/SDL_hints.h:
-
-/usr/include/SDL2/SDL_keyboard.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/mmintrin.h:
 
@@ -968,6 +975,26 @@ CMakeFiles/retr01_sim_app.dir/src/ui.c.o: /home/g/Repos/retr01/retr01_sim/src/ui
 
 /usr/include/bits/mathcalls-macros.h:
 
+/usr/include/SDL2/SDL_clipboard.h:
+
+/usr/include/SDL2/SDL_hints.h:
+
+/usr/include/SDL2/SDL_keyboard.h:
+
+/usr/include/bits/iscanonical.h:
+
+/home/g/Repos/retr01/retr01_sim/src/islands/bringup_abc.h:
+
+/usr/include/bits/types/sigset_t.h:
+
+/usr/include/SDL2/SDL_stdinc.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx512vp2intersectintrin.h:
+
+/usr/include/SDL2/SDL_joystick.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/cmpccxaddintrin.h:
+
 /usr/include/stdlib.h:
 
 /usr/include/SDL2/SDL_config.h:
@@ -990,15 +1017,11 @@ CMakeFiles/retr01_sim_app.dir/src/ui.c.o: /home/g/Repos/retr01/retr01_sim/src/ui
 
 /usr/include/SDL2/SDL_events.h:
 
-/usr/include/bits/types/sigset_t.h:
+/usr/include/bits/types/clockid_t.h:
 
-/usr/include/SDL2/SDL_stdinc.h:
+/usr/include/bits/stdint-intn.h:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx512vp2intersectintrin.h:
-
-/usr/include/SDL2/SDL_joystick.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/cmpccxaddintrin.h:
+/usr/include/SDL2/SDL_rwops.h:
 
 /home/g/Repos/retr01/retr01_sim/chips/osc8m.h:
 
@@ -1014,10 +1037,6 @@ CMakeFiles/retr01_sim_app.dir/src/ui.c.o: /home/g/Repos/retr01/retr01_sim/src/ui
 
 /home/g/Repos/retr01/retr01_sim/chips/prg_rom.h:
 
-/home/g/Repos/retr01/retr01_sim/chips/pwr5v.h:
-
-/home/g/Repos/retr01/retr01_sim/include/retr01_sim/bus.h:
-
 /home/g/Repos/retr01/retr01_sim/chips/sn74hc14.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdint.h:
@@ -1030,13 +1049,15 @@ CMakeFiles/retr01_sim_app.dir/src/ui.c.o: /home/g/Repos/retr01/retr01_sim/src/ui
 
 /usr/include/SDL2/SDL_metal.h:
 
-/usr/include/SDL2/SDL_thread.h:
-
 /usr/include/SDL2/SDL_guid.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/sha512intrin.h:
 
 /usr/include/SDL2/SDL_haptic.h:
+
+/usr/include/SDL2/SDL_shape.h:
+
+/usr/include/SDL2/SDL_quit.h:
 
 /usr/include/SDL2/SDL_locale.h:
 
@@ -1082,23 +1103,11 @@ CMakeFiles/retr01_sim_app.dir/src/ui.c.o: /home/g/Repos/retr01/retr01_sim/src/ui
 
 /usr/include/SDL2/SDL_render.h:
 
-/usr/include/SDL2/SDL_quit.h:
-
-/usr/include/SDL2/SDL_shape.h:
-
-/usr/include/SDL2/SDL_rwops.h:
-
-/usr/include/bits/types/clockid_t.h:
-
-/usr/include/bits/stdint-intn.h:
-
 /usr/include/bits/pthreadtypes.h:
 
 /usr/include/SDL2/SDL_scancode.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/cetintrin.h:
-
-/home/g/Repos/retr01/retr01_sim/src/island_abc.h:
 
 /usr/include/SDL2/SDL_system.h:
 
@@ -1324,12 +1333,12 @@ CMakeFiles/retr01_sim_app.dir/src/ui.c.o: /home/g/Repos/retr01/retr01_sim/src/ui
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/sm4intrin.h:
 
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/vpclmulqdqintrin.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdarg.h:
+
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/tmmintrin.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx512bmmvlintrin.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/vaesintrin.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdarg.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/vpclmulqdqintrin.h:

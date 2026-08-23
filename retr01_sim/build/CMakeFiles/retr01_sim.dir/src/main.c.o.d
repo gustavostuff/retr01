@@ -1,7 +1,7 @@
 CMakeFiles/retr01_sim.dir/src/main.c.o: \
  /home/g/Repos/retr01/retr01_sim/src/main.c /usr/include/stdc-predef.h \
  /home/g/Repos/retr01/retr01_sim/src/app.h \
- /home/g/Repos/retr01/retr01_sim/src/island_abc.h \
+ /home/g/Repos/retr01/retr01_sim/src/islands/bringup_abc.h \
  /home/g/Repos/retr01/retr01_sim/chips/as6c62256.h \
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/entity.h \
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/pin.h \
@@ -20,13 +20,15 @@ CMakeFiles/retr01_sim.dir/src/main.c.o: \
  /home/g/Repos/retr01/retr01_sim/chips/osc8m.h \
  /home/g/Repos/retr01/retr01_sim/chips/prg_rom.h \
  /home/g/Repos/retr01/retr01_sim/chips/pwr5v.h \
+ /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island.h \
+ /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_group.h \
  /home/g/Repos/retr01/retr01_sim/chips/sn74hc14.h \
- /home/g/Repos/retr01/retr01_sim/src/ui.h \
- /home/g/Repos/retr01/retr01_sim/include/retr01_sim/traces.h \
- /usr/include/SDL2/SDL.h /usr/include/SDL2/SDL_main.h \
- /usr/include/SDL2/SDL_stdinc.h /usr/include/SDL2/SDL_config.h \
- /usr/include/SDL2/SDL_platform.h /usr/include/SDL2/begin_code.h \
- /usr/include/SDL2/close_code.h /usr/include/SDL2/SDL_config_unix.h \
+ /home/g/Repos/retr01/retr01_sim/chips/w65c02s.h \
+ /home/g/Repos/retr01/retr01_sim/src/ui.h /usr/include/SDL2/SDL.h \
+ /usr/include/SDL2/SDL_main.h /usr/include/SDL2/SDL_stdinc.h \
+ /usr/include/SDL2/SDL_config.h /usr/include/SDL2/SDL_platform.h \
+ /usr/include/SDL2/begin_code.h /usr/include/SDL2/close_code.h \
+ /usr/include/SDL2/SDL_config_unix.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/limits.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/syslimits.h \
  /usr/include/limits.h /usr/include/bits/posix1_lim.h \
@@ -199,5 +201,4 @@ CMakeFiles/retr01_sim.dir/src/main.c.o: \
  /usr/include/SDL2/SDL_render.h /usr/include/SDL2/SDL_shape.h \
  /usr/include/SDL2/SDL_system.h /usr/include/SDL2/SDL_timer.h \
  /usr/include/SDL2/SDL_version.h /usr/include/SDL2/SDL_locale.h \
- /usr/include/SDL2/SDL_misc.h \
- /home/g/Repos/retr01/retr01_sim/chips/w65c02s.h
+ /usr/include/SDL2/SDL_misc.h

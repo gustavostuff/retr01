@@ -1,7 +1,8 @@
 #ifndef RETR01_SIM_APP_H
 #define RETR01_SIM_APP_H
 
-#include "island_abc.h"
+#include "islands/bringup_abc.h"
+#include "retr01_sim/island_group.h"
 #include "ui.h"
 
 #include <SDL.h>
@@ -13,7 +14,8 @@ typedef struct R01sApp {
     int scale;
     int running;
     R01sUi ui;
-    R01sIslandAbc island;
+    R01sIslandGroup group;
+    R01sBringupAbc bringup;
 } R01sApp;
 
 int r01s_app_init(R01sApp *app, int headless);

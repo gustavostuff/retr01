@@ -23,13 +23,13 @@ int r01s_entity_add_pin(R01sEntity *e, int number, const char *name, R01sPinDir 
     return 0;
 }
 
-void r01s_entity_set_dip(R01sEntity *e, int pin_count, int body_w, int body_h) {
+void r01s_entity_set_dip(R01sEntity *e, int dip_pins, int body_w, int body_h) {
     if (!e) {
         return;
     }
+    e->dip_pins = dip_pins > 0 ? dip_pins : 0;
     e->body_w = body_w > 0 ? body_w : 40;
-    e->body_h = body_h > 0 ? body_h : (pin_count / 2) * 12 + 16;
-    (void)pin_count;
+    e->body_h = body_h > 0 ? body_h : (dip_pins / 2) * 12 + 16;
 }
 
 void r01s_entity_place(R01sEntity *e, int board_x, int board_y) {

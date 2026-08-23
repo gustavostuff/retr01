@@ -3,6 +3,13 @@
 #include <stdio.h>
 #include <string.h>
 
+#define R01S_ISLAND_PAD_X 4
+#define R01S_ISLAND_PAD_TOP 22
+#define R01S_ISLAND_PAD_BOTTOM 4
+#define R01S_CHIP_PIN_OUT 12
+
+static void clamp_chip_in_island(R01sUi *ui, R01sEntity *e, int island_index);
+
 /* Minimal 5x7 digits/letters for labels (subset). */
 static const uint8_t FONT[36][7] = {
     {0x0E, 0x11, 0x13, 0x15, 0x19, 0x11, 0x0E}, {0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E},
@@ -82,8 +89,8 @@ int r01s_ui_init(R01sUi *ui) {
     }
     memset(ui, 0, sizeof(*ui));
     ui->selected = -1;
-    r01s_traces_clear(&ui->traces);
-    snprintf(ui->status, sizeof(ui->status), "islands A+B+C — wheel/drag pan");
+    ui->drag_chip = -1;
+    snprintf(ui->status, sizeof(ui->status), "islands A+B+C — drag chips, wheel/drag pan");
     return 0;
 }
 
@@ -93,11 +100,23 @@ void r01s_ui_shutdown(R01sUi *ui) {
     }
 }
 
-int r01s_ui_add_chip(R01sUi *ui, R01sEntity *chip) {
+void r01s_ui_bind_group(R01sUi *ui, R01sIslandGroup *group) {
+    if (ui) {
+        ui->group = group;
+    }
+}
+
+int r01s_ui_add_chip(R01sUi *ui, R01sEntity *chip, int island_index) {
     if (!ui || !chip || ui->chip_count >= R01S_BOARD_MAX_CHIPS) {
         return -1;
     }
-    ui->chips[ui->chip_count++] = chip;
+    if (!ui->group || island_index < 0 || island_index >= r01s_island_group_count(ui->group)) {
+        return -1;
+    }
+    ui->chips[ui->chip_count] = chip;
+    ui->chip_island[ui->chip_count] = (uint8_t)island_index;
+    clamp_chip_in_island(ui, chip, island_index);
+    ui->chip_count++;
     return 0;
 }
 
@@ -155,19 +174,31 @@ static void pin_level_rgb(R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg, U
     }
 }
 
+static int dip_pin_y(const R01sEntity *e, int pin_num, int *side_left) {
+    int dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
+    int rows = dip / 2;
+    int pitch = rows > 1 ? (e->body_h - 16) / (rows - 1) : 0;
+    int idx;
+
+    if (dip <= 0 || pin_num <= 0 || pin_num > dip) {
+        *side_left = 1;
+        return e->board_y + e->body_h / 2;
+    }
+    *side_left = pin_num <= rows;
+    idx = *side_left ? (pin_num - 1) : (dip - pin_num);
+    return e->board_y + 8 + idx * pitch;
+}
+
 static void draw_chip(SDL_Renderer *r, const R01sEntity *e, int pan_x, int pan_y, int selected) {
     int x = e->board_x - pan_x;
     int y = e->board_y - pan_y;
-    int rows = (e->pin_count + 1) / 2;
     int i;
-    int pitch = rows > 1 ? (e->body_h - 16) / (rows - 1) : 0;
     int label_y;
 
     for (i = 0; i < e->pin_count; i++) {
         int num = e->pins[i].number;
-        int side_left = num <= rows;
-        int idx = side_left ? (num - 1) : (e->pin_count - num);
-        int py = y + 8 + idx * pitch;
+        int side_left;
+        int py = dip_pin_y(e, num, &side_left) - pan_y;
         int px0, px1;
         Uint8 pr, pg, pb;
         pin_level_rgb(e->pins[i].level, e->pins[i].dir, &pr, &pg, &pb);
@@ -204,13 +235,57 @@ static void draw_led(SDL_Renderer *r, int x, int y, int on, Uint8 R, Uint8 G, Ui
     font_draw(r, x + 14, y + 2, label, 180, 180, 170);
 }
 
-static void draw_island_frame(SDL_Renderer *r, int bx, int by, int bw, int bh, const char *title, int pan_x,
-                              int pan_y) {
-    int x = bx - pan_x;
-    int y = by - pan_y;
-    fill_rect(r, x + 2, y + 2, bw - 4, 16, 22, 48, 32);
-    font_draw(r, x + 8, y + 6, title, 180, 220, 160);
-    draw_rect(r, x, y, bw, bh, 60, 100, 70);
+static void clamp_chip_in_island(R01sUi *ui, R01sEntity *e, int island_index) {
+    const R01sIsland *island;
+    int min_x, min_y, max_x, max_y;
+    int bx, by;
+
+    if (!ui || !e) {
+        return;
+    }
+    island = r01s_island_group_at(ui->group, island_index);
+    if (!island) {
+        return;
+    }
+    min_x = island->board_x + R01S_ISLAND_PAD_X + R01S_CHIP_PIN_OUT;
+    min_y = island->board_y + R01S_ISLAND_PAD_TOP;
+    max_x = island->board_x + island->board_w - R01S_ISLAND_PAD_X - R01S_CHIP_PIN_OUT - e->body_w;
+    max_y = island->board_y + island->board_h - R01S_ISLAND_PAD_BOTTOM - e->body_h;
+    if (max_x < min_x) {
+        min_x = max_x = island->board_x + (island->board_w - e->body_w) / 2;
+    }
+    if (max_y < min_y) {
+        min_y = max_y = island->board_y + (island->board_h - e->body_h) / 2;
+    }
+    bx = e->board_x;
+    by = e->board_y;
+    if (bx < min_x) {
+        bx = min_x;
+    }
+    if (by < min_y) {
+        by = min_y;
+    }
+    if (bx > max_x) {
+        bx = max_x;
+    }
+    if (by > max_y) {
+        by = max_y;
+    }
+    r01s_entity_place(e, bx, by);
+}
+
+static void move_chip_drag(R01sUi *ui, int chip_i, int board_mx, int board_my) {
+    R01sEntity *e = ui->chips[chip_i];
+    r01s_entity_place(e, board_mx - ui->drag_grab_bx, board_my - ui->drag_grab_by);
+    clamp_chip_in_island(ui, e, ui->chip_island[chip_i]);
+}
+
+static void draw_island_frame(SDL_Renderer *r, const R01sIsland *island, int pan_x, int pan_y) {
+    int x = island->board_x - pan_x;
+    int y = island->board_y - pan_y;
+    fill_rect(r, x + 2, y + 2, island->board_w - 4, 16, 22, 48, 32);
+    font_draw(r, x + 8, y + 6, island->title ? island->title : "ISLAND", 180, 220, 160);
+    draw_rect(r, x, y, island->board_w, island->board_h, 60, 100, 70);
 }
 
 void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
@@ -227,13 +302,15 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
         SDL_RenderDrawLine(r, 0, gy, R01S_LOGIC_W, gy);
     }
 
-    /* Board island frames (world space) */
-    draw_island_frame(r, 40, 40, 220, 160, "ISLAND A  POWER", ui->pan_x, ui->pan_y);
-    draw_island_frame(r, 40, 220, 220, 420, "ISLAND B  CLK RST", ui->pan_x, ui->pan_y);
-    draw_island_frame(r, 300, 40, 1000, 560, "ISLAND C  CPU RAM PRG", ui->pan_x, ui->pan_y);
-
-    r01s_traces_rebuild(&ui->traces);
-    r01s_traces_draw(&ui->traces, r, ui->pan_x, ui->pan_y);
+    /* Board island frames (from active group) */
+    if (ui->group) {
+        for (i = 0; i < r01s_island_group_count(ui->group); i++) {
+            const R01sIsland *island = r01s_island_group_at(ui->group, i);
+            if (island) {
+                draw_island_frame(r, island, ui->pan_x, ui->pan_y);
+            }
+        }
+    }
 
     for (i = 0; i < ui->chip_count; i++) {
         draw_chip(r, ui->chips[i], ui->pan_x, ui->pan_y, i == ui->selected);
@@ -242,7 +319,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     /* Fixed HUD */
     fill_rect(r, 0, 0, R01S_LOGIC_W, 22, 12, 14, 16);
     font_draw(r, 8, 7, "RETR01 SIM  ISLANDS A+B+C", 200, 210, 220);
-    font_draw(r, R01S_LOGIC_W - 420, 7, "SPC PAUSE  R RESET  . STEP  WHEEL PAN  ESC", 120, 130, 140);
+    font_draw(r, R01S_LOGIC_W - 500, 7, "SPC PAUSE  R RESET  . STEP  DRAG CHIP  WHEEL PAN  ESC", 120, 130, 140);
 
     fill_rect(r, R01S_LOGIC_W - 200, 36, 184, 110, 16, 22, 18);
     draw_rect(r, R01S_LOGIC_W - 200, 36, 184, 110, 80, 90, 70);
@@ -250,7 +327,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     draw_led(r, R01S_LOGIC_W - 192, 60, ui->probe_vdd, 80, 220, 100, "VDD");
     draw_led(r, R01S_LOGIC_W - 192, 78, ui->probe_phi2, 220, 200, 60, "PHI2");
     draw_led(r, R01S_LOGIC_W - 192, 96, ui->probe_resb_low, 220, 80, 80, "RESB LO");
-    font_draw(r, R01S_LOGIC_W - 192, 118, "U JUMP = CROSS", 120, 130, 120);
+    font_draw(r, R01S_LOGIC_W - 192, 118, "PINS GLOW = LEVEL", 120, 130, 120);
 
     fill_rect(r, 0, R01S_LOGIC_H - 22, R01S_LOGIC_W, 22, 12, 14, 16);
     font_draw(r, 8, R01S_LOGIC_H - 15, ui->status, 160, 170, 160);
@@ -264,6 +341,8 @@ static int hit_chip(const R01sEntity *e, int lx, int ly, int pan_x, int pan_y) {
 
 int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_y) {
     int i;
+    int board_mx = logic_x + ui->pan_x;
+    int board_my = logic_y + ui->pan_y;
     if (!ui || !e) {
         return 0;
     }
@@ -293,6 +372,10 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         r01s_ui_clamp_pan(ui);
         return 1;
     }
+    if (e->type == SDL_MOUSEMOTION && ui->drag_chip >= 0) {
+        move_chip_drag(ui, ui->drag_chip, board_mx, board_my);
+        return 1;
+    }
     if (e->type == SDL_KEYDOWN) {
         int step = 48;
         if (e->key.keysym.sym == SDLK_LEFT) {
@@ -316,12 +399,20 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             return 1;
         }
     }
+    if (e->type == SDL_MOUSEBUTTONUP && e->button.button == SDL_BUTTON_LEFT) {
+        ui->drag_chip = -1;
+        return ui->selected >= 0;
+    }
     if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT) {
         ui->selected = -1;
+        ui->drag_chip = -1;
         for (i = ui->chip_count - 1; i >= 0; i--) {
             if (hit_chip(ui->chips[i], logic_x, logic_y, ui->pan_x, ui->pan_y)) {
                 ui->selected = i;
-                snprintf(ui->status, sizeof(ui->status), "selected %s (%s)  pins=%d",
+                ui->drag_chip = i;
+                ui->drag_grab_bx = board_mx - ui->chips[i]->board_x;
+                ui->drag_grab_by = board_my - ui->chips[i]->board_y;
+                snprintf(ui->status, sizeof(ui->status), "drag %s (%s)  pins=%d",
                          ui->chips[i]->refdes ? ui->chips[i]->refdes : "?",
                          ui->chips[i]->part ? ui->chips[i]->part : "?", ui->chips[i]->pin_count);
                 return 1;

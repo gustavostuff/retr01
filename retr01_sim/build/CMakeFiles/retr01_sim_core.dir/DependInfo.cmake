@@ -17,6 +17,8 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/g/Repos/retr01/retr01_sim/chips/w65c02s.c" "CMakeFiles/retr01_sim_core.dir/chips/w65c02s.c.o" "gcc" "CMakeFiles/retr01_sim_core.dir/chips/w65c02s.c.o.d"
   "/home/g/Repos/retr01/retr01_sim/src/bus.c" "CMakeFiles/retr01_sim_core.dir/src/bus.c.o" "gcc" "CMakeFiles/retr01_sim_core.dir/src/bus.c.o.d"
   "/home/g/Repos/retr01/retr01_sim/src/entity.c" "CMakeFiles/retr01_sim_core.dir/src/entity.c.o" "gcc" "CMakeFiles/retr01_sim_core.dir/src/entity.c.o.d"
+  "/home/g/Repos/retr01/retr01_sim/src/island.c" "CMakeFiles/retr01_sim_core.dir/src/island.c.o" "gcc" "CMakeFiles/retr01_sim_core.dir/src/island.c.o.d"
+  "/home/g/Repos/retr01/retr01_sim/src/island_group.c" "CMakeFiles/retr01_sim_core.dir/src/island_group.c.o" "gcc" "CMakeFiles/retr01_sim_core.dir/src/island_group.c.o.d"
   "/home/g/Repos/retr01/retr01_sim/src/pin.c" "CMakeFiles/retr01_sim_core.dir/src/pin.c.o" "gcc" "CMakeFiles/retr01_sim_core.dir/src/pin.c.o.d"
   )
 

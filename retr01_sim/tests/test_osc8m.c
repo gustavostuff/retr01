@@ -9,6 +9,8 @@ int main(void) {
 
     r01s_osc8m_init(&chip, "Y1");
     e = r01s_osc8m_entity(&chip);
+    expect_true(e->dip_pins == 8, "8-pin package");
+    expect_true(e->pin_count == 4, "4 modeled pins");
 
     r01s_entity_drive(e, "VDD", R01S_LVL_L);
     r01s_entity_tick(e);

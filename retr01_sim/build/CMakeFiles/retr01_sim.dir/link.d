@@ -6,11 +6,6 @@ retr01_sim: \
   libretr01_sim_app.a \
   libretr01_sim_core.a \
   /usr/lib/libSDL2.so \
-  /usr/lib/gcc/x86_64-pc-linux-gnu/16/../../../../lib/libm.so \
-  /usr/lib/gcc/x86_64-pc-linux-gnu/16/../../../../lib/libm.so \
-  /usr/lib/gcc/x86_64-pc-linux-gnu/16/../../../../lib/libm.so \
-  /usr/lib/libm.so.6 \
-  /usr/lib/libmvec.so.1 \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/libgcc.a \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/libgcc_s_asneeded.so \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/libgcc_s_asneeded.so \
@@ -56,16 +51,6 @@ libretr01_sim_app.a:
 libretr01_sim_core.a:
 
 /usr/lib/libSDL2.so:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/../../../../lib/libm.so:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/../../../../lib/libm.so:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/../../../../lib/libm.so:
-
-/usr/lib/libm.so.6:
-
-/usr/lib/libmvec.so.1:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/libgcc.a:
 

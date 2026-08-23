@@ -35,6 +35,8 @@ struct R01sEntity {
     /* DIP body size in logical pixels (UI). */
     int body_w;
     int body_h;
+    /* Physical DIP pin count (e.g. 8 for OSC8M); used for package layout. */
+    int dip_pins;
     /* Top-left of package body on the board canvas. */
     int board_x;
     int board_y;
@@ -47,8 +49,8 @@ void r01s_entity_init(R01sEntity *e, const R01sEntityVTable *vt, const char *par
 /* Append a pin (fails if pin_count == R01S_MAX_PINS). Returns 0 ok, -1 full. */
 int r01s_entity_add_pin(R01sEntity *e, int number, const char *name, R01sPinDir dir);
 
-/* DIP body helpers: dual-row package, pin 1 top-left. */
-void r01s_entity_set_dip(R01sEntity *e, int pin_count, int body_w, int body_h);
+/* DIP body helpers: dual-row package, pin 1 top-left. dip_pins is the package pin count. */
+void r01s_entity_set_dip(R01sEntity *e, int dip_pins, int body_w, int body_h);
 
 void r01s_entity_place(R01sEntity *e, int board_x, int board_y);
 

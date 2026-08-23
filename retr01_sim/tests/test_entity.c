@@ -22,6 +22,7 @@ int main(void) {
     e = r01s_stub14_entity(&chip);
     expect_true(e != NULL, "entity");
     expect_true(e->pin_count == 14, "14 pins");
+    expect_true(e->dip_pins == 14, "14-pin package");
     expect_true(e->part && e->part[0], "part name");
     expect_true(e->refdes && e->refdes[0] == 'U', "refdes");
 

@@ -2,33 +2,39 @@
 #define RETR01_SIM_UI_H
 
 #include "retr01_sim/entity.h"
-#include "retr01_sim/traces.h"
+#include "retr01_sim/island_group.h"
 #include "retr01_sim/types.h"
 
 #include <SDL.h>
+#include <stdint.h>
 
 #define R01S_BOARD_MAX_CHIPS 32
 
 typedef struct R01sUi {
+    R01sIslandGroup *group;
     R01sEntity *chips[R01S_BOARD_MAX_CHIPS];
+    uint8_t chip_island[R01S_BOARD_MAX_CHIPS];
     int chip_count;
     int selected; /* index or -1 */
     int pan_x;
     int pan_y;
     int drag_pan; /* middle/right button pan */
+    int drag_chip; /* chip index while left-dragging, else -1 */
+    int drag_grab_bx;
+    int drag_grab_by;
     int drag_last_x;
     int drag_last_y;
     char status[192];
     int probe_vdd;
     int probe_phi2;
     int probe_resb_low;
-    R01sTraceMap traces;
 } R01sUi;
 
 int r01s_ui_init(R01sUi *ui);
 void r01s_ui_shutdown(R01sUi *ui);
 
-int r01s_ui_add_chip(R01sUi *ui, R01sEntity *chip);
+void r01s_ui_bind_group(R01sUi *ui, R01sIslandGroup *group);
+int r01s_ui_add_chip(R01sUi *ui, R01sEntity *chip, int island_index);
 
 void r01s_ui_clamp_pan(R01sUi *ui);
 void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r);

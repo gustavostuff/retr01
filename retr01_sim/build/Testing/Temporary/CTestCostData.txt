@@ -1,9 +1,9 @@
 entity 1 0.00121408
-test_entity 5 0.000205487
-test_pwr5v 5 0.000218002
-test_osc8m 5 0.000289608
-test_sn74hc14 5 0.00028994
-test_as6c62256 5 0.000228514
-test_prg_rom 4 0.000243784
-test_w65c02s 4 0.000267025
+test_entity 11 0.000107661
+test_pwr5v 11 9.74452e-05
+test_osc8m 11 6.43326e-05
+test_sn74hc14 11 6.50089e-05
+test_as6c62256 11 9.46288e-05
+test_prg_rom 10 7.77738e-05
+test_w65c02s 10 7.49548e-05
 ---
