@@ -24,6 +24,7 @@ Each IC is a struct that **starts with** an `R01sEntity`, plus an `R01sEntityVTa
 | O | `video_sink.c` | LCD_SINK | 128×120 RGBS playfield preview |
 | J | `sst39sf040.c` | SST39SF040 | 512 KB flash, **read-only stub** |
 | K | `atmega328p.c` | ATmega328P | APU regs `$FE40–$FE5F` + PWM square stub |
+| L | `atmega1284p.c` | ATmega1284P | OAM `$FE20/$FE21` + 20 MHz tick stub |
 | bus | `sn74hc245.c` | SN74HC245 | Octal transceiver (DIR + OE) |
 | glue | `sn74hc00.c` | SN74HC00 | Quad NAND |
 | glue | `sn74hc08.c` | SN74HC08 | Quad AND |

@@ -3,6 +3,7 @@
 
 #include "at28c16.h"
 #include "as6c62256.h"
+#include "atmega1284p.h"
 #include "atmega328p.h"
 #include "beam_xy.h"
 #include "bg_fetch.h"
@@ -39,6 +40,7 @@ enum {
     R01S_ISLAND_VIDEO = 8,
     R01S_ISLAND_CART = 9,
     R01S_ISLAND_APU = 10,
+    R01S_ISLAND_MCU1284 = 11,
 };
 
 typedef struct R01sIslandPowerImpl {
@@ -95,7 +97,11 @@ typedef struct R01sIslandApuImpl {
     R01sAtmega328p *apu; /* $FE40–$FE5F */
 } R01sIslandApuImpl;
 
-/* Bring-up board: islands A–E + G + H + I + O + J + K (F deferred). */
+typedef struct R01sIslandMcu1284Impl {
+    R01sAtmega1284p *mcu; /* OAM $FE20/$FE21; EEPROM mb $FE70–$FE72 */
+} R01sIslandMcu1284Impl;
+
+/* Bring-up board: islands A–E + G + H + I + O + J + K + L (F deferred). */
 typedef struct R01sBoard {
     R01sPwr5v pwr;
     R01sOsc8m osc;
@@ -118,6 +124,7 @@ typedef struct R01sBoard {
     R01sVideoSink video_sink;
     R01sSst39sf040 cart_flash;
     R01sAtmega328p apu;
+    R01sAtmega1284p mcu1284;
     R01sIslandPowerImpl power_impl;
     R01sIslandClockImpl clock_impl;
     R01sIslandCpuMemImpl cpu_mem_impl;
@@ -129,6 +136,7 @@ typedef struct R01sBoard {
     R01sIslandVideoImpl video_impl;
     R01sIslandCartImpl cart_impl;
     R01sIslandApuImpl apu_impl;
+    R01sIslandMcu1284Impl mcu1284_impl;
     /* Soft $FE10/$FE11 latch + $FE12 auto-inc (pre-full PLD). */
     uint16_t vram_addr;
     int vram_fe12_armed;
@@ -153,6 +161,7 @@ typedef struct R01sBoard {
     uint8_t health_saw_video;
     uint8_t health_saw_map;
     uint8_t health_saw_apu;
+    uint8_t health_saw_oam;
     uint32_t health_phi2_edges;
 } R01sBoard;
 

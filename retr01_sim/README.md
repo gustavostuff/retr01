@@ -6,7 +6,7 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 
 ## Status
 
-**Islands A–E + G + H + I + O + J + K models, wiring, and layer-2 smoke.** SDL board UI. Architecture: [`docs/08_simulator.md`](../docs/08_simulator.md).
+**Islands A–E + G + H + I + O + J + K + L models, wiring, and layer-2 smoke.** SDL board UI. Architecture: [`docs/08_simulator.md`](../docs/08_simulator.md).
 
 | Island | Components |
 |--------|------------|
@@ -14,17 +14,18 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 | B Clocks + reset | `OSC8M`, `SN74HC14` |
 | C CPU + RAM + PRG | `W65C02S`, `AS6C62256`, `PRG_ROM` (breadboard leftover; deselected when cart owns `$8000+`) |
 | D `$FExx` latch | `SN74HC573` @ `$FE02` / `$FE03` / `$FE04` (soft decode in board) |
-| E Pads | `PADS` stub @ `$FE60`/`$FE61` (pre-1284) |
+| E Pads | `PADS` stub @ `$FE60`/`$FE61` (pre-1284 merge) |
 | G VRAM | 2nd `AS6C62256` + `SN74HC157` mux; soft `$FE10`–`$FE12` + PHI2 interleave |
 | H Beam | `OSC_DOT` + `BEAM_XY` (ATF22V10 X/Y stub, 341×262) + `SN74HC688` vs `$FE04` |
 | I BG fetch | `BG_FETCH` PLD stub — nametable VA from beam+scroll; PPU-phase VRAM read |
 | O Video | `COMPOSITOR` PLD stub + `AT28C16` Color PROM + `LCD_SINK` (128×120 RGBS preview) |
 | J Cart | `SST39SF040` — PRG `$8000+` + MAP `$FE90`–`$FE93`; loads `.retr01` / flash bin |
 | K APU | `ATMEGA328P` stub — `$FE40`–`$FE5F` regs + digital PWM square |
+| L MCU | `ATMEGA1284P` stub — OAM `$FE20`/`$FE21` + 20 MHz tick; `$FE70`–`$FE72` mailbox |
 
 **Cart load:** `./sim run -- path/to/project.retr01` (or auto-finds `retr01_studio/project.retr01`). Sim applies a **bring-up PRG overlay** into the cart PRG window so island smoke still runs — that overlay is **not** Studio ROM content ([triage](../docs/08_simulator.md#cart-rom-vs-runners-triage)).
 
-Next: **L** (1284) / **M**/**N** sprites, or CHR fetch into Island O (from cart).
+Next: **M** line buffer → **N** sprites (1284 + linebuf + CHR).
 
 ## Build
 
@@ -76,10 +77,10 @@ Live probe (top-right) shows **VDD / PHI2 / RESB**. Pin stubs glow by level (no 
 | Path | Role |
 |------|------|
 | `include/retr01_sim/` | Public headers (`entity`, `pin`, `bus`, `board`, `island*`, `types`) |
-| `src/board.c` | **Board recipe A–E + G + H + I + O + J + K** — wiring, settle loop, group vtable |
+| `src/board.c` | **Board recipe A–E + G + H + I + O + J + K + L** — wiring, settle loop, group vtable |
 | `src/main.c` | SDL entry: build board + run UI |
 | `chips/` | Per-part models (subclass the base entity) |
-| `tests/` | Layer-1 unit tests + `test_island_abcdeghiojk` (layer 2) |
+| `tests/` | Layer-1 unit tests + `test_island_abcdeghiojkl` (layer 2) |
 
 ## Model
 
