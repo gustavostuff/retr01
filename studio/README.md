@@ -66,7 +66,7 @@ UPDATE_GOLDENS=1 SDL_VIDEODRIVER=offscreen ./build/test_e2e
 | Place OAM | SPR + **PLACE**: click screen |
 | Generate | **Ctrl+G** — BG or SPR bank by layer |
 | Grid overlay | **G** |
-| Constraints / Play | Scroll left to **Play / Constraints**. **Space** / **PLAY**; WASD move. **DZ+WARP** + **FADE-BLK**: Enter/Shift fades palettes to black, swaps screen, fades in |
+| Constraints / Play | Scroll left to **Play / Constraints**. **Space** / **PLAY**; WASD move. **DZ+WARP** + **FADE-BLK**: Enter/Shift lerps BG+SPR palettes toward kit black (10 frames), swaps when all slots are master 0, then fades in |
 | Cart I2C save flag | **I2C SAV** in Constraints |
 | Export cart | **Ctrl+E** → `project.retr01`, `_prom.bin`, `_boot.s`, `_flash.bin` |
 | Save / load | **Ctrl+S** / **Ctrl+O** → `project.json` (v8; RLE on pixels/tiles/attrs hex) |

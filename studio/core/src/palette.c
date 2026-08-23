@@ -37,6 +37,26 @@ void r01_kit_rgb(int master_index, uint8_t *r, uint8_t *g, uint8_t *b) {
     }
 }
 
+int r01_nearest_kit_index(uint8_t r, uint8_t g, uint8_t b) {
+    int best = 0;
+    int best_d = 1 << 30;
+    int i;
+    for (i = 0; i < R01_MASTER_COLORS; i++) {
+        int dr = (int)r - (int)KIT_RGB[i][0];
+        int dg = (int)g - (int)KIT_RGB[i][1];
+        int db = (int)b - (int)KIT_RGB[i][2];
+        int d = dr * dr + dg * dg + db * db;
+        if (d < best_d) {
+            best_d = d;
+            best = i;
+            if (d == 0) {
+                break;
+            }
+        }
+    }
+    return best;
+}
+
 uint8_t r01_quantize_r3g3b2(uint8_t r, uint8_t g, uint8_t b) {
     uint8_t rr = (uint8_t)((r * 7 + 127) / 255);
     uint8_t gg = (uint8_t)((g * 7 + 127) / 255);

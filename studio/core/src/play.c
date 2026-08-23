@@ -136,50 +136,108 @@ static void update_camera(R01PlayState *pl, const R01Constraints *c) {
     }
 }
 
-static void rebuild_fade_pal(R01PlayState *pl) {
+static void snapshot_full_pals(R01PlayState *pl, const R01Project *p) {
+    const R01World *w = &p->worlds[p->active_world];
+    const R01PalRow *bg = r01_world_bg_pals(p, w);
+    const R01PalRow *spr = r01_world_spr_pals(p, w);
     int i;
-    for (i = 0; i < R01_MASTER_COLORS; i++) {
-        uint8_t r, g, b;
-        r01_kit_rgb(i, &r, &g, &b);
-        pl->fade_pal[i][0] = (uint8_t)((r * pl->fade_level) / R01_PLAY_FADE_MAX);
-        pl->fade_pal[i][1] = (uint8_t)((g * pl->fade_level) / R01_PLAY_FADE_MAX);
-        pl->fade_pal[i][2] = (uint8_t)((b * pl->fade_level) / R01_PLAY_FADE_MAX);
+    for (i = 0; i < R01_PAL_ROWS; i++) {
+        if (bg) {
+            pl->fade_bg_full[i] = bg[i];
+        } else {
+            memset(&pl->fade_bg_full[i], 0, sizeof(R01PalRow));
+        }
+        if (spr) {
+            pl->fade_spr_full[i] = spr[i];
+        } else {
+            memset(&pl->fade_spr_full[i], 0, sizeof(R01PalRow));
+        }
     }
 }
 
-static int fade_pal_all_black(const R01PlayState *pl) {
-    int i;
-    if (pl->fade_level <= 0) {
-        return 1;
+static void copy_pal_rows(R01PalRow *dst, const R01PalRow *src) {
+    memcpy(dst, src, sizeof(R01PalRow) * (size_t)R01_PAL_ROWS);
+}
+
+static void zero_pal_rows(R01PalRow *rows) {
+    memset(rows, 0, sizeof(R01PalRow) * (size_t)R01_PAL_ROWS);
+}
+
+/*
+ * Rebuild live BG+SPR fade buffers from authored snapshots.
+ * OUT: step 0..FRAMES lerps full→black (kit-nearest).
+ * IN:  step 0..FRAMES lerps black→full (kit-nearest).
+ * At OUT end, force all slots to master 0.
+ */
+static void rebuild_fade_pals(R01PlayState *pl) {
+    int row, slot;
+    int toward_black = (pl->fade_phase == R01_PLAY_FADE_OUT);
+    int t_num = pl->fade_step;
+    int t_den = R01_PLAY_FADE_FRAMES;
+
+    if (t_num < 0) {
+        t_num = 0;
     }
-    for (i = 0; i < R01_MASTER_COLORS; i++) {
-        if (pl->fade_pal[i][0] | pl->fade_pal[i][1] | pl->fade_pal[i][2]) {
-            return 0;
+    if (t_num > t_den) {
+        t_num = t_den;
+    }
+
+    for (row = 0; row < R01_PAL_ROWS; row++) {
+        for (slot = 0; slot < R01_PAL_COLORS; slot++) {
+            uint8_t fr, fg, fb, tr, tg, tb, lr, lg, lb;
+            int from_i = toward_black ? pl->fade_bg_full[row].idx[slot] : 0;
+            int to_i = toward_black ? 0 : pl->fade_bg_full[row].idx[slot];
+            r01_kit_rgb(from_i, &fr, &fg, &fb);
+            r01_kit_rgb(to_i, &tr, &tg, &tb);
+            if (t_num >= t_den) {
+                pl->fade_bg[row].idx[slot] = (uint8_t)(to_i & 63);
+            } else {
+                lr = (uint8_t)(((int)fr * (t_den - t_num) + (int)tr * t_num) / t_den);
+                lg = (uint8_t)(((int)fg * (t_den - t_num) + (int)tg * t_num) / t_den);
+                lb = (uint8_t)(((int)fb * (t_den - t_num) + (int)tb * t_num) / t_den);
+                pl->fade_bg[row].idx[slot] = (uint8_t)r01_nearest_kit_index(lr, lg, lb);
+            }
+
+            from_i = toward_black ? pl->fade_spr_full[row].idx[slot] : 0;
+            to_i = toward_black ? 0 : pl->fade_spr_full[row].idx[slot];
+            r01_kit_rgb(from_i, &fr, &fg, &fb);
+            r01_kit_rgb(to_i, &tr, &tg, &tb);
+            if (t_num >= t_den) {
+                pl->fade_spr[row].idx[slot] = (uint8_t)(to_i & 63);
+            } else {
+                lr = (uint8_t)(((int)fr * (t_den - t_num) + (int)tr * t_num) / t_den);
+                lg = (uint8_t)(((int)fg * (t_den - t_num) + (int)tg * t_num) / t_den);
+                lb = (uint8_t)(((int)fb * (t_den - t_num) + (int)tb * t_num) / t_den);
+                pl->fade_spr[row].idx[slot] = (uint8_t)r01_nearest_kit_index(lr, lg, lb);
+            }
+        }
+    }
+
+    if (toward_black && t_num >= t_den) {
+        zero_pal_rows(pl->fade_bg);
+        zero_pal_rows(pl->fade_spr);
+    }
+}
+
+static int fade_pals_all_zero(const R01PlayState *pl) {
+    int row, slot;
+    for (row = 0; row < R01_PAL_ROWS; row++) {
+        for (slot = 0; slot < R01_PAL_COLORS; slot++) {
+            if (pl->fade_bg[row].idx[slot] != 0 || pl->fade_spr[row].idx[slot] != 0) {
+                return 0;
+            }
         }
     }
     return 1;
 }
 
-static void apply_fade_rgb(const R01PlayState *pl, uint8_t *r, uint8_t *g, uint8_t *b) {
-    /* Scale sampled kit RGB by fade_level (same as reading fade_pal[master]). */
-    if (r) {
-        *r = (uint8_t)((*r * pl->fade_level) / R01_PLAY_FADE_MAX);
-    }
-    if (g) {
-        *g = (uint8_t)((*g * pl->fade_level) / R01_PLAY_FADE_MAX);
-    }
-    if (b) {
-        *b = (uint8_t)((*b * pl->fade_level) / R01_PLAY_FADE_MAX);
-    }
-}
-
 static void tick_fade(R01PlayState *pl, const R01Constraints *c) {
     if (pl->fade_phase == R01_PLAY_FADE_OUT) {
-        if (pl->fade_level > 0) {
-            pl->fade_level--;
+        if (pl->fade_step < R01_PLAY_FADE_FRAMES) {
+            pl->fade_step++;
         }
-        rebuild_fade_pal(pl);
-        if (fade_pal_all_black(pl)) {
+        rebuild_fade_pals(pl);
+        if (fade_pals_all_zero(pl)) {
             if (pl->pending_col >= 0 && pl->pending_row >= 0) {
                 place_player_centered(pl, pl->pending_col, pl->pending_row);
                 update_camera(pl, c);
@@ -187,20 +245,21 @@ static void tick_fade(R01PlayState *pl, const R01Constraints *c) {
             pl->pending_col = -1;
             pl->pending_row = -1;
             pl->fade_phase = R01_PLAY_FADE_IN;
-            pl->fade_level = 0;
-            rebuild_fade_pal(pl);
+            pl->fade_step = 0;
+            rebuild_fade_pals(pl);
         }
         return;
     }
     if (pl->fade_phase == R01_PLAY_FADE_IN) {
-        if (pl->fade_level < R01_PLAY_FADE_MAX) {
-            pl->fade_level++;
+        if (pl->fade_step < R01_PLAY_FADE_FRAMES) {
+            pl->fade_step++;
         }
-        rebuild_fade_pal(pl);
-        if (pl->fade_level >= R01_PLAY_FADE_MAX) {
+        rebuild_fade_pals(pl);
+        if (pl->fade_step >= R01_PLAY_FADE_FRAMES) {
+            copy_pal_rows(pl->fade_bg, pl->fade_bg_full);
+            copy_pal_rows(pl->fade_spr, pl->fade_spr_full);
             pl->fade_phase = R01_PLAY_FADE_IDLE;
-            pl->fade_level = R01_PLAY_FADE_MAX;
-            rebuild_fade_pal(pl);
+            pl->fade_step = 0;
         }
     }
 }
@@ -226,10 +285,12 @@ void r01_play_start(R01PlayState *pl, const R01Project *p) {
     pl->facing_dx = 1;
     pl->facing_dy = 0;
     pl->fade_phase = R01_PLAY_FADE_IDLE;
-    pl->fade_level = R01_PLAY_FADE_MAX;
+    pl->fade_step = 0;
     pl->pending_col = -1;
     pl->pending_row = -1;
-    rebuild_fade_pal(pl);
+    snapshot_full_pals(pl, p);
+    copy_pal_rows(pl->fade_bg, pl->fade_bg_full);
+    copy_pal_rows(pl->fade_spr, pl->fade_spr_full);
     if (s && s->present) {
         place_player_centered(pl, s->col, s->row);
     }
@@ -256,10 +317,9 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
     lock_home = (mode == R01_SCROLL_HYBRID);
     pl->frame++;
 
-    /* Palette fade runs even if movement is frozen. */
     if (pl->fade_phase != R01_PLAY_FADE_IDLE) {
         tick_fade(pl, c);
-        return; /* no move / camera chase mid-fade */
+        return;
     }
 
     if (dx || dy) {
@@ -389,12 +449,13 @@ int r01_play_button(R01PlayState *pl, const R01Project *p, int button) {
     }
 
     if (c->transition == R01_XITION_FADE) {
-        /* Fade palettes to black, swap when buffer is black, then fade in. */
+        snapshot_full_pals(pl, p);
+        copy_pal_rows(pl->fade_bg, pl->fade_bg_full);
+        copy_pal_rows(pl->fade_spr, pl->fade_spr_full);
         pl->pending_col = ncol;
         pl->pending_row = nrow;
         pl->fade_phase = R01_PLAY_FADE_OUT;
-        pl->fade_level = R01_PLAY_FADE_MAX;
-        rebuild_fade_pal(pl);
+        pl->fade_step = 0;
         return 1;
     }
 
@@ -409,8 +470,9 @@ int r01_play_sample(const R01Project *p, const R01PlayState *pl, int vx, int vy,
     const R01Constraints *c;
     int wx, wy, col, row, lx, ly, idx;
     const R01Screen *s;
-    uint8_t attr;
+    uint8_t attr, color, master;
     int anim_frame = 0;
+    int tx, ty, sx, sy, cell;
 
     if (!p || !pl || vx < 0 || vy < 0 || vx >= R01_SCREEN_PX_W || vy >= R01_SCREEN_PX_H) {
         return -1;
@@ -437,7 +499,6 @@ int r01_play_sample(const R01Project *p, const R01PlayState *pl, int vx, int vy,
         if (b) {
             *b = 0;
         }
-        apply_fade_rgb(pl, r, g, b);
         return -1;
     }
     s = &w->screens[idx];
@@ -449,7 +510,20 @@ int r01_play_sample(const R01Project *p, const R01PlayState *pl, int vx, int vy,
             lx = R01_SCREEN_PX_W - 1;
         }
     }
-    r01_tilemap_pixel_rgb(p, w, s->pixels, s->attrs, lx, ly, r, g, b);
-    apply_fade_rgb(pl, r, g, b);
+    tx = lx / 8;
+    ty = ly / 8;
+    sx = lx % 8;
+    sy = ly % 8;
+    cell = ty * R01_SCREEN_TILES_X + tx;
+    attr = s->attrs[cell];
+    if (r01_attr_flip_h(attr)) {
+        sx = 7 - sx;
+    }
+    if (r01_attr_flip_v(attr)) {
+        sy = 7 - sy;
+    }
+    color = s->pixels[(ty * 8 + sy) * R01_SCREEN_PX_W + (tx * 8 + sx)] & 3u;
+    master = pl->fade_bg[r01_attr_pal(attr)].idx[color];
+    r01_kit_rgb(master, r, g, b);
     return 0;
 }

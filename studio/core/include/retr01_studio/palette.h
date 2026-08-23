@@ -6,6 +6,9 @@
 /* Kit logical 24-bit Color PROM mirror (docs/02). */
 void r01_kit_rgb(int master_index, uint8_t *r, uint8_t *g, uint8_t *b);
 
+/* Nearest master index (0..63) to an RGB triple — kit-legal quantization. */
+int r01_nearest_kit_index(uint8_t r, uint8_t g, uint8_t b);
+
 /* Pack / unpack board R3G3B2 for PROM burn helpers. */
 uint8_t r01_quantize_r3g3b2(uint8_t r, uint8_t g, uint8_t b);
 void r01_r3g3b2_to_rgb(uint8_t packed, uint8_t *r, uint8_t *g, uint8_t *b);

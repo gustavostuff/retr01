@@ -652,7 +652,6 @@ static void draw_play_view(UiState *ui, SDL_Renderer *r) {
         int dzy = c ? c->deadzone_y : R01_PLAY_DZ_INSET_Y;
         int free_w = R01_SCREEN_PX_W - 2 * dzx;
         int free_h = R01_SCREEN_PX_H - 2 * dzy;
-        int fl = ui->play.fade_level;
         if (free_w > 0 && free_h > 0) {
             int mode = c ? c->scroll_mode : R01_SCROLL_DEADZONE;
             if (mode == R01_SCROLL_DEADZONE || mode == R01_SCROLL_HYBRID) {
@@ -661,12 +660,26 @@ static void draw_play_view(UiState *ui, SDL_Renderer *r) {
         }
         if (px + R01_PLAY_PLAYER_SIZE > 0 && py + R01_PLAY_PLAYER_SIZE > 0 && px < R01_SCREEN_PX_W &&
             py < R01_SCREEN_PX_H) {
-            Uint8 pr = (Uint8)((80 * fl) / R01_PLAY_FADE_MAX);
-            Uint8 pg = (Uint8)((220 * fl) / R01_PLAY_FADE_MAX);
-            Uint8 pb = (Uint8)((255 * fl) / R01_PLAY_FADE_MAX);
+            /* Cyan player, faded via kit-nearest like BG/SPR slots. */
+            int t = ui->play.fade_step;
+            int den = R01_PLAY_FADE_FRAMES;
+            int lr = 80, lg = 220, lb = 255;
+            uint8_t pr, pg, pb;
+            int ki;
+            if (ui->play.fade_phase == R01_PLAY_FADE_OUT) {
+                lr = (80 * (den - t)) / den;
+                lg = (220 * (den - t)) / den;
+                lb = (255 * (den - t)) / den;
+            } else if (ui->play.fade_phase == R01_PLAY_FADE_IN) {
+                lr = (80 * t) / den;
+                lg = (220 * t) / den;
+                lb = (255 * t) / den;
+            }
+            ki = r01_nearest_kit_index((uint8_t)lr, (uint8_t)lg, (uint8_t)lb);
+            r01_kit_rgb(ki, &pr, &pg, &pb);
             fill_rect(r, view_x + px * zx, view_y + py * zx, R01_PLAY_PLAYER_SIZE * zx,
                       R01_PLAY_PLAYER_SIZE * zx, pr, pg, pb);
-            if (fl > 0) {
+            if (ki != 0) {
                 draw_rect(r, view_x + px * zx, view_y + py * zx, R01_PLAY_PLAYER_SIZE * zx,
                           R01_PLAY_PLAYER_SIZE * zx, 255, 255, 255);
             }
@@ -680,8 +693,8 @@ static void draw_play_view(UiState *ui, SDL_Renderer *r) {
             fp = "IN";
         }
         snprintf(buf, sizeof(buf), "PLAYER %d,%d  HOME %d,%d  FADE %s %d/%d", ui->play.player_x,
-                 ui->play.player_y, ui->play.home_col, ui->play.home_row, fp, ui->play.fade_level,
-                 R01_PLAY_FADE_MAX);
+                 ui->play.player_y, ui->play.home_col, ui->play.home_row, fp, ui->play.fade_step,
+                 R01_PLAY_FADE_FRAMES);
     }
     font_draw(r, view_x, view_y + R01_SCREEN_PX_H * zx + 4, buf, 160, 200, 160);
     font_draw(r, UI_LEFT_W + 4, UI_LOGIC_H - 12, ui->status, 130, 130, 140);

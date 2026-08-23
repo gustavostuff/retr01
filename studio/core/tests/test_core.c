@@ -394,19 +394,20 @@ static void test_play_scroll(void) {
     expect_true(pl.player_x == R01_SCREEN_PX_W + R01_SCREEN_PX_W / 2 - R01_PLAY_PLAYER_SIZE / 2, "centered");
     expect_true(pl.cam_x == R01_SCREEN_PX_W, "cam snapped on warp");
 
-    /* FADE: black-out → swap → black-in (pal buffer). */
+    /* FADE: kit-legal BG+SPR slots → master 0 → swap → fade in. */
     {
-        int i;
+        int i, row, slot;
         uint8_t r, g, b;
+        int all_zero;
         p->worlds[0].constraints.transition = R01_XITION_FADE;
         r01_play_start(&pl, p);
-        expect_true(pl.fade_level == R01_PLAY_FADE_MAX && pl.fade_phase == R01_PLAY_FADE_IDLE, "fade idle");
+        expect_true(pl.fade_step == 0 && pl.fade_phase == R01_PLAY_FADE_IDLE, "fade idle");
         expect_true(r01_play_button(&pl, p, R01_PLAY_BTN_START) == 1, "start queues fade");
         expect_true(pl.fade_phase == R01_PLAY_FADE_OUT, "fade out");
         expect_true(pl.home_col == 0, "still on old screen during fade-out");
         expect_true(pl.pending_col == 1, "pending neighbor");
-        /* Drain fade-out until pal is black and swap fires */
-        for (i = 0; i < R01_PLAY_FADE_MAX + 2; i++) {
+        /* Drain fade-out until all slots are 0 and swap fires */
+        for (i = 0; i < R01_PLAY_FADE_FRAMES + 2; i++) {
             r01_play_tick(&pl, p, 0, 0);
             if (pl.fade_phase == R01_PLAY_FADE_IN) {
                 break;
@@ -414,17 +415,25 @@ static void test_play_scroll(void) {
         }
         expect_true(pl.fade_phase == R01_PLAY_FADE_IN, "entered fade-in");
         expect_true(pl.home_col == 1, "swapped at black");
-        expect_true(pl.fade_level == 0, "level 0 at swap");
-        expect_true((pl.fade_pal[48][0] | pl.fade_pal[48][1] | pl.fade_pal[48][2]) == 0, "pal black");
+        expect_true(pl.fade_step == 0, "step 0 at swap");
+        all_zero = 1;
+        for (row = 0; row < R01_PAL_ROWS; row++) {
+            for (slot = 0; slot < R01_PAL_COLORS; slot++) {
+                if (pl.fade_bg[row].idx[slot] != 0 || pl.fade_spr[row].idx[slot] != 0) {
+                    all_zero = 0;
+                }
+            }
+        }
+        expect_true(all_zero, "all BG+SPR fade slots master 0");
         r01_play_sample(p, &pl, 64, 60, &r, &g, &b);
         expect_true((r | g | b) == 0, "viewport black at swap");
-        for (i = 0; i < R01_PLAY_FADE_MAX + 2; i++) {
+        for (i = 0; i < R01_PLAY_FADE_FRAMES + 2; i++) {
             r01_play_tick(&pl, p, 0, 0);
             if (pl.fade_phase == R01_PLAY_FADE_IDLE) {
                 break;
             }
         }
-        expect_true(pl.fade_phase == R01_PLAY_FADE_IDLE && pl.fade_level == R01_PLAY_FADE_MAX, "fade done");
+        expect_true(pl.fade_phase == R01_PLAY_FADE_IDLE && pl.fade_step == 0, "fade done");
     }
 
     /* AABB: bottom edge uses player_y + size, not top-left alone. */
