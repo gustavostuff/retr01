@@ -27,7 +27,7 @@ Empty-screen / player bounds are **game software** (same idea as Studio Play), n
 
 ### Phase notes
 
-**1–4 (cart viewer).** Soft world boot: Studio stub never streams MAP. `$FE30` / reset loads CHR/pals/screens/parallax into VRAM. Host arrows pan the atlas by shifting the 2×2 window.
+**1–4 (cart viewer).** Soft world boot: Studio stub never streams MAP. `$FE30` / reset loads CHR/pals/screens/parallax into VRAM. Host arrows pan the atlas by shifting the 2×2 window. Those soft helpers are **emu conveniences**, not cart bytes — see [`docs/08` — Cart ROM vs runners](../docs/08_simulator.md#cart-rom-vs-runners-triage).
 
 **5 (next).** Mirror Studio Play feel on the loaded cart without waiting for real game PRG: one player meta/sprite, collision = AABB only on **present** screens, scroll modes later if useful. Still not silicon-accurate sprite pipeline.
 

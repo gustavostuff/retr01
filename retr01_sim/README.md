@@ -20,7 +20,7 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 | I BG fetch | `BG_FETCH` PLD stub — nametable VA from beam+scroll; PPU-phase VRAM read |
 | O Video | `COMPOSITOR` PLD stub + `AT28C16` Color PROM + `LCD_SINK` (128×120 RGBS preview) |
 
-Next: island **J** (cart flash SST39SF040 — PRG/CHR/MAP), or **F** (machine EEPROM).
+Next: island **J** (cart flash — load `project_flash.bin` / `.retr01`). Not ready for end-to-end cart play yet; see [`docs/08` — Cart ROM vs runners](../docs/08_simulator.md#cart-rom-vs-runners-triage).
 
 ## Build
 

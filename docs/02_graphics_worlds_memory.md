@@ -179,6 +179,8 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 
 Boot: magic -> pointers -> world header -> screen dir / parallax dir -> `off_payload`. Load grid screens into VRAM slots 0-3; load parallax dir entries into slots 4-5. MAP port: `$FE90`-`$FE92` addr, `$FE93` data auto-inc.
 
+**Debugging carts:** Studio Play and editor chrome are **not** the cart. Emu/sim may soft-load or host-pan beyond what stub PRG does. Triage ROM vs runner: [`08` — Cart ROM vs runners](08_simulator.md#cart-rom-vs-runners-triage).
+
 ## CPU map and `$FExx`
 
 Logical CPU addresses below are the software SoT. Silicon uses **9x HC573** with bit-packing ([`06`](06_hardware_v1_32ic.md)); the **bitfield packing table is still TBD** (Q21) -- prefer these logical addresses + Zero Page shadows until it lands.

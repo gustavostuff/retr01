@@ -77,10 +77,12 @@ UPDATE_GOLDENS=1 SDL_VIDEODRIVER=offscreen ./build/test_e2e
 
 | File | Contents |
 |------|----------|
-| `*.retr01` | Packed cart (magic `RETR01`, pals, 32 KB stub PRG, worlds/CHR/MAP) |
-| `*_prom.bin` | 64-byte Color PROM (R3G3B2) |
-| `*_boot.s` | Readable ca65 stub + constraint equates |
+| `*.retr01` | Packed cart (magic `RETR01`, pals, 32 KB **stub** PRG, worlds/CHR/MAP) |
+| `*_prom.bin` | 64-byte Color PROM (R3G3B2) — **motherboard**, not cart |
+| `*_boot.s` | Readable ca65 stub + constraint equates (listing; binary in `.retr01` is SoT) |
 | `*_flash.bin` | Same image padded to **512 KB** (SST39SF040) |
+
+**In ROM vs Studio sugar:** Play, editor tabs, and live previews are **not** burned. Stub PRG hangs after `STA $FE30` / clear scroll — it does not stream MAP or run Play logic. Full triage: [`docs/08_simulator.md` — Cart ROM vs runners](../docs/08_simulator.md#cart-rom-vs-runners-triage).
 
 ## Layout
 

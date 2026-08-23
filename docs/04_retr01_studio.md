@@ -161,6 +161,8 @@ Generate correct boring asm first. Optimize in toolchain, not inside the UI.
 
 **Status:** done in `studio/` — cart pack (`RETR01` header + pointers + pals + 32 KB stub PRG + world CHR/MAP), Color PROM **R3G3B2** emit, ca65 boot `.s` equates, 512 KB flash pad, **Ctrl+E** export, JSON **v6** (`has_cart_save`). Full constraints→cc65/`retr01-opt` pipeline remains a later toolchain pass (Studio embeds a boring stub today).
 
+**ROM vs sugar / runners:** Play and editor chrome are not the cart. Stub PRG does not stream MAP; emu soft-boot is a runner helper. Triage guide: [`08`](08_simulator.md#cart-rom-vs-runners-triage).
+
 **UI E2E:** `ctest` target **e2e** drives the real SDL shell (greatest + golden BMPs). See `studio/app/tests/README.md`.
 
 ## Hardware map

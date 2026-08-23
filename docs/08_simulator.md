@@ -61,6 +61,55 @@ Full Retr01-A netlist: **current BOM** [`06`](06_hardware_v1_32ic.md) (**32 IC**
 
 **Pass:** cart boots, NMI ~60 Hz class, stable video, controllable pads, no hot / fighting buses in the model.
 
+## Cart ROM vs runners (triage)
+
+When something looks wrong on screen, **do not assume the `.retr01` is bad** and **do not assume the emu/sim is bad**. Studio, cart image, emu, and sim are four different layers. Bugs live in one of them.
+
+### Who owns what
+
+| Layer | Artifact | Runs on silicon / runners? | Notes |
+|-------|----------|----------------------------|--------|
+| **Studio editor / Play** | `project.json` (+ UI) | **No** | Paint, OAM place, Play scroll/fade, active world tab — **host preview only**. Play samples authored data; it never executes PRG or `$FExx`. |
+| **Cart image** | `project.retr01` (+ optional `project_flash.bin`) | **Yes** (flash) | Packed bytes SoT for PRG/CHR/MAP/pals. Magic `RETR01` layout in [`02`](02_graphics_worlds_memory.md). |
+| **Color PROM burn** | `project_prom.bin` | **Yes** (motherboard) | **Not inside the cart.** Kit → R3G3B2; board AT28C16. |
+| **Boot asm listing** | `project_boot.s` | **Human-readable only** | Equates + stub source. The **binary stub inside `.retr01`** is what runners execute (Studio embeds it; asm can drift — treat binary as SoT). |
+| **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Today also **soft-boots** world CHR/MAP into VRAM and **host-pans** the atlas — Studio stub PRG does **not** stream MAP. |
+| **Board sim** | `retr01_sim` | IC / island netlist | Bring-up islands A–E+G+H+I+O. **Island J (cart flash) not wired yet**; still uses Island C `PRG_ROM` smoke program. |
+
+### What is actually in `project.retr01` today
+
+Verified against Studio pack (`r01_cart_build`) and the checked-in `retr01_studio/project.retr01` (~138 KB; flash pad is 512 KB):
+
+| In ROM | Meaning |
+|--------|---------|
+| Header + pointer table | magic, format, world count, I2C-save flag, 24-bit offs |
+| Global BG/sprite palettes | 16+16 master indices (not RGB) |
+| 32 KB PRG | **Boring stub only**: `SEI`/`CLD`/`TXS`, `STA $FE30` (world **0**), clear scroll, **hang**. Constraint bytes at `$8100+` are data, not a game loop. |
+| World table + world blobs | CHR banks, optional world pals, screen/parallax dirs, **480 B** screen payloads |
+
+| **Not** in ROM (sugar / other chips / host) | Meaning |
+|---------------------------------------------|---------|
+| Studio Play motion, deadzone, fade | Host `play.c` from JSON constraints |
+| Editor active world tab | UI only; stub always boots world **0** (`_boot.s` `START_WORLD` can disagree — binary wins) |
+| OAM/meta placement as live sprites | Authored into project; cart CHR may hold banks, but stub never writes `$FE20`/`$FE21` |
+| Live camera seam streaming | Needs real PRG + `$FE90`–`$FE93`; emu soft-boot / host pan stand in today |
+| Kit RGB / Play preview colors | Logical kit; burn path is `*_prom.bin` on the board |
+| Full constraints→cc65 game | Still future toolchain; not in this stub |
+
+### How to tell ROM bug vs runner bug
+
+1. **Hex / dump the cart first** — magic, PRG stub bytes, a known screen payload offset, CHR bank. If the dump is wrong, it’s Studio export / pack. If the dump is right, blame the runner or soft helpers.
+2. **Same `.retr01` on emu and (later) sim** — if both misbehave the same way after a dump-clean cart, prefer ROM/content or shared contract (`02`). If only one runner fails, prefer that runner.
+3. **Never use Studio Play as proof the cart boots** — Play bypasses PRG. Use emu (cart load) or sim (flash IC) for burnable behavior.
+4. **Call out soft helpers explicitly** — emu `r01e_ppu_boot_world` / host pan are **runner conveniences**, not silicon and not in the stub. A “blank screen” with stub PRG and **no** soft-boot is expected until PRG streams MAP or the runner soft-loads.
+5. **Color wrong?** Check `*_prom.bin` / board PROM path separately from cart palette **indices**.
+
+### Sim readiness to load `project.retr01`
+
+**Not yet for end-to-end cart play.** Chip model `SST39SF040` exists (unit-tested) but Island **J** is not on the board. Island O still approximates BG color from nametable tile low bits (no CHR fetch). Next step for cart bring-up: Island **J** — load `project_flash.bin` or pad `.retr01` into flash, map PRG `$8000+`, MAP `$FE90`–`$FE93`, then CHR into the video path.
+
+Until then, keep using the Island C smoke PRG for board health; use **emu** + hex dumps to validate `project.retr01` content.
+
 ## Modeling principles
 
 1. **IC-first:** one module per part number; pins named after the datasheet.
@@ -125,7 +174,9 @@ Current pin-level code is intentional for catching PCB bugs early.
 | 3 | Island **G** (VRAM interleave) / more `$FExx` latches (**done** — soft `$FE10`–`$FE12`) |
 | 4 | Island **H** beam (**done** — `OSC_DOT` + `BEAM_XY` PLD stub + `HC688` / `$FE04`) |
 | 5 | Island **I** BG fetch (**done** — `BG_FETCH` nametable VA + PPU-phase VRAM read) |
-| Later | Island **O** video/LCD, cart **J**, remaining ICs, pads→1284; then optimization passes |
+| 6 | Island **O** video (**done** — compositor + AT28C16 + 128×120 sink; CHR still stubbed) |
+| Next | Island **J** cart flash — load `.retr01` / `*_flash.bin`; see [Cart ROM vs runners](#cart-rom-vs-runners-triage) |
+| Later | Remaining ICs, pads→1284, real CHR fetch; then optimization passes |
 
 ## Related docs
 
