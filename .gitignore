@@ -19,3 +19,4 @@ Testing/
 *.swp
 *~
 .DS_Store
+retr01_sim/debug/

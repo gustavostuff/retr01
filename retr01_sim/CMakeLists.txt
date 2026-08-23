@@ -17,6 +17,7 @@ add_library(retr01_sim_core
   src/island_group.c
   src/island_builder.c
   src/board.c
+  src/board_debug.c
   chips/stub14.c
   chips/pwr5v.c
   chips/osc8m.c

@@ -1,11 +1,29 @@
 #include "app.h"
+#include "board_debug.h"
 
 #include "retr01_sim/board.h"
 
+#include <SDL.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static R01sBoard g_board;
+
+static int want_debug(int argc, char **argv) {
+    int i;
+    const char *env = getenv("R01S_DEBUG");
+    if (env && env[0] != '\0' && strcmp(env, "0") != 0) {
+        return 1;
+    }
+    for (i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--debug") == 0 || strcmp(argv[i], "-d") == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 
 static int try_load_cart(R01sBoard *board, int argc, char **argv) {
     static const char *defaults[] = {"retr01_studio/project.retr01", "../retr01_studio/project.retr01",
@@ -49,6 +67,7 @@ static int setup_board(R01sApp *app, int argc, char **argv) {
 
 int main(int argc, char **argv) {
     R01sApp app;
+    int debug = want_debug(argc, argv);
 
     if (r01s_app_init(&app, 0) != 0) {
         return 1;
@@ -58,6 +77,7 @@ int main(int argc, char **argv) {
         r01s_app_shutdown(&app);
         return 1;
     }
+    r01s_board_debug_begin(&g_board, debug);
 
     while (app.running) {
         SDL_Event e;
@@ -65,8 +85,12 @@ int main(int argc, char **argv) {
             r01s_app_handle_event(&app, &e);
         }
         r01s_app_frame(&app);
+        if (debug) {
+            r01s_board_debug_tick(&g_board, SDL_GetTicks());
+        }
     }
 
+    r01s_board_debug_end();
     r01s_app_shutdown(&app);
     return 0;
 }
