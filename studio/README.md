@@ -84,4 +84,4 @@ UPDATE_GOLDENS=1 SDL_VIDEODRIVER=offscreen ./build/test_e2e
 
 ## Layout
 
-Fixed **640x360** logical canvas, integer scale. Left column scrolls (Worlds / Planes / BG / Sprite / Palettes / Constraints).
+Fixed **640x360** logical canvas, integer scale. Left column scrolls (Worlds / Planes / BG / Sprite / Palettes / Constraints). Top-right **VRAM 1×** shows the 2×2 camera slots with the 128×120 viewport frame.

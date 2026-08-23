@@ -29,6 +29,12 @@
 #define UI_WORLD_GRID_X 8
 #define UI_WORLD_GRID_Y 38
 
+/* Top-right 1× VRAM workbench (2×2 screens) + 128×120 viewport frame. */
+#define UI_VRAM_PX_W (R01_SCREEN_PX_W * 2)
+#define UI_VRAM_PX_H (R01_SCREEN_PX_H * 2)
+#define UI_VRAM_X (UI_LOGIC_W - UI_VRAM_PX_W - 8)
+#define UI_VRAM_Y 18
+
 #define UI_MODE_PIXEL 0
 #define UI_MODE_ATTR 1
 

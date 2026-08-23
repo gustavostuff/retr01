@@ -622,6 +622,108 @@ static void draw_oam_sprite(UiState *ui, SDL_Renderer *r, R01World *w, const R01
     }
 }
 
+/* Sample one world pixel (kit RGB). Uses live fade pals while Play is active. */
+static void sample_world_rgb(UiState *ui, int wx, int wy, uint8_t *r, uint8_t *g, uint8_t *b) {
+    const R01World *w;
+    int col, row, lx, ly, idx;
+    const R01Screen *s;
+    if (r) {
+        *r = 0;
+    }
+    if (g) {
+        *g = 0;
+    }
+    if (b) {
+        *b = 0;
+    }
+    if (!ui || !ui->project || wx < 0 || wy < 0) {
+        return;
+    }
+    if (ui->play.active) {
+        R01PlayState tmp = ui->play;
+        tmp.cam_x = wx;
+        tmp.cam_y = wy;
+        r01_play_sample(ui->project, &tmp, 0, 0, r, g, b);
+        return;
+    }
+    w = &ui->project->worlds[ui->project->active_world];
+    col = wx / R01_SCREEN_PX_W;
+    row = wy / R01_SCREEN_PX_H;
+    lx = wx % R01_SCREEN_PX_W;
+    ly = wy % R01_SCREEN_PX_H;
+    idx = r01_world_find_screen(w, col, row);
+    if (idx < 0) {
+        return;
+    }
+    s = &w->screens[idx];
+    r01_screen_pixel_rgb(ui->project, w, s, lx, ly, r, g, b);
+}
+
+/*
+ * Top-right 1× preview of the HW VRAM 2×2 camera workbench, with the
+ * 128×120 scroll viewport framed inside (docs/02).
+ */
+static void draw_vram_preview(UiState *ui, SDL_Renderer *r) {
+    R01Screen *grid = r01_project_active_screen(ui->project);
+    int cam_x = 0, cam_y = 0;
+    int wb_ox, wb_oy, scroll_x, scroll_y;
+    int x, y;
+    int px = UI_VRAM_X;
+    int py = UI_VRAM_Y;
+
+    if (ui->play.active) {
+        cam_x = ui->play.cam_x;
+        cam_y = ui->play.cam_y;
+    } else if (grid && grid->present) {
+        cam_x = grid->col * R01_SCREEN_PX_W;
+        cam_y = grid->row * R01_SCREEN_PX_H;
+    }
+
+    if (cam_x < 0) {
+        cam_x = 0;
+    }
+    if (cam_y < 0) {
+        cam_y = 0;
+    }
+    wb_ox = (cam_x / R01_SCREEN_PX_W) * R01_SCREEN_PX_W;
+    wb_oy = (cam_y / R01_SCREEN_PX_H) * R01_SCREEN_PX_H;
+    scroll_x = cam_x - wb_ox;
+    scroll_y = cam_y - wb_oy;
+
+    font_draw(r, px, 4, "VRAM 1x", 180, 200, 220);
+    fill_rect(r, px, py, UI_VRAM_PX_W, UI_VRAM_PX_H, 8, 8, 10);
+
+    for (y = 0; y < UI_VRAM_PX_H; y++) {
+        for (x = 0; x < UI_VRAM_PX_W; x++) {
+            uint8_t cr, cg, cb;
+            sample_world_rgb(ui, wb_ox + x, wb_oy + y, &cr, &cg, &cb);
+            fill_rect(r, px + x, py + y, 1, 1, cr, cg, cb);
+        }
+    }
+
+    /* Slot seams (2×2). */
+    SDL_SetRenderDrawColor(r, 70, 80, 95, 255);
+    SDL_RenderDrawLine(r, px + R01_SCREEN_PX_W, py, px + R01_SCREEN_PX_W, py + UI_VRAM_PX_H - 1);
+    SDL_RenderDrawLine(r, px, py + R01_SCREEN_PX_H, px + UI_VRAM_PX_W - 1, py + R01_SCREEN_PX_H);
+
+    /* Outer workbench + viewport window frame. */
+    draw_rect(r, px - 1, py - 1, UI_VRAM_PX_W + 2, UI_VRAM_PX_H + 2, 110, 120, 140);
+    draw_rect(r, px + scroll_x, py + scroll_y, R01_SCREEN_PX_W, R01_SCREEN_PX_H, 255, 220, 80);
+    draw_rect(r, px + scroll_x + 1, py + scroll_y + 1, R01_SCREEN_PX_W - 2, R01_SCREEN_PX_H - 2, 255, 220, 80);
+
+    if (ui->play.active) {
+        int ppx = ui->play.player_x - wb_ox;
+        int ppy = ui->play.player_y - wb_oy;
+        if (ppx + R01_PLAY_PLAYER_SIZE > 0 && ppy + R01_PLAY_PLAYER_SIZE > 0 && ppx < UI_VRAM_PX_W &&
+            ppy < UI_VRAM_PX_H) {
+            uint8_t pr, pg, pb;
+            int ki = r01_nearest_kit_index(80, 220, 255);
+            r01_kit_rgb(ki, &pr, &pg, &pb);
+            fill_rect(r, px + ppx, py + ppy, R01_PLAY_PLAYER_SIZE, R01_PLAY_PLAYER_SIZE, pr, pg, pb);
+        }
+    }
+}
+
 static void draw_play_view(UiState *ui, SDL_Renderer *r) {
     int view_x = UI_LEFT_W + 8;
     int view_y = 28;
@@ -698,6 +800,7 @@ static void draw_play_view(UiState *ui, SDL_Renderer *r) {
     }
     font_draw(r, view_x, view_y + R01_SCREEN_PX_H * zx + 4, buf, 160, 200, 160);
     font_draw(r, UI_LEFT_W + 4, UI_LOGIC_H - 12, ui->status, 130, 130, 140);
+    draw_vram_preview(ui, r);
 }
 
 static void draw_screen(UiState *ui, SDL_Renderer *r) {
@@ -772,11 +875,11 @@ static void draw_screen(UiState *ui, SDL_Renderer *r) {
         font_draw(r, UI_LEFT_W + 200, 4, buf, 180, 200, 160);
     }
 
-    font_draw(r, UI_LEFT_W + 400, 4, "BK", 140, 140, 150);
+    font_draw(r, UI_VRAM_X - 72, 4, "BK", 140, 140, 150);
     {
         int b;
         for (b = 0; b < 4; b++) {
-            int bx = UI_LEFT_W + 418 + b * 14;
+            int bx = UI_VRAM_X - 54 + b * 14;
             int sel = (b == ui->project->generate_bank);
             fill_rect(r, bx, 2, 12, 12, sel ? 80 : 40, sel ? 100 : 48, sel ? 70 : 55);
             snprintf(buf, sizeof(buf), "%d", b);
@@ -845,6 +948,7 @@ static void draw_screen(UiState *ui, SDL_Renderer *r) {
     }
 
     font_draw(r, UI_LEFT_W + 4, UI_LOGIC_H - 12, ui->status, 130, 130, 140);
+    draw_vram_preview(ui, r);
 }
 
 static void draw_toast(UiState *ui, SDL_Renderer *r) {
@@ -1613,7 +1717,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
         {
             int b;
             for (b = 0; b < 4; b++) {
-                int bx = UI_LEFT_W + 418 + b * 14;
+                int bx = UI_VRAM_X - 54 + b * 14;
                 if (hit(logic_x, logic_y, bx, 2, 12, 12)) {
                     if (r01_project_select_bg_bank(ui->project, b) == b) {
                         if (ui->layer == UI_LAYER_SPR) {
