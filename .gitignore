@@ -1,0 +1,21 @@
+# C / object files
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+*.out
+
+# CMake / local builds
+**/build/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+compile_commands.json
+Testing/
+
+# Editors / OS
+*.swp
+*~
+.DS_Store
