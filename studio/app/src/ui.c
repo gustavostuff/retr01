@@ -217,13 +217,26 @@ static R01Constraints *edit_constraints(UiState *ui) {
 static const char *scroll_mode_name(int mode) {
     switch (mode) {
     case R01_SCROLL_DEADZONE:
-        return "DEADZ";
+        return "SMOOTH DZ";
     case R01_SCROLL_INSTANT:
-        return "INST";
+        return "SCR SNAP";
     case R01_SCROLL_HYBRID:
-        return "HYBRID";
+        return "DZ+WARP";
     default:
-        return "PIXEL";
+        return "CAM LOCK";
+    }
+}
+
+static const char *scroll_mode_hint(int mode) {
+    switch (mode) {
+    case R01_SCROLL_DEADZONE:
+        return "cam follows at dead-zone edge";
+    case R01_SCROLL_INSTANT:
+        return "cam snaps per screen cell";
+    case R01_SCROLL_HYBRID:
+        return "smooth in-screen; Enter/Shift warp";
+    default:
+        return "cam locked on player center";
     }
 }
 
@@ -492,57 +505,66 @@ static void draw_constraints(UiState *ui, SDL_Renderer *r) {
     int oy = -ui->left_scroll_y;
     R01World *w = cur_world(ui);
     R01Constraints *c = edit_constraints(ui);
-    char buf[48];
+    char buf[64];
     int y0 = UI_CONSTRAINTS_Y + oy;
+    int free_w = R01_SCREEN_PX_W - 2 * c->deadzone_x;
+    int free_h = R01_SCREEN_PX_H - 2 * c->deadzone_y;
+
     fill_rect(r, 0, y0, UI_LEFT_W, UI_CONSTRAINTS_H, 18, 20, 24);
-    font_draw(r, 4, y0 + 4, "CONSTRAINTS", 200, 200, 210);
-    fill_rect(r, 120, y0 + 2, 36, 12, ui->play.active ? 90 : 40, ui->play.active ? 120 : 48,
+    font_draw(r, 4, y0 + 4, "PLAY / CONSTRAINTS", 200, 200, 210);
+    fill_rect(r, 148, y0 + 2, 44, 12, ui->play.active ? 90 : 40, ui->play.active ? 120 : 48,
               ui->play.active ? 70 : 55);
-    font_draw(r, 124, y0 + 4, "PLAY", 230, 230, 240);
+    font_draw(r, 152, y0 + 4, ui->play.active ? "STOP" : "PLAY", 230, 230, 240);
 
-    fill_rect(r, 4, y0 + 20, 48, 12, (w && w->use_constraints) ? 80 : 40,
+    font_draw(r, 4, y0 + 18, "SCOPE", 120, 120, 130);
+    fill_rect(r, 44, y0 + 16, 72, 12, (w && w->use_constraints) ? 80 : 40,
               (w && w->use_constraints) ? 100 : 48, (w && w->use_constraints) ? 70 : 55);
-    font_draw(r, 8, y0 + 22, w && w->use_constraints ? "WORLD" : "PROJ", 230, 230, 240);
+    font_draw(r, 48, y0 + 18, w && w->use_constraints ? "THIS WORLD" : "PROJECT", 230, 230, 240);
 
-    snprintf(buf, sizeof(buf), "SCROLL %s", scroll_mode_name(c->scroll_mode));
-    fill_rect(r, 56, y0 + 20, 80, 12, 40, 48, 60);
-    font_draw(r, 60, y0 + 22, buf, 230, 230, 240);
+    font_draw(r, 4, y0 + 34, "SCROLL", 120, 120, 130);
+    fill_rect(r, 48, y0 + 32, 84, 12, 40, 48, 60);
+    font_draw(r, 52, y0 + 34, scroll_mode_name(c->scroll_mode), 230, 230, 240);
+    fill_rect(r, 136, y0 + 32, 56, 12, 40, 48, 60);
+    font_draw(r, 140, y0 + 34, c->transition == R01_XITION_FADE ? "FADE" : "CUT", 230, 230, 240);
+    font_draw(r, 4, y0 + 48, scroll_mode_hint(c->scroll_mode), 100, 110, 100);
 
-    fill_rect(r, 140, y0 + 20, 44, 12, 40, 48, 60);
-    font_draw(r, 144, y0 + 22, c->transition == R01_XITION_FADE ? "FADE" : "CUT", 230, 230, 240);
+    snprintf(buf, sizeof(buf), "DEAD ZONE  free %dx%d  inset %d,%d", free_w > 0 ? free_w : 0,
+             free_h > 0 ? free_h : 0, c->deadzone_x, c->deadzone_y);
+    font_draw(r, 4, y0 + 62, buf, 160, 160, 170);
+    fill_rect(r, 4, y0 + 74, 44, 12, 40, 48, 60);
+    font_draw(r, 14, y0 + 76, "X-", 230, 230, 240);
+    fill_rect(r, 52, y0 + 74, 44, 12, 40, 48, 60);
+    font_draw(r, 62, y0 + 76, "X+", 230, 230, 240);
+    fill_rect(r, 100, y0 + 74, 44, 12, 40, 48, 60);
+    font_draw(r, 110, y0 + 76, "Y-", 230, 230, 240);
+    fill_rect(r, 148, y0 + 74, 44, 12, 40, 48, 60);
+    font_draw(r, 158, y0 + 76, "Y+", 230, 230, 240);
 
-    snprintf(buf, sizeof(buf), "ANIM %d  ENEMY %d", c->anim_rate, c->enemy_anim_rate);
-    font_draw(r, 4, y0 + 40, buf, 160, 160, 170);
-    fill_rect(r, 4, y0 + 52, 20, 12, 40, 48, 60);
-    font_draw(r, 8, y0 + 54, "A-", 230, 230, 240);
-    fill_rect(r, 28, y0 + 52, 20, 12, 40, 48, 60);
-    font_draw(r, 32, y0 + 54, "A+", 230, 230, 240);
-    fill_rect(r, 56, y0 + 52, 20, 12, 40, 48, 60);
-    font_draw(r, 60, y0 + 54, "E-", 230, 230, 240);
-    fill_rect(r, 80, y0 + 52, 20, 12, 40, 48, 60);
-    font_draw(r, 84, y0 + 54, "E+", 230, 230, 240);
+    snprintf(buf, sizeof(buf), "BG ANIM %d   ENEMY ANIM %d", c->anim_rate, c->enemy_anim_rate);
+    font_draw(r, 4, y0 + 92, buf, 160, 160, 170);
+    fill_rect(r, 4, y0 + 104, 28, 12, 40, 48, 60);
+    font_draw(r, 8, y0 + 106, "BG-", 230, 230, 240);
+    fill_rect(r, 36, y0 + 104, 28, 12, 40, 48, 60);
+    font_draw(r, 40, y0 + 106, "BG+", 230, 230, 240);
+    fill_rect(r, 68, y0 + 104, 28, 12, 40, 48, 60);
+    font_draw(r, 72, y0 + 106, "EN-", 230, 230, 240);
+    fill_rect(r, 100, y0 + 104, 28, 12, 40, 48, 60);
+    font_draw(r, 104, y0 + 106, "EN+", 230, 230, 240);
 
-    snprintf(buf, sizeof(buf), "DZ %d,%d (%dx%d)  META %d", c->deadzone_x, c->deadzone_y,
-             R01_SCREEN_PX_W - 2 * c->deadzone_x, R01_SCREEN_PX_H - 2 * c->deadzone_y, c->player_meta);
-    font_draw(r, 4, y0 + 72, buf, 160, 160, 170);
-    fill_rect(r, 4, y0 + 84, 28, 12, 40, 48, 60);
-    font_draw(r, 6, y0 + 86, "DX-", 230, 230, 240);
-    fill_rect(r, 36, y0 + 84, 28, 12, 40, 48, 60);
-    font_draw(r, 38, y0 + 86, "DX+", 230, 230, 240);
-    fill_rect(r, 68, y0 + 84, 28, 12, 40, 48, 60);
-    font_draw(r, 70, y0 + 86, "DY-", 230, 230, 240);
-    fill_rect(r, 100, y0 + 84, 28, 12, 40, 48, 60);
-    font_draw(r, 102, y0 + 86, "DY+", 230, 230, 240);
-    fill_rect(r, 132, y0 + 84, 28, 12, 40, 48, 60);
-    font_draw(r, 134, y0 + 86, "M-", 230, 230, 240);
-    fill_rect(r, 164, y0 + 84, 28, 12, 40, 48, 60);
-    font_draw(r, 166, y0 + 86, "M+", 230, 230, 240);
-
-    font_draw(r, 4, y0 + 108, "ARROWS MOVE IN PLAY", 110, 110, 120);
-    fill_rect(r, 4, y0 + 120, 52, 12, ui->project->has_cart_save ? 80 : 40,
+    snprintf(buf, sizeof(buf), "PLAYER META %d", c->player_meta);
+    font_draw(r, 4, y0 + 122, buf, 160, 160, 170);
+    fill_rect(r, 100, y0 + 120, 28, 12, 40, 48, 60);
+    font_draw(r, 104, y0 + 122, "M-", 230, 230, 240);
+    fill_rect(r, 132, y0 + 120, 28, 12, 40, 48, 60);
+    font_draw(r, 136, y0 + 122, "M+", 230, 230, 240);
+    fill_rect(r, 4, y0 + 136, 88, 12, ui->project->has_cart_save ? 80 : 40,
               ui->project->has_cart_save ? 100 : 48, ui->project->has_cart_save ? 70 : 55);
-    font_draw(r, 8, y0 + 122, "I2C SAV", 230, 230, 240);
-    font_draw(r, 60, y0 + 122, "CTRL+E EXPORT", 110, 110, 120);
+    font_draw(r, 8, y0 + 138, "I2C CART SAVE", 230, 230, 240);
+    font_draw(r, 100, y0 + 138, "Ctrl+E export", 110, 110, 120);
+
+    font_draw(r, 4, y0 + 154, "MOVE WASD/ARROWS", 110, 120, 110);
+    font_draw(r, 4, y0 + 166, "Z=X  X=Y  SHIFT=COIN  ENTER=START", 110, 120, 110);
+    font_draw(r, 4, y0 + 178, "SPACE play/stop", 100, 100, 110);
 }
 
 static void draw_left_scrollbar(UiState *ui, SDL_Renderer *r) {
@@ -627,9 +649,11 @@ static void draw_play_view(UiState *ui, SDL_Renderer *r) {
         int dzy = c ? c->deadzone_y : R01_PLAY_DZ_INSET_Y;
         int free_w = R01_SCREEN_PX_W - 2 * dzx;
         int free_h = R01_SCREEN_PX_H - 2 * dzy;
-        if (free_w > 0 && free_h > 0 &&
-            (c ? c->scroll_mode : R01_SCROLL_DEADZONE) == R01_SCROLL_DEADZONE) {
-            draw_rect(r, view_x + dzx * zx, view_y + dzy * zx, free_w * zx, free_h * zx, 60, 90, 70);
+        if (free_w > 0 && free_h > 0) {
+            int mode = c ? c->scroll_mode : R01_SCROLL_DEADZONE;
+            if (mode == R01_SCROLL_DEADZONE || mode == R01_SCROLL_HYBRID) {
+                draw_rect(r, view_x + dzx * zx, view_y + dzy * zx, free_w * zx, free_h * zx, 60, 90, 70);
+            }
         }
         if (px + R01_PLAY_PLAYER_SIZE > 0 && py + R01_PLAY_PLAYER_SIZE > 0 && px < R01_SCREEN_PX_W &&
             py < R01_SCREEN_PX_H) {
@@ -639,7 +663,8 @@ static void draw_play_view(UiState *ui, SDL_Renderer *r) {
                       R01_PLAY_PLAYER_SIZE * zx, 255, 255, 255);
         }
     }
-    snprintf(buf, sizeof(buf), "PLAYER %d,%d  FADE %d", ui->play.player_x, ui->play.player_y, ui->play.fade);
+    snprintf(buf, sizeof(buf), "PLAYER %d,%d  HOME %d,%d  FADE %d", ui->play.player_x, ui->play.player_y,
+             ui->play.home_col, ui->play.home_row, ui->play.fade);
     font_draw(r, view_x, view_y + R01_SCREEN_PX_H * zx + 4, buf, 160, 200, 160);
     font_draw(r, UI_LEFT_W + 4, UI_LOGIC_H - 12, ui->status, 130, 130, 140);
 }
@@ -930,7 +955,8 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
             } else {
                 r01_play_start(&ui->play, ui->project);
                 ui->play_last_tick = 0;
-                snprintf(ui->status, sizeof(ui->status), "play — arrows/WASD move");
+                snprintf(ui->status, sizeof(ui->status),
+                         "play — WASD move; Z/X; Shift=coin Enter=start");
             }
             return 1;
         }
@@ -939,6 +965,33 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
                 r01_play_stop(&ui->play);
                 ui->play_last_tick = 0;
                 snprintf(ui->status, sizeof(ui->status), "play stopped");
+                return 1;
+            }
+            /* Pad: Z=X, X=Y, Shift=coin, Enter=start */
+            if (k == SDLK_z) {
+                r01_play_button(&ui->play, ui->project, R01_PLAY_BTN_X);
+                snprintf(ui->status, sizeof(ui->status), "pad X (Z)");
+                return 1;
+            }
+            if (k == SDLK_x) {
+                r01_play_button(&ui->play, ui->project, R01_PLAY_BTN_Y);
+                snprintf(ui->status, sizeof(ui->status), "pad Y (X)");
+                return 1;
+            }
+            if (k == SDLK_LSHIFT || k == SDLK_RSHIFT) {
+                if (r01_play_button(&ui->play, ui->project, R01_PLAY_BTN_COIN)) {
+                    snprintf(ui->status, sizeof(ui->status), "coin → warp screen");
+                } else {
+                    snprintf(ui->status, sizeof(ui->status), "coin (DZ+WARP to change screen)");
+                }
+                return 1;
+            }
+            if (k == SDLK_RETURN || k == SDLK_KP_ENTER) {
+                if (r01_play_button(&ui->play, ui->project, R01_PLAY_BTN_START)) {
+                    snprintf(ui->status, sizeof(ui->status), "start → warp screen");
+                } else {
+                    snprintf(ui->status, sizeof(ui->status), "start (DZ+WARP to change screen)");
+                }
                 return 1;
             }
             if (k == SDLK_s && (mod & KMOD_CTRL)) {
@@ -1246,7 +1299,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
             if (cy >= UI_CONSTRAINTS_Y && cy < UI_CONSTRAINTS_Y + UI_CONSTRAINTS_H) {
                 R01Constraints *c = edit_constraints(ui);
                 w = cur_world(ui);
-                if (hit(logic_x, cy, 120, UI_CONSTRAINTS_Y + 2, 36, 12)) {
+                if (hit(logic_x, cy, 148, UI_CONSTRAINTS_Y + 2, 44, 12)) {
                     if (ui->play.active) {
                         r01_play_stop(&ui->play);
                         ui->play_last_tick = 0;
@@ -1254,88 +1307,90 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
                     } else {
                         r01_play_start(&ui->play, ui->project);
                         ui->play_last_tick = 0;
-                        snprintf(ui->status, sizeof(ui->status), "play — arrows/WASD move");
+                        snprintf(ui->status, sizeof(ui->status),
+                                 "play — WASD move; Z/X; Shift=coin Enter=start");
                     }
                     return 1;
                 }
-                if (hit(logic_x, cy, 4, UI_CONSTRAINTS_Y + 20, 48, 12) && w) {
+                if (hit(logic_x, cy, 44, UI_CONSTRAINTS_Y + 16, 72, 12) && w) {
                     w->use_constraints = !w->use_constraints;
                     snprintf(ui->status, sizeof(ui->status),
                              w->use_constraints ? "world constraints" : "project constraints");
                     return 1;
                 }
-                if (hit(logic_x, cy, 56, UI_CONSTRAINTS_Y + 20, 80, 12)) {
+                if (hit(logic_x, cy, 48, UI_CONSTRAINTS_Y + 32, 84, 12)) {
                     c->scroll_mode = (c->scroll_mode + 1) % 4;
-                    snprintf(ui->status, sizeof(ui->status), "scroll %s", scroll_mode_name(c->scroll_mode));
+                    snprintf(ui->status, sizeof(ui->status), "scroll: %s (%s)",
+                             scroll_mode_name(c->scroll_mode), scroll_mode_hint(c->scroll_mode));
                     return 1;
                 }
-                if (hit(logic_x, cy, 140, UI_CONSTRAINTS_Y + 20, 44, 12)) {
+                if (hit(logic_x, cy, 136, UI_CONSTRAINTS_Y + 32, 56, 12)) {
                     c->transition = c->transition == R01_XITION_CUT ? R01_XITION_FADE : R01_XITION_CUT;
                     snprintf(ui->status, sizeof(ui->status),
-                             c->transition == R01_XITION_FADE ? "fade" : "cut");
+                             c->transition == R01_XITION_FADE ? "transition: fade" : "transition: cut");
                     return 1;
                 }
-                if (hit(logic_x, cy, 4, UI_CONSTRAINTS_Y + 52, 20, 12)) {
-                    if (c->anim_rate > 1) {
-                        c->anim_rate--;
-                    }
-                    return 1;
-                }
-                if (hit(logic_x, cy, 28, UI_CONSTRAINTS_Y + 52, 20, 12)) {
-                    if (c->anim_rate < 120) {
-                        c->anim_rate++;
-                    }
-                    return 1;
-                }
-                if (hit(logic_x, cy, 56, UI_CONSTRAINTS_Y + 52, 20, 12)) {
-                    if (c->enemy_anim_rate > 1) {
-                        c->enemy_anim_rate--;
-                    }
-                    return 1;
-                }
-                if (hit(logic_x, cy, 80, UI_CONSTRAINTS_Y + 52, 20, 12)) {
-                    if (c->enemy_anim_rate < 120) {
-                        c->enemy_anim_rate++;
-                    }
-                    return 1;
-                }
-                if (hit(logic_x, cy, 4, UI_CONSTRAINTS_Y + 84, 28, 12)) {
+                if (hit(logic_x, cy, 4, UI_CONSTRAINTS_Y + 74, 44, 12)) {
                     if (c->deadzone_x > 0) {
                         c->deadzone_x--;
                     }
                     return 1;
                 }
-                if (hit(logic_x, cy, 36, UI_CONSTRAINTS_Y + 84, 28, 12)) {
+                if (hit(logic_x, cy, 52, UI_CONSTRAINTS_Y + 74, 44, 12)) {
                     if (c->deadzone_x < 56) {
                         c->deadzone_x++;
                     }
                     return 1;
                 }
-                if (hit(logic_x, cy, 68, UI_CONSTRAINTS_Y + 84, 28, 12)) {
+                if (hit(logic_x, cy, 100, UI_CONSTRAINTS_Y + 74, 44, 12)) {
                     if (c->deadzone_y > 0) {
                         c->deadzone_y--;
                     }
                     return 1;
                 }
-                if (hit(logic_x, cy, 100, UI_CONSTRAINTS_Y + 84, 28, 12)) {
+                if (hit(logic_x, cy, 148, UI_CONSTRAINTS_Y + 74, 44, 12)) {
                     if (c->deadzone_y < 52) {
                         c->deadzone_y++;
                     }
                     return 1;
                 }
-                if (hit(logic_x, cy, 132, UI_CONSTRAINTS_Y + 84, 28, 12)) {
+                if (hit(logic_x, cy, 4, UI_CONSTRAINTS_Y + 104, 28, 12)) {
+                    if (c->anim_rate > 1) {
+                        c->anim_rate--;
+                    }
+                    return 1;
+                }
+                if (hit(logic_x, cy, 36, UI_CONSTRAINTS_Y + 104, 28, 12)) {
+                    if (c->anim_rate < 120) {
+                        c->anim_rate++;
+                    }
+                    return 1;
+                }
+                if (hit(logic_x, cy, 68, UI_CONSTRAINTS_Y + 104, 28, 12)) {
+                    if (c->enemy_anim_rate > 1) {
+                        c->enemy_anim_rate--;
+                    }
+                    return 1;
+                }
+                if (hit(logic_x, cy, 100, UI_CONSTRAINTS_Y + 104, 28, 12)) {
+                    if (c->enemy_anim_rate < 120) {
+                        c->enemy_anim_rate++;
+                    }
+                    return 1;
+                }
+                if (hit(logic_x, cy, 100, UI_CONSTRAINTS_Y + 120, 28, 12)) {
                     if (c->player_meta > -1) {
                         c->player_meta--;
                     }
                     return 1;
                 }
-                if (hit(logic_x, cy, 164, UI_CONSTRAINTS_Y + 84, 28, 12)) {
+                if (hit(logic_x, cy, 132, UI_CONSTRAINTS_Y + 120, 28, 12)) {
                     if (c->player_meta < R01_MAX_METASPRITES - 1) {
                         c->player_meta++;
                     }
                     return 1;
                 }
-                if (hit(logic_x, cy, 4, UI_CONSTRAINTS_Y + 120, 52, 12)) {
+                if (hit(logic_x, cy, 4, UI_CONSTRAINTS_Y + 136, 88, 12)) {
                     ui->project->has_cart_save = !ui->project->has_cart_save;
                     snprintf(ui->status, sizeof(ui->status),
                              ui->project->has_cart_save ? "cart I2C save on" : "cart I2C save off");

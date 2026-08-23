@@ -31,59 +31,55 @@ const R01Constraints *r01_project_constraints(const R01Project *p) {
 }
 
 static int screen_present_at(const R01World *w, int col, int row) {
+    int gc = w->grid_cols > 0 ? w->grid_cols : R01_GRID_SIZE;
+    int gr = w->grid_rows > 0 ? w->grid_rows : R01_GRID_SIZE;
+    if (col < 0 || row < 0 || col >= gc || row >= gr) {
+        return 0;
+    }
     return r01_world_find_screen(w, col, row) >= 0;
 }
 
-static void clamp_player_to_world(const R01World *w, int *px, int *py) {
-    int col, row, lx, ly;
-    int gc = w->grid_cols > 0 ? w->grid_cols : R01_GRID_SIZE;
-    int gr = w->grid_rows > 0 ? w->grid_rows : R01_GRID_SIZE;
-    int max_x = gc * R01_SCREEN_PX_W - R01_PLAY_PLAYER_SIZE;
-    int max_y = gr * R01_SCREEN_PX_H - R01_PLAY_PLAYER_SIZE;
-    if (*px < 0) {
-        *px = 0;
+/*
+ * True if the full player AABB at (px,py) only overlaps present screens.
+ * If lock_home: every overlapped cell must equal (home_col, home_row).
+ */
+static int player_aabb_ok(const R01World *w, int px, int py, int lock_home, int home_col, int home_row) {
+    int x1, y1, c0, c1, r0, r1, c, r;
+    if (!w || px < 0 || py < 0) {
+        return 0;
     }
-    if (*py < 0) {
-        *py = 0;
-    }
-    if (max_x < 0) {
-        max_x = 0;
-    }
-    if (max_y < 0) {
-        max_y = 0;
-    }
-    if (*px > max_x) {
-        *px = max_x;
-    }
-    if (*py > max_y) {
-        *py = max_y;
-    }
-    col = *px / R01_SCREEN_PX_W;
-    row = *py / R01_SCREEN_PX_H;
-    lx = *px - col * R01_SCREEN_PX_W;
-    ly = *py - row * R01_SCREEN_PX_H;
-    if (col >= gc) {
-        col = gc - 1;
-        lx = R01_SCREEN_PX_W - R01_PLAY_PLAYER_SIZE;
-    }
-    if (row >= gr) {
-        row = gr - 1;
-        ly = R01_SCREEN_PX_H - R01_PLAY_PLAYER_SIZE;
-    }
-    if (!screen_present_at(w, col, row)) {
-        int i;
-        for (i = 0; i < w->screen_count; i++) {
-            if (w->screens[i].present) {
-                col = w->screens[i].col;
-                row = w->screens[i].row;
-                lx = R01_SCREEN_PX_W / 2 - R01_PLAY_PLAYER_SIZE / 2;
-                ly = R01_SCREEN_PX_H / 2 - R01_PLAY_PLAYER_SIZE / 2;
-                break;
+    x1 = px + R01_PLAY_PLAYER_SIZE - 1;
+    y1 = py + R01_PLAY_PLAYER_SIZE - 1;
+    c0 = px / R01_SCREEN_PX_W;
+    c1 = x1 / R01_SCREEN_PX_W;
+    r0 = py / R01_SCREEN_PX_H;
+    r1 = y1 / R01_SCREEN_PX_H;
+    for (c = c0; c <= c1; c++) {
+        for (r = r0; r <= r1; r++) {
+            if (lock_home) {
+                if (c != home_col || r != home_row) {
+                    return 0;
+                }
+            } else if (!screen_present_at(w, c, r)) {
+                return 0;
             }
         }
     }
-    *px = col * R01_SCREEN_PX_W + lx;
-    *py = row * R01_SCREEN_PX_H + ly;
+    return 1;
+}
+
+static void set_home_from_player(R01PlayState *pl) {
+    pl->home_col = pl->player_x / R01_SCREEN_PX_W;
+    pl->home_row = pl->player_y / R01_SCREEN_PX_H;
+}
+
+static void place_player_centered(R01PlayState *pl, int col, int row) {
+    pl->home_col = col;
+    pl->home_row = row;
+    pl->player_x = col * R01_SCREEN_PX_W + R01_SCREEN_PX_W / 2 - R01_PLAY_PLAYER_SIZE / 2;
+    pl->player_y = row * R01_SCREEN_PX_H + R01_SCREEN_PX_H / 2 - R01_PLAY_PLAYER_SIZE / 2;
+    pl->cam_x = col * R01_SCREEN_PX_W;
+    pl->cam_y = row * R01_SCREEN_PX_H;
 }
 
 static void update_camera(R01PlayState *pl, const R01Constraints *c) {
@@ -91,7 +87,6 @@ static void update_camera(R01PlayState *pl, const R01Constraints *c) {
     int mode = c ? c->scroll_mode : R01_SCROLL_DEADZONE;
     int dzx = c ? c->deadzone_x : R01_PLAY_DZ_INSET_X;
     int dzy = c ? c->deadzone_y : R01_PLAY_DZ_INSET_Y;
-    /* Camera tracks the center of the 8×8 player. */
     int ax = pl->player_x + R01_PLAY_PLAYER_SIZE / 2;
     int ay = pl->player_y + R01_PLAY_PLAYER_SIZE / 2;
 
@@ -116,7 +111,7 @@ static void update_camera(R01PlayState *pl, const R01Constraints *c) {
         return;
     }
 
-    /* DEADZONE / HYBRID: free box is inset by deadzone_* from viewport edges. */
+    /* DEADZONE and HYBRID: smooth free-box only — no automatic screen snap. */
     {
         int left = pl->cam_x + dzx;
         int right = pl->cam_x + R01_SCREEN_PX_W - dzx;
@@ -139,20 +134,6 @@ static void update_camera(R01PlayState *pl, const R01Constraints *c) {
             pl->cam_y = 0;
         }
     }
-
-    if (mode == R01_SCROLL_HYBRID) {
-        int pcol = ax / R01_SCREEN_PX_W;
-        int prow = ay / R01_SCREEN_PX_H;
-        int ccol = pl->cam_x / R01_SCREEN_PX_W;
-        int crow = pl->cam_y / R01_SCREEN_PX_H;
-        if (pcol != ccol || prow != crow) {
-            if (c && c->transition == R01_XITION_FADE && pl->fade == 0) {
-                pl->fade = 16;
-            }
-            pl->cam_x = pcol * R01_SCREEN_PX_W;
-            pl->cam_y = prow * R01_SCREEN_PX_H;
-        }
-    }
 }
 
 void r01_play_start(R01PlayState *pl, const R01Project *p) {
@@ -173,11 +154,10 @@ void r01_play_start(R01PlayState *pl, const R01Project *p) {
         s = (R01Screen *)&w->screens[0];
     }
     pl->active = 1;
+    pl->facing_dx = 1;
+    pl->facing_dy = 0;
     if (s && s->present) {
-        pl->player_x = s->col * R01_SCREEN_PX_W + R01_SCREEN_PX_W / 2 - R01_PLAY_PLAYER_SIZE / 2;
-        pl->player_y = s->row * R01_SCREEN_PX_H + R01_SCREEN_PX_H / 2 - R01_PLAY_PLAYER_SIZE / 2;
-        pl->cam_x = s->col * R01_SCREEN_PX_W;
-        pl->cam_y = s->row * R01_SCREEN_PX_H;
+        place_player_centered(pl, s->col, s->row);
     }
     update_camera(pl, r01_project_constraints(p));
 }
@@ -191,40 +171,154 @@ void r01_play_stop(R01PlayState *pl) {
 void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
     const R01World *w;
     const R01Constraints *c;
-    int nx, ny;
+    int mode;
+    int lock_home;
     if (!pl || !pl->active || !p) {
         return;
     }
     w = &p->worlds[p->active_world];
     c = r01_project_constraints(p);
+    mode = c ? c->scroll_mode : R01_SCROLL_DEADZONE;
+    lock_home = (mode == R01_SCROLL_HYBRID);
     pl->frame++;
 
     if (pl->fade > 0) {
         pl->fade--;
     }
 
-    nx = pl->player_x + dx;
-    ny = pl->player_y + dy;
-    {
-        int ncol = nx / R01_SCREEN_PX_W;
-        int nrow = ny / R01_SCREEN_PX_H;
-        int ocol = pl->player_x / R01_SCREEN_PX_W;
-        int orow = pl->player_y / R01_SCREEN_PX_H;
-        int gc = w->grid_cols > 0 ? w->grid_cols : R01_GRID_SIZE;
-        int gr = w->grid_rows > 0 ? w->grid_rows : R01_GRID_SIZE;
-        if (ncol != ocol || nrow != orow) {
-            if (ncol < 0 || nrow < 0 || ncol >= gc || nrow >= gr || !screen_present_at(w, ncol, nrow)) {
-                nx = pl->player_x;
-                ny = pl->player_y;
-            } else if (c && c->transition == R01_XITION_FADE) {
-                pl->fade = 12;
-            }
+    if (dx || dy) {
+        if (dx) {
+            pl->facing_dx = dx < 0 ? -1 : 1;
+            pl->facing_dy = 0;
+        } else {
+            pl->facing_dx = 0;
+            pl->facing_dy = dy < 0 ? -1 : 1;
         }
     }
-    pl->player_x = nx;
-    pl->player_y = ny;
-    clamp_player_to_world(w, &pl->player_x, &pl->player_y);
+
+    /* Separate axes so the 8×8 can slide along walls / screen edges. */
+    if (dx != 0) {
+        int nx = pl->player_x + dx;
+        if (player_aabb_ok(w, nx, pl->player_y, lock_home, pl->home_col, pl->home_row)) {
+            pl->player_x = nx;
+        }
+    }
+    if (dy != 0) {
+        int ny = pl->player_y + dy;
+        if (player_aabb_ok(w, pl->player_x, ny, lock_home, pl->home_col, pl->home_row)) {
+            pl->player_y = ny;
+        }
+    }
+
+    if (!lock_home) {
+        set_home_from_player(pl);
+    }
+
     update_camera(pl, c);
+}
+
+static int pick_warp_neighbor(const R01World *w, const R01PlayState *pl, int *out_col, int *out_row) {
+    int dirs[4][2];
+    int n = 0;
+    int i;
+    int cx = pl->player_x + R01_PLAY_PLAYER_SIZE / 2;
+    int cy = pl->player_y + R01_PLAY_PLAYER_SIZE / 2;
+    int lx = cx - pl->home_col * R01_SCREEN_PX_W;
+    int ly = cy - pl->home_row * R01_SCREEN_PX_H;
+
+    if (pl->facing_dx || pl->facing_dy) {
+        dirs[n][0] = pl->facing_dx;
+        dirs[n][1] = pl->facing_dy;
+        n++;
+    }
+    /* Prefer the nearest screen edge if facing is unclear / blocked. */
+    {
+        int dist_l = lx;
+        int dist_r = R01_SCREEN_PX_W - 1 - lx;
+        int dist_t = ly;
+        int dist_b = R01_SCREEN_PX_H - 1 - ly;
+        int best = dist_l;
+        int bdx = -1, bdy = 0;
+        if (dist_r < best) {
+            best = dist_r;
+            bdx = 1;
+            bdy = 0;
+        }
+        if (dist_t < best) {
+            best = dist_t;
+            bdx = 0;
+            bdy = -1;
+        }
+        if (dist_b < best) {
+            bdx = 0;
+            bdy = 1;
+        }
+        dirs[n][0] = bdx;
+        dirs[n][1] = bdy;
+        n++;
+    }
+    dirs[n][0] = 1;
+    dirs[n][1] = 0;
+    n++;
+    dirs[n][0] = -1;
+    dirs[n][1] = 0;
+    n++;
+    /* also try up/down as last resorts — reuse slots carefully */
+    for (i = 0; i < n; i++) {
+        int ncol = pl->home_col + dirs[i][0];
+        int nrow = pl->home_row + dirs[i][1];
+        if (dirs[i][0] == 0 && dirs[i][1] == 0) {
+            continue;
+        }
+        if (screen_present_at(w, ncol, nrow)) {
+            *out_col = ncol;
+            *out_row = nrow;
+            return 1;
+        }
+    }
+    /* explicit up/down fallbacks */
+    if (screen_present_at(w, pl->home_col, pl->home_row - 1)) {
+        *out_col = pl->home_col;
+        *out_row = pl->home_row - 1;
+        return 1;
+    }
+    if (screen_present_at(w, pl->home_col, pl->home_row + 1)) {
+        *out_col = pl->home_col;
+        *out_row = pl->home_row + 1;
+        return 1;
+    }
+    return 0;
+}
+
+int r01_play_button(R01PlayState *pl, const R01Project *p, int button) {
+    const R01World *w;
+    const R01Constraints *c;
+    int ncol, nrow;
+    if (!pl || !pl->active || !p) {
+        return 0;
+    }
+    w = &p->worlds[p->active_world];
+    c = r01_project_constraints(p);
+
+    /* X / Y reserved for gameplay; Studio Play only warps on coin/start. */
+    if (button != R01_PLAY_BTN_COIN && button != R01_PLAY_BTN_START) {
+        return 0;
+    }
+    if (!c || c->scroll_mode != R01_SCROLL_HYBRID) {
+        return 0;
+    }
+    if (!pick_warp_neighbor(w, pl, &ncol, &nrow)) {
+        return 0;
+    }
+    if (ncol == pl->home_col && nrow == pl->home_row) {
+        return 0;
+    }
+    place_player_centered(pl, ncol, nrow);
+    if (c->transition == R01_XITION_FADE) {
+        pl->fade = 12;
+    }
+    update_camera(pl, c);
+    return 1;
 }
 
 int r01_play_sample(const R01Project *p, const R01PlayState *pl, int vx, int vy, uint8_t *r, uint8_t *g,
@@ -267,7 +361,6 @@ int r01_play_sample(const R01Project *p, const R01PlayState *pl, int vx, int vy,
     attr = s->attrs[(ly / 8) * R01_SCREEN_TILES_X + (lx / 8)];
     if (r01_attr_anim(attr) && c && c->anim_rate > 0) {
         anim_frame = (pl->frame / c->anim_rate) & 3;
-        /* soft preview: nudge sample coords within tile by frame (visual pulse) */
         lx = (lx & ~7) + ((lx + anim_frame) & 7);
         if (lx >= R01_SCREEN_PX_W) {
             lx = R01_SCREEN_PX_W - 1;
@@ -275,7 +368,6 @@ int r01_play_sample(const R01Project *p, const R01PlayState *pl, int vx, int vy,
     }
     r01_tilemap_pixel_rgb(p, w, s->pixels, s->attrs, lx, ly, r, g, b);
     if (pl->fade > 0) {
-        /* dim during fade transition */
         if (r) {
             *r = (uint8_t)((*r * pl->fade) / 16);
         }

@@ -370,9 +370,49 @@ static void test_play_scroll(void) {
 
     p->worlds[0].use_constraints = 1;
     p->worlds[0].constraints.scroll_mode = R01_SCROLL_HYBRID;
+    p->worlds[0].constraints.deadzone_x = R01_PLAY_DZ_INSET_X;
+    p->worlds[0].constraints.deadzone_y = R01_PLAY_DZ_INSET_Y;
     c = r01_project_constraints(p);
     expect_true(c == &p->worlds[0].constraints, "world override");
     expect_true(c->scroll_mode == R01_SCROLL_HYBRID, "hybrid");
+
+    /* HYBRID: locked to home screen until Start/Coin warp — no auto snap while walking. */
+    r01_play_start(&pl, p);
+    expect_true(pl.home_col == 0 && pl.home_row == 0, "hybrid home");
+    {
+        int i;
+        int start_x = pl.player_x;
+        for (i = 0; i < R01_SCREEN_PX_W; i++) {
+            r01_play_tick(&pl, p, 1, 0);
+        }
+        expect_true(pl.home_col == 0, "hybrid no auto screen change");
+        expect_true(pl.player_x > start_x, "moved right inside home");
+        expect_true(pl.player_x + R01_PLAY_PLAYER_SIZE - 1 < R01_SCREEN_PX_W, "AABB stays in screen 0");
+    }
+    expect_true(r01_play_button(&pl, p, R01_PLAY_BTN_START) == 1, "start warps");
+    expect_true(pl.home_col == 1 && pl.home_row == 0, "warped to neighbor");
+    expect_true(pl.player_x == R01_SCREEN_PX_W + R01_SCREEN_PX_W / 2 - R01_PLAY_PLAYER_SIZE / 2, "centered");
+    expect_true(pl.cam_x == R01_SCREEN_PX_W, "cam snapped on warp");
+
+    /* AABB: bottom edge uses player_y + size, not top-left alone. */
+    p->worlds[0].use_constraints = 0;
+    p->constraints.scroll_mode = R01_SCROLL_DEADZONE;
+    r01_world_toggle_screen(&p->worlds[0], 0, 1); /* screen below (0,0) */
+    r01_play_start(&pl, p);
+    pl.player_x = 10;
+    pl.player_y = R01_SCREEN_PX_H - R01_PLAY_PLAYER_SIZE; /* bottom-aligned in screen 0 */
+    {
+        int y0 = pl.player_y;
+        /* one step down straddles into row 1 — allowed (present) */
+        r01_play_tick(&pl, p, 0, 1);
+        expect_true(pl.player_y == y0 + 1, "AABB may straddle present screens");
+        /* Block into missing: bottom of (0,1) then further down */
+        pl.player_x = 10;
+        pl.player_y = 2 * R01_SCREEN_PX_H - R01_PLAY_PLAYER_SIZE;
+        y0 = pl.player_y;
+        r01_play_tick(&pl, p, 0, 1);
+        expect_true(pl.player_y == y0, "AABB blocks missing screen below");
+    }
 
     /* Fresh defaults: DEADZONE + 32×30 free box */
     {

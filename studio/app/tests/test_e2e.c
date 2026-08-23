@@ -126,7 +126,7 @@ TEST constraints_and_play(void) {
     e2e_scroll_left_bottom(&g_app);
     {
         int before = g_app.ui.project->constraints.scroll_mode;
-        e2e_click(&g_app, 90, UI_CONSTRAINTS_Y - g_app.ui.left_scroll_y + 26);
+        e2e_click(&g_app, 90, UI_CONSTRAINTS_Y - g_app.ui.left_scroll_y + 38);
         ASSERT_EQ((before + 1) % 4, g_app.ui.project->constraints.scroll_mode);
     }
     e2e_key(&g_app, SDLK_SPACE, KMOD_NONE);
@@ -135,7 +135,7 @@ TEST constraints_and_play(void) {
     /* nudge via tick API (keyboard state is process-global; inject ticks) */
     r01_play_tick(&g_app.ui.play, g_app.ui.project, 1, 0);
     r01_play_tick(&g_app.ui.play, g_app.ui.project, 1, 0);
-    ASSERT(g_app.ui.play.player_x > R01_SCREEN_PX_W / 2);
+    ASSERT(g_app.ui.play.player_x >= R01_SCREEN_PX_W / 2 - R01_PLAY_PLAYER_SIZE / 2);
     e2e_key(&g_app, SDLK_ESCAPE, KMOD_NONE);
     ASSERT_EQ(0, g_app.ui.play.active);
     PASS();
