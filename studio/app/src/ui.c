@@ -528,7 +528,7 @@ static void draw_constraints(UiState *ui, SDL_Renderer *r) {
     fill_rect(r, 48, y0 + 32, 84, 12, 40, 48, 60);
     font_draw(r, 52, y0 + 34, scroll_mode_name(c->scroll_mode), 230, 230, 240);
     fill_rect(r, 136, y0 + 32, 56, 12, 40, 48, 60);
-    font_draw(r, 140, y0 + 34, c->transition == R01_XITION_FADE ? "FADE" : "CUT", 230, 230, 240);
+    font_draw(r, 140, y0 + 34, c->transition == R01_XITION_FADE ? "FADE-BLK" : "CUT", 230, 230, 240);
     font_draw(r, 4, y0 + 48, scroll_mode_hint(c->scroll_mode), 100, 110, 100);
 
     snprintf(buf, sizeof(buf), "DEAD ZONE  free %dx%d  inset %d,%d", free_w > 0 ? free_w : 0,
@@ -652,6 +652,7 @@ static void draw_play_view(UiState *ui, SDL_Renderer *r) {
         int dzy = c ? c->deadzone_y : R01_PLAY_DZ_INSET_Y;
         int free_w = R01_SCREEN_PX_W - 2 * dzx;
         int free_h = R01_SCREEN_PX_H - 2 * dzy;
+        int fl = ui->play.fade_level;
         if (free_w > 0 && free_h > 0) {
             int mode = c ? c->scroll_mode : R01_SCROLL_DEADZONE;
             if (mode == R01_SCROLL_DEADZONE || mode == R01_SCROLL_HYBRID) {
@@ -660,14 +661,28 @@ static void draw_play_view(UiState *ui, SDL_Renderer *r) {
         }
         if (px + R01_PLAY_PLAYER_SIZE > 0 && py + R01_PLAY_PLAYER_SIZE > 0 && px < R01_SCREEN_PX_W &&
             py < R01_SCREEN_PX_H) {
+            Uint8 pr = (Uint8)((80 * fl) / R01_PLAY_FADE_MAX);
+            Uint8 pg = (Uint8)((220 * fl) / R01_PLAY_FADE_MAX);
+            Uint8 pb = (Uint8)((255 * fl) / R01_PLAY_FADE_MAX);
             fill_rect(r, view_x + px * zx, view_y + py * zx, R01_PLAY_PLAYER_SIZE * zx,
-                      R01_PLAY_PLAYER_SIZE * zx, 80, 220, 255);
-            draw_rect(r, view_x + px * zx, view_y + py * zx, R01_PLAY_PLAYER_SIZE * zx,
-                      R01_PLAY_PLAYER_SIZE * zx, 255, 255, 255);
+                      R01_PLAY_PLAYER_SIZE * zx, pr, pg, pb);
+            if (fl > 0) {
+                draw_rect(r, view_x + px * zx, view_y + py * zx, R01_PLAY_PLAYER_SIZE * zx,
+                          R01_PLAY_PLAYER_SIZE * zx, 255, 255, 255);
+            }
         }
     }
-    snprintf(buf, sizeof(buf), "PLAYER %d,%d  HOME %d,%d  FADE %d", ui->play.player_x, ui->play.player_y,
-             ui->play.home_col, ui->play.home_row, ui->play.fade);
+    {
+        const char *fp = "IDLE";
+        if (ui->play.fade_phase == R01_PLAY_FADE_OUT) {
+            fp = "OUT";
+        } else if (ui->play.fade_phase == R01_PLAY_FADE_IN) {
+            fp = "IN";
+        }
+        snprintf(buf, sizeof(buf), "PLAYER %d,%d  HOME %d,%d  FADE %s %d/%d", ui->play.player_x,
+                 ui->play.player_y, ui->play.home_col, ui->play.home_row, fp, ui->play.fade_level,
+                 R01_PLAY_FADE_MAX);
+    }
     font_draw(r, view_x, view_y + R01_SCREEN_PX_H * zx + 4, buf, 160, 200, 160);
     font_draw(r, UI_LEFT_W + 4, UI_LOGIC_H - 12, ui->status, 130, 130, 140);
 }
@@ -1330,7 +1345,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int logic_x, int logic_y) {
                 if (hit(logic_x, cy, 136, UI_CONSTRAINTS_Y + 32, 56, 12)) {
                     c->transition = c->transition == R01_XITION_CUT ? R01_XITION_FADE : R01_XITION_CUT;
                     snprintf(ui->status, sizeof(ui->status),
-                             c->transition == R01_XITION_FADE ? "transition: fade" : "transition: cut");
+                             c->transition == R01_XITION_FADE ? "transition: fade-to-black" : "transition: cut");
                     return 1;
                 }
                 if (hit(logic_x, cy, 4, UI_CONSTRAINTS_Y + 74, 44, 12)) {

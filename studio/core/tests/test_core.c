@@ -394,6 +394,39 @@ static void test_play_scroll(void) {
     expect_true(pl.player_x == R01_SCREEN_PX_W + R01_SCREEN_PX_W / 2 - R01_PLAY_PLAYER_SIZE / 2, "centered");
     expect_true(pl.cam_x == R01_SCREEN_PX_W, "cam snapped on warp");
 
+    /* FADE: black-out → swap → black-in (pal buffer). */
+    {
+        int i;
+        uint8_t r, g, b;
+        p->worlds[0].constraints.transition = R01_XITION_FADE;
+        r01_play_start(&pl, p);
+        expect_true(pl.fade_level == R01_PLAY_FADE_MAX && pl.fade_phase == R01_PLAY_FADE_IDLE, "fade idle");
+        expect_true(r01_play_button(&pl, p, R01_PLAY_BTN_START) == 1, "start queues fade");
+        expect_true(pl.fade_phase == R01_PLAY_FADE_OUT, "fade out");
+        expect_true(pl.home_col == 0, "still on old screen during fade-out");
+        expect_true(pl.pending_col == 1, "pending neighbor");
+        /* Drain fade-out until pal is black and swap fires */
+        for (i = 0; i < R01_PLAY_FADE_MAX + 2; i++) {
+            r01_play_tick(&pl, p, 0, 0);
+            if (pl.fade_phase == R01_PLAY_FADE_IN) {
+                break;
+            }
+        }
+        expect_true(pl.fade_phase == R01_PLAY_FADE_IN, "entered fade-in");
+        expect_true(pl.home_col == 1, "swapped at black");
+        expect_true(pl.fade_level == 0, "level 0 at swap");
+        expect_true((pl.fade_pal[48][0] | pl.fade_pal[48][1] | pl.fade_pal[48][2]) == 0, "pal black");
+        r01_play_sample(p, &pl, 64, 60, &r, &g, &b);
+        expect_true((r | g | b) == 0, "viewport black at swap");
+        for (i = 0; i < R01_PLAY_FADE_MAX + 2; i++) {
+            r01_play_tick(&pl, p, 0, 0);
+            if (pl.fade_phase == R01_PLAY_FADE_IDLE) {
+                break;
+            }
+        }
+        expect_true(pl.fade_phase == R01_PLAY_FADE_IDLE && pl.fade_level == R01_PLAY_FADE_MAX, "fade done");
+    }
+
     /* AABB: bottom edge uses player_y + size, not top-left alone. */
     p->worlds[0].use_constraints = 0;
     p->constraints.scroll_mode = R01_SCROLL_DEADZONE;

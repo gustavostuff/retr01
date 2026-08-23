@@ -136,6 +136,75 @@ static void update_camera(R01PlayState *pl, const R01Constraints *c) {
     }
 }
 
+static void rebuild_fade_pal(R01PlayState *pl) {
+    int i;
+    for (i = 0; i < R01_MASTER_COLORS; i++) {
+        uint8_t r, g, b;
+        r01_kit_rgb(i, &r, &g, &b);
+        pl->fade_pal[i][0] = (uint8_t)((r * pl->fade_level) / R01_PLAY_FADE_MAX);
+        pl->fade_pal[i][1] = (uint8_t)((g * pl->fade_level) / R01_PLAY_FADE_MAX);
+        pl->fade_pal[i][2] = (uint8_t)((b * pl->fade_level) / R01_PLAY_FADE_MAX);
+    }
+}
+
+static int fade_pal_all_black(const R01PlayState *pl) {
+    int i;
+    if (pl->fade_level <= 0) {
+        return 1;
+    }
+    for (i = 0; i < R01_MASTER_COLORS; i++) {
+        if (pl->fade_pal[i][0] | pl->fade_pal[i][1] | pl->fade_pal[i][2]) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static void apply_fade_rgb(const R01PlayState *pl, uint8_t *r, uint8_t *g, uint8_t *b) {
+    /* Scale sampled kit RGB by fade_level (same as reading fade_pal[master]). */
+    if (r) {
+        *r = (uint8_t)((*r * pl->fade_level) / R01_PLAY_FADE_MAX);
+    }
+    if (g) {
+        *g = (uint8_t)((*g * pl->fade_level) / R01_PLAY_FADE_MAX);
+    }
+    if (b) {
+        *b = (uint8_t)((*b * pl->fade_level) / R01_PLAY_FADE_MAX);
+    }
+}
+
+static void tick_fade(R01PlayState *pl, const R01Constraints *c) {
+    if (pl->fade_phase == R01_PLAY_FADE_OUT) {
+        if (pl->fade_level > 0) {
+            pl->fade_level--;
+        }
+        rebuild_fade_pal(pl);
+        if (fade_pal_all_black(pl)) {
+            if (pl->pending_col >= 0 && pl->pending_row >= 0) {
+                place_player_centered(pl, pl->pending_col, pl->pending_row);
+                update_camera(pl, c);
+            }
+            pl->pending_col = -1;
+            pl->pending_row = -1;
+            pl->fade_phase = R01_PLAY_FADE_IN;
+            pl->fade_level = 0;
+            rebuild_fade_pal(pl);
+        }
+        return;
+    }
+    if (pl->fade_phase == R01_PLAY_FADE_IN) {
+        if (pl->fade_level < R01_PLAY_FADE_MAX) {
+            pl->fade_level++;
+        }
+        rebuild_fade_pal(pl);
+        if (pl->fade_level >= R01_PLAY_FADE_MAX) {
+            pl->fade_phase = R01_PLAY_FADE_IDLE;
+            pl->fade_level = R01_PLAY_FADE_MAX;
+            rebuild_fade_pal(pl);
+        }
+    }
+}
+
 void r01_play_start(R01PlayState *pl, const R01Project *p) {
     const R01World *w;
     R01Screen *s;
@@ -156,6 +225,11 @@ void r01_play_start(R01PlayState *pl, const R01Project *p) {
     pl->active = 1;
     pl->facing_dx = 1;
     pl->facing_dy = 0;
+    pl->fade_phase = R01_PLAY_FADE_IDLE;
+    pl->fade_level = R01_PLAY_FADE_MAX;
+    pl->pending_col = -1;
+    pl->pending_row = -1;
+    rebuild_fade_pal(pl);
     if (s && s->present) {
         place_player_centered(pl, s->col, s->row);
     }
@@ -182,8 +256,10 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
     lock_home = (mode == R01_SCROLL_HYBRID);
     pl->frame++;
 
-    if (pl->fade > 0) {
-        pl->fade--;
+    /* Palette fade runs even if movement is frozen. */
+    if (pl->fade_phase != R01_PLAY_FADE_IDLE) {
+        tick_fade(pl, c);
+        return; /* no move / camera chase mid-fade */
     }
 
     if (dx || dy) {
@@ -196,7 +272,6 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
         }
     }
 
-    /* Separate axes so the 8×8 can slide along walls / screen edges. */
     if (dx != 0) {
         int nx = pl->player_x + dx;
         if (player_aabb_ok(w, nx, pl->player_y, lock_home, pl->home_col, pl->home_row)) {
@@ -231,7 +306,6 @@ static int pick_warp_neighbor(const R01World *w, const R01PlayState *pl, int *ou
         dirs[n][1] = pl->facing_dy;
         n++;
     }
-    /* Prefer the nearest screen edge if facing is unclear / blocked. */
     {
         int dist_l = lx;
         int dist_r = R01_SCREEN_PX_W - 1 - lx;
@@ -263,7 +337,6 @@ static int pick_warp_neighbor(const R01World *w, const R01PlayState *pl, int *ou
     dirs[n][0] = -1;
     dirs[n][1] = 0;
     n++;
-    /* also try up/down as last resorts — reuse slots carefully */
     for (i = 0; i < n; i++) {
         int ncol = pl->home_col + dirs[i][0];
         int nrow = pl->home_row + dirs[i][1];
@@ -276,7 +349,6 @@ static int pick_warp_neighbor(const R01World *w, const R01PlayState *pl, int *ou
             return 1;
         }
     }
-    /* explicit up/down fallbacks */
     if (screen_present_at(w, pl->home_col, pl->home_row - 1)) {
         *out_col = pl->home_col;
         *out_row = pl->home_row - 1;
@@ -297,10 +369,12 @@ int r01_play_button(R01PlayState *pl, const R01Project *p, int button) {
     if (!pl || !pl->active || !p) {
         return 0;
     }
+    if (pl->fade_phase != R01_PLAY_FADE_IDLE) {
+        return 0;
+    }
     w = &p->worlds[p->active_world];
     c = r01_project_constraints(p);
 
-    /* X / Y reserved for gameplay; Studio Play only warps on coin/start. */
     if (button != R01_PLAY_BTN_COIN && button != R01_PLAY_BTN_START) {
         return 0;
     }
@@ -313,10 +387,18 @@ int r01_play_button(R01PlayState *pl, const R01Project *p, int button) {
     if (ncol == pl->home_col && nrow == pl->home_row) {
         return 0;
     }
-    place_player_centered(pl, ncol, nrow);
+
     if (c->transition == R01_XITION_FADE) {
-        pl->fade = 12;
+        /* Fade palettes to black, swap when buffer is black, then fade in. */
+        pl->pending_col = ncol;
+        pl->pending_row = nrow;
+        pl->fade_phase = R01_PLAY_FADE_OUT;
+        pl->fade_level = R01_PLAY_FADE_MAX;
+        rebuild_fade_pal(pl);
+        return 1;
     }
+
+    place_player_centered(pl, ncol, nrow);
     update_camera(pl, c);
     return 1;
 }
@@ -347,14 +429,15 @@ int r01_play_sample(const R01Project *p, const R01PlayState *pl, int vx, int vy,
     idx = r01_world_find_screen(w, col, row);
     if (idx < 0) {
         if (r) {
-            *r = 8;
+            *r = 0;
         }
         if (g) {
-            *g = 8;
+            *g = 0;
         }
         if (b) {
-            *b = 12;
+            *b = 0;
         }
+        apply_fade_rgb(pl, r, g, b);
         return -1;
     }
     s = &w->screens[idx];
@@ -367,16 +450,6 @@ int r01_play_sample(const R01Project *p, const R01PlayState *pl, int vx, int vy,
         }
     }
     r01_tilemap_pixel_rgb(p, w, s->pixels, s->attrs, lx, ly, r, g, b);
-    if (pl->fade > 0) {
-        if (r) {
-            *r = (uint8_t)((*r * pl->fade) / 16);
-        }
-        if (g) {
-            *g = (uint8_t)((*g * pl->fade) / 16);
-        }
-        if (b) {
-            *b = (uint8_t)((*b * pl->fade) / 16);
-        }
-    }
+    apply_fade_rgb(pl, r, g, b);
     return 0;
 }
