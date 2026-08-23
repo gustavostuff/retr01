@@ -23,6 +23,9 @@ int main(void) {
     expect_true(e != NULL, "entity");
     expect_true(e->pin_count == 14, "14 pins");
     expect_true(e->dip_pins == 14, "14-pin package");
+    expect_true(e->body_h == r01s_dip_body_h(14), "body_h from pitch");
+    expect_true(e->body_h == R01S_DIP_PIN_MARGIN_Y * 2 + 6 * R01S_DIP_PIN_PITCH, "14-pin pitch=12");
+    expect_true(r01s_dip_body_h(40) - r01s_dip_body_h(28) == 6 * R01S_DIP_PIN_PITCH, "same pitch 28↔40");
     expect_true(e->part && e->part[0], "part name");
     expect_true(e->refdes && e->refdes[0] == 'U', "refdes");
 

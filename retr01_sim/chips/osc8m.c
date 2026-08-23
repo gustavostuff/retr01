@@ -51,7 +51,7 @@ void r01s_osc8m_init(R01sOsc8m *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 4, "GND", R01S_PIN_PWR);
     r01s_entity_add_pin(&chip->base, 5, "PHI2", R01S_PIN_OUT);
     r01s_entity_add_pin(&chip->base, 8, "VDD", R01S_PIN_IN);
-    r01s_entity_set_dip(&chip->base, 8, 40, 56);
+    r01s_entity_set_dip(&chip->base, 8, 40);
     r01s_entity_reset(&chip->base);
 }
 

@@ -14,12 +14,23 @@ add_library(retr01_sim_core
   src/bus.c
   src/island.c
   src/island_group.c
+  src/island_builder.c
+  src/board.c
   chips/stub14.c
   chips/pwr5v.c
   chips/osc8m.c
   chips/sn74hc14.c
+  chips/sn74hc04.c
+  chips/sn74hc00.c
+  chips/sn74hc08.c
+  chips/sn74hc32.c
+  chips/sn74hc573.c
+  chips/sn74hc245.c
+  chips/sn74hc157.c
   chips/as6c62256.c
   chips/prg_rom.c
+  chips/pads.c
+  chips/sst39sf040.c
   chips/w65c02s.c
 )
 target_include_directories(retr01_sim_core PUBLIC
@@ -30,7 +41,6 @@ target_include_directories(retr01_sim_core PUBLIC
 add_library(retr01_sim_app
   src/ui.c
   src/app.c
-  src/islands/bringup_abc.c
 )
 target_include_directories(retr01_sim_app PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -51,9 +61,17 @@ function(r01s_unit_test name)
 endfunction()
 
 r01s_unit_test(test_entity)
+r01s_unit_test(test_bus)
 r01s_unit_test(test_pwr5v)
 r01s_unit_test(test_osc8m)
 r01s_unit_test(test_sn74hc14)
+r01s_unit_test(test_sn74hc_glue)
+r01s_unit_test(test_sn74hc573)
+r01s_unit_test(test_sn74hc245)
+r01s_unit_test(test_sn74hc157)
 r01s_unit_test(test_as6c62256)
 r01s_unit_test(test_prg_rom)
+r01s_unit_test(test_sst39sf040)
 r01s_unit_test(test_w65c02s)
+r01s_unit_test(test_island_abcde)
+r01s_unit_test(test_pads)

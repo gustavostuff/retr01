@@ -1,12 +1,9 @@
 #include "ui.h"
 
+#include "retr01_sim/board_layout.h"
+
 #include <stdio.h>
 #include <string.h>
-
-#define R01S_ISLAND_PAD_X 4
-#define R01S_ISLAND_PAD_TOP 22
-#define R01S_ISLAND_PAD_BOTTOM 4
-#define R01S_CHIP_PIN_OUT 12
 
 static void clamp_chip_in_island(R01sUi *ui, R01sEntity *e, int island_index);
 
@@ -90,7 +87,7 @@ int r01s_ui_init(R01sUi *ui) {
     memset(ui, 0, sizeof(*ui));
     ui->selected = -1;
     ui->drag_chip = -1;
-    snprintf(ui->status, sizeof(ui->status), "islands A+B+C — drag chips, wheel/drag pan");
+    snprintf(ui->status, sizeof(ui->status), "islands A-E — drag chips, wheel/drag pan");
     return 0;
 }
 
@@ -177,7 +174,6 @@ static void pin_level_rgb(R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg, U
 static int dip_pin_y(const R01sEntity *e, int pin_num, int *side_left) {
     int dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
     int rows = dip / 2;
-    int pitch = rows > 1 ? (e->body_h - 16) / (rows - 1) : 0;
     int idx;
 
     if (dip <= 0 || pin_num <= 0 || pin_num > dip) {
@@ -186,7 +182,8 @@ static int dip_pin_y(const R01sEntity *e, int pin_num, int *side_left) {
     }
     *side_left = pin_num <= rows;
     idx = *side_left ? (pin_num - 1) : (dip - pin_num);
-    return e->board_y + 8 + idx * pitch;
+    /* Fixed pitch — body_h is derived from the same constants in r01s_entity_set_dip. */
+    return e->board_y + R01S_DIP_PIN_MARGIN_Y + idx * R01S_DIP_PIN_PITCH;
 }
 
 static void draw_chip(SDL_Renderer *r, const R01sEntity *e, int pan_x, int pan_y, int selected) {
@@ -318,7 +315,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
 
     /* Fixed HUD */
     fill_rect(r, 0, 0, R01S_LOGIC_W, 22, 12, 14, 16);
-    font_draw(r, 8, 7, "RETR01 SIM  ISLANDS A+B+C", 200, 210, 220);
+    font_draw(r, 8, 7, "RETR01 SIM  ISLANDS A-E", 200, 210, 220);
     font_draw(r, R01S_LOGIC_W - 500, 7, "SPC PAUSE  R RESET  . STEP  DRAG CHIP  WHEEL PAN  ESC", 120, 130, 140);
 
     fill_rect(r, R01S_LOGIC_W - 200, 36, 184, 110, 16, 22, 18);

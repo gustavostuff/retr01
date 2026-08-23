@@ -6,13 +6,17 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 
 ## Status
 
-**Islands A–C chip models + unit tests.** SDL board UI scaffold. Next: wire island C netlist smoke (CPU+RAM+PRG).
+**Islands A–E models, wiring, and layer-2 smoke.** SDL board UI. Architecture: [`docs/08_simulator.md`](../docs/08_simulator.md).
 
 | Island | Components |
 |--------|------------|
 | A Power | `PWR5V` |
 | B Clocks + reset | `OSC8M`, `SN74HC14` |
 | C CPU + RAM + PRG | `W65C02S`, `AS6C62256`, `PRG_ROM` |
+| D `$FExx` latch | `SN74HC573` @ `$FE02` (soft decode in board) |
+| E Pads | `PADS` stub @ `$FE60`/`$FE61` (pre-1284) |
+
+Next: island **G** (VRAM interleave) or more `$FExx` latches.
 
 ## Build
 
@@ -54,11 +58,11 @@ Live probe (top-right) shows **VDD / PHI2 / RESB**. Pin stubs glow by level (no 
 
 | Path | Role |
 |------|------|
-| `include/retr01_sim/` | Public headers (`entity`, `pin`, `bus`, `island`, `island_group`, `types`) |
-| `src/` | Core sim + SDL UI shell |
-| `src/islands/` | Concrete island groups (e.g. bring-up A+B+C) |
+| `include/retr01_sim/` | Public headers (`entity`, `pin`, `bus`, `board`, `island*`, `types`) |
+| `src/board.c` | **Board recipe A–E** — wiring, settle loop, group vtable |
+| `src/main.c` | SDL entry: build board + run UI |
 | `chips/` | Per-part models (subclass the base entity) |
-| `tests/` | Layer-1 unit tests |
+| `tests/` | Layer-1 unit tests + `test_island_abc` (layer 2) |
 
 ## Model
 
@@ -67,3 +71,9 @@ Live probe (top-right) shows **VDD / PHI2 / RESB**. Pin stubs glow by level (no 
 **Island** — a board region holding entities; optional island vtable for local init/eval.
 
 **Island group** — N islands wired together; group vtable owns cross-island sim step, reset, and status. The full console will eventually be one island group.
+
+**Island builder** — assembles islands + chip placements into a group.
+
+**Board** — `r01s_board_build()` binds the A–E recipe (settle passes, memory/`$FExx` decode, PHI2 edge). UI mounts the same builder.
+
+**Bus** — undriven pins pull high on read; H+L (or sensing `X`) **aborts** with a stderr bus-fight report (net + drivers + why).

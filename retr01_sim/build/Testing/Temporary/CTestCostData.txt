@@ -1,9 +1,18 @@
 entity 1 0.00121408
-test_entity 11 0.000107661
-test_pwr5v 11 9.74452e-05
-test_osc8m 11 6.43326e-05
-test_sn74hc14 11 6.50089e-05
-test_as6c62256 11 9.46288e-05
-test_prg_rom 10 7.77738e-05
-test_w65c02s 10 7.49548e-05
+test_entity 22 5.4006e-05
+test_pwr5v 22 3.35065e-05
+test_osc8m 22 3.26306e-05
+test_sn74hc14 22 3.32856e-05
+test_as6c62256 22 4.99975e-05
+test_prg_rom 21 5.6392e-05
+test_w65c02s 21 4.104e-05
+test_sn74hc_glue 11 6.8123e-05
+test_sn74hc573 10 7.26883e-05
+test_sn74hc245 10 7.70222e-05
+test_sn74hc157 11 7.6161e-05
+test_sst39sf040 11 0.000158817
+test_bus 6 0.000152943
+test_island_abc 4 0.00152823
+test_island_abcde 1 0.00983212
+test_pads 1 0.00123543
 ---

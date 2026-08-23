@@ -1,2 +1,2 @@
-/usr/bin/ar qc libretr01_sim_app.a CMakeFiles/retr01_sim_app.dir/src/ui.c.o CMakeFiles/retr01_sim_app.dir/src/app.c.o CMakeFiles/retr01_sim_app.dir/src/islands/bringup_abc.c.o
+/usr/bin/ar qc libretr01_sim_app.a CMakeFiles/retr01_sim_app.dir/src/ui.c.o CMakeFiles/retr01_sim_app.dir/src/app.c.o
 /usr/bin/ranlib libretr01_sim_app.a

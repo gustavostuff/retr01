@@ -2,6 +2,14 @@
 
 #include <string.h>
 
+int r01s_dip_body_h(int dip_pins) {
+    int rows = dip_pins / 2;
+    if (rows <= 1) {
+        return R01S_DIP_PIN_MARGIN_Y * 2;
+    }
+    return R01S_DIP_PIN_MARGIN_Y * 2 + (rows - 1) * R01S_DIP_PIN_PITCH;
+}
+
 void r01s_entity_init(R01sEntity *e, const R01sEntityVTable *vt, const char *part, const char *refdes) {
     if (!e) {
         return;
@@ -23,13 +31,13 @@ int r01s_entity_add_pin(R01sEntity *e, int number, const char *name, R01sPinDir 
     return 0;
 }
 
-void r01s_entity_set_dip(R01sEntity *e, int dip_pins, int body_w, int body_h) {
+void r01s_entity_set_dip(R01sEntity *e, int dip_pins, int body_w) {
     if (!e) {
         return;
     }
     e->dip_pins = dip_pins > 0 ? dip_pins : 0;
     e->body_w = body_w > 0 ? body_w : 40;
-    e->body_h = body_h > 0 ? body_h : (dip_pins / 2) * 12 + 16;
+    e->body_h = r01s_dip_body_h(e->dip_pins);
 }
 
 void r01s_entity_place(R01sEntity *e, int board_x, int board_y) {

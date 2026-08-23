@@ -4,17 +4,20 @@
 CMakeFiles/retr01_sim.dir/src/main.c.o: /home/g/Repos/retr01/retr01_sim/src/main.c \
   /home/g/Repos/retr01/retr01_sim/chips/as6c62256.h \
   /home/g/Repos/retr01/retr01_sim/chips/osc8m.h \
+  /home/g/Repos/retr01/retr01_sim/chips/pads.h \
   /home/g/Repos/retr01/retr01_sim/chips/prg_rom.h \
   /home/g/Repos/retr01/retr01_sim/chips/pwr5v.h \
   /home/g/Repos/retr01/retr01_sim/chips/sn74hc14.h \
+  /home/g/Repos/retr01/retr01_sim/chips/sn74hc573.h \
   /home/g/Repos/retr01/retr01_sim/chips/w65c02s.h \
+  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/board.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/entity.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island.h \
+  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_builder.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_group.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/pin.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/types.h \
   /home/g/Repos/retr01/retr01_sim/src/app.h \
-  /home/g/Repos/retr01/retr01_sim/src/islands/bringup_abc.h \
   /home/g/Repos/retr01/retr01_sim/src/ui.h \
   /usr/include/SDL2/SDL.h \
   /usr/include/SDL2/SDL_assert.h \
@@ -313,15 +316,13 @@ libretr01_sim_core.a:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/xmmintrin.h:
 
-/usr/include/bits/types/wint_t.h:
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/usermsrintrin.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/uintrintrin.h:
 
 /usr/include/bits/types/mbstate_t.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/amxint8intrin.h:
-
-/usr/include/bits/types/locale_t.h:
-
-/usr/include/SDL2/SDL_touch.h:
 
 /usr/include/bits/types/clock_t.h:
 
@@ -397,6 +398,8 @@ libretr01_sim_core.a:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/tsxldtrkintrin.h:
 
+/usr/include/bits/iscanonical.h:
+
 /usr/include/bits/fp-logb.h:
 
 /home/g/Repos/retr01/retr01_sim/include/retr01_sim/island.h:
@@ -431,15 +434,33 @@ libretr01_sim_core.a:
 
 /usr/include/SDL2/SDL_rect.h:
 
+/usr/include/SDL2/SDL_touch.h:
+
+/usr/include/bits/types/locale_t.h:
+
 /usr/include/SDL2/SDL_log.h:
 
 /usr/include/SDL2/SDL_thread.h:
+
+/usr/include/SDL2/SDL_system.h:
 
 /usr/include/SDL2/SDL_config_unix.h:
 
 /usr/include/alloca.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx512dqintrin.h:
+
+/usr/include/bits/types/clockid_t.h:
+
+/usr/include/bits/stdint-intn.h:
+
+/usr/include/SDL2/SDL_stdinc.h:
+
+/usr/include/bits/types/sigset_t.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx512vp2intersectintrin.h:
+
+/usr/include/SDL2/SDL_rwops.h:
 
 /home/g/Repos/retr01/retr01_sim/chips/pwr5v.h:
 
@@ -449,11 +470,13 @@ libretr01_sim_core.a:
 
 /usr/include/SDL2/SDL_mouse.h:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/mmintrin.h:
+/usr/lib/Scrt1.o:
 
-/usr/include/bits/fp-fast.h:
+/usr/include/SDL2/SDL_clipboard.h:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/ia32intrin.h:
+/usr/include/SDL2/SDL_hints.h:
+
+/usr/include/SDL2/SDL_keyboard.h:
 
 /usr/include/stdlib.h:
 
@@ -461,17 +484,15 @@ libretr01_sim_core.a:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/enqcmdintrin.h:
 
+/usr/include/bits/stdlib-bsearch.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/sgxintrin.h:
+
 /usr/include/SDL2/begin_code.h:
 
 /usr/include/SDL2/SDL_version.h:
 
 /usr/include/bits/uintn-identity.h:
-
-/usr/include/bits/typesizes.h:
-
-/usr/include/bits/stdlib-bsearch.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/sgxintrin.h:
 
 /home/g/Repos/retr01/retr01_sim/include/retr01_sim/entity.h:
 
@@ -483,27 +504,21 @@ libretr01_sim_core.a:
 
 /usr/include/bits/mathcalls-macros.h:
 
-/usr/lib/Scrt1.o:
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/waitpkgintrin.h:
 
-/usr/include/SDL2/SDL_clipboard.h:
+/usr/include/SDL2/SDL_events.h:
 
-/usr/include/SDL2/SDL_hints.h:
+/usr/include/bits/stdint-least.h:
 
-/usr/include/SDL2/SDL_keyboard.h:
+/usr/include/SDL2/SDL_power.h:
 
-/usr/include/bits/iscanonical.h:
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/cetintrin.h:
 
-/home/g/Repos/retr01/retr01_sim/src/islands/bringup_abc.h:
+/usr/lib/libc.so:
 
-/usr/include/bits/types/sigset_t.h:
+/usr/include/bits/pthreadtypes.h:
 
-/usr/include/SDL2/SDL_stdinc.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx512vp2intersectintrin.h:
-
-/usr/include/SDL2/SDL_joystick.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/cmpccxaddintrin.h:
+/usr/include/SDL2/SDL_scancode.h:
 
 /usr/include/SDL2/SDL.h:
 
@@ -517,23 +532,23 @@ libretr01_sim_core.a:
 
 /usr/include/SDL2/SDL_metal.h:
 
-/usr/include/SDL2/SDL_pixels.h:
+/home/g/Repos/retr01/retr01_sim/chips/pads.h:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/amxfp8intrin.h:
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/pconfigintrin.h:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/waitpkgintrin.h:
+/usr/include/SDL2/SDL_joystick.h:
 
-/usr/include/SDL2/SDL_events.h:
-
-/usr/include/bits/types/clockid_t.h:
-
-/usr/include/bits/stdint-intn.h:
-
-/usr/include/SDL2/SDL_rwops.h:
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/cmpccxaddintrin.h:
 
 /home/g/Repos/retr01/retr01_sim/chips/osc8m.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx10_2mediaintrin.h:
+
+/home/g/Repos/retr01/retr01_sim/chips/sn74hc14.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdint.h:
+
+/usr/include/bits/typesizes.h:
 
 /usr/include/bits/types/cookie_io_functions_t.h:
 
@@ -545,9 +560,19 @@ libretr01_sim_core.a:
 
 /home/g/Repos/retr01/retr01_sim/chips/prg_rom.h:
 
-/home/g/Repos/retr01/retr01_sim/chips/sn74hc14.h:
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/mmintrin.h:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdint.h:
+/usr/include/bits/fp-fast.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/ia32intrin.h:
+
+/home/g/Repos/retr01/retr01_sim/include/retr01_sim/board.h:
+
+/usr/include/SDL2/SDL_mutex.h:
+
+/usr/include/SDL2/SDL_pixels.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/amxfp8intrin.h:
 
 /usr/include/SDL2/SDL_guid.h:
 
@@ -565,15 +590,13 @@ libretr01_sim_core.a:
 
 /usr/include/bits/types.h:
 
+/home/g/Repos/retr01/retr01_sim/include/retr01_sim/island_builder.h:
+
 /usr/include/bits/types/struct_timespec.h:
 
 /usr/include/SDL2/SDL_hidapi.h:
 
 /usr/include/bits/types/struct_FILE.h:
-
-/usr/include/SDL2/SDL_power.h:
-
-/usr/include/bits/stdint-least.h:
 
 /usr/include/SDL2/SDL_loadso.h:
 
@@ -583,9 +606,9 @@ libretr01_sim_core.a:
 
 /usr/include/bits/types/time_t.h:
 
-/usr/include/SDL2/SDL_endian.h:
+/home/g/Repos/retr01/retr01_sim/chips/sn74hc573.h:
 
-/usr/include/SDL2/SDL_mutex.h:
+/usr/include/SDL2/SDL_endian.h:
 
 /usr/include/bits/types/__sigset_t.h:
 
@@ -601,23 +624,17 @@ CMakeFiles/retr01_sim.dir/src/main.c.o:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/prfchwintrin.h:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/usermsrintrin.h:
-
 /usr/include/SDL2/SDL_keycode.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/limits.h:
 
 /usr/include/SDL2/SDL_render.h:
 
-/usr/lib/libc.so:
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/vaesintrin.h:
 
-/usr/include/bits/pthreadtypes.h:
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx512bmmvlintrin.h:
 
-/usr/include/SDL2/SDL_scancode.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/cetintrin.h:
-
-/usr/include/SDL2/SDL_system.h:
+/usr/include/bits/types/wint_t.h:
 
 /usr/include/bits/waitflags.h:
 
@@ -726,8 +743,6 @@ libretr01_sim_app.a:
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx512cdintrin.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx512fintrin.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/uintrintrin.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx512fp16vlintrin.h:
 
@@ -841,8 +856,6 @@ libretr01_sim_app.a:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/mwaitxintrin.h:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/pconfigintrin.h:
-
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/rdseedintrin.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/serializeintrin.h:
@@ -860,7 +873,3 @@ libretr01_sim_app.a:
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdarg.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/tmmintrin.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx512bmmvlintrin.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/vaesintrin.h:

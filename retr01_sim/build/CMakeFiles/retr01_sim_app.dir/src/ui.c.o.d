@@ -193,4 +193,5 @@ CMakeFiles/retr01_sim_app.dir/src/ui.c.o: \
  /usr/include/SDL2/SDL_render.h /usr/include/SDL2/SDL_shape.h \
  /usr/include/SDL2/SDL_system.h /usr/include/SDL2/SDL_timer.h \
  /usr/include/SDL2/SDL_version.h /usr/include/SDL2/SDL_locale.h \
- /usr/include/SDL2/SDL_misc.h
+ /usr/include/SDL2/SDL_misc.h \
+ /home/g/Repos/retr01/retr01_sim/include/retr01_sim/board_layout.h

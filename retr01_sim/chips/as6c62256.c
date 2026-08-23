@@ -79,7 +79,7 @@ void r01s_as6c62256_init(R01sAs6c62256 *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 26, "A13", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 27, "WE#", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 28, "VCC", R01S_PIN_PWR);
-    r01s_entity_set_dip(&chip->base, 28, 56, 160);
+    r01s_entity_set_dip(&chip->base, 28, 56);
     r01s_entity_reset(&chip->base);
 }
 

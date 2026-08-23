@@ -43,14 +43,25 @@ struct R01sEntity {
     void *impl;
 };
 
+/* Uniform DIP geometry (logical pixels) — same pitch on every package. */
+#define R01S_DIP_PIN_PITCH 12
+#define R01S_DIP_PIN_MARGIN_Y 8 /* first/last pin inset from body top/bottom */
+
+/* Dual-row body height from package pin count (even). */
+int r01s_dip_body_h(int dip_pins);
+
 /* Zero entity; set vtable/part/refdes; pins start empty. */
 void r01s_entity_init(R01sEntity *e, const R01sEntityVTable *vt, const char *part, const char *refdes);
 
 /* Append a pin (fails if pin_count == R01S_MAX_PINS). Returns 0 ok, -1 full. */
 int r01s_entity_add_pin(R01sEntity *e, int number, const char *name, R01sPinDir dir);
 
-/* DIP body helpers: dual-row package, pin 1 top-left. dip_pins is the package pin count. */
-void r01s_entity_set_dip(R01sEntity *e, int dip_pins, int body_w, int body_h);
+/*
+ * DIP body: dual-row package, pin 1 top-left.
+ * Height is always derived from dip_pins + R01S_DIP_PIN_PITCH so pin spacing matches
+ * across parts. body_w is the package width only.
+ */
+void r01s_entity_set_dip(R01sEntity *e, int dip_pins, int body_w);
 
 void r01s_entity_place(R01sEntity *e, int board_x, int board_y);
 

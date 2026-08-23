@@ -16,6 +16,19 @@ static void logic_from_window(const R01sApp *app, int win_x, int win_y, int *lx,
     *ly = (win_y - oy) / scale;
 }
 
+void r01s_app_mount_builder(R01sApp *app) {
+    int i;
+    R01sIslandBuilder *b;
+    if (!app) {
+        return;
+    }
+    b = &app->builder;
+    r01s_ui_bind_group(&app->ui, &b->group);
+    for (i = 0; i < b->mount_count; i++) {
+        r01s_ui_add_chip(&app->ui, b->mounts[i].entity, b->mounts[i].island_index);
+    }
+}
+
 int r01s_app_init(R01sApp *app, int headless) {
     Uint32 flags;
     memset(app, 0, sizeof(*app));
@@ -39,9 +52,6 @@ int r01s_app_init(R01sApp *app, int headless) {
         return -1;
     }
 
-    r01s_bringup_abc_setup(&app->bringup, &app->group);
-    r01s_bringup_abc_mount(&app->bringup, &app->group, &app->ui);
-
     flags = SDL_WINDOW_ALLOW_HIGHDPI;
     if (headless) {
         flags |= SDL_WINDOW_HIDDEN;
@@ -49,11 +59,10 @@ int r01s_app_init(R01sApp *app, int headless) {
         flags |= SDL_WINDOW_RESIZABLE;
     }
 
-    app->win = SDL_CreateWindow("Retr01 Sim — Islands A+B+C", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                R01S_LOGIC_W, R01S_LOGIC_H, flags);
+    app->win = SDL_CreateWindow("Retr01 Sim", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, R01S_LOGIC_W,
+                                R01S_LOGIC_H, flags);
     if (!app->win) {
         fprintf(stderr, "window: %s\n", SDL_GetError());
-        r01s_island_group_shutdown(&app->group);
         r01s_ui_shutdown(&app->ui);
         SDL_Quit();
         return -1;
@@ -66,7 +75,6 @@ int r01s_app_init(R01sApp *app, int headless) {
     if (!app->ren) {
         fprintf(stderr, "renderer: %s\n", SDL_GetError());
         SDL_DestroyWindow(app->win);
-        r01s_island_group_shutdown(&app->group);
         r01s_ui_shutdown(&app->ui);
         SDL_Quit();
         return -1;
@@ -78,7 +86,6 @@ int r01s_app_init(R01sApp *app, int headless) {
         fprintf(stderr, "texture: %s\n", SDL_GetError());
         SDL_DestroyRenderer(app->ren);
         SDL_DestroyWindow(app->win);
-        r01s_island_group_shutdown(&app->group);
         r01s_ui_shutdown(&app->ui);
         SDL_Quit();
         return -1;
@@ -91,7 +98,7 @@ void r01s_app_shutdown(R01sApp *app) {
     if (!app) {
         return;
     }
-    r01s_island_group_shutdown(&app->group);
+    r01s_island_builder_shutdown(&app->builder);
     r01s_ui_shutdown(&app->ui);
     if (app->target) {
         SDL_DestroyTexture(app->target);
@@ -109,10 +116,14 @@ void r01s_app_shutdown(R01sApp *app) {
 void r01s_app_frame(R01sApp *app) {
     int ww, wh, scale, draw_w, draw_h;
     SDL_Rect dst;
+    R01sIslandGroup *group;
 
-    r01s_island_group_frame(&app->group);
-    r01s_island_group_fill_status(&app->group, app->ui.status, sizeof(app->ui.status));
-    r01s_island_group_update_probes(&app->group, &app->ui.probe_vdd, &app->ui.probe_phi2, &app->ui.probe_resb_low);
+    group = r01s_island_builder_group(&app->builder);
+    if (group) {
+        r01s_island_group_frame(group);
+        r01s_island_group_fill_status(group, app->ui.status, sizeof(app->ui.status));
+        r01s_island_group_update_probes(group, &app->ui.probe_vdd, &app->ui.probe_phi2, &app->ui.probe_resb_low);
+    }
 
     SDL_SetRenderTarget(app->ren, app->target);
     r01s_ui_draw(&app->ui, app->ren);
@@ -143,27 +154,29 @@ void r01s_app_frame(R01sApp *app) {
 
 void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
     int lx, ly;
+    R01sIslandGroup *group;
     if (!app || !e) {
         return;
     }
+    group = r01s_island_builder_group(&app->builder);
     if (e->type == SDL_QUIT) {
         app->running = 0;
         return;
     }
-    if (e->type == SDL_KEYDOWN) {
+    if (e->type == SDL_KEYDOWN && group) {
         switch (e->key.keysym.sym) {
         case SDLK_ESCAPE:
             app->running = 0;
             return;
         case SDLK_SPACE:
-            app->group.running = !app->group.running;
+            group->running = !group->running;
             return;
         case SDLK_r:
-            r01s_island_group_reset(&app->group);
+            r01s_island_group_reset(group);
             return;
         case SDLK_PERIOD:
-            if (!app->group.running) {
-                r01s_island_group_step(&app->group);
+            if (!group->running) {
+                r01s_island_group_step(group);
             }
             return;
         default:

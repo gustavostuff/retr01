@@ -45,7 +45,7 @@ void r01s_pwr5v_init(R01sPwr5v *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 2, "EN", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 3, "VDD", R01S_PIN_OUT);
     r01s_entity_add_pin(&chip->base, 4, "GND", R01S_PIN_PWR);
-    r01s_entity_set_dip(&chip->base, 4, 36, 48);
+    r01s_entity_set_dip(&chip->base, 4, 36);
     r01s_entity_reset(&chip->base);
 }
 

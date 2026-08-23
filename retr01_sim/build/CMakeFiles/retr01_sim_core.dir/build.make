@@ -142,10 +142,38 @@ CMakeFiles/retr01_sim_core.dir/src/island_group.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_sim_core.dir/src/island_group.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/retr01_sim/src/island_group.c -o CMakeFiles/retr01_sim_core.dir/src/island_group.c.s
 
+CMakeFiles/retr01_sim_core.dir/src/island_builder.c.o: CMakeFiles/retr01_sim_core.dir/flags.make
+CMakeFiles/retr01_sim_core.dir/src/island_builder.c.o: /home/g/Repos/retr01/retr01_sim/src/island_builder.c
+CMakeFiles/retr01_sim_core.dir/src/island_builder.c.o: CMakeFiles/retr01_sim_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building C object CMakeFiles/retr01_sim_core.dir/src/island_builder.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_core.dir/src/island_builder.c.o -MF CMakeFiles/retr01_sim_core.dir/src/island_builder.c.o.d -o CMakeFiles/retr01_sim_core.dir/src/island_builder.c.o -c /home/g/Repos/retr01/retr01_sim/src/island_builder.c
+
+CMakeFiles/retr01_sim_core.dir/src/island_builder.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/retr01_sim_core.dir/src/island_builder.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/g/Repos/retr01/retr01_sim/src/island_builder.c > CMakeFiles/retr01_sim_core.dir/src/island_builder.c.i
+
+CMakeFiles/retr01_sim_core.dir/src/island_builder.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_sim_core.dir/src/island_builder.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/retr01_sim/src/island_builder.c -o CMakeFiles/retr01_sim_core.dir/src/island_builder.c.s
+
+CMakeFiles/retr01_sim_core.dir/src/board.c.o: CMakeFiles/retr01_sim_core.dir/flags.make
+CMakeFiles/retr01_sim_core.dir/src/board.c.o: /home/g/Repos/retr01/retr01_sim/src/board.c
+CMakeFiles/retr01_sim_core.dir/src/board.c.o: CMakeFiles/retr01_sim_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building C object CMakeFiles/retr01_sim_core.dir/src/board.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_core.dir/src/board.c.o -MF CMakeFiles/retr01_sim_core.dir/src/board.c.o.d -o CMakeFiles/retr01_sim_core.dir/src/board.c.o -c /home/g/Repos/retr01/retr01_sim/src/board.c
+
+CMakeFiles/retr01_sim_core.dir/src/board.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/retr01_sim_core.dir/src/board.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/g/Repos/retr01/retr01_sim/src/board.c > CMakeFiles/retr01_sim_core.dir/src/board.c.i
+
+CMakeFiles/retr01_sim_core.dir/src/board.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_sim_core.dir/src/board.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/retr01_sim/src/board.c -o CMakeFiles/retr01_sim_core.dir/src/board.c.s
+
 CMakeFiles/retr01_sim_core.dir/chips/stub14.c.o: CMakeFiles/retr01_sim_core.dir/flags.make
 CMakeFiles/retr01_sim_core.dir/chips/stub14.c.o: /home/g/Repos/retr01/retr01_sim/chips/stub14.c
 CMakeFiles/retr01_sim_core.dir/chips/stub14.c.o: CMakeFiles/retr01_sim_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building C object CMakeFiles/retr01_sim_core.dir/chips/stub14.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building C object CMakeFiles/retr01_sim_core.dir/chips/stub14.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_core.dir/chips/stub14.c.o -MF CMakeFiles/retr01_sim_core.dir/chips/stub14.c.o.d -o CMakeFiles/retr01_sim_core.dir/chips/stub14.c.o -c /home/g/Repos/retr01/retr01_sim/chips/stub14.c
 
 CMakeFiles/retr01_sim_core.dir/chips/stub14.c.i: cmake_force
@@ -159,7 +187,7 @@ CMakeFiles/retr01_sim_core.dir/chips/stub14.c.s: cmake_force
 CMakeFiles/retr01_sim_core.dir/chips/pwr5v.c.o: CMakeFiles/retr01_sim_core.dir/flags.make
 CMakeFiles/retr01_sim_core.dir/chips/pwr5v.c.o: /home/g/Repos/retr01/retr01_sim/chips/pwr5v.c
 CMakeFiles/retr01_sim_core.dir/chips/pwr5v.c.o: CMakeFiles/retr01_sim_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building C object CMakeFiles/retr01_sim_core.dir/chips/pwr5v.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building C object CMakeFiles/retr01_sim_core.dir/chips/pwr5v.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_core.dir/chips/pwr5v.c.o -MF CMakeFiles/retr01_sim_core.dir/chips/pwr5v.c.o.d -o CMakeFiles/retr01_sim_core.dir/chips/pwr5v.c.o -c /home/g/Repos/retr01/retr01_sim/chips/pwr5v.c
 
 CMakeFiles/retr01_sim_core.dir/chips/pwr5v.c.i: cmake_force
@@ -173,7 +201,7 @@ CMakeFiles/retr01_sim_core.dir/chips/pwr5v.c.s: cmake_force
 CMakeFiles/retr01_sim_core.dir/chips/osc8m.c.o: CMakeFiles/retr01_sim_core.dir/flags.make
 CMakeFiles/retr01_sim_core.dir/chips/osc8m.c.o: /home/g/Repos/retr01/retr01_sim/chips/osc8m.c
 CMakeFiles/retr01_sim_core.dir/chips/osc8m.c.o: CMakeFiles/retr01_sim_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building C object CMakeFiles/retr01_sim_core.dir/chips/osc8m.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building C object CMakeFiles/retr01_sim_core.dir/chips/osc8m.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_core.dir/chips/osc8m.c.o -MF CMakeFiles/retr01_sim_core.dir/chips/osc8m.c.o.d -o CMakeFiles/retr01_sim_core.dir/chips/osc8m.c.o -c /home/g/Repos/retr01/retr01_sim/chips/osc8m.c
 
 CMakeFiles/retr01_sim_core.dir/chips/osc8m.c.i: cmake_force
@@ -187,7 +215,7 @@ CMakeFiles/retr01_sim_core.dir/chips/osc8m.c.s: cmake_force
 CMakeFiles/retr01_sim_core.dir/chips/sn74hc14.c.o: CMakeFiles/retr01_sim_core.dir/flags.make
 CMakeFiles/retr01_sim_core.dir/chips/sn74hc14.c.o: /home/g/Repos/retr01/retr01_sim/chips/sn74hc14.c
 CMakeFiles/retr01_sim_core.dir/chips/sn74hc14.c.o: CMakeFiles/retr01_sim_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building C object CMakeFiles/retr01_sim_core.dir/chips/sn74hc14.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building C object CMakeFiles/retr01_sim_core.dir/chips/sn74hc14.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_core.dir/chips/sn74hc14.c.o -MF CMakeFiles/retr01_sim_core.dir/chips/sn74hc14.c.o.d -o CMakeFiles/retr01_sim_core.dir/chips/sn74hc14.c.o -c /home/g/Repos/retr01/retr01_sim/chips/sn74hc14.c
 
 CMakeFiles/retr01_sim_core.dir/chips/sn74hc14.c.i: cmake_force
@@ -198,10 +226,108 @@ CMakeFiles/retr01_sim_core.dir/chips/sn74hc14.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_sim_core.dir/chips/sn74hc14.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/retr01_sim/chips/sn74hc14.c -o CMakeFiles/retr01_sim_core.dir/chips/sn74hc14.c.s
 
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc04.c.o: CMakeFiles/retr01_sim_core.dir/flags.make
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc04.c.o: /home/g/Repos/retr01/retr01_sim/chips/sn74hc04.c
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc04.c.o: CMakeFiles/retr01_sim_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building C object CMakeFiles/retr01_sim_core.dir/chips/sn74hc04.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_core.dir/chips/sn74hc04.c.o -MF CMakeFiles/retr01_sim_core.dir/chips/sn74hc04.c.o.d -o CMakeFiles/retr01_sim_core.dir/chips/sn74hc04.c.o -c /home/g/Repos/retr01/retr01_sim/chips/sn74hc04.c
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc04.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/retr01_sim_core.dir/chips/sn74hc04.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/g/Repos/retr01/retr01_sim/chips/sn74hc04.c > CMakeFiles/retr01_sim_core.dir/chips/sn74hc04.c.i
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc04.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_sim_core.dir/chips/sn74hc04.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/retr01_sim/chips/sn74hc04.c -o CMakeFiles/retr01_sim_core.dir/chips/sn74hc04.c.s
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc00.c.o: CMakeFiles/retr01_sim_core.dir/flags.make
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc00.c.o: /home/g/Repos/retr01/retr01_sim/chips/sn74hc00.c
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc00.c.o: CMakeFiles/retr01_sim_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building C object CMakeFiles/retr01_sim_core.dir/chips/sn74hc00.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_core.dir/chips/sn74hc00.c.o -MF CMakeFiles/retr01_sim_core.dir/chips/sn74hc00.c.o.d -o CMakeFiles/retr01_sim_core.dir/chips/sn74hc00.c.o -c /home/g/Repos/retr01/retr01_sim/chips/sn74hc00.c
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc00.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/retr01_sim_core.dir/chips/sn74hc00.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/g/Repos/retr01/retr01_sim/chips/sn74hc00.c > CMakeFiles/retr01_sim_core.dir/chips/sn74hc00.c.i
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc00.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_sim_core.dir/chips/sn74hc00.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/retr01_sim/chips/sn74hc00.c -o CMakeFiles/retr01_sim_core.dir/chips/sn74hc00.c.s
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc08.c.o: CMakeFiles/retr01_sim_core.dir/flags.make
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc08.c.o: /home/g/Repos/retr01/retr01_sim/chips/sn74hc08.c
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc08.c.o: CMakeFiles/retr01_sim_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building C object CMakeFiles/retr01_sim_core.dir/chips/sn74hc08.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_core.dir/chips/sn74hc08.c.o -MF CMakeFiles/retr01_sim_core.dir/chips/sn74hc08.c.o.d -o CMakeFiles/retr01_sim_core.dir/chips/sn74hc08.c.o -c /home/g/Repos/retr01/retr01_sim/chips/sn74hc08.c
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc08.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/retr01_sim_core.dir/chips/sn74hc08.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/g/Repos/retr01/retr01_sim/chips/sn74hc08.c > CMakeFiles/retr01_sim_core.dir/chips/sn74hc08.c.i
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc08.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_sim_core.dir/chips/sn74hc08.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/retr01_sim/chips/sn74hc08.c -o CMakeFiles/retr01_sim_core.dir/chips/sn74hc08.c.s
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc32.c.o: CMakeFiles/retr01_sim_core.dir/flags.make
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc32.c.o: /home/g/Repos/retr01/retr01_sim/chips/sn74hc32.c
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc32.c.o: CMakeFiles/retr01_sim_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building C object CMakeFiles/retr01_sim_core.dir/chips/sn74hc32.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_core.dir/chips/sn74hc32.c.o -MF CMakeFiles/retr01_sim_core.dir/chips/sn74hc32.c.o.d -o CMakeFiles/retr01_sim_core.dir/chips/sn74hc32.c.o -c /home/g/Repos/retr01/retr01_sim/chips/sn74hc32.c
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc32.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/retr01_sim_core.dir/chips/sn74hc32.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/g/Repos/retr01/retr01_sim/chips/sn74hc32.c > CMakeFiles/retr01_sim_core.dir/chips/sn74hc32.c.i
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc32.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_sim_core.dir/chips/sn74hc32.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/retr01_sim/chips/sn74hc32.c -o CMakeFiles/retr01_sim_core.dir/chips/sn74hc32.c.s
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc573.c.o: CMakeFiles/retr01_sim_core.dir/flags.make
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc573.c.o: /home/g/Repos/retr01/retr01_sim/chips/sn74hc573.c
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc573.c.o: CMakeFiles/retr01_sim_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building C object CMakeFiles/retr01_sim_core.dir/chips/sn74hc573.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_core.dir/chips/sn74hc573.c.o -MF CMakeFiles/retr01_sim_core.dir/chips/sn74hc573.c.o.d -o CMakeFiles/retr01_sim_core.dir/chips/sn74hc573.c.o -c /home/g/Repos/retr01/retr01_sim/chips/sn74hc573.c
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc573.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/retr01_sim_core.dir/chips/sn74hc573.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/g/Repos/retr01/retr01_sim/chips/sn74hc573.c > CMakeFiles/retr01_sim_core.dir/chips/sn74hc573.c.i
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc573.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_sim_core.dir/chips/sn74hc573.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/retr01_sim/chips/sn74hc573.c -o CMakeFiles/retr01_sim_core.dir/chips/sn74hc573.c.s
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc245.c.o: CMakeFiles/retr01_sim_core.dir/flags.make
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc245.c.o: /home/g/Repos/retr01/retr01_sim/chips/sn74hc245.c
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc245.c.o: CMakeFiles/retr01_sim_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building C object CMakeFiles/retr01_sim_core.dir/chips/sn74hc245.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_core.dir/chips/sn74hc245.c.o -MF CMakeFiles/retr01_sim_core.dir/chips/sn74hc245.c.o.d -o CMakeFiles/retr01_sim_core.dir/chips/sn74hc245.c.o -c /home/g/Repos/retr01/retr01_sim/chips/sn74hc245.c
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc245.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/retr01_sim_core.dir/chips/sn74hc245.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/g/Repos/retr01/retr01_sim/chips/sn74hc245.c > CMakeFiles/retr01_sim_core.dir/chips/sn74hc245.c.i
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc245.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_sim_core.dir/chips/sn74hc245.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/retr01_sim/chips/sn74hc245.c -o CMakeFiles/retr01_sim_core.dir/chips/sn74hc245.c.s
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc157.c.o: CMakeFiles/retr01_sim_core.dir/flags.make
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc157.c.o: /home/g/Repos/retr01/retr01_sim/chips/sn74hc157.c
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc157.c.o: CMakeFiles/retr01_sim_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building C object CMakeFiles/retr01_sim_core.dir/chips/sn74hc157.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_core.dir/chips/sn74hc157.c.o -MF CMakeFiles/retr01_sim_core.dir/chips/sn74hc157.c.o.d -o CMakeFiles/retr01_sim_core.dir/chips/sn74hc157.c.o -c /home/g/Repos/retr01/retr01_sim/chips/sn74hc157.c
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc157.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/retr01_sim_core.dir/chips/sn74hc157.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/g/Repos/retr01/retr01_sim/chips/sn74hc157.c > CMakeFiles/retr01_sim_core.dir/chips/sn74hc157.c.i
+
+CMakeFiles/retr01_sim_core.dir/chips/sn74hc157.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_sim_core.dir/chips/sn74hc157.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/retr01_sim/chips/sn74hc157.c -o CMakeFiles/retr01_sim_core.dir/chips/sn74hc157.c.s
+
 CMakeFiles/retr01_sim_core.dir/chips/as6c62256.c.o: CMakeFiles/retr01_sim_core.dir/flags.make
 CMakeFiles/retr01_sim_core.dir/chips/as6c62256.c.o: /home/g/Repos/retr01/retr01_sim/chips/as6c62256.c
 CMakeFiles/retr01_sim_core.dir/chips/as6c62256.c.o: CMakeFiles/retr01_sim_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building C object CMakeFiles/retr01_sim_core.dir/chips/as6c62256.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building C object CMakeFiles/retr01_sim_core.dir/chips/as6c62256.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_core.dir/chips/as6c62256.c.o -MF CMakeFiles/retr01_sim_core.dir/chips/as6c62256.c.o.d -o CMakeFiles/retr01_sim_core.dir/chips/as6c62256.c.o -c /home/g/Repos/retr01/retr01_sim/chips/as6c62256.c
 
 CMakeFiles/retr01_sim_core.dir/chips/as6c62256.c.i: cmake_force
@@ -215,7 +341,7 @@ CMakeFiles/retr01_sim_core.dir/chips/as6c62256.c.s: cmake_force
 CMakeFiles/retr01_sim_core.dir/chips/prg_rom.c.o: CMakeFiles/retr01_sim_core.dir/flags.make
 CMakeFiles/retr01_sim_core.dir/chips/prg_rom.c.o: /home/g/Repos/retr01/retr01_sim/chips/prg_rom.c
 CMakeFiles/retr01_sim_core.dir/chips/prg_rom.c.o: CMakeFiles/retr01_sim_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building C object CMakeFiles/retr01_sim_core.dir/chips/prg_rom.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building C object CMakeFiles/retr01_sim_core.dir/chips/prg_rom.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_core.dir/chips/prg_rom.c.o -MF CMakeFiles/retr01_sim_core.dir/chips/prg_rom.c.o.d -o CMakeFiles/retr01_sim_core.dir/chips/prg_rom.c.o -c /home/g/Repos/retr01/retr01_sim/chips/prg_rom.c
 
 CMakeFiles/retr01_sim_core.dir/chips/prg_rom.c.i: cmake_force
@@ -226,10 +352,38 @@ CMakeFiles/retr01_sim_core.dir/chips/prg_rom.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_sim_core.dir/chips/prg_rom.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/retr01_sim/chips/prg_rom.c -o CMakeFiles/retr01_sim_core.dir/chips/prg_rom.c.s
 
+CMakeFiles/retr01_sim_core.dir/chips/pads.c.o: CMakeFiles/retr01_sim_core.dir/flags.make
+CMakeFiles/retr01_sim_core.dir/chips/pads.c.o: /home/g/Repos/retr01/retr01_sim/chips/pads.c
+CMakeFiles/retr01_sim_core.dir/chips/pads.c.o: CMakeFiles/retr01_sim_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building C object CMakeFiles/retr01_sim_core.dir/chips/pads.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_core.dir/chips/pads.c.o -MF CMakeFiles/retr01_sim_core.dir/chips/pads.c.o.d -o CMakeFiles/retr01_sim_core.dir/chips/pads.c.o -c /home/g/Repos/retr01/retr01_sim/chips/pads.c
+
+CMakeFiles/retr01_sim_core.dir/chips/pads.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/retr01_sim_core.dir/chips/pads.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/g/Repos/retr01/retr01_sim/chips/pads.c > CMakeFiles/retr01_sim_core.dir/chips/pads.c.i
+
+CMakeFiles/retr01_sim_core.dir/chips/pads.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_sim_core.dir/chips/pads.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/retr01_sim/chips/pads.c -o CMakeFiles/retr01_sim_core.dir/chips/pads.c.s
+
+CMakeFiles/retr01_sim_core.dir/chips/sst39sf040.c.o: CMakeFiles/retr01_sim_core.dir/flags.make
+CMakeFiles/retr01_sim_core.dir/chips/sst39sf040.c.o: /home/g/Repos/retr01/retr01_sim/chips/sst39sf040.c
+CMakeFiles/retr01_sim_core.dir/chips/sst39sf040.c.o: CMakeFiles/retr01_sim_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building C object CMakeFiles/retr01_sim_core.dir/chips/sst39sf040.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_core.dir/chips/sst39sf040.c.o -MF CMakeFiles/retr01_sim_core.dir/chips/sst39sf040.c.o.d -o CMakeFiles/retr01_sim_core.dir/chips/sst39sf040.c.o -c /home/g/Repos/retr01/retr01_sim/chips/sst39sf040.c
+
+CMakeFiles/retr01_sim_core.dir/chips/sst39sf040.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/retr01_sim_core.dir/chips/sst39sf040.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/g/Repos/retr01/retr01_sim/chips/sst39sf040.c > CMakeFiles/retr01_sim_core.dir/chips/sst39sf040.c.i
+
+CMakeFiles/retr01_sim_core.dir/chips/sst39sf040.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/retr01_sim_core.dir/chips/sst39sf040.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/g/Repos/retr01/retr01_sim/chips/sst39sf040.c -o CMakeFiles/retr01_sim_core.dir/chips/sst39sf040.c.s
+
 CMakeFiles/retr01_sim_core.dir/chips/w65c02s.c.o: CMakeFiles/retr01_sim_core.dir/flags.make
 CMakeFiles/retr01_sim_core.dir/chips/w65c02s.c.o: /home/g/Repos/retr01/retr01_sim/chips/w65c02s.c
 CMakeFiles/retr01_sim_core.dir/chips/w65c02s.c.o: CMakeFiles/retr01_sim_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building C object CMakeFiles/retr01_sim_core.dir/chips/w65c02s.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building C object CMakeFiles/retr01_sim_core.dir/chips/w65c02s.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/retr01_sim_core.dir/chips/w65c02s.c.o -MF CMakeFiles/retr01_sim_core.dir/chips/w65c02s.c.o.d -o CMakeFiles/retr01_sim_core.dir/chips/w65c02s.c.o -c /home/g/Repos/retr01/retr01_sim/chips/w65c02s.c
 
 CMakeFiles/retr01_sim_core.dir/chips/w65c02s.c.i: cmake_force
@@ -247,12 +401,23 @@ retr01_sim_core_OBJECTS = \
 "CMakeFiles/retr01_sim_core.dir/src/bus.c.o" \
 "CMakeFiles/retr01_sim_core.dir/src/island.c.o" \
 "CMakeFiles/retr01_sim_core.dir/src/island_group.c.o" \
+"CMakeFiles/retr01_sim_core.dir/src/island_builder.c.o" \
+"CMakeFiles/retr01_sim_core.dir/src/board.c.o" \
 "CMakeFiles/retr01_sim_core.dir/chips/stub14.c.o" \
 "CMakeFiles/retr01_sim_core.dir/chips/pwr5v.c.o" \
 "CMakeFiles/retr01_sim_core.dir/chips/osc8m.c.o" \
 "CMakeFiles/retr01_sim_core.dir/chips/sn74hc14.c.o" \
+"CMakeFiles/retr01_sim_core.dir/chips/sn74hc04.c.o" \
+"CMakeFiles/retr01_sim_core.dir/chips/sn74hc00.c.o" \
+"CMakeFiles/retr01_sim_core.dir/chips/sn74hc08.c.o" \
+"CMakeFiles/retr01_sim_core.dir/chips/sn74hc32.c.o" \
+"CMakeFiles/retr01_sim_core.dir/chips/sn74hc573.c.o" \
+"CMakeFiles/retr01_sim_core.dir/chips/sn74hc245.c.o" \
+"CMakeFiles/retr01_sim_core.dir/chips/sn74hc157.c.o" \
 "CMakeFiles/retr01_sim_core.dir/chips/as6c62256.c.o" \
 "CMakeFiles/retr01_sim_core.dir/chips/prg_rom.c.o" \
+"CMakeFiles/retr01_sim_core.dir/chips/pads.c.o" \
+"CMakeFiles/retr01_sim_core.dir/chips/sst39sf040.c.o" \
 "CMakeFiles/retr01_sim_core.dir/chips/w65c02s.c.o"
 
 # External object files for target retr01_sim_core
@@ -263,16 +428,27 @@ libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/src/entity.c.o
 libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/src/bus.c.o
 libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/src/island.c.o
 libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/src/island_group.c.o
+libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/src/island_builder.c.o
+libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/src/board.c.o
 libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/chips/stub14.c.o
 libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/chips/pwr5v.c.o
 libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/chips/osc8m.c.o
 libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/chips/sn74hc14.c.o
+libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/chips/sn74hc04.c.o
+libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/chips/sn74hc00.c.o
+libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/chips/sn74hc08.c.o
+libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/chips/sn74hc32.c.o
+libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/chips/sn74hc573.c.o
+libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/chips/sn74hc245.c.o
+libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/chips/sn74hc157.c.o
 libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/chips/as6c62256.c.o
 libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/chips/prg_rom.c.o
+libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/chips/pads.c.o
+libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/chips/sst39sf040.c.o
 libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/chips/w65c02s.c.o
 libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/build.make
 libretr01_sim_core.a: CMakeFiles/retr01_sim_core.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Linking C static library libretr01_sim_core.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Linking C static library libretr01_sim_core.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/retr01_sim_core.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/retr01_sim_core.dir/link.txt --verbose=$(VERBOSE)
 
