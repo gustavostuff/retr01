@@ -72,6 +72,10 @@ static void copy_latch_q_to_cpu_d(R01sEntity *cpu, R01sEntity *latch) {
     }
 }
 
+static void drive_level_bit(R01sEntity *e, const char *name, int bit_on) {
+    r01s_entity_drive(e, name, bit_on ? R01S_LVL_H : R01S_LVL_L);
+}
+
 static int addr_is_io(uint16_t addr) {
     return addr >= 0xFE00u && addr <= 0xFEFFu;
 }
@@ -124,6 +128,104 @@ static void wire_io(R01sBoard *ctx) {
         copy_bus_named(cpu, "D", pads, "DQ", 8);
     } else {
         r01s_entity_eval(pads);
+    }
+}
+
+/*
+ * Island G — VRAM port $FE10/$FE11/$FE12 + PHI2 interleave.
+ * CPU phase (PHI2 high): CPU may R/W via soft addr latch + FE12.
+ * PPU phase (PHI2 low): mux selects stub addr 0; VRAM OE for future BG fetch.
+ * Auto-inc arms on FE12 access; committed on next PHI2 rising edge.
+ */
+static void wire_vram(R01sBoard *ctx) {
+    R01sEntity *cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
+    R01sEntity *vram = r01s_as6c62256_entity(ctx->vram_impl.vram);
+    R01sEntity *mux = r01s_sn74hc157_entity(ctx->vram_impl.mux);
+    R01sEntity *osc = r01s_osc8m_entity(ctx->clock_impl.osc);
+    uint16_t cpu_addr = (uint16_t)r01s_bus_read(cpu, "A", 16);
+    int read = r01s_level_is_high(r01s_entity_sense(cpu, "RWB"));
+    int be = r01s_level_is_high(r01s_entity_sense(cpu, "BE"));
+    int cpu_phase = r01s_level_is_high(r01s_entity_sense(osc, "PHI2"));
+    int hit_lo = (cpu_addr == 0xFE10u);
+    int hit_hi = (cpu_addr == 0xFE11u);
+    int hit_data = (cpu_addr == 0xFE12u);
+    uint16_t va = (uint16_t)(ctx->vram_addr & 0x7FFFu);
+    uint16_t sram_addr;
+    int i;
+
+    /* Soft addr latch ports (always CPU-side, not PHI2-gated). */
+    if (be && addr_is_io(cpu_addr)) {
+        if (hit_lo && !read) {
+            ctx->vram_addr = (uint16_t)((ctx->vram_addr & 0xFF00u) | (r01s_bus_read(cpu, "D", 8) & 0xFFu));
+            va = (uint16_t)(ctx->vram_addr & 0x7FFFu);
+        }
+        if (hit_hi && !read) {
+            ctx->vram_addr =
+                (uint16_t)((ctx->vram_addr & 0x00FFu) | ((r01s_bus_read(cpu, "D", 8) & 0xFFu) << 8));
+            va = (uint16_t)(ctx->vram_addr & 0x7FFFu);
+        }
+        if (hit_lo && read) {
+            r01s_bus_write(cpu, "D", 8, (uint8_t)(ctx->vram_addr & 0xFFu));
+        }
+        if (hit_hi && read) {
+            r01s_bus_write(cpu, "D", 8, (uint8_t)((ctx->vram_addr >> 8) & 0xFFu));
+        }
+    }
+
+    /* HC157: A = CPU VRAM addr[3:0], B = PPU stub 0, AB = !cpu_phase */
+    r01s_entity_drive(mux, "G#", R01S_LVL_L);
+    r01s_entity_drive(mux, "AB", cpu_phase ? R01S_LVL_L : R01S_LVL_H);
+    drive_level_bit(mux, "1A", (va >> 0) & 1);
+    drive_level_bit(mux, "2A", (va >> 1) & 1);
+    drive_level_bit(mux, "3A", (va >> 2) & 1);
+    drive_level_bit(mux, "4A", (va >> 3) & 1);
+    r01s_entity_drive(mux, "1B", R01S_LVL_L);
+    r01s_entity_drive(mux, "2B", R01S_LVL_L);
+    r01s_entity_drive(mux, "3B", R01S_LVL_L);
+    r01s_entity_drive(mux, "4B", R01S_LVL_L);
+    r01s_entity_eval(mux);
+
+    sram_addr = cpu_phase ? va : 0u;
+    /* Low 4 bits from mux Y (visual interleave); upper from selected side. */
+    for (i = 0; i < 4; i++) {
+        char yn[4], an[8];
+        snprintf(yn, sizeof(yn), "%dY", i + 1);
+        snprintf(an, sizeof(an), "A%d", i);
+        r01s_entity_drive(vram, an, r01s_entity_sense(mux, yn));
+    }
+    for (i = 4; i < 15; i++) {
+        char an[8];
+        snprintf(an, sizeof(an), "A%d", i);
+        drive_level_bit(vram, an, (sram_addr >> i) & 1);
+    }
+
+    r01s_entity_drive(vram, "CE#", R01S_LVL_H);
+    r01s_entity_drive(vram, "OE#", R01S_LVL_H);
+    r01s_entity_drive(vram, "WE#", R01S_LVL_H);
+    r01s_bus_hiz(vram, "DQ", 8);
+
+    if (cpu_phase && be && hit_data) {
+        r01s_entity_drive(vram, "CE#", R01S_LVL_L);
+        if (read) {
+            r01s_entity_drive(vram, "OE#", R01S_LVL_L);
+            r01s_entity_drive(vram, "WE#", R01S_LVL_H);
+            r01s_entity_eval(vram);
+            copy_bus_named(cpu, "D", vram, "DQ", 8);
+        } else {
+            r01s_entity_drive(vram, "OE#", R01S_LVL_H);
+            r01s_entity_drive(vram, "WE#", R01S_LVL_L);
+            copy_bus_named(vram, "DQ", cpu, "D", 8);
+            r01s_entity_eval(vram);
+        }
+        ctx->vram_fe12_armed = 1;
+    } else if (!cpu_phase) {
+        /* PPU stub fetch: read-only, not on CPU D. */
+        r01s_entity_drive(vram, "CE#", R01S_LVL_L);
+        r01s_entity_drive(vram, "OE#", R01S_LVL_L);
+        r01s_entity_drive(vram, "WE#", R01S_LVL_H);
+        r01s_entity_eval(vram);
+    } else {
+        r01s_entity_eval(vram);
     }
 }
 
@@ -213,6 +315,7 @@ static void board_settle(R01sBoard *ctx, R01sIslandGroup *group) {
         wire_power_clock_reset(ctx, group);
         wire_memory(ctx);
         wire_io(ctx);
+        wire_vram(ctx);
     }
 }
 
@@ -232,8 +335,27 @@ static void island_clock_init(R01sIsland *island) {
 
 static void island_cpu_mem_init(R01sIsland *island) {
     R01sIslandCpuMemImpl *impl = (R01sIslandCpuMemImpl *)island->impl;
-    /* Boot: STA $FE02 = $55 once, then loop LDA $FE60 (live pad read into A). */
-    uint8_t prog[] = {0xA9, 0x55, 0x8D, 0x02, 0xFE, 0xAD, 0x60, 0xFE, 0x4C, 0x06, 0x80};
+    /*
+     * Boot smoke for A–E + G:
+     *   STA $FE02 = $55
+     *   VRAM: addr=0, STA $FE12 = $AA, reseek 0, LDA $FE12
+     *   then loop LDA $FE60
+     */
+    uint8_t prog[] = {
+        0xA9, 0x55,       /* LDA #$55 */
+        0x8D, 0x02, 0xFE, /* STA $FE02 */
+        0xA9, 0x00,       /* LDA #$00 */
+        0x8D, 0x10, 0xFE, /* STA $FE10 */
+        0x8D, 0x11, 0xFE, /* STA $FE11 */
+        0xA9, 0xAA,       /* LDA #$AA */
+        0x8D, 0x12, 0xFE, /* STA $FE12 */
+        0xA9, 0x00,       /* LDA #$00 */
+        0x8D, 0x10, 0xFE, /* STA $FE10 */
+        0x8D, 0x11, 0xFE, /* STA $FE11 */
+        0xAD, 0x12, 0xFE, /* LDA $FE12 @ $801A */
+        0xAD, 0x60, 0xFE, /* LDA $FE60 @ $801D */
+        0x4C, 0x1D, 0x80, /* JMP $801D (pad loop) */
+    };
 
     r01s_w65c02s_init(impl->cpu, "U1");
     r01s_as6c62256_init(impl->ram, "U3");
@@ -257,11 +379,20 @@ static void island_pads_init(R01sIsland *island) {
     r01s_island_add_entity(island, r01s_pads_entity(impl->pads));
 }
 
+static void island_vram_init(R01sIsland *island) {
+    R01sIslandVramImpl *impl = (R01sIslandVramImpl *)island->impl;
+    r01s_as6c62256_init(impl->vram, "U6");
+    r01s_sn74hc157_init(impl->mux, "U7");
+    r01s_island_add_entity(island, r01s_as6c62256_entity(impl->vram));
+    r01s_island_add_entity(island, r01s_sn74hc157_entity(impl->mux));
+}
+
 static const R01sIslandVTable ISLAND_POWER_VT = {island_power_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CLOCK_VT = {island_clock_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CPU_VT = {island_cpu_mem_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_IO_VT = {island_io_latch_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_PADS_VT = {island_pads_init, NULL, NULL, NULL, NULL};
+static const R01sIslandVTable ISLAND_VRAM_VT = {island_vram_init, NULL, NULL, NULL, NULL};
 
 static void board_shutdown(R01sIslandGroup *group) {
     int i;
@@ -282,11 +413,15 @@ static void board_reset(R01sIslandGroup *group) {
     ctx->reset_hold = R01S_RESET_HOLD;
     ctx->cycles = 0;
     ctx->phi2_prev = R01S_LVL_L;
+    ctx->vram_addr = 0;
+    ctx->vram_fe12_armed = 0;
     r01s_bus_clear_conflicts();
     r01s_entity_reset(r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu));
     r01s_entity_reset(r01s_osc8m_entity(ctx->clock_impl.osc));
     r01s_entity_reset(r01s_sn74hc573_entity(ctx->io_latch_impl.latch));
     r01s_entity_reset(r01s_pads_entity(ctx->pads_impl.pads));
+    r01s_entity_reset(r01s_as6c62256_entity(ctx->vram_impl.vram));
+    r01s_entity_reset(r01s_sn74hc157_entity(ctx->vram_impl.mux));
     board_settle(ctx, group);
     r01s_entity_eval(r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu));
     board_settle(ctx, group);
@@ -328,6 +463,12 @@ static void board_step(R01sIslandGroup *group) {
             ctx->cycles++;
             r01s_entity_eval(cpu);
             board_settle(ctx, group);
+            /* Auto-inc once when the FE12 DATA cycle ends (not when it begins). */
+            if (ctx->vram_fe12_armed &&
+                r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu) != R01S_CPU_OP_DATA) {
+                ctx->vram_addr = (uint16_t)((ctx->vram_addr + 1u) & 0x7FFFu);
+                ctx->vram_fe12_armed = 0;
+            }
         }
     }
     ctx->phi2_prev = phi2;
@@ -345,7 +486,8 @@ static void board_status(R01sIslandGroup *group, char *buf, size_t buf_len) {
     pwr = r01s_pwr5v_entity(ctx->power_impl.pwr);
     osc = r01s_osc8m_entity(ctx->clock_impl.osc);
     snprintf(buf, buf_len,
-             "%s  VDD=%c PHI2=%c RESB=%c  PC=%04X A=%02X AB=%04X IR=%02X %s  LE=%02X P1=%02X P2=%02X  cyc=%u",
+             "%s  VDD=%c PHI2=%c RESB=%c  PC=%04X A=%02X AB=%04X IR=%02X %s  LE=%02X "
+             "VA=%04X V0=%02X P1=%02X P2=%02X  cyc=%u",
              group->running ? "RUN" : "PAUSE",
              r01s_level_is_high(r01s_entity_sense(pwr, "VDD")) ? 'H' : 'L',
              r01s_level_is_high(r01s_entity_sense(osc, "PHI2")) ? 'H' : 'L',
@@ -353,9 +495,9 @@ static void board_status(R01sIslandGroup *group, char *buf, size_t buf_len) {
              r01s_w65c02s_pc(ctx->cpu_mem_impl.cpu), r01s_w65c02s_a(ctx->cpu_mem_impl.cpu),
              (unsigned)r01s_bus_read(cpu, "A", 16), ctx->cpu.ir,
              phase_name(r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu)),
-             r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch),
-             r01s_pads_get(ctx->pads_impl.pads, 0), r01s_pads_get(ctx->pads_impl.pads, 1),
-             (unsigned)ctx->cycles);
+             r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch), (unsigned)(ctx->vram_addr & 0x7FFFu),
+             r01s_as6c62256_peek(ctx->vram_impl.vram, 0), r01s_pads_get(ctx->pads_impl.pads, 0),
+             r01s_pads_get(ctx->pads_impl.pads, 1), (unsigned)ctx->cycles);
 }
 
 static void board_update_probes(R01sIslandGroup *group, int *probe_vdd, int *probe_phi2, int *probe_resb_low) {
@@ -401,6 +543,8 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     board->cpu_mem_impl.prg = &board->prg;
     board->io_latch_impl.latch = &board->latch;
     board->pads_impl.pads = &board->pads;
+    board->vram_impl.vram = &board->vram;
+    board->vram_impl.mux = &board->vram_mux;
 
     if (r01s_island_builder_add(b, &ISLAND_POWER_VT, "ISLAND A  POWER", 0, 0, 1, 1, &board->power_impl) < 0) {
         return -1;
@@ -418,6 +562,9 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         return -1;
     }
     if (r01s_island_builder_add(b, &ISLAND_PADS_VT, "ISLAND E  PADS", 0, 0, 1, 1, &board->pads_impl) < 0) {
+        return -1;
+    }
+    if (r01s_island_builder_add(b, &ISLAND_VRAM_VT, "ISLAND G  VRAM", 0, 0, 1, 1, &board->vram_impl) < 0) {
         return -1;
     }
 
@@ -444,6 +591,16 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     }
     r01s_island_builder_mount_rel(b, r01s_sn74hc573_entity(&board->latch), R01S_ISLAND_IO_LATCH, 0, 0);
     r01s_island_builder_mount_rel(b, r01s_pads_entity(&board->pads), R01S_ISLAND_PADS, 0, 0);
+    {
+        R01sEntity *vram_e = r01s_as6c62256_entity(&board->vram);
+        R01sEntity *mux_e = r01s_sn74hc157_entity(&board->vram_mux);
+        int mux_y = (vram_e->body_h - mux_e->body_h) / 2;
+        if (mux_y < 0) {
+            mux_y = 0;
+        }
+        r01s_island_builder_mount_rel(b, vram_e, R01S_ISLAND_VRAM, 0, 0);
+        r01s_island_builder_mount_rel(b, mux_e, R01S_ISLAND_VRAM, vram_e->body_w + R01S_CHIP_GAP, mux_y);
+    }
 
     r01s_island_builder_fit_all(b);
     r01s_island_builder_arrange(b, 40, 40, R01S_ISLAND_GAP, 1);

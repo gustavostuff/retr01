@@ -67,6 +67,6 @@ set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/test_prg_rom.dir/DependInfo.cmake"
   "CMakeFiles/test_sst39sf040.dir/DependInfo.cmake"
   "CMakeFiles/test_w65c02s.dir/DependInfo.cmake"
-  "CMakeFiles/test_island_abcde.dir/DependInfo.cmake"
+  "CMakeFiles/test_island_abcdeg.dir/DependInfo.cmake"
   "CMakeFiles/test_pads.dir/DependInfo.cmake"
   )

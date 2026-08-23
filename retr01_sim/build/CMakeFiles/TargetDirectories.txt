@@ -15,7 +15,7 @@
 /home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_prg_rom.dir
 /home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_sst39sf040.dir
 /home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_w65c02s.dir
-/home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_island_abcde.dir
+/home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_island_abcdeg.dir
 /home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_pads.dir
 /home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test.dir
 /home/g/Repos/retr01/retr01_sim/build/CMakeFiles/edit_cache.dir

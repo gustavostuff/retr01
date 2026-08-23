@@ -204,5 +204,6 @@ CMakeFiles/retr01_sim.dir/src/main.c.o: \
  /home/g/Repos/retr01/retr01_sim/chips/prg_rom.h \
  /home/g/Repos/retr01/retr01_sim/chips/pwr5v.h \
  /home/g/Repos/retr01/retr01_sim/chips/sn74hc14.h \
+ /home/g/Repos/retr01/retr01_sim/chips/sn74hc157.h \
  /home/g/Repos/retr01/retr01_sim/chips/sn74hc573.h \
  /home/g/Repos/retr01/retr01_sim/chips/w65c02s.h

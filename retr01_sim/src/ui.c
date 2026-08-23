@@ -515,7 +515,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
 
     /* Fixed HUD */
     fill_rect(r, 0, 0, R01S_LOGIC_W, 22, 12, 14, 16);
-    font_draw(r, 8, 7, "RETR01 SIM  ISLANDS A-E", 200, 210, 220);
+    font_draw(r, 8, 7, "RETR01 SIM  ISLANDS A-E+G", 200, 210, 220);
     font_draw(r, R01S_LOGIC_W - 560, 7, "SHIFT+ARROWS PAN  STICKS FE60/61", 120, 130, 140);
 
     fill_rect(r, R01S_LOGIC_W - 200, 36, 184, 168, 16, 22, 18);

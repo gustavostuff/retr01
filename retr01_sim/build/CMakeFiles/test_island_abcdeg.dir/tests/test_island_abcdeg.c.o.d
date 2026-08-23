@@ -1,6 +1,6 @@
-CMakeFiles/retr01_sim_core.dir/src/board.c.o: \
- /home/g/Repos/retr01/retr01_sim/src/board.c /usr/include/stdc-predef.h \
- /home/g/Repos/retr01/retr01_sim/include/retr01_sim/board.h \
+CMakeFiles/test_island_abcdeg.dir/tests/test_island_abcdeg.c.o: \
+ /home/g/Repos/retr01/retr01_sim/tests/test_island_abcdeg.c \
+ /usr/include/stdc-predef.h \
  /home/g/Repos/retr01/retr01_sim/chips/as6c62256.h \
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/entity.h \
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/pin.h \
@@ -16,6 +16,7 @@ CMakeFiles/retr01_sim_core.dir/src/board.c.o: \
  /usr/include/bits/time64.h /usr/include/bits/wchar.h \
  /usr/include/bits/stdint-intn.h /usr/include/bits/stdint-uintn.h \
  /usr/include/bits/stdint-least.h \
+ /home/g/Repos/retr01/retr01_sim/include/retr01_sim/board.h \
  /home/g/Repos/retr01/retr01_sim/chips/osc8m.h \
  /home/g/Repos/retr01/retr01_sim/chips/pads.h \
  /home/g/Repos/retr01/retr01_sim/chips/prg_rom.h \
@@ -27,15 +28,12 @@ CMakeFiles/retr01_sim_core.dir/src/board.c.o: \
  /home/g/Repos/retr01/retr01_sim/chips/sn74hc157.h \
  /home/g/Repos/retr01/retr01_sim/chips/sn74hc573.h \
  /home/g/Repos/retr01/retr01_sim/chips/w65c02s.h \
- /home/g/Repos/retr01/retr01_sim/include/retr01_sim/board_layout.h \
  /home/g/Repos/retr01/retr01_sim/include/retr01_sim/bus.h \
- /usr/include/stdio.h \
+ /home/g/Repos/retr01/retr01_sim/tests/test_common.h /usr/include/stdio.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdarg.h \
  /usr/include/bits/types/__fpos_t.h /usr/include/bits/types/__mbstate_t.h \
  /usr/include/bits/types/__fpos64_t.h /usr/include/bits/types/__FILE.h \
  /usr/include/bits/types/FILE.h /usr/include/bits/types/struct_FILE.h \
  /usr/include/bits/types/cookie_io_functions_t.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/floatn.h \
- /usr/include/bits/floatn-common.h /usr/include/bits/stdio.h \
- /usr/include/string.h /usr/include/bits/types/locale_t.h \
- /usr/include/bits/types/__locale_t.h /usr/include/strings.h
+ /usr/include/bits/floatn-common.h /usr/include/bits/stdio.h

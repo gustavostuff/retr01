@@ -8,7 +8,7 @@
 #define R01S_SRAM_BYTES 32768u
 
 /*
- * Island C — AS6C62256 system RAM ($0000-$7FFF role).
+ * AS6C62256 — 32 KB SRAM (system RAM on island C, VRAM on island G).
  * Pinout / truth table: hw/md/AS6C62256.md
  */
 typedef struct R01sAs6c62256 {

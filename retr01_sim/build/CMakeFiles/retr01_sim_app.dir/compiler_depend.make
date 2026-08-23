@@ -8,6 +8,7 @@ CMakeFiles/retr01_sim_app.dir/src/app.c.o: /home/g/Repos/retr01/retr01_sim/src/a
   /home/g/Repos/retr01/retr01_sim/chips/prg_rom.h \
   /home/g/Repos/retr01/retr01_sim/chips/pwr5v.h \
   /home/g/Repos/retr01/retr01_sim/chips/sn74hc14.h \
+  /home/g/Repos/retr01/retr01_sim/chips/sn74hc157.h \
   /home/g/Repos/retr01/retr01_sim/chips/sn74hc573.h \
   /home/g/Repos/retr01/retr01_sim/chips/w65c02s.h \
   /home/g/Repos/retr01/retr01_sim/include/retr01_sim/board.h \
@@ -554,6 +555,8 @@ CMakeFiles/retr01_sim_app.dir/src/ui.c.o: /home/g/Repos/retr01/retr01_sim/src/ui
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/tsxldtrkintrin.h:
 
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/tmmintrin.h:
+
 /usr/include/bits/types/mbstate_t.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/amxint8intrin.h:
@@ -782,12 +785,6 @@ CMakeFiles/retr01_sim_app.dir/src/ui.c.o: /home/g/Repos/retr01/retr01_sim/src/ui
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/ia32intrin.h:
 
-/usr/include/bits/types/time_t.h:
-
-/usr/include/SDL2/SDL_endian.h:
-
-/home/g/Repos/retr01/retr01_sim/chips/sn74hc573.h:
-
 /usr/include/SDL2/SDL_mutex.h:
 
 /usr/include/bits/typesizes.h:
@@ -834,6 +831,8 @@ CMakeFiles/retr01_sim_app.dir/src/ui.c.o: /home/g/Repos/retr01/retr01_sim/src/ui
 
 /home/g/Repos/retr01/retr01_sim/chips/as6c62256.h:
 
+/home/g/Repos/retr01/retr01_sim/chips/sn74hc157.h:
+
 /usr/include/bits/types/__sigset_t.h:
 
 /usr/include/SDL2/SDL_filesystem.h:
@@ -851,6 +850,12 @@ CMakeFiles/retr01_sim_app.dir/src/ui.c.o: /home/g/Repos/retr01/retr01_sim/src/ui
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/vaesintrin.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/avx512bmmvlintrin.h:
+
+/usr/include/SDL2/SDL_endian.h:
+
+/home/g/Repos/retr01/retr01_sim/chips/sn74hc573.h:
+
+/usr/include/bits/types/time_t.h:
 
 /usr/include/bits/types/timer_t.h:
 
@@ -1083,5 +1088,3 @@ CMakeFiles/retr01_sim_app.dir/src/ui.c.o: /home/g/Repos/retr01/retr01_sim/src/ui
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/vpclmulqdqintrin.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdarg.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/include/tmmintrin.h:

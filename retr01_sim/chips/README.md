@@ -12,8 +12,9 @@ Each IC is a struct that **starts with** an `R01sEntity`, plus an `R01sEntityVTa
 | C | `prg_rom.c` | PRG_ROM | Tiny 32 KB read-only PRG stub |
 | D | `sn74hc573.c` | SN74HC573 | Octal latch (`$FE02` on board) |
 | E | `pads.c` | PADS | `$FE60`/`$FE61` stub (1=pressed) |
+| G | `as6c62256.c` | AS6C62256 | 2nd instance — interleaved VRAM |
+| G | `sn74hc157.c` | SN74HC157 | PHI2 CPU/PPU addr mux (low nybble) |
 | bus | `sn74hc245.c` | SN74HC245 | Octal transceiver (DIR + OE) |
-| G / M | `sn74hc157.c` | SN74HC157 | Quad 2:1 mux (G# force L) |
 | J | `sst39sf040.c` | SST39SF040 | 512 KB flash, **read-only stub** |
 | glue | `sn74hc00.c` | SN74HC00 | Quad NAND |
 | glue | `sn74hc08.c` | SN74HC08 | Quad AND |

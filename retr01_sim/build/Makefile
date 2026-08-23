@@ -348,17 +348,17 @@ test_w65c02s/fast:
 .PHONY : test_w65c02s/fast
 
 #=============================================================================
-# Target rules for targets named test_island_abcde
+# Target rules for targets named test_island_abcdeg
 
 # Build rule for target.
-test_island_abcde: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_island_abcde
-.PHONY : test_island_abcde
+test_island_abcdeg: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_island_abcdeg
+.PHONY : test_island_abcdeg
 
 # fast build rule for target.
-test_island_abcde/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_island_abcde.dir/build.make CMakeFiles/test_island_abcde.dir/build
-.PHONY : test_island_abcde/fast
+test_island_abcdeg/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_island_abcdeg.dir/build.make CMakeFiles/test_island_abcdeg.dir/build
+.PHONY : test_island_abcdeg/fast
 
 #=============================================================================
 # Target rules for targets named test_pads
@@ -1117,29 +1117,29 @@ tests/test_gamepad.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gamepad.dir/build.make CMakeFiles/test_gamepad.dir/tests/test_gamepad.c.s
 .PHONY : tests/test_gamepad.c.s
 
-tests/test_island_abcde.o: tests/test_island_abcde.c.o
-.PHONY : tests/test_island_abcde.o
+tests/test_island_abcdeg.o: tests/test_island_abcdeg.c.o
+.PHONY : tests/test_island_abcdeg.o
 
 # target to build an object file
-tests/test_island_abcde.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_island_abcde.dir/build.make CMakeFiles/test_island_abcde.dir/tests/test_island_abcde.c.o
-.PHONY : tests/test_island_abcde.c.o
+tests/test_island_abcdeg.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_island_abcdeg.dir/build.make CMakeFiles/test_island_abcdeg.dir/tests/test_island_abcdeg.c.o
+.PHONY : tests/test_island_abcdeg.c.o
 
-tests/test_island_abcde.i: tests/test_island_abcde.c.i
-.PHONY : tests/test_island_abcde.i
+tests/test_island_abcdeg.i: tests/test_island_abcdeg.c.i
+.PHONY : tests/test_island_abcdeg.i
 
 # target to preprocess a source file
-tests/test_island_abcde.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_island_abcde.dir/build.make CMakeFiles/test_island_abcde.dir/tests/test_island_abcde.c.i
-.PHONY : tests/test_island_abcde.c.i
+tests/test_island_abcdeg.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_island_abcdeg.dir/build.make CMakeFiles/test_island_abcdeg.dir/tests/test_island_abcdeg.c.i
+.PHONY : tests/test_island_abcdeg.c.i
 
-tests/test_island_abcde.s: tests/test_island_abcde.c.s
-.PHONY : tests/test_island_abcde.s
+tests/test_island_abcdeg.s: tests/test_island_abcdeg.c.s
+.PHONY : tests/test_island_abcdeg.s
 
 # target to generate assembly for a file
-tests/test_island_abcde.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_island_abcde.dir/build.make CMakeFiles/test_island_abcde.dir/tests/test_island_abcde.c.s
-.PHONY : tests/test_island_abcde.c.s
+tests/test_island_abcdeg.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_island_abcdeg.dir/build.make CMakeFiles/test_island_abcdeg.dir/tests/test_island_abcdeg.c.s
+.PHONY : tests/test_island_abcdeg.c.s
 
 tests/test_osc8m.o: tests/test_osc8m.c.o
 .PHONY : tests/test_osc8m.o
@@ -1421,7 +1421,7 @@ help:
 	@echo "... test_bus"
 	@echo "... test_entity"
 	@echo "... test_gamepad"
-	@echo "... test_island_abcde"
+	@echo "... test_island_abcdeg"
 	@echo "... test_osc8m"
 	@echo "... test_pads"
 	@echo "... test_prg_rom"
@@ -1526,9 +1526,9 @@ help:
 	@echo "... tests/test_gamepad.o"
 	@echo "... tests/test_gamepad.i"
 	@echo "... tests/test_gamepad.s"
-	@echo "... tests/test_island_abcde.o"
-	@echo "... tests/test_island_abcde.i"
-	@echo "... tests/test_island_abcde.s"
+	@echo "... tests/test_island_abcdeg.o"
+	@echo "... tests/test_island_abcdeg.i"
+	@echo "... tests/test_island_abcdeg.s"
 	@echo "... tests/test_osc8m.o"
 	@echo "... tests/test_osc8m.i"
 	@echo "... tests/test_osc8m.s"
