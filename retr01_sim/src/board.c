@@ -80,26 +80,31 @@ static int addr_is_io(uint16_t addr) {
     return addr >= 0xFE00u && addr <= 0xFEFFu;
 }
 
-/* Soft PLD: $FE02 latch + $FE60/$FE61 pads. Deselect RAM/PRG in $FExx. */
+/* Soft PLD: $FE02 / $FE04 latches + $FE60/$FE61 pads. Deselect RAM/PRG in $FExx. */
 static void wire_io(R01sBoard *ctx) {
     R01sEntity *cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
     R01sEntity *latch = r01s_sn74hc573_entity(ctx->io_latch_impl.latch);
+    R01sEntity *raster = r01s_sn74hc573_entity(ctx->io_latch_impl.raster);
     R01sEntity *pads = r01s_pads_entity(ctx->pads_impl.pads);
     uint16_t addr = (uint16_t)r01s_bus_read(cpu, "A", 16);
     int read = r01s_level_is_high(r01s_entity_sense(cpu, "RWB"));
     int be = r01s_level_is_high(r01s_entity_sense(cpu, "BE"));
     int hit_latch = (addr == 0xFE02u);
+    int hit_raster = (addr == 0xFE04u);
     int hit_pads = (addr == 0xFE60u || addr == 0xFE61u);
 
     /* Default: I/O devices idle */
     r01s_entity_drive(latch, "OE", R01S_LVL_L); /* Q visible */
     r01s_entity_drive(latch, "LE", R01S_LVL_L);
+    r01s_entity_drive(raster, "OE", R01S_LVL_L);
+    r01s_entity_drive(raster, "LE", R01S_LVL_L);
     r01s_entity_drive(pads, "CE#", R01S_LVL_H);
     r01s_entity_drive(pads, "OE#", R01S_LVL_H);
     r01s_entity_drive(pads, "A0", R01S_LVL_L);
 
     if (!be || !addr_is_io(addr)) {
         r01s_entity_eval(latch);
+        r01s_entity_eval(raster);
         r01s_entity_eval(pads);
         return;
     }
@@ -121,6 +126,19 @@ static void wire_io(R01sBoard *ctx) {
         r01s_entity_eval(latch);
     }
 
+    if (hit_raster) {
+        copy_cpu_d_to_latch_d(raster, cpu);
+        if (!read) {
+            r01s_entity_drive(raster, "LE", R01S_LVL_H);
+        }
+        r01s_entity_eval(raster);
+        if (read) {
+            copy_latch_q_to_cpu_d(cpu, raster);
+        }
+    } else {
+        r01s_entity_eval(raster);
+    }
+
     if (hit_pads && read) {
         r01s_entity_drive(pads, "CE#", R01S_LVL_L);
         r01s_entity_drive(pads, "OE#", R01S_LVL_L);
@@ -129,6 +147,41 @@ static void wire_io(R01sBoard *ctx) {
     } else {
         r01s_entity_eval(pads);
     }
+}
+
+/* Island H — DOT osc + beam PLD stub + HC688 raster compare vs $FE04. */
+static void wire_beam(R01sBoard *ctx, R01sIslandGroup *group) {
+    R01sEntity *pwr = r01s_pwr5v_entity(ctx->power_impl.pwr);
+    R01sEntity *osc = r01s_osc_dot_entity(ctx->beam_impl.osc_dot);
+    R01sEntity *beam = r01s_beam_xy_entity(ctx->beam_impl.beam);
+    R01sEntity *cmp = r01s_sn74hc688_entity(ctx->beam_impl.cmp);
+    R01sEntity *raster = r01s_sn74hc573_entity(ctx->io_latch_impl.raster);
+    R01sLevel vdd = r01s_entity_sense(pwr, "VDD");
+    R01sLevel resb = (ctx->reset_hold > 0) ? R01S_LVL_L : R01S_LVL_H;
+    int i;
+    char pn[8], qn[8], yn[8];
+
+    (void)group;
+    r01s_entity_drive(osc, "VDD", vdd);
+    r01s_entity_drive(osc, "OE#", R01S_LVL_H);
+    r01s_entity_drive(beam, "RES#", resb);
+    r01s_entity_drive(beam, "DOT", r01s_entity_sense(osc, "DOT"));
+
+    /* P = beam Y[7:0], Q = $FE04 latch */
+    for (i = 0; i < 8; i++) {
+        snprintf(pn, sizeof(pn), "P%d", i);
+        snprintf(yn, sizeof(yn), "Y%d", i);
+        snprintf(qn, sizeof(qn), "Q%d", i);
+        r01s_entity_drive(cmp, pn, r01s_entity_sense(beam, yn));
+        {
+            char ln[8];
+            snprintf(ln, sizeof(ln), "%dQ", i + 1);
+            r01s_entity_drive(cmp, qn, r01s_entity_sense(raster, ln));
+        }
+    }
+    r01s_entity_drive(cmp, "OE#", R01S_LVL_L); /* compare always armed for smoke */
+    r01s_entity_eval(beam);
+    r01s_entity_eval(cmp);
 }
 
 /*
@@ -316,6 +369,7 @@ static void board_settle(R01sBoard *ctx, R01sIslandGroup *group) {
         wire_memory(ctx);
         wire_io(ctx);
         wire_vram(ctx);
+        wire_beam(ctx, group);
     }
 }
 
@@ -370,7 +424,19 @@ static void island_cpu_mem_init(R01sIsland *island) {
 static void island_io_latch_init(R01sIsland *island) {
     R01sIslandIoLatchImpl *impl = (R01sIslandIoLatchImpl *)island->impl;
     r01s_sn74hc573_init(impl->latch, "U5");
+    r01s_sn74hc573_init(impl->raster, "U5B");
     r01s_island_add_entity(island, r01s_sn74hc573_entity(impl->latch));
+    r01s_island_add_entity(island, r01s_sn74hc573_entity(impl->raster));
+}
+
+static void island_beam_init(R01sIsland *island) {
+    R01sIslandBeamImpl *impl = (R01sIslandBeamImpl *)island->impl;
+    r01s_osc_dot_init(impl->osc_dot, "Y2");
+    r01s_beam_xy_init(impl->beam, "UPLD");
+    r01s_sn74hc688_init(impl->cmp, "U42");
+    r01s_island_add_entity(island, r01s_osc_dot_entity(impl->osc_dot));
+    r01s_island_add_entity(island, r01s_beam_xy_entity(impl->beam));
+    r01s_island_add_entity(island, r01s_sn74hc688_entity(impl->cmp));
 }
 
 static void island_pads_init(R01sIsland *island) {
@@ -393,6 +459,7 @@ static const R01sIslandVTable ISLAND_CPU_VT = {island_cpu_mem_init, NULL, NULL, 
 static const R01sIslandVTable ISLAND_IO_VT = {island_io_latch_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_PADS_VT = {island_pads_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_VRAM_VT = {island_vram_init, NULL, NULL, NULL, NULL};
+static const R01sIslandVTable ISLAND_BEAM_VT = {island_beam_init, NULL, NULL, NULL, NULL};
 
 static void board_shutdown(R01sIslandGroup *group) {
     int i;
@@ -419,9 +486,13 @@ static void board_reset(R01sIslandGroup *group) {
     r01s_entity_reset(r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu));
     r01s_entity_reset(r01s_osc8m_entity(ctx->clock_impl.osc));
     r01s_entity_reset(r01s_sn74hc573_entity(ctx->io_latch_impl.latch));
+    r01s_entity_reset(r01s_sn74hc573_entity(ctx->io_latch_impl.raster));
     r01s_entity_reset(r01s_pads_entity(ctx->pads_impl.pads));
     r01s_entity_reset(r01s_as6c62256_entity(ctx->vram_impl.vram));
     r01s_entity_reset(r01s_sn74hc157_entity(ctx->vram_impl.mux));
+    r01s_entity_reset(r01s_osc_dot_entity(ctx->beam_impl.osc_dot));
+    r01s_entity_reset(r01s_beam_xy_entity(ctx->beam_impl.beam));
+    r01s_entity_reset(r01s_sn74hc688_entity(ctx->beam_impl.cmp));
     board_settle(ctx, group);
     r01s_entity_eval(r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu));
     board_settle(ctx, group);
@@ -448,6 +519,15 @@ static void board_step(R01sIslandGroup *group) {
 
     board_settle(ctx, group);
     r01s_entity_tick(osc);
+    r01s_entity_tick(r01s_osc_dot_entity(ctx->beam_impl.osc_dot));
+    board_settle(ctx, group);
+    /* Beam senses DOT edges itself (domain independent of PHI2). */
+    {
+        R01sEntity *dot_osc = r01s_osc_dot_entity(ctx->beam_impl.osc_dot);
+        R01sEntity *beam = r01s_beam_xy_entity(ctx->beam_impl.beam);
+        r01s_entity_drive(beam, "DOT", r01s_entity_sense(dot_osc, "DOT"));
+        r01s_entity_tick(beam);
+    }
     board_settle(ctx, group);
 
     phi2 = r01s_entity_sense(osc, "PHI2");
@@ -487,7 +567,7 @@ static void board_status(R01sIslandGroup *group, char *buf, size_t buf_len) {
     osc = r01s_osc8m_entity(ctx->clock_impl.osc);
     snprintf(buf, buf_len,
              "%s  VDD=%c PHI2=%c RESB=%c  PC=%04X A=%02X AB=%04X IR=%02X %s  LE=%02X "
-             "VA=%04X V0=%02X P1=%02X P2=%02X  cyc=%u",
+             "VA=%04X V0=%02X P1=%02X P2=%02X  XY=%d,%d%s%s  cyc=%u",
              group->running ? "RUN" : "PAUSE",
              r01s_level_is_high(r01s_entity_sense(pwr, "VDD")) ? 'H' : 'L',
              r01s_level_is_high(r01s_entity_sense(osc, "PHI2")) ? 'H' : 'L',
@@ -497,7 +577,9 @@ static void board_status(R01sIslandGroup *group, char *buf, size_t buf_len) {
              phase_name(r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu)),
              r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch), (unsigned)(ctx->vram_addr & 0x7FFFu),
              r01s_as6c62256_peek(ctx->vram_impl.vram, 0), r01s_pads_get(ctx->pads_impl.pads, 0),
-             r01s_pads_get(ctx->pads_impl.pads, 1), (unsigned)ctx->cycles);
+             r01s_pads_get(ctx->pads_impl.pads, 1), r01s_beam_xy_x(ctx->beam_impl.beam),
+             r01s_beam_xy_y(ctx->beam_impl.beam), r01s_beam_xy_hblank(ctx->beam_impl.beam) ? " HB" : "",
+             r01s_beam_xy_vblank(ctx->beam_impl.beam) ? " VB" : "", (unsigned)ctx->cycles);
 }
 
 static void board_update_probes(R01sIslandGroup *group, int *probe_vdd, int *probe_phi2, int *probe_resb_low) {
@@ -542,9 +624,13 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     board->cpu_mem_impl.ram = &board->ram;
     board->cpu_mem_impl.prg = &board->prg;
     board->io_latch_impl.latch = &board->latch;
+    board->io_latch_impl.raster = &board->raster_latch;
     board->pads_impl.pads = &board->pads;
     board->vram_impl.vram = &board->vram;
     board->vram_impl.mux = &board->vram_mux;
+    board->beam_impl.osc_dot = &board->osc_dot;
+    board->beam_impl.beam = &board->beam;
+    board->beam_impl.cmp = &board->raster_cmp;
 
     if (r01s_island_builder_add(b, &ISLAND_POWER_VT, "ISLAND A  POWER", 0, 0, 1, 1, &board->power_impl) < 0) {
         return -1;
@@ -565,6 +651,9 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         return -1;
     }
     if (r01s_island_builder_add(b, &ISLAND_VRAM_VT, "ISLAND G  VRAM", 0, 0, 1, 1, &board->vram_impl) < 0) {
+        return -1;
+    }
+    if (r01s_island_builder_add(b, &ISLAND_BEAM_VT, "ISLAND H  BEAM", 0, 0, 1, 1, &board->beam_impl) < 0) {
         return -1;
     }
 
@@ -590,6 +679,11 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         r01s_island_builder_mount_rel(b, prg_e, R01S_ISLAND_CPU, x, 0);
     }
     r01s_island_builder_mount_rel(b, r01s_sn74hc573_entity(&board->latch), R01S_ISLAND_IO_LATCH, 0, 0);
+    {
+        R01sEntity *fe02 = r01s_sn74hc573_entity(&board->latch);
+        r01s_island_builder_mount_rel(b, r01s_sn74hc573_entity(&board->raster_latch), R01S_ISLAND_IO_LATCH,
+                                      fe02->body_w + R01S_CHIP_GAP, 0);
+    }
     r01s_island_builder_mount_rel(b, r01s_pads_entity(&board->pads), R01S_ISLAND_PADS, 0, 0);
     {
         R01sEntity *vram_e = r01s_as6c62256_entity(&board->vram);
@@ -600,6 +694,21 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         }
         r01s_island_builder_mount_rel(b, vram_e, R01S_ISLAND_VRAM, 0, 0);
         r01s_island_builder_mount_rel(b, mux_e, R01S_ISLAND_VRAM, vram_e->body_w + R01S_CHIP_GAP, mux_y);
+    }
+    {
+        R01sEntity *dot_e = r01s_osc_dot_entity(&board->osc_dot);
+        R01sEntity *beam_e = r01s_beam_xy_entity(&board->beam);
+        R01sEntity *cmp_e = r01s_sn74hc688_entity(&board->raster_cmp);
+        int x = 0;
+        int beam_y = (dot_e->body_h - beam_e->body_h) / 2;
+        if (beam_y < 0) {
+            beam_y = 0;
+        }
+        r01s_island_builder_mount_rel(b, dot_e, R01S_ISLAND_BEAM, 0, 0);
+        x = dot_e->body_w + R01S_CHIP_GAP;
+        r01s_island_builder_mount_rel(b, beam_e, R01S_ISLAND_BEAM, x, beam_y);
+        x += beam_e->body_w + R01S_CHIP_GAP;
+        r01s_island_builder_mount_rel(b, cmp_e, R01S_ISLAND_BEAM, x, 0);
     }
 
     r01s_island_builder_fit_all(b);

@@ -48,7 +48,7 @@ Examples:
 
 **Pass:** same criteria as the hardware island checklist in `03`.
 
-Layer-2 bring-up for **A–E + G** lives in `retr01_sim/tests/test_island_abcdeg.c` (`STA $FE02`, VRAM `$FE12`=`$AA`, `LDA $FE60`).
+Layer-2 bring-up for **A–E + G + H** lives in `retr01_sim/tests/test_island_abcdegh.c` (`STA $FE02`, VRAM `$FE12`=`$AA`, `LDA $FE60`, beam HBlank / line advance, HC688 vs `$FE04`).
 
 ### 3. System tests (whole board)
 
@@ -123,7 +123,8 @@ Current pin-level code is intentional for catching PCB bugs early.
 | 1 | `hw/md/` IC reference docs (batches: CPU/MCU, memory, glue/video) |
 | 2 | Islands **A–E** models + unit tests + layer-2 smoke (**done**) |
 | 3 | Island **G** (VRAM interleave) / more `$FExx` latches (**done** — soft `$FE10`–`$FE12`) |
-| Later | Island **H/I** beam + BG fetch, remaining ICs, video, cart, pads→1284, screen; then optimization passes |
+| 4 | Island **H** beam (**done** — `OSC_DOT` + `BEAM_XY` PLD stub + `HC688` / `$FE04`) |
+| Later | Island **I** BG fetch, remaining ICs, video, cart, pads→1284, screen; then optimization passes |
 
 ## Related docs
 

@@ -28,11 +28,15 @@ add_library(retr01_sim_core
   chips/sn74hc573.c
   chips/sn74hc245.c
   chips/sn74hc157.c
+  chips/sn74hc161.c
+  chips/sn74hc688.c
   chips/as6c62256.c
   chips/prg_rom.c
   chips/pads.c
   chips/sst39sf040.c
   chips/w65c02s.c
+  chips/osc_dot.c
+  chips/beam_xy.c
 )
 target_include_directories(retr01_sim_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -71,9 +75,12 @@ r01s_unit_test(test_sn74hc_glue)
 r01s_unit_test(test_sn74hc573)
 r01s_unit_test(test_sn74hc245)
 r01s_unit_test(test_sn74hc157)
+r01s_unit_test(test_sn74hc161)
+r01s_unit_test(test_sn74hc688)
+r01s_unit_test(test_beam_xy)
 r01s_unit_test(test_as6c62256)
 r01s_unit_test(test_prg_rom)
 r01s_unit_test(test_sst39sf040)
 r01s_unit_test(test_w65c02s)
-r01s_unit_test(test_island_abcdeg)
+r01s_unit_test(test_island_abcdegh)
 r01s_unit_test(test_pads)
