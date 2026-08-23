@@ -62,6 +62,28 @@ static uint8_t read_pads(const Uint8 *keys, int p2) {
     return b;
 }
 
+/* Studio stub hangs without reading pads or streaming MAP; host pans the atlas. */
+static void apply_host_scroll(R01eMachine *m, uint8_t pad0) {
+    int dx = 0;
+    int dy = 0;
+    if (!m) {
+        return;
+    }
+    if (pad0 & R01E_PAD_LEFT) {
+        dx -= 1;
+    }
+    if (pad0 & R01E_PAD_RIGHT) {
+        dx += 1;
+    }
+    if (pad0 & R01E_PAD_UP) {
+        dy -= 1;
+    }
+    if (pad0 & R01E_PAD_DOWN) {
+        dy += 1;
+    }
+    (void)r01e_ppu_host_pan(m, dx, dy);
+}
+
 int main(int argc, char **argv) {
     const char *path = NULL;
     char err[256];
@@ -113,7 +135,18 @@ int main(int argc, char **argv) {
 
     printf("retr01_emu: loaded %s (%zu bytes, %u worlds)\n", path, machine.cart.len,
            (unsigned)machine.cart.world_count);
-    printf("Controls: Arrows/ZX/1/Enter = P1 · WASD/NM/2/Bksp = P2 · Space pause · R reset · Esc quit\n");
+    {
+        int wi;
+        for (wi = 0; wi < R01E_MAX_WORLDS; wi++) {
+            R01eWorldView wv;
+            if (r01e_cart_world(&machine.cart, wi, &wv) == 0) {
+                printf("  world %d: %u screens (start %u,%u)\n", wi, (unsigned)wv.screen_count,
+                       (unsigned)wv.start_col, (unsigned)wv.start_row);
+            }
+        }
+    }
+    printf("Note: Studio stub STA $FE30 with project active_world (often not world 0).\n");
+    printf("Controls: Arrows = atlas pan · 0-7 = select world · ZX/1/Enter = P1 · Space pause · R reset · Esc quit\n");
 
     last_ticks = SDL_GetTicks();
     while (running) {
@@ -129,13 +162,24 @@ int main(int argc, char **argv) {
                     paused = !paused;
                 } else if (ev.key.keysym.sym == SDLK_r) {
                     r01e_machine_reset(&machine);
+                } else if (ev.key.keysym.sym >= SDLK_0 && ev.key.keysym.sym <= SDLK_7) {
+                    int w = (int)(ev.key.keysym.sym - SDLK_0);
+                    if (r01e_ppu_boot_world(&machine, w) == 0) {
+                        r01e_ppu_render_frame(&machine);
+                        printf("world %d loaded (cam %d,%d max %d,%d)\n", w, machine.ppu.cam_x,
+                               machine.ppu.cam_y, machine.ppu.cam_max_x, machine.ppu.cam_max_y);
+                    }
                 }
             }
         }
 
         keys = SDL_GetKeyboardState(NULL);
-        r01e_machine_set_pad(&machine, 0, read_pads(keys, 0));
-        r01e_machine_set_pad(&machine, 1, read_pads(keys, 1));
+        {
+            uint8_t pad0 = read_pads(keys, 0);
+            r01e_machine_set_pad(&machine, 0, pad0);
+            r01e_machine_set_pad(&machine, 1, read_pads(keys, 1));
+            apply_host_scroll(&machine, pad0);
+        }
 
         if (!paused) {
             /* Catch up to ~60 Hz wall clock with machine frames. */

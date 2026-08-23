@@ -30,7 +30,9 @@ ctest --test-dir build --output-on-failure
 
 Or: `./scripts/build-run.sh [path.retr01]`
 
-**Controls:** arrows / Z X / 1 / Enter = P1 · WASD / N M / 2 / Backspace = P2 · Space pause · R reset · Esc quit.
+**Controls:** arrows = atlas pan (host shifts 2×2 VRAM; stub has no MAP streamer) · **0–7** = select world · Z X / 1 / Enter = P1 buttons · Space pause · R reset · Esc quit.
+
+**Studio cart note:** the boot stub does `STA $FE30` with the project’s **active_world**. This project’s stub selects **world 2** (1 screen); the 12-screen atlas is **world 0** — press `0` after boot.
 
 ## Layout
 

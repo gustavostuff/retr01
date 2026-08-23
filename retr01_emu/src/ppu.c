@@ -51,13 +51,133 @@ static void copy_pal_rows(uint8_t *dst, const uint8_t *src16) {
     }
 }
 
+static void world_bounds(const R01eCart *cart, const R01eWorldView *wv, int *min_c, int *min_r,
+                         int *max_c, int *max_r) {
+    const uint8_t *dir;
+    int si;
+    *min_c = *min_r = 99;
+    *max_c = *max_r = 0;
+    dir = r01e_cart_ptr(cart, wv->base + wv->off_screen_dir, (size_t)wv->screen_count * 12u);
+    if (!dir || wv->screen_count == 0) {
+        *min_c = *min_r = *max_c = *max_r = 0;
+        return;
+    }
+    for (si = 0; si < wv->screen_count; si++) {
+        const uint8_t *e = dir + (size_t)si * 12u;
+        int c = (int)e[0];
+        int r = (int)e[1];
+        if (c < *min_c) {
+            *min_c = c;
+        }
+        if (r < *min_r) {
+            *min_r = r;
+        }
+        if (c > *max_c) {
+            *max_c = c;
+        }
+        if (r > *max_r) {
+            *max_r = r;
+        }
+    }
+}
+
+static int load_screen_into_slot(R01eMachine *m, const R01eWorldView *wv, int col, int row, int slot) {
+    const uint8_t *dir;
+    int si;
+    uint8_t *dst = m->ppu.vram + (size_t)slot * R01E_VRAM_SLOT_BYTES;
+    memset(dst, 0, R01E_VRAM_SLOT_BYTES);
+    dir = r01e_cart_ptr(&m->cart, wv->base + wv->off_screen_dir, (size_t)wv->screen_count * 12u);
+    if (!dir) {
+        return 0;
+    }
+    for (si = 0; si < wv->screen_count; si++) {
+        const uint8_t *e = dir + (size_t)si * 12u;
+        uint32_t poff;
+        const uint8_t *pay;
+        if ((int)e[0] != col || (int)e[1] != row) {
+            continue;
+        }
+        poff = get_u24(e + 4);
+        pay = r01e_cart_ptr(&m->cart, wv->base + poff, R01E_SCREEN_PAYLOAD);
+        if (!pay) {
+            return 0;
+        }
+        memcpy(dst, pay, R01E_SCREEN_PAYLOAD);
+        return 1;
+    }
+    return 0;
+}
+
+int r01e_ppu_sync_camera(R01eMachine *m) {
+    R01eWorldView wv;
+    R01ePpu *ppu;
+    int dx, dy;
+    if (!m) {
+        return -1;
+    }
+    ppu = &m->ppu;
+    if (r01e_cart_world(&m->cart, (int)ppu->world, &wv) != 0) {
+        return -1;
+    }
+    for (dy = 0; dy < 2; dy++) {
+        for (dx = 0; dx < 2; dx++) {
+            (void)load_screen_into_slot(m, &wv, ppu->cam_origin_col + dx, ppu->cam_origin_row + dy,
+                                        dy * 2 + dx);
+        }
+    }
+    ppu->scroll_x = (uint8_t)(ppu->cam_x - ppu->cam_origin_col * R01E_SCREEN_PX_W);
+    ppu->scroll_y = (uint8_t)(ppu->cam_y - ppu->cam_origin_row * R01E_SCREEN_PX_H);
+    if (ppu->scroll_x > 127) {
+        ppu->scroll_x = 127;
+    }
+    if (ppu->scroll_y > 119) {
+        ppu->scroll_y = 119;
+    }
+    return 0;
+}
+
+int r01e_ppu_host_pan(R01eMachine *m, int dx, int dy) {
+    R01ePpu *ppu;
+    int nx, ny;
+    if (!m || (dx == 0 && dy == 0)) {
+        return 0;
+    }
+    ppu = &m->ppu;
+    nx = ppu->cam_x + dx;
+    ny = ppu->cam_y + dy;
+    if (nx < 0) {
+        nx = 0;
+    }
+    if (ny < 0) {
+        ny = 0;
+    }
+    if (nx > ppu->cam_max_x) {
+        nx = ppu->cam_max_x;
+    }
+    if (ny > ppu->cam_max_y) {
+        ny = ppu->cam_max_y;
+    }
+    if (nx == ppu->cam_x && ny == ppu->cam_y) {
+        return 0;
+    }
+    ppu->cam_x = nx;
+    ppu->cam_y = ny;
+    /* Viewport is 128x120; HW scroll is 0..127 / 0..119 inside a 2x2 workbench. */
+    ppu->cam_origin_col = nx / R01E_SCREEN_PX_W;
+    ppu->cam_origin_row = ny / R01E_SCREEN_PX_H;
+    (void)r01e_ppu_sync_camera(m);
+    r01e_ppu_render_frame(m);
+    return 1;
+}
+
 int r01e_ppu_boot_world(R01eMachine *m, int world) {
     R01eWorldView wv;
     R01ePpu *ppu;
     const uint8_t *chr;
     const uint8_t *pal_bg;
     const uint8_t *pal_spr;
-    int dx, dy, si, pi;
+    int si, pi;
+    int min_c, min_r, max_c, max_r;
     if (!m || world < 0 || world >= R01E_MAX_WORLDS) {
         return -1;
     }
@@ -91,34 +211,20 @@ int r01e_ppu_boot_world(R01eMachine *m, int world) {
 
     memset(ppu->vram, 0, sizeof(ppu->vram));
 
-    /* Camera slots 0-3 around start_col/start_row. */
-    for (dy = 0; dy < 2; dy++) {
-        for (dx = 0; dx < 2; dx++) {
-            int want_c = (int)wv.start_col + dx;
-            int want_r = (int)wv.start_row + dy;
-            int slot = dy * 2 + dx;
-            const uint8_t *dir = r01e_cart_ptr(&m->cart, wv.base + wv.off_screen_dir,
-                                               (size_t)wv.screen_count * 12u);
-            if (!dir) {
-                continue;
-            }
-            for (si = 0; si < wv.screen_count; si++) {
-                const uint8_t *e = dir + (size_t)si * 12u;
-                uint32_t poff;
-                const uint8_t *pay;
-                if ((int)e[0] != want_c || (int)e[1] != want_r) {
-                    continue;
-                }
-                poff = get_u24(e + 4);
-                pay = r01e_cart_ptr(&m->cart, wv.base + poff, R01E_SCREEN_PAYLOAD);
-                if (!pay) {
-                    break;
-                }
-                memcpy(ppu->vram + (size_t)slot * R01E_VRAM_SLOT_BYTES, pay, R01E_SCREEN_PAYLOAD);
-                break;
-            }
-        }
+    world_bounds(&m->cart, &wv, &min_c, &min_r, &max_c, &max_r);
+    ppu->cam_origin_col = (int)wv.start_col;
+    ppu->cam_origin_row = (int)wv.start_row;
+    ppu->cam_x = ppu->cam_origin_col * R01E_SCREEN_PX_W;
+    ppu->cam_y = ppu->cam_origin_row * R01E_SCREEN_PX_H;
+    ppu->cam_max_x = max_c * R01E_SCREEN_PX_W;
+    ppu->cam_max_y = max_r * R01E_SCREEN_PX_H;
+    if (ppu->cam_max_x < ppu->cam_x) {
+        ppu->cam_max_x = ppu->cam_x;
     }
+    if (ppu->cam_max_y < ppu->cam_y) {
+        ppu->cam_max_y = ppu->cam_y;
+    }
+    (void)r01e_ppu_sync_camera(m);
 
     /* Parallax -> slots 4-5. */
     {

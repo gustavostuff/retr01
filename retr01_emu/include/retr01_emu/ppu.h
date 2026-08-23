@@ -44,6 +44,15 @@ typedef struct R01ePpu {
     uint8_t chr[8][R01E_CHR_BANK_BYTES];
     int chr_loaded;
 
+    /* NW corner of live 2x2 camera in world grid (docs/02). */
+    int cam_origin_col;
+    int cam_origin_row;
+    /* World-space top-left of viewport (host atlas preview). */
+    int cam_x;
+    int cam_y;
+    int cam_max_x;
+    int cam_max_y;
+
     /* Beam */
     int dot_x;
     int dot_y;
@@ -60,6 +69,15 @@ void r01e_ppu_write(struct R01eMachine *m, uint16_t addr, uint8_t v);
 
 /* Soft-boot world assets into VRAM/CHR/pals (Studio stub never streams MAP). */
 int r01e_ppu_boot_world(struct R01eMachine *m, int world);
+
+/* Reload VRAM slots 0-3 from cart at cam_origin_*; set scroll from cam_x/y. */
+int r01e_ppu_sync_camera(struct R01eMachine *m);
+
+/*
+ * Host atlas pan (Studio stub has no MAP streamer). dx/dy in logical pixels.
+ * Shifts the 2x2 workbench when leaving the loaded window.
+ */
+int r01e_ppu_host_pan(struct R01eMachine *m, int dx, int dy);
 
 /* Advance one dot; samples FB on visible dots when BG enable (ctrl bit0). */
 void r01e_ppu_dot(struct R01eMachine *m);
