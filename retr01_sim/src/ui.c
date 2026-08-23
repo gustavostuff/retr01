@@ -159,7 +159,7 @@ int r01s_ui_init(R01sUi *ui) {
     ui->drag_stick = -1;
     ui->drag_btn = -1;
     snprintf(ui->status, sizeof(ui->status),
-             "islands A-E+G+H+I+O+J+K+L — drag empty / resize BR — SPACE run/pause");
+             "islands A-E+G+H+I+O+J+K+L+M — drag empty / resize BR — SPACE run/pause");
     return 0;
 }
 
@@ -1093,7 +1093,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
 
     /* Fixed HUD */
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_UI_HUD_TOP, 12, 14, 16);
-    font_draw(r, 8, 7, "RETR01 SIM  ISLANDS A-E+G+H+I+O+J+K+L", 200, 210, 220);
+    font_draw(r, 8, 7, "RETR01 SIM  ISLANDS A-E+G+H+I+O+J+K+L+M", 200, 210, 220);
     font_draw(r, R01S_UI_VIEW_X + 8, 7, "DRAG EMPTY / RESIZE BR  SHIFT+ARROWS PAN (VERT)", 120, 130,
               140);
 

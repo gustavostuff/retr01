@@ -147,6 +147,11 @@ static void board_update_milestones(R01sBoard *ctx) {
         r01s_atmega1284p_alive(ctx->mcu1284_impl.mcu)) {
         ctx->health_saw_oam = 1;
     }
+    if (ctx->linebuf_saw_mux_mcu && ctx->linebuf_saw_mux_beam &&
+        r01s_as6c62256_peek(ctx->linebuf_impl.sram, 0x00) == 0xA0 &&
+        r01s_as6c62256_peek(ctx->linebuf_impl.sram, 0x80) == 0xB0) {
+        ctx->health_saw_linebuf = 1;
+    }
 }
 
 static int board_integrated(const R01sBoard *ctx) {
@@ -155,7 +160,7 @@ static int board_integrated(const R01sBoard *ctx) {
     }
     return ctx->health_saw_latch && ctx->health_saw_vram && ctx->health_saw_vram_read && ctx->health_saw_pad &&
            ctx->health_saw_beam && ctx->health_saw_bg_fetch && ctx->health_saw_video && ctx->health_saw_map &&
-           ctx->health_saw_apu && ctx->health_saw_oam;
+           ctx->health_saw_apu && ctx->health_saw_oam && ctx->health_saw_linebuf;
 }
 
 static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
@@ -509,6 +514,34 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_level_name(r01s_entity_sense(r01s_atmega1284p_entity(mcu), "RUN")));
     }
 
+    /* Island M — sprite line-buffer SRAM + HC157 mux */
+    {
+        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_LINEBUF];
+        R01sAs6c62256 *lb = ctx->linebuf_impl.sram;
+        ih->letter = 'M';
+        if (booting) {
+            ih->health = R01S_HEALTH_BOOT;
+            snprintf(ih->activity, sizeof(ih->activity), "linebuf idle");
+        } else if (ctx->health_saw_linebuf) {
+            ih->health = R01S_HEALTH_OK;
+            snprintf(ih->activity, sizeof(ih->activity), "ping-pong show=%u",
+                     (unsigned)ctx->linebuf_show_half);
+        } else if (ctx->linebuf_saw_mux_mcu || ctx->linebuf_saw_mux_beam) {
+            ih->health = R01S_HEALTH_WARN;
+            snprintf(ih->activity, sizeof(ih->activity), "mux mcu=%d beam=%d", ctx->linebuf_saw_mux_mcu,
+                     ctx->linebuf_saw_mux_beam);
+        } else {
+            ih->health = R01S_HEALTH_WARN;
+            snprintf(ih->activity, sizeof(ih->activity), "await HBlank fill");
+        }
+        snprintf(ih->debug, sizeof(ih->debug),
+                 "island=M LINEBUF health=%s saw=%d show=%u mux_mcu=%d mux_beam=%d "
+                 "half0=$%02X half1=$%02X expect A0/B0",
+                 r01s_health_tag(ih->health), ctx->health_saw_linebuf, (unsigned)ctx->linebuf_show_half,
+                 ctx->linebuf_saw_mux_mcu, ctx->linebuf_saw_mux_beam, r01s_as6c62256_peek(lb, 0x00),
+                 r01s_as6c62256_peek(lb, 0x80));
+    }
+
     for (i = 0; i < out->island_count; i++) {
         system = r01s_health_worst(system, out->islands[i].health);
     }
@@ -529,12 +562,12 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
         out->system = R01S_HEALTH_WARN;
         snprintf(out->system_label, sizeof(out->system_label), "BRING-UP");
         snprintf(out->system_detail, sizeof(out->system_detail),
-                 "L=%s V=%s P=%s B=%s BG=%s O=%s J=%s K=%s 1284=%s",
+                 "L=%s V=%s P=%s B=%s BG=%s O=%s J=%s K=%s 1284=%s M=%s",
                  ctx->health_saw_latch ? "ok" : "-", ctx->health_saw_vram_read ? "ok" : "-",
                  ctx->health_saw_pad ? "ok" : "-", ctx->health_saw_beam ? "ok" : "-",
                  ctx->health_saw_bg_fetch ? "ok" : "-", ctx->health_saw_video ? "ok" : "-",
                  ctx->health_saw_map ? "ok" : "-", ctx->health_saw_apu ? "ok" : "-",
-                 ctx->health_saw_oam ? "ok" : "-");
+                 ctx->health_saw_oam ? "ok" : "-", ctx->health_saw_linebuf ? "ok" : "-");
     } else if (system == R01S_HEALTH_WARN) {
         out->system = R01S_HEALTH_WARN;
         snprintf(out->system_label, sizeof(out->system_label), "PAUSED");
@@ -552,13 +585,13 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
         int n = snprintf(out->system_debug, sizeof(out->system_debug),
                          "retr01_sim health system=%s label=%s detail=%s running=%d powered=%d cyc=%u "
                          "conflicts=%u milestones latch=%d vram_w=%d vram_r=%d pad=%d beam=%d bg=%d video=%d "
-                         "map=%d apu=%d oam=%d\n",
+                         "map=%d apu=%d oam=%d linebuf=%d\n",
                          r01s_health_tag(out->system), out->system_label, out->system_detail,
                          group->running, group->powered, (unsigned)ctx->cycles, conflicts,
                          ctx->health_saw_latch, ctx->health_saw_vram, ctx->health_saw_vram_read,
                          ctx->health_saw_pad, ctx->health_saw_beam, ctx->health_saw_bg_fetch,
                          ctx->health_saw_video, ctx->health_saw_map, ctx->health_saw_apu,
-                         ctx->health_saw_oam);
+                         ctx->health_saw_oam, ctx->health_saw_linebuf);
         if (n > 0) {
             used = (size_t)n;
         }
@@ -987,6 +1020,100 @@ static void wire_vram(R01sBoard *ctx) {
     }
 }
 
+/*
+ * Island M — sprite line-buffer SRAM (no CPU port).
+ * Soft 1284 fill on HBlank entry; beam reads show half on visible dots.
+ * HC157: AB low = MCU fill addr, AB high = beam X.
+ */
+static void linebuf_drive_addr(R01sBoard *ctx, uint16_t addr, int mcu_sel) {
+    R01sEntity *sram = r01s_as6c62256_entity(ctx->linebuf_impl.sram);
+    R01sEntity *mux = r01s_sn74hc157_entity(ctx->linebuf_impl.mux);
+    int i;
+    uint8_t lo = (uint8_t)(addr & 0x0Fu);
+
+    r01s_entity_drive(mux, "G#", R01S_LVL_L);
+    r01s_entity_drive(mux, "AB", mcu_sel ? R01S_LVL_L : R01S_LVL_H);
+    /* Same lo on A and B so Y matches; SEL still exercises the mux path. */
+    drive_level_bit(mux, "1A", (lo >> 0) & 1);
+    drive_level_bit(mux, "2A", (lo >> 1) & 1);
+    drive_level_bit(mux, "3A", (lo >> 2) & 1);
+    drive_level_bit(mux, "4A", (lo >> 3) & 1);
+    drive_level_bit(mux, "1B", (lo >> 0) & 1);
+    drive_level_bit(mux, "2B", (lo >> 1) & 1);
+    drive_level_bit(mux, "3B", (lo >> 2) & 1);
+    drive_level_bit(mux, "4B", (lo >> 3) & 1);
+    r01s_entity_eval(mux);
+
+    for (i = 0; i < 4; i++) {
+        char yn[4], an[8];
+        snprintf(yn, sizeof(yn), "%dY", i + 1);
+        snprintf(an, sizeof(an), "A%d", i);
+        r01s_entity_drive(sram, an, r01s_entity_sense(mux, yn));
+    }
+    for (i = 4; i < 15; i++) {
+        char an[8];
+        snprintf(an, sizeof(an), "A%d", i);
+        drive_level_bit(sram, an, (addr >> i) & 1);
+    }
+}
+
+static void linebuf_write_byte(R01sBoard *ctx, uint16_t addr, uint8_t data) {
+    R01sEntity *sram = r01s_as6c62256_entity(ctx->linebuf_impl.sram);
+    linebuf_drive_addr(ctx, addr, 1);
+    ctx->linebuf_saw_mux_mcu = 1;
+    r01s_entity_drive(sram, "CE#", R01S_LVL_L);
+    r01s_entity_drive(sram, "OE#", R01S_LVL_H);
+    r01s_entity_drive(sram, "WE#", R01S_LVL_L);
+    r01s_bus_write(sram, "DQ", 8, data);
+    r01s_entity_eval(sram);
+    r01s_entity_drive(sram, "WE#", R01S_LVL_H);
+    r01s_entity_eval(sram);
+    r01s_entity_drive(sram, "CE#", R01S_LVL_H);
+    r01s_bus_hiz(sram, "DQ", 8);
+}
+
+static void linebuf_soft_fill_half(R01sBoard *ctx, int half) {
+    int i;
+    uint16_t base = (uint16_t)((half & 1) << 7);
+    uint8_t tag = (half & 1) ? 0xB0u : 0xA0u;
+    for (i = 0; i < 128; i++) {
+        linebuf_write_byte(ctx, (uint16_t)(base + (unsigned)i), (uint8_t)(tag ^ (uint8_t)(i & 0x0Fu)));
+    }
+}
+
+static void wire_linebuf(R01sBoard *ctx) {
+    R01sEntity *sram = r01s_as6c62256_entity(ctx->linebuf_impl.sram);
+    int hblank = r01s_beam_xy_hblank(ctx->beam_impl.beam);
+    int bx = r01s_beam_xy_x(ctx->beam_impl.beam);
+    uint16_t show_addr;
+
+    /* Entering HBlank: swap halves, soft-fill the off-screen half (pre-N 1284 stub). */
+    if (hblank && !ctx->linebuf_prev_hblank) {
+        int fill_half;
+        ctx->linebuf_show_half ^= 1u;
+        fill_half = ctx->linebuf_show_half ^ 1;
+        linebuf_soft_fill_half(ctx, fill_half);
+    }
+    ctx->linebuf_prev_hblank = (uint8_t)(hblank ? 1 : 0);
+
+    r01s_entity_drive(sram, "CE#", R01S_LVL_H);
+    r01s_entity_drive(sram, "OE#", R01S_LVL_H);
+    r01s_entity_drive(sram, "WE#", R01S_LVL_H);
+    r01s_bus_hiz(sram, "DQ", 8);
+
+    if (!hblank && bx >= 0 && bx < 128) {
+        show_addr = (uint16_t)(((ctx->linebuf_show_half & 1u) << 7) | (bx & 0x7F));
+        linebuf_drive_addr(ctx, show_addr, 0);
+        ctx->linebuf_saw_mux_beam = 1;
+        r01s_entity_drive(sram, "CE#", R01S_LVL_L);
+        r01s_entity_drive(sram, "OE#", R01S_LVL_L);
+        r01s_entity_drive(sram, "WE#", R01S_LVL_H);
+        r01s_entity_eval(sram);
+    } else {
+        r01s_entity_eval(sram);
+    }
+}
+
 /* Island I — BG fetch address from beam + scroll; eval before VRAM uses VA. */
 static void wire_bg_fetch(R01sBoard *ctx) {
     R01sEntity *osc = r01s_osc8m_entity(ctx->clock_impl.osc);
@@ -1196,6 +1323,7 @@ static void board_settle(R01sBoard *ctx, R01sIslandGroup *group) {
         wire_beam(ctx, group);
         wire_bg_fetch(ctx);
         wire_vram(ctx);
+        wire_linebuf(ctx);
     }
 }
 
@@ -1294,6 +1422,14 @@ static void island_mcu1284_init(R01sIsland *island) {
     r01s_island_add_entity(island, r01s_atmega1284p_entity(impl->mcu));
 }
 
+static void island_linebuf_init(R01sIsland *island) {
+    R01sIslandLinebufImpl *impl = (R01sIslandLinebufImpl *)island->impl;
+    r01s_as6c62256_init(impl->sram, "U41");
+    r01s_sn74hc157_init(impl->mux, "U42");
+    r01s_island_add_entity(island, r01s_as6c62256_entity(impl->sram));
+    r01s_island_add_entity(island, r01s_sn74hc157_entity(impl->mux));
+}
+
 static const R01sIslandVTable ISLAND_POWER_VT = {island_power_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CLOCK_VT = {island_clock_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CPU_VT = {island_cpu_mem_init, NULL, NULL, NULL, NULL};
@@ -1306,6 +1442,7 @@ static const R01sIslandVTable ISLAND_VIDEO_VT = {island_video_init, NULL, NULL, 
 static const R01sIslandVTable ISLAND_CART_VT = {island_cart_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_APU_VT = {island_apu_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_MCU1284_VT = {island_mcu1284_init, NULL, NULL, NULL, NULL};
+static const R01sIslandVTable ISLAND_LINEBUF_VT = {island_linebuf_init, NULL, NULL, NULL, NULL};
 
 static void board_install_bringup_prg(R01sBoard *board) {
     uint32_t base;
@@ -1472,6 +1609,11 @@ static void board_reset(R01sIslandGroup *group) {
     ctx->health_saw_map = 0;
     ctx->health_saw_apu = 0;
     ctx->health_saw_oam = 0;
+    ctx->health_saw_linebuf = 0;
+    ctx->linebuf_show_half = 0;
+    ctx->linebuf_prev_hblank = 0;
+    ctx->linebuf_saw_mux_mcu = 0;
+    ctx->linebuf_saw_mux_beam = 0;
     ctx->health_phi2_edges = 0;
     r01s_bus_clear_conflicts();
     r01s_entity_reset(r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu));
@@ -1492,6 +1634,8 @@ static void board_reset(R01sIslandGroup *group) {
     r01s_entity_reset(r01s_sst39sf040_entity(ctx->cart_impl.flash));
     r01s_entity_reset(r01s_atmega328p_entity(ctx->apu_impl.apu));
     r01s_entity_reset(r01s_atmega1284p_entity(ctx->mcu1284_impl.mcu));
+    r01s_entity_reset(r01s_as6c62256_entity(ctx->linebuf_impl.sram));
+    r01s_entity_reset(r01s_sn74hc157_entity(ctx->linebuf_impl.mux));
     board_settle(ctx, group);
     r01s_entity_eval(r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu));
     board_settle(ctx, group);
@@ -1653,6 +1797,8 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     board->cart_impl.flash = &board->cart_flash;
     board->apu_impl.apu = &board->apu;
     board->mcu1284_impl.mcu = &board->mcu1284;
+    board->linebuf_impl.sram = &board->linebuf;
+    board->linebuf_impl.mux = &board->linebuf_mux;
 
     if (r01s_island_builder_add(b, &ISLAND_POWER_VT, "ISLAND A  POWER", 0, 0, 1, 1, &board->power_impl) < 0) {
         return -1;
@@ -1695,6 +1841,10 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     }
     if (r01s_island_builder_add(b, &ISLAND_MCU1284_VT, "ISLAND L  MCU 1284", 0, 0, 1, 1,
                                 &board->mcu1284_impl) < 0) {
+        return -1;
+    }
+    if (r01s_island_builder_add(b, &ISLAND_LINEBUF_VT, "ISLAND M  LINEBUF", 0, 0, 1, 1,
+                                &board->linebuf_impl) < 0) {
         return -1;
     }
 
@@ -1770,6 +1920,16 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     r01s_island_builder_mount_rel(b, r01s_sst39sf040_entity(&board->cart_flash), R01S_ISLAND_CART, 0, 0);
     r01s_island_builder_mount_rel(b, r01s_atmega328p_entity(&board->apu), R01S_ISLAND_APU, 0, 0);
     r01s_island_builder_mount_rel(b, r01s_atmega1284p_entity(&board->mcu1284), R01S_ISLAND_MCU1284, 0, 0);
+    {
+        R01sEntity *lb_e = r01s_as6c62256_entity(&board->linebuf);
+        R01sEntity *mux_e = r01s_sn74hc157_entity(&board->linebuf_mux);
+        int mux_y = (lb_e->body_h - mux_e->body_h) / 2;
+        if (mux_y < 0) {
+            mux_y = 0;
+        }
+        r01s_island_builder_mount_rel(b, lb_e, R01S_ISLAND_LINEBUF, 0, 0);
+        r01s_island_builder_mount_rel(b, mux_e, R01S_ISLAND_LINEBUF, lb_e->body_w + R01S_CHIP_GAP, mux_y);
+    }
 
     r01s_island_builder_fit_all(b);
     r01s_island_builder_arrange_rows(b, 40, 40, R01S_ISLAND_GAP, R01S_ISLAND_GAP, R01S_ISLAND_ROW_MAX_W);

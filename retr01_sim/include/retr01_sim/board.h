@@ -41,6 +41,7 @@ enum {
     R01S_ISLAND_CART = 9,
     R01S_ISLAND_APU = 10,
     R01S_ISLAND_MCU1284 = 11,
+    R01S_ISLAND_LINEBUF = 12,
 };
 
 typedef struct R01sIslandPowerImpl {
@@ -101,7 +102,12 @@ typedef struct R01sIslandMcu1284Impl {
     R01sAtmega1284p *mcu; /* OAM $FE20/$FE21; EEPROM mb $FE70–$FE72 */
 } R01sIslandMcu1284Impl;
 
-/* Bring-up board: islands A–E + G + H + I + O + J + K + L (F deferred). */
+typedef struct R01sIslandLinebufImpl {
+    R01sAs6c62256 *sram; /* ping-pong $000–$07F / $080–$0FF */
+    R01sSn74hc157 *mux;  /* MCU fill addr vs beam X */
+} R01sIslandLinebufImpl;
+
+/* Bring-up board: islands A–E + G + H + I + O + J + K + L + M (F deferred). */
 typedef struct R01sBoard {
     R01sPwr5v pwr;
     R01sOsc8m osc;
@@ -125,6 +131,8 @@ typedef struct R01sBoard {
     R01sSst39sf040 cart_flash;
     R01sAtmega328p apu;
     R01sAtmega1284p mcu1284;
+    R01sAs6c62256 linebuf;
+    R01sSn74hc157 linebuf_mux;
     R01sIslandPowerImpl power_impl;
     R01sIslandClockImpl clock_impl;
     R01sIslandCpuMemImpl cpu_mem_impl;
@@ -137,6 +145,7 @@ typedef struct R01sBoard {
     R01sIslandCartImpl cart_impl;
     R01sIslandApuImpl apu_impl;
     R01sIslandMcu1284Impl mcu1284_impl;
+    R01sIslandLinebufImpl linebuf_impl;
     /* Soft $FE10/$FE11 latch + $FE12 auto-inc (pre-full PLD). */
     uint16_t vram_addr;
     int vram_fe12_armed;
@@ -162,6 +171,12 @@ typedef struct R01sBoard {
     uint8_t health_saw_map;
     uint8_t health_saw_apu;
     uint8_t health_saw_oam;
+    uint8_t health_saw_linebuf;
+    /* Island M ping-pong state (no CPU port — soft 1284 fill until N). */
+    uint8_t linebuf_show_half; /* 0 = $000–$07F showing, 1 = $080–$0FF */
+    uint8_t linebuf_prev_hblank;
+    uint8_t linebuf_saw_mux_mcu;
+    uint8_t linebuf_saw_mux_beam;
     uint32_t health_phi2_edges;
 } R01sBoard;
 

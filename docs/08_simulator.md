@@ -48,7 +48,7 @@ Examples:
 
 **Pass:** same criteria as the hardware island checklist in `03`.
 
-Layer-2 bring-up for **A–E + G + H + I + O + J + K + L** lives in `retr01_sim/tests/test_island_abcdeghiojkl.c` (`STA $FE02`, VRAM `$FE12`, `LDA $FE60`, beam HBlank / line advance, HC688 vs `$FE04`, BG fetch latches tile `$42` / attr `$07`, Color PROM pixels on 128×120 sink, MAP `$FE93` reads cart magic `'R'`, APU `$FE40`–`$FE42` enables PWM square, OAM `$FE20`/`$FE21` write+readback on 1284).
+Layer-2 bring-up for **A–E + G + H + I + O + J + K + L + M** lives in `retr01_sim/tests/test_island_abcdeghiojklm.c` (`STA $FE02`, VRAM `$FE12`, `LDA $FE60`, beam HBlank / line advance, HC688 vs `$FE04`, BG fetch latches tile `$42` / attr `$07`, Color PROM pixels on 128×120 sink, MAP `$FE93` reads cart magic `'R'`, APU `$FE40`–`$FE42` enables PWM square, OAM `$FE20`/`$FE21` write+readback on 1284, linebuf ping-pong halves + HC157 mux).
 
 ### 3. System tests (whole board)
 
@@ -74,7 +74,7 @@ When something looks wrong on screen, **do not assume the `.retr01` is bad** and
 | **Color PROM burn** | `project_prom.bin` | **Yes** (motherboard) | **Not inside the cart.** Kit → R3G3B2; board AT28C16. |
 | **Boot asm listing** | `project_boot.s` | **Human-readable only** | Equates + stub source. The **binary stub inside `.retr01`** is what runners execute (Studio embeds it; asm can drift — treat binary as SoT). |
 | **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Today also **soft-boots** world CHR/MAP into VRAM and **host-pans** the atlas — Studio stub PRG does **not** stream MAP. |
-| **Board sim** | `retr01_sim` | IC / island netlist | Islands A–E+G+H+I+O+J+K+**L**. Cart flash loads `.retr01`; **bring-up PRG overlay** replaces cart PRG for island smoke (call it out — not Studio ROM). CHR→video still stubbed. |
+| **Board sim** | `retr01_sim` | IC / island netlist | Islands A–E+G+H+I+O+J+K+L+**M**. Cart flash loads `.retr01`; **bring-up PRG overlay** replaces cart PRG for island smoke (call it out — not Studio ROM). CHR→video still stubbed. |
 
 ### What is actually in `project.retr01` today
 
@@ -110,7 +110,9 @@ Verified against Studio pack (`r01_cart_build`) and the checked-in `retr01_studi
 
 **Island K wired.** `$FE40`–`$FE5F` on ATmega328P stub; bring-up enables a period/vol square; health watches PWM edges. Not a full AVR core or host audio sink — digital PWM pin only.
 
-**Island L wired.** ATmega1284P stub: OAM `$FE20`/`$FE21` auto-inc, 20 MHz domain tick counter, soft `$FE70`–`$FE72` mailbox. Pads remain Island E until N. Line-buffer fill is M/N.
+**Island L wired.** ATmega1284P stub: OAM `$FE20`/`$FE21` auto-inc, 20 MHz domain tick counter, soft `$FE70`–`$FE72` mailbox. Pads remain Island E until N.
+
+**Island M wired.** Third `AS6C62256` + `SN74HC157`: ping-pong 128-byte halves; soft HBlank fill (pre-N 1284 writer); beam reads show half. Not sprite pixels yet — that is N.
 
 Still missing for “cart looks like Play”: CHR fetch into Island O, real game PRG (no overlay), MAP streaming of screens (stub hangs). Use emu soft-boot for atlas viewing; use sim for bus/island validation.
 
