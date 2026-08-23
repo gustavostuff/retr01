@@ -7,7 +7,7 @@
 
 /*
  * Island O — compositor PLD stub (BG/sprite priority mux -> 6-bit PROM index).
- * Sprite path wired but inactive until Island N; BG wins today.
+ * Sprite path from Island N linebuf; transparent (0) defers to BG.
  */
 typedef struct R01sCompositor {
     R01sEntity base;

@@ -6,7 +6,7 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 
 ## Status
 
-**Islands A–E + G + H + I + O + J + K + L + M models, wiring, and layer-2 smoke.** SDL board UI. Architecture: [`docs/08_simulator.md`](../docs/08_simulator.md).
+**Islands A–E + G + H + I + O + J + K + L + M + N models, wiring, and layer-2 smoke.** SDL board UI. Architecture: [`docs/08_simulator.md`](../docs/08_simulator.md).
 
 | Island | Components |
 |--------|------------|
@@ -22,11 +22,12 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 | J Cart | `SST39SF040` — PRG `$8000+` + MAP `$FE90`–`$FE93`; loads `.retr01` / flash bin |
 | K APU | `ATMEGA328P` stub — `$FE40`–`$FE5F` regs + digital PWM square |
 | L MCU | `ATMEGA1284P` stub — OAM `$FE20`/`$FE21` + 20 MHz tick; `$FE70`–`$FE72` mailbox |
-| M Linebuf | 3rd `AS6C62256` + `SN74HC157` — ping-pong 128 px halves; soft HBlank fill |
+| M Linebuf | 3rd `AS6C62256` + `SN74HC157` — ping-pong 128 px halves |
+| N Sprites | `SPRITE_FETCH` stub — OAM→linebuf fill + compositor sprite path (CHR stub) |
 
 **Cart load:** `./sim run -- path/to/project.retr01` (or auto-finds `retr01_studio/project.retr01`). Sim applies a **bring-up PRG overlay** into the cart PRG window so island smoke still runs — that overlay is **not** Studio ROM content ([triage](../docs/08_simulator.md#cart-rom-vs-runners-triage)).
 
-Next: **N** sprites (1284 + linebuf + CHR).
+Next: **P** integration (optional **F** EEPROM).
 
 ## Build
 
@@ -81,7 +82,7 @@ Live probe (top-right) shows **VDD / PHI2 / RESB**. Pin stubs glow by level (no 
 | `src/board.c` | **Board recipe A–E + G + H + I + O + J + K + L + M** — wiring, settle loop, group vtable |
 | `src/main.c` | SDL entry: build board + run UI |
 | `chips/` | Per-part models (subclass the base entity) |
-| `tests/` | Layer-1 unit tests + `test_island_abcdeghiojklm` (layer 2) |
+| `tests/` | Layer-1 unit tests + `test_island_abcdeghiojklmn` (layer 2) |
 
 ## Model
 

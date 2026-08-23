@@ -17,8 +17,8 @@
 #include <stdio.h>
 
 /*
- * Layer-2 islands A–E + G + H + I + O + J + K + L + M smoke:
- *   prior milestones + linebuf ping-pong halves + HC157 mux both paths.
+ * Layer-2 islands A–E + G + H + I + O + J + K + L + M + N smoke:
+ *   prior milestones + linebuf ping-pong + OAM→linebuf sprite pixels on compositor.
  */
 int main(void) {
     R01sBoard board;
@@ -40,12 +40,13 @@ int main(void) {
     int saw_apu = 0;
     int saw_oam = 0;
     int saw_linebuf = 0;
+    int saw_sprites = 0;
 
     r01s_island_builder_init(&builder);
     expect_true(r01s_board_build(&board, &builder) == 0, "board build");
     group = r01s_island_builder_group(&builder);
     expect_true(group != NULL, "group");
-    expect_true(r01s_island_group_count(group) == 13, "13 islands A-E+G+H+I+O+J+K+L+M");
+    expect_true(r01s_island_group_count(group) == 14, "14 islands A-E+G+H+I+O+J+K+L+M+N");
 
     b = r01s_board_from_group(group);
     expect_true(b != NULL, "board ctx");
@@ -68,7 +69,7 @@ int main(void) {
         r01s_entity_drive(raster, "LE", R01S_LVL_L);
     }
 
-    for (i = 0; i < 20000; i++) {
+    for (i = 0; i < 60000; i++) {
         r01s_island_group_step(group);
         if (r01s_sn74hc573_peek_q(&b->latch) == 0x55) {
             saw_latch = 1;
@@ -110,15 +111,18 @@ int main(void) {
                                   r01s_atmega1284p_alive(&b->mcu1284))) {
             saw_oam = 1;
         }
-        if (b->health_saw_linebuf ||
-            (b->linebuf_saw_mux_mcu && b->linebuf_saw_mux_beam &&
-             r01s_as6c62256_peek(&b->linebuf, 0x00) == 0xA0 &&
-             r01s_as6c62256_peek(&b->linebuf, 0x80) == 0xB0)) {
+        if (b->health_saw_linebuf || (b->linebuf_saw_mux_mcu && b->linebuf_saw_mux_beam)) {
             saw_linebuf = 1;
+        }
+        if (b->health_saw_sprites ||
+            r01s_as6c62256_peek(&b->linebuf, (uint16_t)(((b->linebuf_show_half & 1u) << 7) | 0x20)) == 0x01 ||
+            r01s_as6c62256_peek(&b->linebuf, 0x20) == 0x01 ||
+            r01s_as6c62256_peek(&b->linebuf, 0xA0) == 0x01) {
+            saw_sprites = 1;
         }
         if (saw_latch && saw_vram && saw_vram_read && saw_pad && saw_beam_hblank && saw_beam_line &&
             saw_raster_hit && saw_bg_tile && saw_bg_attr && saw_video && saw_map && saw_apu && saw_oam &&
-            saw_linebuf) {
+            saw_linebuf && saw_sprites) {
             break;
         }
     }
@@ -136,14 +140,17 @@ int main(void) {
     expect_true(saw_map, "island J MAP $FE93 read cart magic R");
     expect_true(saw_apu, "island K APU PWM tone edges");
     expect_true(saw_oam, "island L OAM $FE21 readback + clk");
-    expect_true(saw_linebuf, "island M linebuf halves + mux");
+    expect_true(saw_linebuf, "island M linebuf mux both paths");
+    expect_true(saw_sprites, "island N sprite pixels in linebuf");
     expect_true(r01s_atmega1284p_oam_peek(&b->mcu1284, 0) == 0x10, "OAM Y=$10");
     expect_true(r01s_atmega1284p_oam_peek(&b->mcu1284, 1) == 0x01, "OAM tile=$01");
     expect_true(r01s_atmega1284p_oam_peek(&b->mcu1284, 3) == 0x20, "OAM X=$20");
-    expect_true(r01s_as6c62256_peek(&b->linebuf, 0x00) == 0xA0, "linebuf half0 tag");
-    expect_true(r01s_as6c62256_peek(&b->linebuf, 0x80) == 0xB0, "linebuf half1 tag");
     expect_true(b->linebuf_saw_mux_mcu, "linebuf mux MCU path");
     expect_true(b->linebuf_saw_mux_beam, "linebuf mux beam path");
+    expect_true(b->health_saw_sprites ||
+                    r01s_as6c62256_peek(&b->linebuf, 0x20) == 0x01 ||
+                    r01s_as6c62256_peek(&b->linebuf, 0xA0) == 0x01,
+                "linebuf has sprite color at X=$20");
     expect_true(r01s_as6c62256_peek(&b->vram, 0) == 0x42, "VRAM[0] final tile");
     expect_true(b->cycles > 0, "CPU cycles advanced");
     expect_true(r01s_bus_conflict_count() == 0, "no bus fight");
@@ -162,5 +169,5 @@ int main(void) {
     }
 
     r01s_island_builder_shutdown(&builder);
-    return test_done("test_island_abcdeghiojklm");
+    return test_done("test_island_abcdeghiojklmn");
 }
