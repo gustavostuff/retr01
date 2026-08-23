@@ -1,6 +1,8 @@
 #include "ui.h"
 
+#include "retr01_sim/board.h"
 #include "retr01_sim/board_layout.h"
+#include "video_sink.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -835,6 +837,29 @@ static void draw_btn(SDL_Renderer *r, const SDL_Rect *rc, int pressed, const cha
     font_draw(r, rc->x + 4, rc->y + 8, label, 210, 210, 200);
 }
 
+static void draw_video_preview(SDL_Renderer *r, const R01sVideoSink *sink, int px, int py) {
+    int x;
+    int y;
+    const uint8_t *rgb;
+    if (!sink) {
+        return;
+    }
+    rgb = r01s_video_sink_rgb(sink);
+    if (!rgb) {
+        return;
+    }
+    fill_rect(r, px - 8, py - 6, 128 + 16, 120 + 22, 16, 22, 18);
+    draw_rect(r, px - 8, py - 6, 128 + 16, 120 + 22, 80, 90, 70);
+    font_draw(r, px, py - 4, "PLAYFIELD 128X120", 180, 190, 160);
+    for (y = 0; y < R01S_VIDEO_H; y++) {
+        for (x = 0; x < R01S_VIDEO_W; x++) {
+            size_t off = (size_t)(y * R01S_VIDEO_W + x) * 3u;
+            SDL_SetRenderDrawColor(r, rgb[off], rgb[off + 1], rgb[off + 2], 255);
+            SDL_RenderDrawPoint(r, px + x, py + 10 + y);
+        }
+    }
+}
+
 static void draw_gamepad_panel(SDL_Renderer *r, const R01sUi *ui, int player) {
     int px, py, cx, cy, b;
     char hex[8];
@@ -994,7 +1019,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
 
     /* Fixed HUD */
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_UI_HUD_TOP, 12, 14, 16);
-    font_draw(r, 8, 7, "RETR01 SIM  ISLANDS A-E+G+H+I", 200, 210, 220);
+    font_draw(r, 8, 7, "RETR01 SIM  ISLANDS A-E+G+H+I+O", 200, 210, 220);
     font_draw(r, R01S_UI_VIEW_X + 8, 7, "DRAG EMPTY / RESIZE BR  SHIFT+ARROWS PAN (VERT)", 120, 130,
               140);
 
@@ -1011,6 +1036,13 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     font_draw(r, probe_x, R01S_UI_HUD_TOP + 118, "P2 FE61", 160, 180, 160);
     draw_pad_bits(r, probe_x, R01S_UI_HUD_TOP + 128, ui->probe_pad_p2);
     font_draw(r, probe_x, R01S_UI_HUD_TOP + 148, "PINS GLOW = LEVEL", 120, 130, 120);
+
+    {
+        R01sBoard *board = r01s_board_from_group(ui->group);
+        if (board) {
+            draw_video_preview(r, &board->video_sink, probe_x, R01S_UI_HUD_TOP + 188);
+        }
+    }
 
     draw_gamepad_panel(r, ui, 0);
     draw_gamepad_panel(r, ui, 1);

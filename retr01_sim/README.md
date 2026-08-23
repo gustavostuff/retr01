@@ -6,7 +6,7 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 
 ## Status
 
-**Islands A–E + G + H + I models, wiring, and layer-2 smoke.** SDL board UI. Architecture: [`docs/08_simulator.md`](../docs/08_simulator.md).
+**Islands A–E + G + H + I + O models, wiring, and layer-2 smoke.** SDL board UI. Architecture: [`docs/08_simulator.md`](../docs/08_simulator.md).
 
 | Island | Components |
 |--------|------------|
@@ -18,8 +18,9 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 | G VRAM | 2nd `AS6C62256` + `SN74HC157` mux; soft `$FE10`–`$FE12` + PHI2 interleave |
 | H Beam | `OSC_DOT` + `BEAM_XY` (ATF22V10 X/Y stub, 341×262) + `SN74HC688` vs `$FE04` |
 | I BG fetch | `BG_FETCH` PLD stub — nametable VA from beam+scroll; PPU-phase VRAM read |
+| O Video | `COMPOSITOR` PLD stub + `AT28C16` Color PROM + `LCD_SINK` (128×120 RGBS preview) |
 
-Next: island **O** (Color PROM + RGBS / LCD sink), or cart **J**.
+Next: island **J** (cart flash SST39SF040 — PRG/CHR/MAP), or **F** (machine EEPROM).
 
 ## Build
 
@@ -71,10 +72,10 @@ Live probe (top-right) shows **VDD / PHI2 / RESB**. Pin stubs glow by level (no 
 | Path | Role |
 |------|------|
 | `include/retr01_sim/` | Public headers (`entity`, `pin`, `bus`, `board`, `island*`, `types`) |
-| `src/board.c` | **Board recipe A–E + G + H + I** — wiring, settle loop, group vtable |
+| `src/board.c` | **Board recipe A–E + G + H + I + O** — wiring, settle loop, group vtable |
 | `src/main.c` | SDL entry: build board + run UI |
 | `chips/` | Per-part models (subclass the base entity) |
-| `tests/` | Layer-1 unit tests + `test_island_abcdeghi` (layer 2) |
+| `tests/` | Layer-1 unit tests + `test_island_abcdeghio` (layer 2) |
 
 ## Model
 

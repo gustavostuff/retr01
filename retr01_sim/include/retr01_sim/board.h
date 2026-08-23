@@ -1,9 +1,11 @@
 #ifndef RETR01_SIM_BOARD_H
 #define RETR01_SIM_BOARD_H
 
+#include "at28c16.h"
 #include "as6c62256.h"
 #include "beam_xy.h"
 #include "bg_fetch.h"
+#include "compositor.h"
 #include "osc8m.h"
 #include "osc_dot.h"
 #include "pads.h"
@@ -15,6 +17,7 @@
 #include "sn74hc157.h"
 #include "sn74hc573.h"
 #include "sn74hc688.h"
+#include "video_sink.h"
 #include "w65c02s.h"
 
 #include <stdint.h>
@@ -31,6 +34,7 @@ enum {
     R01S_ISLAND_VRAM = 5,
     R01S_ISLAND_BEAM = 6,
     R01S_ISLAND_BG_FETCH = 7,
+    R01S_ISLAND_VIDEO = 8,
 };
 
 typedef struct R01sIslandPowerImpl {
@@ -73,7 +77,13 @@ typedef struct R01sIslandBgFetchImpl {
     R01sBgFetch *fetch;
 } R01sIslandBgFetchImpl;
 
-/* Bring-up board: islands A–E + G + H + I (F deferred). */
+typedef struct R01sIslandVideoImpl {
+    R01sCompositor *comp;
+    R01sAt28c16 *prom;
+    R01sVideoSink *sink;
+} R01sIslandVideoImpl;
+
+/* Bring-up board: islands A–E + G + H + I + O (F/J deferred). */
 typedef struct R01sBoard {
     R01sPwr5v pwr;
     R01sOsc8m osc;
@@ -91,6 +101,9 @@ typedef struct R01sBoard {
     R01sBeamXy beam;
     R01sSn74hc688 raster_cmp;
     R01sBgFetch bg_fetch;
+    R01sCompositor compositor;
+    R01sAt28c16 color_prom;
+    R01sVideoSink video_sink;
     R01sIslandPowerImpl power_impl;
     R01sIslandClockImpl clock_impl;
     R01sIslandCpuMemImpl cpu_mem_impl;
@@ -99,6 +112,7 @@ typedef struct R01sBoard {
     R01sIslandVramImpl vram_impl;
     R01sIslandBeamImpl beam_impl;
     R01sIslandBgFetchImpl bg_fetch_impl;
+    R01sIslandVideoImpl video_impl;
     /* Soft $FE10/$FE11 latch + $FE12 auto-inc (pre-full PLD). */
     uint16_t vram_addr;
     int vram_fe12_armed;
@@ -112,6 +126,7 @@ typedef struct R01sBoard {
     uint8_t health_saw_pad;
     uint8_t health_saw_beam;
     uint8_t health_saw_bg_fetch;
+    uint8_t health_saw_video;
     uint32_t health_phi2_edges;
 } R01sBoard;
 

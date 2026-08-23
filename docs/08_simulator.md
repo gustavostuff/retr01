@@ -48,7 +48,7 @@ Examples:
 
 **Pass:** same criteria as the hardware island checklist in `03`.
 
-Layer-2 bring-up for **A–E + G + H + I** lives in `retr01_sim/tests/test_island_abcdeghi.c` (`STA $FE02`, VRAM `$FE12`, `LDA $FE60`, beam HBlank / line advance, HC688 vs `$FE04`, BG fetch latches tile `$42` / attr `$07`).
+Layer-2 bring-up for **A–E + G + H + I + O** lives in `retr01_sim/tests/test_island_abcdeghio.c` (`STA $FE02`, VRAM `$FE12`, `LDA $FE60`, beam HBlank / line advance, HC688 vs `$FE04`, BG fetch latches tile `$42` / attr `$07`, Color PROM pixels on 128×120 sink).
 
 ### 3. System tests (whole board)
 

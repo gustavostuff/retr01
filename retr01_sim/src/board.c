@@ -64,6 +64,9 @@ static void board_update_milestones(R01sBoard *ctx) {
         r01s_bg_fetch_last_tile(ctx->bg_fetch_impl.fetch) == 0x42) {
         ctx->health_saw_bg_fetch = 1;
     }
+    if (r01s_video_sink_lit_pixels(ctx->video_impl.sink) > 64) {
+        ctx->health_saw_video = 1;
+    }
 }
 
 static int board_integrated(const R01sBoard *ctx) {
@@ -71,7 +74,7 @@ static int board_integrated(const R01sBoard *ctx) {
         return 0;
     }
     return ctx->health_saw_latch && ctx->health_saw_vram && ctx->health_saw_vram_read && ctx->health_saw_pad &&
-           ctx->health_saw_beam && ctx->health_saw_bg_fetch;
+           ctx->health_saw_beam && ctx->health_saw_bg_fetch && ctx->health_saw_video;
 }
 
 static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
@@ -310,6 +313,39 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_sn74hc573_peek_q(ctx->io_latch_impl.scroll_y));
     }
 
+    /* Island O — Color PROM + compositor + LCD sink */
+    {
+        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_VIDEO];
+        R01sVideoSink *sink = ctx->video_impl.sink;
+        ih->letter = 'O';
+        if (booting) {
+            ih->health = R01S_HEALTH_BOOT;
+            snprintf(ih->activity, sizeof(ih->activity), "video idle");
+        } else if (ctx->health_saw_video) {
+            ih->health = R01S_HEALTH_OK;
+            snprintf(ih->activity, sizeof(ih->activity), "RGBS %u px lit",
+                     (unsigned)r01s_video_sink_lit_pixels(sink));
+        } else if (r01s_video_sink_lit_pixels(sink) > 0) {
+            ih->health = R01S_HEALTH_WARN;
+            snprintf(ih->activity, sizeof(ih->activity), "ramp %u px",
+                     (unsigned)r01s_video_sink_lit_pixels(sink));
+        } else if (!group->running) {
+            ih->health = R01S_HEALTH_WARN;
+            snprintf(ih->activity, sizeof(ih->activity), "await dot stream");
+        } else {
+            ih->health = R01S_HEALTH_BOOT;
+            snprintf(ih->activity, sizeof(ih->activity), "await visible dots");
+        }
+        snprintf(ih->debug, sizeof(ih->debug),
+                 "island=O VIDEO health=%s saw=%d lit=%u samples=%u comp_out=$%02X prom0=$%02X "
+                 "pixel00=$%02X",
+                 r01s_health_tag(ih->health), ctx->health_saw_video,
+                 (unsigned)r01s_video_sink_lit_pixels(sink), (unsigned)sink->dot_samples,
+                 r01s_compositor_out(ctx->video_impl.comp),
+                 r01s_at28c16_peek(ctx->video_impl.prom, 0),
+                 r01s_video_sink_pixel_packed(sink, 0, 0));
+    }
+
     for (i = 0; i < out->island_count; i++) {
         system = r01s_health_worst(system, out->islands[i].health);
     }
@@ -330,10 +366,10 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
         out->system = R01S_HEALTH_WARN;
         snprintf(out->system_label, sizeof(out->system_label), "BRING-UP");
         snprintf(out->system_detail, sizeof(out->system_detail),
-                 "boot latch=%s vram=%s pads=%s beam=%s bg=%s",
+                 "boot latch=%s vram=%s pads=%s beam=%s bg=%s video=%s",
                  ctx->health_saw_latch ? "ok" : "wait", ctx->health_saw_vram_read ? "ok" : "wait",
                  ctx->health_saw_pad ? "ok" : "wait", ctx->health_saw_beam ? "ok" : "wait",
-                 ctx->health_saw_bg_fetch ? "ok" : "wait");
+                 ctx->health_saw_bg_fetch ? "ok" : "wait", ctx->health_saw_video ? "ok" : "wait");
     } else if (system == R01S_HEALTH_WARN) {
         out->system = R01S_HEALTH_WARN;
         snprintf(out->system_label, sizeof(out->system_label), "PAUSED");
@@ -350,11 +386,12 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
         size_t used = 0;
         int n = snprintf(out->system_debug, sizeof(out->system_debug),
                          "retr01_sim health system=%s label=%s detail=%s running=%d powered=%d cyc=%u "
-                         "conflicts=%u milestones latch=%d vram_w=%d vram_r=%d pad=%d beam=%d bg=%d\n",
+                         "conflicts=%u milestones latch=%d vram_w=%d vram_r=%d pad=%d beam=%d bg=%d video=%d\n",
                          r01s_health_tag(out->system), out->system_label, out->system_detail,
                          group->running, group->powered, (unsigned)ctx->cycles, conflicts,
                          ctx->health_saw_latch, ctx->health_saw_vram, ctx->health_saw_vram_read,
-                         ctx->health_saw_pad, ctx->health_saw_beam, ctx->health_saw_bg_fetch);
+                         ctx->health_saw_pad, ctx->health_saw_beam, ctx->health_saw_bg_fetch,
+                         ctx->health_saw_video);
         if (n > 0) {
             used = (size_t)n;
         }
@@ -649,6 +686,96 @@ static void wire_bg_fetch(R01sBoard *ctx) {
     r01s_entity_eval(r01s_bg_fetch_entity(bg));
 }
 
+/* Nametable tile byte at logical pixel (pre-CHR: tile low 6 bits -> PROM index). */
+static uint8_t board_vram_tile_at(const R01sBoard *ctx, int lx, int ly) {
+    uint8_t sx;
+    uint8_t sy;
+    int slot_x;
+    int slot_y;
+    int slot;
+    int local_x;
+    int local_y;
+    int tx;
+    int ty;
+    int cell;
+    uint16_t addr;
+    uint8_t scroll_x = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch);
+    uint8_t scroll_y = r01s_sn74hc573_peek_q(ctx->io_latch_impl.scroll_y);
+
+    if (lx < 0 || ly < 0 || lx >= R01S_VIDEO_W || ly >= R01S_VIDEO_H) {
+        return 0;
+    }
+    sx = (uint8_t)((scroll_x + (unsigned)lx) & 127u);
+    sy = (uint8_t)(scroll_y + (unsigned)ly);
+    if (sy >= 120u) {
+        sy = 119u;
+    }
+    slot_x = (sx / R01S_BG_SCREEN_PX_W) & 1;
+    slot_y = (sy / R01S_BG_SCREEN_PX_H) & 1;
+    slot = slot_y * 2 + slot_x;
+    local_x = (int)sx - slot_x * R01S_BG_SCREEN_PX_W;
+    local_y = (int)sy - slot_y * R01S_BG_SCREEN_PX_H;
+    tx = local_x / 8;
+    ty = local_y / 8;
+    if (tx >= R01S_BG_SCREEN_TILES_X) {
+        tx = R01S_BG_SCREEN_TILES_X - 1;
+    }
+    if (ty > 14) {
+        ty = 14;
+    }
+    cell = ty * R01S_BG_SCREEN_TILES_X + tx;
+    addr = (uint16_t)(slot * R01S_BG_SLOT_BYTES + cell);
+    return r01s_as6c62256_peek(ctx->vram_impl.vram, addr);
+}
+
+static void wire_video_prom_addr(R01sEntity *prom, uint8_t index) {
+    int i;
+    char name[4];
+    for (i = 0; i < 6; i++) {
+        snprintf(name, sizeof(name), "A%d", i);
+        r01s_entity_drive(prom, name, (index & (1u << i)) ? R01S_LVL_H : R01S_LVL_L);
+    }
+    r01s_entity_drive(prom, "CE#", R01S_LVL_L);
+    r01s_entity_drive(prom, "OE#", R01S_LVL_L);
+    r01s_entity_drive(prom, "WE#", R01S_LVL_H);
+    r01s_entity_eval(prom);
+}
+
+/*
+ * Island O — dot-sampled BG -> compositor -> Color PROM -> LCD sink.
+ * CHR fetch deferred to Island J; tile low 6 bits stand in as master index.
+ */
+static void wire_video_dot(R01sBoard *ctx) {
+    R01sBeamXy *beam = ctx->beam_impl.beam;
+    R01sCompositor *comp = ctx->video_impl.comp;
+    R01sAt28c16 *prom = ctx->video_impl.prom;
+    R01sVideoSink *sink = ctx->video_impl.sink;
+    R01sEntity *comp_e = r01s_compositor_entity(comp);
+    R01sEntity *prom_e = r01s_at28c16_entity(prom);
+    int bx = r01s_beam_xy_x(beam);
+    int by = r01s_beam_xy_y(beam);
+    int lx;
+    int ly;
+    uint8_t tile;
+    uint8_t idx;
+    uint8_t packed;
+
+    if (r01s_beam_xy_hblank(beam) || r01s_beam_xy_vblank(beam) || bx >= R01S_BEAM_VISIBLE_W ||
+        by >= R01S_BEAM_VISIBLE_H) {
+        return;
+    }
+    lx = bx / 2;
+    ly = by / 2;
+    tile = board_vram_tile_at(ctx, lx, ly);
+    r01s_compositor_set_bg(comp, (uint8_t)(tile & 0x3Fu));
+    r01s_compositor_set_sprite(comp, 0, 0);
+    r01s_entity_eval(comp_e);
+    idx = r01s_compositor_out(comp);
+    wire_video_prom_addr(prom_e, idx);
+    packed = r01s_at28c16_peek(prom, idx);
+    r01s_video_sink_plot(sink, lx, ly, packed);
+}
+
 static void wire_memory(R01sBoard *ctx) {
     R01sEntity *cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
     R01sEntity *ram = r01s_as6c62256_entity(ctx->cpu_mem_impl.ram);
@@ -844,6 +971,16 @@ static void island_bg_fetch_init(R01sIsland *island) {
     r01s_island_add_entity(island, r01s_bg_fetch_entity(impl->fetch));
 }
 
+static void island_video_init(R01sIsland *island) {
+    R01sIslandVideoImpl *impl = (R01sIslandVideoImpl *)island->impl;
+    r01s_compositor_init(impl->comp, "UPLDV");
+    r01s_at28c16_init(impl->prom, "U24");
+    r01s_video_sink_init(impl->sink, "LCD1");
+    r01s_island_add_entity(island, r01s_compositor_entity(impl->comp));
+    r01s_island_add_entity(island, r01s_at28c16_entity(impl->prom));
+    r01s_island_add_entity(island, r01s_video_sink_entity(impl->sink));
+}
+
 static const R01sIslandVTable ISLAND_POWER_VT = {island_power_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CLOCK_VT = {island_clock_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CPU_VT = {island_cpu_mem_init, NULL, NULL, NULL, NULL};
@@ -852,6 +989,7 @@ static const R01sIslandVTable ISLAND_PADS_VT = {island_pads_init, NULL, NULL, NU
 static const R01sIslandVTable ISLAND_VRAM_VT = {island_vram_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_BEAM_VT = {island_beam_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_BG_FETCH_VT = {island_bg_fetch_init, NULL, NULL, NULL, NULL};
+static const R01sIslandVTable ISLAND_VIDEO_VT = {island_video_init, NULL, NULL, NULL, NULL};
 
 static void board_shutdown(R01sIslandGroup *group) {
     int i;
@@ -880,6 +1018,7 @@ static void board_reset(R01sIslandGroup *group) {
     ctx->health_saw_pad = 0;
     ctx->health_saw_beam = 0;
     ctx->health_saw_bg_fetch = 0;
+    ctx->health_saw_video = 0;
     ctx->health_phi2_edges = 0;
     r01s_bus_clear_conflicts();
     r01s_entity_reset(r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu));
@@ -894,6 +1033,9 @@ static void board_reset(R01sIslandGroup *group) {
     r01s_entity_reset(r01s_beam_xy_entity(ctx->beam_impl.beam));
     r01s_entity_reset(r01s_sn74hc688_entity(ctx->beam_impl.cmp));
     r01s_entity_reset(r01s_bg_fetch_entity(ctx->bg_fetch_impl.fetch));
+    r01s_entity_reset(r01s_compositor_entity(ctx->video_impl.comp));
+    r01s_entity_reset(r01s_at28c16_entity(ctx->video_impl.prom));
+    r01s_entity_reset(r01s_video_sink_entity(ctx->video_impl.sink));
     board_settle(ctx, group);
     r01s_entity_eval(r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu));
     board_settle(ctx, group);
@@ -928,6 +1070,7 @@ static void board_step(R01sIslandGroup *group) {
         R01sEntity *beam = r01s_beam_xy_entity(ctx->beam_impl.beam);
         r01s_entity_drive(beam, "DOT", r01s_entity_sense(dot_osc, "DOT"));
         r01s_entity_tick(beam);
+        wire_video_dot(ctx);
     }
     board_settle(ctx, group);
 
@@ -1041,6 +1184,9 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     board->beam_impl.beam = &board->beam;
     board->beam_impl.cmp = &board->raster_cmp;
     board->bg_fetch_impl.fetch = &board->bg_fetch;
+    board->video_impl.comp = &board->compositor;
+    board->video_impl.prom = &board->color_prom;
+    board->video_impl.sink = &board->video_sink;
 
     if (r01s_island_builder_add(b, &ISLAND_POWER_VT, "ISLAND A  POWER", 0, 0, 1, 1, &board->power_impl) < 0) {
         return -1;
@@ -1068,6 +1214,10 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     }
     if (r01s_island_builder_add(b, &ISLAND_BG_FETCH_VT, "ISLAND I  BG FETCH", 0, 0, 1, 1,
                                 &board->bg_fetch_impl) < 0) {
+        return -1;
+    }
+    if (r01s_island_builder_add(b, &ISLAND_VIDEO_VT, "ISLAND O  VIDEO RGBS", 0, 0, 1, 1,
+                                &board->video_impl) < 0) {
         return -1;
     }
 
@@ -1129,6 +1279,17 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         r01s_island_builder_mount_rel(b, cmp_e, R01S_ISLAND_BEAM, x, 0);
     }
     r01s_island_builder_mount_rel(b, r01s_bg_fetch_entity(&board->bg_fetch), R01S_ISLAND_BG_FETCH, 0, 0);
+    {
+        R01sEntity *comp_e = r01s_compositor_entity(&board->compositor);
+        R01sEntity *prom_e = r01s_at28c16_entity(&board->color_prom);
+        R01sEntity *sink_e = r01s_video_sink_entity(&board->video_sink);
+        int x = 0;
+        r01s_island_builder_mount_rel(b, comp_e, R01S_ISLAND_VIDEO, 0, 0);
+        x += comp_e->body_w + R01S_CHIP_GAP;
+        r01s_island_builder_mount_rel(b, prom_e, R01S_ISLAND_VIDEO, x, 0);
+        x += prom_e->body_w + R01S_CHIP_GAP;
+        r01s_island_builder_mount_rel(b, sink_e, R01S_ISLAND_VIDEO, x, 0);
+    }
 
     r01s_island_builder_fit_all(b);
     r01s_island_builder_arrange_rows(b, 40, 40, R01S_ISLAND_GAP, R01S_ISLAND_GAP, R01S_ISLAND_ROW_MAX_W);
