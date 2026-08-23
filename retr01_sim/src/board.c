@@ -2,6 +2,7 @@
 
 #include "retr01_sim/board_layout.h"
 #include "retr01_sim/bus.h"
+#include "retr01_sim/health.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -39,6 +40,245 @@ static const char *phase_name(R01sCpuPhase p) {
     default:
         return "?";
     }
+}
+
+static void board_update_milestones(R01sBoard *ctx) {
+    if (!ctx) {
+        return;
+    }
+    if (r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch) == 0x55) {
+        ctx->health_saw_latch = 1;
+    }
+    if (r01s_as6c62256_peek(ctx->vram_impl.vram, 0) == 0xAA) {
+        ctx->health_saw_vram = 1;
+    }
+    if (r01s_w65c02s_a(ctx->cpu_mem_impl.cpu) == 0xAA) {
+        ctx->health_saw_vram_read = 1;
+    }
+    if (r01s_w65c02s_a(ctx->cpu_mem_impl.cpu) == 0xA5) {
+        ctx->health_saw_pad = 1;
+    }
+    if (r01s_beam_xy_hblank(ctx->beam_impl.beam) || r01s_beam_xy_y(ctx->beam_impl.beam) > 0) {
+        ctx->health_saw_beam = 1;
+    }
+}
+
+static int board_integrated(const R01sBoard *ctx) {
+    if (!ctx) {
+        return 0;
+    }
+    return ctx->health_saw_latch && ctx->health_saw_vram && ctx->health_saw_vram_read && ctx->health_saw_pad &&
+           ctx->health_saw_beam;
+}
+
+static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
+    R01sBoard *ctx = board_from_group(group);
+    R01sHealth system = R01S_HEALTH_OK;
+    int integrated;
+    int booting;
+    unsigned conflicts;
+    int i;
+
+    if (!out) {
+        return;
+    }
+    memset(out, 0, sizeof(*out));
+    out->island_count = group ? group->island_count : 0;
+    if (!ctx || !group) {
+        out->system = R01S_HEALTH_FAIL;
+        snprintf(out->system_label, sizeof(out->system_label), "NO BOARD");
+        snprintf(out->system_detail, sizeof(out->system_detail), "Island group not wired");
+        return;
+    }
+
+    integrated = board_integrated(ctx);
+    booting = ctx->reset_hold > 0;
+    conflicts = r01s_bus_conflict_count();
+
+    /* Island A — power */
+    {
+        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_POWER];
+        ih->letter = 'A';
+        if (!group->powered) {
+            ih->health = R01S_HEALTH_FAIL;
+            snprintf(ih->activity, sizeof(ih->activity), "power switch off");
+        } else if (!r01s_level_is_high(r01s_entity_sense(r01s_pwr5v_entity(ctx->power_impl.pwr), "VDD"))) {
+            ih->health = R01S_HEALTH_FAIL;
+            snprintf(ih->activity, sizeof(ih->activity), "5V rail missing");
+        } else {
+            ih->health = R01S_HEALTH_OK;
+            snprintf(ih->activity, sizeof(ih->activity), "5V rail up");
+        }
+    }
+
+    /* Island B — clock / reset */
+    {
+        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_CLOCK];
+        ih->letter = 'B';
+        if (booting) {
+            ih->health = R01S_HEALTH_BOOT;
+            snprintf(ih->activity, sizeof(ih->activity), "reset hold (%d)", ctx->reset_hold);
+        } else if (!group->running) {
+            ih->health = R01S_HEALTH_WARN;
+            snprintf(ih->activity, sizeof(ih->activity), "clock halted (SPACE)");
+        } else if (ctx->health_phi2_edges < 2) {
+            ih->health = R01S_HEALTH_BOOT;
+            snprintf(ih->activity, sizeof(ih->activity), "PHI2 starting");
+        } else {
+            ih->health = R01S_HEALTH_OK;
+            snprintf(ih->activity, sizeof(ih->activity), "8MHz PHI2 running");
+        }
+    }
+
+    /* Island C — CPU / RAM / PRG */
+    {
+        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_CPU];
+        R01sW65C02S *cpu = ctx->cpu_mem_impl.cpu;
+        ih->letter = 'C';
+        if (conflicts > 0) {
+            ih->health = R01S_HEALTH_FAIL;
+            snprintf(ih->activity, sizeof(ih->activity), "bus fight (%u)", conflicts);
+        } else if (booting) {
+            ih->health = R01S_HEALTH_BOOT;
+            snprintf(ih->activity, sizeof(ih->activity), "CPU in reset");
+        } else if (!group->running && ctx->cycles == 0) {
+            ih->health = R01S_HEALTH_WARN;
+            snprintf(ih->activity, sizeof(ih->activity), "waiting for clock");
+        } else {
+            ih->health = R01S_HEALTH_OK;
+            snprintf(ih->activity, sizeof(ih->activity), "%s PC=%04X cyc=%u",
+                     phase_name(r01s_w65c02s_phase(cpu)), r01s_w65c02s_pc(cpu), (unsigned)ctx->cycles);
+            if (!group->running) {
+                ih->health = R01S_HEALTH_WARN;
+            }
+        }
+    }
+
+    /* Island D — $FExx latches */
+    {
+        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_IO_LATCH];
+        uint8_t le = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch);
+        ih->letter = 'D';
+        if (booting) {
+            ih->health = R01S_HEALTH_BOOT;
+            snprintf(ih->activity, sizeof(ih->activity), "await boot STA $FE02");
+        } else if (ctx->health_saw_latch) {
+            ih->health = R01S_HEALTH_OK;
+            snprintf(ih->activity, sizeof(ih->activity), "scroll latched $%02X", le);
+        } else {
+            ih->health = R01S_HEALTH_WARN;
+            snprintf(ih->activity, sizeof(ih->activity), "await STA $FE02 ($%02X)", le);
+        }
+    }
+
+    /* Island E — pads */
+    {
+        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_PADS];
+        ih->letter = 'E';
+        if (booting) {
+            ih->health = R01S_HEALTH_BOOT;
+            snprintf(ih->activity, sizeof(ih->activity), "pads idle");
+        } else if (ctx->health_saw_pad) {
+            ih->health = R01S_HEALTH_OK;
+            snprintf(ih->activity, sizeof(ih->activity), "LDA $FE60 ok P1=$%02X",
+                     r01s_pads_get(ctx->pads_impl.pads, 0));
+        } else {
+            ih->health = R01S_HEALTH_WARN;
+            snprintf(ih->activity, sizeof(ih->activity), "await CPU pad read");
+        }
+    }
+
+    /* Island G — VRAM */
+    {
+        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_VRAM];
+        uint8_t v0 = r01s_as6c62256_peek(ctx->vram_impl.vram, 0);
+        ih->letter = 'G';
+        if (booting) {
+            ih->health = R01S_HEALTH_BOOT;
+            snprintf(ih->activity, sizeof(ih->activity), "VRAM idle");
+        } else if (ctx->health_saw_vram && ctx->health_saw_vram_read) {
+            ih->health = R01S_HEALTH_OK;
+            snprintf(ih->activity, sizeof(ih->activity), "VRAM[0]=$%02X readback ok", v0);
+        } else if (ctx->health_saw_vram) {
+            ih->health = R01S_HEALTH_WARN;
+            snprintf(ih->activity, sizeof(ih->activity), "await LDA $FE12 readback");
+        } else {
+            ih->health = R01S_HEALTH_WARN;
+            snprintf(ih->activity, sizeof(ih->activity), "await STA $FE12 ($%02X)", v0);
+        }
+    }
+
+    /* Island H — beam */
+    {
+        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_BEAM];
+        int bx = r01s_beam_xy_x(ctx->beam_impl.beam);
+        int by = r01s_beam_xy_y(ctx->beam_impl.beam);
+        ih->letter = 'H';
+        if (booting) {
+            ih->health = R01S_HEALTH_BOOT;
+            snprintf(ih->activity, sizeof(ih->activity), "beam idle");
+        } else if (!group->running) {
+            ih->health = R01S_HEALTH_WARN;
+            snprintf(ih->activity, sizeof(ih->activity), "raster frozen %d,%d", bx, by);
+        } else if (ctx->health_saw_beam) {
+            ih->health = R01S_HEALTH_OK;
+            snprintf(ih->activity, sizeof(ih->activity), "scan %d,%d%s%s", bx, by,
+                     r01s_beam_xy_hblank(ctx->beam_impl.beam) ? " HB" : "",
+                     r01s_beam_xy_vblank(ctx->beam_impl.beam) ? " VB" : "");
+        } else {
+            ih->health = R01S_HEALTH_BOOT;
+            snprintf(ih->activity, sizeof(ih->activity), "beam starting");
+        }
+    }
+
+    for (i = 0; i < out->island_count; i++) {
+        system = r01s_health_worst(system, out->islands[i].health);
+    }
+
+    if (conflicts > 0) {
+        out->system = R01S_HEALTH_FAIL;
+        snprintf(out->system_label, sizeof(out->system_label), "BUS FAULT");
+        snprintf(out->system_detail, sizeof(out->system_detail), "%u bus conflict(s) — check wiring", conflicts);
+        return;
+    }
+
+    if (!group->powered ||
+        out->islands[R01S_ISLAND_POWER].health == R01S_HEALTH_FAIL) {
+        out->system = R01S_HEALTH_FAIL;
+        snprintf(out->system_label, sizeof(out->system_label), "POWER FAULT");
+        snprintf(out->system_detail, sizeof(out->system_detail), "Island A must be up before integration");
+        return;
+    }
+
+    if (booting) {
+        out->system = R01S_HEALTH_BOOT;
+        snprintf(out->system_label, sizeof(out->system_label), "BOOTING");
+        snprintf(out->system_detail, sizeof(out->system_detail), "Reset release — islands starting");
+        return;
+    }
+
+    if (!integrated) {
+        out->system = R01S_HEALTH_WARN;
+        snprintf(out->system_label, sizeof(out->system_label), "BRING-UP");
+        snprintf(out->system_detail, sizeof(out->system_detail),
+                 "CPU boot: latch=%s vram=%s pads=%s beam=%s",
+                 ctx->health_saw_latch ? "ok" : "wait", ctx->health_saw_vram_read ? "ok" : "wait",
+                 ctx->health_saw_pad ? "ok" : "wait", ctx->health_saw_beam ? "ok" : "wait");
+        return;
+    }
+
+    if (system == R01S_HEALTH_WARN) {
+        out->system = R01S_HEALTH_WARN;
+        snprintf(out->system_label, sizeof(out->system_label), "PAUSED");
+        snprintf(out->system_detail, sizeof(out->system_detail),
+                 group->running ? "One island idle or waiting" : "Integrated — press SPACE to run");
+        return;
+    }
+
+    out->system = R01S_HEALTH_OK;
+    snprintf(out->system_label, sizeof(out->system_label), "INTEGRATED");
+    snprintf(out->system_detail, sizeof(out->system_detail),
+             group->running ? "All islands working together" : "All islands ok — paused");
 }
 
 static void copy_bus_named(R01sEntity *dst, const char *dst_prefix, R01sEntity *src, const char *src_prefix,
@@ -482,6 +722,12 @@ static void board_reset(R01sIslandGroup *group) {
     ctx->phi2_prev = R01S_LVL_L;
     ctx->vram_addr = 0;
     ctx->vram_fe12_armed = 0;
+    ctx->health_saw_latch = 0;
+    ctx->health_saw_vram = 0;
+    ctx->health_saw_vram_read = 0;
+    ctx->health_saw_pad = 0;
+    ctx->health_saw_beam = 0;
+    ctx->health_phi2_edges = 0;
     r01s_bus_clear_conflicts();
     r01s_entity_reset(r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu));
     r01s_entity_reset(r01s_osc8m_entity(ctx->clock_impl.osc));
@@ -531,6 +777,9 @@ static void board_step(R01sIslandGroup *group) {
     board_settle(ctx, group);
 
     phi2 = r01s_entity_sense(osc, "PHI2");
+    if (phi2 != ctx->phi2_prev && (phi2 == R01S_LVL_H || phi2 == R01S_LVL_L)) {
+        ctx->health_phi2_edges++;
+    }
     if (phi2 == R01S_LVL_H && ctx->phi2_prev != R01S_LVL_H) {
         if (ctx->reset_hold > 0) {
             ctx->reset_hold--;
@@ -552,6 +801,7 @@ static void board_step(R01sIslandGroup *group) {
         }
     }
     ctx->phi2_prev = phi2;
+    board_update_milestones(ctx);
 }
 
 static void board_status(R01sIslandGroup *group, char *buf, size_t buf_len) {
@@ -607,6 +857,7 @@ static const R01sIslandGroupVTable BOARD_GROUP_VT = {
     board_eval_idle,
     board_status,
     board_update_probes,
+    board_fill_health,
 };
 
 int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {

@@ -1,6 +1,7 @@
 #ifndef RETR01_SIM_ISLAND_GROUP_H
 #define RETR01_SIM_ISLAND_GROUP_H
 
+#include "retr01_sim/health.h"
 #include "retr01_sim/island.h"
 
 #include <stddef.h>
@@ -17,6 +18,7 @@ typedef struct R01sIslandGroupVTable {
     void (*eval_idle)(R01sIslandGroup *group);
     void (*status)(R01sIslandGroup *group, char *buf, size_t buf_len);
     void (*update_probes)(R01sIslandGroup *group, int *probe_vdd, int *probe_phi2, int *probe_resb_low);
+    void (*fill_health)(R01sIslandGroup *group, R01sSystemHealth *out);
 } R01sIslandGroupVTable;
 
 struct R01sIslandGroup {
@@ -41,6 +43,7 @@ void r01s_island_group_frame(R01sIslandGroup *group);
 void r01s_island_group_fill_status(R01sIslandGroup *group, char *buf, size_t buf_len);
 void r01s_island_group_update_probes(R01sIslandGroup *group, int *probe_vdd, int *probe_phi2,
                                      int *probe_resb_low);
+void r01s_island_group_fill_health(R01sIslandGroup *group, R01sSystemHealth *out);
 
 const R01sIsland *r01s_island_group_at(const R01sIslandGroup *group, int index);
 R01sIsland *r01s_island_group_at_mut(R01sIslandGroup *group, int index);

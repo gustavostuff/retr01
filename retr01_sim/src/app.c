@@ -135,6 +135,7 @@ void r01s_app_frame(R01sApp *app) {
     if (group) {
         r01s_island_group_frame(group);
         r01s_island_group_fill_status(group, app->ui.status, sizeof(app->ui.status));
+        r01s_island_group_fill_health(group, &app->ui.health);
         r01s_island_group_update_probes(group, &app->ui.probe_vdd, &app->ui.probe_phi2, &app->ui.probe_resb_low);
     }
 

@@ -95,6 +95,13 @@ typedef struct R01sBoard {
     int reset_hold;
     uint32_t cycles;
     R01sLevel phi2_prev;
+    /* Bring-up milestones (sticky, cleared on reset). */
+    uint8_t health_saw_latch;
+    uint8_t health_saw_vram;
+    uint8_t health_saw_vram_read;
+    uint8_t health_saw_pad;
+    uint8_t health_saw_beam;
+    uint32_t health_phi2_edges;
 } R01sBoard;
 
 int r01s_board_build(R01sBoard *board, R01sIslandBuilder *builder);

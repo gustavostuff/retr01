@@ -1,5 +1,6 @@
 #include "retr01_sim/island_group.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #define R01S_GROUP_HALF_STEPS_PER_FRAME 8
@@ -103,6 +104,21 @@ void r01s_island_group_update_probes(R01sIslandGroup *group, int *probe_vdd, int
     }
     if (group->vt && group->vt->update_probes) {
         group->vt->update_probes(group, probe_vdd, probe_phi2, probe_resb_low);
+    }
+}
+
+void r01s_island_group_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
+    if (!out) {
+        return;
+    }
+    memset(out, 0, sizeof(*out));
+    if (group && group->vt && group->vt->fill_health) {
+        group->vt->fill_health(group, out);
+    } else if (group) {
+        out->island_count = group->island_count;
+        out->system = R01S_HEALTH_WARN;
+        snprintf(out->system_label, sizeof(out->system_label), "UNKNOWN");
+        snprintf(out->system_detail, sizeof(out->system_detail), "No health hook for this group");
     }
 }
 

@@ -3,6 +3,7 @@
 
 #include "retr01_sim/entity.h"
 #include "retr01_sim/gamepad.h"
+#include "retr01_sim/health.h"
 #include "retr01_sim/island_group.h"
 #include "retr01_sim/types.h"
 
@@ -11,6 +12,16 @@
 
 #define R01S_BOARD_MAX_CHIPS 32
 #define R01S_UI_GAMEPAD_COUNT 2
+
+/* Fixed HUD chrome — board draws only in the center viewport. */
+#define R01S_UI_HUD_TOP 22
+#define R01S_UI_HUD_BOTTOM 22
+#define R01S_UI_SIDEBAR_L 244
+#define R01S_UI_SIDEBAR_R 200
+#define R01S_UI_VIEW_X R01S_UI_SIDEBAR_L
+#define R01S_UI_VIEW_Y R01S_UI_HUD_TOP
+#define R01S_UI_VIEW_W (R01S_LOGIC_W - R01S_UI_SIDEBAR_L - R01S_UI_SIDEBAR_R)
+#define R01S_UI_VIEW_H (R01S_LOGIC_H - R01S_UI_HUD_TOP - R01S_UI_HUD_BOTTOM)
 
 typedef struct R01sUi {
     R01sIslandGroup *group;
@@ -29,6 +40,7 @@ typedef struct R01sUi {
     int drag_last_x;
     int drag_last_y;
     char status[192];
+    R01sSystemHealth health;
     int probe_vdd;
     int probe_phi2;
     int probe_resb_low;
