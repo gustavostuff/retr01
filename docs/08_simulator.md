@@ -72,8 +72,8 @@ Full Retr01-A netlist: **current BOM** [`06`](06_hardware_v1_32ic.md) (**32 IC**
 | Priority | Work |
 |----------|------|
 | 1 | `hw/md/` IC reference docs (batches: CPU/MCU, memory, glue/video) |
-| 2 | `retr01_sim/` scaffolding + **W65C02S** + **AS6C62256** unit tests (system RAM role) |
-| 3 | Link CPU + RAM island (island C) |
+| 2 | `retr01_sim/` — islands **A/B/C** chip models + unit tests (done scaffold) |
+| 3 | Wire island **C** netlist (CPU + RAM + PRG) smoke |
 | Later | Remaining ICs, video, cart, pads, screen |
 
 ## Related docs

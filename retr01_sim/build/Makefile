@@ -178,6 +178,204 @@ test_entity/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_entity.dir/build.make CMakeFiles/test_entity.dir/build
 .PHONY : test_entity/fast
 
+#=============================================================================
+# Target rules for targets named test_pwr5v
+
+# Build rule for target.
+test_pwr5v: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_pwr5v
+.PHONY : test_pwr5v
+
+# fast build rule for target.
+test_pwr5v/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_pwr5v.dir/build.make CMakeFiles/test_pwr5v.dir/build
+.PHONY : test_pwr5v/fast
+
+#=============================================================================
+# Target rules for targets named test_osc8m
+
+# Build rule for target.
+test_osc8m: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_osc8m
+.PHONY : test_osc8m
+
+# fast build rule for target.
+test_osc8m/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_osc8m.dir/build.make CMakeFiles/test_osc8m.dir/build
+.PHONY : test_osc8m/fast
+
+#=============================================================================
+# Target rules for targets named test_sn74hc14
+
+# Build rule for target.
+test_sn74hc14: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_sn74hc14
+.PHONY : test_sn74hc14
+
+# fast build rule for target.
+test_sn74hc14/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_sn74hc14.dir/build.make CMakeFiles/test_sn74hc14.dir/build
+.PHONY : test_sn74hc14/fast
+
+#=============================================================================
+# Target rules for targets named test_as6c62256
+
+# Build rule for target.
+test_as6c62256: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_as6c62256
+.PHONY : test_as6c62256
+
+# fast build rule for target.
+test_as6c62256/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_as6c62256.dir/build.make CMakeFiles/test_as6c62256.dir/build
+.PHONY : test_as6c62256/fast
+
+#=============================================================================
+# Target rules for targets named test_prg_rom
+
+# Build rule for target.
+test_prg_rom: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_prg_rom
+.PHONY : test_prg_rom
+
+# fast build rule for target.
+test_prg_rom/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_prg_rom.dir/build.make CMakeFiles/test_prg_rom.dir/build
+.PHONY : test_prg_rom/fast
+
+#=============================================================================
+# Target rules for targets named test_w65c02s
+
+# Build rule for target.
+test_w65c02s: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_w65c02s
+.PHONY : test_w65c02s
+
+# fast build rule for target.
+test_w65c02s/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_w65c02s.dir/build.make CMakeFiles/test_w65c02s.dir/build
+.PHONY : test_w65c02s/fast
+
+chips/as6c62256.o: chips/as6c62256.c.o
+.PHONY : chips/as6c62256.o
+
+# target to build an object file
+chips/as6c62256.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/as6c62256.c.o
+.PHONY : chips/as6c62256.c.o
+
+chips/as6c62256.i: chips/as6c62256.c.i
+.PHONY : chips/as6c62256.i
+
+# target to preprocess a source file
+chips/as6c62256.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/as6c62256.c.i
+.PHONY : chips/as6c62256.c.i
+
+chips/as6c62256.s: chips/as6c62256.c.s
+.PHONY : chips/as6c62256.s
+
+# target to generate assembly for a file
+chips/as6c62256.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/as6c62256.c.s
+.PHONY : chips/as6c62256.c.s
+
+chips/osc8m.o: chips/osc8m.c.o
+.PHONY : chips/osc8m.o
+
+# target to build an object file
+chips/osc8m.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/osc8m.c.o
+.PHONY : chips/osc8m.c.o
+
+chips/osc8m.i: chips/osc8m.c.i
+.PHONY : chips/osc8m.i
+
+# target to preprocess a source file
+chips/osc8m.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/osc8m.c.i
+.PHONY : chips/osc8m.c.i
+
+chips/osc8m.s: chips/osc8m.c.s
+.PHONY : chips/osc8m.s
+
+# target to generate assembly for a file
+chips/osc8m.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/osc8m.c.s
+.PHONY : chips/osc8m.c.s
+
+chips/prg_rom.o: chips/prg_rom.c.o
+.PHONY : chips/prg_rom.o
+
+# target to build an object file
+chips/prg_rom.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/prg_rom.c.o
+.PHONY : chips/prg_rom.c.o
+
+chips/prg_rom.i: chips/prg_rom.c.i
+.PHONY : chips/prg_rom.i
+
+# target to preprocess a source file
+chips/prg_rom.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/prg_rom.c.i
+.PHONY : chips/prg_rom.c.i
+
+chips/prg_rom.s: chips/prg_rom.c.s
+.PHONY : chips/prg_rom.s
+
+# target to generate assembly for a file
+chips/prg_rom.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/prg_rom.c.s
+.PHONY : chips/prg_rom.c.s
+
+chips/pwr5v.o: chips/pwr5v.c.o
+.PHONY : chips/pwr5v.o
+
+# target to build an object file
+chips/pwr5v.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/pwr5v.c.o
+.PHONY : chips/pwr5v.c.o
+
+chips/pwr5v.i: chips/pwr5v.c.i
+.PHONY : chips/pwr5v.i
+
+# target to preprocess a source file
+chips/pwr5v.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/pwr5v.c.i
+.PHONY : chips/pwr5v.c.i
+
+chips/pwr5v.s: chips/pwr5v.c.s
+.PHONY : chips/pwr5v.s
+
+# target to generate assembly for a file
+chips/pwr5v.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/pwr5v.c.s
+.PHONY : chips/pwr5v.c.s
+
+chips/sn74hc14.o: chips/sn74hc14.c.o
+.PHONY : chips/sn74hc14.o
+
+# target to build an object file
+chips/sn74hc14.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/sn74hc14.c.o
+.PHONY : chips/sn74hc14.c.o
+
+chips/sn74hc14.i: chips/sn74hc14.c.i
+.PHONY : chips/sn74hc14.i
+
+# target to preprocess a source file
+chips/sn74hc14.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/sn74hc14.c.i
+.PHONY : chips/sn74hc14.c.i
+
+chips/sn74hc14.s: chips/sn74hc14.c.s
+.PHONY : chips/sn74hc14.s
+
+# target to generate assembly for a file
+chips/sn74hc14.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/sn74hc14.c.s
+.PHONY : chips/sn74hc14.c.s
+
 chips/stub14.o: chips/stub14.c.o
 .PHONY : chips/stub14.o
 
@@ -202,6 +400,30 @@ chips/stub14.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/stub14.c.s
 .PHONY : chips/stub14.c.s
 
+chips/w65c02s.o: chips/w65c02s.c.o
+.PHONY : chips/w65c02s.o
+
+# target to build an object file
+chips/w65c02s.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/w65c02s.c.o
+.PHONY : chips/w65c02s.c.o
+
+chips/w65c02s.i: chips/w65c02s.c.i
+.PHONY : chips/w65c02s.i
+
+# target to preprocess a source file
+chips/w65c02s.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/w65c02s.c.i
+.PHONY : chips/w65c02s.c.i
+
+chips/w65c02s.s: chips/w65c02s.c.s
+.PHONY : chips/w65c02s.s
+
+# target to generate assembly for a file
+chips/w65c02s.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/chips/w65c02s.c.s
+.PHONY : chips/w65c02s.c.s
+
 src/app.o: src/app.c.o
 .PHONY : src/app.o
 
@@ -225,6 +447,30 @@ src/app.s: src/app.c.s
 src/app.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_app.dir/build.make CMakeFiles/retr01_sim_app.dir/src/app.c.s
 .PHONY : src/app.c.s
+
+src/bus.o: src/bus.c.o
+.PHONY : src/bus.o
+
+# target to build an object file
+src/bus.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/src/bus.c.o
+.PHONY : src/bus.c.o
+
+src/bus.i: src/bus.c.i
+.PHONY : src/bus.i
+
+# target to preprocess a source file
+src/bus.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/src/bus.c.i
+.PHONY : src/bus.c.i
+
+src/bus.s: src/bus.c.s
+.PHONY : src/bus.s
+
+# target to generate assembly for a file
+src/bus.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/src/bus.c.s
+.PHONY : src/bus.c.s
 
 src/entity.o: src/entity.c.o
 .PHONY : src/entity.o
@@ -322,6 +568,30 @@ src/ui.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_app.dir/build.make CMakeFiles/retr01_sim_app.dir/src/ui.c.s
 .PHONY : src/ui.c.s
 
+tests/test_as6c62256.o: tests/test_as6c62256.c.o
+.PHONY : tests/test_as6c62256.o
+
+# target to build an object file
+tests/test_as6c62256.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_as6c62256.dir/build.make CMakeFiles/test_as6c62256.dir/tests/test_as6c62256.c.o
+.PHONY : tests/test_as6c62256.c.o
+
+tests/test_as6c62256.i: tests/test_as6c62256.c.i
+.PHONY : tests/test_as6c62256.i
+
+# target to preprocess a source file
+tests/test_as6c62256.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_as6c62256.dir/build.make CMakeFiles/test_as6c62256.dir/tests/test_as6c62256.c.i
+.PHONY : tests/test_as6c62256.c.i
+
+tests/test_as6c62256.s: tests/test_as6c62256.c.s
+.PHONY : tests/test_as6c62256.s
+
+# target to generate assembly for a file
+tests/test_as6c62256.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_as6c62256.dir/build.make CMakeFiles/test_as6c62256.dir/tests/test_as6c62256.c.s
+.PHONY : tests/test_as6c62256.c.s
+
 tests/test_entity.o: tests/test_entity.c.o
 .PHONY : tests/test_entity.o
 
@@ -346,6 +616,126 @@ tests/test_entity.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_entity.dir/build.make CMakeFiles/test_entity.dir/tests/test_entity.c.s
 .PHONY : tests/test_entity.c.s
 
+tests/test_osc8m.o: tests/test_osc8m.c.o
+.PHONY : tests/test_osc8m.o
+
+# target to build an object file
+tests/test_osc8m.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_osc8m.dir/build.make CMakeFiles/test_osc8m.dir/tests/test_osc8m.c.o
+.PHONY : tests/test_osc8m.c.o
+
+tests/test_osc8m.i: tests/test_osc8m.c.i
+.PHONY : tests/test_osc8m.i
+
+# target to preprocess a source file
+tests/test_osc8m.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_osc8m.dir/build.make CMakeFiles/test_osc8m.dir/tests/test_osc8m.c.i
+.PHONY : tests/test_osc8m.c.i
+
+tests/test_osc8m.s: tests/test_osc8m.c.s
+.PHONY : tests/test_osc8m.s
+
+# target to generate assembly for a file
+tests/test_osc8m.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_osc8m.dir/build.make CMakeFiles/test_osc8m.dir/tests/test_osc8m.c.s
+.PHONY : tests/test_osc8m.c.s
+
+tests/test_prg_rom.o: tests/test_prg_rom.c.o
+.PHONY : tests/test_prg_rom.o
+
+# target to build an object file
+tests/test_prg_rom.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_prg_rom.dir/build.make CMakeFiles/test_prg_rom.dir/tests/test_prg_rom.c.o
+.PHONY : tests/test_prg_rom.c.o
+
+tests/test_prg_rom.i: tests/test_prg_rom.c.i
+.PHONY : tests/test_prg_rom.i
+
+# target to preprocess a source file
+tests/test_prg_rom.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_prg_rom.dir/build.make CMakeFiles/test_prg_rom.dir/tests/test_prg_rom.c.i
+.PHONY : tests/test_prg_rom.c.i
+
+tests/test_prg_rom.s: tests/test_prg_rom.c.s
+.PHONY : tests/test_prg_rom.s
+
+# target to generate assembly for a file
+tests/test_prg_rom.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_prg_rom.dir/build.make CMakeFiles/test_prg_rom.dir/tests/test_prg_rom.c.s
+.PHONY : tests/test_prg_rom.c.s
+
+tests/test_pwr5v.o: tests/test_pwr5v.c.o
+.PHONY : tests/test_pwr5v.o
+
+# target to build an object file
+tests/test_pwr5v.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_pwr5v.dir/build.make CMakeFiles/test_pwr5v.dir/tests/test_pwr5v.c.o
+.PHONY : tests/test_pwr5v.c.o
+
+tests/test_pwr5v.i: tests/test_pwr5v.c.i
+.PHONY : tests/test_pwr5v.i
+
+# target to preprocess a source file
+tests/test_pwr5v.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_pwr5v.dir/build.make CMakeFiles/test_pwr5v.dir/tests/test_pwr5v.c.i
+.PHONY : tests/test_pwr5v.c.i
+
+tests/test_pwr5v.s: tests/test_pwr5v.c.s
+.PHONY : tests/test_pwr5v.s
+
+# target to generate assembly for a file
+tests/test_pwr5v.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_pwr5v.dir/build.make CMakeFiles/test_pwr5v.dir/tests/test_pwr5v.c.s
+.PHONY : tests/test_pwr5v.c.s
+
+tests/test_sn74hc14.o: tests/test_sn74hc14.c.o
+.PHONY : tests/test_sn74hc14.o
+
+# target to build an object file
+tests/test_sn74hc14.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_sn74hc14.dir/build.make CMakeFiles/test_sn74hc14.dir/tests/test_sn74hc14.c.o
+.PHONY : tests/test_sn74hc14.c.o
+
+tests/test_sn74hc14.i: tests/test_sn74hc14.c.i
+.PHONY : tests/test_sn74hc14.i
+
+# target to preprocess a source file
+tests/test_sn74hc14.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_sn74hc14.dir/build.make CMakeFiles/test_sn74hc14.dir/tests/test_sn74hc14.c.i
+.PHONY : tests/test_sn74hc14.c.i
+
+tests/test_sn74hc14.s: tests/test_sn74hc14.c.s
+.PHONY : tests/test_sn74hc14.s
+
+# target to generate assembly for a file
+tests/test_sn74hc14.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_sn74hc14.dir/build.make CMakeFiles/test_sn74hc14.dir/tests/test_sn74hc14.c.s
+.PHONY : tests/test_sn74hc14.c.s
+
+tests/test_w65c02s.o: tests/test_w65c02s.c.o
+.PHONY : tests/test_w65c02s.o
+
+# target to build an object file
+tests/test_w65c02s.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_w65c02s.dir/build.make CMakeFiles/test_w65c02s.dir/tests/test_w65c02s.c.o
+.PHONY : tests/test_w65c02s.c.o
+
+tests/test_w65c02s.i: tests/test_w65c02s.c.i
+.PHONY : tests/test_w65c02s.i
+
+# target to preprocess a source file
+tests/test_w65c02s.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_w65c02s.dir/build.make CMakeFiles/test_w65c02s.dir/tests/test_w65c02s.c.i
+.PHONY : tests/test_w65c02s.c.i
+
+tests/test_w65c02s.s: tests/test_w65c02s.c.s
+.PHONY : tests/test_w65c02s.s
+
+# target to generate assembly for a file
+tests/test_w65c02s.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_w65c02s.dir/build.make CMakeFiles/test_w65c02s.dir/tests/test_w65c02s.c.s
+.PHONY : tests/test_w65c02s.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -358,13 +748,40 @@ help:
 	@echo "... retr01_sim"
 	@echo "... retr01_sim_app"
 	@echo "... retr01_sim_core"
+	@echo "... test_as6c62256"
 	@echo "... test_entity"
+	@echo "... test_osc8m"
+	@echo "... test_prg_rom"
+	@echo "... test_pwr5v"
+	@echo "... test_sn74hc14"
+	@echo "... test_w65c02s"
+	@echo "... chips/as6c62256.o"
+	@echo "... chips/as6c62256.i"
+	@echo "... chips/as6c62256.s"
+	@echo "... chips/osc8m.o"
+	@echo "... chips/osc8m.i"
+	@echo "... chips/osc8m.s"
+	@echo "... chips/prg_rom.o"
+	@echo "... chips/prg_rom.i"
+	@echo "... chips/prg_rom.s"
+	@echo "... chips/pwr5v.o"
+	@echo "... chips/pwr5v.i"
+	@echo "... chips/pwr5v.s"
+	@echo "... chips/sn74hc14.o"
+	@echo "... chips/sn74hc14.i"
+	@echo "... chips/sn74hc14.s"
 	@echo "... chips/stub14.o"
 	@echo "... chips/stub14.i"
 	@echo "... chips/stub14.s"
+	@echo "... chips/w65c02s.o"
+	@echo "... chips/w65c02s.i"
+	@echo "... chips/w65c02s.s"
 	@echo "... src/app.o"
 	@echo "... src/app.i"
 	@echo "... src/app.s"
+	@echo "... src/bus.o"
+	@echo "... src/bus.i"
+	@echo "... src/bus.s"
 	@echo "... src/entity.o"
 	@echo "... src/entity.i"
 	@echo "... src/entity.s"
@@ -377,9 +794,27 @@ help:
 	@echo "... src/ui.o"
 	@echo "... src/ui.i"
 	@echo "... src/ui.s"
+	@echo "... tests/test_as6c62256.o"
+	@echo "... tests/test_as6c62256.i"
+	@echo "... tests/test_as6c62256.s"
 	@echo "... tests/test_entity.o"
 	@echo "... tests/test_entity.i"
 	@echo "... tests/test_entity.s"
+	@echo "... tests/test_osc8m.o"
+	@echo "... tests/test_osc8m.i"
+	@echo "... tests/test_osc8m.s"
+	@echo "... tests/test_prg_rom.o"
+	@echo "... tests/test_prg_rom.i"
+	@echo "... tests/test_prg_rom.s"
+	@echo "... tests/test_pwr5v.o"
+	@echo "... tests/test_pwr5v.i"
+	@echo "... tests/test_pwr5v.s"
+	@echo "... tests/test_sn74hc14.o"
+	@echo "... tests/test_sn74hc14.i"
+	@echo "... tests/test_sn74hc14.s"
+	@echo "... tests/test_w65c02s.o"
+	@echo "... tests/test_w65c02s.i"
+	@echo "... tests/test_w65c02s.s"
 .PHONY : help
 
 

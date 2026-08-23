@@ -67,6 +67,12 @@ all: CMakeFiles/retr01_sim_core.dir/all
 all: CMakeFiles/retr01_sim_app.dir/all
 all: CMakeFiles/retr01_sim.dir/all
 all: CMakeFiles/test_entity.dir/all
+all: CMakeFiles/test_pwr5v.dir/all
+all: CMakeFiles/test_osc8m.dir/all
+all: CMakeFiles/test_sn74hc14.dir/all
+all: CMakeFiles/test_as6c62256.dir/all
+all: CMakeFiles/test_prg_rom.dir/all
+all: CMakeFiles/test_w65c02s.dir/all
 .PHONY : all
 
 # The main recursive "codegen" target.
@@ -74,6 +80,12 @@ codegen: CMakeFiles/retr01_sim_core.dir/codegen
 codegen: CMakeFiles/retr01_sim_app.dir/codegen
 codegen: CMakeFiles/retr01_sim.dir/codegen
 codegen: CMakeFiles/test_entity.dir/codegen
+codegen: CMakeFiles/test_pwr5v.dir/codegen
+codegen: CMakeFiles/test_osc8m.dir/codegen
+codegen: CMakeFiles/test_sn74hc14.dir/codegen
+codegen: CMakeFiles/test_as6c62256.dir/codegen
+codegen: CMakeFiles/test_prg_rom.dir/codegen
+codegen: CMakeFiles/test_w65c02s.dir/codegen
 .PHONY : codegen
 
 # The main recursive "preinstall" target.
@@ -85,6 +97,12 @@ clean: CMakeFiles/retr01_sim_core.dir/clean
 clean: CMakeFiles/retr01_sim_app.dir/clean
 clean: CMakeFiles/retr01_sim.dir/clean
 clean: CMakeFiles/test_entity.dir/clean
+clean: CMakeFiles/test_pwr5v.dir/clean
+clean: CMakeFiles/test_osc8m.dir/clean
+clean: CMakeFiles/test_sn74hc14.dir/clean
+clean: CMakeFiles/test_as6c62256.dir/clean
+clean: CMakeFiles/test_prg_rom.dir/clean
+clean: CMakeFiles/test_w65c02s.dir/clean
 .PHONY : clean
 
 #=============================================================================
@@ -94,12 +112,12 @@ clean: CMakeFiles/test_entity.dir/clean
 CMakeFiles/retr01_sim_core.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=6,7,8,9 "Built target retr01_sim_core"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=6,7,8,9,10,11,12,13,14,15,16 "Built target retr01_sim_core"
 .PHONY : CMakeFiles/retr01_sim_core.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/retr01_sim_core.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 4
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 11
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/retr01_sim_core.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 0
 .PHONY : CMakeFiles/retr01_sim_core.dir/rule
@@ -111,7 +129,7 @@ retr01_sim_core: CMakeFiles/retr01_sim_core.dir/rule
 # codegen rule for target.
 CMakeFiles/retr01_sim_core.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/retr01_sim_core.dir/build.make CMakeFiles/retr01_sim_core.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=6,7,8,9 "Finished codegen for target retr01_sim_core"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=6,7,8,9,10,11,12,13,14,15,16 "Finished codegen for target retr01_sim_core"
 .PHONY : CMakeFiles/retr01_sim_core.dir/codegen
 
 # clean rule for target.
@@ -131,7 +149,7 @@ CMakeFiles/retr01_sim_app.dir/all: CMakeFiles/retr01_sim_core.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/retr01_sim_app.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 7
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 14
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/retr01_sim_app.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 0
 .PHONY : CMakeFiles/retr01_sim_app.dir/rule
@@ -164,7 +182,7 @@ CMakeFiles/retr01_sim.dir/all: CMakeFiles/retr01_sim_app.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/retr01_sim.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 9
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 16
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/retr01_sim.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 0
 .PHONY : CMakeFiles/retr01_sim.dir/rule
@@ -191,12 +209,12 @@ CMakeFiles/retr01_sim.dir/clean:
 CMakeFiles/test_entity.dir/all: CMakeFiles/retr01_sim_core.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_entity.dir/build.make CMakeFiles/test_entity.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_entity.dir/build.make CMakeFiles/test_entity.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=10,11 "Built target test_entity"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=19,20 "Built target test_entity"
 .PHONY : CMakeFiles/test_entity.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_entity.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 6
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 13
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_entity.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 0
 .PHONY : CMakeFiles/test_entity.dir/rule
@@ -208,13 +226,205 @@ test_entity: CMakeFiles/test_entity.dir/rule
 # codegen rule for target.
 CMakeFiles/test_entity.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_entity.dir/build.make CMakeFiles/test_entity.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=10,11 "Finished codegen for target test_entity"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=19,20 "Finished codegen for target test_entity"
 .PHONY : CMakeFiles/test_entity.dir/codegen
 
 # clean rule for target.
 CMakeFiles/test_entity.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_entity.dir/build.make CMakeFiles/test_entity.dir/clean
 .PHONY : CMakeFiles/test_entity.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/test_pwr5v.dir
+
+# All Build rule for target.
+CMakeFiles/test_pwr5v.dir/all: CMakeFiles/retr01_sim_core.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_pwr5v.dir/build.make CMakeFiles/test_pwr5v.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_pwr5v.dir/build.make CMakeFiles/test_pwr5v.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=25,26 "Built target test_pwr5v"
+.PHONY : CMakeFiles/test_pwr5v.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/test_pwr5v.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 13
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_pwr5v.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 0
+.PHONY : CMakeFiles/test_pwr5v.dir/rule
+
+# Convenience name for target.
+test_pwr5v: CMakeFiles/test_pwr5v.dir/rule
+.PHONY : test_pwr5v
+
+# codegen rule for target.
+CMakeFiles/test_pwr5v.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_pwr5v.dir/build.make CMakeFiles/test_pwr5v.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=25,26 "Finished codegen for target test_pwr5v"
+.PHONY : CMakeFiles/test_pwr5v.dir/codegen
+
+# clean rule for target.
+CMakeFiles/test_pwr5v.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_pwr5v.dir/build.make CMakeFiles/test_pwr5v.dir/clean
+.PHONY : CMakeFiles/test_pwr5v.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/test_osc8m.dir
+
+# All Build rule for target.
+CMakeFiles/test_osc8m.dir/all: CMakeFiles/retr01_sim_core.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_osc8m.dir/build.make CMakeFiles/test_osc8m.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_osc8m.dir/build.make CMakeFiles/test_osc8m.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=21,22 "Built target test_osc8m"
+.PHONY : CMakeFiles/test_osc8m.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/test_osc8m.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 13
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_osc8m.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 0
+.PHONY : CMakeFiles/test_osc8m.dir/rule
+
+# Convenience name for target.
+test_osc8m: CMakeFiles/test_osc8m.dir/rule
+.PHONY : test_osc8m
+
+# codegen rule for target.
+CMakeFiles/test_osc8m.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_osc8m.dir/build.make CMakeFiles/test_osc8m.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=21,22 "Finished codegen for target test_osc8m"
+.PHONY : CMakeFiles/test_osc8m.dir/codegen
+
+# clean rule for target.
+CMakeFiles/test_osc8m.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_osc8m.dir/build.make CMakeFiles/test_osc8m.dir/clean
+.PHONY : CMakeFiles/test_osc8m.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/test_sn74hc14.dir
+
+# All Build rule for target.
+CMakeFiles/test_sn74hc14.dir/all: CMakeFiles/retr01_sim_core.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_sn74hc14.dir/build.make CMakeFiles/test_sn74hc14.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_sn74hc14.dir/build.make CMakeFiles/test_sn74hc14.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=27,28 "Built target test_sn74hc14"
+.PHONY : CMakeFiles/test_sn74hc14.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/test_sn74hc14.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 13
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_sn74hc14.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 0
+.PHONY : CMakeFiles/test_sn74hc14.dir/rule
+
+# Convenience name for target.
+test_sn74hc14: CMakeFiles/test_sn74hc14.dir/rule
+.PHONY : test_sn74hc14
+
+# codegen rule for target.
+CMakeFiles/test_sn74hc14.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_sn74hc14.dir/build.make CMakeFiles/test_sn74hc14.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=27,28 "Finished codegen for target test_sn74hc14"
+.PHONY : CMakeFiles/test_sn74hc14.dir/codegen
+
+# clean rule for target.
+CMakeFiles/test_sn74hc14.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_sn74hc14.dir/build.make CMakeFiles/test_sn74hc14.dir/clean
+.PHONY : CMakeFiles/test_sn74hc14.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/test_as6c62256.dir
+
+# All Build rule for target.
+CMakeFiles/test_as6c62256.dir/all: CMakeFiles/retr01_sim_core.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_as6c62256.dir/build.make CMakeFiles/test_as6c62256.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_as6c62256.dir/build.make CMakeFiles/test_as6c62256.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=17,18 "Built target test_as6c62256"
+.PHONY : CMakeFiles/test_as6c62256.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/test_as6c62256.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 13
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_as6c62256.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 0
+.PHONY : CMakeFiles/test_as6c62256.dir/rule
+
+# Convenience name for target.
+test_as6c62256: CMakeFiles/test_as6c62256.dir/rule
+.PHONY : test_as6c62256
+
+# codegen rule for target.
+CMakeFiles/test_as6c62256.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_as6c62256.dir/build.make CMakeFiles/test_as6c62256.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=17,18 "Finished codegen for target test_as6c62256"
+.PHONY : CMakeFiles/test_as6c62256.dir/codegen
+
+# clean rule for target.
+CMakeFiles/test_as6c62256.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_as6c62256.dir/build.make CMakeFiles/test_as6c62256.dir/clean
+.PHONY : CMakeFiles/test_as6c62256.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/test_prg_rom.dir
+
+# All Build rule for target.
+CMakeFiles/test_prg_rom.dir/all: CMakeFiles/retr01_sim_core.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_prg_rom.dir/build.make CMakeFiles/test_prg_rom.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_prg_rom.dir/build.make CMakeFiles/test_prg_rom.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=23,24 "Built target test_prg_rom"
+.PHONY : CMakeFiles/test_prg_rom.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/test_prg_rom.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 13
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_prg_rom.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 0
+.PHONY : CMakeFiles/test_prg_rom.dir/rule
+
+# Convenience name for target.
+test_prg_rom: CMakeFiles/test_prg_rom.dir/rule
+.PHONY : test_prg_rom
+
+# codegen rule for target.
+CMakeFiles/test_prg_rom.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_prg_rom.dir/build.make CMakeFiles/test_prg_rom.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=23,24 "Finished codegen for target test_prg_rom"
+.PHONY : CMakeFiles/test_prg_rom.dir/codegen
+
+# clean rule for target.
+CMakeFiles/test_prg_rom.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_prg_rom.dir/build.make CMakeFiles/test_prg_rom.dir/clean
+.PHONY : CMakeFiles/test_prg_rom.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/test_w65c02s.dir
+
+# All Build rule for target.
+CMakeFiles/test_w65c02s.dir/all: CMakeFiles/retr01_sim_core.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_w65c02s.dir/build.make CMakeFiles/test_w65c02s.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_w65c02s.dir/build.make CMakeFiles/test_w65c02s.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=29,30 "Built target test_w65c02s"
+.PHONY : CMakeFiles/test_w65c02s.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/test_w65c02s.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 13
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_w65c02s.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/g/Repos/retr01/retr01_sim/build/CMakeFiles 0
+.PHONY : CMakeFiles/test_w65c02s.dir/rule
+
+# Convenience name for target.
+test_w65c02s: CMakeFiles/test_w65c02s.dir/rule
+.PHONY : test_w65c02s
+
+# codegen rule for target.
+CMakeFiles/test_w65c02s.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_w65c02s.dir/build.make CMakeFiles/test_w65c02s.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/g/Repos/retr01/retr01_sim/build/CMakeFiles --progress-num=29,30 "Finished codegen for target test_w65c02s"
+.PHONY : CMakeFiles/test_w65c02s.dir/codegen
+
+# clean rule for target.
+CMakeFiles/test_w65c02s.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_w65c02s.dir/build.make CMakeFiles/test_w65c02s.dir/clean
+.PHONY : CMakeFiles/test_w65c02s.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

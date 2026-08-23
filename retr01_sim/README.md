@@ -6,7 +6,13 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 
 ## Status
 
-**Scaffold** — SDL board UI + base chip entity. No real IC models yet (next: W65C02S + AS6C62256).
+**Islands A–C chip models + unit tests.** SDL board UI scaffold. Next: wire island C netlist smoke (CPU+RAM+PRG).
+
+| Island | Components |
+|--------|------------|
+| A Power | `PWR5V` |
+| B Clocks + reset | `OSC8M`, `SN74HC14` |
+| C CPU + RAM + PRG | `W65C02S`, `AS6C62256`, `PRG_ROM` |
 
 ## Build
 

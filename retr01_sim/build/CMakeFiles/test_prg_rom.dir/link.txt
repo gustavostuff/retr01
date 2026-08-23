@@ -1,0 +1,1 @@
+/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/test_prg_rom.dir/link.d CMakeFiles/test_prg_rom.dir/tests/test_prg_rom.c.o -o test_prg_rom  libretr01_sim_core.a

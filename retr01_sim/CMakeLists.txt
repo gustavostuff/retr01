@@ -11,7 +11,14 @@ pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 add_library(retr01_sim_core
   src/pin.c
   src/entity.c
+  src/bus.c
   chips/stub14.c
+  chips/pwr5v.c
+  chips/osc8m.c
+  chips/sn74hc14.c
+  chips/as6c62256.c
+  chips/prg_rom.c
+  chips/w65c02s.c
 )
 target_include_directories(retr01_sim_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -32,6 +39,18 @@ add_executable(retr01_sim src/main.c)
 target_link_libraries(retr01_sim PRIVATE retr01_sim_app)
 
 enable_testing()
-add_executable(test_entity tests/test_entity.c)
-target_link_libraries(test_entity PRIVATE retr01_sim_core)
-add_test(NAME entity COMMAND test_entity)
+
+function(r01s_unit_test name)
+  add_executable(${name} tests/${name}.c)
+  target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+  target_link_libraries(${name} PRIVATE retr01_sim_core)
+  add_test(NAME ${name} COMMAND ${name})
+endfunction()
+
+r01s_unit_test(test_entity)
+r01s_unit_test(test_pwr5v)
+r01s_unit_test(test_osc8m)
+r01s_unit_test(test_sn74hc14)
+r01s_unit_test(test_as6c62256)
+r01s_unit_test(test_prg_rom)
+r01s_unit_test(test_w65c02s)

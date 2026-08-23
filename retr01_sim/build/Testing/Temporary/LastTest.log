@@ -1,10 +1,10 @@
-Start testing: Aug 22 19:08 MST
+Start testing: Aug 22 19:46 MST
 ----------------------------------------------------------
-1/1 Testing: entity
-1/1 Test: entity
+1/7 Testing: test_entity
+1/7 Test: test_entity
 Command: "/home/g/Repos/retr01/retr01_sim/build/test_entity"
 Directory: /home/g/Repos/retr01/retr01_sim/build
-"entity" start time: Aug 22 19:08 MST
+"test_entity" start time: Aug 22 19:46 MST
 Output:
 ----------------------------------------------------------
 test_entity: ok
@@ -12,8 +12,104 @@ test_entity: ok
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"entity" end time: Aug 22 19:08 MST
-"entity" time elapsed: 00:00:00
+"test_entity" end time: Aug 22 19:46 MST
+"test_entity" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-End testing: Aug 22 19:08 MST
+2/7 Testing: test_pwr5v
+2/7 Test: test_pwr5v
+Command: "/home/g/Repos/retr01/retr01_sim/build/test_pwr5v"
+Directory: /home/g/Repos/retr01/retr01_sim/build
+"test_pwr5v" start time: Aug 22 19:46 MST
+Output:
+----------------------------------------------------------
+test_pwr5v: ok
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"test_pwr5v" end time: Aug 22 19:46 MST
+"test_pwr5v" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/7 Testing: test_osc8m
+3/7 Test: test_osc8m
+Command: "/home/g/Repos/retr01/retr01_sim/build/test_osc8m"
+Directory: /home/g/Repos/retr01/retr01_sim/build
+"test_osc8m" start time: Aug 22 19:46 MST
+Output:
+----------------------------------------------------------
+test_osc8m: ok
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"test_osc8m" end time: Aug 22 19:46 MST
+"test_osc8m" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/7 Testing: test_sn74hc14
+4/7 Test: test_sn74hc14
+Command: "/home/g/Repos/retr01/retr01_sim/build/test_sn74hc14"
+Directory: /home/g/Repos/retr01/retr01_sim/build
+"test_sn74hc14" start time: Aug 22 19:46 MST
+Output:
+----------------------------------------------------------
+test_sn74hc14: ok
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"test_sn74hc14" end time: Aug 22 19:46 MST
+"test_sn74hc14" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/7 Testing: test_as6c62256
+5/7 Test: test_as6c62256
+Command: "/home/g/Repos/retr01/retr01_sim/build/test_as6c62256"
+Directory: /home/g/Repos/retr01/retr01_sim/build
+"test_as6c62256" start time: Aug 22 19:46 MST
+Output:
+----------------------------------------------------------
+test_as6c62256: ok
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"test_as6c62256" end time: Aug 22 19:46 MST
+"test_as6c62256" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/7 Testing: test_prg_rom
+6/7 Test: test_prg_rom
+Command: "/home/g/Repos/retr01/retr01_sim/build/test_prg_rom"
+Directory: /home/g/Repos/retr01/retr01_sim/build
+"test_prg_rom" start time: Aug 22 19:46 MST
+Output:
+----------------------------------------------------------
+test_prg_rom: ok
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"test_prg_rom" end time: Aug 22 19:46 MST
+"test_prg_rom" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/7 Testing: test_w65c02s
+7/7 Test: test_w65c02s
+Command: "/home/g/Repos/retr01/retr01_sim/build/test_w65c02s"
+Directory: /home/g/Repos/retr01/retr01_sim/build
+"test_w65c02s" start time: Aug 22 19:46 MST
+Output:
+----------------------------------------------------------
+test_w65c02s: ok
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"test_w65c02s" end time: Aug 22 19:46 MST
+"test_w65c02s" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Aug 22 19:46 MST

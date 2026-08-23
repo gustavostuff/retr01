@@ -2,6 +2,12 @@
 /home/g/Repos/retr01/retr01_sim/build/CMakeFiles/retr01_sim_app.dir
 /home/g/Repos/retr01/retr01_sim/build/CMakeFiles/retr01_sim.dir
 /home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_entity.dir
+/home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_pwr5v.dir
+/home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_osc8m.dir
+/home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_sn74hc14.dir
+/home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_as6c62256.dir
+/home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_prg_rom.dir
+/home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test_w65c02s.dir
 /home/g/Repos/retr01/retr01_sim/build/CMakeFiles/test.dir
 /home/g/Repos/retr01/retr01_sim/build/CMakeFiles/edit_cache.dir
 /home/g/Repos/retr01/retr01_sim/build/CMakeFiles/rebuild_cache.dir

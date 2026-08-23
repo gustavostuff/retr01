@@ -1,0 +1,189 @@
+#include "w65c02s.h"
+
+#include "retr01_sim/bus.h"
+
+#include <string.h>
+
+static void cpu_drive_bus(R01sEntity *e, R01sW65C02S *c) {
+    if (!r01s_level_is_high(r01s_entity_sense(e, "BE"))) {
+        r01s_bus_hiz(e, "A", 16);
+        r01s_bus_hiz(e, "D", 8);
+        r01s_entity_drive(e, "RWB", R01S_LVL_Z);
+        r01s_entity_drive(e, "SYNC", R01S_LVL_Z);
+        r01s_entity_drive(e, "VPB", R01S_LVL_Z);
+        r01s_entity_drive(e, "MLB", R01S_LVL_Z);
+        return;
+    }
+    r01s_bus_write(e, "A", 16, c->ab);
+    r01s_entity_drive(e, "RWB", c->rwb ? R01S_LVL_H : R01S_LVL_L);
+    r01s_entity_drive(e, "SYNC", c->sync ? R01S_LVL_H : R01S_LVL_L);
+    if (c->phase == R01S_CPU_VEC_PCL || c->phase == R01S_CPU_VEC_PCH) {
+        r01s_entity_drive(e, "VPB", R01S_LVL_L);
+    } else {
+        r01s_entity_drive(e, "VPB", R01S_LVL_H);
+    }
+    r01s_entity_drive(e, "MLB", R01S_LVL_H);
+    if (c->rwb) {
+        r01s_bus_hiz(e, "D", 8);
+    }
+}
+
+static void cpu_reset(R01sEntity *e) {
+    R01sW65C02S *c = (R01sW65C02S *)e;
+    c->a = c->x = c->y = 0;
+    c->s = 0xFD;
+    c->p = 0x34;
+    c->pc = 0;
+    c->ab = 0xFFFC;
+    c->ir = 0;
+    c->res_cycles = 7;
+    c->phase = R01S_CPU_RES_HOLD;
+    c->sync = 0;
+    c->rwb = 1;
+    cpu_drive_bus(e, c);
+}
+
+static void cpu_eval(R01sEntity *e) {
+    R01sW65C02S *c = (R01sW65C02S *)e;
+    if (r01s_level_is_low(r01s_entity_sense(e, "RESB"))) {
+        c->phase = R01S_CPU_RES_HOLD;
+        c->res_cycles = 7;
+        c->sync = 0;
+        c->rwb = 1;
+        c->ab = 0xFFFC;
+    }
+    cpu_drive_bus(e, c);
+}
+
+static uint8_t cpu_sample_d(R01sEntity *e) {
+    return (uint8_t)r01s_bus_read(e, "D", 8);
+}
+
+static void cpu_tick(R01sEntity *e) {
+    R01sW65C02S *c = (R01sW65C02S *)e;
+
+    if (!r01s_level_is_high(r01s_entity_sense(e, "BE"))) {
+        cpu_drive_bus(e, c);
+        return;
+    }
+    if (r01s_level_is_low(r01s_entity_sense(e, "RDY"))) {
+        cpu_drive_bus(e, c);
+        return;
+    }
+    if (r01s_level_is_low(r01s_entity_sense(e, "RESB"))) {
+        c->phase = R01S_CPU_RES_HOLD;
+        c->res_cycles = 7;
+        c->sync = 0;
+        c->rwb = 1;
+        c->ab = 0xFFFC;
+        cpu_drive_bus(e, c);
+        return;
+    }
+
+    switch (c->phase) {
+    case R01S_CPU_RES_HOLD:
+        c->phase = R01S_CPU_RES_WAIT;
+        c->res_cycles = 7;
+        c->ab = 0xFFFC;
+        c->rwb = 1;
+        c->sync = 0;
+        break;
+    case R01S_CPU_RES_WAIT:
+        c->res_cycles--;
+        if (c->res_cycles <= 0) {
+            c->phase = R01S_CPU_VEC_PCL;
+            c->ab = 0xFFFC;
+            c->rwb = 1;
+            c->sync = 0;
+        }
+        break;
+    case R01S_CPU_VEC_PCL:
+        c->pc = cpu_sample_d(e);
+        c->phase = R01S_CPU_VEC_PCH;
+        c->ab = 0xFFFD;
+        c->rwb = 1;
+        c->sync = 0;
+        break;
+    case R01S_CPU_VEC_PCH:
+        c->pc |= (uint16_t)cpu_sample_d(e) << 8;
+        c->phase = R01S_CPU_FETCH;
+        c->ab = c->pc;
+        c->rwb = 1;
+        c->sync = 1;
+        break;
+    case R01S_CPU_FETCH:
+        c->ir = cpu_sample_d(e);
+        c->pc++;
+        c->ab = c->pc;
+        c->rwb = 1;
+        c->sync = 1;
+        break;
+    }
+
+    cpu_drive_bus(e, c);
+}
+
+static void cpu_destroy(R01sEntity *e) {
+    (void)e;
+}
+
+static const R01sEntityVTable CPU_VT = {cpu_reset, cpu_eval, cpu_tick, cpu_destroy};
+
+static const char *const CPU_A_NAMES[16] = {"A0",  "A1",  "A2",  "A3",  "A4",  "A5",  "A6",  "A7",
+                                           "A8",  "A9",  "A10", "A11", "A12", "A13", "A14", "A15"};
+
+void r01s_w65c02s_init(R01sW65C02S *chip, const char *refdes) {
+    int i;
+    if (!chip) {
+        return;
+    }
+    memset(chip, 0, sizeof(*chip));
+    r01s_entity_init(&chip->base, &CPU_VT, "W65C02S", refdes ? refdes : "U1");
+    chip->base.impl = chip;
+
+    r01s_entity_add_pin(&chip->base, 1, "VPB", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 2, "RDY", R01S_PIN_IO);
+    r01s_entity_add_pin(&chip->base, 3, "PHI1O", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 4, "IRQB", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 5, "MLB", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 6, "NMIB", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 7, "SYNC", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 8, "VDD", R01S_PIN_PWR);
+    for (i = 0; i <= 11; i++) {
+        r01s_entity_add_pin(&chip->base, 9 + i, CPU_A_NAMES[i], R01S_PIN_OUT);
+    }
+    r01s_entity_add_pin(&chip->base, 21, "VSS", R01S_PIN_PWR);
+    r01s_entity_add_pin(&chip->base, 22, CPU_A_NAMES[12], R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 23, CPU_A_NAMES[13], R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 24, CPU_A_NAMES[14], R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 25, CPU_A_NAMES[15], R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 26, "D7", R01S_PIN_IO);
+    r01s_entity_add_pin(&chip->base, 27, "D6", R01S_PIN_IO);
+    r01s_entity_add_pin(&chip->base, 28, "D5", R01S_PIN_IO);
+    r01s_entity_add_pin(&chip->base, 29, "D4", R01S_PIN_IO);
+    r01s_entity_add_pin(&chip->base, 30, "D3", R01S_PIN_IO);
+    r01s_entity_add_pin(&chip->base, 31, "D2", R01S_PIN_IO);
+    r01s_entity_add_pin(&chip->base, 32, "D1", R01S_PIN_IO);
+    r01s_entity_add_pin(&chip->base, 33, "D0", R01S_PIN_IO);
+    r01s_entity_add_pin(&chip->base, 34, "RWB", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 35, "NC", R01S_PIN_NC);
+    r01s_entity_add_pin(&chip->base, 36, "BE", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 37, "PHI2", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 38, "SOB", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 39, "PHI2O", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 40, "RESB", R01S_PIN_IN);
+    r01s_entity_set_dip(&chip->base, 40, 64, 220);
+    r01s_entity_reset(&chip->base);
+}
+
+R01sEntity *r01s_w65c02s_entity(R01sW65C02S *chip) {
+    return chip ? &chip->base : NULL;
+}
+
+uint16_t r01s_w65c02s_pc(const R01sW65C02S *chip) {
+    return chip ? chip->pc : 0;
+}
+
+R01sCpuPhase r01s_w65c02s_phase(const R01sW65C02S *chip) {
+    return chip ? chip->phase : R01S_CPU_RES_HOLD;
+}

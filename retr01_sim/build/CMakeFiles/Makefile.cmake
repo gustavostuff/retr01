@@ -54,4 +54,10 @@ set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/retr01_sim_app.dir/DependInfo.cmake"
   "CMakeFiles/retr01_sim.dir/DependInfo.cmake"
   "CMakeFiles/test_entity.dir/DependInfo.cmake"
+  "CMakeFiles/test_pwr5v.dir/DependInfo.cmake"
+  "CMakeFiles/test_osc8m.dir/DependInfo.cmake"
+  "CMakeFiles/test_sn74hc14.dir/DependInfo.cmake"
+  "CMakeFiles/test_as6c62256.dir/DependInfo.cmake"
+  "CMakeFiles/test_prg_rom.dir/DependInfo.cmake"
+  "CMakeFiles/test_w65c02s.dir/DependInfo.cmake"
   )

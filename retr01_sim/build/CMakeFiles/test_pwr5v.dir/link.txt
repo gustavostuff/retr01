@@ -1,0 +1,1 @@
+/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/test_pwr5v.dir/link.d CMakeFiles/test_pwr5v.dir/tests/test_pwr5v.c.o -o test_pwr5v  libretr01_sim_core.a

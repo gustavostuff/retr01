@@ -1,0 +1,1 @@
+/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/test_osc8m.dir/link.d CMakeFiles/test_osc8m.dir/tests/test_osc8m.c.o -o test_osc8m  libretr01_sim_core.a
