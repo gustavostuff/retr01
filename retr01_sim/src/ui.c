@@ -520,14 +520,53 @@ static void draw_health_dot(SDL_Renderer *r, int x, int y, R01sHealth h) {
 #define R01S_UI_STATUS_PANEL_W (R01S_UI_SIDEBAR_L - 16)
 #define R01S_UI_STATUS_ROW0 (R01S_UI_STATUS_PANEL_Y + 66)
 #define R01S_UI_STATUS_ROW_H 16
+#define R01S_UI_STATUS_FOOTER_H 16
+#define R01S_UI_STATUS_LIST_BOTTOM \
+    (R01S_UI_STATUS_PANEL_Y + R01S_UI_STATUS_PANEL_H - R01S_UI_STATUS_FOOTER_H)
+#define R01S_UI_STATUS_LIST_H (R01S_UI_STATUS_LIST_BOTTOM - R01S_UI_STATUS_ROW0)
 
 static int health_needs_debug(R01sHealth h) {
     return h == R01S_HEALTH_WARN || h == R01S_HEALTH_FAIL;
 }
 
-static void health_copy_btn_rect(int island_index, SDL_Rect *rc) {
+static int status_list_content_h(const R01sSystemHealth *health) {
+    int n = health ? health->island_count : 0;
+    return n * R01S_UI_STATUS_ROW_H;
+}
+
+static int status_list_max_scroll(const R01sSystemHealth *health) {
+    int content = status_list_content_h(health);
+    int max_s = content - R01S_UI_STATUS_LIST_H;
+    return max_s > 0 ? max_s : 0;
+}
+
+static void status_clamp_scroll(R01sUi *ui) {
+    int max_s;
+    if (!ui) {
+        return;
+    }
+    max_s = status_list_max_scroll(&ui->health);
+    if (ui->status_scroll < 0) {
+        ui->status_scroll = 0;
+    }
+    if (ui->status_scroll > max_s) {
+        ui->status_scroll = max_s;
+    }
+}
+
+static int status_panel_hit(int lx, int ly) {
+    return lx >= R01S_UI_STATUS_PANEL_X && lx < R01S_UI_STATUS_PANEL_X + R01S_UI_STATUS_PANEL_W &&
+           ly >= R01S_UI_STATUS_PANEL_Y && ly < R01S_UI_STATUS_PANEL_Y + R01S_UI_STATUS_PANEL_H;
+}
+
+static int status_list_hit(int lx, int ly) {
+    return lx >= R01S_UI_STATUS_PANEL_X && lx < R01S_UI_STATUS_PANEL_X + R01S_UI_STATUS_PANEL_W &&
+           ly >= R01S_UI_STATUS_ROW0 && ly < R01S_UI_STATUS_LIST_BOTTOM;
+}
+
+static void health_copy_btn_rect(const R01sUi *ui, int island_index, SDL_Rect *rc) {
     rc->x = R01S_UI_STATUS_PANEL_X + R01S_UI_STATUS_PANEL_W - 42;
-    rc->y = R01S_UI_STATUS_ROW0 + island_index * R01S_UI_STATUS_ROW_H;
+    rc->y = R01S_UI_STATUS_ROW0 + island_index * R01S_UI_STATUS_ROW_H - (ui ? ui->status_scroll : 0);
     rc->w = 34;
     rc->h = 12;
 }
@@ -551,19 +590,25 @@ static int ui_copy_health_text(R01sUi *ui, const char *text) {
     return 0;
 }
 
-static void draw_system_health_panel(SDL_Renderer *r, const R01sSystemHealth *health) {
+static void draw_system_health_panel(SDL_Renderer *r, R01sUi *ui) {
+    const R01sSystemHealth *health;
     int i;
     int px = R01S_UI_STATUS_PANEL_X;
     int py = R01S_UI_STATUS_PANEL_Y;
     int pw = R01S_UI_STATUS_PANEL_W;
     int ph = R01S_UI_STATUS_PANEL_H;
+    int max_s;
     Uint8 sr, sg, sb;
     char row[56];
     SDL_Rect copy_rc;
+    SDL_Rect list_clip;
 
-    if (!health) {
+    if (!ui) {
         return;
     }
+    health = &ui->health;
+    status_clamp_scroll(ui);
+    max_s = status_list_max_scroll(health);
 
     fill_rect(r, px, py, pw, ph, 14, 20, 16);
     draw_rect(r, px, py, pw, ph, 70, 90, 75);
@@ -583,10 +628,20 @@ static void draw_system_health_panel(SDL_Renderer *r, const R01sSystemHealth *he
 
     fill_rect(r, px + 8, py + 58, pw - 16, 1, 40, 55, 45);
 
+    list_clip.x = px + 2;
+    list_clip.y = R01S_UI_STATUS_ROW0;
+    list_clip.w = pw - 4;
+    list_clip.h = R01S_UI_STATUS_LIST_H;
+    SDL_RenderSetClipRect(r, &list_clip);
+
     for (i = 0; i < health->island_count; i++) {
         const R01sIslandHealth *ih = &health->islands[i];
-        int ry = R01S_UI_STATUS_ROW0 + i * R01S_UI_STATUS_ROW_H;
+        int ry = R01S_UI_STATUS_ROW0 + i * R01S_UI_STATUS_ROW_H - ui->status_scroll;
         char letter[2];
+
+        if (ry + R01S_UI_STATUS_ROW_H < R01S_UI_STATUS_ROW0 || ry >= R01S_UI_STATUS_LIST_BOTTOM) {
+            continue;
+        }
 
         letter[0] = ih->letter ? ih->letter : '?';
         letter[1] = '\0';
@@ -595,14 +650,32 @@ static void draw_system_health_panel(SDL_Renderer *r, const R01sSystemHealth *he
         snprintf(row, sizeof(row), "%s %s", r01s_health_tag(ih->health), ih->activity);
         font_draw(r, px + 34, ry + 2, row, 140, 155, 135);
         if (health_needs_debug(ih->health)) {
-            health_copy_btn_rect(i, &copy_rc);
+            health_copy_btn_rect(ui, i, &copy_rc);
             fill_rect(r, copy_rc.x, copy_rc.y, copy_rc.w, copy_rc.h, 50, 58, 48);
             draw_rect(r, copy_rc.x, copy_rc.y, copy_rc.w, copy_rc.h, 160, 150, 80);
             font_draw(r, copy_rc.x + 4, copy_rc.y + 2, "COPY", 210, 200, 120);
         }
     }
+    SDL_RenderSetClipRect(r, NULL);
 
-    font_draw(r, px + 8, py + ph - 14, "WARN/FAIL COPY PASTES DEBUG", 100, 115, 100);
+    /* Scrollbar when island list overflows. */
+    if (max_s > 0) {
+        int track_x = px + pw - 7;
+        int track_y = R01S_UI_STATUS_ROW0;
+        int track_h = R01S_UI_STATUS_LIST_H;
+        int thumb_h = track_h * R01S_UI_STATUS_LIST_H / status_list_content_h(health);
+        int thumb_y;
+        if (thumb_h < 10) {
+            thumb_h = 10;
+        }
+        thumb_y = track_y + (track_h - thumb_h) * ui->status_scroll / max_s;
+        fill_rect(r, track_x, track_y, 4, track_h, 28, 36, 30);
+        fill_rect(r, track_x, thumb_y, 4, thumb_h, 90, 120, 95);
+    }
+
+    font_draw(r, px + 8, py + ph - 14,
+              max_s > 0 ? "WHEEL SCROLLS LIST  WARN/FAIL COPY" : "WARN/FAIL COPY PASTES DEBUG", 100, 115,
+              100);
 }
 
 static void draw_island_frame(SDL_Renderer *r, const R01sUi *ui, const R01sIsland *island, int active,
@@ -1023,7 +1096,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     font_draw(r, R01S_UI_VIEW_X + 8, 7, "DRAG EMPTY / RESIZE BR  SHIFT+ARROWS PAN (VERT)", 120, 130,
               140);
 
-    draw_system_health_panel(r, &ui->health);
+    draw_system_health_panel(r, ui);
 
     fill_rect(r, probe_x - 8, R01S_UI_HUD_TOP + 6, R01S_UI_SIDEBAR_R - 8, 168, 16, 22, 18);
     draw_rect(r, probe_x - 8, R01S_UI_HUD_TOP + 6, R01S_UI_SIDEBAR_R - 8, 168, 80, 90, 70);
@@ -1104,11 +1177,18 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
     if (ui_logic_in_view(logic_x, logic_y)) {
         ui_logic_to_board(ui, logic_x, logic_y, &board_mx, &board_my);
     }
-    if (e->type == SDL_MOUSEWHEEL && ui_logic_in_view(logic_x, logic_y)) {
-        ui->pan_x -= e->wheel.x * 32;
-        ui->pan_y -= e->wheel.y * 32;
-        r01s_ui_clamp_pan(ui);
-        return 1;
+    if (e->type == SDL_MOUSEWHEEL) {
+        if (status_panel_hit(logic_x, logic_y) || status_list_hit(logic_x, logic_y)) {
+            ui->status_scroll -= e->wheel.y * R01S_UI_STATUS_ROW_H;
+            status_clamp_scroll(ui);
+            return 1;
+        }
+        if (ui_logic_in_view(logic_x, logic_y)) {
+            ui->pan_x -= e->wheel.x * 32;
+            ui->pan_y -= e->wheel.y * 32;
+            r01s_ui_clamp_pan(ui);
+            return 1;
+        }
     }
     if (e->type == SDL_MOUSEBUTTONDOWN &&
         (e->button.button == SDL_BUTTON_MIDDLE || e->button.button == SDL_BUTTON_RIGHT) &&
@@ -1211,7 +1291,10 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             if (!health_needs_debug(ui->health.islands[i].health)) {
                 continue;
             }
-            health_copy_btn_rect(i, &copy_rc);
+            health_copy_btn_rect(ui, i, &copy_rc);
+            if (!status_list_hit(copy_rc.x + copy_rc.w / 2, copy_rc.y + copy_rc.h / 2)) {
+                continue; /* scrolled out of list viewport */
+            }
             if (logic_x >= copy_rc.x && logic_x < copy_rc.x + copy_rc.w && logic_y >= copy_rc.y &&
                 logic_y < copy_rc.y + copy_rc.h) {
                 ui_copy_health_text(ui, ui->health.islands[i].debug);

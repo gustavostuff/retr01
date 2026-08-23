@@ -52,6 +52,7 @@ typedef struct R01sUi {
     int mouse_btn[R01S_UI_GAMEPAD_COUNT][4]; /* X Y COIN START held by mouse */
     int mouse_lx; /* last logic-space mouse (for tooltips) */
     int mouse_ly;
+    int status_scroll; /* px offset into island status rows */
 } R01sUi;
 
 int r01s_ui_init(R01sUi *ui);
