@@ -11,7 +11,7 @@ static void init_screen(R01Screen *s, int col, int row) {
     int c;
     s->col = col;
     s->row = row;
-    s->present = 1;
+    s->present = 0;
     memset(s->pixels, 0, sizeof(s->pixels));
     memset(s->tiles, 0, sizeof(s->tiles));
     for (c = 0; c < R01_TILES_PER_SCREEN; c++) {
@@ -172,7 +172,32 @@ static int collect_opaque_colors(const uint8_t *rgba, size_t npx, Rgb out[4], in
     return 0;
 }
 
-static uint8_t map_pixel(const uint8_t *p, const Rgb colors[4], int ncolors) {
+static int build_png_palette(const Rgb colors[4], int ncolors, uint8_t master_for_index[4],
+                             uint8_t color_to_index[4], char *err_buf, size_t err_cap) {
+    int i;
+    int next = 1;
+    master_for_index[0] = 0;
+    master_for_index[1] = 0;
+    master_for_index[2] = 0;
+    master_for_index[3] = 0;
+    for (i = 0; i < ncolors; i++) {
+        uint8_t m = (uint8_t)r01_kit_nearest_master(colors[i].r, colors[i].g, colors[i].b);
+        if (m == 0) {
+            color_to_index[i] = 0;
+        } else {
+            if (next > 3) {
+                set_err(err_buf, err_cap, "need ≤4 colors (incl. backdrop)");
+                return -1;
+            }
+            master_for_index[next] = m;
+            color_to_index[i] = (uint8_t)next;
+            next++;
+        }
+    }
+    return 0;
+}
+
+static uint8_t map_pixel(const uint8_t *p, const Rgb colors[4], const uint8_t color_to_index[4], int ncolors) {
     Rgb c;
     int j;
     if (p[3] == 0) {
@@ -183,26 +208,27 @@ static uint8_t map_pixel(const uint8_t *p, const Rgb colors[4], int ncolors) {
     c.b = p[2];
     for (j = 0; j < ncolors; j++) {
         if (rgb_eq(colors[j], c)) {
-            return (uint8_t)j;
+            return color_to_index[j];
         }
     }
     return 0;
 }
 
 static void fill_screen_from_cell(R01Screen *s, const uint8_t *rgba, int png_w, int png_col, int png_row,
-                                  const Rgb colors[4], int ncolors) {
+                                  const Rgb colors[4], const uint8_t color_to_index[4], int ncolors) {
     int y, x;
     int ox = png_col * R01_SCREEN_PX_W;
     int oy = png_row * R01_SCREEN_PX_H;
     for (y = 0; y < R01_SCREEN_PX_H; y++) {
         for (x = 0; x < R01_SCREEN_PX_W; x++) {
             const uint8_t *p = rgba + ((size_t)(oy + y) * (size_t)png_w + (size_t)(ox + x)) * 4u;
-            s->pixels[y * R01_SCREEN_PX_W + x] = map_pixel(p, colors, ncolors);
+            s->pixels[y * R01_SCREEN_PX_W + x] = map_pixel(p, colors, color_to_index, ncolors);
         }
     }
 }
 
-int r01_world_import_png(R01World *w, const char *path, char *err_buf, size_t err_cap) {
+int r01_project_import_png(R01Project *p, const char *path, char *err_buf, size_t err_cap) {
+    R01World *w;
     FILE *fp = NULL;
     png_structp png = NULL;
     png_infop info = NULL;
@@ -213,10 +239,17 @@ int r01_world_import_png(R01World *w, const char *path, char *err_buf, size_t er
     Rgb colors[4];
     int ncolors = 0;
     int cols, rows, col, row;
+    uint8_t master_for_index[4];
+    uint8_t color_to_index[4];
     png_uint_32 y;
     size_t rowbytes;
 
-    if (!w || !path || !path[0]) {
+    if (!p || !path || !path[0]) {
+        set_err(err_buf, err_cap, "bad args");
+        return -1;
+    }
+    w = r01_project_world0(p);
+    if (!w) {
         set_err(err_buf, err_cap, "bad args");
         return -1;
     }
@@ -296,18 +329,24 @@ int r01_world_import_png(R01World *w, const char *path, char *err_buf, size_t er
     if (collect_opaque_colors(rgba, (size_t)width * (size_t)height, colors, &ncolors, err_buf, err_cap) != 0) {
         goto fail;
     }
+    if (build_png_palette(colors, ncolors, master_for_index, color_to_index, err_buf, err_cap) != 0) {
+        goto fail;
+    }
+    r01_project_set_bg_pals_from_png(p, master_for_index);
 
     for (row = 0; row < rows; row++) {
         for (col = 0; col < cols; col++) {
-            R01Screen *s;
-            if (cell_fully_transparent(rgba, (int)width, col, row)) {
-                continue;
-            }
-            s = r01_world_screen_at(w, col, row);
+            R01Screen *s = r01_world_screen_at(w, col, row);
             if (!s) {
                 continue;
             }
-            fill_screen_from_cell(s, rgba, (int)width, col, row, colors, ncolors);
+            if (cell_fully_transparent(rgba, (int)width, col, row)) {
+                s->present = 0;
+                memset(s->pixels, 0, sizeof(s->pixels));
+                continue;
+            }
+            s->present = 1;
+            fill_screen_from_cell(s, rgba, (int)width, col, row, colors, color_to_index, ncolors);
         }
     }
 

@@ -52,7 +52,7 @@ static int world_cell_size(const R01World *w) {
 }
 
 static int world_cell_at(const R01World *w, int lx, int ly, int *out_idx) {
-    int col, row, cs;
+    int col, row, cs, idx;
     int gx = UI_WORLD_GRID_X;
     int gy = UI_WORLD_GRID_Y;
     if (!w || lx < gx || ly < gy) {
@@ -64,10 +64,45 @@ static int world_cell_at(const R01World *w, int lx, int ly, int *out_idx) {
     if (col < 0 || row < 0 || col >= w->grid_cols || row >= w->grid_rows) {
         return 0;
     }
+    idx = r01_world_screen_index(w, col, row);
+    if (idx < 0 || !w->screens[idx].present) {
+        return 0;
+    }
     if (out_idx) {
-        *out_idx = r01_world_screen_index(w, col, row);
+        *out_idx = idx;
     }
     return 1;
+}
+
+static int play_button_hit(int lx, int ly) {
+    return lx >= UI_PLAY_BTN_X && lx < UI_PLAY_BTN_X + UI_PLAY_BTN_W && ly >= UI_PLAY_BTN_Y &&
+           ly < UI_PLAY_BTN_Y + UI_PLAY_BTN_H;
+}
+
+static void draw_play_button(const UiState *ui, SDL_Renderer *r) {
+    int x = UI_PLAY_BTN_X;
+    int y = UI_PLAY_BTN_Y;
+    if (ui->play.active) {
+        fill_rect(r, x, y, UI_PLAY_BTN_W, UI_PLAY_BTN_H, 120, 45, 45);
+        font_draw(r, x + 16, y + 3, "STOP", 240, 240, 240);
+    } else {
+        fill_rect(r, x, y, UI_PLAY_BTN_W, UI_PLAY_BTN_H, 35, 110, 55);
+        font_draw(r, x + 16, y + 3, "PLAY", 240, 240, 240);
+    }
+    draw_rect(r, x, y, UI_PLAY_BTN_W, UI_PLAY_BTN_H, ui->play.active ? 180 : 80, ui->play.active ? 80 : 160,
+              ui->play.active ? 80 : 90);
+}
+
+static void ui_toggle_play(UiState *ui) {
+    if (ui->play.active) {
+        r01_play_stop(&ui->play);
+        snprintf(ui->status, sizeof(ui->status), "edit mode — drop PNG or click PLAY");
+    } else if (!r01_play_start(&ui->play, ui->project)) {
+        ui_toast(ui, "no screens — drop PNG first", 1);
+    } else {
+        ui->play_last_tick = SDL_GetTicks();
+        snprintf(ui->status, sizeof(ui->status), "play — WASD/arrows move  X/Y warp");
+    }
 }
 
 static void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s) {
@@ -83,7 +118,7 @@ static void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s)
         for (x = 0; x < R01_SCREEN_PX_W; x++) {
             uint8_t cr, cg, cb;
             SDL_Rect px;
-            r01_screen_pixel_rgb(ui->project, s, x, y, &cr, &cg, &cb);
+            r01_screen_pixel_rgb(ui->project, r01_project_world0(ui->project), s, x, y, &cr, &cg, &cb);
             px.x = ox + x * scale;
             px.y = oy + y * scale;
             px.w = scale;
@@ -115,6 +150,8 @@ static void draw_play_view(UiState *ui, SDL_Renderer *r) {
     }
     {
         int pcx, pcy;
+        uint8_t pr, pg, pb;
+        r01_kit_rgb(ui->project->global_pal_spr[0].idx[1], &pr, &pg, &pb);
         for (pcy = 0; pcy < R01_PLAY_PLAYER_SIZE; pcy++) {
             for (pcx = 0; pcx < R01_PLAY_PLAYER_SIZE; pcx++) {
                 int wx = ui->play.player_x + pcx;
@@ -129,7 +166,7 @@ static void draw_play_view(UiState *ui, SDL_Renderer *r) {
                 px.y = oy + vy * scale;
                 px.w = scale;
                 px.h = scale;
-                SDL_SetRenderDrawColor(r, 0, 0, 0, 255);
+                SDL_SetRenderDrawColor(r, pr, pg, pb, 255);
                 SDL_RenderFillRect(r, &px);
             }
         }
@@ -148,7 +185,7 @@ int ui_init(UiState *ui) {
     }
     r01_project_init(ui->project, "untitled");
     snprintf(ui->project_path, sizeof(ui->project_path), "project.json");
-    snprintf(ui->status, sizeof(ui->status), "DROP PNG — SPACE PLAY — X/Y WARP");
+    snprintf(ui->status, sizeof(ui->status), "DROP PNG — CLICK PLAY — WASD MOVE");
     return 0;
 }
 
@@ -197,6 +234,7 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
     SDL_RenderClear(r);
     fill_rect(r, 0, 0, UI_LOGIC_W, 20, 12, 14, 18);
     font_draw(r, 8, 6, "RETR01 STUDIO — SMOOTH + EAGLE VIEW", 200, 210, 220);
+    draw_play_button(ui, r);
 
     fill_rect(r, 0, 20, UI_LEFT_W, UI_LOGIC_H - 20, 24, 26, 30);
     font_draw(r, 8, 28, "WORLD 0", 160, 170, 180);
@@ -208,6 +246,9 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
             int x = UI_WORLD_GRID_X + col * cs;
             int y = UI_WORLD_GRID_Y + row * cs;
             idx = r01_world_screen_index(w, col, row);
+            if (idx < 0 || !w->screens[idx].present) {
+                continue;
+            }
             if (idx == ui->project->active_screen) {
                 fill_rect(r, x, y, cs - 2, cs - 2, 40, 70, 50);
             } else {
@@ -277,20 +318,27 @@ int ui_handle_drop_file(UiState *ui, const char *path, int lx, int ly) {
     if (!ui || !path) {
         return 0;
     }
+    if (r01_project_import_png(ui->project, path, err, sizeof(err)) != 0) {
+        ui_toast(ui, err, 1);
+        return 1;
+    }
     w = r01_project_world0(ui->project);
     if (!w) {
         return 0;
     }
-    if (r01_world_import_png(w, path, err, sizeof(err)) != 0) {
-        ui_toast(ui, err, 1);
-        return 1;
-    }
     {
         int idx = r01_world_screen_index(w, R01_START_COL, R01_START_ROW);
-        if (idx >= 0) {
+        if (idx >= 0 && w->screens[idx].present) {
             ui->project->active_screen = idx;
-        } else if (w->screen_count > 0) {
+        } else {
+            int i;
             ui->project->active_screen = 0;
+            for (i = 0; i < w->screen_count; i++) {
+                if (w->screens[i].present) {
+                    ui->project->active_screen = i;
+                    break;
+                }
+            }
         }
     }
     ui_toast(ui, "png imported", 0);
@@ -329,14 +377,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
         }
         if (e->key.keysym.sym == SDLK_SPACE) {
-            if (ui->play.active) {
-                r01_play_stop(&ui->play);
-                snprintf(ui->status, sizeof(ui->status), "edit mode");
-            } else {
-                r01_play_start(&ui->play, ui->project);
-                ui->play_last_tick = SDL_GetTicks();
-                snprintf(ui->status, sizeof(ui->status), "play — WASD MOVE X/Y WARP");
-            }
+            ui_toggle_play(ui);
             return 1;
         }
         if (ui->play.active) {
@@ -353,12 +394,18 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
     if (e->type == SDL_KEYUP) {
         ui->keys[e->key.keysym.scancode] = 0;
     }
-    if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT && !ui->play.active) {
-        int idx;
-        R01World *w = r01_project_world0(ui->project);
-        if (w && world_cell_at(w, lx, ly, &idx)) {
-            ui->project->active_screen = idx;
+    if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT) {
+        if (play_button_hit(lx, ly)) {
+            ui_toggle_play(ui);
             return 1;
+        }
+        if (!ui->play.active) {
+            int idx;
+            R01World *w = r01_project_world0(ui->project);
+            if (w && world_cell_at(w, lx, ly, &idx)) {
+                ui->project->active_screen = idx;
+                return 1;
+            }
         }
     }
     return 0;

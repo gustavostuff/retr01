@@ -78,6 +78,26 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
     fprintf(f, "  \"active_screen\": %d,\n", p->active_screen);
     fprintf(f, "  \"grid_cols\": %d,\n", w->grid_cols);
     fprintf(f, "  \"grid_rows\": %d,\n", w->grid_rows);
+    fprintf(f, "  \"global_pal_bg\": [");
+    for (i = 0; i < R01_PAL_ROWS; i++) {
+        int j;
+        fprintf(f, "%s[", i ? ", " : "");
+        for (j = 0; j < R01_PAL_COLORS; j++) {
+            fprintf(f, "%s%d", j ? ", " : "", p->global_pal_bg[i].idx[j]);
+        }
+        fprintf(f, "]");
+    }
+    fprintf(f, "],\n");
+    fprintf(f, "  \"global_pal_spr\": [");
+    for (i = 0; i < R01_PAL_ROWS; i++) {
+        int j;
+        fprintf(f, "%s[", i ? ", " : "");
+        for (j = 0; j < R01_PAL_COLORS; j++) {
+            fprintf(f, "%s%d", j ? ", " : "", p->global_pal_spr[i].idx[j]);
+        }
+        fprintf(f, "]");
+    }
+    fprintf(f, "],\n");
     fprintf(f, "  \"screens\": [\n");
     for (i = 0; i < w->screen_count; i++) {
         const R01Screen *s = &w->screens[i];
@@ -92,7 +112,7 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
             set_err(err_buf, err_cap, "oom");
             return -1;
         }
-        fprintf(f, "    {\"col\": %d, \"row\": %d,\n", s->col, s->row);
+        fprintf(f, "    {\"col\": %d, \"row\": %d, \"present\": %d,\n", s->col, s->row, s->present);
         fprintf(f, "     \"pixels_hex\": \"%s\",\n", px);
         fprintf(f, "     \"tiles_hex\": \"%s\",\n", tl);
         fprintf(f, "     \"attrs_hex\": \"%s\"}%s\n", at, i + 1 < w->screen_count ? "," : "");
@@ -151,6 +171,52 @@ static int json_string_field(const char *obj, const char *key, char *buf, size_t
     return n > 0;
 }
 
+static int parse_bracket_row(const char *start, uint8_t out[R01_PAL_COLORS]) {
+    const char *k = start;
+    int i = 0;
+    if (!start || *start != '[') {
+        return 0;
+    }
+    k++;
+    while (*k && i < R01_PAL_COLORS) {
+        char *end;
+        long v;
+        while (*k == ' ' || *k == '\t' || *k == ',') {
+            k++;
+        }
+        if (*k == ']') {
+            break;
+        }
+        v = strtol(k, &end, 10);
+        if (end == k) {
+            break;
+        }
+        out[i++] = (uint8_t)v;
+        k = end;
+    }
+    return i == R01_PAL_COLORS;
+}
+
+static int load_palette_rows(const char *buf, const char *key, R01PalRow rows[R01_PAL_ROWS]) {
+    const char *section = json_find(buf, key);
+    const char *row;
+    int i = 0;
+    if (!section) {
+        return 0;
+    }
+    row = strchr(section, '[');
+    if (row) {
+        row = strchr(row + 1, '[');
+    }
+    while (row && i < R01_PAL_ROWS) {
+        if (parse_bracket_row(row, rows[i].idx)) {
+            i++;
+        }
+        row = strchr(row + 1, '[');
+    }
+    return i;
+}
+
 int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t err_cap) {
     FILE *f;
     long sz;
@@ -201,6 +267,23 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
     if (active >= 0 && active < r01_project_world0(p)->screen_count) {
         p->active_screen = active;
     }
+    {
+        R01PalRow bg[R01_PAL_ROWS];
+        R01PalRow spr[R01_PAL_ROWS];
+        int nbg = load_palette_rows(buf, "\"global_pal_bg\"", bg);
+        int nspr = load_palette_rows(buf, "\"global_pal_spr\"", spr);
+        int ri;
+        if (nbg == R01_PAL_ROWS) {
+            for (ri = 0; ri < R01_PAL_ROWS; ri++) {
+                p->global_pal_bg[ri] = bg[ri];
+            }
+        }
+        if (nspr == R01_PAL_ROWS) {
+            for (ri = 0; ri < R01_PAL_ROWS; ri++) {
+                p->global_pal_spr[ri] = spr[ri];
+            }
+        }
+    }
 
     section = json_find(buf, "\"screens\"");
     if (section) {
@@ -213,7 +296,8 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
             char px[sizeof(((R01Screen *)0)->pixels) * 2 + 4];
             char tl[sizeof(((R01Screen *)0)->tiles) * 2 + 4];
             char at[sizeof(((R01Screen *)0)->attrs) * 2 + 4];
-            int col = 0, row = 0, si;
+            int col = 0, row = 0, present = 1, si;
+            int has_present = 0;
             R01Screen *s;
             if (!end) {
                 break;
@@ -227,6 +311,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
             slice[olen] = '\0';
             json_int_after(slice, "\"col\"", &col);
             json_int_after(slice, "\"row\"", &row);
+            has_present = json_int_after(slice, "\"present\"", &present);
             si = r01_world_screen_index(w, col, row);
             if (si < 0) {
                 free(slice);
@@ -234,6 +319,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                 continue;
             }
             s = &w->screens[si];
+            s->present = (has_present && present) || !has_present ? 1 : 0;
             px[0] = tl[0] = at[0] = '\0';
             if (json_string_field(slice, "\"pixels_hex\"", px, sizeof(px))) {
                 decode_hex(px, s->pixels, sizeof(s->pixels));

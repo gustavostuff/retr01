@@ -1,6 +1,7 @@
 #include "retr01_studio/palette.h"
+#include "retr01_studio/chr_pack.h"
 
-/* docs/02 kit swatches, row-major 16×4 */
+#include <string.h>
 static const uint8_t KIT_RGB[R01_MASTER_COLORS][3] = {
     {0x00, 0x00, 0x00}, {0x29, 0x05, 0x14}, {0x2A, 0x05, 0x07}, {0x23, 0x0F, 0x06},
     {0x1E, 0x13, 0x06}, {0x1A, 0x16, 0x05}, {0x14, 0x18, 0x07}, {0x06, 0x1A, 0x07},
@@ -19,6 +20,8 @@ static const uint8_t KIT_RGB[R01_MASTER_COLORS][3] = {
     {0x22, 0xD0, 0xA6}, {0x3B, 0xCD, 0xC9}, {0x48, 0xC9, 0xE4}, {0x88, 0xC4, 0xED},
     {0xA4, 0xBD, 0xEF}, {0xBB, 0xB5, 0xF1}, {0xD5, 0xA9, 0xEF}, {0xF0, 0x9B, 0xDD},
 };
+
+#define R01_PHASE1_SPR_RED 34 /* kit bright red */
 
 void r01_kit_rgb(int master_index, uint8_t *r, uint8_t *g, uint8_t *b) {
     int i = master_index & 63;
@@ -40,11 +43,35 @@ uint8_t r01_quantize_r3g3b2(uint8_t r, uint8_t g, uint8_t b) {
     return (uint8_t)((rr << 5) | (gg << 2) | bb);
 }
 
-static void pal_row_phase1(R01PalRow *row, int column) {
+int r01_kit_nearest_master(uint8_t r, uint8_t g, uint8_t b) {
+    int best = 0;
+    int best_d = 0x7fffffff;
+    int i;
+    for (i = 0; i < R01_MASTER_COLORS; i++) {
+        int dr = (int)r - (int)KIT_RGB[i][0];
+        int dg = (int)g - (int)KIT_RGB[i][1];
+        int db = (int)b - (int)KIT_RGB[i][2];
+        int d = dr * dr + dg * dg + db * db;
+        if (d < best_d) {
+            best_d = d;
+            best = i;
+        }
+    }
+    return best;
+}
+
+static void pal_row_phase1_bg(R01PalRow *row, int column) {
     row->idx[0] = 0;
     row->idx[1] = (uint8_t)(16 + column);
     row->idx[2] = (uint8_t)(32 + column);
     row->idx[3] = (uint8_t)(48 + column);
+}
+
+static void pal_row_phase1_spr(R01PalRow *row) {
+    row->idx[0] = 0;
+    row->idx[1] = R01_PHASE1_SPR_RED;
+    row->idx[2] = R01_PHASE1_SPR_RED;
+    row->idx[3] = R01_PHASE1_SPR_RED;
 }
 
 void r01_project_init_phase1_pals(R01Project *p) {
@@ -53,15 +80,32 @@ void r01_project_init_phase1_pals(R01Project *p) {
         return;
     }
     for (i = 0; i < R01_PAL_ROWS; i++) {
-        pal_row_phase1(&p->global_pal_bg[i], i);
-        pal_row_phase1(&p->global_pal_spr[i], i + 4);
+        pal_row_phase1_bg(&p->global_pal_bg[i], i);
+        pal_row_phase1_spr(&p->global_pal_spr[i]);
     }
 }
 
-void r01_screen_pixel_rgb(const R01Project *p, const R01Screen *s, int px, int py, uint8_t *r, uint8_t *g,
-                          uint8_t *b) {
-    int tx, ty, sx, sy, cell;
-    uint8_t attr, color, master;
+void r01_project_set_bg_pals_from_png(R01Project *p, const uint8_t master_for_index[4]) {
+    R01PalRow row;
+    int i;
+    if (!p || !master_for_index) {
+        return;
+    }
+    row.idx[0] = master_for_index[0];
+    row.idx[1] = master_for_index[1];
+    row.idx[2] = master_for_index[2];
+    row.idx[3] = master_for_index[3];
+    for (i = 0; i < R01_PAL_ROWS; i++) {
+        p->global_pal_bg[i] = row;
+        p->global_pal_spr[i].idx[0] = row.idx[0];
+    }
+}
+
+void r01_screen_pixel_rgb(const R01Project *p, const R01World *w, const R01Screen *s, int px, int py, uint8_t *r,
+                          uint8_t *g, uint8_t *b) {
+    int tx, ty, sx, sy, cell, bank;
+    uint8_t attr, color, master, tile_id;
+    const uint8_t *tile;
     if (!p || !s || px < 0 || py < 0 || px >= R01_SCREEN_PX_W || py >= R01_SCREEN_PX_H) {
         if (r) {
             *r = 0;
@@ -80,13 +124,20 @@ void r01_screen_pixel_rgb(const R01Project *p, const R01Screen *s, int px, int p
     sy = py % 8;
     cell = ty * R01_SCREEN_TILES_X + tx;
     attr = s->attrs[cell];
+    tile_id = s->tiles[cell];
+    bank = r01_attr_bank(attr);
     if (r01_attr_flip_h(attr)) {
         sx = 7 - sx;
     }
     if (r01_attr_flip_v(attr)) {
         sy = 7 - sy;
     }
-    color = s->pixels[(ty * 8 + sy) * R01_SCREEN_PX_W + (tx * 8 + sx)] & 3u;
+    if (w && bank >= 0 && bank < R01_BG_BANKS && tile_id < (uint8_t)w->bg_banks[bank].tile_count) {
+        tile = w->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+        color = r01_tile_pixel_color(tile, sx, sy);
+    } else {
+        color = s->pixels[(ty * 8 + sy) * R01_SCREEN_PX_W + (tx * 8 + sx)] & 3u;
+    }
     master = p->global_pal_bg[r01_attr_pal(attr)].idx[color];
     r01_kit_rgb(master, r, g, b);
 }

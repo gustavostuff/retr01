@@ -51,16 +51,51 @@ static void update_camera(R01PlayState *pl) {
     }
 }
 
-void r01_play_start(R01PlayState *pl, const R01Project *p) {
+static int play_spawn_screen(const R01World *w, int *out_col, int *out_row) {
+    int i;
+    if (!w) {
+        return 0;
+    }
+    if (r01_world_find_screen(w, R01_START_COL, R01_START_ROW) >= 0) {
+        if (out_col) {
+            *out_col = R01_START_COL;
+        }
+        if (out_row) {
+            *out_row = R01_START_ROW;
+        }
+        return 1;
+    }
+    for (i = 0; i < w->screen_count; i++) {
+        if (w->screens[i].present) {
+            if (out_col) {
+                *out_col = w->screens[i].col;
+            }
+            if (out_row) {
+                *out_row = w->screens[i].row;
+            }
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int r01_play_start(R01PlayState *pl, const R01Project *p) {
+    const R01World *w;
+    int col = 0, row = 0;
     if (!pl) {
-        return;
+        return 0;
     }
     memset(pl, 0, sizeof(*pl));
     if (!p) {
-        return;
+        return 0;
+    }
+    w = r01_project_world0_const(p);
+    if (!play_spawn_screen(w, &col, &row)) {
+        return 0;
     }
     pl->active = 1;
-    place_player_centered(pl, R01_START_COL, R01_START_ROW);
+    place_player_centered(pl, col, row);
+    return 1;
 }
 
 void r01_play_stop(R01PlayState *pl) {
@@ -149,6 +184,6 @@ int r01_play_sample_bg(const R01Project *p, const R01PlayState *pl, int vx, int 
         return 0;
     }
     s = &w->screens[idx];
-    r01_screen_pixel_rgb(p, s, wx % R01_SCREEN_PX_W, wy % R01_SCREEN_PX_H, r, g, b);
+    r01_screen_pixel_rgb(p, w, s, wx % R01_SCREEN_PX_W, wy % R01_SCREEN_PX_H, r, g, b);
     return 0;
 }

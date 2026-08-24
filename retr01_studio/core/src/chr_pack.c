@@ -25,39 +25,82 @@ void r01_tile_from_pixels(const uint8_t *pixels, int tile_col, int tile_row, uin
     }
 }
 
+uint8_t r01_tile_pixel_color(const uint8_t tile[R01_TILE_BYTES], int sx, int sy) {
+    uint8_t p0;
+    uint8_t p1;
+    int bit;
+    if (!tile || sx < 0 || sx > 7 || sy < 0 || sy > 7) {
+        return 0;
+    }
+    p0 = tile[sy];
+    p1 = tile[sy + 8];
+    bit = 7 - sx;
+    return (uint8_t)(((p0 >> bit) & 1u) | (((p1 >> bit) & 1u) << 1));
+}
+
 static int tile_equal(const uint8_t a[R01_TILE_BYTES], const uint8_t b[R01_TILE_BYTES]) {
     return memcmp(a, b, R01_TILE_BYTES) == 0;
 }
 
+static void tile_flip_h(uint8_t dst[R01_TILE_BYTES], const uint8_t src[R01_TILE_BYTES]) {
+    int r;
+    for (r = 0; r < 8; r++) {
+        int plane;
+        for (plane = 0; plane < 2; plane++) {
+            uint8_t v = src[r + plane * 8];
+            uint8_t o = 0;
+            int b;
+            for (b = 0; b < 8; b++) {
+                if (v & (1u << b)) {
+                    o |= (uint8_t)(1u << (7 - b));
+                }
+            }
+            dst[r + plane * 8] = o;
+        }
+    }
+}
+
+static void tile_flip_v(uint8_t dst[R01_TILE_BYTES], const uint8_t src[R01_TILE_BYTES]) {
+    int r;
+    for (r = 0; r < 8; r++) {
+        dst[r] = src[7 - r];
+        dst[r + 8] = src[15 - r];
+    }
+}
+
+static void tile_orient(const uint8_t src[R01_TILE_BYTES], int flip_h, int flip_v, uint8_t dst[R01_TILE_BYTES]) {
+    uint8_t tmp[R01_TILE_BYTES];
+    if (!flip_h && !flip_v) {
+        memcpy(dst, src, R01_TILE_BYTES);
+        return;
+    }
+    if (flip_h && !flip_v) {
+        tile_flip_h(dst, src);
+        return;
+    }
+    if (!flip_h && flip_v) {
+        tile_flip_v(dst, src);
+        return;
+    }
+    tile_flip_h(tmp, src);
+    tile_flip_v(dst, tmp);
+}
+
 static int find_unique(uint8_t unique[][R01_TILE_BYTES], int unique_count, const uint8_t tile[R01_TILE_BYTES],
                        int *out_flips) {
+    static const int FLIP_VARIANTS[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     int u;
     for (u = 0; u < unique_count; u++) {
-        uint8_t tmp[R01_TILE_BYTES];
-        if (tile_equal(unique[u], tile)) {
-            *out_flips = 0;
-            return u;
-        }
-        /* H flip */
-        memcpy(tmp, unique[u], R01_TILE_BYTES);
-        {
-            int r;
-            for (r = 0; r < 8; r++) {
-                uint8_t v = tmp[r];
-                uint8_t o = 0;
-                int b;
-                for (b = 0; b < 8; b++) {
-                    if (v & (1u << b)) {
-                        o |= (uint8_t)(1u << (7 - b));
-                    }
-                }
-                tmp[r] = o;
-                tmp[r + 8] = unique[u][r + 8];
+        int variant;
+        for (variant = 0; variant < 4; variant++) {
+            uint8_t oriented[R01_TILE_BYTES];
+            int fh = FLIP_VARIANTS[variant][0];
+            int fv = FLIP_VARIANTS[variant][1];
+            tile_orient(unique[u], fh, fv, oriented);
+            if (tile_equal(oriented, tile)) {
+                *out_flips = (fh ? R01_ATTR_FLIP_H : 0) | (fv ? R01_ATTR_FLIP_V : 0);
+                return u;
             }
-        }
-        if (tile_equal(tmp, tile)) {
-            *out_flips = R01_ATTR_FLIP_H;
-            return u;
         }
     }
     return -1;

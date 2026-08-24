@@ -21,6 +21,11 @@
 
 #define UI_TOAST_MS 2800
 
+#define UI_PLAY_BTN_X 556
+#define UI_PLAY_BTN_Y 3
+#define UI_PLAY_BTN_W 76
+#define UI_PLAY_BTN_H 14
+
 typedef struct UiState {
     R01Project *project;
     R01PlayState play;

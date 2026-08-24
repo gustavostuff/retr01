@@ -14,6 +14,6 @@ R01Screen *r01_project_active_screen(R01Project *p);
 int r01_world_find_screen(const R01World *w, int col, int row);
 R01Screen *r01_world_screen_at(R01World *w, int col, int row);
 
-int r01_world_import_png(R01World *w, const char *path, char *err_buf, size_t err_cap);
+int r01_project_import_png(R01Project *p, const char *path, char *err_buf, size_t err_cap);
 
 #endif

@@ -16,7 +16,7 @@ typedef struct R01PlayState {
     int cam_y;
 } R01PlayState;
 
-void r01_play_start(R01PlayState *pl, const R01Project *p);
+int r01_play_start(R01PlayState *pl, const R01Project *p);
 void r01_play_stop(R01PlayState *pl);
 void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy);
 int r01_play_button(R01PlayState *pl, const R01Project *p, int button);

@@ -31,8 +31,14 @@ int main(void) {
     expect_true(p->worlds[0].screen_count == R01_DEFAULT_GRID * R01_DEFAULT_GRID, "9 screens default");
     expect_true(p->worlds[0].screens[4].col == 1 && p->worlds[0].screens[4].row == 1, "center screen");
     expect_true(p->active_screen == 4, "active start 1,1");
+    {
+        int i;
+        for (i = 0; i < p->worlds[0].screen_count; i++) {
+            p->worlds[0].screens[i].present = 1;
+        }
+    }
 
-    r01_play_start(&pl, p);
+    expect_true(r01_play_start(&pl, p), "play start");
     expect_true(pl.active, "play active");
     expect_true(pl.player_x > 0 && pl.player_y > 0, "player placed");
 
