@@ -14,15 +14,71 @@ static void pld_drive_byte(R01sEntity *e, const char *prefix, uint8_t v) {
     }
 }
 
+static void pld_drive_named(R01sEntity *e, const char *name, int on) {
+    r01s_entity_drive(e, name, on ? R01S_LVL_H : R01S_LVL_L);
+}
+
 static void pld_reset(R01sEntity *e) {
     R01sAtf22v10 *c = (R01sAtf22v10 *)e;
     c->p_bus = 0;
     c->q_bus = 0;
     c->eq = 0;
-    pld_drive_byte(e, "Y", 0);
     if (c->role == R01S_PLD_BEAM_Y) {
+        pld_drive_byte(e, "Y", 0);
         r01s_entity_drive(e, "EQ#", R01S_LVL_H);
+        return;
     }
+    if (c->role == R01S_PLD_DECODE) {
+        pld_drive_named(e, "SEL_FE02", 0);
+        pld_drive_named(e, "SEL_FE03", 0);
+        pld_drive_named(e, "SEL_FE04", 0);
+        pld_drive_named(e, "SEL_FE08", 0);
+        pld_drive_named(e, "SEL_FE10", 0);
+        pld_drive_named(e, "SEL_FE11", 0);
+        pld_drive_named(e, "SEL_FE90", 0);
+        pld_drive_named(e, "SEL_FE91", 0);
+        pld_drive_named(e, "SEL_FE92", 0);
+        pld_drive_named(e, "SEL_FE93", 0);
+        pld_drive_named(e, "SEL_FE12", 0);
+        return;
+    }
+    /* VRAM glue: I→Y passthrough until interleave equations land. */
+    pld_drive_byte(e, "Y", 0);
+}
+
+static uint8_t pld_sense_a_lo(R01sEntity *e) {
+    int i;
+    uint8_t a = 0;
+    char name[4];
+    for (i = 0; i < 8; i++) {
+        snprintf(name, sizeof(name), "A%d", i);
+        if (r01s_level_is_high(r01s_entity_sense(e, name))) {
+            a |= (uint8_t)(1u << i);
+        }
+    }
+    return a;
+}
+
+static void pld_eval_decode(R01sEntity *e) {
+    R01sAtf22v10 *c = (R01sAtf22v10 *)e;
+    int fe = r01s_level_is_low(r01s_entity_sense(e, "FE#")); /* active-low page hit */
+    int be = r01s_level_is_high(r01s_entity_sense(e, "BE"));
+    uint8_t off = pld_sense_a_lo(e);
+    int hit = fe && be;
+
+    pld_drive_named(e, "SEL_FE02", hit && off == 0x02u);
+    pld_drive_named(e, "SEL_FE03", hit && off == 0x03u);
+    pld_drive_named(e, "SEL_FE04", hit && off == 0x04u);
+    pld_drive_named(e, "SEL_FE08", hit && off == 0x08u);
+    pld_drive_named(e, "SEL_FE10", hit && off == 0x10u);
+    pld_drive_named(e, "SEL_FE11", hit && off == 0x11u);
+    pld_drive_named(e, "SEL_FE12", hit && off == 0x12u);
+    pld_drive_named(e, "SEL_FE90", hit && off == 0x90u);
+    pld_drive_named(e, "SEL_FE91", hit && off == 0x91u);
+    pld_drive_named(e, "SEL_FE92", hit && off == 0x92u);
+    pld_drive_named(e, "SEL_FE93", hit && off == 0x93u);
+    c->p_bus = off;
+    c->q_bus = hit ? off : 0;
 }
 
 static void pld_eval(R01sEntity *e) {
@@ -31,6 +87,11 @@ static void pld_eval(R01sEntity *e) {
     uint8_t p = 0;
     uint8_t q = 0;
     char pn[8], qn[8];
+
+    if (c->role == R01S_PLD_DECODE) {
+        pld_eval_decode(e);
+        return;
+    }
 
     if (c->role == R01S_PLD_BEAM_Y) {
         for (i = 0; i < 8; i++) {
@@ -50,7 +111,7 @@ static void pld_eval(R01sEntity *e) {
         return;
     }
 
-    /* Decode / VRAM glue: visible passthrough stub for bench bring-up. */
+    /* VRAM glue: visible passthrough stub for bench bring-up. */
     for (i = 0; i < 8; i++) {
         char in[8];
         snprintf(in, sizeof(in), "I%d", i);
@@ -82,6 +143,31 @@ void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role) {
     chip->role = role;
     r01s_entity_init(&chip->base, &ATF22_VT, "ATF22V10", refdes ? refdes : "UPLD");
     chip->base.impl = chip;
+
+    if (role == R01S_PLD_DECODE) {
+        static const char *const A_NAMES[8] = {"A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7"};
+        for (i = 0; i < 8; i++) {
+            r01s_entity_add_pin(&chip->base, 1 + i, A_NAMES[i], R01S_PIN_IN);
+        }
+        r01s_entity_add_pin(&chip->base, 9, "FE#", R01S_PIN_IN);
+        r01s_entity_add_pin(&chip->base, 10, "BE", R01S_PIN_IN);
+        r01s_entity_add_pin(&chip->base, 11, "RWB", R01S_PIN_IN);
+        r01s_entity_add_pin(&chip->base, 12, "SEL_FE02", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 13, "SEL_FE03", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 14, "SEL_FE04", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 15, "SEL_FE08", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 16, "SEL_FE10", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 17, "SEL_FE11", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 18, "SEL_FE12", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 19, "SEL_FE90", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 20, "SEL_FE91", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 21, "SEL_FE92", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 22, "SEL_FE93", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 23, "VCC", R01S_PIN_PWR);
+        r01s_entity_set_dip(&chip->base, 24, 72);
+        r01s_entity_reset(&chip->base);
+        return;
+    }
 
     for (i = 0; i < 8; i++) {
         char in[8], out[8];

@@ -8,8 +8,9 @@
 
 /*
  * ATF22V10 — behavioral PLD shell (32-IC BOM has five).
- * Decode / VRAM glue / beam-Y compare are minimal combinatorial stubs.
- * Beam-X, compositor, and BG fetch remain dedicated models but use part ATF22V10.
+ * DECODE: $FExx select equations → SEL_FE* (board pulses HC573 LE from these).
+ * VRAM: I→Y passthrough stub until interleave equations land.
+ * BEAM_Y: P==Q → EQ#. Beam-X / compositor / BG fetch are dedicated models.
  */
 typedef struct R01sAtf22v10 {
     R01sEntity base;

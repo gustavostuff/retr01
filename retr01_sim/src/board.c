@@ -926,11 +926,142 @@ static void flash_read_selected(R01sEntity *flash, uint32_t abs) {
     r01s_entity_eval(flash);
 }
 
+enum {
+    R01S_FLASH_CE_NONE = 0,
+    R01S_FLASH_CE_PRG = 1,
+    R01S_FLASH_CE_MAP = 2,
+    R01S_FLASH_CE_CHR = 3,
+};
+
+/* Yield flash so CHR (DOT / HBlank) can own /CE without fighting a stale PRG claim. */
+static void flash_yield_for_chr(R01sBoard *ctx) {
+    R01sEntity *flash = r01s_sst39sf040_entity(ctx->cart_impl.flash);
+    flash_deselect(flash);
+    ctx->flash_ce_owner = R01S_FLASH_CE_NONE;
+}
+
+/* CHR plane read through flash CE#. Returns 0 if PRG/MAP owns the bus (caller holds). */
+static int flash_chr_read_byte(R01sBoard *ctx, uint32_t abs, uint8_t *out) {
+    R01sEntity *flash;
+    if (!ctx || !out) {
+        return 0;
+    }
+    if (ctx->flash_ce_owner == R01S_FLASH_CE_PRG || ctx->flash_ce_owner == R01S_FLASH_CE_MAP) {
+        return 0;
+    }
+    flash = r01s_sst39sf040_entity(ctx->cart_impl.flash);
+    ctx->flash_ce_owner = R01S_FLASH_CE_CHR;
+    /* Fast video/memory: still honor CE ownership, but skip per-dot pin settle. */
+    if (r01s_fast_glue_enabled(R01S_FAST_GLUE_MEMORY) || r01s_fast_glue_enabled(R01S_FAST_GLUE_VIDEO)) {
+        *out = r01s_sst39sf040_peek(ctx->cart_impl.flash, abs);
+        return 1;
+    }
+    flash_read_selected(flash, abs);
+    *out = (uint8_t)r01s_bus_read(flash, "DQ", 8);
+    return 1;
+}
+
+static void flash_chr_release(R01sBoard *ctx) {
+    if (!ctx || ctx->flash_ce_owner != R01S_FLASH_CE_CHR) {
+        return;
+    }
+    flash_deselect(r01s_sst39sf040_entity(ctx->cart_impl.flash));
+    ctx->flash_ce_owner = R01S_FLASH_CE_NONE;
+}
+
+static void sync_vram_addr_from_latches(R01sBoard *ctx) {
+    uint8_t lo = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE10]);
+    uint8_t hi = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE11]);
+    ctx->vram_addr = (uint16_t)((((uint16_t)hi << 8) | lo) & 0x7FFFu);
+}
+
+static void sync_map_addr_from_latches(R01sBoard *ctx) {
+    uint32_t lo = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE90]);
+    uint32_t mid = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE91]);
+    uint32_t hi = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE92]);
+    ctx->map_addr = (hi << 16) | (mid << 8) | lo;
+}
+
+static void sync_pal_addr_from_latch(R01sBoard *ctx) {
+    ctx->pal_addr =
+        (uint8_t)(r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE08]) & 0x1Fu);
+}
+
+static void poke_vram_addr_latches(R01sBoard *ctx, uint16_t va) {
+    va &= 0x7FFFu;
+    r01s_sn74hc573_poke_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE10], (uint8_t)(va & 0xFFu));
+    r01s_sn74hc573_poke_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE11], (uint8_t)((va >> 8) & 0xFFu));
+    ctx->vram_addr = va;
+}
+
+static void poke_map_addr_latches(R01sBoard *ctx, uint32_t ma) {
+    ma &= 0xFFFFFFu;
+    r01s_sn74hc573_poke_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE90], (uint8_t)(ma & 0xFFu));
+    r01s_sn74hc573_poke_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE91], (uint8_t)((ma >> 8) & 0xFFu));
+    r01s_sn74hc573_poke_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE92], (uint8_t)((ma >> 16) & 0xFFu));
+    ctx->map_addr = ma;
+}
+
+static void poke_pal_addr_latch(R01sBoard *ctx, uint8_t pa) {
+    pa &= 0x1Fu;
+    r01s_sn74hc573_poke_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE08], pa);
+    ctx->pal_addr = pa;
+}
+
+/* Pulse HC573 LE from decode SEL; route D↔Q on pin path. */
+static void latch_port_cycle(R01sBoard *ctx, R01sEntity *latch, R01sEntity *cpu, int selected,
+                             int read) {
+    r01s_entity_drive(latch, "OE", R01S_LVL_L);
+    r01s_entity_drive(latch, "LE", R01S_LVL_L);
+    if (!selected) {
+        r01s_entity_eval(latch);
+        return;
+    }
+    copy_cpu_d_to_latch_d(ctx, latch, cpu);
+    if (!read) {
+        r01s_entity_drive(latch, "LE", R01S_LVL_H);
+    }
+    r01s_entity_eval(latch);
+    if (read) {
+        copy_latch_q_to_cpu_d(ctx, cpu, latch);
+    }
+    r01s_entity_drive(latch, "LE", R01S_LVL_L);
+    r01s_entity_eval(latch);
+}
+
+static int pld_sel(R01sEntity *pld, const char *name) {
+    return r01s_level_is_high(r01s_entity_sense(pld, name));
+}
+
+/* Drive decode PLD from CPU A/BE; SEL_FE* qualify HC573 / MAP / VRAM ports. */
+static void wire_decode(R01sBoard *ctx) {
+    R01sEntity *cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
+    R01sEntity *pld = r01s_atf22v10_entity(ctx->cpu_mem_impl.pld_decode);
+    uint16_t addr = board_cpu_addr(ctx, cpu);
+    int be = board_cpu_be(ctx, cpu);
+    int i;
+    char an[4];
+
+    for (i = 0; i < 8; i++) {
+        snprintf(an, sizeof(an), "A%d", i);
+        r01s_entity_drive(pld, an, (addr & (1u << i)) ? R01S_LVL_H : R01S_LVL_L);
+    }
+    r01s_entity_drive(pld, "FE#", ((addr & 0xFF00u) == 0xFE00u) ? R01S_LVL_L : R01S_LVL_H);
+    r01s_entity_drive(pld, "BE", be ? R01S_LVL_H : R01S_LVL_L);
+    r01s_entity_drive(pld, "RWB", board_cpu_read(ctx, cpu) ? R01S_LVL_H : R01S_LVL_L);
+    r01s_entity_eval(pld);
+}
+
 static void wire_io(R01sBoard *ctx) {
     R01sEntity *cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
+    R01sEntity *pld = r01s_atf22v10_entity(ctx->cpu_mem_impl.pld_decode);
     R01sEntity *latch = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE02]);
     R01sEntity *scroll_y = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE03]);
     R01sEntity *raster = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE04]);
+    R01sEntity *pal_latch = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE08]);
+    R01sEntity *map_lo = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE90]);
+    R01sEntity *map_mid = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE91]);
+    R01sEntity *map_hi = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE92]);
     R01sEntity *pads = r01s_pads_entity(ctx->pads_impl.pads);
     R01sEntity *apu = r01s_atmega328p_entity(ctx->apu_impl.apu);
     R01sEntity *mcu = r01s_atmega1284p_entity(ctx->mcu1284_impl.mcu);
@@ -938,30 +1069,29 @@ static void wire_io(R01sBoard *ctx) {
     uint16_t addr = board_cpu_addr(ctx, cpu);
     int read = board_cpu_read(ctx, cpu);
     int be = board_cpu_be(ctx, cpu);
-    int hit_latch = (addr == 0xFE02u);
-    int hit_scroll_y = (addr == 0xFE03u);
-    int hit_raster = (addr == 0xFE04u);
     int hit_oam_addr = (addr == 0xFE20u);
     int hit_oam_data = (addr == 0xFE21u);
     int hit_oam = hit_oam_addr || hit_oam_data;
     int hit_eeprom = (addr >= 0xFE70u && addr <= 0xFE72u);
     int hit_apu = (addr >= 0xFE40u && addr <= 0xFE5Fu);
     int hit_pads = (addr == 0xFE60u || addr == 0xFE61u);
-    int hit_map_lo = (addr == 0xFE90u);
-    int hit_map_mid = (addr == 0xFE91u);
-    int hit_map_hi = (addr == 0xFE92u);
-    int hit_map_data = (addr == 0xFE93u);
-    int hit_pal_addr = (addr == 0xFE08u);
     int hit_pal_data = (addr == 0xFE09u);
+    int hit_map_data;
+    int sel_fe02, sel_fe03, sel_fe04, sel_fe08, sel_fe90, sel_fe91, sel_fe92, sel_fe93;
     int ai;
 
+    wire_decode(ctx);
+    sel_fe02 = pld_sel(pld, "SEL_FE02");
+    sel_fe03 = pld_sel(pld, "SEL_FE03");
+    sel_fe04 = pld_sel(pld, "SEL_FE04");
+    sel_fe08 = pld_sel(pld, "SEL_FE08");
+    sel_fe90 = pld_sel(pld, "SEL_FE90");
+    sel_fe91 = pld_sel(pld, "SEL_FE91");
+    sel_fe92 = pld_sel(pld, "SEL_FE92");
+    sel_fe93 = pld_sel(pld, "SEL_FE93");
+    hit_map_data = sel_fe93;
+
     /* Default: I/O devices idle */
-    r01s_entity_drive(latch, "OE", R01S_LVL_L); /* Q visible */
-    r01s_entity_drive(latch, "LE", R01S_LVL_L);
-    r01s_entity_drive(scroll_y, "OE", R01S_LVL_L);
-    r01s_entity_drive(scroll_y, "LE", R01S_LVL_L);
-    r01s_entity_drive(raster, "OE", R01S_LVL_L);
-    r01s_entity_drive(raster, "LE", R01S_LVL_L);
     r01s_entity_drive(pads, "CE#", R01S_LVL_H);
     r01s_entity_drive(pads, "OE#", R01S_LVL_H);
     r01s_entity_drive(pads, "A0", R01S_LVL_L);
@@ -979,9 +1109,13 @@ static void wire_io(R01sBoard *ctx) {
                       r01s_beam_xy_hblank(ctx->beam_impl.beam_x) ? R01S_LVL_H : R01S_LVL_L);
 
     if (!be || !addr_is_io(addr)) {
-        r01s_entity_eval(latch);
-        r01s_entity_eval(scroll_y);
-        r01s_entity_eval(raster);
+        latch_port_cycle(ctx, latch, cpu, 0, read);
+        latch_port_cycle(ctx, scroll_y, cpu, 0, read);
+        latch_port_cycle(ctx, raster, cpu, 0, read);
+        latch_port_cycle(ctx, pal_latch, cpu, 0, read);
+        latch_port_cycle(ctx, map_lo, cpu, 0, read);
+        latch_port_cycle(ctx, map_mid, cpu, 0, read);
+        latch_port_cycle(ctx, map_hi, cpu, 0, read);
         r01s_entity_eval(pads);
         r01s_entity_eval(apu);
         r01s_entity_eval(mcu);
@@ -1005,43 +1139,19 @@ static void wire_io(R01sBoard *ctx) {
         }
     }
 
-    if (hit_latch) {
-        copy_cpu_d_to_latch_d(ctx, latch, cpu);
-        if (!read) {
-            r01s_entity_drive(latch, "LE", R01S_LVL_H);
-        }
-        r01s_entity_eval(latch);
-        if (read) {
-            copy_latch_q_to_cpu_d(ctx, cpu, latch);
-        }
-    } else {
-        r01s_entity_eval(latch);
+    /* Decode PLD SEL → HC573 LE (BOM latches on pin path). */
+    latch_port_cycle(ctx, latch, cpu, sel_fe02, read);
+    latch_port_cycle(ctx, scroll_y, cpu, sel_fe03, read);
+    latch_port_cycle(ctx, raster, cpu, sel_fe04, read);
+    latch_port_cycle(ctx, pal_latch, cpu, sel_fe08, read);
+    latch_port_cycle(ctx, map_lo, cpu, sel_fe90, read);
+    latch_port_cycle(ctx, map_mid, cpu, sel_fe91, read);
+    latch_port_cycle(ctx, map_hi, cpu, sel_fe92, read);
+    if (sel_fe08) {
+        sync_pal_addr_from_latch(ctx);
     }
-
-    if (hit_scroll_y) {
-        copy_cpu_d_to_latch_d(ctx, scroll_y, cpu);
-        if (!read) {
-            r01s_entity_drive(scroll_y, "LE", R01S_LVL_H);
-        }
-        r01s_entity_eval(scroll_y);
-        if (read) {
-            copy_latch_q_to_cpu_d(ctx, cpu, scroll_y);
-        }
-    } else {
-        r01s_entity_eval(scroll_y);
-    }
-
-    if (hit_raster) {
-        copy_cpu_d_to_latch_d(ctx, raster, cpu);
-        if (!read) {
-            r01s_entity_drive(raster, "LE", R01S_LVL_H);
-        }
-        r01s_entity_eval(raster);
-        if (read) {
-            copy_latch_q_to_cpu_d(ctx, cpu, raster);
-        }
-    } else {
-        r01s_entity_eval(raster);
+    if (sel_fe90 || sel_fe91 || sel_fe92) {
+        sync_map_addr_from_latches(ctx);
     }
 
     /* Island L — OAM $FE20/$FE21 (hold WE#/OE# across settle; chip edge-inc). */
@@ -1104,35 +1214,20 @@ static void wire_io(R01sBoard *ctx) {
         r01s_entity_eval(pads);
     }
 
-    /* Island J — MAP seek + auto-inc read (flash CE only here; PRG path leaves flash alone). */
-    if (hit_map_lo && !read) {
-        ctx->map_addr = (ctx->map_addr & 0xFFFF00u) | board_cpu_d_sample(ctx, cpu);
-    }
-    if (hit_map_mid && !read) {
-        ctx->map_addr = (ctx->map_addr & 0xFF00FFu) | ((uint32_t)board_cpu_d_sample(ctx, cpu) << 8);
-    }
-    if (hit_map_hi && !read) {
-        ctx->map_addr = (ctx->map_addr & 0x00FFFFu) | ((uint32_t)board_cpu_d_sample(ctx, cpu) << 16);
-    }
-    if (hit_map_lo && read) {
-        r01s_bus_write(cpu, "D", 8, (uint8_t)(ctx->map_addr & 0xFFu));
-    }
-    if (hit_map_mid && read) {
-        r01s_bus_write(cpu, "D", 8, (uint8_t)((ctx->map_addr >> 8) & 0xFFu));
-    }
-    if (hit_map_hi && read) {
-        r01s_bus_write(cpu, "D", 8, (uint8_t)((ctx->map_addr >> 16) & 0xFFu));
-    }
+    /* Island J — MAP $FE93: flash CE via decode SEL (seek from HC573 FE90–92). */
     if (hit_map_data && read && ctx->cart_loaded &&
         r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu) == R01S_CPU_OP_DATA) {
         uint8_t dq;
+        sync_map_addr_from_latches(ctx);
         if (r01s_fast_glue_enabled(R01S_FAST_GLUE_MEMORY)) {
             dq = r01s_sst39sf040_peek(ctx->cart_impl.flash, ctx->map_addr);
             r01s_bus_write(cpu, "D", 8, dq);
+            ctx->flash_ce_owner = R01S_FLASH_CE_MAP;
         } else {
             flash_read_selected(flash, ctx->map_addr);
             copy_bus_named(ctx, cpu, "D", flash, "DQ", 8);
             dq = board_cpu_d_sample(ctx, cpu);
+            ctx->flash_ce_owner = R01S_FLASH_CE_MAP;
         }
         if (dq == 0x52) {
             ctx->health_saw_map = 1; /* cart magic 'R' at seek 0 */
@@ -1140,22 +1235,21 @@ static void wire_io(R01sBoard *ctx) {
         ctx->map_fe93_armed = 1;
     } else if (hit_map_data) {
         flash_deselect(flash);
+        if (ctx->flash_ce_owner == R01S_FLASH_CE_MAP) {
+            ctx->flash_ce_owner = R01S_FLASH_CE_NONE;
+        }
     }
 
-    /* Soft $FE08/$FE09 active palette (auto-inc on data write). */
-    if (hit_pal_addr && !read) {
-        ctx->pal_addr = (uint8_t)(board_cpu_d_sample(ctx, cpu) & 0x1Fu);
-    }
-    if (hit_pal_addr && read) {
-        r01s_bus_write(cpu, "D", 8, ctx->pal_addr);
-    }
+    /* $FE09 palette data; addr index from HC573 FE08. */
     if (hit_pal_data && !read &&
         r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu) == R01S_CPU_OP_DATA && !ctx->pal_fe09_wrote) {
+        sync_pal_addr_from_latch(ctx);
         ctx->active_pal[ctx->pal_addr & 0x1Fu] = board_cpu_d_sample(ctx, cpu);
-        ctx->pal_addr = (uint8_t)((ctx->pal_addr + 1u) & 0x1Fu);
+        poke_pal_addr_latch(ctx, (uint8_t)((ctx->pal_addr + 1u) & 0x1Fu));
         ctx->pal_fe09_wrote = 1;
     }
     if (hit_pal_data && read) {
+        sync_pal_addr_from_latch(ctx);
         r01s_bus_write(cpu, "D", 8, ctx->active_pal[ctx->pal_addr & 0x1Fu]);
     }
 }
@@ -1200,46 +1294,40 @@ static void wire_beam(R01sBoard *ctx, R01sIslandGroup *group) {
 
 /*
  * Island G — VRAM port $FE10/$FE11/$FE12 + PHI2 interleave.
- * CPU phase (PHI2 high): CPU may R/W via soft addr latch + FE12.
- * PPU phase (PHI2 low): mux selects Island I BG fetch VA; VRAM OE for nametable.
- * Auto-inc arms on FE12 access; committed on next PHI2 rising edge.
+ * CPU phase (PHI2 high): CPU may R/W via HC573 FE10/FE11 + FE12.
+ * PPU phase (PHI2 low): mux selects BG fetch VA; VRAM OE for nametable.
+ * Auto-inc arms on FE12 access; committed on next PHI2 rising edge (poke latches).
  */
 static void wire_vram(R01sBoard *ctx) {
     R01sEntity *cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
+    R01sEntity *pld = r01s_atf22v10_entity(ctx->cpu_mem_impl.pld_decode);
     R01sEntity *vram = r01s_as6c62256_entity(ctx->vram_impl.vram);
     R01sEntity *mux = r01s_sn74hc157_entity(ctx->vram_impl.mux157[R01S_MUX157_VRAM0]);
     R01sEntity *osc = r01s_osc8m_entity(ctx->clock_impl.osc);
+    R01sEntity *fe10 = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE10]);
+    R01sEntity *fe11 = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE11]);
     R01sBgFetch *bg = ctx->bg_fetch_impl.fetch;
     uint16_t cpu_addr = board_cpu_addr(ctx, cpu);
     int read = board_cpu_read(ctx, cpu);
     int be = board_cpu_be(ctx, cpu);
     int cpu_phase = r01s_level_is_high(r01s_entity_sense(osc, "PHI2"));
-    int hit_lo = (cpu_addr == 0xFE10u);
-    int hit_hi = (cpu_addr == 0xFE11u);
-    int hit_data = (cpu_addr == 0xFE12u);
-    uint16_t va = (uint16_t)(ctx->vram_addr & 0x7FFFu);
+    int hit_data;
+    uint16_t va;
     uint16_t ppu_va = (uint16_t)(r01s_bg_fetch_va(bg) & 0x7FFFu);
     uint16_t sram_addr;
     int i;
 
-    /* Soft addr latch ports (always CPU-side, not PHI2-gated). */
-    if (be && addr_is_io(cpu_addr)) {
-        if (hit_lo && !read) {
-            ctx->vram_addr = (uint16_t)((ctx->vram_addr & 0xFF00u) | board_cpu_d_sample(ctx, cpu));
-            va = (uint16_t)(ctx->vram_addr & 0x7FFFu);
-        }
-        if (hit_hi && !read) {
-            ctx->vram_addr =
-                (uint16_t)((ctx->vram_addr & 0x00FFu) | ((uint16_t)board_cpu_d_sample(ctx, cpu) << 8));
-            va = (uint16_t)(ctx->vram_addr & 0x7FFFu);
-        }
-        if (hit_lo && read) {
-            r01s_bus_write(cpu, "D", 8, (uint8_t)(ctx->vram_addr & 0xFFu));
-        }
-        if (hit_hi && read) {
-            r01s_bus_write(cpu, "D", 8, (uint8_t)((ctx->vram_addr >> 8) & 0xFFu));
-        }
+    /* FE10/FE11 via decode SEL → HC573 (not PHI2-gated). */
+    wire_decode(ctx);
+    latch_port_cycle(ctx, fe10, cpu, pld_sel(pld, "SEL_FE10"), read);
+    latch_port_cycle(ctx, fe11, cpu, pld_sel(pld, "SEL_FE11"), read);
+    if (pld_sel(pld, "SEL_FE10") || pld_sel(pld, "SEL_FE11")) {
+        sync_vram_addr_from_latches(ctx);
     }
+    hit_data = pld_sel(pld, "SEL_FE12");
+    va = (uint16_t)(ctx->vram_addr & 0x7FFFu);
+    (void)cpu_addr;
+    (void)be;
 
     /* HC157: A = CPU VRAM addr[3:0], B = PPU fetch VA[3:0], AB = !cpu_phase */
     r01s_entity_drive(mux, "G#", R01S_LVL_L);
@@ -1362,22 +1450,27 @@ static void linebuf_write_byte(R01sBoard *ctx, uint16_t addr, uint8_t data) {
 #define R01S_ATTR_FLIP_H 0x10u
 #define R01S_ATTR_FLIP_V 0x20u
 
-static uint8_t board_flash_byte(const R01sBoard *ctx, uint32_t abs) {
-    if (!ctx || abs >= sizeof(ctx->cart_flash.mem)) {
-        return 0xFF;
+/* CHR plane byte via flash /CE. Returns 0 on CE deny (caller should hold). */
+static int board_chr_flash_byte(R01sBoard *ctx, uint32_t abs, uint8_t *out) {
+    if (!ctx || !out || abs >= sizeof(ctx->cart_flash.mem)) {
+        return 0;
     }
-    return ctx->cart_flash.mem[abs];
+    return flash_chr_read_byte(ctx, abs, out);
 }
 
-static uint8_t board_chr_color(const R01sBoard *ctx, uint32_t chr_base, uint8_t tile, uint8_t attr,
-                               int px, int py) {
+/* 2bpp CHR via flash CE#. *ok=0 if CE denied mid-fetch. */
+static uint8_t board_chr_color(R01sBoard *ctx, uint32_t chr_base, uint8_t tile, uint8_t attr, int px,
+                               int py, int *ok) {
     uint8_t bank = (uint8_t)(attr & R01S_ATTR_BANK);
     int row = py & 7;
     int col = px & 7;
     uint32_t tbase;
-    uint8_t p0, p1;
+    uint8_t p0 = 0xFF, p1 = 0xFF;
     int bit;
 
+    if (ok) {
+        *ok = 1;
+    }
     if (attr & R01S_ATTR_FLIP_V) {
         row = 7 - row;
     }
@@ -1385,8 +1478,13 @@ static uint8_t board_chr_color(const R01sBoard *ctx, uint32_t chr_base, uint8_t 
         col = 7 - col;
     }
     tbase = chr_base + (uint32_t)bank * R01S_CHR_BANK_BYTES + (uint32_t)tile * R01S_CHR_TILE_BYTES;
-    p0 = board_flash_byte(ctx, tbase + (uint32_t)row);
-    p1 = board_flash_byte(ctx, tbase + 8u + (uint32_t)row);
+    if (!board_chr_flash_byte(ctx, tbase + (uint32_t)row, &p0) ||
+        !board_chr_flash_byte(ctx, tbase + 8u + (uint32_t)row, &p1)) {
+        if (ok) {
+            *ok = 0;
+        }
+        return 0;
+    }
     bit = 7 - col;
     return (uint8_t)(((p1 >> bit) & 1u) << 1) | (uint8_t)((p0 >> bit) & 1u);
 }
@@ -1441,6 +1539,7 @@ static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     uint8_t tile, attr, color, pal, master;
     int local_x, local_y;
     uint8_t scroll_x, scroll_y, sx, sy;
+    int chr_ok = 1;
 
     if (ctx->cart_off_chr == 0) {
         board_vram_cell_at(ctx, lx, ly, &tile, &attr);
@@ -1458,16 +1557,21 @@ static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     }
     local_x = (int)(sx % R01S_BG_SCREEN_PX_W);
     local_y = (int)(sy % R01S_BG_SCREEN_PX_H);
-    color = board_chr_color(ctx, ctx->cart_off_chr, tile, attr, local_x & 7, local_y & 7);
+    color = board_chr_color(ctx, ctx->cart_off_chr, tile, attr, local_x & 7, local_y & 7, &chr_ok);
+    if (!chr_ok) {
+        /* PRG/MAP owns flash /CE — hold last master (no fight). */
+        return ctx->chr_last_master;
+    }
     pal = (uint8_t)((attr & R01S_ATTR_PAL) >> R01S_ATTR_PAL_SHIFT);
     master = board_pal_master(ctx, 0, pal, color);
     ctx->chr_last_master = master;
+    flash_chr_release(ctx);
     return master;
 }
 
 
 
-/* Island N: clear half, OAM-scan logical Y, paint ≤16 sprites (CHR from flash when meta). */
+/* Island N: clear half, OAM-scan logical Y, paint ≤16 sprites (CHR via flash CE in HBlank). */
 static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
     int i;
     int si;
@@ -1478,6 +1582,9 @@ static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
     uint16_t base = (uint16_t)((half & 1) << 7);
     R01sAtmega1284p *mcu = ctx->mcu1284_impl.mcu;
     R01sSpriteFetch *sf = ctx->sprites_impl.fetch;
+
+    /* HBlank steals flash from PRG — dedicated CHR window. */
+    flash_yield_for_chr(ctx);
 
     for (i = 0; i < 128; i++) {
         linebuf_write_byte(ctx, (uint16_t)(base + (unsigned)i), 0);
@@ -1502,12 +1609,13 @@ static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
             for (px = 0; px < 8; px++) {
                 int x = (int)ox + px;
                 uint8_t master;
+                int chr_ok = 1;
                 if (x < 0 || x >= 128) {
                     continue;
                 }
                 if (spr_chr) {
-                    uint8_t c2 = board_chr_color(ctx, spr_chr, tile, attr, px, row);
-                    if (c2 == 0) {
+                    uint8_t c2 = board_chr_color(ctx, spr_chr, tile, attr, px, row, &chr_ok);
+                    if (!chr_ok || c2 == 0) {
                         continue;
                     }
                     master = board_pal_master(ctx, 1, pal, c2);
@@ -1526,6 +1634,8 @@ static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
             }
         }
     }
+
+    flash_chr_release(ctx);
 
     r01s_sprite_fetch_note_fill(sf, (uint8_t)(logical_y & 0xFF), (uint8_t)painted, pixels, hit_x,
                                 hit_color);
@@ -1659,7 +1769,7 @@ static void wire_video_dot_fast(R01sBoard *ctx) {
 
 /*
  * Island O — dot-sampled BG -> compositor -> Color PROM -> LCD sink.
- * CHR: behavioral flash peek (no /CE fight with PRG/MAP); 2bpp + $FE08/$FE09.
+ * CHR: flash /CE during DOT window (yield PRG first); hold chr_last_master on deny.
  */
 static void wire_video_dot(R01sBoard *ctx) {
     if (r01s_fast_glue_enabled(R01S_FAST_GLUE_VIDEO)) {
@@ -1719,11 +1829,17 @@ static void wire_memory_fast(R01sBoard *ctx) {
     int use_cart_prg = ctx->cart_loaded && ctx->cart_len_prg > 0;
 
     if (!board_cpu_be(ctx, cpu_e) || addr_is_io(addr)) {
+        if (!(addr_is_io(addr) && addr == 0xFE93u) && ctx->flash_ce_owner == R01S_FLASH_CE_PRG) {
+            ctx->flash_ce_owner = R01S_FLASH_CE_NONE;
+        }
         return;
     }
 
     if (!(addr & 0x8000u)) {
         uint16_t ram_addr = (uint16_t)(addr & 0x7FFFu);
+        if (ctx->flash_ce_owner == R01S_FLASH_CE_PRG) {
+            ctx->flash_ce_owner = R01S_FLASH_CE_NONE;
+        }
         if (read) {
             r01s_bus_write(cpu_e, "D", 8, r01s_as6c62256_peek(&ctx->ram, ram_addr));
         } else {
@@ -1737,6 +1853,7 @@ static void wire_memory_fast(R01sBoard *ctx) {
         if (off < ctx->cart_len_prg) {
             r01s_bus_write(cpu_e, "D", 8,
                            r01s_sst39sf040_peek(&ctx->cart_flash, ctx->cart_off_prg + off));
+            ctx->flash_ce_owner = R01S_FLASH_CE_PRG;
         }
         return;
     }
@@ -1769,9 +1886,12 @@ static void wire_memory(R01sBoard *ctx) {
     r01s_entity_drive(prg, "OE#", R01S_LVL_H);
     r01s_bus_hiz(ram, "DQ", 8);
     r01s_bus_hiz(prg, "DQ", 8);
-    /* PRG vs MAP: only one flash /CE. MAP owns flash inside wire_io on $FE93. */
+    /* PRG vs MAP vs CHR: only one flash /CE. MAP owns flash inside wire_io on $FE93. */
     if (!(io && addr == 0xFE93u)) {
         flash_deselect(flash);
+        if (ctx->flash_ce_owner == R01S_FLASH_CE_PRG || ctx->flash_ce_owner == R01S_FLASH_CE_CHR) {
+            ctx->flash_ce_owner = R01S_FLASH_CE_NONE;
+        }
     }
 
     if (!r01s_level_is_high(r01s_entity_sense(cpu, "BE")) || io) {
@@ -1800,6 +1920,7 @@ static void wire_memory(R01sBoard *ctx) {
         if (off < ctx->cart_len_prg) {
             flash_read_selected(flash, ctx->cart_off_prg + off);
             copy_bus_named(ctx, cpu, "D", flash, "DQ", 8);
+            ctx->flash_ce_owner = R01S_FLASH_CE_PRG;
         }
         r01s_entity_eval(prg);
         r01s_entity_eval(ram);
@@ -2250,6 +2371,7 @@ static void board_reset(R01sIslandGroup *group) {
     ctx->vram_fe12_armed = 0;
     ctx->map_addr = 0;
     ctx->map_fe93_armed = 0;
+    ctx->flash_ce_owner = R01S_FLASH_CE_NONE;
     ctx->pal_addr = 0;
     ctx->pal_fe09_wrote = 0;
     memset(ctx->active_pal, 0, sizeof(ctx->active_pal));
@@ -2283,6 +2405,9 @@ static void board_reset(R01sIslandGroup *group) {
         for (li = 0; li < R01S_BOM_HC573_N; li++) {
             r01s_entity_reset(r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[li]));
         }
+        poke_vram_addr_latches(ctx, 0);
+        poke_map_addr_latches(ctx, 0);
+        poke_pal_addr_latch(ctx, 0);
     }
     r01s_entity_reset(r01s_pads_entity(ctx->pads_impl.pads));
     r01s_entity_reset(r01s_as6c62256_entity(ctx->vram_impl.vram));
@@ -2347,6 +2472,8 @@ static void board_step(R01sIslandGroup *group) {
         R01sEntity *beam = r01s_beam_xy_entity(ctx->beam_impl.beam_x);
         R01sEntity *cpu_e = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
         int di;
+        /* DOT window: yield flash so CHR can own /CE (CPU not advancing). */
+        flash_yield_for_chr(ctx);
         for (di = 0; di < R01S_BEAM_DOTS_PER_STEP; di++) {
             r01s_entity_tick(dot_osc);
             r01s_entity_drive(beam, "DOT", r01s_entity_sense(dot_osc, "DOT"));
@@ -2363,6 +2490,7 @@ static void board_step(R01sIslandGroup *group) {
             }
             wire_video_dot(ctx);
         }
+        flash_chr_release(ctx);
     }
     board_settle(ctx, group);
 
@@ -2387,11 +2515,11 @@ static void board_step(R01sIslandGroup *group) {
             /* Auto-inc after a completed DATA cycle that touched $FE12 / $FE93. */
             if (ph_before == R01S_CPU_OP_DATA) {
                 if (ctx->vram_fe12_armed) {
-                    ctx->vram_addr = (uint16_t)((ctx->vram_addr + 1u) & 0x7FFFu);
+                    poke_vram_addr_latches(ctx, (uint16_t)((ctx->vram_addr + 1u) & 0x7FFFu));
                     ctx->vram_fe12_armed = 0;
                 }
                 if (ctx->map_fe93_armed) {
-                    ctx->map_addr = (ctx->map_addr + 1u) & 0xFFFFFFu;
+                    poke_map_addr_latches(ctx, (ctx->map_addr + 1u) & 0xFFFFFFu);
                     ctx->map_fe93_armed = 0;
                 }
                 ctx->pal_fe09_wrote = 0;

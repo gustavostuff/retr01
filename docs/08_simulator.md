@@ -189,8 +189,8 @@ Current pin-level code is intentional for catching PCB bugs early.
 | 6 | Island **O** video (**done** — compositor + AT28C16 + 128×120 sink; CHR from cart flash + `$FE08`/`$FE09` active pals) |
 | 7 | Island **J** cart (**done** — SST39SF040 + 24C64 EEPROM, PRG + MAP `$FE90`–`$FE93`, `.retr01` load + bring-up PRG overlay) |
 | 8 | **32-IC canvas** (**done** — 9×573, 6×157, 3×245, 5 PLD shells, 3 MCU, 3 SRAM, flash + PROM + cart EEPROM) |
-| Next | Route more `$FExx` through HC573 entities (retire soft addr latches); wire HC245 into bus paths; retire bring-up PRG overlay when game PRG streams MAP |
-| Later | Pads→1284 on canvas; optimization passes |
+| Next | Wire HC245 into bus paths; retire bring-up PRG overlay when game PRG streams MAP |
+| Later | Pads→1284 on canvas; optimization passes; JEDEC fuse PLD engine |
 
 ## Related docs
 

@@ -197,12 +197,14 @@ typedef struct R01sBoard {
     R01sIslandBusImpl bus_impl;
     R01sIslandSpritesImpl sprites_impl;
     R01sIslandIntegrationImpl integration_impl;
-    /* Soft $FE10/$FE11 latch + $FE12 auto-inc (pre-full PLD). */
+    /* VRAM addr = HC573 FE10|FE11 (cache); $FE12 auto-inc via poke. */
     uint16_t vram_addr;
     int vram_fe12_armed;
-    /* Soft MAP $FE90-$FE92 seek + $FE93 data auto-inc. */
+    /* MAP seek = HC573 FE90|FE91|FE92 (cache); $FE93 auto-inc via poke. */
     uint32_t map_addr;
     int map_fe93_armed;
+    /* Flash /CE owner: PRG, MAP, and CHR are mutually exclusive. */
+    uint8_t flash_ce_owner;
     /* Cart image metadata (flash absolute offsets). */
     uint32_t cart_off_prg;
     uint32_t cart_len_prg;
@@ -212,11 +214,11 @@ typedef struct R01sBoard {
     uint32_t cart_off_pal_spr;
     int cart_loaded;
     char cart_label[48];
-    /* Soft $FE08/$FE09 active palette (4 BG + 4 sprite x 4). */
+    /* Active palette RAM (soft); addr index from HC573 FE08. */
     uint8_t active_pal[32];
     uint8_t pal_addr;
     int pal_fe09_wrote; /* one write+inc per DATA cycle */
-    uint8_t chr_last_master; /* hold when CHR CE would fight PRG/MAP */
+    uint8_t chr_last_master; /* hold last BG/sprite master when CHR CE denied */
     int reset_hold;
     uint32_t cycles;
     R01sLevel phi2_prev;
