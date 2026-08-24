@@ -39,7 +39,10 @@ void r01s_island_group_bind(R01sIslandGroup *group, const R01sIslandGroupVTable 
 void r01s_island_group_shutdown(R01sIslandGroup *group);
 void r01s_island_group_reset(R01sIslandGroup *group);
 void r01s_island_group_step(R01sIslandGroup *group);
+/* When paused: combinatorial settle only. When running: fixed step batch (non-UI / tests). */
 void r01s_island_group_frame(R01sIslandGroup *group);
+/* Paused-path settle used by the UI frame loop (running path steps with a wall budget). */
+void r01s_island_group_eval_idle(R01sIslandGroup *group);
 void r01s_island_group_fill_status(R01sIslandGroup *group, char *buf, size_t buf_len);
 void r01s_island_group_update_probes(R01sIslandGroup *group, int *probe_vdd, int *probe_phi2,
                                      int *probe_resb_low);

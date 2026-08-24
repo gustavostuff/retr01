@@ -54,6 +54,7 @@ typedef struct R01sUi {
     int mouse_ly;
     int sidebar_scroll; /* px offset into left sidebar content */
     int fps;            /* rolling 1s frame rate for HUD */
+    int sim_steps;      /* board steps taken in the last UI frame */
 } R01sUi;
 
 int r01s_ui_init(R01sUi *ui);

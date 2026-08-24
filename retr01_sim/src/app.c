@@ -10,6 +10,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Leave headroom for draw + vsync inside a ~16.7 ms frame. */
+#define R01S_SIM_BUDGET_MS 10
+#define R01S_SIM_MAX_STEPS_PER_FRAME 128
+
 static void logic_from_window(const R01sApp *app, int win_x, int win_y, int *lx, int *ly) {
     int ww, wh, draw_w, draw_h, ox, oy, scale;
     SDL_GetWindowSize(app->win, &ww, &wh);
@@ -152,7 +156,24 @@ void r01s_app_frame(R01sApp *app) {
         app->ui.probe_pad_p2 = r01s_pads_get(&board->pads, 1);
     }
     if (group) {
-        r01s_island_group_frame(group);
+        /* Prefer UI ~60 FPS: spend at most R01S_SIM_BUDGET_MS on board steps. */
+        if (group->running) {
+            Uint64 t0 = SDL_GetPerformanceCounter();
+            Uint64 freq = SDL_GetPerformanceFrequency();
+            Uint64 budget = (freq * (Uint64)R01S_SIM_BUDGET_MS) / 1000u;
+            int n = 0;
+            while (n < R01S_SIM_MAX_STEPS_PER_FRAME) {
+                r01s_island_group_step(group);
+                n++;
+                if ((SDL_GetPerformanceCounter() - t0) >= budget) {
+                    break;
+                }
+            }
+            app->ui.sim_steps = n;
+        } else {
+            r01s_island_group_eval_idle(group);
+            app->ui.sim_steps = 0;
+        }
         r01s_island_group_fill_status(group, app->ui.status, sizeof(app->ui.status));
         r01s_island_group_fill_health(group, &app->ui.health);
         r01s_island_group_update_probes(group, &app->ui.probe_vdd, &app->ui.probe_phi2, &app->ui.probe_resb_low);

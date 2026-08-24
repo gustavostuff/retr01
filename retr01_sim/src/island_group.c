@@ -4,8 +4,8 @@
 #include <string.h>
 
 /*
- * UI board steps per display frame (~60 Hz). Keep modest — beam catch-up is
- * handled inside board_step (DOT burst), not by multiplying full PHI2 settles.
+ * Fixed board steps for non-UI callers (tests / tools). The interactive app
+ * budgets wall time instead so the UI can hold ~60 FPS (see r01s_app_frame).
  */
 #define R01S_GROUP_HALF_STEPS_PER_FRAME 32
 
@@ -74,6 +74,15 @@ void r01s_island_group_step(R01sIslandGroup *group) {
     }
 }
 
+void r01s_island_group_eval_idle(R01sIslandGroup *group) {
+    if (!group) {
+        return;
+    }
+    if (group->vt && group->vt->eval_idle) {
+        group->vt->eval_idle(group);
+    }
+}
+
 void r01s_island_group_frame(R01sIslandGroup *group) {
     int i;
     if (!group) {
@@ -85,8 +94,8 @@ void r01s_island_group_frame(R01sIslandGroup *group) {
                 r01s_island_group_step(group);
             }
         }
-    } else if (group->vt && group->vt->eval_idle) {
-        group->vt->eval_idle(group);
+    } else {
+        r01s_island_group_eval_idle(group);
     }
 }
 
