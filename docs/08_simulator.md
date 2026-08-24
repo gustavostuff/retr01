@@ -74,7 +74,7 @@ When something looks wrong on screen, **do not assume the `.retr01` is bad** and
 | **Color PROM burn** | `project_prom.bin` | **Yes** (motherboard) | **Not inside the cart.** Kit → R3G3B2; board AT28C16. |
 | **Boot asm listing** | `project_boot.s` | **Human-readable only** | Equates + stub source. The **binary stub inside `.retr01`** is what runners execute (Studio embeds it; asm can drift — treat binary as SoT). |
 | **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Today also **soft-boots** world CHR/MAP into VRAM and **host-pans** the atlas — Studio stub PRG does **not** stream MAP. |
-| **Board sim** | `retr01_sim` | IC / island netlist | Islands A–E+G+H+I+O+J+K+L+M+N+**P**. Cart flash loads `.retr01`; **bring-up PRG overlay** replaces cart PRG for island smoke (call it out — not Studio ROM). Sprite CHR is stubbed (tile index); full CHR fetch still open. |
+| **Board sim** | `retr01_sim` | IC / island netlist | Islands A–E+G+H+I+O+J+K+L+M+N+**P**. Cart flash loads `.retr01`; **bring-up PRG overlay** replaces cart PRG for island smoke (call it out — not Studio ROM). Bring-up streams MAP→VRAM and fetches 2bpp CHR from flash via `$FE08`/`$FE09`. |
 
 ### What is actually in `project.retr01` today
 
@@ -114,11 +114,11 @@ Verified against Studio pack (`r01_cart_build`) and the checked-in `retr01_studi
 
 **Island M wired.** Third `AS6C62256` + `SN74HC157`: ping-pong 128-byte halves; beam reads show half.
 
-**Island N wired.** HBlank OAM scan fills next linebuf half (CHR stub); compositor takes sprite pixels.
+**Island N wired.** HBlank OAM scan fills next linebuf half (sprite CHR from flash when cart meta present); compositor takes sprite pixels.
 
 **Island P wired.** Beam `NMI#` → CPU `NMIB` on VBlank entry; integration health wants pads + video + sprites + ≥1 NMI pulse and zero bus conflicts. Optional **F** (machine EEPROM) still deferred.
 
-Still missing for “cart looks like Play”: CHR fetch from cart into Island O, real game PRG (no overlay), MAP streaming of screens (stub hangs). Sim stays chip/netlist-only — **no** emu-style host soft-boot into VRAM. Use emu soft-boot for atlas viewing; use sim for bus/island validation.
+Bring-up overlay now streams world-0 screen0 MAP→VRAM and loads `$FE08`/`$FE09` pals from cart; Island O fetches 2bpp CHR from flash (no host soft-boot). Still missing for full Play parity: real game PRG (no overlay), camera seam streaming. Use emu soft-boot for atlas viewing; use sim for bus/island validation.
 
 ## Modeling principles
 
@@ -184,9 +184,9 @@ Current pin-level code is intentional for catching PCB bugs early.
 | 3 | Island **G** (VRAM interleave) / more `$FExx` latches (**done** — soft `$FE10`–`$FE12`) |
 | 4 | Island **H** beam (**done** — `OSC_DOT` + `BEAM_XY` PLD stub + `HC688` / `$FE04`) |
 | 5 | Island **I** BG fetch (**done** — `BG_FETCH` nametable VA + PPU-phase VRAM read) |
-| 6 | Island **O** video (**done** — compositor + AT28C16 + 128×120 sink; CHR still stubbed) |
+| 6 | Island **O** video (**done** — compositor + AT28C16 + 128×120 sink; CHR from cart flash + `$FE08`/`$FE09` active pals) |
 | 7 | Island **J** cart (**done** — SST39SF040, PRG + MAP `$FE90`–`$FE93`, `.retr01` load + bring-up PRG overlay) |
-| Next | CHR from cart into video path; retire bring-up PRG overlay when real PRG streams MAP |
+| Next | Retire bring-up PRG overlay when Studio/game PRG streams MAP; camera seam streaming |
 | Later | Remaining ICs, pads→1284; then optimization passes |
 
 ## Related docs

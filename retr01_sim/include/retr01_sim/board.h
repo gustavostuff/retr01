@@ -171,8 +171,17 @@ typedef struct R01sBoard {
     /* Cart image metadata (flash absolute offsets). */
     uint32_t cart_off_prg;
     uint32_t cart_len_prg;
+    uint32_t cart_off_chr;         /* world-0 CHR base; 0 = stub tile&0x3F */
+    uint32_t cart_off_map_screen0; /* absolute MAP payload for screen (0,0) */
+    uint32_t cart_off_pal_bg;
+    uint32_t cart_off_pal_spr;
     int cart_loaded;
     char cart_label[48];
+    /* Soft $FE08/$FE09 active palette (4 BG + 4 sprite x 4). */
+    uint8_t active_pal[32];
+    uint8_t pal_addr;
+    int pal_fe09_wrote; /* one write+inc per DATA cycle */
+    uint8_t chr_last_master; /* hold when CHR CE would fight PRG/MAP */
     int reset_hold;
     uint32_t cycles;
     R01sLevel phi2_prev;

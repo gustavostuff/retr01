@@ -166,13 +166,49 @@ int main(void) {
         const char *paths[] = {"../retr01_studio/project.retr01", "../../retr01_studio/project.retr01",
                                "retr01_studio/project.retr01", NULL};
         int pi;
+        int loaded = 0;
         for (pi = 0; paths[pi]; pi++) {
             if (r01s_board_load_cart(b, paths[pi]) == 0) {
+                loaded = 1;
                 expect_true(r01s_sst39sf040_peek(&b->cart_flash, 0) == 'R', "studio cart magic");
-                expect_true(r01s_sst39sf040_peek(&b->cart_flash, b->cart_off_prg) == 0xA9, "bring-up LDA overlay");
+                expect_true(r01s_sst39sf040_peek(&b->cart_flash, b->cart_off_prg) == 0xA9,
+                            "bring-up LDA overlay");
+                expect_true(b->cart_off_chr != 0, "world0 CHR base from cart");
+                expect_true(b->cart_off_map_screen0 != 0, "world0 screen0 MAP payload");
+                r01s_island_group_reset(group);
+                for (i = 0; i < 200000; i++) {
+                    int vi;
+                    int nz = 0;
+                    r01s_island_group_step(group);
+                    if ((i & 0x3FFF) != 0) {
+                        continue;
+                    }
+                    for (vi = 0; vi < 240; vi++) {
+                        if (r01s_as6c62256_peek(&b->vram, (uint16_t)vi) != 0) {
+                            nz++;
+                        }
+                    }
+                    if (nz > 40 &&
+                        (b->active_pal[0] != 0 || b->active_pal[1] != 0 || b->active_pal[2] != 0)) {
+                        break;
+                    }
+                }
+                {
+                    int nz = 0;
+                    int vi;
+                    for (vi = 0; vi < 240; vi++) {
+                        if (r01s_as6c62256_peek(&b->vram, (uint16_t)vi) != 0) {
+                            nz++;
+                        }
+                    }
+                    expect_true(nz > 40, "bring-up MAP stream filled nametable");
+                }
+                expect_true(b->active_pal[0] != 0 || b->active_pal[1] != 0 || b->active_pal[2] != 0,
+                            "bring-up loaded active palette via MAP");
                 break;
             }
         }
+        expect_true(loaded, "studio project.retr01 found");
     }
 
     r01s_island_builder_shutdown(&builder);

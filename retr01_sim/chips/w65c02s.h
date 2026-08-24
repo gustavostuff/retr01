@@ -12,7 +12,8 @@
  * Implemented:
  *   - BE=0 => A/D/RWB Hi-Z
  *   - RESB hold + 7-cycle reset + vector fetch $FFFC/$FFFD
- *   - EA NOP, A9 LDA #imm, AD LDA abs, 8D STA abs, 4C JMP abs
+ *   - EA NOP, A9 LDA #imm, A2 LDX #imm, AD LDA abs, 8D STA abs,
+ *     4C JMP abs, CA DEX, D0 BNE rel (Z from LDA/LDX/DEX)
  * tick() = one PHI2 cycle.
  */
 typedef enum R01sCpuPhase {

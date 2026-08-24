@@ -69,6 +69,19 @@ static void cpu_begin_fetch(R01sW65C02S *c) {
     c->sync = 1;
 }
 
+static void cpu_set_zn(R01sW65C02S *c, uint8_t v) {
+    if (v == 0) {
+        c->p |= 0x02u; /* Z */
+    } else {
+        c->p = (uint8_t)(c->p & ~0x02u);
+    }
+    if (v & 0x80u) {
+        c->p |= 0x80u; /* N */
+    } else {
+        c->p = (uint8_t)(c->p & ~0x80u);
+    }
+}
+
 static void cpu_tick(R01sEntity *e) {
     R01sW65C02S *c = (R01sW65C02S *)e;
 
@@ -126,7 +139,14 @@ static void cpu_tick(R01sEntity *e) {
         case 0xEA: /* NOP — 1-cycle stub (real chip is 2) */
             cpu_begin_fetch(c);
             break;
+        case 0xCA: /* DEX — 1-cycle stub (real chip is 2) */
+            c->x--;
+            cpu_set_zn(c, c->x);
+            cpu_begin_fetch(c);
+            break;
         case 0xA9: /* LDA #imm */
+        case 0xA2: /* LDX #imm */
+        case 0xD0: /* BNE rel */
             c->phase = R01S_CPU_OP_IMM;
             c->ab = c->pc;
             c->rwb = 1;
@@ -144,8 +164,21 @@ static void cpu_tick(R01sEntity *e) {
         }
         break;
     case R01S_CPU_OP_IMM:
-        c->a = cpu_sample_d(e);
-        c->pc++;
+        if (c->ir == 0xA2) {
+            c->x = cpu_sample_d(e);
+            cpu_set_zn(c, c->x);
+            c->pc++;
+        } else if (c->ir == 0xD0) {
+            int8_t off = (int8_t)cpu_sample_d(e);
+            c->pc++;
+            if ((c->p & 0x02u) == 0) {
+                c->pc = (uint16_t)(c->pc + (int16_t)off);
+            }
+        } else {
+            c->a = cpu_sample_d(e);
+            cpu_set_zn(c, c->a);
+            c->pc++;
+        }
         cpu_begin_fetch(c);
         break;
     case R01S_CPU_OP_ADL:
@@ -171,6 +204,7 @@ static void cpu_tick(R01sEntity *e) {
     case R01S_CPU_OP_DATA:
         if (c->rwb) {
             c->a = cpu_sample_d(e);
+            cpu_set_zn(c, c->a);
         }
         cpu_begin_fetch(c);
         break;

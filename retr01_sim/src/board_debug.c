@@ -103,10 +103,12 @@ static void write_snapshot(R01sBoard *b, uint32_t wall_ms, const char *why) {
     fprintf(g_log, "cpu: PC=%04X A=%02X cycles=%u reset_hold=%d\n", pc, a, (unsigned)b->cycles,
             b->reset_hold);
     fprintf(g_log,
-            "cart: loaded=%d label=%s off_prg=$%06X len_prg=$%04X magic=%02X%02X%02X%02X%02X%02X "
+            "cart: loaded=%d label=%s off_prg=$%06X len_prg=$%04X off_chr=$%06X map_s0=$%06X "
+            "pal_bg=$%06X magic=%02X%02X%02X%02X%02X%02X "
             "prg0=%02X%02X%02X%02X (expect A9..=LDA if bring-up overlay)\n",
             b->cart_loaded, b->cart_label[0] ? b->cart_label : "-", (unsigned)prg0,
-            (unsigned)b->cart_len_prg, r01s_sst39sf040_peek(&b->cart_flash, 0),
+            (unsigned)b->cart_len_prg, (unsigned)b->cart_off_chr, (unsigned)b->cart_off_map_screen0,
+            (unsigned)b->cart_off_pal_bg, r01s_sst39sf040_peek(&b->cart_flash, 0),
             r01s_sst39sf040_peek(&b->cart_flash, 1), r01s_sst39sf040_peek(&b->cart_flash, 2),
             r01s_sst39sf040_peek(&b->cart_flash, 3), r01s_sst39sf040_peek(&b->cart_flash, 4),
             r01s_sst39sf040_peek(&b->cart_flash, 5), r01s_sst39sf040_peek(&b->cart_flash, prg0 + 0),
@@ -127,6 +129,11 @@ static void write_snapshot(R01sBoard *b, uint32_t wall_ms, const char *why) {
             (unsigned)b->vram_addr);
     dump_hex_line(g_log, "tiles", b, 0, 16);
     dump_hex_line(g_log, "attrs", b, 0xF0, 16);
+    fprintf(g_log, "  pal:");
+    for (i = 0; i < 16; i++) {
+        fprintf(g_log, " %02X", b->active_pal[i]);
+    }
+    fprintf(g_log, "  chr_last=%02X\n", b->chr_last_master);
     fprintf(g_log, "  oam:");
     for (i = 0; i < 16; i++) {
         fprintf(g_log, " %02X", r01s_atmega1284p_oam_peek(&b->mcu1284, (uint8_t)i));
@@ -175,7 +182,7 @@ void r01s_board_debug_begin(R01sBoard *board, int enabled) {
     fprintf(g_log, "retr01_sim board debug trace\n");
     fprintf(g_log, "started: %s", ctime(&now));
     fprintf(g_log, "note: bring-up PRG overlay replaces Studio PRG; no host soft-boot of MAP/CHR.\n");
-    fprintf(g_log, "expected LCD with current bring-up: black + smoke tiles, not Studio sky.\n");
+    fprintf(g_log, "expected LCD after bring-up MAP/CHR: world-0 screen (sky), not only smoke red.\n");
     if (board) {
         write_snapshot(board, 0, "begin");
     }

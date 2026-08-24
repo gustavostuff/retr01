@@ -19,11 +19,14 @@
  */
 #define R01S_BEAM_DOTS_PER_STEP 128
 
+
 /*
  * Bring-up smoke PRG (overlay into cart PRG window — not Studio game code).
- * Ends with MAP, APU tone, OAM write+readback, then pad poll loop.
+ * Body through OAM readback is fixed. When cart meta is valid, install appends
+ * pal+$FE08/$FE09 load and 480 B MAP→VRAM, then pad hang (addresses patched).
+ * Ends with MAP seek 0 + LDA $FE93 ('R') BEFORE any MAP stream so island health sticks.
  */
-static const uint8_t R01S_BRINGUP_PRG[] = {
+static const uint8_t R01S_BRINGUP_SMOKE[] = {
     0xA9, 0x55,       /* LDA #$55 */
     0x8D, 0x02, 0xFE, /* STA $FE02 */
     0xA9, 0x00,       /* LDA #$00 */
@@ -53,7 +56,7 @@ static const uint8_t R01S_BRINGUP_PRG[] = {
     0x8D, 0x90, 0xFE, /* STA $FE90 */
     0x8D, 0x91, 0xFE, /* STA $FE91 */
     0x8D, 0x92, 0xFE, /* STA $FE92 */
-    0xAD, 0x93, 0xFE, /* LDA $FE93 expect $52 'R' @ $804C */
+    0xAD, 0x93, 0xFE, /* LDA $FE93 expect $52 'R' */
     0xA9, 0x10,       /* LDA #$10 — APU period lo */
     0x8D, 0x41, 0xFE, /* STA $FE41 */
     0xA9, 0x00,       /* LDA #$00 — APU period hi */
@@ -72,10 +75,70 @@ static const uint8_t R01S_BRINGUP_PRG[] = {
     0x8D, 0x21, 0xFE, /* STA $FE21 */
     0xA9, 0x00,       /* LDA #$00 */
     0x8D, 0x20, 0xFE, /* STA $FE20 */
-    0xAD, 0x21, 0xFE, /* LDA $FE21 expect $10 @ $807C */
-    0xAD, 0x60, 0xFE, /* LDA $FE60 @ $807F */
-    0x4C, 0x7F, 0x80, /* JMP $807F */
+    0xAD, 0x21, 0xFE, /* LDA $FE21 expect $10 */
 };
+
+/* Pad hang only (used when cart has no world-0 MAP/CHR meta). */
+static const uint8_t R01S_BRINGUP_HANG[] = {
+    0xAD, 0x60, 0xFE, /* LDA $FE60 */
+    0x4C, 0x00, 0x80, /* JMP hang — lo patched at install */
+};
+
+/*
+ * Palette + MAP stream tail. Immediates for seeks patched at install.
+ * Layout after smoke:
+ *   LDA #pal_lo / STA $FE90 / LDA #pal_mid / STA $FE91 / LDA #pal_hi / STA $FE92
+ *   LDA #$00 / STA $FE08
+ *   LDX #32 / loop: LDA $FE93 / STA $FE09 / DEX / BNE
+ *   LDA #map_lo..hi seek
+ *   LDA #$00 / STA $FE10 / STA $FE11
+ *   LDX #240 / copy / LDX #240 / copy
+ *   hang
+ */
+enum {
+    R01S_BR_OFF_PAL_LO = 1,
+    R01S_BR_OFF_PAL_MID = 6,
+    R01S_BR_OFF_PAL_HI = 11,
+    R01S_BR_OFF_MAP_LO = 32,
+    R01S_BR_OFF_MAP_MID = 37,
+    R01S_BR_OFF_MAP_HI = 42,
+};
+
+static const uint8_t R01S_BRINGUP_STREAM[] = {
+    0xA9, 0x00,       /* LDA #pal_lo */
+    0x8D, 0x90, 0xFE, /* STA $FE90 */
+    0xA9, 0x00,       /* LDA #pal_mid */
+    0x8D, 0x91, 0xFE, /* STA $FE91 */
+    0xA9, 0x00,       /* LDA #pal_hi */
+    0x8D, 0x92, 0xFE, /* STA $FE92 */
+    0xA9, 0x00,       /* LDA #$00 */
+    0x8D, 0x08, 0xFE, /* STA $FE08 */
+    0xA2, 0x20,       /* LDX #32 */
+    0xAD, 0x93, 0xFE, /* LDA $FE93 */
+    0x8D, 0x09, 0xFE, /* STA $FE09 */
+    0xCA,             /* DEX */
+    0xD0, 0xF7,       /* BNE *-9 */
+    0xA9, 0x00,       /* LDA #map_lo */
+    0x8D, 0x90, 0xFE, /* STA $FE90 */
+    0xA9, 0x00,       /* LDA #map_mid */
+    0x8D, 0x91, 0xFE, /* STA $FE91 */
+    0xA9, 0x00,       /* LDA #map_hi */
+    0x8D, 0x92, 0xFE, /* STA $FE92 */
+    0xA9, 0x00,       /* LDA #$00 */
+    0x8D, 0x10, 0xFE, /* STA $FE10 */
+    0x8D, 0x11, 0xFE, /* STA $FE11 */
+    0xA2, 0xF0,       /* LDX #240 */
+    0xAD, 0x93, 0xFE, /* LDA $FE93 */
+    0x8D, 0x12, 0xFE, /* STA $FE12 */
+    0xCA,             /* DEX */
+    0xD0, 0xF7,       /* BNE *-9 */
+    0xA2, 0xF0,       /* LDX #240 */
+    0xAD, 0x93, 0xFE, /* LDA $FE93 */
+    0x8D, 0x12, 0xFE, /* STA $FE12 */
+    0xCA,             /* DEX */
+    0xD0, 0xF7,       /* BNE *-9 */
+};
+
 
 static void put_u24(uint8_t *p, uint32_t v) {
     p[0] = (uint8_t)(v & 0xFFu);
@@ -138,9 +201,14 @@ static void board_update_milestones(R01sBoard *ctx) {
     if (r01s_beam_xy_hblank(ctx->beam_impl.beam) || r01s_beam_xy_y(ctx->beam_impl.beam) > 0) {
         ctx->health_saw_beam = 1;
     }
-    if (r01s_bg_fetch_count(ctx->bg_fetch_impl.fetch) > 0 &&
-        r01s_bg_fetch_last_tile(ctx->bg_fetch_impl.fetch) == 0x42) {
-        ctx->health_saw_bg_fetch = 1;
+    /* Smoke latches tile $42; after MAP stream VRAM is world data — either is OK. */
+    if (r01s_bg_fetch_count(ctx->bg_fetch_impl.fetch) > 0) {
+        uint8_t tile = r01s_bg_fetch_last_tile(ctx->bg_fetch_impl.fetch);
+        if (tile == 0x42 ||
+            (ctx->cart_off_map_screen0 != 0 &&
+             ctx->map_addr >= ctx->cart_off_map_screen0 + 480u)) {
+            ctx->health_saw_bg_fetch = 1;
+        }
     }
     if (r01s_video_sink_lit_pixels(ctx->video_impl.sink) > 64) {
         ctx->health_saw_video = 1;
@@ -387,8 +455,14 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                      r01s_bg_fetch_last_tile(bg), r01s_bg_fetch_last_attr(bg));
         } else if (r01s_bg_fetch_count(bg) > 0) {
             ih->health = R01S_HEALTH_WARN;
-            snprintf(ih->activity, sizeof(ih->activity), "fetching tile=$%02X",
-                     r01s_bg_fetch_last_tile(bg));
+            if (ctx->cart_off_map_screen0 &&
+                ctx->map_addr < ctx->cart_off_map_screen0 + 480u) {
+                snprintf(ih->activity, sizeof(ih->activity), "await MAP stream (tile=$%02X)",
+                         r01s_bg_fetch_last_tile(bg));
+            } else {
+                snprintf(ih->activity, sizeof(ih->activity), "fetching tile=$%02X",
+                         r01s_bg_fetch_last_tile(bg));
+            }
         } else if (!group->running) {
             ih->health = R01S_HEALTH_WARN;
             snprintf(ih->activity, sizeof(ih->activity), "await PPU fetches");
@@ -767,6 +841,8 @@ static void wire_io(R01sBoard *ctx) {
     int hit_map_mid = (addr == 0xFE91u);
     int hit_map_hi = (addr == 0xFE92u);
     int hit_map_data = (addr == 0xFE93u);
+    int hit_pal_addr = (addr == 0xFE08u);
+    int hit_pal_data = (addr == 0xFE09u);
     int ai;
 
     /* Default: I/O devices idle */
@@ -937,7 +1013,8 @@ static void wire_io(R01sBoard *ctx) {
     if (hit_map_hi && read) {
         r01s_bus_write(cpu, "D", 8, (uint8_t)((ctx->map_addr >> 16) & 0xFFu));
     }
-    if (hit_map_data && read && ctx->cart_loaded) {
+    if (hit_map_data && read && ctx->cart_loaded &&
+        r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu) == R01S_CPU_OP_DATA) {
         uint8_t dq;
         flash_read_selected(flash, ctx->map_addr);
         copy_bus_named(cpu, "D", flash, "DQ", 8);
@@ -948,6 +1025,23 @@ static void wire_io(R01sBoard *ctx) {
         ctx->map_fe93_armed = 1;
     } else if (hit_map_data) {
         flash_deselect(flash);
+    }
+
+    /* Soft $FE08/$FE09 active palette (auto-inc on data write). */
+    if (hit_pal_addr && !read) {
+        ctx->pal_addr = (uint8_t)(r01s_bus_read(cpu, "D", 8) & 0x1Fu);
+    }
+    if (hit_pal_addr && read) {
+        r01s_bus_write(cpu, "D", 8, ctx->pal_addr);
+    }
+    if (hit_pal_data && !read &&
+        r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu) == R01S_CPU_OP_DATA && !ctx->pal_fe09_wrote) {
+        ctx->active_pal[ctx->pal_addr & 0x1Fu] = (uint8_t)r01s_bus_read(cpu, "D", 8);
+        ctx->pal_addr = (uint8_t)((ctx->pal_addr + 1u) & 0x1Fu);
+        ctx->pal_fe09_wrote = 1;
+    }
+    if (hit_pal_data && read) {
+        r01s_bus_write(cpu, "D", 8, ctx->active_pal[ctx->pal_addr & 0x1Fu]);
     }
 }
 
@@ -1061,7 +1155,8 @@ static void wire_vram(R01sBoard *ctx) {
     r01s_entity_drive(vram, "WE#", R01S_LVL_H);
     r01s_bus_hiz(vram, "DQ", 8);
 
-    if (cpu_phase && be && hit_data) {
+    if (cpu_phase && be && hit_data &&
+        r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu) == R01S_CPU_OP_DATA) {
         r01s_entity_drive(vram, "CE#", R01S_LVL_L);
         if (read) {
             r01s_entity_drive(vram, "OE#", R01S_LVL_L);
@@ -1141,7 +1236,120 @@ static void linebuf_write_byte(R01sBoard *ctx, uint16_t addr, uint8_t data) {
     r01s_bus_hiz(sram, "DQ", 8);
 }
 
-/* Island N: clear half, OAM-scan logical Y, paint ≤16 sprites (CHR stub = tile&0x3F). */
+#define R01S_CHR_TILE_BYTES 16u
+#define R01S_CHR_BANK_BYTES 0x1000u
+#define R01S_ATTR_BANK 0x03u
+#define R01S_ATTR_PAL 0x0Cu
+#define R01S_ATTR_PAL_SHIFT 2
+#define R01S_ATTR_FLIP_H 0x10u
+#define R01S_ATTR_FLIP_V 0x20u
+
+static uint8_t board_flash_byte(const R01sBoard *ctx, uint32_t abs) {
+    if (!ctx || abs >= sizeof(ctx->cart_flash.mem)) {
+        return 0xFF;
+    }
+    return ctx->cart_flash.mem[abs];
+}
+
+static uint8_t board_chr_color(const R01sBoard *ctx, uint32_t chr_base, uint8_t tile, uint8_t attr,
+                               int px, int py) {
+    uint8_t bank = (uint8_t)(attr & R01S_ATTR_BANK);
+    int row = py & 7;
+    int col = px & 7;
+    uint32_t tbase;
+    uint8_t p0, p1;
+    int bit;
+
+    if (attr & R01S_ATTR_FLIP_V) {
+        row = 7 - row;
+    }
+    if (attr & R01S_ATTR_FLIP_H) {
+        col = 7 - col;
+    }
+    tbase = chr_base + (uint32_t)bank * R01S_CHR_BANK_BYTES + (uint32_t)tile * R01S_CHR_TILE_BYTES;
+    p0 = board_flash_byte(ctx, tbase + (uint32_t)row);
+    p1 = board_flash_byte(ctx, tbase + 8u + (uint32_t)row);
+    bit = 7 - col;
+    return (uint8_t)(((p1 >> bit) & 1u) << 1) | (uint8_t)((p0 >> bit) & 1u);
+}
+
+static uint8_t board_pal_master(const R01sBoard *ctx, int sprite, uint8_t pal, uint8_t color) {
+    uint8_t idx;
+    if (color == 0) {
+        return (uint8_t)(ctx->active_pal[0] & 63u); /* shared backdrop */
+    }
+    idx = (uint8_t)((sprite ? 16u : 0u) + (uint8_t)((pal & 3u) * 4u) + (color & 3u));
+    return (uint8_t)(ctx->active_pal[idx & 31u] & 63u);
+}
+
+static void board_vram_cell_at(const R01sBoard *ctx, int lx, int ly, uint8_t *tile_out, uint8_t *attr_out) {
+    uint8_t sx;
+    uint8_t sy;
+    int slot_x, slot_y, slot, local_x, local_y, tx, ty, cell;
+    uint16_t addr;
+    uint8_t scroll_x = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch);
+    uint8_t scroll_y = r01s_sn74hc573_peek_q(ctx->io_latch_impl.scroll_y);
+
+    *tile_out = 0;
+    *attr_out = 0;
+    if (lx < 0 || ly < 0 || lx >= R01S_VIDEO_W || ly >= R01S_VIDEO_H) {
+        return;
+    }
+    sx = (uint8_t)((scroll_x + (unsigned)lx) & 127u);
+    sy = (uint8_t)(scroll_y + (unsigned)ly);
+    if (sy >= 120u) {
+        sy = 119u;
+    }
+    slot_x = (sx / R01S_BG_SCREEN_PX_W) & 1;
+    slot_y = (sy / R01S_BG_SCREEN_PX_H) & 1;
+    slot = slot_y * 2 + slot_x;
+    local_x = (int)sx - slot_x * R01S_BG_SCREEN_PX_W;
+    local_y = (int)sy - slot_y * R01S_BG_SCREEN_PX_H;
+    tx = local_x / 8;
+    ty = local_y / 8;
+    if (tx >= R01S_BG_SCREEN_TILES_X) {
+        tx = R01S_BG_SCREEN_TILES_X - 1;
+    }
+    if (ty > 14) {
+        ty = 14;
+    }
+    cell = ty * R01S_BG_SCREEN_TILES_X + tx;
+    addr = (uint16_t)(slot * R01S_BG_SLOT_BYTES + cell);
+    *tile_out = r01s_as6c62256_peek(ctx->vram_impl.vram, addr);
+    *attr_out = r01s_as6c62256_peek(ctx->vram_impl.vram, (uint16_t)(addr - cell + R01S_BG_ATTR_OFF + cell));
+}
+
+static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
+    uint8_t tile, attr, color, pal, master;
+    int local_x, local_y;
+    uint8_t scroll_x, scroll_y, sx, sy;
+
+    if (ctx->cart_off_chr == 0) {
+        board_vram_cell_at(ctx, lx, ly, &tile, &attr);
+        master = (uint8_t)(tile & 0x3Fu);
+        ctx->chr_last_master = master;
+        return master;
+    }
+    board_vram_cell_at(ctx, lx, ly, &tile, &attr);
+    scroll_x = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch);
+    scroll_y = r01s_sn74hc573_peek_q(ctx->io_latch_impl.scroll_y);
+    sx = (uint8_t)((scroll_x + (unsigned)lx) & 127u);
+    sy = (uint8_t)(scroll_y + (unsigned)ly);
+    if (sy >= 120u) {
+        sy = 119u;
+    }
+    local_x = (int)(sx % R01S_BG_SCREEN_PX_W);
+    local_y = (int)(sy % R01S_BG_SCREEN_PX_H);
+    color = board_chr_color(ctx, ctx->cart_off_chr, tile, attr, local_x & 7, local_y & 7);
+    pal = (uint8_t)((attr & R01S_ATTR_PAL) >> R01S_ATTR_PAL_SHIFT);
+    master = board_pal_master(ctx, 0, pal, color);
+    ctx->chr_last_master = master;
+    return master;
+}
+
+
+
+/* Island N: clear half, OAM-scan logical Y, paint ≤16 sprites (CHR from flash when meta). */
 static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
     int i;
     int si;
@@ -1163,34 +1371,48 @@ static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
         uint8_t attr = r01s_atmega1284p_oam_peek(mcu, (uint8_t)(si * 4 + 2));
         uint8_t ox = r01s_atmega1284p_oam_peek(mcu, (uint8_t)(si * 4 + 3));
         int h = (attr & 0x80u) ? 16 : 8;
-        uint8_t color;
         int px;
 
         if (logical_y < (int)oy || logical_y >= (int)oy + h) {
             continue;
         }
         painted++;
-        color = (uint8_t)(tile & 0x3Fu);
-        if (color == 0) {
-            continue;
-        }
-        for (px = 0; px < 8; px++) {
-            int x = (int)ox + px;
-            if (x < 0 || x >= 128) {
-                continue;
-            }
-            linebuf_write_byte(ctx, (uint16_t)(base + (unsigned)x), color);
-            pixels++;
-            if (!hit_color) {
-                hit_x = (uint8_t)x;
-                hit_color = color;
+        {
+            int row = logical_y - (int)oy;
+            uint8_t pal = (uint8_t)((attr & R01S_ATTR_PAL) >> R01S_ATTR_PAL_SHIFT);
+            uint32_t spr_chr = ctx->cart_off_chr ? (ctx->cart_off_chr + 4u * R01S_CHR_BANK_BYTES) : 0;
+            for (px = 0; px < 8; px++) {
+                int x = (int)ox + px;
+                uint8_t master;
+                if (x < 0 || x >= 128) {
+                    continue;
+                }
+                if (spr_chr) {
+                    uint8_t c2 = board_chr_color(ctx, spr_chr, tile, attr, px, row);
+                    if (c2 == 0) {
+                        continue;
+                    }
+                    master = board_pal_master(ctx, 1, pal, c2);
+                } else {
+                    master = (uint8_t)(tile & 0x3Fu);
+                    if (master == 0) {
+                        continue;
+                    }
+                }
+                linebuf_write_byte(ctx, (uint16_t)(base + (unsigned)x), master);
+                pixels++;
+                if (!hit_color) {
+                    hit_x = (uint8_t)x;
+                    hit_color = master;
+                }
             }
         }
     }
 
     r01s_sprite_fetch_note_fill(sf, (uint8_t)(logical_y & 0xFF), (uint8_t)painted, pixels, hit_x,
                                 hit_color);
-    if (pixels > 0) {
+    /* Opaque pixels or an OAM hit on this line (CHR may be blank for smoke tile). */
+    if (pixels > 0 || painted > 0) {
         ctx->health_saw_sprites = 1;
     }
 }
@@ -1255,47 +1477,6 @@ static void wire_bg_fetch(R01sBoard *ctx) {
 }
 
 
-/* Nametable tile byte at logical pixel (pre-CHR: tile low 6 bits -> PROM index). */
-static uint8_t board_vram_tile_at(const R01sBoard *ctx, int lx, int ly) {
-    uint8_t sx;
-    uint8_t sy;
-    int slot_x;
-    int slot_y;
-    int slot;
-    int local_x;
-    int local_y;
-    int tx;
-    int ty;
-    int cell;
-    uint16_t addr;
-    uint8_t scroll_x = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch);
-    uint8_t scroll_y = r01s_sn74hc573_peek_q(ctx->io_latch_impl.scroll_y);
-
-    if (lx < 0 || ly < 0 || lx >= R01S_VIDEO_W || ly >= R01S_VIDEO_H) {
-        return 0;
-    }
-    sx = (uint8_t)((scroll_x + (unsigned)lx) & 127u);
-    sy = (uint8_t)(scroll_y + (unsigned)ly);
-    if (sy >= 120u) {
-        sy = 119u;
-    }
-    slot_x = (sx / R01S_BG_SCREEN_PX_W) & 1;
-    slot_y = (sy / R01S_BG_SCREEN_PX_H) & 1;
-    slot = slot_y * 2 + slot_x;
-    local_x = (int)sx - slot_x * R01S_BG_SCREEN_PX_W;
-    local_y = (int)sy - slot_y * R01S_BG_SCREEN_PX_H;
-    tx = local_x / 8;
-    ty = local_y / 8;
-    if (tx >= R01S_BG_SCREEN_TILES_X) {
-        tx = R01S_BG_SCREEN_TILES_X - 1;
-    }
-    if (ty > 14) {
-        ty = 14;
-    }
-    cell = ty * R01S_BG_SCREEN_TILES_X + tx;
-    addr = (uint16_t)(slot * R01S_BG_SLOT_BYTES + cell);
-    return r01s_as6c62256_peek(ctx->vram_impl.vram, addr);
-}
 
 static void wire_video_prom_addr(R01sEntity *prom, uint8_t index) {
     int i;
@@ -1310,9 +1491,17 @@ static void wire_video_prom_addr(R01sEntity *prom, uint8_t index) {
     r01s_entity_eval(prom);
 }
 
+/* Hold LCD while bring-up MAP-streams tiles then attrs (avoids sky→unflipped→flipped). */
+static int board_video_held_for_map_stream(const R01sBoard *ctx) {
+    if (!ctx || ctx->cart_off_map_screen0 == 0) {
+        return 0;
+    }
+    return ctx->map_addr < ctx->cart_off_map_screen0 + 480u;
+}
+
 /*
  * Island O — dot-sampled BG -> compositor -> Color PROM -> LCD sink.
- * CHR fetch deferred to Island J; tile low 6 bits stand in as master index.
+ * CHR: behavioral flash peek (no /CE fight with PRG/MAP); 2bpp + $FE08/$FE09.
  */
 static void wire_video_dot(R01sBoard *ctx) {
     R01sBeamXy *beam = ctx->beam_impl.beam;
@@ -1325,7 +1514,7 @@ static void wire_video_dot(R01sBoard *ctx) {
     int by = r01s_beam_xy_y(beam);
     int lx;
     int ly;
-    uint8_t tile;
+    uint8_t bg;
     uint8_t idx;
     uint8_t packed;
 
@@ -1333,10 +1522,14 @@ static void wire_video_dot(R01sBoard *ctx) {
         by >= R01S_BEAM_VISIBLE_H) {
         return;
     }
+    /* Blank until nametable+attrs finished streaming (real games would VBlank-load). */
+    if (board_video_held_for_map_stream(ctx)) {
+        return;
+    }
     lx = bx / 2;
     ly = by / 2;
-    tile = board_vram_tile_at(ctx, lx, ly);
-    r01s_compositor_set_bg(comp, (uint8_t)(tile & 0x3Fu));
+    bg = board_bg_master_at(ctx, lx, ly);
+    r01s_compositor_set_bg(comp, bg);
     {
         uint16_t spr_addr = (uint16_t)(((ctx->linebuf_show_half & 1u) << 7) | (lx & 0x7F));
         uint8_t spr = r01s_as6c62256_peek(ctx->linebuf_impl.sram, spr_addr);
@@ -1486,7 +1679,16 @@ static void island_cpu_mem_init(R01sIsland *island) {
     r01s_w65c02s_init(impl->cpu, "U1");
     r01s_as6c62256_init(impl->ram, "U3");
     r01s_prg_rom_init(impl->prg, "U4");
-    r01s_prg_rom_load(impl->prg, 0x0000, R01S_BRINGUP_PRG, (uint16_t)sizeof(R01S_BRINGUP_PRG));
+    {
+        uint8_t boot[sizeof(R01S_BRINGUP_SMOKE) + sizeof(R01S_BRINGUP_HANG)];
+        uint16_t hang_pc;
+        memcpy(boot, R01S_BRINGUP_SMOKE, sizeof(R01S_BRINGUP_SMOKE));
+        memcpy(boot + sizeof(R01S_BRINGUP_SMOKE), R01S_BRINGUP_HANG, sizeof(R01S_BRINGUP_HANG));
+        hang_pc = (uint16_t)(0x8000u + sizeof(R01S_BRINGUP_SMOKE));
+        boot[sizeof(R01S_BRINGUP_SMOKE) + 4] = (uint8_t)(hang_pc & 0xFFu);
+        boot[sizeof(R01S_BRINGUP_SMOKE) + 5] = (uint8_t)(hang_pc >> 8);
+        r01s_prg_rom_load(impl->prg, 0x0000, boot, (uint16_t)sizeof(boot));
+    }
     r01s_prg_rom_set_reset_vec(impl->prg, 0x8000);
     r01s_island_add_entity(island, r01s_w65c02s_entity(impl->cpu));
     r01s_island_add_entity(island, r01s_as6c62256_entity(impl->ram));
@@ -1599,17 +1801,108 @@ static const R01sIslandVTable ISLAND_SPRITES_VT = {island_sprites_init, NULL, NU
 static const R01sIslandVTable ISLAND_INTEGRATION_VT = {island_integration_init, NULL, NULL, NULL, NULL};
 
 
-static void board_install_bringup_prg(R01sBoard *board) {
-    uint32_t base;
-    uint32_t i;
+static void board_resolve_cart_meta(R01sBoard *board) {
+    const uint8_t *img;
+    const uint8_t *ptrs;
+    const uint8_t *slot;
+    const uint8_t *hdr;
+    const uint8_t *dir;
+    uint32_t off_wtable;
+    uint32_t world_base;
+    uint32_t off_chr;
+    uint32_t off_sdir;
+    uint8_t start_col;
+    uint8_t start_row;
+    uint8_t screen_count;
+    int si;
+
+    board->cart_off_chr = 0;
+    board->cart_off_map_screen0 = 0;
+    board->cart_off_pal_bg = 0;
+    board->cart_off_pal_spr = 0;
     if (!board || !board->cart_loaded) {
         return;
     }
+    img = board->cart_flash.mem;
+    if (memcmp(img, "RETR01", 6) != 0) {
+        return;
+    }
+    ptrs = img + R01S_CART_HDR_SIZE;
+    board->cart_off_pal_bg = get_u24(ptrs + 6);
+    board->cart_off_pal_spr = get_u24(ptrs + 12);
+    off_wtable = get_u24(ptrs + 18);
+    if ((size_t)off_wtable + 8u > sizeof(board->cart_flash.mem)) {
+        return;
+    }
+    slot = img + off_wtable;
+    if (slot[0] == 0) {
+        return;
+    }
+    world_base = get_u24(slot + 2);
+    if ((size_t)world_base + 32u > sizeof(board->cart_flash.mem)) {
+        return;
+    }
+    hdr = img + world_base;
+    start_col = hdr[0];
+    start_row = hdr[1];
+    screen_count = hdr[5];
+    off_chr = get_u24(hdr + 8);
+    off_sdir = get_u24(hdr + 11);
+    board->cart_off_chr = world_base + off_chr;
+    if ((size_t)world_base + (size_t)off_sdir + (size_t)screen_count * 12u > sizeof(board->cart_flash.mem)) {
+        board->cart_off_chr = 0;
+        return;
+    }
+    dir = img + world_base + off_sdir;
+    for (si = 0; si < (int)screen_count; si++) {
+        const uint8_t *e = dir + (size_t)si * 12u;
+        uint32_t poff;
+        if (e[0] != start_col || e[1] != start_row) {
+            continue;
+        }
+        poff = get_u24(e + 4);
+        board->cart_off_map_screen0 = world_base + poff;
+        return;
+    }
+}
+
+static void board_install_bringup_prg(R01sBoard *board) {
+    uint32_t base;
+    uint32_t i;
+    uint8_t buf[512];
+    size_t n = 0;
+    uint16_t hang_pc;
+    int stream;
+
+    if (!board || !board->cart_loaded) {
+        return;
+    }
+    board_resolve_cart_meta(board);
+    stream = (board->cart_off_map_screen0 != 0 && board->cart_off_pal_bg != 0);
+
+    memcpy(buf + n, R01S_BRINGUP_SMOKE, sizeof(R01S_BRINGUP_SMOKE));
+    n += sizeof(R01S_BRINGUP_SMOKE);
+    if (stream) {
+        memcpy(buf + n, R01S_BRINGUP_STREAM, sizeof(R01S_BRINGUP_STREAM));
+        buf[n + R01S_BR_OFF_PAL_LO] = (uint8_t)(board->cart_off_pal_bg & 0xFFu);
+        buf[n + R01S_BR_OFF_PAL_MID] = (uint8_t)((board->cart_off_pal_bg >> 8) & 0xFFu);
+        buf[n + R01S_BR_OFF_PAL_HI] = (uint8_t)((board->cart_off_pal_bg >> 16) & 0xFFu);
+        buf[n + R01S_BR_OFF_MAP_LO] = (uint8_t)(board->cart_off_map_screen0 & 0xFFu);
+        buf[n + R01S_BR_OFF_MAP_MID] = (uint8_t)((board->cart_off_map_screen0 >> 8) & 0xFFu);
+        buf[n + R01S_BR_OFF_MAP_HI] = (uint8_t)((board->cart_off_map_screen0 >> 16) & 0xFFu);
+        n += sizeof(R01S_BRINGUP_STREAM);
+    }
+    hang_pc = (uint16_t)(0x8000u + n);
+    memcpy(buf + n, R01S_BRINGUP_HANG, sizeof(R01S_BRINGUP_HANG));
+    buf[n + 4] = (uint8_t)(hang_pc & 0xFFu);
+    buf[n + 5] = (uint8_t)(hang_pc >> 8);
+    n += sizeof(R01S_BRINGUP_HANG);
+
     base = board->cart_off_prg;
     for (i = 0; i < R01S_CART_PRG_BYTES; i++) {
         r01s_sst39sf040_poke(&board->cart_flash, base + i, 0xEA);
     }
-    r01s_sst39sf040_load(&board->cart_flash, base, R01S_BRINGUP_PRG, (uint32_t)sizeof(R01S_BRINGUP_PRG));
+    r01s_sst39sf040_load(&board->cart_flash, base, buf, (uint32_t)n);
     /* Reset vector at CPU $FFFC/$FFFD => PRG offset $7FFC/$7FFD */
     r01s_sst39sf040_poke(&board->cart_flash, base + 0x7FFCu, 0x00);
     r01s_sst39sf040_poke(&board->cart_flash, base + 0x7FFDu, 0x80);
@@ -1754,6 +2047,10 @@ static void board_reset(R01sIslandGroup *group) {
     ctx->vram_fe12_armed = 0;
     ctx->map_addr = 0;
     ctx->map_fe93_armed = 0;
+    ctx->pal_addr = 0;
+    ctx->pal_fe09_wrote = 0;
+    memset(ctx->active_pal, 0, sizeof(ctx->active_pal));
+    ctx->chr_last_master = 0;
     ctx->health_saw_latch = 0;
     ctx->health_saw_vram = 0;
     ctx->health_saw_vram_read = 0;
@@ -1861,21 +2158,24 @@ static void board_step(R01sIslandGroup *group) {
             r01s_entity_eval(cpu);
             board_settle(ctx, group);
         } else {
+            R01sCpuPhase ph_before;
             board_settle(ctx, group);
+            ph_before = r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu);
             r01s_entity_tick(cpu);
             ctx->cycles++;
             r01s_entity_eval(cpu);
             board_settle(ctx, group);
-            /* Auto-inc once when the FE12 DATA cycle ends (not when it begins). */
-            if (ctx->vram_fe12_armed &&
-                r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu) != R01S_CPU_OP_DATA) {
-                ctx->vram_addr = (uint16_t)((ctx->vram_addr + 1u) & 0x7FFFu);
-                ctx->vram_fe12_armed = 0;
-            }
-            if (ctx->map_fe93_armed &&
-                r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu) != R01S_CPU_OP_DATA) {
-                ctx->map_addr = (ctx->map_addr + 1u) & 0xFFFFFFu;
-                ctx->map_fe93_armed = 0;
+            /* Auto-inc after a completed DATA cycle that touched $FE12 / $FE93. */
+            if (ph_before == R01S_CPU_OP_DATA) {
+                if (ctx->vram_fe12_armed) {
+                    ctx->vram_addr = (uint16_t)((ctx->vram_addr + 1u) & 0x7FFFu);
+                    ctx->vram_fe12_armed = 0;
+                }
+                if (ctx->map_fe93_armed) {
+                    ctx->map_addr = (ctx->map_addr + 1u) & 0xFFFFFFu;
+                    ctx->map_fe93_armed = 0;
+                }
+                ctx->pal_fe09_wrote = 0;
             }
         }
     }
