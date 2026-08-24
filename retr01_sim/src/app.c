@@ -29,7 +29,10 @@ void r01s_app_mount_builder(R01sApp *app) {
     b = &app->builder;
     r01s_ui_bind_group(&app->ui, &b->group);
     for (i = 0; i < b->mount_count; i++) {
-        r01s_ui_add_chip(&app->ui, b->mounts[i].entity, b->mounts[i].island_index);
+        if (r01s_ui_add_chip(&app->ui, b->mounts[i].entity, b->mounts[i].island_index) != 0) {
+            fprintf(stderr, "ui: dropped chip mount %d/%d (R01S_BOARD_MAX_CHIPS=%d)\n", i, b->mount_count,
+                    R01S_BOARD_MAX_CHIPS);
+        }
     }
 }
 

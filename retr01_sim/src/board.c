@@ -2026,7 +2026,8 @@ static void island_beam_init(R01sIsland *island) {
 static void island_pads_init(R01sIsland *island) {
     R01sIslandPadsImpl *impl = (R01sIslandPadsImpl *)island->impl;
     r01s_pads_init(impl->pads, "PAD");
-    /* Pads silicon is on 1284P — entity kept for tests; not mounted on canvas. */
+    /* Soft port model (silicon path is 1284); still shown on canvas for $FE60/$FE61. */
+    r01s_island_add_entity(island, r01s_pads_entity(impl->pads));
 }
 
 static void island_vram_init(R01sIsland *island) {
@@ -2034,21 +2035,19 @@ static void island_vram_init(R01sIsland *island) {
     static const char *const mux_ref[R01S_BOM_HC157_N] = {"U7A", "U7B", "U7C", "U7D", "U7E", "U7F"};
     int i;
     r01s_as6c62256_init(impl->vram, "U6");
-    r01s_bg_fetch_init(impl->bg_pld, "UPLDI");
     r01s_atf22v10_init(impl->pld_vram, "UPLDB", R01S_PLD_VRAM);
     r01s_island_add_entity(island, r01s_as6c62256_entity(impl->vram));
     for (i = 0; i < 3; i++) {
         r01s_sn74hc157_init(impl->mux157[i], mux_ref[i]);
         r01s_island_add_entity(island, r01s_sn74hc157_entity(impl->mux157[i]));
     }
-    r01s_island_add_entity(island, r01s_bg_fetch_entity(impl->bg_pld));
     r01s_island_add_entity(island, r01s_atf22v10_entity(impl->pld_vram));
 }
 
 static void island_bg_fetch_init(R01sIsland *island) {
     R01sIslandBgFetchImpl *impl = (R01sIslandBgFetchImpl *)island->impl;
     r01s_bg_fetch_init(impl->fetch, "UPLDI");
-    /* Mounted on VRAM island — stats only here. */
+    r01s_island_add_entity(island, r01s_bg_fetch_entity(impl->fetch));
 }
 
 static void island_video_init(R01sIsland *island) {
@@ -2763,11 +2762,10 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
             r01s_island_builder_mount_rel(b, mux_e, R01S_ISLAND_VRAM, x, 0);
             x += mux_e->body_w + R01S_CHIP_GAP;
         }
-        r01s_island_builder_mount_rel(b, r01s_bg_fetch_entity(&board->bg_fetch), R01S_ISLAND_VRAM, x, 0);
-        x += r01s_bg_fetch_entity(&board->bg_fetch)->body_w + R01S_CHIP_GAP;
         r01s_island_builder_mount_rel(b, r01s_atf22v10_entity(&board->pld_vram), R01S_ISLAND_VRAM, x, 0);
         (void)y;
     }
+    r01s_island_builder_mount_rel(b, r01s_bg_fetch_entity(&board->bg_fetch), R01S_ISLAND_BG_FETCH, 0, 0);
     {
         R01sEntity *dot_e = r01s_osc_dot_entity(&board->osc_dot);
         R01sEntity *beam_x = r01s_beam_xy_entity(&board->pld_beam_x);
@@ -2829,6 +2827,11 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
             x += e->body_w + R01S_CHIP_GAP;
         }
     }
+    r01s_island_builder_mount_rel(b, r01s_pads_entity(&board->pads), R01S_ISLAND_PADS, 0, 0);
+    r01s_island_builder_mount_rel(b, r01s_sprite_fetch_entity(&board->sprite_fetch), R01S_ISLAND_SPRITES, 0,
+                                  0);
+    r01s_island_builder_mount_rel(b, r01s_integration_entity(&board->integration), R01S_ISLAND_INTEGRATION, 0,
+                                  0);
 
 
     r01s_island_builder_fit_all(b);

@@ -15,9 +15,9 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 | C CPU + decode | `W65C02S`, `AS6C62256`, `ATF22V10` decode, `SN74HC245` (CPU bus) |
 | D `$FExx` latch | **9×** `SN74HC573` (`$FE02`–`$FE04`, `$FE08`, `$FE10`–`$FE12`, `$FE90`–`$FE92`) |
 | E Pads | `$FE60`/`$FE61` via 1284 (pads struct for tests; not a BOM IC) |
-| G VRAM | 2nd `AS6C62256` + **3×** `SN74HC157` + `BG_FETCH` + `ATF22V10` VRAM glue |
+| G VRAM | 2nd `AS6C62256` + **3×** `SN74HC157` + `ATF22V10` VRAM glue |
 | H Beam | `OSC_DOT` + `BEAM_XY` (X PLD) + `ATF22V10` Y compare vs `$FE04` |
-| I BG fetch | stats island — chip mounted on **G** |
+| I BG fetch | `BG_FETCH` PLD — nametable VA from beam+scroll |
 | O Video | `COMPOSITOR` + `AT28C16` Color PROM + `LCD_SINK` |
 | J Cart | `SST39SF040` + cart `24C64` I²C EEPROM |
 | K APU | `ATMEGA328P` stub — `$FE40`–`$FE5F` regs + digital PWM square |

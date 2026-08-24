@@ -10,7 +10,7 @@
 #include <SDL.h>
 #include <stdint.h>
 
-#define R01S_BOARD_MAX_CHIPS 32
+#define R01S_BOARD_MAX_CHIPS 64
 #define R01S_UI_GAMEPAD_COUNT 2
 
 /* Fixed HUD chrome — board draws only in the center viewport. */
