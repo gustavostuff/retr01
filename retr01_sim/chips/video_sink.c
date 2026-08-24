@@ -37,7 +37,8 @@ void r01s_video_sink_init(R01sVideoSink *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 2, "HSYNC", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 3, "VSYNC", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 4, "VCC", R01S_PIN_PWR);
-    r01s_entity_set_glyph(&chip->base, R01S_ENTITY_VIS_DISPLAY, 72, 52);
+    /* Body fits the 128x120 playfield plus bezel / label chrome. */
+    r01s_entity_set_glyph(&chip->base, R01S_ENTITY_VIS_DISPLAY, R01S_VIDEO_W + 16, R01S_VIDEO_H + 28);
     r01s_entity_reset(&chip->base);
 }
 

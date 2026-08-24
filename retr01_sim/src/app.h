@@ -12,6 +12,8 @@ typedef struct R01sApp {
     SDL_Texture *target;
     int scale;
     int running;
+    Uint32 fps_last_ms;
+    int fps_frames;
     R01sUi ui;
     R01sIslandBuilder builder;
 } R01sApp;

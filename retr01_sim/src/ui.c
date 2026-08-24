@@ -1,14 +1,15 @@
 #include "ui.h"
 
-#include "retr01_sim/board.h"
 #include "retr01_sim/board_layout.h"
 #include "retr01_sim/bus.h"
+#include "ui_assets.h"
 #include "video_sink.h"
 
 #include <stdio.h>
 #include <string.h>
 
 static void clamp_chip_in_island(R01sUi *ui, R01sEntity *e, int island_index);
+static void draw_video_pixels(SDL_Renderer *r, const R01sVideoSink *sink, int px, int py);
 
 static int ui_board_sx(const R01sUi *ui, int board_x) {
     return R01S_UI_VIEW_X + board_x - ui->pan_x;
@@ -299,75 +300,75 @@ static void draw_glyph_pins(SDL_Renderer *r, const R01sUi *ui, const R01sEntity 
     }
 }
 
+static void blit_rgba_scaled(SDL_Renderer *r, int dx, int dy, const uint8_t *rgba, int w, int h, int scale) {
+    int x, y, sx, sy;
+    if (!rgba || w <= 0 || h <= 0 || scale < 1) {
+        return;
+    }
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            const uint8_t *p = rgba + ((size_t)y * (size_t)w + (size_t)x) * 4u;
+            if (p[3] == 0) {
+                continue;
+            }
+            SDL_SetRenderDrawColor(r, p[0], p[1], p[2], 255);
+            for (sy = 0; sy < scale; sy++) {
+                for (sx = 0; sx < scale; sx++) {
+                    SDL_RenderDrawPoint(r, dx + x * scale + sx, dy + y * scale + sy);
+                }
+            }
+        }
+    }
+}
+
 static void draw_pwr_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int selected) {
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);
-    int on = 0;
-    int i;
-    for (i = 0; i < e->pin_count; i++) {
-        if (e->pins[i].name && strcmp(e->pins[i].name, "VDD") == 0 && r01s_level_is_high(e->pins[i].level)) {
-            on = 1;
-            break;
-        }
-    }
+    int img_w = R01S_UI_BATTERY_W * 2;
+    int ix = x + (e->body_w - img_w) / 2;
+    int iy = y + 4;
     draw_glyph_pins(r, ui, e, e->board_x, e->board_y);
-    fill_rect(r, x + 10, y + 14, e->body_w - 20, e->body_h - 22, on ? 34 : 24, on ? 46 : 28, on ? 34 : 24);
-    draw_rect(r, x + 10, y + 14, e->body_w - 20, e->body_h - 22, selected ? 255 : 120, selected ? 220 : 180,
-              selected ? 80 : 80);
-    fill_rect(r, x + 18, y + 6, e->body_w - 36, 8, on ? 50 : 32, on ? 62 : 36, on ? 50 : 32);
-    draw_rect(r, x + 18, y + 6, e->body_w - 36, 8, 140, 160, 120);
-    font_draw(r, x + e->body_w / 2 - 10, y + e->body_h / 2 - 2, "5V", 220, 230, 180);
+    draw_rect(r, x, y, e->body_w, e->body_h, selected ? 255 : 80, selected ? 220 : 90, selected ? 80 : 70);
+    blit_rgba_scaled(r, ix, iy, R01S_UI_BATTERY_RGBA, R01S_UI_BATTERY_W, R01S_UI_BATTERY_H, 2);
     if (e->refdes) {
-        font_draw_ellipsize(r, x + 6, y + e->body_h - 14, e->refdes, e->body_w - 12, 180, 190, 160);
+        font_draw_ellipsize(r, x + 4, y + e->body_h - 12, e->refdes, e->body_w - 8, 180, 190, 160);
     }
 }
 
 static void draw_osc_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int selected) {
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);
-    int cx = x + e->body_w / 2;
-    int cy = y + e->body_h / 2 + 2;
-    int on = 0;
-    int i;
-    for (i = 0; i < e->pin_count; i++) {
-        if ((e->pins[i].name &&
-             (strcmp(e->pins[i].name, "PHI2") == 0 || strcmp(e->pins[i].name, "DOT") == 0)) &&
-            r01s_level_is_high(e->pins[i].level)) {
-            on = 1;
-            break;
-        }
-    }
+    int img_w = R01S_UI_OSC_W * 2;
+    int img_h = R01S_UI_OSC_H * 2;
+    int ix = x + (e->body_w - img_w) / 2;
+    int iy = y + (e->body_h - img_h) / 2 - 4;
     draw_glyph_pins(r, ui, e, e->board_x, e->board_y);
-    fill_rect(r, x + 8, y + 10, e->body_w - 16, e->body_h - 18, 22, 28, 34);
-    draw_rect(r, x + 8, y + 10, e->body_w - 16, e->body_h - 18, selected ? 255 : 120, selected ? 220 : 160,
-              selected ? 80 : 120);
-    fill_rect(r, cx - 10, cy - 14, 20, 28, on ? 48 : 32, on ? 58 : 38, on ? 72 : 52);
-    draw_rect(r, cx - 10, cy - 14, 20, 28, 160, 180, 210);
-    SDL_SetRenderDrawColor(r, 200, 220, 240, 255);
-    SDL_RenderDrawLine(r, cx - 6, cy + 8, cx - 2, cy - 6);
-    SDL_RenderDrawLine(r, cx - 2, cy - 6, cx + 2, cy + 8);
-    SDL_RenderDrawLine(r, cx + 2, cy + 8, cx + 6, cy - 6);
-    if (e->part) {
-        font_draw_ellipsize(r, x + 4, y + e->body_h - 14, e->part, e->body_w - 8, 160, 180, 200);
-    }
+    draw_rect(r, x, y, e->body_w, e->body_h, selected ? 255 : 80, selected ? 220 : 100, selected ? 80 : 110);
+    blit_rgba_scaled(r, ix, iy, R01S_UI_OSC_RGBA, R01S_UI_OSC_W, R01S_UI_OSC_H, 2);
     if (e->refdes) {
-        font_draw_ellipsize(r, x + 4, y + 12, e->refdes, e->body_w - 8, 180, 190, 170);
+        font_draw_ellipsize(r, x + 4, y + 4, e->refdes, e->body_w - 8, 180, 190, 170);
+    }
+    if (e->part) {
+        font_draw_ellipsize(r, x + 4, y + e->body_h - 12, e->part, e->body_w - 8, 160, 180, 200);
     }
 }
 
 static void draw_display_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int selected) {
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);
+    int px = x + 8;
+    int py = y + 16;
+    const R01sVideoSink *sink = (const R01sVideoSink *)e;
     draw_glyph_pins(r, ui, e, e->board_x, e->board_y);
-    fill_rect(r, x + 4, y + 8, e->body_w - 8, e->body_h - 14, 28, 32, 36);
+    fill_rect(r, x + 4, y + 8, e->body_w - 8, e->body_h - 14, 16, 22, 18);
     draw_rect(r, x + 4, y + 8, e->body_w - 8, e->body_h - 14, selected ? 255 : 140, selected ? 220 : 160,
               selected ? 80 : 180);
-    fill_rect(r, x + 10, y + 14, e->body_w - 20, e->body_h - 28, 12, 18, 28);
-    draw_rect(r, x + 10, y + 14, e->body_w - 20, e->body_h - 28, 80, 120, 160);
-    fill_rect(r, x + e->body_w / 2 - 8, y + e->body_h - 6, 16, 4, 40, 44, 48);
-    font_draw(r, x + e->body_w / 2 - 12, y + e->body_h / 2 - 4, "LCD", 140, 180, 220);
+    font_draw(r, px, y + 6, "LCD 128X120", 180, 190, 160);
+    fill_rect(r, px, py, R01S_VIDEO_W, R01S_VIDEO_H, 8, 12, 16);
+    draw_video_pixels(r, sink, px, py);
+    draw_rect(r, px - 1, py - 1, R01S_VIDEO_W + 2, R01S_VIDEO_H + 2, 80, 100, 120);
     if (e->refdes) {
-        font_draw_ellipsize(r, x + 6, y + 10, e->refdes, e->body_w - 12, 180, 190, 170);
+        font_draw_ellipsize(r, x + 6, y + e->body_h - 12, e->refdes, e->body_w - 12, 180, 190, 170);
     }
 }
 
@@ -649,66 +650,93 @@ static void draw_health_dot(SDL_Renderer *r, int x, int y, R01sHealth h) {
     draw_rect(r, x, y, 8, 8, 30, 40, 35);
 }
 
-#define R01S_UI_STATUS_PANEL_H 220
-#define R01S_UI_STATUS_PANEL_X 8
-#define R01S_UI_STATUS_PANEL_Y (R01S_UI_HUD_TOP + 6)
-#define R01S_UI_STATUS_PANEL_W (R01S_UI_SIDEBAR_L - 16)
-#define R01S_UI_STATUS_ROW0 (R01S_UI_STATUS_PANEL_Y + 66)
+#define R01S_UI_SIDEBAR_X 8
+#define R01S_UI_SIDEBAR_TOP (R01S_UI_HUD_TOP + 6)
+#define R01S_UI_SIDEBAR_BOTTOM (R01S_LOGIC_H - R01S_UI_HUD_BOTTOM - 6)
+#define R01S_UI_SIDEBAR_W (R01S_UI_SIDEBAR_L - 16)
+#define R01S_UI_SIDEBAR_VIEW_H (R01S_UI_SIDEBAR_BOTTOM - R01S_UI_SIDEBAR_TOP)
+#define R01S_UI_STATUS_HDR_H 66
 #define R01S_UI_STATUS_ROW_H 16
 #define R01S_UI_STATUS_FOOTER_H 16
-#define R01S_UI_STATUS_LIST_BOTTOM \
-    (R01S_UI_STATUS_PANEL_Y + R01S_UI_STATUS_PANEL_H - R01S_UI_STATUS_FOOTER_H)
-#define R01S_UI_STATUS_LIST_H (R01S_UI_STATUS_LIST_BOTTOM - R01S_UI_STATUS_ROW0)
+#define R01S_UI_SIDEBAR_GAP 8
+#define R01S_UI_PROBE_H 156
+#define GP_PANEL_W 156
+#define GP_PANEL_H 132
 
 static int health_needs_debug(R01sHealth h) {
     return h == R01S_HEALTH_WARN || h == R01S_HEALTH_FAIL;
 }
 
-static int status_list_content_h(const R01sSystemHealth *health) {
+static int status_panel_h(const R01sSystemHealth *health) {
     int n = health ? health->island_count : 0;
-    return n * R01S_UI_STATUS_ROW_H;
+    return R01S_UI_STATUS_HDR_H + n * R01S_UI_STATUS_ROW_H + R01S_UI_STATUS_FOOTER_H;
 }
 
-static int status_list_max_scroll(const R01sSystemHealth *health) {
-    int content = status_list_content_h(health);
-    int max_s = content - R01S_UI_STATUS_LIST_H;
+static int sidebar_content_h(const R01sUi *ui) {
+    int h;
+    if (!ui) {
+        return 0;
+    }
+    /* Controllers, live probe, then full system status. */
+    h = GP_PANEL_H + R01S_UI_SIDEBAR_GAP;
+    h += GP_PANEL_H + R01S_UI_SIDEBAR_GAP;
+    h += R01S_UI_PROBE_H + R01S_UI_SIDEBAR_GAP;
+    h += status_panel_h(&ui->health);
+    return h;
+}
+
+static int sidebar_max_scroll(const R01sUi *ui) {
+    int max_s = sidebar_content_h(ui) - R01S_UI_SIDEBAR_VIEW_H;
     return max_s > 0 ? max_s : 0;
 }
 
-static void status_clamp_scroll(R01sUi *ui) {
+static void sidebar_clamp_scroll(R01sUi *ui) {
     int max_s;
     if (!ui) {
         return;
     }
-    max_s = status_list_max_scroll(&ui->health);
-    if (ui->status_scroll < 0) {
-        ui->status_scroll = 0;
+    max_s = sidebar_max_scroll(ui);
+    if (ui->sidebar_scroll < 0) {
+        ui->sidebar_scroll = 0;
     }
-    if (ui->status_scroll > max_s) {
-        ui->status_scroll = max_s;
+    if (ui->sidebar_scroll > max_s) {
+        ui->sidebar_scroll = max_s;
     }
 }
 
-static int status_panel_hit(int lx, int ly) {
-    return lx >= R01S_UI_STATUS_PANEL_X && lx < R01S_UI_STATUS_PANEL_X + R01S_UI_STATUS_PANEL_W &&
-           ly >= R01S_UI_STATUS_PANEL_Y && ly < R01S_UI_STATUS_PANEL_Y + R01S_UI_STATUS_PANEL_H;
+static int sidebar_hit(int lx, int ly) {
+    return lx >= 0 && lx < R01S_UI_SIDEBAR_L && ly >= R01S_UI_SIDEBAR_TOP && ly < R01S_UI_SIDEBAR_BOTTOM;
 }
 
-static int status_list_hit(int lx, int ly) {
-    return lx >= R01S_UI_STATUS_PANEL_X && lx < R01S_UI_STATUS_PANEL_X + R01S_UI_STATUS_PANEL_W &&
-           ly >= R01S_UI_STATUS_ROW0 && ly < R01S_UI_STATUS_LIST_BOTTOM;
+/* Content-local Y → screen Y (accounts for sidebar scroll). */
+static int sidebar_sy(const R01sUi *ui, int content_y) {
+    return R01S_UI_SIDEBAR_TOP + content_y - (ui ? ui->sidebar_scroll : 0);
+}
+
+static int sidebar_gp_content_y(int player) {
+    return player == 0 ? 0 : (GP_PANEL_H + R01S_UI_SIDEBAR_GAP);
+}
+
+static int sidebar_probe_content_y(void) {
+    return GP_PANEL_H + R01S_UI_SIDEBAR_GAP + GP_PANEL_H + R01S_UI_SIDEBAR_GAP;
+}
+
+static int sidebar_status_content_y(void) {
+    return sidebar_probe_content_y() + R01S_UI_PROBE_H + R01S_UI_SIDEBAR_GAP;
 }
 
 static void health_copy_btn_rect(const R01sUi *ui, int island_index, SDL_Rect *rc) {
-    rc->x = R01S_UI_STATUS_PANEL_X + R01S_UI_STATUS_PANEL_W - 42;
-    rc->y = R01S_UI_STATUS_ROW0 + island_index * R01S_UI_STATUS_ROW_H - (ui ? ui->status_scroll : 0);
+    int status_y = sidebar_sy(ui, sidebar_status_content_y());
+    rc->x = R01S_UI_SIDEBAR_X + R01S_UI_SIDEBAR_W - 42;
+    rc->y = status_y + R01S_UI_STATUS_HDR_H + island_index * R01S_UI_STATUS_ROW_H;
     rc->w = 34;
     rc->h = 12;
 }
 
-static void health_system_copy_rect(SDL_Rect *rc) {
-    rc->x = R01S_UI_STATUS_PANEL_X + R01S_UI_STATUS_PANEL_W - 50;
-    rc->y = R01S_UI_STATUS_PANEL_Y + 22;
+static void health_system_copy_rect(const R01sUi *ui, SDL_Rect *rc) {
+    int status_y = sidebar_sy(ui, sidebar_status_content_y());
+    rc->x = R01S_UI_SIDEBAR_X + R01S_UI_SIDEBAR_W - 50;
+    rc->y = status_y + 22;
     rc->w = 42;
     rc->h = 16;
 }
@@ -725,25 +753,21 @@ static int ui_copy_health_text(R01sUi *ui, const char *text) {
     return 0;
 }
 
-static void draw_system_health_panel(SDL_Renderer *r, R01sUi *ui) {
+static void draw_system_health_panel(SDL_Renderer *r, R01sUi *ui, int py) {
     const R01sSystemHealth *health;
     int i;
-    int px = R01S_UI_STATUS_PANEL_X;
-    int py = R01S_UI_STATUS_PANEL_Y;
-    int pw = R01S_UI_STATUS_PANEL_W;
-    int ph = R01S_UI_STATUS_PANEL_H;
-    int max_s;
+    int px = R01S_UI_SIDEBAR_X;
+    int pw = R01S_UI_SIDEBAR_W;
+    int ph;
     Uint8 sr, sg, sb;
     char row[56];
     SDL_Rect copy_rc;
-    SDL_Rect list_clip;
 
     if (!ui) {
         return;
     }
     health = &ui->health;
-    status_clamp_scroll(ui);
-    max_s = status_list_max_scroll(health);
+    ph = status_panel_h(health);
 
     fill_rect(r, px, py, pw, ph, 14, 20, 16);
     draw_rect(r, px, py, pw, ph, 70, 90, 75);
@@ -753,30 +777,19 @@ static void draw_system_health_panel(SDL_Renderer *r, R01sUi *ui) {
     fill_rect(r, px + 8, py + 22, pw - 16, 18, sr, sg, sb);
     font_draw(r, px + 12, py + 26, health->system_label[0] ? health->system_label : "?", 20, 24, 22);
     if (health_needs_debug(health->system) || health->system == R01S_HEALTH_BOOT) {
-        health_system_copy_rect(&copy_rc);
+        health_system_copy_rect(ui, &copy_rc);
         fill_rect(r, copy_rc.x, copy_rc.y, copy_rc.w, copy_rc.h, 30, 36, 32);
         draw_rect(r, copy_rc.x, copy_rc.y, copy_rc.w, copy_rc.h, 20, 24, 22);
         font_draw(r, copy_rc.x + 4, copy_rc.y + 4, "COPY", 20, 24, 22);
     }
 
     font_draw(r, px + 8, py + 44, health->system_detail, 150, 165, 145);
-
     fill_rect(r, px + 8, py + 58, pw - 16, 1, 40, 55, 45);
-
-    list_clip.x = px + 2;
-    list_clip.y = R01S_UI_STATUS_ROW0;
-    list_clip.w = pw - 4;
-    list_clip.h = R01S_UI_STATUS_LIST_H;
-    SDL_RenderSetClipRect(r, &list_clip);
 
     for (i = 0; i < health->island_count; i++) {
         const R01sIslandHealth *ih = &health->islands[i];
-        int ry = R01S_UI_STATUS_ROW0 + i * R01S_UI_STATUS_ROW_H - ui->status_scroll;
+        int ry = py + R01S_UI_STATUS_HDR_H + i * R01S_UI_STATUS_ROW_H;
         char letter[2];
-
-        if (ry + R01S_UI_STATUS_ROW_H < R01S_UI_STATUS_ROW0 || ry >= R01S_UI_STATUS_LIST_BOTTOM) {
-            continue;
-        }
 
         letter[0] = ih->letter ? ih->letter : '?';
         letter[1] = '\0';
@@ -791,26 +804,24 @@ static void draw_system_health_panel(SDL_Renderer *r, R01sUi *ui) {
             font_draw(r, copy_rc.x + 4, copy_rc.y + 2, "COPY", 210, 200, 120);
         }
     }
-    SDL_RenderSetClipRect(r, NULL);
 
-    /* Scrollbar when island list overflows. */
-    if (max_s > 0) {
-        int track_x = px + pw - 7;
-        int track_y = R01S_UI_STATUS_ROW0;
-        int track_h = R01S_UI_STATUS_LIST_H;
-        int thumb_h = track_h * R01S_UI_STATUS_LIST_H / status_list_content_h(health);
-        int thumb_y;
-        if (thumb_h < 10) {
-            thumb_h = 10;
-        }
-        thumb_y = track_y + (track_h - thumb_h) * ui->status_scroll / max_s;
-        fill_rect(r, track_x, track_y, 4, track_h, 28, 36, 30);
-        fill_rect(r, track_x, thumb_y, 4, thumb_h, 90, 120, 95);
-    }
+    font_draw(r, px + 8, py + ph - 14, "WARN/FAIL COPY PASTES DEBUG", 100, 115, 100);
+}
 
-    font_draw(r, px + 8, py + ph - 14,
-              max_s > 0 ? "WHEEL SCROLLS LIST  WARN/FAIL COPY" : "WARN/FAIL COPY PASTES DEBUG", 100, 115,
-              100);
+static void draw_live_probe(SDL_Renderer *r, const R01sUi *ui, int py) {
+    int px = R01S_UI_SIDEBAR_X;
+    int pw = R01S_UI_SIDEBAR_W;
+    fill_rect(r, px, py, pw, R01S_UI_PROBE_H, 16, 22, 18);
+    draw_rect(r, px, py, pw, R01S_UI_PROBE_H, 80, 90, 70);
+    font_draw(r, px + 8, py + 8, "LIVE PROBE", 200, 210, 180);
+    draw_led(r, px + 8, py + 26, ui->probe_vdd, 80, 220, 100, "VDD");
+    draw_led(r, px + 8, py + 44, ui->probe_phi2, 220, 200, 60, "PHI2");
+    draw_led(r, px + 8, py + 62, ui->probe_resb_low, 220, 80, 80, "RESB LO");
+    font_draw(r, px + 8, py + 84, "P1 FE60", 160, 180, 160);
+    draw_pad_bits(r, px + 8, py + 94, ui->probe_pad_p1);
+    font_draw(r, px + 8, py + 114, "P2 FE61", 160, 180, 160);
+    draw_pad_bits(r, px + 8, py + 124, ui->probe_pad_p2);
+    font_draw(r, px + 8, py + 144, "PINS GLOW = LEVEL", 120, 130, 120);
 }
 
 static void draw_island_frame(SDL_Renderer *r, const R01sUi *ui, const R01sIsland *island, int active,
@@ -957,46 +968,41 @@ static void ui_fill_tooltip(const R01sUi *ui, char *out, size_t out_len) {
     }
 }
 
-#define GP_PANEL_W 156
-#define GP_PANEL_H 132
-#define R01S_UI_GP1_Y (R01S_UI_STATUS_PANEL_Y + R01S_UI_STATUS_PANEL_H + 8)
-#define R01S_UI_GP2_Y (R01S_UI_GP1_Y + GP_PANEL_H + 8)
-
-static void gp_panel_origin(int player, int *px, int *py) {
-    *px = 8;
-    *py = player == 0 ? R01S_UI_GP1_Y : R01S_UI_GP2_Y;
+static void gp_panel_origin(const R01sUi *ui, int player, int *px, int *py) {
+    *px = R01S_UI_SIDEBAR_X;
+    *py = sidebar_sy(ui, sidebar_gp_content_y(player));
 }
 
-static void gp_stick_center(int player, int *cx, int *cy) {
+static void gp_stick_center(const R01sUi *ui, int player, int *cx, int *cy) {
     int px, py;
-    gp_panel_origin(player, &px, &py);
+    gp_panel_origin(ui, player, &px, &py);
     *cx = px + 36;
     *cy = py + 56;
 }
 
-static void gp_btn_rect(int player, int btn, SDL_Rect *rc) {
+static void gp_btn_rect(const R01sUi *ui, int player, int btn, SDL_Rect *rc) {
     int px, py;
-    gp_panel_origin(player, &px, &py);
+    gp_panel_origin(ui, player, &px, &py);
     rc->x = px + 88 + (btn % 2) * 28;
     rc->y = py + 28 + (btn / 2) * 28;
     rc->w = 24;
     rc->h = 24;
 }
 
-static int gp_hit_stick(int player, int lx, int ly) {
+static int gp_hit_stick(const R01sUi *ui, int player, int lx, int ly) {
     int cx, cy;
     int dx, dy;
-    gp_stick_center(player, &cx, &cy);
+    gp_stick_center(ui, player, &cx, &cy);
     dx = lx - cx;
     dy = ly - cy;
     return dx * dx + dy * dy <= (R01S_GAMEPAD_STICK_RADIUS + 8) * (R01S_GAMEPAD_STICK_RADIUS + 8);
 }
 
-static int gp_hit_btn(int player, int lx, int ly) {
+static int gp_hit_btn(const R01sUi *ui, int player, int lx, int ly) {
     int b;
     for (b = 0; b < 4; b++) {
         SDL_Rect rc;
-        gp_btn_rect(player, b, &rc);
+        gp_btn_rect(ui, player, b, &rc);
         if (lx >= rc.x && lx < rc.x + rc.w && ly >= rc.y && ly < rc.y + rc.h) {
             return b;
         }
@@ -1004,16 +1010,16 @@ static int gp_hit_btn(int player, int lx, int ly) {
     return -1;
 }
 
-static int gp_hit_any(int lx, int ly, int *player_out, int *btn_out) {
+static int gp_hit_any(const R01sUi *ui, int lx, int ly, int *player_out, int *btn_out) {
     int p;
     for (p = 0; p < R01S_UI_GAMEPAD_COUNT; p++) {
-        int b = gp_hit_btn(p, lx, ly);
+        int b = gp_hit_btn(ui, p, lx, ly);
         if (b >= 0) {
             *player_out = p;
             *btn_out = b;
             return 2;
         }
-        if (gp_hit_stick(p, lx, ly)) {
+        if (gp_hit_stick(ui, p, lx, ly)) {
             *player_out = p;
             *btn_out = -1;
             return 1;
@@ -1022,9 +1028,9 @@ static int gp_hit_any(int lx, int ly, int *player_out, int *btn_out) {
     return 0;
 }
 
-static void gp_stick_from_point(R01sGamepadInput *gp, int player, int lx, int ly) {
+static void gp_stick_from_point(R01sUi *ui, R01sGamepadInput *gp, int player, int lx, int ly) {
     int cx, cy;
-    gp_stick_center(player, &cx, &cy);
+    gp_stick_center(ui, player, &cx, &cy);
     gp->stick_x = lx - cx;
     gp->stick_y = ly - cy;
     r01s_gamepad_stick_clamp(&gp->stick_x, &gp->stick_y, R01S_GAMEPAD_STICK_RADIUS);
@@ -1066,34 +1072,24 @@ static void draw_video_pixels(SDL_Renderer *r, const R01sVideoSink *sink, int px
     }
 }
 
-static void draw_video_preview(SDL_Renderer *r, const R01sVideoSink *sink, int px, int py) {
-    if (!sink) {
-        return;
-    }
-    fill_rect(r, px - 8, py - 6, 128 + 16, 120 + 22, 16, 22, 18);
-    draw_rect(r, px - 8, py - 6, 128 + 16, 120 + 22, 80, 90, 70);
-    font_draw(r, px, py - 4, "PLAYFIELD 128X120", 180, 190, 160);
-    draw_video_pixels(r, sink, px, py + 10);
-}
-
 static void draw_gamepad_panel(SDL_Renderer *r, const R01sUi *ui, int player) {
     int px, py, cx, cy, b;
     char hex[8];
     uint8_t bits;
     SDL_Rect brc;
 
-    gp_panel_origin(player, &px, &py);
+    gp_panel_origin(ui, player, &px, &py);
     fill_rect(r, px, py, GP_PANEL_W, GP_PANEL_H, 16, 20, 24);
     draw_rect(r, px, py, GP_PANEL_W, GP_PANEL_H, 60, 70, 80);
     font_draw(r, px + 8, py + 6, player == 0 ? "P1 FE60" : "P2 FE61", 180, 200, 220);
 
-    gp_stick_center(player, &cx, &cy);
+    gp_stick_center(ui, player, &cx, &cy);
     draw_stick(r, cx, cy, ui->gamepad[player].stick_x, ui->gamepad[player].stick_y);
 
     for (b = 0; b < 4; b++) {
         const char *labels[4] = {"X", "Y", "C", "S"};
         int pressed = 0;
-        gp_btn_rect(player, b, &brc);
+        gp_btn_rect(ui, player, b, &brc);
         switch (b) {
         case 0:
             pressed = ui->gamepad[player].btn_x;
@@ -1181,11 +1177,15 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     int ox = (-ui->pan_x) % 32;
     int oy = (-ui->pan_y) % 32;
     SDL_Rect view_clip = {R01S_UI_VIEW_X, R01S_UI_VIEW_Y, R01S_UI_VIEW_W, R01S_UI_VIEW_H};
-    int probe_x = R01S_LOGIC_W - R01S_UI_SIDEBAR_R + 8;
+    SDL_Rect sidebar_clip = {0, R01S_UI_SIDEBAR_TOP, R01S_UI_SIDEBAR_L, R01S_UI_SIDEBAR_VIEW_H};
+    int max_s;
+    char fps_buf[16];
+
+    sidebar_clamp_scroll(ui);
+    max_s = sidebar_max_scroll(ui);
 
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_LOGIC_H, 12, 14, 16);
     fill_rect(r, 0, 0, R01S_UI_SIDEBAR_L, R01S_LOGIC_H, 14, 18, 16);
-    fill_rect(r, R01S_LOGIC_W - R01S_UI_SIDEBAR_R, 0, R01S_UI_SIDEBAR_R, R01S_LOGIC_H, 16, 20, 18);
     fill_rect(r, R01S_UI_VIEW_X, R01S_UI_VIEW_Y, R01S_UI_VIEW_W, R01S_UI_VIEW_H, 18, 42, 28);
 
     SDL_RenderSetClipRect(r, &view_clip);
@@ -1239,32 +1239,32 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     font_draw(r, R01S_UI_VIEW_X + 8, 7, "DRAG EMPTY / RESIZE BR  SHIFT+ARROWS PAN (VERT)", 120, 130,
               140);
 
-    draw_system_health_panel(r, ui);
-
-    fill_rect(r, probe_x - 8, R01S_UI_HUD_TOP + 6, R01S_UI_SIDEBAR_R - 8, 168, 16, 22, 18);
-    draw_rect(r, probe_x - 8, R01S_UI_HUD_TOP + 6, R01S_UI_SIDEBAR_R - 8, 168, 80, 90, 70);
-    font_draw(r, probe_x, R01S_UI_HUD_TOP + 12, "LIVE PROBE", 200, 210, 180);
-    draw_led(r, probe_x, R01S_UI_HUD_TOP + 30, ui->probe_vdd, 80, 220, 100, "VDD");
-    draw_led(r, probe_x, R01S_UI_HUD_TOP + 48, ui->probe_phi2, 220, 200, 60, "PHI2");
-    draw_led(r, probe_x, R01S_UI_HUD_TOP + 66, ui->probe_resb_low, 220, 80, 80, "RESB LO");
-    font_draw(r, probe_x, R01S_UI_HUD_TOP + 88, "P1 FE60", 160, 180, 160);
-    draw_pad_bits(r, probe_x, R01S_UI_HUD_TOP + 98, ui->probe_pad_p1);
-    font_draw(r, probe_x, R01S_UI_HUD_TOP + 118, "P2 FE61", 160, 180, 160);
-    draw_pad_bits(r, probe_x, R01S_UI_HUD_TOP + 128, ui->probe_pad_p2);
-    font_draw(r, probe_x, R01S_UI_HUD_TOP + 148, "PINS GLOW = LEVEL", 120, 130, 120);
-
-    {
-        R01sBoard *board = r01s_board_from_group(ui->group);
-        if (board) {
-            draw_video_preview(r, &board->video_sink, probe_x, R01S_UI_HUD_TOP + 188);
-        }
-    }
-
+    /* Left sidebar: controllers, live probe, system status (scrollable). */
+    SDL_RenderSetClipRect(r, &sidebar_clip);
     draw_gamepad_panel(r, ui, 0);
     draw_gamepad_panel(r, ui, 1);
+    draw_live_probe(r, ui, sidebar_sy(ui, sidebar_probe_content_y()));
+    draw_system_health_panel(r, ui, sidebar_sy(ui, sidebar_status_content_y()));
+    SDL_RenderSetClipRect(r, NULL);
+
+    if (max_s > 0) {
+        int track_x = R01S_UI_SIDEBAR_L - 6;
+        int track_y = R01S_UI_SIDEBAR_TOP;
+        int track_h = R01S_UI_SIDEBAR_VIEW_H;
+        int thumb_h = track_h * R01S_UI_SIDEBAR_VIEW_H / sidebar_content_h(ui);
+        int thumb_y;
+        if (thumb_h < 12) {
+            thumb_h = 12;
+        }
+        thumb_y = track_y + (track_h - thumb_h) * ui->sidebar_scroll / max_s;
+        fill_rect(r, track_x, track_y, 4, track_h, 28, 36, 30);
+        fill_rect(r, track_x, thumb_y, 4, thumb_h, 90, 120, 95);
+    }
 
     fill_rect(r, 0, R01S_LOGIC_H - R01S_UI_HUD_BOTTOM, R01S_LOGIC_W, R01S_UI_HUD_BOTTOM, 12, 14, 16);
     font_draw(r, 8, R01S_LOGIC_H - 15, ui->status, 160, 170, 160);
+    snprintf(fps_buf, sizeof(fps_buf), "%d FPS", ui->fps);
+    font_draw(r, R01S_LOGIC_W - font_text_width(fps_buf) - 8, R01S_LOGIC_H - 15, fps_buf, 160, 180, 160);
 
     {
         char tip[160];
@@ -1321,9 +1321,9 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         ui_logic_to_board(ui, logic_x, logic_y, &board_mx, &board_my);
     }
     if (e->type == SDL_MOUSEWHEEL) {
-        if (status_panel_hit(logic_x, logic_y) || status_list_hit(logic_x, logic_y)) {
-            ui->status_scroll -= e->wheel.y * R01S_UI_STATUS_ROW_H;
-            status_clamp_scroll(ui);
+        if (sidebar_hit(logic_x, logic_y)) {
+            ui->sidebar_scroll -= e->wheel.y * R01S_UI_STATUS_ROW_H;
+            sidebar_clamp_scroll(ui);
             return 1;
         }
         if (ui_logic_in_view(logic_x, logic_y)) {
@@ -1357,7 +1357,7 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         return 1;
     }
     if (e->type == SDL_MOUSEMOTION && ui->drag_stick >= 0) {
-        gp_stick_from_point(&ui->gamepad[ui->drag_stick], ui->drag_stick, logic_x, logic_y);
+        gp_stick_from_point(ui, &ui->gamepad[ui->drag_stick], ui->drag_stick, logic_x, logic_y);
         return 1;
     }
     if (e->type == SDL_MOUSEMOTION && ui->resize_island >= 0) {
@@ -1423,9 +1423,9 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
 
         /* System / island COPY buttons (sidebar) before gamepad / board hits. */
         if (health_needs_debug(ui->health.system) || ui->health.system == R01S_HEALTH_BOOT) {
-            health_system_copy_rect(&copy_rc);
-            if (logic_x >= copy_rc.x && logic_x < copy_rc.x + copy_rc.w && logic_y >= copy_rc.y &&
-                logic_y < copy_rc.y + copy_rc.h) {
+            health_system_copy_rect(ui, &copy_rc);
+            if (sidebar_hit(logic_x, logic_y) && logic_x >= copy_rc.x && logic_x < copy_rc.x + copy_rc.w &&
+                logic_y >= copy_rc.y && logic_y < copy_rc.y + copy_rc.h) {
                 ui_copy_health_text(ui, ui->health.system_debug);
                 return 1;
             }
@@ -1435,8 +1435,8 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 continue;
             }
             health_copy_btn_rect(ui, i, &copy_rc);
-            if (!status_list_hit(copy_rc.x + copy_rc.w / 2, copy_rc.y + copy_rc.h / 2)) {
-                continue; /* scrolled out of list viewport */
+            if (!sidebar_hit(copy_rc.x + copy_rc.w / 2, copy_rc.y + copy_rc.h / 2)) {
+                continue; /* scrolled out of sidebar viewport */
             }
             if (logic_x >= copy_rc.x && logic_x < copy_rc.x + copy_rc.w && logic_y >= copy_rc.y &&
                 logic_y < copy_rc.y + copy_rc.h) {
@@ -1445,7 +1445,7 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             }
         }
 
-        hit = gp_hit_any(logic_x, logic_y, &gp_player, &gp_btn);
+        hit = gp_hit_any(ui, logic_x, logic_y, &gp_player, &gp_btn);
         if (hit == 2) {
             ui->drag_btn = gp_player * 4 + gp_btn;
             ui->mouse_btn[gp_player][gp_btn] = 1;
@@ -1453,7 +1453,7 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         }
         if (hit == 1) {
             ui->drag_stick = gp_player;
-            gp_stick_from_point(&ui->gamepad[gp_player], gp_player, logic_x, logic_y);
+            gp_stick_from_point(ui, &ui->gamepad[gp_player], gp_player, logic_x, logic_y);
             return 1;
         }
         ui->selected = -1;

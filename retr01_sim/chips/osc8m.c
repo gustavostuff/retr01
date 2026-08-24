@@ -51,7 +51,8 @@ void r01s_osc8m_init(R01sOsc8m *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 4, "GND", R01S_PIN_PWR);
     r01s_entity_add_pin(&chip->base, 5, "PHI2", R01S_PIN_OUT);
     r01s_entity_add_pin(&chip->base, 8, "VDD", R01S_PIN_IN);
-    r01s_entity_set_glyph(&chip->base, R01S_ENTITY_VIS_OSC, 48, 52);
+    /* Sized for 2x osc.png (25x17) plus pin / label margins. */
+    r01s_entity_set_glyph(&chip->base, R01S_ENTITY_VIS_OSC, 58, 54);
     r01s_entity_reset(&chip->base);
 }
 

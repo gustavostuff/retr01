@@ -65,6 +65,8 @@ int r01s_app_init(R01sApp *app, int headless) {
         fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
         return -1;
     }
+    app->fps_last_ms = SDL_GetTicks();
+    app->fps_frames = 0;
 
     if (r01s_ui_init(&app->ui) != 0) {
         SDL_Quit();
@@ -137,6 +139,7 @@ void r01s_app_frame(R01sApp *app) {
     SDL_Rect dst;
     R01sIslandGroup *group;
     R01sBoard *board;
+    Uint32 now;
 
     group = r01s_island_builder_group(&app->builder);
     r01s_ui_sync_gamepads(&app->ui);
@@ -153,6 +156,14 @@ void r01s_app_frame(R01sApp *app) {
         r01s_island_group_fill_status(group, app->ui.status, sizeof(app->ui.status));
         r01s_island_group_fill_health(group, &app->ui.health);
         r01s_island_group_update_probes(group, &app->ui.probe_vdd, &app->ui.probe_phi2, &app->ui.probe_resb_low);
+    }
+
+    app->fps_frames++;
+    now = SDL_GetTicks();
+    if (now - app->fps_last_ms >= 1000u) {
+        app->ui.fps = app->fps_frames;
+        app->fps_frames = 0;
+        app->fps_last_ms = now;
     }
 
     SDL_SetRenderTarget(app->ren, app->target);

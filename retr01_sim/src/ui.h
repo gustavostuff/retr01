@@ -17,7 +17,7 @@
 #define R01S_UI_HUD_TOP 22
 #define R01S_UI_HUD_BOTTOM 22
 #define R01S_UI_SIDEBAR_L 244
-#define R01S_UI_SIDEBAR_R 200
+#define R01S_UI_SIDEBAR_R 0
 #define R01S_UI_VIEW_X R01S_UI_SIDEBAR_L
 #define R01S_UI_VIEW_Y R01S_UI_HUD_TOP
 #define R01S_UI_VIEW_W (R01S_LOGIC_W - R01S_UI_SIDEBAR_L - R01S_UI_SIDEBAR_R)
@@ -52,7 +52,8 @@ typedef struct R01sUi {
     int mouse_btn[R01S_UI_GAMEPAD_COUNT][4]; /* X Y COIN START held by mouse */
     int mouse_lx; /* last logic-space mouse (for tooltips) */
     int mouse_ly;
-    int status_scroll; /* px offset into island status rows */
+    int sidebar_scroll; /* px offset into left sidebar content */
+    int fps;            /* rolling 1s frame rate for HUD */
 } R01sUi;
 
 int r01s_ui_init(R01sUi *ui);
