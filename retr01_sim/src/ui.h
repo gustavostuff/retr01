@@ -97,4 +97,13 @@ int r01s_ui_rotate_selected(R01sUi *ui);
 int r01s_ui_layout_load(R01sUi *ui);
 int r01s_ui_layout_save(R01sUi *ui);
 
+/* Copy live island frames + chip positions into save_* snapshots. */
+void r01s_ui_snapshot_island_layout(R01sUi *ui);
+
+/* Copy live island frame geometry only (compact mode — chip snapshot stays island-relative). */
+void r01s_ui_snapshot_island_frames(R01sUi *ui);
+
+/* Fix stacked/invalid island layouts after load or mode toggle. */
+void r01s_ui_heal_island_layout(R01sUi *ui);
+
 #endif

@@ -59,9 +59,14 @@ static int chip_index_by_refdes(const R01sUi *ui, const char *refdes) {
 
 static void capture_snapshots(R01sUi *ui) {
     int i;
-    int n_islands;
     if (!ui || !ui->group) {
         return;
+    }
+    /* Always persist live island frames (compact hides frames but geometry stays on group). */
+    if (ui->layout_compact) {
+        r01s_ui_snapshot_island_frames(ui);
+    } else {
+        r01s_ui_snapshot_island_layout(ui);
     }
     if (ui->layout_compact) {
         for (i = 0; i < ui->chip_count; i++) {
@@ -71,47 +76,6 @@ static void capture_snapshots(R01sUi *ui) {
             ui->compact_chip_orient[i] = e ? (uint8_t)e->orient : (uint8_t)R01S_ORIENT_H;
         }
         ui->compact_saved = 1;
-        /* Island snapshot already in save_* from when we entered compact. */
-        if (!ui->layout_saved) {
-            /* Shouldn't happen; keep frames as currently stored on islands. */
-            n_islands = r01s_island_group_count(ui->group);
-            for (i = 0; i < n_islands && i < R01S_MAX_ISLANDS; i++) {
-                const R01sIsland *island = r01s_island_group_at(ui->group, i);
-                if (!island) {
-                    continue;
-                }
-                ui->save_island_x[i] = island->board_x;
-                ui->save_island_y[i] = island->board_y;
-                ui->save_island_w[i] = island->board_w;
-                ui->save_island_h[i] = island->board_h;
-            }
-            for (i = 0; i < ui->chip_count; i++) {
-                const R01sEntity *e = ui->chips[i];
-                ui->save_chip_x[i] = e ? e->board_x : 0;
-                ui->save_chip_y[i] = e ? e->board_y : 0;
-                ui->save_chip_orient[i] = e ? (uint8_t)e->orient : (uint8_t)R01S_ORIENT_H;
-            }
-            ui->layout_saved = 1;
-        }
-    } else {
-        n_islands = r01s_island_group_count(ui->group);
-        for (i = 0; i < n_islands && i < R01S_MAX_ISLANDS; i++) {
-            const R01sIsland *island = r01s_island_group_at(ui->group, i);
-            if (!island) {
-                continue;
-            }
-            ui->save_island_x[i] = island->board_x;
-            ui->save_island_y[i] = island->board_y;
-            ui->save_island_w[i] = island->board_w;
-            ui->save_island_h[i] = island->board_h;
-        }
-        for (i = 0; i < ui->chip_count; i++) {
-            const R01sEntity *e = ui->chips[i];
-            ui->save_chip_x[i] = e ? e->board_x : 0;
-            ui->save_chip_y[i] = e ? e->board_y : 0;
-            ui->save_chip_orient[i] = e ? (uint8_t)e->orient : (uint8_t)R01S_ORIENT_H;
-        }
-        ui->layout_saved = 1;
     }
 }
 
@@ -449,31 +413,56 @@ int r01s_ui_layout_load(R01sUi *ui) {
 
     /* Apply island-mode geometry first. */
     if (ui->layout_saved) {
-        for (i = 0; i < n_islands && i < R01S_MAX_ISLANDS; i++) {
-            R01sIsland *island = r01s_island_group_at_mut(ui->group, i);
-            if (!island || ui->save_island_w[i] <= 0 || ui->save_island_h[i] <= 0) {
-                continue;
+        int n = r01s_island_group_count(ui->group);
+        int have_frames = 0;
+        for (i = 0; i < n && i < R01S_MAX_ISLANDS; i++) {
+            if (ui->save_island_w[i] > 0 && ui->save_island_h[i] > 0) {
+                have_frames = 1;
+                break;
             }
-            island->board_x = ui->save_island_x[i];
-            island->board_y = ui->save_island_y[i];
-            island->board_w = ui->save_island_w[i];
-            island->board_h = ui->save_island_h[i];
         }
-        for (i = 0; i < ui->chip_count; i++) {
-            R01sEntity *e = ui->chips[i];
-            if (!e) {
-                continue;
+        if (!have_frames) {
+            /* Empty islands[] in JSON — arrange default rows, then place chips. */
+            for (i = 0; i < ui->chip_count; i++) {
+                R01sEntity *e = ui->chips[i];
+                if (!e) {
+                    continue;
+                }
+                if (e->visual == R01S_ENTITY_VIS_IC) {
+                    r01s_entity_set_orient(e, (R01sPkgOrient)ui->save_chip_orient[i]);
+                }
+                r01s_entity_place(e, ui->save_chip_x[i], ui->save_chip_y[i]);
             }
-            if (e->visual == R01S_ENTITY_VIS_IC) {
-                r01s_entity_set_orient(e, (R01sPkgOrient)ui->save_chip_orient[i]);
+        } else {
+            for (i = 0; i < n && i < R01S_MAX_ISLANDS; i++) {
+                R01sIsland *island = r01s_island_group_at_mut(ui->group, i);
+                if (!island || ui->save_island_w[i] <= 0 || ui->save_island_h[i] <= 0) {
+                    continue;
+                }
+                island->board_x = ui->save_island_x[i];
+                island->board_y = ui->save_island_y[i];
+                island->board_w = ui->save_island_w[i];
+                island->board_h = ui->save_island_h[i];
             }
-            r01s_entity_place(e, ui->save_chip_x[i], ui->save_chip_y[i]);
+            for (i = 0; i < ui->chip_count; i++) {
+                R01sEntity *e = ui->chips[i];
+                if (!e) {
+                    continue;
+                }
+                if (e->visual == R01S_ENTITY_VIS_IC) {
+                    r01s_entity_set_orient(e, (R01sPkgOrient)ui->save_chip_orient[i]);
+                }
+                r01s_entity_place(e, ui->save_chip_x[i], ui->save_chip_y[i]);
+            }
         }
     }
 
     ui->pan_x = pan_x;
     ui->pan_y = pan_y;
     ui->layout_compact = 0;
+    if (!mode_compact) {
+        r01s_ui_heal_island_layout(ui);
+    }
     if (mode_compact && ui->compact_saved) {
         for (i = 0; i < ui->chip_count; i++) {
             R01sEntity *e = ui->chips[i];
