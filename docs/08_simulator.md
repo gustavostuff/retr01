@@ -120,6 +120,8 @@ Verified against Studio pack (`r01_cart_build`) and the checked-in `retr01_studi
 
 Bring-up overlay now streams world-0 screen0 MAP→VRAM and loads `$FE08`/`$FE09` pals from cart; Island O fetches 2bpp CHR from flash (no host soft-boot). Still missing for full Play parity: real game PRG (no overlay), camera seam streaming. Use emu soft-boot for atlas viewing; use sim for bus/island validation.
 
+**Fast path (toggle):** Optimization Playbook Pass 3 — optional glue inlining without removing pin-level code. Default off. `R01S_FAST=1` or `./sim run -- --fast` enables **settle** (1-pass vs 4-pass combinatorial settle) and **video** (direct compositor+PROM peek per dot). Press **F** in the UI to toggle. Future flags: `bus`, `memory`, `pins`.
+
 ## Modeling principles
 
 1. **IC-first:** one module per part number; pins named after the datasheet.

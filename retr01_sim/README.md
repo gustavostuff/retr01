@@ -28,6 +28,8 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 
 **Cart load:** `./sim run -- path/to/project.retr01` (or auto-finds `retr01_studio/project.retr01`). Sim applies a **bring-up PRG overlay** into the cart PRG window so island smoke still runs — that overlay is **not** Studio ROM content ([triage](../docs/08_simulator.md#cart-rom-vs-runners-triage)). After smoke it also MAP-streams world-0 screen0 into VRAM and loads active pals via `$FE93`→`$FE08`/`$FE09`; LCD stays blank until that 480 B stream finishes (tiles+attrs), then samples 2bpp CHR from flash. Still **no** emu-style host soft-boot.
 
+**Fast path (optional):** Playbook “glue inlining” — default is full pin-level settle (4 passes) + compositor entity eval per dot. Enable **`R01S_FAST=1`**, **`./sim run -- --fast`**, or press **`F`** in the UI for `settle` (1-pass settle) + `video` (direct PROM path). Slow route unchanged; reserved flags: `bus`, `memory`, `pins` for future passes.
+
 Next: optional **F** machine EEPROM (1284 path); retire bring-up overlay when game PRG owns MAP.
 
 ## Build

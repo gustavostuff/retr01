@@ -1,5 +1,6 @@
 #include "retr01_sim/board.h"
 
+#include "retr01_sim/board_fast.h"
 #include "retr01_sim/board_layout.h"
 #include "retr01_sim/bus.h"
 #include "retr01_sim/health.h"
@@ -12,6 +13,7 @@
 #define R01S_CART_HDR_SIZE 16
 #define R01S_CART_PTR_SIZE 24
 #define R01S_CART_PRG_BYTES 0x8000u
+#define R01S_SETTLE_PASSES_FAST 1
 /*
  * DOT/beam ticks per board step. Real silicon runs DOT ≈ PHI2 order; the UI
  * only does ~32 board steps/frame, so without a burst first VBlank takes minutes.
@@ -1500,10 +1502,55 @@ static int board_video_held_for_map_stream(const R01sBoard *ctx) {
 }
 
 /*
+ * Playbook Pass 3 — inline Island O glue (same priority as compositor PLD, no entity eval).
+ */
+static void wire_video_dot_fast(R01sBoard *ctx) {
+    R01sBeamXy *beam = ctx->beam_impl.beam;
+    R01sAt28c16 *prom = ctx->video_impl.prom;
+    R01sVideoSink *sink = ctx->video_impl.sink;
+    int bx = r01s_beam_xy_x(beam);
+    int by = r01s_beam_xy_y(beam);
+    int lx;
+    int ly;
+    uint8_t bg;
+    uint8_t spr;
+    uint8_t idx;
+    uint8_t packed;
+
+    if (r01s_beam_xy_hblank(beam) || r01s_beam_xy_vblank(beam) || bx >= R01S_BEAM_VISIBLE_W ||
+        by >= R01S_BEAM_VISIBLE_H) {
+        return;
+    }
+    if (board_video_held_for_map_stream(ctx)) {
+        return;
+    }
+    lx = bx / 2;
+    ly = by / 2;
+    bg = board_bg_master_at(ctx, lx, ly);
+    spr = r01s_as6c62256_peek(ctx->linebuf_impl.sram,
+                              (uint16_t)(((ctx->linebuf_show_half & 1u) << 7) | (lx & 0x7F)));
+    if (spr != 0) {
+        ctx->health_saw_sprites = 1;
+    }
+    if (spr != 0 && (spr & 0x3Fu) != 0) {
+        idx = (uint8_t)(spr & 0x3Fu);
+    } else {
+        idx = (uint8_t)(bg & 0x3Fu);
+    }
+    packed = r01s_at28c16_peek(prom, idx);
+    r01s_video_sink_plot(sink, lx, ly, packed);
+}
+
+/*
  * Island O — dot-sampled BG -> compositor -> Color PROM -> LCD sink.
  * CHR: behavioral flash peek (no /CE fight with PRG/MAP); 2bpp + $FE08/$FE09.
  */
 static void wire_video_dot(R01sBoard *ctx) {
+    if (r01s_fast_glue_enabled(R01S_FAST_GLUE_VIDEO)) {
+        wire_video_dot_fast(ctx);
+        return;
+    }
+
     R01sBeamXy *beam = ctx->beam_impl.beam;
     R01sCompositor *comp = ctx->video_impl.comp;
     R01sAt28c16 *prom = ctx->video_impl.prom;
@@ -1647,8 +1694,9 @@ static void wire_power_clock_reset(R01sBoard *ctx, R01sIslandGroup *group) {
 }
 
 static void board_settle(R01sBoard *ctx, R01sIslandGroup *group) {
+    int passes = r01s_fast_glue_enabled(R01S_FAST_GLUE_SETTLE) ? R01S_SETTLE_PASSES_FAST : R01S_SETTLE_PASSES;
     int i;
-    for (i = 0; i < R01S_SETTLE_PASSES; i++) {
+    for (i = 0; i < passes; i++) {
         wire_power_clock_reset(ctx, group);
         wire_memory(ctx);
         wire_io(ctx);
