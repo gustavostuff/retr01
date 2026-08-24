@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define R01S_LAYOUT_VERSION 1
+#define R01S_LAYOUT_VERSION 2
 
 static const char *const LAYOUT_READ_PATHS[] = {
     "retr01_sim/ui_layout.json",
@@ -107,12 +107,33 @@ int r01s_ui_layout_save(R01sUi *ui) {
     fprintf(f, "  \"islands\": [\n");
     first = 1;
     for (i = 0; i < n_islands && i < R01S_MAX_ISLANDS; i++) {
+        const R01sIsland *island = r01s_island_group_at(ui->group, i);
+        int ix;
+        int iy;
+        int iw;
+        int ih;
+        if (!island) {
+            continue;
+        }
+        /* Prefer live frames; fall back to last island-mode snapshot. */
+        if (island->board_w > 0 && island->board_h > 0) {
+            ix = island->board_x;
+            iy = island->board_y;
+            iw = island->board_w;
+            ih = island->board_h;
+        } else if (ui->save_island_w[i] > 0 && ui->save_island_h[i] > 0) {
+            ix = ui->save_island_x[i];
+            iy = ui->save_island_y[i];
+            iw = ui->save_island_w[i];
+            ih = ui->save_island_h[i];
+        } else {
+            continue;
+        }
         if (!first) {
             fprintf(f, ",\n");
         }
         first = 0;
-        fprintf(f, "    {\"i\": %d, \"x\": %d, \"y\": %d, \"w\": %d, \"h\": %d}", i, ui->save_island_x[i],
-                ui->save_island_y[i], ui->save_island_w[i], ui->save_island_h[i]);
+        fprintf(f, "    {\"i\": %d, \"x\": %d, \"y\": %d, \"w\": %d, \"h\": %d}", i, ix, iy, iw, ih);
     }
     fprintf(f, "\n  ],\n");
 
@@ -121,6 +142,8 @@ int r01s_ui_layout_save(R01sUi *ui) {
     for (i = 0; i < ui->chip_count; i++) {
         const R01sEntity *e = ui->chips[i];
         const char *id;
+        int rx;
+        int ry;
         if (!e || !e->refdes) {
             continue;
         }
@@ -129,9 +152,23 @@ int r01s_ui_layout_save(R01sUi *ui) {
             fprintf(f, ",\n");
         }
         first = 0;
+        if (ui->layout_compact) {
+            /* Compact mode — keep last island-relative snapshot, not board coords. */
+            rx = ui->save_chip_x[i];
+            ry = ui->save_chip_y[i];
+        } else {
+            const R01sIsland *island = r01s_island_group_at(ui->group, ui->chip_island[i]);
+            if (island) {
+                rx = e->board_x - island->board_x;
+                ry = e->board_y - island->board_y;
+            } else {
+                rx = ui->save_chip_x[i];
+                ry = ui->save_chip_y[i];
+            }
+        }
         fprintf(f,
-                "    {\"id\": \"%s\", \"island\": %d, \"x\": %d, \"y\": %d, \"orient\": \"%s\"}", id,
-                (int)ui->chip_island[i], ui->save_chip_x[i], ui->save_chip_y[i],
+                "    {\"id\": \"%s\", \"island\": %d, \"rx\": %d, \"ry\": %d, \"orient\": \"%s\"}", id,
+                (int)ui->chip_island[i], rx, ry,
                 ui->save_chip_orient[i] == (uint8_t)R01S_ORIENT_V ? "V" : "H");
     }
     fprintf(f, "\n  ],\n");
@@ -248,6 +285,7 @@ int r01s_ui_layout_load(R01sUi *ui) {
     long sz;
     FILE *f = NULL;
     int i;
+    int file_version = 1;
     int mode_compact = 0;
     int pan_x = 0;
     int pan_y = 0;
@@ -297,6 +335,10 @@ int r01s_ui_layout_load(R01sUi *ui) {
     fclose(f);
 
     mode[0] = '\0';
+    json_int_after(buf, "\"version\"", &file_version);
+    if (file_version <= 0) {
+        file_version = 1;
+    }
     json_string_after(buf, "\"mode\"", mode, sizeof(mode));
     mode_compact = (strcmp(mode, "compact") == 0);
     json_int_after(buf, "\"pan_x\"", &pan_x);
@@ -342,7 +384,9 @@ int r01s_ui_layout_load(R01sUi *ui) {
             char slice[320];
             char id[32];
             char orient[8];
-            int x = 0, y = 0, island = 0;
+            int rx = 0;
+            int ry = 0;
+            int island = 0;
             int ci;
             end = json_object_end(obj);
             if (!end || (size_t)(end - obj) >= sizeof(slice)) {
@@ -354,14 +398,18 @@ int r01s_ui_layout_load(R01sUi *ui) {
             orient[0] = 'H';
             orient[1] = '\0';
             if (json_string_after(slice, "\"id\"", id, sizeof(id))) {
-                json_int_after(slice, "\"x\"", &x);
-                json_int_after(slice, "\"y\"", &y);
+                if (!json_int_after(slice, "\"rx\"", &rx)) {
+                    json_int_after(slice, "\"x\"", &rx);
+                }
+                if (!json_int_after(slice, "\"ry\"", &ry)) {
+                    json_int_after(slice, "\"y\"", &ry);
+                }
                 json_int_after(slice, "\"island\"", &island);
                 json_string_after(slice, "\"orient\"", orient, sizeof(orient));
                 ci = chip_index_by_refdes(ui, id);
                 if (ci >= 0) {
-                    ui->save_chip_x[ci] = x;
-                    ui->save_chip_y[ci] = y;
+                    ui->save_chip_x[ci] = rx;
+                    ui->save_chip_y[ci] = ry;
                     ui->save_chip_orient[ci] =
                         (orient[0] == 'V' || orient[0] == 'v') ? (uint8_t)R01S_ORIENT_V
                                                                : (uint8_t)R01S_ORIENT_H;
@@ -411,58 +459,14 @@ int r01s_ui_layout_load(R01sUi *ui) {
         }
     }
 
-    /* Apply island-mode geometry first. */
-    if (ui->layout_saved) {
-        int n = r01s_island_group_count(ui->group);
-        int have_frames = 0;
-        for (i = 0; i < n && i < R01S_MAX_ISLANDS; i++) {
-            if (ui->save_island_w[i] > 0 && ui->save_island_h[i] > 0) {
-                have_frames = 1;
-                break;
-            }
-        }
-        if (!have_frames) {
-            /* Empty islands[] in JSON — arrange default rows, then place chips. */
-            for (i = 0; i < ui->chip_count; i++) {
-                R01sEntity *e = ui->chips[i];
-                if (!e) {
-                    continue;
-                }
-                if (e->visual == R01S_ENTITY_VIS_IC) {
-                    r01s_entity_set_orient(e, (R01sPkgOrient)ui->save_chip_orient[i]);
-                }
-                r01s_entity_place(e, ui->save_chip_x[i], ui->save_chip_y[i]);
-            }
-        } else {
-            for (i = 0; i < n && i < R01S_MAX_ISLANDS; i++) {
-                R01sIsland *island = r01s_island_group_at_mut(ui->group, i);
-                if (!island || ui->save_island_w[i] <= 0 || ui->save_island_h[i] <= 0) {
-                    continue;
-                }
-                island->board_x = ui->save_island_x[i];
-                island->board_y = ui->save_island_y[i];
-                island->board_w = ui->save_island_w[i];
-                island->board_h = ui->save_island_h[i];
-            }
-            for (i = 0; i < ui->chip_count; i++) {
-                R01sEntity *e = ui->chips[i];
-                if (!e) {
-                    continue;
-                }
-                if (e->visual == R01S_ENTITY_VIS_IC) {
-                    r01s_entity_set_orient(e, (R01sPkgOrient)ui->save_chip_orient[i]);
-                }
-                r01s_entity_place(e, ui->save_chip_x[i], ui->save_chip_y[i]);
-            }
-        }
+    /* Apply island-mode geometry (frames first, then island-relative chips). */
+    if (ui->layout_saved && !mode_compact) {
+        r01s_ui_load_island_layout(ui, file_version);
     }
 
     ui->pan_x = pan_x;
     ui->pan_y = pan_y;
     ui->layout_compact = 0;
-    if (!mode_compact) {
-        r01s_ui_heal_island_layout(ui);
-    }
     if (mode_compact && ui->compact_saved) {
         for (i = 0; i < ui->chip_count; i++) {
             R01sEntity *e = ui->chips[i];

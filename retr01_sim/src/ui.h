@@ -63,6 +63,7 @@ typedef struct R01sUi {
     int layout_compact; /* 1 = pack chips like a PCB (no island frames) */
     /* Snapshot of island-mode geometry while compact (restored on toggle off). */
     int layout_saved;
+    /* Island-mode chip positions relative to island board_x/board_y. */
     int save_chip_x[R01S_BOARD_MAX_CHIPS];
     int save_chip_y[R01S_BOARD_MAX_CHIPS];
     uint8_t save_chip_orient[R01S_BOARD_MAX_CHIPS]; /* R01sPkgOrient */
@@ -103,7 +104,13 @@ void r01s_ui_snapshot_island_layout(R01sUi *ui);
 /* Copy live island frame geometry only (compact mode — chip snapshot stays island-relative). */
 void r01s_ui_snapshot_island_frames(R01sUi *ui);
 
-/* Fix stacked/invalid island layouts after load or mode toggle. */
-void r01s_ui_heal_island_layout(R01sUi *ui);
+/* Apply saved island frames + island-relative chip positions (no compact/ heal side effects). */
+void r01s_ui_apply_saved_island_layout(R01sUi *ui);
+
+/* Apply saved island layout after JSON load (handles v1 absolute coords + v2 relative). */
+void r01s_ui_load_island_layout(R01sUi *ui, int file_version);
+
+/* v1 JSON stored absolute board coords — convert to island-relative using live frames. */
+void r01s_ui_layout_migrate_v1_chips(R01sUi *ui);
 
 #endif
