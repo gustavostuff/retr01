@@ -33,23 +33,21 @@
 /* Combinatorial settle passes per wire/eval half-step (PLD/glue depth). */
 #define R01S_SETTLE_PASSES 4
 
+/* 12 canvas islands — one per BOM region; pads/sprites/NMI/BG-fetch are wired, not separate frames. */
 enum {
     R01S_ISLAND_POWER = 0,
     R01S_ISLAND_CLOCK = 1,
     R01S_ISLAND_CPU = 2,
     R01S_ISLAND_IO_LATCH = 3,
-    R01S_ISLAND_PADS = 4,
-    R01S_ISLAND_VRAM = 5,
-    R01S_ISLAND_BEAM = 6,
-    R01S_ISLAND_BG_FETCH = 7,
-    R01S_ISLAND_VIDEO = 8,
-    R01S_ISLAND_CART = 9,
-    R01S_ISLAND_APU = 10,
-    R01S_ISLAND_MCU1284 = 11,
-    R01S_ISLAND_LINEBUF = 12,
-    R01S_ISLAND_SPRITES = 13,
-    R01S_ISLAND_INTEGRATION = 14,
-    R01S_ISLAND_BUS = 15,
+    R01S_ISLAND_VRAM = 4,
+    R01S_ISLAND_BEAM = 5,
+    R01S_ISLAND_VIDEO = 6,
+    R01S_ISLAND_CART = 7,
+    R01S_ISLAND_APU = 8,
+    R01S_ISLAND_MCU1284 = 9,
+    R01S_ISLAND_LINEBUF = 10,
+    R01S_ISLAND_BUS = 11,
+    R01S_ISLAND_COUNT = 12,
 };
 
 typedef struct R01sIslandPowerImpl {

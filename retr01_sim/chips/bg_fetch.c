@@ -160,6 +160,7 @@ void r01s_bg_fetch_init(R01sBgFetch *chip, const char *refdes) {
     }
     r01s_entity_add_pin(&chip->base, 42, "VCC", R01S_PIN_PWR);
     r01s_entity_set_dip(&chip->base, 42, 72);
+    r01s_entity_set_glyph(&chip->base, R01S_ENTITY_VIS_NONE, 0, 0);
     r01s_entity_reset(&chip->base);
 }
 

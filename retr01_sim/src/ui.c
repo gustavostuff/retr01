@@ -160,7 +160,7 @@ int r01s_ui_init(R01sUi *ui) {
     ui->drag_stick = -1;
     ui->drag_btn = -1;
     snprintf(ui->status, sizeof(ui->status),
-             "islands A-E+G+H+I+O+J+K+L+M — drag empty / resize BR — SPACE run/pause");
+             "32-IC BOM — islands A-D G H O J K L M Q — drag / resize BR — SPACE run/pause");
     return 0;
 }
 

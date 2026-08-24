@@ -228,3 +228,18 @@ void r01s_island_builder_shutdown(R01sIslandBuilder *builder) {
 R01sIslandGroup *r01s_island_builder_group(R01sIslandBuilder *builder) {
     return builder ? &builder->group : NULL;
 }
+
+int r01s_island_builder_count_visual(const R01sIslandBuilder *builder, R01sEntityVisual visual) {
+    int i;
+    int n = 0;
+    if (!builder) {
+        return 0;
+    }
+    for (i = 0; i < builder->mount_count; i++) {
+        R01sEntity *e = builder->mounts[i].entity;
+        if (e && e->visual == visual) {
+            n++;
+        }
+    }
+    return n;
+}

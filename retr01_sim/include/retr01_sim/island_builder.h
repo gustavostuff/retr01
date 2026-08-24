@@ -1,6 +1,7 @@
 #ifndef RETR01_SIM_ISLAND_BUILDER_H
 #define RETR01_SIM_ISLAND_BUILDER_H
 
+#include "retr01_sim/entity.h"
 #include "retr01_sim/island.h"
 #include "retr01_sim/island_group.h"
 
@@ -64,5 +65,8 @@ int r01s_island_builder_finish(R01sIslandBuilder *builder);
 void r01s_island_builder_shutdown(R01sIslandBuilder *builder);
 
 R01sIslandGroup *r01s_island_builder_group(R01sIslandBuilder *builder);
+
+/* Count mounted entities with a given canvas visual (e.g. R01S_ENTITY_VIS_IC for BOM DIP count). */
+int r01s_island_builder_count_visual(const R01sIslandBuilder *builder, R01sEntityVisual visual);
 
 #endif

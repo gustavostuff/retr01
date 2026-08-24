@@ -5,7 +5,9 @@
 #include "beam_xy.h"
 #include "bg_fetch.h"
 #include "retr01_sim/board.h"
+#include "retr01_sim/bom32.h"
 #include "retr01_sim/bus.h"
+#include "retr01_sim/entity.h"
 #include "retr01_sim/island_builder.h"
 #include "atf22v10.h"
 #include "sn74hc573.h"
@@ -17,8 +19,8 @@
 #include <stdio.h>
 
 /*
- * Layer-2 islands A–E + G + H + I + O + J + K + L + M + N + P smoke:
- *   prior milestones + sprites + VBlank NMI (~60 Hz class) + no bus fight (Island P).
+ * Layer-2 islands A–D + G + H + O + J + K + L + M + Q smoke:
+ *   prior milestones + sprites + VBlank NMI (~60 Hz class) + no bus fight.
  */
 int main(void) {
     R01sBoard board;
@@ -47,7 +49,10 @@ int main(void) {
     expect_true(r01s_board_build(&board, &builder) == 0, "board build");
     group = r01s_island_builder_group(&builder);
     expect_true(group != NULL, "group");
-    expect_true(r01s_island_group_count(group) == 16, "16 islands A-E+G+H+I+O+J+K+L+M+N+P+Q");
+    expect_true(r01s_island_group_count(group) == R01S_ISLAND_COUNT,
+                "12 islands A-D+G+H+O+J+K+L+M+Q");
+    expect_true(r01s_island_builder_count_visual(&builder, R01S_ENTITY_VIS_IC) == R01S_BOM_IC_N,
+                "32 BOM IC visuals mounted");
 
     b = r01s_board_from_group(group);
     expect_true(b != NULL, "board ctx");
@@ -134,19 +139,19 @@ int main(void) {
     expect_true(saw_latch, "STA $FE02 hit island D latch");
     expect_true(saw_vram, "STA $FE12 wrote $AA to VRAM[0]");
     expect_true(saw_vram_read, "LDA $FE12 read VRAM back into A");
-    expect_true(saw_pad, "LDA $FE60 read island E pads");
+    expect_true(saw_pad, "LDA $FE60 read pads (1284 island L)");
     expect_true(saw_beam_hblank, "island H HBlank");
     expect_true(saw_beam_line, "island H advanced past line 0");
     expect_true(saw_raster_hit, "beam-Y PLD EQ# on Y vs $FE04");
-    expect_true(saw_bg_tile, "island I latched nametable tile $42");
-    expect_true(saw_bg_attr, "island I latched nametable attr $07");
+    expect_true(saw_bg_tile, "VRAM PLD latched nametable tile $42");
+    expect_true(saw_bg_attr, "VRAM PLD latched nametable attr $07");
     expect_true(saw_video, "island O lit logical pixels from PROM");
     expect_true(saw_map, "island J MAP $FE93 read cart magic R");
     expect_true(saw_apu, "island K APU PWM tone edges");
     expect_true(saw_oam, "island L OAM $FE21 readback + clk");
     expect_true(saw_linebuf, "island M linebuf mux both paths");
-    expect_true(saw_sprites, "island N sprite pixels in linebuf");
-    expect_true(saw_nmi, "island P VBlank NMI pulse");
+    expect_true(saw_sprites, "1284 OAM fill → linebuf sprites");
+    expect_true(saw_nmi, "beam island H VBlank NMI pulse");
     expect_true(b->health_saw_nmi, "health saw NMI");
     expect_true(b->nmi_pulses >= 1, "NMI pulse count");
     expect_true(r01s_atmega1284p_oam_peek(&b->mcu1284, 0) == 0x10, "OAM Y=$10");

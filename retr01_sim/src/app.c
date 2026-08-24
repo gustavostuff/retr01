@@ -2,6 +2,8 @@
 
 #include "retr01_sim/board.h"
 #include "retr01_sim/board_fast.h"
+#include "retr01_sim/bom32.h"
+#include "retr01_sim/island_builder.h"
 #include "pads.h"
 
 #include <stdio.h>
@@ -36,6 +38,12 @@ void r01s_app_mount_builder(R01sApp *app) {
         if (r01s_ui_add_chip(&app->ui, e, b->mounts[i].island_index) != 0) {
             fprintf(stderr, "ui: dropped chip mount %d/%d (R01S_BOARD_MAX_CHIPS=%d)\n", i, b->mount_count,
                     R01S_BOARD_MAX_CHIPS);
+        }
+    }
+    {
+        int bom_ic = r01s_island_builder_count_visual(b, R01S_ENTITY_VIS_IC);
+        if (bom_ic != R01S_BOM_IC_N) {
+            fprintf(stderr, "ui: expected %d BOM IC visuals, mounted %d ui chips\n", R01S_BOM_IC_N, bom_ic);
         }
     }
 }

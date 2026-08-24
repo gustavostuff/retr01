@@ -3,6 +3,7 @@
 #include "retr01_sim/board_fast.h"
 #include "retr01_sim/board_layout.h"
 #include "retr01_sim/bus.h"
+#include "retr01_sim/entity.h"
 #include "retr01_sim/health.h"
 
 #include <stdio.h>
@@ -363,43 +364,22 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_health_tag(ih->health), ctx->health_saw_latch, le, ry);
     }
 
-    /* Island E — pads */
-    {
-        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_PADS];
-        uint8_t p1 = r01s_pads_get(ctx->pads_impl.pads, 0);
-        uint8_t p2 = r01s_pads_get(ctx->pads_impl.pads, 1);
-        R01sEntity *pads = r01s_pads_entity(ctx->pads_impl.pads);
-        ih->letter = 'E';
-        if (booting) {
-            ih->health = R01S_HEALTH_BOOT;
-            snprintf(ih->activity, sizeof(ih->activity), "pads idle");
-        } else if (ctx->health_saw_pad) {
-            ih->health = R01S_HEALTH_OK;
-            snprintf(ih->activity, sizeof(ih->activity), "LDA $FE60 ok P1=$%02X", p1);
-        } else {
-            ih->health = R01S_HEALTH_WARN;
-            snprintf(ih->activity, sizeof(ih->activity), "await CPU pad read");
-        }
-        snprintf(ih->debug, sizeof(ih->debug),
-                 "island=E PADS health=%s saw_pad_read=%d P1_FE60=$%02X P2_FE61=$%02X CE#=%s OE#=%s "
-                 "CPU_A=%02X (boot loops LDA $FE60; idle pads often $00)",
-                 r01s_health_tag(ih->health), ctx->health_saw_pad, p1, p2,
-                 r01s_level_name(r01s_entity_sense(pads, "CE#")),
-                 r01s_level_name(r01s_entity_sense(pads, "OE#")),
-                 r01s_w65c02s_a(ctx->cpu_mem_impl.cpu));
-    }
-
-    /* Island G — VRAM */
+    /* Island G — VRAM + BG nametable fetch (VRAM PLD) */
     {
         R01sIslandHealth *ih = &out->islands[R01S_ISLAND_VRAM];
+        R01sBgFetch *bg = ctx->bg_fetch_impl.fetch;
         uint8_t v0 = r01s_as6c62256_peek(ctx->vram_impl.vram, 0);
         ih->letter = 'G';
         if (booting) {
             ih->health = R01S_HEALTH_BOOT;
             snprintf(ih->activity, sizeof(ih->activity), "VRAM idle");
-        } else if (ctx->health_saw_vram && ctx->health_saw_vram_read) {
+        } else if (ctx->health_saw_vram && ctx->health_saw_vram_read && ctx->health_saw_bg_fetch) {
             ih->health = R01S_HEALTH_OK;
-            snprintf(ih->activity, sizeof(ih->activity), "VRAM[0]=$%02X readback ok", v0);
+            snprintf(ih->activity, sizeof(ih->activity), "VRAM[0]=$%02X NT $%02X/$%02X", v0,
+                     r01s_bg_fetch_last_tile(bg), r01s_bg_fetch_last_attr(bg));
+        } else if (ctx->health_saw_vram && ctx->health_saw_vram_read) {
+            ih->health = R01S_HEALTH_WARN;
+            snprintf(ih->activity, sizeof(ih->activity), "VRAM ok await BG fetch");
         } else if (ctx->health_saw_vram) {
             ih->health = R01S_HEALTH_WARN;
             snprintf(ih->activity, sizeof(ih->activity), "await LDA $FE12 readback");
@@ -408,19 +388,22 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
             snprintf(ih->activity, sizeof(ih->activity), "await STA $FE12 ($%02X)", v0);
         }
         snprintf(ih->debug, sizeof(ih->debug),
-                 "island=G VRAM health=%s saw_write=%d saw_readback=%d VA=$%04X VRAM[0]=$%02X "
-                 "expect=$AA fe12_armed=%d",
+                 "island=G VRAM health=%s saw_write=%d saw_readback=%d saw_bg=%d VA=$%04X VRAM[0]=$%02X "
+                 "TILE=$%02X ATTR=$%02X fe12_armed=%d",
                  r01s_health_tag(ih->health), ctx->health_saw_vram, ctx->health_saw_vram_read,
-                 (unsigned)(ctx->vram_addr & 0x7FFFu), v0, ctx->vram_fe12_armed);
+                 ctx->health_saw_bg_fetch, (unsigned)r01s_bg_fetch_va(bg), v0,
+                 r01s_bg_fetch_last_tile(bg), r01s_bg_fetch_last_attr(bg), ctx->vram_fe12_armed);
     }
 
-    /* Island H — beam */
+    /* Island H — beam raster + VBlank NMI */
     {
         R01sIslandHealth *ih = &out->islands[R01S_ISLAND_BEAM];
+        R01sIntegration *ig = ctx->integration_impl.integ;
         int bx = r01s_beam_xy_x(ctx->beam_impl.beam_x);
         int by = r01s_beam_xy_y(ctx->beam_impl.beam_x);
         int hb = r01s_beam_xy_hblank(ctx->beam_impl.beam_x);
         int vb = r01s_beam_xy_vblank(ctx->beam_impl.beam_x);
+        unsigned pulses = (unsigned)r01s_integration_nmi_pulses(ig);
         ih->letter = 'H';
         if (booting) {
             ih->health = R01S_HEALTH_BOOT;
@@ -428,58 +411,24 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
         } else if (!group->running) {
             ih->health = R01S_HEALTH_WARN;
             snprintf(ih->activity, sizeof(ih->activity), "raster frozen %d,%d", bx, by);
-        } else if (ctx->health_saw_beam) {
+        } else if (ctx->health_saw_beam && ctx->health_saw_nmi) {
             ih->health = R01S_HEALTH_OK;
-            snprintf(ih->activity, sizeof(ih->activity), "scan %d,%d%s%s", bx, by, hb ? " HB" : "",
-                     vb ? " VB" : "");
+            snprintf(ih->activity, sizeof(ih->activity), "scan %d,%d NMI x%u%s%s", bx, by, pulses,
+                     hb ? " HB" : "", vb ? " VB" : "");
+        } else if (ctx->health_saw_beam) {
+            ih->health = R01S_HEALTH_WARN;
+            snprintf(ih->activity, sizeof(ih->activity), "scan %d,%d await NMI", bx, by);
         } else {
             ih->health = R01S_HEALTH_BOOT;
             snprintf(ih->activity, sizeof(ih->activity), "beam starting");
         }
         snprintf(ih->debug, sizeof(ih->debug),
-                 "island=H BEAM health=%s saw_beam=%d X=%d Y=%d HBlank=%d VBlank=%d EQ#=%s FE04=$%02X",
-                 r01s_health_tag(ih->health), ctx->health_saw_beam, bx, by, hb, vb,
+                 "island=H BEAM health=%s saw_beam=%d saw_nmi=%d pulses=%u X=%d Y=%d HBlank=%d VBlank=%d "
+                 "EQ#=%s FE04=$%02X",
+                 r01s_health_tag(ih->health), ctx->health_saw_beam, ctx->health_saw_nmi, pulses, bx, by,
+                 hb, vb,
                  r01s_level_name(r01s_entity_sense(r01s_atf22v10_entity(ctx->beam_impl.beam_y), "EQ#")),
                  r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE04]));
-    }
-
-    /* Island I — BG nametable fetch */
-    {
-        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_BG_FETCH];
-        R01sBgFetch *bg = ctx->bg_fetch_impl.fetch;
-        ih->letter = 'I';
-        if (booting) {
-            ih->health = R01S_HEALTH_BOOT;
-            snprintf(ih->activity, sizeof(ih->activity), "BG fetch idle");
-        } else if (ctx->health_saw_bg_fetch) {
-            ih->health = R01S_HEALTH_OK;
-            snprintf(ih->activity, sizeof(ih->activity), "NT tile=$%02X attr=$%02X",
-                     r01s_bg_fetch_last_tile(bg), r01s_bg_fetch_last_attr(bg));
-        } else if (r01s_bg_fetch_count(bg) > 0) {
-            ih->health = R01S_HEALTH_WARN;
-            if (ctx->cart_off_map_screen0 &&
-                ctx->map_addr < ctx->cart_off_map_screen0 + 480u) {
-                snprintf(ih->activity, sizeof(ih->activity), "await MAP stream (tile=$%02X)",
-                         r01s_bg_fetch_last_tile(bg));
-            } else {
-                snprintf(ih->activity, sizeof(ih->activity), "fetching tile=$%02X",
-                         r01s_bg_fetch_last_tile(bg));
-            }
-        } else if (!group->running) {
-            ih->health = R01S_HEALTH_WARN;
-            snprintf(ih->activity, sizeof(ih->activity), "await PPU fetches");
-        } else {
-            ih->health = R01S_HEALTH_BOOT;
-            snprintf(ih->activity, sizeof(ih->activity), "await visible fetch");
-        }
-        snprintf(ih->debug, sizeof(ih->debug),
-                 "island=I BG_FETCH health=%s saw=$%02X n=%u VA=$%04X active=%d attr=%d TILE=$%02X "
-                 "ATTR=$%02X SX=$%02X SY=$%02X",
-                 r01s_health_tag(ih->health), ctx->health_saw_bg_fetch, (unsigned)r01s_bg_fetch_count(bg),
-                 (unsigned)r01s_bg_fetch_va(bg), r01s_bg_fetch_active(bg), r01s_bg_fetch_attr_cycle(bg),
-                 r01s_bg_fetch_last_tile(bg), r01s_bg_fetch_last_attr(bg),
-                 r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE02]),
-                 r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE03]));
     }
 
     /* Island O — Color PROM + compositor + LCD sink */
@@ -569,18 +518,23 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_level_name(r01s_entity_sense(r01s_atmega328p_entity(apu), "PWM")));
     }
 
-    /* Island L — ATmega1284P OAM / 20 MHz stub */
+    /* Island L — ATmega1284P: pads $FE60, OAM, sprite fill */
     {
         R01sIslandHealth *ih = &out->islands[R01S_ISLAND_MCU1284];
         R01sAtmega1284p *mcu = ctx->mcu1284_impl.mcu;
+        R01sSpriteFetch *sf = ctx->sprites_impl.fetch;
+        uint8_t p1 = r01s_pads_get(ctx->pads_impl.pads, 0);
         ih->letter = 'L';
         if (booting) {
             ih->health = R01S_HEALTH_BOOT;
             snprintf(ih->activity, sizeof(ih->activity), "1284 idle");
-        } else if (ctx->health_saw_oam) {
+        } else if (ctx->health_saw_pad && ctx->health_saw_oam && ctx->health_saw_sprites) {
             ih->health = R01S_HEALTH_OK;
-            snprintf(ih->activity, sizeof(ih->activity), "OAM Y=$%02X clk=%u",
-                     r01s_atmega1284p_oam_peek(mcu, 0), (unsigned)r01s_atmega1284p_clk_ticks(mcu));
+            snprintf(ih->activity, sizeof(ih->activity), "P1=$%02X OAM Y=$%02X spr x=$%02X", p1,
+                     r01s_atmega1284p_oam_peek(mcu, 0), r01s_sprite_fetch_last_hit_x(sf));
+        } else if (ctx->health_saw_oam) {
+            ih->health = R01S_HEALTH_WARN;
+            snprintf(ih->activity, sizeof(ih->activity), "OAM ok await pads/spr");
         } else if (r01s_atmega1284p_alive(mcu)) {
             ih->health = R01S_HEALTH_WARN;
             snprintf(ih->activity, sizeof(ih->activity), "clk ok await OAM");
@@ -589,11 +543,12 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
             snprintf(ih->activity, sizeof(ih->activity), "await 20 MHz / OAM");
         }
         snprintf(ih->debug, sizeof(ih->debug),
-                 "island=L MCU1284 health=%s saw_oam=%d alive=%d oam0=$%02X oam1=$%02X addr=$%02X "
-                 "clk=%u RUN=%s",
-                 r01s_health_tag(ih->health), ctx->health_saw_oam, r01s_atmega1284p_alive(mcu),
-                 r01s_atmega1284p_oam_peek(mcu, 0), r01s_atmega1284p_oam_peek(mcu, 1),
-                 r01s_atmega1284p_oam_addr(mcu), (unsigned)r01s_atmega1284p_clk_ticks(mcu),
+                 "island=L MCU1284 health=%s saw_pad=%d saw_oam=%d saw_sprites=%d P1=$%02X oam0=$%02X "
+                 "spr_fills=%u hit_x=$%02X clk=%u RUN=%s",
+                 r01s_health_tag(ih->health), ctx->health_saw_pad, ctx->health_saw_oam,
+                 ctx->health_saw_sprites, p1, r01s_atmega1284p_oam_peek(mcu, 0),
+                 (unsigned)r01s_sprite_fetch_fill_count(sf), r01s_sprite_fetch_last_hit_x(sf),
+                 (unsigned)r01s_atmega1284p_clk_ticks(mcu),
                  r01s_level_name(r01s_entity_sense(r01s_atmega1284p_entity(mcu), "RUN")));
     }
 
@@ -623,63 +578,6 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_health_tag(ih->health), ctx->health_saw_linebuf, (unsigned)ctx->linebuf_show_half,
                  ctx->linebuf_saw_mux_mcu, ctx->linebuf_saw_mux_beam, r01s_as6c62256_peek(lb, 0x00),
                  r01s_as6c62256_peek(lb, 0x80));
-    }
-
-    /* Island N — OAM → linebuf → compositor */
-    {
-        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_SPRITES];
-        R01sSpriteFetch *sf = ctx->sprites_impl.fetch;
-        ih->letter = 'N';
-        if (booting) {
-            ih->health = R01S_HEALTH_BOOT;
-            snprintf(ih->activity, sizeof(ih->activity), "sprites idle");
-        } else if (ctx->health_saw_sprites) {
-            ih->health = R01S_HEALTH_OK;
-            snprintf(ih->activity, sizeof(ih->activity), "spr ly=$%02X x=$%02X c=$%02X",
-                     r01s_sprite_fetch_last_ly(sf), r01s_sprite_fetch_last_hit_x(sf),
-                     r01s_sprite_fetch_last_hit_color(sf));
-        } else if (r01s_sprite_fetch_fill_count(sf) > 0) {
-            ih->health = R01S_HEALTH_WARN;
-            snprintf(ih->activity, sizeof(ih->activity), "fills=%u await OAM hit",
-                     (unsigned)r01s_sprite_fetch_fill_count(sf));
-        } else {
-            ih->health = R01S_HEALTH_WARN;
-            snprintf(ih->activity, sizeof(ih->activity), "await HBlank OAM fill");
-        }
-        snprintf(ih->debug, sizeof(ih->debug),
-                 "island=N SPRITES health=%s saw=%d fills=%u px=%u last_ly=$%02X hit_x=$%02X "
-                 "hit_c=$%02X",
-                 r01s_health_tag(ih->health), ctx->health_saw_sprites,
-                 (unsigned)r01s_sprite_fetch_fill_count(sf), (unsigned)r01s_sprite_fetch_pixel_count(sf),
-                 r01s_sprite_fetch_last_ly(sf), r01s_sprite_fetch_last_hit_x(sf),
-                 r01s_sprite_fetch_last_hit_color(sf));
-    }
-
-    /* Island P — integration: pads + video + NMI ~60 Hz class + no bus fight */
-    {
-        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_INTEGRATION];
-        R01sIntegration *ig = ctx->integration_impl.integ;
-        unsigned pulses = (unsigned)r01s_integration_nmi_pulses(ig);
-        int ok = board_integrated(ctx) && conflicts == 0;
-        ih->letter = 'P';
-        if (booting) {
-            ih->health = R01S_HEALTH_BOOT;
-            snprintf(ih->activity, sizeof(ih->activity), "integration idle");
-        } else if (ok) {
-            ih->health = R01S_HEALTH_OK;
-            snprintf(ih->activity, sizeof(ih->activity), "NMI x%u pads+video ok", pulses);
-        } else if (ctx->health_saw_nmi) {
-            ih->health = R01S_HEALTH_WARN;
-            snprintf(ih->activity, sizeof(ih->activity), "NMI x%u await islands", pulses);
-        } else {
-            int by = r01s_beam_xy_y(ctx->beam_impl.beam_x);
-            ih->health = R01S_HEALTH_WARN;
-            /* Show scan progress — first VBlank is Y=240 (slow if UI steps/frame is tiny). */
-            snprintf(ih->activity, sizeof(ih->activity), "beam Y=%d/240 await NMI", by);
-        }
-        snprintf(ih->debug, sizeof(ih->debug),
-                 "island=P INTEGRATION health=%s saw_nmi=%d pulses=%u conflicts=%u integrated=%d",
-                 r01s_health_tag(ih->health), ctx->health_saw_nmi, pulses, conflicts, integrated);
     }
 
     for (i = 0; i < out->island_count; i++) {
@@ -2025,12 +1923,6 @@ static void island_beam_init(R01sIsland *island) {
     r01s_island_add_entity(island, r01s_atf22v10_entity(impl->beam_y));
 }
 
-static void island_pads_init(R01sIsland *island) {
-    R01sIslandPadsImpl *impl = (R01sIslandPadsImpl *)island->impl;
-    r01s_pads_init(impl->pads, "PAD");
-    /* Wired via 1284 on silicon — sim model only; not drawn on the board canvas. */
-}
-
 static void island_vram_init(R01sIsland *island) {
     R01sIslandVramImpl *impl = (R01sIslandVramImpl *)island->impl;
     static const char *const mux_ref[R01S_BOM_HC157_N] = {"U7A", "U7B", "U7C", "U7D", "U7E", "U7F"};
@@ -2043,12 +1935,6 @@ static void island_vram_init(R01sIsland *island) {
         r01s_island_add_entity(island, r01s_sn74hc157_entity(impl->mux157[i]));
     }
     r01s_island_add_entity(island, r01s_atf22v10_entity(impl->pld_vram));
-}
-
-static void island_bg_fetch_init(R01sIsland *island) {
-    R01sIslandBgFetchImpl *impl = (R01sIslandBgFetchImpl *)island->impl;
-    r01s_bg_fetch_init(impl->fetch, "UPLDI");
-    r01s_island_add_entity(island, r01s_bg_fetch_entity(impl->fetch));
 }
 
 static void island_video_init(R01sIsland *island) {
@@ -2103,34 +1989,18 @@ static void island_bus_init(R01sIsland *island) {
     }
 }
 
-static void island_sprites_init(R01sIsland *island) {
-    R01sIslandSpritesImpl *impl = (R01sIslandSpritesImpl *)island->impl;
-    r01s_sprite_fetch_init(impl->fetch, "UPLDN");
-    r01s_island_add_entity(island, r01s_sprite_fetch_entity(impl->fetch));
-}
-
-static void island_integration_init(R01sIsland *island) {
-    R01sIslandIntegrationImpl *impl = (R01sIslandIntegrationImpl *)island->impl;
-    r01s_integration_init(impl->integ, "UPLDP");
-    r01s_island_add_entity(island, r01s_integration_entity(impl->integ));
-}
-
 
 static const R01sIslandVTable ISLAND_POWER_VT = {island_power_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CLOCK_VT = {island_clock_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CPU_VT = {island_cpu_mem_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_IO_VT = {island_io_latch_init, NULL, NULL, NULL, NULL};
-static const R01sIslandVTable ISLAND_PADS_VT = {island_pads_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_VRAM_VT = {island_vram_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_BEAM_VT = {island_beam_init, NULL, NULL, NULL, NULL};
-static const R01sIslandVTable ISLAND_BG_FETCH_VT = {island_bg_fetch_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_VIDEO_VT = {island_video_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CART_VT = {island_cart_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_APU_VT = {island_apu_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_MCU1284_VT = {island_mcu1284_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_LINEBUF_VT = {island_linebuf_init, NULL, NULL, NULL, NULL};
-static const R01sIslandVTable ISLAND_SPRITES_VT = {island_sprites_init, NULL, NULL, NULL, NULL};
-static const R01sIslandVTable ISLAND_INTEGRATION_VT = {island_integration_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_BUS_VT = {island_bus_init, NULL, NULL, NULL, NULL};
 
 
@@ -2651,6 +2521,7 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     r01s_pads_init(&board->pads, "PAD");
     r01s_sprite_fetch_init(&board->sprite_fetch, "UPLDN");
     r01s_integration_init(&board->integration, "UPLDP");
+    r01s_bg_fetch_init(&board->bg_fetch, "UPLDI");
 
     if (r01s_island_builder_add(b, &ISLAND_POWER_VT, "ISLAND A  POWER", 0, 0, 1, 1, &board->power_impl) < 0) {
         return -1;
@@ -2667,18 +2538,10 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
                                 &board->io_latch_impl) < 0) {
         return -1;
     }
-    if (r01s_island_builder_add(b, &ISLAND_PADS_VT, "ISLAND E  PADS (1284)", 0, 0, 1, 1, &board->pads_impl) <
-        0) {
-        return -1;
-    }
     if (r01s_island_builder_add(b, &ISLAND_VRAM_VT, "ISLAND G  VRAM+PLD", 0, 0, 1, 1, &board->vram_impl) < 0) {
         return -1;
     }
-    if (r01s_island_builder_add(b, &ISLAND_BEAM_VT, "ISLAND H  BEAM PLD", 0, 0, 1, 1, &board->beam_impl) < 0) {
-        return -1;
-    }
-    if (r01s_island_builder_add(b, &ISLAND_BG_FETCH_VT, "ISLAND I  BG FETCH", 0, 0, 1, 1,
-                                &board->bg_fetch_impl) < 0) {
+    if (r01s_island_builder_add(b, &ISLAND_BEAM_VT, "ISLAND H  BEAM NMI", 0, 0, 1, 1, &board->beam_impl) < 0) {
         return -1;
     }
     if (r01s_island_builder_add(b, &ISLAND_VIDEO_VT, "ISLAND O  VIDEO RGBS", 0, 0, 1, 1,
@@ -2692,20 +2555,12 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     if (r01s_island_builder_add(b, &ISLAND_APU_VT, "ISLAND K  APU 328P", 0, 0, 1, 1, &board->apu_impl) < 0) {
         return -1;
     }
-    if (r01s_island_builder_add(b, &ISLAND_MCU1284_VT, "ISLAND L  MCU 1284", 0, 0, 1, 1,
+    if (r01s_island_builder_add(b, &ISLAND_MCU1284_VT, "ISLAND L  1284 PADS OAM", 0, 0, 1, 1,
                                 &board->mcu1284_impl) < 0) {
         return -1;
     }
     if (r01s_island_builder_add(b, &ISLAND_LINEBUF_VT, "ISLAND M  LINEBUF", 0, 0, 1, 1,
                                 &board->linebuf_impl) < 0) {
-        return -1;
-    }
-    if (r01s_island_builder_add(b, &ISLAND_SPRITES_VT, "ISLAND N  SPRITES", 0, 0, 1, 1,
-                                &board->sprites_impl) < 0) {
-        return -1;
-    }
-    if (r01s_island_builder_add(b, &ISLAND_INTEGRATION_VT, "ISLAND P  INTEGRATION", 0, 0, 1, 1,
-                                &board->integration_impl) < 0) {
         return -1;
     }
     if (r01s_island_builder_add(b, &ISLAND_BUS_VT, "ISLAND Q  BUS HC245 x3", 0, 0, 1, 1, &board->bus_impl) <
@@ -2715,16 +2570,7 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
 
 
     r01s_island_builder_mount_rel(b, r01s_pwr5v_entity(&board->pwr), R01S_ISLAND_POWER, 0, 0);
-    {
-        R01sEntity *osc_e = r01s_osc8m_entity(&board->osc);
-        R01sEntity *hc_e = r01s_sn74hc14_entity(&board->hc14);
-        int osc_y = (hc_e->body_h - osc_e->body_h) / 2;
-        if (osc_y < 0) {
-            osc_y = 0;
-        }
-        r01s_island_builder_mount_rel(b, osc_e, R01S_ISLAND_CLOCK, 0, osc_y);
-        r01s_island_builder_mount_rel(b, hc_e, R01S_ISLAND_CLOCK, osc_e->body_w + R01S_CHIP_GAP, 0);
-    }
+    r01s_island_builder_mount_rel(b, r01s_osc8m_entity(&board->osc), R01S_ISLAND_CLOCK, 0, 0);
     r01s_island_builder_mount_rel(b, r01s_w65c02s_entity(&board->cpu), R01S_ISLAND_CPU, 0, 0);
     {
         R01sEntity *cpu_e = r01s_w65c02s_entity(&board->cpu);
@@ -2766,7 +2612,6 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         r01s_island_builder_mount_rel(b, r01s_atf22v10_entity(&board->pld_vram), R01S_ISLAND_VRAM, x, 0);
         (void)y;
     }
-    r01s_island_builder_mount_rel(b, r01s_bg_fetch_entity(&board->bg_fetch), R01S_ISLAND_BG_FETCH, 0, 0);
     {
         R01sEntity *dot_e = r01s_osc_dot_entity(&board->osc_dot);
         R01sEntity *beam_x = r01s_beam_xy_entity(&board->pld_beam_x);
@@ -2831,6 +2676,14 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
 
     r01s_island_builder_fit_all(b);
     r01s_island_builder_arrange_rows(b, 40, 40, R01S_ISLAND_GAP, R01S_ISLAND_GAP, R01S_ISLAND_ROW_MAX_W);
+
+    {
+        int bom_ic = r01s_island_builder_count_visual(b, R01S_ENTITY_VIS_IC);
+        if (bom_ic != R01S_BOM_IC_N) {
+            fprintf(stderr, "board: expected %d BOM IC mounts, got %d\n", R01S_BOM_IC_N, bom_ic);
+            return -1;
+        }
+    }
 
     if (r01s_island_builder_finish(b) != 0) {
         return -1;
