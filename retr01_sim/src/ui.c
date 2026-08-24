@@ -391,14 +391,16 @@ static int font_text_height(const char *text) {
     return font_text_width(text); /* same advance when rotated */
 }
 
-/* Pin along-axis board coord + which side (1 = pin1 side: bottom if H, left if V). */
+/* Pin along-axis board coord + which side (1 = pin1 side: bottom if H, left if V).
+ * Pitch is always JEDEC 0.100″ (R01S_DIP_PIN_PITCH_PX); end margin centers the row. */
 static void dip_pin_pos(const R01sEntity *e, int pin_num, int *along, int *side_pin1) {
     int dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
     int half = dip / 2;
     int idx;
     int span;
-    int pitch;
-    int margin = R01S_DIP_PIN_MARGIN_PX;
+    int pitch = R01S_DIP_PIN_PITCH_PX;
+    int row_span;
+    int margin;
 
     if (dip <= 0 || pin_num <= 0 || pin_num > dip) {
         *side_pin1 = 1;
@@ -408,13 +410,10 @@ static void dip_pin_pos(const R01sEntity *e, int pin_num, int *along, int *side_
     *side_pin1 = pin_num <= half;
     idx = *side_pin1 ? (pin_num - 1) : (dip - pin_num);
     span = (e->orient == R01S_ORIENT_H) ? e->body_w : e->body_h;
-    if (half > 1) {
-        pitch = (span - 2 * margin) / (half - 1);
-        if (pitch < 1) {
-            pitch = 1;
-        }
-    } else {
-        pitch = 0;
+    row_span = (half > 1) ? (half - 1) * pitch : 0;
+    margin = (span - row_span) / 2;
+    if (margin < 1) {
+        margin = 1;
     }
     *along = margin + idx * pitch;
 }
@@ -814,10 +813,11 @@ static void health_copy_btn_rect(const R01sUi *ui, int island_index, SDL_Rect *r
 
 static void health_system_copy_rect(const R01sUi *ui, SDL_Rect *rc) {
     int status_y = sidebar_sy(ui, sidebar_status_content_y());
+    /* Title row — above the system color bar so it does not overlap. */
     rc->x = R01S_UI_SIDEBAR_X + R01S_UI_SIDEBAR_W - 50;
-    rc->y = status_y + 22;
+    rc->y = status_y + 4;
     rc->w = 42;
-    rc->h = 16;
+    rc->h = 14;
 }
 
 static int ui_copy_health_text(R01sUi *ui, const char *text) {
@@ -838,6 +838,7 @@ static void draw_system_health_panel(SDL_Renderer *r, R01sUi *ui, int py) {
     int px = R01S_UI_SIDEBAR_X;
     int pw = R01S_UI_SIDEBAR_W;
     int ph;
+    int show_sys_copy;
     Uint8 sr, sg, sb;
     char row[56];
     SDL_Rect copy_rc;
@@ -847,36 +848,46 @@ static void draw_system_health_panel(SDL_Renderer *r, R01sUi *ui, int py) {
     }
     health = &ui->health;
     ph = status_panel_h(health);
+    show_sys_copy = health_needs_debug(health->system) || health->system == R01S_HEALTH_BOOT;
 
     fill_rect(r, px, py, pw, ph, 14, 20, 16);
     draw_rect(r, px, py, pw, ph, 70, 90, 75);
-    font_draw(r, px + 8, py + 6, "SYSTEM STATUS", 190, 205, 180);
+    font_draw_ellipsize(r, px + 8, py + 6, "SYSTEM STATUS",
+                        show_sys_copy ? (pw - 66) : (pw - 16), 190, 205, 180);
+
+    if (show_sys_copy) {
+        health_system_copy_rect(ui, &copy_rc);
+        fill_rect(r, copy_rc.x, copy_rc.y, copy_rc.w, copy_rc.h, 50, 58, 48);
+        draw_rect(r, copy_rc.x, copy_rc.y, copy_rc.w, copy_rc.h, 200, 190, 100);
+        font_draw(r, copy_rc.x + 4, copy_rc.y + 3, "COPY", 230, 220, 140);
+    }
 
     health_rgb(health->system, &sr, &sg, &sb);
     fill_rect(r, px + 8, py + 22, pw - 16, 18, sr, sg, sb);
-    font_draw(r, px + 12, py + 26, health->system_label[0] ? health->system_label : "?", 20, 24, 22);
-    if (health_needs_debug(health->system) || health->system == R01S_HEALTH_BOOT) {
-        health_system_copy_rect(ui, &copy_rc);
-        fill_rect(r, copy_rc.x, copy_rc.y, copy_rc.w, copy_rc.h, 30, 36, 32);
-        draw_rect(r, copy_rc.x, copy_rc.y, copy_rc.w, copy_rc.h, 20, 24, 22);
-        font_draw(r, copy_rc.x + 4, copy_rc.y + 4, "COPY", 20, 24, 22);
-    }
+    font_draw_ellipsize(r, px + 12, py + 26, health->system_label[0] ? health->system_label : "?", pw - 28, 20,
+                        24, 22);
 
-    font_draw(r, px + 8, py + 44, health->system_detail, 150, 165, 145);
+    font_draw_ellipsize(r, px + 8, py + 44, health->system_detail, pw - 16, 150, 165, 145);
     fill_rect(r, px + 8, py + 58, pw - 16, 1, 40, 55, 45);
 
     for (i = 0; i < health->island_count; i++) {
         const R01sIslandHealth *ih = &health->islands[i];
         int ry = py + R01S_UI_STATUS_HDR_H + i * R01S_UI_STATUS_ROW_H;
         char letter[2];
+        int row_max_w;
+        int has_copy = health_needs_debug(ih->health);
 
         letter[0] = ih->letter ? ih->letter : '?';
         letter[1] = '\0';
         draw_health_dot(r, px + 10, ry + 1, ih->health);
         font_draw(r, px + 22, ry + 2, letter, 180, 200, 170);
         snprintf(row, sizeof(row), "%s %s", r01s_health_tag(ih->health), ih->activity);
-        font_draw(r, px + 34, ry + 2, row, 140, 155, 135);
-        if (health_needs_debug(ih->health)) {
+        row_max_w = has_copy ? (pw - 34 - 46) : (pw - 34 - 12);
+        if (row_max_w < 24) {
+            row_max_w = 24;
+        }
+        font_draw_ellipsize(r, px + 34, ry + 2, row, row_max_w, 140, 155, 135);
+        if (has_copy) {
             health_copy_btn_rect(ui, i, &copy_rc);
             fill_rect(r, copy_rc.x, copy_rc.y, copy_rc.w, copy_rc.h, 50, 58, 48);
             draw_rect(r, copy_rc.x, copy_rc.y, copy_rc.w, copy_rc.h, 160, 150, 80);
@@ -884,7 +895,7 @@ static void draw_system_health_panel(SDL_Renderer *r, R01sUi *ui, int py) {
         }
     }
 
-    font_draw(r, px + 8, py + ph - 14, "WARN/FAIL COPY PASTES DEBUG", 100, 115, 100);
+    font_draw_ellipsize(r, px + 8, py + ph - 14, "WARN/FAIL COPY PASTES DEBUG", pw - 16, 100, 115, 100);
 }
 
 static void draw_live_probe(SDL_Renderer *r, const R01sUi *ui, int py) {

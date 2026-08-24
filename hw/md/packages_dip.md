@@ -9,7 +9,7 @@ Sources: [Microchip Packaging Spec DS00049](https://ww1.microchip.com/downloads/
 |----------|-------|-------|
 | `R01S_PX_PER_MM` | **4** | One logical pixel = 0.25 mm |
 | Example | W65C02S ≈ **52 × 14 mm** → **208 × 56 px** (horizontal) | |
-| Pin pitch | **2.54 mm** → **10 px** at this scale | JEDEC 0.100″ |
+| Pin pitch | **2.54 mm** → **10 px** (fixed; never scaled to body) | JEDEC 0.100″ |
 
 All IC packages share this single scale. Glyphs (PWR / OSC / LCD) are not JEDEC DIPs; they keep separate art sizes.
 

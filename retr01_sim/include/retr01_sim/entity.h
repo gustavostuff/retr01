@@ -65,9 +65,9 @@ struct R01sEntity {
 
 /* Canvas scale: physical mm → logical pixels (shared by every IC). */
 #define R01S_PX_PER_MM 4
-/* JEDEC 0.100″ pin pitch at that scale. */
+/* JEDEC 0.100″ pin pitch at that scale — never stretch/compress between pins. */
 #define R01S_DIP_PIN_PITCH_PX 10
-#define R01S_DIP_PIN_MARGIN_PX 8
+#define R01S_DIP_PIN_MARGIN_PX 8 /* soft hint only; draw centers row with leftover */
 
 /* Look up (or estimate) molded body length × width in mm for a DIP pin count. */
 void r01s_dip_pkg_mm(int dip_pins, int *len_mm, int *wid_mm);
