@@ -26,10 +26,20 @@ typedef struct R01sEntityVTable {
     void (*destroy)(R01sEntity *e);
 } R01sEntityVTable;
 
+/* Board canvas rendering — only R01S_ENTITY_VIS_IC uses the DIP package. */
+typedef enum R01sEntityVisual {
+    R01S_ENTITY_VIS_IC = 0,
+    R01S_ENTITY_VIS_PWR,
+    R01S_ENTITY_VIS_OSC,
+    R01S_ENTITY_VIS_DISPLAY,
+    R01S_ENTITY_VIS_NONE,
+} R01sEntityVisual;
+
 struct R01sEntity {
     const R01sEntityVTable *vt;
     const char *part;   /* e.g. "W65C02S" */
     const char *refdes; /* e.g. "U1" */
+    R01sEntityVisual visual;
     int pin_count;
     R01sPin pins[R01S_MAX_PINS];
     /* DIP body size in logical pixels (UI). */
@@ -62,6 +72,9 @@ int r01s_entity_add_pin(R01sEntity *e, int number, const char *name, R01sPinDir 
  * across parts. body_w is the package width only.
  */
 void r01s_entity_set_dip(R01sEntity *e, int dip_pins, int body_w);
+
+/* Non-DIP board symbols (power, crystal, LCD). dip_pins cleared. */
+void r01s_entity_set_glyph(R01sEntity *e, R01sEntityVisual visual, int body_w, int body_h);
 
 void r01s_entity_place(R01sEntity *e, int board_x, int board_y);
 

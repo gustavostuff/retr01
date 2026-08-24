@@ -2,6 +2,7 @@
 
 #include "retr01_sim/board.h"
 #include "retr01_sim/board_layout.h"
+#include "retr01_sim/bus.h"
 #include "video_sink.h"
 
 #include <stdio.h>
@@ -258,6 +259,118 @@ static int dip_pin_y(const R01sEntity *e, int pin_num, int *side_left) {
     return e->board_y + R01S_DIP_PIN_MARGIN_Y + idx * R01S_DIP_PIN_PITCH;
 }
 
+static void draw_glyph_pins(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int board_x, int board_y) {
+    int x = ui_board_sx(ui, board_x);
+    int li = 0;
+    int ri = 0;
+    int i;
+    for (i = 0; i < e->pin_count; i++) {
+        int side_left;
+        int idx;
+        int py;
+        int px0;
+        int px1;
+        Uint8 pr, pg, pb;
+        if (e->pins[i].dir == R01S_PIN_PWR || e->pins[i].dir == R01S_PIN_NC) {
+            continue;
+        }
+        side_left = (e->pins[i].dir == R01S_PIN_IN || e->pins[i].dir == R01S_PIN_IO) ? 1 : 0;
+        if (side_left) {
+            idx = li++;
+        } else {
+            idx = ri++;
+        }
+        py = board_y + 10 + idx * 10;
+        if (py > board_y + e->body_h - 6) {
+            py = board_y + e->body_h - 6;
+        }
+        py = ui_board_sy(ui, py);
+        pin_level_rgb(e->pins[i].level, e->pins[i].dir, &pr, &pg, &pb);
+        if (side_left) {
+            px0 = x - 10;
+            px1 = x;
+        } else {
+            px0 = x + e->body_w;
+            px1 = x + e->body_w + 10;
+        }
+        SDL_SetRenderDrawColor(r, pr, pg, pb, 255);
+        SDL_RenderDrawLine(r, px0, py, px1, py);
+        fill_rect(r, side_left ? px0 : px1 - 3, py - 1, 3, 3, pr, pg, pb);
+    }
+}
+
+static void draw_pwr_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int selected) {
+    int x = ui_board_sx(ui, e->board_x);
+    int y = ui_board_sy(ui, e->board_y);
+    int on = 0;
+    int i;
+    for (i = 0; i < e->pin_count; i++) {
+        if (e->pins[i].name && strcmp(e->pins[i].name, "VDD") == 0 && r01s_level_is_high(e->pins[i].level)) {
+            on = 1;
+            break;
+        }
+    }
+    draw_glyph_pins(r, ui, e, e->board_x, e->board_y);
+    fill_rect(r, x + 10, y + 14, e->body_w - 20, e->body_h - 22, on ? 34 : 24, on ? 46 : 28, on ? 34 : 24);
+    draw_rect(r, x + 10, y + 14, e->body_w - 20, e->body_h - 22, selected ? 255 : 120, selected ? 220 : 180,
+              selected ? 80 : 80);
+    fill_rect(r, x + 18, y + 6, e->body_w - 36, 8, on ? 50 : 32, on ? 62 : 36, on ? 50 : 32);
+    draw_rect(r, x + 18, y + 6, e->body_w - 36, 8, 140, 160, 120);
+    font_draw(r, x + e->body_w / 2 - 10, y + e->body_h / 2 - 2, "5V", 220, 230, 180);
+    if (e->refdes) {
+        font_draw_ellipsize(r, x + 6, y + e->body_h - 14, e->refdes, e->body_w - 12, 180, 190, 160);
+    }
+}
+
+static void draw_osc_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int selected) {
+    int x = ui_board_sx(ui, e->board_x);
+    int y = ui_board_sy(ui, e->board_y);
+    int cx = x + e->body_w / 2;
+    int cy = y + e->body_h / 2 + 2;
+    int on = 0;
+    int i;
+    for (i = 0; i < e->pin_count; i++) {
+        if ((e->pins[i].name &&
+             (strcmp(e->pins[i].name, "PHI2") == 0 || strcmp(e->pins[i].name, "DOT") == 0)) &&
+            r01s_level_is_high(e->pins[i].level)) {
+            on = 1;
+            break;
+        }
+    }
+    draw_glyph_pins(r, ui, e, e->board_x, e->board_y);
+    fill_rect(r, x + 8, y + 10, e->body_w - 16, e->body_h - 18, 22, 28, 34);
+    draw_rect(r, x + 8, y + 10, e->body_w - 16, e->body_h - 18, selected ? 255 : 120, selected ? 220 : 160,
+              selected ? 80 : 120);
+    fill_rect(r, cx - 10, cy - 14, 20, 28, on ? 48 : 32, on ? 58 : 38, on ? 72 : 52);
+    draw_rect(r, cx - 10, cy - 14, 20, 28, 160, 180, 210);
+    SDL_SetRenderDrawColor(r, 200, 220, 240, 255);
+    SDL_RenderDrawLine(r, cx - 6, cy + 8, cx - 2, cy - 6);
+    SDL_RenderDrawLine(r, cx - 2, cy - 6, cx + 2, cy + 8);
+    SDL_RenderDrawLine(r, cx + 2, cy + 8, cx + 6, cy - 6);
+    if (e->part) {
+        font_draw_ellipsize(r, x + 4, y + e->body_h - 14, e->part, e->body_w - 8, 160, 180, 200);
+    }
+    if (e->refdes) {
+        font_draw_ellipsize(r, x + 4, y + 12, e->refdes, e->body_w - 8, 180, 190, 170);
+    }
+}
+
+static void draw_display_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int selected) {
+    int x = ui_board_sx(ui, e->board_x);
+    int y = ui_board_sy(ui, e->board_y);
+    draw_glyph_pins(r, ui, e, e->board_x, e->board_y);
+    fill_rect(r, x + 4, y + 8, e->body_w - 8, e->body_h - 14, 28, 32, 36);
+    draw_rect(r, x + 4, y + 8, e->body_w - 8, e->body_h - 14, selected ? 255 : 140, selected ? 220 : 160,
+              selected ? 80 : 180);
+    fill_rect(r, x + 10, y + 14, e->body_w - 20, e->body_h - 28, 12, 18, 28);
+    draw_rect(r, x + 10, y + 14, e->body_w - 20, e->body_h - 28, 80, 120, 160);
+    fill_rect(r, x + e->body_w / 2 - 8, y + e->body_h - 6, 16, 4, 40, 44, 48);
+    font_draw(r, x + e->body_w / 2 - 12, y + e->body_h / 2 - 4, "LCD", 140, 180, 220);
+    if (e->refdes) {
+        font_draw_ellipsize(r, x + 6, y + 10, e->refdes, e->body_w - 12, 180, 190, 170);
+    }
+}
+
 static void draw_chip(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int selected) {
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);
@@ -306,6 +419,27 @@ static void draw_chip(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, in
     {
         SDL_Rect view_clip = {R01S_UI_VIEW_X, R01S_UI_VIEW_Y, R01S_UI_VIEW_W, R01S_UI_VIEW_H};
         SDL_RenderSetClipRect(r, &view_clip);
+    }
+}
+
+static void draw_board_item(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int selected) {
+    if (!e) {
+        return;
+    }
+    switch (e->visual) {
+    case R01S_ENTITY_VIS_PWR:
+        draw_pwr_glyph(r, ui, e, selected);
+        break;
+    case R01S_ENTITY_VIS_OSC:
+        draw_osc_glyph(r, ui, e, selected);
+        break;
+    case R01S_ENTITY_VIS_DISPLAY:
+        draw_display_glyph(r, ui, e, selected);
+        break;
+    case R01S_ENTITY_VIS_IC:
+    default:
+        draw_chip(r, ui, e, selected);
+        break;
     }
 }
 
@@ -1079,7 +1213,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     }
 
     for (i = 0; i < ui->chip_count; i++) {
-        draw_chip(r, ui, ui->chips[i], i == ui->selected);
+        draw_board_item(r, ui, ui->chips[i], i == ui->selected);
     }
 
     /* Headers above chips so activity/title stay readable */

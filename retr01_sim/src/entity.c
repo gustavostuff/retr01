@@ -35,9 +35,20 @@ void r01s_entity_set_dip(R01sEntity *e, int dip_pins, int body_w) {
     if (!e) {
         return;
     }
+    e->visual = R01S_ENTITY_VIS_IC;
     e->dip_pins = dip_pins > 0 ? dip_pins : 0;
     e->body_w = body_w > 0 ? body_w : 40;
     e->body_h = r01s_dip_body_h(e->dip_pins);
+}
+
+void r01s_entity_set_glyph(R01sEntity *e, R01sEntityVisual visual, int body_w, int body_h) {
+    if (!e) {
+        return;
+    }
+    e->visual = visual;
+    e->dip_pins = 0;
+    e->body_w = body_w > 0 ? body_w : 48;
+    e->body_h = body_h > 0 ? body_h : 48;
 }
 
 void r01s_entity_place(R01sEntity *e, int board_x, int board_y) {

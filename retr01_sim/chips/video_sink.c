@@ -37,7 +37,7 @@ void r01s_video_sink_init(R01sVideoSink *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 2, "HSYNC", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 3, "VSYNC", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 4, "VCC", R01S_PIN_PWR);
-    r01s_entity_set_dip(&chip->base, 16, 40);
+    r01s_entity_set_glyph(&chip->base, R01S_ENTITY_VIS_DISPLAY, 72, 52);
     r01s_entity_reset(&chip->base);
 }
 

@@ -37,7 +37,7 @@ void r01s_integration_init(R01sIntegration *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 6, "GND", R01S_PIN_PWR);
     r01s_entity_add_pin(&chip->base, 7, "NC", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 8, "VCC", R01S_PIN_PWR);
-    r01s_entity_set_dip(&chip->base, 8, 40);
+    r01s_entity_set_glyph(&chip->base, R01S_ENTITY_VIS_NONE, 0, 0);
     r01s_entity_reset(&chip->base);
 }
 

@@ -68,7 +68,7 @@ void r01s_pads_init(R01sPads *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 12, "DQ7", R01S_PIN_IO);
     r01s_entity_add_pin(&chip->base, 13, "VCC", R01S_PIN_PWR);
     r01s_entity_add_pin(&chip->base, 14, "NC", R01S_PIN_NC);
-    r01s_entity_set_dip(&chip->base, 14, 48);
+    r01s_entity_set_glyph(&chip->base, R01S_ENTITY_VIS_NONE, 0, 0);
     r01s_entity_reset(&chip->base);
 }
 

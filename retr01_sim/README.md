@@ -10,21 +10,21 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 
 | Island | Components (canvas) |
 |--------|---------------------|
-| A Power | `PWR5V` |
-| B Clocks + reset | `OSC8M`, `SN74HC14` |
+| A Power | `PWR5V` (battery glyph — not a BOM IC) |
+| B Clocks + reset | `OSC8M` + `SN74HC14` (crystal glyph + DIP) |
 | C CPU + decode | `W65C02S`, `AS6C62256`, `ATF22V10` decode, `SN74HC245` (CPU bus) |
 | D `$FExx` latch | **9×** `SN74HC573` (`$FE02`–`$FE04`, `$FE08`, `$FE10`–`$FE12`, `$FE90`–`$FE92`) |
-| E Pads | `$FE60`/`$FE61` via 1284 (pads struct for tests; not a BOM IC) |
+| E Pads | `$FE60`/`$FE61` via 1284 (sim model; not on canvas) |
 | G VRAM | 2nd `AS6C62256` + **3×** `SN74HC157` + `ATF22V10` VRAM glue |
 | H Beam | `OSC_DOT` + `BEAM_XY` (X PLD) + `ATF22V10` Y compare vs `$FE04` |
 | I BG fetch | `BG_FETCH` PLD — nametable VA from beam+scroll |
-| O Video | `COMPOSITOR` + `AT28C16` Color PROM + `LCD_SINK` |
+| O Video | `COMPOSITOR` + `AT28C16` + `LCD_SINK` (monitor glyph) |
 | J Cart | `SST39SF040` + cart `24C64` I²C EEPROM |
 | K APU | `ATMEGA328P` stub — `$FE40`–`$FE5F` regs + digital PWM square |
 | L MCU | `ATMEGA1284P` stub — OAM `$FE20`/`$FE21` + 20 MHz tick; `$FE70`–`$FE72` mailbox |
 | M Linebuf | 3rd `AS6C62256` + **3×** `SN74HC157` — ping-pong 128 px halves |
-| N Sprites | `SPRITE_FETCH` stub (logic; not in 32-IC count) |
-| P Integration | NMI / bus-fight stats (logic; not in 32-IC count) |
+| N Sprites | stats via 1284/OAM (not on canvas) |
+| P Integration | NMI / bus-fight stats (not on canvas) |
 | Q Bus | **2×** `SN74HC245` (3rd mounted on **C**) |
 
 Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8000+`.

@@ -1262,13 +1262,14 @@ static void wire_io(R01sBoard *ctx) {
     }
 }
 
-/* Island H — DOT osc + beam PLD stub + HC688 raster compare vs $FE04. */
+/* Island H — DOT osc + beam PLD + Y-compare vs $FE04; EQ# drives CPU IRQB. */
 static void wire_beam(R01sBoard *ctx, R01sIslandGroup *group) {
     R01sEntity *pwr = r01s_pwr5v_entity(ctx->power_impl.pwr);
     R01sEntity *osc = r01s_osc_dot_entity(ctx->beam_impl.osc_dot);
     R01sEntity *beam = r01s_beam_xy_entity(ctx->beam_impl.beam_x);
     R01sEntity *beam_y = r01s_atf22v10_entity(ctx->beam_impl.beam_y);
     R01sEntity *raster = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE04]);
+    R01sEntity *cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
     R01sLevel vdd = r01s_entity_sense(pwr, "VDD");
     R01sLevel resb = (ctx->reset_hold > 0) ? R01S_LVL_L : R01S_LVL_H;
     int i;
@@ -1295,6 +1296,8 @@ static void wire_beam(R01sBoard *ctx, R01sIslandGroup *group) {
     r01s_entity_drive(beam_y, "OE#", R01S_LVL_L);
     r01s_entity_eval(beam);
     r01s_entity_eval(beam_y);
+    /* Active-low raster match → IRQB (CPU IRQ service still Phase-1 stub). */
+    r01s_entity_drive(cpu, "IRQB", r01s_entity_sense(beam_y, "EQ#"));
 }
 
 /*
@@ -1934,8 +1937,7 @@ static void wire_power_clock_reset(R01sBoard *ctx, R01sIslandGroup *group) {
     r01s_entity_drive(cpu, "RESB", resb);
     r01s_entity_drive(cpu, "BE", R01S_LVL_H);
     r01s_entity_drive(cpu, "RDY", R01S_LVL_H);
-    r01s_entity_drive(cpu, "IRQB", R01S_LVL_H);
-    /* NMIB driven from beam NMI# in wire_beam / board_step */
+    /* IRQB from beam-Y EQ# in wire_beam; NMIB from beam NMI# in board_step */
 
     phi2 = r01s_entity_sense(osc, "PHI2");
     r01s_entity_drive(hc, "1A", phi2 == R01S_LVL_Z ? R01S_LVL_L : phi2);
@@ -2026,8 +2028,7 @@ static void island_beam_init(R01sIsland *island) {
 static void island_pads_init(R01sIsland *island) {
     R01sIslandPadsImpl *impl = (R01sIslandPadsImpl *)island->impl;
     r01s_pads_init(impl->pads, "PAD");
-    /* Soft port model (silicon path is 1284); still shown on canvas for $FE60/$FE61. */
-    r01s_island_add_entity(island, r01s_pads_entity(impl->pads));
+    /* Wired via 1284 on silicon — sim model only; not drawn on the board canvas. */
 }
 
 static void island_vram_init(R01sIsland *island) {
@@ -2827,12 +2828,6 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
             x += e->body_w + R01S_CHIP_GAP;
         }
     }
-    r01s_island_builder_mount_rel(b, r01s_pads_entity(&board->pads), R01S_ISLAND_PADS, 0, 0);
-    r01s_island_builder_mount_rel(b, r01s_sprite_fetch_entity(&board->sprite_fetch), R01S_ISLAND_SPRITES, 0,
-                                  0);
-    r01s_island_builder_mount_rel(b, r01s_integration_entity(&board->integration), R01S_ISLAND_INTEGRATION, 0,
-                                  0);
-
 
     r01s_island_builder_fit_all(b);
     r01s_island_builder_arrange_rows(b, 40, 40, R01S_ISLAND_GAP, R01S_ISLAND_GAP, R01S_ISLAND_ROW_MAX_W);

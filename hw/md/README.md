@@ -9,12 +9,13 @@ Keyboard-friendly notes for each motherboard IC: what it is, package/pins, speed
 | Batch | Status | Parts |
 |-------|--------|-------|
 | **1. CPU / MCU** | Done | [`W65C02S.md`](W65C02S.md), [`ATmega1284P.md`](ATmega1284P.md), [`ATmega328P.md`](ATmega328P.md) |
-| **2. Memory** | Done | [`AS6C62256.md`](AS6C62256.md), [`SST39SF040.md`](SST39SF040.md), [`AT28C64B.md`](AT28C64B.md), [`AT28C16.md`](AT28C16.md) |
-| **3. Logic / video glue** | Done | [`ATF22V10.md`](ATF22V10.md), [`SN74HC157.md`](SN74HC157.md), [`SN74HC245.md`](SN74HC245.md), [`SN74HC573.md`](SN74HC573.md), [`SN74HC688.md`](SN74HC688.md), [`SN74HC161.md`](SN74HC161.md), [`SN74HC_glue.md`](SN74HC_glue.md) (HC00/04/08/14/32/86) |
+| **2. Memory** | Done | [`AS6C62256.md`](AS6C62256.md), [`SST39SF040.md`](SST39SF040.md), [`AT28C16.md`](AT28C16.md), [`24C64.md`](24C64.md) (cart I2C save), [`AT28C64B.md`](AT28C64B.md) (**legacy** parallel board EEPROM) |
+| **3. Logic / video glue** | Done | [`ATF22V10.md`](ATF22V10.md), [`SN74HC157.md`](SN74HC157.md), [`SN74HC245.md`](SN74HC245.md), [`SN74HC573.md`](SN74HC573.md), [`SN74HC688.md`](SN74HC688.md) (**legacy**), [`SN74HC161.md`](SN74HC161.md) (**legacy**), [`SN74HC_glue.md`](SN74HC_glue.md) (HC00/04/08/14/32/86) |
 
 ## Conventions
 
 - Active-low signals keep the datasheet **B** / **#** suffix (`IRQB`, `CE#`).
 - Retr01 clocks: CPU **8.000 MHz** PHI2, dot **5.369318 MHz**, 1284 **20 MHz**, 328P **16 MHz**.
 - Accuracy level for sim timing is not frozen; docs list datasheet numbers so models can tighten later.
-- Current BOM ([`06`](../../docs/06_hardware_v1_32ic.md)): 328P APU, 3x HC245, no AT28C64B (1284 EEPROM + cart I2C), 1x Color PROM. Notes for HC161/HC688/AT28C64B/extra glue support the **legacy ~52** path / bench fallback.
+- Current BOM ([`06`](../../docs/06_hardware_v1_32ic.md)): 328P APU, 3x HC245, cart **24C64** I2C save, no AT28C64B (1284 internal EEPROM), 1x Color PROM. Notes for HC161/HC688/AT28C64B/extra glue support the **legacy ~52** path / bench fallback / unit tests only.
+- **Authority:** vendor PDF in `hw/` → these markdown notes → C chip models. Soft glue in `board.c` is system wiring, not a redefinition of the IC.

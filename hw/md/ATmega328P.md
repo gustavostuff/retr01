@@ -86,10 +86,12 @@ No connection to VRAM or sprite line buffer. Optional shared reset with system R
 
 Island **K** pass: independent tone without the rest of the video board.
 
-## v0 vs v1
+## v0 vs current (32-IC)
 
-| | v0 | v1 |
-|--|----|----|
-| Chip present | Yes | No (logic on 1284) |
-| `$FE40-$FE5F` | 328P | 1284 firmware |
-| Bring-up | Island K | Merged with sprite MCU timing budget |
+Current BOM **keeps** a dedicated 328P for APU ([`06`](../../docs/06_hardware_v1_32ic.md)). 1284 does **not** own `$FE40-$FE5F`.
+
+| | Legacy ~52 sketches | Current 32-IC |
+|--|---------------------|---------------|
+| Chip present | Yes | **Yes** (dedicated APU) |
+| `$FE40-$FE5F` | 328P | **328P** |
+| Bring-up | Island K | Island K (soft bus stub in sim) |
