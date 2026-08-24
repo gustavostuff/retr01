@@ -1,108 +1,29 @@
 #include "retr01_studio/json_io.h"
-#include "retr01_studio/play.h"
+#include "retr01_studio/chr_pack.h"
 #include "retr01_studio/project.h"
+#include "retr01_studio/palette.h"
 
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-static void set_err(char *err_buf, size_t err_cap, const char *msg) {
-    if (err_buf && err_cap > 0) {
-        snprintf(err_buf, err_cap, "%s", msg ? msg : "error");
-    }
-}
 
 static int hex_nibble(char c) {
     if (c >= '0' && c <= '9') {
         return c - '0';
     }
     if (c >= 'a' && c <= 'f') {
-        return c - 'a' + 10;
+        return 10 + c - 'a';
     }
     if (c >= 'A' && c <= 'F') {
-        return c - 'A' + 10;
+        return 10 + c - 'A';
     }
     return -1;
 }
 
-static int write_hex(FILE *f, const uint8_t *data, size_t n) {
-    static const char *H = "0123456789abcdef";
+static int decode_hex(const char *hex, uint8_t *out, size_t out_len) {
     size_t i;
-    for (i = 0; i < n; i++) {
-        if (fputc(H[(data[i] >> 4) & 0xF], f) == EOF) {
-            return -1;
-        }
-        if (fputc(H[data[i] & 0xF], f) == EOF) {
-            return -1;
-        }
-    }
-    return 0;
-}
-
-/* Byte RLE: pairs (count 1..255, value). Falls back to raw hex if RLE is not smaller. */
-static size_t rle_encode(const uint8_t *in, size_t n, uint8_t *out, size_t out_cap) {
-    size_t i = 0, o = 0;
-    while (i < n) {
-        uint8_t v = in[i];
-        size_t run = 1;
-        while (i + run < n && in[i + run] == v && run < 255) {
-            run++;
-        }
-        if (o + 2 > out_cap) {
-            return 0;
-        }
-        out[o++] = (uint8_t)run;
-        out[o++] = v;
-        i += run;
-    }
-    return o;
-}
-
-static int rle_decode(const uint8_t *in, size_t in_n, uint8_t *out, size_t out_len) {
-    size_t i = 0, o = 0;
-    if ((in_n & 1u) != 0) {
-        return -1;
-    }
-    while (i + 1 < in_n) {
-        uint8_t run = in[i++];
-        uint8_t v = in[i++];
-        size_t k;
-        if (run == 0 || o + run > out_len) {
-            return -1;
-        }
-        for (k = 0; k < run; k++) {
-            out[o++] = v;
-        }
-    }
-    return o == out_len ? 0 : -1;
-}
-
-static int write_hex_rle(FILE *f, const uint8_t *data, size_t n) {
-    uint8_t *enc;
-    size_t enc_n;
-    int rc;
-    if (n == 0) {
-        return 0;
-    }
-    enc = (uint8_t *)malloc(n * 2u);
-    if (!enc) {
-        return write_hex(f, data, n);
-    }
-    enc_n = rle_encode(data, n, enc, n * 2u);
-    if (enc_n > 0 && enc_n < n) {
-        rc = write_hex(f, enc, enc_n);
-    } else {
-        rc = write_hex(f, data, n);
-    }
-    free(enc);
-    return rc;
-}
-
-static int parse_hex(const char *hex, uint8_t *out, size_t out_len) {
-    size_t i;
-    size_t hex_len = strlen(hex);
-    if (hex_len != out_len * 2) {
+    size_t n = strlen(hex);
+    if (n != out_len * 2u) {
         return -1;
     }
     for (i = 0; i < out_len; i++) {
@@ -116,1129 +37,219 @@ static int parse_hex(const char *hex, uint8_t *out, size_t out_len) {
     return 0;
 }
 
-/* Raw hex (len == 2*out_len) or RLE hex (compressed stream). */
-static int parse_hex_field(const char *hex, uint8_t *out, size_t out_len) {
-    size_t hex_len;
-    uint8_t *raw;
-    size_t raw_n;
+static char *encode_hex(const uint8_t *in, size_t in_len) {
+    static const char *HEX = "0123456789ABCDEF";
+    char *out = (char *)malloc(in_len * 2u + 1u);
     size_t i;
-    int rc;
-    if (!hex) {
-        return -1;
-    }
-    hex_len = strlen(hex);
-    if (hex_len == out_len * 2u) {
-        return parse_hex(hex, out, out_len);
-    }
-    if (hex_len < 2 || (hex_len & 1u) != 0) {
-        return -1;
-    }
-    raw_n = hex_len / 2u;
-    raw = (uint8_t *)malloc(raw_n);
-    if (!raw) {
-        return -1;
-    }
-    for (i = 0; i < raw_n; i++) {
-        int hi = hex_nibble(hex[i * 2]);
-        int lo = hex_nibble(hex[i * 2 + 1]);
-        if (hi < 0 || lo < 0) {
-            free(raw);
-            return -1;
-        }
-        raw[i] = (uint8_t)((hi << 4) | lo);
-    }
-    rc = rle_decode(raw, raw_n, out, out_len);
-    free(raw);
-    return rc;
-}
-
-static char *read_file(const char *path, size_t *out_len) {
-    FILE *f = fopen(path, "rb");
-    long sz;
-    char *buf;
-    if (!f) {
+    if (!out) {
         return NULL;
     }
-    if (fseek(f, 0, SEEK_END) != 0) {
-        fclose(f);
-        return NULL;
+    for (i = 0; i < in_len; i++) {
+        out[i * 2] = HEX[in[i] >> 4];
+        out[i * 2 + 1] = HEX[in[i] & 0x0Fu];
     }
-    sz = ftell(f);
-    if (sz < 0) {
-        fclose(f);
-        return NULL;
-    }
-    rewind(f);
-    buf = (char *)malloc((size_t)sz + 1);
-    if (!buf) {
-        fclose(f);
-        return NULL;
-    }
-    if (fread(buf, 1, (size_t)sz, f) != (size_t)sz) {
-        free(buf);
-        fclose(f);
-        return NULL;
-    }
-    buf[sz] = 0;
-    fclose(f);
-    if (out_len) {
-        *out_len = (size_t)sz;
-    }
-    return buf;
+    out[in_len * 2] = '\0';
+    return out;
 }
 
-/* Find "key": and return pointer after colon whitespace. */
-static const char *find_key(const char *json, const char *key) {
-    char pattern[128];
-    const char *p;
-    snprintf(pattern, sizeof(pattern), "\"%s\"", key);
-    p = strstr(json, pattern);
-    if (!p) {
-        return NULL;
-    }
-    p += strlen(pattern);
-    while (*p && (isspace((unsigned char)*p) || *p == ':')) {
-        p++;
-    }
-    return p;
-}
-
-static int parse_int_after(const char *p, int *out) {
-    char *end;
-    long v;
-    if (!p) {
-        return -1;
-    }
-    v = strtol(p, &end, 10);
-    if (end == p) {
-        return -1;
-    }
-    *out = (int)v;
-    return 0;
-}
-
-static int parse_string_after(const char *p, char *out, size_t out_cap) {
-    size_t n = 0;
-    if (!p || *p != '"') {
-        return -1;
-    }
-    p++;
-    while (*p && *p != '"' && n + 1 < out_cap) {
-        if (*p == '\\' && p[1]) {
-            p++;
-        }
-        out[n++] = *p++;
-    }
-    if (*p != '"') {
-        return -1;
-    }
-    out[n] = 0;
-    return 0;
-}
-
-/* Parse [[a,b,c,d],...] into 4 R01PalRow. Starts at first '[' of outer array. */
-static int parse_pal_rows(const char *p, R01PalRow rows[R01_PAL_ROWS]) {
-    int ri, ci;
-    if (!p || *p != '[') {
-        return -1;
-    }
-    p++;
-    for (ri = 0; ri < R01_PAL_ROWS; ri++) {
-        while (*p && isspace((unsigned char)*p)) {
-            p++;
-        }
-        if (*p != '[') {
-            return -1;
-        }
-        p++;
-        for (ci = 0; ci < R01_PAL_COLORS; ci++) {
-            char *end;
-            long v;
-            while (*p && isspace((unsigned char)*p)) {
-                p++;
-            }
-            v = strtol(p, &end, 10);
-            if (end == p) {
-                return -1;
-            }
-            rows[ri].idx[ci] = (uint8_t)((int)v & 63);
-            p = end;
-            while (*p && (isspace((unsigned char)*p) || *p == ',')) {
-                p++;
-            }
-        }
-        if (*p != ']') {
-            return -1;
-        }
-        p++;
-        while (*p && (isspace((unsigned char)*p) || *p == ',')) {
-            p++;
-        }
-    }
-    return 0;
-}
-
-static void write_constraints(FILE *f, const char *indent, const R01Constraints *c) {
-    fprintf(f, "%s\"constraints\": {\n", indent);
-    fprintf(f, "%s  \"player_meta\": %d,\n", indent, c->player_meta);
-    fprintf(f, "%s  \"enemy_anim_rate\": %d,\n", indent, c->enemy_anim_rate);
-    fprintf(f, "%s  \"anim_rate\": %d,\n", indent, c->anim_rate);
-    fprintf(f, "%s  \"scroll_mode\": %d,\n", indent, c->scroll_mode);
-    fprintf(f, "%s  \"deadzone_x\": %d,\n", indent, c->deadzone_x);
-    fprintf(f, "%s  \"deadzone_y\": %d,\n", indent, c->deadzone_y);
-    fprintf(f, "%s  \"transition\": %d\n", indent, c->transition);
-    fprintf(f, "%s}", indent);
-}
-
-static void parse_constraints_obj(const char *obj, R01Constraints *c) {
-    const char *pcur;
-    if (!obj || !c) {
-        return;
-    }
-    pcur = find_key(obj, "player_meta");
-    parse_int_after(pcur, &c->player_meta);
-    pcur = find_key(obj, "enemy_anim_rate");
-    parse_int_after(pcur, &c->enemy_anim_rate);
-    pcur = find_key(obj, "anim_rate");
-    parse_int_after(pcur, &c->anim_rate);
-    pcur = find_key(obj, "scroll_mode");
-    parse_int_after(pcur, &c->scroll_mode);
-    pcur = find_key(obj, "deadzone_x");
-    parse_int_after(pcur, &c->deadzone_x);
-    pcur = find_key(obj, "deadzone_y");
-    parse_int_after(pcur, &c->deadzone_y);
-    pcur = find_key(obj, "transition");
-    parse_int_after(pcur, &c->transition);
-    if (c->enemy_anim_rate < 1) {
-        c->enemy_anim_rate = 1;
-    }
-    if (c->anim_rate < 1) {
-        c->anim_rate = 1;
-    }
-    if (c->scroll_mode < 0 || c->scroll_mode > R01_SCROLL_HYBRID) {
-        c->scroll_mode = R01_SCROLL_PIXEL;
-    }
-    if (c->transition != R01_XITION_FADE) {
-        c->transition = R01_XITION_CUT;
-    }
-}
-
-static void parse_constraints_key(const char *block, R01Constraints *c) {
-    const char *pcur = find_key(block, "constraints");
-    const char *brace;
-    if (!pcur) {
-        return;
-    }
-    brace = strchr(pcur, '{');
-    if (brace) {
-        parse_constraints_obj(brace, c);
+static void set_err(char *err_buf, size_t err_cap, const char *msg) {
+    if (err_buf && err_cap > 0) {
+        snprintf(err_buf, err_cap, "%s", msg ? msg : "error");
     }
 }
 
 int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, size_t err_cap) {
     FILE *f;
-    int wi, i, c;
+    const R01World *w;
+    int i;
     if (!p || !path) {
         set_err(err_buf, err_cap, "bad args");
         return -1;
     }
-    f = fopen(path, "wb");
+    w = &p->worlds[0];
+    f = fopen(path, "w");
     if (!f) {
-        set_err(err_buf, err_cap, "cannot open for write");
+        set_err(err_buf, err_cap, "cannot write json");
         return -1;
     }
-
     fprintf(f, "{\n");
-    fprintf(f, "  \"format\": \"retr01_studio_project\",\n");
-    fprintf(f, "  \"version\": 8,\n");
+    fprintf(f, "  \"version\": %d,\n", R01_JSON_VER);
     fprintf(f, "  \"name\": \"%s\",\n", p->name);
-    fprintf(f, "  \"active_world\": %d,\n", p->active_world);
     fprintf(f, "  \"active_screen\": %d,\n", p->active_screen);
-    fprintf(f, "  \"active_plane\": %d,\n", p->active_plane);
-    fprintf(f, "  \"generate_bank\": %d,\n", p->generate_bank);
-    fprintf(f, "  \"paint_color\": %d,\n", p->paint_color);
-    fprintf(f, "  \"has_cart_save\": %d,\n", p->has_cart_save ? 1 : 0);
-    write_constraints(f, "  ", &p->constraints);
-    fprintf(f, ",\n");
-
-    fprintf(f, "  \"global_pal_bg\": [");
-    for (i = 0; i < R01_PAL_ROWS; i++) {
-        fprintf(f, "[");
-        for (c = 0; c < R01_PAL_COLORS; c++) {
-            fprintf(f, "%d%s", p->global_pal_bg[i].idx[c], c + 1 < R01_PAL_COLORS ? "," : "");
+    fprintf(f, "  \"grid_cols\": %d,\n", w->grid_cols);
+    fprintf(f, "  \"grid_rows\": %d,\n", w->grid_rows);
+    fprintf(f, "  \"screens\": [\n");
+    for (i = 0; i < w->screen_count; i++) {
+        const R01Screen *s = &w->screens[i];
+        char *px = encode_hex(s->pixels, sizeof(s->pixels));
+        char *tl = encode_hex(s->tiles, sizeof(s->tiles));
+        char *at = encode_hex(s->attrs, sizeof(s->attrs));
+        if (!px || !tl || !at) {
+            free(px);
+            free(tl);
+            free(at);
+            fclose(f);
+            set_err(err_buf, err_cap, "oom");
+            return -1;
         }
-        fprintf(f, "]%s", i + 1 < R01_PAL_ROWS ? "," : "");
+        fprintf(f, "    {\"col\": %d, \"row\": %d,\n", s->col, s->row);
+        fprintf(f, "     \"pixels_hex\": \"%s\",\n", px);
+        fprintf(f, "     \"tiles_hex\": \"%s\",\n", tl);
+        fprintf(f, "     \"attrs_hex\": \"%s\"}%s\n", at, i + 1 < w->screen_count ? "," : "");
+        free(px);
+        free(tl);
+        free(at);
     }
-    fprintf(f, "],\n");
-    fprintf(f, "  \"global_pal_spr\": [");
-    for (i = 0; i < R01_PAL_ROWS; i++) {
-        fprintf(f, "[");
-        for (c = 0; c < R01_PAL_COLORS; c++) {
-            fprintf(f, "%d%s", p->global_pal_spr[i].idx[c], c + 1 < R01_PAL_COLORS ? "," : "");
-        }
-        fprintf(f, "]%s", i + 1 < R01_PAL_ROWS ? "," : "");
-    }
-    fprintf(f, "],\n");
-
-    fprintf(f, "  \"worlds\": [\n");
-
-    for (wi = 0; wi < R01_MAX_WORLDS; wi++) {
-        const R01World *w = &p->worlds[wi];
-        int si, bi;
-        fprintf(f, "    {\n");
-        fprintf(f, "      \"present\": %d,\n", w->present ? 1 : 0);
-        fprintf(f, "      \"grid_cols\": %d,\n", w->grid_cols > 0 ? w->grid_cols : R01_GRID_SIZE);
-        fprintf(f, "      \"grid_rows\": %d,\n", w->grid_rows > 0 ? w->grid_rows : R01_GRID_SIZE);
-        fprintf(f, "      \"default_bg_bank\": %d,\n", w->default_bg_bank);
-        fprintf(f, "      \"default_pal_row\": %d,\n", w->default_pal_row);
-        fprintf(f, "      \"use_world_pals\": %d,\n", w->use_world_pals ? 1 : 0);
-        fprintf(f, "      \"use_constraints\": %d,\n", w->use_constraints ? 1 : 0);
-        write_constraints(f, "      ", &w->constraints);
-        fprintf(f, ",\n");
-        fprintf(f, "      \"pal_bg\": [");
-        for (i = 0; i < R01_PAL_ROWS; i++) {
-            fprintf(f, "[");
-            for (c = 0; c < R01_PAL_COLORS; c++) {
-                fprintf(f, "%d%s", w->pal_bg[i].idx[c], c + 1 < R01_PAL_COLORS ? "," : "");
-            }
-            fprintf(f, "]%s", i + 1 < R01_PAL_ROWS ? "," : "");
-        }
-        fprintf(f, "],\n");
-        fprintf(f, "      \"pal_spr\": [");
-        for (i = 0; i < R01_PAL_ROWS; i++) {
-            fprintf(f, "[");
-            for (c = 0; c < R01_PAL_COLORS; c++) {
-                fprintf(f, "%d%s", w->pal_spr[i].idx[c], c + 1 < R01_PAL_COLORS ? "," : "");
-            }
-            fprintf(f, "]%s", i + 1 < R01_PAL_ROWS ? "," : "");
-        }
-        fprintf(f, "],\n");
-        fprintf(f, "      \"screens\": [\n");
-        for (si = 0; si < w->screen_count; si++) {
-            const R01Screen *s = &w->screens[si];
-            fprintf(f, "        {\n");
-            fprintf(f, "          \"col\": %d,\n", s->col);
-            fprintf(f, "          \"row\": %d,\n", s->row);
-            fprintf(f, "          \"present\": %d,\n", s->present ? 1 : 0);
-            fprintf(f, "          \"pixels_hex\": \"");
-            write_hex_rle(f, s->pixels, sizeof(s->pixels));
-            fprintf(f, "\",\n");
-            fprintf(f, "          \"tiles_hex\": \"");
-            write_hex_rle(f, s->tiles, sizeof(s->tiles));
-            fprintf(f, "\",\n");
-            fprintf(f, "          \"attrs_hex\": \"");
-            write_hex_rle(f, s->attrs, sizeof(s->attrs));
-            fprintf(f, "\",\n");
-            fprintf(f, "          \"oam\": [\n");
-            {
-                int oi;
-                for (oi = 0; oi < s->oam_count; oi++) {
-                    const R01Oam *o = &s->oam[oi];
-                    fprintf(f, "            {\"x\":%d,\"y\":%d,\"tile\":%d,\"attr\":%d}%s\n", o->x, o->y, o->tile,
-                            o->attr, oi + 1 < s->oam_count ? "," : "");
-                }
-            }
-            fprintf(f, "          ]\n");
-            fprintf(f, "        }%s\n", si + 1 < w->screen_count ? "," : "");
-        }
-        fprintf(f, "      ],\n");
-        fprintf(f, "      \"planes\": [\n");
-        for (si = 0; si < R01_MAX_PARALLAX_PLANES; si++) {
-            const R01ParallaxPlane *pl = &w->planes[si];
-            fprintf(f, "        {\n");
-            fprintf(f, "          \"present\": %d,\n", pl->present ? 1 : 0);
-            fprintf(f, "          \"slot\": %d,\n", pl->slot);
-            fprintf(f, "          \"pixels_hex\": \"");
-            write_hex_rle(f, pl->pixels, sizeof(pl->pixels));
-            fprintf(f, "\",\n");
-            fprintf(f, "          \"tiles_hex\": \"");
-            write_hex_rle(f, pl->tiles, sizeof(pl->tiles));
-            fprintf(f, "\",\n");
-            fprintf(f, "          \"attrs_hex\": \"");
-            write_hex_rle(f, pl->attrs, sizeof(pl->attrs));
-            fprintf(f, "\"\n");
-            fprintf(f, "        }%s\n", si + 1 < R01_MAX_PARALLAX_PLANES ? "," : "");
-        }
-        fprintf(f, "      ],\n");
-        fprintf(f, "      \"bg_banks\": [\n");
-        for (bi = 0; bi < R01_BG_BANKS; bi++) {
-            const R01BgBank *b = &w->bg_banks[bi];
-            size_t chr_n = (size_t)b->tile_count * R01_TILE_BYTES;
-            fprintf(f, "        {\n");
-            fprintf(f, "          \"tile_count\": %d,\n", b->tile_count);
-            fprintf(f, "          \"chr_hex\": \"");
-            write_hex(f, b->chr, chr_n);
-            fprintf(f, "\"\n");
-            fprintf(f, "        }%s\n", bi + 1 < R01_BG_BANKS ? "," : "");
-        }
-        fprintf(f, "      ],\n");
-        fprintf(f, "      \"spr_banks\": [\n");
-        for (bi = 0; bi < R01_SPR_BANKS; bi++) {
-            const R01SprBank *b = &w->spr_banks[bi];
-            size_t chr_n = (size_t)b->tile_count * R01_TILE_BYTES;
-            fprintf(f, "        {\n");
-            fprintf(f, "          \"tile_count\": %d,\n", b->tile_count);
-            fprintf(f, "          \"chr_hex\": \"");
-            write_hex(f, b->chr, chr_n);
-            fprintf(f, "\"\n");
-            fprintf(f, "        }%s\n", bi + 1 < R01_SPR_BANKS ? "," : "");
-        }
-        fprintf(f, "      ],\n");
-        fprintf(f, "      \"metas\": [\n");
-        {
-            int mi;
-            for (mi = 0; mi < w->meta_count; mi++) {
-                const R01MetaSprite *m = &w->metas[mi];
-                int pi;
-                fprintf(f, "        {\n");
-                fprintf(f, "          \"present\": %d,\n", m->present ? 1 : 0);
-                fprintf(f, "          \"frame_count\": %d,\n", m->frame_count);
-                fprintf(f, "          \"parts\": [\n");
-                for (pi = 0; pi < m->part_count; pi++) {
-                    const R01MetaPart *part = &m->parts[pi];
-                    fprintf(f, "            {\"dx\":%d,\"dy\":%d,\"tile\":%d,\"attr\":%d}%s\n", part->dx, part->dy,
-                            part->tile, part->attr, pi + 1 < m->part_count ? "," : "");
-                }
-                fprintf(f, "          ]\n");
-                fprintf(f, "        }%s\n", mi + 1 < w->meta_count ? "," : "");
-            }
-        }
-        fprintf(f, "      ]\n");
-        fprintf(f, "    }%s\n", wi + 1 < R01_MAX_WORLDS ? "," : "");
-    }
-
-    fprintf(f, "  ]\n");
+    fprintf(f, "  ],\n");
+    fprintf(f, "  \"bg_bank0_tiles\": %d\n", w->bg_banks[0].tile_count);
     fprintf(f, "}\n");
     fclose(f);
     return 0;
 }
 
-/*
- * Phase-1 loader: not a full JSON parser. Expects files written by
- * r01_project_save_json (key order flexible within objects via sequential search
- * from each world/screen block).
- */
+static const char *json_find(const char *hay, const char *needle) {
+    return hay ? strstr(hay, needle) : NULL;
+}
+
+static int json_int_after(const char *p, const char *key, int *out) {
+    const char *k = json_find(p, key);
+    char *end;
+    long v;
+    if (!k || !out) {
+        return 0;
+    }
+    k += strlen(key);
+    while (*k == ' ' || *k == '\t' || *k == ':' || *k == '\"') {
+        k++;
+    }
+    v = strtol(k, &end, 10);
+    if (end == k) {
+        return 0;
+    }
+    *out = (int)v;
+    return 1;
+}
+
+static int json_string_field(const char *obj, const char *key, char *buf, size_t buf_len) {
+    const char *k = json_find(obj, key);
+    size_t n = 0;
+    if (!k || !buf || buf_len == 0) {
+        return 0;
+    }
+    k += strlen(key);
+    while (*k && *k != '\"') {
+        k++;
+    }
+    if (*k != '\"') {
+        return 0;
+    }
+    k++;
+    while (*k && *k != '\"' && n + 1 < buf_len) {
+        buf[n++] = *k++;
+    }
+    buf[n] = '\0';
+    return n > 0;
+}
+
 int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t err_cap) {
-    char *json;
-    size_t len = 0;
-    const char *pcur;
-    int version = 0;
-    int wi;
+    FILE *f;
+    long sz;
+    char *buf = NULL;
+    const char *section;
+    const char *obj;
+    char name[R01_NAME_MAX];
+    int active = R01_START_ROW * R01_DEFAULT_GRID + R01_START_COL;
+    int grid_cols = R01_DEFAULT_GRID;
+    int grid_rows = R01_DEFAULT_GRID;
 
     if (!p || !path) {
         set_err(err_buf, err_cap, "bad args");
         return -1;
     }
-
-    json = read_file(path, &len);
-    if (!json) {
-        set_err(err_buf, err_cap, "cannot read file");
+    f = fopen(path, "rb");
+    if (!f) {
+        set_err(err_buf, err_cap, "cannot open json");
         return -1;
     }
-
-    if (!strstr(json, "\"retr01_studio_project\"")) {
-        free(json);
-        set_err(err_buf, err_cap, "not a retr01_studio_project");
+    if (fseek(f, 0, SEEK_END) != 0 || (sz = ftell(f)) < 0 || fseek(f, 0, SEEK_SET) != 0) {
+        fclose(f);
+        set_err(err_buf, err_cap, "read failed");
         return -1;
     }
-
-    r01_project_init(p, "loaded");
-    pcur = find_key(json, "version");
-    if (parse_int_after(pcur, &version) != 0 || version < 1 || version > 8) {
-        free(json);
-        set_err(err_buf, err_cap, "unsupported version");
+    buf = (char *)malloc((size_t)sz + 1u);
+    if (!buf || fread(buf, 1, (size_t)sz, f) != (size_t)sz) {
+        free(buf);
+        fclose(f);
+        set_err(err_buf, err_cap, "read failed");
         return -1;
     }
+    buf[sz] = '\0';
+    fclose(f);
 
-    pcur = find_key(json, "name");
-    if (pcur) {
-        char name[R01_NAME_MAX];
-        if (parse_string_after(pcur, name, sizeof(name)) == 0) {
-            strncpy(p->name, name, R01_NAME_MAX - 1);
-        }
+    r01_project_init(p, "untitled");
+    name[0] = '\0';
+    json_string_field(buf, "\"name\"", name, sizeof(name));
+    if (name[0]) {
+        strncpy(p->name, name, R01_NAME_MAX - 1);
     }
-    pcur = find_key(json, "active_world");
-    parse_int_after(pcur, &p->active_world);
-    pcur = find_key(json, "active_screen");
-    parse_int_after(pcur, &p->active_screen);
-    p->active_plane = -1;
-    pcur = find_key(json, "active_plane");
-    parse_int_after(pcur, &p->active_plane);
-    pcur = find_key(json, "generate_bank");
-    parse_int_after(pcur, &p->generate_bank);
-    pcur = find_key(json, "paint_color");
-    parse_int_after(pcur, &p->paint_color);
-    pcur = find_key(json, "has_cart_save");
-    {
-        int hs = 0;
-        parse_int_after(pcur, &hs);
-        p->has_cart_save = hs ? 1 : 0;
+    json_int_after(buf, "\"active_screen\"", &active);
+    json_int_after(buf, "\"grid_cols\"", &grid_cols);
+    json_int_after(buf, "\"grid_rows\"", &grid_rows);
+    if (grid_cols >= 1 && grid_cols <= R01_GRID_MAX && grid_rows >= 1 && grid_rows <= R01_GRID_MAX) {
+        r01_world_set_grid(r01_project_world0(p), grid_cols, grid_rows);
     }
-    parse_constraints_key(json, &p->constraints);
-
-    pcur = find_key(json, "global_pal_bg");
-    if (pcur) {
-        parse_pal_rows(pcur, p->global_pal_bg);
-    }
-    pcur = find_key(json, "global_pal_spr");
-    if (pcur) {
-        parse_pal_rows(pcur, p->global_pal_spr);
+    if (active >= 0 && active < r01_project_world0(p)->screen_count) {
+        p->active_screen = active;
     }
 
-    /* Split worlds by walking "\"present\":" inside worlds array — brittle but ok for our writer. */
-    {
-        const char *worlds = strstr(json, "\"worlds\"");
-        const char *cursor;
-        if (!worlds) {
-            free(json);
-            set_err(err_buf, err_cap, "missing worlds");
-            return -1;
-        }
-        cursor = strchr(worlds, '[');
-        if (!cursor) {
-            free(json);
-            set_err(err_buf, err_cap, "bad worlds");
-            return -1;
-        }
-        cursor++;
-
-        for (wi = 0; wi < R01_MAX_WORLDS; wi++) {
-            R01World *w = &p->worlds[wi];
-            const char *wobj = strchr(cursor, '{');
-            const char *wend;
-            const char *screens;
-            const char *scur;
-            int si, bi;
-            char *wblock;
-            size_t wlen;
-
-            if (!wobj) {
+    section = json_find(buf, "\"screens\"");
+    if (section) {
+        R01World *w = r01_project_world0(p);
+        obj = strchr(section, '{');
+        while (obj && obj < buf + sz) {
+            const char *end = strchr(obj, '}');
+            size_t olen;
+            char *slice;
+            char px[sizeof(((R01Screen *)0)->pixels) * 2 + 4];
+            char tl[sizeof(((R01Screen *)0)->tiles) * 2 + 4];
+            char at[sizeof(((R01Screen *)0)->attrs) * 2 + 4];
+            int col = 0, row = 0, si;
+            R01Screen *s;
+            if (!end) {
                 break;
             }
-            wend = wobj + 1;
-            {
-                int depth = 1;
-                while (*wend && depth > 0) {
-                    if (*wend == '{') {
-                        depth++;
-                    } else if (*wend == '}') {
-                        depth--;
-                    }
-                    wend++;
-                }
+            olen = (size_t)(end - obj + 1);
+            slice = (char *)malloc(olen + 1u);
+            if (!slice) {
+                break;
             }
-            wlen = (size_t)(wend - wobj);
-            wblock = (char *)malloc(wlen + 1);
-            if (!wblock) {
-                free(json);
-                set_err(err_buf, err_cap, "oom");
-                return -1;
+            memcpy(slice, obj, olen);
+            slice[olen] = '\0';
+            json_int_after(slice, "\"col\"", &col);
+            json_int_after(slice, "\"row\"", &row);
+            si = r01_world_screen_index(w, col, row);
+            if (si < 0) {
+                free(slice);
+                obj = strchr(end + 1, '{');
+                continue;
             }
-            memcpy(wblock, wobj, wlen);
-            wblock[wlen] = 0;
-
-            memset(w, 0, sizeof(*w));
-            r01_constraints_init_default(&w->constraints);
-            w->grid_cols = R01_GRID_SIZE;
-            w->grid_rows = R01_GRID_SIZE;
-            pcur = find_key(wblock, "present");
-            {
-                int pr = 0;
-                parse_int_after(pcur, &pr);
-                w->present = pr ? 1 : 0;
+            s = &w->screens[si];
+            px[0] = tl[0] = at[0] = '\0';
+            if (json_string_field(slice, "\"pixels_hex\"", px, sizeof(px))) {
+                decode_hex(px, s->pixels, sizeof(s->pixels));
             }
-            pcur = find_key(wblock, "grid_cols");
-            {
-                int gc = R01_GRID_SIZE;
-                parse_int_after(pcur, &gc);
-                if (gc < 1 || gc > R01_GRID_SIZE) {
-                    gc = R01_GRID_SIZE;
-                }
-                w->grid_cols = gc;
+            if (json_string_field(slice, "\"tiles_hex\"", tl, sizeof(tl))) {
+                decode_hex(tl, s->tiles, sizeof(s->tiles));
             }
-            pcur = find_key(wblock, "grid_rows");
-            {
-                int gr = R01_GRID_SIZE;
-                parse_int_after(pcur, &gr);
-                if (gr < 1 || gr > R01_GRID_SIZE) {
-                    gr = R01_GRID_SIZE;
-                }
-                w->grid_rows = gr;
+            if (json_string_field(slice, "\"attrs_hex\"", at, sizeof(at))) {
+                decode_hex(at, s->attrs, sizeof(s->attrs));
             }
-            pcur = find_key(wblock, "default_bg_bank");
-            parse_int_after(pcur, &w->default_bg_bank);
-            pcur = find_key(wblock, "default_pal_row");
-            parse_int_after(pcur, &w->default_pal_row);
-            pcur = find_key(wblock, "use_world_pals");
-            {
-                int u = 0;
-                parse_int_after(pcur, &u);
-                w->use_world_pals = u ? 1 : 0;
-            }
-            pcur = find_key(wblock, "use_constraints");
-            {
-                int u = 0;
-                parse_int_after(pcur, &u);
-                w->use_constraints = u ? 1 : 0;
-            }
-            parse_constraints_key(wblock, &w->constraints);
-            pcur = find_key(wblock, "pal_bg");
-            if (pcur) {
-                parse_pal_rows(pcur, w->pal_bg);
-            } else {
-                int i;
-                for (i = 0; i < R01_PAL_ROWS; i++) {
-                    w->pal_bg[i] = p->global_pal_bg[i];
-                }
-            }
-            pcur = find_key(wblock, "pal_spr");
-            if (pcur) {
-                parse_pal_rows(pcur, w->pal_spr);
-            } else {
-                int i;
-                for (i = 0; i < R01_PAL_ROWS; i++) {
-                    w->pal_spr[i] = p->global_pal_spr[i];
-                }
-            }
-
-            screens = strstr(wblock, "\"screens\"");
-            if (screens) {
-                const char *s_arr = strchr(screens, '[');
-                const char *s_end = NULL;
-                if (s_arr) {
-                    int depth = 0;
-                    const char *q = s_arr;
-                    for (; *q; q++) {
-                        if (*q == '[') {
-                            depth++;
-                        } else if (*q == ']') {
-                            depth--;
-                            if (depth == 0) {
-                                s_end = q;
-                                break;
-                            }
-                        }
-                    }
-                }
-                scur = s_arr ? s_arr + 1 : NULL;
-                if (scur && s_end) {
-                    for (si = 0; si < R01_MAX_SCREENS_PER_WORLD; si++) {
-                        const char *sobj = NULL;
-                        const char *scan;
-                        const char *send;
-                        char *sblock;
-                        size_t slen;
-                        R01Screen *s;
-                        char *hex;
-                        size_t hexcap = R01_SCREEN_PX_W * R01_SCREEN_PX_H * 2 + 8;
-
-                        for (scan = scur; scan < s_end; scan++) {
-                            if (*scan == '{') {
-                                sobj = scan;
-                                break;
-                            }
-                        }
-                        if (!sobj) {
-                            break;
-                        }
-                        send = sobj + 1;
-                        {
-                            int depth = 1;
-                            while (send < s_end && depth > 0) {
-                                if (*send == '{') {
-                                    depth++;
-                                } else if (*send == '}') {
-                                    depth--;
-                                }
-                                send++;
-                            }
-                        }
-                        slen = (size_t)(send - sobj);
-                        sblock = (char *)malloc(slen + 1);
-                        hex = (char *)malloc(hexcap);
-                        if (!sblock || !hex) {
-                            free(sblock);
-                            free(hex);
-                            free(wblock);
-                            free(json);
-                            set_err(err_buf, err_cap, "oom");
-                            return -1;
-                        }
-                        memcpy(sblock, sobj, slen);
-                        sblock[slen] = 0;
-
-                        s = &w->screens[w->screen_count];
-                        memset(s, 0, sizeof(*s));
-                        pcur = find_key(sblock, "col");
-                        parse_int_after(pcur, &s->col);
-                        pcur = find_key(sblock, "row");
-                        parse_int_after(pcur, &s->row);
-                        pcur = find_key(sblock, "present");
-                        {
-                            int pr = 1;
-                            parse_int_after(pcur, &pr);
-                            s->present = pr ? 1 : 0;
-                        }
-                        /* legacy v2 "parallax" on screens is ignored */
-                        pcur = find_key(sblock, "pixels_hex");
-                        if (pcur && parse_string_after(pcur, hex, hexcap) == 0) {
-                            if (parse_hex_field(hex, s->pixels, sizeof(s->pixels)) != 0) {
-                                free(hex);
-                                free(sblock);
-                                free(wblock);
-                                free(json);
-                                set_err(err_buf, err_cap, "bad pixels_hex");
-                                return -1;
-                            }
-                        }
-                        pcur = find_key(sblock, "tiles_hex");
-                        if (pcur && parse_string_after(pcur, hex, hexcap) == 0) {
-                            parse_hex_field(hex, s->tiles, sizeof(s->tiles));
-                        }
-                        pcur = find_key(sblock, "attrs_hex");
-                        if (pcur && parse_string_after(pcur, hex, hexcap) == 0) {
-                            parse_hex_field(hex, s->attrs, sizeof(s->attrs));
-                        }
-                        {
-                            const char *oam = strstr(sblock, "\"oam\"");
-                            const char *ocur;
-                            const char *oend = NULL;
-                            if (oam) {
-                                ocur = strchr(oam, '[');
-                                if (ocur) {
-                                    int depth = 0;
-                                    const char *q = ocur;
-                                    for (; *q; q++) {
-                                        if (*q == '[') {
-                                            depth++;
-                                        } else if (*q == ']') {
-                                            depth--;
-                                            if (depth == 0) {
-                                                oend = q;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    ocur++;
-                                    while (ocur && oend && ocur < oend && s->oam_count < R01_MAX_OAM_PER_SCREEN) {
-                                        const char *obrace = NULL;
-                                        const char *scan;
-                                        for (scan = ocur; scan < oend; scan++) {
-                                            if (*scan == '{') {
-                                                obrace = scan;
-                                                break;
-                                            }
-                                        }
-                                        if (!obrace) {
-                                            break;
-                                        }
-                                        {
-                                            int x = 0, y = 0, tile = 0, attr = 0;
-                                            const char *k;
-                                            k = find_key(obrace, "x");
-                                            parse_int_after(k, &x);
-                                            k = find_key(obrace, "y");
-                                            parse_int_after(k, &y);
-                                            k = find_key(obrace, "tile");
-                                            parse_int_after(k, &tile);
-                                            k = find_key(obrace, "attr");
-                                            parse_int_after(k, &attr);
-                                            s->oam[s->oam_count].x = (uint8_t)x;
-                                            s->oam[s->oam_count].y = (uint8_t)y;
-                                            s->oam[s->oam_count].tile = (uint8_t)tile;
-                                            s->oam[s->oam_count].attr = (uint8_t)attr;
-                                            s->oam_count++;
-                                        }
-                                        ocur = strchr(obrace, '}');
-                                        if (!ocur) {
-                                            break;
-                                        }
-                                        ocur++;
-                                    }
-                                }
-                            }
-                        }
-
-                        w->screen_count++;
-                        free(sblock);
-                        free(hex);
-                        scur = send;
-                    }
-                }
-            }
-
-            {
-                const char *planes = strstr(wblock, "\"planes\"");
-                const char *p_arr;
-                const char *p_end = NULL;
-                const char *pcur2;
-                int pi;
-                if (planes) {
-                    p_arr = strchr(planes, '[');
-                    if (p_arr) {
-                        int depth = 0;
-                        const char *q = p_arr;
-                        for (; *q; q++) {
-                            if (*q == '[') {
-                                depth++;
-                            } else if (*q == ']') {
-                                depth--;
-                                if (depth == 0) {
-                                    p_end = q;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    pcur2 = p_arr ? p_arr + 1 : NULL;
-                    if (pcur2 && p_end) {
-                        for (pi = 0; pi < R01_MAX_PARALLAX_PLANES; pi++) {
-                            const char *pobj = NULL;
-                            const char *scan;
-                            const char *pend;
-                            char *pblock;
-                            size_t plen;
-                            R01ParallaxPlane *pl;
-                            char *hex;
-                            size_t hexcap = R01_SCREEN_PX_W * R01_SCREEN_PX_H * 2 + 8;
-
-                            for (scan = pcur2; scan < p_end; scan++) {
-                                if (*scan == '{') {
-                                    pobj = scan;
-                                    break;
-                                }
-                            }
-                            if (!pobj) {
-                                break;
-                            }
-                            pend = pobj + 1;
-                            {
-                                int depth = 1;
-                                while (pend < p_end && depth > 0) {
-                                    if (*pend == '{') {
-                                        depth++;
-                                    } else if (*pend == '}') {
-                                        depth--;
-                                    }
-                                    pend++;
-                                }
-                            }
-                            plen = (size_t)(pend - pobj);
-                            pblock = (char *)malloc(plen + 1);
-                            hex = (char *)malloc(hexcap);
-                            if (!pblock || !hex) {
-                                free(pblock);
-                                free(hex);
-                                free(wblock);
-                                free(json);
-                                set_err(err_buf, err_cap, "oom");
-                                return -1;
-                            }
-                            memcpy(pblock, pobj, plen);
-                            pblock[plen] = 0;
-                            pl = &w->planes[pi];
-                            memset(pl, 0, sizeof(*pl));
-                            pl->slot = pi;
-                            pcur = find_key(pblock, "present");
-                            {
-                                int pr = 0;
-                                parse_int_after(pcur, &pr);
-                                pl->present = pr ? 1 : 0;
-                            }
-                            pcur = find_key(pblock, "slot");
-                            parse_int_after(pcur, &pl->slot);
-                            if (pl->slot < 0 || pl->slot >= R01_MAX_PARALLAX_PLANES) {
-                                pl->slot = pi;
-                            }
-                            pcur = find_key(pblock, "pixels_hex");
-                            if (pcur && parse_string_after(pcur, hex, hexcap) == 0) {
-                                parse_hex_field(hex, pl->pixels, sizeof(pl->pixels));
-                            }
-                            pcur = find_key(pblock, "tiles_hex");
-                            if (pcur && parse_string_after(pcur, hex, hexcap) == 0) {
-                                parse_hex_field(hex, pl->tiles, sizeof(pl->tiles));
-                            }
-                            pcur = find_key(pblock, "attrs_hex");
-                            if (pcur && parse_string_after(pcur, hex, hexcap) == 0) {
-                                parse_hex_field(hex, pl->attrs, sizeof(pl->attrs));
-                            }
-                            free(pblock);
-                            free(hex);
-                            pcur2 = pend;
-                        }
-                    }
-                }
-            }
-
-            for (bi = 0; bi < R01_BG_BANKS; bi++) {
-                /* Find bg_banks array entries sequentially from wblock */
-                (void)bi;
-            }
-            {
-                const char *banks = strstr(wblock, "\"bg_banks\"");
-                const char *bcur;
-                if (banks) {
-                    bcur = strchr(banks, '[');
-                    if (bcur) {
-                        bcur++;
-                        for (bi = 0; bi < R01_BG_BANKS; bi++) {
-                            const char *bobj = strchr(bcur, '{');
-                            const char *bend;
-                            char *bblock;
-                            size_t blen;
-                            char *hexbuf;
-                            size_t hexcap = R01_BANK_CHR_BYTES * 2 + 8;
-                            R01BgBank *b;
-
-                            if (!bobj) {
-                                break;
-                            }
-                            bend = bobj + 1;
-                            {
-                                int depth = 1;
-                                while (*bend && depth > 0) {
-                                    if (*bend == '{') {
-                                        depth++;
-                                    } else if (*bend == '}') {
-                                        depth--;
-                                    }
-                                    bend++;
-                                }
-                            }
-                            blen = (size_t)(bend - bobj);
-                            bblock = (char *)malloc(blen + 1);
-                            hexbuf = (char *)malloc(hexcap);
-                            if (!bblock || !hexbuf) {
-                                free(bblock);
-                                free(hexbuf);
-                                free(wblock);
-                                free(json);
-                                set_err(err_buf, err_cap, "oom");
-                                return -1;
-                            }
-                            memcpy(bblock, bobj, blen);
-                            bblock[blen] = 0;
-                            b = &w->bg_banks[bi];
-                            memset(b, 0, sizeof(*b));
-                            pcur = find_key(bblock, "tile_count");
-                            parse_int_after(pcur, &b->tile_count);
-                            if (b->tile_count < 0) {
-                                b->tile_count = 0;
-                            }
-                            if (b->tile_count > R01_TILES_PER_BANK) {
-                                b->tile_count = R01_TILES_PER_BANK;
-                            }
-                            pcur = find_key(bblock, "chr_hex");
-                            if (pcur && parse_string_after(pcur, hexbuf, hexcap) == 0) {
-                                size_t need = (size_t)b->tile_count * R01_TILE_BYTES;
-                                if (parse_hex(hexbuf, b->chr, need) != 0 && need > 0) {
-                                    free(bblock);
-                                    free(hexbuf);
-                                    free(wblock);
-                                    free(json);
-                                    set_err(err_buf, err_cap, "bad chr_hex");
-                                    return -1;
-                                }
-                            }
-                            free(bblock);
-                            free(hexbuf);
-                            bcur = bend;
-                        }
-                    }
-                }
-            }
-
-            {
-                const char *banks = strstr(wblock, "\"spr_banks\"");
-                const char *bcur;
-                if (banks) {
-                    bcur = strchr(banks, '[');
-                    if (bcur) {
-                        bcur++;
-                        for (bi = 0; bi < R01_SPR_BANKS; bi++) {
-                            const char *bobj = strchr(bcur, '{');
-                            const char *bend;
-                            char *bblock;
-                            size_t blen;
-                            char *hexbuf;
-                            size_t hexcap = R01_BANK_CHR_BYTES * 2 + 8;
-                            R01SprBank *b;
-
-                            if (!bobj) {
-                                break;
-                            }
-                            bend = bobj + 1;
-                            {
-                                int depth = 1;
-                                while (*bend && depth > 0) {
-                                    if (*bend == '{') {
-                                        depth++;
-                                    } else if (*bend == '}') {
-                                        depth--;
-                                    }
-                                    bend++;
-                                }
-                            }
-                            blen = (size_t)(bend - bobj);
-                            bblock = (char *)malloc(blen + 1);
-                            hexbuf = (char *)malloc(hexcap);
-                            if (!bblock || !hexbuf) {
-                                free(bblock);
-                                free(hexbuf);
-                                free(wblock);
-                                free(json);
-                                set_err(err_buf, err_cap, "oom");
-                                return -1;
-                            }
-                            memcpy(bblock, bobj, blen);
-                            bblock[blen] = 0;
-                            b = &w->spr_banks[bi];
-                            memset(b, 0, sizeof(*b));
-                            pcur = find_key(bblock, "tile_count");
-                            parse_int_after(pcur, &b->tile_count);
-                            if (b->tile_count < 0) {
-                                b->tile_count = 0;
-                            }
-                            if (b->tile_count > R01_TILES_PER_BANK) {
-                                b->tile_count = R01_TILES_PER_BANK;
-                            }
-                            pcur = find_key(bblock, "chr_hex");
-                            if (pcur && parse_string_after(pcur, hexbuf, hexcap) == 0) {
-                                size_t need = (size_t)b->tile_count * R01_TILE_BYTES;
-                                if (need > 0) {
-                                    parse_hex(hexbuf, b->chr, need);
-                                }
-                            }
-                            free(bblock);
-                            free(hexbuf);
-                            bcur = bend;
-                        }
-                    }
-                }
-            }
-
-            {
-                const char *metas = strstr(wblock, "\"metas\"");
-                const char *mcur;
-                const char *mend = NULL;
-                if (metas) {
-                    mcur = strchr(metas, '[');
-                    if (mcur) {
-                        int depth = 0;
-                        const char *q = mcur;
-                        for (; *q; q++) {
-                            if (*q == '[') {
-                                depth++;
-                            } else if (*q == ']') {
-                                depth--;
-                                if (depth == 0) {
-                                    mend = q;
-                                    break;
-                                }
-                            }
-                        }
-                        mcur++;
-                        while (mcur && mend && mcur < mend && w->meta_count < R01_MAX_METASPRITES) {
-                            const char *mobj = NULL;
-                            const char *scan;
-                            const char *mobj_end;
-                            R01MetaSprite *m;
-                            for (scan = mcur; scan < mend; scan++) {
-                                if (*scan == '{') {
-                                    mobj = scan;
-                                    break;
-                                }
-                            }
-                            if (!mobj) {
-                                break;
-                            }
-                            mobj_end = mobj + 1;
-                            {
-                                int d = 1;
-                                while (mobj_end < mend && d > 0) {
-                                    if (*mobj_end == '{') {
-                                        d++;
-                                    } else if (*mobj_end == '}') {
-                                        d--;
-                                    }
-                                    mobj_end++;
-                                }
-                            }
-                            m = &w->metas[w->meta_count];
-                            memset(m, 0, sizeof(*m));
-                            {
-                                int pr = 1, fc = 1;
-                                const char *k = find_key(mobj, "present");
-                                parse_int_after(k, &pr);
-                                m->present = pr ? 1 : 0;
-                                k = find_key(mobj, "frame_count");
-                                parse_int_after(k, &fc);
-                                m->frame_count = fc < 1 ? 1 : (fc > R01_MAX_META_FRAMES ? R01_MAX_META_FRAMES : fc);
-                            }
-                            {
-                                const char *parts = strstr(mobj, "\"parts\"");
-                                const char *pcur2;
-                                const char *pend = mobj_end;
-                                if (parts && parts < mobj_end) {
-                                    pcur2 = strchr(parts, '[');
-                                    if (pcur2) {
-                                        pcur2++;
-                                        while (pcur2 < pend && m->part_count < R01_MAX_META_PARTS) {
-                                            const char *pobj = NULL;
-                                            const char *ps;
-                                            for (ps = pcur2; ps < pend; ps++) {
-                                                if (*ps == '{') {
-                                                    pobj = ps;
-                                                    break;
-                                                }
-                                                if (*ps == ']') {
-                                                    pobj = NULL;
-                                                    break;
-                                                }
-                                            }
-                                            if (!pobj) {
-                                                break;
-                                            }
-                                            {
-                                                int dx = 0, dy = 0, tile = 0, attr = 0;
-                                                const char *k = find_key(pobj, "dx");
-                                                parse_int_after(k, &dx);
-                                                k = find_key(pobj, "dy");
-                                                parse_int_after(k, &dy);
-                                                k = find_key(pobj, "tile");
-                                                parse_int_after(k, &tile);
-                                                k = find_key(pobj, "attr");
-                                                parse_int_after(k, &attr);
-                                                m->parts[m->part_count].dx = (int8_t)dx;
-                                                m->parts[m->part_count].dy = (int8_t)dy;
-                                                m->parts[m->part_count].tile = (uint8_t)tile;
-                                                m->parts[m->part_count].attr = (uint8_t)attr;
-                                                m->part_count++;
-                                            }
-                                            pcur2 = strchr(pobj, '}');
-                                            if (!pcur2) {
-                                                break;
-                                            }
-                                            pcur2++;
-                                        }
-                                    }
-                                }
-                            }
-                            w->meta_count++;
-                            mcur = mobj_end;
-                        }
-                    }
-                }
-            }
-
-            free(wblock);
-            cursor = wend;
+            free(slice);
+            obj = strchr(end + 1, '{');
         }
     }
 
-    if (p->active_world < 0 || p->active_world >= R01_MAX_WORLDS) {
-        p->active_world = 0;
-    }
-    free(json);
+    free(buf);
+    r01_chr_pack_world_bank0(r01_project_world0(p));
     return 0;
 }

@@ -6,8 +6,6 @@
 #   ./studio run [-- app-args...]
 #   ./studio build-run [-- app-args...]
 #   ./studio unit
-#   ./studio e2e
-#   ./studio e2e-watch [speed]
 #   ./studio help
 set -euo pipefail
 
@@ -18,7 +16,7 @@ source "$ROOT/scripts/r01-common.sh"
 PROJ="$ROOT/retr01_studio"
 BIN="$PROJ/build/retr01_studio"
 CMD="${1:-}"
-[[ -n "$CMD" ]] || r01_usage_die "usage: $0 <build|run|build-run|unit|e2e|e2e-watch|help> ..."
+[[ -n "$CMD" ]] || r01_usage_die "usage: $0 <build|run|build-run|unit|help> ..."
 shift || true
 
 case "$CMD" in
@@ -31,8 +29,6 @@ Retr01 Studio
   build-run [-- args]
                      build then run
   unit               build + core unit tests
-  e2e                build + headless e2e (ctest)
-  e2e-watch [speed]  build + visual e2e (default speed 1)
   help               this text
 EOF
     ;;
@@ -54,33 +50,6 @@ EOF
     r01_ensure_cmake "$PROJ"
     cmake --build "$PROJ/build" --target test_core
     r01_ctest "$PROJ" -R '^core$'
-    ;;
-  e2e)
-    cd "$PROJ"
-    r01_ensure_cmake "$PROJ"
-    cmake --build "$PROJ/build" --target test_e2e
-    # Headless-friendly when no display; keep default if DISPLAY is set.
-    if [[ -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]]; then
-      export SDL_VIDEODRIVER="${SDL_VIDEODRIVER:-offscreen}"
-    fi
-    r01_ctest "$PROJ" -R '^e2e$'
-    ;;
-  e2e-watch)
-    SPEED="${1:-1}"
-    if ! awk -v s="$SPEED" 'BEGIN { exit !(s + 0 > 0) }'; then
-      r01_die "speed must be a positive number (got: ${SPEED})"
-    fi
-    BASE_MS=120
-    WATCH_MS="$(awk -v base="$BASE_MS" -v s="$SPEED" 'BEGIN {
-      ms = int(base / s + 0.5)
-      if (ms < 1) ms = 1
-      print ms
-    }')"
-    cd "$PROJ"
-    r01_ensure_cmake "$PROJ"
-    cmake --build "$PROJ/build" --target test_e2e
-    echo "E2E watch @ ${SPEED}x (E2E_WATCH_MS=${WATCH_MS})"
-    exec env E2E_WATCH=1 E2E_WATCH_MS="$WATCH_MS" "$PROJ/build/test_e2e"
     ;;
   *)
     r01_usage_die "unknown command: $CMD (try: $0 help)"

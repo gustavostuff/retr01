@@ -4,46 +4,7 @@
 
 #include <string.h>
 
-void r01_constraints_init_default(R01Constraints *c) {
-    if (!c) {
-        return;
-    }
-    memset(c, 0, sizeof(*c));
-    c->player_meta = -1;
-    c->enemy_anim_rate = 8;
-    c->anim_rate = 12;
-    c->scroll_mode = R01_SCROLL_DEADZONE;
-    c->deadzone_x = R01_PLAY_DZ_INSET_X;
-    c->deadzone_y = R01_PLAY_DZ_INSET_Y;
-    c->transition = R01_XITION_CUT;
-}
-
-const R01Constraints *r01_project_constraints(const R01Project *p) {
-    const R01World *w;
-    if (!p) {
-        return NULL;
-    }
-    w = &p->worlds[p->active_world];
-    if (w->present && w->use_constraints) {
-        return &w->constraints;
-    }
-    return &p->constraints;
-}
-
-static int screen_present_at(const R01World *w, int col, int row) {
-    int gc = w->grid_cols > 0 ? w->grid_cols : R01_GRID_SIZE;
-    int gr = w->grid_rows > 0 ? w->grid_rows : R01_GRID_SIZE;
-    if (col < 0 || row < 0 || col >= gc || row >= gr) {
-        return 0;
-    }
-    return r01_world_find_screen(w, col, row) >= 0;
-}
-
-/*
- * True if the full player AABB at (px,py) only overlaps present screens.
- * If lock_home: every overlapped cell must equal (home_col, home_row).
- */
-static int player_aabb_ok(const R01World *w, int px, int py, int lock_home, int home_col, int home_row) {
+static int player_aabb_ok(const R01World *w, int px, int py) {
     int x1, y1, c0, c1, r0, r1, c, r;
     if (!w || px < 0 || py < 0) {
         return 0;
@@ -56,217 +17,41 @@ static int player_aabb_ok(const R01World *w, int px, int py, int lock_home, int 
     r1 = y1 / R01_SCREEN_PX_H;
     for (c = c0; c <= c1; c++) {
         for (r = r0; r <= r1; r++) {
-            if (lock_home) {
-                if (c != home_col || r != home_row) {
-                    return 0;
-                }
-            } else if (!screen_present_at(w, c, r)) {
+            if (r01_world_find_screen(w, c, r) < 0) {
                 return 0;
             }
         }
     }
     return 1;
-}
-
-static void set_home_from_player(R01PlayState *pl) {
-    pl->home_col = pl->player_x / R01_SCREEN_PX_W;
-    pl->home_row = pl->player_y / R01_SCREEN_PX_H;
 }
 
 static void place_player_centered(R01PlayState *pl, int col, int row) {
-    pl->home_col = col;
-    pl->home_row = row;
     pl->player_x = col * R01_SCREEN_PX_W + R01_SCREEN_PX_W / 2 - R01_PLAY_PLAYER_SIZE / 2;
     pl->player_y = row * R01_SCREEN_PX_H + R01_SCREEN_PX_H / 2 - R01_PLAY_PLAYER_SIZE / 2;
-    pl->cam_x = col * R01_SCREEN_PX_W;
-    pl->cam_y = row * R01_SCREEN_PX_H;
+    pl->cam_x = pl->player_x + R01_PLAY_PLAYER_SIZE / 2 - R01_SCREEN_PX_W / 2;
+    pl->cam_y = pl->player_y + R01_PLAY_PLAYER_SIZE / 2 - R01_SCREEN_PX_H / 2;
+    if (pl->cam_x < 0) {
+        pl->cam_x = 0;
+    }
+    if (pl->cam_y < 0) {
+        pl->cam_y = 0;
+    }
 }
 
-static void update_camera(R01PlayState *pl, const R01Constraints *c) {
-    int target_x, target_y;
-    int mode = c ? c->scroll_mode : R01_SCROLL_DEADZONE;
-    int dzx = c ? c->deadzone_x : R01_PLAY_DZ_INSET_X;
-    int dzy = c ? c->deadzone_y : R01_PLAY_DZ_INSET_Y;
+static void update_camera(R01PlayState *pl) {
     int ax = pl->player_x + R01_PLAY_PLAYER_SIZE / 2;
     int ay = pl->player_y + R01_PLAY_PLAYER_SIZE / 2;
-
-    if (mode == R01_SCROLL_INSTANT) {
-        pl->cam_x = (ax / R01_SCREEN_PX_W) * R01_SCREEN_PX_W;
-        pl->cam_y = (ay / R01_SCREEN_PX_H) * R01_SCREEN_PX_H;
-        return;
+    pl->cam_x = ax - R01_SCREEN_PX_W / 2;
+    pl->cam_y = ay - R01_SCREEN_PX_H / 2;
+    if (pl->cam_x < 0) {
+        pl->cam_x = 0;
     }
-
-    target_x = ax - R01_SCREEN_PX_W / 2;
-    target_y = ay - R01_SCREEN_PX_H / 2;
-    if (target_x < 0) {
-        target_x = 0;
-    }
-    if (target_y < 0) {
-        target_y = 0;
-    }
-
-    if (mode == R01_SCROLL_PIXEL) {
-        pl->cam_x = target_x;
-        pl->cam_y = target_y;
-        return;
-    }
-
-    /* DEADZONE and HYBRID: smooth free-box only — no automatic screen snap. */
-    {
-        int left = pl->cam_x + dzx;
-        int right = pl->cam_x + R01_SCREEN_PX_W - dzx;
-        int top = pl->cam_y + dzy;
-        int bot = pl->cam_y + R01_SCREEN_PX_H - dzy;
-        if (ax < left) {
-            pl->cam_x -= (left - ax);
-        } else if (ax > right) {
-            pl->cam_x += (ax - right);
-        }
-        if (ay < top) {
-            pl->cam_y -= (top - ay);
-        } else if (ay > bot) {
-            pl->cam_y += (ay - bot);
-        }
-        if (pl->cam_x < 0) {
-            pl->cam_x = 0;
-        }
-        if (pl->cam_y < 0) {
-            pl->cam_y = 0;
-        }
-    }
-}
-
-static void snapshot_full_pals(R01PlayState *pl, const R01Project *p) {
-    const R01World *w = &p->worlds[p->active_world];
-    const R01PalRow *bg = r01_world_bg_pals(p, w);
-    const R01PalRow *spr = r01_world_spr_pals(p, w);
-    int i;
-    for (i = 0; i < R01_PAL_ROWS; i++) {
-        if (bg) {
-            pl->fade_bg_full[i] = bg[i];
-        } else {
-            memset(&pl->fade_bg_full[i], 0, sizeof(R01PalRow));
-        }
-        if (spr) {
-            pl->fade_spr_full[i] = spr[i];
-        } else {
-            memset(&pl->fade_spr_full[i], 0, sizeof(R01PalRow));
-        }
-    }
-}
-
-static void copy_pal_rows(R01PalRow *dst, const R01PalRow *src) {
-    memcpy(dst, src, sizeof(R01PalRow) * (size_t)R01_PAL_ROWS);
-}
-
-static void zero_pal_rows(R01PalRow *rows) {
-    memset(rows, 0, sizeof(R01PalRow) * (size_t)R01_PAL_ROWS);
-}
-
-/*
- * Rebuild live BG+SPR fade buffers from authored snapshots.
- * OUT: step 0..FRAMES lerps full→black (kit-nearest).
- * IN:  step 0..FRAMES lerps black→full (kit-nearest).
- * At OUT end, force all slots to master 0.
- */
-static void rebuild_fade_pals(R01PlayState *pl) {
-    int row, slot;
-    int toward_black = (pl->fade_phase == R01_PLAY_FADE_OUT);
-    int t_num = pl->fade_step;
-    int t_den = R01_PLAY_FADE_FRAMES;
-
-    if (t_num < 0) {
-        t_num = 0;
-    }
-    if (t_num > t_den) {
-        t_num = t_den;
-    }
-
-    for (row = 0; row < R01_PAL_ROWS; row++) {
-        for (slot = 0; slot < R01_PAL_COLORS; slot++) {
-            uint8_t fr, fg, fb, tr, tg, tb, lr, lg, lb;
-            int from_i = toward_black ? pl->fade_bg_full[row].idx[slot] : 0;
-            int to_i = toward_black ? 0 : pl->fade_bg_full[row].idx[slot];
-            r01_kit_rgb(from_i, &fr, &fg, &fb);
-            r01_kit_rgb(to_i, &tr, &tg, &tb);
-            if (t_num >= t_den) {
-                pl->fade_bg[row].idx[slot] = (uint8_t)(to_i & 63);
-            } else {
-                lr = (uint8_t)(((int)fr * (t_den - t_num) + (int)tr * t_num) / t_den);
-                lg = (uint8_t)(((int)fg * (t_den - t_num) + (int)tg * t_num) / t_den);
-                lb = (uint8_t)(((int)fb * (t_den - t_num) + (int)tb * t_num) / t_den);
-                pl->fade_bg[row].idx[slot] = (uint8_t)r01_nearest_kit_index(lr, lg, lb);
-            }
-
-            from_i = toward_black ? pl->fade_spr_full[row].idx[slot] : 0;
-            to_i = toward_black ? 0 : pl->fade_spr_full[row].idx[slot];
-            r01_kit_rgb(from_i, &fr, &fg, &fb);
-            r01_kit_rgb(to_i, &tr, &tg, &tb);
-            if (t_num >= t_den) {
-                pl->fade_spr[row].idx[slot] = (uint8_t)(to_i & 63);
-            } else {
-                lr = (uint8_t)(((int)fr * (t_den - t_num) + (int)tr * t_num) / t_den);
-                lg = (uint8_t)(((int)fg * (t_den - t_num) + (int)tg * t_num) / t_den);
-                lb = (uint8_t)(((int)fb * (t_den - t_num) + (int)tb * t_num) / t_den);
-                pl->fade_spr[row].idx[slot] = (uint8_t)r01_nearest_kit_index(lr, lg, lb);
-            }
-        }
-    }
-
-    if (toward_black && t_num >= t_den) {
-        zero_pal_rows(pl->fade_bg);
-        zero_pal_rows(pl->fade_spr);
-    }
-}
-
-static int fade_pals_all_zero(const R01PlayState *pl) {
-    int row, slot;
-    for (row = 0; row < R01_PAL_ROWS; row++) {
-        for (slot = 0; slot < R01_PAL_COLORS; slot++) {
-            if (pl->fade_bg[row].idx[slot] != 0 || pl->fade_spr[row].idx[slot] != 0) {
-                return 0;
-            }
-        }
-    }
-    return 1;
-}
-
-static void tick_fade(R01PlayState *pl, const R01Constraints *c) {
-    if (pl->fade_phase == R01_PLAY_FADE_OUT) {
-        if (pl->fade_step < R01_PLAY_FADE_FRAMES) {
-            pl->fade_step++;
-        }
-        rebuild_fade_pals(pl);
-        if (fade_pals_all_zero(pl)) {
-            if (pl->pending_col >= 0 && pl->pending_row >= 0) {
-                place_player_centered(pl, pl->pending_col, pl->pending_row);
-                update_camera(pl, c);
-            }
-            pl->pending_col = -1;
-            pl->pending_row = -1;
-            pl->fade_phase = R01_PLAY_FADE_IN;
-            pl->fade_step = 0;
-            rebuild_fade_pals(pl);
-        }
-        return;
-    }
-    if (pl->fade_phase == R01_PLAY_FADE_IN) {
-        if (pl->fade_step < R01_PLAY_FADE_FRAMES) {
-            pl->fade_step++;
-        }
-        rebuild_fade_pals(pl);
-        if (pl->fade_step >= R01_PLAY_FADE_FRAMES) {
-            copy_pal_rows(pl->fade_bg, pl->fade_bg_full);
-            copy_pal_rows(pl->fade_spr, pl->fade_spr_full);
-            pl->fade_phase = R01_PLAY_FADE_IDLE;
-            pl->fade_step = 0;
-        }
+    if (pl->cam_y < 0) {
+        pl->cam_y = 0;
     }
 }
 
 void r01_play_start(R01PlayState *pl, const R01Project *p) {
-    const R01World *w;
-    R01Screen *s;
     if (!pl) {
         return;
     }
@@ -274,27 +59,8 @@ void r01_play_start(R01PlayState *pl, const R01Project *p) {
     if (!p) {
         return;
     }
-    w = &p->worlds[p->active_world];
-    s = NULL;
-    if (p->active_screen >= 0 && p->active_screen < w->screen_count) {
-        s = (R01Screen *)&w->screens[p->active_screen];
-    } else if (w->screen_count > 0) {
-        s = (R01Screen *)&w->screens[0];
-    }
     pl->active = 1;
-    pl->facing_dx = 1;
-    pl->facing_dy = 0;
-    pl->fade_phase = R01_PLAY_FADE_IDLE;
-    pl->fade_step = 0;
-    pl->pending_col = -1;
-    pl->pending_row = -1;
-    snapshot_full_pals(pl, p);
-    copy_pal_rows(pl->fade_bg, pl->fade_bg_full);
-    copy_pal_rows(pl->fade_spr, pl->fade_spr_full);
-    if (s && s->present) {
-        place_player_centered(pl, s->col, s->row);
-    }
-    update_camera(pl, r01_project_constraints(p));
+    place_player_centered(pl, R01_START_COL, R01_START_ROW);
 }
 
 void r01_play_stop(R01PlayState *pl) {
@@ -305,115 +71,63 @@ void r01_play_stop(R01PlayState *pl) {
 
 void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
     const R01World *w;
-    const R01Constraints *c;
-    int mode;
-    int lock_home;
     if (!pl || !pl->active || !p) {
         return;
     }
-    w = &p->worlds[p->active_world];
-    c = r01_project_constraints(p);
-    mode = c ? c->scroll_mode : R01_SCROLL_DEADZONE;
-    lock_home = (mode == R01_SCROLL_HYBRID);
-    pl->frame++;
-
-    if (pl->fade_phase != R01_PLAY_FADE_IDLE) {
-        tick_fade(pl, c);
+    w = r01_project_world0_const(p);
+    if (!w) {
         return;
     }
-
-    if (dx || dy) {
-        if (dx) {
-            pl->facing_dx = dx < 0 ? -1 : 1;
-            pl->facing_dy = 0;
-        } else {
-            pl->facing_dx = 0;
-            pl->facing_dy = dy < 0 ? -1 : 1;
-        }
-    }
-
     if (dx != 0) {
         int nx = pl->player_x + dx;
-        if (player_aabb_ok(w, nx, pl->player_y, lock_home, pl->home_col, pl->home_row)) {
+        if (player_aabb_ok(w, nx, pl->player_y)) {
             pl->player_x = nx;
         }
     }
     if (dy != 0) {
         int ny = pl->player_y + dy;
-        if (player_aabb_ok(w, pl->player_x, ny, lock_home, pl->home_col, pl->home_row)) {
+        if (player_aabb_ok(w, pl->player_x, ny)) {
             pl->player_y = ny;
         }
     }
-
-    if (!lock_home) {
-        set_home_from_player(pl);
-    }
-
-    update_camera(pl, c);
+    update_camera(pl);
 }
 
-/* Studio test-game hub: Enter warps to world screen (0,0). */
-#define R01_PLAY_HUB_COL 0
-#define R01_PLAY_HUB_ROW 0
-
-int r01_play_button(R01PlayState *pl, const R01Project *p, int button) {
+static int warp_to(R01PlayState *pl, const R01Project *p, int col, int row) {
     const R01World *w;
-    const R01Constraints *c;
-    int ncol = R01_PLAY_HUB_COL;
-    int nrow = R01_PLAY_HUB_ROW;
     if (!pl || !pl->active || !p) {
         return 0;
     }
-    if (pl->fade_phase != R01_PLAY_FADE_IDLE) {
+    w = r01_project_world0_const(p);
+    if (!w || r01_world_find_screen(w, col, row) < 0) {
         return 0;
     }
-    /* Enter/START only — Shift/COIN does not warp. */
-    if (button != R01_PLAY_BTN_START) {
-        return 0;
-    }
-    w = &p->worlds[p->active_world];
-    c = r01_project_constraints(p);
-    if (!c || c->scroll_mode != R01_SCROLL_HYBRID) {
-        return 0;
-    }
-    if (!screen_present_at(w, ncol, nrow)) {
-        return 0;
-    }
-    if (pl->home_col == ncol && pl->home_row == nrow) {
-        return 0;
-    }
-
-    if (c->transition == R01_XITION_FADE) {
-        snapshot_full_pals(pl, p);
-        copy_pal_rows(pl->fade_bg, pl->fade_bg_full);
-        copy_pal_rows(pl->fade_spr, pl->fade_spr_full);
-        pl->pending_col = ncol;
-        pl->pending_row = nrow;
-        pl->fade_phase = R01_PLAY_FADE_OUT;
-        pl->fade_step = 0;
-        return 1;
-    }
-
-    place_player_centered(pl, ncol, nrow);
-    update_camera(pl, c);
+    place_player_centered(pl, col, row);
     return 1;
 }
 
-int r01_play_sample(const R01Project *p, const R01PlayState *pl, int vx, int vy, uint8_t *r, uint8_t *g,
-                    uint8_t *b) {
-    const R01World *w;
-    const R01Constraints *c;
-    int wx, wy, col, row, lx, ly, idx;
-    const R01Screen *s;
-    uint8_t attr, color, master;
-    int anim_frame = 0;
-    int tx, ty, sx, sy, cell;
+int r01_play_button(R01PlayState *pl, const R01Project *p, int button) {
+    if (button == R01_PLAY_BTN_X) {
+        return warp_to(pl, p, 0, 0);
+    }
+    if (button == R01_PLAY_BTN_Y) {
+        return warp_to(pl, p, 1, 0);
+    }
+    return 0;
+}
 
+int r01_play_sample_bg(const R01Project *p, const R01PlayState *pl, int vx, int vy, uint8_t *r, uint8_t *g,
+                       uint8_t *b) {
+    const R01World *w;
+    int wx, wy, col, row, idx;
+    const R01Screen *s;
     if (!p || !pl || vx < 0 || vy < 0 || vx >= R01_SCREEN_PX_W || vy >= R01_SCREEN_PX_H) {
         return -1;
     }
-    w = &p->worlds[p->active_world];
-    c = r01_project_constraints(p);
+    w = r01_project_world0_const(p);
+    if (!w) {
+        return -1;
+    }
     wx = pl->cam_x + vx;
     wy = pl->cam_y + vy;
     if (wx < 0 || wy < 0) {
@@ -421,8 +135,6 @@ int r01_play_sample(const R01Project *p, const R01PlayState *pl, int vx, int vy,
     }
     col = wx / R01_SCREEN_PX_W;
     row = wy / R01_SCREEN_PX_H;
-    lx = wx % R01_SCREEN_PX_W;
-    ly = wy % R01_SCREEN_PX_H;
     idx = r01_world_find_screen(w, col, row);
     if (idx < 0) {
         if (r) {
@@ -434,31 +146,9 @@ int r01_play_sample(const R01Project *p, const R01PlayState *pl, int vx, int vy,
         if (b) {
             *b = 0;
         }
-        return -1;
+        return 0;
     }
     s = &w->screens[idx];
-    attr = s->attrs[(ly / 8) * R01_SCREEN_TILES_X + (lx / 8)];
-    if (r01_attr_anim(attr) && c && c->anim_rate > 0) {
-        anim_frame = (pl->frame / c->anim_rate) & 3;
-        lx = (lx & ~7) + ((lx + anim_frame) & 7);
-        if (lx >= R01_SCREEN_PX_W) {
-            lx = R01_SCREEN_PX_W - 1;
-        }
-    }
-    tx = lx / 8;
-    ty = ly / 8;
-    sx = lx % 8;
-    sy = ly % 8;
-    cell = ty * R01_SCREEN_TILES_X + tx;
-    attr = s->attrs[cell];
-    if (r01_attr_flip_h(attr)) {
-        sx = 7 - sx;
-    }
-    if (r01_attr_flip_v(attr)) {
-        sy = 7 - sy;
-    }
-    color = s->pixels[(ty * 8 + sy) * R01_SCREEN_PX_W + (tx * 8 + sx)] & 3u;
-    master = pl->fade_bg[r01_attr_pal(attr)].idx[color];
-    r01_kit_rgb(master, r, g, b);
+    r01_screen_pixel_rgb(p, s, wx % R01_SCREEN_PX_W, wy % R01_SCREEN_PX_H, r, g, b);
     return 0;
 }
