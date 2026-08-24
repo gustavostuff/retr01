@@ -192,8 +192,9 @@ int main(void) {
     expect_true(r01s_bus_conflict_count() == 0, "no bus fight");
 
     {
-        const char *paths[] = {"../retr01_studio/project.retr01", "../../retr01_studio/project.retr01",
-                               "retr01_studio/project.retr01", NULL};
+        const char *paths[] = {"../retr01_studio/test_game/test.retr01",
+                               "../../retr01_studio/test_game/test.retr01",
+                               "retr01_studio/test_game/test.retr01", NULL};
         int pi;
         int loaded = 0;
         for (pi = 0; paths[pi]; pi++) {
@@ -203,7 +204,7 @@ int main(void) {
                 expect_true(r01s_sst39sf040_peek(&b->cart_flash, b->cart_off_prg) == 0xA9,
                             "bring-up LDA overlay");
                 expect_true(b->cart_off_chr != 0, "world0 CHR base from cart");
-                expect_true(b->cart_off_map_screen0 != 0, "world0 screen0 MAP payload");
+                expect_true(b->cart_off_map_screen0 != 0, "world0 start-screen MAP payload");
                 r01s_island_group_reset(group);
                 for (i = 0; i < 200000; i++) {
                     int vi;
@@ -237,7 +238,7 @@ int main(void) {
                 break;
             }
         }
-        expect_true(loaded, "studio project.retr01 found");
+        expect_true(loaded, "studio test_game/test.retr01 found");
     }
 
     r01s_island_builder_shutdown(&builder);

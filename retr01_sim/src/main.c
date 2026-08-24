@@ -100,27 +100,14 @@ static const char *first_cart_arg(int argc, char **argv) {
 }
 
 static int try_load_cart(R01sBoard *board, int argc, char **argv) {
-    static const char *defaults[] = {"retr01_studio/project.retr01", "../retr01_studio/project.retr01",
-                                     "../../retr01_studio/project.retr01",
-                                     "retr01_studio/project_flash.bin", "../retr01_studio/project_flash.bin",
-                                     NULL};
-    int i;
     const char *path = first_cart_arg(argc, argv);
-    if (path) {
-        if (r01s_board_load_cart(board, path) == 0) {
-            fprintf(stderr, "cart: loaded %s (bring-up PRG overlay applied)\n", path);
-            return 0;
-        }
-        fprintf(stderr, "cart: failed to load %s — keeping synthetic\n", path);
+    if (!path) {
+        return 0;
+    }
+    if (r01s_board_load_cart(board, path) != 0) {
+        fprintf(stderr, "cart: failed to load %s\n", path);
         return -1;
     }
-    for (i = 0; defaults[i]; i++) {
-        if (r01s_board_load_cart(board, defaults[i]) == 0) {
-            fprintf(stderr, "cart: loaded %s (bring-up PRG overlay applied)\n", defaults[i]);
-            return 0;
-        }
-    }
-    fprintf(stderr, "cart: using synthetic bring-up image\n");
     return 0;
 }
 

@@ -3,8 +3,8 @@
 #
 # Usage:
 #   ./sim build
-#   ./sim run [-- app-args...]
-#   ./sim build-run [-- app-args...]
+#   ./sim run [cart.retr01] [-- app-args...]
+#   ./sim build-run [cart.retr01] [-- app-args...]
 #   ./sim unit
 #   ./sim help
 set -euo pipefail
@@ -15,21 +15,38 @@ source "$ROOT/scripts/r01-common.sh"
 
 PROJ="$ROOT/retr01_sim"
 BIN="$PROJ/build/retr01_sim"
+DEFAULT_CART="$ROOT/retr01_studio/test_game/test.retr01"
 CMD="${1:-}"
 [[ -n "$CMD" ]] || r01_usage_die "usage: $0 <build|run|build-run|unit|help> ..."
 shift || true
+
+# Ensure a cart path is passed to the binary (default: Studio test_game export).
+sim_exec() {
+  local has_cart=0
+  local a
+  for a in "$@"; do
+    if [[ "$a" != -* ]]; then
+      has_cart=1
+      break
+    fi
+  done
+  if [[ $has_cart -eq 0 ]]; then
+    exec "$BIN" "$@" "$DEFAULT_CART"
+  else
+    exec "$BIN" "$@"
+  fi
+}
 
 case "$CMD" in
   help|-h|--help)
     cat <<'EOF'
 Retr01 board simulator
 
-  build              configure (if needed) + build
-  run [-- args]      run sim (must already be built)
-  build-run [-- args]
-                     build then run
-  unit               build + IC unit tests (ctest)
-  help               this text
+  build                 configure (if needed) + build
+  run [cart.retr01]     run sim (default: retr01_studio/test_game/test.retr01)
+  build-run [cart...]   build then run
+  unit                  build + IC unit tests (ctest)
+  help                  this text
 EOF
     ;;
   build)
@@ -38,12 +55,12 @@ EOF
     ;;
   run)
     [[ -x "$BIN" ]] || r01_die "not built — run: $0 build"
-    exec "$BIN" "$@"
+    sim_exec "$@"
     ;;
   build-run|br)
     cd "$PROJ"
     r01_build "$PROJ"
-    exec "$BIN" "$@"
+    sim_exec "$@"
     ;;
   unit|test)
     cd "$PROJ"
