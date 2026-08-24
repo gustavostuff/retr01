@@ -1,6 +1,7 @@
 #include "bg_fetch.h"
 #include "retr01_sim/bus.h"
 #include "test_common.h"
+#include "video_sink.h"
 
 #include <stdio.h>
 
@@ -30,6 +31,18 @@ int main(void) {
     r01s_bg_fetch_set_beam(&chip, 16, 0, 0, 0);
     r01s_entity_eval(r01s_bg_fetch_entity(&chip));
     expect_true(r01s_bg_fetch_va(&chip) == 1, "tile col1");
+
+    /* SCALE 1x: beam (64+8, 60) → logical (8,0) → same tile col 1 */
+    r01s_bg_fetch_set_scale_2x(&chip, 0);
+    r01s_bg_fetch_set_scroll(&chip, 0, 0);
+    r01s_bg_fetch_set_beam(&chip, R01S_SCALE_1X_OX + 8, R01S_SCALE_1X_OY, 0, 0);
+    r01s_entity_eval(r01s_bg_fetch_entity(&chip));
+    expect_true(r01s_bg_fetch_active(&chip), "1x playfield fetch");
+    expect_true(r01s_bg_fetch_va(&chip) == 1, "1x tile col1");
+    r01s_bg_fetch_set_beam(&chip, 0, 0, 0, 0);
+    r01s_entity_eval(r01s_bg_fetch_entity(&chip));
+    expect_true(!r01s_bg_fetch_active(&chip), "1x border idle");
+    r01s_bg_fetch_set_scale_2x(&chip, 1);
 
     /* Scroll into slot 1: scroll_x=120 + lx=16 (beam X=32) => sx=136 */
     r01s_bg_fetch_set_scroll(&chip, 120, 0);

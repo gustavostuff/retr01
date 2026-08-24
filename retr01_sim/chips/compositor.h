@@ -8,6 +8,7 @@
 /*
  * Island O — compositor PLD stub (BG/sprite priority mux -> 6-bit PROM index).
  * Sprite path from Island N linebuf; transparent (0) defers to BG.
+ * Output indexes Color PROM on the 256×240 RGBS path.
  */
 typedef struct R01sCompositor {
     R01sEntity base;

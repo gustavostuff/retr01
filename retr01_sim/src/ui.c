@@ -1,5 +1,6 @@
 #include "ui.h"
 
+#include "retr01_sim/board.h"
 #include "retr01_sim/board_layout.h"
 #include "retr01_sim/bus.h"
 #include "ui_assets.h"
@@ -168,7 +169,7 @@ int r01s_ui_init(R01sUi *ui) {
     ui->drag_btn = -1;
     ui->ctx_chip = -1;
     snprintf(ui->status, sizeof(ui->status),
-             "SPACE pause — Ctrl+R reset — R rotate IC — COMPACT/ISLANDS");
+             "SPACE pause — Ctrl+R reset — R rotate — G SCALE — COMPACT/ISLANDS");
     return 0;
 }
 
@@ -429,19 +430,36 @@ static void draw_osc_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *
 static void draw_display_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int selected) {
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);
-    int px = x + 8;
-    int py = y + 16;
+    int inner_x = x + 4;
+    int inner_y = y + 8;
+    int inner_w = e->body_w - 8;
+    int inner_h = e->body_h - 14;
+    int hdr_h = 14;
+    int ftr_h = 12;
+    int px = inner_x + (inner_w - R01S_VIDEO_W) / 2;
+    int py = inner_y + hdr_h;
     const R01sVideoSink *sink = (const R01sVideoSink *)e;
+    char scale_lbl[16];
+    int scale_w;
     draw_glyph_pins(r, ui, e, e->board_x, e->board_y);
-    fill_rect(r, x + 4, y + 8, e->body_w - 8, e->body_h - 14, 16, 22, 18);
-    draw_rect(r, x + 4, y + 8, e->body_w - 8, e->body_h - 14, selected ? 255 : 140, selected ? 220 : 160,
+    fill_rect(r, inner_x, inner_y, inner_w, inner_h, 16, 22, 18);
+    draw_rect(r, inner_x, inner_y, inner_w, inner_h, selected ? 255 : 140, selected ? 220 : 160,
               selected ? 80 : 180);
-    font_draw(r, px, y + 6, "LCD 128X120", 180, 190, 160);
+    /* Header band — centered title, SCALE right-aligned (clear of left-side pins). */
+    font_draw(r, inner_x + (inner_w - font_text_width("LCD 256X240")) / 2, inner_y + 3, "LCD 256X240",
+              180, 190, 160);
+    snprintf(scale_lbl, sizeof(scale_lbl), "SCALE %s",
+             r01s_video_sink_scale_2x(sink) ? "2X" : "1X");
+    scale_w = font_text_width(scale_lbl);
+    font_draw(r, inner_x + inner_w - scale_w - 4, inner_y + 3, scale_lbl, 140, 200, 160);
+    fill_rect(r, inner_x + 2, inner_y + hdr_h - 1, inner_w - 4, 1, 40, 55, 45);
     fill_rect(r, px, py, R01S_VIDEO_W, R01S_VIDEO_H, 8, 12, 16);
     draw_video_pixels(r, sink, px, py);
     draw_rect(r, px - 1, py - 1, R01S_VIDEO_W + 2, R01S_VIDEO_H + 2, 80, 100, 120);
+    fill_rect(r, inner_x + 2, py + R01S_VIDEO_H + 1, inner_w - 4, 1, 40, 55, 45);
     if (e->refdes) {
-        font_draw_ellipsize(r, x + 6, y + e->body_h - 12, e->refdes, e->body_w - 12, 180, 190, 170);
+        font_draw_ellipsize(r, inner_x + (inner_w - font_text_width(e->refdes)) / 2,
+                            inner_y + inner_h - ftr_h + 2, e->refdes, inner_w - 8, 180, 190, 170);
     }
 }
 
@@ -1786,10 +1804,10 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_UI_HUD_TOP, 12, 14, 16);
     font_draw(r, 8, 7, "RETR01 SIM  ISLANDS O+A+C+D+G+H+J+K+L", 200, 210, 220);
     if (ui->layout_compact) {
-        font_draw(r, R01S_UI_VIEW_X + 8, 7, "COMPACT  R ROTATE  Ctrl+R RESET  SHIFT+ARROWS PAN", 120, 130,
+        font_draw(r, R01S_UI_VIEW_X + 8, 7, "COMPACT  R ROTATE  G SCALE  Ctrl+R RESET  SHIFT+ARROWS PAN", 120, 130,
                   140);
     } else {
-        font_draw(r, R01S_UI_VIEW_X + 8, 7, "R ROTATE  Ctrl+R RESET  DRAG/RESIZE  SHIFT+ARROWS PAN", 120,
+        font_draw(r, R01S_UI_VIEW_X + 8, 7, "R ROTATE  G SCALE  Ctrl+R RESET  DRAG/RESIZE  SHIFT+ARROWS PAN", 120,
                   130, 140);
     }
     {
@@ -1983,6 +2001,16 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         int step = 48;
         if (!(e->key.keysym.mod & KMOD_CTRL) && e->key.keysym.sym == SDLK_r) {
             if (r01s_ui_rotate_selected(ui)) {
+                return 1;
+            }
+        }
+        if (!(e->key.keysym.mod & KMOD_CTRL) && e->key.keysym.sym == SDLK_g) {
+            R01sBoard *board = r01s_board_from_group(ui->group);
+            if (board) {
+                R01sVideoSink *sink = &board->video_sink;
+                r01s_video_sink_set_scale_2x(sink, !r01s_video_sink_scale_2x(sink));
+                snprintf(ui->status, sizeof(ui->status), "SCALE %s (256x240 field, timing 341x262)",
+                         r01s_video_sink_scale_2x(sink) ? "2X" : "1X");
                 return 1;
             }
         }

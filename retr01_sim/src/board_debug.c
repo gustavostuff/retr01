@@ -139,10 +139,10 @@ static void write_snapshot(R01sBoard *b, uint32_t wall_ms, const char *why) {
         fprintf(g_log, " %02X", r01s_atmega1284p_oam_peek(&b->mcu1284, (uint8_t)i));
     }
     fputc('\n', g_log);
-    fprintf(g_log, "video: lit=%u samples=%u", (unsigned)r01s_video_sink_lit_pixels(&b->video_sink),
-            (unsigned)b->video_sink.dot_samples);
+    fprintf(g_log, "video: lit=%u samples=%u scale=%dx", (unsigned)r01s_video_sink_lit_pixels(&b->video_sink),
+            (unsigned)b->video_sink.dot_samples, r01s_video_sink_scale_2x(&b->video_sink) ? 2 : 1);
     dump_rgb(g_log, b, 0, 0);
-    dump_rgb(g_log, b, 32, 16);
+    dump_rgb(g_log, b, 128, 120);
     dump_rgb(g_log, b, 64, 60);
     fputc('\n', g_log);
     fflush(g_log);

@@ -64,7 +64,7 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 # or: ./build/retr01_sim
 ```
 
-**Controls:** `Space` pause/resume · `Ctrl+R` reset · `R` rotate selected IC · `.` single-step (while paused) · **COMPACT / ISLANDS** (HUD) · **left-drag chip** move · **right-click chip** orient H/V · **left-drag empty island** move frame · **bottom-right grip** resize · **Shift+arrows / wheel / middle-drag** pan · `Esc` quit.
+**Controls:** `Space` pause/resume · `Ctrl+R` reset · `R` rotate selected IC · `G` SCALE 2x/1x · `.` single-step (while paused) · **COMPACT / ISLANDS** (HUD) · **left-drag chip** move · **right-click chip** orient H/V · **left-drag empty island** move frame · **bottom-right grip** resize · **Shift+arrows / wheel / middle-drag** pan · `Esc` quit.
 
 **Layout persistence:** island frames + chip positions (island mode) and compact chip positions are saved to `retr01_sim/ui_layout.json` (override with `R01S_LAYOUT`). Reloaded on next launch.
 

@@ -444,11 +444,11 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
             snprintf(ih->activity, sizeof(ih->activity), "await visible dots");
         }
         snprintf(ih->debug, sizeof(ih->debug),
-                 "island=O VIDEO health=%s saw=%d lit=%u samples=%u comp_out=$%02X prom0=$%02X "
-                 "pixel00=$%02X",
+                 "island=O VIDEO health=%s saw=%d lit=%u samples=%u scale=%dx "
+                 "comp_out=$%02X prom0=$%02X pixel00=$%02X",
                  r01s_health_tag(ih->health), ctx->health_saw_video,
                  (unsigned)r01s_video_sink_lit_pixels(sink), (unsigned)sink->dot_samples,
-                 r01s_compositor_out(ctx->video_impl.comp),
+                 r01s_video_sink_scale_2x(sink) ? 2 : 1, r01s_compositor_out(ctx->video_impl.comp),
                  r01s_at28c16_peek(ctx->video_impl.prom, 0),
                  r01s_video_sink_pixel_packed(sink, 0, 0));
     }
@@ -1473,7 +1473,7 @@ static void board_vram_cell_at(const R01sBoard *ctx, int lx, int ly, uint8_t *ti
 
     *tile_out = 0;
     *attr_out = 0;
-    if (lx < 0 || ly < 0 || lx >= R01S_VIDEO_W || ly >= R01S_VIDEO_H) {
+    if (lx < 0 || ly < 0 || lx >= R01S_LOGICAL_W || ly >= R01S_LOGICAL_H) {
         return;
     }
     sx = (uint8_t)((scroll_x + (unsigned)lx) & 127u);
@@ -1617,6 +1617,8 @@ static void wire_linebuf(R01sBoard *ctx) {
     int bx = r01s_beam_xy_x(ctx->beam_impl.beam_x);
     int by = r01s_beam_xy_y(ctx->beam_impl.beam_x);
     int lx;
+    int ly;
+    int scale_2x = r01s_video_sink_scale_2x(ctx->video_impl.sink);
     uint16_t show_addr;
 
     /* Entering HBlank: OAM-fill next half for next logical Y, then show it. */
@@ -1624,13 +1626,16 @@ static void wire_linebuf(R01sBoard *ctx) {
         int next_by = by + 1;
         int next_ly;
         int fill_half;
+        int probe_x = scale_2x ? 0 : R01S_SCALE_1X_OX;
         if (next_by >= R01S_BEAM_DOTS_Y) {
             next_by = 0;
         }
-        next_ly = next_by / 2;
         fill_half = ctx->linebuf_show_half ^ 1;
-        linebuf_oam_fill_half(ctx, fill_half, next_ly);
-        ctx->linebuf_show_half = (uint8_t)(fill_half & 1);
+        if (r01s_rgbs_beam_to_logical(scale_2x, probe_x, next_by, &lx, &next_ly)) {
+            linebuf_oam_fill_half(ctx, fill_half, next_ly);
+            ctx->linebuf_show_half = (uint8_t)(fill_half & 1);
+        }
+        /* Border / VBlank lines: keep prior half (no OAM fill). */
     }
     ctx->linebuf_prev_hblank = (uint8_t)(hblank ? 1 : 0);
 
@@ -1639,8 +1644,7 @@ static void wire_linebuf(R01sBoard *ctx) {
     r01s_entity_drive(sram, "WE#", R01S_LVL_H);
     r01s_bus_hiz(sram, "DQ", 8);
 
-    lx = bx / 2;
-    if (!hblank && bx >= 0 && bx < R01S_BEAM_VISIBLE_W && lx >= 0 && lx < 128) {
+    if (!hblank && r01s_rgbs_beam_to_logical(scale_2x, bx, by, &lx, &ly)) {
         show_addr = (uint16_t)(((ctx->linebuf_show_half & 1u) << 7) | (lx & 0x7F));
         linebuf_drive_addr(ctx, show_addr, 0);
         ctx->linebuf_saw_mux_beam = 1;
@@ -1660,6 +1664,7 @@ static void wire_bg_fetch(R01sBoard *ctx) {
     R01sBgFetch *bg = ctx->bg_fetch_impl.fetch;
     int cpu_phase = r01s_level_is_high(r01s_entity_sense(osc, "PHI2"));
 
+    r01s_bg_fetch_set_scale_2x(bg, r01s_video_sink_scale_2x(ctx->video_impl.sink));
     r01s_bg_fetch_set_beam(bg, r01s_beam_xy_x(ctx->beam_impl.beam_x), r01s_beam_xy_y(ctx->beam_impl.beam_x),
                            r01s_beam_xy_hblank(ctx->beam_impl.beam_x),
                            r01s_beam_xy_vblank(ctx->beam_impl.beam_x));
@@ -1703,6 +1708,7 @@ static void wire_video_dot_fast(R01sBoard *ctx) {
     int by = r01s_beam_xy_y(beam);
     int lx;
     int ly;
+    int scale_2x = r01s_video_sink_scale_2x(sink);
     uint8_t bg;
     uint8_t spr;
     uint8_t idx;
@@ -1715,8 +1721,11 @@ static void wire_video_dot_fast(R01sBoard *ctx) {
     if (board_video_held_for_map_stream(ctx)) {
         return;
     }
-    lx = bx / 2;
-    ly = by / 2;
+    if (!r01s_rgbs_beam_to_logical(scale_2x, bx, by, &lx, &ly)) {
+        /* SCALE 1x border — black (index 0) inside the fixed 256×240 field. */
+        r01s_video_sink_plot(sink, bx, by, 0);
+        return;
+    }
     bg = board_bg_master_at(ctx, lx, ly);
     spr = r01s_as6c62256_peek(ctx->mcu_lb_impl.sram,
                               (uint16_t)(((ctx->linebuf_show_half & 1u) << 7) | (lx & 0x7F)));
@@ -1729,12 +1738,13 @@ static void wire_video_dot_fast(R01sBoard *ctx) {
         idx = (uint8_t)(bg & 0x3Fu);
     }
     packed = r01s_at28c16_peek(prom, idx);
-    r01s_video_sink_plot(sink, lx, ly, packed);
+    r01s_video_sink_plot(sink, bx, by, packed);
 }
 
 /*
  * Island O — dot-sampled BG -> compositor -> Color PROM -> LCD sink.
  * CHR: flash /CE during DOT window (yield PRG first); hold chr_last_master on deny.
+ * Sink is the 256×240 RGBS field; SCALE maps beam → logical 128×120.
  */
 static void wire_video_dot(R01sBoard *ctx) {
     if (r01s_fast_glue_enabled(R01S_FAST_GLUE_VIDEO)) {
@@ -1752,6 +1762,7 @@ static void wire_video_dot(R01sBoard *ctx) {
     int by = r01s_beam_xy_y(beam);
     int lx;
     int ly;
+    int scale_2x = r01s_video_sink_scale_2x(sink);
     uint8_t bg;
     uint8_t idx;
     uint8_t packed;
@@ -1764,8 +1775,10 @@ static void wire_video_dot(R01sBoard *ctx) {
     if (board_video_held_for_map_stream(ctx)) {
         return;
     }
-    lx = bx / 2;
-    ly = by / 2;
+    if (!r01s_rgbs_beam_to_logical(scale_2x, bx, by, &lx, &ly)) {
+        r01s_video_sink_plot(sink, bx, by, 0);
+        return;
+    }
     bg = board_bg_master_at(ctx, lx, ly);
     r01s_compositor_set_bg(comp, bg);
     {
@@ -1781,7 +1794,7 @@ static void wire_video_dot(R01sBoard *ctx) {
     idx = r01s_compositor_out(comp);
     wire_video_prom_addr(prom_e, idx);
     packed = r01s_at28c16_peek(prom, idx);
-    r01s_video_sink_plot(sink, lx, ly, packed);
+    r01s_video_sink_plot(sink, bx, by, packed);
 }
 
 /*

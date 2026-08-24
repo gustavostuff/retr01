@@ -4,7 +4,7 @@
 
 ## Goal
 
-Reliably simulate the **Retr01-A motherboard** as a system of discrete ICs: each chip is a model with **pins**, **package form**, and **datasheet behavior**, wired like the real board. The end state is a whole-system sim that boots a cart, accepts pad input, and shows a **digital playfield** (logical 128x120 / RGBS raster path as needed).
+Reliably simulate the **Retr01-A motherboard** as a system of discrete ICs: each chip is a model with **pins**, **package form**, and **datasheet behavior**, wired like the real board. The end state is a whole-system sim that boots a cart, accepts pad input, and shows a **digital playfield** (logical 128x120 inside a **256x240** RGBS field / LCD sink).
 
 **Accuracy** (cycle-exact PHI2, ns-level AC margins, full AVR peripheral set, etc.) is **defined as we go**. Start with behavior that is correct enough to validate islands and catch bus fights; tighten timing and ISA coverage when tests demand it.
 
@@ -48,7 +48,7 @@ Examples:
 
 **Pass:** same criteria as the hardware island checklist in `03`.
 
-Layer-2 bring-up for letters **A–E + G + H + I + O + J + K + L + M + N + P** lives in `retr01_sim/tests/test_island_abcdeghiojklmnp.c` (`STA $FE02`, VRAM `$FE12`, `LDA $FE60`, beam HBlank / line advance, **ATF22V10** Y compare vs `$FE04`, BG fetch latches tile `$42` / attr `$07`, Color PROM pixels on 128×120 sink, MAP `$FE93` reads cart magic `'R'`, APU `$FE40`–`$FE42` enables PWM square, OAM `$FE20`/`$FE21` write+readback on 1284, linebuf ping-pong + OAM sprite fill into compositor, VBlank NMI → CPU).
+Layer-2 bring-up for letters **A–E + G + H + I + O + J + K + L + M + N + P** lives in `retr01_sim/tests/test_island_abcdeghiojklmnp.c` (`STA $FE02`, VRAM `$FE12`, `LDA $FE60`, beam HBlank / line advance, **ATF22V10** Y compare vs `$FE04`, BG fetch latches tile `$42` / attr `$07`, Color PROM pixels on 256×240 sink, MAP `$FE93` reads cart magic `'R'`, APU `$FE40`–`$FE42` enables PWM square, OAM `$FE20`/`$FE21` write+readback on 1284, linebuf ping-pong + OAM sprite fill into compositor, VBlank NMI → CPU).
 
 The SDL **canvas** is **9 frames** (O top-left; A+B, L+M, and former Q HC245s co-located) — see [`03` sim canvas grouping](03_hardware_implementation.md#sim-canvas-grouping) and [`retr01_sim/README.md`](../retr01_sim/README.md).
 
@@ -186,7 +186,7 @@ Current pin-level code is intentional for catching PCB bugs early.
 | 3 | Island **G** (VRAM interleave) / more `$FExx` latches (**done** — soft `$FE10`–`$FE12`) |
 | 4 | Island **H** beam (**done** — `OSC_DOT` + `BEAM_XY` X PLD + `ATF22V10` Y compare / `$FE04`) |
 | 5 | Island **I** BG fetch (**done** — `BG_FETCH` nametable VA + PPU-phase VRAM read) |
-| 6 | Island **O** video (**done** — compositor + AT28C16 + 128×120 sink; CHR from cart flash + `$FE08`/`$FE09` active pals) |
+| 6 | Island **O** video (**done** — compositor + AT28C16 + 256×240 sink; SCALE 2x default / 1x centered; CHR from cart flash + `$FE08`/`$FE09` active pals) |
 | 7 | Island **J** cart (**done** — SST39SF040 + 24C64 EEPROM, PRG + MAP `$FE90`–`$FE93`, `.retr01` load + bring-up PRG overlay) |
 | 8 | **32-IC canvas** (**done** — **9 frames**: O top-left; A∪B, L∪M; HC245s on C/O/J; letters E/I/N/P wired-only) |
 | Next | Wire HC245 into bus paths; retire bring-up PRG overlay when game PRG streams MAP |

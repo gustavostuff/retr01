@@ -21,7 +21,7 @@ Each IC is a struct that **starts with** an `R01sEntity`, plus an `R01sEntityVTa
 | I | `bg_fetch.c` | BG_FETCH | Nametable VA from beam+scroll; tile/attr latch |
 | O | `compositor.c` | COMPOSITOR | BG/sprite priority mux PLD stub |
 | O | `at28c16.c` | AT28C16 | Color PROM (kit R3G3B2, 64 entries) |
-| O | `video_sink.c` | LCD_SINK | 128×120 RGBS playfield preview |
+| O | `video_sink.c` | LCD_SINK | 256×240 RGBS field (SCALE 2x/1x) |
 | J | `sst39sf040.c` | SST39SF040 | 512 KB flash, **read-only stub** |
 | K | `atmega328p.c` | ATmega328P | APU regs `$FE40–$FE5F` + PWM square stub |
 | L | `atmega1284p.c` | ATmega1284P | OAM `$FE20/$FE21` + 20 MHz tick stub |

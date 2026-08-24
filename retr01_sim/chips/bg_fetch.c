@@ -1,6 +1,7 @@
 #include "bg_fetch.h"
 
 #include "retr01_sim/bus.h"
+#include "video_sink.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -33,9 +34,7 @@ static void bg_drive_latches(R01sBgFetch *c) {
     }
 }
 
-static uint16_t bg_compute_va(const R01sBgFetch *c, int *attr_cycle_out) {
-    int lx = c->beam_x / 2;
-    int ly = c->beam_y / 2;
+static uint16_t bg_compute_va(const R01sBgFetch *c, int lx, int ly, int *attr_cycle_out) {
     int sx;
     int sy;
     int slot_x;
@@ -70,7 +69,8 @@ static uint16_t bg_compute_va(const R01sBgFetch *c, int *attr_cycle_out) {
         ty = 14;
     }
     cell = ty * R01S_BG_SCREEN_TILES_X + tx;
-    attr = (c->beam_x & 1) != 0;
+    /* 2x: two beam dots per logical pixel → odd beam = attr. 1x: odd logical. */
+    attr = c->scale_2x ? ((c->beam_x & 1) != 0) : ((lx & 1) != 0);
     if (attr_cycle_out) {
         *attr_cycle_out = attr;
     }
@@ -82,16 +82,19 @@ static uint16_t bg_compute_va(const R01sBgFetch *c, int *attr_cycle_out) {
 
 static void bg_recompute(R01sBgFetch *c) {
     int attr = 0;
-    int visible;
+    int lx = 0;
+    int ly = 0;
+    int in_playfield;
 
-    visible = !c->hblank && !c->vblank && c->beam_x < 256 && c->beam_y < 240;
-    if (c->cpu_phase || !visible) {
+    in_playfield = !c->hblank && !c->vblank &&
+                   r01s_rgbs_beam_to_logical(c->scale_2x, c->beam_x, c->beam_y, &lx, &ly);
+    if (c->cpu_phase || !in_playfield) {
         c->fetching = 0;
         c->attr_cycle = 0;
         c->va = 0;
     } else {
         c->fetching = 1;
-        c->va = bg_compute_va(c, &attr);
+        c->va = bg_compute_va(c, lx, ly, &attr);
         c->attr_cycle = attr;
     }
     bg_drive_va(c);
@@ -105,6 +108,7 @@ static void bg_reset(R01sEntity *e) {
     c->hblank = 0;
     c->vblank = 0;
     c->cpu_phase = 1;
+    c->scale_2x = 1;
     c->scroll_x = 0;
     c->scroll_y = 0;
     c->va = 0;
@@ -176,6 +180,13 @@ void r01s_bg_fetch_set_beam(R01sBgFetch *chip, int x, int y, int hblank, int vbl
     chip->beam_y = y;
     chip->hblank = hblank ? 1 : 0;
     chip->vblank = vblank ? 1 : 0;
+}
+
+void r01s_bg_fetch_set_scale_2x(R01sBgFetch *chip, int scale_2x) {
+    if (!chip) {
+        return;
+    }
+    chip->scale_2x = scale_2x ? 1 : 0;
 }
 
 void r01s_bg_fetch_set_scroll(R01sBgFetch *chip, uint8_t sx, uint8_t sy) {
