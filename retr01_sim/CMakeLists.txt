@@ -29,6 +29,8 @@ add_library(retr01_sim_core
   chips/sn74hc32.c
   chips/sn74hc573.c
   chips/sn74hc245.c
+  chips/atf22v10.c
+  chips/i2c_eeprom.c
   chips/sn74hc157.c
   chips/sn74hc161.c
   chips/sn74hc688.c

@@ -5,20 +5,23 @@
 #include "as6c62256.h"
 #include "atmega1284p.h"
 #include "atmega328p.h"
+#include "atf22v10.h"
 #include "beam_xy.h"
 #include "bg_fetch.h"
 #include "compositor.h"
+#include "i2c_eeprom.h"
 #include "osc8m.h"
 #include "osc_dot.h"
 #include "pads.h"
 #include "prg_rom.h"
 #include "pwr5v.h"
+#include "retr01_sim/bom32.h"
 #include "retr01_sim/island_builder.h"
 #include "retr01_sim/types.h"
 #include "sn74hc14.h"
 #include "sn74hc157.h"
+#include "sn74hc245.h"
 #include "sn74hc573.h"
-#include "sn74hc688.h"
 #include "integration.h"
 #include "sprite_fetch.h"
 #include "sst39sf040.h"
@@ -46,6 +49,7 @@ enum {
     R01S_ISLAND_LINEBUF = 12,
     R01S_ISLAND_SPRITES = 13,
     R01S_ISLAND_INTEGRATION = 14,
+    R01S_ISLAND_BUS = 15,
 };
 
 typedef struct R01sIslandPowerImpl {
@@ -60,13 +64,12 @@ typedef struct R01sIslandClockImpl {
 typedef struct R01sIslandCpuMemImpl {
     R01sW65C02S *cpu;
     R01sAs6c62256 *ram;
-    R01sPrgRom *prg; /* breadboard leftover; deselected when cart owns $8000+ */
+    R01sPrgRom *prg; /* bench fallback — not mounted when cart owns PRG */
+    R01sAtf22v10 *pld_decode;
 } R01sIslandCpuMemImpl;
 
 typedef struct R01sIslandIoLatchImpl {
-    R01sSn74hc573 *latch;    /* $FE02 scroll X */
-    R01sSn74hc573 *scroll_y; /* $FE03 scroll Y */
-    R01sSn74hc573 *raster;   /* $FE04 raster compare Y */
+    R01sSn74hc573 *latch573[R01S_BOM_HC573_N];
 } R01sIslandIoLatchImpl;
 
 typedef struct R01sIslandPadsImpl {
@@ -75,13 +78,15 @@ typedef struct R01sIslandPadsImpl {
 
 typedef struct R01sIslandVramImpl {
     R01sAs6c62256 *vram;
-    R01sSn74hc157 *mux;
+    R01sSn74hc157 *mux157[R01S_BOM_HC157_N];
+    R01sBgFetch *bg_pld;
+    R01sAtf22v10 *pld_vram;
 } R01sIslandVramImpl;
 
 typedef struct R01sIslandBeamImpl {
     R01sOscDot *osc_dot;
-    R01sBeamXy *beam;
-    R01sSn74hc688 *cmp; /* Y[7:0] vs $FE04 */
+    R01sBeamXy *beam_x;
+    R01sAtf22v10 *beam_y;
 } R01sIslandBeamImpl;
 
 typedef struct R01sIslandBgFetchImpl {
@@ -96,6 +101,7 @@ typedef struct R01sIslandVideoImpl {
 
 typedef struct R01sIslandCartImpl {
     R01sSst39sf040 *flash;
+    R01sI2cEeprom *save_eeprom;
 } R01sIslandCartImpl;
 
 typedef struct R01sIslandApuImpl {
@@ -107,9 +113,13 @@ typedef struct R01sIslandMcu1284Impl {
 } R01sIslandMcu1284Impl;
 
 typedef struct R01sIslandLinebufImpl {
-    R01sAs6c62256 *sram; /* ping-pong $000–$07F / $080–$0FF */
-    R01sSn74hc157 *mux;  /* MCU fill addr vs beam X */
+    R01sAs6c62256 *sram;
+    R01sSn74hc157 *mux157[R01S_BOM_HC157_N];
 } R01sIslandLinebufImpl;
+
+typedef struct R01sIslandBusImpl {
+    R01sSn74hc245 *bus245[R01S_BOM_HC245_N];
+} R01sIslandBusImpl;
 
 typedef struct R01sIslandSpritesImpl {
     R01sSpriteFetch *fetch; /* OAM→linebuf fill stats (Island N) */
@@ -142,34 +152,37 @@ typedef struct R01sBoardWireCache {
     int latch_q[R01S_WIRE_CACHE_D]; /* 573 1Q..8Q */
 } R01sBoardWireCache;
 
-/* Bring-up board: islands A–E + G + H + I + O + J + K + L + M + N + P (F deferred). */
+/* Full 32-IC BOM netlist + bench/support parts (PWR/OSC/LCD). */
 typedef struct R01sBoard {
+    /* Support (not in 32-IC count). */
     R01sPwr5v pwr;
     R01sOsc8m osc;
     R01sSn74hc14 hc14;
+    R01sOscDot osc_dot;
+    R01sVideoSink video_sink;
+    R01sPrgRom prg; /* bench PRG — not mounted when cart owns $8000+ */
+    R01sPads pads;  /* wired via 1284 on silicon; kept for bring-up tests */
+    R01sSpriteFetch sprite_fetch;
+    R01sIntegration integration;
+    /* 32-IC BOM silicon. */
     R01sW65C02S cpu;
     R01sAs6c62256 ram;
-    R01sPrgRom prg;
-    R01sSn74hc573 latch;
-    R01sSn74hc573 scroll_y_latch;
-    R01sSn74hc573 raster_latch;
-    R01sPads pads;
     R01sAs6c62256 vram;
-    R01sSn74hc157 vram_mux;
-    R01sOscDot osc_dot;
-    R01sBeamXy beam;
-    R01sSn74hc688 raster_cmp;
-    R01sBgFetch bg_fetch;
-    R01sCompositor compositor;
-    R01sAt28c16 color_prom;
-    R01sVideoSink video_sink;
+    R01sAs6c62256 linebuf;
     R01sSst39sf040 cart_flash;
     R01sAtmega328p apu;
     R01sAtmega1284p mcu1284;
-    R01sAs6c62256 linebuf;
-    R01sSn74hc157 linebuf_mux;
-    R01sSpriteFetch sprite_fetch;
-    R01sIntegration integration;
+    R01sAt28c16 color_prom;
+    R01sSn74hc573 latch573[R01S_BOM_HC573_N];
+    R01sSn74hc157 mux157[R01S_BOM_HC157_N];
+    R01sSn74hc245 bus245[R01S_BOM_HC245_N];
+    R01sAtf22v10 pld_decode;
+    R01sAtf22v10 pld_vram;
+    R01sBeamXy pld_beam_x;
+    R01sAtf22v10 pld_beam_y;
+    R01sBgFetch bg_fetch;
+    R01sCompositor compositor;
+    R01sI2cEeprom cart_eeprom;
     R01sIslandPowerImpl power_impl;
     R01sIslandClockImpl clock_impl;
     R01sIslandCpuMemImpl cpu_mem_impl;
@@ -183,6 +196,7 @@ typedef struct R01sBoard {
     R01sIslandApuImpl apu_impl;
     R01sIslandMcu1284Impl mcu1284_impl;
     R01sIslandLinebufImpl linebuf_impl;
+    R01sIslandBusImpl bus_impl;
     R01sIslandSpritesImpl sprites_impl;
     R01sIslandIntegrationImpl integration_impl;
     /* Soft $FE10/$FE11 latch + $FE12 auto-inc (pre-full PLD). */

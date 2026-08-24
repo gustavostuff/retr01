@@ -106,3 +106,11 @@ R01sEntity *r01s_sn74hc573_entity(R01sSn74hc573 *chip) {
 uint8_t r01s_sn74hc573_peek_q(const R01sSn74hc573 *chip) {
     return chip ? chip->latched : 0;
 }
+
+void r01s_sn74hc573_poke_q(R01sSn74hc573 *chip, uint8_t value) {
+    if (!chip) {
+        return;
+    }
+    chip->latched = value;
+    hc573_drive_q(&chip->base, value);
+}

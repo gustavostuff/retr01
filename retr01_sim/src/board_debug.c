@@ -94,8 +94,8 @@ static void write_snapshot(R01sBoard *b, uint32_t wall_ms, const char *why) {
     pc = r01s_w65c02s_pc(&b->cpu);
     a = r01s_w65c02s_a(&b->cpu);
     bits = health_bits(b);
-    bx = r01s_beam_xy_x(&b->beam);
-    by = r01s_beam_xy_y(&b->beam);
+    bx = r01s_beam_xy_x(&b->pld_beam_x);
+    by = r01s_beam_xy_y(&b->pld_beam_x);
     prg0 = b->cart_off_prg;
 
     fprintf(g_log, "\n==== snap t=%ums (+%ums) why=%s ====\n", (unsigned)wall_ms,
@@ -122,8 +122,8 @@ static void write_snapshot(R01sBoard *b, uint32_t wall_ms, const char *why) {
             b->health_saw_pad, b->health_saw_beam, b->health_saw_bg_fetch, b->health_saw_video,
             b->health_saw_map, b->health_saw_apu, b->health_saw_oam, b->health_saw_linebuf,
             b->health_saw_sprites, b->health_saw_nmi, (unsigned)b->nmi_pulses);
-    fprintf(g_log, "beam: x=%d y=%d hblank=%d vblank=%d\n", bx, by, r01s_beam_xy_hblank(&b->beam),
-            r01s_beam_xy_vblank(&b->beam));
+    fprintf(g_log, "beam: x=%d y=%d hblank=%d vblank=%d\n", bx, by, r01s_beam_xy_hblank(&b->pld_beam_x),
+            r01s_beam_xy_vblank(&b->pld_beam_x));
     fprintf(g_log, "vram: nonzero_tiles_slot0=%d/240 nonzero_attrs_slot0=%d/240 vram_addr=$%04X\n",
             count_vram_nonzero(b, 0, 240), count_vram_nonzero(b, 0xF0, 240),
             (unsigned)b->vram_addr);
@@ -222,7 +222,7 @@ void r01s_board_debug_tick(R01sBoard *board, uint32_t wall_ms) {
     }
     if (board->nmi_pulses != g_prev_nmi) {
         fprintf(g_log, "event: nmi_pulses %u -> %u at t=%ums beam_y=%d\n", (unsigned)g_prev_nmi,
-                (unsigned)board->nmi_pulses, (unsigned)wall_ms, r01s_beam_xy_y(&board->beam));
+                (unsigned)board->nmi_pulses, (unsigned)wall_ms, r01s_beam_xy_y(&board->pld_beam_x));
         g_prev_nmi = board->nmi_pulses;
     }
     if (wall_ms - g_last_snap_ms >= R01S_DEBUG_INTERVAL_MS) {

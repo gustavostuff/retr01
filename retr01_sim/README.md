@@ -6,25 +6,28 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 
 ## Status
 
-**Islands A–E + G + H + I + O + J + K + L + M + N + P models, wiring, and layer-2 smoke.** SDL board UI. Architecture: [`docs/08_simulator.md`](../docs/08_simulator.md).
+**Islands A–E + G + H + I + O + J + K + L + M + N + P + Q — 32-IC BOM on canvas, wiring, layer-2 smoke.** SDL board UI. Architecture: [`docs/08_simulator.md`](../docs/08_simulator.md).
 
-| Island | Components |
-|--------|------------|
+| Island | Components (canvas) |
+|--------|---------------------|
 | A Power | `PWR5V` |
 | B Clocks + reset | `OSC8M`, `SN74HC14` |
-| C CPU + RAM + PRG | `W65C02S`, `AS6C62256`, `PRG_ROM` (breadboard leftover; deselected when cart owns `$8000+`) |
-| D `$FExx` latch | `SN74HC573` @ `$FE02` / `$FE03` / `$FE04` (soft decode in board) |
-| E Pads | `PADS` stub @ `$FE60`/`$FE61` (pre-1284 merge) |
-| G VRAM | 2nd `AS6C62256` + `SN74HC157` mux; soft `$FE10`–`$FE12` + PHI2 interleave |
-| H Beam | `OSC_DOT` + `BEAM_XY` (ATF22V10 X/Y stub, 341×262) + `SN74HC688` vs `$FE04` |
-| I BG fetch | `BG_FETCH` PLD stub — nametable VA from beam+scroll; PPU-phase VRAM read |
-| O Video | `COMPOSITOR` + `AT28C16` Color PROM + `LCD_SINK`; CHR from cart flash + `$FE08`/`$FE09` pals |
-| J Cart | `SST39SF040` — PRG `$8000+` + MAP `$FE90`–`$FE93`; loads `.retr01` / flash bin |
+| C CPU + decode | `W65C02S`, `AS6C62256`, `ATF22V10` decode, `SN74HC245` (CPU bus) |
+| D `$FExx` latch | **9×** `SN74HC573` (`$FE02`–`$FE04`, `$FE08`, `$FE10`–`$FE12`, `$FE90`–`$FE92`) |
+| E Pads | `$FE60`/`$FE61` via 1284 (pads struct for tests; not a BOM IC) |
+| G VRAM | 2nd `AS6C62256` + **3×** `SN74HC157` + `BG_FETCH` + `ATF22V10` VRAM glue |
+| H Beam | `OSC_DOT` + `BEAM_XY` (X PLD) + `ATF22V10` Y compare vs `$FE04` |
+| I BG fetch | stats island — chip mounted on **G** |
+| O Video | `COMPOSITOR` + `AT28C16` Color PROM + `LCD_SINK` |
+| J Cart | `SST39SF040` + cart `24C64` I²C EEPROM |
 | K APU | `ATMEGA328P` stub — `$FE40`–`$FE5F` regs + digital PWM square |
 | L MCU | `ATMEGA1284P` stub — OAM `$FE20`/`$FE21` + 20 MHz tick; `$FE70`–`$FE72` mailbox |
-| M Linebuf | 3rd `AS6C62256` + `SN74HC157` — ping-pong 128 px halves |
-| N Sprites | `SPRITE_FETCH` stub — OAM→linebuf fill + compositor sprite path (CHR from flash when meta) |
-| P Integration | `INTEGRATION` stub — beam NMI#→CPU, pads+video+NMI smoke |
+| M Linebuf | 3rd `AS6C62256` + **3×** `SN74HC157` — ping-pong 128 px halves |
+| N Sprites | `SPRITE_FETCH` stub (logic; not in 32-IC count) |
+| P Integration | NMI / bus-fight stats (logic; not in 32-IC count) |
+| Q Bus | **2×** `SN74HC245` (3rd mounted on **C**) |
+
+Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8000+`.
 
 **Cart load:** `./sim run -- path/to/project.retr01` (or auto-finds `retr01_studio/project.retr01`). Sim applies a **bring-up PRG overlay** into the cart PRG window so island smoke still runs — that overlay is **not** Studio ROM content ([triage](../docs/08_simulator.md#cart-rom-vs-runners-triage)). After smoke it also MAP-streams world-0 screen0 into VRAM and loads active pals via `$FE93`→`$FE08`/`$FE09`; LCD stays blank until that 480 B stream finishes (tiles+attrs), then samples 2bpp CHR from flash. Still **no** emu-style host soft-boot.
 

@@ -142,7 +142,7 @@ void r01s_bg_fetch_init(R01sBgFetch *chip, const char *refdes) {
         return;
     }
     memset(chip, 0, sizeof(*chip));
-    r01s_entity_init(&chip->base, &BG_FETCH_VT, "BG_FETCH", refdes ? refdes : "UPLDI");
+    r01s_entity_init(&chip->base, &BG_FETCH_VT, "ATF22V10", refdes ? refdes : "UPLDI");
     chip->base.impl = chip;
     for (i = 0; i < 15; i++) {
         r01s_entity_add_pin(&chip->base, 1 + i, VA_NAMES[i], R01S_PIN_OUT);

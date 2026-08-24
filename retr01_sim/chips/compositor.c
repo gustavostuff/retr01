@@ -56,7 +56,7 @@ void r01s_compositor_init(R01sCompositor *chip, const char *refdes) {
         return;
     }
     memset(chip, 0, sizeof(*chip));
-    r01s_entity_init(&chip->base, &COMP_VT, "COMPOSITOR", refdes ? refdes : "UPLDV");
+    r01s_entity_init(&chip->base, &COMP_VT, "ATF22V10", refdes ? refdes : "UPLDV");
     chip->base.impl = chip;
     for (i = 0; i < 6; i++) {
         r01s_entity_add_pin(&chip->base, 1 + i, BG_NAMES[i], R01S_PIN_IN);

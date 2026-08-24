@@ -18,5 +18,6 @@ void r01s_sn74hc573_init(R01sSn74hc573 *chip, const char *refdes);
 R01sEntity *r01s_sn74hc573_entity(R01sSn74hc573 *chip);
 
 uint8_t r01s_sn74hc573_peek_q(const R01sSn74hc573 *chip);
+void r01s_sn74hc573_poke_q(R01sSn74hc573 *chip, uint8_t value);
 
 #endif

@@ -4,7 +4,7 @@
 #include "retr01_sim/island.h"
 #include "retr01_sim/island_group.h"
 
-#define R01S_BUILDER_MAX_MOUNT 32
+#define R01S_BUILDER_MAX_MOUNT 64
 
 struct R01sUi;
 

@@ -7,8 +7,8 @@
 #include "retr01_sim/board.h"
 #include "retr01_sim/bus.h"
 #include "retr01_sim/island_builder.h"
+#include "atf22v10.h"
 #include "sn74hc573.h"
-#include "sn74hc688.h"
 #include "sst39sf040.h"
 #include "test_common.h"
 #include "video_sink.h"
@@ -47,7 +47,7 @@ int main(void) {
     expect_true(r01s_board_build(&board, &builder) == 0, "board build");
     group = r01s_island_builder_group(&builder);
     expect_true(group != NULL, "group");
-    expect_true(r01s_island_group_count(group) == 15, "15 islands A-E+G+H+I+O+J+K+L+M+N+P");
+    expect_true(r01s_island_group_count(group) == 16, "16 islands A-E+G+H+I+O+J+K+L+M+N+P+Q");
 
     b = r01s_board_from_group(group);
     expect_true(b != NULL, "board ctx");
@@ -57,7 +57,7 @@ int main(void) {
 
     r01s_pads_set(&b->pads, 0, 0xA5);
     {
-        R01sEntity *raster = r01s_sn74hc573_entity(&b->raster_latch);
+        R01sEntity *raster = r01s_sn74hc573_entity(&b->latch573[R01S_LATCH_FE04]);
         int bi;
         char dn[8];
         for (bi = 0; bi < 8; bi++) {
@@ -72,7 +72,7 @@ int main(void) {
 
     for (i = 0; i < 250000; i++) {
         r01s_island_group_step(group);
-        if (r01s_sn74hc573_peek_q(&b->latch) == 0x55) {
+        if (r01s_sn74hc573_peek_q(&b->latch573[R01S_LATCH_FE02]) == 0x55) {
             saw_latch = 1;
         }
         if (r01s_as6c62256_peek(&b->vram, 0) == 0xAA) {
@@ -84,13 +84,13 @@ int main(void) {
         if (r01s_w65c02s_a(&b->cpu) == 0xA5) {
             saw_pad = 1;
         }
-        if (r01s_beam_xy_hblank(&b->beam)) {
+        if (r01s_beam_xy_hblank(&b->pld_beam_x)) {
             saw_beam_hblank = 1;
         }
-        if (r01s_beam_xy_y(&b->beam) >= 1) {
+        if (r01s_beam_xy_y(&b->pld_beam_x) >= 1) {
             saw_beam_line = 1;
         }
-        if (r01s_entity_sense(r01s_sn74hc688_entity(&b->raster_cmp), "EQ#") == R01S_LVL_L) {
+        if (r01s_entity_sense(r01s_atf22v10_entity(&b->pld_beam_y), "EQ#") == R01S_LVL_L) {
             saw_raster_hit = 1;
         }
         if (r01s_bg_fetch_last_tile(&b->bg_fetch) == 0x42) {
@@ -137,7 +137,7 @@ int main(void) {
     expect_true(saw_pad, "LDA $FE60 read island E pads");
     expect_true(saw_beam_hblank, "island H HBlank");
     expect_true(saw_beam_line, "island H advanced past line 0");
-    expect_true(saw_raster_hit, "HC688 EQ# on Y vs $FE04");
+    expect_true(saw_raster_hit, "beam-Y PLD EQ# on Y vs $FE04");
     expect_true(saw_bg_tile, "island I latched nametable tile $42");
     expect_true(saw_bg_attr, "island I latched nametable attr $07");
     expect_true(saw_video, "island O lit logical pixels from PROM");

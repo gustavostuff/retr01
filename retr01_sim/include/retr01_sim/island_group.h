@@ -6,7 +6,7 @@
 
 #include <stddef.h>
 
-#define R01S_MAX_ISLANDS 16
+#define R01S_MAX_ISLANDS 17
 
 typedef struct R01sIslandGroup R01sIslandGroup;
 

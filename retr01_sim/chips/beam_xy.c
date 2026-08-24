@@ -95,7 +95,7 @@ void r01s_beam_xy_init(R01sBeamXy *chip, const char *refdes) {
         return;
     }
     memset(chip, 0, sizeof(*chip));
-    r01s_entity_init(&chip->base, &BEAM_VT, "BEAM_XY", refdes ? refdes : "UPLD");
+    r01s_entity_init(&chip->base, &BEAM_VT, "ATF22V10", refdes ? refdes : "UPLDX");
     chip->base.impl = chip;
     r01s_entity_add_pin(&chip->base, 1, "DOT", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 2, "RES#", R01S_PIN_IN);
