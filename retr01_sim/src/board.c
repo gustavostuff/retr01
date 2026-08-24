@@ -677,7 +677,7 @@ static void board_wire_cache_fill_latch_dq(R01sBoard *ctx) {
     R01sEntity *latch = r01s_sn74hc573_entity(&ctx->latch573[R01S_LATCH_FE02]);
     int i;
     for (i = 0; i < R01S_WIRE_CACHE_D; i++) {
-        char dn[8], qn[8];
+        char dn[16], qn[16];
         snprintf(dn, sizeof(dn), "%dD", i + 1);
         snprintf(qn, sizeof(qn), "%dQ", i + 1);
         ctx->wire_cache.latch_d[i] = board_pin_idx(latch, dn);
@@ -1280,7 +1280,7 @@ static void wire_beam(R01sBoard *ctx, R01sIslandGroup *group) {
         snprintf(qn, sizeof(qn), "Q%d", i);
         r01s_entity_drive(beam_y, pn, r01s_entity_sense(beam, yn));
         {
-            char ln[8];
+            char ln[16];
             snprintf(ln, sizeof(ln), "%dQ", i + 1);
             r01s_entity_drive(beam_y, qn, r01s_entity_sense(raster, ln));
         }
