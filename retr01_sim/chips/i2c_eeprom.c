@@ -33,7 +33,7 @@ void r01s_i2c_eeprom_init(R01sI2cEeprom *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 3, "SDA", R01S_PIN_IO);
     r01s_entity_add_pin(&chip->base, 4, "SCL", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 5, "WP#", R01S_PIN_IN);
-    r01s_entity_set_dip(&chip->base, 8, 48);
+    r01s_entity_set_dip(&chip->base, 8);
     r01s_entity_reset(&chip->base);
 }
 

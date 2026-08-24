@@ -132,7 +132,7 @@ void r01s_atmega1284p_init(R01sAtmega1284p *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 38, "NC", R01S_PIN_NC);
     r01s_entity_add_pin(&chip->base, 39, "NC", R01S_PIN_NC);
     r01s_entity_add_pin(&chip->base, 40, "AVCC", R01S_PIN_PWR);
-    r01s_entity_set_dip(&chip->base, 40, 64);
+    r01s_entity_set_dip(&chip->base, 40);
     r01s_entity_reset(&chip->base);
 }
 

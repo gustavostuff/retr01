@@ -110,7 +110,7 @@ void r01s_at28c16_init(R01sAt28c16 *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 17, "WE#", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 18, "VCC", R01S_PIN_PWR);
     r01s_entity_add_pin(&chip->base, 19, "VSS", R01S_PIN_PWR);
-    r01s_entity_set_dip(&chip->base, 24, 48);
+    r01s_entity_set_dip(&chip->base, 24);
     r01s_at28c16_load_kit(chip);
     r01s_entity_reset(&chip->base);
 }

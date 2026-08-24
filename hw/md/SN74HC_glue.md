@@ -81,3 +81,12 @@ Scattered between CPU decode, reset, beam wrap, IRQ polarity. v1 deletes these p
 ## Sim notes
 
 One tiny module type per gate family (NAND2, AND2, OR2, XOR2, INV, SCHMITT_INV) with instance count from the netlist. No need for full TI PDF switching tables until timing closure.
+
+## Package dimensions
+
+| | |
+|--|--|
+| Outline | PDIP-14, 300 mil (HC00/04/08/14/32/86) |
+| Body (nom.) | **19 × 6 mm** (length × width) |
+| Sim @ 4 px/mm | **76 × 24 px** horizontal (default) |
+| Reference | [`packages_dip.md`](packages_dip.md) |

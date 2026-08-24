@@ -5,6 +5,15 @@
 **Qty:** 1.  
 **Clock (Retr01):** **20 MHz** (requires VCC 4.5-5.5 V for 20 MHz grade).
 
+## Package dimensions
+
+| | |
+|--|--|
+| Outline | PDIP-40, 600 mil |
+| Body (nom.) | **52 × 14 mm** (length × width) |
+| Sim @ 4 px/mm | **208 × 56 px** horizontal (default) |
+| Reference | [`packages_dip.md`](packages_dip.md) |
+
 ## What it is
 
 AVR 8-bit MCU: **128 KB Flash**, **16 KB SRAM**, **4 KB EEPROM**, 32 GPIO lines on four ports (A/B/C/D), timers with PWM, USART, SPI, TWI, ADC, JTAG. Retr01 uses it as a **dedicated helper MCU**, not the game CPU: it owns **OAM**, **sprite line-buffer fill**, **controller bytes**, and **machine EEPROM**. APU stays on **328P** ([`06`](../../docs/06_hardware_v1_32ic.md)).

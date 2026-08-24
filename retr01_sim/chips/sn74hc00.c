@@ -76,7 +76,7 @@ void r01s_sn74hc00_init(R01sSn74hc00 *chip, const char *refdes) {
     r01s_entity_init(&chip->base, &HC00_VT, "SN74HC00", refdes ? refdes : "U?");
     chip->base.impl = chip;
     add_quad2_pins(&chip->base);
-    r01s_entity_set_dip(&chip->base, 14, 48);
+    r01s_entity_set_dip(&chip->base, 14);
     r01s_entity_reset(&chip->base);
 }
 

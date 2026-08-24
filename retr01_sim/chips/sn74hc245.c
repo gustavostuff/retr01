@@ -98,7 +98,7 @@ void r01s_sn74hc245_init(R01sSn74hc245 *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 18, "B1", R01S_PIN_IO);
     r01s_entity_add_pin(&chip->base, 19, "OE", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 20, "VCC", R01S_PIN_PWR);
-    r01s_entity_set_dip(&chip->base, 20, 56);
+    r01s_entity_set_dip(&chip->base, 20);
     r01s_entity_reset(&chip->base);
 }
 

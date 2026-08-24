@@ -79,7 +79,7 @@ void r01s_sn74hc157_init(R01sSn74hc157 *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 14, "4A", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 15, "G#", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 16, "VCC", R01S_PIN_PWR);
-    r01s_entity_set_dip(&chip->base, 16, 52);
+    r01s_entity_set_dip(&chip->base, 16);
     r01s_entity_reset(&chip->base);
 }
 

@@ -109,7 +109,7 @@ void r01s_beam_xy_init(R01sBeamXy *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 22, "VBLANK", R01S_PIN_OUT);
     r01s_entity_add_pin(&chip->base, 23, "NMI#", R01S_PIN_OUT);
     r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
-    r01s_entity_set_dip(&chip->base, 24, 64);
+    r01s_entity_set_dip(&chip->base, 24);
     r01s_entity_reset(&chip->base);
 }
 

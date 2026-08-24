@@ -69,7 +69,7 @@ void r01s_compositor_init(R01sCompositor *chip, const char *refdes) {
         r01s_entity_add_pin(&chip->base, 14 + i, A_NAMES[i], R01S_PIN_OUT);
     }
     r01s_entity_add_pin(&chip->base, 20, "VCC", R01S_PIN_PWR);
-    r01s_entity_set_dip(&chip->base, 24, 56);
+    r01s_entity_set_dip(&chip->base, 24);
     r01s_entity_reset(&chip->base);
 }
 

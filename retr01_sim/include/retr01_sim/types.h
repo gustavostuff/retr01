@@ -9,7 +9,7 @@
 #define R01S_LOGIC_H 720
 
 /* Scrollable board world (may exceed canvas). Tall enough for multi-row islands. */
-#define R01S_BOARD_W 1600
+#define R01S_BOARD_W 2800
 #define R01S_BOARD_H 2400
 
 /* Max pins on a single package we care about for now (40-pin DIP CPU). */

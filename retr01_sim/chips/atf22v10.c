@@ -164,7 +164,7 @@ void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role) {
         r01s_entity_add_pin(&chip->base, 21, "SEL_FE92", R01S_PIN_OUT);
         r01s_entity_add_pin(&chip->base, 22, "SEL_FE93", R01S_PIN_OUT);
         r01s_entity_add_pin(&chip->base, 23, "VCC", R01S_PIN_PWR);
-        r01s_entity_set_dip(&chip->base, 24, 72);
+        r01s_entity_set_dip(&chip->base, 24);
         r01s_entity_reset(&chip->base);
         return;
     }
@@ -186,9 +186,9 @@ void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role) {
         }
         r01s_entity_add_pin(&chip->base, 33, "OE#", R01S_PIN_IN);
         r01s_entity_add_pin(&chip->base, 34, "EQ#", R01S_PIN_OUT);
-        r01s_entity_set_dip(&chip->base, 24, 72);
+        r01s_entity_set_dip(&chip->base, 24);
     } else {
-        r01s_entity_set_dip(&chip->base, 24, 64);
+        r01s_entity_set_dip(&chip->base, 24);
     }
     r01s_entity_add_pin(&chip->base, role == R01S_PLD_BEAM_Y ? 35 : 17, "VCC", R01S_PIN_PWR);
     r01s_entity_reset(&chip->base);

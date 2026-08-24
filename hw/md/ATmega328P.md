@@ -5,6 +5,15 @@
 **Qty:** **1** (current 32-IC BOM -- dedicated APU).  
 **Clock (Retr01):** **16 MHz** (5 V).
 
+## Package dimensions
+
+| | |
+|--|--|
+| Outline | PDIP-28, 600 mil |
+| Body (nom.) | **36 × 14 mm** (length × width) |
+| Sim @ 4 px/mm | **144 × 56 px** horizontal (default) |
+| Reference | [`packages_dip.md`](packages_dip.md) |
+
 ## What it is
 
 AVR 8-bit MCU. For **ATmega328P** specifically: **32 KB Flash**, **2 KB SRAM**, **1 KB EEPROM**, 23 I/O lines, timers/PWM, USART, SPI, TWI, ADC. Retr01 dedicates it to a **NES-style APU**: the 6502 writes register-like bytes in `$FE40-$FE5F`; this chip synthesizes audio (PWM or similar analog-friendly output).

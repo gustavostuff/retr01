@@ -160,6 +160,7 @@ int r01s_ui_init(R01sUi *ui) {
     ui->resize_island = -1;
     ui->drag_stick = -1;
     ui->drag_btn = -1;
+    ui->ctx_chip = -1;
     snprintf(ui->status, sizeof(ui->status),
              "32-IC BOM — islands A-D G H O J K L M Q — drag / resize BR — SPACE run/pause");
     return 0;
@@ -243,21 +244,6 @@ static void pin_level_rgb(R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg, U
         *pb = 90;
         break;
     }
-}
-
-static int dip_pin_y(const R01sEntity *e, int pin_num, int *side_left) {
-    int dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
-    int rows = dip / 2;
-    int idx;
-
-    if (dip <= 0 || pin_num <= 0 || pin_num > dip) {
-        *side_left = 1;
-        return e->board_y + e->body_h / 2;
-    }
-    *side_left = pin_num <= rows;
-    idx = *side_left ? (pin_num - 1) : (dip - pin_num);
-    /* Fixed pitch — body_h is derived from the same constants in r01s_entity_set_dip. */
-    return e->board_y + R01S_DIP_PIN_MARGIN_Y + idx * R01S_DIP_PIN_PITCH;
 }
 
 static void draw_glyph_pins(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int board_x, int board_y) {
@@ -372,50 +358,143 @@ static void draw_display_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEnti
     }
 }
 
+static void font_draw_v(SDL_Renderer *r, int x, int y, const char *text, Uint8 R, Uint8 G, Uint8 B) {
+    /* 90° CW: each 5x7 glyph reads top→bottom along +Y. */
+    int cy = y;
+    SDL_SetRenderDrawColor(r, R, G, B, 255);
+    for (; text && *text; text++) {
+        int gi = glyph_ix(*text);
+        int row, col;
+        if (*text == ' ' || *text == '/' || *text == '+' || *text == '-' || *text == '#' || *text == ':' ||
+            *text == '.') {
+            cy += 6;
+            continue;
+        }
+        if (gi < 0) {
+            cy += 6;
+            continue;
+        }
+        for (row = 0; row < 7; row++) {
+            uint8_t bits = FONT[gi][row];
+            for (col = 0; col < 5; col++) {
+                if (bits & (0x10 >> col)) {
+                    /* (col,row) → (row, 4-col) */
+                    SDL_RenderDrawPoint(r, x + row, cy + (4 - col));
+                }
+            }
+        }
+        cy += 6;
+    }
+}
+
+static int font_text_height(const char *text) {
+    return font_text_width(text); /* same advance when rotated */
+}
+
+/* Pin along-axis board coord + which side (1 = pin1 side: bottom if H, left if V). */
+static void dip_pin_pos(const R01sEntity *e, int pin_num, int *along, int *side_pin1) {
+    int dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
+    int half = dip / 2;
+    int idx;
+    int span;
+    int pitch;
+    int margin = R01S_DIP_PIN_MARGIN_PX;
+
+    if (dip <= 0 || pin_num <= 0 || pin_num > dip) {
+        *side_pin1 = 1;
+        *along = (e->orient == R01S_ORIENT_H) ? (e->body_w / 2) : (e->body_h / 2);
+        return;
+    }
+    *side_pin1 = pin_num <= half;
+    idx = *side_pin1 ? (pin_num - 1) : (dip - pin_num);
+    span = (e->orient == R01S_ORIENT_H) ? e->body_w : e->body_h;
+    if (half > 1) {
+        pitch = (span - 2 * margin) / (half - 1);
+        if (pitch < 1) {
+            pitch = 1;
+        }
+    } else {
+        pitch = 0;
+    }
+    *along = margin + idx * pitch;
+}
+
 static void draw_chip(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int selected) {
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);
     int i;
-    int label_y;
-    int label_max_w = e->body_w - 12;
+    int label_max;
     SDL_Rect body_clip;
+    int horiz = (e->orient != R01S_ORIENT_V);
 
     for (i = 0; i < e->pin_count; i++) {
         int num = e->pins[i].number;
-        int side_left;
-        int py = ui_board_sy(ui, dip_pin_y(e, num, &side_left));
-        int px0, px1;
+        int along;
+        int side_pin1;
+        int px0, px1, py0, py1;
         Uint8 pr, pg, pb;
+        dip_pin_pos(e, num, &along, &side_pin1);
         pin_level_rgb(e->pins[i].level, e->pins[i].dir, &pr, &pg, &pb);
-        if (side_left) {
-            px0 = x - 10;
-            px1 = x;
+        if (horiz) {
+            int px = x + along;
+            if (side_pin1) {
+                py0 = y + e->body_h;
+                py1 = y + e->body_h + 10;
+            } else {
+                py0 = y - 10;
+                py1 = y;
+            }
+            SDL_SetRenderDrawColor(r, pr, pg, pb, 255);
+            SDL_RenderDrawLine(r, px, py0, px, py1);
+            fill_rect(r, px - 1, side_pin1 ? py1 - 3 : py0, 3, 3, pr, pg, pb);
         } else {
-            px0 = x + e->body_w;
-            px1 = x + e->body_w + 10;
+            int py = y + along;
+            if (side_pin1) {
+                px0 = x - 10;
+                px1 = x;
+            } else {
+                px0 = x + e->body_w;
+                px1 = x + e->body_w + 10;
+            }
+            SDL_SetRenderDrawColor(r, pr, pg, pb, 255);
+            SDL_RenderDrawLine(r, px0, py, px1, py);
+            fill_rect(r, side_pin1 ? px0 : px1 - 3, py - 1, 3, 3, pr, pg, pb);
         }
-        SDL_SetRenderDrawColor(r, pr, pg, pb, 255);
-        SDL_RenderDrawLine(r, px0, py, px1, py);
-        fill_rect(r, side_left ? px0 : px1 - 3, py - 1, 3, 3, pr, pg, pb);
     }
 
     fill_rect(r, x, y, e->body_w, e->body_h, 28, 32, 28);
     draw_rect(r, x, y, e->body_w, e->body_h, selected ? 255 : 140, selected ? 220 : 140,
               selected ? 80 : 120);
-    fill_rect(r, x + e->body_w / 2 - 4, y - 2, 8, 4, 20, 22, 20);
+    /* Notch: left when horizontal, top when vertical. */
+    if (horiz) {
+        fill_rect(r, x - 2, y + e->body_h / 2 - 4, 4, 8, 20, 22, 20);
+    } else {
+        fill_rect(r, x + e->body_w / 2 - 4, y - 2, 8, 4, 20, 22, 20);
+    }
 
-    /* Labels clipped + ellipsized inside body */
     body_clip.x = x + 2;
     body_clip.y = y + 2;
     body_clip.w = e->body_w - 4;
     body_clip.h = e->body_h - 4;
     SDL_RenderSetClipRect(r, &body_clip);
-    label_y = y + 14;
-    if (e->refdes) {
-        font_draw_ellipsize(r, x + 6, label_y, e->refdes, label_max_w, 220, 220, 200);
-    }
-    if (e->part) {
-        font_draw_ellipsize(r, x + 6, label_y + 12, e->part, label_max_w, 160, 180, 140);
+    if (horiz) {
+        label_max = e->body_w - 12;
+        if (e->refdes) {
+            font_draw_ellipsize(r, x + 6, y + e->body_h / 2 - 10, e->refdes, label_max, 220, 220, 200);
+        }
+        if (e->part) {
+            font_draw_ellipsize(r, x + 6, y + e->body_h / 2 + 2, e->part, label_max, 160, 180, 140);
+        }
+    } else {
+        label_max = e->body_h - 12;
+        if (e->refdes) {
+            font_draw_v(r, x + e->body_w / 2 - 10, y + 6, e->refdes, 220, 220, 200);
+        }
+        if (e->part) {
+            font_draw_v(r, x + e->body_w / 2 + 2, y + 6, e->part, 160, 180, 140);
+        }
+        (void)label_max;
+        (void)font_text_height;
     }
     {
         SDL_Rect view_clip = {R01S_UI_VIEW_X, R01S_UI_VIEW_Y, R01S_UI_VIEW_W, R01S_UI_VIEW_H};
@@ -1266,6 +1345,24 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     snprintf(fps_buf, sizeof(fps_buf), "%d FPS %d STP", ui->fps, ui->sim_steps);
     font_draw(r, R01S_LOGIC_W - font_text_width(fps_buf) - 8, R01S_LOGIC_H - 15, fps_buf, 160, 180, 160);
 
+    if (ui->ctx_chip >= 0 && ui->ctx_chip < ui->chip_count) {
+        const R01sEntity *ce = ui->chips[ui->ctx_chip];
+        const char *item = (ce && ce->orient == R01S_ORIENT_V) ? "ORIENT HORIZONTAL" : "ORIENT VERTICAL";
+        int mw = font_text_width(item) + 16;
+        int mh = 22;
+        int mx = ui->ctx_x;
+        int my = ui->ctx_y;
+        if (mx + mw > R01S_LOGIC_W - 4) {
+            mx = R01S_LOGIC_W - 4 - mw;
+        }
+        if (my + mh > R01S_LOGIC_H - 4) {
+            my = R01S_LOGIC_H - 4 - mh;
+        }
+        fill_rect(r, mx, my, mw, mh, 24, 28, 22);
+        draw_rect(r, mx, my, mw, mh, 180, 200, 160);
+        font_draw(r, mx + 8, my + 7, item, 220, 230, 200);
+    }
+
     {
         char tip[160];
         ui_fill_tooltip(ui, tip, sizeof(tip));
@@ -1278,6 +1375,9 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
 static int hit_chip(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);
+    if (e->orient == R01S_ORIENT_H) {
+        return lx >= x - 4 && lx < x + e->body_w + 4 && ly >= y - 12 && ly < y + e->body_h + 12;
+    }
     return lx >= x - 12 && lx < x + e->body_w + 12 && ly >= y - 4 && ly < y + e->body_h + 4;
 }
 
@@ -1333,9 +1433,31 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             return 1;
         }
     }
+    if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_RIGHT) {
+        /* Chip context menu (orient); otherwise board pan. */
+        if (ui_logic_in_view(logic_x, logic_y)) {
+            for (i = ui->chip_count - 1; i >= 0; i--) {
+                if (ui->chips[i] && ui->chips[i]->visual == R01S_ENTITY_VIS_IC &&
+                    hit_chip(ui, ui->chips[i], logic_x, logic_y)) {
+                    ui->ctx_chip = i;
+                    ui->ctx_x = logic_x;
+                    ui->ctx_y = logic_y;
+                    ui->selected = i;
+                    return 1;
+                }
+            }
+        }
+        if (ui_logic_in_view(logic_x, logic_y)) {
+            ui->ctx_chip = -1;
+            ui->drag_pan = 1;
+            ui->drag_last_x = logic_x;
+            ui->drag_last_y = logic_y;
+            return 1;
+        }
+    }
     if (e->type == SDL_MOUSEBUTTONDOWN &&
-        (e->button.button == SDL_BUTTON_MIDDLE || e->button.button == SDL_BUTTON_RIGHT) &&
-        ui_logic_in_view(logic_x, logic_y)) {
+        e->button.button == SDL_BUTTON_MIDDLE && ui_logic_in_view(logic_x, logic_y)) {
+        ui->ctx_chip = -1;
         ui->drag_pan = 1;
         ui->drag_last_x = logic_x;
         ui->drag_last_y = logic_y;
@@ -1420,6 +1542,36 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         int gp_btn = -1;
         int hit;
         SDL_Rect copy_rc;
+
+        /* Context menu: toggle package orientation. */
+        if (ui->ctx_chip >= 0 && ui->ctx_chip < ui->chip_count) {
+            const R01sEntity *ce = ui->chips[ui->ctx_chip];
+            const char *item =
+                (ce && ce->orient == R01S_ORIENT_V) ? "ORIENT HORIZONTAL" : "ORIENT VERTICAL";
+            int mw = font_text_width(item) + 16;
+            int mh = 22;
+            int mx = ui->ctx_x;
+            int my = ui->ctx_y;
+            if (mx + mw > R01S_LOGIC_W - 4) {
+                mx = R01S_LOGIC_W - 4 - mw;
+            }
+            if (my + mh > R01S_LOGIC_H - 4) {
+                my = R01S_LOGIC_H - 4 - mh;
+            }
+            if (logic_x >= mx && logic_x < mx + mw && logic_y >= my && logic_y < my + mh) {
+                R01sEntity *te = ui->chips[ui->ctx_chip];
+                if (te && te->visual == R01S_ENTITY_VIS_IC) {
+                    r01s_entity_set_orient(te, te->orient == R01S_ORIENT_V ? R01S_ORIENT_H : R01S_ORIENT_V);
+                    clamp_chip_in_island(ui, te, ui->chip_island[ui->ctx_chip]);
+                    snprintf(ui->status, sizeof(ui->status), "%s → %s",
+                             te->refdes ? te->refdes : "?",
+                             te->orient == R01S_ORIENT_V ? "VERTICAL" : "HORIZONTAL");
+                }
+                ui->ctx_chip = -1;
+                return 1;
+            }
+            ui->ctx_chip = -1; /* click elsewhere dismisses */
+        }
 
         /* System / island COPY buttons (sidebar) before gamepad / board hits. */
         if (health_needs_debug(ui->health.system) || ui->health.system == R01S_HEALTH_BOOT) {

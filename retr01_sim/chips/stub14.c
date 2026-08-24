@@ -56,7 +56,7 @@ void r01s_stub14_init(R01sStub14 *chip, const char *refdes) {
     for (i = 0; i < sizeof(STUB14_PINS) / sizeof(STUB14_PINS[0]); i++) {
         r01s_entity_add_pin(&chip->base, STUB14_PINS[i].num, STUB14_PINS[i].name, STUB14_PINS[i].dir);
     }
-    r01s_entity_set_dip(&chip->base, 14, 48);
+    r01s_entity_set_dip(&chip->base, 14);
     r01s_entity_reset(&chip->base);
 }
 
