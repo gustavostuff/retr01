@@ -84,9 +84,9 @@ Fixed **640×360** logical canvas, integer scale (default **2×**).
 
 **Play:** Available (e.g. **Space** / **PLAY**). Behavior must match exported cart logic for scroll, player, and X/Y warps.
 
-**Save / load:** **Ctrl+S** / **Ctrl+O** → project JSON.
+**Save / load:** **Ctrl+S** / **Ctrl+O** → `test_game/test.r01proj` (created on save).
 
-**Export cart:** **Ctrl+E** → `project.retr01` (+ companion files as today: `*_prom.bin`, `*_boot.s`, `*_flash.bin` where applicable). Cart **Play-equivalent** behavior: smooth scroll, hardcoded black player, X/Y warps.
+**Export cart:** **Ctrl+E** → `test_game/test.retr01` (+ `test_prom.bin`, `test_boot.s`, `test_flash.bin` in the same folder).
 
 ### PNG import
 
@@ -129,8 +129,9 @@ Preview and cart burn quantize through the kit Color PROM (**R3G3B2**).
 Drop PNG → pack tiles → BG bank 0 + screen tile/attr payloads
        → apply fixed global palettes
        → save project JSON
-Play  → smooth scroll + black 8×8 player + X/Y warp events
-Export → .retr01 (PRG stub implements same behavior as Play for Phase 1)
+Play  → smooth scroll + player sprite + X/Y warp (SoT: `core/src/play.c`)
+Export → `.retr01` (present screens only, play table `$8100`, marker `R01P`)
+Emu   → same Play rules applied to exported cart MAP (re-export after edits)
 ```
 
 ### Phase 1 — out of scope
@@ -243,23 +244,26 @@ ctest --test-dir build --output-on-failure
 | Play / pause preview | **Space** / **PLAY** |
 | Move player | **WASD** / arrows |
 | Warp test | **X** → screen (0,0), **Y** → screen (1,0) |
-| Save / load project | **Ctrl+S** / **Ctrl+O** |
-| Export cart | **Ctrl+E** |
+| Save / load project | **Ctrl+S** / **Ctrl+O** → `test_game/test.r01proj` |
+| Export cart | **Ctrl+E** → `test_game/test.retr01` |
 
 ---
 
 ## Export artifacts
 
-**Ctrl+E** writes next to the project stem:
+**Ctrl+E** writes under `test_game/` (repo root relative to launch cwd):
 
 | File | Contents |
 |------|----------|
-| `*.retr01` | Packed cart (`RETR01` magic, globals, world 0 CHR/MAP, palettes, PRG) |
-| `*_prom.bin` | 64-byte Color PROM image (**motherboard**, not in cart) |
-| `*_boot.s` | Human-readable ca65 stub / equates |
-| `*_flash.bin` | Cart image padded to **512 KB** |
+| `test_game/test.retr01` | Packed cart (`RETR01` magic, globals, world 0 CHR/MAP, palettes, PRG) |
+| `test_game/test_prom.bin` | 64-byte Color PROM image (**motherboard**, not in cart) |
+| `test_game/test_boot.s` | Human-readable ca65 stub / equates |
+| `test_game/test_flash.bin` | Cart image padded to **512 KB** |
 
-**ROM vs Studio chrome:** Editor layout, hidden panels, and PNG import UI are not burned into the cart. Phase 1 PRG implements **Smooth + Eagle View** behavior (scroll, player, X/Y warps) to match **Play**.
+**ROM vs Studio chrome:** Editor layout and PNG import UI are not burned into the cart.
+Phase 1 **Play SoT** is `play.c`. Export packs matching MAP (present screens only) + play
+table; the emulator runs that same Play behavior on the cart. Full 6502 gameplay inside PRG
+is the next step — today PRG boots + polls pads while the cart runtime applies Play.
 
 See [`docs/08_simulator.md` — Cart ROM vs runners](../docs/08_simulator.md#cart-rom-vs-runners-triage) for sim/emu vs cart boundaries.
 

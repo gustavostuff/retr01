@@ -16,7 +16,6 @@ int r01e_machine_init(R01eMachine *m, const char *cart_path, char *err, size_t e
     }
     m->dot_num = R01E_DOT_HZ;
     m->dot_den = R01E_CPU_HZ;
-    m->dot_acc = 0;
     r01e_machine_reset(m);
     return 0;
 }
@@ -34,26 +33,28 @@ void r01e_machine_reset(R01eMachine *m) {
         return;
     }
     memset(m->ram, 0, sizeof(m->ram));
-    r01e_ppu_reset(&m->ppu);
+    r01e_io_reset(&m->io);
+    r01e_video_reset(&m->video);
+    r01e_play_reset(&m->play);
     m->nmi_pending = 0;
-    m->irq_line = 0;
     m->dot_acc = 0;
     r01e_cpu_reset(&m->cpu, m);
-    /* Preload world 0 so FB is ready before stub STA $FE30 (also reloads). */
-    (void)r01e_ppu_boot_world(m, 0);
-    r01e_ppu_render_frame(m);
+    (void)r01e_video_boot_world(m, 0);
+    (void)r01e_play_start(m);
+    r01e_video_render_frame(m);
+    r01e_play_draw(m);
 }
 
 uint8_t r01e_mem_read(R01eMachine *m, uint16_t addr) {
     const uint8_t *prg;
     uint32_t prg_off;
+
     if (addr < 0x8000u) {
         return m->ram[addr];
     }
     if (addr >= 0xFE00u && addr <= 0xFEFFu) {
-        return r01e_ppu_read(m, addr);
+        return r01e_io_read(m, addr);
     }
-    /* PRG: cart image maps linearly into $8000-$FFFF with I/O hole. */
     prg = r01e_cart_prg(&m->cart);
     if (!prg) {
         return 0xFF;
@@ -71,22 +72,21 @@ void r01e_mem_write(R01eMachine *m, uint16_t addr, uint8_t v) {
         return;
     }
     if (addr >= 0xFE00u && addr <= 0xFEFFu) {
-        r01e_ppu_write(m, addr, v);
+        r01e_io_write(m, addr, v);
     }
-    /* PRG writes ignored (ROM). */
 }
 
 static void advance_dots(R01eMachine *m, int cpu_cycles) {
-    /* dots ≈ cycles * DOT_HZ / CPU_HZ */
     m->dot_acc += (uint64_t)cpu_cycles * m->dot_num;
     while (m->dot_acc >= m->dot_den) {
         m->dot_acc -= m->dot_den;
-        r01e_ppu_dot(m);
+        r01e_io_dot(m);
     }
 }
 
 int r01e_machine_step_insn(R01eMachine *m) {
     int cyc;
+
     if (!m) {
         return 0;
     }
@@ -98,19 +98,21 @@ int r01e_machine_step_insn(R01eMachine *m) {
 int r01e_machine_frame(R01eMachine *m) {
     int start_frame;
     int guard = 0;
+
     if (!m) {
         return 0;
     }
-    start_frame = m->ppu.frame;
-    while (m->ppu.frame == start_frame && guard < 2000000) {
+    start_frame = m->io.frame;
+    while (m->io.frame == start_frame && guard < 2000000) {
         (void)r01e_machine_step_insn(m);
         guard++;
     }
-    /* Ensure FB is current even if beam wrap already rendered. */
-    if (!m->ppu.chr_loaded) {
-        (void)r01e_ppu_boot_world(m, (int)m->ppu.world);
+    r01e_play_tick(m);
+    if (!m->video.chr_loaded) {
+        (void)r01e_video_boot_world(m, (int)m->io.world);
     }
-    r01e_ppu_render_frame(m);
+    r01e_video_render_frame(m);
+    r01e_play_draw(m);
     return guard;
 }
 
@@ -119,8 +121,8 @@ void r01e_machine_set_pad(R01eMachine *m, int player, uint8_t bits) {
         return;
     }
     if (player == 0) {
-        m->ppu.pad0 = bits;
+        m->io.pad0 = bits;
     } else {
-        m->ppu.pad1 = bits;
+        m->io.pad1 = bits;
     }
 }

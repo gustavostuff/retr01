@@ -106,6 +106,42 @@ static int find_unique(uint8_t unique[][R01_TILE_BYTES], int unique_count, const
     return -1;
 }
 
+void r01_screen_fill_pixels_from_bank(const R01World *w, R01Screen *s) {
+    int ty, tx;
+    if (!w || !s) {
+        return;
+    }
+    for (ty = 0; ty < R01_SCREEN_TILES_Y; ty++) {
+        for (tx = 0; tx < R01_SCREEN_TILES_X; tx++) {
+            int cell = ty * R01_SCREEN_TILES_X + tx;
+            uint8_t attr = s->attrs[cell];
+            uint8_t tile_id = s->tiles[cell];
+            int bank = r01_attr_bank(attr);
+            const uint8_t *tile;
+            int sy, sx;
+            if (bank < 0 || bank >= R01_BG_BANKS || tile_id >= (uint8_t)w->bg_banks[bank].tile_count) {
+                continue;
+            }
+            tile = w->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+            for (sy = 0; sy < 8; sy++) {
+                for (sx = 0; sx < 8; sx++) {
+                    int px = tx * 8 + sx;
+                    int py = ty * 8 + sy;
+                    int csx = sx;
+                    int csy = sy;
+                    if (r01_attr_flip_h(attr)) {
+                        csx = 7 - csx;
+                    }
+                    if (r01_attr_flip_v(attr)) {
+                        csy = 7 - csy;
+                    }
+                    s->pixels[py * R01_SCREEN_PX_W + px] = r01_tile_pixel_color(tile, csx, csy);
+                }
+            }
+        }
+    }
+}
+
 static R01ChrPackStatus pack_screen(uint8_t unique[][R01_TILE_BYTES], int *unique_count, R01Screen *s) {
     int ty, tx;
     for (ty = 0; ty < R01_SCREEN_TILES_Y; ty++) {

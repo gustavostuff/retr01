@@ -1,6 +1,7 @@
 #include "retr01_studio/cart.h"
 #include "retr01_studio/chr_pack.h"
 #include "retr01_studio/palette.h"
+#include "retr01_studio/prg_phase1.h"
 #include "retr01_studio/project.h"
 
 #include <stdio.h>
@@ -104,27 +105,9 @@ int r01_prom_write(const char *path, char *err_buf, size_t err_cap) {
     return 0;
 }
 
-void r01_prg_fill_stub(uint8_t prg[R01_PRG_BYTES]) {
-    static const uint8_t code[] = {
-        0x78, 0xD8, 0xA2, 0xFF, 0x9A, 0xA9, 0x00, 0x8D, 0x30, 0xFE, 0xA9, 0x00, 0x8D, 0x02, 0xFE,
-        0x8D, 0x03, 0xFE, 0x4C, 0x00, 0x80,
-    };
-    uint16_t hang = 0x8014u;
-    memset(prg, 0xEA, R01_PRG_BYTES);
-    memcpy(prg, code, sizeof(code));
-    prg[sizeof(code) - 3] = (uint8_t)(hang & 0xFF);
-    prg[sizeof(code) - 2] = (uint8_t)((hang >> 8) & 0xFF);
-    prg[0x7FFA] = (uint8_t)(hang & 0xFF);
-    prg[0x7FFB] = (uint8_t)((hang >> 8) & 0xFF);
-    prg[0x7FFC] = 0x00;
-    prg[0x7FFD] = 0x80;
-    prg[0x7FFE] = (uint8_t)(hang & 0xFF);
-    prg[0x7FFF] = (uint8_t)((hang >> 8) & 0xFF);
-}
-
 int r01_prg_write_asm(const R01Project *p, const char *path, char *err_buf, size_t err_cap) {
     FILE *f;
-    (void)p;
+    const R01World *w;
     if (!path) {
         set_err(err_buf, err_cap, "bad args");
         return -1;
@@ -134,17 +117,36 @@ int r01_prg_write_asm(const R01Project *p, const char *path, char *err_buf, size
         set_err(err_buf, err_cap, "cannot write asm");
         return -1;
     }
-    fprintf(f, "; Retr01 Phase 1 boot stub — Smooth + Eagle View\n");
+    w = p ? &p->worlds[0] : NULL;
+    fprintf(f, "; Retr01 Phase 1 — Smooth + Eagle View (Studio Play SoT)\n");
+    fprintf(f, "; Gameplay: Studio play.c / emu cart runtime (marker R01P @ $80F0).\n");
+    fprintf(f, "; Play table @ $8100: present[8] bitmask, spawn_col, spawn_row.\n");
     fprintf(f, ".setcpu \"65C02\"\n");
     fprintf(f, "WORLD     = $FE30\n");
     fprintf(f, "SCROLL_X  = $FE02\n");
     fprintf(f, "SCROLL_Y  = $FE03\n");
+    fprintf(f, "PPUCTRL   = $FE00\n");
+    fprintf(f, "PPUSTATUS = $FE01\n");
+    fprintf(f, "PAD0      = $FE60\n");
     fprintf(f, ".segment \"CODE\"\n.org $8000\n");
     fprintf(f, "reset:\n        sei\n        cld\n        ldx #$ff\n        txs\n");
     fprintf(f, "        lda #0\n        sta WORLD\n        sta SCROLL_X\n        sta SCROLL_Y\n");
-    fprintf(f, "hang:   jmp hang\n");
+    fprintf(f, "        lda #1\n        sta PPUCTRL\n");
+    fprintf(f, "main:\n        lda PPUSTATUS\n        and #$80\n        beq main\n");
+    fprintf(f, "        lda PAD0\n        sta $00FE\n        jmp main\n");
+    fprintf(f, ".segment \"PLAY\"\n.org $8100\n");
+    fprintf(f, "; present mask + spawn filled by exporter\n");
+    if (w) {
+        int i, n = 0;
+        for (i = 0; i < w->screen_count; i++) {
+            if (w->screens[i].present) {
+                n++;
+            }
+        }
+        fprintf(f, "; %d present screens in cart MAP\n", n);
+    }
     fprintf(f, ".segment \"VECTORS\"\n.org $FFFA\n");
-    fprintf(f, "        .word hang\n        .word reset\n        .word hang\n");
+    fprintf(f, "        .word main\n        .word reset\n        .word main\n");
     fclose(f);
     return 0;
 }
@@ -160,18 +162,38 @@ static int append_pal_rows(Buf *b, const R01PalRow rows[R01_PAL_ROWS]) {
     return buf_append(b, tmp, sizeof(tmp));
 }
 
+static void fill_solid_tile(uint8_t tile[R01_TILE_BYTES], uint8_t color) {
+    int row;
+    uint8_t p0 = (color & 1u) ? 0xFFu : 0;
+    uint8_t p1 = (color & 2u) ? 0xFFu : 0;
+    memset(tile, 0, R01_TILE_BYTES);
+    for (row = 0; row < 8; row++) {
+        tile[row] = p0;
+        tile[row + 8] = p1;
+    }
+}
+
 static int build_world_blob(Buf *blob, const R01World *w) {
     uint8_t hdr[WORLD_HDR_SIZE];
     uint8_t dir[R01_MAX_SCREENS * SCREEN_DIR_ENT];
     size_t off_chr, off_sdir, off_spay;
-    int si, bi;
+    int si, bi, present_n = 0;
     uint32_t payload_base;
 
     memset(hdr, 0, sizeof(hdr));
     memset(dir, 0, sizeof(dir));
+    for (si = 0; si < w->screen_count; si++) {
+        if (w->screens[si].present) {
+            present_n++;
+        }
+    }
+    if (present_n > 255) {
+        present_n = 255;
+    }
+
     off_chr = WORLD_HDR_SIZE;
     off_sdir = off_chr + (size_t)R01_BG_BANKS * R01_CHR_BANK_BYTES + (size_t)R01_SPR_BANKS * R01_CHR_BANK_BYTES;
-    off_spay = off_sdir + (size_t)w->screen_count * SCREEN_DIR_ENT;
+    off_spay = off_sdir + (size_t)present_n * SCREEN_DIR_ENT;
     payload_base = (uint32_t)off_spay;
 
     put_u8(hdr + 0, (uint8_t)R01_START_COL);
@@ -179,7 +201,7 @@ static int build_world_blob(Buf *blob, const R01World *w) {
     put_u8(hdr + 2, 0);
     put_u8(hdr + 3, 0);
     put_u8(hdr + 4, 0);
-    put_u8(hdr + 5, (uint8_t)w->screen_count);
+    put_u8(hdr + 5, (uint8_t)present_n);
     put_u8(hdr + 6, 0);
     put_u24(hdr + 8, (uint32_t)off_chr);
     put_u24(hdr + 11, (uint32_t)off_sdir);
@@ -205,28 +227,43 @@ static int build_world_blob(Buf *blob, const R01World *w) {
     for (bi = 0; bi < R01_SPR_BANKS; bi++) {
         uint8_t bank[R01_CHR_BANK_BYTES];
         memset(bank, 0, sizeof(bank));
+        if (bi == 0) {
+            /* Tile 1 = solid color-1 player (matches Studio Play sprite pal idx 1). */
+            fill_solid_tile(bank + R01_TILE_BYTES, 1);
+        }
         if (buf_append(blob, bank, sizeof(bank)) != 0) {
             return -1;
         }
     }
-    for (si = 0; si < w->screen_count; si++) {
-        const R01Screen *s = &w->screens[si];
-        uint8_t *e = dir + (size_t)si * SCREEN_DIR_ENT;
-        put_u8(e + 0, (uint8_t)s->col);
-        put_u8(e + 1, (uint8_t)s->row);
-        put_u8(e + 2, 0);
-        put_u8(e + 3, 0);
-        put_u24(e + 4, payload_base + (uint32_t)si * SCREEN_PAYLOAD);
-        put_u24(e + 7, 0);
-    }
-    if (buf_append(blob, dir, (size_t)w->screen_count * SCREEN_DIR_ENT) != 0) {
-        return -1;
-    }
-    for (si = 0; si < w->screen_count; si++) {
-        const R01Screen *s = &w->screens[si];
-        if (buf_append(blob, s->tiles, R01_TILES_PER_SCREEN) != 0 ||
-            buf_append(blob, s->attrs, R01_ATTRS_PER_SCREEN) != 0) {
+    {
+        int di = 0;
+        for (si = 0; si < w->screen_count; si++) {
+            const R01Screen *s = &w->screens[si];
+            uint8_t *e;
+            if (!s->present) {
+                continue;
+            }
+            e = dir + (size_t)di * SCREEN_DIR_ENT;
+            put_u8(e + 0, (uint8_t)s->col);
+            put_u8(e + 1, (uint8_t)s->row);
+            put_u8(e + 2, 0);
+            put_u8(e + 3, 0);
+            put_u24(e + 4, payload_base + (uint32_t)di * SCREEN_PAYLOAD);
+            put_u24(e + 7, 0);
+            di++;
+        }
+        if (buf_append(blob, dir, (size_t)present_n * SCREEN_DIR_ENT) != 0) {
             return -1;
+        }
+        for (si = 0; si < w->screen_count; si++) {
+            const R01Screen *s = &w->screens[si];
+            if (!s->present) {
+                continue;
+            }
+            if (buf_append(blob, s->tiles, R01_TILES_PER_SCREEN) != 0 ||
+                buf_append(blob, s->attrs, R01_ATTRS_PER_SCREEN) != 0) {
+                return -1;
+            }
         }
     }
     return 0;
@@ -270,7 +307,7 @@ static int r01_cart_build(const R01Project *p, uint8_t **out, size_t *out_len, c
     memcpy(hdr, "RETR01", 6);
     hdr[6] = R01_CART_FORMAT_VER;
     hdr[7] = 1;
-    r01_prg_fill_stub(prg);
+    r01_prg_fill_phase1(prg, &work->worlds[0]);
 
     off_pal_bg = HDR_SIZE + PTR_TABLE_SIZE;
     off_pal_spr = off_pal_bg + 16;
@@ -380,6 +417,10 @@ int r01_export_bundle(const R01Project *p, const char *path_stem, char *err_buf,
     char path[R01_PATH_MAX];
     if (!p || !path_stem) {
         set_err(err_buf, err_cap, "bad args");
+        return -1;
+    }
+    snprintf(path, sizeof(path), "%s.retr01", path_stem);
+    if (r01_path_ensure_parent(path, err_buf, err_cap) != 0) {
         return -1;
     }
     snprintf(path, sizeof(path), "%s.retr01", path_stem);

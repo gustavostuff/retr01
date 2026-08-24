@@ -183,9 +183,16 @@ int ui_init(UiState *ui) {
     if (!ui->project) {
         return -1;
     }
-    r01_project_init(ui->project, "untitled");
-    snprintf(ui->project_path, sizeof(ui->project_path), "project.json");
-    snprintf(ui->status, sizeof(ui->status), "DROP PNG — CLICK PLAY — WASD MOVE");
+    snprintf(ui->project_path, sizeof(ui->project_path), "%s", R01_DEFAULT_PROJECT);
+    {
+        char err[128];
+        if (r01_project_load_json(ui->project, ui->project_path, err, sizeof(err)) != 0) {
+            r01_project_init(ui->project, "test");
+        } else {
+            r01_chr_pack_world_bank0(r01_project_world0(ui->project));
+        }
+    }
+    snprintf(ui->status, sizeof(ui->status), "DROP PNG — CTRL+S SAVE — CTRL+E EXPORT");
     return 0;
 }
 
@@ -290,24 +297,16 @@ static void ui_save(UiState *ui) {
         ui_toast(ui, err, 1);
         return;
     }
-    ui_toast(ui, "saved", 0);
+    ui_toast(ui, R01_DEFAULT_PROJECT " saved", 0);
 }
 
 static void ui_export(UiState *ui) {
     char err[128];
-    char stem[R01_PATH_MAX];
-    strncpy(stem, ui->project_path, sizeof(stem) - 1);
-    {
-        char *dot = strrchr(stem, '.');
-        if (dot) {
-            *dot = '\0';
-        }
-    }
-    if (r01_export_bundle(ui->project, stem, err, sizeof(err)) != 0) {
+    if (r01_export_bundle(ui->project, R01_DEFAULT_CART_STEM, err, sizeof(err)) != 0) {
         ui_toast(ui, err, 1);
         return;
     }
-    ui_toast(ui, "exported cart", 0);
+    ui_toast(ui, R01_DEFAULT_CART_STEM ".retr01 exported", 0);
 }
 
 int ui_handle_drop_file(UiState *ui, const char *path, int lx, int ly) {

@@ -35,7 +35,11 @@
 
 #define R01_NAME_MAX 64
 #define R01_PATH_MAX 512
-#define R01_JSON_VER 1
+#define R01_JSON_VER 3
+
+#define R01_GAME_DIR "test_game"
+#define R01_DEFAULT_PROJECT R01_GAME_DIR "/test.r01proj"
+#define R01_DEFAULT_CART_STEM R01_GAME_DIR "/test"
 
 /* BG attr (docs/02) */
 #define R01_ATTR_BANK_MASK 0x03u

@@ -16,4 +16,6 @@ R01Screen *r01_world_screen_at(R01World *w, int col, int row);
 
 int r01_project_import_png(R01Project *p, const char *path, char *err_buf, size_t err_cap);
 
+int r01_path_ensure_parent(const char *path, char *err_buf, size_t err_cap);
+
 #endif

@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 static void init_screen(R01Screen *s, int col, int row) {
     int c;
@@ -371,4 +373,31 @@ fail:
         fclose(fp);
     }
     return -1;
+}
+
+int r01_path_ensure_parent(const char *path, char *err_buf, size_t err_cap) {
+    char dir[R01_PATH_MAX];
+    char *slash;
+    if (!path || !path[0]) {
+        set_err(err_buf, err_cap, "bad path");
+        return -1;
+    }
+    strncpy(dir, path, sizeof(dir) - 1u);
+    dir[sizeof(dir) - 1u] = '\0';
+    slash = strrchr(dir, '/');
+    if (!slash) {
+        return 0;
+    }
+    *slash = '\0';
+    if (dir[0] == '\0') {
+        return 0;
+    }
+    if (mkdir(dir, 0755) != 0) {
+        struct stat st;
+        if (stat(dir, &st) != 0 || !S_ISDIR(st.st_mode)) {
+            set_err(err_buf, err_cap, "cannot create output dir");
+            return -1;
+        }
+    }
+    return 0;
 }

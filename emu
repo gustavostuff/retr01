@@ -15,7 +15,7 @@ source "$ROOT/scripts/r01-common.sh"
 
 PROJ="$ROOT/retr01_emu"
 BIN="$PROJ/build/retr01_emu"
-DEFAULT_CART="$ROOT/retr01_studio/project.retr01"
+DEFAULT_CART="$ROOT/retr01_studio/test_game/test.retr01"
 CMD="${1:-}"
 [[ -n "$CMD" ]] || r01_usage_die "usage: $0 <build|run|build-run|unit|help> ..."
 shift || true
@@ -26,7 +26,7 @@ case "$CMD" in
 Retr01 Emulator
 
   build                 configure (if needed) + build
-  run [cart.retr01]     run emu (default: retr01_studio/project.retr01)
+  run [cart.retr01]     run emu (default: retr01_studio/test_game/test.retr01)
   build-run [cart...]   build then run
   unit                  build + ctest
   help                  this text

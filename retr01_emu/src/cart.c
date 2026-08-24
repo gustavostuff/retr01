@@ -162,3 +162,24 @@ int r01e_cart_world(const R01eCart *c, int index, R01eWorldView *out) {
     out->off_wpal_spr = get_u24(hdr + 20);
     return 0;
 }
+
+int r01e_cart_has_screen(const R01eCart *c, int world, int col, int row) {
+    R01eWorldView wv;
+    const uint8_t *dir;
+    int si;
+
+    if (r01e_cart_world(c, world, &wv) != 0) {
+        return 0;
+    }
+    dir = r01e_cart_ptr(c, wv.base + wv.off_screen_dir, (size_t)wv.screen_count * 12u);
+    if (!dir) {
+        return 0;
+    }
+    for (si = 0; si < wv.screen_count; si++) {
+        const uint8_t *e = dir + (size_t)si * 12u;
+        if ((int)e[0] == col && (int)e[1] == row) {
+            return 1;
+        }
+    }
+    return 0;
+}

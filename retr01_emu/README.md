@@ -1,46 +1,38 @@
 # Retr01 Emulator
 
-Software-visible C emulator for Retr01-A. Separate from the IC-first board simulator
-([`retr01_sim/`](../retr01_sim/)). Contract: [`docs/02_graphics_worlds_memory.md`](../docs/02_graphics_worlds_memory.md).
+Software-visible C emulator for Retr01-A Phase 1 carts. Separate from the IC board
+simulator ([`retr01_sim/`](../retr01_sim/)). Contract:
+[`docs/02_graphics_worlds_memory.md`](../docs/02_graphics_worlds_memory.md).
 
 Root helper: [`../emu`](../emu) (`build` · `run` · `build-run` · `unit`).
 
-## Level
+## Phase 1 scope (active)
 
-PHI2-ish 65C02 + logical `$FExx` + VRAM/CHR/MAP — not pin settle / DIP entities.
-Empty-screen / player bounds are **game software** (same idea as Studio Play), not PPU silicon.
+| Layer | What runs today |
+|-------|-----------------|
+| **Cart** | Load `.retr01` — present screens only, CHR, pals, Phase 1 PRG (`R01P`) |
+| **Play** | **Studio Play SoT** — same move / camera / collision / X·Y warps as Studio |
+| **CPU** | Boots world 0, VBlank pad poll (gameplay in cart runtime until full 6502 play) |
+| **Video** | Soft-boot MAP/CHR into 2×2 workbench; smooth scroll from play camera |
+| **Host** | SDL; WASD/arrows move; **X**/**Y** warp (same as Studio) |
 
-## Phases
+**Sync contract:** Studio Play (`play.c`) is the source of truth. Export packs only **present**
+screens + play table (`$8100`) + `R01P` marker. Emulator applies the same play rules to that
+cart MAP so live Play and emu feel match after a fresh Ctrl+E export.
 
-| Phase | Status | What |
-|-------|--------|------|
-| **1** | **done** | Cart load (`.retr01`), RAM `$0000-$7FFF`, PRG `$8000+` with I/O hole, 65C02 core |
-| **2** | **done** | `$FExx` ports (PPU, VRAM, OAM, pads, MAP, APU stub), host pads |
-| **3** | **done** | Beam/frame pacing, BG render (2×2 camera + scroll), kit Color PROM, soft world boot |
-| **4** | **done** | SDL host + atlas pan; runs `retr01_studio/project.retr01` (`START_WORLD=0`) |
-| **5** | **next** | **Host Play soft-layer** — player sprite, pad-driven move/camera, refuse empty screens; viewport may still show empty cells |
-| **6** | planned | **Sprites / OAM** — composite OAM over BG (8×8 / 8×16, bank/pal/flip/priority, 16/line cap) |
-| **7** | planned | **MAP streamer** — shift 2×2 workbench from cart MAP (`$FE90`–`$FE93` / soft boot helper) when camera leaves loaded slots; retire host-only atlas hacks where PRG can drive it |
-| **8** | planned | **NMI / raster** — VBlank NMI from `PPUCTRL`, `$FE04`/`$FE05` scanline IRQ hooks usable by real PRG |
-| **9** | planned | **APU stub → hearable** — `$FE40`–`$FE5F` enough for Studio/cart smoke (not full 328P) |
-| **10** | planned | **CPU / timing harden** — wider 65C02 coverage, tighter cycle counts vs beam; keep below `retr01_sim` pin level |
+## Scaffolded (not active)
 
-### Phase notes
-
-**1–4 (cart viewer).** Soft world boot: Studio stub never streams MAP. `$FE30` / reset loads CHR/pals/screens/parallax into VRAM. Host arrows pan the atlas by shifting the 2×2 window. Those soft helpers are **emu conveniences**, not cart bytes — see [`docs/08` — Cart ROM vs runners](../docs/08_simulator.md#cart-rom-vs-runners-triage).
-
-**5 (next).** Mirror Studio Play feel on the loaded cart without waiting for real game PRG: one player meta/sprite, collision = AABB only on **present** screens, scroll modes later if useful. Still not silicon-accurate sprite pipeline.
-
-**6.** OAM already has ports; render path does not composite yet.
-
-**7.** Closes the gap between host pan and what shipping PRG must do at seams ([`02`](../docs/02_graphics_worlds_memory.md) camera workbench).
-
-**8–10.** Needed once carts stop hanging after boot and exercise interrupts / audio / tighter timing.
+| Module | File | Later phase |
+|--------|------|-------------|
+| **6502 play loop** | PRG | Move play math into cart CPU (retire host runtime) |
+| **OAM composite** | `video.c` | Hardware sprite path (play draws overlay today) |
+| **Parallax** | `video.c` | VRAM slots 4–5 |
+| **MAP streamer** | `io.c` | Camera seam via `$FE90-$FE93` |
+| **Multi-world** | `cart.c` | Worlds 1–7 |
 
 ## Build / run
 
 ```bash
-# from repo root
 ./emu build-run
 ./emu unit
 
@@ -48,22 +40,21 @@ Empty-screen / player bounds are **game software** (same idea as Studio Play), n
 cd retr01_emu
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
-./build/retr01_emu ../retr01_studio/project.retr01
+./build/retr01_emu ../retr01_studio/test_game/test.retr01
 ```
 
-**Controls (phase 4):** arrows = atlas pan · **0–7** = world · Z X / 1 / Enter = P1 buttons · Space pause · R reset · Esc quit.
-
-**Boot world:** stub `START_WORLD` is always **0** (editor `active_world` is not a cart field).
+**Controls:** WASD or arrows = move · **X**/**Y** = warp · Space = pause · R = reset · Esc = quit
 
 ## Layout
 
 | Path | Role |
 |------|------|
-| `include/retr01_emu/` | Public headers |
-| `src/cart.c` | `.retr01` parse |
-| `src/cpu.c` | 65C02-ish core |
-| `src/ppu.c` | `$FExx` + video + soft boot |
-| `src/machine.c` | Bus + frame step |
+| `include/retr01_emu/types.h` | Shared constants |
+| `include/retr01_emu/cart.h` | `.retr01` parser |
+| `include/retr01_emu/cpu.h` | 65C02 core |
+| `include/retr01_emu/io.h` | `$FExx` register file |
+| `include/retr01_emu/video.h` | CHR / VRAM / render / soft boot |
+| `include/retr01_emu/play.h` | Runtime layer scaffold |
+| `include/retr01_emu/machine.h` | Bus + frame loop |
 | `src/main.c` | SDL host |
-| `tests/` | Cart + boot smoke |
-| `scripts/build-run.sh` | Local build+run |
+| `tests/` | Cart + boot smoke tests |

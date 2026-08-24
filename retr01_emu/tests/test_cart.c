@@ -3,8 +3,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#define R01E_TEST_CART "../retr01_studio/test_game/test.retr01"
+
 int main(int argc, char **argv) {
-    const char *path = argc > 1 ? argv[1] : "../retr01_studio/project.retr01";
+    const char *path = argc > 1 ? argv[1] : R01E_TEST_CART;
     R01eCart cart;
     R01eWorldView wv;
     char err[256];
@@ -23,7 +25,6 @@ int main(int argc, char **argv) {
         fprintf(stderr, "FAIL prg\n");
         return 1;
     }
-    /* Studio stub starts with SEI */
     if (prg[0] != 0x78) {
         fprintf(stderr, "FAIL stub opcode %02x\n", prg[0]);
         return 1;

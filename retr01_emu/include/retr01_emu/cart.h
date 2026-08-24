@@ -44,6 +44,9 @@ void r01e_cart_free(R01eCart *c);
 const uint8_t *r01e_cart_prg(const R01eCart *c);
 int r01e_cart_world(const R01eCart *c, int index, R01eWorldView *out);
 
+/* Return 1 if world has a screen at grid col,row. */
+int r01e_cart_has_screen(const R01eCart *c, int world, int col, int row);
+
 /* Absolute byte in cart image, or NULL if OOB. */
 const uint8_t *r01e_cart_ptr(const R01eCart *c, uint32_t abs_off, size_t need);
 
