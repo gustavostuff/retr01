@@ -6,26 +6,23 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 
 ## Status
 
-**Islands A–E + G + H + I + O + J + K + L + M + N + P + Q — 32-IC BOM on canvas, wiring, layer-2 smoke.** SDL board UI. Architecture: [`docs/08_simulator.md`](../docs/08_simulator.md).
+**9 canvas islands (O first / top-left) + wired-only E/I/N/P — 32-IC BOM, layer-2 smoke.** SDL board UI. Architecture: [`docs/08_simulator.md`](../docs/08_simulator.md).
 
 | Island | Components (canvas) |
 |--------|---------------------|
-| A Power | `PWR5V` (battery glyph — not a BOM IC) |
-| B Clocks + reset | `OSC8M` + `SN74HC14` (crystal glyph + DIP) |
-| C CPU + decode | `W65C02S`, `AS6C62256`, `ATF22V10` decode, `SN74HC245` (CPU bus) |
+| O Video | `COMPOSITOR` + `AT28C16` + `LCD_SINK` + video `SN74HC245` (top-left) |
+| A Power+clk | `PWR5V` + `OSC8M` + `SN74HC14` |
+| C CPU + decode | `W65C02S`, `AS6C62256`, `ATF22V10` decode, CPU `SN74HC245` |
 | D `$FExx` latch | **9×** `SN74HC573` (`$FE02`–`$FE04`, `$FE08`, `$FE10`–`$FE12`, `$FE90`–`$FE92`) |
 | E Pads | `$FE60`/`$FE61` via 1284 (sim model; not on canvas) |
 | G VRAM | 2nd `AS6C62256` + **3×** `SN74HC157` + `ATF22V10` VRAM glue |
 | H Beam | `OSC_DOT` + `BEAM_XY` (X PLD) + `ATF22V10` Y compare vs `$FE04` |
-| I BG fetch | `BG_FETCH` PLD — nametable VA from beam+scroll |
-| O Video | `COMPOSITOR` + `AT28C16` + `LCD_SINK` (monitor glyph) |
-| J Cart | `SST39SF040` + cart `24C64` I²C EEPROM |
+| I BG fetch | `BG_FETCH` PLD — nametable VA from beam+scroll (not on canvas) |
+| J Cart | `SST39SF040` + cart `24C64` + cart/OAM `SN74HC245` |
 | K APU | `ATMEGA328P` stub — `$FE40`–`$FE5F` regs + digital PWM square |
-| L MCU | `ATMEGA1284P` stub — OAM `$FE20`/`$FE21` + 20 MHz tick; `$FE70`–`$FE72` mailbox |
-| M Linebuf | 3rd `AS6C62256` + **3×** `SN74HC157` — ping-pong 128 px halves |
+| L MCU+linebuf | `ATMEGA1284P` + linebuf `AS6C62256` + **3×** `SN74HC157` |
 | N Sprites | stats via 1284/OAM (not on canvas) |
 | P Integration | NMI / bus-fight stats (not on canvas) |
-| Q Bus | **2×** `SN74HC245` (3rd mounted on **C**) |
 
 Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8000+`.
 
@@ -85,7 +82,7 @@ Live probe (top-right) shows **VDD / PHI2 / RESB**. Pin stubs glow by level (no 
 | Path | Role |
 |------|------|
 | `include/retr01_sim/` | Public headers (`entity`, `pin`, `bus`, `board`, `island*`, `types`) |
-| `src/board.c` | **Board recipe A–E + G + H + I + O + J + K + L + M** — wiring, settle loop, group vtable |
+| `src/board.c` | **Board recipe** — 9 canvas islands (O…L), wiring, settle loop, group vtable |
 | `src/main.c` | SDL entry: build board + run UI |
 | `chips/` | Per-part models (subclass the base entity) |
 | `tests/` | Layer-1 unit tests + `test_island_abcdeghiojklmnp` (layer 2) |
@@ -100,6 +97,6 @@ Live probe (top-right) shows **VDD / PHI2 / RESB**. Pin stubs glow by level (no 
 
 **Island builder** — assembles islands + chip placements into a group.
 
-**Board** — `r01s_board_build()` binds the A–E + G recipe (settle passes, memory/`$FExx`/VRAM decode, PHI2 edge). UI mounts the same builder.
+**Board** — `r01s_board_build()` binds the full netlist (settle passes, memory/`$FExx`/VRAM decode, PHI2 edge) onto **9 canvas frames**. UI mounts the same builder.
 
 **Bus** — undriven pins pull high on read; H+L (or sensing `X`) **aborts** with a stderr bus-fight report (net + drivers + why).

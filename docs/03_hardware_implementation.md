@@ -83,6 +83,8 @@ Do not breadboard all **52** legacy ICs at once. Prove **islands**, then merge -
 
 **Ground rules:** 5 V only, 100 nF per IC. One bus driver at a time. Start CPU at **1-2 MHz** if wires ring, then **8 MHz**. Do not share CHR between BG and 1284 until each side works alone. W65C02S: **`BE` high**, **`RDY` high**, clock = **`PHI2`**.
 
+Letter islands below are the **electrical bring-up checklist** (bench order). The board simulator may **co-locate** several letters on one canvas frame without changing these pass criteria — see [Sim canvas grouping](#sim-canvas-grouping).
+
 ```text
 A Power
 B Clocks + reset
@@ -138,6 +140,24 @@ Parallel: develop **K** and **L** in sim while breadboarding **A-I**. Merge at *
 | **P** Integration | Stable video, pads, NMI ~60 Hz, no hot chips |
 
 **Integration order:** A,B -> C,D -> G -> E -> H,I,O -> J -> K -> L,M,N -> full compositor. Stop breadboarding and draw KiCad when **A-E**, **G-J**, and **K-O** pass.
+
+### Sim canvas grouping
+
+`retr01_sim` still validates the letter milestones above (layer-2 smoke in `test_island_abcdeghiojklmnp.c`), but the **SDL canvas** uses **9 frames** so related chips sit together. Wiring is unchanged.
+
+| Canvas frame (UI) | Bring-up letters on that frame |
+|-------------------|-------------------------------|
+| **O** VIDEO RGBS *(top-left)* | O (+ video HC245) |
+| **A** POWER+CLK | A + B |
+| **C** CPU RAM PLD | C (+ CPU HC245) |
+| **D** FExx LATCH | D |
+| **G** VRAM+PLD | G (I stays wired-only) |
+| **H** BEAM NMI | H |
+| **J** CART FLASH | J (+ cart/OAM HC245) |
+| **K** APU 328P | K |
+| **L** 1284+LINEBUF | L + M (N/P stay wired/stats) |
+
+Not drawn as frames (still in the netlist / health milestones): **E** pads, **F** EEPROM (deferred), **I** BG fetch, **N** sprites, **P** integration. Former canvas-only **Q** (extra HC245s) is folded into **C** / **O** / **J**. Details: [`08`](08_simulator.md), [`retr01_sim/README.md`](../retr01_sim/README.md).
 
 | Port | Island | Smoke check |
 |------|--------|-------------|

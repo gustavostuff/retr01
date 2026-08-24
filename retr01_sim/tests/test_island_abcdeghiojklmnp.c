@@ -18,9 +18,10 @@
 #include "w65c02s.h"
 
 #include <stdio.h>
+#include <string.h>
 
 /*
- * Layer-2 islands A–D + G + H + O + J + K + L + M + Q smoke:
+ * Layer-2 islands O + A + C + D + G + H + J + K + L smoke:
  *   prior milestones + sprites + VBlank NMI (~60 Hz class) + no bus fight.
  */
 int main(void) {
@@ -52,9 +53,30 @@ int main(void) {
     group = r01s_island_builder_group(&builder);
     expect_true(group != NULL, "group");
     expect_true(r01s_island_group_count(group) == R01S_ISLAND_COUNT,
-                "12 islands A-D+G+H+O+J+K+L+M+Q");
+                "9 islands O+A+C+D+G+H+J+K+L");
     expect_true(r01s_island_builder_count_visual(&builder, R01S_ENTITY_VIS_IC) == R01S_BOM_IC_N,
                 "32 BOM IC visuals mounted");
+    expect_true(r01s_island_group_at(group, R01S_ISLAND_VIDEO) != NULL, "video island present");
+    expect_true(r01s_island_group_at(group, R01S_ISLAND_VIDEO)->title != NULL &&
+                    strstr(r01s_island_group_at(group, R01S_ISLAND_VIDEO)->title, "VIDEO") != NULL,
+                "video island titled");
+    /* LCD island is first in arrange order → top-left of the canvas pack. */
+    {
+        const R01sIsland *video = r01s_island_group_at(group, R01S_ISLAND_VIDEO);
+        const R01sIsland *other;
+        int oi;
+        expect_true(video != NULL, "video island");
+        for (oi = 0; oi < r01s_island_group_count(group); oi++) {
+            if (oi == R01S_ISLAND_VIDEO) {
+                continue;
+            }
+            other = r01s_island_group_at(group, oi);
+            expect_true(other != NULL, "peer island");
+            expect_true(video->board_y < other->board_y ||
+                            (video->board_y == other->board_y && video->board_x <= other->board_x),
+                        "video island is top-left among peers");
+        }
+    }
 
     b = r01s_board_from_group(group);
     expect_true(b != NULL, "board ctx");
@@ -151,7 +173,7 @@ int main(void) {
     expect_true(saw_map, "island J MAP $FE93 read cart magic R");
     expect_true(saw_apu, "island K APU PWM tone edges");
     expect_true(saw_oam, "island L OAM $FE21 readback + clk");
-    expect_true(saw_linebuf, "island M linebuf mux both paths");
+    expect_true(saw_linebuf, "island L linebuf mux both paths");
     expect_true(saw_sprites, "1284 OAM fill → linebuf sprites");
     expect_true(saw_nmi, "beam island H VBlank NMI pulse");
     expect_true(b->health_saw_nmi, "health saw NMI");

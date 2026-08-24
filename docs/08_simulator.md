@@ -48,7 +48,9 @@ Examples:
 
 **Pass:** same criteria as the hardware island checklist in `03`.
 
-Layer-2 bring-up for **A–E + G + H + I + O + J + K + L + M + N + P + Q** lives in `retr01_sim/tests/test_island_abcdeghiojklmnp.c` (`STA $FE02`, VRAM `$FE12`, `LDA $FE60`, beam HBlank / line advance, **ATF22V10** Y compare vs `$FE04`, BG fetch latches tile `$42` / attr `$07`, Color PROM pixels on 128×120 sink, MAP `$FE93` reads cart magic `'R'`, APU `$FE40`–`$FE42` enables PWM square, OAM `$FE20`/`$FE21` write+readback on 1284, linebuf ping-pong + OAM sprite fill into compositor, VBlank NMI → CPU).
+Layer-2 bring-up for letters **A–E + G + H + I + O + J + K + L + M + N + P** lives in `retr01_sim/tests/test_island_abcdeghiojklmnp.c` (`STA $FE02`, VRAM `$FE12`, `LDA $FE60`, beam HBlank / line advance, **ATF22V10** Y compare vs `$FE04`, BG fetch latches tile `$42` / attr `$07`, Color PROM pixels on 128×120 sink, MAP `$FE93` reads cart magic `'R'`, APU `$FE40`–`$FE42` enables PWM square, OAM `$FE20`/`$FE21` write+readback on 1284, linebuf ping-pong + OAM sprite fill into compositor, VBlank NMI → CPU).
+
+The SDL **canvas** is **9 frames** (O top-left; A+B, L+M, and former Q HC245s co-located) — see [`03` sim canvas grouping](03_hardware_implementation.md#sim-canvas-grouping) and [`retr01_sim/README.md`](../retr01_sim/README.md).
 
 ### 3. System tests (whole board)
 
@@ -74,7 +76,7 @@ When something looks wrong on screen, **do not assume the `.retr01` is bad** and
 | **Color PROM burn** | `project_prom.bin` | **Yes** (motherboard) | **Not inside the cart.** Kit → R3G3B2; board AT28C16. |
 | **Boot asm listing** | `project_boot.s` | **Human-readable only** | Equates + stub source. The **binary stub inside `.retr01`** is what runners execute (Studio embeds it; asm can drift — treat binary as SoT). |
 | **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Today also **soft-boots** world CHR/MAP into VRAM and **host-pans** the atlas — Studio stub PRG does **not** stream MAP. |
-| **Board sim** | `retr01_sim` | IC / island netlist | Islands A–E+G+H+I+O+J+K+L+M+N+**P**+**Q**; **32-IC BOM** mounted on canvas (`bom32.h`). Cart flash loads `.retr01`; **bring-up PRG overlay** replaces cart PRG for island smoke (call it out — not Studio ROM). Bring-up streams MAP→VRAM and fetches 2bpp CHR from flash via `$FE08`/`$FE09`. |
+| **Board sim** | `retr01_sim` | IC / island netlist | Bring-up letters A–E+G+H+I+O+J+K+L+M+N+**P** on **9 canvas frames** (O first; A∪B, L∪M; HC245s on C/O/J). **32-IC BOM** mounted (`bom32.h`). Cart flash loads `.retr01`; **bring-up PRG overlay** replaces cart PRG for island smoke (call it out — not Studio ROM). Bring-up streams MAP→VRAM and fetches 2bpp CHR from flash via `$FE08`/`$FE09`. |
 
 ### What is actually in `project.retr01` today
 
@@ -110,15 +112,13 @@ Verified against Studio pack (`r01_cart_build`) and the checked-in `retr01_studi
 
 **Island K wired.** `$FE40`–`$FE5F` on ATmega328P stub; bring-up enables a period/vol square; health watches PWM edges. Not a full AVR core or host audio sink — digital PWM pin only.
 
-**Island L wired.** ATmega1284P stub: OAM `$FE20`/`$FE21` auto-inc, 20 MHz domain tick counter, soft `$FE70`–`$FE72` mailbox. Pads remain Island E until N.
-
-**Island M wired.** Third `AS6C62256` + `SN74HC157`: ping-pong 128-byte halves; beam reads show half.
+**Island L (+ M on same canvas) wired.** ATmega1284P stub: OAM `$FE20`/`$FE21` auto-inc, 20 MHz domain tick counter, soft `$FE70`–`$FE72` mailbox; third `AS6C62256` + `SN74HC157` linebuf ping-pong on the same frame. Pads remain letter **E** (wired via 1284).
 
 **Island N wired.** HBlank OAM scan fills next linebuf half (sprite CHR from flash when cart meta present); compositor takes sprite pixels.
 
 **Island P wired.** Beam `NMI#` → CPU `NMIB` on VBlank entry; integration health wants pads + video + sprites + ≥1 NMI pulse and zero bus conflicts. Optional **F** (machine EEPROM) still deferred.
 
-Bring-up overlay now streams world-0 screen0 MAP→VRAM and loads `$FE08`/`$FE09` pals from cart; Island O fetches 2bpp CHR from flash (no host soft-boot). Still missing for full Play parity: real game PRG (no overlay), camera seam streaming. Use emu soft-boot for atlas viewing; use sim for bus/island validation.
+Bring-up overlay now streams world-0 screen0 MAP→VRAM and loads `$FE08`/`$FE09` pals from cart; Island O (canvas top-left) fetches 2bpp CHR from flash (no host soft-boot). Still missing for full Play parity: real game PRG (no overlay), camera seam streaming. Use emu soft-boot for atlas viewing; use sim for bus/island validation.
 
 **Fast path (toggle):** Optimization Playbook — optional glue inlining without removing pin-level code. Default off. `R01S_FAST=1` or `./sim run -- --fast` enables **settle** (1-pass combinatorial settle), **video** (direct compositor+PROM per dot), **memory** (inline RAM/PRG/MAP flash decode), and **pins** (cached pin indices for bus copies). Press **F** to toggle. Reserved: `bus` (Pass 2 bitmasks).
 
@@ -188,7 +188,7 @@ Current pin-level code is intentional for catching PCB bugs early.
 | 5 | Island **I** BG fetch (**done** — `BG_FETCH` nametable VA + PPU-phase VRAM read) |
 | 6 | Island **O** video (**done** — compositor + AT28C16 + 128×120 sink; CHR from cart flash + `$FE08`/`$FE09` active pals) |
 | 7 | Island **J** cart (**done** — SST39SF040 + 24C64 EEPROM, PRG + MAP `$FE90`–`$FE93`, `.retr01` load + bring-up PRG overlay) |
-| 8 | **32-IC canvas** (**done** — 9×573, 6×157, 3×245, 5 PLD shells, 3 MCU, 3 SRAM, flash + PROM + cart EEPROM) |
+| 8 | **32-IC canvas** (**done** — **9 frames**: O top-left; A∪B, L∪M; HC245s on C/O/J; letters E/I/N/P wired-only) |
 | Next | Wire HC245 into bus paths; retire bring-up PRG overlay when game PRG streams MAP |
 | Later | Pads→1284 on canvas; optimization passes; JEDEC fuse PLD engine |
 
@@ -199,4 +199,5 @@ Current pin-level code is intentional for catching PCB bugs early.
 | [`hw/md/README.md`](../hw/md/README.md) | Index of IC markdown references |
 | [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) | Memory map, `$FExx`, cart |
 | [`06_hardware_v1_32ic.md`](06_hardware_v1_32ic.md) | Current Retr01-A BOM (**32 IC**) |
-| [`03_hardware_implementation.md`](03_hardware_implementation.md) | Island checklist / legacy ~52 notes |
+| [`03_hardware_implementation.md`](03_hardware_implementation.md) | Protoboard letter islands + [sim canvas grouping](03_hardware_implementation.md#sim-canvas-grouping) |
+| [`retr01_sim/README.md`](../retr01_sim/README.md) | Sim status / canvas island table |

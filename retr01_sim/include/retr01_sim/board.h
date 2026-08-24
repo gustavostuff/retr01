@@ -33,37 +33,32 @@
 /* Combinatorial settle passes per wire/eval half-step (PLD/glue depth). */
 #define R01S_SETTLE_PASSES 4
 
-/* 12 canvas islands — one per BOM region; pads/sprites/NMI/BG-fetch are wired, not separate frames. */
+/* 9 canvas islands — support chips co-located; pads/sprites/NMI/BG-fetch stay wired-only. */
 enum {
-    R01S_ISLAND_POWER = 0,
-    R01S_ISLAND_CLOCK = 1,
-    R01S_ISLAND_CPU = 2,
-    R01S_ISLAND_IO_LATCH = 3,
-    R01S_ISLAND_VRAM = 4,
-    R01S_ISLAND_BEAM = 5,
-    R01S_ISLAND_VIDEO = 6,
-    R01S_ISLAND_CART = 7,
-    R01S_ISLAND_APU = 8,
-    R01S_ISLAND_MCU1284 = 9,
-    R01S_ISLAND_LINEBUF = 10,
-    R01S_ISLAND_BUS = 11,
-    R01S_ISLAND_COUNT = 12,
+    R01S_ISLAND_VIDEO = 0,     /* O — LCD / RGBS (top-left) */
+    R01S_ISLAND_POWER_CLK = 1, /* A+B — 5V + OSC/HC14 */
+    R01S_ISLAND_CPU = 2,       /* C — CPU RAM PLD + CPU HC245 */
+    R01S_ISLAND_IO_LATCH = 3,  /* D */
+    R01S_ISLAND_VRAM = 4,      /* G */
+    R01S_ISLAND_BEAM = 5,      /* H */
+    R01S_ISLAND_CART = 6,      /* J — flash + cart HC245 */
+    R01S_ISLAND_APU = 7,       /* K */
+    R01S_ISLAND_MCU_LB = 8,    /* L+M — 1284 + linebuf */
+    R01S_ISLAND_COUNT = 9,
 };
 
-typedef struct R01sIslandPowerImpl {
+typedef struct R01sIslandPowerClkImpl {
     R01sPwr5v *pwr;
-} R01sIslandPowerImpl;
-
-typedef struct R01sIslandClockImpl {
     R01sOsc8m *osc;
     R01sSn74hc14 *hc14;
-} R01sIslandClockImpl;
+} R01sIslandPowerClkImpl;
 
 typedef struct R01sIslandCpuMemImpl {
     R01sW65C02S *cpu;
     R01sAs6c62256 *ram;
     R01sPrgRom *prg; /* bench fallback — not mounted when cart owns PRG */
     R01sAtf22v10 *pld_decode;
+    R01sSn74hc245 *bus245_cpu;
 } R01sIslandCpuMemImpl;
 
 typedef struct R01sIslandIoLatchImpl {
@@ -95,25 +90,24 @@ typedef struct R01sIslandVideoImpl {
     R01sCompositor *comp;
     R01sAt28c16 *prom;
     R01sVideoSink *sink;
+    R01sSn74hc245 *bus245_video;
 } R01sIslandVideoImpl;
 
 typedef struct R01sIslandCartImpl {
     R01sSst39sf040 *flash;
     R01sI2cEeprom *save_eeprom;
+    R01sSn74hc245 *bus245_cart;
 } R01sIslandCartImpl;
 
 typedef struct R01sIslandApuImpl {
     R01sAtmega328p *apu; /* $FE40–$FE5F */
 } R01sIslandApuImpl;
 
-typedef struct R01sIslandMcu1284Impl {
+typedef struct R01sIslandMcuLbImpl {
     R01sAtmega1284p *mcu; /* OAM $FE20/$FE21; EEPROM mb $FE70–$FE72 */
-} R01sIslandMcu1284Impl;
-
-typedef struct R01sIslandLinebufImpl {
     R01sAs6c62256 *sram;
     R01sSn74hc157 *mux157[R01S_BOM_HC157_N];
-} R01sIslandLinebufImpl;
+} R01sIslandMcuLbImpl;
 
 typedef struct R01sIslandBusImpl {
     R01sSn74hc245 *bus245[R01S_BOM_HC245_N];
@@ -181,8 +175,7 @@ typedef struct R01sBoard {
     R01sBgFetch bg_fetch;
     R01sCompositor compositor;
     R01sI2cEeprom cart_eeprom;
-    R01sIslandPowerImpl power_impl;
-    R01sIslandClockImpl clock_impl;
+    R01sIslandPowerClkImpl power_clk_impl;
     R01sIslandCpuMemImpl cpu_mem_impl;
     R01sIslandIoLatchImpl io_latch_impl;
     R01sIslandPadsImpl pads_impl;
@@ -192,8 +185,7 @@ typedef struct R01sBoard {
     R01sIslandVideoImpl video_impl;
     R01sIslandCartImpl cart_impl;
     R01sIslandApuImpl apu_impl;
-    R01sIslandMcu1284Impl mcu1284_impl;
-    R01sIslandLinebufImpl linebuf_impl;
+    R01sIslandMcuLbImpl mcu_lb_impl;
     R01sIslandBusImpl bus_impl;
     R01sIslandSpritesImpl sprites_impl;
     R01sIslandIntegrationImpl integration_impl;

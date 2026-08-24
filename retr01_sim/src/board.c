@@ -219,9 +219,9 @@ static void board_update_milestones(R01sBoard *ctx) {
     if (r01s_atmega328p_enabled(ctx->apu_impl.apu) && r01s_atmega328p_pwm_edges(ctx->apu_impl.apu) >= 2) {
         ctx->health_saw_apu = 1;
     }
-    if (r01s_atmega1284p_oam_peek(ctx->mcu1284_impl.mcu, 0) == 0x10 &&
-        r01s_atmega1284p_oam_peek(ctx->mcu1284_impl.mcu, 1) == 0x01 &&
-        r01s_atmega1284p_alive(ctx->mcu1284_impl.mcu)) {
+    if (r01s_atmega1284p_oam_peek(ctx->mcu_lb_impl.mcu, 0) == 0x10 &&
+        r01s_atmega1284p_oam_peek(ctx->mcu_lb_impl.mcu, 1) == 0x01 &&
+        r01s_atmega1284p_alive(ctx->mcu_lb_impl.mcu)) {
         ctx->health_saw_oam = 1;
     }
     if (ctx->linebuf_saw_mux_mcu && ctx->linebuf_saw_mux_beam) {
@@ -265,10 +265,11 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
     booting = ctx->reset_hold > 0;
     conflicts = r01s_bus_conflict_count();
 
-    /* Island A — power */
+    /* Island A — power + clock / reset (merged canvas) */
     {
-        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_POWER];
-        R01sEntity *pwr = r01s_pwr5v_entity(ctx->power_impl.pwr);
+        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_POWER_CLK];
+        R01sEntity *pwr = r01s_pwr5v_entity(ctx->power_clk_impl.pwr);
+        R01sEntity *osc = r01s_osc8m_entity(ctx->power_clk_impl.osc);
         ih->letter = 'A';
         if (!group->powered) {
             ih->health = R01S_HEALTH_FAIL;
@@ -276,36 +277,24 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
         } else if (!r01s_level_is_high(r01s_entity_sense(pwr, "VDD"))) {
             ih->health = R01S_HEALTH_FAIL;
             snprintf(ih->activity, sizeof(ih->activity), "5V rail missing");
-        } else {
-            ih->health = R01S_HEALTH_OK;
-            snprintf(ih->activity, sizeof(ih->activity), "5V rail up");
-        }
-        snprintf(ih->debug, sizeof(ih->debug),
-                 "island=A POWER health=%s powered=%d VDD=%s", r01s_health_tag(ih->health),
-                 group->powered, r01s_level_name(r01s_entity_sense(pwr, "VDD")));
-    }
-
-    /* Island B — clock / reset */
-    {
-        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_CLOCK];
-        R01sEntity *osc = r01s_osc8m_entity(ctx->clock_impl.osc);
-        ih->letter = 'B';
-        if (booting) {
+        } else if (booting) {
             ih->health = R01S_HEALTH_BOOT;
             snprintf(ih->activity, sizeof(ih->activity), "reset hold (%d)", ctx->reset_hold);
         } else if (!group->running) {
             ih->health = R01S_HEALTH_WARN;
-            snprintf(ih->activity, sizeof(ih->activity), "clock halted (SPACE)");
+            snprintf(ih->activity, sizeof(ih->activity), "5V up — clock halted");
         } else if (ctx->health_phi2_edges < 2) {
             ih->health = R01S_HEALTH_BOOT;
-            snprintf(ih->activity, sizeof(ih->activity), "PHI2 starting");
+            snprintf(ih->activity, sizeof(ih->activity), "5V up — PHI2 starting");
         } else {
             ih->health = R01S_HEALTH_OK;
-            snprintf(ih->activity, sizeof(ih->activity), "8MHz PHI2 running");
+            snprintf(ih->activity, sizeof(ih->activity), "5V + 8MHz PHI2");
         }
         snprintf(ih->debug, sizeof(ih->debug),
-                 "island=B CLOCK health=%s running=%d reset_hold=%d PHI2=%s edges=%u",
-                 r01s_health_tag(ih->health), group->running, ctx->reset_hold,
+                 "island=A POWER+CLK health=%s powered=%d VDD=%s running=%d reset_hold=%d PHI2=%s "
+                 "edges=%u",
+                 r01s_health_tag(ih->health), group->powered,
+                 r01s_level_name(r01s_entity_sense(pwr, "VDD")), group->running, ctx->reset_hold,
                  r01s_level_name(r01s_entity_sense(osc, "PHI2")), (unsigned)ctx->health_phi2_edges);
     }
 
@@ -518,66 +507,42 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_level_name(r01s_entity_sense(r01s_atmega328p_entity(apu), "PWM")));
     }
 
-    /* Island L — ATmega1284P: pads $FE60, OAM, sprite fill */
+    /* Island L — ATmega1284P + linebuf (merged canvas) */
     {
-        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_MCU1284];
-        R01sAtmega1284p *mcu = ctx->mcu1284_impl.mcu;
+        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_MCU_LB];
+        R01sAtmega1284p *mcu = ctx->mcu_lb_impl.mcu;
+        R01sAs6c62256 *lb = ctx->mcu_lb_impl.sram;
         R01sSpriteFetch *sf = ctx->sprites_impl.fetch;
         uint8_t p1 = r01s_pads_get(ctx->pads_impl.pads, 0);
         ih->letter = 'L';
         if (booting) {
             ih->health = R01S_HEALTH_BOOT;
-            snprintf(ih->activity, sizeof(ih->activity), "1284 idle");
-        } else if (ctx->health_saw_pad && ctx->health_saw_oam && ctx->health_saw_sprites) {
+            snprintf(ih->activity, sizeof(ih->activity), "1284/linebuf idle");
+        } else if (ctx->health_saw_pad && ctx->health_saw_oam && ctx->health_saw_sprites &&
+                   ctx->health_saw_linebuf) {
             ih->health = R01S_HEALTH_OK;
-            snprintf(ih->activity, sizeof(ih->activity), "P1=$%02X OAM Y=$%02X spr x=$%02X", p1,
-                     r01s_atmega1284p_oam_peek(mcu, 0), r01s_sprite_fetch_last_hit_x(sf));
-        } else if (ctx->health_saw_oam) {
+            snprintf(ih->activity, sizeof(ih->activity), "P1=$%02X OAM+LB show=%u", p1,
+                     (unsigned)ctx->linebuf_show_half);
+        } else if (ctx->health_saw_oam || ctx->health_saw_linebuf) {
             ih->health = R01S_HEALTH_WARN;
-            snprintf(ih->activity, sizeof(ih->activity), "OAM ok await pads/spr");
+            snprintf(ih->activity, sizeof(ih->activity), "OAM/LB partial pads=%d spr=%d",
+                     ctx->health_saw_pad, ctx->health_saw_sprites);
         } else if (r01s_atmega1284p_alive(mcu)) {
             ih->health = R01S_HEALTH_WARN;
-            snprintf(ih->activity, sizeof(ih->activity), "clk ok await OAM");
+            snprintf(ih->activity, sizeof(ih->activity), "clk ok await OAM/LB");
         } else {
             ih->health = R01S_HEALTH_WARN;
             snprintf(ih->activity, sizeof(ih->activity), "await 20 MHz / OAM");
         }
         snprintf(ih->debug, sizeof(ih->debug),
-                 "island=L MCU1284 health=%s saw_pad=%d saw_oam=%d saw_sprites=%d P1=$%02X oam0=$%02X "
-                 "spr_fills=%u hit_x=$%02X clk=%u RUN=%s",
+                 "island=L MCU+LB health=%s saw_pad=%d saw_oam=%d saw_sprites=%d saw_lb=%d P1=$%02X "
+                 "oam0=$%02X show=%u mux_mcu=%d mux_beam=%d spr_fills=%u",
                  r01s_health_tag(ih->health), ctx->health_saw_pad, ctx->health_saw_oam,
-                 ctx->health_saw_sprites, p1, r01s_atmega1284p_oam_peek(mcu, 0),
-                 (unsigned)r01s_sprite_fetch_fill_count(sf), r01s_sprite_fetch_last_hit_x(sf),
-                 (unsigned)r01s_atmega1284p_clk_ticks(mcu),
-                 r01s_level_name(r01s_entity_sense(r01s_atmega1284p_entity(mcu), "RUN")));
-    }
-
-    /* Island M — sprite line-buffer SRAM + HC157 mux */
-    {
-        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_LINEBUF];
-        R01sAs6c62256 *lb = ctx->linebuf_impl.sram;
-        ih->letter = 'M';
-        if (booting) {
-            ih->health = R01S_HEALTH_BOOT;
-            snprintf(ih->activity, sizeof(ih->activity), "linebuf idle");
-        } else if (ctx->health_saw_linebuf) {
-            ih->health = R01S_HEALTH_OK;
-            snprintf(ih->activity, sizeof(ih->activity), "ping-pong show=%u",
-                     (unsigned)ctx->linebuf_show_half);
-        } else if (ctx->linebuf_saw_mux_mcu || ctx->linebuf_saw_mux_beam) {
-            ih->health = R01S_HEALTH_WARN;
-            snprintf(ih->activity, sizeof(ih->activity), "mux mcu=%d beam=%d", ctx->linebuf_saw_mux_mcu,
-                     ctx->linebuf_saw_mux_beam);
-        } else {
-            ih->health = R01S_HEALTH_WARN;
-            snprintf(ih->activity, sizeof(ih->activity), "await HBlank fill");
-        }
-        snprintf(ih->debug, sizeof(ih->debug),
-                 "island=M LINEBUF health=%s saw=%d show=%u mux_mcu=%d mux_beam=%d "
-                 "half0=$%02X half1=$%02X",
-                 r01s_health_tag(ih->health), ctx->health_saw_linebuf, (unsigned)ctx->linebuf_show_half,
-                 ctx->linebuf_saw_mux_mcu, ctx->linebuf_saw_mux_beam, r01s_as6c62256_peek(lb, 0x00),
-                 r01s_as6c62256_peek(lb, 0x80));
+                 ctx->health_saw_sprites, ctx->health_saw_linebuf, p1,
+                 r01s_atmega1284p_oam_peek(mcu, 0), (unsigned)ctx->linebuf_show_half,
+                 ctx->linebuf_saw_mux_mcu, ctx->linebuf_saw_mux_beam,
+                 (unsigned)r01s_sprite_fetch_fill_count(sf));
+        (void)lb;
     }
 
     for (i = 0; i < out->island_count; i++) {
@@ -589,7 +554,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
         out->system = R01S_HEALTH_FAIL;
         snprintf(out->system_label, sizeof(out->system_label), "BUS FAULT");
         snprintf(out->system_detail, sizeof(out->system_detail), "%u bus conflict(s) — check wiring", conflicts);
-    } else if (!group->powered || out->islands[R01S_ISLAND_POWER].health == R01S_HEALTH_FAIL) {
+    } else if (!group->powered || out->islands[R01S_ISLAND_POWER_CLK].health == R01S_HEALTH_FAIL) {
         out->system = R01S_HEALTH_FAIL;
         snprintf(out->system_label, sizeof(out->system_label), "POWER FAULT");
         snprintf(out->system_detail, sizeof(out->system_detail), "Island A must be up before integration");
@@ -1064,7 +1029,7 @@ static void wire_io(R01sBoard *ctx) {
     R01sEntity *map_hi = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE92]);
     R01sEntity *pads = r01s_pads_entity(ctx->pads_impl.pads);
     R01sEntity *apu = r01s_atmega328p_entity(ctx->apu_impl.apu);
-    R01sEntity *mcu = r01s_atmega1284p_entity(ctx->mcu1284_impl.mcu);
+    R01sEntity *mcu = r01s_atmega1284p_entity(ctx->mcu_lb_impl.mcu);
     R01sEntity *flash = r01s_sst39sf040_entity(ctx->cart_impl.flash);
     uint16_t addr = board_cpu_addr(ctx, cpu);
     int read = board_cpu_read(ctx, cpu);
@@ -1179,9 +1144,9 @@ static void wire_io(R01sBoard *ctx) {
     if (hit_eeprom) {
         unsigned ei = (unsigned)(addr - 0xFE70u);
         if (read) {
-            r01s_bus_write(cpu, "D", 8, r01s_atmega1284p_eeprom_peek(ctx->mcu1284_impl.mcu, ei));
+            r01s_bus_write(cpu, "D", 8, r01s_atmega1284p_eeprom_peek(ctx->mcu_lb_impl.mcu, ei));
         } else {
-            r01s_atmega1284p_eeprom_poke(ctx->mcu1284_impl.mcu, ei, board_cpu_d_sample(ctx, cpu));
+            r01s_atmega1284p_eeprom_poke(ctx->mcu_lb_impl.mcu, ei, board_cpu_d_sample(ctx, cpu));
         }
     }
 
@@ -1256,7 +1221,7 @@ static void wire_io(R01sBoard *ctx) {
 
 /* Island H — DOT osc + beam PLD + Y-compare vs $FE04; EQ# drives CPU IRQB. */
 static void wire_beam(R01sBoard *ctx, R01sIslandGroup *group) {
-    R01sEntity *pwr = r01s_pwr5v_entity(ctx->power_impl.pwr);
+    R01sEntity *pwr = r01s_pwr5v_entity(ctx->power_clk_impl.pwr);
     R01sEntity *osc = r01s_osc_dot_entity(ctx->beam_impl.osc_dot);
     R01sEntity *beam = r01s_beam_xy_entity(ctx->beam_impl.beam_x);
     R01sEntity *beam_y = r01s_atf22v10_entity(ctx->beam_impl.beam_y);
@@ -1303,7 +1268,7 @@ static void wire_vram(R01sBoard *ctx) {
     R01sEntity *pld = r01s_atf22v10_entity(ctx->cpu_mem_impl.pld_decode);
     R01sEntity *vram = r01s_as6c62256_entity(ctx->vram_impl.vram);
     R01sEntity *mux = r01s_sn74hc157_entity(ctx->vram_impl.mux157[R01S_MUX157_VRAM0]);
-    R01sEntity *osc = r01s_osc8m_entity(ctx->clock_impl.osc);
+    R01sEntity *osc = r01s_osc8m_entity(ctx->power_clk_impl.osc);
     R01sEntity *fe10 = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE10]);
     R01sEntity *fe11 = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE11]);
     R01sBgFetch *bg = ctx->bg_fetch_impl.fetch;
@@ -1396,8 +1361,8 @@ static void wire_vram(R01sBoard *ctx) {
  * HC157: AB low = MCU fill addr, AB high = beam X.
  */
 static void linebuf_drive_addr(R01sBoard *ctx, uint16_t addr, int mcu_sel) {
-    R01sEntity *sram = r01s_as6c62256_entity(ctx->linebuf_impl.sram);
-    R01sEntity *mux = r01s_sn74hc157_entity(ctx->linebuf_impl.mux157[R01S_MUX157_LINEBUF0]);
+    R01sEntity *sram = r01s_as6c62256_entity(ctx->mcu_lb_impl.sram);
+    R01sEntity *mux = r01s_sn74hc157_entity(ctx->mcu_lb_impl.mux157[R01S_MUX157_LINEBUF0]);
     int i;
     uint8_t lo = (uint8_t)(addr & 0x0Fu);
 
@@ -1428,7 +1393,7 @@ static void linebuf_drive_addr(R01sBoard *ctx, uint16_t addr, int mcu_sel) {
 }
 
 static void linebuf_write_byte(R01sBoard *ctx, uint16_t addr, uint8_t data) {
-    R01sEntity *sram = r01s_as6c62256_entity(ctx->linebuf_impl.sram);
+    R01sEntity *sram = r01s_as6c62256_entity(ctx->mcu_lb_impl.sram);
     linebuf_drive_addr(ctx, addr, 1);
     ctx->linebuf_saw_mux_mcu = 1;
     r01s_entity_drive(sram, "CE#", R01S_LVL_L);
@@ -1580,7 +1545,7 @@ static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
     uint8_t hit_x = 0;
     uint8_t hit_color = 0;
     uint16_t base = (uint16_t)((half & 1) << 7);
-    R01sAtmega1284p *mcu = ctx->mcu1284_impl.mcu;
+    R01sAtmega1284p *mcu = ctx->mcu_lb_impl.mcu;
     R01sSpriteFetch *sf = ctx->sprites_impl.fetch;
 
     /* HBlank steals flash from PRG — dedicated CHR window. */
@@ -1647,7 +1612,7 @@ static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
 
 
 static void wire_linebuf(R01sBoard *ctx) {
-    R01sEntity *sram = r01s_as6c62256_entity(ctx->linebuf_impl.sram);
+    R01sEntity *sram = r01s_as6c62256_entity(ctx->mcu_lb_impl.sram);
     int hblank = r01s_beam_xy_hblank(ctx->beam_impl.beam_x);
     int bx = r01s_beam_xy_x(ctx->beam_impl.beam_x);
     int by = r01s_beam_xy_y(ctx->beam_impl.beam_x);
@@ -1691,7 +1656,7 @@ static void wire_linebuf(R01sBoard *ctx) {
 
 /* Island I — BG fetch address from beam + scroll; eval before VRAM uses VA. */
 static void wire_bg_fetch(R01sBoard *ctx) {
-    R01sEntity *osc = r01s_osc8m_entity(ctx->clock_impl.osc);
+    R01sEntity *osc = r01s_osc8m_entity(ctx->power_clk_impl.osc);
     R01sBgFetch *bg = ctx->bg_fetch_impl.fetch;
     int cpu_phase = r01s_level_is_high(r01s_entity_sense(osc, "PHI2"));
 
@@ -1753,7 +1718,7 @@ static void wire_video_dot_fast(R01sBoard *ctx) {
     lx = bx / 2;
     ly = by / 2;
     bg = board_bg_master_at(ctx, lx, ly);
-    spr = r01s_as6c62256_peek(ctx->linebuf_impl.sram,
+    spr = r01s_as6c62256_peek(ctx->mcu_lb_impl.sram,
                               (uint16_t)(((ctx->linebuf_show_half & 1u) << 7) | (lx & 0x7F)));
     if (spr != 0) {
         ctx->health_saw_sprites = 1;
@@ -1805,7 +1770,7 @@ static void wire_video_dot(R01sBoard *ctx) {
     r01s_compositor_set_bg(comp, bg);
     {
         uint16_t spr_addr = (uint16_t)(((ctx->linebuf_show_half & 1u) << 7) | (lx & 0x7F));
-        uint8_t spr = r01s_as6c62256_peek(ctx->linebuf_impl.sram, spr_addr);
+        uint8_t spr = r01s_as6c62256_peek(ctx->mcu_lb_impl.sram, spr_addr);
         r01s_compositor_set_sprite(comp, (uint8_t)(spr & 0x3Fu), spr != 0);
         if (spr != 0) {
             ctx->health_saw_sprites = 1;
@@ -1938,9 +1903,9 @@ static void wire_memory(R01sBoard *ctx) {
 }
 
 static void wire_power_clock_reset(R01sBoard *ctx, R01sIslandGroup *group) {
-    R01sEntity *pwr = r01s_pwr5v_entity(ctx->power_impl.pwr);
-    R01sEntity *osc = r01s_osc8m_entity(ctx->clock_impl.osc);
-    R01sEntity *hc = r01s_sn74hc14_entity(ctx->clock_impl.hc14);
+    R01sEntity *pwr = r01s_pwr5v_entity(ctx->power_clk_impl.pwr);
+    R01sEntity *osc = r01s_osc8m_entity(ctx->power_clk_impl.osc);
+    R01sEntity *hc = r01s_sn74hc14_entity(ctx->power_clk_impl.hc14);
     R01sEntity *cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
     R01sLevel vdd, phi2, resb;
 
@@ -1985,16 +1950,12 @@ static void board_settle(R01sBoard *ctx, R01sIslandGroup *group) {
     }
 }
 
-static void island_power_init(R01sIsland *island) {
-    R01sIslandPowerImpl *impl = (R01sIslandPowerImpl *)island->impl;
+static void island_power_clk_init(R01sIsland *island) {
+    R01sIslandPowerClkImpl *impl = (R01sIslandPowerClkImpl *)island->impl;
     r01s_pwr5v_init(impl->pwr, "PS1");
-    r01s_island_add_entity(island, r01s_pwr5v_entity(impl->pwr));
-}
-
-static void island_clock_init(R01sIsland *island) {
-    R01sIslandClockImpl *impl = (R01sIslandClockImpl *)island->impl;
     r01s_osc8m_init(impl->osc, "Y1");
     r01s_sn74hc14_init(impl->hc14, "U2");
+    r01s_island_add_entity(island, r01s_pwr5v_entity(impl->pwr));
     r01s_island_add_entity(island, r01s_osc8m_entity(impl->osc));
     r01s_island_add_entity(island, r01s_sn74hc14_entity(impl->hc14));
 }
@@ -2020,6 +1981,10 @@ static void island_cpu_mem_init(R01sIsland *island) {
     r01s_island_add_entity(island, r01s_as6c62256_entity(impl->ram));
     r01s_atf22v10_init(impl->pld_decode, "UPLDA", R01S_PLD_DECODE);
     r01s_island_add_entity(island, r01s_atf22v10_entity(impl->pld_decode));
+    if (impl->bus245_cpu) {
+        r01s_sn74hc245_init(impl->bus245_cpu, "U20A");
+        r01s_island_add_entity(island, r01s_sn74hc245_entity(impl->bus245_cpu));
+    }
 }
 
 static void island_io_latch_init(R01sIsland *island) {
@@ -2066,6 +2031,10 @@ static void island_video_init(R01sIsland *island) {
     r01s_island_add_entity(island, r01s_compositor_entity(impl->comp));
     r01s_island_add_entity(island, r01s_at28c16_entity(impl->prom));
     r01s_island_add_entity(island, r01s_video_sink_entity(impl->sink));
+    if (impl->bus245_video) {
+        r01s_sn74hc245_init(impl->bus245_video, "U20B");
+        r01s_island_add_entity(island, r01s_sn74hc245_entity(impl->bus245_video));
+    }
 }
 
 static void island_cart_init(R01sIsland *island) {
@@ -2074,6 +2043,10 @@ static void island_cart_init(R01sIsland *island) {
     r01s_i2c_eeprom_init(impl->save_eeprom, "U50");
     r01s_island_add_entity(island, r01s_sst39sf040_entity(impl->flash));
     r01s_island_add_entity(island, r01s_i2c_eeprom_entity(impl->save_eeprom));
+    if (impl->bus245_cart) {
+        r01s_sn74hc245_init(impl->bus245_cart, "U20C");
+        r01s_island_add_entity(island, r01s_sn74hc245_entity(impl->bus245_cart));
+    }
 }
 
 static void island_apu_init(R01sIsland *island) {
@@ -2082,17 +2055,13 @@ static void island_apu_init(R01sIsland *island) {
     r01s_island_add_entity(island, r01s_atmega328p_entity(impl->apu));
 }
 
-static void island_mcu1284_init(R01sIsland *island) {
-    R01sIslandMcu1284Impl *impl = (R01sIslandMcu1284Impl *)island->impl;
-    r01s_atmega1284p_init(impl->mcu, "U1284");
-    r01s_island_add_entity(island, r01s_atmega1284p_entity(impl->mcu));
-}
-
-static void island_linebuf_init(R01sIsland *island) {
-    R01sIslandLinebufImpl *impl = (R01sIslandLinebufImpl *)island->impl;
+static void island_mcu_lb_init(R01sIsland *island) {
+    R01sIslandMcuLbImpl *impl = (R01sIslandMcuLbImpl *)island->impl;
     static const char *const mux_ref[R01S_BOM_HC157_N] = {"U7A", "U7B", "U7C", "U7D", "U7E", "U7F"};
     int i;
+    r01s_atmega1284p_init(impl->mcu, "U1284");
     r01s_as6c62256_init(impl->sram, "U41");
+    r01s_island_add_entity(island, r01s_atmega1284p_entity(impl->mcu));
     r01s_island_add_entity(island, r01s_as6c62256_entity(impl->sram));
     for (i = 3; i < R01S_BOM_HC157_N; i++) {
         r01s_sn74hc157_init(impl->mux157[i], mux_ref[i]);
@@ -2100,29 +2069,15 @@ static void island_linebuf_init(R01sIsland *island) {
     }
 }
 
-static void island_bus_init(R01sIsland *island) {
-    R01sIslandBusImpl *impl = (R01sIslandBusImpl *)island->impl;
-    static const char *const ref[R01S_BOM_HC245_N] = {"U20A", "U20B", "U20C"};
-    int i;
-    for (i = 0; i < R01S_BOM_HC245_N; i++) {
-        r01s_sn74hc245_init(impl->bus245[i], ref[i]);
-        r01s_island_add_entity(island, r01s_sn74hc245_entity(impl->bus245[i]));
-    }
-}
-
-
-static const R01sIslandVTable ISLAND_POWER_VT = {island_power_init, NULL, NULL, NULL, NULL};
-static const R01sIslandVTable ISLAND_CLOCK_VT = {island_clock_init, NULL, NULL, NULL, NULL};
+static const R01sIslandVTable ISLAND_VIDEO_VT = {island_video_init, NULL, NULL, NULL, NULL};
+static const R01sIslandVTable ISLAND_POWER_CLK_VT = {island_power_clk_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CPU_VT = {island_cpu_mem_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_IO_VT = {island_io_latch_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_VRAM_VT = {island_vram_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_BEAM_VT = {island_beam_init, NULL, NULL, NULL, NULL};
-static const R01sIslandVTable ISLAND_VIDEO_VT = {island_video_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CART_VT = {island_cart_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_APU_VT = {island_apu_init, NULL, NULL, NULL, NULL};
-static const R01sIslandVTable ISLAND_MCU1284_VT = {island_mcu1284_init, NULL, NULL, NULL, NULL};
-static const R01sIslandVTable ISLAND_LINEBUF_VT = {island_linebuf_init, NULL, NULL, NULL, NULL};
-static const R01sIslandVTable ISLAND_BUS_VT = {island_bus_init, NULL, NULL, NULL, NULL};
+static const R01sIslandVTable ISLAND_MCU_LB_VT = {island_mcu_lb_init, NULL, NULL, NULL, NULL};
 
 
 static void board_resolve_cart_meta(R01sBoard *board) {
@@ -2399,7 +2354,7 @@ static void board_reset(R01sIslandGroup *group) {
     ctx->health_phi2_edges = 0;
     r01s_bus_clear_conflicts();
     r01s_entity_reset(r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu));
-    r01s_entity_reset(r01s_osc8m_entity(ctx->clock_impl.osc));
+    r01s_entity_reset(r01s_osc8m_entity(ctx->power_clk_impl.osc));
     {
         int li;
         for (li = 0; li < R01S_BOM_HC573_N; li++) {
@@ -2434,9 +2389,9 @@ static void board_reset(R01sIslandGroup *group) {
     r01s_entity_reset(r01s_video_sink_entity(ctx->video_impl.sink));
     r01s_entity_reset(r01s_sst39sf040_entity(ctx->cart_impl.flash));
     r01s_entity_reset(r01s_atmega328p_entity(ctx->apu_impl.apu));
-    r01s_entity_reset(r01s_atmega1284p_entity(ctx->mcu1284_impl.mcu));
-    r01s_entity_reset(r01s_as6c62256_entity(ctx->linebuf_impl.sram));
-    r01s_entity_reset(r01s_sn74hc157_entity(ctx->linebuf_impl.mux157[R01S_MUX157_LINEBUF0]));
+    r01s_entity_reset(r01s_atmega1284p_entity(ctx->mcu_lb_impl.mcu));
+    r01s_entity_reset(r01s_as6c62256_entity(ctx->mcu_lb_impl.sram));
+    r01s_entity_reset(r01s_sn74hc157_entity(ctx->mcu_lb_impl.mux157[R01S_MUX157_LINEBUF0]));
     board_settle(ctx, group);
     r01s_entity_eval(r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu));
     board_settle(ctx, group);
@@ -2458,13 +2413,13 @@ static void board_step(R01sIslandGroup *group) {
     if (!ctx || !group->powered) {
         return;
     }
-    osc = r01s_osc8m_entity(ctx->clock_impl.osc);
+    osc = r01s_osc8m_entity(ctx->power_clk_impl.osc);
     cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
 
     board_settle(ctx, group);
     r01s_entity_tick(osc);
     r01s_entity_tick(r01s_atmega328p_entity(ctx->apu_impl.apu));
-    r01s_entity_tick(r01s_atmega1284p_entity(ctx->mcu1284_impl.mcu));
+    r01s_entity_tick(r01s_atmega1284p_entity(ctx->mcu_lb_impl.mcu));
     board_settle(ctx, group);
     /* Beam/DOT domain: burst so interactive UI reaches VBlank without minutes of wait. */
     {
@@ -2539,8 +2494,8 @@ static void board_status(R01sIslandGroup *group, char *buf, size_t buf_len) {
         return;
     }
     cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
-    pwr = r01s_pwr5v_entity(ctx->power_impl.pwr);
-    osc = r01s_osc8m_entity(ctx->clock_impl.osc);
+    pwr = r01s_pwr5v_entity(ctx->power_clk_impl.pwr);
+    osc = r01s_osc8m_entity(ctx->power_clk_impl.osc);
     snprintf(buf, buf_len,
              "%s  VDD=%c PHI2=%c RESB=%c  PC=%04X A=%02X AB=%04X IR=%02X %s  LE=%02X "
              "VA=%04X V0=%02X P1=%02X P2=%02X  XY=%d,%d%s%s BG=%02X/%02X cyc=%u",
@@ -2566,10 +2521,10 @@ static void board_update_probes(R01sIslandGroup *group, int *probe_vdd, int *pro
         return;
     }
     if (probe_vdd) {
-        *probe_vdd = r01s_level_is_high(r01s_entity_sense(r01s_pwr5v_entity(ctx->power_impl.pwr), "VDD"));
+        *probe_vdd = r01s_level_is_high(r01s_entity_sense(r01s_pwr5v_entity(ctx->power_clk_impl.pwr), "VDD"));
     }
     if (probe_phi2) {
-        *probe_phi2 = r01s_level_is_high(r01s_entity_sense(r01s_osc8m_entity(ctx->clock_impl.osc), "PHI2"));
+        *probe_phi2 = r01s_level_is_high(r01s_entity_sense(r01s_osc8m_entity(ctx->power_clk_impl.osc), "PHI2"));
     }
     if (probe_resb_low) {
         *probe_resb_low =
@@ -2596,9 +2551,9 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
 
     r01s_island_builder_bind(b, &BOARD_GROUP_VT, board);
 
-    board->power_impl.pwr = &board->pwr;
-    board->clock_impl.osc = &board->osc;
-    board->clock_impl.hc14 = &board->hc14;
+    board->power_clk_impl.pwr = &board->pwr;
+    board->power_clk_impl.osc = &board->osc;
+    board->power_clk_impl.hc14 = &board->hc14;
     board->cpu_mem_impl.cpu = &board->cpu;
     board->cpu_mem_impl.ram = &board->ram;
     board->cpu_mem_impl.prg = &board->prg;
@@ -2629,12 +2584,12 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     board->cart_impl.flash = &board->cart_flash;
     board->cart_impl.save_eeprom = &board->cart_eeprom;
     board->apu_impl.apu = &board->apu;
-    board->mcu1284_impl.mcu = &board->mcu1284;
-    board->linebuf_impl.sram = &board->linebuf;
+    board->mcu_lb_impl.mcu = &board->mcu1284;
+    board->mcu_lb_impl.sram = &board->linebuf;
     {
         int i;
         for (i = 0; i < R01S_BOM_HC157_N; i++) {
-            board->linebuf_impl.mux157[i] = &board->mux157[i];
+            board->mcu_lb_impl.mux157[i] = &board->mux157[i];
         }
     }
     {
@@ -2643,6 +2598,9 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
             board->bus_impl.bus245[i] = &board->bus245[i];
         }
     }
+    board->cpu_mem_impl.bus245_cpu = &board->bus245[R01S_BUS245_CPU];
+    board->video_impl.bus245_video = &board->bus245[R01S_BUS245_VIDEO];
+    board->cart_impl.bus245_cart = &board->bus245[R01S_BUS245_CART_OAM];
     board->sprites_impl.fetch = &board->sprite_fetch;
     board->integration_impl.integ = &board->integration;
 
@@ -2651,11 +2609,13 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     r01s_integration_init(&board->integration, "UPLDP");
     r01s_bg_fetch_init(&board->bg_fetch, "UPLDI");
 
-    if (r01s_island_builder_add(b, &ISLAND_POWER_VT, "ISLAND A  POWER", 0, 0, 1, 1, &board->power_impl) < 0) {
+    /* Add order = canvas Z / arrange_rows order — VIDEO (LCD) first → top-left. */
+    if (r01s_island_builder_add(b, &ISLAND_VIDEO_VT, "ISLAND O  VIDEO RGBS", 0, 0, 1, 1,
+                                &board->video_impl) < 0) {
         return -1;
     }
-    if (r01s_island_builder_add(b, &ISLAND_CLOCK_VT, "ISLAND B  CLK RST", 0, 0, 1, 1, &board->clock_impl) <
-        0) {
+    if (r01s_island_builder_add(b, &ISLAND_POWER_CLK_VT, "ISLAND A  POWER+CLK", 0, 0, 1, 1,
+                                &board->power_clk_impl) < 0) {
         return -1;
     }
     if (r01s_island_builder_add(b, &ISLAND_CPU_VT, "ISLAND C  CPU RAM PLD", 0, 0, 1, 1,
@@ -2672,10 +2632,6 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     if (r01s_island_builder_add(b, &ISLAND_BEAM_VT, "ISLAND H  BEAM NMI", 0, 0, 1, 1, &board->beam_impl) < 0) {
         return -1;
     }
-    if (r01s_island_builder_add(b, &ISLAND_VIDEO_VT, "ISLAND O  VIDEO RGBS", 0, 0, 1, 1,
-                                &board->video_impl) < 0) {
-        return -1;
-    }
     if (r01s_island_builder_add(b, &ISLAND_CART_VT, "ISLAND J  CART FLASH", 0, 0, 1, 1,
                                 &board->cart_impl) < 0) {
         return -1;
@@ -2683,27 +2639,37 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     if (r01s_island_builder_add(b, &ISLAND_APU_VT, "ISLAND K  APU 328P", 0, 0, 1, 1, &board->apu_impl) < 0) {
         return -1;
     }
-    if (r01s_island_builder_add(b, &ISLAND_MCU1284_VT, "ISLAND L  1284 PADS OAM", 0, 0, 1, 1,
-                                &board->mcu1284_impl) < 0) {
-        return -1;
-    }
-    if (r01s_island_builder_add(b, &ISLAND_LINEBUF_VT, "ISLAND M  LINEBUF", 0, 0, 1, 1,
-                                &board->linebuf_impl) < 0) {
-        return -1;
-    }
-    if (r01s_island_builder_add(b, &ISLAND_BUS_VT, "ISLAND Q  BUS HC245 x3", 0, 0, 1, 1, &board->bus_impl) <
-        0) {
+    if (r01s_island_builder_add(b, &ISLAND_MCU_LB_VT, "ISLAND L  1284+LINEBUF", 0, 0, 1, 1,
+                                &board->mcu_lb_impl) < 0) {
         return -1;
     }
 
-
-    r01s_island_builder_mount_rel(b, r01s_pwr5v_entity(&board->pwr), R01S_ISLAND_POWER, 0, 0);
-    r01s_island_builder_mount_rel(b, r01s_osc8m_entity(&board->osc), R01S_ISLAND_CLOCK, 0, 0);
-    r01s_island_builder_mount_rel(b, r01s_w65c02s_entity(&board->cpu), R01S_ISLAND_CPU, 0, 0);
+    {
+        R01sEntity *comp_e = r01s_compositor_entity(&board->compositor);
+        R01sEntity *prom_e = r01s_at28c16_entity(&board->color_prom);
+        R01sEntity *sink_e = r01s_video_sink_entity(&board->video_sink);
+        R01sEntity *buf_e = r01s_sn74hc245_entity(&board->bus245[R01S_BUS245_VIDEO]);
+        int x = 0;
+        r01s_island_builder_mount_rel(b, comp_e, R01S_ISLAND_VIDEO, 0, 0);
+        x += comp_e->body_w + R01S_CHIP_GAP;
+        r01s_island_builder_mount_rel(b, prom_e, R01S_ISLAND_VIDEO, x, 0);
+        x += prom_e->body_w + R01S_CHIP_GAP;
+        r01s_island_builder_mount_rel(b, sink_e, R01S_ISLAND_VIDEO, x, 0);
+        x += sink_e->body_w + R01S_CHIP_GAP;
+        r01s_island_builder_mount_rel(b, buf_e, R01S_ISLAND_VIDEO, x, 0);
+    }
+    {
+        R01sEntity *pwr_e = r01s_pwr5v_entity(&board->pwr);
+        R01sEntity *osc_e = r01s_osc8m_entity(&board->osc);
+        r01s_island_builder_mount_rel(b, pwr_e, R01S_ISLAND_POWER_CLK, 0, 0);
+        r01s_island_builder_mount_rel(b, osc_e, R01S_ISLAND_POWER_CLK, pwr_e->body_w + R01S_CHIP_GAP, 0);
+    }
     {
         R01sEntity *cpu_e = r01s_w65c02s_entity(&board->cpu);
         R01sEntity *ram_e = r01s_as6c62256_entity(&board->ram);
-        int x = cpu_e->body_w + R01S_CHIP_GAP;
+        int x = 0;
+        r01s_island_builder_mount_rel(b, cpu_e, R01S_ISLAND_CPU, 0, 0);
+        x = cpu_e->body_w + R01S_CHIP_GAP;
         r01s_island_builder_mount_rel(b, ram_e, R01S_ISLAND_CPU, x, 0);
         x += ram_e->body_w + R01S_CHIP_GAP;
         r01s_island_builder_mount_rel(b, r01s_atf22v10_entity(&board->pld_decode), R01S_ISLAND_CPU, x, 0);
@@ -2728,7 +2694,6 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     {
         R01sEntity *vram_e = r01s_as6c62256_entity(&board->vram);
         int x = 0;
-        int y = 0;
         int i;
         r01s_island_builder_mount_rel(b, vram_e, R01S_ISLAND_VRAM, 0, 0);
         x = vram_e->body_w + R01S_CHIP_GAP;
@@ -2738,7 +2703,6 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
             x += mux_e->body_w + R01S_CHIP_GAP;
         }
         r01s_island_builder_mount_rel(b, r01s_atf22v10_entity(&board->pld_vram), R01S_ISLAND_VRAM, x, 0);
-        (void)y;
     }
     {
         R01sEntity *dot_e = r01s_osc_dot_entity(&board->osc_dot);
@@ -2756,49 +2720,34 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         r01s_island_builder_mount_rel(b, beam_y, R01S_ISLAND_BEAM, x, 0);
     }
     {
-        R01sEntity *comp_e = r01s_compositor_entity(&board->compositor);
-        R01sEntity *prom_e = r01s_at28c16_entity(&board->color_prom);
-        R01sEntity *sink_e = r01s_video_sink_entity(&board->video_sink);
-        int x = 0;
-        r01s_island_builder_mount_rel(b, comp_e, R01S_ISLAND_VIDEO, 0, 0);
-        x += comp_e->body_w + R01S_CHIP_GAP;
-        r01s_island_builder_mount_rel(b, prom_e, R01S_ISLAND_VIDEO, x, 0);
-        x += prom_e->body_w + R01S_CHIP_GAP;
-        r01s_island_builder_mount_rel(b, sink_e, R01S_ISLAND_VIDEO, x, 0);
-    }
-    {
         R01sEntity *flash_e = r01s_sst39sf040_entity(&board->cart_flash);
         R01sEntity *ee_e = r01s_i2c_eeprom_entity(&board->cart_eeprom);
+        R01sEntity *buf_e = r01s_sn74hc245_entity(&board->bus245[R01S_BUS245_CART_OAM]);
+        int x = 0;
         r01s_island_builder_mount_rel(b, flash_e, R01S_ISLAND_CART, 0, 0);
-        r01s_island_builder_mount_rel(b, ee_e, R01S_ISLAND_CART, flash_e->body_w + R01S_CHIP_GAP, 0);
+        x = flash_e->body_w + R01S_CHIP_GAP;
+        r01s_island_builder_mount_rel(b, ee_e, R01S_ISLAND_CART, x, 0);
+        x += ee_e->body_w + R01S_CHIP_GAP;
+        r01s_island_builder_mount_rel(b, buf_e, R01S_ISLAND_CART, x, 0);
     }
     r01s_island_builder_mount_rel(b, r01s_atmega328p_entity(&board->apu), R01S_ISLAND_APU, 0, 0);
-    r01s_island_builder_mount_rel(b, r01s_atmega1284p_entity(&board->mcu1284), R01S_ISLAND_MCU1284, 0, 0);
     {
+        R01sEntity *mcu_e = r01s_atmega1284p_entity(&board->mcu1284);
         R01sEntity *lb_e = r01s_as6c62256_entity(&board->linebuf);
-        int x = lb_e->body_w + R01S_CHIP_GAP;
+        int x;
         int i;
-        r01s_island_builder_mount_rel(b, lb_e, R01S_ISLAND_LINEBUF, 0, 0);
+        r01s_island_builder_mount_rel(b, mcu_e, R01S_ISLAND_MCU_LB, 0, 0);
+        x = mcu_e->body_w + R01S_CHIP_GAP;
+        r01s_island_builder_mount_rel(b, lb_e, R01S_ISLAND_MCU_LB, x, 0);
+        x += lb_e->body_w + R01S_CHIP_GAP;
         for (i = 3; i < R01S_BOM_HC157_N; i++) {
             R01sEntity *mux_e = r01s_sn74hc157_entity(&board->mux157[i]);
             int mux_y = (lb_e->body_h - mux_e->body_h) / 2;
             if (mux_y < 0) {
                 mux_y = 0;
             }
-            r01s_island_builder_mount_rel(b, mux_e, R01S_ISLAND_LINEBUF, x, mux_y);
+            r01s_island_builder_mount_rel(b, mux_e, R01S_ISLAND_MCU_LB, x, mux_y);
             x += mux_e->body_w + R01S_CHIP_GAP;
-        }
-    }
-    {
-        int i;
-        int x = 0;
-        for (i = 0; i < R01S_BOM_HC245_N; i++) {
-            R01sEntity *e = r01s_sn74hc245_entity(&board->bus245[i]);
-            if (i == R01S_BUS245_CPU) {
-                continue; /* mounted on CPU island */
-            }
-            r01s_island_builder_mount_rel(b, e, R01S_ISLAND_BUS, x, 0);
-            x += e->body_w + R01S_CHIP_GAP;
         }
     }
 

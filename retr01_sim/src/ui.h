@@ -7,6 +7,8 @@
 #include "retr01_sim/island_group.h"
 #include "retr01_sim/types.h"
 
+/* R01S_MAX_ISLANDS comes from island_group.h */
+
 #include <SDL.h>
 #include <stdint.h>
 
@@ -58,6 +60,15 @@ typedef struct R01sUi {
     int ctx_chip;       /* context-menu chip index, or -1 */
     int ctx_x;          /* menu anchor in logic space */
     int ctx_y;
+    int layout_compact; /* 1 = pack chips like a PCB (no island frames) */
+    /* Snapshot of island-mode geometry while compact (restored on toggle off). */
+    int layout_saved;
+    int save_chip_x[R01S_BOARD_MAX_CHIPS];
+    int save_chip_y[R01S_BOARD_MAX_CHIPS];
+    int save_island_x[R01S_MAX_ISLANDS];
+    int save_island_y[R01S_MAX_ISLANDS];
+    int save_island_w[R01S_MAX_ISLANDS];
+    int save_island_h[R01S_MAX_ISLANDS];
 } R01sUi;
 
 int r01s_ui_init(R01sUi *ui);

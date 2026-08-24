@@ -6,10 +6,14 @@
 #include "video_sink.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static void clamp_chip_in_island(R01sUi *ui, R01sEntity *e, int island_index);
+static void clamp_chip(R01sUi *ui, R01sEntity *e, int island_index);
 static void draw_video_pixels(SDL_Renderer *r, const R01sVideoSink *sink, int px, int py);
+static void ui_toggle_compact(R01sUi *ui);
+static void compact_btn_rect(const R01sUi *ui, SDL_Rect *rc);
 
 static int ui_board_sx(const R01sUi *ui, int board_x) {
     return R01S_UI_VIEW_X + board_x - ui->pan_x;
@@ -162,7 +166,7 @@ int r01s_ui_init(R01sUi *ui) {
     ui->drag_btn = -1;
     ui->ctx_chip = -1;
     snprintf(ui->status, sizeof(ui->status),
-             "32-IC BOM — islands A-D G H O J K L M Q — drag / resize BR — SPACE run/pause");
+             "32-IC BOM — islands O A C D G H J K L — drag / resize BR — SPACE run/pause");
     return 0;
 }
 
@@ -187,7 +191,7 @@ int r01s_ui_add_chip(R01sUi *ui, R01sEntity *chip, int island_index) {
     }
     ui->chips[ui->chip_count] = chip;
     ui->chip_island[ui->chip_count] = (uint8_t)island_index;
-    clamp_chip_in_island(ui, chip, island_index);
+    clamp_chip(ui, chip, island_index);
     ui->chip_count++;
     return 0;
 }
@@ -539,6 +543,41 @@ static void draw_pad_bits(SDL_Renderer *r, int x, int y, uint8_t bits) {
     }
 }
 
+static void clamp_chip_to_board(R01sEntity *e) {
+    int min_x = R01S_CHIP_PIN_OUT;
+    int min_y = R01S_CHIP_PIN_OUT;
+    int max_x;
+    int max_y;
+    int bx, by;
+
+    if (!e) {
+        return;
+    }
+    max_x = R01S_BOARD_W - R01S_CHIP_PIN_OUT - e->body_w;
+    max_y = R01S_BOARD_H - R01S_CHIP_PIN_OUT - e->body_h;
+    if (max_x < min_x) {
+        max_x = min_x;
+    }
+    if (max_y < min_y) {
+        max_y = min_y;
+    }
+    bx = e->board_x;
+    by = e->board_y;
+    if (bx < min_x) {
+        bx = min_x;
+    }
+    if (by < min_y) {
+        by = min_y;
+    }
+    if (bx > max_x) {
+        bx = max_x;
+    }
+    if (by > max_y) {
+        by = max_y;
+    }
+    r01s_entity_place(e, bx, by);
+}
+
 static void clamp_chip_in_island(R01sUi *ui, R01sEntity *e, int island_index) {
     const R01sIsland *island;
     int min_x, min_y, max_x, max_y;
@@ -578,10 +617,278 @@ static void clamp_chip_in_island(R01sUi *ui, R01sEntity *e, int island_index) {
     r01s_entity_place(e, bx, by);
 }
 
+static void clamp_chip(R01sUi *ui, R01sEntity *e, int island_index) {
+    if (!ui) {
+        return;
+    }
+    if (ui->layout_compact) {
+        clamp_chip_to_board(e);
+    } else {
+        clamp_chip_in_island(ui, e, island_index);
+    }
+}
+
 static void move_chip_drag(R01sUi *ui, int chip_i, int board_mx, int board_my) {
     R01sEntity *e = ui->chips[chip_i];
     r01s_entity_place(e, board_mx - ui->drag_grab_bx, board_my - ui->drag_grab_by);
-    clamp_chip_in_island(ui, e, ui->chip_island[chip_i]);
+    clamp_chip(ui, e, ui->chip_island[chip_i]);
+}
+
+typedef struct {
+    int idx;
+    int pw;
+    int ph;
+} R01sPackItem;
+
+static void chip_pack_footprint(const R01sEntity *e, int *pw, int *ph) {
+    if (!e || !pw || !ph) {
+        return;
+    }
+    /* Pin stubs stick out of the long sides of a DIP (H: L/R, V: T/B). */
+    if (e->visual == R01S_ENTITY_VIS_IC && e->orient == R01S_ORIENT_V) {
+        *pw = e->body_w;
+        *ph = e->body_h + 2 * R01S_CHIP_PIN_OUT;
+    } else {
+        *pw = e->body_w + 2 * R01S_CHIP_PIN_OUT;
+        *ph = e->body_h;
+    }
+    if (*pw < 1) {
+        *pw = 1;
+    }
+    if (*ph < 1) {
+        *ph = 1;
+    }
+}
+
+static int pack_item_taller(const void *a, const void *b) {
+    const R01sPackItem *pa = a;
+    const R01sPackItem *pb = b;
+    if (pb->ph != pa->ph) {
+        return pb->ph - pa->ph;
+    }
+    return pb->pw - pa->pw;
+}
+
+static int ui_isqrt(int n) {
+    int x;
+    int y;
+    if (n <= 0) {
+        return 0;
+    }
+    x = n;
+    y = (x + 1) / 2;
+    while (y < x) {
+        x = y;
+        y = (x + n / x) / 2;
+    }
+    return x;
+}
+
+/* Shelf-pack items into rows capped at max_row_w; write board positions into out_x/out_y. */
+static void pack_shelves(const R01sPackItem *items, int n, int max_row_w, int gap, int origin_x, int origin_y,
+                         int *out_x, int *out_y, int *bb_w, int *bb_h) {
+    int i;
+    int x = origin_x;
+    int y = origin_y;
+    int row_h = 0;
+    int max_x = origin_x;
+    int max_y = origin_y;
+
+    for (i = 0; i < n; i++) {
+        int pw = items[i].pw;
+        int ph = items[i].ph;
+        if (i > 0 && x > origin_x && x + pw > origin_x + max_row_w) {
+            x = origin_x;
+            y += row_h + gap;
+            row_h = 0;
+        }
+        out_x[i] = x;
+        out_y[i] = y;
+        if (x + pw > max_x) {
+            max_x = x + pw;
+        }
+        if (y + ph > max_y) {
+            max_y = y + ph;
+        }
+        if (ph > row_h) {
+            row_h = ph;
+        }
+        x += pw + gap;
+    }
+    *bb_w = max_x - origin_x;
+    *bb_h = max_y - origin_y;
+}
+
+static void ui_save_island_layout(R01sUi *ui) {
+    int i;
+    int n_islands;
+
+    if (!ui || !ui->group) {
+        return;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        const R01sEntity *e = ui->chips[i];
+        ui->save_chip_x[i] = e ? e->board_x : 0;
+        ui->save_chip_y[i] = e ? e->board_y : 0;
+    }
+    n_islands = r01s_island_group_count(ui->group);
+    for (i = 0; i < n_islands && i < R01S_MAX_ISLANDS; i++) {
+        const R01sIsland *island = r01s_island_group_at(ui->group, i);
+        if (!island) {
+            continue;
+        }
+        ui->save_island_x[i] = island->board_x;
+        ui->save_island_y[i] = island->board_y;
+        ui->save_island_w[i] = island->board_w;
+        ui->save_island_h[i] = island->board_h;
+    }
+    ui->layout_saved = 1;
+}
+
+static void ui_restore_island_layout(R01sUi *ui) {
+    int i;
+    int n_islands;
+
+    if (!ui || !ui->group || !ui->layout_saved) {
+        return;
+    }
+    n_islands = r01s_island_group_count(ui->group);
+    for (i = 0; i < n_islands && i < R01S_MAX_ISLANDS; i++) {
+        R01sIsland *island = r01s_island_group_at_mut(ui->group, i);
+        if (!island) {
+            continue;
+        }
+        island->board_x = ui->save_island_x[i];
+        island->board_y = ui->save_island_y[i];
+        island->board_w = ui->save_island_w[i];
+        island->board_h = ui->save_island_h[i];
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        R01sEntity *e = ui->chips[i];
+        if (!e) {
+            continue;
+        }
+        r01s_entity_place(e, ui->save_chip_x[i], ui->save_chip_y[i]);
+    }
+}
+
+/*
+ * Pack all drawable chips into a near-square rectangle (shelf packing over
+ * several candidate row widths). Chip body is inset by pin stub margin.
+ */
+static void ui_apply_compact_layout(R01sUi *ui) {
+    R01sPackItem items[R01S_BOARD_MAX_CHIPS];
+    int place_x[R01S_BOARD_MAX_CHIPS];
+    int place_y[R01S_BOARD_MAX_CHIPS];
+    int best_x[R01S_BOARD_MAX_CHIPS];
+    int best_y[R01S_BOARD_MAX_CHIPS];
+    int n = 0;
+    int i;
+    int area = 0;
+    int side;
+    int best_score = 0x7fffffff;
+    int best_w = 0;
+    int best_h = 0;
+    int t;
+
+    if (!ui) {
+        return;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        const R01sEntity *e = ui->chips[i];
+        if (!e || e->visual == R01S_ENTITY_VIS_NONE || e->body_w <= 0 || e->body_h <= 0) {
+            continue;
+        }
+        items[n].idx = i;
+        chip_pack_footprint(e, &items[n].pw, &items[n].ph);
+        area += items[n].pw * items[n].ph;
+        n++;
+    }
+    if (n == 0) {
+        return;
+    }
+    qsort(items, (size_t)n, sizeof(items[0]), pack_item_taller);
+    side = ui_isqrt(area);
+    if (side < items[0].pw) {
+        side = items[0].pw;
+    }
+
+    for (t = 0; t < 24; t++) {
+        int max_row = side + (t - 8) * (side / 8 + 8);
+        int bb_w = 0;
+        int bb_h = 0;
+        int score;
+        int diff;
+        if (max_row < items[0].pw) {
+            max_row = items[0].pw;
+        }
+        pack_shelves(items, n, max_row, R01S_COMPACT_GAP, R01S_COMPACT_ORIGIN_X, R01S_COMPACT_ORIGIN_Y,
+                     place_x, place_y, &bb_w, &bb_h);
+        diff = bb_w > bb_h ? bb_w - bb_h : bb_h - bb_w;
+        /* Prefer near-square, then smaller bounding box. */
+        score = diff * 4 + bb_w + bb_h;
+        if (score < best_score) {
+            best_score = score;
+            best_w = bb_w;
+            best_h = bb_h;
+            memcpy(best_x, place_x, (size_t)n * sizeof(int));
+            memcpy(best_y, place_y, (size_t)n * sizeof(int));
+        }
+    }
+
+    for (i = 0; i < n; i++) {
+        R01sEntity *e = ui->chips[items[i].idx];
+        int bx = best_x[i];
+        int by = best_y[i];
+        int pw, ph;
+        if (!e) {
+            continue;
+        }
+        chip_pack_footprint(e, &pw, &ph);
+        /* Center body inside footprint so pin stubs stay inside the cell. */
+        bx += (pw - e->body_w) / 2;
+        by += (ph - e->body_h) / 2;
+        r01s_entity_place(e, bx, by);
+        clamp_chip_to_board(e);
+    }
+
+    (void)best_w;
+    (void)best_h;
+    ui->pan_x = 0;
+    ui->pan_y = 0;
+    r01s_ui_clamp_pan(ui);
+}
+
+static void ui_toggle_compact(R01sUi *ui) {
+    if (!ui) {
+        return;
+    }
+    ui->drag_chip = -1;
+    ui->drag_island = -1;
+    ui->resize_island = -1;
+    ui->selected = -1;
+    ui->ctx_chip = -1;
+
+    if (!ui->layout_compact) {
+        ui_save_island_layout(ui);
+        ui_apply_compact_layout(ui);
+        ui->layout_compact = 1;
+        snprintf(ui->status, sizeof(ui->status), "compact PCB layout — click ISLANDS to restore frames");
+    } else {
+        ui_restore_island_layout(ui);
+        ui->layout_compact = 0;
+        snprintf(ui->status, sizeof(ui->status), "island layout restored");
+        r01s_ui_clamp_pan(ui);
+    }
+}
+
+static void compact_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
+    const char *label = (ui && ui->layout_compact) ? "ISLANDS" : "COMPACT";
+    int tw = font_text_width(label) + 16;
+    rc->x = R01S_LOGIC_W - tw - 8;
+    rc->y = 3;
+    rc->w = tw;
+    rc->h = 16;
 }
 
 static void island_content_min_size(const R01sUi *ui, int island_index, int *min_w, int *min_h) {
@@ -691,7 +998,7 @@ static void resize_island_drag(R01sUi *ui, int island_index, int board_mx, int b
     island->board_h = nh;
     for (i = 0; i < ui->chip_count; i++) {
         if (ui->chip_island[i] == (uint8_t)island_index) {
-            clamp_chip_in_island(ui, ui->chips[i], island_index);
+            clamp_chip(ui, ui->chips[i], island_index);
         }
     }
 }
@@ -930,6 +1237,7 @@ static void draw_island_frame(SDL_Renderer *r, const R01sUi *ui, const R01sIslan
         bb = active ? 120 : 70;
     }
 
+    fill_rect(r, x, y, island->board_w, island->board_h, R01S_BOARD_BG_R, R01S_BOARD_BG_G, R01S_BOARD_BG_B);
     fill_rect(r, x + 2, y + 2, island->board_w - 4, R01S_ISLAND_HEADER_H, 22, 48, 32);
     draw_rect(r, x, y, island->board_w, island->board_h, br, bg, bb);
     /* Bottom-right resize grip */
@@ -1263,7 +1571,7 @@ uint8_t r01s_ui_gamepad_port(const R01sUi *ui, int player) {
 }
 
 void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
-    int i, gx, gy;
+    int i, gx, gy, pass;
     int ox = (-ui->pan_x) % 32;
     int oy = (-ui->pan_y) % 32;
     SDL_Rect view_clip = {R01S_UI_VIEW_X, R01S_UI_VIEW_Y, R01S_UI_VIEW_W, R01S_UI_VIEW_H};
@@ -1276,7 +1584,8 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
 
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_LOGIC_H, 12, 14, 16);
     fill_rect(r, 0, 0, R01S_UI_SIDEBAR_L, R01S_LOGIC_H, 14, 18, 16);
-    fill_rect(r, R01S_UI_VIEW_X, R01S_UI_VIEW_Y, R01S_UI_VIEW_W, R01S_UI_VIEW_H, 18, 42, 28);
+    fill_rect(r, R01S_UI_VIEW_X, R01S_UI_VIEW_Y, R01S_UI_VIEW_W, R01S_UI_VIEW_H, R01S_BOARD_BG_R,
+              R01S_BOARD_BG_G, R01S_BOARD_BG_B);
 
     SDL_RenderSetClipRect(r, &view_clip);
     SDL_SetRenderDrawColor(r, 24, 52, 34, 255);
@@ -1287,36 +1596,52 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
         SDL_RenderDrawLine(r, R01S_UI_VIEW_X, gy, R01S_UI_VIEW_X + R01S_UI_VIEW_W, gy);
     }
 
-    /* Board island frames (chrome under chips) */
-    if (ui->group) {
-        for (i = 0; i < r01s_island_group_count(ui->group); i++) {
-            const R01sIsland *island = r01s_island_group_at(ui->group, i);
-            const R01sIslandHealth *ih = NULL;
-            int active = (i == ui->drag_island || i == ui->resize_island);
-            if (i < ui->health.island_count) {
-                ih = &ui->health.islands[i];
-            }
-            if (island) {
-                draw_island_frame(r, ui, island, active, ih);
-            }
+    /* Islands back→front as complete units so a front island fully occludes
+     * anything behind it (frame fill + chips + header). Compact: chips only. */
+    if (ui->group && !ui->layout_compact) {
+        int n_islands = r01s_island_group_count(ui->group);
+        int front = -1;
+        if (ui->drag_island >= 0) {
+            front = ui->drag_island;
+        } else if (ui->resize_island >= 0) {
+            front = ui->resize_island;
         }
-    }
-
-    for (i = 0; i < ui->chip_count; i++) {
-        draw_board_item(r, ui, ui->chips[i], i == ui->selected);
-    }
-
-    /* Headers above chips so activity/title stay readable */
-    if (ui->group) {
-        for (i = 0; i < r01s_island_group_count(ui->group); i++) {
-            const R01sIsland *island = r01s_island_group_at(ui->group, i);
-            const R01sIslandHealth *ih = NULL;
-            if (i < ui->health.island_count) {
-                ih = &ui->health.islands[i];
-            }
-            if (island) {
+        for (pass = 0; pass < 2; pass++) {
+            for (i = 0; i < n_islands; i++) {
+                const R01sIsland *island;
+                const R01sIslandHealth *ih = NULL;
+                int active;
+                int j;
+                if (pass == 0 && front >= 0 && i == front) {
+                    continue; /* draw focused island last */
+                }
+                if (pass == 1 && i != front) {
+                    continue;
+                }
+                island = r01s_island_group_at(ui->group, i);
+                if (!island) {
+                    continue;
+                }
+                active = (i == ui->drag_island || i == ui->resize_island);
+                if (i < ui->health.island_count) {
+                    ih = &ui->health.islands[i];
+                }
+                draw_island_frame(r, ui, island, active, ih);
+                for (j = 0; j < ui->chip_count; j++) {
+                    if (ui->chip_island[j] != (uint8_t)i) {
+                        continue;
+                    }
+                    draw_board_item(r, ui, ui->chips[j], j == ui->selected);
+                }
                 draw_island_header(r, ui, island, ih);
             }
+            if (front < 0) {
+                break;
+            }
+        }
+    } else {
+        for (i = 0; i < ui->chip_count; i++) {
+            draw_board_item(r, ui, ui->chips[i], i == ui->selected);
         }
     }
     SDL_RenderSetClipRect(r, NULL);
@@ -1325,9 +1650,22 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
 
     /* Fixed HUD */
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_UI_HUD_TOP, 12, 14, 16);
-    font_draw(r, 8, 7, "RETR01 SIM  ISLANDS A-E+G+H+I+O+J+K+L+M", 200, 210, 220);
-    font_draw(r, R01S_UI_VIEW_X + 8, 7, "DRAG EMPTY / RESIZE BR  SHIFT+ARROWS PAN (VERT)", 120, 130,
-              140);
+    font_draw(r, 8, 7, "RETR01 SIM  ISLANDS O+A+C+D+G+H+J+K+L", 200, 210, 220);
+    if (ui->layout_compact) {
+        font_draw(r, R01S_UI_VIEW_X + 8, 7, "COMPACT PCB  DRAG CHIPS  SHIFT+ARROWS PAN", 120, 130, 140);
+    } else {
+        font_draw(r, R01S_UI_VIEW_X + 8, 7, "DRAG EMPTY / RESIZE BR  SHIFT+ARROWS PAN (VERT)", 120, 130,
+                  140);
+    }
+    {
+        SDL_Rect cbtn;
+        const char *clabel = ui->layout_compact ? "ISLANDS" : "COMPACT";
+        compact_btn_rect(ui, &cbtn);
+        fill_rect(r, cbtn.x, cbtn.y, cbtn.w, cbtn.h, ui->layout_compact ? 40 : 28, ui->layout_compact ? 70 : 40,
+                  ui->layout_compact ? 50 : 32);
+        draw_rect(r, cbtn.x, cbtn.y, cbtn.w, cbtn.h, 120, 160, 130);
+        font_draw(r, cbtn.x + 8, cbtn.y + 5, clabel, 200, 220, 180);
+    }
 
     /* Left sidebar: controllers, live probe, system status (scrollable). */
     SDL_RenderSetClipRect(r, &sidebar_clip);
@@ -1573,15 +1911,30 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 R01sEntity *te = ui->chips[ui->ctx_chip];
                 if (te && te->visual == R01S_ENTITY_VIS_IC) {
                     r01s_entity_set_orient(te, te->orient == R01S_ORIENT_V ? R01S_ORIENT_H : R01S_ORIENT_V);
-                    clamp_chip_in_island(ui, te, ui->chip_island[ui->ctx_chip]);
+                    clamp_chip(ui, te, ui->chip_island[ui->ctx_chip]);
                     snprintf(ui->status, sizeof(ui->status), "%s → %s",
                              te->refdes ? te->refdes : "?",
                              te->orient == R01S_ORIENT_V ? "VERTICAL" : "HORIZONTAL");
+                    if (ui->layout_compact) {
+                        /* Re-pack so footprint change doesn't leave overlaps. */
+                        ui_apply_compact_layout(ui);
+                    }
                 }
                 ui->ctx_chip = -1;
                 return 1;
             }
             ui->ctx_chip = -1; /* click elsewhere dismisses */
+        }
+
+        /* Compact / Islands layout toggle (top HUD). */
+        {
+            SDL_Rect cbtn;
+            compact_btn_rect(ui, &cbtn);
+            if (logic_x >= cbtn.x && logic_x < cbtn.x + cbtn.w && logic_y >= cbtn.y &&
+                logic_y < cbtn.y + cbtn.h) {
+                ui_toggle_compact(ui);
+                return 1;
+            }
         }
 
         /* System / island COPY buttons (sidebar) before gamepad / board hits. */
@@ -1625,7 +1978,7 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         ui->resize_island = -1;
 
         /* Resize handle wins over chips (bottom-right grip). */
-        if (ui->group) {
+        if (ui->group && !ui->layout_compact) {
             for (i = r01s_island_group_count(ui->group) - 1; i >= 0; i--) {
                 const R01sIsland *island = r01s_island_group_at(ui->group, i);
                 if (island && hit_island_resize(ui, island, logic_x, logic_y)) {
@@ -1655,7 +2008,7 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         }
 
         /* Empty island area (including title bar) moves the frame + chips. */
-        if (ui->group) {
+        if (ui->group && !ui->layout_compact) {
             for (i = r01s_island_group_count(ui->group) - 1; i >= 0; i--) {
                 const R01sIsland *island = r01s_island_group_at(ui->group, i);
                 if (!island || !hit_island_frame(ui, island, logic_x, logic_y)) {
