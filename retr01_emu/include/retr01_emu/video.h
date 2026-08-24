@@ -12,6 +12,8 @@ typedef struct R01eVideo {
     uint8_t vram[R01E_VRAM_BYTES];
     uint8_t chr[8][R01E_CHR_BANK_BYTES]; /* BG0-3 + SPR0-3 for active world */
     int chr_loaded;
+    /* 1 if VRAM camera slot 0-3 holds a present screen (else Studio-black). */
+    uint8_t slot_present[4];
 
     /* 2x2 camera workbench origin in world grid (docs/02). */
     int cam_origin_col;
@@ -22,6 +24,8 @@ typedef struct R01eVideo {
     int cam_max_y;
 
     uint8_t fb[R01E_VISIBLE_W * R01E_VISIBLE_H * 3]; /* SCALE 2x RGB */
+    /* Debug: 2x2 VRAM workbench at 1:1 (256x240). */
+    uint8_t vram_atlas[R01E_VRAM_ATLAS_W * R01E_VRAM_ATLAS_H * 3];
 } R01eVideo;
 
 void r01e_video_reset(R01eVideo *vid);
@@ -43,6 +47,9 @@ int r01e_video_host_pan(struct R01eMachine *m, int dx, int dy);
 
 /* Full-frame BG composite (sprites stubbed — phase 6). */
 void r01e_video_render_frame(struct R01eMachine *m);
+
+/* Render 2x2 VRAM slots into vram_atlas (256x240, 1:1). */
+void r01e_video_render_vram_atlas(struct R01eMachine *m);
 
 /* Phase 2+: load parallax payloads into VRAM slots 4-5. */
 void r01e_video_load_parallax(struct R01eMachine *m, const R01eWorldView *wv);

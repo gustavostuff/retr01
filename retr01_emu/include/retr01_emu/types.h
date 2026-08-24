@@ -38,6 +38,9 @@
 #define R01E_DOTS_Y 262
 #define R01E_VISIBLE_W 256
 #define R01E_VISIBLE_H 240
+/* 2x2 camera workbench atlas: 2*128 x 2*120 = 256x240 (1:1, no scale). */
+#define R01E_VRAM_ATLAS_W (R01E_SCREEN_PX_W * 2)
+#define R01E_VRAM_ATLAS_H (R01E_SCREEN_PX_H * 2)
 #define R01E_CPU_HZ 8000000u
 #define R01E_DOT_HZ 5369318u
 

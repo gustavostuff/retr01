@@ -86,6 +86,9 @@ static int load_screen_into_slot(R01eMachine *m, const R01eWorldView *wv, int co
     uint8_t *dst = m->video.vram + (size_t)slot * R01E_VRAM_SLOT_BYTES;
 
     memset(dst, 0, R01E_VRAM_SLOT_BYTES);
+    if (slot >= 0 && slot < 4) {
+        m->video.slot_present[slot] = 0;
+    }
     dir = r01e_cart_ptr(&m->cart, wv->base + wv->off_screen_dir, (size_t)wv->screen_count * 12u);
     if (!dir) {
         return 0;
@@ -104,6 +107,9 @@ static int load_screen_into_slot(R01eMachine *m, const R01eWorldView *wv, int co
             return 0;
         }
         memcpy(dst, pay, R01E_SCREEN_PAYLOAD);
+        if (slot >= 0 && slot < 4) {
+            m->video.slot_present[slot] = 1;
+        }
         return 1;
     }
     return 0;
@@ -286,11 +292,16 @@ static void sample_bg(R01eMachine *m, int lx, int ly, uint8_t *r, uint8_t *g, ui
     int px, py, i;
     uint8_t master;
 
+    /* Empty / missing screens: pure black (Studio Play), not palette color 0. */
     if (slot_x < 0 || slot_x > 1 || slot_y < 0 || slot_y > 1) {
-        kit_rgb(0, r, g, b);
+        *r = *g = *b = 0;
         return;
     }
     slot = slot_y * 2 + slot_x;
+    if (!vid->slot_present[slot]) {
+        *r = *g = *b = 0;
+        return;
+    }
     local_x = sx - slot_x * R01E_SCREEN_PX_W;
     local_y = sy - slot_y * R01E_SCREEN_PX_H;
     tx = local_x / 8;
@@ -340,6 +351,187 @@ static void sample_bg(R01eMachine *m, int lx, int ly, uint8_t *r, uint8_t *g, ui
     kit_rgb(master, r, g, b);
 }
 
+static void sample_bg_play_world(R01eMachine *m, int lx, int ly, uint8_t *r, uint8_t *g, uint8_t *b) {
+    /* Studio play.c r01_play_sample_bg — absolute world coords, no 2x2 seam. */
+    R01eWorldView wv;
+    const uint8_t *dir;
+    int wx, wy, col, row, si;
+    int local_x, local_y, tx, ty, cell, px, py, i;
+    const uint8_t *pay = NULL;
+    uint8_t tile, attr, bank, pal, color;
+    const uint8_t *chr;
+    uint8_t tile16[16];
+    uint8_t master;
+
+    *r = *g = *b = 0;
+    if (!m->play.enabled) {
+        return;
+    }
+    wx = m->play.cam_x + lx;
+    wy = m->play.cam_y + ly;
+    if (wx < 0 || wy < 0) {
+        return;
+    }
+    col = wx / R01E_SCREEN_PX_W;
+    row = wy / R01E_SCREEN_PX_H;
+    if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) != 0) {
+        return;
+    }
+    dir = r01e_cart_ptr(&m->cart, wv.base + wv.off_screen_dir, (size_t)wv.screen_count * 12u);
+    if (!dir) {
+        return;
+    }
+    for (si = 0; si < wv.screen_count; si++) {
+        const uint8_t *e = dir + (size_t)si * 12u;
+        if ((int)e[0] == col && (int)e[1] == row) {
+            uint32_t poff = get_u24(e + 4);
+            pay = r01e_cart_ptr(&m->cart, wv.base + poff, R01E_SCREEN_PAYLOAD);
+            break;
+        }
+    }
+    if (!pay) {
+        return; /* empty screen → black */
+    }
+    local_x = wx % R01E_SCREEN_PX_W;
+    local_y = wy % R01E_SCREEN_PX_H;
+    tx = local_x / 8;
+    ty = local_y / 8;
+    cell = ty * R01E_SCREEN_TILES_X + tx;
+    tile = pay[cell];
+    attr = pay[0xF0 + cell];
+    bank = (uint8_t)(attr & R01E_ATTR_BANK_MASK);
+    pal = (uint8_t)((attr & R01E_ATTR_PAL_MASK) >> R01E_ATTR_PAL_SHIFT);
+    chr = m->video.chr[bank & 3u];
+    memcpy(tile16, chr + (size_t)tile * R01E_TILE_BYTES, R01E_TILE_BYTES);
+    if (attr & R01E_ATTR_FLIP_H) {
+        for (i = 0; i < 8; i++) {
+            uint8_t v0 = tile16[i], v1 = tile16[i + 8], o0 = 0, o1 = 0;
+            int bit;
+            for (bit = 0; bit < 8; bit++) {
+                if (v0 & (1u << bit)) {
+                    o0 |= (uint8_t)(1u << (7 - bit));
+                }
+                if (v1 & (1u << bit)) {
+                    o1 |= (uint8_t)(1u << (7 - bit));
+                }
+            }
+            tile16[i] = o0;
+            tile16[i + 8] = o1;
+        }
+    }
+    if (attr & R01E_ATTR_FLIP_V) {
+        for (i = 0; i < 4; i++) {
+            uint8_t t = tile16[i];
+            tile16[i] = tile16[7 - i];
+            tile16[7 - i] = t;
+            t = tile16[i + 8];
+            tile16[i + 8] = tile16[15 - i];
+            tile16[15 - i] = t;
+        }
+    }
+    px = local_x & 7;
+    py = local_y & 7;
+    color = tile_pix(tile16, px, py);
+    master = m->io.pal[(pal & 3u) * 4u + (color & 3u)] & 63u;
+    if (color == 0) {
+        master = m->io.pal[0] & 63u;
+    }
+    kit_rgb(master, r, g, b);
+}
+
+static void sample_vram_slot_px(R01eMachine *m, int slot, int local_x, int local_y, uint8_t *r, uint8_t *g,
+                                uint8_t *b) {
+    R01eVideo *vid = &m->video;
+    int tx, ty, cell, px, py, i;
+    const uint8_t *base;
+    uint8_t tile, attr, bank, pal, col;
+    const uint8_t *chr;
+    uint8_t tile16[16];
+    uint8_t master;
+
+    *r = *g = *b = 0;
+    if (slot < 0 || slot > 3 || !vid->slot_present[slot]) {
+        return;
+    }
+    if (local_x < 0 || local_y < 0 || local_x >= R01E_SCREEN_PX_W || local_y >= R01E_SCREEN_PX_H) {
+        return;
+    }
+    tx = local_x / 8;
+    ty = local_y / 8;
+    cell = ty * R01E_SCREEN_TILES_X + tx;
+    base = vid->vram + (size_t)slot * R01E_VRAM_SLOT_BYTES;
+    tile = base[cell];
+    attr = base[0xF0 + cell];
+    bank = (uint8_t)(attr & R01E_ATTR_BANK_MASK);
+    pal = (uint8_t)((attr & R01E_ATTR_PAL_MASK) >> R01E_ATTR_PAL_SHIFT);
+    chr = vid->chr[bank & 3u];
+    memcpy(tile16, chr + (size_t)tile * R01E_TILE_BYTES, R01E_TILE_BYTES);
+    if (attr & R01E_ATTR_FLIP_H) {
+        for (i = 0; i < 8; i++) {
+            uint8_t v0 = tile16[i], v1 = tile16[i + 8], o0 = 0, o1 = 0;
+            int bit;
+            for (bit = 0; bit < 8; bit++) {
+                if (v0 & (1u << bit)) {
+                    o0 |= (uint8_t)(1u << (7 - bit));
+                }
+                if (v1 & (1u << bit)) {
+                    o1 |= (uint8_t)(1u << (7 - bit));
+                }
+            }
+            tile16[i] = o0;
+            tile16[i + 8] = o1;
+        }
+    }
+    if (attr & R01E_ATTR_FLIP_V) {
+        for (i = 0; i < 4; i++) {
+            uint8_t t = tile16[i];
+            tile16[i] = tile16[7 - i];
+            tile16[7 - i] = t;
+            t = tile16[i + 8];
+            tile16[i + 8] = tile16[15 - i];
+            tile16[15 - i] = t;
+        }
+    }
+    px = local_x & 7;
+    py = local_y & 7;
+    col = tile_pix(tile16, px, py);
+    master = m->io.pal[(pal & 3u) * 4u + (col & 3u)] & 63u;
+    if (col == 0) {
+        master = m->io.pal[0] & 63u;
+    }
+    kit_rgb(master, r, g, b);
+}
+
+void r01e_video_render_vram_atlas(R01eMachine *m) {
+    R01eVideo *vid;
+    int ay, ax;
+
+    if (!m) {
+        return;
+    }
+    vid = &m->video;
+    memset(vid->vram_atlas, 0, sizeof(vid->vram_atlas));
+    if (!vid->chr_loaded) {
+        return;
+    }
+    /* 2x2 slots → 256x240 @ 1:1 (slot0 NW, 1 NE, 2 SW, 3 SE). */
+    for (ay = 0; ay < R01E_VRAM_ATLAS_H; ay++) {
+        for (ax = 0; ax < R01E_VRAM_ATLAS_W; ax++) {
+            int slot_x = ax / R01E_SCREEN_PX_W;
+            int slot_y = ay / R01E_SCREEN_PX_H;
+            int slot = slot_y * 2 + slot_x;
+            int lx = ax - slot_x * R01E_SCREEN_PX_W;
+            int ly = ay - slot_y * R01E_SCREEN_PX_H;
+            uint8_t r, g, b;
+            size_t i = ((size_t)ay * R01E_VRAM_ATLAS_W + (size_t)ax) * 3u;
+            sample_vram_slot_px(m, slot, lx, ly, &r, &g, &b);
+            vid->vram_atlas[i] = r;
+            vid->vram_atlas[i + 1] = g;
+            vid->vram_atlas[i + 2] = b;
+        }
+    }
+}
+
 static void composite_sprites(R01eMachine *m) {
     (void)m; /* Phase 6: OAM linebuf compositing over BG */
 }
@@ -359,7 +551,11 @@ void r01e_video_render_frame(R01eMachine *m) {
     for (ly = 0; ly < R01E_SCREEN_PX_H; ly++) {
         for (lx = 0; lx < R01E_SCREEN_PX_W; lx++) {
             uint8_t r, g, b;
-            sample_bg(m, lx, ly, &r, &g, &b);
+            if (m->play.enabled) {
+                sample_bg_play_world(m, lx, ly, &r, &g, &b);
+            } else {
+                sample_bg(m, lx, ly, &r, &g, &b);
+            }
             for (oy = 0; oy < 2; oy++) {
                 for (ox = 0; ox < 2; ox++) {
                     int fx = lx * 2 + ox;
