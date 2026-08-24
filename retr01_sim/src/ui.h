@@ -65,10 +65,17 @@ typedef struct R01sUi {
     int layout_saved;
     int save_chip_x[R01S_BOARD_MAX_CHIPS];
     int save_chip_y[R01S_BOARD_MAX_CHIPS];
+    uint8_t save_chip_orient[R01S_BOARD_MAX_CHIPS]; /* R01sPkgOrient */
     int save_island_x[R01S_MAX_ISLANDS];
     int save_island_y[R01S_MAX_ISLANDS];
     int save_island_w[R01S_MAX_ISLANDS];
     int save_island_h[R01S_MAX_ISLANDS];
+    /* Persisted compact-mode chip placements (by chip index). */
+    int compact_saved;
+    int compact_chip_x[R01S_BOARD_MAX_CHIPS];
+    int compact_chip_y[R01S_BOARD_MAX_CHIPS];
+    uint8_t compact_chip_orient[R01S_BOARD_MAX_CHIPS];
+    int layout_dirty; /* write ui_layout.json on next save opportunity */
 } R01sUi;
 
 int r01s_ui_init(R01sUi *ui);
@@ -82,5 +89,12 @@ void r01s_ui_sync_gamepads(R01sUi *ui);
 uint8_t r01s_ui_gamepad_port(const R01sUi *ui, int player);
 void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r);
 int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_y);
+
+/* Rotate selected DIP (H↔V). Returns 1 if rotated. */
+int r01s_ui_rotate_selected(R01sUi *ui);
+
+/* Persist island + compact layouts to JSON (default path search / create). */
+int r01s_ui_layout_load(R01sUi *ui);
+int r01s_ui_layout_save(R01sUi *ui);
 
 #endif

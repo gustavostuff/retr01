@@ -262,7 +262,7 @@ void r01s_w65c02s_init(R01sW65C02S *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 38, "SOB", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 39, "PHI2O", R01S_PIN_OUT);
     r01s_entity_add_pin(&chip->base, 40, "RESB", R01S_PIN_IN);
-    r01s_entity_set_dip(&chip->base, 40);
+    r01s_entity_set_dip_mm(&chip->base, 40, 52, 16);
     r01s_entity_reset(&chip->base);
 }
 

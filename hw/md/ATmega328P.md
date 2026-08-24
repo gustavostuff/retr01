@@ -10,8 +10,8 @@
 | | |
 |--|--|
 | Outline | PDIP-28, 600 mil |
-| Body (nom.) | **36 × 14 mm** (length × width) |
-| Sim @ 4 px/mm | **144 × 56 px** horizontal (default) |
+| Body (nom.) | **35 × 8 mm** (length × width) |
+| Sim @ 4 px/mm | **140 × 32 px** horizontal (default) |
 | Reference | [`packages_dip.md`](packages_dip.md) |
 
 ## What it is

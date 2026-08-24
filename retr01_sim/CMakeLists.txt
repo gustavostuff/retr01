@@ -57,6 +57,7 @@ target_include_directories(retr01_sim_core PUBLIC
 
 add_library(retr01_sim_app
   src/ui.c
+  src/ui_layout.c
   src/app.c
 )
 target_include_directories(retr01_sim_app PUBLIC

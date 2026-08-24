@@ -1,42 +1,59 @@
 # PDIP package dimensions (Retr01 sim / board)
 
 Canonical **plastic DIP** body sizes used by the simulator canvas and for layout planning.
-Sources: [Microchip Packaging Spec DS00049](https://ww1.microchip.com/downloads/en/PackagingSpec/00049w.pdf) (PDIP family, nominal mm), JEDEC MS-001 / MS-011 row spacing, and WDC W65C02S as a standard **40-pin 600 mil** PDIP (datasheet omits outline; body matches JEDEC-class 40-pin parts).
+
+Where a part has a measured / datasheet body, the sim uses **`r01s_entity_set_dip_mm()`**.
+Otherwise it falls back to the pin-count defaults below (74HC N-package family for 14/16/20;
+JEDEC-class 600 mil for larger counts).
 
 ## Sim canvas scale
 
 | Constant | Value | Notes |
 |----------|-------|-------|
-| `R01S_PX_PER_MM` | **4** | One logical pixel = 0.25 mm |
-| Example | W65C02S ≈ **52 × 14 mm** → **208 × 56 px** (horizontal) | |
-| Pin pitch | **2.54 mm** → **10 px** (fixed; never scaled to body) | JEDEC 0.100″ |
+| `R01S_PX_PER_MM` | **4** | **1 mm real = 4 logical px** (bbox ÷ 4 → mm) |
+| Pin pitch | **2.54 mm** → **10 px** | JEDEC 0.100″ (fixed) |
 
-All IC packages share this single scale. Glyphs (PWR / OSC / LCD) are not JEDEC DIPs; they keep separate art sizes.
+**Layout workflow:** COMPACT pack → enclose in an image editor → **÷ 4** for approx real mm.
 
-## Body sizes (molded package)
+## Part-specific bodies (authoritative)
 
-`Length` = overall body **D** (along the pin rows). `Width` = molded body **E1** (across the two rows). Row spacing **E** is the lead-row distance (300 mil or 600 mil), slightly wider than E1.
+| Part | Pins | Body L×W (mm) | Horizontal px @ 4 px/mm | Notes |
+|------|------|---------------|-------------------------|-------|
+| **W65C02S** | 40 | **52 × 16** | 208 × 64 | Measured / vendor; WDC DS omits outline |
+| **SST39SF040** | 32 | **42 × 14** | 168 × 56 | |
+| **AS6C62256** | 28 | **37 × 13** | 148 × 52 | |
+| **ATF22V10** | 24 | **32 × 8** | 128 × 32 | Narrow body |
+| **ATmega1284P** | 40 | **53 × 14** | 212 × 56 | |
+| **ATmega328P** | 28 | **35 × 8** | 140 × 32 | Narrow body |
 
-| Pins | Row | Length D (mm) | Width E1 (mm) | Horizontal px (L×W) | Typical Retr01 parts |
-|------|-----|---------------|---------------|---------------------|----------------------|
-| 8 | 300 mil | **9** | **6** | 36 × 24 | 24C64 (cart I2C), can osc shells |
-| 14 | 300 mil | **19** | **6** | 76 × 24 | 74HC00/04/08/14/32 |
-| 16 | 300 mil | **19** | **6** | 76 × 24 | 74HC157, 74HC161 |
-| 20 | 300 mil | **26** | **6** | 104 × 24 | 74HC245, 74HC573, 74HC688 |
-| 24 | 600 mil | **32** | **14** | 128 × 56 | ATF22V10, AT28C16 |
-| 28 | 600 mil | **36** | **14** | 144 × 56 | AS6C62256, ATmega328P |
-| 32 | 600 mil | **42** | **14** | 168 × 56 | SST39SF040 |
-| 40 | 600 mil | **52** | **14** | 208 × 56 | W65C02S, ATmega1284P |
+## 74HC family DIP (N / through-hole)
 
-Nominal Microchip PDIP figures (where published) round to the mm values above for a clean 4 px/mm grid (e.g. 40-pin E1 nom **13.84 mm** → **14 mm**; D nom ~**52.3 mm** → **52 mm**).
+From typical 74HC PDIP drawings (body width ≈ 6.35 mm → **6 mm** in sim; lengths rounded):
+
+| Pins | Length (mm) | Body width (mm) | Total width (mm) | Pitch | Sim L×W px |
+|------|-------------|-----------------|------------------|-------|------------|
+| 14 | ~19.3 → **19** | 6.35 → **6** | 7.62 | 2.54 | 76 × 24 |
+| 16 | ~19.8 → **20** | 6.35 → **6** | 7.62 | 2.54 | 80 × 24 |
+| 20 | ~25.4 → **25** | 6.35 → **6** | 7.62 | 2.54 | 100 × 24 |
+
+Used by: 74HC00/04/08/14/32 (14), 74HC157/161 (16), 74HC245/573/688 (20).
+
+## Fallback pin-count table
+
+| Pins | Row class | Length D (mm) | Width E1 (mm) | Used when |
+|------|-----------|---------------|---------------|-----------|
+| 8 | 300 mil | **9** | **6** | 24C64, etc. |
+| 14 | 300 mil | **19** | **6** | HC 14-pin |
+| 16 | 300 mil | **20** | **6** | HC 16-pin |
+| 20 | 300 mil | **25** | **6** | HC 20-pin |
+| 24 | 600 mil | **32** | **14** | AT28C16, PLD shells without override |
+| 28 | 600 mil | **36** | **14** | PRG stub, etc. |
+| 32 | 600 mil | **42** | **14** | default 32-pin |
+| 40 | 600 mil | **52** | **14** | default 40-pin |
 
 ## Orientation (sim UI)
 
-- **Horizontal (default):** length along X; pins on top and bottom; notch on the left; pin 1 bottom-left.
-- **Vertical:** length along Y; pins on left and right; notch on top; pin 1 top-left (classic DIP drawing).
+- **Horizontal (default):** length along X; pins on top/bottom; notch left; pin 1 bottom-left.
+- **Vertical:** length along Y; pins left/right; notch top; pin 1 top-left.
 
-Right-click a chip in the simulator to toggle orientation. Labels rotate with the package.
-
-## Per-part notes
-
-Each IC markdown in this folder should list its Retr01 package and point here for the numeric outline. Vendor PDFs remain authoritative for PCB footprints (pad size, lead span `eB`, tolerances).
+Right-click or **R** (selected) to toggle. Labels rotate with the package.

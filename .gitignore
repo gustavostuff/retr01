@@ -20,3 +20,5 @@ Testing/
 *~
 .DS_Store
 retr01_sim/debug/
+retr01_sim/ui_layout.json
+ui_layout.json

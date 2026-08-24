@@ -63,9 +63,9 @@ struct R01sEntity {
     void *impl;
 };
 
-/* Canvas scale: physical mm → logical pixels (shared by every IC). */
+/* Canvas scale: 1 mm real package = 4 logical pixels (compact bbox ÷ 4 → mm). */
 #define R01S_PX_PER_MM 4
-/* JEDEC 0.100″ pin pitch at that scale — never stretch/compress between pins. */
+/* JEDEC 0.100″ pin pitch ≈ 2.54 mm → 10 px at R01S_PX_PER_MM (never stretch-to-fill). */
 #define R01S_DIP_PIN_PITCH_PX 10
 #define R01S_DIP_PIN_MARGIN_PX 8 /* soft hint only; draw centers row with leftover */
 
@@ -84,10 +84,13 @@ void r01s_entity_init(R01sEntity *e, const R01sEntityVTable *vt, const char *par
 int r01s_entity_add_pin(R01sEntity *e, int number, const char *name, R01sPinDir dir);
 
 /*
- * DIP body from JEDEC-class mm outline at R01S_PX_PER_MM.
+ * DIP body from JEDEC-class / family mm outline at R01S_PX_PER_MM.
  * Default orientation is horizontal (labels read left-to-right).
  */
 void r01s_entity_set_dip(R01sEntity *e, int dip_pins);
+
+/* Same as set_dip, but with an explicit molded body length × width (mm). */
+void r01s_entity_set_dip_mm(R01sEntity *e, int dip_pins, int len_mm, int wid_mm);
 
 /* Toggle / set package orientation; refreshes body_w/body_h. */
 void r01s_entity_set_orient(R01sEntity *e, R01sPkgOrient orient);

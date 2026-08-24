@@ -119,7 +119,7 @@ void r01s_atmega328p_init(R01sAtmega328p *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 26, "NC", R01S_PIN_NC);
     r01s_entity_add_pin(&chip->base, 27, "NC", R01S_PIN_NC);
     r01s_entity_add_pin(&chip->base, 28, "AVCC", R01S_PIN_PWR);
-    r01s_entity_set_dip(&chip->base, 28);
+    r01s_entity_set_dip_mm(&chip->base, 28, 35, 8);
     r01s_entity_reset(&chip->base);
 }
 

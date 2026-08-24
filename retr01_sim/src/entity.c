@@ -3,7 +3,7 @@
 #include <string.h>
 
 /*
- * Molded PDIP body L×W (mm), rounded for a clean 4 px/mm grid.
+ * Molded PDIP body L×W (mm), rounded for a clean px/mm grid.
  * See hw/md/packages_dip.md (Microchip DS00049 + JEDEC MS-001/MS-011).
  */
 typedef struct R01sDipPkg {
@@ -13,7 +13,9 @@ typedef struct R01sDipPkg {
 } R01sDipPkg;
 
 static const R01sDipPkg R01S_DIP_PKGS[] = {
-    {8, 9, 6},   {14, 19, 6},  {16, 19, 6},  {20, 26, 6},
+    /* 14/16/20: 74HC N-package family (body width ~6.35 → 6 mm). */
+    {8, 9, 6},   {14, 19, 6},  {16, 20, 6},  {20, 25, 6},
+    /* Wider / longer defaults — prefer r01s_entity_set_dip_mm per part when known. */
     {24, 32, 14}, {28, 36, 14}, {32, 42, 14}, {40, 52, 14},
 };
 
@@ -111,6 +113,22 @@ void r01s_entity_set_dip(R01sEntity *e, int dip_pins) {
     e->visual = R01S_ENTITY_VIS_IC;
     e->dip_pins = dip_pins > 0 ? dip_pins : 0;
     r01s_dip_pkg_mm(e->dip_pins, &e->pkg_len_mm, &e->pkg_wid_mm);
+    e->orient = R01S_ORIENT_H;
+    r01s_entity_refresh_body(e);
+}
+
+void r01s_entity_set_dip_mm(R01sEntity *e, int dip_pins, int len_mm, int wid_mm) {
+    if (!e) {
+        return;
+    }
+    e->visual = R01S_ENTITY_VIS_IC;
+    e->dip_pins = dip_pins > 0 ? dip_pins : 0;
+    if (len_mm > 0 && wid_mm > 0) {
+        e->pkg_len_mm = len_mm;
+        e->pkg_wid_mm = wid_mm;
+    } else {
+        r01s_dip_pkg_mm(e->dip_pins, &e->pkg_len_mm, &e->pkg_wid_mm);
+    }
     e->orient = R01S_ORIENT_H;
     r01s_entity_refresh_body(e);
 }

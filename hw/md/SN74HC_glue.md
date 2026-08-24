@@ -87,6 +87,6 @@ One tiny module type per gate family (NAND2, AND2, OR2, XOR2, INV, SCHMITT_INV) 
 | | |
 |--|--|
 | Outline | PDIP-14, 300 mil (HC00/04/08/14/32/86) |
-| Body (nom.) | **19 × 6 mm** (length × width) |
+| Body (nom.) | **19 × 6 mm** (length × width; ~19.3 × 6.35) |
 | Sim @ 4 px/mm | **76 × 24 px** horizontal (default) |
 | Reference | [`packages_dip.md`](packages_dip.md) |

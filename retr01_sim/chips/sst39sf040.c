@@ -87,7 +87,7 @@ void r01s_sst39sf040_init(R01sSst39sf040 *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 30, "A17", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 31, "WE#", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 32, "VDD", R01S_PIN_PWR);
-    r01s_entity_set_dip(&chip->base, 32);
+    r01s_entity_set_dip_mm(&chip->base, 32, 42, 14);
     r01s_entity_reset(&chip->base);
 }
 

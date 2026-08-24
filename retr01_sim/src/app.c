@@ -50,6 +50,9 @@ void r01s_app_mount_builder(R01sApp *app) {
             fprintf(stderr, "ui: expected %d BOM IC visuals, mounted %d ui chips\n", R01S_BOM_IC_N, bom_ic);
         }
     }
+    if (r01s_ui_layout_load(&app->ui) != 0) {
+        /* No saved layout — keep builder defaults. */
+    }
 }
 
 int r01s_app_init(R01sApp *app, int headless) {
@@ -234,8 +237,13 @@ void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
             group->running = !group->running;
             return;
         case SDLK_r:
-            r01s_island_group_reset(group);
-            return;
+            if (e->key.keysym.mod & KMOD_CTRL) {
+                r01s_island_group_reset(group);
+                snprintf(app->ui.status, sizeof(app->ui.status), "simulation reset");
+                return;
+            }
+            /* Bare R falls through to UI (rotate selected IC). */
+            break;
         case SDLK_f:
             if (r01s_fast_glue_mask() & R01S_FAST_GLUE_BOOT_DEFAULT) {
                 r01s_fast_glue_set(0);

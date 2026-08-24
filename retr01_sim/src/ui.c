@@ -11,6 +11,8 @@
 
 static void clamp_chip_in_island(R01sUi *ui, R01sEntity *e, int island_index);
 static void clamp_chip(R01sUi *ui, R01sEntity *e, int island_index);
+static void ui_save_island_layout(R01sUi *ui);
+static void ui_save_compact_layout(R01sUi *ui);
 static void draw_video_pixels(SDL_Renderer *r, const R01sVideoSink *sink, int px, int py);
 static void ui_toggle_compact(R01sUi *ui);
 static void compact_btn_rect(const R01sUi *ui, SDL_Rect *rc);
@@ -166,14 +168,48 @@ int r01s_ui_init(R01sUi *ui) {
     ui->drag_btn = -1;
     ui->ctx_chip = -1;
     snprintf(ui->status, sizeof(ui->status),
-             "32-IC BOM — islands O A C D G H J K L — drag / resize BR — SPACE run/pause");
+             "SPACE pause — Ctrl+R reset — R rotate IC — COMPACT/ISLANDS");
     return 0;
 }
 
 void r01s_ui_shutdown(R01sUi *ui) {
     if (ui) {
+        if (ui->group) {
+            r01s_ui_layout_save(ui);
+        }
         memset(ui, 0, sizeof(*ui));
     }
+}
+
+int r01s_ui_rotate_selected(R01sUi *ui) {
+    R01sEntity *te;
+    int idx;
+    if (!ui) {
+        return 0;
+    }
+    idx = ui->selected;
+    if (idx < 0 || idx >= ui->chip_count) {
+        idx = ui->ctx_chip;
+    }
+    if (idx < 0 || idx >= ui->chip_count) {
+        return 0;
+    }
+    te = ui->chips[idx];
+    if (!te || te->visual != R01S_ENTITY_VIS_IC) {
+        return 0;
+    }
+    r01s_entity_set_orient(te, te->orient == R01S_ORIENT_V ? R01S_ORIENT_H : R01S_ORIENT_V);
+    clamp_chip(ui, te, ui->chip_island[idx]);
+    if (ui->layout_compact) {
+        ui_save_compact_layout(ui);
+    } else {
+        ui_save_island_layout(ui);
+    }
+    ui->layout_dirty = 1;
+    r01s_ui_layout_save(ui);
+    snprintf(ui->status, sizeof(ui->status), "%s → %s", te->refdes ? te->refdes : "?",
+             te->orient == R01S_ORIENT_V ? "VERTICAL" : "HORIZONTAL");
+    return 1;
 }
 
 void r01s_ui_bind_group(R01sUi *ui, R01sIslandGroup *group) {
@@ -221,21 +257,28 @@ void r01s_ui_clamp_pan(R01sUi *ui) {
 
 static void pin_level_rgb(R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg, Uint8 *pb) {
     if (dir == R01S_PIN_PWR) {
-        *pr = 200;
-        *pg = 80;
-        *pb = 80;
+        *pr = 220;
+        *pg = 70;
+        *pb = 70;
+        return;
+    }
+    if (dir == R01S_PIN_NC) {
+        *pr = 70;
+        *pg = 70;
+        *pb = 70;
         return;
     }
     switch (lvl) {
     case R01S_LVL_H:
-        *pr = 80;
-        *pg = 220;
-        *pb = 100;
+        *pr = 70;
+        *pg = 210;
+        *pb = 90;
         break;
     case R01S_LVL_L:
-        *pr = 40;
-        *pg = 50;
-        *pb = 45;
+        /* Solid dark — no light center (pad is a filled block). */
+        *pr = 28;
+        *pg = 32;
+        *pb = 30;
         break;
     case R01S_LVL_X:
         *pr = 220;
@@ -243,11 +286,51 @@ static void pin_level_rgb(R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg, U
         *pb = 200;
         break;
     default:
-        *pr = 110;
-        *pg = 110;
-        *pb = 90;
+        /* Hi-Z / undriven */
+        *pr = 120;
+        *pg = 125;
+        *pb = 110;
         break;
     }
+}
+
+/* DIP pad: solid 3×3 block; stub stops at the pad (no line through the fill). */
+static void draw_dip_pad_h(SDL_Renderer *r, int px, int body_edge_y, int outward_down, Uint8 pr, Uint8 pg,
+                           Uint8 pb) {
+    int stub0;
+    int stub1;
+    int pad_y;
+    if (outward_down) {
+        pad_y = body_edge_y + 7;
+        stub0 = body_edge_y;
+        stub1 = pad_y;
+    } else {
+        pad_y = body_edge_y - 9;
+        stub0 = pad_y + 2;
+        stub1 = body_edge_y;
+    }
+    SDL_SetRenderDrawColor(r, pr, pg, pb, 255);
+    SDL_RenderDrawLine(r, px, stub0, px, stub1);
+    fill_rect(r, px - 1, pad_y, 3, 3, pr, pg, pb);
+}
+
+static void draw_dip_pad_v(SDL_Renderer *r, int py, int body_edge_x, int outward_left, Uint8 pr, Uint8 pg,
+                           Uint8 pb) {
+    int stub0;
+    int stub1;
+    int pad_x;
+    if (outward_left) {
+        pad_x = body_edge_x - 9;
+        stub0 = pad_x + 2;
+        stub1 = body_edge_x;
+    } else {
+        pad_x = body_edge_x + 7;
+        stub0 = body_edge_x;
+        stub1 = pad_x;
+    }
+    SDL_SetRenderDrawColor(r, pr, pg, pb, 255);
+    SDL_RenderDrawLine(r, stub0, py, stub1, py);
+    fill_rect(r, pad_x, py - 1, 3, 3, pr, pg, pb);
 }
 
 static void draw_glyph_pins(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int board_x, int board_y) {
@@ -429,39 +512,24 @@ static void draw_chip(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, in
     int label_max;
     SDL_Rect body_clip;
     int horiz = (e->orient != R01S_ORIENT_V);
+    int dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
 
     for (i = 0; i < e->pin_count; i++) {
         int num = e->pins[i].number;
         int along;
         int side_pin1;
-        int px0, px1, py0, py1;
         Uint8 pr, pg, pb;
+        /* Only package outline pins — logical pins beyond dip_pins used to share one
+         * slot (often the center) and crush spacing (e.g. ATF22V10 beam-Y extras). */
+        if (num < 1 || num > dip) {
+            continue;
+        }
         dip_pin_pos(e, num, &along, &side_pin1);
         pin_level_rgb(e->pins[i].level, e->pins[i].dir, &pr, &pg, &pb);
         if (horiz) {
-            int px = x + along;
-            if (side_pin1) {
-                py0 = y + e->body_h;
-                py1 = y + e->body_h + 10;
-            } else {
-                py0 = y - 10;
-                py1 = y;
-            }
-            SDL_SetRenderDrawColor(r, pr, pg, pb, 255);
-            SDL_RenderDrawLine(r, px, py0, px, py1);
-            fill_rect(r, px - 1, side_pin1 ? py1 - 3 : py0, 3, 3, pr, pg, pb);
+            draw_dip_pad_h(r, x + along, side_pin1 ? (y + e->body_h) : y, side_pin1, pr, pg, pb);
         } else {
-            int py = y + along;
-            if (side_pin1) {
-                px0 = x - 10;
-                px1 = x;
-            } else {
-                px0 = x + e->body_w;
-                px1 = x + e->body_w + 10;
-            }
-            SDL_SetRenderDrawColor(r, pr, pg, pb, 255);
-            SDL_RenderDrawLine(r, px0, py, px1, py);
-            fill_rect(r, side_pin1 ? px0 : px1 - 3, py - 1, 3, 3, pr, pg, pb);
+            draw_dip_pad_v(r, y + along, side_pin1 ? x : (x + e->body_w), side_pin1, pr, pg, pb);
         }
     }
 
@@ -730,6 +798,7 @@ static void ui_save_island_layout(R01sUi *ui) {
         const R01sEntity *e = ui->chips[i];
         ui->save_chip_x[i] = e ? e->board_x : 0;
         ui->save_chip_y[i] = e ? e->board_y : 0;
+        ui->save_chip_orient[i] = e ? (uint8_t)e->orient : (uint8_t)R01S_ORIENT_H;
     }
     n_islands = r01s_island_group_count(ui->group);
     for (i = 0; i < n_islands && i < R01S_MAX_ISLANDS; i++) {
@@ -743,6 +812,20 @@ static void ui_save_island_layout(R01sUi *ui) {
         ui->save_island_h[i] = island->board_h;
     }
     ui->layout_saved = 1;
+}
+
+static void ui_save_compact_layout(R01sUi *ui) {
+    int i;
+    if (!ui) {
+        return;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        const R01sEntity *e = ui->chips[i];
+        ui->compact_chip_x[i] = e ? e->board_x : 0;
+        ui->compact_chip_y[i] = e ? e->board_y : 0;
+        ui->compact_chip_orient[i] = e ? (uint8_t)e->orient : (uint8_t)R01S_ORIENT_H;
+    }
+    ui->compact_saved = 1;
 }
 
 static void ui_restore_island_layout(R01sUi *ui) {
@@ -768,7 +851,29 @@ static void ui_restore_island_layout(R01sUi *ui) {
         if (!e) {
             continue;
         }
+        if (e->visual == R01S_ENTITY_VIS_IC) {
+            r01s_entity_set_orient(e, (R01sPkgOrient)ui->save_chip_orient[i]);
+        }
         r01s_entity_place(e, ui->save_chip_x[i], ui->save_chip_y[i]);
+        clamp_chip_in_island(ui, e, ui->chip_island[i]);
+    }
+}
+
+static void ui_restore_compact_layout(R01sUi *ui) {
+    int i;
+    if (!ui || !ui->compact_saved) {
+        return;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        R01sEntity *e = ui->chips[i];
+        if (!e) {
+            continue;
+        }
+        if (e->visual == R01S_ENTITY_VIS_IC) {
+            r01s_entity_set_orient(e, (R01sPkgOrient)ui->compact_chip_orient[i]);
+        }
+        r01s_entity_place(e, ui->compact_chip_x[i], ui->compact_chip_y[i]);
+        clamp_chip_to_board(e);
     }
 }
 
@@ -871,15 +976,24 @@ static void ui_toggle_compact(R01sUi *ui) {
 
     if (!ui->layout_compact) {
         ui_save_island_layout(ui);
-        ui_apply_compact_layout(ui);
+        if (ui->compact_saved) {
+            ui_restore_compact_layout(ui);
+        } else {
+            ui_apply_compact_layout(ui);
+            ui_save_compact_layout(ui);
+        }
         ui->layout_compact = 1;
+        ui->layout_dirty = 1;
         snprintf(ui->status, sizeof(ui->status), "compact PCB layout — click ISLANDS to restore frames");
     } else {
+        ui_save_compact_layout(ui);
         ui_restore_island_layout(ui);
         ui->layout_compact = 0;
+        ui->layout_dirty = 1;
         snprintf(ui->status, sizeof(ui->status), "island layout restored");
         r01s_ui_clamp_pan(ui);
     }
+    r01s_ui_layout_save(ui);
 }
 
 static void compact_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
@@ -1044,7 +1158,7 @@ static void draw_health_dot(SDL_Renderer *r, int x, int y, R01sHealth h) {
 #define R01S_UI_STATUS_ROW_H 16
 #define R01S_UI_STATUS_FOOTER_H 16
 #define R01S_UI_SIDEBAR_GAP 8
-#define R01S_UI_PROBE_H 156
+#define R01S_UI_PROBE_H 220
 #define GP_PANEL_W 156
 #define GP_PANEL_H 132
 
@@ -1205,9 +1319,16 @@ static void draw_system_health_panel(SDL_Renderer *r, R01sUi *ui, int py) {
     font_draw_ellipsize(r, px + 8, py + ph - 14, "WARN/FAIL COPY PASTES DEBUG", pw - 16, 100, 115, 100);
 }
 
+static void draw_pin_swatch(SDL_Renderer *r, int x, int y, Uint8 R, Uint8 G, Uint8 B, const char *label) {
+    fill_rect(r, x, y, 8, 8, R, G, B);
+    draw_rect(r, x, y, 8, 8, 90, 100, 85);
+    font_draw(r, x + 12, y + 1, label, 160, 175, 155);
+}
+
 static void draw_live_probe(SDL_Renderer *r, const R01sUi *ui, int py) {
     int px = R01S_UI_SIDEBAR_X;
     int pw = R01S_UI_SIDEBAR_W;
+    Uint8 pr, pg, pb;
     fill_rect(r, px, py, pw, R01S_UI_PROBE_H, 16, 22, 18);
     draw_rect(r, px, py, pw, R01S_UI_PROBE_H, 80, 90, 70);
     font_draw(r, px + 8, py + 8, "LIVE PROBE", 200, 210, 180);
@@ -1218,7 +1339,20 @@ static void draw_live_probe(SDL_Renderer *r, const R01sUi *ui, int py) {
     draw_pad_bits(r, px + 8, py + 94, ui->probe_pad_p1);
     font_draw(r, px + 8, py + 114, "P2 FE61", 160, 180, 160);
     draw_pad_bits(r, px + 8, py + 124, ui->probe_pad_p2);
-    font_draw(r, px + 8, py + 144, "PINS GLOW = LEVEL", 120, 130, 120);
+
+    font_draw(r, px + 8, py + 148, "PIN COLORS", 200, 210, 180);
+    pin_level_rgb(R01S_LVL_H, R01S_PIN_OUT, &pr, &pg, &pb);
+    draw_pin_swatch(r, px + 8, py + 164, pr, pg, pb, "HIGH");
+    pin_level_rgb(R01S_LVL_L, R01S_PIN_OUT, &pr, &pg, &pb);
+    draw_pin_swatch(r, px + 100, py + 164, pr, pg, pb, "LOW");
+    pin_level_rgb(R01S_LVL_X, R01S_PIN_OUT, &pr, &pg, &pb);
+    draw_pin_swatch(r, px + 8, py + 180, pr, pg, pb, "X / FIGHT");
+    pin_level_rgb(R01S_LVL_Z, R01S_PIN_OUT, &pr, &pg, &pb);
+    draw_pin_swatch(r, px + 100, py + 180, pr, pg, pb, "Hi-Z");
+    pin_level_rgb(R01S_LVL_L, R01S_PIN_PWR, &pr, &pg, &pb);
+    draw_pin_swatch(r, px + 8, py + 196, pr, pg, pb, "PWR / VCC");
+    pin_level_rgb(R01S_LVL_L, R01S_PIN_NC, &pr, &pg, &pb);
+    draw_pin_swatch(r, px + 100, py + 196, pr, pg, pb, "N/C");
 }
 
 static void draw_island_frame(SDL_Renderer *r, const R01sUi *ui, const R01sIsland *island, int active,
@@ -1652,10 +1786,11 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_UI_HUD_TOP, 12, 14, 16);
     font_draw(r, 8, 7, "RETR01 SIM  ISLANDS O+A+C+D+G+H+J+K+L", 200, 210, 220);
     if (ui->layout_compact) {
-        font_draw(r, R01S_UI_VIEW_X + 8, 7, "COMPACT PCB  DRAG CHIPS  SHIFT+ARROWS PAN", 120, 130, 140);
-    } else {
-        font_draw(r, R01S_UI_VIEW_X + 8, 7, "DRAG EMPTY / RESIZE BR  SHIFT+ARROWS PAN (VERT)", 120, 130,
+        font_draw(r, R01S_UI_VIEW_X + 8, 7, "COMPACT  R ROTATE  Ctrl+R RESET  SHIFT+ARROWS PAN", 120, 130,
                   140);
+    } else {
+        font_draw(r, R01S_UI_VIEW_X + 8, 7, "R ROTATE  Ctrl+R RESET  DRAG/RESIZE  SHIFT+ARROWS PAN", 120,
+                  130, 140);
     }
     {
         SDL_Rect cbtn;
@@ -1846,6 +1981,11 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
     if (e->type == SDL_KEYDOWN) {
         const Uint8 *mods = SDL_GetKeyboardState(NULL);
         int step = 48;
+        if (!(e->key.keysym.mod & KMOD_CTRL) && e->key.keysym.sym == SDLK_r) {
+            if (r01s_ui_rotate_selected(ui)) {
+                return 1;
+            }
+        }
         if (mods[SDL_SCANCODE_LSHIFT] || mods[SDL_SCANCODE_RSHIFT]) {
             if (e->key.keysym.sym == SDLK_LEFT) {
                 ui->pan_x -= step;
@@ -1870,6 +2010,8 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         }
     }
     if (e->type == SDL_MOUSEBUTTONUP && e->button.button == SDL_BUTTON_LEFT) {
+        int was_layout_drag =
+            (ui->drag_chip >= 0 || ui->drag_island >= 0 || ui->resize_island >= 0);
         if (ui->drag_stick >= 0) {
             ui->gamepad[ui->drag_stick].stick_x = 0;
             ui->gamepad[ui->drag_stick].stick_y = 0;
@@ -1884,6 +2026,10 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         ui->drag_chip = -1;
         ui->drag_island = -1;
         ui->resize_island = -1;
+        if (was_layout_drag) {
+            ui->layout_dirty = 1;
+            r01s_ui_layout_save(ui);
+        }
         return ui->selected >= 0;
     }
     if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT) {
@@ -1908,18 +2054,8 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 my = R01S_LOGIC_H - 4 - mh;
             }
             if (logic_x >= mx && logic_x < mx + mw && logic_y >= my && logic_y < my + mh) {
-                R01sEntity *te = ui->chips[ui->ctx_chip];
-                if (te && te->visual == R01S_ENTITY_VIS_IC) {
-                    r01s_entity_set_orient(te, te->orient == R01S_ORIENT_V ? R01S_ORIENT_H : R01S_ORIENT_V);
-                    clamp_chip(ui, te, ui->chip_island[ui->ctx_chip]);
-                    snprintf(ui->status, sizeof(ui->status), "%s → %s",
-                             te->refdes ? te->refdes : "?",
-                             te->orient == R01S_ORIENT_V ? "VERTICAL" : "HORIZONTAL");
-                    if (ui->layout_compact) {
-                        /* Re-pack so footprint change doesn't leave overlaps. */
-                        ui_apply_compact_layout(ui);
-                    }
-                }
+                ui->selected = ui->ctx_chip;
+                r01s_ui_rotate_selected(ui);
                 ui->ctx_chip = -1;
                 return 1;
             }
