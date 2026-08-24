@@ -22,7 +22,8 @@ typedef enum R01sFastGlue {
     R01S_FAST_GLUE_ALL     = 0xFFFFu,
 } R01sFastGlue;
 
-#define R01S_FAST_GLUE_BOOT_DEFAULT (R01S_FAST_GLUE_SETTLE | R01S_FAST_GLUE_VIDEO)
+#define R01S_FAST_GLUE_BOOT_DEFAULT \
+    (R01S_FAST_GLUE_SETTLE | R01S_FAST_GLUE_VIDEO | R01S_FAST_GLUE_MEMORY | R01S_FAST_GLUE_PINS)
 
 uint32_t r01s_fast_glue_mask(void);
 void r01s_fast_glue_set(uint32_t mask);

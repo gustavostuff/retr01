@@ -74,9 +74,11 @@ static void apply_fast_cli(int argc, char **argv) {
         /* env already applied in from_env */
     }
     if (mask) {
-        fprintf(stderr, "fast: %s (settle=%d video=%d) — pin-level still available via --no-fast / F key\n",
+        fprintf(stderr, "fast: %s (settle=%d video=%d memory=%d pins=%d) — pin-level via --no-fast / F\n",
                 r01s_fast_glue_label(mask), r01s_fast_glue_enabled(R01S_FAST_GLUE_SETTLE),
-                r01s_fast_glue_enabled(R01S_FAST_GLUE_VIDEO));
+                r01s_fast_glue_enabled(R01S_FAST_GLUE_VIDEO),
+                r01s_fast_glue_enabled(R01S_FAST_GLUE_MEMORY),
+                r01s_fast_glue_enabled(R01S_FAST_GLUE_PINS));
     }
 }
 

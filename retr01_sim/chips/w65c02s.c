@@ -274,8 +274,16 @@ uint16_t r01s_w65c02s_pc(const R01sW65C02S *chip) {
     return chip ? chip->pc : 0;
 }
 
+uint16_t r01s_w65c02s_ab(const R01sW65C02S *chip) {
+    return chip ? chip->ab : 0;
+}
+
 uint8_t r01s_w65c02s_a(const R01sW65C02S *chip) {
     return chip ? chip->a : 0;
+}
+
+int r01s_w65c02s_rwb(const R01sW65C02S *chip) {
+    return chip ? chip->rwb : 1;
 }
 
 R01sCpuPhase r01s_w65c02s_phase(const R01sW65C02S *chip) {

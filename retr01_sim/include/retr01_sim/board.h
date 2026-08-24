@@ -119,6 +119,29 @@ typedef struct R01sIslandIntegrationImpl {
     R01sIntegration *integ; /* NMI / system-ok stats (Island P) */
 } R01sIslandIntegrationImpl;
 
+/* Cached pin indices for fast wire_* (Playbook Target 1). Built in r01s_board_build(). */
+#define R01S_WIRE_CACHE_A 16
+#define R01S_WIRE_CACHE_D 8
+
+typedef struct R01sBoardWireCache {
+    int built;
+    int cpu_a[R01S_WIRE_CACHE_A];
+    int cpu_d[R01S_WIRE_CACHE_D];
+    int cpu_rwb;
+    int cpu_be;
+    int ram_a[15];
+    int ram_dq[R01S_WIRE_CACHE_D];
+    int prg_a[15];
+    int prg_dq[R01S_WIRE_CACHE_D];
+    int flash_dq[R01S_WIRE_CACHE_D];
+    int vram_dq[R01S_WIRE_CACHE_D];
+    int mcu_dq[R01S_WIRE_CACHE_D];
+    int apu_dq[R01S_WIRE_CACHE_D];
+    int pads_dq[R01S_WIRE_CACHE_D];
+    int latch_d[R01S_WIRE_CACHE_D]; /* 573 1D..8D */
+    int latch_q[R01S_WIRE_CACHE_D]; /* 573 1Q..8Q */
+} R01sBoardWireCache;
+
 /* Bring-up board: islands A–E + G + H + I + O + J + K + L + M + N + P (F deferred). */
 typedef struct R01sBoard {
     R01sPwr5v pwr;
@@ -207,6 +230,7 @@ typedef struct R01sBoard {
     uint8_t linebuf_saw_mux_mcu;
     uint8_t linebuf_saw_mux_beam;
     uint32_t health_phi2_edges;
+    R01sBoardWireCache wire_cache;
 } R01sBoard;
 
 int r01s_board_build(R01sBoard *board, R01sIslandBuilder *builder);

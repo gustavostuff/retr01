@@ -911,10 +911,11 @@ static void draw_btn(SDL_Renderer *r, const SDL_Rect *rc, int pressed, const cha
     font_draw(r, rc->x + 4, rc->y + 8, label, 210, 210, 200);
 }
 
-static void draw_video_preview(SDL_Renderer *r, const R01sVideoSink *sink, int px, int py) {
+static void draw_video_pixels(SDL_Renderer *r, const R01sVideoSink *sink, int px, int py) {
     int x;
     int y;
     const uint8_t *rgb;
+
     if (!sink) {
         return;
     }
@@ -922,16 +923,23 @@ static void draw_video_preview(SDL_Renderer *r, const R01sVideoSink *sink, int p
     if (!rgb) {
         return;
     }
-    fill_rect(r, px - 8, py - 6, 128 + 16, 120 + 22, 16, 22, 18);
-    draw_rect(r, px - 8, py - 6, 128 + 16, 120 + 22, 80, 90, 70);
-    font_draw(r, px, py - 4, "PLAYFIELD 128X120", 180, 190, 160);
     for (y = 0; y < R01S_VIDEO_H; y++) {
         for (x = 0; x < R01S_VIDEO_W; x++) {
             size_t off = (size_t)(y * R01S_VIDEO_W + x) * 3u;
             SDL_SetRenderDrawColor(r, rgb[off], rgb[off + 1], rgb[off + 2], 255);
-            SDL_RenderDrawPoint(r, px + x, py + 10 + y);
+            SDL_RenderDrawPoint(r, px + x, py + y);
         }
     }
+}
+
+static void draw_video_preview(SDL_Renderer *r, const R01sVideoSink *sink, int px, int py) {
+    if (!sink) {
+        return;
+    }
+    fill_rect(r, px - 8, py - 6, 128 + 16, 120 + 22, 16, 22, 18);
+    draw_rect(r, px - 8, py - 6, 128 + 16, 120 + 22, 80, 90, 70);
+    font_draw(r, px, py - 4, "PLAYFIELD 128X120", 180, 190, 160);
+    draw_video_pixels(r, sink, px, py + 10);
 }
 
 static void draw_gamepad_panel(SDL_Renderer *r, const R01sUi *ui, int player) {

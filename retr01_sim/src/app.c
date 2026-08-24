@@ -203,9 +203,12 @@ void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
                          r01s_fast_glue_mask() ? " [FAST]" : "");
                 SDL_SetWindowTitle(app->win, title);
             }
-            fprintf(stderr, "fast: %s (settle=%d video=%d)\n", r01s_fast_glue_label(r01s_fast_glue_mask()),
+            fprintf(stderr, "fast: %s (settle=%d video=%d memory=%d pins=%d)\n",
+                    r01s_fast_glue_label(r01s_fast_glue_mask()),
                     r01s_fast_glue_enabled(R01S_FAST_GLUE_SETTLE),
-                    r01s_fast_glue_enabled(R01S_FAST_GLUE_VIDEO));
+                    r01s_fast_glue_enabled(R01S_FAST_GLUE_VIDEO),
+                    r01s_fast_glue_enabled(R01S_FAST_GLUE_MEMORY),
+                    r01s_fast_glue_enabled(R01S_FAST_GLUE_PINS));
             return;
         case SDLK_PERIOD:
             if (!group->running) {
