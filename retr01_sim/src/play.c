@@ -195,9 +195,6 @@ void r01s_play_on_vblank(R01sBoard *b) {
     if (!b) {
         return;
     }
-    if (b->video_impl.sink) {
-        r01s_video_sink_clear(b->video_impl.sink);
-    }
     if (!b->play.enabled) {
         return;
     }

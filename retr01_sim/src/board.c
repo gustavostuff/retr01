@@ -1816,7 +1816,7 @@ static void island_video_init(R01sIsland *island) {
     R01sIslandVideoImpl *impl = (R01sIslandVideoImpl *)island->impl;
     r01s_compositor_init(impl->comp, "UPLDV");
     r01s_at28c16_init(impl->prom, "U24");
-    r01s_video_sink_init(impl->sink, "LCD1");
+    r01s_video_sink_init(impl->sink, "SCR1");
     r01s_island_add_entity(island, r01s_compositor_entity(impl->comp));
     r01s_island_add_entity(island, r01s_at28c16_entity(impl->prom));
     r01s_island_add_entity(island, r01s_video_sink_entity(impl->sink));
@@ -2436,6 +2436,9 @@ static void board_step(R01sIslandGroup *group) {
             {
                 int vb = r01s_beam_xy_vblank(ctx->beam_impl.beam_x);
                 if (vb && !ctx->vblank_prev) {
+                    if (ctx->video_impl.sink) {
+                        r01s_video_sink_on_vblank(ctx->video_impl.sink);
+                    }
                     r01s_play_on_vblank(ctx);
                 }
                 ctx->vblank_prev = (uint8_t)(vb ? 1 : 0);

@@ -4,13 +4,17 @@
 
 #include <string.h>
 
+/* Per UI frame (~60 Hz): ~4% decay reads as CRT phosphor persistence. */
+#define R01S_VIDEO_PHOSPHOR_DECAY_NUM 245
+#define R01S_VIDEO_PHOSPHOR_DECAY_DEN 256
+
 static void sink_reset(R01sEntity *e) {
     R01sVideoSink *c = (R01sVideoSink *)e;
     memset(c->rgb, 0, sizeof(c->rgb));
     c->dot_samples = 0;
     c->lit_pixels = 0;
     c->last_packed = 0;
-    /* SCALE DIP persists across reset (board switch, not soft reset). */
+    /* SCALE DIP and render mode persist across reset (board switch, not soft reset). */
 }
 
 static void sink_eval(R01sEntity *e) {
@@ -26,6 +30,23 @@ static void sink_destroy(R01sEntity *e) {
 }
 
 static const R01sEntityVTable SINK_VT = {sink_reset, sink_eval, sink_tick, sink_destroy};
+
+static int sink_mode_valid(int mode) {
+    return mode >= R01S_VIDEO_RENDER_NORMAL && mode <= R01S_VIDEO_RENDER_PHOSPHOR;
+}
+
+static void sink_phosphor_decay(R01sVideoSink *chip) {
+    size_t i;
+    size_t n;
+
+    if (!chip) {
+        return;
+    }
+    n = sizeof(chip->rgb);
+    for (i = 0; i < n; i++) {
+        chip->rgb[i] = (uint8_t)((chip->rgb[i] * R01S_VIDEO_PHOSPHOR_DECAY_NUM) / R01S_VIDEO_PHOSPHOR_DECAY_DEN);
+    }
+}
 
 int r01s_rgbs_beam_to_logical(int scale_2x, int bx, int by, int *lx, int *ly) {
     int x;
@@ -57,9 +78,10 @@ void r01s_video_sink_init(R01sVideoSink *chip, const char *refdes) {
         return;
     }
     memset(chip, 0, sizeof(*chip));
-    r01s_entity_init(&chip->base, &SINK_VT, "LCD_SINK", refdes ? refdes : "LCD1");
+    r01s_entity_init(&chip->base, &SINK_VT, "SCREEN_SINK", refdes ? refdes : "SCR1");
     chip->base.impl = chip;
     chip->scale_2x = 0; /* 1x centered playfield (toggle to 2x via UI / G) */
+    chip->render_mode = R01S_VIDEO_RENDER_DEFAULT;
     r01s_entity_add_pin(&chip->base, 1, "DOT", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 2, "HSYNC", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 3, "VSYNC", R01S_PIN_IN);
@@ -82,6 +104,17 @@ void r01s_video_sink_set_scale_2x(R01sVideoSink *chip, int scale_2x) {
 
 int r01s_video_sink_scale_2x(const R01sVideoSink *chip) {
     return chip ? (chip->scale_2x ? 1 : 0) : 0;
+}
+
+void r01s_video_sink_set_render_mode(R01sVideoSink *chip, int mode) {
+    if (!chip || !sink_mode_valid(mode)) {
+        return;
+    }
+    chip->render_mode = (uint8_t)mode;
+}
+
+int r01s_video_sink_render_mode(const R01sVideoSink *chip) {
+    return chip ? (int)chip->render_mode : R01S_VIDEO_RENDER_DEFAULT;
 }
 
 void r01s_video_sink_plot(R01sVideoSink *chip, int fx, int fy, uint8_t prom_byte) {
@@ -110,6 +143,22 @@ void r01s_video_sink_clear(R01sVideoSink *chip) {
     }
     memset(chip->rgb, 0, sizeof(chip->rgb));
     chip->lit_pixels = 0;
+}
+
+void r01s_video_sink_on_vblank(R01sVideoSink *chip) {
+    if (!chip) {
+        return;
+    }
+    if (chip->render_mode == R01S_VIDEO_RENDER_NORMAL) {
+        r01s_video_sink_clear(chip);
+    }
+}
+
+void r01s_video_sink_display_tick(R01sVideoSink *chip) {
+    if (!chip || chip->render_mode != R01S_VIDEO_RENDER_PHOSPHOR) {
+        return;
+    }
+    sink_phosphor_decay(chip);
 }
 
 const uint8_t *r01s_video_sink_rgb(const R01sVideoSink *chip) {

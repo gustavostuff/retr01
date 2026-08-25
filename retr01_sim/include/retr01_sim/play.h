@@ -51,7 +51,7 @@ void r01s_play_tick(struct R01sBoard *board, uint8_t pad);
 /* Deprecated: player renders via OAM on the beam. Kept for API stability. */
 void r01s_play_draw(struct R01sBoard *board);
 
-/* VBlank: clear LCD field and latch pending scroll / camera / OAM (from board_step). */
+/* VBlank: latch pending scroll / camera / OAM (from board_step). LCD field start handled by video_sink. */
 void r01s_play_on_vblank(struct R01sBoard *board);
 
 #endif
