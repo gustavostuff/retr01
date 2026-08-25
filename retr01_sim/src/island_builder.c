@@ -44,6 +44,8 @@ void r01s_island_builder_mount(R01sIslandBuilder *builder, R01sEntity *entity, i
         builder->mount_count >= R01S_BUILDER_MAX_MOUNT) {
         return;
     }
+    board_x = r01s_grid_snap(board_x);
+    board_y = r01s_grid_snap(board_y);
     r01s_entity_place(entity, board_x, board_y);
     builder->mounts[builder->mount_count].entity = entity;
     builder->mounts[builder->mount_count].island_index = island_index;
@@ -96,11 +98,12 @@ void r01s_island_builder_fit_island(R01sIslandBuilder *builder, int island_index
     }
 
     if (max_rx == 0 && max_ry == 0) {
-        max_rx = 32;
-        max_ry = 32;
+        max_rx = 30;
+        max_ry = 30;
     }
-    island->board_w = R01S_ISLAND_PAD_X + R01S_CHIP_PIN_OUT + max_rx + R01S_CHIP_PIN_OUT + R01S_ISLAND_PAD_X;
-    island->board_h = R01S_ISLAND_PAD_TOP + max_ry + R01S_ISLAND_PAD_BOTTOM;
+    island->board_w =
+        r01s_grid_snap_up(R01S_ISLAND_PAD_X + R01S_CHIP_PIN_OUT + max_rx + R01S_CHIP_PIN_OUT + R01S_ISLAND_PAD_X);
+    island->board_h = r01s_grid_snap_up(R01S_ISLAND_PAD_TOP + max_ry + R01S_ISLAND_PAD_BOTTOM);
 }
 
 void r01s_island_builder_fit_all(R01sIslandBuilder *builder) {
@@ -152,8 +155,8 @@ void r01s_island_builder_arrange(R01sIslandBuilder *builder, int start_x, int st
 void r01s_island_builder_arrange_rows(R01sIslandBuilder *builder, int start_x, int start_y, int gap_x,
                                       int gap_y, int max_row_w) {
     int i;
-    int x = start_x;
-    int y = start_y;
+    int x = r01s_grid_snap(start_x);
+    int y = r01s_grid_snap(start_y);
     int row_h = 0;
     int limit;
 
@@ -163,6 +166,8 @@ void r01s_island_builder_arrange_rows(R01sIslandBuilder *builder, int start_x, i
     if (max_row_w < 64) {
         max_row_w = 64;
     }
+    start_x = x;
+    start_y = y;
     limit = start_x + max_row_w;
 
     for (i = 0; i < builder->island_count; i++) {
@@ -171,11 +176,16 @@ void r01s_island_builder_arrange_rows(R01sIslandBuilder *builder, int start_x, i
         int dy;
         int j;
 
+        island->board_w = r01s_grid_snap_up(island->board_w);
+        island->board_h = r01s_grid_snap_up(island->board_h);
+
         if (i > 0 && x > start_x && x + island->board_w > limit) {
             x = start_x;
             y += row_h + gap_y;
             row_h = 0;
         }
+        x = r01s_grid_snap(x);
+        y = r01s_grid_snap(y);
 
         dx = x - island->board_x;
         dy = y - island->board_y;
@@ -187,8 +197,8 @@ void r01s_island_builder_arrange_rows(R01sIslandBuilder *builder, int start_x, i
                 if (m->island_index != i || !m->entity) {
                     continue;
                 }
-                m->board_x += dx;
-                m->board_y += dy;
+                m->board_x = r01s_grid_snap(m->board_x + dx);
+                m->board_y = r01s_grid_snap(m->board_y + dy);
                 r01s_entity_place(m->entity, m->board_x, m->board_y);
             }
         } else {

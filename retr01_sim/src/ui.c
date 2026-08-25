@@ -311,43 +311,35 @@ static void pin_level_rgb(R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg, U
     }
 }
 
-/* DIP pad: solid 3×3 block; stub stops at the pad (no line through the fill). */
+/* DIP pad: colored stub only (no terminal square). */
 static void draw_dip_pad_h(SDL_Renderer *r, int px, int body_edge_y, int outward_down, Uint8 pr, Uint8 pg,
                            Uint8 pb) {
     int stub0;
     int stub1;
-    int pad_y;
     if (outward_down) {
-        pad_y = body_edge_y + 7;
         stub0 = body_edge_y;
-        stub1 = pad_y;
+        stub1 = body_edge_y + 9;
     } else {
-        pad_y = body_edge_y - 9;
-        stub0 = pad_y + 2;
+        stub0 = body_edge_y - 9;
         stub1 = body_edge_y;
     }
     SDL_SetRenderDrawColor(r, pr, pg, pb, 255);
     SDL_RenderDrawLine(r, px, stub0, px, stub1);
-    fill_rect(r, px - 1, pad_y, 3, 3, pr, pg, pb);
 }
 
 static void draw_dip_pad_v(SDL_Renderer *r, int py, int body_edge_x, int outward_left, Uint8 pr, Uint8 pg,
                            Uint8 pb) {
     int stub0;
     int stub1;
-    int pad_x;
     if (outward_left) {
-        pad_x = body_edge_x - 9;
-        stub0 = pad_x + 2;
+        stub0 = body_edge_x - 9;
         stub1 = body_edge_x;
     } else {
-        pad_x = body_edge_x + 7;
         stub0 = body_edge_x;
-        stub1 = pad_x;
+        stub1 = body_edge_x + 9;
     }
     SDL_SetRenderDrawColor(r, pr, pg, pb, 255);
     SDL_RenderDrawLine(r, stub0, py, stub1, py);
-    fill_rect(r, pad_x, py - 1, 3, 3, pr, pg, pb);
 }
 
 static void draw_glyph_pins(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int board_x, int board_y) {
@@ -386,7 +378,6 @@ static void draw_glyph_pins(SDL_Renderer *r, const R01sUi *ui, const R01sEntity 
         }
         SDL_SetRenderDrawColor(r, pr, pg, pb, 255);
         SDL_RenderDrawLine(r, px0, py, px1, py);
-        fill_rect(r, side_left ? px0 : px1 - 3, py - 1, 3, 3, pr, pg, pb);
     }
 }
 
@@ -671,18 +662,32 @@ static void clamp_chip_to_board(R01sEntity *e) {
     if (by > max_y) {
         by = max_y;
     }
+    bx = r01s_grid_snap(bx);
+    by = r01s_grid_snap(by);
+    if (bx < min_x) {
+        bx = r01s_grid_snap_up(min_x);
+    }
+    if (by < min_y) {
+        by = r01s_grid_snap_up(min_y);
+    }
+    if (bx > max_x) {
+        bx = r01s_grid_snap(max_x);
+    }
+    if (by > max_y) {
+        by = r01s_grid_snap(max_y);
+    }
     r01s_entity_place(e, bx, by);
 }
 
 static void clamp_chip_in_island(R01sUi *ui, R01sEntity *e, int island_index) {
-    const R01sIsland *island;
+    R01sIsland *island;
     int min_x, min_y, max_x, max_y;
     int bx, by;
 
     if (!ui || !e) {
         return;
     }
-    island = r01s_island_group_at(ui->group, island_index);
+    island = r01s_island_group_at_mut(ui->group, island_index);
     if (!island) {
         return;
     }
@@ -690,11 +695,28 @@ static void clamp_chip_in_island(R01sUi *ui, R01sEntity *e, int island_index) {
     min_y = island->board_y + R01S_ISLAND_PAD_TOP;
     max_x = island->board_x + island->board_w - R01S_ISLAND_PAD_X - R01S_CHIP_PIN_OUT - e->body_w;
     max_y = island->board_y + island->board_h - R01S_ISLAND_PAD_BOTTOM - e->body_h;
+    /* Grow the frame instead of collapsing every chip onto the same center. */
     if (max_x < min_x) {
-        min_x = max_x = island->board_x + (island->board_w - e->body_w) / 2;
+        int need = r01s_grid_snap_up(e->body_w + 2 * R01S_CHIP_PIN_OUT + 2 * R01S_ISLAND_PAD_X);
+        if (island->board_w < need) {
+            island->board_w = need;
+        }
+        min_x = island->board_x + R01S_ISLAND_PAD_X + R01S_CHIP_PIN_OUT;
+        max_x = island->board_x + island->board_w - R01S_ISLAND_PAD_X - R01S_CHIP_PIN_OUT - e->body_w;
+        if (max_x < min_x) {
+            min_x = max_x = island->board_x + (island->board_w - e->body_w) / 2;
+        }
     }
     if (max_y < min_y) {
-        min_y = max_y = island->board_y + (island->board_h - e->body_h) / 2;
+        int need = r01s_grid_snap_up(e->body_h + R01S_ISLAND_PAD_TOP + R01S_ISLAND_PAD_BOTTOM);
+        if (island->board_h < need) {
+            island->board_h = need;
+        }
+        min_y = island->board_y + R01S_ISLAND_PAD_TOP;
+        max_y = island->board_y + island->board_h - R01S_ISLAND_PAD_BOTTOM - e->body_h;
+        if (max_y < min_y) {
+            min_y = max_y = island->board_y + (island->board_h - e->body_h) / 2;
+        }
     }
     bx = e->board_x;
     by = e->board_y;
@@ -709,6 +731,20 @@ static void clamp_chip_in_island(R01sUi *ui, R01sEntity *e, int island_index) {
     }
     if (by > max_y) {
         by = max_y;
+    }
+    bx = r01s_grid_snap(bx);
+    by = r01s_grid_snap(by);
+    if (bx < min_x) {
+        bx = r01s_grid_snap_up(min_x);
+    }
+    if (by < min_y) {
+        by = r01s_grid_snap_up(min_y);
+    }
+    if (bx > max_x) {
+        bx = r01s_grid_snap(max_x);
+    }
+    if (by > max_y) {
+        by = r01s_grid_snap(max_y);
     }
     r01s_entity_place(e, bx, by);
 }
@@ -943,11 +979,15 @@ static void ui_arrange_islands_default(R01sUi *ui) {
         if (island->board_h < R01S_ISLAND_MIN_H) {
             island->board_h = R01S_ISLAND_MIN_H;
         }
+        island->board_w = r01s_grid_snap_up(island->board_w);
+        island->board_h = r01s_grid_snap_up(island->board_h);
         if (i > 0 && x > start_x && x + island->board_w > limit) {
             x = start_x;
             y += row_h + R01S_ISLAND_GAP;
             row_h = 0;
         }
+        x = r01s_grid_snap(x);
+        y = r01s_grid_snap(y);
         dx = x - island->board_x;
         dy = y - island->board_y;
         island->board_x = x;
@@ -985,6 +1025,172 @@ static void ui_fit_island_to_chips(R01sUi *ui, int island_index) {
     if (island->board_h < min_h) {
         island->board_h = min_h;
     }
+    island->board_w = r01s_grid_snap_up(island->board_w);
+    island->board_h = r01s_grid_snap_up(island->board_h);
+}
+
+/* Shelf-pack chips inside one island so they never share the same cell. */
+static void ui_pack_island_chips(R01sUi *ui, int island_index) {
+    R01sIsland *island;
+    R01sPackItem items[R01S_BOARD_MAX_CHIPS];
+    int place_x[R01S_BOARD_MAX_CHIPS];
+    int place_y[R01S_BOARD_MAX_CHIPS];
+    int n = 0;
+    int i;
+    int origin_x;
+    int origin_y;
+    int max_row;
+    int bb_w = 0;
+    int bb_h = 0;
+
+    if (!ui || !ui->group) {
+        return;
+    }
+    island = r01s_island_group_at_mut(ui->group, island_index);
+    if (!island) {
+        return;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        const R01sEntity *e = ui->chips[i];
+        if (!e || ui->chip_island[i] != (uint8_t)island_index || e->visual == R01S_ENTITY_VIS_NONE ||
+            e->body_w <= 0 || e->body_h <= 0) {
+            continue;
+        }
+        items[n].idx = i;
+        chip_pack_footprint(e, &items[n].pw, &items[n].ph);
+        n++;
+    }
+    if (n == 0) {
+        return;
+    }
+    qsort(items, (size_t)n, sizeof(items[0]), pack_item_taller);
+    origin_x = island->board_x + R01S_ISLAND_PAD_X + R01S_CHIP_PIN_OUT;
+    origin_y = island->board_y + R01S_ISLAND_PAD_TOP;
+    max_row = island->board_w - 2 * R01S_ISLAND_PAD_X - 2 * R01S_CHIP_PIN_OUT;
+    if (max_row < items[0].pw) {
+        max_row = items[0].pw;
+    }
+    pack_shelves(items, n, max_row, R01S_CHIP_GAP, origin_x, origin_y, place_x, place_y, &bb_w, &bb_h);
+    for (i = 0; i < n; i++) {
+        R01sEntity *e = ui->chips[items[i].idx];
+        int bx = place_x[i];
+        int by = place_y[i];
+        int pw, ph;
+        if (!e) {
+            continue;
+        }
+        chip_pack_footprint(e, &pw, &ph);
+        bx += (pw - e->body_w) / 2;
+        by += (ph - e->body_h) / 2;
+        r01s_entity_place(e, r01s_grid_snap(bx), r01s_grid_snap(by));
+    }
+    ui_fit_island_to_chips(ui, island_index);
+}
+
+static int entity_bodies_overlap(const R01sEntity *a, const R01sEntity *b) {
+    if (!a || !b) {
+        return 0;
+    }
+    return a->board_x < b->board_x + b->body_w && a->board_x + a->body_w > b->board_x &&
+           a->board_y < b->board_y + b->body_h && a->board_y + a->body_h > b->board_y;
+}
+
+static int island_chips_overlap(const R01sUi *ui, int island_index) {
+    int i, j;
+    if (!ui) {
+        return 0;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        const R01sEntity *a;
+        if (ui->chip_island[i] != (uint8_t)island_index) {
+            continue;
+        }
+        a = ui->chips[i];
+        if (!a || a->visual == R01S_ENTITY_VIS_NONE) {
+            continue;
+        }
+        for (j = i + 1; j < ui->chip_count; j++) {
+            const R01sEntity *b;
+            if (ui->chip_island[j] != (uint8_t)island_index) {
+                continue;
+            }
+            b = ui->chips[j];
+            if (!b || b->visual == R01S_ENTITY_VIS_NONE) {
+                continue;
+            }
+            if (entity_bodies_overlap(a, b)) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+static int island_saved_positions_degenerate(const R01sUi *ui, int island_index) {
+    int i;
+    int n = 0;
+    int fx = 0;
+    int fy = 0;
+    if (!ui) {
+        return 0;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        if (ui->chip_island[i] != (uint8_t)island_index) {
+            continue;
+        }
+        if (!ui->chips[i] || ui->chips[i]->visual == R01S_ENTITY_VIS_NONE) {
+            continue;
+        }
+        if (n == 0) {
+            fx = ui->save_chip_x[i];
+            fy = ui->save_chip_y[i];
+        } else if (ui->save_chip_x[i] != fx || ui->save_chip_y[i] != fy) {
+            return 0;
+        }
+        n++;
+    }
+    return n > 1;
+}
+
+static void island_expand_for_saved_chips(R01sUi *ui, int island_index) {
+    R01sIsland *island;
+    int i;
+    int need_w = R01S_ISLAND_MIN_W;
+    int need_h = R01S_ISLAND_MIN_H;
+
+    if (!ui || !ui->group) {
+        return;
+    }
+    island = r01s_island_group_at_mut(ui->group, island_index);
+    if (!island) {
+        return;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        R01sEntity *e;
+        int right;
+        int bottom;
+        if (ui->chip_island[i] != (uint8_t)island_index) {
+            continue;
+        }
+        e = ui->chips[i];
+        if (!e) {
+            continue;
+        }
+        right = ui->save_chip_x[i] + e->body_w + R01S_CHIP_PIN_OUT + R01S_ISLAND_PAD_X;
+        bottom = ui->save_chip_y[i] + e->body_h + R01S_ISLAND_PAD_BOTTOM;
+        if (right > need_w) {
+            need_w = right;
+        }
+        if (bottom > need_h) {
+            need_h = bottom;
+        }
+    }
+    if (island->board_w < need_w) {
+        island->board_w = need_w;
+    }
+    if (island->board_h < need_h) {
+        island->board_h = need_h;
+    }
 }
 
 static void ui_save_compact_layout(R01sUi *ui) {
@@ -1016,10 +1222,10 @@ void r01s_ui_apply_saved_island_layout(R01sUi *ui) {
             if (!island || ui->save_island_w[i] <= 0 || ui->save_island_h[i] <= 0) {
                 continue;
             }
-            island->board_x = ui->save_island_x[i];
-            island->board_y = ui->save_island_y[i];
-            island->board_w = ui->save_island_w[i];
-            island->board_h = ui->save_island_h[i];
+            island->board_x = r01s_grid_snap(ui->save_island_x[i]);
+            island->board_y = r01s_grid_snap(ui->save_island_y[i]);
+            island->board_w = r01s_grid_snap_up(ui->save_island_w[i]);
+            island->board_h = r01s_grid_snap_up(ui->save_island_h[i]);
         }
     }
 
@@ -1031,7 +1237,28 @@ void r01s_ui_apply_saved_island_layout(R01sUi *ui) {
         if (e->visual == R01S_ENTITY_VIS_IC) {
             r01s_entity_set_orient(e, (R01sPkgOrient)ui->save_chip_orient[i]);
         }
-        ui_chip_place_rel(ui, i, ui->save_chip_x[i], ui->save_chip_y[i]);
+    }
+
+    for (i = 0; i < n_islands; i++) {
+        if (island_saved_positions_degenerate(ui, i)) {
+            ui_pack_island_chips(ui, i);
+            continue;
+        }
+        island_expand_for_saved_chips(ui, i);
+        {
+            int j;
+            for (j = 0; j < ui->chip_count; j++) {
+                R01sEntity *e = ui->chips[j];
+                if (!e || ui->chip_island[j] != (uint8_t)i) {
+                    continue;
+                }
+                ui_chip_place_rel(ui, j, ui->save_chip_x[j], ui->save_chip_y[j]);
+            }
+        }
+        ui_fit_island_to_chips(ui, i);
+        if (island_chips_overlap(ui, i)) {
+            ui_pack_island_chips(ui, i);
+        }
     }
 }
 
@@ -1082,10 +1309,10 @@ void r01s_ui_load_island_layout(R01sUi *ui, int file_version) {
             if (!island || ui->save_island_w[i] <= 0 || ui->save_island_h[i] <= 0) {
                 continue;
             }
-            island->board_x = ui->save_island_x[i];
-            island->board_y = ui->save_island_y[i];
-            island->board_w = ui->save_island_w[i];
-            island->board_h = ui->save_island_h[i];
+            island->board_x = r01s_grid_snap(ui->save_island_x[i]);
+            island->board_y = r01s_grid_snap(ui->save_island_y[i]);
+            island->board_w = r01s_grid_snap_up(ui->save_island_w[i]);
+            island->board_h = r01s_grid_snap_up(ui->save_island_h[i]);
         }
         r01s_ui_layout_migrate_v1_chips(ui);
     }
@@ -1094,6 +1321,8 @@ void r01s_ui_load_island_layout(R01sUi *ui, int file_version) {
         ui_arrange_islands_default(ui);
     }
     r01s_ui_apply_saved_island_layout(ui);
+    /* Persist repaired positions (pack / expand) into the in-memory snapshot. */
+    r01s_ui_snapshot_island_layout(ui);
 }
 
 static void ui_restore_island_layout(R01sUi *ui) {
@@ -1120,7 +1349,7 @@ static void ui_restore_compact_layout(R01sUi *ui) {
         if (e->visual == R01S_ENTITY_VIS_IC) {
             r01s_entity_set_orient(e, (R01sPkgOrient)ui->compact_chip_orient[i]);
         }
-        r01s_entity_place(e, ui->compact_chip_x[i], ui->compact_chip_y[i]);
+        r01s_entity_place(e, r01s_grid_snap(ui->compact_chip_x[i]), r01s_grid_snap(ui->compact_chip_y[i]));
         clamp_chip_to_board(e);
     }
 }
@@ -1201,7 +1430,7 @@ static void ui_apply_compact_layout(R01sUi *ui) {
         /* Center body inside footprint so pin stubs stay inside the cell. */
         bx += (pw - e->body_w) / 2;
         by += (ph - e->body_h) / 2;
-        r01s_entity_place(e, bx, by);
+        r01s_entity_place(e, r01s_grid_snap(bx), r01s_grid_snap(by));
         clamp_chip_to_board(e);
     }
 
@@ -1291,8 +1520,8 @@ static void move_island_drag(R01sUi *ui, int island_index, int board_mx, int boa
     if (!island) {
         return;
     }
-    nx = board_mx - ui->drag_grab_bx;
-    ny = board_my - ui->drag_grab_by;
+    nx = r01s_grid_snap(board_mx - ui->drag_grab_bx);
+    ny = r01s_grid_snap(board_my - ui->drag_grab_by);
     if (nx < 0) {
         nx = 0;
     }
@@ -1300,10 +1529,10 @@ static void move_island_drag(R01sUi *ui, int island_index, int board_mx, int boa
         ny = 0;
     }
     if (nx + island->board_w > R01S_BOARD_W) {
-        nx = R01S_BOARD_W - island->board_w;
+        nx = r01s_grid_snap(R01S_BOARD_W - island->board_w);
     }
     if (ny + island->board_h > R01S_BOARD_H) {
-        ny = R01S_BOARD_H - island->board_h;
+        ny = r01s_grid_snap(R01S_BOARD_H - island->board_h);
     }
     if (nx < 0) {
         nx = 0;
@@ -1328,34 +1557,217 @@ static void move_island_drag(R01sUi *ui, int island_index, int board_mx, int boa
     }
 }
 
+static void island_chip_content_bounds(const R01sUi *ui, int island_index, int *out_l, int *out_t, int *out_r,
+                                       int *out_b) {
+    int i;
+    int have = 0;
+    int l = 0, t = 0, r = 0, b = 0;
+
+    for (i = 0; i < ui->chip_count; i++) {
+        const R01sEntity *e;
+        int cl, ct, cr, cb;
+        if (ui->chip_island[i] != (uint8_t)island_index) {
+            continue;
+        }
+        e = ui->chips[i];
+        if (!e || e->visual == R01S_ENTITY_VIS_NONE) {
+            continue;
+        }
+        cl = e->board_x - R01S_ISLAND_PAD_X - R01S_CHIP_PIN_OUT;
+        ct = e->board_y - R01S_ISLAND_PAD_TOP;
+        cr = e->board_x + e->body_w + R01S_CHIP_PIN_OUT + R01S_ISLAND_PAD_X;
+        cb = e->board_y + e->body_h + R01S_ISLAND_PAD_BOTTOM;
+        if (!have) {
+            l = cl;
+            t = ct;
+            r = cr;
+            b = cb;
+            have = 1;
+        } else {
+            if (cl < l) {
+                l = cl;
+            }
+            if (ct < t) {
+                t = ct;
+            }
+            if (cr > r) {
+                r = cr;
+            }
+            if (cb > b) {
+                b = cb;
+            }
+        }
+    }
+    if (!have) {
+        l = 0;
+        t = 0;
+        r = R01S_ISLAND_MIN_W;
+        b = R01S_ISLAND_MIN_H;
+    }
+    if (out_l) {
+        *out_l = l;
+    }
+    if (out_t) {
+        *out_t = t;
+    }
+    if (out_r) {
+        *out_r = r;
+    }
+    if (out_b) {
+        *out_b = b;
+    }
+}
+
 static void resize_island_drag(R01sUi *ui, int island_index, int board_mx, int board_my) {
     R01sIsland *island = r01s_island_group_at_mut(ui->group, island_index);
-    int min_w, min_h, nw, nh, i;
+    int fixed_l, fixed_t, fixed_r, fixed_b;
+    int nx, ny, nw, nh;
+    int need_l, need_t, need_r, need_b;
+    int i;
+    int corner;
 
     if (!island) {
         return;
     }
-    island_content_min_size(ui, island_index, &min_w, &min_h);
-    nw = board_mx - island->board_x;
-    nh = board_my - island->board_y;
-    if (nw < min_w) {
-        nw = min_w;
+    corner = ui->resize_corner;
+    fixed_l = island->board_x;
+    fixed_t = island->board_y;
+    fixed_r = island->board_x + island->board_w;
+    fixed_b = island->board_y + island->board_h;
+    island_chip_content_bounds(ui, island_index, &need_l, &need_t, &need_r, &need_b);
+
+    switch (corner) {
+    case R01S_ISLAND_CORNER_BL:
+        nx = board_mx;
+        ny = fixed_t;
+        nw = fixed_r - board_mx;
+        nh = board_my - fixed_t;
+        break;
+    case R01S_ISLAND_CORNER_TR:
+        nx = fixed_l;
+        ny = board_my;
+        nw = board_mx - fixed_l;
+        nh = fixed_b - board_my;
+        break;
+    case R01S_ISLAND_CORNER_TL:
+        nx = board_mx;
+        ny = board_my;
+        nw = fixed_r - board_mx;
+        nh = fixed_b - board_my;
+        break;
+    case R01S_ISLAND_CORNER_BR:
+    default:
+        nx = fixed_l;
+        ny = fixed_t;
+        nw = board_mx - fixed_l;
+        nh = board_my - fixed_t;
+        break;
     }
-    if (nh < min_h) {
-        nh = min_h;
+
+    /* Keep chips inside: clamp edges that are being dragged. */
+    if (corner == R01S_ISLAND_CORNER_BL || corner == R01S_ISLAND_CORNER_TL) {
+        if (nx > need_l) {
+            nx = need_l;
+        }
+        nw = fixed_r - nx;
+    } else {
+        if (nx + nw < need_r) {
+            nw = need_r - nx;
+        }
     }
-    if (island->board_x + nw > R01S_BOARD_W) {
-        nw = R01S_BOARD_W - island->board_x;
+    if (corner == R01S_ISLAND_CORNER_TR || corner == R01S_ISLAND_CORNER_TL) {
+        if (ny > need_t) {
+            ny = need_t;
+        }
+        nh = fixed_b - ny;
+    } else {
+        if (ny + nh < need_b) {
+            nh = need_b - ny;
+        }
     }
-    if (island->board_y + nh > R01S_BOARD_H) {
-        nh = R01S_BOARD_H - island->board_y;
+
+    if (nw < R01S_ISLAND_MIN_W) {
+        if (corner == R01S_ISLAND_CORNER_BL || corner == R01S_ISLAND_CORNER_TL) {
+            nx = fixed_r - R01S_ISLAND_MIN_W;
+            nw = R01S_ISLAND_MIN_W;
+        } else {
+            nw = R01S_ISLAND_MIN_W;
+        }
     }
-    if (nw < min_w) {
-        nw = min_w;
+    if (nh < R01S_ISLAND_MIN_H) {
+        if (corner == R01S_ISLAND_CORNER_TR || corner == R01S_ISLAND_CORNER_TL) {
+            ny = fixed_b - R01S_ISLAND_MIN_H;
+            nh = R01S_ISLAND_MIN_H;
+        } else {
+            nh = R01S_ISLAND_MIN_H;
+        }
     }
-    if (nh < min_h) {
-        nh = min_h;
+
+    if (nx < 0) {
+        if (corner == R01S_ISLAND_CORNER_BL || corner == R01S_ISLAND_CORNER_TL) {
+            nx = 0;
+            nw = fixed_r - nx;
+        } else {
+            nx = 0;
+        }
     }
+    if (ny < 0) {
+        if (corner == R01S_ISLAND_CORNER_TR || corner == R01S_ISLAND_CORNER_TL) {
+            ny = 0;
+            nh = fixed_b - ny;
+        } else {
+            ny = 0;
+        }
+    }
+    if (nx + nw > R01S_BOARD_W) {
+        if (corner == R01S_ISLAND_CORNER_BR || corner == R01S_ISLAND_CORNER_TR) {
+            nw = R01S_BOARD_W - nx;
+        } else {
+            nx = R01S_BOARD_W - nw;
+            if (nx < 0) {
+                nx = 0;
+                nw = R01S_BOARD_W;
+            }
+        }
+    }
+    if (ny + nh > R01S_BOARD_H) {
+        if (corner == R01S_ISLAND_CORNER_BR || corner == R01S_ISLAND_CORNER_BL) {
+            nh = R01S_BOARD_H - ny;
+        } else {
+            ny = R01S_BOARD_H - nh;
+            if (ny < 0) {
+                ny = 0;
+                nh = R01S_BOARD_H;
+            }
+        }
+    }
+
+    /* Snap origin down and size up so frames stay on the universal grid. */
+    nx = r01s_grid_snap(nx);
+    ny = r01s_grid_snap(ny);
+    if (corner == R01S_ISLAND_CORNER_BL || corner == R01S_ISLAND_CORNER_TL) {
+        nw = fixed_r - nx;
+    }
+    if (corner == R01S_ISLAND_CORNER_TR || corner == R01S_ISLAND_CORNER_TL) {
+        nh = fixed_b - ny;
+    }
+    nw = r01s_grid_snap_up(nw);
+    nh = r01s_grid_snap_up(nh);
+    if (nw < R01S_ISLAND_MIN_W) {
+        nw = R01S_ISLAND_MIN_W;
+    }
+    if (nh < R01S_ISLAND_MIN_H) {
+        nh = R01S_ISLAND_MIN_H;
+    }
+    if (nx + nw > R01S_BOARD_W) {
+        nw = r01s_grid_snap(R01S_BOARD_W - nx);
+    }
+    if (ny + nh > R01S_BOARD_H) {
+        nh = r01s_grid_snap(R01S_BOARD_H - ny);
+    }
+
+    island->board_x = nx;
+    island->board_y = ny;
     island->board_w = nw;
     island->board_h = nh;
     for (i = 0; i < ui->chip_count; i++) {
@@ -1408,10 +1820,12 @@ static void draw_health_dot(SDL_Renderer *r, int x, int y, R01sHealth h) {
 #define R01S_UI_SIDEBAR_GAP 8
 #define R01S_UI_SCALE_BTN_H 16
 #define R01S_UI_FAST_BTN_H 16
-#define R01S_UI_SCALE_ROW_H (R01S_UI_SCALE_BTN_H + R01S_UI_SIDEBAR_GAP + R01S_UI_FAST_BTN_H + R01S_UI_SIDEBAR_GAP)
+#define R01S_UI_BTN_ROW_H (R01S_UI_SCALE_BTN_H + R01S_UI_SIDEBAR_GAP)
 #define R01S_UI_PROBE_H 220
-#define GP_PANEL_W 156
-#define GP_PANEL_H 132
+#define GP_PANEL_GAP 6
+#define GP_PANEL_W ((R01S_UI_SIDEBAR_W - GP_PANEL_GAP) / 2)
+#define GP_PANEL_H 100
+#define GP_STICK_R 14
 
 static int health_needs_debug(R01sHealth h) {
     return h == R01S_HEALTH_WARN || h == R01S_HEALTH_FAIL;
@@ -1422,18 +1836,28 @@ static int status_panel_h(const R01sSystemHealth *health) {
     return R01S_UI_STATUS_HDR_H + n * R01S_UI_STATUS_ROW_H + R01S_UI_STATUS_FOOTER_H;
 }
 
+static int sidebar_status_content_y(void) {
+    return 0;
+}
+
+static int sidebar_probe_content_y(const R01sUi *ui) {
+    return status_panel_h(ui ? &ui->health : NULL) + R01S_UI_SIDEBAR_GAP;
+}
+
+static int sidebar_gp_content_y(const R01sUi *ui) {
+    return sidebar_probe_content_y(ui) + R01S_UI_PROBE_H + R01S_UI_SIDEBAR_GAP;
+}
+
+static int sidebar_btn_row_content_y(const R01sUi *ui) {
+    return sidebar_gp_content_y(ui) + GP_PANEL_H + R01S_UI_SIDEBAR_GAP;
+}
+
 static int sidebar_content_h(const R01sUi *ui) {
-    int h;
     if (!ui) {
         return 0;
     }
-    /* LCD scale toggle, controllers, live probe, then full system status. */
-    h = R01S_UI_SCALE_ROW_H;
-    h += GP_PANEL_H + R01S_UI_SIDEBAR_GAP;
-    h += GP_PANEL_H + R01S_UI_SIDEBAR_GAP;
-    h += R01S_UI_PROBE_H + R01S_UI_SIDEBAR_GAP;
-    h += status_panel_h(&ui->health);
-    return h;
+    /* System status, live probe, controllers (side-by-side), then scale+fast row. */
+    return sidebar_btn_row_content_y(ui) + R01S_UI_BTN_ROW_H;
 }
 
 static int sidebar_max_scroll(const R01sUi *ui) {
@@ -1464,19 +1888,6 @@ static int sidebar_sy(const R01sUi *ui, int content_y) {
     return R01S_UI_SIDEBAR_TOP + content_y - (ui ? ui->sidebar_scroll : 0);
 }
 
-static int sidebar_gp_content_y(int player) {
-    int base = R01S_UI_SCALE_ROW_H;
-    return player == 0 ? base : (base + GP_PANEL_H + R01S_UI_SIDEBAR_GAP);
-}
-
-static int sidebar_probe_content_y(void) {
-    return R01S_UI_SCALE_ROW_H + GP_PANEL_H + R01S_UI_SIDEBAR_GAP + GP_PANEL_H + R01S_UI_SIDEBAR_GAP;
-}
-
-static int sidebar_status_content_y(void) {
-    return sidebar_probe_content_y() + R01S_UI_PROBE_H + R01S_UI_SIDEBAR_GAP;
-}
-
 static int ui_lcd_scale_2x(const R01sUi *ui) {
     R01sBoard *board = ui ? r01s_board_from_group(ui->group) : NULL;
     return board ? r01s_video_sink_scale_2x(&board->video_sink) : 0;
@@ -1499,16 +1910,20 @@ static void ui_toggle_lcd_scale(R01sUi *ui) {
 }
 
 static void scale_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
+    int gap = 4;
+    int bw = (R01S_UI_SIDEBAR_W - gap) / 2;
     rc->x = R01S_UI_SIDEBAR_X;
-    rc->y = sidebar_sy(ui, 0);
-    rc->w = R01S_UI_SIDEBAR_W;
+    rc->y = sidebar_sy(ui, sidebar_btn_row_content_y(ui));
+    rc->w = bw;
     rc->h = R01S_UI_SCALE_BTN_H;
 }
 
 static void fast_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
-    rc->x = R01S_UI_SIDEBAR_X;
-    rc->y = sidebar_sy(ui, R01S_UI_SCALE_BTN_H + R01S_UI_SIDEBAR_GAP);
-    rc->w = R01S_UI_SIDEBAR_W;
+    int gap = 4;
+    int bw = (R01S_UI_SIDEBAR_W - gap) / 2;
+    rc->x = R01S_UI_SIDEBAR_X + bw + gap;
+    rc->y = sidebar_sy(ui, sidebar_btn_row_content_y(ui));
+    rc->w = R01S_UI_SIDEBAR_W - bw - gap;
     rc->h = R01S_UI_FAST_BTN_H;
 }
 
@@ -1659,12 +2074,16 @@ static void draw_live_probe(SDL_Renderer *r, const R01sUi *ui, int py) {
     draw_pin_swatch(r, px + 100, py + 196, pr, pg, pb, "N/C");
 }
 
+static void draw_island_resize_grip(SDL_Renderer *r, int hx, int hy) {
+    fill_rect(r, hx, hy, R01S_ISLAND_RESIZE_HANDLE, R01S_ISLAND_RESIZE_HANDLE, 40, 70, 50);
+    draw_rect(r, hx, hy, R01S_ISLAND_RESIZE_HANDLE, R01S_ISLAND_RESIZE_HANDLE, 120, 160, 130);
+}
+
 static void draw_island_frame(SDL_Renderer *r, const R01sUi *ui, const R01sIsland *island, int active,
                               const R01sIslandHealth *ih) {
     int x = ui_board_sx(ui, island->board_x);
     int y = ui_board_sy(ui, island->board_y);
-    int hx = x + island->board_w - R01S_ISLAND_RESIZE_HANDLE;
-    int hy = y + island->board_h - R01S_ISLAND_RESIZE_HANDLE;
+    int hs = R01S_ISLAND_RESIZE_HANDLE;
     Uint8 br, bg, bb;
 
     if (ih) {
@@ -1678,14 +2097,11 @@ static void draw_island_frame(SDL_Renderer *r, const R01sUi *ui, const R01sIslan
     fill_rect(r, x, y, island->board_w, island->board_h, R01S_BOARD_BG_R, R01S_BOARD_BG_G, R01S_BOARD_BG_B);
     fill_rect(r, x + 2, y + 2, island->board_w - 4, R01S_ISLAND_HEADER_H, 22, 48, 32);
     draw_rect(r, x, y, island->board_w, island->board_h, br, bg, bb);
-    /* Bottom-right resize grip */
-    fill_rect(r, hx, hy, R01S_ISLAND_RESIZE_HANDLE, R01S_ISLAND_RESIZE_HANDLE, 40, 70, 50);
-    draw_rect(r, hx, hy, R01S_ISLAND_RESIZE_HANDLE, R01S_ISLAND_RESIZE_HANDLE, 120, 160, 130);
-    SDL_SetRenderDrawColor(r, 160, 200, 170, 255);
-    SDL_RenderDrawLine(r, hx + 3, hy + R01S_ISLAND_RESIZE_HANDLE - 3, hx + R01S_ISLAND_RESIZE_HANDLE - 3,
-                       hy + 3);
-    SDL_RenderDrawLine(r, hx + 6, hy + R01S_ISLAND_RESIZE_HANDLE - 3, hx + R01S_ISLAND_RESIZE_HANDLE - 3,
-                       hy + 6);
+    /* Corner resize grips */
+    draw_island_resize_grip(r, x, y);
+    draw_island_resize_grip(r, x + island->board_w - hs, y);
+    draw_island_resize_grip(r, x, y + island->board_h - hs);
+    draw_island_resize_grip(r, x + island->board_w - hs, y + island->board_h - hs);
 }
 
 /* Drawn after chips so header text stays above packages. */
@@ -1805,24 +2221,24 @@ static void ui_fill_tooltip(const R01sUi *ui, char *out, size_t out_len) {
 }
 
 static void gp_panel_origin(const R01sUi *ui, int player, int *px, int *py) {
-    *px = R01S_UI_SIDEBAR_X;
-    *py = sidebar_sy(ui, sidebar_gp_content_y(player));
+    *px = R01S_UI_SIDEBAR_X + player * (GP_PANEL_W + GP_PANEL_GAP);
+    *py = sidebar_sy(ui, sidebar_gp_content_y(ui));
 }
 
 static void gp_stick_center(const R01sUi *ui, int player, int *cx, int *cy) {
     int px, py;
     gp_panel_origin(ui, player, &px, &py);
-    *cx = px + 36;
-    *cy = py + 56;
+    *cx = px + 26;
+    *cy = py + 48;
 }
 
 static void gp_btn_rect(const R01sUi *ui, int player, int btn, SDL_Rect *rc) {
     int px, py;
     gp_panel_origin(ui, player, &px, &py);
-    rc->x = px + 88 + (btn % 2) * 28;
-    rc->y = py + 28 + (btn / 2) * 28;
-    rc->w = 24;
-    rc->h = 24;
+    rc->x = px + 54 + (btn % 2) * 22;
+    rc->y = py + 28 + (btn / 2) * 22;
+    rc->w = 20;
+    rc->h = 20;
 }
 
 static int gp_hit_stick(const R01sUi *ui, int player, int lx, int ly) {
@@ -1831,7 +2247,7 @@ static int gp_hit_stick(const R01sUi *ui, int player, int lx, int ly) {
     gp_stick_center(ui, player, &cx, &cy);
     dx = lx - cx;
     dy = ly - cy;
-    return dx * dx + dy * dy <= (R01S_GAMEPAD_STICK_RADIUS + 8) * (R01S_GAMEPAD_STICK_RADIUS + 8);
+    return dx * dx + dy * dy <= (GP_STICK_R + 6) * (GP_STICK_R + 6);
 }
 
 static int gp_hit_btn(const R01sUi *ui, int player, int lx, int ly) {
@@ -1869,22 +2285,20 @@ static void gp_stick_from_point(R01sUi *ui, R01sGamepadInput *gp, int player, in
     gp_stick_center(ui, player, &cx, &cy);
     gp->stick_x = lx - cx;
     gp->stick_y = ly - cy;
-    r01s_gamepad_stick_clamp(&gp->stick_x, &gp->stick_y, R01S_GAMEPAD_STICK_RADIUS);
+    r01s_gamepad_stick_clamp(&gp->stick_x, &gp->stick_y, GP_STICK_R);
 }
 
 static void draw_stick(SDL_Renderer *r, int cx, int cy, int sx, int sy) {
-    fill_rect(r, cx - R01S_GAMEPAD_STICK_RADIUS, cy - R01S_GAMEPAD_STICK_RADIUS,
-              R01S_GAMEPAD_STICK_RADIUS * 2, R01S_GAMEPAD_STICK_RADIUS * 2, 24, 28, 32);
-    draw_rect(r, cx - R01S_GAMEPAD_STICK_RADIUS, cy - R01S_GAMEPAD_STICK_RADIUS,
-              R01S_GAMEPAD_STICK_RADIUS * 2, R01S_GAMEPAD_STICK_RADIUS * 2, 70, 80, 90);
-    fill_rect(r, cx + sx - 6, cy + sy - 6, 12, 12, 180, 190, 200);
-    draw_rect(r, cx + sx - 6, cy + sy - 6, 12, 12, 240, 240, 240);
+    fill_rect(r, cx - GP_STICK_R, cy - GP_STICK_R, GP_STICK_R * 2, GP_STICK_R * 2, 24, 28, 32);
+    draw_rect(r, cx - GP_STICK_R, cy - GP_STICK_R, GP_STICK_R * 2, GP_STICK_R * 2, 70, 80, 90);
+    fill_rect(r, cx + sx - 4, cy + sy - 4, 8, 8, 180, 190, 200);
+    draw_rect(r, cx + sx - 4, cy + sy - 4, 8, 8, 240, 240, 240);
 }
 
 static void draw_btn(SDL_Renderer *r, const SDL_Rect *rc, int pressed, const char *label) {
     fill_rect(r, rc->x, rc->y, rc->w, rc->h, pressed ? 90 : 40, pressed ? 120 : 48, pressed ? 160 : 56);
     draw_rect(r, rc->x, rc->y, rc->w, rc->h, 120, 130, 140);
-    font_draw(r, rc->x + 4, rc->y + 8, label, 210, 210, 200);
+    font_draw(r, rc->x + 3, rc->y + 6, label, 210, 210, 200);
 }
 
 static void draw_video_pixels(SDL_Renderer *r, R01sUi *ui, const R01sVideoSink *sink, int px, int py) {
@@ -1996,16 +2410,16 @@ void r01s_ui_sync_gamepads(R01sUi *ui) {
         ui->gamepad[0].stick_x = 0;
         ui->gamepad[0].stick_y = 0;
         if (keys[SDL_SCANCODE_UP] || keys[SDL_SCANCODE_W]) {
-            ui->gamepad[0].stick_y = -20;
+            ui->gamepad[0].stick_y = -GP_STICK_R;
         }
         if (keys[SDL_SCANCODE_DOWN] || keys[SDL_SCANCODE_S]) {
-            ui->gamepad[0].stick_y = 20;
+            ui->gamepad[0].stick_y = GP_STICK_R;
         }
         if (keys[SDL_SCANCODE_LEFT] || keys[SDL_SCANCODE_A]) {
-            ui->gamepad[0].stick_x = -20;
+            ui->gamepad[0].stick_x = -GP_STICK_R;
         }
         if (keys[SDL_SCANCODE_RIGHT] || keys[SDL_SCANCODE_D]) {
-            ui->gamepad[0].stick_x = 20;
+            ui->gamepad[0].stick_x = GP_STICK_R;
         }
         if ((keys[SDL_SCANCODE_UP] || keys[SDL_SCANCODE_W]) &&
             (keys[SDL_SCANCODE_DOWN] || keys[SDL_SCANCODE_S])) {
@@ -2020,16 +2434,16 @@ void r01s_ui_sync_gamepads(R01sUi *ui) {
         ui->gamepad[1].stick_x = 0;
         ui->gamepad[1].stick_y = 0;
         if (keys[SDL_SCANCODE_I]) {
-            ui->gamepad[1].stick_y = -20;
+            ui->gamepad[1].stick_y = -GP_STICK_R;
         }
         if (keys[SDL_SCANCODE_K]) {
-            ui->gamepad[1].stick_y = 20;
+            ui->gamepad[1].stick_y = GP_STICK_R;
         }
         if (keys[SDL_SCANCODE_J]) {
-            ui->gamepad[1].stick_x = -20;
+            ui->gamepad[1].stick_x = -GP_STICK_R;
         }
         if (keys[SDL_SCANCODE_L]) {
-            ui->gamepad[1].stick_x = 20;
+            ui->gamepad[1].stick_x = GP_STICK_R;
         }
     }
 
@@ -2150,8 +2564,12 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
         font_draw(r, cbtn.x + 8, cbtn.y + 5, clabel, 200, 220, 180);
     }
 
-    /* Left sidebar: LCD scale, controllers, live probe, system status (scrollable). */
+    /* Left sidebar: system status, live probe, controllers, scale+fast (scrollable). */
     SDL_RenderSetClipRect(r, &sidebar_clip);
+    draw_system_health_panel(r, ui, sidebar_sy(ui, sidebar_status_content_y()));
+    draw_live_probe(r, ui, sidebar_sy(ui, sidebar_probe_content_y(ui)));
+    draw_gamepad_panel(r, ui, 0);
+    draw_gamepad_panel(r, ui, 1);
     {
         SDL_Rect sbtn;
         const char *slabel = ui_lcd_scale_2x(ui) ? "SCALE 2X" : "SCALE 1X";
@@ -2171,10 +2589,6 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
         draw_rect(r, fbtn.x, fbtn.y, fbtn.w, fbtn.h, on ? 200 : 120, on ? 160 : 160, on ? 100 : 130);
         font_draw(r, fbtn.x + (fbtn.w - font_text_width(flabel)) / 2, fbtn.y + 5, flabel, 200, 220, 180);
     }
-    draw_gamepad_panel(r, ui, 0);
-    draw_gamepad_panel(r, ui, 1);
-    draw_live_probe(r, ui, sidebar_sy(ui, sidebar_probe_content_y()));
-    draw_system_health_panel(r, ui, sidebar_sy(ui, sidebar_status_content_y()));
     SDL_RenderSetClipRect(r, NULL);
 
     if (max_s > 0) {
@@ -2265,12 +2679,27 @@ static int hit_island_frame(const R01sUi *ui, const R01sIsland *island, int lx, 
     return lx >= x && lx < x + island->board_w && ly >= y && ly < y + island->board_h;
 }
 
+/* Returns corner id, or -1 if miss. */
 static int hit_island_resize(const R01sUi *ui, const R01sIsland *island, int lx, int ly) {
     int x = ui_board_sx(ui, island->board_x);
     int y = ui_board_sy(ui, island->board_y);
-    int hx = x + island->board_w - R01S_ISLAND_RESIZE_HANDLE;
-    int hy = y + island->board_h - R01S_ISLAND_RESIZE_HANDLE;
-    return lx >= hx && lx < x + island->board_w && ly >= hy && ly < y + island->board_h;
+    int hs = R01S_ISLAND_RESIZE_HANDLE;
+    int right = x + island->board_w;
+    int bottom = y + island->board_h;
+
+    if (lx >= right - hs && lx < right && ly >= bottom - hs && ly < bottom) {
+        return R01S_ISLAND_CORNER_BR;
+    }
+    if (lx >= x && lx < x + hs && ly >= bottom - hs && ly < bottom) {
+        return R01S_ISLAND_CORNER_BL;
+    }
+    if (lx >= right - hs && lx < right && ly >= y && ly < y + hs) {
+        return R01S_ISLAND_CORNER_TR;
+    }
+    if (lx >= x && lx < x + hs && ly >= y && ly < y + hs) {
+        return R01S_ISLAND_CORNER_TL;
+    }
+    return -1;
 }
 
 static int island_has_chip_at(const R01sUi *ui, int island_index, int lx, int ly) {
@@ -2535,12 +2964,18 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         ui->drag_island = -1;
         ui->resize_island = -1;
 
-        /* Resize handle wins over chips (bottom-right grip). */
+        /* Resize handle wins over chips (any corner grip). */
         if (ui->group && !ui->layout_compact) {
             for (i = r01s_island_group_count(ui->group) - 1; i >= 0; i--) {
                 const R01sIsland *island = r01s_island_group_at(ui->group, i);
-                if (island && hit_island_resize(ui, island, logic_x, logic_y)) {
+                int corner;
+                if (!island) {
+                    continue;
+                }
+                corner = hit_island_resize(ui, island, logic_x, logic_y);
+                if (corner >= 0) {
                     ui->resize_island = i;
+                    ui->resize_corner = corner;
                     snprintf(ui->status, sizeof(ui->status), "resize %s",
                              island->title ? island->title : "ISLAND");
                     return 1;

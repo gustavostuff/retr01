@@ -104,6 +104,11 @@ int r01s_ui_layout_save(R01sUi *ui) {
     fprintf(f, "  \"pan_x\": %d,\n", ui->pan_x);
     fprintf(f, "  \"pan_y\": %d,\n", ui->pan_y);
 
+    /* Always persist both layouts in the same file:
+     * - islands + island_chips: island-mode frames and island-relative chips
+     * - compact_chips: absolute compact-mode chip placements
+     * Active mode is recorded, but neither section is discarded when toggling.
+     */
     fprintf(f, "  \"islands\": [\n");
     first = 1;
     for (i = 0; i < n_islands && i < R01S_MAX_ISLANDS; i++) {
@@ -129,6 +134,10 @@ int r01s_ui_layout_save(R01sUi *ui) {
         } else {
             continue;
         }
+        ix = r01s_grid_snap(ix);
+        iy = r01s_grid_snap(iy);
+        iw = r01s_grid_snap_up(iw);
+        ih = r01s_grid_snap_up(ih);
         if (!first) {
             fprintf(f, ",\n");
         }
@@ -156,6 +165,10 @@ int r01s_ui_layout_save(R01sUi *ui) {
             /* Compact mode — keep last island-relative snapshot, not board coords. */
             rx = ui->save_chip_x[i];
             ry = ui->save_chip_y[i];
+            fprintf(f,
+                    "    {\"id\": \"%s\", \"island\": %d, \"rx\": %d, \"ry\": %d, \"orient\": \"%s\"}", id,
+                    (int)ui->chip_island[i], r01s_grid_snap(rx), r01s_grid_snap(ry),
+                    ui->save_chip_orient[i] == (uint8_t)R01S_ORIENT_V ? "V" : "H");
         } else {
             const R01sIsland *island = r01s_island_group_at(ui->group, ui->chip_island[i]);
             if (island) {
@@ -165,11 +178,11 @@ int r01s_ui_layout_save(R01sUi *ui) {
                 rx = ui->save_chip_x[i];
                 ry = ui->save_chip_y[i];
             }
+            fprintf(f,
+                    "    {\"id\": \"%s\", \"island\": %d, \"rx\": %d, \"ry\": %d, \"orient\": \"%s\"}", id,
+                    (int)ui->chip_island[i], r01s_grid_snap(rx), r01s_grid_snap(ry),
+                    e->orient == R01S_ORIENT_V ? "V" : "H");
         }
-        fprintf(f,
-                "    {\"id\": \"%s\", \"island\": %d, \"rx\": %d, \"ry\": %d, \"orient\": \"%s\"}", id,
-                (int)ui->chip_island[i], rx, ry,
-                ui->save_chip_orient[i] == (uint8_t)R01S_ORIENT_V ? "V" : "H");
     }
     fprintf(f, "\n  ],\n");
 
@@ -188,7 +201,7 @@ int r01s_ui_layout_save(R01sUi *ui) {
             }
             first = 0;
             fprintf(f, "    {\"id\": \"%s\", \"x\": %d, \"y\": %d, \"orient\": \"%s\"}", id,
-                    ui->compact_chip_x[i], ui->compact_chip_y[i],
+                    r01s_grid_snap(ui->compact_chip_x[i]), r01s_grid_snap(ui->compact_chip_y[i]),
                     ui->compact_chip_orient[i] == (uint8_t)R01S_ORIENT_V ? "V" : "H");
         }
     }
@@ -476,7 +489,7 @@ int r01s_ui_layout_load(R01sUi *ui) {
             if (e->visual == R01S_ENTITY_VIS_IC) {
                 r01s_entity_set_orient(e, (R01sPkgOrient)ui->compact_chip_orient[i]);
             }
-            r01s_entity_place(e, ui->compact_chip_x[i], ui->compact_chip_y[i]);
+            r01s_entity_place(e, r01s_grid_snap(ui->compact_chip_x[i]), r01s_grid_snap(ui->compact_chip_y[i]));
         }
         ui->layout_compact = 1;
     }

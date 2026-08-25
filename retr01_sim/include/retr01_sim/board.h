@@ -32,7 +32,7 @@
 #include <stdint.h>
 
 /* Combinatorial settle passes per wire/eval half-step (PLD/glue depth). */
-#define R01S_SETTLE_PASSES 4
+#define R01S_SETTLE_PASSES 2
 
 /* 9 canvas islands — support chips co-located; pads/sprites/NMI/BG-fetch stay wired-only. */
 enum {

@@ -15,12 +15,12 @@
 #define R01S_CART_PRG_BYTES 0x8000u
 /*
  * DOT/beam ticks per board step. Real silicon runs DOT ≈ PHI2 order; the UI
- * only does ~32 board steps/frame, so without a burst first VBlank takes minutes.
- * 128 dots/step * 32 steps/frame ≈ 4k dots/frame → VBlank in ~1 s wall.
+ * only does a few board steps/frame, so without a burst first VBlank takes minutes.
+ * Keep this modest — CPU load scales with dots × settle × steps/frame.
  */
-#define R01S_BEAM_DOTS_PER_STEP 128
+#define R01S_BEAM_DOTS_PER_STEP 32
 /* Fast mode: fewer DOT ticks per PHI2 step (video still advances, much cheaper). */
-#define R01S_BEAM_DOTS_PER_STEP_FAST 8
+#define R01S_BEAM_DOTS_PER_STEP_FAST 4
 /* Fast mode combinatorial depth (pin mode uses R01S_SETTLE_PASSES). */
 #define R01S_SETTLE_PASSES_FAST 1
 

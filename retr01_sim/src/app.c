@@ -11,7 +11,7 @@
 #include <string.h>
 
 /* Step batches between UI tick handshakes with main (spinner advances). */
-#define R01S_CATCHUP_BATCH_STEPS 64
+#define R01S_CATCHUP_BATCH_STEPS 32
 /* Max time worker waits for main to ack the UI tick (ms). */
 #define R01S_CATCHUP_UI_WAIT_MS 50
 
@@ -36,8 +36,8 @@ static void catchup_signal_ui_tick(R01sApp *app, R01sBoard *board) {
 }
 
 /* Leave headroom for draw + vsync inside a ~16.7 ms frame. */
-#define R01S_SIM_BUDGET_MS 10
-#define R01S_SIM_MAX_STEPS_PER_FRAME 128
+#define R01S_SIM_BUDGET_MS 3
+#define R01S_SIM_MAX_STEPS_PER_FRAME 24
 
 static void logic_from_window(const R01sApp *app, int win_x, int win_y, int *lx, int *ly) {
     int ww, wh, draw_w, draw_h, ox, oy, scale;

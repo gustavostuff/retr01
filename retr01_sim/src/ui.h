@@ -37,6 +37,7 @@ typedef struct R01sUi {
     int drag_chip; /* chip index while left-dragging, else -1 */
     int drag_island; /* island index while moving frame, else -1 */
     int resize_island; /* island index while resizing, else -1 */
+    int resize_corner; /* R01S_ISLAND_CORNER_* while resizing */
     int drag_grab_bx;
     int drag_grab_by;
     int drag_last_x;
