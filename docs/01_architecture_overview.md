@@ -11,6 +11,7 @@ When docs disagree, use this order.
 | Retr01-A **HW BOM** (current) | [`06`](06_hardware_v1_32ic.md) | **32 IC** system. Does not invent `$FExx` |
 | Optional discrete islands / legacy ~52 sketch | [`03`](03_hardware_implementation.md) | Bench fallback; full ~52 architecture also on `main` |
 | Studio data model / phases | [`04`](04_retr01_studio.md) | Follows `02` |
+| Audio / APU protocol | [`09`](09_audio_architecture.md) | 6502 sequencer + 328P mixer; `$FE4x` bus bridge |
 | IC pin/behavior detail | [`hw/md/`](../hw/md/) + datasheet PDFs | Sim and schematics |
 
 **Current product board:** [`06`](06_hardware_v1_32ic.md) -- **32 ICs**, ~**12 x 12 cm**. Diagram below is the **legacy ~52 IC** planning sketch (also on `main`) for orientation only.
@@ -256,6 +257,7 @@ Two validation tracks (not Studio):
 - Product pitch and NES comparison: `07_pitch.md`
 - Graphics, worlds, `$FExx`, cart image (software SoT): `02_graphics_worlds_memory.md`
 - Current 32-IC HW BOM: `06_hardware_v1_32ic.md`
+- Audio / APU bytecode + bus bridge: `09_audio_architecture.md`
 - Optional islands / legacy ~52: `03_hardware_implementation.md`
 - Retr01 Studio: `04_retr01_studio.md`
 - Locked decisions + open Qs: `05_costs_and_open_questions.md`

@@ -28,6 +28,8 @@ Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8
 
 **Cart load:** `./sim run` passes `retr01_studio/test_game/test.retr01` (override with a path; resolved from repo root). Sim applies a **bring-up PRG overlay** (smoke + palette + MAP→VRAM stream via `$FE93`→`$FE12`). Startup catchup runs that stream on a **worker thread** (~12k pin-level steps) so the SDL window stays responsive; status shows progress. Host softboot is opt-in only (`R01S_SOFTBOOT=1`). No host Play — pads reach `$FE60`/`$FE61`; scroll/player wait on game PRG.
 
+Why the worker exists (and how to show a live board during boot later): [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md).
+
 Next: optional machine EEPROM (1284 path); retire bring-up overlay when game PRG owns MAP.
 
 ## Build
@@ -62,7 +64,7 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 # or: ./build/retr01_sim
 ```
 
-**Controls:** `Space` pause/resume · `Ctrl+R` reset · `R` rotate selected IC · `G` SCALE 2x/1x · `.` single-step (while paused) · **COMPACT / ISLANDS** (HUD) · **left-drag chip** move · **right-click chip** orient H/V · **left-drag empty island** move frame · **bottom-right grip** resize · **Shift+arrows / wheel / middle-drag** pan · `Esc` quit.
+**Controls:** `Space` pause/resume · `Ctrl+R` reset · `R` rotate selected IC · **SCALE 1X/2X** (left sidebar button or `G`; default **1x**) · `.` single-step (while paused) · **COMPACT / ISLANDS** (HUD) · **left-drag chip** move · **right-click chip** orient H/V · **left-drag empty island** move frame · **bottom-right grip** resize · **Shift+arrows / wheel / middle-drag** pan · `Esc` quit.
 
 **Layout persistence:** island frames + chip positions (island mode) and compact chip positions are saved to `retr01_sim/ui_layout.json` (override with `R01S_LAYOUT`). Reloaded on next launch.
 

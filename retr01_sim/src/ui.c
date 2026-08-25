@@ -21,9 +21,12 @@ static void ui_fit_island_to_chips(R01sUi *ui, int island_index);
 static void ui_chip_rel_from_abs(const R01sUi *ui, int chip_i, int abs_x, int abs_y, int *rx, int *ry);
 static void ui_chip_place_rel(R01sUi *ui, int chip_i, int rx, int ry);
 static void island_content_min_size(const R01sUi *ui, int island_index, int *min_w, int *min_h);
-static void draw_video_pixels(SDL_Renderer *r, const R01sVideoSink *sink, int px, int py);
+static void draw_video_pixels(SDL_Renderer *r, R01sUi *ui, const R01sVideoSink *sink, int px, int py);
 static void ui_toggle_compact(R01sUi *ui);
 static void compact_btn_rect(const R01sUi *ui, SDL_Rect *rc);
+static void ui_toggle_lcd_scale(R01sUi *ui);
+static void scale_btn_rect(const R01sUi *ui, SDL_Rect *rc);
+static int ui_lcd_scale_2x(const R01sUi *ui);
 
 static int ui_board_sx(const R01sUi *ui, int board_x) {
     return R01S_UI_VIEW_X + board_x - ui->pan_x;
@@ -176,7 +179,7 @@ int r01s_ui_init(R01sUi *ui) {
     ui->drag_btn = -1;
     ui->ctx_chip = -1;
     snprintf(ui->status, sizeof(ui->status),
-             "SPACE pause — Ctrl+R reset — R rotate — G SCALE — COMPACT/ISLANDS");
+             "SPACE pause — Ctrl+R reset — R rotate — SCALE 1X/2X (sidebar / G) — COMPACT/ISLANDS");
     return 0;
 }
 
@@ -184,6 +187,10 @@ void r01s_ui_shutdown(R01sUi *ui) {
     if (ui) {
         if (ui->group) {
             r01s_ui_layout_save(ui);
+        }
+        if (ui->lcd_tex) {
+            SDL_DestroyTexture(ui->lcd_tex);
+            ui->lcd_tex = NULL;
         }
         memset(ui, 0, sizeof(*ui));
     }
@@ -434,7 +441,7 @@ static void draw_osc_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *
     }
 }
 
-static void draw_display_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int selected) {
+static void draw_display_glyph(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e, int selected) {
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);
     int inner_x = x + 4;
@@ -460,7 +467,7 @@ static void draw_display_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEnti
     font_draw(r, inner_x + inner_w - scale_w - 4, inner_y + 3, scale_lbl, 140, 200, 160);
     fill_rect(r, inner_x + 2, inner_y + hdr_h - 1, inner_w - 4, 1, 40, 55, 45);
     fill_rect(r, px, py, R01S_VIDEO_W, R01S_VIDEO_H, 8, 12, 16);
-    draw_video_pixels(r, sink, px, py);
+    draw_video_pixels(r, ui, sink, px, py);
     draw_rect(r, px - 1, py - 1, R01S_VIDEO_W + 2, R01S_VIDEO_H + 2, 80, 100, 120);
 }
 
@@ -592,7 +599,7 @@ static void draw_chip(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, in
     }
 }
 
-static void draw_board_item(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int selected) {
+static void draw_board_item(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e, int selected) {
     if (!e) {
         return;
     }
@@ -1397,6 +1404,8 @@ static void draw_health_dot(SDL_Renderer *r, int x, int y, R01sHealth h) {
 #define R01S_UI_STATUS_ROW_H 16
 #define R01S_UI_STATUS_FOOTER_H 16
 #define R01S_UI_SIDEBAR_GAP 8
+#define R01S_UI_SCALE_BTN_H 16
+#define R01S_UI_SCALE_ROW_H (R01S_UI_SCALE_BTN_H + R01S_UI_SIDEBAR_GAP)
 #define R01S_UI_PROBE_H 220
 #define GP_PANEL_W 156
 #define GP_PANEL_H 132
@@ -1415,8 +1424,9 @@ static int sidebar_content_h(const R01sUi *ui) {
     if (!ui) {
         return 0;
     }
-    /* Controllers, live probe, then full system status. */
-    h = GP_PANEL_H + R01S_UI_SIDEBAR_GAP;
+    /* LCD scale toggle, controllers, live probe, then full system status. */
+    h = R01S_UI_SCALE_ROW_H;
+    h += GP_PANEL_H + R01S_UI_SIDEBAR_GAP;
     h += GP_PANEL_H + R01S_UI_SIDEBAR_GAP;
     h += R01S_UI_PROBE_H + R01S_UI_SIDEBAR_GAP;
     h += status_panel_h(&ui->health);
@@ -1452,15 +1462,44 @@ static int sidebar_sy(const R01sUi *ui, int content_y) {
 }
 
 static int sidebar_gp_content_y(int player) {
-    return player == 0 ? 0 : (GP_PANEL_H + R01S_UI_SIDEBAR_GAP);
+    int base = R01S_UI_SCALE_ROW_H;
+    return player == 0 ? base : (base + GP_PANEL_H + R01S_UI_SIDEBAR_GAP);
 }
 
 static int sidebar_probe_content_y(void) {
-    return GP_PANEL_H + R01S_UI_SIDEBAR_GAP + GP_PANEL_H + R01S_UI_SIDEBAR_GAP;
+    return R01S_UI_SCALE_ROW_H + GP_PANEL_H + R01S_UI_SIDEBAR_GAP + GP_PANEL_H + R01S_UI_SIDEBAR_GAP;
 }
 
 static int sidebar_status_content_y(void) {
     return sidebar_probe_content_y() + R01S_UI_PROBE_H + R01S_UI_SIDEBAR_GAP;
+}
+
+static int ui_lcd_scale_2x(const R01sUi *ui) {
+    R01sBoard *board = ui ? r01s_board_from_group(ui->group) : NULL;
+    return board ? r01s_video_sink_scale_2x(&board->video_sink) : 0;
+}
+
+static void ui_toggle_lcd_scale(R01sUi *ui) {
+    R01sBoard *board;
+    R01sVideoSink *sink;
+    if (!ui) {
+        return;
+    }
+    board = r01s_board_from_group(ui->group);
+    if (!board) {
+        return;
+    }
+    sink = &board->video_sink;
+    r01s_video_sink_set_scale_2x(sink, !r01s_video_sink_scale_2x(sink));
+    snprintf(ui->status, sizeof(ui->status), "SCALE %s (256x240 field, timing 341x262)",
+             r01s_video_sink_scale_2x(sink) ? "2X" : "1X");
+}
+
+static void scale_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
+    rc->x = R01S_UI_SIDEBAR_X;
+    rc->y = sidebar_sy(ui, 0);
+    rc->w = R01S_UI_SIDEBAR_W;
+    rc->h = R01S_UI_SCALE_BTN_H;
 }
 
 static void health_copy_btn_rect(const R01sUi *ui, int island_index, SDL_Rect *rc) {
@@ -1822,25 +1861,60 @@ static void draw_btn(SDL_Renderer *r, const SDL_Rect *rc, int pressed, const cha
     font_draw(r, rc->x + 4, rc->y + 8, label, 210, 210, 200);
 }
 
-static void draw_video_pixels(SDL_Renderer *r, const R01sVideoSink *sink, int px, int py) {
-    int x;
-    int y;
+static void draw_video_pixels(SDL_Renderer *r, R01sUi *ui, const R01sVideoSink *sink, int px, int py) {
     const uint8_t *rgb;
+    SDL_Rect dst;
 
-    if (!sink) {
+    if (!r || !ui || !sink) {
         return;
     }
     rgb = r01s_video_sink_rgb(sink);
     if (!rgb) {
         return;
     }
-    for (y = 0; y < R01S_VIDEO_H; y++) {
-        for (x = 0; x < R01S_VIDEO_W; x++) {
-            size_t off = (size_t)(y * R01S_VIDEO_W + x) * 3u;
-            SDL_SetRenderDrawColor(r, rgb[off], rgb[off + 1], rgb[off + 2], 255);
-            SDL_RenderDrawPoint(r, px + x, py + y);
+    if (!ui->lcd_tex) {
+        ui->lcd_tex = SDL_CreateTexture(r, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING,
+                                        R01S_VIDEO_W, R01S_VIDEO_H);
+        if (!ui->lcd_tex) {
+            /* Fallback if RGB24 unsupported on this renderer. */
+            ui->lcd_tex = SDL_CreateTexture(r, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING,
+                                            R01S_VIDEO_W, R01S_VIDEO_H);
+        }
+        if (!ui->lcd_tex) {
+            return;
+        }
+        SDL_SetTextureScaleMode(ui->lcd_tex, SDL_ScaleModeNearest);
+    }
+    {
+        Uint32 fmt = 0;
+        SDL_QueryTexture(ui->lcd_tex, &fmt, NULL, NULL, NULL);
+        if (fmt == SDL_PIXELFORMAT_RGB24) {
+            if (SDL_UpdateTexture(ui->lcd_tex, NULL, rgb, R01S_VIDEO_W * 3) != 0) {
+                return;
+            }
+        } else {
+            static uint8_t rgba[R01S_VIDEO_W * R01S_VIDEO_H * 4];
+            int x, y;
+            for (y = 0; y < R01S_VIDEO_H; y++) {
+                for (x = 0; x < R01S_VIDEO_W; x++) {
+                    size_t si = ((size_t)y * R01S_VIDEO_W + (size_t)x) * 3u;
+                    size_t di = ((size_t)y * R01S_VIDEO_W + (size_t)x) * 4u;
+                    rgba[di] = rgb[si];
+                    rgba[di + 1] = rgb[si + 1];
+                    rgba[di + 2] = rgb[si + 2];
+                    rgba[di + 3] = 255;
+                }
+            }
+            if (SDL_UpdateTexture(ui->lcd_tex, NULL, rgba, R01S_VIDEO_W * 4) != 0) {
+                return;
+            }
         }
     }
+    dst.x = px;
+    dst.y = py;
+    dst.w = R01S_VIDEO_W;
+    dst.h = R01S_VIDEO_H;
+    SDL_RenderCopy(r, ui->lcd_tex, NULL, &dst);
 }
 
 static void draw_gamepad_panel(SDL_Renderer *r, const R01sUi *ui, int player) {
@@ -2050,8 +2124,17 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
         font_draw(r, cbtn.x + 8, cbtn.y + 5, clabel, 200, 220, 180);
     }
 
-    /* Left sidebar: controllers, live probe, system status (scrollable). */
+    /* Left sidebar: LCD scale, controllers, live probe, system status (scrollable). */
     SDL_RenderSetClipRect(r, &sidebar_clip);
+    {
+        SDL_Rect sbtn;
+        const char *slabel = ui_lcd_scale_2x(ui) ? "SCALE 2X" : "SCALE 1X";
+        int on_2x = ui_lcd_scale_2x(ui);
+        scale_btn_rect(ui, &sbtn);
+        fill_rect(r, sbtn.x, sbtn.y, sbtn.w, sbtn.h, on_2x ? 40 : 28, on_2x ? 70 : 40, on_2x ? 50 : 32);
+        draw_rect(r, sbtn.x, sbtn.y, sbtn.w, sbtn.h, 120, 160, 130);
+        font_draw(r, sbtn.x + (sbtn.w - font_text_width(slabel)) / 2, sbtn.y + 5, slabel, 200, 220, 180);
+    }
     draw_gamepad_panel(r, ui, 0);
     draw_gamepad_panel(r, ui, 1);
     draw_live_probe(r, ui, sidebar_sy(ui, sidebar_probe_content_y()));
@@ -2104,21 +2187,31 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     }
 }
 
-void r01s_ui_draw_busy(R01sUi *ui, SDL_Renderer *r, const char *status) {
+void r01s_ui_draw_boot(R01sUi *ui, SDL_Renderer *r, int spin_frame) {
+    static const char spin_chars[] = {'|', '/', '-', '\\'};
+    char line[48];
     char fps_buf[16];
-    const char *msg = status && status[0] ? status : "IC MAP stream…";
+    char spin;
+    int cx;
 
     if (!ui || !r) {
         return;
     }
-    fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_LOGIC_H, 12, 14, 16);
-    fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_UI_HUD_TOP, 20, 24, 28);
-    fill_rect(r, 0, R01S_LOGIC_H - R01S_UI_HUD_BOTTOM, R01S_LOGIC_W, R01S_UI_HUD_BOTTOM, 20, 24, 28);
-    font_draw(r, 8, 7, "RETR01 SIM — CATCHUP (WORKER)", 180, 200, 160);
+    if (spin_frame < 0) {
+        spin_frame = 0;
+    }
+    spin = spin_chars[spin_frame & 3];
+
+    fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_LOGIC_H, 0, 0, 0);
+    snprintf(line, sizeof(line), "Booting console... %c", spin);
+    cx = (R01S_LOGIC_W - font_text_width(line)) / 2;
+    if (cx < 8) {
+        cx = 8;
+    }
+    font_draw(r, cx, R01S_LOGIC_H / 2 - 4, line, 200, 210, 180);
     snprintf(fps_buf, sizeof(fps_buf), "%d FPS", ui->fps);
-    font_draw(r, R01S_LOGIC_W - font_text_width(fps_buf) - 8, 7, fps_buf, 140, 180, 140);
-    font_draw(r, 8, R01S_LOGIC_H / 2 - 8, msg, 200, 210, 180);
-    font_draw(r, 8, R01S_LOGIC_H - 16, "ESC QUIT", 120, 130, 140);
+    font_draw(r, R01S_LOGIC_W - font_text_width(fps_buf) - 8, 7, fps_buf, 100, 110, 100);
+    font_draw(r, 8, R01S_LOGIC_H - 16, "ESC QUIT", 90, 90, 90);
 }
 
 static int hit_chip(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
@@ -2252,12 +2345,8 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             }
         }
         if (!(e->key.keysym.mod & KMOD_CTRL) && e->key.keysym.sym == SDLK_g) {
-            R01sBoard *board = r01s_board_from_group(ui->group);
-            if (board) {
-                R01sVideoSink *sink = &board->video_sink;
-                r01s_video_sink_set_scale_2x(sink, !r01s_video_sink_scale_2x(sink));
-                snprintf(ui->status, sizeof(ui->status), "SCALE %s (256x240 field, timing 341x262)",
-                         r01s_video_sink_scale_2x(sink) ? "2X" : "1X");
+            if (r01s_board_from_group(ui->group)) {
+                ui_toggle_lcd_scale(ui);
                 return 1;
             }
         }
@@ -2344,6 +2433,17 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             if (logic_x >= cbtn.x && logic_x < cbtn.x + cbtn.w && logic_y >= cbtn.y &&
                 logic_y < cbtn.y + cbtn.h) {
                 ui_toggle_compact(ui);
+                return 1;
+            }
+        }
+
+        /* LCD SCALE 1X/2X (left sidebar). */
+        {
+            SDL_Rect sbtn;
+            scale_btn_rect(ui, &sbtn);
+            if (sidebar_hit(logic_x, logic_y) && logic_x >= sbtn.x && logic_x < sbtn.x + sbtn.w &&
+                logic_y >= sbtn.y && logic_y < sbtn.y + sbtn.h) {
+                ui_toggle_lcd_scale(ui);
                 return 1;
             }
         }

@@ -198,7 +198,7 @@ Current pin-level code is intentional for catching PCB bugs early.
 | 3 | Island **G** (VRAM interleave) / more `$FExx` latches (**done** — soft `$FE10`–`$FE12`) |
 | 4 | Island **H** beam (**done** — `OSC_DOT` + `BEAM_XY` X PLD + `ATF22V10` Y compare / `$FE04`) |
 | 5 | Island **I** BG fetch (**done** — `BG_FETCH` nametable VA + PPU-phase VRAM read) |
-| 6 | Island **O** video (**done** — compositor + AT28C16 + 256×240 sink; SCALE 2x default / 1x centered; CHR from cart flash + `$FE08`/`$FE09` active pals) |
+| 6 | Island **O** video (**done** — compositor + AT28C16 + 256×240 sink; SCALE **1x** default / 2x fills field; CHR from cart flash + `$FE08`/`$FE09` active pals) |
 | 7 | Island **J** cart (**done** — SST39SF040 + 24C64 EEPROM, PRG + MAP `$FE90`–`$FE93`, `.retr01` load + bring-up PRG overlay) |
 | 8 | **32-IC canvas** (**done** — **9 frames**: O top-left; A∪B, L∪M; HC245s on C/O/J; letters E/I/N/P wired-only) |
 | Next | Wire HC245 into bus paths; retire bring-up PRG overlay when game PRG streams MAP |

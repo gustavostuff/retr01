@@ -77,6 +77,7 @@ typedef struct R01sUi {
     int compact_chip_y[R01S_BOARD_MAX_CHIPS];
     uint8_t compact_chip_orient[R01S_BOARD_MAX_CHIPS];
     int layout_dirty; /* write ui_layout.json on next save opportunity */
+    SDL_Texture *lcd_tex; /* 256×240 LCD framebuffer upload (streaming) */
 } R01sUi;
 
 int r01s_ui_init(R01sUi *ui);
@@ -90,8 +91,8 @@ void r01s_ui_sync_gamepads(R01sUi *ui);
 uint8_t r01s_ui_gamepad_port(const R01sUi *ui, int player);
 void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r);
 
-/* Lightweight frame while IC catchup worker owns the board (no board reads). */
-void r01s_ui_draw_busy(R01sUi *ui, SDL_Renderer *r, const char *status);
+/* Black boot screen during IC catchup. spin_frame advances on worker→main ticks. */
+void r01s_ui_draw_boot(R01sUi *ui, SDL_Renderer *r, int spin_frame);
 int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_y);
 
 /* Rotate selected DIP (H↔V). Returns 1 if rotated. */

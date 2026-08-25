@@ -59,7 +59,7 @@ void r01s_video_sink_init(R01sVideoSink *chip, const char *refdes) {
     memset(chip, 0, sizeof(*chip));
     r01s_entity_init(&chip->base, &SINK_VT, "LCD_SINK", refdes ? refdes : "LCD1");
     chip->base.impl = chip;
-    chip->scale_2x = 1; /* docs: 2x default */
+    chip->scale_2x = 0; /* 1x centered playfield (toggle to 2x via UI / G) */
     r01s_entity_add_pin(&chip->base, 1, "DOT", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 2, "HSYNC", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 3, "VSYNC", R01S_PIN_IN);
@@ -81,7 +81,7 @@ void r01s_video_sink_set_scale_2x(R01sVideoSink *chip, int scale_2x) {
 }
 
 int r01s_video_sink_scale_2x(const R01sVideoSink *chip) {
-    return chip ? (chip->scale_2x ? 1 : 0) : 1;
+    return chip ? (chip->scale_2x ? 1 : 0) : 0;
 }
 
 void r01s_video_sink_plot(R01sVideoSink *chip, int fx, int fy, uint8_t prom_byte) {

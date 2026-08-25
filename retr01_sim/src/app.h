@@ -24,6 +24,9 @@ typedef struct R01sApp {
     SDL_atomic_t catchup_active;
     int catchup_rc;
     struct R01sBoard *catchup_board;
+    /* Worker sets catchup_ui_req=1 after each batch; main advances spinner + clears. */
+    SDL_atomic_t catchup_ui_req;
+    int catchup_spin; /* 0..3 boot spinner phase */
 } R01sApp;
 
 int r01s_app_init(R01sApp *app, int headless);

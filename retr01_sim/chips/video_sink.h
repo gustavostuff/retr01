@@ -18,7 +18,7 @@
 /*
  * Island O — 256×240 RGBS / LCD sink.
  * Beam timing stays 341×262 (HBLANK X≥256, VBLANK Y≥240).
- * Board SCALE DIP: 2x (default) fills the field; 1x centers 128×120 with border.
+ * Board SCALE DIP: 1x (default) centers 128×120 with border; 2x fills the field.
  */
 typedef struct R01sVideoSink {
     R01sEntity base;
@@ -26,7 +26,7 @@ typedef struct R01sVideoSink {
     uint32_t dot_samples;
     uint32_t lit_pixels;
     uint8_t last_packed;
-    uint8_t scale_2x; /* 1 = 2x (default), 0 = 1x centered */
+    uint8_t scale_2x; /* 1 = 2x fills field, 0 = 1x centered (default) */
 } R01sVideoSink;
 
 void r01s_video_sink_init(R01sVideoSink *chip, const char *refdes);

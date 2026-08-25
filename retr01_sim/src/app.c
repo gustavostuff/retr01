@@ -9,6 +9,31 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Step batches between UI tick handshakes with main (spinner advances). */
+#define R01S_CATCHUP_BATCH_STEPS 64
+/* Max time worker waits for main to ack the UI tick (ms). */
+#define R01S_CATCHUP_UI_WAIT_MS 50
+
+static void catchup_signal_ui_tick(R01sApp *app, R01sBoard *board) {
+    Uint32 t0;
+    if (!app) {
+        return;
+    }
+    SDL_AtomicSet(&app->catchup_ui_req, 1);
+    t0 = SDL_GetTicks();
+    while (SDL_AtomicGet(&app->catchup_ui_req) != 0) {
+        if (board && board->catchup_cancel) {
+            SDL_AtomicSet(&app->catchup_ui_req, 0);
+            return;
+        }
+        if ((SDL_GetTicks() - t0) >= (Uint32)R01S_CATCHUP_UI_WAIT_MS) {
+            SDL_AtomicSet(&app->catchup_ui_req, 0);
+            return;
+        }
+        SDL_Delay(1);
+    }
+}
+
 /* Leave headroom for draw + vsync inside a ~16.7 ms frame. */
 #define R01S_SIM_BUDGET_MS 10
 #define R01S_SIM_MAX_STEPS_PER_FRAME 128
@@ -89,10 +114,11 @@ static int catchup_thread_fn_yielding(void *userdata) {
         int done = 0;
         int batch;
         SDL_LockMutex(app->board_mu);
-        for (batch = 0; batch < 256 && i < 80000; batch++) {
+        for (batch = 0; batch < R01S_CATCHUP_BATCH_STEPS && i < 80000; batch++) {
             if (board->catchup_cancel) {
                 app->catchup_rc = -1;
                 SDL_UnlockMutex(app->board_mu);
+                SDL_AtomicSet(&app->catchup_ui_req, 0);
                 SDL_AtomicSet(&app->catchup_active, 0);
                 return -1;
             }
@@ -104,21 +130,20 @@ static int catchup_thread_fn_yielding(void *userdata) {
                 break;
             }
         }
-        if ((i % 5000) < 256) {
-            snprintf(app->ui.status, sizeof(app->ui.status),
-                     "IC MAP stream… %d steps  map=%06X/%06X", i, (unsigned)board->map_addr,
-                     (unsigned)target);
-        }
+        snprintf(app->ui.status, sizeof(app->ui.status),
+                 "IC MAP stream… %d steps  map=%06X/%06X", i, (unsigned)board->map_addr,
+                 (unsigned)target);
         if (done) {
             snprintf(app->ui.status, sizeof(app->ui.status), "IC MAP stream ready (%d steps)", i);
         }
         SDL_UnlockMutex(app->board_mu);
         if (done) {
+            catchup_signal_ui_tick(app, board);
             SDL_AtomicSet(&app->catchup_active, 0);
             return 0;
         }
-        /* Yield briefly so the main thread can paint a busy frame without board lock. */
-        SDL_Delay(0);
+        /* Handshake: main advances boot spinner, then worker continues. */
+        catchup_signal_ui_tick(app, board);
     }
 
     app->catchup_rc = -1;
@@ -154,12 +179,14 @@ void r01s_app_start_ic_catchup(R01sApp *app, struct R01sBoard *board) {
     app->catchup_board = board;
     app->catchup_rc = 0;
     board->catchup_cancel = 0;
-    SDL_AtomicSet(&app->catchup_active, 1);
     group = r01s_island_builder_group(&app->builder);
     if (group) {
         group->running = 0; /* don't double-step until stream done */
     }
-    snprintf(app->ui.status, sizeof(app->ui.status), "IC MAP stream starting…");
+    app->catchup_spin = 0;
+    SDL_AtomicSet(&app->catchup_ui_req, 0);
+    snprintf(app->ui.status, sizeof(app->ui.status), "Booting console…");
+    SDL_AtomicSet(&app->catchup_active, 1);
     app->catchup_th = SDL_CreateThread(catchup_thread_fn_yielding, "r01s_catchup", app);
     if (!app->catchup_th) {
         fprintf(stderr, "catchup: thread failed (%s), running sync\n", SDL_GetError());
@@ -203,6 +230,7 @@ int r01s_app_init(R01sApp *app, int headless) {
     app->scale = 1;
     app->running = 1;
     SDL_AtomicSet(&app->catchup_active, 0);
+    SDL_AtomicSet(&app->catchup_ui_req, 0);
 
     if (headless) {
         if (!getenv("SDL_VIDEODRIVER")) {
@@ -302,7 +330,6 @@ void r01s_app_frame(R01sApp *app) {
     R01sBoard *board;
     Uint32 now;
     int catching_up;
-    char busy_status[sizeof(app->ui.status)];
 
     group = r01s_island_builder_group(&app->builder);
     catching_up = r01s_app_catchup_active(app);
@@ -323,21 +350,15 @@ void r01s_app_frame(R01sApp *app) {
 
     if (catching_up) {
         /*
-         * Worker owns the board. Do not hold board_mu across a full UI draw —
-         * that was starving the worker and tanking FPS (~12). Snapshot status
-         * under a short lock, then paint a cheap busy frame.
+         * Black boot screen. Worker signals catchup_ui_req after each batch;
+         * main advances the spinner and acks — never blocks on board_mu.
          */
-        busy_status[0] = '\0';
-        if (app->board_mu) {
-            SDL_LockMutex(app->board_mu);
+        if (SDL_AtomicGet(&app->catchup_ui_req)) {
+            app->catchup_spin = (app->catchup_spin + 1) & 3;
+            SDL_AtomicSet(&app->catchup_ui_req, 0);
         }
-        snprintf(busy_status, sizeof(busy_status), "%s", app->ui.status);
-        if (app->board_mu) {
-            SDL_UnlockMutex(app->board_mu);
-        }
-
         SDL_SetRenderTarget(app->ren, app->target);
-        r01s_ui_draw_busy(&app->ui, app->ren, busy_status);
+        r01s_ui_draw_boot(&app->ui, app->ren, app->catchup_spin);
         SDL_SetRenderTarget(app->ren, NULL);
     } else {
         if (app->board_mu) {
