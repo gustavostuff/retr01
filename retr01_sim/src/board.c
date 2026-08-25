@@ -20,7 +20,6 @@
  */
 #define R01S_BEAM_DOTS_PER_STEP 128
 
-
 /*
  * Bring-up smoke PRG (overlay into cart PRG window — not Studio game code).
  * Body through OAM readback is fixed. When cart meta is valid, install appends
@@ -1884,15 +1883,27 @@ static void board_install_bringup_prg(R01sBoard *board) {
     uint8_t buf[512];
     size_t n = 0;
     uint16_t hang_pc;
+    int stream = 0;
 
     if (!board || !board->cart_loaded) {
         return;
     }
     board_resolve_cart_meta(board);
-    /* LCD content: r01s_board_softboot_start_screen (not the old 480 B CPU MAP loop). */
+    /* IC path: palette + 480 B MAP→VRAM via $FE93→$FE12 (replaces host softboot). */
+    stream = (board->cart_off_map_screen0 != 0 && board->cart_off_pal_bg != 0);
 
     memcpy(buf + n, R01S_BRINGUP_SMOKE, sizeof(R01S_BRINGUP_SMOKE));
     n += sizeof(R01S_BRINGUP_SMOKE);
+    if (stream) {
+        memcpy(buf + n, R01S_BRINGUP_STREAM, sizeof(R01S_BRINGUP_STREAM));
+        buf[n + R01S_BR_OFF_PAL_LO] = (uint8_t)(board->cart_off_pal_bg & 0xFFu);
+        buf[n + R01S_BR_OFF_PAL_MID] = (uint8_t)((board->cart_off_pal_bg >> 8) & 0xFFu);
+        buf[n + R01S_BR_OFF_PAL_HI] = (uint8_t)((board->cart_off_pal_bg >> 16) & 0xFFu);
+        buf[n + R01S_BR_OFF_MAP_LO] = (uint8_t)(board->cart_off_map_screen0 & 0xFFu);
+        buf[n + R01S_BR_OFF_MAP_MID] = (uint8_t)((board->cart_off_map_screen0 >> 8) & 0xFFu);
+        buf[n + R01S_BR_OFF_MAP_HI] = (uint8_t)((board->cart_off_map_screen0 >> 16) & 0xFFu);
+        n += sizeof(R01S_BRINGUP_STREAM);
+    }
     hang_pc = (uint16_t)(0x8000u + n);
     memcpy(buf + n, R01S_BRINGUP_HANG, sizeof(R01S_BRINGUP_HANG));
     buf[n + 4] = (uint8_t)(hang_pc & 0xFFu);
@@ -1907,6 +1918,7 @@ static void board_install_bringup_prg(R01sBoard *board) {
     /* Reset vector at CPU $FFFC/$FFFD => PRG offset $7FFC/$7FFD */
     r01s_sst39sf040_poke(&board->cart_flash, base + 0x7FFCu, 0x00);
     r01s_sst39sf040_poke(&board->cart_flash, base + 0x7FFDu, 0x80);
+
 }
 
 static void board_install_synthetic_cart(R01sBoard *board) {
@@ -2133,47 +2145,69 @@ void r01s_board_set_scroll(R01sBoard *board, uint8_t scroll_x, uint8_t scroll_y)
 int r01s_board_softboot_start_screen(R01sBoard *board) {
     uint32_t i;
 
+    /* Opt-in debug only (R01S_SOFTBOOT=1). Default path is IC MAP stream. */
     if (!board || !board->cart_loaded) {
         return -1;
     }
     if (board->cart_off_map_screen0 == 0 || board->cart_off_pal_bg == 0) {
         return -1;
     }
+    for (i = 0; i < 480u; i++) {
+        uint8_t b = r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_map_screen0 + i);
+        r01s_as6c62256_poke(&board->vram, (uint16_t)i, b);
+    }
     for (i = 0; i < 32u; i++) {
         board->active_pal[i] =
             (uint8_t)(r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_pal_bg + i) & 63u);
     }
-    /* Unblank LCD hold: map_addr past streamed start-screen payload. */
     poke_map_addr_latches(board, board->cart_off_map_screen0 + 480u);
-    if (!r01s_play_start(board)) {
-        /* Fallback: single slot 0 if Play cannot spawn. */
-        board_load_screen_slot(board, (int)board->cart_start_col, (int)board->cart_start_row, 0);
-        r01s_board_set_scroll(board, 0, 0);
-        return 0;
-    }
     return 0;
 }
 
 int r01s_board_catchup_bringup(R01sBoard *board, R01sIslandGroup *group) {
     int i;
+    const char *want_soft;
+    uint32_t target;
+    uint8_t expect0;
 
     if (!board || !board->cart_loaded || board->cart_off_map_screen0 == 0) {
         return 0;
     }
-    if (r01s_board_softboot_start_screen(board) != 0) {
+
+    want_soft = getenv("R01S_SOFTBOOT");
+    if (want_soft && want_soft[0] != '\0' && strcmp(want_soft, "0") != 0) {
+        if (r01s_board_softboot_start_screen(board) != 0) {
+            return -1;
+        }
+        if (!group) {
+            return 0;
+        }
+        for (i = 0; i < 12000; i++) {
+            r01s_island_group_step(group);
+            if (r01s_w65c02s_pc(board->cpu_mem_impl.cpu) >= 0x8078u) {
+                break;
+            }
+        }
+        return r01s_board_softboot_start_screen(board);
+    }
+
+    /* Default: run bring-up PRG MAP stream on the pin-level netlist (~12k steps). */
+    target = board->cart_off_map_screen0 + 480u;
+    expect0 = r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_map_screen0);
+    board->catchup_cancel = 0;
+    if (!group) {
         return -1;
     }
-    if (!group) {
-        return 0;
-    }
-    /* Brief burst past reset-hold + smoke ($42), then softboot again. */
-    for (i = 0; i < 12000; i++) {
+    for (i = 0; i < 80000; i++) {
+        if (board->catchup_cancel) {
+            return -1;
+        }
         r01s_island_group_step(group);
-        if (r01s_w65c02s_pc(board->cpu_mem_impl.cpu) >= 0x8078u) {
-            break;
+        if (board->map_addr >= target && r01s_as6c62256_peek(&board->vram, 0) == expect0) {
+            return 0;
         }
     }
-    return r01s_board_softboot_start_screen(board);
+    return -1;
 }
 
 static void board_shutdown(R01sIslandGroup *group) {
@@ -2205,6 +2239,7 @@ static void board_reset(R01sIslandGroup *group) {
     memset(ctx->active_pal, 0, sizeof(ctx->active_pal));
     ctx->chr_last_master = 0;
     r01s_play_reset(&ctx->play);
+    ctx->catchup_cancel = 0;
     ctx->health_saw_latch = 0;
     ctx->health_saw_vram = 0;
     ctx->health_saw_vram_read = 0;

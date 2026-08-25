@@ -194,8 +194,9 @@ typedef struct R01sBoard {
     uint8_t pal_addr;
     int pal_fe09_wrote; /* one write+inc per DATA cycle */
     uint8_t chr_last_master; /* hold last BG/sprite master when CHR CE denied */
-    /* Host Play (TEMPORARY — with softboot). */
+    /* Host Play scaffold (unused in default UI — game PRG owns play later). */
     R01sPlay play;
+    int catchup_cancel; /* cooperative cancel for threaded IC catchup */
     int reset_hold;
     uint32_t cycles;
     R01sLevel phi2_prev;
@@ -230,21 +231,15 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *builder);
 int r01s_board_load_cart(R01sBoard *board, const char *path);
 
 /*
- * Soft-load cart pals + host Play (2×2 camera MAP into VRAM, scroll latches) and
- * advance map_addr past the start-screen payload so the LCD unblanks. Host
- * convenience (like emu Play) — not IC behavior.
- *
- * TEMPORARY / HIGH PRIORITY TO RETIRE: restore MAP/Play ownership to PRG (or
- * staged IC-path stream); keep this only as opt-in debug. See docs/08_simulator.md
- * (#high-priority--retire-sim-lcd-softboot).
- *
- * Returns 0 on success, -1 if cart meta missing.
+ * Opt-in host soft-load of start-screen MAP+pals (R01S_SOFTBOOT=1). Default LCD
+ * path is IC bring-up PRG streaming via $FE93→$FE12 — see catchup_bringup.
  */
 int r01s_board_softboot_start_screen(R01sBoard *board);
 
 /*
- * Soft-boot start screen for LCD, then optionally a short paint burst.
- * Prefer this over multi-100k-step CPU catchup (that OOMs/hangs the UI).
+ * Run bring-up palette + MAP→VRAM on the pin-level netlist until the start screen
+ * is in VRAM and the LCD hold lifts (~12k board steps). Opt-in softboot via
+ * R01S_SOFTBOOT=1. Returns 0 on success, -1 on timeout / missing meta.
  */
 int r01s_board_catchup_bringup(R01sBoard *board, R01sIslandGroup *group);
 

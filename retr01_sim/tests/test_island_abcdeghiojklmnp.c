@@ -204,16 +204,14 @@ int main(void) {
                 expect_true(b->cart_off_chr != 0, "world0 CHR base from cart");
                 expect_true(b->cart_off_map_screen0 != 0, "world0 start-screen MAP payload");
                 r01s_island_group_reset(group);
-                expect_true(r01s_board_softboot_start_screen(b) == 0, "softboot start screen");
+                expect_true(r01s_board_catchup_bringup(b, group) == 0, "IC MAP stream catchup");
                 expect_true(b->map_addr >= b->cart_off_map_screen0 + 480u, "MAP addr past start screen");
                 {
                     uint8_t expect0 =
                         r01s_sst39sf040_peek(&b->cart_flash, b->cart_off_map_screen0);
                     expect_true(r01s_as6c62256_peek(&b->vram, 0) == expect0,
-                                "VRAM[0] matches softbooted MAP byte");
+                                "VRAM[0] matches streamed MAP byte");
                 }
-                expect_true(b->active_pal[0] != 0 || b->active_pal[1] != 0 || b->active_pal[2] != 0,
-                            "softboot loaded active palette");
                 break;
             }
         }

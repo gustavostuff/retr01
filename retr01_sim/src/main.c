@@ -67,9 +67,8 @@ static int setup_board(R01sApp *app, int argc, char **argv) {
     {
         R01sIslandGroup *group = r01s_island_builder_group(&app->builder);
         r01s_island_group_reset(group);
-        if (r01s_board_catchup_bringup(&g_board, group) != 0) {
-            fprintf(stderr, "cart: start-screen softboot failed (LCD may stay blank)\n");
-        }
+        /* Non-blocking: worker thread runs IC MAP stream; UI stays responsive. */
+        r01s_app_start_ic_catchup(app, &g_board);
     }
     snprintf(title, sizeof(title), "Retr01 Sim — %s", g_board.cart_label[0] ? g_board.cart_label : "cart");
     SDL_SetWindowTitle(app->win, title);

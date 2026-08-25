@@ -26,13 +26,9 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 
 Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8000+`.
 
-**Cart load:** `./sim run` passes `retr01_studio/test_game/test.retr01` (override with a path; resolved from repo root). Sim applies a **bring-up PRG overlay** for island smoke. For the LCD it **temporarily soft-boots** pals + **host Play** (2×2 MAP into VRAM, scroll, player overlay) — like emu Play; bypasses MAP→VRAM ICs for that load; pixel path still IC.
+**Cart load:** `./sim run` passes `retr01_studio/test_game/test.retr01` (override with a path; resolved from repo root). Sim applies a **bring-up PRG overlay** (smoke + palette + MAP→VRAM stream via `$FE93`→`$FE12`). Startup catchup runs that stream on a **worker thread** (~12k pin-level steps) so the SDL window stays responsive; status shows progress. Host softboot is opt-in only (`R01S_SOFTBOOT=1`). No host Play — pads reach `$FE60`/`$FE61`; scroll/player wait on game PRG.
 
-**Input (host Play):** arrows/WASD move, **X** warp → screen (0,0), **Y** warp → (1,0). Same SoT as Studio/emu (`play.c`).
-
-**HIGH PRIORITY:** Retire LCD softboot **and** host Play — game/bring-up PRG (or a cheaper staged IC-path stream) must own MAP/camera again; soft helpers become opt-in debug only. Tracked in [`docs/08_simulator.md`](../docs/08_simulator.md#high-priority--retire-sim-lcd-softboot).
-
-Next: optional **F** machine EEPROM (1284 path); retire bring-up overlay when game PRG owns MAP.
+Next: optional machine EEPROM (1284 path); retire bring-up overlay when game PRG owns MAP.
 
 ## Build
 

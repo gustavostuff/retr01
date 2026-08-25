@@ -3,7 +3,6 @@
 #include "retr01_sim/board.h"
 #include "retr01_sim/bom32.h"
 #include "retr01_sim/island_builder.h"
-#include "retr01_sim/play.h"
 #include "pads.h"
 
 #include <stdio.h>
@@ -24,6 +23,149 @@ static void logic_from_window(const R01sApp *app, int win_x, int win_y, int *lx,
     oy = (wh - draw_h) / 2;
     *lx = (win_x - ox) / scale;
     *ly = (win_y - oy) / scale;
+}
+
+static void catchup_join(R01sApp *app) {
+    if (!app || !app->catchup_th) {
+        return;
+    }
+    SDL_WaitThread(app->catchup_th, NULL);
+    app->catchup_th = NULL;
+    SDL_AtomicSet(&app->catchup_active, 0);
+    if (app->catchup_rc != 0) {
+        fprintf(stderr, "cart: IC MAP stream catchup failed (LCD may stay blank)\n");
+        snprintf(app->ui.status, sizeof(app->ui.status), "IC MAP stream failed");
+    } else {
+        snprintf(app->ui.status, sizeof(app->ui.status), "IC MAP stream ready");
+    }
+}
+
+/*
+ * Yielding catchup: step under mutex one-at-a-time so the UI thread can paint.
+ * Uses the same completion rules as r01s_board_catchup_bringup (non-softboot).
+ */
+static int catchup_thread_fn_yielding(void *userdata) {
+    R01sApp *app = (R01sApp *)userdata;
+    R01sIslandGroup *group;
+    R01sBoard *board;
+    uint32_t target;
+    uint8_t expect0;
+    int i;
+    const char *want_soft;
+
+    if (!app) {
+        return -1;
+    }
+    group = r01s_island_builder_group(&app->builder);
+    board = app->catchup_board;
+    if (!group || !board) {
+        SDL_AtomicSet(&app->catchup_active, 0);
+        return -1;
+    }
+
+    want_soft = getenv("R01S_SOFTBOOT");
+    if (want_soft && want_soft[0] != '\0' && strcmp(want_soft, "0") != 0) {
+        SDL_LockMutex(app->board_mu);
+        app->catchup_rc = r01s_board_catchup_bringup(board, group);
+        SDL_UnlockMutex(app->board_mu);
+        SDL_AtomicSet(&app->catchup_active, 0);
+        return app->catchup_rc;
+    }
+
+    if (!board->cart_loaded || board->cart_off_map_screen0 == 0) {
+        app->catchup_rc = 0;
+        SDL_AtomicSet(&app->catchup_active, 0);
+        return 0;
+    }
+
+    SDL_LockMutex(app->board_mu);
+    board->catchup_cancel = 0;
+    target = board->cart_off_map_screen0 + 480u;
+    expect0 = r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_map_screen0);
+    SDL_UnlockMutex(app->board_mu);
+
+    i = 0;
+    while (i < 80000) {
+        int done = 0;
+        int batch;
+        SDL_LockMutex(app->board_mu);
+        for (batch = 0; batch < 256 && i < 80000; batch++) {
+            if (board->catchup_cancel) {
+                app->catchup_rc = -1;
+                SDL_UnlockMutex(app->board_mu);
+                SDL_AtomicSet(&app->catchup_active, 0);
+                return -1;
+            }
+            r01s_island_group_step(group);
+            i++;
+            if (board->map_addr >= target && r01s_as6c62256_peek(&board->vram, 0) == expect0) {
+                done = 1;
+                app->catchup_rc = 0;
+                break;
+            }
+        }
+        if ((i % 5000) < 256) {
+            snprintf(app->ui.status, sizeof(app->ui.status),
+                     "IC MAP stream… %d steps  map=%06X/%06X", i, (unsigned)board->map_addr,
+                     (unsigned)target);
+        }
+        if (done) {
+            snprintf(app->ui.status, sizeof(app->ui.status), "IC MAP stream ready (%d steps)", i);
+        }
+        SDL_UnlockMutex(app->board_mu);
+        if (done) {
+            SDL_AtomicSet(&app->catchup_active, 0);
+            return 0;
+        }
+        /* Yield briefly so the main thread can paint a busy frame without board lock. */
+        SDL_Delay(0);
+    }
+
+    app->catchup_rc = -1;
+    SDL_AtomicSet(&app->catchup_active, 0);
+    return -1;
+}
+
+int r01s_app_catchup_active(const R01sApp *app) {
+    return app && SDL_AtomicGet((SDL_atomic_t *)&app->catchup_active) != 0;
+}
+
+void r01s_app_start_ic_catchup(R01sApp *app, struct R01sBoard *board) {
+    R01sIslandGroup *group;
+    if (!app || !board) {
+        return;
+    }
+    if (app->catchup_th) {
+        /* Previous worker still joining. */
+        if (SDL_AtomicGet(&app->catchup_active)) {
+            board->catchup_cancel = 1;
+        }
+        catchup_join(app);
+    }
+    if (!app->board_mu) {
+        app->board_mu = SDL_CreateMutex();
+        if (!app->board_mu) {
+            fprintf(stderr, "catchup: mutex failed, running sync\n");
+            group = r01s_island_builder_group(&app->builder);
+            (void)r01s_board_catchup_bringup(board, group);
+            return;
+        }
+    }
+    app->catchup_board = board;
+    app->catchup_rc = 0;
+    board->catchup_cancel = 0;
+    SDL_AtomicSet(&app->catchup_active, 1);
+    group = r01s_island_builder_group(&app->builder);
+    if (group) {
+        group->running = 0; /* don't double-step until stream done */
+    }
+    snprintf(app->ui.status, sizeof(app->ui.status), "IC MAP stream starting…");
+    app->catchup_th = SDL_CreateThread(catchup_thread_fn_yielding, "r01s_catchup", app);
+    if (!app->catchup_th) {
+        fprintf(stderr, "catchup: thread failed (%s), running sync\n", SDL_GetError());
+        SDL_AtomicSet(&app->catchup_active, 0);
+        (void)r01s_board_catchup_bringup(board, group);
+    }
 }
 
 void r01s_app_mount_builder(R01sApp *app) {
@@ -60,6 +202,7 @@ int r01s_app_init(R01sApp *app, int headless) {
     memset(app, 0, sizeof(*app));
     app->scale = 1;
     app->running = 1;
+    SDL_AtomicSet(&app->catchup_active, 0);
 
     if (headless) {
         if (!getenv("SDL_VIDEODRIVER")) {
@@ -119,12 +262,23 @@ int r01s_app_init(R01sApp *app, int headless) {
         return -1;
     }
     SDL_SetTextureScaleMode(app->target, SDL_ScaleModeNearest);
+    app->board_mu = SDL_CreateMutex();
     return 0;
 }
 
 void r01s_app_shutdown(R01sApp *app) {
     if (!app) {
         return;
+    }
+    if (app->catchup_board) {
+        app->catchup_board->catchup_cancel = 1;
+    }
+    if (app->catchup_th) {
+        catchup_join(app);
+    }
+    if (app->board_mu) {
+        SDL_DestroyMutex(app->board_mu);
+        app->board_mu = NULL;
     }
     r01s_island_builder_shutdown(&app->builder);
     r01s_ui_shutdown(&app->ui);
@@ -147,45 +301,16 @@ void r01s_app_frame(R01sApp *app) {
     R01sIslandGroup *group;
     R01sBoard *board;
     Uint32 now;
+    int catching_up;
+    char busy_status[sizeof(app->ui.status)];
 
     group = r01s_island_builder_group(&app->builder);
-    r01s_ui_sync_gamepads(&app->ui);
-    board = r01s_board_from_group(group);
-    if (board) {
-        uint8_t pad0 = r01s_ui_gamepad_port(&app->ui, 0);
-        r01s_pads_set(&board->pads, 0, pad0);
-        r01s_pads_set(&board->pads, 1, r01s_ui_gamepad_port(&app->ui, 1));
-        r01s_pads_refresh_preview(&board->pads);
-        app->ui.probe_pad_p1 = r01s_pads_get(&board->pads, 0);
-        app->ui.probe_pad_p2 = r01s_pads_get(&board->pads, 1);
-        /* Host Play once per UI frame (TEMPORARY — with softboot). */
-        r01s_play_tick(board, pad0);
-    }
-    if (group) {
-        /* Prefer UI ~60 FPS: spend at most R01S_SIM_BUDGET_MS on board steps. */
-        if (group->running) {
-            Uint64 t0 = SDL_GetPerformanceCounter();
-            Uint64 freq = SDL_GetPerformanceFrequency();
-            Uint64 budget = (freq * (Uint64)R01S_SIM_BUDGET_MS) / 1000u;
-            int n = 0;
-            while (n < R01S_SIM_MAX_STEPS_PER_FRAME) {
-                r01s_island_group_step(group);
-                n++;
-                if ((SDL_GetPerformanceCounter() - t0) >= budget) {
-                    break;
-                }
-            }
-            app->ui.sim_steps = n;
-        } else {
-            r01s_island_group_eval_idle(group);
-            app->ui.sim_steps = 0;
+    catching_up = r01s_app_catchup_active(app);
+    if (!catching_up && app->catchup_th) {
+        catchup_join(app);
+        if (group) {
+            group->running = 1;
         }
-        if (board) {
-            r01s_play_draw(board);
-        }
-        r01s_island_group_fill_status(group, app->ui.status, sizeof(app->ui.status));
-        r01s_island_group_fill_health(group, &app->ui.health);
-        r01s_island_group_update_probes(group, &app->ui.probe_vdd, &app->ui.probe_phi2, &app->ui.probe_resb_low);
     }
 
     app->fps_frames++;
@@ -196,9 +321,71 @@ void r01s_app_frame(R01sApp *app) {
         app->fps_last_ms = now;
     }
 
-    SDL_SetRenderTarget(app->ren, app->target);
-    r01s_ui_draw(&app->ui, app->ren);
-    SDL_SetRenderTarget(app->ren, NULL);
+    if (catching_up) {
+        /*
+         * Worker owns the board. Do not hold board_mu across a full UI draw —
+         * that was starving the worker and tanking FPS (~12). Snapshot status
+         * under a short lock, then paint a cheap busy frame.
+         */
+        busy_status[0] = '\0';
+        if (app->board_mu) {
+            SDL_LockMutex(app->board_mu);
+        }
+        snprintf(busy_status, sizeof(busy_status), "%s", app->ui.status);
+        if (app->board_mu) {
+            SDL_UnlockMutex(app->board_mu);
+        }
+
+        SDL_SetRenderTarget(app->ren, app->target);
+        r01s_ui_draw_busy(&app->ui, app->ren, busy_status);
+        SDL_SetRenderTarget(app->ren, NULL);
+    } else {
+        if (app->board_mu) {
+            SDL_LockMutex(app->board_mu);
+        }
+
+        r01s_ui_sync_gamepads(&app->ui);
+        board = r01s_board_from_group(group);
+        if (board) {
+            uint8_t pad0 = r01s_ui_gamepad_port(&app->ui, 0);
+            r01s_pads_set(&board->pads, 0, pad0);
+            r01s_pads_set(&board->pads, 1, r01s_ui_gamepad_port(&app->ui, 1));
+            r01s_pads_refresh_preview(&board->pads);
+            app->ui.probe_pad_p1 = r01s_pads_get(&board->pads, 0);
+            app->ui.probe_pad_p2 = r01s_pads_get(&board->pads, 1);
+        }
+        if (group) {
+            if (group->running) {
+                Uint64 t0 = SDL_GetPerformanceCounter();
+                Uint64 freq = SDL_GetPerformanceFrequency();
+                Uint64 budget = (freq * (Uint64)R01S_SIM_BUDGET_MS) / 1000u;
+                int n = 0;
+                while (n < R01S_SIM_MAX_STEPS_PER_FRAME) {
+                    r01s_island_group_step(group);
+                    n++;
+                    if ((SDL_GetPerformanceCounter() - t0) >= budget) {
+                        break;
+                    }
+                }
+                app->ui.sim_steps = n;
+            } else {
+                r01s_island_group_eval_idle(group);
+                app->ui.sim_steps = 0;
+            }
+            r01s_island_group_fill_status(group, app->ui.status, sizeof(app->ui.status));
+            r01s_island_group_fill_health(group, &app->ui.health);
+            r01s_island_group_update_probes(group, &app->ui.probe_vdd, &app->ui.probe_phi2,
+                                           &app->ui.probe_resb_low);
+        }
+
+        SDL_SetRenderTarget(app->ren, app->target);
+        r01s_ui_draw(&app->ui, app->ren);
+        SDL_SetRenderTarget(app->ren, NULL);
+
+        if (app->board_mu) {
+            SDL_UnlockMutex(app->board_mu);
+        }
+    }
 
     SDL_GetWindowSize(app->win, &ww, &wh);
     {
@@ -231,37 +418,69 @@ void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
     }
     group = r01s_island_builder_group(&app->builder);
     if (e->type == SDL_QUIT) {
+        if (app->catchup_board) {
+            app->catchup_board->catchup_cancel = 1;
+        }
         app->running = 0;
         return;
     }
     if (e->type == SDL_KEYDOWN && group) {
         switch (e->key.keysym.sym) {
         case SDLK_ESCAPE:
+            if (app->catchup_board) {
+                app->catchup_board->catchup_cancel = 1;
+            }
             app->running = 0;
             return;
         case SDLK_SPACE:
+            if (r01s_app_catchup_active(app)) {
+                return;
+            }
             group->running = !group->running;
             return;
         case SDLK_r:
             if (e->key.keysym.mod & KMOD_CTRL) {
                 R01sBoard *b = r01s_board_from_group(group);
-                r01s_island_group_reset(group);
-                if (b) {
-                    (void)r01s_board_catchup_bringup(b, group);
+                if (r01s_app_catchup_active(app) && b) {
+                    b->catchup_cancel = 1;
+                    catchup_join(app);
                 }
-                snprintf(app->ui.status, sizeof(app->ui.status), "simulation reset");
+                if (app->board_mu) {
+                    SDL_LockMutex(app->board_mu);
+                }
+                r01s_island_group_reset(group);
+                if (app->board_mu) {
+                    SDL_UnlockMutex(app->board_mu);
+                }
+                if (b) {
+                    r01s_app_start_ic_catchup(app, b);
+                }
+                snprintf(app->ui.status, sizeof(app->ui.status), "simulation reset — IC stream…");
                 return;
             }
             /* Bare R falls through to UI (rotate selected IC). */
             break;
         case SDLK_PERIOD:
+            if (r01s_app_catchup_active(app)) {
+                return;
+            }
             if (!group->running) {
+                if (app->board_mu) {
+                    SDL_LockMutex(app->board_mu);
+                }
                 r01s_island_group_step(group);
+                if (app->board_mu) {
+                    SDL_UnlockMutex(app->board_mu);
+                }
             }
             return;
         default:
             break;
         }
+    }
+    if (r01s_app_catchup_active(app)) {
+        /* Ignore board interaction while worker owns the netlist. */
+        return;
     }
     if (e->type == SDL_MOUSEBUTTONDOWN || e->type == SDL_MOUSEBUTTONUP || e->type == SDL_MOUSEMOTION ||
         e->type == SDL_MOUSEWHEEL || e->type == SDL_KEYDOWN) {

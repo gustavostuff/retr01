@@ -89,6 +89,9 @@ void r01s_ui_clamp_pan(R01sUi *ui);
 void r01s_ui_sync_gamepads(R01sUi *ui);
 uint8_t r01s_ui_gamepad_port(const R01sUi *ui, int player);
 void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r);
+
+/* Lightweight frame while IC catchup worker owns the board (no board reads). */
+void r01s_ui_draw_busy(R01sUi *ui, SDL_Renderer *r, const char *status);
 int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_y);
 
 /* Rotate selected DIP (H↔V). Returns 1 if rotated. */

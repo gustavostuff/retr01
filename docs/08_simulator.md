@@ -76,7 +76,7 @@ When something looks wrong on screen, **do not assume the `.retr01` is bad** and
 | **Color PROM burn** | `project_prom.bin` | **Yes** (motherboard) | **Not inside the cart.** Kit → R3G3B2; board AT28C16. |
 | **Boot asm listing** | `project_boot.s` | **Human-readable only** | Equates + stub source. The **binary stub inside `.retr01`** is what runners execute (Studio embeds it; asm can drift — treat binary as SoT). |
 | **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Today also **soft-boots** world CHR/MAP into VRAM and **host-pans** the atlas — Studio stub PRG does **not** stream MAP. |
-| **Board sim** | `retr01_sim` | IC / island netlist | Bring-up letters A–E+G+H+I+O+J+K+L+M+N+**P** on **9 canvas frames** (O first; A∪B, L∪M; HC245s on C/O/J). **32-IC BOM** mounted (`bom32.h`). Cart flash loads `.retr01`; **bring-up PRG overlay** replaces cart PRG for island smoke (not Studio ROM). **Temporary:** host **`r01s_board_softboot_start_screen`** + **`r01s_play_*`** copy pals / 2×2 MAP into VRAM, poke scroll, overlay player (Studio/emu Play SoT — bypasses `$FE93`→`$FE12` for that load). Pixel path still uses IC models. **High priority: retire softboot + host Play** — see Near-term focus. |
+| **Board sim** | `retr01_sim` | IC / island netlist | Bring-up letters A–E+G+H+I+O+J+K+L+M+N+**P** on **9 canvas frames** (O first; A∪B, L∪M; HC245s on C/O/J). **32-IC BOM** mounted (`bom32.h`). Cart flash loads `.retr01`; **bring-up PRG overlay** (smoke + pal + MAP stream via `$FE93`→`$FE12`) replaces cart PRG for island smoke. LCD unblanks after IC catchup (~12k steps). Host softboot is **opt-in** (`R01S_SOFTBOOT=1`). No host Play. |
 
 ### What is actually in `project.retr01` today
 
@@ -103,7 +103,7 @@ Verified against Studio pack (`r01_cart_build`) and the checked-in `retr01_studi
 1. **Hex / dump the cart first** — magic, PRG stub bytes, a known screen payload offset, CHR bank. If the dump is wrong, it’s Studio export / pack. If the dump is right, blame the runner or soft helpers.
 2. **Same `.retr01` on emu and (later) sim** — if both misbehave the same way after a dump-clean cart, prefer ROM/content or shared contract (`02`). If only one runner fails, prefer that runner.
 3. **Never use Studio Play as proof the cart boots** — Play bypasses PRG. Use emu (cart load) or sim (flash IC) for burnable behavior.
-4. **Call out soft helpers explicitly** — emu `r01e_video_boot_world` / host pan, and sim `r01s_board_softboot_start_screen` / `r01s_play_*`, are **runner conveniences**, not silicon and not in game PRG. A “blank screen” with stub PRG and **no** soft-boot is expected until PRG streams MAP or the runner soft-loads.
+4. **Call out soft helpers explicitly** — emu `r01e_video_boot_world` / host pan are runner conveniences. Sim default path streams MAP on the IC netlist; `R01S_SOFTBOOT=1` is opt-in host poke only.
 5. **Color wrong?** Check `*_prom.bin` / board PROM path separately from cart palette **indices**.
 
 ### Sim readiness to load `project.retr01`
@@ -118,19 +118,20 @@ Verified against Studio pack (`r01_cart_build`) and the checked-in `retr01_studi
 
 **Island P wired.** Beam `NMI#` → CPU `NMIB` on VBlank entry; integration health wants pads + video + sprites + ≥1 NMI pulse and zero bus conflicts. Optional **F** (machine EEPROM) still deferred.
 
-Bring-up overlay is smoke + pad hang; LCD + Play (scroll / X·Y warps / player) are filled by **host softboot + host Play** (not CPU MAP stream — full netlist stream OOMed the UI). Island O still fetches 2bpp CHR from flash. Still missing for full Play-on-silicon: real game PRG (no overlay), MAP owned by PRG over `$FE90`–`$FE93`/`$FE12`, camera seam streaming. Treat sim softboot/Play as **temporary**.
+Bring-up overlay is smoke + **palette + MAP stream** (`$FE93`→`$FE12`) + pad hang. Startup **`r01s_board_catchup_bringup`** runs that stream on the pin-level board (~12k steps) so the LCD hold lifts. Host softboot / host Play are retired from the default path (`R01S_SOFTBOOT=1` remains for triage). Island O still fetches 2bpp CHR from flash. Still missing for Play-on-silicon: real game PRG (no overlay) owning camera/player.
 
-### HIGH PRIORITY — retire sim LCD softboot + host Play
+### Softboot (opt-in only)
 
-**Not permanent.** `r01s_board_softboot_start_screen` / `r01s_board_catchup_bringup` / `r01s_play_*` poke VRAM + active pals + scroll latches and overlay the player so the LCD is playable. That **bypasses** the low-level MAP port / VRAM write path (and PRG play loop) for boot content and motion.
+`r01s_board_softboot_start_screen` is **not** the default. Set `R01S_SOFTBOOT=1` to poke VRAM/pals and advance `map_addr` without the CPU stream (debug / triage). Default = IC stream ownership.
 
-| Do next | Notes |
-|---------|--------|
-| **1. Restore MAP ownership to PRG** | Studio/game or bring-up PRG streams start screen via `$FE93`→`$FE12` (and pals via `$FE08`/`$FE09`) inside the netlist. |
-| **2. Or cheaper staged stream** | e.g. burst/stream across frames without host poke — must still exercise IC decode/CE paths. |
-| **3. Softboot + host Play → opt-in debug only** | Default off once (1) or (2) works and PRG owns camera/player; keep flag for triage if needed. |
+| Status | Notes |
+|--------|--------|
+| **Done** | Bring-up PRG streams start MAP+pals via `$FE93`→`$FE12` / `$FE08`/`$FE09` |
+| **Done** | Catchup runs stream on netlist (~12k steps; no OOM from old 240k sync wait) |
+| **Done** | Host Play removed from sim UI loop |
+| **Next** | Game PRG owns camera/player (retire bring-up overlay) |
 
-Until then, dump flash/`off_prg` and call out softboot/Play whenever comparing “LCD shows tiles / scrolls” to silicon honesty.
+Until game PRG owns Play, the sim LCD shows the streamed start screen but will not scroll/warp from pads.
 
 ## Modeling principles
 
@@ -191,7 +192,7 @@ Current pin-level code is intentional for catching PCB bugs early.
 
 | Priority | Work |
 |----------|------|
-| **HP** | **Retire sim LCD softboot** — PRG (or staged IC-path stream) owns MAP→VRAM; softboot opt-in debug only ([above](#high-priority--retire-sim-lcd-softboot)) |
+| **Done** | **IC MAP stream default** — softboot opt-in (`R01S_SOFTBOOT=1`); host Play removed ([above](#softboot-opt-in-only)) |
 | 1 | `hw/md/` IC reference docs (batches: CPU/MCU, memory, glue/video) |
 | 2 | Islands **A–E** models + unit tests + layer-2 smoke (**done**) |
 | 3 | Island **G** (VRAM interleave) / more `$FExx` latches (**done** — soft `$FE10`–`$FE12`) |

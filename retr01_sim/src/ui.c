@@ -2104,6 +2104,23 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     }
 }
 
+void r01s_ui_draw_busy(R01sUi *ui, SDL_Renderer *r, const char *status) {
+    char fps_buf[16];
+    const char *msg = status && status[0] ? status : "IC MAP stream…";
+
+    if (!ui || !r) {
+        return;
+    }
+    fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_LOGIC_H, 12, 14, 16);
+    fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_UI_HUD_TOP, 20, 24, 28);
+    fill_rect(r, 0, R01S_LOGIC_H - R01S_UI_HUD_BOTTOM, R01S_LOGIC_W, R01S_UI_HUD_BOTTOM, 20, 24, 28);
+    font_draw(r, 8, 7, "RETR01 SIM — CATCHUP (WORKER)", 180, 200, 160);
+    snprintf(fps_buf, sizeof(fps_buf), "%d FPS", ui->fps);
+    font_draw(r, R01S_LOGIC_W - font_text_width(fps_buf) - 8, 7, fps_buf, 140, 180, 140);
+    font_draw(r, 8, R01S_LOGIC_H / 2 - 8, msg, 200, 210, 180);
+    font_draw(r, 8, R01S_LOGIC_H - 16, "ESC QUIT", 120, 130, 140);
+}
+
 static int hit_chip(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);
