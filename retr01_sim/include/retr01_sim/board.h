@@ -17,6 +17,7 @@
 #include "pwr5v.h"
 #include "retr01_sim/bom32.h"
 #include "retr01_sim/island_builder.h"
+#include "retr01_sim/play.h"
 #include "retr01_sim/types.h"
 #include "sn74hc14.h"
 #include "sn74hc157.h"
@@ -201,9 +202,14 @@ typedef struct R01sBoard {
     uint32_t cart_off_prg;
     uint32_t cart_len_prg;
     uint32_t cart_off_chr;         /* world-0 CHR base; 0 = stub tile&0x3F */
-    uint32_t cart_off_map_screen0; /* absolute MAP payload for screen (0,0) */
+    uint32_t cart_off_map_screen0; /* absolute MAP payload for world start screen */
     uint32_t cart_off_pal_bg;
     uint32_t cart_off_pal_spr;
+    uint32_t cart_world_base;      /* world-0 blob base in flash */
+    uint32_t cart_off_sdir;        /* absolute screen directory */
+    uint8_t cart_screen_count;
+    uint8_t cart_start_col;
+    uint8_t cart_start_row;
     int cart_loaded;
     char cart_label[48];
     /* Active palette RAM (soft); addr index from HC573 FE08. */
@@ -211,6 +217,8 @@ typedef struct R01sBoard {
     uint8_t pal_addr;
     int pal_fe09_wrote; /* one write+inc per DATA cycle */
     uint8_t chr_last_master; /* hold last BG/sprite master when CHR CE denied */
+    /* Host Play (TEMPORARY — with softboot). */
+    R01sPlay play;
     int reset_hold;
     uint32_t cycles;
     R01sLevel phi2_prev;
@@ -246,9 +254,14 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *builder);
 int r01s_board_load_cart(R01sBoard *board, const char *path);
 
 /*
- * Soft-load cart start-screen MAP + BG pals into VRAM / active palette and advance
- * map_addr past the 480 B payload so the LCD unblanks. Same bytes the bring-up PRG
- * would stream via $FE93→$FE12 — host convenience (like emu boot), not IC behavior.
+ * Soft-load cart pals + host Play (2×2 camera MAP into VRAM, scroll latches) and
+ * advance map_addr past the start-screen payload so the LCD unblanks. Host
+ * convenience (like emu Play) — not IC behavior.
+ *
+ * TEMPORARY / HIGH PRIORITY TO RETIRE: restore MAP/Play ownership to PRG (or
+ * staged IC-path stream); keep this only as opt-in debug. See docs/08_simulator.md
+ * (#high-priority--retire-sim-lcd-softboot).
+ *
  * Returns 0 on success, -1 if cart meta missing.
  */
 int r01s_board_softboot_start_screen(R01sBoard *board);
@@ -258,6 +271,12 @@ int r01s_board_softboot_start_screen(R01sBoard *board);
  * Prefer this over multi-100k-step CPU catchup (that OOMs/hangs the UI).
  */
 int r01s_board_catchup_bringup(R01sBoard *board, R01sIslandGroup *group);
+
+/* Cart screen directory helpers (world 0). */
+int r01s_board_has_screen(const R01sBoard *board, int col, int row);
+int r01s_board_first_screen(const R01sBoard *board, int *out_col, int *out_row);
+int r01s_board_load_camera_2x2(R01sBoard *board, int origin_col, int origin_row);
+void r01s_board_set_scroll(R01sBoard *board, uint8_t scroll_x, uint8_t scroll_y);
 
 R01sBoard *r01s_board_from_group(R01sIslandGroup *group);
 

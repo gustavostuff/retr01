@@ -2,6 +2,7 @@
 
 #include "retr01_sim/board.h"
 #include "retr01_sim/board_fast.h"
+#include "retr01_sim/play.h"
 #include "retr01_sim/bom32.h"
 #include "retr01_sim/island_builder.h"
 #include "pads.h"
@@ -152,11 +153,14 @@ void r01s_app_frame(R01sApp *app) {
     r01s_ui_sync_gamepads(&app->ui);
     board = r01s_board_from_group(group);
     if (board) {
-        r01s_pads_set(&board->pads, 0, r01s_ui_gamepad_port(&app->ui, 0));
+        uint8_t pad0 = r01s_ui_gamepad_port(&app->ui, 0);
+        r01s_pads_set(&board->pads, 0, pad0);
         r01s_pads_set(&board->pads, 1, r01s_ui_gamepad_port(&app->ui, 1));
         r01s_pads_refresh_preview(&board->pads);
         app->ui.probe_pad_p1 = r01s_pads_get(&board->pads, 0);
         app->ui.probe_pad_p2 = r01s_pads_get(&board->pads, 1);
+        /* Host Play once per UI frame (TEMPORARY — with softboot). */
+        r01s_play_tick(board, pad0);
     }
     if (group) {
         /* Prefer UI ~60 FPS: spend at most R01S_SIM_BUDGET_MS on board steps. */
@@ -176,6 +180,9 @@ void r01s_app_frame(R01sApp *app) {
         } else {
             r01s_island_group_eval_idle(group);
             app->ui.sim_steps = 0;
+        }
+        if (board) {
+            r01s_play_draw(board);
         }
         r01s_island_group_fill_status(group, app->ui.status, sizeof(app->ui.status));
         r01s_island_group_fill_health(group, &app->ui.health);

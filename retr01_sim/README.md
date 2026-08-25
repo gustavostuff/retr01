@@ -26,7 +26,11 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 
 Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8000+`.
 
-**Cart load:** `./sim run` passes `retr01_studio/test_game/test.retr01` (override with a path; resolved from repo root). Sim applies a **bring-up PRG overlay** for island smoke. For the LCD it **soft-boots** the cart start-screen MAP + pals into VRAM (emu-style host convenience — not Studio game PRG). Still **no** full 2×2 Play camera / player loop.
+**Cart load:** `./sim run` passes `retr01_studio/test_game/test.retr01` (override with a path; resolved from repo root). Sim applies a **bring-up PRG overlay** for island smoke. For the LCD it **temporarily soft-boots** pals + **host Play** (2×2 MAP into VRAM, scroll, player overlay) — like emu Play; bypasses MAP→VRAM ICs for that load; pixel path still IC.
+
+**Input (host Play):** arrows/WASD move, **X** warp → screen (0,0), **Y** warp → (1,0). Same SoT as Studio/emu (`play.c`).
+
+**HIGH PRIORITY:** Retire LCD softboot **and** host Play — game/bring-up PRG (or a cheaper staged IC-path stream) must own MAP/camera again; soft helpers become opt-in debug only. Tracked in [`docs/08_simulator.md`](../docs/08_simulator.md#high-priority--retire-sim-lcd-softboot).
 
 **Fast path (optional):** Playbook glue inlining — default is full pin-level settle (4 passes) + compositor entity eval per dot. Enable **`R01S_FAST=1`**, **`./sim run -- --fast`**, or press **`F`** for `settle` + `video` + `memory` + `pins`. Slow route unchanged; reserved: `bus` (Pass 2 bitmasks).
 

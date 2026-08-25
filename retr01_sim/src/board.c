@@ -1464,8 +1464,8 @@ static uint8_t board_pal_master(const R01sBoard *ctx, int sprite, uint8_t pal, u
 }
 
 static void board_vram_cell_at(const R01sBoard *ctx, int lx, int ly, uint8_t *tile_out, uint8_t *attr_out) {
-    uint8_t sx;
-    uint8_t sy;
+    int sx;
+    int sy;
     int slot_x, slot_y, slot, local_x, local_y, tx, ty, cell;
     uint16_t addr;
     uint8_t scroll_x = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE02]);
@@ -1476,16 +1476,20 @@ static void board_vram_cell_at(const R01sBoard *ctx, int lx, int ly, uint8_t *ti
     if (lx < 0 || ly < 0 || lx >= R01S_LOGICAL_W || ly >= R01S_LOGICAL_H) {
         return;
     }
-    sx = (uint8_t)((scroll_x + (unsigned)lx) & 127u);
-    sy = (uint8_t)(scroll_y + (unsigned)ly);
-    if (sy >= 120u) {
-        sy = 119u;
-    }
+    /* Match bg_fetch: scroll within 0–127 / 0–119, then add logical (2×2 workbench). */
+    sx = (int)(scroll_x & 127u) + lx;
+    sy = (int)(scroll_y < 120u ? scroll_y : 119u) + ly;
     slot_x = (sx / R01S_BG_SCREEN_PX_W) & 1;
     slot_y = (sy / R01S_BG_SCREEN_PX_H) & 1;
     slot = slot_y * 2 + slot_x;
-    local_x = (int)sx - slot_x * R01S_BG_SCREEN_PX_W;
-    local_y = (int)sy - slot_y * R01S_BG_SCREEN_PX_H;
+    local_x = sx - slot_x * R01S_BG_SCREEN_PX_W;
+    local_y = sy - slot_y * R01S_BG_SCREEN_PX_H;
+    if (local_x < 0) {
+        local_x = 0;
+    }
+    if (local_y < 0) {
+        local_y = 0;
+    }
     tx = local_x / 8;
     ty = local_y / 8;
     if (tx >= R01S_BG_SCREEN_TILES_X) {
@@ -1503,7 +1507,8 @@ static void board_vram_cell_at(const R01sBoard *ctx, int lx, int ly, uint8_t *ti
 static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     uint8_t tile, attr, color, pal, master;
     int local_x, local_y;
-    uint8_t scroll_x, scroll_y, sx, sy;
+    uint8_t scroll_x, scroll_y;
+    int sx, sy;
     int chr_ok = 1;
 
     if (ctx->cart_off_chr == 0) {
@@ -1515,13 +1520,10 @@ static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     board_vram_cell_at(ctx, lx, ly, &tile, &attr);
     scroll_x = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE02]);
     scroll_y = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE03]);
-    sx = (uint8_t)((scroll_x + (unsigned)lx) & 127u);
-    sy = (uint8_t)(scroll_y + (unsigned)ly);
-    if (sy >= 120u) {
-        sy = 119u;
-    }
-    local_x = (int)(sx % R01S_BG_SCREEN_PX_W);
-    local_y = (int)(sy % R01S_BG_SCREEN_PX_H);
+    sx = (int)(scroll_x & 127u) + lx;
+    sy = (int)(scroll_y < 120u ? scroll_y : 119u) + ly;
+    local_x = sx - ((sx / R01S_BG_SCREEN_PX_W) & 1) * R01S_BG_SCREEN_PX_W;
+    local_y = sy - ((sy / R01S_BG_SCREEN_PX_H) & 1) * R01S_BG_SCREEN_PX_H;
     color = board_chr_color(ctx, ctx->cart_off_chr, tile, attr, local_x & 7, local_y & 7, &chr_ok);
     if (!chr_ok) {
         /* PRG/MAP owns flash /CE — hold last master (no fight). */
@@ -2115,6 +2117,11 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     board->cart_off_map_screen0 = 0;
     board->cart_off_pal_bg = 0;
     board->cart_off_pal_spr = 0;
+    board->cart_world_base = 0;
+    board->cart_off_sdir = 0;
+    board->cart_screen_count = 0;
+    board->cart_start_col = 0;
+    board->cart_start_row = 0;
     if (!board || !board->cart_loaded) {
         return;
     }
@@ -2144,11 +2151,18 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     off_chr = get_u24(hdr + 8);
     off_sdir = get_u24(hdr + 11);
     board->cart_off_chr = world_base + off_chr;
+    board->cart_world_base = world_base;
+    board->cart_start_col = start_col;
+    board->cart_start_row = start_row;
+    board->cart_screen_count = screen_count;
     if ((size_t)world_base + (size_t)off_sdir + (size_t)screen_count * 12u > sizeof(board->cart_flash.mem)) {
         board->cart_off_chr = 0;
+        board->cart_world_base = 0;
+        board->cart_screen_count = 0;
         return;
     }
-    dir = img + world_base + off_sdir;
+    board->cart_off_sdir = world_base + off_sdir;
+    dir = img + board->cart_off_sdir;
     for (si = 0; si < (int)screen_count; si++) {
         const uint8_t *e = dir + (size_t)si * 12u;
         uint32_t poff;
@@ -2308,6 +2322,111 @@ int r01s_board_load_cart(R01sBoard *board, const char *path) {
     return 0;
 }
 
+int r01s_board_has_screen(const R01sBoard *board, int col, int row) {
+    const uint8_t *dir;
+    int si;
+
+    if (!board || board->cart_off_sdir == 0 || board->cart_screen_count == 0) {
+        return 0;
+    }
+    if (col < 0 || row < 0 || col > 255 || row > 255) {
+        return 0;
+    }
+    dir = board->cart_flash.mem + board->cart_off_sdir;
+    for (si = 0; si < (int)board->cart_screen_count; si++) {
+        const uint8_t *e = dir + (size_t)si * 12u;
+        if (e[0] == (uint8_t)col && e[1] == (uint8_t)row) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int r01s_board_first_screen(const R01sBoard *board, int *out_col, int *out_row) {
+    const uint8_t *dir;
+    const uint8_t *e;
+
+    if (!board || board->cart_off_sdir == 0 || board->cart_screen_count == 0) {
+        return 0;
+    }
+    dir = board->cart_flash.mem + board->cart_off_sdir;
+    e = dir;
+    if (out_col) {
+        *out_col = (int)e[0];
+    }
+    if (out_row) {
+        *out_row = (int)e[1];
+    }
+    return 1;
+}
+
+static uint32_t board_map_off_for_screen(const R01sBoard *board, int col, int row) {
+    const uint8_t *dir;
+    int si;
+
+    if (!board || board->cart_off_sdir == 0) {
+        return 0;
+    }
+    dir = board->cart_flash.mem + board->cart_off_sdir;
+    for (si = 0; si < (int)board->cart_screen_count; si++) {
+        const uint8_t *e = dir + (size_t)si * 12u;
+        if (e[0] == (uint8_t)col && e[1] == (uint8_t)row) {
+            return board->cart_world_base + get_u24(e + 4);
+        }
+    }
+    return 0;
+}
+
+static void board_load_screen_slot(R01sBoard *board, int col, int row, int slot) {
+    uint32_t map_off;
+    uint16_t base;
+    uint32_t i;
+
+    if (!board || slot < 0 || slot > 3) {
+        return;
+    }
+    base = (uint16_t)(slot * R01S_BG_SLOT_BYTES);
+    map_off = board_map_off_for_screen(board, col, row);
+    if (map_off == 0) {
+        for (i = 0; i < 480u; i++) {
+            r01s_as6c62256_poke(&board->vram, (uint16_t)(base + i), 0);
+        }
+        return;
+    }
+    for (i = 0; i < 480u; i++) {
+        uint8_t b = r01s_sst39sf040_peek(&board->cart_flash, map_off + i);
+        r01s_as6c62256_poke(&board->vram, (uint16_t)(base + i), b);
+    }
+}
+
+int r01s_board_load_camera_2x2(R01sBoard *board, int origin_col, int origin_row) {
+    int dx, dy;
+
+    if (!board || !board->cart_loaded || board->cart_off_sdir == 0) {
+        return -1;
+    }
+    for (dy = 0; dy < 2; dy++) {
+        for (dx = 0; dx < 2; dx++) {
+            board_load_screen_slot(board, origin_col + dx, origin_row + dy, dy * 2 + dx);
+        }
+    }
+    return 0;
+}
+
+void r01s_board_set_scroll(R01sBoard *board, uint8_t scroll_x, uint8_t scroll_y) {
+    if (!board) {
+        return;
+    }
+    if (scroll_x > 127) {
+        scroll_x = 127;
+    }
+    if (scroll_y > 119) {
+        scroll_y = 119;
+    }
+    r01s_sn74hc573_poke_q(board->io_latch_impl.latch573[R01S_LATCH_FE02], scroll_x);
+    r01s_sn74hc573_poke_q(board->io_latch_impl.latch573[R01S_LATCH_FE03], scroll_y);
+}
+
 int r01s_board_softboot_start_screen(R01sBoard *board) {
     uint32_t i;
 
@@ -2317,16 +2436,18 @@ int r01s_board_softboot_start_screen(R01sBoard *board) {
     if (board->cart_off_map_screen0 == 0 || board->cart_off_pal_bg == 0) {
         return -1;
     }
-    for (i = 0; i < 480u; i++) {
-        uint8_t b = r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_map_screen0 + i);
-        r01s_as6c62256_poke(&board->vram, (uint16_t)i, b);
-    }
     for (i = 0; i < 32u; i++) {
         board->active_pal[i] =
             (uint8_t)(r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_pal_bg + i) & 63u);
     }
-    /* Unblank LCD hold: map_addr past streamed payload. */
+    /* Unblank LCD hold: map_addr past streamed start-screen payload. */
     poke_map_addr_latches(board, board->cart_off_map_screen0 + 480u);
+    if (!r01s_play_start(board)) {
+        /* Fallback: single slot 0 if Play cannot spawn. */
+        board_load_screen_slot(board, (int)board->cart_start_col, (int)board->cart_start_row, 0);
+        r01s_board_set_scroll(board, 0, 0);
+        return 0;
+    }
     return 0;
 }
 
@@ -2384,6 +2505,7 @@ static void board_reset(R01sIslandGroup *group) {
     ctx->pal_fe09_wrote = 0;
     memset(ctx->active_pal, 0, sizeof(ctx->active_pal));
     ctx->chr_last_master = 0;
+    r01s_play_reset(&ctx->play);
     ctx->health_saw_latch = 0;
     ctx->health_saw_vram = 0;
     ctx->health_saw_vram_read = 0;

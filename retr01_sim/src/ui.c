@@ -1895,38 +1895,47 @@ void r01s_ui_sync_gamepads(R01sUi *ui) {
     if (ui->drag_stick != 0) {
         ui->gamepad[0].stick_x = 0;
         ui->gamepad[0].stick_y = 0;
-        if (keys[SDL_SCANCODE_UP]) {
+        if (keys[SDL_SCANCODE_UP] || keys[SDL_SCANCODE_W]) {
             ui->gamepad[0].stick_y = -20;
         }
-        if (keys[SDL_SCANCODE_DOWN]) {
+        if (keys[SDL_SCANCODE_DOWN] || keys[SDL_SCANCODE_S]) {
             ui->gamepad[0].stick_y = 20;
         }
-        if (keys[SDL_SCANCODE_LEFT]) {
+        if (keys[SDL_SCANCODE_LEFT] || keys[SDL_SCANCODE_A]) {
             ui->gamepad[0].stick_x = -20;
         }
-        if (keys[SDL_SCANCODE_RIGHT]) {
+        if (keys[SDL_SCANCODE_RIGHT] || keys[SDL_SCANCODE_D]) {
             ui->gamepad[0].stick_x = 20;
+        }
+        if ((keys[SDL_SCANCODE_UP] || keys[SDL_SCANCODE_W]) &&
+            (keys[SDL_SCANCODE_DOWN] || keys[SDL_SCANCODE_S])) {
+            ui->gamepad[0].stick_y = 0;
+        }
+        if ((keys[SDL_SCANCODE_LEFT] || keys[SDL_SCANCODE_A]) &&
+            (keys[SDL_SCANCODE_RIGHT] || keys[SDL_SCANCODE_D])) {
+            ui->gamepad[0].stick_x = 0;
         }
     }
     if (ui->drag_stick != 1) {
         ui->gamepad[1].stick_x = 0;
         ui->gamepad[1].stick_y = 0;
-        if (keys[SDL_SCANCODE_W]) {
+        if (keys[SDL_SCANCODE_I]) {
             ui->gamepad[1].stick_y = -20;
         }
-        if (keys[SDL_SCANCODE_S]) {
+        if (keys[SDL_SCANCODE_K]) {
             ui->gamepad[1].stick_y = 20;
         }
-        if (keys[SDL_SCANCODE_A]) {
+        if (keys[SDL_SCANCODE_J]) {
             ui->gamepad[1].stick_x = -20;
         }
-        if (keys[SDL_SCANCODE_D]) {
+        if (keys[SDL_SCANCODE_L]) {
             ui->gamepad[1].stick_x = 20;
         }
     }
 
-    ui->gamepad[0].btn_x = ui->mouse_btn[0][0] || keys[SDL_SCANCODE_Z];
-    ui->gamepad[0].btn_y = ui->mouse_btn[0][1] || keys[SDL_SCANCODE_X];
+    /* P1: X/Y match Studio warps; Z also fires X (legacy). */
+    ui->gamepad[0].btn_x = ui->mouse_btn[0][0] || keys[SDL_SCANCODE_Z] || keys[SDL_SCANCODE_X];
+    ui->gamepad[0].btn_y = ui->mouse_btn[0][1] || keys[SDL_SCANCODE_Y];
     ui->gamepad[0].btn_coin = ui->mouse_btn[0][2] || keys[SDL_SCANCODE_1];
     ui->gamepad[0].btn_start = ui->mouse_btn[0][3] || keys[SDL_SCANCODE_RETURN];
 
