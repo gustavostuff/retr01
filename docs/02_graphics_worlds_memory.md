@@ -209,7 +209,7 @@ PRG planning cap is **32 KB** total in the cart image; the CPU sees the classic 
 | `$FE38` | `PAL_ROW` | hint. Still copy `$FE08`/`$FE09` |
 | `$FE40`-`$FE5F` | APU | **ATmega328P** |
 | `$FE60`/`$FE61` | pads | bits 0-7: right, left, down, up, X, Y, **coin** (cabinet) / **select** (console draft), start (**1=pressed**) |
-| `$FE70`-`$FE72` | machine EEPROM | **1284 internal EEPROM** handshake (protocol TBD). **Not** parallel AT28C64B |
+| `$FE70`-`$FE72` | machine EEPROM | **1284 internal EEPROM** handshake (protocol TBD) |
 | `$FE80` | reserved | unused |
 | `$FE90`-`$FE93` | MAP | 24-bit seek + read auto-inc |
 | (TBD) | cart save | **Cart I2C EEPROM** via HAL (`cart_save_*`); CPU port TBD (Q20) |

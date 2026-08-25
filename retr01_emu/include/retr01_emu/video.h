@@ -28,6 +28,8 @@ typedef struct R01eVideo {
     uint8_t vram_atlas[R01E_VRAM_ATLAS_W * R01E_VRAM_ATLAS_H * 3];
 } R01eVideo;
 
+void r01e_video_kit_rgb(int master_index, uint8_t *r, uint8_t *g, uint8_t *b);
+
 void r01e_video_reset(R01eVideo *vid);
 
 /*

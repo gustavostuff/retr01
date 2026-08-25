@@ -16,9 +16,7 @@ Each IC is a struct that **starts with** an `R01sEntity`, plus an `R01sEntityVTa
 | G | `sn74hc157.c` | SN74HC157 | PHI2 CPU/PPU addr mux (low nybble) |
 | H | `osc_dot.c` | OSC_DOT | ~5.37 MHz dot can (independent of PHI2) |
 | H | `beam_xy.c` | BEAM_XY | ATF22V10 X/Y beam stub (341x262, H/VBlank, NMI#) |
-| H | `sn74hc161.c` | SN74HC161 | Discrete counter (unit tests / optional bench; not on 32-IC canvas) |
-| H | `sn74hc688.c` | SN74HC688 | Raster compare (unit tests / optional bench; not on 32-IC canvas) |
-| I | `bg_fetch.c` | BG_FETCH | Nametable VA from beam+scroll; tile/attr latch |
+| I | `bg_fetch.c` | BG_FETCH | Nametable VA from beam+scroll, tile/attr latch |
 | O | `compositor.c` | COMPOSITOR | BG/sprite priority mux PLD stub |
 | O | `at28c16.c` | AT28C16 | Color PROM (kit R3G3B2, 64 entries) |
 | O | `video_sink.c` | LCD_SINK | 256x240 RGBS field (SCALE 2x/1x) |
@@ -26,7 +24,7 @@ Each IC is a struct that **starts with** an `R01sEntity`, plus an `R01sEntityVTa
 | K | `atmega328p.c` | ATmega328P | APU regs `$FE40-$FE5F` + PWM square stub |
 | L | `atmega1284p.c` | ATmega1284P | OAM `$FE20/$FE21` + 20 MHz tick stub |
 | M | `as6c62256.c` + `sn74hc157.c` | AS6C62256 + HC157 | Line-buffer ping-pong + addr mux |
-| N | `sprite_fetch.c` | SPRITE_FETCH | OAM->linebuf fill stats; board paints sprites |
+| N | `sprite_fetch.c` | SPRITE_FETCH | OAM->linebuf fill stats. Board paints sprites |
 | P | `integration.c` | INTEGRATION | System NMI/pads/video integration stub |
 | bus | `sn74hc245.c` | SN74HC245 | Octal transceiver (DIR + OE) |
 | glue | `sn74hc00.c` | SN74HC00 | Quad NAND |

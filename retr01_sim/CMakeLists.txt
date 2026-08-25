@@ -32,8 +32,6 @@ add_library(retr01_sim_core
   chips/atf22v10.c
   chips/i2c_eeprom.c
   chips/sn74hc157.c
-  chips/sn74hc161.c
-  chips/sn74hc688.c
   chips/as6c62256.c
   chips/prg_rom.c
   chips/pads.c
@@ -88,8 +86,6 @@ r01s_unit_test(test_sn74hc_glue)
 r01s_unit_test(test_sn74hc573)
 r01s_unit_test(test_sn74hc245)
 r01s_unit_test(test_sn74hc157)
-r01s_unit_test(test_sn74hc161)
-r01s_unit_test(test_sn74hc688)
 r01s_unit_test(test_beam_xy)
 r01s_unit_test(test_bg_fetch)
 r01s_unit_test(test_at28c16)

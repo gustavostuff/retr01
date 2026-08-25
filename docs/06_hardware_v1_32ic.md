@@ -26,7 +26,7 @@ Target: **through-hole DIP**, compact **12 x 12 cm** 4-layer PCB.
 | Video timing | 341x262, ~5.37 MHz dot |
 | Audio MCU | **ATmega328P** (dedicated APU) |
 | Sprite / pads / machine EEPROM | **ATmega1284P** (no APU time-share) |
-| Board config storage | **1284P internal 4 KB EEPROM** (handshake; no AT28C64B) |
+| Board config storage | **1284P internal 4 KB EEPROM** (handshake) |
 | Color PROM | **1x AT28C16** (or faster OTP): packed R3-G3-B2; 1-dot pipeline |
 | Beam / raster | **2x ATF22V10** (X/Y state machines + compare) |
 | Glue logic | Absorbed into PLDs |
@@ -139,7 +139,7 @@ Detail in [`02`](02_graphics_worlds_memory.md). Short:
 | Topic | Norm |
 |-------|------|
 | `$FE40-$FE5F` APU | ATmega328P |
-| Machine config | 1284 internal EEPROM via **`$FE70-$FE72` handshake** (same address band as legacy parallel EEPROM; **not** AT28C64B silicon) |
+| Machine config | 1284 internal EEPROM via **`$FE70-$FE72` handshake** |
 | Latch silicon | 9x HC573 bit-packed (bitfields open in `02`) |
 | Cart saves | Cart I2C EEPROM + HAL |
 
@@ -180,10 +180,6 @@ Phase B -- Board-specific merges
 Phase C -- First integrated PCB
   32 IC system (12 x 12 cm mobo + cart)
 ```
-
-**Optional:** use discrete HC161 + HC688 on the bench if a beam PLD fails (not in the product BOM).
-
----
 
 ## Risk summary
 

@@ -13,7 +13,7 @@ Later Studio phases are **not** specified here; they will be defined when work s
 | | |
 |--|--|
 | **Scroll** | Smooth pixel scroll; camera follows player; **no dead zone** |
-| **Sprites** | One hardcoded **8x8** player (kit **bright red**, master index 34) |
+| **Sprites** | One hardcoded **8x8** player. Fill color comes from **sprite palette row 0, index 1** (phase 1 default: kit bright red) |
 | **Events** | **Warp** on pad **X** / **Y** (Phase 1 test hooks; see [Events](#events-strategy)) |
 
 ---
@@ -43,7 +43,7 @@ Phase 0 is infrastructure only; nothing in the shell beyond what is needed to bo
 ### Game behavior (Smooth + Eagle View)
 
 - **Scroll:** Smooth **pixel** scroll across present screens. When the player moves, the camera moves -- **no dead zone**, no free-box inset.
-- **Player:** Exactly **one** sprite entity -- an **8x8** tile, **bright red** (kit master index **34**), hardcoded (not placed or edited in the UI). Movement: **WASD** / d-pad arrows in Play.
+- **Player:** Exactly **one** sprite entity, an **8x8** tile, hardcoded (not placed or edited in the UI). Fill color is read from **sprite palette row 0, color index 1** (phase 1 init sets that slot to kit bright red). Movement: **WASD** / d-pad arrows in Play.
 - **Start:** Prefer screen **(1, 1)** if present, else first present screen.
 - **Collision:** Player AABB must stay on **present** screens only.
 - **Warp events (Phase 1 hardcoded):** Press **X** -> instant warp to screen **(0, 0)**. Press **Y** -> instant warp to screen **(1, 0)**. These are **event warp** tests for instant screen swap; see [Events](#events-strategy).
@@ -105,10 +105,10 @@ PNG drop is the **only** way to author screen graphics in Phase 1.
 
 Phase 1 does **not** expose a Palettes cell. Global palette data is **written automatically** into the project and cart:
 
-- **Color 0 (shared backdrop):** Master index **0** (`#000000`) in **every** BG and sprite palette row -- same **shared BG color** convention as NES (index 0 is universal backdrop / transparent for sprites).
+- **Color 0 (shared backdrop):** Master index **0** (`#000000`) in every BG and sprite palette row. Same shared backdrop convention as NES (index 0 is universal backdrop / transparent for sprites).
 - **Colors 1-3:** For each of the **8** palette rows (4 BG + 4 sprite), indices 1-3 are taken from **vertical strips** of the kit **16x4** master grid ([`docs/02`](../docs/02_graphics_worlds_memory.md)), using **rows 1-3 only** (no dark row-0 swatches):
-  - BG palette row *i* (0...3): master indices **(16+i)**, **(32+i)**, **(48+i)** -- column *i*, rows 1-3.
-  - Sprite palette row *i* (0...3): master indices **(20+i)**, **(36+i)**, **(52+i)** -- column *4+i*, rows 1-3.
+  - BG palette row *i* (0...3): master indices **(16+i)**, **(32+i)**, **(48+i)**. Column *i*, rows 1-3.
+  - Sprite palette row *i* (0...3): phase 1 sets colors 1-3 to kit bright red (player uses index 1).
 
 Preview and cart burn quantize through the kit Color PROM (**R3G3B2**).
 

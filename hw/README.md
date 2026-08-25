@@ -19,9 +19,6 @@ Swap / alternate parts live in [`candidates/`](candidates/).
 | `SN74HC245_bus_transceiver.pdf` | 74HC245 | Bus isolation (x3) |
 | `SN74HC573_latch.pdf` | 74HC573 | `$FExx` latches (x9) |
 | `SN74HC14_schmitt.pdf` | 74HC14 | Reset / clocks (support; not always in 32 count) |
-| `AT28C64B_eeprom.pdf` | AT28C64B | **Legacy** board EEPROM (replaced by 1284 internal) |
-| `SN74HC688_comparator.pdf` | 74HC688 | **Legacy** raster compare (-> Y PLD) |
-| `SN74HC161_counter.pdf` | 74HC161 | **Legacy** beam counters (-> PLD) |
 | `SN74HC00_nand.pdf` | 74HC00 | Glue (often absorbed into PLD) |
 | `SN74HC04_inverter.pdf` | 74HC04 | Glue |
 | `SN74HC08_and.pdf` | 74HC08 | Glue |

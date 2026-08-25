@@ -137,10 +137,12 @@ static void draw_world_map(SDL_Renderer *ren, R01eMachine *m, int ox, int oy) {
 static void draw_vram_player(SDL_Renderer *ren, const R01eMachine *m) {
     SDL_Rect cell;
     int ax, ay, x0, y0, x1, y1;
+    uint8_t pr, pg, pb;
 
     if (!m->play.enabled) {
         return;
     }
+    r01e_play_player_rgb(m, &pr, &pg, &pb);
     ax = m->play.player_x - m->video.cam_origin_col * R01E_SCREEN_PX_W;
     ay = m->play.player_y - m->video.cam_origin_row * R01E_SCREEN_PX_H;
     x0 = ax;
@@ -166,7 +168,7 @@ static void draw_vram_player(SDL_Renderer *ren, const R01eMachine *m) {
     cell.y = y0;
     cell.w = x1 - x0;
     cell.h = y1 - y0;
-    SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
+    SDL_SetRenderDrawColor(ren, pr, pg, pb, 255);
     SDL_RenderFillRect(ren, &cell);
     SDL_SetRenderDrawColor(ren, 20, 20, 20, 255);
     SDL_RenderDrawRect(ren, &cell);

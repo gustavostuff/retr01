@@ -4,7 +4,7 @@
 
 | | |
 |--|--|
-| **Current Retr01-A HW BOM** | [`06`](06_hardware_v1_32ic.md) -- **32 IC** (norm) |
+| **Current Retr01-A HW BOM** | [`06`](06_hardware_v1_32ic.md), **32 IC** (norm) |
 | **Software-visible map** | [`02`](02_graphics_worlds_memory.md) |
 | **Sources of truth** | [`01`](01_architecture_overview.md) |
 
@@ -16,10 +16,10 @@ Software contracts live in [`02`](02_graphics_worlds_memory.md).
 
 Four active compute domains on one **5 V** board:
 
-- **W65C02S** -- game logic (fills nametables, OAM, latches -- never a framebuffer)
-- **BG / beam path** -- PLD + HC157 (beam X/Y in ATF22V10; no discrete HC161/HC688 in the BOM)
-- **ATmega1284P** -- OAM, sprite line-buffer fill, pad bytes, machine EEPROM handshake
-- **ATmega328P** -- audio
+- **W65C02S:** game logic (fills nametables, OAM, latches). Never paints a framebuffer.
+- **BG / beam path:** PLD + HC157 (beam X/Y in ATF22V10)
+- **ATmega1284P:** OAM, sprite line-buffer fill, pad bytes, machine EEPROM handshake
+- **ATmega328P:** audio
 
 ## Board summary (points to 06)
 

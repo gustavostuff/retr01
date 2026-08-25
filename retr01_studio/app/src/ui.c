@@ -151,7 +151,7 @@ static void draw_play_view(UiState *ui, SDL_Renderer *r) {
     {
         int pcx, pcy;
         uint8_t pr, pg, pb;
-        r01_kit_rgb(ui->project->global_pal_spr[0].idx[1], &pr, &pg, &pb);
+        r01_project_player_rgb(ui->project, &pr, &pg, &pb);
         for (pcy = 0; pcy < R01_PLAY_PLAYER_SIZE; pcy++) {
             for (pcx = 0; pcx < R01_PLAY_PLAYER_SIZE; pcx++) {
                 int wx = ui->play.player_x + pcx;

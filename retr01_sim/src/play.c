@@ -211,8 +211,8 @@ void r01s_play_draw(R01sBoard *board) {
     pl = &board->play;
     sink = board->video_impl.sink;
     scale_2x = r01s_video_sink_scale_2x(sink);
-    /* Studio / emu: global_pal_spr[0].idx[1] → active_pal[17]. */
-    master = (uint8_t)(board->active_pal[17] & 63u);
+    /* global_pal_spr[0].idx[1] loaded into active_pal[17] after cart bring-up. */
+    master = (uint8_t)(board->active_pal[R01S_ACTIVE_PAL_PLAYER] & 63u);
     packed = r01s_at28c16_peek(board->video_impl.prom, master);
 
     for (pcy = 0; pcy < R01S_PLAY_PLAYER_SIZE; pcy++) {

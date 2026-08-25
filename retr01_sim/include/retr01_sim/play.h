@@ -7,6 +7,11 @@ struct R01sBoard;
 
 #define R01S_PLAY_PLAYER_SIZE 8
 
+/* Player fill: sprite palette row 0, color index 1 (global_pal_spr[0].idx[1]). */
+#define R01S_PAL_SPR_BASE 16
+#define R01S_PAL_PLAYER_COLOR 1
+#define R01S_ACTIVE_PAL_PLAYER (R01S_PAL_SPR_BASE + R01S_PAL_PLAYER_COLOR)
+
 /*
  * Host Play — Studio/emu-equivalent move + camera + X/Y warps.
  * TEMPORARY / HIGH PRIORITY TO RETIRE with softboot: not IC behavior; soft-loads

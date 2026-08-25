@@ -44,7 +44,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Sprite cap | **16** per **logical** scanline |
 | Scroll | `scroll_x` **0-127**, `scroll_y` **0-119**, wrap |
 | `$FExx` logical map | Draft in [`02`](02_graphics_worlds_memory.md). Silicon: **9x HC573** bit-packed (bitfield table open -- Q21) |
-| Machine config storage | **1284 internal 4 KB EEPROM** (handshake via `$FE70`-`$FE72` band; protocol TBD -- Q20). **No AT28C64B** |
+| Machine config storage | **1284 internal 4 KB EEPROM** (handshake via `$FE70`-`$FE72` band, protocol TBD, Q20) |
 | Cart game saves | **I2C EEPROM on cart** (in the 32). HAL / port TBD -- Q20 |
 | MAP access | **`$FE90`-`$FE92`** addr, **`$FE93`** data + auto-inc |
 | PRG layout | **One global PRG section** per cart, **32 KB** max at `$8000` (I/O hole at `$FE00-$FEFF`). **`$FE80` reserved / unused** |

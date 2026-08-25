@@ -34,6 +34,10 @@ static void kit_rgb(int idx, uint8_t *r, uint8_t *g, uint8_t *b) {
     *b = KIT_RGB[i][2];
 }
 
+void r01e_video_kit_rgb(int master_index, uint8_t *r, uint8_t *g, uint8_t *b) {
+    kit_rgb(master_index, r, g, b);
+}
+
 void r01e_video_reset(R01eVideo *vid) {
     if (!vid) {
         return;

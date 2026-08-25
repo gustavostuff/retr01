@@ -16,8 +16,8 @@
 
 ### Behavior
 
-- **Scroll:** Smooth **pixel** scroll. Camera follows the player -- **no dead zone**.
-- **Player:** One **8x8** overlay sprite (kit **bright red**, master index 34). **WASD** / arrows in Play.
+- **Scroll:** Smooth **pixel** scroll. Camera follows the player with **no dead zone**.
+- **Player:** One **8x8** overlay sprite. Fill color from **sprite palette row 0, index 1** (phase 1 default: kit bright red). **WASD** / arrows in Play.
 - **Start:** Prefer screen **(1, 1)** if present, else first present screen.
 - **Warps (hardcoded):** **X** -> screen **(0, 0)**. **Y** -> screen **(1, 0)**. Instant.
 - **Collision:** Player stays on **present** screens only.
@@ -60,7 +60,7 @@ Palettes are written automatically (no UI): shared backdrop index **0**, kit str
 | Action | Input / path |
 |--------|----------------|
 | Save / load | **Ctrl+S** / **Ctrl+O** -> `test_game/test.r01proj` (JSON **v3**) |
-| Play | **Space** / **PLAY** -- SoT: `core/src/play.c` |
+| Play | **Space** / **PLAY**. SoT: `core/src/play.c` |
 | Export | **Ctrl+E** -> `test_game/test.retr01` (+ `test_prom.bin`, `test_boot.s`, `test_flash.bin`) |
 
 **Cart:** Present screens only in MAP; play table at PRG `$8100`; marker `R01P`. Stub PRG boots and polls pads; Play math runs on the host (Studio and Emulator), not inside 6502 PRG yet.

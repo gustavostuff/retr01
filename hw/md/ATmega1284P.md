@@ -121,5 +121,5 @@ Tests: OAM auto-inc wrap, sprite Y match, ping-pong half select, pad bit polarit
 | Topic | Current (32 IC) | Earlier sketches |
 |-------|-----------------|---------------------|
 | Audio | Separate **328P** | Separate 328P |
-| Machine EEPROM | Internal **4 KB** EEPROM | AT28C64B parallel |
+| Machine EEPROM | Internal **4 KB** EEPROM | (1284 on-board) |
 | Clock | 20 MHz | 20 MHz |

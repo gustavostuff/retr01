@@ -37,7 +37,7 @@ cmake --build build
 
 **Controls:** WASD or arrows = move * **X**/**Y** = warp * Space = pause * R = reset * Esc = quit
 
-**Debug window:** VRAM 2x2 workbench (256x240, red = viewport, white = player) beside a world map sized to the present-screen bounding box (blue = present, gold = current screen).
+**Debug window:** VRAM 2x2 workbench (256x240, red = viewport, player = palette red) beside a world map sized to the present-screen bounding box (blue = present, gold = current screen).
 
 ## Layout
 

@@ -21,8 +21,6 @@ static const uint8_t KIT_RGB[R01_MASTER_COLORS][3] = {
     {0xA4, 0xBD, 0xEF}, {0xBB, 0xB5, 0xF1}, {0xD5, 0xA9, 0xEF}, {0xF0, 0x9B, 0xDD},
 };
 
-#define R01_PHASE1_SPR_RED 34 /* kit bright red */
-
 void r01_kit_rgb(int master_index, uint8_t *r, uint8_t *g, uint8_t *b) {
     int i = master_index & 63;
     if (r) {
@@ -69,9 +67,20 @@ static void pal_row_phase1_bg(R01PalRow *row, int column) {
 
 static void pal_row_phase1_spr(R01PalRow *row) {
     row->idx[0] = 0;
-    row->idx[1] = R01_PHASE1_SPR_RED;
-    row->idx[2] = R01_PHASE1_SPR_RED;
-    row->idx[3] = R01_PHASE1_SPR_RED;
+    row->idx[1] = (uint8_t)R01_KIT_RED_MASTER;
+    row->idx[2] = (uint8_t)R01_KIT_RED_MASTER;
+    row->idx[3] = (uint8_t)R01_KIT_RED_MASTER;
+}
+
+uint8_t r01_project_player_master(const R01Project *p) {
+    if (!p) {
+        return (uint8_t)R01_KIT_RED_MASTER;
+    }
+    return p->global_pal_spr[R01_PLAYER_SPR_PAL_ROW].idx[R01_PLAYER_SPR_COLOR];
+}
+
+void r01_project_player_rgb(const R01Project *p, uint8_t *r, uint8_t *g, uint8_t *b) {
+    r01_kit_rgb(r01_project_player_master(p), r, g, b);
 }
 
 void r01_project_init_phase1_pals(R01Project *p) {
