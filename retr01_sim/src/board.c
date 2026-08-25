@@ -4,6 +4,7 @@
 #include "retr01_sim/bus.h"
 #include "retr01_sim/entity.h"
 #include "retr01_sim/health.h"
+#include "retr01_sim/play.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1379,6 +1380,23 @@ static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
             int row = logical_y - (int)oy;
             uint8_t pal = (uint8_t)((attr & R01S_ATTR_PAL) >> R01S_ATTR_PAL_SHIFT);
             uint32_t spr_chr = ctx->cart_off_chr ? (ctx->cart_off_chr + 4u * R01S_CHR_BANK_BYTES) : 0;
+            /* Host Play: solid 8x8 via sprite pal color 1 (OAM slot 0, no CHR tile yet). */
+            if (ctx->play.enabled && si == 0) {
+                uint8_t master = board_pal_master(ctx, 1, pal, R01S_PAL_PLAYER_COLOR);
+                for (px = 0; px < 8; px++) {
+                    int x = (int)ox + px;
+                    if (x < 0 || x >= 128) {
+                        continue;
+                    }
+                    linebuf_write_byte(ctx, (uint16_t)(base + (unsigned)x), master);
+                    pixels++;
+                    if (!hit_color) {
+                        hit_x = (uint8_t)x;
+                        hit_color = master;
+                    }
+                }
+                continue;
+            }
             for (px = 0; px < 8; px++) {
                 int x = (int)ox + px;
                 uint8_t master;

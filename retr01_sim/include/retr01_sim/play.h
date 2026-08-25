@@ -14,8 +14,7 @@ struct R01sBoard;
 
 /*
  * Host Play — Studio/emu-equivalent move + camera + X/Y warps.
- * TEMPORARY / HIGH PRIORITY TO RETIRE with softboot: not IC behavior; soft-loads
- * 2×2 VRAM slots and pokes scroll latches. See docs/08_simulator.md.
+ * Player renders via OAM entry 0 on the beam (Island N/O), not a host LCD stamp.
  */
 typedef struct R01sPlay {
     int enabled;
@@ -39,6 +38,7 @@ int r01s_play_start(struct R01sBoard *board);
 void r01s_play_tick(struct R01sBoard *board, uint8_t pad);
 
 /* Overlay player onto LCD sink (after board video steps). */
+/* Deprecated: player renders via OAM on the beam. Kept for API stability. */
 void r01s_play_draw(struct R01sBoard *board);
 
 #endif

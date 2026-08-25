@@ -2,8 +2,7 @@
 
 #include "retr01_sim/board.h"
 #include "retr01_sim/gamepad.h"
-#include "at28c16.h"
-#include "video_sink.h"
+#include "atmega1284p.h"
 
 #include <string.h>
 
@@ -78,6 +77,28 @@ static int spawn_screen(R01sBoard *b, int *out_col, int *out_row) {
     return r01s_board_first_screen(b, out_col, out_row);
 }
 
+/* Sync OAM entry 0 to viewport position (emu write_oam_player). Island N renders it on the beam. */
+static void write_oam_player(R01sBoard *b) {
+    R01sPlay *pl;
+    int vx;
+    int vy;
+
+    if (!b || !b->play.enabled) {
+        return;
+    }
+    pl = &b->play;
+    vx = pl->player_x - pl->cam_x;
+    vy = pl->player_y - pl->cam_y;
+    if (vx < 0 || vy < 0 || vx > 247 || vy > 247) {
+        r01s_atmega1284p_oam_poke(&b->mcu1284, 0, 0xFF);
+        return;
+    }
+    r01s_atmega1284p_oam_poke(&b->mcu1284, 0, (uint8_t)vy);
+    r01s_atmega1284p_oam_poke(&b->mcu1284, 1, 1);
+    r01s_atmega1284p_oam_poke(&b->mcu1284, 2, 0);
+    r01s_atmega1284p_oam_poke(&b->mcu1284, 3, (uint8_t)vx);
+}
+
 static void sync_video(R01sBoard *b) {
     R01sPlay *pl;
     int ox, oy;
@@ -105,6 +126,7 @@ static void sync_video(R01sBoard *b) {
     if (origin_changed) {
         (void)r01s_board_load_camera_2x2(b, ox, oy);
     }
+    write_oam_player(b);
 }
 
 static int warp_to(R01sBoard *b, int col, int row) {
@@ -198,43 +220,6 @@ void r01s_play_tick(R01sBoard *board, uint8_t pad) {
 }
 
 void r01s_play_draw(R01sBoard *board) {
-    R01sPlay *pl;
-    R01sVideoSink *sink;
-    uint8_t master;
-    uint8_t packed;
-    int pcx, pcy;
-    int scale_2x;
-
-    if (!board || !board->play.enabled || !board->video_impl.sink || !board->video_impl.prom) {
-        return;
-    }
-    pl = &board->play;
-    sink = board->video_impl.sink;
-    scale_2x = r01s_video_sink_scale_2x(sink);
-    /* global_pal_spr[0].idx[1] loaded into active_pal[17] after cart bring-up. */
-    master = (uint8_t)(board->active_pal[R01S_ACTIVE_PAL_PLAYER] & 63u);
-    packed = r01s_at28c16_peek(board->video_impl.prom, master);
-
-    for (pcy = 0; pcy < R01S_PLAY_PLAYER_SIZE; pcy++) {
-        for (pcx = 0; pcx < R01S_PLAY_PLAYER_SIZE; pcx++) {
-            int wx = pl->player_x + pcx;
-            int wy = pl->player_y + pcy;
-            int vx = wx - pl->cam_x;
-            int vy = wy - pl->cam_y;
-            int ox, oy;
-
-            if (vx < 0 || vy < 0 || vx >= R01S_LOGICAL_W || vy >= R01S_LOGICAL_H) {
-                continue;
-            }
-            if (scale_2x) {
-                for (oy = 0; oy < 2; oy++) {
-                    for (ox = 0; ox < 2; ox++) {
-                        r01s_video_sink_plot(sink, vx * 2 + ox, vy * 2 + oy, packed);
-                    }
-                }
-            } else {
-                r01s_video_sink_plot(sink, vx + R01S_SCALE_1X_OX, vy + R01S_SCALE_1X_OY, packed);
-            }
-        }
-    }
+    (void)board;
+    /* Player is rendered by Island N (OAM → linebuf) + Island O compositor on the beam. */
 }

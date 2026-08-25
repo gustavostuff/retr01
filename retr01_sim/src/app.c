@@ -458,9 +458,6 @@ void r01s_app_frame(R01sApp *app) {
                 r01s_island_group_eval_idle(group);
                 app->ui.sim_steps = 0;
             }
-            if (board) {
-                r01s_play_draw(board);
-            }
             r01s_island_group_fill_status(group, app->ui.status, sizeof(app->ui.status));
             r01s_island_group_fill_health(group, &app->ui.health);
             r01s_island_group_update_probes(group, &app->ui.probe_vdd, &app->ui.probe_phi2,
