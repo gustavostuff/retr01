@@ -20,20 +20,42 @@ CMD="${1:-}"
 [[ -n "$CMD" ]] || r01_usage_die "usage: $0 <build|run|build-run|unit|help> ..."
 shift || true
 
+# Resolve a cart path against the repo root (build-run cds into retr01_sim/).
+resolve_cart() {
+  local p="$1"
+  if [[ "$p" == /* ]]; then
+    printf '%s' "$p"
+    return
+  fi
+  if [[ -f "$ROOT/$p" ]]; then
+    printf '%s' "$ROOT/$p"
+    return
+  fi
+  if [[ -f "$p" ]]; then
+    printf '%s' "$(cd "$(dirname "$p")" && pwd)/$(basename "$p")"
+    return
+  fi
+  # Prefer ROOT-relative so the binary gets a stable absolute path.
+  printf '%s' "$ROOT/$p"
+}
+
 # Ensure a cart path is passed to the binary (default: Studio test_game export).
 sim_exec() {
-  local has_cart=0
+  local args=()
   local a
+  local has_cart=0
   for a in "$@"; do
     if [[ "$a" != -* ]]; then
       has_cart=1
-      break
+      args+=("$(resolve_cart "$a")")
+    else
+      args+=("$a")
     fi
   done
   if [[ $has_cart -eq 0 ]]; then
-    exec "$BIN" "$@" "$DEFAULT_CART"
+    exec "$BIN" "${args[@]}" "$DEFAULT_CART"
   else
-    exec "$BIN" "$@"
+    exec "$BIN" "${args[@]}"
   fi
 }
 
@@ -47,6 +69,8 @@ Retr01 board simulator
   build-run [cart...]   build then run
   unit                  build + IC unit tests (ctest)
   help                  this text
+
+Cart paths are resolved from the repo root (absolute paths also OK).
 EOF
     ;;
   build)

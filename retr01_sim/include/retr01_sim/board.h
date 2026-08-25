@@ -245,6 +245,20 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *builder);
  * into the cart PRG window so A–O island checks still run (overlay — not Studio ROM). */
 int r01s_board_load_cart(R01sBoard *board, const char *path);
 
+/*
+ * Soft-load cart start-screen MAP + BG pals into VRAM / active palette and advance
+ * map_addr past the 480 B payload so the LCD unblanks. Same bytes the bring-up PRG
+ * would stream via $FE93→$FE12 — host convenience (like emu boot), not IC behavior.
+ * Returns 0 on success, -1 if cart meta missing.
+ */
+int r01s_board_softboot_start_screen(R01sBoard *board);
+
+/*
+ * Soft-boot start screen for LCD, then optionally a short paint burst.
+ * Prefer this over multi-100k-step CPU catchup (that OOMs/hangs the UI).
+ */
+int r01s_board_catchup_bringup(R01sBoard *board, R01sIslandGroup *group);
+
 R01sBoard *r01s_board_from_group(R01sIslandGroup *group);
 
 #endif

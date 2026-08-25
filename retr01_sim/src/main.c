@@ -105,7 +105,8 @@ static int try_load_cart(R01sBoard *board, int argc, char **argv) {
         return 0;
     }
     if (r01s_board_load_cart(board, path) != 0) {
-        fprintf(stderr, "cart: failed to load %s\n", path);
+        fprintf(stderr, "cart: failed to load %s (cwd-relative paths break after ./sim build-run)\n",
+                path);
         return -1;
     }
     return 0;
@@ -120,8 +121,17 @@ static int setup_board(R01sApp *app, int argc, char **argv) {
     if (r01s_board_build(&g_board, &app->builder) != 0) {
         return -1;
     }
-    (void)try_load_cart(&g_board, argc, argv);
+    if (try_load_cart(&g_board, argc, argv) != 0) {
+        return -1;
+    }
     r01s_app_mount_builder(app);
+    {
+        R01sIslandGroup *group = r01s_island_builder_group(&app->builder);
+        r01s_island_group_reset(group);
+        if (r01s_board_catchup_bringup(&g_board, group) != 0) {
+            fprintf(stderr, "cart: start-screen softboot failed (LCD may stay blank)\n");
+        }
+    }
     snprintf(title, sizeof(title), "Retr01 Sim — %s%s", g_board.cart_label[0] ? g_board.cart_label : "cart",
              r01s_fast_glue_mask() ? " [FAST]" : "");
     SDL_SetWindowTitle(app->win, title);

@@ -1719,6 +1719,8 @@ static void wire_video_dot_fast(R01sBoard *ctx) {
         return;
     }
     if (board_video_held_for_map_stream(ctx)) {
+        /* Blank during stream — do not freeze leftover smoke pixels on the sink. */
+        r01s_video_sink_plot(sink, bx, by, 0);
         return;
     }
     if (!r01s_rgbs_beam_to_logical(scale_2x, bx, by, &lx, &ly)) {
@@ -1773,6 +1775,7 @@ static void wire_video_dot(R01sBoard *ctx) {
     }
     /* Blank until nametable+attrs finished streaming (real games would VBlank-load). */
     if (board_video_held_for_map_stream(ctx)) {
+        r01s_video_sink_plot(sink, bx, by, 0);
         return;
     }
     if (!r01s_rgbs_beam_to_logical(scale_2x, bx, by, &lx, &ly)) {
@@ -2164,26 +2167,15 @@ static void board_install_bringup_prg(R01sBoard *board) {
     uint8_t buf[512];
     size_t n = 0;
     uint16_t hang_pc;
-    int stream;
 
     if (!board || !board->cart_loaded) {
         return;
     }
     board_resolve_cart_meta(board);
-    stream = (board->cart_off_map_screen0 != 0 && board->cart_off_pal_bg != 0);
+    /* LCD content: r01s_board_softboot_start_screen (not the old 480 B CPU MAP loop). */
 
     memcpy(buf + n, R01S_BRINGUP_SMOKE, sizeof(R01S_BRINGUP_SMOKE));
     n += sizeof(R01S_BRINGUP_SMOKE);
-    if (stream) {
-        memcpy(buf + n, R01S_BRINGUP_STREAM, sizeof(R01S_BRINGUP_STREAM));
-        buf[n + R01S_BR_OFF_PAL_LO] = (uint8_t)(board->cart_off_pal_bg & 0xFFu);
-        buf[n + R01S_BR_OFF_PAL_MID] = (uint8_t)((board->cart_off_pal_bg >> 8) & 0xFFu);
-        buf[n + R01S_BR_OFF_PAL_HI] = (uint8_t)((board->cart_off_pal_bg >> 16) & 0xFFu);
-        buf[n + R01S_BR_OFF_MAP_LO] = (uint8_t)(board->cart_off_map_screen0 & 0xFFu);
-        buf[n + R01S_BR_OFF_MAP_MID] = (uint8_t)((board->cart_off_map_screen0 >> 8) & 0xFFu);
-        buf[n + R01S_BR_OFF_MAP_HI] = (uint8_t)((board->cart_off_map_screen0 >> 16) & 0xFFu);
-        n += sizeof(R01S_BRINGUP_STREAM);
-    }
     hang_pc = (uint16_t)(0x8000u + n);
     memcpy(buf + n, R01S_BRINGUP_HANG, sizeof(R01S_BRINGUP_HANG));
     buf[n + 4] = (uint8_t)(hang_pc & 0xFFu);
@@ -2314,6 +2306,54 @@ int r01s_board_load_cart(R01sBoard *board, const char *path) {
     /* Bring-up overlay: keep island smoke working on a real Studio cart. */
     board_install_bringup_prg(board);
     return 0;
+}
+
+int r01s_board_softboot_start_screen(R01sBoard *board) {
+    uint32_t i;
+
+    if (!board || !board->cart_loaded) {
+        return -1;
+    }
+    if (board->cart_off_map_screen0 == 0 || board->cart_off_pal_bg == 0) {
+        return -1;
+    }
+    for (i = 0; i < 480u; i++) {
+        uint8_t b = r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_map_screen0 + i);
+        r01s_as6c62256_poke(&board->vram, (uint16_t)i, b);
+    }
+    for (i = 0; i < 32u; i++) {
+        board->active_pal[i] =
+            (uint8_t)(r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_pal_bg + i) & 63u);
+    }
+    /* Unblank LCD hold: map_addr past streamed payload. */
+    poke_map_addr_latches(board, board->cart_off_map_screen0 + 480u);
+    return 0;
+}
+
+int r01s_board_catchup_bringup(R01sBoard *board, R01sIslandGroup *group) {
+    uint32_t prev_fast;
+    int i;
+
+    if (!board || !board->cart_loaded || board->cart_off_map_screen0 == 0) {
+        return 0;
+    }
+    if (r01s_board_softboot_start_screen(board) != 0) {
+        return -1;
+    }
+    if (!group) {
+        return 0;
+    }
+    /* Brief FAST burst past reset-hold + smoke ($42), then softboot again. */
+    prev_fast = r01s_fast_glue_mask();
+    r01s_fast_glue_set(R01S_FAST_GLUE_BOOT_DEFAULT);
+    for (i = 0; i < 12000; i++) {
+        r01s_island_group_step(group);
+        if (r01s_w65c02s_pc(board->cpu_mem_impl.cpu) >= 0x8078u) {
+            break;
+        }
+    }
+    r01s_fast_glue_set(prev_fast);
+    return r01s_board_softboot_start_screen(board);
 }
 
 static void board_shutdown(R01sIslandGroup *group) {

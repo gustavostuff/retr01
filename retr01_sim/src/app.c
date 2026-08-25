@@ -238,7 +238,11 @@ void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
             return;
         case SDLK_r:
             if (e->key.keysym.mod & KMOD_CTRL) {
+                R01sBoard *b = r01s_board_from_group(group);
                 r01s_island_group_reset(group);
+                if (b) {
+                    (void)r01s_board_catchup_bringup(b, group);
+                }
                 snprintf(app->ui.status, sizeof(app->ui.status), "simulation reset");
                 return;
             }
