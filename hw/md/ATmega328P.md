@@ -10,8 +10,8 @@
 | | |
 |--|--|
 | Outline | PDIP-28, 600 mil |
-| Body (nom.) | **35 × 8 mm** (length × width) |
-| Sim @ 4 px/mm | **140 × 32 px** horizontal (default) |
+| Body (nom.) | **35 x 8 mm** (length x width) |
+| Sim @ 4 px/mm | **140 x 32 px** horizontal (default) |
 | Reference | [`packages_dip.md`](packages_dip.md) |
 
 ## What it is
@@ -99,7 +99,7 @@ Island **K** pass: independent tone without the rest of the video board.
 
 Current BOM **keeps** a dedicated 328P for APU ([`06`](../../docs/06_hardware_v1_32ic.md)). 1284 does **not** own `$FE40-$FE5F`.
 
-| | Legacy ~52 sketches | Current 32-IC |
+| | Earlier sketches | Current 32-IC |
 |--|---------------------|---------------|
 | Chip present | Yes | **Yes** (dedicated APU) |
 | `$FE40-$FE5F` | 328P | **328P** |

@@ -1,34 +1,26 @@
 # Retr01 Emulator
 
-Software-visible C emulator for Retr01-A Phase 1 carts. Separate from the IC board
+Software-visible C emulator for Retr01-A **Phase 1** carts. Separate from the IC board
 simulator ([`retr01_sim/`](../retr01_sim/)). Contract:
 [`docs/02_graphics_worlds_memory.md`](../docs/02_graphics_worlds_memory.md).
 
-Root helper: [`../emu`](../emu) (`build` · `run` · `build-run` · `unit`).
+Root helper: [`../emu`](../emu) (`build` * `run` * `build-run` * `unit`).
+
+Later emulator phases are **not** specified here; they will be defined when work starts.
 
 ## Phase 1 scope (active)
 
 | Layer | What runs today |
 |-------|-----------------|
-| **Cart** | Load `.retr01` — present screens only, CHR, pals, Phase 1 PRG (`R01P`) |
-| **Play** | **Studio Play SoT** — same move / camera / collision / X·Y warps as Studio |
-| **CPU** | Boots world 0, VBlank pad poll (gameplay in cart runtime until full 6502 play) |
-| **Video** | Soft-boot MAP/CHR into 2×2 workbench; smooth scroll from play camera |
+| **Cart** | Load `.retr01` -- present screens only, CHR, pals, Phase 1 PRG (`R01P`) |
+| **Play** | **Studio Play SoT** -- same move / camera / collision / X/Y warps as Studio |
+| **CPU** | Boots world 0, VBlank pad poll (gameplay in host Play until full 6502 play) |
+| **Video** | Soft-boot MAP/CHR into 2x2 workbench; smooth scroll from play camera |
 | **Host** | SDL; WASD/arrows move; **X**/**Y** warp (same as Studio) |
 
 **Sync contract:** Studio Play (`play.c`) is the source of truth. Export packs only **present**
 screens + play table (`$8100`) + `R01P` marker. Emulator applies the same play rules to that
 cart MAP so live Play and emu feel match after a fresh Ctrl+E export.
-
-## Scaffolded (not active)
-
-| Module | File | Later phase |
-|--------|------|-------------|
-| **6502 play loop** | PRG | Move play math into cart CPU (retire host runtime) |
-| **OAM composite** | `video.c` | Hardware sprite path (play draws overlay today) |
-| **Parallax** | `video.c` | VRAM slots 4–5 |
-| **MAP streamer** | `io.c` | Camera seam via `$FE90-$FE93` |
-| **Multi-world** | `cart.c` | Worlds 1–7 |
 
 ## Build / run
 
@@ -43,9 +35,9 @@ cmake --build build
 ./build/retr01_emu ../retr01_studio/test_game/test.retr01
 ```
 
-**Controls:** WASD or arrows = move · **X**/**Y** = warp · Space = pause · R = reset · Esc = quit
+**Controls:** WASD or arrows = move * **X**/**Y** = warp * Space = pause * R = reset * Esc = quit
 
-**Debug window:** VRAM 2×2 workbench (256×240, red = viewport, white = player) beside a world map sized to the present-screen bounding box (blue = present, gold = current screen).
+**Debug window:** VRAM 2x2 workbench (256x240, red = viewport, white = player) beside a world map sized to the present-screen bounding box (blue = present, gold = current screen).
 
 ## Layout
 
@@ -56,7 +48,7 @@ cmake --build build
 | `include/retr01_emu/cpu.h` | 65C02 core |
 | `include/retr01_emu/io.h` | `$FExx` register file |
 | `include/retr01_emu/video.h` | CHR / VRAM / render / soft boot |
-| `include/retr01_emu/play.h` | Runtime layer scaffold |
+| `include/retr01_emu/play.h` | Host Play runtime (Phase 1) |
 | `include/retr01_emu/machine.h` | Bus + frame loop |
 | `src/main.c` | SDL host |
 | `tests/` | Cart + boot smoke tests |

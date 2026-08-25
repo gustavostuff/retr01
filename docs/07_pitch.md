@@ -181,7 +181,7 @@ None of this makes NES games bad. Many masterpieces worked within tighter rules.
 
 ## Project status (honest)
 
-Retr01 is in **architecture and documentation** phase. Retr01-A silicon is being brought up as **protoboard islands** before a motherboard PCB. Retr01 Studio Phase 1 (world grid + BG paint + Generate bank) is the active software track.
+Retr01 is in **architecture and documentation** phase. Retr01-A silicon is being brought up as **protoboard islands** before a motherboard PCB. **Retr01 Studio Phase 1** (PNG import + Play + `.retr01` export) and **Emulator Phase 1** are the active software tracks.
 
 The pitch is the destination. The other docs are the blueprint.
 
@@ -247,6 +247,6 @@ Different does not mean better for every game. A tight NES-style single screen i
 | [`01_architecture_overview.md`](01_architecture_overview.md) | Sources of truth, terminology, capability snapshot |
 | [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) | Worlds, VRAM, MAP, palettes, `$FExx` (software SoT) |
 | [`06_hardware_v1_32ic.md`](06_hardware_v1_32ic.md) | Retr01-A **32 IC** HW BOM |
-| [`03_hardware_implementation.md`](03_hardware_implementation.md) | Optional islands / legacy ~52 notes |
-| [`04_retr01_studio.md`](04_retr01_studio.md) | Authoring tool roadmap |
+| [`03_hardware_implementation.md`](03_hardware_implementation.md) | Protoboard island checklist |
+| [`04_retr01_studio.md`](04_retr01_studio.md) | Studio Phase 1 (short) |
 | [`05_costs_and_open_questions.md`](05_costs_and_open_questions.md) | Locked decisions, costs, open questions |

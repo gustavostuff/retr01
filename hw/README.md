@@ -2,7 +2,7 @@
 
 Official / vendor datasheets for Retr01-A. These are reference PDFs (pinouts, AC timing, package drawings). They are **not** Retr01 schematics.
 
-**Markdown IC notes (sim / bring-up):** [`md/`](md/) — start with [`md/README.md`](md/README.md). Current BOM: [`../docs/06_hardware_v1_32ic.md`](../docs/06_hardware_v1_32ic.md). Simulator: [`../docs/08_simulator.md`](../docs/08_simulator.md).
+**Markdown IC notes (sim / bring-up):** [`md/`](md/) - start with [`md/README.md`](md/README.md). Current BOM: [`../docs/06_hardware_v1_32ic.md`](../docs/06_hardware_v1_32ic.md). Simulator: [`../docs/08_simulator.md`](../docs/08_simulator.md).
 
 Swap / alternate parts live in [`candidates/`](candidates/).
 
@@ -16,19 +16,19 @@ Swap / alternate parts live in [`candidates/`](candidates/).
 | `AT28C16_color_prom.pdf` | AT28C16 | Color PROM (packed R3G3B2) |
 | `ATF22V10_pld.pdf` | ATF22V10 | Decode / beam / compositor PLDs |
 | `SN74HC157_mux.pdf` | 74HC157 | Addr mux (3 VRAM + 3 linebuf) |
-| `SN74HC245_bus_transceiver.pdf` | 74HC245 | Bus isolation (×3) |
-| `SN74HC573_latch.pdf` | 74HC573 | `$FExx` latches (×9) |
+| `SN74HC245_bus_transceiver.pdf` | 74HC245 | Bus isolation (x3) |
+| `SN74HC573_latch.pdf` | 74HC573 | `$FExx` latches (x9) |
 | `SN74HC14_schmitt.pdf` | 74HC14 | Reset / clocks (support; not always in 32 count) |
 | `AT28C64B_eeprom.pdf` | AT28C64B | **Legacy** board EEPROM (replaced by 1284 internal) |
-| `SN74HC688_comparator.pdf` | 74HC688 | **Legacy** raster compare (→ Y PLD) |
-| `SN74HC161_counter.pdf` | 74HC161 | **Legacy** beam counters (→ PLD) |
+| `SN74HC688_comparator.pdf` | 74HC688 | **Legacy** raster compare (-> Y PLD) |
+| `SN74HC161_counter.pdf` | 74HC161 | **Legacy** beam counters (-> PLD) |
 | `SN74HC00_nand.pdf` | 74HC00 | Glue (often absorbed into PLD) |
 | `SN74HC04_inverter.pdf` | 74HC04 | Glue |
 | `SN74HC08_and.pdf` | 74HC08 | Glue |
 | `SN74HC32_or.pdf` | 74HC32 | Glue |
 | `SN74HC86_xor.pdf` | 74HC86 | Glue |
 
-Cart I2C save EEPROM (24C64-class): see [`md/24C64.md`](md/24C64.md) — pick a vendor PDF when the part is frozen.
+Cart I2C save EEPROM (24C64-class): see [`md/24C64.md`](md/24C64.md) - pick a vendor PDF when the part is frozen.
 
 ## candidates/
 

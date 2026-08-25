@@ -9,11 +9,11 @@
 | Chip list, IC count, PCB size, silicon merges | Software-visible `$FExx` **logical** map, cart image, worlds/VRAM -- [`02`](02_graphics_worlds_memory.md) |
 | HW pathways (PLD roles, bus HC245 split, PROM packaging) | Exact mailbox/I2C `$FExx` bit protocols -- land those in `02` when frozen |
 
-Same **game-visible graphics model** as the older ~52 IC sketch on `main` (32 KB sys / VRAM / linebuf, 512 KB cart, interleaved VRAM, 341x262, `$FE4x` APU on 328P). Differences that matter for software: **`$FE70-$FE72` is a 1284 EEPROM handshake** (not parallel AT28C64B), packed Color PROM, bit-packed latches, cart I2C saves -- see [`02`](02_graphics_worlds_memory.md).
+Game-visible graphics model: 32 KB sys / VRAM / linebuf, 512 KB cart, interleaved VRAM, 341x262, `$FE4x` APU on 328P. Software notes: **`$FE70-$FE72` is a 1284 EEPROM handshake**, packed Color PROM, bit-packed latches, cart I2C saves -- see [`02`](02_graphics_worlds_memory.md).
 
 Target: **through-hole DIP**, compact **12 x 12 cm** 4-layer PCB.
 
-**Related:** software [`02`](02_graphics_worlds_memory.md). Decisions [`05`](05_costs_and_open_questions.md). Overview [`01`](01_architecture_overview.md). Optional discrete island checklist [`03`](03_hardware_implementation.md) (legacy ~52 path / bench fallback).
+**Related:** software [`02`](02_graphics_worlds_memory.md). Decisions [`05`](05_costs_and_open_questions.md). Overview [`01`](01_architecture_overview.md). Protoboard islands [`03`](03_hardware_implementation.md).
 
 ---
 
@@ -34,88 +34,9 @@ Target: **through-hole DIP**, compact **12 x 12 cm** 4-layer PCB.
 | Bus transceivers | **3x HC245** (CPU / video / cart-OAM) |
 | Cart game saves | **1x I2C EEPROM on cart** (in the 32) |
 
-vs the older ~52 IC architecture (preserved on `main` / documented in [`03`](03_hardware_implementation.md)): about **20 ICs** removed by packing latches, absorbing glue/beam into PLDs, consolidating Color PROM, and dropping parallel board EEPROM -- while keeping 328P and 3x HC245.
-
 ---
 
-## Part 1: What changed vs the ~52 IC sketch
-
-Historical reduction notes (why 32, not 52). Product BOM is [Part 2](#part-2-bill-of-materials).
-
-### 1. Board EEPROM eliminated (-1 IC)
-
-| | |
-|--|--|
-| **Removed** | 1x AT28C64B (28-pin DIP) |
-| **Replaced by** | ATmega1284P **internal 4 KB EEPROM** |
-| **Reason** | Cabinet config and high scores are low-frequency writes. |
-| **Caveat** | **4 KB**. Game saves on **cart EEPROM**. CPU handshake TBD in `02`. |
-
-### 2. Audio MCU retained
-
-| | |
-|--|--|
-| **Kept** | 1x ATmega328P |
-| **Role** | NES-style APU @ 16 MHz; `$FE40-$FE5F` |
-| **Reason** | Dedicated APU; 1284 stays on sprites, OAM, pads, machine EEPROM. |
-
-### 3. Color PROMs consolidated (-2 ICs)
-
-| | |
-|--|--|
-| **Removed** | 2x AT28C16 (of 3) |
-| **Replaced by** | 1x AT28C16: **6-bit index in**, **8-bit** `{RRRGGGBB}` out |
-| **Timing** | **1-dot pipeline**. Prefer faster OTP (e.g. AT27C256R-70) if 150 ns is tight. |
-| **Quality** | Blue is **2 bits**. Studio must quantize to R3G3B2. |
-
-### 4. Discrete glue absorbed (-9 ICs net)
-
-| | |
-|--|--|
-| **Removed** | ~10x 74HC glue |
-| **Replaced by** | Equations in **ATF22V10** devices |
-| **Caveat** | **5 PLDs** total; **6th** only if fit fails. |
-
-### 5. Beam counters and raster compare (-5 ICs net)
-
-| | |
-|--|--|
-| **Removed** | 4x HC161 + 1x HC688 |
-| **Replaced by** | 2x ATF22V10: X (0-340), Y (0-261) + compare vs `$FE04` -> IRQ |
-
-### 6. Hardware latches packed (-5 ICs)
-
-| | |
-|--|--|
-| **Replaced by** | **9x HC573** bit-packed `$FExx` bytes |
-| **Caveat** | Logical addresses in `02`; **bitfield packing table** still open (Q21). |
-
-### 7. Bus transceivers retained
-
-| | |
-|--|--|
-| **Kept** | **3x HC245** |
-
-### 8. Compositor in PLD
-
-| | |
-|--|--|
-| **Added** | Compositor ATF22V10 (5th PLD): **priority mux only** -> 6-bit Color PROM index |
-| **Escape** | +1 ATF22V10 (33 ICs) |
-
-### 9. Cart save EEPROM (+1 IC, in the 32)
-
-| | |
-|--|--|
-| **Added** | 1x I2C EEPROM on cartridge (e.g. 24C64) |
-
-### Net tally (approx.)
-
-Authoritative count is the [BOM table](#ic-count) (**32**). Approx deltas vs ~52: -1 EEPROM -2 PROM -9 glue -5 beam -5 latches +2 PLDs +1 cart save, with HC14 absorbed.
-
----
-
-## Part 2: Bill of materials
+## Bill of materials
 
 ### Processors and MCUs (3 ICs)
 
@@ -188,7 +109,7 @@ Interface: 6502 bit-bang or 1284 as I2C master behind a `$FExx` window (TBD in `
 
 ### APU path (328P)
 
-1. W65C02S writes `$FE40-$FE5F` (sequencer / bytecode — see [`09`](09_audio_architecture.md)).
+1. W65C02S writes `$FE40-$FE5F` (sequencer / bytecode - see [`09`](09_audio_architecture.md)).
 2. **Bus bridge** = decode + CPU-domain HC245 isolation + 328P port/latch (not a separate IC).
 3. ATmega328P services APU continuously (mix / DAC).
 4. ATmega1284P does **not** synthesize audio.
@@ -260,7 +181,7 @@ Phase C -- First integrated PCB
   32 IC system (12 x 12 cm mobo + cart)
 ```
 
-**Optional:** use discrete HC161 + HC688 on the bench if a beam PLD fails (legacy parts from the ~52 path). Do not breadboard 52 ICs as a product goal. Full ~52 IC architecture remains on `main` / [`03`](03_hardware_implementation.md).
+**Optional:** use discrete HC161 + HC688 on the bench if a beam PLD fails (not in the product BOM).
 
 ---
 
@@ -281,6 +202,6 @@ Phase C -- First integrated PCB
 | Doc | Content |
 |-----|---------|
 | [`02`](02_graphics_worlds_memory.md) | Software SoT |
-| [`03`](03_hardware_implementation.md) | Legacy ~52 / optional island checklist |
+| [`03`](03_hardware_implementation.md) | Protoboard island checklist |
 | [`05`](05_costs_and_open_questions.md) | Locked decisions + open Qs |
 | [`01`](01_architecture_overview.md) | Sources of truth + snapshot |

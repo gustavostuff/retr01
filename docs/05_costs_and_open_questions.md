@@ -61,10 +61,10 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Dot clock | **5.369318 MHz** |
 | Raster | scanline compare + IRQ |
 | APU | separate **ATmega328P** (`$FE40-$FE5F`) |
-| Near-term software | **Retr01 Studio** only (visual authoring + later compile) |
-| Studio project files | **JSON** OK. **Schema/structure deferred** until Studio coding |
-| Future software | board IC simulator ([`08`](08_simulator.md)); optional later cycle-level cart check (not current work) |
-| Legacy ~52 IC path | Preserved on **`main`** and as optional island notes in [`03`](03_hardware_implementation.md) -- not the product BOM |
+| Near-term software | **Retr01 Studio Phase 1** + **Emulator Phase 1** ([`04`](04_retr01_studio.md), studio/emu READMEs) |
+| Studio project files | **JSON** (current schema **v3** in Studio Phase 1) |
+| Validation tools | board IC simulator ([`08`](08_simulator.md)); software emu ([`retr01_emu/`](../retr01_emu/)) |
+| md) -- not the product BOM |
 
 ## Cost snapshot
 
@@ -104,13 +104,13 @@ Flash + I2C save on cart PCB. Motherboard + cart proto still targets roughly the
 | Q21 | HC573 bitfield packing | 9-chip packed map must be written in `02` |
 | Q16 | Default living-tile list cap | Recommend **32** vs **64** cells per camera workbench (`RETR01_ANIM_MAX`) |
 | Q17 | BG anim rate | Fixed global `rate_shift`, or per-game constant only? |
-| Q18 | BG flip+bank silicon timing | Prove on BG fetch island before locking Studio Phase 2 attr UI |
+| Q18 | BG flip+bank silicon timing | Prove on BG fetch island before locking attr UI in a later Studio phase |
 | Q19 | Cart flash part | **Locked:** **SST39SF040** (512 KB, DIP-32) |
 
 ## Practical next decisions
 
 1. tune RGBS on real hardware (Q2)
-2. start Retr01 Studio Phase 0/1 (JSON project files. Freeze schema when code needs it)
+2. Retr01 Studio / Emulator Phase 1 (JSON project files. Freeze schema when code needs it)
 3. freeze cart pointer packing (Q12)
 4. freeze save/mailbox APIs + HC573 bitfields (Q20, Q21); confirm PROM part (Q15)
 5. flesh out ATtiny85 poll timing when Retr01-C work starts (Q13)

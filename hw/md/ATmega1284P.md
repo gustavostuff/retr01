@@ -10,8 +10,8 @@
 | | |
 |--|--|
 | Outline | PDIP-40, 600 mil |
-| Body (nom.) | **53 × 14 mm** (length × width) |
-| Sim @ 4 px/mm | **212 × 56 px** horizontal (default) |
+| Body (nom.) | **53 x 14 mm** (length x width) |
+| Sim @ 4 px/mm | **212 x 56 px** horizontal (default) |
 | Reference | [`packages_dip.md`](packages_dip.md) |
 
 ## What it is
@@ -118,7 +118,7 @@ Tests: OAM auto-inc wrap, sprite Y match, ping-pong half select, pad bit polarit
 
 ## Current vs legacy
 
-| Topic | Current (32 IC) | Legacy (~52 / main) |
+| Topic | Current (32 IC) | Earlier sketches |
 |-------|-----------------|---------------------|
 | Audio | Separate **328P** | Separate 328P |
 | Machine EEPROM | Internal **4 KB** EEPROM | AT28C64B parallel |

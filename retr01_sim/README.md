@@ -6,27 +6,27 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 
 ## Status
 
-**9 canvas islands (O first / top-left) + wired-only E/I/N/P — 32-IC BOM, layer-2 smoke.** SDL board UI. Architecture: [`docs/08_simulator.md`](../docs/08_simulator.md).
+**9 canvas islands (O first / top-left) + wired-only E/I/N/P - 32-IC BOM, layer-2 smoke.** SDL board UI. Architecture: [`docs/08_simulator.md`](../docs/08_simulator.md).
 
 | Island | Components (canvas) |
 |--------|---------------------|
 | O Video | `COMPOSITOR` + `AT28C16` + `LCD_SINK` + video `SN74HC245` (top-left) |
 | A Power+clk | `PWR5V` + `OSC8M` + `SN74HC14` |
 | C CPU + decode | `W65C02S`, `AS6C62256`, `ATF22V10` decode, CPU `SN74HC245` |
-| D `$FExx` latch | **9×** `SN74HC573` (`$FE02`–`$FE04`, `$FE08`, `$FE10`–`$FE12`, `$FE90`–`$FE92`) |
+| D `$FExx` latch | **9x** `SN74HC573` (`$FE02`-`$FE04`, `$FE08`, `$FE10`-`$FE12`, `$FE90`-`$FE92`) |
 | E Pads | `$FE60`/`$FE61` via 1284 (sim model; not on canvas) |
-| G VRAM | 2nd `AS6C62256` + **3×** `SN74HC157` + `ATF22V10` VRAM glue |
+| G VRAM | 2nd `AS6C62256` + **3x** `SN74HC157` + `ATF22V10` VRAM glue |
 | H Beam | `OSC_DOT` + `BEAM_XY` (X PLD) + `ATF22V10` Y compare vs `$FE04` |
-| I BG fetch | `BG_FETCH` PLD — nametable VA from beam+scroll (not on canvas) |
+| I BG fetch | `BG_FETCH` PLD - nametable VA from beam+scroll (not on canvas) |
 | J Cart | `SST39SF040` + cart `24C64` + cart/OAM `SN74HC245` |
-| K APU | `ATMEGA328P` stub — `$FE40`–`$FE5F` regs + digital PWM square |
-| L MCU+linebuf | `ATMEGA1284P` + linebuf `AS6C62256` + **3×** `SN74HC157` |
+| K APU | `ATMEGA328P` stub - `$FE40`-`$FE5F` regs + digital PWM square |
+| L MCU+linebuf | `ATMEGA1284P` + linebuf `AS6C62256` + **3x** `SN74HC157` |
 | N Sprites | stats via 1284/OAM (not on canvas) |
 | P Integration | NMI / bus-fight stats (not on canvas) |
 
 Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8000+`.
 
-**Cart load:** `./sim run` passes `retr01_studio/test_game/test.retr01` (override with a path; resolved from repo root). Sim applies a **bring-up PRG overlay** (smoke + palette + MAP→VRAM stream via `$FE93`→`$FE12`). Startup catchup runs that stream on a **worker thread** (~12k pin-level steps) so the SDL window stays responsive; status shows progress. Host softboot is opt-in only (`R01S_SOFTBOOT=1`). **`R01S_FAST=1`** / sidebar **SIM FAST**: word MAP catchup + thinner settle/beam (pin mode remains default). **Host Play** (temporary): after catchup, pads drive Studio-equivalent move/camera/X·Y warps until game PRG owns Play.
+**Cart load:** `./sim run` passes `retr01_studio/test_game/test.retr01` (override with a path; resolved from repo root). Sim applies a **bring-up PRG overlay** (smoke + palette + MAP->VRAM stream via `$FE93`->`$FE12`). Startup catchup runs that stream on a **worker thread** (~12k pin-level steps) so the SDL window stays responsive; status shows progress. Host softboot is opt-in only (`R01S_SOFTBOOT=1`). **`R01S_FAST=1`** / sidebar **SIM FAST**: word MAP catchup + thinner settle/beam (pin mode remains default). **Host Play** (temporary): after catchup, pads drive Studio-equivalent move/camera/X*Y warps until game PRG owns Play.
 
 Why the worker exists (and how to show a live board during boot later): [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md).
 
@@ -64,13 +64,13 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 # or: ./build/retr01_sim
 ```
 
-**Controls:** `Space` pause/resume · `Ctrl+R` reset · `R` rotate selected IC · **SCALE 1X/2X** (left sidebar button or `G`; default **1x**) · `.` single-step (while paused) · **COMPACT / ISLANDS** (HUD) · **left-drag chip** move · **right-click chip** orient H/V · **left-drag empty island** move frame · **bottom-right grip** resize · **Shift+arrows / wheel / middle-drag** pan · `Esc` quit.
+**Controls:** `Space` pause/resume * `Ctrl+R` reset * `R` rotate selected IC * **SCALE 1X/2X** (left sidebar button or `G`; default **1x**) * `.` single-step (while paused) * **COMPACT / ISLANDS** (HUD) * **left-drag chip** move * **right-click chip** orient H/V * **left-drag empty island** move frame * **bottom-right grip** resize * **Shift+arrows / wheel / middle-drag** pan * `Esc` quit.
 
 **Layout persistence:** island frames + chip positions (island mode) and compact chip positions are saved to `retr01_sim/ui_layout.json` (override with `R01S_LAYOUT`). Reloaded on next launch.
 
-**Gamepads (island E → `$FE60`/`$FE61`):** bottom-left panels or keyboard. After boot catchup, **Host Play** uses P1 for move + warps (Studio/emu SoT):
+**Gamepads (island E -> `$FE60`/`$FE61`):** bottom-left panels or keyboard. After boot catchup, **Host Play** uses P1 for move + warps (Studio/emu SoT):
 
-| | Stick | X (warp → screen 0,0) | Y (warp → screen 1,0) | Coin | Start |
+| | Stick | X (warp -> screen 0,0) | Y (warp -> screen 1,0) | Coin | Start |
 |--|-------|----------------------|----------------------|------|-------|
 | **P1** | Arrows or WASD (8-way) | **X** or Z | **Y** | 1 | Enter |
 | **P2** | IJKL (8-way) | N | M | 2 | Backspace |
@@ -84,21 +84,21 @@ Live probe (top-right) shows **VDD / PHI2 / RESB**. Pin stubs glow by level (no 
 | Path | Role |
 |------|------|
 | `include/retr01_sim/` | Public headers (`entity`, `pin`, `bus`, `board`, `island*`, `types`) |
-| `src/board.c` | **Board recipe** — 9 canvas islands (O…L), wiring, settle loop, group vtable |
+| `src/board.c` | **Board recipe** - 9 canvas islands (O...L), wiring, settle loop, group vtable |
 | `src/main.c` | SDL entry: build board + run UI |
 | `chips/` | Per-part models (subclass the base entity) |
 | `tests/` | Layer-1 unit tests + `test_island_abcdeghiojklmnp` (layer 2) |
 
 ## Model
 
-**Entity** — every IC is an `R01sEntity` with pins + vtable (`reset` / `eval` / `tick` / `destroy`).
+**Entity** - every IC is an `R01sEntity` with pins + vtable (`reset` / `eval` / `tick` / `destroy`).
 
-**Island** — a board region holding entities; optional island vtable for local init/eval.
+**Island** - a board region holding entities; optional island vtable for local init/eval.
 
-**Island group** — N islands wired together; group vtable owns cross-island sim step, reset, and status. The full console will eventually be one island group.
+**Island group** - N islands wired together; group vtable owns cross-island sim step, reset, and status. The full console will eventually be one island group.
 
-**Island builder** — assembles islands + chip placements into a group.
+**Island builder** - assembles islands + chip placements into a group.
 
-**Board** — `r01s_board_build()` binds the full netlist (settle passes, memory/`$FExx`/VRAM decode, PHI2 edge) onto **9 canvas frames**. UI mounts the same builder.
+**Board** - `r01s_board_build()` binds the full netlist (settle passes, memory/`$FExx`/VRAM decode, PHI2 edge) onto **9 canvas frames**. UI mounts the same builder.
 
-**Bus** — undriven pins pull high on read; H+L (or sensing `X`) **aborts** with a stderr bus-fight report (net + drivers + why).
+**Bus** - undriven pins pull high on read; H+L (or sensing `X`) **aborts** with a stderr bus-fight report (net + drivers + why).

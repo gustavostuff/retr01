@@ -48,13 +48,13 @@ Examples:
 
 **Pass:** same criteria as the hardware island checklist in `03`.
 
-Layer-2 bring-up for letters **A–E + G + H + I + O + J + K + L + M + N + P** lives in `retr01_sim/tests/test_island_abcdeghiojklmnp.c` (`STA $FE02`, VRAM `$FE12`, `LDA $FE60`, beam HBlank / line advance, **ATF22V10** Y compare vs `$FE04`, BG fetch latches tile `$42` / attr `$07`, Color PROM pixels on 256×240 sink, MAP `$FE93` reads cart magic `'R'`, APU `$FE40`–`$FE42` enables PWM square, OAM `$FE20`/`$FE21` write+readback on 1284, linebuf ping-pong + OAM sprite fill into compositor, VBlank NMI → CPU).
+Layer-2 bring-up for letters **A-E + G + H + I + O + J + K + L + M + N + P** lives in `retr01_sim/tests/test_island_abcdeghiojklmnp.c` (`STA $FE02`, VRAM `$FE12`, `LDA $FE60`, beam HBlank / line advance, **ATF22V10** Y compare vs `$FE04`, BG fetch latches tile `$42` / attr `$07`, Color PROM pixels on 256x240 sink, MAP `$FE93` reads cart magic `'R'`, APU `$FE40`-`$FE42` enables PWM square, OAM `$FE20`/`$FE21` write+readback on 1284, linebuf ping-pong + OAM sprite fill into compositor, VBlank NMI -> CPU).
 
-The SDL **canvas** is **9 frames** (O top-left; A+B, L+M, and former Q HC245s co-located) — see [`03` sim canvas grouping](03_hardware_implementation.md#sim-canvas-grouping) and [`retr01_sim/README.md`](../retr01_sim/README.md).
+The SDL **canvas** is **9 frames** (O top-left; A+B, L+M, and former Q HC245s co-located) - see [`03` sim canvas grouping](03_hardware_implementation.md#sim-canvas-grouping) and [`retr01_sim/README.md`](../retr01_sim/README.md).
 
 ### 3. System tests (whole board)
 
-Full Retr01-A netlist: **current BOM** [`06`](06_hardware_v1_32ic.md) (**32 IC**). Optional legacy ~52 netlist only if explicitly testing that path ([`03`](03_hardware_implementation.md)). Software ports always from [`02`](02_graphics_worlds_memory.md).
+Full Retr01-A netlist: **current BOM** [`06`](06_hardware_v1_32ic.md) (**32 IC**). Software ports always from [`02`](02_graphics_worlds_memory.md).
 
 - Cart image (`.retr01` / PRG+CHR+MAP)
 - Pad bytes (`$FE60`/`$FE61`) from host input
@@ -71,12 +71,12 @@ When something looks wrong on screen, **do not assume the `.retr01` is bad** and
 
 | Layer | Artifact | Runs on silicon / runners? | Notes |
 |-------|----------|----------------------------|--------|
-| **Studio editor / Play** | `project.json` (+ UI) | **No** | Paint, OAM place, Play scroll/fade, active world tab — **host preview only**. Play samples authored data; it never executes PRG or `$FExx`. |
+| **Studio editor / Play** | `project.json` (+ UI) | **No** | Phase 1: PNG import, Worlds/Screen UI, Play scroll/warps - **host preview only**. Play samples authored data; it never executes PRG or `$FExx`. |
 | **Cart image** | `project.retr01` (+ optional `project_flash.bin`) | **Yes** (flash) | Packed bytes SoT for PRG/CHR/MAP/pals. Magic `RETR01` layout in [`02`](02_graphics_worlds_memory.md). |
-| **Color PROM burn** | `project_prom.bin` | **Yes** (motherboard) | **Not inside the cart.** Kit → R3G3B2; board AT28C16. |
-| **Boot asm listing** | `project_boot.s` | **Human-readable only** | Equates + stub source. The **binary stub inside `.retr01`** is what runners execute (Studio embeds it; asm can drift — treat binary as SoT). |
-| **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Today also **soft-boots** world CHR/MAP into VRAM and **host-pans** the atlas — Studio stub PRG does **not** stream MAP. |
-| **Board sim** | `retr01_sim` | IC / island netlist | Bring-up letters A–E+G+H+I+O+J+K+L+M+N+**P** on **9 canvas frames** (O first; A∪B, L∪M; HC245s on C/O/J). **32-IC BOM** mounted (`bom32.h`). Cart flash loads `.retr01`; **bring-up PRG overlay** (smoke + pal + MAP stream via `$FE93`→`$FE12`) replaces cart PRG for island smoke. LCD unblanks after IC catchup (~12k steps). Host softboot is **opt-in** (`R01S_SOFTBOOT=1`). **Host Play** (temporary) drives scroll/player/X·Y warps from pads after catchup. |
+| **Color PROM burn** | `project_prom.bin` | **Yes** (motherboard) | **Not inside the cart.** Kit -> R3G3B2; board AT28C16. |
+| **Boot asm listing** | `project_boot.s` | **Human-readable only** | Equates + stub source. The **binary stub inside `.retr01`** is what runners execute (Studio embeds it; asm can drift - treat binary as SoT). |
+| **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Today also **soft-boots** world CHR/MAP into VRAM and **host-pans** the atlas - Studio stub PRG does **not** stream MAP. |
+| **Board sim** | `retr01_sim` | IC / island netlist | Bring-up letters A-E+G+H+I+O+J+K+L+M+N+**P** on **9 canvas frames** (O first; AUB, LUM; HC245s on C/O/J). **32-IC BOM** mounted (`bom32.h`). Cart flash loads `.retr01`; **bring-up PRG overlay** (smoke + pal + MAP stream via `$FE93`->`$FE12`) replaces cart PRG for island smoke. LCD unblanks after IC catchup (~12k steps). Host softboot is **opt-in** (`R01S_SOFTBOOT=1`). **Host Play** (temporary) drives scroll/player/X*Y warps from pads after catchup. |
 
 ### What is actually in `project.retr01` today
 
@@ -92,33 +92,33 @@ Verified against Studio pack (`r01_cart_build`) and the checked-in `retr01_studi
 | **Not** in ROM (sugar / other chips / host) | Meaning |
 |---------------------------------------------|---------|
 | Studio Play motion, deadzone, fade | Host `play.c` from JSON constraints |
-| Editor active world tab | UI only; stub always boots world **0** (`_boot.s` `START_WORLD` can disagree — binary wins) |
+| Editor active world tab | UI only; stub always boots world **0** (`_boot.s` `START_WORLD` can disagree - binary wins) |
 | OAM/meta placement as live sprites | Authored into project; cart CHR may hold banks, but stub never writes `$FE20`/`$FE21` |
-| Live camera seam streaming | Needs real PRG + `$FE90`–`$FE93`; emu soft-boot / host pan stand in today |
+| Live camera seam streaming | Needs real PRG + `$FE90`-`$FE93`; emu soft-boot / host pan stand in today |
 | Kit RGB / Play preview colors | Logical kit; burn path is `*_prom.bin` on the board |
-| Full constraints→cc65 game | Still future toolchain; not in this stub |
+| Full constraints->cc65 game | Still future toolchain; not in this stub |
 
 ### How to tell ROM bug vs runner bug
 
-1. **Hex / dump the cart first** — magic, PRG stub bytes, a known screen payload offset, CHR bank. If the dump is wrong, it’s Studio export / pack. If the dump is right, blame the runner or soft helpers.
-2. **Same `.retr01` on emu and (later) sim** — if both misbehave the same way after a dump-clean cart, prefer ROM/content or shared contract (`02`). If only one runner fails, prefer that runner.
-3. **Never use Studio Play as proof the cart boots** — Play bypasses PRG. Use emu (cart load) or sim (flash IC) for burnable behavior.
-4. **Call out soft helpers explicitly** — emu `r01e_video_boot_world` / host pan are runner conveniences. Sim default path streams MAP on the IC netlist; `R01S_SOFTBOOT=1` is opt-in host poke only.
+1. **Hex / dump the cart first** - magic, PRG stub bytes, a known screen payload offset, CHR bank. If the dump is wrong, it's Studio export / pack. If the dump is right, blame the runner or soft helpers.
+2. **Same `.retr01` on emu and (later) sim** - if both misbehave the same way after a dump-clean cart, prefer ROM/content or shared contract (`02`). If only one runner fails, prefer that runner.
+3. **Never use Studio Play as proof the cart boots** - Play bypasses PRG. Use emu (cart load) or sim (flash IC) for burnable behavior.
+4. **Call out soft helpers explicitly** - emu `r01e_video_boot_world` / host pan are runner conveniences. Sim default path streams MAP on the IC netlist; `R01S_SOFTBOOT=1` is opt-in host poke only.
 5. **Color wrong?** Check `*_prom.bin` / board PROM path separately from cart palette **indices**.
 
 ### Sim readiness to load `project.retr01`
 
-**Island J wired.** Load with `./sim run -- retr01_studio/project.retr01` (or auto-detect). Flash owns PRG `$8000+` and MAP `$FE90`–`$FE93` (one `/CE` context at a time). Sim **overlays bring-up smoke PRG** into the cart PRG window so island checks still pass — dump flash/`off_prg` to see overlay vs Studio stub.
+**Island J wired.** Load with `./sim run -- retr01_studio/project.retr01` (or auto-detect). Flash owns PRG `$8000+` and MAP `$FE90`-`$FE93` (one `/CE` context at a time). Sim **overlays bring-up smoke PRG** into the cart PRG window so island checks still pass - dump flash/`off_prg` to see overlay vs Studio stub.
 
-**Island K wired.** `$FE40`–`$FE5F` on ATmega328P stub; bring-up enables a period/vol square; health watches PWM edges. Not a full AVR core or host audio sink — digital PWM pin only.
+**Island K wired.** `$FE40`-`$FE5F` on ATmega328P stub; bring-up enables a period/vol square; health watches PWM edges. Not a full AVR core or host audio sink - digital PWM pin only.
 
-**Island L (+ M on same canvas) wired.** ATmega1284P stub: OAM `$FE20`/`$FE21` auto-inc, 20 MHz domain tick counter, soft `$FE70`–`$FE72` mailbox; third `AS6C62256` + `SN74HC157` linebuf ping-pong on the same frame. Pads remain letter **E** (wired via 1284).
+**Island L (+ M on same canvas) wired.** ATmega1284P stub: OAM `$FE20`/`$FE21` auto-inc, 20 MHz domain tick counter, soft `$FE70`-`$FE72` mailbox; third `AS6C62256` + `SN74HC157` linebuf ping-pong on the same frame. Pads remain letter **E** (wired via 1284).
 
 **Island N wired.** HBlank OAM scan fills next linebuf half (sprite CHR from flash when cart meta present); compositor takes sprite pixels.
 
-**Island P wired.** Beam `NMI#` → CPU `NMIB` on VBlank entry; integration health wants pads + video + sprites + ≥1 NMI pulse and zero bus conflicts. Optional **F** (machine EEPROM) still deferred.
+**Island P wired.** Beam `NMI#` -> CPU `NMIB` on VBlank entry; integration health wants pads + video + sprites + >=1 NMI pulse and zero bus conflicts. Optional **F** (machine EEPROM) still deferred.
 
-Bring-up overlay is smoke + **palette + MAP stream** (`$FE93`→`$FE12`) + pad hang. Startup **`r01s_board_catchup_bringup`** runs that stream on the pin-level board (~12k steps) so the LCD hold lifts. Host softboot is opt-in (`R01S_SOFTBOOT=1`). **Host Play** is re-enabled in the UI loop after catchup (Studio/emu SoT: move, camera, X→(0,0) / Y→(1,0) warps) until game PRG owns camera/player. Island O still fetches 2bpp CHR from flash.
+Bring-up overlay is smoke + **palette + MAP stream** (`$FE93`->`$FE12`) + pad hang. Startup **`r01s_board_catchup_bringup`** runs that stream on the pin-level board (~12k steps) so the LCD hold lifts. Host softboot is opt-in (`R01S_SOFTBOOT=1`). **Host Play** is re-enabled in the UI loop after catchup (Studio/emu SoT: move, camera, X->(0,0) / Y->(1,0) warps) until game PRG owns camera/player. Island O still fetches 2bpp CHR from flash.
 
 ### Softboot (opt-in only)
 
@@ -126,9 +126,9 @@ Bring-up overlay is smoke + **palette + MAP stream** (`$FE93`→`$FE12`) + pad h
 
 | Status | Notes |
 |--------|--------|
-| **Done** | Bring-up PRG streams start MAP+pals via `$FE93`→`$FE12` / `$FE08`/`$FE09` |
+| **Done** | Bring-up PRG streams start MAP+pals via `$FE93`->`$FE12` / `$FE08`/`$FE09` |
 | **Done** | Catchup runs stream on netlist (~12k steps; no OOM from old 240k sync wait) |
-| **Temp** | Host Play in UI loop (pads → scroll/player/warps; retire when game PRG owns Play) |
+| **Temp** | Host Play in UI loop (pads -> scroll/player/warps; retire when game PRG owns Play) |
 | **Next** | Game PRG owns camera/player (retire bring-up overlay + host Play) |
 
 ## Modeling principles
@@ -143,27 +143,27 @@ Bring-up overlay is smoke + **palette + MAP stream** (`$FE93`→`$FE12`) + pad h
 
 Answers to the foundation questions from the simulator roadmap. **Optimize later** (string kill, bus bitmasks, super-components, DOD) only after a pixel is on screen.
 
-### 1. Master clock — how time moves
+### 1. Master clock - how time moves
 
 | Decision | Choice |
 |----------|--------|
-| Style | **Entity array / island-group step** — `r01s_island_group_step()` runs the board vtable; each step advances OSC PHI2 and (on rising edge) the W65C02S. |
+| Style | **Entity array / island-group step** - `r01s_island_group_step()` runs the board vtable; each step advances OSC PHI2 and (on rising edge) the W65C02S. |
 | Current base | **PHI2 half-steps** from `OSC8M` (8 MHz class). No 20 MHz AVR domain yet. |
 | When ATmega lands | Plan a **virtual master** at LCM of the crystals (e.g. **40 MHz**), with per-domain counters so 20 MHz and 8 MHz chips tick on their intervals. Until then, stay PHI2-centric. |
 
 Combinatorial parts (`eval` only) do **not** tick; they settle inside the board wire pass.
 
-### 2. Bus resolution — electrical propagation
+### 2. Bus resolution - electrical propagation
 
 | Decision | Choice |
 |----------|--------|
-| Ordering | **Settle loop** — each half-step runs `R01S_SETTLE_PASSES` (currently **4**) of wire + combinatorial `eval` so decode → CE → DQ can propagate before the next clock edge. Raise the constant when PLD/glue depth grows. |
-| Conflict | `r01s_level_merge` / `r01s_bus_resolve`: H+L → **hard abort** (`exit(1)`) with a stderr report (net, both drivers/levels, why). Reading a pin already at `X` also aborts. Unit tests may call `r01s_bus_set_fatal_conflicts(0)` to assert on `X` without exiting. |
-| Undriven net | **Pull-up to HIGH** — `r01s_bus_read` treats `Z` as `H` (`r01s_level_pulled`), so an idle data bus reads **`$FF`**, matching motherboard pull-ups. |
+| Ordering | **Settle loop** - each half-step runs `R01S_SETTLE_PASSES` (currently **4**) of wire + combinatorial `eval` so decode -> CE -> DQ can propagate before the next clock edge. Raise the constant when PLD/glue depth grows. |
+| Conflict | `r01s_level_merge` / `r01s_bus_resolve`: H+L -> **hard abort** (`exit(1)`) with a stderr report (net, both drivers/levels, why). Reading a pin already at `X` also aborts. Unit tests may call `r01s_bus_set_fatal_conflicts(0)` to assert on `X` without exiting. |
+| Undriven net | **Pull-up to HIGH** - `r01s_bus_read` treats `Z` as `H` (`r01s_level_pulled`), so an idle data bus reads **`$FF`**, matching motherboard pull-ups. |
 
 Wires today are **explicit copy/resolve in the board recipe** (`src/board.c`), not a global netlist object. Pins are per-entity; the board owns how they connect. A pointer-netlist can replace copies later without changing chip models.
 
-### 3. State management — where wires live
+### 3. State management - where wires live
 
 | Decision | Choice |
 |----------|--------|
@@ -173,15 +173,15 @@ Wires today are **explicit copy/resolve in the board recipe** (`src/board.c`), n
 
 ### 4. Dual clock domains (future)
 
-Documented plan only: when Island N/K (ATmega) is simulated, introduce a master tick at the LCM of 20 MHz and 8 MHz and gate each chip’s `tick()` with a divider. Do **not** pretend the domains are synchronous.
+Documented plan only: when Island N/K (ATmega) is simulated, introduce a master tick at the LCM of 20 MHz and 8 MHz and gate each chip's `tick()` with a divider. Do **not** pretend the domains are synchronous.
 
 ### 5. Optimization playbook
 
 1. Cache pin indices / kill hot-path `strcmp` / `snprintf`
 2. Bitmask major buses (`uint16_t address_bus`, etc.)
-3. Merge proven glue into a “super component”
+3. Merge proven glue into a "super component"
 4. Flat entity array for cache locality
-5. **Done (toggle):** `R01S_FAST=1` / UI **SIM FAST** — word MAP catchup + 1 settle pass + 8 beam dots/step; default remains full pin settle ([`CATCHUP_THREADING.md`](../retr01_sim/CATCHUP_THREADING.md))
+5. **Done (toggle):** `R01S_FAST=1` / UI **SIM FAST** - word MAP catchup + 1 settle pass + 8 beam dots/step; default remains full pin settle ([`CATCHUP_THREADING.md`](../retr01_sim/CATCHUP_THREADING.md))
 
 Pin-level code stays the default for catching PCB bugs early.
 
@@ -189,17 +189,17 @@ Pin-level code stays the default for catching PCB bugs early.
 
 | Priority | Work |
 |----------|------|
-| **Done** | **IC MAP stream default** — softboot opt-in (`R01S_SOFTBOOT=1`); host Play removed ([above](#softboot-opt-in-only)) |
+| **Done** | **IC MAP stream default** - softboot opt-in (`R01S_SOFTBOOT=1`); host Play removed ([above](#softboot-opt-in-only)) |
 | 1 | `hw/md/` IC reference docs (batches: CPU/MCU, memory, glue/video) |
-| 2 | Islands **A–E** models + unit tests + layer-2 smoke (**done**) |
-| 3 | Island **G** (VRAM interleave) / more `$FExx` latches (**done** — soft `$FE10`–`$FE12`) |
-| 4 | Island **H** beam (**done** — `OSC_DOT` + `BEAM_XY` X PLD + `ATF22V10` Y compare / `$FE04`) |
-| 5 | Island **I** BG fetch (**done** — `BG_FETCH` nametable VA + PPU-phase VRAM read) |
-| 6 | Island **O** video (**done** — compositor + AT28C16 + 256×240 sink; SCALE **1x** default / 2x fills field; CHR from cart flash + `$FE08`/`$FE09` active pals) |
-| 7 | Island **J** cart (**done** — SST39SF040 + 24C64 EEPROM, PRG + MAP `$FE90`–`$FE93`, `.retr01` load + bring-up PRG overlay) |
-| 8 | **32-IC canvas** (**done** — **9 frames**: O top-left; A∪B, L∪M; HC245s on C/O/J; letters E/I/N/P wired-only) |
+| 2 | Islands **A-E** models + unit tests + layer-2 smoke (**done**) |
+| 3 | Island **G** (VRAM interleave) / more `$FExx` latches (**done** - soft `$FE10`-`$FE12`) |
+| 4 | Island **H** beam (**done** - `OSC_DOT` + `BEAM_XY` X PLD + `ATF22V10` Y compare / `$FE04`) |
+| 5 | Island **I** BG fetch (**done** - `BG_FETCH` nametable VA + PPU-phase VRAM read) |
+| 6 | Island **O** video (**done** - compositor + AT28C16 + 256x240 sink; SCALE **1x** default / 2x fills field; CHR from cart flash + `$FE08`/`$FE09` active pals) |
+| 7 | Island **J** cart (**done** - SST39SF040 + 24C64 EEPROM, PRG + MAP `$FE90`-`$FE93`, `.retr01` load + bring-up PRG overlay) |
+| 8 | **32-IC canvas** (**done** - **9 frames**: O top-left; AUB, LUM; HC245s on C/O/J; letters E/I/N/P wired-only) |
 | Next | Wire HC245 into bus paths; retire bring-up PRG overlay when game PRG streams MAP |
-| Later | Pads→1284 on canvas; optimization passes; JEDEC fuse PLD engine |
+| Later | Pads->1284 on canvas; optimization passes; JEDEC fuse PLD engine |
 
 ## Related docs
 

@@ -16,7 +16,7 @@ Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 ## Worlds, screens, cart budget
 
 - **8** worlds max. Sparse **8x8** grid, **32** screens/world (camera / playfield only)
-- Per world: up to **2 parallax planes** (same 480 B payload as a screen). **Not** on the world grid — separate MAP directory. Maps to VRAM slots **4-5**
+- Per world: up to **2 parallax planes** (same 480 B payload as a screen). **Not** on the world grid - separate MAP directory. Maps to VRAM slots **4-5**
 - Screen / plane payload: **480 B** raw (**240** tiles + **240** attrs). Direct MAP `$FE93` -> VRAM `$FE12` (no RLE required)
 - Per world: **4 BG + 4 sprite** CHR banks (**32 KB**), optional palette banks, screen dir + parallax dir
 - Cart: **512 KB** (SST39SF040). **32 KB** PRG at `$8000` (I/O hole at `$FE00-$FEFF`; no `$FE80` paging)
@@ -115,7 +115,7 @@ Line N+1| fill N+1         |        | SHOW             |
 
 Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio and burn tools **quantize** to R3G3B2 when building the PROM image ([`04`](04_retr01_studio.md)).
 
-(Legacy ~52 boards on `main` used 3x AT28C16 R/G/B; not the current norm.)
+(Earlier board sketches used 3x AT28C16 R/G/B; not the current norm.)
 
 ```text
 #000000 #290514 #2A0507 #230F06 #1E1306 #1A1605 #141807 #061A07 #051A13 #071918 #08181C #071722 #030B3D #16033A #20052D #260420
@@ -179,7 +179,7 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 
 Boot: magic -> pointers -> world header -> screen dir / parallax dir -> `off_payload`. Load grid screens into VRAM slots 0-3; load parallax dir entries into slots 4-5. MAP port: `$FE90`-`$FE92` addr, `$FE93` data auto-inc.
 
-**Debugging carts:** Studio Play and editor chrome are **not** the cart. Emu/sim may soft-load or host-pan beyond what stub PRG does. Triage ROM vs runner: [`08` — Cart ROM vs runners](08_simulator.md#cart-rom-vs-runners-triage).
+**Debugging carts:** Studio Play and editor chrome are **not** the cart. Emu/sim may soft-load or host-pan beyond what stub PRG does. Triage ROM vs runner: [`08` - Cart ROM vs runners](08_simulator.md#cart-rom-vs-runners-triage).
 
 ## CPU map and `$FExx`
 

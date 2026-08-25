@@ -10,31 +10,31 @@ JEDEC-class 600 mil for larger counts).
 
 | Constant | Value | Notes |
 |----------|-------|-------|
-| `R01S_PX_PER_MM` | **4** | **1 mm real = 4 logical px** (bbox ÷ 4 → mm) |
-| Pin pitch | **2.54 mm** → **10 px** | JEDEC 0.100″ (fixed) |
+| `R01S_PX_PER_MM` | **4** | **1 mm real = 4 logical px** (bbox / 4 -> mm) |
+| Pin pitch | **2.54 mm** -> **10 px** | JEDEC 0.100" (fixed) |
 
-**Layout workflow:** COMPACT pack → enclose in an image editor → **÷ 4** for approx real mm.
+**Layout workflow:** COMPACT pack -> enclose in an image editor -> **/ 4** for approx real mm.
 
 ## Part-specific bodies (authoritative)
 
-| Part | Pins | Body L×W (mm) | Horizontal px @ 4 px/mm | Notes |
+| Part | Pins | Body LxW (mm) | Horizontal px @ 4 px/mm | Notes |
 |------|------|---------------|-------------------------|-------|
-| **W65C02S** | 40 | **52 × 16** | 208 × 64 | Measured / vendor; WDC DS omits outline |
-| **SST39SF040** | 32 | **42 × 14** | 168 × 56 | |
-| **AS6C62256** | 28 | **37 × 13** | 148 × 52 | |
-| **ATF22V10** | 24 | **32 × 8** | 128 × 32 | Narrow body |
-| **ATmega1284P** | 40 | **53 × 14** | 212 × 56 | |
-| **ATmega328P** | 28 | **35 × 8** | 140 × 32 | Narrow body |
+| **W65C02S** | 40 | **52 x 16** | 208 x 64 | Measured / vendor; WDC DS omits outline |
+| **SST39SF040** | 32 | **42 x 14** | 168 x 56 | |
+| **AS6C62256** | 28 | **37 x 13** | 148 x 52 | |
+| **ATF22V10** | 24 | **32 x 8** | 128 x 32 | Narrow body |
+| **ATmega1284P** | 40 | **53 x 14** | 212 x 56 | |
+| **ATmega328P** | 28 | **35 x 8** | 140 x 32 | Narrow body |
 
 ## 74HC family DIP (N / through-hole)
 
-From typical 74HC PDIP drawings (body width ≈ 6.35 mm → **6 mm** in sim; lengths rounded):
+From typical 74HC PDIP drawings (body width ~= 6.35 mm -> **6 mm** in sim; lengths rounded):
 
-| Pins | Length (mm) | Body width (mm) | Total width (mm) | Pitch | Sim L×W px |
+| Pins | Length (mm) | Body width (mm) | Total width (mm) | Pitch | Sim LxW px |
 |------|-------------|-----------------|------------------|-------|------------|
-| 14 | ~19.3 → **19** | 6.35 → **6** | 7.62 | 2.54 | 76 × 24 |
-| 16 | ~19.8 → **20** | 6.35 → **6** | 7.62 | 2.54 | 80 × 24 |
-| 20 | ~25.4 → **25** | 6.35 → **6** | 7.62 | 2.54 | 100 × 24 |
+| 14 | ~19.3 -> **19** | 6.35 -> **6** | 7.62 | 2.54 | 76 x 24 |
+| 16 | ~19.8 -> **20** | 6.35 -> **6** | 7.62 | 2.54 | 80 x 24 |
+| 20 | ~25.4 -> **25** | 6.35 -> **6** | 7.62 | 2.54 | 100 x 24 |
 
 Used by: 74HC00/04/08/14/32 (14), 74HC157/161 (16), 74HC245/573/688 (20).
 

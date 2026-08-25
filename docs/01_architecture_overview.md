@@ -9,122 +9,30 @@ When docs disagree, use this order.
 | Software-visible behavior (CPU map, `$FExx` **logical** ports, cart image, worlds/VRAM/palettes) | [`02`](02_graphics_worlds_memory.md) | Current draft. Open bitfields/mailbox/I2C ports called out there |
 | Locked decisions + open questions | [`05`](05_costs_and_open_questions.md) | Does not replace `02` for register text |
 | Retr01-A **HW BOM** (current) | [`06`](06_hardware_v1_32ic.md) | **32 IC** system. Does not invent `$FExx` |
-| Optional discrete islands / legacy ~52 sketch | [`03`](03_hardware_implementation.md) | Bench fallback; full ~52 architecture also on `main` |
-| Studio data model / phases | [`04`](04_retr01_studio.md) | Follows `02` |
+| Protoboard island bring-up | [`03`](03_hardware_implementation.md) | Bench checklist for the **32 IC** netlist |
+| Studio Phase 1 (product) | [`retr01_studio/README.md`](../retr01_studio/README.md) | Authoring + Play + export. Short mirror: [`04`](04_retr01_studio.md) |
+| Emulator Phase 1 | [`retr01_emu/README.md`](../retr01_emu/README.md) | Soft cart runtime matching Studio Play |
 | Audio / APU protocol | [`09`](09_audio_architecture.md) | 6502 sequencer + 328P mixer; `$FE4x` bus bridge |
+| Board IC simulator | [`08`](08_simulator.md) + [`retr01_sim/README.md`](../retr01_sim/README.md) | Pin/netlist models of the 32-IC BOM |
 | IC pin/behavior detail | [`hw/md/`](../hw/md/) + datasheet PDFs | Sim and schematics |
 
-**Current product board:** [`06`](06_hardware_v1_32ic.md) -- **32 ICs**, ~**12 x 12 cm**. Diagram below is the **legacy ~52 IC** planning sketch (also on `main`) for orientation only.
-
-**Legacy ~52 layout (not to scale).** Historical planning envelope ~160 x 220 mm. Each box is one IC; box width tracks DIP pin count.
+**Current product board:** [`06`](06_hardware_v1_32ic.md) -- **32 ICs**, ~**12 x 12 cm** 4-layer THT.
 
 ```text
-  NORTH (I/O edge - cabinet / bench)   ~160 x 220 mm planning envelope (not to scale)
-  +----------------------------------------------------------------------------------------------------------+
-  | [5V IN] (o) PWR LED     +-------------------- IDC-20 CABINET --------------------+     [ISP 6-pin]       |
-  |                         | START COIN P1 P2 ... -> ATmega1284P pad glue            |     SCALE DIP 2x/1x  |
-  +-------------------------+---------------------------------------------------------+----------------------+
-  |                                                                                                          |
-  |  +-- CPU + PLD DECODE ------------------------------------+  +-- SRAM TRIO (AS6C62256 x3) ------------+  |
-  |  |                                                        |  |                                        |  |
-  |  |  +------------------------+                            |  |  +---------------+  +---------------+  |  |
-  |  |  |      W65C02S    [40]   |   8.000 MHz PHI2           |  |  | SYS RAM [28]  |  |  VRAM  [28]   |  |  |
-  |  |  |      game CPU          |                            |  |  | AS6C62256     |  | AS6C62256     |  |  |
-  |  |  +------------------------+                            |  |  | $0000-$7FFF   |  | interleaved   |  |  |
-  |  |                                                        |  |  +---------------+  +---------------+  |  |
-  |  |  +-------------+ +-------------+ +-------------+       |  |                                        |  |
-  |  |  | ATF22V10    | | ATF22V10    | | ATF22V10    |       |  |         +---------------+              |  |
-  |  |  | DEC   [24]  | | TIM   [24]  | | PPU   [24]  |       |  |         | LINEBUF [28]  |              |  |
-  |  |  +-------------+ +-------------+ +-------------+       |  |         | AS6C62256     |              |  |
-  |  |                                                        |  |         | sprite ping   |              |  |
-  |  |  +-----------+ +-----------+ +-----------+             |  |         +---------------+              |  |
-  |  |  | HC573[20] | | HC573[20] | | HC688[20] | raster cmp  |  +----------------------------------------+  |
-  |  |  | decode/LE | | wrap/hit  | | compare   |             |                                              |
-  |  |  +-----------+ +-----------+ +-----------+             |  +-- MCU DOMAIN --------------------------+  |
-  |  +--------------------------------------------------------+  |                                        |  |
-  |                                                              |  +------------------------+            |  |
-  |  +-- VRAM INTERLEAVE + CPU BUS ---------------------------+  |  |   ATmega1284P   [40]   | 20 MHz     |  |
-  |  |                                                        |  |  |   OAM / sprites / pads |            |  |
-  |  |  addr mux CPU-phase vs BG-fetch (HC157 x4):            |  |  +------------------------+            |  |
-  |  |  +--------+ +--------+ +--------+ +--------+           |  |                                        |  |
-  |  |  |HC157   | |HC157   | |HC157   | |HC157   |           |  |  +-----------------+                   |  |
-  |  |  |[16]    | |[16]    | |[16]    | |[16]    |           |  |  | ATmega328P [28] | 16 MHz APU        |  |
-  |  |  +--------+ +--------+ +--------+ +--------+           |  |  +-----------------+                   |  |
-  |  |                                                        |  |                                        |  |
-  |  |  +-----------+ +-----------+ +-----------+             |  |  line-buffer addr mux (HC157 x2):      |  |
-  |  |  | HC245[20] | | HC573[20] | | HC573[20] |             |  |  +--------+ +--------+                 |  |
-  |  |  | CPU bus   | | VRAM addr | | VRAM data  |            |  |  |HC157   | |HC157   | 1284 vs beam    |  |
-  |  |  +-----------+ +-----------+ +-----------+             |  |  |[16]    | |[16]    |                 |  |
-  |  +--------------------------------------------------------+  |  +--------+ +--------+                 |  |
-  |                                                              +----------------------------------------+  |
-  |                                                                                                          |
-  |  +-- BG BEAM + $FExx LATCHES + GLUE ------------------------------------------------------------------+  |
-  |  |                                                                                                    |  |
-  |  |  beam X/Y counters (HC161 x4) -> 341x262 @ ~5.37 MHz dot                                           |  |
-  |  |  +-------+ +-------+ +-------+ +-------+                                                           |  |
-  |  |  |HC161  | |HC161  | |HC161  | |HC161  |                                                           |  |
-  |  |  |[14]   | |[14]   | |[14]   | |[14]   |                                                           |  |
-  |  |  +-------+ +-------+ +-------+ +-------+                                                           |  |
-  |  |                                                                                                    |  |
-  |  |  $FExx latches HC573 (14 total in legend; boxes below are representative)                          |  |
-  |  |  +-----------+ +-----------+ +-----------+ +-----------+                                           |  |
-  |  |  | HC573[20] | | HC573[20] | | HC573[20] | | HC573[20] |                                           |  |
-  |  |  +-----------+ +-----------+ +-----------+ +-----------+                                           |  |
-  |  |  +-----------+ +-----------+ +-----------+ +-----------+                                           |  |
-  |  |  | HC573[20] | | HC573[20] | | HC573[20] | | HC573[20] |                                           |  |
-  |  |  +-----------+ +-----------+ +-----------+ +-----------+                                           |  |
-  |  |                                                                                                    |  |
-  |  |  more $FExx / path latches (HC573) + OAM path                                                      |  |
-  |  |  +-----------+ +-----------+ +-----------+                                                         |  |
-  |  |  | HC573[20] | | HC573[20] | | HC245[20] |                                                         |  |
-  |  |  | (latches) | | (latches) | | OAM path  |                                                         |  |
-  |  |  +-----------+ +-----------+ +-----------+                                                         |  |
-  |  |                                                                                                    |  |
-  |  |  glue + reset (DIP-14)                                                                             |  |
-  |  |  +-------+ +-------+ +-------+ +-------+ +-------+ +-------+ +-------+ +-------+ +-------+         |  |
-  |  |  |HC14   | |HC00   | |HC00   | |HC04   | |HC04   | |HC08   | |HC08   | |HC32   | |HC32   |         |  |
-  |  |  |[14]rst| |[14]   | |[14]   | |[14]   | |[14]   | |[14]   | |[14]   | |[14]   | |[14]   |         |  |
-  |  |  +-------+ +-------+ +-------+ +-------+ +-------+ +-------+ +-------+ +-------+ +-------+         |  |
-  |  |  +-------+                                                                                         |  |
-  |  |  |HC86   |                                                                                         |  |
-  |  |  |[14]   |                                                                                         |  |
-  |  |  +-------+                                                                                         |  |
-  |  +----------------------------------------------------------------------------------------------------+  |
-  |                                                                                                          |
-  |  +-- CART + BOARD EEPROM ---------------------+  +-- VIDEO OUT (Color PROM + pads) -------------------+  |
-  |  |                                            |  |                                                    |  |
-  |  |  +-------------------+                     |  |  +-------------+ +-------------+ +-------------+   |  |
-  |  |  | SST39SF040  [32]  |  512 KB NOR         |  |  | AT28C16[24] | | AT28C16[24] | | AT28C16[24] |   |  |
-  |  |  | PRG/CHR/MAP gated |  v0 on-board socket |  |  | Color PROM R| | Color PROM G| | Color PROM B|   |  |
-  |  |  +-------------------+                     |  |  +-------------+ +-------------+ +-------------+   |  |
-  |  |                                            |  |         |               |               |          |  |
-  |  |  +---------------+  +-----------+          |  |      R-2R+75R        R-2R+75R        R-2R+75R      |  |
-  |  |  | AT28C64B [28] |  | HC245[20] |          |  |         +---------------+---------------+          |  |
-  |  |  | board EEPROM  |  | cart isol |          |  |         J RGBS / S-VIDEO / COMPOSITE pads          |  |
-  |  |  +---------------+  +-----------+          |  |                                                    |  |
-  |  |                                            |  +----------------------------------------------------+  |
-  |  |  +-- CART EDGE (planning) ---------------+ |                                                          |
-  |  |  | 32-pin ROM socket / future cart IDC   | |                                                          |
-  |  |  +---------------------------------------+ |                                                          |
-  |  +--------------------------------------------+                                                          |
-  |                                                                                                          |
-  SOUTH (component side - tallest sockets ~15 mm clearance below board)                                      |
-  +----------------------------------------------------------------------------------------------------------+
-
-  LEGEND (legacy ~52 planning count - see 03; current BOM is 06)
-  Box width ~ pin count (DIP-40 widest, DIP-14 narrowest). Each box = one IC.
-
-  Package | Count | Parts
-  --------+-------+------------------------------------------------------------------
-  [40]    |   2   | W65C02S, ATmega1284P
-  [32]    |   1   | SST39SF040 cart flash (512 KB)
-  [28]    |   5   | AS6C62256 x3, ATmega328P, AT28C64B
-  [24]    |   6   | ATF22V10 x3 (DEC/TIM/PPU), AT28C16 x3 (Color PROM R/G/B)
-  [20]    |  18   | HC573 x14, HC245 x3, HC688 x1
-  [16]    |   6   | HC157 x4 (VRAM mux) + HC157 x2 (line-buffer mux)
-  [14]    |  14   | HC161 x4, HC14 x1, HC00 x2, HC04 x2, HC08 x2, HC32 x2, HC86 x1
-  --------+-------+------------------------------------------------------------------
-          |  52   | legacy sketch (optional +1 ATF22V10). Current: 32 IC in 06
+  Retr01-A (32 IC) -- roles, not PCB layout
+  +------------------------------------------------------------------+
+  | W65C02S          game CPU @ 8.000 MHz                            |
+  | ATF22V10 x5      decode, interleave, beam X/Y, compositor        |
+  | HC573 x9         packed $FExx latches                            |
+  | HC157 x6         VRAM / line-buffer address mux                  |
+  | HC245 x3         CPU / video / cart-OAM isolation                |
+  | AS6C62256 x3     sys RAM, interleaved VRAM, sprite line buffer   |
+  | SST39SF040       512 KB cart flash (PRG/CHR/MAP)                 |
+  | AT28C16          Color PROM (6-bit index -> R3G3B2)              |
+  | ATmega1284P      OAM / sprites / pads / machine EEPROM           |
+  | ATmega328P       APU ($FE40-$FE5F)                               |
+  | I2C EEPROM       cart game saves (in the 32)                     |
+  +------------------------------------------------------------------+
 ```
 
 This folder is the current architecture spec for **Retr01**.
@@ -211,7 +119,7 @@ Current chip list: [`06`](06_hardware_v1_32ic.md) (**32 IC**). Roles:
 
 ### Retr01-A
 
-- Through-hole motherboard, **~32 IC** system ([`06`](06_hardware_v1_32ic.md)), ~**12 x 12 cm** target
+- Through-hole motherboard, **32 IC** system ([`06`](06_hardware_v1_32ic.md)), ~**12 x 12 cm** target
 - RGBS + S-Video + composite pads
 - **SCALE** DIP (**2x** default / **1x** optional)
 - 20-pin IDC for cabinet controls
@@ -240,16 +148,14 @@ Current chip list: [`06`](06_hardware_v1_32ic.md) (**32 IC**). Roles:
 
 ## Near-term software focus
 
-**Retr01 Studio** is the only tool in active development. See `04_retr01_studio.md` for UI layout, Phase 1 scope, and roadmap.
+**Retr01 Studio** Phase 1 and **Retr01 Emulator** Phase 1 are the active tools. See [`retr01_studio/README.md`](../retr01_studio/README.md) and [`retr01_emu/README.md`](../retr01_emu/README.md). Later Studio/Emu phases are not documented until they are defined.
 
-Studio authors worlds, screens, palettes, and CHR. Full `.retr01` cart compile (PRG + CHR + MAP) lands in later Studio phases - see `04_retr01_studio.md`.
+Studio Phase 1: PNG atlas import, Play preview, `.retr01` export. Emulator Phase 1: load that cart and run the same Play rules on host.
 
-## Future software (planned)
-
-Two validation tracks (not Studio):
+## Validation tools
 
 - **Board IC simulator** ([`08`](08_simulator.md)) -- pin/netlist models of the 32-IC BOM; islands then full board
-- **Optional later cycle-level cart check** -- tighter `$FExx` / timing fidelity for game images (may share code with the board sim or stay separate; not started)
+- **Software emulator** ([`retr01_emu/`](../retr01_emu/)) -- Phase 1 cart + Play parity with Studio
 
 ## Where to look next
 
@@ -258,8 +164,8 @@ Two validation tracks (not Studio):
 - Graphics, worlds, `$FExx`, cart image (software SoT): `02_graphics_worlds_memory.md`
 - Current 32-IC HW BOM: `06_hardware_v1_32ic.md`
 - Audio / APU bytecode + bus bridge: `09_audio_architecture.md`
-- Optional islands / legacy ~52: `03_hardware_implementation.md`
-- Retr01 Studio: `04_retr01_studio.md`
+- Protoboard islands: `03_hardware_implementation.md`
+- Retr01 Studio Phase 1: `04_retr01_studio.md` / `retr01_studio/README.md`
 - Locked decisions + open Qs: `05_costs_and_open_questions.md`
 - Board simulator: `08_simulator.md`
 - IC markdown notes: `hw/md/`
