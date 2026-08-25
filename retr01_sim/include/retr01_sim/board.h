@@ -224,6 +224,7 @@ typedef struct R01sBoard {
     /* Island M ping-pong state (no CPU port; filled by Island N OAM eval). */
     uint8_t linebuf_show_half; /* 0 = $000–$07F showing, 1 = $080–$0FF */
     uint8_t linebuf_prev_hblank;
+    uint8_t vblank_prev;
     uint8_t linebuf_saw_mux_mcu;
     uint8_t linebuf_saw_mux_beam;
     uint32_t health_phi2_edges;

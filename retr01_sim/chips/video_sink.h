@@ -39,6 +39,7 @@ void r01s_video_sink_set_scale_2x(R01sVideoSink *chip, int scale_2x);
 int r01s_video_sink_scale_2x(const R01sVideoSink *chip);
 
 void r01s_video_sink_plot(R01sVideoSink *chip, int fx, int fy, uint8_t prom_byte);
+void r01s_video_sink_clear(R01sVideoSink *chip);
 const uint8_t *r01s_video_sink_rgb(const R01sVideoSink *chip);
 uint32_t r01s_video_sink_lit_pixels(const R01sVideoSink *chip);
 uint8_t r01s_video_sink_pixel_packed(const R01sVideoSink *chip, int fx, int fy);

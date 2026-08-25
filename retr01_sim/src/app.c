@@ -37,6 +37,7 @@ static void catchup_signal_ui_tick(R01sApp *app, R01sBoard *board) {
 
 /* Leave headroom for draw + vsync inside a ~16.7 ms frame. */
 #define R01S_SIM_BUDGET_MS 3
+#define R01S_SIM_BUDGET_MS_PLAY 10
 #define R01S_SIM_MAX_STEPS_PER_FRAME 24
 
 static void logic_from_window(const R01sApp *app, int win_x, int win_y, int *lx, int *ly) {
@@ -444,7 +445,9 @@ void r01s_app_frame(R01sApp *app) {
             if (group->running) {
                 Uint64 t0 = SDL_GetPerformanceCounter();
                 Uint64 freq = SDL_GetPerformanceFrequency();
-                Uint64 budget = (freq * (Uint64)R01S_SIM_BUDGET_MS) / 1000u;
+                Uint64 budget_ms = (board && board->play.enabled) ? (Uint64)R01S_SIM_BUDGET_MS_PLAY
+                                                                    : (Uint64)R01S_SIM_BUDGET_MS;
+                Uint64 budget = (freq * budget_ms) / 1000u;
                 int n = 0;
                 while (n < R01S_SIM_MAX_STEPS_PER_FRAME) {
                     r01s_island_group_step(group);

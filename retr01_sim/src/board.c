@@ -20,6 +20,8 @@
  * Keep this modest — CPU load scales with dots × settle × steps/frame.
  */
 #define R01S_BEAM_DOTS_PER_STEP 32
+/* Host Play: faster fields so ~1px/VBlank feels closer to 60 Hz game time. */
+#define R01S_BEAM_DOTS_PER_STEP_PLAY 384
 /* Fast mode: fewer DOT ticks per PHI2 step (video still advances, much cheaper). */
 #define R01S_BEAM_DOTS_PER_STEP_FAST 4
 /* Fast mode combinatorial depth (pin mode uses R01S_SETTLE_PASSES). */
@@ -2330,6 +2332,7 @@ static void board_reset(R01sIslandGroup *group) {
     ctx->linebuf_show_half = 0;
 
     ctx->linebuf_prev_hblank = 0;
+    ctx->vblank_prev = 0;
     ctx->linebuf_saw_mux_mcu = 0;
     ctx->linebuf_saw_mux_beam = 0;
     ctx->health_phi2_edges = 0;
@@ -2398,6 +2401,9 @@ static void board_step(R01sIslandGroup *group) {
     osc = r01s_osc8m_entity(ctx->power_clk_impl.osc);
     cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
     beam_dots = ctx->sim_fast ? R01S_BEAM_DOTS_PER_STEP_FAST : R01S_BEAM_DOTS_PER_STEP;
+    if (ctx->play.enabled) {
+        beam_dots = R01S_BEAM_DOTS_PER_STEP_PLAY;
+    }
 
     board_settle(ctx, group);
     r01s_entity_tick(osc);
@@ -2427,6 +2433,13 @@ static void board_step(R01sIslandGroup *group) {
                 ctx->nmi_prev = nmi;
             }
             wire_video_dot(ctx);
+            {
+                int vb = r01s_beam_xy_vblank(ctx->beam_impl.beam_x);
+                if (vb && !ctx->vblank_prev) {
+                    r01s_play_on_vblank(ctx);
+                }
+                ctx->vblank_prev = (uint8_t)(vb ? 1 : 0);
+            }
         }
         flash_chr_release(ctx);
     }

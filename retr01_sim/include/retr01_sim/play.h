@@ -13,8 +13,9 @@ struct R01sBoard;
 #define R01S_ACTIVE_PAL_PLAYER (R01S_PAL_SPR_BASE + R01S_PAL_PLAYER_COLOR)
 
 /*
- * Host Play — Studio/emu-equivalent move + camera + X/Y warps.
- * Player renders via OAM entry 0 on the beam (Island N/O), not a host LCD stamp.
+ * Host Play — Studio-equivalent move + camera + X/Y warps.
+ * Sim: 1 logical px per sim VBlank when d-pad held; scroll latched once per field.
+ * Player renders via OAM on the beam (Island N/O).
  */
 typedef struct R01sPlay {
     int enabled;
@@ -27,6 +28,15 @@ typedef struct R01sPlay {
     int player_w;
     int player_h;
     uint8_t pad_prev;
+    uint8_t pad_held;
+    /* Latched on VBlank (hardware-accurate scroll / camera updates). */
+    uint8_t video_pending;
+    uint8_t pending_scroll_x;
+    uint8_t pending_scroll_y;
+    int pending_origin_col;
+    int pending_origin_row;
+    int pending_camera_reload;
+    int force_camera_reload;
 } R01sPlay;
 
 void r01s_play_reset(R01sPlay *play);
@@ -34,11 +44,14 @@ void r01s_play_reset(R01sPlay *play);
 /* Soft-load 2×2 camera + scroll from cart start / first present screen. */
 int r01s_play_start(struct R01sBoard *board);
 
-/* One UI-frame tick from P1 pad bits ($FE60 layout). */
+/* Sample P1 pad ($FE60 layout); movement runs on sim VBlank, not here. */
 void r01s_play_tick(struct R01sBoard *board, uint8_t pad);
 
 /* Overlay player onto LCD sink (after board video steps). */
 /* Deprecated: player renders via OAM on the beam. Kept for API stability. */
 void r01s_play_draw(struct R01sBoard *board);
+
+/* VBlank: clear LCD field and latch pending scroll / camera / OAM (from board_step). */
+void r01s_play_on_vblank(struct R01sBoard *board);
 
 #endif

@@ -3,10 +3,11 @@
 #include "retr01_sim/board.h"
 #include "retr01_sim/gamepad.h"
 #include "atmega1284p.h"
+#include "video_sink.h"
 
 #include <string.h>
 
-/* Mirror Studio / emu play.c — algorithms kept identical. */
+/* Studio/emu move+camera math; sim applies 1 logical px per sim VBlank (game frame). */
 
 static int player_aabb_ok(R01sBoard *b, int px, int py) {
     int x1, y1, c0, c1, r0, r1, c, r;
@@ -77,7 +78,6 @@ static int spawn_screen(R01sBoard *b, int *out_col, int *out_row) {
     return r01s_board_first_screen(b, out_col, out_row);
 }
 
-/* Sync OAM entry 0 to viewport position (emu write_oam_player). Island N renders it on the beam. */
 static void write_oam_player(R01sBoard *b) {
     R01sPlay *pl;
     int vx;
@@ -99,11 +99,13 @@ static void write_oam_player(R01sBoard *b) {
     r01s_atmega1284p_oam_poke(&b->mcu1284, 3, (uint8_t)vx);
 }
 
-static void sync_video(R01sBoard *b) {
+static void queue_video(R01sBoard *b) {
     R01sPlay *pl;
-    int ox, oy;
+    int ox;
+    int oy;
     int origin_changed;
-    uint8_t sx, sy;
+    uint8_t sx;
+    uint8_t sy;
 
     if (!b || !b->play.enabled) {
         return;
@@ -112,8 +114,10 @@ static void sync_video(R01sBoard *b) {
     ox = pl->cam_x / R01S_BG_SCREEN_PX_W;
     oy = pl->cam_y / R01S_BG_SCREEN_PX_H;
     origin_changed = (ox != pl->origin_col || oy != pl->origin_row);
-    pl->origin_col = ox;
-    pl->origin_row = oy;
+    if (pl->force_camera_reload) {
+        origin_changed = 1;
+        pl->force_camera_reload = 0;
+    }
     sx = (uint8_t)(pl->cam_x - ox * R01S_BG_SCREEN_PX_W);
     sy = (uint8_t)(pl->cam_y - oy * R01S_BG_SCREEN_PX_H);
     if (sx > 127) {
@@ -122,11 +126,83 @@ static void sync_video(R01sBoard *b) {
     if (sy > 119) {
         sy = 119;
     }
-    r01s_board_set_scroll(b, sx, sy);
-    if (origin_changed) {
-        (void)r01s_board_load_camera_2x2(b, ox, oy);
+    pl->pending_scroll_x = sx;
+    pl->pending_scroll_y = sy;
+    pl->pending_origin_col = ox;
+    pl->pending_origin_row = oy;
+    pl->pending_camera_reload = origin_changed;
+    pl->video_pending = 1;
+}
+
+static void apply_video_latch(R01sBoard *b) {
+    R01sPlay *pl;
+
+    if (!b || !b->play.enabled || !b->play.video_pending) {
+        return;
     }
+    pl = &b->play;
+    r01s_board_set_scroll(b, pl->pending_scroll_x, pl->pending_scroll_y);
+    if (pl->pending_camera_reload) {
+        (void)r01s_board_load_camera_2x2(b, pl->pending_origin_col, pl->pending_origin_row);
+    }
+    pl->origin_col = pl->pending_origin_col;
+    pl->origin_row = pl->pending_origin_row;
+    pl->video_pending = 0;
     write_oam_player(b);
+}
+
+static void step_move_from_pad(R01sBoard *b) {
+    R01sPlay *pl;
+    uint8_t pad;
+    int dx = 0;
+    int dy = 0;
+
+    if (!b || !b->play.enabled) {
+        return;
+    }
+    pl = &b->play;
+    pad = pl->pad_held;
+    if (pad & R01S_PAD_LEFT) {
+        dx = -1;
+    } else if (pad & R01S_PAD_RIGHT) {
+        dx = 1;
+    }
+    if (pad & R01S_PAD_UP) {
+        dy = -1;
+    } else if (pad & R01S_PAD_DOWN) {
+        dy = 1;
+    }
+    if (dx == 0 && dy == 0) {
+        return;
+    }
+    if (dx != 0) {
+        int nx = pl->player_x + dx;
+        if (player_aabb_ok(b, nx, pl->player_y)) {
+            pl->player_x = nx;
+        }
+    }
+    if (dy != 0) {
+        int ny = pl->player_y + dy;
+        if (player_aabb_ok(b, pl->player_x, ny)) {
+            pl->player_y = ny;
+        }
+    }
+    update_camera(pl);
+    queue_video(b);
+}
+
+void r01s_play_on_vblank(R01sBoard *b) {
+    if (!b) {
+        return;
+    }
+    if (b->video_impl.sink) {
+        r01s_video_sink_clear(b->video_impl.sink);
+    }
+    if (!b->play.enabled) {
+        return;
+    }
+    step_move_from_pad(b);
+    apply_video_latch(b);
 }
 
 static int warp_to(R01sBoard *b, int col, int row) {
@@ -137,10 +213,9 @@ static int warp_to(R01sBoard *b, int col, int row) {
         return 0;
     }
     place_player_centered(&b->play, col, row);
-    /* Force camera reload even if origin numbers match after warp. */
-    b->play.origin_col = -1;
-    b->play.origin_row = -1;
-    sync_video(b);
+    b->play.force_camera_reload = 1;
+    queue_video(b);
+    apply_video_latch(b);
     return 1;
 }
 
@@ -167,15 +242,15 @@ int r01s_play_start(R01sBoard *board) {
     }
     board->play.enabled = 1;
     place_player_centered(&board->play, col, row);
-    sync_video(board);
+    board->play.force_camera_reload = 1;
+    queue_video(board);
+    r01s_play_on_vblank(board);
     return 1;
 }
 
 void r01s_play_tick(R01sBoard *board, uint8_t pad) {
     R01sPlay *pl;
     uint8_t edge;
-    int dx = 0;
-    int dy = 0;
 
     if (!board || !board->play.enabled) {
         return;
@@ -183,43 +258,16 @@ void r01s_play_tick(R01sBoard *board, uint8_t pad) {
     pl = &board->play;
     edge = (uint8_t)(pad & (uint8_t)~pl->pad_prev);
     pl->pad_prev = pad;
+    pl->pad_held = (uint8_t)(pad & (R01S_PAD_UP | R01S_PAD_DOWN | R01S_PAD_LEFT | R01S_PAD_RIGHT));
 
-    /* Studio: X → (0,0), Y → (1,0) */
     if (edge & R01S_PAD_X) {
         (void)warp_to(board, 0, 0);
     }
     if (edge & R01S_PAD_Y) {
         (void)warp_to(board, 1, 0);
     }
-
-    if (pad & R01S_PAD_LEFT) {
-        dx = -1;
-    } else if (pad & R01S_PAD_RIGHT) {
-        dx = 1;
-    }
-    if (pad & R01S_PAD_UP) {
-        dy = -1;
-    } else if (pad & R01S_PAD_DOWN) {
-        dy = 1;
-    }
-
-    if (dx != 0) {
-        int nx = pl->player_x + dx;
-        if (player_aabb_ok(board, nx, pl->player_y)) {
-            pl->player_x = nx;
-        }
-    }
-    if (dy != 0) {
-        int ny = pl->player_y + dy;
-        if (player_aabb_ok(board, pl->player_x, ny)) {
-            pl->player_y = ny;
-        }
-    }
-    update_camera(pl);
-    sync_video(board);
 }
 
 void r01s_play_draw(R01sBoard *board) {
     (void)board;
-    /* Player is rendered by Island N (OAM → linebuf) + Island O compositor on the beam. */
 }

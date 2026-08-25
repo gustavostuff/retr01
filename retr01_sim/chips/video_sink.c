@@ -104,6 +104,14 @@ void r01s_video_sink_plot(R01sVideoSink *chip, int fx, int fy, uint8_t prom_byte
     chip->rgb[off + 2] = b;
 }
 
+void r01s_video_sink_clear(R01sVideoSink *chip) {
+    if (!chip) {
+        return;
+    }
+    memset(chip->rgb, 0, sizeof(chip->rgb));
+    chip->lit_pixels = 0;
+}
+
 const uint8_t *r01s_video_sink_rgb(const R01sVideoSink *chip) {
     return chip ? chip->rgb : NULL;
 }
