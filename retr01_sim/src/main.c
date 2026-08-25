@@ -56,6 +56,11 @@ static int setup_board(R01sApp *app, int argc, char **argv) {
     if (!app) {
         return -1;
     }
+    /*
+     * Window starts hidden; first boot present (via catchup start) reveals it.
+     * Board build can take a while — keep the window hidden so we never flash
+     * an empty/uninitialized frame before "Booting console…".
+     */
     r01s_island_builder_init(&app->builder);
     if (r01s_board_build(&g_board, &app->builder) != 0) {
         return -1;
@@ -84,6 +89,9 @@ int main(int argc, char **argv) {
     }
     if (setup_board(&app, argc, argv) != 0) {
         fprintf(stderr, "board setup failed\n");
+        if (app.win) {
+            SDL_ShowWindow(app.win);
+        }
         r01s_app_shutdown(&app);
         return 1;
     }

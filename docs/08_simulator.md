@@ -177,16 +177,15 @@ Wires today are **explicit copy/resolve in the board recipe** (`src/board.c`), n
 
 Documented plan only: when Island N/K (ATmega) is simulated, introduce a master tick at the LCM of 20 MHz and 8 MHz and gate each chip’s `tick()` with a divider. Do **not** pretend the domains are synchronous.
 
-### 5. Optimization playbook (deferred)
-
-Do **not** apply until Layer 3 shows a pixel:
+### 5. Optimization playbook
 
 1. Cache pin indices / kill hot-path `strcmp` / `snprintf`
 2. Bitmask major buses (`uint16_t address_bus`, etc.)
 3. Merge proven glue into a “super component”
 4. Flat entity array for cache locality
+5. **Done (toggle):** `R01S_FAST=1` / UI **SIM FAST** — word MAP catchup + 1 settle pass + 8 beam dots/step; default remains full pin settle ([`CATCHUP_THREADING.md`](../retr01_sim/CATCHUP_THREADING.md))
 
-Current pin-level code is intentional for catching PCB bugs early.
+Pin-level code stays the default for catching PCB bugs early.
 
 ## Near-term focus
 

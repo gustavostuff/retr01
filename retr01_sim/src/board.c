@@ -19,6 +19,10 @@
  * 128 dots/step * 32 steps/frame ≈ 4k dots/frame → VBlank in ~1 s wall.
  */
 #define R01S_BEAM_DOTS_PER_STEP 128
+/* Fast mode: fewer DOT ticks per PHI2 step (video still advances, much cheaper). */
+#define R01S_BEAM_DOTS_PER_STEP_FAST 8
+/* Fast mode combinatorial depth (pin mode uses R01S_SETTLE_PASSES). */
+#define R01S_SETTLE_PASSES_FAST 1
 
 /*
  * Bring-up smoke PRG (overlay into cart PRG window — not Studio game code).
@@ -1656,9 +1660,11 @@ static void wire_power_clock_reset(R01sBoard *ctx, R01sIslandGroup *group) {
     r01s_entity_drive(cpu, "PHI2", phi2 == R01S_LVL_H ? R01S_LVL_H : R01S_LVL_L);
 }
 
-static void board_settle(R01sBoard *ctx, R01sIslandGroup *group) {
-    int passes = R01S_SETTLE_PASSES;
+static void board_settle_n(R01sBoard *ctx, R01sIslandGroup *group, int passes) {
     int i;
+    if (passes < 1) {
+        passes = 1;
+    }
     for (i = 0; i < passes; i++) {
         wire_power_clock_reset(ctx, group);
         wire_memory(ctx);
@@ -1668,6 +1674,49 @@ static void board_settle(R01sBoard *ctx, R01sIslandGroup *group) {
         wire_vram(ctx);
         wire_linebuf(ctx);
     }
+}
+
+static void board_settle(R01sBoard *ctx, R01sIslandGroup *group) {
+    board_settle_n(ctx, group, ctx && ctx->sim_fast ? R01S_SETTLE_PASSES_FAST : R01S_SETTLE_PASSES);
+}
+
+void r01s_board_set_sim_fast(R01sBoard *board, int enable) {
+    if (!board) {
+        return;
+    }
+    board->sim_fast = enable ? 1 : 0;
+}
+
+int r01s_board_sim_fast(const R01sBoard *board) {
+    return board && board->sim_fast ? 1 : 0;
+}
+
+/*
+ * Word-level MAP+palette bring-up (same VRAM/pal/map_addr end state as IC stream).
+ * Skips pin settle / beam; used when sim_fast is on.
+ */
+static int board_fast_apply_map_stream(R01sBoard *board) {
+    uint32_t i;
+
+    if (!board || !board->cart_loaded) {
+        return -1;
+    }
+    if (board->cart_off_map_screen0 == 0 || board->cart_off_pal_bg == 0) {
+        return -1;
+    }
+    for (i = 0; i < 32u; i++) {
+        board->active_pal[i] =
+            (uint8_t)(r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_pal_bg + i) & 63u);
+    }
+    for (i = 0; i < 480u; i++) {
+        uint8_t b = r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_map_screen0 + i);
+        r01s_as6c62256_poke(&board->vram, (uint16_t)i, b);
+    }
+    poke_map_addr_latches(board, board->cart_off_map_screen0 + 480u);
+    board->health_saw_map = 1;
+    board->health_saw_vram = 1;
+    board->health_saw_latch = 1;
+    return 0;
 }
 
 static void island_power_clk_init(R01sIsland *island) {
@@ -2191,6 +2240,11 @@ int r01s_board_catchup_bringup(R01sBoard *board, R01sIslandGroup *group) {
         return r01s_board_softboot_start_screen(board);
     }
 
+    /* Fast mode: word transaction MAP+pal (same end state, no ~12k pin steps). */
+    if (board->sim_fast) {
+        return board_fast_apply_map_stream(board);
+    }
+
     /* Default: run bring-up PRG MAP stream on the pin-level netlist (~12k steps). */
     target = board->cart_off_map_screen0 + 480u;
     expect0 = r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_map_screen0);
@@ -2319,11 +2373,13 @@ static void board_step(R01sIslandGroup *group) {
     R01sEntity *osc;
     R01sEntity *cpu;
     R01sLevel phi2;
+    int beam_dots;
     if (!ctx || !group->powered) {
         return;
     }
     osc = r01s_osc8m_entity(ctx->power_clk_impl.osc);
     cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
+    beam_dots = ctx->sim_fast ? R01S_BEAM_DOTS_PER_STEP_FAST : R01S_BEAM_DOTS_PER_STEP;
 
     board_settle(ctx, group);
     r01s_entity_tick(osc);
@@ -2338,7 +2394,7 @@ static void board_step(R01sIslandGroup *group) {
         int di;
         /* DOT window: yield flash so CHR can own /CE (CPU not advancing). */
         flash_yield_for_chr(ctx);
-        for (di = 0; di < R01S_BEAM_DOTS_PER_STEP; di++) {
+        for (di = 0; di < beam_dots; di++) {
             r01s_entity_tick(dot_osc);
             r01s_entity_drive(beam, "DOT", r01s_entity_sense(dot_osc, "DOT"));
             r01s_entity_tick(beam);
@@ -2457,6 +2513,13 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         return -1;
     }
     memset(board, 0, sizeof(*board));
+
+    {
+        const char *fast = getenv("R01S_FAST");
+        if (fast && fast[0] != '\0' && strcmp(fast, "0") != 0) {
+            board->sim_fast = 1;
+        }
+    }
 
     r01s_island_builder_bind(b, &BOARD_GROUP_VT, board);
 

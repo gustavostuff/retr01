@@ -26,6 +26,8 @@ static void ui_toggle_compact(R01sUi *ui);
 static void compact_btn_rect(const R01sUi *ui, SDL_Rect *rc);
 static void ui_toggle_lcd_scale(R01sUi *ui);
 static void scale_btn_rect(const R01sUi *ui, SDL_Rect *rc);
+static void ui_toggle_sim_fast(R01sUi *ui);
+static void fast_btn_rect(const R01sUi *ui, SDL_Rect *rc);
 static int ui_lcd_scale_2x(const R01sUi *ui);
 
 static int ui_board_sx(const R01sUi *ui, int board_x) {
@@ -179,7 +181,7 @@ int r01s_ui_init(R01sUi *ui) {
     ui->drag_btn = -1;
     ui->ctx_chip = -1;
     snprintf(ui->status, sizeof(ui->status),
-             "SPACE pause — Ctrl+R reset — R rotate — SCALE 1X/2X (sidebar / G) — COMPACT/ISLANDS");
+             "SPACE pause — Ctrl+R reset — R rotate — SCALE / SIM PIN|FAST (sidebar) — COMPACT/ISLANDS");
     return 0;
 }
 
@@ -1405,7 +1407,8 @@ static void draw_health_dot(SDL_Renderer *r, int x, int y, R01sHealth h) {
 #define R01S_UI_STATUS_FOOTER_H 16
 #define R01S_UI_SIDEBAR_GAP 8
 #define R01S_UI_SCALE_BTN_H 16
-#define R01S_UI_SCALE_ROW_H (R01S_UI_SCALE_BTN_H + R01S_UI_SIDEBAR_GAP)
+#define R01S_UI_FAST_BTN_H 16
+#define R01S_UI_SCALE_ROW_H (R01S_UI_SCALE_BTN_H + R01S_UI_SIDEBAR_GAP + R01S_UI_FAST_BTN_H + R01S_UI_SIDEBAR_GAP)
 #define R01S_UI_PROBE_H 220
 #define GP_PANEL_W 156
 #define GP_PANEL_H 132
@@ -1500,6 +1503,29 @@ static void scale_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
     rc->y = sidebar_sy(ui, 0);
     rc->w = R01S_UI_SIDEBAR_W;
     rc->h = R01S_UI_SCALE_BTN_H;
+}
+
+static void fast_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
+    rc->x = R01S_UI_SIDEBAR_X;
+    rc->y = sidebar_sy(ui, R01S_UI_SCALE_BTN_H + R01S_UI_SIDEBAR_GAP);
+    rc->w = R01S_UI_SIDEBAR_W;
+    rc->h = R01S_UI_FAST_BTN_H;
+}
+
+static void ui_toggle_sim_fast(R01sUi *ui) {
+    R01sBoard *board;
+    if (!ui) {
+        return;
+    }
+    board = r01s_board_from_group(ui->group);
+    if (!board) {
+        return;
+    }
+    r01s_board_set_sim_fast(board, !r01s_board_sim_fast(board));
+    snprintf(ui->status, sizeof(ui->status),
+             r01s_board_sim_fast(board)
+                 ? "SIM FAST — word MAP catchup + thin settle/beam (R01S_FAST)"
+                 : "SIM PIN — full netlist settle (default)");
 }
 
 static void health_copy_btn_rect(const R01sUi *ui, int island_index, SDL_Rect *rc) {
@@ -2135,6 +2161,16 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
         draw_rect(r, sbtn.x, sbtn.y, sbtn.w, sbtn.h, 120, 160, 130);
         font_draw(r, sbtn.x + (sbtn.w - font_text_width(slabel)) / 2, sbtn.y + 5, slabel, 200, 220, 180);
     }
+    {
+        SDL_Rect fbtn;
+        R01sBoard *board = r01s_board_from_group(ui->group);
+        int on = board && r01s_board_sim_fast(board);
+        const char *flabel = on ? "SIM FAST" : "SIM PIN";
+        fast_btn_rect(ui, &fbtn);
+        fill_rect(r, fbtn.x, fbtn.y, fbtn.w, fbtn.h, on ? 50 : 28, on ? 55 : 40, on ? 40 : 32);
+        draw_rect(r, fbtn.x, fbtn.y, fbtn.w, fbtn.h, on ? 200 : 120, on ? 160 : 160, on ? 100 : 130);
+        font_draw(r, fbtn.x + (fbtn.w - font_text_width(flabel)) / 2, fbtn.y + 5, flabel, 200, 220, 180);
+    }
     draw_gamepad_panel(r, ui, 0);
     draw_gamepad_panel(r, ui, 1);
     draw_live_probe(r, ui, sidebar_sy(ui, sidebar_probe_content_y()));
@@ -2444,6 +2480,17 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             if (sidebar_hit(logic_x, logic_y) && logic_x >= sbtn.x && logic_x < sbtn.x + sbtn.w &&
                 logic_y >= sbtn.y && logic_y < sbtn.y + sbtn.h) {
                 ui_toggle_lcd_scale(ui);
+                return 1;
+            }
+        }
+
+        /* SIM PIN / FAST (left sidebar). */
+        {
+            SDL_Rect fbtn;
+            fast_btn_rect(ui, &fbtn);
+            if (sidebar_hit(logic_x, logic_y) && logic_x >= fbtn.x && logic_x < fbtn.x + fbtn.w &&
+                logic_y >= fbtn.y && logic_y < fbtn.y + fbtn.h) {
+                ui_toggle_sim_fast(ui);
                 return 1;
             }
         }

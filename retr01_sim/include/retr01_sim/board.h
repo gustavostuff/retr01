@@ -197,6 +197,11 @@ typedef struct R01sBoard {
     /* Host Play scaffold (unused in default UI — game PRG owns play later). */
     R01sPlay play;
     int catchup_cancel; /* cooperative cancel for threaded IC catchup */
+    /*
+     * sim_fast: word/transaction shortcuts (MAP catchup poke, thin settle/beam).
+     * Default 0 = full pin-level netlist. Toggle via UI or R01S_FAST=1.
+     */
+    int sim_fast;
     int reset_hold;
     uint32_t cycles;
     R01sLevel phi2_prev;
@@ -237,11 +242,16 @@ int r01s_board_load_cart(R01sBoard *board, const char *path);
 int r01s_board_softboot_start_screen(R01sBoard *board);
 
 /*
- * Run bring-up palette + MAP→VRAM on the pin-level netlist until the start screen
- * is in VRAM and the LCD hold lifts (~12k board steps). Opt-in softboot via
+ * Run bring-up palette + MAP→VRAM until the start screen is in VRAM and the LCD
+ * hold lifts. Pin mode (~12k board steps). Fast mode (sim_fast / R01S_FAST): word
+ * transaction copy of MAP+pals (same end state, no pin settle). Opt-in softboot via
  * R01S_SOFTBOOT=1. Returns 0 on success, -1 on timeout / missing meta.
  */
 int r01s_board_catchup_bringup(R01sBoard *board, R01sIslandGroup *group);
+
+/* Pin-accurate (0) vs word/fast (1). Env R01S_FAST=1 at build selects default. */
+void r01s_board_set_sim_fast(R01sBoard *board, int enable);
+int r01s_board_sim_fast(const R01sBoard *board);
 
 /* Cart screen directory helpers (world 0). */
 int r01s_board_has_screen(const R01sBoard *board, int col, int row);

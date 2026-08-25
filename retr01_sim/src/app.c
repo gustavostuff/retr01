@@ -103,6 +103,20 @@ static int catchup_thread_fn_yielding(void *userdata) {
         return 0;
     }
 
+    /* Fast mode: one word-transaction MAP apply (no ~12k pin steps). */
+    if (r01s_board_sim_fast(board)) {
+        SDL_LockMutex(app->board_mu);
+        snprintf(app->ui.status, sizeof(app->ui.status), "FAST MAP stream…");
+        app->catchup_rc = r01s_board_catchup_bringup(board, group);
+        if (app->catchup_rc == 0) {
+            snprintf(app->ui.status, sizeof(app->ui.status), "FAST MAP stream ready");
+        }
+        SDL_UnlockMutex(app->board_mu);
+        catchup_signal_ui_tick(app, board);
+        SDL_AtomicSet(&app->catchup_active, 0);
+        return app->catchup_rc;
+    }
+
     SDL_LockMutex(app->board_mu);
     board->catchup_cancel = 0;
     target = board->cart_off_map_screen0 + 480u;
@@ -155,6 +169,46 @@ int r01s_app_catchup_active(const R01sApp *app) {
     return app && SDL_AtomicGet((SDL_atomic_t *)&app->catchup_active) != 0;
 }
 
+/* Draw + present boot UI; reveal window on first paint so setup never flashes empty. */
+static void app_present_boot(R01sApp *app, int spin) {
+    int ww, wh, scale, draw_w, draw_h;
+    SDL_Rect dst;
+
+    if (!app || !app->ren || !app->target || !app->win) {
+        return;
+    }
+
+    SDL_SetRenderTarget(app->ren, app->target);
+    r01s_ui_draw_boot(&app->ui, app->ren, spin);
+    SDL_SetRenderTarget(app->ren, NULL);
+
+    SDL_GetWindowSize(app->win, &ww, &wh);
+    {
+        int sx = ww / R01S_LOGIC_W;
+        int sy = wh / R01S_LOGIC_H;
+        scale = sx < sy ? sx : sy;
+        if (scale < 1) {
+            scale = 1;
+        }
+        app->scale = scale;
+    }
+    draw_w = R01S_LOGIC_W * scale;
+    draw_h = R01S_LOGIC_H * scale;
+    dst.x = (ww - draw_w) / 2;
+    dst.y = (wh - draw_h) / 2;
+    dst.w = draw_w;
+    dst.h = draw_h;
+
+    SDL_SetRenderDrawColor(app->ren, 0, 0, 0, 255);
+    SDL_RenderClear(app->ren);
+    SDL_RenderCopy(app->ren, app->target, NULL, &dst);
+    SDL_RenderPresent(app->ren);
+
+    if (!(SDL_GetWindowFlags(app->win) & SDL_WINDOW_SHOWN)) {
+        SDL_ShowWindow(app->win);
+    }
+}
+
 void r01s_app_start_ic_catchup(R01sApp *app, struct R01sBoard *board) {
     R01sIslandGroup *group;
     if (!app || !board) {
@@ -187,6 +241,8 @@ void r01s_app_start_ic_catchup(R01sApp *app, struct R01sBoard *board) {
     SDL_AtomicSet(&app->catchup_ui_req, 0);
     snprintf(app->ui.status, sizeof(app->ui.status), "Booting console…");
     SDL_AtomicSet(&app->catchup_active, 1);
+    /* Paint boot before the worker races ahead of the first frame. */
+    app_present_boot(app, app->catchup_spin);
     app->catchup_th = SDL_CreateThread(catchup_thread_fn_yielding, "r01s_catchup", app);
     if (!app->catchup_th) {
         fprintf(stderr, "catchup: thread failed (%s), running sync\n", SDL_GetError());
@@ -251,10 +307,8 @@ int r01s_app_init(R01sApp *app, int headless) {
         return -1;
     }
 
-    flags = SDL_WINDOW_ALLOW_HIGHDPI;
-    if (headless) {
-        flags |= SDL_WINDOW_HIDDEN;
-    } else {
+    flags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN;
+    if (!headless) {
         flags |= SDL_WINDOW_RESIZABLE;
     }
 
