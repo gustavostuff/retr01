@@ -1,10 +1,9 @@
 #include "app.h"
 
 #include "retr01_sim/board.h"
-#include "retr01_sim/board_fast.h"
-#include "retr01_sim/play.h"
 #include "retr01_sim/bom32.h"
 #include "retr01_sim/island_builder.h"
+#include "retr01_sim/play.h"
 #include "pads.h"
 
 #include <stdio.h>
@@ -255,27 +254,6 @@ void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
             }
             /* Bare R falls through to UI (rotate selected IC). */
             break;
-        case SDLK_f:
-            if (r01s_fast_glue_mask() & R01S_FAST_GLUE_BOOT_DEFAULT) {
-                r01s_fast_glue_set(0);
-            } else {
-                r01s_fast_glue_set(R01S_FAST_GLUE_BOOT_DEFAULT);
-            }
-            if (app->win) {
-                R01sBoard *b = r01s_board_from_group(group);
-                char title[96];
-                snprintf(title, sizeof(title), "Retr01 Sim — %s%s",
-                         b && b->cart_label[0] ? b->cart_label : "cart",
-                         r01s_fast_glue_mask() ? " [FAST]" : "");
-                SDL_SetWindowTitle(app->win, title);
-            }
-            fprintf(stderr, "fast: %s (settle=%d video=%d memory=%d pins=%d)\n",
-                    r01s_fast_glue_label(r01s_fast_glue_mask()),
-                    r01s_fast_glue_enabled(R01S_FAST_GLUE_SETTLE),
-                    r01s_fast_glue_enabled(R01S_FAST_GLUE_VIDEO),
-                    r01s_fast_glue_enabled(R01S_FAST_GLUE_MEMORY),
-                    r01s_fast_glue_enabled(R01S_FAST_GLUE_PINS));
-            return;
         case SDLK_PERIOD:
             if (!group->running) {
                 r01s_island_group_step(group);

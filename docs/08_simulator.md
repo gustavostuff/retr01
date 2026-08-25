@@ -132,8 +132,6 @@ Bring-up overlay is smoke + pad hang; LCD + Play (scroll / X·Y warps / player) 
 
 Until then, dump flash/`off_prg` and call out softboot/Play whenever comparing “LCD shows tiles / scrolls” to silicon honesty.
 
-**Fast path (toggle):** Optimization Playbook — optional glue inlining without removing pin-level code. Default off. `R01S_FAST=1` or `./sim run -- --fast` enables **settle** (1-pass combinatorial settle), **video** (direct compositor+PROM per dot), **memory** (inline RAM/PRG/MAP flash decode), and **pins** (cached pin indices for bus copies). Press **F** to toggle. Reserved: `bus` (Pass 2 bitmasks).
-
 ## Modeling principles
 
 1. **IC-first:** one module per part number; pins named after the datasheet.

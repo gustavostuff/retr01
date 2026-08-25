@@ -2,7 +2,6 @@
 #include "board_debug.h"
 
 #include "retr01_sim/board.h"
-#include "retr01_sim/board_fast.h"
 
 #include <SDL.h>
 #include <stdio.h>
@@ -25,70 +24,10 @@ static int want_debug(int argc, char **argv) {
     return 0;
 }
 
-static int is_fast_flag(const char *arg, const char **spec_out) {
-    if (!arg) {
-        return 0;
-    }
-    if (strcmp(arg, "--fast") == 0) {
-        if (spec_out) {
-            *spec_out = "boot";
-        }
-        return 1;
-    }
-    if (strncmp(arg, "--fast=", 7) == 0) {
-        if (spec_out) {
-            *spec_out = arg + 7;
-        }
-        return 1;
-    }
-    if (strcmp(arg, "--no-fast") == 0) {
-        if (spec_out) {
-            *spec_out = "none";
-        }
-        return 1;
-    }
-    return 0;
-}
-
-static void apply_fast_cli(int argc, char **argv) {
-    int i;
-    uint32_t mask = r01s_fast_glue_from_env();
-    int saw_cli = 0;
-
-    for (i = 1; i < argc; i++) {
-        const char *spec = NULL;
-        if (is_fast_flag(argv[i], &spec)) {
-            uint32_t parsed = r01s_fast_glue_parse(spec);
-            if (spec && (parsed || strcmp(spec, "none") == 0 || strcmp(spec, "off") == 0 ||
-                         strcmp(spec, "0") == 0)) {
-                mask = parsed;
-                saw_cli = 1;
-            } else {
-                fprintf(stderr, "fast: bad --fast=%s (try boot, settle,video, none)\n", spec ? spec : "?");
-            }
-        }
-    }
-    if (saw_cli) {
-        r01s_fast_glue_set(mask);
-    } else if (mask) {
-        /* env already applied in from_env */
-    }
-    if (mask) {
-        fprintf(stderr, "fast: %s (settle=%d video=%d memory=%d pins=%d) — pin-level via --no-fast / F\n",
-                r01s_fast_glue_label(mask), r01s_fast_glue_enabled(R01S_FAST_GLUE_SETTLE),
-                r01s_fast_glue_enabled(R01S_FAST_GLUE_VIDEO),
-                r01s_fast_glue_enabled(R01S_FAST_GLUE_MEMORY),
-                r01s_fast_glue_enabled(R01S_FAST_GLUE_PINS));
-    }
-}
-
 static const char *first_cart_arg(int argc, char **argv) {
     int i;
     for (i = 1; i < argc; i++) {
         if (argv[i][0] == '-') {
-            if (is_fast_flag(argv[i], NULL)) {
-                continue;
-            }
             if (strcmp(argv[i], "--debug") == 0 || strcmp(argv[i], "-d") == 0) {
                 continue;
             }
@@ -132,8 +71,7 @@ static int setup_board(R01sApp *app, int argc, char **argv) {
             fprintf(stderr, "cart: start-screen softboot failed (LCD may stay blank)\n");
         }
     }
-    snprintf(title, sizeof(title), "Retr01 Sim — %s%s", g_board.cart_label[0] ? g_board.cart_label : "cart",
-             r01s_fast_glue_mask() ? " [FAST]" : "");
+    snprintf(title, sizeof(title), "Retr01 Sim — %s", g_board.cart_label[0] ? g_board.cart_label : "cart");
     SDL_SetWindowTitle(app->win, title);
     return 0;
 }
@@ -141,8 +79,6 @@ static int setup_board(R01sApp *app, int argc, char **argv) {
 int main(int argc, char **argv) {
     R01sApp app;
     int debug = want_debug(argc, argv);
-
-    apply_fast_cli(argc, argv);
 
     if (r01s_app_init(&app, 0) != 0) {
         return 1;

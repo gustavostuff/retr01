@@ -1,6 +1,5 @@
 #include "retr01_sim/board.h"
 
-#include "retr01_sim/board_fast.h"
 #include "retr01_sim/board_layout.h"
 #include "retr01_sim/bus.h"
 #include "retr01_sim/entity.h"
@@ -14,7 +13,6 @@
 #define R01S_CART_HDR_SIZE 16
 #define R01S_CART_PTR_SIZE 24
 #define R01S_CART_PRG_BYTES 0x8000u
-#define R01S_SETTLE_PASSES_FAST 1
 /*
  * DOT/beam ticks per board step. Real silicon runs DOT ≈ PHI2 order; the UI
  * only does ~32 board steps/frame, so without a burst first VBlank takes minutes.
@@ -614,127 +612,23 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
     }
 }
 
-static void copy_bus_named(R01sBoard *ctx, R01sEntity *dst, const char *dst_prefix, R01sEntity *src,
-                           const char *src_prefix, int width);
-
-static int board_pin_idx(R01sEntity *e, const char *name) {
-    R01sPin *p;
-    if (!e || !name) {
-        return -1;
-    }
-    p = r01s_entity_pin_named(e, name);
-    if (!p) {
-        return -1;
-    }
-    return (int)(p - e->pins);
-}
-
-static void board_wire_cache_fill_idx(int *out, int n, R01sEntity *e, const char *prefix, int start) {
-    int i;
-    for (i = 0; i < n; i++) {
-        char name[8];
-        snprintf(name, sizeof(name), "%s%d", prefix, start + i);
-        out[i] = board_pin_idx(e, name);
-    }
-}
-
-static void board_wire_cache_fill_latch_dq(R01sBoard *ctx) {
-    R01sEntity *latch = r01s_sn74hc573_entity(&ctx->latch573[R01S_LATCH_FE02]);
-    int i;
-    for (i = 0; i < R01S_WIRE_CACHE_D; i++) {
-        char dn[16], qn[16];
-        snprintf(dn, sizeof(dn), "%dD", i + 1);
-        snprintf(qn, sizeof(qn), "%dQ", i + 1);
-        ctx->wire_cache.latch_d[i] = board_pin_idx(latch, dn);
-        ctx->wire_cache.latch_q[i] = board_pin_idx(latch, qn);
-    }
-}
-
-static void board_wire_cache_build(R01sBoard *ctx) {
-    R01sBoardWireCache *wc;
-    R01sEntity *cpu;
-    R01sEntity *ram;
-    R01sEntity *prg;
-    R01sEntity *flash;
-    R01sEntity *vram;
-    R01sEntity *mcu;
-    R01sEntity *apu;
-    R01sEntity *pads;
-
-    if (!ctx || ctx->wire_cache.built) {
-        return;
-    }
-    wc = &ctx->wire_cache;
-    cpu = r01s_w65c02s_entity(&ctx->cpu);
-    ram = r01s_as6c62256_entity(&ctx->ram);
-    prg = r01s_prg_rom_entity(&ctx->prg);
-    flash = r01s_sst39sf040_entity(&ctx->cart_flash);
-    vram = r01s_as6c62256_entity(&ctx->vram);
-    mcu = r01s_atmega1284p_entity(&ctx->mcu1284);
-    apu = r01s_atmega328p_entity(&ctx->apu);
-    pads = r01s_pads_entity(&ctx->pads);
-
-    board_wire_cache_fill_idx(wc->cpu_a, R01S_WIRE_CACHE_A, cpu, "A", 0);
-    board_wire_cache_fill_idx(wc->cpu_d, R01S_WIRE_CACHE_D, cpu, "D", 0);
-    wc->cpu_rwb = board_pin_idx(cpu, "RWB");
-    wc->cpu_be = board_pin_idx(cpu, "BE");
-    board_wire_cache_fill_idx(wc->ram_a, 15, ram, "A", 0);
-    board_wire_cache_fill_idx(wc->ram_dq, R01S_WIRE_CACHE_D, ram, "DQ", 0);
-    board_wire_cache_fill_idx(wc->prg_a, 15, prg, "A", 0);
-    board_wire_cache_fill_idx(wc->prg_dq, R01S_WIRE_CACHE_D, prg, "DQ", 0);
-    board_wire_cache_fill_idx(wc->flash_dq, R01S_WIRE_CACHE_D, flash, "DQ", 0);
-    board_wire_cache_fill_idx(wc->vram_dq, R01S_WIRE_CACHE_D, vram, "DQ", 0);
-    board_wire_cache_fill_idx(wc->mcu_dq, R01S_WIRE_CACHE_D, mcu, "DQ", 0);
-    board_wire_cache_fill_idx(wc->apu_dq, R01S_WIRE_CACHE_D, apu, "DQ", 0);
-    board_wire_cache_fill_idx(wc->pads_dq, R01S_WIRE_CACHE_D, pads, "DQ", 0);
-    board_wire_cache_fill_latch_dq(ctx);
-    wc->built = 1;
-}
-
-static void copy_bus_idx(R01sEntity *dst, const int *dst_idx, R01sEntity *src, const int *src_idx, int width) {
-    int i;
-    for (i = 0; i < width; i++) {
-        int di = dst_idx[i];
-        int si = src_idx[i];
-        if (di >= 0 && si >= 0) {
-            dst->pins[di].level = src->pins[si].level;
-        }
-    }
-}
-
-static int board_fast_cpu_path(const R01sBoard *ctx) {
-    return ctx &&
-           (r01s_fast_glue_enabled(R01S_FAST_GLUE_PINS) || r01s_fast_glue_enabled(R01S_FAST_GLUE_MEMORY));
-}
-
 static uint16_t board_cpu_addr(R01sBoard *ctx, R01sEntity *cpu_e) {
-    if (board_fast_cpu_path(ctx)) {
-        return r01s_w65c02s_ab(&ctx->cpu);
-    }
+    (void)ctx;
     return (uint16_t)r01s_bus_read(cpu_e, "A", 16);
 }
 
 static int board_cpu_read(R01sBoard *ctx, R01sEntity *cpu_e) {
-    if (board_fast_cpu_path(ctx)) {
-        return r01s_w65c02s_rwb(&ctx->cpu) != 0;
-    }
+    (void)ctx;
     return r01s_level_is_high(r01s_entity_sense(cpu_e, "RWB"));
 }
 
 static int board_cpu_be(R01sBoard *ctx, R01sEntity *cpu_e) {
-    if (r01s_fast_glue_enabled(R01S_FAST_GLUE_PINS)) {
-        board_wire_cache_build(ctx);
-        if (ctx->wire_cache.cpu_be >= 0) {
-            return r01s_level_is_high(cpu_e->pins[ctx->wire_cache.cpu_be].level);
-        }
-    }
+    (void)ctx;
     return r01s_level_is_high(r01s_entity_sense(cpu_e, "BE"));
 }
 
 static uint8_t board_cpu_d_sample(R01sBoard *ctx, R01sEntity *cpu_e) {
-    if (board_fast_cpu_path(ctx) && !r01s_w65c02s_rwb(&ctx->cpu)) {
-        return r01s_w65c02s_a(&ctx->cpu);
-    }
+    (void)ctx;
     return (uint8_t)r01s_bus_read(cpu_e, "D", 8);
 }
 
@@ -743,79 +637,7 @@ static void copy_bus_named(R01sBoard *ctx, R01sEntity *dst, const char *dst_pref
     int i;
     char dn[16], sn[16];
 
-    if (ctx && r01s_fast_glue_enabled(R01S_FAST_GLUE_PINS)) {
-        R01sBoardWireCache *wc;
-        R01sEntity *cpu = r01s_w65c02s_entity(&ctx->cpu);
-        R01sEntity *ram = r01s_as6c62256_entity(&ctx->ram);
-        R01sEntity *prg = r01s_prg_rom_entity(&ctx->prg);
-        R01sEntity *flash = r01s_sst39sf040_entity(&ctx->cart_flash);
-        R01sEntity *vram = r01s_as6c62256_entity(&ctx->vram);
-        R01sEntity *mcu = r01s_atmega1284p_entity(&ctx->mcu1284);
-        R01sEntity *apu = r01s_atmega328p_entity(&ctx->apu);
-        R01sEntity *pads = r01s_pads_entity(&ctx->pads);
-
-        board_wire_cache_build(ctx);
-        wc = &ctx->wire_cache;
-        if (width == 15 && dst_prefix[0] == 'A' && src_prefix[0] == 'A') {
-            if (dst == ram && src == cpu) {
-                copy_bus_idx(dst, wc->ram_a, src, wc->cpu_a, 15);
-                return;
-            }
-            if (dst == prg && src == cpu) {
-                copy_bus_idx(dst, wc->prg_a, src, wc->cpu_a, 15);
-                return;
-            }
-        }
-        if (width == 8 && dst_prefix[0] == 'D' && src_prefix[0] == 'D') {
-            if (dst == cpu && src == ram) {
-                copy_bus_idx(dst, wc->cpu_d, src, wc->ram_dq, 8);
-                return;
-            }
-            if (dst == cpu && src == prg) {
-                copy_bus_idx(dst, wc->cpu_d, src, wc->prg_dq, 8);
-                return;
-            }
-            if (dst == cpu && src == flash) {
-                copy_bus_idx(dst, wc->cpu_d, src, wc->flash_dq, 8);
-                return;
-            }
-            if (dst == cpu && src == vram) {
-                copy_bus_idx(dst, wc->cpu_d, src, wc->vram_dq, 8);
-                return;
-            }
-            if (dst == cpu && src == mcu) {
-                copy_bus_idx(dst, wc->cpu_d, src, wc->mcu_dq, 8);
-                return;
-            }
-            if (dst == cpu && src == apu) {
-                copy_bus_idx(dst, wc->cpu_d, src, wc->apu_dq, 8);
-                return;
-            }
-            if (dst == cpu && src == pads) {
-                copy_bus_idx(dst, wc->cpu_d, src, wc->pads_dq, 8);
-                return;
-            }
-        }
-        if (width == 8 && dst_prefix[0] == 'D' && src_prefix[0] == 'D' && src == cpu) {
-            if (dst == ram) {
-                copy_bus_idx(dst, wc->ram_dq, src, wc->cpu_d, 8);
-                return;
-            }
-            if (dst == vram) {
-                copy_bus_idx(dst, wc->vram_dq, src, wc->cpu_d, 8);
-                return;
-            }
-            if (dst == mcu) {
-                copy_bus_idx(dst, wc->mcu_dq, src, wc->cpu_d, 8);
-                return;
-            }
-            if (dst == apu) {
-                copy_bus_idx(dst, wc->apu_dq, src, wc->cpu_d, 8);
-                return;
-            }
-        }
-    }
-
+    (void)ctx;
     for (i = 0; i < width; i++) {
         snprintf(dn, sizeof(dn), "%s%d", dst_prefix, i);
         snprintf(sn, sizeof(sn), "%s%d", src_prefix, i);
@@ -827,11 +649,7 @@ static void copy_cpu_d_to_latch_d(R01sBoard *ctx, R01sEntity *latch, R01sEntity 
     int i;
     char ln[8], cn[8];
 
-    if (ctx && r01s_fast_glue_enabled(R01S_FAST_GLUE_PINS)) {
-        board_wire_cache_build(ctx);
-        copy_bus_idx(latch, ctx->wire_cache.latch_d, cpu, ctx->wire_cache.cpu_d, R01S_WIRE_CACHE_D);
-        return;
-    }
+    (void)ctx;
     for (i = 0; i < 8; i++) {
         snprintf(ln, sizeof(ln), "%dD", i + 1);
         snprintf(cn, sizeof(cn), "D%d", i);
@@ -843,11 +661,7 @@ static void copy_latch_q_to_cpu_d(R01sBoard *ctx, R01sEntity *cpu, R01sEntity *l
     int i;
     char ln[8], cn[8];
 
-    if (ctx && r01s_fast_glue_enabled(R01S_FAST_GLUE_PINS)) {
-        board_wire_cache_build(ctx);
-        copy_bus_idx(cpu, ctx->wire_cache.cpu_d, latch, ctx->wire_cache.latch_q, R01S_WIRE_CACHE_D);
-        return;
-    }
+    (void)ctx;
     for (i = 0; i < 8; i++) {
         snprintf(ln, sizeof(ln), "%dQ", i + 1);
         snprintf(cn, sizeof(cn), "D%d", i);
@@ -916,11 +730,6 @@ static int flash_chr_read_byte(R01sBoard *ctx, uint32_t abs, uint8_t *out) {
     }
     flash = r01s_sst39sf040_entity(ctx->cart_impl.flash);
     ctx->flash_ce_owner = R01S_FLASH_CE_CHR;
-    /* Fast video/memory: still honor CE ownership, but skip per-dot pin settle. */
-    if (r01s_fast_glue_enabled(R01S_FAST_GLUE_MEMORY) || r01s_fast_glue_enabled(R01S_FAST_GLUE_VIDEO)) {
-        *out = r01s_sst39sf040_peek(ctx->cart_impl.flash, abs);
-        return 1;
-    }
     flash_read_selected(flash, abs);
     *out = (uint8_t)r01s_bus_read(flash, "DQ", 8);
     return 1;
@@ -1184,16 +993,10 @@ static void wire_io(R01sBoard *ctx) {
         r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu) == R01S_CPU_OP_DATA) {
         uint8_t dq;
         sync_map_addr_from_latches(ctx);
-        if (r01s_fast_glue_enabled(R01S_FAST_GLUE_MEMORY)) {
-            dq = r01s_sst39sf040_peek(ctx->cart_impl.flash, ctx->map_addr);
-            r01s_bus_write(cpu, "D", 8, dq);
-            ctx->flash_ce_owner = R01S_FLASH_CE_MAP;
-        } else {
-            flash_read_selected(flash, ctx->map_addr);
-            copy_bus_named(ctx, cpu, "D", flash, "DQ", 8);
-            dq = board_cpu_d_sample(ctx, cpu);
-            ctx->flash_ce_owner = R01S_FLASH_CE_MAP;
-        }
+        flash_read_selected(flash, ctx->map_addr);
+        copy_bus_named(ctx, cpu, "D", flash, "DQ", 8);
+        dq = board_cpu_d_sample(ctx, cpu);
+        ctx->flash_ce_owner = R01S_FLASH_CE_MAP;
         if (dq == 0x52) {
             ctx->health_saw_map = 1; /* cart magic 'R' at seek 0 */
         }
@@ -1700,62 +1503,11 @@ static int board_video_held_for_map_stream(const R01sBoard *ctx) {
 }
 
 /*
- * Playbook Pass 3 — inline Island O glue (same priority as compositor PLD, no entity eval).
- */
-static void wire_video_dot_fast(R01sBoard *ctx) {
-    R01sBeamXy *beam = ctx->beam_impl.beam_x;
-    R01sAt28c16 *prom = ctx->video_impl.prom;
-    R01sVideoSink *sink = ctx->video_impl.sink;
-    int bx = r01s_beam_xy_x(beam);
-    int by = r01s_beam_xy_y(beam);
-    int lx;
-    int ly;
-    int scale_2x = r01s_video_sink_scale_2x(sink);
-    uint8_t bg;
-    uint8_t spr;
-    uint8_t idx;
-    uint8_t packed;
-
-    if (r01s_beam_xy_hblank(beam) || r01s_beam_xy_vblank(beam) || bx >= R01S_BEAM_VISIBLE_W ||
-        by >= R01S_BEAM_VISIBLE_H) {
-        return;
-    }
-    if (board_video_held_for_map_stream(ctx)) {
-        /* Blank during stream — do not freeze leftover smoke pixels on the sink. */
-        r01s_video_sink_plot(sink, bx, by, 0);
-        return;
-    }
-    if (!r01s_rgbs_beam_to_logical(scale_2x, bx, by, &lx, &ly)) {
-        /* SCALE 1x border — black (index 0) inside the fixed 256×240 field. */
-        r01s_video_sink_plot(sink, bx, by, 0);
-        return;
-    }
-    bg = board_bg_master_at(ctx, lx, ly);
-    spr = r01s_as6c62256_peek(ctx->mcu_lb_impl.sram,
-                              (uint16_t)(((ctx->linebuf_show_half & 1u) << 7) | (lx & 0x7F)));
-    if (spr != 0) {
-        ctx->health_saw_sprites = 1;
-    }
-    if (spr != 0 && (spr & 0x3Fu) != 0) {
-        idx = (uint8_t)(spr & 0x3Fu);
-    } else {
-        idx = (uint8_t)(bg & 0x3Fu);
-    }
-    packed = r01s_at28c16_peek(prom, idx);
-    r01s_video_sink_plot(sink, bx, by, packed);
-}
-
-/*
  * Island O — dot-sampled BG -> compositor -> Color PROM -> LCD sink.
  * CHR: flash /CE during DOT window (yield PRG first); hold chr_last_master on deny.
  * Sink is the 256×240 RGBS field; SCALE maps beam → logical 128×120.
  */
 static void wire_video_dot(R01sBoard *ctx) {
-    if (r01s_fast_glue_enabled(R01S_FAST_GLUE_VIDEO)) {
-        wire_video_dot_fast(ctx);
-        return;
-    }
-
     R01sBeamXy *beam = ctx->beam_impl.beam_x;
     R01sCompositor *comp = ctx->video_impl.comp;
     R01sAt28c16 *prom = ctx->video_impl.prom;
@@ -1802,56 +1554,7 @@ static void wire_video_dot(R01sBoard *ctx) {
     r01s_video_sink_plot(sink, bx, by, packed);
 }
 
-/*
- * Playbook Target 3 — inline CPU RAM/PRG decode (no per-pin RAM/flash entity eval).
- */
-static void wire_memory_fast(R01sBoard *ctx) {
-    R01sEntity *cpu_e = r01s_w65c02s_entity(&ctx->cpu);
-    uint16_t addr = r01s_w65c02s_ab(&ctx->cpu);
-    int read = r01s_w65c02s_rwb(&ctx->cpu) != 0;
-    int use_cart_prg = ctx->cart_loaded && ctx->cart_len_prg > 0;
-
-    if (!board_cpu_be(ctx, cpu_e) || addr_is_io(addr)) {
-        if (!(addr_is_io(addr) && addr == 0xFE93u) && ctx->flash_ce_owner == R01S_FLASH_CE_PRG) {
-            ctx->flash_ce_owner = R01S_FLASH_CE_NONE;
-        }
-        return;
-    }
-
-    if (!(addr & 0x8000u)) {
-        uint16_t ram_addr = (uint16_t)(addr & 0x7FFFu);
-        if (ctx->flash_ce_owner == R01S_FLASH_CE_PRG) {
-            ctx->flash_ce_owner = R01S_FLASH_CE_NONE;
-        }
-        if (read) {
-            r01s_bus_write(cpu_e, "D", 8, r01s_as6c62256_peek(&ctx->ram, ram_addr));
-        } else {
-            r01s_as6c62256_poke(&ctx->ram, ram_addr, r01s_w65c02s_a(&ctx->cpu));
-        }
-        return;
-    }
-
-    if (use_cart_prg && read) {
-        uint32_t off = (uint32_t)(addr - 0x8000u);
-        if (off < ctx->cart_len_prg) {
-            r01s_bus_write(cpu_e, "D", 8,
-                           r01s_sst39sf040_peek(&ctx->cart_flash, ctx->cart_off_prg + off));
-            ctx->flash_ce_owner = R01S_FLASH_CE_PRG;
-        }
-        return;
-    }
-
-    if (read) {
-        r01s_bus_write(cpu_e, "D", 8, r01s_prg_rom_peek(&ctx->prg, (uint16_t)(addr - 0x8000u)));
-    }
-}
-
 static void wire_memory(R01sBoard *ctx) {
-    if (r01s_fast_glue_enabled(R01S_FAST_GLUE_MEMORY)) {
-        wire_memory_fast(ctx);
-        return;
-    }
-
     R01sEntity *cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
     R01sEntity *ram = r01s_as6c62256_entity(ctx->cpu_mem_impl.ram);
     R01sEntity *prg = r01s_prg_rom_entity(ctx->cpu_mem_impl.prg);
@@ -1955,7 +1658,7 @@ static void wire_power_clock_reset(R01sBoard *ctx, R01sIslandGroup *group) {
 }
 
 static void board_settle(R01sBoard *ctx, R01sIslandGroup *group) {
-    int passes = r01s_fast_glue_enabled(R01S_FAST_GLUE_SETTLE) ? R01S_SETTLE_PASSES_FAST : R01S_SETTLE_PASSES;
+    int passes = R01S_SETTLE_PASSES;
     int i;
     for (i = 0; i < passes; i++) {
         wire_power_clock_reset(ctx, group);
@@ -2452,7 +2155,6 @@ int r01s_board_softboot_start_screen(R01sBoard *board) {
 }
 
 int r01s_board_catchup_bringup(R01sBoard *board, R01sIslandGroup *group) {
-    uint32_t prev_fast;
     int i;
 
     if (!board || !board->cart_loaded || board->cart_off_map_screen0 == 0) {
@@ -2464,16 +2166,13 @@ int r01s_board_catchup_bringup(R01sBoard *board, R01sIslandGroup *group) {
     if (!group) {
         return 0;
     }
-    /* Brief FAST burst past reset-hold + smoke ($42), then softboot again. */
-    prev_fast = r01s_fast_glue_mask();
-    r01s_fast_glue_set(R01S_FAST_GLUE_BOOT_DEFAULT);
+    /* Brief burst past reset-hold + smoke ($42), then softboot again. */
     for (i = 0; i < 12000; i++) {
         r01s_island_group_step(group);
         if (r01s_w65c02s_pc(board->cpu_mem_impl.cpu) >= 0x8078u) {
             break;
         }
     }
-    r01s_fast_glue_set(prev_fast);
     return r01s_board_softboot_start_screen(board);
 }
 
@@ -2942,6 +2641,5 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     }
     /* After island init (flash memset) — install bring-up cart image. */
     board_install_synthetic_cart(board);
-    board_wire_cache_build(board);
     return 0;
 }

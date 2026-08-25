@@ -6,7 +6,6 @@
 #include "bg_fetch.h"
 #include "retr01_sim/board.h"
 #include "retr01_sim/bom32.h"
-#include "retr01_sim/board_fast.h"
 #include "retr01_sim/bus.h"
 #include "retr01_sim/entity.h"
 #include "retr01_sim/island_builder.h"
@@ -47,7 +46,6 @@ int main(void) {
     int saw_sprites = 0;
     int saw_nmi = 0;
 
-    r01s_fast_glue_from_env();
     r01s_island_builder_init(&builder);
     expect_true(r01s_board_build(&board, &builder) == 0, "board build");
     group = r01s_island_builder_group(&builder);

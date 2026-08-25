@@ -32,8 +32,6 @@ Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8
 
 **HIGH PRIORITY:** Retire LCD softboot **and** host Play — game/bring-up PRG (or a cheaper staged IC-path stream) must own MAP/camera again; soft helpers become opt-in debug only. Tracked in [`docs/08_simulator.md`](../docs/08_simulator.md#high-priority--retire-sim-lcd-softboot).
 
-**Fast path (optional):** Playbook glue inlining — default is full pin-level settle (4 passes) + compositor entity eval per dot. Enable **`R01S_FAST=1`**, **`./sim run -- --fast`**, or press **`F`** for `settle` + `video` + `memory` + `pins`. Slow route unchanged; reserved: `bus` (Pass 2 bitmasks).
-
 Next: optional **F** machine EEPROM (1284 path); retire bring-up overlay when game PRG owns MAP.
 
 ## Build
