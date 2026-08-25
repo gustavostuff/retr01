@@ -76,7 +76,7 @@ When something looks wrong on screen, **do not assume the `.retr01` is bad** and
 | **Color PROM burn** | `project_prom.bin` | **Yes** (motherboard) | **Not inside the cart.** Kit → R3G3B2; board AT28C16. |
 | **Boot asm listing** | `project_boot.s` | **Human-readable only** | Equates + stub source. The **binary stub inside `.retr01`** is what runners execute (Studio embeds it; asm can drift — treat binary as SoT). |
 | **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Today also **soft-boots** world CHR/MAP into VRAM and **host-pans** the atlas — Studio stub PRG does **not** stream MAP. |
-| **Board sim** | `retr01_sim` | IC / island netlist | Bring-up letters A–E+G+H+I+O+J+K+L+M+N+**P** on **9 canvas frames** (O first; A∪B, L∪M; HC245s on C/O/J). **32-IC BOM** mounted (`bom32.h`). Cart flash loads `.retr01`; **bring-up PRG overlay** (smoke + pal + MAP stream via `$FE93`→`$FE12`) replaces cart PRG for island smoke. LCD unblanks after IC catchup (~12k steps). Host softboot is **opt-in** (`R01S_SOFTBOOT=1`). No host Play. |
+| **Board sim** | `retr01_sim` | IC / island netlist | Bring-up letters A–E+G+H+I+O+J+K+L+M+N+**P** on **9 canvas frames** (O first; A∪B, L∪M; HC245s on C/O/J). **32-IC BOM** mounted (`bom32.h`). Cart flash loads `.retr01`; **bring-up PRG overlay** (smoke + pal + MAP stream via `$FE93`→`$FE12`) replaces cart PRG for island smoke. LCD unblanks after IC catchup (~12k steps). Host softboot is **opt-in** (`R01S_SOFTBOOT=1`). **Host Play** (temporary) drives scroll/player/X·Y warps from pads after catchup. |
 
 ### What is actually in `project.retr01` today
 
@@ -118,7 +118,7 @@ Verified against Studio pack (`r01_cart_build`) and the checked-in `retr01_studi
 
 **Island P wired.** Beam `NMI#` → CPU `NMIB` on VBlank entry; integration health wants pads + video + sprites + ≥1 NMI pulse and zero bus conflicts. Optional **F** (machine EEPROM) still deferred.
 
-Bring-up overlay is smoke + **palette + MAP stream** (`$FE93`→`$FE12`) + pad hang. Startup **`r01s_board_catchup_bringup`** runs that stream on the pin-level board (~12k steps) so the LCD hold lifts. Host softboot / host Play are retired from the default path (`R01S_SOFTBOOT=1` remains for triage). Island O still fetches 2bpp CHR from flash. Still missing for Play-on-silicon: real game PRG (no overlay) owning camera/player.
+Bring-up overlay is smoke + **palette + MAP stream** (`$FE93`→`$FE12`) + pad hang. Startup **`r01s_board_catchup_bringup`** runs that stream on the pin-level board (~12k steps) so the LCD hold lifts. Host softboot is opt-in (`R01S_SOFTBOOT=1`). **Host Play** is re-enabled in the UI loop after catchup (Studio/emu SoT: move, camera, X→(0,0) / Y→(1,0) warps) until game PRG owns camera/player. Island O still fetches 2bpp CHR from flash.
 
 ### Softboot (opt-in only)
 
@@ -128,10 +128,8 @@ Bring-up overlay is smoke + **palette + MAP stream** (`$FE93`→`$FE12`) + pad h
 |--------|--------|
 | **Done** | Bring-up PRG streams start MAP+pals via `$FE93`→`$FE12` / `$FE08`/`$FE09` |
 | **Done** | Catchup runs stream on netlist (~12k steps; no OOM from old 240k sync wait) |
-| **Done** | Host Play removed from sim UI loop |
-| **Next** | Game PRG owns camera/player (retire bring-up overlay) |
-
-Until game PRG owns Play, the sim LCD shows the streamed start screen but will not scroll/warp from pads.
+| **Temp** | Host Play in UI loop (pads → scroll/player/warps; retire when game PRG owns Play) |
+| **Next** | Game PRG owns camera/player (retire bring-up overlay + host Play) |
 
 ## Modeling principles
 

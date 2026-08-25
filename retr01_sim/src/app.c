@@ -3,6 +3,7 @@
 #include "retr01_sim/board.h"
 #include "retr01_sim/bom32.h"
 #include "retr01_sim/island_builder.h"
+#include "retr01_sim/play.h"
 #include "pads.h"
 
 #include <stdio.h>
@@ -62,6 +63,10 @@ static void catchup_join(R01sApp *app) {
         snprintf(app->ui.status, sizeof(app->ui.status), "IC MAP stream failed");
     } else {
         snprintf(app->ui.status, sizeof(app->ui.status), "IC MAP stream ready");
+        /* Host Play until game PRG owns camera/player (Studio/emu SoT). */
+        if (app->catchup_board) {
+            (void)r01s_play_start(app->catchup_board);
+        }
     }
 }
 
@@ -226,7 +231,9 @@ void r01s_app_start_ic_catchup(R01sApp *app, struct R01sBoard *board) {
         if (!app->board_mu) {
             fprintf(stderr, "catchup: mutex failed, running sync\n");
             group = r01s_island_builder_group(&app->builder);
-            (void)r01s_board_catchup_bringup(board, group);
+            if (r01s_board_catchup_bringup(board, group) == 0) {
+                (void)r01s_play_start(board);
+            }
             return;
         }
     }
@@ -247,7 +254,9 @@ void r01s_app_start_ic_catchup(R01sApp *app, struct R01sBoard *board) {
     if (!app->catchup_th) {
         fprintf(stderr, "catchup: thread failed (%s), running sync\n", SDL_GetError());
         SDL_AtomicSet(&app->catchup_active, 0);
-        (void)r01s_board_catchup_bringup(board, group);
+        if (r01s_board_catchup_bringup(board, group) == 0) {
+            (void)r01s_play_start(board);
+        }
     }
 }
 
@@ -428,6 +437,8 @@ void r01s_app_frame(R01sApp *app) {
             r01s_pads_refresh_preview(&board->pads);
             app->ui.probe_pad_p1 = r01s_pads_get(&board->pads, 0);
             app->ui.probe_pad_p2 = r01s_pads_get(&board->pads, 1);
+            /* Host Play once per UI frame (TEMPORARY — until game PRG owns Play). */
+            r01s_play_tick(board, pad0);
         }
         if (group) {
             if (group->running) {
@@ -446,6 +457,9 @@ void r01s_app_frame(R01sApp *app) {
             } else {
                 r01s_island_group_eval_idle(group);
                 app->ui.sim_steps = 0;
+            }
+            if (board) {
+                r01s_play_draw(board);
             }
             r01s_island_group_fill_status(group, app->ui.status, sizeof(app->ui.status));
             r01s_island_group_fill_health(group, &app->ui.health);

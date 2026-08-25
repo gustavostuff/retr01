@@ -2033,8 +2033,8 @@ void r01s_ui_sync_gamepads(R01sUi *ui) {
         }
     }
 
-    /* P1: X/Y match Studio warps; Z also fires X (legacy). */
-    ui->gamepad[0].btn_x = ui->mouse_btn[0][0] || keys[SDL_SCANCODE_Z] || keys[SDL_SCANCODE_X];
+    /* P1: X/Y match Studio warps (Z also fires X — legacy). */
+    ui->gamepad[0].btn_x = ui->mouse_btn[0][0] || keys[SDL_SCANCODE_X] || keys[SDL_SCANCODE_Z];
     ui->gamepad[0].btn_y = ui->mouse_btn[0][1] || keys[SDL_SCANCODE_Y];
     ui->gamepad[0].btn_coin = ui->mouse_btn[0][2] || keys[SDL_SCANCODE_1];
     ui->gamepad[0].btn_start = ui->mouse_btn[0][3] || keys[SDL_SCANCODE_RETURN];
