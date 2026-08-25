@@ -17,13 +17,21 @@ static void ui_save_compact_layout(R01sUi *ui);
 static void ui_restore_island_layout(R01sUi *ui);
 static int ui_island_snapshot_valid(const R01sUi *ui);
 static void ui_arrange_islands_default(R01sUi *ui);
-static void ui_fit_island_to_chips(R01sUi *ui, int island_index);
+static void ui_tighten_island_to_chips(R01sUi *ui, int island_index);
+static void ui_pack_island_chips(R01sUi *ui, int island_index);
+static void ui_row_place_islands(R01sUi *ui);
+static int island_saved_chip_layout_sane(const R01sUi *ui, int island_index);
+static void island_expand_for_saved_chips(R01sUi *ui, int island_index);
+static int island_chips_overlap(const R01sUi *ui, int island_index);
+static void ui_rebuild_islands_from_saved_chips(R01sUi *ui);
 static void ui_chip_rel_from_abs(const R01sUi *ui, int chip_i, int abs_x, int abs_y, int *rx, int *ry);
 static void ui_chip_place_rel(R01sUi *ui, int chip_i, int rx, int ry);
 static void island_content_min_size(const R01sUi *ui, int island_index, int *min_w, int *min_h);
 static void draw_video_pixels(SDL_Renderer *r, R01sUi *ui, const R01sVideoSink *sink, int px, int py);
 static void ui_toggle_compact(R01sUi *ui);
 static void compact_btn_rect(const R01sUi *ui, SDL_Rect *rc);
+static void save_btn_rect(const R01sUi *ui, SDL_Rect *rc);
+static void ui_save_layout_now(R01sUi *ui);
 static void ui_toggle_lcd_scale(R01sUi *ui);
 static void scale_btn_rect(const R01sUi *ui, SDL_Rect *rc);
 static void ui_toggle_sim_fast(R01sUi *ui);
@@ -180,16 +188,15 @@ int r01s_ui_init(R01sUi *ui) {
     ui->drag_stick = -1;
     ui->drag_btn = -1;
     ui->ctx_chip = -1;
+    ui->box_sel = 0;
+    memset(ui->chip_sel, 0, sizeof(ui->chip_sel));
     snprintf(ui->status, sizeof(ui->status),
-             "SPACE pause — Ctrl+R reset — R rotate — SCALE / SIM PIN|FAST (sidebar) — COMPACT/ISLANDS");
+             "SPACE pause — S save layout — R rotate — SCALE / SIM (sidebar) — COMPACT/ISLANDS");
     return 0;
 }
 
 void r01s_ui_shutdown(R01sUi *ui) {
     if (ui) {
-        if (ui->group) {
-            r01s_ui_layout_save(ui);
-        }
         if (ui->lcd_tex) {
             SDL_DestroyTexture(ui->lcd_tex);
             ui->lcd_tex = NULL;
@@ -199,34 +206,64 @@ void r01s_ui_shutdown(R01sUi *ui) {
 }
 
 int r01s_ui_rotate_selected(R01sUi *ui) {
-    R01sEntity *te;
-    int idx;
+    int i;
+    int n = 0;
+    const char *last_ref = NULL;
+    R01sPkgOrient last_orient = R01S_ORIENT_H;
+
     if (!ui) {
         return 0;
     }
-    idx = ui->selected;
-    if (idx < 0 || idx >= ui->chip_count) {
-        idx = ui->ctx_chip;
-    }
-    if (idx < 0 || idx >= ui->chip_count) {
-        return 0;
-    }
-    te = ui->chips[idx];
-    if (!te || te->visual != R01S_ENTITY_VIS_IC) {
-        return 0;
-    }
-    r01s_entity_set_orient(te, te->orient == R01S_ORIENT_V ? R01S_ORIENT_H : R01S_ORIENT_V);
-    clamp_chip(ui, te, ui->chip_island[idx]);
+
+    /* Compact multi-select: rotate every selected IC. */
     if (ui->layout_compact) {
-        ui_save_compact_layout(ui);
-    } else {
-        ui_save_island_layout(ui);
+        for (i = 0; i < ui->chip_count; i++) {
+            R01sEntity *te;
+            if (!ui->chip_sel[i]) {
+                continue;
+            }
+            te = ui->chips[i];
+            if (!te || te->visual != R01S_ENTITY_VIS_IC) {
+                continue;
+            }
+            r01s_entity_set_orient(te, te->orient == R01S_ORIENT_V ? R01S_ORIENT_H : R01S_ORIENT_V);
+            clamp_chip(ui, te, ui->chip_island[i]);
+            last_ref = te->refdes;
+            last_orient = te->orient;
+            n++;
+        }
+        if (n > 0) {
+            ui->layout_dirty = 1;
+            if (n == 1) {
+                snprintf(ui->status, sizeof(ui->status), "%s → %s", last_ref ? last_ref : "?",
+                         last_orient == R01S_ORIENT_V ? "VERTICAL" : "HORIZONTAL");
+            } else {
+                snprintf(ui->status, sizeof(ui->status), "rotated %d chips", n);
+            }
+            return 1;
+        }
     }
-    ui->layout_dirty = 1;
-    r01s_ui_layout_save(ui);
-    snprintf(ui->status, sizeof(ui->status), "%s → %s", te->refdes ? te->refdes : "?",
-             te->orient == R01S_ORIENT_V ? "VERTICAL" : "HORIZONTAL");
-    return 1;
+
+    {
+        R01sEntity *te;
+        int idx = ui->selected;
+        if (idx < 0 || idx >= ui->chip_count) {
+            idx = ui->ctx_chip;
+        }
+        if (idx < 0 || idx >= ui->chip_count) {
+            return 0;
+        }
+        te = ui->chips[idx];
+        if (!te || te->visual != R01S_ENTITY_VIS_IC) {
+            return 0;
+        }
+        r01s_entity_set_orient(te, te->orient == R01S_ORIENT_V ? R01S_ORIENT_H : R01S_ORIENT_V);
+        clamp_chip(ui, te, ui->chip_island[idx]);
+        ui->layout_dirty = 1;
+        snprintf(ui->status, sizeof(ui->status), "%s → %s", te->refdes ? te->refdes : "?",
+                 te->orient == R01S_ORIENT_V ? "VERTICAL" : "HORIZONTAL");
+        return 1;
+    }
 }
 
 void r01s_ui_bind_group(R01sUi *ui, R01sIslandGroup *group) {
@@ -766,6 +803,206 @@ static void move_chip_drag(R01sUi *ui, int chip_i, int board_mx, int board_my) {
     clamp_chip(ui, e, ui->chip_island[chip_i]);
 }
 
+static void ui_sel_clear(R01sUi *ui) {
+    if (!ui) {
+        return;
+    }
+    memset(ui->chip_sel, 0, sizeof(ui->chip_sel));
+    ui->selected = -1;
+}
+
+static int ui_sel_count(const R01sUi *ui) {
+    int i;
+    int n = 0;
+    if (!ui) {
+        return 0;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        if (ui->chip_sel[i]) {
+            n++;
+        }
+    }
+    return n;
+}
+
+static void ui_sel_set_one(R01sUi *ui, int chip_i) {
+    if (!ui || chip_i < 0 || chip_i >= ui->chip_count) {
+        return;
+    }
+    memset(ui->chip_sel, 0, sizeof(ui->chip_sel));
+    ui->chip_sel[chip_i] = 1;
+    ui->selected = chip_i;
+}
+
+static void ui_sel_toggle(R01sUi *ui, int chip_i) {
+    int i;
+    if (!ui || chip_i < 0 || chip_i >= ui->chip_count) {
+        return;
+    }
+    ui->chip_sel[chip_i] = ui->chip_sel[chip_i] ? 0 : 1;
+    if (ui->chip_sel[chip_i]) {
+        ui->selected = chip_i;
+        return;
+    }
+    if (ui->selected == chip_i) {
+        ui->selected = -1;
+        for (i = 0; i < ui->chip_count; i++) {
+            if (ui->chip_sel[i]) {
+                ui->selected = i;
+                break;
+            }
+        }
+    }
+}
+
+static int chip_board_intersects_box(const R01sEntity *e, int x0, int y0, int x1, int y1) {
+    int l, t, r, b;
+    int el, et, er, eb;
+    if (!e || e->visual == R01S_ENTITY_VIS_NONE) {
+        return 0;
+    }
+    if (x0 > x1) {
+        int tmp = x0;
+        x0 = x1;
+        x1 = tmp;
+    }
+    if (y0 > y1) {
+        int tmp = y0;
+        y0 = y1;
+        y1 = tmp;
+    }
+    el = e->board_x;
+    et = e->board_y;
+    er = e->board_x + e->body_w;
+    eb = e->board_y + e->body_h;
+    l = x0;
+    t = y0;
+    r = x1;
+    b = y1;
+    return el < r && er > l && et < b && eb > t;
+}
+
+static void ui_sel_from_box(R01sUi *ui, int additive) {
+    int i;
+    int first = -1;
+    if (!ui) {
+        return;
+    }
+    if (!additive) {
+        memset(ui->chip_sel, 0, sizeof(ui->chip_sel));
+        ui->selected = -1;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        const R01sEntity *e = ui->chips[i];
+        if (!chip_board_intersects_box(e, ui->box_bx0, ui->box_by0, ui->box_bx1, ui->box_by1)) {
+            continue;
+        }
+        ui->chip_sel[i] = 1;
+        if (first < 0) {
+            first = i;
+        }
+    }
+    if (first >= 0) {
+        ui->selected = first;
+    } else if (!additive) {
+        ui->selected = -1;
+    }
+}
+
+static void ui_begin_sel_drag(R01sUi *ui, int board_mx, int board_my) {
+    int i;
+    if (!ui) {
+        return;
+    }
+    ui->sel_drag_ox = board_mx;
+    ui->sel_drag_oy = board_my;
+    for (i = 0; i < ui->chip_count; i++) {
+        const R01sEntity *e = ui->chips[i];
+        ui->sel_start_x[i] = e ? e->board_x : 0;
+        ui->sel_start_y[i] = e ? e->board_y : 0;
+    }
+}
+
+static void move_selection_drag(R01sUi *ui, int board_mx, int board_my) {
+    int i;
+    int dx;
+    int dy;
+    int dx_lo = -0x3fffffff;
+    int dx_hi = 0x3fffffff;
+    int dy_lo = -0x3fffffff;
+    int dy_hi = 0x3fffffff;
+    int any = 0;
+
+    if (!ui) {
+        return;
+    }
+    dx = r01s_grid_snap(board_mx - ui->sel_drag_ox);
+    dy = r01s_grid_snap(board_my - ui->sel_drag_oy);
+
+    for (i = 0; i < ui->chip_count; i++) {
+        R01sEntity *e;
+        int min_x, min_y, max_x, max_y;
+        if (!ui->chip_sel[i]) {
+            continue;
+        }
+        e = ui->chips[i];
+        if (!e) {
+            continue;
+        }
+        any = 1;
+        min_x = R01S_CHIP_PIN_OUT;
+        min_y = R01S_CHIP_PIN_OUT;
+        max_x = R01S_BOARD_W - R01S_CHIP_PIN_OUT - e->body_w;
+        max_y = R01S_BOARD_H - R01S_CHIP_PIN_OUT - e->body_h;
+        if (max_x < min_x) {
+            max_x = min_x;
+        }
+        if (max_y < min_y) {
+            max_y = min_y;
+        }
+        if (min_x - ui->sel_start_x[i] > dx_lo) {
+            dx_lo = min_x - ui->sel_start_x[i];
+        }
+        if (max_x - ui->sel_start_x[i] < dx_hi) {
+            dx_hi = max_x - ui->sel_start_x[i];
+        }
+        if (min_y - ui->sel_start_y[i] > dy_lo) {
+            dy_lo = min_y - ui->sel_start_y[i];
+        }
+        if (max_y - ui->sel_start_y[i] < dy_hi) {
+            dy_hi = max_y - ui->sel_start_y[i];
+        }
+    }
+    if (!any) {
+        return;
+    }
+    if (dx < dx_lo) {
+        dx = dx_lo;
+    }
+    if (dx > dx_hi) {
+        dx = dx_hi;
+    }
+    if (dy < dy_lo) {
+        dy = dy_lo;
+    }
+    if (dy > dy_hi) {
+        dy = dy_hi;
+    }
+    dx = r01s_grid_snap(dx);
+    dy = r01s_grid_snap(dy);
+    for (i = 0; i < ui->chip_count; i++) {
+        R01sEntity *e;
+        if (!ui->chip_sel[i]) {
+            continue;
+        }
+        e = ui->chips[i];
+        if (!e) {
+            continue;
+        }
+        r01s_entity_place(e, ui->sel_start_x[i] + dx, ui->sel_start_y[i] + dy);
+    }
+}
+
 typedef struct {
     int idx;
     int pw;
@@ -891,6 +1128,21 @@ static void ui_chip_place_rel(R01sUi *ui, int chip_i, int rx, int ry) {
     clamp_chip_in_island(ui, e, ui->chip_island[chip_i]);
 }
 
+/* Place at exact island-relative coords — used for faithful load (no clamp/grow). */
+static void ui_chip_place_rel_exact(R01sUi *ui, int chip_i, int rx, int ry) {
+    R01sEntity *e;
+    const R01sIsland *island;
+    if (!ui || !ui->group || chip_i < 0 || chip_i >= ui->chip_count) {
+        return;
+    }
+    e = ui->chips[chip_i];
+    island = r01s_island_group_at(ui->group, ui->chip_island[chip_i]);
+    if (!e || !island) {
+        return;
+    }
+    r01s_entity_place(e, island->board_x + rx, island->board_y + ry);
+}
+
 void r01s_ui_snapshot_island_layout(R01sUi *ui) {
     int i;
 
@@ -951,6 +1203,34 @@ static int ui_island_snapshot_valid(const R01sUi *ui) {
 
 static void ui_arrange_islands_default(R01sUi *ui) {
     int n_islands;
+    int i;
+
+    if (!ui || !ui->group) {
+        return;
+    }
+    n_islands = r01s_island_group_count(ui->group);
+    /*
+     * Pack chips into each island first. Never size frames from whatever absolute
+     * chip positions happen to be live (e.g. compact-mode coords) — that creates
+     * huge overlapping islands.
+     */
+    for (i = 0; i < n_islands; i++) {
+        R01sIsland *island = r01s_island_group_at_mut(ui->group, i);
+        if (!island) {
+            continue;
+        }
+        island->board_x = 0;
+        island->board_y = 0;
+        island->board_w = R01S_ISLAND_MIN_W;
+        island->board_h = R01S_ISLAND_MIN_H;
+        ui_pack_island_chips(ui, i);
+    }
+    ui_row_place_islands(ui);
+}
+
+/* Place already-sized islands in wrapping rows; chips move with their frame. */
+static void ui_row_place_islands(R01sUi *ui) {
+    int n_islands;
     int start_x = 40;
     int start_y = 40;
     int x = start_x;
@@ -972,7 +1252,6 @@ static void ui_arrange_islands_default(R01sUi *ui) {
         if (!island) {
             continue;
         }
-        ui_fit_island_to_chips(ui, i);
         if (island->board_w < R01S_ISLAND_MIN_W) {
             island->board_w = R01S_ISLAND_MIN_W;
         }
@@ -1006,7 +1285,62 @@ static void ui_arrange_islands_default(R01sUi *ui) {
     }
 }
 
-static void ui_fit_island_to_chips(R01sUi *ui, int island_index) {
+/*
+ * Recover island frames when islands[] was missing/empty but island_chips look
+ * like valid island-relative placements (common corrupt compact save).
+ */
+static void ui_rebuild_islands_from_saved_chips(R01sUi *ui) {
+    int n_islands;
+    int i;
+
+    if (!ui || !ui->group) {
+        return;
+    }
+    n_islands = r01s_island_group_count(ui->group);
+    for (i = 0; i < n_islands; i++) {
+        R01sIsland *island = r01s_island_group_at_mut(ui->group, i);
+        int j;
+        if (!island) {
+            continue;
+        }
+        if (!island_saved_chip_layout_sane(ui, i)) {
+            island->board_x = 0;
+            island->board_y = 0;
+            island->board_w = R01S_ISLAND_MIN_W;
+            island->board_h = R01S_ISLAND_MIN_H;
+            ui_pack_island_chips(ui, i);
+            continue;
+        }
+        island->board_x = 0;
+        island->board_y = 0;
+        island->board_w = R01S_ISLAND_MIN_W;
+        island->board_h = R01S_ISLAND_MIN_H;
+        for (j = 0; j < ui->chip_count; j++) {
+            R01sEntity *e = ui->chips[j];
+            if (!e || ui->chip_island[j] != (uint8_t)i) {
+                continue;
+            }
+            if (e->visual == R01S_ENTITY_VIS_IC) {
+                r01s_entity_set_orient(e, (R01sPkgOrient)ui->save_chip_orient[j]);
+            }
+        }
+        island_expand_for_saved_chips(ui, i);
+        for (j = 0; j < ui->chip_count; j++) {
+            if (ui->chip_island[j] != (uint8_t)i) {
+                continue;
+            }
+            ui_chip_place_rel(ui, j, ui->save_chip_x[j], ui->save_chip_y[j]);
+        }
+        ui_tighten_island_to_chips(ui, i);
+        if (island_chips_overlap(ui, i)) {
+            ui_pack_island_chips(ui, i);
+        }
+    }
+    ui_row_place_islands(ui);
+}
+
+/* Fit frame exactly to chip content (shrinks wasted empty space). */
+static void ui_tighten_island_to_chips(R01sUi *ui, int island_index) {
     R01sIsland *island;
     int min_w;
     int min_h;
@@ -1019,14 +1353,14 @@ static void ui_fit_island_to_chips(R01sUi *ui, int island_index) {
         return;
     }
     island_content_min_size(ui, island_index, &min_w, &min_h);
-    if (island->board_w < min_w) {
-        island->board_w = min_w;
+    if (min_w < R01S_ISLAND_MIN_W) {
+        min_w = R01S_ISLAND_MIN_W;
     }
-    if (island->board_h < min_h) {
-        island->board_h = min_h;
+    if (min_h < R01S_ISLAND_MIN_H) {
+        min_h = R01S_ISLAND_MIN_H;
     }
-    island->board_w = r01s_grid_snap_up(island->board_w);
-    island->board_h = r01s_grid_snap_up(island->board_h);
+    island->board_w = r01s_grid_snap_up(min_w);
+    island->board_h = r01s_grid_snap_up(min_h);
 }
 
 /* Shelf-pack chips inside one island so they never share the same cell. */
@@ -1084,7 +1418,7 @@ static void ui_pack_island_chips(R01sUi *ui, int island_index) {
         by += (ph - e->body_h) / 2;
         r01s_entity_place(e, r01s_grid_snap(bx), r01s_grid_snap(by));
     }
-    ui_fit_island_to_chips(ui, island_index);
+    ui_tighten_island_to_chips(ui, island_index);
 }
 
 static int entity_bodies_overlap(const R01sEntity *a, const R01sEntity *b) {
@@ -1152,6 +1486,40 @@ static int island_saved_positions_degenerate(const R01sUi *ui, int island_index)
     return n > 1;
 }
 
+/*
+ * Island-relative chip saves sometimes get corrupted into absolute board coords
+ * (ry in the thousands). Reject those so we re-pack instead of inflating frames.
+ */
+static int island_saved_chip_layout_sane(const R01sUi *ui, int island_index) {
+    int i;
+    int n = 0;
+    /* One island's content should stay well under the board row wrap width. */
+    const int max_rel = R01S_ISLAND_ROW_MAX_W;
+
+    if (!ui) {
+        return 0;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        if (ui->chip_island[i] != (uint8_t)island_index) {
+            continue;
+        }
+        if (!ui->chips[i] || ui->chips[i]->visual == R01S_ENTITY_VIS_NONE) {
+            continue;
+        }
+        n++;
+        if (ui->save_chip_x[i] < 0 || ui->save_chip_y[i] < 0) {
+            return 0;
+        }
+        if (ui->save_chip_x[i] > max_rel || ui->save_chip_y[i] > max_rel) {
+            return 0;
+        }
+    }
+    if (n == 0) {
+        return 1;
+    }
+    return !island_saved_positions_degenerate(ui, island_index);
+}
+
 static void island_expand_for_saved_chips(R01sUi *ui, int island_index) {
     R01sIsland *island;
     int i;
@@ -1216,17 +1584,16 @@ void r01s_ui_apply_saved_island_layout(R01sUi *ui) {
     }
     n_islands = r01s_island_group_count(ui->group);
 
-    if (ui_island_snapshot_valid(ui)) {
-        for (i = 0; i < n_islands && i < R01S_MAX_ISLANDS; i++) {
-            R01sIsland *island = r01s_island_group_at_mut(ui->group, i);
-            if (!island || ui->save_island_w[i] <= 0 || ui->save_island_h[i] <= 0) {
-                continue;
-            }
-            island->board_x = r01s_grid_snap(ui->save_island_x[i]);
-            island->board_y = r01s_grid_snap(ui->save_island_y[i]);
-            island->board_w = r01s_grid_snap_up(ui->save_island_w[i]);
-            island->board_h = r01s_grid_snap_up(ui->save_island_h[i]);
+    /* Exact frames from file — no snap/expand/pack. */
+    for (i = 0; i < n_islands && i < R01S_MAX_ISLANDS; i++) {
+        R01sIsland *island = r01s_island_group_at_mut(ui->group, i);
+        if (!island || ui->save_island_w[i] <= 0 || ui->save_island_h[i] <= 0) {
+            continue;
         }
+        island->board_x = ui->save_island_x[i];
+        island->board_y = ui->save_island_y[i];
+        island->board_w = ui->save_island_w[i];
+        island->board_h = ui->save_island_h[i];
     }
 
     for (i = 0; i < ui->chip_count; i++) {
@@ -1237,28 +1604,7 @@ void r01s_ui_apply_saved_island_layout(R01sUi *ui) {
         if (e->visual == R01S_ENTITY_VIS_IC) {
             r01s_entity_set_orient(e, (R01sPkgOrient)ui->save_chip_orient[i]);
         }
-    }
-
-    for (i = 0; i < n_islands; i++) {
-        if (island_saved_positions_degenerate(ui, i)) {
-            ui_pack_island_chips(ui, i);
-            continue;
-        }
-        island_expand_for_saved_chips(ui, i);
-        {
-            int j;
-            for (j = 0; j < ui->chip_count; j++) {
-                R01sEntity *e = ui->chips[j];
-                if (!e || ui->chip_island[j] != (uint8_t)i) {
-                    continue;
-                }
-                ui_chip_place_rel(ui, j, ui->save_chip_x[j], ui->save_chip_y[j]);
-            }
-        }
-        ui_fit_island_to_chips(ui, i);
-        if (island_chips_overlap(ui, i)) {
-            ui_pack_island_chips(ui, i);
-        }
+        ui_chip_place_rel_exact(ui, i, ui->save_chip_x[i], ui->save_chip_y[i]);
     }
 }
 
@@ -1309,30 +1655,67 @@ void r01s_ui_load_island_layout(R01sUi *ui, int file_version) {
             if (!island || ui->save_island_w[i] <= 0 || ui->save_island_h[i] <= 0) {
                 continue;
             }
-            island->board_x = r01s_grid_snap(ui->save_island_x[i]);
-            island->board_y = r01s_grid_snap(ui->save_island_y[i]);
-            island->board_w = r01s_grid_snap_up(ui->save_island_w[i]);
-            island->board_h = r01s_grid_snap_up(ui->save_island_h[i]);
+            island->board_x = ui->save_island_x[i];
+            island->board_y = ui->save_island_y[i];
+            island->board_w = ui->save_island_w[i];
+            island->board_h = ui->save_island_h[i];
         }
         r01s_ui_layout_migrate_v1_chips(ui);
     }
 
+    /*
+     * Missing/empty islands[] with leftover island_chips is a common corrupt
+     * save. Rebuild frames from relative chip placements when those look sane;
+     * otherwise pack from scratch. Valid saves apply verbatim.
+     */
     if (!ui_island_snapshot_valid(ui)) {
-        ui_arrange_islands_default(ui);
+        int any_sane = 0;
+        for (i = 0; i < n_islands; i++) {
+            if (island_saved_chip_layout_sane(ui, i)) {
+                any_sane = 1;
+                break;
+            }
+        }
+        if (any_sane) {
+            ui_rebuild_islands_from_saved_chips(ui);
+        } else {
+            ui_arrange_islands_default(ui);
+        }
+        r01s_ui_snapshot_island_layout(ui);
+        return;
     }
+
     r01s_ui_apply_saved_island_layout(ui);
-    /* Persist repaired positions (pack / expand) into the in-memory snapshot. */
-    r01s_ui_snapshot_island_layout(ui);
 }
 
 static void ui_restore_island_layout(R01sUi *ui) {
+    int i;
+    int n_islands;
+
     if (!ui || !ui->group) {
         return;
     }
-    if (!ui->layout_saved || !ui_island_snapshot_valid(ui)) {
-        ui_arrange_islands_default(ui);
+    if (ui->layout_saved && ui_island_snapshot_valid(ui)) {
+        r01s_ui_apply_saved_island_layout(ui);
+        return;
     }
-    r01s_ui_apply_saved_island_layout(ui);
+    /* Frames missing: recover from island_chips if possible. */
+    n_islands = r01s_island_group_count(ui->group);
+    if (ui->layout_saved) {
+        int any_sane = 0;
+        for (i = 0; i < n_islands; i++) {
+            if (island_saved_chip_layout_sane(ui, i)) {
+                any_sane = 1;
+                break;
+            }
+        }
+        if (any_sane) {
+            ui_rebuild_islands_from_saved_chips(ui);
+            r01s_ui_snapshot_island_layout(ui);
+            return;
+        }
+    }
+    ui_arrange_islands_default(ui);
     r01s_ui_snapshot_island_layout(ui);
 }
 
@@ -1349,8 +1732,7 @@ static void ui_restore_compact_layout(R01sUi *ui) {
         if (e->visual == R01S_ENTITY_VIS_IC) {
             r01s_entity_set_orient(e, (R01sPkgOrient)ui->compact_chip_orient[i]);
         }
-        r01s_entity_place(e, r01s_grid_snap(ui->compact_chip_x[i]), r01s_grid_snap(ui->compact_chip_y[i]));
-        clamp_chip_to_board(e);
+        r01s_entity_place(e, ui->compact_chip_x[i], ui->compact_chip_y[i]);
     }
 }
 
@@ -1450,6 +1832,8 @@ static void ui_toggle_compact(R01sUi *ui) {
     ui->resize_island = -1;
     ui->selected = -1;
     ui->ctx_chip = -1;
+    ui->box_sel = 0;
+    memset(ui->chip_sel, 0, sizeof(ui->chip_sel));
 
     if (!ui->layout_compact) {
         ui_save_island_layout(ui);
@@ -1470,7 +1854,6 @@ static void ui_toggle_compact(R01sUi *ui) {
         snprintf(ui->status, sizeof(ui->status), "island layout restored");
         r01s_ui_clamp_pan(ui);
     }
-    r01s_ui_layout_save(ui);
 }
 
 static void compact_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
@@ -1480,6 +1863,28 @@ static void compact_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
     rc->y = 3;
     rc->w = tw;
     rc->h = 16;
+}
+
+static void save_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
+    SDL_Rect cbtn;
+    const char *label = "SAVE";
+    int tw = font_text_width(label) + 16;
+    compact_btn_rect(ui, &cbtn);
+    rc->w = tw;
+    rc->h = 16;
+    rc->y = 3;
+    rc->x = cbtn.x - tw - 6;
+}
+
+static void ui_save_layout_now(R01sUi *ui) {
+    if (!ui || !ui->group) {
+        return;
+    }
+    if (r01s_ui_layout_save(ui) == 0) {
+        snprintf(ui->status, sizeof(ui->status), "layout saved");
+    } else {
+        snprintf(ui->status, sizeof(ui->status), "layout save failed");
+    }
 }
 
 static void island_content_min_size(const R01sUi *ui, int island_index, int *min_w, int *min_h) {
@@ -2134,7 +2539,7 @@ static void draw_island_header(SDL_Renderer *r, const R01sUi *ui, const R01sIsla
 }
 
 static int hit_chip(const R01sUi *ui, const R01sEntity *e, int lx, int ly);
-static int hit_island_header(const R01sUi *ui, const R01sIsland *island, int lx, int ly);
+static int hit_board_top(const R01sUi *ui, int lx, int ly, int *chip_out, int *island_out, int *corner_out);
 
 static void draw_tooltip(SDL_Renderer *r, int lx, int ly, const char *text) {
     int tw;
@@ -2168,14 +2573,10 @@ static void draw_tooltip(SDL_Renderer *r, int lx, int ly, const char *text) {
     font_draw(r, box_x + pad, box_y + pad, text, 220, 230, 200);
 }
 
-static int hit_island_header(const R01sUi *ui, const R01sIsland *island, int lx, int ly) {
-    int x = ui_board_sx(ui, island->board_x);
-    int y = ui_board_sy(ui, island->board_y);
-    return lx >= x && lx < x + island->board_w && ly >= y && ly < y + R01S_ISLAND_HEADER_H;
-}
-
 static void ui_fill_tooltip(const R01sUi *ui, char *out, size_t out_len) {
-    int i;
+    int chip_i = -1;
+    int island_i = -1;
+    int kind;
 
     if (!ui || !out || out_len == 0) {
         return;
@@ -2185,10 +2586,11 @@ static void ui_fill_tooltip(const R01sUi *ui, char *out, size_t out_len) {
         return;
     }
 
-    for (i = ui->chip_count - 1; i >= 0; i--) {
-        const R01sEntity *e = ui->chips[i];
-        if (!hit_chip(ui, e, ui->mouse_lx, ui->mouse_ly)) {
-            continue;
+    kind = hit_board_top(ui, ui->mouse_lx, ui->mouse_ly, &chip_i, &island_i, NULL);
+    if (kind == 1 && chip_i >= 0 && chip_i < ui->chip_count) {
+        const R01sEntity *e = ui->chips[chip_i];
+        if (!e) {
+            return;
         }
         if (e->refdes && e->part) {
             snprintf(out, out_len, "%s  %s", e->refdes, e->part);
@@ -2199,23 +2601,19 @@ static void ui_fill_tooltip(const R01sUi *ui, char *out, size_t out_len) {
         }
         return;
     }
-
-    if (ui->group) {
-        for (i = r01s_island_group_count(ui->group) - 1; i >= 0; i--) {
-            const R01sIsland *island = r01s_island_group_at(ui->group, i);
-            const R01sIslandHealth *ih = NULL;
-            if (!island || !hit_island_header(ui, island, ui->mouse_lx, ui->mouse_ly)) {
-                continue;
-            }
-            if (i < ui->health.island_count) {
-                ih = &ui->health.islands[i];
-            }
-            if (ih && ih->activity[0]) {
-                snprintf(out, out_len, "%s - %s", island->title ? island->title : "ISLAND", ih->activity);
-            } else {
-                snprintf(out, out_len, "%s", island->title ? island->title : "ISLAND");
-            }
+    if ((kind == 2 || kind == 3) && island_i >= 0 && ui->group) {
+        const R01sIsland *island = r01s_island_group_at(ui->group, island_i);
+        const R01sIslandHealth *ih = NULL;
+        if (!island) {
             return;
+        }
+        if (island_i < ui->health.island_count) {
+            ih = &ui->health.islands[island_i];
+        }
+        if (ih && ih->activity[0]) {
+            snprintf(out, out_len, "%s - %s", island->title ? island->title : "ISLAND", ih->activity);
+        } else {
+            snprintf(out, out_len, "%s", island->title ? island->title : "ISLAND");
         }
     }
 }
@@ -2537,7 +2935,29 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
         }
     } else {
         for (i = 0; i < ui->chip_count; i++) {
-            draw_board_item(r, ui, ui->chips[i], i == ui->selected);
+            draw_board_item(r, ui, ui->chips[i], ui->chip_sel[i] || i == ui->selected);
+        }
+        if (ui->box_sel) {
+            int x0 = ui_board_sx(ui, ui->box_bx0 < ui->box_bx1 ? ui->box_bx0 : ui->box_bx1);
+            int y0 = ui_board_sy(ui, ui->box_by0 < ui->box_by1 ? ui->box_by0 : ui->box_by1);
+            int x1 = ui_board_sx(ui, ui->box_bx0 < ui->box_bx1 ? ui->box_bx1 : ui->box_bx0);
+            int y1 = ui_board_sy(ui, ui->box_by0 < ui->box_by1 ? ui->box_by1 : ui->box_by0);
+            int bw = x1 - x0;
+            int bh = y1 - y0;
+            if (bw < 1) {
+                bw = 1;
+            }
+            if (bh < 1) {
+                bh = 1;
+            }
+            SDL_SetRenderDrawColor(r, 80, 180, 120, 40);
+            {
+                SDL_Rect fill = {x0, y0, bw, bh};
+                SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+                SDL_RenderFillRect(r, &fill);
+                SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
+            }
+            draw_rect(r, x0, y0, bw, bh, 120, 220, 160);
         }
     }
     SDL_RenderSetClipRect(r, NULL);
@@ -2548,11 +2968,21 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_UI_HUD_TOP, 12, 14, 16);
     font_draw(r, 8, 7, "RETR01 SIM  ISLANDS O+A+C+D+G+H+J+K+L", 200, 210, 220);
     if (ui->layout_compact) {
-        font_draw(r, R01S_UI_VIEW_X + 8, 7, "COMPACT  R ROTATE  G SCALE  Ctrl+R RESET  SHIFT+ARROWS PAN", 120, 130,
-                  140);
+        font_draw(r, R01S_UI_VIEW_X + 8, 7,
+                  "COMPACT  DRAG-BOX SELECT  S SAVE  R ROTATE  G SCALE  SHIFT+CLICK", 120, 130, 140);
     } else {
-        font_draw(r, R01S_UI_VIEW_X + 8, 7, "R ROTATE  G SCALE  Ctrl+R RESET  DRAG/RESIZE  SHIFT+ARROWS PAN", 120,
+        font_draw(r, R01S_UI_VIEW_X + 8, 7, "S SAVE  R ROTATE  G SCALE  Ctrl+R RESET  DRAG/RESIZE  SHIFT+ARROWS PAN", 120,
                   130, 140);
+    }
+    {
+        SDL_Rect sbtn;
+        save_btn_rect(ui, &sbtn);
+        fill_rect(r, sbtn.x, sbtn.y, sbtn.w, sbtn.h, ui->layout_dirty ? 70 : 28, ui->layout_dirty ? 55 : 40,
+                  ui->layout_dirty ? 30 : 32);
+        draw_rect(r, sbtn.x, sbtn.y, sbtn.w, sbtn.h, ui->layout_dirty ? 220 : 120, ui->layout_dirty ? 180 : 160,
+                  ui->layout_dirty ? 100 : 130);
+        font_draw(r, sbtn.x + 8, sbtn.y + 5, "SAVE", ui->layout_dirty ? 255 : 200, ui->layout_dirty ? 230 : 220,
+                  ui->layout_dirty ? 180 : 180);
     }
     {
         SDL_Rect cbtn;
@@ -2702,14 +3132,123 @@ static int hit_island_resize(const R01sUi *ui, const R01sIsland *island, int lx,
     return -1;
 }
 
-static int island_has_chip_at(const R01sUi *ui, int island_index, int lx, int ly) {
+/* Front-most island first (matches draw: higher index on top; active drag/resize on top). */
+static int island_hit_stack(const R01sUi *ui, int *out_idx, int max_out) {
+    int n;
+    int front;
     int i;
-    for (i = 0; i < ui->chip_count; i++) {
+    int k = 0;
+
+    if (!ui || !ui->group || !out_idx || max_out <= 0) {
+        return 0;
+    }
+    n = r01s_island_group_count(ui->group);
+    if (n > max_out) {
+        n = max_out;
+    }
+    front = -1;
+    if (ui->drag_island >= 0) {
+        front = ui->drag_island;
+    } else if (ui->resize_island >= 0) {
+        front = ui->resize_island;
+    }
+    if (front >= 0 && front < n) {
+        out_idx[k++] = front;
+    }
+    for (i = n - 1; i >= 0; i--) {
+        if (i == front) {
+            continue;
+        }
+        out_idx[k++] = i;
+    }
+    return k;
+}
+
+/* Topmost chip of this island under (lx,ly), or -1. */
+static int hit_chip_in_island(const R01sUi *ui, int island_index, int lx, int ly) {
+    int i;
+    for (i = ui->chip_count - 1; i >= 0; i--) {
         if (ui->chip_island[i] != (uint8_t)island_index) {
             continue;
         }
-        if (hit_chip(ui, ui->chips[i], lx, ly)) {
-            return 1;
+        if (ui->chips[i] && hit_chip(ui, ui->chips[i], lx, ly)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+/*
+ * Board pick matching draw occlusion.
+ * Returns: 0 miss, 1 chip (*chip_out), 2 move island (*island_out), 3 resize (*island_out, *corner_out).
+ */
+static int hit_board_top(const R01sUi *ui, int lx, int ly, int *chip_out, int *island_out, int *corner_out) {
+    int stack[R01S_MAX_ISLANDS];
+    int nstack;
+    int s;
+
+    if (chip_out) {
+        *chip_out = -1;
+    }
+    if (island_out) {
+        *island_out = -1;
+    }
+    if (corner_out) {
+        *corner_out = -1;
+    }
+    if (!ui || !ui_logic_in_view(lx, ly)) {
+        return 0;
+    }
+
+    if (ui->group && !ui->layout_compact) {
+        nstack = island_hit_stack(ui, stack, R01S_MAX_ISLANDS);
+        for (s = 0; s < nstack; s++) {
+            int ii = stack[s];
+            const R01sIsland *island = r01s_island_group_at(ui->group, ii);
+            int corner;
+            int chip_i;
+            if (!island || !hit_island_frame(ui, island, lx, ly)) {
+                continue;
+            }
+            /* This island fully occludes anything behind it. */
+            corner = hit_island_resize(ui, island, lx, ly);
+            if (corner >= 0) {
+                if (island_out) {
+                    *island_out = ii;
+                }
+                if (corner_out) {
+                    *corner_out = corner;
+                }
+                return 3;
+            }
+            chip_i = hit_chip_in_island(ui, ii, lx, ly);
+            if (chip_i >= 0) {
+                if (chip_out) {
+                    *chip_out = chip_i;
+                }
+                if (island_out) {
+                    *island_out = ii;
+                }
+                return 1;
+            }
+            if (island_out) {
+                *island_out = ii;
+            }
+            return 2;
+        }
+        return 0;
+    }
+
+    /* Compact (or no islands): chips only, last-drawn wins. */
+    {
+        int i;
+        for (i = ui->chip_count - 1; i >= 0; i--) {
+            if (ui->chips[i] && hit_chip(ui, ui->chips[i], lx, ly)) {
+                if (chip_out) {
+                    *chip_out = i;
+                }
+                return 1;
+            }
         }
     }
     return 0;
@@ -2743,18 +3282,24 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
     if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_RIGHT) {
         /* Chip context menu (orient); otherwise board pan. */
         if (ui_logic_in_view(logic_x, logic_y)) {
-            for (i = ui->chip_count - 1; i >= 0; i--) {
-                if (ui->chips[i] && ui->chips[i]->visual == R01S_ENTITY_VIS_IC &&
-                    hit_chip(ui, ui->chips[i], logic_x, logic_y)) {
-                    ui->ctx_chip = i;
-                    ui->ctx_x = logic_x;
-                    ui->ctx_y = logic_y;
-                    ui->selected = i;
-                    return 1;
+            int chip_i = -1;
+            int kind = hit_board_top(ui, logic_x, logic_y, &chip_i, NULL, NULL);
+            if (kind == 1 && chip_i >= 0 && chip_i < ui->chip_count && ui->chips[chip_i] &&
+                ui->chips[chip_i]->visual == R01S_ENTITY_VIS_IC) {
+                ui->ctx_chip = chip_i;
+                ui->ctx_x = logic_x;
+                ui->ctx_y = logic_y;
+                if (ui->layout_compact) {
+                    if (!ui->chip_sel[chip_i]) {
+                        ui_sel_set_one(ui, chip_i);
+                    } else {
+                        ui->selected = chip_i;
+                    }
+                } else {
+                    ui->selected = chip_i;
                 }
+                return 1;
             }
-        }
-        if (ui_logic_in_view(logic_x, logic_y)) {
             ui->ctx_chip = -1;
             ui->drag_pan = 1;
             ui->drag_last_x = logic_x;
@@ -2797,13 +3342,26 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         move_island_drag(ui, ui->drag_island, board_mx, board_my);
         return 1;
     }
+    if (e->type == SDL_MOUSEMOTION && ui->box_sel) {
+        ui->box_bx1 = board_mx;
+        ui->box_by1 = board_my;
+        return 1;
+    }
     if (e->type == SDL_MOUSEMOTION && ui->drag_chip >= 0) {
-        move_chip_drag(ui, ui->drag_chip, board_mx, board_my);
+        if (ui->layout_compact && ui_sel_count(ui) > 1) {
+            move_selection_drag(ui, board_mx, board_my);
+        } else {
+            move_chip_drag(ui, ui->drag_chip, board_mx, board_my);
+        }
         return 1;
     }
     if (e->type == SDL_KEYDOWN) {
         const Uint8 *mods = SDL_GetKeyboardState(NULL);
         int step = 48;
+        if (!(e->key.keysym.mod & KMOD_CTRL) && e->key.keysym.sym == SDLK_s) {
+            ui_save_layout_now(ui);
+            return 1;
+        }
         if (!(e->key.keysym.mod & KMOD_CTRL) && e->key.keysym.sym == SDLK_r) {
             if (r01s_ui_rotate_selected(ui)) {
                 return 1;
@@ -2852,14 +3410,32 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             ui->drag_btn = -1;
             return 1;
         }
+        if (ui->box_sel) {
+            int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
+            int w = ui->box_bx1 - ui->box_bx0;
+            int h = ui->box_by1 - ui->box_by0;
+            if (w < 0) {
+                w = -w;
+            }
+            if (h < 0) {
+                h = -h;
+            }
+            ui->box_sel = 0;
+            if (w >= 4 || h >= 4) {
+                ui_sel_from_box(ui, shift);
+                snprintf(ui->status, sizeof(ui->status), "selected %d", ui_sel_count(ui));
+            } else if (!shift) {
+                ui_sel_clear(ui);
+            }
+            return 1;
+        }
         ui->drag_chip = -1;
         ui->drag_island = -1;
         ui->resize_island = -1;
         if (was_layout_drag) {
             ui->layout_dirty = 1;
-            r01s_ui_layout_save(ui);
         }
-        return ui->selected >= 0;
+        return ui->selected >= 0 || ui_sel_count(ui) > 0;
     }
     if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT) {
         int gp_player = 0;
@@ -2889,6 +3465,17 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 return 1;
             }
             ui->ctx_chip = -1; /* click elsewhere dismisses */
+        }
+
+        /* Save layout (top HUD). */
+        {
+            SDL_Rect sbtn;
+            save_btn_rect(ui, &sbtn);
+            if (logic_x >= sbtn.x && logic_x < sbtn.x + sbtn.w && logic_y >= sbtn.y &&
+                logic_y < sbtn.y + sbtn.h) {
+                ui_save_layout_now(ui);
+                return 1;
+            }
         }
 
         /* Compact / Islands layout toggle (top HUD). */
@@ -2964,59 +3551,79 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         ui->drag_island = -1;
         ui->resize_island = -1;
 
-        /* Resize handle wins over chips (any corner grip). */
-        if (ui->group && !ui->layout_compact) {
-            for (i = r01s_island_group_count(ui->group) - 1; i >= 0; i--) {
-                const R01sIsland *island = r01s_island_group_at(ui->group, i);
-                int corner;
-                if (!island) {
-                    continue;
-                }
-                corner = hit_island_resize(ui, island, logic_x, logic_y);
-                if (corner >= 0) {
-                    ui->resize_island = i;
-                    ui->resize_corner = corner;
-                    snprintf(ui->status, sizeof(ui->status), "resize %s",
-                             island->title ? island->title : "ISLAND");
-                    return 1;
-                }
-            }
-        }
-
         if (!ui_logic_in_view(logic_x, logic_y)) {
             return 1;
         }
 
-        for (i = ui->chip_count - 1; i >= 0; i--) {
-            if (hit_chip(ui, ui->chips[i], logic_x, logic_y)) {
-                ui->selected = i;
-                ui->drag_chip = i;
-                ui->drag_grab_bx = board_mx - ui->chips[i]->board_x;
-                ui->drag_grab_by = board_my - ui->chips[i]->board_y;
-                snprintf(ui->status, sizeof(ui->status), "drag %s (%s)  pins=%d",
-                         ui->chips[i]->refdes ? ui->chips[i]->refdes : "?",
-                         ui->chips[i]->part ? ui->chips[i]->part : "?", ui->chips[i]->pin_count);
+        {
+            int chip_i = -1;
+            int island_i = -1;
+            int corner = -1;
+            int kind = hit_board_top(ui, logic_x, logic_y, &chip_i, &island_i, &corner);
+            int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
+
+            if (kind == 3 && island_i >= 0) {
+                const R01sIsland *island = r01s_island_group_at(ui->group, island_i);
+                ui_sel_clear(ui);
+                ui->resize_island = island_i;
+                ui->resize_corner = corner;
+                snprintf(ui->status, sizeof(ui->status), "resize %s",
+                         island && island->title ? island->title : "ISLAND");
                 return 1;
             }
-        }
-
-        /* Empty island area (including title bar) moves the frame + chips. */
-        if (ui->group && !ui->layout_compact) {
-            for (i = r01s_island_group_count(ui->group) - 1; i >= 0; i--) {
-                const R01sIsland *island = r01s_island_group_at(ui->group, i);
-                if (!island || !hit_island_frame(ui, island, logic_x, logic_y)) {
-                    continue;
+            if (kind == 1 && chip_i >= 0 && chip_i < ui->chip_count && ui->chips[chip_i]) {
+                if (ui->layout_compact && shift) {
+                    ui_sel_toggle(ui, chip_i);
+                    snprintf(ui->status, sizeof(ui->status), "selected %d", ui_sel_count(ui));
+                    return 1;
                 }
-                if (island_has_chip_at(ui, i, logic_x, logic_y)) {
-                    continue;
+                if (ui->layout_compact && ui->chip_sel[chip_i] && ui_sel_count(ui) > 1) {
+                    /* Drag whole selection; keep multi-select. */
+                    ui->selected = chip_i;
+                    ui->drag_chip = chip_i;
+                    ui->drag_grab_bx = board_mx - ui->chips[chip_i]->board_x;
+                    ui->drag_grab_by = board_my - ui->chips[chip_i]->board_y;
+                    ui_begin_sel_drag(ui, board_mx, board_my);
+                    snprintf(ui->status, sizeof(ui->status), "drag %d chips", ui_sel_count(ui));
+                    return 1;
                 }
-                ui->drag_island = i;
+                if (ui->layout_compact) {
+                    ui_sel_set_one(ui, chip_i);
+                } else {
+                    ui_sel_clear(ui);
+                    ui->selected = chip_i;
+                }
+                ui->drag_chip = chip_i;
+                ui->drag_grab_bx = board_mx - ui->chips[chip_i]->board_x;
+                ui->drag_grab_by = board_my - ui->chips[chip_i]->board_y;
+                ui_begin_sel_drag(ui, board_mx, board_my);
+                snprintf(ui->status, sizeof(ui->status), "drag %s (%s)  pins=%d",
+                         ui->chips[chip_i]->refdes ? ui->chips[chip_i]->refdes : "?",
+                         ui->chips[chip_i]->part ? ui->chips[chip_i]->part : "?",
+                         ui->chips[chip_i]->pin_count);
+                return 1;
+            }
+            if (kind == 2 && island_i >= 0) {
+                const R01sIsland *island = r01s_island_group_at(ui->group, island_i);
+                ui_sel_clear(ui);
+                ui->drag_island = island_i;
                 ui->drag_grab_bx = board_mx - island->board_x;
                 ui->drag_grab_by = board_my - island->board_y;
                 snprintf(ui->status, sizeof(ui->status), "move %s",
-                         island->title ? island->title : "ISLAND");
+                         island && island->title ? island->title : "ISLAND");
                 return 1;
             }
+            /* Compact empty board: start marquee select. */
+            if (ui->layout_compact) {
+                if (!shift) {
+                    ui_sel_clear(ui);
+                }
+                ui->box_sel = 1;
+                ui->box_bx0 = ui->box_bx1 = board_mx;
+                ui->box_by0 = ui->box_by1 = board_my;
+                return 1;
+            }
+            ui_sel_clear(ui);
         }
         return 1;
     }

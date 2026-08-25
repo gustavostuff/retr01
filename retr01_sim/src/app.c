@@ -499,6 +499,45 @@ void r01s_app_frame(R01sApp *app) {
     SDL_RenderPresent(app->ren);
 }
 
+/* 1 = proceed with quit, 0 = stay open. */
+static int app_confirm_quit(R01sApp *app) {
+    const SDL_MessageBoxButtonData buttons[] = {
+        {SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 0, "Save"},
+        {0, 1, "Don't Save"},
+        {SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 2, "Cancel"},
+    };
+    SDL_MessageBoxData data;
+    int button = 2;
+
+    if (!app) {
+        return 1;
+    }
+    if (!app->ui.layout_dirty) {
+        return 1;
+    }
+    memset(&data, 0, sizeof(data));
+    data.flags = SDL_MESSAGEBOX_WARNING;
+    data.window = app->win;
+    data.title = "Unsaved layout";
+    data.message = "Layout has changed. Save layout before closing?";
+    data.numbuttons = 3;
+    data.buttons = buttons;
+    if (SDL_ShowMessageBox(&data, &button) < 0) {
+        fprintf(stderr, "layout: quit prompt failed (%s)\n", SDL_GetError());
+        return 1;
+    }
+    if (button == 0) {
+        if (r01s_ui_layout_save(&app->ui) != 0) {
+            fprintf(stderr, "layout: save failed on quit\n");
+        }
+        return 1;
+    }
+    if (button == 1) {
+        return 1;
+    }
+    return 0;
+}
+
 void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
     int lx, ly;
     R01sIslandGroup *group;
@@ -507,6 +546,9 @@ void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
     }
     group = r01s_island_builder_group(&app->builder);
     if (e->type == SDL_QUIT) {
+        if (!app_confirm_quit(app)) {
+            return;
+        }
         if (app->catchup_board) {
             app->catchup_board->catchup_cancel = 1;
         }
@@ -516,6 +558,9 @@ void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
     if (e->type == SDL_KEYDOWN && group) {
         switch (e->key.keysym.sym) {
         case SDLK_ESCAPE:
+            if (!app_confirm_quit(app)) {
+                return;
+            }
             if (app->catchup_board) {
                 app->catchup_board->catchup_cancel = 1;
             }

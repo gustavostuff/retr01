@@ -30,7 +30,13 @@ typedef struct R01sUi {
     R01sEntity *chips[R01S_BOARD_MAX_CHIPS];
     uint8_t chip_island[R01S_BOARD_MAX_CHIPS];
     int chip_count;
-    int selected; /* index or -1 */
+    int selected; /* primary index or -1 (compat / status) */
+    uint8_t chip_sel[R01S_BOARD_MAX_CHIPS]; /* compact multi-select */
+    int box_sel; /* 1 = dragging marquee in compact mode */
+    int box_bx0, box_by0, box_bx1, box_by1; /* board-space marquee */
+    int sel_drag_ox, sel_drag_oy; /* board mouse at multi-drag start */
+    int sel_start_x[R01S_BOARD_MAX_CHIPS];
+    int sel_start_y[R01S_BOARD_MAX_CHIPS];
     int pan_x;
     int pan_y;
     int drag_pan; /* middle/right button pan */
@@ -77,7 +83,7 @@ typedef struct R01sUi {
     int compact_chip_x[R01S_BOARD_MAX_CHIPS];
     int compact_chip_y[R01S_BOARD_MAX_CHIPS];
     uint8_t compact_chip_orient[R01S_BOARD_MAX_CHIPS];
-    int layout_dirty; /* write ui_layout.json on next save opportunity */
+    int layout_dirty; /* 1 = unsaved layout edits (SAVE / S to write ui_layout.json) */
     SDL_Texture *lcd_tex; /* 256×240 LCD framebuffer upload (streaming) */
 } R01sUi;
 
