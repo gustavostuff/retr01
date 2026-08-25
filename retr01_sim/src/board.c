@@ -17,7 +17,7 @@
 /*
  * DOT/beam ticks per board step. Real silicon runs DOT ≈ PHI2 order; the UI
  * only does a few board steps/frame, so without a burst first VBlank takes minutes.
- * Keep this modest — CPU load scales with dots × settle × steps/frame.
+ * Keep this modest: CPU load scales with dots × settle × steps/frame.
  */
 #define R01S_BEAM_DOTS_PER_STEP 32
 /* Host Play: faster fields so ~1px/VBlank feels closer to 60 Hz game time. */
@@ -28,7 +28,7 @@
 #define R01S_SETTLE_PASSES_FAST 1
 
 /*
- * Bring-up smoke PRG (overlay into cart PRG window — not Studio game code).
+ * Bring-up smoke PRG (overlay into cart PRG window: not Studio game code).
  * Body through OAM readback is fixed. When cart meta is valid, install appends
  * pal+$FE08/$FE09 load and 480 B MAP→VRAM, then pad hang (addresses patched).
  * Ends with MAP seek 0 + LDA $FE93 ('R') BEFORE any MAP stream so island health sticks.
@@ -59,26 +59,26 @@ static const uint8_t R01S_BRINGUP_SMOKE[] = {
     0x8D, 0x11, 0xFE, /* STA $FE11 */
     0xA9, 0x07,       /* LDA #$07 */
     0x8D, 0x12, 0xFE, /* STA $FE12 attr[0] */
-    0xA9, 0x00,       /* LDA #$00 — MAP seek 0 */
+    0xA9, 0x00,       /* LDA #$00: MAP seek 0 */
     0x8D, 0x90, 0xFE, /* STA $FE90 */
     0x8D, 0x91, 0xFE, /* STA $FE91 */
     0x8D, 0x92, 0xFE, /* STA $FE92 */
     0xAD, 0x93, 0xFE, /* LDA $FE93 expect $52 'R' */
-    0xA9, 0x10,       /* LDA #$10 — APU period lo */
+    0xA9, 0x10,       /* LDA #$10: APU period lo */
     0x8D, 0x41, 0xFE, /* STA $FE41 */
-    0xA9, 0x00,       /* LDA #$00 — APU period hi */
+    0xA9, 0x00,       /* LDA #$00: APU period hi */
     0x8D, 0x42, 0xFE, /* STA $FE42 */
-    0xA9, 0x8F,       /* LDA #$8F — enable + vol 8 */
+    0xA9, 0x8F,       /* LDA #$8F: enable + vol 8 */
     0x8D, 0x40, 0xFE, /* STA $FE40 */
-    0xA9, 0x00,       /* LDA #$00 — OAM addr 0 */
+    0xA9, 0x00,       /* LDA #$00: OAM addr 0 */
     0x8D, 0x20, 0xFE, /* STA $FE20 */
-    0xA9, 0x10,       /* LDA #$10 — Y */
+    0xA9, 0x10,       /* LDA #$10: Y */
     0x8D, 0x21, 0xFE, /* STA $FE21 */
-    0xA9, 0x01,       /* LDA #$01 — tile */
+    0xA9, 0x01,       /* LDA #$01: tile */
     0x8D, 0x21, 0xFE, /* STA $FE21 */
-    0xA9, 0x00,       /* LDA #$00 — attr */
+    0xA9, 0x00,       /* LDA #$00: attr */
     0x8D, 0x21, 0xFE, /* STA $FE21 */
-    0xA9, 0x20,       /* LDA #$20 — X */
+    0xA9, 0x20,       /* LDA #$20: X */
     0x8D, 0x21, 0xFE, /* STA $FE21 */
     0xA9, 0x00,       /* LDA #$00 */
     0x8D, 0x20, 0xFE, /* STA $FE20 */
@@ -88,7 +88,7 @@ static const uint8_t R01S_BRINGUP_SMOKE[] = {
 /* Pad hang only (used when cart has no world-0 MAP/CHR meta). */
 static const uint8_t R01S_BRINGUP_HANG[] = {
     0xAD, 0x60, 0xFE, /* LDA $FE60 */
-    0x4C, 0x00, 0x80, /* JMP hang — lo patched at install */
+    0x4C, 0x00, 0x80, /* JMP hang: lo patched at install */
 };
 
 /*
@@ -204,11 +204,11 @@ static void board_update_milestones(R01sBoard *ctx) {
         ctx->health_saw_vram_read = 1;
     }
     /* Pad milestone is set in wire_io when CPU actually reads $FE60/$FE61
-     * (not A==$A5 — that value is only used by the unit-test preload). */
+     * (not A==$A5: that value is only used by the unit-test preload). */
     if (r01s_beam_xy_hblank(ctx->beam_impl.beam_x) || r01s_beam_xy_y(ctx->beam_impl.beam_x) > 0) {
         ctx->health_saw_beam = 1;
     }
-    /* Smoke latches tile $42; after MAP stream VRAM is world data — either is OK. */
+    /* Smoke latches tile $42; after MAP stream VRAM is world data: either is OK. */
     if (r01s_bg_fetch_count(ctx->bg_fetch_impl.fetch) > 0) {
         uint8_t tile = r01s_bg_fetch_last_tile(ctx->bg_fetch_impl.fetch);
         if (tile == 0x42 ||
@@ -269,7 +269,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
     booting = ctx->reset_hold > 0;
     conflicts = r01s_bus_conflict_count();
 
-    /* Island A — power + clock / reset (merged canvas) */
+    /* Island A: power + clock / reset (merged canvas) */
     {
         R01sIslandHealth *ih = &out->islands[R01S_ISLAND_POWER_CLK];
         R01sEntity *pwr = r01s_pwr5v_entity(ctx->power_clk_impl.pwr);
@@ -286,10 +286,10 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
             snprintf(ih->activity, sizeof(ih->activity), "reset hold (%d)", ctx->reset_hold);
         } else if (!group->running) {
             ih->health = R01S_HEALTH_WARN;
-            snprintf(ih->activity, sizeof(ih->activity), "5V up — clock halted");
+            snprintf(ih->activity, sizeof(ih->activity), "5V up: clock halted");
         } else if (ctx->health_phi2_edges < 2) {
             ih->health = R01S_HEALTH_BOOT;
-            snprintf(ih->activity, sizeof(ih->activity), "5V up — PHI2 starting");
+            snprintf(ih->activity, sizeof(ih->activity), "5V up: PHI2 starting");
         } else {
             ih->health = R01S_HEALTH_OK;
             snprintf(ih->activity, sizeof(ih->activity), "5V + 8MHz PHI2");
@@ -302,7 +302,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_level_name(r01s_entity_sense(osc, "PHI2")), (unsigned)ctx->health_phi2_edges);
     }
 
-    /* Island C — CPU / RAM / PRG */
+    /* Island C: CPU / RAM / PRG */
     {
         R01sIslandHealth *ih = &out->islands[R01S_ISLAND_CPU];
         R01sW65C02S *cpu = ctx->cpu_mem_impl.cpu;
@@ -336,7 +336,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_level_name(r01s_entity_sense(cpu_e, "BE")), (unsigned)ctx->cycles, conflicts);
     }
 
-    /* Island D — $FExx latches */
+    /* Island D: $FExx latches */
     {
         R01sIslandHealth *ih = &out->islands[R01S_ISLAND_IO_LATCH];
         uint8_t le = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE02]);
@@ -357,7 +357,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_health_tag(ih->health), ctx->health_saw_latch, le, ry);
     }
 
-    /* Island G — VRAM + BG nametable fetch (VRAM PLD) */
+    /* Island G: VRAM + BG nametable fetch (VRAM PLD) */
     {
         R01sIslandHealth *ih = &out->islands[R01S_ISLAND_VRAM];
         R01sBgFetch *bg = ctx->bg_fetch_impl.fetch;
@@ -388,7 +388,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_bg_fetch_last_tile(bg), r01s_bg_fetch_last_attr(bg), ctx->vram_fe12_armed);
     }
 
-    /* Island H — beam raster + VBlank NMI */
+    /* Island H: beam raster + VBlank NMI */
     {
         R01sIslandHealth *ih = &out->islands[R01S_ISLAND_BEAM];
         R01sIntegration *ig = ctx->integration_impl.integ;
@@ -424,7 +424,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE04]));
     }
 
-    /* Island O — Color PROM + compositor + LCD sink */
+    /* Island O: Color PROM + compositor + LCD sink */
     {
         R01sIslandHealth *ih = &out->islands[R01S_ISLAND_VIDEO];
         R01sVideoSink *sink = ctx->video_impl.sink;
@@ -457,7 +457,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_video_sink_pixel_packed(sink, 0, 0));
     }
 
-    /* Island J — cart flash SST39SF040 */
+    /* Island J: cart flash SST39SF040 */
     {
         R01sIslandHealth *ih = &out->islands[R01S_ISLAND_CART];
         ih->letter = 'J';
@@ -483,7 +483,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  ctx->health_saw_map, r01s_sst39sf040_peek(ctx->cart_impl.flash, 0));
     }
 
-    /* Island K — ATmega328P APU */
+    /* Island K: ATmega328P APU */
     {
         R01sIslandHealth *ih = &out->islands[R01S_ISLAND_APU];
         R01sAtmega328p *apu = ctx->apu_impl.apu;
@@ -511,7 +511,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_level_name(r01s_entity_sense(r01s_atmega328p_entity(apu), "PWM")));
     }
 
-    /* Island L — ATmega1284P + linebuf (merged canvas) */
+    /* Island L: ATmega1284P + linebuf (merged canvas) */
     {
         R01sIslandHealth *ih = &out->islands[R01S_ISLAND_MCU_LB];
         R01sAtmega1284p *mcu = ctx->mcu_lb_impl.mcu;
@@ -557,7 +557,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
     if (conflicts > 0) {
         out->system = R01S_HEALTH_FAIL;
         snprintf(out->system_label, sizeof(out->system_label), "BUS FAULT");
-        snprintf(out->system_detail, sizeof(out->system_detail), "%u bus conflict(s) — check wiring", conflicts);
+        snprintf(out->system_detail, sizeof(out->system_detail), "%u bus conflict(s): check wiring", conflicts);
     } else if (!group->powered || out->islands[R01S_ISLAND_POWER_CLK].health == R01S_HEALTH_FAIL) {
         out->system = R01S_HEALTH_FAIL;
         snprintf(out->system_label, sizeof(out->system_label), "POWER FAULT");
@@ -565,7 +565,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
     } else if (booting) {
         out->system = R01S_HEALTH_BOOT;
         snprintf(out->system_label, sizeof(out->system_label), "BOOTING");
-        snprintf(out->system_detail, sizeof(out->system_detail), "Reset release — islands starting");
+        snprintf(out->system_detail, sizeof(out->system_detail), "Reset release: islands starting");
     } else if (!integrated) {
         out->system = R01S_HEALTH_WARN;
         snprintf(out->system_label, sizeof(out->system_label), "BRING-UP");
@@ -583,12 +583,12 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
         out->system = R01S_HEALTH_WARN;
         snprintf(out->system_label, sizeof(out->system_label), "PAUSED");
         snprintf(out->system_detail, sizeof(out->system_detail),
-                 group->running ? "One island idle or waiting" : "Integrated — press SPACE to run");
+                 group->running ? "One island idle or waiting" : "Integrated: press SPACE to run");
     } else {
         out->system = R01S_HEALTH_OK;
         snprintf(out->system_label, sizeof(out->system_label), "INTEGRATED");
         snprintf(out->system_detail, sizeof(out->system_detail),
-                 group->running ? "All islands working together" : "All islands ok — paused");
+                 group->running ? "All islands working together" : "All islands ok: paused");
     }
 
     {
@@ -934,7 +934,7 @@ static void wire_io(R01sBoard *ctx) {
         sync_map_addr_from_latches(ctx);
     }
 
-    /* Island L — OAM $FE20/$FE21 (hold WE#/OE# across settle; chip edge-inc). */
+    /* Island L: OAM $FE20/$FE21 (hold WE#/OE# across settle; chip edge-inc). */
     if (hit_oam) {
         r01s_entity_drive(mcu, "CE#", R01S_LVL_L);
         if (read) {
@@ -955,7 +955,7 @@ static void wire_io(R01sBoard *ctx) {
         r01s_entity_eval(mcu);
     }
 
-    /* Soft $FE70–$FE72 machine-EEPROM mailbox (protocol TBD — Island F). */
+    /* Soft $FE70–$FE72 machine-EEPROM mailbox (protocol TBD: Island F). */
     if (hit_eeprom) {
         unsigned ei = (unsigned)(addr - 0xFE70u);
         if (read) {
@@ -994,7 +994,7 @@ static void wire_io(R01sBoard *ctx) {
         r01s_entity_eval(pads);
     }
 
-    /* Island J — MAP $FE93: flash CE via decode SEL (seek from HC573 FE90–92). */
+    /* Island J: MAP $FE93: flash CE via decode SEL (seek from HC573 FE90–92). */
     if (hit_map_data && read && ctx->cart_loaded &&
         r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu) == R01S_CPU_OP_DATA) {
         uint8_t dq;
@@ -1028,7 +1028,7 @@ static void wire_io(R01sBoard *ctx) {
     }
 }
 
-/* Island H — DOT osc + beam PLD + Y-compare vs $FE04; EQ# drives CPU IRQB. */
+/* Island H: DOT osc + beam PLD + Y-compare vs $FE04; EQ# drives CPU IRQB. */
 static void wire_beam(R01sBoard *ctx, R01sIslandGroup *group) {
     R01sEntity *pwr = r01s_pwr5v_entity(ctx->power_clk_impl.pwr);
     R01sEntity *osc = r01s_osc_dot_entity(ctx->beam_impl.osc_dot);
@@ -1067,7 +1067,7 @@ static void wire_beam(R01sBoard *ctx, R01sIslandGroup *group) {
 }
 
 /*
- * Island G — VRAM port $FE10/$FE11/$FE12 + PHI2 interleave.
+ * Island G: VRAM port $FE10/$FE11/$FE12 + PHI2 interleave.
  * CPU phase (PHI2 high): CPU may R/W via HC573 FE10/FE11 + FE12.
  * PPU phase (PHI2 low): mux selects BG fetch VA; VRAM OE for nametable.
  * Auto-inc arms on FE12 access; committed on next PHI2 rising edge (poke latches).
@@ -1165,7 +1165,7 @@ static void wire_vram(R01sBoard *ctx) {
 }
 
 /*
- * Island M — sprite line-buffer SRAM (no CPU port).
+ * Island M: sprite line-buffer SRAM (no CPU port).
  * Soft 1284 fill on HBlank entry; beam reads show half on visible dots.
  * HC157: AB low = MCU fill addr, AB high = beam X.
  */
@@ -1335,7 +1335,7 @@ static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     local_y = sy - ((sy / R01S_BG_SCREEN_PX_H) & 1) * R01S_BG_SCREEN_PX_H;
     color = board_chr_color(ctx, ctx->cart_off_chr, tile, attr, local_x & 7, local_y & 7, &chr_ok);
     if (!chr_ok) {
-        /* PRG/MAP owns flash /CE — hold last master (no fight). */
+        /* PRG/MAP owns flash /CE: hold last master (no fight). */
         return ctx->chr_last_master;
     }
     pal = (uint8_t)((attr & R01S_ATTR_PAL) >> R01S_ATTR_PAL_SHIFT);
@@ -1359,7 +1359,7 @@ static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
     R01sAtmega1284p *mcu = ctx->mcu_lb_impl.mcu;
     R01sSpriteFetch *sf = ctx->sprites_impl.fetch;
 
-    /* HBlank steals flash from PRG — dedicated CHR window. */
+    /* HBlank steals flash from PRG: dedicated CHR window. */
     flash_yield_for_chr(ctx);
 
     for (i = 0; i < 128; i++) {
@@ -1486,7 +1486,7 @@ static void wire_linebuf(R01sBoard *ctx) {
 }
 
 
-/* Island I — BG fetch address from beam + scroll; eval before VRAM uses VA. */
+/* Island I: BG fetch address from beam + scroll; eval before VRAM uses VA. */
 static void wire_bg_fetch(R01sBoard *ctx) {
     R01sEntity *osc = r01s_osc8m_entity(ctx->power_clk_impl.osc);
     R01sBgFetch *bg = ctx->bg_fetch_impl.fetch;
@@ -1526,7 +1526,7 @@ static int board_video_held_for_map_stream(const R01sBoard *ctx) {
 }
 
 /*
- * Island O — dot-sampled BG -> compositor -> Color PROM -> LCD sink.
+ * Island O: dot-sampled BG -> compositor -> Color PROM -> LCD sink.
  * CHR: flash /CE during DOT window (yield PRG first); hold chr_last_master on deny.
  * Sink is the 256×240 RGBS field; SCALE maps beam → logical 128×120.
  */
@@ -2612,7 +2612,7 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     r01s_integration_init(&board->integration, "UPLDP");
     r01s_bg_fetch_init(&board->bg_fetch, "UPLDI");
 
-    /* Add order = canvas Z / arrange_rows order — VIDEO (LCD) first → top-left. */
+    /* Add order = canvas Z / arrange_rows order: VIDEO (LCD) first → top-left. */
     if (r01s_island_builder_add(b, &ISLAND_VIDEO_VT, "ISLAND O  VIDEO RGBS", 0, 0, 1, 1,
                                 &board->video_impl) < 0) {
         return -1;
@@ -2768,7 +2768,7 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     if (r01s_island_builder_finish(b) != 0) {
         return -1;
     }
-    /* After island init (flash memset) — install bring-up cart image. */
+    /* After island init (flash memset): install bring-up cart image. */
     board_install_synthetic_cart(board);
     return 0;
 }

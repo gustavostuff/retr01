@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-/* RGBS active field (docs/02) — LCD framebuffer matches CRT visible area. */
+/* RGBS active field (docs/02). LCD framebuffer matches CRT visible area. */
 #define R01S_VIDEO_W 256
 #define R01S_VIDEO_H 240
 /* Game / Studio logical resolution (16×15 tiles). */
@@ -16,7 +16,7 @@
 #define R01S_SCALE_1X_OY ((R01S_VIDEO_H - R01S_LOGICAL_H) / 2) /* 60 */
 
 /*
- * Island O — 256×240 RGBS / LCD sink.
+ * Island O: 256×240 RGBS / LCD sink.
  * Beam timing stays 341×262 (HBLANK X≥256, VBLANK Y≥240).
  * Board SCALE DIP: 1x (default) centers 128×120 with border; 2x fills the field.
  */

@@ -34,17 +34,17 @@
 /* Combinatorial settle passes per wire/eval half-step (PLD/glue depth). */
 #define R01S_SETTLE_PASSES 2
 
-/* 9 canvas islands — support chips co-located; pads/sprites/NMI/BG-fetch stay wired-only. */
+/* 9 canvas islands: support chips co-located; pads/sprites/NMI/BG-fetch stay wired-only. */
 enum {
-    R01S_ISLAND_VIDEO = 0,     /* O — LCD / RGBS (top-left) */
-    R01S_ISLAND_POWER_CLK = 1, /* A+B — 5V + OSC/HC14 */
-    R01S_ISLAND_CPU = 2,       /* C — CPU RAM PLD + CPU HC245 */
+    R01S_ISLAND_VIDEO = 0,     /* O: LCD / RGBS (top-left) */
+    R01S_ISLAND_POWER_CLK = 1, /* A+B: 5V + OSC/HC14 */
+    R01S_ISLAND_CPU = 2,       /* C: CPU RAM PLD + CPU HC245 */
     R01S_ISLAND_IO_LATCH = 3,  /* D */
     R01S_ISLAND_VRAM = 4,      /* G */
     R01S_ISLAND_BEAM = 5,      /* H */
-    R01S_ISLAND_CART = 6,      /* J — flash + cart HC245 */
+    R01S_ISLAND_CART = 6,      /* J: flash + cart HC245 */
     R01S_ISLAND_APU = 7,       /* K */
-    R01S_ISLAND_MCU_LB = 8,    /* L+M — 1284 + linebuf */
+    R01S_ISLAND_MCU_LB = 8,    /* L+M: 1284 + linebuf */
     R01S_ISLAND_COUNT = 9,
 };
 
@@ -57,7 +57,7 @@ typedef struct R01sIslandPowerClkImpl {
 typedef struct R01sIslandCpuMemImpl {
     R01sW65C02S *cpu;
     R01sAs6c62256 *ram;
-    R01sPrgRom *prg; /* bench fallback — not mounted when cart owns PRG */
+    R01sPrgRom *prg; /* bench fallback: not mounted when cart owns PRG */
     R01sAtf22v10 *pld_decode;
     R01sSn74hc245 *bus245_cpu;
 } R01sIslandCpuMemImpl;
@@ -130,7 +130,7 @@ typedef struct R01sBoard {
     R01sSn74hc14 hc14;
     R01sOscDot osc_dot;
     R01sVideoSink video_sink;
-    R01sPrgRom prg; /* bench PRG — not mounted when cart owns $8000+ */
+    R01sPrgRom prg; /* bench PRG: not mounted when cart owns $8000+ */
     R01sPads pads;  /* wired via 1284 on silicon; kept for bring-up tests */
     R01sSpriteFetch sprite_fetch;
     R01sIntegration integration;
@@ -194,7 +194,7 @@ typedef struct R01sBoard {
     uint8_t pal_addr;
     int pal_fe09_wrote; /* one write+inc per DATA cycle */
     uint8_t chr_last_master; /* hold last BG/sprite master when CHR CE denied */
-    /* Host Play scaffold (unused in default UI — game PRG owns play later). */
+    /* Host Play scaffold (unused in default UI: game PRG owns play later). */
     R01sPlay play;
     int catchup_cancel; /* cooperative cancel for threaded IC catchup */
     /*
@@ -233,12 +233,12 @@ typedef struct R01sBoard {
 int r01s_board_build(R01sBoard *board, R01sIslandBuilder *builder);
 
 /* Load `.retr01` or 512 KB flash image into Island J. Re-applies bring-up smoke PRG
- * into the cart PRG window so A–O island checks still run (overlay — not Studio ROM). */
+ * into the cart PRG window so A–O island checks still run (overlay: not Studio ROM). */
 int r01s_board_load_cart(R01sBoard *board, const char *path);
 
 /*
  * Opt-in host soft-load of start-screen MAP+pals (R01S_SOFTBOOT=1). Default LCD
- * path is IC bring-up PRG streaming via $FE93→$FE12 — see catchup_bringup.
+ * path is IC bring-up PRG streaming via $FE93→$FE12: see catchup_bringup.
  */
 int r01s_board_softboot_start_screen(R01sBoard *board);
 

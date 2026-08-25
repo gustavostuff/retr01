@@ -16,10 +16,10 @@ When docs disagree, use this order.
 | Board IC simulator | [`08`](08_simulator.md) + [`retr01_sim/README.md`](../retr01_sim/README.md) | Pin/netlist models of the 32-IC BOM |
 | IC pin/behavior detail | [`hw/md/`](../hw/md/) + datasheet PDFs | Sim and schematics |
 
-**Current product board:** [`06`](06_hardware_v1_32ic.md) -- **32 ICs**, ~**12 x 12 cm** 4-layer THT.
+**Current product board:** [`06`](06_hardware_v1_32ic.md), **32 ICs**, ~**12 x 12 cm** 4-layer THT.
 
 ```text
-  Retr01-A (32 IC) -- roles, not PCB layout
+  Retr01-A (32 IC): roles, not PCB layout
   +------------------------------------------------------------------+
   | W65C02S          game CPU @ 8.000 MHz                            |
   | ATF22V10 x5      decode, interleave, beam X/Y, compositor        |
@@ -154,8 +154,8 @@ Studio Phase 1: PNG atlas import, Play preview, `.retr01` export. Emulator Phase
 
 ## Validation tools
 
-- **Board IC simulator** ([`08`](08_simulator.md)) -- pin/netlist models of the 32-IC BOM; islands then full board
-- **Software emulator** ([`retr01_emu/`](../retr01_emu/)) -- Phase 1 cart + Play parity with Studio
+- **Board IC simulator** ([`08`](08_simulator.md)): pin/netlist models of the 32-IC BOM, islands then full board
+- **Software emulator** ([`retr01_emu/`](../retr01_emu/)): Phase 1 cart + Play parity with Studio
 
 ## Where to look next
 

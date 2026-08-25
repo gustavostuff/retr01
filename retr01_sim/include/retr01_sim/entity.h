@@ -26,7 +26,7 @@ typedef struct R01sEntityVTable {
     void (*destroy)(R01sEntity *e);
 } R01sEntityVTable;
 
-/* Board canvas rendering — only R01S_ENTITY_VIS_IC uses the DIP package. */
+/* Board canvas rendering: only R01S_ENTITY_VIS_IC uses the DIP package. */
 typedef enum R01sEntityVisual {
     R01S_ENTITY_VIS_IC = 0,
     R01S_ENTITY_VIS_PWR,
@@ -48,7 +48,7 @@ struct R01sEntity {
     R01sEntityVisual visual;
     int pin_count;
     R01sPin pins[R01S_MAX_PINS];
-    /* DIP body size in logical pixels (UI) — from pkg mm × scale + orient. */
+    /* DIP body size in logical pixels (UI): from pkg mm × scale + orient. */
     int body_w;
     int body_h;
     /* Physical DIP pin count (e.g. 40 for W65C02S); used for package layout. */

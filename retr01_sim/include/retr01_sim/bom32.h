@@ -12,7 +12,7 @@
 #define R01S_BOM_PLD_N   5
 #define R01S_BOM_IC_N    32
 
-/* Packed HC573 assignments (logical ports — bitfields TBD in docs/02). */
+/* Packed HC573 assignments (logical ports: bitfields TBD in docs/02). */
 enum {
     R01S_LATCH_FE02 = 0, /* scroll X */
     R01S_LATCH_FE03,     /* scroll Y */

@@ -11,7 +11,7 @@ struct R01sUi;
 
 /*
  * Assembles N islands into a group, records chip placements, and mounts the UI.
- * Board recipes (which islands, wiring) live at the call site — typically main.c.
+ * Board recipes (which islands, wiring) live at the call site: typically main.c.
  */
 typedef struct R01sIslandBuilder {
     R01sIslandGroup group;

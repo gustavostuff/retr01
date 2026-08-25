@@ -13,8 +13,8 @@ struct R01sBoard;
 #define R01S_ACTIVE_PAL_PLAYER (R01S_PAL_SPR_BASE + R01S_PAL_PLAYER_COLOR)
 
 /*
- * Host Play — Studio-equivalent move + camera + X/Y warps.
- * Sim: 1 logical px per sim VBlank when d-pad held; scroll latched once per field.
+ * Host Play: Studio-equivalent move + camera + X/Y warps.
+ * Sim: 1 logical px per sim VBlank when d-pad held. Scroll latched once per field.
  * Player renders via OAM on the beam (Island N/O).
  */
 typedef struct R01sPlay {

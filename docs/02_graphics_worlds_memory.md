@@ -2,7 +2,7 @@
 
 Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 
-**Authority:** this file is the **software-visible** source of truth (see [`01`](01_architecture_overview.md)). Current HW BOM: [`06`](06_hardware_v1_32ic.md) (**32 IC**). HW must not invent CPU ports here; open mailbox/I2C/bitfield items stay listed as TBD below.
+**Authority:** this file is the **software-visible** source of truth (see [`01`](01_architecture_overview.md)). Current HW BOM: [`06`](06_hardware_v1_32ic.md) (**32 IC**). HW must not invent CPU ports here. Open mailbox/I2C/bitfield items stay listed as TBD below.
 
 ## Display
 
@@ -111,7 +111,7 @@ Line N+1| fill N+1         |        | SHOW             |
 
 ## Palettes
 
-**Color PROM** (board): **64 master indices**, packed **`{RRRGGGBB}`** (R3 G3 B2) in **one** PROM/OTP chip, 1-dot pipeline ([`06`](06_hardware_v1_32ic.md)). Active buffer: **4 BG + 4 sprite** via `$FE08`/`$FE09` (indices held in packed HC573 / decode path on the 32-IC board -- no separate palette RAM IC). Shared color 0. BG+sprite row index always locked together.
+**Color PROM** (board): **64 master indices**, packed **`{RRRGGGBB}`** (R3 G3 B2) in **one** PROM/OTP chip, 1-dot pipeline ([`06`](06_hardware_v1_32ic.md)). Active buffer: **4 BG + 4 sprite** via `$FE08`/`$FE09` (indices held in packed HC573 / decode path on the 32-IC board, no separate palette RAM IC). Shared color 0. BG+sprite row index always locked together.
 
 Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio and burn tools **quantize** to R3G3B2 when building the PROM image ([`04`](04_retr01_studio.md)).
 
@@ -183,7 +183,7 @@ Boot: magic -> pointers -> world header -> screen dir / parallax dir -> `off_pay
 
 ## CPU map and `$FExx`
 
-Logical CPU addresses below are the software SoT. Silicon uses **9x HC573** with bit-packing ([`06`](06_hardware_v1_32ic.md)); the **bitfield packing table is still TBD** (Q21) -- prefer these logical addresses + Zero Page shadows until it lands.
+Logical CPU addresses below are the software SoT. Silicon uses **9x HC573** with bit-packing ([`06`](06_hardware_v1_32ic.md)). The **bitfield packing table is still TBD** (Q21). Prefer these logical addresses + Zero Page shadows until it lands.
 
 | Range | Region |
 |-------|--------|
@@ -196,7 +196,7 @@ PRG planning cap is **32 KB** total in the cart image; the CPU sees the classic 
 
 | Addr | Name | Notes |
 |------|------|-------|
-| `$FE00` | `PPUCTRL` | BG/sprites/NMI enable bits; camera slot mode (**1 / 2H / 2V / 4** -- bitfield TBD) |
+| `$FE00` | `PPUCTRL` | BG/sprites/NMI enable bits, camera slot mode (**1 / 2H / 2V / 4**, bitfield TBD) |
 | `$FE01` | `PPUSTATUS` | VBlank, raster hit (read clears) |
 | `$FE02`/`$FE03` | scroll X/Y | 0-127 / 0-119 |
 | `$FE04`/`$FE05` | raster Y / IRQ | `$FE04` = compare scanline (latched). `$FE05` = enable/ack/control (**bitfield TBD**) |
@@ -212,7 +212,7 @@ PRG planning cap is **32 KB** total in the cart image; the CPU sees the classic 
 | `$FE70`-`$FE72` | machine EEPROM | **1284 internal EEPROM** handshake (protocol TBD) |
 | `$FE80` | reserved | unused |
 | `$FE90`-`$FE93` | MAP | 24-bit seek + read auto-inc |
-| (TBD) | cart save | **Cart I2C EEPROM** via HAL (`cart_save_*`); CPU port TBD (Q20) |
+| (TBD) | cart save | **Cart I2C EEPROM** via HAL (`cart_save_*`). CPU port TBD (Q20) |
 
 **HAL:** PRG should use `machine_eeprom_*` and `cart_save_*` helpers so games are not welded to a specific mailbox layout. APU may use direct `$FE4x` stores.
 

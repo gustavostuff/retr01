@@ -6,10 +6,10 @@
 
 | This doc owns | This doc does **not** own |
 |---------------|---------------------------|
-| Chip list, IC count, PCB size, silicon merges | Software-visible `$FExx` **logical** map, cart image, worlds/VRAM -- [`02`](02_graphics_worlds_memory.md) |
-| HW pathways (PLD roles, bus HC245 split, PROM packaging) | Exact mailbox/I2C `$FExx` bit protocols -- land those in `02` when frozen |
+| Chip list, IC count, PCB size, silicon merges | Software-visible `$FExx` **logical** map, cart image, worlds/VRAM ([`02`](02_graphics_worlds_memory.md)) |
+| HW pathways (PLD roles, bus HC245 split, PROM packaging) | Exact mailbox/I2C `$FExx` bit protocols. Land those in `02` when frozen |
 
-Game-visible graphics model: 32 KB sys / VRAM / linebuf, 512 KB cart, interleaved VRAM, 341x262, `$FE4x` APU on 328P. Software notes: **`$FE70-$FE72` is a 1284 EEPROM handshake**, packed Color PROM, bit-packed latches, cart I2C saves -- see [`02`](02_graphics_worlds_memory.md).
+Game-visible graphics model: 32 KB sys / VRAM / linebuf, 512 KB cart, interleaved VRAM, 341x262, `$FE4x` APU on 328P. Software notes: **`$FE70-$FE72` is a 1284 EEPROM handshake**, packed Color PROM, bit-packed latches, cart I2C saves. See [`02`](02_graphics_worlds_memory.md).
 
 Target: **through-hole DIP**, compact **12 x 12 cm** 4-layer PCB.
 
@@ -101,7 +101,7 @@ Interface: 6502 bit-bang or 1284 as I2C master behind a `$FExx` window (TBD in `
 
 **Split:** **31** motherboard (incl. cart flash in socket) + **1** cart save. If flash lives only on the cart PCB: still **32** (30 soldered mobo + flash + EEPROM).
 
-**Not in the 32:** **74HC14** reset/clock -- absorb if possible; else +1 -> 33.
+**Not in the 32:** **74HC14** reset/clock. Absorb if possible, else +1 -> 33.
 
 ---
 
@@ -155,11 +155,11 @@ Bench/sim gates before locking schematics / first PCB spin:
 |------|----------------|
 | **G1 CPU + RAM** | Island C style |
 | **G2 VRAM interleave** | Island G style |
-| **G3 Beam PLDs** | Stable 341x262; HBlank/VBlank/NMI stubs; raster IRQ |
-| **G4 Compositor PLD** | BG/sprite priority @ dot rate; pipelined PROM |
-| **G5 328P APU** | Stable output; `$FE4x` smoke |
+| **G3 Beam PLDs** | Stable 341x262, HBlank/VBlank/NMI stubs, raster IRQ |
+| **G4 Compositor PLD** | BG/sprite priority @ dot rate, pipelined PROM |
+| **G5 328P APU** | Stable output, `$FE4x` smoke |
 | **G6 Bus** | No fights with 3x HC245 + PLD `/OE` |
-| **G7 Color** | 64-entry PROM; RGBS tuned; 1-dot pipeline |
+| **G7 Color** | 64-entry PROM, RGBS tuned, 1-dot pipeline |
 | **G8 Saves** | 1284 machine EEPROM + cart EEPROM R/W |
 
 ---
@@ -167,17 +167,17 @@ Bench/sim gates before locking schematics / first PCB spin:
 ## Bring-up strategy
 
 ```text
-Phase A -- Prove behavior (island order from 03, adapted to this BOM)
+Phase A: Prove behavior (island order from 03, adapted to this BOM)
   CPU+RAM, VRAM interleave, beam PLDs, BG fetch, 1284 sprites,
   328P APU, Color PROM + RGBS (pipelined).
 
-Phase B -- Board-specific merges
+Phase B: Board-specific merges
   - Compositor PLD at dot rate
   - Packed HC573 / $FExx (as bitfields land in 02)
   - 1284 machine-EEPROM handshake
   - Cart I2C save path
 
-Phase C -- First integrated PCB
+Phase C: First integrated PCB
   32 IC system (12 x 12 cm mobo + cart)
 ```
 
@@ -185,11 +185,11 @@ Phase C -- First integrated PCB
 
 | Area | Risk | Mitigation |
 |------|------|------------|
-| Compositor PLD | I/O and timing fit | Priority-mux-only; escape +1 PLD |
+| Compositor PLD | I/O and timing fit | Priority-mux-only, escape +1 PLD |
 | Bus contention | Driver fights | 3x HC245 |
-| Color PROM | 150 ns / R3G3B2 | 1-dot pipeline; faster OTP; Studio match |
+| Color PROM | 150 ns / R3G3B2 | 1-dot pipeline, faster OTP, Studio match |
 | `$FExx` / saves | Spec gaps | Freeze mailbox + I2C + bitfields in `02` |
-| IC count | Overflow | Norm **32**; +1 PLD or +HC14 only if needed |
+| IC count | Overflow | Norm **32**, +1 PLD or +HC14 only if needed |
 
 ---
 
