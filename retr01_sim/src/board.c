@@ -5,7 +5,6 @@
 #include "retr01_sim/entity.h"
 #include "retr01_sim/health.h"
 #include "retr01_sim/play.h"
-#include "agent_debug_log.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,11 +26,6 @@
 #define R01S_BEAM_DOTS_PER_STEP_FAST 4
 /* Fast mode combinatorial depth (pin mode uses R01S_SETTLE_PASSES). */
 #define R01S_SETTLE_PASSES_FAST 1
-
-static int g_play_spr_bx_min = 999;
-static int g_play_spr_bx_max = -1;
-static int g_play_spr_by_min = 999;
-static int g_play_spr_by_max = -1;
 
 /*
  * Bring-up smoke PRG (overlay into cart PRG window: not Studio game code).
@@ -232,6 +226,11 @@ static void board_update_milestones(R01sBoard *ctx) {
     if (r01s_atmega1284p_oam_peek(ctx->mcu_lb_impl.mcu, 0) == 0x10 &&
         r01s_atmega1284p_oam_peek(ctx->mcu_lb_impl.mcu, 1) == 0x01 &&
         r01s_atmega1284p_alive(ctx->mcu_lb_impl.mcu)) {
+        ctx->health_saw_oam = 1;
+    }
+    /* Host Play: player OAM tile=1 (smoke Y=$10 is overwritten). */
+    if (ctx->play.enabled && r01s_atmega1284p_oam_peek(ctx->mcu_lb_impl.mcu, 1) == 0x01 &&
+        r01s_atmega1284p_oam_peek(ctx->mcu_lb_impl.mcu, 0) != 0xFF) {
         ctx->health_saw_oam = 1;
     }
     if (ctx->linebuf_saw_mux_mcu && ctx->linebuf_saw_mux_beam) {
@@ -1391,14 +1390,6 @@ static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
             /* Host Play: solid 8x8 via sprite pal color 1 (OAM slot 0, no CHR tile yet). */
             if (ctx->play.enabled && si == 0) {
                 uint8_t master = board_pal_master(ctx, 1, pal, R01S_PAL_PLAYER_COLOR);
-                static int fill_logs;
-                if (fill_logs < 40 && (logical_y == (int)oy || logical_y == (int)oy + 7)) {
-                    /* #region agent log */
-                    r01s_agent_debug_log("H3", "board.c:linebuf_oam_fill_half", "player_line", (int)ox,
-                                         logical_y, (int)oy, fill_logs);
-                    /* #endregion */
-                    fill_logs++;
-                }
                 for (px = 0; px < 8; px++) {
                     int x = (int)ox + px;
                     if (x < 0 || x >= 128) {
@@ -1476,16 +1467,6 @@ static void wire_linebuf(R01sBoard *ctx) {
         if (r01s_rgbs_beam_to_logical(scale_2x, probe_x, next_by, &lx, &next_ly)) {
             linebuf_oam_fill_half(ctx, fill_half, next_ly);
             ctx->linebuf_show_half = (uint8_t)(fill_half & 1);
-            if (ctx->play.enabled) {
-                static int fill_edge_logs;
-                if (fill_edge_logs < 40) {
-                    /* #region agent log */
-                    r01s_agent_debug_log("H13", "board.c:wire_linebuf", "hblank_fill", by, next_by, next_ly,
-                                         (int)ctx->linebuf_show_half);
-                    /* #endregion */
-                    fill_edge_logs++;
-                }
-            }
         }
         /* Border / VBlank lines: keep prior half (no OAM fill). */
     }
@@ -1604,36 +1585,6 @@ static void wire_video_dot(R01sBoard *ctx) {
     wire_video_prom_addr(prom_e, idx);
     packed = r01s_at28c16_peek(prom, idx);
     r01s_video_sink_plot(sink, bx, by, packed);
-    if (ctx->play.enabled && lx == 0 && ly == 0 && (bx & 1) == 0) {
-        static int tl_logs;
-        if (tl_logs < 8) {
-            uint8_t tile = 0, attr = 0;
-            board_vram_cell_at(ctx, 0, 0, &tile, &attr);
-            /* #region agent log */
-            r01s_agent_debug_log("H14", "board.c:wire_video_dot", "top_left", (int)tile, (int)attr, (int)bg,
-                                 (int)packed);
-            /* #endregion */
-            tl_logs++;
-        }
-    }
-    if (ctx->play.enabled && packed != 0) {
-        int pvx = ctx->play.player_x - ctx->play.cam_x;
-        int pvy = ctx->play.player_y - ctx->play.cam_y;
-        if (lx >= pvx && lx < pvx + R01S_PLAY_PLAYER_SIZE && ly >= pvy && ly < pvy + R01S_PLAY_PLAYER_SIZE) {
-            if (by < g_play_spr_by_min) {
-                g_play_spr_by_min = by;
-            }
-            if (by > g_play_spr_by_max) {
-                g_play_spr_by_max = by;
-            }
-            if (bx < g_play_spr_bx_min) {
-                g_play_spr_bx_min = bx;
-            }
-            if (bx > g_play_spr_bx_max) {
-                g_play_spr_bx_max = bx;
-            }
-        }
-    }
 }
 
 static void wire_memory(R01sBoard *ctx) {
@@ -1801,7 +1752,14 @@ static int board_fast_apply_map_stream(R01sBoard *board) {
     }
     r01s_sn74hc573_poke_q(board->io_latch_impl.latch573[R01S_LATCH_FE02], 0);
     r01s_sn74hc573_poke_q(board->io_latch_impl.latch573[R01S_LATCH_FE03], 0);
+    /* FAST skips the pin steps that burn reset_hold; leave RESB high and park
+     * at hang so Play does not re-fetch $8000 and re-run smoke+MAP stream. */
+    board->reset_hold = 0;
     r01s_board_park_bringup_cpu(board);
+    /* Smoke tone + health: FAST never executes STA $FE40 / LDA $FE12. */
+    r01s_atmega328p_poke(board->apu_impl.apu, 1, 0x10); /* period lo */
+    r01s_atmega328p_poke(board->apu_impl.apu, 2, 0x00); /* period hi */
+    r01s_atmega328p_poke(board->apu_impl.apu, 0, 0x8F); /* enable + vol */
     /* Smoke LDA $FE60 never ran in FAST; hang will later, but host pads are live. */
     board->health_saw_pad = 1;
     if (board->video_impl.sink) {
@@ -1809,6 +1767,7 @@ static int board_fast_apply_map_stream(R01sBoard *board) {
     }
     board->health_saw_map = 1;
     board->health_saw_vram = 1;
+    board->health_saw_vram_read = 1; /* word load stands in for smoke readback */
     board->health_saw_latch = 1;
     return 0;
 }
@@ -2367,6 +2326,10 @@ int r01s_board_catchup_bringup(R01sBoard *board, R01sIslandGroup *group) {
         }
         r01s_island_group_step(group);
         if (board->map_addr >= target && r01s_as6c62256_peek(&board->vram, 0) == expect0) {
+            /* Smoke LDA $FE12 leaves A==$AA for only a few cycles; pin catchup
+             * often misses it. MAP-complete + matching VRAM[0] proves the port. */
+            board->health_saw_vram = 1;
+            board->health_saw_vram_read = 1;
             return 0;
         }
     }
@@ -2401,7 +2364,8 @@ static void board_reset(R01sIslandGroup *group) {
     ctx->pal_fe09_wrote = 0;
     memset(ctx->active_pal, 0, sizeof(ctx->active_pal));
     ctx->chr_last_master = 0;
-    ctx->bringup_hang_pc = 0;
+    /* Keep bringup_hang_pc: FAST catchup parks here. Clearing it made park a
+     * no-op after group_reset, so Play re-ran smoke ($42) over camera VRAM. */
     r01s_play_reset(&ctx->play);
     ctx->catchup_cancel = 0;
     ctx->health_saw_latch = 0;
@@ -2527,36 +2491,6 @@ static void board_step(R01sIslandGroup *group) {
             {
                 int vb = r01s_beam_xy_vblank(ctx->beam_impl.beam_x);
                 if (vb && !ctx->vblank_prev) {
-                    if (ctx->play.enabled && g_play_spr_by_max >= 0) {
-                        static int spr_logs;
-                        if (spr_logs < 20) {
-                            /* #region agent log */
-                            r01s_agent_debug_log("H7", "board.c:vblank", "player_extent", g_play_spr_bx_min,
-                                                 g_play_spr_bx_max, g_play_spr_by_min, g_play_spr_by_max);
-                            r01s_agent_debug_log("H7", "board.c:vblank", "player_extent_wh",
-                                                 r01s_video_sink_scale_2x(ctx->video_impl.sink),
-                                                 g_play_spr_bx_max - g_play_spr_bx_min + 1,
-                                                 g_play_spr_by_max - g_play_spr_by_min + 1, spr_logs);
-                            /* #endregion */
-                            spr_logs++;
-                        }
-                    }
-                    if (ctx->play.enabled) {
-                        static int map_logs;
-                        if (map_logs < 20) {
-                            /* #region agent log */
-                            r01s_agent_debug_log("H8", "board.c:vblank", "map_gate",
-                                                 (int)(ctx->map_addr < ctx->cart_off_map_screen0 + 480u),
-                                                 (int)(ctx->map_addr & 0xffff),
-                                                 (int)((ctx->cart_off_map_screen0 + 480u) & 0xffff), map_logs);
-                            /* #endregion */
-                            map_logs++;
-                        }
-                    }
-                    g_play_spr_bx_min = 999;
-                    g_play_spr_bx_max = -1;
-                    g_play_spr_by_min = 999;
-                    g_play_spr_by_max = -1;
                     if (ctx->video_impl.sink) {
                         r01s_video_sink_on_vblank(ctx->video_impl.sink);
                     }

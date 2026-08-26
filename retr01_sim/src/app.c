@@ -1,6 +1,5 @@
 #include "app.h"
 
-#include "agent_debug_log.h"
 #include "beam_xy.h"
 #include "retr01_sim/board.h"
 #include "retr01_sim/bom32.h"
@@ -150,6 +149,9 @@ static int catchup_thread_fn_yielding(void *userdata) {
             if (board->map_addr >= target && r01s_as6c62256_peek(&board->vram, 0) == expect0) {
                 done = 1;
                 app->catchup_rc = 0;
+                /* Same sticky marks as r01s_board_catchup_bringup (A==$AA is easy to miss). */
+                board->health_saw_vram = 1;
+                board->health_saw_vram_read = 1;
                 break;
             }
         }
@@ -447,11 +449,6 @@ void r01s_app_frame(R01sApp *app) {
         if (group) {
             if (group->running) {
                 int n = 0;
-                uint32_t dots_before = 0;
-                uint32_t dots_after = 0;
-                if (board) {
-                    dots_before = board->video_sink.dot_samples;
-                }
                 if (board && board->play.enabled) {
                     Uint64 t0 = SDL_GetPerformanceCounter();
                     Uint64 freq = SDL_GetPerformanceFrequency();
@@ -473,18 +470,6 @@ void r01s_app_frame(R01sApp *app) {
                         if ((SDL_GetPerformanceCounter() - t0) >= budget) {
                             break;
                         }
-                    }
-                }
-                if (board) {
-                    static int beam_logs;
-                    dots_after = board->video_sink.dot_samples;
-                    if (beam_logs < 30) {
-                        /* #region agent log */
-                        r01s_agent_debug_log("H6", "app.c:frame", "beam_budget", n,
-                                             (int)(dots_after - dots_before),
-                                             r01s_video_sink_scale_2x(&board->video_sink), beam_logs);
-                        /* #endregion */
-                        beam_logs++;
                     }
                 }
                 app->ui.sim_steps = n;

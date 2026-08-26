@@ -132,3 +132,14 @@ int r01s_beam_xy_hblank(const R01sBeamXy *chip) {
 int r01s_beam_xy_vblank(const R01sBeamXy *chip) {
     return chip ? (chip->y >= R01S_BEAM_VISIBLE_H) : 0;
 }
+
+void r01s_beam_xy_rewind(R01sBeamXy *chip) {
+    if (!chip) {
+        return;
+    }
+    chip->x = 0;
+    chip->y = 0;
+    chip->dot_prev = R01S_LVL_L;
+    chip->nmi_hold = 0;
+    beam_drive_flags(chip);
+}

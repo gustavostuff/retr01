@@ -2,10 +2,11 @@
 
 #include "retr01_sim/board.h"
 #include "retr01_sim/gamepad.h"
-#include "agent_debug_log.h"
 #include "atmega1284p.h"
+#include "as6c62256.h"
+#include "atmega328p.h"
+#include "beam_xy.h"
 #include "video_sink.h"
-#include "w65c02s.h"
 
 #include <string.h>
 
@@ -99,19 +100,7 @@ static void write_oam_player(R01sBoard *b) {
     r01s_atmega1284p_oam_poke(&b->mcu1284, 1, 1);
     r01s_atmega1284p_oam_poke(&b->mcu1284, 2, 0);
     r01s_atmega1284p_oam_poke(&b->mcu1284, 3, (uint8_t)vx);
-    {
-        static int oam_logs;
-        if (oam_logs < 30) {
-            /* #region agent log */
-            r01s_agent_debug_log("H3", "play.c:write_oam_player", "oam_write", vx, vy,
-                                 (int)r01s_atmega1284p_oam_peek(&b->mcu1284, 0),
-                                 (int)r01s_atmega1284p_oam_peek(&b->mcu1284, 3));
-            r01s_agent_debug_log("H4", "play.c:write_oam_player", "cpu_pc",
-                                 (int)r01s_w65c02s_pc(b->cpu_mem_impl.cpu), oam_logs, 0, 0);
-            /* #endregion */
-            oam_logs++;
-        }
-    }
+    b->health_saw_oam = 1;
 }
 
 static void queue_video(R01sBoard *b) {
@@ -165,26 +154,7 @@ static void apply_video_latch(R01sBoard *b) {
                              pl->pending_scroll_y != r01s_sn74hc573_peek_q(b->io_latch_impl.latch573[R01S_LATCH_FE03]);
         int origin_changed = pl->pending_origin_col != pl->origin_col || pl->pending_origin_row != pl->origin_row;
         if (scroll_changed || origin_changed || pl->pending_camera_reload) {
-            static int latch_logs;
             r01s_video_sink_clear(sink);
-            if (latch_logs < 20) {
-                /* #region agent log */
-                r01s_agent_debug_log("H11", "play.c:apply_video_latch", "normal_scroll_clear",
-                                     (int)pl->pending_scroll_x, (int)pl->pending_scroll_y, (int)scroll_changed,
-                                     latch_logs);
-                /* #endregion */
-                latch_logs++;
-            }
-        }
-    } else if (sink) {
-        static int latch_logs;
-        if (latch_logs < 10) {
-            /* #region agent log */
-            r01s_agent_debug_log("H11", "play.c:apply_video_latch", "no_scroll_clear",
-                                 r01s_video_sink_render_mode(sink), (int)pl->pending_scroll_x,
-                                 (int)pl->pending_scroll_y, latch_logs);
-            /* #endregion */
-            latch_logs++;
         }
     }
     r01s_board_set_scroll(b, pl->pending_scroll_x, pl->pending_scroll_y);
@@ -286,9 +256,28 @@ int r01s_play_start(R01sBoard *board) {
     /* Host Play owns pads; FAST catchup skips smoke LDA $FE60 so mark pad health here. */
     board->health_saw_pad = 1;
     place_player_centered(&board->play, col, row);
+    /* Same as FAST apply: do not let residual reset_hold re-vector into smoke. */
+    board->reset_hold = 0;
     r01s_board_park_bringup_cpu(board);
+    /* Ensure smoke-equivalent tone if catchup skipped or APU was reset. */
+    if (!r01s_atmega328p_enabled(board->apu_impl.apu)) {
+        r01s_atmega328p_poke(board->apu_impl.apu, 1, 0x10);
+        r01s_atmega328p_poke(board->apu_impl.apu, 2, 0x00);
+        r01s_atmega328p_poke(board->apu_impl.apu, 0, 0x8F);
+    }
     if (board->video_impl.sink) {
         r01s_video_sink_clear(board->video_impl.sink);
+    }
+    /* After clear, start raster at (0,0) so the first field paints the top (no black corner). */
+    r01s_beam_xy_rewind(board->beam_impl.beam_x);
+    board->linebuf_prev_hblank = 0;
+    board->vblank_prev = 0;
+    board->linebuf_show_half = 0;
+    if (board->mcu_lb_impl.sram) {
+        uint16_t ai;
+        for (ai = 0; ai < 256u; ai++) {
+            r01s_as6c62256_poke(board->mcu_lb_impl.sram, ai, 0);
+        }
     }
     board->play.force_camera_reload = 1;
     queue_video(board);

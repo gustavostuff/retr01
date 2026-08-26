@@ -29,5 +29,7 @@ int r01s_beam_xy_x(const R01sBeamXy *chip);
 int r01s_beam_xy_y(const R01sBeamXy *chip);
 int r01s_beam_xy_hblank(const R01sBeamXy *chip);
 int r01s_beam_xy_vblank(const R01sBeamXy *chip);
+/* Host Play: rewind raster to start of field after SCREEN clear. */
+void r01s_beam_xy_rewind(R01sBeamXy *chip);
 
 #endif
