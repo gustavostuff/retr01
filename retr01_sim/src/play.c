@@ -2,8 +2,10 @@
 
 #include "retr01_sim/board.h"
 #include "retr01_sim/gamepad.h"
+#include "agent_debug_log.h"
 #include "atmega1284p.h"
 #include "video_sink.h"
+#include "w65c02s.h"
 
 #include <string.h>
 
@@ -97,6 +99,19 @@ static void write_oam_player(R01sBoard *b) {
     r01s_atmega1284p_oam_poke(&b->mcu1284, 1, 1);
     r01s_atmega1284p_oam_poke(&b->mcu1284, 2, 0);
     r01s_atmega1284p_oam_poke(&b->mcu1284, 3, (uint8_t)vx);
+    {
+        static int oam_logs;
+        if (oam_logs < 30) {
+            /* #region agent log */
+            r01s_agent_debug_log("H3", "play.c:write_oam_player", "oam_write", vx, vy,
+                                 (int)r01s_atmega1284p_oam_peek(&b->mcu1284, 0),
+                                 (int)r01s_atmega1284p_oam_peek(&b->mcu1284, 3));
+            r01s_agent_debug_log("H4", "play.c:write_oam_player", "cpu_pc",
+                                 (int)r01s_w65c02s_pc(b->cpu_mem_impl.cpu), oam_logs, 0, 0);
+            /* #endregion */
+            oam_logs++;
+        }
+    }
 }
 
 static void queue_video(R01sBoard *b) {
@@ -136,11 +151,42 @@ static void queue_video(R01sBoard *b) {
 
 static void apply_video_latch(R01sBoard *b) {
     R01sPlay *pl;
+    R01sVideoSink *sink;
 
     if (!b || !b->play.enabled || !b->play.video_pending) {
         return;
     }
     pl = &b->play;
+    sink = b->video_impl.sink;
+    /* Persist/Phosphor must not hard-clear on scroll: that wipes trails and makes the
+     * slow beam redraw look like a growing/glitching sprite. Normal clears on VBlank. */
+    if (sink && r01s_video_sink_render_mode(sink) == R01S_VIDEO_RENDER_NORMAL) {
+        int scroll_changed = pl->pending_scroll_x != r01s_sn74hc573_peek_q(b->io_latch_impl.latch573[R01S_LATCH_FE02]) ||
+                             pl->pending_scroll_y != r01s_sn74hc573_peek_q(b->io_latch_impl.latch573[R01S_LATCH_FE03]);
+        int origin_changed = pl->pending_origin_col != pl->origin_col || pl->pending_origin_row != pl->origin_row;
+        if (scroll_changed || origin_changed || pl->pending_camera_reload) {
+            static int latch_logs;
+            r01s_video_sink_clear(sink);
+            if (latch_logs < 20) {
+                /* #region agent log */
+                r01s_agent_debug_log("H11", "play.c:apply_video_latch", "normal_scroll_clear",
+                                     (int)pl->pending_scroll_x, (int)pl->pending_scroll_y, (int)scroll_changed,
+                                     latch_logs);
+                /* #endregion */
+                latch_logs++;
+            }
+        }
+    } else if (sink) {
+        static int latch_logs;
+        if (latch_logs < 10) {
+            /* #region agent log */
+            r01s_agent_debug_log("H11", "play.c:apply_video_latch", "no_scroll_clear",
+                                 r01s_video_sink_render_mode(sink), (int)pl->pending_scroll_x,
+                                 (int)pl->pending_scroll_y, latch_logs);
+            /* #endregion */
+            latch_logs++;
+        }
+    }
     r01s_board_set_scroll(b, pl->pending_scroll_x, pl->pending_scroll_y);
     if (pl->pending_camera_reload) {
         (void)r01s_board_load_camera_2x2(b, pl->pending_origin_col, pl->pending_origin_row);
@@ -192,14 +238,12 @@ static void step_move_from_pad(R01sBoard *b) {
 }
 
 void r01s_play_on_vblank(R01sBoard *b) {
-    if (!b) {
-        return;
-    }
-    if (!b->play.enabled) {
+    if (!b || !b->play.enabled) {
         return;
     }
     step_move_from_pad(b);
     apply_video_latch(b);
+    write_oam_player(b);
 }
 
 static int warp_to(R01sBoard *b, int col, int row) {
@@ -237,8 +281,15 @@ int r01s_play_start(R01sBoard *board) {
     if (!spawn_screen(board, &col, &row)) {
         return 0;
     }
+    r01s_board_mark_map_ready(board);
     board->play.enabled = 1;
+    /* Host Play owns pads; FAST catchup skips smoke LDA $FE60 so mark pad health here. */
+    board->health_saw_pad = 1;
     place_player_centered(&board->play, col, row);
+    r01s_board_park_bringup_cpu(board);
+    if (board->video_impl.sink) {
+        r01s_video_sink_clear(board->video_impl.sink);
+    }
     board->play.force_camera_reload = 1;
     queue_video(board);
     r01s_play_on_vblank(board);

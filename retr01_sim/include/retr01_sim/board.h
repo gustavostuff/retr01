@@ -189,6 +189,7 @@ typedef struct R01sBoard {
     uint8_t cart_start_row;
     int cart_loaded;
     char cart_label[48];
+    uint16_t bringup_hang_pc; /* PRG pad-poll loop after bring-up overlay (host park target) */
     /* Active palette RAM (soft); addr index from HC573 FE08. */
     uint8_t active_pal[32];
     uint8_t pal_addr;
@@ -259,6 +260,10 @@ int r01s_board_has_screen(const R01sBoard *board, int col, int row);
 int r01s_board_first_screen(const R01sBoard *board, int *out_col, int *out_row);
 int r01s_board_load_camera_2x2(R01sBoard *board, int origin_col, int origin_row);
 void r01s_board_set_scroll(R01sBoard *board, uint8_t scroll_x, uint8_t scroll_y);
+/* Park CPU on bring-up pad hang so host Play OAM/scroll are not overwritten by smoke PRG. */
+void r01s_board_park_bringup_cpu(R01sBoard *board);
+/* Host Play: MAP/VRAM already loaded via catchup; keep stream gate open. */
+void r01s_board_mark_map_ready(R01sBoard *board);
 
 R01sBoard *r01s_board_from_group(R01sIslandGroup *group);
 

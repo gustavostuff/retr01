@@ -1,10 +1,13 @@
 #include "app.h"
 
+#include "agent_debug_log.h"
+#include "beam_xy.h"
 #include "retr01_sim/board.h"
 #include "retr01_sim/bom32.h"
 #include "retr01_sim/island_builder.h"
 #include "retr01_sim/play.h"
 #include "pads.h"
+#include "video_sink.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -443,20 +446,53 @@ void r01s_app_frame(R01sApp *app) {
         }
         if (group) {
             if (group->running) {
-                Uint64 t0 = SDL_GetPerformanceCounter();
-                Uint64 freq = SDL_GetPerformanceFrequency();
-                Uint64 budget_ms = (board && board->play.enabled) ? (Uint64)R01S_SIM_BUDGET_MS_PLAY
-                                                                    : (Uint64)R01S_SIM_BUDGET_MS;
-                Uint64 budget = (freq * budget_ms) / 1000u;
                 int n = 0;
-                while (n < R01S_SIM_MAX_STEPS_PER_FRAME) {
-                    r01s_island_group_step(group);
-                    n++;
-                    if ((SDL_GetPerformanceCounter() - t0) >= budget) {
-                        break;
+                uint32_t dots_before = 0;
+                uint32_t dots_after = 0;
+                if (board) {
+                    dots_before = board->video_sink.dot_samples;
+                }
+                if (board && board->play.enabled) {
+                    Uint64 t0 = SDL_GetPerformanceCounter();
+                    Uint64 freq = SDL_GetPerformanceFrequency();
+                    Uint64 budget = (freq * (Uint64)R01S_SIM_BUDGET_MS_PLAY) / 1000u;
+                    while (n < R01S_SIM_MAX_STEPS_PER_FRAME) {
+                        r01s_island_group_step(group);
+                        n++;
+                        if ((SDL_GetPerformanceCounter() - t0) >= budget) {
+                            break;
+                        }
+                    }
+                } else {
+                    Uint64 t0 = SDL_GetPerformanceCounter();
+                    Uint64 freq = SDL_GetPerformanceFrequency();
+                    Uint64 budget = (freq * (Uint64)R01S_SIM_BUDGET_MS) / 1000u;
+                    while (n < R01S_SIM_MAX_STEPS_PER_FRAME) {
+                        r01s_island_group_step(group);
+                        n++;
+                        if ((SDL_GetPerformanceCounter() - t0) >= budget) {
+                            break;
+                        }
+                    }
+                }
+                if (board) {
+                    static int beam_logs;
+                    dots_after = board->video_sink.dot_samples;
+                    if (beam_logs < 30) {
+                        /* #region agent log */
+                        r01s_agent_debug_log("H6", "app.c:frame", "beam_budget", n,
+                                             (int)(dots_after - dots_before),
+                                             r01s_video_sink_scale_2x(&board->video_sink), beam_logs);
+                        /* #endregion */
+                        beam_logs++;
                     }
                 }
                 app->ui.sim_steps = n;
+                if (board && r01s_video_sink_render_mode(&board->video_sink) == R01S_VIDEO_RENDER_PHOSPHOR) {
+                    int bx = r01s_beam_xy_x(board->beam_impl.beam_x);
+                    int by = r01s_beam_xy_y(board->beam_impl.beam_x);
+                    r01s_video_sink_display_tick(&board->video_sink, bx, by);
+                }
             } else {
                 r01s_island_group_eval_idle(group);
                 app->ui.sim_steps = 0;

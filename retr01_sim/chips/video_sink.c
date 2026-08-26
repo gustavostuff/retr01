@@ -1,11 +1,12 @@
 #include "video_sink.h"
 
 #include "at28c16.h"
+#include "../src/agent_debug_log.h"
 
 #include <string.h>
 
-/* Per UI frame (~60 Hz): ~4% decay reads as CRT phosphor persistence. */
-#define R01S_VIDEO_PHOSPHOR_DECAY_NUM 245
+/* ~15% per UI frame (~60 Hz): trails clear in ~0.5 s while beam still paints. */
+#define R01S_VIDEO_PHOSPHOR_DECAY_NUM 217
 #define R01S_VIDEO_PHOSPHOR_DECAY_DEN 256
 
 static void sink_reset(R01sEntity *e) {
@@ -35,6 +36,38 @@ static int sink_mode_valid(int mode) {
     return mode >= R01S_VIDEO_RENDER_NORMAL && mode <= R01S_VIDEO_RENDER_PHOSPHOR;
 }
 
+static uint32_t sink_nonzero_pixels(const R01sVideoSink *chip) {
+    size_t i;
+    size_t n;
+    uint32_t count = 0;
+
+    if (!chip) {
+        return 0;
+    }
+    n = sizeof(chip->rgb);
+    for (i = 0; i < n; i += 3u) {
+        if (chip->rgb[i] || chip->rgb[i + 1] || chip->rgb[i + 2]) {
+            count++;
+        }
+    }
+    return count;
+}
+
+static uint32_t sink_rgb_energy(const R01sVideoSink *chip) {
+    size_t i;
+    size_t n;
+    uint64_t sum = 0;
+
+    if (!chip) {
+        return 0;
+    }
+    n = sizeof(chip->rgb);
+    for (i = 0; i < n; i++) {
+        sum += chip->rgb[i];
+    }
+    return (uint32_t)(sum / 256u);
+}
+
 static void sink_phosphor_decay(R01sVideoSink *chip) {
     size_t i;
     size_t n;
@@ -45,6 +78,47 @@ static void sink_phosphor_decay(R01sVideoSink *chip) {
     n = sizeof(chip->rgb);
     for (i = 0; i < n; i++) {
         chip->rgb[i] = (uint8_t)((chip->rgb[i] * R01S_VIDEO_PHOSPHOR_DECAY_NUM) / R01S_VIDEO_PHOSPHOR_DECAY_DEN);
+    }
+}
+
+/* Decay unscanned residue: rows below beam_y, and on beam_y only x >= beam_x. */
+static void sink_phosphor_decay_unscanned(R01sVideoSink *chip, int beam_x, int beam_y) {
+    int y;
+    int x;
+
+    if (!chip) {
+        return;
+    }
+    if (beam_y < 0) {
+        beam_y = 0;
+    }
+    if (beam_x < 0) {
+        beam_x = 0;
+    }
+    if (beam_y >= R01S_VIDEO_H) {
+        return;
+    }
+    /* Current scanline: only pixels the beam has not rewritten yet. */
+    if (beam_x < R01S_VIDEO_W) {
+        for (x = beam_x; x < R01S_VIDEO_W; x++) {
+            size_t off = (size_t)(beam_y * R01S_VIDEO_W + x) * 3u;
+            chip->rgb[off] =
+                (uint8_t)((chip->rgb[off] * R01S_VIDEO_PHOSPHOR_DECAY_NUM) / R01S_VIDEO_PHOSPHOR_DECAY_DEN);
+            chip->rgb[off + 1] =
+                (uint8_t)((chip->rgb[off + 1] * R01S_VIDEO_PHOSPHOR_DECAY_NUM) / R01S_VIDEO_PHOSPHOR_DECAY_DEN);
+            chip->rgb[off + 2] =
+                (uint8_t)((chip->rgb[off + 2] * R01S_VIDEO_PHOSPHOR_DECAY_NUM) / R01S_VIDEO_PHOSPHOR_DECAY_DEN);
+        }
+    }
+    /* Rows below the beam: previous field. */
+    for (y = beam_y + 1; y < R01S_VIDEO_H; y++) {
+        size_t off = (size_t)y * (size_t)R01S_VIDEO_W * 3u;
+        size_t end = off + (size_t)R01S_VIDEO_W * 3u;
+        size_t i;
+        for (i = off; i < end; i++) {
+            chip->rgb[i] =
+                (uint8_t)((chip->rgb[i] * R01S_VIDEO_PHOSPHOR_DECAY_NUM) / R01S_VIDEO_PHOSPHOR_DECAY_DEN);
+        }
     }
 }
 
@@ -117,6 +191,12 @@ int r01s_video_sink_render_mode(const R01sVideoSink *chip) {
     return chip ? (int)chip->render_mode : R01S_VIDEO_RENDER_DEFAULT;
 }
 
+void r01s_video_sink_set_field_active(R01sVideoSink *chip, int active) {
+    if (chip) {
+        chip->field_active = active ? 1u : 0u;
+    }
+}
+
 void r01s_video_sink_plot(R01sVideoSink *chip, int fx, int fy, uint8_t prom_byte) {
     uint8_t r;
     uint8_t g;
@@ -132,6 +212,7 @@ void r01s_video_sink_plot(R01sVideoSink *chip, int fx, int fy, uint8_t prom_byte
     if (prom_byte != 0) {
         chip->lit_pixels++;
     }
+    chip->field_active = 1;
     chip->rgb[off] = r;
     chip->rgb[off + 1] = g;
     chip->rgb[off + 2] = b;
@@ -146,19 +227,60 @@ void r01s_video_sink_clear(R01sVideoSink *chip) {
 }
 
 void r01s_video_sink_on_vblank(R01sVideoSink *chip) {
+    static int vblank_logs;
+
     if (!chip) {
         return;
     }
+    chip->field_active = 0;
     if (chip->render_mode == R01S_VIDEO_RENDER_NORMAL) {
         r01s_video_sink_clear(chip);
+        if (vblank_logs < 40) {
+            /* #region agent log */
+            r01s_agent_debug_log("H1", "video_sink.c:on_vblank", "normal_clear", (int)chip->render_mode, 0, 0,
+                                 0);
+            /* #endregion */
+            vblank_logs++;
+        }
+        return;
+    }
+    /* Persist/Phosphor: keep prior pixels. Phosphor fades on display_tick (~60 Hz). */
+    if (vblank_logs < 40) {
+        /* #region agent log */
+        r01s_agent_debug_log("H1", "video_sink.c:on_vblank", "field_end", (int)chip->render_mode,
+                             (int)sink_nonzero_pixels(chip), (int)sink_rgb_energy(chip),
+                             (int)chip->field_active);
+        /* #endregion */
+        vblank_logs++;
     }
 }
 
-void r01s_video_sink_display_tick(R01sVideoSink *chip) {
+void r01s_video_sink_display_tick(R01sVideoSink *chip, int beam_x, int beam_y) {
+    static int tick_logs;
+    uint32_t e_before;
+    uint32_t e_after;
+
     if (!chip || chip->render_mode != R01S_VIDEO_RENDER_PHOSPHOR) {
         return;
     }
-    sink_phosphor_decay(chip);
+    e_before = sink_rgb_energy(chip);
+    /*
+     * Decay only unscanned residue so a slow beam does not fade pixels it already
+     * painted this field (that caused horizontal phosphor streaks).
+     */
+    if (chip->field_active && beam_y >= 0 && beam_y < R01S_VIDEO_H) {
+        sink_phosphor_decay_unscanned(chip, beam_x, beam_y);
+    } else {
+        sink_phosphor_decay(chip);
+    }
+    e_after = sink_rgb_energy(chip);
+    if (tick_logs < 40) {
+        /* #region agent log */
+        r01s_agent_debug_log("H15", "video_sink.c:display_tick", "phosphor_decay", (int)e_before, (int)e_after,
+                             beam_x, beam_y);
+        /* #endregion */
+        tick_logs++;
+    }
 }
 
 const uint8_t *r01s_video_sink_rgb(const R01sVideoSink *chip) {

@@ -289,3 +289,14 @@ int r01s_w65c02s_rwb(const R01sW65C02S *chip) {
 R01sCpuPhase r01s_w65c02s_phase(const R01sW65C02S *chip) {
     return chip ? chip->phase : R01S_CPU_RES_HOLD;
 }
+
+void r01s_w65c02s_set_pc(R01sW65C02S *chip, uint16_t pc) {
+    if (!chip) {
+        return;
+    }
+    chip->pc = pc;
+    chip->phase = R01S_CPU_FETCH;
+    chip->ir = 0;
+    chip->sync = 1;
+    chip->rwb = 1;
+}

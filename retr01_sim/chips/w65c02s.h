@@ -45,6 +45,7 @@ void r01s_w65c02s_init(R01sW65C02S *chip, const char *refdes);
 R01sEntity *r01s_w65c02s_entity(R01sW65C02S *chip);
 
 uint16_t r01s_w65c02s_pc(const R01sW65C02S *chip);
+void r01s_w65c02s_set_pc(R01sW65C02S *chip, uint16_t pc);
 uint16_t r01s_w65c02s_ab(const R01sW65C02S *chip);
 uint8_t r01s_w65c02s_a(const R01sW65C02S *chip);
 int r01s_w65c02s_rwb(const R01sW65C02S *chip);

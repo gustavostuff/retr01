@@ -36,6 +36,7 @@ typedef struct R01sVideoSink {
     uint8_t last_packed;
     uint8_t scale_2x;     /* 1 = 2x fills field, 0 = 1x centered (default) */
     uint8_t render_mode;  /* R01sVideoRenderMode */
+    uint8_t field_active; /* 1 while beam is painting the visible field */
 } R01sVideoSink;
 
 void r01s_video_sink_init(R01sVideoSink *chip, const char *refdes);
@@ -49,13 +50,14 @@ int r01s_video_sink_scale_2x(const R01sVideoSink *chip);
 
 void r01s_video_sink_set_render_mode(R01sVideoSink *chip, int mode);
 int r01s_video_sink_render_mode(const R01sVideoSink *chip);
+void r01s_video_sink_set_field_active(R01sVideoSink *chip, int active);
 
 void r01s_video_sink_plot(R01sVideoSink *chip, int fx, int fy, uint8_t prom_byte);
 void r01s_video_sink_clear(R01sVideoSink *chip);
-/* Field boundary: normal clears, persist/phosphor keep prior pixels. */
+/* Field boundary: normal clears, phosphor decays, persist keeps prior pixels. */
 void r01s_video_sink_on_vblank(R01sVideoSink *chip);
-/* UI frame tick: phosphor decay (no-op for other modes). */
-void r01s_video_sink_display_tick(R01sVideoSink *chip);
+/* Reserved for future UI hooks (phosphor decays on VBlank). */
+void r01s_video_sink_display_tick(R01sVideoSink *chip, int beam_x, int beam_y);
 const uint8_t *r01s_video_sink_rgb(const R01sVideoSink *chip);
 uint32_t r01s_video_sink_lit_pixels(const R01sVideoSink *chip);
 uint8_t r01s_video_sink_pixel_packed(const R01sVideoSink *chip, int fx, int fy);

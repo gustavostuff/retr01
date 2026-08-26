@@ -2807,7 +2807,6 @@ static void draw_video_pixels(SDL_Renderer *r, R01sUi *ui, R01sVideoSink *sink, 
     if (!r || !ui || !sink) {
         return;
     }
-    r01s_video_sink_display_tick(sink);
     rgb = r01s_video_sink_rgb(sink);
     if (!rgb) {
         return;
