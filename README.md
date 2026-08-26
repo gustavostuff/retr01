@@ -33,10 +33,6 @@ Details and fair NES comparisons: [`docs/07_pitch.md`](docs/07_pitch.md).
 
 Later editions (console and handheld) share the same soul: one architecture, different shells.
 
-## Project status
-
-Retr01 is in **architecture & documentation** phase with **Retr01 Studio Phase 1** and **Emulator Phase 1** as the active coding focus. Board IC simulator: [`retr01_sim/`](retr01_sim/) ([`docs/08_simulator.md`](docs/08_simulator.md)). Software-visible emulator: [`retr01_emu/`](retr01_emu/).
-
 ### Root helpers
 
 One action per invocation:
