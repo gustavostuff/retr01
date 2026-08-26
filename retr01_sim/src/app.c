@@ -66,7 +66,6 @@ static void catchup_join(R01sApp *app) {
         snprintf(app->ui.status, sizeof(app->ui.status), "IC MAP stream failed");
     } else {
         snprintf(app->ui.status, sizeof(app->ui.status), "IC MAP stream ready");
-        /* Host Play until game PRG owns camera/player (Studio/emu SoT). */
         if (app->catchup_board) {
             (void)r01s_play_start(app->catchup_board);
         }
@@ -152,6 +151,7 @@ static int catchup_thread_fn_yielding(void *userdata) {
                 /* Same sticky marks as r01s_board_catchup_bringup (A==$AA is easy to miss). */
                 board->health_saw_vram = 1;
                 board->health_saw_vram_read = 1;
+                r01s_board_catchup_finish(board);
                 break;
             }
         }
@@ -443,7 +443,6 @@ void r01s_app_frame(R01sApp *app) {
             r01s_pads_refresh_preview(&board->pads);
             app->ui.probe_pad_p1 = r01s_pads_get(&board->pads, 0);
             app->ui.probe_pad_p2 = r01s_pads_get(&board->pads, 1);
-            /* Host Play once per UI frame (TEMPORARY — until game PRG owns Play). */
             r01s_play_tick(board, pad0);
         }
         if (group) {

@@ -177,11 +177,12 @@ Documented plan only: when Island N/K (ATmega) is simulated, introduce a master 
 
 ### 5. Optimization playbook
 
-1. Cache pin indices / kill hot-path `strcmp` / `snprintf`
-2. Bitmask major buses (`uint16_t address_bus`, etc.)
-3. Merge proven glue into a "super component"
-4. Flat entity array for cache locality
-5. **Done (toggle):** `R01S_FAST=1` / UI **SIM FAST**. Word MAP catchup + 1 settle pass + 8 beam dots/step. Default remains full pin settle ([`CATCHUP_THREADING.md`](../retr01_sim/CATCHUP_THREADING.md))
+1. **Done:** cache pin indices — lazy `pin_hash_idx` in `r01s_entity_pin_named` (see [`PERFORMANCE.md`](../retr01_sim/PERFORMANCE.md))
+2. **Done:** CPU address/RWB from chip model in `board.c` wire path (not 16 pin re-reads per settle)
+3. Bitmask major buses (`uint16_t address_bus`, etc.) — partial via (2)
+4. Merge proven glue into a "super component"
+5. Flat entity array for cache locality
+6. **Done (toggle):** `R01S_FAST=1` / UI **SIM FAST**. Word MAP catchup + thin settle/beam + Host Play scaffold. Default remains full pin settle ([`CATCHUP_THREADING.md`](../retr01_sim/CATCHUP_THREADING.md), [`PERFORMANCE.md`](../retr01_sim/PERFORMANCE.md))
 
 Pin-level code stays the default for catching PCB bugs early.
 

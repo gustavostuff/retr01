@@ -2588,6 +2588,20 @@ static void ui_set_sim_fast(R01sUi *ui, int enable) {
         return;
     }
     r01s_board_set_sim_fast(board, enable ? 1 : 0);
+    if (enable) {
+        if (board->cart_loaded && board->cart_off_map_screen0 != 0) {
+            if (!board->health_saw_map) {
+                (void)r01s_board_catchup_bringup(board, ui->group);
+            } else if (!board->vram_slot_present[0] && board->cart_off_sdir != 0) {
+                r01s_board_catchup_finish(board);
+            }
+        }
+        if (board->cart_loaded && !board->play.enabled) {
+            (void)r01s_play_start(board);
+        }
+    } else if (board->cart_loaded && board->health_saw_map && !board->play.enabled) {
+        (void)r01s_play_start(board);
+    }
     snprintf(ui->status, sizeof(ui->status),
              r01s_board_sim_fast(board)
                  ? "SIM FAST: word MAP catchup + thin settle/beam (R01S_FAST)"

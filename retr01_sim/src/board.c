@@ -34,7 +34,7 @@
  * Bring-up smoke PRG (overlay into cart PRG window: not Studio game code).
  * Body through OAM readback is fixed. When cart meta is valid, install appends
  * pal+$FE08/$FE09 load and 480 B MAP→VRAM, then pad hang (addresses patched).
- * Ends with MAP seek 0 + LDA $FE93 ('R') BEFORE any MAP stream so island health sticks.
+ * Ends with MAP seek 0 + LDA $FE93 ('r' cart magic) BEFORE any MAP stream so island health sticks.
  */
 static const uint8_t R01S_BRINGUP_SMOKE[] = {
     0xA9, 0x55,       /* LDA #$55 */
@@ -66,7 +66,7 @@ static const uint8_t R01S_BRINGUP_SMOKE[] = {
     0x8D, 0x90, 0xFE, /* STA $FE90 */
     0x8D, 0x91, 0xFE, /* STA $FE91 */
     0x8D, 0x92, 0xFE, /* STA $FE92 */
-    0xAD, 0x93, 0xFE, /* LDA $FE93 expect $52 'R' */
+    0xAD, 0x93, 0xFE, /* LDA $FE93 expect $72 'r' (cart magic) */
     0xA9, 0x10,       /* LDA #$10: APU period lo */
     0x8D, 0x41, 0xFE, /* STA $FE41 */
     0xA9, 0x00,       /* LDA #$00: APU period hi */
@@ -526,7 +526,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                      (unsigned)(ctx->map_addr & 0xFFFFFFu));
         } else {
             ih->health = R01S_HEALTH_WARN;
-            snprintf(ih->activity, sizeof(ih->activity), "await LDA $FE93 ('R')");
+            snprintf(ih->activity, sizeof(ih->activity), "await LDA $FE93 ('r')");
         }
         snprintf(ih->debug, sizeof(ih->debug),
                  "island=J CART health=%s loaded=%d label=%s off_prg=$%06X len_prg=$%04X map=$%06X "
@@ -672,13 +672,13 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
 }
 
 static uint16_t board_cpu_addr(R01sBoard *ctx, R01sEntity *cpu_e) {
-    (void)ctx;
-    return (uint16_t)r01s_bus_read(cpu_e, "A", 16);
+    (void)cpu_e;
+    return r01s_w65c02s_ab(ctx->cpu_mem_impl.cpu);
 }
 
 static int board_cpu_read(R01sBoard *ctx, R01sEntity *cpu_e) {
-    (void)ctx;
-    return r01s_level_is_high(r01s_entity_sense(cpu_e, "RWB"));
+    (void)cpu_e;
+    return r01s_w65c02s_rwb(ctx->cpu_mem_impl.cpu);
 }
 
 static int board_cpu_be(R01sBoard *ctx, R01sEntity *cpu_e) {
@@ -687,8 +687,10 @@ static int board_cpu_be(R01sBoard *ctx, R01sEntity *cpu_e) {
 }
 
 static uint8_t board_cpu_d_sample(R01sBoard *ctx, R01sEntity *cpu_e) {
-    (void)ctx;
-    return (uint8_t)r01s_bus_read(cpu_e, "D", 8);
+    if (r01s_w65c02s_rwb(ctx->cpu_mem_impl.cpu)) {
+        return (uint8_t)r01s_bus_read(cpu_e, "D", 8);
+    }
+    return r01s_w65c02s_a(ctx->cpu_mem_impl.cpu);
 }
 
 static void copy_bus_named(R01sBoard *ctx, R01sEntity *dst, const char *dst_prefix, R01sEntity *src,
@@ -734,6 +736,11 @@ static void drive_level_bit(R01sEntity *e, const char *name, int bit_on) {
 
 static int addr_is_io(uint16_t addr) {
     return addr >= 0xFE00u && addr <= 0xFEFFu;
+}
+
+/* MAP seek 0 must read flash[0] == 'r' ("retr01" cart header). */
+static int board_map_byte_is_cart_magic(const R01sBoard *ctx, uint8_t dq) {
+    return ctx && ctx->map_addr == 0 && dq == (uint8_t)'r';
 }
 
 /* Soft PLD: $FE02–$FE04 latches + $FE40–$FE5F APU + $FE60/$FE61 pads + $FE90–$FE93 MAP. */
@@ -1056,8 +1063,8 @@ static void wire_io(R01sBoard *ctx) {
         copy_bus_named(ctx, cpu, "D", flash, "DQ", 8);
         dq = board_cpu_d_sample(ctx, cpu);
         ctx->flash_ce_owner = R01S_FLASH_CE_MAP;
-        if (dq == 0x52) {
-            ctx->health_saw_map = 1; /* cart magic 'R' at seek 0 */
+        if (board_map_byte_is_cart_magic(ctx, dq)) {
+            ctx->health_saw_map = 1; /* cart magic 'r' at seek 0 */
         }
         ctx->map_fe93_armed = 1;
     } else if (hit_map_data) {
@@ -1445,7 +1452,7 @@ static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
             int row = logical_y - (int)oy;
             uint8_t pal = (uint8_t)((attr & R01S_ATTR_PAL) >> R01S_ATTR_PAL_SHIFT);
             uint32_t spr_chr = ctx->cart_off_chr ? (ctx->cart_off_chr + 4u * R01S_CHR_BANK_BYTES) : 0;
-            /* Host Play: solid 8x8 via sprite pal color 1 (OAM slot 0, no CHR tile yet). */
+            /* Host Play: solid 8x8 via sprite pal color 1. */
             if (ctx->play.enabled && si == 0) {
                 uint8_t master = board_pal_master(ctx, 1, pal, R01S_PAL_PLAYER_COLOR);
                 for (px = 0; px < 8; px++) {
@@ -1589,6 +1596,10 @@ static int board_video_held_for_map_stream(const R01sBoard *ctx) {
     if (ctx->play.enabled) {
         return 0;
     }
+    if (ctx->health_saw_map && ctx->cart_off_map_screen0 != 0 &&
+        ctx->map_addr >= ctx->cart_off_map_screen0 + 480u) {
+        return 0;
+    }
     return ctx->map_addr < ctx->cart_off_map_screen0 + 480u;
 }
 
@@ -1598,6 +1609,7 @@ static int board_video_held_for_map_stream(const R01sBoard *ctx) {
  * Sink is the 256×240 RGBS field; SCALE maps beam → logical 128×120.
  */
 static void wire_video_dot(R01sBoard *ctx) {
+    wire_bg_fetch(ctx);
     R01sBeamXy *beam = ctx->beam_impl.beam_x;
     R01sCompositor *comp = ctx->video_impl.comp;
     R01sAt28c16 *prom = ctx->video_impl.prom;
@@ -1749,17 +1761,23 @@ static void wire_power_clock_reset(R01sBoard *ctx, R01sIslandGroup *group) {
 
 static void board_settle_n(R01sBoard *ctx, R01sIslandGroup *group, int passes) {
     int i;
+    int fast;
     if (passes < 1) {
         passes = 1;
     }
+    fast = ctx && ctx->sim_fast;
     for (i = 0; i < passes; i++) {
         wire_power_clock_reset(ctx, group);
         wire_memory(ctx);
         wire_io(ctx);
         wire_beam(ctx, group);
-        wire_bg_fetch(ctx);
+        if (!fast) {
+            wire_bg_fetch(ctx);
+        }
         wire_vram(ctx);
-        wire_linebuf(ctx);
+        if (!fast) {
+            wire_linebuf(ctx);
+        }
     }
 }
 
@@ -1778,13 +1796,26 @@ int r01s_board_sim_fast(const R01sBoard *board) {
     return board && board->sim_fast ? 1 : 0;
 }
 
+void r01s_board_catchup_finish(R01sBoard *board) {
+    if (!board || !board->cart_loaded) {
+        return;
+    }
+    if (board->cart_off_map_screen0 != 0) {
+        poke_map_addr_latches(board, board->cart_off_map_screen0 + 480u);
+    }
+    if (board->cart_off_sdir != 0) {
+        (void)r01s_board_load_camera_2x2(board, (int)board->cart_start_col, (int)board->cart_start_row);
+    } else if (board->cart_off_map_screen0 != 0) {
+        /* Synthetic / no directory: pin stream wrote slot-0 bytes at VRAM $0000. */
+        board->vram_slot_present[0] = 1;
+    }
+}
+
 /*
  * Word-level MAP+palette bring-up (same VRAM/pal/map_addr end state as IC stream).
  * Skips pin settle / beam; used when sim_fast is on.
  */
 static int board_fast_apply_map_stream(R01sBoard *board) {
-    uint32_t i;
-
     if (!board || !board->cart_loaded) {
         return -1;
     }
@@ -1792,16 +1823,7 @@ static int board_fast_apply_map_stream(R01sBoard *board) {
         return -1;
     }
     board_apply_active_pals_from_cart(board);
-    for (i = 0; i < 480u; i++) {
-        uint8_t b = r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_map_screen0 + i);
-        r01s_as6c62256_poke(&board->vram, (uint16_t)i, b);
-    }
-    poke_map_addr_latches(board, board->cart_off_map_screen0 + 480u);
-    if (board->cart_off_sdir != 0) {
-        int sc = (int)board->cart_start_col;
-        int sr = (int)board->cart_start_row;
-        (void)r01s_board_load_camera_2x2(board, sc, sr);
-    }
+    r01s_board_catchup_finish(board);
     r01s_sn74hc573_poke_q(board->io_latch_impl.latch573[R01S_LATCH_FE02], 0);
     r01s_sn74hc573_poke_q(board->io_latch_impl.latch573[R01S_LATCH_FE03], 0);
     /* FAST skips the pin steps that burn reset_hold; leave RESB high and park
@@ -1814,12 +1836,14 @@ static int board_fast_apply_map_stream(R01sBoard *board) {
     r01s_atmega328p_poke(board->apu_impl.apu, 0, 0x8F); /* enable + vol */
     /* Smoke LDA $FE60 never ran in FAST; hang will later, but host pads are live. */
     board->health_saw_pad = 1;
+    board->health_saw_map = 1;
+    board->health_saw_apu = 1;
     if (board->video_impl.sink) {
         r01s_video_sink_clear(board->video_impl.sink);
     }
-    board->health_saw_map = 1;
     board->health_saw_vram = 1;
     board->health_saw_vram_read = 1; /* word load stands in for smoke readback */
+    board->health_saw_bg_fetch = 1; /* FAST settle skips wire_bg_fetch */
     board->health_saw_latch = 1;
     return 0;
 }
@@ -2415,11 +2439,7 @@ int r01s_board_catchup_bringup(R01sBoard *board, R01sIslandGroup *group) {
              * often misses it. MAP-complete + matching VRAM[0] proves the port. */
             board->health_saw_vram = 1;
             board->health_saw_vram_read = 1;
-            board->vram_slot_present[0] = 1;
-            if (board->cart_off_sdir != 0) {
-                (void)r01s_board_load_camera_2x2(board, (int)board->cart_start_col,
-                                                   (int)board->cart_start_row);
-            }
+            r01s_board_catchup_finish(board);
             return 0;
         }
     }
@@ -2551,8 +2571,11 @@ static void board_step(R01sIslandGroup *group) {
 
     board_settle(ctx, group);
     r01s_entity_tick(osc);
-    r01s_entity_tick(r01s_atmega328p_entity(ctx->apu_impl.apu));
-    r01s_entity_tick(r01s_atmega1284p_entity(ctx->mcu_lb_impl.mcu));
+    /* FAST skips AVR domain ticks (health/APU smoke filled at word catchup). */
+    if (!ctx->sim_fast) {
+        r01s_entity_tick(r01s_atmega328p_entity(ctx->apu_impl.apu));
+        r01s_entity_tick(r01s_atmega1284p_entity(ctx->mcu_lb_impl.mcu));
+    }
     board_settle(ctx, group);
     /* Beam/DOT domain: burst so interactive UI reaches VBlank without minutes of wait. */
     {

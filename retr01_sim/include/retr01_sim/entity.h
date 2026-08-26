@@ -41,6 +41,8 @@ typedef enum R01sPkgOrient {
     R01S_ORIENT_V = 1, /* length along Y; pins left/right; notch top */
 } R01sPkgOrient;
 
+#define R01S_PIN_HASH_SIZE 96 /* > max pins/entity; built once, hot-path lookups */
+
 struct R01sEntity {
     const R01sEntityVTable *vt;
     const char *part;   /* e.g. "W65C02S" */
@@ -48,6 +50,9 @@ struct R01sEntity {
     R01sEntityVisual visual;
     int pin_count;
     R01sPin pins[R01S_MAX_PINS];
+    /* Lazy pin-name index: pin_hash_idx[slot] -> pins[] index, -1 empty. */
+    uint8_t pin_hash_built;
+    int8_t pin_hash_idx[R01S_PIN_HASH_SIZE];
     /* DIP body size in logical pixels (UI): from pkg mm × scale + orient. */
     int body_w;
     int body_h;
@@ -111,5 +116,11 @@ void r01s_entity_destroy(R01sEntity *e);
 /* Find pin by package number (1-based). NULL if missing. */
 R01sPin *r01s_entity_pin(R01sEntity *e, int number);
 const R01sPin *r01s_entity_pin_const(const R01sEntity *e, int number);
+
+/* Build pin_hash_idx once (safe to call repeatedly). */
+void r01s_entity_pin_hash_build(R01sEntity *e);
+
+R01sPin *r01s_entity_pin_named(R01sEntity *e, const char *name);
+const R01sPin *r01s_entity_pin_named_const(const R01sEntity *e, const char *name);
 
 #endif

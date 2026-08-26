@@ -204,8 +204,9 @@ typedef struct R01sBoard {
     R01sPlay play;
     int catchup_cancel; /* cooperative cancel for threaded IC catchup */
     /*
-     * sim_fast: word/transaction shortcuts (MAP catchup poke, thin settle/beam).
-     * Default 0 = full pin-level netlist. Toggle via UI or R01S_FAST=1.
+     * sim_fast: word/transaction shortcuts (MAP catchup poke, thin settle/beam,
+     * Host Play scaffold). Default 0 = full pin-level netlist. Toggle via UI or
+     * R01S_FAST=1.
      */
     int sim_fast;
     int reset_hold;
@@ -255,6 +256,9 @@ int r01s_board_softboot_start_screen(R01sBoard *board);
  * R01S_SOFTBOOT=1. Returns 0 on success, -1 on timeout / missing meta.
  */
 int r01s_board_catchup_bringup(R01sBoard *board, R01sIslandGroup *group);
+
+/* After MAP stream (pin worker or sync path): 2×2 camera, map_addr, slot flags. */
+void r01s_board_catchup_finish(R01sBoard *board);
 
 /* Pin-accurate (0) vs word/fast (1). Env R01S_FAST=1 at build selects default. */
 void r01s_board_set_sim_fast(R01sBoard *board, int enable);

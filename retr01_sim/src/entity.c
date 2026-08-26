@@ -86,6 +86,43 @@ void r01s_entity_refresh_body(R01sEntity *e) {
     }
 }
 
+static unsigned entity_pin_hash_key(const char *name) {
+    unsigned h = 2166136261u;
+    if (!name) {
+        return 0;
+    }
+    while (*name) {
+        h ^= (unsigned char)*name++;
+        h *= 16777619u;
+    }
+    return h % R01S_PIN_HASH_SIZE;
+}
+
+void r01s_entity_pin_hash_build(R01sEntity *e) {
+    int i;
+    if (!e || e->pin_hash_built) {
+        return;
+    }
+    for (i = 0; i < R01S_PIN_HASH_SIZE; i++) {
+        e->pin_hash_idx[i] = -1;
+    }
+    for (i = 0; i < e->pin_count; i++) {
+        unsigned slot = entity_pin_hash_key(e->pins[i].name);
+        int probes = 0;
+        while (e->pin_hash_idx[slot] >= 0) {
+            slot = (slot + 1u) % R01S_PIN_HASH_SIZE;
+            probes++;
+            if (probes >= R01S_PIN_HASH_SIZE) {
+                break;
+            }
+        }
+        if (probes < R01S_PIN_HASH_SIZE) {
+            e->pin_hash_idx[slot] = (int8_t)i;
+        }
+    }
+    e->pin_hash_built = 1;
+}
+
 void r01s_entity_init(R01sEntity *e, const R01sEntityVTable *vt, const char *part, const char *refdes) {
     if (!e) {
         return;
@@ -97,6 +134,12 @@ void r01s_entity_init(R01sEntity *e, const R01sEntityVTable *vt, const char *par
     e->orient = R01S_ORIENT_H;
     e->body_w = 40;
     e->body_h = 24;
+    {
+        int hi;
+        for (hi = 0; hi < R01S_PIN_HASH_SIZE; hi++) {
+            e->pin_hash_idx[hi] = -1;
+        }
+    }
 }
 
 int r01s_entity_add_pin(R01sEntity *e, int number, const char *name, R01sPinDir dir) {
@@ -105,6 +148,7 @@ int r01s_entity_add_pin(R01sEntity *e, int number, const char *name, R01sPinDir 
     }
     r01s_pin_init(&e->pins[e->pin_count], number, name, dir);
     e->pin_count++;
+    e->pin_hash_built = 0;
     return 0;
 }
 
@@ -208,4 +252,39 @@ R01sPin *r01s_entity_pin(R01sEntity *e, int number) {
 
 const R01sPin *r01s_entity_pin_const(const R01sEntity *e, int number) {
     return r01s_entity_pin((R01sEntity *)e, number);
+}
+
+R01sPin *r01s_entity_pin_named(R01sEntity *e, const char *name) {
+    int i;
+    if (!e || !name) {
+        return NULL;
+    }
+    if (!e->pin_hash_built) {
+        r01s_entity_pin_hash_build(e);
+    }
+    if (e->pin_hash_built) {
+        unsigned slot = entity_pin_hash_key(name);
+        int probes = 0;
+        while (probes < R01S_PIN_HASH_SIZE) {
+            int idx = e->pin_hash_idx[slot];
+            if (idx < 0) {
+                break;
+            }
+            if (e->pins[idx].name && strcmp(e->pins[idx].name, name) == 0) {
+                return &e->pins[idx];
+            }
+            slot = (slot + 1u) % R01S_PIN_HASH_SIZE;
+            probes++;
+        }
+    }
+    for (i = 0; i < e->pin_count; i++) {
+        if (e->pins[i].name && strcmp(e->pins[i].name, name) == 0) {
+            return &e->pins[i];
+        }
+    }
+    return NULL;
+}
+
+const R01sPin *r01s_entity_pin_named_const(const R01sEntity *e, const char *name) {
+    return r01s_entity_pin_named((R01sEntity *)e, name);
 }

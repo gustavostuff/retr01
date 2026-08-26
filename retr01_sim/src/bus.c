@@ -1,5 +1,7 @@
 #include "retr01_sim/bus.h"
 
+#include "retr01_sim/entity.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -76,23 +78,6 @@ static int levels_conflict(R01sLevel a, R01sLevel b) {
         return 1;
     }
     return a != b;
-}
-
-R01sPin *r01s_entity_pin_named(R01sEntity *e, const char *name) {
-    int i;
-    if (!e || !name) {
-        return NULL;
-    }
-    for (i = 0; i < e->pin_count; i++) {
-        if (e->pins[i].name && strcmp(e->pins[i].name, name) == 0) {
-            return &e->pins[i];
-        }
-    }
-    return NULL;
-}
-
-const R01sPin *r01s_entity_pin_named_const(const R01sEntity *e, const char *name) {
-    return r01s_entity_pin_named((R01sEntity *)e, name);
 }
 
 void r01s_entity_drive(R01sEntity *e, const char *name, R01sLevel level) {

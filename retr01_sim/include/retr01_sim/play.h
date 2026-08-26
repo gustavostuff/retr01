@@ -17,9 +17,9 @@ struct R01sBoard;
 #define R01S_ACTIVE_PAL_PLAYER (R01S_PAL_SPR_BASE + R01S_PAL_PLAYER_COLOR)
 
 /*
- * Host Play: Studio-equivalent move + camera + X/Y warps.
+ * Host Play: Studio-equivalent move + camera + X/Y warps after MAP catchup.
  * Sim: 1 logical px per sim VBlank when d-pad held. Scroll latched once per field.
- * Player renders via OAM on the beam (Island N/O).
+ * Player renders via OAM on the beam (Island N/O). Word catchup / thin settle stay FAST-only.
  */
 typedef struct R01sPlay {
     int enabled;

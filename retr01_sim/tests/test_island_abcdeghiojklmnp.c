@@ -79,8 +79,8 @@ int main(void) {
     b = r01s_board_from_group(group);
     expect_true(b != NULL, "board ctx");
     expect_true(b->cart_loaded, "cart loaded");
-    expect_true(r01s_sst39sf040_peek(&b->cart_flash, 0) == 'R', "flash magic R");
-    expect_true(r01s_sst39sf040_peek(&b->cart_flash, 1) == 'E', "flash magic E");
+    expect_true(r01s_sst39sf040_peek(&b->cart_flash, 0) == 'r', "flash magic r (retr01)");
+    expect_true(r01s_sst39sf040_peek(&b->cart_flash, 1) == 'e', "flash magic e (retr01)");
 
     r01s_pads_set(&b->pads, 0, 0xA5);
     {
@@ -168,7 +168,7 @@ int main(void) {
     expect_true(saw_bg_tile, "VRAM PLD latched nametable tile $42");
     expect_true(saw_bg_attr, "VRAM PLD latched nametable attr $07");
     expect_true(saw_video, "island O lit logical pixels from PROM");
-    expect_true(saw_map, "island J MAP $FE93 read cart magic R");
+    expect_true(saw_map, "island J MAP $FE93 read cart magic r");
     expect_true(saw_apu, "island K APU PWM tone edges");
     expect_true(saw_oam, "island L OAM $FE21 readback + clk");
     expect_true(saw_linebuf, "island L linebuf mux both paths");
@@ -198,7 +198,7 @@ int main(void) {
         for (pi = 0; paths[pi]; pi++) {
             if (r01s_board_load_cart(b, paths[pi]) == 0) {
                 loaded = 1;
-                expect_true(r01s_sst39sf040_peek(&b->cart_flash, 0) == 'R', "studio cart magic");
+                expect_true(r01s_sst39sf040_peek(&b->cart_flash, 0) == 'r', "studio cart magic");
                 expect_true(r01s_sst39sf040_peek(&b->cart_flash, b->cart_off_prg) == 0xA9,
                             "bring-up LDA overlay");
                 expect_true(b->cart_off_chr != 0, "world0 CHR base from cart");

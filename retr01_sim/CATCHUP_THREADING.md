@@ -110,6 +110,9 @@ These modes share the same chip entities, wires, and UI. What changes is **how m
 | Goal | PCB / pin truth | Throughput / snappy boot |
 | Catchup | ~12k real netlist steps of bring-up PRG | One word-level MAP+pal apply |
 | Each `board_step` | Deep settle + fat beam burst | Shallow settle + thin beam burst |
+| Settle wires | Full (incl. BG fetch + linebuf) | Skips BG fetch + linebuf in settle (beam loop only) |
+| AVR ticks (328P/1284P) | Every PHI2 step | Skipped (smoke filled at word catchup) |
+| Host Play | Off | On after catchup (pads / camera / OAM shortcut) |
 | Bus fights / settle depth | Visible | Easier to miss |
 | End VRAM/pal after catchup | Start screen in VRAM | Same *data* end state |
 
