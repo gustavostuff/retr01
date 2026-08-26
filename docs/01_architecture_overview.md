@@ -19,7 +19,7 @@ When docs disagree, use this order.
 **Current product board:** [`06`](06_hardware_v1_32ic.md), **32 ICs**, ~**12 x 12 cm** 4-layer THT.
 
 ```text
-  Retr01-A (32 IC): roles, not PCB layout
+  Retr01-A (32 IC): roles:
   +------------------------------------------------------------------+
   | W65C02S          game CPU @ 8.000 MHz                            |
   | ATF22V10 x5      decode, interleave, beam X/Y, compositor        |

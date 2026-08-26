@@ -14,6 +14,9 @@
 #define R01S_CART_HDR_SIZE 16
 #define R01S_CART_PTR_SIZE 24
 #define R01S_CART_PRG_BYTES 0x8000u
+#define R01S_PAL_ROW_BYTES 16u
+#define R01S_PAL_PLANE_BYTES 128u
+#define R01S_ACTIVE_PAL_BYTES 32u
 /*
  * DOT/beam ticks per board step. Real silicon runs DOT ≈ PHI2 order; the UI
  * only does a few board steps/frame, so without a burst first VBlank takes minutes.
@@ -94,37 +97,51 @@ static const uint8_t R01S_BRINGUP_HANG[] = {
 /*
  * Palette + MAP stream tail. Immediates for seeks patched at install.
  * Layout after smoke:
- *   LDA #pal_lo / STA $FE90 / LDA #pal_mid / STA $FE91 / LDA #pal_hi / STA $FE92
- *   LDA #$00 / STA $FE08
- *   LDX #32 / loop: LDA $FE93 / STA $FE09 / DEX / BNE
- *   LDA #map_lo..hi seek
- *   LDA #$00 / STA $FE10 / STA $FE11
- *   LDX #240 / copy / LDX #240 / copy
+ *   seek global BG row (16 B) -> $FE08/$FE09
+ *   seek global SPR row (16 B) -> continue auto-inc into sprite half
+ *   seek MAP start screen -> 480 B VRAM
  *   hang
  */
 enum {
-    R01S_BR_OFF_PAL_LO = 1,
-    R01S_BR_OFF_PAL_MID = 6,
-    R01S_BR_OFF_PAL_HI = 11,
-    R01S_BR_OFF_MAP_LO = 32,
-    R01S_BR_OFF_MAP_MID = 37,
-    R01S_BR_OFF_MAP_HI = 42,
+    R01S_BR_OFF_BG_LO = 1,
+    R01S_BR_OFF_BG_MID = 6,
+    R01S_BR_OFF_BG_HI = 11,
+    R01S_BR_OFF_SPR_LO = 32,
+    R01S_BR_OFF_SPR_MID = 37,
+    R01S_BR_OFF_SPR_HI = 42,
+    R01S_BR_OFF_MAP_LO = 58,
+    R01S_BR_OFF_MAP_MID = 63,
+    R01S_BR_OFF_MAP_HI = 68,
 };
 
 static const uint8_t R01S_BRINGUP_STREAM[] = {
-    0xA9, 0x00,       /* LDA #pal_lo */
+    /* BG palette row (16 master indices) */
+    0xA9, 0x00,       /* LDA #bg_lo */
     0x8D, 0x90, 0xFE, /* STA $FE90 */
-    0xA9, 0x00,       /* LDA #pal_mid */
+    0xA9, 0x00,       /* LDA #bg_mid */
     0x8D, 0x91, 0xFE, /* STA $FE91 */
-    0xA9, 0x00,       /* LDA #pal_hi */
+    0xA9, 0x00,       /* LDA #bg_hi */
     0x8D, 0x92, 0xFE, /* STA $FE92 */
     0xA9, 0x00,       /* LDA #$00 */
     0x8D, 0x08, 0xFE, /* STA $FE08 */
-    0xA2, 0x20,       /* LDX #32 */
+    0xA2, 0x10,       /* LDX #16 */
     0xAD, 0x93, 0xFE, /* LDA $FE93 */
     0x8D, 0x09, 0xFE, /* STA $FE09 */
     0xCA,             /* DEX */
     0xD0, 0xF7,       /* BNE *-9 */
+    /* SPR palette row (pal_addr already 16 after BG copy) */
+    0xA9, 0x00,       /* LDA #spr_lo */
+    0x8D, 0x90, 0xFE, /* STA $FE90 */
+    0xA9, 0x00,       /* LDA #spr_mid */
+    0x8D, 0x91, 0xFE, /* STA $FE91 */
+    0xA9, 0x00,       /* LDA #spr_hi */
+    0x8D, 0x92, 0xFE, /* STA $FE92 */
+    0xA2, 0x10,       /* LDX #16 */
+    0xAD, 0x93, 0xFE, /* LDA $FE93 */
+    0x8D, 0x09, 0xFE, /* STA $FE09 */
+    0xCA,             /* DEX */
+    0xD0, 0xF7,       /* BNE *-9 */
+    /* Start-screen MAP -> VRAM */
     0xA9, 0x00,       /* LDA #map_lo */
     0x8D, 0x90, 0xFE, /* STA $FE90 */
     0xA9, 0x00,       /* LDA #map_mid */
@@ -155,6 +172,37 @@ static void put_u24(uint8_t *p, uint32_t v) {
 
 static uint32_t get_u24(const uint8_t *p) {
     return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16);
+}
+
+/* Absolute flash offset of one 16 B palette row inside a global plane. */
+static uint32_t board_pal_row_off(uint32_t plane_off, uint32_t plane_len, unsigned row) {
+    unsigned r = row & 7u;
+    if (plane_len == 0 || plane_len >= R01S_PAL_PLANE_BYTES) {
+        return plane_off + r * R01S_PAL_ROW_BYTES;
+    }
+    /* Legacy single-row blob (16 B): ignore row index. */
+    return plane_off;
+}
+
+static void board_apply_active_pals_from_cart(R01sBoard *board) {
+    uint32_t off_bg;
+    uint32_t off_spr;
+    unsigned i;
+
+    if (!board || board->cart_off_pal_bg == 0) {
+        return;
+    }
+    off_bg = board_pal_row_off(board->cart_off_pal_bg, board->cart_len_pal_bg, board->cart_default_pal_row);
+    off_spr = board->cart_off_pal_spr
+                  ? board_pal_row_off(board->cart_off_pal_spr, board->cart_len_pal_spr, board->cart_default_pal_row)
+                  : off_bg + R01S_PAL_ROW_BYTES;
+    for (i = 0; i < R01S_PAL_ROW_BYTES; i++) {
+        board->active_pal[i] =
+            (uint8_t)(r01s_sst39sf040_peek(&board->cart_flash, off_bg + i) & 63u);
+        board->active_pal[R01S_PAL_ROW_BYTES + i] =
+            (uint8_t)(r01s_sst39sf040_peek(&board->cart_flash, off_spr + i) & 63u);
+    }
+    board->chr_last_master = (uint8_t)(board->active_pal[0] & 63u);
 }
 
 static R01sBoard *board_from_group(R01sIslandGroup *group) {
@@ -1734,12 +1782,7 @@ static int board_fast_apply_map_stream(R01sBoard *board) {
     if (board->cart_off_map_screen0 == 0 || board->cart_off_pal_bg == 0) {
         return -1;
     }
-    for (i = 0; i < 32u; i++) {
-        board->active_pal[i] =
-            (uint8_t)(r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_pal_bg + i) & 63u);
-    }
-    /* Avoid black flash if CHR /CE is denied before first successful fetch. */
-    board->chr_last_master = (uint8_t)(board->active_pal[0] & 63u);
+    board_apply_active_pals_from_cart(board);
     for (i = 0; i < 480u; i++) {
         uint8_t b = r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_map_screen0 + i);
         r01s_as6c62256_poke(&board->vram, (uint16_t)i, b);
@@ -1920,7 +1963,10 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     board->cart_off_chr = 0;
     board->cart_off_map_screen0 = 0;
     board->cart_off_pal_bg = 0;
+    board->cart_len_pal_bg = 0;
     board->cart_off_pal_spr = 0;
+    board->cart_len_pal_spr = 0;
+    board->cart_default_pal_row = 0;
     board->cart_world_base = 0;
     board->cart_off_sdir = 0;
     board->cart_screen_count = 0;
@@ -1935,7 +1981,9 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     }
     ptrs = img + R01S_CART_HDR_SIZE;
     board->cart_off_pal_bg = get_u24(ptrs + 6);
+    board->cart_len_pal_bg = get_u24(ptrs + 9);
     board->cart_off_pal_spr = get_u24(ptrs + 12);
+    board->cart_len_pal_spr = get_u24(ptrs + 15);
     off_wtable = get_u24(ptrs + 18);
     if ((size_t)off_wtable + 8u > sizeof(board->cart_flash.mem)) {
         return;
@@ -1951,6 +1999,7 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     hdr = img + world_base;
     start_col = hdr[0];
     start_row = hdr[1];
+    board->cart_default_pal_row = (uint8_t)(hdr[4] & 7u);
     screen_count = hdr[5];
     off_chr = get_u24(hdr + 8);
     off_sdir = get_u24(hdr + 11);
@@ -1997,10 +2046,19 @@ static void board_install_bringup_prg(R01sBoard *board) {
     memcpy(buf + n, R01S_BRINGUP_SMOKE, sizeof(R01S_BRINGUP_SMOKE));
     n += sizeof(R01S_BRINGUP_SMOKE);
     if (stream) {
+        uint32_t off_bg =
+            board_pal_row_off(board->cart_off_pal_bg, board->cart_len_pal_bg, board->cart_default_pal_row);
+        uint32_t off_spr =
+            board->cart_off_pal_spr
+                ? board_pal_row_off(board->cart_off_pal_spr, board->cart_len_pal_spr, board->cart_default_pal_row)
+                : off_bg + R01S_PAL_ROW_BYTES;
         memcpy(buf + n, R01S_BRINGUP_STREAM, sizeof(R01S_BRINGUP_STREAM));
-        buf[n + R01S_BR_OFF_PAL_LO] = (uint8_t)(board->cart_off_pal_bg & 0xFFu);
-        buf[n + R01S_BR_OFF_PAL_MID] = (uint8_t)((board->cart_off_pal_bg >> 8) & 0xFFu);
-        buf[n + R01S_BR_OFF_PAL_HI] = (uint8_t)((board->cart_off_pal_bg >> 16) & 0xFFu);
+        buf[n + R01S_BR_OFF_BG_LO] = (uint8_t)(off_bg & 0xFFu);
+        buf[n + R01S_BR_OFF_BG_MID] = (uint8_t)((off_bg >> 8) & 0xFFu);
+        buf[n + R01S_BR_OFF_BG_HI] = (uint8_t)((off_bg >> 16) & 0xFFu);
+        buf[n + R01S_BR_OFF_SPR_LO] = (uint8_t)(off_spr & 0xFFu);
+        buf[n + R01S_BR_OFF_SPR_MID] = (uint8_t)((off_spr >> 8) & 0xFFu);
+        buf[n + R01S_BR_OFF_SPR_HI] = (uint8_t)((off_spr >> 16) & 0xFFu);
         buf[n + R01S_BR_OFF_MAP_LO] = (uint8_t)(board->cart_off_map_screen0 & 0xFFu);
         buf[n + R01S_BR_OFF_MAP_MID] = (uint8_t)((board->cart_off_map_screen0 >> 8) & 0xFFu);
         buf[n + R01S_BR_OFF_MAP_HI] = (uint8_t)((board->cart_off_map_screen0 >> 16) & 0xFFu);
@@ -2028,10 +2086,11 @@ static void board_install_synthetic_cart(R01sBoard *board) {
     uint8_t hdr[R01S_CART_HDR_SIZE];
     uint8_t ptrs[R01S_CART_PTR_SIZE];
     uint32_t off_pal_bg = R01S_CART_HDR_SIZE + R01S_CART_PTR_SIZE; /* 0x28 */
-    uint32_t off_pal_spr = off_pal_bg + 16;                         /* 0x38 */
-    uint32_t off_prg = off_pal_spr + 16;                             /* 0x48 */
+    uint32_t off_pal_spr = off_pal_bg + R01S_PAL_PLANE_BYTES;
+    uint32_t off_prg = off_pal_spr + R01S_PAL_PLANE_BYTES;
     uint32_t off_wtable = off_prg + R01S_CART_PRG_BYTES;
-    uint8_t pals[32];
+    uint8_t pals[R01S_PAL_PLANE_BYTES * 2u];
+    unsigned i;
 
     memset(hdr, 0, sizeof(hdr));
     memcpy(hdr, "RETR01", 6);
@@ -2041,17 +2100,28 @@ static void board_install_synthetic_cart(R01sBoard *board) {
     put_u24(ptrs + 0, off_prg);
     put_u24(ptrs + 3, R01S_CART_PRG_BYTES);
     put_u24(ptrs + 6, off_pal_bg);
-    put_u24(ptrs + 9, 16);
+    put_u24(ptrs + 9, R01S_PAL_PLANE_BYTES);
     put_u24(ptrs + 12, off_pal_spr);
-    put_u24(ptrs + 15, 16);
+    put_u24(ptrs + 15, R01S_PAL_PLANE_BYTES);
     put_u24(ptrs + 18, off_wtable);
     put_u24(ptrs + 21, 64);
     memset(pals, 0, sizeof(pals));
+    /* Row 0 BG: kit strips; row 0 SPR: color1 = bright-ish red index 34. */
+    for (i = 0; i < 4u; i++) {
+        pals[i * 4u + 0] = 0;
+        pals[i * 4u + 1] = (uint8_t)(16u + i);
+        pals[i * 4u + 2] = (uint8_t)(32u + i);
+        pals[i * 4u + 3] = (uint8_t)(48u + i);
+        pals[R01S_PAL_PLANE_BYTES + i * 4u + 0] = 0;
+        pals[R01S_PAL_PLANE_BYTES + i * 4u + 1] = 34;
+        pals[R01S_PAL_PLANE_BYTES + i * 4u + 2] = 34;
+        pals[R01S_PAL_PLANE_BYTES + i * 4u + 3] = 34;
+    }
 
     memset(board->cart_flash.mem, 0xFF, sizeof(board->cart_flash.mem));
     r01s_sst39sf040_load(&board->cart_flash, 0, hdr, R01S_CART_HDR_SIZE);
     r01s_sst39sf040_load(&board->cart_flash, R01S_CART_HDR_SIZE, ptrs, R01S_CART_PTR_SIZE);
-    r01s_sst39sf040_load(&board->cart_flash, off_pal_bg, pals, 32);
+    r01s_sst39sf040_load(&board->cart_flash, off_pal_bg, pals, (uint32_t)sizeof(pals));
     board->cart_off_prg = off_prg;
     board->cart_len_prg = R01S_CART_PRG_BYTES;
     board->cart_loaded = 1;
@@ -2273,10 +2343,7 @@ int r01s_board_softboot_start_screen(R01sBoard *board) {
         uint8_t b = r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_map_screen0 + i);
         r01s_as6c62256_poke(&board->vram, (uint16_t)i, b);
     }
-    for (i = 0; i < 32u; i++) {
-        board->active_pal[i] =
-            (uint8_t)(r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_pal_bg + i) & 63u);
-    }
+    board_apply_active_pals_from_cart(board);
     poke_map_addr_latches(board, board->cart_off_map_screen0 + 480u);
     return 0;
 }

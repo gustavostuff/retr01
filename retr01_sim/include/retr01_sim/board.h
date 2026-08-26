@@ -181,7 +181,10 @@ typedef struct R01sBoard {
     uint32_t cart_off_chr;         /* world-0 CHR base; 0 = stub tile&0x3F */
     uint32_t cart_off_map_screen0; /* absolute MAP payload for world start screen */
     uint32_t cart_off_pal_bg;
+    uint32_t cart_len_pal_bg;
     uint32_t cart_off_pal_spr;
+    uint32_t cart_len_pal_spr;
+    uint8_t cart_default_pal_row; /* 0..7 into global planes */
     uint32_t cart_world_base;      /* world-0 blob base in flash */
     uint32_t cart_off_sdir;        /* absolute screen directory */
     uint8_t cart_screen_count;

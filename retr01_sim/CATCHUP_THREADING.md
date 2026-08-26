@@ -131,7 +131,7 @@ These modes share the same chip entities, wires, and UI. What changes is **how m
 
 1. Worker locks once, calls `r01s_board_catchup_bringup` -> `board_fast_apply_map_stream`.
 2. That function **does not** step the netlist. It:
-   - peeks one **global** BG palette row + one global sprite row (**16+16** B) from cart flash -> `board->active_pal[]` (row from world `default_pal_row`, else 0)
+   - peeks one global BG row + one global sprite row (**16+16** B from the 128 B planes, using world `default_pal_row`) -> `board->active_pal[]`
    - peeks 480 MAP bytes -> `r01s_as6c62256_poke` into VRAM
    - `poke_map_addr_latches(..., screen0 + 480)`
    - sets `health_saw_map` / `health_saw_vram` / `health_saw_latch`
