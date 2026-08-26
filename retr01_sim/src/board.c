@@ -1370,8 +1370,22 @@ static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     uint8_t tile, attr, color, pal, master;
     int local_x, local_y;
     uint8_t scroll_x, scroll_y;
-    int sx, sy;
+    int sx, sy, slot_x, slot_y, slot;
     int chr_ok = 1;
+
+    scroll_x = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE02]);
+    scroll_y = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE03]);
+    sx = (int)(scroll_x & 127u) + lx;
+    sy = (int)(scroll_y < 120u ? scroll_y : 119u) + ly;
+    slot_x = (sx / R01S_BG_SCREEN_PX_W) & 1;
+    slot_y = (sy / R01S_BG_SCREEN_PX_H) & 1;
+    slot = slot_y * 2 + slot_x;
+    /* Match emu/Studio: missing directory screens → shared backdrop (not CHR tile 0). */
+    if (!ctx->vram_slot_present[slot & 3]) {
+        master = (uint8_t)(ctx->active_pal[0] & 63u);
+        ctx->chr_last_master = master;
+        return master;
+    }
 
     if (ctx->cart_off_chr == 0) {
         board_vram_cell_at(ctx, lx, ly, &tile, &attr);
@@ -1380,12 +1394,8 @@ static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
         return master;
     }
     board_vram_cell_at(ctx, lx, ly, &tile, &attr);
-    scroll_x = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE02]);
-    scroll_y = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE03]);
-    sx = (int)(scroll_x & 127u) + lx;
-    sy = (int)(scroll_y < 120u ? scroll_y : 119u) + ly;
-    local_x = sx - ((sx / R01S_BG_SCREEN_PX_W) & 1) * R01S_BG_SCREEN_PX_W;
-    local_y = sy - ((sy / R01S_BG_SCREEN_PX_H) & 1) * R01S_BG_SCREEN_PX_H;
+    local_x = sx - slot_x * R01S_BG_SCREEN_PX_W;
+    local_y = sy - slot_y * R01S_BG_SCREEN_PX_H;
     color = board_chr_color(ctx, ctx->cart_off_chr, tile, attr, local_x & 7, local_y & 7, &chr_ok);
     if (!chr_ok) {
         /* PRG/MAP owns flash /CE: hold last master (no fight). */
@@ -2279,12 +2289,14 @@ static void board_load_screen_slot(R01sBoard *board, int col, int row, int slot)
         for (i = 0; i < 480u; i++) {
             r01s_as6c62256_poke(&board->vram, (uint16_t)(base + i), 0);
         }
+        board->vram_slot_present[slot] = 0;
         return;
     }
     for (i = 0; i < 480u; i++) {
         uint8_t b = r01s_sst39sf040_peek(&board->cart_flash, map_off + i);
         r01s_as6c62256_poke(&board->vram, (uint16_t)(base + i), b);
     }
+    board->vram_slot_present[slot] = 1;
 }
 
 int r01s_board_load_camera_2x2(R01sBoard *board, int origin_col, int origin_row) {
@@ -2343,8 +2355,15 @@ int r01s_board_softboot_start_screen(R01sBoard *board) {
         uint8_t b = r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_map_screen0 + i);
         r01s_as6c62256_poke(&board->vram, (uint16_t)i, b);
     }
+    board->vram_slot_present[0] = 1;
+    board->vram_slot_present[1] = 0;
+    board->vram_slot_present[2] = 0;
+    board->vram_slot_present[3] = 0;
     board_apply_active_pals_from_cart(board);
     poke_map_addr_latches(board, board->cart_off_map_screen0 + 480u);
+    if (board->cart_off_sdir != 0) {
+        (void)r01s_board_load_camera_2x2(board, (int)board->cart_start_col, (int)board->cart_start_row);
+    }
     return 0;
 }
 
@@ -2397,6 +2416,11 @@ int r01s_board_catchup_bringup(R01sBoard *board, R01sIslandGroup *group) {
              * often misses it. MAP-complete + matching VRAM[0] proves the port. */
             board->health_saw_vram = 1;
             board->health_saw_vram_read = 1;
+            board->vram_slot_present[0] = 1;
+            if (board->cart_off_sdir != 0) {
+                (void)r01s_board_load_camera_2x2(board, (int)board->cart_start_col,
+                                                   (int)board->cart_start_row);
+            }
             return 0;
         }
     }
