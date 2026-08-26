@@ -11,6 +11,8 @@ int r01_world_screen_index(const R01World *w, int col, int row);
 R01World *r01_project_world0(R01Project *p);
 const R01World *r01_project_world0_const(const R01Project *p);
 R01Screen *r01_project_active_screen(R01Project *p);
+/* Select world start screen (R01_START_COL/ROW) if present, else first present. */
+void r01_project_select_start_screen(R01Project *p);
 int r01_world_find_screen(const R01World *w, int col, int row);
 R01Screen *r01_world_screen_at(R01World *w, int col, int row);
 

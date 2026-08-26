@@ -63,9 +63,10 @@ void r01_project_init(R01Project *p, const char *name) {
     } else {
         strncpy(p->name, "untitled", R01_NAME_MAX - 1);
     }
-    p->active_screen = R01_START_ROW * R01_DEFAULT_GRID + R01_START_COL;
+    p->active_screen = 0;
     r01_project_init_phase1_pals(p);
     r01_world_init_phase1(&p->worlds[0]);
+    r01_project_select_start_screen(p);
 }
 
 R01World *r01_project_world0(R01Project *p) {
@@ -109,6 +110,32 @@ R01Screen *r01_project_active_screen(R01Project *p) {
         return NULL;
     }
     return &w->screens[p->active_screen];
+}
+
+void r01_project_select_start_screen(R01Project *p) {
+    R01World *w;
+    int idx;
+    int i;
+    if (!p) {
+        return;
+    }
+    w = r01_project_world0(p);
+    if (!w || w->screen_count < 1) {
+        p->active_screen = 0;
+        return;
+    }
+    idx = r01_world_screen_index(w, R01_START_COL, R01_START_ROW);
+    if (idx >= 0 && idx < w->screen_count && w->screens[idx].present) {
+        p->active_screen = idx;
+        return;
+    }
+    for (i = 0; i < w->screen_count; i++) {
+        if (w->screens[i].present) {
+            p->active_screen = i;
+            return;
+        }
+    }
+    p->active_screen = (idx >= 0 && idx < w->screen_count) ? idx : 0;
 }
 
 static void set_err(char *err_buf, size_t err_cap, const char *msg) {

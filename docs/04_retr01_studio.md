@@ -18,7 +18,7 @@
 
 - **Scroll:** Smooth **pixel** scroll. Camera follows the player with **no dead zone**.
 - **Player:** One **8x8** overlay sprite. Fill color from **sprite palette row 0, index 1** (phase 1 default: kit bright red). **WASD** / arrows in Play.
-- **Start:** Prefer screen **(1, 1)** if present, else first present screen.
+- **Start:** Prefer screen **(2, 0)** if present, else first present screen.
 - **Warps (hardcoded):** **X** -> screen **(0, 0)**. **Y** -> screen **(1, 0)**. Instant.
 - **Collision:** Player stays on **present** screens only.
 

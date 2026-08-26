@@ -44,7 +44,7 @@ Phase 0 is infrastructure only; nothing in the shell beyond what is needed to bo
 
 - **Scroll:** Smooth **pixel** scroll across present screens. When the player moves, the camera moves -- **no dead zone**, no free-box inset.
 - **Player:** Exactly **one** sprite entity, an **8x8** tile, hardcoded (not placed or edited in the UI). Fill color is read from **sprite palette row 0, color index 1** (phase 1 init sets that slot to kit bright red). Movement: **WASD** / d-pad arrows in Play.
-- **Start:** Prefer screen **(1, 1)** if present, else first present screen.
+- **Start:** Prefer screen **(2, 0)** if present, else first present screen.
 - **Collision:** Player AABB must stay on **present** screens only.
 - **Warp events (Phase 1 hardcoded):** Press **X** -> instant warp to screen **(0, 0)**. Press **Y** -> instant warp to screen **(1, 0)**. These are **event warp** tests for instant screen swap; see [Events](#events-strategy).
 - **Not in Phase 1:** Parallax planes, attr editing, sprite banks UI, palette UI, pixel paint, Generate, dead-zone / hybrid scroll, fade transitions, multi-tile entities, multi-world tabs.

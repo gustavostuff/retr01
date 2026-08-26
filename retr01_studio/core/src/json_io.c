@@ -604,6 +604,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
         }
     }
 
+    r01_project_select_start_screen(p);
     free(buf);
     return 0;
 }

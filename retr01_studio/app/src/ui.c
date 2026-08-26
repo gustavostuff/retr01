@@ -194,6 +194,7 @@ int ui_init(UiState *ui) {
             r01_project_init(ui->project, "test");
         } else {
             r01_chr_pack_world_bank0(r01_project_world0(ui->project));
+            r01_project_select_start_screen(ui->project);
         }
     }
     snprintf(ui->status, sizeof(ui->status), "DROP PNG — CTRL+S SAVE — CTRL+E EXPORT");
@@ -368,21 +369,7 @@ int ui_handle_drop_file(UiState *ui, const char *path, int lx, int ly) {
     if (!w) {
         return 0;
     }
-    {
-        int idx = r01_world_screen_index(w, R01_START_COL, R01_START_ROW);
-        if (idx >= 0 && w->screens[idx].present) {
-            ui->project->active_screen = idx;
-        } else {
-            int i;
-            ui->project->active_screen = 0;
-            for (i = 0; i < w->screen_count; i++) {
-                if (w->screens[i].present) {
-                    ui->project->active_screen = i;
-                    break;
-                }
-            }
-        }
-    }
+    r01_project_select_start_screen(ui->project);
     ui_toast(ui, "png imported", 0);
     snprintf(ui->status, sizeof(ui->status), "PNG OK — %dx%d grid, %d tiles", w->grid_cols, w->grid_rows,
              w->bg_banks[0].tile_count);

@@ -14,8 +14,8 @@
 #define R01_GRID_MAX 8
 #define R01_DEFAULT_GRID 3
 #define R01_MAX_SCREENS (R01_GRID_MAX * R01_GRID_MAX)
-#define R01_START_COL 1
-#define R01_START_ROW 1
+#define R01_START_COL 2
+#define R01_START_ROW 0
 
 #define R01_MAX_WORLDS 8
 #define R01_BG_BANKS 4

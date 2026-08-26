@@ -29,8 +29,8 @@ int main(void) {
 
     r01_project_init(p, "test");
     expect_true(p->worlds[0].screen_count == R01_DEFAULT_GRID * R01_DEFAULT_GRID, "9 screens default");
-    expect_true(p->worlds[0].screens[4].col == 1 && p->worlds[0].screens[4].row == 1, "center screen");
-    expect_true(p->active_screen == 4, "active start 1,1");
+    expect_true(p->worlds[0].screens[2].col == 2 && p->worlds[0].screens[2].row == 0, "start screen 2,0");
+    expect_true(p->active_screen == 2, "active start 2,0");
     {
         int i;
         for (i = 0; i < p->worlds[0].screen_count; i++) {
