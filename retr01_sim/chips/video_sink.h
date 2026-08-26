@@ -29,7 +29,7 @@ typedef enum R01sVideoRenderMode {
 #define R01S_VIDEO_RENDER_DEFAULT R01S_VIDEO_RENDER_PERSIST
 
 /* UI control strip above the LCD preview (matches sim ui.c). */
-#define R01S_VIDEO_SINK_CTRL_H 18
+#define R01S_VIDEO_SINK_CTRL_H 24
 
 typedef struct R01sVideoSink {
     R01sEntity base;

@@ -44,10 +44,12 @@ static void draw_radio_option(SDL_Renderer *r, const SDL_Rect *rc, int selected,
 
 #define R01S_UI_GRID_CELL 5
 #define R01S_UI_GRID_ALPHA 22
-#define R01S_LCD_CTRL_H 18
-#define R01S_LCD_CTRL_BTN_W 36
-#define R01S_LCD_CTRL_GAP 4
+#define R01S_LCD_CTRL_BTN_H 20
+#define R01S_LCD_CTRL_PAD_Y 2
+#define R01S_LCD_CTRL_GAP 6
 #define R01S_LCD_CTRL_BTN_N 5
+#define R01S_LCD_CTRL_BTN_W_MIN 28
+#define R01S_LCD_CTRL_BTN_W_MAX 38
 
 static int ui_board_sx(const R01sUi *ui, int board_x) {
     return R01S_UI_VIEW_X + board_x - ui->pan_x;
@@ -372,6 +374,124 @@ void r01s_ui_island_z_raise(R01sUi *ui, int island_index) {
     ui->island_z_order[n - 1] = (uint8_t)island_index;
 }
 
+static int chip_visual_draw_layer(const R01sEntity *e) {
+    if (!e) {
+        return 0;
+    }
+    switch (e->visual) {
+    case R01S_ENTITY_VIS_IC:
+        return 0;
+    case R01S_ENTITY_VIS_PWR:
+    case R01S_ENTITY_VIS_OSC:
+        return 1;
+    case R01S_ENTITY_VIS_DISPLAY:
+        return 2;
+    default:
+        return 0;
+    }
+}
+
+void r01s_ui_chip_z_init(R01sUi *ui) {
+    int n;
+    int i;
+    int j;
+
+    if (!ui) {
+        return;
+    }
+    n = ui->chip_count;
+    if (n > R01S_BOARD_MAX_CHIPS) {
+        n = R01S_BOARD_MAX_CHIPS;
+    }
+    ui->chip_z_count = n;
+    for (i = 0; i < n; i++) {
+        ui->chip_z_order[i] = (uint8_t)i;
+    }
+    /* ICs back, display/LCD front (stable by chip index). */
+    for (i = 1; i < n; i++) {
+        uint8_t key = ui->chip_z_order[i];
+        int key_layer = chip_visual_draw_layer(ui->chips[key]);
+        j = i - 1;
+        while (j >= 0 && chip_visual_draw_layer(ui->chips[ui->chip_z_order[j]]) > key_layer) {
+            ui->chip_z_order[j + 1] = ui->chip_z_order[j];
+            j--;
+        }
+        ui->chip_z_order[j + 1] = key;
+    }
+}
+
+void r01s_ui_chip_z_apply(R01sUi *ui, const int *z_by_index, int n) {
+    int rank;
+    int i;
+    int seen[R01S_BOARD_MAX_CHIPS];
+
+    if (!ui || n <= 0 || n > R01S_BOARD_MAX_CHIPS) {
+        r01s_ui_chip_z_init(ui);
+        return;
+    }
+    memset(seen, 0, sizeof(seen));
+    ui->chip_z_count = n;
+    for (rank = 0; rank < n; rank++) {
+        int found = -1;
+        for (i = 0; i < n; i++) {
+            if (!z_by_index || z_by_index[i] != rank) {
+                continue;
+            }
+            if (seen[i]) {
+                r01s_ui_chip_z_init(ui);
+                return;
+            }
+            seen[i] = 1;
+            found = i;
+            break;
+        }
+        if (found < 0) {
+            r01s_ui_chip_z_init(ui);
+            return;
+        }
+        ui->chip_z_order[rank] = (uint8_t)found;
+    }
+}
+
+int r01s_ui_chip_z_rank(const R01sUi *ui, int chip_index) {
+    int p;
+    if (!ui || chip_index < 0) {
+        return 0;
+    }
+    for (p = 0; p < ui->chip_z_count; p++) {
+        if (ui->chip_z_order[p] == (uint8_t)chip_index) {
+            return p;
+        }
+    }
+    return chip_index;
+}
+
+void r01s_ui_chip_z_raise(R01sUi *ui, int chip_index) {
+    int n;
+    int p;
+    int i;
+
+    if (!ui || chip_index < 0) {
+        return;
+    }
+    n = ui->chip_z_count;
+    if (n <= 1 || chip_index >= n) {
+        return;
+    }
+    for (p = 0; p < n; p++) {
+        if (ui->chip_z_order[p] == (uint8_t)chip_index) {
+            break;
+        }
+    }
+    if (p < 0 || p >= n - 1) {
+        return;
+    }
+    for (i = p; i < n - 1; i++) {
+        ui->chip_z_order[i] = ui->chip_z_order[i + 1];
+    }
+    ui->chip_z_order[n - 1] = (uint8_t)chip_index;
+}
+
 int r01s_ui_add_chip(R01sUi *ui, R01sEntity *chip, int island_index) {
     if (!ui || !chip || ui->chip_count >= R01S_BOARD_MAX_CHIPS) {
         return -1;
@@ -577,17 +697,36 @@ static void draw_osc_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *
     blit_rgba_scaled(r, ix, iy, R01S_UI_OSC_RGBA, R01S_UI_OSC_W, R01S_UI_OSC_H, 1);
 }
 
+static int lcd_ctrl_btn_w(const R01sEntity *e) {
+    int avail;
+    int w;
+
+    if (!e) {
+        return R01S_LCD_CTRL_BTN_W_MIN;
+    }
+    avail = e->body_w - 4;
+    w = (avail - (R01S_LCD_CTRL_BTN_N - 1) * R01S_LCD_CTRL_GAP) / R01S_LCD_CTRL_BTN_N;
+    if (w > R01S_LCD_CTRL_BTN_W_MAX) {
+        w = R01S_LCD_CTRL_BTN_W_MAX;
+    }
+    if (w < R01S_LCD_CTRL_BTN_W_MIN) {
+        w = R01S_LCD_CTRL_BTN_W_MIN;
+    }
+    return w;
+}
+
 static void display_ctrl_btn_rect(const R01sUi *ui, const R01sEntity *e, int btn, SDL_Rect *rc) {
-    int total = R01S_LCD_CTRL_BTN_N * R01S_LCD_CTRL_BTN_W + (R01S_LCD_CTRL_BTN_N - 1) * R01S_LCD_CTRL_GAP;
+    int btn_w = lcd_ctrl_btn_w(e);
+    int total = R01S_LCD_CTRL_BTN_N * btn_w + (R01S_LCD_CTRL_BTN_N - 1) * R01S_LCD_CTRL_GAP;
     int x0 = ui_board_sx(ui, e->board_x + (e->body_w - total) / 2);
-    int y0 = ui_board_sy(ui, e->board_y);
+    int y0 = ui_board_sy(ui, e->board_y + R01S_LCD_CTRL_PAD_Y);
     if (!rc || !e || btn < 0 || btn >= R01S_LCD_CTRL_BTN_N) {
         return;
     }
-    rc->x = x0 + btn * (R01S_LCD_CTRL_BTN_W + R01S_LCD_CTRL_GAP);
+    rc->x = x0 + btn * (btn_w + R01S_LCD_CTRL_GAP);
     rc->y = y0;
-    rc->w = R01S_LCD_CTRL_BTN_W;
-    rc->h = R01S_LCD_CTRL_H;
+    rc->w = btn_w;
+    rc->h = R01S_LCD_CTRL_BTN_H;
 }
 
 static void draw_lcd_ctrl_bar(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e,
@@ -621,7 +760,7 @@ static void draw_display_glyph(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e,
 
     r01s_video_sink_lcd_size(sink, &lcd_w, &lcd_h);
     lcd_x = x + (e->body_w - lcd_w) / 2;
-    lcd_y = y + R01S_LCD_CTRL_H;
+    lcd_y = y + R01S_VIDEO_SINK_CTRL_H;
 
     draw_glyph_pins(r, ui, e, e->board_x, e->board_y);
     draw_lcd_ctrl_bar(r, ui, e, sink);
@@ -1887,6 +2026,7 @@ static void ui_apply_compact_layout(R01sUi *ui) {
     ui->pan_x = 0;
     ui->pan_y = 0;
     r01s_ui_clamp_pan(ui);
+    r01s_ui_chip_z_init(ui);
 }
 
 static void ui_toggle_compact(R01sUi *ui) {
@@ -1908,6 +2048,9 @@ static void ui_toggle_compact(R01sUi *ui) {
         } else {
             ui_apply_compact_layout(ui);
             ui_save_compact_layout(ui);
+        }
+        if (ui->chip_z_count != ui->chip_count) {
+            r01s_ui_chip_z_init(ui);
         }
         ui->layout_compact = 1;
         ui->layout_dirty = 1;
@@ -2294,8 +2437,9 @@ static void draw_health_dot(SDL_Renderer *r, int x, int y, R01sHealth h) {
 #define R01S_UI_RADIO_GAP 4
 #define R01S_UI_RADIO_SECTION_GAP 4
 #define R01S_UI_SCREEN_MODE_N 3
-#define R01S_UI_PROBE_H 118
-#define R01S_UI_PAD_BIT_STRIDE 9
+#define R01S_UI_PROBE_H 136
+#define R01S_UI_PROBE_ROW 15
+#define R01S_UI_PAD_BIT_STRIDE 10
 #define GP_PANEL_GAP 6
 #define GP_PANEL_W R01S_UI_SIDEBAR_W
 #define GP_PANEL_H 50
@@ -2491,35 +2635,6 @@ static void draw_sidebar_radio_controls(SDL_Renderer *r, R01sUi *ui) {
     draw_radio_option(r, &rc, board && r01s_board_sim_fast(board), "FAST");
 }
 
-static void health_copy_btn_rect(const R01sUi *ui, int island_index, SDL_Rect *rc) {
-    int status_y = sidebar_sy(ui, sidebar_status_content_y());
-    rc->x = R01S_UI_SIDEBAR_X + R01S_UI_SIDEBAR_W - 42;
-    rc->y = status_y + R01S_UI_STATUS_HDR_H + island_index * R01S_UI_STATUS_ROW_H + 1;
-    rc->w = 34;
-    rc->h = 11;
-}
-
-static void health_system_copy_rect(const R01sUi *ui, SDL_Rect *rc) {
-    int status_y = sidebar_sy(ui, sidebar_status_content_y());
-    /* Title row — above the system color bar so it does not overlap. */
-    rc->x = R01S_UI_SIDEBAR_X + R01S_UI_SIDEBAR_W - 50;
-    rc->y = status_y + 3;
-    rc->w = 42;
-    rc->h = 12;
-}
-
-static int ui_copy_health_text(R01sUi *ui, const char *text) {
-    if (!ui || !text || !text[0]) {
-        return -1;
-    }
-    if (SDL_SetClipboardText(text) != 0) {
-        snprintf(ui->status, sizeof(ui->status), "clipboard failed: %s", SDL_GetError());
-        return -1;
-    }
-    snprintf(ui->status, sizeof(ui->status), "copied debug to clipboard (%zu chars)", strlen(text));
-    return 0;
-}
-
 static const char *health_island_title(const R01sUi *ui, int island_index) {
     const R01sIsland *island;
     if (!ui || !ui->group) {
@@ -2527,6 +2642,43 @@ static const char *health_island_title(const R01sUi *ui, int island_index) {
     }
     island = r01s_island_group_at(ui->group, island_index);
     return island && island->title ? island->title : "?";
+}
+
+/* Sidebar row label: drop "ISLAND " and keep id + description. */
+static const char *health_sidebar_island_label(const R01sUi *ui, int island_index) {
+    const char *title = health_island_title(ui, island_index);
+    if (strncmp(title, "ISLAND ", 7) == 0 && title[7]) {
+        return title + 7;
+    }
+    return title;
+}
+
+static const char *health_sidebar_island_letter(const R01sUi *ui, int island_index) {
+    static char letter[2];
+    const char *title = health_island_title(ui, island_index);
+
+    letter[0] = '?';
+    letter[1] = '\0';
+    if (strncmp(title, "ISLAND ", 7) == 0 && title[7]) {
+        letter[0] = title[7];
+    }
+    return letter;
+}
+
+static void health_island_row_tooltip(const R01sUi *ui, int island_index, char *out, size_t out_len) {
+    const R01sIslandHealth *ih;
+
+    if (!ui || !out || out_len == 0 || island_index < 0 || island_index >= ui->health.island_count) {
+        return;
+    }
+    ih = &ui->health.islands[island_index];
+    if (health_needs_debug(ih->health) && ih->debug[0]) {
+        snprintf(out, out_len, "%s — %s", health_sidebar_island_label(ui, island_index), ih->debug);
+    } else if (ih->activity[0]) {
+        snprintf(out, out_len, "%s — %s", health_sidebar_island_label(ui, island_index), ih->activity);
+    } else {
+        snprintf(out, out_len, "%s", health_sidebar_island_label(ui, island_index));
+    }
 }
 
 static void health_island_row_rect(const R01sUi *ui, int island_index, SDL_Rect *rc) {
@@ -2551,29 +2703,19 @@ static void draw_system_health_panel(SDL_Renderer *r, R01sUi *ui, int py) {
     int px = R01S_UI_SIDEBAR_X;
     int pw = R01S_UI_SIDEBAR_W;
     int ph;
-    int show_sys_copy;
     Uint8 sr, sg, sb;
     char row[56];
-    SDL_Rect copy_rc;
+    int tag_w;
 
     if (!ui) {
         return;
     }
     health = &ui->health;
     ph = status_panel_h(health);
-    show_sys_copy = health_needs_debug(health->system) || health->system == R01S_HEALTH_BOOT;
 
     fill_rect(r, px, py, pw, ph, 14, 20, 16);
     draw_rect(r, px, py, pw, ph, 70, 90, 75);
-    font_draw_ellipsize(r, px + 6, py + 4, "SYSTEM STATUS", show_sys_copy ? (pw - 58) : (pw - 12), 190, 205,
-                        180);
-
-    if (show_sys_copy) {
-        health_system_copy_rect(ui, &copy_rc);
-        fill_rect(r, copy_rc.x, copy_rc.y, copy_rc.w, copy_rc.h, 50, 58, 48);
-        draw_rect(r, copy_rc.x, copy_rc.y, copy_rc.w, copy_rc.h, 200, 190, 100);
-        font_draw(r, copy_rc.x + 4, copy_rc.y + 3, "COPY", 230, 220, 140);
-    }
+    font_draw(r, px + 6, py + 4, "STATUS", 190, 205, 180);
 
     health_rgb(health->system, &sr, &sg, &sb);
     fill_rect(r, px + 6, py + 18, pw - 12, 14, sr, sg, sb);
@@ -2584,25 +2726,12 @@ static void draw_system_health_panel(SDL_Renderer *r, R01sUi *ui, int py) {
     for (i = 0; i < health->island_count; i++) {
         const R01sIslandHealth *ih = &health->islands[i];
         int ry = py + R01S_UI_STATUS_HDR_H + i * R01S_UI_STATUS_ROW_H;
-        int row_max_w;
-        int has_copy = health_needs_debug(ih->health);
-        int tag_w;
 
         draw_health_dot(r, px + 6, ry + 4, ih->health);
-        row_max_w = has_copy && pw >= 110 ? (pw - 40) : (pw - 26);
-        if (row_max_w < 20) {
-            row_max_w = 20;
-        }
-        font_draw_ellipsize(r, px + 18, ry + 4, health_island_title(ui, i), row_max_w, 140, 155, 135);
+        font_draw(r, px + 18, ry + 4, health_sidebar_island_letter(ui, i), 140, 155, 135);
         snprintf(row, sizeof(row), "%s", r01s_health_tag(ih->health));
         tag_w = font_text_width(row);
-        font_draw(r, px + pw - tag_w - (has_copy && pw >= 110 ? 40 : 8), ry + 3, row, 140, 155, 135);
-        if (has_copy && pw >= 110) {
-            health_copy_btn_rect(ui, i, &copy_rc);
-            fill_rect(r, copy_rc.x, copy_rc.y, copy_rc.w, copy_rc.h, 50, 58, 48);
-            draw_rect(r, copy_rc.x, copy_rc.y, copy_rc.w, copy_rc.h, 160, 150, 80);
-            font_draw(r, copy_rc.x + 4, copy_rc.y + 2, "COPY", 210, 200, 120);
-        }
+        font_draw(r, px + pw - tag_w - 8, ry + 3, row, 140, 155, 135);
     }
 
     font_draw_ellipsize(r, px + 6, py + ph - 11, "HOVER ROW FOR DETAIL", pw - 12, 100, 115, 100);
@@ -2632,23 +2761,33 @@ static void draw_pin_swatch(SDL_Renderer *r, int x, int y, Uint8 R, Uint8 G, Uin
 static void draw_live_probe(SDL_Renderer *r, const R01sUi *ui, int py) {
     int px = R01S_UI_SIDEBAR_X;
     int pw = R01S_UI_SIDEBAR_W;
+    int row;
     Uint8 pr, pg, pb;
+
     fill_rect(r, px, py, pw, R01S_UI_PROBE_H, 16, 22, 18);
     draw_rect(r, px, py, pw, R01S_UI_PROBE_H, 80, 90, 70);
-    font_draw(r, px + 4, py + 3, "PROBE", 200, 210, 180);
-    draw_led(r, px + 4, py + 14, ui->probe_vdd, 80, 220, 100, "VDD");
-    draw_led(r, px + 4, py + 28, ui->probe_phi2, 220, 200, 60, "PHI2");
-    draw_led(r, px + 4, py + 42, ui->probe_resb_low, 220, 80, 80, "RST");
-    font_draw(r, px + 4, py + 58, "P1", 160, 180, 160);
-    draw_pad_bits_compact(r, px + 4, py + 66, ui->probe_pad_p1);
-    font_draw(r, px + 4, py + 78, "P2", 160, 180, 160);
-    draw_pad_bits_compact(r, px + 4, py + 86, ui->probe_pad_p2);
-
-    font_draw(r, px + 4, py + 100, "PINS", 200, 210, 180);
+    font_draw(r, px + 6, py + 4, "PROBE", 200, 210, 180);
+    row = py + 16;
+    draw_led(r, px + 6, row, ui->probe_vdd, 80, 220, 100, "VDD");
+    row += R01S_UI_PROBE_ROW;
+    draw_led(r, px + 6, row, ui->probe_phi2, 220, 200, 60, "PHI2");
+    row += R01S_UI_PROBE_ROW;
+    draw_led(r, px + 6, row, ui->probe_resb_low, 220, 80, 80, "RST");
+    row += R01S_UI_PROBE_ROW + 2;
+    font_draw(r, px + 6, row, "P1", 160, 180, 160);
+    row += 10;
+    draw_pad_bits_compact(r, px + 6, row, ui->probe_pad_p1);
+    row += 12;
+    font_draw(r, px + 6, row, "P2", 160, 180, 160);
+    row += 10;
+    draw_pad_bits_compact(r, px + 6, row, ui->probe_pad_p2);
+    row += 14;
+    font_draw(r, px + 6, row, "PINS", 200, 210, 180);
+    row += 12;
     pin_level_rgb(R01S_LVL_H, R01S_PIN_OUT, &pr, &pg, &pb);
-    draw_pin_swatch(r, px + 4, py + 110, pr, pg, pb, "HI");
+    draw_pin_swatch(r, px + 6, row, pr, pg, pb, "HI");
     pin_level_rgb(R01S_LVL_L, R01S_PIN_OUT, &pr, &pg, &pb);
-    draw_pin_swatch(r, px + 48, py + 110, pr, pg, pb, "LO");
+    draw_pin_swatch(r, px + 50, row, pr, pg, pb, "LO");
 }
 
 static void draw_island_resize_grip(SDL_Renderer *r, int hx, int hy) {
@@ -2755,16 +2894,20 @@ static void ui_fill_tooltip(const R01sUi *ui, char *out, size_t out_len) {
         SDL_Rect rc;
         health_system_bar_rect(ui, &rc);
         if (ui->mouse_lx >= rc.x && ui->mouse_lx < rc.x + rc.w && ui->mouse_ly >= rc.y &&
-            ui->mouse_ly < rc.y + rc.h && ui->health.system_detail[0]) {
-            snprintf(out, out_len, "%s", ui->health.system_detail);
+            ui->mouse_ly < rc.y + rc.h) {
+            if ((health_needs_debug(ui->health.system) || ui->health.system == R01S_HEALTH_BOOT) &&
+                ui->health.system_debug[0]) {
+                snprintf(out, out_len, "%s", ui->health.system_debug);
+            } else if (ui->health.system_detail[0]) {
+                snprintf(out, out_len, "%s", ui->health.system_detail);
+            }
             return;
         }
         for (i = 0; i < ui->health.island_count; i++) {
-            const R01sIslandHealth *ih = &ui->health.islands[i];
             health_island_row_rect(ui, i, &rc);
             if (ui->mouse_lx >= rc.x && ui->mouse_lx < rc.x + rc.w && ui->mouse_ly >= rc.y &&
-                ui->mouse_ly < rc.y + rc.h && ih->activity[0]) {
-                snprintf(out, out_len, "%s — %s", health_island_title(ui, i), ih->activity);
+                ui->mouse_ly < rc.y + rc.h) {
+                health_island_row_tooltip(ui, i, out, out_len);
                 return;
             }
         }
@@ -3130,8 +3273,17 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
             draw_island_header(r, ui, island, ih);
         }
     } else {
-        for (i = 0; i < ui->chip_count; i++) {
-            draw_board_item(r, ui, ui->chips[i], ui->chip_sel[i] || i == ui->selected);
+        int rank;
+        int n_chips = ui->chip_z_count;
+        if (n_chips <= 0) {
+            n_chips = ui->chip_count;
+        }
+        for (rank = 0; rank < n_chips; rank++) {
+            int ci = (rank < ui->chip_z_count) ? (int)ui->chip_z_order[rank] : rank;
+            if (ci < 0 || ci >= ui->chip_count) {
+                continue;
+            }
+            draw_board_item(r, ui, ui->chips[ci], ui->chip_sel[ci] || ci == ui->selected);
         }
         if (ui->box_sel) {
             int x0 = ui_board_sx(ui, ui->box_bx0 < ui->box_bx1 ? ui->box_bx0 : ui->box_bx1);
@@ -3426,13 +3578,21 @@ static int hit_board_top(const R01sUi *ui, int lx, int ly, int *chip_out, int *i
         return 0;
     }
 
-    /* Compact (or no islands): chips only, last-drawn wins. */
+    /* Compact (or no islands): chips only, front-most in chip_z_order wins. */
     {
-        int i;
-        for (i = ui->chip_count - 1; i >= 0; i--) {
-            if (ui->chips[i] && hit_chip(ui, ui->chips[i], lx, ly)) {
+        int rank;
+        int n_chips = ui->chip_z_count;
+        if (n_chips <= 0) {
+            n_chips = ui->chip_count;
+        }
+        for (rank = n_chips - 1; rank >= 0; rank--) {
+            int ci = (rank < ui->chip_z_count) ? (int)ui->chip_z_order[rank] : rank;
+            if (ci < 0 || ci >= ui->chip_count) {
+                continue;
+            }
+            if (ui->chips[ci] && hit_chip(ui, ui->chips[ci], lx, ly)) {
                 if (chip_out) {
-                    *chip_out = i;
+                    *chip_out = ci;
                 }
                 return 1;
             }
@@ -3628,7 +3788,6 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         int gp_player = 0;
         int gp_btn = -1;
         int hit;
-        SDL_Rect copy_rc;
 
         /* Context menu: toggle package orientation. */
         if (ui->ctx_chip >= 0 && ui->ctx_chip < ui->chip_count) {
@@ -3716,30 +3875,6 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             }
         }
 
-        /* System / island COPY buttons (sidebar) before gamepad / board hits. */
-        if (health_needs_debug(ui->health.system) || ui->health.system == R01S_HEALTH_BOOT) {
-            health_system_copy_rect(ui, &copy_rc);
-            if (sidebar_hit(logic_x, logic_y) && logic_x >= copy_rc.x && logic_x < copy_rc.x + copy_rc.w &&
-                logic_y >= copy_rc.y && logic_y < copy_rc.y + copy_rc.h) {
-                ui_copy_health_text(ui, ui->health.system_debug);
-                return 1;
-            }
-        }
-        for (i = 0; i < ui->health.island_count; i++) {
-            if (!health_needs_debug(ui->health.islands[i].health)) {
-                continue;
-            }
-            health_copy_btn_rect(ui, i, &copy_rc);
-            if (!sidebar_hit(copy_rc.x + copy_rc.w / 2, copy_rc.y + copy_rc.h / 2)) {
-                continue; /* scrolled out of sidebar viewport */
-            }
-            if (logic_x >= copy_rc.x && logic_x < copy_rc.x + copy_rc.w && logic_y >= copy_rc.y &&
-                logic_y < copy_rc.y + copy_rc.h) {
-                ui_copy_health_text(ui, ui->health.islands[i].debug);
-                return 1;
-            }
-        }
-
         hit = gp_hit_any(ui, logic_x, logic_y, &gp_player, &gp_btn);
         if (hit == 2) {
             ui->drag_btn = gp_player * 4 + gp_btn;
@@ -3778,7 +3913,10 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 return 1;
             }
             if (kind == 1 && chip_i >= 0 && chip_i < ui->chip_count && ui->chips[chip_i]) {
-                if (!ui->layout_compact && island_i >= 0) {
+                if (ui->layout_compact) {
+                    r01s_ui_chip_z_raise(ui, chip_i);
+                    ui->layout_dirty = 1;
+                } else if (island_i >= 0) {
                     r01s_ui_island_z_raise(ui, island_i);
                 }
                 if (ui->layout_compact && shift) {

@@ -47,6 +47,9 @@ typedef struct R01sUi {
     /* Draw order back→front: island_z_order[0] is bottom, [count-1] is top. */
     uint8_t island_z_order[R01S_MAX_ISLANDS];
     int island_z_count;
+    /* Compact-mode chip draw order (same convention as island_z_order). */
+    uint8_t chip_z_order[R01S_BOARD_MAX_CHIPS];
+    int chip_z_count;
     int drag_grab_bx;
     int drag_grab_by;
     int drag_last_x;
@@ -99,6 +102,11 @@ void r01s_ui_island_z_init(R01sUi *ui);
 void r01s_ui_island_z_apply(R01sUi *ui, const int *z_by_index, int n);
 int r01s_ui_island_z_rank(const R01sUi *ui, int island_index);
 void r01s_ui_island_z_raise(R01sUi *ui, int island_index);
+
+void r01s_ui_chip_z_init(R01sUi *ui);
+void r01s_ui_chip_z_apply(R01sUi *ui, const int *z_by_index, int n);
+int r01s_ui_chip_z_rank(const R01sUi *ui, int chip_index);
+void r01s_ui_chip_z_raise(R01sUi *ui, int chip_index);
 
 int r01s_ui_add_chip(R01sUi *ui, R01sEntity *chip, int island_index);
 

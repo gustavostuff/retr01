@@ -222,9 +222,10 @@ int r01s_ui_layout_save(R01sUi *ui) {
                 fprintf(f, ",\n");
             }
             first = 0;
-            fprintf(f, "    {\"id\": \"%s\", \"x\": %d, \"y\": %d, \"orient\": \"%s\"}", id,
+            fprintf(f, "    {\"id\": \"%s\", \"x\": %d, \"y\": %d, \"orient\": \"%s\", \"z\": %d}", id,
                     ui->compact_chip_x[i], ui->compact_chip_y[i],
-                    ui->compact_chip_orient[i] == (uint8_t)R01S_ORIENT_V ? "V" : "H");
+                    ui->compact_chip_orient[i] == (uint8_t)R01S_ORIENT_V ? "V" : "H",
+                    r01s_ui_chip_z_rank(ui, i));
         }
     }
     fprintf(f, "\n  ]\n");
@@ -331,6 +332,8 @@ int r01s_ui_layout_load(R01sUi *ui) {
     int n_islands;
     int island_z_by_index[R01S_MAX_ISLANDS];
     int island_z_loaded = 0;
+    int chip_z_by_index[R01S_BOARD_MAX_CHIPS];
+    int chip_z_loaded = 0;
 
     if (!ui || !ui->group) {
         return -1;
@@ -338,6 +341,9 @@ int r01s_ui_layout_load(R01sUi *ui) {
     n_islands = r01s_island_group_count(ui->group);
     for (i = 0; i < R01S_MAX_ISLANDS; i++) {
         island_z_by_index[i] = i;
+    }
+    for (i = 0; i < R01S_BOARD_MAX_CHIPS; i++) {
+        chip_z_by_index[i] = i;
     }
     {
         const char *env = getenv("R01S_LAYOUT");
@@ -491,7 +497,7 @@ int r01s_ui_layout_load(R01sUi *ui) {
             char slice[320];
             char id[32];
             char orient[8];
-            int x = 0, y = 0;
+            int x = 0, y = 0, z = 0;
             int ci;
             end = json_object_end(obj);
             if (!end || (size_t)(end - obj) >= sizeof(slice)) {
@@ -508,6 +514,10 @@ int r01s_ui_layout_load(R01sUi *ui) {
                 json_string_after(slice, "\"orient\"", orient, sizeof(orient));
                 ci = chip_index_by_refdes(ui, id);
                 if (ci >= 0) {
+                    if (json_int_after(slice, "\"z\"", &z)) {
+                        chip_z_by_index[ci] = z;
+                        chip_z_loaded = 1;
+                    }
                     ui->compact_chip_x[ci] = x;
                     ui->compact_chip_y[ci] = y;
                     ui->compact_chip_orient[ci] =
@@ -540,6 +550,11 @@ int r01s_ui_layout_load(R01sUi *ui) {
             r01s_entity_place(e, ui->compact_chip_x[i], ui->compact_chip_y[i]);
         }
         ui->layout_compact = 1;
+    }
+    if (chip_z_loaded) {
+        r01s_ui_chip_z_apply(ui, chip_z_by_index, ui->chip_count);
+    } else {
+        r01s_ui_chip_z_init(ui);
     }
     r01s_ui_clamp_pan(ui);
     ui->layout_dirty = 0;
