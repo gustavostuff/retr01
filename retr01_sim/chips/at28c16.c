@@ -129,6 +129,19 @@ void r01s_at28c16_load_kit(R01sAt28c16 *chip) {
     }
 }
 
+void r01s_at28c16_kit_rgb(int master_index, uint8_t *r, uint8_t *g, uint8_t *b) {
+    int i = master_index & 63;
+    if (r) {
+        *r = KIT_RGB[i][0];
+    }
+    if (g) {
+        *g = KIT_RGB[i][1];
+    }
+    if (b) {
+        *b = KIT_RGB[i][2];
+    }
+}
+
 uint8_t r01s_at28c16_peek(const R01sAt28c16 *chip, int index) {
     if (!chip) {
         return 0;

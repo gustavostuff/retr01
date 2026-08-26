@@ -157,7 +157,7 @@ void r01s_video_sink_set_field_active(R01sVideoSink *chip, int active) {
     }
 }
 
-void r01s_video_sink_plot(R01sVideoSink *chip, int fx, int fy, uint8_t prom_byte) {
+void r01s_video_sink_plot(R01sVideoSink *chip, int fx, int fy, uint8_t master_index) {
     uint8_t r;
     uint8_t g;
     uint8_t b;
@@ -166,10 +166,12 @@ void r01s_video_sink_plot(R01sVideoSink *chip, int fx, int fy, uint8_t prom_byte
         return;
     }
     chip->dot_samples++;
-    chip->last_packed = prom_byte;
-    r01s_at28c16_unpack_rgb(prom_byte, &r, &g, &b);
+    /* Studio/emu SoT: full kit RGB. PROM R3G3B2 is still driven on the IC path. */
+    r01s_at28c16_kit_rgb((int)master_index, &r, &g, &b);
+    chip->last_packed = (uint8_t)(((r * 7 + 127) / 255 << 5) | ((g * 7 + 127) / 255 << 2) |
+                                  ((b * 3 + 127) / 255));
     off = (size_t)(fy * R01S_VIDEO_W + fx) * 3u;
-    if (prom_byte != 0) {
+    if ((master_index & 63u) != 0) {
         chip->lit_pixels++;
     }
     chip->field_active = 1;

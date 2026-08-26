@@ -2224,11 +2224,13 @@ static void draw_health_dot(SDL_Renderer *r, int x, int y, R01sHealth h) {
 #define R01S_UI_STATUS_ROW_H 16
 #define R01S_UI_STATUS_FOOTER_H 16
 #define R01S_UI_SIDEBAR_GAP 8
-#define R01S_UI_RADIO_HDR_H 12
-#define R01S_UI_RADIO_BTN_H 16
+#define R01S_UI_RADIO_HDR_H 10
+#define R01S_UI_RADIO_BTN_H 14
 #define R01S_UI_RADIO_GAP 2
+#define R01S_UI_RADIO_SECTION_GAP 4
 #define R01S_UI_SCREEN_MODE_N 3
 #define R01S_UI_PROBE_H 124
+#define R01S_UI_PAD_BIT_STRIDE 8
 #define GP_PANEL_GAP 6
 #define GP_PANEL_W ((R01S_UI_SIDEBAR_W - GP_PANEL_GAP) / 2)
 #define GP_PANEL_H 100
@@ -2265,26 +2267,27 @@ static int sidebar_screen_section_y(const R01sUi *ui) {
 }
 
 static int sidebar_screen_section_h(void) {
-    return R01S_UI_RADIO_HDR_H + R01S_UI_SCREEN_MODE_N * R01S_UI_RADIO_BTN_H +
-           (R01S_UI_SCREEN_MODE_N - 1) * R01S_UI_RADIO_GAP;
+    /* SCREEN modes share one row (Normal | Persist | Phosphor). */
+    return R01S_UI_RADIO_HDR_H + R01S_UI_RADIO_BTN_H;
 }
 
 static int sidebar_dual_group_y(const R01sUi *ui, int group) {
-    int y = sidebar_screen_section_y(ui) + sidebar_screen_section_h() + R01S_UI_SIDEBAR_GAP;
-    y += group * (R01S_UI_RADIO_HDR_H + R01S_UI_RADIO_BTN_H + R01S_UI_SIDEBAR_GAP);
+    int y = sidebar_screen_section_y(ui) + sidebar_screen_section_h() + R01S_UI_RADIO_SECTION_GAP;
+    y += group * (R01S_UI_RADIO_HDR_H + R01S_UI_RADIO_BTN_H + R01S_UI_RADIO_SECTION_GAP);
     return y;
 }
 
 static void sidebar_screen_mode_rect(const R01sUi *ui, int mode_index, SDL_Rect *rc) {
-    rc->x = R01S_UI_SIDEBAR_X;
-    rc->w = R01S_UI_SIDEBAR_W;
+    int gap = R01S_UI_RADIO_GAP;
+    int bw = (R01S_UI_SIDEBAR_W - (R01S_UI_SCREEN_MODE_N - 1) * gap) / R01S_UI_SCREEN_MODE_N;
     rc->h = R01S_UI_RADIO_BTN_H;
-    rc->y = sidebar_sy(ui, sidebar_screen_section_y(ui) + R01S_UI_RADIO_HDR_H +
-                                mode_index * (R01S_UI_RADIO_BTN_H + R01S_UI_RADIO_GAP));
+    rc->w = bw;
+    rc->y = sidebar_sy(ui, sidebar_screen_section_y(ui) + R01S_UI_RADIO_HDR_H);
+    rc->x = R01S_UI_SIDEBAR_X + mode_index * (bw + gap);
 }
 
 static void sidebar_dual_radio_rect(const R01sUi *ui, int group, int option, SDL_Rect *rc) {
-    int gap = 4;
+    int gap = R01S_UI_RADIO_GAP;
     int bw = (R01S_UI_SIDEBAR_W - gap) / 2;
     rc->h = R01S_UI_RADIO_BTN_H;
     rc->w = bw;
@@ -2391,19 +2394,21 @@ static int radio_hit(const SDL_Rect *rc, int mx, int my) {
 static void draw_radio_option(SDL_Renderer *r, const SDL_Rect *rc, int selected, const char *label) {
     int cx;
     int cy;
+    int label_x;
     if (!r || !rc || !label) {
         return;
     }
-    cx = rc->x + 10;
+    cx = rc->x + 7;
     cy = rc->y + rc->h / 2;
+    label_x = rc->x + 14;
     fill_rect(r, rc->x, rc->y, rc->w, rc->h, selected ? 36 : 22, selected ? 52 : 30, selected ? 40 : 28);
     draw_rect(r, rc->x, rc->y, rc->w, rc->h, selected ? 140 : 80, selected ? 170 : 100, selected ? 120 : 85);
-    fill_rect(r, cx - 4, cy - 4, 8, 8, 24, 28, 32);
-    draw_rect(r, cx - 4, cy - 4, 8, 8, 100, 110, 120);
+    fill_rect(r, cx - 3, cy - 3, 6, 6, 24, 28, 32);
+    draw_rect(r, cx - 3, cy - 3, 6, 6, 100, 110, 120);
     if (selected) {
-        fill_rect(r, cx - 2, cy - 2, 4, 4, 180, 220, 160);
+        fill_rect(r, cx - 1, cy - 1, 2, 2, 180, 220, 160);
     }
-    font_draw(r, rc->x + 20, rc->y + (rc->h - 8) / 2, label, selected ? 220 : 170, selected ? 230 : 180,
+    font_draw(r, label_x, rc->y + (rc->h - 8) / 2, label, selected ? 220 : 170, selected ? 230 : 180,
               selected ? 200 : 160);
 }
 
@@ -2538,9 +2543,8 @@ static void draw_pad_bits_compact(SDL_Renderer *r, int x, int y, uint8_t bits) {
     int i;
     for (i = 0; i < 8; i++) {
         int on = (bits & (1u << i)) != 0;
-        fill_rect(r, x + i * 10, y, 9, 9, on ? 80 : 30, on ? 200 : 30, on ? 100 : 30);
-        draw_rect(r, x + i * 10, y, 9, 9, 120, 130, 120);
-        font_draw(r, x + i * 10 + 1, y + 1, names[i], 200, 210, 200);
+        int bx = x + i * R01S_UI_PAD_BIT_STRIDE;
+        font_draw(r, bx, y, names[i], on ? 80 : 140, on ? 220 : 150, on ? 100 : 140);
     }
 }
 

@@ -52,7 +52,7 @@ void r01s_video_sink_set_render_mode(R01sVideoSink *chip, int mode);
 int r01s_video_sink_render_mode(const R01sVideoSink *chip);
 void r01s_video_sink_set_field_active(R01sVideoSink *chip, int active);
 
-void r01s_video_sink_plot(R01sVideoSink *chip, int fx, int fy, uint8_t prom_byte);
+void r01s_video_sink_plot(R01sVideoSink *chip, int fx, int fy, uint8_t master_index);
 void r01s_video_sink_clear(R01sVideoSink *chip);
 /* Field boundary: normal clears, phosphor decays, persist keeps prior pixels. */
 void r01s_video_sink_on_vblank(R01sVideoSink *chip);

@@ -1,4 +1,4 @@
-I am not using normal caps for "RETR", I'm instead using small caps (Unicode)
+I am not using normal caps for "RETR", I'm instead using small caps (Unicode + 2 ASCII)
 
 RETR01   \/
          /\

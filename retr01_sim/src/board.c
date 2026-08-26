@@ -1611,7 +1611,6 @@ static void wire_video_dot(R01sBoard *ctx) {
     int scale_2x = r01s_video_sink_scale_2x(sink);
     uint8_t bg;
     uint8_t idx;
-    uint8_t packed;
 
     if (r01s_beam_xy_hblank(beam) || r01s_beam_xy_vblank(beam) || bx >= R01S_BEAM_VISIBLE_W ||
         by >= R01S_BEAM_VISIBLE_H) {
@@ -1641,8 +1640,8 @@ static void wire_video_dot(R01sBoard *ctx) {
 
     idx = r01s_compositor_out(comp);
     wire_video_prom_addr(prom_e, idx);
-    packed = r01s_at28c16_peek(prom, idx);
-    r01s_video_sink_plot(sink, bx, by, packed);
+    (void)r01s_at28c16_peek(prom, idx); /* Color PROM still on the digital video path */
+    r01s_video_sink_plot(sink, bx, by, idx);
 }
 
 static void wire_memory(R01sBoard *ctx) {
