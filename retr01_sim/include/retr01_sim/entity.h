@@ -63,11 +63,11 @@ struct R01sEntity {
     void *impl;
 };
 
-/* Canvas scale: 1 mm real package = 4 logical pixels (compact bbox ÷ 4 → mm). */
-#define R01S_PX_PER_MM 4
-/* JEDEC 0.100″ pin pitch ≈ 2.54 mm → 10 px at R01S_PX_PER_MM (never stretch-to-fill). */
-#define R01S_DIP_PIN_PITCH_PX 10
-#define R01S_DIP_PIN_MARGIN_PX 8 /* soft hint only; draw centers row with leftover */
+/* Canvas scale: 1 mm real package = 2 logical pixels (compact bbox ÷ 2 → mm). */
+#define R01S_PX_PER_MM 2
+/* JEDEC 0.100″ pin pitch ≈ 2.54 mm → 5 px at R01S_PX_PER_MM (never stretch-to-fill). */
+#define R01S_DIP_PIN_PITCH_PX 5
+#define R01S_DIP_PIN_MARGIN_PX 4 /* soft hint only; draw centers row with leftover */
 
 /* Look up (or estimate) molded body length × width in mm for a DIP pin count. */
 void r01s_dip_pkg_mm(int dip_pins, int *len_mm, int *wid_mm);

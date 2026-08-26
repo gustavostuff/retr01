@@ -161,7 +161,8 @@ int r01s_ui_layout_save(R01sUi *ui) {
             fprintf(f, ",\n");
         }
         first = 0;
-        fprintf(f, "    {\"i\": %d, \"x\": %d, \"y\": %d, \"w\": %d, \"h\": %d}", i, ix, iy, iw, ih);
+        fprintf(f, "    {\"i\": %d, \"x\": %d, \"y\": %d, \"w\": %d, \"h\": %d, \"z\": %d}", i, ix, iy, iw, ih,
+                r01s_ui_island_z_rank(ui, i));
     }
     fprintf(f, "\n  ],\n");
 
@@ -328,9 +329,15 @@ int r01s_ui_layout_load(R01sUi *ui) {
     const char *obj;
     const char *end;
     int n_islands;
+    int island_z_by_index[R01S_MAX_ISLANDS];
+    int island_z_loaded = 0;
 
     if (!ui || !ui->group) {
         return -1;
+    }
+    n_islands = r01s_island_group_count(ui->group);
+    for (i = 0; i < R01S_MAX_ISLANDS; i++) {
+        island_z_by_index[i] = i;
     }
     {
         const char *env = getenv("R01S_LAYOUT");
@@ -392,7 +399,7 @@ int r01s_ui_layout_load(R01sUi *ui) {
         int got_frame = 0;
         obj = json_next_object(section);
         while (obj && (!stop || obj < stop)) {
-            int idx = -1, x = 0, y = 0, w = 0, h = 0;
+            int idx = -1, x = 0, y = 0, w = 0, h = 0, z = 0;
             char slice[256];
             end = json_object_end(obj);
             if (!end || (size_t)(end - obj) >= sizeof(slice)) {
@@ -406,6 +413,10 @@ int r01s_ui_layout_load(R01sUi *ui) {
                 json_int_after(slice, "\"y\"", &y);
                 json_int_after(slice, "\"w\"", &w);
                 json_int_after(slice, "\"h\"", &h);
+                if (json_int_after(slice, "\"z\"", &z)) {
+                    island_z_by_index[idx] = z;
+                    island_z_loaded = 1;
+                }
                 if (w > 0 && h > 0) {
                     ui->save_island_x[idx] = x;
                     ui->save_island_y[idx] = y;
@@ -419,6 +430,11 @@ int r01s_ui_layout_load(R01sUi *ui) {
         if (got_frame) {
             ui->layout_saved = 1;
         }
+    }
+    if (island_z_loaded) {
+        r01s_ui_island_z_apply(ui, island_z_by_index, n_islands);
+    } else {
+        r01s_ui_island_z_init(ui);
     }
 
     section = json_find(buf, "\"island_chips\"");

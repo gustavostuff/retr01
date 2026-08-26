@@ -27,7 +27,8 @@ static void ui_rebuild_islands_from_saved_chips(R01sUi *ui);
 static void ui_chip_rel_from_abs(const R01sUi *ui, int chip_i, int abs_x, int abs_y, int *rx, int *ry);
 static void ui_chip_place_rel(R01sUi *ui, int chip_i, int rx, int ry);
 static void island_content_min_size(const R01sUi *ui, int island_index, int *min_w, int *min_h);
-static void draw_video_pixels(SDL_Renderer *r, R01sUi *ui, R01sVideoSink *sink, int px, int py);
+static void draw_video_pixels(SDL_Renderer *r, R01sUi *ui, R01sVideoSink *sink, int px, int py, int dw,
+                              int dh);
 static void ui_toggle_compact(R01sUi *ui);
 static void compact_btn_rect(const R01sUi *ui, SDL_Rect *rc);
 static void save_btn_rect(const R01sUi *ui, SDL_Rect *rc);
@@ -36,8 +37,17 @@ static void ui_toggle_lcd_scale(R01sUi *ui);
 static void ui_set_lcd_scale(R01sUi *ui, int scale_2x);
 static void ui_set_screen_render_mode(R01sUi *ui, int mode);
 static void ui_set_sim_fast(R01sUi *ui, int enable);
+static int hit_chip(const R01sUi *ui, const R01sEntity *e, int lx, int ly);
 static int ui_lcd_scale_2x(const R01sUi *ui);
 static int ui_screen_render_mode(const R01sUi *ui);
+static void draw_radio_option(SDL_Renderer *r, const SDL_Rect *rc, int selected, const char *label);
+
+#define R01S_UI_GRID_CELL 5
+#define R01S_UI_GRID_ALPHA 22
+#define R01S_LCD_CTRL_H 18
+#define R01S_LCD_CTRL_BTN_W 36
+#define R01S_LCD_CTRL_GAP 4
+#define R01S_LCD_CTRL_BTN_N 5
 
 static int ui_board_sx(const R01sUi *ui, int board_x) {
     return R01S_UI_VIEW_X + board_x - ui->pan_x;
@@ -270,7 +280,96 @@ int r01s_ui_rotate_selected(R01sUi *ui) {
 void r01s_ui_bind_group(R01sUi *ui, R01sIslandGroup *group) {
     if (ui) {
         ui->group = group;
+        r01s_ui_island_z_init(ui);
     }
+}
+
+void r01s_ui_island_z_init(R01sUi *ui) {
+    int n;
+    int i;
+    if (!ui) {
+        return;
+    }
+    n = ui->group ? r01s_island_group_count(ui->group) : 0;
+    if (n > R01S_MAX_ISLANDS) {
+        n = R01S_MAX_ISLANDS;
+    }
+    ui->island_z_count = n;
+    for (i = 0; i < n; i++) {
+        ui->island_z_order[i] = (uint8_t)i;
+    }
+}
+
+void r01s_ui_island_z_apply(R01sUi *ui, const int *z_by_index, int n) {
+    int rank;
+    int i;
+    int seen[R01S_MAX_ISLANDS];
+
+    if (!ui || n <= 0 || n > R01S_MAX_ISLANDS) {
+        r01s_ui_island_z_init(ui);
+        return;
+    }
+    memset(seen, 0, sizeof(seen));
+    ui->island_z_count = n;
+    for (rank = 0; rank < n; rank++) {
+        int found = -1;
+        for (i = 0; i < n; i++) {
+            if (!z_by_index || z_by_index[i] != rank) {
+                continue;
+            }
+            if (seen[i]) {
+                r01s_ui_island_z_init(ui);
+                return;
+            }
+            seen[i] = 1;
+            found = i;
+            break;
+        }
+        if (found < 0) {
+            r01s_ui_island_z_init(ui);
+            return;
+        }
+        ui->island_z_order[rank] = (uint8_t)found;
+    }
+}
+
+int r01s_ui_island_z_rank(const R01sUi *ui, int island_index) {
+    int p;
+    if (!ui || island_index < 0) {
+        return 0;
+    }
+    for (p = 0; p < ui->island_z_count; p++) {
+        if (ui->island_z_order[p] == (uint8_t)island_index) {
+            return p;
+        }
+    }
+    return island_index;
+}
+
+void r01s_ui_island_z_raise(R01sUi *ui, int island_index) {
+    int n;
+    int p;
+    int i;
+
+    if (!ui || island_index < 0) {
+        return;
+    }
+    n = ui->island_z_count;
+    if (n <= 1 || island_index >= n) {
+        return;
+    }
+    for (p = 0; p < n; p++) {
+        if (ui->island_z_order[p] == (uint8_t)island_index) {
+            break;
+        }
+    }
+    if (p < 0 || p >= n - 1) {
+        return;
+    }
+    for (i = p; i < n - 1; i++) {
+        ui->island_z_order[i] = ui->island_z_order[i + 1];
+    }
+    ui->island_z_order[n - 1] = (uint8_t)island_index;
 }
 
 int r01s_ui_add_chip(R01sUi *ui, R01sEntity *chip, int island_index) {
@@ -356,9 +455,9 @@ static void draw_dip_pad_h(SDL_Renderer *r, int px, int body_edge_y, int outward
     int stub1;
     if (outward_down) {
         stub0 = body_edge_y;
-        stub1 = body_edge_y + 9;
+        stub1 = body_edge_y + R01S_CHIP_PIN_OUT;
     } else {
-        stub0 = body_edge_y - 9;
+        stub0 = body_edge_y - R01S_CHIP_PIN_OUT;
         stub1 = body_edge_y;
     }
     SDL_SetRenderDrawColor(r, pr, pg, pb, 255);
@@ -370,11 +469,11 @@ static void draw_dip_pad_v(SDL_Renderer *r, int py, int body_edge_x, int outward
     int stub0;
     int stub1;
     if (outward_left) {
-        stub0 = body_edge_x - 9;
+        stub0 = body_edge_x - R01S_CHIP_PIN_OUT;
         stub1 = body_edge_x;
     } else {
         stub0 = body_edge_x;
-        stub1 = body_edge_x + 9;
+        stub1 = body_edge_x + R01S_CHIP_PIN_OUT;
     }
     SDL_SetRenderDrawColor(r, pr, pg, pb, 255);
     SDL_RenderDrawLine(r, stub0, py, stub1, py);
@@ -401,18 +500,18 @@ static void draw_glyph_pins(SDL_Renderer *r, const R01sUi *ui, const R01sEntity 
         } else {
             idx = ri++;
         }
-        py = board_y + 10 + idx * 10;
-        if (py > board_y + e->body_h - 6) {
-            py = board_y + e->body_h - 6;
+        py = board_y + 5 + idx * 5;
+        if (py > board_y + e->body_h - 3) {
+            py = board_y + e->body_h - 3;
         }
         py = ui_board_sy(ui, py);
         pin_level_rgb(e->pins[i].level, e->pins[i].dir, &pr, &pg, &pb);
         if (side_left) {
-            px0 = x - 10;
+            px0 = x - R01S_CHIP_PIN_OUT;
             px1 = x;
         } else {
             px0 = x + e->body_w;
-            px1 = x + e->body_w + 10;
+            px1 = x + e->body_w + R01S_CHIP_PIN_OUT;
         }
         SDL_SetRenderDrawColor(r, pr, pg, pb, 255);
         SDL_RenderDrawLine(r, px0, py, px1, py);
@@ -440,99 +539,96 @@ static void blit_rgba_scaled(SDL_Renderer *r, int dx, int dy, const uint8_t *rgb
     }
 }
 
+static void draw_segment_btn(SDL_Renderer *r, const SDL_Rect *rc, int selected, const char *label) {
+    int tw;
+    int tx;
+    int ty;
+    if (!r || !rc || !label) {
+        return;
+    }
+    tw = font_text_width(label);
+    tx = rc->x + (rc->w - tw) / 2;
+    ty = rc->y + (rc->h - 8) / 2;
+    fill_rect(r, rc->x, rc->y, rc->w, rc->h, selected ? 36 : 22, selected ? 52 : 30, selected ? 40 : 28);
+    draw_rect(r, rc->x, rc->y, rc->w, rc->h, selected ? 140 : 80, selected ? 170 : 100, selected ? 120 : 85);
+    font_draw(r, tx, ty, label, selected ? 220 : 170, selected ? 230 : 180, selected ? 200 : 160);
+}
+
 static void draw_pwr_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int selected) {
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);
-    int img_w = R01S_UI_BATTERY_W * 2;
+    int img_w = R01S_UI_BATTERY_W;
     int ix = x + (e->body_w - img_w) / 2;
-    int iy = y + 4;
+    int iy = y + 2;
     draw_glyph_pins(r, ui, e, e->board_x, e->board_y);
     draw_rect(r, x, y, e->body_w, e->body_h, selected ? 255 : 80, selected ? 220 : 90, selected ? 80 : 70);
-    blit_rgba_scaled(r, ix, iy, R01S_UI_BATTERY_RGBA, R01S_UI_BATTERY_W, R01S_UI_BATTERY_H, 2);
-    if (e->refdes) {
-        font_draw_ellipsize(r, x + 4, y + e->body_h - 12, e->refdes, e->body_w - 8, 180, 190, 160);
-    }
+    blit_rgba_scaled(r, ix, iy, R01S_UI_BATTERY_RGBA, R01S_UI_BATTERY_W, R01S_UI_BATTERY_H, 1);
 }
 
 static void draw_osc_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int selected) {
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);
-    int img_w = R01S_UI_OSC_W * 2;
-    int img_h = R01S_UI_OSC_H * 2;
+    int img_w = R01S_UI_OSC_W;
+    int img_h = R01S_UI_OSC_H;
     int ix = x + (e->body_w - img_w) / 2;
-    int iy = y + (e->body_h - img_h) / 2 - 4;
+    int iy = y + (e->body_h - img_h) / 2 - 2;
     draw_glyph_pins(r, ui, e, e->board_x, e->board_y);
     draw_rect(r, x, y, e->body_w, e->body_h, selected ? 255 : 80, selected ? 220 : 100, selected ? 80 : 110);
-    blit_rgba_scaled(r, ix, iy, R01S_UI_OSC_RGBA, R01S_UI_OSC_W, R01S_UI_OSC_H, 2);
-    if (e->refdes) {
-        font_draw_ellipsize(r, x + 4, y + 4, e->refdes, e->body_w - 8, 180, 190, 170);
+    blit_rgba_scaled(r, ix, iy, R01S_UI_OSC_RGBA, R01S_UI_OSC_W, R01S_UI_OSC_H, 1);
+}
+
+static void display_ctrl_btn_rect(const R01sUi *ui, const R01sEntity *e, int btn, SDL_Rect *rc) {
+    int total = R01S_LCD_CTRL_BTN_N * R01S_LCD_CTRL_BTN_W + (R01S_LCD_CTRL_BTN_N - 1) * R01S_LCD_CTRL_GAP;
+    int x0 = ui_board_sx(ui, e->board_x + (e->body_w - total) / 2);
+    int y0 = ui_board_sy(ui, e->board_y);
+    if (!rc || !e || btn < 0 || btn >= R01S_LCD_CTRL_BTN_N) {
+        return;
     }
-    if (e->part) {
-        font_draw_ellipsize(r, x + 4, y + e->body_h - 12, e->part, e->body_w - 8, 160, 180, 200);
+    rc->x = x0 + btn * (R01S_LCD_CTRL_BTN_W + R01S_LCD_CTRL_GAP);
+    rc->y = y0;
+    rc->w = R01S_LCD_CTRL_BTN_W;
+    rc->h = R01S_LCD_CTRL_H;
+}
+
+static void draw_lcd_ctrl_bar(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e,
+                              const R01sVideoSink *sink) {
+    static const char *const labels[R01S_LCD_CTRL_BTN_N] = {"NRM", "PRS", "PHO", "1X", "2X"};
+    SDL_Rect rc;
+    int mode;
+    int scale2;
+    int i;
+
+    if (!r || !ui || !e || !sink) {
+        return;
+    }
+    mode = r01s_video_sink_render_mode(sink);
+    scale2 = r01s_video_sink_scale_2x(sink);
+    for (i = 0; i < R01S_LCD_CTRL_BTN_N; i++) {
+        int sel = (i < 3) ? (mode == i) : (i == 3 ? !scale2 : scale2);
+        display_ctrl_btn_rect(ui, e, i, &rc);
+        draw_segment_btn(r, &rc, sel, labels[i]);
     }
 }
 
 static void draw_display_glyph(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e, int selected) {
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);
-    int inner_x = x + 4;
-    int inner_y = y + 8;
-    int inner_w = e->body_w - 8;
-    int inner_h = e->body_h - 14;
-    int hdr_h = 14;
-    int px = inner_x + (inner_w - R01S_VIDEO_W) / 2;
-    int py = inner_y + hdr_h;
     const R01sVideoSink *sink = (const R01sVideoSink *)e;
-    char scale_lbl[16];
-    int scale_w;
+    int lcd_w;
+    int lcd_h;
+    int lcd_x;
+    int lcd_y;
+
+    r01s_video_sink_lcd_size(sink, &lcd_w, &lcd_h);
+    lcd_x = x + (e->body_w - lcd_w) / 2;
+    lcd_y = y + R01S_LCD_CTRL_H;
+
     draw_glyph_pins(r, ui, e, e->board_x, e->board_y);
-    fill_rect(r, inner_x, inner_y, inner_w, inner_h, 16, 22, 18);
-    draw_rect(r, inner_x, inner_y, inner_w, inner_h, selected ? 255 : 140, selected ? 220 : 160,
-              selected ? 80 : 180);
-    /* Header band — centered title, SCALE right-aligned (clear of left-side pins). */
-    font_draw(r, inner_x + (inner_w - font_text_width("SCREEN 256X240")) / 2, inner_y + 3, "SCREEN 256X240",
-              180, 190, 160);
-    snprintf(scale_lbl, sizeof(scale_lbl), "SCALE %s",
-             r01s_video_sink_scale_2x(sink) ? "2X" : "1X");
-    scale_w = font_text_width(scale_lbl);
-    font_draw(r, inner_x + inner_w - scale_w - 4, inner_y + 3, scale_lbl, 140, 200, 160);
-    fill_rect(r, inner_x + 2, inner_y + hdr_h - 1, inner_w - 4, 1, 40, 55, 45);
-    fill_rect(r, px, py, R01S_VIDEO_W, R01S_VIDEO_H, 8, 12, 16);
-    draw_video_pixels(r, ui, (R01sVideoSink *)(void *)sink, px, py);
-    draw_rect(r, px - 1, py - 1, R01S_VIDEO_W + 2, R01S_VIDEO_H + 2, 80, 100, 120);
-}
-
-static void font_draw_v(SDL_Renderer *r, int x, int y, const char *text, Uint8 R, Uint8 G, Uint8 B) {
-    /* 90° CW: each 5x7 glyph reads top→bottom along +Y. */
-    int cy = y;
-    SDL_SetRenderDrawColor(r, R, G, B, 255);
-    for (; text && *text; text++) {
-        int gi = glyph_ix(*text);
-        int row, col;
-        if (*text == ' ' || *text == '/' || *text == '+' || *text == '-' || *text == '#' || *text == ':' ||
-            *text == '.') {
-            cy += 6;
-            continue;
-        }
-        if (gi < 0) {
-            cy += 6;
-            continue;
-        }
-        for (row = 0; row < 7; row++) {
-            uint8_t bits = FONT[gi][row];
-            for (col = 0; col < 5; col++) {
-                if (bits & (0x10 >> col)) {
-                    /* (col,row) → (row, 4-col) */
-                    SDL_RenderDrawPoint(r, x + row, cy + (4 - col));
-                }
-            }
-        }
-        cy += 6;
+    draw_lcd_ctrl_bar(r, ui, e, sink);
+    draw_video_pixels(r, ui, (R01sVideoSink *)(void *)sink, lcd_x, lcd_y, lcd_w, lcd_h);
+    if (selected) {
+        draw_rect(r, x, y, e->body_w, e->body_h, 255, 220, 80);
     }
-}
-
-static int font_text_height(const char *text) {
-    return font_text_width(text); /* same advance when rotated */
 }
 
 /* Pin along-axis board coord + which side (1 = pin1 side: bottom if H, left if V).
@@ -566,8 +662,6 @@ static void draw_chip(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, in
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);
     int i;
-    int label_max;
-    SDL_Rect body_clip;
     int horiz = (e->orient != R01S_ORIENT_V);
     int dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
 
@@ -595,38 +689,9 @@ static void draw_chip(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, in
               selected ? 80 : 120);
     /* Notch: left when horizontal, top when vertical. */
     if (horiz) {
-        fill_rect(r, x - 2, y + e->body_h / 2 - 4, 4, 8, 20, 22, 20);
+        fill_rect(r, x - 1, y + e->body_h / 2 - 2, 2, 4, 20, 22, 20);
     } else {
-        fill_rect(r, x + e->body_w / 2 - 4, y - 2, 8, 4, 20, 22, 20);
-    }
-
-    body_clip.x = x + 2;
-    body_clip.y = y + 2;
-    body_clip.w = e->body_w - 4;
-    body_clip.h = e->body_h - 4;
-    SDL_RenderSetClipRect(r, &body_clip);
-    if (horiz) {
-        label_max = e->body_w - 12;
-        if (e->refdes) {
-            font_draw_ellipsize(r, x + 6, y + e->body_h / 2 - 10, e->refdes, label_max, 220, 220, 200);
-        }
-        if (e->part) {
-            font_draw_ellipsize(r, x + 6, y + e->body_h / 2 + 2, e->part, label_max, 160, 180, 140);
-        }
-    } else {
-        label_max = e->body_h - 12;
-        if (e->refdes) {
-            font_draw_v(r, x + e->body_w / 2 - 10, y + 6, e->refdes, 220, 220, 200);
-        }
-        if (e->part) {
-            font_draw_v(r, x + e->body_w / 2 + 2, y + 6, e->part, 160, 180, 140);
-        }
-        (void)label_max;
-        (void)font_text_height;
-    }
-    {
-        SDL_Rect view_clip = {R01S_UI_VIEW_X, R01S_UI_VIEW_Y, R01S_UI_VIEW_W, R01S_UI_VIEW_H};
-        SDL_RenderSetClipRect(r, &view_clip);
+        fill_rect(r, x + e->body_w / 2 - 2, y - 1, 4, 2, 20, 22, 20);
     }
 }
 
@@ -1863,7 +1928,7 @@ static void compact_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
     rc->x = R01S_LOGIC_W - tw - 8;
     rc->y = 3;
     rc->w = tw;
-    rc->h = 16;
+    rc->h = 18;
 }
 
 static void save_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
@@ -1872,7 +1937,7 @@ static void save_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
     int tw = font_text_width(label) + 16;
     compact_btn_rect(ui, &cbtn);
     rc->w = tw;
-    rc->h = 16;
+    rc->h = 18;
     rc->y = 3;
     rc->x = cbtn.x - tw - 6;
 }
@@ -2215,26 +2280,26 @@ static void draw_health_dot(SDL_Renderer *r, int x, int y, R01sHealth h) {
     draw_rect(r, x, y, 8, 8, 30, 40, 35);
 }
 
-#define R01S_UI_SIDEBAR_X 8
+#define R01S_UI_SIDEBAR_X 4
 #define R01S_UI_SIDEBAR_TOP (R01S_UI_HUD_TOP + 6)
 #define R01S_UI_SIDEBAR_BOTTOM (R01S_LOGIC_H - R01S_UI_HUD_BOTTOM - 6)
 #define R01S_UI_SIDEBAR_W (R01S_UI_SIDEBAR_L - 16)
 #define R01S_UI_SIDEBAR_VIEW_H (R01S_UI_SIDEBAR_BOTTOM - R01S_UI_SIDEBAR_TOP)
-#define R01S_UI_STATUS_HDR_H 66
-#define R01S_UI_STATUS_ROW_H 16
-#define R01S_UI_STATUS_FOOTER_H 16
-#define R01S_UI_SIDEBAR_GAP 8
-#define R01S_UI_RADIO_HDR_H 10
-#define R01S_UI_RADIO_BTN_H 14
-#define R01S_UI_RADIO_GAP 2
+#define R01S_UI_STATUS_HDR_H 38
+#define R01S_UI_STATUS_ROW_H 15
+#define R01S_UI_STATUS_FOOTER_H 12
+#define R01S_UI_SIDEBAR_GAP 6
+#define R01S_UI_RADIO_HDR_H 12
+#define R01S_UI_RADIO_BTN_H 16
+#define R01S_UI_RADIO_GAP 4
 #define R01S_UI_RADIO_SECTION_GAP 4
 #define R01S_UI_SCREEN_MODE_N 3
-#define R01S_UI_PROBE_H 124
-#define R01S_UI_PAD_BIT_STRIDE 8
+#define R01S_UI_PROBE_H 118
+#define R01S_UI_PAD_BIT_STRIDE 9
 #define GP_PANEL_GAP 6
-#define GP_PANEL_W ((R01S_UI_SIDEBAR_W - GP_PANEL_GAP) / 2)
-#define GP_PANEL_H 100
-#define GP_STICK_R 14
+#define GP_PANEL_W R01S_UI_SIDEBAR_W
+#define GP_PANEL_H 50
+#define GP_STICK_R 8
 
 static int health_needs_debug(R01sHealth h) {
     return h == R01S_HEALTH_WARN || h == R01S_HEALTH_FAIL;
@@ -2262,44 +2327,30 @@ static int sidebar_sy(const R01sUi *ui, int content_y) {
     return R01S_UI_SIDEBAR_TOP + content_y - (ui ? ui->sidebar_scroll : 0);
 }
 
-static int sidebar_screen_section_y(const R01sUi *ui) {
-    return sidebar_gp_content_y(ui) + GP_PANEL_H + R01S_UI_SIDEBAR_GAP;
+static int sidebar_radio_group_h(int option_count) {
+    if (option_count < 1) {
+        return R01S_UI_RADIO_HDR_H;
+    }
+    return R01S_UI_RADIO_HDR_H + option_count * R01S_UI_RADIO_BTN_H + (option_count - 1) * R01S_UI_RADIO_GAP;
 }
 
-static int sidebar_screen_section_h(void) {
-    /* SCREEN modes share one row (Normal | Persist | Phosphor). */
-    return R01S_UI_RADIO_HDR_H + R01S_UI_RADIO_BTN_H;
+static int sidebar_sim_section_y(const R01sUi *ui) {
+    return sidebar_gp_content_y(ui) + 2 * GP_PANEL_H + GP_PANEL_GAP;
 }
 
-static int sidebar_dual_group_y(const R01sUi *ui, int group) {
-    int y = sidebar_screen_section_y(ui) + sidebar_screen_section_h() + R01S_UI_RADIO_SECTION_GAP;
-    y += group * (R01S_UI_RADIO_HDR_H + R01S_UI_RADIO_BTN_H + R01S_UI_RADIO_SECTION_GAP);
-    return y;
-}
-
-static void sidebar_screen_mode_rect(const R01sUi *ui, int mode_index, SDL_Rect *rc) {
-    int gap = R01S_UI_RADIO_GAP;
-    int bw = (R01S_UI_SIDEBAR_W - (R01S_UI_SCREEN_MODE_N - 1) * gap) / R01S_UI_SCREEN_MODE_N;
+static void sidebar_sim_radio_rect(const R01sUi *ui, int option, SDL_Rect *rc) {
+    rc->w = R01S_UI_SIDEBAR_W;
     rc->h = R01S_UI_RADIO_BTN_H;
-    rc->w = bw;
-    rc->y = sidebar_sy(ui, sidebar_screen_section_y(ui) + R01S_UI_RADIO_HDR_H);
-    rc->x = R01S_UI_SIDEBAR_X + mode_index * (bw + gap);
-}
-
-static void sidebar_dual_radio_rect(const R01sUi *ui, int group, int option, SDL_Rect *rc) {
-    int gap = R01S_UI_RADIO_GAP;
-    int bw = (R01S_UI_SIDEBAR_W - gap) / 2;
-    rc->h = R01S_UI_RADIO_BTN_H;
-    rc->w = bw;
-    rc->y = sidebar_sy(ui, sidebar_dual_group_y(ui, group) + R01S_UI_RADIO_HDR_H);
-    rc->x = R01S_UI_SIDEBAR_X + option * (bw + gap);
+    rc->x = R01S_UI_SIDEBAR_X;
+    rc->y = sidebar_sy(ui, sidebar_sim_section_y(ui) + R01S_UI_RADIO_HDR_H +
+                                option * (R01S_UI_RADIO_BTN_H + R01S_UI_RADIO_GAP));
 }
 
 static int sidebar_content_h(const R01sUi *ui) {
     if (!ui) {
         return 0;
     }
-    return sidebar_dual_group_y(ui, 1) + R01S_UI_RADIO_HDR_H + R01S_UI_RADIO_BTN_H;
+    return sidebar_sim_section_y(ui) + sidebar_radio_group_h(2);
 }
 
 static int sidebar_max_scroll(const R01sUi *ui) {
@@ -2347,8 +2398,20 @@ static void ui_set_lcd_scale(R01sUi *ui, int scale_2x) {
     }
     sink = &board->video_sink;
     r01s_video_sink_set_scale_2x(sink, scale_2x ? 1 : 0);
-    snprintf(ui->status, sizeof(ui->status), "SCALE %s (256x240 field, timing 341x262)",
-             r01s_video_sink_scale_2x(sink) ? "2X" : "1X");
+    {
+        int i;
+        for (i = 0; i < ui->chip_count; i++) {
+            R01sEntity *e = ui->chips[i];
+            if (e && e->visual == R01S_ENTITY_VIS_DISPLAY) {
+                clamp_chip(ui, e, (int)ui->chip_island[i]);
+            }
+        }
+    }
+    ui->layout_dirty = 1;
+    snprintf(ui->status, sizeof(ui->status), "SCALE %s (%dx%d preview, 256x240 field)",
+             r01s_video_sink_scale_2x(sink) ? "2X" : "1X",
+             r01s_video_sink_scale_2x(sink) ? R01S_VIDEO_W : R01S_LOGICAL_W,
+             r01s_video_sink_scale_2x(sink) ? R01S_VIDEO_H : R01S_LOGICAL_H);
 }
 
 static void ui_toggle_lcd_scale(R01sUi *ui) {
@@ -2395,12 +2458,14 @@ static void draw_radio_option(SDL_Renderer *r, const SDL_Rect *rc, int selected,
     int cx;
     int cy;
     int label_x;
+    int ty;
     if (!r || !rc || !label) {
         return;
     }
-    cx = rc->x + 7;
+    cx = rc->x + 8;
     cy = rc->y + rc->h / 2;
-    label_x = rc->x + 14;
+    label_x = rc->x + 18;
+    ty = rc->y + (rc->h - 8) / 2;
     fill_rect(r, rc->x, rc->y, rc->w, rc->h, selected ? 36 : 22, selected ? 52 : 30, selected ? 40 : 28);
     draw_rect(r, rc->x, rc->y, rc->w, rc->h, selected ? 140 : 80, selected ? 170 : 100, selected ? 120 : 85);
     fill_rect(r, cx - 3, cy - 3, 6, 6, 24, 28, 32);
@@ -2408,56 +2473,39 @@ static void draw_radio_option(SDL_Renderer *r, const SDL_Rect *rc, int selected,
     if (selected) {
         fill_rect(r, cx - 1, cy - 1, 2, 2, 180, 220, 160);
     }
-    font_draw(r, label_x, rc->y + (rc->h - 8) / 2, label, selected ? 220 : 170, selected ? 230 : 180,
-              selected ? 200 : 160);
+    font_draw(r, label_x, ty, label, selected ? 220 : 170, selected ? 230 : 180, selected ? 200 : 160);
 }
 
 static void draw_sidebar_radio_controls(SDL_Renderer *r, R01sUi *ui) {
-    static const char *const screen_labels[R01S_UI_SCREEN_MODE_N] = {"Normal", "Persist", "Phosphor"};
     SDL_Rect rc;
-    int mode;
-    int i;
     R01sBoard *board;
 
     if (!r || !ui) {
         return;
     }
-    mode = ui_screen_render_mode(ui);
-    font_draw(r, R01S_UI_SIDEBAR_X, sidebar_sy(ui, sidebar_screen_section_y(ui)), "SCREEN", 150, 160, 140);
-    for (i = 0; i < R01S_UI_SCREEN_MODE_N; i++) {
-        sidebar_screen_mode_rect(ui, i, &rc);
-        draw_radio_option(r, &rc, mode == i, screen_labels[i]);
-    }
-
-    font_draw(r, R01S_UI_SIDEBAR_X, sidebar_sy(ui, sidebar_dual_group_y(ui, 0)), "SCALE", 150, 160, 140);
-    sidebar_dual_radio_rect(ui, 0, 0, &rc);
-    draw_radio_option(r, &rc, !ui_lcd_scale_2x(ui), "1X");
-    sidebar_dual_radio_rect(ui, 0, 1, &rc);
-    draw_radio_option(r, &rc, ui_lcd_scale_2x(ui), "2X");
-
-    font_draw(r, R01S_UI_SIDEBAR_X, sidebar_sy(ui, sidebar_dual_group_y(ui, 1)), "SIM", 150, 160, 140);
     board = r01s_board_from_group(ui->group);
-    sidebar_dual_radio_rect(ui, 1, 0, &rc);
+    font_draw(r, R01S_UI_SIDEBAR_X, sidebar_sy(ui, sidebar_sim_section_y(ui)), "SIM", 150, 160, 140);
+    sidebar_sim_radio_rect(ui, 0, &rc);
     draw_radio_option(r, &rc, !(board && r01s_board_sim_fast(board)), "PIN");
-    sidebar_dual_radio_rect(ui, 1, 1, &rc);
+    sidebar_sim_radio_rect(ui, 1, &rc);
     draw_radio_option(r, &rc, board && r01s_board_sim_fast(board), "FAST");
 }
 
 static void health_copy_btn_rect(const R01sUi *ui, int island_index, SDL_Rect *rc) {
     int status_y = sidebar_sy(ui, sidebar_status_content_y());
     rc->x = R01S_UI_SIDEBAR_X + R01S_UI_SIDEBAR_W - 42;
-    rc->y = status_y + R01S_UI_STATUS_HDR_H + island_index * R01S_UI_STATUS_ROW_H;
+    rc->y = status_y + R01S_UI_STATUS_HDR_H + island_index * R01S_UI_STATUS_ROW_H + 1;
     rc->w = 34;
-    rc->h = 12;
+    rc->h = 11;
 }
 
 static void health_system_copy_rect(const R01sUi *ui, SDL_Rect *rc) {
     int status_y = sidebar_sy(ui, sidebar_status_content_y());
     /* Title row — above the system color bar so it does not overlap. */
     rc->x = R01S_UI_SIDEBAR_X + R01S_UI_SIDEBAR_W - 50;
-    rc->y = status_y + 4;
+    rc->y = status_y + 3;
     rc->w = 42;
-    rc->h = 14;
+    rc->h = 12;
 }
 
 static int ui_copy_health_text(R01sUi *ui, const char *text) {
@@ -2470,6 +2518,31 @@ static int ui_copy_health_text(R01sUi *ui, const char *text) {
     }
     snprintf(ui->status, sizeof(ui->status), "copied debug to clipboard (%zu chars)", strlen(text));
     return 0;
+}
+
+static const char *health_island_title(const R01sUi *ui, int island_index) {
+    const R01sIsland *island;
+    if (!ui || !ui->group) {
+        return "?";
+    }
+    island = r01s_island_group_at(ui->group, island_index);
+    return island && island->title ? island->title : "?";
+}
+
+static void health_island_row_rect(const R01sUi *ui, int island_index, SDL_Rect *rc) {
+    int status_y = sidebar_sy(ui, sidebar_status_content_y());
+    rc->x = R01S_UI_SIDEBAR_X;
+    rc->y = status_y + R01S_UI_STATUS_HDR_H + island_index * R01S_UI_STATUS_ROW_H;
+    rc->w = R01S_UI_SIDEBAR_W;
+    rc->h = R01S_UI_STATUS_ROW_H;
+}
+
+static void health_system_bar_rect(const R01sUi *ui, SDL_Rect *rc) {
+    int status_y = sidebar_sy(ui, sidebar_status_content_y());
+    rc->x = R01S_UI_SIDEBAR_X + 6;
+    rc->y = status_y + 18;
+    rc->w = R01S_UI_SIDEBAR_W - 12;
+    rc->h = 14;
 }
 
 static void draw_system_health_panel(SDL_Renderer *r, R01sUi *ui, int py) {
@@ -2492,8 +2565,8 @@ static void draw_system_health_panel(SDL_Renderer *r, R01sUi *ui, int py) {
 
     fill_rect(r, px, py, pw, ph, 14, 20, 16);
     draw_rect(r, px, py, pw, ph, 70, 90, 75);
-    font_draw_ellipsize(r, px + 8, py + 6, "SYSTEM STATUS",
-                        show_sys_copy ? (pw - 66) : (pw - 16), 190, 205, 180);
+    font_draw_ellipsize(r, px + 6, py + 4, "SYSTEM STATUS", show_sys_copy ? (pw - 58) : (pw - 12), 190, 205,
+                        180);
 
     if (show_sys_copy) {
         health_system_copy_rect(ui, &copy_rc);
@@ -2503,31 +2576,28 @@ static void draw_system_health_panel(SDL_Renderer *r, R01sUi *ui, int py) {
     }
 
     health_rgb(health->system, &sr, &sg, &sb);
-    fill_rect(r, px + 8, py + 22, pw - 16, 18, sr, sg, sb);
-    font_draw_ellipsize(r, px + 12, py + 26, health->system_label[0] ? health->system_label : "?", pw - 28, 20,
+    fill_rect(r, px + 6, py + 18, pw - 12, 14, sr, sg, sb);
+    font_draw_ellipsize(r, px + 10, py + 21, health->system_label[0] ? health->system_label : "?", pw - 20, 20,
                         24, 22);
-
-    font_draw_ellipsize(r, px + 8, py + 44, health->system_detail, pw - 16, 150, 165, 145);
-    fill_rect(r, px + 8, py + 58, pw - 16, 1, 40, 55, 45);
+    fill_rect(r, px + 6, py + 34, pw - 12, 1, 40, 55, 45);
 
     for (i = 0; i < health->island_count; i++) {
         const R01sIslandHealth *ih = &health->islands[i];
         int ry = py + R01S_UI_STATUS_HDR_H + i * R01S_UI_STATUS_ROW_H;
-        char letter[2];
         int row_max_w;
         int has_copy = health_needs_debug(ih->health);
+        int tag_w;
 
-        letter[0] = ih->letter ? ih->letter : '?';
-        letter[1] = '\0';
-        draw_health_dot(r, px + 10, ry + 1, ih->health);
-        font_draw(r, px + 22, ry + 2, letter, 180, 200, 170);
-        snprintf(row, sizeof(row), "%s %s", r01s_health_tag(ih->health), ih->activity);
-        row_max_w = has_copy ? (pw - 34 - 46) : (pw - 34 - 12);
-        if (row_max_w < 24) {
-            row_max_w = 24;
+        draw_health_dot(r, px + 6, ry + 4, ih->health);
+        row_max_w = has_copy && pw >= 110 ? (pw - 40) : (pw - 26);
+        if (row_max_w < 20) {
+            row_max_w = 20;
         }
-        font_draw_ellipsize(r, px + 34, ry + 2, row, row_max_w, 140, 155, 135);
-        if (has_copy) {
+        font_draw_ellipsize(r, px + 18, ry + 4, health_island_title(ui, i), row_max_w, 140, 155, 135);
+        snprintf(row, sizeof(row), "%s", r01s_health_tag(ih->health));
+        tag_w = font_text_width(row);
+        font_draw(r, px + pw - tag_w - (has_copy && pw >= 110 ? 40 : 8), ry + 3, row, 140, 155, 135);
+        if (has_copy && pw >= 110) {
             health_copy_btn_rect(ui, i, &copy_rc);
             fill_rect(r, copy_rc.x, copy_rc.y, copy_rc.w, copy_rc.h, 50, 58, 48);
             draw_rect(r, copy_rc.x, copy_rc.y, copy_rc.w, copy_rc.h, 160, 150, 80);
@@ -2535,7 +2605,7 @@ static void draw_system_health_panel(SDL_Renderer *r, R01sUi *ui, int py) {
         }
     }
 
-    font_draw_ellipsize(r, px + 8, py + ph - 14, "WARN/FAIL COPY PASTES DEBUG", pw - 16, 100, 115, 100);
+    font_draw_ellipsize(r, px + 6, py + ph - 11, "HOVER ROW FOR DETAIL", pw - 12, 100, 115, 100);
 }
 
 static void draw_pad_bits_compact(SDL_Renderer *r, int x, int y, uint8_t bits) {
@@ -2565,28 +2635,20 @@ static void draw_live_probe(SDL_Renderer *r, const R01sUi *ui, int py) {
     Uint8 pr, pg, pb;
     fill_rect(r, px, py, pw, R01S_UI_PROBE_H, 16, 22, 18);
     draw_rect(r, px, py, pw, R01S_UI_PROBE_H, 80, 90, 70);
-    font_draw(r, px + 8, py + 4, "PROBE", 200, 210, 180);
-    draw_led(r, px + 8, py + 16, ui->probe_vdd, 80, 220, 100, "VDD");
-    draw_led(r, px + 78, py + 16, ui->probe_phi2, 220, 200, 60, "PHI2");
-    draw_led(r, px + 148, py + 16, ui->probe_resb_low, 220, 80, 80, "RST");
-    font_draw(r, px + 8, py + 34, "P1", 160, 180, 160);
-    draw_pad_bits_compact(r, px + 26, py + 32, ui->probe_pad_p1);
-    font_draw(r, px + 8, py + 48, "P2", 160, 180, 160);
-    draw_pad_bits_compact(r, px + 26, py + 46, ui->probe_pad_p2);
+    font_draw(r, px + 4, py + 3, "PROBE", 200, 210, 180);
+    draw_led(r, px + 4, py + 14, ui->probe_vdd, 80, 220, 100, "VDD");
+    draw_led(r, px + 4, py + 28, ui->probe_phi2, 220, 200, 60, "PHI2");
+    draw_led(r, px + 4, py + 42, ui->probe_resb_low, 220, 80, 80, "RST");
+    font_draw(r, px + 4, py + 58, "P1", 160, 180, 160);
+    draw_pad_bits_compact(r, px + 4, py + 66, ui->probe_pad_p1);
+    font_draw(r, px + 4, py + 78, "P2", 160, 180, 160);
+    draw_pad_bits_compact(r, px + 4, py + 86, ui->probe_pad_p2);
 
-    font_draw(r, px + 8, py + 64, "PINS", 200, 210, 180);
+    font_draw(r, px + 4, py + 100, "PINS", 200, 210, 180);
     pin_level_rgb(R01S_LVL_H, R01S_PIN_OUT, &pr, &pg, &pb);
-    draw_pin_swatch(r, px + 8, py + 76, pr, pg, pb, "HIGH");
+    draw_pin_swatch(r, px + 4, py + 110, pr, pg, pb, "HI");
     pin_level_rgb(R01S_LVL_L, R01S_PIN_OUT, &pr, &pg, &pb);
-    draw_pin_swatch(r, px + 108, py + 76, pr, pg, pb, "LOW");
-    pin_level_rgb(R01S_LVL_X, R01S_PIN_OUT, &pr, &pg, &pb);
-    draw_pin_swatch(r, px + 8, py + 90, pr, pg, pb, "X");
-    pin_level_rgb(R01S_LVL_Z, R01S_PIN_OUT, &pr, &pg, &pb);
-    draw_pin_swatch(r, px + 108, py + 90, pr, pg, pb, "Hi-Z");
-    pin_level_rgb(R01S_LVL_L, R01S_PIN_PWR, &pr, &pg, &pb);
-    draw_pin_swatch(r, px + 8, py + 104, pr, pg, pb, "PWR");
-    pin_level_rgb(R01S_LVL_L, R01S_PIN_NC, &pr, &pg, &pb);
-    draw_pin_swatch(r, px + 108, py + 104, pr, pg, pb, "N/C");
+    draw_pin_swatch(r, px + 48, py + 110, pr, pg, pb, "LO");
 }
 
 static void draw_island_resize_grip(SDL_Renderer *r, int hx, int hy) {
@@ -2625,30 +2687,25 @@ static void draw_island_header(SDL_Renderer *r, const R01sUi *ui, const R01sIsla
     int x = ui_board_sx(ui, island->board_x);
     int y = ui_board_sy(ui, island->board_y);
     int title_max;
-    int act_max;
     Uint8 br = 180, bg = 220, bb = 160;
     char badge[12];
+    int tag_w;
 
     fill_rect(r, x + 2, y + 2, island->board_w - 4, R01S_ISLAND_HEADER_H, 22, 48, 32);
-    title_max = island->board_w - 56;
+    tag_w = ih ? font_text_width(r01s_health_tag(ih->health)) + 14 : 0;
+    title_max = island->board_w - tag_w - 12;
     if (title_max < 24) {
         title_max = 24;
     }
-    font_draw_ellipsize(r, x + 8, y + 6, island->title ? island->title : "ISLAND", title_max, 180, 220, 160);
-    if (ih && ih->activity[0]) {
-        act_max = island->board_w - 16;
-        if (act_max < 24) {
-            act_max = 24;
-        }
-        font_draw_ellipsize(r, x + 8, y + 16, ih->activity, act_max, 130, 150, 125);
+    font_draw_ellipsize(r, x + 4, y + 6, island->title ? island->title : "ISLAND", title_max, 180, 220, 160);
+    if (ih) {
         health_rgb(ih->health, &br, &bg, &bb);
         snprintf(badge, sizeof(badge), "%s", r01s_health_tag(ih->health));
-        font_draw(r, x + island->board_w - 44, y + 6, badge, br, bg, bb);
-        draw_health_dot(r, x + island->board_w - 18, y + 5, ih->health);
+        font_draw(r, x + island->board_w - tag_w, y + 6, badge, br, bg, bb);
+        draw_health_dot(r, x + island->board_w - 10, y + 7, ih->health);
     }
 }
 
-static int hit_chip(const R01sUi *ui, const R01sEntity *e, int lx, int ly);
 static int hit_board_top(const R01sUi *ui, int lx, int ly, int *chip_out, int *island_out, int *corner_out);
 
 static void draw_tooltip(SDL_Renderer *r, int lx, int ly, const char *text) {
@@ -2687,11 +2744,32 @@ static void ui_fill_tooltip(const R01sUi *ui, char *out, size_t out_len) {
     int chip_i = -1;
     int island_i = -1;
     int kind;
+    int i;
 
     if (!ui || !out || out_len == 0) {
         return;
     }
     out[0] = '\0';
+
+    if (sidebar_hit(ui->mouse_lx, ui->mouse_ly)) {
+        SDL_Rect rc;
+        health_system_bar_rect(ui, &rc);
+        if (ui->mouse_lx >= rc.x && ui->mouse_lx < rc.x + rc.w && ui->mouse_ly >= rc.y &&
+            ui->mouse_ly < rc.y + rc.h && ui->health.system_detail[0]) {
+            snprintf(out, out_len, "%s", ui->health.system_detail);
+            return;
+        }
+        for (i = 0; i < ui->health.island_count; i++) {
+            const R01sIslandHealth *ih = &ui->health.islands[i];
+            health_island_row_rect(ui, i, &rc);
+            if (ui->mouse_lx >= rc.x && ui->mouse_lx < rc.x + rc.w && ui->mouse_ly >= rc.y &&
+                ui->mouse_ly < rc.y + rc.h && ih->activity[0]) {
+                snprintf(out, out_len, "%s — %s", health_island_title(ui, i), ih->activity);
+                return;
+            }
+        }
+    }
+
     if (!ui_logic_in_view(ui->mouse_lx, ui->mouse_ly)) {
         return;
     }
@@ -2729,24 +2807,24 @@ static void ui_fill_tooltip(const R01sUi *ui, char *out, size_t out_len) {
 }
 
 static void gp_panel_origin(const R01sUi *ui, int player, int *px, int *py) {
-    *px = R01S_UI_SIDEBAR_X + player * (GP_PANEL_W + GP_PANEL_GAP);
-    *py = sidebar_sy(ui, sidebar_gp_content_y(ui));
+    *px = R01S_UI_SIDEBAR_X;
+    *py = sidebar_sy(ui, sidebar_gp_content_y(ui) + player * (GP_PANEL_H + GP_PANEL_GAP));
 }
 
 static void gp_stick_center(const R01sUi *ui, int player, int *cx, int *cy) {
     int px, py;
     gp_panel_origin(ui, player, &px, &py);
-    *cx = px + 26;
-    *cy = py + 48;
+    *cx = px + 14;
+    *cy = py + 26;
 }
 
 static void gp_btn_rect(const R01sUi *ui, int player, int btn, SDL_Rect *rc) {
     int px, py;
     gp_panel_origin(ui, player, &px, &py);
-    rc->x = px + 54 + (btn % 2) * 22;
-    rc->y = py + 28 + (btn / 2) * 22;
-    rc->w = 20;
-    rc->h = 20;
+    rc->x = px + 44 + (btn % 2) * 16;
+    rc->y = py + 16 + (btn / 2) * 16;
+    rc->w = 14;
+    rc->h = 14;
 }
 
 static int gp_hit_stick(const R01sUi *ui, int player, int lx, int ly) {
@@ -2804,16 +2882,25 @@ static void draw_stick(SDL_Renderer *r, int cx, int cy, int sx, int sy) {
 }
 
 static void draw_btn(SDL_Renderer *r, const SDL_Rect *rc, int pressed, const char *label) {
+    int tw;
+    int tx;
+    int ty;
+    if (!r || !rc || !label) {
+        return;
+    }
+    tw = font_text_width(label);
+    tx = rc->x + (rc->w - tw) / 2;
+    ty = rc->y + (rc->h - 8) / 2;
     fill_rect(r, rc->x, rc->y, rc->w, rc->h, pressed ? 90 : 40, pressed ? 120 : 48, pressed ? 160 : 56);
     draw_rect(r, rc->x, rc->y, rc->w, rc->h, 120, 130, 140);
-    font_draw(r, rc->x + 3, rc->y + 6, label, 210, 210, 200);
+    font_draw(r, tx, ty, label, 210, 210, 200);
 }
 
-static void draw_video_pixels(SDL_Renderer *r, R01sUi *ui, R01sVideoSink *sink, int px, int py) {
+static void draw_video_pixels(SDL_Renderer *r, R01sUi *ui, R01sVideoSink *sink, int px, int py, int dw, int dh) {
     const uint8_t *rgb;
     SDL_Rect dst;
 
-    if (!r || !ui || !sink) {
+    if (!r || !ui || !sink || dw < 1 || dh < 1) {
         return;
     }
     rgb = r01s_video_sink_rgb(sink);
@@ -2860,9 +2947,14 @@ static void draw_video_pixels(SDL_Renderer *r, R01sUi *ui, R01sVideoSink *sink, 
     }
     dst.x = px;
     dst.y = py;
-    dst.w = R01S_VIDEO_W;
-    dst.h = R01S_VIDEO_H;
-    SDL_RenderCopy(r, ui->lcd_tex, NULL, &dst);
+    dst.w = dw;
+    dst.h = dh;
+    if (r01s_video_sink_scale_2x(sink)) {
+        SDL_RenderCopy(r, ui->lcd_tex, NULL, &dst);
+    } else {
+        SDL_Rect src = {R01S_SCALE_1X_OX, R01S_SCALE_1X_OY, R01S_LOGICAL_W, R01S_LOGICAL_H};
+        SDL_RenderCopy(r, ui->lcd_tex, &src, &dst);
+    }
 }
 
 static void draw_gamepad_panel(SDL_Renderer *r, const R01sUi *ui, int player) {
@@ -2874,7 +2966,10 @@ static void draw_gamepad_panel(SDL_Renderer *r, const R01sUi *ui, int player) {
     gp_panel_origin(ui, player, &px, &py);
     fill_rect(r, px, py, GP_PANEL_W, GP_PANEL_H, 16, 20, 24);
     draw_rect(r, px, py, GP_PANEL_W, GP_PANEL_H, 60, 70, 80);
-    font_draw(r, px + 8, py + 6, player == 0 ? "P1 FE60" : "P2 FE61", 180, 200, 220);
+    bits = r01s_gamepad_encode(&ui->gamepad[player]);
+    snprintf(hex, sizeof(hex), "%02X", bits);
+    font_draw(r, px + 4, py + 2, player == 0 ? "P1" : "P2", 180, 200, 220);
+    font_draw(r, px + GP_PANEL_W - font_text_width(hex) - 4, py + 2, hex, 140, 160, 140);
 
     gp_stick_center(ui, player, &cx, &cy);
     draw_stick(r, cx, cy, ui->gamepad[player].stick_x, ui->gamepad[player].stick_y);
@@ -2901,10 +2996,6 @@ static void draw_gamepad_panel(SDL_Renderer *r, const R01sUi *ui, int player) {
         }
         draw_btn(r, &brc, pressed, labels[b]);
     }
-
-    bits = r01s_gamepad_encode(&ui->gamepad[player]);
-    snprintf(hex, sizeof(hex), "%02X", bits);
-    font_draw(r, px + 8, py + GP_PANEL_H - 14, hex, 140, 160, 140);
 }
 
 void r01s_ui_sync_gamepads(R01sUi *ui) {
@@ -2975,9 +3066,9 @@ uint8_t r01s_ui_gamepad_port(const R01sUi *ui, int player) {
 }
 
 void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
-    int i, gx, gy, pass;
-    int ox = (-ui->pan_x) % 32;
-    int oy = (-ui->pan_y) % 32;
+    int i, gx, gy;
+    int ox = (-ui->pan_x) % R01S_UI_GRID_CELL;
+    int oy = (-ui->pan_y) % R01S_UI_GRID_CELL;
     SDL_Rect view_clip = {R01S_UI_VIEW_X, R01S_UI_VIEW_Y, R01S_UI_VIEW_W, R01S_UI_VIEW_H};
     SDL_Rect sidebar_clip = {0, R01S_UI_SIDEBAR_TOP, R01S_UI_SIDEBAR_L, R01S_UI_SIDEBAR_VIEW_H};
     int max_s;
@@ -2992,56 +3083,51 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
               R01S_BOARD_BG_G, R01S_BOARD_BG_B);
 
     SDL_RenderSetClipRect(r, &view_clip);
-    SDL_SetRenderDrawColor(r, 24, 52, 34, 255);
-    for (gx = R01S_UI_VIEW_X + ox; gx < R01S_UI_VIEW_X + R01S_UI_VIEW_W; gx += 32) {
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(r, 28, 58, 38, R01S_UI_GRID_ALPHA);
+    for (gx = R01S_UI_VIEW_X + ox; gx < R01S_UI_VIEW_X + R01S_UI_VIEW_W; gx += R01S_UI_GRID_CELL) {
         SDL_RenderDrawLine(r, gx, R01S_UI_VIEW_Y, gx, R01S_UI_VIEW_Y + R01S_UI_VIEW_H);
     }
-    for (gy = R01S_UI_VIEW_Y + oy; gy < R01S_UI_VIEW_Y + R01S_UI_VIEW_H; gy += 32) {
+    for (gy = R01S_UI_VIEW_Y + oy; gy < R01S_UI_VIEW_Y + R01S_UI_VIEW_H; gy += R01S_UI_GRID_CELL) {
         SDL_RenderDrawLine(r, R01S_UI_VIEW_X, gy, R01S_UI_VIEW_X + R01S_UI_VIEW_W, gy);
     }
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
 
     /* Islands back→front as complete units so a front island fully occludes
      * anything behind it (frame fill + chips + header). Compact: chips only. */
     if (ui->group && !ui->layout_compact) {
-        int n_islands = r01s_island_group_count(ui->group);
-        int front = -1;
-        if (ui->drag_island >= 0) {
-            front = ui->drag_island;
-        } else if (ui->resize_island >= 0) {
-            front = ui->resize_island;
+        int rank;
+        int n_islands = ui->island_z_count;
+        if (n_islands <= 0) {
+            n_islands = r01s_island_group_count(ui->group);
         }
-        for (pass = 0; pass < 2; pass++) {
-            for (i = 0; i < n_islands; i++) {
-                const R01sIsland *island;
-                const R01sIslandHealth *ih = NULL;
-                int active;
-                int j;
-                if (pass == 0 && front >= 0 && i == front) {
-                    continue; /* draw focused island last */
-                }
-                if (pass == 1 && i != front) {
+        for (rank = 0; rank < n_islands; rank++) {
+            const R01sIsland *island;
+            const R01sIslandHealth *ih = NULL;
+            int i;
+            int active;
+            int j;
+            if (rank >= ui->island_z_count) {
+                i = rank;
+            } else {
+                i = ui->island_z_order[rank];
+            }
+            island = r01s_island_group_at(ui->group, i);
+            if (!island) {
+                continue;
+            }
+            active = (i == ui->drag_island || i == ui->resize_island);
+            if (i < ui->health.island_count) {
+                ih = &ui->health.islands[i];
+            }
+            draw_island_frame(r, ui, island, active, ih);
+            for (j = 0; j < ui->chip_count; j++) {
+                if (ui->chip_island[j] != (uint8_t)i) {
                     continue;
                 }
-                island = r01s_island_group_at(ui->group, i);
-                if (!island) {
-                    continue;
-                }
-                active = (i == ui->drag_island || i == ui->resize_island);
-                if (i < ui->health.island_count) {
-                    ih = &ui->health.islands[i];
-                }
-                draw_island_frame(r, ui, island, active, ih);
-                for (j = 0; j < ui->chip_count; j++) {
-                    if (ui->chip_island[j] != (uint8_t)i) {
-                        continue;
-                    }
-                    draw_board_item(r, ui, ui->chips[j], j == ui->selected);
-                }
-                draw_island_header(r, ui, island, ih);
+                draw_board_item(r, ui, ui->chips[j], j == ui->selected);
             }
-            if (front < 0) {
-                break;
-            }
+            draw_island_header(r, ui, island, ih);
         }
     } else {
         for (i = 0; i < ui->chip_count; i++) {
@@ -3076,13 +3162,20 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
 
     /* Fixed HUD */
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_UI_HUD_TOP, 12, 14, 16);
-    font_draw(r, 8, 7, "retr01 SIM  ISLANDS O+A+C+D+G+H+J+K+L", 200, 210, 220);
-    if (ui->layout_compact) {
-        font_draw(r, R01S_UI_VIEW_X + 8, 7,
-                  "COMPACT  DRAG-BOX SELECT  S SAVE  R ROTATE  G SCALE  SHIFT+CLICK", 120, 130, 140);
-    } else {
-        font_draw(r, R01S_UI_VIEW_X + 8, 7, "S SAVE  R ROTATE  G SCALE  Ctrl+R RESET  DRAG/RESIZE  SHIFT+ARROWS PAN", 120,
-                  130, 140);
+    font_draw(r, 4, 7, "retr01 SIM", 200, 210, 220);
+    {
+        SDL_Rect sbtn;
+        const char *hint;
+        int hint_x;
+        int hint_max;
+        save_btn_rect(ui, &sbtn);
+        hint_x = R01S_UI_VIEW_X + 4;
+        hint_max = sbtn.x - hint_x - 4;
+        if (hint_max < 24) {
+            hint_max = 24;
+        }
+        hint = ui->layout_compact ? "BOX SEL  S SAVE  R ROT  G SCALE" : "S SAVE  R ROT  G SCALE  PAN  DRAG";
+        font_draw_ellipsize(r, hint_x, 7, hint, hint_max, 120, 130, 140);
     }
     {
         SDL_Rect sbtn;
@@ -3091,8 +3184,8 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
                   ui->layout_dirty ? 30 : 32);
         draw_rect(r, sbtn.x, sbtn.y, sbtn.w, sbtn.h, ui->layout_dirty ? 220 : 120, ui->layout_dirty ? 180 : 160,
                   ui->layout_dirty ? 100 : 130);
-        font_draw(r, sbtn.x + 8, sbtn.y + 5, "SAVE", ui->layout_dirty ? 255 : 200, ui->layout_dirty ? 230 : 220,
-                  ui->layout_dirty ? 180 : 180);
+        font_draw(r, sbtn.x + (sbtn.w - font_text_width("SAVE")) / 2, sbtn.y + (sbtn.h - 8) / 2, "SAVE",
+                  ui->layout_dirty ? 255 : 200, ui->layout_dirty ? 230 : 220, ui->layout_dirty ? 180 : 180);
     }
     {
         SDL_Rect cbtn;
@@ -3101,7 +3194,8 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
         fill_rect(r, cbtn.x, cbtn.y, cbtn.w, cbtn.h, ui->layout_compact ? 40 : 28, ui->layout_compact ? 70 : 40,
                   ui->layout_compact ? 50 : 32);
         draw_rect(r, cbtn.x, cbtn.y, cbtn.w, cbtn.h, 120, 160, 130);
-        font_draw(r, cbtn.x + 8, cbtn.y + 5, clabel, 200, 220, 180);
+        font_draw(r, cbtn.x + (cbtn.w - font_text_width(clabel)) / 2, cbtn.y + (cbtn.h - 8) / 2, clabel, 200, 220,
+                  180);
     }
 
     /* Left sidebar: system status, probe, controllers, screen/scale/sim radios (scrollable). */
@@ -3128,9 +3222,12 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     }
 
     fill_rect(r, 0, R01S_LOGIC_H - R01S_UI_HUD_BOTTOM, R01S_LOGIC_W, R01S_UI_HUD_BOTTOM, 12, 14, 16);
-    font_draw(r, 8, R01S_LOGIC_H - 15, ui->status, 160, 170, 160);
     snprintf(fps_buf, sizeof(fps_buf), "%d FPS %d STP", ui->fps, ui->sim_steps);
-    font_draw(r, R01S_LOGIC_W - font_text_width(fps_buf) - 8, R01S_LOGIC_H - 15, fps_buf, 160, 180, 160);
+    {
+        int fps_w = font_text_width(fps_buf) + 8;
+        font_draw_ellipsize(r, 8, R01S_LOGIC_H - 15, ui->status, R01S_LOGIC_W - fps_w - 12, 160, 170, 160);
+        font_draw(r, R01S_LOGIC_W - fps_w, R01S_LOGIC_H - 15, fps_buf, 160, 180, 160);
+    }
 
     if (ui->ctx_chip >= 0 && ui->ctx_chip < ui->chip_count) {
         const R01sEntity *ce = ui->chips[ui->ctx_chip];
@@ -3190,9 +3287,11 @@ static int hit_chip(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);
     if (e->orient == R01S_ORIENT_H) {
-        return lx >= x - 4 && lx < x + e->body_w + 4 && ly >= y - 12 && ly < y + e->body_h + 12;
+        return lx >= x - R01S_CHIP_PIN_OUT && lx < x + e->body_w + R01S_CHIP_PIN_OUT &&
+               ly >= y - R01S_CHIP_PIN_OUT && ly < y + e->body_h + R01S_CHIP_PIN_OUT;
     }
-    return lx >= x - 12 && lx < x + e->body_w + 12 && ly >= y - 4 && ly < y + e->body_h + 4;
+    return lx >= x - R01S_CHIP_PIN_OUT && lx < x + e->body_w + R01S_CHIP_PIN_OUT &&
+           ly >= y - R01S_CHIP_PIN_OUT && ly < y + e->body_h + R01S_CHIP_PIN_OUT;
 }
 
 static int hit_island_frame(const R01sUi *ui, const R01sIsland *island, int lx, int ly) {
@@ -3224,34 +3323,30 @@ static int hit_island_resize(const R01sUi *ui, const R01sIsland *island, int lx,
     return -1;
 }
 
-/* Front-most island first (matches draw: higher index on top; active drag/resize on top). */
+/* Front-most island first (matches island_z_order). */
 static int island_hit_stack(const R01sUi *ui, int *out_idx, int max_out) {
-    int n;
-    int front;
-    int i;
     int k = 0;
+    int rank;
 
     if (!ui || !ui->group || !out_idx || max_out <= 0) {
         return 0;
     }
-    n = r01s_island_group_count(ui->group);
-    if (n > max_out) {
-        n = max_out;
-    }
-    front = -1;
-    if (ui->drag_island >= 0) {
-        front = ui->drag_island;
-    } else if (ui->resize_island >= 0) {
-        front = ui->resize_island;
-    }
-    if (front >= 0 && front < n) {
-        out_idx[k++] = front;
-    }
-    for (i = n - 1; i >= 0; i--) {
-        if (i == front) {
-            continue;
+    if (ui->island_z_count <= 0) {
+        int n = r01s_island_group_count(ui->group);
+        int i;
+        if (n > max_out) {
+            n = max_out;
         }
-        out_idx[k++] = i;
+        for (i = n - 1; i >= 0; i--) {
+            out_idx[k++] = i;
+        }
+        return k;
+    }
+    for (rank = ui->island_z_count - 1; rank >= 0; rank--) {
+        if (k >= max_out) {
+            break;
+        }
+        out_idx[k++] = ui->island_z_order[rank];
     }
     return k;
 }
@@ -3581,43 +3676,40 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             }
         }
 
-        /* SCREEN render mode (left sidebar). */
+        /* LCD screen / scale controls (above SCR1). */
         {
-            SDL_Rect rc;
-            int i;
-            for (i = 0; i < R01S_UI_SCREEN_MODE_N; i++) {
-                sidebar_screen_mode_rect(ui, i, &rc);
-                if (sidebar_hit(logic_x, logic_y) && radio_hit(&rc, logic_x, logic_y)) {
-                    ui_set_screen_render_mode(ui, i);
-                    return 1;
+            int ci;
+            for (ci = 0; ci < ui->chip_count; ci++) {
+                R01sEntity *e = ui->chips[ci];
+                int b;
+                if (!e || e->visual != R01S_ENTITY_VIS_DISPLAY) {
+                    continue;
                 }
-            }
-        }
-
-        /* SCREEN SCALE 1X/2X (left sidebar). */
-        {
-            SDL_Rect rc;
-            sidebar_dual_radio_rect(ui, 0, 0, &rc);
-            if (sidebar_hit(logic_x, logic_y) && radio_hit(&rc, logic_x, logic_y)) {
-                ui_set_lcd_scale(ui, 0);
-                return 1;
-            }
-            sidebar_dual_radio_rect(ui, 0, 1, &rc);
-            if (sidebar_hit(logic_x, logic_y) && radio_hit(&rc, logic_x, logic_y)) {
-                ui_set_lcd_scale(ui, 1);
-                return 1;
+                for (b = 0; b < R01S_LCD_CTRL_BTN_N; b++) {
+                    SDL_Rect rc;
+                    display_ctrl_btn_rect(ui, e, b, &rc);
+                    if (logic_x >= rc.x && logic_x < rc.x + rc.w && logic_y >= rc.y &&
+                        logic_y < rc.y + rc.h) {
+                        if (b < 3) {
+                            ui_set_screen_render_mode(ui, b);
+                        } else {
+                            ui_set_lcd_scale(ui, b == 4);
+                        }
+                        return 1;
+                    }
+                }
             }
         }
 
         /* SIM PIN / FAST (left sidebar). */
         {
             SDL_Rect rc;
-            sidebar_dual_radio_rect(ui, 1, 0, &rc);
+            sidebar_sim_radio_rect(ui, 0, &rc);
             if (sidebar_hit(logic_x, logic_y) && radio_hit(&rc, logic_x, logic_y)) {
                 ui_set_sim_fast(ui, 0);
                 return 1;
             }
-            sidebar_dual_radio_rect(ui, 1, 1, &rc);
+            sidebar_sim_radio_rect(ui, 1, &rc);
             if (sidebar_hit(logic_x, logic_y) && radio_hit(&rc, logic_x, logic_y)) {
                 ui_set_sim_fast(ui, 1);
                 return 1;
@@ -3678,6 +3770,7 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             if (kind == 3 && island_i >= 0) {
                 const R01sIsland *island = r01s_island_group_at(ui->group, island_i);
                 ui_sel_clear(ui);
+                r01s_ui_island_z_raise(ui, island_i);
                 ui->resize_island = island_i;
                 ui->resize_corner = corner;
                 snprintf(ui->status, sizeof(ui->status), "resize %s",
@@ -3685,6 +3778,9 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 return 1;
             }
             if (kind == 1 && chip_i >= 0 && chip_i < ui->chip_count && ui->chips[chip_i]) {
+                if (!ui->layout_compact && island_i >= 0) {
+                    r01s_ui_island_z_raise(ui, island_i);
+                }
                 if (ui->layout_compact && shift) {
                     ui_sel_toggle(ui, chip_i);
                     snprintf(ui->status, sizeof(ui->status), "selected %d", ui_sel_count(ui));
@@ -3719,6 +3815,7 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             if (kind == 2 && island_i >= 0) {
                 const R01sIsland *island = r01s_island_group_at(ui->group, island_i);
                 ui_sel_clear(ui);
+                r01s_ui_island_z_raise(ui, island_i);
                 ui->drag_island = island_i;
                 ui->drag_grab_bx = board_mx - island->board_x;
                 ui->drag_grab_by = board_my - island->board_y;

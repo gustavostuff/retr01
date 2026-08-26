@@ -5,8 +5,8 @@
 #include <stdint.h>
 
 /* Logical UI canvas (integer-scaled window). */
-#define R01S_LOGIC_W 1280
-#define R01S_LOGIC_H 720
+#define R01S_LOGIC_W 640
+#define R01S_LOGIC_H 360
 
 /* Scrollable board world (may exceed canvas). Tall enough for multi-row islands. */
 #define R01S_BOARD_W 2800

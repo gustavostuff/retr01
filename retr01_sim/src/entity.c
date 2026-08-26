@@ -1,5 +1,7 @@
 #include "retr01_sim/entity.h"
 
+#include "retr01_sim/board_layout.h"
+
 #include <string.h>
 
 /*
@@ -76,11 +78,11 @@ void r01s_entity_refresh_body(R01sEntity *e) {
     along = e->pkg_len_mm > 0 ? e->pkg_len_mm * R01S_PX_PER_MM : r01s_dip_body_along_px(e->dip_pins);
     across = e->pkg_wid_mm > 0 ? e->pkg_wid_mm * R01S_PX_PER_MM : r01s_dip_body_across_px(e->dip_pins);
     if (e->orient == R01S_ORIENT_V) {
-        e->body_w = across;
-        e->body_h = along;
+        e->body_w = r01s_snap5_up(across);
+        e->body_h = r01s_snap5_up(along);
     } else {
-        e->body_w = along;
-        e->body_h = across;
+        e->body_w = r01s_snap5_up(along);
+        e->body_h = r01s_snap5_up(across);
     }
 }
 
@@ -152,8 +154,8 @@ void r01s_entity_set_glyph(R01sEntity *e, R01sEntityVisual visual, int body_w, i
     e->pkg_len_mm = 0;
     e->pkg_wid_mm = 0;
     e->orient = R01S_ORIENT_H;
-    e->body_w = body_w > 0 ? body_w : 48;
-    e->body_h = body_h > 0 ? body_h : 48;
+    e->body_w = body_w > 0 ? r01s_snap5_up(body_w) : 25;
+    e->body_h = body_h > 0 ? r01s_snap5_up(body_h) : 25;
 }
 
 void r01s_entity_place(R01sEntity *e, int board_x, int board_y) {

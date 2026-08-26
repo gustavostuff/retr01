@@ -18,7 +18,7 @@
 /* Fixed HUD chrome — board draws only in the center viewport. */
 #define R01S_UI_HUD_TOP 22
 #define R01S_UI_HUD_BOTTOM 22
-#define R01S_UI_SIDEBAR_L 244
+#define R01S_UI_SIDEBAR_L 100
 #define R01S_UI_SIDEBAR_R 0
 #define R01S_UI_VIEW_X R01S_UI_SIDEBAR_L
 #define R01S_UI_VIEW_Y R01S_UI_HUD_TOP
@@ -44,6 +44,9 @@ typedef struct R01sUi {
     int drag_island; /* island index while moving frame, else -1 */
     int resize_island; /* island index while resizing, else -1 */
     int resize_corner; /* R01S_ISLAND_CORNER_* while resizing */
+    /* Draw order back→front: island_z_order[0] is bottom, [count-1] is top. */
+    uint8_t island_z_order[R01S_MAX_ISLANDS];
+    int island_z_count;
     int drag_grab_bx;
     int drag_grab_by;
     int drag_last_x;
@@ -91,6 +94,12 @@ int r01s_ui_init(R01sUi *ui);
 void r01s_ui_shutdown(R01sUi *ui);
 
 void r01s_ui_bind_group(R01sUi *ui, R01sIslandGroup *group);
+
+void r01s_ui_island_z_init(R01sUi *ui);
+void r01s_ui_island_z_apply(R01sUi *ui, const int *z_by_index, int n);
+int r01s_ui_island_z_rank(const R01sUi *ui, int island_index);
+void r01s_ui_island_z_raise(R01sUi *ui, int island_index);
+
 int r01s_ui_add_chip(R01sUi *ui, R01sEntity *chip, int island_index);
 
 void r01s_ui_clamp_pan(R01sUi *ui);

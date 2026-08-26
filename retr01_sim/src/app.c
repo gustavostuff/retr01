@@ -298,7 +298,7 @@ void r01s_app_mount_builder(R01sApp *app) {
 int r01s_app_init(R01sApp *app, int headless) {
     Uint32 flags;
     memset(app, 0, sizeof(*app));
-    app->scale = 1;
+    app->scale = headless ? 1 : 2;
     app->running = 1;
     SDL_AtomicSet(&app->catchup_active, 0);
     SDL_AtomicSet(&app->catchup_ui_req, 0);
@@ -327,8 +327,8 @@ int r01s_app_init(R01sApp *app, int headless) {
         flags |= SDL_WINDOW_RESIZABLE;
     }
 
-    app->win = SDL_CreateWindow("retr01 Sim", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, R01S_LOGIC_W,
-                                R01S_LOGIC_H, flags);
+    app->win = SDL_CreateWindow("retr01 Sim", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                R01S_LOGIC_W * app->scale, R01S_LOGIC_H * app->scale, flags);
     if (!app->win) {
         fprintf(stderr, "window: %s\n", SDL_GetError());
         r01s_ui_shutdown(&app->ui);

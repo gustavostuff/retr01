@@ -46,7 +46,7 @@ void r01s_pwr5v_init(R01sPwr5v *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 3, "VDD", R01S_PIN_OUT);
     r01s_entity_add_pin(&chip->base, 4, "GND", R01S_PIN_PWR);
     /* Sized for 2x battery.png (25x37) plus pin / label margins. */
-    r01s_entity_set_glyph(&chip->base, R01S_ENTITY_VIS_PWR, 58, 86);
+    r01s_entity_set_glyph(&chip->base, R01S_ENTITY_VIS_PWR, 30, 45);
     r01s_entity_reset(&chip->base);
 }
 

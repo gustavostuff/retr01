@@ -52,7 +52,7 @@ void r01s_osc_dot_init(R01sOscDot *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 5, "DOT", R01S_PIN_OUT);
     r01s_entity_add_pin(&chip->base, 8, "VDD", R01S_PIN_IN);
     /* Sized for 2x osc.png (25x17) plus pin / label margins. */
-    r01s_entity_set_glyph(&chip->base, R01S_ENTITY_VIS_OSC, 58, 54);
+    r01s_entity_set_glyph(&chip->base, R01S_ENTITY_VIS_OSC, 30, 30);
     r01s_entity_reset(&chip->base);
 }
 

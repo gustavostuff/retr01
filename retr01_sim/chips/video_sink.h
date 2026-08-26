@@ -26,7 +26,10 @@ typedef enum R01sVideoRenderMode {
     R01S_VIDEO_RENDER_PHOSPHOR = 2,
 } R01sVideoRenderMode;
 
-#define R01S_VIDEO_RENDER_DEFAULT R01S_VIDEO_RENDER_PHOSPHOR
+#define R01S_VIDEO_RENDER_DEFAULT R01S_VIDEO_RENDER_PERSIST
+
+/* UI control strip above the LCD preview (matches sim ui.c). */
+#define R01S_VIDEO_SINK_CTRL_H 18
 
 typedef struct R01sVideoSink {
     R01sEntity base;
@@ -47,6 +50,8 @@ int r01s_rgbs_beam_to_logical(int scale_2x, int bx, int by, int *lx, int *ly);
 
 void r01s_video_sink_set_scale_2x(R01sVideoSink *chip, int scale_2x);
 int r01s_video_sink_scale_2x(const R01sVideoSink *chip);
+void r01s_video_sink_refresh_glyph(R01sVideoSink *chip);
+void r01s_video_sink_lcd_size(const R01sVideoSink *chip, int *w, int *h);
 
 void r01s_video_sink_set_render_mode(R01sVideoSink *chip, int mode);
 int r01s_video_sink_render_mode(const R01sVideoSink *chip);

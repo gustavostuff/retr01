@@ -1,4 +1,5 @@
 #include "retr01_sim/entity.h"
+#include "retr01_sim/board_layout.h"
 #include "stub14.h"
 
 #include <stdio.h>
@@ -25,15 +26,16 @@ int main(void) {
     expect_true(e->dip_pins == 14, "14-pin package");
     expect_true(e->orient == R01S_ORIENT_H, "default horizontal");
     expect_true(e->pkg_len_mm == 19 && e->pkg_wid_mm == 6, "DIP-14 mm outline");
-    expect_true(e->body_w == 19 * R01S_PX_PER_MM, "horizontal body_w");
-    expect_true(e->body_h == 6 * R01S_PX_PER_MM, "horizontal body_h");
+    expect_true(e->body_w == r01s_snap5_up(19 * R01S_PX_PER_MM), "horizontal body_w");
+    expect_true(e->body_h == r01s_snap5_up(6 * R01S_PX_PER_MM), "horizontal body_h");
     expect_true(r01s_dip_body_along_px(40) == 52 * R01S_PX_PER_MM, "DIP-40 length px");
     expect_true(r01s_dip_body_across_px(40) == 14 * R01S_PX_PER_MM, "DIP-40 width px");
     expect_true(e->part && e->part[0], "part name");
     expect_true(e->refdes && e->refdes[0] == 'U', "refdes");
 
     r01s_entity_set_orient(e, R01S_ORIENT_V);
-    expect_true(e->body_w == 6 * R01S_PX_PER_MM && e->body_h == 19 * R01S_PX_PER_MM, "vertical swap");
+    expect_true(e->body_w == r01s_snap5_up(6 * R01S_PX_PER_MM) && e->body_h == r01s_snap5_up(19 * R01S_PX_PER_MM),
+                "vertical swap");
 
     p = r01s_entity_pin(e, 1);
     expect_true(p != NULL && p->dir == R01S_PIN_IN, "pin 1 in");

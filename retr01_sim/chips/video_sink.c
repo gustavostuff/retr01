@@ -2,6 +2,8 @@
 
 #include "at28c16.h"
 
+#include "retr01_sim/board_layout.h"
+
 #include <string.h>
 
 /* ~15% / UI frame: prior-field residue and vblank gaps. */
@@ -107,6 +109,43 @@ int r01s_rgbs_beam_to_logical(int scale_2x, int bx, int by, int *lx, int *ly) {
     return 1;
 }
 
+void r01s_video_sink_lcd_size(const R01sVideoSink *chip, int *w, int *h) {
+    if (chip && chip->scale_2x) {
+        if (w) {
+            *w = R01S_VIDEO_W;
+        }
+        if (h) {
+            *h = R01S_VIDEO_H;
+        }
+    } else {
+        if (w) {
+            *w = R01S_LOGICAL_W;
+        }
+        if (h) {
+            *h = R01S_LOGICAL_H;
+        }
+    }
+}
+
+void r01s_video_sink_refresh_glyph(R01sVideoSink *chip) {
+    int lcd_w;
+    int lcd_h;
+    int body_w;
+    int body_h;
+
+    if (!chip) {
+        return;
+    }
+    r01s_video_sink_lcd_size(chip, &lcd_w, &lcd_h);
+    body_w = lcd_w + 4;
+    if (body_w < 200) {
+        body_w = 200;
+    }
+    body_h = R01S_VIDEO_SINK_CTRL_H + lcd_h;
+    chip->base.body_w = r01s_snap5_up(body_w);
+    chip->base.body_h = r01s_snap5_up(body_h);
+}
+
 void r01s_video_sink_init(R01sVideoSink *chip, const char *refdes) {
     if (!chip) {
         return;
@@ -120,8 +159,8 @@ void r01s_video_sink_init(R01sVideoSink *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 2, "HSYNC", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 3, "VSYNC", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 4, "VCC", R01S_PIN_PWR);
-    /* Body = 256×240 field + bezel / labels. */
-    r01s_entity_set_glyph(&chip->base, R01S_ENTITY_VIS_DISPLAY, R01S_VIDEO_W + 16, R01S_VIDEO_H + 36);
+    r01s_entity_set_glyph(&chip->base, R01S_ENTITY_VIS_DISPLAY, 0, 0);
+    r01s_video_sink_refresh_glyph(chip);
     r01s_entity_reset(&chip->base);
 }
 
@@ -134,6 +173,7 @@ void r01s_video_sink_set_scale_2x(R01sVideoSink *chip, int scale_2x) {
         return;
     }
     chip->scale_2x = scale_2x ? 1 : 0;
+    r01s_video_sink_refresh_glyph(chip);
 }
 
 int r01s_video_sink_scale_2x(const R01sVideoSink *chip) {
