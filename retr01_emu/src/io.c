@@ -123,7 +123,8 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
         (void)r01e_video_boot_world(m, (int)io->world);
         break;
     case 0xFE38:
-        io->pal_row = (uint8_t)(v & 3u);
+        io->pal_row = (uint8_t)(v & 7u);
+        r01e_video_load_active_pals(m);
         break;
     case 0xFE60:
     case 0xFE61:

@@ -45,12 +45,47 @@ void r01e_video_reset(R01eVideo *vid) {
     memset(vid, 0, sizeof(*vid));
 }
 
-static void copy_pal_rows(uint8_t *dst, const uint8_t *src16) {
+static void copy_pal_row(uint8_t *dst, const uint8_t *src16) {
     if (src16) {
-        memcpy(dst, src16, 16);
+        memcpy(dst, src16, R01E_PAL_ROW_BYTES);
     } else {
-        memset(dst, 0, 16);
+        memset(dst, 0, R01E_PAL_ROW_BYTES);
     }
+}
+
+/* Pick 16 B for row from a global plane (128 B preferred; 16 B = row 0 only). */
+static const uint8_t *pal_row_ptr(const R01eCart *c, uint32_t off, uint32_t len, unsigned row) {
+    const uint8_t *plane;
+    unsigned r = row & 7u;
+    uint32_t need;
+
+    if (len == 0) {
+        len = R01E_PAL_PLANE_BYTES;
+    }
+    if (len >= R01E_PAL_PLANE_BYTES) {
+        need = R01E_PAL_PLANE_BYTES;
+        plane = r01e_cart_ptr(c, off, need);
+        if (plane) {
+            return plane + (size_t)r * R01E_PAL_ROW_BYTES;
+        }
+    }
+    plane = r01e_cart_ptr(c, off, R01E_PAL_ROW_BYTES);
+    return plane; /* legacy single-row blob */
+}
+
+void r01e_video_load_active_pals(R01eMachine *m) {
+    unsigned row;
+    const uint8_t *pal_bg;
+    const uint8_t *pal_spr;
+
+    if (!m) {
+        return;
+    }
+    row = m->io.pal_row & 7u;
+    pal_bg = pal_row_ptr(&m->cart, m->cart.off_pal_bg, m->cart.len_pal_bg, row);
+    pal_spr = pal_row_ptr(&m->cart, m->cart.off_pal_spr, m->cart.len_pal_spr, row);
+    copy_pal_row(m->io.pal, pal_bg);
+    copy_pal_row(m->io.pal + R01E_PAL_ROW_BYTES, pal_spr);
 }
 
 static void world_bounds(const R01eCart *cart, const R01eWorldView *wv, int *min_c, int *min_r,
@@ -210,8 +245,6 @@ int r01e_video_boot_world(R01eMachine *m, int world) {
     R01eWorldView wv;
     R01eVideo *vid;
     const uint8_t *chr;
-    const uint8_t *pal_bg;
-    const uint8_t *pal_spr;
     int si;
     int min_c, min_r, max_c, max_r;
 
@@ -233,18 +266,8 @@ int r01e_video_boot_world(R01eMachine *m, int world) {
     }
     vid->chr_loaded = 1;
 
-    if (wv.off_wpal_bg) {
-        pal_bg = r01e_cart_ptr(&m->cart, wv.base + wv.off_wpal_bg, 16);
-    } else {
-        pal_bg = r01e_cart_ptr(&m->cart, m->cart.off_pal_bg, 16);
-    }
-    if (wv.off_wpal_spr) {
-        pal_spr = r01e_cart_ptr(&m->cart, wv.base + wv.off_wpal_spr, 16);
-    } else {
-        pal_spr = r01e_cart_ptr(&m->cart, m->cart.off_pal_spr, 16);
-    }
-    copy_pal_rows(m->io.pal, pal_bg);
-    copy_pal_rows(m->io.pal + 16, pal_spr);
+    m->io.pal_row = (uint8_t)(wv.default_pal_row & 7u);
+    r01e_video_load_active_pals(m);
 
     memset(vid->vram, 0, sizeof(vid->vram));
 
@@ -281,6 +304,10 @@ static uint8_t tile_pix(const uint8_t tile16[16], int px, int py) {
     return c;
 }
 
+static void backdrop_rgb(R01eMachine *m, uint8_t *r, uint8_t *g, uint8_t *b) {
+    kit_rgb(m->io.pal[0] & 63u, r, g, b);
+}
+
 static void sample_bg(R01eMachine *m, int lx, int ly, uint8_t *r, uint8_t *g, uint8_t *b) {
     R01eVideo *vid = &m->video;
     int sx = m->io.scroll_x + lx;
@@ -296,14 +323,14 @@ static void sample_bg(R01eMachine *m, int lx, int ly, uint8_t *r, uint8_t *g, ui
     int px, py, i;
     uint8_t master;
 
-    /* Empty / missing screens: pure black (Studio Play), not palette color 0. */
+    /* Empty / missing screens: shared backdrop (BG pal color 0). */
     if (slot_x < 0 || slot_x > 1 || slot_y < 0 || slot_y > 1) {
-        *r = *g = *b = 0;
+        backdrop_rgb(m, r, g, b);
         return;
     }
     slot = slot_y * 2 + slot_x;
     if (!vid->slot_present[slot]) {
-        *r = *g = *b = 0;
+        backdrop_rgb(m, r, g, b);
         return;
     }
     local_x = sx - slot_x * R01E_SCREEN_PX_W;
@@ -367,7 +394,7 @@ static void sample_bg_play_world(R01eMachine *m, int lx, int ly, uint8_t *r, uin
     uint8_t tile16[16];
     uint8_t master;
 
-    *r = *g = *b = 0;
+    backdrop_rgb(m, r, g, b);
     if (!m->play.enabled) {
         return;
     }
@@ -394,7 +421,7 @@ static void sample_bg_play_world(R01eMachine *m, int lx, int ly, uint8_t *r, uin
         }
     }
     if (!pay) {
-        return; /* empty screen → black */
+        return; /* empty screen → backdrop */
     }
     local_x = wx % R01E_SCREEN_PX_W;
     local_y = wy % R01E_SCREEN_PX_H;
@@ -453,7 +480,7 @@ static void sample_vram_slot_px(R01eMachine *m, int slot, int local_x, int local
     uint8_t tile16[16];
     uint8_t master;
 
-    *r = *g = *b = 0;
+    backdrop_rgb(m, r, g, b);
     if (slot < 0 || slot > 3 || !vid->slot_present[slot]) {
         return;
     }

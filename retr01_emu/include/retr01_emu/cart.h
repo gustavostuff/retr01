@@ -15,7 +15,9 @@ typedef struct R01eCart {
     uint32_t off_prg;
     uint32_t len_prg;
     uint32_t off_pal_bg;
+    uint32_t len_pal_bg;
     uint32_t off_pal_spr;
+    uint32_t len_pal_spr;
     uint32_t off_world_table;
 } R01eCart;
 
@@ -29,11 +31,9 @@ typedef struct R01eWorldView {
     uint8_t default_pal_row;
     uint8_t screen_count;
     uint8_t parallax_count;
-    uint32_t off_chr;       /* relative to world base */
+    uint32_t off_chr; /* relative to world base */
     uint32_t off_screen_dir;
     uint32_t off_parallax_dir;
-    uint32_t off_wpal_bg; /* 0 = use globals */
-    uint32_t off_wpal_spr;
 } R01eWorldView;
 
 /* Load packed .retr01 (or 512 KB flash image). Owns *out->data. */

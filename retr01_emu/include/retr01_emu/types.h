@@ -28,8 +28,11 @@
 #define R01E_CHR_BANK_BYTES 4096u
 #define R01E_MASTER_COLORS 64
 #define R01E_PAL_COLORS 4
-#define R01E_PAL_ROWS 4
-#define R01E_ACTIVE_PAL_BYTES 32
+#define R01E_PALS_PER_ROW 4
+#define R01E_PAL_ROWS 8
+#define R01E_PAL_ROW_BYTES (R01E_PALS_PER_ROW * R01E_PAL_COLORS) /* 16 */
+#define R01E_PAL_PLANE_BYTES (R01E_PAL_ROWS * R01E_PAL_ROW_BYTES) /* 128 */
+#define R01E_ACTIVE_PAL_BYTES 32 /* 4 BG + 4 sprite pals loaded from one row */
 
 #define R01E_OAM_ENTRIES 64
 #define R01E_OAM_ENTRY_BYTES 4 /* Y, tile, attr, X */

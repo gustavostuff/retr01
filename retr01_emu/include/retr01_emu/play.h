@@ -9,7 +9,7 @@ struct R01eMachine;
 #define R01E_START_COL 1
 #define R01E_START_ROW 1
 
-/* Player fill: sprite palette row 0, color index 1 (global_pal_spr[0].idx[1]). */
+/* Player fill: sprite row color index 1 in active buffer (io.pal[16+1]). */
 #define R01E_PAL_SPR_BASE 16
 #define R01E_PAL_PLAYER_COLOR 1
 #define R01E_PAL_PLAYER (R01E_PAL_SPR_BASE + R01E_PAL_PLAYER_COLOR)

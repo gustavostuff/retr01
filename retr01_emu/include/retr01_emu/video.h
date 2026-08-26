@@ -12,7 +12,7 @@ typedef struct R01eVideo {
     uint8_t vram[R01E_VRAM_BYTES];
     uint8_t chr[8][R01E_CHR_BANK_BYTES]; /* BG0-3 + SPR0-3 for active world */
     int chr_loaded;
-    /* 1 if VRAM camera slot 0-3 holds a present screen (else Studio-black). */
+    /* 1 if VRAM camera slot 0-3 holds a present screen (else backdrop). */
     uint8_t slot_present[4];
 
     /* 2x2 camera workbench origin in world grid (docs/02). */
@@ -31,6 +31,9 @@ typedef struct R01eVideo {
 void r01e_video_kit_rgb(int master_index, uint8_t *r, uint8_t *g, uint8_t *b);
 
 void r01e_video_reset(R01eVideo *vid);
+
+/* Copy one global palette row (BG+SPR) into the active $FE08/$FE09 buffer. */
+void r01e_video_load_active_pals(struct R01eMachine *m);
 
 /*
  * Soft-boot world assets from cart (Phase 1 emu convenience — stub PRG never streams MAP).

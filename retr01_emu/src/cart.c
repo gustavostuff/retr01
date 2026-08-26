@@ -80,7 +80,9 @@ int r01e_cart_load_mem(R01eCart *out, const uint8_t *img, size_t len, char *err,
     out->off_prg = get_u24(ptrs + 0);
     out->len_prg = get_u24(ptrs + 3);
     out->off_pal_bg = get_u24(ptrs + 6);
+    out->len_pal_bg = get_u24(ptrs + 9);
     out->off_pal_spr = get_u24(ptrs + 12);
+    out->len_pal_spr = get_u24(ptrs + 15);
     out->off_world_table = get_u24(ptrs + 18);
     if (out->len_prg == 0 || !r01e_cart_ptr(out, out->off_prg, out->len_prg > R01E_PRG_BYTES ? R01E_PRG_BYTES : out->len_prg)) {
         r01e_cart_free(out);
@@ -152,14 +154,12 @@ int r01e_cart_world(const R01eCart *c, int index, R01eWorldView *out) {
     out->start_col = hdr[0];
     out->start_row = hdr[1];
     out->default_bg_bank = hdr[2] & 3u;
-    out->default_pal_row = hdr[4] & 3u;
+    out->default_pal_row = hdr[4] & 7u;
     out->screen_count = hdr[5];
     out->parallax_count = hdr[6];
     out->off_chr = get_u24(hdr + 8);
     out->off_screen_dir = get_u24(hdr + 11);
     out->off_parallax_dir = get_u24(hdr + 14);
-    out->off_wpal_bg = get_u24(hdr + 17);
-    out->off_wpal_spr = get_u24(hdr + 20);
     return 0;
 }
 

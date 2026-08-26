@@ -10,14 +10,19 @@
 
 #define R01E_DEFAULT_CART "../retr01_studio/test_game/test.retr01"
 
-/* Debug pane: VRAM atlas (256x240) + world map beside it. */
+/* Debug pane: VRAM atlas + world map + active BG/SPR palette rows. */
 #define DBG_GAP 8
 #define DBG_MAP_CELL 20
 #define DBG_MAP_MAX_CELLS 8
 #define DBG_MAP_W (DBG_MAP_CELL * DBG_MAP_MAX_CELLS)
 #define DBG_MAP_H (DBG_MAP_CELL * DBG_MAP_MAX_CELLS)
+#define DBG_PAL_SWATCH 8
+#define DBG_PAL_GAP 2
+#define DBG_PAL_GROUP_GAP 4
+#define DBG_PAL_LABEL_W 28
+#define DBG_PAL_H (DBG_PAL_SWATCH * 2 + DBG_PAL_GAP + 10)
 #define DBG_WIN_W (R01E_VRAM_ATLAS_W + DBG_GAP + DBG_MAP_W)
-#define DBG_WIN_H R01E_VRAM_ATLAS_H
+#define DBG_WIN_H (R01E_VRAM_ATLAS_H + DBG_GAP + DBG_PAL_H)
 
 static uint8_t read_pads(const Uint8 *keys) {
     uint8_t b = 0;
@@ -174,6 +179,63 @@ static void draw_vram_player(SDL_Renderer *ren, const R01eMachine *m) {
     SDL_RenderDrawRect(ren, &cell);
 }
 
+/* 5x7 uppercase glyphs (MSB = leftmost). */
+static const uint8_t DBG_GLYPH_B[7] = {0x1E, 0x11, 0x11, 0x1E, 0x11, 0x11, 0x1E};
+static const uint8_t DBG_GLYPH_G[7] = {0x0E, 0x11, 0x10, 0x17, 0x11, 0x11, 0x0E};
+static const uint8_t DBG_GLYPH_S[7] = {0x0E, 0x11, 0x10, 0x0E, 0x01, 0x11, 0x0E};
+static const uint8_t DBG_GLYPH_P[7] = {0x1E, 0x11, 0x11, 0x1E, 0x10, 0x10, 0x10};
+static const uint8_t DBG_GLYPH_R[7] = {0x1E, 0x11, 0x11, 0x1E, 0x14, 0x12, 0x11};
+
+static void dbg_blit_glyph(SDL_Renderer *ren, int x, int y, const uint8_t rows[7], Uint8 R, Uint8 G,
+                           Uint8 B) {
+    int row, col;
+    SDL_SetRenderDrawColor(ren, R, G, B, 255);
+    for (row = 0; row < 7; row++) {
+        for (col = 0; col < 5; col++) {
+            if (rows[row] & (1u << (4 - col))) {
+                SDL_RenderDrawPoint(ren, x + col, y + row);
+            }
+        }
+    }
+}
+
+static void draw_pal_strip(SDL_Renderer *ren, int x, int y, const uint8_t *row16) {
+    int pal, c;
+    int cx = x;
+    SDL_Rect cell;
+
+    for (pal = 0; pal < R01E_PALS_PER_ROW; pal++) {
+        for (c = 0; c < R01E_PAL_COLORS; c++) {
+            uint8_t cr, cg, cb;
+            uint8_t master = row16 ? (row16[pal * R01E_PAL_COLORS + c] & 63u) : 0;
+            r01e_video_kit_rgb(master, &cr, &cg, &cb);
+            cell.x = cx;
+            cell.y = y;
+            cell.w = DBG_PAL_SWATCH;
+            cell.h = DBG_PAL_SWATCH;
+            SDL_SetRenderDrawColor(ren, cr, cg, cb, 255);
+            SDL_RenderFillRect(ren, &cell);
+            SDL_SetRenderDrawColor(ren, 50, 55, 60, 255);
+            SDL_RenderDrawRect(ren, &cell);
+            cx += DBG_PAL_SWATCH + 1;
+        }
+        cx += DBG_PAL_GROUP_GAP - 1;
+    }
+}
+
+static void draw_active_palettes(SDL_Renderer *ren, R01eMachine *m, int ox, int oy) {
+    int y2 = oy + DBG_PAL_SWATCH + DBG_PAL_GAP;
+
+    dbg_blit_glyph(ren, ox, oy, DBG_GLYPH_B, 160, 180, 160);
+    dbg_blit_glyph(ren, ox + 6, oy, DBG_GLYPH_G, 160, 180, 160);
+    draw_pal_strip(ren, ox + DBG_PAL_LABEL_W, oy, m->io.pal);
+
+    dbg_blit_glyph(ren, ox, y2, DBG_GLYPH_S, 180, 160, 160);
+    dbg_blit_glyph(ren, ox + 6, y2, DBG_GLYPH_P, 180, 160, 160);
+    dbg_blit_glyph(ren, ox + 12, y2, DBG_GLYPH_R, 180, 160, 160);
+    draw_pal_strip(ren, ox + DBG_PAL_LABEL_W, y2, m->io.pal + R01E_PAL_ROW_BYTES);
+}
+
 static void present_debug_pane(SDL_Renderer *dbg_ren, SDL_Texture *vram_tex, R01eMachine *m) {
     SDL_Rect dst;
     SDL_Rect vp;
@@ -206,6 +268,7 @@ static void present_debug_pane(SDL_Renderer *dbg_ren, SDL_Texture *vram_tex, R01
 
     draw_vram_player(dbg_ren, m);
     draw_world_map(dbg_ren, m, R01E_VRAM_ATLAS_W + DBG_GAP, 0);
+    draw_active_palettes(dbg_ren, m, 4, R01E_VRAM_ATLAS_H + DBG_GAP);
     SDL_RenderPresent(dbg_ren);
 }
 
@@ -259,10 +322,10 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    /* One debug window: VRAM 2x2 (left) + world map (right). */
+    /* One debug window: VRAM 2x2 (left) + world map (right) + palette rows. */
     SDL_GetWindowPosition(win, &main_x, &main_y);
     SDL_GetWindowSize(win, &main_w, &main_h);
-    dbg_win = SDL_CreateWindow("VRAM + world map", main_x + main_w + 16, main_y, DBG_WIN_W, DBG_WIN_H,
+    dbg_win = SDL_CreateWindow("Rendering debug", main_x + main_w + 16, main_y, DBG_WIN_W, DBG_WIN_H,
                                SDL_WINDOW_HIDDEN);
     dbg_ren = dbg_win ? SDL_CreateRenderer(dbg_win, -1, SDL_RENDERER_ACCELERATED) : NULL;
     if (dbg_ren) {
@@ -297,7 +360,7 @@ int main(int argc, char **argv) {
     }
     printf("Studio Play SoT: WASD/arrows move · X/Y warp · Space pause · R reset · Esc quit\n");
     if (dbg_win) {
-        printf("Debug: VRAM 2x2 (red viewport) + world map (gold = current screen)\n");
+        printf("Debug: Rendering debug — VRAM 2x2 + world map + BG/SPR pals\n");
     }
 
     /* Present boot frame while still hidden, then show. */
