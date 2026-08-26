@@ -2544,7 +2544,12 @@ static void draw_pad_bits_compact(SDL_Renderer *r, int x, int y, uint8_t bits) {
     for (i = 0; i < 8; i++) {
         int on = (bits & (1u << i)) != 0;
         int bx = x + i * R01S_UI_PAD_BIT_STRIDE;
-        font_draw(r, bx, y, names[i], on ? 80 : 140, on ? 220 : 150, on ? 100 : 140);
+        if (on) {
+            fill_rect(r, bx - 1, y - 1, 7, 9, 0, 255, 0); /* (0,1,0) pressed */
+            font_draw(r, bx, y, names[i], 0, 0, 0);
+        } else {
+            font_draw(r, bx, y, names[i], 140, 150, 140);
+        }
     }
 }
 
