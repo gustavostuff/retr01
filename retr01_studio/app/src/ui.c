@@ -156,8 +156,8 @@ static void draw_play_view(UiState *ui, SDL_Renderer *r) {
         int pcx, pcy;
         uint8_t pr, pg, pb;
         r01_project_player_rgb(ui->project, &pr, &pg, &pb);
-        for (pcy = 0; pcy < R01_PLAY_PLAYER_SIZE; pcy++) {
-            for (pcx = 0; pcx < R01_PLAY_PLAYER_SIZE; pcx++) {
+        for (pcy = 0; pcy < R01_PLAY_PLAYER_H; pcy++) {
+            for (pcx = 0; pcx < R01_PLAY_PLAYER_W; pcx++) {
                 int wx = ui->play.player_x + pcx;
                 int wy = ui->play.player_y + pcy;
                 int vx = wx - ui->play.cam_x;

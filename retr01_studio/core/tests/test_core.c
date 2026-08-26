@@ -40,13 +40,33 @@ int main(void) {
 
     expect_true(r01_play_start(&pl, p), "play start");
     expect_true(pl.active, "play active");
-    expect_true(pl.player_x > 0 && pl.player_y > 0, "player placed");
+    expect_true(pl.player_x == R01_START_COL * R01_SCREEN_PX_W + R01_SCREEN_PX_W - R01_PLAY_PLAYER_W -
+                                    R01_PLAY_SPAWN_MARGIN_RIGHT,
+                "spawn margin right");
+    expect_true(pl.player_y == R01_START_ROW * R01_SCREEN_PX_H + R01_SCREEN_PX_H - R01_PLAY_PLAYER_H -
+                                    R01_PLAY_SPAWN_MARGIN_BOTTOM,
+                "spawn margin bottom");
+    expect_true(pl.cam_x == pl.player_x + R01_PLAY_PLAYER_W / 2 - R01_SCREEN_PX_W / 2 &&
+                    pl.cam_y == pl.player_y + R01_PLAY_PLAYER_H / 2 - R01_SCREEN_PX_H / 2,
+                "cam already smooth-follows on start");
+
+    r01_play_tick(&pl, p, 0, 0);
+    expect_true(pl.cam_x == pl.player_x + R01_PLAY_PLAYER_W / 2 - R01_SCREEN_PX_W / 2, "idle keeps follow");
 
     r01_play_tick(&pl, p, 1, 0);
-    expect_true(pl.cam_x == pl.player_x + 4 - R01_SCREEN_PX_W / 2, "smooth cam");
+    expect_true(pl.cam_x == pl.player_x + R01_PLAY_PLAYER_W / 2 - R01_SCREEN_PX_W / 2, "smooth cam");
 
     expect_true(r01_play_button(&pl, p, R01_PLAY_BTN_X), "warp X");
     expect_true(pl.player_x / R01_SCREEN_PX_W == 0, "warp col 0");
+    expect_true(pl.player_x % R01_SCREEN_PX_W ==
+                    R01_SCREEN_PX_W - R01_PLAY_PLAYER_W - R01_PLAY_SPAWN_MARGIN_RIGHT,
+                "warp keeps right margin");
+    expect_true(pl.player_y % R01_SCREEN_PX_H ==
+                    R01_SCREEN_PX_H - R01_PLAY_PLAYER_H - R01_PLAY_SPAWN_MARGIN_BOTTOM,
+                "warp keeps bottom margin");
+    expect_true(pl.cam_x == pl.player_x + R01_PLAY_PLAYER_W / 2 - R01_SCREEN_PX_W / 2 &&
+                    pl.cam_y == pl.player_y + R01_PLAY_PLAYER_H / 2 - R01_SCREEN_PX_H / 2,
+                "warp cam already follows");
 
     expect_true(r01_project_save_json(p, "test_project.json", err, sizeof(err)) == 0, "save json");
     memset(p, 0, sizeof(*p));

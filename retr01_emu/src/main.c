@@ -106,8 +106,8 @@ static void draw_world_map(SDL_Renderer *ren, R01eMachine *m, int ox, int oy) {
     rows = max_r - min_r + 1;
 
     if (m->play.enabled) {
-        cur_c = (m->play.player_x + R01E_PLAY_PLAYER_SIZE / 2) / R01E_SCREEN_PX_W;
-        cur_r = (m->play.player_y + R01E_PLAY_PLAYER_SIZE / 2) / R01E_SCREEN_PX_H;
+        cur_c = (m->play.player_x + R01E_PLAY_PLAYER_W / 2) / R01E_SCREEN_PX_W;
+        cur_r = (m->play.player_y + R01E_PLAY_PLAYER_H / 2) / R01E_SCREEN_PX_H;
     } else {
         cur_c = m->video.cam_origin_col;
         cur_r = m->video.cam_origin_row;
@@ -152,8 +152,8 @@ static void draw_vram_player(SDL_Renderer *ren, const R01eMachine *m) {
     ay = m->play.player_y - m->video.cam_origin_row * R01E_SCREEN_PX_H;
     x0 = ax;
     y0 = ay;
-    x1 = ax + R01E_PLAY_PLAYER_SIZE;
-    y1 = ay + R01E_PLAY_PLAYER_SIZE;
+    x1 = ax + R01E_PLAY_PLAYER_W;
+    y1 = ay + R01E_PLAY_PLAYER_H;
     if (x0 < 0) {
         x0 = 0;
     }

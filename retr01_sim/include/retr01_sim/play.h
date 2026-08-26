@@ -5,7 +5,11 @@
 
 struct R01sBoard;
 
-#define R01S_PLAY_PLAYER_SIZE 8
+#define R01S_PLAY_PLAYER_W 8
+#define R01S_PLAY_PLAYER_H 8
+#define R01S_PLAY_PLAYER_SIZE R01S_PLAY_PLAYER_W /* legacy alias; square for now */
+#define R01S_PLAY_SPAWN_MARGIN_RIGHT 4
+#define R01S_PLAY_SPAWN_MARGIN_BOTTOM 7
 
 /* Player fill: sprite half of active buffer, color index 1. */
 #define R01S_PAL_SPR_BASE 16

@@ -3,7 +3,12 @@
 
 #include "retr01_studio/types.h"
 
-#define R01_PLAY_PLAYER_SIZE 8
+/* Player AABB in world pixels (square for now). */
+#define R01_PLAY_PLAYER_W 8
+#define R01_PLAY_PLAYER_H 8
+/* Default spawn: empty margin inside the spawn screen's right/bottom edges. */
+#define R01_PLAY_SPAWN_MARGIN_RIGHT 4
+#define R01_PLAY_SPAWN_MARGIN_BOTTOM 7
 
 #define R01_PLAY_BTN_X 0
 #define R01_PLAY_BTN_Y 1

@@ -9,8 +9,8 @@ static int player_aabb_ok(const R01World *w, int px, int py) {
     if (!w || px < 0 || py < 0) {
         return 0;
     }
-    x1 = px + R01_PLAY_PLAYER_SIZE - 1;
-    y1 = py + R01_PLAY_PLAYER_SIZE - 1;
+    x1 = px + R01_PLAY_PLAYER_W - 1;
+    y1 = py + R01_PLAY_PLAYER_H - 1;
     c0 = px / R01_SCREEN_PX_W;
     c1 = x1 / R01_SCREEN_PX_W;
     r0 = py / R01_SCREEN_PX_H;
@@ -25,22 +25,9 @@ static int player_aabb_ok(const R01World *w, int px, int py) {
     return 1;
 }
 
-static void place_player_centered(R01PlayState *pl, int col, int row) {
-    pl->player_x = col * R01_SCREEN_PX_W + R01_SCREEN_PX_W / 2 - R01_PLAY_PLAYER_SIZE / 2;
-    pl->player_y = row * R01_SCREEN_PX_H + R01_SCREEN_PX_H / 2 - R01_PLAY_PLAYER_SIZE / 2;
-    pl->cam_x = pl->player_x + R01_PLAY_PLAYER_SIZE / 2 - R01_SCREEN_PX_W / 2;
-    pl->cam_y = pl->player_y + R01_PLAY_PLAYER_SIZE / 2 - R01_SCREEN_PX_H / 2;
-    if (pl->cam_x < 0) {
-        pl->cam_x = 0;
-    }
-    if (pl->cam_y < 0) {
-        pl->cam_y = 0;
-    }
-}
-
 static void update_camera(R01PlayState *pl) {
-    int ax = pl->player_x + R01_PLAY_PLAYER_SIZE / 2;
-    int ay = pl->player_y + R01_PLAY_PLAYER_SIZE / 2;
+    int ax = pl->player_x + R01_PLAY_PLAYER_W / 2;
+    int ay = pl->player_y + R01_PLAY_PLAYER_H / 2;
     pl->cam_x = ax - R01_SCREEN_PX_W / 2;
     pl->cam_y = ay - R01_SCREEN_PX_H / 2;
     if (pl->cam_x < 0) {
@@ -49,6 +36,16 @@ static void update_camera(R01PlayState *pl) {
     if (pl->cam_y < 0) {
         pl->cam_y = 0;
     }
+}
+
+static void place_player_on_screen(R01PlayState *pl, int col, int row) {
+    /* World spawn: W×H inset from this screen's right/bottom edges. */
+    pl->player_x =
+        col * R01_SCREEN_PX_W + R01_SCREEN_PX_W - R01_PLAY_PLAYER_W - R01_PLAY_SPAWN_MARGIN_RIGHT;
+    pl->player_y =
+        row * R01_SCREEN_PX_H + R01_SCREEN_PX_H - R01_PLAY_PLAYER_H - R01_PLAY_SPAWN_MARGIN_BOTTOM;
+    /* First frame already uses smooth follow (player centered in the viewport). */
+    update_camera(pl);
 }
 
 static int play_spawn_screen(const R01World *w, int *out_col, int *out_row) {
@@ -94,7 +91,7 @@ int r01_play_start(R01PlayState *pl, const R01Project *p) {
         return 0;
     }
     pl->active = 1;
-    place_player_centered(pl, col, row);
+    place_player_on_screen(pl, col, row);
     return 1;
 }
 
@@ -125,6 +122,7 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
             pl->player_y = ny;
         }
     }
+    /* No dead zone: camera tracks the player every tick. */
     update_camera(pl);
 }
 
@@ -137,7 +135,7 @@ static int warp_to(R01PlayState *pl, const R01Project *p, int col, int row) {
     if (!w || r01_world_find_screen(w, col, row) < 0) {
         return 0;
     }
-    place_player_centered(pl, col, row);
+    place_player_on_screen(pl, col, row);
     return 1;
 }
 

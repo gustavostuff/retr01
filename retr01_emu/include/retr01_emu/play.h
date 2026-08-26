@@ -5,9 +5,13 @@
 
 struct R01eMachine;
 
-#define R01E_PLAY_PLAYER_SIZE 8
-#define R01E_START_COL 1
-#define R01E_START_ROW 1
+#define R01E_PLAY_PLAYER_W 8
+#define R01E_PLAY_PLAYER_H 8
+#define R01E_PLAY_PLAYER_SIZE R01E_PLAY_PLAYER_W /* legacy alias; square for now */
+#define R01E_PLAY_SPAWN_MARGIN_RIGHT 4
+#define R01E_PLAY_SPAWN_MARGIN_BOTTOM 7
+#define R01E_START_COL 2
+#define R01E_START_ROW 0
 
 /* Player fill: sprite row color index 1 in active buffer (io.pal[16+1]). */
 #define R01E_PAL_SPR_BASE 16

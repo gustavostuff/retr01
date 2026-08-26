@@ -18,8 +18,8 @@ static int player_aabb_ok(R01sBoard *b, int px, int py) {
     if (!b || px < 0 || py < 0) {
         return 0;
     }
-    x1 = px + R01S_PLAY_PLAYER_SIZE - 1;
-    y1 = py + R01S_PLAY_PLAYER_SIZE - 1;
+    x1 = px + R01S_PLAY_PLAYER_W - 1;
+    y1 = py + R01S_PLAY_PLAYER_H - 1;
     c0 = px / R01S_BG_SCREEN_PX_W;
     c1 = x1 / R01S_BG_SCREEN_PX_W;
     r0 = py / R01S_BG_SCREEN_PX_H;
@@ -34,22 +34,9 @@ static int player_aabb_ok(R01sBoard *b, int px, int py) {
     return 1;
 }
 
-static void place_player_centered(R01sPlay *pl, int col, int row) {
-    pl->player_x = col * R01S_BG_SCREEN_PX_W + R01S_BG_SCREEN_PX_W / 2 - R01S_PLAY_PLAYER_SIZE / 2;
-    pl->player_y = row * R01S_BG_SCREEN_PX_H + R01S_BG_SCREEN_PX_H / 2 - R01S_PLAY_PLAYER_SIZE / 2;
-    pl->cam_x = pl->player_x + R01S_PLAY_PLAYER_SIZE / 2 - R01S_BG_SCREEN_PX_W / 2;
-    pl->cam_y = pl->player_y + R01S_PLAY_PLAYER_SIZE / 2 - R01S_BG_SCREEN_PX_H / 2;
-    if (pl->cam_x < 0) {
-        pl->cam_x = 0;
-    }
-    if (pl->cam_y < 0) {
-        pl->cam_y = 0;
-    }
-}
-
 static void update_camera(R01sPlay *pl) {
-    int ax = pl->player_x + R01S_PLAY_PLAYER_SIZE / 2;
-    int ay = pl->player_y + R01S_PLAY_PLAYER_SIZE / 2;
+    int ax = pl->player_x + R01S_PLAY_PLAYER_W / 2;
+    int ay = pl->player_y + R01S_PLAY_PLAYER_H / 2;
 
     pl->cam_x = ax - R01S_BG_SCREEN_PX_W / 2;
     pl->cam_y = ay - R01S_BG_SCREEN_PX_H / 2;
@@ -59,6 +46,15 @@ static void update_camera(R01sPlay *pl) {
     if (pl->cam_y < 0) {
         pl->cam_y = 0;
     }
+}
+
+static void place_player_on_screen(R01sPlay *pl, int col, int row) {
+    /* Match Studio/emu: margin spawn + camera already smooth-follows. */
+    pl->player_x = col * R01S_BG_SCREEN_PX_W + R01S_BG_SCREEN_PX_W - R01S_PLAY_PLAYER_W -
+                   R01S_PLAY_SPAWN_MARGIN_RIGHT;
+    pl->player_y = row * R01S_BG_SCREEN_PX_H + R01S_BG_SCREEN_PX_H - R01S_PLAY_PLAYER_H -
+                   R01S_PLAY_SPAWN_MARGIN_BOTTOM;
+    update_camera(pl);
 }
 
 static int spawn_screen(R01sBoard *b, int *out_col, int *out_row) {
@@ -223,7 +219,7 @@ static int warp_to(R01sBoard *b, int col, int row) {
     if (!r01s_board_has_screen(b, col, row)) {
         return 0;
     }
-    place_player_centered(&b->play, col, row);
+    place_player_on_screen(&b->play, col, row);
     b->play.force_camera_reload = 1;
     queue_video(b);
     apply_video_latch(b);
@@ -235,8 +231,8 @@ void r01s_play_reset(R01sPlay *play) {
         return;
     }
     memset(play, 0, sizeof(*play));
-    play->player_w = R01S_PLAY_PLAYER_SIZE;
-    play->player_h = R01S_PLAY_PLAYER_SIZE;
+    play->player_w = R01S_PLAY_PLAYER_W;
+    play->player_h = R01S_PLAY_PLAYER_H;
     play->origin_col = -1;
     play->origin_row = -1;
 }
@@ -255,7 +251,7 @@ int r01s_play_start(R01sBoard *board) {
     board->play.enabled = 1;
     /* Host Play owns pads; FAST catchup skips smoke LDA $FE60 so mark pad health here. */
     board->health_saw_pad = 1;
-    place_player_centered(&board->play, col, row);
+    place_player_on_screen(&board->play, col, row);
     /* Same as FAST apply: do not let residual reset_hold re-vector into smoke. */
     board->reset_hold = 0;
     r01s_board_park_bringup_cpu(board);

@@ -23,8 +23,8 @@ static int player_aabb_ok(R01eMachine *m, int px, int py) {
     if (!m || px < 0 || py < 0) {
         return 0;
     }
-    x1 = px + R01E_PLAY_PLAYER_SIZE - 1;
-    y1 = py + R01E_PLAY_PLAYER_SIZE - 1;
+    x1 = px + R01E_PLAY_PLAYER_W - 1;
+    y1 = py + R01E_PLAY_PLAYER_H - 1;
     c0 = px / R01E_SCREEN_PX_W;
     c1 = x1 / R01E_SCREEN_PX_W;
     r0 = py / R01E_SCREEN_PX_H;
@@ -39,22 +39,9 @@ static int player_aabb_ok(R01eMachine *m, int px, int py) {
     return 1;
 }
 
-static void place_player_centered(R01ePlay *pl, int col, int row) {
-    pl->player_x = col * R01E_SCREEN_PX_W + R01E_SCREEN_PX_W / 2 - R01E_PLAY_PLAYER_SIZE / 2;
-    pl->player_y = row * R01E_SCREEN_PX_H + R01E_SCREEN_PX_H / 2 - R01E_PLAY_PLAYER_SIZE / 2;
-    pl->cam_x = pl->player_x + R01E_PLAY_PLAYER_SIZE / 2 - R01E_SCREEN_PX_W / 2;
-    pl->cam_y = pl->player_y + R01E_PLAY_PLAYER_SIZE / 2 - R01E_SCREEN_PX_H / 2;
-    if (pl->cam_x < 0) {
-        pl->cam_x = 0;
-    }
-    if (pl->cam_y < 0) {
-        pl->cam_y = 0;
-    }
-}
-
 static void update_camera(R01ePlay *pl) {
-    int ax = pl->player_x + R01E_PLAY_PLAYER_SIZE / 2;
-    int ay = pl->player_y + R01E_PLAY_PLAYER_SIZE / 2;
+    int ax = pl->player_x + R01E_PLAY_PLAYER_W / 2;
+    int ay = pl->player_y + R01E_PLAY_PLAYER_H / 2;
 
     pl->cam_x = ax - R01E_SCREEN_PX_W / 2;
     pl->cam_y = ay - R01E_SCREEN_PX_H / 2;
@@ -64,6 +51,15 @@ static void update_camera(R01ePlay *pl) {
     if (pl->cam_y < 0) {
         pl->cam_y = 0;
     }
+}
+
+static void place_player_on_screen(R01ePlay *pl, int col, int row) {
+    /* Match Studio: W×H inset from right/bottom; camera already smooth-follows. */
+    pl->player_x =
+        col * R01E_SCREEN_PX_W + R01E_SCREEN_PX_W - R01E_PLAY_PLAYER_W - R01E_PLAY_SPAWN_MARGIN_RIGHT;
+    pl->player_y =
+        row * R01E_SCREEN_PX_H + R01E_SCREEN_PX_H - R01E_PLAY_PLAYER_H - R01E_PLAY_SPAWN_MARGIN_BOTTOM;
+    update_camera(pl);
 }
 
 static int spawn_screen(R01eMachine *m, int *out_col, int *out_row) {
@@ -167,8 +163,8 @@ void r01e_play_reset(R01ePlay *play) {
         return;
     }
     memset(play, 0, sizeof(*play));
-    play->player_w = R01E_PLAY_PLAYER_SIZE;
-    play->player_h = R01E_PLAY_PLAYER_SIZE;
+    play->player_w = R01E_PLAY_PLAYER_W;
+    play->player_h = R01E_PLAY_PLAYER_H;
 }
 
 int r01e_play_start(R01eMachine *m) {
@@ -186,7 +182,7 @@ int r01e_play_start(R01eMachine *m) {
         return 0;
     }
     m->play.enabled = 1;
-    place_player_centered(&m->play, col, row);
+    place_player_on_screen(&m->play, col, row);
     r01e_play_sync_video(m);
     write_oam_player(m);
     return 1;
@@ -199,7 +195,7 @@ static int warp_to(R01eMachine *m, int col, int row) {
     if (!r01e_cart_has_screen(&m->cart, (int)m->io.world, col, row)) {
         return 0;
     }
-    place_player_centered(&m->play, col, row);
+    place_player_on_screen(&m->play, col, row);
     r01e_play_sync_video(m);
     write_oam_player(m);
     return 1;
@@ -251,6 +247,7 @@ void r01e_play_tick(R01eMachine *m) {
             pl->player_y = ny;
         }
     }
+    /* No dead zone: camera tracks the player every tick. */
     update_camera(pl);
     r01e_play_sync_video(m);
     write_oam_player(m);
@@ -273,8 +270,8 @@ void r01e_play_draw(R01eMachine *m) {
     }
     pl = &m->play;
     r01e_play_player_rgb(m, &pr, &pg, &pb);
-    for (pcy = 0; pcy < R01E_PLAY_PLAYER_SIZE; pcy++) {
-        for (pcx = 0; pcx < R01E_PLAY_PLAYER_SIZE; pcx++) {
+    for (pcy = 0; pcy < R01E_PLAY_PLAYER_H; pcy++) {
+        for (pcx = 0; pcx < R01E_PLAY_PLAYER_W; pcx++) {
             int wx = pl->player_x + pcx;
             int wy = pl->player_y + pcy;
             int vx = wx - pl->cam_x;
