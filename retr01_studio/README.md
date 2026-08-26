@@ -103,12 +103,14 @@ PNG drop is the **only** way to author screen graphics in Phase 1.
 
 ### Palettes (internal only -- no UI)
 
-Phase 1 does **not** expose a Palettes cell. Global palette data is **written automatically** into the project and cart:
+Phase 1 does **not** expose a Palettes cell. Global palette data is **written automatically** into the project and cart per [`docs/02`](../docs/02_graphics_worlds_memory.md):
 
-- **Color 0 (shared backdrop):** Master index **0** (`#000000`) in every BG and sprite palette row. Same shared backdrop convention as NES (index 0 is universal backdrop / transparent for sprites).
-- **Colors 1-3:** For each of the **8** palette rows (4 BG + 4 sprite), indices 1-3 are taken from **vertical strips** of the kit **16x4** master grid ([`docs/02`](../docs/02_graphics_worlds_memory.md)), using **rows 1-3 only** (no dark row-0 swatches):
-  - BG palette row *i* (0...3): master indices **(16+i)**, **(32+i)**, **(48+i)**. Column *i*, rows 1-3.
-  - Sprite palette row *i* (0...3): phase 1 sets colors 1-3 to kit bright red (player uses index 1).
+- **Cart layout:** **8 global BG palette rows** + **8 global sprite palette rows** (**256 B** total).
+- **Color 0 (shared backdrop):** Master index **0** (`#000000`) in every palette. Same shared backdrop convention as NES (index 0 is universal backdrop / transparent for sprites).
+- **Colors 1-3:** For each global row *i* (**0...7**):
+  - BG row *i*: master indices **(16+(i%4))**, **(32+(i%4))**, **(48+(i%4))** — kit column *(i mod 4)*, rows 1-3 (no dark row-0 swatches).
+  - Sprite row *i*: phase 1 sets colors 1-3 to kit bright red (player uses row **0**, palette **0**, index **1**).
+- **Active row:** Play / export use global row **0** unless a world `default_pal_row` says otherwise.
 
 Preview and cart burn quantize through the kit Color PROM (**R3G3B2**).
 

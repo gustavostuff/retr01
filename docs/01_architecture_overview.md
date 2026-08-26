@@ -71,8 +71,8 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 | **Sprite bank (runtime)** | Per **OAM entry**: attr bits select CHR sprite bank **0-3** |
 | **BG bank helper** | Optional `$FE31`-`$FE36` bulk stamp into slot attrs. Not the live fetch source |
 | **Sprite bank helper** | Optional `$FE37` bulk stamp into OAM attrs. Not the live fetch source |
-| **BG palette bank** | Cartridge store of up to **32 BG palettes** (**8 palette rows x 4 palettes**) |
-| **Sprite palette bank** | Cartridge store of up to **32 sprite palettes** (**8 palette rows x 4 palettes**) |
+| **Global BG palettes** | Cart-wide store of **32 BG palettes** (**8 palette rows × 4 palettes**) |
+| **Global sprite palettes** | Cart-wide store of **32 sprite palettes** (**8 palette rows × 4 palettes**) |
 | **Palette row** | **4 palettes** in one plane, index **0-7**. BG row N and sprite row N are selected together |
 | **Palette** | One 4-color set (**4 master indices** into the Color PROM) |
 | **Active palette buffer** | **8 palettes** on screen: **4 BG + 4 sprite** from the currently selected palette row |
@@ -102,10 +102,10 @@ Current chip list: [`06`](06_hardware_v1_32ic.md) (**32 IC**). Roles:
 | Logical resolution | **128x120** (**16x15** tiles, **16:15**) |
 | RGBS active field | **256x240** (SCALE **2x** fills field, **1x** = centered 128x120) |
 | Tile size | **8x8** |
-| Color | **2bpp**, **64-entry Color PROM** on board (packed **R3G3B2**), cart holds indices only, **one synced palette row active** (4 BG + 4 sprite) |
+| Color | **2bpp**, **64-entry Color PROM** on board (packed **R3G3B2**), cart holds **8 global BG rows + 8 global sprite rows** (indices only), **one synced row active** (4 BG + 4 sprite) |
 | Worlds | **8** max |
 | Screens per world | **32** max on sparse **8x8** virtual grid |
-| Cart / PRG | **512 KB** flash. **32 KB** PRG (one region, no paging). ~**414 KB** full fill |
+| Cart / PRG | **512 KB** flash. **32 KB** PRG (one region, no paging). ~**420 KB** full fill |
 | CHR per world | **4 BG banks + 4 sprite banks**, **256 tiles each**, **32 KB** |
 | Sprites | **64 OAM**, **16 per logical scanline** max |
 | VRAM | **32 KB**, interleaved |

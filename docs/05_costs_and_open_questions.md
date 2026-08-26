@@ -22,15 +22,14 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Bank sizes | **256 tiles** per bank, **4 KB** each |
 | Master palette (logical) | **64 indices** in board **Color PROM**. Same logical kit on Retr01-A/C/H. **Not** in cart |
 | Color PROM (encoding) | **1x** PROM/OTP: packed **R3G3B2** `{RRRGGGBB}`; 1-dot pipeline. Studio quantizes kit swatches |
-| Cart global palette banks | **2 sets of 4** = **8 palettes** total (**1 BG set + 1 sprite set**), indices only. Cart-wide default for every world |
+| Cart global palettes | **8 BG palette rows** + **8 sprite palette rows** (**32 + 32** palettes, **256 B** total), indices only |
 | MAP / cart layout | Fixed header + **pointer table**, world table, per-world CHR + screen dir + payloads - see [`02`](02_graphics_worlds_memory.md) *Cart image* |
-| MAP world header | `start_col`/`start_row`, **`default_bg_bank`**, **`default_spr_bank`**, optional `default_pal_row` |
-| World palette banks | optional **BG** and/or **sprite** banks, up to **8 rows x 4** each. If present, **override** cart globals for that world/plane. If absent, world uses cart globals |
-| Palette cart storage | **uncompressed** master **indices**. **Pointer table** locates blobs. **No** master RGB in cart |
+| MAP world header | `start_col`/`start_row`, **`default_bg_bank`**, **`default_spr_bank`**, optional `default_pal_row` (**0-7**) |
+| Palette cart storage | **uncompressed** master **indices** in the two global blobs. **Pointer table** locates them. **No** master RGB in cart |
 | Active palette buffer | **4 BG + 4 sprite palettes** from one selected **palette row** via `$FE08`/`$FE09` (indices into Color PROM) |
 | Palette row selection | BG palette row **N** and sprite palette row **N** are always selected together |
 | Shared backdrop | all **8** active palettes use the same **color 0** master index (software must write it into every slot when loading a row) |
-| Palette fallback | world bank (if any) -> cart global sets -> **system default** indices (**software** only: kit/Studio/boot). Bare ASM/C that never writes `$FE08`/`$FE09` gets **undefined/garbage** colors. Master RGB always from Color PROM |
+| Palette fallback | cart globals -> **system default** indices (**software** only: kit/Studio/boot). Bare ASM/C that never writes `$FE08`/`$FE09` gets **undefined/garbage** colors. Master RGB always from Color PROM |
 | Runtime BG banking | per **8x8 tile** (attr `BANK` bits). Screens may stamp a default only at load |
 | BG attr byte | per tile: `BANK` (1-0), `PAL` (3-2), `FLIP_H` (4), `FLIP_V` (5) **hardware**. `SOLID` (6), `ANIM` (7) **software**. Same low fields as OAM - see [`02`](02_graphics_worlds_memory.md) |
 | BG living tiles | `ANIM=1`: **4** consecutive CHR indices `B..B+3`, `B` 4-aligned. Software advances nametable |
@@ -49,7 +48,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | MAP access | **`$FE90`-`$FE92`** addr, **`$FE93`** data + auto-inc |
 | PRG layout | **One global PRG section** per cart, **32 KB** max at `$8000` (I/O hole at `$FE00-$FEFF`). **`$FE80` reserved / unused** |
 | PRG size (planning) | **32 KB** hard cap. Fits the CPU map with no runtime paging |
-| Cart fit | **Standard cart 512 KB**. Full caps + 32 KB PRG ~**414 KB** (~**98 KB** free) - see [`02`](02_graphics_worlds_memory.md) |
+| Cart fit | **Standard cart 512 KB**. Full caps + 32 KB PRG ~**420 KB** (~**92 KB** free) - see [`02`](02_graphics_worlds_memory.md) |
 | Cart flash | **512 KB** parallel NOR (**SST39SF040**). On cartridge (socket OK for early bring-up). Same `.retr01` image |
 | Beam / glue | Beam in **2x ATF22V10**; glue absorbed; **5** PLDs (compositor = priority mux) |
 | Bus | **3x HC245** |

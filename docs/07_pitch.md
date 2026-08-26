@@ -40,7 +40,7 @@ Retr01-A is meant to drop into a cabinet:
 - **5 V** barrel power, through-hole build, repair-friendly sockets
 - **20-pin IDC** for coin, start, and player controls
 - **RGBS**, S-Video, and composite output pads (cabinet monitors today, converters for modern displays tomorrow)
-- Real **cartridge** plan: **512 KB** standard image (PRG + CHR + MAP). Full caps + **32 KB** PRG ~**414 KB**, ~**98 KB** free
+- Real **cartridge** plan: **512 KB** standard image (PRG + CHR + MAP). Full caps + **32 KB** PRG ~**420 KB**, ~**92 KB** free
 
 You get a board you can breadboard in islands, bring up module by module, then integrate - not a black-box FPGA mystery. Retr01-A is a compact **32 IC** system ([`06`](06_hardware_v1_32ic.md)).
 
@@ -76,7 +76,7 @@ Same contract again, SMD build, likely multi-board layout. Battery, display, and
 - RGBS path uses a stable **256x240** active raster. Board **SCALE** DIP: **2x** default doubles to **256x240** (no letterbox); **1x** centers **128x120**
 - A **640x640** handheld LCD can show the same games at **5x** (**640x600**, thin letterbox) without a second game resolution
 - **8x8** tiles, **2bpp** patterns
-- **64 master palette indices** in board **Color PROM** (packed **R3G3B2** on current boards), with **4 BG + 4 sprite palettes** active at once from one synced palette row
+- **64 master palette indices** in board **Color PROM** (packed **R3G3B2** on current boards), with **4 BG + 4 sprite palettes** active at once from one synced palette row (**8 BG + 8 sprite rows** in the cart)
 - Limits on purpose, not accidental mush
 
 ### Worlds, not just levels
@@ -203,7 +203,7 @@ Retr01 deliberately rhymes with the NES where it helps learning and art directio
 | Frame rate class | **~60.098 Hz** (262 lines) | **~60.098 Hz** (341x262 timing) |
 | Game media | **Cartridge** | **Cartridge** (`.retr01`) |
 | Background + sprites | Tile BG + movable sprites | Tile BG + movable sprites |
-| Palette model | Indices into system colors | **Color PROM** (**64 indices**, packed **R3G3B2** on board) + cart palette **index** rows |
+| Palette model | Indices into system colors | **Color PROM** (**64 indices**, packed **R3G3B2** on board) + cart **8 BG + 8 sprite** palette **index** rows |
 | Audio direction | Period-accurate square/noise/DPCM style | **NES-style APU** on dedicated MCU |
 | Developer culture | Asm, fixed layouts, no heap | Asm-friendly, **binary-first** layouts |
 
@@ -218,13 +218,13 @@ If you know how NES tiles, attrs, and sprites work, Retr01 art pipelines will fe
 | Logical playfield | **256x240** (32x30 tiles) | **128x120** (16x15 tiles) - chunky. **2x** fills CRT |
 | Why smaller logical | - | **Bigger pixels**, cheaper rooms, more worlds in flash |
 | RGBS/CRT active field | **256x240** | **256x240** raster. Board **SCALE**: **2x** = full field, or **1x** centered |
-| Cart / ROM size | Often 128-512 KB class | **512 KB** standard (~**414 KB** full fill + slack). **32 KB** PRG |
+| Cart / ROM size | Often 128-512 KB class | **512 KB** standard (~**420 KB** full fill + slack). **32 KB** PRG |
 | CPU clock | **~1.79 MHz** | **8.000 MHz** |
 | Work RAM | **2 KB** | **32 KB** system RAM (CPU-only) |
 | Video RAM | **2 KB** PPU internal | **32 KB** interleaved VRAM + separate line-buffer SRAM |
 | CPU access to nametables | Mostly **VBlank/forced blank** | **Interleaved CPU phases** every frame |
 | Sprites per scanline | **8** | **16** (logical lines) |
-| On-screen palette slots | **4 BG + 4 sprite** (with shared backdrop rules) | **4 BG + 4 sprite** active row. **64** master indices in **Color PROM** (R3G3B2). Cart holds **index** banks only |
+| On-screen palette slots | **4 BG + 4 sprite** (with shared backdrop rules) | **4 BG + 4 sprite** active row. **64** master indices in **Color PROM** (R3G3B2). Cart holds **8 BG + 8 sprite** palette **index** rows |
 | Nametables live at once | **2** for scroll tricks | **6 slots**: **4** camera + **2** parallax plane |
 | World/map hardware | None (game code) | **MAP-ROM**, **8 worlds**, **32 screens/world**, **480 B**/screen raw |
 | CHR banking | Mapper-dependent, game-defined | **4 BG + 4 sprite banks/world**, **per-tile** BG bank, **per-sprite** bank (attrs) |

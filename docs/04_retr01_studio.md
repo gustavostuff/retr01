@@ -53,7 +53,7 @@
 | Cell size | **128x120** px per screen cell |
 | Generate | **No** Ctrl+G in Phase 1 |
 
-Palettes are written automatically (no UI): shared backdrop index **0**, kit strip indices for colors 1-3. See studio README.
+Palettes are written automatically (no UI): **8 global BG rows + 8 global sprite rows**. Shared backdrop index **0**; kit strip / bright-red fills for colors 1-3. See studio README / [`02`](02_graphics_worlds_memory.md).
 
 ### Save / Play / export
 

@@ -85,9 +85,9 @@ Verified against Studio pack (`r01_cart_build`) and the checked-in `retr01_studi
 | In ROM | Meaning |
 |--------|---------|
 | Header + pointer table | magic, format, world count, I2C-save flag, 24-bit offs |
-| Global BG/sprite palettes | 16+16 master indices (not RGB) |
+| Global BG/sprite palettes | **8** BG rows + **8** sprite rows (**128+128** master indices, not RGB) |
 | 32 KB PRG | **Boring stub only**: `SEI`/`CLD`/`TXS`, `STA $FE30` (world **0**), clear scroll, **hang**. Constraint bytes at `$8100+` are data, not a game loop. |
-| World table + world blobs | CHR banks, optional world pals, screen/parallax dirs, **480 B** screen payloads |
+| World table + world blobs | CHR banks, screen/parallax dirs, **480 B** screen payloads |
 
 | **Not** in ROM (sugar / other chips / host) | Meaning |
 |---------------------------------------------|---------|

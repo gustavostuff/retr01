@@ -1,0 +1,7 @@
+I am not using normal caps for "RETR", I'm instead using small caps (Unicode)
+
+RETR01   \/
+         /\
+
+           /
+ʀᴇᴛʀ01   \/

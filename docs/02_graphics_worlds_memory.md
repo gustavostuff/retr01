@@ -18,7 +18,8 @@ Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 - **8** worlds max. Sparse **8x8** grid, **32** screens/world (camera / playfield only)
 - Per world: up to **2 parallax planes** (same 480 B payload as a screen). **Not** on the world grid - separate MAP directory. Maps to VRAM slots **4-5**
 - Screen / plane payload: **480 B** raw (**240** tiles + **240** attrs). Direct MAP `$FE93` -> VRAM `$FE12` (no RLE required)
-- Per world: **4 BG + 4 sprite** CHR banks (**32 KB**), optional palette banks, screen dir + parallax dir
+- Per world: **4 BG + 4 sprite** CHR banks (**32 KB**), screen dir + parallax dir
+- Palettes: **8 global BG palette rows** + **8 global sprite palette rows** (see [Palettes](#palettes))
 - Cart: **512 KB** (SST39SF040). **32 KB** PRG at `$8000` (I/O hole at `$FE00-$FEFF`; no `$FE80` paging)
 
 | Asset | Size at caps |
@@ -26,9 +27,10 @@ Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 | CHR (8 x 32 KB) | **256 KB** |
 | MAP screens (8 x 32 x 480 B) | **120 KB** |
 | MAP parallax (8 x 2 x 480 B) | **~7.5 KB** |
-| Pals + dirs/headers | **~6 KB** |
+| Global pals (8 BG rows + 8 sprite rows) | **256 B** |
+| Dirs / headers | **~4 KB** |
 | PRG | **32 KB** |
-| **Total / free** | **~422 KB** used, **~90 KB** free |
+| **Total / free** | **~420 KB** used, **~92 KB** free |
 
 **Banks:** live BG bank = per-tile attr bits 1-0. Live sprite bank = per-OAM attr bits 1-0. `$FE31`-`$FE37` are optional stamp helpers only.
 
@@ -113,6 +115,8 @@ Line N+1| fill N+1         |        | SHOW             |
 
 **Color PROM** (board): **64 master indices**, packed **`{RRRGGGBB}`** (R3 G3 B2) in **one** PROM/OTP chip, 1-dot pipeline ([`06`](06_hardware_v1_32ic.md)). Active buffer: **4 BG + 4 sprite** via `$FE08`/`$FE09` (indices held in packed HC573 / decode path on the 32-IC board, no separate palette RAM IC). Shared color 0. BG+sprite row index always locked together.
 
+**Cart storage:** **8 BG palette rows** + **8 sprite palette rows**. Each row is **4 palettes × 4 master indices = 16 B**. Totals: **128 B** BG + **128 B** sprite = **256 B**. Software selects a row (`$FE38` hint) and copies it into `$FE08`/`$FE09`.
+
 Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio and burn tools **quantize** to R3G3B2 when building the PROM image ([`04`](04_retr01_studio.md)).
 
 (Earlier board sketches used 3x AT28C16 R/G/B; not the current norm.)
@@ -124,7 +128,7 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 #FFFFFF #F1A2BB #F1A6A1 #F1A983 #EEAC44 #D4BA33 #B0C841 #73D275 #22D0A6 #3BCDC9 #48C9E4 #88C4ED #A4BDEF #BBB5F1 #D5A9EF #F09BDD
 ```
 
-**Fallback (software, load time):** world bank if present -> else cart globals (4 BG + 4 sprite) -> else kit defaults. Bare metal with no `$FE08`/`$FE09` writes = **garbage colors**. Hardware never auto-loads.
+**Fallback (software, load time):** cart global rows -> else kit defaults. Bare metal with no `$FE08`/`$FE09` writes = **garbage colors**. Hardware never auto-loads.
 
 ## Cart image (`.retr01`)
 
@@ -140,15 +144,15 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 |    reserved...                                                 |
 |    POINTER TABLE (24-bit offsets + optional lengths)           |
 |      off_prg / len_prg                                         |
-|      off_global_pal_bg     -> 4 BG palettes (16 bytes)         |
-|      off_global_pal_spr    -> 4 sprite palettes (16 bytes)     |
+|      off_global_pal_bg     -> 8 BG palette rows (128 bytes)    |
+|      off_global_pal_spr    -> 8 sprite palette rows (128 bytes)|
 |      off_world_table       -> 8 world slots                    |
 |      (optional off_strings / off_extra)                        |
 +----------------------------------------------------------------+
-| GLOBAL PALETTES (cart-wide, 8 pals = 4 BG + 4 sprite)          |
-|    BG set:    4 palettes x 4 master indices = 16 B             |
-|    Sprite set: 4 palettes x 4 master indices = 16 B            |
-|    Worlds without their own banks use these for all rendering  |
+| GLOBAL PALETTES                                                |
+|    BG:     8 rows x 4 pals x 4 master indices = 128 B          |
+|    Sprite: 8 rows x 4 pals x 4 master indices = 128 B          |
+|    Active row N: copy 4 BG + 4 sprite pals into $FE08/$FE09     |
 +----------------------------------------------------------------+
 |  PRG (one global section, max 32 KB at $8000; I/O hole $FE00)   |
 +----------------------------------------------------------------+
@@ -159,13 +163,11 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 |  +------------------------------------------------------------+|
 |  | WORLD HEADER                                               ||
 |  |   start_col, start_row, default_bg_bank, default_spr_bank  ||
-|  |   default_pal_row, screen_count (0..32)                    ||
+|  |   default_pal_row (0..7), screen_count (0..32)              ||
 |  |   parallax_count (0..2)                                    ||
 |  |   off_chr, off_screen_dir, off_parallax_dir                ||
-|  |   off_world_pal_bg / off_world_pal_spr (0 = use globals)   ||
 |  +------------------------------------------------------------+|
 |  | CHR: BG 0..3 + SPR 0..3 (4 KB each)                        ||
-|  | optional world pal banks (up to 8 rows x 4 each plane)     ||
 |  | SCREEN DIR: col,row,flags, off_payload, off_screen_meta    ||
 |  |   flags: default BG bank, pal row hint (not parallax)      ||
 |  | PARALLAX DIR: slot (0..1 -> VRAM 4..5), flags, off_payload ||
