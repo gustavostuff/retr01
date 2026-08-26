@@ -1,5 +1,5 @@
-#ifndef RETR01_EMU_VIDEO_H
-#define RETR01_EMU_VIDEO_H
+#ifndef retr01_EMU_VIDEO_H
+#define retr01_EMU_VIDEO_H
 
 #include "retr01_emu/cart.h"
 #include "retr01_emu/types.h"

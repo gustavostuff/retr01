@@ -3076,7 +3076,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
 
     /* Fixed HUD */
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_UI_HUD_TOP, 12, 14, 16);
-    font_draw(r, 8, 7, "RETR01 SIM  ISLANDS O+A+C+D+G+H+J+K+L", 200, 210, 220);
+    font_draw(r, 8, 7, "retr01 SIM  ISLANDS O+A+C+D+G+H+J+K+L", 200, 210, 220);
     if (ui->layout_compact) {
         font_draw(r, R01S_UI_VIEW_X + 8, 7,
                   "COMPACT  DRAG-BOX SELECT  S SAVE  R ROTATE  G SCALE  SHIFT+CLICK", 120, 130, 140);

@@ -1,4 +1,4 @@
-# PDIP package dimensions (Retr01 sim / board)
+# PDIP package dimensions (retr01 sim / board)
 
 Canonical **plastic DIP** body sizes used by the simulator canvas and for layout planning.
 

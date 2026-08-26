@@ -1,5 +1,5 @@
-#ifndef RETR01_EMU_CART_H
-#define RETR01_EMU_CART_H
+#ifndef retr01_EMU_CART_H
+#define retr01_EMU_CART_H
 
 #include "retr01_emu/types.h"
 

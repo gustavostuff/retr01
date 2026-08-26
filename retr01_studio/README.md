@@ -1,6 +1,6 @@
-# Retr01 Studio
+# retr01 Studio
 
-Visual authoring tool for Retr01 worlds, screens, and cartridge images. This document is the **product spec** for **Studio Phase 1**. Hardware and memory layout: [`docs/02_graphics_worlds_memory.md`](../docs/02_graphics_worlds_memory.md). Short docs mirror: [`docs/04_retr01_studio.md`](../docs/04_retr01_studio.md).
+Visual authoring tool for retr01 worlds, screens, and cartridge images. This document is the **product spec** for **Studio Phase 1**. Hardware and memory layout: [`docs/02_graphics_worlds_memory.md`](../docs/02_graphics_worlds_memory.md). Short docs mirror: [`docs/04_retr01_studio.md`](../docs/04_retr01_studio.md).
 
 **Stack:** C11 + SDL2, shared `libretr01_studio_core` + thin shell.
 
@@ -219,7 +219,7 @@ ctest --test-dir build --output-on-failure
 
 | File | Contents |
 |------|----------|
-| `test_game/test.retr01` | Packed cart (`RETR01` magic, globals, world 0 CHR/MAP, palettes, PRG) |
+| `test_game/test.retr01` | Packed cart (`retr01` magic, globals, world 0 CHR/MAP, palettes, PRG) |
 | `test_game/test_prom.bin` | 64-byte Color PROM image (**motherboard**, not in cart) |
 | `test_game/test_boot.s` | Human-readable ca65 stub / equates |
 | `test_game/test_flash.bin` | Cart image padded to **512 KB** |

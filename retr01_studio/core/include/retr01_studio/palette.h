@@ -1,5 +1,5 @@
-#ifndef RETR01_STUDIO_PALETTE_H
-#define RETR01_STUDIO_PALETTE_H
+#ifndef retr01_STUDIO_PALETTE_H
+#define retr01_STUDIO_PALETTE_H
 
 #include "retr01_studio/types.h"
 

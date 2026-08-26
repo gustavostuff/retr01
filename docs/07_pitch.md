@@ -1,14 +1,14 @@
-# Retr01 Pitch
+# retr01 Pitch
 
 **Discrete-logic 8-bit hardware for people who love the look of the classics and want room to build large games.**
 
-Retr01 is a family of purpose-built 2D game machines. One architecture, one cartridge format, one software contract - three shells:
+retr01 is a family of purpose-built 2D game machines. One architecture, one cartridge format, one software contract - three shells:
 
 | Model | What it is | Status |
 |-------|------------|--------|
-| **Retr01-A** | Arcade motherboard (through-hole, cabinet-first) | **First hardware target** |
-| **Retr01-C** | Home console (same core, smaller board, different controllers) | Planned after A |
-| **Retr01-H** | Handheld (SMD, same software map) | Later |
+| **retr01-A** | Arcade motherboard (through-hole, cabinet-first) | **First hardware target** |
+| **retr01-C** | Home console (same core, smaller board, different controllers) | Planned after A |
+| **retr01-H** | Handheld (SMD, same software map) | Later |
 
 This document is the **product pitch**. Technical specs live in the other `docs/` files. NES comparison tables are at the **bottom** only.
 
@@ -16,41 +16,41 @@ This document is the **product pitch**. Technical specs live in the other `docs/
 
 ## The one-line pitch
 
-**Retr01-A is an arcade-ready 6502 platform that keeps NES-era tile/sprite aesthetics while giving developers faster CPU time, large worlds, smoother scrolling, and parallax that does not fight the hardware.**
+**retr01-A is an arcade-ready 6502 platform that keeps NES-era tile/sprite aesthetics while giving developers faster CPU time, large worlds, smoother scrolling, and parallax that does not fight the hardware.**
 
 ---
 
-## Why Retr01 exists
+## Why retr01 exists
 
-Classic 8-bit consoles earned their place in history. The NES in particular proved that tight limits can produce unforgettable art. Retr01 is not a joke about those machines. It is a **respectful successor lane**: same visual vocabulary (8x8 tiles, 2bpp patterns, sprite lists, palette tricks), but with plumbing redesigned for **2020s game design** - large maps, seamless camera movement, layered backgrounds, and enough CPU headroom to run real game logic every frame.
+Classic 8-bit consoles earned their place in history. The NES in particular proved that tight limits can produce unforgettable art. retr01 is not a joke about those machines. It is a **respectful successor lane**: same visual vocabulary (8x8 tiles, 2bpp patterns, sprite lists, palette tricks), but with plumbing redesigned for **2020s game design** - large maps, seamless camera movement, layered backgrounds, and enough CPU headroom to run real game logic every frame.
 
 Most retro projects either:
 
 - **Emulate** old hardware exactly (great for preservation, tight for new design), or
 - **Abandon** the aesthetic entirely (modern engines, different feel).
 
-Retr01 takes a third path: **new silicon, familiar rules, expanded world model.**
+retr01 takes a third path: **new silicon, familiar rules, expanded world model.**
 
 ---
 
-## Retr01-A: arcade first
+## retr01-A: arcade first
 
-Retr01-A is meant to drop into a cabinet:
+retr01-A is meant to drop into a cabinet:
 
 - **5 V** barrel power, through-hole build, repair-friendly sockets
 - **20-pin IDC** for coin, start, and player controls
 - **RGBS**, S-Video, and composite output pads (cabinet monitors today, converters for modern displays tomorrow)
 - Real **cartridge** plan: **512 KB** standard image (PRG + CHR + MAP). Full caps + **32 KB** PRG ~**420 KB**, ~**92 KB** free
 
-You get a board you can breadboard in islands, bring up module by module, then integrate - not a black-box FPGA mystery. Retr01-A is a compact **32 IC** system ([`06`](06_hardware_v1_32ic.md)).
+You get a board you can breadboard in islands, bring up module by module, then integrate - not a black-box FPGA mystery. retr01-A is a compact **32 IC** system ([`06`](06_hardware_v1_32ic.md)).
 
-**Retr01 Studio** (in development) authors worlds, screens, tile art, and palettes. Later Studio phases compile full `.retr01` cart images. A **board IC simulator** ([`08`](08_simulator.md)) is planned for silicon validation; an optional tighter cycle-level cart check may follow.
+**retr01 Studio** (in development) authors worlds, screens, tile art, and palettes. Later Studio phases compile full `.retr01` cart images. A **board IC simulator** ([`08`](08_simulator.md)) is planned for silicon validation; an optional tighter cycle-level cart check may follow.
 
 ---
 
-## Retr01-C and Retr01-H (same soul, different shell)
+## retr01-C and retr01-H (same soul, different shell)
 
-### Retr01-C (console)
+### retr01-C (console)
 
 Same CPU map, same graphics model, same carts. Intended differences are **industrial design**, not software:
 
@@ -60,7 +60,7 @@ Same CPU map, same graphics model, same carts. Intended differences are **indust
 
 Games built for A should port to C with recompilation, not re-architecture.
 
-### Retr01-H (handheld)
+### retr01-H (handheld)
 
 Same contract again, SMD build, likely multi-board layout. Battery, display, and controls are hardware problems - **not** a second game platform. If it runs on A, it should run on H.
 
@@ -81,7 +81,7 @@ Same contract again, SMD build, likely multi-board layout. Battery, display, and
 
 ### Worlds, not just levels
 
-Retr01 treats **worlds** as a first-class cart concept:
+retr01 treats **worlds** as a first-class cart concept:
 
 - Up to **8 worlds** per game
 - Each world: sparse **8x8** grid, up to **32 stored screens**
@@ -128,7 +128,7 @@ Sprites are evaluated and line-buffered by an **ATmega1284P**. Audio runs on a *
 - **No sprite-0 hit API**, no hardware "did sprite 5 touch the background" flag
 - **Palette effects** (fade, flash, row interpolation) are runtime library + register writes, backed by a real **active palette buffer**
 
-Retr01 gives you hooks that match how 8-bit games actually implement physics and FX, without pretending the PPU is a physics engine.
+retr01 gives you hooks that match how 8-bit games actually implement physics and FX, without pretending the PPU is a physics engine.
 
 ---
 
@@ -137,16 +137,16 @@ Retr01 gives you hooks that match how 8-bit games actually implement physics and
 | Platform | CPU | Approx. clock | Notes |
 |----------|-----|---------------|-------|
 | **NES (NTSC)** | Ricoh 2A03 (6502-based) | **~1.79 MHz** | Iconic library, tight VBlank budget |
-| **Retr01-A** | W65C02S | **8.000 MHz** | ~**4.5x** NES clock, CMOS 6502 ISA |
+| **retr01-A** | W65C02S | **8.000 MHz** | ~**4.5x** NES clock, CMOS 6502 ISA |
 | **SNES** | W65C816 | **~3.58 MHz** | 16-bit successor era (different generation) |
 
-Clock ratio alone is not "4.5x the game." Video timing, DMA absence, and your own code matter. The point is practical: Retr01 targets **headroom for world streaming, AI, and FX** while staying in an 8-bit programming model - not squeezing every opcode into VBlank.
+Clock ratio alone is not "4.5x the game." Video timing, DMA absence, and your own code matter. The point is practical: retr01 targets **headroom for world streaming, AI, and FX** while staying in an 8-bit programming model - not squeezing every opcode into VBlank.
 
 ---
 
 ## World model vs classic level loading
 
-| Idea | Classic NES-style approach | Retr01 approach |
+| Idea | Classic NES-style approach | retr01 approach |
 |------|---------------------------|-----------------|
 | Map storage | Often ad-hoc tables in PRG, manual pointers | **Self-describing cart**: header + **pointer table** + worlds/screens (**480 B** raw) |
 | Room grid | Engine-specific | Up to **32 screens/world** on an **8x8** sparse grid (**8** worlds) |
@@ -155,7 +155,7 @@ Clock ratio alone is not "4.5x the game." Video timing, DMA absence, and your ow
 | Parallax layer | Status bar tricks, CHR abuse, IRQ hacks | **Dedicated plane slots 4-5** + raster band |
 | Mid-frame splits | Sprite 0 hit timing | **Raster compare IRQ** |
 
-None of this makes NES games bad. Many masterpieces worked within tighter rules. Retr01 assumes you want those rules **loosened in predictable places** so Studio and homebrew code can focus on content.
+None of this makes NES games bad. Many masterpieces worked within tighter rules. retr01 assumes you want those rules **loosened in predictable places** so Studio and homebrew code can focus on content.
 
 ---
 
@@ -163,10 +163,10 @@ None of this makes NES games bad. Many masterpieces worked within tighter rules.
 
 | Piece | Role |
 |-------|------|
-| **Retr01 Studio** | Visual authoring: worlds, screens, CHR banks, palettes (phased). Full `.retr01` export in later phases |
+| **retr01 Studio** | Visual authoring: worlds, screens, CHR banks, palettes (phased). Full `.retr01` export in later phases |
 | **Board IC simulator** ([`08`](08_simulator.md)) | Pin/netlist validation of the 32-IC BOM (planned) |
 | **Optional cycle-level cart check** | Later tighter `$FExx` / timing check for game images (planned, may share code with board sim) |
-| **Retr01-A board** | Reference hardware and cabinet deploy target |
+| **retr01-A board** | Reference hardware and cabinet deploy target |
 
 ---
 
@@ -181,7 +181,7 @@ None of this makes NES games bad. Many masterpieces worked within tighter rules.
 
 ## Project status (honest)
 
-Retr01 is in **architecture and documentation** phase. Retr01-A silicon is being brought up as **protoboard islands** before a motherboard PCB. **Retr01 Studio Phase 1** (PNG import + Play + `.retr01` export) and **Emulator Phase 1** are the active software tracks.
+retr01 is in **architecture and documentation** phase. retr01-A silicon is being brought up as **protoboard islands** before a motherboard PCB. **retr01 Studio Phase 1** (PNG import + Play + `.retr01` export) and **Emulator Phase 1** are the active software tracks.
 
 The pitch is the destination. The other docs are the blueprint.
 
@@ -189,9 +189,9 @@ The pitch is the destination. The other docs are the blueprint.
 
 ## NES comparison: what is the same
 
-Retr01 deliberately rhymes with the NES where it helps learning and art direction:
+retr01 deliberately rhymes with the NES where it helps learning and art direction:
 
-| Topic | NES (NTSC) | Retr01-A |
+| Topic | NES (NTSC) | retr01-A |
 |-------|------------|----------|
 | CPU family | 6502-derived (2A03) | **6502-derived (W65C02S)** |
 | Tile size | **8x8** | **8x8** |
@@ -207,13 +207,13 @@ Retr01 deliberately rhymes with the NES where it helps learning and art directio
 | Audio direction | Period-accurate square/noise/DPCM style | **NES-style APU** on dedicated MCU |
 | Developer culture | Asm, fixed layouts, no heap | Asm-friendly, **binary-first** layouts |
 
-If you know how NES tiles, attrs, and sprites work, Retr01 art pipelines will feel familiar - just on a **tighter, chunkier** playfield.
+If you know how NES tiles, attrs, and sprites work, retr01 art pipelines will feel familiar - just on a **tighter, chunkier** playfield.
 
 ---
 
 ## NES comparison: what is different
 
-| Topic | NES (NTSC) | Retr01-A |
+| Topic | NES (NTSC) | retr01-A |
 |-------|------------|----------|
 | Logical playfield | **256x240** (32x30 tiles) | **128x120** (16x15 tiles) - chunky. **2x** fills CRT |
 | Why smaller logical | - | **Bigger pixels**, cheaper rooms, more worlds in flash |
@@ -233,10 +233,10 @@ If you know how NES tiles, attrs, and sprites work, Retr01 art pipelines will fe
 | PPU integration | Single Ricoh PPU | **PLD/HC BG path** + **ATmega1284P** sprite line buffer + **ATmega328P** APU ([`06`](06_hardware_v1_32ic.md)) |
 | CPU vs video clock | Derived/coupled | **Independent** CPU and dot clocks |
 | Output | RF/composite (retail) | **RGBS**, S-Video, composite **pads** (arcade-first) |
-| Form factor | Consumer console | **Retr01-A** arcade, **Retr01-C** console, **Retr01-H** handheld |
-| Authoring tool | Historical third-party | **Retr01 Studio** (in development) |
+| Form factor | Consumer console | **retr01-A** arcade, **retr01-C** console, **retr01-H** handheld |
+| Authoring tool | Historical third-party | **retr01 Studio** (in development) |
 
-Different does not mean better for every game. A tight NES-style single screen is still valid on Retr01. The hardware just removes a few famous bottlenecks when you want more world.
+Different does not mean better for every game. A tight NES-style single screen is still valid on retr01. The hardware just removes a few famous bottlenecks when you want more world.
 
 ---
 
@@ -246,7 +246,7 @@ Different does not mean better for every game. A tight NES-style single screen i
 |-----|---------|
 | [`01_architecture_overview.md`](01_architecture_overview.md) | Sources of truth, terminology, capability snapshot |
 | [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) | Worlds, VRAM, MAP, palettes, `$FExx` (software SoT) |
-| [`06_hardware_v1_32ic.md`](06_hardware_v1_32ic.md) | Retr01-A **32 IC** HW BOM |
+| [`06_hardware_v1_32ic.md`](06_hardware_v1_32ic.md) | retr01-A **32 IC** HW BOM |
 | [`03_hardware_implementation.md`](03_hardware_implementation.md) | Protoboard island checklist |
 | [`04_retr01_studio.md`](04_retr01_studio.md) | Studio Phase 1 (short) |
 | [`05_costs_and_open_questions.md`](05_costs_and_open_questions.md) | Locked decisions, costs, open questions |

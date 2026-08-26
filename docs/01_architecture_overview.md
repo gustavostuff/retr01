@@ -1,4 +1,4 @@
-# Retr01 Architecture Overview
+# retr01 Architecture Overview
 
 ## Sources of truth
 
@@ -8,7 +8,7 @@ When docs disagree, use this order.
 |---------|-----------|-------|
 | Software-visible behavior (CPU map, `$FExx` **logical** ports, cart image, worlds/VRAM/palettes) | [`02`](02_graphics_worlds_memory.md) | Current draft. Open bitfields/mailbox/I2C ports called out there |
 | Locked decisions + open questions | [`05`](05_costs_and_open_questions.md) | Does not replace `02` for register text |
-| Retr01-A **HW BOM** (current) | [`06`](06_hardware_v1_32ic.md) | **32 IC** system. Does not invent `$FExx` |
+| retr01-A **HW BOM** (current) | [`06`](06_hardware_v1_32ic.md) | **32 IC** system. Does not invent `$FExx` |
 | Protoboard island bring-up | [`03`](03_hardware_implementation.md) | Bench checklist for the **32 IC** netlist |
 | Studio Phase 1 (product) | [`retr01_studio/README.md`](../retr01_studio/README.md) | Authoring + Play + export. Short mirror: [`04`](04_retr01_studio.md) |
 | Emulator Phase 1 | [`retr01_emu/README.md`](../retr01_emu/README.md) | Soft cart runtime matching Studio Play |
@@ -19,7 +19,7 @@ When docs disagree, use this order.
 **Current product board:** [`06`](06_hardware_v1_32ic.md), **32 ICs**, ~**12 x 12 cm** 4-layer THT.
 
 ```text
-  Retr01-A (32 IC): roles:
+  retr01-A (32 IC): roles:
   +------------------------------------------------------------------+
   | W65C02S          game CPU @ 8.000 MHz                            |
   | ATF22V10 x5      decode, interleave, beam X/Y, compositor        |
@@ -35,15 +35,15 @@ When docs disagree, use this order.
   +------------------------------------------------------------------+
 ```
 
-This folder is the current architecture spec for **Retr01**.
+This folder is the current architecture spec for **retr01**.
 
-Retr01 is a family of discrete-logic 2D machines that share one CPU model, one graphics model, one memory map, and one cartridge format across form factors.
+retr01 is a family of discrete-logic 2D machines that share one CPU model, one graphics model, one memory map, and one cartridge format across form factors.
 
 ## Scope
 
-- **Retr01-A**: arcade motherboard, through-hole, first hardware target
-- **Retr01-C**: home console, same architecture, different I/O shell
-- **Retr01-H**: handheld, later SMD variant, same software contract
+- **retr01-A**: arcade motherboard, through-hole, first hardware target
+- **retr01-C**: home console, same architecture, different I/O shell
+- **retr01-H**: handheld, later SMD variant, same software contract
 
 ## Core principles
 
@@ -117,7 +117,7 @@ Current chip list: [`06`](06_hardware_v1_32ic.md) (**32 IC**). Roles:
 
 ## Variants
 
-### Retr01-A
+### retr01-A
 
 - Through-hole motherboard, **32 IC** system ([`06`](06_hardware_v1_32ic.md)), ~**12 x 12 cm** target
 - RGBS + S-Video + composite pads
@@ -126,13 +126,13 @@ Current chip list: [`06`](06_hardware_v1_32ic.md) (**32 IC**). Roles:
 - 5 V barrel power
 - Cart: 512 KB flash + I2C game-save EEPROM
 
-### Retr01-C
+### retr01-C
 
 - Same core architecture
 - 3-wire controllers with **ATtiny85** (draft) in the pad -> `$FE60/$FE61`
 - Same software contract
 
-### Retr01-H
+### retr01-H
 
 - Later SMD handheld
 - Same memory map and cartridge model
@@ -148,7 +148,7 @@ Current chip list: [`06`](06_hardware_v1_32ic.md) (**32 IC**). Roles:
 
 ## Near-term software focus
 
-**Retr01 Studio** Phase 1 and **Retr01 Emulator** Phase 1 are the active tools. See [`retr01_studio/README.md`](../retr01_studio/README.md) and [`retr01_emu/README.md`](../retr01_emu/README.md). Later Studio/Emu phases are not documented until they are defined.
+**retr01 Studio** Phase 1 and **retr01 Emulator** Phase 1 are the active tools. See [`retr01_studio/README.md`](../retr01_studio/README.md) and [`retr01_emu/README.md`](../retr01_emu/README.md). Later Studio/Emu phases are not documented until they are defined.
 
 Studio Phase 1: PNG atlas import, Play preview, `.retr01` export. Emulator Phase 1: load that cart and run the same Play rules on host.
 
@@ -165,7 +165,7 @@ Studio Phase 1: PNG atlas import, Play preview, `.retr01` export. Emulator Phase
 - Current 32-IC HW BOM: `06_hardware_v1_32ic.md`
 - Audio / APU bytecode + bus bridge: `09_audio_architecture.md`
 - Protoboard islands: `03_hardware_implementation.md`
-- Retr01 Studio Phase 1: `04_retr01_studio.md` / `retr01_studio/README.md`
+- retr01 Studio Phase 1: `04_retr01_studio.md` / `retr01_studio/README.md`
 - Locked decisions + open Qs: `05_costs_and_open_questions.md`
 - Board simulator: `08_simulator.md`
 - IC markdown notes: `hw/md/`

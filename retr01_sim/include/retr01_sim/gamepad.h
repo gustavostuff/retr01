@@ -1,10 +1,10 @@
-#ifndef RETR01_SIM_GAMEPAD_H
-#define RETR01_SIM_GAMEPAD_H
+#ifndef retr01_SIM_GAMEPAD_H
+#define retr01_SIM_GAMEPAD_H
 
 #include <stdint.h>
 
 /*
- * Retr01 pad byte @ $FE60 (P1) / $FE61 (P2). 1 = pressed.
+ * retr01 pad byte @ $FE60 (P1) / $FE61 (P2). 1 = pressed.
  * docs/02_graphics_worlds_memory.md
  */
 #define R01S_PAD_RIGHT  (1u << 0)

@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_HEALTH_H
-#define RETR01_SIM_HEALTH_H
+#ifndef retr01_SIM_HEALTH_H
+#define retr01_SIM_HEALTH_H
 
 #include <stddef.h>
 

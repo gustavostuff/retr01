@@ -1,4 +1,4 @@
-# Retr01 Audio Architecture
+# retr01 Audio Architecture
 
 Software + hardware specification for the dedicated APU path. Channel map, DPCM, and bytecode protocol follow the audio design brief (NES-style tracker on 6502 + software mixer on AVR). Silicon placement matches the **32-IC BOM** ([`06`](06_hardware_v1_32ic.md)). Register window: **`$FE40`-`$FE5F`** ([`02`](02_graphics_worlds_memory.md)).
 
@@ -6,7 +6,7 @@ Software + hardware specification for the dedicated APU path. Channel map, DPCM,
 
 ## 1. Hardware architecture overview
 
-Retr01 has **no fixed-function audio ASIC**. Roles split like the rest of the board:
+retr01 has **no fixed-function audio ASIC**. Roles split like the rest of the board:
 
 | Role | Who |
 |------|-----|
@@ -34,7 +34,7 @@ Flow:
 
 ### The Bus Bridge
 
-On Retr01, **"the Bus Bridge"** is **not** a separate named IC. It is the **CPU -> APU write path** that lets an 8 MHz 6502 hand bytes to a 16 MHz AVR without sharing a raw, always-on data bus:
+On retr01, **"the Bus Bridge"** is **not** a separate named IC. It is the **CPU -> APU write path** that lets an 8 MHz 6502 hand bytes to a 16 MHz AVR without sharing a raw, always-on data bus:
 
 1. **Decode** - PLD (and `$FExx` latches where needed) maps CPU accesses in **`$FE40`-`$FE5F`** to the APU window.
 2. **Isolation** - the **CPU-domain 74HC245** (one of three board HC245s) plus PHI2 / `/OE` gating so only one master drives that domain at a time ([`06`](06_hardware_v1_32ic.md) bus split).

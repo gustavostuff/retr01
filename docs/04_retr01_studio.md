@@ -1,4 +1,4 @@
-# Retr01 Studio
+# retr01 Studio
 
 **Phase 1 product SoT:** [`retr01_studio/README.md`](../retr01_studio/README.md). This file is a short mirror for the docs tree. Later Studio phases are **not** documented here until defined.
 

@@ -1,6 +1,6 @@
-# Hardware datasheets (Retr01-A)
+# Hardware datasheets (retr01-A)
 
-Official / vendor datasheets for Retr01-A. These are reference PDFs (pinouts, AC timing, package drawings). They are **not** Retr01 schematics.
+Official / vendor datasheets for retr01-A. These are reference PDFs (pinouts, AC timing, package drawings). They are **not** retr01 schematics.
 
 **Markdown IC notes (sim / bring-up):** [`md/`](md/) - start with [`md/README.md`](md/README.md). Current BOM: [`../docs/06_hardware_v1_32ic.md`](../docs/06_hardware_v1_32ic.md). Simulator: [`../docs/08_simulator.md`](../docs/08_simulator.md).
 

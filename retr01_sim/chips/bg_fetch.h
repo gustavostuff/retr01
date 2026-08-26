@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_BG_FETCH_H
-#define RETR01_SIM_BG_FETCH_H
+#ifndef retr01_SIM_BG_FETCH_H
+#define retr01_SIM_BG_FETCH_H
 
 #include "retr01_sim/entity.h"
 

@@ -1,5 +1,5 @@
-#ifndef RETR01_EMU_CPU_H
-#define RETR01_EMU_CPU_H
+#ifndef retr01_EMU_CPU_H
+#define retr01_EMU_CPU_H
 
 #include <stdint.h>
 

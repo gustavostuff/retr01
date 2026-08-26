@@ -1,4 +1,4 @@
-# Retr01 Graphics, Worlds, and Memory
+# retr01 Graphics, Worlds, and Memory
 
 Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 
@@ -132,7 +132,7 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 
 ## Cart image (`.retr01`)
 
-24-bit offsets. Magic **`RETR01`**.
+24-bit offsets. Magic **`retr01`**.
 
 ```text
 +----------------------------------------------------------------+

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Configure (if needed), build, then run Retr01 Studio.
+# Configure (if needed), build, then run retr01 Studio.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

@@ -118,7 +118,7 @@ int r01_prg_write_asm(const R01Project *p, const char *path, char *err_buf, size
         return -1;
     }
     w = p ? &p->worlds[0] : NULL;
-    fprintf(f, "; Retr01 Phase 1 — Smooth + Eagle View (Studio Play SoT)\n");
+    fprintf(f, "; retr01 Phase 1 — Smooth + Eagle View (Studio Play SoT)\n");
     fprintf(f, "; Gameplay: Studio play.c / emu cart runtime (marker R01P @ $80F0).\n");
     fprintf(f, "; Play table @ $8100: present[8] bitmask, spawn_col, spawn_row.\n");
     fprintf(f, ".setcpu \"65C02\"\n");
@@ -305,7 +305,7 @@ static int r01_cart_build(const R01Project *p, uint8_t **out, size_t *out_len, c
     }
 
     memset(hdr, 0, sizeof(hdr));
-    memcpy(hdr, "RETR01", 6);
+    memcpy(hdr, "retr01", 6);
     hdr[6] = R01_CART_FORMAT_VER;
     hdr[7] = 1;
     r01_prg_fill_phase1(prg, &work->worlds[0]);

@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_SN74HC00_H
-#define RETR01_SIM_SN74HC00_H
+#ifndef retr01_SIM_SN74HC00_H
+#define retr01_SIM_SN74HC00_H
 
 #include "retr01_sim/entity.h"
 

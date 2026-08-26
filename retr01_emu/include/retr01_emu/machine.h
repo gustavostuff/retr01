@@ -1,5 +1,5 @@
-#ifndef RETR01_EMU_MACHINE_H
-#define RETR01_EMU_MACHINE_H
+#ifndef retr01_EMU_MACHINE_H
+#define retr01_EMU_MACHINE_H
 
 #include "retr01_emu/cart.h"
 #include "retr01_emu/cpu.h"

@@ -282,7 +282,7 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
     SDL_SetRenderDrawColor(r, 18, 20, 24, 255);
     SDL_RenderClear(r);
     fill_rect(r, 0, 0, UI_LOGIC_W, 20, 12, 14, 18);
-    font_draw(r, 8, 6, "RETR01 STUDIO — SMOOTH + EAGLE VIEW", 200, 210, 220);
+    font_draw(r, 8, 6, "retr01 STUDIO — SMOOTH + EAGLE VIEW", 200, 210, 220);
     draw_play_button(ui, r);
 
     fill_rect(r, 0, 20, UI_LEFT_W, UI_LOGIC_H - 20, 24, 26, 30);

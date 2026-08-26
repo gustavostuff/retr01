@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_ISLAND_BUILDER_H
-#define RETR01_SIM_ISLAND_BUILDER_H
+#ifndef retr01_SIM_ISLAND_BUILDER_H
+#define retr01_SIM_ISLAND_BUILDER_H
 
 #include "retr01_sim/entity.h"
 #include "retr01_sim/island.h"

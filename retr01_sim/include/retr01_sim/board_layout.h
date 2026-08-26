@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_BOARD_LAYOUT_H
-#define RETR01_SIM_BOARD_LAYOUT_H
+#ifndef retr01_SIM_BOARD_LAYOUT_H
+#define retr01_SIM_BOARD_LAYOUT_H
 
 /* Universal board grid (islands + chips, island and compact modes). */
 #define R01S_GRID 10

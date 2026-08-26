@@ -1,5 +1,5 @@
-#ifndef RETR01_STUDIO_FONT_H
-#define RETR01_STUDIO_FONT_H
+#ifndef retr01_STUDIO_FONT_H
+#define retr01_STUDIO_FONT_H
 
 #include <SDL.h>
 

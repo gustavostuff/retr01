@@ -1,6 +1,6 @@
-# Retr01 Board Simulator
+# retr01 Board Simulator
 
-IC-first board simulator for Retr01-A. Separate from Retr01 Studio (authoring).
+IC-first board simulator for retr01-A. Separate from retr01 Studio (authoring).
 
 See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](../hw/md/). BOM: [`docs/06_hardware_v1_32ic.md`](../docs/06_hardware_v1_32ic.md).
 

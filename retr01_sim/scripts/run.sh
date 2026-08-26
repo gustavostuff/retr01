@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run Retr01 Board Simulator (expects an existing build).
+# Run retr01 Board Simulator (expects an existing build).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_BOARD_DEBUG_H
-#define RETR01_SIM_BOARD_DEBUG_H
+#ifndef retr01_SIM_BOARD_DEBUG_H
+#define retr01_SIM_BOARD_DEBUG_H
 
 #include "retr01_sim/board.h"
 

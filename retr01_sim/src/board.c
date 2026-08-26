@@ -1985,7 +1985,7 @@ static void board_resolve_cart_meta(R01sBoard *board) {
         return;
     }
     img = board->cart_flash.mem;
-    if (memcmp(img, "RETR01", 6) != 0) {
+    if (memcmp(img, "retr01", 6) != 0) {
         return;
     }
     ptrs = img + R01S_CART_HDR_SIZE;
@@ -2102,7 +2102,7 @@ static void board_install_synthetic_cart(R01sBoard *board) {
     unsigned i;
 
     memset(hdr, 0, sizeof(hdr));
-    memcpy(hdr, "RETR01", 6);
+    memcpy(hdr, "retr01", 6);
     hdr[6] = 1;
     hdr[7] = 1;
     memset(ptrs, 0, sizeof(ptrs));
@@ -2145,7 +2145,7 @@ static int board_parse_cart_image(R01sBoard *board, const uint8_t *img, size_t l
     if (!board || !img || len < R01S_CART_HDR_SIZE + R01S_CART_PTR_SIZE) {
         return -1;
     }
-    if (memcmp(img, "RETR01", 6) != 0) {
+    if (memcmp(img, "retr01", 6) != 0) {
         /* Raw flash dump: treat whole image as mapped from 0; PRG at 0x48 convention. */
         if (len > R01S_FLASH_BYTES) {
             len = R01S_FLASH_BYTES;

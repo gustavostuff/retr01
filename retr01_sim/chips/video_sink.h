@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_VIDEO_SINK_H
-#define RETR01_SIM_VIDEO_SINK_H
+#ifndef retr01_SIM_VIDEO_SINK_H
+#define retr01_SIM_VIDEO_SINK_H
 
 #include "retr01_sim/entity.h"
 

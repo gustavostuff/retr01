@@ -1,5 +1,5 @@
-#ifndef RETR01_STUDIO_JSON_IO_H
-#define RETR01_STUDIO_JSON_IO_H
+#ifndef retr01_STUDIO_JSON_IO_H
+#define retr01_STUDIO_JSON_IO_H
 
 #include "retr01_studio/types.h"
 

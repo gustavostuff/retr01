@@ -75,7 +75,7 @@ static int setup_board(R01sApp *app, int argc, char **argv) {
         /* Non-blocking: worker thread runs IC MAP stream; UI stays responsive. */
         r01s_app_start_ic_catchup(app, &g_board);
     }
-    snprintf(title, sizeof(title), "Retr01 Sim — %s", g_board.cart_label[0] ? g_board.cart_label : "cart");
+    snprintf(title, sizeof(title), "retr01 Sim — %s", g_board.cart_label[0] ? g_board.cart_label : "cart");
     SDL_SetWindowTitle(app->win, title);
     return 0;
 }

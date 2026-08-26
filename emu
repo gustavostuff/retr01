@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Retr01 Emulator — one action at a time.
+# retr01 Emulator — one action at a time.
 #
 # Usage:
 #   ./emu build
@@ -23,7 +23,7 @@ shift || true
 case "$CMD" in
   help|-h|--help)
     cat <<'EOF'
-Retr01 Emulator
+retr01 Emulator
 
   build                 configure (if needed) + build
   run [cart.retr01]     run emu (default: retr01_studio/test_game/test.retr01)

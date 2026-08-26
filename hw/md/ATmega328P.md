@@ -1,9 +1,9 @@
 # ATmega328P -- APU MCU
 
 **PDF:** [`../ATmega328P_mcu.pdf`](../ATmega328P_mcu.pdf) (family sheet includes 48/88/168/328).  
-**Package (Retr01-A):** 28-pin PDIP.  
+**Package (retr01-A):** 28-pin PDIP.  
 **Qty:** **1** (current 32-IC BOM -- dedicated APU).  
-**Clock (Retr01):** **16 MHz** (5 V).
+**Clock (retr01):** **16 MHz** (5 V).
 
 ## Package dimensions
 
@@ -16,9 +16,9 @@
 
 ## What it is
 
-AVR 8-bit MCU. For **ATmega328P** specifically: **32 KB Flash**, **2 KB SRAM**, **1 KB EEPROM**, 23 I/O lines, timers/PWM, USART, SPI, TWI, ADC. Retr01 dedicates it to a **NES-style APU**: the 6502 writes register-like bytes in `$FE40-$FE5F`; this chip synthesizes audio (PWM or similar analog-friendly output).
+AVR 8-bit MCU. For **ATmega328P** specifically: **32 KB Flash**, **2 KB SRAM**, **1 KB EEPROM**, 23 I/O lines, timers/PWM, USART, SPI, TWI, ADC. retr01 dedicates it to a **NES-style APU**: the 6502 writes register-like bytes in `$FE40-$FE5F`; this chip synthesizes audio (PWM or similar analog-friendly output).
 
-## Retr01 role
+## retr01 role
 
 | Duty | Detail |
 |------|--------|
@@ -37,7 +37,7 @@ Current BOM: [`06`](../../docs/06_hardware_v1_32ic.md).
 | SRAM | 2 KB |
 | EEPROM | 1 KB |
 
-Speed grade at 5 V: up to **20 MHz**; Retr01 plans **16 MHz**.
+Speed grade at 5 V: up to **20 MHz**; retr01 plans **16 MHz**.
 
 ## 28-pin PDIP (standard 328P)
 
@@ -79,7 +79,7 @@ GPIO-to-`$FE4x` wiring is **schematic TBD**. Sim contract: **32-byte APU window*
 | Silence / disable | PWM idle or DC mid-level per design |
 | Rapid register spam | Last write wins; no bus timeout on 6502 side |
 
-## Communication on Retr01
+## Communication on retr01
 
 ```text
 W65C02S --$FE40-$FE5F--> decode --> ATmega328P --> PWM --> analog out

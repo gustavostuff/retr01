@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Retr01 board simulator — one action at a time.
+# retr01 board simulator — one action at a time.
 #
 # Usage:
 #   ./sim build
@@ -62,7 +62,7 @@ sim_exec() {
 case "$CMD" in
   help|-h|--help)
     cat <<'EOF'
-Retr01 board simulator
+retr01 board simulator
 
   build                 configure (if needed) + build
   run [cart.retr01]     run sim (default: retr01_studio/test_game/test.retr01)

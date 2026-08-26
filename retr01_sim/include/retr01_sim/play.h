@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_PLAY_H
-#define RETR01_SIM_PLAY_H
+#ifndef retr01_SIM_PLAY_H
+#define retr01_SIM_PLAY_H
 
 #include <stdint.h>
 

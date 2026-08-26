@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_TEST_H
-#define RETR01_SIM_TEST_H
+#ifndef retr01_SIM_TEST_H
+#define retr01_SIM_TEST_H
 
 #include <stdio.h>
 

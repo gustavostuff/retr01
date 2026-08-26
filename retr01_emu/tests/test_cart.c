@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "FAIL load: %s\n", err);
         return 1;
     }
-    if (memcmp(cart.data, "RETR01", 6) != 0) {
+    if (memcmp(cart.data, "retr01", 6) != 0) {
         fprintf(stderr, "FAIL magic\n");
         return 1;
     }

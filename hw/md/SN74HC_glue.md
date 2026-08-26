@@ -12,9 +12,9 @@
 **Qty (v0):** **10** total -- HC14 x1, HC00 x2, HC04 x2, HC08 x2, HC32 x2, HC86 x1.  
 **Qty (v1):** **0** -- equations move into ATF22V10.
 
-Family: 74HC, 2-6 V, Retr01 at **5 V**. Propagation delays typically teens of ns.
+Family: 74HC, 2-6 V, retr01 at **5 V**. Propagation delays typically teens of ns.
 
-## Retr01 role
+## retr01 role
 
 Small combinatorial glue: reset conditioning, enable combining, polarity fixups, XOR for compare helpers, Schmitt clocks/reset (HC14). Exact nets are schematic-level; sim instantiates gates from the netlist.
 

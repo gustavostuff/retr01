@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_I2C_EEPROM_H
-#define RETR01_SIM_I2C_EEPROM_H
+#ifndef retr01_SIM_I2C_EEPROM_H
+#define retr01_SIM_I2C_EEPROM_H
 
 #include "retr01_sim/entity.h"
 

@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_BOARD_H
-#define RETR01_SIM_BOARD_H
+#ifndef retr01_SIM_BOARD_H
+#define retr01_SIM_BOARD_H
 
 #include "at28c16.h"
 #include "as6c62256.h"

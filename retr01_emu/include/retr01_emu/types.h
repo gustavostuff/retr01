@@ -1,11 +1,11 @@
-#ifndef RETR01_EMU_TYPES_H
-#define RETR01_EMU_TYPES_H
+#ifndef retr01_EMU_TYPES_H
+#define retr01_EMU_TYPES_H
 
 #include <stddef.h>
 #include <stdint.h>
 
 /* Cart / world layout — docs/02_graphics_worlds_memory.md */
-#define R01E_CART_MAGIC "RETR01"
+#define R01E_CART_MAGIC "retr01"
 #define R01E_CART_FORMAT_VER 1
 #define R01E_CART_FLASH_BYTES (512u * 1024u)
 #define R01E_PRG_BYTES 32768u

@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_PWR5V_H
-#define RETR01_SIM_PWR5V_H
+#ifndef retr01_SIM_PWR5V_H
+#define retr01_SIM_PWR5V_H
 
 #include "retr01_sim/entity.h"
 

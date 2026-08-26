@@ -1,14 +1,14 @@
-# Retr01 Board Simulator
+# retr01 Board Simulator
 
 **Status:** Scaffold under [`retr01_sim/`](../retr01_sim/). IC behavior references: [`hw/md/`](../hw/md/). Current BOM: [`06`](06_hardware_v1_32ic.md). Island checklist: [`03`](03_hardware_implementation.md).
 
 ## Goal
 
-Reliably simulate the **Retr01-A motherboard** as a system of discrete ICs: each chip is a model with **pins**, **package form**, and **datasheet behavior**, wired like the real board. The end state is a whole-system sim that boots a cart, accepts pad input, and shows a **digital playfield** (logical 128x120 inside a **256x240** RGBS field / LCD sink).
+Reliably simulate the **retr01-A motherboard** as a system of discrete ICs: each chip is a model with **pins**, **package form**, and **datasheet behavior**, wired like the real board. The end state is a whole-system sim that boots a cart, accepts pad input, and shows a **digital playfield** (logical 128x120 inside a **256x240** RGBS field / LCD sink).
 
 **Accuracy** (cycle-exact PHI2, ns-level AC margins, full AVR peripheral set, etc.) is **defined as we go**. Start with behavior that is correct enough to validate islands and catch bus fights. Tighten timing and ISA coverage when tests demand it.
 
-This simulator is **not** Retr01 Studio (authoring). It is the **board IC / netlist validation** path. A separate tighter cycle-level cart check may appear later; do not conflate the two names.
+This simulator is **not** retr01 Studio (authoring). It is the **board IC / netlist validation** path. A separate tighter cycle-level cart check may appear later; do not conflate the two names.
 
 ## Three test layers
 
@@ -54,7 +54,7 @@ The SDL **canvas** is **9 frames** (O top-left; A+B, L+M, and former Q HC245s co
 
 ### 3. System tests (whole board)
 
-Full Retr01-A netlist: **current BOM** [`06`](06_hardware_v1_32ic.md) (**32 IC**). Software ports always from [`02`](02_graphics_worlds_memory.md).
+Full retr01-A netlist: **current BOM** [`06`](06_hardware_v1_32ic.md) (**32 IC**). Software ports always from [`02`](02_graphics_worlds_memory.md).
 
 - Cart image (`.retr01` / PRG+CHR+MAP)
 - Pad bytes (`$FE60`/`$FE61`) from host input
@@ -72,7 +72,7 @@ When something looks wrong on screen, **do not assume the `.retr01` is bad** and
 | Layer | Artifact | Runs on silicon / runners? | Notes |
 |-------|----------|----------------------------|--------|
 | **Studio editor / Play** | `project.json` (+ UI) | **No** | Phase 1: PNG import, Worlds/Screen UI, Play scroll/warps. **Host preview only.** Play samples authored data. It never executes PRG or `$FExx`. |
-| **Cart image** | `project.retr01` (+ optional `project_flash.bin`) | **Yes** (flash) | Packed bytes SoT for PRG/CHR/MAP/pals. Magic `RETR01` layout in [`02`](02_graphics_worlds_memory.md). |
+| **Cart image** | `project.retr01` (+ optional `project_flash.bin`) | **Yes** (flash) | Packed bytes SoT for PRG/CHR/MAP/pals. Magic `retr01` layout in [`02`](02_graphics_worlds_memory.md). |
 | **Color PROM burn** | `project_prom.bin` | **Yes** (motherboard) | **Not inside the cart.** Kit -> R3G3B2. Board AT28C16. |
 | **Boot asm listing** | `project_boot.s` | **Human-readable only** | Equates + stub source. The **binary stub inside `.retr01`** is what runners execute (Studio embeds it). Asm can drift. Treat binary as SoT. |
 | **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Today also **soft-boots** world CHR/MAP into VRAM and **host-pans** the atlas. Studio stub PRG does **not** stream MAP. |
@@ -135,7 +135,7 @@ Bring-up overlay is smoke + **palette + MAP stream** (`$FE93`->`$FE12`) + pad ha
 
 1. **IC-first:** one module per part number. Pins named after the datasheet.
 2. **Netlist second:** islands and the full board are graphs of pin connections.
-3. **Retr01-only:** no generic multi-board sandbox. Contracts and clocks match this project.
+3. **retr01-only:** no generic multi-board sandbox. Contracts and clocks match this project.
 4. **Tests before polish:** unit -> island -> system. Layer 1 does not require a GUI.
 5. **Sources of truth:** `hw/*.pdf` + `hw/md/*.md` for pin/behavior, `docs/02` for `$FExx`, `docs/06` for the board netlist ([`01`](01_architecture_overview.md)).
 
@@ -207,6 +207,6 @@ Pin-level code stays the default for catching PCB bugs early.
 |-----|------|
 | [`hw/md/README.md`](../hw/md/README.md) | Index of IC markdown references |
 | [`02_graphics_worlds_memory.md`](02_graphics_worlds_memory.md) | Memory map, `$FExx`, cart |
-| [`06_hardware_v1_32ic.md`](06_hardware_v1_32ic.md) | Current Retr01-A BOM (**32 IC**) |
+| [`06_hardware_v1_32ic.md`](06_hardware_v1_32ic.md) | Current retr01-A BOM (**32 IC**) |
 | [`03_hardware_implementation.md`](03_hardware_implementation.md) | Protoboard letter islands + [sim canvas grouping](03_hardware_implementation.md#sim-canvas-grouping) |
 | [`retr01_sim/README.md`](../retr01_sim/README.md) | Sim status / canvas island table |

@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_OSC_DOT_H
-#define RETR01_SIM_OSC_DOT_H
+#ifndef retr01_SIM_OSC_DOT_H
+#define retr01_SIM_OSC_DOT_H
 
 #include "retr01_sim/entity.h"
 

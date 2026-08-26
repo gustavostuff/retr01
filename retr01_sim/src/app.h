@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_APP_H
-#define RETR01_SIM_APP_H
+#ifndef retr01_SIM_APP_H
+#define retr01_SIM_APP_H
 
 #include "retr01_sim/island_builder.h"
 #include "ui.h"

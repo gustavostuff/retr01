@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Retr01 Studio — one action at a time.
+# retr01 Studio — one action at a time.
 #
 # Usage:
 #   ./studio build
@@ -22,7 +22,7 @@ shift || true
 case "$CMD" in
   help|-h|--help)
     cat <<'EOF'
-Retr01 Studio
+retr01 Studio
 
   build              configure (if needed) + build
   run [-- args]      run app (must already be built)

@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_ENTITY_H
-#define RETR01_SIM_ENTITY_H
+#ifndef retr01_SIM_ENTITY_H
+#define retr01_SIM_ENTITY_H
 
 #include "retr01_sim/pin.h"
 

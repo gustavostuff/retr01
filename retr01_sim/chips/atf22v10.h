@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_ATF22V10_H
-#define RETR01_SIM_ATF22V10_H
+#ifndef retr01_SIM_ATF22V10_H
+#define retr01_SIM_ATF22V10_H
 
 #include "retr01_sim/bom32.h"
 #include "retr01_sim/entity.h"

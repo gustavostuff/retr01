@@ -1,5 +1,5 @@
-#ifndef RETR01_STUDIO_PRG_PHASE1_H
-#define RETR01_STUDIO_PRG_PHASE1_H
+#ifndef retr01_STUDIO_PRG_PHASE1_H
+#define retr01_STUDIO_PRG_PHASE1_H
 
 #include "retr01_studio/types.h"
 

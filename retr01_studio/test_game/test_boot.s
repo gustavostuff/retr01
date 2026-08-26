@@ -1,4 +1,4 @@
-; Retr01 Phase 1 — Smooth + Eagle View (Studio Play SoT)
+; retr01 Phase 1 — Smooth + Eagle View (Studio Play SoT)
 ; Gameplay: Studio play.c / emu cart runtime (marker R01P @ $80F0).
 ; Play table @ $8100: present[8] bitmask, spawn_col, spawn_row.
 .setcpu "65C02"

@@ -78,7 +78,7 @@ int main(void) {
         FILE *f = fopen("test_cart.retr01", "rb");
         char magic[6];
         if (f && fread(magic, 1, 6, f) == 6) {
-            expect_true(memcmp(magic, "RETR01", 6) == 0, "cart magic");
+            expect_true(memcmp(magic, "retr01", 6) == 0, "cart magic");
         } else {
             expect_true(0, "cart magic");
         }

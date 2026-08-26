@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_TYPES_H
-#define RETR01_SIM_TYPES_H
+#ifndef retr01_SIM_TYPES_H
+#define retr01_SIM_TYPES_H
 
 #include <stddef.h>
 #include <stdint.h>

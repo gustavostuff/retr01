@@ -1,5 +1,5 @@
-#ifndef RETR01_EMU_IO_H
-#define RETR01_EMU_IO_H
+#ifndef retr01_EMU_IO_H
+#define retr01_EMU_IO_H
 
 #include "retr01_emu/types.h"
 

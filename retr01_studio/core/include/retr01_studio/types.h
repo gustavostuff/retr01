@@ -1,5 +1,5 @@
-#ifndef RETR01_STUDIO_TYPES_H
-#define RETR01_STUDIO_TYPES_H
+#ifndef retr01_STUDIO_TYPES_H
+#define retr01_STUDIO_TYPES_H
 
 #include <stddef.h>
 #include <stdint.h>

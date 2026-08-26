@@ -1,5 +1,5 @@
-#ifndef RETR01_STUDIO_APP_SHELL_H
-#define RETR01_STUDIO_APP_SHELL_H
+#ifndef retr01_STUDIO_APP_SHELL_H
+#define retr01_STUDIO_APP_SHELL_H
 
 #include "ui.h"
 

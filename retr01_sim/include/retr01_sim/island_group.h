@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_ISLAND_GROUP_H
-#define RETR01_SIM_ISLAND_GROUP_H
+#ifndef retr01_SIM_ISLAND_GROUP_H
+#define retr01_SIM_ISLAND_GROUP_H
 
 #include "retr01_sim/health.h"
 #include "retr01_sim/island.h"

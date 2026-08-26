@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_W65C02S_H
-#define RETR01_SIM_W65C02S_H
+#ifndef retr01_SIM_W65C02S_H
+#define retr01_SIM_W65C02S_H
 
 #include "retr01_sim/entity.h"
 

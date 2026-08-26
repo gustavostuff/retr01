@@ -1,6 +1,6 @@
-# Retr01-A Hardware (32 IC)
+# retr01-A Hardware (32 IC)
 
-**Status:** **Current** Retr01-A system BOM (motherboard + cart). This is the normative board architecture on this branch.
+**Status:** **Current** retr01-A system BOM (motherboard + cart). This is the normative board architecture on this branch.
 
 **Authority:**
 

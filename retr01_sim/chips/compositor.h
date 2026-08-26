@@ -1,5 +1,5 @@
-#ifndef RETR01_SIM_COMPOSITOR_H
-#define RETR01_SIM_COMPOSITOR_H
+#ifndef retr01_SIM_COMPOSITOR_H
+#define retr01_SIM_COMPOSITOR_H
 
 #include "retr01_sim/entity.h"
 

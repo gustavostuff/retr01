@@ -1,5 +1,5 @@
-#ifndef RETR01_STUDIO_UI_H
-#define RETR01_STUDIO_UI_H
+#ifndef retr01_STUDIO_UI_H
+#define retr01_STUDIO_UI_H
 
 #include "retr01_studio/play.h"
 #include "retr01_studio/project.h"

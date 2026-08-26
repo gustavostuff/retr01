@@ -302,7 +302,7 @@ int main(int argc, char **argv) {
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 
     /* Hidden until first frame is presented — avoids empty-window flash. */
-    win = SDL_CreateWindow("Retr01 Emulator (Phase 1)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+    win = SDL_CreateWindow("retr01 Emulator (Phase 1)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                            R01E_VISIBLE_W * scale, R01E_VISIBLE_H * scale,
                            SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN);
     ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
