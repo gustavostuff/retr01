@@ -2,12 +2,15 @@
 
 The Retr01 project is a modern, discrete-logic 8-bit hardware family, built to be understood, hacked, and shipped. 3 hardware variants are planned, starting by the arcade board.
 
+Project status: Docs, Design, Emulation and Simulation.
 
-| Device/PCB | Description |
-|---|---|
-| **Retr01-A** | Arcade motherboard, the first build. Uses THT components and doesn't worry too much about PCB size.  |
-| **Retr01-C** | Home console. We'll have to mind the board size for this one and use controllers (3-cable line planned). |
-| **Retr01-H** | Handheld. This is the most challenging task. Will use SMD components, multiple boards, LCD, battery, etc. Pipe dream honestly. |
+Overall roadmap:
+
+| Stage | Device/PCB | Description |
+|---|---|---|
+| 1 | **Retr01-A** | Arcade motherboard, the first build. Uses THT components and doesn't worry too much about PCB size.  |
+| 2 | **Retr01-C** | Home console. We'll have to mind the board size for this one and use controllers (3-cable line planned). |
+| 3 | **Retr01-H** | Handheld. This is the most challenging task. Will use SMD components, multiple boards, LCD, battery, etc. |
 
 The arcade board: something you can drop into a cabinet, wire to sticks and buttons, and run games that look and play like classic 8-bit tile/sprite games. A world model and CPU budget built for large designs.
 
