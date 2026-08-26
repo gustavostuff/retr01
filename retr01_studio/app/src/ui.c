@@ -111,7 +111,11 @@ static void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s)
     int oy = UI_SCREEN_Y + (UI_SCREEN_VIEW_H - R01_SCREEN_PX_H * scale) / 2;
     int y, x;
     if (!s) {
-        font_draw(r, UI_SCREEN_X + 8, UI_SCREEN_Y + 8, "NO SCREEN — DROP PNG", 140, 140, 150);
+        uint8_t br, bg, bb;
+        r01_project_backdrop_rgb(ui->project, r01_project_world0(ui->project), &br, &bg, &bb);
+        fill_rect(r, ox, oy, R01_SCREEN_PX_W * scale, R01_SCREEN_PX_H * scale, br, bg, bb);
+        font_draw(r, ox + 8, oy + 8, "NO SCREEN — DROP PNG", 140, 140, 150);
+        draw_rect(r, ox - 1, oy - 1, R01_SCREEN_PX_W * scale + 2, R01_SCREEN_PX_H * scale + 2, 80, 90, 100);
         return;
     }
     for (y = 0; y < R01_SCREEN_PX_H; y++) {
@@ -229,6 +233,43 @@ void ui_tick(UiState *ui) {
     r01_play_tick(&ui->play, ui->project, dx, dy);
 }
 
+static void draw_pal_strip(SDL_Renderer *r, int x, int y, const R01PalRow pals[R01_PALS_PER_ROW]) {
+    int pal, c;
+    int cx = x;
+    for (pal = 0; pal < R01_PALS_PER_ROW; pal++) {
+        for (c = 0; c < R01_PAL_COLORS; c++) {
+            uint8_t cr, cg, cb;
+            r01_kit_rgb(pals[pal].idx[c], &cr, &cg, &cb);
+            fill_rect(r, cx, y, UI_PAL_SWATCH, UI_PAL_SWATCH, cr, cg, cb);
+            draw_rect(r, cx, y, UI_PAL_SWATCH, UI_PAL_SWATCH, 50, 55, 60);
+            cx += UI_PAL_SWATCH + 1;
+        }
+        cx += UI_PAL_GROUP_GAP - 1;
+    }
+}
+
+static void draw_active_palettes(UiState *ui, SDL_Renderer *r) {
+    const R01World *w;
+    int row;
+    int x = UI_PAL_PANEL_X;
+    int y = UI_PAL_PANEL_Y;
+    if (!ui || !ui->project) {
+        return;
+    }
+    w = r01_project_world0(ui->project);
+    row = w ? w->default_pal_row : 0;
+    if (row < 0) {
+        row = 0;
+    }
+    if (row >= R01_PAL_ROWS) {
+        row = R01_PAL_ROWS - 1;
+    }
+    font_draw(r, x, y, "BG", 140, 150, 160);
+    draw_pal_strip(r, x + UI_PAL_LABEL_W, y, ui->project->global_pal_bg[row]);
+    font_draw(r, x, y + UI_PAL_SWATCH + UI_PAL_GAP + 2, "SPR", 140, 150, 160);
+    draw_pal_strip(r, x + UI_PAL_LABEL_W, y + UI_PAL_SWATCH + UI_PAL_GAP + 2, ui->project->global_pal_spr[row]);
+}
+
 void ui_draw(UiState *ui, SDL_Renderer *r) {
     R01World *w = r01_project_world0(ui->project);
     int col, row, idx, cs;
@@ -280,6 +321,8 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
         font_draw(r, UI_SCREEN_X, 28, label, 160, 170, 180);
         draw_screen_editor(ui, r, s);
     }
+
+    draw_active_palettes(ui, r);
 
     font_draw(r, 8, UI_LOGIC_H - 14, ui->status, 120, 130, 140);
     if (ui->toast_until > SDL_GetTicks() && ui->toast[0]) {

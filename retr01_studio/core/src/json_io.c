@@ -227,23 +227,33 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
     fprintf(f, "  \"grid_cols\": %d,\n", w->grid_cols);
     fprintf(f, "  \"grid_rows\": %d,\n", w->grid_rows);
     fprintf(f, "  \"global_pal_bg\": [");
-    for (i = 0; i < R01_PAL_ROWS; i++) {
-        int j;
-        fprintf(f, "%s[", i ? ", " : "");
-        for (j = 0; j < R01_PAL_COLORS; j++) {
-            fprintf(f, "%s%d", j ? ", " : "", p->global_pal_bg[i].idx[j]);
+    {
+        int row, pal, j, first = 1;
+        for (row = 0; row < R01_PAL_ROWS; row++) {
+            for (pal = 0; pal < R01_PALS_PER_ROW; pal++) {
+                fprintf(f, "%s[", first ? "" : ", ");
+                first = 0;
+                for (j = 0; j < R01_PAL_COLORS; j++) {
+                    fprintf(f, "%s%d", j ? ", " : "", p->global_pal_bg[row][pal].idx[j]);
+                }
+                fprintf(f, "]");
+            }
         }
-        fprintf(f, "]");
     }
     fprintf(f, "],\n");
     fprintf(f, "  \"global_pal_spr\": [");
-    for (i = 0; i < R01_PAL_ROWS; i++) {
-        int j;
-        fprintf(f, "%s[", i ? ", " : "");
-        for (j = 0; j < R01_PAL_COLORS; j++) {
-            fprintf(f, "%s%d", j ? ", " : "", p->global_pal_spr[i].idx[j]);
+    {
+        int row, pal, j, first = 1;
+        for (row = 0; row < R01_PAL_ROWS; row++) {
+            for (pal = 0; pal < R01_PALS_PER_ROW; pal++) {
+                fprintf(f, "%s[", first ? "" : ", ");
+                first = 0;
+                for (j = 0; j < R01_PAL_COLORS; j++) {
+                    fprintf(f, "%s%d", j ? ", " : "", p->global_pal_spr[row][pal].idx[j]);
+                }
+                fprintf(f, "]");
+            }
         }
-        fprintf(f, "]");
     }
     fprintf(f, "],\n");
     {
@@ -410,10 +420,12 @@ static int parse_bracket_row(const char *start, uint8_t out[R01_PAL_COLORS]) {
     return i == R01_PAL_COLORS;
 }
 
-static int load_palette_rows(const char *buf, const char *key, R01PalRow rows[R01_PAL_ROWS]) {
+static int load_palette_plane(const char *buf, const char *key, R01PalRow plane[R01_PAL_ROWS][R01_PALS_PER_ROW]) {
     const char *section = json_find(buf, key);
     const char *row;
+    R01PalRow flat[R01_PAL_COUNT];
     int i = 0;
+    int n;
     if (!section) {
         return 0;
     }
@@ -421,13 +433,27 @@ static int load_palette_rows(const char *buf, const char *key, R01PalRow rows[R0
     if (row) {
         row = strchr(row + 1, '[');
     }
-    while (row && i < R01_PAL_ROWS) {
-        if (parse_bracket_row(row, rows[i].idx)) {
+    while (row && i < R01_PAL_COUNT) {
+        if (parse_bracket_row(row, flat[i].idx)) {
             i++;
         }
         row = strchr(row + 1, '[');
     }
-    return i;
+    n = i;
+    if (n == R01_PAL_COUNT) {
+        for (i = 0; i < R01_PAL_COUNT; i++) {
+            plane[i / R01_PALS_PER_ROW][i % R01_PALS_PER_ROW] = flat[i];
+        }
+        return n;
+    }
+    /* Legacy v3: 4 pals = one row. Copy into row 0; caller keeps other rows from init. */
+    if (n == R01_PALS_PER_ROW) {
+        for (i = 0; i < R01_PALS_PER_ROW; i++) {
+            plane[0][i] = flat[i];
+        }
+        return n;
+    }
+    return n;
 }
 
 int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t err_cap) {
@@ -483,21 +509,11 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
         p->active_screen = active;
     }
     {
-        R01PalRow bg[R01_PAL_ROWS];
-        R01PalRow spr[R01_PAL_ROWS];
-        int nbg = load_palette_rows(buf, "\"global_pal_bg\"", bg);
-        int nspr = load_palette_rows(buf, "\"global_pal_spr\"", spr);
-        int ri;
-        if (nbg == R01_PAL_ROWS) {
-            for (ri = 0; ri < R01_PAL_ROWS; ri++) {
-                p->global_pal_bg[ri] = bg[ri];
-            }
-        }
-        if (nspr == R01_PAL_ROWS) {
-            for (ri = 0; ri < R01_PAL_ROWS; ri++) {
-                p->global_pal_spr[ri] = spr[ri];
-            }
-        }
+        int nbg = load_palette_plane(buf, "\"global_pal_bg\"", p->global_pal_bg);
+        int nspr = load_palette_plane(buf, "\"global_pal_spr\"", p->global_pal_spr);
+        (void)nbg;
+        (void)nspr;
+        /* Full plane (32) or legacy row-0 (4) already applied; other rows keep phase1 init. */
     }
 
     section = json_find(buf, "\"screens\"");

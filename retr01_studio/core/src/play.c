@@ -166,21 +166,14 @@ int r01_play_sample_bg(const R01Project *p, const R01PlayState *pl, int vx, int 
     wx = pl->cam_x + vx;
     wy = pl->cam_y + vy;
     if (wx < 0 || wy < 0) {
-        return -1;
+        r01_project_backdrop_rgb(p, w, r, g, b);
+        return 0;
     }
     col = wx / R01_SCREEN_PX_W;
     row = wy / R01_SCREEN_PX_H;
     idx = r01_world_find_screen(w, col, row);
     if (idx < 0) {
-        if (r) {
-            *r = 0;
-        }
-        if (g) {
-            *g = 0;
-        }
-        if (b) {
-            *b = 0;
-        }
+        r01_project_backdrop_rgb(p, w, r, g, b);
         return 0;
     }
     s = &w->screens[idx];

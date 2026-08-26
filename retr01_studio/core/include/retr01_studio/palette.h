@@ -3,8 +3,9 @@
 
 #include "retr01_studio/types.h"
 
-/* Phase 1 player fill: sprite palette row 0, color index 1 (not a hardcoded master). */
-#define R01_PLAYER_SPR_PAL_ROW 0
+/* Phase 1 player fill: sprite row 0, pal 0, color index 1 (not a hardcoded master). */
+#define R01_PLAYER_SPR_ROW 0
+#define R01_PLAYER_SPR_PAL 0
 #define R01_PLAYER_SPR_COLOR 1
 #define R01_ACTIVE_PAL_SPR_BASE 16
 #define R01_ACTIVE_PAL_PLAYER (R01_ACTIVE_PAL_SPR_BASE + R01_PLAYER_SPR_COLOR)
@@ -20,6 +21,8 @@ uint8_t r01_quantize_r3g3b2(uint8_t r, uint8_t g, uint8_t b);
 
 void r01_project_init_phase1_pals(R01Project *p);
 void r01_project_set_bg_pals_from_png(R01Project *p, const uint8_t master_for_index[4]);
+/* Shared backdrop = BG palette color 0 for the world's default_pal_row. */
+void r01_project_backdrop_rgb(const R01Project *p, const R01World *w, uint8_t *r, uint8_t *g, uint8_t *b);
 void r01_screen_pixel_rgb(const R01Project *p, const R01World *w, const R01Screen *s, int px, int py, uint8_t *r,
                           uint8_t *g, uint8_t *b);
 

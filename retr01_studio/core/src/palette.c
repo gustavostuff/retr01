@@ -58,25 +58,26 @@ int r01_kit_nearest_master(uint8_t r, uint8_t g, uint8_t b) {
     return best;
 }
 
-static void pal_row_phase1_bg(R01PalRow *row, int column) {
-    row->idx[0] = 0;
-    row->idx[1] = (uint8_t)(16 + column);
-    row->idx[2] = (uint8_t)(32 + column);
-    row->idx[3] = (uint8_t)(48 + column);
+static void pal_phase1_bg(R01PalRow *pal, int column) {
+    int col = column & 3;
+    pal->idx[0] = 0;
+    pal->idx[1] = (uint8_t)(16 + col);
+    pal->idx[2] = (uint8_t)(32 + col);
+    pal->idx[3] = (uint8_t)(48 + col);
 }
 
-static void pal_row_phase1_spr(R01PalRow *row) {
-    row->idx[0] = 0;
-    row->idx[1] = (uint8_t)R01_KIT_RED_MASTER;
-    row->idx[2] = (uint8_t)R01_KIT_RED_MASTER;
-    row->idx[3] = (uint8_t)R01_KIT_RED_MASTER;
+static void pal_phase1_spr(R01PalRow *pal) {
+    pal->idx[0] = 0;
+    pal->idx[1] = (uint8_t)R01_KIT_RED_MASTER;
+    pal->idx[2] = (uint8_t)R01_KIT_RED_MASTER;
+    pal->idx[3] = (uint8_t)R01_KIT_RED_MASTER;
 }
 
 uint8_t r01_project_player_master(const R01Project *p) {
     if (!p) {
         return (uint8_t)R01_KIT_RED_MASTER;
     }
-    return p->global_pal_spr[R01_PLAYER_SPR_PAL_ROW].idx[R01_PLAYER_SPR_COLOR];
+    return p->global_pal_spr[R01_PLAYER_SPR_ROW][R01_PLAYER_SPR_PAL].idx[R01_PLAYER_SPR_COLOR];
 }
 
 void r01_project_player_rgb(const R01Project *p, uint8_t *r, uint8_t *g, uint8_t *b) {
@@ -84,19 +85,22 @@ void r01_project_player_rgb(const R01Project *p, uint8_t *r, uint8_t *g, uint8_t
 }
 
 void r01_project_init_phase1_pals(R01Project *p) {
-    int i;
+    int row, pal;
     if (!p) {
         return;
     }
-    for (i = 0; i < R01_PAL_ROWS; i++) {
-        pal_row_phase1_bg(&p->global_pal_bg[i], i);
-        pal_row_phase1_spr(&p->global_pal_spr[i]);
+    for (row = 0; row < R01_PAL_ROWS; row++) {
+        for (pal = 0; pal < R01_PALS_PER_ROW; pal++) {
+            /* Kit column = pal within row; rows 4-7 repeat columns 0-3. */
+            pal_phase1_bg(&p->global_pal_bg[row][pal], pal);
+            pal_phase1_spr(&p->global_pal_spr[row][pal]);
+        }
     }
 }
 
 void r01_project_set_bg_pals_from_png(R01Project *p, const uint8_t master_for_index[4]) {
     R01PalRow row;
-    int i;
+    int r, pal;
     if (!p || !master_for_index) {
         return;
     }
@@ -104,15 +108,37 @@ void r01_project_set_bg_pals_from_png(R01Project *p, const uint8_t master_for_in
     row.idx[1] = master_for_index[1];
     row.idx[2] = master_for_index[2];
     row.idx[3] = master_for_index[3];
-    for (i = 0; i < R01_PAL_ROWS; i++) {
-        p->global_pal_bg[i] = row;
-        p->global_pal_spr[i].idx[0] = row.idx[0];
+    for (r = 0; r < R01_PAL_ROWS; r++) {
+        for (pal = 0; pal < R01_PALS_PER_ROW; pal++) {
+            p->global_pal_bg[r][pal] = row;
+            p->global_pal_spr[r][pal].idx[0] = row.idx[0];
+        }
     }
+}
+
+static int clamp_pal_row(int row) {
+    if (row < 0) {
+        return 0;
+    }
+    if (row >= R01_PAL_ROWS) {
+        return R01_PAL_ROWS - 1;
+    }
+    return row;
+}
+
+void r01_project_backdrop_rgb(const R01Project *p, const R01World *w, uint8_t *r, uint8_t *g, uint8_t *b) {
+    int prow;
+    uint8_t master = 0;
+    if (p) {
+        prow = clamp_pal_row(w ? w->default_pal_row : 0);
+        master = p->global_pal_bg[prow][0].idx[0];
+    }
+    r01_kit_rgb(master, r, g, b);
 }
 
 void r01_screen_pixel_rgb(const R01Project *p, const R01World *w, const R01Screen *s, int px, int py, uint8_t *r,
                           uint8_t *g, uint8_t *b) {
-    int tx, ty, sx, sy, cell, bank;
+    int tx, ty, sx, sy, cell, bank, prow;
     uint8_t attr, color, master, tile_id;
     const uint8_t *tile;
     if (!p || !s || px < 0 || py < 0 || px >= R01_SCREEN_PX_W || py >= R01_SCREEN_PX_H) {
@@ -147,6 +173,7 @@ void r01_screen_pixel_rgb(const R01Project *p, const R01World *w, const R01Scree
     } else {
         color = s->pixels[(ty * 8 + sy) * R01_SCREEN_PX_W + (tx * 8 + sx)] & 3u;
     }
-    master = p->global_pal_bg[r01_attr_pal(attr)].idx[color];
+    prow = clamp_pal_row(w ? w->default_pal_row : 0);
+    master = p->global_pal_bg[prow][r01_attr_pal(attr)].idx[color];
     r01_kit_rgb(master, r, g, b);
 }

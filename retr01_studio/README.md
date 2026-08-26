@@ -81,7 +81,7 @@ Fixed **640x360** logical canvas, integer scale (default **2x**).
 
 **Play:** Available (e.g. **Space** / **PLAY**). Behavior must match exported cart logic for scroll, player, and X/Y warps.
 
-**Save / load:** **Ctrl+S** / **Ctrl+O** -> `test_game/test.r01proj` (created on save). JSON **version 3**.
+**Save / load:** **Ctrl+S** / **Ctrl+O** -> `test_game/test.r01proj` (created on save). JSON **version 4**.
 
 **Export cart:** **Ctrl+E** -> `test_game/test.retr01` (+ `test_prom.bin`, `test_boot.s`, `test_flash.bin` in the same folder).
 
@@ -107,10 +107,10 @@ Phase 1 does **not** expose a Palettes cell. Global palette data is **written au
 
 - **Cart layout:** **8 global BG palette rows** + **8 global sprite palette rows** (**256 B** total).
 - **Color 0 (shared backdrop):** Master index **0** (`#000000`) in every palette. Same shared backdrop convention as NES (index 0 is universal backdrop / transparent for sprites).
-- **Colors 1-3:** For each global row *i* (**0...7**):
-  - BG row *i*: master indices **(16+(i%4))**, **(32+(i%4))**, **(48+(i%4))** — kit column *(i mod 4)*, rows 1-3 (no dark row-0 swatches).
-  - Sprite row *i*: phase 1 sets colors 1-3 to kit bright red (player uses row **0**, palette **0**, index **1**).
-- **Active row:** Play / export use global row **0** unless a world `default_pal_row` says otherwise.
+- **Colors 1-3:** For each global row *i* (**0...7**) and pal *p* (**0...3**) within that row:
+  - BG `[i][p]`: master indices **(16+p)**, **(32+p)**, **(48+p)** — kit column *p*, rows 1-3.
+  - Sprite `[i][p]`: phase 1 sets colors 1-3 to kit bright red (player uses row **0**, pal **0**, index **1**).
+- **Active row:** Play / export use the world's `default_pal_row` (Phase 1: **0**).
 
 Preview and cart burn quantize through the kit Color PROM (**R3G3B2**).
 

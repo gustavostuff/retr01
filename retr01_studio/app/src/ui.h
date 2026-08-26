@@ -26,6 +26,17 @@
 #define UI_PLAY_BTN_W 76
 #define UI_PLAY_BTN_H 14
 
+/* Active palette strip (bottom-right): 4 pals × 4 colors. */
+#define UI_PAL_SWATCH 6
+#define UI_PAL_GAP 2
+#define UI_PAL_GROUP_GAP 4
+#define UI_PAL_STRIP_W                                                                                     \
+    (4 * (4 * UI_PAL_SWATCH + 3 * 1) + 3 * UI_PAL_GROUP_GAP)
+#define UI_PAL_LABEL_W 22
+#define UI_PAL_PANEL_W (UI_PAL_LABEL_W + UI_PAL_STRIP_W)
+#define UI_PAL_PANEL_X (UI_LOGIC_W - UI_PAL_PANEL_W - 8)
+#define UI_PAL_PANEL_Y (UI_LOGIC_H - 36)
+
 typedef struct UiState {
     R01Project *project;
     R01PlayState play;

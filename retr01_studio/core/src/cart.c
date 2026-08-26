@@ -151,12 +151,14 @@ int r01_prg_write_asm(const R01Project *p, const char *path, char *err_buf, size
     return 0;
 }
 
-static int append_pal_rows(Buf *b, const R01PalRow rows[R01_PAL_ROWS]) {
-    int i, c;
-    uint8_t tmp[R01_PAL_ROWS * R01_PAL_COLORS];
-    for (i = 0; i < R01_PAL_ROWS; i++) {
-        for (c = 0; c < R01_PAL_COLORS; c++) {
-            tmp[i * R01_PAL_COLORS + c] = rows[i].idx[c] & 63u;
+static int append_pal_plane(Buf *b, R01PalRow plane[R01_PAL_ROWS][R01_PALS_PER_ROW]) {
+    int row, pal, c, o = 0;
+    uint8_t tmp[R01_PAL_PLANE_BYTES];
+    for (row = 0; row < R01_PAL_ROWS; row++) {
+        for (pal = 0; pal < R01_PALS_PER_ROW; pal++) {
+            for (c = 0; c < R01_PAL_COLORS; c++) {
+                tmp[o++] = plane[row][pal].idx[c] & 63u;
+            }
         }
     }
     return buf_append(b, tmp, sizeof(tmp));
@@ -198,16 +200,15 @@ static int build_world_blob(Buf *blob, const R01World *w) {
 
     put_u8(hdr + 0, (uint8_t)R01_START_COL);
     put_u8(hdr + 1, (uint8_t)R01_START_ROW);
-    put_u8(hdr + 2, 0);
-    put_u8(hdr + 3, 0);
-    put_u8(hdr + 4, 0);
+    put_u8(hdr + 2, (uint8_t)(w->default_bg_bank & 3));
+    put_u8(hdr + 3, 0); /* default_spr_bank */
+    put_u8(hdr + 4, (uint8_t)(w->default_pal_row & 7));
     put_u8(hdr + 5, (uint8_t)present_n);
     put_u8(hdr + 6, 0);
     put_u24(hdr + 8, (uint32_t)off_chr);
     put_u24(hdr + 11, (uint32_t)off_sdir);
     put_u24(hdr + 14, 0);
-    put_u24(hdr + 17, 0);
-    put_u24(hdr + 20, 0);
+    /* hdr+17..31 reserved */
 
     if (buf_append(blob, hdr, WORLD_HDR_SIZE) != 0) {
         return -1;
@@ -310,23 +311,23 @@ static int r01_cart_build(const R01Project *p, uint8_t **out, size_t *out_len, c
     r01_prg_fill_phase1(prg, &work->worlds[0]);
 
     off_pal_bg = HDR_SIZE + PTR_TABLE_SIZE;
-    off_pal_spr = off_pal_bg + 16;
-    off_prg = off_pal_spr + 16;
+    off_pal_spr = off_pal_bg + R01_PAL_PLANE_BYTES;
+    off_prg = off_pal_spr + R01_PAL_PLANE_BYTES;
     off_wtable = off_prg + R01_PRG_BYTES;
 
     memset(ptrs, 0, sizeof(ptrs));
     put_u24(ptrs + 0, off_prg);
     put_u24(ptrs + 3, R01_PRG_BYTES);
     put_u24(ptrs + 6, off_pal_bg);
-    put_u24(ptrs + 9, 16);
+    put_u24(ptrs + 9, R01_PAL_PLANE_BYTES);
     put_u24(ptrs + 12, off_pal_spr);
-    put_u24(ptrs + 15, 16);
+    put_u24(ptrs + 15, R01_PAL_PLANE_BYTES);
     put_u24(ptrs + 18, off_wtable);
     put_u24(ptrs + 21, WORLD_TABLE_SIZE);
 
     if (buf_append(&cart, hdr, HDR_SIZE) != 0 || buf_append(&cart, ptrs, PTR_TABLE_SIZE) != 0 ||
-        append_pal_rows(&cart, work->global_pal_bg) != 0 ||
-        append_pal_rows(&cart, work->global_pal_spr) != 0 || buf_append(&cart, prg, R01_PRG_BYTES) != 0) {
+        append_pal_plane(&cart, work->global_pal_bg) != 0 ||
+        append_pal_plane(&cart, work->global_pal_spr) != 0 || buf_append(&cart, prg, R01_PRG_BYTES) != 0) {
         goto oom;
     }
 

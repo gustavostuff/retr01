@@ -59,7 +59,7 @@ Palettes are written automatically (no UI): **8 global BG rows + 8 global sprite
 
 | Action | Input / path |
 |--------|----------------|
-| Save / load | **Ctrl+S** / **Ctrl+O** -> `test_game/test.r01proj` (JSON **v3**) |
+| Save / load | **Ctrl+S** / **Ctrl+O** -> `test_game/test.r01proj` (JSON **v4**) |
 | Play | **Space** / **PLAY**. SoT: `core/src/play.c` |
 | Export | **Ctrl+E** -> `test_game/test.retr01` (+ `test_prom.bin`, `test_boot.s`, `test_flash.bin`) |
 

@@ -26,7 +26,10 @@
 
 #define R01_MASTER_COLORS 64
 #define R01_PAL_COLORS 4
-#define R01_PAL_ROWS 4
+#define R01_PALS_PER_ROW 4
+#define R01_PAL_ROWS 8
+#define R01_PAL_COUNT (R01_PAL_ROWS * R01_PALS_PER_ROW)
+#define R01_PAL_PLANE_BYTES (R01_PAL_COUNT * R01_PAL_COLORS)
 
 #define R01_CART_FLASH_BYTES (512u * 1024u)
 #define R01_PRG_BYTES 32768u
@@ -35,7 +38,7 @@
 
 #define R01_NAME_MAX 64
 #define R01_PATH_MAX 512
-#define R01_JSON_VER 3
+#define R01_JSON_VER 4
 
 #define R01_GAME_DIR "test_game"
 #define R01_DEFAULT_PROJECT R01_GAME_DIR "/test.r01proj"
@@ -48,6 +51,7 @@
 #define R01_ATTR_FLIP_H 0x10u
 #define R01_ATTR_FLIP_V 0x20u
 
+/* One 4-color palette (master indices into Color PROM). */
 typedef struct R01PalRow {
     uint8_t idx[R01_PAL_COLORS];
 } R01PalRow;
@@ -84,8 +88,9 @@ typedef struct R01World {
 typedef struct R01Project {
     char name[R01_NAME_MAX];
     int active_screen; /* index 0..8 into world0.screens */
-    R01PalRow global_pal_bg[R01_PAL_ROWS];
-    R01PalRow global_pal_spr[R01_PAL_ROWS];
+    /* 8 rows × 4 pals each (docs/02). Index [row][pal]. */
+    R01PalRow global_pal_bg[R01_PAL_ROWS][R01_PALS_PER_ROW];
+    R01PalRow global_pal_spr[R01_PAL_ROWS][R01_PALS_PER_ROW];
     R01World worlds[R01_MAX_WORLDS];
 } R01Project;
 
