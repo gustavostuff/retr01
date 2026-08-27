@@ -91,21 +91,19 @@ static void pick_spawn_scroll(const R01World *w, int col, int row, uint8_t *out_
 }
 
 static void pick_spawn(const R01World *w, int *col, int *row) {
-    int i;
-    *col = R01_START_COL;
-    *row = R01_START_ROW;
-    if (w && r01_world_find_screen(w, R01_START_COL, R01_START_ROW) >= 0) {
+    int idx;
+    if (!col || !row) {
         return;
     }
+    *col = R01_START_COL;
+    *row = R01_START_ROW;
     if (!w) {
         return;
     }
-    for (i = 0; i < w->screen_count; i++) {
-        if (w->screens[i].present) {
-            *col = w->screens[i].col;
-            *row = w->screens[i].row;
-            return;
-        }
+    idx = r01_world_default_screen(w);
+    if (idx >= 0 && idx < w->screen_count && w->screens[idx].present) {
+        *col = w->screens[idx].col;
+        *row = w->screens[idx].row;
     }
 }
 

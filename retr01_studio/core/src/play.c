@@ -49,31 +49,21 @@ static void place_player_on_screen(R01PlayState *pl, int col, int row) {
 }
 
 static int play_spawn_screen(const R01World *w, int *out_col, int *out_row) {
-    int i;
+    int idx;
     if (!w) {
         return 0;
     }
-    if (r01_world_find_screen(w, R01_START_COL, R01_START_ROW) >= 0) {
-        if (out_col) {
-            *out_col = R01_START_COL;
-        }
-        if (out_row) {
-            *out_row = R01_START_ROW;
-        }
-        return 1;
+    idx = r01_world_default_screen(w);
+    if (idx < 0 || idx >= w->screen_count || !w->screens[idx].present) {
+        return 0;
     }
-    for (i = 0; i < w->screen_count; i++) {
-        if (w->screens[i].present) {
-            if (out_col) {
-                *out_col = w->screens[i].col;
-            }
-            if (out_row) {
-                *out_row = w->screens[i].row;
-            }
-            return 1;
-        }
+    if (out_col) {
+        *out_col = w->screens[idx].col;
     }
-    return 0;
+    if (out_row) {
+        *out_row = w->screens[idx].row;
+    }
+    return 1;
 }
 
 int r01_play_start(R01PlayState *pl, const R01Project *p) {
@@ -86,7 +76,7 @@ int r01_play_start(R01PlayState *pl, const R01Project *p) {
     if (!p) {
         return 0;
     }
-    w = r01_project_world0_const(p);
+    w = r01_project_active_world_const(p);
     if (!play_spawn_screen(w, &col, &row)) {
         return 0;
     }
@@ -106,7 +96,7 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
     if (!pl || !pl->active || !p) {
         return;
     }
-    w = r01_project_world0_const(p);
+    w = r01_project_active_world_const(p);
     if (!w) {
         return;
     }
@@ -131,7 +121,7 @@ static int warp_to(R01PlayState *pl, const R01Project *p, int col, int row) {
     if (!pl || !pl->active || !p) {
         return 0;
     }
-    w = r01_project_world0_const(p);
+    w = r01_project_active_world_const(p);
     if (!w || r01_world_find_screen(w, col, row) < 0) {
         return 0;
     }
@@ -149,6 +139,16 @@ int r01_play_button(R01PlayState *pl, const R01Project *p, int button) {
     return 0;
 }
 
+int r01_play_screen_index(const R01PlayState *pl, const R01World *w) {
+    int col, row;
+    if (!pl || !w) {
+        return -1;
+    }
+    col = (pl->player_x + R01_PLAY_PLAYER_W / 2) / R01_SCREEN_PX_W;
+    row = (pl->player_y + R01_PLAY_PLAYER_H / 2) / R01_SCREEN_PX_H;
+    return r01_world_find_screen(w, col, row);
+}
+
 int r01_play_sample_bg(const R01Project *p, const R01PlayState *pl, int vx, int vy, uint8_t *r, uint8_t *g,
                        uint8_t *b) {
     const R01World *w;
@@ -157,7 +157,7 @@ int r01_play_sample_bg(const R01Project *p, const R01PlayState *pl, int vx, int 
     if (!p || !pl || vx < 0 || vy < 0 || vx >= R01_SCREEN_PX_W || vy >= R01_SCREEN_PX_H) {
         return -1;
     }
-    w = r01_project_world0_const(p);
+    w = r01_project_active_world_const(p);
     if (!w) {
         return -1;
     }

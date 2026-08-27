@@ -223,7 +223,10 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
     fprintf(f, "{\n");
     fprintf(f, "  \"version\": %d,\n", R01_JSON_VER);
     fprintf(f, "  \"name\": \"%s\",\n", p->name);
+    fprintf(f, "  \"default_world\": %d,\n", p->default_world);
+    fprintf(f, "  \"active_world\": %d,\n", p->active_world);
     fprintf(f, "  \"active_screen\": %d,\n", p->active_screen);
+    fprintf(f, "  \"default_screen\": %d,\n", w->default_screen);
     fprintf(f, "  \"grid_cols\": %d,\n", w->grid_cols);
     fprintf(f, "  \"grid_rows\": %d,\n", w->grid_rows);
     fprintf(f, "  \"global_pal_bg\": [");
@@ -463,6 +466,9 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
     const char *section;
     const char *obj;
     int active = R01_START_ROW * R01_DEFAULT_GRID + R01_START_COL;
+    int default_world = 0;
+    int active_world = 0;
+    int default_screen = -1;
     int grid_cols = R01_DEFAULT_GRID;
     int grid_rows = R01_DEFAULT_GRID;
 
@@ -499,14 +505,31 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
         }
         free(name_str);
     }
+    json_int_after(buf, "\"default_world\"", &default_world);
+    json_int_after(buf, "\"active_world\"", &active_world);
     json_int_after(buf, "\"active_screen\"", &active);
+    json_int_after(buf, "\"default_screen\"", &default_screen);
     json_int_after(buf, "\"grid_cols\"", &grid_cols);
     json_int_after(buf, "\"grid_rows\"", &grid_rows);
     if (grid_cols >= 1 && grid_cols <= R01_GRID_MAX && grid_rows >= 1 && grid_rows <= R01_GRID_MAX) {
         r01_world_set_grid(r01_project_world0(p), grid_cols, grid_rows);
     }
+    if (default_world >= 0 && default_world < R01_MAX_WORLDS) {
+        p->default_world = default_world;
+    }
+    if (active_world >= 0 && active_world < R01_MAX_WORLDS) {
+        p->active_world = active_world;
+    }
     if (active >= 0 && active < r01_project_world0(p)->screen_count) {
         p->active_screen = active;
+    }
+    {
+        R01World *w0 = r01_project_world0(p);
+        if (default_screen >= 0 && default_screen < w0->screen_count && w0->screens[default_screen].present) {
+            w0->default_screen = default_screen;
+        } else {
+            r01_world_sync_default_screen(w0);
+        }
     }
     {
         int nbg = load_palette_plane(buf, "\"global_pal_bg\"", p->global_pal_bg);

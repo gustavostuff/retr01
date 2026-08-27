@@ -50,6 +50,8 @@
 #define R01_ATTR_PAL_SHIFT 2
 #define R01_ATTR_FLIP_H 0x10u
 #define R01_ATTR_FLIP_V 0x20u
+#define R01_ATTR_SOLID 0x40u
+#define R01_ATTR_ANIM 0x80u
 
 /* One 4-color palette (master indices into Color PROM). */
 typedef struct R01PalRow {
@@ -79,6 +81,7 @@ typedef struct R01World {
     int grid_rows;
     int default_bg_bank;
     int default_pal_row;
+    int default_screen; /* index into screens[]; spawn / play start */
     R01Screen screens[R01_MAX_SCREENS];
     int screen_count;
     R01BgBank bg_banks[R01_BG_BANKS];
@@ -87,7 +90,9 @@ typedef struct R01World {
 
 typedef struct R01Project {
     char name[R01_NAME_MAX];
-    int active_screen; /* index 0..8 into world0.screens */
+    int default_world; /* play / export entry world */
+    int active_world;  /* 0..R01_MAX_WORLDS-1 */
+    int active_screen; /* index into worlds[active_world].screens */
     /* 8 rows × 4 pals each (docs/02). Index [row][pal]. */
     R01PalRow global_pal_bg[R01_PAL_ROWS][R01_PALS_PER_ROW];
     R01PalRow global_pal_spr[R01_PAL_ROWS][R01_PALS_PER_ROW];
@@ -107,6 +112,13 @@ static inline int r01_attr_flip_v(uint8_t a) {
     return (a & R01_ATTR_FLIP_V) != 0;
 }
 
+static inline int r01_attr_anim(uint8_t a) {
+    return (a & R01_ATTR_ANIM) != 0;
+}
+static inline int r01_attr_solid(uint8_t a) {
+    return (a & R01_ATTR_SOLID) != 0;
+}
+
 static inline uint8_t r01_attr_pack(int bank, int pal, int flip_h, int flip_v) {
     uint8_t a = (uint8_t)((bank & 3) | ((pal & 3) << R01_ATTR_PAL_SHIFT));
     if (flip_h) {
@@ -116,6 +128,11 @@ static inline uint8_t r01_attr_pack(int bank, int pal, int flip_h, int flip_v) {
         a |= R01_ATTR_FLIP_V;
     }
     return a;
+}
+
+static inline uint8_t r01_attr_merge(uint8_t old, int bank, int pal, int flip_h, int flip_v) {
+    return (uint8_t)((old & (R01_ATTR_SOLID | R01_ATTR_ANIM)) |
+                     r01_attr_pack(bank, pal, flip_h, flip_v));
 }
 
 #endif

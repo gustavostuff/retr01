@@ -3,6 +3,19 @@
 
 #include <SDL.h>
 
+/* Proggy Tiny via FreeType. Labels/buttons are 16px tall. */
+#define R01_UI_FONT_PX 16
+
+int font_init(void);
+void font_shutdown(void);
+
+int font_text_width(const char *text);
+int font_line_h(void);
+
 void font_draw(SDL_Renderer *r, int x, int y, const char *text, Uint8 R, Uint8 G, Uint8 B);
+
+/* Draw text centered in a 16px-tall rect (width should already be snap-8). */
+void font_draw_centered(SDL_Renderer *r, int x, int y, int w, int h, const char *text, Uint8 R, Uint8 G,
+                        Uint8 B);
 
 #endif

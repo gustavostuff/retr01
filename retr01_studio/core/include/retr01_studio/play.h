@@ -25,6 +25,7 @@ int r01_play_start(R01PlayState *pl, const R01Project *p);
 void r01_play_stop(R01PlayState *pl);
 void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy);
 int r01_play_button(R01PlayState *pl, const R01Project *p, int button);
+int r01_play_screen_index(const R01PlayState *pl, const R01World *w);
 
 int r01_play_sample_bg(const R01Project *p, const R01PlayState *pl, int vx, int vy, uint8_t *r, uint8_t *g,
                        uint8_t *b);

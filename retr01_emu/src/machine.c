@@ -173,34 +173,6 @@ int r01e_machine_frame(R01eMachine *m) {
     m->prof_acc_active = 0;
     m->prof_acc_vblank = 0;
     m->prof_acc_idle = 0;
-    /* #region agent log */
-    {
-        static int dbg_n;
-        if (dbg_n < 40) {
-            FILE *df = fopen("/home/g/Repos/retr01/.cursor/debug-7de916.log", "a");
-            if (df) {
-                uint64_t busy = m->prof_last_active + m->prof_last_vblank;
-                uint64_t all = busy + m->prof_last_idle;
-                fprintf(df,
-                        "{\"sessionId\":\"7de916\",\"runId\":\"busy-metric\",\"hypothesisId\":\"F,G,H\","
-                        "\"location\":\"machine.c:frame\",\"message\":\"busy vs idle frame\","
-                        "\"data\":{\"n\":%d,\"busy_a\":%llu,\"busy_v\":%llu,\"busy\":%llu,"
-                        "\"idle\":%llu,\"all\":%llu,\"budget\":%llu,\"pct_budget\":%.2f,"
-                        "\"waiting\":%d,\"insns\":%d},"
-                        "\"timestamp\":%d}\n",
-                        dbg_n, (unsigned long long)m->prof_last_active,
-                        (unsigned long long)m->prof_last_vblank, (unsigned long long)busy,
-                        (unsigned long long)m->prof_last_idle, (unsigned long long)all,
-                        (unsigned long long)R01E_CPU_BUDGET_CYCLES,
-                        R01E_CPU_BUDGET_CYCLES ? (100.0 * (double)busy / (double)R01E_CPU_BUDGET_CYCLES)
-                                               : 0.0,
-                        m->prof_waiting, guard, dbg_n);
-                fclose(df);
-            }
-            dbg_n++;
-        }
-    }
-    /* #endregion */
     r01e_play_tick(m);
     if (!m->video.chr_loaded) {
         if (r01e_video_softboot_enabled()) {

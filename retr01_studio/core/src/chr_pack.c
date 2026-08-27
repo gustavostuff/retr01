@@ -86,6 +86,10 @@ static void tile_orient(const uint8_t src[R01_TILE_BYTES], int flip_h, int flip_
     tile_flip_v(dst, tmp);
 }
 
+void r01_tile_orient(const uint8_t src[R01_TILE_BYTES], int flip_h, int flip_v, uint8_t dst[R01_TILE_BYTES]) {
+    tile_orient(src, flip_h, flip_v, dst);
+}
+
 static int find_unique(uint8_t unique[][R01_TILE_BYTES], int unique_count, const uint8_t tile[R01_TILE_BYTES],
                        int *out_flips) {
     static const int FLIP_VARIANTS[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
@@ -166,6 +170,77 @@ static R01ChrPackStatus pack_screen(uint8_t unique[][R01_TILE_BYTES], int *uniqu
         }
     }
     return R01_CHR_OK;
+}
+
+void r01_tile_set_pixel(uint8_t tile[R01_TILE_BYTES], int sx, int sy, uint8_t color) {
+    int bit;
+    if (!tile || sx < 0 || sx > 7 || sy < 0 || sy > 7) {
+        return;
+    }
+    bit = 7 - sx;
+    tile[sy] = (uint8_t)((tile[sy] & (uint8_t)~(1u << bit)) | (((color & 1u) ? 1u : 0u) << bit));
+    tile[sy + 8] =
+        (uint8_t)((tile[sy + 8] & (uint8_t)~(1u << bit)) | (((color & 2u) ? 1u : 0u) << bit));
+}
+
+int r01_chr_alloc_tile(R01World *w, int bank) {
+    R01ChrBank *b;
+    if (!w || bank < 0 || bank >= R01_BG_BANKS) {
+        return -1;
+    }
+    b = &w->bg_banks[bank];
+    if (b->tile_count >= R01_TILES_PER_BANK) {
+        return -1;
+    }
+    memset(b->chr + (size_t)b->tile_count * R01_TILE_BYTES, 0, R01_TILE_BYTES);
+    b->tile_count++;
+    return b->tile_count - 1;
+}
+
+int r01_chr_write_tile(R01World *w, int bank, int tile_id, const uint8_t tile[R01_TILE_BYTES]) {
+    R01ChrBank *b;
+    if (!w || !tile || bank < 0 || bank >= R01_BG_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
+        return -1;
+    }
+    b = &w->bg_banks[bank];
+    if (tile_id >= b->tile_count) {
+        b->tile_count = tile_id + 1;
+    }
+    memcpy(b->chr + (size_t)tile_id * R01_TILE_BYTES, tile, R01_TILE_BYTES);
+    return 0;
+}
+
+void r01_screen_paint_tile(R01World *w, R01Screen *s, int tile_x, int tile_y, uint8_t tile_id, uint8_t attr) {
+    int cell;
+    int sy, sx;
+    const uint8_t *tile;
+    int bank;
+    if (!w || !s || tile_x < 0 || tile_y < 0 || tile_x >= R01_SCREEN_TILES_X || tile_y >= R01_SCREEN_TILES_Y) {
+        return;
+    }
+    cell = tile_y * R01_SCREEN_TILES_X + tile_x;
+    s->tiles[cell] = tile_id;
+    s->attrs[cell] = attr;
+    bank = r01_attr_bank(attr);
+    if (bank < 0 || bank >= R01_BG_BANKS || tile_id >= (uint8_t)w->bg_banks[bank].tile_count) {
+        return;
+    }
+    tile = w->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+    for (sy = 0; sy < 8; sy++) {
+        for (sx = 0; sx < 8; sx++) {
+            int px = tile_x * 8 + sx;
+            int py = tile_y * 8 + sy;
+            int csx = sx;
+            int csy = sy;
+            if (r01_attr_flip_h(attr)) {
+                csx = 7 - csx;
+            }
+            if (r01_attr_flip_v(attr)) {
+                csy = 7 - csy;
+            }
+            s->pixels[py * R01_SCREEN_PX_W + px] = r01_tile_pixel_color(tile, csx, csy);
+        }
+    }
 }
 
 R01ChrPackStatus r01_chr_pack_world_bank0(R01World *w) {

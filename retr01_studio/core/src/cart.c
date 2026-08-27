@@ -199,8 +199,12 @@ static int build_world_blob(Buf *blob, const R01World *w) {
     off_spay = off_sdir + (size_t)present_n * SCREEN_DIR_ENT;
     payload_base = (uint32_t)off_spay;
 
-    put_u8(hdr + 0, (uint8_t)R01_START_COL);
-    put_u8(hdr + 1, (uint8_t)R01_START_ROW);
+    {
+        int ds = r01_world_default_screen(w);
+        const R01Screen *spawn = &w->screens[ds];
+        put_u8(hdr + 0, (uint8_t)spawn->col);
+        put_u8(hdr + 1, (uint8_t)spawn->row);
+    }
     put_u8(hdr + 2, (uint8_t)(w->default_bg_bank & 3));
     put_u8(hdr + 3, 0); /* default_spr_bank */
     put_u8(hdr + 4, (uint8_t)(w->default_pal_row & 7));
@@ -289,15 +293,20 @@ static uint32_t cart_off_map_screen0(const R01World *w, uint32_t world_base) {
         }
     }
     payload_base = off_sdir + (uint32_t)present_n * SCREEN_DIR_ENT;
-    for (si = 0; si < w->screen_count; si++) {
-        const R01Screen *s = &w->screens[si];
-        if (!s->present) {
-            continue;
+    {
+        int ds = r01_world_default_screen(w);
+        int dc = w->screens[ds].col;
+        int dr = w->screens[ds].row;
+        for (si = 0; si < w->screen_count; si++) {
+            const R01Screen *s = &w->screens[si];
+            if (!s->present) {
+                continue;
+            }
+            if (s->col == dc && s->row == dr) {
+                return world_base + payload_base + (uint32_t)di * SCREEN_PAYLOAD;
+            }
+            di++;
         }
-        if (s->col == R01_START_COL && s->row == R01_START_ROW) {
-            return world_base + payload_base + (uint32_t)di * SCREEN_PAYLOAD;
-        }
-        di++;
     }
     di = 0;
     for (si = 0; si < w->screen_count; si++) {

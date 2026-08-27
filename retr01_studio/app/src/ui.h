@@ -8,46 +8,117 @@
 
 #define UI_LOGIC_W 640
 #define UI_LOGIC_H 360
-#define UI_LEFT_W 200
 
-#define UI_WORLD_GRID_X 24
-#define UI_WORLD_GRID_Y 48
-#define UI_WORLD_CELL 28
+/* Phase 2 chrome: dark / darker gray, 8px grid. */
+#define UI_COL_BG_R 34
+#define UI_COL_BG_G 34
+#define UI_COL_BG_B 38
+#define UI_COL_PANEL_R 26
+#define UI_COL_PANEL_G 26
+#define UI_COL_PANEL_B 30
+#define UI_COL_WELL_R 63
+#define UI_COL_WELL_G 63
+#define UI_COL_WELL_B 74
+#define UI_COL_ACTIVE_R 45
+#define UI_COL_ACTIVE_G 125
+#define UI_COL_ACTIVE_B 70
+#define UI_COL_PRESENT_R 55
+#define UI_COL_PRESENT_G 130
+#define UI_COL_PRESENT_B 220
+#define UI_COL_MARK_R 245
+#define UI_COL_MARK_G 245
+#define UI_COL_MARK_B 245
+#define UI_COL_CHESS_A_R 58
+#define UI_COL_CHESS_A_G 58
+#define UI_COL_CHESS_A_B 66
+#define UI_COL_CHESS_B_R 50
+#define UI_COL_CHESS_B_G 50
+#define UI_COL_CHESS_B_B 58
 
-#define UI_SCREEN_X 220
-#define UI_SCREEN_Y 48
-#define UI_SCREEN_VIEW_W 400
-#define UI_SCREEN_VIEW_H 280
+#define UI_UNIT 8
+#define UI_BTN_H 16
+#define UI_SIDEBAR_W 128
+#define UI_WORLD_BTN 16
+#define UI_WORLD_CELL 16
+#define UI_WORLD_VIEW 128
+#define UI_PAL_SWATCH 8
+#define UI_PAL_LABEL_W 32
+
+#define UI_WORLDS_X 0
+#define UI_WORLDS_Y 0
+#define UI_WORLD_BTNS_Y (UI_WORLDS_Y + UI_BTN_H)
+#define UI_WORLD_VIEW_Y (UI_WORLD_BTNS_Y + UI_WORLD_BTN)
+
+#define UI_MAIN_W (UI_LOGIC_W - UI_SIDEBAR_W)
+#define UI_SCREEN_SCALE 2
+#define UI_SCREEN_W (R01_SCREEN_PX_W * UI_SCREEN_SCALE)
+#define UI_SCREEN_H (R01_SCREEN_PX_H * UI_SCREEN_SCALE)
+#define UI_SCREEN_X (UI_SIDEBAR_W + (UI_MAIN_W - UI_SCREEN_W) / 2)
+#define UI_SCREEN_Y ((UI_LOGIC_H - UI_SCREEN_H) / 2)
+
+#define UI_MODAL_W 288
+#define UI_MODAL_H 160
+#define UI_TILE_CANVAS 128
 
 #define UI_TOAST_MS 2800
 
-#define UI_PLAY_BTN_X 556
-#define UI_PLAY_BTN_Y 3
-#define UI_PLAY_BTN_W 76
-#define UI_PLAY_BTN_H 14
+#define UI_MENU_MAX 8
+#define UI_MENU_SUB_NONE 0
+#define UI_MENU_SUB_BANK 1
+#define UI_MENU_SUB_PAL 2
 
-/* Active palette strip (bottom-right): 4 pals × 4 colors. */
-#define UI_PAL_SWATCH 6
-#define UI_PAL_GAP 2
-#define UI_PAL_GROUP_GAP 4
-#define UI_PAL_STRIP_W                                                                                     \
-    (4 * (4 * UI_PAL_SWATCH + 3 * 1) + 3 * UI_PAL_GROUP_GAP)
-#define UI_PAL_LABEL_W 22
-#define UI_PAL_PANEL_W (UI_PAL_LABEL_W + UI_PAL_STRIP_W)
-#define UI_PAL_PANEL_X (UI_LOGIC_W - UI_PAL_PANEL_W - 8)
-#define UI_PAL_PANEL_Y (UI_LOGIC_H - 36)
+typedef struct UiMenu {
+    int open;
+    int submenu;
+    int x, y;
+    int item_count;
+    char items[UI_MENU_MAX][24];
+    int screen_tx, screen_ty; /* tile under cursor when opened */
+} UiMenu;
+
+typedef struct UiTileEdit {
+    int open;
+    int pal;   /* 0..3 within active pal row */
+    int color; /* 0..3 within pal */
+    int tile_id;
+    int bank;
+    int flip_h;
+    int flip_v;
+    int is_new;
+    uint8_t chr[R01_TILE_BYTES];
+    int paint_tx, paint_ty; /* screen tile that opened the editor (-1 if none) */
+} UiTileEdit;
+
+typedef struct UiBrush {
+    int armed; /* after Save in tile editor */
+    int bank;
+    int tile_id;
+    int pal;
+    int flip_h;
+    int flip_v;
+    uint8_t chr[R01_TILE_BYTES];
+} UiBrush;
 
 typedef struct UiState {
     R01Project *project;
     R01PlayState play;
     char project_path[R01_PATH_MAX];
-    char status[128];
     char toast[96];
     Uint32 toast_until;
     int toast_error;
     int scale;
     Uint32 play_last_tick;
     Uint8 keys[512];
+    int mouse_x;
+    int mouse_y;
+    UiMenu menu;
+    UiTileEdit tile_edit;
+    UiBrush brush;
+    int sel_tx;
+    int sel_ty;
+    Uint32 last_click_ms;
+    int last_click_col;
+    int last_click_row;
 } UiState;
 
 int ui_init(UiState *ui);

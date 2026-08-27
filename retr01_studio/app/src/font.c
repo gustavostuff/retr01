@@ -1,110 +1,140 @@
 #include "font.h"
 
-#include <stdint.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
-/*
- * 5x7 glyphs. Bits 4..0 = columns left→right (0x10 = leftmost).
- * Covers: space 0-9 A-Z . : - / _ + = ( )
- */
-static const uint8_t GLYPHS[][7] = {
-    /*  0 space */ {0, 0, 0, 0, 0, 0, 0},
-    /*  1 0 */ {0x0E, 0x11, 0x13, 0x15, 0x19, 0x11, 0x0E},
-    /*  2 1 */ {0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E},
-    /*  3 2 */ {0x0E, 0x11, 0x01, 0x06, 0x08, 0x10, 0x1F},
-    /*  4 3 */ {0x0E, 0x11, 0x01, 0x06, 0x01, 0x11, 0x0E},
-    /*  5 4 */ {0x02, 0x06, 0x0A, 0x12, 0x1F, 0x02, 0x02},
-    /*  6 5 */ {0x1F, 0x10, 0x1E, 0x01, 0x01, 0x11, 0x0E},
-    /*  7 6 */ {0x06, 0x08, 0x10, 0x1E, 0x11, 0x11, 0x0E},
-    /*  8 7 */ {0x1F, 0x01, 0x02, 0x04, 0x08, 0x08, 0x08},
-    /*  9 8 */ {0x0E, 0x11, 0x11, 0x0E, 0x11, 0x11, 0x0E},
-    /* 10 9 */ {0x0E, 0x11, 0x11, 0x0F, 0x01, 0x02, 0x0C},
-    /* 11 A */ {0x0E, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11},
-    /* 12 B */ {0x1E, 0x11, 0x11, 0x1E, 0x11, 0x11, 0x1E},
-    /* 13 C */ {0x0E, 0x11, 0x10, 0x10, 0x10, 0x11, 0x0E},
-    /* 14 D */ {0x1E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x1E},
-    /* 15 E */ {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x1F},
-    /* 16 F */ {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x10},
-    /* 17 G */ {0x0E, 0x11, 0x10, 0x17, 0x11, 0x11, 0x0F},
-    /* 18 H */ {0x11, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11},
-    /* 19 I */ {0x0E, 0x04, 0x04, 0x04, 0x04, 0x04, 0x0E},
-    /* 20 J */ {0x07, 0x02, 0x02, 0x02, 0x02, 0x12, 0x0C},
-    /* 21 K */ {0x11, 0x12, 0x14, 0x18, 0x14, 0x12, 0x11},
-    /* 22 L */ {0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x1F},
-    /* 23 M */ {0x11, 0x1B, 0x15, 0x15, 0x11, 0x11, 0x11},
-    /* 24 N */ {0x11, 0x19, 0x15, 0x13, 0x11, 0x11, 0x11},
-    /* 25 O */ {0x0E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E},
-    /* 26 P */ {0x1E, 0x11, 0x11, 0x1E, 0x10, 0x10, 0x10},
-    /* 27 Q */ {0x0E, 0x11, 0x11, 0x11, 0x15, 0x12, 0x0D},
-    /* 28 R */ {0x1E, 0x11, 0x11, 0x1E, 0x14, 0x12, 0x11},
-    /* 29 S */ {0x0E, 0x11, 0x10, 0x0E, 0x01, 0x11, 0x0E},
-    /* 30 T */ {0x1F, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04},
-    /* 31 U */ {0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E},
-    /* 32 V */ {0x11, 0x11, 0x11, 0x11, 0x11, 0x0A, 0x04},
-    /* 33 W */ {0x11, 0x11, 0x11, 0x15, 0x15, 0x1B, 0x11},
-    /* 34 X */ {0x11, 0x11, 0x0A, 0x04, 0x0A, 0x11, 0x11},
-    /* 35 Y */ {0x11, 0x11, 0x0A, 0x04, 0x04, 0x04, 0x04},
-    /* 36 Z */ {0x1F, 0x01, 0x02, 0x04, 0x08, 0x10, 0x1F},
-    /* 37 . */ {0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x0C},
-    /* 38 : */ {0x00, 0x0C, 0x0C, 0x00, 0x0C, 0x0C, 0x00},
-    /* 39 - */ {0x00, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00},
-    /* 40 / */ {0x01, 0x02, 0x04, 0x08, 0x10, 0x00, 0x00},
-    /* 41 _ */ {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1F},
-    /* 42 + */ {0x00, 0x04, 0x04, 0x1F, 0x04, 0x04, 0x00},
-    /* 43 = */ {0x00, 0x00, 0x1F, 0x00, 0x1F, 0x00, 0x00},
-    /* 44 ( */ {0x04, 0x08, 0x10, 0x10, 0x10, 0x08, 0x04},
-    /* 45 ) */ {0x08, 0x04, 0x02, 0x02, 0x02, 0x04, 0x08},
-};
+#include <stdio.h>
+#include <string.h>
 
-static int glyph_index(char c) {
-    if (c == ' ') {
+static FT_Library g_ft_lib;
+static FT_Face g_ft_face;
+static int g_ft_ready;
+
+static int font_try_open(const char *path) {
+    if (!path || !path[0]) {
+        return -1;
+    }
+    if (FT_New_Face(g_ft_lib, path, 0, &g_ft_face) != 0) {
+        return -1;
+    }
+    if (FT_Set_Pixel_Sizes(g_ft_face, 0, R01_UI_FONT_PX) != 0) {
+        FT_Done_Face(g_ft_face);
+        g_ft_face = NULL;
+        return -1;
+    }
+    return 0;
+}
+
+int font_init(void) {
+    static const char *const paths[] = {
+        R01_STUDIO_ASSETS_DIR "/proggy-tiny.ttf",
+        "retr01_studio/assets/proggy-tiny.ttf",
+        "assets/proggy-tiny.ttf",
+        "../retr01_studio/assets/proggy-tiny.ttf",
+        NULL,
+    };
+    int i;
+
+    if (g_ft_ready) {
         return 0;
     }
-    if (c >= '0' && c <= '9') {
-        return 1 + (c - '0');
+    if (FT_Init_FreeType(&g_ft_lib) != 0) {
+        return -1;
     }
-    if (c >= 'a' && c <= 'z') {
-        c = (char)(c - 'a' + 'A');
+    for (i = 0; paths[i]; i++) {
+        if (font_try_open(paths[i]) == 0) {
+            g_ft_ready = 1;
+            return 0;
+        }
     }
-    if (c >= 'A' && c <= 'Z') {
-        return 11 + (c - 'A');
+    FT_Done_FreeType(g_ft_lib);
+    g_ft_lib = NULL;
+    fprintf(stderr, "retr01_studio: failed to load proggy-tiny.ttf\n");
+    return -1;
+}
+
+void font_shutdown(void) {
+    if (g_ft_face) {
+        FT_Done_Face(g_ft_face);
+        g_ft_face = NULL;
     }
-    switch (c) {
-    case '.':
-        return 37;
-    case ':':
-        return 38;
-    case '-':
-        return 39;
-    case '/':
-        return 40;
-    case '_':
-        return 41;
-    case '+':
-        return 42;
-    case '=':
-        return 43;
-    case '(':
-        return 44;
-    case ')':
-        return 45;
-    default:
-        return 0; /* unknown → blank */
+    if (g_ft_lib) {
+        FT_Done_FreeType(g_ft_lib);
+        g_ft_lib = NULL;
     }
+    g_ft_ready = 0;
+}
+
+int font_line_h(void) {
+    if (font_init() != 0) {
+        return R01_UI_FONT_PX;
+    }
+    return (int)((g_ft_face->size->metrics.height + 63) >> 6);
+}
+
+static int font_ascent(void) {
+    if (font_init() != 0) {
+        return R01_UI_FONT_PX - 2;
+    }
+    return (int)((g_ft_face->size->metrics.ascender + 63) >> 6);
+}
+
+int font_text_width(const char *text) {
+    int w = 0;
+    const unsigned char *p;
+    if (!text || font_init() != 0) {
+        return 0;
+    }
+    for (p = (const unsigned char *)text; *p; p++) {
+        if (FT_Load_Char(g_ft_face, (FT_ULong)*p, FT_LOAD_DEFAULT) != 0) {
+            continue;
+        }
+        w += (int)(g_ft_face->glyph->advance.x >> 6);
+    }
+    return w;
 }
 
 void font_draw(SDL_Renderer *r, int x, int y, const char *text, Uint8 R, Uint8 G, Uint8 B) {
-    int cx = x;
-    SDL_SetRenderDrawColor(r, R, G, B, 255);
-    for (; text && *text; text++) {
-        const uint8_t *g = GLYPHS[glyph_index(*text)];
+    int pen_x;
+    int baseline;
+    const unsigned char *p;
+
+    if (!r || !text || !*text) {
+        return;
+    }
+    if (font_init() != 0) {
+        return;
+    }
+    pen_x = x;
+    baseline = y + font_ascent();
+    for (p = (const unsigned char *)text; *p; p++) {
+        FT_GlyphSlot slot;
+        FT_Bitmap *bm;
         int row, col;
-        for (row = 0; row < 7; row++) {
-            for (col = 0; col < 5; col++) {
-                if (g[row] & (0x10 >> col)) {
-                    SDL_RenderDrawPoint(r, cx + col, y + row);
+        if (FT_Load_Char(g_ft_face, (FT_ULong)*p, FT_LOAD_RENDER) != 0) {
+            continue;
+        }
+        slot = g_ft_face->glyph;
+        bm = &slot->bitmap;
+        for (row = 0; row < (int)bm->rows; row++) {
+            for (col = 0; col < (int)bm->width; col++) {
+                unsigned char a = bm->buffer[row * (int)bm->pitch + col];
+                if (a == 0) {
+                    continue;
                 }
+                SDL_SetRenderDrawColor(r, R, G, B, a);
+                SDL_RenderDrawPoint(r, pen_x + slot->bitmap_left + col, baseline - slot->bitmap_top + row);
             }
         }
-        cx += 6;
+        pen_x += (int)(slot->advance.x >> 6);
     }
+}
+
+void font_draw_centered(SDL_Renderer *r, int x, int y, int w, int h, const char *text, Uint8 R, Uint8 G,
+                        Uint8 B) {
+    int tw = font_text_width(text);
+    int th = font_line_h();
+    int tx = x + (w - tw) / 2;
+    int ty = y + (h - th) / 2;
+    font_draw(r, tx, ty, text, R, G, B);
 }

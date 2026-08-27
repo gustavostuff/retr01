@@ -276,32 +276,6 @@ static void dbg_chart_maybe_sample(DbgCpuChart *ch, Uint32 now_ms) {
     i = ch->head;
     ch->active[i] = ch->peak_active;
     ch->vblank[i] = ch->peak_vblank;
-    /* #region agent log */
-    {
-        static int dbg_s;
-        if (dbg_s < 24) {
-            FILE *df = fopen("/home/g/Repos/retr01/.cursor/debug-7de916.log", "a");
-            if (df) {
-                uint64_t sum = ch->peak_active + ch->peak_vblank;
-                double pct = R01E_CPU_BUDGET_CYCLES
-                                 ? (100.0 * (double)sum / (double)R01E_CPU_BUDGET_CYCLES)
-                                 : 0.0;
-                fprintf(df,
-                        "{\"sessionId\":\"7de916\",\"runId\":\"busy-metric\",\"hypothesisId\":\"F,G\","
-                        "\"location\":\"main.c:chart_sample\",\"message\":\"chart bar sample\","
-                        "\"data\":{\"s\":%d,\"peak_a\":%llu,\"peak_v\":%llu,\"sum\":%llu,"
-                        "\"budget\":%llu,\"pct\":%.1f,\"count\":%d},"
-                        "\"timestamp\":%u}\n",
-                        dbg_s, (unsigned long long)ch->peak_active,
-                        (unsigned long long)ch->peak_vblank, (unsigned long long)sum,
-                        (unsigned long long)R01E_CPU_BUDGET_CYCLES, pct, ch->count + 1,
-                        (unsigned)now_ms);
-                fclose(df);
-            }
-            dbg_s++;
-        }
-    }
-    /* #endregion */
     ch->head = (ch->head + 1) % DBG_CHART_BARS;
     if (ch->count < DBG_CHART_BARS) {
         ch->count++;

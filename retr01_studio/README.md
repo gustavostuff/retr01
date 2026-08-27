@@ -1,10 +1,50 @@
 # retr01 Studio
 
-Visual authoring tool for retr01 worlds, screens, and cartridge images. This document is the **product spec** for **Studio Phase 1**. Hardware and memory layout: [`docs/02_graphics_worlds_memory.md`](../docs/02_graphics_worlds_memory.md). Short docs mirror: [`docs/04_retr01_studio.md`](../docs/04_retr01_studio.md).
+Visual authoring tool for retr01 worlds, screens, and cartridge images. **Phase 1** (PNG import + Play + export) remains; **Phase 2** adds multi-world chrome, screen create/delete, and tile paint. Hardware layout: [`docs/02_graphics_worlds_memory.md`](../docs/02_graphics_worlds_memory.md). Short docs mirror: [`docs/04_retr01_studio.md`](../docs/04_retr01_studio.md).
 
-**Stack:** C11 + SDL2, shared `libretr01_studio_core` + thin shell.
+**Stack:** C11 + SDL2 + FreeType (Proggy Tiny), shared `libretr01_studio_core` + thin shell.
 
-Later Studio phases are **not** specified here; they will be defined when work starts.
+---
+
+## Phase 2 -- Worlds + BG tile paint
+
+**Goal:** Author worlds/screens without PNG-only workflows: create/remove screens, edit 8x8 tiles, paint them onto maps.
+
+### UI chrome
+
+Fixed **640x360** logical canvas. Dark gray / darker gray only. All chrome snaps to an **8px** grid. Buttons and labels are **16px** tall; width = content rounded up to a multiple of 8. Font: **Proggy Tiny** (`assets/proggy-tiny.ttf`).
+
+```text
++------------------------------------------------------------------+
+| Worlds                                                           |
+| [0][1][2][3][4][5][6][7]     [ Play ]                            |
+| +--------------+                                                 |
+| | 128x128 map  |              [ Screen 256x240 @2x ]             |
+| | 16px cells   |                                                 |
+| +--------------+                              [BG/SPR 8px pals]  |
++------------------------------------------------------------------+
+```
+
+| Control | Behavior |
+|---------|----------|
+| **Worlds** label | Above the world buttons |
+| **8 world buttons** | 16x16 each. World 0 starts present with a **3x3** blank screen region on an **8x8** slot map. Other worlds empty until clicked (creates empty world). |
+| **World map 128x128** | Cell pitch **16** (15px fill + 1px gap). Present screens dark; active screen green. |
+| **Double-click** empty slot | Create screen |
+| **Ctrl+click** present slot | Remove screen |
+| **Click** present slot | Select active screen |
+| **Play** | Centered above the screen view (Space / button) |
+| **Palette strip** | Bottom-right, **8x8** contiguous swatches, BG row then SPR row |
+
+### Tile edit
+
+| Step | Action |
+|------|--------|
+| Right-click screen | Context menu: **Edit tile** (and **Paint with this** after a save) |
+| **Edit tile** modal | **288x160**. Title, **Palette/color** 4x4 (4 pals x 4 colors, 8px cells), **128x128** pixel canvas (16px per tile pixel), Save / Cancel |
+| After Save | Brush armed; menu gains **Paint with this**; left-click paints that tile+palette onto the map |
+
+PNG drop still imports into the **active** world. Export / cart pack remains **world 0** (Phase 1 cart path).
 
 ---
 

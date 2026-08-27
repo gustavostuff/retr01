@@ -46,6 +46,7 @@ int r01_world_set_grid(R01World *w, int cols, int rows) {
 }
 
 void r01_world_init_phase1(R01World *w) {
+    int col, row, idx;
     if (!w) {
         return;
     }
@@ -53,7 +54,29 @@ void r01_world_init_phase1(R01World *w) {
     w->present = 1;
     w->default_bg_bank = 0;
     w->default_pal_row = 0;
-    r01_world_set_grid(w, R01_DEFAULT_GRID, R01_DEFAULT_GRID);
+    /* Full 8x8 map slots; default authored region is 3x3 present blank screens. */
+    r01_world_set_grid(w, R01_GRID_MAX, R01_GRID_MAX);
+    for (row = 0; row < R01_DEFAULT_GRID; row++) {
+        for (col = 0; col < R01_DEFAULT_GRID; col++) {
+            idx = r01_world_screen_index(w, col, row);
+            if (idx >= 0) {
+                w->screens[idx].present = 1;
+            }
+        }
+    }
+    r01_world_sync_default_screen(w);
+}
+
+void r01_world_init_empty(R01World *w) {
+    if (!w) {
+        return;
+    }
+    memset(w, 0, sizeof(*w));
+    w->present = 1;
+    w->default_bg_bank = 0;
+    w->default_pal_row = 0;
+    r01_world_set_grid(w, R01_GRID_MAX, R01_GRID_MAX);
+    r01_world_sync_default_screen(w);
 }
 
 void r01_project_init(R01Project *p, const char *name) {
@@ -63,6 +86,8 @@ void r01_project_init(R01Project *p, const char *name) {
     } else {
         strncpy(p->name, "untitled", R01_NAME_MAX - 1);
     }
+    p->default_world = 0;
+    p->active_world = 0;
     p->active_screen = 0;
     r01_project_init_phase1_pals(p);
     r01_world_init_phase1(&p->worlds[0]);
@@ -75,6 +100,20 @@ R01World *r01_project_world0(R01Project *p) {
 
 const R01World *r01_project_world0_const(const R01Project *p) {
     return p ? &p->worlds[0] : NULL;
+}
+
+R01World *r01_project_active_world(R01Project *p) {
+    if (!p || p->active_world < 0 || p->active_world >= R01_MAX_WORLDS) {
+        return NULL;
+    }
+    return &p->worlds[p->active_world];
+}
+
+const R01World *r01_project_active_world_const(const R01Project *p) {
+    if (!p || p->active_world < 0 || p->active_world >= R01_MAX_WORLDS) {
+        return NULL;
+    }
+    return &p->worlds[p->active_world];
 }
 
 int r01_world_find_screen(const R01World *w, int col, int row) {
@@ -102,8 +141,8 @@ R01Screen *r01_world_screen_at(R01World *w, int col, int row) {
 
 R01Screen *r01_project_active_screen(R01Project *p) {
     R01World *w;
-    w = r01_project_world0(p);
-    if (!p || !w || p->active_screen < 0 || p->active_screen >= w->screen_count) {
+    w = r01_project_active_world(p);
+    if (!p || !w || !w->present || p->active_screen < 0 || p->active_screen >= w->screen_count) {
         return NULL;
     }
     if (!w->screens[p->active_screen].present) {
@@ -119,8 +158,8 @@ void r01_project_select_start_screen(R01Project *p) {
     if (!p) {
         return;
     }
-    w = r01_project_world0(p);
-    if (!w || w->screen_count < 1) {
+    w = r01_project_active_world(p);
+    if (!w || !w->present || w->screen_count < 1) {
         p->active_screen = 0;
         return;
     }
@@ -136,6 +175,120 @@ void r01_project_select_start_screen(R01Project *p) {
         }
     }
     p->active_screen = (idx >= 0 && idx < w->screen_count) ? idx : 0;
+}
+
+static int world_start_screen_index(const R01World *w) {
+    int idx;
+    int i;
+    if (!w || !w->present || w->screen_count < 1) {
+        return 0;
+    }
+    idx = r01_world_screen_index(w, R01_START_COL, R01_START_ROW);
+    if (idx >= 0 && idx < w->screen_count && w->screens[idx].present) {
+        return idx;
+    }
+    for (i = 0; i < w->screen_count; i++) {
+        if (w->screens[i].present) {
+            return i;
+        }
+    }
+    return (idx >= 0 && idx < w->screen_count) ? idx : 0;
+}
+
+int r01_world_default_screen(const R01World *w) {
+    if (!w || !w->present || w->screen_count < 1) {
+        return 0;
+    }
+    if (w->default_screen >= 0 && w->default_screen < w->screen_count &&
+        w->screens[w->default_screen].present) {
+        return w->default_screen;
+    }
+    return world_start_screen_index(w);
+}
+
+void r01_world_sync_default_screen(R01World *w) {
+    if (w) {
+        w->default_screen = world_start_screen_index(w);
+    }
+}
+
+void r01_project_begin_play(R01Project *p) {
+    R01World *w;
+    if (!p) {
+        return;
+    }
+    if (p->default_world < 0 || p->default_world >= R01_MAX_WORLDS ||
+        !p->worlds[p->default_world].present) {
+        p->default_world = 0;
+    }
+    p->active_world = p->default_world;
+    w = r01_project_active_world(p);
+    if (!w) {
+        return;
+    }
+    r01_world_sync_default_screen(w);
+    p->active_screen = r01_world_default_screen(w);
+}
+
+int r01_project_set_active_world(R01Project *p, int world_idx) {
+    if (!p || world_idx < 0 || world_idx >= R01_MAX_WORLDS) {
+        return -1;
+    }
+    if (!p->worlds[world_idx].present) {
+        r01_world_init_empty(&p->worlds[world_idx]);
+    }
+    p->active_world = world_idx;
+    r01_project_select_start_screen(p);
+    return 0;
+}
+
+int r01_world_create_screen(R01World *w, int col, int row) {
+    R01Screen *s;
+    if (!w || !w->present || col < 0 || row < 0 || col >= R01_GRID_MAX || row >= R01_GRID_MAX) {
+        return -1;
+    }
+    if (w->grid_cols < R01_GRID_MAX || w->grid_rows < R01_GRID_MAX) {
+        /* Expand to full map while preserving present screens. */
+        R01Screen old[R01_MAX_SCREENS];
+        int n = w->screen_count;
+        int i;
+        memcpy(old, w->screens, sizeof(old));
+        r01_world_set_grid(w, R01_GRID_MAX, R01_GRID_MAX);
+        for (i = 0; i < n; i++) {
+            if (!old[i].present) {
+                continue;
+            }
+            s = r01_world_screen_at(w, old[i].col, old[i].row);
+            if (s) {
+                *s = old[i];
+            }
+        }
+    }
+    s = r01_world_screen_at(w, col, row);
+    if (!s) {
+        return -1;
+    }
+    if (!s->present) {
+        init_screen(s, col, row);
+        s->present = 1;
+    }
+    return r01_world_screen_index(w, col, row);
+}
+
+int r01_world_remove_screen(R01World *w, int col, int row) {
+    R01Screen *s = r01_world_screen_at(w, col, row);
+    int idx;
+    int was_default;
+    if (!s || !s->present) {
+        return -1;
+    }
+    idx = r01_world_screen_index(w, col, row);
+    was_default = (idx >= 0 && idx == w->default_screen);
+    init_screen(s, col, row);
+    if (was_default) {
+        r01_world_sync_default_screen(w);
+    }
+    return 0;
 }
 
 static void set_err(char *err_buf, size_t err_cap, const char *msg) {
@@ -277,7 +430,7 @@ int r01_project_import_png(R01Project *p, const char *path, char *err_buf, size_
         set_err(err_buf, err_cap, "bad args");
         return -1;
     }
-    w = r01_project_world0(p);
+    w = r01_project_active_world(p);
     if (!w) {
         set_err(err_buf, err_cap, "bad args");
         return -1;

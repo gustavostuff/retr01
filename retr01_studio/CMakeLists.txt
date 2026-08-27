@@ -21,6 +21,7 @@ target_include_directories(retr01_studio_core PUBLIC
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBPNG REQUIRED IMPORTED_TARGET libpng)
 pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
+pkg_check_modules(FREETYPE REQUIRED IMPORTED_TARGET freetype2)
 target_link_libraries(retr01_studio_core PUBLIC PkgConfig::LIBPNG)
 
 enable_testing()
@@ -37,7 +38,9 @@ add_library(retr01_studio_app
 target_include_directories(retr01_studio_app PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/app/src
 )
-target_link_libraries(retr01_studio_app PUBLIC retr01_studio_core PkgConfig::SDL2)
+target_link_libraries(retr01_studio_app PUBLIC retr01_studio_core PkgConfig::SDL2 PkgConfig::FREETYPE)
+target_compile_definitions(retr01_studio_app PRIVATE
+  "R01_STUDIO_ASSETS_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/assets\"")
 
 add_executable(retr01_studio app/src/main.c)
 target_link_libraries(retr01_studio PRIVATE retr01_studio_app)

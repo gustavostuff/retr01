@@ -28,8 +28,10 @@ int main(void) {
     }
 
     r01_project_init(p, "test");
-    expect_true(p->worlds[0].screen_count == R01_DEFAULT_GRID * R01_DEFAULT_GRID, "9 screens default");
+    expect_true(p->worlds[0].screen_count == R01_GRID_MAX * R01_GRID_MAX, "8x8 screen slots");
     expect_true(p->worlds[0].screens[2].col == 2 && p->worlds[0].screens[2].row == 0, "start screen 2,0");
+    expect_true(p->worlds[0].screens[0].present && p->worlds[0].screens[3].present == 0,
+                "default 3x3 present region");
     expect_true(p->active_screen == 2, "active start 2,0");
     {
         int i;
@@ -71,7 +73,7 @@ int main(void) {
     expect_true(r01_project_save_json(p, "test_project.json", err, sizeof(err)) == 0, "save json");
     memset(p, 0, sizeof(*p));
     expect_true(r01_project_load_json(p, "test_project.json", err, sizeof(err)) == 0, "load json");
-    expect_true(p->worlds[0].screen_count == R01_DEFAULT_GRID * R01_DEFAULT_GRID, "reload screens");
+    expect_true(p->worlds[0].screen_count == R01_GRID_MAX * R01_GRID_MAX, "reload screens");
 
     expect_true(r01_cart_write(p, "test_cart.retr01", err, sizeof(err)) == 0, "cart write");
     {
