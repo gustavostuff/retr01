@@ -199,8 +199,8 @@ int main(void) {
             if (r01s_board_load_cart(b, paths[pi]) == 0) {
                 loaded = 1;
                 expect_true(r01s_sst39sf040_peek(&b->cart_flash, 0) == 'r', "studio cart magic");
-                expect_true(r01s_sst39sf040_peek(&b->cart_flash, b->cart_off_prg) == 0xA9,
-                            "bring-up LDA overlay");
+                expect_true(r01s_sst39sf040_peek(&b->cart_flash, b->cart_off_prg) == 0x78,
+                            "studio cart PRG SEI (not sim overlay)");
                 expect_true(b->cart_off_chr != 0, "world0 CHR base from cart");
                 expect_true(b->cart_off_map_screen0 != 0, "world0 start-screen MAP payload");
                 r01s_island_group_reset(group);

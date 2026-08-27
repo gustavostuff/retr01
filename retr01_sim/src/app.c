@@ -151,6 +151,7 @@ static int catchup_thread_fn_yielding(void *userdata) {
                 /* Same sticky marks as r01s_board_catchup_bringup (A==$AA is easy to miss). */
                 board->health_saw_vram = 1;
                 board->health_saw_vram_read = 1;
+                board->health_saw_map = 1;
                 r01s_board_catchup_finish(board);
                 break;
             }

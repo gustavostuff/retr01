@@ -181,7 +181,7 @@ void r01s_board_debug_begin(R01sBoard *board, int enabled) {
     atexit(r01s_board_debug_end);
     fprintf(g_log, "retr01_sim board debug trace\n");
     fprintf(g_log, "started: %s", ctime(&now));
-    fprintf(g_log, "note: bring-up PRG overlay replaces Studio PRG; no host soft-boot of MAP/CHR.\n");
+    fprintf(g_log, "note: cart PRG from flash image (Studio export); synthetic cart uses sim overlay.\n");
     fprintf(g_log, "expected LCD after bring-up MAP/CHR: world-0 screen (sky), not only smoke red.\n");
     if (board) {
         write_snapshot(board, 0, "begin");

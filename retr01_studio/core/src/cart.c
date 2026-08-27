@@ -118,7 +118,7 @@ int r01_prg_write_asm(const R01Project *p, const char *path, char *err_buf, size
         return -1;
     }
     w = p ? &p->worlds[0] : NULL;
-    fprintf(f, "; retr01 Phase 1 — Smooth + Eagle View (Studio Play SoT)\n");
+    fprintf(f, "; retr01 Phase 1 — boot streams palette + start MAP, then VBlank pad poll.\n");
     fprintf(f, "; Gameplay: Studio play.c / emu cart runtime (marker R01P @ $80F0).\n");
     fprintf(f, "; Play table @ $8100: present[8] bitmask, spawn_col, spawn_row.\n");
     fprintf(f, ".setcpu \"65C02\"\n");
@@ -132,6 +132,7 @@ int r01_prg_write_asm(const R01Project *p, const char *path, char *err_buf, size
     fprintf(f, "reset:\n        sei\n        cld\n        ldx #$ff\n        txs\n");
     fprintf(f, "        lda #0\n        sta WORLD\n        sta SCROLL_X\n        sta SCROLL_Y\n");
     fprintf(f, "        lda #1\n        sta PPUCTRL\n");
+    fprintf(f, "; palette + MAP stream patched at export — see prg_phase1.c\n");
     fprintf(f, "main:\n        lda PPUSTATUS\n        and #$80\n        beq main\n");
     fprintf(f, "        lda PAD0\n        sta $00FE\n        jmp main\n");
     fprintf(f, ".segment \"PLAY\"\n.org $8100\n");
@@ -270,6 +271,45 @@ static int build_world_blob(Buf *blob, const R01World *w) {
     return 0;
 }
 
+static uint32_t cart_off_map_screen0(const R01World *w, uint32_t world_base) {
+    uint32_t off_chr = WORLD_HDR_SIZE;
+    uint32_t off_sdir =
+        off_chr + (uint32_t)R01_BG_BANKS * R01_CHR_BANK_BYTES + (uint32_t)R01_SPR_BANKS * R01_CHR_BANK_BYTES;
+    uint32_t payload_base;
+    int present_n = 0;
+    int di = 0;
+    int si;
+
+    if (!w) {
+        return 0;
+    }
+    for (si = 0; si < w->screen_count; si++) {
+        if (w->screens[si].present) {
+            present_n++;
+        }
+    }
+    payload_base = off_sdir + (uint32_t)present_n * SCREEN_DIR_ENT;
+    for (si = 0; si < w->screen_count; si++) {
+        const R01Screen *s = &w->screens[si];
+        if (!s->present) {
+            continue;
+        }
+        if (s->col == R01_START_COL && s->row == R01_START_ROW) {
+            return world_base + payload_base + (uint32_t)di * SCREEN_PAYLOAD;
+        }
+        di++;
+    }
+    di = 0;
+    for (si = 0; si < w->screen_count; si++) {
+        const R01Screen *s = &w->screens[si];
+        if (!s->present) {
+            continue;
+        }
+        return world_base + payload_base + (uint32_t)di * SCREEN_PAYLOAD;
+    }
+    return 0;
+}
+
 static int r01_cart_build(const R01Project *p, uint8_t **out, size_t *out_len, char *err_buf, size_t err_cap) {
     Buf cart = {0};
     R01Project *work;
@@ -277,7 +317,8 @@ static int r01_cart_build(const R01Project *p, uint8_t **out, size_t *out_len, c
     uint8_t ptrs[PTR_TABLE_SIZE];
     uint8_t wtable[WORLD_TABLE_SIZE];
     uint8_t prg[R01_PRG_BYTES];
-    uint32_t off_prg, off_pal_bg, off_pal_spr, off_wtable;
+    uint32_t off_prg, off_pal_bg, off_pal_spr, off_wtable, world_base;
+    R01PrgCartLayout prg_layout;
     Buf world_blob = {0};
 
     if (!p || !out || !out_len) {
@@ -308,12 +349,21 @@ static int r01_cart_build(const R01Project *p, uint8_t **out, size_t *out_len, c
     memcpy(hdr, "retr01", 6);
     hdr[6] = R01_CART_FORMAT_VER;
     hdr[7] = 1;
-    r01_prg_fill_phase1(prg, &work->worlds[0]);
 
     off_pal_bg = HDR_SIZE + PTR_TABLE_SIZE;
     off_pal_spr = off_pal_bg + R01_PAL_PLANE_BYTES;
     off_prg = off_pal_spr + R01_PAL_PLANE_BYTES;
     off_wtable = off_prg + R01_PRG_BYTES;
+    world_base = off_wtable + WORLD_TABLE_SIZE;
+
+    memset(&prg_layout, 0, sizeof(prg_layout));
+    prg_layout.off_pal_bg = off_pal_bg;
+    prg_layout.len_pal_bg = R01_PAL_PLANE_BYTES;
+    prg_layout.off_pal_spr = off_pal_spr;
+    prg_layout.len_pal_spr = R01_PAL_PLANE_BYTES;
+    prg_layout.default_pal_row = (uint8_t)(work->worlds[0].default_pal_row & 7u);
+    prg_layout.off_map_screen0 = cart_off_map_screen0(&work->worlds[0], world_base);
+    r01_prg_fill_phase1(prg, &work->worlds[0], &prg_layout);
 
     memset(ptrs, 0, sizeof(ptrs));
     put_u24(ptrs + 0, off_prg);

@@ -1,4 +1,4 @@
-; retr01 Phase 1 — Smooth + Eagle View (Studio Play SoT)
+; retr01 Phase 1 — boot streams palette + start MAP, then VBlank pad poll.
 ; Gameplay: Studio play.c / emu cart runtime (marker R01P @ $80F0).
 ; Play table @ $8100: present[8] bitmask, spawn_col, spawn_row.
 .setcpu "65C02"
@@ -21,6 +21,7 @@ reset:
         sta SCROLL_Y
         lda #1
         sta PPUCTRL
+; palette + MAP stream patched at export — see prg_phase1.c
 main:
         lda PPUSTATUS
         and #$80

@@ -59,9 +59,26 @@ static void place_player_on_screen(R01sPlay *pl, int col, int row) {
 
 static int spawn_screen(R01sBoard *b, int *out_col, int *out_row) {
     int sc, sr;
+    const uint8_t *prg;
 
     if (!b) {
         return 0;
+    }
+    if (b->cart_off_prg != 0 && b->cart_len_prg > 0x0109u) {
+        prg = b->cart_flash.mem + b->cart_off_prg;
+        if (prg[0x00F0] == 'R' && prg[0x00F1] == '0' && prg[0x00F2] == '1' && prg[0x00F3] == 'P') {
+            sc = (int)prg[0x0108];
+            sr = (int)prg[0x0109];
+            if (r01s_board_has_screen(b, sc, sr)) {
+                if (out_col) {
+                    *out_col = sc;
+                }
+                if (out_row) {
+                    *out_row = sr;
+                }
+                return 1;
+            }
+        }
     }
     sc = (int)b->cart_start_col;
     sr = (int)b->cart_start_row;
@@ -107,7 +124,7 @@ static void queue_video(R01sBoard *b) {
     uint8_t sx;
     uint8_t sy;
 
-    if (!b || !b->play.enabled) {
+    if (!b) {
         return;
     }
     pl = &b->play;
@@ -138,18 +155,24 @@ static void apply_video_latch(R01sBoard *b) {
     R01sPlay *pl;
     R01sVideoSink *sink;
 
-    if (!b || !b->play.enabled || !b->play.video_pending) {
+    if (!b || !b->play.video_pending) {
         return;
     }
     pl = &b->play;
     sink = b->video_impl.sink;
-    /* Persist/Phosphor must not hard-clear on scroll: that wipes trails and makes the
-     * slow beam redraw look like a growing/glitching sprite. Normal clears on VBlank. */
-    if (sink && r01s_video_sink_render_mode(sink) == R01S_VIDEO_RENDER_NORMAL) {
+    if (sink) {
         int scroll_changed = pl->pending_scroll_x != r01s_sn74hc573_peek_q(b->io_latch_impl.latch573[R01S_LATCH_FE02]) ||
                              pl->pending_scroll_y != r01s_sn74hc573_peek_q(b->io_latch_impl.latch573[R01S_LATCH_FE03]);
         int origin_changed = pl->pending_origin_col != pl->origin_col || pl->pending_origin_row != pl->origin_row;
-        if (scroll_changed || origin_changed || pl->pending_camera_reload) {
+        int mode = r01s_video_sink_render_mode(sink);
+        int do_clear = 0;
+        if (mode == R01S_VIDEO_RENDER_NORMAL) {
+            do_clear = scroll_changed || origin_changed || pl->pending_camera_reload;
+        } else {
+            /* Persist/Phosphor: never hard-clear on scroll nudge; only on 2×2 seam reload. */
+            do_clear = origin_changed || pl->pending_camera_reload;
+        }
+        if (do_clear) {
             r01s_video_sink_clear(sink);
         }
     }
@@ -248,7 +271,6 @@ int r01s_play_start(R01sBoard *board) {
         return 0;
     }
     r01s_board_mark_map_ready(board);
-    board->play.enabled = 1;
     /* Host Play owns pads; FAST catchup skips smoke LDA $FE60 so mark pad health here. */
     board->health_saw_pad = 1;
     place_player_on_screen(&board->play, col, row);
@@ -261,7 +283,12 @@ int r01s_play_start(R01sBoard *board) {
         r01s_atmega328p_poke(board->apu_impl.apu, 2, 0x00);
         r01s_atmega328p_poke(board->apu_impl.apu, 0, 0x8F);
     }
-    if (board->video_impl.sink) {
+    /* Latch scroll + 2×2 before play.enabled so no field renders at scroll=$00. */
+    board->play.force_camera_reload = 1;
+    queue_video(board);
+    apply_video_latch(board);
+    if (board->video_impl.sink &&
+        r01s_video_sink_render_mode(board->video_impl.sink) == R01S_VIDEO_RENDER_NORMAL) {
         r01s_video_sink_clear(board->video_impl.sink);
     }
     /* After clear, start raster at (0,0) so the first field paints the top (no black corner). */
@@ -275,9 +302,8 @@ int r01s_play_start(R01sBoard *board) {
             r01s_as6c62256_poke(board->mcu_lb_impl.sram, ai, 0);
         }
     }
-    board->play.force_camera_reload = 1;
-    queue_video(board);
-    r01s_play_on_vblank(board);
+    board->play.enabled = 1;
+    write_oam_player(board);
     return 1;
 }
 

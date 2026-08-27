@@ -29,6 +29,9 @@
 #define R01S_BEAM_DOTS_PER_STEP_FAST 4
 /* Fast mode combinatorial depth (pin mode uses R01S_SETTLE_PASSES). */
 #define R01S_SETTLE_PASSES_FAST 1
+/* PRG init LDA #imm offsets (must match retr01_studio/prg_phase1.c). */
+#define R01S_PRG_INIT_SCROLL_X 11u
+#define R01S_PRG_INIT_SCROLL_Y 16u
 
 /*
  * Bring-up smoke PRG (overlay into cart PRG window: not Studio game code).
@@ -1373,6 +1376,22 @@ static void board_vram_cell_at(const R01sBoard *ctx, int lx, int ly, uint8_t *ti
     *attr_out = r01s_as6c62256_peek(ctx->vram_impl.vram, (uint16_t)(addr - cell + R01S_BG_ATTR_OFF + cell));
 }
 
+static uint32_t board_map_off_for_screen(const R01sBoard *board, int col, int row);
+
+static void board_apply_prg_boot_scroll(R01sBoard *board) {
+    uint32_t off;
+
+    if (!board || board->cart_off_prg == 0) {
+        return;
+    }
+    off = board->cart_off_prg;
+    if (off + R01S_PRG_INIT_SCROLL_Y >= (uint32_t)sizeof(board->cart_flash.mem)) {
+        return;
+    }
+    r01s_board_set_scroll(board, board->cart_flash.mem[off + R01S_PRG_INIT_SCROLL_X],
+                          board->cart_flash.mem[off + R01S_PRG_INIT_SCROLL_Y]);
+}
+
 static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     uint8_t tile, attr, color, pal, master;
     int local_x, local_y;
@@ -1592,15 +1611,12 @@ static int board_video_held_for_map_stream(const R01sBoard *ctx) {
     if (!ctx || ctx->cart_off_map_screen0 == 0) {
         return 0;
     }
-    /* Host Play uses catchup-loaded VRAM; do not blank on stale map_addr. */
+    /* Host Play applies camera scroll after catchup; cart PRG init owns boot scroll. */
     if (ctx->play.enabled) {
         return 0;
     }
-    if (ctx->health_saw_map && ctx->cart_off_map_screen0 != 0 &&
-        ctx->map_addr >= ctx->cart_off_map_screen0 + 480u) {
-        return 0;
-    }
-    return ctx->map_addr < ctx->cart_off_map_screen0 + 480u;
+    /* Hold during MAP stream and until play latches scroll + 2×2 camera. */
+    return 1;
 }
 
 /*
@@ -1802,6 +1818,7 @@ void r01s_board_catchup_finish(R01sBoard *board) {
     }
     if (board->cart_off_map_screen0 != 0) {
         poke_map_addr_latches(board, board->cart_off_map_screen0 + 480u);
+        board->health_saw_map = 1;
     }
     if (board->cart_off_sdir != 0) {
         (void)r01s_board_load_camera_2x2(board, (int)board->cart_start_col, (int)board->cart_start_row);
@@ -1824,8 +1841,7 @@ static int board_fast_apply_map_stream(R01sBoard *board) {
     }
     board_apply_active_pals_from_cart(board);
     r01s_board_catchup_finish(board);
-    r01s_sn74hc573_poke_q(board->io_latch_impl.latch573[R01S_LATCH_FE02], 0);
-    r01s_sn74hc573_poke_q(board->io_latch_impl.latch573[R01S_LATCH_FE03], 0);
+    board_apply_prg_boot_scroll(board);
     /* FAST skips the pin steps that burn reset_hold; leave RESB high and park
      * at hang so Play does not re-fetch $8000 and re-run smoke+MAP stream. */
     board->reset_hold = 0;
@@ -2162,6 +2178,8 @@ static void board_install_synthetic_cart(R01sBoard *board) {
     board_install_bringup_prg(board);
 }
 
+static void board_sync_main_pc_from_cart(R01sBoard *board);
+
 static int board_parse_cart_image(R01sBoard *board, const uint8_t *img, size_t len) {
     const uint8_t *ptrs;
     uint32_t off_prg;
@@ -2198,7 +2216,22 @@ static int board_parse_cart_image(R01sBoard *board, const uint8_t *img, size_t l
     board->cart_off_prg = off_prg;
     board->cart_len_prg = len_prg;
     board->cart_loaded = 1;
+    board_resolve_cart_meta(board);
+    board_sync_main_pc_from_cart(board);
     return 0;
+}
+
+static void board_sync_main_pc_from_cart(R01sBoard *board) {
+    uint32_t off;
+    if (!board || !board->cart_loaded || board->cart_off_prg == 0) {
+        return;
+    }
+    off = board->cart_off_prg + 0x7FFAu;
+    if (off + 1u >= sizeof(board->cart_flash.mem)) {
+        return;
+    }
+    board->bringup_hang_pc =
+        (uint16_t)((uint16_t)board->cart_flash.mem[off] | ((uint16_t)board->cart_flash.mem[off + 1u] << 8));
 }
 
 int r01s_board_load_cart(R01sBoard *board, const char *path) {
@@ -2238,8 +2271,7 @@ int r01s_board_load_cart(R01sBoard *board, const char *path) {
         const char *slash = strrchr(path, '/');
         snprintf(board->cart_label, sizeof(board->cart_label), "%s", slash ? slash + 1 : path);
     }
-    /* Bring-up overlay: keep island smoke working on a real Studio cart. */
-    board_install_bringup_prg(board);
+    /* Cart PRG in flash is executed as-is (Studio export includes MAP boot). */
     return 0;
 }
 
@@ -2348,6 +2380,7 @@ void r01s_board_set_scroll(R01sBoard *board, uint8_t scroll_x, uint8_t scroll_y)
     }
     r01s_sn74hc573_poke_q(board->io_latch_impl.latch573[R01S_LATCH_FE02], scroll_x);
     r01s_sn74hc573_poke_q(board->io_latch_impl.latch573[R01S_LATCH_FE03], scroll_y);
+    board->health_saw_latch = 1;
 }
 
 void r01s_board_park_bringup_cpu(R01sBoard *board) {
@@ -2439,6 +2472,7 @@ int r01s_board_catchup_bringup(R01sBoard *board, R01sIslandGroup *group) {
              * often misses it. MAP-complete + matching VRAM[0] proves the port. */
             board->health_saw_vram = 1;
             board->health_saw_vram_read = 1;
+            board->health_saw_map = 1;
             r01s_board_catchup_finish(board);
             return 0;
         }

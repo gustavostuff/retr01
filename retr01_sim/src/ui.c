@@ -47,7 +47,7 @@ static void draw_radio_option(SDL_Renderer *r, const SDL_Rect *rc, int selected,
 #define R01S_LCD_CTRL_BTN_H 20
 #define R01S_LCD_CTRL_PAD_Y 2
 #define R01S_LCD_CTRL_GAP 6
-#define R01S_LCD_CTRL_BTN_N 5
+#define R01S_LCD_CTRL_BTN_N 4
 #define R01S_LCD_CTRL_BTN_W_MIN 28
 #define R01S_LCD_CTRL_BTN_W_MAX 38
 
@@ -731,7 +731,7 @@ static void display_ctrl_btn_rect(const R01sUi *ui, const R01sEntity *e, int btn
 
 static void draw_lcd_ctrl_bar(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e,
                               const R01sVideoSink *sink) {
-    static const char *const labels[R01S_LCD_CTRL_BTN_N] = {"NRM", "PRS", "PHO", "1X", "2X"};
+    static const char *const labels[R01S_LCD_CTRL_BTN_N] = {"PRS", "PHO", "1X", "2X"};
     SDL_Rect rc;
     int mode;
     int scale2;
@@ -743,7 +743,7 @@ static void draw_lcd_ctrl_bar(SDL_Renderer *r, const R01sUi *ui, const R01sEntit
     mode = r01s_video_sink_render_mode(sink);
     scale2 = r01s_video_sink_scale_2x(sink);
     for (i = 0; i < R01S_LCD_CTRL_BTN_N; i++) {
-        int sel = (i < 3) ? (mode == i) : (i == 3 ? !scale2 : scale2);
+        int sel = (i < 2) ? (mode == i + 1) : (i == 2 ? !scale2 : scale2);
         display_ctrl_btn_rect(ui, e, i, &rc);
         draw_segment_btn(r, &rc, sel, labels[i]);
     }
@@ -3863,10 +3863,10 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                     display_ctrl_btn_rect(ui, e, b, &rc);
                     if (logic_x >= rc.x && logic_x < rc.x + rc.w && logic_y >= rc.y &&
                         logic_y < rc.y + rc.h) {
-                        if (b < 3) {
-                            ui_set_screen_render_mode(ui, b);
+                        if (b < 2) {
+                            ui_set_screen_render_mode(ui, b + 1);
                         } else {
-                            ui_set_lcd_scale(ui, b == 4);
+                            ui_set_lcd_scale(ui, b == 3);
                         }
                         return 1;
                     }

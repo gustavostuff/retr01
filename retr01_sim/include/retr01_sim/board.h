@@ -192,7 +192,7 @@ typedef struct R01sBoard {
     uint8_t cart_start_row;
     int cart_loaded;
     char cart_label[48];
-    uint16_t bringup_hang_pc; /* PRG pad-poll loop after bring-up overlay (host park target) */
+    uint16_t bringup_hang_pc; /* PRG main-loop PC from cart vector $FFFA (host park target) */
     /* Active palette RAM (soft); addr index from HC573 FE08. */
     uint8_t active_pal[32];
     uint8_t pal_addr;
