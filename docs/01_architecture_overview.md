@@ -14,6 +14,7 @@ When docs disagree, use this order.
 | Emulator Phase 1 | [`retr01_emu/README.md`](../retr01_emu/README.md) | Soft cart runtime matching Studio Play |
 | Audio / APU protocol | [`09`](09_audio_architecture.md) | 6502 sequencer + 328P mixer; `$FE4x` bus bridge |
 | Board IC simulator | [`08`](08_simulator.md) + [`retr01_sim/README.md`](../retr01_sim/README.md) | Pin/netlist models of the 32-IC BOM |
+| Studio game modules (movement, camera, entities, collision budgets) | [`10`](10_game_modules.md) | Attachable gameplay profiles. Studio phases implement subsets later |
 | IC pin/behavior detail | [`hw/md/`](../hw/md/) + datasheet PDFs | Sim and schematics |
 
 **Current product board:** [`06`](06_hardware_v1_32ic.md), **32 ICs**, ~**12 x 12 cm** 4-layer THT.
@@ -168,4 +169,5 @@ Studio Phase 1: PNG atlas import, Play preview, `.retr01` export. Emulator Phase
 - retr01 Studio Phase 1: `04_retr01_studio.md` / `retr01_studio/README.md`
 - Locked decisions + open Qs: `05_costs_and_open_questions.md`
 - Board simulator: `08_simulator.md`
+- Game modules (Studio attachable mechanics + budgets): `10_game_modules.md`
 - IC markdown notes: `hw/md/`
