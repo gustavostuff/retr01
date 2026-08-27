@@ -13,7 +13,7 @@ Overall roadmap:
 |---|---|---|
 | 1 | **retr01-A** | Arcade motherboard, the first build. Uses THT components and doesn't worry too much about PCB size.  |
 | 2 | **retr01-C** | Home console. We'll have to mind the board size for this one and use controllers (3-cable line planned). |
-| 3 | **retr01-H** | Handheld. This is the most challenging task. Will use SMD components, multiple boards, LCD, battery, etc. |
+| 3 | **retr01-H** | Handheld. This is the most challenging task. It will use SMD parts, contact pads, LCD, battery, etc. |
 
 The arcade board: something you can drop into a cabinet, wire to sticks and buttons, and run games that look and play like classic 8-bit tile/sprite games. A world model and CPU budget built for large designs.
 
