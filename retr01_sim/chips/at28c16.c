@@ -95,21 +95,31 @@ void r01s_at28c16_init(R01sAt28c16 *chip, const char *refdes) {
     r01s_entity_init(&chip->base, &PROM_VT, "AT28C16", refdes ? refdes : "U?");
     chip->base.impl = chip;
 
-    for (i = 0; i < 6; i++) {
-        char name[4];
-        snprintf(name, sizeof(name), "A%d", i);
-        r01s_entity_add_pin(&chip->base, 1 + i, name, R01S_PIN_IN);
-    }
-    for (i = 0; i < 8; i++) {
+    /* 24-pin PDIP per hw/md/AT28C16.md — sim uses A0–A5 only; tie-offs are NC. */
+    r01s_entity_add_pin(&chip->base, 1, "A7", R01S_PIN_NC);
+    r01s_entity_add_pin(&chip->base, 2, "A6", R01S_PIN_NC);
+    r01s_entity_add_pin(&chip->base, 3, "A5", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 4, "A4", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 5, "A3", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 6, "A2", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 7, "A1", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 8, "A0", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 9, "IO0", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 10, "IO1", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 11, "IO2", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 12, "GND", R01S_PIN_PWR);
+    for (i = 3; i < 8; i++) {
         char name[4];
         snprintf(name, sizeof(name), "IO%d", i);
-        r01s_entity_add_pin(&chip->base, 7 + i, name, R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 10 + i, name, R01S_PIN_OUT);
     }
-    r01s_entity_add_pin(&chip->base, 15, "CE#", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 16, "OE#", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 17, "WE#", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 18, "VCC", R01S_PIN_PWR);
-    r01s_entity_add_pin(&chip->base, 19, "VSS", R01S_PIN_PWR);
+    r01s_entity_add_pin(&chip->base, 18, "CE#", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 19, "A10", R01S_PIN_NC);
+    r01s_entity_add_pin(&chip->base, 20, "WE#", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 21, "OE#", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 22, "A9", R01S_PIN_NC);
+    r01s_entity_add_pin(&chip->base, 23, "A8", R01S_PIN_NC);
+    r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
     r01s_entity_set_dip(&chip->base, 24);
     r01s_at28c16_load_kit(chip);
     r01s_entity_reset(&chip->base);

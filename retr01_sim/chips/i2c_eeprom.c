@@ -28,11 +28,15 @@ void r01s_i2c_eeprom_init(R01sI2cEeprom *chip, const char *refdes) {
     memset(chip, 0, sizeof(*chip));
     r01s_entity_init(&chip->base, &I2C_EEPROM_VT, "24C64", refdes ? refdes : "U50");
     chip->base.impl = chip;
-    r01s_entity_add_pin(&chip->base, 1, "VCC", R01S_PIN_PWR);
-    r01s_entity_add_pin(&chip->base, 2, "GND", R01S_PIN_PWR);
-    r01s_entity_add_pin(&chip->base, 3, "SDA", R01S_PIN_IO);
-    r01s_entity_add_pin(&chip->base, 4, "SCL", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 5, "WP#", R01S_PIN_IN);
+    /* 8-pin PDIP per hw/md/24C64.md */
+    r01s_entity_add_pin(&chip->base, 1, "A0", R01S_PIN_NC);
+    r01s_entity_add_pin(&chip->base, 2, "A1", R01S_PIN_NC);
+    r01s_entity_add_pin(&chip->base, 3, "A2", R01S_PIN_NC);
+    r01s_entity_add_pin(&chip->base, 4, "GND", R01S_PIN_PWR);
+    r01s_entity_add_pin(&chip->base, 5, "SDA", R01S_PIN_IO);
+    r01s_entity_add_pin(&chip->base, 6, "SCL", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 7, "WP#", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 8, "VCC", R01S_PIN_PWR);
     r01s_entity_set_dip(&chip->base, 8);
     r01s_entity_reset(&chip->base);
 }

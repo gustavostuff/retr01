@@ -70,6 +70,9 @@ typedef struct R01sUi {
     int sidebar_scroll; /* px offset into left sidebar content */
     int fps;            /* rolling 1s frame rate for HUD */
     int sim_steps;      /* board steps taken in the last UI frame */
+    int pins_quiet;     /* 1 = IC pin stubs static gray (no level colors) */
+    int show_cart_flash;  /* 1 = draw SST39SF040 (U40) */
+    int show_cart_eeprom; /* 1 = draw 24C64 (U50) */
     int ctx_chip;       /* context-menu chip index, or -1 */
     int ctx_x;          /* menu anchor in logic space */
     int ctx_y;

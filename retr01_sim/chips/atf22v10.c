@@ -164,6 +164,7 @@ void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role) {
         r01s_entity_add_pin(&chip->base, 21, "SEL_FE92", R01S_PIN_OUT);
         r01s_entity_add_pin(&chip->base, 22, "SEL_FE93", R01S_PIN_OUT);
         r01s_entity_add_pin(&chip->base, 23, "VCC", R01S_PIN_PWR);
+        r01s_entity_add_pin(&chip->base, 24, "GND", R01S_PIN_PWR);
         r01s_entity_set_dip_mm(&chip->base, 24, 32, 8);
         r01s_entity_reset(&chip->base);
         return;
@@ -186,11 +187,21 @@ void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role) {
         }
         r01s_entity_add_pin(&chip->base, 33, "OE#", R01S_PIN_IN);
         r01s_entity_add_pin(&chip->base, 34, "EQ#", R01S_PIN_OUT);
+        /* Package outline is 24-pin; P0-P7 occupy 17-24. Extra compare pins are logical-only. */
+        r01s_entity_add_pin(&chip->base, 35, "VCC", R01S_PIN_PWR);
         r01s_entity_set_dip_mm(&chip->base, 24, 32, 8);
     } else {
+        /* VRAM glue (UPLDB): fill PDIP-24 so both rows are even (was 12 vs 5). */
+        r01s_entity_add_pin(&chip->base, 17, "NC17", R01S_PIN_NC);
+        r01s_entity_add_pin(&chip->base, 18, "NC18", R01S_PIN_NC);
+        r01s_entity_add_pin(&chip->base, 19, "NC19", R01S_PIN_NC);
+        r01s_entity_add_pin(&chip->base, 20, "NC20", R01S_PIN_NC);
+        r01s_entity_add_pin(&chip->base, 21, "NC21", R01S_PIN_NC);
+        r01s_entity_add_pin(&chip->base, 22, "NC22", R01S_PIN_NC);
+        r01s_entity_add_pin(&chip->base, 23, "GND", R01S_PIN_PWR);
+        r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
         r01s_entity_set_dip_mm(&chip->base, 24, 32, 8);
     }
-    r01s_entity_add_pin(&chip->base, role == R01S_PLD_BEAM_Y ? 35 : 17, "VCC", R01S_PIN_PWR);
     r01s_entity_reset(&chip->base);
 }
 

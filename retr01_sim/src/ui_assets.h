@@ -167,4 +167,13 @@ static const uint8_t R01S_UI_OSC_RGBA[1700] = {
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 };
 
+/* DIP pin stub: tip points north (away from IC body). From assets/pin.png. */
+#define R01S_UI_PIN_W 3
+#define R01S_UI_PIN_H 3
+static const uint8_t R01S_UI_PIN_RGBA[R01S_UI_PIN_W * R01S_UI_PIN_H * 4] = {
+    0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, /* tip */
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+};
+
 #endif

@@ -10,11 +10,12 @@
 #define R01S_ISLAND_PAD_TOP (R01S_ISLAND_HEADER_H + R01S_GRID)
 #define R01S_ISLAND_PAD_BOTTOM 5
 #define R01S_CHIP_PIN_OUT 5
+#define R01S_CHIP_PIN_THICK 3
 
 /* Board / island fill (matches workarea background in ui.c). */
-#define R01S_BOARD_BG_R 18
-#define R01S_BOARD_BG_G 42
-#define R01S_BOARD_BG_B 28
+#define R01S_BOARD_BG_R 22
+#define R01S_BOARD_BG_G 50
+#define R01S_BOARD_BG_B 34
 
 /* Gap between chips inside an island, and between island frames. */
 #define R01S_CHIP_GAP 5
