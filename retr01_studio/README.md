@@ -47,7 +47,7 @@ Phase 0 is infrastructure only; nothing in the shell beyond what is needed to bo
 - **Start:** Prefer screen **(2, 0)** if present, else first present screen.
 - **Collision:** Player AABB must stay on **present** screens only.
 - **Warp events (Phase 1 hardcoded):** Press **X** -> instant warp to screen **(0, 0)**. Press **Y** -> instant warp to screen **(1, 0)**. These are **event warp** tests for instant screen swap; see [Events](#events-strategy).
-- **Not in Phase 1:** Parallax planes, attr editing, sprite banks UI, palette UI, pixel paint, Generate, dead-zone / hybrid scroll, fade transitions, multi-tile entities, multi-world tabs.
+- **Not in Phase 1:** Parallax planes, attr editing UI, sprite banks UI, palette **editor**, pixel paint, Generate, dead-zone / hybrid scroll, fade transitions, multi-tile entities, multi-world tabs.
 
 ### World and grid
 
@@ -77,7 +77,8 @@ Fixed **640x360** logical canvas, integer scale (default **2x**).
 |--------|---------|
 | **Left -- Worlds** | Only panel in the left column. Shows the world grid (default **3x3**; resizes to match PNG atlas); click selects active **present** screen. |
 | **Right -- Screen** | Shows the active grid screen (128x120). **No pixel or attr editing** -- display only, fed from PNG import data. |
-| **Hidden** | Planes, BG bank viewer, Sprite banks, Palettes, Constraints, Generate, VRAM 1x camera preview. |
+| **Hidden** | Planes, BG bank viewer, Sprite banks, palette **editor**, Constraints, Generate, VRAM 1x camera preview. |
+| **Read-only chrome** | Active **BG/SPR** palette strip for `default_pal_row` (not an editor) |
 
 **Play:** Available (e.g. **Space** / **PLAY**). Behavior must match exported cart logic for scroll, player, and X/Y warps.
 
@@ -101,15 +102,14 @@ PNG drop is the **only** way to author screen graphics in Phase 1.
 | Packing | All patterns deduped into **BG bank 0**; tile/attr planes for touched screens updated from the import |
 | Generate | **No** separate Generate action (**Ctrl+G** disabled / removed in Phase 1) |
 
-### Palettes (internal only -- no UI)
+### Palettes (auto + read-only strip)
 
-Phase 1 does **not** expose a Palettes cell. Global palette data is **written automatically** into the project and cart per [`docs/02`](../docs/02_graphics_worlds_memory.md):
+Phase 1 has **no palette editor**. A read-only **BG/SPR** swatch strip shows the active row. Global palette data is written automatically into the project and cart per [`docs/02`](../docs/02_graphics_worlds_memory.md):
 
 - **Cart layout:** **8 global BG palette rows** + **8 global sprite palette rows** (**256 B** total).
 - **Color 0 (shared backdrop):** Master index **0** (`#000000`) in every palette. Same shared backdrop convention as NES (index 0 is universal backdrop / transparent for sprites).
-- **Colors 1-3:** For each global row *i* (**0...7**) and pal *p* (**0...3**) within that row:
-  - BG `[i][p]`: master indices **(16+p)**, **(32+p)**, **(48+p)** — kit column *p*, rows 1-3.
-  - Sprite `[i][p]`: phase 1 sets colors 1-3 to kit bright red (player uses row **0**, pal **0**, index **1**).
+- **Before PNG import:** Phase 1 init fills BG colors 1-3 from kit columns `(16+p)` / `(32+p)` / `(48+p)`, and sprite colors 1-3 with kit bright red (player uses row **0**, pal **0**, index **1**).
+- **After PNG import:** BG rows (and sprite backdrop) are remapped to **nearest kit masters** from the atlas colors (`r01_project_set_bg_pals_from_png`).
 - **Active row:** Play / export use the world's `default_pal_row` (Phase 1: **0**).
 
 Preview and cart burn quantize through the kit Color PROM (**R3G3B2**).
@@ -118,18 +118,19 @@ Preview and cart burn quantize through the kit Color PROM (**R3G3B2**).
 
 | Asset | Phase 1 |
 |-------|---------|
-| BG banks | **Bank 0** filled by PNG import; banks 1-3 empty unless pre-seeded in file |
-| Sprite banks | Empty in UI; player tile is **runtime hardcoded**, not from authored CHR |
-| Attr plane | Default attrs (bank **0**, palette row **0**, no flips/ANIM) stamped on import |
+| BG banks | **Bank 0** filled by PNG import. Banks 1-3 empty unless pre-seeded in file |
+| Sprite banks | Empty in UI. Export plants solid color-1 tile **1** in SPR bank 0 for the player |
+| Attr plane | Import stamps bank/pal. **Flip-aware CHR dedupe** may set `FLIP_H` / `FLIP_V` when matching oriented tiles |
 
 ### Data flow
 
 ```text
-Drop PNG -> pack tiles -> BG bank 0 + screen tile/attr payloads
-       -> apply fixed global palettes
+Drop PNG -> pack tiles (flip-aware) -> BG bank 0 + screen tile/attr payloads
+       -> remap BG pals from PNG masters
        -> save project JSON
 Play  -> smooth scroll + player sprite + X/Y warp (SoT: `core/src/play.c`)
-Export -> `.retr01` (present screens only, play table `$8100`, marker `R01P`)
+Export -> `.retr01` (present screens only, play table `$8100`, marker `R01P`,
+          PRG streams pal + start MAP)
 Emu   -> same Play rules applied to exported cart MAP (re-export after edits)
 ```
 
@@ -137,7 +138,7 @@ Emu   -> same Play rules applied to exported cart MAP (re-export after edits)
 
 - Pixel / attr paint, sprite placement, meta-sprites
 - Planes / parallax
-- Palette editor, bank viewers, VRAM 1x preview
+- Palette **editor**, bank viewers, VRAM 1x preview
 - Generate (**Ctrl+G**)
 - Second world, manual grid resize UI, grids larger than **8x8**
 - Dead-zone, instant-scroll, and fade **profiles** (except X/Y **warp** test events)

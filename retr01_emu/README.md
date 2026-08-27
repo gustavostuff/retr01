@@ -12,15 +12,16 @@ Later emulator phases are **not** specified here; they will be defined when work
 
 | Layer | What runs today |
 |-------|-----------------|
-| **Cart** | Load `.retr01` -- present screens only, CHR, pals, Phase 1 PRG (`R01P`) |
+| **Cart** | Load `.retr01` (Studio packs present screens only). CHR, pals, Phase 1 PRG (`R01P`) |
 | **Play** | **Studio Play SoT** -- same move / camera / collision / X/Y warps as Studio |
-| **CPU** | Boots world 0, VBlank pad poll (gameplay in host Play until full 6502 play) |
-| **Video** | Soft-boot MAP/CHR into 2x2 workbench; smooth scroll from play camera |
+| **CPU** | Boots world 0. Gameplay in host Play until full 6502 play |
+| **Video** | Soft-boot MAP/CHR into 2x2 workbench (debug atlas). **Main FB** samples cart MAP while Play is on |
 | **Host** | SDL; WASD/arrows move; **X**/**Y** warp (same as Studio) |
 
 **Sync contract:** Studio Play (`play.c`) is the source of truth. Export packs only **present**
 screens + play table (`$8100`) + `R01P` marker. Emulator applies the same play rules to that
-cart MAP so live Play and emu feel match after a fresh Ctrl+E export.
+cart MAP so live Play and emu feel match after a fresh Ctrl+E export. Soft-boot is mandatory for
+emu Play parity. It is not the same as sim IC MAP stream.
 
 ## Build / run
 
@@ -47,7 +48,7 @@ cmake --build build
 | `include/retr01_emu/cart.h` | `.retr01` parser |
 | `include/retr01_emu/cpu.h` | 65C02 core |
 | `include/retr01_emu/io.h` | `$FExx` register file |
-| `include/retr01_emu/video.h` | CHR / VRAM / render / soft boot |
+| `include/retr01_emu/video.h` | CHR / VRAM / render / soft boot (host pan = tests only) |
 | `include/retr01_emu/play.h` | Host Play runtime (Phase 1) |
 | `include/retr01_emu/machine.h` | Bus + frame loop |
 | `src/main.c` | SDL host |

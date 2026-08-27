@@ -60,10 +60,9 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Dot clock | **5.369318 MHz** |
 | Raster | scanline compare + IRQ |
 | APU | separate **ATmega328P** (`$FE40-$FE5F`) |
-| Near-term software | **retr01 Studio Phase 1** + **Emulator Phase 1** ([`04`](04_retr01_studio.md), studio/emu READMEs) |
-| Studio project files | **JSON** (current schema **v3** in Studio Phase 1) |
-| Validation tools | board IC simulator ([`08`](08_simulator.md)); software emu ([`retr01_emu/`](../retr01_emu/)) |
-| md) -- not the product BOM |
+| Near-term software | **retr01 Studio Phase 1** + **Emulator Phase 1** + board sim ([`04`](04_retr01_studio.md), studio/emu/sim READMEs, [`08`](08_simulator.md)) |
+| Studio project files | **JSON** (current schema **v4** in Studio Phase 1) |
+| Validation tools | board IC simulator ([`08`](08_simulator.md)). Software emu ([`retr01_emu/`](../retr01_emu/)) |
 
 ## Cost snapshot
 
@@ -95,7 +94,7 @@ Flash + I2C save on cart PCB. Motherboard + cart proto still targets roughly the
 | Q2 | RGBS analog levels/sync polarity tuning | digital timing is locked. Bench tuning still needed |
 | Q10 | OAM attr bitfields | **Locked:** bank/pal/flip/priority/size in [`02`](02_graphics_worlds_memory.md). 8x16 tile-pair fetch detail on 1284 firmware still micro-rev |
 | Q11 | `$FE07` plane band end/dual-band detail | start scanline drafted. End-of-band pairing may need a second latch |
-| Q12 | PRG/CHR/MAP offsets inside **512 KB** flash | **Direction set:** cart header + pointer table in [`02`](02_graphics_worlds_memory.md). Byte-level packing still micro-rev |
+| Q12 | PRG/CHR/MAP offsets inside **512 KB** flash | **Locked in code** (`format_ver` 1): header 16, pointer table 24, world slot 8, world header 32, screen dir 12. Documented in [`02`](02_graphics_worlds_memory.md) |
 | Q13 | retr01-C pad bit timing | ATtiny85 + 3-wire draft locked. Baud/poll edge details later |
 | Q14 | Color PROM DAC depth | Packed R3G3B2 is the norm. How many resistor steps / levels on the bench still tunable |
 | Q15 | Color PROM part (AT28C16 vs faster OTP) | **Pinned candidate:** **AT27C256R-70PU** (70 ns, DIP-28) if 150 ns is tight. Footprint DIP-24 vs DIP-28 |
@@ -109,7 +108,6 @@ Flash + I2C save on cart PCB. Motherboard + cart proto still targets roughly the
 ## Practical next decisions
 
 1. tune RGBS on real hardware (Q2)
-2. retr01 Studio / Emulator Phase 1 (JSON project files. Freeze schema when code needs it)
-3. freeze cart pointer packing (Q12)
-4. freeze save/mailbox APIs + HC573 bitfields (Q20, Q21); confirm PROM part (Q15)
-5. flesh out ATtiny85 poll timing when retr01-C work starts (Q13)
+2. Studio game modules / later phases ([`10`](10_game_modules.md))
+3. freeze save/mailbox APIs + HC573 bitfields (Q20, Q21). Confirm PROM part (Q15)
+4. flesh out ATtiny85 poll timing when retr01-C work starts (Q13)

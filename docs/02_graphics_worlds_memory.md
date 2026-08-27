@@ -132,44 +132,45 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 
 ## Cart image (`.retr01`)
 
-24-bit offsets. Magic **`retr01`**.
+24-bit offsets. Magic **`retr01`** (lowercase ASCII). **`format_ver` = 1** (frozen in Studio/Emu/Sim packers).
 
 ```text
 +----------------------------------------------------------------+
-|  CART HEADER (fixed, starts at offset 0)                       |
-|    magic[6]          'R','E','T','R','0','1'                   |
-|    format_ver        u8                                        |
+|  CART HEADER (16 B at offset 0)                                |
+|    magic[6]          'r','e','t','r','0','1'                   |
+|    format_ver        u8 (= 1)                                  |
 |    world_count       u8 (1..8)                                 |
-|    flags             u8 (reserved)                             |
-|    reserved...                                                 |
-|    POINTER TABLE (24-bit offsets + optional lengths)           |
-|      off_prg / len_prg                                         |
-|      off_global_pal_bg     -> 8 BG palette rows (128 bytes)    |
-|      off_global_pal_spr    -> 8 sprite palette rows (128 bytes)|
-|      off_world_table       -> 8 world slots                    |
-|      (optional off_strings / off_extra)                        |
+|    flags / reserved  (pad to 16 B)                             |
+|  POINTER TABLE (24 B, each field u24)                          |
+|    off_prg, len_prg                                            |
+|    off_pal_bg, len_pal_bg                                      |
+|    off_pal_spr, len_pal_spr                                    |
+|    off_world_table, len_world_table                            |
 +----------------------------------------------------------------+
 | GLOBAL PALETTES                                                |
 |    BG:     8 rows x 4 pals x 4 master indices = 128 B          |
 |    Sprite: 8 rows x 4 pals x 4 master indices = 128 B          |
 |    Active row N: copy 4 BG + 4 sprite pals into $FE08/$FE09     |
 +----------------------------------------------------------------+
-|  PRG (one global section, max 32 KB at $8000; I/O hole $FE00)   |
+|  PRG (one global section, max 32 KB at $8000, I/O hole $FE00)   |
+|    Phase 1: pal + start MAP stream, play table $8100, R01P     |
 +----------------------------------------------------------------+
-|  WORLD TABLE (up to 8 entries)                                 |
-|    each slot: present u8, off_world u24, len_world u24         |
+|  WORLD TABLE (8 slots x 8 B)                                   |
+|    each slot: present u8, pad u8, off_world u24, len_world u24 |
 +----------------------------------------------------------------+
 |  WORLD 0 BLOB                                                  |
 |  +------------------------------------------------------------+|
-|  | WORLD HEADER                                               ||
+|  | WORLD HEADER (32 B)                                        ||
 |  |   start_col, start_row, default_bg_bank, default_spr_bank  ||
-|  |   default_pal_row (0..7), screen_count (0..32)              ||
+|  |   default_pal_row (0..7), screen_count (= present count)   ||
 |  |   parallax_count (0..2)                                    ||
-|  |   off_chr, off_screen_dir, off_parallax_dir                ||
+|  |   off_chr u24, off_screen_dir u24, off_parallax_dir u24    ||
+|  |   reserved to 32 B                                         ||
 |  +------------------------------------------------------------+|
 |  | CHR: BG 0..3 + SPR 0..3 (4 KB each)                        ||
-|  | SCREEN DIR: col,row,flags, off_payload, off_screen_meta    ||
-|  |   flags: default BG bank, pal row hint (not parallax)      ||
+|  | SCREEN DIR: 12 B per present screen                        ||
+|  |   col, row, flags0, flags1 (Phase 1: flags = 0)            ||
+|  |   off_payload u24, off_screen_meta u24 (0 if unused)       ||
 |  | PARALLAX DIR: slot (0..1 -> VRAM 4..5), flags, off_payload ||
 |  | SCREEN PAYLOADS: 240 tile + 240 attr each                  ||
 |  | PARALLAX PAYLOADS: same 480 B shape (after screens)        ||
@@ -179,9 +180,17 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 +----------------------------------------------------------------+
 ```
 
-Boot: magic -> pointers -> world header -> screen dir / parallax dir -> `off_payload`. Load grid screens into VRAM slots 0-3; load parallax dir entries into slots 4-5. MAP port: `$FE90`-`$FE92` addr, `$FE93` data auto-inc.
+Boot: magic -> pointers -> world header -> screen dir / parallax dir -> `off_payload`. Load grid screens into VRAM slots 0-3. Load parallax dir entries into slots 4-5. MAP port: `$FE90`-`$FE92` addr, `$FE93` data auto-inc.
 
-**Debugging carts:** Studio Play and editor chrome are **not** the cart. Emu/sim may soft-load or host-pan beyond what stub PRG does. Triage ROM vs runner: [`08` - Cart ROM vs runners](08_simulator.md#cart-rom-vs-runners-triage).
+**Debugging carts:** Studio Play and editor chrome are **not** the cart. Runner helpers differ:
+
+| Runner | MAP / pals into VRAM |
+|--------|----------------------|
+| **Studio export PRG** | Streams **one** pal row + **start screen** via `$FE93` -> `$FE08`/`$FE09`/`$FE12` |
+| **Emulator** | **Always** soft-boots world CHR/MAP/pals. Host Play. Main FB samples cart MAP when Play is on |
+| **Board sim** | Default = IC (or FAST word) stream from cart PRG. Softboot only if `R01S_SOFTBOOT=1` |
+
+Phase 1 does **not** stream full 2x2 camera seams. Triage ROM vs runner: [`08` - Cart ROM vs runners](08_simulator.md#cart-rom-vs-runners-triage).
 
 ## CPU map and `$FExx`
 

@@ -6,9 +6,10 @@
 
 | Does (Phase 1) | Does not (Phase 1) |
 |----------------|--------------------|
-| PNG atlas import, Play preview, `.retr01` export | Pixel/attr paint, Generate, palette/bank UI |
+| PNG atlas import, Play preview, `.retr01` export | Pixel/attr paint, Generate, palette **editor** / bank UI |
 | One world, sparse present screens | Multi-world tabs, planes, constraints editor |
 | Host Play matching Emulator Phase 1 | Cycle / `$FExx` / silicon timing |
+| Read-only active BG/SPR palette strip | |
 
 ## Phase 1 summary
 
@@ -32,7 +33,8 @@
 | Canvas | Fixed **640x360**, integer scale (default **2x**) |
 | Left | Worlds grid only |
 | Right | Screen preview (read-only) |
-| Hidden | Planes, bank viewers, Palettes, Constraints, Generate, VRAM 1x |
+| Hidden | Planes, bank viewers, palette editor, Constraints, Generate, VRAM 1x |
+| Read-only | Active BG/SPR palette strip |
 
 ```text
 +------------------------------------------------------------------+
@@ -53,7 +55,7 @@
 | Cell size | **128x120** px per screen cell |
 | Generate | **No** Ctrl+G in Phase 1 |
 
-Palettes are written automatically (no UI): **8 global BG rows + 8 global sprite rows**. Shared backdrop index **0**; kit strip / bright-red fills for colors 1-3. See studio README / [`02`](02_graphics_worlds_memory.md).
+Palettes are written automatically (read-only strip only, no editor): **8 global BG rows + 8 global sprite rows**. Init uses kit fills. PNG import remaps BG to nearest kit masters. See studio README / [`02`](02_graphics_worlds_memory.md).
 
 ### Save / Play / export
 
@@ -63,7 +65,7 @@ Palettes are written automatically (no UI): **8 global BG rows + 8 global sprite
 | Play | **Space** / **PLAY**. SoT: `core/src/play.c` |
 | Export | **Ctrl+E** -> `test_game/test.retr01` (+ `test_prom.bin`, `test_boot.s`, `test_flash.bin`) |
 
-**Cart:** Present screens only in MAP; play table at PRG `$8100`; marker `R01P`. Stub PRG boots and polls pads; Play math runs on the host (Studio and Emulator), not inside 6502 PRG yet.
+**Cart:** Present screens only in MAP. Play table at PRG `$8100`. Marker `R01P`. Phase 1 PRG streams pals + start MAP, then waits on VBlank. Play math (scroll/player/warps) runs on the host (Studio and Emulator), not inside 6502 PRG yet.
 
 ### Out of scope (Phase 1)
 

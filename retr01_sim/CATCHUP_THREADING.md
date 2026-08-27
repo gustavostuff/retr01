@@ -112,7 +112,7 @@ These modes share the same chip entities, wires, and UI. What changes is **how m
 | Each `board_step` | Deep settle + fat beam burst | Shallow settle + thin beam burst |
 | Settle wires | Full (incl. BG fetch + linebuf) | Skips BG fetch + linebuf in settle (beam loop only) |
 | AVR ticks (328P/1284P) | Every PHI2 step | Skipped (smoke filled at word catchup) |
-| Host Play | Off | On after catchup (pads / camera / OAM shortcut) |
+| Host Play | On after catchup | On after catchup (same scaffold) |
 | Bus fights / settle depth | Visible | Easier to miss |
 | End VRAM/pal after catchup | Start screen in VRAM | Same *data* end state |
 
@@ -124,9 +124,9 @@ These modes share the same chip entities, wires, and UI. What changes is **how m
 
 **PIN (`sim_fast == 0`) - code path in `app.c` + `r01s_board_catchup_bringup`:**
 
-1. Worker locks `board_mu`, runs batches of `r01s_island_group_step` (~64), unlocks, signals spinner, repeats.
+1. Worker locks `board_mu`, runs batches of `r01s_island_group_step` (**32**), unlocks, signals spinner, repeats.
 2. Each step is a full `board_step` (below): PHI2, CPU micro-ops, decode, MAP/VRAM ports, beam dots, video wire.
-3. Bring-up PRG on the cart overlay actually runs: LDA `$FE93` / STA `$FE12` (and palette path) until `map_addr >= cart_off_map_screen0 + 480` and VRAM\[0\] matches flash.
+3. Cart PRG (or synthetic bring-up overlay if no cart file) runs the MAP/pal stream: LDA `$FE93` / STA `$FE12` (and palette path) until `map_addr >= cart_off_map_screen0 + 480` and VRAM[0] matches flash.
 4. Wall time is on the order of **~10-15 s** (~1 ms/step x ~12k steps on a typical machine).
 5. Side effect: CPU PC, latches, PHI2 edges, beam position, and partial LCD samples advance for real during the stream.
 
@@ -155,10 +155,10 @@ Each settle pass runs, in order: `wire_power_clock_reset`, `wire_memory`, `wire_
 
 | | Passes per `board_settle` call |
 |--|--------------------------------|
-| PIN | `R01S_SETTLE_PASSES` (**4**) |
+| PIN | `R01S_SETTLE_PASSES` (**2**) |
 | FAST | `R01S_SETTLE_PASSES_FAST` (**1**) |
 
-`board_step` invokes settle **several times** per step (around PHI2 / CPU / beam). So PIN does roughly **4x** the wire work of FAST on every settle call. Deep settle exists so decode -> CE -> DQ can propagate in one half-cycle; one pass is usually enough once the netlist is "warm," but shallow settle can hide multi-level glue races.
+`board_step` invokes settle **several times** per step (around PHI2 / CPU / beam). So PIN does roughly **2x** the wire work of FAST on every settle call. Deep settle exists so decode -> CE -> DQ can propagate in one half-cycle. Shallow settle can hide multi-level glue races.
 
 **Beam / video burst (inside `board_step`):**
 
@@ -168,10 +168,11 @@ After osc/APU/1284 ticks, both modes loop DOT:
 
 | | DOT iterations per board step |
 |--|-------------------------------|
-| PIN | `R01S_BEAM_DOTS_PER_STEP` (**128**) |
-| FAST | `R01S_BEAM_DOTS_PER_STEP_FAST` (**8**) |
+| PIN | `R01S_BEAM_DOTS_PER_STEP` (**32**) |
+| FAST | `R01S_BEAM_DOTS_PER_STEP_FAST` (**4**) |
+| Host Play (either mode) | `R01S_BEAM_DOTS_PER_STEP_PLAY` (**640**) |
 
-Same silicon timing model (341x262), but FAST advances the raster **16x slower per board step**. Under the UI's ~10 ms step budget you still get video, but fewer dots (and fewer sink plots) per wall-clock frame. PIN burns most of its step time here during catchup and play.
+Same silicon timing model (341x262), but FAST advances the raster slower per board step. Under the UI step budget you still get video, but fewer dots (and fewer sink plots) per wall-clock frame unless Host Play raises the burst. PIN burns more of its step time here during catchup.
 
 **Unchanged in both modes:**
 

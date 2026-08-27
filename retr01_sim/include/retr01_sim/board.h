@@ -200,7 +200,7 @@ typedef struct R01sBoard {
     uint8_t chr_last_master; /* hold last BG/sprite master when CHR CE denied */
     /* 2×2 workbench: 1 = screen dir hit loaded into slot (absent → backdrop). */
     uint8_t vram_slot_present[4];
-    /* Host Play scaffold (unused in default UI: game PRG owns play later). */
+    /* Host Play scaffold (enabled after catchup in PIN and FAST UI). */
     R01sPlay play;
     int catchup_cancel; /* cooperative cancel for threaded IC catchup */
     /*

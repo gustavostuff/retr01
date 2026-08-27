@@ -44,7 +44,7 @@ retr01-A is meant to drop into a cabinet:
 
 You get a board you can breadboard in islands, bring up module by module, then integrate - not a black-box FPGA mystery. retr01-A is a compact **32 IC** system ([`06`](06_hardware_v1_32ic.md)).
 
-**retr01 Studio** (in development) authors worlds, screens, tile art, and palettes. Later Studio phases compile full `.retr01` cart images. A **board IC simulator** ([`08`](08_simulator.md)) is planned for silicon validation; an optional tighter cycle-level cart check may follow.
+**retr01 Studio** Phase 1 authors worlds via PNG import, Play preview, and **`.retr01` export**. **retr01 Emulator** Phase 1 runs those carts with host Play parity. The **board IC simulator** ([`08`](08_simulator.md)) validates the 32-IC netlist. An optional tighter cycle-level cart check may follow.
 
 ---
 
@@ -163,9 +163,10 @@ None of this makes NES games bad. Many masterpieces worked within tighter rules.
 
 | Piece | Role |
 |-------|------|
-| **retr01 Studio** | Visual authoring: worlds, screens, CHR banks, palettes (phased). Full `.retr01` export in later phases |
-| **Board IC simulator** ([`08`](08_simulator.md)) | Pin/netlist validation of the 32-IC BOM (planned) |
-| **Optional cycle-level cart check** | Later tighter `$FExx` / timing check for game images (planned, may share code with board sim) |
+| **retr01 Studio** | Visual authoring: Phase 1 PNG worlds + Play + `.retr01` export ([`04`](04_retr01_studio.md)) |
+| **retr01 Emulator** | Software-visible Phase 1 cart runner + host Play ([`retr01_emu/README.md`](../retr01_emu/README.md)) |
+| **Board IC simulator** ([`08`](08_simulator.md)) | Pin/netlist validation of the 32-IC BOM (live under `retr01_sim/`) |
+| **Optional cycle-level cart check** | Later tighter `$FExx` / timing check for game images (may share code with board sim) |
 | **retr01-A board** | Reference hardware and cabinet deploy target |
 
 ---
@@ -181,7 +182,7 @@ None of this makes NES games bad. Many masterpieces worked within tighter rules.
 
 ## Project status (honest)
 
-retr01 is in **architecture and documentation** phase. retr01-A silicon is being brought up as **protoboard islands** before a motherboard PCB. **retr01 Studio Phase 1** (PNG import + Play + `.retr01` export) and **Emulator Phase 1** are the active software tracks.
+retr01 has a locked architecture blueprint plus **working Studio / Emulator / board simulator** tracks. retr01-A silicon is being brought up as **protoboard islands** before a motherboard PCB. **Studio Phase 1** (PNG import + Play + `.retr01` export), **Emulator Phase 1**, and the **board IC sim** are the active software tracks.
 
 The pitch is the destination. The other docs are the blueprint.
 
@@ -234,7 +235,7 @@ If you know how NES tiles, attrs, and sprites work, retr01 art pipelines will fe
 | CPU vs video clock | Derived/coupled | **Independent** CPU and dot clocks |
 | Output | RF/composite (retail) | **RGBS**, S-Video, composite **pads** (arcade-first) |
 | Form factor | Consumer console | **retr01-A** arcade, **retr01-C** console, **retr01-H** handheld |
-| Authoring tool | Historical third-party | **retr01 Studio** (in development) |
+| Authoring tool | Historical third-party | **retr01 Studio** (Phase 1 live) |
 
 Different does not mean better for every game. A tight NES-style single screen is still valid on retr01. The hardware just removes a few famous bottlenecks when you want more world.
 
