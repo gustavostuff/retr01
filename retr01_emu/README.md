@@ -14,14 +14,11 @@ Later emulator phases are **not** specified here; they will be defined when work
 |-------|-----------------|
 | **Cart** | Load `.retr01` (Studio packs present screens only). CHR, pals, Phase 1 PRG (`R01P`) |
 | **Play** | **Studio Play SoT** -- same move / camera / collision / X/Y warps as Studio |
-| **CPU** | Boots world 0. Gameplay in host Play until full 6502 play |
-| **Video** | Soft-boot MAP/CHR into 2x2 workbench (debug atlas). **Main FB** samples cart MAP while Play is on |
+| **CPU** | Boots world 0. Default: PRG streams pals + start MAP (`$FE93`->`$FE12`). Gameplay still host Play |
+| **Video** | Main FB = **VRAM + scroll** + **OAM composite** (SCALE 2x). Play host-fills 2x2 seams via `sync_camera` |
 | **Host** | SDL; WASD/arrows move; **X**/**Y** warp (same as Studio) |
 
-**Sync contract:** Studio Play (`play.c`) is the source of truth. Export packs only **present**
-screens + play table (`$8100`) + `R01P` marker. Emulator applies the same play rules to that
-cart MAP so live Play and emu feel match after a fresh Ctrl+E export. Soft-boot is mandatory for
-emu Play parity. It is not the same as sim IC MAP stream.
+**Sync contract:** Studio Play (`play.c`) is the source of truth for motion. Export packs present screens + play table (`$8100`) + `R01P`. Soft-boot (`R01E_SOFTBOOT=1`) keeps the old host memcpy boot path for triage. Default boot runs cart PRG stream catchup like sim.
 
 ## Build / run
 
@@ -38,7 +35,9 @@ cmake --build build
 
 **Controls:** WASD or arrows = move * **X**/**Y** = warp * Space = pause * R = reset * Esc = quit
 
-**Debug window ("Rendering debug"):** VRAM 2x2 workbench (256x240, red = viewport, player = palette red) beside a world map sized to the present-screen bounding box (blue = present, gold = current screen). Active **BG** and **SPR** palette rows (4×4 swatches) along the bottom.
+**Env:** `R01E_SOFTBOOT=1` -- host memcpy VRAM/pals at boot (debug). Default runs cart PRG MAP/pal stream catchup.
+
+**Debug window:** VRAM 2x2 workbench (256x240, red = viewport, player via OAM) beside a world map (blue = present, gold = current screen). Active **BG** and **SPR** palette rows along the bottom of that row. Below: **CPU busy** chart (2 samples/s, 20 bars) -- cyan = busy cycles in active display, orange = busy in VBlank (excludes `$FE01` VBlank-wait spins). Red line = soft max **50k** cycles/frame (`docs/10`).
 
 ## Layout
 
@@ -48,7 +47,7 @@ cmake --build build
 | `include/retr01_emu/cart.h` | `.retr01` parser |
 | `include/retr01_emu/cpu.h` | 65C02 core |
 | `include/retr01_emu/io.h` | `$FExx` register file |
-| `include/retr01_emu/video.h` | CHR / VRAM / render / soft boot (host pan = tests only) |
+| `include/retr01_emu/video.h` | CHR / VRAM / render / softboot opt-in / OAM composite |
 | `include/retr01_emu/play.h` | Host Play runtime (Phase 1) |
 | `include/retr01_emu/machine.h` | Bus + frame loop |
 | `src/main.c` | SDL host |

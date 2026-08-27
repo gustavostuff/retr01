@@ -75,7 +75,7 @@ When something looks wrong on screen, **do not assume the `.retr01` is bad** and
 | **Cart image** | `test_game/test.retr01` (+ `test_flash.bin`) | **Yes** (flash) | Packed bytes SoT for PRG/CHR/MAP/pals. Magic `retr01`, `format_ver` **1**. Layout in [`02`](02_graphics_worlds_memory.md). |
 | **Color PROM burn** | `test_prom.bin` | **Yes** (motherboard) | **Not inside the cart.** Kit -> R3G3B2. Board AT28C16. |
 | **Boot asm listing** | `test_boot.s` | **Human-readable only** | Equates + stub source. The **binary inside `.retr01`** is what runners execute (Studio embeds it). Asm can drift. Treat binary as SoT. |
-| **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. **Always soft-boots** CHR/MAP/pals (`r01e_video_boot_world`). Host Play drives camera/player. Main FB samples **cart MAP** when Play is on (debug atlas uses soft-boot VRAM). `r01e_video_host_pan` is tests-only. |
+| **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Default: PRG catchup streams pals + start MAP. Softboot opt-in (`R01E_SOFTBOOT=1`). Host Play for camera/player. Main FB = **VRAM + scroll** + **OAM composite**. `r01e_video_host_pan` is tests-only. |
 | **Board sim** | `retr01_sim` | IC / island netlist | **32-IC BOM** on **9 canvas frames**. Default cart: `retr01_studio/test_game/test.retr01`. **Loaded cart PRG runs as-is** (Phase 1 streams pals + start MAP via `$FE93`->`$FE12`). Bring-up PRG overlay only when **no cart file** (synthetic). Catchup ~12k PIN steps (or FAST word apply). Softboot opt-in (`R01S_SOFTBOOT=1`). **Host Play** after catchup in **both** PIN and FAST. |
 
 ### What is actually in `test.retr01` today

@@ -10,7 +10,7 @@
 
 #define R01E_DEFAULT_CART "../retr01_studio/test_game/test.retr01"
 
-/* Debug pane: VRAM atlas + world map + active BG/SPR palette rows. */
+/* Debug pane: VRAM atlas + world map + active BG/SPR palette rows + CPU budget. */
 #define DBG_GAP 8
 #define DBG_MAP_CELL 20
 #define DBG_MAP_MAX_CELLS 8
@@ -21,8 +21,13 @@
 #define DBG_PAL_GROUP_GAP 4
 #define DBG_PAL_LABEL_W 28
 #define DBG_PAL_H (DBG_PAL_SWATCH * 2 + DBG_PAL_GAP + 10)
+#define DBG_CHART_BARS 20
+#define DBG_CHART_HZ 2
+#define DBG_CHART_H 72
+#define DBG_CHART_PAD 6
+#define DBG_CHART_LABEL_H 12
 #define DBG_WIN_W (R01E_VRAM_ATLAS_W + DBG_GAP + DBG_MAP_W)
-#define DBG_WIN_H (R01E_VRAM_ATLAS_H + DBG_GAP + DBG_PAL_H)
+#define DBG_WIN_H (R01E_VRAM_ATLAS_H + DBG_GAP + DBG_PAL_H + DBG_GAP + DBG_CHART_H + DBG_CHART_LABEL_H)
 
 static uint8_t read_pads(const Uint8 *keys) {
     uint8_t b = 0;
@@ -47,14 +52,12 @@ static void on_key_down(R01eMachine *m, SDL_Keycode sym) {
         m->io.pad0 = (uint8_t)(m->io.pad0 | R01E_PAD_X);
         r01e_play_tick(m);
         r01e_video_render_frame(m);
-        r01e_play_draw(m);
         m->play.pad_prev = m->io.pad0;
         m->io.pad0 = (uint8_t)(m->io.pad0 & (uint8_t)~R01E_PAD_X);
     } else if (sym == SDLK_y) {
         m->io.pad0 = (uint8_t)(m->io.pad0 | R01E_PAD_Y);
         r01e_play_tick(m);
         r01e_video_render_frame(m);
-        r01e_play_draw(m);
         m->play.pad_prev = m->io.pad0;
         m->io.pad0 = (uint8_t)(m->io.pad0 & (uint8_t)~R01E_PAD_Y);
     }
@@ -115,7 +118,7 @@ static void draw_world_map(SDL_Renderer *ren, R01eMachine *m, int ox, int oy) {
 
     /* Center the used bounding box in the map pane. */
     map_ox = ox + (DBG_MAP_W - DBG_MAP_CELL * cols) / 2;
-    map_oy = oy + (DBG_WIN_H - DBG_MAP_CELL * rows) / 2;
+    map_oy = oy + (R01E_VRAM_ATLAS_H - DBG_MAP_CELL * rows) / 2;
 
     for (r = min_r; r <= max_r; r++) {
         for (c = min_c; c <= max_c; c++) {
@@ -236,9 +239,188 @@ static void draw_active_palettes(SDL_Renderer *ren, R01eMachine *m, int ox, int 
     draw_pal_strip(ren, ox + DBG_PAL_LABEL_W, y2, m->io.pal + R01E_PAL_ROW_BYTES);
 }
 
-static void present_debug_pane(SDL_Renderer *dbg_ren, SDL_Texture *vram_tex, R01eMachine *m) {
+typedef struct DbgCpuChart {
+    uint64_t active[DBG_CHART_BARS];
+    uint64_t vblank[DBG_CHART_BARS];
+    int count;
+    int head; /* next write index */
+    uint64_t peak_active;
+    uint64_t peak_vblank;
+    Uint32 last_sample_ms;
+} DbgCpuChart;
+
+static void dbg_chart_note_frame(DbgCpuChart *ch, const R01eMachine *m) {
+    if (!ch || !m) {
+        return;
+    }
+    if (m->prof_last_active > ch->peak_active) {
+        ch->peak_active = m->prof_last_active;
+    }
+    if (m->prof_last_vblank > ch->peak_vblank) {
+        ch->peak_vblank = m->prof_last_vblank;
+    }
+}
+
+static void dbg_chart_maybe_sample(DbgCpuChart *ch, Uint32 now_ms) {
+    int i;
+    if (!ch) {
+        return;
+    }
+    if (ch->last_sample_ms == 0) {
+        ch->last_sample_ms = now_ms;
+        return;
+    }
+    if ((int)(now_ms - ch->last_sample_ms) < (1000 / DBG_CHART_HZ)) {
+        return;
+    }
+    i = ch->head;
+    ch->active[i] = ch->peak_active;
+    ch->vblank[i] = ch->peak_vblank;
+    /* #region agent log */
+    {
+        static int dbg_s;
+        if (dbg_s < 24) {
+            FILE *df = fopen("/home/g/Repos/retr01/.cursor/debug-7de916.log", "a");
+            if (df) {
+                uint64_t sum = ch->peak_active + ch->peak_vblank;
+                double pct = R01E_CPU_BUDGET_CYCLES
+                                 ? (100.0 * (double)sum / (double)R01E_CPU_BUDGET_CYCLES)
+                                 : 0.0;
+                fprintf(df,
+                        "{\"sessionId\":\"7de916\",\"runId\":\"busy-metric\",\"hypothesisId\":\"F,G\","
+                        "\"location\":\"main.c:chart_sample\",\"message\":\"chart bar sample\","
+                        "\"data\":{\"s\":%d,\"peak_a\":%llu,\"peak_v\":%llu,\"sum\":%llu,"
+                        "\"budget\":%llu,\"pct\":%.1f,\"count\":%d},"
+                        "\"timestamp\":%u}\n",
+                        dbg_s, (unsigned long long)ch->peak_active,
+                        (unsigned long long)ch->peak_vblank, (unsigned long long)sum,
+                        (unsigned long long)R01E_CPU_BUDGET_CYCLES, pct, ch->count + 1,
+                        (unsigned)now_ms);
+                fclose(df);
+            }
+            dbg_s++;
+        }
+    }
+    /* #endregion */
+    ch->head = (ch->head + 1) % DBG_CHART_BARS;
+    if (ch->count < DBG_CHART_BARS) {
+        ch->count++;
+    }
+    ch->peak_active = 0;
+    ch->peak_vblank = 0;
+    ch->last_sample_ms = now_ms;
+}
+
+static void draw_cpu_budget_chart(SDL_Renderer *ren, const DbgCpuChart *ch, int ox, int oy) {
+    SDL_Rect frame;
+    SDL_Rect bar;
+    int plot_w = DBG_WIN_W - 2 * DBG_CHART_PAD;
+    int plot_h = DBG_CHART_H - DBG_CHART_PAD;
+    int slot_w;
+    int budget_y;
+    int n, slot;
+    uint64_t budget = R01E_CPU_BUDGET_CYCLES;
+
+    frame.x = ox;
+    frame.y = oy;
+    frame.w = DBG_WIN_W;
+    frame.h = DBG_CHART_H + DBG_CHART_LABEL_H;
+    SDL_SetRenderDrawColor(ren, 18, 20, 26, 255);
+    SDL_RenderFillRect(ren, &frame);
+    SDL_SetRenderDrawColor(ren, 40, 44, 52, 255);
+    SDL_RenderDrawRect(ren, &frame);
+
+    /* Legend swatches */
+    bar.x = ox + DBG_CHART_PAD;
+    bar.y = oy + 2;
+    bar.w = 8;
+    bar.h = 6;
+    SDL_SetRenderDrawColor(ren, 70, 190, 200, 255);
+    SDL_RenderFillRect(ren, &bar);
+    bar.x += 12;
+    SDL_SetRenderDrawColor(ren, 220, 140, 50, 255);
+    SDL_RenderFillRect(ren, &bar);
+
+    slot_w = plot_w / DBG_CHART_BARS;
+    if (slot_w < 2) {
+        slot_w = 2;
+    }
+    /* 100% budget line at top of plot (full frame CPU allotment). */
+    budget_y = oy + DBG_CHART_LABEL_H;
+    SDL_SetRenderDrawColor(ren, 120, 55, 55, 255);
+    SDL_RenderDrawLine(ren, ox + DBG_CHART_PAD, budget_y, ox + DBG_CHART_PAD + plot_w - 1, budget_y);
+
+    n = ch ? ch->count : 0;
+    for (slot = 0; slot < n; slot++) {
+        /* Oldest on the left */
+        int idx = (ch->head - n + slot + DBG_CHART_BARS * 2) % DBG_CHART_BARS;
+        uint64_t act = ch->active[idx];
+        uint64_t vbl = ch->vblank[idx];
+        uint64_t total = act + vbl;
+        int h_tot, h_act, h_vbl;
+        int bx = ox + DBG_CHART_PAD + slot * slot_w + 1;
+        int bw = slot_w - 2;
+        int base_y = oy + DBG_CHART_LABEL_H + plot_h;
+
+        if (bw < 1) {
+            bw = 1;
+        }
+        if (total > budget) {
+            /* Scale so overflow still fits (clip at 150% visual). */
+            uint64_t scale = (budget * 3u) / 2u;
+            if (scale < total) {
+                act = act * scale / total;
+                vbl = vbl * scale / total;
+                total = act + vbl;
+            }
+        }
+        h_tot = (int)((total * (uint64_t)plot_h) / (budget ? budget : 1));
+        h_act = (int)((act * (uint64_t)plot_h) / (budget ? budget : 1));
+        h_vbl = (int)((vbl * (uint64_t)plot_h) / (budget ? budget : 1));
+        if (h_tot > plot_h) {
+            /* Preserve active:vblank ratio when clipping to plot. */
+            if (total > 0) {
+                h_act = (int)((act * (uint64_t)plot_h) / total);
+                h_vbl = plot_h - h_act;
+            } else {
+                h_act = 0;
+                h_vbl = 0;
+            }
+            h_tot = plot_h;
+        } else {
+            h_vbl = h_tot - h_act;
+        }
+        if (total > 0 && h_tot < 1) {
+            h_tot = 1;
+            h_act = (act >= vbl) ? 1 : 0;
+            h_vbl = h_tot - h_act;
+        }
+
+        /* Stacked: active (bottom / cyan), vblank (top / orange) */
+        if (h_act > 0) {
+            bar.x = bx;
+            bar.y = base_y - h_act;
+            bar.w = bw;
+            bar.h = h_act;
+            SDL_SetRenderDrawColor(ren, 70, 190, 200, 255);
+            SDL_RenderFillRect(ren, &bar);
+        }
+        if (h_vbl > 0) {
+            bar.x = bx;
+            bar.y = base_y - h_act - h_vbl;
+            bar.w = bw;
+            bar.h = h_vbl;
+            SDL_SetRenderDrawColor(ren, 220, 140, 50, 255);
+            SDL_RenderFillRect(ren, &bar);
+        }
+    }
+}
+
+static void present_debug_pane(SDL_Renderer *dbg_ren, SDL_Texture *vram_tex, R01eMachine *m,
+                              const DbgCpuChart *chart) {
     SDL_Rect dst;
     SDL_Rect vp;
+    int chart_y;
 
     r01e_video_render_vram_atlas(m);
     SDL_UpdateTexture(vram_tex, NULL, m->video.vram_atlas, R01E_VRAM_ATLAS_W * 3);
@@ -269,6 +451,8 @@ static void present_debug_pane(SDL_Renderer *dbg_ren, SDL_Texture *vram_tex, R01
     draw_vram_player(dbg_ren, m);
     draw_world_map(dbg_ren, m, R01E_VRAM_ATLAS_W + DBG_GAP, 0);
     draw_active_palettes(dbg_ren, m, 4, R01E_VRAM_ATLAS_H + DBG_GAP);
+    chart_y = R01E_VRAM_ATLAS_H + DBG_GAP + DBG_PAL_H + DBG_GAP;
+    draw_cpu_budget_chart(dbg_ren, chart, 0, chart_y);
     SDL_RenderPresent(dbg_ren);
 }
 
@@ -287,6 +471,9 @@ int main(int argc, char **argv) {
     int paused = 0;
     Uint32 last_ticks;
     int main_x = 0, main_y = 0, main_w = 0, main_h = 0;
+    DbgCpuChart cpu_chart;
+
+    memset(&cpu_chart, 0, sizeof(cpu_chart));
 
     if (r01e_machine_init(&machine, path, err, sizeof(err)) != 0) {
         fprintf(stderr, "retr01_emu: %s\n", err);
@@ -322,10 +509,10 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    /* One debug window: VRAM 2x2 (left) + world map (right) + palette rows. */
+    /* One debug window: VRAM 2x2 + world map + pals + CPU budget chart. */
     SDL_GetWindowPosition(win, &main_x, &main_y);
     SDL_GetWindowSize(win, &main_w, &main_h);
-    dbg_win = SDL_CreateWindow("Rendering debug", main_x + main_w + 16, main_y, DBG_WIN_W, DBG_WIN_H,
+    dbg_win = SDL_CreateWindow("Debug", main_x + main_w + 16, main_y, DBG_WIN_W, DBG_WIN_H,
                                SDL_WINDOW_HIDDEN);
     dbg_ren = dbg_win ? SDL_CreateRenderer(dbg_win, -1, SDL_RENDERER_ACCELERATED) : NULL;
     if (dbg_ren) {
@@ -360,7 +547,7 @@ int main(int argc, char **argv) {
     }
     printf("Studio Play SoT: WASD/arrows move · X/Y warp · Space pause · R reset · Esc quit\n");
     if (dbg_win) {
-        printf("Debug: Rendering debug — VRAM 2x2 + world map + BG/SPR pals\n");
+        printf("Debug: VRAM 2x2 + world map + BG/SPR pals + CPU busy budget (2 Hz, 50k red line)\n");
     }
 
     /* Present boot frame while still hidden, then show. */
@@ -370,7 +557,7 @@ int main(int argc, char **argv) {
     SDL_RenderCopy(ren, tex, NULL, NULL);
     SDL_RenderPresent(ren);
     if (dbg_win && dbg_ren && vram_tex) {
-        present_debug_pane(dbg_ren, vram_tex, &machine);
+        present_debug_pane(dbg_ren, vram_tex, &machine, &cpu_chart);
         SDL_ShowWindow(dbg_win);
     }
     SDL_ShowWindow(win);
@@ -410,15 +597,18 @@ int main(int argc, char **argv) {
         keys = SDL_GetKeyboardState(NULL);
         r01e_machine_set_pad(&machine, 0, read_pads(keys));
 
-        if (!paused) {
+        {
             Uint32 now = SDL_GetTicks();
-            if ((int)(now - last_ticks) >= 16) {
-                (void)r01e_machine_frame(&machine);
-                last_ticks = now;
+            if (!paused) {
+                if ((int)(now - last_ticks) >= 16) {
+                    (void)r01e_machine_frame(&machine);
+                    dbg_chart_note_frame(&cpu_chart, &machine);
+                    last_ticks = now;
+                }
+                dbg_chart_maybe_sample(&cpu_chart, now);
+            } else {
+                r01e_video_render_frame(&machine);
             }
-        } else {
-            r01e_video_render_frame(&machine);
-            r01e_play_draw(&machine);
         }
 
         SDL_UpdateTexture(tex, NULL, machine.video.fb, R01E_VISIBLE_W * 3);
@@ -428,7 +618,7 @@ int main(int argc, char **argv) {
         SDL_RenderPresent(ren);
 
         if (dbg_win && dbg_ren && vram_tex) {
-            present_debug_pane(dbg_ren, vram_tex, &machine);
+            present_debug_pane(dbg_ren, vram_tex, &machine, &cpu_chart);
         }
     }
 

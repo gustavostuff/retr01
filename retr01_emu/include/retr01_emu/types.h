@@ -46,12 +46,19 @@
 #define R01E_VRAM_ATLAS_H (R01E_SCREEN_PX_H * 2)
 #define R01E_CPU_HZ 8000000u
 #define R01E_DOT_HZ 5369318u
+/* Nominal CPU cycles per CRT frame (8 MHz / ~60.098 Hz). Use 64-bit mul — 8e6*1000 overflows u32. */
+#define R01E_CYCLES_PER_FRAME ((uint64_t)R01E_CPU_HZ * 1000ull / 60098ull)
+/* Soft max for game logic (docs/10): bars scale to this; red line = 100%. */
+#define R01E_CPU_BUDGET_CYCLES 50000ull
 
 #define R01E_ATTR_BANK_MASK 0x03u
 #define R01E_ATTR_PAL_MASK 0x0Cu
 #define R01E_ATTR_PAL_SHIFT 2
 #define R01E_ATTR_FLIP_H 0x10u
 #define R01E_ATTR_FLIP_V 0x20u
+#define R01E_OAM_PRIORITY 0x40u
+#define R01E_OAM_SIZE_16 0x80u /* 0=8x8, 1=8x16 */
+#define R01E_SPRITES_PER_LINE 16
 
 /* Pads $FE60/$FE61 — docs/02 */
 #define R01E_PAD_RIGHT 0x01u

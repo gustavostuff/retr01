@@ -12,6 +12,7 @@ void r01e_io_reset(R01eIo *io) {
     }
     memset(io, 0, sizeof(*io));
     io->ctrl = R01E_PPUCTRL_BG_EN;
+    memset(io->oam, 0xFF, sizeof(io->oam));
 }
 
 uint8_t r01e_io_read(R01eMachine *m, uint16_t addr) {
@@ -21,6 +22,10 @@ uint8_t r01e_io_read(R01eMachine *m, uint16_t addr) {
     switch (addr) {
     case 0xFE01:
         v = io->status;
+        /* VBlank-clear poll => game is idle-waiting; set clears => work / sync path. */
+        if (m) {
+            m->prof_waiting = (v & R01E_PPUSTATUS_VBLANK) ? 0 : 1;
+        }
         io->status = (uint8_t)(io->status & (uint8_t)~(R01E_PPUSTATUS_VBLANK | R01E_PPUSTATUS_HIT));
         return v;
     case 0xFE02:
@@ -120,11 +125,17 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
         break;
     case 0xFE30:
         io->world = (uint8_t)(v & 7u);
-        (void)r01e_video_boot_world(m, (int)io->world);
+        if (r01e_video_softboot_enabled()) {
+            (void)r01e_video_boot_world(m, (int)io->world);
+        } else {
+            (void)r01e_video_prepare_world(m, (int)io->world);
+        }
         break;
     case 0xFE38:
         io->pal_row = (uint8_t)(v & 7u);
-        r01e_video_load_active_pals(m);
+        if (r01e_video_softboot_enabled()) {
+            r01e_video_load_active_pals(m);
+        }
         break;
     case 0xFE60:
     case 0xFE61:
@@ -163,8 +174,6 @@ void r01e_io_dot(R01eMachine *m) {
         if (io->dot_y >= R01E_DOTS_Y) {
             io->dot_y = 0;
             io->frame++;
-            r01e_video_render_frame(m);
-            r01e_play_draw(m);
         }
         if (io->dot_y == R01E_VISIBLE_H) {
             entered_vblank = 1;

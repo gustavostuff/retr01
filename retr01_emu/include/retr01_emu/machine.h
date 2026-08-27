@@ -21,6 +21,16 @@ typedef struct R01eMachine {
     uint64_t dot_den;
     uint64_t dot_acc;
     int nmi_pending;
+    /* 1 while spinning on $FE01 with VBlank clear (not counted as busy work). */
+    int prof_waiting;
+    /* Last completed CRT frame: busy CPU cycles (excludes PPUSTATUS wait) in active vs VBlank. */
+    uint64_t prof_last_active;
+    uint64_t prof_last_vblank;
+    uint64_t prof_acc_active;
+    uint64_t prof_acc_vblank;
+    /* Full frame cycle totals (including wait) — debug / sanity only. */
+    uint64_t prof_acc_idle;
+    uint64_t prof_last_idle;
 } R01eMachine;
 
 int r01e_machine_init(R01eMachine *m, const char *cart_path, char *err, size_t err_cap);

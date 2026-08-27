@@ -184,6 +184,7 @@ int r01e_play_start(R01eMachine *m) {
     m->play.enabled = 1;
     place_player_on_screen(&m->play, col, row);
     r01e_play_sync_video(m);
+    (void)r01e_video_sync_camera(m);
     write_oam_player(m);
     return 1;
 }
@@ -261,38 +262,8 @@ void r01e_play_player_rgb(const R01eMachine *m, uint8_t *r, uint8_t *g, uint8_t 
 }
 
 void r01e_play_draw(R01eMachine *m) {
-    R01ePlay *pl;
-    uint8_t pr, pg, pb;
-    int pcx, pcy;
-
-    if (!m || !m->play.enabled) {
-        return;
-    }
-    pl = &m->play;
-    r01e_play_player_rgb(m, &pr, &pg, &pb);
-    for (pcy = 0; pcy < R01E_PLAY_PLAYER_H; pcy++) {
-        for (pcx = 0; pcx < R01E_PLAY_PLAYER_W; pcx++) {
-            int wx = pl->player_x + pcx;
-            int wy = pl->player_y + pcy;
-            int vx = wx - pl->cam_x;
-            int vy = wy - pl->cam_y;
-            int ox, oy;
-
-            if (vx < 0 || vy < 0 || vx >= R01E_SCREEN_PX_W || vy >= R01E_SCREEN_PX_H) {
-                continue;
-            }
-            for (oy = 0; oy < 2; oy++) {
-                for (ox = 0; ox < 2; ox++) {
-                    int fx = vx * 2 + ox;
-                    int fy = vy * 2 + oy;
-                    size_t i = ((size_t)fy * R01E_VISIBLE_W + (size_t)fx) * 3u;
-                    m->video.fb[i] = pr;
-                    m->video.fb[i + 1] = pg;
-                    m->video.fb[i + 2] = pb;
-                }
-            }
-        }
-    }
+    /* Player is drawn via OAM composite in r01e_video_render_frame. */
+    (void)m;
 }
 
 void r01e_play_post_event(R01ePlay *play, R01eEvent evt) {

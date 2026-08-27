@@ -222,8 +222,9 @@ void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01World *w, const R0
     n += append_boot_stream(prg + n, layout);
     main_pc = (uint16_t)(CODE_BASE + n);
     memcpy(prg + n, main_loop, sizeof(main_loop));
-    prg[n + 7] = (uint8_t)(main_pc & 0xFFu);
-    prg[n + 8] = (uint8_t)(main_pc >> 8);
+    /* Patch JMP abs operand (last 2 bytes), not the LDA $FE60 in the middle. */
+    prg[n + sizeof(main_loop) - 2] = (uint8_t)(main_pc & 0xFFu);
+    prg[n + sizeof(main_loop) - 1] = (uint8_t)(main_pc >> 8);
     n += sizeof(main_loop);
 
     fill_present_mask(mask, w);

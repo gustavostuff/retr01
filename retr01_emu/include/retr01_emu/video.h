@@ -35,8 +35,16 @@ void r01e_video_reset(R01eVideo *vid);
 /* Copy one global palette row (BG+SPR) into the active $FE08/$FE09 buffer. */
 void r01e_video_load_active_pals(struct R01eMachine *m);
 
+/* R01E_SOFTBOOT=1 enables host memcpy soft-boot (debug). Default = off. */
+int r01e_video_softboot_enabled(void);
+
 /*
- * Soft-boot world assets from cart (Phase 1 emu convenience — stub PRG never streams MAP).
+ * Load CHR + camera bounds for a world. Does not fill VRAM/pals (PRG or softboot does).
+ */
+int r01e_video_prepare_world(struct R01eMachine *m, int world);
+
+/*
+ * Soft-boot world assets from cart (opt-in via R01E_SOFTBOOT=1).
  * Loads CHR, palettes, 2x2 screen workbench into VRAM slots 0-3.
  */
 int r01e_video_boot_world(struct R01eMachine *m, int world);
@@ -45,12 +53,11 @@ int r01e_video_boot_world(struct R01eMachine *m, int world);
 int r01e_video_sync_camera(struct R01eMachine *m);
 
 /*
- * Host atlas pan until MAP streamer exists (phase 7).
- * dx/dy in logical pixels; shifts 2x2 workbench when leaving loaded window.
+ * Host atlas pan (tests / debug). dx/dy in logical pixels.
  */
 int r01e_video_host_pan(struct R01eMachine *m, int dx, int dy);
 
-/* Full-frame BG composite (sprites stubbed — phase 6). */
+/* Full-frame BG (VRAM+scroll) + OAM sprite composite. SCALE 2x RGB. */
 void r01e_video_render_frame(struct R01eMachine *m);
 
 /* Render 2x2 VRAM slots into vram_atlas (256x240, 1:1). */

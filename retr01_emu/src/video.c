@@ -2,6 +2,7 @@
 
 #include "retr01_emu/machine.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 static const uint8_t KIT_RGB[R01E_MASTER_COLORS][3] = {
@@ -33,6 +34,9 @@ static void kit_rgb(int idx, uint8_t *r, uint8_t *g, uint8_t *b) {
     *g = KIT_RGB[i][1];
     *b = KIT_RGB[i][2];
 }
+
+static void world_bounds(const R01eCart *cart, const R01eWorldView *wv, int *min_c, int *min_r,
+                         int *max_c, int *max_r);
 
 void r01e_video_kit_rgb(int master_index, uint8_t *r, uint8_t *g, uint8_t *b) {
     kit_rgb(master_index, r, g, b);
@@ -86,6 +90,79 @@ void r01e_video_load_active_pals(R01eMachine *m) {
     pal_spr = pal_row_ptr(&m->cart, m->cart.off_pal_spr, m->cart.len_pal_spr, row);
     copy_pal_row(m->io.pal, pal_bg);
     copy_pal_row(m->io.pal + R01E_PAL_ROW_BYTES, pal_spr);
+}
+
+int r01e_video_softboot_enabled(void) {
+    const char *e = getenv("R01E_SOFTBOOT");
+    return e && e[0] != '\0' && e[0] != '0';
+}
+
+static int prepare_world_common(R01eMachine *m, int world, R01eWorldView *wv) {
+    R01eVideo *vid;
+    const uint8_t *chr;
+    int si;
+    int min_c, min_r, max_c, max_r;
+
+    if (!m || !wv || world < 0 || world >= R01E_MAX_WORLDS) {
+        return -1;
+    }
+    vid = &m->video;
+    if (r01e_cart_world(&m->cart, world, wv) != 0) {
+        return -1;
+    }
+    m->io.world = (uint8_t)(world & 7);
+
+    chr = r01e_cart_ptr(&m->cart, wv->base + wv->off_chr, 8u * R01E_CHR_BANK_BYTES);
+    if (!chr) {
+        return -1;
+    }
+    for (si = 0; si < 8; si++) {
+        memcpy(vid->chr[si], chr + (size_t)si * R01E_CHR_BANK_BYTES, R01E_CHR_BANK_BYTES);
+    }
+    vid->chr_loaded = 1;
+
+    world_bounds(&m->cart, wv, &min_c, &min_r, &max_c, &max_r);
+    vid->cam_origin_col = (int)wv->start_col;
+    vid->cam_origin_row = (int)wv->start_row;
+    vid->cam_x = vid->cam_origin_col * R01E_SCREEN_PX_W;
+    vid->cam_y = vid->cam_origin_row * R01E_SCREEN_PX_H;
+    vid->cam_max_x = max_c * R01E_SCREEN_PX_W;
+    vid->cam_max_y = max_r * R01E_SCREEN_PX_H;
+    if (vid->cam_max_x < vid->cam_x) {
+        vid->cam_max_x = vid->cam_x;
+    }
+    if (vid->cam_max_y < vid->cam_y) {
+        vid->cam_max_y = vid->cam_y;
+    }
+    return 0;
+}
+
+int r01e_video_prepare_world(R01eMachine *m, int world) {
+    R01eWorldView wv;
+
+    if (prepare_world_common(m, world, &wv) != 0) {
+        return -1;
+    }
+    memset(m->video.vram, 0, sizeof(m->video.vram));
+    memset(m->video.slot_present, 0, sizeof(m->video.slot_present));
+    m->io.pal_row = (uint8_t)(wv.default_pal_row & 7u);
+    /* Pals come from PRG $FE08/$FE09 stream (or softboot). */
+    return 0;
+}
+
+int r01e_video_boot_world(R01eMachine *m, int world) {
+    R01eWorldView wv;
+
+    if (prepare_world_common(m, world, &wv) != 0) {
+        return -1;
+    }
+    m->io.pal_row = (uint8_t)(wv.default_pal_row & 7u);
+    r01e_video_load_active_pals(m);
+    memset(m->video.vram, 0, sizeof(m->video.vram));
+    memset(m->video.slot_present, 0, sizeof(m->video.slot_present));
+    (void)r01e_video_sync_camera(m);
+    r01e_video_load_parallax(m, &wv);
+    return 0;
 }
 
 static void world_bounds(const R01eCart *cart, const R01eWorldView *wv, int *min_c, int *min_r,
@@ -241,54 +318,6 @@ int r01e_video_host_pan(R01eMachine *m, int dx, int dy) {
     return 1;
 }
 
-int r01e_video_boot_world(R01eMachine *m, int world) {
-    R01eWorldView wv;
-    R01eVideo *vid;
-    const uint8_t *chr;
-    int si;
-    int min_c, min_r, max_c, max_r;
-
-    if (!m || world < 0 || world >= R01E_MAX_WORLDS) {
-        return -1;
-    }
-    vid = &m->video;
-    if (r01e_cart_world(&m->cart, world, &wv) != 0) {
-        return -1;
-    }
-    m->io.world = (uint8_t)(world & 7);
-
-    chr = r01e_cart_ptr(&m->cart, wv.base + wv.off_chr, 8u * R01E_CHR_BANK_BYTES);
-    if (!chr) {
-        return -1;
-    }
-    for (si = 0; si < 8; si++) {
-        memcpy(vid->chr[si], chr + (size_t)si * R01E_CHR_BANK_BYTES, R01E_CHR_BANK_BYTES);
-    }
-    vid->chr_loaded = 1;
-
-    m->io.pal_row = (uint8_t)(wv.default_pal_row & 7u);
-    r01e_video_load_active_pals(m);
-
-    memset(vid->vram, 0, sizeof(vid->vram));
-
-    world_bounds(&m->cart, &wv, &min_c, &min_r, &max_c, &max_r);
-    vid->cam_origin_col = (int)wv.start_col;
-    vid->cam_origin_row = (int)wv.start_row;
-    vid->cam_x = vid->cam_origin_col * R01E_SCREEN_PX_W;
-    vid->cam_y = vid->cam_origin_row * R01E_SCREEN_PX_H;
-    vid->cam_max_x = max_c * R01E_SCREEN_PX_W;
-    vid->cam_max_y = max_r * R01E_SCREEN_PX_H;
-    if (vid->cam_max_x < vid->cam_x) {
-        vid->cam_max_x = vid->cam_x;
-    }
-    if (vid->cam_max_y < vid->cam_y) {
-        vid->cam_max_y = vid->cam_y;
-    }
-    (void)r01e_video_sync_camera(m);
-    r01e_video_load_parallax(m, &wv);
-    return 0;
-}
-
 static uint8_t tile_pix(const uint8_t tile16[16], int px, int py) {
     int bit = 7 - (px & 7);
     uint8_t p0 = tile16[py & 7];
@@ -377,94 +406,6 @@ static void sample_bg(R01eMachine *m, int lx, int ly, uint8_t *r, uint8_t *g, ui
     col = tile_pix(tile16, px, py);
     master = m->io.pal[(pal & 3u) * 4u + (col & 3u)] & 63u;
     if (col == 0) {
-        master = m->io.pal[0] & 63u;
-    }
-    kit_rgb(master, r, g, b);
-}
-
-static void sample_bg_play_world(R01eMachine *m, int lx, int ly, uint8_t *r, uint8_t *g, uint8_t *b) {
-    /* Studio play.c r01_play_sample_bg — absolute world coords, no 2x2 seam. */
-    R01eWorldView wv;
-    const uint8_t *dir;
-    int wx, wy, col, row, si;
-    int local_x, local_y, tx, ty, cell, px, py, i;
-    const uint8_t *pay = NULL;
-    uint8_t tile, attr, bank, pal, color;
-    const uint8_t *chr;
-    uint8_t tile16[16];
-    uint8_t master;
-
-    backdrop_rgb(m, r, g, b);
-    if (!m->play.enabled) {
-        return;
-    }
-    wx = m->play.cam_x + lx;
-    wy = m->play.cam_y + ly;
-    if (wx < 0 || wy < 0) {
-        return;
-    }
-    col = wx / R01E_SCREEN_PX_W;
-    row = wy / R01E_SCREEN_PX_H;
-    if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) != 0) {
-        return;
-    }
-    dir = r01e_cart_ptr(&m->cart, wv.base + wv.off_screen_dir, (size_t)wv.screen_count * 12u);
-    if (!dir) {
-        return;
-    }
-    for (si = 0; si < wv.screen_count; si++) {
-        const uint8_t *e = dir + (size_t)si * 12u;
-        if ((int)e[0] == col && (int)e[1] == row) {
-            uint32_t poff = get_u24(e + 4);
-            pay = r01e_cart_ptr(&m->cart, wv.base + poff, R01E_SCREEN_PAYLOAD);
-            break;
-        }
-    }
-    if (!pay) {
-        return; /* empty screen → backdrop */
-    }
-    local_x = wx % R01E_SCREEN_PX_W;
-    local_y = wy % R01E_SCREEN_PX_H;
-    tx = local_x / 8;
-    ty = local_y / 8;
-    cell = ty * R01E_SCREEN_TILES_X + tx;
-    tile = pay[cell];
-    attr = pay[0xF0 + cell];
-    bank = (uint8_t)(attr & R01E_ATTR_BANK_MASK);
-    pal = (uint8_t)((attr & R01E_ATTR_PAL_MASK) >> R01E_ATTR_PAL_SHIFT);
-    chr = m->video.chr[bank & 3u];
-    memcpy(tile16, chr + (size_t)tile * R01E_TILE_BYTES, R01E_TILE_BYTES);
-    if (attr & R01E_ATTR_FLIP_H) {
-        for (i = 0; i < 8; i++) {
-            uint8_t v0 = tile16[i], v1 = tile16[i + 8], o0 = 0, o1 = 0;
-            int bit;
-            for (bit = 0; bit < 8; bit++) {
-                if (v0 & (1u << bit)) {
-                    o0 |= (uint8_t)(1u << (7 - bit));
-                }
-                if (v1 & (1u << bit)) {
-                    o1 |= (uint8_t)(1u << (7 - bit));
-                }
-            }
-            tile16[i] = o0;
-            tile16[i + 8] = o1;
-        }
-    }
-    if (attr & R01E_ATTR_FLIP_V) {
-        for (i = 0; i < 4; i++) {
-            uint8_t t = tile16[i];
-            tile16[i] = tile16[7 - i];
-            tile16[7 - i] = t;
-            t = tile16[i + 8];
-            tile16[i + 8] = tile16[15 - i];
-            tile16[15 - i] = t;
-        }
-    }
-    px = local_x & 7;
-    py = local_y & 7;
-    color = tile_pix(tile16, px, py);
-    master = m->io.pal[(pal & 3u) * 4u + (color & 3u)] & 63u;
-    if (color == 0) {
         master = m->io.pal[0] & 63u;
     }
     kit_rgb(master, r, g, b);
@@ -563,8 +504,113 @@ void r01e_video_render_vram_atlas(R01eMachine *m) {
     }
 }
 
+static void flip_tile16(uint8_t tile16[16], uint8_t attr) {
+    int i;
+    if (attr & R01E_ATTR_FLIP_H) {
+        for (i = 0; i < 8; i++) {
+            uint8_t v0 = tile16[i], v1 = tile16[i + 8], o0 = 0, o1 = 0;
+            int bit;
+            for (bit = 0; bit < 8; bit++) {
+                if (v0 & (1u << bit)) {
+                    o0 |= (uint8_t)(1u << (7 - bit));
+                }
+                if (v1 & (1u << bit)) {
+                    o1 |= (uint8_t)(1u << (7 - bit));
+                }
+            }
+            tile16[i] = o0;
+            tile16[i + 8] = o1;
+        }
+    }
+    if (attr & R01E_ATTR_FLIP_V) {
+        for (i = 0; i < 4; i++) {
+            uint8_t t = tile16[i];
+            tile16[i] = tile16[7 - i];
+            tile16[7 - i] = t;
+            t = tile16[i + 8];
+            tile16[i + 8] = tile16[15 - i];
+            tile16[15 - i] = t;
+        }
+    }
+}
+
+static void put_fb_px2x(R01eVideo *vid, int lx, int ly, uint8_t r, uint8_t g, uint8_t b) {
+    int ox, oy;
+    if (lx < 0 || ly < 0 || lx >= R01E_SCREEN_PX_W || ly >= R01E_SCREEN_PX_H) {
+        return;
+    }
+    for (oy = 0; oy < 2; oy++) {
+        for (ox = 0; ox < 2; ox++) {
+            int fx = lx * 2 + ox;
+            int fy = ly * 2 + oy;
+            size_t i = ((size_t)fy * R01E_VISIBLE_W + (size_t)fx) * 3u;
+            vid->fb[i] = r;
+            vid->fb[i + 1] = g;
+            vid->fb[i + 2] = b;
+        }
+    }
+}
+
+static void blit_spr_tile(R01eMachine *m, int sx, int sy, uint8_t tile, uint8_t attr,
+                          uint8_t line_count[R01E_SCREEN_PX_H]) {
+    uint8_t bank = (uint8_t)(attr & R01E_ATTR_BANK_MASK);
+    uint8_t pal = (uint8_t)((attr & R01E_ATTR_PAL_MASK) >> R01E_ATTR_PAL_SHIFT);
+    const uint8_t *chr = m->video.chr[4 + (bank & 3u)];
+    uint8_t tile16[16];
+    int px, py;
+
+    memcpy(tile16, chr + (size_t)tile * R01E_TILE_BYTES, R01E_TILE_BYTES);
+    flip_tile16(tile16, attr);
+    for (py = 0; py < 8; py++) {
+        int ly = sy + py;
+        if (ly < 0 || ly >= R01E_SCREEN_PX_H) {
+            continue;
+        }
+        if (line_count[ly] >= R01E_SPRITES_PER_LINE) {
+            continue;
+        }
+        for (px = 0; px < 8; px++) {
+            int lx = sx + px;
+            uint8_t col;
+            uint8_t master;
+            uint8_t r, g, b;
+            if (lx < 0 || lx >= R01E_SCREEN_PX_W) {
+                continue;
+            }
+            col = tile_pix(tile16, px, py);
+            if (col == 0) {
+                continue;
+            }
+            master = m->io.pal[16u + (pal & 3u) * 4u + (col & 3u)] & 63u;
+            kit_rgb(master, &r, &g, &b);
+            put_fb_px2x(&m->video, lx, ly, r, g, b);
+        }
+        line_count[ly]++;
+    }
+}
+
 static void composite_sprites(R01eMachine *m) {
-    (void)m; /* Phase 6: OAM linebuf compositing over BG */
+    uint8_t line_count[R01E_SCREEN_PX_H];
+    int ei;
+
+    memset(line_count, 0, sizeof(line_count));
+    for (ei = 0; ei < R01E_OAM_ENTRIES; ei++) {
+        const uint8_t *e = &m->io.oam[(size_t)ei * R01E_OAM_ENTRY_BYTES];
+        uint8_t sy = e[0];
+        uint8_t tile = e[1];
+        uint8_t attr = e[2];
+        uint8_t sx = e[3];
+        int tall = (attr & R01E_OAM_SIZE_16) != 0;
+
+        /* Y=$FF = unused (common convention). */
+        if (sy == 0xFFu) {
+            continue;
+        }
+        blit_spr_tile(m, (int)sx, (int)sy, tile, attr, line_count);
+        if (tall) {
+            blit_spr_tile(m, (int)sx, (int)sy + 8, (uint8_t)(tile | 1u), attr, line_count);
+        }
+    }
 }
 
 void r01e_video_render_frame(R01eMachine *m) {
@@ -582,11 +628,7 @@ void r01e_video_render_frame(R01eMachine *m) {
     for (ly = 0; ly < R01E_SCREEN_PX_H; ly++) {
         for (lx = 0; lx < R01E_SCREEN_PX_W; lx++) {
             uint8_t r, g, b;
-            if (m->play.enabled) {
-                sample_bg_play_world(m, lx, ly, &r, &g, &b);
-            } else {
-                sample_bg(m, lx, ly, &r, &g, &b);
-            }
+            sample_bg(m, lx, ly, &r, &g, &b);
             for (oy = 0; oy < 2; oy++) {
                 for (ox = 0; ox < 2; ox++) {
                     int fx = lx * 2 + ox;
