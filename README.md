@@ -1,4 +1,7 @@
 <img src="img/logo_v2.png" alt="Logo V2" />
+<img src="retr01_sim/assets/board.png" alt="PCB concept">
+
+(this is a concept PCB, not a final design. That said, the quantity/shape of ICs is accurate-ish)
 
 The retr01 project is a modern, discrete-logic 8-bit hardware family, built to be understood, hacked, and shipped. 3 hardware variants are planned, starting by the arcade board.
 
