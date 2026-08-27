@@ -111,9 +111,10 @@ Targets assume: software collision, OAM builds every frame, some MAP streaming, 
 | Sprites on one scanline | Design for **<= 12** | **16** HW drop | Multi-sprite bosses need Y spread |
 | States per entity *type* | **3** | **4** | Idle / run / hurt / ... |
 | Frames per state | **3** | **4** | Entity sprite frames (soft). Separate from BG living tiles (`ANIM` attr, also soft, [`02`](02_graphics_worlds_memory.md)) |
-| Sprites (OAM) per state frame | **1-4** typical | **8** soft for bosses | Same state origin for all |
+| Sprites (OAM) per state frame | **1-4** typical | **16** | Sprite-only bosses: recommend **8-16** on one entity. BG bosses: see below |
 | Entity-entity AABB tests / frame | **~120** naive pairs @ 16 active | Prefer grids if higher | See collision section |
-| Hitboxes per entity (active state) | **1** primary | **2-4** weak points | Boss weak points |
+| Hitboxes per entity (active state) | **1** | **1** | One box per entity (no multi-hitbox on a single entity) |
+| Boss weak-part entities (BG boss) | **1-4** | **4** | Sprite entities as dynamic / weak parts. Each still has **1** hitbox |
 
 ### Cycle sketch (order of magnitude)
 
@@ -157,9 +158,10 @@ The player is a **Game entity** slot that mainly follows pad input (`$FE60` / `$
 ### 1.3 Platformer physics (later in this family)
 
 - Velocity, gravity, jump.
-- **Meter size** scales physics feel: smaller meter = slower / "moon" motion, larger = snappier Earth-like.
+- **Meter size** scales physics feel in logical pixels. **Default = 8 px** with **Earth** gravity feel at that meter.
+- Smaller meter (e.g. 4 px) = slower / "moon" motion. Larger meter (e.g. 16 px) = snappier / heavier Earth-like response.
 - Intended as the last profile added in this family.
-- Exact fixed-point format TBD when implemented. Document units as logical pixels per frame at meter = 1.0 reference.
+- Exact fixed-point format TBD when implemented. Document accel / max-fall / jump impulse relative to the active meter (default reference: **8 px**, Earth).
 
 ```text
   Profiles (exclusive for now):
@@ -219,7 +221,8 @@ Dead zone is centered on the viewport unless Studio later allows offsets.
 - When the player entity **origin** crosses the current screen edge into another **present** screen, start a rail scroll to that screen.
 - During the scroll: **controllers disabled**.
 - Default speed: **4 px / frame** (full 128 px edge ~**32** frames ~**0.53 s**). 1 px/frame is allowed but feels slow (~2.1 s).
-- After settle: re-enable pads. Update workbench / freeze sets as needed.
+- **VRAM workbench updates during the slide**, not after. As soon as the next frame would show a screen piece that is not already in the 2x2 camera slots, stream that screen (MAP -> VRAM) in time for that frame. Prefer filling the destination / seam slots early in the transition so the sliding viewport never samples an unloaded cell.
+- After settle: re-enable pads. Refresh entity ACTIVE / FROZEN / INACTIVE for the new viewport + workbench.
 
 ### 2.D Automatic camera
 
@@ -255,7 +258,7 @@ Rules:
 - Each entity may have multiple **states** (idle, run, crouch, ...).
 - Each state may have multiple **frames**. Each frame may use multiple **sprites** (OAM entries).
 - All frames of a state share that state's **X,Y origin** for drawing.
-- Each state has a **hitbox** independent of the draw origin (boss weak points, offset hurtboxes).
+- Each state has a **hitbox** independent of the draw origin (one box only per entity. May be offset from the draw origin).
 - States change on **events**, actions, or circumstances (pads, timers, collisions, scripts).
 
 ### 3.2 Player
@@ -273,13 +276,42 @@ For now, document only simple motion cycles:
 | Up-down | Oscillate on Y between two world anchors |
 | Linear | Constant velocity until despawn / bounce / script stop |
 
-Richer AI (chase, pathfind, pattern bosses) is out of scope for this revision.
+Richer AI (chase, pathfind, scripted boss phases) is out of scope for this revision beyond the boss render patterns below.
 
-### 3.4 Studio authoring (intent)
+### 3.4 Large / BG bosses
+
+Two authoring patterns (may combine):
+
+| Pattern | Body | Weak / dynamic parts |
+|---------|------|----------------------|
+| **Sprite boss** | One entity, recommend **8-16** OAM sprites per state frame | Same entity hitbox (one box) |
+| **BG boss** | Boss art is **BG** (nametable / plane). Scroll the BG in **X**, **Y**, or **both** so a very large body can move past the 128x120 view | **1-4** sprite **entities** as moving parts (eyes, hands, cores, ...). Each part is a normal entity with **1** hitbox. A part may be a weak point, a hazard, or both |
+
+```text
+  BG boss (example)
+  +---------------------------+  workbench / scrolled BG art
+  |  #######################  |
+  |  ##                 ##    |
+  |  ##   [eye]   [eye] ##    |  <- sprite entities (1-4)
+  |  ##      [core]     ##    |     each: 1 hitbox
+  |  #######################  |
+  +---------------------------+
+           viewport 128x120
+```
+
+Rules for **BG boss**:
+
+- BG scroll for the body is game/script driven (not the Camera module profile). It may use main scroll latches and/or a parallax plane slot ([`02`](02_graphics_worlds_memory.md) slots 4-5) when the playfield must stay independent. Exact port recipe is an open item.
+- Weak points are **not** multi-hitboxes on one entity. They are **separate sprite entities** (up to **4**) that move with or relative to the BG body.
+- Those part entities count toward ACTIVE / OAM / freeze budgets like any other entity.
+- Damage: player hitbox vs each part entity hitbox (player-centric). Hitting the BG pixels alone does not register unless a part entity (or a future trigger volume) covers that region.
+
+### 3.5 Studio authoring (intent)
 
 - Place entity instances in the world (or spawn tables).
 - Edit type: states, frames, sprite lists, origins, hitboxes.
 - Attach motion cycle parameters for non-player entities.
+- Mark boss encounters: sprite-only vs BG body + part entities, BG scroll axes.
 - Preview ACTIVE / FROZEN behavior against the camera profile in Play.
 
 ---
@@ -305,8 +337,7 @@ Hardware has **no** sprite-vs-BG or sprite-vs-sprite hit logic ([`01`](01_archit
 | Layer | Source | Use |
 |-------|--------|-----|
 | **BG solid** | Screen attr `SOLID` bit (software bit, video ignores it) + optional RAM shadow | Floors, walls, blocks |
-| **Entity hitbox** | Active state's hitbox at instance `world_x/y` (+ origin policy below) | Body / interaction |
-| **Weak points** | Extra hitboxes on a state | Boss damage regions |
+| **Entity hitbox** | Active state's **one** hitbox at instance `world_x/y` (+ origin policy below) | Body, interaction, or one boss part / weak point |
 | **Triggers** | Optional non-solid volumes (future) | Cameras, scripts, warps |
 
 **Hitbox vs draw origin:** hitbox is authored in state space. At runtime, place it relative to the entity instance position (recommended default: hitbox offset from the same world position used for the state origin). Do not require hitbox == sprite AABB.
@@ -316,7 +347,7 @@ Hardware has **no** sprite-vs-BG or sprite-vs-sprite hit logic ([`01`](01_archit
 ```text
   Player ACTIVE  <->  BG SOLID          (movement resolution)
   Player ACTIVE  <->  NPC/enemy ACTIVE  (damage / bump)
-  Player ACTIVE  <->  weak points       (boss patterns)
+  Player ACTIVE  <->  boss part entities (1-4 weak / dynamic parts)
   NPC ACTIVE     <->  BG SOLID          (optional, patrols may use anchors only)
   FROZEN / INACTIVE                     (skipped)
 ```
@@ -381,8 +412,9 @@ Not a full HAL yet -- shape the codegen toward this:
 ## Open items (freeze later)
 
 - Exact entity instance struct sizes and ZP layout
-- Meter / fixed-point format for profile 1.3
-- Weak-point damage pipeline and invuln frames
+- Meter / fixed-point format for profile 1.3 (defaults locked: **8 px** meter, Earth gravity. Tunables TBD)
+- Damage / invuln frames pipeline
+- BG boss scroll recipe (main `$FE02`/`$FE03` vs plane slots 4-5 vs scripted MAP)
 - Trigger volumes as first-class colliders
 - Whether FROZEN entities may keep cheap timers (currently: **no** updates)
 - BGM/SFX Studio profiles ([`09`](09_audio_architecture.md))
