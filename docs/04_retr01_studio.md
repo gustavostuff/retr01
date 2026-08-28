@@ -26,8 +26,8 @@
 - **Player:** 8x8 overlay from sprite pal row 0 index 1
 - **Start:** Prefer **(2, 0)** if present
 - **Warps:** X -> (0,0), Y -> (1,0)
-- **Save / load:** Ctrl+S / Ctrl+O -> `test_game/test.r01proj` (JSON v4)
-- **Export:** Ctrl+E -> `test_game/test.retr01` (+ prom / boot / flash)
+- **Save / load:** Ctrl+S / Ctrl+O -> `rom/test.r01proj` (JSON v4)
+- **Export:** Ctrl+E -> `rom/test.retr01` (+ prom / boot / flash)
 
 ## Hardware map
 
@@ -35,4 +35,4 @@ Studio follows [`02`](02_graphics_worlds_memory.md). Board BOM: [`06`](06_hardwa
 
 ## Build
 
-See [`retr01_studio/README.md`](../retr01_studio/README.md). Root helper: `./studio build-run`.
+See [`retr01_studio/README.md`](../retr01_studio/README.md). Root helper: `scripts/run-studio rom/test.r01proj`.

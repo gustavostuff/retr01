@@ -2,7 +2,11 @@
 
 #include <stdio.h>
 
-#define R01E_TEST_CART "../retr01_studio/test_game/test.retr01"
+#ifdef R01_DEFAULT_CART
+#define R01E_TEST_CART R01_DEFAULT_CART
+#else
+#define R01E_TEST_CART "../rom/test.retr01"
+#endif
 
 int main(int argc, char **argv) {
     const char *path = argc > 1 ? argv[1] : R01E_TEST_CART;

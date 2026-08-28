@@ -147,9 +147,9 @@ Fixed **640x360** logical canvas, integer scale (default **2x**). Current chrome
 
 **Play:** Available (e.g. **Space** / **PLAY**). Behavior must match exported cart logic for scroll, player, and X/Y warps.
 
-**Save / load:** **Ctrl+S** / **Ctrl+O** -> `test_game/test.r01proj` (created on save). JSON **version 4** (`default_screen`, `default_pal_row`, tile/attr planes).
+**Save / load:** **Ctrl+S** / **Ctrl+O** -> `rom/test.r01proj` (created on save). JSON **version 4** (`default_screen`, `default_pal_row`, tile/attr planes).
 
-**Export cart:** **Ctrl+E** -> `test_game/test.retr01` (+ `test_prom.bin`, `test_boot.s`, `test_flash.bin` in the same folder).
+**Export cart:** **Ctrl+E** -> `rom/test.retr01` (+ `test_prom.bin`, `test_boot.s`, `test_flash.bin` in the same folder).
 
 ### PNG import
 
@@ -237,7 +237,7 @@ These exist to validate **instant screen swap** and the event pipeline. They are
 ## Build and run
 
 ```bash
-cd retr01_studio   # or ./studio from repo root
+cd retr01_studio   # or use scripts/run-studio from repo root
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ctest --test-dir build --output-on-failure
@@ -247,8 +247,8 @@ ctest --test-dir build --output-on-failure
 Or from repo root:
 
 ```bash
-./studio/scripts/build-run.sh
-./studio/scripts/test-unit.sh
+scripts/run-unit-tests
+scripts/run-studio rom/test.r01proj
 ```
 
 **Needs:** CMake, C compiler, SDL2, libpng.
@@ -259,7 +259,7 @@ Or from repo root:
 ctest --test-dir build --output-on-failure
 ```
 
-- **core** — pack, JSON, play + collision, cart + PRG phase 1 (six suites: project, play, chr, json, cart, palette)
+- **core** — pack, JSON, play + collision, cart + PRG phase 1 (seven suites: project, play, chr, json, cart, palette, fixture)
 
 ---
 
@@ -276,21 +276,21 @@ ctest --test-dir build --output-on-failure
 | Play / pause preview | **Space** / **PLAY** |
 | Move player | **WASD** / arrows |
 | Warp test | **X** -> screen (0,0), **Y** -> screen (1,0) |
-| Save / load project | **Ctrl+S** / **Ctrl+O** -> `test_game/test.r01proj` |
-| Export cart | **Ctrl+E** -> `test_game/test.retr01` |
+| Save / load project | **Ctrl+S** / **Ctrl+O** -> `rom/test.r01proj` |
+| Export cart | **Ctrl+E** -> `rom/test.retr01` |
 
 ---
 
 ## Export artifacts
 
-**Ctrl+E** writes under `test_game/` (repo root relative to launch cwd):
+**Ctrl+E** writes under `rom/` (repo root relative to launch cwd):
 
 | File | Contents |
 |------|----------|
-| `test_game/test.retr01` | Packed cart (`retr01` magic, globals, world 0 CHR/MAP, palettes, PRG + collision stub) |
-| `test_game/test_prom.bin` | 64-byte Color PROM image (**motherboard**, not in cart) |
-| `test_game/test_boot.s` | Human-readable ca65 stub / equates (play table, `play_pos_ok`, solid shadow layout) |
-| `test_game/test_flash.bin` | Cart image padded to **512 KB** |
+| `rom/test.retr01` | Packed cart (`retr01` magic, globals, world 0 CHR/MAP, palettes, PRG + collision stub) |
+| `rom/test_prom.bin` | 64-byte Color PROM image (**motherboard**, not in cart) |
+| `rom/test_boot.s` | Human-readable ca65 stub / equates (play table, `play_pos_ok`, solid shadow layout) |
+| `rom/test_flash.bin` | Cart image padded to **512 KB** |
 
 **ROM vs Studio chrome:** Editor layout, tile paint, and palette modal are not burned into the cart.
 Phase 1 **Play SoT** is `play.c` + `collision.c`. Export packs MAP attrs (including **solid**), play

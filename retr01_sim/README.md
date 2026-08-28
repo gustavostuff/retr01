@@ -26,7 +26,7 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 
 Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8000+`.
 
-**Cart load:** `./sim run` passes `retr01_studio/test_game/test.retr01` (override with a path; resolved from repo root). The **6502 executes cart PRG from flash** (Studio export includes palette + MAP→VRAM boot via `$FE93`→`$FE12`). Startup catchup runs that stream on a **worker thread** (~12k pin-level steps) so the SDL window stays responsive. Synthetic test cart still uses sim bring-up overlay for island smoke. Host softboot is opt-in only (`R01S_SOFTBOOT=1`). See [`PERFORMANCE.md`](PERFORMANCE.md).
+**Cart load:** `scripts/run-sim rom/test.retr01` (cart path required). The **6502 executes cart PRG from flash** (Studio export includes palette + MAP→VRAM boot via `$FE93`→`$FE12`). Startup catchup runs that stream on a **worker thread** (~12k pin-level steps) so the SDL window stays responsive. Synthetic test cart still uses sim bring-up overlay for island smoke. Host softboot is opt-in only (`R01S_SOFTBOOT=1`). See [`PERFORMANCE.md`](PERFORMANCE.md).
 
 Why the worker exists (and how to show a live board during boot later): [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md).
 
@@ -42,17 +42,11 @@ ctest --test-dir build --output-on-failure
 ./build/retr01_sim
 ```
 
-Or use the helper scripts:
-
-| Script | What it does |
-|--------|----------------|
-| `scripts/run.sh` | Run the app (build must already exist) |
-| `scripts/build-run.sh` | Configure if needed, build, run |
-| `scripts/test-unit.sh` | Build + run IC unit tests |
+Or from repo root:
 
 ```bash
-./scripts/build-run.sh
-./scripts/test-unit.sh
+scripts/run-unit-tests
+scripts/run-sim rom/test.retr01
 ```
 
 Needs: CMake, a C compiler, SDL2 (`sdl2` package).
@@ -60,8 +54,8 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 ## Run
 
 ```bash
-./scripts/run.sh
-# or: ./build/retr01_sim
+scripts/run-sim rom/test.retr01
+# or: ./build/retr01_sim /path/to/cart.retr01
 ```
 
 **Controls:** `Space` pause/resume * `Ctrl+R` reset * `R` rotate selected IC * **SCALE 1X/2X** (left sidebar button or `G`; default **1x**) * `.` single-step (while paused) * **COMPACT / ISLANDS** (HUD) * **left-drag chip** move * **right-click chip** orient H/V * **left-drag empty island** move frame * **bottom-right grip** resize * **Shift+arrows / wheel / middle-drag** pan * `Esc` quit.

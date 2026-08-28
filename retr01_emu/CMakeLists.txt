@@ -27,12 +27,20 @@ target_link_libraries(retr01_emu PRIVATE retr01_emu_core PkgConfig::SDL2)
 
 enable_testing()
 
-set(R01E_TEST_CART ${CMAKE_SOURCE_DIR}/../retr01_studio/test_game/test.retr01)
+set(R01_REPO_ROOT "${CMAKE_SOURCE_DIR}/.." CACHE PATH "retr01 repo root")
+set(R01_ROM_DIR "${R01_REPO_ROOT}/rom")
+set(R01_TEST_CART "${R01_ROM_DIR}/test.retr01")
+
+target_compile_definitions(retr01_emu_core PUBLIC "R01_DEFAULT_CART=\"${R01_TEST_CART}\"")
 
 add_executable(test_cart tests/test_cart.c)
 target_link_libraries(test_cart PRIVATE retr01_emu_core)
-add_test(NAME test_cart COMMAND test_cart ${R01E_TEST_CART})
+add_test(NAME test_cart COMMAND test_cart ${R01_TEST_CART})
 
 add_executable(test_boot tests/test_boot.c)
 target_link_libraries(test_boot PRIVATE retr01_emu_core)
-add_test(NAME test_boot COMMAND test_boot ${R01E_TEST_CART})
+add_test(NAME test_boot COMMAND test_boot ${R01_TEST_CART})
+
+add_executable(test_play tests/test_play.c)
+target_link_libraries(test_play PRIVATE retr01_emu_core)
+add_test(NAME test_play COMMAND test_play ${R01_TEST_CART})

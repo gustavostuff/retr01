@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=scripts/r01-common.sh
+source "$ROOT/scripts/r01-common.sh"
+
+PROJECT="${1:-}"
+[[ -n "$PROJECT" ]] || r01_usage_die "usage: scripts/run-studio <project.r01proj>"
+
+STUDIO="$R01_ROOT/retr01_studio"
+BIN="$STUDIO/build/retr01_studio"
+PROJECT_ABS="$(r01_resolve_path "$PROJECT")"
+
+[[ -f "$PROJECT_ABS" ]] || r01_die "project not found: $PROJECT"
+
+r01_build "$STUDIO"
+exec "$BIN" "$PROJECT_ABS"

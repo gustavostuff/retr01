@@ -44,8 +44,7 @@ static int try_load_cart(R01sBoard *board, int argc, char **argv) {
         return 0;
     }
     if (r01s_board_load_cart(board, path) != 0) {
-        fprintf(stderr, "cart: failed to load %s (cwd-relative paths break after ./sim build-run)\n",
-                path);
+        fprintf(stderr, "cart: failed to load %s\n", path);
         return -1;
     }
     return 0;

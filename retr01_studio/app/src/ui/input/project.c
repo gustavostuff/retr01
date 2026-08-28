@@ -3,6 +3,7 @@
 #include "font/font.h"
 
 #include "retr01_studio/cart.h"
+#include "retr01_studio/paths.h"
 #include "retr01_studio/chr_pack.h"
 #include "retr01_studio/json_io.h"
 #include "retr01_studio/palette.h"
@@ -150,12 +151,17 @@ void ui_save(UiState *ui) {
 }
 
 void ui_export(UiState *ui) {
+    char stem[R01_PATH_MAX];
     char err[128];
-    if (r01_export_bundle(ui->project, R01_DEFAULT_CART_STEM, err, sizeof(err)) != 0) {
+    if (r01_path_resolve(R01_DEFAULT_CART_STEM, stem, sizeof(stem)) != 0) {
+        ui_toast(ui, "export path failed", 1);
+        return;
+    }
+    if (r01_export_bundle(ui->project, stem, err, sizeof(err)) != 0) {
         ui_toast(ui, err, 1);
         return;
     }
-    ui_toast(ui, R01_DEFAULT_CART_STEM ".retr01 exported", 0);
+    ui_toast(ui, R01_ROM_DIR "/test.retr01 exported", 0);
 }
 
 int ui_handle_drop_file(UiState *ui, const char *path, int lx, int ly) {

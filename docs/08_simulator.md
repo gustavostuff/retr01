@@ -71,16 +71,16 @@ When something looks wrong on screen, **do not assume the `.retr01` is bad** and
 
 | Layer | Artifact | Runs on silicon / runners? | Notes |
 |-------|----------|----------------------------|--------|
-| **Studio editor / Play** | `test_game/test.r01proj` (+ UI) | **No** | Phase 1: PNG import, Worlds/Screen UI, Play scroll/warps. **Host preview only.** Play samples authored data. It never executes PRG or `$FExx`. |
-| **Cart image** | `test_game/test.retr01` (+ `test_flash.bin`) | **Yes** (flash) | Packed bytes SoT for PRG/CHR/MAP/pals. Magic `retr01`, `format_ver` **1**. Layout in [`02`](02_graphics_worlds_memory.md). |
+| **Studio editor / Play** | `rom/test.r01proj` (+ UI) | **No** | Phase 1: PNG import, Worlds/Screen UI, Play scroll/warps. **Host preview only.** Play samples authored data. It never executes PRG or `$FExx`. |
+| **Cart image** | `rom/test.retr01` (+ `test_flash.bin`) | **Yes** (flash) | Packed bytes SoT for PRG/CHR/MAP/pals. Magic `retr01`, `format_ver` **1**. Layout in [`02`](02_graphics_worlds_memory.md). |
 | **Color PROM burn** | `test_prom.bin` | **Yes** (motherboard) | **Not inside the cart.** Kit -> R3G3B2. Board AT28C16. |
 | **Boot asm listing** | `test_boot.s` | **Human-readable only** | Equates + stub source. The **binary inside `.retr01`** is what runners execute (Studio embeds it). Asm can drift. Treat binary as SoT. |
 | **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Default: PRG catchup streams pals + start MAP. Softboot opt-in (`R01E_SOFTBOOT=1`). Host Play for camera/player. Main FB = **VRAM + scroll** + **OAM composite**. `r01e_video_host_pan` is tests-only. |
-| **Board sim** | `retr01_sim` | IC / island netlist | **32-IC BOM** on **9 canvas frames**. Default cart: `retr01_studio/test_game/test.retr01`. **Loaded cart PRG runs as-is** (Phase 1 streams pals + start MAP via `$FE93`->`$FE12`). Bring-up PRG overlay only when **no cart file** (synthetic). Catchup ~12k pin-level steps. Softboot opt-in (`R01S_SOFTBOOT=1`). **Host Play** after catchup. |
+| **Board sim** | `retr01_sim` | IC / island netlist | **32-IC BOM** on **9 canvas frames**. Golden cart: `rom/test.retr01`. **Loaded cart PRG runs as-is** (Phase 1 streams pals + start MAP via `$FE93`->`$FE12`). Bring-up PRG overlay only when **no cart file** (synthetic). Catchup ~12k pin-level steps. Softboot opt-in (`R01S_SOFTBOOT=1`). **Host Play** after catchup. |
 
 ### What is actually in `test.retr01` today
 
-Verified against Studio pack (`r01_cart_build`) and `retr01_studio/test_game/test.retr01`. Flash pad is 512 KB.
+Verified against Studio pack (`r01_cart_build`) and `rom/test.retr01`. Flash pad is 512 KB.
 
 | In ROM | Meaning |
 |--------|---------|
@@ -108,7 +108,7 @@ Verified against Studio pack (`r01_cart_build`) and `retr01_studio/test_game/tes
 
 ### Sim readiness to load `test.retr01`
 
-**Island J wired.** `./sim run` defaults to `retr01_studio/test_game/test.retr01` (override with a path). Flash owns PRG `$8000+` and MAP `$FE90`-`$FE93` (one `/CE` context at a time). **File load keeps Studio PRG.** Synthetic (no-file) path installs bring-up overlay for island smoke.
+**Island J wired.** `scripts/run-sim rom/test.retr01` loads the golden cart (path required). Flash owns PRG `$8000+` and MAP `$FE90`-`$FE93` (one `/CE` context at a time). **File load keeps Studio PRG.** Synthetic (no-file) path installs bring-up overlay for island smoke.
 
 **Island K wired.** `$FE40`-`$FE5F` on ATmega328P stub. Bring-up enables a period/vol square. Health watches PWM edges. Not a full AVR core or host audio sink, digital PWM pin only.
 

@@ -8,7 +8,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define R01E_DEFAULT_CART "../retr01_studio/test_game/test.retr01"
+#ifdef R01_DEFAULT_CART
+#define R01E_DEFAULT_CART R01_DEFAULT_CART
+#endif
+
+#ifndef R01E_DEFAULT_CART
+#define R01E_DEFAULT_CART "../rom/test.retr01"
+#endif
 
 /* Debug pane: VRAM atlas + world map + active BG/SPR palette rows + CPU budget. */
 #define DBG_GAP 8

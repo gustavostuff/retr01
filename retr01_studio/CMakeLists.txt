@@ -14,10 +14,16 @@ add_library(retr01_studio_core
   core/src/collision.c
   core/src/prg_phase1.c
   core/src/cart.c
+  core/src/paths.c
 )
 target_include_directories(retr01_studio_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include
 )
+set(R01_REPO_ROOT "${CMAKE_SOURCE_DIR}/.." CACHE PATH "retr01 repo root")
+set(R01_ROM_DIR "${R01_REPO_ROOT}/rom")
+set(R01_TEST_CART "${R01_ROM_DIR}/test.retr01")
+set(R01_TEST_PROJECT "${R01_ROM_DIR}/test.r01proj")
+target_compile_definitions(retr01_studio_core PUBLIC "R01_REPO_ROOT=\"${R01_REPO_ROOT}\"")
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBPNG REQUIRED IMPORTED_TARGET libpng)
@@ -43,6 +49,12 @@ r01_studio_add_test(chr)
 r01_studio_add_test(json)
 r01_studio_add_test(cart)
 r01_studio_add_test(palette)
+
+add_executable(test_fixture core/tests/test_fixture.c ${STUDIO_TEST_HARNESS})
+target_include_directories(test_fixture PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/core/tests)
+target_link_libraries(test_fixture PRIVATE retr01_studio_core)
+add_test(NAME fixture COMMAND test_fixture ${R01_TEST_PROJECT} ${R01_TEST_CART})
+set_tests_properties(fixture PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 add_library(retr01_studio_app
   app/src/shell/app_shell.c

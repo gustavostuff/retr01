@@ -36,21 +36,22 @@ Details and fair NES comparisons: [`docs/07_pitch.md`](docs/07_pitch.md).
 
 Later editions (console and handheld) share the same soul: one architecture, different shells.
 
-### Root helpers
+### Scripts
 
-One action per invocation:
-
-| Script | Examples |
-|--------|----------|
-| [`./studio`](studio) | `build` * `run` * `build-run` * `unit` |
-| [`./emu`](emu) | `build` * `run [cart]` * `build-run` * `unit` |
-| [`./sim`](sim) | `build` * `run` * `build-run` * `unit` |
+| Script | Usage |
+|--------|--------|
+| [`scripts/run-studio`](scripts/run-studio) | `scripts/run-studio rom/test.r01proj` |
+| [`scripts/run-emu`](scripts/run-emu) | `scripts/run-emu rom/test.retr01` |
+| [`scripts/run-sim`](scripts/run-sim) | `scripts/run-sim rom/test.retr01` |
+| [`scripts/run-unit-tests`](scripts/run-unit-tests) | build + ctest for Studio, Emu, and Sim |
 
 ```bash
-./studio help
-./emu build-run
-./sim unit
+scripts/run-unit-tests
+scripts/run-studio rom/test.r01proj
+scripts/run-emu rom/test.retr01
 ```
+
+**ROM output:** Studio **Ctrl+E** writes cart images under [`rom/`](rom/) at the repo root.
 
 ---
 

@@ -4,7 +4,7 @@ Software-visible C emulator for retr01-A **Phase 1** carts. Separate from the IC
 simulator ([`retr01_sim/`](../retr01_sim/)). Contract:
 [`docs/02_graphics_worlds_memory.md`](../docs/02_graphics_worlds_memory.md).
 
-Root helper: [`../emu`](../emu) (`build` * `run` * `build-run` * `unit`).
+Repo helper: [`scripts/run-emu`](../scripts/run-emu).
 
 Later emulator phases are **not** specified here; they will be defined when work starts.
 
@@ -23,14 +23,14 @@ Later emulator phases are **not** specified here; they will be defined when work
 ## Build / run
 
 ```bash
-./emu build-run
-./emu unit
+scripts/run-unit-tests
+scripts/run-emu rom/test.retr01
 
 # or
 cd retr01_emu
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
-./build/retr01_emu ../retr01_studio/test_game/test.retr01
+./build/retr01_emu ../rom/test.retr01
 ```
 
 **Controls:** WASD or arrows = move * **X**/**Y** = warp * Space = pause * R = reset * Esc = quit
@@ -51,4 +51,4 @@ cmake --build build
 | `include/retr01_emu/play.h` | Host Play runtime (Phase 1) |
 | `include/retr01_emu/machine.h` | Bus + frame loop |
 | `src/main.c` | SDL host |
-| `tests/` | Cart + boot smoke tests |
+| `tests/` | Cart + boot + play smoke tests |
