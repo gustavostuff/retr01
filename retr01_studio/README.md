@@ -1,6 +1,6 @@
 # retr01 Studio
 
-Visual authoring tool for retr01 worlds, screens, and cartridge images. **Phase 1** (PNG import + Play + export) remains; **Phase 2** adds multi-world chrome, screen create/delete, and tile paint. Hardware layout: [`docs/02_graphics_worlds_memory.md`](../docs/02_graphics_worlds_memory.md). Short docs mirror: [`docs/04_retr01_studio.md`](../docs/04_retr01_studio.md).
+Visual authoring tool for retr01 worlds, screens, and cartridge images. **Phase 1** (PNG import + Play + export) remains; **Phase 2** adds multi-world chrome, screen create/delete, tile edit/paint, **solid** collision attrs, global palette editing, and **default spawn screen**. Hardware layout: [`docs/02_graphics_worlds_memory.md`](../docs/02_graphics_worlds_memory.md). Short docs mirror: [`docs/04_retr01_studio.md`](../docs/04_retr01_studio.md).
 
 **Stack:** C11 + SDL2 + FreeType (Proggy Tiny), shared `libretr01_studio_core` + thin shell.
 
@@ -16,12 +16,18 @@ Fixed **640x360** logical canvas. Dark gray / darker gray only. All chrome snaps
 
 ```text
 +------------------------------------------------------------------+
-| Worlds                                                           |
-| [0][1][2][3][4][5][6][7]     [ Play ]                            |
-| +--------------+                                                 |
-| | 128x128 map  |              [ Screen 256x240 @2x ]             |
-| | 16px cells   |                                                 |
-| +--------------+                              [BG/SPR 8px pals]  |
+| SIDEBAR (128)          | MAIN                                     |
+| [>] Worlds             |              [ Play ]                    |
+|  [0][1][2][3]          |         +------------------+  ( ) Sel    |
+|  [4][5][6][7]          |         | Screen 256x240   |  ( ) Paint  |
+|  +--------------+      |         | 128x120 @2x edit |             |
+|  | 128x128 map  |      |         +------------------+             |
+|  | 8x8 x 16px   |      |                                          |
+|  +--------------+      |                                          |
+| [>] Palettes           |                                          |
+|  BG  [32px strip]      |                                          |
+|  SPR [32px strip]      |                                          |
+|  [0][1]...[7] rows     |                                          |
 +------------------------------------------------------------------+
 ```
 
@@ -34,17 +40,27 @@ Fixed **640x360** logical canvas. Dark gray / darker gray only. All chrome snaps
 | **Ctrl+click** present slot | Remove screen |
 | **Click** present slot | Select active screen |
 | **Play** | Centered above the screen view (Space / button) |
-| **Palette strip** | Bottom-right, **8x8** contiguous swatches, BG row then SPR row |
+| **Tile selection / Tile paint** | Radio rows beside the screen (edit mode only). **Paint** uses the armed stamp; **Selection** for marquee + context menu |
+| **Palette strip** | Sidebar **Palettes** accordion: **8x8** BG then SPR swatches + row **0–7** buttons. **Click strip** opens **Global palettes** modal |
 
 ### Tile edit
 
 | Step | Action |
 |------|--------|
-| Right-click screen | Context menu: **Edit tile** (and **Paint with this** after a save) |
+| Right-click tile (selection mode) | Context menu: **Move to tile bank**, **Add new tile here**, **Edit tile**, **Set tile palette**, **Set Anim mode**, **Set Solid** |
 | **Edit tile** modal | **288x160**. Title, **Palette/color** 4x4 (4 pals x 4 colors, 8px cells), **128x128** pixel canvas (16px per tile pixel), Save / Cancel |
-| After Save | Brush armed; menu gains **Paint with this**; left-click paints that tile+palette onto the map |
+| After Save | Brush armed; left-click in **Tile paint** mode stamps that tile+palette onto the map |
+| **Set Solid** | Toggles `R01_ATTR_SOLID` on every tile in the **active world** whose hardware attrs match the clicked cell (**bank + pal + H/V flips**, not tile ID). Re-export cart for emu/sim MAP attrs |
+| **Set Anim mode** | Toggles `R01_ATTR_ANIM` on the current tile selection |
+| Marquee | Drag on screen in **Tile selection** mode; bank/pal/anim/solid apply to the selection |
+
+Right-click a **world map** cell: **Set default screen** (Play + export spawn), **Make default world**.
 
 PNG drop still imports into the **active** world. Export / cart pack remains **world 0** (Phase 1 cart path).
+
+### Global palettes
+
+Click the **BG/SPR strip** (not Play) to open the **Global palettes** modal: pick BG/SPR plane cells, click kit masters, Save/Cancel. Row **0–7** buttons set `default_pal_row` when the modal is closed.
 
 ---
 
@@ -54,6 +70,8 @@ PNG drop still imports into the **active** world. Export / cart pack remains **w
 |--|--|
 | **Scroll** | Smooth pixel scroll; camera follows player; **no dead zone** |
 | **Sprites** | One hardcoded **8x8** player. Fill color comes from **sprite palette row 0, index 1** (phase 1 default: kit bright red) |
+| **Collision** | Player **8x8** AABB blocked by tiles with **`R01_ATTR_SOLID`** (`0x40`) on present screens |
+| **Start** | Center of **`default_screen`** (world map context menu). New worlds default to **(2, 0)** if present, else first present screen |
 | **Events** | **Warp** on pad **X** / **Y** (Phase 1 test hooks; see [Events](#events-strategy)) |
 
 ---
@@ -84,10 +102,10 @@ Phase 0 is infrastructure only; nothing in the shell beyond what is needed to bo
 
 - **Scroll:** Smooth **pixel** scroll across present screens. When the player moves, the camera moves -- **no dead zone**, no free-box inset.
 - **Player:** Exactly **one** sprite entity, an **8x8** tile, hardcoded (not placed or edited in the UI). Fill color is read from **sprite palette row 0, color index 1** (phase 1 init sets that slot to kit bright red). Movement: **WASD** / d-pad arrows in Play.
-- **Start:** Prefer screen **(2, 0)** if present, else first present screen.
-- **Collision:** Player AABB must stay on **present** screens only.
+- **Start:** Player spawns at the **center** of the world's **`default_screen`** (`default_screen` in JSON; set via world map context menu). If unset, falls back to **(2, 0)** when present, else the first present screen. **`begin_play`** switches the active screen to the default before Play starts.
+- **Collision:** Movement uses corner **AABB** vs **present** screens and **solid** BG attrs (`R01_ATTR_SOLID`). Same rules in Play, emu, and sim host Play (`core/src/collision.c`).
 - **Warp events (Phase 1 hardcoded):** Press **X** -> instant warp to screen **(0, 0)**. Press **Y** -> instant warp to screen **(1, 0)**. These are **event warp** tests for instant screen swap; see [Events](#events-strategy).
-- **Not in Phase 1:** Parallax planes, attr editing UI, sprite banks UI, palette **editor**, pixel paint, Generate, dead-zone / hybrid scroll, fade transitions, multi-tile entities, multi-world tabs.
+- **Not in Phase 1:** Parallax planes, full attr inspector UI, sprite banks UI, Generate, dead-zone / hybrid scroll, fade transitions, multi-tile entities, multi-world cart export.
 
 ### World and grid
 
@@ -116,13 +134,13 @@ Fixed **640x360** logical canvas, integer scale (default **2x**).
 | Region | Phase 1 |
 |--------|---------|
 | **Left -- Worlds** | Only panel in the left column. Shows the world grid (default **3x3**; resizes to match PNG atlas); click selects active **present** screen. |
-| **Right -- Screen** | Shows the active grid screen (128x120). **No pixel or attr editing** -- display only, fed from PNG import data. |
-| **Hidden** | Planes, BG bank viewer, Sprite banks, palette **editor**, Constraints, Generate, VRAM 1x camera preview. |
-| **Read-only chrome** | Active **BG/SPR** palette strip for `default_pal_row` (not an editor) |
+| **Right -- Screen** | Active grid screen (128x120) @2x. **Tile selection** (marquee + right-click menu) or **Tile paint** (stamped tiles). No freeform pixel paint outside the tile modal. |
+| **Hidden** | Planes, BG bank viewer, Sprite banks, Constraints, Generate, VRAM 1x camera preview. |
+| **Palette chrome** | Read-only strip + **Global palettes** modal (kit master indices for BG/SPR rows) |
 
 **Play:** Available (e.g. **Space** / **PLAY**). Behavior must match exported cart logic for scroll, player, and X/Y warps.
 
-**Save / load:** **Ctrl+S** / **Ctrl+O** -> `test_game/test.r01proj` (created on save). JSON **version 4**.
+**Save / load:** **Ctrl+S** / **Ctrl+O** -> `test_game/test.r01proj` (created on save). JSON **version 4** (`default_screen`, `default_pal_row`, tile/attr planes).
 
 **Export cart:** **Ctrl+E** -> `test_game/test.retr01` (+ `test_prom.bin`, `test_boot.s`, `test_flash.bin` in the same folder).
 
@@ -142,15 +160,14 @@ PNG drop is the **only** way to author screen graphics in Phase 1.
 | Packing | All patterns deduped into **BG bank 0**; tile/attr planes for touched screens updated from the import |
 | Generate | **No** separate Generate action (**Ctrl+G** disabled / removed in Phase 1) |
 
-### Palettes (auto + read-only strip)
+### Palettes (strip + global editor)
 
-Phase 1 has **no palette editor**. A read-only **BG/SPR** swatch strip shows the active row. Global palette data is written automatically into the project and cart per [`docs/02`](../docs/02_graphics_worlds_memory.md):
+Phase 1 has **no per-tile RGB editor** — colors are **kit master indices** ([`docs/02`](../docs/02_graphics_worlds_memory.md)).
 
-- **Cart layout:** **8 global BG palette rows** + **8 global sprite palette rows** (**256 B** total).
-- **Color 0 (shared backdrop):** Master index **0** (`#000000`) in every palette. Same shared backdrop convention as NES (index 0 is universal backdrop / transparent for sprites).
+- **Strip:** Active **BG/SPR** row (`default_pal_row`). Row buttons switch the default row.
+- **Modal:** Click the strip to edit all **8 BG + 8 SPR** rows (4 pals × 4 colors). Save writes project JSON; Cancel restores snapshot.
 - **Before PNG import:** Phase 1 init fills BG colors 1-3 from kit columns `(16+p)` / `(32+p)` / `(48+p)`, and sprite colors 1-3 with kit bright red (player uses row **0**, pal **0**, index **1**).
 - **After PNG import:** BG rows (and sprite backdrop) are remapped to **nearest kit masters** from the atlas colors (`r01_project_set_bg_pals_from_png`).
-- **Active row:** Play / export use the world's `default_pal_row` (Phase 1: **0**).
 
 Preview and cart burn quantize through the kit Color PROM (**R3G3B2**).
 
@@ -160,7 +177,7 @@ Preview and cart burn quantize through the kit Color PROM (**R3G3B2**).
 |-------|---------|
 | BG banks | **Bank 0** filled by PNG import. Banks 1-3 empty unless pre-seeded in file |
 | Sprite banks | Empty in UI. Export plants solid color-1 tile **1** in SPR bank 0 for the player |
-| Attr plane | Import stamps bank/pal. **Flip-aware CHR dedupe** may set `FLIP_H` / `FLIP_V` when matching oriented tiles |
+| Attr plane | Import stamps bank/pal. **Flip-aware CHR dedupe** may set `FLIP_H` / `FLIP_V`. **Solid** / **Anim** via tile context menu (`0x40` / `0x80`) |
 
 ### Data flow
 
@@ -168,21 +185,20 @@ Preview and cart burn quantize through the kit Color PROM (**R3G3B2**).
 Drop PNG -> pack tiles (flip-aware) -> BG bank 0 + screen tile/attr payloads
        -> remap BG pals from PNG masters
        -> save project JSON
-Play  -> smooth scroll + player sprite + X/Y warp (SoT: `core/src/play.c`)
-Export -> `.retr01` (present screens only, play table `$8100`, marker `R01P`,
-          PRG streams pal + start MAP)
-Emu   -> same Play rules applied to exported cart MAP (re-export after edits)
+Play  -> smooth scroll + player sprite + solid collision + X/Y warp (SoT: core/src/play.c)
+Export -> `.retr01` (present screens, play table `$8100`, marker `R01P` v2,
+          PRG streams pal + start MAP, `play_pos_ok` @ $8500 + solid tables @ $8700)
+Emu/Sim -> host Play uses cart MAP attrs for solid; re-export after solid edits
 ```
 
 ### Phase 1 -- out of scope
 
-- Pixel / attr paint, sprite placement, meta-sprites
+- Sprite placement, meta-sprites, multi-tile entity authoring
 - Planes / parallax
-- Palette **editor**, bank viewers, VRAM 1x preview
 - Generate (**Ctrl+G**)
-- Second world, manual grid resize UI, grids larger than **8x8**
+- Multi-world **cart** export (UI can author other worlds; pack still world 0)
 - Dead-zone, instant-scroll, and fade **profiles** (except X/Y **warp** test events)
-- Enemy or multi-tile entity authoring
+- Full 6502 gameplay loop (PRG boot + collision stub; movement still host Play in emu/sim)
 
 ---
 
@@ -236,7 +252,7 @@ Or from repo root:
 ctest --test-dir build --output-on-failure
 ```
 
-- **core** -- pack, JSON, play, cart (Phase 0 plumbing)
+- **core** — pack, JSON, play + collision, cart + PRG phase 1 (six suites: project, play, chr, json, cart, palette)
 
 ---
 
@@ -245,7 +261,11 @@ ctest --test-dir build --output-on-failure
 | Action | Input |
 |--------|--------|
 | Select screen | Click present cell in Worlds |
+| Set default screen / world | Right-click world map cell |
 | Import atlas | **Drop PNG** anywhere on window |
+| Tile selection / paint | Radio rows beside screen view |
+| Tile context menu | Right-click tile (selection mode) |
+| Edit global palettes | Click BG/SPR strip |
 | Play / pause preview | **Space** / **PLAY** |
 | Move player | **WASD** / arrows |
 | Warp test | **X** -> screen (0,0), **Y** -> screen (1,0) |
@@ -260,14 +280,15 @@ ctest --test-dir build --output-on-failure
 
 | File | Contents |
 |------|----------|
-| `test_game/test.retr01` | Packed cart (`retr01` magic, globals, world 0 CHR/MAP, palettes, PRG) |
+| `test_game/test.retr01` | Packed cart (`retr01` magic, globals, world 0 CHR/MAP, palettes, PRG + collision stub) |
 | `test_game/test_prom.bin` | 64-byte Color PROM image (**motherboard**, not in cart) |
-| `test_game/test_boot.s` | Human-readable ca65 stub / equates |
+| `test_game/test_boot.s` | Human-readable ca65 stub / equates (play table, `play_pos_ok`, solid shadow layout) |
 | `test_game/test_flash.bin` | Cart image padded to **512 KB** |
 
-**ROM vs Studio chrome:** Editor layout and PNG import UI are not burned into the cart.
-Phase 1 **Play SoT** is `play.c`. Export packs matching MAP (present screens only) + play
-table; the emulator runs that same Play behavior on the cart.
+**ROM vs Studio chrome:** Editor layout, tile paint, and palette modal are not burned into the cart.
+Phase 1 **Play SoT** is `play.c` + `collision.c`. Export packs MAP attrs (including **solid**), play
+table + spawn from **`default_screen`**, and optional 6502 **`play_pos_ok`** for future PRG-owned movement.
+Emulator and sim apply the same collision rules against cart MAP; **re-export after solid edits**.
 
 See [`docs/08_simulator.md` -- Cart ROM vs runners](../docs/08_simulator.md#cart-rom-vs-runners-triage) for sim/emu vs cart boundaries.
 
