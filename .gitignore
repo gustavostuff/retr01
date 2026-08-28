@@ -23,3 +23,6 @@ retr01_sim/debug/
 retr01_sim/ui_layout.json
 ui_layout.json
 .cursor/
+
+# Release binaries (scripts/build-all.sh)
+release/
