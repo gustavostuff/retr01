@@ -146,11 +146,13 @@ static void apply_video_latch(R01sBoard *b) {
         int mode = r01s_video_sink_render_mode(sink);
         int do_clear = 0;
         if (mode == R01S_VIDEO_RENDER_NORMAL) {
+            /* Normal: vblank already cleared; also clear on scroll/seam so stale pixels
+             * do not linger if beam budget skips part of the field. */
             do_clear = scroll_changed || origin_changed || pl->pending_camera_reload;
-        } else {
-            /* Persist/Phosphor: never hard-clear on scroll nudge; only on 2×2 seam reload. */
-            do_clear = origin_changed || pl->pending_camera_reload;
         }
+        /* Persist/Phosphor: never clear on scroll or 2×2 seam reload — VRAM swap only.
+         * Clearing here caused a full black frame during vblank until the beam
+         * repainted (visible on first left step when cam_x crosses a screen column). */
         if (do_clear) {
             r01s_video_sink_clear(sink);
         }
