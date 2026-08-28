@@ -16,11 +16,11 @@ Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 ## Worlds, screens, cart budget
 
 - **7** worlds max (indices **0-6**). Sparse **8x8** grid per world, **32** screens/world (camera / playfield only)
-- Per world: up to **2 parallax planes** (same 480 B payload as a screen). **Not** on the world grid - separate MAP directory. Maps to VRAM slots **4-5**
+- Per world: up to **2 parallax planes** (same 480 B payload as a screen). **Not** on the world grid. Separate MAP directory. Maps to VRAM slots **4-5**
 - Screen / plane payload: **480 B** raw (**240** tiles + **240** attrs). Direct MAP `$FE93` -> VRAM `$FE12` (no RLE required)
 - Per world: **4 BG + 4 sprite** CHR banks (**32 KB**), screen dir + parallax dir
 - Palettes: **8 global BG palette rows** + **8 global sprite palette rows** (see [Palettes](#palettes))
-- Cart: **512 KB** (SST39SF040). **128 KB** PRG in cart image (CPU window still `$8000-$FFFF` with I/O hole, banked via `$FE80` -- see PRG). Studio Phase 1 export still emits **32 KB** until cart `format_ver` bump lands.
+- Cart: **512 KB** (SST39SF040). **128 KB** PRG in cart image (CPU window still `$8000-$FFFF` with I/O hole, banked via `$FE80`, see PRG). Studio Phase 1 export still emits **32 KB** until cart `format_ver` bump lands.
 
 | Asset | Size at caps (7 worlds) |
 |-------|--------------------------|
@@ -121,7 +121,7 @@ Line N+1| fill N+1         |        | SHOW             |
 
 Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio and burn tools **quantize** to R3G3B2 when building the PROM image ([`04`](04_retr01_studio.md)).
 
-(Earlier board sketches used 3x AT28C16 R/G/B - not the current norm.)
+(Earlier board sketches used 3x AT28C16 R/G/B, not the current norm.)
 
 ```text
 #000000 #290514 #2A0507 #230F06 #1E1306 #1A1605 #141807 #061A07 #051A13 #071918 #08181C #071722 #030B3D #16033A #20052D #260420

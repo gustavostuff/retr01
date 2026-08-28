@@ -20,7 +20,7 @@ The arcade board: something you can drop into a cabinet, wire to sticks and butt
 
 ## Why it exists
 
-Most retro projects either emulate the past exactly or leave the aesthetic behind. retr01 keeps the 8-bit look (8x8 tiles, 2bpp art, cartridge games) and redesigns the plumbing for multi-screen worlds, smoother scrolling, and simple parallax - without VBlank-only nametable updates. Studio supports multi-world **authoring** today. Cart export is **world 0** only.
+Most retro projects either emulate the past exactly or leave the aesthetic behind. retr01 keeps the 8-bit look (8x8 tiles, 2bpp art, cartridge games) and redesigns the plumbing for multi-screen worlds, smoother scrolling, and simple parallax, without VBlank-only nametable updates. Studio supports multi-world **authoring** today. Cart export is **world 0** only.
 
 Technical specs: [`docs/01_architecture_overview.md`](docs/01_architecture_overview.md), [`docs/02_graphics_worlds_memory.md`](docs/02_graphics_worlds_memory.md).
 

@@ -25,20 +25,20 @@ Flow:
   Cart PRG / track data
         |
         v
-  W65C02S  --NMI 60 Hz-->  decompress / delay / bitmask
+  W65C02S  -> NMI 60 Hz ->  decompress / delay / bitmask
         |
         |  STA $FE4x...          Bus Bridge
         v
-  ATmega328P APU  --mix 8 ch-->  R-2R DAC / amp
+  ATmega328P APU  -> mix 8 ch ->  R-2R DAC / amp
 ```
 
 ### The Bus Bridge
 
 On retr01, **"the Bus Bridge"** is **not** a separate named IC. It is the **CPU -> APU write path** that lets an 8 MHz 6502 hand bytes to a 16 MHz AVR without sharing a raw, always-on data bus:
 
-1. **Decode** - PLD (and `$FExx` latches where needed) maps CPU accesses in **`$FE40`-`$FE5F`** to the APU window.
-2. **Isolation** - the **CPU-domain 74HC245** (one of three board HC245s) plus PHI2 / `/OE` gating so only one master drives that domain at a time ([`06`](06_hardware_v1_32ic.md) bus split).
-3. **Capture** - the 328P sees register-like writes on its port (or a latch clocked on the write). It owns synthesis timing after that.
+1. **Decode**: PLD (and `$FExx` latches where needed) maps CPU accesses in **`$FE40`-`$FE5F`** to the APU window.
+2. **Isolation**: the **CPU-domain 74HC245** (one of three board HC245s) plus PHI2 / `/OE` gating so only one master drives that domain at a time ([`06`](06_hardware_v1_32ic.md) bus split).
+3. **Capture**: the 328P sees register-like writes on its port (or a latch clocked on the write). It owns synthesis timing after that.
 
 Game code does ordinary `STA $FE4x`. The bridge is **decode + bus isolation + APU-side latch/port**, same pattern as other `$FExx` peripherals. Exact GPIO pinout is schematic TBD. The **software contract** is the 32-byte window.
 
@@ -48,21 +48,21 @@ Game code does ordinary `STA $FE4x`. The bridge is **decode + bus isolation + AP
 
 Mixing runs in software on the 328P so the system can keep **8 concurrent channels**. Channels are **strictly divided** so SFX never steal BGM notes. BGM channels are typed for a classic 8-bit tracker feel.
 
-### 2.1 Background music (BGM) - channels 1-5
+### 2.1 Background music (BGM), channels 1-5
 
 | Ch | Wave | Role |
 |----|------|------|
 | 1 | Pulse | Primary lead melody (duty cycle adjustable) |
 | 2 | Pulse | Harmony / arpeggios / counter-melody |
-| 3 | Triangle | Dedicated bassline - **linear quantization, no volume control** (avoids clicks) |
+| 3 | Triangle | Dedicated bassline. **Linear quantization, no volume control** (avoids clicks) |
 | 4 | Noise | Cymbals, hi-hats, synthesized snares |
 | 5 | DPCM | 1-bit delta-encoded PCM (kicks, voice clips, orchestral hits) |
 
-### 2.2 Sound effects (SFX) - channels 6-8
+### 2.2 Sound effects (SFX), channels 6-8
 
 | Ch | Default | Role |
 |----|---------|------|
-| 6-8 | Pulse / noise | Dynamic SFX - jump, shoot, UI blips, etc. |
+| 6-8 | Pulse / noise | Dynamic SFX: jump, shoot, UI blips, etc. |
 
 Game logic may trigger SFX **arbitrarily** without interrupting channels 1-5.
 
@@ -140,16 +140,16 @@ These ride with channel data through the bus bridge:
 |------|---------|
 | `8X` | Set volume of the target channel to `X` (0-15) |
 | `9X` | Duty cycle (pulse) or noise type (noise) |
-| `7X` | **DPCM trigger** - play PROGMEM sample ID `X` (**channel 5 only**) |
+| `7X` | **DPCM trigger**: play PROGMEM sample ID `X` (**channel 5 only**) |
 
 ### 5.2 Playback control (handled on the 6502)
 
 | Code | Meaning |
 |------|---------|
-| `FD` | **Channel bitmask** - core decompression bridge (below) |
+| `FD` | **Channel bitmask**: core decompression bridge (below) |
 | `FE` | Next byte = delay in **frames** |
-| `FB` | Stop / play-once - mute or mark track not to loop |
-| `FA` | Loop track - reset CPU read pointer to start of track block |
+| `FB` | Stop / play-once. Mute or mark track not to loop |
+| `FA` | Loop track. Reset CPU read pointer to start of track block |
 
 #### `FD` bitmask (decompression bridge)
 
@@ -164,7 +164,7 @@ These ride with channel data through the bus bridge:
 
 The sequencer is driven entirely by the W65C02S **NMI** (~60x/s). **BGM** and **SFX** are two independent state machines. Main game logic runs between NMIs. Audio work stays bounded per frame.
 
-### Step 1 - Evaluate BGM (channels 1-5)
+### Step 1: Evaluate BGM (channels 1-5)
 
 1. Decrement `BGM_Delay_Counter`. If still **> 0**, skip to Step 2.
 2. Read the byte at `BGM_Read_Pointer`.
@@ -175,7 +175,7 @@ The sequencer is driven entirely by the W65C02S **NMI** (~60x/s). **BGM** and **
    - Push `FD`, mask, and data bytes to the ATmega latch via the bus bridge.
 5. Advance `BGM_Read_Pointer` as needed.
 
-### Step 2 - Evaluate SFX (channels 6-8)
+### Step 2: Evaluate SFX (channels 6-8)
 
 1. If no SFX active -> **exit** audio routine.
 2. Decrement `SFX_Delay_Counter`. If still **> 0** -> exit.
@@ -188,9 +188,9 @@ The sequencer is driven entirely by the W65C02S **NMI** (~60x/s). **BGM** and **
 ```text
   NMI entry
     |
-    +-> BGM SM (ch 1-5) --delay / FD / FA*FB*FE--> $FE4x
+    +-> BGM SM (ch 1-5), delay / FD / FA*FB*FE -> $FE4x
     |
-    +-> SFX SM (ch 6-8) --same, early-out if idle--> $FE4x
+    +-> SFX SM (ch 6-8), same, early-out if idle -> $FE4x
           |
           v
        RTI -> game loop
@@ -204,7 +204,7 @@ The sequencer is driven entirely by the W65C02S **NMI** (~60x/s). **BGM** and **
 |-------|--------|
 | Design (this doc) | 8-ch mixer, DPCM-in-AVR-flash, semantic hex + NMI dual tracker |
 | HW BOM | 328P + `$FE40`-`$FE5F` + CPU HC245 domain |
-| Board sim | Island **K** stub: period/vol **PWM square** smoke - not full mixer/DPCM yet ([`retr01_sim/README.md`](../retr01_sim/README.md)) |
+| Board sim | Island **K** stub: period/vol **PWM square** smoke. Not full mixer/DPCM yet ([`retr01_sim/README.md`](../retr01_sim/README.md)) |
 
 ---
 

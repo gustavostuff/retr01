@@ -324,7 +324,7 @@ Short stub only. Full protocol lives in [`07_audio_architecture.md`](07_audio_ar
 |--------|-------|
 | Role | Studio tools + generated ASM macros/routines to start/stop BGM and fire SFX |
 | Hardware | 6502 sequencer -> `$FE40`-`$FE5F` -> ATmega328P mixer ([`07`](07_audio_architecture.md)) |
-| Status | **TBD** -- channel map, bytecode authoring UI, and module profiles not frozen here |
+| Status | **TBD**. Channel map, bytecode authoring UI, and module profiles not frozen here |
 
 ---
 
@@ -363,7 +363,7 @@ Entity-entity among all NPCs is **opt-in** and expensive. Default generated loop
 
 ### 5.4 ASM peek (generated pattern)
 
-Not a full HAL yet -- shape the codegen toward this:
+Not a full HAL yet. Shape the codegen toward this:
 
 ```text
   NMI or main frame:

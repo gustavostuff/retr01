@@ -51,7 +51,7 @@ PNG drop imports into the **active** world. Cart export packs **world 0** only (
 | **Player** | One hardcoded **8x8** sprite. Color from sprite pal row 0, index 1 |
 | **Collision** | **8x8** AABB vs tiles with `R01_ATTR_SOLID` on present screens |
 | **Start** | Center of **`default_screen`** in the play world. Fallback grid **(2,0)** or first present |
-| **Warps** | **X** -> screen (0,0). **Y** -> screen (1,0) - Phase 1 test hooks, no Events UI yet |
+| **Warps** | **X** -> screen (0,0). **Y** -> screen (1,0). Phase 1 test hooks, no Events UI yet |
 
 Play SoT: `core/src/play.c` + `collision.c`. Emu/sim mirror the same rules (separate source copies). Re-export after solid edits. Host collision reads **cart MAP attrs**, not the PRG collision stub.
 
@@ -86,7 +86,7 @@ Play SoT: `core/src/play.c` + `collision.c`. Emu/sim mirror the same rules (sepa
 
 ## Palettes
 
-Kit **master indices** only ([`docs/02`](../docs/02_graphics_worlds_memory.md)) - no per-tile RGB editor. Strip shows active BG/SPR row for the **active world**. Modal edits all **8 BG + 8 SPR** rows project-wide. Preview and cart burn quantize through Color PROM (**R3G3B2**).
+Kit **master indices** only ([`docs/02`](../docs/02_graphics_worlds_memory.md)). No per-tile RGB editor. Strip shows active BG/SPR row for the **active world**. Modal edits all **8 BG + 8 SPR** rows project-wide. Preview and cart burn quantize through Color PROM (**R3G3B2**).
 
 ---
 
@@ -109,7 +109,7 @@ PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are
 
 | Phase | Scope |
 |-------|--------|
-| **0** | Core lib: project/world/screen structs, JSON I/O, CHR pack, cart image, unit tests - no author UI |
+| **0** | Core lib: project/world/screen structs, JSON I/O, CHR pack, cart image, unit tests. No author UI |
 | **1** | Single-world PNG import, Play, `.retr01` export |
 | **2** | Multi-world UI, tile edit/paint, solid/anim attrs, global palettes, default spawn (current, partial multi-world persistence) |
 

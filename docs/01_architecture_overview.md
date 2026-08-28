@@ -17,7 +17,7 @@ When docs disagree, use this order.
 | Studio game modules (movement, camera, entities, collision budgets) | [`08`](08_game_modules.md) | Attachable gameplay profiles. Studio phases implement subsets later |
 | IC pin/behavior detail | [`hw/md/`](../hw/md/) + datasheet PDFs | Sim and schematics |
 
-**Current product board:** [`06`](06_hardware_v1_32ic.md) - **32 ICs**, ~**12x12 cm** 4-layer THT (chip roles and netlist there).
+**Current product board:** [`06`](06_hardware_v1_32ic.md), **32 ICs**, ~**12x12 cm** 4-layer THT (chip roles and netlist there).
 
 This folder is the current architecture spec for **retr01**.
 
@@ -132,13 +132,13 @@ Current chip list: [`06`](06_hardware_v1_32ic.md) (**32 IC**). Roles:
 
 ## Near-term software focus
 
-**retr01 Studio** (Phase 2 authoring) and **retr01 Emulator** (Phase 1 cart runtime) are the active tools - see [`retr01_studio/README.md`](../retr01_studio/README.md) and [`retr01_emu/README.md`](../retr01_emu/README.md). **Board IC simulator** ([`retr01_sim/`](../retr01_sim/)) validates the 32-IC netlist.
+**retr01 Studio** (Phase 2 authoring) and **retr01 Emulator** (Phase 1 cart runtime) are the active tools. See [`retr01_studio/README.md`](../retr01_studio/README.md) and [`retr01_emu/README.md`](../retr01_emu/README.md). **Board IC simulator** ([`retr01_sim/`](../retr01_sim/)) validates the 32-IC netlist.
 
 ## Doc index (`docs/`)
 
 | # | File | Topic |
 |---|------|--------|
-| 01 | `01_architecture_overview.md` | This file - sources of truth, terminology |
+| 01 | `01_architecture_overview.md` | This file. Sources of truth, terminology |
 | 02 | `02_graphics_worlds_memory.md` | Software SoT: VRAM, cart, `$FExx` |
 | 03 | `03_hardware_implementation.md` | Protoboard island bring-up |
 | 04 | `04_retr01_studio.md` | Studio stub (product SoT: component README) |

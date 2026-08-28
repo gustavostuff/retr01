@@ -1,6 +1,6 @@
 # retr01 Studio
 
-**Product SoT:** [`retr01_studio/README.md`](../retr01_studio/README.md) - build, controls, UI, export.
+**Product SoT:** [`retr01_studio/README.md`](../retr01_studio/README.md). Build, controls, UI, export.
 
 C11 + SDL2 authoring app. Phase 2 (current): 7-world sidebar, tile edit/paint, solid attrs, global palettes, default spawn. Phase 1 still: PNG import, Play, `.retr01` export (world 0 only).
 

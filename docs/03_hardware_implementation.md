@@ -68,7 +68,7 @@ Full register map: [`02`](02_graphics_worlds_memory.md).
 
 **Ground rules:** 5 V only, 100 nF per IC. One bus driver at a time. Start CPU at **1-2 MHz** if wires ring, then **8 MHz**. Do not share CHR between BG and 1284 until each side works alone. W65C02S: **`BE` high**, **`RDY` high**, clock = **`PHI2`**.
 
-Letter islands below are the **electrical bring-up checklist** (bench order). The board simulator may **co-locate** several letters on one canvas frame without changing these pass criteria -- see [Sim canvas grouping](#sim-canvas-grouping).
+Letter islands below are the **electrical bring-up checklist** (bench order). The board simulator may **co-locate** several letters on one canvas frame without changing these pass criteria. See [Sim canvas grouping](#sim-canvas-grouping).
 
 ```text
 A Power

@@ -109,7 +109,7 @@ Interface: 6502 bit-bang or 1284 as I2C master behind a `$FExx` window (TBD in `
 
 ### APU path (328P)
 
-1. W65C02S writes `$FE40-$FE5F` (sequencer / bytecode - see [`07`](07_audio_architecture.md)).
+1. W65C02S writes `$FE40-$FE5F` (sequencer / bytecode, see [`07`](07_audio_architecture.md)).
 2. **Bus bridge** = decode + CPU-domain HC245 isolation + 328P port/latch (not a separate IC).
 3. ATmega328P services APU continuously (mix / DAC).
 4. ATmega1284P does **not** synthesize audio.

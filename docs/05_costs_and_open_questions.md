@@ -23,7 +23,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Master palette (logical) | **64 indices** in board **Color PROM**. Same logical kit on retr01-A/C/H. **Not** in cart |
 | Color PROM (encoding) | **1x** PROM/OTP: packed **R3G3B2** `{RRRGGGBB}`, 1-dot pipeline. Studio quantizes kit swatches |
 | Cart global palettes | **8 BG palette rows** + **8 sprite palette rows** (**32 + 32** palettes, **256 B** total), indices only |
-| MAP / cart layout | Fixed header + **pointer table**, world table, per-world CHR + screen dir + payloads - see [`02`](02_graphics_worlds_memory.md) *Cart image* |
+| MAP / cart layout | Fixed header + **pointer table**, world table, per-world CHR + screen dir + payloads. See [`02`](02_graphics_worlds_memory.md) *Cart image* |
 | MAP world header | `start_col`/`start_row`, **`default_bg_bank`**, **`default_spr_bank`**, optional `default_pal_row` (**0-7**) |
 | Palette cart storage | **uncompressed** master **indices** in the two global blobs. **Pointer table** locates them. **No** master RGB in cart |
 | Active palette buffer | **4 BG + 4 sprite palettes** from one selected **palette row** via `$FE08`/`$FE09` (indices into Color PROM) |
@@ -31,24 +31,24 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Shared backdrop | all **8** active palettes use the same **color 0** master index (software must write it into every slot when loading a row) |
 | Palette fallback | cart globals -> **system default** indices (**software** only: kit/Studio/boot). Bare ASM/C that never writes `$FE08`/`$FE09` gets **undefined/garbage** colors. Master RGB always from Color PROM |
 | Runtime BG banking | per **8x8 tile** (attr `BANK` bits). Screens may stamp a default only at load |
-| BG attr byte | per tile: `BANK` (1-0), `PAL` (3-2), `FLIP_H` (4), `FLIP_V` (5) **hardware**. `SOLID` (6), `ANIM` (7) **software**. Same low fields as OAM - see [`02`](02_graphics_worlds_memory.md) |
+| BG attr byte | per tile: `BANK` (1-0), `PAL` (3-2), `FLIP_H` (4), `FLIP_V` (5) **hardware**. `SOLID` (6), `ANIM` (7) **software**. Same low fields as OAM. See [`02`](02_graphics_worlds_memory.md) |
 | BG living tiles | `ANIM=1`: **4** consecutive CHR indices `B..B+3`, `B` 4-aligned. Software advances nametable |
 | BG collision | `SOLID` bit + **RAM shadow**. Video ignores `SOLID` |
 | Runtime sprite banking | per **OAM entry** (attr `BANK` bits). `$FE37` optional stamp only |
-| OAM attr byte | `BANK` (1-0), `PAL` (3-2), `FLIP_H` (4), `FLIP_V` (5), `PRIORITY` (6), `SIZE` (7) - see [`02`](02_graphics_worlds_memory.md) |
+| OAM attr byte | `BANK` (1-0), `PAL` (3-2), `FLIP_H` (4), `FLIP_V` (5), `PRIORITY` (6), `SIZE` (7). See [`02`](02_graphics_worlds_memory.md) |
 | VRAM | **32 KB**, interleaved. Slots **512 B** aligned (240+240 used) |
 | System RAM | **32 KB**, CPU-only |
 | Line buffer | third **32 KB** SRAM, sprite ping-pong, **128 px**/half used |
 | OAM | in **ATmega1284P**, no DMA. **`$FE20`** = addr, **`$FE21`** = data (auto-inc). Entry `Y, tile, attr, X` in logical space |
 | Sprite cap | **16** per **logical** scanline |
 | Scroll | `scroll_x` **0-127**, `scroll_y` **0-119**, wrap |
-| `$FExx` logical map | Draft in [`02`](02_graphics_worlds_memory.md). Silicon: **9x HC573** bit-packed (bitfield table open -- Q21) |
+| `$FExx` logical map | Draft in [`02`](02_graphics_worlds_memory.md). Silicon: **9x HC573** bit-packed (bitfield table open, Q21) |
 | Machine config storage | **1284 internal 4 KB EEPROM** (handshake via `$FE70`-`$FE72` band, protocol TBD, Q20) |
-| Cart game saves | **I2C EEPROM on cart** (in the 32). HAL / port TBD -- Q20 |
+| Cart game saves | **I2C EEPROM on cart** (in the 32). HAL / port TBD (Q20) |
 | MAP access | **`$FE90`-`$FE92`** addr, **`$FE93`** data + auto-inc |
 | PRG layout | **One global PRG section** per cart, **32 KB** max at `$8000` (I/O hole at `$FE00-$FEFF`). **`$FE80` reserved / unused** |
 | PRG size (planning) | **32 KB** hard cap. Fits the CPU map with no runtime paging |
-| Cart fit | **Standard cart 512 KB**. Full 7-world caps + **128 KB** PRG ~**478 KB** (~**46 KB** free). Phase 1 export (32 KB PRG, world 0) much smaller - see [`02`](02_graphics_worlds_memory.md) |
+| Cart fit | **Standard cart 512 KB**. Full 7-world caps + **128 KB** PRG ~**478 KB** (~**46 KB** free). Phase 1 export (32 KB PRG, world 0) much smaller. See [`02`](02_graphics_worlds_memory.md) |
 | Cart flash | **512 KB** parallel NOR (**SST39SF040**). On cartridge (socket OK for early bring-up). Same `.retr01` image |
 | Beam / glue | Beam in **2x ATF22V10**, glue absorbed, **5** PLDs (compositor = priority mux) |
 | Bus | **3x HC245** |
@@ -98,7 +98,7 @@ Flash + I2C save on cart PCB. Motherboard + cart proto still targets roughly the
 | Q13 | retr01-C pad bit timing | ATtiny85 + 3-wire draft locked. Baud/poll edge details later |
 | Q14 | Color PROM DAC depth | Packed R3G3B2 is the norm. How many resistor steps / levels on the bench still tunable |
 | Q15 | Color PROM part (AT28C16 vs faster OTP) | **Pinned candidate:** **AT27C256R-70PU** (70 ns, DIP-28) if 150 ns is tight. Footprint DIP-24 vs DIP-28 |
-| Q20 | Machine EEPROM handshake + cart I2C API | Protocol / `$FExx` for 1284 mailbox + cart save HAL -- TBD in [`02`](02_graphics_worlds_memory.md) |
+| Q20 | Machine EEPROM handshake + cart I2C API | Protocol / `$FExx` for 1284 mailbox + cart save HAL. TBD in [`02`](02_graphics_worlds_memory.md) |
 | Q21 | HC573 bitfield packing | 9-chip packed map must be written in `02` |
 | Q16 | Default living-tile list cap | Recommend **32** vs **64** cells per camera workbench (`retr01_ANIM_MAX`) |
 | Q17 | BG anim rate | Fixed global `rate_shift`, or per-game constant only? |

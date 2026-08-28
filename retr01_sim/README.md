@@ -6,7 +6,7 @@ IC-first board simulator for retr01-A. Separate from retr01 Studio (authoring). 
 
 ## Status
 
-**9 canvas islands (O first / top-left) + wired-only E/I/N/P - 32-IC BOM, layer-2 smoke.** SDL board UI.
+**9 canvas islands (O first / top-left) + wired-only E/I/N/P, 32-IC BOM, layer-2 smoke.** SDL board UI.
 
 | Island | Components (canvas) |
 |--------|---------------------|
@@ -17,9 +17,9 @@ IC-first board simulator for retr01-A. Separate from retr01 Studio (authoring). 
 | E Pads | `$FE60`/`$FE61` via 1284 (sim model, not on canvas) |
 | G VRAM | 2nd `AS6C62256` + **3x** `SN74HC157` + `ATF22V10` VRAM glue |
 | H Beam | `OSC_DOT` + `BEAM_XY` (X PLD) + `ATF22V10` Y compare vs `$FE04` |
-| I BG fetch | `BG_FETCH` PLD - nametable VA from beam+scroll (not on canvas) |
+| I BG fetch | `BG_FETCH` PLD, nametable VA from beam+scroll (not on canvas) |
 | J Cart | `SST39SF040` + cart `24C64` + cart/OAM `SN74HC245` |
-| K APU | `ATMEGA328P` stub - `$FE40`-`$FE5F` regs + digital PWM square |
+| K APU | `ATMEGA328P` stub, `$FE40`-`$FE5F` regs + digital PWM square |
 | L MCU+linebuf | `ATMEGA1284P` + linebuf `AS6C62256` + **3x** `SN74HC157` |
 | N Sprites | stats via 1284/OAM (not on canvas) |
 | P Integration | NMI / bus-fight stats (not on canvas) |
@@ -38,7 +38,7 @@ Why the worker exists: [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md).
   Layer 1: Unit (one IC)
        |
        v
-  Layer 2: Island (few ICs + wires)  -- see docs/03 + test_island_abcdeghiojklmnp.c
+  Layer 2: Island (few ICs + wires). See docs/03 + test_island_abcdeghiojklmnp.c
        |
        v
   Layer 3: System (full board + cart + input + screen)
@@ -54,7 +54,7 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 
 | Layer | Artifact | On silicon / runners? | Notes |
 |-------|----------|----------------------|--------|
-| **Studio editor / Play** | `rom/test.r01proj` (+ UI) | **No** | Host preview only - never executes PRG or `$FExx` |
+| **Studio editor / Play** | `rom/test.r01proj` (+ UI) | **No** | Host preview only. Never executes PRG or `$FExx` |
 | **Cart image** | `rom/test.retr01` (+ `test_flash.bin`) | **Yes** (flash) | Packed bytes SoT for PRG/CHR/MAP/pals. Layout in [`docs/02`](../docs/02_graphics_worlds_memory.md) |
 | **Color PROM burn** | `test_prom.bin` | **Yes** (motherboard) | Not inside the cart. Kit -> R3G3B2. Board AT28C16 |
 | **Boot asm listing** | `test_boot.s` | Human-readable only | Binary inside `.retr01` is what runners execute |
@@ -80,9 +80,9 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 
 ### How to tell ROM bug vs runner bug
 
-1. **Hex / dump the cart first** - if the dump is wrong, it is Studio export. If right, blame the runner or soft helpers.
-2. **Same `.retr01` on emu and sim** - both wrong the same way -> ROM/content or shared contract (`02`). Only one fails -> that runner.
-3. **Never use Studio Play as proof the cart boots** - Play bypasses PRG.
+1. **Hex / dump the cart first.** If the dump is wrong, it is Studio export. If right, blame the runner or soft helpers.
+2. **Same `.retr01` on emu and sim.** Both wrong the same way -> ROM/content or shared contract (`02`). Only one fails -> that runner.
+3. **Never use Studio Play as proof the cart boots.** Play bypasses PRG.
 4. **Call out soft helpers.** `R01E_SOFTBOOT=1` / `R01S_SOFTBOOT=1` are opt-in host poke only.
 5. **Color wrong?** Check `*_prom.bin` / board PROM path separately from cart palette indices.
 
@@ -93,7 +93,7 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 | Time base | PHI2 half-steps from `OSC8M`. Combinatorial parts settle in wire pass |
 | Bus | Settle loop (`R01S_SETTLE_PASSES`). H+L -> hard abort. Undriven -> pull-up HIGH (`$FF`) |
 | Wiring | Explicit `wire_*` in `board.c`. Global netlist deferred |
-| Boot UX | Worker-thread MAP catchup - [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md) |
+| Boot UX | Worker-thread MAP catchup. See [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md) |
 | Perf | [`PERFORMANCE.md`](PERFORMANCE.md) |
 
 **Model:** every IC is an `R01sEntity` (pins + vtable). Islands hold entities. Island groups wire them. `r01s_board_build()` binds the full netlist onto 9 canvas frames. Undriven pins pull high. H+L aborts with a bus-fight report.
@@ -142,7 +142,7 @@ Live probe (top-right) shows **VDD / PHI2 / RESB**. Status bar shows CPU `PC` / 
 | Path | Role |
 |------|------|
 | `include/retr01_sim/` | Public headers (`entity`, `pin`, `bus`, `board`, `island*`, `types`) |
-| `src/board.c` | Board recipe - 9 canvas islands, wiring, settle loop |
+| `src/board.c` | Board recipe. 9 canvas islands, wiring, settle loop |
 | `src/main.c` | SDL entry |
 | `chips/` | Per-part models |
 | `tests/` | Layer-1 unit tests + `test_island_abcdeghiojklmnp` (layer 2) |
