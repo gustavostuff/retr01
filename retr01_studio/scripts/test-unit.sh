@@ -6,5 +6,5 @@ cd "$ROOT"
 if [[ ! -f build/CMakeCache.txt ]]; then
   cmake -B build -DCMAKE_BUILD_TYPE=Release
 fi
-cmake --build build --target test_core
-ctest --test-dir build --output-on-failure -R '^core$'
+cmake --build build
+ctest --test-dir build --output-on-failure

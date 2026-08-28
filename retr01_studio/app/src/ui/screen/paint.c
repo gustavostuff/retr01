@@ -79,7 +79,7 @@ void ui_paint_tile(UiState *ui, int tx, int ty) {
         return;
     }
     if (!ui_paint_stamp_get(ui, &tile_id, &attr)) {
-        ui_toast(ui, "select or Alt+click a tile to paint with", 1);
+        ui_toast(ui, "Not tile was selected as brush", 1);
         return;
     }
     if (tx == ui->last_paint_tx && ty == ui->last_paint_ty) {

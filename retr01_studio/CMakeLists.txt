@@ -25,10 +25,23 @@ pkg_check_modules(FREETYPE REQUIRED IMPORTED_TARGET freetype2)
 target_link_libraries(retr01_studio_core PUBLIC PkgConfig::LIBPNG)
 
 enable_testing()
-add_executable(test_core core/tests/test_core.c)
-target_link_libraries(test_core PRIVATE retr01_studio_core)
-add_test(NAME core COMMAND test_core)
-set_tests_properties(core PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+set(STUDIO_TEST_HARNESS core/tests/test_harness.c)
+
+function(r01_studio_add_test name)
+  add_executable(test_${name} core/tests/test_${name}.c ${STUDIO_TEST_HARNESS})
+  target_include_directories(test_${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/core/tests)
+  target_link_libraries(test_${name} PRIVATE retr01_studio_core)
+  add_test(NAME ${name} COMMAND test_${name})
+  set_tests_properties(${name} PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+endfunction()
+
+r01_studio_add_test(project)
+r01_studio_add_test(play)
+r01_studio_add_test(chr)
+r01_studio_add_test(json)
+r01_studio_add_test(cart)
+r01_studio_add_test(palette)
 
 add_library(retr01_studio_app
   app/src/shell/app_shell.c
