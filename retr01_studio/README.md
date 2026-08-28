@@ -15,7 +15,7 @@ Visual authoring tool for retr01 worlds, screens, and cartridge images. **Phase 
 Fixed **640x360** logical canvas. Dark gray / darker gray only. All chrome snaps to an **8px** grid. Buttons and labels are **16px** tall; width = content rounded up to a multiple of 8. Font: **Proggy Tiny** (`assets/proggy-tiny.ttf`).
 
 ```text
-+------------------------------------------------------------------+
++-------------------------------------------------------------------+
 | SIDEBAR (128)          | MAIN                                     |
 | [>] Worlds             |              [ Play ]                    |
 |  [0][1][2][3]          |         +------------------+  ( ) Sel    |
@@ -28,14 +28,14 @@ Fixed **640x360** logical canvas. Dark gray / darker gray only. All chrome snaps
 |  BG  [32px strip]      |                                          |
 |  SPR [32px strip]      |                                          |
 |  [0][1]...[7] rows     |                                          |
-+------------------------------------------------------------------+
++-------------------------------------------------------------------+
 ```
 
 | Control | Behavior |
 |---------|----------|
-| **Worlds** label | Above the world buttons |
+| **Worlds** accordion | Collapsible sidebar section: world buttons + map |
 | **8 world buttons** | 16x16 each. World 0 starts present with a **3x3** blank screen region on an **8x8** slot map. Other worlds empty until clicked (creates empty world). |
-| **World map 128x128** | Cell pitch **16** (15px fill + 1px gap). Present screens dark; active screen green. |
+| **World map 128x128** | Cell pitch **16** (15px fill + 1px gap). Present screens **blue**; **white fill** = default spawn screen; **white outline** = selected screen |
 | **Double-click** empty slot | Create screen |
 | **Ctrl+click** present slot | Remove screen |
 | **Click** present slot | Select active screen |
@@ -111,7 +111,7 @@ Phase 0 is infrastructure only; nothing in the shell beyond what is needed to bo
 
 | Rule | Phase 1 value |
 |------|----------------|
-| Worlds | **One** world only (**world 0**). No add/switch world UI. |
+| Worlds | **One** world in Phase 1 UI; **Phase 2** adds 8-world sidebar (cart export still **world 0**) |
 | Grid size | **3x3** default; PNG import resizes to **NxM** (1-8 per axis, max **8x8**) |
 | Screen placement | Grid slots exist; **present** only where PNG has opaque content (transparent cells stay absent). Click present cells to select. |
 | Initial content | Empty / absent screens until PNG import. |
@@ -119,24 +119,31 @@ Phase 0 is infrastructure only; nothing in the shell beyond what is needed to bo
 
 ### Authoring UI
 
-Fixed **640x360** logical canvas, integer scale (default **2x**).
+Fixed **640x360** logical canvas, integer scale (default **2x**). Current chrome is **Phase 2** (Phase 1 was a read-only screen + world grid only):
 
 ```text
 +------------------------------------------------------------------+
-|  [ Worlds -- NxM grid ]  |                                       |
-|  (single world,          |                                       |
-|   default 3x3;           |         [ Screen ]                    |
-|   click to select)       |   (read-only view of active screen)   |
-|                          |                                       |
+| SIDEBAR (128)          | MAIN                                     |
+| [>] Worlds             |              [ Play ]                    |
+|  [0][1][2][3]          |         +------------------+  ( ) Sel    |
+|  [4][5][6][7]          |         | Screen 256x240   |  ( ) Paint  |
+|  +--------------+      |         | 128x120 @2x edit |             |
+|  | 128x128 map  |      |         +------------------+             |
+|  | 8x8 x 16px   |      |                                          |
+|  +--------------+      |                                          |
+| [>] Palettes           |                                          |
+|  BG  [32px strip]      |                                          |
+|  SPR [32px strip]      |                                          |
+|  [0][1]...[7] rows     |                                          |
 +------------------------------------------------------------------+
 ```
 
-| Region | Phase 1 |
-|--------|---------|
-| **Left -- Worlds** | Only panel in the left column. Shows the world grid (default **3x3**; resizes to match PNG atlas); click selects active **present** screen. |
-| **Right -- Screen** | Active grid screen (128x120) @2x. **Tile selection** (marquee + right-click menu) or **Tile paint** (stamped tiles). No freeform pixel paint outside the tile modal. |
-| **Hidden** | Planes, BG bank viewer, Sprite banks, Constraints, Generate, VRAM 1x camera preview. |
-| **Palette chrome** | Read-only strip + **Global palettes** modal (kit master indices for BG/SPR rows) |
+| Region | Phase 1 (original) | Current (Phase 2) |
+|--------|--------------------|-------------------|
+| **Left -- Worlds** | World 0 grid only; click to select | 8 world buttons + **8×8** map accordion; create/delete screens |
+| **Left -- Palettes** | — | Accordion: BG/SPR strips + row buttons; click opens global editor |
+| **Right -- Screen** | Read-only PNG view | **Tile selection** / **Tile paint** + tile modal |
+| **Hidden** | Planes, banks, Generate, VRAM preview | Same |
 
 **Play:** Available (e.g. **Space** / **PLAY**). Behavior must match exported cart logic for scroll, player, and X/Y warps.
 
@@ -146,12 +153,12 @@ Fixed **640x360** logical canvas, integer scale (default **2x**).
 
 ### PNG import
 
-PNG drop is the **only** way to author screen graphics in Phase 1.
+Bulk atlas import; Phase 2 **tile edit/paint** can also author tiles cell-by-cell.
 
 | Rule | Value |
 |------|--------|
 | Drop target | **Anywhere** on the app window |
-| Destination | **World 0**, **BG bank 0** always |
+| Destination | **Active** world, **BG bank 0** |
 | Unique patterns | <= **256** unique 8x8 tiles from the import |
 | Colors | <= **4** colors per PNG |
 | Cell size | **128x120** px per screen cell |
@@ -256,7 +263,7 @@ ctest --test-dir build --output-on-failure
 
 ---
 
-## Phase 1 controls
+## Controls
 
 | Action | Input |
 |--------|--------|
@@ -299,6 +306,6 @@ See [`docs/08_simulator.md` -- Cart ROM vs runners](../docs/08_simulator.md#cart
 | Doc | Topic |
 |-----|--------|
 | [`docs/02`](../docs/02_graphics_worlds_memory.md) | Screens, VRAM, palettes, cart layout |
-| [`docs/04`](../docs/04_retr01_studio.md) | Short Phase 1 mirror in docs/ |
+| [`docs/04`](../docs/04_retr01_studio.md) | Short mirror in docs/ (may lag this README) |
 | [`docs/08`](../docs/08_simulator.md) | Board sim + cart loading |
 | [`retr01_emu/README.md`](../retr01_emu/README.md) | Emulator Phase 1 |
