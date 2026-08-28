@@ -15,6 +15,8 @@ add_library(retr01_studio_core
   core/src/prg_phase1.c
   core/src/cart.c
   core/src/paths.c
+  core/src/sprites.c
+  core/src/entities.c
 )
 target_include_directories(retr01_studio_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include
@@ -49,6 +51,8 @@ r01_studio_add_test(chr)
 r01_studio_add_test(json)
 r01_studio_add_test(cart)
 r01_studio_add_test(palette)
+r01_studio_add_test(sprites)
+r01_studio_add_test(entities)
 
 add_executable(test_fixture core/tests/test_fixture.c ${STUDIO_TEST_HARNESS})
 target_include_directories(test_fixture PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/core/tests)
@@ -80,6 +84,8 @@ add_library(retr01_studio_app
   app/src/ui/modals/pal_edit.c
   app/src/ui/modals/pal_edit_draw.c
   app/src/ui/modals/tile_edit.c
+  app/src/ui/modals/sprite_edit.c
+  app/src/ui/modals/entity_edit.c
 )
 target_include_directories(retr01_studio_app PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/app/src

@@ -38,11 +38,24 @@
 
 #define R01_NAME_MAX 64
 #define R01_PATH_MAX 512
-#define R01_JSON_VER 4
+#define R01_JSON_VER 5
 
 #define R01_ROM_DIR "rom"
 #define R01_DEFAULT_PROJECT R01_ROM_DIR "/test.r01proj"
 #define R01_DEFAULT_CART_STEM R01_ROM_DIR "/test"
+
+/* Per-world sprite catalog (CHR patterns in spr_banks + authoring metadata). */
+#define R01_MAX_SPRITES 256
+
+/* Entity types (docs/08). UI may lock state_count to 1; arrays sized for later. */
+#define R01_MAX_ENTITY_TYPES 64
+#define R01_ENTITY_STATES_MAX 4
+#define R01_ENTITY_FRAMES_MAX 4
+#define R01_ENTITY_PARTS_MAX 4 /* 2x2 tile frame budget */
+#define R01_ENTITY_COMPOSE_PX 16
+#define R01_ENTITY_NAME_MAX 32
+#define R01_ENTITY_HITBOX_W 8
+#define R01_ENTITY_HITBOX_H 8
 
 /* BG attr (docs/02) */
 #define R01_ATTR_BANK_MASK 0x03u
@@ -75,6 +88,47 @@ typedef struct R01ChrBank {
 typedef R01ChrBank R01BgBank;
 typedef R01ChrBank R01SprBank;
 
+/* Catalog entry: one 8x8 pattern in a SPR bank + default palette. */
+typedef struct R01SpriteDef {
+    int bank;    /* 0..R01_SPR_BANKS-1 */
+    int tile_id; /* index in spr_banks[bank] */
+    int pal;     /* 0..3 within the active sprite palette row */
+} R01SpriteDef;
+
+/* One OAM-like part in an entity frame (dx/dy relative to state origin). */
+typedef struct R01EntityPart {
+    int bank;
+    int tile_id;
+    int pal;
+    int flip_h;
+    int flip_v;
+    int dx;
+    int dy;
+} R01EntityPart;
+
+typedef struct R01EntityFrame {
+    R01EntityPart parts[R01_ENTITY_PARTS_MAX];
+    int part_count;
+} R01EntityFrame;
+
+typedef struct R01EntityState {
+    char name[R01_ENTITY_NAME_MAX]; /* project-only authoring label */
+    int origin_x;
+    int origin_y;
+    int hitbox_x;
+    int hitbox_y;
+    int hitbox_w; /* fixed 8 for now */
+    int hitbox_h;
+    R01EntityFrame frames[R01_ENTITY_FRAMES_MAX];
+    int frame_count; /* 1..R01_ENTITY_FRAMES_MAX */
+} R01EntityState;
+
+typedef struct R01EntityType {
+    int present;
+    R01EntityState states[R01_ENTITY_STATES_MAX];
+    int state_count; /* UI may lock to 1; wire up to R01_ENTITY_STATES_MAX */
+} R01EntityType;
+
 typedef struct R01World {
     int present;
     int grid_cols;
@@ -86,6 +140,10 @@ typedef struct R01World {
     int screen_count;
     R01BgBank bg_banks[R01_BG_BANKS];
     R01SprBank spr_banks[R01_SPR_BANKS];
+    R01SpriteDef sprites[R01_MAX_SPRITES];
+    int sprite_count;
+    R01EntityType entities[R01_MAX_ENTITY_TYPES];
+    int entity_count;
 } R01World;
 
 typedef struct R01Project {

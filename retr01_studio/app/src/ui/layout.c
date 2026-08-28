@@ -157,8 +157,26 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
     lo->pals_open = (ui->accordion_open == UI_ACC_PALS);
     if (lo->pals_open) {
         lo->pals_body_y = y;
+        y += UI_PAL_BODY_H;
     } else {
         lo->pals_body_y = -1;
+    }
+    lo->sprites_hdr_y = y;
+    y += UI_BTN_H;
+    lo->sprites_open = (ui->accordion_open == UI_ACC_SPRITES);
+    if (lo->sprites_open) {
+        lo->sprites_body_y = y;
+        y += UI_SPRITES_BODY_H;
+    } else {
+        lo->sprites_body_y = -1;
+    }
+    lo->entities_hdr_y = y;
+    y += UI_BTN_H;
+    lo->entities_open = (ui->accordion_open == UI_ACC_ENTITIES);
+    if (lo->entities_open) {
+        lo->entities_body_y = y;
+    } else {
+        lo->entities_body_y = -1;
     }
 }
 int world_cell_hit(const UiState *ui, int lx, int ly, int *out_col, int *out_row) {
@@ -231,6 +249,18 @@ int accordion_header_hit(const UiState *ui, int lx, int ly, int *out_section) {
         }
         return 1;
     }
+    if (ly >= lo.sprites_hdr_y && ly < lo.sprites_hdr_y + UI_BTN_H) {
+        if (out_section) {
+            *out_section = UI_ACC_SPRITES;
+        }
+        return 1;
+    }
+    if (ly >= lo.entities_hdr_y && ly < lo.entities_hdr_y + UI_BTN_H) {
+        if (out_section) {
+            *out_section = UI_ACC_ENTITIES;
+        }
+        return 1;
+    }
     return 0;
 }
 
@@ -296,4 +326,149 @@ void pal_modal_layout(PalModalLayout *lo) {
     lo->btn_y = lo->my + UI_PAL_MODAL_H - UI_BTN_H - UI_UNIT;
     lo->save_w = label_width("Save");
     lo->cancel_w = label_width("Cancel");
+}
+
+void sprite_modal_layout(SpriteModalLayout *lo) {
+    lo->mx = modal_x();
+    lo->my = modal_y();
+    lo->pal_x = lo->mx + UI_UNIT * 2;
+    lo->pal_label_y = lo->my + UI_MODAL_BODY_Y;
+    lo->pal_y = lo->pal_label_y + UI_BTN_H;
+    lo->canvas_x = lo->mx + UI_MODAL_W - UI_UNIT - UI_TILE_CANVAS;
+    lo->canvas_y = lo->my + UI_MODAL_BODY_Y;
+    lo->btn_y = lo->my + UI_MODAL_H - UI_BTN_H - UI_UNIT;
+    lo->save_w = label_width("Save");
+    lo->cancel_w = label_width("Cancel");
+}
+
+void entity_modal_layout(EntityModalLayout *lo) {
+    int mx = (UI_LOGIC_W - UI_ENTITY_MODAL_W) / 2;
+    int my = (UI_LOGIC_H - UI_ENTITY_MODAL_H) / 2;
+    int left_x = mx + UI_UNIT * 2;
+    int right_x = mx + UI_ENTITY_MODAL_W / 2 + UI_UNIT;
+    lo->mx = mx;
+    lo->my = my;
+    lo->left_label_y = my + UI_BTN_H + 2;
+    lo->left_dots_x = left_x + label_width("Sprite bank") + UI_UNIT;
+    lo->left_dots_y = lo->left_label_y + 4;
+    lo->left_grid_x = left_x;
+    lo->left_grid_y = lo->left_label_y + UI_BTN_H + 2;
+    lo->right_state_y = lo->left_label_y;
+    lo->right_dots_x = right_x + label_width("State") + UI_UNIT;
+    lo->right_dots_y = lo->right_state_y + 4;
+    lo->right_name_x = lo->right_dots_x + UI_DOT_STRIP_N * (UI_DOT_SIZE + UI_DOT_GAP) + UI_UNIT;
+    lo->right_name_y = lo->right_state_y;
+    lo->right_name_w = mx + UI_ENTITY_MODAL_W - UI_UNIT * 2 - lo->right_name_x;
+    if (lo->right_name_w < UI_UNIT * 8) {
+        lo->right_name_w = UI_UNIT * 8;
+    }
+    lo->right_frame_y = lo->right_state_y + UI_BTN_H;
+    lo->frame_dots_x = right_x + label_width("Frame") + UI_UNIT;
+    lo->frame_dots_y = lo->right_frame_y + 4;
+    lo->right_grid_x = right_x;
+    lo->right_grid_y = lo->left_grid_y;
+    lo->radio_x = right_x;
+    lo->radio_y = lo->right_grid_y + UI_ENTITY_COMPOSE + UI_UNIT;
+    lo->btn_y = my + UI_ENTITY_MODAL_H - UI_BTN_H - UI_UNIT;
+    lo->save_w = label_width("Save");
+    lo->cancel_w = label_width("Cancel");
+}
+
+int entities_list_hit(const UiState *ui, int lx, int ly, int *out_type_idx) {
+    AccordionLayout lo;
+    const R01World *w;
+    int rows, row, idx;
+    if (!ui || ui->play.active) {
+        return 0;
+    }
+    accordion_layout(ui, &lo);
+    if (!lo.entities_open) {
+        return 0;
+    }
+    w = r01_project_active_world_const(ui->project);
+    if (!w || w->entity_count < 1) {
+        return 0;
+    }
+    rows = (UI_ENTITIES_BODY_H - UI_BTN_H) / UI_SPRITE_ROW_H;
+    if (lx < UI_WORLDS_X || lx >= UI_SIDEBAR_W || ly < lo.entities_body_y ||
+        ly >= lo.entities_body_y + rows * UI_SPRITE_ROW_H) {
+        return 0;
+    }
+    row = (ly - lo.entities_body_y) / UI_SPRITE_ROW_H;
+    idx = ui->entities_scroll + row;
+    if (idx < 0 || idx >= w->entity_count) {
+        return 0;
+    }
+    if (out_type_idx) {
+        *out_type_idx = idx;
+    }
+    return 1;
+}
+
+int entities_add_hit(const UiState *ui, int lx, int ly) {
+    AccordionLayout lo;
+    int add_y;
+    int add_w;
+    if (!ui || ui->play.active) {
+        return 0;
+    }
+    accordion_layout(ui, &lo);
+    if (!lo.entities_open) {
+        return 0;
+    }
+    add_y = lo.entities_body_y + UI_ENTITIES_BODY_H - UI_BTN_H;
+    add_w = label_width("Add");
+    return point_in_rect(lx, ly, UI_WORLDS_X + UI_UNIT, add_y, add_w, UI_BTN_H);
+}
+
+static int sprites_visible_rows(void) {
+    /* Leave one row for Add button. */
+    return (UI_SPRITES_BODY_H - UI_BTN_H) / UI_SPRITE_ROW_H;
+}
+
+int sprites_list_hit(const UiState *ui, int lx, int ly, int *out_catalog_idx) {
+    AccordionLayout lo;
+    const R01World *w;
+    int rows, row, idx;
+    if (!ui || ui->play.active) {
+        return 0;
+    }
+    accordion_layout(ui, &lo);
+    if (!lo.sprites_open) {
+        return 0;
+    }
+    w = r01_project_active_world_const(ui->project);
+    if (!w || w->sprite_count < 1) {
+        return 0;
+    }
+    rows = sprites_visible_rows();
+    if (lx < UI_WORLDS_X || lx >= UI_SIDEBAR_W || ly < lo.sprites_body_y ||
+        ly >= lo.sprites_body_y + rows * UI_SPRITE_ROW_H) {
+        return 0;
+    }
+    row = (ly - lo.sprites_body_y) / UI_SPRITE_ROW_H;
+    idx = ui->sprites_scroll + row;
+    if (idx < 0 || idx >= w->sprite_count) {
+        return 0;
+    }
+    if (out_catalog_idx) {
+        *out_catalog_idx = idx;
+    }
+    return 1;
+}
+
+int sprites_add_hit(const UiState *ui, int lx, int ly) {
+    AccordionLayout lo;
+    int add_y;
+    int add_w;
+    if (!ui || ui->play.active) {
+        return 0;
+    }
+    accordion_layout(ui, &lo);
+    if (!lo.sprites_open) {
+        return 0;
+    }
+    add_y = lo.sprites_body_y + UI_SPRITES_BODY_H - UI_BTN_H;
+    add_w = label_width("Add");
+    return point_in_rect(lx, ly, UI_WORLDS_X + UI_UNIT, add_y, add_w, UI_BTN_H);
 }

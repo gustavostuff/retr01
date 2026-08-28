@@ -1,9 +1,9 @@
 {
-  "version": 4,
+  "version": 5,
   "name": "untitled",
   "default_world": 0,
   "active_world": 0,
-  "active_screen": 9,
+  "active_screen": 2,
   "default_screen": 9,
   "default_pal_row": 0,
   "grid_cols": 8,
@@ -12,6 +12,31 @@
   "global_pal_spr": [[0, 18, 34, 50], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34]],
   "bg_bank0_tiles": 3,
   "bg_bank0_b64": "68MWZMKVIXMUPOmbPWrejAD8wHgfAPgA//////////8AQEBAfAAAAAAAAAAAAAAA",
+  "spr_banks": [
+    {"tiles": 1, "b64": "Hj4+PMYALDYAFBQAODgAAA=="},
+    {"tiles": 0, "b64": ""},
+    {"tiles": 0, "b64": ""},
+    {"tiles": 0, "b64": ""}
+  ],
+  "sprites": [
+    {"bank": 0, "tile": 0, "pal": 0}
+  ],
+  "entities": [
+    {
+      "state_count": 1,
+      "states": [
+        {
+          "name": "Idle",
+          "origin_x": 4, "origin_y": 4,
+          "hitbox_x": 0, "hitbox_y": 0, "hitbox_w": 8, "hitbox_h": 8,
+          "frame_count": 1,
+          "frames": [
+            {"parts": [{"bank":0,"tile":0,"pal":0,"fh":0,"fv":0,"dx":0,"dy":0}]}
+          ]
+        }
+      ]
+    }
+  ],
   "screens": [
     {"col": 0, "row": 0,
      "tiles_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAABAQEBAAAAAAAAAAAAAAEBAQEBAQAAAAAAAAAAAQEBAQEBAQAAAAAAAAABAQEBAQEBAQAAAAAAAAAAAQEBAQEBAQAAAAAAAAAAAQEBAQEBAAABAQEAAAABAQEBAQEBAQEBAQAA",

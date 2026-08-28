@@ -50,6 +50,24 @@
 #define UI_ACC_NONE (-1)
 #define UI_ACC_WORLDS 0
 #define UI_ACC_PALS 1
+#define UI_ACC_SPRITES 2
+#define UI_ACC_ENTITIES 3
+
+#define UI_SPRITES_BODY_H 96
+#define UI_SPRITE_ROW_H 16
+#define UI_SPRITE_ICON 8
+#define UI_ENTITIES_BODY_H 96
+
+#define UI_ENTITY_MODAL_W 448
+#define UI_ENTITY_MODAL_H 300
+#define UI_ENTITY_BANK_GRID 128 /* 16x16 tiles @ 8px */
+#define UI_ENTITY_COMPOSE 128   /* 16px @ 8x scale */
+#define UI_DOT_SIZE 8
+#define UI_DOT_GAP 4
+#define UI_DOT_STRIP_N 4
+
+#define UI_DRAG_SPRITES 0
+#define UI_DRAG_HITBOX 1
 
 #define UI_MAIN_W (UI_LOGIC_W - UI_SIDEBAR_W)
 #define UI_SCREEN_SCALE 2
@@ -80,9 +98,13 @@
 #define UI_MENU_MAX 8
 #define UI_MENU_KIND_TILE 1
 #define UI_MENU_KIND_WORLD 2
+#define UI_MENU_KIND_SPRITE 3
+#define UI_MENU_KIND_ENTITY 4
 #define UI_MENU_SUB_NONE 0
 #define UI_MENU_SUB_BANK 1
 #define UI_MENU_SUB_PAL 2
+#define UI_MENU_SUB_SPR_BANK 3
+#define UI_MENU_SUB_SPR_PAL 4
 
 typedef struct UiMenu {
     int open;
@@ -102,6 +124,8 @@ typedef struct UiMenu {
 
     int screen_tx, screen_ty;
     int world_screen_idx;
+    int sprite_catalog_idx;
+    int entity_type_idx;
 } UiMenu;
 
 typedef struct UiTileEdit {
@@ -129,6 +153,37 @@ typedef struct UiPalEdit {
     R01PalRow snap_spr[R01_PAL_ROWS][R01_PALS_PER_ROW];
 } UiPalEdit;
 
+typedef struct UiSpriteEdit {
+    int open;
+    int is_new;
+    int catalog_idx; /* -1 when creating */
+    int bank;
+    int tile_id;
+    int pal;   /* 0..3 */
+    int color; /* 0..3 paint color */
+    int flip_h;
+    int flip_v;
+    uint8_t chr[R01_TILE_BYTES];
+} UiSpriteEdit;
+
+typedef struct UiEntityEdit {
+    int open;
+    int is_new;
+    int type_idx; /* -1 when creating; commit on save */
+    R01EntityType draft;
+    int bank;       /* left picker bank 0..3 */
+    int state;      /* 0..3; UI locks to 0 for now */
+    int frame;      /* 0..3 */
+    int drag_mode;  /* UI_DRAG_SPRITES or UI_DRAG_HITBOX */
+    int sel_part;   /* -1 or index in current frame */
+    int dragging;   /* 0 none, 1 part, 2 hitbox, 3 origin, 4 bank-sprite ghost */
+    int drag_tile;  /* tile id when dragging from bank */
+    int drag_off_x;
+    int drag_off_y;
+    int states_unlocked; /* 0 = only state 0 selectable */
+    int name_focus;      /* editing state name field */
+} UiEntityEdit;
+
 typedef struct UiBrush {
     int armed; /* after Save in tile editor */
     int bank;
@@ -154,6 +209,8 @@ typedef struct UiState {
     UiMenu menu;
     UiTileEdit tile_edit;
     UiPalEdit pal_edit;
+    UiSpriteEdit sprite_edit;
+    UiEntityEdit entity_edit;
     UiBrush brush;
     int paint_stamp_valid;
     uint8_t paint_stamp_tile;
@@ -167,7 +224,9 @@ typedef struct UiState {
     Uint32 last_click_ms;
     int last_click_col;
     int last_click_row;
-    int accordion_open; /* UI_ACC_WORLDS, UI_ACC_PALS, or UI_ACC_NONE */
+    int accordion_open; /* UI_ACC_* or UI_ACC_NONE */
+    int sprites_scroll; /* list scroll in rows */
+    int entities_scroll;
 } UiState;
 
 int ui_init(UiState *ui);

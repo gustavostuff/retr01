@@ -7,6 +7,8 @@
 #include "retr01_studio/json_io.h"
 #include "retr01_studio/palette.h"
 #include "retr01_studio/project.h"
+#include "retr01_studio/entities.h"
+#include "retr01_studio/sprites.h"
 
 #include <png.h>
 #include <stdio.h>
@@ -23,6 +25,8 @@ void menu_close(UiState *ui) {
     ui->menu.item_count = 0;
     ui->menu.sub_count = 0;
     ui->menu.world_screen_idx = -1;
+    ui->menu.sprite_catalog_idx = -1;
+    ui->menu.entity_type_idx = -1;
     memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
 }
 
@@ -58,7 +62,8 @@ static void menu_clamp_xy(int *x, int *y, int w, int h) {
 static void menu_build_sub(UiState *ui, int sub_kind) {
     int i;
     ui->menu.sub_count = 0;
-    if (sub_kind == UI_MENU_SUB_BANK || sub_kind == UI_MENU_SUB_PAL) {
+    if (sub_kind == UI_MENU_SUB_BANK || sub_kind == UI_MENU_SUB_PAL || sub_kind == UI_MENU_SUB_SPR_BANK ||
+        sub_kind == UI_MENU_SUB_SPR_PAL) {
         for (i = 0; i < 4; i++) {
             snprintf(ui->menu.sub_items[ui->menu.sub_count++], 24, "%d", i + 1);
         }
@@ -104,6 +109,7 @@ void menu_open_tile(UiState *ui, int x, int y, int tx, int ty) {
     ui->menu.screen_tx = tx;
     ui->menu.screen_ty = ty;
     ui->menu.world_screen_idx = -1;
+    ui->menu.sprite_catalog_idx = -1;
     ui->menu.item_count = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Move to tile bank");
     ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_BANK;
@@ -135,11 +141,58 @@ void menu_open_world_cell(UiState *ui, int x, int y, int screen_idx) {
     ui->menu.screen_tx = -1;
     ui->menu.screen_ty = -1;
     ui->menu.world_screen_idx = screen_idx;
+    ui->menu.sprite_catalog_idx = -1;
     ui->menu.item_count = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Set default screen");
     ui->menu.item_sub[ui->menu.item_count++] = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Make default world");
     ui->menu.item_sub[ui->menu.item_count++] = 0;
+    ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
+    ui->menu.root_x = x;
+    ui->menu.root_y = y;
+    menu_clamp_xy(&ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
+}
+
+void menu_open_sprite(UiState *ui, int x, int y, int catalog_idx) {
+    ui->menu.open = 1;
+    ui->menu.kind = UI_MENU_KIND_SPRITE;
+    ui->menu.submenu = UI_MENU_SUB_NONE;
+    ui->menu.screen_tx = -1;
+    ui->menu.screen_ty = -1;
+    ui->menu.world_screen_idx = -1;
+    ui->menu.sprite_catalog_idx = catalog_idx;
+    ui->menu.entity_type_idx = -1;
+    ui->menu.item_count = 0;
+    snprintf(ui->menu.items[ui->menu.item_count], 32, "Edit sprite");
+    ui->menu.item_sub[ui->menu.item_count++] = 0;
+    snprintf(ui->menu.items[ui->menu.item_count], 32, "Remove");
+    ui->menu.item_sub[ui->menu.item_count++] = 0;
+    snprintf(ui->menu.items[ui->menu.item_count], 32, "Set palette");
+    ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_SPR_PAL;
+    snprintf(ui->menu.items[ui->menu.item_count], 32, "Change sprite bank");
+    ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_SPR_BANK;
+    memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
+    ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
+    ui->menu.root_x = x;
+    ui->menu.root_y = y;
+    menu_clamp_xy(&ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
+}
+
+void menu_open_entity(UiState *ui, int x, int y, int type_idx) {
+    ui->menu.open = 1;
+    ui->menu.kind = UI_MENU_KIND_ENTITY;
+    ui->menu.submenu = UI_MENU_SUB_NONE;
+    ui->menu.screen_tx = -1;
+    ui->menu.screen_ty = -1;
+    ui->menu.world_screen_idx = -1;
+    ui->menu.sprite_catalog_idx = -1;
+    ui->menu.entity_type_idx = type_idx;
+    ui->menu.item_count = 0;
+    snprintf(ui->menu.items[ui->menu.item_count], 32, "Edit entity");
+    ui->menu.item_sub[ui->menu.item_count++] = 0;
+    snprintf(ui->menu.items[ui->menu.item_count], 32, "Remove");
+    ui->menu.item_sub[ui->menu.item_count++] = 0;
+    memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
     ui->menu.root_x = x;
     ui->menu.root_y = y;
@@ -252,6 +305,18 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
             screen_set_sel_bank(ui, item);
         } else if (ui->menu.submenu == UI_MENU_SUB_PAL) {
             screen_set_sel_pal(ui, item);
+        } else if (ui->menu.submenu == UI_MENU_SUB_SPR_PAL) {
+            R01World *w = r01_project_active_world(ui->project);
+            if (w && r01_world_sprite_set_pal(w, ui->menu.sprite_catalog_idx, item) == 0) {
+                ui_toast(ui, "sprite palette set", 0);
+            }
+        } else if (ui->menu.submenu == UI_MENU_SUB_SPR_BANK) {
+            R01World *w = r01_project_active_world(ui->project);
+            if (w && r01_world_sprite_move_bank(w, ui->menu.sprite_catalog_idx, item) == 0) {
+                ui_toast(ui, "sprite bank changed", 0);
+            } else {
+                ui_toast(ui, "cannot move sprite bank", 1);
+            }
         }
         menu_close(ui);
         return;
@@ -273,6 +338,28 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
             menu_set_default_screen(ui);
         } else if (item == 1) {
             menu_set_default_world(ui);
+        }
+        menu_close(ui);
+        return;
+    }
+    if (ui->menu.kind == UI_MENU_KIND_SPRITE) {
+        R01World *w = r01_project_active_world(ui->project);
+        if (item == 0) {
+            sprite_edit_open(ui, ui->menu.sprite_catalog_idx);
+        } else if (item == 1 && w) {
+            r01_world_sprite_remove(w, ui->menu.sprite_catalog_idx);
+            ui_toast(ui, "sprite removed", 0);
+        }
+        menu_close(ui);
+        return;
+    }
+    if (ui->menu.kind == UI_MENU_KIND_ENTITY) {
+        R01World *w = r01_project_active_world(ui->project);
+        if (item == 0) {
+            entity_edit_open(ui, ui->menu.entity_type_idx);
+        } else if (item == 1 && w) {
+            r01_world_entity_remove(w, ui->menu.entity_type_idx);
+            ui_toast(ui, "entity removed", 0);
         }
         menu_close(ui);
         return;

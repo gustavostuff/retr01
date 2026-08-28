@@ -28,9 +28,31 @@ int ui_init(UiState *ui) {
             "assets/radio_button.png",
             NULL,
         };
+        static const char *const dot_paths[] = {
+            R01_STUDIO_ASSETS_DIR "/ui_dot.png",
+            "retr01_studio/assets/ui_dot.png",
+            "assets/ui_dot.png",
+            NULL,
+        };
+        static const char *const cross_paths[] = {
+            R01_STUDIO_ASSETS_DIR "/ui_cross.png",
+            "retr01_studio/assets/ui_cross.png",
+            "assets/ui_cross.png",
+            NULL,
+        };
         int i;
         for (i = 0; radio_paths[i]; i++) {
             if (ui_load_png_rgba(radio_paths[i], &g_radio_rgba, &g_radio_w, &g_radio_h) == 0) {
+                break;
+            }
+        }
+        for (i = 0; dot_paths[i]; i++) {
+            if (ui_load_png_rgba(dot_paths[i], &g_dot_rgba, &g_dot_w, &g_dot_h) == 0) {
+                break;
+            }
+        }
+        for (i = 0; cross_paths[i]; i++) {
+            if (ui_load_png_rgba(cross_paths[i], &g_cross_rgba, &g_cross_w, &g_cross_h) == 0) {
                 break;
             }
         }
@@ -66,6 +88,14 @@ void ui_shutdown(UiState *ui) {
     g_radio_rgba = NULL;
     g_radio_w = 0;
     g_radio_h = 0;
+    free(g_dot_rgba);
+    g_dot_rgba = NULL;
+    g_dot_w = 0;
+    g_dot_h = 0;
+    free(g_cross_rgba);
+    g_cross_rgba = NULL;
+    g_cross_w = 0;
+    g_cross_h = 0;
     if (g_cursor_arrow) {
         SDL_FreeCursor(g_cursor_arrow);
         g_cursor_arrow = NULL;

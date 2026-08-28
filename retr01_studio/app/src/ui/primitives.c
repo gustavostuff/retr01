@@ -16,6 +16,12 @@
 uint8_t *g_radio_rgba;
 int g_radio_w;
 int g_radio_h;
+uint8_t *g_dot_rgba;
+int g_dot_w;
+int g_dot_h;
+uint8_t *g_cross_rgba;
+int g_cross_w;
+int g_cross_h;
 
 int ui_load_png_rgba(const char *path, uint8_t **out_px, int *out_w, int *out_h) {
     FILE *fp;
@@ -138,6 +144,76 @@ void draw_radio_sprite(SDL_Renderer *r, int dx, int dy, int selected) {
             }
         }
     }
+}
+
+void draw_dot_strip(SDL_Renderer *r, int x, int y, int count, int selected, int unlocked_count) {
+    int i;
+    if (count < 1) {
+        count = UI_DOT_STRIP_N;
+    }
+    for (i = 0; i < count; i++) {
+        int dx = x + i * (UI_DOT_SIZE + UI_DOT_GAP);
+        int unlocked = (unlocked_count < 0) || (i < unlocked_count);
+        int on = (i == selected) && unlocked;
+        int px, py;
+        Uint8 cr = unlocked ? (on ? UI_COL_ACTIVE_R : 200) : 80;
+        Uint8 cg = unlocked ? (on ? UI_COL_ACTIVE_G : 200) : 80;
+        Uint8 cb = unlocked ? (on ? UI_COL_ACTIVE_B : 200) : 80;
+        if (g_dot_rgba && g_dot_w == UI_DOT_SIZE && g_dot_h == UI_DOT_SIZE) {
+            for (py = 0; py < UI_DOT_SIZE; py++) {
+                for (px = 0; px < UI_DOT_SIZE; px++) {
+                    const uint8_t *p = &g_dot_rgba[(py * g_dot_w + px) * 4u];
+                    if (p[3] > 128) {
+                        fill_rect(r, dx + px, y + py, 1, 1, cr, cg, cb);
+                    }
+                }
+            }
+        } else {
+            fill_rect(r, dx + 2, y + 2, 4, 4, cr, cg, cb);
+        }
+        if (on) {
+            fill_rect(r, dx + 3, y + 3, 2, 2, 240, 240, 240);
+        }
+    }
+}
+
+int dot_strip_hit(int lx, int ly, int x, int y, int count, int *out_idx) {
+    int i;
+    if (count < 1) {
+        count = UI_DOT_STRIP_N;
+    }
+    if (ly < y || ly >= y + UI_DOT_SIZE) {
+        return 0;
+    }
+    for (i = 0; i < count; i++) {
+        int dx = x + i * (UI_DOT_SIZE + UI_DOT_GAP);
+        if (lx >= dx && lx < dx + UI_DOT_SIZE) {
+            if (out_idx) {
+                *out_idx = i;
+            }
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void draw_ui_cross(SDL_Renderer *r, int cx, int cy) {
+    int px, py;
+    int ox = cx - UI_DOT_SIZE / 2;
+    int oy = cy - UI_DOT_SIZE / 2;
+    if (g_cross_rgba && g_cross_w == UI_DOT_SIZE && g_cross_h == UI_DOT_SIZE) {
+        for (py = 0; py < UI_DOT_SIZE; py++) {
+            for (px = 0; px < UI_DOT_SIZE; px++) {
+                const uint8_t *p = &g_cross_rgba[(py * g_cross_w + px) * 4u];
+                if (p[3] > 128) {
+                    fill_rect(r, ox + px, oy + py, 1, 1, 240, 240, 240);
+                }
+            }
+        }
+        return;
+    }
+    fill_rect(r, cx - 3, cy, 7, 1, 240, 240, 240);
+    fill_rect(r, cx, cy - 3, 1, 7, 240, 240, 240);
 }
 
 void draw_label(SDL_Renderer *r, int x, int y, const char *text) {

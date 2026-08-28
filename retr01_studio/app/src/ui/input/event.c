@@ -41,6 +41,25 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             return 1;
         }
+        if (ui->sprite_edit.open) {
+            if (e->key.keysym.sym == SDLK_ESCAPE) {
+                ui->sprite_edit.open = 0;
+                return 1;
+            }
+            return 1;
+        }
+        if (ui->entity_edit.open) {
+            if (e->key.keysym.sym == SDLK_ESCAPE) {
+                if (ui->entity_edit.name_focus) {
+                    ui->entity_edit.name_focus = 0;
+                } else {
+                    ui->entity_edit.open = 0;
+                }
+                return 1;
+            }
+            entity_modal_key(ui, e->key.keysym.sym);
+            return 1;
+        }
         if (ui->tile_edit.open) {
             if (e->key.keysym.sym == SDLK_ESCAPE) {
                 ui->tile_edit.open = 0;
@@ -158,6 +177,16 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             return 1;
         }
 
+        if (ui->sprite_edit.open) {
+            sprite_modal_handle(ui, lx, ly, 1);
+            return 1;
+        }
+
+        if (ui->entity_edit.open) {
+            entity_modal_handle(ui, lx, ly, 1);
+            return 1;
+        }
+
         if (ui->tile_edit.open) {
             tile_modal_handle(ui, lx, ly, 1);
             return 1;
@@ -178,6 +207,16 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
 
         if (e->button.button == SDL_BUTTON_RIGHT && !ui->play.active) {
             int col, row;
+            int spr_idx;
+            int ent_idx;
+            if (sprites_list_hit(ui, lx, ly, &spr_idx)) {
+                menu_open_sprite(ui, lx, ly, spr_idx);
+                return 1;
+            }
+            if (entities_list_hit(ui, lx, ly, &ent_idx)) {
+                menu_open_entity(ui, lx, ly, ent_idx);
+                return 1;
+            }
             if (world_cell_hit(ui, lx, ly, &col, &row)) {
                 R01World *w = r01_project_active_world(ui->project);
                 int idx = w ? r01_world_screen_index(w, col, row) : -1;
@@ -217,6 +256,14 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             if (lx < UI_SIDEBAR_W && accordion_header_hit(ui, lx, ly, &acc_sec)) {
                 accordion_toggle(ui, acc_sec);
+                return 1;
+            }
+            if (!ui->play.active && sprites_add_hit(ui, lx, ly)) {
+                sprite_edit_open_new(ui);
+                return 1;
+            }
+            if (!ui->play.active && entities_add_hit(ui, lx, ly)) {
+                entity_edit_open_new(ui);
                 return 1;
             }
             if (!ui->play.active && palette_strip_hit(ui, lx, ly)) {
@@ -290,9 +337,14 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         ui->last_paint_tx = -1;
         ui->last_paint_ty = -1;
         ui->sel_drag = 0;
+        if (ui->entity_edit.open) {
+            entity_modal_handle(ui, lx, ly, 0);
+            return 1;
+        }
     }
 
-    if (e->type == SDL_MOUSEMOTION && !ui->play.active && !ui->tile_edit.open && !ui->menu.open) {
+    if (e->type == SDL_MOUSEMOTION && !ui->play.active && !ui->tile_edit.open && !ui->sprite_edit.open &&
+        !ui->entity_edit.open && !ui->menu.open) {
         int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
         int tx, ty;
         if (ui->screen_mode == UI_SCREEN_MODE_SEL && ui->sel_drag && shift &&
@@ -312,6 +364,53 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
     if (e->type == SDL_MOUSEMOTION && ui->tile_edit.open && (e->motion.state & SDL_BUTTON_LMASK)) {
         tile_modal_handle(ui, lx, ly, 1);
         return 1;
+    }
+    if (e->type == SDL_MOUSEMOTION && ui->sprite_edit.open && (e->motion.state & SDL_BUTTON_LMASK)) {
+        sprite_modal_handle(ui, lx, ly, 1);
+        return 1;
+    }
+    if (e->type == SDL_MOUSEMOTION && ui->entity_edit.open) {
+        if (e->motion.state & SDL_BUTTON_LMASK) {
+            entity_modal_drag(ui, lx, ly);
+        }
+        return 1;
+    }
+    if (e->type == SDL_MOUSEWHEEL && !ui->pal_edit.open && !ui->tile_edit.open && !ui->sprite_edit.open &&
+        !ui->entity_edit.open && !ui->play.active) {
+        AccordionLayout lo;
+        accordion_layout(ui, &lo);
+        if (lo.sprites_open && lx < UI_SIDEBAR_W) {
+            const R01World *w = r01_project_active_world_const(ui->project);
+            int vis = (UI_SPRITES_BODY_H - UI_BTN_H) / UI_SPRITE_ROW_H;
+            int max_scroll = 0;
+            if (w && w->sprite_count > vis) {
+                max_scroll = w->sprite_count - vis;
+            }
+            ui->sprites_scroll -= e->wheel.y;
+            if (ui->sprites_scroll < 0) {
+                ui->sprites_scroll = 0;
+            }
+            if (ui->sprites_scroll > max_scroll) {
+                ui->sprites_scroll = max_scroll;
+            }
+            return 1;
+        }
+        if (lo.entities_open && lx < UI_SIDEBAR_W) {
+            const R01World *w = r01_project_active_world_const(ui->project);
+            int vis = (UI_ENTITIES_BODY_H - UI_BTN_H) / UI_SPRITE_ROW_H;
+            int max_scroll = 0;
+            if (w && w->entity_count > vis) {
+                max_scroll = w->entity_count - vis;
+            }
+            ui->entities_scroll -= e->wheel.y;
+            if (ui->entities_scroll < 0) {
+                ui->entities_scroll = 0;
+            }
+            if (ui->entities_scroll > max_scroll) {
+                ui->entities_scroll = max_scroll;
+            }
+            return 1;
+        }
     }
     return 0;
 }

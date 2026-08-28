@@ -14,6 +14,12 @@ typedef struct AccordionLayout {
     int pals_hdr_y;
     int pals_body_y;
     int pals_open;
+    int sprites_hdr_y;
+    int sprites_body_y;
+    int sprites_open;
+    int entities_hdr_y;
+    int entities_body_y;
+    int entities_open;
 } AccordionLayout;
 
 static inline void ui_world_btn_pos(int wi, int btns_y, int *out_x, int *out_y) {
@@ -40,9 +46,37 @@ typedef struct PalModalLayout {
     int btn_y, save_w, cancel_w;
 } PalModalLayout;
 
+typedef struct SpriteModalLayout {
+    int mx, my;
+    int pal_x, pal_label_y, pal_y;
+    int canvas_x, canvas_y;
+    int btn_y, save_w, cancel_w;
+} SpriteModalLayout;
+
+typedef struct EntityModalLayout {
+    int mx, my;
+    int left_label_y;
+    int left_dots_x, left_dots_y;
+    int left_grid_x, left_grid_y;
+    int right_state_y;
+    int right_dots_x, right_dots_y;
+    int right_name_x, right_name_y, right_name_w;
+    int right_frame_y;
+    int frame_dots_x, frame_dots_y;
+    int right_grid_x, right_grid_y;
+    int radio_x, radio_y;
+    int btn_y, save_w, cancel_w;
+} EntityModalLayout;
+
 extern uint8_t *g_radio_rgba;
 extern int g_radio_w;
 extern int g_radio_h;
+extern uint8_t *g_dot_rgba;
+extern int g_dot_w;
+extern int g_dot_h;
+extern uint8_t *g_cross_rgba;
+extern int g_cross_w;
+extern int g_cross_h;
 
 extern SDL_Cursor *g_cursor_arrow;
 extern SDL_Cursor *g_cursor_hand;
@@ -57,6 +91,9 @@ void hover_overlay(SDL_Renderer *r, int x, int y, int w, int h);
 int point_in_rect(int lx, int ly, int x, int y, int w, int h);
 int label_width(const char *text);
 void draw_radio_sprite(SDL_Renderer *r, int dx, int dy, int selected);
+void draw_dot_strip(SDL_Renderer *r, int x, int y, int count, int selected, int unlocked_count);
+int dot_strip_hit(int lx, int ly, int x, int y, int count, int *out_idx);
+void draw_ui_cross(SDL_Renderer *r, int cx, int cy);
 void draw_label(SDL_Renderer *r, int x, int y, const char *text);
 void draw_button(SDL_Renderer *r, int x, int y, int w, const char *text, int active, int hover);
 void draw_chess_grid(SDL_Renderer *r, int x0, int y0, int cols, int rows, int cell);
@@ -77,10 +114,16 @@ void accordion_toggle(UiState *ui, int section);
 void draw_accordion_header(SDL_Renderer *r, int y, const char *title, int open, int hover);
 void tile_modal_layout(TileModalLayout *lo);
 void pal_modal_layout(PalModalLayout *lo);
+void sprite_modal_layout(SpriteModalLayout *lo);
+void entity_modal_layout(EntityModalLayout *lo);
 int play_btn_w(const UiState *ui);
 int play_btn_x(const UiState *ui);
 int play_btn_y(void);
 int play_button_hit(const UiState *ui, int lx, int ly);
+int sprites_list_hit(const UiState *ui, int lx, int ly, int *out_catalog_idx);
+int sprites_add_hit(const UiState *ui, int lx, int ly);
+int entities_list_hit(const UiState *ui, int lx, int ly, int *out_type_idx);
+int entities_add_hit(const UiState *ui, int lx, int ly);
 
 /* ui/modals/pal_edit.c */
 int palette_strip_hit(const UiState *ui, int lx, int ly);
@@ -100,6 +143,8 @@ void draw_pal_modal(UiState *ui, SDL_Renderer *r);
 void menu_close(UiState *ui);
 void menu_open_tile(UiState *ui, int x, int y, int tx, int ty);
 void menu_open_world_cell(UiState *ui, int x, int y, int screen_idx);
+void menu_open_sprite(UiState *ui, int x, int y, int catalog_idx);
+void menu_open_entity(UiState *ui, int x, int y, int type_idx);
 int menu_hit(const UiState *ui, int lx, int ly, int *out_item, int *out_sub);
 void menu_update_hover(UiState *ui, int lx, int ly);
 void handle_menu_pick(UiState *ui, int item, int is_sub);
@@ -135,6 +180,20 @@ void tile_edit_open(UiState *ui, int tx, int ty);
 void tile_edit_open_new(UiState *ui, int tx, int ty);
 int tile_modal_handle(UiState *ui, int lx, int ly, int down);
 void draw_tile_modal(UiState *ui, SDL_Renderer *r);
+
+/* ui/modals/sprite_edit.c */
+void sprite_edit_open_new(UiState *ui);
+void sprite_edit_open(UiState *ui, int catalog_idx);
+int sprite_modal_handle(UiState *ui, int lx, int ly, int down);
+void draw_sprite_modal(UiState *ui, SDL_Renderer *r);
+
+/* ui/modals/entity_edit.c */
+void entity_edit_open_new(UiState *ui);
+void entity_edit_open(UiState *ui, int type_idx);
+int entity_modal_handle(UiState *ui, int lx, int ly, int down);
+void entity_modal_drag(UiState *ui, int lx, int ly);
+void entity_modal_key(UiState *ui, SDL_Keycode sym);
+void draw_entity_modal(UiState *ui, SDL_Renderer *r);
 
 /* ui/draw/mode.c */
 void ui_update_cursor(const UiState *ui);

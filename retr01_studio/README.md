@@ -1,12 +1,12 @@
 # Retr01 Studio
 
-Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. **Phase 2** (current): multi-world sidebar, screen create/delete, tile edit/paint, solid collision attrs, global palette editor, default spawn screen. **Phase 1** still applies: PNG import, Play preview, export. Hardware: [`docs/02`](../docs/02_graphics_worlds_memory.md). Docs stub: [`docs/04`](../docs/04_retr01_studio.md).
+Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. **Phase 3B** (current): Game entities accordion + Add/Edit entity modal (compose, hitbox, origin), JSON entity types. **Phase 3A**: Game sprites accordion + Create/Edit sprite modal, SPR bank CHR catalog. **Phase 2** still applies: multi-world sidebar, screen create/delete, tile edit/paint, solid collision attrs, global palette editor, default spawn screen. **Phase 1** still applies: PNG import, Play preview, export. Hardware: [`docs/02`](../docs/02_graphics_worlds_memory.md). Docs stub: [`docs/04`](../docs/04_retr01_studio.md).
 
 **Stack:** C11 + SDL2 + FreeType (Proggy Tiny), `libretr01_studio_core` + thin shell.
 
 ---
 
-## UI (Phase 2)
+## UI (Phase 2 + 3A/B)
 
 Fixed **640x360** logical canvas, **8px** grid, dark gray chrome. Buttons/labels **16px** tall. Proggy Tiny (`assets/proggy-tiny.ttf`).
 
@@ -20,6 +20,10 @@ Fixed **640x360** logical canvas, **8px** grid, dark gray chrome. Buttons/labels
 |  +--------------+      |         +------------------+             |
 | [>] Palettes           |                                          |
 |  BG/SPR strips + [0-7] |                                          |
+| [>] Game sprites       |                                          |
+|  icons + tile index    |                                          |
+| [>] Game entities      |                                          |
+|  icons + state name    |                                          |
 +-------------------------------------------------------------------+
 ```
 
@@ -36,6 +40,8 @@ Fixed **640x360** logical canvas, **8px** grid, dark gray chrome. Buttons/labels
 | **Edit tile** modal | **288x160**, 4x4 palette picker, **128x128** pixel canvas |
 | **Set Solid** | Toggles `R01_ATTR_SOLID` (`0x40`) on matching tiles in active world (bank+pal+flips, not tile ID) |
 | **Palette strip** | Click BG/SPR strip -> **Global palettes** modal. Row **0-7** sets `default_pal_row` for the active world |
+| **Game sprites** | List of SPR catalog entries (**1x** icons + bank tile index). Empty: **empty** + **Add**. Create/Edit modal uses **SPR** palette row. Right-click: edit, remove, set palette, change sprite bank. New sprites fill bank **0**, then **1..3** |
+| **Game entities** | List of entity types (first-part icon + state-0 name). Empty: **empty** + **Add**. Modal: left SPR bank dots + 16×16 tile grid; right state/frame dots, name field, 16×16 compose @8×, red hitbox, origin cross, Drag sprites / Drag hitbox radios. Drag bank tile onto compose. Selected part: **H/V** flips, **1–4** palette, Delete removes. States locked to **0** (Idle) for now. Right-click: edit, remove |
 
 PNG drop imports into the **active** world. Cart export packs **world 0** only (ignores `default_world`).
 
@@ -56,17 +62,18 @@ Play SoT: `core/src/play.c` + `collision.c`. Emu/sim mirror the same rules (sepa
 
 ---
 
-## Save / load (JSON v4)
+## Save / load (JSON v5)
 
 **Ctrl+S** / **Ctrl+O** -> `rom/test.r01proj` by default.
 
 | Field | Behavior |
 |-------|----------|
-| `version` | **4** (`R01_JSON_VER`) |
+| `version` | **5** (`R01_JSON_VER`) |
 | Palettes | Project-wide: all **8 BG + 8 SPR** rows |
-| World data | **Active world only** on save: grid, screens, `bg_bank0`, `default_screen`, `default_pal_row` |
+| World data | **Active world only** on save: grid, screens, `bg_bank0`, `spr_banks`, sprite catalog, `entities`, `default_screen`, `default_pal_row` |
 | Load | Always applies saved world data to **world 0**. Restores `default_world` / `active_world` indices |
 | Worlds 1-6 | Session-only until multi-world JSON lands |
+| v4 projects | Load OK; sprite catalog / SPR banks / entities start empty |
 
 ---
 
@@ -110,9 +117,10 @@ PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are
 |-------|--------|
 | **0** | Core lib: project/world/screen structs, JSON I/O, CHR pack, cart image, unit tests. No author UI |
 | **1** | Single-world PNG import, Play, `.retr01` export |
-| **2** | Multi-world UI, tile edit/paint, solid/anim attrs, global palettes, default spawn (current, partial multi-world persistence) |
+| **2** | Multi-world UI, tile edit/paint, solid/anim attrs, global palettes, default spawn (partial multi-world persistence) |
+| **3A** | Game sprites accordion, Create/Edit sprite modal (SPR pals), SPR bank CHR + catalog, JSON v5 (current) |
 
-**Out of scope (for now):** sprite placement UI, parallax planes, Generate, multi-world cart export, multi-world JSON save, dead-zone/fade scroll profiles, full 6502 gameplay loop.
+**Out of scope (for now):** entity modal / placement, sprite drop onto screen, sprite placement UI in Play/emu/sim, parallax planes, Generate, multi-world cart export, multi-world JSON save, dead-zone/fade scroll profiles, full 6502 gameplay loop.
 
 ---
 
@@ -146,6 +154,8 @@ ctest --test-dir build --output-on-failure
 | Tile sel / paint | Radio rows beside screen |
 | Tile context menu | Right-click tile (selection mode) |
 | Edit global palettes | Click BG/SPR strip |
+| Add / edit game sprite | Game sprites accordion → **Add**, or right-click → Edit |
+| Sprite context menu | Right-click sprite row (edit / remove / palette / bank) |
 | Play / pause | **Space** / **PLAY** |
 | Move player | **WASD** / arrows |
 | Warp test | **X** -> (0,0), **Y** -> (1,0) |
