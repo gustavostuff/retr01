@@ -1,4 +1,4 @@
-# retr01_sim performance guardrails
+# Retr01 Sim performance guardrails
 
 How the sim stays fast without giving up pin-mode validation. Full gap analysis lives in project notes; this doc tracks **what is landed** in code.
 

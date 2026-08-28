@@ -19,7 +19,7 @@ add_library(retr01_studio_core
 target_include_directories(retr01_studio_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include
 )
-set(R01_REPO_ROOT "${CMAKE_SOURCE_DIR}/.." CACHE PATH "retr01 repo root")
+set(R01_REPO_ROOT "${CMAKE_SOURCE_DIR}/.." CACHE PATH "Retr01 repo root")
 set(R01_ROM_DIR "${R01_REPO_ROOT}/rom")
 set(R01_TEST_CART "${R01_ROM_DIR}/test.retr01")
 set(R01_TEST_PROJECT "${R01_ROM_DIR}/test.r01proj")

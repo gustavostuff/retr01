@@ -1,8 +1,8 @@
-# retr01 Board Simulator
+# Retr01 Board Simulator
 
-IC-first board simulator for retr01-A. Separate from retr01 Studio (authoring). Pin/behavior: [`hw/md/`](../hw/md/). BOM: [`docs/06_hardware_v1_32ic.md`](../docs/06_hardware_v1_32ic.md). Island checklist: [`docs/03_hardware_implementation.md`](../docs/03_hardware_implementation.md).
+IC-first board simulator for Retr01-A. Separate from Retr01 Studio (authoring). Pin/behavior: [`hw/md/`](../hw/md/). BOM: [`docs/06_hardware_v1_32ic.md`](../docs/06_hardware_v1_32ic.md). Island checklist: [`docs/03_hardware_implementation.md`](../docs/03_hardware_implementation.md).
 
-**Goal:** simulate the retr01-A motherboard as discrete ICs (pins, package, datasheet behavior) wired like the real board. End state: boot a cart, accept pad input, show a digital playfield (logical 128x120 inside a 256x240 RGBS field / LCD sink). Accuracy tightens as tests demand it.
+**Goal:** simulate the Retr01-A motherboard as discrete ICs (pins, package, datasheet behavior) wired like the real board. End state: boot a cart, accept pad input, show a digital playfield (logical 128x120 inside a 256x240 RGBS field / LCD sink). Accuracy tightens as tests demand it.
 
 ## Status
 

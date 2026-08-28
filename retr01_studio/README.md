@@ -1,6 +1,6 @@
-# retr01 Studio
+# Retr01 Studio
 
-Visual authoring for retr01 worlds, screens, and `.retr01` cartridge images. **Phase 2** (current): multi-world sidebar, screen create/delete, tile edit/paint, solid collision attrs, global palette editor, default spawn screen. **Phase 1** still applies: PNG import, Play preview, export. Hardware: [`docs/02`](../docs/02_graphics_worlds_memory.md). Docs stub: [`docs/04`](../docs/04_retr01_studio.md).
+Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. **Phase 2** (current): multi-world sidebar, screen create/delete, tile edit/paint, solid collision attrs, global palette editor, default spawn screen. **Phase 1** still applies: PNG import, Play preview, export. Hardware: [`docs/02`](../docs/02_graphics_worlds_memory.md). Docs stub: [`docs/04`](../docs/04_retr01_studio.md).
 
 **Stack:** C11 + SDL2 + FreeType (Proggy Tiny), `libretr01_studio_core` + thin shell.
 

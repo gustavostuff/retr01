@@ -1,4 +1,4 @@
-# retr01 Graphics, Worlds, and Memory
+# Retr01 Graphics, Worlds, and Memory
 
 Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 

@@ -1,10 +1,10 @@
-# retr01 Hardware Implementation
+# Retr01 Hardware Implementation
 
-**Scope:** Optional **protoboard island** checklist for the **current 32 IC** retr01-A netlist. Useful for discrete bring-up and bench fallback.
+**Scope:** Optional **protoboard island** checklist for the **current 32 IC** Retr01-A netlist. Useful for discrete bring-up and bench fallback.
 
 | | |
 |--|--|
-| **Current retr01-A HW BOM** | [`06`](06_hardware_v1_32ic.md), **32 IC** (norm) |
+| **Current Retr01-A HW BOM** | [`06`](06_hardware_v1_32ic.md), **32 IC** (norm) |
 | **Software-visible map** | [`02`](02_graphics_worlds_memory.md) |
 | **Sources of truth** | [`01`](01_architecture_overview.md) |
 

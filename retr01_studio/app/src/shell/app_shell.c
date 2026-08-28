@@ -39,7 +39,7 @@ int app_shell_init(AppShell *app, int headless) {
 
     flags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
 
-    app->win = SDL_CreateWindow("retr01 Studio", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+    app->win = SDL_CreateWindow("Retr01 Studio", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                 UI_LOGIC_W * app->scale, UI_LOGIC_H * app->scale, flags);
     if (!app->win) {
         ui_shutdown(&app->ui);

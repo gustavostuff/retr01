@@ -1119,7 +1119,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
 
     /* Fixed HUD */
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_UI_HUD_TOP, 12, 14, 16);
-    font_draw(r, R01S_UI_UNIT, R01S_UI_UNIT, "retr01 SIM", 200, 210, 220);
+    font_draw(r, R01S_UI_UNIT, R01S_UI_UNIT, "Retr01 Sim", 200, 210, 220);
     {
         SDL_Rect sbtn;
         const char *hint;

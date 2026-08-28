@@ -314,7 +314,7 @@ int r01s_app_init(R01sApp *app, int headless) {
         flags |= SDL_WINDOW_RESIZABLE;
     }
 
-    app->win = SDL_CreateWindow("retr01 Sim", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+    app->win = SDL_CreateWindow("Retr01 Sim", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                 R01S_LOGIC_W * app->scale, R01S_LOGIC_H * app->scale, flags);
     if (!app->win) {
         fprintf(stderr, "window: %s\n", SDL_GetError());

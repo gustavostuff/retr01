@@ -1,4 +1,4 @@
-# retr01 Studio Game Modules
+# Retr01 Studio Game Modules
 
 Gameplay modules are **attachable functionalities** that define mechanics and runtime behavior for a game (cart). Studio phases that implement each module are chosen later. This file is the **product / runtime contract**.
 

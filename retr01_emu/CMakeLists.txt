@@ -27,7 +27,7 @@ target_link_libraries(retr01_emu PRIVATE retr01_emu_core PkgConfig::SDL2)
 
 enable_testing()
 
-set(R01_REPO_ROOT "${CMAKE_SOURCE_DIR}/.." CACHE PATH "retr01 repo root")
+set(R01_REPO_ROOT "${CMAKE_SOURCE_DIR}/.." CACHE PATH "Retr01 repo root")
 set(R01_ROM_DIR "${R01_REPO_ROOT}/rom")
 set(R01_TEST_CART "${R01_ROM_DIR}/test.retr01")
 

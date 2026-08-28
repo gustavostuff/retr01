@@ -1,4 +1,4 @@
-# retr01 Costs and Open Questions
+# Retr01 Costs and Open Questions
 
 This doc merges the old cost sheet and decision log into one planning file.
 
@@ -8,8 +8,8 @@ This doc merges the old cost sheet and decision log into one planning file.
 
 | Topic | Decision |
 |------|----------|
-| Name/family | **retr01**, rollout **A -> C -> H** |
-| retr01-A HW BOM | **32 IC** system ([`06`](06_hardware_v1_32ic.md)): 31 motherboard + 1 cart I2C save. Escape +1 PLD -> 33 |
+| Name/family | **Retr01**, rollout **A -> C -> H** |
+| Retr01-A HW BOM | **32 IC** system ([`06`](06_hardware_v1_32ic.md)): 31 motherboard + 1 cart I2C save. Escape +1 PLD -> 33 |
 | PCB envelope (A) | ~**12 x 12 cm** 4-layer THT target |
 | Worlds | **7** max (indices 0-6) |
 | World layout | sparse virtual grid up to **8x8**, **32 screens max** per world |
@@ -20,7 +20,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Scale | board **SCALE** DIP: **2x** default (**256x240**), **1x** optional (centered **128x120**) |
 | CHR layout | **4 BG banks + 4 sprite banks** per world |
 | Bank sizes | **256 tiles** per bank, **4 KB** each |
-| Master palette (logical) | **64 indices** in board **Color PROM**. Same logical kit on retr01-A/C/H. **Not** in cart |
+| Master palette (logical) | **64 indices** in board **Color PROM**. Same logical kit on Retr01-A/C/H. **Not** in cart |
 | Color PROM (encoding) | **1x** PROM/OTP: packed **R3G3B2** `{RRRGGGBB}`, 1-dot pipeline. Studio quantizes kit swatches |
 | Cart global palettes | **8 BG palette rows** + **8 sprite palette rows** (**32 + 32** palettes, **256 B** total), indices only |
 | MAP / cart layout | Fixed header + **pointer table**, world table, per-world CHR + screen dir + payloads. See [`02`](02_graphics_worlds_memory.md) *Cart image* |
@@ -55,12 +55,12 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Parallax camera lock | if **any** H or V parallax band is enabled, main camera locks to that axis for the **whole frame** |
 | CPU map | RAM at `$0000-$7FFF`, I/O at `$FE00-$FEFF` |
 | Controls | one byte per player at `$FE60/$FE61` |
-| retr01-C pad transport | **draft:** **ATtiny85** in pad. Wires **VCC, GND, DATA**. 1284 master-polls. Same `$FE60/$FE61` bytes |
+| Retr01-C pad transport | **draft:** **ATtiny85** in pad. Wires **VCC, GND, DATA**. 1284 master-polls. Same `$FE60/$FE61` bytes |
 | CPU clock | **8.000 MHz** |
 | Dot clock | **5.369318 MHz** |
 | Raster | scanline compare + IRQ |
 | APU | separate **ATmega328P** (`$FE40-$FE5F`) |
-| Near-term software | **retr01 Studio Phase 2** + **Emulator Phase 1** + board sim (studio/emu/sim READMEs) |
+| Near-term software | **Retr01 Studio Phase 2** + **Emulator Phase 1** + board sim (studio/emu/sim READMEs) |
 | Studio project files | **JSON v4** (one world's map/CHR per save, see Studio README) |
 | Validation tools | board IC simulator ([`retr01_sim/README.md`](../retr01_sim/README.md)). Software emu ([`retr01_emu/`](../retr01_emu/)) |
 
@@ -95,7 +95,7 @@ Flash + I2C save on cart PCB. Motherboard + cart proto still targets roughly the
 | Q10 | OAM attr bitfields | **Locked:** bank/pal/flip/priority/size in [`02`](02_graphics_worlds_memory.md). 8x16 tile-pair fetch detail on 1284 firmware still micro-rev |
 | Q11 | `$FE07` plane band end/dual-band detail | start scanline drafted. End-of-band pairing may need a second latch |
 | Q12 | PRG/CHR/MAP offsets inside **512 KB** flash | **Locked in code** (`format_ver` 1): header 16, pointer table 24, world table entry 8 B x **7** slots, world header 32, screen dir 12. **128 KB PRG** + 7 worlds planned (`format_ver` 2). See [`02`](02_graphics_worlds_memory.md) |
-| Q13 | retr01-C pad bit timing | ATtiny85 + 3-wire draft locked. Baud/poll edge details later |
+| Q13 | Retr01-C pad bit timing | ATtiny85 + 3-wire draft locked. Baud/poll edge details later |
 | Q14 | Color PROM DAC depth | Packed R3G3B2 is the norm. How many resistor steps / levels on the bench still tunable |
 | Q15 | Color PROM part (AT28C16 vs faster OTP) | **Pinned candidate:** **AT27C256R-70PU** (70 ns, DIP-28) if 150 ns is tight. Footprint DIP-24 vs DIP-28 |
 | Q20 | Machine EEPROM handshake + cart I2C API | Protocol / `$FExx` for 1284 mailbox + cart save HAL. TBD in [`02`](02_graphics_worlds_memory.md) |
@@ -110,4 +110,4 @@ Flash + I2C save on cart PCB. Motherboard + cart proto still targets roughly the
 1. tune RGBS on real hardware (Q2)
 2. Studio game modules / later phases ([`08`](08_game_modules.md))
 3. freeze save/mailbox APIs + HC573 bitfields (Q20, Q21). Confirm PROM part (Q15)
-4. flesh out ATtiny85 poll timing when retr01-C work starts (Q13)
+4. flesh out ATtiny85 poll timing when Retr01-C work starts (Q13)

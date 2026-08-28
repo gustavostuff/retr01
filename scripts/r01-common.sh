@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Shared helpers for retr01 repo scripts.
+# Shared helpers for Retr01 repo scripts.
 # shellcheck shell=bash
 
 r01_repo_root() {

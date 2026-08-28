@@ -1,9 +1,9 @@
 # ATmega1284P -- Sprite / OAM / pad MCU
 
 **PDF:** [`../ATmega1284P_mcu.pdf`](../ATmega1284P_mcu.pdf).  
-**Package (retr01-A):** 40-pin PDIP.  
+**Package (Retr01-A):** 40-pin PDIP.  
 **Qty:** 1.  
-**Clock (retr01):** **20 MHz** (requires VCC 4.5-5.5 V for 20 MHz grade).
+**Clock (Retr01):** **20 MHz** (requires VCC 4.5-5.5 V for 20 MHz grade).
 
 ## Package dimensions
 
@@ -16,11 +16,11 @@
 
 ## What it is
 
-AVR 8-bit MCU: **128 KB Flash**, **16 KB SRAM**, **4 KB EEPROM**, 32 GPIO lines on four ports (A/B/C/D), timers with PWM, USART, SPI, TWI, ADC, JTAG. retr01 uses it as a **dedicated helper MCU**, not the game CPU: it owns **OAM**, **sprite line-buffer fill**, **controller bytes**, and **machine EEPROM**. APU stays on **328P** ([`06`](../../docs/06_hardware_v1_32ic.md)).
+AVR 8-bit MCU: **128 KB Flash**, **16 KB SRAM**, **4 KB EEPROM**, 32 GPIO lines on four ports (A/B/C/D), timers with PWM, USART, SPI, TWI, ADC, JTAG. Retr01 uses it as a **dedicated helper MCU**, not the game CPU: it owns **OAM**, **sprite line-buffer fill**, **controller bytes**, and **machine EEPROM**. APU stays on **328P** ([`06`](../../docs/06_hardware_v1_32ic.md)).
 
-## retr01 role
+## Retr01 role
 
-| Port / duty | retr01 map |
+| Port / duty | Retr01 map |
 |-------------|------------|
 | OAM storage + evaluate | CPU writes via `$FE20` (addr) / `$FE21` (data), auto-inc; 64 entries `Y,tile,attr,X` |
 | Sprite line buffer | During **HBlank**, write next line into AS6C62256 line-buffer SRAM (ping-pong 128 px halves) |
@@ -98,7 +98,7 @@ Line N+1: half A FILL N+2      | half B SHOW
 | Load `$FE61` | Pad bitfield for player 2 |
 | 16 sprites on one Y | First 16 evaluated; extras dropped (or documented overflow rule) |
 
-## Communication on retr01
+## Communication on Retr01
 
 ```text
 W65C02S --$FE20/21-->  ATmega1284P  --addr/data-->  AS6C62256 linebuf

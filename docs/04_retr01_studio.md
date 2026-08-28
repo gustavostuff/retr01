@@ -1,4 +1,4 @@
-# retr01 Studio
+# Retr01 Studio
 
 **Product SoT:** [`retr01_studio/README.md`](../retr01_studio/README.md). Build, controls, UI, export.
 
