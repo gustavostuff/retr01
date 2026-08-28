@@ -6,7 +6,7 @@ simulator ([`retr01_sim/`](../retr01_sim/)). Contract:
 
 Repo helper: [`scripts/run-emu`](../scripts/run-emu).
 
-Later emulator phases are **not** specified here; they will be defined when work starts.
+Later emulator phases are **not** specified here. They will be defined when work starts.
 
 ## Phase 1 scope (active)
 
@@ -16,7 +16,7 @@ Later emulator phases are **not** specified here; they will be defined when work
 | **Play** | **Studio Play SoT** -- same move / camera / collision / X/Y warps as Studio |
 | **CPU** | Boots world 0. Default: PRG streams pals + start MAP (`$FE93`->`$FE12`). Gameplay still host Play |
 | **Video** | Main FB = **VRAM + scroll** + **OAM composite** (SCALE 2x). Play host-fills 2x2 seams via `sync_camera` |
-| **Host** | SDL; WASD/arrows move; **X**/**Y** warp (same as Studio) |
+| **Host** | SDL. WASD/arrows move. **X**/**Y** warp (same as Studio) |
 
 **Sync contract:** Studio Play (`play.c`) is the source of truth for motion. Export packs present screens + play table (`$8100`) + `R01P`. Soft-boot (`R01E_SOFTBOOT=1`) keeps the old host memcpy boot path for triage. Default boot runs cart PRG stream catchup like sim.
 
@@ -41,7 +41,7 @@ cmake --build build
 
 **Env:** `R01E_SOFTBOOT=1` -- host memcpy VRAM/pals at boot (debug). Default runs cart PRG MAP/pal stream catchup.
 
-**Debug window:** VRAM 2x2 workbench (256x240, red = viewport, player via OAM) beside a world map (blue = present, gold = current screen). Active **BG** and **SPR** palette rows along the bottom of that row. Below: **CPU busy** chart (2 samples/s, 20 bars) -- cyan = busy cycles in active display, orange = busy in VBlank (excludes `$FE01` VBlank-wait spins). Red line = soft max **50k** cycles/frame (`R01E_CPU_BUDGET_CYCLES`; see [`docs/08`](../docs/08_game_modules.md) for design budgets).
+**Debug window:** VRAM 2x2 workbench (256x240, red = viewport, player via OAM) beside a world map (blue = present, gold = current screen). Active **BG** and **SPR** palette rows along the bottom of that row. Below: **CPU busy** chart (2 samples/s, 20 bars) -- cyan = busy cycles in active display, orange = busy in VBlank (excludes `$FE01` VBlank-wait spins). Red line = soft max **50k** cycles/frame (`R01E_CPU_BUDGET_CYCLES`, see [`docs/08`](../docs/08_game_modules.md) for design budgets).
 
 ## Layout
 

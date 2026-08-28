@@ -27,7 +27,7 @@ Target: **through-hole DIP**, compact **12 x 12 cm** 4-layer PCB.
 | Audio MCU | **ATmega328P** (dedicated APU) |
 | Sprite / pads / machine EEPROM | **ATmega1284P** (no APU time-share) |
 | Board config storage | **1284P internal 4 KB EEPROM** (handshake) |
-| Color PROM | **1x AT28C16** (or faster OTP): packed R3-G3-B2; 1-dot pipeline |
+| Color PROM | **1x AT28C16** (or faster OTP): packed R3-G3-B2, 1-dot pipeline |
 | Beam / raster | **2x ATF22V10** (X/Y state machines + compare) |
 | Glue logic | Absorbed into PLDs |
 | `$FExx` latches | **9x HC573** (bit-packed bytes) |
@@ -138,6 +138,7 @@ Detail in [`02`](02_graphics_worlds_memory.md). Short:
 
 | Topic | Norm |
 |-------|------|
+| PRG bank | **`$FE80`** latch -> flash A16/A17 (128 KB cart PRG, 4 banks). Vectors from bank 0 |
 | `$FE40-$FE5F` APU | ATmega328P |
 | Machine config | 1284 internal EEPROM via **`$FE70-$FE72` handshake** |
 | Latch silicon | 9x HC573 bit-packed (bitfields open in `02`) |

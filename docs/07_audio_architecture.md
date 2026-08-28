@@ -38,9 +38,9 @@ On retr01, **"the Bus Bridge"** is **not** a separate named IC. It is the **CPU 
 
 1. **Decode** - PLD (and `$FExx` latches where needed) maps CPU accesses in **`$FE40`-`$FE5F`** to the APU window.
 2. **Isolation** - the **CPU-domain 74HC245** (one of three board HC245s) plus PHI2 / `/OE` gating so only one master drives that domain at a time ([`06`](06_hardware_v1_32ic.md) bus split).
-3. **Capture** - the 328P sees register-like writes on its port (or a latch clocked on the write); it owns synthesis timing after that.
+3. **Capture** - the 328P sees register-like writes on its port (or a latch clocked on the write). It owns synthesis timing after that.
 
-Game code does ordinary `STA $FE4x`. The bridge is **decode + bus isolation + APU-side latch/port**, same pattern as other `$FExx` peripherals. Exact GPIO pinout is schematic TBD; the **software contract** is the 32-byte window.
+Game code does ordinary `STA $FE4x`. The bridge is **decode + bus isolation + APU-side latch/port**, same pattern as other `$FExx` peripherals. Exact GPIO pinout is schematic TBD. The **software contract** is the 32-byte window.
 
 ---
 
@@ -100,7 +100,7 @@ Custom bitfield: highly compressed for the CPU, yet readable in a hex dump. **On
 | Field | Bits | Meaning |
 |-------|------|---------|
 | Note letter | 7-4 (high nibble) | `0`=G, `A`=A, `B`=B, `C`=C, `D`=D, `E`=E, `F`=F |
-| Octave / accidental | 3-0 (low nibble) | `0`-`7` = **natural**, octave = value; `8`-`F` = **flat**, octave = value - 8 |
+| Octave / accidental | 3-0 (low nibble) | `0`-`7` = **natural**, octave = value. `8`-`F` = **flat**, octave = value - 8 |
 
 AVR decode:
 
@@ -162,7 +162,7 @@ These ride with channel data through the bus bridge:
 
 ## 6. 60 Hz NMI dual-streaming loop
 
-The sequencer is driven entirely by the W65C02S **NMI** (~60x/s). **BGM** and **SFX** are two independent state machines. Main game logic runs between NMIs; audio work stays bounded per frame.
+The sequencer is driven entirely by the W65C02S **NMI** (~60x/s). **BGM** and **SFX** are two independent state machines. Main game logic runs between NMIs. Audio work stays bounded per frame.
 
 ### Step 1 - Evaluate BGM (channels 1-5)
 
@@ -180,7 +180,7 @@ The sequencer is driven entirely by the W65C02S **NMI** (~60x/s). **BGM** and **
 1. If no SFX active -> **exit** audio routine.
 2. Decrement `SFX_Delay_Counter`. If still **> 0** -> exit.
 3. Read the byte at `SFX_Read_Pointer`.
-4. If control code: execute; on **`FB`**, mark SFX inactive and mute SFX channels.
+4. If control code: execute. On **`FB`**, mark SFX inactive and mute SFX channels.
 5. If **`FD`**: read mask, pull data, push to ATmega latch.
 6. Advance `SFX_Read_Pointer`.
 7. End NMI -> return to main game logic.

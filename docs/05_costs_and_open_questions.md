@@ -11,7 +11,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Name/family | **retr01**, rollout **A -> C -> H** |
 | retr01-A HW BOM | **32 IC** system ([`06`](06_hardware_v1_32ic.md)): 31 motherboard + 1 cart I2C save. Escape +1 PLD -> 33 |
 | PCB envelope (A) | ~**12 x 12 cm** 4-layer THT target |
-| Worlds | **8** max |
+| Worlds | **7** max (indices 0-6) |
 | World layout | sparse virtual grid up to **8x8**, **32 screens max** per world |
 | Screen format | **16x15** tiles (**128x120**), **240-byte** tile plane + **240-byte** attr plane (one attr/tile) |
 | MAP screen format | **480 B** raw per screen (**240** tile indices + **240** attrs, one byte each). **No RLE** required |
@@ -21,7 +21,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | CHR layout | **4 BG banks + 4 sprite banks** per world |
 | Bank sizes | **256 tiles** per bank, **4 KB** each |
 | Master palette (logical) | **64 indices** in board **Color PROM**. Same logical kit on retr01-A/C/H. **Not** in cart |
-| Color PROM (encoding) | **1x** PROM/OTP: packed **R3G3B2** `{RRRGGGBB}`; 1-dot pipeline. Studio quantizes kit swatches |
+| Color PROM (encoding) | **1x** PROM/OTP: packed **R3G3B2** `{RRRGGGBB}`, 1-dot pipeline. Studio quantizes kit swatches |
 | Cart global palettes | **8 BG palette rows** + **8 sprite palette rows** (**32 + 32** palettes, **256 B** total), indices only |
 | MAP / cart layout | Fixed header + **pointer table**, world table, per-world CHR + screen dir + payloads - see [`02`](02_graphics_worlds_memory.md) *Cart image* |
 | MAP world header | `start_col`/`start_row`, **`default_bg_bank`**, **`default_spr_bank`**, optional `default_pal_row` (**0-7**) |
@@ -48,9 +48,9 @@ This doc merges the old cost sheet and decision log into one planning file.
 | MAP access | **`$FE90`-`$FE92`** addr, **`$FE93`** data + auto-inc |
 | PRG layout | **One global PRG section** per cart, **32 KB** max at `$8000` (I/O hole at `$FE00-$FEFF`). **`$FE80` reserved / unused** |
 | PRG size (planning) | **32 KB** hard cap. Fits the CPU map with no runtime paging |
-| Cart fit | **Standard cart 512 KB**. Full caps + 32 KB PRG ~**420 KB** (~**92 KB** free) - see [`02`](02_graphics_worlds_memory.md) |
+| Cart fit | **Standard cart 512 KB**. Full 7-world caps + **128 KB** PRG ~**478 KB** (~**46 KB** free). Phase 1 export (32 KB PRG, world 0) much smaller - see [`02`](02_graphics_worlds_memory.md) |
 | Cart flash | **512 KB** parallel NOR (**SST39SF040**). On cartridge (socket OK for early bring-up). Same `.retr01` image |
-| Beam / glue | Beam in **2x ATF22V10**; glue absorbed; **5** PLDs (compositor = priority mux) |
+| Beam / glue | Beam in **2x ATF22V10**, glue absorbed, **5** PLDs (compositor = priority mux) |
 | Bus | **3x HC245** |
 | Parallax camera lock | if **any** H or V parallax band is enabled, main camera locks to that axis for the **whole frame** |
 | CPU map | RAM at `$0000-$7FFF`, I/O at `$FE00-$FEFF` |
@@ -61,7 +61,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Raster | scanline compare + IRQ |
 | APU | separate **ATmega328P** (`$FE40-$FE5F`) |
 | Near-term software | **retr01 Studio Phase 2** + **Emulator Phase 1** + board sim (studio/emu/sim READMEs) |
-| Studio project files | **JSON v4** (one world's map/CHR per save; see Studio README) |
+| Studio project files | **JSON v4** (one world's map/CHR per save, see Studio README) |
 | Validation tools | board IC simulator ([`retr01_sim/README.md`](../retr01_sim/README.md)). Software emu ([`retr01_emu/`](../retr01_emu/)) |
 
 ## Cost snapshot
@@ -94,7 +94,7 @@ Flash + I2C save on cart PCB. Motherboard + cart proto still targets roughly the
 | Q2 | RGBS analog levels/sync polarity tuning | digital timing is locked. Bench tuning still needed |
 | Q10 | OAM attr bitfields | **Locked:** bank/pal/flip/priority/size in [`02`](02_graphics_worlds_memory.md). 8x16 tile-pair fetch detail on 1284 firmware still micro-rev |
 | Q11 | `$FE07` plane band end/dual-band detail | start scanline drafted. End-of-band pairing may need a second latch |
-| Q12 | PRG/CHR/MAP offsets inside **512 KB** flash | **Locked in code** (`format_ver` 1): header 16, pointer table 24, world slot 8, world header 32, screen dir 12. Documented in [`02`](02_graphics_worlds_memory.md) |
+| Q12 | PRG/CHR/MAP offsets inside **512 KB** flash | **Locked in code** (`format_ver` 1): header 16, pointer table 24, world table entry 8 B x **7** slots, world header 32, screen dir 12. **128 KB PRG** + 7 worlds planned (`format_ver` 2). See [`02`](02_graphics_worlds_memory.md) |
 | Q13 | retr01-C pad bit timing | ATtiny85 + 3-wire draft locked. Baud/poll edge details later |
 | Q14 | Color PROM DAC depth | Packed R3G3B2 is the norm. How many resistor steps / levels on the bench still tunable |
 | Q15 | Color PROM part (AT28C16 vs faster OTP) | **Pinned candidate:** **AT27C256R-70PU** (70 ns, DIP-28) if 150 ns is tight. Footprint DIP-24 vs DIP-28 |

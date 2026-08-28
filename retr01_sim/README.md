@@ -14,7 +14,7 @@ IC-first board simulator for retr01-A. Separate from retr01 Studio (authoring). 
 | A Power+clk | `PWR5V` + `OSC8M` + `SN74HC14` |
 | C CPU + decode | `W65C02S`, `AS6C62256`, `ATF22V10` decode, CPU `SN74HC245` |
 | D `$FExx` latch | **9x** `SN74HC573` (`$FE02`-`$FE04`, `$FE08`, `$FE10`-`$FE12`, `$FE90`-`$FE92`) |
-| E Pads | `$FE60`/`$FE61` via 1284 (sim model; not on canvas) |
+| E Pads | `$FE60`/`$FE61` via 1284 (sim model, not on canvas) |
 | G VRAM | 2nd `AS6C62256` + **3x** `SN74HC157` + `ATF22V10` VRAM glue |
 | H Beam | `OSC_DOT` + `BEAM_XY` (X PLD) + `ATF22V10` Y compare vs `$FE04` |
 | I BG fetch | `BG_FETCH` PLD - nametable VA from beam+scroll (not on canvas) |
@@ -30,7 +30,7 @@ Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8
 
 Why the worker exists: [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md).
 
-**Next:** optional machine EEPROM (1284 path); retire bring-up overlay when game PRG owns MAP.
+**Next:** optional machine EEPROM (1284 path). Retire bring-up overlay when game PRG owns MAP.
 
 ## Test layers
 
@@ -73,7 +73,7 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 | **Not** in ROM | Meaning |
 |----------------|---------|
 | Studio Play motion, camera, warps | Host `play.c` / emu Play / sim Host Play |
-| Host collision source | Cart flash MAP attrs (`R01_ATTR_SOLID`); PRG collision stub not used by host runners |
+| Host collision source | Cart flash MAP attrs (`R01_ATTR_SOLID`). PRG collision stub not used by host runners |
 | Editor UI state | UI only. Cart boots world **0** |
 | Live camera seam streaming (2x2 shift) | Phase 1 PRG loads start screen only |
 | Full game loop in 6502 | Still future. Host Play stands in |
@@ -90,13 +90,13 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 
 | Topic | Choice |
 |-------|--------|
-| Time base | PHI2 half-steps from `OSC8M`; combinatorial parts settle in wire pass |
-| Bus | Settle loop (`R01S_SETTLE_PASSES`); H+L -> hard abort; undriven -> pull-up HIGH (`$FF`) |
-| Wiring | Explicit `wire_*` in `board.c`; global netlist deferred |
+| Time base | PHI2 half-steps from `OSC8M`. Combinatorial parts settle in wire pass |
+| Bus | Settle loop (`R01S_SETTLE_PASSES`). H+L -> hard abort. Undriven -> pull-up HIGH (`$FF`) |
+| Wiring | Explicit `wire_*` in `board.c`. Global netlist deferred |
 | Boot UX | Worker-thread MAP catchup - [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md) |
 | Perf | [`PERFORMANCE.md`](PERFORMANCE.md) |
 
-**Model:** every IC is an `R01sEntity` (pins + vtable). Islands hold entities; island groups wire them. `r01s_board_build()` binds the full netlist onto 9 canvas frames. Undriven pins pull high; H+L aborts with a bus-fight report.
+**Model:** every IC is an `R01sEntity` (pins + vtable). Islands hold entities. Island groups wire them. `r01s_board_build()` binds the full netlist onto 9 canvas frames. Undriven pins pull high. H+L aborts with a bus-fight report.
 
 ## Build
 
@@ -124,11 +124,11 @@ scripts/run-sim rom/test.retr01
 # or: ./build/retr01_sim /path/to/cart.retr01
 ```
 
-**Controls:** `Space` pause/resume * `Ctrl+R` reset * `R` rotate selected IC * **SCALE 1X/2X** (left sidebar button or `G`; default **1x**) * `.` single-step (while paused) * **COMPACT / ISLANDS** (HUD) * **left-drag chip** move * **right-click chip** orient H/V * **left-drag empty island** move frame * **bottom-right grip** resize * **Shift+arrows / wheel / middle-drag** pan * `Esc` quit.
+**Controls:** `Space` pause/resume * `Ctrl+R` reset * `R` rotate selected IC * **SCALE 1X/2X** (left sidebar button or `G`, default **1x**) * `.` single-step (while paused) * **COMPACT / ISLANDS** (HUD) * **left-drag chip** move * **right-click chip** orient H/V * **left-drag empty island** move frame * **bottom-right grip** resize * **Shift+arrows / wheel / middle-drag** pan * `Esc` quit.
 
 **Layout persistence:** island frames + chip positions saved to `retr01_sim/ui_layout.json` (override with `R01S_LAYOUT`).
 
-**Gamepads (island E -> `$FE60`/`$FE61`):** bottom-left panels or keyboard. After boot catchup, **Host Play** uses P1 for move + warps (Studio/emu rules; collision from cart MAP attrs):
+**Gamepads (island E -> `$FE60`/`$FE61`):** bottom-left panels or keyboard. After boot catchup, **Host Play** uses P1 for move + warps (Studio/emu rules, collision from cart MAP attrs):
 
 | | Stick | X (warp -> screen 0,0) | Y (warp -> screen 1,0) | Coin | Start |
 |--|-------|----------------------|----------------------|------|-------|

@@ -12,7 +12,7 @@ When docs disagree, use this order.
 | Protoboard island bring-up | [`03`](03_hardware_implementation.md) | Bench checklist for the **32 IC** netlist |
 | Studio Phase 2 (product) | [`retr01_studio/README.md`](../retr01_studio/README.md) | Authoring + Play + export. Short mirror: [`04`](04_retr01_studio.md) |
 | Emulator Phase 1 | [`retr01_emu/README.md`](../retr01_emu/README.md) | Soft cart runtime matching Studio Play |
-| Audio / APU protocol | [`07`](07_audio_architecture.md) | 6502 sequencer + 328P mixer; `$FE4x` bus bridge |
+| Audio / APU protocol | [`07`](07_audio_architecture.md) | 6502 sequencer + 328P mixer, `$FE4x` bus bridge |
 | Board IC simulator | [`retr01_sim/README.md`](../retr01_sim/README.md) | Pin/netlist models of the 32-IC BOM |
 | Studio game modules (movement, camera, entities, collision budgets) | [`08`](08_game_modules.md) | Attachable gameplay profiles. Studio phases implement subsets later |
 | IC pin/behavior detail | [`hw/md/`](../hw/md/) + datasheet PDFs | Sim and schematics |
@@ -60,7 +60,7 @@ retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 | **Palette row** | **4 palettes** in one plane, index **0-7**. BG row N and sprite row N are selected together |
 | **Palette** | One 4-color set (**4 master indices** into the Color PROM) |
 | **Active palette buffer** | **8 palettes** on screen: **4 BG + 4 sprite** from the currently selected palette row |
-| **Color PROM** | Board-resident **64-entry** master palette (packed **R3G3B2** on current boards; not in cart) |
+| **Color PROM** | Board-resident **64-entry** master palette (packed **R3G3B2** on current boards, not in cart) |
 | **SCALE** | Board DIP: **2x** default (**128x120** -> **256x240**, fills CRT) or **1x** (centered **128x120**) |
 
 ## High-level hardware
@@ -87,9 +87,9 @@ Current chip list: [`06`](06_hardware_v1_32ic.md) (**32 IC**). Roles:
 | RGBS active field | **256x240** (SCALE **2x** fills field, **1x** = centered 128x120) |
 | Tile size | **8x8** |
 | Color | **2bpp**, **64-entry Color PROM** on board (packed **R3G3B2**), cart holds **8 global BG rows + 8 global sprite rows** (indices only), **one synced row active** (4 BG + 4 sprite) |
-| Worlds | **8** max |
+| Worlds | **7** max (indices 0-6) |
 | Screens per world | **32** max on sparse **8x8** virtual grid |
-| Cart / PRG | **512 KB** flash. **32 KB** PRG (one region, no paging). ~**420 KB** full fill |
+| Cart / PRG | **512 KB** flash. **128 KB** PRG in image (4 banks, CPU window 32 KB + `$FE80`). Phase 1 export still **32 KB** until cart bump. ~**478 KB** full fill at 7-world caps |
 | CHR per world | **4 BG banks + 4 sprite banks**, **256 tiles each**, **32 KB** |
 | Sprites | **64 OAM**, **16 per logical scanline** max |
 | VRAM | **32 KB**, interleaved |
@@ -125,10 +125,10 @@ Current chip list: [`06`](06_hardware_v1_32ic.md) (**32 IC**). Roles:
 
 - RAM at `$0000-$7FFF`
 - I/O page at `$FE00-$FEFF`
-- PRG as **one global section** in the cart (**32 KB** max). It maps at `$8000` with the classic I/O hole at `$FE00-$FEFF` (see [`02`](02_graphics_worlds_memory.md)); not split per world.
+- PRG as **one global section** in the cart (**128 KB** max in image, **32 KB** CPU window + `$FE80` bank). Maps at `$8000` with the classic I/O hole at `$FE00-$FEFF` (see [`02`](02_graphics_worlds_memory.md)), not split per world.
 - World/MAP streaming through `$FE90`
-- BG banks per **8x8 tile** (attr `BANK`); screens may only stamp a default at load
-- Sprite bank independent of BG banks (per OAM attr `BANK`; `$FE37` optional stamp)
+- BG banks per **8x8 tile** (attr `BANK`). Screens may only stamp a default at load
+- Sprite bank independent of BG banks (per OAM attr `BANK`, `$FE37` optional stamp)
 
 ## Near-term software focus
 
