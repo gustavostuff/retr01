@@ -31,17 +31,26 @@ add_test(NAME core COMMAND test_core)
 set_tests_properties(core PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 add_library(retr01_studio_app
-  app/src/app_shell.c
-  app/src/ui.c
-  app/src/ui_primitives.c
-  app/src/ui_layout.c
-  app/src/ui_pal_edit.c
-  app/src/ui_menu.c
-  app/src/ui_screen.c
-  app/src/ui_tile_edit.c
-  app/src/ui_draw.c
-  app/src/ui_input.c
-  app/src/font.c
+  app/src/shell/app_shell.c
+  app/src/font/font.c
+  app/src/ui/core.c
+  app/src/ui/primitives.c
+  app/src/ui/layout.c
+  app/src/ui/draw/frame.c
+  app/src/ui/draw/sidebar.c
+  app/src/ui/draw/mode.c
+  app/src/ui/screen/selection.c
+  app/src/ui/screen/paint.c
+  app/src/ui/screen/edit.c
+  app/src/ui/screen/draw.c
+  app/src/ui/input/event.c
+  app/src/ui/input/project.c
+  app/src/ui/input/world.c
+  app/src/ui/menu/menu.c
+  app/src/ui/menu/draw.c
+  app/src/ui/modals/pal_edit.c
+  app/src/ui/modals/pal_edit_draw.c
+  app/src/ui/modals/tile_edit.c
 )
 target_include_directories(retr01_studio_app PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/app/src

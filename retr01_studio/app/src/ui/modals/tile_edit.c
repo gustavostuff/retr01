@@ -1,6 +1,6 @@
-#include "ui.h"
-#include "ui_internal.h"
-#include "font.h"
+#include "ui/ui.h"
+#include "ui/internal.h"
+#include "font/font.h"
 
 #include "retr01_studio/cart.h"
 #include "retr01_studio/chr_pack.h"

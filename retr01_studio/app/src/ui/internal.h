@@ -1,7 +1,7 @@
 #ifndef retr01_STUDIO_UI_INTERNAL_H
 #define retr01_STUDIO_UI_INTERNAL_H
 
-#include "ui.h"
+#include "ui/ui.h"
 
 #include <SDL.h>
 #include <stdint.h>
@@ -38,7 +38,7 @@ extern int g_radio_h;
 extern SDL_Cursor *g_cursor_arrow;
 extern SDL_Cursor *g_cursor_hand;
 
-/* ui_primitives.c */
+/* ui/primitives.c */
 int ui_load_png_rgba(const char *path, uint8_t **out_px, int *out_w, int *out_h);
 int snap8(int v);
 void ui_toast(UiState *ui, const char *msg, int is_error);
@@ -52,7 +52,7 @@ void draw_label(SDL_Renderer *r, int x, int y, const char *text);
 void draw_button(SDL_Renderer *r, int x, int y, int w, const char *text, int active, int hover);
 void draw_chess_grid(SDL_Renderer *r, int x0, int y0, int cols, int rows, int cell);
 
-/* ui_layout.c */
+/* ui/layout.c */
 void ui_editor_layout(const UiState *ui, int *screen_x, int *screen_y, int *mode_x, int *mode_y0);
 int screen_mode_hit(const UiState *ui, int lx, int ly, int *out_row);
 int screen_mode_row_hit(const UiState *ui, int lx, int ly, int row);
@@ -73,7 +73,7 @@ int play_btn_x(const UiState *ui);
 int play_btn_y(void);
 int play_button_hit(const UiState *ui, int lx, int ly);
 
-/* ui_pal_edit.c */
+/* ui/modals/pal_edit.c */
 int palette_strip_hit(const UiState *ui, int lx, int ly);
 int palette_row_btn_hit(const UiState *ui, int lx, int ly, int *out_row);
 void pal_edit_close(UiState *ui);
@@ -87,7 +87,7 @@ int pal_modal_plane_hit(int lx, int ly, int plane, int *out_pal, int *out_color)
 int pal_modal_handle(UiState *ui, int lx, int ly, int down);
 void draw_pal_modal(UiState *ui, SDL_Renderer *r);
 
-/* ui_menu.c */
+/* ui/menu/menu.c */
 void menu_close(UiState *ui);
 void menu_open_tile(UiState *ui, int x, int y, int tx, int ty);
 void menu_open_world_cell(UiState *ui, int x, int y, int screen_idx);
@@ -95,41 +95,53 @@ int menu_hit(const UiState *ui, int lx, int ly, int *out_item, int *out_sub);
 void menu_update_hover(UiState *ui, int lx, int ly);
 void handle_menu_pick(UiState *ui, int item, int is_sub);
 
-/* ui_screen.c */
+/* ui/screen/selection.c */
 void screen_sel_set(UiState *ui, int x0, int y0, int x1, int y1);
 void screen_sel_clear(UiState *ui);
 int screen_sel_valid(const UiState *ui);
 void screen_sel_bounds(const UiState *ui, int *min_x, int *min_y, int *max_x, int *max_y);
 void screen_refresh_sel(UiState *ui);
 int screen_sel_is_multi(const UiState *ui);
+
+/* ui/screen/paint.c */
 void ui_paint_stamp_set(UiState *ui, uint8_t tile, uint8_t attr);
 void ui_paint_stamp_from_cell(UiState *ui, int tx, int ty);
 int ui_paint_stamp_from_sel(const UiState *ui, uint8_t *out_tile, uint8_t *out_attr);
 void ui_paint_tile(UiState *ui, int tx, int ty);
 void ui_flood_fill(UiState *ui, int tx, int ty);
+
+/* ui/screen/edit.c */
 void ui_toggle_play(UiState *ui);
 void screen_set_sel_bank(UiState *ui, int bank);
 void screen_set_sel_pal(UiState *ui, int pal);
 void screen_toggle_sel_flag(UiState *ui, uint8_t flag);
-void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s);
 
-/* ui_tile_edit.c */
+/* ui/screen/draw.c */
+void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s);
+void draw_play_view(UiState *ui, SDL_Renderer *r);
+
+/* ui/modals/tile_edit.c */
 void tile_edit_open(UiState *ui, int tx, int ty);
 void tile_edit_open_new(UiState *ui, int tx, int ty);
 int tile_modal_handle(UiState *ui, int lx, int ly, int down);
 void draw_tile_modal(UiState *ui, SDL_Renderer *r);
 
-/* ui_draw.c */
+/* ui/draw/mode.c */
 void ui_update_cursor(const UiState *ui);
-void draw_sidebar(UiState *ui, SDL_Renderer *r);
 void draw_screen_mode(UiState *ui, SDL_Renderer *r);
-void draw_play_view(UiState *ui, SDL_Renderer *r);
+
+/* ui/draw/sidebar.c */
+void draw_sidebar(UiState *ui, SDL_Renderer *r);
+
+/* ui/menu/draw.c */
 void draw_menu(UiState *ui, SDL_Renderer *r);
 
-/* ui_input.c */
+/* ui/input/project.c */
 void ui_reset_after_project_load(UiState *ui);
 void ui_save(UiState *ui);
 void ui_export(UiState *ui);
+
+/* ui/input/world.c */
 int ui_screen_nav(UiState *ui, int dcol, int drow);
 void handle_world_click(UiState *ui, int col, int row, int ctrl, int dbl);
 

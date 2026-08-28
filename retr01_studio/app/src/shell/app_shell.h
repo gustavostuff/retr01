@@ -1,7 +1,7 @@
 #ifndef retr01_STUDIO_APP_SHELL_H
 #define retr01_STUDIO_APP_SHELL_H
 
-#include "ui.h"
+#include "ui/ui.h"
 
 typedef struct AppShell {
     UiState ui;

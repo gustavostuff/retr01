@@ -1,4 +1,4 @@
-#include "app_shell.h"
+#include "shell/app_shell.h"
 
 #include <stdio.h>
 #include <string.h>

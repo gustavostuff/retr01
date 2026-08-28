@@ -54,11 +54,8 @@ static void update_camera(R01ePlay *pl) {
 }
 
 static void place_player_on_screen(R01ePlay *pl, int col, int row) {
-    /* Match Studio: W×H inset from right/bottom; camera already smooth-follows. */
-    pl->player_x =
-        col * R01E_SCREEN_PX_W + R01E_SCREEN_PX_W - R01E_PLAY_PLAYER_W - R01E_PLAY_SPAWN_MARGIN_RIGHT;
-    pl->player_y =
-        row * R01E_SCREEN_PX_H + R01E_SCREEN_PX_H - R01E_PLAY_PLAYER_H - R01E_PLAY_SPAWN_MARGIN_BOTTOM;
+    pl->player_x = R01E_PLAY_SPAWN_CENTER_X(col);
+    pl->player_y = R01E_PLAY_SPAWN_CENTER_Y(row);
     update_camera(pl);
 }
 

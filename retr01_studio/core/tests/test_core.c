@@ -44,6 +44,15 @@ int main(void) {
     expect_true(pl.active, "play active");
     expect_true(pl.player_x == R01_PLAY_SPAWN_CENTER_X(R01_START_COL), "spawn center x");
     expect_true(pl.player_y == R01_PLAY_SPAWN_CENTER_Y(R01_START_ROW), "spawn center y");
+    {
+        p->worlds[0].default_screen = 2;
+        r01_project_begin_play(p);
+        expect_true(p->worlds[0].default_screen == 2, "begin_play keeps default_screen");
+        memset(&pl, 0, sizeof(pl));
+        expect_true(r01_play_start(&pl, p), "play on default_screen");
+        expect_true(pl.player_x == R01_PLAY_SPAWN_CENTER_X(2), "default screen spawn x");
+        expect_true(pl.player_y == R01_PLAY_SPAWN_CENTER_Y(0), "default screen spawn y");
+    }
     expect_true(pl.cam_x == pl.player_x + R01_PLAY_PLAYER_W / 2 - R01_SCREEN_PX_W / 2 &&
                     pl.cam_y == pl.player_y + R01_PLAY_PLAYER_H / 2 - R01_SCREEN_PX_H / 2,
                 "cam already smooth-follows on start");

@@ -226,7 +226,10 @@ void r01_project_begin_play(R01Project *p) {
     if (!w) {
         return;
     }
-    r01_world_sync_default_screen(w);
+    if (w->default_screen < 0 || w->default_screen >= w->screen_count ||
+        !w->screens[w->default_screen].present) {
+        r01_world_sync_default_screen(w);
+    }
     p->active_screen = r01_world_default_screen(w);
 }
 
