@@ -39,12 +39,8 @@ static void update_camera(R01PlayState *pl) {
 }
 
 static void place_player_on_screen(R01PlayState *pl, int col, int row) {
-    /* World spawn: W×H inset from this screen's right/bottom edges. */
-    pl->player_x =
-        col * R01_SCREEN_PX_W + R01_SCREEN_PX_W - R01_PLAY_PLAYER_W - R01_PLAY_SPAWN_MARGIN_RIGHT;
-    pl->player_y =
-        row * R01_SCREEN_PX_H + R01_SCREEN_PX_H - R01_PLAY_PLAYER_H - R01_PLAY_SPAWN_MARGIN_BOTTOM;
-    /* First frame already uses smooth follow (player centered in the viewport). */
+    pl->player_x = R01_PLAY_SPAWN_CENTER_X(col);
+    pl->player_y = R01_PLAY_SPAWN_CENTER_Y(row);
     update_camera(pl);
 }
 

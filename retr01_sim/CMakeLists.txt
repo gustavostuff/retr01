@@ -56,6 +56,11 @@ target_include_directories(retr01_sim_core PUBLIC
 
 add_library(retr01_sim_app
   src/ui.c
+  src/ui_font.c
+  src/ui_draw_chip.c
+  src/ui_placement.c
+  src/ui_draw.c
+  src/ui_input.c
   src/ui_layout.c
   src/app.c
 )

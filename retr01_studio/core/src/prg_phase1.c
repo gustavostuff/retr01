@@ -64,8 +64,8 @@ static void pick_spawn_scroll(const R01World *w, int col, int row, uint8_t *out_
     uint8_t sy;
 
     (void)w;
-    px = col * R01_SCREEN_PX_W + R01_SCREEN_PX_W - R01_PLAY_PLAYER_W - R01_PLAY_SPAWN_MARGIN_RIGHT;
-    py = row * R01_SCREEN_PX_H + R01_SCREEN_PX_H - R01_PLAY_PLAYER_H - R01_PLAY_SPAWN_MARGIN_BOTTOM;
+    px = R01_PLAY_SPAWN_CENTER_X(col);
+    py = R01_PLAY_SPAWN_CENTER_Y(row);
     ax = px + R01_PLAY_PLAYER_W / 2;
     ay = py + R01_PLAY_PLAYER_H / 2;
     cam_x = ax - R01_SCREEN_PX_W / 2;

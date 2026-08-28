@@ -42,12 +42,8 @@ int main(void) {
 
     expect_true(r01_play_start(&pl, p), "play start");
     expect_true(pl.active, "play active");
-    expect_true(pl.player_x == R01_START_COL * R01_SCREEN_PX_W + R01_SCREEN_PX_W - R01_PLAY_PLAYER_W -
-                                    R01_PLAY_SPAWN_MARGIN_RIGHT,
-                "spawn margin right");
-    expect_true(pl.player_y == R01_START_ROW * R01_SCREEN_PX_H + R01_SCREEN_PX_H - R01_PLAY_PLAYER_H -
-                                    R01_PLAY_SPAWN_MARGIN_BOTTOM,
-                "spawn margin bottom");
+    expect_true(pl.player_x == R01_PLAY_SPAWN_CENTER_X(R01_START_COL), "spawn center x");
+    expect_true(pl.player_y == R01_PLAY_SPAWN_CENTER_Y(R01_START_ROW), "spawn center y");
     expect_true(pl.cam_x == pl.player_x + R01_PLAY_PLAYER_W / 2 - R01_SCREEN_PX_W / 2 &&
                     pl.cam_y == pl.player_y + R01_PLAY_PLAYER_H / 2 - R01_SCREEN_PX_H / 2,
                 "cam already smooth-follows on start");
@@ -60,19 +56,22 @@ int main(void) {
 
     expect_true(r01_play_button(&pl, p, R01_PLAY_BTN_X), "warp X");
     expect_true(pl.player_x / R01_SCREEN_PX_W == 0, "warp col 0");
-    expect_true(pl.player_x % R01_SCREEN_PX_W ==
-                    R01_SCREEN_PX_W - R01_PLAY_PLAYER_W - R01_PLAY_SPAWN_MARGIN_RIGHT,
-                "warp keeps right margin");
-    expect_true(pl.player_y % R01_SCREEN_PX_H ==
-                    R01_SCREEN_PX_H - R01_PLAY_PLAYER_H - R01_PLAY_SPAWN_MARGIN_BOTTOM,
-                "warp keeps bottom margin");
+    expect_true(pl.player_x == R01_PLAY_SPAWN_CENTER_X(0), "warp center x");
+    expect_true(pl.player_y == R01_PLAY_SPAWN_CENTER_Y(0), "warp center y");
     expect_true(pl.cam_x == pl.player_x + R01_PLAY_PLAYER_W / 2 - R01_SCREEN_PX_W / 2 &&
                     pl.cam_y == pl.player_y + R01_PLAY_PLAYER_H / 2 - R01_SCREEN_PX_H / 2,
                 "warp cam already follows");
 
-    expect_true(r01_project_save_json(p, "test_project.json", err, sizeof(err)) == 0, "save json");
+    {
+        R01Screen *s = &p->worlds[0].screens[2];
+        s->attrs[0] = r01_attr_pack(0, 2, 1, 0);
+        expect_true(r01_project_save_json(p, "test_project.json", err, sizeof(err)) == 0, "save json");
+        expect_true(s->attrs[0] == r01_attr_pack(0, 2, 1, 0), "save keeps tile palette");
+    }
+
     memset(p, 0, sizeof(*p));
     expect_true(r01_project_load_json(p, "test_project.json", err, sizeof(err)) == 0, "load json");
+    expect_true(p->worlds[0].screens[2].attrs[0] == r01_attr_pack(0, 2, 1, 0), "load keeps tile palette");
     expect_true(p->worlds[0].screen_count == R01_GRID_MAX * R01_GRID_MAX, "reload screens");
 
     expect_true(r01_cart_write(p, "test_cart.retr01", err, sizeof(err)) == 0, "cart write");
@@ -87,6 +86,24 @@ int main(void) {
         if (f) {
             fclose(f);
         }
+    }
+
+    {
+        R01Project *p2 = (R01Project *)calloc(1, sizeof(R01Project));
+        expect_true(p2 != NULL, "oom");
+        r01_project_init(p2, "roundtrip");
+        p2->default_world = 0;
+        p2->worlds[0].screens[9].present = 1;
+        p2->worlds[0].default_screen = 9;
+        p2->worlds[0].default_pal_row = 3;
+        p2->global_pal_bg[1][2].idx[1] = 42;
+        expect_true(r01_project_save_json(p2, "test_roundtrip.r01proj", err, sizeof(err)) == 0, "save roundtrip");
+        memset(p2, 0, sizeof(*p2));
+        expect_true(r01_project_load_json(p2, "test_roundtrip.r01proj", err, sizeof(err)) == 0, "load roundtrip");
+        expect_true(p2->worlds[0].default_screen == 9, "default_screen roundtrip");
+        expect_true(p2->worlds[0].default_pal_row == 3, "default_pal_row roundtrip");
+        expect_true(p2->global_pal_bg[1][2].idx[1] == 42, "palette roundtrip");
+        free(p2);
     }
 
     if (failures) {

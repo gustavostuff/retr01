@@ -1,0 +1,199 @@
+#include "ui.h"
+#include "ui_internal.h"
+#include "font.h"
+
+#include "retr01_studio/cart.h"
+#include "retr01_studio/chr_pack.h"
+#include "retr01_studio/json_io.h"
+#include "retr01_studio/palette.h"
+#include "retr01_studio/project.h"
+
+#include <png.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void tile_edit_open(UiState *ui, int tx, int ty) {
+    R01World *w = r01_project_active_world(ui->project);
+    R01Screen *s = r01_project_active_screen(ui->project);
+    int cell;
+    uint8_t attr;
+    memset(&ui->tile_edit, 0, sizeof(ui->tile_edit));
+    ui->tile_edit.open = 1;
+    ui->tile_edit.paint_tx = tx;
+    ui->tile_edit.paint_ty = ty;
+    ui->tile_edit.bank = 0;
+    ui->tile_edit.pal = 0;
+    ui->tile_edit.color = 1;
+    if (s && w && tx >= 0 && ty >= 0) {
+        cell = ty * R01_SCREEN_TILES_X + tx;
+        attr = s->attrs[cell];
+        ui->tile_edit.tile_id = s->tiles[cell];
+        ui->tile_edit.pal = r01_attr_pal(attr);
+        ui->tile_edit.bank = r01_attr_bank(attr);
+        ui->tile_edit.flip_h = r01_attr_flip_h(attr);
+        ui->tile_edit.flip_v = r01_attr_flip_v(attr);
+        if (ui->tile_edit.tile_id < w->bg_banks[ui->tile_edit.bank].tile_count) {
+            const uint8_t *raw =
+                w->bg_banks[ui->tile_edit.bank].chr + (size_t)ui->tile_edit.tile_id * R01_TILE_BYTES;
+            r01_tile_orient(raw, ui->tile_edit.flip_h, ui->tile_edit.flip_v, ui->tile_edit.chr);
+            ui->tile_edit.is_new = 0;
+        } else {
+            ui->tile_edit.is_new = 1;
+            ui->tile_edit.tile_id = -1;
+            memset(ui->tile_edit.chr, 0, sizeof(ui->tile_edit.chr));
+        }
+    } else {
+        ui->tile_edit.is_new = 1;
+        ui->tile_edit.tile_id = -1;
+    }
+}
+
+void tile_edit_open_new(UiState *ui, int tx, int ty) {
+    tile_edit_open(ui, tx, ty);
+    ui->tile_edit.is_new = 1;
+    ui->tile_edit.tile_id = -1;
+    ui->tile_edit.bank = 0;
+    ui->tile_edit.pal = 0;
+    ui->tile_edit.flip_h = 0;
+    ui->tile_edit.flip_v = 0;
+    memset(ui->tile_edit.chr, 0, sizeof(ui->tile_edit.chr));
+}
+
+static void tile_edit_save(UiState *ui) {
+    R01World *w = r01_project_active_world(ui->project);
+    R01Screen *s;
+    int id;
+    int si;
+    uint8_t canonical[R01_TILE_BYTES];
+    if (!w) {
+        return;
+    }
+    if (ui->tile_edit.is_new || ui->tile_edit.tile_id < 0) {
+        id = r01_chr_alloc_tile(w, ui->tile_edit.bank);
+        if (id < 0) {
+            ui_toast(ui, "CHR bank full", 1);
+            return;
+        }
+        ui->tile_edit.tile_id = id;
+        ui->tile_edit.is_new = 0;
+    } else {
+        id = ui->tile_edit.tile_id;
+    }
+    r01_tile_orient(ui->tile_edit.chr, ui->tile_edit.flip_h, ui->tile_edit.flip_v, canonical);
+    r01_chr_write_tile(w, ui->tile_edit.bank, id, canonical);
+    for (si = 0; si < w->screen_count; si++) {
+        if (w->screens[si].present) {
+            r01_screen_fill_pixels_from_bank(w, &w->screens[si]);
+        }
+    }
+    s = r01_project_active_screen(ui->project);
+    if (s && ui->tile_edit.paint_tx >= 0 && ui->tile_edit.paint_ty >= 0) {
+        r01_screen_paint_tile(w, s, ui->tile_edit.paint_tx, ui->tile_edit.paint_ty, (uint8_t)id,
+                              r01_attr_pack(ui->tile_edit.bank, ui->tile_edit.pal, ui->tile_edit.flip_h,
+                                            ui->tile_edit.flip_v));
+    }
+    ui->brush.armed = 1;
+    ui->brush.bank = ui->tile_edit.bank;
+    ui->brush.tile_id = id;
+    ui->brush.pal = ui->tile_edit.pal;
+    ui->brush.flip_h = ui->tile_edit.flip_h;
+    ui->brush.flip_v = ui->tile_edit.flip_v;
+    memcpy(ui->brush.chr, ui->tile_edit.chr, R01_TILE_BYTES);
+    ui_paint_stamp_set(ui, (uint8_t)id,
+                       r01_attr_pack(ui->tile_edit.bank, ui->tile_edit.pal, ui->tile_edit.flip_h,
+                                     ui->tile_edit.flip_v));
+    ui->tile_edit.open = 0;
+    ui_toast(ui, "tile saved", 0);
+}
+
+void draw_tile_modal(UiState *ui, SDL_Renderer *r) {
+    TileModalLayout lo;
+    const R01World *w = r01_project_active_world_const(ui->project);
+    int row = w ? w->default_pal_row : 0;
+    int pal, c, sy, sx;
+
+    tile_modal_layout(&lo);
+    fill_rect(r, 0, 0, UI_LOGIC_W, UI_LOGIC_H, 0, 0, 0);
+    {
+        /* dim overlay */
+        SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(r, 0, 0, 0, 160);
+        {
+            SDL_Rect full = {0, 0, UI_LOGIC_W, UI_LOGIC_H};
+            SDL_RenderFillRect(r, &full);
+        }
+        SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+    }
+    fill_rect(r, lo.mx, lo.my, UI_MODAL_W, UI_MODAL_H, UI_COL_BG_R, UI_COL_BG_G, UI_COL_BG_B);
+    draw_rect(r, lo.mx, lo.my, UI_MODAL_W, UI_MODAL_H, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
+
+    font_draw_centered(r, lo.mx, lo.my, UI_MODAL_W, UI_BTN_H, "Edit tile", 240, 240, 240);
+
+    draw_label(r, lo.pal_x, lo.pal_label_y, "Palette/color");
+    for (pal = 0; pal < R01_PALS_PER_ROW; pal++) {
+        for (c = 0; c < R01_PAL_COLORS; c++) {
+            uint8_t cr, cg, cb;
+            int x = lo.pal_x + c * UI_PAL_SWATCH;
+            int y = lo.pal_y + pal * UI_PAL_SWATCH;
+            r01_kit_rgb(ui->project->global_pal_bg[row][pal].idx[c], &cr, &cg, &cb);
+            fill_rect(r, x, y, UI_PAL_SWATCH, UI_PAL_SWATCH, cr, cg, cb);
+            if (pal == ui->tile_edit.pal && c == ui->tile_edit.color) {
+                draw_rect(r, x, y, UI_PAL_SWATCH, UI_PAL_SWATCH, 240, 240, 240);
+            }
+        }
+    }
+
+    fill_rect(r, lo.canvas_x, lo.canvas_y, UI_TILE_CANVAS, UI_TILE_CANVAS, UI_COL_WELL_R, UI_COL_WELL_G,
+              UI_COL_WELL_B);
+    for (sy = 0; sy < 8; sy++) {
+        for (sx = 0; sx < 8; sx++) {
+            uint8_t col = r01_tile_pixel_color(ui->tile_edit.chr, sx, sy);
+            uint8_t cr, cg, cb;
+            int cell = 16;
+            r01_kit_rgb(ui->project->global_pal_bg[row][ui->tile_edit.pal].idx[col & 3u], &cr, &cg, &cb);
+            fill_rect(r, lo.canvas_x + sx * cell, lo.canvas_y + sy * cell, cell - 1, cell - 1, cr, cg, cb);
+        }
+    }
+
+    {
+        int save_hover =
+            point_in_rect(ui->mouse_x, ui->mouse_y, lo.pal_x, lo.btn_y, lo.save_w, UI_BTN_H);
+        int cancel_hover = point_in_rect(ui->mouse_x, ui->mouse_y, lo.pal_x + lo.save_w + UI_UNIT, lo.btn_y,
+                                         lo.cancel_w, UI_BTN_H);
+        draw_button(r, lo.pal_x, lo.btn_y, lo.save_w, "Save", 1, save_hover);
+        draw_button(r, lo.pal_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, "Cancel", 0, cancel_hover);
+    }
+}
+
+int tile_modal_handle(UiState *ui, int lx, int ly, int down) {
+    TileModalLayout lo;
+    tile_modal_layout(&lo);
+
+    if (!down) {
+        return 1;
+    }
+    if (lx >= lo.pal_x && lx < lo.pal_x + 4 * UI_PAL_SWATCH && ly >= lo.pal_y &&
+        ly < lo.pal_y + 4 * UI_PAL_SWATCH) {
+        ui->tile_edit.color = (lx - lo.pal_x) / UI_PAL_SWATCH;
+        ui->tile_edit.pal = (ly - lo.pal_y) / UI_PAL_SWATCH;
+        return 1;
+    }
+    if (lx >= lo.canvas_x && lx < lo.canvas_x + UI_TILE_CANVAS && ly >= lo.canvas_y &&
+        ly < lo.canvas_y + UI_TILE_CANVAS) {
+        int sx = (lx - lo.canvas_x) / 16;
+        int sy = (ly - lo.canvas_y) / 16;
+        r01_tile_set_pixel(ui->tile_edit.chr, sx, sy, (uint8_t)ui->tile_edit.color);
+        return 1;
+    }
+    if (lx >= lo.pal_x && lx < lo.pal_x + lo.save_w && ly >= lo.btn_y && ly < lo.btn_y + UI_BTN_H) {
+        tile_edit_save(ui);
+        return 1;
+    }
+    if (lx >= lo.pal_x + lo.save_w + UI_UNIT && lx < lo.pal_x + lo.save_w + UI_UNIT + lo.cancel_w &&
+        ly >= lo.btn_y && ly < lo.btn_y + UI_BTN_H) {
+        ui->tile_edit.open = 0;
+        return 1;
+    }
+    return 1;
+}

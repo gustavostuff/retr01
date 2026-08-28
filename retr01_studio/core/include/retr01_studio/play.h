@@ -6,9 +6,9 @@
 /* Player AABB in world pixels (square for now). */
 #define R01_PLAY_PLAYER_W 8
 #define R01_PLAY_PLAYER_H 8
-/* Default spawn: empty margin inside the spawn screen's right/bottom edges. */
-#define R01_PLAY_SPAWN_MARGIN_RIGHT 4
-#define R01_PLAY_SPAWN_MARGIN_BOTTOM 7
+/* Default spawn: center of the spawn screen. */
+#define R01_PLAY_SPAWN_CENTER_X(col) ((col)*R01_SCREEN_PX_W + (R01_SCREEN_PX_W - R01_PLAY_PLAYER_W) / 2)
+#define R01_PLAY_SPAWN_CENTER_Y(row) ((row)*R01_SCREEN_PX_H + (R01_SCREEN_PX_H - R01_PLAY_PLAYER_H) / 2)
 
 #define R01_PLAY_BTN_X 0
 #define R01_PLAY_BTN_Y 1

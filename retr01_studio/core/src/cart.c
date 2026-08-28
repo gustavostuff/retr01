@@ -342,11 +342,6 @@ static int r01_cart_build(const R01Project *p, uint8_t **out, size_t *out_len, c
         return -1;
     }
     memcpy(work, p, sizeof(*work));
-    if (r01_chr_pack_world_bank0(&work->worlds[0]) != R01_CHR_OK) {
-        free(work);
-        set_err(err_buf, err_cap, "chr pack failed");
-        return -1;
-    }
     if (build_world_blob(&world_blob, &work->worlds[0]) != 0) {
         free(work);
         free(world_blob.data);

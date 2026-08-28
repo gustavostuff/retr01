@@ -166,7 +166,11 @@ static R01ChrPackStatus pack_screen(uint8_t unique[][R01_TILE_BYTES], int *uniqu
                 flips = 0;
             }
             s->tiles[cell] = (uint8_t)found;
-            s->attrs[cell] = r01_attr_pack(0, 0, flips & R01_ATTR_FLIP_H ? 1 : 0, flips & R01_ATTR_FLIP_V ? 1 : 0);
+            {
+                uint8_t old = s->attrs[cell];
+                s->attrs[cell] = r01_attr_merge(old, r01_attr_bank(old), r01_attr_pal(old),
+                                                (flips & R01_ATTR_FLIP_H) != 0, (flips & R01_ATTR_FLIP_V) != 0);
+            }
         }
     }
     return R01_CHR_OK;

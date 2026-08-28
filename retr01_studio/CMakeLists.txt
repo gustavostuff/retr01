@@ -33,12 +33,20 @@ set_tests_properties(core PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DI
 add_library(retr01_studio_app
   app/src/app_shell.c
   app/src/ui.c
+  app/src/ui_primitives.c
+  app/src/ui_layout.c
+  app/src/ui_pal_edit.c
+  app/src/ui_menu.c
+  app/src/ui_screen.c
+  app/src/ui_tile_edit.c
+  app/src/ui_draw.c
+  app/src/ui_input.c
   app/src/font.c
 )
 target_include_directories(retr01_studio_app PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/app/src
 )
-target_link_libraries(retr01_studio_app PUBLIC retr01_studio_core PkgConfig::SDL2 PkgConfig::FREETYPE)
+target_link_libraries(retr01_studio_app PUBLIC retr01_studio_core PkgConfig::SDL2 PkgConfig::FREETYPE PkgConfig::LIBPNG)
 target_compile_definitions(retr01_studio_app PRIVATE
   "R01_STUDIO_ASSETS_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/assets\"")
 

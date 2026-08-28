@@ -201,6 +201,7 @@ static void set_err(char *err_buf, size_t err_cap, const char *msg) {
 int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, size_t err_cap) {
     FILE *f;
     const R01World *w;
+    int wi;
     int i;
     int wrote = 0;
     if (!p || !path) {
@@ -210,11 +211,11 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
     if (r01_path_ensure_parent(path, err_buf, err_cap) != 0) {
         return -1;
     }
-    w = &p->worlds[0];
-    if (r01_chr_pack_world_bank0(w) != R01_CHR_OK) {
-        set_err(err_buf, err_cap, "chr pack failed");
-        return -1;
+    wi = p->active_world;
+    if (wi < 0 || wi >= R01_MAX_WORLDS) {
+        wi = 0;
     }
+    w = &p->worlds[wi];
     f = fopen(path, "w");
     if (!f) {
         set_err(err_buf, err_cap, "cannot write json");
@@ -227,6 +228,7 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
     fprintf(f, "  \"active_world\": %d,\n", p->active_world);
     fprintf(f, "  \"active_screen\": %d,\n", p->active_screen);
     fprintf(f, "  \"default_screen\": %d,\n", w->default_screen);
+    fprintf(f, "  \"default_pal_row\": %d,\n", w->default_pal_row);
     fprintf(f, "  \"grid_cols\": %d,\n", w->grid_cols);
     fprintf(f, "  \"grid_rows\": %d,\n", w->grid_rows);
     fprintf(f, "  \"global_pal_bg\": [");
@@ -469,6 +471,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
     int default_world = 0;
     int active_world = 0;
     int default_screen = -1;
+    int default_pal_row = 0;
     int grid_cols = R01_DEFAULT_GRID;
     int grid_rows = R01_DEFAULT_GRID;
 
@@ -509,6 +512,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
     json_int_after(buf, "\"active_world\"", &active_world);
     json_int_after(buf, "\"active_screen\"", &active);
     json_int_after(buf, "\"default_screen\"", &default_screen);
+    json_int_after(buf, "\"default_pal_row\"", &default_pal_row);
     json_int_after(buf, "\"grid_cols\"", &grid_cols);
     json_int_after(buf, "\"grid_rows\"", &grid_rows);
     if (grid_cols >= 1 && grid_cols <= R01_GRID_MAX && grid_rows >= 1 && grid_rows <= R01_GRID_MAX) {
@@ -524,14 +528,6 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
         p->active_screen = active;
     }
     {
-        R01World *w0 = r01_project_world0(p);
-        if (default_screen >= 0 && default_screen < w0->screen_count && w0->screens[default_screen].present) {
-            w0->default_screen = default_screen;
-        } else {
-            r01_world_sync_default_screen(w0);
-        }
-    }
-    {
         int nbg = load_palette_plane(buf, "\"global_pal_bg\"", p->global_pal_bg);
         int nspr = load_palette_plane(buf, "\"global_pal_spr\"", p->global_pal_spr);
         (void)nbg;
@@ -540,94 +536,117 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
     }
 
     section = json_find(buf, "\"screens\"");
-    if (section) {
-        R01World *w = r01_project_world0(p);
-        obj = strchr(section, '{');
-        while (obj && obj < buf + sz) {
-            const char *end = strchr(obj, '}');
-            size_t olen;
-            char *slice;
-            int col = 0, row = 0, present = 1, si;
-            int has_present = 0;
-            R01Screen *s;
-            if (!end) {
-                break;
-            }
-            olen = (size_t)(end - obj + 1);
-            slice = (char *)malloc(olen + 1u);
-            if (!slice) {
-                break;
-            }
-            memcpy(slice, obj, olen);
-            slice[olen] = '\0';
-            json_int_after(slice, "\"col\"", &col);
-            json_int_after(slice, "\"row\"", &row);
-            has_present = json_int_after(slice, "\"present\"", &present);
-            si = r01_world_screen_index(w, col, row);
-            if (si < 0) {
+    {
+        int tilemaps_loaded = 0;
+        if (section) {
+            R01World *w = r01_project_world0(p);
+            obj = strchr(section, '{');
+            while (obj && obj < buf + sz) {
+                const char *end = strchr(obj, '}');
+                size_t olen;
+                char *slice;
+                int col = 0, row = 0, present = 1, si;
+                int has_present = 0;
+                R01Screen *s;
+                if (!end) {
+                    break;
+                }
+                olen = (size_t)(end - obj + 1);
+                slice = (char *)malloc(olen + 1u);
+                if (!slice) {
+                    break;
+                }
+                memcpy(slice, obj, olen);
+                slice[olen] = '\0';
+                json_int_after(slice, "\"col\"", &col);
+                json_int_after(slice, "\"row\"", &row);
+                has_present = json_int_after(slice, "\"present\"", &present);
+                si = r01_world_screen_index(w, col, row);
+                if (si < 0) {
+                    free(slice);
+                    obj = strchr(end + 1, '{');
+                    continue;
+                }
+                s = &w->screens[si];
+                s->present = 1;
+                if (has_present && !present) {
+                    s->present = 0;
+                }
+                if (load_screen_field(slice, "\"pixels_b64\"", "\"pixels_rle_hex\"", "\"pixels_hex\"", s->pixels,
+                                      sizeof(s->pixels)) != 0) {
+                    free(slice);
+                    free(buf);
+                    set_err(err_buf, err_cap, "screen decode failed");
+                    return -1;
+                }
+                if (load_screen_field(slice, "\"tiles_b64\"", "\"tiles_rle_hex\"", "\"tiles_hex\"", s->tiles,
+                                      sizeof(s->tiles)) != 0 ||
+                    load_screen_field(slice, "\"attrs_b64\"", "\"attrs_rle_hex\"", "\"attrs_hex\"", s->attrs,
+                                      sizeof(s->attrs)) != 0) {
+                    free(slice);
+                    free(buf);
+                    set_err(err_buf, err_cap, "screen decode failed");
+                    return -1;
+                }
+                if (json_find(slice, "\"tiles_b64\"")) {
+                    tilemaps_loaded = 1;
+                }
                 free(slice);
                 obj = strchr(end + 1, '{');
-                continue;
             }
-            s = &w->screens[si];
-            s->present = 1;
-            if (has_present && !present) {
-                s->present = 0;
+        }
+
+        {
+            R01World *w = r01_project_world0(p);
+            int bank_tiles = 0;
+            int bank_loaded = 0;
+            char *bank_b64 = json_string_field_dup(buf, "\"bg_bank0_b64\"");
+            json_int_after(buf, "\"bg_bank0_tiles\"", &bank_tiles);
+            if (bank_b64 && bank_tiles > 0 && bank_tiles <= R01_TILES_PER_BANK) {
+                size_t bin_len = 0;
+                size_t expect = (size_t)bank_tiles * R01_TILE_BYTES;
+                uint8_t *bin = decode_b64(bank_b64, &bin_len);
+                if (bin && bin_len == expect) {
+                    memset(w->bg_banks[0].chr, 0, R01_BANK_CHR_BYTES);
+                    memcpy(w->bg_banks[0].chr, bin, expect);
+                    w->bg_banks[0].tile_count = bank_tiles;
+                    bank_loaded = 1;
+                }
+                free(bin);
             }
-            if (load_screen_field(slice, "\"pixels_b64\"", "\"pixels_rle_hex\"", "\"pixels_hex\"", s->pixels,
-                                  sizeof(s->pixels)) != 0) {
-                free(slice);
-                free(buf);
-                set_err(err_buf, err_cap, "screen decode failed");
-                return -1;
+            free(bank_b64);
+            if (bank_loaded) {
+                int si;
+                for (si = 0; si < w->screen_count; si++) {
+                    R01Screen *s = &w->screens[si];
+                    if (s->present) {
+                        r01_screen_fill_pixels_from_bank(w, s);
+                    }
+                }
+            } else if (!tilemaps_loaded) {
+                r01_chr_pack_world_bank0(w);
             }
-            if (load_screen_field(slice, "\"tiles_b64\"", "\"tiles_rle_hex\"", "\"tiles_hex\"", s->tiles,
-                                  sizeof(s->tiles)) != 0 ||
-                load_screen_field(slice, "\"attrs_b64\"", "\"attrs_rle_hex\"", "\"attrs_hex\"", s->attrs,
-                                  sizeof(s->attrs)) != 0) {
-                free(slice);
-                free(buf);
-                set_err(err_buf, err_cap, "screen decode failed");
-                return -1;
-            }
-            free(slice);
-            obj = strchr(end + 1, '{');
         }
     }
 
     {
-        R01World *w = r01_project_world0(p);
-        int bank_tiles = 0;
-        int bank_loaded = 0;
-        char *bank_b64 = json_string_field_dup(buf, "\"bg_bank0_b64\"");
-        json_int_after(buf, "\"bg_bank0_tiles\"", &bank_tiles);
-        if (bank_b64 && bank_tiles > 0 && bank_tiles <= R01_TILES_PER_BANK) {
-            size_t bin_len = 0;
-            size_t expect = (size_t)bank_tiles * R01_TILE_BYTES;
-            uint8_t *bin = decode_b64(bank_b64, &bin_len);
-            if (bin && bin_len == expect) {
-                memset(w->bg_banks[0].chr, 0, R01_BANK_CHR_BYTES);
-                memcpy(w->bg_banks[0].chr, bin, expect);
-                w->bg_banks[0].tile_count = bank_tiles;
-                bank_loaded = 1;
-            }
-            free(bin);
-        }
-        free(bank_b64);
-        if (bank_loaded) {
-            int si;
-            for (si = 0; si < w->screen_count; si++) {
-                R01Screen *s = &w->screens[si];
-                if (s->present) {
-                    r01_screen_fill_pixels_from_bank(w, s);
-                }
-            }
+        R01World *w0 = r01_project_world0(p);
+        if (default_screen >= 0 && default_screen < w0->screen_count && w0->screens[default_screen].present) {
+            w0->default_screen = default_screen;
         } else {
-            r01_chr_pack_world_bank0(w);
+            r01_world_sync_default_screen(w0);
+        }
+        if (default_pal_row >= 0 && default_pal_row < R01_PAL_ROWS) {
+            w0->default_pal_row = default_pal_row;
         }
     }
 
-    r01_project_select_start_screen(p);
+    if (active >= 0 && active < r01_project_world0(p)->screen_count &&
+        r01_project_world0(p)->screens[active].present) {
+        p->active_screen = active;
+    } else {
+        r01_project_select_start_screen(p);
+    }
     free(buf);
     return 0;
 }
