@@ -68,6 +68,7 @@
 
 #define UI_DRAG_SPRITES 0
 #define UI_DRAG_HITBOX 1
+#define UI_DRAG_PAINT 2
 
 #define UI_CATALOG_DRAG_SPRITE 1
 #define UI_CATALOG_DRAG_ENTITY 2
@@ -177,8 +178,9 @@ typedef struct UiEntityEdit {
     int bank;       /* left picker bank 0..3 */
     int state;      /* 0..3; UI locks to 0 for now */
     int frame;      /* 0..3 */
-    int drag_mode;  /* UI_DRAG_SPRITES or UI_DRAG_HITBOX */
+    int drag_mode;  /* UI_DRAG_SPRITES, UI_DRAG_HITBOX, or UI_DRAG_PAINT */
     int sel_part;   /* -1 or index in current frame */
+    int paint_color; /* 0..3 when paint mode */
     int dragging;   /* 0 none, 1 part, 2 hitbox, 3 origin, 4 bank-sprite ghost */
     int drag_tile;  /* tile id when dragging from bank */
     int drag_off_x;

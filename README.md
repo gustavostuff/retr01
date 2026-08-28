@@ -41,20 +41,20 @@ Thin wrappers at the repo root forward to [`scripts/`](scripts/):
 
 | Script | Usage |
 |--------|--------|
-| [`run-studio`](run-studio) | `./run-studio rom/test.r01proj` |
-| [`run-emu`](run-emu) | `./run-emu rom/test.retr01` |
-| [`run-sim`](run-sim) | `./run-sim rom/test.retr01` |
-| [`run-unit-tests`](run-unit-tests) | build + ctest for Studio, Emu, and Sim |
+| [`studio`](studio) | `./studio rom/test.r01proj` |
+| [`emu`](emu) | `./emu rom/test.retr01` |
+| [`sim`](sim) | `./sim rom/test.retr01` |
+| [`unit-tests`](unit-tests) | build + ctest for Studio, Emu, and Sim |
 | [`export-rom`](export-rom) | `./export-rom [project.r01proj] [stem]` |
 | [`build-all`](build-all) | Release builds → `release/retr01_{studio,emu,sim}` |
 
 ```bash
 ./build-all
-./run-unit-tests
-./run-studio rom/test.r01proj
+./unit-tests
+./studio rom/test.r01proj
 ./export-rom rom/test.r01proj
-./run-emu rom/test.retr01
-./run-sim rom/test.retr01
+./emu rom/test.retr01
+./sim rom/test.retr01
 ```
 
 **ROM output:** Studio **Ctrl+E** (or `./export-rom`) writes cart images under [`rom/`](rom/) at the repo root.

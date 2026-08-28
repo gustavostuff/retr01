@@ -156,23 +156,24 @@ void draw_dot_strip(SDL_Renderer *r, int x, int y, int count, int selected, int 
         int unlocked = (unlocked_count < 0) || (i < unlocked_count);
         int on = (i == selected) && unlocked;
         int px, py;
-        Uint8 cr = unlocked ? (on ? UI_COL_ACTIVE_R : 200) : 80;
-        Uint8 cg = unlocked ? (on ? UI_COL_ACTIVE_G : 200) : 80;
-        Uint8 cb = unlocked ? (on ? UI_COL_ACTIVE_B : 200) : 80;
+        /* 8x8 slot BG: Play green when selected, darkest panel gray otherwise. */
+        if (on) {
+            fill_rect(r, dx, y, UI_DOT_SIZE, UI_DOT_SIZE, UI_COL_ACTIVE_R, UI_COL_ACTIVE_G, UI_COL_ACTIVE_B);
+        } else {
+            fill_rect(r, dx, y, UI_DOT_SIZE, UI_DOT_SIZE, UI_COL_PANEL_R, UI_COL_PANEL_G, UI_COL_PANEL_B);
+        }
+        /* Dot glyph painted as-is from ui_dot.png (alpha). */
         if (g_dot_rgba && g_dot_w == UI_DOT_SIZE && g_dot_h == UI_DOT_SIZE) {
             for (py = 0; py < UI_DOT_SIZE; py++) {
                 for (px = 0; px < UI_DOT_SIZE; px++) {
                     const uint8_t *p = &g_dot_rgba[(py * g_dot_w + px) * 4u];
                     if (p[3] > 128) {
-                        fill_rect(r, dx + px, y + py, 1, 1, cr, cg, cb);
+                        fill_rect(r, dx + px, y + py, 1, 1, p[0], p[1], p[2]);
                     }
                 }
             }
         } else {
-            fill_rect(r, dx + 2, y + 2, 4, 4, cr, cg, cb);
-        }
-        if (on) {
-            fill_rect(r, dx + 3, y + 3, 2, 2, 240, 240, 240);
+            fill_rect(r, dx + 2, y + 2, 4, 4, 240, 240, 240);
         }
     }
 }

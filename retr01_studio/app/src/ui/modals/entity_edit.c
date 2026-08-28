@@ -32,6 +32,7 @@ void entity_edit_open_new(UiState *ui) {
     ui->entity_edit.frame = 0;
     ui->entity_edit.drag_mode = UI_DRAG_SPRITES;
     ui->entity_edit.sel_part = -1;
+    ui->entity_edit.paint_color = 1;
     ui->entity_edit.states_unlocked = 0; /* only state 0 */
     ui->entity_edit.name_focus = 0;
 }
@@ -55,6 +56,7 @@ void entity_edit_open(UiState *ui, int type_idx) {
     ui->entity_edit.frame = 0;
     ui->entity_edit.drag_mode = UI_DRAG_SPRITES;
     ui->entity_edit.sel_part = -1;
+    ui->entity_edit.paint_color = 1;
     ui->entity_edit.states_unlocked = 0;
     ui->entity_edit.name_focus = 0;
 }
@@ -218,8 +220,16 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
     st = edit_state(ui);
     fr = edit_frame(ui);
     if (fr) {
+        int sel = ui->entity_edit.sel_part;
+        /* Draw non-selected first; selected last so it sits on top (z-order). */
         for (i = 0; i < fr->part_count; i++) {
-            draw_part(ui, r, &fr->parts[i], lo.right_grid_x, lo.right_grid_y, 8, i == ui->entity_edit.sel_part);
+            if (i == sel) {
+                continue;
+            }
+            draw_part(ui, r, &fr->parts[i], lo.right_grid_x, lo.right_grid_y, 8, 0);
+        }
+        if (sel >= 0 && sel < fr->part_count) {
+            draw_part(ui, r, &fr->parts[sel], lo.right_grid_x, lo.right_grid_y, 8, 1);
         }
     }
     if (st) {
@@ -243,10 +253,14 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
         int ry = lo.radio_y;
         int sel0 = ui->entity_edit.drag_mode == UI_DRAG_SPRITES;
         int sel1 = ui->entity_edit.drag_mode == UI_DRAG_HITBOX;
+        int sel2 = ui->entity_edit.drag_mode == UI_DRAG_PAINT;
         draw_radio_sprite(r, lo.radio_x, ry + 4, sel0);
         font_draw(r, lo.radio_x + UI_MODE_RADIO + UI_MODE_GAP, ry + 4, "Drag sprites", 230, 230, 230);
         draw_radio_sprite(r, lo.radio_x, ry + UI_BTN_H + 4, sel1);
         font_draw(r, lo.radio_x + UI_MODE_RADIO + UI_MODE_GAP, ry + UI_BTN_H + 4, "Drag hitbox/x,y", 230, 230,
+                  230);
+        draw_radio_sprite(r, lo.radio_x, ry + UI_BTN_H * 2 + 4, sel2);
+        font_draw(r, lo.radio_x + UI_MODE_RADIO + UI_MODE_GAP, ry + UI_BTN_H * 2 + 4, "Paint sprites", 230, 230,
                   230);
         (void)w;
     }
@@ -281,10 +295,17 @@ static int clamp_origin(int v) {
     return v;
 }
 
-static int part_at(const R01EntityFrame *fr, int px, int py) {
+static int part_at(const R01EntityFrame *fr, int px, int py, int prefer_sel) {
     int i;
     if (!fr) {
         return -1;
+    }
+    /* Prefer selected part when overlapping so selection matches visual z-order. */
+    if (prefer_sel >= 0 && prefer_sel < fr->part_count) {
+        const R01EntityPart *pt = &fr->parts[prefer_sel];
+        if (px >= pt->dx && px < pt->dx + 8 && py >= pt->dy && py < pt->dy + 8) {
+            return prefer_sel;
+        }
     }
     for (i = fr->part_count - 1; i >= 0; i--) {
         const R01EntityPart *pt = &fr->parts[i];
@@ -293,6 +314,48 @@ static int part_at(const R01EntityFrame *fr, int px, int py) {
         }
     }
     return -1;
+}
+
+/* Paint one compose pixel into the selected part's SPR CHR (respecting flips). */
+static void paint_selected_part(UiState *ui, int cx, int cy) {
+    R01World *w;
+    R01EntityFrame *fr;
+    R01EntityPart *pt;
+    const uint8_t *src;
+    uint8_t tile[R01_TILE_BYTES];
+    int lx, ly;
+    int sel;
+    if (!ui) {
+        return;
+    }
+    fr = edit_frame(ui);
+    sel = ui->entity_edit.sel_part;
+    if (!fr || sel < 0 || sel >= fr->part_count) {
+        return;
+    }
+    pt = &fr->parts[sel];
+    if (cx < pt->dx || cx >= pt->dx + 8 || cy < pt->dy || cy >= pt->dy + 8) {
+        return;
+    }
+    w = r01_project_active_world(ui->project);
+    if (!w) {
+        return;
+    }
+    src = r01_chr_spr_tile(w, pt->bank, pt->tile_id);
+    if (!src) {
+        return;
+    }
+    memcpy(tile, src, R01_TILE_BYTES);
+    lx = cx - pt->dx;
+    ly = cy - pt->dy;
+    if (pt->flip_h) {
+        lx = 7 - lx;
+    }
+    if (pt->flip_v) {
+        ly = 7 - ly;
+    }
+    r01_tile_set_pixel(tile, lx, ly, (uint8_t)(ui->entity_edit.paint_color & 3));
+    (void)r01_chr_write_spr_tile(w, pt->bank, pt->tile_id, tile);
 }
 
 int entity_modal_handle(UiState *ui, int lx, int ly, int down) {
@@ -382,6 +445,10 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down) {
         ui->entity_edit.drag_mode = UI_DRAG_HITBOX;
         return 1;
     }
+    if (point_in_rect(lx, ly, lo.radio_x, lo.radio_y + UI_BTN_H * 2, UI_UNIT * 20, UI_BTN_H)) {
+        ui->entity_edit.drag_mode = UI_DRAG_PAINT;
+        return 1;
+    }
 
     if (point_in_rect(lx, ly, lo.left_grid_x, lo.btn_y, lo.save_w, UI_BTN_H)) {
         entity_edit_save(ui);
@@ -422,8 +489,21 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down) {
                 ui->entity_edit.drag_off_y = cy - st->hitbox_y;
                 return 1;
             }
+        } else if (ui->entity_edit.drag_mode == UI_DRAG_PAINT && fr) {
+            idx = part_at(fr, cx, cy, ui->entity_edit.sel_part);
+            if (idx >= 0) {
+                if (idx != ui->entity_edit.sel_part) {
+                    /* Click another part: select only (no paint on this down). */
+                    ui->entity_edit.sel_part = idx;
+                    return 1;
+                }
+                paint_selected_part(ui, cx, cy);
+                ui->entity_edit.dragging = 5;
+                return 1;
+            }
+            ui->entity_edit.sel_part = -1;
         } else if (fr) {
-            idx = part_at(fr, cx, cy);
+            idx = part_at(fr, cx, cy, ui->entity_edit.sel_part);
             if (idx >= 0) {
                 ui->entity_edit.sel_part = idx;
                 ui->entity_edit.dragging = 1;
@@ -448,9 +528,14 @@ void entity_modal_drag(UiState *ui, int lx, int ly) {
     entity_modal_layout(&lo);
     st = edit_state(ui);
     fr = edit_frame(ui);
-    if (ui->entity_edit.dragging == 1 && fr && ui->entity_edit.sel_part >= 0 &&
-        ui->entity_edit.sel_part < fr->part_count &&
+    if (ui->entity_edit.dragging == 5 &&
         point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
+        int cx = (lx - lo.right_grid_x) / 8;
+        int cy = (ly - lo.right_grid_y) / 8;
+        paint_selected_part(ui, cx, cy);
+    } else if (ui->entity_edit.dragging == 1 && fr && ui->entity_edit.sel_part >= 0 &&
+               ui->entity_edit.sel_part < fr->part_count &&
+               point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
         int cx = (lx - lo.right_grid_x) / 8;
         int cy = (ly - lo.right_grid_y) / 8;
         fr->parts[ui->entity_edit.sel_part].dx = clamp_compose(cx - ui->entity_edit.drag_off_x);
@@ -495,6 +580,10 @@ void entity_modal_key(UiState *ui, SDL_Keycode sym) {
             st->name[len + 1] = '\0';
             return;
         }
+        return;
+    }
+    if (ui->entity_edit.drag_mode == UI_DRAG_PAINT && sym >= SDLK_1 && sym <= SDLK_4) {
+        ui->entity_edit.paint_color = (int)(sym - SDLK_1);
         return;
     }
     fr = edit_frame(ui);
