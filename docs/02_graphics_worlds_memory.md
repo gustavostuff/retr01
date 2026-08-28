@@ -115,7 +115,7 @@ Line N+1| fill N+1         |        | SHOW             |
 
 **Color PROM** (board): **64 master indices**, packed **`{RRRGGGBB}`** (R3 G3 B2) in **one** PROM/OTP chip, 1-dot pipeline ([`06`](06_hardware_v1_32ic.md)). Active buffer: **4 BG + 4 sprite** via `$FE08`/`$FE09` (indices held in packed HC573 / decode path on the 32-IC board, no separate palette RAM IC). Shared color 0. BG+sprite row index always locked together.
 
-**Cart storage:** **8 BG palette rows** + **8 sprite palette rows**. Each row is **4 palettes × 4 master indices = 16 B**. Totals: **128 B** BG + **128 B** sprite = **256 B**. Software selects a row (`$FE38` hint) and copies it into `$FE08`/`$FE09`.
+**Cart storage:** **8 BG palette rows** + **8 sprite palette rows**. Each row is **4 palettes x 4 master indices = 16 B**. Totals: **128 B** BG + **128 B** sprite = **256 B**. Software selects a row (`$FE38` hint) and copies it into `$FE08`/`$FE09`.
 
 Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio and burn tools **quantize** to R3G3B2 when building the PROM image ([`04`](04_retr01_studio.md)).
 
@@ -187,10 +187,10 @@ Boot: magic -> pointers -> world header -> screen dir / parallax dir -> `off_pay
 | Runner | MAP / pals into VRAM |
 |--------|----------------------|
 | **Studio export PRG** | Streams **one** pal row + **start screen** via `$FE93` -> `$FE08`/`$FE09`/`$FE12` |
-| **Emulator** | **Always** soft-boots world CHR/MAP/pals. Host Play. Main FB samples cart MAP when Play is on |
+| **Emulator** | Default: cart PRG pal+start MAP catchup into VRAM (`$FE93`->`$FE12`). Host Play handles camera/player/warps; `sync_camera` reloads a 2x2 workbench during Play. Opt-in host memcpy: `R01E_SOFTBOOT=1` |
 | **Board sim** | Default = IC stream from cart PRG. Softboot only if `R01S_SOFTBOOT=1` |
 
-Phase 1 does **not** stream full 2x2 camera seams. Triage ROM vs runner: [`08` - Cart ROM vs runners](08_simulator.md#cart-rom-vs-runners-triage).
+Phase 1 PRG boot streams **one** start screen only (no full 2x2 seam PRG yet). Host Play in emu/sim fills the 2x2 window during preview. Triage ROM vs runner: [`retr01_sim/README.md`](../retr01_sim/README.md#cart-rom-vs-runners-triage).
 
 ## CPU map and `$FExx`
 

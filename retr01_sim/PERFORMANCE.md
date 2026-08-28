@@ -16,10 +16,10 @@ Rule: new cost should be a **data-structure win** that does not change pin behav
 
 ## Landed (pin netlist)
 
-1. **Pin-name hash** — `r01s_entity_pin_hash_build` + lazy lookup in `r01s_entity_pin_named` (kills hot-path linear `strcmp` scans).
-2. **CPU bus from chip model** — `board_cpu_addr` / `board_cpu_read` / write-data sample use `r01s_w65c02s_ab` / `rwb` / `a` instead of re-reading 16+8 pins every wire pass.
+1. **Pin-name hash** - `r01s_entity_pin_hash_build` + lazy lookup in `r01s_entity_pin_named` (kills hot-path linear `strcmp` scans).
+2. **CPU bus from chip model** - `board_cpu_addr` / `board_cpu_read` / write-data sample use `r01s_w65c02s_ab` / `rwb` / `a` instead of re-reading 16+8 pins every wire pass.
 
-**Host Play** (pad tick, spawn/camera, OAM sprite shortcut, LCD hold bypass) runs after MAP catchup — it is a host preview scaffold, not silicon contract.
+**Host Play** (pad tick, spawn/camera, OAM sprite shortcut, LCD hold bypass) runs after MAP catchup - it is a host preview scaffold, not silicon contract.
 
 ## Next (not yet coded)
 
@@ -29,4 +29,4 @@ Rule: new cost should be a **data-structure win** that does not change pin behav
 - Master virtual tick for dual clock domains (PHI2 + DOT + 20 MHz AVR)
 - Debug net highlight / pin history (probe-time only)
 
-See [`docs/08_simulator.md`](../docs/08_simulator.md) § Optimization playbook.
+See [`README.md`](README.md) (Architecture summary).

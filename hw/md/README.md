@@ -2,7 +2,7 @@
 
 Keyboard-friendly notes for each motherboard IC: what it is, package/pins, speed and memory, retr01 role, pin behavior, and how it talks to the rest of the board. Written for **simulator authors** and island bring-up. Not a substitute for the vendor PDF.
 
-**PDFs:** parent folder [`hw/`](../). **Simulator goals:** [`docs/08_simulator.md`](../../docs/08_simulator.md).  
+**PDFs:** parent folder [`hw/`](../). **Simulator:** [`retr01_sim/README.md`](../../retr01_sim/README.md).  
 **PDIP body sizes (mm + sim px):** [`packages_dip.md`](packages_dip.md).
 
 ## Doc batches

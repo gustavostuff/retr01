@@ -17,13 +17,11 @@ Overall roadmap:
 
 The arcade board: something you can drop into a cabinet, wire to sticks and buttons, and run games that look and play like classic 8-bit tile/sprite games. A world model and CPU budget built for large designs.
 
-For the full product pitch and **NES comparison tables**, see [`docs/07_pitch.md`](docs/07_pitch.md).
-
 ## Why it exists
 
-Most retro projects either emulate the past exactly or leave the aesthetic behind. retr01 keeps the 8-bit look (8x8 tiles, 2bpp art, cartridge games) and redesigns the plumbing for easily navigable, multi-world games, multi-screen worlds, smoother scrolling and simple parallax integration, without VBlank-only nametable updates.
+Most retro projects either emulate the past exactly or leave the aesthetic behind. retr01 keeps the 8-bit look (8x8 tiles, 2bpp art, cartridge games) and redesigns the plumbing for multi-screen worlds, smoother scrolling, and simple parallax - without VBlank-only nametable updates. Studio supports multi-world **authoring** today; cart export is **world 0** only.
 
-Details and fair NES comparisons: [`docs/07_pitch.md`](docs/07_pitch.md).
+Technical specs: [`docs/01_architecture_overview.md`](docs/01_architecture_overview.md), [`docs/02_graphics_worlds_memory.md`](docs/02_graphics_worlds_memory.md).
 
 ## What you get (in plain terms)
 
@@ -31,7 +29,7 @@ Details and fair NES comparisons: [`docs/07_pitch.md`](docs/07_pitch.md).
 - **A bold but readable look:** limited color per tile/sprite on purpose, with clarity over mush
 - **Big cartridge worlds:** up to **8 worlds**, **32 screens** each, on a **512 KB** cart
 - **Chunky 128x120** playfields (**16x15** tiles) with board **2x** into a **256x240** RGBS raster (fills CRT, no letterbox)
-- **Smooth multi-screen scrolling:** cameras that cross screen borders using a 2x2 live nametable window (see pitch doc)
+- **Smooth multi-screen scrolling:** cameras that cross screen borders using a 2x2 live nametable window (see [`docs/02`](docs/02_graphics_worlds_memory.md))
 - **retr01 Studio:** visual tool to author worlds and export `.retr01` cart images
 
 Later editions (console and handheld) share the same soul: one architecture, different shells.
@@ -49,6 +47,7 @@ Later editions (console and handheld) share the same soul: one architecture, dif
 scripts/run-unit-tests
 scripts/run-studio rom/test.r01proj
 scripts/run-emu rom/test.retr01
+scripts/run-sim rom/test.retr01
 ```
 
 **ROM output:** Studio **Ctrl+E** writes cart images under [`rom/`](rom/) at the repo root.

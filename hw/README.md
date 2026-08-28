@@ -2,7 +2,7 @@
 
 Official / vendor datasheets for retr01-A. These are reference PDFs (pinouts, AC timing, package drawings). They are **not** retr01 schematics.
 
-**Markdown IC notes (sim / bring-up):** [`md/`](md/) - start with [`md/README.md`](md/README.md). Current BOM: [`../docs/06_hardware_v1_32ic.md`](../docs/06_hardware_v1_32ic.md). Simulator: [`../docs/08_simulator.md`](../docs/08_simulator.md).
+**Markdown IC notes (sim / bring-up):** [`md/`](md/) - start with [`md/README.md`](md/README.md). Current BOM: [`../docs/06_hardware_v1_32ic.md`](../docs/06_hardware_v1_32ic.md). Simulator: [`../retr01_sim/README.md`](../retr01_sim/README.md).
 
 Swap / alternate parts live in [`candidates/`](candidates/).
 

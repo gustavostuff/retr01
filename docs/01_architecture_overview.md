@@ -10,14 +10,14 @@ When docs disagree, use this order.
 | Locked decisions + open questions | [`05`](05_costs_and_open_questions.md) | Does not replace `02` for register text |
 | retr01-A **HW BOM** (current) | [`06`](06_hardware_v1_32ic.md) | **32 IC** system. Does not invent `$FExx` |
 | Protoboard island bring-up | [`03`](03_hardware_implementation.md) | Bench checklist for the **32 IC** netlist |
-| Studio Phase 1 (product) | [`retr01_studio/README.md`](../retr01_studio/README.md) | Authoring + Play + export. Short mirror: [`04`](04_retr01_studio.md) |
+| Studio Phase 2 (product) | [`retr01_studio/README.md`](../retr01_studio/README.md) | Authoring + Play + export. Short mirror: [`04`](04_retr01_studio.md) |
 | Emulator Phase 1 | [`retr01_emu/README.md`](../retr01_emu/README.md) | Soft cart runtime matching Studio Play |
-| Audio / APU protocol | [`09`](09_audio_architecture.md) | 6502 sequencer + 328P mixer; `$FE4x` bus bridge |
-| Board IC simulator | [`08`](08_simulator.md) + [`retr01_sim/README.md`](../retr01_sim/README.md) | Pin/netlist models of the 32-IC BOM |
-| Studio game modules (movement, camera, entities, collision budgets) | [`10`](10_game_modules.md) | Attachable gameplay profiles. Studio phases implement subsets later |
+| Audio / APU protocol | [`07`](07_audio_architecture.md) | 6502 sequencer + 328P mixer; `$FE4x` bus bridge |
+| Board IC simulator | [`retr01_sim/README.md`](../retr01_sim/README.md) | Pin/netlist models of the 32-IC BOM |
+| Studio game modules (movement, camera, entities, collision budgets) | [`08`](08_game_modules.md) | Attachable gameplay profiles. Studio phases implement subsets later |
 | IC pin/behavior detail | [`hw/md/`](../hw/md/) + datasheet PDFs | Sim and schematics |
 
-**Current product board:** [`06`](06_hardware_v1_32ic.md) — **32 ICs**, ~**12×12 cm** 4-layer THT (chip roles and netlist there).
+**Current product board:** [`06`](06_hardware_v1_32ic.md) - **32 ICs**, ~**12x12 cm** 4-layer THT (chip roles and netlist there).
 
 This folder is the current architecture spec for **retr01**.
 
@@ -55,8 +55,8 @@ retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 | **Sprite bank (runtime)** | Per **OAM entry**: attr bits select CHR sprite bank **0-3** |
 | **BG bank helper** | Optional `$FE31`-`$FE36` bulk stamp into slot attrs. Not the live fetch source |
 | **Sprite bank helper** | Optional `$FE37` bulk stamp into OAM attrs. Not the live fetch source |
-| **Global BG palettes** | Cart-wide store of **32 BG palettes** (**8 palette rows × 4 palettes**) |
-| **Global sprite palettes** | Cart-wide store of **32 sprite palettes** (**8 palette rows × 4 palettes**) |
+| **Global BG palettes** | Cart-wide store of **32 BG palettes** (**8 palette rows x 4 palettes**) |
+| **Global sprite palettes** | Cart-wide store of **32 sprite palettes** (**8 palette rows x 4 palettes**) |
 | **Palette row** | **4 palettes** in one plane, index **0-7**. BG row N and sprite row N are selected together |
 | **Palette** | One 4-color set (**4 master indices** into the Color PROM) |
 | **Active palette buffer** | **8 palettes** on screen: **4 BG + 4 sprite** from the currently selected palette row |
@@ -132,4 +132,17 @@ Current chip list: [`06`](06_hardware_v1_32ic.md) (**32 IC**). Roles:
 
 ## Near-term software focus
 
-**retr01 Studio** (Phase 2 authoring) and **retr01 Emulator** (Phase 1 cart runtime) are the active tools — see [`retr01_studio/README.md`](../retr01_studio/README.md) and [`retr01_emu/README.md`](../retr01_emu/README.md). **Board IC simulator** ([`08`](08_simulator.md) / [`retr01_sim/`](../retr01_sim/)) validates the 32-IC netlist. Use the **sources of truth** table at the top for everything else.
+**retr01 Studio** (Phase 2 authoring) and **retr01 Emulator** (Phase 1 cart runtime) are the active tools - see [`retr01_studio/README.md`](../retr01_studio/README.md) and [`retr01_emu/README.md`](../retr01_emu/README.md). **Board IC simulator** ([`retr01_sim/`](../retr01_sim/)) validates the 32-IC netlist.
+
+## Doc index (`docs/`)
+
+| # | File | Topic |
+|---|------|--------|
+| 01 | `01_architecture_overview.md` | This file - sources of truth, terminology |
+| 02 | `02_graphics_worlds_memory.md` | Software SoT: VRAM, cart, `$FExx` |
+| 03 | `03_hardware_implementation.md` | Protoboard island bring-up |
+| 04 | `04_retr01_studio.md` | Studio stub (product SoT: component README) |
+| 05 | `05_costs_and_open_questions.md` | Locked decisions, open questions |
+| 06 | `06_hardware_v1_32ic.md` | 32-IC BOM |
+| 07 | `07_audio_architecture.md` | APU / bytecode |
+| 08 | `08_game_modules.md` | Game module contract + budgets |

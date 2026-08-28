@@ -142,7 +142,7 @@ Parallel: develop **K** and **L** in sim while breadboarding **A-I**. Merge at *
 | **K** APU 328P | K |
 | **L** 1284+LINEBUF | L + M (N/P stay wired/stats) |
 
-Not drawn as frames (still in the netlist / health milestones): **E** pads, **F** EEPROM (deferred), **I** BG fetch, **N** sprites, **P** integration. Details: [`08`](08_simulator.md), [`retr01_sim/README.md`](../retr01_sim/README.md).
+Not drawn as frames (still in the netlist / health milestones): **E** pads, **F** EEPROM (deferred), **I** BG fetch, **N** sprites, **P** integration. Details: [`retr01_sim/README.md`](../retr01_sim/README.md).
 
 | Port | Island | Smoke check |
 |------|--------|-------------|

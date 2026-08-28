@@ -105,6 +105,6 @@ Avoid holding `board_mu` across a full `r01s_ui_draw` while the worker is steppi
 4. Wall time is on the order of **~10-15 s** (~1 ms/step x ~12k steps on a typical machine).
 5. Side effect: CPU PC, latches, PHI2 edges, beam position, and partial LCD samples advance for real during the stream.
 
-`R01S_SOFTBOOT=1` is an alternate path (host softboot + some steps) for triage only — not the default cart PRG execution model.
+`R01S_SOFTBOOT=1` is an alternate path (host softboot + some steps) for triage only - not the default cart PRG execution model.
 
-See also: [`README.md`](README.md), [`docs/08_simulator.md`](../docs/08_simulator.md), [`PERFORMANCE.md`](PERFORMANCE.md).
+See also: [`README.md`](README.md), [`PERFORMANCE.md`](PERFORMANCE.md).

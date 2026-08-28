@@ -60,9 +60,9 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Dot clock | **5.369318 MHz** |
 | Raster | scanline compare + IRQ |
 | APU | separate **ATmega328P** (`$FE40-$FE5F`) |
-| Near-term software | **retr01 Studio Phase 1** + **Emulator Phase 1** + board sim ([`04`](04_retr01_studio.md), studio/emu/sim READMEs, [`08`](08_simulator.md)) |
-| Studio project files | **JSON** (current schema **v4** in Studio Phase 1) |
-| Validation tools | board IC simulator ([`08`](08_simulator.md)). Software emu ([`retr01_emu/`](../retr01_emu/)) |
+| Near-term software | **retr01 Studio Phase 2** + **Emulator Phase 1** + board sim (studio/emu/sim READMEs) |
+| Studio project files | **JSON v4** (one world's map/CHR per save; see Studio README) |
+| Validation tools | board IC simulator ([`retr01_sim/README.md`](../retr01_sim/README.md)). Software emu ([`retr01_emu/`](../retr01_emu/)) |
 
 ## Cost snapshot
 
@@ -108,6 +108,6 @@ Flash + I2C save on cart PCB. Motherboard + cart proto still targets roughly the
 ## Practical next decisions
 
 1. tune RGBS on real hardware (Q2)
-2. Studio game modules / later phases ([`10`](10_game_modules.md))
+2. Studio game modules / later phases ([`08`](08_game_modules.md))
 3. freeze save/mailbox APIs + HC573 bitfields (Q20, Q21). Confirm PROM part (Q15)
 4. flesh out ATtiny85 poll timing when retr01-C work starts (Q13)

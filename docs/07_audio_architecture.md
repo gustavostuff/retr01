@@ -204,7 +204,7 @@ The sequencer is driven entirely by the W65C02S **NMI** (~60x/s). **BGM** and **
 |-------|--------|
 | Design (this doc) | 8-ch mixer, DPCM-in-AVR-flash, semantic hex + NMI dual tracker |
 | HW BOM | 328P + `$FE40`-`$FE5F` + CPU HC245 domain |
-| Board sim | Island **K** stub: period/vol **PWM square** smoke - not full mixer/DPCM yet ([`08`](08_simulator.md)) |
+| Board sim | Island **K** stub: period/vol **PWM square** smoke - not full mixer/DPCM yet ([`retr01_sim/README.md`](../retr01_sim/README.md)) |
 
 ---
 
@@ -212,5 +212,6 @@ The sequencer is driven entirely by the W65C02S **NMI** (~60x/s). **BGM** and **
 
 - Memory map / `$FExx`: [`02`](02_graphics_worlds_memory.md)
 - 32-IC BOM / APU path: [`06`](06_hardware_v1_32ic.md)
+- Game module budgets: [`08`](08_game_modules.md)
 - 328P chip notes: [`hw/md/ATmega328P.md`](../hw/md/ATmega328P.md)
 - Overview index: [`01`](01_architecture_overview.md)

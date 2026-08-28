@@ -20,6 +20,10 @@ Later emulator phases are **not** specified here; they will be defined when work
 
 **Sync contract:** Studio Play (`play.c`) is the source of truth for motion. Export packs present screens + play table (`$8100`) + `R01P`. Soft-boot (`R01E_SOFTBOOT=1`) keeps the old host memcpy boot path for triage. Default boot runs cart PRG stream catchup like sim.
 
+**Collision:** Host Play reads **cart MAP attrs** (`R01_ATTR_SOLID`). PRG collision stub at `$8500` is packed for future 6502 use, not used by host movement today.
+
+**Runtime:** World **0** only (`R01E_PHASE1_WORLDS=1`).
+
 ## Build / run
 
 ```bash
@@ -37,7 +41,7 @@ cmake --build build
 
 **Env:** `R01E_SOFTBOOT=1` -- host memcpy VRAM/pals at boot (debug). Default runs cart PRG MAP/pal stream catchup.
 
-**Debug window:** VRAM 2x2 workbench (256x240, red = viewport, player via OAM) beside a world map (blue = present, gold = current screen). Active **BG** and **SPR** palette rows along the bottom of that row. Below: **CPU busy** chart (2 samples/s, 20 bars) -- cyan = busy cycles in active display, orange = busy in VBlank (excludes `$FE01` VBlank-wait spins). Red line = soft max **50k** cycles/frame (`docs/10`).
+**Debug window:** VRAM 2x2 workbench (256x240, red = viewport, player via OAM) beside a world map (blue = present, gold = current screen). Active **BG** and **SPR** palette rows along the bottom of that row. Below: **CPU busy** chart (2 samples/s, 20 bars) -- cyan = busy cycles in active display, orange = busy in VBlank (excludes `$FE01` VBlank-wait spins). Red line = soft max **50k** cycles/frame (`R01E_CPU_BUDGET_CYCLES`; see [`docs/08`](../docs/08_game_modules.md) for design budgets).
 
 ## Layout
 
