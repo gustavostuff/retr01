@@ -291,10 +291,12 @@ Two authoring patterns (may combine):
   BG boss (example)
   +---------------------------+  workbench / scrolled BG art
   |  #######################  |
-  |  ##                 ##    |
-  |  ##   [eye]   [eye] ##    |  <- sprite entities (1-4)
-  |  ##      [core]     ##    |     each: 1 hitbox
+  |  ##                   ##  |
+  |  ##   [eye]   [eye]   ##  |  <- sprite entities (1-4)
+  |  ##      [core]       ##  |     each: 1 hitbox
   |  #######################  |
+  |                           |
+  |                           |
   +---------------------------+
            viewport 128x120
 ```
