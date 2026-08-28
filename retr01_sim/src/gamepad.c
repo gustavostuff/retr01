@@ -77,3 +77,26 @@ void r01s_gamepad_stick_clamp(int *stick_x, int *stick_y, int radius) {
         }
     }
 }
+
+void r01s_gamepad_stick_snap_digital(int *stick_x, int *stick_y, int travel, int dead) {
+    if (!stick_x || !stick_y || travel <= 0) {
+        return;
+    }
+    if (dead < 0) {
+        dead = 0;
+    }
+    if (*stick_x > dead) {
+        *stick_x = travel;
+    } else if (*stick_x < -dead) {
+        *stick_x = -travel;
+    } else {
+        *stick_x = 0;
+    }
+    if (*stick_y > dead) {
+        *stick_y = travel;
+    } else if (*stick_y < -dead) {
+        *stick_y = -travel;
+    } else {
+        *stick_y = 0;
+    }
+}

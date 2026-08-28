@@ -10,6 +10,20 @@ int main(void) {
     expect_true(r01s_gamepad_stick_bits(3, 3) == 0, "inside deadzone");
 
     {
+        int sx = 4;
+        int sy = -5;
+        r01s_gamepad_stick_snap_digital(&sx, &sy, 8, R01S_GAMEPAD_MOUSE_DEAD);
+        expect_true(sx == 8 && sy == -8, "mouse snap digital");
+    }
+
+    {
+        int sx = 1;
+        int sy = 0;
+        r01s_gamepad_stick_snap_digital(&sx, &sy, 8, R01S_GAMEPAD_MOUSE_DEAD);
+        expect_true(sx == 0 && sy == 0, "mouse snap center");
+    }
+
+    {
         R01sGamepadInput gp;
         r01s_gamepad_input_clear(&gp);
         gp.stick_x = 20;

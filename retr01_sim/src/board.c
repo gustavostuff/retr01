@@ -286,13 +286,24 @@ static void board_update_milestones(R01sBoard *ctx) {
 
 }
 
+/* Tone edges, or APU left disabled (studio cart MAP-only boot). */
+static int board_apu_milestone_ok(const R01sBoard *ctx) {
+    if (!ctx || !ctx->apu_impl.apu) {
+        return 0;
+    }
+    if (ctx->health_saw_apu) {
+        return 1;
+    }
+    return !r01s_atmega328p_enabled(ctx->apu_impl.apu);
+}
+
 static int board_integrated(const R01sBoard *ctx) {
     if (!ctx) {
         return 0;
     }
     return ctx->health_saw_latch && ctx->health_saw_vram && ctx->health_saw_vram_read && ctx->health_saw_pad &&
            ctx->health_saw_beam && ctx->health_saw_bg_fetch && ctx->health_saw_video && ctx->health_saw_map &&
-           ctx->health_saw_apu && ctx->health_saw_oam && ctx->health_saw_linebuf &&
+           board_apu_milestone_ok(ctx) && ctx->health_saw_oam && ctx->health_saw_linebuf &&
            ctx->health_saw_sprites && ctx->health_saw_nmi;
 }
 
@@ -552,8 +563,8 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
             snprintf(ih->activity, sizeof(ih->activity), "enabled period=%u",
                      (unsigned)r01s_atmega328p_period(apu));
         } else {
-            ih->health = R01S_HEALTH_WARN;
-            snprintf(ih->activity, sizeof(ih->activity), "await STA $FE40");
+            ih->health = R01S_HEALTH_OK;
+            snprintf(ih->activity, sizeof(ih->activity), "APU idle");
         }
         snprintf(ih->debug, sizeof(ih->debug),
                  "island=K APU health=%s saw=%d en=%d FE40=$%02X period=%u edges=%u hi=%u PWM=%s",
@@ -626,7 +637,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  ctx->health_saw_latch ? "ok" : "-", ctx->health_saw_vram_read ? "ok" : "-",
                  ctx->health_saw_pad ? "ok" : "-", ctx->health_saw_beam ? "ok" : "-",
                  ctx->health_saw_bg_fetch ? "ok" : "-", ctx->health_saw_video ? "ok" : "-",
-                 ctx->health_saw_map ? "ok" : "-", ctx->health_saw_apu ? "ok" : "-",
+                 ctx->health_saw_map ? "ok" : "-", board_apu_milestone_ok(ctx) ? "ok" : "-",
                  ctx->health_saw_oam ? "ok" : "-", ctx->health_saw_linebuf ? "ok" : "-",
                  ctx->health_saw_sprites ? "ok" : "-", ctx->health_saw_nmi ? "ok" : "-");
 

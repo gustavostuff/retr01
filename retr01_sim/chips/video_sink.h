@@ -28,9 +28,7 @@ typedef enum R01sVideoRenderMode {
 
 #define R01S_VIDEO_RENDER_DEFAULT R01S_VIDEO_RENDER_PERSIST
 
-/* UI control strip above the LCD preview (matches sim ui.c). */
-#define R01S_VIDEO_SINK_CTRL_H 24
-
+/* LCD control overlay is drawn inside the framebuffer (sim UI). */
 typedef struct R01sVideoSink {
     R01sEntity base;
     uint8_t rgb[R01S_VIDEO_W * R01S_VIDEO_H * 3];

@@ -94,6 +94,21 @@ void fill_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Ui
     SDL_RenderFillRect(r, &rc);
 }
 
+void fill_rect_a(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B, Uint8 A) {
+    SDL_Rect rc = {x, y, w, h};
+    if (A >= 255) {
+        fill_rect(r, x, y, w, h, R, G, B);
+        return;
+    }
+    if (A == 0) {
+        return;
+    }
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(r, R, G, B, A);
+    SDL_RenderFillRect(r, &rc);
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
+}
+
 void draw_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B) {
     SDL_Rect rc = {x, y, w, h};
     SDL_SetRenderDrawColor(r, R, G, B, 255);

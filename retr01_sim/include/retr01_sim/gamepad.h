@@ -18,6 +18,7 @@
 
 #define R01S_GAMEPAD_STICK_RADIUS 28
 #define R01S_GAMEPAD_STICK_DEAD  6
+#define R01S_GAMEPAD_MOUSE_DEAD  2
 
 typedef struct R01sGamepadInput {
     int stick_x; /* offset from stick center, pixels */
@@ -37,5 +38,8 @@ uint8_t r01s_gamepad_encode(const R01sGamepadInput *gp);
 
 /* Clamp stick deflection to a circular gate. */
 void r01s_gamepad_stick_clamp(int *stick_x, int *stick_y, int radius);
+
+/* Mouse d-pad: snap analog offset to full travel per axis (NES digital pad). */
+void r01s_gamepad_stick_snap_digital(int *stick_x, int *stick_y, int travel, int dead);
 
 #endif

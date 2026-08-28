@@ -417,7 +417,7 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             }
         }
 
-        /* LCD screen / scale controls (above SCR1). */
+        /* LCD overlay controls (inside SCR1 framebuffer). */
         {
             int ci;
             for (ci = 0; ci < ui->chip_count; ci++) {
@@ -440,6 +440,11 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                     }
                 }
             }
+        }
+
+        /* STATUS: copy WARN/FAIL rows or system header to clipboard. */
+        if (sidebar_hit(logic_x, logic_y) && ui_health_copy_at(ui, logic_x, logic_y)) {
+            return 1;
         }
 
         /* PROBE: gray pin stubs toggle. */

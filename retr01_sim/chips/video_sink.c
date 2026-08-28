@@ -137,11 +137,8 @@ void r01s_video_sink_refresh_glyph(R01sVideoSink *chip) {
         return;
     }
     r01s_video_sink_lcd_size(chip, &lcd_w, &lcd_h);
-    body_w = lcd_w + 4;
-    if (body_w < 200) {
-        body_w = 200;
-    }
-    body_h = R01S_VIDEO_SINK_CTRL_H + lcd_h;
+    body_w = lcd_w;
+    body_h = lcd_h;
     chip->base.body_w = r01s_snap5_up(body_w);
     chip->base.body_h = r01s_snap5_up(body_h);
 }

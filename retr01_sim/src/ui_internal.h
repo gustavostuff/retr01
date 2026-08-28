@@ -17,12 +17,14 @@
 #define R01S_UI_PIN_GRAY_G 179
 #define R01S_UI_PIN_GRAY_B 204
 
-#define R01S_LCD_CTRL_BTN_H 20
-#define R01S_LCD_CTRL_PAD_Y 2
-#define R01S_LCD_CTRL_GAP 6
+#define R01S_LCD_CTRL_BTN_H R01S_UI_UNIT * 2
+#define R01S_LCD_CTRL_PAD_X 0
+#define R01S_LCD_CTRL_PAD_Y 0
+#define R01S_LCD_CTRL_GAP R01S_UI_UNIT / 2
 #define R01S_LCD_CTRL_BTN_N 4
-#define R01S_LCD_CTRL_BTN_W_MIN 28
-#define R01S_LCD_CTRL_BTN_W_MAX 38
+#define R01S_LCD_CTRL_BTN_W 24
+#define R01S_LCD_CTRL_BG_A_IDLE 64
+#define R01S_LCD_CTRL_BG_A_HOT 255
 
 #define R01S_UI_STATUS_ROW_H 16
 
@@ -49,6 +51,7 @@ int font_ensure(void);
 void font_shutdown(void);
 int font_line_h(void);
 void fill_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B);
+void fill_rect_a(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B, Uint8 A);
 void draw_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B);
 void font_draw(SDL_Renderer *r, int x, int y, const char *text, Uint8 R, Uint8 G, Uint8 B);
 void font_draw_a(SDL_Renderer *r, int x, int y, const char *text, Uint8 R, Uint8 G, Uint8 B, Uint8 A);
@@ -100,5 +103,6 @@ int sidebar_sy(const R01sUi *ui, int content_y);
 int gp_hit_any(const R01sUi *ui, int lx, int ly, int *player_out, int *btn_out);
 int hit_board_top(const R01sUi *ui, int lx, int ly, int *chip_out, int *island_out, int *corner_out);
 void gp_stick_from_point(R01sUi *ui, R01sGamepadInput *gp, int player, int lx, int ly);
+int ui_health_copy_at(R01sUi *ui, int lx, int ly);
 
 #endif

@@ -216,35 +216,40 @@ static void draw_osc_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *
     blit_rgba_scaled(r, ix, iy, R01S_UI_OSC_RGBA, R01S_UI_OSC_W, R01S_UI_OSC_H, 1);
 }
 
-static int lcd_ctrl_btn_w(const R01sEntity *e) {
-    int avail;
-    int w;
+static void draw_lcd_ctrl_btn(SDL_Renderer *r, const R01sUi *ui, const SDL_Rect *rc, int selected,
+                              const char *label) {
+    int tw;
+    int tx;
+    int ty;
+    int hot;
+    Uint8 bg_a;
 
-    if (!e) {
-        return R01S_LCD_CTRL_BTN_W_MIN;
+    if (!r || !rc || !label) {
+        return;
     }
-    avail = e->body_w - 4;
-    w = (avail - (R01S_LCD_CTRL_BTN_N - 1) * R01S_LCD_CTRL_GAP) / R01S_LCD_CTRL_BTN_N;
-    if (w > R01S_LCD_CTRL_BTN_W_MAX) {
-        w = R01S_LCD_CTRL_BTN_W_MAX;
+    hot = selected;
+    if (ui && ui->mouse_lx >= rc->x && ui->mouse_lx < rc->x + rc->w && ui->mouse_ly >= rc->y &&
+        ui->mouse_ly < rc->y + rc->h) {
+        hot = 1;
     }
-    if (w < R01S_LCD_CTRL_BTN_W_MIN) {
-        w = R01S_LCD_CTRL_BTN_W_MIN;
-    }
-    return w;
+    bg_a = hot ? R01S_LCD_CTRL_BG_A_HOT : R01S_LCD_CTRL_BG_A_IDLE;
+    fill_rect_a(r, rc->x, rc->y, rc->w, rc->h, selected ? 36 : 22, selected ? 52 : 30, selected ? 40 : 28,
+                bg_a);
+    tw = font_text_width(label);
+    tx = rc->x + (rc->w - tw) / 2;
+    ty = rc->y + (rc->h - font_line_h()) / 2;
+    font_draw(r, tx, ty, label, 255, 255, 255);
 }
 
 void display_ctrl_btn_rect(const R01sUi *ui, const R01sEntity *e, int btn, SDL_Rect *rc) {
-    int btn_w = lcd_ctrl_btn_w(e);
-    int total = R01S_LCD_CTRL_BTN_N * btn_w + (R01S_LCD_CTRL_BTN_N - 1) * R01S_LCD_CTRL_GAP;
-    int x0 = ui_board_sx(ui, e->board_x + (e->body_w - total) / 2);
+    int x0 = ui_board_sx(ui, e->board_x + R01S_LCD_CTRL_PAD_X);
     int y0 = ui_board_sy(ui, e->board_y + R01S_LCD_CTRL_PAD_Y);
     if (!rc || !e || btn < 0 || btn >= R01S_LCD_CTRL_BTN_N) {
         return;
     }
-    rc->x = x0 + btn * (btn_w + R01S_LCD_CTRL_GAP);
+    rc->x = x0 + btn * (R01S_LCD_CTRL_BTN_W + R01S_LCD_CTRL_GAP);
     rc->y = y0;
-    rc->w = btn_w;
+    rc->w = R01S_LCD_CTRL_BTN_W;
     rc->h = R01S_LCD_CTRL_BTN_H;
 }
 
@@ -264,7 +269,7 @@ static void draw_lcd_ctrl_bar(SDL_Renderer *r, const R01sUi *ui, const R01sEntit
     for (i = 0; i < R01S_LCD_CTRL_BTN_N; i++) {
         int sel = (i < 2) ? (mode == i + 1) : (i == 2 ? !scale2 : scale2);
         display_ctrl_btn_rect(ui, e, i, &rc);
-        draw_segment_btn(r, &rc, sel, labels[i]);
+        draw_lcd_ctrl_btn(r, ui, &rc, sel, labels[i]);
     }
 }
 
@@ -274,16 +279,11 @@ static void draw_display_glyph(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e,
     const R01sVideoSink *sink = (const R01sVideoSink *)e;
     int lcd_w;
     int lcd_h;
-    int lcd_x;
-    int lcd_y;
 
     r01s_video_sink_lcd_size(sink, &lcd_w, &lcd_h);
-    lcd_x = x + (e->body_w - lcd_w) / 2;
-    lcd_y = y + R01S_VIDEO_SINK_CTRL_H;
-
     draw_glyph_pins(r, ui, e, e->board_x, e->board_y);
+    draw_video_pixels(r, ui, (R01sVideoSink *)(void *)sink, x, y, lcd_w, lcd_h);
     draw_lcd_ctrl_bar(r, ui, e, sink);
-    draw_video_pixels(r, ui, (R01sVideoSink *)(void *)sink, lcd_x, lcd_y, lcd_w, lcd_h);
     if (selected) {
         draw_rect(r, x, y, e->body_w, e->body_h, 255, 220, 80);
     }
