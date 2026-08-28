@@ -21,18 +21,20 @@ static void draw_worlds_body(UiState *ui, SDL_Renderer *r, const AccordionLayout
 
     for (i = 0; i < R01_MAX_WORLDS; i++) {
         char num[4];
-        int x = UI_WORLDS_X + i * UI_WORLD_BTN;
-        int y = lo->worlds_btns_y;
+        int x, y;
         int on = (i == ui->project->active_world);
-        int hover = point_in_rect(lx, ly, x, y, UI_WORLD_BTN, UI_WORLD_BTN);
+        int hover;
+
+        ui_world_btn_pos(i, lo->worlds_btns_y, &x, &y);
+        hover = point_in_rect(lx, ly, x, y, UI_WORLD_BTN, UI_WORLD_BTN);
 
         if (on) {
             fill_rect(r, x, y, UI_WORLD_BTN, UI_WORLD_BTN, UI_COL_ACTIVE_R, UI_COL_ACTIVE_G, UI_COL_ACTIVE_B);
         } else {
             fill_rect(r, x, y, UI_WORLD_BTN, UI_WORLD_BTN, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
         }
-        snprintf(num, sizeof(num), "%d", i);
-        font_draw(r, x + 1, y, num, 240, 240, 240);
+        snprintf(num, sizeof(num), "%d", i + 1);
+        font_draw(r, x + 2, y + 2, num, 240, 240, 240);
         if (hover) {
             hover_overlay(r, x, y, UI_WORLD_BTN, UI_WORLD_BTN);
         }

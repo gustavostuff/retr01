@@ -16,6 +16,15 @@ typedef struct AccordionLayout {
     int pals_open;
 } AccordionLayout;
 
+static inline void ui_world_btn_pos(int wi, int btns_y, int *out_x, int *out_y) {
+    if (out_x) {
+        *out_x = UI_WORLDS_X + wi * UI_WORLD_BTN;
+    }
+    if (out_y) {
+        *out_y = btns_y;
+    }
+}
+
 typedef struct TileModalLayout {
     int mx, my;
     int pal_x, pal_label_y, pal_y;

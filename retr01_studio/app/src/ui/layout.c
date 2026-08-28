@@ -201,7 +201,8 @@ int world_btn_hit(const UiState *ui, int lx, int ly, int *out_wi) {
         return 0;
     }
     for (i = 0; i < R01_MAX_WORLDS; i++) {
-        int x = UI_WORLDS_X + i * UI_WORLD_BTN;
+        int x;
+        ui_world_btn_pos(i, y, &x, NULL);
         if (lx >= x && lx < x + UI_WORLD_BTN) {
             if (out_wi) {
                 *out_wi = i;

@@ -56,6 +56,9 @@ target_link_libraries(test_fixture PRIVATE retr01_studio_core)
 add_test(NAME fixture COMMAND test_fixture ${R01_TEST_PROJECT} ${R01_TEST_CART})
 set_tests_properties(fixture PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+add_executable(export_rom core/tools/export_rom.c)
+target_link_libraries(export_rom PRIVATE retr01_studio_core)
+
 add_library(retr01_studio_app
   app/src/shell/app_shell.c
   app/src/font/font.c

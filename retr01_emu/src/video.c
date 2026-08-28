@@ -110,7 +110,7 @@ static int prepare_world_common(R01eMachine *m, int world, R01eWorldView *wv) {
     if (r01e_cart_world(&m->cart, world, wv) != 0) {
         return -1;
     }
-    m->io.world = (uint8_t)(world & 7);
+    m->io.world = (uint8_t)world;
 
     chr = r01e_cart_ptr(&m->cart, wv->base + wv->off_chr, 8u * R01E_CHR_BANK_BYTES);
     if (!chr) {

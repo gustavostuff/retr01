@@ -33,7 +33,7 @@ main:
 .segment "PLAY"
 .org $8100
 ; present mask + spawn filled by exporter
-; 20 present screens in cart MAP
+; 12 present screens in cart MAP
 .segment "VECTORS"
 .org $FFFA
         .word main

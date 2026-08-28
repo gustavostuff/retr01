@@ -14,10 +14,9 @@ Fixed **640x360** logical canvas, **8px** grid, dark gray chrome. Buttons/labels
 +-------------------------------------------------------------------+
 | SIDEBAR (128)          | MAIN                                     |
 | [>] Worlds             |              [ Play ]                    |
-|  [0][1][2][3]          |         +------------------+  ( ) Sel    |
-|  [4][5][6]             |         | Screen 256x240   |  ( ) Paint  |
-|  +--------------+      |         | 128x120 @2x edit |             |
-|  | 128x128 map  |      |         +------------------+             |
+|  [1][2][3][4][5][6][7] |         +------------------+  ( ) Sel    |
+|  +--------------+      |         | Screen 256x240   |  ( ) Paint  |
+|  | 128x128 map  |      |         | 128x120 @2x edit |             |
 |  +--------------+      |                                          |
 | [>] Palettes           |                                          |
 |  BG/SPR strips + [0-7] |                                          |
@@ -26,7 +25,7 @@ Fixed **640x360** logical canvas, **8px** grid, dark gray chrome. Buttons/labels
 
 | Control | Behavior |
 |---------|----------|
-| **Worlds** | 7 world buttons (**0-6**). World 0 starts with **3x3** blank screens on an **8x8** slot map. Worlds 1-6 start empty until first click |
+| **Worlds** | 7 world buttons (**1-7**, internal indices **0-6**). World 1 starts with **3x3** blank screens on an **8x8** slot map. Worlds 2-7 start empty until first click |
 | **World map** | **16px** cell pitch. Present = blue. White fill = default spawn. White outline = selected |
 | **Double-click** empty slot | Create screen |
 | **Ctrl+click** present | Remove screen |

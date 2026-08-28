@@ -20,7 +20,7 @@
 #define R01E_VRAM_SLOT_BYTES 512
 #define R01E_VRAM_BYTES 0x4000u
 
-#define R01E_MAX_WORLDS 8
+#define R01E_MAX_WORLDS 7
 #define R01E_PHASE1_WORLDS 1 /* Studio Phase 1: world 0 only */
 #define R01E_BG_BANKS 4
 #define R01E_SPR_BANKS 4

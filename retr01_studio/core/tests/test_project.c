@@ -50,6 +50,9 @@ TEST_MAIN() {
     EXPECT(r01_project_set_active_world(p, 1) == 0, "activate world 1");
     EXPECT(p->active_world == 1, "active_world updated");
     EXPECT(p->worlds[1].present, "lazy world init");
+    EXPECT(r01_project_set_active_world(p, R01_MAX_WORLDS - 1) == 0, "activate last world");
+    EXPECT(p->active_world == R01_MAX_WORLDS - 1, "last world index");
+    EXPECT(r01_project_set_active_world(p, R01_MAX_WORLDS) < 0, "reject world past max");
 
     {
         uint8_t merged = r01_attr_merge(r01_attr_pack(0, 0, 0, 0) | R01_ATTR_SOLID | R01_ATTR_ANIM, 2, 3, 1, 1);

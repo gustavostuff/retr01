@@ -17,7 +17,7 @@
 #define R01_START_COL 2
 #define R01_START_ROW 0
 
-#define R01_MAX_WORLDS 8
+#define R01_MAX_WORLDS 7
 #define R01_BG_BANKS 4
 #define R01_SPR_BANKS 4
 #define R01_TILES_PER_BANK 256
