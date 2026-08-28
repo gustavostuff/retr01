@@ -43,32 +43,28 @@ static void draw_health_dot(SDL_Renderer *r, int x, int y, R01sHealth h) {
     draw_rect(r, x, y, 8, 8, 30, 40, 35);
 }
 
-#define R01S_UI_SIDEBAR_X 4
-#define R01S_UI_SIDEBAR_TOP (R01S_UI_HUD_TOP + 6)
-#define R01S_UI_SIDEBAR_BOTTOM (R01S_LOGIC_H - R01S_UI_HUD_BOTTOM - 6)
-#define R01S_UI_SIDEBAR_W (R01S_UI_SIDEBAR_L - 16)
+#define R01S_UI_SIDEBAR_X R01S_UI_UNIT
+#define R01S_UI_SIDEBAR_TOP (R01S_UI_HUD_TOP + R01S_UI_UNIT)
+#define R01S_UI_SIDEBAR_BOTTOM (R01S_LOGIC_H - R01S_UI_HUD_BOTTOM - R01S_UI_UNIT)
+#define R01S_UI_SIDEBAR_W (R01S_UI_SIDEBAR_L - R01S_UI_UNIT * 2)
 #define R01S_UI_SIDEBAR_VIEW_H (R01S_UI_SIDEBAR_BOTTOM - R01S_UI_SIDEBAR_TOP)
-#define R01S_UI_STATUS_HDR_H 38
-#define R01S_UI_STATUS_ROW_H 15
-#define R01S_UI_STATUS_FOOTER_H 12
-#define R01S_UI_SIDEBAR_GAP 6
-#define R01S_UI_RADIO_HDR_H 12
-#define R01S_UI_RADIO_BTN_H 16
-#define R01S_UI_RADIO_GAP 4
-#define R01S_UI_RADIO_SECTION_GAP 4
-#define R01S_UI_SCREEN_MODE_N 3
-#define R01S_UI_PROBE_H 154
-#define R01S_UI_PIN_QUIET_BTN_H 16
-#define R01S_UI_PROBE_ROW 15
-#define R01S_UI_CART_HDR_H 12
-#define R01S_UI_CART_BTN_H 16
-#define R01S_UI_CART_BTN_GAP 4
+#define R01S_UI_STATUS_HDR_H 40
+#define R01S_UI_STATUS_ROW_H 16
+#define R01S_UI_STATUS_FOOTER_H 16
+#define R01S_UI_SIDEBAR_GAP R01S_UI_UNIT
+#define R01S_UI_PROBE_H 160
+#define R01S_UI_PIN_QUIET_BTN_H (R01S_UI_UNIT * 2)
+#define R01S_UI_PROBE_ROW 16
+#define R01S_UI_CART_HDR_H R01S_UI_UNIT * 2
+#define R01S_UI_CART_BTN_H (R01S_UI_UNIT * 2)
+#define R01S_UI_CART_BTN_GAP R01S_UI_UNIT
 #define R01S_UI_CART_H (R01S_UI_CART_HDR_H + 2 * R01S_UI_CART_BTN_H + R01S_UI_CART_BTN_GAP)
-#define R01S_UI_PAD_BIT_STRIDE 10
-#define GP_PANEL_GAP 6
+#define R01S_UI_SCREEN_MODE_N 3
+#define R01S_UI_PAD_BIT_STRIDE R01S_UI_UNIT + 2
+#define GP_PANEL_GAP R01S_UI_UNIT
 #define GP_PANEL_W R01S_UI_SIDEBAR_W
-#define GP_PANEL_H 50
-#define GP_STICK_R 8
+#define GP_PANEL_H 56
+#define GP_STICK_R R01S_UI_UNIT
 
 static int health_needs_debug(R01sHealth h) {
     return h == R01S_HEALTH_WARN || h == R01S_HEALTH_FAIL;
@@ -100,30 +96,11 @@ int sidebar_sy(const R01sUi *ui, int content_y) {
     return R01S_UI_SIDEBAR_TOP + content_y - (ui ? ui->sidebar_scroll : 0);
 }
 
-static int sidebar_radio_group_h(int option_count) {
-    if (option_count < 1) {
-        return R01S_UI_RADIO_HDR_H;
-    }
-    return R01S_UI_RADIO_HDR_H + option_count * R01S_UI_RADIO_BTN_H + (option_count - 1) * R01S_UI_RADIO_GAP;
-}
-
-static int sidebar_sim_section_y(const R01sUi *ui) {
-    return sidebar_gp_content_y(ui) + 2 * GP_PANEL_H + GP_PANEL_GAP;
-}
-
-void sidebar_sim_radio_rect(const R01sUi *ui, int option, SDL_Rect *rc) {
-    rc->w = R01S_UI_SIDEBAR_W;
-    rc->h = R01S_UI_RADIO_BTN_H;
-    rc->x = R01S_UI_SIDEBAR_X;
-    rc->y = sidebar_sy(ui, sidebar_sim_section_y(ui) + R01S_UI_RADIO_HDR_H +
-                                option * (R01S_UI_RADIO_BTN_H + R01S_UI_RADIO_GAP));
-}
-
 static int sidebar_content_h(const R01sUi *ui) {
     if (!ui) {
         return 0;
     }
-    return sidebar_sim_section_y(ui) + sidebar_radio_group_h(2);
+    return sidebar_gp_content_y(ui) + 2 * GP_PANEL_H + GP_PANEL_GAP;
 }
 
 static int sidebar_max_scroll(const R01sUi *ui) {
@@ -207,75 +184,8 @@ void ui_set_screen_render_mode(R01sUi *ui, int mode) {
     snprintf(ui->status, sizeof(ui->status), "SCREEN %s", labels[mode]);
 }
 
-void ui_set_sim_fast(R01sUi *ui, int enable) {
-    R01sBoard *board;
-    if (!ui) {
-        return;
-    }
-    board = r01s_board_from_group(ui->group);
-    if (!board) {
-        return;
-    }
-    r01s_board_set_sim_fast(board, enable ? 1 : 0);
-    if (enable) {
-        if (board->cart_loaded && board->cart_off_map_screen0 != 0) {
-            if (!board->health_saw_map) {
-                (void)r01s_board_catchup_bringup(board, ui->group);
-            } else if (!board->vram_slot_present[0] && board->cart_off_sdir != 0) {
-                r01s_board_catchup_finish(board);
-            }
-        }
-        if (board->cart_loaded && !board->play.enabled) {
-            (void)r01s_play_start(board);
-        }
-    } else if (board->cart_loaded && board->health_saw_map && !board->play.enabled) {
-        (void)r01s_play_start(board);
-    }
-    snprintf(ui->status, sizeof(ui->status),
-             r01s_board_sim_fast(board)
-                 ? "SIM FAST: word MAP catchup + thin settle/beam (R01S_FAST)"
-                 : "SIM PIN: full netlist settle (default)");
-}
-
 int radio_hit(const SDL_Rect *rc, int mx, int my) {
     return rc && mx >= rc->x && mx < rc->x + rc->w && my >= rc->y && my < rc->y + rc->h;
-}
-
-static void draw_radio_option(SDL_Renderer *r, const SDL_Rect *rc, int selected, const char *label) {
-    int cx;
-    int cy;
-    int label_x;
-    int ty;
-    if (!r || !rc || !label) {
-        return;
-    }
-    cx = rc->x + 8;
-    cy = rc->y + rc->h / 2;
-    label_x = rc->x + 18;
-    ty = rc->y + (rc->h - font_line_h()) / 2;
-    fill_rect(r, rc->x, rc->y, rc->w, rc->h, selected ? 36 : 22, selected ? 52 : 30, selected ? 40 : 28);
-    draw_rect(r, rc->x, rc->y, rc->w, rc->h, selected ? 140 : 80, selected ? 170 : 100, selected ? 120 : 85);
-    fill_rect(r, cx - 3, cy - 3, 6, 6, 24, 28, 32);
-    draw_rect(r, cx - 3, cy - 3, 6, 6, 100, 110, 120);
-    if (selected) {
-        fill_rect(r, cx - 1, cy - 1, 2, 2, 180, 220, 160);
-    }
-    font_draw(r, label_x, ty, label, selected ? 220 : 170, selected ? 230 : 180, selected ? 200 : 160);
-}
-
-static void draw_sidebar_radio_controls(SDL_Renderer *r, R01sUi *ui) {
-    SDL_Rect rc;
-    R01sBoard *board;
-
-    if (!r || !ui) {
-        return;
-    }
-    board = r01s_board_from_group(ui->group);
-    font_draw(r, R01S_UI_SIDEBAR_X, sidebar_sy(ui, sidebar_sim_section_y(ui)), "SIM", 150, 160, 140);
-    sidebar_sim_radio_rect(ui, 0, &rc);
-    draw_radio_option(r, &rc, !(board && r01s_board_sim_fast(board)), "PIN");
-    sidebar_sim_radio_rect(ui, 1, &rc);
-    draw_radio_option(r, &rc, board && r01s_board_sim_fast(board), "FAST");
 }
 
 static const char *health_island_title(const R01sUi *ui, int island_index) {
@@ -334,10 +244,10 @@ static void health_island_row_rect(const R01sUi *ui, int island_index, SDL_Rect 
 
 static void health_system_bar_rect(const R01sUi *ui, SDL_Rect *rc) {
     int status_y = sidebar_sy(ui, sidebar_status_content_y());
-    rc->x = R01S_UI_SIDEBAR_X + 6;
-    rc->y = status_y + 18;
-    rc->w = R01S_UI_SIDEBAR_W - 12;
-    rc->h = 14;
+    rc->x = R01S_UI_SIDEBAR_X + R01S_UI_UNIT;
+    rc->y = status_y + R01S_UI_UNIT * 2 + 2;
+    rc->w = R01S_UI_SIDEBAR_W - R01S_UI_UNIT * 2;
+    rc->h = R01S_UI_UNIT * 2;
 }
 
 static void draw_system_health_panel(SDL_Renderer *r, R01sUi *ui, int py) {
@@ -358,26 +268,26 @@ static void draw_system_health_panel(SDL_Renderer *r, R01sUi *ui, int py) {
 
     fill_rect(r, px, py, pw, ph, 14, 20, 16);
     draw_rect(r, px, py, pw, ph, 70, 90, 75);
-    font_draw(r, px + 6, py + 4, "STATUS", 190, 205, 180);
+    font_draw(r, px + R01S_UI_UNIT, py + R01S_UI_UNIT / 2, "STATUS", 190, 205, 180);
 
     health_rgb(health->system, &sr, &sg, &sb);
-    fill_rect(r, px + 6, py + 18, pw - 12, 14, sr, sg, sb);
-    font_draw_ellipsize(r, px + 10, py + 21, health->system_label[0] ? health->system_label : "?", pw - 20, 20,
+    fill_rect(r, px + R01S_UI_UNIT, py + R01S_UI_UNIT * 2 + 2, pw - R01S_UI_UNIT * 2, R01S_UI_UNIT * 2, sr, sg, sb);
+    font_draw_ellipsize(r, px + R01S_UI_UNIT + 4, py + R01S_UI_UNIT * 2 + 5, health->system_label[0] ? health->system_label : "?", pw - R01S_UI_UNIT * 2 - 8, 20,
                         24, 22);
-    fill_rect(r, px + 6, py + 34, pw - 12, 1, 40, 55, 45);
+    fill_rect(r, px + R01S_UI_UNIT, py + R01S_UI_UNIT * 4 + 2, pw - R01S_UI_UNIT * 2, 1, 40, 55, 45);
 
     for (i = 0; i < health->island_count; i++) {
         const R01sIslandHealth *ih = &health->islands[i];
         int ry = py + R01S_UI_STATUS_HDR_H + i * R01S_UI_STATUS_ROW_H;
 
-        draw_health_dot(r, px + 6, ry + 4, ih->health);
-        font_draw(r, px + 18, ry + 4, health_sidebar_island_letter(ui, i), 140, 155, 135);
+        draw_health_dot(r, px + R01S_UI_UNIT, ry + 4, ih->health);
+        font_draw(r, px + R01S_UI_UNIT + 12, ry + 4, health_sidebar_island_letter(ui, i), 140, 155, 135);
         snprintf(row, sizeof(row), "%s", r01s_health_tag(ih->health));
         tag_w = font_text_width(row);
-        font_draw(r, px + pw - tag_w - 8, ry + 3, row, 140, 155, 135);
+        font_draw(r, px + pw - tag_w - R01S_UI_UNIT, ry + 3, row, 140, 155, 135);
     }
 
-    font_draw_ellipsize(r, px + 6, py + ph - 11, "HOVER ROW FOR DETAIL", pw - 12, 100, 115, 100);
+    font_draw_ellipsize(r, px + R01S_UI_UNIT, py + ph - R01S_UI_UNIT - 3, "HOVER ROW FOR DETAIL", pw - R01S_UI_UNIT * 2, 100, 115, 100);
 }
 
 static void draw_pad_bits_compact(SDL_Renderer *r, int x, int y, uint8_t bits) {
@@ -405,10 +315,10 @@ void sidebar_probe_quiet_btn_rect(const R01sUi *ui, int probe_py, SDL_Rect *rc) 
     if (!rc) {
         return;
     }
-    rc->x = R01S_UI_SIDEBAR_X + 6;
-    rc->w = R01S_UI_SIDEBAR_W - 12;
+    rc->x = R01S_UI_SIDEBAR_X + R01S_UI_UNIT;
+    rc->w = R01S_UI_SIDEBAR_W - R01S_UI_UNIT * 2;
     rc->h = R01S_UI_PIN_QUIET_BTN_H;
-    rc->y = probe_py + R01S_UI_PROBE_H - rc->h - 6;
+    rc->y = probe_py + R01S_UI_PROBE_H - rc->h - R01S_UI_UNIT;
 }
 
 /* Cart ICs on island J: SST39SF040 (U40) and 24C64 (U50). */
@@ -477,29 +387,29 @@ static void draw_live_probe(SDL_Renderer *r, const R01sUi *ui, int py) {
 
     fill_rect(r, px, py, pw, R01S_UI_PROBE_H, 16, 22, 18);
     draw_rect(r, px, py, pw, R01S_UI_PROBE_H, 80, 90, 70);
-    font_draw(r, px + 6, py + 4, "PROBE", 200, 210, 180);
-    row = py + 16;
-    draw_led(r, px + 6, row, ui->probe_vdd, 80, 220, 100, "VDD");
+    font_draw(r, px + R01S_UI_UNIT, py + R01S_UI_UNIT / 2, "PROBE", 200, 210, 180);
+    row = py + R01S_UI_UNIT * 2;
+    draw_led(r, px + R01S_UI_UNIT, row, ui->probe_vdd, 80, 220, 100, "VDD");
     row += R01S_UI_PROBE_ROW;
     draw_led(r, px + 6, row, ui->probe_phi2, 220, 200, 60, "PHI2");
     row += R01S_UI_PROBE_ROW;
     draw_led(r, px + 6, row, ui->probe_resb_low, 220, 80, 80, "RST");
     row += R01S_UI_PROBE_ROW + 2;
-    font_draw(r, px + 6, row, "P1", 160, 180, 160);
-    row += 10;
-    draw_pad_bits_compact(r, px + 6, row, ui->probe_pad_p1);
-    row += 12;
-    font_draw(r, px + 6, row, "P2", 160, 180, 160);
-    row += 10;
-    draw_pad_bits_compact(r, px + 6, row, ui->probe_pad_p2);
-    row += 14;
+    font_draw(r, px + R01S_UI_UNIT, row, "P1", 160, 180, 160);
+    row += R01S_UI_UNIT + 2;
+    draw_pad_bits_compact(r, px + R01S_UI_UNIT, row, ui->probe_pad_p1);
+    row += R01S_UI_UNIT + 4;
+    font_draw(r, px + R01S_UI_UNIT, row, "P2", 160, 180, 160);
+    row += R01S_UI_UNIT + 2;
+    draw_pad_bits_compact(r, px + R01S_UI_UNIT, row, ui->probe_pad_p2);
+    row += R01S_UI_UNIT + 6;
     if (ui->pins_quiet) {
-        draw_pin_swatch(r, px + 6, row, R01S_UI_PIN_GRAY_R, R01S_UI_PIN_GRAY_G, R01S_UI_PIN_GRAY_B, "GRAY");
+        draw_pin_swatch(r, px + R01S_UI_UNIT, row, R01S_UI_PIN_GRAY_R, R01S_UI_PIN_GRAY_G, R01S_UI_PIN_GRAY_B, "GRAY");
     } else {
-        font_draw(r, px + 6, row, "PINS", 200, 210, 180);
-        row += 12;
+        font_draw(r, px + R01S_UI_UNIT, row, "PINS", 200, 210, 180);
+        row += R01S_UI_UNIT + 4;
         pin_level_rgb(R01S_LVL_H, R01S_PIN_OUT, &pr, &pg, &pb);
-        draw_pin_swatch(r, px + 6, row, pr, pg, pb, "HI");
+        draw_pin_swatch(r, px + R01S_UI_UNIT, row, pr, pg, pb, "HI");
         pin_level_rgb(R01S_LVL_L, R01S_PIN_OUT, &pr, &pg, &pb);
         draw_pin_swatch(r, px + 50, row, pr, pg, pb, "LO");
     }
@@ -1024,20 +934,21 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
 
     /* Fixed HUD */
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_UI_HUD_TOP, 12, 14, 16);
-    font_draw(r, 4, 7, "retr01 SIM", 200, 210, 220);
+    font_draw(r, R01S_UI_UNIT, R01S_UI_UNIT, "retr01 SIM", 200, 210, 220);
     {
         SDL_Rect sbtn;
         const char *hint;
         int hint_x;
         int hint_max;
+        int text_y = R01S_UI_UNIT;
         save_btn_rect(ui, &sbtn);
-        hint_x = R01S_UI_VIEW_X + 4;
-        hint_max = sbtn.x - hint_x - 4;
+        hint_x = R01S_UI_VIEW_X + R01S_UI_UNIT;
+        hint_max = sbtn.x - hint_x - R01S_UI_UNIT;
         if (hint_max < 24) {
             hint_max = 24;
         }
         hint = ui->layout_compact ? "BOX SEL  S SAVE  R ROT  G SCALE" : "S SAVE  R ROT  G SCALE  PAN  DRAG";
-        font_draw_ellipsize(r, hint_x, 7, hint, hint_max, 120, 130, 140);
+        font_draw_ellipsize(r, hint_x, text_y, hint, hint_max, 120, 130, 140);
     }
     {
         SDL_Rect sbtn;
@@ -1060,18 +971,17 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
                   180);
     }
 
-    /* Left sidebar: system status, probe, controllers, screen/scale/sim radios (scrollable). */
+    /* Left sidebar: system status, probe, controllers (scrollable). */
     SDL_RenderSetClipRect(r, &sidebar_clip);
     draw_system_health_panel(r, ui, sidebar_sy(ui, sidebar_status_content_y()));
     draw_live_probe(r, ui, sidebar_sy(ui, sidebar_probe_content_y(ui)));
     draw_cart_toggles(r, ui);
     draw_gamepad_panel(r, ui, 0);
     draw_gamepad_panel(r, ui, 1);
-    draw_sidebar_radio_controls(r, ui);
     SDL_RenderSetClipRect(r, NULL);
 
     if (max_s > 0) {
-        int track_x = R01S_UI_SIDEBAR_L - 6;
+        int track_x = R01S_UI_SIDEBAR_L - R01S_UI_UNIT;
         int track_y = R01S_UI_SIDEBAR_TOP;
         int track_h = R01S_UI_SIDEBAR_VIEW_H;
         int thumb_h = track_h * R01S_UI_SIDEBAR_VIEW_H / sidebar_content_h(ui);
@@ -1087,10 +997,11 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     fill_rect(r, 0, R01S_LOGIC_H - R01S_UI_HUD_BOTTOM, R01S_LOGIC_W, R01S_UI_HUD_BOTTOM, 12, 14, 16);
     snprintf(fps_buf, sizeof(fps_buf), "%d FPS %d STP", ui->fps, ui->sim_steps);
     {
-        int fps_w = font_text_width(fps_buf) + 8;
-        font_draw_ellipsize(r, 8, R01S_LOGIC_H - font_line_h() - 4, ui->status, R01S_LOGIC_W - fps_w - 12, 160, 170,
+        int fps_w = font_text_width(fps_buf) + R01S_UI_UNIT;
+        int status_y = R01S_LOGIC_H - font_line_h() - R01S_UI_UNIT;
+        font_draw_ellipsize(r, R01S_UI_UNIT, status_y, ui->status, R01S_LOGIC_W - fps_w - R01S_UI_UNIT, 160, 170,
                             160);
-        font_draw(r, R01S_LOGIC_W - fps_w, R01S_LOGIC_H - font_line_h() - 4, fps_buf, 160, 180, 160);
+        font_draw(r, R01S_LOGIC_W - fps_w, status_y, fps_buf, 160, 180, 160);
     }
 
     if (ui->ctx_chip >= 0 && ui->ctx_chip < ui->chip_count) {
@@ -1138,12 +1049,12 @@ void r01s_ui_draw_boot(R01sUi *ui, SDL_Renderer *r, int spin_frame) {
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_LOGIC_H, 0, 0, 0);
     snprintf(line, sizeof(line), "Booting console... %c", spin);
     cx = (R01S_LOGIC_W - font_text_width(line)) / 2;
-    if (cx < 8) {
-        cx = 8;
+    if (cx < R01S_UI_UNIT) {
+        cx = R01S_UI_UNIT;
     }
     font_draw(r, cx, R01S_LOGIC_H / 2 - 4, line, 200, 210, 180);
     snprintf(fps_buf, sizeof(fps_buf), "%d FPS", ui->fps);
-    font_draw(r, R01S_LOGIC_W - font_text_width(fps_buf) - 8, 7, fps_buf, 100, 110, 100);
-    font_draw(r, 8, R01S_LOGIC_H - font_line_h() - 4, "ESC QUIT", 90, 90, 90);
+    font_draw(r, R01S_LOGIC_W - font_text_width(fps_buf) - R01S_UI_UNIT, R01S_UI_UNIT, fps_buf, 100, 110, 100);
+    font_draw(r, R01S_UI_UNIT, R01S_LOGIC_H - font_line_h() - R01S_UI_UNIT, "ESC QUIT", 90, 90, 90);
 }
 

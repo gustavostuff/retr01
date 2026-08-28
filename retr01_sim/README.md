@@ -26,7 +26,7 @@ See [`docs/08_simulator.md`](../docs/08_simulator.md). Pin/behavior: [`hw/md/`](
 
 Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8000+`.
 
-**Cart load:** `./sim run` passes `retr01_studio/test_game/test.retr01` (override with a path; resolved from repo root). The **6502 executes cart PRG from flash** (Studio export includes palette + MAP→VRAM boot via `$FE93`→`$FE12`). Startup catchup runs that stream on a **worker thread** (~12k pin-level steps in SIM PIN) so the SDL window stays responsive. Synthetic test cart still uses sim bring-up overlay for island smoke. Host softboot is opt-in only (`R01S_SOFTBOOT=1`). **`R01S_FAST=1`** / sidebar **SIM FAST**: word MAP catchup + thinner settle/beam + **Host Play** scaffold. See [`PERFORMANCE.md`](PERFORMANCE.md).
+**Cart load:** `./sim run` passes `retr01_studio/test_game/test.retr01` (override with a path; resolved from repo root). The **6502 executes cart PRG from flash** (Studio export includes palette + MAP→VRAM boot via `$FE93`→`$FE12`). Startup catchup runs that stream on a **worker thread** (~12k pin-level steps) so the SDL window stays responsive. Synthetic test cart still uses sim bring-up overlay for island smoke. Host softboot is opt-in only (`R01S_SOFTBOOT=1`). See [`PERFORMANCE.md`](PERFORMANCE.md).
 
 Why the worker exists (and how to show a live board during boot later): [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md).
 

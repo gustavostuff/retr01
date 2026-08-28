@@ -13,25 +13,7 @@
 /* Studio/emu move+camera math; sim applies 1 logical px per sim VBlank (game frame). */
 
 static int player_aabb_ok(R01sBoard *b, int px, int py) {
-    int x1, y1, c0, c1, r0, r1, c, r;
-
-    if (!b || px < 0 || py < 0) {
-        return 0;
-    }
-    x1 = px + R01S_PLAY_PLAYER_W - 1;
-    y1 = py + R01S_PLAY_PLAYER_H - 1;
-    c0 = px / R01S_BG_SCREEN_PX_W;
-    c1 = x1 / R01S_BG_SCREEN_PX_W;
-    r0 = py / R01S_BG_SCREEN_PX_H;
-    r1 = y1 / R01S_BG_SCREEN_PX_H;
-    for (c = c0; c <= c1; c++) {
-        for (r = r0; r <= r1; r++) {
-            if (!r01s_board_has_screen(b, c, r)) {
-                return 0;
-            }
-        }
-    }
-    return 1;
+    return r01s_board_player_aabb_ok(b, px, py);
 }
 
 static void update_camera(R01sPlay *pl) {
@@ -49,11 +31,8 @@ static void update_camera(R01sPlay *pl) {
 }
 
 static void place_player_on_screen(R01sPlay *pl, int col, int row) {
-    /* Match Studio/emu: margin spawn + camera already smooth-follows. */
-    pl->player_x = col * R01S_BG_SCREEN_PX_W + R01S_BG_SCREEN_PX_W - R01S_PLAY_PLAYER_W -
-                   R01S_PLAY_SPAWN_MARGIN_RIGHT;
-    pl->player_y = row * R01S_BG_SCREEN_PX_H + R01S_BG_SCREEN_PX_H - R01S_PLAY_PLAYER_H -
-                   R01S_PLAY_SPAWN_MARGIN_BOTTOM;
+    pl->player_x = R01S_PLAY_SPAWN_CENTER_X(col);
+    pl->player_y = R01S_PLAY_SPAWN_CENTER_Y(row);
     update_camera(pl);
 }
 
@@ -271,18 +250,7 @@ int r01s_play_start(R01sBoard *board) {
         return 0;
     }
     r01s_board_mark_map_ready(board);
-    /* Host Play owns pads; FAST catchup skips smoke LDA $FE60 so mark pad health here. */
-    board->health_saw_pad = 1;
     place_player_on_screen(&board->play, col, row);
-    /* Same as FAST apply: do not let residual reset_hold re-vector into smoke. */
-    board->reset_hold = 0;
-    r01s_board_park_bringup_cpu(board);
-    /* Ensure smoke-equivalent tone if catchup skipped or APU was reset. */
-    if (!r01s_atmega328p_enabled(board->apu_impl.apu)) {
-        r01s_atmega328p_poke(board->apu_impl.apu, 1, 0x10);
-        r01s_atmega328p_poke(board->apu_impl.apu, 2, 0x00);
-        r01s_atmega328p_poke(board->apu_impl.apu, 0, 0x8F);
-    }
     /* Latch scroll + 2×2 before play.enabled so no field renders at scroll=$00. */
     board->play.force_camera_reload = 1;
     queue_video(board);

@@ -24,7 +24,7 @@
 #define R01S_LCD_CTRL_BTN_W_MIN 28
 #define R01S_LCD_CTRL_BTN_W_MAX 38
 
-#define R01S_UI_STATUS_ROW_H 15
+#define R01S_UI_STATUS_ROW_H 16
 
 static inline int ui_board_sx(const R01sUi *ui, int board_x) {
     return R01S_UI_VIEW_X + board_x - ui->pan_x;
@@ -84,7 +84,6 @@ int ui_lcd_scale_2x(const R01sUi *ui);
 int ui_screen_render_mode(const R01sUi *ui);
 void ui_set_lcd_scale(R01sUi *ui, int scale_2x);
 void ui_set_screen_render_mode(R01sUi *ui, int mode);
-void ui_set_sim_fast(R01sUi *ui, int enable);
 void ui_toggle_lcd_scale(R01sUi *ui);
 int ui_chip_is_cart_flash(const R01sEntity *e);
 int ui_chip_is_cart_eeprom(const R01sEntity *e);
@@ -94,7 +93,6 @@ int ui_chip_hidden(const R01sUi *ui, const R01sEntity *e);
 int radio_hit(const SDL_Rect *rc, int mx, int my);
 void sidebar_probe_quiet_btn_rect(const R01sUi *ui, int probe_py, SDL_Rect *rc);
 void sidebar_cart_btn_rect(const R01sUi *ui, int which, SDL_Rect *rc);
-void sidebar_sim_radio_rect(const R01sUi *ui, int option, SDL_Rect *rc);
 int sidebar_hit(int lx, int ly);
 void sidebar_clamp_scroll(R01sUi *ui);
 int sidebar_probe_content_y(const R01sUi *ui);

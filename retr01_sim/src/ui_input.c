@@ -481,21 +481,6 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             }
         }
 
-        /* SIM PIN / FAST (left sidebar). */
-        {
-            SDL_Rect rc;
-            sidebar_sim_radio_rect(ui, 0, &rc);
-            if (sidebar_hit(logic_x, logic_y) && radio_hit(&rc, logic_x, logic_y)) {
-                ui_set_sim_fast(ui, 0);
-                return 1;
-            }
-            sidebar_sim_radio_rect(ui, 1, &rc);
-            if (sidebar_hit(logic_x, logic_y) && radio_hit(&rc, logic_x, logic_y)) {
-                ui_set_sim_fast(ui, 1);
-                return 1;
-            }
-        }
-
         hit = gp_hit_any(ui, logic_x, logic_y, &gp_player, &gp_btn);
         if (hit == 2) {
             ui->drag_btn = gp_player * 4 + gp_btn;

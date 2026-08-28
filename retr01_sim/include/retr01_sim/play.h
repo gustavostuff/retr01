@@ -8,8 +8,8 @@ struct R01sBoard;
 #define R01S_PLAY_PLAYER_W 8
 #define R01S_PLAY_PLAYER_H 8
 #define R01S_PLAY_PLAYER_SIZE R01S_PLAY_PLAYER_W /* legacy alias; square for now */
-#define R01S_PLAY_SPAWN_MARGIN_RIGHT 4
-#define R01S_PLAY_SPAWN_MARGIN_BOTTOM 7
+#define R01S_PLAY_SPAWN_CENTER_X(col) ((col)*R01S_BG_SCREEN_PX_W + (R01S_BG_SCREEN_PX_W - R01S_PLAY_PLAYER_W) / 2)
+#define R01S_PLAY_SPAWN_CENTER_Y(row) ((row)*R01S_BG_SCREEN_PX_H + (R01S_BG_SCREEN_PX_H - R01S_PLAY_PLAYER_H) / 2)
 
 /* Player fill: sprite half of active buffer, color index 1. */
 #define R01S_PAL_SPR_BASE 16
@@ -19,7 +19,7 @@ struct R01sBoard;
 /*
  * Host Play: Studio-equivalent move + camera + X/Y warps after MAP catchup.
  * Sim: 1 logical px per sim VBlank when d-pad held. Scroll latched once per field.
- * Player renders via OAM on the beam (Island N/O). Word catchup / thin settle stay FAST-only.
+ * Player renders via OAM on the beam (Island N/O).
  */
 typedef struct R01sPlay {
     int enabled;

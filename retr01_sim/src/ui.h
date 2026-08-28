@@ -16,9 +16,10 @@
 #define R01S_UI_GAMEPAD_COUNT 2
 
 /* Fixed HUD chrome — board draws only in the center viewport. */
-#define R01S_UI_HUD_TOP 22
-#define R01S_UI_HUD_BOTTOM 22
-#define R01S_UI_SIDEBAR_L 100
+#define R01S_UI_UNIT 8
+#define R01S_UI_HUD_TOP (R01S_UI_UNIT + 16)
+#define R01S_UI_HUD_BOTTOM (R01S_UI_UNIT + 16)
+#define R01S_UI_SIDEBAR_L 125
 #define R01S_UI_SIDEBAR_R 0
 #define R01S_UI_VIEW_X R01S_UI_SIDEBAR_L
 #define R01S_UI_VIEW_Y R01S_UI_HUD_TOP

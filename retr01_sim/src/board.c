@@ -25,10 +25,6 @@
 #define R01S_BEAM_DOTS_PER_STEP 32
 /* Host Play: faster fields so ~1px/VBlank feels closer to 60 Hz game time. */
 #define R01S_BEAM_DOTS_PER_STEP_PLAY 640
-/* Fast mode: fewer DOT ticks per PHI2 step (video still advances, much cheaper). */
-#define R01S_BEAM_DOTS_PER_STEP_FAST 4
-/* Fast mode combinatorial depth (pin mode uses R01S_SETTLE_PASSES). */
-#define R01S_SETTLE_PASSES_FAST 1
 /* PRG init LDA #imm offsets (must match retr01_studio/prg_phase1.c). */
 #define R01S_PRG_INIT_SCROLL_X 11u
 #define R01S_PRG_INIT_SCROLL_Y 16u
@@ -1286,6 +1282,7 @@ static void linebuf_write_byte(R01sBoard *ctx, uint16_t addr, uint8_t data) {
 #define R01S_ATTR_PAL_SHIFT 2
 #define R01S_ATTR_FLIP_H 0x10u
 #define R01S_ATTR_FLIP_V 0x20u
+#define R01S_ATTR_SOLID 0x40u
 
 /* CHR plane byte via flash /CE. Returns 0 on CE deny (caller should hold). */
 static int board_chr_flash_byte(R01sBoard *ctx, uint32_t abs, uint8_t *out) {
@@ -1377,20 +1374,6 @@ static void board_vram_cell_at(const R01sBoard *ctx, int lx, int ly, uint8_t *ti
 }
 
 static uint32_t board_map_off_for_screen(const R01sBoard *board, int col, int row);
-
-static void board_apply_prg_boot_scroll(R01sBoard *board) {
-    uint32_t off;
-
-    if (!board || board->cart_off_prg == 0) {
-        return;
-    }
-    off = board->cart_off_prg;
-    if (off + R01S_PRG_INIT_SCROLL_Y >= (uint32_t)sizeof(board->cart_flash.mem)) {
-        return;
-    }
-    r01s_board_set_scroll(board, board->cart_flash.mem[off + R01S_PRG_INIT_SCROLL_X],
-                          board->cart_flash.mem[off + R01S_PRG_INIT_SCROLL_Y]);
-}
 
 static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     uint8_t tile, attr, color, pal, master;
@@ -1777,39 +1760,22 @@ static void wire_power_clock_reset(R01sBoard *ctx, R01sIslandGroup *group) {
 
 static void board_settle_n(R01sBoard *ctx, R01sIslandGroup *group, int passes) {
     int i;
-    int fast;
     if (passes < 1) {
         passes = 1;
     }
-    fast = ctx && ctx->sim_fast;
     for (i = 0; i < passes; i++) {
         wire_power_clock_reset(ctx, group);
         wire_memory(ctx);
         wire_io(ctx);
         wire_beam(ctx, group);
-        if (!fast) {
-            wire_bg_fetch(ctx);
-        }
+        wire_bg_fetch(ctx);
         wire_vram(ctx);
-        if (!fast) {
-            wire_linebuf(ctx);
-        }
+        wire_linebuf(ctx);
     }
 }
 
 static void board_settle(R01sBoard *ctx, R01sIslandGroup *group) {
-    board_settle_n(ctx, group, ctx && ctx->sim_fast ? R01S_SETTLE_PASSES_FAST : R01S_SETTLE_PASSES);
-}
-
-void r01s_board_set_sim_fast(R01sBoard *board, int enable) {
-    if (!board) {
-        return;
-    }
-    board->sim_fast = enable ? 1 : 0;
-}
-
-int r01s_board_sim_fast(const R01sBoard *board) {
-    return board && board->sim_fast ? 1 : 0;
+    board_settle_n(ctx, group, R01S_SETTLE_PASSES);
 }
 
 void r01s_board_catchup_finish(R01sBoard *board) {
@@ -1826,42 +1792,6 @@ void r01s_board_catchup_finish(R01sBoard *board) {
         /* Synthetic / no directory: pin stream wrote slot-0 bytes at VRAM $0000. */
         board->vram_slot_present[0] = 1;
     }
-}
-
-/*
- * Word-level MAP+palette bring-up (same VRAM/pal/map_addr end state as IC stream).
- * Skips pin settle / beam; used when sim_fast is on.
- */
-static int board_fast_apply_map_stream(R01sBoard *board) {
-    if (!board || !board->cart_loaded) {
-        return -1;
-    }
-    if (board->cart_off_map_screen0 == 0 || board->cart_off_pal_bg == 0) {
-        return -1;
-    }
-    board_apply_active_pals_from_cart(board);
-    r01s_board_catchup_finish(board);
-    board_apply_prg_boot_scroll(board);
-    /* FAST skips the pin steps that burn reset_hold; leave RESB high and park
-     * at hang so Play does not re-fetch $8000 and re-run smoke+MAP stream. */
-    board->reset_hold = 0;
-    r01s_board_park_bringup_cpu(board);
-    /* Smoke tone + health: FAST never executes STA $FE40 / LDA $FE12. */
-    r01s_atmega328p_poke(board->apu_impl.apu, 1, 0x10); /* period lo */
-    r01s_atmega328p_poke(board->apu_impl.apu, 2, 0x00); /* period hi */
-    r01s_atmega328p_poke(board->apu_impl.apu, 0, 0x8F); /* enable + vol */
-    /* Smoke LDA $FE60 never ran in FAST; hang will later, but host pads are live. */
-    board->health_saw_pad = 1;
-    board->health_saw_map = 1;
-    board->health_saw_apu = 1;
-    if (board->video_impl.sink) {
-        r01s_video_sink_clear(board->video_impl.sink);
-    }
-    board->health_saw_vram = 1;
-    board->health_saw_vram_read = 1; /* word load stands in for smoke readback */
-    board->health_saw_bg_fetch = 1; /* FAST settle skips wire_bg_fetch */
-    board->health_saw_latch = 1;
-    return 0;
 }
 
 static void island_power_clk_init(R01sIsland *island) {
@@ -2119,7 +2049,6 @@ static void board_install_bringup_prg(R01sBoard *board) {
     buf[n + 5] = (uint8_t)(hang_pc >> 8);
     n += sizeof(R01S_BRINGUP_HANG);
 
-    board->bringup_hang_pc = hang_pc;
     base = board->cart_off_prg;
     for (i = 0; i < R01S_CART_PRG_BYTES; i++) {
         r01s_sst39sf040_poke(&board->cart_flash, base + i, 0xEA);
@@ -2178,8 +2107,6 @@ static void board_install_synthetic_cart(R01sBoard *board) {
     board_install_bringup_prg(board);
 }
 
-static void board_sync_main_pc_from_cart(R01sBoard *board);
-
 static int board_parse_cart_image(R01sBoard *board, const uint8_t *img, size_t len) {
     const uint8_t *ptrs;
     uint32_t off_prg;
@@ -2217,21 +2144,7 @@ static int board_parse_cart_image(R01sBoard *board, const uint8_t *img, size_t l
     board->cart_len_prg = len_prg;
     board->cart_loaded = 1;
     board_resolve_cart_meta(board);
-    board_sync_main_pc_from_cart(board);
     return 0;
-}
-
-static void board_sync_main_pc_from_cart(R01sBoard *board) {
-    uint32_t off;
-    if (!board || !board->cart_loaded || board->cart_off_prg == 0) {
-        return;
-    }
-    off = board->cart_off_prg + 0x7FFAu;
-    if (off + 1u >= sizeof(board->cart_flash.mem)) {
-        return;
-    }
-    board->bringup_hang_pc =
-        (uint16_t)((uint16_t)board->cart_flash.mem[off] | ((uint16_t)board->cart_flash.mem[off + 1u] << 8));
 }
 
 int r01s_board_load_cart(R01sBoard *board, const char *path) {
@@ -2330,6 +2243,67 @@ static uint32_t board_map_off_for_screen(const R01sBoard *board, int col, int ro
     return 0;
 }
 
+int r01s_board_attr_at(const R01sBoard *board, int wx, int wy, uint8_t *out_attr) {
+    int col, row, lx, ly, tx, ty, cell;
+    uint32_t pay;
+
+    if (!board || wx < 0 || wy < 0) {
+        return -1;
+    }
+    col = wx / R01S_BG_SCREEN_PX_W;
+    row = wy / R01S_BG_SCREEN_PX_H;
+    pay = board_map_off_for_screen(board, col, row);
+    if (pay == 0) {
+        return -1;
+    }
+    lx = wx % R01S_BG_SCREEN_PX_W;
+    ly = wy % R01S_BG_SCREEN_PX_H;
+    tx = lx / 8;
+    ty = ly / 8;
+    cell = ty * 16 + tx;
+    if (pay + 240u + (uint32_t)cell >= sizeof(board->cart_flash.mem)) {
+        return -1;
+    }
+    if (out_attr) {
+        *out_attr = r01s_sst39sf040_peek(&board->cart_flash, pay + 240u + (uint32_t)cell);
+    }
+    return 0;
+}
+
+int r01s_board_solid_at(const R01sBoard *board, int wx, int wy) {
+    uint8_t attr;
+    if (r01s_board_attr_at(board, wx, wy, &attr) != 0) {
+        return 0;
+    }
+    return (attr & R01S_ATTR_SOLID) != 0;
+}
+
+int r01s_board_player_aabb_ok(const R01sBoard *board, int px, int py) {
+    int x1, y1, c0, c1, r0, r1, col, row;
+
+    if (!board || px < 0 || py < 0) {
+        return 0;
+    }
+    x1 = px + R01S_PLAY_PLAYER_W - 1;
+    y1 = py + R01S_PLAY_PLAYER_H - 1;
+    c0 = px / R01S_BG_SCREEN_PX_W;
+    c1 = x1 / R01S_BG_SCREEN_PX_W;
+    r0 = py / R01S_BG_SCREEN_PX_H;
+    r1 = y1 / R01S_BG_SCREEN_PX_H;
+    for (col = c0; col <= c1; col++) {
+        for (row = r0; row <= r1; row++) {
+            if (!r01s_board_has_screen(board, col, row)) {
+                return 0;
+            }
+        }
+    }
+    if (r01s_board_solid_at(board, px, py) || r01s_board_solid_at(board, x1, py) ||
+        r01s_board_solid_at(board, px, y1) || r01s_board_solid_at(board, x1, y1)) {
+        return 0;
+    }
+    return 1;
+}
+
 static void board_load_screen_slot(R01sBoard *board, int col, int row, int slot) {
     uint32_t map_off;
     uint16_t base;
@@ -2381,13 +2355,6 @@ void r01s_board_set_scroll(R01sBoard *board, uint8_t scroll_x, uint8_t scroll_y)
     r01s_sn74hc573_poke_q(board->io_latch_impl.latch573[R01S_LATCH_FE02], scroll_x);
     r01s_sn74hc573_poke_q(board->io_latch_impl.latch573[R01S_LATCH_FE03], scroll_y);
     board->health_saw_latch = 1;
-}
-
-void r01s_board_park_bringup_cpu(R01sBoard *board) {
-    if (!board || board->bringup_hang_pc < 0x8000u) {
-        return;
-    }
-    r01s_w65c02s_set_pc(board->cpu_mem_impl.cpu, board->bringup_hang_pc);
 }
 
 void r01s_board_mark_map_ready(R01sBoard *board) {
@@ -2450,11 +2417,6 @@ int r01s_board_catchup_bringup(R01sBoard *board, R01sIslandGroup *group) {
         return r01s_board_softboot_start_screen(board);
     }
 
-    /* Fast mode: word transaction MAP+pal (same end state, no ~12k pin steps). */
-    if (board->sim_fast) {
-        return board_fast_apply_map_stream(board);
-    }
-
     /* Default: run bring-up PRG MAP stream on the pin-level netlist (~12k steps). */
     target = board->cart_off_map_screen0 + 480u;
     expect0 = r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_map_screen0);
@@ -2508,8 +2470,6 @@ static void board_reset(R01sIslandGroup *group) {
     ctx->pal_fe09_wrote = 0;
     memset(ctx->active_pal, 0, sizeof(ctx->active_pal));
     ctx->chr_last_master = 0;
-    /* Keep bringup_hang_pc: FAST catchup parks here. Clearing it made park a
-     * no-op after group_reset, so Play re-ran smoke ($42) over camera VRAM. */
     r01s_play_reset(&ctx->play);
     ctx->catchup_cancel = 0;
     ctx->health_saw_latch = 0;
@@ -2598,18 +2558,15 @@ static void board_step(R01sIslandGroup *group) {
     }
     osc = r01s_osc8m_entity(ctx->power_clk_impl.osc);
     cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
-    beam_dots = ctx->sim_fast ? R01S_BEAM_DOTS_PER_STEP_FAST : R01S_BEAM_DOTS_PER_STEP;
+    beam_dots = R01S_BEAM_DOTS_PER_STEP;
     if (ctx->play.enabled) {
         beam_dots = R01S_BEAM_DOTS_PER_STEP_PLAY;
     }
 
     board_settle(ctx, group);
     r01s_entity_tick(osc);
-    /* FAST skips AVR domain ticks (health/APU smoke filled at word catchup). */
-    if (!ctx->sim_fast) {
-        r01s_entity_tick(r01s_atmega328p_entity(ctx->apu_impl.apu));
-        r01s_entity_tick(r01s_atmega1284p_entity(ctx->mcu_lb_impl.mcu));
-    }
+    r01s_entity_tick(r01s_atmega328p_entity(ctx->apu_impl.apu));
+    r01s_entity_tick(r01s_atmega1284p_entity(ctx->mcu_lb_impl.mcu));
     board_settle(ctx, group);
     /* Beam/DOT domain: burst so interactive UI reaches VBlank without minutes of wait. */
     {
@@ -2749,13 +2706,6 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         return -1;
     }
     memset(board, 0, sizeof(*board));
-
-    {
-        const char *fast = getenv("R01S_FAST");
-        if (fast && fast[0] != '\0' && strcmp(fast, "0") != 0) {
-            board->sim_fast = 1;
-        }
-    }
 
     r01s_island_builder_bind(b, &BOARD_GROUP_VT, board);
 

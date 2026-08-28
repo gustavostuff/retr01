@@ -1215,22 +1215,22 @@ void ui_toggle_compact(R01sUi *ui) {
 
 void compact_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
     const char *label = (ui && ui->layout_compact) ? "ISLANDS" : "COMPACT";
-    int tw = font_text_width(label) + 16;
-    rc->x = R01S_LOGIC_W - tw - 8;
-    rc->y = 3;
+    int tw = font_text_width(label) + R01S_UI_UNIT * 2;
+    rc->x = R01S_LOGIC_W - tw - R01S_UI_UNIT;
+    rc->y = R01S_UI_UNIT / 2;
     rc->w = tw;
-    rc->h = 18;
+    rc->h = R01S_UI_UNIT * 2;
 }
 
 void save_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
     SDL_Rect cbtn;
     const char *label = "SAVE";
-    int tw = font_text_width(label) + 16;
+    int tw = font_text_width(label) + R01S_UI_UNIT * 2;
     compact_btn_rect(ui, &cbtn);
     rc->w = tw;
-    rc->h = 18;
-    rc->y = 3;
-    rc->x = cbtn.x - tw - 6;
+    rc->h = R01S_UI_UNIT * 2;
+    rc->y = R01S_UI_UNIT / 2;
+    rc->x = cbtn.x - tw - R01S_UI_UNIT;
 }
 
 void ui_save_layout_now(R01sUi *ui) {

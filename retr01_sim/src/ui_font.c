@@ -35,10 +35,11 @@ static int font_try_open(const char *path) {
 
 int font_ensure(void) {
     static const char *const paths[] = {
-        R01S_ASSETS_DIR "/AsepriteFont.ttf",
-        "retr01_sim/assets/AsepriteFont.ttf",
-        "assets/AsepriteFont.ttf",
-        "../retr01_sim/assets/AsepriteFont.ttf",
+        R01S_ASSETS_DIR "/proggy-tiny.ttf",
+        "retr01_sim/assets/proggy-tiny.ttf",
+        "retr01_studio/assets/proggy-tiny.ttf",
+        "assets/proggy-tiny.ttf",
+        "../retr01_sim/assets/proggy-tiny.ttf",
         NULL,
     };
     int i;
@@ -57,7 +58,7 @@ int font_ensure(void) {
     }
     FT_Done_FreeType(g_ft_lib);
     g_ft_lib = NULL;
-    fprintf(stderr, "retr01_sim: failed to load AsepriteFont.ttf\n");
+    fprintf(stderr, "retr01_sim: failed to load proggy-tiny.ttf\n");
     return -1;
 }
 

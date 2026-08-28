@@ -188,7 +188,7 @@ Boot: magic -> pointers -> world header -> screen dir / parallax dir -> `off_pay
 |--------|----------------------|
 | **Studio export PRG** | Streams **one** pal row + **start screen** via `$FE93` -> `$FE08`/`$FE09`/`$FE12` |
 | **Emulator** | **Always** soft-boots world CHR/MAP/pals. Host Play. Main FB samples cart MAP when Play is on |
-| **Board sim** | Default = IC (or FAST word) stream from cart PRG. Softboot only if `R01S_SOFTBOOT=1` |
+| **Board sim** | Default = IC stream from cart PRG. Softboot only if `R01S_SOFTBOOT=1` |
 
 Phase 1 does **not** stream full 2x2 camera seams. Triage ROM vs runner: [`08` - Cart ROM vs runners](08_simulator.md#cart-rom-vs-runners-triage).
 

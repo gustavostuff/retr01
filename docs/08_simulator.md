@@ -76,7 +76,7 @@ When something looks wrong on screen, **do not assume the `.retr01` is bad** and
 | **Color PROM burn** | `test_prom.bin` | **Yes** (motherboard) | **Not inside the cart.** Kit -> R3G3B2. Board AT28C16. |
 | **Boot asm listing** | `test_boot.s` | **Human-readable only** | Equates + stub source. The **binary inside `.retr01`** is what runners execute (Studio embeds it). Asm can drift. Treat binary as SoT. |
 | **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Default: PRG catchup streams pals + start MAP. Softboot opt-in (`R01E_SOFTBOOT=1`). Host Play for camera/player. Main FB = **VRAM + scroll** + **OAM composite**. `r01e_video_host_pan` is tests-only. |
-| **Board sim** | `retr01_sim` | IC / island netlist | **32-IC BOM** on **9 canvas frames**. Default cart: `retr01_studio/test_game/test.retr01`. **Loaded cart PRG runs as-is** (Phase 1 streams pals + start MAP via `$FE93`->`$FE12`). Bring-up PRG overlay only when **no cart file** (synthetic). Catchup ~12k PIN steps (or FAST word apply). Softboot opt-in (`R01S_SOFTBOOT=1`). **Host Play** after catchup in **both** PIN and FAST. |
+| **Board sim** | `retr01_sim` | IC / island netlist | **32-IC BOM** on **9 canvas frames**. Default cart: `retr01_studio/test_game/test.retr01`. **Loaded cart PRG runs as-is** (Phase 1 streams pals + start MAP via `$FE93`->`$FE12`). Bring-up PRG overlay only when **no cart file** (synthetic). Catchup ~12k pin-level steps. Softboot opt-in (`R01S_SOFTBOOT=1`). **Host Play** after catchup. |
 
 ### What is actually in `test.retr01` today
 
@@ -103,7 +103,7 @@ Verified against Studio pack (`r01_cart_build`) and `retr01_studio/test_game/tes
 1. **Hex / dump the cart first** - magic, PRG stream bytes, a known screen payload offset, CHR bank. If the dump is wrong, it's Studio export / pack. If the dump is right, blame the runner or soft helpers.
 2. **Same `.retr01` on emu and sim** - if both misbehave the same way after a dump-clean cart, prefer ROM/content or shared contract (`02`). If only one runner fails, prefer that runner.
 3. **Never use Studio Play as proof the cart boots** - Play bypasses PRG. Use emu (cart image + soft helpers) or sim (flash IC / cart PRG stream) for burnable behavior.
-4. **Call out soft helpers explicitly.** Emu always soft-boots + host Plays (main view is not proof of PRG MAP stream). Sim default path runs cart PRG on the netlist (or FAST word apply). `R01S_SOFTBOOT=1` is opt-in host poke only.
+4. **Call out soft helpers explicitly.** Emu always soft-boots + host Plays (main view is not proof of PRG MAP stream). Sim default path runs cart PRG on the netlist. `R01S_SOFTBOOT=1` is opt-in host poke only.
 5. **Color wrong?** Check `*_prom.bin` / board PROM path separately from cart palette **indices**.
 
 ### Sim readiness to load `test.retr01`
@@ -118,7 +118,7 @@ Verified against Studio pack (`r01_cart_build`) and `retr01_studio/test_game/tes
 
 **Island P wired.** Beam `NMI#` -> CPU `NMIB` on VBlank entry. Integration health wants pads + video + sprites + >=1 NMI pulse and zero bus conflicts. Optional **F** (machine EEPROM) still deferred.
 
-Startup **`r01s_board_catchup_bringup`** runs the MAP/pal stream (~12k PIN steps, or FAST word apply) so the LCD hold lifts. Host softboot is opt-in (`R01S_SOFTBOOT=1`). **Host Play** starts after catchup in PIN and FAST (Studio/emu SoT: move, camera, X->(0,0) / Y->(1,0) warps) until game PRG owns camera/player. Island O still fetches 2bpp CHR from flash.
+Startup **`r01s_board_catchup_bringup`** runs the MAP/pal stream (~12k pin-level steps) so the LCD hold lifts. Host softboot is opt-in (`R01S_SOFTBOOT=1`). **Host Play** starts after catchup (Studio/emu SoT: move, camera, X->(0,0) / Y->(1,0) warps) until game PRG owns camera/player. Island O still fetches 2bpp CHR from flash.
 
 ### Softboot (opt-in only)
 
@@ -127,8 +127,8 @@ Startup **`r01s_board_catchup_bringup`** runs the MAP/pal stream (~12k PIN steps
 | Status | Notes |
 |--------|--------|
 | **Done** | Cart / bring-up PRG streams start MAP+pals via `$FE93`->`$FE12` / `$FE08`/`$FE09` |
-| **Done** | Catchup on netlist (~12k steps) or FAST word apply |
-| **Temp** | Host Play after catchup in **both** PIN and FAST (retire when game PRG owns Play) |
+| **Done** | Catchup on netlist (~12k steps) |
+| **Temp** | Host Play after catchup (retire when game PRG owns Play) |
 | **Next** | Game PRG owns camera/player. Retire synthetic bring-up overlay + host Play |
 
 ## Modeling principles
@@ -157,7 +157,7 @@ Combinatorial parts (`eval` only) do **not** tick. They settle inside the board 
 
 | Decision | Choice |
 |----------|--------|
-| Ordering | **Settle loop** - each half-step runs `R01S_SETTLE_PASSES` (currently **2**, or **1** in SIM FAST) of wire + combinatorial `eval` so decode -> CE -> DQ can propagate before the next clock edge. Raise the constant when PLD/glue depth grows. |
+| Ordering | **Settle loop** - each half-step runs `R01S_SETTLE_PASSES` (currently **2**) of wire + combinatorial `eval` so decode -> CE -> DQ can propagate before the next clock edge. Raise the constant when PLD/glue depth grows. |
 | Conflict | `r01s_level_merge` / `r01s_bus_resolve`: H+L -> **hard abort** (`exit(1)`) with a stderr report (net, both drivers/levels, why). Reading a pin already at `X` also aborts. Unit tests may call `r01s_bus_set_fatal_conflicts(0)` to assert on `X` without exiting. |
 | Undriven net | **Pull-up to HIGH** - `r01s_bus_read` treats `Z` as `H` (`r01s_level_pulled`), so an idle data bus reads **`$FF`**, matching motherboard pull-ups. |
 
@@ -182,7 +182,7 @@ Documented plan only: when Island N/K (ATmega) is simulated, introduce a master 
 3. Bitmask major buses (`uint16_t address_bus`, etc.) - partial via (2)
 4. Merge proven glue into a "super component"
 5. Flat entity array for cache locality
-6. **Done (toggle):** `R01S_FAST=1` / UI **SIM FAST**. Word MAP catchup + thin settle/beam. Host Play is separate (on after catchup in both modes). Default remains full pin settle ([`CATCHUP_THREADING.md`](../retr01_sim/CATCHUP_THREADING.md), [`PERFORMANCE.md`](../retr01_sim/PERFORMANCE.md))
+6. **Done:** worker-thread MAP catchup so boot UI stays responsive ([`CATCHUP_THREADING.md`](../retr01_sim/CATCHUP_THREADING.md), [`PERFORMANCE.md`](../retr01_sim/PERFORMANCE.md))
 
 Pin-level code stays the default for catching PCB bugs early.
 
@@ -190,7 +190,7 @@ Pin-level code stays the default for catching PCB bugs early.
 
 | Priority | Work |
 |----------|------|
-| **Done** | **IC MAP stream default** (cart PRG or synthetic bring-up). Softboot opt-in (`R01S_SOFTBOOT=1`). **Host Play** after catchup in PIN and FAST |
+| **Done** | **IC MAP stream default** (cart PRG or synthetic bring-up). Softboot opt-in (`R01S_SOFTBOOT=1`). **Host Play** after catchup |
 | 1 | `hw/md/` IC reference docs (batches: CPU/MCU, memory, glue/video) |
 | 2 | Islands **A-E** models + unit tests + layer-2 smoke (**done**) |
 | 3 | Island **G** (VRAM interleave) / more `$FExx` latches (**done**, soft `$FE10`-`$FE12`) |

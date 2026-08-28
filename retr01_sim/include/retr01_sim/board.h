@@ -192,7 +192,6 @@ typedef struct R01sBoard {
     uint8_t cart_start_row;
     int cart_loaded;
     char cart_label[48];
-    uint16_t bringup_hang_pc; /* PRG main-loop PC from cart vector $FFFA (host park target) */
     /* Active palette RAM (soft); addr index from HC573 FE08. */
     uint8_t active_pal[32];
     uint8_t pal_addr;
@@ -200,15 +199,9 @@ typedef struct R01sBoard {
     uint8_t chr_last_master; /* hold last BG/sprite master when CHR CE denied */
     /* 2×2 workbench: 1 = screen dir hit loaded into slot (absent → backdrop). */
     uint8_t vram_slot_present[4];
-    /* Host Play scaffold (enabled after catchup in PIN and FAST UI). */
+    /* Host Play scaffold (enabled after catchup). */
     R01sPlay play;
     int catchup_cancel; /* cooperative cancel for threaded IC catchup */
-    /*
-     * sim_fast: word/transaction shortcuts (MAP catchup poke, thin settle/beam,
-     * Host Play scaffold). Default 0 = full pin-level netlist. Toggle via UI or
-     * R01S_FAST=1.
-     */
-    int sim_fast;
     int reset_hold;
     uint32_t cycles;
     R01sLevel phi2_prev;
@@ -251,26 +244,26 @@ int r01s_board_softboot_start_screen(R01sBoard *board);
 
 /*
  * Run bring-up palette + MAP→VRAM until the start screen is in VRAM and the LCD
- * hold lifts. Pin mode (~12k board steps). Fast mode (sim_fast / R01S_FAST): word
- * transaction copy of MAP+pals (same end state, no pin settle). Opt-in softboot via
- * R01S_SOFTBOOT=1. Returns 0 on success, -1 on timeout / missing meta.
+ * hold lifts (~12k board steps). Opt-in softboot via R01S_SOFTBOOT=1. Returns 0
+ * on success, -1 on timeout / missing meta.
  */
 int r01s_board_catchup_bringup(R01sBoard *board, R01sIslandGroup *group);
 
 /* After MAP stream (pin worker or sync path): 2×2 camera, map_addr, slot flags. */
 void r01s_board_catchup_finish(R01sBoard *board);
 
-/* Pin-accurate (0) vs word/fast (1). Env R01S_FAST=1 at build selects default. */
-void r01s_board_set_sim_fast(R01sBoard *board, int enable);
-int r01s_board_sim_fast(const R01sBoard *board);
-
 /* Cart screen directory helpers (world 0). */
 int r01s_board_has_screen(const R01sBoard *board, int col, int row);
 int r01s_board_first_screen(const R01sBoard *board, int *out_col, int *out_row);
+
+/* BG attr at world pixel from cart MAP (-1 if no screen). */
+int r01s_board_attr_at(const R01sBoard *board, int wx, int wy, uint8_t *out_attr);
+int r01s_board_solid_at(const R01sBoard *board, int wx, int wy);
+/* Player AABB vs present screens + BG solid (Studio play.c SoT). */
+int r01s_board_player_aabb_ok(const R01sBoard *board, int px, int py);
+
 int r01s_board_load_camera_2x2(R01sBoard *board, int origin_col, int origin_row);
 void r01s_board_set_scroll(R01sBoard *board, uint8_t scroll_x, uint8_t scroll_y);
-/* Park CPU on bring-up pad hang so host Play OAM/scroll are not overwritten by smoke PRG. */
-void r01s_board_park_bringup_cpu(R01sBoard *board);
 /* Host Play: MAP/VRAM already loaded via catchup; keep stream gate open. */
 void r01s_board_mark_map_ready(R01sBoard *board);
 

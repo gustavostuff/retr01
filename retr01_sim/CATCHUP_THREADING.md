@@ -4,9 +4,9 @@ Why IC bring-up runs on a worker thread, why a synchronous boot freezes the wind
 
 ## What "boot catchup" is
 
-On startup (and after Ctrl+R reset), the sim must get the bring-up **palette + start-screen MAP** into VRAM before the LCD hold lifts. Default (**SIM PIN**): ~12k island steps of the IC `$FE93`->`$FE12` stream (`r01s_board_catchup_bringup` / yielding worker in `app.c`). **SIM FAST** (`R01S_FAST=1`): same VRAM/pal end state via a word-level apply - see [`R01S_FAST` below](#r01s_fast-unset-sim-pin-vs-r01s_fast1-sim-fast).
+On startup (and after Ctrl+R reset), the sim must get the bring-up **palette + start-screen MAP** into VRAM before the LCD hold lifts. That is ~12k island steps of the IC `$FE93`->`$FE12` stream (`r01s_board_catchup_bringup` / yielding worker in `app.c`).
 
-Until pin-mode catchup finishes, the board is mid-stream: buses, map pointer, and sink contents change every step.
+Until catchup finishes, the board is mid-stream: buses, map pointer, and sink contents change every step.
 
 ## Why a synchronous boot hangs the app
 
@@ -76,7 +76,7 @@ Tried briefly in development; works, but feels stale unless batches are short an
 
 ### 4. Faster catchup / less work
 
-**Partially landed:** `R01S_FAST` / SIM FAST (word MAP catchup + thin settle/beam) - details [below](#r01s_fast-unset-sim-pin-vs-r01s_fast1-sim-fast). Further ideas: skip idle islands, or pin-mode catchup that omits beam until MAP completes.
+Further ideas: skip idle islands, or pin-mode catchup that omits beam until MAP completes.
 
 ### Recommended direction
 
@@ -91,123 +91,20 @@ Avoid holding `board_mu` across a full `r01s_ui_draw` while the worker is steppi
 
 | Item | Role |
 |------|------|
-| `R01S_SOFTBOOT=1` | Skip IC stream; host poke (triage only) - different from FAST |
-| `R01S_FAST=1` / sidebar **SIM FAST** | Word MAP catchup + thin settle/beam; default **SIM PIN** is full netlist |
+| `R01S_SOFTBOOT=1` | Skip IC stream; host poke (triage only) |
 | LCD `SCALE` 1x/2x | Sidebar / `G`; independent of catchup threading |
 | LCD texture blit | Streaming upload of sink RGB (not per-pixel `DrawPoint`) |
 
-## `R01S_FAST` unset (SIM PIN) vs `R01S_FAST=1` (SIM FAST)
+## Catchup code path
 
-Flag lives on the board as `board->sim_fast` (`r01s_board_set_sim_fast` / `r01s_board_sim_fast`).  
-`R01S_FAST=1` at `r01s_board_build` sets it before catchup starts. The sidebar **SIM PIN / SIM FAST** button toggles the same flag at runtime (after boot, that only affects **ongoing** `board_step`; catchup already finished unless you Ctrl+R).
-
-These modes share the same chip entities, wires, and UI. What changes is **how much electrical work each step does**, and **how catchup fills VRAM**.
-
-### Mental model
-
-| | SIM PIN (default) | SIM FAST |
-|--|-------------------|----------|
-| Goal | PCB / pin truth | Throughput / snappy boot |
-| Catchup | ~12k real netlist steps of bring-up PRG | One word-level MAP+pal apply |
-| Each `board_step` | Deep settle + fat beam burst | Shallow settle + thin beam burst |
-| Settle wires | Full (incl. BG fetch + linebuf) | Skips BG fetch + linebuf in settle (beam loop only) |
-| AVR ticks (328P/1284P) | Every PHI2 step | Skipped (smoke filled at word catchup) |
-| Host Play | On after catchup | On after catchup (same scaffold) |
-| Bus fights / settle depth | Visible | Easier to miss |
-| End VRAM/pal after catchup | Start screen in VRAM | Same *data* end state |
-
-`R01S_SOFTBOOT=1` is a third path (host softboot + some steps). FAST is **not** softboot: softboot is explicitly opt-in debug; FAST still uses cart flash peeks and sets `map_addr` / health flags via `board_fast_apply_map_stream`, but **does not** execute the `$FE93`->`$FE12` loop on the 6502.
-
----
-
-### 1. Boot catchup - what the worker does
-
-**PIN (`sim_fast == 0`) - code path in `app.c` + `r01s_board_catchup_bringup`:**
+**Worker (`app.c` + `r01s_board_catchup_bringup`):**
 
 1. Worker locks `board_mu`, runs batches of `r01s_island_group_step` (**32**), unlocks, signals spinner, repeats.
-2. Each step is a full `board_step` (below): PHI2, CPU micro-ops, decode, MAP/VRAM ports, beam dots, video wire.
+2. Each step is a full `board_step`: PHI2, CPU micro-ops, decode, MAP/VRAM ports, beam dots, video wire.
 3. Cart PRG (or synthetic bring-up overlay if no cart file) runs the MAP/pal stream: LDA `$FE93` / STA `$FE12` (and palette path) until `map_addr >= cart_off_map_screen0 + 480` and VRAM[0] matches flash.
 4. Wall time is on the order of **~10-15 s** (~1 ms/step x ~12k steps on a typical machine).
 5. Side effect: CPU PC, latches, PHI2 edges, beam position, and partial LCD samples advance for real during the stream.
 
-**FAST (`sim_fast == 1`) - early exit in the worker:**
+`R01S_SOFTBOOT=1` is an alternate path (host softboot + some steps) for triage only — not the default cart PRG execution model.
 
-1. Worker locks once, calls `r01s_board_catchup_bringup` -> `board_fast_apply_map_stream`.
-2. That function **does not** step the netlist. It:
-   - peeks one global BG row + one global sprite row (**16+16** B from the 128 B planes, using world `default_pal_row`) -> `board->active_pal[]`
-   - peeks 480 MAP bytes -> `r01s_as6c62256_poke` into VRAM
-   - `poke_map_addr_latches(..., screen0 + 480)`
-   - sets `health_saw_map` / `health_saw_vram` / `health_saw_latch`
-3. Unlock, one spinner tick, catchup done (**milliseconds**).
-4. Side effect: **no** bring-up instruction stream, **no** per-byte `$FE93`/`$FE12` pin traffic, beam/LCD mostly still at reset until the post-catchup frame loop runs.
-
-So: PIN *simulates the stream*; FAST *installs the stream's result*.
-
----
-
-### 2. Ongoing simulation - what one `board_step` does
-
-Both modes still call the same `board_step` in `board.c`. The branch is only how expensive two inner loops are.
-
-**Settle (`board_settle` -> `board_settle_n`):**
-
-Each settle pass runs, in order: `wire_power_clock_reset`, `wire_memory`, `wire_io`, `wire_beam`, `wire_bg_fetch`, `wire_vram`, `wire_linebuf` (drive/sense pins across islands).
-
-| | Passes per `board_settle` call |
-|--|--------------------------------|
-| PIN | `R01S_SETTLE_PASSES` (**2**) |
-| FAST | `R01S_SETTLE_PASSES_FAST` (**1**) |
-
-`board_step` invokes settle **several times** per step (around PHI2 / CPU / beam). So PIN does roughly **2x** the wire work of FAST on every settle call. Deep settle exists so decode -> CE -> DQ can propagate in one half-cycle. Shallow settle can hide multi-level glue races.
-
-**Beam / video burst (inside `board_step`):**
-
-After osc/APU/1284 ticks, both modes loop DOT:
-
-- tick DOT osc -> drive beam -> tick beam -> NMI edge -> `wire_video_dot` (BG/sprite/compositor/PROM -> LCD sink).
-
-| | DOT iterations per board step |
-|--|-------------------------------|
-| PIN | `R01S_BEAM_DOTS_PER_STEP` (**32**) |
-| FAST | `R01S_BEAM_DOTS_PER_STEP_FAST` (**4**) |
-| Host Play (either mode) | `R01S_BEAM_DOTS_PER_STEP_PLAY` (**640**) |
-
-Same silicon timing model (341x262), but FAST advances the raster slower per board step. Under the UI step budget you still get video, but fewer dots (and fewer sink plots) per wall-clock frame unless Host Play raises the burst. PIN burns more of its step time here during catchup.
-
-**Unchanged in both modes:**
-
-- Same `r01s_entity_tick` / `eval` on CPU, osc, AVRs, beam, etc.
-- Same pin structs and UI drawing (LCD still blits the sink texture).
-- Same auto-inc rules for `$FE12` / `$FE93` when those cycles *do* happen on the pin path.
-
----
-
-### 3. What you gain / lose
-
-**FAST helps**
-
-- Boot: catchup effectively free vs multi-second worker.
-- Play: more PHI2/CPU progress per UI frame for the same wall budget (~5-20x less work per step from settlexbeam cuts, depending on hot path).
-- Iteration when you care about "screen up + game logic," not pin fights.
-
-**PIN keeps**
-
-- Electrical realism: multi-pass settle, fat beam, IC MAP ownership through the real `$FExx` path.
-- Better odds of catching bus fights, wrong CE owners, and "works in soft poke, fails on silicon" bugs.
-- Catchup that proves bring-up PRG + decode + flash + VRAM port together.
-
-**Not the same as softboot:** softboot is an explicit host bypass (`R01S_SOFTBOOT`). FAST catchup is a **word transaction** of the same cart bytes the IC stream would write, still keyed off cart meta (`cart_off_map_screen0`, `cart_off_pal_bg`).
-
----
-
-### 4. Code map
-
-| Concern | Where |
-|---------|--------|
-| Flag / env default | `board->sim_fast`, `r01s_board_build` (`R01S_FAST`), UI `ui_toggle_sim_fast` |
-| Catchup branch | `r01s_board_catchup_bringup`, worker early path in `app.c` |
-| Word MAP apply | `board_fast_apply_map_stream` |
-| Settle depth | `board_settle` -> `R01S_SETTLE_PASSES` vs `_FAST` |
-| Beam burst | `board_step` -> `R01S_BEAM_DOTS_PER_STEP` vs `_FAST` |
-
-See also: [`README.md`](README.md), [`docs/08_simulator.md`](../docs/08_simulator.md).
+See also: [`README.md`](README.md), [`docs/08_simulator.md`](../docs/08_simulator.md), [`PERFORMANCE.md`](PERFORMANCE.md).

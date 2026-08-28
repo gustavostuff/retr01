@@ -110,20 +110,6 @@ static int catchup_thread_fn_yielding(void *userdata) {
         return 0;
     }
 
-    /* Fast mode: one word-transaction MAP apply (no ~12k pin steps). */
-    if (r01s_board_sim_fast(board)) {
-        SDL_LockMutex(app->board_mu);
-        snprintf(app->ui.status, sizeof(app->ui.status), "FAST MAP stream…");
-        app->catchup_rc = r01s_board_catchup_bringup(board, group);
-        if (app->catchup_rc == 0) {
-            snprintf(app->ui.status, sizeof(app->ui.status), "FAST MAP stream ready");
-        }
-        SDL_UnlockMutex(app->board_mu);
-        catchup_signal_ui_tick(app, board);
-        SDL_AtomicSet(&app->catchup_active, 0);
-        return app->catchup_rc;
-    }
-
     SDL_LockMutex(app->board_mu);
     board->catchup_cancel = 0;
     target = board->cart_off_map_screen0 + 480u;
