@@ -47,6 +47,14 @@ int r01e_cart_world(const R01eCart *c, int index, R01eWorldView *out);
 /* Return 1 if world has a screen at grid col,row. */
 int r01e_cart_has_screen(const R01eCart *c, int world, int col, int row);
 
+/* BG attr at world pixel; -1 if no screen. */
+int r01e_cart_attr_at(const R01eCart *c, int world, int wx, int wy, uint8_t *out_attr);
+
+int r01e_cart_solid_at(const R01eCart *c, int world, int wx, int wy);
+
+/* Player AABB vs present screens and BG solid (Studio play.c SoT). */
+int r01e_cart_player_aabb_ok(const R01eCart *c, int world, int px, int py);
+
 /* Absolute byte in cart image, or NULL if OOB. */
 const uint8_t *r01e_cart_ptr(const R01eCart *c, uint32_t abs_off, size_t need);
 

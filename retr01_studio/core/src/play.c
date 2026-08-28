@@ -1,29 +1,9 @@
+#include "retr01_studio/collision.h"
 #include "retr01_studio/play.h"
 #include "retr01_studio/palette.h"
 #include "retr01_studio/project.h"
 
 #include <string.h>
-
-static int player_aabb_ok(const R01World *w, int px, int py) {
-    int x1, y1, c0, c1, r0, r1, c, r;
-    if (!w || px < 0 || py < 0) {
-        return 0;
-    }
-    x1 = px + R01_PLAY_PLAYER_W - 1;
-    y1 = py + R01_PLAY_PLAYER_H - 1;
-    c0 = px / R01_SCREEN_PX_W;
-    c1 = x1 / R01_SCREEN_PX_W;
-    r0 = py / R01_SCREEN_PX_H;
-    r1 = y1 / R01_SCREEN_PX_H;
-    for (c = c0; c <= c1; c++) {
-        for (r = r0; r <= r1; r++) {
-            if (r01_world_find_screen(w, c, r) < 0) {
-                return 0;
-            }
-        }
-    }
-    return 1;
-}
 
 static void update_camera(R01PlayState *pl) {
     int ax = pl->player_x + R01_PLAY_PLAYER_W / 2;
@@ -98,13 +78,13 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
     }
     if (dx != 0) {
         int nx = pl->player_x + dx;
-        if (player_aabb_ok(w, nx, pl->player_y)) {
+        if (r01_world_player_aabb_ok(w, nx, pl->player_y)) {
             pl->player_x = nx;
         }
     }
     if (dy != 0) {
         int ny = pl->player_y + dy;
-        if (player_aabb_ok(w, pl->player_x, ny)) {
+        if (r01_world_player_aabb_ok(w, pl->player_x, ny)) {
             pl->player_y = ny;
         }
     }

@@ -183,3 +183,88 @@ int r01e_cart_has_screen(const R01eCart *c, int world, int col, int row) {
     }
     return 0;
 }
+
+static int cart_screen_payload(const R01eCart *c, int world, int col, int row, uint32_t *out_off) {
+    R01eWorldView wv;
+    const uint8_t *dir;
+    int si;
+
+    if (r01e_cart_world(c, world, &wv) != 0) {
+        return 0;
+    }
+    dir = r01e_cart_ptr(c, wv.base + wv.off_screen_dir, (size_t)wv.screen_count * 12u);
+    if (!dir) {
+        return 0;
+    }
+    for (si = 0; si < wv.screen_count; si++) {
+        const uint8_t *e = dir + (size_t)si * 12u;
+        if ((int)e[0] == col && (int)e[1] == row) {
+            if (out_off) {
+                *out_off = wv.base + get_u24(e + 4);
+            }
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int r01e_cart_attr_at(const R01eCart *c, int world, int wx, int wy, uint8_t *out_attr) {
+    int col, row, lx, ly, tx, ty, cell;
+    uint32_t pay;
+    const uint8_t *attrs;
+
+    if (!c || wx < 0 || wy < 0) {
+        return -1;
+    }
+    col = wx / R01E_SCREEN_PX_W;
+    row = wy / R01E_SCREEN_PX_H;
+    if (!cart_screen_payload(c, world, col, row, &pay)) {
+        return -1;
+    }
+    lx = wx % R01E_SCREEN_PX_W;
+    ly = wy % R01E_SCREEN_PX_H;
+    tx = lx / 8;
+    ty = ly / 8;
+    cell = ty * R01E_SCREEN_TILES_X + tx;
+    attrs = r01e_cart_ptr(c, pay + R01E_TILES_PER_SCREEN + (uint32_t)cell, 1);
+    if (!attrs) {
+        return -1;
+    }
+    if (out_attr) {
+        *out_attr = attrs[0];
+    }
+    return 0;
+}
+
+int r01e_cart_solid_at(const R01eCart *c, int world, int wx, int wy) {
+    uint8_t attr;
+    if (r01e_cart_attr_at(c, world, wx, wy, &attr) != 0) {
+        return 0;
+    }
+    return (attr & R01E_ATTR_SOLID) != 0;
+}
+
+int r01e_cart_player_aabb_ok(const R01eCart *c, int world, int px, int py) {
+    int x1, y1, c0, c1, r0, r1, col, row;
+    if (!c || px < 0 || py < 0) {
+        return 0;
+    }
+    x1 = px + 7;
+    y1 = py + 7;
+    c0 = px / R01E_SCREEN_PX_W;
+    c1 = x1 / R01E_SCREEN_PX_W;
+    r0 = py / R01E_SCREEN_PX_H;
+    r1 = y1 / R01E_SCREEN_PX_H;
+    for (col = c0; col <= c1; col++) {
+        for (row = r0; row <= r1; row++) {
+            if (!r01e_cart_has_screen(c, world, col, row)) {
+                return 0;
+            }
+        }
+    }
+    if (r01e_cart_solid_at(c, world, px, py) || r01e_cart_solid_at(c, world, x1, py) ||
+        r01e_cart_solid_at(c, world, px, y1) || r01e_cart_solid_at(c, world, x1, y1)) {
+        return 0;
+    }
+    return 1;
+}

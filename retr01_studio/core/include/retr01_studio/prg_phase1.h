@@ -17,6 +17,9 @@ typedef struct R01PrgCartLayout {
 #define R01_PRG_INIT_SCROLL_X 11u /* LDA #imm before STA $FE02 */
 #define R01_PRG_INIT_SCROLL_Y 16u /* LDA #imm before STA $FE03 */
 
+/* play_pos_ok @ CPU $8500 (PRG+$0500). Solid shadow dir @ $810A. */
+#define R01_PLAY_COLLISION_CPU 0x8500u
+
 /*
  * Phase 1 PRG: reset init, palette + start-screen MAP stream ($FE93->$FE12),
  * then VBlank pad poll. Play table at $8100. Main loop PC stored at PRG+$7FFA.

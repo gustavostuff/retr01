@@ -11,6 +11,7 @@ add_library(retr01_studio_core
   core/src/json_io.c
   core/src/palette.c
   core/src/play.c
+  core/src/collision.c
   core/src/prg_phase1.c
   core/src/cart.c
 )

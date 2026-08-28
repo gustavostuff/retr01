@@ -289,8 +289,7 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
         screen_toggle_sel_flag(ui, R01_ATTR_ANIM);
         break;
     case 5:
-        menu_ensure_tile_sel(ui);
-        screen_toggle_sel_flag(ui, R01_ATTR_SOLID);
+        screen_set_solid_by_hw(ui, ui->menu.screen_tx, ui->menu.screen_ty);
         break;
     default:
         break;

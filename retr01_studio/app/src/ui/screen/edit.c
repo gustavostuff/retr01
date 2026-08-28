@@ -4,6 +4,7 @@
 
 #include "retr01_studio/cart.h"
 #include "retr01_studio/chr_pack.h"
+#include "retr01_studio/collision.h"
 #include "retr01_studio/json_io.h"
 #include "retr01_studio/palette.h"
 #include "retr01_studio/project.h"
@@ -106,5 +107,28 @@ void screen_toggle_sel_flag(UiState *ui, uint8_t flag) {
             int cell = ty * R01_SCREEN_TILES_X + tx;
             s->attrs[cell] ^= flag;
         }
+    }
+}
+
+void screen_set_solid_by_hw(UiState *ui, int ref_tx, int ref_ty) {
+    R01World *w = r01_project_active_world(ui->project);
+    R01Screen *s = r01_project_active_screen(ui->project);
+    int cell;
+    uint8_t ref_attr;
+    uint8_t hw_key;
+    int set_solid;
+    int touched;
+
+    if (!w || !s || ref_tx < 0 || ref_tx >= R01_SCREEN_TILES_X || ref_ty < 0 || ref_ty >= R01_SCREEN_TILES_Y) {
+        return;
+    }
+    cell = ref_ty * R01_SCREEN_TILES_X + ref_tx;
+    ref_attr = s->attrs[cell];
+    hw_key = r01_attr_hw(ref_attr);
+    set_solid = !r01_attr_solid(ref_attr);
+    touched = r01_world_apply_solid_hw(w, hw_key, set_solid);
+    screen_refresh_sel(ui);
+    if (touched > 0) {
+        ui_toast(ui, set_solid ? "solid set (matching attrs)" : "solid cleared (matching attrs)", 0);
     }
 }

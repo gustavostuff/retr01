@@ -1,6 +1,9 @@
+#include "retr01_studio/collision.h"
 #include "retr01_studio/play.h"
 #include "retr01_studio/prg_phase1.h"
 #include "retr01_studio/project.h"
+
+#include "play_collision_bin.h"
 
 #include <string.h>
 
@@ -10,6 +13,13 @@
 #define PLAY_PRESENT 0
 #define PLAY_SPAWN_C 8
 #define PLAY_SPAWN_R 9
+#define PLAY_COLL_COUNT 10
+#define PLAY_COLL_DIR 11 /* 4 bytes/screen: col, row, tab_lo, tab_hi (CPU addr) */
+
+#define R01P_OFF 0x00F0u
+#define R01P_VER_COLLISION 2u
+#define R01_PLAY_COLLISION_OFF 0x0500u /* CPU $8500 */
+#define R01_PLAY_SOLID_DATA_OFF 0x0700u /* CPU $8700 — solid shadow tables */
 
 enum {
     PRG_OFF_BG_LO = 1,
@@ -179,6 +189,50 @@ static size_t append_boot_stream(uint8_t *out, const R01PrgCartLayout *layout) {
     return sizeof(stream);
 }
 
+static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01World *w) {
+    size_t data_off = R01_PLAY_SOLID_DATA_OFF;
+    int di = 0;
+    int si;
+
+    if (!w) {
+        prg[PLAY_OFF + PLAY_COLL_COUNT] = 0;
+        return;
+    }
+    for (si = 0; si < w->screen_count; si++) {
+        const R01Screen *s = &w->screens[si];
+        int cell;
+        uint16_t tab_addr;
+        uint8_t *ent;
+        if (!s->present || s->col < 0 || s->col > 7 || s->row < 0 || s->row > 7) {
+            continue;
+        }
+        if (data_off + R01_TILES_PER_SCREEN > R01_PRG_BYTES) {
+            break;
+        }
+        tab_addr = (uint16_t)(CODE_BASE + data_off);
+        for (cell = 0; cell < R01_TILES_PER_SCREEN; cell++) {
+            prg[data_off++] = (s->attrs[cell] & R01_ATTR_SOLID) ? 1u : 0u;
+        }
+        if (PLAY_OFF + PLAY_COLL_DIR + (size_t)(di + 1) * 4u > R01_PLAY_COLLISION_OFF) {
+            break;
+        }
+        ent = prg + PLAY_OFF + PLAY_COLL_DIR + (size_t)di * 4u;
+        ent[0] = (uint8_t)s->col;
+        ent[1] = (uint8_t)s->row;
+        ent[2] = (uint8_t)(tab_addr & 0xFFu);
+        ent[3] = (uint8_t)(tab_addr >> 8);
+        di++;
+    }
+    prg[PLAY_OFF + PLAY_COLL_COUNT] = (uint8_t)di;
+}
+
+static void install_collision_code(uint8_t prg[R01_PRG_BYTES]) {
+    if (R01_PLAY_COLLISION_OFF + play_collision_bin_len > R01_PLAY_SOLID_DATA_OFF) {
+        return;
+    }
+    memcpy(prg + R01_PLAY_COLLISION_OFF, play_collision_bin, play_collision_bin_len);
+}
+
 void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01World *w, const R01PrgCartLayout *layout) {
     uint8_t mask[8];
     int spawn_c = R01_START_COL, spawn_r = R01_START_ROW;
@@ -230,11 +284,15 @@ void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01World *w, const R0
     prg[PLAY_OFF + PLAY_SPAWN_C] = (uint8_t)spawn_c;
     prg[PLAY_OFF + PLAY_SPAWN_R] = (uint8_t)spawn_r;
 
-    prg[0x00F0] = 'R';
-    prg[0x00F1] = '0';
-    prg[0x00F2] = '1';
-    prg[0x00F3] = 'P';
-    prg[0x00F4] = 1;
+    install_collision_code(prg);
+    fill_collision_tables(prg, w);
+
+    prg[R01P_OFF] = 'R';
+    prg[R01P_OFF + 1] = '0';
+    prg[R01P_OFF + 2] = '1';
+    prg[R01P_OFF + 3] = 'P';
+    prg[R01P_OFF + 4] = R01P_VER_COLLISION;
+    put_u16_le(prg + R01P_OFF + 5, (uint16_t)(CODE_BASE + R01_PLAY_COLLISION_OFF));
 
     put_u16_le(prg + 0x7FFA, main_pc);
     put_u16_le(prg + 0x7FFC, CODE_BASE);

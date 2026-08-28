@@ -115,6 +115,7 @@ void ui_toggle_play(UiState *ui);
 void screen_set_sel_bank(UiState *ui, int bank);
 void screen_set_sel_pal(UiState *ui, int pal);
 void screen_toggle_sel_flag(UiState *ui, uint8_t flag);
+void screen_set_solid_by_hw(UiState *ui, int ref_tx, int ref_ty);
 
 /* ui/screen/draw.c */
 void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s);

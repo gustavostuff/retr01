@@ -120,7 +120,8 @@ int r01_prg_write_asm(const R01Project *p, const char *path, char *err_buf, size
     w = p ? &p->worlds[0] : NULL;
     fprintf(f, "; retr01 Phase 1 — boot streams palette + start MAP, then VBlank pad poll.\n");
     fprintf(f, "; Gameplay: Studio play.c / emu cart runtime (marker R01P @ $80F0).\n");
-    fprintf(f, "; Play table @ $8100: present[8] bitmask, spawn_col, spawn_row.\n");
+    fprintf(f, "; Play table @ $8100: present[8], spawn, coll_dir @ $810A.\n");
+    fprintf(f, "; play_pos_ok @ $8500 (PRG+$0500): solid shadow probe via ($20),Y.\n");
     fprintf(f, ".setcpu \"65C02\"\n");
     fprintf(f, "WORLD     = $FE30\n");
     fprintf(f, "SCROLL_X  = $FE02\n");

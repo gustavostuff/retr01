@@ -17,26 +17,7 @@ static int cart_is_phase1_play(const R01eCart *c) {
 }
 
 static int player_aabb_ok(R01eMachine *m, int px, int py) {
-    int x1, y1, c0, c1, r0, r1, c, r;
-    int world = (int)m->io.world;
-
-    if (!m || px < 0 || py < 0) {
-        return 0;
-    }
-    x1 = px + R01E_PLAY_PLAYER_W - 1;
-    y1 = py + R01E_PLAY_PLAYER_H - 1;
-    c0 = px / R01E_SCREEN_PX_W;
-    c1 = x1 / R01E_SCREEN_PX_W;
-    r0 = py / R01E_SCREEN_PX_H;
-    r1 = y1 / R01E_SCREEN_PX_H;
-    for (c = c0; c <= c1; c++) {
-        for (r = r0; r <= r1; r++) {
-            if (!r01e_cart_has_screen(&m->cart, world, c, r)) {
-                return 0;
-            }
-        }
-    }
-    return 1;
+    return r01e_cart_player_aabb_ok(&m->cart, (int)m->io.world, px, py);
 }
 
 static void update_camera(R01ePlay *pl) {
