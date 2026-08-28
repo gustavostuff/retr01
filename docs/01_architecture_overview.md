@@ -17,24 +17,7 @@ When docs disagree, use this order.
 | Studio game modules (movement, camera, entities, collision budgets) | [`10`](10_game_modules.md) | Attachable gameplay profiles. Studio phases implement subsets later |
 | IC pin/behavior detail | [`hw/md/`](../hw/md/) + datasheet PDFs | Sim and schematics |
 
-**Current product board:** [`06`](06_hardware_v1_32ic.md), **32 ICs**, ~**12 x 12 cm** 4-layer THT.
-
-```text
-  retr01-A (32 IC): roles:
-  +------------------------------------------------------------------+
-  | W65C02S          game CPU @ 8.000 MHz                            |
-  | ATF22V10 x5      decode, interleave, beam X/Y, compositor        |
-  | HC573 x9         packed $FExx latches                            |
-  | HC157 x6         VRAM / line-buffer address mux                  |
-  | HC245 x3         CPU / video / cart-OAM isolation                |
-  | AS6C62256 x3     sys RAM, interleaved VRAM, sprite line buffer   |
-  | SST39SF040       512 KB cart flash (PRG/CHR/MAP)                 |
-  | AT28C16          Color PROM (6-bit index -> R3G3B2)              |
-  | ATmega1284P      OAM / sprites / pads / machine EEPROM           |
-  | ATmega328P       APU ($FE40-$FE5F)                               |
-  | I2C EEPROM       cart game saves (in the 32)                     |
-  +------------------------------------------------------------------+
-```
+**Current product board:** [`06`](06_hardware_v1_32ic.md) — **32 ICs**, ~**12×12 cm** 4-layer THT (chip roles and netlist there).
 
 This folder is the current architecture spec for **retr01**.
 
@@ -149,25 +132,4 @@ Current chip list: [`06`](06_hardware_v1_32ic.md) (**32 IC**). Roles:
 
 ## Near-term software focus
 
-**retr01 Studio** Phase 1 and **retr01 Emulator** Phase 1 are the active tools. See [`retr01_studio/README.md`](../retr01_studio/README.md) and [`retr01_emu/README.md`](../retr01_emu/README.md). Later Studio/Emu phases are not documented until they are defined.
-
-Studio Phase 1: PNG atlas import, Play preview, `.retr01` export. Emulator Phase 1: load that cart and run the same Play rules on host.
-
-## Validation tools
-
-- **Board IC simulator** ([`08`](08_simulator.md)): pin/netlist models of the 32-IC BOM, islands then full board
-- **Software emulator** ([`retr01_emu/`](../retr01_emu/)): Phase 1 cart + Play parity with Studio
-
-## Where to look next
-
-- **Sources of truth:** table at top of this doc
-- Product pitch and NES comparison: `07_pitch.md`
-- Graphics, worlds, `$FExx`, cart image (software SoT): `02_graphics_worlds_memory.md`
-- Current 32-IC HW BOM: `06_hardware_v1_32ic.md`
-- Audio / APU bytecode + bus bridge: `09_audio_architecture.md`
-- Protoboard islands: `03_hardware_implementation.md`
-- retr01 Studio Phase 1: `04_retr01_studio.md` / `retr01_studio/README.md`
-- Locked decisions + open Qs: `05_costs_and_open_questions.md`
-- Board simulator: `08_simulator.md`
-- Game modules (Studio attachable mechanics + budgets): `10_game_modules.md`
-- IC markdown notes: `hw/md/`
+**retr01 Studio** (Phase 2 authoring) and **retr01 Emulator** (Phase 1 cart runtime) are the active tools — see [`retr01_studio/README.md`](../retr01_studio/README.md) and [`retr01_emu/README.md`](../retr01_emu/README.md). **Board IC simulator** ([`08`](08_simulator.md) / [`retr01_sim/`](../retr01_sim/)) validates the 32-IC netlist. Use the **sources of truth** table at the top for everything else.
