@@ -167,20 +167,28 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 |  |   default_pal_row (0..7), screen_count (= present count)   ||
 |  |   parallax_count (0..2)                                    ||
 |  |   off_chr u24, off_screen_dir u24, off_parallax_dir u24    ||
+|  |   entity_type_count u8, entity_inst_count u8               ||
+|  |   off_entity_types u24, off_entity_insts u24               ||
 |  |   reserved to 32 B                                         ||
 |  +------------------------------------------------------------+|
-|  | CHR: BG 0..3 + SPR 0..3 (4 KB each)                        ||
+|  | CHR: BG 0..3 + SPR 0..3 (4 KB each; real spr_banks)        ||
 |  | SCREEN DIR: 12 B per present screen                        ||
 |  |   col, row, flags0, flags1 (Phase 1: flags = 0)            ||
 |  |   off_payload u24, off_screen_meta u24 (0 if unused)       ||
 |  | PARALLAX DIR: slot (0..1 -> VRAM 4..5), flags, off_payload ||
 |  | SCREEN PAYLOADS: 240 tile + 240 attr each                  ||
 |  | PARALLAX PAYLOADS: same 480 B shape (after screens)        ||
+|  | ENTITY TYPES: 20 B each (state0/frame0 only)               ||
+|  |   origin_x, origin_y, part_count, pad                      ||
+|  |   4× {tile, attr, dx i8, dy i8} (unused parts zero)        ||
+|  | INSTANCES: 6 B each {type_id, pad, world_x u16, world_y u16}||
 |  +------------------------------------------------------------+|
 +----------------------------------------------------------------+
 |  WORLD 1 .. N                                                  |
 +----------------------------------------------------------------+
 ```
+
+OAM attr packing matches BG: bank bits 1-0, pal bits 3-2, `FLIP_H=0x10`, `FLIP_V=0x20`. Instance `world_x/y` is the **user origin**; host Play draws parts at `world + (dx,dy) - origin` (Studio `r01_entity_world_x/y`). SPR bank 0 **tile 1** is reserved as the solid player stub (OAM slot 0).
 
 Boot: magic -> pointers -> world header -> screen dir / parallax dir -> `off_payload`. Load grid screens into VRAM slots 0-3. Load parallax dir entries into slots 4-5. MAP port: `$FE90`-`$FE92` addr, `$FE93` data auto-inc.
 

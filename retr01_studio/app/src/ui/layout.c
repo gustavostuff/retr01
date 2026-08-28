@@ -139,6 +139,27 @@ int screen_hit(const UiState *ui, int lx, int ly, int *out_tx, int *out_ty) {
     return 1;
 }
 
+int screen_pixel_hit(const UiState *ui, int lx, int ly, int *out_px, int *out_py) {
+    int ox, oy;
+    int px, py;
+    screen_origin(ui, &ox, &oy);
+    if (lx < ox || ly < oy || lx >= ox + UI_SCREEN_W || ly >= oy + UI_SCREEN_H) {
+        return 0;
+    }
+    px = (lx - ox) / UI_SCREEN_SCALE;
+    py = (ly - oy) / UI_SCREEN_SCALE;
+    if (px < 0 || py < 0 || px >= R01_SCREEN_PX_W || py >= R01_SCREEN_PX_H) {
+        return 0;
+    }
+    if (out_px) {
+        *out_px = px;
+    }
+    if (out_py) {
+        *out_py = py;
+    }
+    return 1;
+}
+
 void accordion_layout(const UiState *ui, AccordionLayout *lo) {
     int y = 0;
     lo->worlds_hdr_y = y;

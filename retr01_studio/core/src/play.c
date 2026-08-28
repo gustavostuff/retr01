@@ -1,4 +1,5 @@
 #include "retr01_studio/collision.h"
+#include "retr01_studio/entities.h"
 #include "retr01_studio/play.h"
 #include "retr01_studio/palette.h"
 #include "retr01_studio/project.h"
@@ -153,4 +154,55 @@ int r01_play_sample_bg(const R01Project *p, const R01PlayState *pl, int vx, int 
     s = &w->screens[idx];
     r01_screen_pixel_rgb(p, w, s, wx % R01_SCREEN_PX_W, wy % R01_SCREEN_PX_H, r, g, b);
     return 0;
+}
+
+int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry *out, int cap) {
+    const R01World *w;
+    int n = 0;
+    int i;
+    if (!p || !pl || !out || cap < 1) {
+        return 0;
+    }
+    w = r01_project_active_world_const(p);
+    if (!w) {
+        return 0;
+    }
+    /* Slot 0: player (hardcoded 8x8 tile 1 / bank 0 — matches cart stub). */
+    out[0].x = pl->player_x - pl->cam_x;
+    out[0].y = pl->player_y - pl->cam_y;
+    out[0].bank = 0;
+    out[0].tile_id = 1;
+    out[0].pal = 0;
+    out[0].flip_h = 0;
+    out[0].flip_v = 0;
+    n = 1;
+
+    for (i = 0; i < w->instance_count && n < cap && n < R01_OAM_MAX; i++) {
+        const R01EntityInstance *inst = &w->instances[i];
+        const R01EntityType *ent;
+        const R01EntityState *st;
+        const R01EntityFrame *fr;
+        int pi;
+        if (inst->type_id < 0 || inst->type_id >= w->entity_count) {
+            continue;
+        }
+        ent = &w->entities[inst->type_id];
+        if (ent->state_count < 1 || ent->states[0].frame_count < 1) {
+            continue;
+        }
+        st = &ent->states[0];
+        fr = &st->frames[0];
+        for (pi = 0; pi < fr->part_count && n < cap && n < R01_OAM_MAX; pi++) {
+            const R01EntityPart *pt = &fr->parts[pi];
+            out[n].x = r01_entity_world_x(inst->world_x, st->origin_x, pt->dx) - pl->cam_x;
+            out[n].y = r01_entity_world_y(inst->world_y, st->origin_y, pt->dy) - pl->cam_y;
+            out[n].bank = pt->bank;
+            out[n].tile_id = pt->tile_id;
+            out[n].pal = pt->pal;
+            out[n].flip_h = pt->flip_h;
+            out[n].flip_v = pt->flip_v;
+            n++;
+        }
+    }
+    return n;
 }

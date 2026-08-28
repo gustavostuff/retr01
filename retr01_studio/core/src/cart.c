@@ -74,6 +74,46 @@ static void put_u24(uint8_t *p, uint32_t v) {
     p[2] = (uint8_t)((v >> 16) & 0xFFu);
 }
 
+static void put_u16(uint8_t *p, uint16_t v) {
+    p[0] = (uint8_t)(v & 0xFFu);
+    p[1] = (uint8_t)((v >> 8) & 0xFFu);
+}
+
+static uint8_t pack_oam_attr(int bank, int pal, int flip_h, int flip_v) {
+    uint8_t a = (uint8_t)((bank & 3) | ((pal & 3) << 2));
+    if (flip_h) {
+        a |= R01_ATTR_FLIP_H;
+    }
+    if (flip_v) {
+        a |= R01_ATTR_FLIP_V;
+    }
+    return a;
+}
+
+static void pack_entity_type_rec(uint8_t out[R01_CART_ENTITY_TYPE_SIZE], const R01EntityType *ent) {
+    const R01EntityState *st;
+    const R01EntityFrame *fr;
+    int pi;
+    memset(out, 0, R01_CART_ENTITY_TYPE_SIZE);
+    if (!ent || ent->state_count < 1 || ent->states[0].frame_count < 1) {
+        return;
+    }
+    st = &ent->states[0];
+    fr = &st->frames[0];
+    out[0] = (uint8_t)st->origin_x;
+    out[1] = (uint8_t)st->origin_y;
+    out[2] = (uint8_t)(fr->part_count > R01_CART_ENTITY_PARTS_MAX ? R01_CART_ENTITY_PARTS_MAX : fr->part_count);
+    out[3] = 0;
+    for (pi = 0; pi < (int)out[2]; pi++) {
+        const R01EntityPart *pt = &fr->parts[pi];
+        uint8_t *slot = out + 4 + pi * 4;
+        slot[0] = (uint8_t)pt->tile_id;
+        slot[1] = pack_oam_attr(pt->bank, pt->pal, pt->flip_h, pt->flip_v);
+        slot[2] = (uint8_t)(int8_t)pt->dx;
+        slot[3] = (uint8_t)(int8_t)pt->dy;
+    }
+}
+
 void r01_prom_fill(uint8_t out64[R01_MASTER_COLORS]) {
     int i;
     for (i = 0; i < R01_MASTER_COLORS; i++) {
@@ -180,8 +220,9 @@ static void fill_solid_tile(uint8_t tile[R01_TILE_BYTES], uint8_t color) {
 static int build_world_blob(Buf *blob, const R01World *w) {
     uint8_t hdr[WORLD_HDR_SIZE];
     uint8_t dir[R01_MAX_SCREENS * SCREEN_DIR_ENT];
-    size_t off_chr, off_sdir, off_spay;
+    size_t off_chr, off_sdir, off_spay, off_types, off_insts;
     int si, bi, present_n = 0;
+    int type_n, inst_n;
     uint32_t payload_base;
 
     memset(hdr, 0, sizeof(hdr));
@@ -194,11 +235,27 @@ static int build_world_blob(Buf *blob, const R01World *w) {
     if (present_n > 255) {
         present_n = 255;
     }
+    type_n = w->entity_count;
+    if (type_n > 255) {
+        type_n = 255;
+    }
+    if (type_n > R01_MAX_ENTITY_TYPES) {
+        type_n = R01_MAX_ENTITY_TYPES;
+    }
+    inst_n = w->instance_count;
+    if (inst_n > 255) {
+        inst_n = 255;
+    }
+    if (inst_n > R01_MAX_ENTITY_INSTANCES) {
+        inst_n = R01_MAX_ENTITY_INSTANCES;
+    }
 
     off_chr = WORLD_HDR_SIZE;
     off_sdir = off_chr + (size_t)R01_BG_BANKS * R01_CHR_BANK_BYTES + (size_t)R01_SPR_BANKS * R01_CHR_BANK_BYTES;
     off_spay = off_sdir + (size_t)present_n * SCREEN_DIR_ENT;
     payload_base = (uint32_t)off_spay;
+    off_types = off_spay + (size_t)present_n * SCREEN_PAYLOAD;
+    off_insts = off_types + (size_t)type_n * R01_CART_ENTITY_TYPE_SIZE;
 
     {
         int ds = r01_world_default_screen(w);
@@ -214,7 +271,10 @@ static int build_world_blob(Buf *blob, const R01World *w) {
     put_u24(hdr + 8, (uint32_t)off_chr);
     put_u24(hdr + 11, (uint32_t)off_sdir);
     put_u24(hdr + 14, 0);
-    /* hdr+17..31 reserved */
+    put_u8(hdr + R01_CART_WHDR_TYPE_COUNT, (uint8_t)type_n);
+    put_u8(hdr + R01_CART_WHDR_INST_COUNT, (uint8_t)inst_n);
+    put_u24(hdr + R01_CART_WHDR_OFF_TYPES, (uint32_t)off_types);
+    put_u24(hdr + R01_CART_WHDR_OFF_INSTS, (uint32_t)off_insts);
 
     if (buf_append(blob, hdr, WORLD_HDR_SIZE) != 0) {
         return -1;
@@ -233,9 +293,14 @@ static int build_world_blob(Buf *blob, const R01World *w) {
     }
     for (bi = 0; bi < R01_SPR_BANKS; bi++) {
         uint8_t bank[R01_CHR_BANK_BYTES];
+        size_t n = (size_t)w->spr_banks[bi].tile_count * R01_TILE_BYTES;
         memset(bank, 0, sizeof(bank));
+        if (n > sizeof(bank)) {
+            n = sizeof(bank);
+        }
+        memcpy(bank, w->spr_banks[bi].chr, n);
         if (bi == 0) {
-            /* Tile 1 = solid color-1 player (matches Studio Play sprite pal idx 1). */
+            /* Tile 1 reserved: solid color-1 player (Studio/emu/sim OAM slot 0). */
             fill_solid_tile(bank + R01_TILE_BYTES, 1);
         }
         if (buf_append(blob, bank, sizeof(bank)) != 0) {
@@ -269,6 +334,31 @@ static int build_world_blob(Buf *blob, const R01World *w) {
             }
             if (buf_append(blob, s->tiles, R01_TILES_PER_SCREEN) != 0 ||
                 buf_append(blob, s->attrs, R01_ATTRS_PER_SCREEN) != 0) {
+                return -1;
+            }
+        }
+    }
+    {
+        int ti;
+        for (ti = 0; ti < type_n; ti++) {
+            uint8_t rec[R01_CART_ENTITY_TYPE_SIZE];
+            pack_entity_type_rec(rec, &w->entities[ti]);
+            if (buf_append(blob, rec, sizeof(rec)) != 0) {
+                return -1;
+            }
+        }
+    }
+    {
+        int ii;
+        for (ii = 0; ii < inst_n; ii++) {
+            uint8_t rec[R01_CART_INSTANCE_SIZE];
+            const R01EntityInstance *inst = &w->instances[ii];
+            memset(rec, 0, sizeof(rec));
+            rec[0] = (uint8_t)inst->type_id;
+            rec[1] = 0;
+            put_u16(rec + 2, (uint16_t)inst->world_x);
+            put_u16(rec + 4, (uint16_t)inst->world_y);
+            if (buf_append(blob, rec, sizeof(rec)) != 0) {
                 return -1;
             }
         }

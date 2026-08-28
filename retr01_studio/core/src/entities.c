@@ -44,12 +44,23 @@ int r01_world_entity_add(R01World *w) {
 }
 
 int r01_world_entity_remove(R01World *w, int type_idx) {
-    int i;
+    int i, j;
     if (!w || type_idx < 0 || type_idx >= w->entity_count) {
         return -1;
     }
-    for (i = type_idx; i < w->entity_count - 1; i++) {
-        w->entities[i] = w->entities[i + 1];
+    /* Drop instances of this type; remap higher type_ids. */
+    for (i = 0; i < w->instance_count;) {
+        if (w->instances[i].type_id == type_idx) {
+            r01_world_instance_remove(w, i);
+            continue;
+        }
+        if (w->instances[i].type_id > type_idx) {
+            w->instances[i].type_id--;
+        }
+        i++;
+    }
+    for (j = type_idx; j < w->entity_count - 1; j++) {
+        w->entities[j] = w->entities[j + 1];
     }
     w->entity_count--;
     memset(&w->entities[w->entity_count], 0, sizeof(w->entities[0]));
@@ -150,4 +161,49 @@ int r01_world_entity_from_sprite(R01World *w, int sprite_catalog_idx) {
     e->states[0].hitbox_w = R01_ENTITY_HITBOX_W;
     e->states[0].hitbox_h = R01_ENTITY_HITBOX_H;
     return idx;
+}
+
+int r01_world_instance_add(R01World *w, int type_id, int world_x, int world_y) {
+    R01EntityInstance *inst;
+    if (!w || type_id < 0 || type_id >= w->entity_count || w->instance_count >= R01_MAX_ENTITY_INSTANCES) {
+        return -1;
+    }
+    inst = &w->instances[w->instance_count];
+    inst->type_id = type_id;
+    inst->world_x = world_x;
+    inst->world_y = world_y;
+    w->instance_count++;
+    return w->instance_count - 1;
+}
+
+int r01_world_instance_remove(R01World *w, int inst_idx) {
+    int i;
+    if (!w || inst_idx < 0 || inst_idx >= w->instance_count) {
+        return -1;
+    }
+    for (i = inst_idx; i < w->instance_count - 1; i++) {
+        w->instances[i] = w->instances[i + 1];
+    }
+    w->instance_count--;
+    memset(&w->instances[w->instance_count], 0, sizeof(w->instances[0]));
+    return 0;
+}
+
+R01EntityInstance *r01_world_instance(R01World *w, int inst_idx) {
+    if (!w || inst_idx < 0 || inst_idx >= w->instance_count) {
+        return NULL;
+    }
+    return &w->instances[inst_idx];
+}
+
+int r01_world_place_sprite(R01World *w, int sprite_catalog_idx, int world_x, int world_y) {
+    int type_id = r01_world_entity_from_sprite(w, sprite_catalog_idx);
+    if (type_id < 0) {
+        return -1;
+    }
+    return r01_world_instance_add(w, type_id, world_x, world_y);
+}
+
+int r01_world_place_entity(R01World *w, int type_id, int world_x, int world_y) {
+    return r01_world_instance_add(w, type_id, world_x, world_y);
 }

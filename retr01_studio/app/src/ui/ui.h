@@ -69,6 +69,9 @@
 #define UI_DRAG_SPRITES 0
 #define UI_DRAG_HITBOX 1
 
+#define UI_CATALOG_DRAG_SPRITE 1
+#define UI_CATALOG_DRAG_ENTITY 2
+
 #define UI_MAIN_W (UI_LOGIC_W - UI_SIDEBAR_W)
 #define UI_SCREEN_SCALE 2
 #define UI_SCREEN_W (R01_SCREEN_PX_W * UI_SCREEN_SCALE)
@@ -194,6 +197,13 @@ typedef struct UiBrush {
     uint8_t chr[R01_TILE_BYTES];
 } UiBrush;
 
+typedef struct UiCatalogDrag {
+    int active; /* 0 none, UI_CATALOG_DRAG_SPRITE, UI_CATALOG_DRAG_ENTITY */
+    int index;
+    int off_x;
+    int off_y;
+} UiCatalogDrag;
+
 typedef struct UiState {
     R01Project *project;
     R01PlayState play;
@@ -212,6 +222,7 @@ typedef struct UiState {
     UiSpriteEdit sprite_edit;
     UiEntityEdit entity_edit;
     UiBrush brush;
+    UiCatalogDrag catalog_drag;
     int paint_stamp_valid;
     uint8_t paint_stamp_tile;
     uint8_t paint_stamp_attr;
@@ -219,6 +230,7 @@ typedef struct UiState {
     int sel_x0, sel_y0, sel_x1, sel_y1; /* inclusive tile rect; invalid when sel_x0 < 0 */
     int sel_anchor_x, sel_anchor_y;
     int sel_drag;
+    int sel_instance; /* -1 or index into world.instances */
     int last_paint_tx;
     int last_paint_ty;
     Uint32 last_click_ms;

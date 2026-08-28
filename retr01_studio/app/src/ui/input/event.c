@@ -4,6 +4,7 @@
 
 #include "retr01_studio/cart.h"
 #include "retr01_studio/chr_pack.h"
+#include "retr01_studio/entities.h"
 #include "retr01_studio/json_io.h"
 #include "retr01_studio/palette.h"
 #include "retr01_studio/project.h"
@@ -64,6 +65,15 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             if (e->key.keysym.sym == SDLK_ESCAPE) {
                 ui->tile_edit.open = 0;
                 return 1;
+            }
+            return 1;
+        }
+        if ((e->key.keysym.sym == SDLK_DELETE || e->key.keysym.sym == SDLK_BACKSPACE) &&
+            !ui->play.active && !ui->menu.open && ui->sel_instance >= 0) {
+            R01World *w = r01_project_active_world(ui->project);
+            if (w && r01_world_instance_remove(w, ui->sel_instance) == 0) {
+                ui->sel_instance = -1;
+                ui_toast(ui, "instance removed", 0);
             }
             return 1;
         }
@@ -266,6 +276,23 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 entity_edit_open_new(ui);
                 return 1;
             }
+            {
+                int catalog_idx;
+                if (!ui->play.active && sprites_list_hit(ui, lx, ly, &catalog_idx)) {
+                    ui->catalog_drag.active = UI_CATALOG_DRAG_SPRITE;
+                    ui->catalog_drag.index = catalog_idx;
+                    ui->catalog_drag.off_x = 4;
+                    ui->catalog_drag.off_y = 4;
+                    return 1;
+                }
+                if (!ui->play.active && entities_list_hit(ui, lx, ly, &catalog_idx)) {
+                    ui->catalog_drag.active = UI_CATALOG_DRAG_ENTITY;
+                    ui->catalog_drag.index = catalog_idx;
+                    ui->catalog_drag.off_x = 4;
+                    ui->catalog_drag.off_y = 4;
+                    return 1;
+                }
+            }
             if (!ui->play.active && palette_strip_hit(ui, lx, ly)) {
                 int prow;
                 if (palette_row_btn_hit(ui, lx, ly, &prow)) {
@@ -304,6 +331,13 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 return 1;
             }
             if (!ui->play.active && screen_hit(ui, lx, ly, &tx, &ty)) {
+                int inst;
+                if (instance_hit_on_screen(ui, lx, ly, &inst)) {
+                    ui->sel_instance = inst;
+                    screen_sel_clear(ui);
+                    return 1;
+                }
+                ui->sel_instance = -1;
                 if (ui->screen_mode == UI_SCREEN_MODE_PAINT) {
                     if (alt) {
                         ui_paint_stamp_from_cell(ui, tx, ty);
@@ -341,10 +375,41 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             entity_modal_handle(ui, lx, ly, 0);
             return 1;
         }
+        if (ui->catalog_drag.active) {
+            int px, py;
+            R01World *w = r01_project_active_world(ui->project);
+            R01Screen *s = r01_project_active_screen(ui->project);
+            if (w && s && !ui->play.active && screen_pixel_hit(ui, lx, ly, &px, &py)) {
+                int wx = s->col * R01_SCREEN_PX_W + px;
+                int wy = s->row * R01_SCREEN_PX_H + py;
+                int idx = -1;
+                if (ui->catalog_drag.active == UI_CATALOG_DRAG_SPRITE) {
+                    idx = r01_world_place_sprite(w, ui->catalog_drag.index, wx, wy);
+                    if (idx >= 0) {
+                        ui_toast(ui, "sprite placed", 0);
+                    } else {
+                        ui_toast(ui, "cannot place sprite", 1);
+                    }
+                } else if (ui->catalog_drag.active == UI_CATALOG_DRAG_ENTITY) {
+                    idx = r01_world_place_entity(w, ui->catalog_drag.index, wx, wy);
+                    if (idx >= 0) {
+                        ui_toast(ui, "entity placed", 0);
+                    } else {
+                        ui_toast(ui, "cannot place entity", 1);
+                    }
+                }
+                if (idx >= 0) {
+                    ui->sel_instance = idx;
+                    screen_sel_clear(ui);
+                }
+            }
+            ui->catalog_drag.active = 0;
+            return 1;
+        }
     }
 
     if (e->type == SDL_MOUSEMOTION && !ui->play.active && !ui->tile_edit.open && !ui->sprite_edit.open &&
-        !ui->entity_edit.open && !ui->menu.open) {
+        !ui->entity_edit.open && !ui->menu.open && !ui->catalog_drag.active) {
         int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
         int tx, ty;
         if (ui->screen_mode == UI_SCREEN_MODE_SEL && ui->sel_drag && shift &&

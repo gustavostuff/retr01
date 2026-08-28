@@ -190,6 +190,11 @@ typedef struct R01sBoard {
     uint8_t cart_screen_count;
     uint8_t cart_start_col;
     uint8_t cart_start_row;
+    /* Phase 3D entity tables (absolute flash offsets). */
+    uint8_t cart_entity_type_count;
+    uint8_t cart_entity_inst_count;
+    uint32_t cart_off_entity_types;
+    uint32_t cart_off_entity_insts;
     int cart_loaded;
     char cart_label[48];
     /* Active palette RAM (soft); addr index from HC573 FE08. */

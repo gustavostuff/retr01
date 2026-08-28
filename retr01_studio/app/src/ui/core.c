@@ -75,6 +75,7 @@ int ui_init(UiState *ui) {
     ui->screen_mode = UI_SCREEN_MODE_SEL;
     ui->accordion_open = UI_ACC_WORLDS;
     ui->menu.world_screen_idx = -1;
+    ui->sel_instance = -1;
     return 0;
 }
 

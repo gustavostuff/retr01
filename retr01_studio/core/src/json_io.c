@@ -437,6 +437,16 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
         }
     }
     fprintf(f, "  ],\n");
+    fprintf(f, "  \"instances\": [\n");
+    {
+        int ii;
+        for (ii = 0; ii < w->instance_count; ii++) {
+            const R01EntityInstance *inst = &w->instances[ii];
+            fprintf(f, "    {\"type\": %d, \"x\": %d, \"y\": %d}%s\n", inst->type_id, inst->world_x,
+                    inst->world_y, ii + 1 < w->instance_count ? "," : "");
+        }
+    }
+    fprintf(f, "  ],\n");
     fprintf(f, "  \"screens\": [\n");
     for (i = 0; i < w->screen_count; i++) {
         const R01Screen *s = &w->screens[i];
@@ -1020,6 +1030,39 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                             st_obj = strchr(st_end + 1, '{');
                         }
                         free(slice);
+                        obj2 = strchr(end + 1, '{');
+                    }
+                }
+            }
+            {
+                const char *inst_sec = json_find(buf, "\"instances\":");
+                const char *inst_end = json_array_end(inst_sec);
+                w->instance_count = 0;
+                memset(w->instances, 0, sizeof(w->instances));
+                if (inst_sec && inst_end) {
+                    const char *obj2 = strchr(inst_sec, '{');
+                    while (obj2 && obj2 < inst_end && w->instance_count < R01_MAX_ENTITY_INSTANCES) {
+                        const char *end = json_object_end(obj2);
+                        size_t olen;
+                        char *slice;
+                        int type_id = 0, wx = 0, wy = 0;
+                        if (!end || end >= inst_end) {
+                            break;
+                        }
+                        olen = (size_t)(end - obj2 + 1);
+                        slice = (char *)malloc(olen + 1u);
+                        if (!slice) {
+                            break;
+                        }
+                        memcpy(slice, obj2, olen);
+                        slice[olen] = '\0';
+                        json_int_after(slice, "\"type\"", &type_id);
+                        json_int_after(slice, "\"x\"", &wx);
+                        json_int_after(slice, "\"y\"", &wy);
+                        free(slice);
+                        if (type_id >= 0 && type_id < w->entity_count) {
+                            (void)r01_world_instance_add(w, type_id, wx, wy);
+                        }
                         obj2 = strchr(end + 1, '{');
                     }
                 }

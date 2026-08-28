@@ -160,6 +160,10 @@ int r01e_cart_world(const R01eCart *c, int index, R01eWorldView *out) {
     out->off_chr = get_u24(hdr + 8);
     out->off_screen_dir = get_u24(hdr + 11);
     out->off_parallax_dir = get_u24(hdr + 14);
+    out->entity_type_count = hdr[R01E_CART_WHDR_TYPE_COUNT];
+    out->entity_inst_count = hdr[R01E_CART_WHDR_INST_COUNT];
+    out->off_entity_types = get_u24(hdr + R01E_CART_WHDR_OFF_TYPES);
+    out->off_entity_insts = get_u24(hdr + R01E_CART_WHDR_OFF_INSTS);
     return 0;
 }
 

@@ -122,18 +122,71 @@ void r01e_play_sync_video(R01eMachine *m) {
     }
 }
 
-static void write_oam_player(R01eMachine *m) {
+static void write_oam(R01eMachine *m) {
     R01ePlay *pl = &m->play;
+    R01eWorldView wv;
+    const uint8_t *types;
+    const uint8_t *insts;
     int vx = pl->player_x - pl->cam_x;
     int vy = pl->player_y - pl->cam_y;
+    int slot = 0;
+    int ii;
 
-    if (vx < 0 || vy < 0 || vx > 247 || vy > 247) {
+    memset(m->io.oam, 0xFF, sizeof(m->io.oam));
+
+    if (vx >= 0 && vy >= 0 && vx <= 247 && vy <= 247) {
+        m->io.oam[0] = (uint8_t)vy;
+        m->io.oam[1] = 1; /* solid tile in SPR bank 0 */
+        m->io.oam[2] = 0; /* bank 0, pal 0 */
+        m->io.oam[3] = (uint8_t)vx;
+        slot = 1;
+    }
+
+    if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) != 0 || wv.entity_inst_count < 1 ||
+        wv.entity_type_count < 1) {
         return;
     }
-    m->io.oam[0] = (uint8_t)vy;
-    m->io.oam[1] = 1; /* solid tile in SPR bank 0 */
-    m->io.oam[2] = 0; /* bank 0, pal 0 */
-    m->io.oam[3] = (uint8_t)vx;
+    types = r01e_cart_ptr(&m->cart, wv.base + wv.off_entity_types,
+                          (size_t)wv.entity_type_count * R01E_CART_ENTITY_TYPE_SIZE);
+    insts = r01e_cart_ptr(&m->cart, wv.base + wv.off_entity_insts,
+                          (size_t)wv.entity_inst_count * R01E_CART_INSTANCE_SIZE);
+    if (!types || !insts) {
+        return;
+    }
+    for (ii = 0; ii < (int)wv.entity_inst_count && slot < R01E_OAM_ENTRIES; ii++) {
+        const uint8_t *irec = insts + (size_t)ii * R01E_CART_INSTANCE_SIZE;
+        uint8_t type_id = irec[0];
+        int world_x = (int)((uint16_t)irec[2] | ((uint16_t)irec[3] << 8));
+        int world_y = (int)((uint16_t)irec[4] | ((uint16_t)irec[5] << 8));
+        const uint8_t *trec;
+        int origin_x, origin_y, part_count, pi;
+        if (type_id >= wv.entity_type_count) {
+            continue;
+        }
+        trec = types + (size_t)type_id * R01E_CART_ENTITY_TYPE_SIZE;
+        origin_x = (int)trec[0];
+        origin_y = (int)trec[1];
+        part_count = (int)trec[2];
+        if (part_count > R01E_CART_ENTITY_PARTS_MAX) {
+            part_count = R01E_CART_ENTITY_PARTS_MAX;
+        }
+        for (pi = 0; pi < part_count && slot < R01E_OAM_ENTRIES; pi++) {
+            const uint8_t *part = trec + 4 + pi * 4;
+            int8_t dx = (int8_t)part[2];
+            int8_t dy = (int8_t)part[3];
+            int sx = world_x + (int)dx - origin_x - pl->cam_x;
+            int sy = world_y + (int)dy - origin_y - pl->cam_y;
+            uint8_t *oe = &m->io.oam[(size_t)slot * R01E_OAM_ENTRY_BYTES];
+            if (sx < 0 || sy < 0 || sx > 247 || sy > 247) {
+                continue;
+            }
+            oe[0] = (uint8_t)sy;
+            oe[1] = part[0]; /* tile */
+            oe[2] = part[1]; /* attr */
+            oe[3] = (uint8_t)sx;
+            slot++;
+        }
+    }
 }
 
 void r01e_play_reset(R01ePlay *play) {
@@ -163,7 +216,7 @@ int r01e_play_start(R01eMachine *m) {
     place_player_on_screen(&m->play, col, row);
     r01e_play_sync_video(m);
     (void)r01e_video_sync_camera(m);
-    write_oam_player(m);
+    write_oam(m);
     return 1;
 }
 
@@ -176,7 +229,7 @@ static int warp_to(R01eMachine *m, int col, int row) {
     }
     place_player_on_screen(&m->play, col, row);
     r01e_play_sync_video(m);
-    write_oam_player(m);
+    write_oam(m);
     return 1;
 }
 
@@ -229,7 +282,7 @@ void r01e_play_tick(R01eMachine *m) {
     /* No dead zone: camera tracks the player every tick. */
     update_camera(pl);
     r01e_play_sync_video(m);
-    write_oam_player(m);
+    write_oam(m);
 }
 
 void r01e_play_player_rgb(const R01eMachine *m, uint8_t *r, uint8_t *g, uint8_t *b) {

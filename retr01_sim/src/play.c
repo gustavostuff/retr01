@@ -73,26 +73,83 @@ static int spawn_screen(R01sBoard *b, int *out_col, int *out_row) {
     return r01s_board_first_screen(b, out_col, out_row);
 }
 
-static void write_oam_player(R01sBoard *b) {
+static void write_oam(R01sBoard *b) {
     R01sPlay *pl;
     int vx;
     int vy;
+    int slot = 0;
+    int ii;
+    const uint8_t *img;
+    const uint8_t *types;
+    const uint8_t *insts;
 
     if (!b || !b->play.enabled) {
         return;
     }
     pl = &b->play;
+    /* Clear all slots unused. */
+    for (ii = 0; ii < 64; ii++) {
+        r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(ii * 4), 0xFF);
+    }
+
     vx = pl->player_x - pl->cam_x;
     vy = pl->player_y - pl->cam_y;
-    if (vx < 0 || vy < 0 || vx > 247 || vy > 247) {
-        r01s_atmega1284p_oam_poke(&b->mcu1284, 0, 0xFF);
+    if (vx >= 0 && vy >= 0 && vx <= 247 && vy <= 247) {
+        r01s_atmega1284p_oam_poke(&b->mcu1284, 0, (uint8_t)vy);
+        r01s_atmega1284p_oam_poke(&b->mcu1284, 1, 1);
+        r01s_atmega1284p_oam_poke(&b->mcu1284, 2, 0);
+        r01s_atmega1284p_oam_poke(&b->mcu1284, 3, (uint8_t)vx);
+        slot = 1;
+        b->health_saw_oam = 1;
+    }
+
+    if (!b->cart_loaded || b->cart_entity_inst_count < 1 || b->cart_entity_type_count < 1 ||
+        b->cart_off_entity_types == 0 || b->cart_off_entity_insts == 0) {
         return;
     }
-    r01s_atmega1284p_oam_poke(&b->mcu1284, 0, (uint8_t)vy);
-    r01s_atmega1284p_oam_poke(&b->mcu1284, 1, 1);
-    r01s_atmega1284p_oam_poke(&b->mcu1284, 2, 0);
-    r01s_atmega1284p_oam_poke(&b->mcu1284, 3, (uint8_t)vx);
-    b->health_saw_oam = 1;
+    img = b->cart_flash.mem;
+    if ((size_t)b->cart_off_entity_types + (size_t)b->cart_entity_type_count * 20u >
+            sizeof(b->cart_flash.mem) ||
+        (size_t)b->cart_off_entity_insts + (size_t)b->cart_entity_inst_count * 6u >
+            sizeof(b->cart_flash.mem)) {
+        return;
+    }
+    types = img + b->cart_off_entity_types;
+    insts = img + b->cart_off_entity_insts;
+    for (ii = 0; ii < (int)b->cart_entity_inst_count && slot < 64; ii++) {
+        const uint8_t *irec = insts + (size_t)ii * 6u;
+        uint8_t type_id = irec[0];
+        int world_x = (int)((uint16_t)irec[2] | ((uint16_t)irec[3] << 8));
+        int world_y = (int)((uint16_t)irec[4] | ((uint16_t)irec[5] << 8));
+        const uint8_t *trec;
+        int origin_x, origin_y, part_count, pi;
+        if (type_id >= b->cart_entity_type_count) {
+            continue;
+        }
+        trec = types + (size_t)type_id * 20u;
+        origin_x = (int)trec[0];
+        origin_y = (int)trec[1];
+        part_count = (int)trec[2];
+        if (part_count > 4) {
+            part_count = 4;
+        }
+        for (pi = 0; pi < part_count && slot < 64; pi++) {
+            const uint8_t *part = trec + 4 + pi * 4;
+            int8_t dx = (int8_t)part[2];
+            int8_t dy = (int8_t)part[3];
+            int sx = world_x + (int)dx - origin_x - pl->cam_x;
+            int sy = world_y + (int)dy - origin_y - pl->cam_y;
+            if (sx < 0 || sy < 0 || sx > 247 || sy > 247) {
+                continue;
+            }
+            r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 0), (uint8_t)sy);
+            r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 1), part[0]);
+            r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 2), part[1]);
+            r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 3), (uint8_t)sx);
+            slot++;
+            b->health_saw_oam = 1;
+        }
+    }
 }
 
 static void queue_video(R01sBoard *b) {
@@ -164,7 +221,7 @@ static void apply_video_latch(R01sBoard *b) {
     pl->origin_col = pl->pending_origin_col;
     pl->origin_row = pl->pending_origin_row;
     pl->video_pending = 0;
-    write_oam_player(b);
+    write_oam(b);
 }
 
 static void step_move_from_pad(R01sBoard *b) {
@@ -213,7 +270,7 @@ void r01s_play_on_vblank(R01sBoard *b) {
     }
     step_move_from_pad(b);
     apply_video_latch(b);
-    write_oam_player(b);
+    write_oam(b);
 }
 
 static int warp_to(R01sBoard *b, int col, int row) {
@@ -273,7 +330,7 @@ int r01s_play_start(R01sBoard *board) {
         }
     }
     board->play.enabled = 1;
-    write_oam_player(board);
+    write_oam(board);
     return 1;
 }
 

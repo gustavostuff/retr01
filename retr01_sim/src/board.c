@@ -1962,6 +1962,10 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     board->cart_screen_count = 0;
     board->cart_start_col = 0;
     board->cart_start_row = 0;
+    board->cart_entity_type_count = 0;
+    board->cart_entity_inst_count = 0;
+    board->cart_off_entity_types = 0;
+    board->cart_off_entity_insts = 0;
     if (!board || !board->cart_loaded) {
         return;
     }
@@ -2005,6 +2009,14 @@ static void board_resolve_cart_meta(R01sBoard *board) {
         return;
     }
     board->cart_off_sdir = world_base + off_sdir;
+    board->cart_entity_type_count = hdr[17];
+    board->cart_entity_inst_count = hdr[18];
+    {
+        uint32_t off_types = get_u24(hdr + 19);
+        uint32_t off_insts = get_u24(hdr + 22);
+        board->cart_off_entity_types = world_base + off_types;
+        board->cart_off_entity_insts = world_base + off_insts;
+    }
     dir = img + board->cart_off_sdir;
     for (si = 0; si < (int)screen_count; si++) {
         const uint8_t *e = dir + (size_t)si * 12u;

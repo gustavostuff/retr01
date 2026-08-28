@@ -56,6 +56,8 @@
 #define R01_ENTITY_NAME_MAX 32
 #define R01_ENTITY_HITBOX_W 8
 #define R01_ENTITY_HITBOX_H 8
+#define R01_MAX_ENTITY_INSTANCES 64
+#define R01_OAM_MAX 64
 
 /* BG attr (docs/02) */
 #define R01_ATTR_BANK_MASK 0x03u
@@ -129,6 +131,13 @@ typedef struct R01EntityType {
     int state_count; /* UI may lock to 1; wire up to R01_ENTITY_STATES_MAX */
 } R01EntityType;
 
+/* Placed instance in world pixel space (world_x/y = user state origin). */
+typedef struct R01EntityInstance {
+    int type_id;
+    int world_x;
+    int world_y;
+} R01EntityInstance;
+
 typedef struct R01World {
     int present;
     int grid_cols;
@@ -144,6 +153,8 @@ typedef struct R01World {
     int sprite_count;
     R01EntityType entities[R01_MAX_ENTITY_TYPES];
     int entity_count;
+    R01EntityInstance instances[R01_MAX_ENTITY_INSTANCES];
+    int instance_count;
 } R01World;
 
 typedef struct R01Project {

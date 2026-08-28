@@ -131,6 +131,8 @@ void ui_reset_after_project_load(UiState *ui) {
     ui->menu.submenu = UI_MENU_SUB_NONE;
     ui->sprites_scroll = 0;
     ui->entities_scroll = 0;
+    ui->sel_instance = -1;
+    ui->catalog_drag.active = 0;
     screen_sel_clear(ui);
     ui->paint_stamp_valid = 0;
     ui->last_paint_tx = -1;

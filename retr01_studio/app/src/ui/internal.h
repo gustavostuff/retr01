@@ -106,6 +106,7 @@ int ui_mode_label_x(int mode_x);
 int ui_mode_panel_w(void);
 void screen_origin(const UiState *ui, int *ox, int *oy);
 int screen_hit(const UiState *ui, int lx, int ly, int *out_tx, int *out_ty);
+int screen_pixel_hit(const UiState *ui, int lx, int ly, int *out_px, int *out_py);
 void accordion_layout(const UiState *ui, AccordionLayout *lo);
 int world_cell_hit(const UiState *ui, int lx, int ly, int *out_col, int *out_row);
 int world_btn_hit(const UiState *ui, int lx, int ly, int *out_wi);
@@ -174,6 +175,8 @@ void screen_set_solid_by_hw(UiState *ui, int ref_tx, int ref_ty);
 /* ui/screen/draw.c */
 void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s);
 void draw_play_view(UiState *ui, SDL_Renderer *r);
+void draw_catalog_drag_ghost(UiState *ui, SDL_Renderer *r);
+int instance_hit_on_screen(const UiState *ui, int lx, int ly, int *out_inst);
 
 /* ui/modals/tile_edit.c */
 void tile_edit_open(UiState *ui, int tx, int ty);

@@ -34,7 +34,21 @@ typedef struct R01eWorldView {
     uint32_t off_chr; /* relative to world base */
     uint32_t off_screen_dir;
     uint32_t off_parallax_dir;
+    /* Phase 3D entity tables (relative to world base; 0 count = none). */
+    uint8_t entity_type_count;
+    uint8_t entity_inst_count;
+    uint32_t off_entity_types;
+    uint32_t off_entity_insts;
 } R01eWorldView;
+
+/* Match Studio cart.h Phase 3D layout. */
+#define R01E_CART_WHDR_TYPE_COUNT 17
+#define R01E_CART_WHDR_INST_COUNT 18
+#define R01E_CART_WHDR_OFF_TYPES 19
+#define R01E_CART_WHDR_OFF_INSTS 22
+#define R01E_CART_ENTITY_PARTS_MAX 4
+#define R01E_CART_ENTITY_TYPE_SIZE 20
+#define R01E_CART_INSTANCE_SIZE 6
 
 /* Load packed .retr01 (or 512 KB flash image). Owns *out->data. */
 int r01e_cart_load_path(R01eCart *out, const char *path, char *err, size_t err_cap);

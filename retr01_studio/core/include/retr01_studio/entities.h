@@ -26,4 +26,27 @@ int r01_entity_frame_remove_part(R01EntityFrame *fr, int part_idx);
 /* Simple 1-state / 1-frame / 1-part entity from a sprite catalog entry (for phase C). */
 int r01_world_entity_from_sprite(R01World *w, int sprite_catalog_idx);
 
+/* Placed instances (world pixels). */
+int r01_world_instance_add(R01World *w, int type_id, int world_x, int world_y);
+int r01_world_instance_remove(R01World *w, int inst_idx);
+R01EntityInstance *r01_world_instance(R01World *w, int inst_idx);
+
+/* Drop a catalog sprite: create entity type + place instance. Returns instance idx or -1. */
+int r01_world_place_sprite(R01World *w, int sprite_catalog_idx, int world_x, int world_y);
+
+/* Drop an entity type: place instance. Returns instance idx or -1. */
+int r01_world_place_entity(R01World *w, int type_id, int world_x, int world_y);
+
+/*
+ * Instance world_x/y is the user-defined state origin in world pixels.
+ * Part / hitbox authoring coords are relative to the 16x16 compose grid;
+ * convert with (coord - origin) before adding to world.
+ */
+static inline int r01_entity_world_x(int world_x, int origin_x, int ax) {
+    return world_x + ax - origin_x;
+}
+static inline int r01_entity_world_y(int world_y, int origin_y, int ay) {
+    return world_y + ay - origin_y;
+}
+
 #endif
