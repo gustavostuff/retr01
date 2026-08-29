@@ -101,11 +101,11 @@ typedef struct R01sIslandCartImpl {
 } R01sIslandCartImpl;
 
 typedef struct R01sIslandApuImpl {
-    R01sAtmega328p *apu; /* $FE40–$FE5F */
+    R01sAtmega328p *apu; /* $FE40-$FE5F */
 } R01sIslandApuImpl;
 
 typedef struct R01sIslandMcuLbImpl {
-    R01sAtmega1284p *mcu; /* OAM $FE20/$FE21; EEPROM mb $FE70–$FE72 */
+    R01sAtmega1284p *mcu; /* OAM $FE20/$FE21; EEPROM mb $FE70-$FE72 */
     R01sAs6c62256 *sram;
     R01sSn74hc157 *mux157[R01S_BOM_HC157_N];
 } R01sIslandMcuLbImpl;
@@ -115,7 +115,7 @@ typedef struct R01sIslandBusImpl {
 } R01sIslandBusImpl;
 
 typedef struct R01sIslandSpritesImpl {
-    R01sSpriteFetch *fetch; /* OAM→linebuf fill stats (Island N) */
+    R01sSpriteFetch *fetch; /* OAM->linebuf fill stats (Island N) */
 } R01sIslandSpritesImpl;
 
 typedef struct R01sIslandIntegrationImpl {
@@ -202,7 +202,7 @@ typedef struct R01sBoard {
     uint8_t pal_addr;
     int pal_fe09_wrote; /* one write+inc per DATA cycle */
     uint8_t chr_last_master; /* hold last BG/sprite master when CHR CE denied */
-    /* 2×2 workbench: 1 = screen dir hit loaded into slot (absent → backdrop). */
+    /* 2x2 workbench: 1 = screen dir hit loaded into slot (absent -> backdrop). */
     uint8_t vram_slot_present[4];
     /* Host Play scaffold (enabled after catchup). */
     R01sPlay play;
@@ -227,7 +227,7 @@ typedef struct R01sBoard {
     R01sLevel nmi_prev; /* beam NMI# edge detect */
     uint32_t nmi_pulses;
     /* Island M ping-pong state (no CPU port; filled by Island N OAM eval). */
-    uint8_t linebuf_show_half; /* 0 = $000–$07F showing, 1 = $080–$0FF */
+    uint8_t linebuf_show_half; /* 0 = $000-$07F showing, 1 = $080-$0FF */
     uint8_t linebuf_prev_hblank;
     uint8_t vblank_prev;
     uint8_t linebuf_saw_mux_mcu;
@@ -238,23 +238,23 @@ typedef struct R01sBoard {
 int r01s_board_build(R01sBoard *board, R01sIslandBuilder *builder);
 
 /* Load `.retr01` or 512 KB flash image into Island J. Re-applies bring-up smoke PRG
- * into the cart PRG window so A–O island checks still run (overlay: not Studio ROM). */
+ * into the cart PRG window so A-O island checks still run (overlay: not Studio ROM). */
 int r01s_board_load_cart(R01sBoard *board, const char *path);
 
 /*
  * Opt-in host soft-load of start-screen MAP+pals (R01S_SOFTBOOT=1). Default LCD
- * path is IC bring-up PRG streaming via $FE93→$FE12: see catchup_bringup.
+ * path is IC bring-up PRG streaming via $FE93->$FE12: see catchup_bringup.
  */
 int r01s_board_softboot_start_screen(R01sBoard *board);
 
 /*
- * Run bring-up palette + MAP→VRAM until the start screen is in VRAM and the LCD
+ * Run bring-up palette + MAP->VRAM until the start screen is in VRAM and the LCD
  * hold lifts (~12k board steps). Opt-in softboot via R01S_SOFTBOOT=1. Returns 0
  * on success, -1 on timeout / missing meta.
  */
 int r01s_board_catchup_bringup(R01sBoard *board, R01sIslandGroup *group);
 
-/* After MAP stream (pin worker or sync path): 2×2 camera, map_addr, slot flags. */
+/* After MAP stream (pin worker or sync path): 2x2 camera, map_addr, slot flags. */
 void r01s_board_catchup_finish(R01sBoard *board);
 
 /* Cart screen directory helpers (world 0). */

@@ -28,7 +28,7 @@ typedef struct R01eMachine {
     uint64_t prof_last_vblank;
     uint64_t prof_acc_active;
     uint64_t prof_acc_vblank;
-    /* Full frame cycle totals (including wait) — debug / sanity only. */
+    /* Full frame cycle totals (including wait) -- debug / sanity only. */
     uint64_t prof_acc_idle;
     uint64_t prof_last_idle;
 } R01eMachine;

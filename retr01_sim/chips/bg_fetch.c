@@ -69,7 +69,7 @@ static uint16_t bg_compute_va(const R01sBgFetch *c, int lx, int ly, int *attr_cy
         ty = 14;
     }
     cell = ty * R01S_BG_SCREEN_TILES_X + tx;
-    /* 2x: two beam dots per logical pixel → odd beam = attr. 1x: odd logical. */
+    /* 2x: two beam dots per logical pixel -> odd beam = attr. 1x: odd logical. */
     attr = c->scale_2x ? ((c->beam_x & 1) != 0) : ((lx & 1) != 0);
     if (attr_cycle_out) {
         *attr_cycle_out = attr;

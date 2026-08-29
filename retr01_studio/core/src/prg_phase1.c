@@ -8,7 +8,7 @@
 #include <string.h>
 
 #define CODE_BASE 0x8000u
-#define PLAY_OFF 0x0100u /* PRG+$0100 → CPU $8100 */
+#define PLAY_OFF 0x0100u /* PRG+$0100 -> CPU $8100 */
 
 #define PLAY_PRESENT 0
 #define PLAY_SPAWN_C 8
@@ -19,7 +19,7 @@
 #define R01P_OFF 0x00F0u
 #define R01P_VER_COLLISION 2u
 #define R01_PLAY_COLLISION_OFF 0x0500u /* CPU $8500 */
-#define R01_PLAY_SOLID_DATA_OFF 0x0700u /* CPU $8700 — solid shadow tables */
+#define R01_PLAY_SOLID_DATA_OFF 0x0700u /* CPU $8700 -- solid shadow tables */
 
 enum {
     PRG_OFF_BG_LO = 1,

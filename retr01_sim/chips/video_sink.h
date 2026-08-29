@@ -8,7 +8,7 @@
 /* RGBS active field (docs/02). LCD framebuffer matches CRT visible area. */
 #define R01S_VIDEO_W 256
 #define R01S_VIDEO_H 240
-/* Game / Studio logical resolution (16×15 tiles). */
+/* Game / Studio logical resolution (16x15 tiles). */
 #define R01S_LOGICAL_W 128
 #define R01S_LOGICAL_H 120
 /* SCALE 1x: center logical playfield inside the RGBS field. */
@@ -16,9 +16,9 @@
 #define R01S_SCALE_1X_OY ((R01S_VIDEO_H - R01S_LOGICAL_H) / 2) /* 60 */
 
 /*
- * Island O: 256×240 RGBS / LCD sink.
- * Beam timing stays 341×262 (HBLANK X≥256, VBLANK Y≥240).
- * Board SCALE DIP: 1x (default) centers 128×120 with border; 2x fills the field.
+ * Island O: 256x240 RGBS / LCD sink.
+ * Beam timing stays 341x262 (HBLANK X>=256, VBLANK Y>=240).
+ * Board SCALE DIP: 1x (default) centers 128x120 with border; 2x fills the field.
  */
 typedef enum R01sVideoRenderMode {
     R01S_VIDEO_RENDER_NORMAL = 0,
@@ -43,7 +43,7 @@ typedef struct R01sVideoSink {
 void r01s_video_sink_init(R01sVideoSink *chip, const char *refdes);
 R01sEntity *r01s_video_sink_entity(R01sVideoSink *chip);
 
-/* Map visible beam (bx,by) → logical (lx,ly). Returns 1 if playfield, 0 if border (1x). */
+/* Map visible beam (bx,by) -> logical (lx,ly). Returns 1 if playfield, 0 if border (1x). */
 int r01s_rgbs_beam_to_logical(int scale_2x, int bx, int by, int *lx, int *ly);
 
 void r01s_video_sink_set_scale_2x(R01sVideoSink *chip, int scale_2x);

@@ -167,7 +167,7 @@ int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry 
     if (!w) {
         return 0;
     }
-    /* Slot 0: player (hardcoded 8x8 tile 1 / bank 0 — matches cart stub). */
+    /* Slot 0: player (hardcoded 8x8 tile 1 / bank 0 -- matches cart stub). */
     out[0].x = pl->player_x - pl->cam_x;
     out[0].y = pl->player_y - pl->cam_y;
     out[0].bank = 0;

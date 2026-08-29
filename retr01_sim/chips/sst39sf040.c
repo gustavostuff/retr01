@@ -28,7 +28,7 @@ static void flash_eval(R01sEntity *e) {
     int oe = r01s_level_is_low(r01s_entity_sense(e, "OE#"));
     int we = r01s_level_is_low(r01s_entity_sense(e, "WE#"));
 
-    /* Read-only stub: drive when selected for read (CE#·OE#·!WE#). */
+    /* Read-only stub: drive when selected for read (CE# | OE# | !WE#). */
     if (!ce || !oe || we) {
         r01s_bus_hiz(e, "DQ", 8);
         return;

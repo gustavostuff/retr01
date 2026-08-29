@@ -6,8 +6,8 @@
 #include <stdint.h>
 
 /*
- * Island P — system integration stub (needs A–E + G–O + N; F deferred).
- * Board wires beam NMI# → CPU NMIB and tracks VBlank NMI pulses (~60 Hz class).
+ * Island P -- system integration stub (needs A-E + G-O + N; F deferred).
+ * Board wires beam NMI# -> CPU NMIB and tracks VBlank NMI pulses (~60 Hz class).
  */
 typedef struct R01sIntegration {
     R01sEntity base;

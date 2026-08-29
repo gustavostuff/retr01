@@ -481,7 +481,7 @@ static void ui_chip_place_rel(R01sUi *ui, int chip_i, int rx, int ry) {
     clamp_chip_in_island(ui, e, ui->chip_island[chip_i]);
 }
 
-/* Place at exact island-relative coords — used for faithful load (no clamp/grow). */
+/* Place at exact island-relative coords -- used for faithful load (no clamp/grow). */
 static void ui_chip_place_rel_exact(R01sUi *ui, int chip_i, int rx, int ry) {
     R01sEntity *e;
     const R01sIsland *island;
@@ -564,7 +564,7 @@ static void ui_arrange_islands_default(R01sUi *ui) {
     n_islands = r01s_island_group_count(ui->group);
     /*
      * Pack chips into each island first. Never size frames from whatever absolute
-     * chip positions happen to be live (e.g. compact-mode coords) — that creates
+     * chip positions happen to be live (e.g. compact-mode coords) -- that creates
      * huge overlapping islands.
      */
     for (i = 0; i < n_islands; i++) {
@@ -937,7 +937,7 @@ void r01s_ui_apply_saved_island_layout(R01sUi *ui) {
     }
     n_islands = r01s_island_group_count(ui->group);
 
-    /* Exact frames from file — no snap/expand/pack. */
+    /* Exact frames from file -- no snap/expand/pack. */
     for (i = 0; i < n_islands && i < R01S_MAX_ISLANDS; i++) {
         R01sIsland *island = r01s_island_group_at_mut(ui->group, i);
         if (!island || ui->save_island_w[i] <= 0 || ui->save_island_h[i] <= 0) {
@@ -1202,7 +1202,7 @@ void ui_toggle_compact(R01sUi *ui) {
         }
         ui->layout_compact = 1;
         ui->layout_dirty = 1;
-        snprintf(ui->status, sizeof(ui->status), "compact PCB layout — click ISLANDS to restore frames");
+        snprintf(ui->status, sizeof(ui->status), "compact PCB layout -- click ISLANDS to restore frames");
     } else {
         ui_save_compact_layout(ui);
         ui_restore_island_layout(ui);

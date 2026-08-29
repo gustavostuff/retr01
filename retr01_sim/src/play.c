@@ -207,7 +207,7 @@ static void apply_video_latch(R01sBoard *b) {
              * do not linger if beam budget skips part of the field. */
             do_clear = scroll_changed || origin_changed || pl->pending_camera_reload;
         }
-        /* Persist/Phosphor: never clear on scroll or 2×2 seam reload — VRAM swap only.
+        /* Persist/Phosphor: never clear on scroll or 2x2 seam reload -- VRAM swap only.
          * Clearing here caused a full black frame during vblank until the beam
          * repainted (visible on first left step when cam_x crosses a screen column). */
         if (do_clear) {
@@ -310,7 +310,7 @@ int r01s_play_start(R01sBoard *board) {
     }
     r01s_board_mark_map_ready(board);
     place_player_on_screen(&board->play, col, row);
-    /* Latch scroll + 2×2 before play.enabled so no field renders at scroll=$00. */
+    /* Latch scroll + 2x2 before play.enabled so no field renders at scroll=$00. */
     board->play.force_camera_reload = 1;
     queue_video(board);
     apply_video_latch(board);

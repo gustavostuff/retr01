@@ -46,7 +46,7 @@ Thin wrappers at the repo root forward to [`scripts/`](scripts/):
 | [`sim`](sim) | `./sim rom/test.retr01` |
 | [`unit-tests`](unit-tests) | build + ctest for Studio, Emu, and Sim |
 | [`export-rom`](export-rom) | `./export-rom [project.r01proj] [stem]` |
-| [`build-all`](build-all) | Release builds → `release/retr01_{studio,emu,sim}` |
+| [`build-all`](build-all) | Release builds -> `release/retr01_{studio,emu,sim}` |
 
 ```bash
 ./build-all

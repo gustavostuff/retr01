@@ -1,4 +1,4 @@
-; retr01 Phase 1 — boot streams palette + start MAP, then VBlank pad poll.
+; retr01 Phase 1 -- boot streams palette + start MAP, then VBlank pad poll.
 ; Gameplay: Studio play.c / emu cart runtime (marker R01P @ $80F0).
 ; Play table @ $8100: present[8], spawn, coll_dir @ $810A.
 ; play_pos_ok @ $8500 (PRG+$0500): solid shadow probe via ($20),Y.
@@ -22,7 +22,7 @@ reset:
         sta SCROLL_Y
         lda #1
         sta PPUCTRL
-; palette + MAP stream patched at export — see prg_phase1.c
+; palette + MAP stream patched at export -- see prg_phase1.c
 main:
         lda PPUSTATUS
         and #$80

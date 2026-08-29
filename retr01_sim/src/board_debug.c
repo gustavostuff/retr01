@@ -173,7 +173,7 @@ void r01s_board_debug_begin(R01sBoard *board, int enabled) {
     ensure_parent_dir(g_path);
     g_log = fopen(g_path, "w");
     if (!g_log) {
-        fprintf(stderr, "debug: cannot open %s — tracing disabled\n", g_path);
+        fprintf(stderr, "debug: cannot open %s -- tracing disabled\n", g_path);
         g_enabled = 0;
         return;
     }
@@ -190,7 +190,7 @@ void r01s_board_debug_begin(R01sBoard *board, int enabled) {
     fprintf(stderr, "debug: writing %s (~1 Hz snapshots; quit after ~20s and send this file)\n", g_path);
     fprintf(stderr, "debug: also linked as retr01_sim/debug/sim_trace.log (symlink to this run)\n");
     {
-        /* Convenience symlink for “the latest run”; safe if link fails. */
+        /* Convenience symlink for "the latest run"; safe if link fails. */
         (void)remove("retr01_sim/debug/sim_trace.log");
         (void)symlink(strrchr(g_path, '/') ? strrchr(g_path, '/') + 1 : g_path,
                       "retr01_sim/debug/sim_trace.log");

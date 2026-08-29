@@ -8,7 +8,7 @@
 #define R01S_FLASH_BYTES (512u * 1024u)
 
 /*
- * 512 KB cart flash — read-only stub (program/erase later).
+ * 512 KB cart flash -- read-only stub (program/erase later).
  * Pinout: hw/md/SST39SF040.md
  */
 typedef struct R01sSst39sf040 {

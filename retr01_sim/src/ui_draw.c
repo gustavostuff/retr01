@@ -116,7 +116,7 @@ static void sidebar_section_sep(SDL_Renderer *r, int y) {
     fill_rect(r, R01S_UI_SIDEBAR_X, y, R01S_UI_SIDEBAR_W, 1, 48, 62, 52);
 }
 
-/* Content-local Y → screen Y (accounts for sidebar scroll). */
+/* Content-local Y -> screen Y (accounts for sidebar scroll). */
 int sidebar_sy(const R01sUi *ui, int content_y) {
     return R01S_UI_SIDEBAR_TOP + content_y - (ui ? ui->sidebar_scroll : 0);
 }
@@ -251,9 +251,9 @@ static void health_island_row_tooltip(const R01sUi *ui, int island_index, char *
     }
     ih = &ui->health.islands[island_index];
     if (health_needs_debug(ih->health) && ih->debug[0]) {
-        snprintf(out, out_len, "%s — %s", health_sidebar_island_label(ui, island_index), ih->debug);
+        snprintf(out, out_len, "%s -- %s", health_sidebar_island_label(ui, island_index), ih->debug);
     } else if (ih->activity[0]) {
-        snprintf(out, out_len, "%s — %s", health_sidebar_island_label(ui, island_index), ih->activity);
+        snprintf(out, out_len, "%s -- %s", health_sidebar_island_label(ui, island_index), ih->activity);
     } else {
         snprintf(out, out_len, "%s", health_sidebar_island_label(ui, island_index));
     }
@@ -999,7 +999,7 @@ void r01s_ui_sync_gamepads(R01sUi *ui) {
         }
     }
 
-    /* P1: X/Y match Studio warps (Z also fires X — legacy). */
+    /* P1: X/Y match Studio warps (Z also fires X -- legacy). */
     ui->gamepad[0].btn_x = ui->mouse_btn[0][0] || keys[SDL_SCANCODE_X] || keys[SDL_SCANCODE_Z];
     ui->gamepad[0].btn_y = ui->mouse_btn[0][1] || keys[SDL_SCANCODE_Y];
     ui->gamepad[0].btn_coin = ui->mouse_btn[0][2] || keys[SDL_SCANCODE_1];
@@ -1035,7 +1035,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
 
     SDL_RenderSetClipRect(r, &view_clip);
 
-    /* Islands back→front as complete units so a front island fully occludes
+    /* Islands back->front as complete units so a front island fully occludes
      * anything behind it (frame fill + chips + header). Compact: chips only. */
     if (ui->group && !ui->layout_compact) {
         int rank;

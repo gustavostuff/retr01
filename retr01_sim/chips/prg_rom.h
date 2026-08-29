@@ -8,7 +8,7 @@
 #define R01S_PRG_ROM_BYTES 32768u
 
 /*
- * Island C — tiny 32 KB PRG ROM stub (breadboard stand-in for cart PRG).
+ * Island C -- tiny 32 KB PRG ROM stub (breadboard stand-in for cart PRG).
  * Read-only: CE# + OE# low => DQ = mem[A14..A0].
  * CPU maps this at $8000-$FFFF (A15 decode external).
  */

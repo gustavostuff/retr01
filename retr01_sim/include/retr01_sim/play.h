@@ -45,7 +45,7 @@ typedef struct R01sPlay {
 
 void r01s_play_reset(R01sPlay *play);
 
-/* Soft-load 2×2 camera + scroll from cart start / first present screen. */
+/* Soft-load 2x2 camera + scroll from cart start / first present screen. */
 int r01s_play_start(struct R01sBoard *board);
 
 /* Sample P1 pad ($FE60 layout); movement runs on sim VBlank, not here. */

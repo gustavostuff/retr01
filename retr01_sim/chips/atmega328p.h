@@ -8,16 +8,16 @@
 #define R01S_APU_REGS 0x20u
 
 /*
- * Island K — ATmega328P APU stub (behavioral; not a full AVR core).
+ * Island K -- ATmega328P APU stub (behavioral; not a full AVR core).
  *
- * Soft bus window $FE40–$FE5F (A0–A4). Sim register map:
- *   [0] $FE40  bit0=enable, bits4–7=volume (0–15)
+ * Soft bus window $FE40-$FE5F (A0-A4). Sim register map:
+ *   [0] $FE40  bit0=enable, bits4-7=volume (0-15)
  *   [1] $FE41  period low
- *   [2] $FE42  period high (bits0–2) → 11-bit period
+ *   [2] $FE42  period high (bits0-2) -> 11-bit period
  *   [3..]      storage only
  *
  * Tick synthesizes a digital square on PWM (duty from volume).
- * Pinout: simplified port decode — GPIO↔$FE4x schematic still TBD (hw/md).
+ * Pinout: simplified port decode -- GPIO<->$FE4x schematic still TBD (hw/md).
  */
 typedef struct R01sAtmega328p {
     R01sEntity base;

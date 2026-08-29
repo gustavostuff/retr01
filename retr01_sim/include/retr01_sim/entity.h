@@ -53,7 +53,7 @@ struct R01sEntity {
     /* Lazy pin-name index: pin_hash_idx[slot] -> pins[] index, -1 empty. */
     uint8_t pin_hash_built;
     int8_t pin_hash_idx[R01S_PIN_HASH_SIZE];
-    /* DIP body size in logical pixels (UI): from pkg mm × scale + orient. */
+    /* DIP body size in logical pixels (UI): from pkg mm x scale + orient. */
     int body_w;
     int body_h;
     /* Physical DIP pin count (e.g. 40 for W65C02S); used for package layout. */
@@ -68,13 +68,13 @@ struct R01sEntity {
     void *impl;
 };
 
-/* Canvas scale: 1 mm real package = 2 logical pixels (compact bbox ÷ 2 → mm). */
+/* Canvas scale: 1 mm real package = 2 logical pixels (compact bbox / 2 -> mm). */
 #define R01S_PX_PER_MM 2
-/* JEDEC 0.100″ pin pitch ≈ 2.54 mm → 5 px at R01S_PX_PER_MM (never stretch-to-fill). */
+/* JEDEC 0.100" pin pitch ~ 2.54 mm -> 5 px at R01S_PX_PER_MM (never stretch-to-fill). */
 #define R01S_DIP_PIN_PITCH_PX 5
 #define R01S_DIP_PIN_MARGIN_PX 4 /* soft hint only; draw centers row with leftover */
 
-/* Look up (or estimate) molded body length × width in mm for a DIP pin count. */
+/* Look up (or estimate) molded body length x width in mm for a DIP pin count. */
 void r01s_dip_pkg_mm(int dip_pins, int *len_mm, int *wid_mm);
 
 /* Body size along the pin-row axis in px (horizontal body_w / vertical body_h). */
@@ -94,7 +94,7 @@ int r01s_entity_add_pin(R01sEntity *e, int number, const char *name, R01sPinDir 
  */
 void r01s_entity_set_dip(R01sEntity *e, int dip_pins);
 
-/* Same as set_dip, but with an explicit molded body length × width (mm). */
+/* Same as set_dip, but with an explicit molded body length x width (mm). */
 void r01s_entity_set_dip_mm(R01sEntity *e, int dip_pins, int len_mm, int wid_mm);
 
 /* Toggle / set package orientation; refreshes body_w/body_h. */

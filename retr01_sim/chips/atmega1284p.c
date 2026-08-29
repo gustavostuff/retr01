@@ -69,7 +69,7 @@ static void mcu_eval(R01sEntity *e) {
 
 static void mcu_tick(R01sEntity *e) {
     R01sAtmega1284p *c = (R01sAtmega1284p *)e;
-    /* Sim-domain stub for 20 MHz — full LCM master tick lands with N/K polish. */
+    /* Sim-domain stub for 20 MHz -- full LCM master tick lands with N/K polish. */
     if (r01s_level_is_high(r01s_entity_sense(e, "CLK"))) {
         c->clk_ticks++;
         c->alive = 1;
@@ -91,7 +91,7 @@ void r01s_atmega1284p_init(R01sAtmega1284p *chip, const char *refdes) {
     r01s_entity_init(&chip->base, &MCU1284_VT, "ATMEGA1284P", refdes ? refdes : "U1284");
     chip->base.impl = chip;
 
-    /* Simplified OAM port (not full AVR PDIP map — decode TBD on schematic). */
+    /* Simplified OAM port (not full AVR PDIP map -- decode TBD on schematic). */
     r01s_entity_add_pin(&chip->base, 1, "RESET#", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 2, "CE#", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 3, "OE#", R01S_PIN_IN);

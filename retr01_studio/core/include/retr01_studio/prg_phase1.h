@@ -13,7 +13,7 @@ typedef struct R01PrgCartLayout {
     uint8_t default_pal_row;
 } R01PrgCartLayout;
 
-/* Byte offsets within PRG init (CPU $8000+) — must match prg_phase1.c init[]. */
+/* Byte offsets within PRG init (CPU $8000+) -- must match prg_phase1.c init[]. */
 #define R01_PRG_INIT_SCROLL_X 11u /* LDA #imm before STA $FE02 */
 #define R01_PRG_INIT_SCROLL_Y 16u /* LDA #imm before STA $FE03 */
 

@@ -7,10 +7,10 @@
 #include <stdint.h>
 
 /*
- * ATF22V10 — behavioral PLD shell (32-IC BOM has five).
- * DECODE: $FExx select equations → SEL_FE* (board pulses HC573 LE from these).
- * VRAM: I→Y passthrough stub until interleave equations land.
- * BEAM_Y: P==Q → EQ#. Beam-X / compositor / BG fetch are dedicated models.
+ * ATF22V10 -- behavioral PLD shell (32-IC BOM has five).
+ * DECODE: $FExx select equations -> SEL_FE* (board pulses HC573 LE from these).
+ * VRAM: I->Y passthrough stub until interleave equations land.
+ * BEAM_Y: P==Q -> EQ#. Beam-X / compositor / BG fetch are dedicated models.
  */
 typedef struct R01sAtf22v10 {
     R01sEntity base;

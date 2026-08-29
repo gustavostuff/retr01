@@ -4,7 +4,7 @@
 #include "retr01_sim/entity.h"
 
 /*
- * Island B — 8.000 MHz can oscillator driving CPU PHI2.
+ * Island B -- 8.000 MHz can oscillator driving CPU PHI2.
  *
  * Pins (DIP-8 half / 4 used):
  *   1 OE#   4 GND   5 PHI2   8 VDD

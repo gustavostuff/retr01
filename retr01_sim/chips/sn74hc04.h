@@ -3,7 +3,7 @@
 
 #include "retr01_sim/entity.h"
 
-/* Hex inverter — hw/md/SN74HC_glue.md (same pinout as HC14). */
+/* Hex inverter -- hw/md/SN74HC_glue.md (same pinout as HC14). */
 typedef struct R01sSn74hc04 {
     R01sEntity base;
 } R01sSn74hc04;

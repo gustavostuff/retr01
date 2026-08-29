@@ -12,9 +12,9 @@
 #define R01S_BG_ATTR_OFF 0xF0
 
 /*
- * Island I — behavioral BG nametable fetch PLD stub (needs G + H).
- * SCALE 2x (default): beam → logical via /2; odd beam X = attr cycle.
- * SCALE 1x: beam → centered 128×120; odd logical X = attr cycle.
+ * Island I -- behavioral BG nametable fetch PLD stub (needs G + H).
+ * SCALE 2x (default): beam -> logical via /2; odd beam X = attr cycle.
+ * SCALE 1x: beam -> centered 128x120; odd logical X = attr cycle.
  * On PPU phase (PHI2 low) and playfield dots, drives VA to tile or attr.
  * Board muxes VA onto VRAM; DQ capture latches TILE/ATTR.
  */

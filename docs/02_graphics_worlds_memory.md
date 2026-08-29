@@ -180,7 +180,7 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 |  | PARALLAX PAYLOADS: same 480 B shape (after screens)        ||
 |  | ENTITY TYPES: 20 B each (state0/frame0 only)               ||
 |  |   origin_x, origin_y, part_count, pad                      ||
-|  |   4× {tile, attr, dx i8, dy i8} (unused parts zero)        ||
+|  |   4x {tile, attr, dx i8, dy i8} (unused parts zero)        ||
 |  | INSTANCES: 6 B each {type_id, pad, world_x u16, world_y u16}||
 |  +------------------------------------------------------------+|
 +----------------------------------------------------------------+
@@ -224,7 +224,7 @@ PRG planning cap is **128 KB** in the cart image (4 x 32 KB banks). The CPU stil
 | `$FE06`/`$FE07` | plane band | any band locks camera axis for the frame |
 | `$FE08`/`$FE09` | pal addr/data | active indices 0-63, auto-inc |
 | `$FE10`-`$FE12` | VRAM addr/data | auto-inc |
-| `$FE20`/`$FE21` | OAM addr/data | auto-inc. Entry `Y,tile,attr,X` ×64. **Host Play:** X/Y are **viewport-relative signed** coords packed as `int8` in each byte (negative top-left allowed; raster clips to **128×120**). Unused slot: `tile == 0xFF` |
+| `$FE20`/`$FE21` | OAM addr/data | auto-inc. Entry `Y,tile,attr,X` x64. **Host Play:** X/Y are **viewport-relative signed** coords packed as `int8` in each byte (negative top-left allowed; raster clips to **128x120**). Unused slot: `tile == 0xFF` |
 | `$FE30` | `WORLD` | 0-6 |
 | `$FE31`-`$FE37` | bank helpers | optional stamps, not live fetch |
 | `$FE38` | `PAL_ROW` | hint. Still copy `$FE08`/`$FE09` |

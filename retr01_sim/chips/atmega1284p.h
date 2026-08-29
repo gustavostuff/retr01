@@ -9,18 +9,18 @@
 #define R01S_MCU1284_EEPROM_MAILBOX 3u
 
 /*
- * Island L — ATmega1284P stub (behavioral; not a full AVR core).
+ * Island L -- ATmega1284P stub (behavioral; not a full AVR core).
  *
  * Soft ports (board decode):
  *   $FE20  OAM address latch (A0=0)
- *   $FE21  OAM data + auto-inc (A0=1) — 64 entries Y,tile,attr,X
- *   $FE70–$FE72 mailbox stub (board poke; protocol TBD)
+ *   $FE21  OAM data + auto-inc (A0=1) -- 64 entries Y,tile,attr,X
+ *   $FE70-$FE72 mailbox stub (board poke; protocol TBD)
  *
  * Pads stay on Island E until N merges 1284 pad path.
  * Line-buffer fill is Island M/N.
  *
  * Tick advances a 20 MHz domain counter (sim step stub; LCM master later).
- * Pinout: simplified port decode — GPIO↔$FExx schematic TBD (hw/md).
+ * Pinout: simplified port decode -- GPIO<->$FExx schematic TBD (hw/md).
  */
 typedef struct R01sAtmega1284p {
     R01sEntity base;

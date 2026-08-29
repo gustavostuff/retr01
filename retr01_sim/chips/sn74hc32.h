@@ -3,7 +3,7 @@
 
 #include "retr01_sim/entity.h"
 
-/* Quad 2-input OR — hw/md/SN74HC_glue.md */
+/* Quad 2-input OR -- hw/md/SN74HC_glue.md */
 typedef struct R01sSn74hc32 {
     R01sEntity base;
 } R01sSn74hc32;

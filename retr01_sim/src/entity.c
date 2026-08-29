@@ -5,7 +5,7 @@
 #include <string.h>
 
 /*
- * Molded PDIP body L×W (mm), rounded for a clean px/mm grid.
+ * Molded PDIP body LxW (mm), rounded for a clean px/mm grid.
  * See hw/md/packages_dip.md (Microchip DS00049 + JEDEC MS-001/MS-011).
  */
 typedef struct R01sDipPkg {
@@ -15,9 +15,9 @@ typedef struct R01sDipPkg {
 } R01sDipPkg;
 
 static const R01sDipPkg R01S_DIP_PKGS[] = {
-    /* 14/16/20: 74HC N-package family (body width ~6.35 → 6 mm). */
+    /* 14/16/20: 74HC N-package family (body width ~6.35 -> 6 mm). */
     {8, 9, 6},   {14, 19, 6},  {16, 20, 6},  {20, 25, 6},
-    /* Wider / longer defaults — prefer r01s_entity_set_dip_mm per part when known. */
+    /* Wider / longer defaults -- prefer r01s_entity_set_dip_mm per part when known. */
     {24, 32, 14}, {28, 36, 14}, {32, 42, 14}, {40, 52, 14},
 };
 

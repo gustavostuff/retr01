@@ -8,7 +8,7 @@
 #define R01S_COLOR_PROM_ENTRIES 64
 
 /*
- * Island O — AT28C16 Color PROM (packed R3G3B2, read-only in play).
+ * Island O -- AT28C16 Color PROM (packed R3G3B2, read-only in play).
  * Address = 6-bit master palette index; data = {RRRGGGBB}.
  */
 typedef struct R01sAt28c16 {

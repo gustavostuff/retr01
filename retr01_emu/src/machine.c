@@ -77,7 +77,7 @@ void r01e_machine_reset(R01eMachine *m) {
     } else {
         (void)r01e_video_prepare_world(m, 0);
         catchup_prg_boot(m);
-        /* Boot stream is not steady-state frame work — drop it from the chart. */
+        /* Boot stream is not steady-state frame work -- drop it from the chart. */
         m->prof_acc_active = 0;
         m->prof_acc_vblank = 0;
         m->prof_acc_idle = 0;

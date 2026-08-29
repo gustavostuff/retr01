@@ -18,9 +18,9 @@ typedef struct R01eIo {
     uint8_t status;      /* $FE01 */
     uint8_t scroll_x;    /* $FE02 0..127 */
     uint8_t scroll_y;    /* $FE03 0..119 */
-    uint8_t raster_y;    /* $FE04 — compare (phase 8+) */
-    uint8_t raster_ctrl; /* $FE05 — enable/ack (phase 8+) */
-    uint8_t plane_lo;    /* $FE06 — parallax band (phase 2+) */
+    uint8_t raster_y;    /* $FE04 -- compare (phase 8+) */
+    uint8_t raster_ctrl; /* $FE05 -- enable/ack (phase 8+) */
+    uint8_t plane_lo;    /* $FE06 -- parallax band (phase 2+) */
     uint8_t plane_hi;    /* $FE07 */
 
     uint8_t pal_addr; /* $FE08 */
@@ -35,10 +35,10 @@ typedef struct R01eIo {
     uint8_t bank_helper[8]; /* $FE31-$FE37 + $FE38 pal row hint */
     uint8_t pal_row;
 
-    uint8_t apu[0x20];    /* $FE40-$FE5F — phase 9+ */
+    uint8_t apu[0x20];    /* $FE40-$FE5F -- phase 9+ */
     uint8_t pad0;         /* $FE60 */
     uint8_t pad1;         /* $FE61 */
-    uint8_t eeprom[3];    /* $FE70-$FE72 — phase 10+ save protocol */
+    uint8_t eeprom[3];    /* $FE70-$FE72 -- phase 10+ save protocol */
 
     uint32_t map_addr; /* $FE90-$FE92 seek; $FE93 read auto-inc */
 

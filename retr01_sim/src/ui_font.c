@@ -169,7 +169,7 @@ void font_draw(SDL_Renderer *r, int x, int y, const char *text, Uint8 R, Uint8 G
     font_draw_a(r, x, y, text, R, G, B, 255);
 }
 
-/* Rasterize text into an alpha buffer (tw × th), then blit. Returns 0 on success. */
+/* Rasterize text into an alpha buffer (tw x th), then blit. Returns 0 on success. */
 static int font_raster_a(uint8_t *buf, int tw, int th, const char *text) {
     int pen_x;
     int baseline;
@@ -241,7 +241,7 @@ int font_text_width(const char *text) {
     return w;
 }
 
-/* Draw text rotated 90° CCW (reads top→bottom). (x,y) = top-left of rotated AABB. */
+/* Draw text rotated 90 deg CCW (reads top->bottom). (x,y) = top-left of rotated AABB. */
 void font_draw_a_rot90ccw(SDL_Renderer *r, int x, int y, const char *text, Uint8 R, Uint8 G, Uint8 B, Uint8 A) {
     int tw = font_text_width(text);
     int th = font_line_h();
@@ -272,7 +272,7 @@ void font_draw_a_rot90ccw(SDL_Renderer *r, int x, int y, const char *text, Uint8
             if (a == 0) {
                 continue;
             }
-            /* 90° CCW: (sx,sy) -> (th-1-sy, sx) */
+            /* 90 deg CCW: (sx,sy) -> (th-1-sy, sx) */
             dx = th - 1 - sy;
             dy = sx;
             SDL_SetRenderDrawColor(r, R, G, B, a);

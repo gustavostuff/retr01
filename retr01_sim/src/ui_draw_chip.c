@@ -31,7 +31,7 @@ void pin_level_rgb(R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg, Uint8 *p
         *pb = 90;
         break;
     case R01S_LVL_L:
-        /* Solid dark — no light center (pad is a filled block). */
+        /* Solid dark -- no light center (pad is a filled block). */
         *pr = 28;
         *pg = 32;
         *pb = 30;
@@ -84,14 +84,14 @@ static void blit_pin_rot(SDL_Renderer *r, int dx, int dy, int rot, Uint8 tr, Uin
                 sx = ox;
                 sy = oy;
             } else if (rot == 1) {
-                /* 90° CW: dest(ox,oy) <- src(oy, h-1-ox) */
+                /* 90 deg CW: dest(ox,oy) <- src(oy, h-1-ox) */
                 sx = oy;
                 sy = h - 1 - ox;
             } else if (rot == 2) {
                 sx = w - 1 - ox;
                 sy = h - 1 - oy;
             } else {
-                /* 90° CCW: dest(ox,oy) <- src(w-1-oy, ox) */
+                /* 90 deg CCW: dest(ox,oy) <- src(w-1-oy, ox) */
                 sx = w - 1 - oy;
                 sy = ox;
             }
@@ -290,7 +290,7 @@ static void draw_display_glyph(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e,
 }
 
 /* Pin along-axis board coord + which side (1 = pin1 side: bottom if H, left if V).
- * Pitch is always JEDEC 0.100″ (R01S_DIP_PIN_PITCH_PX); end margin centers the row. */
+ * Pitch is always JEDEC 0.100" (R01S_DIP_PIN_PITCH_PX); end margin centers the row. */
 static void dip_pin_pos(const R01sEntity *e, int pin_num, int *along, int *side_pin1) {
     int dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
     int half = dip / 2;
@@ -328,7 +328,7 @@ static void draw_chip(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, in
         int along;
         int side_pin1;
         Uint8 pr, pg, pb;
-        /* Only package outline pins — logical pins beyond dip_pins used to share one
+        /* Only package outline pins -- logical pins beyond dip_pins used to share one
          * slot (often the center) and crush spacing (e.g. ATF22V10 beam-Y extras). */
         if (num < 1 || num > dip) {
             continue;
@@ -353,7 +353,7 @@ static void draw_chip(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, in
         fill_rect(r, x + e->body_w / 2 - 2, y - 1, 4, 2, 20, 22, 20);
     }
     /* Part label centered on body, 50% opaque white. Skip if it won't fit fully.
-     * Vertical packages get the label rotated 90° CW (reads top→bottom). */
+     * Vertical packages get the label rotated 90 deg CW (reads top->bottom). */
     {
         const char *label = e->part ? e->part : e->refdes;
         if (label && label[0]) {
@@ -364,7 +364,7 @@ static void draw_chip(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, in
                     font_draw_a(r, x + (e->body_w - tw) / 2, y + (e->body_h - fh) / 2, label, 255, 255, 255, 128);
                 }
             } else if (tw <= e->body_h - 4 && fh <= e->body_w - 4) {
-                /* Rotated AABB is fh wide × tw tall. */
+                /* Rotated AABB is fh wide x tw tall. */
                 font_draw_a_rot90ccw(r, x + (e->body_w - fh) / 2, y + (e->body_h - tw) / 2, label, 255, 255, 255,
                                      128);
             }

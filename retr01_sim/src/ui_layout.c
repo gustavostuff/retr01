@@ -80,7 +80,7 @@ static void capture_snapshots(R01sUi *ui) {
     /*
      * Island frames+chip relatives and compact chip abs positions are independent.
      * In island mode, refresh both from live. In compact mode, only refresh compact
-     * chips — keep the last island-mode frame/chip snapshot (do not derive frames
+     * chips -- keep the last island-mode frame/chip snapshot (do not derive frames
      * from live group, which may still be builder defaults or a prior bad arrange).
      */
     if (ui->layout_compact) {
@@ -179,7 +179,7 @@ int r01s_ui_layout_save(R01sUi *ui) {
         }
         id = e->refdes;
         if (ui->layout_compact) {
-            /* Compact mode — keep last island-relative snapshot, not board coords. */
+            /* Compact mode -- keep last island-relative snapshot, not board coords. */
             rx = ui->save_chip_x[i];
             ry = ui->save_chip_y[i];
             orient_s = ui->save_chip_orient[i] == (uint8_t)R01S_ORIENT_V ? "V" : "H";

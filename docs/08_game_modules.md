@@ -361,7 +361,7 @@ Entity-entity among all NPCs is **opt-in** and expensive. Default generated loop
 
 - Author `SOLID` on tiles via tile context **Set Solid** (Phase 2 Studio).
 - Author entity **origins** and **hitboxes** in the entity modal (guides checkbox toggles overlay + interaction). **Runtime** entity collision is still future.
-- Play preview uses the same region rules (ACTIVE only). Sprites **clip to the 128×120 viewport** when partially off-screen (Studio, emu, sim Host Play).
+- Play preview uses the same region rules (ACTIVE only). Sprites **clip to the 128x120 viewport** when partially off-screen (Studio, emu, sim Host Play).
 - Show hitboxes / solids as optional overlay in Play (implementation phase TBD).
 - Camera rail / auto-scroll must pause or redefine collision during transitions if pads are muted (rail: typically freeze gameplay collisions until scroll ends).
 

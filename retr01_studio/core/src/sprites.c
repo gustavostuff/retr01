@@ -21,7 +21,7 @@ int r01_chr_alloc_spr_tile(R01World *w, int bank) {
         return -1;
     }
     b = &w->spr_banks[bank];
-    /* Bank 0 tile 1 is the cart player stub — never hand it to user art. */
+    /* Bank 0 tile 1 is the cart player stub -- never hand it to user art. */
     if (bank == 0 && b->tile_count == R01_SPR_PLAYER_TILE_ID) {
         if (b->tile_count >= R01_TILES_PER_BANK) {
             return -1;

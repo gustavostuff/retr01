@@ -38,7 +38,7 @@ int main(void) {
     expect_true(r01s_beam_xy_y(&beam) == 1, "Y advanced one line");
     expect_true(saw_hblank, "HBlank during line");
 
-    /* Advance to VBlank: need 239 more full lines from y=1 → y=240 */
+    /* Advance to VBlank: need 239 more full lines from y=1 -> y=240 */
     for (i = 0; i < 239 * 682 && !saw_vblank; i++) {
         r01s_entity_tick(o);
         r01s_entity_drive(b, "DOT", r01s_entity_sense(o, "DOT"));

@@ -52,7 +52,7 @@ static void bus_fight_abort(const char *net, const char *driver_a, R01sLevel a, 
                             R01sLevel b, const char *why) {
     g_bus_conflicts++;
     fprintf(stderr, "\n");
-    fprintf(stderr, "retr01_sim: BUS FIGHT — simulation aborted\n");
+    fprintf(stderr, "retr01_sim: BUS FIGHT -- simulation aborted\n");
     fprintf(stderr, "  net:      %s\n", net ? net : "(unknown)");
     if (driver_a) {
         fprintf(stderr, "  driver A: %s = %s\n", driver_a, r01s_level_name(a));
@@ -202,7 +202,7 @@ void r01s_bus_resolve(R01sEntity *dst, const char *dst_prefix, const R01sEntity 
         return;
     }
 
-    /* Snapshot labels once — entity_label uses a static buffer. */
+    /* Snapshot labels once -- entity_label uses a static buffer. */
     snprintf(la, sizeof(la), "%s", entity_label(a));
     snprintf(lb, sizeof(lb), "%s", entity_label(b));
 

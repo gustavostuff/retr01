@@ -348,7 +348,7 @@ static int collect_opaque_colors(const uint8_t *rgba, size_t npx, Rgb out[4], in
             continue;
         }
         if (n >= 4) {
-            set_err(err_buf, err_cap, "need ≤4 colors");
+            set_err(err_buf, err_cap, "need <=4 colors");
             return -1;
         }
         out[n++] = c;
@@ -371,7 +371,7 @@ static int build_png_palette(const Rgb colors[4], int ncolors, uint8_t master_fo
             color_to_index[i] = 0;
         } else {
             if (next > 3) {
-                set_err(err_buf, err_cap, "need ≤4 colors (incl. backdrop)");
+                set_err(err_buf, err_cap, "need <=4 colors (incl. backdrop)");
                 return -1;
             }
             master_for_index[next] = m;
@@ -461,13 +461,13 @@ int r01_project_import_png(R01Project *p, const char *path, char *err_buf, size_
     png_get_IHDR(png, info, &width, &height, &bit_depth, NULL, NULL, NULL, NULL);
 
     if ((width % (png_uint_32)R01_SCREEN_PX_W) != 0 || (height % (png_uint_32)R01_SCREEN_PX_H) != 0) {
-        set_err(err_buf, err_cap, "size must be multiple of 128×120");
+        set_err(err_buf, err_cap, "size must be multiple of 128x120");
         goto fail;
     }
     cols = (int)(width / (png_uint_32)R01_SCREEN_PX_W);
     rows = (int)(height / (png_uint_32)R01_SCREEN_PX_H);
     if (cols > R01_GRID_MAX || rows > R01_GRID_MAX) {
-        set_err(err_buf, err_cap, "png grid exceeds 8×8");
+        set_err(err_buf, err_cap, "png grid exceeds 8x8");
         goto fail;
     }
 

@@ -6,8 +6,8 @@
 #include <stdint.h>
 
 /*
- * Island N — sprite pipeline stub (needs L + M + J).
- * Board owns OAM→linebuf fill + compositor; this chip holds fill stats for UI/health.
+ * Island N -- sprite pipeline stub (needs L + M + J).
+ * Board owns OAM->linebuf fill + compositor; this chip holds fill stats for UI/health.
  * CHR is stubbed as solid master-index = tile&0x3F until cart CHR is granted.
  */
 typedef struct R01sSpriteFetch {

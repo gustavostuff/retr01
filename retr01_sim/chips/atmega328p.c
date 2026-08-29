@@ -90,7 +90,7 @@ void r01s_atmega328p_init(R01sAtmega328p *chip, const char *refdes) {
     r01s_entity_init(&chip->base, &APU_VT, "ATMEGA328P", refdes ? refdes : "U328");
     chip->base.impl = chip;
 
-    /* Simplified APU port (not full AVR PDIP map — decode TBD on schematic). */
+    /* Simplified APU port (not full AVR PDIP map -- decode TBD on schematic). */
     r01s_entity_add_pin(&chip->base, 1, "RESET#", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 2, "CE#", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 3, "OE#", R01S_PIN_IN);

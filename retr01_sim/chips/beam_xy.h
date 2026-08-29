@@ -11,8 +11,8 @@
 #define R01S_BEAM_VISIBLE_H 240
 
 /*
- * Island H — behavioral stand-in for ATF22V10 X/Y beam PLDs (32-IC BOM).
- * Rising DOT advances X; wrap 341→0 bumps Y; wrap 262→0.
+ * Island H -- behavioral stand-in for ATF22V10 X/Y beam PLDs (32-IC BOM).
+ * Rising DOT advances X; wrap 341->0 bumps Y; wrap 262->0.
  * HBLANK = X>=256, VBLANK = Y>=240, NMI# pulses low on VBlank entry.
  */
 typedef struct R01sBeamXy {

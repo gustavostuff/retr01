@@ -468,7 +468,7 @@ int main(int argc, char **argv) {
     /* Before any renderer/texture: nearest-neighbor upscale. */
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 
-    /* Hidden until first frame is presented — avoids empty-window flash. */
+    /* Hidden until first frame is presented -- avoids empty-window flash. */
     win = SDL_CreateWindow("Retr01 Emulator (Phase 1)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                            R01E_VISIBLE_W * scale, R01E_VISIBLE_H * scale,
                            SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN);
@@ -501,7 +501,7 @@ int main(int argc, char **argv) {
                                      R01E_VRAM_ATLAS_W, R01E_VRAM_ATLAS_H);
     }
     if (!dbg_win || !dbg_ren || !vram_tex) {
-        fprintf(stderr, "retr01_emu: debug window unavailable (%s) — continuing without it\n",
+        fprintf(stderr, "retr01_emu: debug window unavailable (%s) -- continuing without it\n",
                 SDL_GetError());
         if (vram_tex) {
             SDL_DestroyTexture(vram_tex);
@@ -525,7 +525,7 @@ int main(int argc, char **argv) {
                    (unsigned)wv.start_col, (unsigned)wv.start_row);
         }
     }
-    printf("Studio Play SoT: WASD/arrows move · X/Y warp · Space pause · R reset · Esc quit\n");
+    printf("Studio Play SoT: WASD/arrows move  |  X/Y warp  |  Space pause  |  R reset  |  Esc quit\n");
     if (dbg_win) {
         printf("Debug: VRAM 2x2 + world map + BG/SPR pals + CPU busy budget (2 Hz, 50k red line)\n");
     }

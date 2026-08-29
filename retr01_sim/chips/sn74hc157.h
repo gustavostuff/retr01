@@ -4,7 +4,7 @@
 #include "retr01_sim/entity.h"
 
 /*
- * Quad 2:1 mux — VRAM / line-buffer address select (island G / M).
+ * Quad 2:1 mux -- VRAM / line-buffer address select (island G / M).
  * Pinout: hw/md/SN74HC157.md
  * Select pin named "AB" (datasheet A/B). Strobe "G#" active-low.
  */

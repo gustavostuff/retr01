@@ -4,7 +4,7 @@
 #include "retr01_sim/entity.h"
 
 /*
- * Octal bus transceiver — CPU / video / cart isolation.
+ * Octal bus transceiver -- CPU / video / cart isolation.
  * Pinout: hw/md/SN74HC245.md
  */
 typedef struct R01sSn74hc245 {

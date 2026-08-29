@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 /*
- * Island C — W65C02S game CPU (functional Phase-1 subset).
+ * Island C -- W65C02S game CPU (functional Phase-1 subset).
  * Pinout: hw/md/W65C02S.md
  *
  * Implemented:

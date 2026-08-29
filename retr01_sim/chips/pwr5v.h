@@ -4,7 +4,7 @@
 #include "retr01_sim/entity.h"
 
 /*
- * Island A — board 5 V rail / regulator model.
+ * Island A -- board 5 V rail / regulator model.
  * Not a BOM line item; represents clean VDD for proto bring-up.
  *
  * Pins (SIP-4 style):

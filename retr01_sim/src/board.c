@@ -18,9 +18,9 @@
 #define R01S_PAL_PLANE_BYTES 128u
 #define R01S_ACTIVE_PAL_BYTES 32u
 /*
- * DOT/beam ticks per board step. Real silicon runs DOT ≈ PHI2 order; the UI
+ * DOT/beam ticks per board step. Real silicon runs DOT ~ PHI2 order; the UI
  * only does a few board steps/frame, so without a burst first VBlank takes minutes.
- * Keep this modest: CPU load scales with dots × settle × steps/frame.
+ * Keep this modest: CPU load scales with dots x settle x steps/frame.
  */
 #define R01S_BEAM_DOTS_PER_STEP 32
 /* Host Play: faster fields so ~1px/VBlank feels closer to 60 Hz game time. */
@@ -32,7 +32,7 @@
 /*
  * Bring-up smoke PRG (overlay into cart PRG window: not Studio game code).
  * Body through OAM readback is fixed. When cart meta is valid, install appends
- * pal+$FE08/$FE09 load and 480 B MAP→VRAM, then pad hang (addresses patched).
+ * pal+$FE08/$FE09 load and 480 B MAP->VRAM, then pad hang (addresses patched).
  * Ends with MAP seek 0 + LDA $FE93 ('r' cart magic) BEFORE any MAP stream so island health sticks.
  */
 static const uint8_t R01S_BRINGUP_SMOKE[] = {
@@ -753,7 +753,7 @@ static int board_map_byte_is_cart_magic(const R01sBoard *ctx, uint8_t dq) {
     return ctx && ctx->map_addr == 0 && dq == (uint8_t)'r';
 }
 
-/* Soft PLD: $FE02–$FE04 latches + $FE40–$FE5F APU + $FE60/$FE61 pads + $FE90–$FE93 MAP. */
+/* Soft PLD: $FE02-$FE04 latches + $FE40-$FE5F APU + $FE60/$FE61 pads + $FE90-$FE93 MAP. */
 static void flash_deselect(R01sEntity *flash) {
     r01s_entity_drive(flash, "CE#", R01S_LVL_H);
     r01s_entity_drive(flash, "OE#", R01S_LVL_H);
@@ -858,7 +858,7 @@ static void poke_pal_addr_latch(R01sBoard *ctx, uint8_t pa) {
     ctx->pal_addr = pa;
 }
 
-/* Pulse HC573 LE from decode SEL; route D↔Q on pin path. */
+/* Pulse HC573 LE from decode SEL; route D<->Q on pin path. */
 static void latch_port_cycle(R01sBoard *ctx, R01sEntity *latch, R01sEntity *cpu, int selected,
                              int read) {
     r01s_entity_drive(latch, "OE", R01S_LVL_L);
@@ -989,7 +989,7 @@ static void wire_io(R01sBoard *ctx) {
         }
     }
 
-    /* Decode PLD SEL → HC573 LE (BOM latches on pin path). */
+    /* Decode PLD SEL -> HC573 LE (BOM latches on pin path). */
     latch_port_cycle(ctx, latch, cpu, sel_fe02, read);
     latch_port_cycle(ctx, scroll_y, cpu, sel_fe03, read);
     latch_port_cycle(ctx, raster, cpu, sel_fe04, read);
@@ -1025,7 +1025,7 @@ static void wire_io(R01sBoard *ctx) {
         r01s_entity_eval(mcu);
     }
 
-    /* Soft $FE70–$FE72 machine-EEPROM mailbox (protocol TBD: Island F). */
+    /* Soft $FE70-$FE72 machine-EEPROM mailbox (protocol TBD: Island F). */
     if (hit_eeprom) {
         unsigned ei = (unsigned)(addr - 0xFE70u);
         if (read) {
@@ -1064,7 +1064,7 @@ static void wire_io(R01sBoard *ctx) {
         r01s_entity_eval(pads);
     }
 
-    /* Island J: MAP $FE93: flash CE via decode SEL (seek from HC573 FE90–92). */
+    /* Island J: MAP $FE93: flash CE via decode SEL (seek from HC573 FE90-92). */
     if (hit_map_data && read && ctx->cart_loaded &&
         r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu) == R01S_CPU_OP_DATA) {
         uint8_t dq;
@@ -1132,7 +1132,7 @@ static void wire_beam(R01sBoard *ctx, R01sIslandGroup *group) {
     r01s_entity_drive(beam_y, "OE#", R01S_LVL_L);
     r01s_entity_eval(beam);
     r01s_entity_eval(beam_y);
-    /* Active-low raster match → IRQB (CPU IRQ service still Phase-1 stub). */
+    /* Active-low raster match -> IRQB (CPU IRQ service still Phase-1 stub). */
     r01s_entity_drive(cpu, "IRQB", r01s_entity_sense(beam_y, "EQ#"));
 }
 
@@ -1161,7 +1161,7 @@ static void wire_vram(R01sBoard *ctx) {
     uint16_t sram_addr;
     int i;
 
-    /* FE10/FE11 via decode SEL → HC573 (not PHI2-gated). */
+    /* FE10/FE11 via decode SEL -> HC573 (not PHI2-gated). */
     wire_decode(ctx);
     latch_port_cycle(ctx, fe10, cpu, pld_sel(pld, "SEL_FE10"), read);
     latch_port_cycle(ctx, fe11, cpu, pld_sel(pld, "SEL_FE11"), read);
@@ -1356,7 +1356,7 @@ static void board_vram_cell_at(const R01sBoard *ctx, int lx, int ly, uint8_t *ti
     if (lx < 0 || ly < 0 || lx >= R01S_LOGICAL_W || ly >= R01S_LOGICAL_H) {
         return;
     }
-    /* Match bg_fetch: scroll within 0–127 / 0–119, then add logical (2×2 workbench). */
+    /* Match bg_fetch: scroll within 0-127 / 0-119, then add logical (2x2 workbench). */
     sx = (int)(scroll_x & 127u) + lx;
     sy = (int)(scroll_y < 120u ? scroll_y : 119u) + ly;
     slot_x = (sx / R01S_BG_SCREEN_PX_W) & 1;
@@ -1400,7 +1400,7 @@ static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     slot_x = (sx / R01S_BG_SCREEN_PX_W) & 1;
     slot_y = (sy / R01S_BG_SCREEN_PX_H) & 1;
     slot = slot_y * 2 + slot_x;
-    /* Match emu/Studio: missing directory screens → shared backdrop (not CHR tile 0). */
+    /* Match emu/Studio: missing directory screens -> shared backdrop (not CHR tile 0). */
     if (!ctx->vram_slot_present[slot & 3]) {
         master = (uint8_t)(ctx->active_pal[0] & 63u);
         ctx->chr_last_master = master;
@@ -1430,7 +1430,7 @@ static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
 
 
 
-/* Island N: clear half, OAM-scan logical Y, paint ≤16 sprites (CHR via flash CE in HBlank). */
+/* Island N: clear half, OAM-scan logical Y, paint <=16 sprites (CHR via flash CE in HBlank). */
 static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
     int i;
     int si;
@@ -1605,7 +1605,7 @@ static void wire_video_prom_addr(R01sEntity *prom, uint8_t index) {
     r01s_entity_eval(prom);
 }
 
-/* Hold LCD while bring-up MAP-streams tiles then attrs (avoids sky→unflipped→flipped). */
+/* Hold LCD while bring-up MAP-streams tiles then attrs (avoids sky->unflipped->flipped). */
 static int board_video_held_for_map_stream(const R01sBoard *ctx) {
     if (!ctx || ctx->cart_off_map_screen0 == 0) {
         return 0;
@@ -1614,14 +1614,14 @@ static int board_video_held_for_map_stream(const R01sBoard *ctx) {
     if (ctx->play.enabled) {
         return 0;
     }
-    /* Hold during MAP stream and until play latches scroll + 2×2 camera. */
+    /* Hold during MAP stream and until play latches scroll + 2x2 camera. */
     return 1;
 }
 
 /*
  * Island O: dot-sampled BG -> compositor -> Color PROM -> LCD sink.
  * CHR: flash /CE during DOT window (yield PRG first); hold chr_last_master on deny.
- * Sink is the 256×240 RGBS field; SCALE maps beam → logical 128×120.
+ * Sink is the 256x240 RGBS field; SCALE maps beam -> logical 128x120.
  */
 static void wire_video_dot(R01sBoard *ctx) {
     wire_bg_fetch(ctx);
@@ -1649,7 +1649,7 @@ static void wire_video_dot(R01sBoard *ctx) {
         return;
     }
     if (!r01s_rgbs_beam_to_logical(scale_2x, bx, by, &lx, &ly)) {
-        /* 1x border: blank (cheap). Raster timing stays 341×262 regardless. */
+        /* 1x border: blank (cheap). Raster timing stays 341x262 regardless. */
         r01s_video_sink_plot(sink, bx, by, 0);
         return;
     }
@@ -1764,7 +1764,7 @@ static void wire_power_clock_reset(R01sBoard *ctx, R01sIslandGroup *group) {
     phi2 = r01s_entity_sense(osc, "PHI2");
     r01s_entity_drive(hc, "1A", phi2 == R01S_LVL_Z ? R01S_LVL_L : phi2);
     r01s_entity_drive(hc, "2A", resb);
-    /* Unused Schmitt gates: tie inputs (real boards do this; avoids X on 3Y–6Y). */
+    /* Unused Schmitt gates: tie inputs (real boards do this; avoids X on 3Y-6Y). */
     r01s_entity_drive(hc, "3A", R01S_LVL_H);
     r01s_entity_drive(hc, "4A", R01S_LVL_H);
     r01s_entity_drive(hc, "5A", R01S_LVL_H);
@@ -2047,7 +2047,7 @@ static void board_install_bringup_prg(R01sBoard *board) {
         return;
     }
     board_resolve_cart_meta(board);
-    /* IC path: palette + 480 B MAP→VRAM via $FE93→$FE12 (replaces host softboot). */
+    /* IC path: palette + 480 B MAP->VRAM via $FE93->$FE12 (replaces host softboot). */
     stream = (board->cart_off_map_screen0 != 0 && board->cart_off_pal_bg != 0);
 
     memcpy(buf + n, R01S_BRINGUP_SMOKE, sizeof(R01S_BRINGUP_SMOKE));
@@ -2795,7 +2795,7 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     r01s_integration_init(&board->integration, "UPLDP");
     r01s_bg_fetch_init(&board->bg_fetch, "UPLDI");
 
-    /* Add order = canvas Z / arrange_rows order: VIDEO (LCD) first → top-left. */
+    /* Add order = canvas Z / arrange_rows order: VIDEO (LCD) first -> top-left. */
     if (r01s_island_builder_add(b, &ISLAND_VIDEO_VT, "ISLAND O  VIDEO RGBS", 0, 0, 1, 1,
                                 &board->video_impl) < 0) {
         return -1;

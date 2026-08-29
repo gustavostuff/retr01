@@ -53,7 +53,7 @@ TEST_MAIN() {
     tile[0] = 0xA5;
     tile[8] = 0x5A;
     EXPECT(r01_chr_write_spr_tile(w, bank, id, tile) == 0, "write spr0");
-    /* Tile 1 reserved for player stub — alloc skips to 2. */
+    /* Tile 1 reserved for player stub -- alloc skips to 2. */
     id = r01_chr_alloc_spr_tile(w, bank);
     EXPECT(id == 2, "spr tile 2 skips reserved 1");
     memset(tile, 0, sizeof(tile));
@@ -147,7 +147,7 @@ TEST_MAIN() {
                     memcpy(stub, img + spr0 + (size_t)R01_SPR_PLAYER_TILE_ID * R01_TILE_BYTES,
                            R01_TILE_BYTES);
                     EXPECT(stub[0] == 0xFF && stub[8] == 0x00, "player stub color-1 at tile 1");
-                    /* Legacy tile-1 art relocated to next free slot (tile_count was 3 → dest 3). */
+                    /* Legacy tile-1 art relocated to next free slot (tile_count was 3 -> dest 3). */
                     memcpy(relocated, img + spr0 + 3u * R01_TILE_BYTES, R01_TILE_BYTES);
                     EXPECT(relocated[0] == 0x11 && relocated[8] == 0x22, "relocated tile1 art");
                 }

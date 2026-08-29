@@ -6,7 +6,7 @@ Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. **P
 
 ---
 
-## UI (Phase 2 + 3A–3E)
+## UI (Phase 2 + 3A-3E)
 
 Fixed **640x360** logical canvas, **8px** grid, dark gray chrome. Buttons/labels **16px** tall. Proggy Tiny (`assets/proggy-tiny.ttf`).
 
@@ -42,10 +42,10 @@ Fixed **640x360** logical canvas, **8px** grid, dark gray chrome. Buttons/labels
 | **Edit tile** modal | **288x160**, 4x4 palette picker, **128x128** pixel canvas |
 | **Set Solid** | Toggles `R01_ATTR_SOLID` (`0x40`) on matching tiles in active world (bank+pal+flips, not tile ID) |
 | **Palette strip** | Click BG/SPR strip -> **Global palettes** modal. Row **0-7** sets `default_pal_row` for the active world |
-| **Sprites** | List of SPR catalog entries (**1×** icons + bank tile index). Empty: **empty** + **Add**. Create/Edit modal: SPR bank dots + 16×16 tile grid, 4×4 SPR palette, LMB drag parts, RMB paint. Right-click: edit, remove, set palette, change sprite bank. New sprites fill bank **0**, then **1..3** |
-| **Metasprites** | Reusable multi-part SPR groups (no origin/hitbox). Empty: **empty** + **Add**. Modal: same compose flow as entities but assembly-only (SPR bank left, 16×16 compose right, 4×4 SPR palette, LMB/RMB). Right-click: edit, remove. **Studio-only** — not a separate cart table; export flattens into entity parts |
-| **Entities** | List of entity types (composite icon + state-0 name). Empty: **empty** + **Add**. Modal: left **metasprite catalog** (drag onto compose); right state/frame dots, name field, 16×16 compose @8×, origin cross + hitbox (guides checkbox), 4×4 SPR palette. LMB select/drag parts, origin, hitbox; RMB paint selected part. Selected part: **H/V** flips, **1–4** palette, Delete removes. States locked to **0** (Idle) for now. Right-click: edit, remove |
-| **Place on screen** | Drag a **Sprites**, **Metasprites**, or **Entities** row onto the screen preview. Sprite drop auto-creates a 1-state/1-frame/1-part entity and places an instance. Metasprite drop auto-creates an entity from the group and places an instance. Entity drop places that type. Instance `world_x/y` is the **user origin** (compose cross); parts/hitbox draw as `(coord - origin)` relative to that. Sprites **clip to 128×120** when partially off-screen. Click instance to select (white outline); **Delete** removes. Visible in edit view and **Play** (OAM slot 0 = player; instances fill 1+) |
+| **Sprites** | List of SPR catalog entries (**1x** icons + bank tile index). Empty: **empty** + **Add**. Create/Edit modal: SPR bank dots + 16x16 tile grid, 4x4 SPR palette, LMB drag parts, RMB paint. Right-click: edit, remove, set palette, change sprite bank. New sprites fill bank **0**, then **1..3** |
+| **Metasprites** | Reusable multi-part SPR groups (no origin/hitbox). Empty: **empty** + **Add**. Modal: same compose flow as entities but assembly-only (SPR bank left, 16x16 compose right, 4x4 SPR palette, LMB/RMB). Right-click: edit, remove. **Studio-only** -- not a separate cart table; export flattens into entity parts |
+| **Entities** | List of entity types (composite icon + state-0 name). Empty: **empty** + **Add**. Modal: left **metasprite catalog** (drag onto compose); right state/frame dots, name field, 16x16 compose @8x, origin cross + hitbox (guides checkbox), 4x4 SPR palette. LMB select/drag parts, origin, hitbox; RMB paint selected part. Selected part: **H/V** flips, **1-4** palette, Delete removes. States locked to **0** (Idle) for now. Right-click: edit, remove |
+| **Place on screen** | Drag a **Sprites**, **Metasprites**, or **Entities** row onto the screen preview. Sprite drop auto-creates a 1-state/1-frame/1-part entity and places an instance. Metasprite drop auto-creates an entity from the group and places an instance. Entity drop places that type. Instance `world_x/y` is the **user origin** (compose cross); parts/hitbox draw as `(coord - origin)` relative to that. Sprites **clip to 128x120** when partially off-screen. Click instance to select (white outline); **Delete** removes. Visible in edit view and **Play** (OAM slot 0 = player; instances fill 1+) |
 
 PNG drop imports into the **active** world. Cart export packs **world 0** only (ignores `default_world`).
 
@@ -62,7 +62,7 @@ PNG drop imports into the **active** world. Cart export packs **world 0** only (
 | **Start** | Center of **`default_screen`** in the play world. Fallback grid **(2,0)** or first present |
 | **Warps** | **X** -> screen (0,0). **Y** -> screen (1,0). Phase 1 test hooks, no Events UI yet |
 
-Play SoT: `core/src/play.c` + `collision.c`. Emu/sim mirror the same rules (separate source copies). Re-export after solid edits. Host collision reads **cart MAP attrs**, not the PRG collision stub. OAM X/Y are **viewport-relative signed** coords; tiles fully outside **128×120** are skipped; partial tiles clip at viewport edges (Studio, emu, sim).
+Play SoT: `core/src/play.c` + `collision.c`. Emu/sim mirror the same rules (separate source copies). Re-export after solid edits. Host collision reads **cart MAP attrs**, not the PRG collision stub. OAM X/Y are **viewport-relative signed** coords; tiles fully outside **128x120** are skipped; partial tiles clip at viewport edges (Studio, emu, sim).
 
 ---
 
@@ -163,11 +163,11 @@ ctest --test-dir build --output-on-failure
 | Tile sel / paint | Radio rows beside screen |
 | Tile context menu | Right-click tile (selection mode) |
 | Edit global palettes | Click BG/SPR strip |
-| Add / edit sprite | Sprites accordion → **Add**, or right-click → Edit |
+| Add / edit sprite | Sprites accordion -> **Add**, or right-click -> Edit |
 | Sprite context menu | Right-click sprite row (edit / remove / palette / bank) |
-| Add / edit metasprite | Metasprites accordion → **Add**, or right-click → Edit |
+| Add / edit metasprite | Metasprites accordion -> **Add**, or right-click -> Edit |
 | Metasprite context menu | Right-click metasprite row (edit / remove) |
-| Add / edit entity | Entities accordion → **Add**, or right-click → Edit |
+| Add / edit entity | Entities accordion -> **Add**, or right-click -> Edit |
 | Entity context menu | Right-click entity row (edit / remove) |
 | Place catalog on screen | Drag Sprites / Metasprites / Entities row onto screen preview |
 | Play / pause | **Space** / **PLAY** |

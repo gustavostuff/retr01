@@ -4,7 +4,7 @@
 #include "retr01_sim/entity.h"
 
 /*
- * Placeholder 14-pin DIP — proves chip "inheritance" from R01sEntity.
+ * Placeholder 14-pin DIP -- proves chip "inheritance" from R01sEntity.
  * Replace with real parts under chips/ (W65C02S, AS6C62256, ...).
  */
 typedef struct R01sStub14 {

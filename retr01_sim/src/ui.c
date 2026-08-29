@@ -74,7 +74,7 @@ int r01s_ui_rotate_selected(R01sUi *ui) {
         if (n > 0) {
             ui->layout_dirty = 1;
             if (n == 1) {
-                snprintf(ui->status, sizeof(ui->status), "%s → %s", last_ref ? last_ref : "?",
+                snprintf(ui->status, sizeof(ui->status), "%s -> %s", last_ref ? last_ref : "?",
                          last_orient == R01S_ORIENT_V ? "VERTICAL" : "HORIZONTAL");
             } else {
                 snprintf(ui->status, sizeof(ui->status), "rotated %d chips", n);
@@ -99,7 +99,7 @@ int r01s_ui_rotate_selected(R01sUi *ui) {
         r01s_entity_set_orient(te, te->orient == R01S_ORIENT_V ? R01S_ORIENT_H : R01S_ORIENT_V);
         clamp_chip(ui, te, ui->chip_island[idx]);
         ui->layout_dirty = 1;
-        snprintf(ui->status, sizeof(ui->status), "%s → %s", te->refdes ? te->refdes : "?",
+        snprintf(ui->status, sizeof(ui->status), "%s -> %s", te->refdes ? te->refdes : "?",
                  te->orient == R01S_ORIENT_V ? "VERTICAL" : "HORIZONTAL");
         return 1;
     }

@@ -487,7 +487,7 @@ void r01e_video_render_vram_atlas(R01eMachine *m) {
     if (!vid->chr_loaded) {
         return;
     }
-    /* 2x2 slots → 256x240 @ 1:1 (slot0 NW, 1 NE, 2 SW, 3 SE). */
+    /* 2x2 slots -> 256x240 @ 1:1 (slot0 NW, 1 NE, 2 SW, 3 SE). */
     for (ay = 0; ay < R01E_VRAM_ATLAS_H; ay++) {
         for (ax = 0; ax < R01E_VRAM_ATLAS_W; ax++) {
             int slot_x = ax / R01E_SCREEN_PX_W;

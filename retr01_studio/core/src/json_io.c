@@ -308,7 +308,7 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
     if (r01_path_ensure_parent(path, err_buf, err_cap) != 0) {
         return -1;
     }
-    /* Persist world 0 only — load always applies the file into worlds[0]. */
+    /* Persist world 0 only -- load always applies the file into worlds[0]. */
     w = r01_project_world0_const(p);
     if (!w) {
         set_err(err_buf, err_cap, "bad project");

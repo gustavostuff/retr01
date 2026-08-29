@@ -57,8 +57,8 @@ static int setup_board(R01sApp *app, int argc, char **argv) {
     }
     /*
      * Window starts hidden; first boot present (via catchup start) reveals it.
-     * Board build can take a while — keep the window hidden so we never flash
-     * an empty/uninitialized frame before "Booting console…".
+     * Board build can take a while -- keep the window hidden so we never flash
+     * an empty/uninitialized frame before "Booting console...".
      */
     r01s_island_builder_init(&app->builder);
     if (r01s_board_build(&g_board, &app->builder) != 0) {
@@ -74,7 +74,7 @@ static int setup_board(R01sApp *app, int argc, char **argv) {
         /* Non-blocking: worker thread runs IC MAP stream; UI stays responsive. */
         r01s_app_start_ic_catchup(app, &g_board);
     }
-    snprintf(title, sizeof(title), "Retr01 Sim — %s", g_board.cart_label[0] ? g_board.cart_label : "cart");
+    snprintf(title, sizeof(title), "Retr01 Sim -- %s", g_board.cart_label[0] ? g_board.cart_label : "cart");
     SDL_SetWindowTitle(app->win, title);
     return 0;
 }

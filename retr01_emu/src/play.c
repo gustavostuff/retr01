@@ -6,7 +6,7 @@
 
 #include <string.h>
 
-/* Studio Play SoT (retr01_studio/core/src/play.c) — keep algorithms identical. */
+/* Studio Play SoT (retr01_studio/core/src/play.c) -- keep algorithms identical. */
 
 static int cart_is_phase1_play(const R01eCart *c) {
     const uint8_t *prg = r01e_cart_prg(c);
@@ -248,7 +248,7 @@ void r01e_play_tick(R01eMachine *m) {
     edge = (uint8_t)(pad & (uint8_t)~pl->pad_prev);
     pl->pad_prev = pad;
 
-    /* Studio: X → (0,0), Y → (1,0) */
+    /* Studio: X -> (0,0), Y -> (1,0) */
     if (edge & R01E_PAD_X) {
         (void)warp_to(m, 0, 0);
     }

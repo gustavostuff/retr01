@@ -136,10 +136,10 @@ static void cpu_tick(R01sEntity *e) {
         c->pc++;
         c->sync = 0;
         switch (c->ir) {
-        case 0xEA: /* NOP — 1-cycle stub (real chip is 2) */
+        case 0xEA: /* NOP -- 1-cycle stub (real chip is 2) */
             cpu_begin_fetch(c);
             break;
-        case 0xCA: /* DEX — 1-cycle stub (real chip is 2) */
+        case 0xCA: /* DEX -- 1-cycle stub (real chip is 2) */
             c->x--;
             cpu_set_zn(c, c->x);
             cpu_begin_fetch(c);

@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 /*
- * Island E — pad ports $FE60 / $FE61 stand-in (pre-ATmega1284).
+ * Island E -- pad ports $FE60 / $FE61 stand-in (pre-ATmega1284).
  * Bits 0-7: right, left, down, up, X, Y, coin/select, start (1 = pressed).
  *
  * CE# low + OE# low => DQ driven from selected port (A0: 0=$FE60, 1=$FE61).

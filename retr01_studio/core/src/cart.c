@@ -164,7 +164,7 @@ int r01_prg_write_asm(const R01Project *p, const char *path, char *err_buf, size
         return -1;
     }
     w = p ? &p->worlds[0] : NULL;
-    fprintf(f, "; retr01 Phase 1 — boot streams palette + start MAP, then VBlank pad poll.\n");
+    fprintf(f, "; retr01 Phase 1 -- boot streams palette + start MAP, then VBlank pad poll.\n");
     fprintf(f, "; Gameplay: Studio play.c / emu cart runtime (marker R01P @ $80F0).\n");
     fprintf(f, "; Play table @ $8100: present[8], spawn, coll_dir @ $810A.\n");
     fprintf(f, "; play_pos_ok @ $8500 (PRG+$0500): solid shadow probe via ($20),Y.\n");
@@ -179,7 +179,7 @@ int r01_prg_write_asm(const R01Project *p, const char *path, char *err_buf, size
     fprintf(f, "reset:\n        sei\n        cld\n        ldx #$ff\n        txs\n");
     fprintf(f, "        lda #0\n        sta WORLD\n        sta SCROLL_X\n        sta SCROLL_Y\n");
     fprintf(f, "        lda #1\n        sta PPUCTRL\n");
-    fprintf(f, "; palette + MAP stream patched at export — see prg_phase1.c\n");
+    fprintf(f, "; palette + MAP stream patched at export -- see prg_phase1.c\n");
     fprintf(f, "main:\n        lda PPUSTATUS\n        and #$80\n        beq main\n");
     fprintf(f, "        lda PAD0\n        sta $00FE\n        jmp main\n");
     fprintf(f, ".segment \"PLAY\"\n.org $8100\n");

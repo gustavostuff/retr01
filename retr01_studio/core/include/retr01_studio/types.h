@@ -173,7 +173,7 @@ typedef struct R01Project {
     int default_world; /* Play entry world (begin_play); cart export always uses worlds[0] */
     int active_world;  /* 0..R01_MAX_WORLDS-1 */
     int active_screen; /* index into worlds[active_world].screens */
-    /* 8 rows × 4 pals each (docs/02). Index [row][pal]. */
+    /* 8 rows x 4 pals each (docs/02). Index [row][pal]. */
     R01PalRow global_pal_bg[R01_PAL_ROWS][R01_PALS_PER_ROW];
     R01PalRow global_pal_spr[R01_PAL_ROWS][R01_PALS_PER_ROW];
     R01World worlds[R01_MAX_WORLDS];

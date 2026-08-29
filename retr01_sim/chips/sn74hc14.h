@@ -4,7 +4,7 @@
 #include "retr01_sim/entity.h"
 
 /*
- * Island B — SN74HC14 hex Schmitt inverter (reset / clock cleanup).
+ * Island B -- SN74HC14 hex Schmitt inverter (reset / clock cleanup).
  * Pinout: hw/md/SN74HC_glue.md
  */
 typedef struct R01sSn74hc14 {

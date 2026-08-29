@@ -15,7 +15,7 @@
 #define R01S_BOARD_MAX_CHIPS 64
 #define R01S_UI_GAMEPAD_COUNT 2
 
-/* Fixed HUD chrome — board draws only in the center viewport. */
+/* Fixed HUD chrome -- board draws only in the center viewport. */
 #define R01S_UI_UNIT 8
 #define R01S_UI_HUD_TOP (R01S_UI_UNIT + 16)
 #define R01S_UI_HUD_BOTTOM (R01S_UI_UNIT + 16)
@@ -45,7 +45,7 @@ typedef struct R01sUi {
     int drag_island; /* island index while moving frame, else -1 */
     int resize_island; /* island index while resizing, else -1 */
     int resize_corner; /* R01S_ISLAND_CORNER_* while resizing */
-    /* Draw order back→front: island_z_order[0] is bottom, [count-1] is top. */
+    /* Draw order back->front: island_z_order[0] is bottom, [count-1] is top. */
     uint8_t island_z_order[R01S_MAX_ISLANDS];
     int island_z_count;
     /* Compact-mode chip draw order (same convention as island_z_order). */
@@ -94,7 +94,7 @@ typedef struct R01sUi {
     int compact_chip_y[R01S_BOARD_MAX_CHIPS];
     uint8_t compact_chip_orient[R01S_BOARD_MAX_CHIPS];
     int layout_dirty; /* 1 = unsaved layout edits (SAVE / S to write ui_layout.json) */
-    SDL_Texture *lcd_tex; /* 256×240 LCD framebuffer upload (streaming) */
+    SDL_Texture *lcd_tex; /* 256x240 LCD framebuffer upload (streaming) */
 } R01sUi;
 
 int r01s_ui_init(R01sUi *ui);
@@ -119,11 +119,11 @@ void r01s_ui_sync_gamepads(R01sUi *ui);
 uint8_t r01s_ui_gamepad_port(const R01sUi *ui, int player);
 void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r);
 
-/* Black boot screen during IC catchup. spin_frame advances on worker→main ticks. */
+/* Black boot screen during IC catchup. spin_frame advances on worker->main ticks. */
 void r01s_ui_draw_boot(R01sUi *ui, SDL_Renderer *r, int spin_frame);
 int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_y);
 
-/* Rotate selected DIP (H↔V). Returns 1 if rotated. */
+/* Rotate selected DIP (H<->V). Returns 1 if rotated. */
 int r01s_ui_rotate_selected(R01sUi *ui);
 
 /* Persist island + compact layouts to JSON (default path search / create). */
@@ -133,7 +133,7 @@ int r01s_ui_layout_save(R01sUi *ui);
 /* Copy live island frames + chip positions into save_* snapshots. */
 void r01s_ui_snapshot_island_layout(R01sUi *ui);
 
-/* Copy live island frame geometry only (compact mode — chip snapshot stays island-relative). */
+/* Copy live island frame geometry only (compact mode -- chip snapshot stays island-relative). */
 void r01s_ui_snapshot_island_frames(R01sUi *ui);
 
 /* Apply saved island frames + island-relative chip positions (no compact/ heal side effects). */
@@ -142,7 +142,7 @@ void r01s_ui_apply_saved_island_layout(R01sUi *ui);
 /* Apply saved island layout after JSON load (handles v1 absolute coords + v2 relative). */
 void r01s_ui_load_island_layout(R01sUi *ui, int file_version);
 
-/* v1 JSON stored absolute board coords — convert to island-relative using live frames. */
+/* v1 JSON stored absolute board coords -- convert to island-relative using live frames. */
 void r01s_ui_layout_migrate_v1_chips(R01sUi *ui);
 
 #endif

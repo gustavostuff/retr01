@@ -27,12 +27,12 @@ int main(void) {
     expect_true(r01s_bg_fetch_va(&chip) == R01S_BG_ATTR_OFF, "odd X = attr0");
     expect_true(r01s_bg_fetch_attr_cycle(&chip), "odd X = attr cycle");
 
-    /* Logical (8,0) with SCALE2 => beam X=16 → tile col 1 */
+    /* Logical (8,0) with SCALE2 => beam X=16 -> tile col 1 */
     r01s_bg_fetch_set_beam(&chip, 16, 0, 0, 0);
     r01s_entity_eval(r01s_bg_fetch_entity(&chip));
     expect_true(r01s_bg_fetch_va(&chip) == 1, "tile col1");
 
-    /* SCALE 1x: beam (64+8, 60) → logical (8,0) → same tile col 1 */
+    /* SCALE 1x: beam (64+8, 60) -> logical (8,0) -> same tile col 1 */
     r01s_bg_fetch_set_scale_2x(&chip, 0);
     r01s_bg_fetch_set_scroll(&chip, 0, 0);
     r01s_bg_fetch_set_beam(&chip, R01S_SCALE_1X_OX + 8, R01S_SCALE_1X_OY, 0, 0);

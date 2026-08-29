@@ -42,7 +42,7 @@ static void pld_reset(R01sEntity *e) {
         pld_drive_named(e, "SEL_FE12", 0);
         return;
     }
-    /* VRAM glue: I→Y passthrough until interleave equations land. */
+    /* VRAM glue: I->Y passthrough until interleave equations land. */
     pld_drive_byte(e, "Y", 0);
 }
 

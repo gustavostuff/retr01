@@ -7,7 +7,7 @@
 
 /*
  * Cart save EEPROM (32-IC BOM: 24C64-class I2C device on cartridge).
- * See hw/md/24C64.md. Phase-1: pin shell + array stub — I2C protocol TBD in docs/02.
+ * See hw/md/24C64.md. Phase-1: pin shell + array stub -- I2C protocol TBD in docs/02.
  */
 typedef struct R01sI2cEeprom {
     R01sEntity base;

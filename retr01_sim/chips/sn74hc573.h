@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 /*
- * Octal transparent latch — island D / $FExx holds.
+ * Octal transparent latch -- island D / $FExx holds.
  * Pinout: hw/md/SN74HC573.md
  */
 typedef struct R01sSn74hc573 {

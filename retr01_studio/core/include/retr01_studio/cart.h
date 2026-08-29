@@ -9,7 +9,7 @@
 #define R01_CART_WHDR_OFF_TYPES 19
 #define R01_CART_WHDR_OFF_INSTS 22
 #define R01_CART_ENTITY_PARTS_MAX 4
-#define R01_CART_ENTITY_TYPE_SIZE 20 /* origin_x,y + part_count + pad + 4×(tile,attr,dx,dy) */
+#define R01_CART_ENTITY_TYPE_SIZE 20 /* origin_x,y + part_count + pad + 4x(tile,attr,dx,dy) */
 #define R01_CART_INSTANCE_SIZE 6     /* type_id, pad, world_x u16 LE, world_y u16 LE */
 
 void r01_prom_fill(uint8_t out64[R01_MASTER_COLORS]);

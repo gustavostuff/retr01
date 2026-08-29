@@ -8,7 +8,7 @@
 #define R01S_SRAM_BYTES 32768u
 
 /*
- * AS6C62256 — 32 KB SRAM (system RAM on C, VRAM on G, sprite line buffer on M).
+ * AS6C62256 -- 32 KB SRAM (system RAM on C, VRAM on G, sprite line buffer on M).
  * Pinout / truth table: hw/md/AS6C62256.md
  */
 typedef struct R01sAs6c62256 {

@@ -4,7 +4,7 @@
 #include "retr01_sim/entity.h"
 
 /*
- * Island H — ~5.369 MHz dot can oscillator (independent of PHI2).
+ * Island H -- ~5.369 MHz dot can oscillator (independent of PHI2).
  * Pins (DIP-8 half): 1 OE#  4 GND  5 DOT  8 VDD
  */
 typedef struct R01sOscDot {

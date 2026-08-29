@@ -21,7 +21,7 @@ int main(void) {
     r01s_bus_hiz(&a, "DQ", 2);
     expect_true(r01s_bus_read(&a, "DQ", 2) == 0x3, "Z pulls high");
 
-    /* Intentional fight — fatal off so we can assert X without exiting. */
+    /* Intentional fight -- fatal off so we can assert X without exiting. */
     r01s_bus_set_fatal_conflicts(0);
     r01s_bus_clear_conflicts();
     r01s_entity_drive(&a, "DQ0", R01S_LVL_H);

@@ -79,7 +79,7 @@ int r01e_cpu_step(R01eCpu *cpu, R01eMachine *m) {
 
     op = rd(m, cpu->pc++);
     switch (op) {
-    case 0x14: { /* TRB zp — 65C02 */
+    case 0x14: { /* TRB zp -- 65C02 */
         addr = rd(m, cpu->pc++);
         v = (uint8_t)(rd(m, addr) & (uint8_t)~cpu->a);
         wr(m, addr, v);
@@ -87,7 +87,7 @@ int r01e_cpu_step(R01eCpu *cpu, R01eMachine *m) {
         cyc = 5;
         break;
     }
-    case 0x80: { /* BRA rel — 65C02 */
+    case 0x80: { /* BRA rel -- 65C02 */
         int8_t off = (int8_t)rd(m, cpu->pc++);
         cpu->pc = (uint16_t)(cpu->pc + off);
         cyc = 3;
@@ -158,7 +158,7 @@ int r01e_cpu_step(R01eCpu *cpu, R01eMachine *m) {
         cpu->pc = addr;
         cyc = 3;
         break;
-    case 0x6C: { /* JMP (abs) — 65C02 page-safe */
+    case 0x6C: { /* JMP (abs) -- 65C02 page-safe */
         uint16_t ind = rd16(m, cpu->pc);
         cpu->pc = rd16(m, ind);
         cyc = 6;

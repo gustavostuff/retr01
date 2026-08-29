@@ -52,10 +52,10 @@ static void hc245_eval(R01sEntity *e) {
         return;
     }
     if (r01s_level_is_high(dir)) {
-        /* A inputs, B outputs — leave A levels alone. */
+        /* A inputs, B outputs -- leave A levels alone. */
         hc245_drive_side(e, 'B', hc245_read_side(e, 'A'));
     } else {
-        /* B inputs, A outputs — leave B levels alone. */
+        /* B inputs, A outputs -- leave B levels alone. */
         hc245_drive_side(e, 'A', hc245_read_side(e, 'B'));
     }
 }

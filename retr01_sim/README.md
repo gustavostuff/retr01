@@ -67,7 +67,7 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 |--------|---------|
 | Header + pointer table | magic `retr01`, `format_ver` 1, world count, 24-bit offs + lens |
 | Global BG/sprite palettes | 8 BG rows + 8 sprite rows (master indices, not RGB) |
-| SPR CHR banks | Real tile bytes from Studio export (4 banks × up to 256 tiles) |
+| SPR CHR banks | Real tile bytes from Studio export (4 banks x up to 256 tiles) |
 | Entity tables | Per-world type records (origin, hitbox, up to 4 parts) + instance list (type, world x/y) |
 | 32 KB PRG | Palette + start-screen MAP stream (`$FE93` -> `$FE08`/`$FE09`/`$FE12`). Scroll/player/warps still **host** Play |
 | World table + blobs | CHR banks, screen dir, 480 B present-screen payloads |

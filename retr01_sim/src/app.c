@@ -143,7 +143,7 @@ static int catchup_thread_fn_yielding(void *userdata) {
             }
         }
         snprintf(app->ui.status, sizeof(app->ui.status),
-                 "IC MAP stream… %d steps  map=%06X/%06X", i, (unsigned)board->map_addr,
+                 "IC MAP stream... %d steps  map=%06X/%06X", i, (unsigned)board->map_addr,
                  (unsigned)target);
         if (done) {
             snprintf(app->ui.status, sizeof(app->ui.status), "IC MAP stream ready (%d steps)", i);
@@ -239,7 +239,7 @@ void r01s_app_start_ic_catchup(R01sApp *app, struct R01sBoard *board) {
     }
     app->catchup_spin = 0;
     SDL_AtomicSet(&app->catchup_ui_req, 0);
-    snprintf(app->ui.status, sizeof(app->ui.status), "Booting console…");
+    snprintf(app->ui.status, sizeof(app->ui.status), "Booting console...");
     SDL_AtomicSet(&app->catchup_active, 1);
     /* Paint boot before the worker races ahead of the first frame. */
     app_present_boot(app, app->catchup_spin);
@@ -278,7 +278,7 @@ void r01s_app_mount_builder(R01sApp *app) {
         }
     }
     if (r01s_ui_layout_load(&app->ui) != 0) {
-        /* No saved layout — keep builder defaults. */
+        /* No saved layout -- keep builder defaults. */
     }
 }
 
@@ -407,7 +407,7 @@ void r01s_app_frame(R01sApp *app) {
     if (catching_up) {
         /*
          * Black boot screen. Worker signals catchup_ui_req after each batch;
-         * main advances the spinner and acks — never blocks on board_mu.
+         * main advances the spinner and acks -- never blocks on board_mu.
          */
         if (SDL_AtomicGet(&app->catchup_ui_req)) {
             app->catchup_spin = (app->catchup_spin + 1) & 3;
@@ -596,7 +596,7 @@ void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
                 if (b) {
                     r01s_app_start_ic_catchup(app, b);
                 }
-                snprintf(app->ui.status, sizeof(app->ui.status), "simulation reset — IC stream…");
+                snprintf(app->ui.status, sizeof(app->ui.status), "simulation reset -- IC stream...");
                 return;
             }
             /* Bare R falls through to UI (rotate selected IC). */

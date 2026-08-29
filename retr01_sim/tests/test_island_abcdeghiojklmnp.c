@@ -62,7 +62,7 @@ int main(void) {
     expect_true(r01s_island_group_at(group, R01S_ISLAND_VIDEO)->title != NULL &&
                     strstr(r01s_island_group_at(group, R01S_ISLAND_VIDEO)->title, "VIDEO") != NULL,
                 "video island titled");
-    /* LCD island is first in arrange order → top-left of the canvas pack. */
+    /* LCD island is first in arrange order -> top-left of the canvas pack. */
     {
         const R01sIsland *video = r01s_island_group_at(group, R01S_ISLAND_VIDEO);
         const R01sIsland *other;
@@ -176,7 +176,7 @@ int main(void) {
     expect_true(saw_apu, "island K APU PWM tone edges");
     expect_true(saw_oam, "island L OAM $FE21 readback + clk");
     expect_true(saw_linebuf, "island L linebuf mux both paths");
-    expect_true(saw_sprites, "1284 OAM fill → linebuf sprites");
+    expect_true(saw_sprites, "1284 OAM fill -> linebuf sprites");
     expect_true(saw_nmi, "beam island H VBlank NMI pulse");
     expect_true(b->health_saw_nmi, "health saw NMI");
     expect_true(b->nmi_pulses >= 1, "NMI pulse count");

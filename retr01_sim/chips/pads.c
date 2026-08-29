@@ -28,7 +28,7 @@ static void pads_eval(R01sEntity *e) {
     int sel;
 
     if (!r01s_level_is_low(r01s_entity_sense(e, "CE#")) || !r01s_level_is_low(r01s_entity_sense(e, "OE#"))) {
-        /* Not on the CPU bus — still show live host input on package pins (sim preview). */
+        /* Not on the CPU bus -- still show live host input on package pins (sim preview). */
         pads_preview_dq(e, c);
         return;
     }

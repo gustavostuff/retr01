@@ -95,7 +95,7 @@ void r01s_at28c16_init(R01sAt28c16 *chip, const char *refdes) {
     r01s_entity_init(&chip->base, &PROM_VT, "AT28C16", refdes ? refdes : "U?");
     chip->base.impl = chip;
 
-    /* 24-pin PDIP per hw/md/AT28C16.md — sim uses A0–A5 only; tie-offs are NC. */
+    /* 24-pin PDIP per hw/md/AT28C16.md -- sim uses A0-A5 only; tie-offs are NC. */
     r01s_entity_add_pin(&chip->base, 1, "A7", R01S_PIN_NC);
     r01s_entity_add_pin(&chip->base, 2, "A6", R01S_PIN_NC);
     r01s_entity_add_pin(&chip->base, 3, "A5", R01S_PIN_IN);
