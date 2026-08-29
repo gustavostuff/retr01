@@ -106,6 +106,80 @@ void ui_toast(UiState *ui, const char *msg, int is_error) {
     ui->toast_until = SDL_GetTicks() + UI_TOAST_MS;
 }
 
+void ui_tooltip_set(UiState *ui, int x, int y, const char *line1, const char *line2) {
+    if (!ui) {
+        return;
+    }
+    ui->tooltip_active = 1;
+    ui->tooltip_x = x;
+    ui->tooltip_y = y;
+    if (line2 && line2[0]) {
+        snprintf(ui->tooltip, sizeof(ui->tooltip), "%s\n%s", line1 ? line1 : "", line2);
+    } else {
+        snprintf(ui->tooltip, sizeof(ui->tooltip), "%s", line1 ? line1 : "");
+    }
+}
+
+void ui_tooltip_clear(UiState *ui) {
+    if (!ui) {
+        return;
+    }
+    ui->tooltip_active = 0;
+    ui->tooltip[0] = '\0';
+}
+
+void draw_tooltip(UiState *ui, SDL_Renderer *r) {
+    int tw, th, x, y;
+    const char *nl;
+    char line1[160];
+    char line2[160];
+    if (!ui || !ui->tooltip_active || !ui->tooltip[0]) {
+        return;
+    }
+    line1[0] = '\0';
+    line2[0] = '\0';
+    nl = strchr(ui->tooltip, '\n');
+    if (nl) {
+        size_t n = (size_t)(nl - ui->tooltip);
+        if (n >= sizeof(line1)) {
+            n = sizeof(line1) - 1;
+        }
+        memcpy(line1, ui->tooltip, n);
+        line1[n] = '\0';
+        snprintf(line2, sizeof(line2), "%s", nl + 1);
+    } else {
+        snprintf(line1, sizeof(line1), "%s", ui->tooltip);
+    }
+    tw = label_width(line1);
+    if (line2[0]) {
+        int w2 = label_width(line2);
+        if (w2 > tw) {
+            tw = w2;
+        }
+    }
+    th = line2[0] ? (UI_BTN_H * 2) : UI_BTN_H;
+    x = ui->tooltip_x + UI_UNIT;
+    y = ui->tooltip_y + UI_UNIT;
+    if (x + tw > UI_LOGIC_W - UI_UNIT) {
+        x = UI_LOGIC_W - UI_UNIT - tw;
+    }
+    if (y + th > UI_LOGIC_H - UI_UNIT) {
+        y = ui->tooltip_y - th - 2;
+    }
+    if (x < UI_UNIT) {
+        x = UI_UNIT;
+    }
+    if (y < UI_UNIT) {
+        y = UI_UNIT;
+    }
+    fill_rect(r, x, y, tw, th, 24, 24, 30);
+    draw_rect(r, x, y, tw, th, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
+    font_draw(r, x + 4, y + 4, line1, 240, 240, 240);
+    if (line2[0]) {
+        font_draw(r, x + 4, y + UI_BTN_H + 4, line2, 180, 180, 190);
+    }
+}
+
 void fill_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B) {
     SDL_Rect rc = {x, y, w, h};
     SDL_SetRenderDrawColor(r, R, G, B, 255);
@@ -123,6 +197,17 @@ void hover_overlay(SDL_Renderer *r, int x, int y, int w, int h) {
     SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(r, 255, 255, 255, 77);
     SDL_RenderFillRect(r, &rc);
+}
+
+void font_draw_clipped(SDL_Renderer *r, int x, int y, int clip_x, int clip_y, int clip_w, int clip_h,
+                       const char *text, Uint8 R, Uint8 G, Uint8 B) {
+    SDL_Rect clip = {clip_x, clip_y, clip_w, clip_h};
+    if (clip_w < 1 || clip_h < 1 || !text) {
+        return;
+    }
+    SDL_RenderSetClipRect(r, &clip);
+    font_draw(r, x, y, text, R, G, B);
+    SDL_RenderSetClipRect(r, NULL);
 }
 
 int point_in_rect(int lx, int ly, int x, int y, int w, int h) {

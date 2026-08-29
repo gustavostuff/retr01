@@ -290,7 +290,7 @@ Studio exports RLE when it shrinks the payload. Otherwise raw. Decode before VRA
 |    Code only -- credits *pages* live in OTHER SCREENS below              |
 +--------------------------------------------------------------------------+
 |  OTHER SCREENS (global -- not in world blobs)                            |
-|    other_count u8 (1..48: id0=TITLE, id1=INTER, id2+= credits; credits pages 0..46) |
+|    other_count u8 (1..48: id0=TITLE, id1=INTER, id2+= credits (0..46))   |
 |    pad[3]                                                                |
 |    DIR: other_count x 8 B                                                |
 |      { id, flags, len_payload u16, off_payload u24 }                     |
@@ -300,37 +300,38 @@ Studio exports RLE when it shrinks the payload. Otherwise raw. Decode before VRA
 |    each slot: present u8, pad u8, off_world u24, len_world u24           |
 +--------------------------------------------------------------------------+
 |  WORLD 0 BLOB                                                            |
-|  +--------------------------------------------------------------+        |
-|  | WORLD HEADER (32 B)                                          |        |
-|  |   start_col, start_row, default_bg_bank, default_spr_bank    |        |
-|  |   default_pal_row (0..7), screen_count (present, max **32**) |        |
-|  |   parallax_count (0..8)                                      |        |
-|  |   off_chr u24, off_screen_dir u24, off_parallax_dir u24      |        |
-|  |   entity_type_count u8, entity_inst_count u8                 |        |
-|  |   off_entity_types u24, off_entity_insts u24                 |        |
-|  |   reserved to 32 B                                           |        |
-|  +--------------------------------------------------------------+        |
-|  | CHR: BG 0..3 + SPR 0..3 (4 KB each; real spr_banks)          |        |
-|  | SCREEN DIR: 12 B per present screen                          |        |
-|  |   col, row, flags0, flags1 (Phase 1: flags = 0)              |        |
-|  |   off_payload u24, off_screen_meta u24 (0 if unused)         |        |
-|  | PARALLAX DIR: parallax_count x 8 B (max 8)                   |        |
-|  |   { index, flags, live_slot, pad, off_payload u24 }          |        |
-|  |   flags: layout single/pair-H/pair-V + scroll H/V            |        |
-|  | SCREEN PAYLOADS: 240 tile + 240 attr each                    |        |
-|  | PARALLAX PAYLOADS: same 480 B shape (after screens)          |        |
-|  | ENTITY TYPES: 20 B each (state0/frame0 only)                 |        |
-|  |   origin_x, origin_y, part_count, pad                        |        |
-|  |   4x {tile, attr, dx i8, dy i8} (unused parts zero)          |        |
-|  | INSTANCES: 6 B each {type_id, flags, world_x u16, world_y u16} |      |
-|  |   flags bit0 = flip_h, bit1 = flip_v (mirror around origin)  |        |
-|  +--------------------------------------------------------------+        |
+|  +-----------------------------------------------------------------+     |
+|  | WORLD HEADER (32 B)                                             |     |
+|  |   start_col, start_row, default_bg_bank, default_spr_bank       |     |
+|  |   default_pal_row (0..7), screen_count (present, max **32**)    |     |
+|  |   parallax_count (0..8)                                         |     |
+|  |   off_chr u24, off_screen_dir u24, off_parallax_dir u24         |     |
+|  |   entity_type_count u8, entity_inst_count u8                    |     |
+|  |   off_entity_types u24, off_entity_insts u24                    |     |
+|  |   pad u8, player_entity u8 (0xFF=stub), hit_x/y/w/h u8          |     |
+|  |   reserved to 32 B                                              |     |
+|  +-----------------------------------------------------------------+     |
+|  | CHR: BG 0..3 + SPR 0..3 (4 KB each; real spr_banks)             |     |
+|  | SCREEN DIR: 12 B per present screen                             |     |
+|  |   col, row, flags0, flags1 (Phase 1: flags = 0)                 |     |
+|  |   off_payload u24, off_screen_meta u24 (0 if unused)            |     |
+|  | PARALLAX DIR: parallax_count x 8 B (max 8)                      |     |
+|  |   { index, flags, live_slot, pad, off_payload u24 }             |     |
+|  |   flags: layout single/pair-H/pair-V + scroll H/V               |     |
+|  | SCREEN PAYLOADS: 240 tile + 240 attr each                       |     |
+|  | PARALLAX PAYLOADS: same 480 B shape (after screens)             |     |
+|  | ENTITY TYPES: 20 B each (state0/frame0 only)                    |     |
+|  |   origin_x, origin_y, part_count, pad                           |     |
+|  |   4x {tile, attr, dx i8, dy i8} (unused parts zero)             |     |
+|  | INSTANCES: 6 B each {type_id, flags, world_x u16, world_y u16}  |     |
+|  |   flags bit0 = flip_h, bit1 = flip_v (mirror around origin)     |     |
+|  +-----------------------------------------------------------------+     |
 +--------------------------------------------------------------------------+
 |  WORLD 1 .. N                                                            |
-+------------------------------------------------------------------------ -+
++--------------------------------------------------------------------------+
 ```
 
-OAM attr packing matches BG: bank bits 1-0, pal bits 3-2, `FLIP_H=0x10`, `FLIP_V=0x20`. Instance `world_x/y` is the **user origin**. Host Play draws parts at `world + (dx,dy) - origin` (Studio `r01_entity_world_x/y`). Instance flags bit0/bit1 (`flip_h`/`flip_v`) mirror each part: `dx' = 2*origin_x - dx - 8` / `dy' = 2*origin_y - dy - 8` and XOR part `FLIP_H` / `FLIP_V` (Studio `r01_entity_part_instance_pose`). SPR bank 0 **tile 1** is reserved as the solid player stub (OAM slot 0).
+OAM attr packing matches BG: bank bits 1-0, pal bits 3-2, `FLIP_H=0x10`, `FLIP_V=0x20`. Instance `world_x/y` is the **user origin**. Host Play draws parts at `world + (dx,dy) - origin` (Studio `r01_entity_world_x/y`). Instance flags bit0/bit1 (`flip_h`/`flip_v`) mirror each part: `dx' = 2*origin_x - dx - 8` / `dy' = 2*origin_y - dy - 8` and XOR part `FLIP_H` / `FLIP_V` (Studio `r01_entity_part_instance_pose`). World header `player_entity` selects the Play-driven type (state0/frame0); `0xFF` falls back to SPR bank 0 **tile 1** (solid stub). Player collision uses the packed hitbox at `origin + (hit - state_origin)`.
 
 Boot: magic -> pointers -> other screens -> world header -> screen dir / parallax dir -> `off_payload`. Load grid screens into VRAM slots 0-3. Load up to **two** active parallax payloads into slots 4-5 (from the world's up to **8** cart entries). Title/interstitial/credits page: decode chosen **other** payload (RLE or raw) into slot 0 (full **128x120**). MAP port: `$FE90`-`$FE92` addr, `$FE93` data auto-inc.
 

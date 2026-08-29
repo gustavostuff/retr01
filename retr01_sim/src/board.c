@@ -1995,6 +1995,11 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     board->cart_entity_inst_count = 0;
     board->cart_off_entity_types = 0;
     board->cart_off_entity_insts = 0;
+    board->cart_player_entity = 0xFF;
+    board->cart_player_hit_x = 0;
+    board->cart_player_hit_y = 0;
+    board->cart_player_hit_w = 8;
+    board->cart_player_hit_h = 8;
     board->cart_format_ver = 0;
     board->cart_off_other = 0;
     board->cart_len_other = 0;
@@ -2071,6 +2076,11 @@ static void board_resolve_cart_meta(R01sBoard *board) {
         board->cart_off_entity_types = world_base + off_types;
         board->cart_off_entity_insts = world_base + off_insts;
     }
+    board->cart_player_entity = hdr[25];
+    board->cart_player_hit_x = hdr[26];
+    board->cart_player_hit_y = hdr[27];
+    board->cart_player_hit_w = hdr[28] ? hdr[28] : 8;
+    board->cart_player_hit_h = hdr[29] ? hdr[29] : 8;
     dir = img + board->cart_off_sdir;
     for (si = 0; si < (int)screen_count; si++) {
         const uint8_t *e = dir + (size_t)si * 12u;
@@ -2361,14 +2371,14 @@ int r01s_board_solid_at(const R01sBoard *board, int wx, int wy) {
     return (attr & R01S_ATTR_SOLID) != 0;
 }
 
-int r01s_board_player_aabb_ok(const R01sBoard *board, int px, int py) {
+int r01s_board_aabb_ok(const R01sBoard *board, int px, int py, int bw, int bh) {
     int x1, y1, c0, c1, r0, r1, col, row;
 
-    if (!board || px < 0 || py < 0) {
+    if (!board || px < 0 || py < 0 || bw < 1 || bh < 1) {
         return 0;
     }
-    x1 = px + R01S_PLAY_PLAYER_W - 1;
-    y1 = py + R01S_PLAY_PLAYER_H - 1;
+    x1 = px + bw - 1;
+    y1 = py + bh - 1;
     c0 = px / R01S_BG_SCREEN_PX_W;
     c1 = x1 / R01S_BG_SCREEN_PX_W;
     r0 = py / R01S_BG_SCREEN_PX_H;
@@ -2385,6 +2395,10 @@ int r01s_board_player_aabb_ok(const R01sBoard *board, int px, int py) {
         return 0;
     }
     return 1;
+}
+
+int r01s_board_player_aabb_ok(const R01sBoard *board, int px, int py) {
+    return r01s_board_aabb_ok(board, px, py, R01S_PLAY_PLAYER_W, R01S_PLAY_PLAYER_H);
 }
 
 static void board_load_screen_slot(R01sBoard *board, int col, int row, int slot) {

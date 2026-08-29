@@ -34,6 +34,13 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         pal_edit_nudge_master(ui, e->wheel.y, shift);
         return 1;
     }
+    if (e->type == SDL_TEXTINPUT) {
+        if (ui->text.field_id > 0) {
+            ui_text_input(ui, e->text.text);
+            return 1;
+        }
+        return 0;
+    }
     if (e->type == SDL_KEYDOWN) {
         ui->keys[e->key.keysym.scancode] = 1;
         if (ui->pal_edit.open) {
@@ -56,7 +63,12 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         }
         if (ui->metasprite_edit.open) {
             if (e->key.keysym.sym == SDLK_ESCAPE) {
-                ui->metasprite_edit.open = 0;
+                if (ui->text.field_id > 0) {
+                    ui_text_blur(ui);
+                } else {
+                    ui->metasprite_edit.open = 0;
+                    ui_text_blur(ui);
+                }
                 return 1;
             }
             metasprite_modal_key(ui, e->key.keysym.sym);
@@ -64,10 +76,11 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         }
         if (ui->entity_edit.open) {
             if (e->key.keysym.sym == SDLK_ESCAPE) {
-                if (ui->entity_edit.name_focus) {
-                    ui->entity_edit.name_focus = 0;
+                if (ui->text.field_id > 0) {
+                    ui_text_blur(ui);
                 } else {
                     ui->entity_edit.open = 0;
+                    ui_text_blur(ui);
                 }
                 return 1;
             }
@@ -155,6 +168,9 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 menu_close(ui);
             }
             return 1;
+        }
+        if (e->key.keysym.sym == SDLK_ESCAPE) {
+            return 3; /* quit app when no modal/menu */
         }
         if (!ui->play.active && !ui->menu.open && ui->screen_mode == UI_SCREEN_MODE_SEL && screen_sel_valid(ui)) {
             R01Screen *s = r01_project_active_screen(ui->project);

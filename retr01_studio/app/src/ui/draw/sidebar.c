@@ -190,7 +190,8 @@ static void draw_sprites_body(UiState *ui, SDL_Renderer *r, const AccordionLayou
             }
             draw_sprite_icon(ui, r, w, &w->sprites[idx], UI_UNIT, y + (UI_SPRITE_ROW_H - UI_SPRITE_ICON) / 2);
             snprintf(label, sizeof(label), "%d", w->sprites[idx].tile_id);
-            font_draw(r, UI_UNIT + UI_SPRITE_ICON + 4, y + 4, label, 230, 230, 230);
+            font_draw_clipped(r, UI_UNIT + UI_SPRITE_ICON + 4, y + 4, UI_UNIT + UI_SPRITE_ICON + 4, y,
+                              UI_SIDEBAR_W - (UI_UNIT + UI_SPRITE_ICON + 4), UI_SPRITE_ROW_H, label, 230, 230, 230);
         }
     }
 
@@ -200,70 +201,21 @@ static void draw_sprites_body(UiState *ui, SDL_Renderer *r, const AccordionLayou
 static void draw_entity_icon(UiState *ui, SDL_Renderer *r, const R01World *w, const R01EntityType *ent, int dx,
                              int dy) {
     const R01EntityFrame *fr;
-    const R01EntityPart *pt;
-    const uint8_t *tile;
-    int row = w->default_pal_row;
-    int sy, sx;
-    fill_rect(r, dx, dy, UI_SPRITE_ICON, UI_SPRITE_ICON, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
     if (!ent || ent->state_count < 1 || ent->states[0].frame_count < 1) {
+        fill_rect(r, dx, dy, UI_PREVIEW_ICON, UI_PREVIEW_ICON, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
         return;
     }
     fr = &ent->states[0].frames[0];
-    if (fr->part_count < 1) {
-        return;
-    }
-    pt = &fr->parts[0];
-    if (row < 0 || row >= R01_PAL_ROWS) {
-        row = 0;
-    }
-    tile = r01_chr_spr_tile(w, pt->bank, pt->tile_id);
-    if (!tile) {
-        return;
-    }
-    for (sy = 0; sy < 8; sy++) {
-        for (sx = 0; sx < 8; sx++) {
-            uint8_t col = r01_tile_pixel_color(tile, sx, sy);
-            uint8_t cr, cg, cb;
-            if (col == 0) {
-                continue;
-            }
-            r01_kit_rgb(ui->project->global_pal_spr[row][pt->pal & 3].idx[col & 3u], &cr, &cg, &cb);
-            fill_rect(r, dx + sx, dy + sy, 1, 1, cr, cg, cb);
-        }
-    }
+    ui_compose_draw_frame_icon(r, ui->project, w, fr, dx, dy, UI_PREVIEW_ICON);
 }
 
 static void draw_metasprite_icon(UiState *ui, SDL_Renderer *r, const R01World *w, const R01MetaspriteDef *ms,
                                  int dx, int dy) {
-    int i;
-    fill_rect(r, dx, dy, UI_SPRITE_ICON, UI_SPRITE_ICON, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
     if (!ms || !w) {
+        fill_rect(r, dx, dy, UI_PREVIEW_ICON, UI_PREVIEW_ICON, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
         return;
     }
-    for (i = 0; i < ms->frame.part_count; i++) {
-        const R01EntityPart *pt = &ms->frame.parts[i];
-        const uint8_t *tile;
-        int row = w->default_pal_row;
-        int sy, sx;
-        if (row < 0 || row >= R01_PAL_ROWS) {
-            row = 0;
-        }
-        tile = r01_chr_spr_tile(w, pt->bank, pt->tile_id);
-        if (!tile) {
-            continue;
-        }
-        for (sy = 0; sy < 8; sy++) {
-            for (sx = 0; sx < 8; sx++) {
-                uint8_t col = r01_tile_pixel_color(tile, sx, sy);
-                uint8_t cr, cg, cb;
-                if (col == 0) {
-                    continue;
-                }
-                r01_kit_rgb(ui->project->global_pal_spr[row][pt->pal & 3].idx[col & 3u], &cr, &cg, &cb);
-                fill_rect(r, dx + sx + pt->dx, dy + sy + pt->dy, 1, 1, cr, cg, cb);
-            }
-        }
-    }
+    ui_compose_draw_frame_icon(r, ui->project, w, &ms->frame, dx, dy, UI_PREVIEW_ICON);
 }
 
 static void draw_metasprites_body(UiState *ui, SDL_Renderer *r, const AccordionLayout *lo) {
@@ -304,9 +256,16 @@ static void draw_metasprites_body(UiState *ui, SDL_Renderer *r, const AccordionL
             if (hover) {
                 fill_rect(r, 0, y, UI_SIDEBAR_W, UI_SPRITE_ROW_H, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
             }
-            draw_metasprite_icon(ui, r, w, &w->metasprites[idx], UI_UNIT, y + (UI_SPRITE_ROW_H - UI_SPRITE_ICON) / 2);
-            label = w->metasprites[idx].name[0] ? w->metasprites[idx].name : "meta";
-            font_draw(r, UI_UNIT + UI_SPRITE_ICON + 4, y + 4, label, 230, 230, 230);
+            draw_metasprite_icon(ui, r, w, &w->metasprites[idx], 0, y);
+            label = r01_metasprite_display_name(&w->metasprites[idx]);
+            font_draw_clipped(r, UI_PREVIEW_ICON + 2, y + 4, UI_PREVIEW_ICON + 2, y,
+                              UI_SIDEBAR_W - (UI_PREVIEW_ICON + 2), UI_SPRITE_ROW_H, label, 230, 230, 230);
+            if (hover) {
+                char id[R01_ID_MAX];
+                int wi = ui->project ? ui->project->active_world : 0;
+                r01_metasprite_id(id, sizeof(id), wi, &w->metasprites[idx]);
+                ui_tooltip_set(ui, UI_SIDEBAR_W, y, label, id);
+            }
         }
     }
 
@@ -351,12 +310,16 @@ static void draw_entities_body(UiState *ui, SDL_Renderer *r, const AccordionLayo
             if (hover) {
                 fill_rect(r, 0, y, UI_SIDEBAR_W, UI_SPRITE_ROW_H, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
             }
-            draw_entity_icon(ui, r, w, &w->entities[idx], UI_UNIT, y + (UI_SPRITE_ROW_H - UI_SPRITE_ICON) / 2);
-            label = w->entities[idx].states[0].name;
-            if (!label[0]) {
-                label = "entity";
+            draw_entity_icon(ui, r, w, &w->entities[idx], 0, y);
+            label = r01_entity_display_name(&w->entities[idx]);
+            font_draw_clipped(r, UI_PREVIEW_ICON + 2, y + 4, UI_PREVIEW_ICON + 2, y,
+                              UI_SIDEBAR_W - (UI_PREVIEW_ICON + 2), UI_SPRITE_ROW_H, label, 230, 230, 230);
+            if (hover) {
+                char id[R01_ID_MAX];
+                int wi = ui->project ? ui->project->active_world : 0;
+                r01_entity_type_id(id, sizeof(id), wi, &w->entities[idx]);
+                ui_tooltip_set(ui, UI_SIDEBAR_W, y, label, id);
             }
-            font_draw(r, UI_UNIT + UI_SPRITE_ICON + 4, y + 4, label, 230, 230, 230);
         }
     }
 
@@ -369,6 +332,7 @@ void draw_sidebar(UiState *ui, SDL_Renderer *r) {
     int ly = ui->mouse_y;
 
     accordion_layout(ui, &lo);
+    ui_tooltip_clear(ui);
     fill_rect(r, 0, 0, UI_SIDEBAR_W, UI_LOGIC_H, UI_COL_PANEL_R, UI_COL_PANEL_G, UI_COL_PANEL_B);
 
     draw_accordion_header(r, lo.worlds_hdr_y, "Worlds", lo.worlds_open,

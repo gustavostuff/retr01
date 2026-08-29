@@ -186,6 +186,17 @@ int r01e_cart_world(const R01eCart *c, int index, R01eWorldView *out) {
     out->entity_inst_count = hdr[R01E_CART_WHDR_INST_COUNT];
     out->off_entity_types = get_u24(hdr + R01E_CART_WHDR_OFF_TYPES);
     out->off_entity_insts = get_u24(hdr + R01E_CART_WHDR_OFF_INSTS);
+    out->player_entity = hdr[R01E_CART_WHDR_PLAYER_ENTITY];
+    out->player_hit_x = hdr[R01E_CART_WHDR_PLAYER_HIT_X];
+    out->player_hit_y = hdr[R01E_CART_WHDR_PLAYER_HIT_Y];
+    out->player_hit_w = hdr[R01E_CART_WHDR_PLAYER_HIT_W];
+    out->player_hit_h = hdr[R01E_CART_WHDR_PLAYER_HIT_H];
+    if (out->player_hit_w < 1) {
+        out->player_hit_w = 8;
+    }
+    if (out->player_hit_h < 1) {
+        out->player_hit_h = 8;
+    }
     return 0;
 }
 
@@ -372,13 +383,13 @@ const uint8_t *r01e_cart_other_payload(const R01eCart *c, int id) {
     return raw;
 }
 
-int r01e_cart_player_aabb_ok(const R01eCart *c, int world, int px, int py) {
+int r01e_cart_aabb_ok(const R01eCart *c, int world, int px, int py, int bw, int bh) {
     int x1, y1, c0, c1, r0, r1, col, row;
-    if (!c || px < 0 || py < 0) {
+    if (!c || px < 0 || py < 0 || bw < 1 || bh < 1) {
         return 0;
     }
-    x1 = px + 7;
-    y1 = py + 7;
+    x1 = px + bw - 1;
+    y1 = py + bh - 1;
     c0 = px / R01E_SCREEN_PX_W;
     c1 = x1 / R01E_SCREEN_PX_W;
     r0 = py / R01E_SCREEN_PX_H;
@@ -395,4 +406,8 @@ int r01e_cart_player_aabb_ok(const R01eCart *c, int world, int px, int py) {
         return 0;
     }
     return 1;
+}
+
+int r01e_cart_player_aabb_ok(const R01eCart *c, int world, int px, int py) {
+    return r01e_cart_aabb_ok(c, world, px, py, 8, 8);
 }

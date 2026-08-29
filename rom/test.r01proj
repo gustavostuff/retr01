@@ -3,9 +3,10 @@
   "name": "untitled",
   "default_world": 0,
   "active_world": 0,
-  "active_screen": 35,
+  "active_screen": 9,
   "default_screen": 9,
   "default_pal_row": 0,
+  "player_entity": 0,
   "grid_cols": 8,
   "grid_rows": 8,
   "global_pal_bg": [[0, 16, 32, 48], [0, 19, 36, 52], [0, 28, 44, 59], [0, 46, 62, 48], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51]],
@@ -13,7 +14,7 @@
   "bg_bank0_tiles": 3,
   "bg_bank0_b64": "68MWZMKVIXMUPOmbPWrejAD8wHgfAPgA//////////8AQEBAfAAAAAAAAAAAAAAA",
   "spr_banks": [
-    {"tiles": 6, "b64": "Hj4+PMYALDYAFBQAODgAAAAABx87Pzc3AAAAAQcFDQ8AAADA4ODw8AAAAADAQECAPH8LHz8fAQYDAAwYMAAGB8Dg8ODw8ADAAGAwAAAAwMC/HwUBw6P/d4EAEhLAgYAy"},
+    {"tiles": 9, "b64": "Hj4+PMYALDYAFBQAODgAAAAABx87Pzc3AAAAAQcFDQ8AAADA4ODw8AAAAADAQECAPH8LHz8fAQYDAAwYMAAGB8Dg8ODw8ADAAGAwAAAAwMC/HwUBw6P/d4EAEhLAgYAyPH8LHz8fAQYDAAwYMAAGBsDg8ODw8CBAAGAwAAAA4EA8fwsfPx8JDAMADBgwAA4M"},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""}
@@ -22,22 +23,54 @@
     {"bank": 0, "tile": 1, "pal": 0},
     {"bank": 0, "tile": 2, "pal": 0},
     {"bank": 0, "tile": 3, "pal": 0},
-    {"bank": 0, "tile": 4, "pal": 0}
+    {"bank": 0, "tile": 4, "pal": 0},
+    {"bank": 0, "tile": 6, "pal": 0},
+    {"bank": 0, "tile": 7, "pal": 0},
+    {"bank": 0, "tile": 8, "pal": 0}
   ],
   "metasprites": [
-    {"name": "Meta", "parts": [{"bank":0,"tile":1,"pal":0,"fh":0,"fv":0,"dx":0,"dy":0},{"bank":0,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":0},{"bank":0,"tile":3,"pal":0,"fh":0,"fv":0,"dx":0,"dy":8},{"bank":0,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":8}]}
+    {"name": "idle metasprite", "parts": [{"bank":0,"tile":1,"pal":0,"fh":0,"fv":0,"dx":0,"dy":0},{"bank":0,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":0},{"bank":0,"tile":3,"pal":0,"fh":0,"fv":0,"dx":0,"dy":8},{"bank":0,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":8}]},
+    {"name": "walking meta sprite frame 01", "parts": [{"bank":0,"tile":1,"pal":0,"fh":0,"fv":0,"dx":0,"dy":0},{"bank":0,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":0},{"bank":0,"tile":7,"pal":0,"fh":0,"fv":0,"dx":8,"dy":8},{"bank":0,"tile":6,"pal":0,"fh":0,"fv":0,"dx":0,"dy":8}]},
+    {"name": "walking metasprite frame 02", "parts": [{"bank":0,"tile":1,"pal":0,"fh":0,"fv":0,"dx":0,"dy":0},{"bank":0,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":0},{"bank":0,"tile":8,"pal":0,"fh":0,"fv":0,"dx":0,"dy":8},{"bank":0,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":8}]}
   ],
   "entities": [
     {
-      "state_count": 1,
+      "name": "player",
+      "state_count": 3,
       "states": [
         {
           "name": "girl",
           "origin_x": 7, "origin_y": 10,
           "hitbox_x": 3, "hitbox_y": 6, "hitbox_w": 8, "hitbox_h": 8,
-          "frame_count": 1,
+          "frame_count": 4,
           "frames": [
+            {"parts": [{"bank":0,"tile":1,"pal":0,"fh":0,"fv":0,"dx":0,"dy":0},{"bank":0,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":0},{"bank":0,"tile":3,"pal":0,"fh":0,"fv":0,"dx":0,"dy":8},{"bank":0,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":8}]},
+            {"parts": []},
+            {"parts": []},
+            {"parts": []}
+          ]
+        },
+        {
+          "name": "Walk",
+          "origin_x": 7, "origin_y": 10,
+          "hitbox_x": 3, "hitbox_y": 6, "hitbox_w": 8, "hitbox_h": 8,
+          "frame_count": 3,
+          "frames": [
+            {"parts": [{"bank":0,"tile":1,"pal":0,"fh":0,"fv":0,"dx":0,"dy":0},{"bank":0,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":0},{"bank":0,"tile":7,"pal":0,"fh":0,"fv":0,"dx":8,"dy":8},{"bank":0,"tile":6,"pal":0,"fh":0,"fv":0,"dx":0,"dy":8}]},
+            {"parts": [{"bank":0,"tile":1,"pal":0,"fh":0,"fv":0,"dx":0,"dy":0},{"bank":0,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":0},{"bank":0,"tile":8,"pal":0,"fh":0,"fv":0,"dx":0,"dy":8},{"bank":0,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":8}]},
             {"parts": [{"bank":0,"tile":1,"pal":0,"fh":0,"fv":0,"dx":0,"dy":0},{"bank":0,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":0},{"bank":0,"tile":3,"pal":0,"fh":0,"fv":0,"dx":0,"dy":8},{"bank":0,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":8}]}
+          ]
+        },
+        {
+          "name": "Hurt",
+          "origin_x": 0, "origin_y": 0,
+          "hitbox_x": 0, "hitbox_y": 0, "hitbox_w": 8, "hitbox_h": 8,
+          "frame_count": 4,
+          "frames": [
+            {"parts": []},
+            {"parts": []},
+            {"parts": []},
+            {"parts": []}
           ]
         }
       ]
@@ -45,7 +78,7 @@
   ],
   "instances": [
     {"type": 0, "x": 299, "y": 521},
-    {"type": 0, "x": 211, "y": 195}
+    {"type": 0, "x": 211, "y": 195, "fh": 1}
   ],
   "other_screens": [
     {"id": 0, "present": 1, "tiles_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "attrs_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"},

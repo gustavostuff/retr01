@@ -78,6 +78,7 @@ add_library(retr01_studio_app
   app/src/ui/widgets/palette_grid.c
   app/src/ui/widgets/button.c
   app/src/ui/widgets/modal.c
+  app/src/ui/widgets/textfield.c
   app/src/ui/widgets/compose.c
   app/src/ui/layout.c
   app/src/ui/draw/frame.c

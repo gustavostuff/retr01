@@ -195,6 +195,11 @@ typedef struct R01sBoard {
     uint8_t cart_entity_inst_count;
     uint32_t cart_off_entity_types;
     uint32_t cart_off_entity_insts;
+    uint8_t cart_player_entity; /* 0xFF = stub */
+    uint8_t cart_player_hit_x;
+    uint8_t cart_player_hit_y;
+    uint8_t cart_player_hit_w;
+    uint8_t cart_player_hit_h;
     uint8_t cart_format_ver;
     uint32_t cart_off_other;
     uint32_t cart_len_other;
@@ -273,6 +278,7 @@ int r01s_board_attr_at(const R01sBoard *board, int wx, int wy, uint8_t *out_attr
 int r01s_board_solid_at(const R01sBoard *board, int wx, int wy);
 /* Player AABB vs present screens + BG solid (Studio play.c SoT). */
 int r01s_board_player_aabb_ok(const R01sBoard *board, int px, int py);
+int r01s_board_aabb_ok(const R01sBoard *board, int px, int py, int bw, int bh);
 
 int r01s_board_load_camera_2x2(R01sBoard *board, int origin_col, int origin_row);
 void r01s_board_set_scroll(R01sBoard *board, uint8_t scroll_x, uint8_t scroll_y);

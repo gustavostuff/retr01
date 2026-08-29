@@ -80,12 +80,17 @@ static int font_ascent(void) {
 }
 
 int font_text_width(const char *text) {
+    return font_text_width_n(text, -1);
+}
+
+int font_text_width_n(const char *text, int n) {
     int w = 0;
+    int i;
     const unsigned char *p;
     if (!text || font_init() != 0) {
         return 0;
     }
-    for (p = (const unsigned char *)text; *p; p++) {
+    for (p = (const unsigned char *)text, i = 0; *p && (n < 0 || i < n); p++, i++) {
         if (FT_Load_Char(g_ft_face, (FT_ULong)*p, FT_LOAD_DEFAULT) != 0) {
             continue;
         }

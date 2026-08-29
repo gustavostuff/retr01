@@ -53,4 +53,5 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
         draw_tile_modal(ui, r);
     }
     draw_catalog_drag_ghost(ui, r);
+    draw_tooltip(ui, r);
 }

@@ -10,6 +10,8 @@ int font_init(void);
 void font_shutdown(void);
 
 int font_text_width(const char *text);
+/* Width of the first n bytes (stops at NUL). n < 0 means full string. */
+int font_text_width_n(const char *text, int n);
 int font_line_h(void);
 
 void font_draw(SDL_Renderer *r, int x, int y, const char *text, Uint8 R, Uint8 G, Uint8 B);

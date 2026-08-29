@@ -60,6 +60,15 @@ static void menu_clamp_xy(int *x, int *y, int w, int h) {
     }
 }
 
+/* Prefer parking the menu over the main canvas when opened from the sidebar. */
+static void menu_place_root(UiState *ui) {
+    menu_clamp_xy(&ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
+    if (ui->menu.root_x < UI_SIDEBAR_W) {
+        ui->menu.root_x = UI_SIDEBAR_W;
+        menu_clamp_xy(&ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
+    }
+}
+
 static void menu_build_sub(UiState *ui, int sub_kind) {
     int i;
     ui->menu.sub_count = 0;
@@ -132,7 +141,7 @@ void menu_open_tile(UiState *ui, int x, int y, int tx, int ty) {
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
     ui->menu.root_x = x;
     ui->menu.root_y = y;
-    menu_clamp_xy(&ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
+    menu_place_root(ui);
 }
 
 void menu_open_world_cell(UiState *ui, int x, int y, int screen_idx) {
@@ -151,7 +160,7 @@ void menu_open_world_cell(UiState *ui, int x, int y, int screen_idx) {
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
     ui->menu.root_x = x;
     ui->menu.root_y = y;
-    menu_clamp_xy(&ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
+    menu_place_root(ui);
 }
 
 void menu_open_sprite(UiState *ui, int x, int y, int catalog_idx) {
@@ -176,7 +185,7 @@ void menu_open_sprite(UiState *ui, int x, int y, int catalog_idx) {
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
     ui->menu.root_x = x;
     ui->menu.root_y = y;
-    menu_clamp_xy(&ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
+    menu_place_root(ui);
 }
 
 void menu_open_metasprite(UiState *ui, int x, int y, int meta_idx) {
@@ -198,10 +207,12 @@ void menu_open_metasprite(UiState *ui, int x, int y, int meta_idx) {
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
     ui->menu.root_x = x;
     ui->menu.root_y = y;
-    menu_clamp_xy(&ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
+    menu_place_root(ui);
 }
 
 void menu_open_entity(UiState *ui, int x, int y, int type_idx) {
+    R01World *w = r01_project_active_world(ui->project);
+    int is_player = 0;
     ui->menu.open = 1;
     ui->menu.kind = UI_MENU_KIND_ENTITY;
     ui->menu.submenu = UI_MENU_SUB_NONE;
@@ -214,13 +225,18 @@ void menu_open_entity(UiState *ui, int x, int y, int type_idx) {
     ui->menu.item_count = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Edit entity");
     ui->menu.item_sub[ui->menu.item_count++] = 0;
+    if (w && r01_world_player_entity(w) == type_idx) {
+        is_player = 1;
+    }
+    snprintf(ui->menu.items[ui->menu.item_count], 32, is_player ? "Unmark as player" : "Mark as player");
+    ui->menu.item_sub[ui->menu.item_count++] = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Remove");
     ui->menu.item_sub[ui->menu.item_count++] = 0;
     memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
     ui->menu.root_x = x;
     ui->menu.root_y = y;
-    menu_clamp_xy(&ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
+    menu_place_root(ui);
 }
 
 void menu_open_instance(UiState *ui, int x, int y, int instance_idx) {
@@ -255,7 +271,7 @@ void menu_open_instance(UiState *ui, int x, int y, int instance_idx) {
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
     ui->menu.root_x = x;
     ui->menu.root_y = y;
-    menu_clamp_xy(&ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
+    menu_place_root(ui);
 }
 
 static int menu_root_hit(const UiState *ui, int lx, int ly, int *out_item) {
@@ -428,6 +444,14 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
         if (item == 0) {
             entity_edit_open(ui, ui->menu.entity_type_idx);
         } else if (item == 1 && w) {
+            if (r01_world_player_entity(w) == ui->menu.entity_type_idx) {
+                r01_world_set_player_entity(w, -1);
+                ui_toast(ui, "player unmarked", 0);
+            } else {
+                r01_world_set_player_entity(w, ui->menu.entity_type_idx);
+                ui_toast(ui, "marked as player", 0);
+            }
+        } else if (item == 2 && w) {
             r01_world_entity_remove(w, ui->menu.entity_type_idx);
             ui_toast(ui, "entity removed", 0);
         }

@@ -353,6 +353,7 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
     fprintf(f, "  \"active_screen\": %d,\n", p->active_screen);
     fprintf(f, "  \"default_screen\": %d,\n", w->default_screen);
     fprintf(f, "  \"default_pal_row\": %d,\n", w->default_pal_row);
+    fprintf(f, "  \"player_entity\": %d,\n", w->player_entity);
     fprintf(f, "  \"grid_cols\": %d,\n", w->grid_cols);
     fprintf(f, "  \"grid_rows\": %d,\n", w->grid_rows);
     fprintf(f, "  \"global_pal_bg\": [");
@@ -448,6 +449,7 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
             const R01EntityType *ent = &w->entities[ei];
             int si;
             fprintf(f, "    {\n");
+            fprintf(f, "      \"name\": \"%s\",\n", ent->name[0] ? ent->name : "Entity");
             fprintf(f, "      \"state_count\": %d,\n", ent->state_count);
             fprintf(f, "      \"states\": [\n");
             for (si = 0; si < ent->state_count; si++) {
@@ -789,6 +791,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
     int active_world = 0;
     int default_screen = -1;
     int default_pal_row = 0;
+    int player_entity = -1;
     int grid_cols = R01_DEFAULT_GRID;
     int grid_rows = R01_DEFAULT_GRID;
 
@@ -830,6 +833,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
     json_int_after(buf, "\"active_screen\"", &active);
     json_int_after(buf, "\"default_screen\"", &default_screen);
     json_int_after(buf, "\"default_pal_row\"", &default_pal_row);
+    json_int_after(buf, "\"player_entity\"", &player_entity);
     json_int_after(buf, "\"grid_cols\"", &grid_cols);
     json_int_after(buf, "\"grid_rows\"", &grid_rows);
     if (grid_cols >= 1 && grid_cols <= R01_GRID_MAX && grid_rows >= 1 && grid_rows <= R01_GRID_MAX) {
@@ -1109,6 +1113,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                 const char *ent_sec = json_find(buf, "\"entities\":");
                 const char *ent_end = json_array_end(ent_sec);
                 w->entity_count = 0;
+                w->player_entity = -1;
                 memset(w->entities, 0, sizeof(w->entities));
                 if (ent_sec && ent_end) {
                     const char *obj2 = strchr(ent_sec, '{');
@@ -1139,6 +1144,10 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                             break;
                         }
                         ent = &w->entities[idx];
+                        json_string_after(slice, "\"name\"", ent->name, sizeof(ent->name));
+                        if (!ent->name[0]) {
+                            strncpy(ent->name, "Entity", R01_ENTITY_NAME_MAX - 1);
+                        }
                         json_int_after(slice, "\"state_count\"", &state_count);
                         if (state_count < 1) {
                             state_count = 1;
@@ -1314,6 +1323,11 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
         }
         if (default_pal_row >= 0 && default_pal_row < R01_PAL_ROWS) {
             w0->default_pal_row = default_pal_row;
+        }
+        if (player_entity >= 0 && player_entity < w0->entity_count) {
+            w0->player_entity = player_entity;
+        } else {
+            w0->player_entity = -1;
         }
     }
 

@@ -239,6 +239,10 @@ int pal_modal_handle(UiState *ui, int lx, int ly, int down) {
         return 1;
     }
     pal_modal_layout(&lo);
+    if (ui_modal_overlay_hit(lx, ly, lo.mx, lo.my, UI_PAL_MODAL_W, UI_PAL_MODAL_H)) {
+        pal_edit_cancel(ui);
+        return 1;
+    }
     if (lx >= lo.master_x && lx < lo.master_x + lo.save_w && ly >= lo.btn_y && ly < lo.btn_y + UI_BTN_H) {
         pal_edit_save(ui);
         return 1;

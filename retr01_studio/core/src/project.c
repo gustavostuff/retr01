@@ -79,6 +79,7 @@ void r01_world_init_phase1(R01World *w) {
     w->present = 1;
     w->default_bg_bank = 0;
     w->default_pal_row = 0;
+    w->player_entity = -1;
     /* Full 8x8 map slots; default authored region is 3x3 present blank screens. */
     r01_world_set_grid(w, R01_GRID_MAX, R01_GRID_MAX);
     for (row = 0; row < R01_DEFAULT_GRID; row++) {
@@ -100,6 +101,7 @@ void r01_world_init_empty(R01World *w) {
     w->present = 1;
     w->default_bg_bank = 0;
     w->default_pal_row = 0;
+    w->player_entity = -1;
     r01_world_set_grid(w, R01_GRID_MAX, R01_GRID_MAX);
     r01_world_sync_default_screen(w);
 }

@@ -294,14 +294,26 @@ static void draw_oam_sprites(UiState *ui, SDL_Renderer *r, int ox, int oy) {
     }
     for (i = 0; i < n; i++) {
         R01EntityPart pt;
-        if (i == 0) {
+        memset(&pt, 0, sizeof(pt));
+        pt.bank = oam[i].bank;
+        pt.tile_id = oam[i].tile_id;
+        pt.pal = oam[i].pal;
+        pt.flip_h = oam[i].flip_h;
+        pt.flip_v = oam[i].flip_v;
+        if (r01_oam_tile_off_screen(oam[i].x, oam[i].y)) {
+            continue;
+        }
+        /* Stub player only (leading OAM when no marked entity). Do not paint every
+         * bank0/tile1 part solid -- authored CHR may use tile 1. */
+        if (i == 0 && r01_world_player_entity(w) < 0 && oam[i].bank == 0 &&
+            oam[i].tile_id == R01_SPR_PLAYER_TILE_ID) {
             int pcx, pcy;
             uint8_t pr, pg, pb;
             r01_project_player_rgb(ui->project, &pr, &pg, &pb);
             for (pcy = 0; pcy < R01_PLAY_PLAYER_H; pcy++) {
                 for (pcx = 0; pcx < R01_PLAY_PLAYER_W; pcx++) {
-                    int vx = oam[0].x + pcx;
-                    int vy = oam[0].y + pcy;
+                    int vx = oam[i].x + pcx;
+                    int vy = oam[i].y + pcy;
                     SDL_Rect px;
                     if (vx < 0 || vy < 0 || vx >= R01_SCREEN_PX_W || vy >= R01_SCREEN_PX_H) {
                         continue;
@@ -314,15 +326,6 @@ static void draw_oam_sprites(UiState *ui, SDL_Renderer *r, int ox, int oy) {
                     SDL_RenderFillRect(r, &px);
                 }
             }
-            continue;
-        }
-        memset(&pt, 0, sizeof(pt));
-        pt.bank = oam[i].bank;
-        pt.tile_id = oam[i].tile_id;
-        pt.pal = oam[i].pal;
-        pt.flip_h = oam[i].flip_h;
-        pt.flip_v = oam[i].flip_v;
-        if (r01_oam_tile_off_screen(oam[i].x, oam[i].y)) {
             continue;
         }
         draw_spr_tile_px(ui, r, w, &pt, oam[i].x, oam[i].y, ox, oy, UI_SCREEN_SCALE, 1);

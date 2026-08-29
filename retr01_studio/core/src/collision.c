@@ -56,13 +56,13 @@ static int solid_corner_blocked(const R01World *w, int wx, int wy) {
     return r01_world_solid_at(w, wx, wy);
 }
 
-int r01_world_player_aabb_ok(const R01World *w, int px, int py) {
+int r01_world_aabb_ok(const R01World *w, int px, int py, int bw, int bh) {
     int x1, y1, c0, c1, r0, r1, c, r;
-    if (!w || px < 0 || py < 0) {
+    if (!w || px < 0 || py < 0 || bw < 1 || bh < 1) {
         return 0;
     }
-    x1 = px + R01_PLAY_PLAYER_W - 1;
-    y1 = py + R01_PLAY_PLAYER_H - 1;
+    x1 = px + bw - 1;
+    y1 = py + bh - 1;
     c0 = px / R01_SCREEN_PX_W;
     c1 = x1 / R01_SCREEN_PX_W;
     r0 = py / R01_SCREEN_PX_H;
@@ -80,6 +80,10 @@ int r01_world_player_aabb_ok(const R01World *w, int px, int py) {
         return 0;
     }
     return 1;
+}
+
+int r01_world_player_aabb_ok(const R01World *w, int px, int py) {
+    return r01_world_aabb_ok(w, px, py, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H);
 }
 
 int r01_world_apply_solid_hw(R01World *w, uint8_t hw_key, int set_solid) {

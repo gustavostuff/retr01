@@ -49,6 +49,7 @@ void metasprite_edit_open_new(UiState *ui) {
     ui->metasprite_edit.sel_part = -1;
     ui->metasprite_edit.paint_color = 1;
     ui->metasprite_edit.paint_pal = 0;
+    ui_text_blur(ui);
 }
 
 void metasprite_edit_open(UiState *ui, int meta_idx) {
@@ -69,6 +70,7 @@ void metasprite_edit_open(UiState *ui, int meta_idx) {
     ui->metasprite_edit.sel_part = -1;
     ui->metasprite_edit.paint_color = 1;
     ui->metasprite_edit.paint_pal = 0;
+    ui_text_blur(ui);
 }
 
 static void metasprite_edit_save(UiState *ui) {
@@ -96,6 +98,7 @@ static void metasprite_edit_save(UiState *ui) {
         ui_toast(ui, "metasprite saved", 0);
     }
     ui->metasprite_edit.open = 0;
+    ui_text_blur(ui);
 }
 
 void draw_metasprite_modal(UiState *ui, SDL_Renderer *r) {
@@ -120,6 +123,18 @@ void draw_metasprite_modal(UiState *ui, SDL_Renderer *r) {
             draw_bank_tile(ui, r, ui->metasprite_edit.bank, ty * 16 + tx, lo.left_grid_x + tx * 8,
                            lo.left_grid_y + ty * 8, 1);
         }
+    }
+
+    {
+        const char *mname = r01_metasprite_display_name(&ui->metasprite_edit.draft);
+        char mid[R01_ID_MAX];
+        int wi = ui->project ? ui->project->active_world : 0;
+        int id_w = lo.mx + UI_ENTITY_MODAL_W - UI_UNIT * 2 - lo.right_grid_x;
+        font_draw(r, lo.right_grid_x, lo.right_name_y + 4, "Name", 230, 230, 230);
+        ui_text_draw(ui, r, lo.right_name_x, lo.right_name_y, lo.right_name_w, mname, 1);
+        r01_metasprite_id(mid, sizeof(mid), wi, &ui->metasprite_edit.draft);
+        font_draw_clipped(r, lo.right_grid_x, lo.right_name_y + UI_BTN_H + 2, lo.right_grid_x,
+                          lo.right_name_y + UI_BTN_H, id_w, UI_BTN_H, mid, 160, 160, 170);
     }
 
     ui_compose_draw_grid(r, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE);
@@ -184,14 +199,27 @@ int metasprite_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button)
             }
         }
         ui->metasprite_edit.dragging = 0;
+        ui_text_mouse_up(ui);
+        return 1;
+    }
+
+    if (ui_modal_overlay_hit(lx, ly, lo.mx, lo.my, UI_ENTITY_MODAL_W, UI_ENTITY_MODAL_H)) {
+        ui->metasprite_edit.open = 0;
+        ui_text_blur(ui);
         return 1;
     }
 
     if (ui_palette_grid_hit(lx, ly, lo.pal_x, lo.pal_y, &pal, &col)) {
+        ui_text_blur(ui);
         ui->metasprite_edit.paint_pal = pal;
         ui->metasprite_edit.paint_color = col;
         return 1;
     }
+    if (ui_text_mouse_down(ui, lx, ly, lo.right_name_x, lo.right_name_y, lo.right_name_w,
+                           ui->metasprite_edit.draft.name, R01_ENTITY_NAME_MAX, 1)) {
+        return 1;
+    }
+    ui_text_blur(ui);
     if (ui_dot_strip_hit(lx, ly, lo.left_dots_x, lo.left_dots_y, UI_DOT_STRIP_N, &idx)) {
         if (idx < R01_SPR_BANKS) {
             ui->metasprite_edit.bank = idx;
@@ -204,6 +232,7 @@ int metasprite_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button)
     }
     if (ui_modal_cancel_hit(lx, ly, lo.left_grid_x, lo.btn_y, lo.save_w, lo.cancel_w)) {
         ui->metasprite_edit.open = 0;
+        ui_text_blur(ui);
         return 1;
     }
     if (!right && point_in_rect(lx, ly, lo.left_grid_x, lo.left_grid_y, UI_ENTITY_BANK_GRID, UI_ENTITY_BANK_GRID)) {
@@ -255,10 +284,17 @@ int metasprite_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button)
 void metasprite_modal_drag(UiState *ui, int lx, int ly, Uint32 buttons) {
     MetaspriteModalLayout lo;
     R01EntityFrame *fr = &ui->metasprite_edit.draft.frame;
-    if (!ui || !ui->metasprite_edit.open || !ui->metasprite_edit.dragging) {
+    if (!ui || !ui->metasprite_edit.open) {
         return;
     }
     metasprite_modal_layout(&lo);
+    if (ui->text.drag && ui->text.field_id == 1) {
+        ui_text_mouse_drag(ui, lx, lo.right_name_x, lo.right_name_w);
+        return;
+    }
+    if (!ui->metasprite_edit.dragging) {
+        return;
+    }
     if (ui->metasprite_edit.dragging == 5 && (buttons & SDL_BUTTON_RMASK) &&
         point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
         int cx = (lx - lo.right_grid_x) / 8;
@@ -282,6 +318,10 @@ void metasprite_modal_key(UiState *ui, SDL_Keycode sym) {
     R01EntityFrame *fr = &ui->metasprite_edit.draft.frame;
     R01EntityPart *pt;
     if (!ui || !ui->metasprite_edit.open) {
+        return;
+    }
+    if (ui->text.field_id > 0) {
+        ui_text_key(ui, sym, SDL_GetModState());
         return;
     }
     if (sym >= SDLK_1 && sym <= SDLK_4) {

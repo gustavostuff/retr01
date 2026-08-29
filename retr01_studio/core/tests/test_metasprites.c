@@ -49,6 +49,15 @@ TEST_MAIN() {
         fr_parts = fr.part_count;
         EXPECT(fr_parts == 2, "flattened part count");
         EXPECT(fr.parts[0].tile_id == 2 && fr.parts[1].tile_id == 3, "flattened tiles");
+        EXPECT(fr.parts[0].dx == 0 && fr.parts[1].dx == 8, "flatten dx");
+    }
+    {
+        R01EntityFrame fr;
+        memset(&fr, 0, sizeof(fr));
+        /* Drop near the right edge: whole group must clamp so both tiles fit. */
+        EXPECT(r01_entity_frame_add_metasprite(&fr, ms, 7, 0) == 0, "clamp drop");
+        EXPECT(fr.part_count == 2, "clamp keeps both parts");
+        EXPECT(fr.parts[0].dx == 0 && fr.parts[1].dx == 8, "clamped to fit");
     }
 
     type_id = r01_world_entity_from_metasprite(w, meta);
@@ -64,6 +73,12 @@ TEST_MAIN() {
     EXPECT(p2->worlds[0].metasprite_count == 1, "roundtrip count");
     EXPECT(strcmp(p2->worlds[0].metasprites[0].name, "Blob") == 0, "roundtrip name");
     EXPECT(p2->worlds[0].metasprites[0].frame.part_count == 2, "roundtrip parts");
+    {
+        char id[R01_ID_MAX];
+        r01_metasprite_id(id, sizeof(id), 0, &p2->worlds[0].metasprites[0]);
+        EXPECT(strcmp(id, "w_01_blob") == 0, "meta id");
+        EXPECT(strcmp(w->entities[type_id].name, "Blob") == 0, "entity inherits meta name");
+    }
 
     EXPECT(r01_world_metasprite_remove(w, 0) == 0, "remove");
     EXPECT(w->metasprite_count == 0, "empty after remove");

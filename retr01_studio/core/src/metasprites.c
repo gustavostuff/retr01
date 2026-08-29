@@ -1,5 +1,6 @@
 #include "retr01_studio/metasprites.h"
 
+#include <stdio.h>
 #include <string.h>
 
 void r01_metasprite_init(R01MetaspriteDef *ms, const char *name) {
@@ -12,6 +13,25 @@ void r01_metasprite_init(R01MetaspriteDef *ms, const char *name) {
     } else {
         strncpy(ms->name, "Meta", R01_ENTITY_NAME_MAX - 1);
     }
+}
+
+const char *r01_metasprite_display_name(const R01MetaspriteDef *ms) {
+    if (!ms || !ms->name[0]) {
+        return "meta";
+    }
+    return ms->name;
+}
+
+void r01_metasprite_id(char *dst, size_t cap, int world_idx, const R01MetaspriteDef *ms) {
+    char slug[R01_ENTITY_NAME_MAX];
+    if (!dst || cap < 1) {
+        return;
+    }
+    r01_id_slugify(slug, sizeof(slug), r01_metasprite_display_name(ms));
+    if (world_idx < 0) {
+        world_idx = 0;
+    }
+    snprintf(dst, cap, "w_%02d_%s", world_idx + 1, slug);
 }
 
 int r01_world_metasprite_add(R01World *w) {
@@ -70,7 +90,14 @@ int r01_entity_frame_add_metasprite(R01EntityFrame *fr, const R01MetaspriteDef *
     int i;
     int min_dx = 0;
     int min_dy = 0;
+    int max_ox = 0;
+    int max_oy = 0;
+    int max_drop_x;
+    int max_drop_y;
     if (!fr || !ms || ms->frame.part_count < 1) {
+        return -1;
+    }
+    if (fr->part_count + ms->frame.part_count > R01_ENTITY_PARTS_MAX) {
         return -1;
     }
     min_dx = ms->frame.parts[0].dx;
@@ -84,13 +111,36 @@ int r01_entity_frame_add_metasprite(R01EntityFrame *fr, const R01MetaspriteDef *
         }
     }
     for (i = 0; i < ms->frame.part_count; i++) {
+        int ox = ms->frame.parts[i].dx - min_dx;
+        int oy = ms->frame.parts[i].dy - min_dy;
+        if (ox > max_ox) {
+            max_ox = ox;
+        }
+        if (oy > max_oy) {
+            max_oy = oy;
+        }
+    }
+    max_drop_x = R01_ENTITY_COMPOSE_PX - 8 - max_ox;
+    max_drop_y = R01_ENTITY_COMPOSE_PX - 8 - max_oy;
+    if (max_drop_x < 0 || max_drop_y < 0) {
+        return -1;
+    }
+    if (drop_cx < 0) {
+        drop_cx = 0;
+    }
+    if (drop_cy < 0) {
+        drop_cy = 0;
+    }
+    if (drop_cx > max_drop_x) {
+        drop_cx = max_drop_x;
+    }
+    if (drop_cy > max_drop_y) {
+        drop_cy = max_drop_y;
+    }
+    for (i = 0; i < ms->frame.part_count; i++) {
         R01EntityPart part = ms->frame.parts[i];
         part.dx = drop_cx + (part.dx - min_dx);
         part.dy = drop_cy + (part.dy - min_dy);
-        if (part.dx < 0 || part.dy < 0 || part.dx > R01_ENTITY_COMPOSE_PX - 8 ||
-            part.dy > R01_ENTITY_COMPOSE_PX - 8) {
-            continue;
-        }
         if (r01_entity_frame_add_part(fr, &part) < 0) {
             return -1;
         }
@@ -116,7 +166,8 @@ int r01_world_entity_from_metasprite(R01World *w, int meta_idx) {
     }
     e = &w->entities[idx];
     if (ms->name[0]) {
-        strncpy(e->states[0].name, ms->name, R01_ENTITY_NAME_MAX - 1);
+        strncpy(e->name, ms->name, R01_ENTITY_NAME_MAX - 1);
+        strncpy(e->states[0].name, "Idle", R01_ENTITY_NAME_MAX - 1);
     }
     fr = r01_entity_frame(e, 0, 0);
     if (!fr) {

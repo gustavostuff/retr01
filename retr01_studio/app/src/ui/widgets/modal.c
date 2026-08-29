@@ -33,3 +33,7 @@ int ui_modal_save_hit(int lx, int ly, int x, int y, int save_w) {
 int ui_modal_cancel_hit(int lx, int ly, int x, int y, int save_w, int cancel_w) {
     return point_in_rect(lx, ly, x + save_w + UI_UNIT, y, cancel_w, UI_BTN_H);
 }
+
+int ui_modal_overlay_hit(int lx, int ly, int mx, int my, int w, int h) {
+    return !point_in_rect(lx, ly, mx, my, w, h);
+}

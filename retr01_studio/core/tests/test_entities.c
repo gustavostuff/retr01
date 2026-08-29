@@ -93,6 +93,7 @@ TEST_MAIN() {
     EXPECT(r01_entity_frame_add_part(&e->states[0].frames[0], &part) == 0, "add part");
     EXPECT(e->states[0].frames[0].part_count == 1, "part count");
 
+    strncpy(e->name, "Hero", R01_ENTITY_NAME_MAX - 1);
     strncpy(e->states[0].name, "Walk", R01_ENTITY_NAME_MAX - 1);
     e->states[0].origin_x = 3;
     e->states[0].origin_y = 5;
@@ -184,9 +185,32 @@ TEST_MAIN() {
         EXPECT(found, "instance 0 in oam");
     }
 
+    /* Mark entity 0 as player: Play uses state0/frame0 at player pos; skips its instances. */
+    {
+        R01OamEntry oam2[R01_OAM_MAX];
+        int n2, found_player = 0, found_inst = 0, oi;
+        int expect_px = r01_entity_world_x(pl.player_x, 3, 4) - pl.cam_x;
+        int expect_py = r01_entity_world_y(pl.player_y, 5, 2) - pl.cam_y;
+        r01_world_set_player_entity(w, 0);
+        EXPECT(r01_world_player_entity(w) == 0, "player marked");
+        n2 = r01_play_build_oam(p, &pl, oam2, R01_OAM_MAX);
+        EXPECT(n2 >= 1, "player entity oam");
+        for (oi = 0; oi < n2; oi++) {
+            if (oam2[oi].tile_id == id && oam2[oi].x == expect_px && oam2[oi].y == expect_py) {
+                found_player = 1;
+            }
+            if (oam2[oi].tile_id == id && oam2[oi].x == r01_entity_world_x(40, 3, -6) - pl.cam_x) {
+                found_inst = 1;
+            }
+        }
+        EXPECT(found_player, "player uses entity art");
+        EXPECT(!found_inst, "player type instance skipped");
+    }
+
     EXPECT(r01_project_save_json(p, "test_entities.r01proj", err, sizeof(err)) == 0, "save");
     EXPECT(r01_project_load_json(p2, "test_entities.r01proj", err, sizeof(err)) == 0, "load");
     EXPECT(p2->worlds[0].entity_count == 4, "roundtrip entity count");
+    EXPECT(p2->worlds[0].player_entity == 0, "player entity rt");
     EXPECT(p2->worlds[0].instance_count == 3, "roundtrip instances");
     EXPECT(p2->worlds[0].instances[0].world_x == 40, "inst0 x");
     EXPECT(p2->worlds[0].instances[0].world_y == 50, "inst0 y");
@@ -194,12 +218,27 @@ TEST_MAIN() {
     EXPECT(p2->worlds[0].instances[1].world_x == 10, "inst1 x");
     EXPECT(p2->worlds[0].instances[2].world_x == 64, "meta inst x");
     EXPECT(p2->worlds[0].metasprite_count == 1, "metasprite rt");
+    EXPECT(strcmp(p2->worlds[0].entities[0].name, "Hero") == 0, "entity name rt");
     EXPECT(strcmp(p2->worlds[0].entities[0].states[0].name, "Walk") == 0, "name rt");
     EXPECT(p2->worlds[0].entities[0].states[0].origin_x == 3, "origin x");
     EXPECT(p2->worlds[0].entities[0].states[0].frames[0].parts[0].dx == 4, "part dx");
 
+    {
+        char id[R01_ID_MAX];
+        char slug[32];
+        r01_id_slugify(slug, sizeof(slug), "Player Walking!");
+        EXPECT(strcmp(slug, "player_walking") == 0, "slugify");
+        strncpy(e->name, "Player", R01_ENTITY_NAME_MAX - 1);
+        strncpy(e->states[0].name, "Walking", R01_ENTITY_NAME_MAX - 1);
+        r01_entity_frame_id(id, sizeof(id), 4, e, 0, 2);
+        EXPECT(strcmp(id, "w_05_player_walking_frame_02") == 0, "frame id");
+        r01_entity_type_id(id, sizeof(id), 0, e);
+        EXPECT(strcmp(id, "w_01_player") == 0, "type id");
+    }
+
     EXPECT(r01_world_entity_remove(&p2->worlds[0], 0) == 0, "remove type");
     EXPECT(p2->worlds[0].entity_count == 3, "count after remove");
+    EXPECT(p2->worlds[0].player_entity == -1, "player cleared on remove");
     /* Instance of type 0 removed; remaining type ids remapped. */
     EXPECT(p2->worlds[0].instance_count == 2, "inst of removed type gone");
     EXPECT(p2->worlds[0].instances[0].type_id == 1, "remapped type");

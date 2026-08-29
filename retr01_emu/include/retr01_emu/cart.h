@@ -44,6 +44,12 @@ typedef struct R01eWorldView {
     uint8_t entity_inst_count;
     uint32_t off_entity_types;
     uint32_t off_entity_insts;
+    /* Play player type index, or R01E_CART_PLAYER_ENTITY_NONE. Hitbox from state 0. */
+    uint8_t player_entity;
+    uint8_t player_hit_x;
+    uint8_t player_hit_y;
+    uint8_t player_hit_w;
+    uint8_t player_hit_h;
 } R01eWorldView;
 
 /* Match Studio cart.h Phase 3D layout. */
@@ -51,6 +57,12 @@ typedef struct R01eWorldView {
 #define R01E_CART_WHDR_INST_COUNT 18
 #define R01E_CART_WHDR_OFF_TYPES 19
 #define R01E_CART_WHDR_OFF_INSTS 22
+#define R01E_CART_WHDR_PLAYER_ENTITY 25
+#define R01E_CART_WHDR_PLAYER_HIT_X 26
+#define R01E_CART_WHDR_PLAYER_HIT_Y 27
+#define R01E_CART_WHDR_PLAYER_HIT_W 28
+#define R01E_CART_WHDR_PLAYER_HIT_H 29
+#define R01E_CART_PLAYER_ENTITY_NONE 0xFFu
 #define R01E_CART_ENTITY_PARTS_MAX 4
 #define R01E_CART_ENTITY_TYPE_SIZE 20
 #define R01E_CART_INSTANCE_SIZE 6
@@ -80,6 +92,9 @@ int r01e_cart_solid_at(const R01eCart *c, int world, int wx, int wy);
 
 /* Player AABB vs present screens and BG solid (Studio play.c SoT). */
 int r01e_cart_player_aabb_ok(const R01eCart *c, int world, int px, int py);
+
+/* General AABB (bw x bh) vs present screens and BG solid. */
+int r01e_cart_aabb_ok(const R01eCart *c, int world, int px, int py, int bw, int bh);
 
 /* Absolute byte in cart image, or NULL if OOB. */
 const uint8_t *r01e_cart_ptr(const R01eCart *c, uint32_t abs_off, size_t need);

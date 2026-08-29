@@ -93,8 +93,11 @@ TEST_MAIN() {
     EXPECT(type_id == 0, "entity type");
     w->entities[0].states[0].origin_x = 2;
     w->entities[0].states[0].origin_y = 3;
+    w->entities[0].states[0].hitbox_x = 1;
+    w->entities[0].states[0].hitbox_y = 2;
     w->entities[0].states[0].frames[0].parts[0].dx = 4;
     w->entities[0].states[0].frames[0].parts[0].dy = 5;
+    r01_world_set_player_entity(w, 0);
     inst = r01_world_place_entity(w, type_id, 40, 50);
     EXPECT(inst == 0, "instance");
     w->instances[0].flip_h = 1;
@@ -196,6 +199,12 @@ TEST_MAIN() {
                 off_insts = rd_u24(hdr + R01_CART_WHDR_OFF_INSTS);
                 EXPECT(type_n == 2, "type count");
                 EXPECT(inst_n == 2, "inst count");
+                EXPECT(hdr[R01_CART_WHDR_PLAYER_ENTITY] == 0, "player entity packed");
+                EXPECT(hdr[R01_CART_WHDR_PLAYER_HIT_X] == 1 && hdr[R01_CART_WHDR_PLAYER_HIT_Y] == 2,
+                       "player hitbox xy");
+                EXPECT(hdr[R01_CART_WHDR_PLAYER_HIT_W] == R01_ENTITY_HITBOX_W &&
+                           hdr[R01_CART_WHDR_PLAYER_HIT_H] == R01_ENTITY_HITBOX_H,
+                       "player hitbox wh");
 
                 off_chr = rd_u24(hdr + 8);
                 /* SPR bank 0 starts after 4 BG banks. */

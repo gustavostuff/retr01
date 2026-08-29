@@ -74,6 +74,7 @@
 #define R01_ENTITY_PARTS_MAX 4 /* 2x2 tile frame budget */
 #define R01_ENTITY_COMPOSE_PX 16
 #define R01_ENTITY_NAME_MAX 32
+#define R01_ID_MAX 96
 #define R01_ENTITY_HITBOX_W 8
 #define R01_ENTITY_HITBOX_H 8
 #define R01_MAX_ENTITY_INSTANCES 64
@@ -140,7 +141,7 @@ typedef struct R01MetaspriteDef {
 } R01MetaspriteDef;
 
 typedef struct R01EntityState {
-    char name[R01_ENTITY_NAME_MAX]; /* project-only authoring label */
+    char name[R01_ENTITY_NAME_MAX]; /* authoring label (idle, walk, ...) */
     int origin_x;
     int origin_y;
     int hitbox_x;
@@ -153,6 +154,7 @@ typedef struct R01EntityState {
 
 typedef struct R01EntityType {
     int present;
+    char name[R01_ENTITY_NAME_MAX]; /* authoring label (player, slime, ...) */
     R01EntityState states[R01_ENTITY_STATES_MAX];
     int state_count; /* 1..R01_ENTITY_STATES_MAX */
 } R01EntityType;
@@ -190,6 +192,7 @@ typedef struct R01World {
     int metasprite_count;
     R01EntityType entities[R01_MAX_ENTITY_TYPES];
     int entity_count;
+    int player_entity; /* type index marked as Play player; -1 = stub tile */
     R01EntityInstance instances[R01_MAX_ENTITY_INSTANCES];
     int instance_count;
 } R01World;

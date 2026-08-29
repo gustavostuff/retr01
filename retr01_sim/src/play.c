@@ -12,8 +12,41 @@
 
 /* Studio/emu move+camera math; sim applies 1 logical px per sim VBlank (game frame). */
 
-static int player_aabb_ok(R01sBoard *b, int px, int py) {
-    return r01s_board_player_aabb_ok(b, px, py);
+static void player_hit_rect(R01sBoard *b, int origin_x, int origin_y, int *hx, int *hy, int *hw, int *hh) {
+    int box_x = origin_x;
+    int box_y = origin_y;
+    int box_w = R01S_PLAY_PLAYER_W;
+    int box_h = R01S_PLAY_PLAYER_H;
+    if (b && b->cart_loaded && b->cart_player_entity != 0xFF &&
+        b->cart_player_entity < b->cart_entity_type_count && b->cart_off_entity_types != 0) {
+        const uint8_t *img = b->cart_flash.mem;
+        const uint8_t *trec =
+            img + b->cart_off_entity_types + (size_t)b->cart_player_entity * 20u;
+        int origin_ax = (int)trec[0];
+        int origin_ay = (int)trec[1];
+        box_x = origin_x + (int)b->cart_player_hit_x - origin_ax;
+        box_y = origin_y + (int)b->cart_player_hit_y - origin_ay;
+        box_w = (int)b->cart_player_hit_w;
+        box_h = (int)b->cart_player_hit_h;
+    }
+    if (hx) {
+        *hx = box_x;
+    }
+    if (hy) {
+        *hy = box_y;
+    }
+    if (hw) {
+        *hw = box_w;
+    }
+    if (hh) {
+        *hh = box_h;
+    }
+}
+
+static int player_move_ok(R01sBoard *b, int ox, int oy) {
+    int hx, hy, hw, hh;
+    player_hit_rect(b, ox, oy, &hx, &hy, &hw, &hh);
+    return r01s_board_aabb_ok(b, hx, hy, hw, hh);
 }
 
 static void update_camera(R01sPlay *pl) {
@@ -75,13 +108,12 @@ static int spawn_screen(R01sBoard *b, int *out_col, int *out_row) {
 
 static void write_oam(R01sBoard *b) {
     R01sPlay *pl;
-    int vx;
-    int vy;
     int slot = 0;
     int ii;
     const uint8_t *img;
-    const uint8_t *types;
+    const uint8_t *types = NULL;
     const uint8_t *insts;
+    int player_type = -1;
 
     if (!b || !b->play.enabled) {
         return;
@@ -90,29 +122,62 @@ static void write_oam(R01sBoard *b) {
     /* Clear all slots unused (tile == 0xFF); match emu / docs. */
     memset(b->mcu1284.oam, 0xFF, sizeof(b->mcu1284.oam));
 
-    vx = pl->player_x - pl->cam_x;
-    vy = pl->player_y - pl->cam_y;
-    if (!r01s_oam_tile_off_screen(vx, vy)) {
-        r01s_atmega1284p_oam_poke(&b->mcu1284, 0, r01s_oam_coord_to_u8(vy));
-        r01s_atmega1284p_oam_poke(&b->mcu1284, 1, 1);
-        r01s_atmega1284p_oam_poke(&b->mcu1284, 2, 0);
-        r01s_atmega1284p_oam_poke(&b->mcu1284, 3, r01s_oam_coord_to_u8(vx));
-        slot = 1;
-        b->health_saw_oam = 1;
+    img = b->cart_flash.mem;
+    if (b->cart_loaded && b->cart_entity_type_count > 0 && b->cart_off_entity_types != 0 &&
+        (size_t)b->cart_off_entity_types + (size_t)b->cart_entity_type_count * 20u <=
+            sizeof(b->cart_flash.mem)) {
+        types = img + b->cart_off_entity_types;
+        if (b->cart_player_entity != 0xFF && b->cart_player_entity < b->cart_entity_type_count) {
+            player_type = (int)b->cart_player_entity;
+        }
     }
 
-    if (!b->cart_loaded || b->cart_entity_inst_count < 1 || b->cart_entity_type_count < 1 ||
-        b->cart_off_entity_types == 0 || b->cart_off_entity_insts == 0) {
+    if (player_type >= 0 && types) {
+        const uint8_t *trec = types + (size_t)player_type * 20u;
+        int origin_x = (int)trec[0];
+        int origin_y = (int)trec[1];
+        int part_count = (int)trec[2];
+        int pi;
+        if (part_count > 4) {
+            part_count = 4;
+        }
+        for (pi = 0; pi < part_count && slot < 64; pi++) {
+            const uint8_t *part = trec + 4 + pi * 4;
+            int dx = (int)(int8_t)part[2];
+            int dy = (int)(int8_t)part[3];
+            int sx = pl->player_x + dx - origin_x - pl->cam_x;
+            int sy = pl->player_y + dy - origin_y - pl->cam_y;
+            if (r01s_oam_tile_off_screen(sx, sy)) {
+                continue;
+            }
+            r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 0), r01s_oam_coord_to_u8(sy));
+            r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 1), part[0]);
+            r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 2), part[1]);
+            r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 3), r01s_oam_coord_to_u8(sx));
+            slot++;
+            b->health_saw_oam = 1;
+        }
+    }
+    if (slot < 1) {
+        int vx = pl->player_x - pl->cam_x;
+        int vy = pl->player_y - pl->cam_y;
+        if (!r01s_oam_tile_off_screen(vx, vy)) {
+            r01s_atmega1284p_oam_poke(&b->mcu1284, 0, r01s_oam_coord_to_u8(vy));
+            r01s_atmega1284p_oam_poke(&b->mcu1284, 1, 1);
+            r01s_atmega1284p_oam_poke(&b->mcu1284, 2, 0);
+            r01s_atmega1284p_oam_poke(&b->mcu1284, 3, r01s_oam_coord_to_u8(vx));
+            slot = 1;
+            b->health_saw_oam = 1;
+        }
+    }
+
+    if (!types || !b->cart_loaded || b->cart_entity_inst_count < 1 || b->cart_off_entity_insts == 0) {
         return;
     }
-    img = b->cart_flash.mem;
-    if ((size_t)b->cart_off_entity_types + (size_t)b->cart_entity_type_count * 20u >
-            sizeof(b->cart_flash.mem) ||
-        (size_t)b->cart_off_entity_insts + (size_t)b->cart_entity_inst_count * 6u >
-            sizeof(b->cart_flash.mem)) {
+    if ((size_t)b->cart_off_entity_insts + (size_t)b->cart_entity_inst_count * 6u >
+        sizeof(b->cart_flash.mem)) {
         return;
     }
-    types = img + b->cart_off_entity_types;
     insts = img + b->cart_off_entity_insts;
     for (ii = 0; ii < (int)b->cart_entity_inst_count && slot < 64; ii++) {
         const uint8_t *irec = insts + (size_t)ii * 6u;
@@ -122,6 +187,9 @@ static void write_oam(R01sBoard *b) {
         const uint8_t *trec;
         int origin_x, origin_y, part_count, pi;
         if (type_id >= b->cart_entity_type_count) {
+            continue;
+        }
+        if (player_type >= 0 && (int)type_id == player_type) {
             continue;
         }
         trec = types + (size_t)type_id * 20u;
@@ -258,13 +326,13 @@ static void step_move_from_pad(R01sBoard *b) {
     }
     if (dx != 0) {
         int nx = pl->player_x + dx;
-        if (player_aabb_ok(b, nx, pl->player_y)) {
+        if (player_move_ok(b, nx, pl->player_y)) {
             pl->player_x = nx;
         }
     }
     if (dy != 0) {
         int ny = pl->player_y + dy;
-        if (player_aabb_ok(b, pl->player_x, ny)) {
+        if (player_move_ok(b, pl->player_x, ny)) {
             pl->player_y = ny;
         }
     }

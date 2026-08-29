@@ -68,6 +68,39 @@ void r01_play_stop(R01PlayState *pl) {
     }
 }
 
+void r01_play_player_hit_rect(const R01World *w, int origin_x, int origin_y, int *hx, int *hy, int *hw,
+                              int *hh) {
+    int pe;
+    int box_w = R01_PLAY_PLAYER_W;
+    int box_h = R01_PLAY_PLAYER_H;
+    int box_x = origin_x;
+    int box_y = origin_y;
+    pe = r01_world_player_entity(w);
+    if (pe >= 0 && w->entities[pe].state_count > 0) {
+        const R01EntityState *st = &w->entities[pe].states[0];
+        box_x = r01_entity_world_x(origin_x, st->origin_x, st->hitbox_x);
+        box_y = r01_entity_world_y(origin_y, st->origin_y, st->hitbox_y);
+        if (st->hitbox_w > 0) {
+            box_w = st->hitbox_w;
+        }
+        if (st->hitbox_h > 0) {
+            box_h = st->hitbox_h;
+        }
+    }
+    if (hx) {
+        *hx = box_x;
+    }
+    if (hy) {
+        *hy = box_y;
+    }
+    if (hw) {
+        *hw = box_w;
+    }
+    if (hh) {
+        *hh = box_h;
+    }
+}
+
 void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
     const R01World *w;
     if (!pl || !pl->active || !p) {
@@ -79,13 +112,17 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
     }
     if (dx != 0) {
         int nx = pl->player_x + dx;
-        if (r01_world_player_aabb_ok(w, nx, pl->player_y)) {
+        int hx, hy, hw, hh;
+        r01_play_player_hit_rect(w, nx, pl->player_y, &hx, &hy, &hw, &hh);
+        if (r01_world_aabb_ok(w, hx, hy, hw, hh)) {
             pl->player_x = nx;
         }
     }
     if (dy != 0) {
         int ny = pl->player_y + dy;
-        if (r01_world_player_aabb_ok(w, pl->player_x, ny)) {
+        int hx, hy, hw, hh;
+        r01_play_player_hit_rect(w, pl->player_x, ny, &hx, &hy, &hw, &hh);
+        if (r01_world_aabb_ok(w, hx, hy, hw, hh)) {
             pl->player_y = ny;
         }
     }
@@ -160,6 +197,7 @@ int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry 
     const R01World *w;
     int n = 0;
     int i;
+    int player_type;
     if (!p || !pl || !out || cap < 1) {
         return 0;
     }
@@ -167,15 +205,48 @@ int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry 
     if (!w) {
         return 0;
     }
-    /* Slot 0: player (hardcoded 8x8 tile 1 / bank 0 -- matches cart stub). */
-    out[0].x = pl->player_x - pl->cam_x;
-    out[0].y = pl->player_y - pl->cam_y;
-    out[0].bank = 0;
-    out[0].tile_id = R01_SPR_PLAYER_TILE_ID;
-    out[0].pal = 0;
-    out[0].flip_h = 0;
-    out[0].flip_v = 0;
-    n = 1;
+
+    player_type = r01_world_player_entity(w);
+    if (player_type >= 0) {
+        const R01EntityType *ent = &w->entities[player_type];
+        const R01EntityState *st;
+        const R01EntityFrame *fr;
+        int pi;
+        if (ent->state_count > 0 && ent->states[0].frame_count > 0) {
+            st = &ent->states[0];
+            fr = &st->frames[0];
+            for (pi = 0; pi < fr->part_count && n < cap && n < R01_OAM_MAX; pi++) {
+                const R01EntityPart *pt = &fr->parts[pi];
+                int dx, dy, fh, fv;
+                int ox, oy;
+                r01_entity_part_instance_pose(st, pt, 0, 0, &dx, &dy, &fh, &fv);
+                ox = r01_entity_world_x(pl->player_x, st->origin_x, dx) - pl->cam_x;
+                oy = r01_entity_world_y(pl->player_y, st->origin_y, dy) - pl->cam_y;
+                if (r01_oam_tile_off_screen(ox, oy)) {
+                    continue;
+                }
+                out[n].x = ox;
+                out[n].y = oy;
+                out[n].bank = pt->bank;
+                out[n].tile_id = pt->tile_id;
+                out[n].pal = pt->pal;
+                out[n].flip_h = fh;
+                out[n].flip_v = fv;
+                n++;
+            }
+        }
+    }
+    if (n < 1) {
+        /* Fallback: hardcoded 8x8 stub (bank 0 tile 1) -- matches cart stub. */
+        out[0].x = pl->player_x - pl->cam_x;
+        out[0].y = pl->player_y - pl->cam_y;
+        out[0].bank = 0;
+        out[0].tile_id = R01_SPR_PLAYER_TILE_ID;
+        out[0].pal = 0;
+        out[0].flip_h = 0;
+        out[0].flip_v = 0;
+        n = 1;
+    }
 
     for (i = 0; i < w->instance_count && n < cap && n < R01_OAM_MAX; i++) {
         const R01EntityInstance *inst = &w->instances[i];
@@ -184,6 +255,10 @@ int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry 
         const R01EntityFrame *fr;
         int pi;
         if (inst->type_id < 0 || inst->type_id >= w->entity_count) {
+            continue;
+        }
+        /* Player type is driven by Play position, not placed instances. */
+        if (player_type >= 0 && inst->type_id == player_type) {
             continue;
         }
         ent = &w->entities[inst->type_id];

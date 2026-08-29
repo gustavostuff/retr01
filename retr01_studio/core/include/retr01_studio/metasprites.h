@@ -4,7 +4,11 @@
 #include "retr01_studio/entities.h"
 #include "retr01_studio/types.h"
 
+#include <stddef.h>
+
 void r01_metasprite_init(R01MetaspriteDef *ms, const char *name);
+void r01_metasprite_id(char *dst, size_t cap, int world_idx, const R01MetaspriteDef *ms);
+const char *r01_metasprite_display_name(const R01MetaspriteDef *ms);
 
 int r01_world_metasprite_add(R01World *w);
 int r01_world_metasprite_remove(R01World *w, int idx);

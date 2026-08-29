@@ -8,6 +8,13 @@
 #define R01_CART_WHDR_INST_COUNT 18
 #define R01_CART_WHDR_OFF_TYPES 19
 #define R01_CART_WHDR_OFF_INSTS 22
+/* Play player: type index, or 0xFF = CHR stub. Hitbox snapshot from that type's state 0. */
+#define R01_CART_WHDR_PLAYER_ENTITY 25
+#define R01_CART_WHDR_PLAYER_HIT_X 26
+#define R01_CART_WHDR_PLAYER_HIT_Y 27
+#define R01_CART_WHDR_PLAYER_HIT_W 28
+#define R01_CART_WHDR_PLAYER_HIT_H 29
+#define R01_CART_PLAYER_ENTITY_NONE 0xFFu
 #define R01_CART_ENTITY_PARTS_MAX 4
 #define R01_CART_ENTITY_TYPE_SIZE 20 /* origin_x,y + part_count + pad + 4x(tile,attr,dx,dy) */
 #define R01_CART_INSTANCE_SIZE 6 /* type_id, flags (bit0 flip_h, bit1 flip_v), world_x u16 LE, world_y u16 LE */

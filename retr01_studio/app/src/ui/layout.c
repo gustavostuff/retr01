@@ -429,8 +429,14 @@ void metasprite_modal_layout(MetaspriteModalLayout *lo) {
     lo->left_dots_y = lo->left_label_y + 4;
     lo->left_grid_x = left_x;
     lo->left_grid_y = lo->left_label_y + UI_BTN_H + 2;
+    lo->right_name_x = right_x + label_width("Name") + UI_UNIT;
+    lo->right_name_y = lo->left_label_y;
+    lo->right_name_w = mx + UI_ENTITY_MODAL_W - UI_UNIT * 2 - lo->right_name_x;
+    if (lo->right_name_w < UI_UNIT * 8) {
+        lo->right_name_w = UI_UNIT * 8;
+    }
     lo->right_grid_x = right_x;
-    lo->right_grid_y = lo->left_grid_y;
+    lo->right_grid_y = lo->right_name_y + UI_BTN_H * 2 + 2;
     lo->pal_label_x = right_x;
     lo->pal_label_y = lo->right_grid_y + UI_ENTITY_COMPOSE + UI_UNIT;
     lo->pal_x = right_x;
@@ -447,7 +453,13 @@ void entity_modal_layout(EntityModalLayout *lo) {
     int right_x = mx + UI_ENTITY_MODAL_W / 2 + UI_UNIT;
     lo->mx = mx;
     lo->my = my;
-    lo->right_state_y = my + UI_BTN_H + 2;
+    lo->right_ent_name_y = my + UI_BTN_H + 2;
+    lo->right_ent_name_x = right_x + label_width("Name") + UI_UNIT;
+    lo->right_ent_name_w = mx + UI_ENTITY_MODAL_W - UI_UNIT * 2 - lo->right_ent_name_x;
+    if (lo->right_ent_name_w < UI_UNIT * 8) {
+        lo->right_ent_name_w = UI_UNIT * 8;
+    }
+    lo->right_state_y = lo->right_ent_name_y + UI_BTN_H;
     lo->right_dots_x = right_x + label_width("State") + UI_UNIT;
     lo->right_dots_y = lo->right_state_y + 4;
     lo->right_name_x = lo->right_dots_x + UI_DOT_STRIP_N * (UI_DOT_SIZE + UI_DOT_GAP) + UI_UNIT;
@@ -459,8 +471,9 @@ void entity_modal_layout(EntityModalLayout *lo) {
     lo->right_frame_y = lo->right_state_y + UI_BTN_H;
     lo->frame_dots_x = right_x + label_width("Frame") + UI_UNIT;
     lo->frame_dots_y = lo->right_frame_y + 4;
+    lo->right_id_y = lo->right_frame_y + UI_BTN_H;
     lo->right_grid_x = right_x;
-    lo->right_grid_y = lo->right_frame_y + UI_BTN_H + 2;
+    lo->right_grid_y = lo->right_id_y + UI_BTN_H;
     lo->left_list_x = left_x;
     lo->left_list_y = lo->right_grid_y;
     lo->left_list_h = UI_ENTITY_LIST_H;

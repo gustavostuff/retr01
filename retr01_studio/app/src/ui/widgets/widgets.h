@@ -30,6 +30,19 @@ void ui_modal_panel(SDL_Renderer *r, int mx, int my, int w, int h, const char *t
 void ui_modal_save_cancel(SDL_Renderer *r, int x, int y, int save_w, int cancel_w, int mouse_x, int mouse_y);
 int ui_modal_save_hit(int lx, int ly, int x, int y, int save_w);
 int ui_modal_cancel_hit(int lx, int ly, int x, int y, int save_w, int cancel_w);
+/* 1 if click is outside the panel (dismiss overlay). */
+int ui_modal_overlay_hit(int lx, int ly, int mx, int my, int w, int h);
+
+/* Text fields (caret, selection, scroll). field_id must be > 0 while focused. */
+void ui_text_blur(UiState *ui);
+void ui_text_focus(UiState *ui, char *buf, int cap, int field_id);
+int ui_text_active(const UiState *ui, int field_id);
+void ui_text_draw(UiState *ui, SDL_Renderer *r, int x, int y, int w, const char *text, int field_id);
+int ui_text_mouse_down(UiState *ui, int lx, int ly, int x, int y, int w, char *buf, int cap, int field_id);
+void ui_text_mouse_up(UiState *ui);
+void ui_text_mouse_drag(UiState *ui, int lx, int x, int w);
+int ui_text_key(UiState *ui, SDL_Keycode sym, Uint16 mod);
+int ui_text_input(UiState *ui, const char *utf8);
 
 int ui_compose_clamp_part(int v);
 int ui_compose_clamp_origin(int v);
@@ -38,6 +51,9 @@ void ui_compose_draw_part(SDL_Renderer *r, const R01Project *p, const struct R01
                           int ox, int oy, int scale, int selected);
 void ui_compose_draw_frame(SDL_Renderer *r, const R01Project *p, const struct R01World *w, const R01EntityFrame *fr,
                            int ox, int oy, int scale, int sel_part);
+/* Center parts on bbox mid-point inside icon_size x icon_size (clipped). */
+void ui_compose_draw_frame_icon(SDL_Renderer *r, const R01Project *p, const struct R01World *w,
+                                const R01EntityFrame *fr, int dx, int dy, int icon_size);
 int ui_compose_part_at(const R01EntityFrame *fr, int px, int py, int prefer_sel);
 void ui_compose_paint_part(R01Project *p, struct R01World *w, R01EntityPart *pt, int cx, int cy, int paint_color);
 

@@ -38,10 +38,15 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy);
 int r01_play_button(R01PlayState *pl, const R01Project *p, int button);
 int r01_play_screen_index(const R01PlayState *pl, const R01World *w);
 
+/* Player collision AABB in world pixels. origin_x/y is the state origin (Play position). */
+void r01_play_player_hit_rect(const R01World *w, int origin_x, int origin_y, int *hx, int *hy, int *hw,
+                              int *hh);
+
 int r01_play_sample_bg(const R01Project *p, const R01PlayState *pl, int vx, int vy, uint8_t *r, uint8_t *g,
                        uint8_t *b);
 
-/* Build OAM for current Play camera. Returns count written (incl. player as 0). */
+/* Build OAM for current Play camera. Returns count written.
+ * Player occupies the leading slots (state 0 / frame 0 of marked entity, or stub tile). */
 int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry *out, int cap);
 
 /* OAM packing: uint8 stores viewport-relative signed coords (-128..127). */

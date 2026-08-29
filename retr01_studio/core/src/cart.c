@@ -1,6 +1,8 @@
 #include "retr01_studio/cart.h"
 #include "retr01_studio/chr_pack.h"
+#include "retr01_studio/entities.h"
 #include "retr01_studio/palette.h"
+#include "retr01_studio/play.h"
 #include "retr01_studio/prg_phase1.h"
 #include "retr01_studio/project.h"
 #include "retr01_studio/sprites.h"
@@ -478,6 +480,24 @@ static int build_world_blob(Buf *blob, const R01World *w) {
     put_u8(hdr + R01_CART_WHDR_INST_COUNT, (uint8_t)inst_n);
     put_u24(hdr + R01_CART_WHDR_OFF_TYPES, (uint32_t)off_types);
     put_u24(hdr + R01_CART_WHDR_OFF_INSTS, (uint32_t)off_insts);
+    {
+        int pe = r01_world_player_entity(w);
+        put_u8(hdr + R01_CART_WHDR_PLAYER_ENTITY, R01_CART_PLAYER_ENTITY_NONE);
+        put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_X, 0);
+        put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_Y, 0);
+        put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_W, (uint8_t)R01_PLAY_PLAYER_W);
+        put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_H, (uint8_t)R01_PLAY_PLAYER_H);
+        if (pe >= 0 && pe < type_n && w->entities[pe].state_count > 0) {
+            const R01EntityState *st = &w->entities[pe].states[0];
+            put_u8(hdr + R01_CART_WHDR_PLAYER_ENTITY, (uint8_t)pe);
+            put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_X, (uint8_t)st->hitbox_x);
+            put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_Y, (uint8_t)st->hitbox_y);
+            put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_W,
+                   (uint8_t)(st->hitbox_w > 0 ? st->hitbox_w : R01_PLAY_PLAYER_W));
+            put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_H,
+                   (uint8_t)(st->hitbox_h > 0 ? st->hitbox_h : R01_PLAY_PLAYER_H));
+        }
+    }
 
     if (buf_append(blob, hdr, WORLD_HDR_SIZE) != 0) {
         return -1;

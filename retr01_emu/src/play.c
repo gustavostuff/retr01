@@ -16,8 +16,45 @@ static int cart_is_phase1_play(const R01eCart *c) {
     return prg[0x00F0] == 'R' && prg[0x00F1] == '0' && prg[0x00F2] == '1' && prg[0x00F3] == 'P';
 }
 
-static int player_aabb_ok(R01eMachine *m, int px, int py) {
-    return r01e_cart_player_aabb_ok(&m->cart, (int)m->io.world, px, py);
+static void player_hit_rect(R01eMachine *m, int origin_x, int origin_y, int *hx, int *hy, int *hw, int *hh) {
+    R01eWorldView wv;
+    int box_x = origin_x;
+    int box_y = origin_y;
+    int box_w = R01E_PLAY_PLAYER_W;
+    int box_h = R01E_PLAY_PLAYER_H;
+
+    if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) == 0 &&
+        wv.player_entity != R01E_CART_PLAYER_ENTITY_NONE && wv.player_entity < wv.entity_type_count) {
+        const uint8_t *types = r01e_cart_ptr(&m->cart, wv.base + wv.off_entity_types,
+                                             (size_t)wv.entity_type_count * R01E_CART_ENTITY_TYPE_SIZE);
+        if (types) {
+            const uint8_t *trec = types + (size_t)wv.player_entity * R01E_CART_ENTITY_TYPE_SIZE;
+            int origin_ax = (int)trec[0];
+            int origin_ay = (int)trec[1];
+            box_x = origin_x + (int)wv.player_hit_x - origin_ax;
+            box_y = origin_y + (int)wv.player_hit_y - origin_ay;
+            box_w = (int)wv.player_hit_w;
+            box_h = (int)wv.player_hit_h;
+        }
+    }
+    if (hx) {
+        *hx = box_x;
+    }
+    if (hy) {
+        *hy = box_y;
+    }
+    if (hw) {
+        *hw = box_w;
+    }
+    if (hh) {
+        *hh = box_h;
+    }
+}
+
+static int player_move_ok(R01eMachine *m, int ox, int oy) {
+    int hx, hy, hw, hh;
+    player_hit_rect(m, ox, oy, &hx, &hy, &hw, &hh);
+    return r01e_cart_aabb_ok(&m->cart, (int)m->io.world, hx, hy, hw, hh);
 }
 
 static void update_camera(R01ePlay *pl) {
@@ -125,32 +162,66 @@ void r01e_play_sync_video(R01eMachine *m) {
 static void write_oam(R01eMachine *m) {
     R01ePlay *pl = &m->play;
     R01eWorldView wv;
-    const uint8_t *types;
-    const uint8_t *insts;
-    int vx = pl->player_x - pl->cam_x;
-    int vy = pl->player_y - pl->cam_y;
+    const uint8_t *types = NULL;
+    const uint8_t *insts = NULL;
     int slot = 0;
     int ii;
+    int player_type = -1;
 
     memset(m->io.oam, 0xFF, sizeof(m->io.oam));
 
-    if (!r01e_oam_tile_off_screen(vx, vy)) {
-        m->io.oam[0] = r01e_oam_coord_to_u8(vy);
-        m->io.oam[1] = 1; /* solid tile in SPR bank 0 */
-        m->io.oam[2] = 0; /* bank 0, pal 0 */
-        m->io.oam[3] = r01e_oam_coord_to_u8(vx);
-        slot = 1;
+    if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) == 0 && wv.entity_type_count > 0) {
+        types = r01e_cart_ptr(&m->cart, wv.base + wv.off_entity_types,
+                             (size_t)wv.entity_type_count * R01E_CART_ENTITY_TYPE_SIZE);
+        if (wv.player_entity != R01E_CART_PLAYER_ENTITY_NONE && wv.player_entity < wv.entity_type_count) {
+            player_type = (int)wv.player_entity;
+        }
     }
 
-    if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) != 0 || wv.entity_inst_count < 1 ||
-        wv.entity_type_count < 1) {
+    if (player_type >= 0 && types) {
+        const uint8_t *trec = types + (size_t)player_type * R01E_CART_ENTITY_TYPE_SIZE;
+        int origin_x = (int)trec[0];
+        int origin_y = (int)trec[1];
+        int part_count = (int)trec[2];
+        int pi;
+        if (part_count > R01E_CART_ENTITY_PARTS_MAX) {
+            part_count = R01E_CART_ENTITY_PARTS_MAX;
+        }
+        for (pi = 0; pi < part_count && slot < R01E_OAM_ENTRIES; pi++) {
+            const uint8_t *part = trec + 4 + pi * 4;
+            int dx = (int)(int8_t)part[2];
+            int dy = (int)(int8_t)part[3];
+            int sx = pl->player_x + dx - origin_x - pl->cam_x;
+            int sy = pl->player_y + dy - origin_y - pl->cam_y;
+            uint8_t *oe = &m->io.oam[(size_t)slot * R01E_OAM_ENTRY_BYTES];
+            if (r01e_oam_tile_off_screen(sx, sy)) {
+                continue;
+            }
+            oe[0] = r01e_oam_coord_to_u8(sy);
+            oe[1] = part[0];
+            oe[2] = part[1];
+            oe[3] = r01e_oam_coord_to_u8(sx);
+            slot++;
+        }
+    }
+    if (slot < 1) {
+        int vx = pl->player_x - pl->cam_x;
+        int vy = pl->player_y - pl->cam_y;
+        if (!r01e_oam_tile_off_screen(vx, vy)) {
+            m->io.oam[0] = r01e_oam_coord_to_u8(vy);
+            m->io.oam[1] = 1; /* solid tile in SPR bank 0 */
+            m->io.oam[2] = 0; /* bank 0, pal 0 */
+            m->io.oam[3] = r01e_oam_coord_to_u8(vx);
+            slot = 1;
+        }
+    }
+
+    if (!types || wv.entity_inst_count < 1) {
         return;
     }
-    types = r01e_cart_ptr(&m->cart, wv.base + wv.off_entity_types,
-                          (size_t)wv.entity_type_count * R01E_CART_ENTITY_TYPE_SIZE);
     insts = r01e_cart_ptr(&m->cart, wv.base + wv.off_entity_insts,
                           (size_t)wv.entity_inst_count * R01E_CART_INSTANCE_SIZE);
-    if (!types || !insts) {
+    if (!insts) {
         return;
     }
     for (ii = 0; ii < (int)wv.entity_inst_count && slot < R01E_OAM_ENTRIES; ii++) {
@@ -161,6 +232,9 @@ static void write_oam(R01eMachine *m) {
         const uint8_t *trec;
         int origin_x, origin_y, part_count, pi;
         if (type_id >= wv.entity_type_count) {
+            continue;
+        }
+        if (player_type >= 0 && (int)type_id == player_type) {
             continue;
         }
         trec = types + (size_t)type_id * R01E_CART_ENTITY_TYPE_SIZE;
@@ -280,13 +354,13 @@ void r01e_play_tick(R01eMachine *m) {
 
     if (dx != 0) {
         int nx = pl->player_x + dx;
-        if (player_aabb_ok(m, nx, pl->player_y)) {
+        if (player_move_ok(m, nx, pl->player_y)) {
             pl->player_x = nx;
         }
     }
     if (dy != 0) {
         int ny = pl->player_y + dy;
-        if (player_aabb_ok(m, pl->player_x, ny)) {
+        if (player_move_ok(m, pl->player_x, ny)) {
             pl->player_y = ny;
         }
     }

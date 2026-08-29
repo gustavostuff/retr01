@@ -62,6 +62,7 @@ typedef struct MetaspriteModalLayout {
     int left_label_y;
     int left_dots_x, left_dots_y;
     int left_grid_x, left_grid_y;
+    int right_name_x, right_name_y, right_name_w;
     int right_grid_x, right_grid_y;
     int pal_label_x, pal_label_y;
     int pal_x, pal_y;
@@ -72,11 +73,13 @@ typedef struct EntityModalLayout {
     int mx, my;
     int left_label_y;
     int left_list_x, left_list_y, left_list_h;
+    int right_ent_name_x, right_ent_name_y, right_ent_name_w;
     int right_state_y;
     int right_dots_x, right_dots_y;
     int right_name_x, right_name_y, right_name_w;
     int right_frame_y;
     int frame_dots_x, frame_dots_y;
+    int right_id_y;
     int right_grid_x, right_grid_y;
     int guides_x, guides_y;
     int pal_label_x, pal_label_y;
@@ -107,9 +110,15 @@ int ui_load_png_rgba(const char *path, uint8_t **out_px, int *out_w, int *out_h)
 int ui_paste_clipboard_png_tile(UiState *ui, uint8_t chr[R01_TILE_BYTES], int pal, int spr_plane);
 int snap8(int v);
 void ui_toast(UiState *ui, const char *msg, int is_error);
+void ui_tooltip_set(UiState *ui, int x, int y, const char *line1, const char *line2);
+void ui_tooltip_clear(UiState *ui);
+void draw_tooltip(UiState *ui, SDL_Renderer *r);
 void fill_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B);
 void draw_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B);
 void hover_overlay(SDL_Renderer *r, int x, int y, int w, int h);
+/* Draw text clipped to a rectangle (scissor). */
+void font_draw_clipped(SDL_Renderer *r, int x, int y, int clip_x, int clip_y, int clip_w, int clip_h,
+                       const char *text, Uint8 R, Uint8 G, Uint8 B);
 int point_in_rect(int lx, int ly, int x, int y, int w, int h);
 int label_width(const char *text);
 void draw_brush_preview(SDL_Renderer *r, const R01Project *p, int row, int pal, int color, int mx, int my);

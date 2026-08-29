@@ -159,6 +159,10 @@ int sprite_modal_handle(UiState *ui, int lx, int ly, int down) {
     if (!down) {
         return 1;
     }
+    if (ui_modal_overlay_hit(lx, ly, lo.mx, lo.my, UI_MODAL_W, UI_MODAL_H)) {
+        ui->sprite_edit.open = 0;
+        return 1;
+    }
     if (ui_palette_grid_hit(lx, ly, lo.pal_x, lo.pal_y, &pal, &col)) {
         ui->sprite_edit.color = col;
         ui->sprite_edit.pal = pal;

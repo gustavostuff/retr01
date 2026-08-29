@@ -28,8 +28,104 @@ void r01_entity_type_init(R01EntityType *e) {
     }
     memset(e, 0, sizeof(*e));
     e->present = 1;
+    strncpy(e->name, "Entity", R01_ENTITY_NAME_MAX - 1);
     e->state_count = 1;
     r01_entity_state_init(&e->states[0], "Idle");
+}
+
+void r01_id_slugify(char *dst, size_t cap, const char *src) {
+    size_t di = 0;
+    int prev_us = 1;
+    if (!dst || cap < 2) {
+        return;
+    }
+    dst[0] = '\0';
+    if (!src) {
+        strncpy(dst, "unnamed", cap - 1);
+        dst[cap - 1] = '\0';
+        return;
+    }
+    while (*src && di + 1 < cap) {
+        unsigned char c = (unsigned char)*src++;
+        if (c >= 'A' && c <= 'Z') {
+            c = (unsigned char)(c - 'A' + 'a');
+        }
+        if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+            dst[di++] = (char)c;
+            prev_us = 0;
+        } else if (!prev_us) {
+            dst[di++] = '_';
+            prev_us = 1;
+        }
+    }
+    while (di > 0 && dst[di - 1] == '_') {
+        di--;
+    }
+    if (di == 0) {
+        strncpy(dst, "unnamed", cap - 1);
+        dst[cap - 1] = '\0';
+        return;
+    }
+    dst[di] = '\0';
+}
+
+const char *r01_entity_display_name(const R01EntityType *e) {
+    if (!e) {
+        return "entity";
+    }
+    if (e->name[0]) {
+        return e->name;
+    }
+    if (e->state_count > 0 && e->states[0].name[0]) {
+        return e->states[0].name;
+    }
+    return "entity";
+}
+
+void r01_entity_type_id(char *dst, size_t cap, int world_idx, const R01EntityType *e) {
+    char slug[R01_ENTITY_NAME_MAX];
+    if (!dst || cap < 1) {
+        return;
+    }
+    r01_id_slugify(slug, sizeof(slug), r01_entity_display_name(e));
+    if (world_idx < 0) {
+        world_idx = 0;
+    }
+    /* IDs use 1-based world numbers to match the Worlds accordion labels. */
+    snprintf(dst, cap, "w_%02d_%s", world_idx + 1, slug);
+}
+
+void r01_entity_state_id(char *dst, size_t cap, int world_idx, const R01EntityType *e, int state_idx) {
+    char eslug[R01_ENTITY_NAME_MAX];
+    char sslug[R01_ENTITY_NAME_MAX];
+    const char *sname = "state";
+    if (!dst || cap < 1) {
+        return;
+    }
+    if (e && state_idx >= 0 && state_idx < e->state_count && e->states[state_idx].name[0]) {
+        sname = e->states[state_idx].name;
+    } else if (e) {
+        sname = r01_entity_default_state_name(state_idx);
+    }
+    r01_id_slugify(eslug, sizeof(eslug), r01_entity_display_name(e));
+    r01_id_slugify(sslug, sizeof(sslug), sname);
+    if (world_idx < 0) {
+        world_idx = 0;
+    }
+    snprintf(dst, cap, "w_%02d_%s_%s", world_idx + 1, eslug, sslug);
+}
+
+void r01_entity_frame_id(char *dst, size_t cap, int world_idx, const R01EntityType *e, int state_idx,
+                         int frame_idx) {
+    char base[R01_ID_MAX];
+    if (!dst || cap < 1) {
+        return;
+    }
+    r01_entity_state_id(base, sizeof(base), world_idx, e, state_idx);
+    if (frame_idx < 0) {
+        frame_idx = 0;
+    }
+    snprintf(dst, cap, "%s_frame_%02d", base, frame_idx);
 }
 
 int r01_world_entity_add(R01World *w) {
@@ -59,12 +155,35 @@ int r01_world_entity_remove(R01World *w, int type_idx) {
         }
         i++;
     }
+    if (w->player_entity == type_idx) {
+        w->player_entity = -1;
+    } else if (w->player_entity > type_idx) {
+        w->player_entity--;
+    }
     for (j = type_idx; j < w->entity_count - 1; j++) {
         w->entities[j] = w->entities[j + 1];
     }
     w->entity_count--;
     memset(&w->entities[w->entity_count], 0, sizeof(w->entities[0]));
     return 0;
+}
+
+void r01_world_set_player_entity(R01World *w, int type_idx) {
+    if (!w) {
+        return;
+    }
+    if (type_idx < 0 || type_idx >= w->entity_count) {
+        w->player_entity = -1;
+        return;
+    }
+    w->player_entity = type_idx;
+}
+
+int r01_world_player_entity(const R01World *w) {
+    if (!w || w->player_entity < 0 || w->player_entity >= w->entity_count) {
+        return -1;
+    }
+    return w->player_entity;
 }
 
 R01EntityType *r01_world_entity(R01World *w, int type_idx) {

@@ -30,10 +30,11 @@ int main(int argc, char **argv) {
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) {
                 running = 0;
-            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
-                running = 0;
             } else {
-                app_shell_handle_event(&app, &e);
+                int rc = app_shell_handle_event(&app, &e);
+                if (rc == 3) {
+                    running = 0;
+                }
             }
         }
         app_shell_frame(&app);

@@ -118,6 +118,38 @@ TEST_MAIN() {
         pl.player_x = before;
     }
 
+    /* Marked player hitbox is offset from the Play origin. */
+    {
+        int type_id;
+        int hx, hy, hw, hh;
+        int cell;
+        R01Screen *scr;
+        type_id = r01_world_entity_add(&p->worlds[0]);
+        EXPECT(type_id >= 0, "hitbox entity");
+        p->worlds[0].entities[type_id].states[0].origin_x = 4;
+        p->worlds[0].entities[type_id].states[0].origin_y = 4;
+        p->worlds[0].entities[type_id].states[0].hitbox_x = 0;
+        p->worlds[0].entities[type_id].states[0].hitbox_y = 0;
+        p->worlds[0].entities[type_id].states[0].hitbox_w = 8;
+        p->worlds[0].entities[type_id].states[0].hitbox_h = 8;
+        r01_world_set_player_entity(&p->worlds[0], type_id);
+        pl.player_x = R01_PLAY_SPAWN_CENTER_X(0);
+        pl.player_y = R01_PLAY_SPAWN_CENTER_Y(0);
+        r01_play_player_hit_rect(&p->worlds[0], pl.player_x, pl.player_y, &hx, &hy, &hw, &hh);
+        EXPECT(hx == pl.player_x - 4 && hy == pl.player_y - 4, "hitbox offset from origin");
+        EXPECT(hw == 8 && hh == 8, "hitbox size");
+        scr = &p->worlds[0].screens[r01_world_find_screen(&p->worlds[0], 0, 0)];
+        cell = ((hy % R01_SCREEN_PX_H) / 8) * R01_SCREEN_TILES_X + ((hx % R01_SCREEN_PX_W) / 8);
+        scr->attrs[cell] |= R01_ATTR_SOLID;
+        {
+            int before = pl.player_x;
+            r01_play_tick(&pl, p, -1, 0);
+            EXPECT(pl.player_x == before, "offset hitbox blocks via solid under box");
+        }
+        scr->attrs[cell] &= (uint8_t)~R01_ATTR_SOLID;
+        r01_world_set_player_entity(&p->worlds[0], -1);
+    }
+
     EXPECT(r01_oam_tile_off_screen(-8, 0), "oam fully left off");
     EXPECT(r01_oam_tile_off_screen(128, 0), "oam fully right off");
     EXPECT(r01_oam_tile_off_screen(0, -8), "oam fully above off");

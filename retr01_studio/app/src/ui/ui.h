@@ -58,11 +58,12 @@
 #define UI_SPRITES_BODY_H 96
 #define UI_SPRITE_ROW_H 16
 #define UI_SPRITE_ICON 8
+#define UI_PREVIEW_ICON 16 /* metasprite / entity sidebar + modal list thumbs */
 #define UI_METASPRITES_BODY_H 96
 #define UI_ENTITIES_BODY_H 96
 
 #define UI_ENTITY_MODAL_W 448
-#define UI_ENTITY_MODAL_H 336
+#define UI_ENTITY_MODAL_H 352
 #define UI_ENTITY_BANK_GRID 128 /* 16x16 tiles @ 8px */
 #define UI_ENTITY_COMPOSE 128   /* 16px @ 8x scale */
 #define UI_ENTITY_LIST_H 128
@@ -210,7 +211,6 @@ typedef struct UiEntityEdit {
     int drag_meta;   /* metasprite catalog idx when dragging */
     int drag_off_x;
     int drag_off_y;
-    int name_focus;
 } UiEntityEdit;
 
 typedef struct UiBrush {
@@ -230,6 +230,17 @@ typedef struct UiCatalogDrag {
     int off_y;
 } UiCatalogDrag;
 
+/* Single active text field (web-like caret / selection / scroll). */
+typedef struct UiTextEdit {
+    char *buf;
+    int cap;
+    int field_id; /* 0 = none; modal-specific otherwise */
+    int caret;
+    int anchor; /* selection other end; equals caret when collapsed */
+    int scroll; /* horizontal px */
+    int drag;   /* mouse-drag selecting */
+} UiTextEdit;
+
 typedef struct UiState {
     R01Project *project;
     R01PlayState play;
@@ -237,6 +248,10 @@ typedef struct UiState {
     char toast[96];
     Uint32 toast_until;
     int toast_error;
+    char tooltip[160];
+    int tooltip_x;
+    int tooltip_y;
+    int tooltip_active;
     int scale;
     Uint32 play_last_tick;
     Uint8 keys[512];
@@ -248,6 +263,7 @@ typedef struct UiState {
     UiSpriteEdit sprite_edit;
     UiMetaspriteEdit metasprite_edit;
     UiEntityEdit entity_edit;
+    UiTextEdit text;
     UiBrush brush;
     UiCatalogDrag catalog_drag;
     int paint_stamp_valid;
