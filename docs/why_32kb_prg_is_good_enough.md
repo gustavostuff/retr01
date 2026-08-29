@@ -1,4 +1,4 @@
-# why 32KB of PRG is good enough
+# Why 32KB of PRG is good enough
 
 Retr01 uses a fixed 32 KB PRG window at $8000-$FFFF.
 That is the same raw size many classic NES NROM titles used. On Retr01 it buys far more game logic.
@@ -14,9 +14,12 @@ That is the same raw size many classic NES NROM titles used. On Retr01 it buys f
 | PRG role | Code + data + rendering hacks | Mostly pure game logic and tables |
 
 On the NES a large fraction of the 32 KB (and of every frame's cycles) was spent just making the picture appear and scroll.
-On Retr01 those costs are already paid by the discrete-logic path and the two AVRs. The 32 KB PRG and the 133 kcycles/frame are therefore available almost entirely for gameplay systems.
+On Retr01 those costs are already paid by the discrete-logic path and the two AVRs. The 32 KB PRG and the 133K cycles/frame are therefore available almost entirely for gameplay systems.
 
-## What fits comfortably in 32 KB PRG
+## What fits in 32 KB PRG
+
+### This is what we can reasonably expect to fit in PRG, in the Retr01 context
+
 
 - 30-60 active entities with individual state machines, simple pathfinding or flocking, and data-driven behavior tables
 - Solid physics and collision: tile-based or soft-pixel, platforms, slopes, one-way platforms, multiple hitboxes per entity
