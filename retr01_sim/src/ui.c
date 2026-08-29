@@ -29,7 +29,7 @@ int r01s_ui_init(R01sUi *ui) {
     ui->show_cart_eeprom = 1;
     (void)font_ensure();
     snprintf(ui->status, sizeof(ui->status),
-             "SPACE pause. S save layout. R rotate. Sidebar: SCREEN / SCALE / SIM. COMPACT/ISLANDS");
+             "SPACE pause. S save layout. R rotate. G scale. Sidebar: SCALE / CART / pads. COMPACT/ISLANDS");
     return 0;
 }
 

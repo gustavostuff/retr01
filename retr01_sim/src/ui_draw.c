@@ -66,7 +66,14 @@ static void draw_health_dot(SDL_Renderer *r, int x, int y, R01sHealth h) {
 #define R01S_UI_CART_HDR_H R01S_UI_UNIT * 2
 #define R01S_UI_CART_BTN_H 16
 #define R01S_UI_CART_BTN_GAP 4
-#define R01S_UI_CART_H (R01S_UI_CART_HDR_H + 2 * R01S_UI_CART_BTN_H + R01S_UI_CART_BTN_GAP)
+#define R01S_UI_CART_BOTTOM_PAD R01S_UI_UNIT
+#define R01S_UI_CART_H                                                                                 \
+    (R01S_UI_CART_HDR_H + 2 * R01S_UI_CART_BTN_H + R01S_UI_CART_BTN_GAP + R01S_UI_CART_BOTTOM_PAD)
+#define R01S_UI_SCALE_HDR_H R01S_UI_UNIT * 2
+#define R01S_UI_SCALE_BTN_H 16
+#define R01S_UI_SCALE_BTN_GAP 4
+#define R01S_UI_SCALE_BOTTOM_PAD R01S_UI_UNIT
+#define R01S_UI_SCALE_H (R01S_UI_SCALE_HDR_H + R01S_UI_SCALE_BTN_H + R01S_UI_SCALE_BOTTOM_PAD)
 #define R01S_UI_SCREEN_MODE_N 3
 #define R01S_UI_PAD_BIT_STRIDE 11
 #define R01S_UI_PAD_GROUP_GAP 8
@@ -108,8 +115,12 @@ int sidebar_cart_content_y(const R01sUi *ui) {
     return sidebar_probe_content_y(ui) + R01S_UI_PROBE_H + 1 + R01S_UI_SEC_PAD;
 }
 
-static int sidebar_gp_content_y(const R01sUi *ui) {
+static int sidebar_scale_content_y(const R01sUi *ui) {
     return sidebar_cart_content_y(ui) + R01S_UI_CART_H + 1 + R01S_UI_SEC_PAD;
+}
+
+static int sidebar_gp_content_y(const R01sUi *ui) {
+    return sidebar_scale_content_y(ui) + R01S_UI_SCALE_H + 1 + R01S_UI_SEC_PAD;
 }
 
 static void sidebar_section_sep(SDL_Renderer *r, int y) {
@@ -164,6 +175,7 @@ int ui_screen_render_mode(const R01sUi *ui) {
 void ui_set_lcd_scale(R01sUi *ui, int scale_2x) {
     R01sBoard *board;
     R01sVideoSink *sink;
+    uint8_t touched[R01S_MAX_ISLANDS];
     if (!ui) {
         return;
     }
@@ -173,8 +185,28 @@ void ui_set_lcd_scale(R01sUi *ui, int scale_2x) {
     }
     sink = &board->video_sink;
     r01s_video_sink_set_scale_2x(sink, scale_2x ? 1 : 0);
+    memset(touched, 0, sizeof(touched));
     {
         int i;
+        for (i = 0; i < ui->chip_count; i++) {
+            R01sEntity *e = ui->chips[i];
+            int ii;
+            if (!e || e->visual != R01S_ENTITY_VIS_DISPLAY) {
+                continue;
+            }
+            ii = (int)ui->chip_island[i];
+            if (scale_2x && ii >= 0 && ii < R01S_MAX_ISLANDS) {
+                touched[ii] = 1;
+            }
+        }
+        if (scale_2x) {
+            for (i = 0; i < R01S_MAX_ISLANDS; i++) {
+                if (touched[i]) {
+                    /* Grow the video island so the larger SCR1 body still fits. */
+                    ui_expand_island_to_chips(ui, i);
+                }
+            }
+        }
         for (i = 0; i < ui->chip_count; i++) {
             R01sEntity *e = ui->chips[i];
             if (e && e->visual == R01S_ENTITY_VIS_DISPLAY) {
@@ -521,6 +553,20 @@ void sidebar_cart_btn_rect(const R01sUi *ui, int which, SDL_Rect *rc) {
                                 which * (R01S_UI_CART_BTN_H + R01S_UI_CART_BTN_GAP));
 }
 
+void sidebar_scale_btn_rect(const R01sUi *ui, int which, SDL_Rect *rc) {
+    /* which: 0 = 1X, 1 = 2X — side-by-side */
+    int gap = R01S_UI_SCALE_BTN_GAP;
+    int bw;
+    if (!rc) {
+        return;
+    }
+    bw = (R01S_UI_SIDEBAR_IW - gap) / 2;
+    rc->x = R01S_UI_SIDEBAR_TX + which * (bw + gap);
+    rc->w = bw;
+    rc->h = R01S_UI_SCALE_BTN_H;
+    rc->y = sidebar_sy(ui, sidebar_scale_content_y(ui) + R01S_UI_SCALE_HDR_H);
+}
+
 static void draw_cart_toggles(SDL_Renderer *r, const R01sUi *ui) {
     SDL_Rect rc;
     int cy = sidebar_sy(ui, sidebar_cart_content_y(ui));
@@ -530,6 +576,18 @@ static void draw_cart_toggles(SDL_Renderer *r, const R01sUi *ui) {
     draw_segment_btn(r, &rc, ui->show_cart_flash, "FLASH");
     sidebar_cart_btn_rect(ui, 1, &rc);
     draw_segment_btn(r, &rc, ui->show_cart_eeprom, "24C64");
+}
+
+static void draw_scale_control(SDL_Renderer *r, const R01sUi *ui) {
+    SDL_Rect rc;
+    int cy = sidebar_sy(ui, sidebar_scale_content_y(ui));
+    int scale2 = ui_lcd_scale_2x(ui);
+
+    font_draw(r, R01S_UI_SIDEBAR_TX, cy + 2, "SCALE", 150, 160, 140);
+    sidebar_scale_btn_rect(ui, 0, &rc);
+    draw_segment_btn(r, &rc, !scale2, "1X");
+    sidebar_scale_btn_rect(ui, 1, &rc);
+    draw_segment_btn(r, &rc, scale2, "2X");
 }
 
 static void draw_live_probe(SDL_Renderer *r, const R01sUi *ui, int py) {
@@ -1165,6 +1223,8 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
         int probe_py = sidebar_sy(ui, probe_cy);
         int cart_cy = sidebar_cart_content_y(ui);
         int cart_py = sidebar_sy(ui, cart_cy);
+        int scale_cy = sidebar_scale_content_y(ui);
+        int scale_py = sidebar_sy(ui, scale_cy);
         int gp_cy = sidebar_gp_content_y(ui);
         int gp_py = sidebar_sy(ui, gp_cy);
 
@@ -1174,6 +1234,8 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
         sidebar_section_sep(r, probe_py + R01S_UI_PROBE_H);
         draw_cart_toggles(r, ui);
         sidebar_section_sep(r, cart_py + R01S_UI_CART_H);
+        draw_scale_control(r, ui);
+        sidebar_section_sep(r, scale_py + R01S_UI_SCALE_H);
         draw_gamepad_panel(r, ui, 0);
         sidebar_section_sep(r, gp_py + GP_PANEL_H);
         draw_gamepad_panel(r, ui, 1);

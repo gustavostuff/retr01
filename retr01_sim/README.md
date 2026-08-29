@@ -128,7 +128,7 @@ scripts/run-sim rom/test.retr01
 # or: ./build/retr01_sim /path/to/cart.retr01
 ```
 
-**Controls:** `Space` pause/resume * `Ctrl+R` reset * `R` rotate selected IC * **SCALE 1X/2X** (left sidebar button or `G`, default **1x**) * `.` single-step (while paused) * **COMPACT / ISLANDS** (HUD) * **left-drag chip** move * **right-click chip** orient H/V * **left-drag empty island** move frame * **bottom-right grip** resize * **Shift+arrows / wheel / middle-drag** pan * `Esc` quit.
+**Controls:** `Space` pause/resume * `Ctrl+R` reset * `R` rotate selected IC * **SCALE 1X/2X** (left sidebar or `G`; **2X** grows the video island to fit SCR1) * `.` single-step (while paused) * **COMPACT / ISLANDS** (HUD) * **left-drag chip** move * **right-click chip** orient H/V * **left-drag empty island** move frame * **bottom-right grip** resize * **Shift+arrows / wheel / middle-drag** pan * `Esc` quit.
 
 **Layout persistence:** island frames + chip positions saved to `retr01_sim/ui_layout.json` (override with `R01S_LAYOUT`).
 

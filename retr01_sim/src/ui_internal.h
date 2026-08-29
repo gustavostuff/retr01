@@ -17,15 +17,6 @@
 #define R01S_UI_PIN_GRAY_G 179
 #define R01S_UI_PIN_GRAY_B 204
 
-#define R01S_LCD_CTRL_BTN_H R01S_UI_UNIT * 2
-#define R01S_LCD_CTRL_PAD_X 0
-#define R01S_LCD_CTRL_PAD_Y 0
-#define R01S_LCD_CTRL_GAP R01S_UI_UNIT / 2
-#define R01S_LCD_CTRL_BTN_N 4
-#define R01S_LCD_CTRL_BTN_W 24
-#define R01S_LCD_CTRL_BG_A_IDLE 64
-#define R01S_LCD_CTRL_BG_A_HOT 255
-
 #define R01S_UI_STATUS_ROW_H 16
 
 static inline int ui_board_sx(const R01sUi *ui, int board_x) {
@@ -64,11 +55,11 @@ void pin_level_rgb(R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg, Uint8 *p
 void draw_segment_btn(SDL_Renderer *r, const SDL_Rect *rc, int selected, const char *label);
 void draw_led(SDL_Renderer *r, int x, int y, int on, Uint8 R, Uint8 G, Uint8 B, const char *label);
 void draw_board_item(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e, int selected);
-void display_ctrl_btn_rect(const R01sUi *ui, const R01sEntity *e, int btn, SDL_Rect *rc);
 void draw_video_pixels(SDL_Renderer *r, R01sUi *ui, R01sVideoSink *sink, int px, int py, int dw, int dh);
 
 /* ui_placement.c */
 void clamp_chip(R01sUi *ui, R01sEntity *e, int island_index);
+void ui_expand_island_to_chips(R01sUi *ui, int island_index);
 void move_chip_drag(R01sUi *ui, int chip_i, int board_mx, int board_my);
 int ui_sel_count(const R01sUi *ui);
 void ui_sel_clear(R01sUi *ui);
@@ -96,6 +87,7 @@ int ui_chip_hidden(const R01sUi *ui, const R01sEntity *e);
 int radio_hit(const SDL_Rect *rc, int mx, int my);
 void sidebar_probe_quiet_btn_rect(const R01sUi *ui, int probe_py, SDL_Rect *rc);
 void sidebar_cart_btn_rect(const R01sUi *ui, int which, SDL_Rect *rc);
+void sidebar_scale_btn_rect(const R01sUi *ui, int which, SDL_Rect *rc);
 int sidebar_hit(int lx, int ly);
 void sidebar_clamp_scroll(R01sUi *ui);
 int sidebar_probe_content_y(const R01sUi *ui);

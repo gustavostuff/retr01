@@ -716,6 +716,36 @@ static void ui_tighten_island_to_chips(R01sUi *ui, int island_index) {
     island->board_h = r01s_grid_snap_up(min_h);
 }
 
+/* Grow island so all chips fit; never shrinks. Used when SCR1 scales to 2x. */
+void ui_expand_island_to_chips(R01sUi *ui, int island_index) {
+    R01sIsland *island;
+    int min_w;
+    int min_h;
+
+    if (!ui || !ui->group) {
+        return;
+    }
+    island = r01s_island_group_at_mut(ui->group, island_index);
+    if (!island) {
+        return;
+    }
+    island_content_min_size(ui, island_index, &min_w, &min_h);
+    if (min_w < R01S_ISLAND_MIN_W) {
+        min_w = R01S_ISLAND_MIN_W;
+    }
+    if (min_h < R01S_ISLAND_MIN_H) {
+        min_h = R01S_ISLAND_MIN_H;
+    }
+    min_w = r01s_grid_snap_up(min_w);
+    min_h = r01s_grid_snap_up(min_h);
+    if (island->board_w < min_w) {
+        island->board_w = min_w;
+    }
+    if (island->board_h < min_h) {
+        island->board_h = min_h;
+    }
+}
+
 /* Shelf-pack chips inside one island so they never share the same cell. */
 static void ui_pack_island_chips(R01sUi *ui, int island_index) {
     R01sIsland *island;

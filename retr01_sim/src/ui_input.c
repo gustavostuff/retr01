@@ -417,31 +417,6 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             }
         }
 
-        /* LCD overlay controls (inside SCR1 framebuffer). */
-        {
-            int ci;
-            for (ci = 0; ci < ui->chip_count; ci++) {
-                R01sEntity *e = ui->chips[ci];
-                int b;
-                if (!e || e->visual != R01S_ENTITY_VIS_DISPLAY) {
-                    continue;
-                }
-                for (b = 0; b < R01S_LCD_CTRL_BTN_N; b++) {
-                    SDL_Rect rc;
-                    display_ctrl_btn_rect(ui, e, b, &rc);
-                    if (logic_x >= rc.x && logic_x < rc.x + rc.w && logic_y >= rc.y &&
-                        logic_y < rc.y + rc.h) {
-                        if (b < 2) {
-                            ui_set_screen_render_mode(ui, b + 1);
-                        } else {
-                            ui_set_lcd_scale(ui, b == 3);
-                        }
-                        return 1;
-                    }
-                }
-            }
-        }
-
         /* STATUS: copy WARN/FAIL rows or system header to clipboard. */
         if (sidebar_hit(logic_x, logic_y) && ui_health_copy_at(ui, logic_x, logic_y)) {
             return 1;
@@ -482,6 +457,21 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 }
                 snprintf(ui->status, sizeof(ui->status),
                          ui->show_cart_eeprom ? "Cart 24C64 (U50) shown" : "Cart 24C64 (U50) hidden");
+                return 1;
+            }
+        }
+
+        /* SCALE: 1X / 2X LCD preview. */
+        if (sidebar_hit(logic_x, logic_y) && r01s_board_from_group(ui->group)) {
+            SDL_Rect rc;
+            sidebar_scale_btn_rect(ui, 0, &rc);
+            if (radio_hit(&rc, logic_x, logic_y)) {
+                ui_set_lcd_scale(ui, 0);
+                return 1;
+            }
+            sidebar_scale_btn_rect(ui, 1, &rc);
+            if (radio_hit(&rc, logic_x, logic_y)) {
+                ui_set_lcd_scale(ui, 1);
                 return 1;
             }
         }
