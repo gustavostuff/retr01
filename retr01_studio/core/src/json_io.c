@@ -4,6 +4,7 @@
 #include "retr01_studio/palette.h"
 #include "retr01_studio/sprites.h"
 #include "retr01_studio/entities.h"
+#include "retr01_studio/metasprites.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -298,7 +299,6 @@ static void set_err(char *err_buf, size_t err_cap, const char *msg) {
 int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, size_t err_cap) {
     FILE *f;
     const R01World *w;
-    int wi;
     int i;
     int wrote = 0;
     if (!p || !path) {
@@ -308,11 +308,12 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
     if (r01_path_ensure_parent(path, err_buf, err_cap) != 0) {
         return -1;
     }
-    wi = p->active_world;
-    if (wi < 0 || wi >= R01_MAX_WORLDS) {
-        wi = 0;
+    /* Persist world 0 only — load always applies the file into worlds[0]. */
+    w = r01_project_world0_const(p);
+    if (!w) {
+        set_err(err_buf, err_cap, "bad project");
+        return -1;
     }
-    w = &p->worlds[wi];
     f = fopen(path, "w");
     if (!f) {
         set_err(err_buf, err_cap, "cannot write json");
@@ -394,6 +395,23 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
             const R01SpriteDef *sp = &w->sprites[si];
             fprintf(f, "    {\"bank\": %d, \"tile\": %d, \"pal\": %d}%s\n", sp->bank, sp->tile_id, sp->pal,
                     si + 1 < w->sprite_count ? "," : "");
+        }
+    }
+    fprintf(f, "  ],\n");
+    fprintf(f, "  \"metasprites\": [\n");
+    {
+        int mi;
+        for (mi = 0; mi < w->metasprite_count; mi++) {
+            const R01MetaspriteDef *ms = &w->metasprites[mi];
+            const R01EntityFrame *fr = &ms->frame;
+            int pi;
+            fprintf(f, "    {\"name\": \"%s\", \"parts\": [", ms->name);
+            for (pi = 0; pi < fr->part_count; pi++) {
+                const R01EntityPart *pt = &fr->parts[pi];
+                fprintf(f, "%s{\"bank\":%d,\"tile\":%d,\"pal\":%d,\"fh\":%d,\"fv\":%d,\"dx\":%d,\"dy\":%d}",
+                        pi ? "," : "", pt->bank, pt->tile_id, pt->pal, pt->flip_h, pt->flip_v, pt->dx, pt->dy);
+            }
+            fprintf(f, "]}%s\n", mi + 1 < w->metasprite_count ? "," : "");
         }
     }
     fprintf(f, "  ],\n");
@@ -809,6 +827,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
             const char *spr_end = json_array_end(spr_section);
             int bi = 0;
             w->sprite_count = 0;
+            w->metasprite_count = 0;
             for (bi = 0; bi < R01_SPR_BANKS; bi++) {
                 memset(w->spr_banks[bi].chr, 0, R01_BANK_CHR_BYTES);
                 w->spr_banks[bi].tile_count = 0;
@@ -877,6 +896,80 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         if (r01_world_sprite_add(w, bank, tile, pal) < 0) {
                             break;
                         }
+                        obj2 = strchr(end + 1, '{');
+                    }
+                }
+            }
+            {
+                const char *meta_sec = json_find(buf, "\"metasprites\":");
+                const char *meta_end = json_array_end(meta_sec);
+                if (meta_sec && meta_end) {
+                    const char *obj2 = strchr(meta_sec, '{');
+                    while (obj2 && obj2 < meta_end && w->metasprite_count < R01_MAX_METASPRITES) {
+                        const char *end = json_object_end(obj2);
+                        size_t olen;
+                        char *slice;
+                        char *name_str;
+                        const char *parts_sec;
+                        const char *parts_end;
+                        const char *pt_obj;
+                        int midx;
+                        R01MetaspriteDef *ms;
+                        if (!end || end >= meta_end) {
+                            break;
+                        }
+                        olen = (size_t)(end - obj2 + 1);
+                        slice = (char *)malloc(olen + 1u);
+                        if (!slice) {
+                            break;
+                        }
+                        memcpy(slice, obj2, olen);
+                        slice[olen] = '\0';
+                        midx = r01_world_metasprite_add(w);
+                        if (midx < 0) {
+                            free(slice);
+                            break;
+                        }
+                        ms = &w->metasprites[midx];
+                        name_str = json_string_field_dup(slice, "\"name\"");
+                        if (name_str && name_str[0]) {
+                            strncpy(ms->name, name_str, R01_ENTITY_NAME_MAX - 1);
+                        }
+                        free(name_str);
+                        parts_sec = json_find(slice, "\"parts\"");
+                        parts_end = json_array_end(parts_sec);
+                        if (parts_sec && parts_end) {
+                            pt_obj = strchr(parts_sec, '{');
+                            while (pt_obj && pt_obj < parts_end &&
+                                   ms->frame.part_count < R01_ENTITY_PARTS_MAX) {
+                                const char *pt_end = strchr(pt_obj, '}');
+                                size_t pt_len;
+                                char *pt_slice;
+                                R01EntityPart part;
+                                if (!pt_end || pt_end >= parts_end) {
+                                    break;
+                                }
+                                pt_len = (size_t)(pt_end - pt_obj + 1);
+                                pt_slice = (char *)malloc(pt_len + 1u);
+                                if (!pt_slice) {
+                                    break;
+                                }
+                                memcpy(pt_slice, pt_obj, pt_len);
+                                pt_slice[pt_len] = '\0';
+                                memset(&part, 0, sizeof(part));
+                                json_int_after(pt_slice, "\"bank\"", &part.bank);
+                                json_int_after(pt_slice, "\"tile\"", &part.tile_id);
+                                json_int_after(pt_slice, "\"pal\"", &part.pal);
+                                json_int_after(pt_slice, "\"fh\"", &part.flip_h);
+                                json_int_after(pt_slice, "\"fv\"", &part.flip_v);
+                                json_int_after(pt_slice, "\"dx\"", &part.dx);
+                                json_int_after(pt_slice, "\"dy\"", &part.dy);
+                                free(pt_slice);
+                                (void)r01_metasprite_add_part(ms, &part);
+                                pt_obj = strchr(pt_end + 1, '{');
+                            }
+                        }
+                        free(slice);
                         obj2 = strchr(end + 1, '{');
                     }
                 }
@@ -1088,6 +1181,8 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
     } else {
         r01_project_select_start_screen(p);
     }
+    /* File data lives in world 0; show that world after load. */
+    p->active_world = 0;
     free(buf);
     return 0;
 }

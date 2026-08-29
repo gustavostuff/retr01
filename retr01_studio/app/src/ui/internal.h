@@ -17,6 +17,9 @@ typedef struct AccordionLayout {
     int sprites_hdr_y;
     int sprites_body_y;
     int sprites_open;
+    int metasprites_hdr_y;
+    int metasprites_body_y;
+    int metasprites_open;
     int entities_hdr_y;
     int entities_body_y;
     int entities_open;
@@ -53,18 +56,30 @@ typedef struct SpriteModalLayout {
     int btn_y, save_w, cancel_w;
 } SpriteModalLayout;
 
-typedef struct EntityModalLayout {
+typedef struct MetaspriteModalLayout {
     int mx, my;
     int left_label_y;
     int left_dots_x, left_dots_y;
     int left_grid_x, left_grid_y;
+    int right_grid_x, right_grid_y;
+    int pal_label_x, pal_label_y;
+    int pal_x, pal_y;
+    int btn_y, save_w, cancel_w;
+} MetaspriteModalLayout;
+
+typedef struct EntityModalLayout {
+    int mx, my;
+    int left_label_y;
+    int left_list_x, left_list_y, left_list_h;
     int right_state_y;
     int right_dots_x, right_dots_y;
     int right_name_x, right_name_y, right_name_w;
     int right_frame_y;
     int frame_dots_x, frame_dots_y;
     int right_grid_x, right_grid_y;
-    int radio_x, radio_y;
+    int guides_x, guides_y;
+    int pal_label_x, pal_label_y;
+    int pal_x, pal_y;
     int btn_y, save_w, cancel_w;
 } EntityModalLayout;
 
@@ -74,6 +89,9 @@ extern int g_radio_h;
 extern uint8_t *g_dot_rgba;
 extern int g_dot_w;
 extern int g_dot_h;
+extern uint8_t *g_checkbox_rgba;
+extern int g_checkbox_w;
+extern int g_checkbox_h;
 extern uint8_t *g_cross_rgba;
 extern int g_cross_w;
 extern int g_cross_h;
@@ -91,6 +109,11 @@ void hover_overlay(SDL_Renderer *r, int x, int y, int w, int h);
 int point_in_rect(int lx, int ly, int x, int y, int w, int h);
 int label_width(const char *text);
 void draw_radio_sprite(SDL_Renderer *r, int dx, int dy, int selected);
+void draw_checkbox_sprite(SDL_Renderer *r, int dx, int dy, int checked);
+void draw_spr_palette_grid(SDL_Renderer *r, const R01Project *p, int row, int pal_x, int pal_y, int sel_pal,
+                           int sel_color);
+int spr_palette_hit(int lx, int ly, int pal_x, int pal_y, int *out_pal, int *out_color);
+void draw_brush_preview(SDL_Renderer *r, const R01Project *p, int row, int pal, int color, int mx, int my);
 void draw_dot_strip(SDL_Renderer *r, int x, int y, int count, int selected, int unlocked_count);
 int dot_strip_hit(int lx, int ly, int x, int y, int count, int *out_idx);
 void draw_ui_cross(SDL_Renderer *r, int cx, int cy);
@@ -116,6 +139,7 @@ void draw_accordion_header(SDL_Renderer *r, int y, const char *title, int open, 
 void tile_modal_layout(TileModalLayout *lo);
 void pal_modal_layout(PalModalLayout *lo);
 void sprite_modal_layout(SpriteModalLayout *lo);
+void metasprite_modal_layout(MetaspriteModalLayout *lo);
 void entity_modal_layout(EntityModalLayout *lo);
 int play_btn_w(const UiState *ui);
 int play_btn_x(const UiState *ui);
@@ -123,6 +147,8 @@ int play_btn_y(void);
 int play_button_hit(const UiState *ui, int lx, int ly);
 int sprites_list_hit(const UiState *ui, int lx, int ly, int *out_catalog_idx);
 int sprites_add_hit(const UiState *ui, int lx, int ly);
+int metasprites_list_hit(const UiState *ui, int lx, int ly, int *out_idx);
+int metasprites_add_hit(const UiState *ui, int lx, int ly);
 int entities_list_hit(const UiState *ui, int lx, int ly, int *out_type_idx);
 int entities_add_hit(const UiState *ui, int lx, int ly);
 
@@ -145,6 +171,7 @@ void menu_close(UiState *ui);
 void menu_open_tile(UiState *ui, int x, int y, int tx, int ty);
 void menu_open_world_cell(UiState *ui, int x, int y, int screen_idx);
 void menu_open_sprite(UiState *ui, int x, int y, int catalog_idx);
+void menu_open_metasprite(UiState *ui, int x, int y, int meta_idx);
 void menu_open_entity(UiState *ui, int x, int y, int type_idx);
 int menu_hit(const UiState *ui, int lx, int ly, int *out_item, int *out_sub);
 void menu_update_hover(UiState *ui, int lx, int ly);
@@ -191,10 +218,17 @@ int sprite_modal_handle(UiState *ui, int lx, int ly, int down);
 void draw_sprite_modal(UiState *ui, SDL_Renderer *r);
 
 /* ui/modals/entity_edit.c */
+void metasprite_edit_open_new(UiState *ui);
+void metasprite_edit_open(UiState *ui, int meta_idx);
+int metasprite_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button);
+void metasprite_modal_drag(UiState *ui, int lx, int ly, Uint32 buttons);
+void metasprite_modal_key(UiState *ui, SDL_Keycode sym);
+void draw_metasprite_modal(UiState *ui, SDL_Renderer *r);
+
 void entity_edit_open_new(UiState *ui);
 void entity_edit_open(UiState *ui, int type_idx);
-int entity_modal_handle(UiState *ui, int lx, int ly, int down);
-void entity_modal_drag(UiState *ui, int lx, int ly);
+int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button);
+void entity_modal_drag(UiState *ui, int lx, int ly, Uint32 buttons);
 void entity_modal_key(UiState *ui, SDL_Keycode sym);
 void draw_entity_modal(UiState *ui, SDL_Renderer *r);
 

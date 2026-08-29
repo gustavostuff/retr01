@@ -5,6 +5,7 @@
 #include "retr01_studio/cart.h"
 #include "retr01_studio/chr_pack.h"
 #include "retr01_studio/entities.h"
+#include "retr01_studio/metasprites.h"
 #include "retr01_studio/json_io.h"
 #include "retr01_studio/palette.h"
 #include "retr01_studio/play.h"
@@ -274,6 +275,21 @@ void draw_catalog_drag_ghost(UiState *ui, SDL_Renderer *r) {
         pt.bank = sp->bank;
         pt.tile_id = sp->tile_id;
         pt.pal = sp->pal;
+        draw_spr_tile_px(ui, r, w, &pt, ui->mouse_x - ui->catalog_drag.off_x, ui->mouse_y - ui->catalog_drag.off_y,
+                         UI_SCREEN_SCALE);
+    } else if (ui->catalog_drag.active == UI_CATALOG_DRAG_METASPRITE) {
+        const R01MetaspriteDef *ms;
+        int i, gx, gy;
+        if (ui->catalog_drag.index < 0 || ui->catalog_drag.index >= w->metasprite_count) {
+            return;
+        }
+        ms = &w->metasprites[ui->catalog_drag.index];
+        gx = ui->mouse_x - ui->catalog_drag.off_x;
+        gy = ui->mouse_y - ui->catalog_drag.off_y;
+        for (i = 0; i < ms->frame.part_count; i++) {
+            draw_spr_tile_px(ui, r, w, &ms->frame.parts[i], gx + ms->frame.parts[i].dx * UI_SCREEN_SCALE,
+                             gy + ms->frame.parts[i].dy * UI_SCREEN_SCALE, UI_SCREEN_SCALE);
+        }
     } else if (ui->catalog_drag.active == UI_CATALOG_DRAG_ENTITY) {
         const R01EntityType *ent;
         if (ui->catalog_drag.index < 0 || ui->catalog_drag.index >= w->entity_count) {
@@ -285,9 +301,9 @@ void draw_catalog_drag_ghost(UiState *ui, SDL_Renderer *r) {
             return;
         }
         pt = ent->states[0].frames[0].parts[0];
+        draw_spr_tile_px(ui, r, w, &pt, ui->mouse_x - ui->catalog_drag.off_x, ui->mouse_y - ui->catalog_drag.off_y,
+                         UI_SCREEN_SCALE);
     } else {
         return;
     }
-    draw_spr_tile_px(ui, r, w, &pt, ui->mouse_x - ui->catalog_drag.off_x, ui->mouse_y - ui->catalog_drag.off_y,
-                     UI_SCREEN_SCALE);
 }

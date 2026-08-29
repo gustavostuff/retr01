@@ -40,6 +40,12 @@ int ui_init(UiState *ui) {
             "assets/ui_cross.png",
             NULL,
         };
+        static const char *const checkbox_paths[] = {
+            R01_STUDIO_ASSETS_DIR "/checkbox.png",
+            "retr01_studio/assets/checkbox.png",
+            "assets/checkbox.png",
+            NULL,
+        };
         int i;
         for (i = 0; radio_paths[i]; i++) {
             if (ui_load_png_rgba(radio_paths[i], &g_radio_rgba, &g_radio_w, &g_radio_h) == 0) {
@@ -53,6 +59,11 @@ int ui_init(UiState *ui) {
         }
         for (i = 0; cross_paths[i]; i++) {
             if (ui_load_png_rgba(cross_paths[i], &g_cross_rgba, &g_cross_w, &g_cross_h) == 0) {
+                break;
+            }
+        }
+        for (i = 0; checkbox_paths[i]; i++) {
+            if (ui_load_png_rgba(checkbox_paths[i], &g_checkbox_rgba, &g_checkbox_w, &g_checkbox_h) == 0) {
                 break;
             }
         }

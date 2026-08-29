@@ -45,6 +45,8 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
         draw_pal_modal(ui, r);
     } else if (ui->sprite_edit.open) {
         draw_sprite_modal(ui, r);
+    } else if (ui->metasprite_edit.open) {
+        draw_metasprite_modal(ui, r);
     } else if (ui->entity_edit.open) {
         draw_entity_modal(ui, r);
     } else if (ui->tile_edit.open) {

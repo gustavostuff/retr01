@@ -1,6 +1,7 @@
 #ifndef retr01_STUDIO_UI_H
 #define retr01_STUDIO_UI_H
 
+#include "retr01_studio/metasprites.h"
 #include "retr01_studio/play.h"
 #include "retr01_studio/project.h"
 
@@ -51,27 +52,27 @@
 #define UI_ACC_WORLDS 0
 #define UI_ACC_PALS 1
 #define UI_ACC_SPRITES 2
-#define UI_ACC_ENTITIES 3
+#define UI_ACC_METASPRITES 3
+#define UI_ACC_ENTITIES 4
 
 #define UI_SPRITES_BODY_H 96
 #define UI_SPRITE_ROW_H 16
 #define UI_SPRITE_ICON 8
+#define UI_METASPRITES_BODY_H 96
 #define UI_ENTITIES_BODY_H 96
 
 #define UI_ENTITY_MODAL_W 448
-#define UI_ENTITY_MODAL_H 300
+#define UI_ENTITY_MODAL_H 320
 #define UI_ENTITY_BANK_GRID 128 /* 16x16 tiles @ 8px */
 #define UI_ENTITY_COMPOSE 128   /* 16px @ 8x scale */
+#define UI_ENTITY_LIST_H 128
 #define UI_DOT_SIZE 8
 #define UI_DOT_GAP 4
 #define UI_DOT_STRIP_N 4
 
-#define UI_DRAG_SPRITES 0
-#define UI_DRAG_HITBOX 1
-#define UI_DRAG_PAINT 2
-
 #define UI_CATALOG_DRAG_SPRITE 1
-#define UI_CATALOG_DRAG_ENTITY 2
+#define UI_CATALOG_DRAG_METASPRITE 2
+#define UI_CATALOG_DRAG_ENTITY 3
 
 #define UI_MAIN_W (UI_LOGIC_W - UI_SIDEBAR_W)
 #define UI_SCREEN_SCALE 2
@@ -81,6 +82,7 @@
 #define UI_MODE_ROW_H UI_BTN_H
 #define UI_MODE_RADIO 8
 #define UI_MODE_GAP 4
+#define UI_CHECKBOX 8
 
 #define UI_SCREEN_MODE_SEL 0
 #define UI_SCREEN_MODE_PAINT 1
@@ -103,7 +105,8 @@
 #define UI_MENU_KIND_TILE 1
 #define UI_MENU_KIND_WORLD 2
 #define UI_MENU_KIND_SPRITE 3
-#define UI_MENU_KIND_ENTITY 4
+#define UI_MENU_KIND_METASPRITE 4
+#define UI_MENU_KIND_ENTITY 5
 #define UI_MENU_SUB_NONE 0
 #define UI_MENU_SUB_BANK 1
 #define UI_MENU_SUB_PAL 2
@@ -129,6 +132,7 @@ typedef struct UiMenu {
     int screen_tx, screen_ty;
     int world_screen_idx;
     int sprite_catalog_idx;
+    int metasprite_idx;
     int entity_type_idx;
 } UiMenu;
 
@@ -170,23 +174,39 @@ typedef struct UiSpriteEdit {
     uint8_t chr[R01_TILE_BYTES];
 } UiSpriteEdit;
 
+typedef struct UiMetaspriteEdit {
+    int open;
+    int is_new;
+    int meta_idx; /* -1 when creating */
+    R01MetaspriteDef draft;
+    int bank;
+    int sel_part;
+    int paint_color;
+    int paint_pal;
+    int dragging; /* 0 none, 1 part, 4 bank tile ghost, 5 paint stroke */
+    int drag_tile;
+    int drag_off_x;
+    int drag_off_y;
+} UiMetaspriteEdit;
+
 typedef struct UiEntityEdit {
     int open;
     int is_new;
     int type_idx; /* -1 when creating; commit on save */
     R01EntityType draft;
-    int bank;       /* left picker bank 0..3 */
     int state;      /* 0..3; UI locks to 0 for now */
     int frame;      /* 0..3 */
-    int drag_mode;  /* UI_DRAG_SPRITES, UI_DRAG_HITBOX, or UI_DRAG_PAINT */
     int sel_part;   /* -1 or index in current frame */
-    int paint_color; /* 0..3 when paint mode */
-    int dragging;   /* 0 none, 1 part, 2 hitbox, 3 origin, 4 bank-sprite ghost */
-    int drag_tile;  /* tile id when dragging from bank */
+    int paint_color;
+    int paint_pal;
+    int show_guides; /* origin cross + hitbox */
+    int meta_scroll; /* left metasprite list */
+    int dragging;    /* 0 none, 1 part, 2 hitbox, 3 origin, 6 metasprite ghost, 5 paint */
+    int drag_meta;   /* metasprite catalog idx when dragging */
     int drag_off_x;
     int drag_off_y;
     int states_unlocked; /* 0 = only state 0 selectable */
-    int name_focus;      /* editing state name field */
+    int name_focus;
 } UiEntityEdit;
 
 typedef struct UiBrush {
@@ -200,7 +220,7 @@ typedef struct UiBrush {
 } UiBrush;
 
 typedef struct UiCatalogDrag {
-    int active; /* 0 none, UI_CATALOG_DRAG_SPRITE, UI_CATALOG_DRAG_ENTITY */
+    int active; /* 0 none, UI_CATALOG_DRAG_* */
     int index;
     int off_x;
     int off_y;
@@ -222,6 +242,7 @@ typedef struct UiState {
     UiTileEdit tile_edit;
     UiPalEdit pal_edit;
     UiSpriteEdit sprite_edit;
+    UiMetaspriteEdit metasprite_edit;
     UiEntityEdit entity_edit;
     UiBrush brush;
     UiCatalogDrag catalog_drag;
@@ -239,7 +260,8 @@ typedef struct UiState {
     int last_click_col;
     int last_click_row;
     int accordion_open; /* UI_ACC_* or UI_ACC_NONE */
-    int sprites_scroll; /* list scroll in rows */
+    int sprites_scroll;
+    int metasprites_scroll;
     int entities_scroll;
 } UiState;
 

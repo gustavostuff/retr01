@@ -8,6 +8,7 @@
 #include "retr01_studio/palette.h"
 #include "retr01_studio/project.h"
 #include "retr01_studio/entities.h"
+#include "retr01_studio/metasprites.h"
 #include "retr01_studio/sprites.h"
 
 #include <png.h>
@@ -232,6 +233,86 @@ static void draw_entity_icon(UiState *ui, SDL_Renderer *r, const R01World *w, co
     }
 }
 
+static void draw_metasprite_icon(UiState *ui, SDL_Renderer *r, const R01World *w, const R01MetaspriteDef *ms,
+                                 int dx, int dy) {
+    int i;
+    fill_rect(r, dx, dy, UI_SPRITE_ICON, UI_SPRITE_ICON, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
+    if (!ms || !w) {
+        return;
+    }
+    for (i = 0; i < ms->frame.part_count; i++) {
+        const R01EntityPart *pt = &ms->frame.parts[i];
+        const uint8_t *tile;
+        int row = w->default_pal_row;
+        int sy, sx;
+        if (row < 0 || row >= R01_PAL_ROWS) {
+            row = 0;
+        }
+        tile = r01_chr_spr_tile(w, pt->bank, pt->tile_id);
+        if (!tile) {
+            continue;
+        }
+        for (sy = 0; sy < 8; sy++) {
+            for (sx = 0; sx < 8; sx++) {
+                uint8_t col = r01_tile_pixel_color(tile, sx, sy);
+                uint8_t cr, cg, cb;
+                if (col == 0) {
+                    continue;
+                }
+                r01_kit_rgb(ui->project->global_pal_spr[row][pt->pal & 3].idx[col & 3u], &cr, &cg, &cb);
+                fill_rect(r, dx + sx + pt->dx, dy + sy + pt->dy, 1, 1, cr, cg, cb);
+            }
+        }
+    }
+}
+
+static void draw_metasprites_body(UiState *ui, SDL_Renderer *r, const AccordionLayout *lo) {
+    const R01World *w = r01_project_active_world_const(ui->project);
+    int lx = ui->mouse_x;
+    int ly = ui->mouse_y;
+    int add_y = lo->metasprites_body_y + UI_METASPRITES_BODY_H - UI_BTN_H;
+    int add_w = label_width("Add");
+    int add_hover = point_in_rect(lx, ly, UI_WORLDS_X + UI_UNIT, add_y, add_w, UI_BTN_H);
+    int vis = (UI_METASPRITES_BODY_H - UI_BTN_H) / UI_SPRITE_ROW_H;
+    int i;
+
+    fill_rect(r, 0, lo->metasprites_body_y, UI_SIDEBAR_W, UI_METASPRITES_BODY_H, UI_COL_PANEL_R, UI_COL_PANEL_G,
+              UI_COL_PANEL_B);
+
+    if (!w || w->metasprite_count < 1) {
+        font_draw_centered(r, 0, lo->metasprites_body_y, UI_SIDEBAR_W, UI_BTN_H * 2, "empty", 160, 160, 170);
+    } else {
+        int max_scroll = w->metasprite_count - vis;
+        if (max_scroll < 0) {
+            max_scroll = 0;
+        }
+        if (ui->metasprites_scroll > max_scroll) {
+            ui->metasprites_scroll = max_scroll;
+        }
+        if (ui->metasprites_scroll < 0) {
+            ui->metasprites_scroll = 0;
+        }
+        for (i = 0; i < vis; i++) {
+            int idx = ui->metasprites_scroll + i;
+            int y = lo->metasprites_body_y + i * UI_SPRITE_ROW_H;
+            const char *label;
+            int hover;
+            if (idx >= w->metasprite_count) {
+                break;
+            }
+            hover = point_in_rect(lx, ly, 0, y, UI_SIDEBAR_W, UI_SPRITE_ROW_H);
+            if (hover) {
+                fill_rect(r, 0, y, UI_SIDEBAR_W, UI_SPRITE_ROW_H, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
+            }
+            draw_metasprite_icon(ui, r, w, &w->metasprites[idx], UI_UNIT, y + (UI_SPRITE_ROW_H - UI_SPRITE_ICON) / 2);
+            label = w->metasprites[idx].name[0] ? w->metasprites[idx].name : "meta";
+            font_draw(r, UI_UNIT + UI_SPRITE_ICON + 4, y + 4, label, 230, 230, 230);
+        }
+    }
+
+    draw_button(r, UI_WORLDS_X + UI_UNIT, add_y, add_w, "Add", 1, add_hover);
+}
+
 static void draw_entities_body(UiState *ui, SDL_Renderer *r, const AccordionLayout *lo) {
     const R01World *w = r01_project_active_world_const(ui->project);
     int lx = ui->mouse_x;
@@ -302,13 +383,19 @@ void draw_sidebar(UiState *ui, SDL_Renderer *r) {
         draw_palettes(ui, r, &lo);
     }
 
-    draw_accordion_header(r, lo.sprites_hdr_y, "Game sprites", lo.sprites_open,
+    draw_accordion_header(r, lo.sprites_hdr_y, "Sprites", lo.sprites_open,
                           point_in_rect(lx, ly, 0, lo.sprites_hdr_y, UI_SIDEBAR_W, UI_BTN_H));
     if (lo.sprites_open) {
         draw_sprites_body(ui, r, &lo);
     }
 
-    draw_accordion_header(r, lo.entities_hdr_y, "Game entities", lo.entities_open,
+    draw_accordion_header(r, lo.metasprites_hdr_y, "Metasprites", lo.metasprites_open,
+                          point_in_rect(lx, ly, 0, lo.metasprites_hdr_y, UI_SIDEBAR_W, UI_BTN_H));
+    if (lo.metasprites_open) {
+        draw_metasprites_body(ui, r, &lo);
+    }
+
+    draw_accordion_header(r, lo.entities_hdr_y, "Entities", lo.entities_open,
                           point_in_rect(lx, ly, 0, lo.entities_hdr_y, UI_SIDEBAR_W, UI_BTN_H));
     if (lo.entities_open) {
         draw_entities_body(ui, r, &lo);

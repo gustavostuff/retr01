@@ -23,6 +23,8 @@
 #define R01_TILES_PER_BANK 256
 #define R01_TILE_BYTES 16
 #define R01_BANK_CHR_BYTES (R01_TILES_PER_BANK * R01_TILE_BYTES)
+/* SPR bank 0 tile reserved for cart/Play player stub (solid color-1). */
+#define R01_SPR_PLAYER_TILE_ID 1
 
 #define R01_MASTER_COLORS 64
 #define R01_PAL_COLORS 4
@@ -38,7 +40,7 @@
 
 #define R01_NAME_MAX 64
 #define R01_PATH_MAX 512
-#define R01_JSON_VER 5
+#define R01_JSON_VER 6
 
 #define R01_ROM_DIR "rom"
 #define R01_DEFAULT_PROJECT R01_ROM_DIR "/test.r01proj"
@@ -46,6 +48,7 @@
 
 /* Per-world sprite catalog (CHR patterns in spr_banks + authoring metadata). */
 #define R01_MAX_SPRITES 256
+#define R01_MAX_METASPRITES 64
 
 /* Entity types (docs/08). UI may lock state_count to 1; arrays sized for later. */
 #define R01_MAX_ENTITY_TYPES 64
@@ -113,6 +116,12 @@ typedef struct R01EntityFrame {
     int part_count;
 } R01EntityFrame;
 
+/* Reusable multi-part sprite group (no origin/hitbox). */
+typedef struct R01MetaspriteDef {
+    char name[R01_ENTITY_NAME_MAX];
+    R01EntityFrame frame;
+} R01MetaspriteDef;
+
 typedef struct R01EntityState {
     char name[R01_ENTITY_NAME_MAX]; /* project-only authoring label */
     int origin_x;
@@ -151,6 +160,8 @@ typedef struct R01World {
     R01SprBank spr_banks[R01_SPR_BANKS];
     R01SpriteDef sprites[R01_MAX_SPRITES];
     int sprite_count;
+    R01MetaspriteDef metasprites[R01_MAX_METASPRITES];
+    int metasprite_count;
     R01EntityType entities[R01_MAX_ENTITY_TYPES];
     int entity_count;
     R01EntityInstance instances[R01_MAX_ENTITY_INSTANCES];

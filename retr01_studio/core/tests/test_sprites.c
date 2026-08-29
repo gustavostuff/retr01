@@ -36,6 +36,9 @@ TEST_MAIN() {
     EXPECT(p->worlds[0].sprite_count == 1, "sprite count");
     EXPECT(p->worlds[0].sprites[0].pal == 2, "default pal");
 
+    id = r01_chr_alloc_spr_tile(&p->worlds[0], bank);
+    EXPECT(id == 2, "second alloc skips player tile 1");
+
     EXPECT(r01_world_sprite_set_pal(&p->worlds[0], 0, 3) == 0, "set pal");
     EXPECT(p->worlds[0].sprites[0].pal == 3, "pal updated");
 

@@ -126,10 +126,12 @@ void ui_reset_after_project_load(UiState *ui) {
     ui->tile_edit.open = 0;
     ui->pal_edit.open = 0;
     ui->sprite_edit.open = 0;
+    ui->metasprite_edit.open = 0;
     ui->entity_edit.open = 0;
     ui->menu.open = 0;
     ui->menu.submenu = UI_MENU_SUB_NONE;
     ui->sprites_scroll = 0;
+    ui->metasprites_scroll = 0;
     ui->entities_scroll = 0;
     ui->sel_instance = -1;
     ui->catalog_drag.active = 0;

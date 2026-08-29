@@ -53,11 +53,9 @@ TEST_MAIN() {
     tile[0] = 0xA5;
     tile[8] = 0x5A;
     EXPECT(r01_chr_write_spr_tile(w, bank, id, tile) == 0, "write spr0");
-    /* Tile 1 will be overwritten by cart player stub; use tile 2 for entity art. */
+    /* Tile 1 reserved for player stub — alloc skips to 2. */
     id = r01_chr_alloc_spr_tile(w, bank);
-    EXPECT(id == 1, "spr tile 1 alloc");
-    id = r01_chr_alloc_spr_tile(w, bank);
-    EXPECT(id == 2, "spr tile 2");
+    EXPECT(id == 2, "spr tile 2 skips reserved 1");
     memset(tile, 0, sizeof(tile));
     tile[0] = 0x3C;
     tile[8] = 0xC3;
@@ -72,6 +70,23 @@ TEST_MAIN() {
     w->entities[0].states[0].frames[0].parts[0].dy = 5;
     inst = r01_world_place_entity(w, type_id, 40, 50);
     EXPECT(inst == 0, "instance");
+
+    /* Legacy: art sitting on reserved tile 1 must relocate on export. */
+    {
+        R01EntityPart *pt;
+        memset(tile, 0, sizeof(tile));
+        tile[0] = 0x11;
+        tile[8] = 0x22;
+        EXPECT(r01_chr_write_spr_tile(w, bank, R01_SPR_PLAYER_TILE_ID, tile) == 0, "legacy tile1 art");
+        type_id = r01_world_entity_add(w);
+        EXPECT(type_id == 1, "legacy entity");
+        pt = &w->entities[type_id].states[0].frames[0].parts[0];
+        memset(pt, 0, sizeof(*pt));
+        pt->bank = 0;
+        pt->tile_id = R01_SPR_PLAYER_TILE_ID;
+        w->entities[type_id].states[0].frames[0].part_count = 1;
+        EXPECT(r01_world_place_entity(w, type_id, 10, 10) >= 0, "legacy inst");
+    }
 
     EXPECT(r01_cart_write(p, "test_cart.retr01", err, sizeof(err)) == 0, "cart write");
     {
@@ -118,15 +133,23 @@ TEST_MAIN() {
                 inst_n = hdr[R01_CART_WHDR_INST_COUNT];
                 off_types = rd_u24(hdr + R01_CART_WHDR_OFF_TYPES);
                 off_insts = rd_u24(hdr + R01_CART_WHDR_OFF_INSTS);
-                EXPECT(type_n == 1, "type count");
-                EXPECT(inst_n == 1, "inst count");
+                EXPECT(type_n == 2, "type count");
+                EXPECT(inst_n == 2, "inst count");
 
                 off_chr = rd_u24(hdr + 8);
                 /* SPR bank 0 starts after 4 BG banks. */
                 {
                     uint32_t spr0 = world_base + off_chr + 4u * R01_CHR_BANK_BYTES;
+                    uint8_t stub[R01_TILE_BYTES];
+                    uint8_t relocated[R01_TILE_BYTES];
                     memcpy(spr_tile2, img + spr0 + 2u * R01_TILE_BYTES, R01_TILE_BYTES);
                     EXPECT(spr_tile2[0] == 0x3C && spr_tile2[8] == 0xC3, "real spr CHR tile 2");
+                    memcpy(stub, img + spr0 + (size_t)R01_SPR_PLAYER_TILE_ID * R01_TILE_BYTES,
+                           R01_TILE_BYTES);
+                    EXPECT(stub[0] == 0xFF && stub[8] == 0x00, "player stub color-1 at tile 1");
+                    /* Legacy tile-1 art relocated to next free slot (tile_count was 3 → dest 3). */
+                    memcpy(relocated, img + spr0 + 3u * R01_TILE_BYTES, R01_TILE_BYTES);
+                    EXPECT(relocated[0] == 0x11 && relocated[8] == 0x22, "relocated tile1 art");
                 }
 
                 memcpy(trec, img + world_base + off_types, R01_CART_ENTITY_TYPE_SIZE);
@@ -134,6 +157,11 @@ TEST_MAIN() {
                 EXPECT(trec[2] == 1, "part count");
                 EXPECT(trec[4] == 2, "part tile");
                 EXPECT(trec[6] == 4 && trec[7] == 5, "part dx dy");
+
+                memcpy(trec, img + world_base + off_types + R01_CART_ENTITY_TYPE_SIZE,
+                       R01_CART_ENTITY_TYPE_SIZE);
+                EXPECT(trec[2] == 1, "legacy part count");
+                EXPECT(trec[4] == 3, "legacy tile remapped off player stub");
 
                 memcpy(irec, img + world_base + off_insts, R01_CART_INSTANCE_SIZE);
                 EXPECT(irec[0] == 0, "inst type");

@@ -3,6 +3,7 @@
 #include "retr01_studio/palette.h"
 #include "retr01_studio/prg_phase1.h"
 #include "retr01_studio/project.h"
+#include "retr01_studio/sprites.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -90,7 +91,8 @@ static uint8_t pack_oam_attr(int bank, int pal, int flip_h, int flip_v) {
     return a;
 }
 
-static void pack_entity_type_rec(uint8_t out[R01_CART_ENTITY_TYPE_SIZE], const R01EntityType *ent) {
+static void pack_entity_type_rec(uint8_t out[R01_CART_ENTITY_TYPE_SIZE], const R01EntityType *ent,
+                                 int remap_b0_tile1) {
     const R01EntityState *st;
     const R01EntityFrame *fr;
     int pi;
@@ -107,7 +109,11 @@ static void pack_entity_type_rec(uint8_t out[R01_CART_ENTITY_TYPE_SIZE], const R
     for (pi = 0; pi < (int)out[2]; pi++) {
         const R01EntityPart *pt = &fr->parts[pi];
         uint8_t *slot = out + 4 + pi * 4;
-        slot[0] = (uint8_t)pt->tile_id;
+        int tile = pt->tile_id;
+        if (remap_b0_tile1 >= 0 && pt->bank == 0 && pt->tile_id == R01_SPR_PLAYER_TILE_ID) {
+            tile = remap_b0_tile1;
+        }
+        slot[0] = (uint8_t)tile;
         slot[1] = pack_oam_attr(pt->bank, pt->pal, pt->flip_h, pt->flip_v);
         slot[2] = (uint8_t)(int8_t)pt->dx;
         slot[3] = (uint8_t)(int8_t)pt->dy;
@@ -217,12 +223,70 @@ static void fill_solid_tile(uint8_t tile[R01_TILE_BYTES], uint8_t color) {
     }
 }
 
+static int tile_nonzero(const uint8_t tile[R01_TILE_BYTES]) {
+    int i;
+    for (i = 0; i < R01_TILE_BYTES; i++) {
+        if (tile[i]) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int spr0_tile_referenced(const R01World *w, int tile_id) {
+    int ti, pi;
+    if (!w) {
+        return 0;
+    }
+    for (ti = 0; ti < w->entity_count; ti++) {
+        const R01EntityType *ent = &w->entities[ti];
+        const R01EntityFrame *fr;
+        if (ent->state_count < 1 || ent->states[0].frame_count < 1) {
+            continue;
+        }
+        fr = &ent->states[0].frames[0];
+        for (pi = 0; pi < fr->part_count; pi++) {
+            if (fr->parts[pi].bank == 0 && fr->parts[pi].tile_id == tile_id) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+/* Copy bank-0 tile 1 aside before the player stub overwrites it. Returns new id or -1. */
+static int relocate_spr0_tile1(uint8_t bank[R01_CHR_BANK_BYTES], const R01World *w) {
+    int dest;
+    const uint8_t *src = bank + (size_t)R01_SPR_PLAYER_TILE_ID * R01_TILE_BYTES;
+    if (!spr0_tile_referenced(w, R01_SPR_PLAYER_TILE_ID) && !tile_nonzero(src)) {
+        return -1;
+    }
+    dest = w->spr_banks[0].tile_count;
+    if (dest <= R01_SPR_PLAYER_TILE_ID) {
+        dest = R01_SPR_PLAYER_TILE_ID + 1;
+    }
+    if (dest >= R01_TILES_PER_BANK) {
+        for (dest = R01_SPR_PLAYER_TILE_ID + 1; dest < R01_TILES_PER_BANK; dest++) {
+            if (!spr0_tile_referenced(w, dest) &&
+                !tile_nonzero(bank + (size_t)dest * R01_TILE_BYTES)) {
+                break;
+            }
+        }
+        if (dest >= R01_TILES_PER_BANK) {
+            return -1;
+        }
+    }
+    memcpy(bank + (size_t)dest * R01_TILE_BYTES, src, R01_TILE_BYTES);
+    return dest;
+}
+
 static int build_world_blob(Buf *blob, const R01World *w) {
     uint8_t hdr[WORLD_HDR_SIZE];
     uint8_t dir[R01_MAX_SCREENS * SCREEN_DIR_ENT];
     size_t off_chr, off_sdir, off_spay, off_types, off_insts;
     int si, bi, present_n = 0;
     int type_n, inst_n;
+    int remap_b0_tile1 = -1;
     uint32_t payload_base;
 
     memset(hdr, 0, sizeof(hdr));
@@ -300,8 +364,10 @@ static int build_world_blob(Buf *blob, const R01World *w) {
         }
         memcpy(bank, w->spr_banks[bi].chr, n);
         if (bi == 0) {
-            /* Tile 1 reserved: solid color-1 player (Studio/emu/sim OAM slot 0). */
-            fill_solid_tile(bank + R01_TILE_BYTES, 1);
+            /* Tile 1 reserved: solid color-1 player (Studio/emu/sim OAM slot 0).
+             * Relocate any user art that still sits there (pre-reservation projects). */
+            remap_b0_tile1 = relocate_spr0_tile1(bank, w);
+            fill_solid_tile(bank + (size_t)R01_SPR_PLAYER_TILE_ID * R01_TILE_BYTES, 1);
         }
         if (buf_append(blob, bank, sizeof(bank)) != 0) {
             return -1;
@@ -342,7 +408,7 @@ static int build_world_blob(Buf *blob, const R01World *w) {
         int ti;
         for (ti = 0; ti < type_n; ti++) {
             uint8_t rec[R01_CART_ENTITY_TYPE_SIZE];
-            pack_entity_type_rec(rec, &w->entities[ti]);
+            pack_entity_type_rec(rec, &w->entities[ti], remap_b0_tile1);
             if (buf_append(blob, rec, sizeof(rec)) != 0) {
                 return -1;
             }

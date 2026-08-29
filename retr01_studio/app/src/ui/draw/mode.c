@@ -59,13 +59,22 @@ void ui_update_cursor(const UiState *ui) {
                point_in_rect(lx, ly, lo.canvas_x, lo.canvas_y, UI_TILE_CANVAS, UI_TILE_CANVAS) ||
                point_in_rect(lx, ly, lo.pal_x, lo.btn_y, lo.save_w, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.pal_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);
+    } else if (ui->metasprite_edit.open) {
+        MetaspriteModalLayout lo;
+        metasprite_modal_layout(&lo);
+        hand = point_in_rect(lx, ly, lo.left_grid_x, lo.left_grid_y, UI_ENTITY_BANK_GRID, UI_ENTITY_BANK_GRID) ||
+               point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE) ||
+               point_in_rect(lx, ly, lo.pal_x, lo.pal_y, 4 * UI_PAL_SWATCH, 4 * UI_PAL_SWATCH) ||
+               point_in_rect(lx, ly, lo.left_grid_x, lo.btn_y, lo.save_w, UI_BTN_H) ||
+               point_in_rect(lx, ly, lo.left_grid_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);
     } else if (ui->entity_edit.open) {
         EntityModalLayout lo;
         entity_modal_layout(&lo);
-        hand = point_in_rect(lx, ly, lo.left_grid_x, lo.left_grid_y, UI_ENTITY_BANK_GRID, UI_ENTITY_BANK_GRID) ||
+        hand = point_in_rect(lx, ly, lo.left_list_x, lo.left_list_y, UI_ENTITY_BANK_GRID, lo.left_list_h) ||
                point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE) ||
-               point_in_rect(lx, ly, lo.left_grid_x, lo.btn_y, lo.save_w, UI_BTN_H) ||
-               point_in_rect(lx, ly, lo.left_grid_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);
+               point_in_rect(lx, ly, lo.pal_x, lo.pal_y, 4 * UI_PAL_SWATCH, 4 * UI_PAL_SWATCH) ||
+               point_in_rect(lx, ly, lo.left_list_x, lo.btn_y, lo.save_w, UI_BTN_H) ||
+               point_in_rect(lx, ly, lo.left_list_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);
     } else if (ui->menu.open) {
         hand = menu_hit(ui, lx, ly, NULL, NULL);
     } else {
@@ -73,6 +82,7 @@ void ui_update_cursor(const UiState *ui) {
                world_btn_hit(ui, lx, ly, NULL) || world_cell_hit(ui, lx, ly, NULL, NULL) ||
                palette_strip_hit(ui, lx, ly) || palette_row_btn_hit(ui, lx, ly, NULL) ||
                sprites_add_hit(ui, lx, ly) || sprites_list_hit(ui, lx, ly, NULL) ||
+               metasprites_add_hit(ui, lx, ly) || metasprites_list_hit(ui, lx, ly, NULL) ||
                entities_add_hit(ui, lx, ly) || entities_list_hit(ui, lx, ly, NULL) ||
                (!ui->play.active && screen_mode_hit(ui, lx, ly, NULL));
     }

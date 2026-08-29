@@ -6,7 +6,8 @@
 /* First SPR bank with free CHR slot, or -1 if all full. Prefers bank 0. */
 int r01_chr_find_spr_bank_space(const R01World *w);
 
-/* Allocate a blank tile in spr_banks[bank]. Returns tile_id or -1. */
+/* Allocate a blank tile in spr_banks[bank]. Returns tile_id or -1.
+ * Bank 0 never returns R01_SPR_PLAYER_TILE_ID (skipped for the player stub). */
 int r01_chr_alloc_spr_tile(R01World *w, int bank);
 
 /* Write 16-byte pattern into spr_banks[bank][tile_id] (grows tile_count). */

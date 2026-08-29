@@ -8,6 +8,7 @@
 #include "retr01_studio/palette.h"
 #include "retr01_studio/project.h"
 #include "retr01_studio/entities.h"
+#include "retr01_studio/metasprites.h"
 #include "retr01_studio/sprites.h"
 
 #include <png.h>
@@ -171,6 +172,28 @@ void menu_open_sprite(UiState *ui, int x, int y, int catalog_idx) {
     ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_SPR_PAL;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Change sprite bank");
     ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_SPR_BANK;
+    memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
+    ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
+    ui->menu.root_x = x;
+    ui->menu.root_y = y;
+    menu_clamp_xy(&ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
+}
+
+void menu_open_metasprite(UiState *ui, int x, int y, int meta_idx) {
+    ui->menu.open = 1;
+    ui->menu.kind = UI_MENU_KIND_METASPRITE;
+    ui->menu.submenu = UI_MENU_SUB_NONE;
+    ui->menu.screen_tx = -1;
+    ui->menu.screen_ty = -1;
+    ui->menu.world_screen_idx = -1;
+    ui->menu.sprite_catalog_idx = -1;
+    ui->menu.metasprite_idx = meta_idx;
+    ui->menu.entity_type_idx = -1;
+    ui->menu.item_count = 0;
+    snprintf(ui->menu.items[ui->menu.item_count], 32, "Edit metasprite");
+    ui->menu.item_sub[ui->menu.item_count++] = 0;
+    snprintf(ui->menu.items[ui->menu.item_count], 32, "Remove");
+    ui->menu.item_sub[ui->menu.item_count++] = 0;
     memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
     ui->menu.root_x = x;
@@ -349,6 +372,17 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
         } else if (item == 1 && w) {
             r01_world_sprite_remove(w, ui->menu.sprite_catalog_idx);
             ui_toast(ui, "sprite removed", 0);
+        }
+        menu_close(ui);
+        return;
+    }
+    if (ui->menu.kind == UI_MENU_KIND_METASPRITE) {
+        R01World *w = r01_project_active_world(ui->project);
+        if (item == 0) {
+            metasprite_edit_open(ui, ui->menu.metasprite_idx);
+        } else if (item == 1 && w) {
+            r01_world_metasprite_remove(w, ui->menu.metasprite_idx);
+            ui_toast(ui, "metasprite removed", 0);
         }
         menu_close(ui);
         return;

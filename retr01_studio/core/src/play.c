@@ -171,7 +171,7 @@ int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry 
     out[0].x = pl->player_x - pl->cam_x;
     out[0].y = pl->player_y - pl->cam_y;
     out[0].bank = 0;
-    out[0].tile_id = 1;
+    out[0].tile_id = R01_SPR_PLAYER_TILE_ID;
     out[0].pal = 0;
     out[0].flip_h = 0;
     out[0].flip_v = 0;

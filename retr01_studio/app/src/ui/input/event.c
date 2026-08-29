@@ -49,6 +49,14 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             return 1;
         }
+        if (ui->metasprite_edit.open) {
+            if (e->key.keysym.sym == SDLK_ESCAPE) {
+                ui->metasprite_edit.open = 0;
+                return 1;
+            }
+            metasprite_modal_key(ui, e->key.keysym.sym);
+            return 1;
+        }
         if (ui->entity_edit.open) {
             if (e->key.keysym.sym == SDLK_ESCAPE) {
                 if (ui->entity_edit.name_focus) {
@@ -192,8 +200,13 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             return 1;
         }
 
+        if (ui->metasprite_edit.open) {
+            metasprite_modal_handle(ui, lx, ly, 1, e->button.button);
+            return 1;
+        }
+
         if (ui->entity_edit.open) {
-            entity_modal_handle(ui, lx, ly, 1);
+            entity_modal_handle(ui, lx, ly, 1, e->button.button);
             return 1;
         }
 
@@ -218,9 +231,22 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         if (e->button.button == SDL_BUTTON_RIGHT && !ui->play.active) {
             int col, row;
             int spr_idx;
+            int meta_idx;
             int ent_idx;
+            if (ui->metasprite_edit.open) {
+                metasprite_modal_handle(ui, lx, ly, 1, SDL_BUTTON_RIGHT);
+                return 1;
+            }
+            if (ui->entity_edit.open) {
+                entity_modal_handle(ui, lx, ly, 1, SDL_BUTTON_RIGHT);
+                return 1;
+            }
             if (sprites_list_hit(ui, lx, ly, &spr_idx)) {
                 menu_open_sprite(ui, lx, ly, spr_idx);
+                return 1;
+            }
+            if (metasprites_list_hit(ui, lx, ly, &meta_idx)) {
+                menu_open_metasprite(ui, lx, ly, meta_idx);
                 return 1;
             }
             if (entities_list_hit(ui, lx, ly, &ent_idx)) {
@@ -272,6 +298,10 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 sprite_edit_open_new(ui);
                 return 1;
             }
+            if (!ui->play.active && metasprites_add_hit(ui, lx, ly)) {
+                metasprite_edit_open_new(ui);
+                return 1;
+            }
             if (!ui->play.active && entities_add_hit(ui, lx, ly)) {
                 entity_edit_open_new(ui);
                 return 1;
@@ -280,6 +310,13 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 int catalog_idx;
                 if (!ui->play.active && sprites_list_hit(ui, lx, ly, &catalog_idx)) {
                     ui->catalog_drag.active = UI_CATALOG_DRAG_SPRITE;
+                    ui->catalog_drag.index = catalog_idx;
+                    ui->catalog_drag.off_x = 4;
+                    ui->catalog_drag.off_y = 4;
+                    return 1;
+                }
+                if (!ui->play.active && metasprites_list_hit(ui, lx, ly, &catalog_idx)) {
+                    ui->catalog_drag.active = UI_CATALOG_DRAG_METASPRITE;
                     ui->catalog_drag.index = catalog_idx;
                     ui->catalog_drag.off_x = 4;
                     ui->catalog_drag.off_y = 4;
@@ -371,8 +408,12 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         ui->last_paint_tx = -1;
         ui->last_paint_ty = -1;
         ui->sel_drag = 0;
+        if (ui->metasprite_edit.open) {
+            metasprite_modal_handle(ui, lx, ly, 0, e->button.button);
+            return 1;
+        }
         if (ui->entity_edit.open) {
-            entity_modal_handle(ui, lx, ly, 0);
+            entity_modal_handle(ui, lx, ly, 0, e->button.button);
             return 1;
         }
         if (ui->catalog_drag.active) {
@@ -390,6 +431,8 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     } else {
                         ui_toast(ui, "cannot place sprite", 1);
                     }
+                } else if (ui->catalog_drag.active == UI_CATALOG_DRAG_METASPRITE) {
+                    /* metasprites are placed via entity editor, not on the world canvas */
                 } else if (ui->catalog_drag.active == UI_CATALOG_DRAG_ENTITY) {
                     idx = r01_world_place_entity(w, ui->catalog_drag.index, wx, wy);
                     if (idx >= 0) {
@@ -409,7 +452,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
     }
 
     if (e->type == SDL_MOUSEMOTION && !ui->play.active && !ui->tile_edit.open && !ui->sprite_edit.open &&
-        !ui->entity_edit.open && !ui->menu.open && !ui->catalog_drag.active) {
+        !ui->metasprite_edit.open && !ui->entity_edit.open && !ui->menu.open && !ui->catalog_drag.active) {
         int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
         int tx, ty;
         if (ui->screen_mode == UI_SCREEN_MODE_SEL && ui->sel_drag && shift &&
@@ -434,14 +477,41 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         sprite_modal_handle(ui, lx, ly, 1);
         return 1;
     }
-    if (e->type == SDL_MOUSEMOTION && ui->entity_edit.open) {
-        if (e->motion.state & SDL_BUTTON_LMASK) {
-            entity_modal_drag(ui, lx, ly);
+    if (e->type == SDL_MOUSEMOTION && ui->metasprite_edit.open) {
+        if (e->motion.state & (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK)) {
+            metasprite_modal_drag(ui, lx, ly, e->motion.state);
         }
         return 1;
     }
+    if (e->type == SDL_MOUSEMOTION && ui->entity_edit.open) {
+        if (e->motion.state & (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK)) {
+            entity_modal_drag(ui, lx, ly, e->motion.state);
+        }
+        return 1;
+    }
+    if (e->type == SDL_MOUSEWHEEL && ui->entity_edit.open) {
+        EntityModalLayout lo;
+        const R01World *w = r01_project_active_world_const(ui->project);
+        entity_modal_layout(&lo);
+        if (point_in_rect(lx, ly, lo.left_list_x, lo.left_list_y, lo.right_grid_x - lo.left_list_x - UI_UNIT,
+                          lo.left_list_h)) {
+            int vis = lo.left_list_h / UI_SPRITE_ROW_H;
+            int max_scroll = 0;
+            if (w && w->metasprite_count > vis) {
+                max_scroll = w->metasprite_count - vis;
+            }
+            ui->entity_edit.meta_scroll -= e->wheel.y;
+            if (ui->entity_edit.meta_scroll < 0) {
+                ui->entity_edit.meta_scroll = 0;
+            }
+            if (ui->entity_edit.meta_scroll > max_scroll) {
+                ui->entity_edit.meta_scroll = max_scroll;
+            }
+            return 1;
+        }
+    }
     if (e->type == SDL_MOUSEWHEEL && !ui->pal_edit.open && !ui->tile_edit.open && !ui->sprite_edit.open &&
-        !ui->entity_edit.open && !ui->play.active) {
+        !ui->metasprite_edit.open && !ui->entity_edit.open && !ui->play.active) {
         AccordionLayout lo;
         accordion_layout(ui, &lo);
         if (lo.sprites_open && lx < UI_SIDEBAR_W) {
@@ -457,6 +527,22 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             if (ui->sprites_scroll > max_scroll) {
                 ui->sprites_scroll = max_scroll;
+            }
+            return 1;
+        }
+        if (lo.metasprites_open && lx < UI_SIDEBAR_W) {
+            const R01World *w = r01_project_active_world_const(ui->project);
+            int vis = (UI_METASPRITES_BODY_H - UI_BTN_H) / UI_SPRITE_ROW_H;
+            int max_scroll = 0;
+            if (w && w->metasprite_count > vis) {
+                max_scroll = w->metasprite_count - vis;
+            }
+            ui->metasprites_scroll -= e->wheel.y;
+            if (ui->metasprites_scroll < 0) {
+                ui->metasprites_scroll = 0;
+            }
+            if (ui->metasprites_scroll > max_scroll) {
+                ui->metasprites_scroll = max_scroll;
             }
             return 1;
         }

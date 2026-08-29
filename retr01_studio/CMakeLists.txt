@@ -17,6 +17,7 @@ add_library(retr01_studio_core
   core/src/paths.c
   core/src/sprites.c
   core/src/entities.c
+  core/src/metasprites.c
 )
 target_include_directories(retr01_studio_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include
@@ -85,6 +86,7 @@ add_library(retr01_studio_app
   app/src/ui/modals/pal_edit_draw.c
   app/src/ui/modals/tile_edit.c
   app/src/ui/modals/sprite_edit.c
+  app/src/ui/modals/metasprite_edit.c
   app/src/ui/modals/entity_edit.c
 )
 target_include_directories(retr01_studio_app PUBLIC
