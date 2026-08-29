@@ -34,6 +34,23 @@ TEST_MAIN() {
                pl.cam_y == pl.player_y + R01_PLAY_PLAYER_H / 2 - R01_SCREEN_PX_H / 2,
            "camera centers on spawn");
 
+    /* Marked player with a placed instance starts at that instance origin. */
+    {
+        int type_id, inst;
+        type_id = r01_world_entity_add(&p->worlds[0]);
+        EXPECT(type_id >= 0, "spawn entity type");
+        r01_world_set_player_entity(&p->worlds[0], type_id);
+        inst = r01_world_place_entity(&p->worlds[0], type_id, 90, 70);
+        EXPECT(inst >= 0, "spawn instance");
+        r01_play_stop(&pl);
+        EXPECT(r01_play_start(&pl, p), "play start at instance");
+        EXPECT(pl.player_x == 90 && pl.player_y == 70, "spawn at placed instance");
+        r01_world_set_player_entity(&p->worlds[0], -1);
+        r01_play_stop(&pl);
+        EXPECT(r01_play_start(&pl, p), "play start fallback");
+        EXPECT(pl.player_x == R01_PLAY_SPAWN_CENTER_X(2), "unmarked falls back to screen center");
+    }
+
     r01_play_tick(&pl, p, 0, 0);
     EXPECT(pl.cam_x == pl.player_x + R01_PLAY_PLAYER_W / 2 - R01_SCREEN_PX_W / 2, "idle keeps camera follow");
 

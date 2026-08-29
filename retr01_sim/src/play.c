@@ -69,6 +69,44 @@ static void place_player_on_screen(R01sPlay *pl, int col, int row) {
     update_camera(pl);
 }
 
+static void place_player_xy(R01sPlay *pl, int wx, int wy) {
+    pl->player_x = wx;
+    pl->player_y = wy;
+    update_camera(pl);
+}
+
+static int player_instance_spawn(R01sBoard *b, int *out_x, int *out_y) {
+    const uint8_t *img;
+    const uint8_t *insts;
+    int ii;
+
+    if (!b || !b->cart_loaded || b->cart_player_entity == 0xFF ||
+        b->cart_player_entity >= b->cart_entity_type_count || b->cart_entity_inst_count < 1 ||
+        b->cart_off_entity_insts == 0) {
+        return 0;
+    }
+    img = b->cart_flash.mem;
+    if ((size_t)b->cart_off_entity_insts + (size_t)b->cart_entity_inst_count * 6u >
+        sizeof(b->cart_flash.mem)) {
+        return 0;
+    }
+    insts = img + b->cart_off_entity_insts;
+    for (ii = 0; ii < (int)b->cart_entity_inst_count; ii++) {
+        const uint8_t *irec = insts + (size_t)ii * 6u;
+        if (irec[0] != b->cart_player_entity) {
+            continue;
+        }
+        if (out_x) {
+            *out_x = (int)((uint16_t)irec[2] | ((uint16_t)irec[3] << 8));
+        }
+        if (out_y) {
+            *out_y = (int)((uint16_t)irec[4] | ((uint16_t)irec[5] << 8));
+        }
+        return 1;
+    }
+    return 0;
+}
+
 static int spawn_screen(R01sBoard *b, int *out_col, int *out_row) {
     int sc, sr;
     const uint8_t *prg;
@@ -376,16 +414,21 @@ void r01s_play_reset(R01sPlay *play) {
 
 int r01s_play_start(R01sBoard *board) {
     int col = 0, row = 0;
+    int sx, sy;
 
     if (!board || !board->cart_loaded) {
         return 0;
     }
     r01s_play_reset(&board->play);
-    if (!spawn_screen(board, &col, &row)) {
+    if (player_instance_spawn(board, &sx, &sy)) {
+        r01s_board_mark_map_ready(board);
+        place_player_xy(&board->play, sx, sy);
+    } else if (spawn_screen(board, &col, &row)) {
+        r01s_board_mark_map_ready(board);
+        place_player_on_screen(&board->play, col, row);
+    } else {
         return 0;
     }
-    r01s_board_mark_map_ready(board);
-    place_player_on_screen(&board->play, col, row);
     /* Latch scroll + 2x2 before play.enabled so no field renders at scroll=$00. */
     board->play.force_camera_reload = 1;
     queue_video(board);

@@ -25,6 +25,12 @@ static void place_player_on_screen(R01PlayState *pl, int col, int row) {
     update_camera(pl);
 }
 
+static void place_player_xy(R01PlayState *pl, int wx, int wy) {
+    pl->player_x = wx;
+    pl->player_y = wy;
+    update_camera(pl);
+}
+
 static int play_spawn_screen(const R01World *w, int *out_col, int *out_row) {
     int idx;
     if (!w) {
@@ -43,9 +49,36 @@ static int play_spawn_screen(const R01World *w, int *out_col, int *out_row) {
     return 1;
 }
 
+/* First placed instance of the marked player type (editor spawn point). */
+static int play_player_instance_spawn(const R01World *w, int *out_x, int *out_y) {
+    int pe;
+    int i;
+    if (!w) {
+        return 0;
+    }
+    pe = r01_world_player_entity(w);
+    if (pe < 0) {
+        return 0;
+    }
+    for (i = 0; i < w->instance_count; i++) {
+        if (w->instances[i].type_id != pe) {
+            continue;
+        }
+        if (out_x) {
+            *out_x = w->instances[i].world_x;
+        }
+        if (out_y) {
+            *out_y = w->instances[i].world_y;
+        }
+        return 1;
+    }
+    return 0;
+}
+
 int r01_play_start(R01PlayState *pl, const R01Project *p) {
     const R01World *w;
     int col = 0, row = 0;
+    int sx, sy;
     if (!pl) {
         return 0;
     }
@@ -54,10 +87,18 @@ int r01_play_start(R01PlayState *pl, const R01Project *p) {
         return 0;
     }
     w = r01_project_active_world_const(p);
-    if (!play_spawn_screen(w, &col, &row)) {
+    if (!w) {
         return 0;
     }
     pl->active = 1;
+    if (play_player_instance_spawn(w, &sx, &sy)) {
+        place_player_xy(pl, sx, sy);
+        return 1;
+    }
+    if (!play_spawn_screen(w, &col, &row)) {
+        pl->active = 0;
+        return 0;
+    }
     place_player_on_screen(pl, col, row);
     return 1;
 }

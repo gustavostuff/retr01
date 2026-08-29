@@ -77,6 +77,46 @@ static void place_player_on_screen(R01ePlay *pl, int col, int row) {
     update_camera(pl);
 }
 
+static void place_player_xy(R01ePlay *pl, int wx, int wy) {
+    pl->player_x = wx;
+    pl->player_y = wy;
+    update_camera(pl);
+}
+
+/* First cart instance of the marked player type (matches Studio placement). */
+static int player_instance_spawn(R01eMachine *m, int *out_x, int *out_y) {
+    R01eWorldView wv;
+    const uint8_t *insts;
+    int ii;
+
+    if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) != 0) {
+        return 0;
+    }
+    if (wv.player_entity == R01E_CART_PLAYER_ENTITY_NONE || wv.player_entity >= wv.entity_type_count ||
+        wv.entity_inst_count < 1) {
+        return 0;
+    }
+    insts = r01e_cart_ptr(&m->cart, wv.base + wv.off_entity_insts,
+                          (size_t)wv.entity_inst_count * R01E_CART_INSTANCE_SIZE);
+    if (!insts) {
+        return 0;
+    }
+    for (ii = 0; ii < (int)wv.entity_inst_count; ii++) {
+        const uint8_t *irec = insts + (size_t)ii * R01E_CART_INSTANCE_SIZE;
+        if (irec[0] != wv.player_entity) {
+            continue;
+        }
+        if (out_x) {
+            *out_x = (int)((uint16_t)irec[2] | ((uint16_t)irec[3] << 8));
+        }
+        if (out_y) {
+            *out_y = (int)((uint16_t)irec[4] | ((uint16_t)irec[5] << 8));
+        }
+        return 1;
+    }
+    return 0;
+}
+
 static int spawn_screen(R01eMachine *m, int *out_col, int *out_row) {
     const uint8_t *prg = r01e_cart_prg(&m->cart);
     int sc, sr;
@@ -285,6 +325,7 @@ void r01e_play_reset(R01ePlay *play) {
 
 int r01e_play_start(R01eMachine *m) {
     int col = 0, row = 0;
+    int sx, sy;
 
     if (!m) {
         return 0;
@@ -293,6 +334,14 @@ int r01e_play_start(R01eMachine *m) {
     /* Phase 1 carts (R01P) always run Studio-Play-equivalent runtime from cart MAP. */
     if (!cart_is_phase1_play(&m->cart) && !r01e_cart_has_screen(&m->cart, 0, R01E_START_COL, R01E_START_ROW)) {
         /* Still try if any screens exist. */
+    }
+    if (player_instance_spawn(m, &sx, &sy)) {
+        m->play.enabled = 1;
+        place_player_xy(&m->play, sx, sy);
+        r01e_play_sync_video(m);
+        (void)r01e_video_sync_camera(m);
+        write_oam(m);
+        return 1;
     }
     if (!spawn_screen(m, &col, &row)) {
         return 0;
