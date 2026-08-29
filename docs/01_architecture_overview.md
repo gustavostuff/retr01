@@ -10,9 +10,8 @@ When docs disagree, use this order.
 | Locked decisions + open questions | [`04`](04_costs_and_open_questions.md) | Does not replace `02` for register text |
 | Retr01-A **HW BOM** (current) | [`05`](05_hardware_v1_32ic.md) | **32 IC** system. Does not invent `$FExx` |
 | Protoboard island bring-up | [`03`](03_hardware_implementation.md) | Bench checklist for the **32 IC** netlist |
-| Studio Phase 4 (product) | [`retr01_studio/README.md`](../retr01_studio/README.md) | Authoring + Play + export. Marked player, names/ids, JSON v7, cart `format_ver` 2 |
-| Studio Phase 5 (export tree) | [`retr01_studio/README.md`](../retr01_studio/README.md) | `output/` layout: `.r01proj` save, **Ctrl+E** -> `C/`, `ASM/`, `data/`, cart sidecars |
-| Emulator Phase 1 | [`retr01_emu/README.md`](../retr01_emu/README.md) | Soft cart runtime matching Studio Play |
+| Retr01 Studio | [`retr01_studio/README.md`](../retr01_studio/README.md) | UI authoring, Play preview, export (`output/` cart + C/ASM/data codegen) |
+| Emulator | [`retr01_emu/README.md`](../retr01_emu/README.md) | Soft cart runtime matching Studio Play |
 | Audio / APU protocol | [`06`](06_audio_architecture.md) | 6502 sequencer + 328P mixer, `$FE4x` bus bridge |
 | Board IC simulator | [`retr01_sim/README.md`](../retr01_sim/README.md) | Pin/netlist models of the 32-IC BOM |
 | Studio game modules (movement, camera, entities, collision budgets) | [`07`](07_game_modules.md) | Attachable gameplay profiles. Studio phases implement subsets later |
@@ -134,7 +133,7 @@ Current chip list: [`05`](05_hardware_v1_32ic.md) (**32 IC**). Roles:
 
 ## Near-term software focus
 
-**Retr01 Studio** (Phase 5 export + Phase 4 Play) and **Retr01 Emulator** (Phase 1 cart runtime) are the active tools. Studio **Save** writes `output/<stem>.r01proj`; **Export** regenerates `output/C/`, `output/ASM/`, `output/data/`, and packed cart bytes. See [`retr01_studio/README.md`](../retr01_studio/README.md) and [`retr01_emu/README.md`](../retr01_emu/README.md). **Board IC simulator** ([`retr01_sim/`](../retr01_sim/)) validates the 32-IC netlist.
+**Retr01 Studio** (authoring + export) and **Retr01 Emulator** (cart runtime) are the active software tools. Studio **Save** writes `output/<stem>.r01proj`; **Export** regenerates `output/C/`, `output/ASM/`, `output/data/`, and packed cart bytes. See [`retr01_studio/README.md`](../retr01_studio/README.md) and [`retr01_emu/README.md`](../retr01_emu/README.md). **Board IC simulator** ([`retr01_sim/`](../retr01_sim/)) validates the 32-IC netlist.
 
 ## Doc index (`docs/`)
 

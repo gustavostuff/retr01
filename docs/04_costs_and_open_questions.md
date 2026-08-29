@@ -63,7 +63,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Dot clock | **5.369318 MHz** |
 | Raster | scanline compare + IRQ |
 | APU | separate **ATmega328P** (`$FE40-$FE5F`) |
-| Near-term software | **Retr01 Studio Phase 2** + **Emulator Phase 1** + board sim (studio/emu/sim READMEs) |
+| Near-term software | **Retr01 Studio** + **Emulator** + board sim (studio/emu/sim READMEs) |
 | Studio project files | **JSON v7** (one world's map/CHR per save + global `other_screens`. See Studio README) |
 | Validation tools | board IC simulator ([`retr01_sim/README.md`](../retr01_sim/README.md)). Software emu ([`retr01_emu/`](../retr01_emu/)) |
 

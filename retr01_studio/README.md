@@ -1,12 +1,17 @@
 # Retr01 Studio
 
-Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. **Phase 5** (current): `output/` tree — save/load defaults, **Ctrl+E** exports generated `C/`, `ASM/`, `data/` plus cart sidecars; `custom_logic.c` created once and preserved. **Phase 4**: named entities/metasprites, **Mark as player**, Play spawn at placed instance, player **hitbox** vs BG solid, cart/emu/sim parity. **Phase 3E**: Metasprites accordion + modal, entity compose from metasprite catalog, JSON v7, cart `format_ver` 2, viewport sprite clipping. **Phase 3D**: cart packs real SPR CHR + entity tables. **Phase 3C–3A / 2 / 1** still apply (place instances, sprites, multi-world sidebar, PNG import, export). Hardware: [`docs/02`](../docs/02_graphics_worlds_memory.md).
+Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. Studio is two tools in one app:
+
+1. **Authoring (UI)** — edit worlds, tiles, palettes, sprites, entities, and instances; preview with **Play**.
+2. **Export (codegen)** — write a game tree under `output/` (packed cart + generated C, 6502 ASM, and binary data).
+
+Authoring state lives in `output/<stem>.r01proj` (JSON). **Ctrl+E** regenerates cart bytes and the generated tree; **`custom_logic.c`** is created on first export and never overwritten. Hardware contract: [`docs/02`](../docs/02_graphics_worlds_memory.md).
 
 **Stack:** C11 + SDL2 + FreeType (Proggy Tiny), `libretr01_studio_core` + thin shell.
 
 ---
 
-## UI (Phase 2–4)
+## Authoring (UI)
 
 Fixed **640x360** logical canvas, **8px** grid, dark gray chrome. Buttons/labels **16px** tall. Proggy Tiny (`assets/proggy-tiny.ttf`).
 
@@ -63,7 +68,7 @@ PNG drop imports into the **active** world. Cart export packs **world 0** only (
 | **Player** | World **`player_entity`** (Entities context **Mark as player**). Draws that type’s **state 0 / frame 0**. If unset/empty, solid stub **SPR bank 0 tile 1**. Placed instances of the player type are skipped in Play OAM |
 | **Start** | **First placed instance** of the marked player type (editor origin). If none / unmarked: center of **`default_screen`**. Fallback grid **(2,0)** or first present |
 | **Collision** | Marked player’s state-0 **hitbox** (offset from origin) vs `R01_ATTR_SOLID` on present screens. Stub player: **8x8** at the origin |
-| **Warps** | **X** -> screen (0,0). **Y** -> screen (1,0). Phase 1 test hooks, no Events UI yet |
+| **Warps** | **X** -> screen (0,0). **Y** -> screen (1,0). Test hooks only; no Events UI yet |
 
 Cart packs `player_entity` + hitbox into the world header — **re-export** after marking or solid edits. Play SoT: `core/src/play.c` + `collision.c`. Emu/sim mirror the same rules (separate source copies). Host collision reads **cart MAP attrs**, not the PRG collision stub. OAM X/Y are **viewport-relative signed** coords. Tiles fully outside **128x120** are skipped; partial tiles clip at viewport edges.
 
@@ -114,40 +119,42 @@ Kit **master indices** only ([`docs/02`](../docs/02_graphics_worlds_memory.md)).
 
 ---
 
-## Export
+## Code generation & export
 
-**Ctrl+E** writes under `output/` (relative to launch cwd):
+**Ctrl+E** writes under `output/` (relative to launch cwd). **Save** (`Ctrl+S`) only updates the `.r01proj`; export does not rewrite it unless you save first.
+
+### Cart & sidecars
 
 | Path | Contents |
 |------|----------|
-| `test.r01proj` | Save target (Ctrl+S only; export does not rewrite unless you save) |
-| `test.retr01` | Packed cart (**world 0**): BG+SPR CHR, MAP, palettes, PRG stub, entity tables, other screens (`format_ver` 2) |
-| `test_prom.bin` | 64-byte Color PROM image (motherboard, not in cart) |
-| `test_flash.bin` | Cart padded to **512 KB** |
-| `C/` | Generated `base_game.c`, `r01_runtime.c`, headers; `custom_logic.c` (template, never overwritten) |
-| `ASM/` | Subdivided 6502 tree (`boot/`, `game/`, `io/`, `player/`, `sprite/`, `collision/`, `tables/`) |
-| `data/` | Palette, CHR, and per-screen MAP bins for `.incbin` |
+| `<stem>.r01proj` | Authoring JSON (save/load) |
+| `<stem>.retr01` | Packed cart (**world 0**): BG+SPR CHR, MAP, palettes, PRG, entity tables, other screens (`format_ver` 2) |
+| `<stem>_prom.bin` | 64-byte Color PROM image (motherboard, not in cart) |
+| `<stem>_flash.bin` | Cart padded to **512 KB** |
 
-PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are for future 6502 use. Editor chrome is not burned into the cart. See [`retr01_sim/README.md`](../retr01_sim/README.md#cart-rom-vs-runners-triage).
+PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are for future on-cart 6502 use. Editor chrome is not burned into the cart. See [`retr01_sim/README.md`](../retr01_sim/README.md#cart-rom-vs-runners-triage).
 
----
+### Generated game tree
 
-## Phase history
+| Path | Role |
+|------|------|
+| `C/base_game.c` | Regenerated each export: frozen tables, init/tick/vblank, calls into `custom_logic` |
+| `C/r01_runtime.c` | Regenerated host stubs (pad helpers, warp, button events) |
+| `C/custom_logic.c` | **User file** — template on first export; hooks for game-specific logic |
+| `C/include/*.h` | `R01GameCtx`, engine API (`r01_input.h`, `r01_player.h`, …) |
+| `ASM/**` | Subdivided 6502 sources (`boot/`, `game/`, `io/`, `player/`, `sprite/`, `collision/`, `tables/`) |
+| `data/*` | Palette, CHR, and per-screen MAP bins for `.incbin` |
 
-| Phase | Scope |
-|-------|--------|
-| **0** | Core lib: project/world/screen structs, JSON I/O, CHR pack, cart image, unit tests. No author UI |
-| **1** | Single-world PNG import, Play, `.retr01` export |
-| **2** | Multi-world UI, tile edit/paint, solid/anim attrs, global palettes, default spawn (partial multi-world persistence) |
-| **3A** | Sprites accordion, Create/Edit sprite modal (SPR pals), SPR bank CHR + catalog, JSON v5 |
-| **3B** | Entities accordion + Add/Edit entity modal (compose / hitbox / origin) |
-| **3C** | Drag sprite/entity onto screen. Studio Play OAM (origin-relative) |
-| **3D** | Cart packs real SPR CHR + entity tables. Emu/sim Play OAM parity |
-| **3E** | Metasprites accordion + modal. Entity compose from metasprite catalog. JSON v7. Cart `format_ver` 2 (other screens incl. credits pages + RLE). Viewport sprite clipping |
-| **4** | **Mark as player**; Play/cart/emu/sim draw state0/frame0, spawn at first placed instance, collide with authored hitbox. Entity/metasprite **names** + derived ids. Text fields, Esc/scrim modal dismiss, readable sidebar context menus |
-| **5** | `rom/` → `output/`; export writes `C/` (`base_game.c`, `custom_logic.c`, headers, `r01_runtime.c`), subdivided `ASM/` + `data/`; cart bytes unchanged (packer still `prg_phase1.c`) |
+The packer still builds PRG bytes in `prg_phase1.c` (byte-compatible with pre-codegen export). The on-disk `ASM/` and `data/` trees are the stable layout for a future ca65 build; they are not assembled during export today. Host **Play** in Studio remains the in-editor preview source of truth (`core/src/play.c`).
 
-**Out of scope (for now):** multi-state animation in Play (authoring supports 1-4 states / 1-4 frames; Play/cart still state0/frame0), entity-vs-entity collision, NPC AI, parallax planes / variable-thickness slices authoring, Generate, multi-world cart export, multi-world JSON save, dead-zone/fade scroll profiles, full 6502 gameplay loop.
+Compile from `output/C/` with `-Iinclude` (or `#include "include/r01_engine.h"` as generated).
+
+### Limitations (current)
+
+- Play and cart runtime use **state 0 / frame 0** only (authoring supports more states/frames).
+- **World 0** only in cart export; worlds 1–7 are session-only in the UI until multi-world save lands.
+- No entity-vs-entity collision, NPC AI, parallax authoring, or full on-cart 6502 gameplay loop yet.
+- No ca65 / `make` step in the default export path.
 
 ---
 
@@ -202,4 +209,4 @@ ctest --test-dir build --output-on-failure
 |-----|--------|
 | [`docs/02`](../docs/02_graphics_worlds_memory.md) | Screens, VRAM, palettes, cart layout |
 | [`retr01_sim/README.md`](../retr01_sim/README.md) | Board sim + cart triage |
-| [`retr01_emu/README.md`](../retr01_emu/README.md) | Emulator Phase 1 |
+| [`retr01_emu/README.md`](../retr01_emu/README.md) | Cart runtime emulator |

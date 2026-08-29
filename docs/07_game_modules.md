@@ -359,8 +359,8 @@ Entity-entity among all NPCs is **opt-in** and expensive. Default generated loop
 
 ### 5.3 Studio behavior
 
-- Author `SOLID` on tiles via tile context **Set Solid** (Phase 2 Studio).
-- Author entity **origins** and **hitboxes** in the entity modal (guides checkbox toggles overlay + interaction). Studio **Phase 4** Play uses the marked player’s hitbox vs BG solid; entity-vs-entity collision is still future.
+- Author `SOLID` on tiles via tile context **Set Solid**.
+- Author entity **origins** and **hitboxes** in the entity modal (guides checkbox toggles overlay + interaction). Studio Play uses the marked player’s hitbox vs BG solid; entity-vs-entity collision is still future.
 - Play preview uses the same region rules (ACTIVE only). Sprites **clip to the 128x120 viewport** when partially off-screen (Studio, emu, sim Host Play).
 - Show hitboxes / solids as optional overlay in Play (implementation phase TBD).
 - Camera rail / auto-scroll must pause or redefine collision during transitions if pads are muted (rail: typically freeze gameplay collisions until scroll ends).
@@ -431,6 +431,6 @@ Not a full HAL yet. Shape the codegen toward this:
 |-----|------|
 | This file | Game module contract + budgets |
 | [`02`](02_graphics_worlds_memory.md) | Display, VRAM, MAP, `$FExx` |
-| Studio README | Current Studio Phase 2 product (may lag this file) |
+| Studio README | Current Studio product (authoring UI + export codegen) |
 | [`06`](06_audio_architecture.md) | APU / bytecode SoT |
 | [`01`](01_architecture_overview.md) | Sources of truth index |
