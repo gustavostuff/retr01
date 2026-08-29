@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-/* Resolve a repo-relative path (e.g. rom/test) to an absolute path. */
+/* Resolve a repo-relative path (e.g. output/test) to an absolute path. */
 int r01_path_resolve(const char *rel, char *out, size_t out_cap);
 
 #endif

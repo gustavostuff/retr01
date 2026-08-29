@@ -1,0 +1,10 @@
+; Retr01 game PRG entry — include chain for ca65 (Phase 5C).
+.setcpu "65c02"
+.include "include/r01_hw.inc"
+.include "include/r01_play.inc"
+.include "include/r01_cart.inc"
+.include "boot/reset.s"
+.include "boot/boot_stream.s"
+.include "game/init.s"
+.include "game/main_loop.s"
+.include "collision/play_collision.s"

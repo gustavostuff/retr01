@@ -13,7 +13,7 @@
 #endif
 
 #ifndef R01E_DEFAULT_CART
-#define R01E_DEFAULT_CART "../rom/test.retr01"
+#define R01E_DEFAULT_CART "../output/test.retr01"
 #endif
 
 /* Debug pane: VRAM atlas + world map + active BG/SPR palette rows + CPU budget. */

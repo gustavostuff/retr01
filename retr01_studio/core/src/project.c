@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -629,6 +630,43 @@ int r01_path_ensure_parent(const char *path, char *err_buf, size_t err_cap) {
         struct stat st;
         if (stat(dir, &st) != 0 || !S_ISDIR(st.st_mode)) {
             set_err(err_buf, err_cap, "cannot create output dir");
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int r01_path_mkdir_p(const char *path, char *err_buf, size_t err_cap) {
+    char tmp[R01_PATH_MAX];
+    size_t i;
+    if (!path || !path[0]) {
+        set_err(err_buf, err_cap, "bad path");
+        return -1;
+    }
+    if (strlen(path) >= sizeof(tmp)) {
+        set_err(err_buf, err_cap, "path too long");
+        return -1;
+    }
+    snprintf(tmp, sizeof(tmp), "%s", path);
+    for (i = 1; tmp[i]; i++) {
+        if (tmp[i] == '/') {
+            tmp[i] = '\0';
+            if (tmp[0] != '\0') {
+                if (mkdir(tmp, 0755) != 0) {
+                    struct stat st;
+                    if (stat(tmp, &st) != 0 || !S_ISDIR(st.st_mode)) {
+                        set_err(err_buf, err_cap, "cannot create dir");
+                        return -1;
+                    }
+                }
+            }
+            tmp[i] = '/';
+        }
+    }
+    if (mkdir(tmp, 0755) != 0) {
+        struct stat st;
+        if (stat(tmp, &st) != 0 || !S_ISDIR(st.st_mode)) {
+            set_err(err_buf, err_cap, "cannot create dir");
             return -1;
         }
     }

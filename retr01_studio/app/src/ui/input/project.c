@@ -172,7 +172,7 @@ void ui_export(UiState *ui) {
         ui_toast(ui, err, 1);
         return;
     }
-    ui_toast(ui, R01_ROM_DIR "/test.retr01 exported", 0);
+    ui_toast(ui, R01_OUTPUT_DIR "/test.retr01 exported", 0);
 }
 
 int ui_handle_drop_file(UiState *ui, const char *path, int lx, int ly) {

@@ -14,6 +14,7 @@ add_library(retr01_studio_core
   core/src/collision.c
   core/src/prg_phase1.c
   core/src/cart.c
+  core/src/export_codegen.c
   core/src/paths.c
   core/src/sprites.c
   core/src/entities.c
@@ -23,9 +24,9 @@ target_include_directories(retr01_studio_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include
 )
 set(R01_REPO_ROOT "${CMAKE_SOURCE_DIR}/.." CACHE PATH "Retr01 repo root")
-set(R01_ROM_DIR "${R01_REPO_ROOT}/rom")
-set(R01_TEST_CART "${R01_ROM_DIR}/test.retr01")
-set(R01_TEST_PROJECT "${R01_ROM_DIR}/test.r01proj")
+set(R01_OUTPUT_DIR "${R01_REPO_ROOT}/output")
+set(R01_TEST_CART "${R01_OUTPUT_DIR}/test.retr01")
+set(R01_TEST_PROJECT "${R01_OUTPUT_DIR}/test.r01proj")
 target_compile_definitions(retr01_studio_core PUBLIC "R01_REPO_ROOT=\"${R01_REPO_ROOT}\"")
 
 find_package(PkgConfig REQUIRED)
@@ -56,6 +57,7 @@ r01_studio_add_test(sprites)
 r01_studio_add_test(entities)
 r01_studio_add_test(metasprites)
 r01_studio_add_test(prg_phase1)
+r01_studio_add_test(export_codegen)
 
 add_executable(test_fixture core/tests/test_fixture.c ${STUDIO_TEST_HARNESS})
 target_include_directories(test_fixture PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/core/tests)

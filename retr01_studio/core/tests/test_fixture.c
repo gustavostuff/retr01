@@ -18,8 +18,8 @@ int main(int argc, char **argv) {
     char magic[6];
     int i;
 
-    proj_path = argc > 1 ? argv[1] : R01_ROM_DIR "/test.r01proj";
-    cart_path = argc > 2 ? argv[2] : R01_ROM_DIR "/test.retr01";
+    proj_path = argc > 1 ? argv[1] : R01_OUTPUT_DIR "/test.r01proj";
+    cart_path = argc > 2 ? argv[2] : R01_OUTPUT_DIR "/test.retr01";
 
     EXPECT(p != NULL && loaded != NULL, "alloc project");
     if (!p || !loaded) {

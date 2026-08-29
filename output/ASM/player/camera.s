@@ -1,0 +1,1 @@
+; center camera on player

@@ -5,7 +5,7 @@
 #ifdef R01_DEFAULT_CART
 #define R01E_TEST_CART R01_DEFAULT_CART
 #else
-#define R01E_TEST_CART "../rom/test.retr01"
+#define R01E_TEST_CART "../output/test.retr01"
 #endif
 
 int main(int argc, char **argv) {

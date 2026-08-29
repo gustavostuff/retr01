@@ -33,5 +33,6 @@ int r01_world_present_count(const R01World *w);
 int r01_project_import_png(R01Project *p, const char *path, char *err_buf, size_t err_cap);
 
 int r01_path_ensure_parent(const char *path, char *err_buf, size_t err_cap);
+int r01_path_mkdir_p(const char *path, char *err_buf, size_t err_cap);
 
 #endif

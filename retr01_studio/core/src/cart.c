@@ -4,6 +4,7 @@
 #include "retr01_studio/palette.h"
 #include "retr01_studio/play.h"
 #include "retr01_studio/prg_phase1.h"
+#include "retr01_studio/export_codegen.h"
 #include "retr01_studio/project.h"
 #include "retr01_studio/sprites.h"
 
@@ -810,6 +811,9 @@ int r01_export_bundle(const R01Project *p, const char *path_stem, char *err_buf,
         set_err(err_buf, err_cap, "bad args");
         return -1;
     }
+    if (r01_export_codegen(p, path_stem, err_buf, err_cap) != 0) {
+        return -1;
+    }
     snprintf(path, sizeof(path), "%s.retr01", path_stem);
     if (r01_path_ensure_parent(path, err_buf, err_cap) != 0) {
         return -1;
@@ -820,10 +824,6 @@ int r01_export_bundle(const R01Project *p, const char *path_stem, char *err_buf,
     }
     snprintf(path, sizeof(path), "%s_prom.bin", path_stem);
     if (r01_prom_write(path, err_buf, err_cap) != 0) {
-        return -1;
-    }
-    snprintf(path, sizeof(path), "%s_boot.s", path_stem);
-    if (r01_prg_write_asm(p, path, err_buf, err_cap) != 0) {
         return -1;
     }
     snprintf(path, sizeof(path), "%s_flash.bin", path_stem);

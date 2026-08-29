@@ -20,7 +20,7 @@
 #include <string.h>
 
 #ifndef R01_TEST_CART
-#define R01_TEST_CART "../rom/test.retr01"
+#define R01_TEST_CART "../output/test.retr01"
 #endif
 
 /*
@@ -194,8 +194,8 @@ int main(void) {
     expect_true(r01s_bus_conflict_count() == 0, "no bus fight");
 
     {
-        const char *paths[] = {R01_TEST_CART, "../rom/test.retr01", "../../rom/test.retr01",
-                               "rom/test.retr01", NULL};
+        const char *paths[] = {R01_TEST_CART, "../output/test.retr01", "../../output/test.retr01",
+                               "output/test.retr01", NULL};
         int pi;
         int loaded = 0;
         for (pi = 0; paths[pi]; pi++) {
@@ -218,7 +218,7 @@ int main(void) {
                 break;
             }
         }
-        expect_true(loaded, "rom/test.retr01 found");
+        expect_true(loaded, "output/test.retr01 found");
     }
 
     r01s_island_builder_shutdown(&builder);

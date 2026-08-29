@@ -1,6 +1,6 @@
 # Retr01 Studio
 
-Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. **Phase 4** (current): named entities/metasprites, **Mark as player**, Play spawn at the placed instance, player **hitbox** vs BG solid, cart/emu/sim parity. **Phase 3E**: Metasprites accordion + modal, entity compose from metasprite catalog, JSON v7, cart `format_ver` 2, viewport sprite clipping. **Phase 3D**: cart packs real SPR CHR + entity tables. **Phase 3C–3A / 2 / 1** still apply (place instances, sprites, multi-world sidebar, PNG import, export). Hardware: [`docs/02`](../docs/02_graphics_worlds_memory.md).
+Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. **Phase 5** (current): `output/` tree — save/load defaults, **Ctrl+E** exports generated `C/`, `ASM/`, `data/` plus cart sidecars; `custom_logic.c` created once and preserved. **Phase 4**: named entities/metasprites, **Mark as player**, Play spawn at placed instance, player **hitbox** vs BG solid, cart/emu/sim parity. **Phase 3E**: Metasprites accordion + modal, entity compose from metasprite catalog, JSON v7, cart `format_ver` 2, viewport sprite clipping. **Phase 3D**: cart packs real SPR CHR + entity tables. **Phase 3C–3A / 2 / 1** still apply (place instances, sprites, multi-world sidebar, PNG import, export). Hardware: [`docs/02`](../docs/02_graphics_worlds_memory.md).
 
 **Stack:** C11 + SDL2 + FreeType (Proggy Tiny), `libretr01_studio_core` + thin shell.
 
@@ -71,7 +71,7 @@ Cart packs `player_entity` + hitbox into the world header — **re-export** afte
 
 ## Save / load (JSON v7)
 
-**Ctrl+S** / **Ctrl+O** -> `rom/test.r01proj` by default.
+**Ctrl+S** / **Ctrl+O** -> `output/test.r01proj` by default.
 
 | Field | Behavior |
 |-------|----------|
@@ -116,14 +116,17 @@ Kit **master indices** only ([`docs/02`](../docs/02_graphics_worlds_memory.md)).
 
 ## Export
 
-**Ctrl+E** writes under `rom/` (relative to launch cwd):
+**Ctrl+E** writes under `output/` (relative to launch cwd):
 
-| File | Contents |
+| Path | Contents |
 |------|----------|
-| `test.retr01` | Packed cart (**world 0**): BG+SPR CHR, MAP, palettes, PRG stub, entity type/instance tables, **other screens** (title/inter/credits pages) (`format_ver` 2) |
+| `test.r01proj` | Save target (Ctrl+S only; export does not rewrite unless you save) |
+| `test.retr01` | Packed cart (**world 0**): BG+SPR CHR, MAP, palettes, PRG stub, entity tables, other screens (`format_ver` 2) |
 | `test_prom.bin` | 64-byte Color PROM image (motherboard, not in cart) |
-| `test_boot.s` | Human-readable ca65 stub / equates |
 | `test_flash.bin` | Cart padded to **512 KB** |
+| `C/` | Generated `base_game.c`, `r01_runtime.c`, headers; `custom_logic.c` (template, never overwritten) |
+| `ASM/` | Subdivided 6502 tree (`boot/`, `game/`, `io/`, `player/`, `sprite/`, `collision/`, `tables/`) |
+| `data/` | Palette, CHR, and per-screen MAP bins for `.incbin` |
 
 PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are for future 6502 use. Editor chrome is not burned into the cart. See [`retr01_sim/README.md`](../retr01_sim/README.md#cart-rom-vs-runners-triage).
 
@@ -142,6 +145,7 @@ PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are
 | **3D** | Cart packs real SPR CHR + entity tables. Emu/sim Play OAM parity |
 | **3E** | Metasprites accordion + modal. Entity compose from metasprite catalog. JSON v7. Cart `format_ver` 2 (other screens incl. credits pages + RLE). Viewport sprite clipping |
 | **4** | **Mark as player**; Play/cart/emu/sim draw state0/frame0, spawn at first placed instance, collide with authored hitbox. Entity/metasprite **names** + derived ids. Text fields, Esc/scrim modal dismiss, readable sidebar context menus |
+| **5** | `rom/` → `output/`; export writes `C/` (`base_game.c`, `custom_logic.c`, headers, `r01_runtime.c`), subdivided `ASM/` + `data/`; cart bytes unchanged (packer still `prg_phase1.c`) |
 
 **Out of scope (for now):** multi-state animation in Play (authoring supports 1-4 states / 1-4 frames; Play/cart still state0/frame0), entity-vs-entity collision, NPC AI, parallax planes / variable-thickness slices authoring, Generate, multi-world cart export, multi-world JSON save, dead-zone/fade scroll profiles, full 6502 gameplay loop.
 
@@ -151,7 +155,7 @@ PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are
 
 ```bash
 scripts/run-unit-tests          # from repo root
-scripts/run-studio rom/test.r01proj
+scripts/run-studio output/test.r01proj
 ```
 
 Or manually:
@@ -187,8 +191,8 @@ ctest --test-dir build --output-on-failure
 | Play / pause | **Space** / **PLAY** |
 | Move player | **WASD** / arrows |
 | Warp test | **X** -> (0,0), **Y** -> (1,0) |
-| Save / load | **Ctrl+S** / **Ctrl+O** -> `rom/test.r01proj` |
-| Export cart | **Ctrl+E** -> `rom/test.retr01` |
+| Save / load | **Ctrl+S** / **Ctrl+O** -> `output/test.r01proj` |
+| Export cart | **Ctrl+E** -> `output/test.retr01` (+ `C/`, `ASM/`, `data/`) |
 
 ---
 

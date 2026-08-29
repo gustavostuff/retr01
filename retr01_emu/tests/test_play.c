@@ -7,7 +7,7 @@
 #ifdef R01_DEFAULT_CART
 #define R01E_TEST_CART R01_DEFAULT_CART
 #else
-#define R01E_TEST_CART "../rom/test.retr01"
+#define R01E_TEST_CART "../output/test.retr01"
 #endif
 
 int main(int argc, char **argv) {
@@ -28,8 +28,8 @@ int main(int argc, char **argv) {
     }
     spawn_x = m.play.player_x;
     spawn_y = m.play.player_y;
-    /* test.r01proj marks player type 0; first instance is at 299,521. */
-    if (spawn_x != 299 || spawn_y != 521) {
+    /* test.r01proj marks player type 0; first instance is at 204,180. */
+    if (spawn_x != 204 || spawn_y != 180) {
         fprintf(stderr, "FAIL spawn at instance: got %d,%d\n", spawn_x, spawn_y);
         r01e_machine_shutdown(&m);
         return 1;

@@ -28,13 +28,13 @@ Later emulator phases are **not** specified here. They will be defined when work
 
 ```bash
 scripts/run-unit-tests
-scripts/run-emu rom/test.retr01
+scripts/run-emu output/test.retr01
 
 # or
 cd retr01_emu
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
-./build/retr01_emu ../rom/test.retr01
+./build/retr01_emu ../output/test.retr01
 ```
 
 **Controls:** WASD or arrows = move * **X**/**Y** = warp * Space = pause * R = reset * Esc = quit

@@ -41,9 +41,9 @@ Thin wrappers at the repo root forward to [`scripts/`](scripts/):
 
 | Script | Usage |
 |--------|--------|
-| [`studio`](studio) | `./studio rom/test.r01proj` |
-| [`emu`](emu) | `./emu rom/test.retr01` |
-| [`sim`](sim) | `./sim rom/test.retr01` |
+| [`studio`](studio) | `./studio output/test.r01proj` |
+| [`emu`](emu) | `./emu output/test.retr01` |
+| [`sim`](sim) | `./sim output/test.retr01` |
 | [`unit-tests`](unit-tests) | build + ctest for Studio, Emu, and Sim |
 | [`export-rom`](export-rom) | `./export-rom [project.r01proj] [stem]` |
 | [`build-all`](build-all) | Release builds -> `release/retr01_{studio,emu,sim}` |
@@ -51,13 +51,13 @@ Thin wrappers at the repo root forward to [`scripts/`](scripts/):
 ```bash
 ./build-all
 ./unit-tests
-./studio rom/test.r01proj
-./export-rom rom/test.r01proj
-./emu rom/test.retr01
-./sim rom/test.retr01
+./studio output/test.r01proj
+./export-rom output/test.r01proj
+./emu output/test.retr01
+./sim output/test.retr01
 ```
 
-**ROM output:** Studio **Ctrl+E** (or `./export-rom`) writes cart images under [`rom/`](rom/) at the repo root.
+**Export output:** Studio **Ctrl+E** (or `./export-rom`) writes cart images and generated game tree under [`output/`](output/) at the repo root.
 
 ---
 

@@ -26,7 +26,7 @@ IC-first board simulator for Retr01-A. Separate from Retr01 Studio (authoring). 
 
 Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8000+`.
 
-**Cart load:** `scripts/run-sim rom/test.retr01` (cart path required). The **6502 executes cart PRG from flash** (Studio export includes palette + MAP->VRAM boot via `$FE93`->`$FE12`). Startup catchup runs that stream on a **worker thread** (~12k pin-level steps) so the SDL window stays responsive. Synthetic test cart still uses sim bring-up overlay for island smoke. Host softboot is opt-in only (`R01S_SOFTBOOT=1`). See [`PERFORMANCE.md`](PERFORMANCE.md).
+**Cart load:** `scripts/run-sim output/test.retr01` (cart path required). The **6502 executes cart PRG from flash** (Studio export includes palette + MAP->VRAM boot via `$FE93`->`$FE12`). Startup catchup runs that stream on a **worker thread** (~12k pin-level steps) so the SDL window stays responsive. Synthetic test cart still uses sim bring-up overlay for island smoke. Host softboot is opt-in only (`R01S_SOFTBOOT=1`). See [`PERFORMANCE.md`](PERFORMANCE.md).
 
 Why the worker exists: [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md).
 
@@ -44,7 +44,7 @@ Why the worker exists: [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md).
   Layer 3: System (full board + cart + input + screen)
 ```
 
-Layer 1: per-chip harness tests in `tests/`. Layer 2: island smoke in `tests/test_island_abcdeghiojklmnp.c`. Layer 3: full netlist + golden cart `rom/test.retr01`.
+Layer 1: per-chip harness tests in `tests/`. Layer 2: island smoke in `tests/test_island_abcdeghiojklmnp.c`. Layer 3: full netlist + golden cart `output/test.retr01`.
 
 ## Cart ROM vs runners (triage)
 
@@ -54,8 +54,8 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 
 | Layer | Artifact | On silicon / runners? | Notes |
 |-------|----------|----------------------|--------|
-| **Studio editor / Play** | `rom/test.r01proj` (+ UI) | **No** | Host preview only. Never executes PRG or `$FExx` |
-| **Cart image** | `rom/test.retr01` (+ `test_flash.bin`) | **Yes** (flash) | Packed bytes SoT for PRG/CHR/MAP/pals. Layout in [`docs/02`](../docs/02_graphics_worlds_memory.md) |
+| **Studio editor / Play** | `output/test.r01proj` (+ UI) | **No** | Host preview only. Never executes PRG or `$FExx` |
+| **Cart image** | `output/test.retr01` (+ `test_flash.bin`) | **Yes** (flash) | Packed bytes SoT for PRG/CHR/MAP/pals. Layout in [`docs/02`](../docs/02_graphics_worlds_memory.md) |
 | **Color PROM burn** | `test_prom.bin` | **Yes** (motherboard) | Not inside the cart. Kit -> R3G3B2. Board AT28C16 |
 | **Boot asm listing** | `test_boot.s` | Human-readable only | Binary inside `.retr01` is what runners execute |
 | **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Default: PRG catchup streams pals + start MAP. Softboot opt-in (`R01E_SOFTBOOT=1`). Host Play for camera/player |
@@ -116,7 +116,7 @@ Or from repo root:
 
 ```bash
 scripts/run-unit-tests
-scripts/run-sim rom/test.retr01
+scripts/run-sim output/test.retr01
 ```
 
 Needs: CMake, a C compiler, SDL2 (`sdl2` package).
@@ -124,7 +124,7 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 ## Run
 
 ```bash
-scripts/run-sim rom/test.retr01
+scripts/run-sim output/test.retr01
 # or: ./build/retr01_sim /path/to/cart.retr01
 ```
 

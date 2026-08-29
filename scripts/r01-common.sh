@@ -10,10 +10,10 @@ if [[ -z "${R01_ROOT:-}" ]]; then
   R01_ROOT="$(r01_repo_root)"
 fi
 export R01_ROOT
-: "${R01_ROM_DIR:=$R01_ROOT/rom}"
-export R01_ROM_DIR
-R01_DEFAULT_CART="$R01_ROM_DIR/test.retr01"
-R01_DEFAULT_PROJECT="$R01_ROM_DIR/test.r01proj"
+: "${R01_OUTPUT_DIR:=$R01_ROOT/output}"
+export R01_OUTPUT_DIR
+R01_DEFAULT_CART="$R01_OUTPUT_DIR/test.retr01"
+R01_DEFAULT_PROJECT="$R01_OUTPUT_DIR/test.r01proj"
 export R01_DEFAULT_CART R01_DEFAULT_PROJECT
 
 r01_die() {

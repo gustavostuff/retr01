@@ -10,7 +10,7 @@
 #ifdef R01_TEST_CART
 #define R01S_TEST_CART R01_TEST_CART
 #else
-#define R01S_TEST_CART "../rom/test.retr01"
+#define R01S_TEST_CART "../output/test.retr01"
 #endif
 
 static int write_tmp_cart(const char *path, const uint8_t *data, size_t len) {

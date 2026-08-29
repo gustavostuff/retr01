@@ -59,9 +59,9 @@
 #define R01_PATH_MAX 512
 #define R01_JSON_VER 7
 
-#define R01_ROM_DIR "rom"
-#define R01_DEFAULT_PROJECT R01_ROM_DIR "/test.r01proj"
-#define R01_DEFAULT_CART_STEM R01_ROM_DIR "/test"
+#define R01_OUTPUT_DIR "output"
+#define R01_DEFAULT_PROJECT R01_OUTPUT_DIR "/test.r01proj"
+#define R01_DEFAULT_CART_STEM R01_OUTPUT_DIR "/test"
 
 /* Per-world sprite catalog (CHR patterns in spr_banks + authoring metadata). */
 #define R01_MAX_SPRITES 256
