@@ -1,5 +1,6 @@
 #include "retr01_studio/chr_pack.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 void r01_tile_from_pixels(const uint8_t *pixels, int tile_col, int tile_row, uint8_t out16[R01_TILE_BYTES]) {
@@ -185,6 +186,55 @@ void r01_tile_set_pixel(uint8_t tile[R01_TILE_BYTES], int sx, int sy, uint8_t co
     tile[sy] = (uint8_t)((tile[sy] & (uint8_t)~(1u << bit)) | (((color & 1u) ? 1u : 0u) << bit));
     tile[sy + 8] =
         (uint8_t)((tile[sy + 8] & (uint8_t)~(1u << bit)) | (((color & 2u) ? 1u : 0u) << bit));
+}
+
+static int rgb_brightness(uint8_t r, uint8_t g, uint8_t b) {
+    return (int)r + (int)g + (int)b;
+}
+
+void r01_tile_from_rgba_brightness(uint8_t out16[R01_TILE_BYTES], const uint8_t *rgba, int img_w, int img_h,
+                                   int src_x, int src_y, const uint8_t (*target_rgb)[3]) {
+    int sy, sx;
+    int tbright[4];
+    if (!out16) {
+        return;
+    }
+    memset(out16, 0, R01_TILE_BYTES);
+    if (!rgba || !target_rgb || img_w < 1 || img_h < 1) {
+        return;
+    }
+    for (sx = 0; sx < 4; sx++) {
+        tbright[sx] = rgb_brightness(target_rgb[sx][0], target_rgb[sx][1], target_rgb[sx][2]);
+    }
+    for (sy = 0; sy < 8; sy++) {
+        for (sx = 0; sx < 8; sx++) {
+            int ix = src_x + sx;
+            int iy = src_y + sy;
+            const uint8_t *p;
+            uint8_t col;
+            int bright, best, best_d, i;
+            if (ix < 0 || iy < 0 || ix >= img_w || iy >= img_h) {
+                continue;
+            }
+            p = rgba + ((size_t)iy * (size_t)img_w + (size_t)ix) * 4u;
+            if (p[3] < 128u) {
+                col = 0;
+            } else {
+                bright = rgb_brightness(p[0], p[1], p[2]);
+                best = 0;
+                best_d = abs(bright - tbright[0]);
+                for (i = 1; i < 4; i++) {
+                    int d = abs(bright - tbright[i]);
+                    if (d < best_d) {
+                        best_d = d;
+                        best = i;
+                    }
+                }
+                col = (uint8_t)best;
+            }
+            r01_tile_set_pixel(out16, sx, sy, col);
+        }
+    }
 }
 
 int r01_chr_alloc_tile(R01World *w, int bank) {

@@ -102,6 +102,9 @@ extern SDL_Cursor *g_cursor_hand;
 
 /* ui/primitives.c */
 int ui_load_png_rgba(const char *path, uint8_t **out_px, int *out_w, int *out_h);
+
+/* Paste clipboard PNG into an 8x8 CHR buffer (alpha->0, brightness match to pal). spr_plane=1 for SPR pals. */
+int ui_paste_clipboard_png_tile(UiState *ui, uint8_t chr[R01_TILE_BYTES], int pal, int spr_plane);
 int snap8(int v);
 void ui_toast(UiState *ui, const char *msg, int is_error);
 void fill_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B);

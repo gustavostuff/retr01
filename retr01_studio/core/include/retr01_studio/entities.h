@@ -50,6 +50,10 @@ int r01_world_place_sprite(R01World *w, int sprite_catalog_idx, int world_x, int
 /* Drop an entity type: place instance. Returns instance idx or -1. */
 int r01_world_place_entity(R01World *w, int type_id, int world_x, int world_y);
 
+/* Resolve part draw pose for an instance (optional mirrors around state origin). */
+void r01_entity_part_instance_pose(const R01EntityState *st, const R01EntityPart *pt, int inst_flip_h,
+                                   int inst_flip_v, int *out_dx, int *out_dy, int *out_flip_h, int *out_flip_v);
+
 /*
  * Instance world_x/y is the user-defined state origin in world pixels.
  * Part / hitbox authoring coords are relative to the 16x16 compose grid;

@@ -62,7 +62,7 @@
 #define UI_ENTITIES_BODY_H 96
 
 #define UI_ENTITY_MODAL_W 448
-#define UI_ENTITY_MODAL_H 320
+#define UI_ENTITY_MODAL_H 336
 #define UI_ENTITY_BANK_GRID 128 /* 16x16 tiles @ 8px */
 #define UI_ENTITY_COMPOSE 128   /* 16px @ 8x scale */
 #define UI_ENTITY_LIST_H 128
@@ -258,6 +258,9 @@ typedef struct UiState {
     int sel_x0, sel_y0, sel_x1, sel_y1; /* inclusive tile rect; invalid when sel_x0 < 0 */
     int sel_anchor_x, sel_anchor_y;
     int sel_drag;
+    int inst_drag;
+    int inst_drag_off_x;
+    int inst_drag_off_y;
     int sel_instance; /* -1 or index into world.instances */
     int last_paint_tx;
     int last_paint_ty;

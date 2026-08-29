@@ -48,6 +48,10 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 ui->sprite_edit.open = 0;
                 return 1;
             }
+            if ((e->key.keysym.mod & KMOD_CTRL) && e->key.keysym.sym == SDLK_v) {
+                (void)ui_paste_clipboard_png_tile(ui, ui->sprite_edit.chr, ui->sprite_edit.pal, 1);
+                return 1;
+            }
             return 1;
         }
         if (ui->metasprite_edit.open) {
@@ -75,6 +79,10 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 ui->tile_edit.open = 0;
                 return 1;
             }
+            if ((e->key.keysym.mod & KMOD_CTRL) && e->key.keysym.sym == SDLK_v) {
+                (void)ui_paste_clipboard_png_tile(ui, ui->tile_edit.chr, ui->tile_edit.pal, 0);
+                return 1;
+            }
             return 1;
         }
         if ((e->key.keysym.sym == SDLK_DELETE || e->key.keysym.sym == SDLK_BACKSPACE) &&
@@ -82,7 +90,20 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             R01World *w = r01_project_active_world(ui->project);
             if (w && r01_world_instance_remove(w, ui->sel_instance) == 0) {
                 ui->sel_instance = -1;
+                ui->inst_drag = 0;
                 ui_toast(ui, "instance removed", 0);
+            }
+            return 1;
+        }
+        if (!ui->play.active && !ui->menu.open && ui->screen_layer == UI_SCREEN_LAYER_SPR &&
+            ui->sel_instance >= 0 && (e->key.keysym.sym == SDLK_h || e->key.keysym.sym == SDLK_v)) {
+            R01World *w = r01_project_active_world(ui->project);
+            if (w && ui->sel_instance < w->instance_count) {
+                if (e->key.keysym.sym == SDLK_h) {
+                    w->instances[ui->sel_instance].flip_h = !w->instances[ui->sel_instance].flip_h;
+                } else {
+                    w->instances[ui->sel_instance].flip_v = !w->instances[ui->sel_instance].flip_v;
+                }
             }
             return 1;
         }
@@ -269,6 +290,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 if (ui->screen_layer == UI_SCREEN_LAYER_SPR) {
                     if (instance_hit_on_screen(ui, lx, ly, &inst)) {
                         ui->sel_instance = inst;
+                        ui->inst_drag = 0;
                         screen_sel_clear(ui);
                         menu_open_instance(ui, lx, ly, inst);
                         return 1;
@@ -373,6 +395,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 ui->screen_layer = mode_row;
                 if (ui->screen_layer == UI_SCREEN_LAYER_BG) {
                     ui->sel_instance = -1;
+                    ui->inst_drag = 0;
                 } else {
                     screen_sel_clear(ui);
                 }
@@ -394,15 +417,25 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             if (!ui->play.active && screen_hit(ui, lx, ly, &tx, &ty)) {
                 int inst;
                 if (ui->screen_layer == UI_SCREEN_LAYER_SPR) {
-                    if (instance_hit_on_screen(ui, lx, ly, &inst)) {
+                    int px, py;
+                    if (instance_hit_on_screen(ui, lx, ly, &inst) && screen_pixel_hit(ui, lx, ly, &px, &py)) {
+                        R01World *w = r01_project_active_world(ui->project);
+                        R01Screen *s = r01_project_active_screen(ui->project);
                         ui->sel_instance = inst;
                         screen_sel_clear(ui);
+                        if (w && s && inst >= 0 && inst < w->instance_count) {
+                            ui->inst_drag = 1;
+                            ui->inst_drag_off_x = w->instances[inst].world_x - (s->col * R01_SCREEN_PX_W + px);
+                            ui->inst_drag_off_y = w->instances[inst].world_y - (s->row * R01_SCREEN_PX_H + py);
+                        }
                     } else {
                         ui->sel_instance = -1;
+                        ui->inst_drag = 0;
                     }
                     return 1;
                 }
                 ui->sel_instance = -1;
+                ui->inst_drag = 0;
                 if (ui->screen_mode == UI_SCREEN_MODE_PAINT) {
                     if (alt) {
                         ui_paint_stamp_from_cell(ui, tx, ty);
@@ -436,6 +469,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         ui->last_paint_tx = -1;
         ui->last_paint_ty = -1;
         ui->sel_drag = 0;
+        ui->inst_drag = 0;
         if (ui->metasprite_edit.open) {
             metasprite_modal_handle(ui, lx, ly, 0, e->button.button);
             return 1;
@@ -489,6 +523,17 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         !ui->metasprite_edit.open && !ui->entity_edit.open && !ui->menu.open && !ui->catalog_drag.active) {
         int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
         int tx, ty;
+        if (ui->screen_layer == UI_SCREEN_LAYER_SPR && ui->inst_drag && ui->sel_instance >= 0 &&
+            (e->motion.state & SDL_BUTTON_LMASK)) {
+            int px, py;
+            R01World *w = r01_project_active_world(ui->project);
+            R01Screen *s = r01_project_active_screen(ui->project);
+            if (w && s && ui->sel_instance < w->instance_count && screen_pixel_hit(ui, lx, ly, &px, &py)) {
+                w->instances[ui->sel_instance].world_x = s->col * R01_SCREEN_PX_W + px + ui->inst_drag_off_x;
+                w->instances[ui->sel_instance].world_y = s->row * R01_SCREEN_PX_H + py + ui->inst_drag_off_y;
+            }
+            return 1;
+        }
         if (ui->screen_layer == UI_SCREEN_LAYER_BG && ui->screen_mode == UI_SCREEN_MODE_SEL && ui->sel_drag &&
             shift && (e->motion.state & SDL_BUTTON_LMASK) && screen_hit(ui, lx, ly, &tx, &ty)) {
             screen_sel_set(ui, ui->sel_anchor_x, ui->sel_anchor_y, tx, ty);

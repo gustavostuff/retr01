@@ -28,7 +28,6 @@ int ui_layer_panel_w(void) {
 }
 
 void ui_editor_layout(const UiState *ui, int *screen_x, int *screen_y, int *layer_x, int *mode_x, int *mode_y0) {
-    int play_active = ui && ui->play.active;
     int available = UI_LOGIC_W - UI_SIDEBAR_W;
     int layer_w = ui_layer_panel_w();
     int mode_w = ui_mode_panel_w();
@@ -39,6 +38,7 @@ void ui_editor_layout(const UiState *ui, int *screen_x, int *screen_y, int *laye
     int sy = (UI_LOGIC_H - UI_SCREEN_H) / 2;
     int lx;
     int mx;
+    (void)ui;
     if (left < UI_SIDEBAR_W + UI_UNIT) {
         left = UI_SIDEBAR_W + UI_UNIT;
     }
@@ -54,25 +54,6 @@ void ui_editor_layout(const UiState *ui, int *screen_x, int *screen_y, int *laye
             sx = lx + layer_w + gap;
             mx = sx + UI_SCREEN_W + gap;
         }
-    }
-    if (play_active) {
-        sx = UI_SIDEBAR_W + (available - UI_SCREEN_W) / 2;
-        if (screen_x) {
-            *screen_x = sx;
-        }
-        if (screen_y) {
-            *screen_y = sy;
-        }
-        if (layer_x) {
-            *layer_x = sx;
-        }
-        if (mode_x) {
-            *mode_x = sx;
-        }
-        if (mode_y0) {
-            *mode_y0 = sy;
-        }
-        return;
     }
     if (screen_x) {
         *screen_x = sx;
@@ -466,11 +447,7 @@ void entity_modal_layout(EntityModalLayout *lo) {
     int right_x = mx + UI_ENTITY_MODAL_W / 2 + UI_UNIT;
     lo->mx = mx;
     lo->my = my;
-    lo->left_label_y = my + UI_BTN_H + 2;
-    lo->left_list_x = left_x;
-    lo->left_list_y = lo->left_label_y + UI_BTN_H + 2;
-    lo->left_list_h = UI_ENTITY_LIST_H;
-    lo->right_state_y = lo->left_label_y;
+    lo->right_state_y = my + UI_BTN_H + 2;
     lo->right_dots_x = right_x + label_width("State") + UI_UNIT;
     lo->right_dots_y = lo->right_state_y + 4;
     lo->right_name_x = lo->right_dots_x + UI_DOT_STRIP_N * (UI_DOT_SIZE + UI_DOT_GAP) + UI_UNIT;
@@ -483,7 +460,11 @@ void entity_modal_layout(EntityModalLayout *lo) {
     lo->frame_dots_x = right_x + label_width("Frame") + UI_UNIT;
     lo->frame_dots_y = lo->right_frame_y + 4;
     lo->right_grid_x = right_x;
-    lo->right_grid_y = lo->left_list_y;
+    lo->right_grid_y = lo->right_frame_y + UI_BTN_H + 2;
+    lo->left_list_x = left_x;
+    lo->left_list_y = lo->right_grid_y;
+    lo->left_list_h = UI_ENTITY_LIST_H;
+    lo->left_label_y = lo->left_list_y - UI_BTN_H - 2;
     lo->guides_x = right_x;
     lo->guides_y = lo->right_grid_y + UI_ENTITY_COMPOSE + UI_UNIT;
     lo->pal_label_x = lo->guides_x + UI_UNIT * 14;

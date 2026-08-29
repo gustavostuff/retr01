@@ -97,6 +97,7 @@ TEST_MAIN() {
     w->entities[0].states[0].frames[0].parts[0].dy = 5;
     inst = r01_world_place_entity(w, type_id, 40, 50);
     EXPECT(inst == 0, "instance");
+    w->instances[0].flip_h = 1;
 
     p->other_screens[R01_CART_OTHER_TITLE].tiles[0] = 0x42;
     /* Credits page (id 2): mostly blank -> RLE in other screens. */
@@ -225,6 +226,7 @@ TEST_MAIN() {
 
                 memcpy(irec, img + world_base + off_insts, R01_CART_INSTANCE_SIZE);
                 EXPECT(irec[0] == 0, "inst type");
+                EXPECT(irec[1] == 1, "inst flip_h flag");
                 EXPECT(rd_u16(irec + 2) == 40, "inst x");
                 EXPECT(rd_u16(irec + 4) == 50, "inst y");
                 free(img);

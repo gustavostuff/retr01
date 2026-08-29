@@ -486,8 +486,19 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
         int ii;
         for (ii = 0; ii < w->instance_count; ii++) {
             const R01EntityInstance *inst = &w->instances[ii];
-            fprintf(f, "    {\"type\": %d, \"x\": %d, \"y\": %d}%s\n", inst->type_id, inst->world_x,
-                    inst->world_y, ii + 1 < w->instance_count ? "," : "");
+            if (inst->flip_h || inst->flip_v) {
+                fprintf(f, "    {\"type\": %d, \"x\": %d, \"y\": %d", inst->type_id, inst->world_x, inst->world_y);
+                if (inst->flip_h) {
+                    fprintf(f, ", \"fh\": 1");
+                }
+                if (inst->flip_v) {
+                    fprintf(f, ", \"fv\": 1");
+                }
+                fprintf(f, "}%s\n", ii + 1 < w->instance_count ? "," : "");
+            } else {
+                fprintf(f, "    {\"type\": %d, \"x\": %d, \"y\": %d}%s\n", inst->type_id, inst->world_x,
+                        inst->world_y, ii + 1 < w->instance_count ? "," : "");
+            }
         }
     }
     fprintf(f, "  ],\n");
@@ -1258,7 +1269,8 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         const char *end = json_object_end(obj2);
                         size_t olen;
                         char *slice;
-                        int type_id = 0, wx = 0, wy = 0;
+                        int type_id = 0, wx = 0, wy = 0, fh = 0, fv = 0;
+                        int idx;
                         if (!end || end >= inst_end) {
                             break;
                         }
@@ -1272,9 +1284,19 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         json_int_after(slice, "\"type\"", &type_id);
                         json_int_after(slice, "\"x\"", &wx);
                         json_int_after(slice, "\"y\"", &wy);
+                        json_int_after(slice, "\"fh\"", &fh);
+                        json_int_after(slice, "\"fv\"", &fv);
                         free(slice);
                         if (type_id >= 0 && type_id < w->entity_count) {
-                            (void)r01_world_instance_add(w, type_id, wx, wy);
+                            idx = r01_world_instance_add(w, type_id, wx, wy);
+                            if (idx >= 0) {
+                                if (fh) {
+                                    w->instances[idx].flip_h = 1;
+                                }
+                                if (fv) {
+                                    w->instances[idx].flip_v = 1;
+                                }
+                            }
                         }
                         obj2 = strchr(end + 1, '{');
                     }

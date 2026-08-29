@@ -48,6 +48,32 @@ TEST_MAIN() {
     r01_screen_fill_pixels_from_bank(w, s);
     EXPECT(s->pixels[0] <= 3, "fill pixels produces palette indices");
 
+    {
+        uint8_t rgba[8 * 8 * 4];
+        uint8_t targets[4][3] = {{0, 0, 0}, {80, 80, 80}, {160, 160, 160}, {255, 255, 255}};
+        int i;
+        memset(rgba, 0, sizeof(rgba));
+        /* Transparent pixel */
+        rgba[0] = 255;
+        rgba[1] = 255;
+        rgba[2] = 255;
+        rgba[3] = 0;
+        /* Mid brightness opaque -> index 2 */
+        rgba[4] = 150;
+        rgba[5] = 150;
+        rgba[6] = 150;
+        rgba[7] = 255;
+        /* Bright opaque -> index 3 */
+        for (i = 0; i < 3; i++) {
+            rgba[8 + i] = 250;
+        }
+        rgba[11] = 255;
+        r01_tile_from_rgba_brightness(tile, rgba, 8, 8, 0, 0, (const uint8_t (*)[3])targets);
+        EXPECT(r01_tile_pixel_color(tile, 0, 0) == 0, "transparent -> 0");
+        EXPECT(r01_tile_pixel_color(tile, 1, 0) == 2, "mid brightness");
+        EXPECT(r01_tile_pixel_color(tile, 2, 0) == 3, "bright");
+    }
+
     free(p);
     TEST_EXIT();
 }

@@ -10,7 +10,7 @@
 #define R01_CART_WHDR_OFF_INSTS 22
 #define R01_CART_ENTITY_PARTS_MAX 4
 #define R01_CART_ENTITY_TYPE_SIZE 20 /* origin_x,y + part_count + pad + 4x(tile,attr,dx,dy) */
-#define R01_CART_INSTANCE_SIZE 6     /* type_id, pad, world_x u16 LE, world_y u16 LE */
+#define R01_CART_INSTANCE_SIZE 6 /* type_id, flags (bit0 flip_h, bit1 flip_v), world_x u16 LE, world_y u16 LE */
 
 /* Other-screens dir entry (relative off_payload to other blob base). */
 #define R01_CART_OTHER_DIR_ID 0

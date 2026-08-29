@@ -133,16 +133,26 @@ static void write_oam(R01sBoard *b) {
         }
         for (pi = 0; pi < part_count && slot < 64; pi++) {
             const uint8_t *part = trec + 4 + pi * 4;
-            int8_t dx = (int8_t)part[2];
-            int8_t dy = (int8_t)part[3];
-            int sx = world_x + (int)dx - origin_x - pl->cam_x;
-            int sy = world_y + (int)dy - origin_y - pl->cam_y;
+            int dx = (int)(int8_t)part[2];
+            int dy = (int)(int8_t)part[3];
+            uint8_t attr = part[1];
+            int sx, sy;
+            if (irec[1] & 1u) {
+                dx = 2 * origin_x - dx - 8;
+                attr = (uint8_t)(attr ^ 0x10u); /* FLIP_H */
+            }
+            if (irec[1] & 2u) {
+                dy = 2 * origin_y - dy - 8;
+                attr = (uint8_t)(attr ^ 0x20u); /* FLIP_V */
+            }
+            sx = world_x + dx - origin_x - pl->cam_x;
+            sy = world_y + dy - origin_y - pl->cam_y;
             if (r01s_oam_tile_off_screen(sx, sy)) {
                 continue;
             }
             r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 0), r01s_oam_coord_to_u8(sy));
             r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 1), part[0]);
-            r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 2), part[1]);
+            r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 2), attr);
             r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 3), r01s_oam_coord_to_u8(sx));
             slot++;
             b->health_saw_oam = 1;

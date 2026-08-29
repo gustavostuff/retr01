@@ -172,17 +172,28 @@ static void write_oam(R01eMachine *m) {
         }
         for (pi = 0; pi < part_count && slot < R01E_OAM_ENTRIES; pi++) {
             const uint8_t *part = trec + 4 + pi * 4;
-            int8_t dx = (int8_t)part[2];
-            int8_t dy = (int8_t)part[3];
-            int sx = world_x + (int)dx - origin_x - pl->cam_x;
-            int sy = world_y + (int)dy - origin_y - pl->cam_y;
-            uint8_t *oe = &m->io.oam[(size_t)slot * R01E_OAM_ENTRY_BYTES];
+            int dx = (int)(int8_t)part[2];
+            int dy = (int)(int8_t)part[3];
+            uint8_t attr = part[1];
+            int sx, sy;
+            uint8_t *oe;
+            if (irec[1] & 1u) {
+                dx = 2 * origin_x - dx - 8;
+                attr = (uint8_t)(attr ^ R01E_ATTR_FLIP_H);
+            }
+            if (irec[1] & 2u) {
+                dy = 2 * origin_y - dy - 8;
+                attr = (uint8_t)(attr ^ R01E_ATTR_FLIP_V);
+            }
+            sx = world_x + dx - origin_x - pl->cam_x;
+            sy = world_y + dy - origin_y - pl->cam_y;
+            oe = &m->io.oam[(size_t)slot * R01E_OAM_ENTRY_BYTES];
             if (r01e_oam_tile_off_screen(sx, sy)) {
                 continue;
             }
             oe[0] = r01e_oam_coord_to_u8(sy);
             oe[1] = part[0]; /* tile */
-            oe[2] = part[1]; /* attr */
+            oe[2] = attr;
             oe[3] = r01e_oam_coord_to_u8(sx);
             slot++;
         }

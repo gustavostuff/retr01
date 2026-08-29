@@ -37,17 +37,18 @@ Fixed **640x360** logical canvas, **8px** grid, dark gray chrome. Buttons/labels
 | **Ctrl+click** present | Remove screen |
 | **Click** present | Select active screen (edit target) |
 | **Right-click** map cell | **Set default screen** / **Make default world** |
-| **BG / Sprite layer** | Radios **left** of screen. **BG layer**: tile select/paint + tile context menu. **Sprite layer**: select instances + instance context menu (edit entity type / remove instance). Tile radios dim on sprite layer |
+| **BG / Sprite layer** | Radios **left** of screen. **BG layer**: tile select/paint + tile context menu. **Sprite layer**: select/drag instances, **H/V** or context **Mirror H/V** (per-instance: remaps part X/Y + toggles `FLIP_H`/`FLIP_V` for OAM), instance context menu (edit entity type / remove). Tile radios dim on sprite layer |
 | **Tile Sel / Paint** | Radios **right** of screen (BG layer only). Paint stamps armed tile+palette |
 | **Right-click tile** (BG layer) | Move to tile bank, add tile, edit tile, set palette/anim/solid |
-| **Right-click instance** (Sprite layer) | Edit entity type / Remove instance |
-| **Edit tile** modal | **288x160**, 4x4 palette picker, **128x128** pixel canvas |
+| **Right-click instance** (Sprite layer) | Mirror H / Mirror V / Edit entity type / Remove instance |
+| **Edit tile** modal | **288x160**, 4x4 palette picker, **128x128** pixel canvas. **Ctrl+V** pastes clipboard PNG (transparent -> index 0, opaque matched by brightness to the selected palette) |
+| **Edit sprite** modal | Same canvas as tile. **Ctrl+V** pastes clipboard PNG onto the SPR canvas (same rules, SPR palette) |
 | **Set Solid** | Toggles `R01_ATTR_SOLID` (`0x40`) on matching tiles in active world (bank+pal+flips, not tile ID) |
 | **Palette strip** | Click BG/SPR strip -> **Global palettes** modal. Row **0-7** sets `default_pal_row` for the active world |
 | **Sprites** | List of SPR catalog entries (**1x** icons + bank tile index). Empty: **empty** + **Add**. Create/Edit modal: SPR bank dots + 16x16 tile grid, 4x4 SPR palette, LMB drag parts, RMB paint. Right-click: edit, remove, set palette, change sprite bank. New sprites fill bank **0**, then **1..3** |
 | **Metasprites** | Reusable multi-part SPR groups (no origin/hitbox). Empty: **empty** + **Add**. Modal: same compose flow as entities but assembly-only (SPR bank left, 16x16 compose right, 4x4 SPR palette, LMB/RMB). Right-click: edit, remove. **Studio-only**: not a separate cart table. Export flattens into entity parts |
-| **Entities** | List of entity types (composite icon + state-0 name). Empty: **empty** + **Add**. Modal: left **metasprite catalog** (drag onto compose). Right **State** / **Frame** dot strips (**1..4** each: click next slot to append. Delete with no part selected trims empty last frame/state). Name field, 16x16 compose @8x, origin cross + hitbox (guides checkbox), 4x4 SPR palette. LMB select/drag parts, origin, hitbox. RMB paint selected part. Selected part: **H/V** flips, **1-4** palette, Delete removes. JSON stores full state/frame tree. Play + cart still use **state 0 / frame 0** only. Right-click: edit, remove |
-| **Place on screen** | Drag a **Sprites**, **Metasprites**, or **Entities** row onto the screen preview (switches to **Sprite layer**). Sprite drop auto-creates a 1-state/1-frame/1-part entity and places an instance. Metasprite drop auto-creates an entity from the group and places an instance. Entity drop places that type. Instance `world_x/y` is the **user origin** (compose cross). Parts/hitbox draw as `(coord - origin)` relative to that. Sprites **clip to 128x120** when partially off-screen. On Sprite layer: click instance to select (white outline). **Delete** removes. Visible in edit view and **Play** (OAM slot 0 = player. Instances fill 1+) |
+| **Entities** | List of entity types (composite icon + state-0 name). Empty: **empty** + **Add**. Modal: left **metasprite catalog** (drag onto compose). Right **State** then **Frame** dot strips (**1..4** each: click next slot to append. Delete with no part selected trims empty last frame/state). Name field, 16x16 compose @8x, origin cross + hitbox (guides checkbox), 4x4 SPR palette. LMB select/drag parts, origin, hitbox. RMB paint selected part. Selected part: **H/V** flips, **1-4** palette, Delete removes. JSON stores full state/frame tree. Play + cart still use **state 0 / frame 0** only. Right-click: edit, remove. Modals use a darkened overlay; **Esc** cancels/closes |
+| **Place on screen** | Drag a **Sprites**, **Metasprites**, or **Entities** row onto the screen preview (switches to **Sprite layer**). Sprite drop auto-creates a 1-state/1-frame/1-part entity and places an instance. Metasprite drop auto-creates an entity from the group and places an instance. Entity drop places that type. Instance `world_x/y` is the **user origin** (compose cross). Parts/hitbox draw as `(coord - origin)` relative to that. Optional instance `fh`/`fv` mirrors parts around the origin (JSON `"fh"`/`"fv"`, cart instance flags bit0/bit1). Sprites **clip to 128x120** when partially off-screen. On Sprite layer: click/drag instance to move (white outline). **H/V** mirrors. **Delete** removes. Visible in edit view and **Play** (OAM slot 0 = player. Instances fill 1+) |
 
 PNG drop imports into the **active** world. Cart export packs **world 0** only (ignores `default_world`).
 
@@ -94,6 +95,16 @@ Play SoT: `core/src/play.c` + `collision.c`. Emu/sim mirror the same rules (sepa
 | Limits | <= **256** unique 8x8 tiles. <= **4** colors per PNG |
 | Transparent cells | Skipped (screen not forced present) |
 | Palettes | BG rows remapped to nearest kit masters after import |
+
+## Clipboard PNG paste
+
+| Rule | Value |
+|------|--------|
+| Shortcut | **Ctrl+V** in **Edit tile** or **Create/Edit sprite** modal |
+| Source | Clipboard `image/png` (GIMP Copy works). Linux: X11 selection, or `xclip` / `wl-paste` if present |
+| Transparent | Alpha < 128 -> palette index **0** |
+| Opaque | Match nearest of the **4** colors in the modal's selected palette by brightness (`r+g+b`) |
+| Size | Top-left **8x8** of the image fills the canvas |
 
 ---
 
@@ -151,7 +162,7 @@ ctest --test-dir build --output-on-failure
 ./build/retr01_studio
 ```
 
-**Needs:** CMake, C compiler, SDL2, libpng, FreeType 2.
+**Needs:** CMake, C compiler, SDL2, libpng, FreeType 2. Optional: X11 (clipboard PNG), `xclip` / `wl-clipboard`.
 
 ---
 

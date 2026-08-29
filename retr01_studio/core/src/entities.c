@@ -233,6 +233,8 @@ int r01_world_instance_add(R01World *w, int type_id, int world_x, int world_y) {
     inst->type_id = type_id;
     inst->world_x = world_x;
     inst->world_y = world_y;
+    inst->flip_h = 0;
+    inst->flip_v = 0;
     w->instance_count++;
     return w->instance_count - 1;
 }
@@ -267,4 +269,34 @@ int r01_world_place_sprite(R01World *w, int sprite_catalog_idx, int world_x, int
 
 int r01_world_place_entity(R01World *w, int type_id, int world_x, int world_y) {
     return r01_world_instance_add(w, type_id, world_x, world_y);
+}
+
+void r01_entity_part_instance_pose(const R01EntityState *st, const R01EntityPart *pt, int inst_flip_h,
+                                   int inst_flip_v, int *out_dx, int *out_dy, int *out_flip_h, int *out_flip_v) {
+    int dx = pt ? pt->dx : 0;
+    int dy = pt ? pt->dy : 0;
+    int fh = pt ? pt->flip_h : 0;
+    int fv = pt ? pt->flip_v : 0;
+    int ox = st ? st->origin_x : 0;
+    int oy = st ? st->origin_y : 0;
+    if (inst_flip_h) {
+        dx = 2 * ox - dx - 8;
+        fh = !fh;
+    }
+    if (inst_flip_v) {
+        dy = 2 * oy - dy - 8;
+        fv = !fv;
+    }
+    if (out_dx) {
+        *out_dx = dx;
+    }
+    if (out_dy) {
+        *out_dy = dy;
+    }
+    if (out_flip_h) {
+        *out_flip_h = fh ? 1 : 0;
+    }
+    if (out_flip_v) {
+        *out_flip_v = fv ? 1 : 0;
+    }
 }

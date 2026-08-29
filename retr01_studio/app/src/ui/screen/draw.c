@@ -55,8 +55,8 @@ static void draw_spr_tile_px(UiState *ui, SDL_Renderer *r, const R01World *w, co
     }
 }
 
-static int entity_local_bounds(const R01EntityType *ent, int local_x, int local_y, int *out_min_x, int *out_min_y,
-                               int *out_max_x, int *out_max_y) {
+static int entity_local_bounds(const R01EntityType *ent, int local_x, int local_y, int flip_h, int flip_v,
+                               int *out_min_x, int *out_min_y, int *out_max_x, int *out_max_y) {
     const R01EntityState *st;
     const R01EntityFrame *fr;
     int pi;
@@ -68,8 +68,11 @@ static int entity_local_bounds(const R01EntityType *ent, int local_x, int local_
     fr = &st->frames[0];
     for (pi = 0; pi < fr->part_count; pi++) {
         const R01EntityPart *pt = &fr->parts[pi];
-        int px = r01_entity_world_x(local_x, st->origin_x, pt->dx);
-        int py = r01_entity_world_y(local_y, st->origin_y, pt->dy);
+        int dx, dy;
+        int px, py;
+        r01_entity_part_instance_pose(st, pt, flip_h, flip_v, &dx, &dy, NULL, NULL);
+        px = r01_entity_world_x(local_x, st->origin_x, dx);
+        py = r01_entity_world_y(local_y, st->origin_y, dy);
         if (px < min_x) {
             min_x = px;
         }
@@ -102,7 +105,7 @@ static int entity_local_bounds(const R01EntityType *ent, int local_x, int local_
 }
 
 static void draw_entity_at_screen(UiState *ui, SDL_Renderer *r, const R01World *w, const R01EntityType *ent,
-                                  int local_x, int local_y, int ox, int oy, int selected) {
+                                  int local_x, int local_y, int flip_h, int flip_v, int ox, int oy, int selected) {
     const R01EntityState *st;
     const R01EntityFrame *fr;
     int pi;
@@ -114,9 +117,16 @@ static void draw_entity_at_screen(UiState *ui, SDL_Renderer *r, const R01World *
     fr = &st->frames[0];
     for (pi = 0; pi < fr->part_count; pi++) {
         const R01EntityPart *pt = &fr->parts[pi];
-        int px = r01_entity_world_x(local_x, st->origin_x, pt->dx);
-        int py = r01_entity_world_y(local_y, st->origin_y, pt->dy);
-        draw_spr_tile_px(ui, r, w, pt, px, py, ox, oy, UI_SCREEN_SCALE, 1);
+        R01EntityPart draw_pt;
+        int dx, dy, fh, fv;
+        int px, py;
+        r01_entity_part_instance_pose(st, pt, flip_h, flip_v, &dx, &dy, &fh, &fv);
+        px = r01_entity_world_x(local_x, st->origin_x, dx);
+        py = r01_entity_world_y(local_y, st->origin_y, dy);
+        draw_pt = *pt;
+        draw_pt.flip_h = fh;
+        draw_pt.flip_v = fv;
+        draw_spr_tile_px(ui, r, w, &draw_pt, px, py, ox, oy, UI_SCREEN_SCALE, 1);
         if (px < min_x) {
             min_x = px;
         }
@@ -172,13 +182,15 @@ static void draw_instances_on_screen(UiState *ui, SDL_Renderer *r, const R01Worl
             continue;
         }
         ent = &w->entities[inst->type_id];
-        if (!entity_local_bounds(ent, local_x, local_y, &min_x, &min_y, &max_x, &max_y)) {
+        if (!entity_local_bounds(ent, local_x, local_y, inst->flip_h, inst->flip_v, &min_x, &min_y, &max_x,
+                                 &max_y)) {
             continue;
         }
         if (max_x <= 0 || max_y <= 0 || min_x >= R01_SCREEN_PX_W || min_y >= R01_SCREEN_PX_H) {
             continue;
         }
-        draw_entity_at_screen(ui, r, w, ent, local_x, local_y, ox, oy, i == ui->sel_instance);
+        draw_entity_at_screen(ui, r, w, ent, local_x, local_y, inst->flip_h, inst->flip_v, ox, oy,
+                              i == ui->sel_instance);
     }
 }
 
@@ -214,8 +226,11 @@ int instance_hit_on_screen(const UiState *ui, int lx, int ly, int *out_inst) {
         local_y = inst->world_y - s->row * R01_SCREEN_PX_H;
         for (pi = 0; pi < fr->part_count; pi++) {
             const R01EntityPart *pt = &fr->parts[pi];
-            int part_x = r01_entity_world_x(local_x, st->origin_x, pt->dx);
-            int part_y = r01_entity_world_y(local_y, st->origin_y, pt->dy);
+            int dx, dy;
+            int part_x, part_y;
+            r01_entity_part_instance_pose(st, pt, inst->flip_h, inst->flip_v, &dx, &dy, NULL, NULL);
+            part_x = r01_entity_world_x(local_x, st->origin_x, dx);
+            part_y = r01_entity_world_y(local_y, st->origin_y, dy);
             if (px >= part_x && px < part_x + 8 && py >= part_y && py < part_y + 8) {
                 if (out_inst) {
                     *out_inst = i;

@@ -560,7 +560,7 @@ static int build_world_blob(Buf *blob, const R01World *w) {
             const R01EntityInstance *inst = &w->instances[ii];
             memset(rec, 0, sizeof(rec));
             rec[0] = (uint8_t)inst->type_id;
-            rec[1] = 0;
+            rec[1] = (uint8_t)((inst->flip_h ? 1u : 0u) | (inst->flip_v ? 2u : 0u));
             put_u16(rec + 2, (uint16_t)inst->world_x);
             put_u16(rec + 4, (uint16_t)inst->world_y);
             if (buf_append(blob, rec, sizeof(rec)) != 0) {

@@ -55,15 +55,8 @@ void draw_pal_modal(UiState *ui, SDL_Renderer *r) {
 
     pal_modal_layout(&lo);
 
-    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(r, 0, 0, 0, 160);
-    {
-        SDL_Rect full = {0, 0, UI_LOGIC_W, UI_LOGIC_H};
-        SDL_RenderFillRect(r, &full);
-    }
-    fill_rect(r, lo.mx, lo.my, UI_PAL_MODAL_W, UI_PAL_MODAL_H, UI_COL_BG_R, UI_COL_BG_G, UI_COL_BG_B);
-    draw_rect(r, lo.mx, lo.my, UI_PAL_MODAL_W, UI_PAL_MODAL_H, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
-    font_draw_centered(r, lo.mx, lo.my, UI_PAL_MODAL_W, UI_BTN_H, "Global palettes", 240, 240, 240);
+    ui_modal_scrim(r);
+    ui_modal_panel(r, lo.mx, lo.my, UI_PAL_MODAL_W, UI_PAL_MODAL_H, "Global palettes");
 
     draw_label(r, lo.master_x, lo.my + UI_MODAL_BODY_Y, "Master 16x4");
     for (row = 0; row < UI_MASTER_ROWS; row++) {

@@ -162,6 +162,8 @@ typedef struct R01EntityInstance {
     int type_id;
     int world_x;
     int world_y;
+    int flip_h; /* 1 = mirror parts around state origin at draw/OAM time */
+    int flip_v;
 } R01EntityInstance;
 
 /* Global off-grid MAP payloads (title, interstitial, credits pages). See docs/02. */

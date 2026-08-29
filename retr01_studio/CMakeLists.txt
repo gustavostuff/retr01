@@ -71,6 +71,7 @@ add_library(retr01_studio_app
   app/src/font/font.c
   app/src/ui/core.c
   app/src/ui/primitives.c
+  app/src/ui/clipboard.c
   app/src/ui/widgets/dot_strip.c
   app/src/ui/widgets/radio.c
   app/src/ui/widgets/checkbox.c
@@ -102,6 +103,12 @@ target_include_directories(retr01_studio_app PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/app/src
 )
 target_link_libraries(retr01_studio_app PUBLIC retr01_studio_core PkgConfig::SDL2 PkgConfig::FREETYPE PkgConfig::LIBPNG)
+find_package(X11)
+if(X11_FOUND)
+  target_compile_definitions(retr01_studio_app PRIVATE R01_HAS_X11=1)
+  target_include_directories(retr01_studio_app PRIVATE ${X11_INCLUDE_DIR})
+  target_link_libraries(retr01_studio_app PUBLIC ${X11_LIBRARIES})
+endif()
 target_compile_definitions(retr01_studio_app PRIVATE
   "R01_STUDIO_ASSETS_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/assets\"")
 

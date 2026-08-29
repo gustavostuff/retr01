@@ -81,6 +81,7 @@ int ui_init(UiState *ui) {
     ui->sel_x1 = -1;
     ui->sel_y1 = -1;
     ui->sel_drag = 0;
+    ui->inst_drag = 0;
     ui->last_paint_tx = -1;
     ui->last_paint_ty = -1;
     ui->screen_mode = UI_SCREEN_MODE_SEL;

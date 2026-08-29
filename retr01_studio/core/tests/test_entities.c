@@ -113,6 +113,24 @@ TEST_MAIN() {
     EXPECT(inst == 0, "place entity");
     EXPECT(w->instance_count == 1, "1 instance");
     EXPECT(w->instances[0].world_x == 40 && w->instances[0].world_y == 50, "inst xy");
+    EXPECT(w->instances[0].flip_h == 0, "inst flip default");
+    EXPECT(w->instances[0].flip_v == 0, "inst flip_v default");
+    {
+        int dx, dy, fh, fv;
+        r01_entity_part_instance_pose(&e->states[0], &part, 1, 0, &dx, &dy, &fh, &fv);
+        /* origin 3, part dx 4 flip_h 1 -> mirrored dx = 2*3-4-8 = -6, flip cleared */
+        EXPECT(dx == -6, "pose mirror dx");
+        EXPECT(dy == 2, "pose mirror dy");
+        EXPECT(fh == 0, "pose toggles part flip_h");
+        EXPECT(fv == 0, "pose keeps flip_v");
+        r01_entity_part_instance_pose(&e->states[0], &part, 0, 1, &dx, &dy, &fh, &fv);
+        /* origin_y 5, part dy 2 -> dy' = 2*5-2-8 = 0, flip_v set */
+        EXPECT(dx == 4, "pose v keeps dx");
+        EXPECT(dy == 0, "pose mirror dy");
+        EXPECT(fh == 1, "pose v keeps part flip_h");
+        EXPECT(fv == 1, "pose toggles flip_v");
+    }
+    w->instances[0].flip_h = 1;
 
     inst = r01_world_place_sprite(w, cat, 10, 20);
     EXPECT(inst == 1, "place sprite");
@@ -149,16 +167,16 @@ TEST_MAIN() {
     n = r01_play_build_oam(p, &pl, oam, R01_OAM_MAX);
     EXPECT(n >= 3, "oam has player + parts");
     EXPECT(oam[0].tile_id == 1, "player oam tile");
-    /* Instance 0: part (4,2), origin (3,5) at world (40,50) -> draw at 41,47 */
+    /* Instance 0 flipped: part dx 4 -> -6, draw at world+(dx-origin). */
     {
         int found = 0;
         int oi;
-        int expect_x = r01_entity_world_x(40, 3, 4) - pl.cam_x;
+        int expect_x = r01_entity_world_x(40, 3, -6) - pl.cam_x;
         int expect_y = r01_entity_world_y(50, 5, 2) - pl.cam_y;
         for (oi = 1; oi < n; oi++) {
             if (oam[oi].x == expect_x && oam[oi].y == expect_y && oam[oi].tile_id == id) {
                 found = 1;
-                EXPECT(oam[oi].flip_h == 1, "oam flip");
+                EXPECT(oam[oi].flip_h == 0, "oam flip toggled by inst");
                 EXPECT(oam[oi].pal == 1, "oam pal");
                 break;
             }
@@ -172,6 +190,7 @@ TEST_MAIN() {
     EXPECT(p2->worlds[0].instance_count == 3, "roundtrip instances");
     EXPECT(p2->worlds[0].instances[0].world_x == 40, "inst0 x");
     EXPECT(p2->worlds[0].instances[0].world_y == 50, "inst0 y");
+    EXPECT(p2->worlds[0].instances[0].flip_h == 1, "inst0 fh rt");
     EXPECT(p2->worlds[0].instances[1].world_x == 10, "inst1 x");
     EXPECT(p2->worlds[0].instances[2].world_x == 64, "meta inst x");
     EXPECT(p2->worlds[0].metasprite_count == 1, "metasprite rt");

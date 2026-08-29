@@ -322,14 +322,15 @@ Studio exports RLE when it shrinks the payload. Otherwise raw. Decode before VRA
 |  | ENTITY TYPES: 20 B each (state0/frame0 only)                 |        |
 |  |   origin_x, origin_y, part_count, pad                        |        |
 |  |   4x {tile, attr, dx i8, dy i8} (unused parts zero)          |        |
-|  | INSTANCES: 6 B each {type_id, pad, world_x u16, world_y u16} |        |
+|  | INSTANCES: 6 B each {type_id, flags, world_x u16, world_y u16} |      |
+|  |   flags bit0 = flip_h, bit1 = flip_v (mirror around origin)  |        |
 |  +--------------------------------------------------------------+        |
 +--------------------------------------------------------------------------+
 |  WORLD 1 .. N                                                            |
 +------------------------------------------------------------------------ -+
 ```
 
-OAM attr packing matches BG: bank bits 1-0, pal bits 3-2, `FLIP_H=0x10`, `FLIP_V=0x20`. Instance `world_x/y` is the **user origin**. Host Play draws parts at `world + (dx,dy) - origin` (Studio `r01_entity_world_x/y`). SPR bank 0 **tile 1** is reserved as the solid player stub (OAM slot 0).
+OAM attr packing matches BG: bank bits 1-0, pal bits 3-2, `FLIP_H=0x10`, `FLIP_V=0x20`. Instance `world_x/y` is the **user origin**. Host Play draws parts at `world + (dx,dy) - origin` (Studio `r01_entity_world_x/y`). Instance flags bit0/bit1 (`flip_h`/`flip_v`) mirror each part: `dx' = 2*origin_x - dx - 8` / `dy' = 2*origin_y - dy - 8` and XOR part `FLIP_H` / `FLIP_V` (Studio `r01_entity_part_instance_pose`). SPR bank 0 **tile 1** is reserved as the solid player stub (OAM slot 0).
 
 Boot: magic -> pointers -> other screens -> world header -> screen dir / parallax dir -> `off_payload`. Load grid screens into VRAM slots 0-3. Load up to **two** active parallax payloads into slots 4-5 (from the world's up to **8** cart entries). Title/interstitial/credits page: decode chosen **other** payload (RLE or raw) into slot 0 (full **128x120**). MAP port: `$FE90`-`$FE92` addr, `$FE93` data auto-inc.
 

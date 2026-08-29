@@ -3,7 +3,6 @@
 #include "font/font.h"
 
 void ui_modal_scrim(SDL_Renderer *r) {
-    fill_rect(r, 0, 0, UI_LOGIC_W, UI_LOGIC_H, 0, 0, 0);
     SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(r, 0, 0, 0, 160);
     {

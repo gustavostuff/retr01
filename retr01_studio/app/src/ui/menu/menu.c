@@ -240,13 +240,17 @@ void menu_open_instance(UiState *ui, int x, int y, int instance_idx) {
     }
     ui->menu.entity_type_idx = type_idx;
     ui->menu.item_count = 0;
+    snprintf(ui->menu.items[ui->menu.item_count], 32, "Mirror H");
+    ui->menu.item_sub[ui->menu.item_count++] = 0;
+    snprintf(ui->menu.items[ui->menu.item_count], 32, "Mirror V");
+    ui->menu.item_sub[ui->menu.item_count++] = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Edit entity");
     ui->menu.item_sub[ui->menu.item_count++] = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Remove instance");
     ui->menu.item_sub[ui->menu.item_count++] = 0;
     memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
     if (type_idx < 0) {
-        ui->menu.item_disabled[0] = 1;
+        ui->menu.item_disabled[2] = 1;
     }
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
     ui->menu.root_x = x;
@@ -432,15 +436,24 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
     }
     if (ui->menu.kind == UI_MENU_KIND_INSTANCE) {
         R01World *w = r01_project_active_world(ui->project);
-        if (item == 0 && ui->menu.entity_type_idx >= 0) {
+        if ((item == 0 || item == 1) && w && ui->menu.instance_idx >= 0 &&
+            ui->menu.instance_idx < w->instance_count) {
+            if (item == 0) {
+                w->instances[ui->menu.instance_idx].flip_h = !w->instances[ui->menu.instance_idx].flip_h;
+            } else {
+                w->instances[ui->menu.instance_idx].flip_v = !w->instances[ui->menu.instance_idx].flip_v;
+            }
+            ui->sel_instance = ui->menu.instance_idx;
+        } else if (item == 2 && ui->menu.entity_type_idx >= 0) {
             entity_edit_open(ui, ui->menu.entity_type_idx);
-        } else if (item == 1 && w && ui->menu.instance_idx >= 0) {
+        } else if (item == 3 && w && ui->menu.instance_idx >= 0) {
             if (r01_world_instance_remove(w, ui->menu.instance_idx) == 0) {
                 if (ui->sel_instance == ui->menu.instance_idx) {
                     ui->sel_instance = -1;
                 } else if (ui->sel_instance > ui->menu.instance_idx) {
                     ui->sel_instance--;
                 }
+                ui->inst_drag = 0;
                 ui_toast(ui, "instance removed", 0);
             }
         }
