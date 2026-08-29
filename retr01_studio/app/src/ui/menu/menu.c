@@ -10,6 +10,7 @@
 #include "retr01_studio/entities.h"
 #include "retr01_studio/metasprites.h"
 #include "retr01_studio/sprites.h"
+#include "retr01_studio/warps.h"
 
 #include <png.h>
 #include <stdio.h>
@@ -77,6 +78,24 @@ static void menu_build_sub(UiState *ui, int sub_kind) {
         for (i = 0; i < 4; i++) {
             snprintf(ui->menu.sub_items[ui->menu.sub_count++], 24, "%d", i + 1);
         }
+    } else if (sub_kind == UI_MENU_SUB_WARP) {
+        R01World *w = ui ? r01_project_active_world(ui->project) : NULL;
+        snprintf(ui->menu.sub_items[ui->menu.sub_count++], 24, "Set as warp entrance");
+        if (w) {
+            for (i = 0; i < w->warp_entrance_count; i++) {
+                const R01WarpEntrance *we = &w->warp_entrances[i];
+                if (!we->present) {
+                    continue;
+                }
+                if (ui->menu.sub_count >= UI_MENU_MAX) {
+                    break;
+                }
+                snprintf(ui->menu.sub_items[ui->menu.sub_count++], 24, "Exit from %s", we->id);
+            }
+        }
+        if (ui->menu.sub_count < 2) {
+            snprintf(ui->menu.sub_items[ui->menu.sub_count++], 24, "(no entrances)");
+        }
     }
     ui->menu.sub_w = UI_UNIT * 4;
     for (i = 0; i < ui->menu.sub_count; i++) {
@@ -133,10 +152,13 @@ void menu_open_tile(UiState *ui, int x, int y, int tx, int ty) {
     ui->menu.item_sub[ui->menu.item_count++] = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Set Solid");
     ui->menu.item_sub[ui->menu.item_count++] = 0;
+    snprintf(ui->menu.items[ui->menu.item_count], 32, "Warp");
+    ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_WARP;
     memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
     if (screen_sel_is_multi(ui)) {
         ui->menu.item_disabled[1] = 1;
         ui->menu.item_disabled[2] = 1;
+        ui->menu.item_disabled[6] = 1;
     }
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
     ui->menu.root_x = x;
@@ -391,6 +413,46 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
                 ui_toast(ui, "sprite bank changed", 0);
             } else {
                 ui_toast(ui, "cannot move sprite bank", 1);
+            }
+        } else if (ui->menu.submenu == UI_MENU_SUB_WARP) {
+            R01World *w = r01_project_active_world(ui->project);
+            R01Screen *s = r01_project_active_screen(ui->project);
+            if (!w || !s || ui->menu.screen_tx < 0 || ui->menu.screen_ty < 0) {
+                menu_close(ui);
+                return;
+            }
+            if (item == 0) {
+                int idx = r01_world_warp_entrance_add(w, s->col, s->row, ui->menu.screen_tx,
+                                                      ui->menu.screen_ty);
+                if (idx >= 0) {
+                    char msg[48];
+                    snprintf(msg, sizeof(msg), "warp %s set", w->warp_entrances[idx].id);
+                    ui_toast(ui, msg, 0);
+                } else {
+                    ui_toast(ui, "cannot set warp entrance", 1);
+                }
+            } else {
+                int ent_i = 0;
+                int ei;
+                int picked = item - 1;
+                for (ei = 0; ei < w->warp_entrance_count; ei++) {
+                    if (!w->warp_entrances[ei].present) {
+                        continue;
+                    }
+                    if (ent_i == picked) {
+                        uint8_t flags = (uint8_t)(R01_WARP_FADE_OUT | R01_WARP_FADE_IN);
+                        if (r01_world_warp_exit_set(w, ei, s->col, s->row, ui->menu.screen_tx,
+                                                    ui->menu.screen_ty, flags) >= 0) {
+                            char msg[48];
+                            snprintf(msg, sizeof(msg), "exit for %s set", w->warp_entrances[ei].id);
+                            ui_toast(ui, msg, 0);
+                        } else {
+                            ui_toast(ui, "cannot set warp exit", 1);
+                        }
+                        break;
+                    }
+                    ent_i++;
+                }
             }
         }
         menu_close(ui);

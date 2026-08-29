@@ -105,7 +105,7 @@
 
 #define UI_TOAST_MS 2800
 
-#define UI_MENU_MAX 8
+#define UI_MENU_MAX 16
 #define UI_MENU_KIND_TILE 1
 #define UI_MENU_KIND_WORLD 2
 #define UI_MENU_KIND_SPRITE 3
@@ -117,6 +117,7 @@
 #define UI_MENU_SUB_PAL 2
 #define UI_MENU_SUB_SPR_BANK 3
 #define UI_MENU_SUB_SPR_PAL 4
+#define UI_MENU_SUB_WARP 5
 
 typedef struct UiMenu {
     int open;

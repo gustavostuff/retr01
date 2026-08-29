@@ -1,6 +1,7 @@
 #ifndef retr01_STUDIO_PLAY_H
 #define retr01_STUDIO_PLAY_H
 
+#include "retr01_studio/game_runtime.h"
 #include "retr01_studio/types.h"
 
 /* Player AABB in world pixels (square for now). */
@@ -15,10 +16,7 @@
 
 typedef struct R01PlayState {
     int active;
-    int player_x;
-    int player_y;
-    int cam_x;
-    int cam_y;
+    R01GameCtx ctx;
 } R01PlayState;
 
 /* Viewport-relative OAM build (Studio Play / Phase D host). Entry 0 = player. */
@@ -48,6 +46,8 @@ int r01_play_sample_bg(const R01Project *p, const R01PlayState *pl, int vx, int 
 /* Build OAM for current Play camera. Returns count written.
  * Player occupies the leading slots (state 0 / frame 0 of marked entity, or stub tile). */
 int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry *out, int cap);
+int r01_play_fade_level(const R01PlayState *pl);
+int r01_play_fade_color(const R01PlayState *pl);
 
 /* OAM packing: uint8 stores viewport-relative signed coords (-128..127). */
 static inline int r01_oam_coord_from_u8(uint8_t v) {

@@ -172,8 +172,8 @@ TEST_MAIN() {
     {
         int found = 0;
         int oi;
-        int expect_x = r01_entity_world_x(40, 3, -6) - pl.cam_x;
-        int expect_y = r01_entity_world_y(50, 5, 2) - pl.cam_y;
+        int expect_x = r01_entity_world_x(40, 3, -6) - pl.ctx.cam_x;
+        int expect_y = r01_entity_world_y(50, 5, 2) - pl.ctx.cam_y;
         for (oi = 1; oi < n; oi++) {
             if (oam[oi].x == expect_x && oam[oi].y == expect_y && oam[oi].tile_id == id) {
                 found = 1;
@@ -189,8 +189,8 @@ TEST_MAIN() {
     {
         R01OamEntry oam2[R01_OAM_MAX];
         int n2, found_player = 0, found_inst = 0, oi;
-        int expect_px = r01_entity_world_x(pl.player_x, 3, 4) - pl.cam_x;
-        int expect_py = r01_entity_world_y(pl.player_y, 5, 2) - pl.cam_y;
+        int expect_px = r01_entity_world_x(pl.ctx.player_x, 3, 4) - pl.ctx.cam_x;
+        int expect_py = r01_entity_world_y(pl.ctx.player_y, 5, 2) - pl.ctx.cam_y;
         r01_world_set_player_entity(w, 0);
         EXPECT(r01_world_player_entity(w) == 0, "player marked");
         n2 = r01_play_build_oam(p, &pl, oam2, R01_OAM_MAX);
@@ -199,7 +199,7 @@ TEST_MAIN() {
             if (oam2[oi].tile_id == id && oam2[oi].x == expect_px && oam2[oi].y == expect_py) {
                 found_player = 1;
             }
-            if (oam2[oi].tile_id == id && oam2[oi].x == r01_entity_world_x(40, 3, -6) - pl.cam_x) {
+            if (oam2[oi].tile_id == id && oam2[oi].x == r01_entity_world_x(40, 3, -6) - pl.ctx.cam_x) {
                 found_inst = 1;
             }
         }

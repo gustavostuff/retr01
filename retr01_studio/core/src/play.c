@@ -1,34 +1,23 @@
 #include "retr01_studio/collision.h"
 #include "retr01_studio/entities.h"
+#include "retr01_studio/game_runtime.h"
 #include "retr01_studio/play.h"
 #include "retr01_studio/palette.h"
 #include "retr01_studio/project.h"
+#include "retr01_studio/warps.h"
 
 #include <string.h>
 
-static void update_camera(R01PlayState *pl) {
-    int ax = pl->player_x + R01_PLAY_PLAYER_W / 2;
-    int ay = pl->player_y + R01_PLAY_PLAYER_H / 2;
-    pl->cam_x = ax - R01_SCREEN_PX_W / 2;
-    pl->cam_y = ay - R01_SCREEN_PX_H / 2;
-    if (pl->cam_x < 0) {
-        pl->cam_x = 0;
-    }
-    if (pl->cam_y < 0) {
-        pl->cam_y = 0;
-    }
-}
+#define R01_PROJ_FIXED_SHIFT 8
 
 static void place_player_on_screen(R01PlayState *pl, int col, int row) {
-    pl->player_x = R01_PLAY_SPAWN_CENTER_X(col);
-    pl->player_y = R01_PLAY_SPAWN_CENTER_Y(row);
-    update_camera(pl);
+    r01_player_warp(&pl->ctx, col, row);
 }
 
 static void place_player_xy(R01PlayState *pl, int wx, int wy) {
-    pl->player_x = wx;
-    pl->player_y = wy;
-    update_camera(pl);
+    pl->ctx.player_x = wx;
+    pl->ctx.player_y = wy;
+    r01_game_camera_update(&pl->ctx);
 }
 
 static int play_spawn_screen(const R01World *w, int *out_col, int *out_row) {
@@ -49,7 +38,6 @@ static int play_spawn_screen(const R01World *w, int *out_col, int *out_row) {
     return 1;
 }
 
-/* First placed instance of the marked player type (editor spawn point). */
 static int play_player_instance_spawn(const R01World *w, int *out_x, int *out_y) {
     int pe;
     int i;
@@ -83,6 +71,7 @@ int r01_play_start(R01PlayState *pl, const R01Project *p) {
         return 0;
     }
     memset(pl, 0, sizeof(*pl));
+    r01_game_ctx_init(&pl->ctx);
     if (!p) {
         return 0;
     }
@@ -144,6 +133,7 @@ void r01_play_player_hit_rect(const R01World *w, int origin_x, int origin_y, int
 
 void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
     const R01World *w;
+    R01GameCtx *ctx;
     if (!pl || !pl->active || !p) {
         return;
     }
@@ -151,45 +141,45 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
     if (!w) {
         return;
     }
+    ctx = &pl->ctx;
+    if (r01_game_fade_active(ctx)) {
+        if (r01_game_fade_tick(ctx)) {
+            r01_game_fade_warp_step(ctx, w);
+        }
+        return;
+    }
     if (dx != 0) {
-        int nx = pl->player_x + dx;
+        int nx = ctx->player_x + dx;
         int hx, hy, hw, hh;
-        r01_play_player_hit_rect(w, nx, pl->player_y, &hx, &hy, &hw, &hh);
+        r01_play_player_hit_rect(w, nx, ctx->player_y, &hx, &hy, &hw, &hh);
         if (r01_world_aabb_ok(w, hx, hy, hw, hh)) {
-            pl->player_x = nx;
+            ctx->player_x = nx;
         }
     }
     if (dy != 0) {
-        int ny = pl->player_y + dy;
+        int ny = ctx->player_y + dy;
         int hx, hy, hw, hh;
-        r01_play_player_hit_rect(w, pl->player_x, ny, &hx, &hy, &hw, &hh);
+        r01_play_player_hit_rect(w, ctx->player_x, ny, &hx, &hy, &hw, &hh);
         if (r01_world_aabb_ok(w, hx, hy, hw, hh)) {
-            pl->player_y = ny;
+            ctx->player_y = ny;
         }
     }
-    /* No dead zone: camera tracks the player every tick. */
-    update_camera(pl);
-}
-
-static int warp_to(R01PlayState *pl, const R01Project *p, int col, int row) {
-    const R01World *w;
-    if (!pl || !pl->active || !p) {
-        return 0;
+    r01_game_camera_update(ctx);
+    r01_projectile_tick(ctx, w);
+    r01_game_warp_check(ctx, w);
+    if (r01_game_fade_active(ctx)) {
+        r01_game_fade_tick(ctx);
     }
-    w = r01_project_active_world_const(p);
-    if (!w || r01_world_find_screen(w, col, row) < 0) {
-        return 0;
-    }
-    place_player_on_screen(pl, col, row);
-    return 1;
 }
 
 int r01_play_button(R01PlayState *pl, const R01Project *p, int button) {
     if (button == R01_PLAY_BTN_X) {
-        return warp_to(pl, p, 0, 0);
+        r01_player_warp(&pl->ctx, 0, 0);
+        return 1;
     }
     if (button == R01_PLAY_BTN_Y) {
-        return warp_to(pl, p, 1, 0);
+        r01_player_warp(&pl->ctx, 1, 0);
+        return 1;
     }
     return 0;
 }
@@ -199,9 +189,17 @@ int r01_play_screen_index(const R01PlayState *pl, const R01World *w) {
     if (!pl || !w) {
         return -1;
     }
-    col = (pl->player_x + R01_PLAY_PLAYER_W / 2) / R01_SCREEN_PX_W;
-    row = (pl->player_y + R01_PLAY_PLAYER_H / 2) / R01_SCREEN_PX_H;
+    col = (pl->ctx.player_x + R01_PLAY_PLAYER_W / 2) / R01_SCREEN_PX_W;
+    row = (pl->ctx.player_y + R01_PLAY_PLAYER_H / 2) / R01_SCREEN_PX_H;
     return r01_world_find_screen(w, col, row);
+}
+
+int r01_play_fade_level(const R01PlayState *pl) {
+    return pl ? pl->ctx.fade_level : 0;
+}
+
+int r01_play_fade_color(const R01PlayState *pl) {
+    return pl ? pl->ctx.fade_color : R01_FADE_BLACK;
 }
 
 int r01_play_sample_bg(const R01Project *p, const R01PlayState *pl, int vx, int vy, uint8_t *r, uint8_t *g,
@@ -216,8 +214,8 @@ int r01_play_sample_bg(const R01Project *p, const R01PlayState *pl, int vx, int 
     if (!w) {
         return -1;
     }
-    wx = pl->cam_x + vx;
-    wy = pl->cam_y + vy;
+    wx = pl->ctx.cam_x + vx;
+    wy = pl->ctx.cam_y + vy;
     if (wx < 0 || wy < 0) {
         r01_project_backdrop_rgb(p, w, r, g, b);
         return 0;
@@ -236,6 +234,7 @@ int r01_play_sample_bg(const R01Project *p, const R01PlayState *pl, int vx, int 
 
 int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry *out, int cap) {
     const R01World *w;
+    const R01GameCtx *ctx;
     int n = 0;
     int i;
     int player_type;
@@ -243,6 +242,7 @@ int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry 
         return 0;
     }
     w = r01_project_active_world_const(p);
+    ctx = &pl->ctx;
     if (!w) {
         return 0;
     }
@@ -261,8 +261,8 @@ int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry 
                 int dx, dy, fh, fv;
                 int ox, oy;
                 r01_entity_part_instance_pose(st, pt, 0, 0, &dx, &dy, &fh, &fv);
-                ox = r01_entity_world_x(pl->player_x, st->origin_x, dx) - pl->cam_x;
-                oy = r01_entity_world_y(pl->player_y, st->origin_y, dy) - pl->cam_y;
+                ox = r01_entity_world_x(ctx->player_x, st->origin_x, dx) - ctx->cam_x;
+                oy = r01_entity_world_y(ctx->player_y, st->origin_y, dy) - ctx->cam_y;
                 if (r01_oam_tile_off_screen(ox, oy)) {
                     continue;
                 }
@@ -278,15 +278,35 @@ int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry 
         }
     }
     if (n < 1) {
-        /* Fallback: hardcoded 8x8 stub (bank 0 tile 1) -- matches cart stub. */
-        out[0].x = pl->player_x - pl->cam_x;
-        out[0].y = pl->player_y - pl->cam_y;
+        out[0].x = ctx->player_x - ctx->cam_x;
+        out[0].y = ctx->player_y - ctx->cam_y;
         out[0].bank = 0;
         out[0].tile_id = R01_SPR_PLAYER_TILE_ID;
         out[0].pal = 0;
         out[0].flip_h = 0;
         out[0].flip_v = 0;
         n = 1;
+    }
+
+    for (i = 0; i < R01_MAX_PROJECTILES && n < cap && n < R01_OAM_MAX; i++) {
+        const R01Projectile *pr = &ctx->projectiles[i];
+        int ox, oy;
+        if (!pr->active) {
+            continue;
+        }
+        ox = (pr->x >> R01_PROJ_FIXED_SHIFT) - ctx->cam_x;
+        oy = (pr->y >> R01_PROJ_FIXED_SHIFT) - ctx->cam_y;
+        if (r01_oam_tile_off_screen(ox, oy)) {
+            continue;
+        }
+        out[n].x = ox;
+        out[n].y = oy;
+        out[n].bank = 0;
+        out[n].tile_id = pr->tile;
+        out[n].pal = pr->pal;
+        out[n].flip_h = 0;
+        out[n].flip_v = 0;
+        n++;
     }
 
     for (i = 0; i < w->instance_count && n < cap && n < R01_OAM_MAX; i++) {
@@ -298,7 +318,6 @@ int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry 
         if (inst->type_id < 0 || inst->type_id >= w->entity_count) {
             continue;
         }
-        /* Player type is driven by Play position, not placed instances. */
         if (player_type >= 0 && inst->type_id == player_type) {
             continue;
         }
@@ -313,8 +332,8 @@ int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry 
             int dx, dy, fh, fv;
             int ox, oy;
             r01_entity_part_instance_pose(st, pt, inst->flip_h, inst->flip_v, &dx, &dy, &fh, &fv);
-            ox = r01_entity_world_x(inst->world_x, st->origin_x, dx) - pl->cam_x;
-            oy = r01_entity_world_y(inst->world_y, st->origin_y, dy) - pl->cam_y;
+            ox = r01_entity_world_x(inst->world_x, st->origin_x, dx) - ctx->cam_x;
+            oy = r01_entity_world_y(inst->world_y, st->origin_y, dy) - ctx->cam_y;
             if (r01_oam_tile_off_screen(ox, oy)) {
                 continue;
             }

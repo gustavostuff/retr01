@@ -19,6 +19,8 @@ add_library(retr01_studio_core
   core/src/sprites.c
   core/src/entities.c
   core/src/metasprites.c
+  core/src/warps.c
+  core/src/game_runtime.c
 )
 target_include_directories(retr01_studio_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include
@@ -33,7 +35,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBPNG REQUIRED IMPORTED_TARGET libpng)
 pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 pkg_check_modules(FREETYPE REQUIRED IMPORTED_TARGET freetype2)
-target_link_libraries(retr01_studio_core PUBLIC PkgConfig::LIBPNG)
+target_link_libraries(retr01_studio_core PUBLIC PkgConfig::LIBPNG m)
 
 enable_testing()
 
@@ -58,6 +60,8 @@ r01_studio_add_test(entities)
 r01_studio_add_test(metasprites)
 r01_studio_add_test(prg_phase1)
 r01_studio_add_test(export_codegen)
+r01_studio_add_test(warps)
+r01_studio_add_test(game_runtime)
 
 add_executable(test_fixture core/tests/test_fixture.c ${STUDIO_TEST_HARNESS})
 target_include_directories(test_fixture PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/core/tests)

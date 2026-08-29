@@ -178,6 +178,18 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "    int cam_y;\n"
                    "    uint8_t pad;\n"
                    "    uint8_t pad_prev;\n"
+                   "    int cam_deadzone_x;\n"
+                   "    int cam_deadzone_y;\n"
+                   "    int cam_axis_lock;\n"
+                   "    int fade_level;\n"
+                   "    int fade_target;\n"
+                   "    int fade_color;\n"
+                   "    int fade_pending_entrance;\n"
+                   "    struct R01Projectile {\n"
+                   "        int active;\n"
+                   "        int x, y, vx, vy, ttl;\n"
+                   "        uint8_t tile, pal;\n"
+                   "    } projectiles[8];\n"
                    "} R01GameCtx;\n\n"
                    "void r01_game_init(R01GameCtx *ctx);\n"
                    "void r01_game_tick(R01GameCtx *ctx);\n"
@@ -197,7 +209,10 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "#include \"r01_player.h\"\n"
                    "#include \"r01_entity.h\"\n"
                    "#include \"r01_camera.h\"\n"
-                   "#include \"r01_events.h\"\n\n"
+                   "#include \"r01_events.h\"\n"
+                   "#include \"r01_fade.h\"\n"
+                   "#include \"r01_warp.h\"\n"
+                   "#include \"r01_projectile.h\"\n\n"
                    "#endif\n",
                    err_buf, err_cap) != 0) {
         return -1;
@@ -238,8 +253,15 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
     }
     snprintf(path, sizeof(path), "%s/r01_camera.h", inc_dir);
     if (write_text(path,
-                   "#ifndef R01_CAMERA_H\n#define R01_CAMERA_H\n"
-                   "/* Camera profiles deferred; center-on-player only in Phase 5. */\n"
+                   "#ifndef R01_CAMERA_H\n#define R01_CAMERA_H\n\n"
+                   "#include <stdint.h>\n"
+                   "typedef struct R01GameCtx R01GameCtx;\n"
+                   "#define R01_CAM_AXIS_BOTH 0\n"
+                   "#define R01_CAM_AXIS_H 1\n"
+                   "#define R01_CAM_AXIS_V 2\n"
+                   "void r01_game_camera_update(R01GameCtx *ctx);\n"
+                   "void r01_camera_set_deadzone(R01GameCtx *ctx, int dx, int dy);\n"
+                   "void r01_camera_set_axis_lock(R01GameCtx *ctx, int mode);\n\n"
                    "#endif\n",
                    err_buf, err_cap) != 0) {
         return -1;
@@ -252,6 +274,46 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "typedef void (*R01EventFn)(R01GameCtx *ctx);\n"
                    "int r01_event_on_button(uint8_t btn, R01EventFn fn);\n"
                    "void r01_runtime_dispatch_buttons(R01GameCtx *ctx);\n\n"
+                   "#endif\n",
+                   err_buf, err_cap) != 0) {
+        return -1;
+    }
+    snprintf(path, sizeof(path), "%s/r01_fade.h", inc_dir);
+    if (write_text(path,
+                   "#ifndef R01_FADE_H\n#define R01_FADE_H\n\n"
+                   "#include <stdint.h>\n"
+                   "typedef struct R01GameCtx R01GameCtx;\n"
+                   "#define R01_FADE_BLACK 0\n"
+                   "#define R01_FADE_WHITE 1\n"
+                   "#define R01_FADE_MAX 255\n"
+                   "void r01_game_fade_start(R01GameCtx *ctx, int to_black_or_white, int target_level);\n"
+                   "int r01_game_fade_active(const R01GameCtx *ctx);\n"
+                   "int r01_game_fade_tick(R01GameCtx *ctx);\n\n"
+                   "#endif\n",
+                   err_buf, err_cap) != 0) {
+        return -1;
+    }
+    snprintf(path, sizeof(path), "%s/r01_warp.h", inc_dir);
+    if (write_text(path,
+                   "#ifndef R01_WARP_H\n#define R01_WARP_H\n\n"
+                   "#include <stdint.h>\n"
+                   "typedef struct R01GameCtx R01GameCtx;\n"
+                   "void r01_game_warp_to_tile(R01GameCtx *ctx, int screen_col, int screen_row, int tile_col,\n"
+                   "                           int tile_row);\n"
+                   "int r01_game_warp_by_id(R01GameCtx *ctx, const char *warp_id);\n"
+                   "void r01_game_warp_check(R01GameCtx *ctx);\n\n"
+                   "#endif\n",
+                   err_buf, err_cap) != 0) {
+        return -1;
+    }
+    snprintf(path, sizeof(path), "%s/r01_projectile.h", inc_dir);
+    if (write_text(path,
+                   "#ifndef R01_PROJECTILE_H\n#define R01_PROJECTILE_H\n\n"
+                   "#include <stdint.h>\n"
+                   "typedef struct R01GameCtx R01GameCtx;\n"
+                   "int r01_projectile_fire(R01GameCtx *ctx, int dx, int dy, int speed);\n"
+                   "void r01_projectile_tick(R01GameCtx *ctx);\n"
+                   "int r01_projectile_count_active(const R01GameCtx *ctx);\n\n"
                    "#endif\n",
                    err_buf, err_cap) != 0) {
         return -1;
@@ -274,6 +336,12 @@ static int write_custom_logic(const char *c_dir, char *err_buf, size_t err_cap) 
                       "}\n\n"
                       "void r01_custom_on_init(R01GameCtx *ctx) {\n"
                       "    r01_event_on_button(R01_BTN_X, on_warp_x);\n"
+                      "    /* Examples:\n"
+                      "     * r01_camera_set_deadzone(ctx, 16, 16);\n"
+                      "     * r01_projectile_fire(ctx, 1, 0, 4);\n"
+                      "     * r01_game_fade_start(ctx, R01_FADE_BLACK, R01_FADE_MAX);\n"
+                      "     * r01_game_warp_by_id(ctx, \"w_00\");\n"
+                      "     */\n"
                       "}\n\n"
                       "void r01_custom_on_tick(R01GameCtx *ctx) {\n"
                       "    (void)ctx;\n"
@@ -282,6 +350,32 @@ static int write_custom_logic(const char *c_dir, char *err_buf, size_t err_cap) 
                       "    (void)ctx;\n"
                       "}\n",
                       err_buf, err_cap);
+}
+
+static int write_warp_ids_header(const char *inc_dir, const R01World *w, char *err_buf, size_t err_cap) {
+    char path[R01_PATH_MAX];
+    FILE *f;
+    int i;
+    snprintf(path, sizeof(path), "%s/r01_warp_ids.h", inc_dir);
+    f = fopen(path, "w");
+    if (!f) {
+        set_err(err_buf, err_cap, "cannot write warp ids");
+        return -1;
+    }
+    fprintf(f, "/* Generated warp entrance ids for custom_logic. */\n");
+    fprintf(f, "#ifndef R01_WARP_IDS_H\n#define R01_WARP_IDS_H\n\n");
+    if (w) {
+        for (i = 0; i < w->warp_entrance_count; i++) {
+            if (!w->warp_entrances[i].present) {
+                continue;
+            }
+            fprintf(f, "#define R01_WARP_%s \"%s\"\n", w->warp_entrances[i].id,
+                    w->warp_entrances[i].id);
+        }
+    }
+    fprintf(f, "\n#endif\n");
+    fclose(f);
+    return 0;
 }
 
 static int write_base_game(FILE *f, const R01Project *p) {
@@ -348,6 +442,46 @@ static int write_base_game(FILE *f, const R01Project *p) {
         fprintf(f, "static const int player_hit_w = %d, player_hit_h = %d;\n", R01_PLAY_PLAYER_W,
                 R01_PLAY_PLAYER_H);
     }
+    if (w && w->warp_entrance_count > 0) {
+        int wi, wrote = 0;
+        fprintf(f, "\ntypedef struct { const char *id; int sc, sr, tc, tr; } R01WarpEntRec;\n");
+        fprintf(f, "typedef struct { int ent; int dsc, dsr, dtc, dtr; uint8_t flags; } R01WarpExitRec;\n");
+        fprintf(f, "static const R01WarpEntRec warp_ents[] = {\n");
+        for (wi = 0; wi < w->warp_entrance_count; wi++) {
+            const R01WarpEntrance *we = &w->warp_entrances[wi];
+            if (!we->present) {
+                continue;
+            }
+            if (wrote) {
+                fprintf(f, ",\n");
+            }
+            fprintf(f, "    {\"%s\", %d, %d, %d, %d}", we->id, we->screen_col, we->screen_row, we->tile_col,
+                    we->tile_row);
+            wrote++;
+        }
+        fprintf(f, "\n};\nstatic const int warp_ent_count = %d;\n", wrote);
+        wrote = 0;
+        fprintf(f, "static const R01WarpExitRec warp_exits[] = {\n");
+        for (wi = 0; wi < w->warp_exit_count; wi++) {
+            const R01WarpExit *wx = &w->warp_exits[wi];
+            if (!wx->present) {
+                continue;
+            }
+            if (wrote) {
+                fprintf(f, ",\n");
+            }
+            fprintf(f, "    {%d, %d, %d, %d, %d, %u}", wx->entrance_idx, wx->dest_screen_col,
+                    wx->dest_screen_row, wx->dest_tile_col, wx->dest_tile_row, (unsigned)wx->flags);
+            wrote++;
+        }
+        fprintf(f, "\n};\nstatic const int warp_exit_count = %d;\n", wrote);
+    } else {
+        fprintf(f, "\ntypedef struct { const char *id; int sc, sr, tc, tr; } R01WarpEntRec;\n");
+        fprintf(f, "typedef struct { int ent; int dsc, dsr, dtc, dtr; uint8_t flags; } R01WarpExitRec;\n");
+        fprintf(f, "static const R01WarpEntRec warp_ents[1] = {{0}};\n");
+        fprintf(f, "static const R01WarpExitRec warp_exits[1] = {{0}};\n");
+        fprintf(f, "static const int warp_ent_count = 0;\nstatic const int warp_exit_count = 0;\n");
+    }
     fprintf(f, "\nstatic void center_camera(R01GameCtx *ctx) {\n");
     fprintf(f, "    int ax = ctx->player_x + %d / 2;\n", R01_PLAY_PLAYER_W);
     fprintf(f, "    int ay = ctx->player_y + %d / 2;\n", R01_PLAY_PLAYER_H);
@@ -375,7 +509,7 @@ static int write_base_game(FILE *f, const R01Project *p) {
     fprintf(f, "    (void)player_hit_x; (void)player_hit_y;\n");
     fprintf(f, "    (void)player_hit_w; (void)player_hit_h;\n");
     fprintf(f, "    if (!ctx) return;\n");
-    fprintf(f, "    ctx->pad = ctx->pad_prev = 0;\n");
+    fprintf(f, "    r01_game_ctx_init(ctx);\n");
     fprintf(f, "    if (!player_instance_spawn(&sx, &sy)) {\n");
     fprintf(f, "        sx = play_spawn_col * %d + (%d - %d) / 2;\n", R01_SCREEN_PX_W, R01_SCREEN_PX_W,
             R01_PLAY_PLAYER_W);
@@ -800,53 +934,23 @@ static int write_data_bins(const char *data_dir, const R01Project *p, char *err_
 
 static int write_runtime_c(const char *c_dir, char *err_buf, size_t err_cap) {
     char path[R01_PATH_MAX];
+    char src[R01_PATH_MAX];
     snprintf(path, sizeof(path), "%s/r01_runtime.c", c_dir);
-    return write_text(path,
-                      "/* Generated runtime stubs for custom_logic (host-side, Phase 5D). */\n"
-                      "#include \"include/r01_engine.h\"\n\n"
-                      "#define R01_EVENT_SLOTS 4\n"
-                      "static struct { uint8_t btn; R01EventFn fn; } s_events[R01_EVENT_SLOTS];\n\n"
-                      "uint8_t r01_pad_pressed(const R01GameCtx *ctx, uint8_t btn) {\n"
-                      "    if (!ctx) return 0;\n"
-                      "    return (uint8_t)((ctx->pad >> btn) & 1u);\n"
-                      "}\n\n"
-                      "uint8_t r01_pad_just_pressed(R01GameCtx *ctx, uint8_t btn) {\n"
-                      "    if (!ctx) return 0;\n"
-                      "    return (uint8_t)(((ctx->pad ^ ctx->pad_prev) & ctx->pad) >> btn) & 1u;\n"
-                      "}\n\n"
-                      "void r01_player_warp(R01GameCtx *ctx, int col, int row) {\n"
-                      "    if (!ctx) return;\n"
-                      "    ctx->player_x = col * 128 + (128 - 8) / 2;\n"
-                      "    ctx->player_y = row * 120 + (120 - 8) / 2;\n"
-                      "}\n\n"
-                      "void r01_player_set_type(uint8_t type_id) { (void)type_id; }\n"
-                      "int r01_entity_spawn(uint8_t type, int wx, int wy) {\n"
-                      "    (void)type; (void)wx; (void)wy; return -1;\n"
-                      "}\n"
-                      "void r01_entity_remove(int inst) { (void)inst; }\n"
-                      "void r01_world_warp_screen(int col, int row) { (void)col; (void)row; }\n"
-                      "int r01_event_on_button(uint8_t btn, R01EventFn fn) {\n"
-                      "    int i;\n"
-                      "    if (!fn) return -1;\n"
-                      "    for (i = 0; i < R01_EVENT_SLOTS; i++) {\n"
-                      "        if (!s_events[i].fn) {\n"
-                      "            s_events[i].btn = btn;\n"
-                      "            s_events[i].fn = fn;\n"
-                      "            return i;\n"
-                      "        }\n"
-                      "    }\n"
-                      "    return -1;\n"
-                      "}\n"
-                      "void r01_runtime_dispatch_buttons(R01GameCtx *ctx) {\n"
-                      "    int i;\n"
-                      "    if (!ctx) return;\n"
-                      "    for (i = 0; i < R01_EVENT_SLOTS; i++) {\n"
-                      "        if (s_events[i].fn && r01_pad_just_pressed(ctx, s_events[i].btn)) {\n"
-                      "            s_events[i].fn(ctx);\n"
-                      "        }\n"
-                      "    }\n"
-                      "}\n",
-                      err_buf, err_cap);
+    snprintf(src, sizeof(src), "%s/retr01_studio/core/src/export_runtime.c", R01_REPO_ROOT);
+    if (copy_file(src, path, err_buf, err_cap) != 0) {
+        return write_text(path,
+                          "/* Generated runtime stubs for custom_logic (host-side). */\n"
+                          "#include \"include/r01_engine.h\"\n\n"
+                          "void r01_game_ctx_init(R01GameCtx *ctx) {\n"
+                          "    if (!ctx) return;\n"
+                          "    ctx->cam_deadzone_x = ctx->cam_deadzone_y = 0;\n"
+                          "    ctx->cam_axis_lock = R01_CAM_AXIS_BOTH;\n"
+                          "    ctx->fade_color = R01_FADE_BLACK;\n"
+                          "    ctx->fade_pending_entrance = -1;\n"
+                          "}\n",
+                          err_buf, err_cap);
+    }
+    return 0;
 }
 
 int r01_export_codegen(const R01Project *p, const char *path_stem, char *err_buf, size_t err_cap) {
@@ -869,6 +973,9 @@ int r01_export_codegen(const R01Project *p, const char *path_stem, char *err_buf
 
     snprintf(path, sizeof(path), "%s/C/include", out_dir);
     if (write_headers(path, err_buf, err_cap) != 0) {
+        return -1;
+    }
+    if (write_warp_ids_header(path, w, err_buf, err_cap) != 0) {
         return -1;
     }
 

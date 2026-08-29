@@ -5,6 +5,7 @@
 #include "retr01_studio/sprites.h"
 #include "retr01_studio/entities.h"
 #include "retr01_studio/metasprites.h"
+#include "retr01_studio/warps.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -501,6 +502,39 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
                 fprintf(f, "    {\"type\": %d, \"x\": %d, \"y\": %d}%s\n", inst->type_id, inst->world_x,
                         inst->world_y, ii + 1 < w->instance_count ? "," : "");
             }
+        }
+    }
+    fprintf(f, "  ],\n");
+    fprintf(f, "  \"warp_entrances\": [\n");
+    {
+        int wi;
+        int wrote = 0;
+        for (wi = 0; wi < w->warp_entrance_count; wi++) {
+            const R01WarpEntrance *we = &w->warp_entrances[wi];
+            if (!we->present) {
+                continue;
+            }
+            fprintf(f, "    %s{\"id\": \"%s\", \"screen_col\": %d, \"screen_row\": %d, \"tile_col\": %d, \"tile_row\": %d}\n",
+                    wrote ? "," : "", we->id, we->screen_col, we->screen_row, we->tile_col, we->tile_row);
+            wrote = 1;
+        }
+    }
+    fprintf(f, "  ],\n");
+    fprintf(f, "  \"warp_exits\": [\n");
+    {
+        int wi;
+        int wrote = 0;
+        for (wi = 0; wi < w->warp_exit_count; wi++) {
+            const R01WarpExit *wx = &w->warp_exits[wi];
+            if (!wx->present) {
+                continue;
+            }
+            fprintf(f,
+                    "    %s{\"entrance\": %d, \"dest_screen_col\": %d, \"dest_screen_row\": %d, \"dest_tile_col\": %d, "
+                    "\"dest_tile_row\": %d, \"flags\": %u}\n",
+                    wrote ? "," : "", wx->entrance_idx, wx->dest_screen_col, wx->dest_screen_row,
+                    wx->dest_tile_col, wx->dest_tile_row, (unsigned)wx->flags);
+            wrote = 1;
         }
     }
     fprintf(f, "  ],\n");
@@ -1263,6 +1297,76 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                             st_obj = strchr(st_end + 1, '{');
                         }
                         free(slice);
+                        obj2 = strchr(end + 1, '{');
+                    }
+                }
+            }
+            {
+                const char *warp_ent = json_find(buf, "\"warp_entrances\":");
+                const char *warp_ent_end = json_array_end(warp_ent);
+                const char *warp_x = json_find(buf, "\"warp_exits\":");
+                const char *warp_x_end = json_array_end(warp_x);
+                r01_world_warps_init(w);
+                if (warp_ent && warp_ent_end) {
+                    const char *obj2 = strchr(warp_ent, '{');
+                    while (obj2 && obj2 < warp_ent_end) {
+                        const char *end = json_object_end(obj2);
+                        size_t olen;
+                        char *slice;
+                        char wid[R01_ID_MAX];
+                        int sc = 0, sr = 0, tc = 0, tr = 0;
+                        if (!end || end >= warp_ent_end) {
+                            break;
+                        }
+                        olen = (size_t)(end - obj2 + 1);
+                        slice = (char *)malloc(olen + 1u);
+                        if (!slice) {
+                            break;
+                        }
+                        memcpy(slice, obj2, olen);
+                        slice[olen] = '\0';
+                        wid[0] = '\0';
+                        json_string_after(slice, "\"id\"", wid, sizeof(wid));
+                        json_int_after(slice, "\"screen_col\"", &sc);
+                        json_int_after(slice, "\"screen_row\"", &sr);
+                        json_int_after(slice, "\"tile_col\"", &tc);
+                        json_int_after(slice, "\"tile_row\"", &tr);
+                        free(slice);
+                        {
+                            int idx = r01_world_warp_entrance_add(w, sc, sr, tc, tr);
+                            if (idx >= 0 && wid[0]) {
+                                strncpy(w->warp_entrances[idx].id, wid, R01_ID_MAX - 1u);
+                                w->warp_entrances[idx].id[R01_ID_MAX - 1u] = '\0';
+                            }
+                        }
+                        obj2 = strchr(end + 1, '{');
+                    }
+                }
+                if (warp_x && warp_x_end) {
+                    const char *obj2 = strchr(warp_x, '{');
+                    while (obj2 && obj2 < warp_x_end) {
+                        const char *end = json_object_end(obj2);
+                        size_t olen;
+                        char *slice;
+                        int ent = 0, dsc = 0, dsr = 0, dtc = 0, dtr = 0, flags = 0;
+                        if (!end || end >= warp_x_end) {
+                            break;
+                        }
+                        olen = (size_t)(end - obj2 + 1);
+                        slice = (char *)malloc(olen + 1u);
+                        if (!slice) {
+                            break;
+                        }
+                        memcpy(slice, obj2, olen);
+                        slice[olen] = '\0';
+                        json_int_after(slice, "\"entrance\"", &ent);
+                        json_int_after(slice, "\"dest_screen_col\"", &dsc);
+                        json_int_after(slice, "\"dest_screen_row\"", &dsr);
+                        json_int_after(slice, "\"dest_tile_col\"", &dtc);
+                        json_int_after(slice, "\"dest_tile_row\"", &dtr);
+                        json_int_after(slice, "\"flags\"", &flags);
+                        free(slice);
+                        r01_world_warp_exit_set(w, ent, dsc, dsr, dtc, dtr, (uint8_t)flags);
                         obj2 = strchr(end + 1, '{');
                     }
                 }

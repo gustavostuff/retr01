@@ -247,6 +247,43 @@ static void set_viewport_clip(SDL_Renderer *r, int ox, int oy) {
     SDL_RenderSetClipRect(r, &clip);
 }
 
+static void draw_warp_markers(UiState *ui, SDL_Renderer *r, const R01World *w, const R01Screen *s, int ox,
+                              int oy) {
+    int i;
+    if (!w || !s) {
+        return;
+    }
+    for (i = 0; i < w->warp_entrance_count; i++) {
+        const R01WarpEntrance *we = &w->warp_entrances[i];
+        SDL_Rect tile;
+        if (!we->present || we->screen_col != s->col || we->screen_row != s->row) {
+            continue;
+        }
+        tile.x = ox + we->tile_col * 8 * UI_SCREEN_SCALE;
+        tile.y = oy + we->tile_row * 8 * UI_SCREEN_SCALE;
+        tile.w = 8 * UI_SCREEN_SCALE;
+        tile.h = 8 * UI_SCREEN_SCALE;
+        SDL_SetRenderDrawColor(r, 80, 220, 120, 255);
+        SDL_RenderDrawRect(r, &tile);
+        SDL_RenderDrawRect(r, &tile);
+    }
+    for (i = 0; i < w->warp_exit_count; i++) {
+        const R01WarpExit *wx = &w->warp_exits[i];
+        SDL_Rect tile;
+        if (!wx->present || wx->dest_screen_col != s->col || wx->dest_screen_row != s->row) {
+            continue;
+        }
+        tile.x = ox + wx->dest_tile_col * 8 * UI_SCREEN_SCALE;
+        tile.y = oy + wx->dest_tile_row * 8 * UI_SCREEN_SCALE;
+        tile.w = 8 * UI_SCREEN_SCALE;
+        tile.h = 8 * UI_SCREEN_SCALE;
+        SDL_SetRenderDrawColor(r, 120, 160, 255, 255);
+        SDL_RenderDrawRect(r, &tile);
+        SDL_RenderDrawRect(r, &tile);
+    }
+    (void)ui;
+}
+
 void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s) {
     int ox, oy, y, x;
     R01World *w = r01_project_active_world(ui->project);
@@ -271,6 +308,7 @@ void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s) {
     }
     set_viewport_clip(r, ox, oy);
     draw_instances_on_screen(ui, r, w, s, ox, oy);
+    draw_warp_markers(ui, r, w, s, ox, oy);
     SDL_RenderSetClipRect(r, NULL);
     if (screen_sel_valid(ui) && ui->screen_mode == UI_SCREEN_MODE_SEL && ui->sel_instance < 0) {
         int min_x, min_y, max_x, max_y;
@@ -351,6 +389,22 @@ void draw_play_view(UiState *ui, SDL_Renderer *r) {
     set_viewport_clip(r, ox, oy);
     draw_oam_sprites(ui, r, ox, oy);
     SDL_RenderSetClipRect(r, NULL);
+    {
+        int fade = r01_play_fade_level(&ui->play);
+        if (fade > 0) {
+            SDL_Rect overlay = {ox, oy, UI_SCREEN_W, UI_SCREEN_H};
+            int c = r01_play_fade_color(&ui->play);
+            Uint8 alpha = (Uint8)((fade * 255) / 255);
+            if (c == R01_FADE_WHITE) {
+                SDL_SetRenderDrawColor(r, 255, 255, 255, alpha);
+            } else {
+                SDL_SetRenderDrawColor(r, 0, 0, 0, alpha);
+            }
+            SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+            SDL_RenderFillRect(r, &overlay);
+            SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
+        }
+    }
 }
 
 void draw_catalog_drag_ghost(UiState *ui, SDL_Renderer *r) {

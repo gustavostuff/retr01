@@ -57,7 +57,7 @@
 
 #define R01_NAME_MAX 64
 #define R01_PATH_MAX 512
-#define R01_JSON_VER 7
+#define R01_JSON_VER 8
 
 #define R01_OUTPUT_DIR "output"
 #define R01_DEFAULT_PROJECT R01_OUTPUT_DIR "/test.r01proj"
@@ -79,6 +79,12 @@
 #define R01_ENTITY_HITBOX_H 8
 #define R01_MAX_ENTITY_INSTANCES 64
 #define R01_OAM_MAX 64
+
+#define R01_MAX_WARP_ENTRANCES 32
+#define R01_MAX_WARP_EXITS 32
+#define R01_WARP_FADE_OUT 0x01u
+#define R01_WARP_FADE_IN 0x02u
+#define R01_WARP_FADE_WHITE 0x04u
 
 /* BG attr (docs/02) */
 #define R01_ATTR_BANK_MASK 0x03u
@@ -168,6 +174,26 @@ typedef struct R01EntityInstance {
     int flip_v;
 } R01EntityInstance;
 
+/* Intra-world warp: entrance tile triggers a jump to an exit destination tile. */
+typedef struct R01WarpEntrance {
+    int present;
+    char id[R01_ID_MAX]; /* autogen: w_00, w_01, ... */
+    int screen_col;
+    int screen_row;
+    int tile_col;
+    int tile_row;
+} R01WarpEntrance;
+
+typedef struct R01WarpExit {
+    int present;
+    int entrance_idx; /* index into warp_entrances[] */
+    int dest_screen_col;
+    int dest_screen_row;
+    int dest_tile_col;
+    int dest_tile_row;
+    uint8_t flags; /* R01_WARP_FADE_* */
+} R01WarpExit;
+
 /* Global off-grid MAP payloads (title, interstitial, credits pages). See docs/02. */
 typedef struct R01OtherScreen {
     int present; /* 0 = omit from cart; title/inter always present after init */
@@ -195,6 +221,10 @@ typedef struct R01World {
     int player_entity; /* type index marked as Play player; -1 = stub tile */
     R01EntityInstance instances[R01_MAX_ENTITY_INSTANCES];
     int instance_count;
+    R01WarpEntrance warp_entrances[R01_MAX_WARP_ENTRANCES];
+    int warp_entrance_count;
+    R01WarpExit warp_exits[R01_MAX_WARP_EXITS];
+    int warp_exit_count;
 } R01World;
 
 typedef struct R01Project {
