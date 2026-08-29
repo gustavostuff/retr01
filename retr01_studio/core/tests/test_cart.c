@@ -14,7 +14,6 @@
 #define CART_PTR_SIZE 36u
 #define CART_PAL_PLANE_BYTES 128u
 #define CART_PRG_OFF (CART_HDR_SIZE + CART_PTR_SIZE + 2u * CART_PAL_PLANE_BYTES)
-#define CART_OTHER_LEN (4u + 2u * 8u + 2u * 480u)
 #define PRG_PLAY_SPAWN_C 0x0108u
 #define PRG_PLAY_SPAWN_R 0x0109u
 #define WORLD_SLOT_SIZE 8u
@@ -26,6 +25,36 @@ static uint32_t rd_u24(const uint8_t *p) {
 
 static uint16_t rd_u16(const uint8_t *p) {
     return (uint16_t)p[0] | ((uint16_t)p[1] << 8);
+}
+
+/* Mirror cart RLE decode for test asserts. */
+static int test_rle_decode_480(const uint8_t *in, size_t in_len, uint8_t out[480]) {
+    size_t ip = 0, op = 0;
+    while (op < 480) {
+        uint8_t cmd;
+        size_t n;
+        if (ip >= in_len) {
+            return -1;
+        }
+        cmd = in[ip++];
+        if (cmd & 0x80u) {
+            n = (size_t)(cmd & 0x7Fu) + 1u;
+            if (ip >= in_len || op + n > 480) {
+                return -1;
+            }
+            memset(out + op, in[ip++], n);
+            op += n;
+        } else {
+            n = (size_t)cmd + 1u;
+            if (ip + n > in_len || op + n > 480) {
+                return -1;
+            }
+            memcpy(out + op, in + ip, n);
+            ip += n;
+            op += n;
+        }
+    }
+    return 0;
 }
 
 TEST_MAIN() {
@@ -69,8 +98,10 @@ TEST_MAIN() {
     inst = r01_world_place_entity(w, type_id, 40, 50);
     EXPECT(inst == 0, "instance");
 
-    strncpy(p->credits, "RETR01 DEMO\nBY TEST", sizeof(p->credits) - 1u);
     p->other_screens[R01_CART_OTHER_TITLE].tiles[0] = 0x42;
+    /* Credits page (id 2): mostly blank -> RLE in other screens. */
+    p->other_screens[R01_CART_OTHER_CREDITS_FIRST].present = 1;
+    p->other_screens[R01_CART_OTHER_CREDITS_FIRST].tiles[0] = 0x11;
 
     /* Legacy: art sitting on reserved tile 1 must relocate on export. */
     {
@@ -134,19 +165,25 @@ TEST_MAIN() {
                 off_wtable = rd_u24(ptrs + 18);
                 EXPECT(rd_u24(ptrs + 3) == R01_PRG_BYTES, "len_prg 32KB");
                 EXPECT(rd_u24(ptrs + 24) == CART_PRG_OFF + R01_PRG_BYTES, "off_other");
-                EXPECT(rd_u24(ptrs + 27) == CART_OTHER_LEN, "len_other");
-                EXPECT(img[rd_u24(ptrs + 24)] == 2, "other_count");
+                EXPECT(rd_u24(ptrs + 27) > 0, "len_other");
+                EXPECT(rd_u24(ptrs + 30) == 0, "credits ptr reserved 0");
+                EXPECT(rd_u24(ptrs + 33) == 0, "credits len reserved 0");
+                EXPECT(img[rd_u24(ptrs + 24)] == 3, "other_count title+inter+credits");
                 EXPECT(img[rd_u24(ptrs + 24) + 4u] == 0, "other dir0 id title");
-                EXPECT(rd_u24(ptrs + 30) == CART_PRG_OFF + R01_PRG_BYTES + CART_OTHER_LEN, "off_credits");
-                {
-                    size_t clen = rd_u24(ptrs + 33);
-                    EXPECT(clen == strlen(p->credits), "len_credits");
-                    EXPECT(memcmp(img + rd_u24(ptrs + 30), p->credits, clen) == 0, "credits blob");
-                }
                 {
                     uint32_t off_other = rd_u24(ptrs + 24);
-                    uint32_t title_rel = rd_u24(img + off_other + 4u + 4u);
-                    EXPECT(img[off_other + title_rel] == 0x42, "title screen tile byte");
+                    const uint8_t *e0 = img + off_other + 4u;
+                    uint16_t plen = rd_u16(e0 + 2);
+                    uint32_t title_rel = rd_u24(e0 + 4);
+                    uint8_t decoded[480];
+                    EXPECT(plen > 0 && plen <= 480, "title payload len");
+                    if (e0[1] & R01_CART_OTHER_FLAG_RLE) {
+                        EXPECT(test_rle_decode_480(img + off_other + title_rel, plen, decoded) == 0,
+                               "title RLE decode");
+                        EXPECT(decoded[0] == 0x42, "title tile0 after decode");
+                    } else {
+                        EXPECT(img[off_other + title_rel] == 0x42, "title screen tile byte");
+                    }
                 }
                 memcpy(slot, img + off_wtable, 8);
                 EXPECT(slot[0] != 0, "world0 present");

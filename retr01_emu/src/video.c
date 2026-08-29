@@ -235,17 +235,23 @@ static int load_screen_into_slot(R01eMachine *m, const R01eWorldView *wv, int co
 void r01e_video_load_parallax(R01eMachine *m, const R01eWorldView *wv) {
     const uint8_t *pdir;
     int pi;
+    int n;
 
     if (!m || !wv || wv->parallax_count == 0) {
         return;
     }
-    pdir = r01e_cart_ptr(&m->cart, wv->base + wv->off_parallax_dir, (size_t)wv->parallax_count * 8u);
+    n = (int)wv->parallax_count;
+    if (n > R01E_PARALLAX_MAX) {
+        n = R01E_PARALLAX_MAX;
+    }
+    pdir = r01e_cart_ptr(&m->cart, wv->base + wv->off_parallax_dir, (size_t)n * 8u);
     if (!pdir) {
         return;
     }
-    for (pi = 0; pi < wv->parallax_count; pi++) {
+    for (pi = 0; pi < n; pi++) {
         const uint8_t *e = pdir + (size_t)pi * 8u;
-        int pslot = (int)(e[0] & 1u);
+        /* live_slot at byte 2 (0/1 -> VRAM 4/5); fall back to legacy index&1. */
+        int pslot = (e[2] <= 1u) ? (int)e[2] : (int)(e[0] & 1u);
         uint32_t poff = get_u24(e + 4);
         const uint8_t *pay = r01e_cart_ptr(&m->cart, wv->base + poff, R01E_SCREEN_PAYLOAD);
         int vslot = 4 + pslot;

@@ -74,10 +74,9 @@ Play SoT: `core/src/play.c` + `collision.c`. Emu/sim mirror the same rules (sepa
 |-------|----------|
 | `version` | **7** (`R01_JSON_VER`) |
 | Palettes | Project-wide: all **8 BG + 8 SPR** rows |
-| `other_screens` | Global title + interstitial MAP payloads (480 B tiles + 480 B attrs each) |
-| `credits` | Global credits ROM text (<= 1024 B ASCII) |
+| `other_screens` | Global title + interstitial + credits pages (480 B each; cart may RLE) |
 | World data | **Active world only** on save: grid, screens, `bg_bank0`, `spr_banks`, sprite catalog, **`metasprites`**, `entities`, `instances`, `default_screen`, `default_pal_row` |
-| Load | Always applies saved world data to **world 0**. Restores `default_world` / `active_world` indices. Initializes empty `other_screens` / `credits` if missing |
+| Load | Always applies saved world data to **world 0**. Restores `default_world` / `active_world` indices. Initializes empty `other_screens` if missing. Legacy `credits` string ignored |
 | Worlds 1-7 | Session-only until multi-world JSON lands (world **0** on disk) |
 | v6 / older projects | Load OK with missing fields empty; re-save as v7. No cart-image migration -- re-export |
 
@@ -108,7 +107,7 @@ Kit **master indices** only ([`docs/02`](../docs/02_graphics_worlds_memory.md)).
 
 | File | Contents |
 |------|----------|
-| `test.retr01` | Packed cart (**world 0**): BG+SPR CHR, MAP, palettes, PRG stub, entity type/instance tables, **other screens**, optional **credits** (`format_ver` 2) |
+| `test.retr01` | Packed cart (**world 0**): BG+SPR CHR, MAP, palettes, PRG stub, entity type/instance tables, **other screens** (title/inter/credits pages) (`format_ver` 2) |
 | `test_prom.bin` | 64-byte Color PROM image (motherboard, not in cart) |
 | `test_boot.s` | Human-readable ca65 stub / equates |
 | `test_flash.bin` | Cart padded to **512 KB** |
@@ -128,7 +127,7 @@ PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are
 | **3B** | Entities accordion + Add/Edit entity modal (compose / hitbox / origin) |
 | **3C** | Drag sprite/entity onto screen; Studio Play OAM (origin-relative) |
 | **3D** | Cart packs real SPR CHR + entity tables; emu/sim Play OAM parity |
-| **3E** | Metasprites accordion + modal; entity compose from metasprite catalog; JSON v7; cart `format_ver` 2 (other screens + credits); viewport sprite clipping (current) |
+| **3E** | Metasprites accordion + modal; entity compose from metasprite catalog; JSON v7; cart `format_ver` 2 (other screens incl. credits pages + RLE); viewport sprite clipping (current) |
 
 **Out of scope (for now):** entity movement/collision, multi-state animation in Play, parallax planes, Generate, multi-world cart export, multi-world JSON save, dead-zone/fade scroll profiles, full 6502 gameplay loop.
 

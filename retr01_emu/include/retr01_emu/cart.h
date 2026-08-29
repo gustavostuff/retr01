@@ -57,6 +57,10 @@ typedef struct R01eWorldView {
 
 #define R01E_CART_OTHER_TITLE 0
 #define R01E_CART_OTHER_INTER 1
+#define R01E_CART_OTHER_DIR_ID 0
+#define R01E_CART_OTHER_DIR_FLAGS 1
+#define R01E_CART_OTHER_DIR_LEN 2
+#define R01E_CART_OTHER_DIR_OFF 4
 
 /* Load packed .retr01 (or 512 KB flash image). Owns *out->data. */
 int r01e_cart_load_path(R01eCart *out, const char *path, char *err, size_t err_cap);
@@ -82,10 +86,13 @@ const uint8_t *r01e_cart_ptr(const R01eCart *c, uint32_t abs_off, size_t need);
 
 uint8_t r01e_cart_read(const R01eCart *c, uint32_t abs_off);
 
-/* format_ver >= 2: other screens blob (title/interstitial). Returns NULL if missing/id OOB. */
-const uint8_t *r01e_cart_other_payload(const R01eCart *c, int id);
+/* Raw other-screen payload (may be RLE). len/flags optional. */
+const uint8_t *r01e_cart_other_raw(const R01eCart *c, int id, size_t *out_len, int *out_flags);
 
-/* format_ver >= 2: credits ROM text. Returns NULL if len 0. */
-const uint8_t *r01e_cart_credits(const R01eCart *c, size_t *out_len);
+/* Decode other screen id into 480 B (tiles||attrs). 0 ok, -1 missing/bad. */
+int r01e_cart_other_decode(const R01eCart *c, int id, uint8_t out[R01E_SCREEN_PAYLOAD]);
+
+/* Deprecated alias: raw payload only when uncompressed; prefer decode. */
+const uint8_t *r01e_cart_other_payload(const R01eCart *c, int id);
 
 #endif

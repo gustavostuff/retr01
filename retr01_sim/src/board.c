@@ -2021,12 +2021,11 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     }
     board->cart_off_other = get_u24(ptrs + 24);
     board->cart_len_other = get_u24(ptrs + 27);
-    board->cart_off_credits = get_u24(ptrs + 30);
-    board->cart_len_credits = get_u24(ptrs + 33);
-    if (board->cart_len_credits > R01S_CART_CREDITS_MAX) {
-        board->cart_len_credits = 0;
-        board->cart_off_credits = 0;
-    }
+    /* Legacy ASCII credits reserved -- ignored. */
+    board->cart_off_credits = 0;
+    board->cart_len_credits = 0;
+    (void)get_u24(ptrs + 30);
+    (void)get_u24(ptrs + 33);
     board->cart_off_other_title =
         cart_other_payload_abs(img, sizeof(board->cart_flash.mem), board->cart_off_other, board->cart_len_other, 0);
     board->cart_off_other_inter =

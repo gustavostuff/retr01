@@ -50,6 +50,7 @@ void r01_other_screen_init(R01OtherScreen *s) {
     if (!s) {
         return;
     }
+    s->present = 0;
     memset(s->tiles, 0, sizeof(s->tiles));
     for (c = 0; c < R01_TILES_PER_SCREEN; c++) {
         s->attrs[c] = r01_attr_pack(0, 0, 0, 0);
@@ -64,7 +65,9 @@ void r01_project_init_other_screens(R01Project *p) {
     for (i = 0; i < R01_CART_OTHER_MAX; i++) {
         r01_other_screen_init(&p->other_screens[i]);
     }
-    p->credits[0] = '\0';
+    /* Title + interstitial always exported (may be blank). */
+    p->other_screens[R01_CART_OTHER_TITLE].present = 1;
+    p->other_screens[R01_CART_OTHER_INTER].present = 1;
 }
 
 void r01_world_init_phase1(R01World *w) {

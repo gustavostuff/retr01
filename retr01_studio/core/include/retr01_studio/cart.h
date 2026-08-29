@@ -15,6 +15,7 @@
 /* Other-screens dir entry (relative off_payload to other blob base). */
 #define R01_CART_OTHER_DIR_ID 0
 #define R01_CART_OTHER_DIR_FLAGS 1
+#define R01_CART_OTHER_DIR_LEN 2
 #define R01_CART_OTHER_DIR_OFF_PAYLOAD 4
 
 void r01_prom_fill(uint8_t out64[R01_MASTER_COLORS]);

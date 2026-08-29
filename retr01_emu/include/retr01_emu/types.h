@@ -8,10 +8,13 @@
 #define R01E_CART_MAGIC "retr01"
 #define R01E_CART_FORMAT_VER 2
 #define R01E_CART_PTR_TABLE_BYTES 36u
-#define R01E_CART_OTHER_MAX 2
+#define R01E_CART_OTHER_MAX 48
+#define R01E_CART_OTHER_CREDITS_FIRST 2
+#define R01E_CART_CREDITS_MIN 0
+#define R01E_CART_CREDITS_MAX (R01E_CART_OTHER_MAX - R01E_CART_OTHER_CREDITS_FIRST) /* 46 */
 #define R01E_CART_OTHER_HDR_BYTES 4u
 #define R01E_CART_OTHER_DIR_BYTES 8u
-#define R01E_CART_CREDITS_MAX 1024u
+#define R01E_CART_OTHER_FLAG_RLE 0x01u
 #define R01E_CART_FLASH_BYTES (512u * 1024u)
 #define R01E_PRG_BYTES 32768u /* fixed 32 KB window at $8000 (docs/02) */
 
@@ -27,6 +30,8 @@
 
 #define R01E_MAX_WORLDS 8
 #define R01E_MAX_PRESENT_SCREENS 32 /* cart cap: 8 worlds x 32 (docs/02) */
+#define R01E_PARALLAX_MIN 0
+#define R01E_PARALLAX_MAX 8 /* per world; live VRAM 4-5 */
 #define R01E_PHASE1_WORLDS 1 /* Studio Phase 1: world 0 only */
 #define R01E_BG_BANKS 4
 #define R01E_SPR_BANKS 4

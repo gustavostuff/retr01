@@ -494,10 +494,17 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
     fprintf(f, "  \"other_screens\": [\n");
     {
         int oi;
+        int wrote_os = 0;
         for (oi = 0; oi < R01_CART_OTHER_MAX; oi++) {
             const R01OtherScreen *os = &p->other_screens[oi];
-            char *tl = encode_b64(os->tiles, sizeof(os->tiles));
-            char *at = encode_b64(os->attrs, sizeof(os->attrs));
+            char *tl;
+            char *at;
+            int force = (oi == R01_CART_OTHER_TITLE || oi == R01_CART_OTHER_INTER);
+            if (!force && !os->present) {
+                continue;
+            }
+            tl = encode_b64(os->tiles, sizeof(os->tiles));
+            at = encode_b64(os->attrs, sizeof(os->attrs));
             if (!tl || !at) {
                 free(tl);
                 free(at);
@@ -505,16 +512,17 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
                 set_err(err_buf, err_cap, "oom");
                 return -1;
             }
-            fprintf(f, "    {\"id\": %d, \"tiles_b64\": \"%s\", \"attrs_b64\": \"%s\"}%s\n", oi, tl, at,
-                    oi + 1 < R01_CART_OTHER_MAX ? "," : "");
+            fprintf(f, "%s    {\"id\": %d, \"present\": 1, \"tiles_b64\": \"%s\", \"attrs_b64\": \"%s\"}",
+                    wrote_os ? ",\n" : "", oi, tl, at);
+            wrote_os = 1;
             free(tl);
             free(at);
         }
+        if (wrote_os) {
+            fprintf(f, "\n");
+        }
     }
     fprintf(f, "  ],\n");
-    fprintf(f, "  \"credits\": \"");
-    json_fprint_escaped(f, p->credits);
-    fprintf(f, "\",\n");
     fprintf(f, "  \"screens\": [\n");
     for (i = 0; i < w->screen_count; i++) {
         const R01Screen *s = &w->screens[i];
@@ -644,7 +652,7 @@ static int load_screen_field(const char *slice, const char *b64_key, const char 
 static int load_other_screens(R01Project *p, const char *buf) {
     const char *section = json_find(buf, "\"other_screens\"");
     const char *obj;
-    int oi;
+    int n;
 
     if (!p || !section) {
         return 0;
@@ -654,11 +662,13 @@ static int load_other_screens(R01Project *p, const char *buf) {
         return 0;
     }
     obj++;
-    for (oi = 0; oi < R01_CART_OTHER_MAX; oi++) {
+    for (n = 0; n < R01_CART_OTHER_MAX; n++) {
         const char *next = strchr(obj, '{');
         char *slice;
         const char *end;
         size_t slen;
+        int id = n;
+        int present = 1;
         if (!next) {
             break;
         }
@@ -673,16 +683,25 @@ static int load_other_screens(R01Project *p, const char *buf) {
         }
         memcpy(slice, next, slen);
         slice[slen] = '\0';
-        if (load_screen_field(slice, "\"tiles_b64\"", "\"tiles_rle_hex\"", "\"tiles_hex\"",
-                              p->other_screens[oi].tiles, sizeof(p->other_screens[oi].tiles)) != 0 ||
-            load_screen_field(slice, "\"attrs_b64\"", "\"attrs_rle_hex\"", "\"attrs_hex\"",
-                              p->other_screens[oi].attrs, sizeof(p->other_screens[oi].attrs)) != 0) {
+        json_int_after(slice, "\"id\"", &id);
+        json_int_after(slice, "\"present\"", &present);
+        if (id < 0 || id >= R01_CART_OTHER_MAX) {
             free(slice);
             return -1;
         }
+        if (load_screen_field(slice, "\"tiles_b64\"", "\"tiles_rle_hex\"", "\"tiles_hex\"",
+                              p->other_screens[id].tiles, sizeof(p->other_screens[id].tiles)) != 0 ||
+            load_screen_field(slice, "\"attrs_b64\"", "\"attrs_rle_hex\"", "\"attrs_hex\"",
+                              p->other_screens[id].attrs, sizeof(p->other_screens[id].attrs)) != 0) {
+            free(slice);
+            return -1;
+        }
+        p->other_screens[id].present = present ? 1 : 0;
         free(slice);
         obj = end + 1;
     }
+    p->other_screens[R01_CART_OTHER_TITLE].present = 1;
+    p->other_screens[R01_CART_OTHER_INTER].present = 1;
     return 0;
 }
 
@@ -811,20 +830,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
     if (active_world >= 0 && active_world < R01_MAX_WORLDS) {
         p->active_world = active_world;
     }
-    {
-        char *credits_str = json_string_field_dup(buf, "\"credits\"");
-        if (credits_str) {
-            if (strlen(credits_str) > R01_CART_CREDITS_MAX) {
-                free(credits_str);
-                free(buf);
-                set_err(err_buf, err_cap, "credits exceeds 1024 bytes");
-                return -1;
-            }
-            strncpy(p->credits, credits_str, R01_CART_CREDITS_MAX);
-            p->credits[R01_CART_CREDITS_MAX] = '\0';
-            free(credits_str);
-        }
-    }
+    /* Legacy "credits" ASCII string ignored -- credits are other-screen pages now. */
     if (load_other_screens(p, buf) != 0) {
         free(buf);
         set_err(err_buf, err_cap, "bad other_screens");

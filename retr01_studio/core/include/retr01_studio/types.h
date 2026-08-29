@@ -15,6 +15,8 @@
 #define R01_DEFAULT_GRID 3
 #define R01_MAX_SCREENS (R01_GRID_MAX * R01_GRID_MAX)
 #define R01_MAX_PRESENT_SCREENS 32 /* cart cap (docs/02): 8 worlds x 32 + 32 KiB PRG in 512 KiB */
+#define R01_PARALLAX_MIN 0
+#define R01_PARALLAX_MAX 8 /* per world; live VRAM slots 4-5 only */
 #define R01_START_COL 2
 #define R01_START_ROW 0
 
@@ -41,13 +43,16 @@
 #define R01_CART_HDR_BYTES 16u
 #define R01_CART_PTR_TABLE_BYTES 36u
 #define R01_CART_SCREEN_PAYLOAD 480u
-#define R01_CART_OTHER_MAX 2
+#define R01_CART_OTHER_MAX 48
 #define R01_CART_OTHER_TITLE 0
 #define R01_CART_OTHER_INTER 1
+#define R01_CART_OTHER_CREDITS_FIRST 2
+#define R01_CART_CREDITS_MIN 0
+#define R01_CART_CREDITS_MAX (R01_CART_OTHER_MAX - R01_CART_OTHER_CREDITS_FIRST) /* 46 */
 #define R01_CART_OTHER_HDR_BYTES 4u
 #define R01_CART_OTHER_DIR_BYTES 8u
-#define R01_CART_CREDITS_MAX 1024u
-#define R01_CART_CREDITS_RECOMMENDED 1000u
+#define R01_CART_OTHER_FLAG_RLE 0x01u
+#define R01_CART_OTHER_BYTES_MAX (64u * 1024u) /* soft export budget */
 
 #define R01_NAME_MAX 64
 #define R01_PATH_MAX 512
@@ -158,8 +163,9 @@ typedef struct R01EntityInstance {
     int world_y;
 } R01EntityInstance;
 
-/* Global off-grid MAP payloads (title, interstitial). See docs/02 other screens. */
+/* Global off-grid MAP payloads (title, interstitial, credits pages). See docs/02. */
 typedef struct R01OtherScreen {
+    int present; /* 0 = omit from cart; title/inter always present after init */
     uint8_t tiles[R01_TILES_PER_SCREEN];
     uint8_t attrs[R01_ATTRS_PER_SCREEN];
 } R01OtherScreen;
@@ -193,8 +199,7 @@ typedef struct R01Project {
     /* 8 rows x 4 pals each (docs/02). Index [row][pal]. */
     R01PalRow global_pal_bg[R01_PAL_ROWS][R01_PALS_PER_ROW];
     R01PalRow global_pal_spr[R01_PAL_ROWS][R01_PALS_PER_ROW];
-    R01OtherScreen other_screens[R01_CART_OTHER_MAX]; /* [0]=title [1]=interstitial */
-    char credits[R01_CART_CREDITS_MAX + 1];           /* cart ROM blob, not PRG */
+    R01OtherScreen other_screens[R01_CART_OTHER_MAX]; /* [0]=title [1]=inter [2+]=credits */
     R01World worlds[R01_MAX_WORLDS];
 } R01Project;
 

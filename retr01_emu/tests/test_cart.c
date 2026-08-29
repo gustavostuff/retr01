@@ -20,9 +20,7 @@ int main(int argc, char **argv) {
     R01eWorldView wv;
     char err[256];
     const uint8_t *prg;
-    const uint8_t *credits;
     const uint8_t *other;
-    size_t credits_len = 0;
     uint8_t bad[64];
     R01eCart junk;
 
@@ -75,13 +73,11 @@ int main(int argc, char **argv) {
     }
 
     other = r01e_cart_other_payload(&cart, R01E_CART_OTHER_TITLE);
-    /* Title may be empty payload offset 0 -- still OK if len_other > 0 */
-    if (cart.len_other > 0 && other == NULL) {
-        /* empty other blob still parses; missing id is ok */
+    (void)other;
+    {
+        uint8_t decoded[R01E_SCREEN_PAYLOAD];
+        (void)r01e_cart_other_decode(&cart, R01E_CART_OTHER_TITLE, decoded);
     }
-    credits = r01e_cart_credits(&cart, &credits_len);
-    (void)credits;
-    (void)credits_len;
 
     /* Collision helpers are callable on packed cart. */
     (void)r01e_cart_solid_at(&cart, 0, wv.start_col * R01E_SCREEN_PX_W + 4,
@@ -89,9 +85,8 @@ int main(int argc, char **argv) {
     (void)r01e_cart_player_aabb_ok(&cart, 0, wv.start_col * R01E_SCREEN_PX_W + 60,
                                    wv.start_row * R01E_SCREEN_PX_H + 56);
 
-    printf("ok cart %zu B worlds=%u prg=%u screens=%u other=%u credits=%zu\n", cart.len,
-           (unsigned)cart.world_count, (unsigned)cart.len_prg, (unsigned)wv.screen_count,
-           (unsigned)cart.len_other, credits_len);
+    printf("ok cart %zu B worlds=%u prg=%u screens=%u other=%u\n", cart.len, (unsigned)cart.world_count,
+           (unsigned)cart.len_prg, (unsigned)wv.screen_count, (unsigned)cart.len_other);
     r01e_cart_free(&cart);
     return 0;
 }
