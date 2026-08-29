@@ -1,4 +1,5 @@
 #include "retr01_studio/game_runtime.h"
+#include "retr01_studio/player_anim.h"
 #include "retr01_studio/collision.h"
 #include "retr01_studio/play.h"
 #include "retr01_studio/warps.h"
@@ -25,6 +26,7 @@ void r01_game_ctx_init(R01GameCtx *ctx) {
     ctx->cam_axis_lock = R01_CAM_AXIS_BOTH;
     ctx->fade_color = R01_FADE_BLACK;
     ctx->fade_pending_entrance = -1;
+    r01_player_anim_init(ctx);
 }
 
 void r01_game_camera_update(R01GameCtx *ctx) {
@@ -127,7 +129,7 @@ void r01_game_warp_check(R01GameCtx *ctx, const R01World *w) {
     if (!ctx || !w || r01_game_fade_active(ctx)) {
         return;
     }
-    r01_play_player_hit_rect(w, ctx->player_x, ctx->player_y, &hx, &hy, &hw, &hh);
+    r01_play_player_hit_rect(w, ctx, ctx->player_x, ctx->player_y, &hx, &hy, &hw, &hh);
     hit = r01_world_warp_entrance_hit(w, hx, hy, hw, hh);
     if (hit < 0) {
         return;

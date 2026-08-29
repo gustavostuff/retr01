@@ -21,6 +21,7 @@ add_library(retr01_studio_core
   core/src/metasprites.c
   core/src/warps.c
   core/src/game_runtime.c
+  core/src/player_anim.c
 )
 target_include_directories(retr01_studio_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include
@@ -62,6 +63,7 @@ r01_studio_add_test(prg_phase1)
 r01_studio_add_test(export_codegen)
 r01_studio_add_test(warps)
 r01_studio_add_test(game_runtime)
+r01_studio_add_test(player_anim)
 
 add_executable(test_fixture core/tests/test_fixture.c ${STUDIO_TEST_HARNESS})
 target_include_directories(test_fixture PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/core/tests)

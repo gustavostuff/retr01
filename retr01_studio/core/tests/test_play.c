@@ -152,7 +152,7 @@ TEST_MAIN() {
         r01_world_set_player_entity(&p->worlds[0], type_id);
         pl.ctx.player_x = R01_PLAY_SPAWN_CENTER_X(0);
         pl.ctx.player_y = R01_PLAY_SPAWN_CENTER_Y(0);
-        r01_play_player_hit_rect(&p->worlds[0], pl.ctx.player_x, pl.ctx.player_y, &hx, &hy, &hw, &hh);
+        r01_play_player_hit_rect(&p->worlds[0], &pl.ctx, pl.ctx.player_x, pl.ctx.player_y, &hx, &hy, &hw, &hh);
         EXPECT(hx == pl.ctx.player_x - 4 && hy == pl.ctx.player_y - 4, "hitbox offset from origin");
         EXPECT(hw == 8 && hh == 8, "hitbox size");
         scr = &p->worlds[0].screens[r01_world_find_screen(&p->worlds[0], 0, 0)];

@@ -24,6 +24,14 @@ static const int player_hit_x = 3;
 static const int player_hit_y = 8;
 static const int player_hit_w = 8;
 static const int player_hit_h = 8;
+const int player_state_frames[4] = {1, 3, 1, 1};
+
+typedef struct { const char *id; int sc, sr, tc, tr; } R01WarpEntRec;
+typedef struct { int ent; int dsc, dsr, dtc, dtr; uint8_t flags; } R01WarpExitRec;
+static const R01WarpEntRec warp_ents[1] = {{0}};
+static const R01WarpExitRec warp_exits[1] = {{0}};
+static const int warp_ent_count = 0;
+static const int warp_exit_count = 0;
 
 static void center_camera(R01GameCtx *ctx) {
     int ax = ctx->player_x + 8 / 2;
@@ -52,7 +60,7 @@ void r01_game_init(R01GameCtx *ctx) {
     (void)player_hit_x; (void)player_hit_y;
     (void)player_hit_w; (void)player_hit_h;
     if (!ctx) return;
-    ctx->pad = ctx->pad_prev = 0;
+    r01_game_ctx_init(ctx);
     if (!player_instance_spawn(&sx, &sy)) {
         sx = play_spawn_col * 128 + (128 - 8) / 2;
         sy = play_spawn_row * 120 + (120 - 8) / 2;

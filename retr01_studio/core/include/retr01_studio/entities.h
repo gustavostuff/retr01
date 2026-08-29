@@ -70,6 +70,10 @@ int r01_world_place_entity(R01World *w, int type_id, int world_x, int world_y);
 void r01_entity_part_instance_pose(const R01EntityState *st, const R01EntityPart *pt, int inst_flip_h,
                                    int inst_flip_v, int *out_dx, int *out_dy, int *out_flip_h, int *out_flip_v);
 
+/* Frames with at least one sprite part (empty Studio slots are skipped for animation). */
+int r01_entity_state_drawable_frame_count(const R01EntityState *st);
+int r01_entity_state_drawable_frame_index(const R01EntityState *st, int slot);
+
 /*
  * Instance world_x/y is the user-defined state origin in world pixels.
  * Part / hitbox authoring coords are relative to the 16x16 compose grid;

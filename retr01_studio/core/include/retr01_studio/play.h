@@ -37,8 +37,8 @@ int r01_play_button(R01PlayState *pl, const R01Project *p, int button);
 int r01_play_screen_index(const R01PlayState *pl, const R01World *w);
 
 /* Player collision AABB in world pixels. origin_x/y is the state origin (Play position). */
-void r01_play_player_hit_rect(const R01World *w, int origin_x, int origin_y, int *hx, int *hy, int *hw,
-                              int *hh);
+void r01_play_player_hit_rect(const R01World *w, const R01GameCtx *ctx, int origin_x, int origin_y, int *hx,
+                              int *hy, int *hw, int *hh);
 
 int r01_play_sample_bg(const R01Project *p, const R01PlayState *pl, int vx, int vy, uint8_t *r, uint8_t *g,
                        uint8_t *b);

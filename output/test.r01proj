@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "name": "untitled",
   "default_world": 0,
   "active_world": 0,
@@ -40,7 +40,7 @@
       "state_count": 3,
       "states": [
         {
-          "name": "girl",
+          "name": "idle",
           "origin_x": 7, "origin_y": 12,
           "hitbox_x": 3, "hitbox_y": 8, "hitbox_w": 8, "hitbox_h": 8,
           "frame_count": 4,
@@ -53,8 +53,8 @@
         },
         {
           "name": "Walk",
-          "origin_x": 7, "origin_y": 10,
-          "hitbox_x": 3, "hitbox_y": 6, "hitbox_w": 8, "hitbox_h": 8,
+          "origin_x": 7, "origin_y": 12,
+          "hitbox_x": 3, "hitbox_y": 8, "hitbox_w": 8, "hitbox_h": 8,
           "frame_count": 3,
           "frames": [
             {"parts": [{"bank":0,"tile":1,"pal":0,"fh":0,"fv":0,"dx":0,"dy":0},{"bank":0,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":0},{"bank":0,"tile":7,"pal":0,"fh":0,"fv":0,"dx":8,"dy":8},{"bank":0,"tile":6,"pal":0,"fh":0,"fv":0,"dx":0,"dy":8}]},
@@ -111,6 +111,10 @@
     {"type": 1, "x": 160, "y": 206},
     {"type": 2, "x": 159, "y": 172},
     {"type": 0, "x": 204, "y": 180}
+  ],
+  "warp_entrances": [
+  ],
+  "warp_exits": [
   ],
   "other_screens": [
     {"id": 0, "present": 1, "tiles_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "attrs_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"},

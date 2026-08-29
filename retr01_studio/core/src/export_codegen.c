@@ -185,6 +185,16 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "    int fade_target;\n"
                    "    int fade_color;\n"
                    "    int fade_pending_entrance;\n"
+                   "    int player_anim_state;\n"
+                   "    int player_anim_frame;\n"
+                   "    int player_anim_ctr;\n"
+                   "    int player_anim_flip_h;\n"
+                   "    int player_anim_dir;\n"
+                   "    int player_anim_moving;\n"
+                   "    int player_default_face;\n"
+                   "    int player_idle_state;\n"
+                   "    int player_walk_state[8];\n"
+                   "    int player_state_delay[4];\n"
                    "    struct R01Projectile {\n"
                    "        int active;\n"
                    "        int x, y, vx, vy, ttl;\n"
@@ -212,7 +222,8 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "#include \"r01_events.h\"\n"
                    "#include \"r01_fade.h\"\n"
                    "#include \"r01_warp.h\"\n"
-                   "#include \"r01_projectile.h\"\n\n"
+                   "#include \"r01_projectile.h\"\n"
+                   "#include \"r01_player_anim.h\"\n\n"
                    "#endif\n",
                    err_buf, err_cap) != 0) {
         return -1;
@@ -236,6 +247,7 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "typedef struct R01GameCtx R01GameCtx;\n"
                    "void r01_player_warp(R01GameCtx *ctx, int col, int row);\n"
                    "void r01_player_set_type(uint8_t type_id);\n\n"
+                   "#include \"r01_player_anim.h\"\n\n"
                    "#endif\n",
                    err_buf, err_cap) != 0) {
         return -1;
@@ -314,6 +326,39 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "int r01_projectile_fire(R01GameCtx *ctx, int dx, int dy, int speed);\n"
                    "void r01_projectile_tick(R01GameCtx *ctx);\n"
                    "int r01_projectile_count_active(const R01GameCtx *ctx);\n\n"
+                   "#endif\n",
+                   err_buf, err_cap) != 0) {
+        return -1;
+    }
+    snprintf(path, sizeof(path), "%s/r01_player_anim.h", inc_dir);
+    if (write_text(path,
+                   "#ifndef R01_PLAYER_ANIM_H\n#define R01_PLAYER_ANIM_H\n\n"
+                   "#include <stdint.h>\n"
+                   "typedef struct R01GameCtx R01GameCtx;\n"
+                   "#define R01_PLAYER_DIR_RIGHT 0\n"
+                   "#define R01_PLAYER_DIR_DOWN_RIGHT 1\n"
+                   "#define R01_PLAYER_DIR_DOWN 2\n"
+                   "#define R01_PLAYER_DIR_DOWN_LEFT 3\n"
+                   "#define R01_PLAYER_DIR_LEFT 4\n"
+                   "#define R01_PLAYER_DIR_UP_LEFT 5\n"
+                   "#define R01_PLAYER_DIR_UP 6\n"
+                   "#define R01_PLAYER_DIR_UP_RIGHT 7\n"
+                   "#define R01_PLAYER_FACE_RIGHT 0\n"
+                   "#define R01_PLAYER_FACE_DOWN 1\n"
+                   "#define R01_PLAYER_FACE_LEFT 2\n"
+                   "#define R01_PLAYER_FACE_UP 3\n"
+                   "void r01_player_anim_init(R01GameCtx *ctx);\n"
+                   "void r01_player_anim_set_idle_state(R01GameCtx *ctx, int entity_state_idx);\n"
+                   "void r01_player_anim_set_walk_state(R01GameCtx *ctx, int dir8, int entity_state_idx);\n"
+                   "void r01_player_anim_set_walk_all(R01GameCtx *ctx, int entity_state_idx);\n"
+                   "void r01_player_default_face_set(R01GameCtx *ctx, int face);\n"
+                   "void r01_entity_state_frame_delay_set(R01GameCtx *ctx, int entity_state_idx, int ticks);\n"
+                   "void r01_player_anim_update(R01GameCtx *ctx, int dx, int dy);\n"
+                   "void r01_player_anim_tick(R01GameCtx *ctx);\n"
+                   "int r01_player_anim_entity_state(const R01GameCtx *ctx);\n"
+                   "int r01_player_anim_frame(const R01GameCtx *ctx);\n"
+                   "int r01_player_anim_flip_h(const R01GameCtx *ctx);\n"
+                   "int r01_player_anim_moving(const R01GameCtx *ctx);\n\n"
                    "#endif\n",
                    err_buf, err_cap) != 0) {
         return -1;
@@ -441,6 +486,21 @@ static int write_base_game(FILE *f, const R01Project *p) {
         fprintf(f, "static const int player_hit_x = 0, player_hit_y = 0;\n");
         fprintf(f, "static const int player_hit_w = %d, player_hit_h = %d;\n", R01_PLAY_PLAYER_W,
                 R01_PLAY_PLAYER_H);
+    }
+    {
+        int si;
+        fprintf(f, "const int player_state_frames[4] = {");
+        for (si = 0; si < 4; si++) {
+            int fc = 1;
+            if (w && pe >= 0 && pe < w->entity_count && si < w->entities[pe].state_count) {
+                fc = r01_entity_state_drawable_frame_count(&w->entities[pe].states[si]);
+                if (fc < 1) {
+                    fc = 1;
+                }
+            }
+            fprintf(f, "%s%d", si ? ", " : "", fc);
+        }
+        fprintf(f, "};\n");
     }
     if (w && w->warp_entrance_count > 0) {
         int wi, wrote = 0;

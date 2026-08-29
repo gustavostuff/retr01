@@ -4,7 +4,7 @@
 #include "retr01_studio/play.h"
 #include "retr01_studio/palette.h"
 #include "retr01_studio/project.h"
-#include "retr01_studio/warps.h"
+#include "retr01_studio/player_anim.h"
 
 #include <string.h>
 
@@ -98,16 +98,24 @@ void r01_play_stop(R01PlayState *pl) {
     }
 }
 
-void r01_play_player_hit_rect(const R01World *w, int origin_x, int origin_y, int *hx, int *hy, int *hw,
-                              int *hh) {
+void r01_play_player_hit_rect(const R01World *w, const R01GameCtx *ctx, int origin_x, int origin_y, int *hx,
+                              int *hy, int *hw, int *hh) {
     int pe;
+    int state_idx = 0;
     int box_w = R01_PLAY_PLAYER_W;
     int box_h = R01_PLAY_PLAYER_H;
     int box_x = origin_x;
     int box_y = origin_y;
     pe = r01_world_player_entity(w);
+    if (ctx) {
+        state_idx = r01_player_anim_entity_state(ctx);
+    }
     if (pe >= 0 && w->entities[pe].state_count > 0) {
-        const R01EntityState *st = &w->entities[pe].states[0];
+        const R01EntityState *st;
+        if (state_idx < 0 || state_idx >= w->entities[pe].state_count) {
+            state_idx = 0;
+        }
+        st = &w->entities[pe].states[state_idx];
         box_x = r01_entity_world_x(origin_x, st->origin_x, st->hitbox_x);
         box_y = r01_entity_world_y(origin_y, st->origin_y, st->hitbox_y);
         if (st->hitbox_w > 0) {
@@ -148,21 +156,26 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
         }
         return;
     }
-    if (dx != 0) {
-        int nx = ctx->player_x + dx;
-        int hx, hy, hw, hh;
-        r01_play_player_hit_rect(w, nx, ctx->player_y, &hx, &hy, &hw, &hh);
-        if (r01_world_aabb_ok(w, hx, hy, hw, hh)) {
-            ctx->player_x = nx;
+    {
+        int pe = r01_world_player_entity(w);
+        r01_player_anim_update(ctx, dx, dy);
+        if (dx != 0) {
+            int nx = ctx->player_x + dx;
+            int hx, hy, hw, hh;
+            r01_play_player_hit_rect(w, ctx, nx, ctx->player_y, &hx, &hy, &hw, &hh);
+            if (r01_world_aabb_ok(w, hx, hy, hw, hh)) {
+                ctx->player_x = nx;
+            }
         }
-    }
-    if (dy != 0) {
-        int ny = ctx->player_y + dy;
-        int hx, hy, hw, hh;
-        r01_play_player_hit_rect(w, ctx->player_x, ny, &hx, &hy, &hw, &hh);
-        if (r01_world_aabb_ok(w, hx, hy, hw, hh)) {
-            ctx->player_y = ny;
+        if (dy != 0) {
+            int ny = ctx->player_y + dy;
+            int hx, hy, hw, hh;
+            r01_play_player_hit_rect(w, ctx, ctx->player_x, ny, &hx, &hy, &hw, &hh);
+            if (r01_world_aabb_ok(w, hx, hy, hw, hh)) {
+                ctx->player_y = ny;
+            }
         }
+        r01_player_anim_tick(ctx, w, pe);
     }
     r01_game_camera_update(ctx);
     r01_projectile_tick(ctx, w);
@@ -252,15 +265,22 @@ int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry 
         const R01EntityType *ent = &w->entities[player_type];
         const R01EntityState *st;
         const R01EntityFrame *fr;
+        int state_idx = r01_player_anim_entity_state(ctx);
+        int frame_idx = r01_player_anim_frame(ctx);
+        int flip_h = r01_player_anim_flip_h(ctx);
         int pi;
-        if (ent->state_count > 0 && ent->states[0].frame_count > 0) {
-            st = &ent->states[0];
-            fr = &st->frames[0];
+        if (state_idx < 0 || state_idx >= ent->state_count) {
+            state_idx = 0;
+        }
+        if (ent->state_count > 0 && ent->states[state_idx].frame_count > 0) {
+            st = &ent->states[state_idx];
+            frame_idx = r01_entity_state_drawable_frame_index(st, frame_idx);
+            fr = &st->frames[frame_idx];
             for (pi = 0; pi < fr->part_count && n < cap && n < R01_OAM_MAX; pi++) {
                 const R01EntityPart *pt = &fr->parts[pi];
                 int dx, dy, fh, fv;
                 int ox, oy;
-                r01_entity_part_instance_pose(st, pt, 0, 0, &dx, &dy, &fh, &fv);
+                r01_entity_part_instance_pose(st, pt, flip_h, 0, &dx, &dy, &fh, &fv);
                 ox = r01_entity_world_x(ctx->player_x, st->origin_x, dx) - ctx->cam_x;
                 oy = r01_entity_world_y(ctx->player_y, st->origin_y, dy) - ctx->cam_y;
                 if (r01_oam_tile_off_screen(ox, oy)) {

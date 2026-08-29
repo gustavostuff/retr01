@@ -45,6 +45,16 @@ struct R01GameCtx {
     int fade_target;
     int fade_color;
     int fade_pending_entrance;
+    int player_anim_state;
+    int player_anim_frame;
+    int player_anim_ctr;
+    int player_anim_flip_h;
+    int player_anim_dir;
+    int player_anim_moving;
+    int player_default_face;
+    int player_idle_state;
+    int player_walk_state[8];
+    int player_state_delay[R01_ENTITY_STATES_MAX];
     R01Projectile projectiles[R01_MAX_PROJECTILES];
 };
 

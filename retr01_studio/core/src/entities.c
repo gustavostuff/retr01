@@ -288,6 +288,35 @@ int r01_entity_trim_last_state(R01EntityType *e) {
     return 1;
 }
 
+int r01_entity_state_drawable_frame_count(const R01EntityState *st) {
+    int fi, n = 0;
+    if (!st) {
+        return 0;
+    }
+    for (fi = 0; fi < st->frame_count; fi++) {
+        if (st->frames[fi].part_count > 0) {
+            n++;
+        }
+    }
+    return n;
+}
+
+int r01_entity_state_drawable_frame_index(const R01EntityState *st, int slot) {
+    int fi, n = 0;
+    if (!st || slot < 0) {
+        return 0;
+    }
+    for (fi = 0; fi < st->frame_count; fi++) {
+        if (st->frames[fi].part_count > 0) {
+            if (n == slot) {
+                return fi;
+            }
+            n++;
+        }
+    }
+    return 0;
+}
+
 int r01_entity_frame_add_part(R01EntityFrame *fr, const R01EntityPart *part) {
     if (!fr || !part || fr->part_count >= R01_ENTITY_PARTS_MAX) {
         return -1;

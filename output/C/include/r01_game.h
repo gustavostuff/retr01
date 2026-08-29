@@ -11,6 +11,28 @@ typedef struct R01GameCtx {
     int cam_y;
     uint8_t pad;
     uint8_t pad_prev;
+    int cam_deadzone_x;
+    int cam_deadzone_y;
+    int cam_axis_lock;
+    int fade_level;
+    int fade_target;
+    int fade_color;
+    int fade_pending_entrance;
+    int player_anim_state;
+    int player_anim_frame;
+    int player_anim_ctr;
+    int player_anim_flip_h;
+    int player_anim_dir;
+    int player_anim_moving;
+    int player_default_face;
+    int player_idle_state;
+    int player_walk_state[8];
+    int player_state_delay[4];
+    struct R01Projectile {
+        int active;
+        int x, y, vx, vy, ttl;
+        uint8_t tile, pal;
+    } projectiles[8];
 } R01GameCtx;
 
 void r01_game_init(R01GameCtx *ctx);
