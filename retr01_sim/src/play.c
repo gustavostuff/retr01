@@ -87,10 +87,8 @@ static void write_oam(R01sBoard *b) {
         return;
     }
     pl = &b->play;
-    /* Clear all slots unused. */
-    for (ii = 0; ii < 64; ii++) {
-        r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(ii * 4), 0xFF);
-    }
+    /* Clear all slots unused (tile == 0xFF); match emu / docs. */
+    memset(b->mcu1284.oam, 0xFF, sizeof(b->mcu1284.oam));
 
     vx = pl->player_x - pl->cam_x;
     vy = pl->player_y - pl->cam_y;

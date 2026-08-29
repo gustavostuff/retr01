@@ -10,7 +10,7 @@ static int port_is_data(const R01sEntity *e) {
 
 static void mcu_reset(R01sEntity *e) {
     R01sAtmega1284p *c = (R01sAtmega1284p *)e;
-    memset(c->oam, 0, sizeof(c->oam));
+    memset(c->oam, 0xFF, sizeof(c->oam)); /* unused slots: tile == 0xFF */
     memset(c->eeprom_mb, 0, sizeof(c->eeprom_mb));
     c->oam_addr = 0;
     c->last_dq = 0;
