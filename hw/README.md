@@ -18,7 +18,7 @@ Swap / alternate parts live in [`candidates/`](candidates/).
 | `SN74HC157_mux.pdf` | 74HC157 | Addr mux (3 VRAM + 3 linebuf) |
 | `SN74HC245_bus_transceiver.pdf` | 74HC245 | Bus isolation (x3) |
 | `SN74HC573_latch.pdf` | 74HC573 | `$FExx` latches (x9) |
-| `SN74HC14_schmitt.pdf` | 74HC14 | Reset / clocks (support; not always in 32 count) |
+| `SN74HC14_schmitt.pdf` | 74HC14 | Reset / clocks (support. Not always in 32 count) |
 | `SN74HC00_nand.pdf` | 74HC00 | Glue (often absorbed into PLD) |
 | `SN74HC04_inverter.pdf` | 74HC04 | Glue |
 | `SN74HC08_and.pdf` | 74HC08 | Glue |

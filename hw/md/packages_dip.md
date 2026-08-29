@@ -3,7 +3,7 @@
 Canonical **plastic DIP** body sizes used by the simulator canvas and for layout planning.
 
 Where a part has a measured / datasheet body, the sim uses **`r01s_entity_set_dip_mm()`**.
-Otherwise it falls back to the pin-count defaults below (74HC N-package family for 14/16/20;
+Otherwise it falls back to the pin-count defaults below (74HC N-package family for 14/16/20,
 JEDEC-class 600 mil for larger counts).
 
 ## Sim canvas scale
@@ -19,7 +19,7 @@ JEDEC-class 600 mil for larger counts).
 
 | Part | Pins | Body LxW (mm) | Horizontal px @ 4 px/mm | Notes |
 |------|------|---------------|-------------------------|-------|
-| **W65C02S** | 40 | **52 x 16** | 208 x 64 | Measured / vendor; WDC DS omits outline |
+| **W65C02S** | 40 | **52 x 16** | 208 x 64 | Measured / vendor. WDC DS omits outline |
 | **SST39SF040** | 32 | **42 x 14** | 168 x 56 | |
 | **AS6C62256** | 28 | **37 x 13** | 148 x 52 | |
 | **ATF22V10** | 24 | **32 x 8** | 128 x 32 | Narrow body |
@@ -28,7 +28,7 @@ JEDEC-class 600 mil for larger counts).
 
 ## 74HC family DIP (N / through-hole)
 
-From typical 74HC PDIP drawings (body width ~= 6.35 mm -> **6 mm** in sim; lengths rounded):
+From typical 74HC PDIP drawings (body width ~= 6.35 mm -> **6 mm** in sim. Lengths rounded):
 
 | Pins | Length (mm) | Body width (mm) | Total width (mm) | Pitch | Sim LxW px |
 |------|-------------|-----------------|------------------|-------|------------|
@@ -53,7 +53,7 @@ Used by: 74HC00/04/08/14/32 (14), 74HC157/161 (16), 74HC245/573/688 (20).
 
 ## Orientation (sim UI)
 
-- **Horizontal (default):** length along X; pins on top/bottom; notch left; pin 1 bottom-left.
-- **Vertical:** length along Y; pins left/right; notch top; pin 1 top-left.
+- **Horizontal (default):** length along X. Pins on top/bottom. Notch left. Pin 1 bottom-left.
+- **Vertical:** length along Y. Pins left/right. Notch top. Pin 1 top-left.
 
 Right-click or **R** (selected) to toggle. Labels rotate with the package.

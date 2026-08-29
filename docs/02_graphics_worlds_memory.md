@@ -15,7 +15,7 @@ Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 
 ## Worlds, screens, cart budget
 
-- **8** worlds max (indices **0-7**). Sparse **8x8** grid per world, **32 present screens** max/world (camera / playfield only; grid slots beyond that stay unused)
+- **8** worlds max (indices **0-7**). Sparse **8x8** grid per world, **32 present screens** max/world (camera / playfield only. Grid slots beyond that stay unused)
 - Per world: **0..8** parallax screens (`PARALLAX_MAX` = **8**). Same **480 B** payload as a playfield screen. **Not** on the world grid. Separate MAP directory. Live fetch uses VRAM slots **4-5** only (PRG streams which payloads are resident). See [Parallax](#parallax)
 - Screen / plane payload: **480 B** raw (**240** tiles + **240** attrs). Direct MAP `$FE93` -> VRAM `$FE12` (no RLE required)
 - Per world: **4 BG + 4 sprite** CHR banks (**32 KB**), screen dir + parallax dir
@@ -30,7 +30,7 @@ Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 | Global pals (8 BG rows + 8 sprite rows) | **256 B** |
 | Dirs / headers | **~3956 B** (~3.9 KB) |
 | PRG | **32 KB** (32768 B) |
-| **Total / free** | **452724 B** (~**442.1 KB**) used; **71564 B** (~**69.9 KB**) free of **512 KB** |
+| **Total / free** | **452724 B** (~**442.1 KB**) used. **71564 B** (~**69.9 KB**) free of **512 KB** |
 
 **32 present screens**/world is the playfield cap (sparse **8x8** grid). Full 8-world fill + **8** parallax/world + **32 KB** PRG leaves ~**70 KB** free in **512 KB** flash for ([Other screens](#other-screens-global-rom)), entity tables, and headroom:
 
@@ -60,7 +60,7 @@ Hardware uses BANK/PAL/FLIP (and sprite PRIORITY/SIZE). Video ignores SOLID/ANIM
 
 ## Camera and VRAM
 
-Slots **0-3** = live 2x2 camera. Slots **4-5** = parallax only (**two** live plane slots). Each slot **512 B** (240+240 used, attrs at `+0xF0`). A world may store up to **8** parallax payloads in cart; PRG chooses which one or two are loaded into slots **4-5**. Scroll `$FE02`/`$FE03`: **0-127** / **0-119**. Hardware does not auto-load MAP. Pan inside loaded slots = scroll only. Seam = software streams ~480 B/screen via `$FE12` (auto-inc). Prefer direct MAP->VRAM.
+Slots **0-3** = live 2x2 camera. Slots **4-5** = parallax only (**two** live plane slots). Each slot **512 B** (240+240 used, attrs at `+0xF0`). A world may store up to **8** parallax payloads in cart. PRG chooses which one or two are loaded into slots **4-5**. Scroll `$FE02`/`$FE03`: **0-127** / **0-119**. Hardware does not auto-load MAP. Pan inside loaded slots = scroll only. Seam = software streams ~480 B/screen via `$FE12` (auto-inc). Prefer direct MAP->VRAM.
 
 ```text
 +-------------+-------------+
@@ -148,18 +148,18 @@ Per-world MAP payloads used as scrolling backdrop planes. **Not** on the playfie
 | `parallax_count` | **0..8** (`PARALLAX_MIN` = **0**, `PARALLAX_MAX` = **8**) |
 | Payload | Same **480 B** as a playfield screen (240 tile + 240 attr), raw |
 | Live VRAM | Slots **4-5** only (**2** resident at a time). PRG loads/swaps from the up-to-**8** cart payloads |
-| Scroll ports | Plane band `$FE06`/`$FE07` (phase 2+); main camera may lock per [04](04_costs_and_open_questions.md) when a band is active |
-| Slices | **1..120** bands of **variable thickness** on the live plane (H or V); see below. Not playfield camera mid-frame shifts |
+| Scroll ports | Plane band `$FE06`/`$FE07` (phase 2+). Main camera may lock per [04](04_costs_and_open_questions.md) when a band is active |
+| Slices | **1..120** bands of **variable thickness** on the live plane (H or V). See below. Not playfield camera mid-frame shifts |
 
-**Layouts** (dir `flags` -- PRG interprets; hardware only sees the loaded slot(s)):
+**Layouts** (dir `flags`: PRG interprets. Hardware only sees the loaded slot(s)):
 
 | Mode | Screens used | Behavior |
 |------|--------------|----------|
 | **Single** | **1** payload | One **128x120** tilemap. Scroll and **repeat** on the chosen axis (H, V, or both) |
-| **Pair H** | **2** consecutive dir entries | Side-by-side (**256x120** strip). Scroll/repeat horizontally so the period is **two** screens -- seam less obvious than a single tilemap |
+| **Pair H** | **2** consecutive dir entries | Side-by-side (**256x120** strip). Scroll/repeat horizontally so the period is **two** screens: seam less obvious than a single tilemap |
 | **Pair V** | **2** consecutive dir entries | Stacked (**128x240** strip). Scroll/repeat vertically with a **two**-screen period |
 
-A world may mix singles and pairs as long as total payloads stay within **8**. A pair consumes **two** of the `parallax_count` slots; the second entry is the partner (not a second independent layer head).
+A world may mix singles and pairs as long as total payloads stay within **8**. A pair consumes **two** of the `parallax_count` slots. The second entry is the partner (not a second independent layer head).
 
 **Dir entry (8 B):** `{ index u8, flags u8, live_slot u8, pad u8, off_payload u24 }`
 
@@ -189,15 +189,15 @@ For Mode-7-style roads and similar tricks: keep a few **base** parallax screens 
 | H-band mode | Bands stack along **Y** (rows). Offset is **H** (`dx`). Typical when the plane scrolls / repeats **horizontally** (roads, side-view depth) |
 | V-band mode | Bands stack along **X** (columns). Offset is **V** (`dy`). Typical when the plane scrolls / repeats **vertically** |
 | Applies to | Live plane slots **4-5** only. **Not** playfield slots **0-3** (collision / camera stay coherent) |
-| Storage | Authoring: list of `{thickness, offset}` (max **120** entries). Runtime may expand to per-row / per-col additives in **sys RAM** (or a future `$FExx` port -- bitfield TBD). **Not** extra MAP screens |
-| Base scroll | Still `$FE06`/`$FE07` band + plane scroll; slice offsets are **additive** inside each band |
-| Typical use | Road: base plane(s) scroll for "driving forward"; H-bands ramp L/R down the view for curves |
+| Storage | Authoring: list of `{thickness, offset}` (max **120** entries). Runtime may expand to per-row / per-col additives in **sys RAM** (or a future `$FExx` port: bitfield TBD). **Not** extra MAP screens |
+| Base scroll | Still `$FE06`/`$FE07` band + plane scroll. Slice offsets are **additive** inside each band |
+| Typical use | Road: base plane(s) scroll for "driving forward". H-bands ramp L/R down the view for curves |
 
-**Do not** implement this with mid-frame playfield camera shifts. Playfield scroll stays frame-coherent; bends belong on the parallax plane.
+**Do not** implement this with mid-frame playfield camera shifts. Playfield scroll stays frame-coherent. Bends belong on the parallax plane.
 
 Empty / unused expanded lines read as **0** (no bend). PRG may rewrite the table every frame (or every few frames) for animation.
 
-**Example -- horizontal parallax (H-bands):** **62** slices covering **120** rows: sixty **1 px** bands + two **30 px** bands.
+**Example: horizontal parallax (H-bands):** **62** slices covering **120** rows: sixty **1 px** bands + two **30 px** bands.
 
 ```text
   Y
@@ -211,9 +211,9 @@ Empty / unused expanded lines read as **0** (no bend). PRG may rewrite the table
  119 +=======+
 ```
 
-Fine **1 px** bands near the horizon (or vanishing point) give smooth curve control; thick **30 px** bands farther out hold a constant offset cheaply.
+Fine **1 px** bands near the horizon (or vanishing point) give smooth curve control. Thick **30 px** bands farther out hold a constant offset cheaply.
 
-**Example -- vertical parallax (V-bands):** same mix along **X**: sixty **1 px** + two **30 px** = **120** columns, then one **8 px** pad band (`dy = 0`) to fill **128**.
+**Example: vertical parallax (V-bands):** same mix along **X**: sixty **1 px** + two **30 px** = **120** columns, then one **8 px** pad band (`dy = 0`) to fill **128**.
 
 ```text
   X 0                                                         127
@@ -225,20 +225,20 @@ You may also use fewer thicker bands (e.g. **4** slices of **30 px** for H-band 
 
 ## Other screens (global ROM)
 
-Non-playfield UI that is **not** on the world grid. Lives in cart flash as **MAP-readable data** (same `$FE90`-`$FE93` port as world MAP). **Not** in the **32 KB** PRG image -- PRG holds boot/load/scroll/fade **code** only.
+Non-playfield UI that is **not** on the world grid. Lives in cart flash as **MAP-readable data** (same `$FE90`-`$FE93` port as world MAP). **Not** in the **32 KB** PRG image: PRG holds boot/load/scroll/fade **code** only.
 
 | Kind | Id range | Cart storage | Dev workflow |
 |------|----------|--------------|--------------|
 | **Title** | **0** | Other-screen payload (raw or RLE) | Stream decode -> VRAM slot **0**, scroll **0,0** |
-| **Level interstitial** | **1** | One shared other-screen payload | Reuse between levels; PRG may patch tiles after load |
-| **Credits pages** | **`CREDITS_FIRST` ..** | Optional other-screen payloads (text + small graphics). **Min 0**, **max 46** (`CREDITS_MAX`) | PRG chooses scroll / fade / hold / cut; no fixed presentation in the cart |
+| **Level interstitial** | **1** | One shared other-screen payload | Reuse between levels. PRG may patch tiles after load |
+| **Credits pages** | **`CREDITS_FIRST` ..** | Optional other-screen payloads (text + small graphics). **Min 0**, **max 46** (`CREDITS_MAX`) | PRG chooses scroll / fade / hold / cut. No fixed presentation in the cart |
 
 **Caps:**
 
 | Field | Value |
 |-------|-------|
 | `other_count` max | **48** (`OTHER_MAX`: title + interstitial + credits) |
-| Credits pages | **min 0**, **max 46** (`CREDITS_MIN` / `CREDITS_MAX`); ids start at **2** (`CREDITS_FIRST`) |
+| Credits pages | **min 0**, **max 46** (`CREDITS_MIN` / `CREDITS_MAX`). Ids start at **2** (`CREDITS_FIRST`) |
 | Uncompressed payload | Always **480 B** (240 tile + 240 attr) after decode |
 | On-cart payload | **Raw 480 B** or **RLE** (see flags). Dir stores `len_payload` |
 | Soft blob budget | Keep `len_other` practical (**~64 KB** typical headroom from free flash) |
@@ -248,22 +248,22 @@ Non-playfield UI that is **not** on the world grid. Lives in cart flash as **MAP
 
 | `flags` bit | Meaning |
 |-------------|---------|
-| **0** (`RLE`) | **1** = RLE-compressed payload; **0** = raw **480 B** |
+| **0** (`RLE`) | **1** = RLE-compressed payload. **0** = raw **480 B** |
 | 1..7 | Reserved (**0**) |
 
 **RLE (byte runs, whole 480 B stream):** command byte `C`:
 - `C < 0x80`: copy next `(C+1)` literal bytes (1..128)
 - `C >= 0x80`: repeat next byte `(C-0x7F)` times (1..128)
 
-Studio exports RLE when it shrinks the payload; otherwise raw. Decode before VRAM fill (PRG or host helper).
+Studio exports RLE when it shrinks the payload. Otherwise raw. Decode before VRAM fill (PRG or host helper).
 
 **Presentation is PRG-owned.** The cart only stores screen payloads. Custom PRG may scroll credits pages vertically, cross-fade, show a single static page, interleave graphics frames, etc. Host Play / Studio do not imply a credits mode.
 
-**Pointer table:** `off_credits` / `len_credits` are **reserved** and must be **0** (legacy ASCII credits blob removed -- use credits **pages** in other screens instead).
+**Pointer table:** `off_credits` / `len_credits` are **reserved** and must be **0** (legacy ASCII credits blob removed: use credits **pages** in other screens instead).
 
 ## Cart image (`.retr01`)
 
-24-bit offsets. Magic **`retr01`** (lowercase ASCII). **`format_ver` = 2**: **36 B** pointer table, **8** world table slots, **32 present screens**/world max, **other screens** (title / interstitial / credits pages). PRG payload is **32 KB** (no banking). Older images are not loaded -- re-export from Studio.
+24-bit offsets. Magic **`retr01`** (lowercase ASCII). **`format_ver` = 2**: **36 B** pointer table, **8** world table slots, **32 present screens**/world max, **other screens** (title / interstitial / credits pages). PRG payload is **32 KB** (no banking). Older images are not loaded: re-export from Studio.
 
 ```text
 +--------------------------------------------------------------------------+
@@ -329,7 +329,7 @@ Studio exports RLE when it shrinks the payload; otherwise raw. Decode before VRA
 +------------------------------------------------------------------------ -+
 ```
 
-OAM attr packing matches BG: bank bits 1-0, pal bits 3-2, `FLIP_H=0x10`, `FLIP_V=0x20`. Instance `world_x/y` is the **user origin**; host Play draws parts at `world + (dx,dy) - origin` (Studio `r01_entity_world_x/y`). SPR bank 0 **tile 1** is reserved as the solid player stub (OAM slot 0).
+OAM attr packing matches BG: bank bits 1-0, pal bits 3-2, `FLIP_H=0x10`, `FLIP_V=0x20`. Instance `world_x/y` is the **user origin**. Host Play draws parts at `world + (dx,dy) - origin` (Studio `r01_entity_world_x/y`). SPR bank 0 **tile 1** is reserved as the solid player stub (OAM slot 0).
 
 Boot: magic -> pointers -> other screens -> world header -> screen dir / parallax dir -> `off_payload`. Load grid screens into VRAM slots 0-3. Load up to **two** active parallax payloads into slots 4-5 (from the world's up to **8** cart entries). Title/interstitial/credits page: decode chosen **other** payload (RLE or raw) into slot 0 (full **128x120**). MAP port: `$FE90`-`$FE92` addr, `$FE93` data auto-inc.
 
@@ -362,10 +362,10 @@ PRG is a **32 KB** image mapped at `$8000-$FFFF` with the `$FE00-$FEFF` I/O hole
 | `$FE01` | `PPUSTATUS` | VBlank, raster hit (read clears) |
 | `$FE02`/`$FE03` | scroll X/Y | 0-127 / 0-119 |
 | `$FE04`/`$FE05` | raster Y / IRQ | `$FE04` = compare scanline (latched). `$FE05` = enable/ack/control (**bitfield TBD**) |
-| `$FE06`/`$FE07` | plane band | any band locks camera axis for the frame. Plane slices (**1..120**, variable thickness, H or V) apply inside the band; see [Parallax](#parallax) |
+| `$FE06`/`$FE07` | plane band | any band locks camera axis for the frame. Plane slices (**1..120**, variable thickness, H or V) apply inside the band. See [Parallax](#parallax) |
 | `$FE08`/`$FE09` | pal addr/data | active indices 0-63, auto-inc |
 | `$FE10`-`$FE12` | VRAM addr/data | auto-inc |
-| `$FE20`/`$FE21` | OAM addr/data | auto-inc. Entry `Y,tile,attr,X` x64. **Host Play:** X/Y are **viewport-relative signed** coords packed as `int8` in each byte (negative top-left allowed; raster clips to **128x120**). Unused slot: `tile == 0xFF` |
+| `$FE20`/`$FE21` | OAM addr/data | auto-inc. Entry `Y,tile,attr,X` x64. **Host Play:** X/Y are **viewport-relative signed** coords packed as `int8` in each byte (negative top-left allowed. Raster clips to **128x120**). Unused slot: `tile == 0xFF` |
 | `$FE30` | `WORLD` | 0-7 |
 | `$FE31`-`$FE37` | bank helpers | optional stamps, not live fetch |
 | `$FE38` | `PAL_ROW` | hint. Still copy `$FE08`/`$FE09` |

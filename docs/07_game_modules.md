@@ -311,7 +311,7 @@ Rules for **BG boss**:
 ### 3.5 Studio authoring (intent)
 
 - Place entity instances in the world (or spawn tables).
-- Build **metasprites** (multi-part SPR groups, no origin/hitbox) in the Metasprites modal; drag metasprite catalog rows onto the **entity** compose canvas to assemble frames.
+- Build **metasprites** (multi-part SPR groups, no origin/hitbox) in the Metasprites modal. Drag metasprite catalog rows onto the **entity** compose canvas to assemble frames.
 - Edit entity type: states, frames, origins, hitboxes, per-part paint (LMB select/drag, RMB paint).
 - Attach motion cycle parameters for non-player entities.
 - Mark boss encounters: sprite-only vs BG body + part entities, BG scroll axes.

@@ -1,6 +1,6 @@
 # Retr01 Studio
 
-Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. **Phase 3E** (current): **Metasprites** accordion + modal (assemble multi-part SPR groups), entity compose from metasprite catalog, JSON v7. **Phase 3D**: cart packs real SPR CHR + entity type/instance tables; emu/sim Play OAM parity with Studio. **Phase 3C**: drag sprite/metasprite/entity onto screen, place instances, Studio Play OAM. **Phase 3B**: Entities accordion + Add/Edit entity modal. **Phase 3A**: Sprites accordion + Create/Edit sprite modal, SPR bank CHR catalog. **Phase 2** still applies: multi-world sidebar, screen create/delete, tile edit/paint, solid collision attrs, global palette editor, default spawn screen. **Phase 1** still applies: PNG import, Play preview, export. Hardware: [`docs/02`](../docs/02_graphics_worlds_memory.md).
+Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. **Phase 3E** (current): **Metasprites** accordion + modal (assemble multi-part SPR groups), entity compose from metasprite catalog, JSON v7. **Phase 3D**: cart packs real SPR CHR + entity type/instance tables. Emu/sim Play OAM parity with Studio. **Phase 3C**: drag sprite/metasprite/entity onto screen, place instances, Studio Play OAM. **Phase 3B**: Entities accordion + Add/Edit entity modal. **Phase 3A**: Sprites accordion + Create/Edit sprite modal, SPR bank CHR catalog. **Phase 2** still applies: multi-world sidebar, screen create/delete, tile edit/paint, solid collision attrs, global palette editor, default spawn screen. **Phase 1** still applies: PNG import, Play preview, export. Hardware: [`docs/02`](../docs/02_graphics_worlds_memory.md).
 
 **Stack:** C11 + SDL2 + FreeType (Proggy Tiny), `libretr01_studio_core` + thin shell.
 
@@ -43,9 +43,9 @@ Fixed **640x360** logical canvas, **8px** grid, dark gray chrome. Buttons/labels
 | **Set Solid** | Toggles `R01_ATTR_SOLID` (`0x40`) on matching tiles in active world (bank+pal+flips, not tile ID) |
 | **Palette strip** | Click BG/SPR strip -> **Global palettes** modal. Row **0-7** sets `default_pal_row` for the active world |
 | **Sprites** | List of SPR catalog entries (**1x** icons + bank tile index). Empty: **empty** + **Add**. Create/Edit modal: SPR bank dots + 16x16 tile grid, 4x4 SPR palette, LMB drag parts, RMB paint. Right-click: edit, remove, set palette, change sprite bank. New sprites fill bank **0**, then **1..3** |
-| **Metasprites** | Reusable multi-part SPR groups (no origin/hitbox). Empty: **empty** + **Add**. Modal: same compose flow as entities but assembly-only (SPR bank left, 16x16 compose right, 4x4 SPR palette, LMB/RMB). Right-click: edit, remove. **Studio-only** -- not a separate cart table; export flattens into entity parts |
-| **Entities** | List of entity types (composite icon + state-0 name). Empty: **empty** + **Add**. Modal: left **metasprite catalog** (drag onto compose); right state/frame dots, name field, 16x16 compose @8x, origin cross + hitbox (guides checkbox), 4x4 SPR palette. LMB select/drag parts, origin, hitbox; RMB paint selected part. Selected part: **H/V** flips, **1-4** palette, Delete removes. States locked to **0** (Idle) for now. Right-click: edit, remove |
-| **Place on screen** | Drag a **Sprites**, **Metasprites**, or **Entities** row onto the screen preview. Sprite drop auto-creates a 1-state/1-frame/1-part entity and places an instance. Metasprite drop auto-creates an entity from the group and places an instance. Entity drop places that type. Instance `world_x/y` is the **user origin** (compose cross); parts/hitbox draw as `(coord - origin)` relative to that. Sprites **clip to 128x120** when partially off-screen. Click instance to select (white outline); **Delete** removes. Visible in edit view and **Play** (OAM slot 0 = player; instances fill 1+) |
+| **Metasprites** | Reusable multi-part SPR groups (no origin/hitbox). Empty: **empty** + **Add**. Modal: same compose flow as entities but assembly-only (SPR bank left, 16x16 compose right, 4x4 SPR palette, LMB/RMB). Right-click: edit, remove. **Studio-only**: not a separate cart table. Export flattens into entity parts |
+| **Entities** | List of entity types (composite icon + state-0 name). Empty: **empty** + **Add**. Modal: left **metasprite catalog** (drag onto compose). Right state/frame dots, name field, 16x16 compose @8x, origin cross + hitbox (guides checkbox), 4x4 SPR palette. LMB select/drag parts, origin, hitbox. RMB paint selected part. Selected part: **H/V** flips, **1-4** palette, Delete removes. States locked to **0** (Idle) for now. Right-click: edit, remove |
+| **Place on screen** | Drag a **Sprites**, **Metasprites**, or **Entities** row onto the screen preview. Sprite drop auto-creates a 1-state/1-frame/1-part entity and places an instance. Metasprite drop auto-creates an entity from the group and places an instance. Entity drop places that type. Instance `world_x/y` is the **user origin** (compose cross). Parts/hitbox draw as `(coord - origin)` relative to that. Sprites **clip to 128x120** when partially off-screen. Click instance to select (white outline). **Delete** removes. Visible in edit view and **Play** (OAM slot 0 = player. Instances fill 1+) |
 
 PNG drop imports into the **active** world. Cart export packs **world 0** only (ignores `default_world`).
 
@@ -62,7 +62,7 @@ PNG drop imports into the **active** world. Cart export packs **world 0** only (
 | **Start** | Center of **`default_screen`** in the play world. Fallback grid **(2,0)** or first present |
 | **Warps** | **X** -> screen (0,0). **Y** -> screen (1,0). Phase 1 test hooks, no Events UI yet |
 
-Play SoT: `core/src/play.c` + `collision.c`. Emu/sim mirror the same rules (separate source copies). Re-export after solid edits. Host collision reads **cart MAP attrs**, not the PRG collision stub. OAM X/Y are **viewport-relative signed** coords; tiles fully outside **128x120** are skipped; partial tiles clip at viewport edges (Studio, emu, sim).
+Play SoT: `core/src/play.c` + `collision.c`. Emu/sim mirror the same rules (separate source copies). Re-export after solid edits. Host collision reads **cart MAP attrs**, not the PRG collision stub. OAM X/Y are **viewport-relative signed** coords. Tiles fully outside **128x120** are skipped. Partial tiles clip at viewport edges (Studio, emu, sim).
 
 ---
 
@@ -74,11 +74,11 @@ Play SoT: `core/src/play.c` + `collision.c`. Emu/sim mirror the same rules (sepa
 |-------|----------|
 | `version` | **7** (`R01_JSON_VER`) |
 | Palettes | Project-wide: all **8 BG + 8 SPR** rows |
-| `other_screens` | Global title + interstitial + credits pages (480 B each; cart may RLE) |
+| `other_screens` | Global title + interstitial + credits pages (480 B each. Cart may RLE) |
 | World data | **Active world only** on save: grid, screens, `bg_bank0`, `spr_banks`, sprite catalog, **`metasprites`**, `entities`, `instances`, `default_screen`, `default_pal_row` |
 | Load | Always applies saved world data to **world 0**. Restores `default_world` / `active_world` indices. Initializes empty `other_screens` if missing. Legacy `credits` string ignored |
 | Worlds 1-7 | Session-only until multi-world JSON lands (world **0** on disk) |
-| v6 / older projects | Load OK with missing fields empty; re-save as v7. No cart-image migration -- re-export |
+| v6 / older projects | Load OK with missing fields empty. Re-save as v7. No cart-image migration: re-export |
 
 ---
 
@@ -125,9 +125,9 @@ PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are
 | **2** | Multi-world UI, tile edit/paint, solid/anim attrs, global palettes, default spawn (partial multi-world persistence) |
 | **3A** | Sprites accordion, Create/Edit sprite modal (SPR pals), SPR bank CHR + catalog, JSON v5 |
 | **3B** | Entities accordion + Add/Edit entity modal (compose / hitbox / origin) |
-| **3C** | Drag sprite/entity onto screen; Studio Play OAM (origin-relative) |
-| **3D** | Cart packs real SPR CHR + entity tables; emu/sim Play OAM parity |
-| **3E** | Metasprites accordion + modal; entity compose from metasprite catalog; JSON v7; cart `format_ver` 2 (other screens incl. credits pages + RLE); viewport sprite clipping (current) |
+| **3C** | Drag sprite/entity onto screen. Studio Play OAM (origin-relative) |
+| **3D** | Cart packs real SPR CHR + entity tables. Emu/sim Play OAM parity |
+| **3E** | Metasprites accordion + modal. Entity compose from metasprite catalog. JSON v7. Cart `format_ver` 2 (other screens incl. credits pages + RLE). Viewport sprite clipping (current) |
 
 **Out of scope (for now):** entity movement/collision, multi-state animation in Play, parallax planes / variable-thickness slices authoring, Generate, multi-world cart export, multi-world JSON save, dead-zone/fade scroll profiles, full 6502 gameplay loop.
 

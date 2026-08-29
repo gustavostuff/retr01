@@ -13,7 +13,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | PCB envelope (A) | ~**12 x 12 cm** 4-layer THT target |
 | Worlds | **8** max (indices 0-7) |
 | World layout | sparse virtual grid up to **8x8**, **32 present screens max** per world (playfield). **Other screens** (title / interstitial / credits pages) are global ROM, not on grid |
-| Parallax (per world) | **0..8** screens (`PARALLAX_MAX` = **8**). **Single** (repeat H/V) or **pair** (2 screens side-by-side or stacked). Live VRAM slots **4-5** only. Optional **slices**: **1..120** bands of variable thickness (H-band or V-band offsets; roads/curves). Not mid-frame playfield camera shifts. See [`02`](02_graphics_worlds_memory.md#parallax) |
+| Parallax (per world) | **0..8** screens (`PARALLAX_MAX` = **8**). **Single** (repeat H/V) or **pair** (2 screens side-by-side or stacked). Live VRAM slots **4-5** only. Optional **slices**: **1..120** bands of variable thickness (H-band or V-band offsets. Roads/curves). Not mid-frame playfield camera shifts. See [`02`](02_graphics_worlds_memory.md#parallax) |
 | Other screens (global) | Max **48** MAP payloads (`OTHER_MAX`): **0** = title, **1** = interstitial, **2+** = credits. Credits pages: **min 0**, **max 46** (`CREDITS_MIN` / `CREDITS_MAX`). Each payload raw **480 B** or **RLE** (`flags.RLE`). Soft `len_other` budget **~64 KB**. PRG owns presentation |
 | Credits | **Credits pages** inside other screens (**0..46**). Text + small graphics as normal tilemaps. Legacy `off_credits`/`len_credits` reserved **0** |
 | Screen format | **16x15** tiles (**128x120**), **240-byte** tile plane + **240-byte** attr plane (one attr/tile) |
@@ -42,7 +42,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | VRAM | **32 KB**, interleaved. Slots **512 B** aligned (240+240 used) |
 | System RAM | **32 KB**, CPU-only |
 | Line buffer | third **32 KB** SRAM, sprite ping-pong, **128 px**/half used |
-| OAM | in **ATmega1284P**, no DMA. **`$FE20`** = addr, **`$FE21`** = data (auto-inc). Entry `Y, tile, attr, X`. **Host Play:** X/Y packed as signed viewport-relative bytes; partial sprites clip to **128x120** |
+| OAM | in **ATmega1284P**, no DMA. **`$FE20`** = addr, **`$FE21`** = data (auto-inc). Entry `Y, tile, attr, X`. **Host Play:** X/Y packed as signed viewport-relative bytes. Partial sprites clip to **128x120** |
 | Sprite cap | **16** per **logical** scanline |
 | Scroll | `scroll_x` **0-127**, `scroll_y` **0-119**, wrap |
 | `$FExx` logical map | Draft in [`02`](02_graphics_worlds_memory.md). Silicon: **9x HC573** bit-packed (bitfield table open, Q21) |
@@ -51,7 +51,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | MAP access | **`$FE90`-`$FE92`** addr, **`$FE93`** data + auto-inc |
 | PRG layout | **One global 32 KB** PRG section per cart at `$8000` (I/O hole at `$FE00-$FEFF`). No banking. **`$FE80`** unused (leave 0) |
 | PRG size | **32 KB** (cart image = CPU window) |
-| Cart fit | **Standard cart 512 KB**. Full 8-world playfield + **8** parallax/world + **32 KB** PRG = **452724 B** (~**442.1 KB**); **71564 B** (~**69.9 KB**) free. See [`02`](02_graphics_worlds_memory.md) |
+| Cart fit | **Standard cart 512 KB**. Full 8-world playfield + **8** parallax/world + **32 KB** PRG = **452724 B** (~**442.1 KB**). **71564 B** (~**69.9 KB**) free. See [`02`](02_graphics_worlds_memory.md) |
 | Cart flash | **512 KB** parallel NOR (**SST39SF040**). On cartridge (socket OK for early bring-up). Same `.retr01` image |
 | Beam / glue | Beam in **2x ATF22V10**, glue absorbed, **5** PLDs (compositor = priority mux) |
 | Bus | **3x HC245** |
@@ -64,7 +64,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Raster | scanline compare + IRQ |
 | APU | separate **ATmega328P** (`$FE40-$FE5F`) |
 | Near-term software | **Retr01 Studio Phase 2** + **Emulator Phase 1** + board sim (studio/emu/sim READMEs) |
-| Studio project files | **JSON v7** (one world's map/CHR per save + global `other_screens`; see Studio README) |
+| Studio project files | **JSON v7** (one world's map/CHR per save + global `other_screens`. See Studio README) |
 | Validation tools | board IC simulator ([`retr01_sim/README.md`](../retr01_sim/README.md)). Software emu ([`retr01_emu/`](../retr01_emu/)) |
 
 ## Cost snapshot

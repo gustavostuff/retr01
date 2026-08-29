@@ -1,4 +1,4 @@
-# SN74HC glue -- DIP-14 gates (v0)
+# SN74HC glue: DIP-14 gates (v0)
 
 **PDFs:**  
 [`../SN74HC00_nand.pdf`](../SN74HC00_nand.pdf),  
@@ -9,14 +9,14 @@
 [`../SN74HC86_xor.pdf`](../SN74HC86_xor.pdf).
 
 **Package:** 14-pin PDIP (N). **VCC** pin 14, **GND** pin 7 on all of these.  
-**Qty (v0):** **10** total -- HC14 x1, HC00 x2, HC04 x2, HC08 x2, HC32 x2, HC86 x1.  
-**Qty (v1):** **0** -- equations move into ATF22V10.
+**Qty (v0):** **10** total: HC14 x1, HC00 x2, HC04 x2, HC08 x2, HC32 x2, HC86 x1.  
+**Qty (v1):** **0**. Equations move into ATF22V10.
 
 Family: 74HC, 2-6 V, Retr01 at **5 V**. Propagation delays typically teens of ns.
 
 ## Retr01 role
 
-Small combinatorial glue: reset conditioning, enable combining, polarity fixups, XOR for compare helpers, Schmitt clocks/reset (HC14). Exact nets are schematic-level; sim instantiates gates from the netlist.
+Small combinatorial glue: reset conditioning, enable combining, polarity fixups, XOR for compare helpers, Schmitt clocks/reset (HC14). Exact nets are schematic-level. Sim instantiates gates from the netlist.
 
 ---
 
@@ -66,13 +66,13 @@ Used by **HC00, HC08, HC32, HC86**:
 | Part | Note |
 |------|------|
 | **HC04** | Standard CMOS invert |
-| **HC14** | Schmitt trigger -- clean up slow edges / reset / crystal buffer duties |
+| **HC14** | Schmitt trigger: clean up slow edges / reset / crystal buffer duties |
 
 ---
 
 ## Expected I/O (unit)
 
-Drive A (and B); Y matches Boolean above within `tpd`. Unused inputs must be tied (not floating) in hardware and in sim.
+Drive A (and B). Y matches Boolean above within `tpd`. Unused inputs must be tied (not floating) in hardware and in sim.
 
 ## Communication
 
@@ -87,6 +87,6 @@ One tiny module type per gate family (NAND2, AND2, OR2, XOR2, INV, SCHMITT_INV) 
 | | |
 |--|--|
 | Outline | PDIP-14, 300 mil (HC00/04/08/14/32/86) |
-| Body (nom.) | **19 x 6 mm** (length x width; ~19.3 x 6.35) |
+| Body (nom.) | **19 x 6 mm** (length x width. ~19.3 x 6.35) |
 | Sim @ 4 px/mm | **76 x 24 px** horizontal (default) |
 | Reference | [`packages_dip.md`](packages_dip.md) |

@@ -1,4 +1,4 @@
-# ATmega1284P -- Sprite / OAM / pad MCU
+# ATmega1284P: Sprite / OAM / pad MCU
 
 **PDF:** [`../ATmega1284P_mcu.pdf`](../ATmega1284P_mcu.pdf).  
 **Package (Retr01-A):** 40-pin PDIP.  
@@ -22,15 +22,15 @@ AVR 8-bit MCU: **128 KB Flash**, **16 KB SRAM**, **4 KB EEPROM**, 32 GPIO lines 
 
 | Port / duty | Retr01 map |
 |-------------|------------|
-| OAM storage + evaluate | CPU writes via `$FE20` (addr) / `$FE21` (data), auto-inc; 64 entries `Y,tile,attr,X` |
+| OAM storage + evaluate | CPU writes via `$FE20` (addr) / `$FE21` (data), auto-inc. 64 entries `Y,tile,attr,X` |
 | Sprite line buffer | During **HBlank**, write next line into AS6C62256 line-buffer SRAM (ping-pong 128 px halves) |
 | Pads | Present `$FE60` / `$FE61` (R L D U X Y coin start, **1 = pressed**) |
-| Machine EEPROM | Internal 4 KB; CPU handshake via `$FE70` band (protocol TBD in `02`) |
+| Machine EEPROM | Internal 4 KB. CPU handshake via `$FE70` band (protocol TBD in `02`) |
 | CHR in HBlank | May own cart CHR bus while BG path is idle (do not share until island N proven) |
 
-**Not** the BG beam path. **Not** the APU -- that is ATmega328P.
+**Not** the BG beam path. **Not** the APU: that is ATmega328P.
 
-Cap: **16 sprites per logical scanline**. Pipeline is one line ahead; not a framebuffer.
+Cap: **16 sprites per logical scanline**. Pipeline is one line ahead. Not a framebuffer.
 
 ## On-chip memory
 
@@ -38,13 +38,13 @@ Cap: **16 sprites per logical scanline**. Pipeline is one line ahead; not a fram
 |-------|------|-------|
 | Flash | 128 KB | Firmware (sprite eval, OAM port, pads, machine EEPROM) |
 | SRAM | 16 KB | OAM shadow, line work, stacks |
-| EEPROM | 4 KB | **Machine config** (not game saves -- those are cart I2C) |
+| EEPROM | 4 KB | **Machine config** (not game saves: those are cart I2C) |
 
 Endurance (typical datasheet): Flash 10k, EEPROM 100k write cycles.
 
 ## 40-pin PDIP (signals)
 
-Notch at top. Left = pins 1-20 top to bottom; right = 21-40 bottom to top.
+Notch at top. Left = pins 1-20 top to bottom. Right = 21-40 bottom to top.
 
 | Pin | Signal | Pin | Signal |
 |-----|--------|-----|--------|
@@ -69,7 +69,7 @@ Notch at top. Left = pins 1-20 top to bottom; right = 21-40 bottom to top.
 | 19 | PD5 (OC1A) | 22 | PC0 (SCL) |
 | 20 | PD6 (OC2B/ICP) | 21 | PD7 (OC2A) |
 
-Exact GPIO-to-`$FExx` bit wiring is **schematic TBD**; sim should expose a **firmware contract**: which ports implement OAM bus, line-buffer address/data, pad inputs, and (later) PWM audio.
+Exact GPIO-to-`$FExx` bit wiring is **schematic TBD**. Sim should expose a **firmware contract**: which ports implement OAM bus, line-buffer address/data, pad inputs, and (later) PWM audio.
 
 ## How it works on the bus (behavioral)
 
@@ -93,10 +93,10 @@ Line N+1: half A FILL N+2      | half B SHOW
 | CPU action | Expect |
 |------------|--------|
 | Store to `$FE20` | OAM address pointer set |
-| Store to `$FE21` | Byte written at pointer; pointer++ |
+| Store to `$FE21` | Byte written at pointer. Pointer++ |
 | Load `$FE60` | Pad bitfield for player 1 |
 | Load `$FE61` | Pad bitfield for player 2 |
-| 16 sprites on one Y | First 16 evaluated; extras dropped (or documented overflow rule) |
+| 16 sprites on one Y | First 16 evaluated. Extras dropped (or documented overflow rule) |
 
 ## Communication on Retr01
 

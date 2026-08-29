@@ -1,8 +1,8 @@
-# ATmega328P -- APU MCU
+# ATmega328P: APU MCU
 
 **PDF:** [`../ATmega328P_mcu.pdf`](../ATmega328P_mcu.pdf) (family sheet includes 48/88/168/328).  
 **Package (Retr01-A):** 28-pin PDIP.  
-**Qty:** **1** (current 32-IC BOM -- dedicated APU).  
+**Qty:** **1** (current 32-IC BOM: dedicated APU).  
 **Clock (Retr01):** **16 MHz** (5 V).
 
 ## Package dimensions
@@ -16,16 +16,16 @@
 
 ## What it is
 
-AVR 8-bit MCU. For **ATmega328P** specifically: **32 KB Flash**, **2 KB SRAM**, **1 KB EEPROM**, 23 I/O lines, timers/PWM, USART, SPI, TWI, ADC. Retr01 dedicates it to a **NES-style APU**: the 6502 writes register-like bytes in `$FE40-$FE5F`; this chip synthesizes audio (PWM or similar analog-friendly output).
+AVR 8-bit MCU. For **ATmega328P** specifically: **32 KB Flash**, **2 KB SRAM**, **1 KB EEPROM**, 23 I/O lines, timers/PWM, USART, SPI, TWI, ADC. Retr01 dedicates it to a **NES-style APU**: the 6502 writes register-like bytes in `$FE40-$FE5F`. This chip synthesizes audio (PWM or similar analog-friendly output).
 
 ## Retr01 role
 
 | Duty | Detail |
 |------|--------|
 | APU registers | Appear at `$FE40-$FE5F` on the 6502 bus (decode + latch or MCU port) |
-| Synthesis | Square / noise / etc. modeled after NES APU; exact channel map TBD in firmware |
-| Output | Timer PWM (or dual PWM) to RC / amp -- board analog TBD |
-| Isolation | Own time domain; may be developed in **sim first** (island **K**) while CPU video islands proceed |
+| Synthesis | Square / noise / etc. modeled after NES APU. Exact channel map TBD in firmware |
+| Output | Timer PWM (or dual PWM) to RC / amp: board analog TBD |
+| Isolation | Own time domain. May be developed in **sim first** (island **K**) while CPU video islands proceed |
 
 Current BOM: [`05`](../../docs/05_hardware_v1_32ic.md).
 
@@ -37,7 +37,7 @@ Current BOM: [`05`](../../docs/05_hardware_v1_32ic.md).
 | SRAM | 2 KB |
 | EEPROM | 1 KB |
 
-Speed grade at 5 V: up to **20 MHz**; Retr01 plans **16 MHz**.
+Speed grade at 5 V: up to **20 MHz**. Retr01 plans **16 MHz**.
 
 ## 28-pin PDIP (standard 328P)
 
@@ -68,7 +68,7 @@ GPIO-to-`$FE4x` wiring is **schematic TBD**. Sim contract: **32-byte APU window*
 
 1. 6502 `STA $FE4x` (or block) -> decode asserts chip select / strobes data into 328P (parallel port or latched bus).
 2. Firmware updates channel state (period, volume, enable, length, ...).
-3. ISR or main loop mixes channels; **hardware timer** outputs PWM continuously.
+3. ISR or main loop mixes channels. **hardware timer** outputs PWM continuously.
 4. CPU is not blocked on audio sample rate beyond the register write.
 
 ### Expected CPU-visible behavior
@@ -77,7 +77,7 @@ GPIO-to-`$FE4x` wiring is **schematic TBD**. Sim contract: **32-byte APU window*
 |------------|--------|
 | Write APU enable / period regs | Audible (or digital) tone changes within firmware latency |
 | Silence / disable | PWM idle or DC mid-level per design |
-| Rapid register spam | Last write wins; no bus timeout on 6502 side |
+| Rapid register spam | Last write wins. No bus timeout on 6502 side |
 
 ## Communication on Retr01
 

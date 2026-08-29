@@ -66,7 +66,7 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 | In ROM | Meaning |
 |--------|---------|
 | Header + pointer table | magic `retr01`, `format_ver` **2** only, world count, **36 B** ptr table (24-bit offs + lens) |
-| Other screens + credits | Title + interstitial + credits **pages** in other-screens blob (raw 480 B or RLE); PRG owns presentation |
+| Other screens + credits | Title + interstitial + credits **pages** in other-screens blob (raw 480 B or RLE). PRG owns presentation |
 | Global BG/sprite palettes | 8 BG rows + 8 sprite rows (master indices, not RGB) |
 | SPR CHR banks | Real tile bytes from Studio export (4 banks x up to 256 tiles) |
 | Entity tables | Per-world type records (origin, hitbox, up to 4 parts) + instance list (type, world x/y) |
@@ -75,7 +75,7 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 
 | **Not** in ROM | Meaning |
 |----------------|---------|
-| **Metasprite catalog** | Studio JSON only; export flattens parts into entity type records |
+| **Metasprite catalog** | Studio JSON only. Export flattens parts into entity type records |
 | Studio Play motion, camera, warps | Host `play.c` / emu Play / sim Host Play |
 | Host collision source | Cart flash MAP attrs (`R01_ATTR_SOLID`). PRG collision stub not used by host runners |
 | Editor UI state | UI only. Cart boots world **0** |
@@ -128,7 +128,7 @@ scripts/run-sim rom/test.retr01
 # or: ./build/retr01_sim /path/to/cart.retr01
 ```
 
-**Controls:** `Space` pause/resume * `Ctrl+R` reset * `R` rotate selected IC * **SCALE 1X/2X** (left sidebar or `G`; **2X** grows the video island to fit SCR1) * `.` single-step (while paused) * **COMPACT / ISLANDS** (HUD) * **left-drag chip** move * **right-click chip** orient H/V * **left-drag empty island** move frame * **bottom-right grip** resize * **Shift+arrows / wheel / middle-drag** pan * `Esc` quit.
+**Controls:** `Space` pause/resume * `Ctrl+R` reset * `R` rotate selected IC * **SCALE 1X/2X** (left sidebar or `G`. **2X** grows the video island to fit SCR1) * `.` single-step (while paused) * **COMPACT / ISLANDS** (HUD) * **left-drag chip** move * **right-click chip** orient H/V * **left-drag empty island** move frame * **bottom-right grip** resize * **Shift+arrows / wheel / middle-drag** pan * `Esc` quit.
 
 **Layout persistence:** island frames + chip positions saved to `retr01_sim/ui_layout.json` (override with `R01S_LAYOUT`).
 
