@@ -6,21 +6,31 @@
 #include <stdlib.h>
 
 int main(int argc, char **argv) {
-    R01Project p;
+    R01Project *p;
     char err[512];
     const char *proj;
     const char *stem;
+    int rc = 1;
 
     proj = argc > 1 ? argv[1] : R01_DEFAULT_PROJECT;
     stem = argc > 2 ? argv[2] : R01_DEFAULT_CART_STEM;
-    if (r01_project_load_json(&p, proj, err, sizeof(err)) != 0) {
-        fprintf(stderr, "load failed: %s\n", err);
+    p = (R01Project *)calloc(1, sizeof(R01Project));
+    if (!p) {
+        fprintf(stderr, "oom\n");
         return 1;
     }
-    if (r01_export_bundle(&p, stem, err, sizeof(err)) != 0) {
+    if (r01_project_load_json(p, proj, err, sizeof(err)) != 0) {
+        fprintf(stderr, "load failed: %s\n", err);
+        goto done;
+    }
+    if (r01_export_bundle(p, stem, err, sizeof(err)) != 0) {
         fprintf(stderr, "export failed: %s\n", err);
-        return 1;
+        goto done;
     }
     printf("exported %s from %s\n", stem, proj);
-    return 0;
+    rc = 0;
+
+done:
+    free(p);
+    return rc;
 }

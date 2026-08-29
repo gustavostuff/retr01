@@ -6,7 +6,14 @@
 
 /* Cart / world layout -- docs/02_graphics_worlds_memory.md */
 #define R01E_CART_MAGIC "retr01"
-#define R01E_CART_FORMAT_VER 1
+#define R01E_CART_FORMAT_VER 2
+#define R01E_CART_FORMAT_VER_V1 1
+#define R01E_CART_PTR_TABLE_V1 24u
+#define R01E_CART_PTR_TABLE_V2 36u
+#define R01E_CART_OTHER_MAX 2
+#define R01E_CART_OTHER_HDR_BYTES 4u
+#define R01E_CART_OTHER_DIR_BYTES 8u
+#define R01E_CART_CREDITS_MAX 1024u
 #define R01E_CART_FLASH_BYTES (512u * 1024u)
 #define R01E_PRG_BYTES 32768u
 

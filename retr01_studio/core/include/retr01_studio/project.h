@@ -4,6 +4,8 @@
 #include "retr01_studio/types.h"
 
 void r01_project_init(R01Project *p, const char *name);
+void r01_other_screen_init(R01OtherScreen *s);
+void r01_project_init_other_screens(R01Project *p);
 void r01_world_init_phase1(R01World *w);
 void r01_world_init_empty(R01World *w);
 int r01_world_set_grid(R01World *w, int cols, int rows);

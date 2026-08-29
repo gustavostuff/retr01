@@ -195,6 +195,13 @@ typedef struct R01sBoard {
     uint8_t cart_entity_inst_count;
     uint32_t cart_off_entity_types;
     uint32_t cart_off_entity_insts;
+    uint8_t cart_format_ver;
+    uint32_t cart_off_other;
+    uint32_t cart_len_other;
+    uint32_t cart_off_other_title;
+    uint32_t cart_off_other_inter;
+    uint32_t cart_off_credits;
+    uint32_t cart_len_credits;
     int cart_loaded;
     char cart_label[48];
     /* Active palette RAM (soft); addr index from HC573 FE08. */

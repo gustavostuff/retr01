@@ -10,7 +10,8 @@
 #include <string.h>
 
 #define HDR_SIZE 16
-#define PTR_TABLE_SIZE 24
+#define PTR_TABLE_SIZE_V1 24
+#define PTR_TABLE_SIZE_V2 36
 #define WORLD_SLOT_SIZE 8
 #define WORLD_TABLE_SIZE (R01_MAX_WORLDS * WORLD_SLOT_SIZE)
 #define WORLD_HDR_SIZE 32
@@ -78,6 +79,67 @@ static void put_u24(uint8_t *p, uint32_t v) {
 static void put_u16(uint8_t *p, uint16_t v) {
     p[0] = (uint8_t)(v & 0xFFu);
     p[1] = (uint8_t)((v >> 8) & 0xFFu);
+}
+
+static size_t cart_ptr_table_bytes(uint8_t format_ver) {
+    return format_ver >= R01_CART_FORMAT_VER ? (size_t)PTR_TABLE_SIZE_V2 : (size_t)PTR_TABLE_SIZE_V1;
+}
+
+static size_t other_blob_bytes(void) {
+    return (size_t)R01_CART_OTHER_HDR_BYTES + (size_t)R01_CART_OTHER_MAX * (size_t)R01_CART_OTHER_DIR_BYTES +
+           (size_t)R01_CART_OTHER_MAX * (size_t)R01_CART_SCREEN_PAYLOAD;
+}
+
+static int build_other_blob(Buf *b, const R01Project *p) {
+    uint8_t hdr[R01_CART_OTHER_HDR_BYTES];
+    uint8_t dir[R01_CART_OTHER_MAX * R01_CART_OTHER_DIR_BYTES];
+    uint32_t payload_base = (uint32_t)R01_CART_OTHER_HDR_BYTES + (uint32_t)R01_CART_OTHER_MAX * R01_CART_OTHER_DIR_BYTES;
+    int i;
+
+    if (!b || !p) {
+        return -1;
+    }
+    memset(hdr, 0, sizeof(hdr));
+    hdr[0] = (uint8_t)R01_CART_OTHER_MAX;
+    memset(dir, 0, sizeof(dir));
+    for (i = 0; i < R01_CART_OTHER_MAX; i++) {
+        uint8_t *e = dir + (size_t)i * R01_CART_OTHER_DIR_BYTES;
+        e[0] = (uint8_t)i;
+        e[1] = 0;
+        put_u24(e + 4, payload_base + (uint32_t)i * R01_CART_SCREEN_PAYLOAD);
+    }
+    if (buf_append(b, hdr, sizeof(hdr)) != 0 || buf_append(b, dir, sizeof(dir)) != 0) {
+        return -1;
+    }
+    for (i = 0; i < R01_CART_OTHER_MAX; i++) {
+        const R01OtherScreen *os = &p->other_screens[i];
+        if (buf_append(b, os->tiles, R01_TILES_PER_SCREEN) != 0 ||
+            buf_append(b, os->attrs, R01_ATTRS_PER_SCREEN) != 0) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+static int build_credits_blob(Buf *b, const char *text, size_t *out_len) {
+    size_t n;
+
+    if (!b || !out_len) {
+        return -1;
+    }
+    *out_len = 0;
+    if (!text || text[0] == '\0') {
+        return 0;
+    }
+    n = strlen(text);
+    if (n > R01_CART_CREDITS_MAX) {
+        return -1;
+    }
+    if (n > 0 && buf_append(b, text, n) != 0) {
+        return -1;
+    }
+    *out_len = n;
+    return 0;
 }
 
 static uint8_t pack_oam_attr(int bank, int pal, int flip_h, int flip_v) {
@@ -483,12 +545,17 @@ static int r01_cart_build(const R01Project *p, uint8_t **out, size_t *out_len, c
     Buf cart = {0};
     R01Project *work;
     uint8_t hdr[HDR_SIZE];
-    uint8_t ptrs[PTR_TABLE_SIZE];
+    uint8_t ptrs[PTR_TABLE_SIZE_V2];
     uint8_t wtable[WORLD_TABLE_SIZE];
     uint8_t prg[R01_PRG_BYTES];
-    uint32_t off_prg, off_pal_bg, off_pal_spr, off_wtable, world_base;
+    size_t ptr_bytes = cart_ptr_table_bytes(R01_CART_FORMAT_VER);
+    uint32_t off_prg, off_pal_bg, off_pal_spr, off_other, off_credits, off_wtable, world_base;
+    size_t other_len = other_blob_bytes();
+    size_t credits_len = 0;
     R01PrgCartLayout prg_layout;
     Buf world_blob = {0};
+    Buf other_blob = {0};
+    Buf credits_blob = {0};
 
     if (!p || !out || !out_len) {
         set_err(err_buf, err_cap, "bad args");
@@ -508,16 +575,33 @@ static int r01_cart_build(const R01Project *p, uint8_t **out, size_t *out_len, c
         set_err(err_buf, err_cap, "world blob failed (>30 present screens?)");
         return -1;
     }
+    if (build_other_blob(&other_blob, work) != 0) {
+        free(work);
+        free(world_blob.data);
+        free(other_blob.data);
+        set_err(err_buf, err_cap, "other screens blob failed");
+        return -1;
+    }
+    if (build_credits_blob(&credits_blob, work->credits, &credits_len) != 0) {
+        free(work);
+        free(world_blob.data);
+        free(other_blob.data);
+        free(credits_blob.data);
+        set_err(err_buf, err_cap, "credits text exceeds 1024 bytes");
+        return -1;
+    }
 
     memset(hdr, 0, sizeof(hdr));
     memcpy(hdr, "retr01", 6);
     hdr[6] = R01_CART_FORMAT_VER;
     hdr[7] = 1;
 
-    off_pal_bg = HDR_SIZE + PTR_TABLE_SIZE;
+    off_pal_bg = HDR_SIZE + (uint32_t)ptr_bytes;
     off_pal_spr = off_pal_bg + R01_PAL_PLANE_BYTES;
     off_prg = off_pal_spr + R01_PAL_PLANE_BYTES;
-    off_wtable = off_prg + R01_PRG_BYTES;
+    off_other = off_prg + R01_PRG_BYTES;
+    off_credits = off_other + (uint32_t)other_len;
+    off_wtable = off_credits + (uint32_t)credits_len;
     world_base = off_wtable + WORLD_TABLE_SIZE;
 
     memset(&prg_layout, 0, sizeof(prg_layout));
@@ -538,10 +622,16 @@ static int r01_cart_build(const R01Project *p, uint8_t **out, size_t *out_len, c
     put_u24(ptrs + 15, R01_PAL_PLANE_BYTES);
     put_u24(ptrs + 18, off_wtable);
     put_u24(ptrs + 21, WORLD_TABLE_SIZE);
+    put_u24(ptrs + 24, off_other);
+    put_u24(ptrs + 27, (uint32_t)other_len);
+    put_u24(ptrs + 30, credits_len > 0 ? off_credits : 0u);
+    put_u24(ptrs + 33, (uint32_t)credits_len);
 
-    if (buf_append(&cart, hdr, HDR_SIZE) != 0 || buf_append(&cart, ptrs, PTR_TABLE_SIZE) != 0 ||
+    if (buf_append(&cart, hdr, HDR_SIZE) != 0 || buf_append(&cart, ptrs, ptr_bytes) != 0 ||
         append_pal_plane(&cart, work->global_pal_bg) != 0 ||
-        append_pal_plane(&cart, work->global_pal_spr) != 0 || buf_append(&cart, prg, R01_PRG_BYTES) != 0) {
+        append_pal_plane(&cart, work->global_pal_spr) != 0 || buf_append(&cart, prg, R01_PRG_BYTES) != 0 ||
+        buf_append(&cart, other_blob.data, other_len) != 0 ||
+        (credits_len > 0 && buf_append(&cart, credits_blob.data, credits_len) != 0)) {
         goto oom;
     }
 
@@ -554,6 +644,8 @@ static int r01_cart_build(const R01Project *p, uint8_t **out, size_t *out_len, c
         goto oom;
     }
     free(world_blob.data);
+    free(other_blob.data);
+    free(credits_blob.data);
     free(work);
     *out = cart.data;
     *out_len = cart.len;
@@ -562,6 +654,8 @@ static int r01_cart_build(const R01Project *p, uint8_t **out, size_t *out_len, c
 oom:
     free(work);
     free(world_blob.data);
+    free(other_blob.data);
+    free(credits_blob.data);
     free(cart.data);
     set_err(err_buf, err_cap, "oom");
     return -1;

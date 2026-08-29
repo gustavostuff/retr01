@@ -19,6 +19,11 @@ typedef struct R01eCart {
     uint32_t off_pal_spr;
     uint32_t len_pal_spr;
     uint32_t off_world_table;
+    uint32_t len_world_table;
+    uint32_t off_other;
+    uint32_t len_other;
+    uint32_t off_credits;
+    uint32_t len_credits;
 } R01eCart;
 
 typedef struct R01eWorldView {
@@ -50,6 +55,9 @@ typedef struct R01eWorldView {
 #define R01E_CART_ENTITY_TYPE_SIZE 20
 #define R01E_CART_INSTANCE_SIZE 6
 
+#define R01E_CART_OTHER_TITLE 0
+#define R01E_CART_OTHER_INTER 1
+
 /* Load packed .retr01 (or 512 KB flash image). Owns *out->data. */
 int r01e_cart_load_path(R01eCart *out, const char *path, char *err, size_t err_cap);
 int r01e_cart_load_mem(R01eCart *out, const uint8_t *img, size_t len, char *err, size_t err_cap);
@@ -73,5 +81,11 @@ int r01e_cart_player_aabb_ok(const R01eCart *c, int world, int px, int py);
 const uint8_t *r01e_cart_ptr(const R01eCart *c, uint32_t abs_off, size_t need);
 
 uint8_t r01e_cart_read(const R01eCart *c, uint32_t abs_off);
+
+/* format_ver >= 2: other screens blob (title/interstitial). Returns NULL if missing/id OOB. */
+const uint8_t *r01e_cart_other_payload(const R01eCart *c, int id);
+
+/* format_ver >= 2: credits ROM text. Returns NULL if len 0. */
+const uint8_t *r01e_cart_credits(const R01eCart *c, size_t *out_len);
 
 #endif

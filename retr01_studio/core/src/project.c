@@ -45,6 +45,28 @@ int r01_world_set_grid(R01World *w, int cols, int rows) {
     return 0;
 }
 
+void r01_other_screen_init(R01OtherScreen *s) {
+    int c;
+    if (!s) {
+        return;
+    }
+    memset(s->tiles, 0, sizeof(s->tiles));
+    for (c = 0; c < R01_TILES_PER_SCREEN; c++) {
+        s->attrs[c] = r01_attr_pack(0, 0, 0, 0);
+    }
+}
+
+void r01_project_init_other_screens(R01Project *p) {
+    int i;
+    if (!p) {
+        return;
+    }
+    for (i = 0; i < R01_CART_OTHER_MAX; i++) {
+        r01_other_screen_init(&p->other_screens[i]);
+    }
+    p->credits[0] = '\0';
+}
+
 void r01_world_init_phase1(R01World *w) {
     int col, row, idx;
     if (!w) {
@@ -90,6 +112,7 @@ void r01_project_init(R01Project *p, const char *name) {
     p->active_world = 0;
     p->active_screen = 0;
     r01_project_init_phase1_pals(p);
+    r01_project_init_other_screens(p);
     r01_world_init_phase1(&p->worlds[0]);
     r01_project_select_start_screen(p);
 }

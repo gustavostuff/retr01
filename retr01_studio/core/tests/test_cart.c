@@ -11,9 +11,10 @@
 #include <string.h>
 
 #define CART_HDR_SIZE 16u
-#define CART_PTR_SIZE 24u
+#define CART_PTR_SIZE 36u
 #define CART_PAL_PLANE_BYTES 128u
 #define CART_PRG_OFF (CART_HDR_SIZE + CART_PTR_SIZE + 2u * CART_PAL_PLANE_BYTES)
+#define CART_OTHER_LEN (4u + 2u * 8u + 2u * 480u)
 #define PRG_PLAY_SPAWN_C 0x0108u
 #define PRG_PLAY_SPAWN_R 0x0109u
 #define WORLD_SLOT_SIZE 8u
@@ -68,6 +69,9 @@ TEST_MAIN() {
     inst = r01_world_place_entity(w, type_id, 40, 50);
     EXPECT(inst == 0, "instance");
 
+    strncpy(p->credits, "RETR01 DEMO\nBY TEST", sizeof(p->credits) - 1u);
+    p->other_screens[R01_CART_OTHER_TITLE].tiles[0] = 0x42;
+
     /* Legacy: art sitting on reserved tile 1 must relocate on export. */
     {
         R01EntityPart *pt;
@@ -98,6 +102,12 @@ TEST_MAIN() {
         if (f) {
             EXPECT(fread(magic, 1, 6, f) == 6, "read cart magic");
             EXPECT(memcmp(magic, "retr01", 6) == 0, "cart magic");
+            EXPECT(fseek(f, 6, SEEK_SET) == 0, "seek format_ver");
+            {
+                uint8_t fmt = 0;
+                EXPECT(fread(&fmt, 1, 1, f) == 1, "read format_ver");
+                EXPECT(fmt == R01_CART_FORMAT_VER, "cart format_ver 2");
+            }
             EXPECT(fseek(f, prg_off + (long)PRG_PLAY_SPAWN_C, SEEK_SET) == 0, "seek prg spawn");
             EXPECT(fread(prg_spawn, 1, 2, f) == 2, "read prg spawn");
             EXPECT(prg_spawn[0] == 2, "prg spawn col matches default screen");
@@ -109,7 +119,7 @@ TEST_MAIN() {
             img = (uint8_t *)malloc((size_t)flen);
             EXPECT(img != NULL, "cart buf");
             if (img) {
-                uint8_t ptrs[24];
+                uint8_t ptrs[36];
                 uint8_t slot[8];
                 uint8_t hdr[WORLD_HDR_SIZE];
                 uint32_t off_wtable, world_base, off_chr, off_types, off_insts;
@@ -120,8 +130,23 @@ TEST_MAIN() {
 
                 EXPECT(fseek(f, 0, SEEK_SET) == 0, "rewind");
                 EXPECT(fread(img, 1, (size_t)flen, f) == (size_t)flen, "read cart");
-                memcpy(ptrs, img + CART_HDR_SIZE, 24);
+                memcpy(ptrs, img + CART_HDR_SIZE, 36);
                 off_wtable = rd_u24(ptrs + 18);
+                EXPECT(rd_u24(ptrs + 24) == CART_PRG_OFF + R01_PRG_BYTES, "off_other");
+                EXPECT(rd_u24(ptrs + 27) == CART_OTHER_LEN, "len_other");
+                EXPECT(img[rd_u24(ptrs + 24)] == 2, "other_count");
+                EXPECT(img[rd_u24(ptrs + 24) + 4u] == 0, "other dir0 id title");
+                EXPECT(rd_u24(ptrs + 30) == CART_PRG_OFF + R01_PRG_BYTES + CART_OTHER_LEN, "off_credits");
+                {
+                    size_t clen = rd_u24(ptrs + 33);
+                    EXPECT(clen == strlen(p->credits), "len_credits");
+                    EXPECT(memcmp(img + rd_u24(ptrs + 30), p->credits, clen) == 0, "credits blob");
+                }
+                {
+                    uint32_t off_other = rd_u24(ptrs + 24);
+                    uint32_t title_rel = rd_u24(img + off_other + 4u + 4u);
+                    EXPECT(img[off_other + title_rel] == 0x42, "title screen tile byte");
+                }
                 memcpy(slot, img + off_wtable, 8);
                 EXPECT(slot[0] != 0, "world0 present");
                 world_base = rd_u24(slot + 2);

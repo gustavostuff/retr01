@@ -37,11 +37,23 @@
 #define R01_CART_FLASH_BYTES (512u * 1024u)
 #define R01_PRG_BYTES 32768u
 #define R01_CHR_BANK_BYTES 4096u
-#define R01_CART_FORMAT_VER 1
+#define R01_CART_FORMAT_VER 2
+#define R01_CART_FORMAT_VER_V1 1
+#define R01_CART_HDR_BYTES 16u
+#define R01_CART_PTR_TABLE_V1 24u
+#define R01_CART_PTR_TABLE_V2 36u
+#define R01_CART_SCREEN_PAYLOAD 480u
+#define R01_CART_OTHER_MAX 2
+#define R01_CART_OTHER_TITLE 0
+#define R01_CART_OTHER_INTER 1
+#define R01_CART_OTHER_HDR_BYTES 4u
+#define R01_CART_OTHER_DIR_BYTES 8u
+#define R01_CART_CREDITS_MAX 1024u
+#define R01_CART_CREDITS_RECOMMENDED 1000u
 
 #define R01_NAME_MAX 64
 #define R01_PATH_MAX 512
-#define R01_JSON_VER 6
+#define R01_JSON_VER 7
 
 #define R01_ROM_DIR "rom"
 #define R01_DEFAULT_PROJECT R01_ROM_DIR "/test.r01proj"
@@ -148,6 +160,12 @@ typedef struct R01EntityInstance {
     int world_y;
 } R01EntityInstance;
 
+/* Global off-grid MAP payloads (title, interstitial). See docs/02 other screens. */
+typedef struct R01OtherScreen {
+    uint8_t tiles[R01_TILES_PER_SCREEN];
+    uint8_t attrs[R01_ATTRS_PER_SCREEN];
+} R01OtherScreen;
+
 typedef struct R01World {
     int present;
     int grid_cols;
@@ -177,6 +195,8 @@ typedef struct R01Project {
     /* 8 rows x 4 pals each (docs/02). Index [row][pal]. */
     R01PalRow global_pal_bg[R01_PAL_ROWS][R01_PALS_PER_ROW];
     R01PalRow global_pal_spr[R01_PAL_ROWS][R01_PALS_PER_ROW];
+    R01OtherScreen other_screens[R01_CART_OTHER_MAX]; /* [0]=title [1]=interstitial */
+    char credits[R01_CART_CREDITS_MAX + 1];           /* cart ROM blob, not PRG */
     R01World worlds[R01_MAX_WORLDS];
 } R01Project;
 

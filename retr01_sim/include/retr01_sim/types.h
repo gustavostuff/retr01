@@ -15,6 +15,17 @@
 /* Max pins on a single package we care about for now (40-pin DIP CPU). */
 #define R01S_MAX_PINS 64
 
+#define R01S_CART_FORMAT_VER_V1 1
+#define R01S_CART_FORMAT_VER_V2 2
+#define R01S_CART_HDR_BYTES 16u
+#define R01S_CART_PTR_TABLE_V1 24u
+#define R01S_CART_PTR_TABLE_V2 36u
+#define R01S_CART_OTHER_MAX 2
+#define R01S_CART_OTHER_HDR_BYTES 4u
+#define R01S_CART_OTHER_DIR_BYTES 8u
+#define R01S_CART_CREDITS_MAX 1024u
+#define R01S_CART_SCREEN_PAYLOAD 480u
+
 /* Cart layout caps (docs/02_graphics_worlds_memory.md). */
 #define R01S_MAX_WORLDS 8
 #define R01S_MAX_PRESENT_SCREENS 30

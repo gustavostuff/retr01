@@ -12,6 +12,11 @@
 #define R01_CART_ENTITY_TYPE_SIZE 20 /* origin_x,y + part_count + pad + 4x(tile,attr,dx,dy) */
 #define R01_CART_INSTANCE_SIZE 6     /* type_id, pad, world_x u16 LE, world_y u16 LE */
 
+/* Other-screens dir entry (relative off_payload to other blob base). */
+#define R01_CART_OTHER_DIR_ID 0
+#define R01_CART_OTHER_DIR_FLAGS 1
+#define R01_CART_OTHER_DIR_OFF_PAYLOAD 4
+
 void r01_prom_fill(uint8_t out64[R01_MASTER_COLORS]);
 int r01_prom_write(const char *path, char *err_buf, size_t err_cap);
 int r01_prg_write_asm(const R01Project *p, const char *path, char *err_buf, size_t err_cap);
