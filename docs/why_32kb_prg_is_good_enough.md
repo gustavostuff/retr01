@@ -1,4 +1,4 @@
-# why 32KB of PRG is good enough
+# Why 32KB of PRG is good enough
 
 Retr01 keeps a fixed 32 KB PRG window at `$8000–$FFFF` (I/O hole at `$FE00–$FEFF`).  
 That is the same raw size many classic NES NROM titles used. On Retr01 it buys far more game logic.
