@@ -116,6 +116,19 @@ const R01World *r01_project_active_world_const(const R01Project *p) {
     return &p->worlds[p->active_world];
 }
 
+int r01_world_present_count(const R01World *w) {
+    int i, n = 0;
+    if (!w) {
+        return 0;
+    }
+    for (i = 0; i < w->screen_count; i++) {
+        if (w->screens[i].present) {
+            n++;
+        }
+    }
+    return n;
+}
+
 int r01_world_find_screen(const R01World *w, int col, int row) {
     int i;
     if (!w) {
@@ -272,6 +285,9 @@ int r01_world_create_screen(R01World *w, int col, int row) {
         return -1;
     }
     if (!s->present) {
+        if (r01_world_present_count(w) >= R01_MAX_PRESENT_SCREENS) {
+            return -1;
+        }
         init_screen(s, col, row);
         s->present = 1;
     }
@@ -537,6 +553,10 @@ int r01_project_import_png(R01Project *p, const char *path, char *err_buf, size_
 
     if (r01_chr_pack_world_bank0(w) == R01_CHR_TOO_MANY_TILES) {
         set_err(err_buf, err_cap, "too many unique tiles (>256)");
+        goto fail;
+    }
+    if (r01_world_present_count(w) > R01_MAX_PRESENT_SCREENS) {
+        set_err(err_buf, err_cap, "png exceeds 30 present screens");
         goto fail;
     }
 

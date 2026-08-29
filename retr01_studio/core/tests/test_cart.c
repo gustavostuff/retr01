@@ -32,7 +32,7 @@ TEST_MAIN() {
     R01World *w;
     uint8_t tile[R01_TILE_BYTES];
     char err[128];
-    int i, bank, id, cat, type_id, inst;
+    int bank, id, cat, type_id, inst;
 
     EXPECT(p != NULL, "alloc project");
     if (!p) {
@@ -41,9 +41,6 @@ TEST_MAIN() {
 
     r01_project_init(p, "cart");
     w = &p->worlds[0];
-    for (i = 0; i < w->screen_count; i++) {
-        w->screens[i].present = 1;
-    }
     w->default_screen = 2;
 
     bank = 0;

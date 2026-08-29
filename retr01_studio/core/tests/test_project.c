@@ -55,6 +55,18 @@ TEST_MAIN() {
     EXPECT(r01_project_set_active_world(p, R01_MAX_WORLDS) < 0, "reject world past max");
 
     {
+        int c, r, n;
+        r01_world_init_empty(w);
+        for (n = 0; n < R01_MAX_PRESENT_SCREENS; n++) {
+            c = n % R01_GRID_MAX;
+            r = n / R01_GRID_MAX;
+            EXPECT(r01_world_create_screen(w, c, r) >= 0, "create up to cart cap");
+        }
+        EXPECT(r01_world_present_count(w) == R01_MAX_PRESENT_SCREENS, "present count at cap");
+        EXPECT(r01_world_create_screen(w, 7, 7) < 0, "reject screen past cap");
+    }
+
+    {
         uint8_t merged = r01_attr_merge(r01_attr_pack(0, 0, 0, 0) | R01_ATTR_SOLID | R01_ATTR_ANIM, 2, 3, 1, 1);
         EXPECT(r01_attr_bank(merged) == 2, "attr_merge bank");
         EXPECT(r01_attr_pal(merged) == 3, "attr_merge pal");

@@ -25,6 +25,8 @@ int r01_world_create_screen(R01World *w, int col, int row);
 int r01_world_remove_screen(R01World *w, int col, int row);
 int r01_world_find_screen(const R01World *w, int col, int row);
 R01Screen *r01_world_screen_at(R01World *w, int col, int row);
+/* Count screens with present=1 (cart export uses this; max R01_MAX_PRESENT_SCREENS). */
+int r01_world_present_count(const R01World *w);
 
 int r01_project_import_png(R01Project *p, const char *path, char *err_buf, size_t err_cap);
 

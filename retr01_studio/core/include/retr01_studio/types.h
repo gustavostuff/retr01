@@ -14,10 +14,11 @@
 #define R01_GRID_MAX 8
 #define R01_DEFAULT_GRID 3
 #define R01_MAX_SCREENS (R01_GRID_MAX * R01_GRID_MAX)
+#define R01_MAX_PRESENT_SCREENS 30 /* cart cap (docs/02): 8 worlds x 30 + 128 KiB PRG in 512 KiB */
 #define R01_START_COL 2
 #define R01_START_ROW 0
 
-#define R01_MAX_WORLDS 7
+#define R01_MAX_WORLDS 8
 #define R01_BG_BANKS 4
 #define R01_SPR_BANKS 4
 #define R01_TILES_PER_BANK 256

@@ -31,7 +31,7 @@ Fixed **640x360** logical canvas, **8px** grid, dark gray chrome. Buttons/labels
 
 | Control | Behavior |
 |---------|----------|
-| **Worlds** | **8** world buttons (**1-8**, internal indices **0-7**; UI still **7** until code bump). World 1 starts with **3x3** blank screens on an **8x8** slot map. Worlds 2-8 start empty until first click. Cart cap: **30 present screens**/world ([`docs/02`](../docs/02_graphics_worlds_memory.md)) |
+| **Worlds** | **8** world buttons (**1-8**, internal indices **0-7**). World 1 starts with **3x3** blank screens on an **8x8** slot map. Worlds 2-8 start empty until first click. Cart cap: **30 present screens**/world ([`docs/02`](../docs/02_graphics_worlds_memory.md)) |
 | **World map** | **16px** cell pitch. Present = blue. White fill = default spawn. White outline = selected |
 | **Double-click** empty slot | Create screen |
 | **Ctrl+click** present | Remove screen |
@@ -76,7 +76,7 @@ Play SoT: `core/src/play.c` + `collision.c`. Emu/sim mirror the same rules (sepa
 | Palettes | Project-wide: all **8 BG + 8 SPR** rows |
 | World data | **Active world only** on save: grid, screens, `bg_bank0`, `spr_banks`, sprite catalog, **`metasprites`**, `entities`, `instances`, `default_screen`, `default_pal_row` |
 | Load | Always applies saved world data to **world 0**. Restores `default_world` / `active_world` indices |
-| Worlds 1-7 | Session-only until multi-world JSON lands |
+| Worlds 1-7 | Session-only until multi-world JSON lands (world **0** on disk) |
 | v5 projects | Load OK; `metasprites` starts empty |
 | v4 projects | Load OK; sprite catalog / SPR banks / entities / instances start empty |
 

@@ -15,6 +15,10 @@
 /* Max pins on a single package we care about for now (40-pin DIP CPU). */
 #define R01S_MAX_PINS 64
 
+/* Cart layout caps (docs/02_graphics_worlds_memory.md). */
+#define R01S_MAX_WORLDS 8
+#define R01S_MAX_PRESENT_SCREENS 30
+
 /* Pin digital level (tri-state aware). */
 typedef enum R01sLevel {
     R01S_LVL_Z = 0, /* hi-Z / not driving */

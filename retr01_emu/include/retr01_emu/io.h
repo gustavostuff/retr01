@@ -31,7 +31,7 @@ typedef struct R01eIo {
     uint8_t oam_addr;              /* $FE20 */
     uint8_t oam[R01E_OAM_ENTRIES * R01E_OAM_ENTRY_BYTES]; /* phase 6+ composite */
 
-    uint8_t world; /* $FE30 0..6 */
+    uint8_t world; /* $FE30 0..7 */
     uint8_t bank_helper[8]; /* $FE31-$FE37 + $FE38 pal row hint */
     uint8_t pal_row;
 

@@ -2000,6 +2000,9 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     start_row = hdr[1];
     board->cart_default_pal_row = (uint8_t)(hdr[4] & 7u);
     screen_count = hdr[5];
+    if (screen_count > R01S_MAX_PRESENT_SCREENS) {
+        return;
+    }
     off_chr = get_u24(hdr + 8);
     off_sdir = get_u24(hdr + 11);
     board->cart_off_chr = world_base + off_chr;

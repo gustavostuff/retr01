@@ -296,6 +296,9 @@ static int build_world_blob(Buf *blob, const R01World *w) {
             present_n++;
         }
     }
+    if (present_n > R01_MAX_PRESENT_SCREENS) {
+        return -1;
+    }
     if (present_n > 255) {
         present_n = 255;
     }
@@ -502,7 +505,7 @@ static int r01_cart_build(const R01Project *p, uint8_t **out, size_t *out_len, c
     if (build_world_blob(&world_blob, &work->worlds[0]) != 0) {
         free(work);
         free(world_blob.data);
-        set_err(err_buf, err_cap, "world blob failed");
+        set_err(err_buf, err_cap, "world blob failed (>30 present screens?)");
         return -1;
     }
 

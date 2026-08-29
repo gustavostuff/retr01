@@ -16,6 +16,7 @@ int main(int argc, char **argv) {
     const char *cart_path;
     FILE *f;
     char magic[6];
+    int i;
 
     proj_path = argc > 1 ? argv[1] : R01_ROM_DIR "/test.r01proj";
     cart_path = argc > 2 ? argv[2] : R01_ROM_DIR "/test.retr01";
@@ -38,8 +39,10 @@ int main(int argc, char **argv) {
     }
 
     r01_project_init(p, "fixture");
-    for (int i = 0; i < p->worlds[0].screen_count; i++) {
-        p->worlds[0].screens[i].present = 1;
+    for (i = 0; i < R01_MAX_PRESENT_SCREENS; i++) {
+        int c = i % R01_GRID_MAX;
+        int r = i / R01_GRID_MAX;
+        EXPECT(r01_world_create_screen(&p->worlds[0], c, r) >= 0, "fixture present screens");
     }
     EXPECT(r01_export_bundle(p, "fixture_export", err, sizeof(err)) == 0, "export bundle");
     {

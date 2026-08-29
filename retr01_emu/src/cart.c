@@ -75,6 +75,11 @@ int r01e_cart_load_mem(R01eCart *out, const uint8_t *img, size_t len, char *err,
     out->len = len;
     out->format_ver = img[6];
     out->world_count = img[7];
+    if (out->world_count > R01E_MAX_WORLDS) {
+        r01e_cart_free(out);
+        set_err(err, err_cap, "world_count too large");
+        return -1;
+    }
     out->flags = img[8];
     ptrs = img + HDR_SIZE;
     out->off_prg = get_u24(ptrs + 0);
@@ -156,6 +161,9 @@ int r01e_cart_world(const R01eCart *c, int index, R01eWorldView *out) {
     out->default_bg_bank = hdr[2] & 3u;
     out->default_pal_row = hdr[4] & 7u;
     out->screen_count = hdr[5];
+    if (out->screen_count > R01E_MAX_PRESENT_SCREENS) {
+        return -1;
+    }
     out->parallax_count = hdr[6];
     out->off_chr = get_u24(hdr + 8);
     out->off_screen_dir = get_u24(hdr + 11);
