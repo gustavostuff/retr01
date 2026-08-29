@@ -90,7 +90,7 @@ Current chip list: [`05`](05_hardware_v1_32ic.md) (**32 IC**). Roles:
 | Worlds | **8** max (indices 0-7) |
 | Screens per world | **30 present** max on sparse **8x8** virtual grid (playfield only) |
 | Global UI ROM | **Other screens**: title + interstitial MAPs (**2 x 480 B**). **Credits**: **<= 1024 B** ASCII in cart flash (not PRG). See [`02`](02_graphics_worlds_memory.md#other-screens-and-credits-global-rom) |
-| Cart / PRG | **512 KB** flash. Cart `format_ver` **2** export (8 worlds, other screens, credits ROM). PRG payload still **32 KB** stub; **128 KB** banked PRG (`$FE80`) planned. ~**508 KB** full fill at 8-world caps |
+| Cart / PRG | **512 KB** flash. Cart `format_ver` **2** (8 worlds, other screens, credits ROM). **32 KB PRG** (no banking). ~**412 KB** full fill at 8-world caps (~**100 KB** free) |
 | CHR per world | **4 BG banks + 4 sprite banks**, **256 tiles each**, **32 KB** |
 | Sprites | **64 OAM**, **16 per logical scanline** max |
 | VRAM | **32 KB**, interleaved |
@@ -126,7 +126,7 @@ Current chip list: [`05`](05_hardware_v1_32ic.md) (**32 IC**). Roles:
 
 - RAM at `$0000-$7FFF`
 - I/O page at `$FE00-$FEFF`
-- PRG as **one global section** in the cart (**128 KB** max in image, **32 KB** CPU window + `$FE80` bank). Maps at `$8000` with the classic I/O hole at `$FE00-$FEFF` (see [`02`](02_graphics_worlds_memory.md)), not split per world.
+- PRG as **one global 32 KB** section in the cart at `$8000` (I/O hole at `$FE00-$FEFF`). No PRG banking. See [`02`](02_graphics_worlds_memory.md). Not split per world.
 - World/MAP streaming through `$FE90`
 - BG banks per **8x8 tile** (attr `BANK`). Screens may only stamp a default at load
 - Sprite bank independent of BG banks (per OAM attr `BANK`, `$FE37` optional stamp)

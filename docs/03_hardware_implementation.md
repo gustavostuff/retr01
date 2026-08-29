@@ -151,5 +151,5 @@ Not drawn as frames (still in the netlist / health milestones): **E** pads, **F*
 | `$FE20`/`$FE21` | N | OAM addr + data auto-inc |
 | `$FE60`/`$FE61` | E | Switch sets matching bit |
 | `$FE70`-`$FE72` | F | Machine EEPROM survives power-cycle |
-| `$FE80` | J | unused, leave 0 |
+| `$FE80` | J | unused (no PRG banking), leave 0 |
 | `$FE90`-`$FE93` | J | MAP seek + read known byte |

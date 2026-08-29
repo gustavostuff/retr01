@@ -33,7 +33,7 @@ On Retr01 the same designs leave headroom for richer AI, better physics, invento
 
 ## Design posture
 
-Keep bank 0 as the fixed home for vectors, interrupt stubs, common library code and any tiny HAL helpers.
+Keep vectors, interrupt stubs, common library code and any tiny HAL helpers in a fixed home within the 32 KB window.
 Put the bulk of game systems and tables in the remaining space.
 Because graphics and streaming are hardware-assisted, most of the 32 KB can stay readable, modular 6502 (or compiled C) instead of cycle-counting rendering tricks.
 

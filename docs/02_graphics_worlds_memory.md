@@ -20,7 +20,7 @@ Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 - Screen / plane payload: **480 B** raw (**240** tiles + **240** attrs). Direct MAP `$FE93` -> VRAM `$FE12` (no RLE required)
 - Per world: **4 BG + 4 sprite** CHR banks (**32 KB**), screen dir + parallax dir
 - Palettes: **8 global BG palette rows** + **8 global sprite palette rows** (see [Palettes](#palettes))
-- Cart: **512 KB** (SST39SF040). **128 KB** PRG max in cart image (CPU window still `$8000-$FFFF` with I/O hole, banked via `$FE80`, see PRG). Studio export uses cart `format_ver` **2** today; PRG payload is still the **32 KB** Phase 1 stub until 128 KB banked export lands.
+- Cart: **512 KB** (SST39SF040). **32 KB PRG** at `$8000-$FFFF` (I/O hole at `$FE00-$FEFF`). No PRG banking. Studio export uses cart `format_ver` **2**.
 
 | Asset | Size at caps (8 worlds) |
 |-------|--------------------------|
@@ -29,20 +29,18 @@ Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 | MAP parallax (8 x 2 x 480 B) | **~7.5 KB** |
 | Global pals (8 BG rows + 8 sprite rows) | **256 B** |
 | Dirs / headers | **~3.6 KB** |
-| PRG | **128 KB** |
-| **Total / free** | **~508 KB** used, **~4.5 KB** free |
+| PRG | **32 KB** |
+| **Total / free** | **~412 KB** used, **~100 KB** free |
 
-**30 screens/world** (not 32) is the cart cap so **8 worlds** + **128 KB** PRG still fit **512 KB** flash with a small spare (~**4.5 KB**). Planned use of that spare ([Other screens and credits](#other-screens-and-credits-global-rom)):
+**30 screens/world** (not 32) is the playfield design cap. Full 8-world fill + **32 KB** PRG leaves ~**100 KB** free in **512 KB** flash for ([Other screens and credits](#other-screens-and-credits-global-rom)), entity tables, and headroom:
 
 | Spare slice (at max fill) | Size |
 |---------------------------|------|
 | **Other screens** (title + interstitial MAPs) | **~1 KB** |
 | **Credits text** (cart ROM, not PRG) | **up to 1 KB** |
-| Entity tables + alignment | **~2.5 KB** remainder |
+| Entity tables + alignment + unused flash | **~98 KB** remainder |
 
 World blobs hold **playfield** screens and **parallax** only. Title, level interstitials, and credits are **global** (see below). They do **not** count toward the **30 present screens**/world cap.
-
-At **32 KB** PRG (current export): **~412 KB** used, **~100 KB** free at the same world caps.
 
 **Banks:** live BG bank = per-tile attr bits 1-0. Live sprite bank = per-OAM attr bits 1-0. `$FE31`-`$FE37` are optional stamp helpers only.
 
@@ -144,7 +142,7 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 
 ## Other screens and credits (global ROM)
 
-Non-playfield UI that is **not** on the world grid. Lives in cart flash as **MAP-readable data** (same `$FE90`-`$FE93` port as world MAP). **Not** in the **128 KB** PRG image -- PRG holds boot/load/scroll **code** only.
+Non-playfield UI that is **not** on the world grid. Lives in cart flash as **MAP-readable data** (same `$FE90`-`$FE93` port as world MAP). **Not** in the **32 KB** PRG image -- PRG holds boot/load/scroll **code** only.
 
 | Kind | Cart storage | Dev workflow |
 |------|--------------|--------------|
@@ -168,7 +166,7 @@ CHR for title/interstitial/credits glyphs comes from existing BG banks (often sh
 
 ## Cart image (`.retr01`)
 
-24-bit offsets. Magic **`retr01`** (lowercase ASCII). **`format_ver` = 1** (legacy load only): **24 B** pointer table, no other-screens/credits blobs. **`format_ver` = 2** (current Studio/Emu/Sim export): **36 B** pointer table, **8** world table slots, **30 present screens**/world max, **other screens** + **credits ROM** pointers. PRG payload is still **32 KB** in export today; **128 KB** banked PRG via `$FE80` is planned.
+24-bit offsets. Magic **`retr01`** (lowercase ASCII). **`format_ver` = 1** (legacy load only): **24 B** pointer table, no other-screens/credits blobs. **`format_ver` = 2** (current Studio/Emu/Sim export): **36 B** pointer table, **8** world table slots, **30 present screens**/world max, **other screens** + **credits ROM** pointers. PRG payload is **32 KB** (no banking).
 
 ```text
 +--------------------------------------------------------------------------+
@@ -190,8 +188,8 @@ CHR for title/interstitial/credits glyphs comes from existing BG banks (often sh
 |    Sprite: 8 rows x 4 pals x 4 master indices = 128 B                    |
 |    Active row N: copy 4 BG + 4 sprite pals into $FE08/$FE09              |
 +--------------------------------------------------------------------------+
-|  PRG (one global section, max 128 KB, CPU window $8000 + I/O hole $FE00) |
-|    Phase 1 export: 32 KB stub. Planned: 128 KB banked (`$FE80`)          |
+|  PRG (one global section, 32 KB at $8000 + I/O hole $FE00)               |
+|    No banking. Vectors in high page                                      |
 |    Code only -- credits strings live in CREDITS ROM below                |
 +--------------------------------------------------------------------------+
 |  OTHER SCREENS (global, v2 -- not in world blobs)                        |
@@ -259,7 +257,7 @@ Logical CPU addresses below are the software SoT. Silicon uses **9x HC573** with
 | `$FE00-$FEFF` | I/O |
 | `$FF00-$FFFF` | PRG high + vectors |
 
-PRG planning cap is **128 KB** in the cart image (4 x 32 KB banks). The CPU still sees one **32 KB** window at `$8000-$FFFF` with the `$FE00-$FEFF` I/O hole. **`$FE80`** selects the bank (2-bit latch, flash A16/A17). Vectors read from **bank 0** (decode forces bank 0 for `$FFFA-$FFFF`).
+PRG is a **32 KB** image mapped at `$8000-$FFFF` with the `$FE00-$FEFF` I/O hole. No bank select. Vectors live in the high page (`$FFFA-$FFFF`).
 
 | Addr | Name | Notes |
 |------|------|-------|
@@ -277,7 +275,7 @@ PRG planning cap is **128 KB** in the cart image (4 x 32 KB banks). The CPU stil
 | `$FE40`-`$FE5F` | APU | **ATmega328P** |
 | `$FE60`/`$FE61` | pads | bits 0-7: right, left, down, up, X, Y, **coin** (cabinet) / **select** (console draft), start (**1=pressed**) |
 | `$FE70`-`$FE72` | machine EEPROM | **1284 internal EEPROM** handshake (protocol TBD) |
-| `$FE80` | `PRG_BANK` | PRG bank select **0-3** (128 KB PRG). Write-only latch |
+| `$FE80` | (reserved) | Unused. Leave **0**. No PRG banking |
 | `$FE90`-`$FE93` | MAP | 24-bit seek + read auto-inc |
 | (TBD) | cart save | **Cart I2C EEPROM** via HAL (`cart_save_*`). CPU port TBD (Q20) |
 

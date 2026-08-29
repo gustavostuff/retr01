@@ -138,7 +138,7 @@ Detail in [`02`](02_graphics_worlds_memory.md). Short:
 
 | Topic | Norm |
 |-------|------|
-| PRG bank | **`$FE80`** latch -> flash A16/A17 (128 KB cart PRG, 4 banks). Vectors from bank 0 |
+| PRG | **32 KB** at `$8000-$FFFF` (I/O hole). No banking. **`$FE80`** unused |
 | `$FE40-$FE5F` APU | ATmega328P |
 | Machine config | 1284 internal EEPROM via **`$FE70-$FE72` handshake** |
 | Latch silicon | 9x HC573 bit-packed (bitfields open in `02`) |
