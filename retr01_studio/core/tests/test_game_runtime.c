@@ -6,6 +6,7 @@
 #include "retr01_studio/play.h"
 #include "retr01_studio/project.h"
 #include "retr01_studio/warps.h"
+#include "r01_play_camera.h"
 
 TEST_MAIN() {
     R01Project *p = (R01Project *)calloc(1, sizeof(R01Project));
@@ -46,6 +47,37 @@ TEST_MAIN() {
     {
         ctx.cam_x = 0;
         ctx.cam_y = 0;
+        ctx.player_x = 204;
+        ctx.player_y = 180;
+        r01_camera_set_deadzone(&ctx, 8, 8);
+        r01_game_camera_snap(&ctx);
+        EXPECT(ctx.cam_x == 204 - R01_SCREEN_PX_W / 2, "snap centers player from zero cam");
+        EXPECT(ctx.cam_y == 180 - R01_SCREEN_PX_H / 2, "snap centers player from zero cam y");
+    }
+
+    {
+        int cam_x = 100;
+        int cam_y = 100;
+        r01_play_camera_update(&cam_x, &cam_y, 200, 180, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H, R01_SCREEN_PX_W,
+                               R01_SCREEN_PX_H, 32, 30, R01_PLAY_CAM_AXIS_BOTH);
+        EXPECT(cam_x == 200 - 79, "32px centered deadzone scrolls at right edge");
+        EXPECT(cam_y == 180 - 74, "30px centered deadzone scrolls at bottom edge");
+    }
+
+    {
+        int cam_x = 100;
+        int cam_y = 100;
+        r01_play_camera_update(&cam_x, &cam_y, 160, 150, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H, R01_SCREEN_PX_W,
+                               R01_SCREEN_PX_H, 32, 30, R01_PLAY_CAM_AXIS_BOTH);
+        EXPECT(cam_x == 100, "origin inside centered deadzone leaves camera x");
+        EXPECT(cam_y == 100, "origin inside centered deadzone leaves camera y");
+    }
+
+    {
+        ctx.cam_x = 0;
+        ctx.cam_y = 0;
+        ctx.player_x = 64;
+        ctx.player_y = 64;
         r01_camera_set_deadzone(&ctx, 0, 0);
         r01_camera_set_axis_lock(&ctx, R01_CAM_AXIS_V);
         r01_game_camera_update(&ctx);

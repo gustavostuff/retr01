@@ -2065,6 +2065,8 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     board->cart_player_hit_w = hdr[28] ? hdr[28] : 8;
     board->cart_player_hit_h = hdr[29] ? hdr[29] : 8;
     board->cart_world_flags = hdr[7];
+    board->cart_cam_deadzone_x = hdr[30];
+    board->cart_cam_deadzone_y = hdr[31];
     board->cart_off_player_anim = 0;
     if ((board->cart_world_flags & 0x01u) != 0 && board->cart_player_entity != 0xFF &&
         board->cart_off_entity_insts != 0) {

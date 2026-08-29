@@ -22,6 +22,7 @@ add_library(r01_play_common
   ${R01_COMMON_DIR}/r01_play_anim.c
   ${R01_COMMON_DIR}/r01_play_anim_cart.c
   ${R01_COMMON_DIR}/r01_play_camera.c
+  ${R01_COMMON_DIR}/r01_custom_logic_scan.c
 )
 target_include_directories(r01_play_common PUBLIC ${R01_COMMON_DIR})
 

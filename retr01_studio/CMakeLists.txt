@@ -23,6 +23,7 @@ add_library(retr01_studio_core
   core/src/game_runtime.c
   core/src/player_anim.c
   ${CMAKE_SOURCE_DIR}/../common/r01_play_camera.c
+  ${CMAKE_SOURCE_DIR}/../common/r01_custom_logic_scan.c
 )
 target_include_directories(retr01_studio_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include

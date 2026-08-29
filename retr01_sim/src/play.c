@@ -74,22 +74,50 @@ static int player_move_ok(R01sBoard *b, int ox, int oy) {
     return r01s_board_aabb_ok(b, hx, hy, hw, hh);
 }
 
-static void update_camera(R01sPlay *pl) {
+static void update_camera(R01sBoard *b) {
+    R01sPlay *pl = &b->play;
     r01_play_camera_update(&pl->cam_x, &pl->cam_y, pl->player_x, pl->player_y, R01S_PLAY_PLAYER_W,
-                           R01S_PLAY_PLAYER_H, R01S_BG_SCREEN_PX_W, R01S_BG_SCREEN_PX_H,
-                           R01_PLAY_CAM_DEADZONE_X_DEFAULT, R01_PLAY_CAM_DEADZONE_Y_DEFAULT, R01_PLAY_CAM_AXIS_BOTH);
+                           R01S_PLAY_PLAYER_H, R01S_BG_SCREEN_PX_W, R01S_BG_SCREEN_PX_H, pl->cam_deadzone_x,
+                           pl->cam_deadzone_y, R01_PLAY_CAM_AXIS_BOTH);
 }
 
-static void place_player_on_screen(R01sPlay *pl, int col, int row) {
+static void snap_camera(R01sBoard *b) {
+    R01sPlay *pl = &b->play;
+    r01_play_camera_snap(&pl->cam_x, &pl->cam_y, pl->player_x, pl->player_y, R01S_PLAY_PLAYER_W,
+                         R01S_PLAY_PLAYER_H, R01S_BG_SCREEN_PX_W, R01S_BG_SCREEN_PX_H, pl->cam_deadzone_x,
+                         pl->cam_deadzone_y, R01_PLAY_CAM_AXIS_BOTH);
+}
+
+static void play_load_cart_camera(R01sBoard *b) {
+    if (!b) {
+        return;
+    }
+    b->play.cam_deadzone_x = R01_PLAY_CAM_DEADZONE_X_DEFAULT;
+    b->play.cam_deadzone_y = R01_PLAY_CAM_DEADZONE_Y_DEFAULT;
+    if (b->cart_loaded) {
+        if (b->cart_cam_deadzone_x != 0 || b->cart_cam_deadzone_y != 0) {
+            int dx = (int)b->cart_cam_deadzone_x;
+            int dy = (int)b->cart_cam_deadzone_y;
+            if (dx <= R01S_BG_SCREEN_PX_W && dy <= R01S_BG_SCREEN_PX_H) {
+                b->play.cam_deadzone_x = dx;
+                b->play.cam_deadzone_y = dy;
+            }
+        }
+    }
+}
+
+static void place_player_on_screen(R01sBoard *b, int col, int row) {
+    R01sPlay *pl = &b->play;
     pl->player_x = R01S_PLAY_SPAWN_CENTER_X(col);
     pl->player_y = R01S_PLAY_SPAWN_CENTER_Y(row);
-    update_camera(pl);
+    snap_camera(b);
 }
 
-static void place_player_xy(R01sPlay *pl, int wx, int wy) {
+static void place_player_xy(R01sBoard *b, int wx, int wy) {
+    R01sPlay *pl = &b->play;
     pl->player_x = wx;
     pl->player_y = wy;
-    update_camera(pl);
+    snap_camera(b);
 }
 
 static int player_instance_spawn(R01sBoard *b, int *out_x, int *out_y) {
@@ -466,7 +494,7 @@ static void step_move_from_pad(R01sBoard *b) {
             pl->player_y = ny;
         }
     }
-    update_camera(pl);
+    update_camera(b);
     if (b->cart_off_player_anim != 0) {
         const uint8_t *blob = b->cart_flash.mem + b->cart_off_player_anim;
         size_t blob_len = sizeof(b->cart_flash.mem) - (size_t)b->cart_off_player_anim;
@@ -494,7 +522,7 @@ static int warp_to(R01sBoard *b, int col, int row) {
     if (!r01s_board_has_screen(b, col, row)) {
         return 0;
     }
-    place_player_on_screen(&b->play, col, row);
+    place_player_on_screen(b, col, row);
     b->play.force_camera_reload = 1;
     queue_video(b);
     apply_video_latch(b);
@@ -520,14 +548,15 @@ int r01s_play_start(R01sBoard *board) {
         return 0;
     }
     r01s_play_reset(&board->play);
+    play_load_cart_camera(board);
     if (player_instance_spawn(board, &sx, &sy)) {
         r01s_board_mark_map_ready(board);
         r01_play_anim_init(&board->play.anim);
-        place_player_xy(&board->play, sx, sy);
+        place_player_xy(board, sx, sy);
     } else if (spawn_screen(board, &col, &row)) {
         r01s_board_mark_map_ready(board);
         r01_play_anim_init(&board->play.anim);
-        place_player_on_screen(&board->play, col, row);
+        place_player_on_screen(board, col, row);
     } else {
         return 0;
     }

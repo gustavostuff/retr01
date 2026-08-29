@@ -83,20 +83,45 @@ static int player_move_ok(R01eMachine *m, int ox, int oy) {
 
 static void update_camera(R01ePlay *pl) {
     r01_play_camera_update(&pl->cam_x, &pl->cam_y, pl->player_x, pl->player_y, R01E_PLAY_PLAYER_W,
-                           R01E_PLAY_PLAYER_H, R01E_SCREEN_PX_W, R01E_SCREEN_PX_H, R01_PLAY_CAM_DEADZONE_X_DEFAULT,
-                           R01_PLAY_CAM_DEADZONE_Y_DEFAULT, R01_PLAY_CAM_AXIS_BOTH);
+                           R01E_PLAY_PLAYER_H, R01E_SCREEN_PX_W, R01E_SCREEN_PX_H, pl->cam_deadzone_x,
+                           pl->cam_deadzone_y, R01_PLAY_CAM_AXIS_BOTH);
+}
+
+static void snap_camera(R01ePlay *pl) {
+    r01_play_camera_snap(&pl->cam_x, &pl->cam_y, pl->player_x, pl->player_y, R01E_PLAY_PLAYER_W,
+                         R01E_PLAY_PLAYER_H, R01E_SCREEN_PX_W, R01E_SCREEN_PX_H, pl->cam_deadzone_x,
+                         pl->cam_deadzone_y, R01_PLAY_CAM_AXIS_BOTH);
+}
+
+static void play_load_cart_camera(R01eMachine *m) {
+    R01eWorldView wv;
+    if (!m) {
+        return;
+    }
+    m->play.cam_deadzone_x = R01_PLAY_CAM_DEADZONE_X_DEFAULT;
+    m->play.cam_deadzone_y = R01_PLAY_CAM_DEADZONE_Y_DEFAULT;
+    if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) == 0) {
+        if (wv.cam_deadzone_x != 0 || wv.cam_deadzone_y != 0) {
+            int dx = (int)wv.cam_deadzone_x;
+            int dy = (int)wv.cam_deadzone_y;
+            if (dx <= R01E_SCREEN_PX_W && dy <= R01E_SCREEN_PX_H) {
+                m->play.cam_deadzone_x = dx;
+                m->play.cam_deadzone_y = dy;
+            }
+        }
+    }
 }
 
 static void place_player_on_screen(R01ePlay *pl, int col, int row) {
     pl->player_x = R01E_PLAY_SPAWN_CENTER_X(col);
     pl->player_y = R01E_PLAY_SPAWN_CENTER_Y(row);
-    update_camera(pl);
+    snap_camera(pl);
 }
 
 static void place_player_xy(R01ePlay *pl, int wx, int wy) {
     pl->player_x = wx;
     pl->player_y = wy;
-    update_camera(pl);
+    snap_camera(pl);
 }
 
 /* First cart instance of the marked player type (matches Studio placement). */
@@ -423,6 +448,7 @@ int r01e_play_start(R01eMachine *m) {
         return 0;
     }
     r01e_play_reset(&m->play);
+    play_load_cart_camera(m);
     /* Phase 1 carts (R01P) always run Studio-Play-equivalent runtime from cart MAP. */
     if (!cart_is_phase1_play(&m->cart) && !r01e_cart_has_screen(&m->cart, 0, R01E_START_COL, R01E_START_ROW)) {
         /* Still try if any screens exist. */

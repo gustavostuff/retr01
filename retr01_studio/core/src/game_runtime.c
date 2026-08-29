@@ -39,6 +39,15 @@ void r01_game_camera_update(R01GameCtx *ctx) {
                            ctx->cam_deadzone_y, ctx->cam_axis_lock);
 }
 
+void r01_game_camera_snap(R01GameCtx *ctx) {
+    if (!ctx) {
+        return;
+    }
+    r01_play_camera_snap(&ctx->cam_x, &ctx->cam_y, ctx->player_x, ctx->player_y, R01_PLAY_PLAYER_W,
+                         R01_PLAY_PLAYER_H, R01_SCREEN_PX_W, R01_SCREEN_PX_H, ctx->cam_deadzone_x,
+                         ctx->cam_deadzone_y, ctx->cam_axis_lock);
+}
+
 void r01_game_fade_start(R01GameCtx *ctx, int to_black_or_white, int target_level) {
     if (!ctx) {
         return;
@@ -278,7 +287,7 @@ void r01_player_warp(R01GameCtx *ctx, int col, int row) {
     }
     ctx->player_x = R01_PLAY_SPAWN_CENTER_X(col);
     ctx->player_y = R01_PLAY_SPAWN_CENTER_Y(row);
-    r01_game_camera_update(ctx);
+    r01_game_camera_snap(ctx);
 }
 
 void r01_player_set_type(uint8_t type_id) {

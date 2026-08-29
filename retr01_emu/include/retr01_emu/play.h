@@ -44,6 +44,8 @@ typedef struct R01ePlay {
     uint8_t pad_prev;
     int entity_count; /* phase 4+ */
     R01PlayAnimCtx anim;
+    int cam_deadzone_x;
+    int cam_deadzone_y;
 } R01ePlay;
 
 void r01e_play_reset(R01ePlay *play);

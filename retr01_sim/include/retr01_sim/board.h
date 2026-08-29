@@ -201,6 +201,8 @@ typedef struct R01sBoard {
     uint8_t cart_player_hit_w;
     uint8_t cart_player_hit_h;
     uint8_t cart_world_flags;
+    uint8_t cart_cam_deadzone_x;
+    uint8_t cart_cam_deadzone_y;
     uint32_t cart_off_player_anim; /* absolute flash offset; 0 if none */
     uint8_t cart_format_ver;
     uint32_t cart_off_other;

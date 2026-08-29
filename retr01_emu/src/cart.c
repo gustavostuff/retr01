@@ -192,6 +192,8 @@ int r01e_cart_world(const R01eCart *c, int index, R01eWorldView *out) {
     out->player_hit_w = hdr[R01E_CART_WHDR_PLAYER_HIT_W];
     out->player_hit_h = hdr[R01E_CART_WHDR_PLAYER_HIT_H];
     out->world_flags = hdr[R01E_CART_WHDR_FLAGS];
+    out->cam_deadzone_x = hdr[R01E_CART_WHDR_CAM_DEADZONE_X];
+    out->cam_deadzone_y = hdr[R01E_CART_WHDR_CAM_DEADZONE_Y];
     out->off_player_anim = out->off_entity_insts + (uint32_t)out->entity_inst_count * R01E_CART_INSTANCE_SIZE;
     out->has_player_anim =
         (out->world_flags & R01E_CART_WHDR_FLAG_PLAYER_ANIM) != 0 &&

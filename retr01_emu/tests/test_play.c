@@ -31,8 +31,8 @@ int main(int argc, char **argv) {
     }
     spawn_x = m.play.player_x;
     spawn_y = m.play.player_y;
-    /* test.r01proj marks player type 0; first instance is at 204,180. */
-    if (spawn_x != 204 || spawn_y != 180) {
+    /* test.r01proj marks player type 0; first instance is at 193,181. */
+    if (spawn_x != 193 || spawn_y != 181) {
         fprintf(stderr, "FAIL spawn at instance: got %d,%d\n", spawn_x, spawn_y);
         r01e_machine_shutdown(&m);
         return 1;
@@ -41,8 +41,8 @@ int main(int argc, char **argv) {
         expect_cam_x = m.play.cam_x;
         expect_cam_y = m.play.cam_y;
         r01_play_camera_update(&expect_cam_x, &expect_cam_y, spawn_x, spawn_y, m.play.player_w, m.play.player_h,
-                               R01E_SCREEN_PX_W, R01E_SCREEN_PX_H, R01_PLAY_CAM_DEADZONE_X_DEFAULT,
-                               R01_PLAY_CAM_DEADZONE_Y_DEFAULT, R01_PLAY_CAM_AXIS_BOTH);
+                               R01E_SCREEN_PX_W, R01E_SCREEN_PX_H, m.play.cam_deadzone_x, m.play.cam_deadzone_y,
+                               R01_PLAY_CAM_AXIS_BOTH);
         if (m.play.cam_x != expect_cam_x || m.play.cam_y != expect_cam_y) {
             fprintf(stderr, "FAIL camera at spawn: got %d,%d expected %d,%d\n", m.play.cam_x, m.play.cam_y,
                     expect_cam_x, expect_cam_y);
@@ -60,8 +60,8 @@ int main(int argc, char **argv) {
         expect_cam_x = m.play.cam_x;
         expect_cam_y = m.play.cam_y;
         r01_play_camera_update(&expect_cam_x, &expect_cam_y, m.play.player_x, m.play.player_y, m.play.player_w,
-                               m.play.player_h, R01E_SCREEN_PX_W, R01E_SCREEN_PX_H, R01_PLAY_CAM_DEADZONE_X_DEFAULT,
-                               R01_PLAY_CAM_DEADZONE_Y_DEFAULT, R01_PLAY_CAM_AXIS_BOTH);
+                               m.play.player_h, R01E_SCREEN_PX_W, R01E_SCREEN_PX_H, m.play.cam_deadzone_x,
+                               m.play.cam_deadzone_y, R01_PLAY_CAM_AXIS_BOTH);
         if (m.play.cam_x != expect_cam_x || m.play.cam_y != expect_cam_y) {
             fprintf(stderr, "FAIL camera follow after deadzone exit: got %d,%d expected %d,%d\n", m.play.cam_x,
                     m.play.cam_y, expect_cam_x, expect_cam_y);

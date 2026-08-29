@@ -42,6 +42,8 @@ typedef struct R01sPlay {
     int pending_origin_row;
     int pending_camera_reload;
     int force_camera_reload;
+    int cam_deadzone_x;
+    int cam_deadzone_y;
     R01PlayAnimCtx anim;
 } R01sPlay;
 

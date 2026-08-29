@@ -7,6 +7,8 @@
 #include "retr01_studio/export_codegen.h"
 #include "retr01_studio/project.h"
 #include "retr01_studio/sprites.h"
+#include "r01_custom_logic_scan.h"
+#include "r01_play_camera.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -494,7 +496,61 @@ static int relocate_spr0_tile1(uint8_t bank[R01_CHR_BANK_BYTES], const R01World 
     return dest;
 }
 
-static int build_world_blob(Buf *blob, const R01World *w) {
+static int cart_pack_cam_deadzone(uint8_t *out_x, uint8_t *out_y, const char *custom_logic_path) {
+    int dx = R01_PLAY_CAM_DEADZONE_X_DEFAULT;
+    int dy = R01_PLAY_CAM_DEADZONE_Y_DEFAULT;
+    if (custom_logic_path && r01_custom_logic_scan_deadzone(custom_logic_path, &dx, &dy) == 0) {
+        /* scanned */
+    }
+    if (dx < 0) {
+        dx = 0;
+    }
+    if (dy < 0) {
+        dy = 0;
+    }
+    if (dx > 255) {
+        dx = 255;
+    }
+    if (dy > 255) {
+        dy = 255;
+    }
+    if (out_x) {
+        *out_x = (uint8_t)dx;
+    }
+    if (out_y) {
+        *out_y = (uint8_t)dy;
+    }
+    return 0;
+}
+
+static int resolve_custom_logic_path(const char *cart_or_stem_path, char *out, size_t out_cap) {
+    const char *slash;
+    size_t dir_len;
+    if (!out || out_cap < 20) {
+        return -1;
+    }
+    if (!cart_or_stem_path || !cart_or_stem_path[0]) {
+        snprintf(out, out_cap, "output/C/custom_logic.c");
+        return 0;
+    }
+    slash = strrchr(cart_or_stem_path, '/');
+    if (!slash) {
+        slash = strrchr(cart_or_stem_path, '\\');
+    }
+    if (!slash) {
+        snprintf(out, out_cap, "C/custom_logic.c");
+        return 0;
+    }
+    dir_len = (size_t)(slash - cart_or_stem_path);
+    if (dir_len + strlen("/C/custom_logic.c") + 1 > out_cap) {
+        return -1;
+    }
+    memcpy(out, cart_or_stem_path, dir_len);
+    snprintf(out + dir_len, out_cap - dir_len, "/C/custom_logic.c");
+    return 0;
+}
+
+static int build_world_blob(Buf *blob, const R01World *w, const char *custom_logic_path) {
     uint8_t hdr[WORLD_HDR_SIZE];
     uint8_t dir[R01_MAX_SCREENS * SCREEN_DIR_ENT];
     size_t off_chr, off_sdir, off_spay, off_types, off_insts;
@@ -573,6 +629,13 @@ static int build_world_blob(Buf *blob, const R01World *w) {
             put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_H,
                    (uint8_t)(st->hitbox_h > 0 ? st->hitbox_h : R01_PLAY_PLAYER_H));
         }
+    }
+    {
+        uint8_t dz_x;
+        uint8_t dz_y;
+        cart_pack_cam_deadzone(&dz_x, &dz_y, custom_logic_path);
+        put_u8(hdr + R01_CART_WHDR_CAM_DEADZONE_X, dz_x);
+        put_u8(hdr + R01_CART_WHDR_CAM_DEADZONE_Y, dz_y);
     }
 
     if (buf_append(blob, hdr, WORLD_HDR_SIZE) != 0) {
@@ -717,7 +780,8 @@ static uint32_t cart_off_map_screen0(const R01World *w, uint32_t world_base) {
     return 0;
 }
 
-static int r01_cart_build(const R01Project *p, uint8_t **out, size_t *out_len, char *err_buf, size_t err_cap) {
+static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **out, size_t *out_len, char *err_buf,
+                          size_t err_cap) {
     Buf cart = {0};
     R01Project *work;
     uint8_t hdr[HDR_SIZE];
@@ -743,13 +807,17 @@ static int r01_cart_build(const R01Project *p, uint8_t **out, size_t *out_len, c
         return -1;
     }
     memcpy(work, p, sizeof(*work));
-    if (build_world_blob(&world_blob, &work->worlds[0]) != 0) {
+    {
+        char custom_logic_path[R01_PATH_MAX];
+        resolve_custom_logic_path(cart_path, custom_logic_path, sizeof(custom_logic_path));
+        if (build_world_blob(&world_blob, &work->worlds[0], custom_logic_path) != 0) {
         free(work);
         free(world_blob.data);
         if (err_buf && err_cap > 0) {
             snprintf(err_buf, err_cap, "world blob failed (>%d present screens?)", R01_MAX_PRESENT_SCREENS);
         }
         return -1;
+        }
     }
     if (build_other_blob(&other_blob, work) != 0) {
         free(work);
@@ -829,7 +897,7 @@ int r01_cart_write(const R01Project *p, const char *path, char *err_buf, size_t 
     uint8_t *img = NULL;
     size_t len = 0;
     FILE *f;
-    if (r01_cart_build(p, &img, &len, err_buf, err_cap) != 0) {
+    if (r01_cart_build(p, path, &img, &len, err_buf, err_cap) != 0) {
         return -1;
     }
     f = fopen(path, "wb");
@@ -854,7 +922,7 @@ int r01_cart_write_flash(const R01Project *p, const char *path, char *err_buf, s
     size_t len = 0;
     Buf flash = {0};
     FILE *f;
-    if (r01_cart_build(p, &img, &len, err_buf, err_cap) != 0) {
+    if (r01_cart_build(p, path, &img, &len, err_buf, err_cap) != 0) {
         return -1;
     }
     if (len > R01_CART_FLASH_BYTES) {

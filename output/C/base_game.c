@@ -15,11 +15,11 @@ static const int player_entity = 0;
 static const R01InstRec entity_insts[3] = {
     {1, 160, 206},
     {2, 159, 172},
-    {0, 204, 180}
+    {0, 193, 181}
 };
 static const int entity_inst_count = 3;
-static const int player_inst_x = 204;
-static const int player_inst_y = 180;
+static const int player_inst_x = 193;
+static const int player_inst_y = 181;
 static const int player_hit_x = 3;
 static const int player_hit_y = 8;
 static const int player_hit_w = 8;
@@ -32,15 +32,6 @@ static const R01WarpEntRec warp_ents[1] = {{0}};
 static const R01WarpExitRec warp_exits[1] = {{0}};
 static const int warp_ent_count = 0;
 static const int warp_exit_count = 0;
-
-static void center_camera(R01GameCtx *ctx) {
-    int ax = ctx->player_x + 8 / 2;
-    int ay = ctx->player_y + 8 / 2;
-    ctx->cam_x = ax - 128 / 2;
-    ctx->cam_y = ay - 120 / 2;
-    if (ctx->cam_x < 0) ctx->cam_x = 0;
-    if (ctx->cam_y < 0) ctx->cam_y = 0;
-}
 
 static int player_instance_spawn(int *out_x, int *out_y) {
     int i;
@@ -67,19 +58,17 @@ void r01_game_init(R01GameCtx *ctx) {
     }
     ctx->player_x = sx;
     ctx->player_y = sy;
-    center_camera(ctx);
     r01_custom_on_init(ctx);
+    r01_game_camera_snap(ctx);
 }
 
 void r01_game_tick(R01GameCtx *ctx) {
     if (!ctx) return;
     if (r01_pad_just_pressed(ctx, R01_BTN_X)) {
         r01_player_warp(ctx, 0, 0);
-        center_camera(ctx);
     }
     if (r01_pad_just_pressed(ctx, R01_BTN_Y)) {
         r01_player_warp(ctx, 1, 0);
-        center_camera(ctx);
     }
     r01_runtime_dispatch_buttons(ctx);
     ctx->pad_prev = ctx->pad;

@@ -272,6 +272,7 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "#define R01_CAM_AXIS_H 1\n"
                    "#define R01_CAM_AXIS_V 2\n"
                    "void r01_game_camera_update(R01GameCtx *ctx);\n"
+                   "void r01_game_camera_snap(R01GameCtx *ctx);\n"
                    "void r01_camera_set_deadzone(R01GameCtx *ctx, int dx, int dy);\n"
                    "void r01_camera_set_axis_lock(R01GameCtx *ctx, int mode);\n\n"
                    "#endif\n",
@@ -382,7 +383,7 @@ static int write_custom_logic(const char *c_dir, char *err_buf, size_t err_cap) 
                       "void r01_custom_on_init(R01GameCtx *ctx) {\n"
                       "    r01_event_on_button(R01_BTN_X, on_warp_x);\n"
                       "    /* Examples:\n"
-                      "     * r01_camera_set_deadzone(ctx, 32, 30);\n"
+                      "     * r01_camera_set_deadzone(ctx, 32, 30); /* centered rect W x H */\n"
                       "     * r01_projectile_fire(ctx, 1, 0, 4);\n"
                       "     * r01_game_fade_start(ctx, R01_FADE_BLACK, R01_FADE_MAX);\n"
                       "     * r01_game_warp_by_id(ctx, \"w_00\");\n"
@@ -542,16 +543,7 @@ static int write_base_game(FILE *f, const R01Project *p) {
         fprintf(f, "static const R01WarpExitRec warp_exits[1] = {{0}};\n");
         fprintf(f, "static const int warp_ent_count = 0;\nstatic const int warp_exit_count = 0;\n");
     }
-    fprintf(f, "\nstatic void center_camera(R01GameCtx *ctx) {\n");
-    fprintf(f, "    int ax = ctx->player_x + %d / 2;\n", R01_PLAY_PLAYER_W);
-    fprintf(f, "    int ay = ctx->player_y + %d / 2;\n", R01_PLAY_PLAYER_H);
-    fprintf(f, "    ctx->cam_x = ax - %d / 2;\n", R01_SCREEN_PX_W);
-    fprintf(f, "    ctx->cam_y = ay - %d / 2;\n", R01_SCREEN_PX_H);
-    fprintf(f, "    if (ctx->cam_x < 0) ctx->cam_x = 0;\n");
-    fprintf(f, "    if (ctx->cam_y < 0) ctx->cam_y = 0;\n");
-    fprintf(f, "}\n\n");
-
-    fprintf(f, "static int player_instance_spawn(int *out_x, int *out_y) {\n");
+    fprintf(f, "\nstatic int player_instance_spawn(int *out_x, int *out_y) {\n");
     fprintf(f, "    int i;\n");
     fprintf(f, "    if (player_entity < 0) return 0;\n");
     fprintf(f, "    for (i = 0; i < entity_inst_count; i++) {\n");
@@ -577,17 +569,17 @@ static int write_base_game(FILE *f, const R01Project *p) {
             R01_PLAY_PLAYER_H);
     fprintf(f, "    }\n");
     fprintf(f, "    ctx->player_x = sx;\n    ctx->player_y = sy;\n");
-    fprintf(f, "    center_camera(ctx);\n");
     fprintf(f, "    r01_custom_on_init(ctx);\n");
+    fprintf(f, "    r01_game_camera_snap(ctx);\n");
     fprintf(f, "}\n\n");
 
     fprintf(f, "void r01_game_tick(R01GameCtx *ctx) {\n");
     fprintf(f, "    if (!ctx) return;\n");
     fprintf(f, "    if (r01_pad_just_pressed(ctx, R01_BTN_X)) {\n");
-    fprintf(f, "        r01_player_warp(ctx, 0, 0);\n        center_camera(ctx);\n");
+    fprintf(f, "        r01_player_warp(ctx, 0, 0);\n");
     fprintf(f, "    }\n");
     fprintf(f, "    if (r01_pad_just_pressed(ctx, R01_BTN_Y)) {\n");
-    fprintf(f, "        r01_player_warp(ctx, 1, 0);\n        center_camera(ctx);\n");
+    fprintf(f, "        r01_player_warp(ctx, 1, 0);\n");
     fprintf(f, "    }\n");
     fprintf(f, "    r01_runtime_dispatch_buttons(ctx);\n");
     fprintf(f, "    ctx->pad_prev = ctx->pad;\n");

@@ -30,7 +30,7 @@ typedef struct R01OamEntry {
     int flip_v;
 } R01OamEntry;
 
-int r01_play_start(R01PlayState *pl, const R01Project *p);
+int r01_play_start(R01PlayState *pl, const R01Project *p, const char *project_path);
 void r01_play_stop(R01PlayState *pl);
 void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy);
 int r01_play_button(R01PlayState *pl, const R01Project *p, int button);

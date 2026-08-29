@@ -164,7 +164,7 @@ TEST_MAIN() {
         EXPECT(ds >= 0 && w->screens[ds].present, "screen 0,0 present");
         w->default_screen = ds;
     }
-    EXPECT(r01_play_start(&pl, p), "play start");
+    EXPECT(r01_play_start(&pl, p, NULL), "play start");
     n = r01_play_build_oam(p, &pl, oam, R01_OAM_MAX);
     EXPECT(n >= 3, "oam has player + parts");
     EXPECT(oam[0].tile_id == 1, "player oam tile");

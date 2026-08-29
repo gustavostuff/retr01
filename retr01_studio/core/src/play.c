@@ -5,10 +5,32 @@
 #include "retr01_studio/palette.h"
 #include "retr01_studio/project.h"
 #include "retr01_studio/player_anim.h"
+#include "retr01_studio/paths.h"
+#include "r01_custom_logic_scan.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #define R01_PROJ_FIXED_SHIFT 8
+
+static void play_apply_custom_logic(R01GameCtx *ctx, const char *project_path) {
+    char path[R01_PATH_MAX];
+    int dx;
+    int dy;
+    if (!ctx) {
+        return;
+    }
+    if (project_path && project_path[0]) {
+        if (r01_custom_logic_path_for_project(project_path, path, sizeof(path)) != 0) {
+            return;
+        }
+    } else if (r01_path_resolve("output/C/custom_logic.c", path, sizeof(path)) != 0) {
+        snprintf(path, sizeof(path), "output/C/custom_logic.c");
+    }
+    if (r01_custom_logic_scan_deadzone(path, &dx, &dy) == 0) {
+        r01_camera_set_deadzone(ctx, dx, dy);
+    }
+}
 
 static void place_player_on_screen(R01PlayState *pl, int col, int row) {
     r01_player_warp(&pl->ctx, col, row);
@@ -17,7 +39,7 @@ static void place_player_on_screen(R01PlayState *pl, int col, int row) {
 static void place_player_xy(R01PlayState *pl, int wx, int wy) {
     pl->ctx.player_x = wx;
     pl->ctx.player_y = wy;
-    r01_game_camera_update(&pl->ctx);
+    r01_game_camera_snap(&pl->ctx);
 }
 
 static int play_spawn_screen(const R01World *w, int *out_col, int *out_row) {
@@ -63,7 +85,7 @@ static int play_player_instance_spawn(const R01World *w, int *out_x, int *out_y)
     return 0;
 }
 
-int r01_play_start(R01PlayState *pl, const R01Project *p) {
+int r01_play_start(R01PlayState *pl, const R01Project *p, const char *project_path) {
     const R01World *w;
     int col = 0, row = 0;
     int sx, sy;
@@ -72,6 +94,7 @@ int r01_play_start(R01PlayState *pl, const R01Project *p) {
     }
     memset(pl, 0, sizeof(*pl));
     r01_game_ctx_init(&pl->ctx);
+    play_apply_custom_logic(&pl->ctx, project_path);
     if (!p) {
         return 0;
     }

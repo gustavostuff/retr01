@@ -51,6 +51,8 @@ typedef struct R01eWorldView {
     uint8_t player_hit_w;
     uint8_t player_hit_h;
     uint8_t world_flags;
+    uint8_t cam_deadzone_x;
+    uint8_t cam_deadzone_y;
     uint32_t off_player_anim; /* relative to world base; valid when has_player_anim */
     int has_player_anim;
 } R01eWorldView;
@@ -65,6 +67,8 @@ typedef struct R01eWorldView {
 #define R01E_CART_WHDR_PLAYER_HIT_Y 27
 #define R01E_CART_WHDR_PLAYER_HIT_W 28
 #define R01E_CART_WHDR_PLAYER_HIT_H 29
+#define R01E_CART_WHDR_CAM_DEADZONE_X 30
+#define R01E_CART_WHDR_CAM_DEADZONE_Y 31
 #define R01E_CART_WHDR_FLAGS 7
 #define R01E_CART_WHDR_FLAG_PLAYER_ANIM 0x01u
 #define R01E_CART_PLAYER_ENTITY_NONE 0xFFu

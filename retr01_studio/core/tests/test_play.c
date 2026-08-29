@@ -43,7 +43,7 @@ TEST_MAIN() {
 
     p->worlds[0].default_screen = 2;
     r01_project_begin_play(p);
-    EXPECT(r01_play_start(&pl, p), "play start");
+    EXPECT(r01_play_start(&pl, p, NULL), "play start");
     EXPECT(pl.active, "play active");
     EXPECT(pl.ctx.player_x == R01_PLAY_SPAWN_CENTER_X(2), "spawn center x on default screen");
     EXPECT(pl.ctx.player_y == R01_PLAY_SPAWN_CENTER_Y(0), "spawn center y on default screen");
@@ -58,11 +58,11 @@ TEST_MAIN() {
         inst = r01_world_place_entity(&p->worlds[0], type_id, 90, 70);
         EXPECT(inst >= 0, "spawn instance");
         r01_play_stop(&pl);
-        EXPECT(r01_play_start(&pl, p), "play start at instance");
+        EXPECT(r01_play_start(&pl, p, NULL), "play start at instance");
         EXPECT(pl.ctx.player_x == 90 && pl.ctx.player_y == 70, "spawn at placed instance");
         r01_world_set_player_entity(&p->worlds[0], -1);
         r01_play_stop(&pl);
-        EXPECT(r01_play_start(&pl, p), "play start fallback");
+        EXPECT(r01_play_start(&pl, p, NULL), "play start fallback");
         EXPECT(pl.ctx.player_x == R01_PLAY_SPAWN_CENTER_X(2), "unmarked falls back to screen center");
     }
 

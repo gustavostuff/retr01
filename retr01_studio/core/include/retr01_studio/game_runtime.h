@@ -65,6 +65,7 @@ typedef void (*R01EventFn)(R01GameCtx *ctx);
 
 void r01_game_ctx_init(R01GameCtx *ctx);
 void r01_game_camera_update(R01GameCtx *ctx);
+void r01_game_camera_snap(R01GameCtx *ctx);
 void r01_game_fade_start(R01GameCtx *ctx, int to_black_or_white, int target_level);
 int r01_game_fade_active(const R01GameCtx *ctx);
 int r01_game_fade_tick(R01GameCtx *ctx);
