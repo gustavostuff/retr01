@@ -82,6 +82,7 @@ void r01s_compositor_set_bg(R01sCompositor *chip, uint8_t index) {
         return;
     }
     chip->bg_index = (uint8_t)(index & 63u);
+    comp_recompute(chip);
 }
 
 void r01s_compositor_set_sprite(R01sCompositor *chip, uint8_t index, int enable) {
@@ -90,6 +91,7 @@ void r01s_compositor_set_sprite(R01sCompositor *chip, uint8_t index, int enable)
     }
     chip->spr_index = (uint8_t)(index & 63u);
     chip->spr_enable = enable ? 1 : 0;
+    comp_recompute(chip);
 }
 
 uint8_t r01s_compositor_out(const R01sCompositor *chip) {

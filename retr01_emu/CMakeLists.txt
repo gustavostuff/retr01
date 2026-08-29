@@ -44,3 +44,11 @@ add_test(NAME test_boot COMMAND test_boot ${R01_TEST_CART})
 add_executable(test_play tests/test_play.c)
 target_link_libraries(test_play PRIVATE retr01_emu_core)
 add_test(NAME test_play COMMAND test_play ${R01_TEST_CART})
+
+add_executable(test_cpu tests/test_cpu.c)
+target_link_libraries(test_cpu PRIVATE retr01_emu_core)
+add_test(NAME test_cpu COMMAND test_cpu ${R01_TEST_CART})
+
+add_executable(test_io tests/test_io.c)
+target_link_libraries(test_io PRIVATE retr01_emu_core)
+add_test(NAME test_io COMMAND test_io ${R01_TEST_CART})

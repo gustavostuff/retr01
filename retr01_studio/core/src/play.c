@@ -194,8 +194,13 @@ int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry 
         fr = &st->frames[0];
         for (pi = 0; pi < fr->part_count && n < cap && n < R01_OAM_MAX; pi++) {
             const R01EntityPart *pt = &fr->parts[pi];
-            out[n].x = r01_entity_world_x(inst->world_x, st->origin_x, pt->dx) - pl->cam_x;
-            out[n].y = r01_entity_world_y(inst->world_y, st->origin_y, pt->dy) - pl->cam_y;
+            int ox = r01_entity_world_x(inst->world_x, st->origin_x, pt->dx) - pl->cam_x;
+            int oy = r01_entity_world_y(inst->world_y, st->origin_y, pt->dy) - pl->cam_y;
+            if (r01_oam_tile_off_screen(ox, oy)) {
+                continue;
+            }
+            out[n].x = ox;
+            out[n].y = oy;
             out[n].bank = pt->bank;
             out[n].tile_id = pt->tile_id;
             out[n].pal = pt->pal;

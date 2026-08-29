@@ -69,7 +69,8 @@ int r01_world_player_aabb_ok(const R01World *w, int px, int py) {
     r1 = y1 / R01_SCREEN_PX_H;
     for (c = c0; c <= c1; c++) {
         for (r = r0; r <= r1; r++) {
-            if (r01_world_find_screen(w, c, r) < 0) {
+            int idx = r01_world_find_screen(w, c, r);
+            if (idx < 0 || !w->screens[idx].present) {
                 return 0;
             }
         }

@@ -1,6 +1,7 @@
 #include "test_harness.h"
 
 #include "retr01_studio/collision.h"
+#include "retr01_studio/entities.h"
 #include "retr01_studio/play.h"
 #include "retr01_studio/project.h"
 
@@ -81,6 +82,71 @@ TEST_MAIN() {
         EXPECT(touched >= 2, "solid by hw touches matching tiles");
         EXPECT(r01_attr_solid(s->attrs[0]) && r01_attr_solid(s->attrs[1]), "matching attrs solid");
         EXPECT(!r01_attr_solid(s->attrs[2]), "non-matching attrs unchanged");
+    }
+
+    /* Seam: solid on neighboring screen blocks crossing the edge. */
+    {
+        int right_idx;
+        R01Screen *right;
+        int edge_x;
+        int ti;
+        EXPECT(r01_world_create_screen(&p->worlds[0], 3, 0) >= 0, "create right neighbor");
+        right_idx = r01_world_find_screen(&p->worlds[0], 3, 0);
+        EXPECT(right_idx >= 0, "right neighbor screen present");
+        right = &p->worlds[0].screens[right_idx];
+        memset(right->attrs, 0, sizeof(right->attrs));
+        for (ti = 0; ti < R01_SCREEN_TILES_Y; ti++) {
+            right->attrs[ti * R01_SCREEN_TILES_X] |= R01_ATTR_SOLID;
+        }
+        edge_x = 3 * R01_SCREEN_PX_W - R01_PLAY_PLAYER_W;
+        pl.player_x = edge_x;
+        pl.player_y = R01_PLAY_SPAWN_CENTER_Y(0);
+        r01_play_tick(&pl, p, 1, 0);
+        EXPECT(pl.player_x == edge_x, "solid seam blocks move into next screen");
+    }
+
+    /* Missing screen also blocks AABB. */
+    {
+        int before = pl.player_x;
+        int miss_idx = r01_world_find_screen(&p->worlds[0], 4, 0);
+        int edge4 = 4 * R01_SCREEN_PX_W - R01_PLAY_PLAYER_W;
+        EXPECT(miss_idx >= 0, "grid slot for col 4");
+        p->worlds[0].screens[miss_idx].present = 0;
+        pl.player_x = edge4;
+        r01_play_tick(&pl, p, 1, 0);
+        EXPECT(pl.player_x == edge4, "missing screen blocks move");
+        pl.player_x = before;
+    }
+
+    EXPECT(r01_oam_tile_off_screen(-8, 0), "oam fully left off");
+    EXPECT(r01_oam_tile_off_screen(128, 0), "oam fully right off");
+    EXPECT(r01_oam_tile_off_screen(0, -8), "oam fully above off");
+    EXPECT(r01_oam_tile_off_screen(0, 120), "oam fully below off");
+    EXPECT(!r01_oam_tile_off_screen(-4, 10), "oam partial left on");
+    EXPECT(!r01_oam_tile_off_screen(120, 10), "oam partial right on");
+
+    {
+        R01OamEntry oam[R01_OAM_MAX];
+        int n;
+        int type_id, inst;
+        type_id = r01_world_entity_add(&p->worlds[0]);
+        EXPECT(type_id >= 0, "oam entity type");
+        p->worlds[0].entities[type_id].states[0].frames[0].part_count = 1;
+        p->worlds[0].entities[type_id].states[0].frames[0].parts[0].tile_id = 2;
+        inst = r01_world_place_entity(&p->worlds[0], type_id, pl.cam_x - 64, pl.cam_y);
+        EXPECT(inst >= 0, "oam far instance");
+        n = r01_play_build_oam(p, &pl, oam, R01_OAM_MAX);
+        EXPECT(n >= 1, "oam has player");
+        /* Far entity should be skipped as fully off-screen. */
+        {
+            int i, found = 0;
+            for (i = 1; i < n; i++) {
+                if (oam[i].tile_id == 2) {
+                    found = 1;
+                }
+            }
+            EXPECT(!found, "fully off-screen entity omitted from OAM");
+        }
     }
 
     r01_play_stop(&pl);

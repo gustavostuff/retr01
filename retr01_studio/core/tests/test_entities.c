@@ -114,6 +114,12 @@ TEST_MAIN() {
         EXPECT(w->instances[2].world_x == 64 && w->instances[2].world_y == 72, "meta inst xy");
     }
 
+    /* Spawn on screen (0,0) so instances near the origin stay in the viewport. */
+    {
+        int ds = r01_world_find_screen(w, 0, 0);
+        EXPECT(ds >= 0 && w->screens[ds].present, "screen 0,0 present");
+        w->default_screen = ds;
+    }
     EXPECT(r01_play_start(&pl, p), "play start");
     n = r01_play_build_oam(p, &pl, oam, R01_OAM_MAX);
     EXPECT(n >= 3, "oam has player + parts");

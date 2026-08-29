@@ -54,6 +54,8 @@ r01_studio_add_test(cart)
 r01_studio_add_test(palette)
 r01_studio_add_test(sprites)
 r01_studio_add_test(entities)
+r01_studio_add_test(metasprites)
+r01_studio_add_test(prg_phase1)
 
 add_executable(test_fixture core/tests/test_fixture.c ${STUDIO_TEST_HARNESS})
 target_include_directories(test_fixture PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/core/tests)

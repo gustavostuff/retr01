@@ -132,6 +132,7 @@ TEST_MAIN() {
                 EXPECT(fread(img, 1, (size_t)flen, f) == (size_t)flen, "read cart");
                 memcpy(ptrs, img + CART_HDR_SIZE, 36);
                 off_wtable = rd_u24(ptrs + 18);
+                EXPECT(rd_u24(ptrs + 3) == R01_PRG_BYTES, "len_prg 32KB");
                 EXPECT(rd_u24(ptrs + 24) == CART_PRG_OFF + R01_PRG_BYTES, "off_other");
                 EXPECT(rd_u24(ptrs + 27) == CART_OTHER_LEN, "len_other");
                 EXPECT(img[rd_u24(ptrs + 24)] == 2, "other_count");
