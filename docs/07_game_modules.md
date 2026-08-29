@@ -303,7 +303,7 @@ Two authoring patterns (may combine):
 
 Rules for **BG boss**:
 
-- BG scroll for the body is game/script driven (not the Camera module profile). It may use main scroll latches and/or a parallax plane slot ([`02`](02_graphics_worlds_memory.md) slots 4-5) when the playfield must stay independent. Exact port recipe is an open item.
+- BG scroll for the body is game/script driven (not the Camera module profile). It may use main scroll latches and/or a parallax plane slot ([`02`](02_graphics_worlds_memory.md) slots 4-5, optional variable-thickness slices) when the playfield must stay independent. Exact port recipe is an open item.
 - Weak points are **not** multi-hitboxes on one entity. They are **separate sprite entities** (up to **4**) that move with or relative to the BG body.
 - Those part entities count toward ACTIVE / OAM / freeze budgets like any other entity.
 - Damage: player hitbox vs each part entity hitbox (player-centric). Hitting the BG pixels alone does not register unless a part entity (or a future trigger volume) covers that region.

@@ -48,7 +48,7 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 | **Screen** | One stored **16x15** tilemap (**128x120**) + **one attr byte per tile** in MAP-ROM |
 | **Grid position** | One `(col, row)` coordinate in a world's sparse virtual grid |
 | **Camera nametable slots** | VRAM slots **0-3**: the live 2x2 playfield field |
-| **Plane nametable slots** | VRAM slots **4-5**: live parallax storage (**2** slots). Cart may hold up to **8** parallax screens/world |
+| **Plane nametable slots** | VRAM slots **4-5**: live parallax storage (**2** slots). Cart may hold up to **8** parallax screens/world. Optional **slices** (**1..120** bands, variable thickness, H or V offsets) bend the plane without moving playfield camera -- e.g. curved roads in racing games |
 | **BG bank** | **256 BG tiles**, arranged as a **16x16** tile grid, **4 KB** (CHR) |
 | **Sprite bank** | **256 sprite tiles**, arranged as a **16x16** tile grid, **4 KB** (CHR) |
 | **BG bank (runtime)** | Per **8x8 tile**: attr bits select CHR BG bank **0-3** (not per screen) |
@@ -88,7 +88,7 @@ Current chip list: [`05`](05_hardware_v1_32ic.md) (**32 IC**). Roles:
 | Tile size | **8x8** |
 | Color | **2bpp**, **64-entry Color PROM** on board (packed **R3G3B2**), cart holds **8 global BG rows + 8 global sprite rows** (indices only), **one synced row active** (4 BG + 4 sprite) |
 | Worlds | **8** max (indices 0-7) |
-| Screens per world | **32 present** max on sparse **8x8** virtual grid (playfield only). **0..8** parallax screens/world |
+| Screens per world | **32 present** max on sparse **8x8** virtual grid (playfield only). **0..8** parallax screens/world; optional **1..120** plane slices (variable thickness) |
 | Global UI ROM | **Other screens** (max **48**): title (**0**), interstitial (**1**), credits pages (**2+**, **0..46**). Payloads raw **480 B** or **RLE**. PRG owns scroll/fade/hold. See [`02`](02_graphics_worlds_memory.md#other-screens-global-rom) |
 | Cart / PRG | **512 KB** flash. Cart `format_ver` **2** only (8 worlds, other screens). **32 KB PRG** (no banking). Full caps (incl. **8** parallax/world) fill **~442 KB**; **~70 KB** free |
 | CHR per world | **4 BG banks + 4 sprite banks**, **256 tiles each**, **32 KB** |

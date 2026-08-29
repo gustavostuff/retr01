@@ -129,7 +129,7 @@ PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are
 | **3D** | Cart packs real SPR CHR + entity tables; emu/sim Play OAM parity |
 | **3E** | Metasprites accordion + modal; entity compose from metasprite catalog; JSON v7; cart `format_ver` 2 (other screens incl. credits pages + RLE); viewport sprite clipping (current) |
 
-**Out of scope (for now):** entity movement/collision, multi-state animation in Play, parallax planes, Generate, multi-world cart export, multi-world JSON save, dead-zone/fade scroll profiles, full 6502 gameplay loop.
+**Out of scope (for now):** entity movement/collision, multi-state animation in Play, parallax planes / variable-thickness slices authoring, Generate, multi-world cart export, multi-world JSON save, dead-zone/fade scroll profiles, full 6502 gameplay loop.
 
 ---
 

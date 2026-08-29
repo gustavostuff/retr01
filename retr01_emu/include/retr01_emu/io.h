@@ -11,7 +11,8 @@ struct R01eMachine;
  * Logical $FE00-$FEFF register file (docs/02).
  * Phase 1: scroll, world, VRAM, palette, pads, MAP read, beam tick.
  * Later: raster IRQ ($FE04/$FE05), APU ($FE40-$FE5F), EEPROM ($FE70-$FE72),
- *        OAM sprite pipeline ($FE20/$FE21), parallax plane band ($FE06/$FE07).
+ *        OAM sprite pipeline ($FE20/$FE21), parallax plane band ($FE06/$FE07),
+ *        plane slices (max R01E_PARALLAX_SLICE_MAX bands; docs/02).
  */
 typedef struct R01eIo {
     uint8_t ctrl;        /* $FE00 */

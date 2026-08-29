@@ -26,6 +26,8 @@ typedef struct R01eVideo {
     uint8_t fb[R01E_VISIBLE_W * R01E_VISIBLE_H * 3]; /* SCALE 2x RGB */
     /* Debug: 2x2 VRAM workbench at 1:1 (256x240). */
     uint8_t vram_atlas[R01E_VRAM_ATLAS_W * R01E_VRAM_ATLAS_H * 3];
+    /* Expanded H-band slice table: additive dx per logical row (docs/02). Unused = 0. */
+    int8_t plane_h_slice[R01E_PARALLAX_SLICE_MAX];
 } R01eVideo;
 
 void r01e_video_kit_rgb(int master_index, uint8_t *r, uint8_t *g, uint8_t *b);
@@ -65,5 +67,13 @@ void r01e_video_render_vram_atlas(struct R01eMachine *m);
 
 /* Phase 2+: load parallax payloads into VRAM slots 4-5. */
 void r01e_video_load_parallax(struct R01eMachine *m, const R01eWorldView *wv);
+
+/*
+ * Expanded H-band plane slices (max R01E_PARALLAX_SLICE_MAX rows).
+ * Authoring uses 1..120 variable-thickness bands; runtime stores per-row dx.
+ */
+void r01e_video_plane_slices_clear(R01eVideo *vid);
+void r01e_video_plane_slice_set(R01eVideo *vid, int row, int8_t dx);
+int8_t r01e_video_plane_slice_get(const R01eVideo *vid, int row);
 
 #endif

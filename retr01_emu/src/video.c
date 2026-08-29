@@ -262,6 +262,27 @@ void r01e_video_load_parallax(R01eMachine *m, const R01eWorldView *wv) {
     }
 }
 
+void r01e_video_plane_slices_clear(R01eVideo *vid) {
+    if (!vid) {
+        return;
+    }
+    memset(vid->plane_h_slice, 0, sizeof(vid->plane_h_slice));
+}
+
+void r01e_video_plane_slice_set(R01eVideo *vid, int row, int8_t dx) {
+    if (!vid || row < 0 || row >= R01E_PARALLAX_SLICE_MAX) {
+        return;
+    }
+    vid->plane_h_slice[row] = dx;
+}
+
+int8_t r01e_video_plane_slice_get(const R01eVideo *vid, int row) {
+    if (!vid || row < 0 || row >= R01E_PARALLAX_SLICE_MAX) {
+        return 0;
+    }
+    return vid->plane_h_slice[row];
+}
+
 int r01e_video_sync_camera(R01eMachine *m) {
     R01eWorldView wv;
     R01eVideo *vid;

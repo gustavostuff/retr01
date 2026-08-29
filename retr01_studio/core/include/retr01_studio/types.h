@@ -17,6 +17,7 @@
 #define R01_MAX_PRESENT_SCREENS 32 /* cart cap (docs/02): 8 worlds x 32 + 32 KiB PRG in 512 KiB */
 #define R01_PARALLAX_MIN 0
 #define R01_PARALLAX_MAX 8 /* per world; live VRAM slots 4-5 only */
+#define R01_PARALLAX_SLICE_MAX 120 /* max bands; variable thickness (docs/02) */
 #define R01_START_COL 2
 #define R01_START_ROW 0
 

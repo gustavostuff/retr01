@@ -34,7 +34,7 @@ Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 
 **32 present screens**/world is the playfield cap (sparse **8x8** grid). Full 8-world fill + **8** parallax/world + **32 KB** PRG leaves ~**70 KB** free in **512 KB** flash for ([Other screens](#other-screens-global-rom)), entity tables, and headroom:
 
-| Spare slice (from ~69.9 KB free) | Size |
+| Spare budget (from ~69.9 KB free) | Size |
 |----------------------------------|------|
 | **Other screens** (title + interstitial + credits pages, RLE or raw) | **up to ~64 KB** soft |
 | Entity tables + alignment + unused flash | **remainder** (~**6 KB+** if other uses full soft budget) |
@@ -149,6 +149,7 @@ Per-world MAP payloads used as scrolling backdrop planes. **Not** on the playfie
 | Payload | Same **480 B** as a playfield screen (240 tile + 240 attr), raw |
 | Live VRAM | Slots **4-5** only (**2** resident at a time). PRG loads/swaps from the up-to-**8** cart payloads |
 | Scroll ports | Plane band `$FE06`/`$FE07` (phase 2+); main camera may lock per [04](04_costs_and_open_questions.md) when a band is active |
+| Slices | **1..120** bands of **variable thickness** on the live plane (H or V); see below. Not playfield camera mid-frame shifts |
 
 **Layouts** (dir `flags` -- PRG interprets; hardware only sees the loaded slot(s)):
 
@@ -175,6 +176,52 @@ A world may mix singles and pairs as long as total payloads stay within **8**. A
 | other | Unused / PRG-defined |
 
 **Authoring note:** prefer **pair** layouts when a looping backdrop would show an obvious repeat every 128 or 120 px. Singles are fine for sparse stars, distant haze, or intentionally tiled patterns.
+
+### Parallax slices (variable-thickness bands)
+
+For Mode-7-style roads and similar tricks: keep a few **base** parallax screens for forward / side motion, and bend the plane with **independent signed offsets on bands** so the same tiles look curved or sheared.
+
+| Field | Value |
+|-------|-------|
+| Slice count | **1..120** when enabled (`PARALLAX_SLICE_MAX` = **120**). **0** = off |
+| What a slice is | One band: **thickness** (px) + signed **offset** (px). Thicknesses may differ |
+| Cover | Band thicknesses along the slice axis must sum to the viewport on that axis (**120** for H-band mode, **128** for V-band mode). Pad with a final band of offset **0** if needed |
+| H-band mode | Bands stack along **Y** (rows). Offset is **H** (`dx`). Typical when the plane scrolls / repeats **horizontally** (roads, side-view depth) |
+| V-band mode | Bands stack along **X** (columns). Offset is **V** (`dy`). Typical when the plane scrolls / repeats **vertically** |
+| Applies to | Live plane slots **4-5** only. **Not** playfield slots **0-3** (collision / camera stay coherent) |
+| Storage | Authoring: list of `{thickness, offset}` (max **120** entries). Runtime may expand to per-row / per-col additives in **sys RAM** (or a future `$FExx` port -- bitfield TBD). **Not** extra MAP screens |
+| Base scroll | Still `$FE06`/`$FE07` band + plane scroll; slice offsets are **additive** inside each band |
+| Typical use | Road: base plane(s) scroll for "driving forward"; H-bands ramp L/R down the view for curves |
+
+**Do not** implement this with mid-frame playfield camera shifts. Playfield scroll stays frame-coherent; bends belong on the parallax plane.
+
+Empty / unused expanded lines read as **0** (no bend). PRG may rewrite the table every frame (or every few frames) for animation.
+
+**Example -- horizontal parallax (H-bands):** **62** slices covering **120** rows: sixty **1 px** bands + two **30 px** bands.
+
+```text
+  Y
+  0  +--+  1 px, dx = d0
+     +--+  1 px, dx = d1
+     ...   (60 x 1 px bands)
+  59 +--+  1 px, dx = d59
+  60 +=======+  30 px, dx = d60
+  89 +=======+
+  90 +=======+  30 px, dx = d61
+ 119 +=======+
+```
+
+Fine **1 px** bands near the horizon (or vanishing point) give smooth curve control; thick **30 px** bands farther out hold a constant offset cheaply.
+
+**Example -- vertical parallax (V-bands):** same mix along **X**: sixty **1 px** + two **30 px** = **120** columns, then one **8 px** pad band (`dy = 0`) to fill **128**.
+
+```text
+  X 0                                                         127
+     | 1 | 1 | ... x60 ... |==== 30 px ====|==== 30 px ====| pad 8 |
+       ^ fine V offsets          shared dy         shared dy   dy=0
+```
+
+You may also use fewer thicker bands (e.g. **4** slices of **30 px** for H-band mode) or a full **120** x **1 px** table when every row needs its own offset.
 
 ## Other screens (global ROM)
 
@@ -315,7 +362,7 @@ PRG is a **32 KB** image mapped at `$8000-$FFFF` with the `$FE00-$FEFF` I/O hole
 | `$FE01` | `PPUSTATUS` | VBlank, raster hit (read clears) |
 | `$FE02`/`$FE03` | scroll X/Y | 0-127 / 0-119 |
 | `$FE04`/`$FE05` | raster Y / IRQ | `$FE04` = compare scanline (latched). `$FE05` = enable/ack/control (**bitfield TBD**) |
-| `$FE06`/`$FE07` | plane band | any band locks camera axis for the frame |
+| `$FE06`/`$FE07` | plane band | any band locks camera axis for the frame. Plane slices (**1..120**, variable thickness, H or V) apply inside the band; see [Parallax](#parallax) |
 | `$FE08`/`$FE09` | pal addr/data | active indices 0-63, auto-inc |
 | `$FE10`-`$FE12` | VRAM addr/data | auto-inc |
 | `$FE20`/`$FE21` | OAM addr/data | auto-inc. Entry `Y,tile,attr,X` x64. **Host Play:** X/Y are **viewport-relative signed** coords packed as `int8` in each byte (negative top-left allowed; raster clips to **128x120**). Unused slot: `tile == 0xFF` |

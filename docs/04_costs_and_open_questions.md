@@ -13,7 +13,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | PCB envelope (A) | ~**12 x 12 cm** 4-layer THT target |
 | Worlds | **8** max (indices 0-7) |
 | World layout | sparse virtual grid up to **8x8**, **32 present screens max** per world (playfield). **Other screens** (title / interstitial / credits pages) are global ROM, not on grid |
-| Parallax (per world) | **0..8** screens (`PARALLAX_MAX` = **8**). **Single** (repeat H/V) or **pair** (2 screens side-by-side or stacked) to lengthen the scroll period. Live VRAM slots **4-5** only; PRG streams which payloads are resident. See [`02`](02_graphics_worlds_memory.md#parallax) |
+| Parallax (per world) | **0..8** screens (`PARALLAX_MAX` = **8**). **Single** (repeat H/V) or **pair** (2 screens side-by-side or stacked). Live VRAM slots **4-5** only. Optional **slices**: **1..120** bands of variable thickness (H-band or V-band offsets; roads/curves). Not mid-frame playfield camera shifts. See [`02`](02_graphics_worlds_memory.md#parallax) |
 | Other screens (global) | Max **48** MAP payloads (`OTHER_MAX`): **0** = title, **1** = interstitial, **2+** = credits. Credits pages: **min 0**, **max 46** (`CREDITS_MIN` / `CREDITS_MAX`). Each payload raw **480 B** or **RLE** (`flags.RLE`). Soft `len_other` budget **~64 KB**. PRG owns presentation |
 | Credits | **Credits pages** inside other screens (**0..46**). Text + small graphics as normal tilemaps. Legacy `off_credits`/`len_credits` reserved **0** |
 | Screen format | **16x15** tiles (**128x120**), **240-byte** tile plane + **240-byte** attr plane (one attr/tile) |
