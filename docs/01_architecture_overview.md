@@ -88,9 +88,9 @@ Current chip list: [`05`](05_hardware_v1_32ic.md) (**32 IC**). Roles:
 | Tile size | **8x8** |
 | Color | **2bpp**, **64-entry Color PROM** on board (packed **R3G3B2**), cart holds **8 global BG rows + 8 global sprite rows** (indices only), **one synced row active** (4 BG + 4 sprite) |
 | Worlds | **8** max (indices 0-7) |
-| Screens per world | **30 present** max on sparse **8x8** virtual grid (playfield only) |
+| Screens per world | **32 present** max on sparse **8x8** virtual grid (playfield only) |
 | Global UI ROM | **Other screens**: title + interstitial MAPs (**2 x 480 B**). **Credits**: **<= 1024 B** ASCII in cart flash (not PRG). See [`02`](02_graphics_worlds_memory.md#other-screens-and-credits-global-rom) |
-| Cart / PRG | **512 KB** flash. Cart `format_ver` **2** (8 worlds, other screens, credits ROM). **32 KB PRG** (no banking). ~**412 KB** full fill at 8-world caps (~**100 KB** free) |
+| Cart / PRG | **512 KB** flash. Cart `format_ver` **2** only (8 worlds, other screens, credits ROM). **32 KB PRG** (no banking). Playfield caps fill **429300 B** (~**419.2 KB**); **~92.8 KB** free |
 | CHR per world | **4 BG banks + 4 sprite banks**, **256 tiles each**, **32 KB** |
 | Sprites | **64 OAM**, **16 per logical scanline** max |
 | VRAM | **32 KB**, interleaved |

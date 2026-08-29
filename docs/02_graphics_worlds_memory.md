@@ -15,32 +15,32 @@ Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 
 ## Worlds, screens, cart budget
 
-- **8** worlds max (indices **0-7**). Sparse **8x8** grid per world, **30 present screens** max/world (camera / playfield only; grid slots beyond that stay unused)
+- **8** worlds max (indices **0-7**). Sparse **8x8** grid per world, **32 present screens** max/world (camera / playfield only; grid slots beyond that stay unused)
 - Per world: up to **2 parallax planes** (same 480 B payload as a screen). **Not** on the world grid. Separate MAP directory. Maps to VRAM slots **4-5**
 - Screen / plane payload: **480 B** raw (**240** tiles + **240** attrs). Direct MAP `$FE93` -> VRAM `$FE12` (no RLE required)
 - Per world: **4 BG + 4 sprite** CHR banks (**32 KB**), screen dir + parallax dir
 - Palettes: **8 global BG palette rows** + **8 global sprite palette rows** (see [Palettes](#palettes))
-- Cart: **512 KB** (SST39SF040). **32 KB PRG** at `$8000-$FFFF` (I/O hole at `$FE00-$FEFF`). No PRG banking. Studio export uses cart `format_ver` **2**.
+- Cart: **512 KB** (SST39SF040). **32 KB PRG** at `$8000-$FFFF` (I/O hole at `$FE00-$FEFF`). No PRG banking. Cart `format_ver` **2**.
 
 | Asset | Size at caps (8 worlds) |
 |-------|--------------------------|
-| CHR (8 x 32 KB) | **256 KB** |
-| MAP screens (8 x 30 x 480 B) | **112 KB** |
-| MAP parallax (8 x 2 x 480 B) | **~7.5 KB** |
+| CHR (8 x 32 KB) | **256 KB** (262144 B) |
+| MAP screens (8 x 32 x 480 B) | **120 KB** (122880 B) |
+| MAP parallax (8 x 2 x 480 B) | **7.5 KB** (7680 B) |
 | Global pals (8 BG rows + 8 sprite rows) | **256 B** |
-| Dirs / headers | **~3.6 KB** |
-| PRG | **32 KB** |
-| **Total / free** | **~412 KB** used, **~100 KB** free |
+| Dirs / headers | **3572 B** (~3.5 KB) |
+| PRG | **32 KB** (32768 B) |
+| **Total / free** | **429300 B** (~**419.2 KB**) used; **94988 B** (~**92.8 KB**) free of **512 KB** |
 
-**30 screens/world** (not 32) is the playfield design cap. Full 8-world fill + **32 KB** PRG leaves ~**100 KB** free in **512 KB** flash for ([Other screens and credits](#other-screens-and-credits-global-rom)), entity tables, and headroom:
+**32 present screens**/world is the playfield cap (sparse **8x8** grid). Full 8-world fill + **32 KB** PRG leaves ~**93 KB** free in **512 KB** flash for ([Other screens and credits](#other-screens-and-credits-global-rom)), entity tables, and headroom:
 
-| Spare slice (at max fill) | Size |
-|---------------------------|------|
-| **Other screens** (title + interstitial MAPs) | **~1 KB** |
-| **Credits text** (cart ROM, not PRG) | **up to 1 KB** |
-| Entity tables + alignment + unused flash | **~98 KB** remainder |
+| Spare slice (from ~92.8 KB free) | Size |
+|----------------------------------|------|
+| **Other screens** (title + interstitial MAPs) | **980 B** |
+| **Credits text** (cart ROM, not PRG) | **up to 1024 B** |
+| Entity tables + alignment + unused flash | **~90.8 KB** remainder |
 
-World blobs hold **playfield** screens and **parallax** only. Title, level interstitials, and credits are **global** (see below). They do **not** count toward the **30 present screens**/world cap.
+World blobs hold **playfield** screens and **parallax** only. Title, level interstitials, and credits are **global** (see below). They do **not** count toward the **32 present screens**/world cap.
 
 **Banks:** live BG bank = per-tile attr bits 1-0. Live sprite bank = per-OAM attr bits 1-0. `$FE31`-`$FE37` are optional stamp helpers only.
 
@@ -146,11 +146,11 @@ Non-playfield UI that is **not** on the world grid. Lives in cart flash as **MAP
 
 | Kind | Cart storage | Dev workflow |
 |------|--------------|--------------|
-| **Title** | Fixed **480 B** MAP in **other screens** slot **0** | Stream to VRAM slot **0**, scroll **0,0**. Studio exports in `format_ver` 2; hand-pack still OK |
+| **Title** | Fixed **480 B** MAP in **other screens** slot **0** | Stream to VRAM slot **0**, scroll **0,0**. Studio export / hand-pack OK |
 | **Level interstitial** | One shared **480 B** MAP in slot **1** | Reuse one canvas between levels; patch tiles/attrs in **C/ASM**, or overlay small PRG patch tables. No per-level MAP slot in cart |
 | **Credits** | **Credits ROM** blob (**<= 1024 B** ASCII text) | PRG scroll/draw routine reads text via MAP; optional one-time copy to sys RAM. **No** credits MAP screen |
 
-**Other screen ids:** `0` = **TITLE**, `1` = **INTER** (interstitial). Max **2** MAP payloads (~**992 B** including dir/header).
+**Other screen ids:** `0` = **TITLE**, `1` = **INTER** (interstitial). Max **2** MAP payloads (**980 B**: `other_count` + pad + 2 x 8 B dir + 2 x 480 B).
 
 **Credits ROM caps:**
 
@@ -162,26 +162,26 @@ Non-playfield UI that is **not** on the world grid. Lives in cart flash as **MAP
 | Runtime read | MAP seek `off_credits`, read `len_credits` bytes via `$FE93` |
 | PRG | Scroll/glyph routine only; font tiles reuse world/other CHR |
 
-CHR for title/interstitial/credits glyphs comes from existing BG banks (often shared with world **0** or baked into other-screen export). No extra CHR budget line for v1.
+CHR for title/interstitial/credits glyphs comes from existing BG banks (often shared with world **0** or baked into other-screen export). No extra CHR budget line.
 
 ## Cart image (`.retr01`)
 
-24-bit offsets. Magic **`retr01`** (lowercase ASCII). **`format_ver` = 1** (legacy load only): **24 B** pointer table, no other-screens/credits blobs. **`format_ver` = 2** (current Studio/Emu/Sim export): **36 B** pointer table, **8** world table slots, **30 present screens**/world max, **other screens** + **credits ROM** pointers. PRG payload is **32 KB** (no banking).
+24-bit offsets. Magic **`retr01`** (lowercase ASCII). **`format_ver` = 2**: **36 B** pointer table, **8** world table slots, **32 present screens**/world max, **other screens** + **credits ROM** pointers. PRG payload is **32 KB** (no banking). Older images are not loaded -- re-export from Studio.
 
 ```text
 +--------------------------------------------------------------------------+
 |  CART HEADER (16 B at offset 0)                                          |
 |    magic[6]          'r','e','t','r','0','1'                             |
-|    format_ver        u8 (1 legacy, 2 current)                            |
+|    format_ver        u8 (**2**)                                          |
 |    world_count       u8 (1..8)                                           |
 |    flags / reserved  (pad to 16 B)                                       |
-|  POINTER TABLE (24 B in v1; +12 B in v2 -- each field u24)               |
+|  POINTER TABLE (36 B -- each field u24)                                  |
 |    off_prg, len_prg                                                      |
 |    off_pal_bg, len_pal_bg                                                |
 |    off_pal_spr, len_pal_spr                                              |
 |    off_world_table, len_world_table                                      |
-|    [v2] off_other, len_other    -- other screens blob                    |
-|    [v2] off_credits, len_credits -- credits ROM (len max 1024)           |
+|    off_other, len_other    -- other screens blob                         |
+|    off_credits, len_credits -- credits ROM (len max 1024)                |
 +--------------------------------------------------------------------------+
 | GLOBAL PALETTES                                                          |
 |    BG:     8 rows x 4 pals x 4 master indices = 128 B                    |
@@ -192,13 +192,13 @@ CHR for title/interstitial/credits glyphs comes from existing BG banks (often sh
 |    No banking. Vectors in high page                                      |
 |    Code only -- credits strings live in CREDITS ROM below                |
 +--------------------------------------------------------------------------+
-|  OTHER SCREENS (global, v2 -- not in world blobs)                        |
-|    other_count u8 (max 2 v1: 0=TITLE, 1=INTER)                           |
+|  OTHER SCREENS (global -- not in world blobs)                            |
+|    other_count u8 (max 2: 0=TITLE, 1=INTER)                              |
 |    pad[3]                                                                |
 |    DIR: other_count x 8 B { id, flags, pad u16, off_payload u24 }        |
 |    PAYLOADS: other_count x 480 B (240 tile + 240 attr each)              |
 +--------------------------------------------------------------------------+
-|  CREDITS ROM (global, v2 -- not PRG)                                     |
+|  CREDITS ROM (global -- not PRG)                                         |
 |    raw ASCII text, len_credits <= 1024                                   |
 +--------------------------------------------------------------------------+
 |  WORLD TABLE (8 slots x 8 B)                                             |
@@ -208,7 +208,7 @@ CHR for title/interstitial/credits glyphs comes from existing BG banks (often sh
 |  +--------------------------------------------------------------+        |
 |  | WORLD HEADER (32 B)                                          |        |
 |  |   start_col, start_row, default_bg_bank, default_spr_bank    |        |
-|  |   default_pal_row (0..7), screen_count (present, max **30**) |        |
+|  |   default_pal_row (0..7), screen_count (present, max **32**) |        |
 |  |   parallax_count (0..2)                                      |        |
 |  |   off_chr u24, off_screen_dir u24, off_parallax_dir u24      |        |
 |  |   entity_type_count u8, entity_inst_count u8                 |        |
@@ -234,7 +234,7 @@ CHR for title/interstitial/credits glyphs comes from existing BG banks (often sh
 
 OAM attr packing matches BG: bank bits 1-0, pal bits 3-2, `FLIP_H=0x10`, `FLIP_V=0x20`. Instance `world_x/y` is the **user origin**; host Play draws parts at `world + (dx,dy) - origin` (Studio `r01_entity_world_x/y`). SPR bank 0 **tile 1** is reserved as the solid player stub (OAM slot 0).
 
-Boot: magic -> pointers -> **[v2] other screens / credits ROM** -> world header -> screen dir / parallax dir -> `off_payload`. Load grid screens into VRAM slots 0-3. Load parallax dir entries into slots 4-5. Title/interstitial: stream chosen **other** payload into slot 0 (full **128x120**). MAP port: `$FE90`-`$FE92` addr, `$FE93` data auto-inc.
+Boot: magic -> pointers -> other screens / credits ROM -> world header -> screen dir / parallax dir -> `off_payload`. Load grid screens into VRAM slots 0-3. Load parallax dir entries into slots 4-5. Title/interstitial: stream chosen **other** payload into slot 0 (full **128x120**). MAP port: `$FE90`-`$FE92` addr, `$FE93` data auto-inc.
 
 **Debugging carts:** Studio Play and editor chrome are **not** the cart. Runner helpers differ:
 

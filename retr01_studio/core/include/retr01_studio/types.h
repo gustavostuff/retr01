@@ -14,7 +14,7 @@
 #define R01_GRID_MAX 8
 #define R01_DEFAULT_GRID 3
 #define R01_MAX_SCREENS (R01_GRID_MAX * R01_GRID_MAX)
-#define R01_MAX_PRESENT_SCREENS 30 /* cart cap (docs/02): 8 worlds x 30 + 128 KiB PRG in 512 KiB */
+#define R01_MAX_PRESENT_SCREENS 32 /* cart cap (docs/02): 8 worlds x 32 + 32 KiB PRG in 512 KiB */
 #define R01_START_COL 2
 #define R01_START_ROW 0
 
@@ -38,10 +38,8 @@
 #define R01_PRG_BYTES 32768u
 #define R01_CHR_BANK_BYTES 4096u
 #define R01_CART_FORMAT_VER 2
-#define R01_CART_FORMAT_VER_V1 1
 #define R01_CART_HDR_BYTES 16u
-#define R01_CART_PTR_TABLE_V1 24u
-#define R01_CART_PTR_TABLE_V2 36u
+#define R01_CART_PTR_TABLE_BYTES 36u
 #define R01_CART_SCREEN_PAYLOAD 480u
 #define R01_CART_OTHER_MAX 2
 #define R01_CART_OTHER_TITLE 0

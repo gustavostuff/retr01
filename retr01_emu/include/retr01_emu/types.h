@@ -7,15 +7,13 @@
 /* Cart / world layout -- docs/02_graphics_worlds_memory.md */
 #define R01E_CART_MAGIC "retr01"
 #define R01E_CART_FORMAT_VER 2
-#define R01E_CART_FORMAT_VER_V1 1
-#define R01E_CART_PTR_TABLE_V1 24u
-#define R01E_CART_PTR_TABLE_V2 36u
+#define R01E_CART_PTR_TABLE_BYTES 36u
 #define R01E_CART_OTHER_MAX 2
 #define R01E_CART_OTHER_HDR_BYTES 4u
 #define R01E_CART_OTHER_DIR_BYTES 8u
 #define R01E_CART_CREDITS_MAX 1024u
 #define R01E_CART_FLASH_BYTES (512u * 1024u)
-#define R01E_PRG_BYTES 32768u
+#define R01E_PRG_BYTES 32768u /* fixed 32 KB window at $8000 (docs/02) */
 
 #define R01E_SCREEN_TILES_X 16
 #define R01E_SCREEN_TILES_Y 15
@@ -28,7 +26,7 @@
 #define R01E_VRAM_BYTES 0x4000u
 
 #define R01E_MAX_WORLDS 8
-#define R01E_MAX_PRESENT_SCREENS 30
+#define R01E_MAX_PRESENT_SCREENS 32 /* cart cap: 8 worlds x 32 (docs/02) */
 #define R01E_PHASE1_WORLDS 1 /* Studio Phase 1: world 0 only */
 #define R01E_BG_BANKS 4
 #define R01E_SPR_BANKS 4

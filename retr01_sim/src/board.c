@@ -12,13 +12,6 @@
 
 #define R01S_RESET_HOLD 12
 #define R01S_CART_HDR_SIZE 16
-#define R01S_CART_PTR_SIZE_V1 24
-#define R01S_CART_PTR_SIZE_V2 36
-#define R01S_CART_PRG_BYTES 0x8000u
-
-static size_t cart_ptr_table_bytes(uint8_t format_ver) {
-    return format_ver >= R01S_CART_FORMAT_VER_V2 ? (size_t)R01S_CART_PTR_SIZE_V2 : (size_t)R01S_CART_PTR_SIZE_V1;
-}
 
 #define R01S_PAL_ROW_BYTES 16u
 #define R01S_PAL_PLANE_BYTES 128u
@@ -2023,20 +2016,21 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     board->cart_off_pal_spr = get_u24(ptrs + 12);
     board->cart_len_pal_spr = get_u24(ptrs + 15);
     off_wtable = get_u24(ptrs + 18);
-    if (board->cart_format_ver >= R01S_CART_FORMAT_VER_V2) {
-        board->cart_off_other = get_u24(ptrs + 24);
-        board->cart_len_other = get_u24(ptrs + 27);
-        board->cart_off_credits = get_u24(ptrs + 30);
-        board->cart_len_credits = get_u24(ptrs + 33);
-        if (board->cart_len_credits > R01S_CART_CREDITS_MAX) {
-            board->cart_len_credits = 0;
-            board->cart_off_credits = 0;
-        }
-        board->cart_off_other_title =
-            cart_other_payload_abs(img, sizeof(board->cart_flash.mem), board->cart_off_other, board->cart_len_other, 0);
-        board->cart_off_other_inter =
-            cart_other_payload_abs(img, sizeof(board->cart_flash.mem), board->cart_off_other, board->cart_len_other, 1);
+    if (board->cart_format_ver != R01S_CART_FORMAT_VER) {
+        return;
     }
+    board->cart_off_other = get_u24(ptrs + 24);
+    board->cart_len_other = get_u24(ptrs + 27);
+    board->cart_off_credits = get_u24(ptrs + 30);
+    board->cart_len_credits = get_u24(ptrs + 33);
+    if (board->cart_len_credits > R01S_CART_CREDITS_MAX) {
+        board->cart_len_credits = 0;
+        board->cart_off_credits = 0;
+    }
+    board->cart_off_other_title =
+        cart_other_payload_abs(img, sizeof(board->cart_flash.mem), board->cart_off_other, board->cart_len_other, 0);
+    board->cart_off_other_inter =
+        cart_other_payload_abs(img, sizeof(board->cart_flash.mem), board->cart_off_other, board->cart_len_other, 1);
     if ((size_t)off_wtable + 8u > sizeof(board->cart_flash.mem)) {
         return;
     }
@@ -2146,8 +2140,8 @@ static void board_install_bringup_prg(R01sBoard *board) {
 
 static void board_install_synthetic_cart(R01sBoard *board) {
     uint8_t hdr[R01S_CART_HDR_SIZE];
-    uint8_t ptrs[R01S_CART_PTR_SIZE_V1];
-    uint32_t off_pal_bg = R01S_CART_HDR_SIZE + R01S_CART_PTR_SIZE_V1; /* 0x28 */
+    uint8_t ptrs[R01S_CART_PTR_TABLE_BYTES];
+    uint32_t off_pal_bg = R01S_CART_HDR_SIZE + R01S_CART_PTR_TABLE_BYTES;
     uint32_t off_pal_spr = off_pal_bg + R01S_PAL_PLANE_BYTES;
     uint32_t off_prg = off_pal_spr + R01S_PAL_PLANE_BYTES;
     uint32_t off_wtable = off_prg + R01S_CART_PRG_BYTES;
@@ -2156,7 +2150,7 @@ static void board_install_synthetic_cart(R01sBoard *board) {
 
     memset(hdr, 0, sizeof(hdr));
     memcpy(hdr, "retr01", 6);
-    hdr[6] = 1;
+    hdr[6] = R01S_CART_FORMAT_VER;
     hdr[7] = 1;
     memset(ptrs, 0, sizeof(ptrs));
     put_u24(ptrs + 0, off_prg);
@@ -2167,6 +2161,7 @@ static void board_install_synthetic_cart(R01sBoard *board) {
     put_u24(ptrs + 15, R01S_PAL_PLANE_BYTES);
     put_u24(ptrs + 18, off_wtable);
     put_u24(ptrs + 21, 64);
+    /* off_other / len_other / off_credits / len_credits remain 0 */
     memset(pals, 0, sizeof(pals));
     /* Row 0 BG: kit strips; row 0 SPR: color1 = bright-ish red index 34. */
     for (i = 0; i < 4u; i++) {
@@ -2182,7 +2177,7 @@ static void board_install_synthetic_cart(R01sBoard *board) {
 
     memset(board->cart_flash.mem, 0xFF, sizeof(board->cart_flash.mem));
     r01s_sst39sf040_load(&board->cart_flash, 0, hdr, R01S_CART_HDR_SIZE);
-    r01s_sst39sf040_load(&board->cart_flash, R01S_CART_HDR_SIZE, ptrs, R01S_CART_PTR_SIZE_V1);
+    r01s_sst39sf040_load(&board->cart_flash, R01S_CART_HDR_SIZE, ptrs, R01S_CART_PTR_TABLE_BYTES);
     r01s_sst39sf040_load(&board->cart_flash, off_pal_bg, pals, (uint32_t)sizeof(pals));
     board->cart_off_prg = off_prg;
     board->cart_len_prg = R01S_CART_PRG_BYTES;
@@ -2196,25 +2191,23 @@ static int board_parse_cart_image(R01sBoard *board, const uint8_t *img, size_t l
     uint32_t off_prg;
     uint32_t len_prg;
     uint8_t format_ver;
-    size_t ptr_bytes;
-    if (!board || !img || len < R01S_CART_HDR_SIZE + R01S_CART_PTR_SIZE_V1) {
+    if (!board || !img || len < R01S_CART_HDR_SIZE + R01S_CART_PTR_TABLE_BYTES) {
         return -1;
     }
     if (memcmp(img, "retr01", 6) != 0) {
-        /* Raw flash dump: treat whole image as mapped from 0; PRG at 0x48 convention. */
+        /* Raw flash dump: treat whole image as mapped from 0; PRG at conventional off after hdr+ptrs+pals. */
         if (len > R01S_FLASH_BYTES) {
             len = R01S_FLASH_BYTES;
         }
         memset(board->cart_flash.mem, 0xFF, sizeof(board->cart_flash.mem));
         r01s_sst39sf040_load(&board->cart_flash, 0, img, (uint32_t)len);
-        board->cart_off_prg = 0x48;
+        board->cart_off_prg = R01S_CART_HDR_SIZE + R01S_CART_PTR_TABLE_BYTES + 2u * 128u;
         board->cart_len_prg = R01S_CART_PRG_BYTES;
         board->cart_loaded = 1;
         return 0;
     }
     format_ver = img[6];
-    ptr_bytes = cart_ptr_table_bytes(format_ver);
-    if (len < R01S_CART_HDR_SIZE + ptr_bytes) {
+    if (format_ver != R01S_CART_FORMAT_VER) {
         return -1;
     }
     ptrs = img + R01S_CART_HDR_SIZE;

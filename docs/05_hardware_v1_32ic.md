@@ -53,7 +53,7 @@ Target: **through-hole DIP**, compact **12 x 12 cm** 4-layer PCB.
 | 1 | AS6C62256 (DIP-28) | 32 KB system RAM (`$0000-$7FFF`) |
 | 1 | AS6C62256 (DIP-28) | 32 KB interleaved VRAM |
 | 1 | AS6C62256 (DIP-28) | 32 KB sprite line-buffer SRAM |
-| 1 | SST39SF040 (DIP-32) | 512 KB cart flash (PRG / CHR / MAP) |
+| 1 | SST39SF040 (DIP-32) | 512 KB cart flash (**32 KB** PRG + CHR / MAP) |
 
 ### Programmable logic (5 ICs)
 

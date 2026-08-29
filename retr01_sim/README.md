@@ -65,7 +65,7 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 
 | In ROM | Meaning |
 |--------|---------|
-| Header + pointer table | magic `retr01`, `format_ver` **2**, world count, **36 B** ptr table (24-bit offs + lens) |
+| Header + pointer table | magic `retr01`, `format_ver` **2** only, world count, **36 B** ptr table (24-bit offs + lens) |
 | Other screens + credits | Title + interstitial MAP blobs; optional credits ASCII (<= 1024 B) |
 | Global BG/sprite palettes | 8 BG rows + 8 sprite rows (master indices, not RGB) |
 | SPR CHR banks | Real tile bytes from Studio export (4 banks x up to 256 tiles) |

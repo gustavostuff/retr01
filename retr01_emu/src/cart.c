@@ -8,10 +8,6 @@
 #define WORLD_SLOT_SIZE 8
 #define WORLD_HDR_SIZE 32
 
-static size_t cart_ptr_table_bytes(uint8_t format_ver) {
-    return format_ver >= R01E_CART_FORMAT_VER ? (size_t)R01E_CART_PTR_TABLE_V2 : (size_t)R01E_CART_PTR_TABLE_V1;
-}
-
 static void set_err(char *err, size_t err_cap, const char *msg) {
     if (err && err_cap > 0) {
         snprintf(err, err_cap, "%s", msg ? msg : "error");
@@ -60,7 +56,7 @@ int r01e_cart_load_mem(R01eCart *out, const uint8_t *img, size_t len, char *err,
         return -1;
     }
     memset(out, 0, sizeof(*out));
-    if (len < HDR_SIZE + R01E_CART_PTR_TABLE_V1) {
+    if (len < HDR_SIZE + R01E_CART_PTR_TABLE_BYTES) {
         set_err(err, err_cap, "cart too small");
         return -1;
     }
@@ -69,8 +65,8 @@ int r01e_cart_load_mem(R01eCart *out, const uint8_t *img, size_t len, char *err,
         return -1;
     }
     out->format_ver = img[6];
-    if (len < HDR_SIZE + cart_ptr_table_bytes(out->format_ver)) {
-        set_err(err, err_cap, "cart too small");
+    if (out->format_ver != R01E_CART_FORMAT_VER) {
+        set_err(err, err_cap, "unsupported cart format_ver");
         return -1;
     }
     copy = (uint8_t *)malloc(len);
@@ -97,16 +93,14 @@ int r01e_cart_load_mem(R01eCart *out, const uint8_t *img, size_t len, char *err,
     out->len_pal_spr = get_u24(ptrs + 15);
     out->off_world_table = get_u24(ptrs + 18);
     out->len_world_table = get_u24(ptrs + 21);
-    if (out->format_ver >= R01E_CART_FORMAT_VER) {
-        out->off_other = get_u24(ptrs + 24);
-        out->len_other = get_u24(ptrs + 27);
-        out->off_credits = get_u24(ptrs + 30);
-        out->len_credits = get_u24(ptrs + 33);
-        if (out->len_credits > R01E_CART_CREDITS_MAX) {
-            r01e_cart_free(out);
-            set_err(err, err_cap, "credits too large");
-            return -1;
-        }
+    out->off_other = get_u24(ptrs + 24);
+    out->len_other = get_u24(ptrs + 27);
+    out->off_credits = get_u24(ptrs + 30);
+    out->len_credits = get_u24(ptrs + 33);
+    if (out->len_credits > R01E_CART_CREDITS_MAX) {
+        r01e_cart_free(out);
+        set_err(err, err_cap, "credits too large");
+        return -1;
     }
     if (out->len_prg == 0 || !r01e_cart_ptr(out, out->off_prg, out->len_prg > R01E_PRG_BYTES ? R01E_PRG_BYTES : out->len_prg)) {
         r01e_cart_free(out);
@@ -280,7 +274,7 @@ const uint8_t *r01e_cart_other_payload(const R01eCart *c, int id) {
     uint8_t count;
     int i;
 
-    if (!c || c->format_ver < R01E_CART_FORMAT_VER || c->len_other == 0 || id < 0 || id >= R01E_CART_OTHER_MAX) {
+    if (!c || c->format_ver != R01E_CART_FORMAT_VER || c->len_other == 0 || id < 0 || id >= R01E_CART_OTHER_MAX) {
         return NULL;
     }
     blob = r01e_cart_ptr(c, c->off_other, c->len_other);
@@ -305,7 +299,7 @@ const uint8_t *r01e_cart_credits(const R01eCart *c, size_t *out_len) {
     if (out_len) {
         *out_len = 0;
     }
-    if (!c || c->format_ver < R01E_CART_FORMAT_VER || c->len_credits == 0) {
+    if (!c || c->format_ver != R01E_CART_FORMAT_VER || c->len_credits == 0) {
         return NULL;
     }
     if (out_len) {

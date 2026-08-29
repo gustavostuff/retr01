@@ -579,7 +579,9 @@ int r01_project_import_png(R01Project *p, const char *path, char *err_buf, size_
         goto fail;
     }
     if (r01_world_present_count(w) > R01_MAX_PRESENT_SCREENS) {
-        set_err(err_buf, err_cap, "png exceeds 30 present screens");
+        if (err_buf && err_cap > 0) {
+            snprintf(err_buf, err_cap, "png exceeds %d present screens", R01_MAX_PRESENT_SCREENS);
+        }
         goto fail;
     }
 

@@ -10,8 +10,7 @@
 #include <string.h>
 
 #define HDR_SIZE 16
-#define PTR_TABLE_SIZE_V1 24
-#define PTR_TABLE_SIZE_V2 36
+#define PTR_TABLE_SIZE ((int)R01_CART_PTR_TABLE_BYTES)
 #define WORLD_SLOT_SIZE 8
 #define WORLD_TABLE_SIZE (R01_MAX_WORLDS * WORLD_SLOT_SIZE)
 #define WORLD_HDR_SIZE 32
@@ -79,10 +78,6 @@ static void put_u24(uint8_t *p, uint32_t v) {
 static void put_u16(uint8_t *p, uint16_t v) {
     p[0] = (uint8_t)(v & 0xFFu);
     p[1] = (uint8_t)((v >> 8) & 0xFFu);
-}
-
-static size_t cart_ptr_table_bytes(uint8_t format_ver) {
-    return format_ver >= R01_CART_FORMAT_VER ? (size_t)PTR_TABLE_SIZE_V2 : (size_t)PTR_TABLE_SIZE_V1;
 }
 
 static size_t other_blob_bytes(void) {
@@ -545,10 +540,10 @@ static int r01_cart_build(const R01Project *p, uint8_t **out, size_t *out_len, c
     Buf cart = {0};
     R01Project *work;
     uint8_t hdr[HDR_SIZE];
-    uint8_t ptrs[PTR_TABLE_SIZE_V2];
+    uint8_t ptrs[PTR_TABLE_SIZE];
     uint8_t wtable[WORLD_TABLE_SIZE];
     uint8_t prg[R01_PRG_BYTES];
-    size_t ptr_bytes = cart_ptr_table_bytes(R01_CART_FORMAT_VER);
+    size_t ptr_bytes = (size_t)PTR_TABLE_SIZE;
     uint32_t off_prg, off_pal_bg, off_pal_spr, off_other, off_credits, off_wtable, world_base;
     size_t other_len = other_blob_bytes();
     size_t credits_len = 0;
@@ -572,7 +567,9 @@ static int r01_cart_build(const R01Project *p, uint8_t **out, size_t *out_len, c
     if (build_world_blob(&world_blob, &work->worlds[0]) != 0) {
         free(work);
         free(world_blob.data);
-        set_err(err_buf, err_cap, "world blob failed (>30 present screens?)");
+        if (err_buf && err_cap > 0) {
+            snprintf(err_buf, err_cap, "world blob failed (>%d present screens?)", R01_MAX_PRESENT_SCREENS);
+        }
         return -1;
     }
     if (build_other_blob(&other_blob, work) != 0) {
