@@ -2,7 +2,7 @@
 
 Gameplay modules are **attachable functionalities** that define mechanics and runtime behavior for a game (cart). Studio phases that implement each module are chosen later. This file is the **product / runtime contract**.
 
-**Related:** software map [`02`](02_graphics_worlds_memory.md). Collision is software-only ([`01`](01_architecture_overview.md)). Audio protocol [`07`](07_audio_architecture.md).
+**Related:** software map [`02`](02_graphics_worlds_memory.md). Collision is software-only ([`01`](01_architecture_overview.md)). Audio protocol [`06`](06_audio_architecture.md).
 
 ## Scope and attachment
 
@@ -321,12 +321,12 @@ Rules for **BG boss**:
 
 ## 4. BGM and SFX module (TBD)
 
-Short stub only. Full protocol lives in [`07_audio_architecture.md`](07_audio_architecture.md).
+Short stub only. Full protocol lives in [`06_audio_architecture.md`](06_audio_architecture.md).
 
 | Intent | Notes |
 |--------|-------|
 | Role | Studio tools + generated ASM macros/routines to start/stop BGM and fire SFX |
-| Hardware | 6502 sequencer -> `$FE40`-`$FE5F` -> ATmega328P mixer ([`07`](07_audio_architecture.md)) |
+| Hardware | 6502 sequencer -> `$FE40`-`$FE5F` -> ATmega328P mixer ([`06`](06_audio_architecture.md)) |
 | Status | **TBD**. Channel map, bytecode authoring UI, and module profiles not frozen here |
 
 ---
@@ -409,7 +409,7 @@ Not a full HAL yet. Shape the codegen toward this:
 | Scroll / camera | `$FE02` / `$FE03` (+ MAP `$FE90`-`$FE93`, VRAM `$FE10`-`$FE12`) |
 | Sprites | OAM `$FE20` / `$FE21` (1284 fill, **16**/line) |
 | BG solid data | MAP/VRAM attrs. CPU tests `SOLID` |
-| Audio | `$FE40`-`$FE5F` ([`07`](07_audio_architecture.md)) |
+| Audio | `$FE40`-`$FE5F` ([`06`](06_audio_architecture.md)) |
 
 ---
 
@@ -421,7 +421,7 @@ Not a full HAL yet. Shape the codegen toward this:
 - BG boss scroll recipe (main `$FE02`/`$FE03` vs plane slots 4-5 vs scripted MAP)
 - Trigger volumes as first-class colliders
 - Whether FROZEN entities may keep cheap timers (currently: **no** updates)
-- BGM/SFX Studio profiles ([`07`](07_audio_architecture.md))
+- BGM/SFX Studio profiles ([`06`](06_audio_architecture.md))
 
 ---
 
@@ -431,6 +431,6 @@ Not a full HAL yet. Shape the codegen toward this:
 |-----|------|
 | This file | Game module contract + budgets |
 | [`02`](02_graphics_worlds_memory.md) | Display, VRAM, MAP, `$FExx` |
-| [`04`](04_retr01_studio.md) / Studio README | Current Studio Phase 2 product (may lag this file) |
-| [`07`](07_audio_architecture.md) | APU / bytecode SoT |
+| Studio README | Current Studio Phase 2 product (may lag this file) |
+| [`06`](06_audio_architecture.md) | APU / bytecode SoT |
 | [`01`](01_architecture_overview.md) | Sources of truth index |

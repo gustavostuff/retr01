@@ -7,17 +7,17 @@ When docs disagree, use this order.
 | Concern | Authority | Notes |
 |---------|-----------|-------|
 | Software-visible behavior (CPU map, `$FExx` **logical** ports, cart image, worlds/VRAM/palettes) | [`02`](02_graphics_worlds_memory.md) | Current draft. Open bitfields/mailbox/I2C ports called out there |
-| Locked decisions + open questions | [`05`](05_costs_and_open_questions.md) | Does not replace `02` for register text |
-| Retr01-A **HW BOM** (current) | [`06`](06_hardware_v1_32ic.md) | **32 IC** system. Does not invent `$FExx` |
+| Locked decisions + open questions | [`04`](04_costs_and_open_questions.md) | Does not replace `02` for register text |
+| Retr01-A **HW BOM** (current) | [`05`](05_hardware_v1_32ic.md) | **32 IC** system. Does not invent `$FExx` |
 | Protoboard island bring-up | [`03`](03_hardware_implementation.md) | Bench checklist for the **32 IC** netlist |
-| Studio Phase 3D+ (product) | [`retr01_studio/README.md`](../retr01_studio/README.md) | Authoring + Play + export. Metasprites, JSON v6. Short mirror: [`04`](04_retr01_studio.md) |
+| Studio Phase 3D+ (product) | [`retr01_studio/README.md`](../retr01_studio/README.md) | Authoring + Play + export. Metasprites, JSON v7, cart `format_ver` 2 |
 | Emulator Phase 1 | [`retr01_emu/README.md`](../retr01_emu/README.md) | Soft cart runtime matching Studio Play |
-| Audio / APU protocol | [`07`](07_audio_architecture.md) | 6502 sequencer + 328P mixer, `$FE4x` bus bridge |
+| Audio / APU protocol | [`06`](06_audio_architecture.md) | 6502 sequencer + 328P mixer, `$FE4x` bus bridge |
 | Board IC simulator | [`retr01_sim/README.md`](../retr01_sim/README.md) | Pin/netlist models of the 32-IC BOM |
-| Studio game modules (movement, camera, entities, collision budgets) | [`08`](08_game_modules.md) | Attachable gameplay profiles. Studio phases implement subsets later |
+| Studio game modules (movement, camera, entities, collision budgets) | [`07`](07_game_modules.md) | Attachable gameplay profiles. Studio phases implement subsets later |
 | IC pin/behavior detail | [`hw/md/`](../hw/md/) + datasheet PDFs | Sim and schematics |
 
-**Current product board:** [`06`](06_hardware_v1_32ic.md), **32 ICs**, ~**12x12 cm** 4-layer THT (chip roles and netlist there).
+**Current product board:** [`05`](05_hardware_v1_32ic.md), **32 ICs**, ~**12x12 cm** 4-layer THT (chip roles and netlist there).
 
 This folder is the current architecture spec for **Retr01**.
 
@@ -65,7 +65,7 @@ Retr01 is a family of discrete-logic 2D machines that share one CPU model, one g
 
 ## High-level hardware
 
-Current chip list: [`06`](06_hardware_v1_32ic.md) (**32 IC**). Roles:
+Current chip list: [`05`](05_hardware_v1_32ic.md) (**32 IC**). Roles:
 
 | Block | Role |
 |------|------|
@@ -90,7 +90,7 @@ Current chip list: [`06`](06_hardware_v1_32ic.md) (**32 IC**). Roles:
 | Worlds | **8** max (indices 0-7) |
 | Screens per world | **30 present** max on sparse **8x8** virtual grid (playfield only) |
 | Global UI ROM | **Other screens**: title + interstitial MAPs (**2 x 480 B**). **Credits**: **<= 1024 B** ASCII in cart flash (not PRG). See [`02`](02_graphics_worlds_memory.md#other-screens-and-credits-global-rom) |
-| Cart / PRG | **512 KB** flash. **128 KB** PRG in image (4 banks, CPU window 32 KB + `$FE80`). Phase 1 export still **32 KB** until cart bump. ~**508 KB** full fill at 8-world caps |
+| Cart / PRG | **512 KB** flash. Cart `format_ver` **2** export (8 worlds, other screens, credits ROM). PRG payload still **32 KB** stub; **128 KB** banked PRG (`$FE80`) planned. ~**508 KB** full fill at 8-world caps |
 | CHR per world | **4 BG banks + 4 sprite banks**, **256 tiles each**, **32 KB** |
 | Sprites | **64 OAM**, **16 per logical scanline** max |
 | VRAM | **32 KB**, interleaved |
@@ -104,7 +104,7 @@ Current chip list: [`06`](06_hardware_v1_32ic.md) (**32 IC**). Roles:
 
 ### Retr01-A
 
-- Through-hole motherboard, **32 IC** system ([`06`](06_hardware_v1_32ic.md)), ~**12 x 12 cm** target
+- Through-hole motherboard, **32 IC** system ([`05`](05_hardware_v1_32ic.md)), ~**12 x 12 cm** target
 - RGBS + S-Video + composite pads
 - **SCALE** DIP (**2x** default / **1x** optional)
 - 20-pin IDC for cabinet controls
@@ -142,8 +142,7 @@ Current chip list: [`06`](06_hardware_v1_32ic.md) (**32 IC**). Roles:
 | 01 | `01_architecture_overview.md` | This file. Sources of truth, terminology |
 | 02 | `02_graphics_worlds_memory.md` | Software SoT: VRAM, cart, `$FExx` |
 | 03 | `03_hardware_implementation.md` | Protoboard island bring-up |
-| 04 | `04_retr01_studio.md` | Studio stub (product SoT: component README) |
-| 05 | `05_costs_and_open_questions.md` | Locked decisions, open questions |
-| 06 | `06_hardware_v1_32ic.md` | 32-IC BOM |
-| 07 | `07_audio_architecture.md` | APU / bytecode |
-| 08 | `08_game_modules.md` | Game module contract + budgets |
+| 04 | `04_costs_and_open_questions.md` | Locked decisions, open questions |
+| 05 | `05_hardware_v1_32ic.md` | 32-IC BOM |
+| 06 | `06_audio_architecture.md` | APU / bytecode |
+| 07 | `07_game_modules.md` | Game module contract + budgets |

@@ -27,7 +27,7 @@ AVR 8-bit MCU. For **ATmega328P** specifically: **32 KB Flash**, **2 KB SRAM**, 
 | Output | Timer PWM (or dual PWM) to RC / amp -- board analog TBD |
 | Isolation | Own time domain; may be developed in **sim first** (island **K**) while CPU video islands proceed |
 
-Current BOM: [`06`](../../docs/06_hardware_v1_32ic.md).
+Current BOM: [`05`](../../docs/05_hardware_v1_32ic.md).
 
 ## On-chip memory (328P)
 
@@ -97,7 +97,7 @@ Island **K** pass: independent tone without the rest of the video board.
 
 ## v0 vs current (32-IC)
 
-Current BOM **keeps** a dedicated 328P for APU ([`06`](../../docs/06_hardware_v1_32ic.md)). 1284 does **not** own `$FE40-$FE5F`.
+Current BOM **keeps** a dedicated 328P for APU ([`05`](../../docs/05_hardware_v1_32ic.md)). 1284 does **not** own `$FE40-$FE5F`.
 
 | | Earlier sketches | Current 32-IC |
 |--|---------------------|---------------|

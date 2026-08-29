@@ -2,14 +2,14 @@
 
 This doc merges the old cost sheet and decision log into one planning file.
 
-**Authority:** [`01`](01_architecture_overview.md) *Sources of truth*. Locked rows here agree with current [`06`](06_hardware_v1_32ic.md) HW and [`02`](02_graphics_worlds_memory.md) software. This file does not replace `02` for `$FExx` text.
+**Authority:** [`01`](01_architecture_overview.md) *Sources of truth*. Locked rows here agree with current [`05`](05_hardware_v1_32ic.md) HW and [`02`](02_graphics_worlds_memory.md) software. This file does not replace `02` for `$FExx` text.
 
 ## Locked decisions
 
 | Topic | Decision |
 |------|----------|
 | Name/family | **Retr01**, rollout **A -> C -> H** |
-| Retr01-A HW BOM | **32 IC** system ([`06`](06_hardware_v1_32ic.md)): 31 motherboard + 1 cart I2C save. Escape +1 PLD -> 33 |
+| Retr01-A HW BOM | **32 IC** system ([`05`](05_hardware_v1_32ic.md)): 31 motherboard + 1 cart I2C save. Escape +1 PLD -> 33 |
 | PCB envelope (A) | ~**12 x 12 cm** 4-layer THT target |
 | Worlds | **8** max (indices 0-7) |
 | World layout | sparse virtual grid up to **8x8**, **30 present screens max** per world (playfield). **Other screens** + **credits** are global ROM, not on grid |
@@ -48,8 +48,8 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Machine config storage | **1284 internal 4 KB EEPROM** (handshake via `$FE70`-`$FE72` band, protocol TBD, Q20) |
 | Cart game saves | **I2C EEPROM on cart** (in the 32). HAL / port TBD (Q20) |
 | MAP access | **`$FE90`-`$FE92`** addr, **`$FE93`** data + auto-inc |
-| PRG layout | **One global PRG section** per cart, **32 KB** max at `$8000` (I/O hole at `$FE00-$FEFF`). **`$FE80` reserved / unused** |
-| PRG size (planning) | **32 KB** hard cap. Fits the CPU map with no runtime paging |
+| PRG layout | **One global PRG section** per cart at `$8000` (I/O hole at `$FE00-$FEFF`). **`$FE80`** reserved for future PRG bank select |
+| PRG size (export today) | **32 KB** stub in cart image. **128 KB** max planned (4 banks via `$FE80`) |
 | Cart fit | **Standard cart 512 KB**. Full 8-world caps + **128 KB** PRG ~**508 KB** (~**4.5 KB** free). **30 screens/world** (not 32) keeps 8 worlds in flash. Phase 1 export (32 KB PRG, world 0) much smaller. See [`02`](02_graphics_worlds_memory.md) |
 | Cart flash | **512 KB** parallel NOR (**SST39SF040**). On cartridge (socket OK for early bring-up). Same `.retr01` image |
 | Beam / glue | Beam in **2x ATF22V10**, glue absorbed, **5** PLDs (compositor = priority mux) |
@@ -63,7 +63,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Raster | scanline compare + IRQ |
 | APU | separate **ATmega328P** (`$FE40-$FE5F`) |
 | Near-term software | **Retr01 Studio Phase 2** + **Emulator Phase 1** + board sim (studio/emu/sim READMEs) |
-| Studio project files | **JSON v4** (one world's map/CHR per save, see Studio README) |
+| Studio project files | **JSON v7** (one world's map/CHR per save + global `other_screens` + `credits`; see Studio README) |
 | Validation tools | board IC simulator ([`retr01_sim/README.md`](../retr01_sim/README.md)). Software emu ([`retr01_emu/`](../retr01_emu/)) |
 
 ## Cost snapshot
@@ -96,7 +96,7 @@ Flash + I2C save on cart PCB. Motherboard + cart proto still targets roughly the
 | Q2 | RGBS analog levels/sync polarity tuning | digital timing is locked. Bench tuning still needed |
 | Q10 | OAM attr bitfields | **Locked:** bank/pal/flip/priority/size in [`02`](02_graphics_worlds_memory.md). 8x16 tile-pair fetch detail on 1284 firmware still micro-rev |
 | Q11 | `$FE07` plane band end/dual-band detail | start scanline drafted. End-of-band pairing may need a second latch |
-| Q12 | PRG/CHR/MAP offsets inside **512 KB** flash | **Locked in code** (`format_ver` 1): header 16, pointer table 24, world table entry 8 B x **7** slots, world header 32, screen dir 12. **`format_ver` 2** (planned): **8** world slots, **30 present screens**/world max, **128 KB** PRG, pointer extensions for **other screens** + **credits ROM** (<= 1024 B). See [`02`](02_graphics_worlds_memory.md) |
+| Q12 | PRG/CHR/MAP offsets inside **512 KB** flash | **Locked in code.** `format_ver` **1** (legacy): 24 B pointer table, no other/credits. `format_ver` **2** (current export): 36 B pointer table, **8** world slots, **30 present screens**/world max, **other screens** + **credits ROM** (<= 1024 B). PRG payload still **32 KB** until 128 KB banked export. See [`02`](02_graphics_worlds_memory.md) |
 | Q13 | Retr01-C pad bit timing | ATtiny85 + 3-wire draft locked. Baud/poll edge details later |
 | Q14 | Color PROM DAC depth | Packed R3G3B2 is the norm. How many resistor steps / levels on the bench still tunable |
 | Q15 | Color PROM part (AT28C16 vs faster OTP) | **Pinned candidate:** **AT27C256R-70PU** (70 ns, DIP-28) if 150 ns is tight. Footprint DIP-24 vs DIP-28 |
@@ -110,6 +110,6 @@ Flash + I2C save on cart PCB. Motherboard + cart proto still targets roughly the
 ## Practical next decisions
 
 1. tune RGBS on real hardware (Q2)
-2. Studio game modules / later phases ([`08`](08_game_modules.md))
+2. Studio game modules / later phases ([`07`](07_game_modules.md))
 3. freeze save/mailbox APIs + HC573 bitfields (Q20, Q21). Confirm PROM part (Q15)
 4. flesh out ATtiny85 poll timing when Retr01-C work starts (Q13)

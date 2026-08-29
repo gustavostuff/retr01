@@ -13,7 +13,7 @@ Game-visible graphics model: 32 KB sys / VRAM / linebuf, 512 KB cart, interleave
 
 Target: **through-hole DIP**, compact **12 x 12 cm** 4-layer PCB.
 
-**Related:** software [`02`](02_graphics_worlds_memory.md). Decisions [`05`](05_costs_and_open_questions.md). Overview [`01`](01_architecture_overview.md). Protoboard islands [`03`](03_hardware_implementation.md).
+**Related:** software [`02`](02_graphics_worlds_memory.md). Decisions [`04`](04_costs_and_open_questions.md). Overview [`01`](01_architecture_overview.md). Protoboard islands [`03`](03_hardware_implementation.md).
 
 ---
 
@@ -109,7 +109,7 @@ Interface: 6502 bit-bang or 1284 as I2C master behind a `$FExx` window (TBD in `
 
 ### APU path (328P)
 
-1. W65C02S writes `$FE40-$FE5F` (sequencer / bytecode, see [`07`](07_audio_architecture.md)).
+1. W65C02S writes `$FE40-$FE5F` (sequencer / bytecode, see [`06`](06_audio_architecture.md)).
 2. **Bus bridge** = decode + CPU-domain HC245 isolation + 328P port/latch (not a separate IC).
 3. ATmega328P services APU continuously (mix / DAC).
 4. ATmega1284P does **not** synthesize audio.
@@ -200,7 +200,7 @@ Phase C: First integrated PCB
 |-----|---------|
 | [`02`](02_graphics_worlds_memory.md) | Software SoT |
 | [`03`](03_hardware_implementation.md) | Protoboard island checklist |
-| [`05`](05_costs_and_open_questions.md) | Locked decisions + open Qs |
+| [`04`](04_costs_and_open_questions.md) | Locked decisions + open Qs |
 | [`01`](01_architecture_overview.md) | Sources of truth + snapshot |
-| [`07`](07_audio_architecture.md) | APU / bytecode |
-| [`08`](08_game_modules.md) | Game module contract + budgets |
+| [`06`](06_audio_architecture.md) | APU / bytecode |
+| [`07`](07_game_modules.md) | Game module contract + budgets |

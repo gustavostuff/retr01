@@ -2,7 +2,7 @@
 
 Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 
-**Authority:** this file is the **software-visible** source of truth (see [`01`](01_architecture_overview.md)). Current HW BOM: [`06`](06_hardware_v1_32ic.md) (**32 IC**). HW must not invent CPU ports here. Open mailbox/I2C/bitfield items stay listed as TBD below.
+**Authority:** this file is the **software-visible** source of truth (see [`01`](01_architecture_overview.md)). Current HW BOM: [`05`](05_hardware_v1_32ic.md) (**32 IC**). HW must not invent CPU ports here. Open mailbox/I2C/bitfield items stay listed as TBD below.
 
 ## Display
 
@@ -20,7 +20,7 @@ Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 - Screen / plane payload: **480 B** raw (**240** tiles + **240** attrs). Direct MAP `$FE93` -> VRAM `$FE12` (no RLE required)
 - Per world: **4 BG + 4 sprite** CHR banks (**32 KB**), screen dir + parallax dir
 - Palettes: **8 global BG palette rows** + **8 global sprite palette rows** (see [Palettes](#palettes))
-- Cart: **512 KB** (SST39SF040). **128 KB** PRG in cart image (CPU window still `$8000-$FFFF` with I/O hole, banked via `$FE80`, see PRG). Studio Phase 1 export still emits **32 KB** until cart `format_ver` bump lands.
+- Cart: **512 KB** (SST39SF040). **128 KB** PRG max in cart image (CPU window still `$8000-$FFFF` with I/O hole, banked via `$FE80`, see PRG). Studio export uses cart `format_ver` **2** today; PRG payload is still the **32 KB** Phase 1 stub until 128 KB banked export lands.
 
 | Asset | Size at caps (8 worlds) |
 |-------|--------------------------|
@@ -125,11 +125,11 @@ Line N+1| fill N+1         |        | SHOW             |
 
 ## Palettes
 
-**Color PROM** (board): **64 master indices**, packed **`{RRRGGGBB}`** (R3 G3 B2) in **one** PROM/OTP chip, 1-dot pipeline ([`06`](06_hardware_v1_32ic.md)). Active buffer: **4 BG + 4 sprite** via `$FE08`/`$FE09` (indices held in packed HC573 / decode path on the 32-IC board, no separate palette RAM IC). Shared color 0. BG+sprite row index always locked together.
+**Color PROM** (board): **64 master indices**, packed **`{RRRGGGBB}`** (R3 G3 B2) in **one** PROM/OTP chip, 1-dot pipeline ([`05`](05_hardware_v1_32ic.md)). Active buffer: **4 BG + 4 sprite** via `$FE08`/`$FE09` (indices held in packed HC573 / decode path on the 32-IC board, no separate palette RAM IC). Shared color 0. BG+sprite row index always locked together.
 
 **Cart storage:** **8 BG palette rows** + **8 sprite palette rows**. Each row is **4 palettes x 4 master indices = 16 B**. Totals: **128 B** BG + **128 B** sprite = **256 B**. Software selects a row (`$FE38` hint) and copies it into `$FE08`/`$FE09`.
 
-Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio and burn tools **quantize** to R3G3B2 when building the PROM image ([`04`](04_retr01_studio.md)).
+Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio and burn tools **quantize** to R3G3B2 when building the PROM image (Studio README).
 
 (Earlier board sketches used 3x AT28C16 R/G/B, not the current norm.)
 
@@ -148,13 +148,13 @@ Non-playfield UI that is **not** on the world grid. Lives in cart flash as **MAP
 
 | Kind | Cart storage | Dev workflow |
 |------|--------------|--------------|
-| **Title** | Fixed **480 B** MAP in **other screens** slot **0** | Stream to VRAM slot **0**, scroll **0,0**. Studio may export later; hand-pack OK for now |
+| **Title** | Fixed **480 B** MAP in **other screens** slot **0** | Stream to VRAM slot **0**, scroll **0,0**. Studio exports in `format_ver` 2; hand-pack still OK |
 | **Level interstitial** | One shared **480 B** MAP in slot **1** | Reuse one canvas between levels; patch tiles/attrs in **C/ASM**, or overlay small PRG patch tables. No per-level MAP slot in cart |
 | **Credits** | **Credits ROM** blob (**<= 1024 B** ASCII text) | PRG scroll/draw routine reads text via MAP; optional one-time copy to sys RAM. **No** credits MAP screen |
 
-**Other screen ids (planned):** `0` = **TITLE**, `1` = **INTER** (interstitial). Max **2** MAP payloads in v1 (~**992 B** including dir/header).
+**Other screen ids:** `0` = **TITLE**, `1` = **INTER** (interstitial). Max **2** MAP payloads (~**992 B** including dir/header).
 
-**Credits ROM (planned caps):**
+**Credits ROM caps:**
 
 | Field | Value |
 |-------|-------|
@@ -168,13 +168,13 @@ CHR for title/interstitial/credits glyphs comes from existing BG banks (often sh
 
 ## Cart image (`.retr01`)
 
-24-bit offsets. Magic **`retr01`** (lowercase ASCII). **`format_ver` = 1** (frozen in current Studio/Emu/Sim packers): **7** world table slots, **32 KB** PRG, no other-screens/credits blobs. **`format_ver` = 2** (planned): **8** worlds max, **30 present screens**/world max, **128 KB** PRG, `$FE80` bank register, **other screens** + **credits ROM** pointers.
+24-bit offsets. Magic **`retr01`** (lowercase ASCII). **`format_ver` = 1** (legacy load only): **24 B** pointer table, no other-screens/credits blobs. **`format_ver` = 2** (current Studio/Emu/Sim export): **36 B** pointer table, **8** world table slots, **30 present screens**/world max, **other screens** + **credits ROM** pointers. PRG payload is still **32 KB** in export today; **128 KB** banked PRG via `$FE80` is planned.
 
 ```text
 +----------------------------------------------------------------+
 |  CART HEADER (16 B at offset 0)                                |
 |    magic[6]          'r','e','t','r','0','1'                   |
-|    format_ver        u8 (= 1)                                  |
+|    format_ver        u8 (1 legacy, 2 current)                    |
 |    world_count       u8 (1..8)                                 |
 |    flags / reserved  (pad to 16 B)                             |
 |  POINTER TABLE (24 B in v1; +12 B in v2 -- each field u24)     |
@@ -250,7 +250,7 @@ Phase 1 PRG boot streams **one** start screen only (no full 2x2 seam PRG yet). H
 
 ## CPU map and `$FExx`
 
-Logical CPU addresses below are the software SoT. Silicon uses **9x HC573** with bit-packing ([`06`](06_hardware_v1_32ic.md)). The **bitfield packing table is still TBD** (Q21). Prefer these logical addresses + Zero Page shadows until it lands.
+Logical CPU addresses below are the software SoT. Silicon uses **9x HC573** with bit-packing ([`05`](05_hardware_v1_32ic.md)). The **bitfield packing table is still TBD** (Q21). Prefer these logical addresses + Zero Page shadows until it lands.
 
 | Range | Region |
 |-------|--------|

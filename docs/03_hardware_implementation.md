@@ -4,7 +4,7 @@
 
 | | |
 |--|--|
-| **Current Retr01-A HW BOM** | [`06`](06_hardware_v1_32ic.md), **32 IC** (norm) |
+| **Current Retr01-A HW BOM** | [`05`](05_hardware_v1_32ic.md), **32 IC** (norm) |
 | **Software-visible map** | [`02`](02_graphics_worlds_memory.md) |
 | **Sources of truth** | [`01`](01_architecture_overview.md) |
 
@@ -26,12 +26,12 @@ Four active compute domains on one **5 V** board:
 | Item | Spec |
 |------|------|
 | System IC count | **32** (31 motherboard + 1 cart I2C save). Escape +1 PLD -> 33 |
-| Color PROM | **1x** packed R3G3B2 ([`06`](06_hardware_v1_32ic.md)) |
+| Color PROM | **1x** packed R3G3B2 ([`05`](05_hardware_v1_32ic.md)) |
 | Machine config | **1284 internal EEPROM** (`$FE70`-`$FE72` handshake). No parallel board EEPROM IC |
 | `$FExx` latches | **9x HC573** bit-packed |
 | Bus | **3x HC245** |
 
-Datasheets: [W65C02S](https://westerndesigncenter.com/wdc/documentation/w65c02s.pdf), [AS6C62256](https://www.alliancememory.com/wp-content/uploads/pdf/datasheets/AS6C62256.pdf), [ATF22V10](https://ww1.microchip.com/downloads/en/DeviceDoc/ATF22V10-Datasheet-DS50002239D.pdf), [ATmega1284P](https://ww1.microchip.com/downloads/en/DeviceDoc/40002047A.pdf), [ATmega328P](https://ww1.microchip.com/downloads/en/DeviceDoc/ATmega328P-DS-DS40002061A.pdf), [AT28C16](https://ww1.microchip.com/downloads/en/DeviceDoc/doc0540.pdf), [SST39SF040](https://ww1.microchip.com/downloads/en/DeviceDoc/20005051C.pdf), [74HC family](https://www.ti.com/logic-circuit/standard-logic/74hc-family/overview.html). Full part list: [`06`](06_hardware_v1_32ic.md).
+Datasheets: [W65C02S](https://westerndesigncenter.com/wdc/documentation/w65c02s.pdf), [AS6C62256](https://www.alliancememory.com/wp-content/uploads/pdf/datasheets/AS6C62256.pdf), [ATF22V10](https://ww1.microchip.com/downloads/en/DeviceDoc/ATF22V10-Datasheet-DS50002239D.pdf), [ATmega1284P](https://ww1.microchip.com/downloads/en/DeviceDoc/40002047A.pdf), [ATmega328P](https://ww1.microchip.com/downloads/en/DeviceDoc/ATmega328P-DS-DS40002061A.pdf), [AT28C16](https://ww1.microchip.com/downloads/en/DeviceDoc/doc0540.pdf), [SST39SF040](https://ww1.microchip.com/downloads/en/DeviceDoc/20005051C.pdf), [74HC family](https://www.ti.com/logic-circuit/standard-logic/74hc-family/overview.html). Full part list: [`05`](05_hardware_v1_32ic.md).
 
 **Clocks:** CPU **8.000 MHz**, dot **5.369318 MHz** (independent), 1284 **20 MHz**, 328P **16 MHz**.
 
@@ -128,7 +128,7 @@ Parallel: develop **K** and **L** in sim while breadboarding **A-I**. Merge at *
 
 ### Sim canvas grouping
 
-`retr01_sim` still validates the letter milestones above (layer-2 smoke in `test_island_abcdeghiojklmnp.c`), but the **SDL canvas** uses **9 frames** so related chips sit together. Wiring is unchanged. BOM count stays **32** ([`06`](06_hardware_v1_32ic.md)).
+`retr01_sim` still validates the letter milestones above (layer-2 smoke in `test_island_abcdeghiojklmnp.c`), but the **SDL canvas** uses **9 frames** so related chips sit together. Wiring is unchanged. BOM count stays **32** ([`05`](05_hardware_v1_32ic.md)).
 
 | Canvas frame (UI) | Bring-up letters on that frame |
 |-------------------|-------------------------------|

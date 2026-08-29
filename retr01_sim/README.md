@@ -1,6 +1,6 @@
 # Retr01 Board Simulator
 
-IC-first board simulator for Retr01-A. Separate from Retr01 Studio (authoring). Pin/behavior: [`hw/md/`](../hw/md/). BOM: [`docs/06_hardware_v1_32ic.md`](../docs/06_hardware_v1_32ic.md). Island checklist: [`docs/03_hardware_implementation.md`](../docs/03_hardware_implementation.md).
+IC-first board simulator for Retr01-A. Separate from Retr01 Studio (authoring). Pin/behavior: [`hw/md/`](../hw/md/). BOM: [`docs/05_hardware_v1_32ic.md`](../docs/05_hardware_v1_32ic.md). Island checklist: [`docs/03_hardware_implementation.md`](../docs/03_hardware_implementation.md).
 
 **Goal:** simulate the Retr01-A motherboard as discrete ICs (pins, package, datasheet behavior) wired like the real board. End state: boot a cart, accept pad input, show a digital playfield (logical 128x120 inside a 256x240 RGBS field / LCD sink). Accuracy tightens as tests demand it.
 
@@ -65,7 +65,8 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 
 | In ROM | Meaning |
 |--------|---------|
-| Header + pointer table | magic `retr01`, `format_ver` 1, world count, 24-bit offs + lens |
+| Header + pointer table | magic `retr01`, `format_ver` **2**, world count, **36 B** ptr table (24-bit offs + lens) |
+| Other screens + credits | Title + interstitial MAP blobs; optional credits ASCII (<= 1024 B) |
 | Global BG/sprite palettes | 8 BG rows + 8 sprite rows (master indices, not RGB) |
 | SPR CHR banks | Real tile bytes from Studio export (4 banks x up to 256 tiles) |
 | Entity tables | Per-world type records (origin, hitbox, up to 4 parts) + instance list (type, world x/y) |

@@ -1,6 +1,6 @@
 # Retr01 Studio
 
-Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. **Phase 3E** (current): **Metasprites** accordion + modal (assemble multi-part SPR groups), entity compose from metasprite catalog, JSON v6. **Phase 3D**: cart packs real SPR CHR + entity type/instance tables; emu/sim Play OAM parity with Studio. **Phase 3C**: drag sprite/metasprite/entity onto screen, place instances, Studio Play OAM. **Phase 3B**: Entities accordion + Add/Edit entity modal. **Phase 3A**: Sprites accordion + Create/Edit sprite modal, SPR bank CHR catalog. **Phase 2** still applies: multi-world sidebar, screen create/delete, tile edit/paint, solid collision attrs, global palette editor, default spawn screen. **Phase 1** still applies: PNG import, Play preview, export. Hardware: [`docs/02`](../docs/02_graphics_worlds_memory.md). Docs stub: [`docs/04`](../docs/04_retr01_studio.md).
+Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. **Phase 3E** (current): **Metasprites** accordion + modal (assemble multi-part SPR groups), entity compose from metasprite catalog, JSON v7. **Phase 3D**: cart packs real SPR CHR + entity type/instance tables; emu/sim Play OAM parity with Studio. **Phase 3C**: drag sprite/metasprite/entity onto screen, place instances, Studio Play OAM. **Phase 3B**: Entities accordion + Add/Edit entity modal. **Phase 3A**: Sprites accordion + Create/Edit sprite modal, SPR bank CHR catalog. **Phase 2** still applies: multi-world sidebar, screen create/delete, tile edit/paint, solid collision attrs, global palette editor, default spawn screen. **Phase 1** still applies: PNG import, Play preview, export. Hardware: [`docs/02`](../docs/02_graphics_worlds_memory.md).
 
 **Stack:** C11 + SDL2 + FreeType (Proggy Tiny), `libretr01_studio_core` + thin shell.
 
@@ -66,17 +66,20 @@ Play SoT: `core/src/play.c` + `collision.c`. Emu/sim mirror the same rules (sepa
 
 ---
 
-## Save / load (JSON v6)
+## Save / load (JSON v7)
 
 **Ctrl+S** / **Ctrl+O** -> `rom/test.r01proj` by default.
 
 | Field | Behavior |
 |-------|----------|
-| `version` | **6** (`R01_JSON_VER`) |
+| `version` | **7** (`R01_JSON_VER`) |
 | Palettes | Project-wide: all **8 BG + 8 SPR** rows |
+| `other_screens` | Global title + interstitial MAP payloads (480 B tiles + 480 B attrs each) |
+| `credits` | Global credits ROM text (<= 1024 B ASCII) |
 | World data | **Active world only** on save: grid, screens, `bg_bank0`, `spr_banks`, sprite catalog, **`metasprites`**, `entities`, `instances`, `default_screen`, `default_pal_row` |
-| Load | Always applies saved world data to **world 0**. Restores `default_world` / `active_world` indices |
+| Load | Always applies saved world data to **world 0**. Restores `default_world` / `active_world` indices. Initializes empty `other_screens` / `credits` if missing |
 | Worlds 1-7 | Session-only until multi-world JSON lands (world **0** on disk) |
+| v6 projects | Load OK; `other_screens` / `credits` start empty |
 | v5 projects | Load OK; `metasprites` starts empty |
 | v4 projects | Load OK; sprite catalog / SPR banks / entities / instances start empty |
 
@@ -107,7 +110,7 @@ Kit **master indices** only ([`docs/02`](../docs/02_graphics_worlds_memory.md)).
 
 | File | Contents |
 |------|----------|
-| `test.retr01` | Packed cart (**world 0**): BG+SPR CHR, MAP, palettes, PRG stub, entity type/instance tables |
+| `test.retr01` | Packed cart (**world 0**): BG+SPR CHR, MAP, palettes, PRG stub, entity type/instance tables, **other screens**, optional **credits** (`format_ver` 2) |
 | `test_prom.bin` | 64-byte Color PROM image (motherboard, not in cart) |
 | `test_boot.s` | Human-readable ca65 stub / equates |
 | `test_flash.bin` | Cart padded to **512 KB** |
@@ -127,7 +130,7 @@ PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are
 | **3B** | Entities accordion + Add/Edit entity modal (compose / hitbox / origin) |
 | **3C** | Drag sprite/entity onto screen; Studio Play OAM (origin-relative) |
 | **3D** | Cart packs real SPR CHR + entity tables; emu/sim Play OAM parity |
-| **3E** | Metasprites accordion + modal; entity compose from metasprite catalog; JSON v6; viewport sprite clipping (current) |
+| **3E** | Metasprites accordion + modal; entity compose from metasprite catalog; JSON v7; cart `format_ver` 2 (other screens + credits); viewport sprite clipping (current) |
 
 **Out of scope (for now):** entity movement/collision, multi-state animation in Play, parallax planes, Generate, multi-world cart export, multi-world JSON save, dead-zone/fade scroll profiles, full 6502 gameplay loop.
 
