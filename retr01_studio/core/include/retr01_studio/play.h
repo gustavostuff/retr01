@@ -44,4 +44,18 @@ int r01_play_sample_bg(const R01Project *p, const R01PlayState *pl, int vx, int 
 /* Build OAM for current Play camera. Returns count written (incl. player as 0). */
 int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry *out, int cap);
 
+/* OAM packing: uint8 stores viewport-relative signed coords (-128..127). */
+static inline int r01_oam_coord_from_u8(uint8_t v) {
+    return (int)(int8_t)v;
+}
+
+static inline uint8_t r01_oam_coord_to_u8(int v) {
+    return (uint8_t)(int8_t)v;
+}
+
+/* True when an 8x8 sprite at (x,y) does not intersect the 128x120 viewport. */
+static inline int r01_oam_tile_off_screen(int x, int y) {
+    return x + 8 <= 0 || y + 8 <= 0 || x >= R01_SCREEN_PX_W || y >= R01_SCREEN_PX_H;
+}
+
 #endif

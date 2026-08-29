@@ -97,3 +97,43 @@ int r01_entity_frame_add_metasprite(R01EntityFrame *fr, const R01MetaspriteDef *
     }
     return 0;
 }
+
+int r01_world_entity_from_metasprite(R01World *w, int meta_idx) {
+    R01EntityType *e;
+    R01EntityFrame *fr;
+    const R01MetaspriteDef *ms;
+    int idx, i;
+    if (!w || meta_idx < 0 || meta_idx >= w->metasprite_count) {
+        return -1;
+    }
+    ms = &w->metasprites[meta_idx];
+    if (ms->frame.part_count < 1) {
+        return -1;
+    }
+    idx = r01_world_entity_add(w);
+    if (idx < 0) {
+        return -1;
+    }
+    e = &w->entities[idx];
+    if (ms->name[0]) {
+        strncpy(e->states[0].name, ms->name, R01_ENTITY_NAME_MAX - 1);
+    }
+    fr = r01_entity_frame(e, 0, 0);
+    if (!fr) {
+        return -1;
+    }
+    for (i = 0; i < ms->frame.part_count; i++) {
+        if (r01_entity_frame_add_part(fr, &ms->frame.parts[i]) < 0) {
+            return -1;
+        }
+    }
+    return idx;
+}
+
+int r01_world_place_metasprite(R01World *w, int meta_idx, int world_x, int world_y) {
+    int type_id = r01_world_entity_from_metasprite(w, meta_idx);
+    if (type_id < 0) {
+        return -1;
+    }
+    return r01_world_instance_add(w, type_id, world_x, world_y);
+}

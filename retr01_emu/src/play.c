@@ -134,11 +134,11 @@ static void write_oam(R01eMachine *m) {
 
     memset(m->io.oam, 0xFF, sizeof(m->io.oam));
 
-    if (vx >= 0 && vy >= 0 && vx <= 247 && vy <= 247) {
-        m->io.oam[0] = (uint8_t)vy;
+    if (!r01e_oam_tile_off_screen(vx, vy)) {
+        m->io.oam[0] = r01e_oam_coord_to_u8(vy);
         m->io.oam[1] = 1; /* solid tile in SPR bank 0 */
         m->io.oam[2] = 0; /* bank 0, pal 0 */
-        m->io.oam[3] = (uint8_t)vx;
+        m->io.oam[3] = r01e_oam_coord_to_u8(vx);
         slot = 1;
     }
 
@@ -177,13 +177,13 @@ static void write_oam(R01eMachine *m) {
             int sx = world_x + (int)dx - origin_x - pl->cam_x;
             int sy = world_y + (int)dy - origin_y - pl->cam_y;
             uint8_t *oe = &m->io.oam[(size_t)slot * R01E_OAM_ENTRY_BYTES];
-            if (sx < 0 || sy < 0 || sx > 247 || sy > 247) {
+            if (r01e_oam_tile_off_screen(sx, sy)) {
                 continue;
             }
-            oe[0] = (uint8_t)sy;
+            oe[0] = r01e_oam_coord_to_u8(sy);
             oe[1] = part[0]; /* tile */
             oe[2] = part[1]; /* attr */
-            oe[3] = (uint8_t)sx;
+            oe[3] = r01e_oam_coord_to_u8(sx);
             slot++;
         }
     }

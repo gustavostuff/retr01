@@ -1,6 +1,8 @@
 #ifndef retr01_EMU_PLAY_H
 #define retr01_EMU_PLAY_H
 
+#include "retr01_emu/types.h"
+
 #include <stdint.h>
 
 struct R01eMachine;
@@ -51,5 +53,17 @@ void r01e_play_player_rgb(const struct R01eMachine *m, uint8_t *r, uint8_t *g, u
 /* Mirror play camera into video scroll / 2x2 workbench. */
 void r01e_play_sync_video(struct R01eMachine *m);
 void r01e_play_post_event(R01ePlay *play, R01eEvent evt);
+
+static inline int r01e_oam_coord_from_u8(uint8_t v) {
+    return (int)(int8_t)v;
+}
+
+static inline uint8_t r01e_oam_coord_to_u8(int v) {
+    return (uint8_t)(int8_t)v;
+}
+
+static inline int r01e_oam_tile_off_screen(int x, int y) {
+    return x + 8 <= 0 || y + 8 <= 0 || x >= R01E_SCREEN_PX_W || y >= R01E_SCREEN_PX_H;
+}
 
 #endif

@@ -1,6 +1,7 @@
 #include "retr01_emu/video.h"
 
 #include "retr01_emu/machine.h"
+#include "retr01_emu/play.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -596,17 +597,18 @@ static void composite_sprites(R01eMachine *m) {
     memset(line_count, 0, sizeof(line_count));
     for (ei = 0; ei < R01E_OAM_ENTRIES; ei++) {
         const uint8_t *e = &m->io.oam[(size_t)ei * R01E_OAM_ENTRY_BYTES];
-        uint8_t sy = e[0];
+        uint8_t sy_u = e[0];
         uint8_t tile = e[1];
         uint8_t attr = e[2];
-        uint8_t sx = e[3];
+        uint8_t sx_u = e[3];
+        int sy = r01e_oam_coord_from_u8(sy_u);
+        int sx = r01e_oam_coord_from_u8(sx_u);
         int tall = (attr & R01E_OAM_SIZE_16) != 0;
 
-        /* Y=$FF = unused (common convention). */
-        if (sy == 0xFFu) {
+        if (tile == 0xFFu) {
             continue;
         }
-        blit_spr_tile(m, (int)sx, (int)sy, tile, attr, line_count);
+        blit_spr_tile(m, sx, sy, tile, attr, line_count);
         if (tall) {
             blit_spr_tile(m, (int)sx, (int)sy + 8, (uint8_t)(tile | 1u), attr, line_count);
         }

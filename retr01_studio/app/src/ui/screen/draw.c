@@ -17,8 +17,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void draw_spr_tile_px(UiState *ui, SDL_Renderer *r, const R01World *w, const R01EntityPart *pt, int dx,
-                             int dy, int scale) {
+static void draw_spr_tile_px(UiState *ui, SDL_Renderer *r, const R01World *w, const R01EntityPart *pt, int log_x,
+                             int log_y, int ox, int oy, int scale, int clip_viewport) {
     const uint8_t *raw;
     uint8_t oriented[R01_TILE_BYTES];
     int row = w->default_pal_row;
@@ -35,19 +35,70 @@ static void draw_spr_tile_px(UiState *ui, SDL_Renderer *r, const R01World *w, co
         for (sx = 0; sx < 8; sx++) {
             uint8_t col = r01_tile_pixel_color(oriented, sx, sy);
             uint8_t cr, cg, cb;
+            int vx = log_x + sx;
+            int vy = log_y + sy;
             SDL_Rect px;
             if (col == 0) {
                 continue;
             }
+            if (clip_viewport && (vx < 0 || vy < 0 || vx >= R01_SCREEN_PX_W || vy >= R01_SCREEN_PX_H)) {
+                continue;
+            }
             r01_kit_rgb(ui->project->global_pal_spr[row][pt->pal & 3].idx[col & 3u], &cr, &cg, &cb);
-            px.x = dx + sx * scale;
-            px.y = dy + sy * scale;
+            px.x = ox + vx * scale;
+            px.y = oy + vy * scale;
             px.w = scale;
             px.h = scale;
             SDL_SetRenderDrawColor(r, cr, cg, cb, 255);
             SDL_RenderFillRect(r, &px);
         }
     }
+}
+
+static int entity_local_bounds(const R01EntityType *ent, int local_x, int local_y, int *out_min_x, int *out_min_y,
+                               int *out_max_x, int *out_max_y) {
+    const R01EntityState *st;
+    const R01EntityFrame *fr;
+    int pi;
+    int min_x = 9999, min_y = 9999, max_x = -9999, max_y = -9999;
+    if (!ent || ent->state_count < 1 || ent->states[0].frame_count < 1) {
+        return 0;
+    }
+    st = &ent->states[0];
+    fr = &st->frames[0];
+    for (pi = 0; pi < fr->part_count; pi++) {
+        const R01EntityPart *pt = &fr->parts[pi];
+        int px = r01_entity_world_x(local_x, st->origin_x, pt->dx);
+        int py = r01_entity_world_y(local_y, st->origin_y, pt->dy);
+        if (px < min_x) {
+            min_x = px;
+        }
+        if (py < min_y) {
+            min_y = py;
+        }
+        if (px + 8 > max_x) {
+            max_x = px + 8;
+        }
+        if (py + 8 > max_y) {
+            max_y = py + 8;
+        }
+    }
+    if (max_x <= min_x) {
+        return 0;
+    }
+    if (out_min_x) {
+        *out_min_x = min_x;
+    }
+    if (out_min_y) {
+        *out_min_y = min_y;
+    }
+    if (out_max_x) {
+        *out_max_x = max_x;
+    }
+    if (out_max_y) {
+        *out_max_y = max_y;
+    }
+    return 1;
 }
 
 static void draw_entity_at_screen(UiState *ui, SDL_Renderer *r, const R01World *w, const R01EntityType *ent,
@@ -65,7 +116,7 @@ static void draw_entity_at_screen(UiState *ui, SDL_Renderer *r, const R01World *
         const R01EntityPart *pt = &fr->parts[pi];
         int px = r01_entity_world_x(local_x, st->origin_x, pt->dx);
         int py = r01_entity_world_y(local_y, st->origin_y, pt->dy);
-        draw_spr_tile_px(ui, r, w, pt, ox + px * UI_SCREEN_SCALE, oy + py * UI_SCREEN_SCALE, UI_SCREEN_SCALE);
+        draw_spr_tile_px(ui, r, w, pt, px, py, ox, oy, UI_SCREEN_SCALE, 1);
         if (px < min_x) {
             min_x = px;
         }
@@ -80,8 +131,28 @@ static void draw_entity_at_screen(UiState *ui, SDL_Renderer *r, const R01World *
         }
     }
     if (selected && max_x > min_x) {
-        draw_rect(r, ox + min_x * UI_SCREEN_SCALE, oy + min_y * UI_SCREEN_SCALE,
-                  (max_x - min_x) * UI_SCREEN_SCALE, (max_y - min_y) * UI_SCREEN_SCALE, 255, 255, 255);
+        int sel_x = min_x;
+        int sel_y = min_y;
+        int sel_w = max_x - min_x;
+        int sel_h = max_y - min_y;
+        if (sel_x < 0) {
+            sel_w += sel_x;
+            sel_x = 0;
+        }
+        if (sel_y < 0) {
+            sel_h += sel_y;
+            sel_y = 0;
+        }
+        if (sel_x + sel_w > R01_SCREEN_PX_W) {
+            sel_w = R01_SCREEN_PX_W - sel_x;
+        }
+        if (sel_y + sel_h > R01_SCREEN_PX_H) {
+            sel_h = R01_SCREEN_PX_H - sel_y;
+        }
+        if (sel_w > 0 && sel_h > 0) {
+            draw_rect(r, ox + sel_x * UI_SCREEN_SCALE, oy + sel_y * UI_SCREEN_SCALE, sel_w * UI_SCREEN_SCALE,
+                      sel_h * UI_SCREEN_SCALE, 255, 255, 255);
+        }
     }
 }
 
@@ -96,15 +167,17 @@ static void draw_instances_on_screen(UiState *ui, SDL_Renderer *r, const R01Worl
         const R01EntityType *ent;
         int local_x = inst->world_x - s->col * R01_SCREEN_PX_W;
         int local_y = inst->world_y - s->row * R01_SCREEN_PX_H;
+        int min_x, min_y, max_x, max_y;
         if (inst->type_id < 0 || inst->type_id >= w->entity_count) {
             continue;
         }
-        if (local_x < -R01_ENTITY_COMPOSE_PX || local_y < -R01_ENTITY_COMPOSE_PX ||
-            local_x >= R01_SCREEN_PX_W + R01_ENTITY_COMPOSE_PX ||
-            local_y >= R01_SCREEN_PX_H + R01_ENTITY_COMPOSE_PX) {
+        ent = &w->entities[inst->type_id];
+        if (!entity_local_bounds(ent, local_x, local_y, &min_x, &min_y, &max_x, &max_y)) {
             continue;
         }
-        ent = &w->entities[inst->type_id];
+        if (max_x <= 0 || max_y <= 0 || min_x >= R01_SCREEN_PX_W || min_y >= R01_SCREEN_PX_H) {
+            continue;
+        }
         draw_entity_at_screen(ui, r, w, ent, local_x, local_y, ox, oy, i == ui->sel_instance);
     }
 }
@@ -154,6 +227,11 @@ int instance_hit_on_screen(const UiState *ui, int lx, int ly, int *out_inst) {
     return 0;
 }
 
+static void set_viewport_clip(SDL_Renderer *r, int ox, int oy) {
+    SDL_Rect clip = {ox, oy, UI_SCREEN_W, UI_SCREEN_H};
+    SDL_RenderSetClipRect(r, &clip);
+}
+
 void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s) {
     int ox, oy, y, x;
     R01World *w = r01_project_active_world(ui->project);
@@ -176,7 +254,9 @@ void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s) {
             SDL_RenderFillRect(r, &px);
         }
     }
+    set_viewport_clip(r, ox, oy);
     draw_instances_on_screen(ui, r, w, s, ox, oy);
+    SDL_RenderSetClipRect(r, NULL);
     if (screen_sel_valid(ui) && ui->screen_mode == UI_SCREEN_MODE_SEL && ui->sel_instance < 0) {
         int min_x, min_y, max_x, max_y;
         int sx, sy, sw, sh;
@@ -227,12 +307,10 @@ static void draw_oam_sprites(UiState *ui, SDL_Renderer *r, int ox, int oy) {
         pt.pal = oam[i].pal;
         pt.flip_h = oam[i].flip_h;
         pt.flip_v = oam[i].flip_v;
-        if (oam[i].x + 8 <= 0 || oam[i].y + 8 <= 0 || oam[i].x >= R01_SCREEN_PX_W ||
-            oam[i].y >= R01_SCREEN_PX_H) {
+        if (r01_oam_tile_off_screen(oam[i].x, oam[i].y)) {
             continue;
         }
-        draw_spr_tile_px(ui, r, w, &pt, ox + oam[i].x * UI_SCREEN_SCALE, oy + oam[i].y * UI_SCREEN_SCALE,
-                         UI_SCREEN_SCALE);
+        draw_spr_tile_px(ui, r, w, &pt, oam[i].x, oam[i].y, ox, oy, UI_SCREEN_SCALE, 1);
     }
 }
 
@@ -252,7 +330,9 @@ void draw_play_view(UiState *ui, SDL_Renderer *r) {
             SDL_RenderFillRect(r, &px);
         }
     }
+    set_viewport_clip(r, ox, oy);
     draw_oam_sprites(ui, r, ox, oy);
+    SDL_RenderSetClipRect(r, NULL);
 }
 
 void draw_catalog_drag_ghost(UiState *ui, SDL_Renderer *r) {
@@ -276,7 +356,7 @@ void draw_catalog_drag_ghost(UiState *ui, SDL_Renderer *r) {
         pt.tile_id = sp->tile_id;
         pt.pal = sp->pal;
         draw_spr_tile_px(ui, r, w, &pt, ui->mouse_x - ui->catalog_drag.off_x, ui->mouse_y - ui->catalog_drag.off_y,
-                         UI_SCREEN_SCALE);
+                         0, 0, 1, 0);
     } else if (ui->catalog_drag.active == UI_CATALOG_DRAG_METASPRITE) {
         const R01MetaspriteDef *ms;
         int i, gx, gy;
@@ -287,8 +367,8 @@ void draw_catalog_drag_ghost(UiState *ui, SDL_Renderer *r) {
         gx = ui->mouse_x - ui->catalog_drag.off_x;
         gy = ui->mouse_y - ui->catalog_drag.off_y;
         for (i = 0; i < ms->frame.part_count; i++) {
-            draw_spr_tile_px(ui, r, w, &ms->frame.parts[i], gx + ms->frame.parts[i].dx * UI_SCREEN_SCALE,
-                             gy + ms->frame.parts[i].dy * UI_SCREEN_SCALE, UI_SCREEN_SCALE);
+            draw_spr_tile_px(ui, r, w, &ms->frame.parts[i], gx + ms->frame.parts[i].dx, gy + ms->frame.parts[i].dy, 0,
+                             0, 1, 0);
         }
     } else if (ui->catalog_drag.active == UI_CATALOG_DRAG_ENTITY) {
         const R01EntityType *ent;
@@ -302,7 +382,7 @@ void draw_catalog_drag_ghost(UiState *ui, SDL_Renderer *r) {
         }
         pt = ent->states[0].frames[0].parts[0];
         draw_spr_tile_px(ui, r, w, &pt, ui->mouse_x - ui->catalog_drag.off_x, ui->mouse_y - ui->catalog_drag.off_y,
-                         UI_SCREEN_SCALE);
+                         0, 0, 1, 0);
     } else {
         return;
     }

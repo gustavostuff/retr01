@@ -94,11 +94,11 @@ static void write_oam(R01sBoard *b) {
 
     vx = pl->player_x - pl->cam_x;
     vy = pl->player_y - pl->cam_y;
-    if (vx >= 0 && vy >= 0 && vx <= 247 && vy <= 247) {
-        r01s_atmega1284p_oam_poke(&b->mcu1284, 0, (uint8_t)vy);
+    if (!r01s_oam_tile_off_screen(vx, vy)) {
+        r01s_atmega1284p_oam_poke(&b->mcu1284, 0, r01s_oam_coord_to_u8(vy));
         r01s_atmega1284p_oam_poke(&b->mcu1284, 1, 1);
         r01s_atmega1284p_oam_poke(&b->mcu1284, 2, 0);
-        r01s_atmega1284p_oam_poke(&b->mcu1284, 3, (uint8_t)vx);
+        r01s_atmega1284p_oam_poke(&b->mcu1284, 3, r01s_oam_coord_to_u8(vx));
         slot = 1;
         b->health_saw_oam = 1;
     }
@@ -139,13 +139,13 @@ static void write_oam(R01sBoard *b) {
             int8_t dy = (int8_t)part[3];
             int sx = world_x + (int)dx - origin_x - pl->cam_x;
             int sy = world_y + (int)dy - origin_y - pl->cam_y;
-            if (sx < 0 || sy < 0 || sx > 247 || sy > 247) {
+            if (r01s_oam_tile_off_screen(sx, sy)) {
                 continue;
             }
-            r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 0), (uint8_t)sy);
+            r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 0), r01s_oam_coord_to_u8(sy));
             r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 1), part[0]);
             r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 2), part[1]);
-            r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 3), (uint8_t)sx);
+            r01s_atmega1284p_oam_poke(&b->mcu1284, (uint8_t)(slot * 4 + 3), r01s_oam_coord_to_u8(sx));
             slot++;
             b->health_saw_oam = 1;
         }

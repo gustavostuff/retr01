@@ -58,4 +58,16 @@ void r01s_play_draw(struct R01sBoard *board);
 /* VBlank: latch pending scroll / camera / OAM (from board_step). LCD field start handled by video_sink. */
 void r01s_play_on_vblank(struct R01sBoard *board);
 
+static inline int r01s_oam_coord_from_u8(uint8_t v) {
+    return (int)(int8_t)v;
+}
+
+static inline uint8_t r01s_oam_coord_to_u8(int v) {
+    return (uint8_t)(int8_t)v;
+}
+
+static inline int r01s_oam_tile_off_screen(int x, int y) {
+    return x + 8 <= 0 || y + 8 <= 0 || x >= 128 || y >= 120;
+}
+
 #endif

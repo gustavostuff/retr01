@@ -6,6 +6,7 @@
 #include "retr01_studio/chr_pack.h"
 #include "retr01_studio/entities.h"
 #include "retr01_studio/json_io.h"
+#include "retr01_studio/metasprites.h"
 #include "retr01_studio/palette.h"
 #include "retr01_studio/project.h"
 
@@ -432,7 +433,12 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                         ui_toast(ui, "cannot place sprite", 1);
                     }
                 } else if (ui->catalog_drag.active == UI_CATALOG_DRAG_METASPRITE) {
-                    /* metasprites are placed via entity editor, not on the world canvas */
+                    idx = r01_world_place_metasprite(w, ui->catalog_drag.index, wx, wy);
+                    if (idx >= 0) {
+                        ui_toast(ui, "metasprite placed", 0);
+                    } else {
+                        ui_toast(ui, "cannot place metasprite", 1);
+                    }
                 } else if (ui->catalog_drag.active == UI_CATALOG_DRAG_ENTITY) {
                     idx = r01_world_place_entity(w, ui->catalog_drag.index, wx, wy);
                     if (idx >= 0) {

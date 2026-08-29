@@ -3,6 +3,7 @@
 #include "retr01_studio/chr_pack.h"
 #include "retr01_studio/entities.h"
 #include "retr01_studio/json_io.h"
+#include "retr01_studio/metasprites.h"
 #include "retr01_studio/play.h"
 #include "retr01_studio/project.h"
 #include "retr01_studio/sprites.h"
@@ -94,6 +95,25 @@ TEST_MAIN() {
     EXPECT(w->instance_count == 2, "2 instances");
     EXPECT(w->instances[1].type_id == 2, "new type id");
 
+    {
+        R01MetaspriteDef *ms;
+        int meta = r01_world_metasprite_add(w);
+        EXPECT(meta == 0, "metasprite add");
+        ms = r01_world_metasprite(w, meta);
+        strncpy(ms->name, "Blob", R01_ENTITY_NAME_MAX - 1);
+        part.dx = 1;
+        part.dy = 0;
+        EXPECT(r01_metasprite_add_part(ms, &part) == 0, "meta part 0");
+        part.dx = 2;
+        part.dy = 0;
+        EXPECT(r01_metasprite_add_part(ms, &part) == 1, "meta part 1");
+        inst = r01_world_place_metasprite(w, meta, 64, 72);
+        EXPECT(inst == 2, "place metasprite");
+        EXPECT(w->entity_count == 4, "auto entity from meta");
+        EXPECT(w->entities[3].states[0].frames[0].part_count == 2, "meta parts copied");
+        EXPECT(w->instances[2].world_x == 64 && w->instances[2].world_y == 72, "meta inst xy");
+    }
+
     EXPECT(r01_play_start(&pl, p), "play start");
     n = r01_play_build_oam(p, &pl, oam, R01_OAM_MAX);
     EXPECT(n >= 3, "oam has player + parts");
@@ -117,19 +137,21 @@ TEST_MAIN() {
 
     EXPECT(r01_project_save_json(p, "test_entities.r01proj", err, sizeof(err)) == 0, "save");
     EXPECT(r01_project_load_json(p2, "test_entities.r01proj", err, sizeof(err)) == 0, "load");
-    EXPECT(p2->worlds[0].entity_count == 3, "roundtrip entity count");
-    EXPECT(p2->worlds[0].instance_count == 2, "roundtrip instances");
+    EXPECT(p2->worlds[0].entity_count == 4, "roundtrip entity count");
+    EXPECT(p2->worlds[0].instance_count == 3, "roundtrip instances");
     EXPECT(p2->worlds[0].instances[0].world_x == 40, "inst0 x");
     EXPECT(p2->worlds[0].instances[0].world_y == 50, "inst0 y");
     EXPECT(p2->worlds[0].instances[1].world_x == 10, "inst1 x");
+    EXPECT(p2->worlds[0].instances[2].world_x == 64, "meta inst x");
+    EXPECT(p2->worlds[0].metasprite_count == 1, "metasprite rt");
     EXPECT(strcmp(p2->worlds[0].entities[0].states[0].name, "Walk") == 0, "name rt");
     EXPECT(p2->worlds[0].entities[0].states[0].origin_x == 3, "origin x");
     EXPECT(p2->worlds[0].entities[0].states[0].frames[0].parts[0].dx == 4, "part dx");
 
     EXPECT(r01_world_entity_remove(&p2->worlds[0], 0) == 0, "remove type");
-    EXPECT(p2->worlds[0].entity_count == 2, "count after remove");
+    EXPECT(p2->worlds[0].entity_count == 3, "count after remove");
     /* Instance of type 0 removed; remaining type ids remapped. */
-    EXPECT(p2->worlds[0].instance_count == 1, "inst of removed type gone");
+    EXPECT(p2->worlds[0].instance_count == 2, "inst of removed type gone");
     EXPECT(p2->worlds[0].instances[0].type_id == 1, "remapped type");
 
     free(p);

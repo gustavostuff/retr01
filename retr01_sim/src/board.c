@@ -1450,14 +1450,19 @@ static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
     }
 
     for (si = 0; si < 64 && painted < 16; si++) {
-        uint8_t oy = r01s_atmega1284p_oam_peek(mcu, (uint8_t)(si * 4 + 0));
+        uint8_t oy_u = r01s_atmega1284p_oam_peek(mcu, (uint8_t)(si * 4 + 0));
         uint8_t tile = r01s_atmega1284p_oam_peek(mcu, (uint8_t)(si * 4 + 1));
         uint8_t attr = r01s_atmega1284p_oam_peek(mcu, (uint8_t)(si * 4 + 2));
-        uint8_t ox = r01s_atmega1284p_oam_peek(mcu, (uint8_t)(si * 4 + 3));
+        uint8_t ox_u = r01s_atmega1284p_oam_peek(mcu, (uint8_t)(si * 4 + 3));
+        int oy = r01s_oam_coord_from_u8(oy_u);
+        int ox = r01s_oam_coord_from_u8(ox_u);
         int h = (attr & 0x80u) ? 16 : 8;
         int px;
 
-        if (logical_y < (int)oy || logical_y >= (int)oy + h) {
+        if (tile == 0xFFu) {
+            continue;
+        }
+        if (logical_y < oy || logical_y >= oy + h) {
             continue;
         }
         painted++;
