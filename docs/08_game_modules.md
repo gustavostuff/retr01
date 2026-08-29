@@ -311,7 +311,8 @@ Rules for **BG boss**:
 ### 3.5 Studio authoring (intent)
 
 - Place entity instances in the world (or spawn tables).
-- Edit type: states, frames, sprite lists, origins, hitboxes.
+- Build **metasprites** (multi-part SPR groups, no origin/hitbox) in the Metasprites modal; drag metasprite catalog rows onto the **entity** compose canvas to assemble frames.
+- Edit entity type: states, frames, origins, hitboxes, per-part paint (LMB select/drag, RMB paint).
 - Attach motion cycle parameters for non-player entities.
 - Mark boss encounters: sprite-only vs BG body + part entities, BG scroll axes.
 - Preview ACTIVE / FROZEN behavior against the camera profile in Play.
@@ -358,9 +359,10 @@ Entity-entity among all NPCs is **opt-in** and expensive. Default generated loop
 
 ### 5.3 Studio behavior
 
-- Author `SOLID` on tiles via tile context **Set Solid** (Phase 2 Studio) and hitboxes on entity states (future).
-- Play preview uses the same region rules (ACTIVE only).
-- Show hitboxes / solids as optional overlay (implementation phase TBD).
+- Author `SOLID` on tiles via tile context **Set Solid** (Phase 2 Studio).
+- Author entity **origins** and **hitboxes** in the entity modal (guides checkbox toggles overlay + interaction). **Runtime** entity collision is still future.
+- Play preview uses the same region rules (ACTIVE only). Sprites **clip to the 128×120 viewport** when partially off-screen (Studio, emu, sim Host Play).
+- Show hitboxes / solids as optional overlay in Play (implementation phase TBD).
 - Camera rail / auto-scroll must pause or redefine collision during transitions if pads are muted (rail: typically freeze gameplay collisions until scroll ends).
 
 ### 5.4 ASM peek (generated pattern)

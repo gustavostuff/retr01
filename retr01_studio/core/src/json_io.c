@@ -820,7 +820,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
             }
         }
 
-        /* v5: SPR banks + sprite catalog (optional; older projects stay empty). */
+        /* v5+: SPR banks + sprite catalog; v6 adds metasprites (optional; older projects stay empty). */
         {
             R01World *w = r01_project_world0(p);
             const char *spr_section = json_find(buf, "\"spr_banks\":");

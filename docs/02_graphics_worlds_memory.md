@@ -224,7 +224,7 @@ PRG planning cap is **128 KB** in the cart image (4 x 32 KB banks). The CPU stil
 | `$FE06`/`$FE07` | plane band | any band locks camera axis for the frame |
 | `$FE08`/`$FE09` | pal addr/data | active indices 0-63, auto-inc |
 | `$FE10`-`$FE12` | VRAM addr/data | auto-inc |
-| `$FE20`/`$FE21` | OAM addr/data | auto-inc. Entry `Y,tile,attr,X` x64 |
+| `$FE20`/`$FE21` | OAM addr/data | auto-inc. Entry `Y,tile,attr,X` ×64. **Host Play:** X/Y are **viewport-relative signed** coords packed as `int8` in each byte (negative top-left allowed; raster clips to **128×120**). Unused slot: `tile == 0xFF` |
 | `$FE30` | `WORLD` | 0-6 |
 | `$FE31`-`$FE37` | bank helpers | optional stamps, not live fetch |
 | `$FE38` | `PAL_ROW` | hint. Still copy `$FE08`/`$FE09` |

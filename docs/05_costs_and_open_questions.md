@@ -39,7 +39,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | VRAM | **32 KB**, interleaved. Slots **512 B** aligned (240+240 used) |
 | System RAM | **32 KB**, CPU-only |
 | Line buffer | third **32 KB** SRAM, sprite ping-pong, **128 px**/half used |
-| OAM | in **ATmega1284P**, no DMA. **`$FE20`** = addr, **`$FE21`** = data (auto-inc). Entry `Y, tile, attr, X` in logical space |
+| OAM | in **ATmega1284P**, no DMA. **`$FE20`** = addr, **`$FE21`** = data (auto-inc). Entry `Y, tile, attr, X`. **Host Play:** X/Y packed as signed viewport-relative bytes; partial sprites clip to **128×120** |
 | Sprite cap | **16** per **logical** scanline |
 | Scroll | `scroll_x` **0-127**, `scroll_y` **0-119**, wrap |
 | `$FExx` logical map | Draft in [`02`](02_graphics_worlds_memory.md). Silicon: **9x HC573** bit-packed (bitfield table open, Q21) |
