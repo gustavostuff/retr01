@@ -171,67 +171,67 @@ CHR for title/interstitial/credits glyphs comes from existing BG banks (often sh
 24-bit offsets. Magic **`retr01`** (lowercase ASCII). **`format_ver` = 1** (legacy load only): **24 B** pointer table, no other-screens/credits blobs. **`format_ver` = 2** (current Studio/Emu/Sim export): **36 B** pointer table, **8** world table slots, **30 present screens**/world max, **other screens** + **credits ROM** pointers. PRG payload is still **32 KB** in export today; **128 KB** banked PRG via `$FE80` is planned.
 
 ```text
-+----------------------------------------------------------------+
-|  CART HEADER (16 B at offset 0)                                |
-|    magic[6]          'r','e','t','r','0','1'                   |
-|    format_ver        u8 (1 legacy, 2 current)                    |
-|    world_count       u8 (1..8)                                 |
-|    flags / reserved  (pad to 16 B)                             |
-|  POINTER TABLE (24 B in v1; +12 B in v2 -- each field u24)     |
-|    off_prg, len_prg                                            |
-|    off_pal_bg, len_pal_bg                                      |
-|    off_pal_spr, len_pal_spr                                    |
-|    off_world_table, len_world_table                            |
-|    [v2] off_other, len_other    -- other screens blob          |
-|    [v2] off_credits, len_credits -- credits ROM (len max 1024) |
-+----------------------------------------------------------------+
-| GLOBAL PALETTES                                                |
-|    BG:     8 rows x 4 pals x 4 master indices = 128 B          |
-|    Sprite: 8 rows x 4 pals x 4 master indices = 128 B          |
-|    Active row N: copy 4 BG + 4 sprite pals into $FE08/$FE09     |
-+----------------------------------------------------------------+
++--------------------------------------------------------------------------+
+|  CART HEADER (16 B at offset 0)                                          |
+|    magic[6]          'r','e','t','r','0','1'                             |
+|    format_ver        u8 (1 legacy, 2 current)                            |
+|    world_count       u8 (1..8)                                           |
+|    flags / reserved  (pad to 16 B)                                       |
+|  POINTER TABLE (24 B in v1; +12 B in v2 -- each field u24)               |
+|    off_prg, len_prg                                                      |
+|    off_pal_bg, len_pal_bg                                                |
+|    off_pal_spr, len_pal_spr                                              |
+|    off_world_table, len_world_table                                      |
+|    [v2] off_other, len_other    -- other screens blob                    |
+|    [v2] off_credits, len_credits -- credits ROM (len max 1024)           |
++--------------------------------------------------------------------------+
+| GLOBAL PALETTES                                                          |
+|    BG:     8 rows x 4 pals x 4 master indices = 128 B                    |
+|    Sprite: 8 rows x 4 pals x 4 master indices = 128 B                    |
+|    Active row N: copy 4 BG + 4 sprite pals into $FE08/$FE09              |
++--------------------------------------------------------------------------+
 |  PRG (one global section, max 128 KB, CPU window $8000 + I/O hole $FE00) |
-|    Phase 1 export: 32 KB stub. Planned: 128 KB banked (`$FE80`)        |
-|    Code only -- credits strings live in CREDITS ROM below              |
-+----------------------------------------------------------------+
-|  OTHER SCREENS (global, v2 -- not in world blobs)              |
-|    other_count u8 (max 2 v1: 0=TITLE, 1=INTER)                 |
-|    pad[3]                                                      |
-|    DIR: other_count x 8 B { id, flags, pad u16, off_payload u24 } |
-|    PAYLOADS: other_count x 480 B (240 tile + 240 attr each)  |
-+----------------------------------------------------------------+
-|  CREDITS ROM (global, v2 -- not PRG)                           |
-|    raw ASCII text, len_credits <= 1024                         |
-+----------------------------------------------------------------+
-|  WORLD TABLE (8 slots x 8 B)                                   |
-|    each slot: present u8, pad u8, off_world u24, len_world u24 |
-+----------------------------------------------------------------+
-|  WORLD 0 BLOB                                                  |
-|  +------------------------------------------------------------+|
-|  | WORLD HEADER (32 B)                                        ||
-|  |   start_col, start_row, default_bg_bank, default_spr_bank  ||
-|  |   default_pal_row (0..7), screen_count (present, max **30**)   ||
-|  |   parallax_count (0..2)                                    ||
-|  |   off_chr u24, off_screen_dir u24, off_parallax_dir u24    ||
-|  |   entity_type_count u8, entity_inst_count u8               ||
-|  |   off_entity_types u24, off_entity_insts u24               ||
-|  |   reserved to 32 B                                         ||
-|  +------------------------------------------------------------+|
-|  | CHR: BG 0..3 + SPR 0..3 (4 KB each; real spr_banks)        ||
-|  | SCREEN DIR: 12 B per present screen                        ||
-|  |   col, row, flags0, flags1 (Phase 1: flags = 0)            ||
-|  |   off_payload u24, off_screen_meta u24 (0 if unused)       ||
-|  | PARALLAX DIR: slot (0..1 -> VRAM 4..5), flags, off_payload ||
-|  | SCREEN PAYLOADS: 240 tile + 240 attr each                  ||
-|  | PARALLAX PAYLOADS: same 480 B shape (after screens)        ||
-|  | ENTITY TYPES: 20 B each (state0/frame0 only)               ||
-|  |   origin_x, origin_y, part_count, pad                      ||
-|  |   4x {tile, attr, dx i8, dy i8} (unused parts zero)        ||
-|  | INSTANCES: 6 B each {type_id, pad, world_x u16, world_y u16}||
-|  +------------------------------------------------------------+|
-+----------------------------------------------------------------+
-|  WORLD 1 .. N                                                  |
-+----------------------------------------------------------------+
+|    Phase 1 export: 32 KB stub. Planned: 128 KB banked (`$FE80`)          |
+|    Code only -- credits strings live in CREDITS ROM below                |
++--------------------------------------------------------------------------+
+|  OTHER SCREENS (global, v2 -- not in world blobs)                        |
+|    other_count u8 (max 2 v1: 0=TITLE, 1=INTER)                           |
+|    pad[3]                                                                |
+|    DIR: other_count x 8 B { id, flags, pad u16, off_payload u24 }        |
+|    PAYLOADS: other_count x 480 B (240 tile + 240 attr each)              |
++--------------------------------------------------------------------------+
+|  CREDITS ROM (global, v2 -- not PRG)                                     |
+|    raw ASCII text, len_credits <= 1024                                   |
++--------------------------------------------------------------------------+
+|  WORLD TABLE (8 slots x 8 B)                                             |
+|    each slot: present u8, pad u8, off_world u24, len_world u24           |
++--------------------------------------------------------------------------+
+|  WORLD 0 BLOB                                                            |
+|  +--------------------------------------------------------------+        |
+|  | WORLD HEADER (32 B)                                          |        |
+|  |   start_col, start_row, default_bg_bank, default_spr_bank    |        |
+|  |   default_pal_row (0..7), screen_count (present, max **30**) |        |
+|  |   parallax_count (0..2)                                      |        |
+|  |   off_chr u24, off_screen_dir u24, off_parallax_dir u24      |        |
+|  |   entity_type_count u8, entity_inst_count u8                 |        |
+|  |   off_entity_types u24, off_entity_insts u24                 |        |
+|  |   reserved to 32 B                                           |        |
+|  +--------------------------------------------------------------+        |
+|  | CHR: BG 0..3 + SPR 0..3 (4 KB each; real spr_banks)          |        |
+|  | SCREEN DIR: 12 B per present screen                          |        |
+|  |   col, row, flags0, flags1 (Phase 1: flags = 0)              |        |
+|  |   off_payload u24, off_screen_meta u24 (0 if unused)         |        |
+|  | PARALLAX DIR: slot (0..1 -> VRAM 4..5), flags, off_payload   |        |
+|  | SCREEN PAYLOADS: 240 tile + 240 attr each                    |        |
+|  | PARALLAX PAYLOADS: same 480 B shape (after screens)          |        |
+|  | ENTITY TYPES: 20 B each (state0/frame0 only)                 |        |
+|  |   origin_x, origin_y, part_count, pad                        |        |
+|  |   4x {tile, attr, dx i8, dy i8} (unused parts zero)          |        |
+|  | INSTANCES: 6 B each {type_id, pad, world_x u16, world_y u16} |        |
+|  +--------------------------------------------------------------+        |
++--------------------------------------------------------------------------+
+|  WORLD 1 .. N                                                            |
++------------------------------------------------------------------------ -+
 ```
 
 OAM attr packing matches BG: bank bits 1-0, pal bits 3-2, `FLIP_H=0x10`, `FLIP_V=0x20`. Instance `world_x/y` is the **user origin**; host Play draws parts at `world + (dx,dy) - origin` (Studio `r01_entity_world_x/y`). SPR bank 0 **tile 1** is reserved as the solid player stub (OAM slot 0).
