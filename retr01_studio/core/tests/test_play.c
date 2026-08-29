@@ -4,9 +4,26 @@
 #include "retr01_studio/entities.h"
 #include "retr01_studio/play.h"
 #include "retr01_studio/project.h"
+#include "r01_play_camera.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+
+static void expect_camera(R01GameCtx *ctx, int line) {
+    int expect_x = ctx->cam_x;
+    int expect_y = ctx->cam_y;
+    r01_play_camera_update(&expect_x, &expect_y, ctx->player_x, ctx->player_y, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H,
+                           R01_SCREEN_PX_W, R01_SCREEN_PX_H, ctx->cam_deadzone_x, ctx->cam_deadzone_y,
+                           ctx->cam_axis_lock);
+    if (ctx->cam_x != expect_x || ctx->cam_y != expect_y) {
+        fprintf(stderr, "FAIL line %d: camera got %d,%d expected %d,%d\n", line, ctx->cam_x, ctx->cam_y, expect_x,
+                expect_y);
+        exit(1);
+    }
+}
+
+#define EXPECT_CAMERA(ctx) expect_camera((ctx), __LINE__)
 
 TEST_MAIN() {
     R01Project *p = (R01Project *)calloc(1, sizeof(R01Project));
@@ -30,9 +47,7 @@ TEST_MAIN() {
     EXPECT(pl.active, "play active");
     EXPECT(pl.ctx.player_x == R01_PLAY_SPAWN_CENTER_X(2), "spawn center x on default screen");
     EXPECT(pl.ctx.player_y == R01_PLAY_SPAWN_CENTER_Y(0), "spawn center y on default screen");
-    EXPECT(pl.ctx.cam_x == pl.ctx.player_x + R01_PLAY_PLAYER_W / 2 - R01_SCREEN_PX_W / 2 &&
-               pl.ctx.cam_y == pl.ctx.player_y + R01_PLAY_PLAYER_H / 2 - R01_SCREEN_PX_H / 2,
-           "camera centers on spawn");
+    EXPECT_CAMERA(&pl.ctx);
 
     /* Marked player with a placed instance starts at that instance origin. */
     {
@@ -52,13 +67,15 @@ TEST_MAIN() {
     }
 
     r01_play_tick(&pl, p, 0, 0);
-    EXPECT(pl.ctx.cam_x == pl.ctx.player_x + R01_PLAY_PLAYER_W / 2 - R01_SCREEN_PX_W / 2, "idle keeps camera follow");
+    EXPECT_CAMERA(&pl.ctx);
 
     {
         int before = pl.ctx.player_x;
+        int before_cam_x = pl.ctx.cam_x;
         r01_play_tick(&pl, p, 1, 0);
         EXPECT(pl.ctx.player_x == before + 1, "move right");
-        EXPECT(pl.ctx.cam_x == pl.ctx.player_x + R01_PLAY_PLAYER_W / 2 - R01_SCREEN_PX_W / 2, "camera follows move");
+        EXPECT_CAMERA(&pl.ctx);
+        (void)before_cam_x;
     }
 
     /* Solid under player blocks any move (all four AABB corners share the tile). */

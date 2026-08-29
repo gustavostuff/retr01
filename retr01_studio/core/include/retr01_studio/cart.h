@@ -9,6 +9,10 @@
 #define R01_CART_WHDR_OFF_TYPES 19
 #define R01_CART_WHDR_OFF_INSTS 22
 /* Play player: type index, or 0xFF = CHR stub. Hitbox snapshot from that type's state 0. */
+#define R01_CART_WHDR_FLAGS 7
+#define R01_CART_WHDR_FLAG_PLAYER_ANIM 0x01u
+#define R01_CART_PLAYER_ANIM_MAGIC0 'P'
+#define R01_CART_PLAYER_ANIM_MAGIC1 'A'
 #define R01_CART_WHDR_PLAYER_ENTITY 25
 #define R01_CART_WHDR_PLAYER_HIT_X 26
 #define R01_CART_WHDR_PLAYER_HIT_Y 27

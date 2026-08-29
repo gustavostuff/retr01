@@ -49,10 +49,18 @@ add_library(retr01_sim_core
   chips/sprite_fetch.c
   chips/integration.c
 )
+set(R01_COMMON_DIR "${CMAKE_SOURCE_DIR}/../common")
+add_library(r01_play_common
+  ${R01_COMMON_DIR}/r01_play_anim.c
+  ${R01_COMMON_DIR}/r01_play_anim_cart.c
+  ${R01_COMMON_DIR}/r01_play_camera.c
+)
+target_include_directories(r01_play_common PUBLIC ${R01_COMMON_DIR})
 target_include_directories(retr01_sim_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}/chips
 )
+target_link_libraries(retr01_sim_core PUBLIC r01_play_common)
 
 add_library(retr01_sim_app
   src/ui.c

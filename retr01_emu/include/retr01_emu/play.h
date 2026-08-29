@@ -2,6 +2,7 @@
 #define retr01_EMU_PLAY_H
 
 #include "retr01_emu/types.h"
+#include "r01_play_anim.h"
 
 #include <stdint.h>
 
@@ -42,6 +43,7 @@ typedef struct R01ePlay {
     int player_h;
     uint8_t pad_prev;
     int entity_count; /* phase 4+ */
+    R01PlayAnimCtx anim;
 } R01ePlay;
 
 void r01e_play_reset(R01ePlay *play);

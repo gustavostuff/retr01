@@ -3,6 +3,8 @@
 #include "retr01_emu/cart.h"
 #include "retr01_emu/machine.h"
 #include "retr01_emu/video.h"
+#include "r01_play_anim_cart.h"
+#include "r01_play_camera.h"
 
 #include <string.h>
 
@@ -16,7 +18,8 @@ static int cart_is_phase1_play(const R01eCart *c) {
     return prg[0x00F0] == 'R' && prg[0x00F1] == '0' && prg[0x00F2] == '1' && prg[0x00F3] == 'P';
 }
 
-static void player_hit_rect(R01eMachine *m, int origin_x, int origin_y, int *hx, int *hy, int *hw, int *hh) {
+static void player_hit_rect(R01eMachine *m, int origin_x, int origin_y, int state_idx, int *hx, int *hy, int *hw,
+                            int *hh) {
     R01eWorldView wv;
     int box_x = origin_x;
     int box_y = origin_y;
@@ -25,16 +28,36 @@ static void player_hit_rect(R01eMachine *m, int origin_x, int origin_y, int *hx,
 
     if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) == 0 &&
         wv.player_entity != R01E_CART_PLAYER_ENTITY_NONE && wv.player_entity < wv.entity_type_count) {
-        const uint8_t *types = r01e_cart_ptr(&m->cart, wv.base + wv.off_entity_types,
-                                             (size_t)wv.entity_type_count * R01E_CART_ENTITY_TYPE_SIZE);
-        if (types) {
-            const uint8_t *trec = types + (size_t)wv.player_entity * R01E_CART_ENTITY_TYPE_SIZE;
-            int origin_ax = (int)trec[0];
-            int origin_ay = (int)trec[1];
-            box_x = origin_x + (int)wv.player_hit_x - origin_ax;
-            box_y = origin_y + (int)wv.player_hit_y - origin_ay;
-            box_w = (int)wv.player_hit_w;
-            box_h = (int)wv.player_hit_h;
+        if (wv.has_player_anim) {
+            const uint8_t *blob =
+                r01e_cart_ptr(&m->cart, wv.base + wv.off_player_anim, wv.len > wv.off_player_anim ? wv.len - wv.off_player_anim : 0);
+            R01CartPlayerAnim anim;
+            const uint8_t *st = NULL;
+            if (blob && r01_cart_player_anim_parse(blob, wv.len - wv.off_player_anim, &anim) == 0) {
+                if (state_idx < 0 || state_idx >= anim.state_count) {
+                    state_idx = 0;
+                }
+                if (r01_cart_player_anim_state_hdr(&anim, state_idx, &st) == 0 && st) {
+                    int origin_ax = (int)st[0];
+                    int origin_ay = (int)st[1];
+                    box_x = origin_x + (int)st[2] - origin_ax;
+                    box_y = origin_y + (int)st[3] - origin_ay;
+                    box_w = (int)st[4];
+                    box_h = (int)st[5];
+                }
+            }
+        } else {
+            const uint8_t *types = r01e_cart_ptr(&m->cart, wv.base + wv.off_entity_types,
+                                                 (size_t)wv.entity_type_count * R01E_CART_ENTITY_TYPE_SIZE);
+            if (types) {
+                const uint8_t *trec = types + (size_t)wv.player_entity * R01E_CART_ENTITY_TYPE_SIZE;
+                int origin_ax = (int)trec[0];
+                int origin_ay = (int)trec[1];
+                box_x = origin_x + (int)wv.player_hit_x - origin_ax;
+                box_y = origin_y + (int)wv.player_hit_y - origin_ay;
+                box_w = (int)wv.player_hit_w;
+                box_h = (int)wv.player_hit_h;
+            }
         }
     }
     if (hx) {
@@ -53,22 +76,15 @@ static void player_hit_rect(R01eMachine *m, int origin_x, int origin_y, int *hx,
 
 static int player_move_ok(R01eMachine *m, int ox, int oy) {
     int hx, hy, hw, hh;
-    player_hit_rect(m, ox, oy, &hx, &hy, &hw, &hh);
+    int state_idx = r01_play_anim_entity_state(&m->play.anim);
+    player_hit_rect(m, ox, oy, state_idx, &hx, &hy, &hw, &hh);
     return r01e_cart_aabb_ok(&m->cart, (int)m->io.world, hx, hy, hw, hh);
 }
 
 static void update_camera(R01ePlay *pl) {
-    int ax = pl->player_x + R01E_PLAY_PLAYER_W / 2;
-    int ay = pl->player_y + R01E_PLAY_PLAYER_H / 2;
-
-    pl->cam_x = ax - R01E_SCREEN_PX_W / 2;
-    pl->cam_y = ay - R01E_SCREEN_PX_H / 2;
-    if (pl->cam_x < 0) {
-        pl->cam_x = 0;
-    }
-    if (pl->cam_y < 0) {
-        pl->cam_y = 0;
-    }
+    r01_play_camera_update(&pl->cam_x, &pl->cam_y, pl->player_x, pl->player_y, R01E_PLAY_PLAYER_W,
+                           R01E_PLAY_PLAYER_H, R01E_SCREEN_PX_W, R01E_SCREEN_PX_H, R01_PLAY_CAM_DEADZONE_X_DEFAULT,
+                           R01_PLAY_CAM_DEADZONE_Y_DEFAULT, R01_PLAY_CAM_AXIS_BOTH);
 }
 
 static void place_player_on_screen(R01ePlay *pl, int col, int row) {
@@ -199,6 +215,105 @@ void r01e_play_sync_video(R01eMachine *m) {
     }
 }
 
+static int write_player_oam(R01eMachine *m, R01eWorldView *wv, int *slot) {
+    R01ePlay *pl = &m->play;
+    const uint8_t *types;
+    int player_type;
+
+    if (!wv || !slot || *slot >= R01E_OAM_ENTRIES) {
+        return 0;
+    }
+    if (wv->player_entity == R01E_CART_PLAYER_ENTITY_NONE || wv->player_entity >= wv->entity_type_count) {
+        return 0;
+    }
+    player_type = (int)wv->player_entity;
+    types = r01e_cart_ptr(&m->cart, wv->base + wv->off_entity_types,
+                         (size_t)wv->entity_type_count * R01E_CART_ENTITY_TYPE_SIZE);
+    if (!types) {
+        return 0;
+    }
+
+    if (wv->has_player_anim) {
+        const uint8_t *blob = r01e_cart_ptr(&m->cart, wv->base + wv->off_player_anim,
+                                            wv->len > wv->off_player_anim ? wv->len - wv->off_player_anim : 0);
+        R01CartPlayerAnim anim;
+        int state_idx = r01_play_anim_entity_state(&pl->anim);
+        int frame_slot = r01_play_anim_frame(&pl->anim);
+        int flip_h = r01_play_anim_flip_h(&pl->anim);
+        const uint8_t *st = NULL;
+        const uint8_t *parts;
+        int part_count;
+        int pi;
+        if (!blob || r01_cart_player_anim_parse(blob, wv->len - wv->off_player_anim, &anim) != 0) {
+            return 0;
+        }
+        if (state_idx < 0 || state_idx >= anim.state_count) {
+            state_idx = 0;
+        }
+        if (r01_cart_player_anim_state_hdr(&anim, state_idx, &st) != 0 || !st) {
+            return 0;
+        }
+        parts = r01_cart_player_anim_frame_parts(&anim, state_idx, frame_slot, &part_count);
+        if (!parts || part_count < 1) {
+            return 0;
+        }
+        if (part_count > R01E_CART_ENTITY_PARTS_MAX) {
+            part_count = R01E_CART_ENTITY_PARTS_MAX;
+        }
+        for (pi = 0; pi < part_count && *slot < R01E_OAM_ENTRIES; pi++) {
+            const uint8_t *part = parts + (size_t)pi * 4u;
+            int origin_x = (int)st[0];
+            int origin_y = (int)st[1];
+            int dx, dy;
+            uint8_t attr;
+            int sx, sy;
+            uint8_t *oe;
+            r01_cart_part_pose(origin_x, origin_y, (int)(int8_t)part[2], (int)(int8_t)part[3], part[1], flip_h, 0, &dx,
+                               &dy, &attr);
+            sx = pl->player_x + dx - origin_x - pl->cam_x;
+            sy = pl->player_y + dy - origin_y - pl->cam_y;
+            oe = &m->io.oam[(size_t)*slot * R01E_OAM_ENTRY_BYTES];
+            if (r01e_oam_tile_off_screen(sx, sy)) {
+                continue;
+            }
+            oe[0] = r01e_oam_coord_to_u8(sy);
+            oe[1] = part[0];
+            oe[2] = attr;
+            oe[3] = r01e_oam_coord_to_u8(sx);
+            (*slot)++;
+        }
+        return 1;
+    }
+
+    {
+        const uint8_t *trec = types + (size_t)player_type * R01E_CART_ENTITY_TYPE_SIZE;
+        int origin_x = (int)trec[0];
+        int origin_y = (int)trec[1];
+        int part_count = (int)trec[2];
+        int pi;
+        if (part_count > R01E_CART_ENTITY_PARTS_MAX) {
+            part_count = R01E_CART_ENTITY_PARTS_MAX;
+        }
+        for (pi = 0; pi < part_count && *slot < R01E_OAM_ENTRIES; pi++) {
+            const uint8_t *part = trec + 4 + pi * 4;
+            int dx = (int)(int8_t)part[2];
+            int dy = (int)(int8_t)part[3];
+            int sx = pl->player_x + dx - origin_x - pl->cam_x;
+            int sy = pl->player_y + dy - origin_y - pl->cam_y;
+            uint8_t *oe = &m->io.oam[(size_t)*slot * R01E_OAM_ENTRY_BYTES];
+            if (r01e_oam_tile_off_screen(sx, sy)) {
+                continue;
+            }
+            oe[0] = r01e_oam_coord_to_u8(sy);
+            oe[1] = part[0];
+            oe[2] = part[1];
+            oe[3] = r01e_oam_coord_to_u8(sx);
+            (*slot)++;
+        }
+        return *slot > 0;
+    }
+}
+
 static void write_oam(R01eMachine *m) {
     R01ePlay *pl = &m->play;
     R01eWorldView wv;
@@ -219,30 +334,7 @@ static void write_oam(R01eMachine *m) {
     }
 
     if (player_type >= 0 && types) {
-        const uint8_t *trec = types + (size_t)player_type * R01E_CART_ENTITY_TYPE_SIZE;
-        int origin_x = (int)trec[0];
-        int origin_y = (int)trec[1];
-        int part_count = (int)trec[2];
-        int pi;
-        if (part_count > R01E_CART_ENTITY_PARTS_MAX) {
-            part_count = R01E_CART_ENTITY_PARTS_MAX;
-        }
-        for (pi = 0; pi < part_count && slot < R01E_OAM_ENTRIES; pi++) {
-            const uint8_t *part = trec + 4 + pi * 4;
-            int dx = (int)(int8_t)part[2];
-            int dy = (int)(int8_t)part[3];
-            int sx = pl->player_x + dx - origin_x - pl->cam_x;
-            int sy = pl->player_y + dy - origin_y - pl->cam_y;
-            uint8_t *oe = &m->io.oam[(size_t)slot * R01E_OAM_ENTRY_BYTES];
-            if (r01e_oam_tile_off_screen(sx, sy)) {
-                continue;
-            }
-            oe[0] = r01e_oam_coord_to_u8(sy);
-            oe[1] = part[0];
-            oe[2] = part[1];
-            oe[3] = r01e_oam_coord_to_u8(sx);
-            slot++;
-        }
+        (void)write_player_oam(m, &wv, &slot);
     }
     if (slot < 1) {
         int vx = pl->player_x - pl->cam_x;
@@ -337,6 +429,7 @@ int r01e_play_start(R01eMachine *m) {
     }
     if (player_instance_spawn(m, &sx, &sy)) {
         m->play.enabled = 1;
+        r01_play_anim_init(&m->play.anim);
         place_player_xy(&m->play, sx, sy);
         r01e_play_sync_video(m);
         (void)r01e_video_sync_camera(m);
@@ -347,6 +440,7 @@ int r01e_play_start(R01eMachine *m) {
         return 0;
     }
     m->play.enabled = 1;
+    r01_play_anim_init(&m->play.anim);
     place_player_on_screen(&m->play, col, row);
     r01e_play_sync_video(m);
     (void)r01e_video_sync_camera(m);
@@ -397,9 +491,11 @@ void r01e_play_tick(R01eMachine *m) {
     }
     if (pad & R01E_PAD_UP) {
         dy = -1;
-    } else if (pad & R01E_PAD_DOWN) {
+    } else     if (pad & R01E_PAD_DOWN) {
         dy = 1;
     }
+
+    r01_play_anim_update(&pl->anim, dx, dy);
 
     if (dx != 0) {
         int nx = pl->player_x + dx;
@@ -415,6 +511,17 @@ void r01e_play_tick(R01eMachine *m) {
     }
     /* No dead zone: camera tracks the player every tick. */
     update_camera(pl);
+    {
+        R01eWorldView wv;
+        if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) == 0 && wv.has_player_anim) {
+            const uint8_t *blob = r01e_cart_ptr(&m->cart, wv.base + wv.off_player_anim,
+                                                wv.len > wv.off_player_anim ? wv.len - wv.off_player_anim : 0);
+            R01CartPlayerAnim anim;
+            if (blob && r01_cart_player_anim_parse(blob, wv.len - wv.off_player_anim, &anim) == 0) {
+                r01_play_anim_tick_cart(&pl->anim, &anim);
+            }
+        }
+    }
     r01e_play_sync_video(m);
     write_oam(m);
 }

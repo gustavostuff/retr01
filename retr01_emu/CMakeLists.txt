@@ -17,10 +17,19 @@ set(R01E_CORE_SRCS
   src/machine.c
 )
 
+set(R01_COMMON_DIR "${CMAKE_SOURCE_DIR}/../common")
+add_library(r01_play_common
+  ${R01_COMMON_DIR}/r01_play_anim.c
+  ${R01_COMMON_DIR}/r01_play_anim_cart.c
+  ${R01_COMMON_DIR}/r01_play_camera.c
+)
+target_include_directories(r01_play_common PUBLIC ${R01_COMMON_DIR})
+
 add_library(retr01_emu_core ${R01E_CORE_SRCS})
 target_include_directories(retr01_emu_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+target_link_libraries(retr01_emu_core PUBLIC r01_play_common)
 
 add_executable(retr01_emu src/main.c)
 target_link_libraries(retr01_emu PRIVATE retr01_emu_core PkgConfig::SDL2)

@@ -4,6 +4,52 @@
 #include <math.h>
 #include <string.h>
 
+#define R01_CAM_DEADZONE_X_DEFAULT 32
+#define R01_CAM_DEADZONE_Y_DEFAULT 30
+#define R01_CAM_AXIS_BOTH 0
+#define R01_CAM_AXIS_H 1
+#define R01_CAM_AXIS_V 2
+
+static void play_camera_update(int *cam_x, int *cam_y, int player_x, int player_y, int player_w, int player_h,
+                               int screen_w, int screen_h, int deadzone_x, int deadzone_y, int axis_lock) {
+    int ax, ay, target_x, target_y;
+    if (!cam_x || !cam_y) {
+        return;
+    }
+    ax = player_x + player_w / 2;
+    ay = player_y + player_h / 2;
+    target_x = ax - screen_w / 2;
+    target_y = ay - screen_h / 2;
+    if (axis_lock != R01_CAM_AXIS_V) {
+        if (deadzone_x > 0) {
+            if (ax - *cam_x < deadzone_x) {
+                *cam_x = ax - deadzone_x;
+            } else if (ax - *cam_x > screen_w - deadzone_x - player_w) {
+                *cam_x = ax - (screen_w - deadzone_x - player_w);
+            }
+        } else {
+            *cam_x = target_x;
+        }
+    }
+    if (axis_lock != R01_CAM_AXIS_H) {
+        if (deadzone_y > 0) {
+            if (ay - *cam_y < deadzone_y) {
+                *cam_y = ay - deadzone_y;
+            } else if (ay - *cam_y > screen_h - deadzone_y - player_h) {
+                *cam_y = ay - (screen_h - deadzone_y - player_h);
+            }
+        } else {
+            *cam_y = target_y;
+        }
+    }
+    if (*cam_x < 0) {
+        *cam_x = 0;
+    }
+    if (*cam_y < 0) {
+        *cam_y = 0;
+    }
+}
+
 #define R01_EVENT_SLOTS 4
 #define R01_MAX_PROJECTILES 8
 #define R01_PROJECTILE_TTL 180
@@ -44,6 +90,8 @@ void r01_game_ctx_init(R01GameCtx *ctx) {
         return;
     }
     memset(ctx, 0, sizeof(*ctx));
+    ctx->cam_deadzone_x = R01_CAM_DEADZONE_X_DEFAULT;
+    ctx->cam_deadzone_y = R01_CAM_DEADZONE_Y_DEFAULT;
     ctx->cam_axis_lock = R01_CAM_AXIS_BOTH;
     ctx->fade_color = R01_FADE_BLACK;
     ctx->fade_pending_entrance = -1;
@@ -61,30 +109,12 @@ static void warp_tile_world_pos(int screen_col, int screen_row, int tile_col, in
 }
 
 void r01_game_camera_update(R01GameCtx *ctx) {
-    int ax, ay, target_x, target_y;
     if (!ctx) {
         return;
     }
-    ax = ctx->player_x + R01_PLAY_PLAYER_W / 2;
-    ay = ctx->player_y + R01_PLAY_PLAYER_H / 2;
-    target_x = ax - R01_SCREEN_PX_W / 2;
-    target_y = ay - R01_SCREEN_PX_H / 2;
-    if (ctx->cam_axis_lock != R01_CAM_AXIS_V) {
-        if (ctx->cam_deadzone_x <= 0) {
-            ctx->cam_x = target_x;
-        }
-    }
-    if (ctx->cam_axis_lock != R01_CAM_AXIS_H) {
-        if (ctx->cam_deadzone_y <= 0) {
-            ctx->cam_y = target_y;
-        }
-    }
-    if (ctx->cam_x < 0) {
-        ctx->cam_x = 0;
-    }
-    if (ctx->cam_y < 0) {
-        ctx->cam_y = 0;
-    }
+    play_camera_update(&ctx->cam_x, &ctx->cam_y, ctx->player_x, ctx->player_y, R01_PLAY_PLAYER_W,
+                           R01_PLAY_PLAYER_H, R01_SCREEN_PX_W, R01_SCREEN_PX_H, ctx->cam_deadzone_x,
+                           ctx->cam_deadzone_y, ctx->cam_axis_lock);
 }
 
 void r01_game_fade_start(R01GameCtx *ctx, int to_black_or_white, int target_level) {

@@ -230,6 +230,81 @@ static uint8_t pack_oam_attr(int bank, int pal, int flip_h, int flip_v) {
     return a;
 }
 
+static int append_player_anim_blob(Buf *blob, const R01World *w, int player_type, int remap_b0_tile1) {
+    const R01EntityType *ent;
+    uint8_t magic[2] = {R01_CART_PLAYER_ANIM_MAGIC0, R01_CART_PLAYER_ANIM_MAGIC1};
+    int si;
+
+    if (!blob || !w || player_type < 0 || player_type >= w->entity_count) {
+        return -1;
+    }
+    ent = &w->entities[player_type];
+    if (ent->state_count < 1) {
+        return -1;
+    }
+    if (buf_append(blob, magic, sizeof(magic)) != 0) {
+        return -1;
+    }
+    {
+        uint8_t sc = (uint8_t)(ent->state_count > R01_ENTITY_STATES_MAX ? R01_ENTITY_STATES_MAX : ent->state_count);
+        if (buf_append(blob, &sc, 1) != 0) {
+            return -1;
+        }
+    }
+    for (si = 0; si < ent->state_count && si < R01_ENTITY_STATES_MAX; si++) {
+        const R01EntityState *st = &ent->states[si];
+        uint8_t hdr[7];
+        int fi;
+        int drawable = 0;
+        for (fi = 0; fi < st->frame_count; fi++) {
+            if (st->frames[fi].part_count > 0) {
+                drawable++;
+            }
+        }
+        if (drawable > 255) {
+            drawable = 255;
+        }
+        hdr[0] = (uint8_t)st->origin_x;
+        hdr[1] = (uint8_t)st->origin_y;
+        hdr[2] = (uint8_t)st->hitbox_x;
+        hdr[3] = (uint8_t)st->hitbox_y;
+        hdr[4] = (uint8_t)(st->hitbox_w > 0 ? st->hitbox_w : R01_PLAY_PLAYER_W);
+        hdr[5] = (uint8_t)(st->hitbox_h > 0 ? st->hitbox_h : R01_PLAY_PLAYER_H);
+        hdr[6] = (uint8_t)drawable;
+        if (buf_append(blob, hdr, sizeof(hdr)) != 0) {
+            return -1;
+        }
+        for (fi = 0; fi < st->frame_count; fi++) {
+            const R01EntityFrame *fr = &st->frames[fi];
+            int pi;
+            uint8_t pc;
+            if (fr->part_count < 1) {
+                continue;
+            }
+            pc = (uint8_t)(fr->part_count > R01_CART_ENTITY_PARTS_MAX ? R01_CART_ENTITY_PARTS_MAX : fr->part_count);
+            if (buf_append(blob, &pc, 1) != 0) {
+                return -1;
+            }
+            for (pi = 0; pi < (int)pc; pi++) {
+                const R01EntityPart *pt = &fr->parts[pi];
+                uint8_t part[4];
+                int tile = pt->tile_id;
+                if (remap_b0_tile1 >= 0 && pt->bank == 0 && pt->tile_id == R01_SPR_PLAYER_TILE_ID) {
+                    tile = remap_b0_tile1;
+                }
+                part[0] = (uint8_t)tile;
+                part[1] = pack_oam_attr(pt->bank, pt->pal, pt->flip_h, pt->flip_v);
+                part[2] = (uint8_t)(int8_t)pt->dx;
+                part[3] = (uint8_t)(int8_t)pt->dy;
+                if (buf_append(blob, part, sizeof(part)) != 0) {
+                    return -1;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
 static void pack_entity_type_rec(uint8_t out[R01_CART_ENTITY_TYPE_SIZE], const R01EntityType *ent,
                                  int remap_b0_tile1) {
     const R01EntityState *st;
@@ -587,6 +662,12 @@ static int build_world_blob(Buf *blob, const R01World *w) {
             if (buf_append(blob, rec, sizeof(rec)) != 0) {
                 return -1;
             }
+        }
+    }
+    {
+        int pe = r01_world_player_entity(w);
+        if (pe >= 0 && pe < type_n && append_player_anim_blob(blob, w, pe, remap_b0_tile1) == 0) {
+            blob->data[R01_CART_WHDR_FLAGS] |= R01_CART_WHDR_FLAG_PLAYER_ANIM;
         }
     }
     return 0;

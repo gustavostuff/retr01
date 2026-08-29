@@ -22,9 +22,11 @@ add_library(retr01_studio_core
   core/src/warps.c
   core/src/game_runtime.c
   core/src/player_anim.c
+  ${CMAKE_SOURCE_DIR}/../common/r01_play_camera.c
 )
 target_include_directories(retr01_studio_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include
+  ${CMAKE_SOURCE_DIR}/../common
 )
 set(R01_REPO_ROOT "${CMAKE_SOURCE_DIR}/.." CACHE PATH "Retr01 repo root")
 set(R01_OUTPUT_DIR "${R01_REPO_ROOT}/output")

@@ -19,6 +19,7 @@ void r01_custom_on_init(R01GameCtx *ctx) {
     r01_player_default_face_set(ctx, R01_PLAYER_FACE_RIGHT);
     r01_entity_state_frame_delay_set(ctx, 0, 10);
     r01_entity_state_frame_delay_set(ctx, 1, 4);
+    r01_camera_set_deadzone(ctx, 16, 15);
 
     r01_event_on_button(R01_BTN_X, on_fire);
     r01_event_on_button(R01_BTN_Y, on_cycle_face);

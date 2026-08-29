@@ -3,6 +3,7 @@
 #include "retr01_studio/collision.h"
 #include "retr01_studio/play.h"
 #include "retr01_studio/warps.h"
+#include "r01_play_camera.h"
 
 #include <math.h>
 #include <string.h>
@@ -21,8 +22,8 @@ void r01_game_ctx_init(R01GameCtx *ctx) {
         return;
     }
     memset(ctx, 0, sizeof(*ctx));
-    ctx->cam_deadzone_x = 0;
-    ctx->cam_deadzone_y = 0;
+    ctx->cam_deadzone_x = R01_CAM_DEADZONE_X_DEFAULT;
+    ctx->cam_deadzone_y = R01_CAM_DEADZONE_Y_DEFAULT;
     ctx->cam_axis_lock = R01_CAM_AXIS_BOTH;
     ctx->fade_color = R01_FADE_BLACK;
     ctx->fade_pending_entrance = -1;
@@ -30,40 +31,12 @@ void r01_game_ctx_init(R01GameCtx *ctx) {
 }
 
 void r01_game_camera_update(R01GameCtx *ctx) {
-    int ax, ay, target_x, target_y;
     if (!ctx) {
         return;
     }
-    ax = ctx->player_x + R01_PLAY_PLAYER_W / 2;
-    ay = ctx->player_y + R01_PLAY_PLAYER_H / 2;
-    target_x = ax - R01_SCREEN_PX_W / 2;
-    target_y = ay - R01_SCREEN_PX_H / 2;
-    if (ctx->cam_axis_lock != R01_CAM_AXIS_V) {
-        if (ax - ctx->cam_x < ctx->cam_deadzone_x) {
-            ctx->cam_x = ax - ctx->cam_deadzone_x;
-        } else if (ax - ctx->cam_x > R01_SCREEN_PX_W - ctx->cam_deadzone_x - R01_PLAY_PLAYER_W) {
-            ctx->cam_x = ax - (R01_SCREEN_PX_W - ctx->cam_deadzone_x - R01_PLAY_PLAYER_W);
-        }
-        if (ctx->cam_deadzone_x <= 0) {
-            ctx->cam_x = target_x;
-        }
-    }
-    if (ctx->cam_axis_lock != R01_CAM_AXIS_H) {
-        if (ay - ctx->cam_y < ctx->cam_deadzone_y) {
-            ctx->cam_y = ay - ctx->cam_deadzone_y;
-        } else if (ay - ctx->cam_y > R01_SCREEN_PX_H - ctx->cam_deadzone_y - R01_PLAY_PLAYER_H) {
-            ctx->cam_y = ay - (R01_SCREEN_PX_H - ctx->cam_deadzone_y - R01_PLAY_PLAYER_H);
-        }
-        if (ctx->cam_deadzone_y <= 0) {
-            ctx->cam_y = target_y;
-        }
-    }
-    if (ctx->cam_x < 0) {
-        ctx->cam_x = 0;
-    }
-    if (ctx->cam_y < 0) {
-        ctx->cam_y = 0;
-    }
+    r01_play_camera_update(&ctx->cam_x, &ctx->cam_y, ctx->player_x, ctx->player_y, R01_PLAY_PLAYER_W,
+                           R01_PLAY_PLAYER_H, R01_SCREEN_PX_W, R01_SCREEN_PX_H, ctx->cam_deadzone_x,
+                           ctx->cam_deadzone_y, ctx->cam_axis_lock);
 }
 
 void r01_game_fade_start(R01GameCtx *ctx, int to_black_or_white, int target_level) {

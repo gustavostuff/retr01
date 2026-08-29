@@ -1494,23 +1494,6 @@ static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
             int row = logical_y - (int)oy;
             uint8_t pal = (uint8_t)((attr & R01S_ATTR_PAL) >> R01S_ATTR_PAL_SHIFT);
             uint32_t spr_chr = ctx->cart_off_chr ? (ctx->cart_off_chr + 4u * R01S_CHR_BANK_BYTES) : 0;
-            /* Host Play: solid 8x8 via sprite pal color 1. */
-            if (ctx->play.enabled && si == 0) {
-                uint8_t master = board_pal_master(ctx, 1, pal, R01S_PAL_PLAYER_COLOR);
-                for (px = 0; px < 8; px++) {
-                    int x = (int)ox + px;
-                    if (x < 0 || x >= 128) {
-                        continue;
-                    }
-                    linebuf_write_byte(ctx, (uint16_t)(base + (unsigned)x), master);
-                    pixels++;
-                    if (!hit_color) {
-                        hit_x = (uint8_t)x;
-                        hit_color = master;
-                    }
-                }
-                continue;
-            }
             for (px = 0; px < 8; px++) {
                 int x = (int)ox + px;
                 uint8_t master;
@@ -2081,6 +2064,13 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     board->cart_player_hit_y = hdr[27];
     board->cart_player_hit_w = hdr[28] ? hdr[28] : 8;
     board->cart_player_hit_h = hdr[29] ? hdr[29] : 8;
+    board->cart_world_flags = hdr[7];
+    board->cart_off_player_anim = 0;
+    if ((board->cart_world_flags & 0x01u) != 0 && board->cart_player_entity != 0xFF &&
+        board->cart_off_entity_insts != 0) {
+        board->cart_off_player_anim =
+            board->cart_off_entity_insts + (uint32_t)board->cart_entity_inst_count * 6u;
+    }
     dir = img + board->cart_off_sdir;
     for (si = 0; si < (int)screen_count; si++) {
         const uint8_t *e = dir + (size_t)si * 12u;

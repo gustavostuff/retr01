@@ -2,6 +2,7 @@
 #define retr01_SIM_PLAY_H
 
 #include <stdint.h>
+#include "r01_play_anim.h"
 
 struct R01sBoard;
 
@@ -41,6 +42,7 @@ typedef struct R01sPlay {
     int pending_origin_row;
     int pending_camera_reload;
     int force_camera_reload;
+    R01PlayAnimCtx anim;
 } R01sPlay;
 
 void r01s_play_reset(R01sPlay *play);
