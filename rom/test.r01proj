@@ -71,98 +71,10 @@
           ]
         }
       ]
-    },
-    {
-      "state_count": 1,
-      "states": [
-        {
-          "name": "Idle",
-          "origin_x": 0, "origin_y": 0,
-          "hitbox_x": 0, "hitbox_y": 0, "hitbox_w": 8, "hitbox_h": 8,
-          "frame_count": 1,
-          "frames": [
-            {"parts": [{"bank":0,"tile":5,"pal":3,"fh":0,"fv":0,"dx":0,"dy":0}]}
-          ]
-        }
-      ]
-    },
-    {
-      "state_count": 1,
-      "states": [
-        {
-          "name": "Idle",
-          "origin_x": 0, "origin_y": 0,
-          "hitbox_x": 0, "hitbox_y": 0, "hitbox_w": 8, "hitbox_h": 8,
-          "frame_count": 1,
-          "frames": [
-            {"parts": [{"bank":0,"tile":5,"pal":3,"fh":0,"fv":0,"dx":0,"dy":0}]}
-          ]
-        }
-      ]
-    },
-    {
-      "state_count": 1,
-      "states": [
-        {
-          "name": "Idle",
-          "origin_x": 0, "origin_y": 0,
-          "hitbox_x": 0, "hitbox_y": 0, "hitbox_w": 8, "hitbox_h": 8,
-          "frame_count": 1,
-          "frames": [
-            {"parts": [{"bank":0,"tile":5,"pal":1,"fh":0,"fv":0,"dx":0,"dy":0}]}
-          ]
-        }
-      ]
-    },
-    {
-      "state_count": 1,
-      "states": [
-        {
-          "name": "Meta",
-          "origin_x": 0, "origin_y": 0,
-          "hitbox_x": 0, "hitbox_y": 0, "hitbox_w": 8, "hitbox_h": 8,
-          "frame_count": 1,
-          "frames": [
-            {"parts": [{"bank":0,"tile":1,"pal":0,"fh":0,"fv":0,"dx":0,"dy":0},{"bank":0,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":0},{"bank":0,"tile":3,"pal":0,"fh":0,"fv":0,"dx":0,"dy":8},{"bank":0,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":8}]}
-          ]
-        }
-      ]
-    },
-    {
-      "state_count": 1,
-      "states": [
-        {
-          "name": "Meta",
-          "origin_x": 0, "origin_y": 0,
-          "hitbox_x": 0, "hitbox_y": 0, "hitbox_w": 8, "hitbox_h": 8,
-          "frame_count": 1,
-          "frames": [
-            {"parts": [{"bank":0,"tile":1,"pal":0,"fh":0,"fv":0,"dx":0,"dy":0},{"bank":0,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":0},{"bank":0,"tile":3,"pal":0,"fh":0,"fv":0,"dx":0,"dy":8},{"bank":0,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":8}]}
-          ]
-        }
-      ]
-    },
-    {
-      "state_count": 1,
-      "states": [
-        {
-          "name": "Meta",
-          "origin_x": 0, "origin_y": 0,
-          "hitbox_x": 0, "hitbox_y": 0, "hitbox_w": 8, "hitbox_h": 8,
-          "frame_count": 1,
-          "frames": [
-            {"parts": [{"bank":0,"tile":1,"pal":0,"fh":0,"fv":0,"dx":0,"dy":0},{"bank":0,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":0},{"bank":0,"tile":3,"pal":0,"fh":0,"fv":0,"dx":0,"dy":8},{"bank":0,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":8}]}
-          ]
-        }
-      ]
     }
   ],
   "instances": [
-    {"type": 2, "x": 167, "y": 158},
-    {"type": 2, "x": 168, "y": 177},
-    {"type": 6, "x": 193, "y": 169},
-    {"type": 7, "x": 220, "y": 183},
-    {"type": 8, "x": 198, "y": 199}
+    {"type": 2, "x": 214, "y": 188}
   ],
   "screens": [
     {"col": 0, "row": 0,
