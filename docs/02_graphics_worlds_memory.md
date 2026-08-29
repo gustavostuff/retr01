@@ -15,24 +15,26 @@ Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 
 ## Worlds, screens, cart budget
 
-- **7** worlds max (indices **0-6**). Sparse **8x8** grid per world, **32** screens/world (camera / playfield only)
+- **8** worlds max (indices **0-7**). Sparse **8x8** grid per world, **30 present screens** max/world (camera / playfield only; grid slots beyond that stay unused)
 - Per world: up to **2 parallax planes** (same 480 B payload as a screen). **Not** on the world grid. Separate MAP directory. Maps to VRAM slots **4-5**
 - Screen / plane payload: **480 B** raw (**240** tiles + **240** attrs). Direct MAP `$FE93` -> VRAM `$FE12` (no RLE required)
 - Per world: **4 BG + 4 sprite** CHR banks (**32 KB**), screen dir + parallax dir
 - Palettes: **8 global BG palette rows** + **8 global sprite palette rows** (see [Palettes](#palettes))
 - Cart: **512 KB** (SST39SF040). **128 KB** PRG in cart image (CPU window still `$8000-$FFFF` with I/O hole, banked via `$FE80`, see PRG). Studio Phase 1 export still emits **32 KB** until cart `format_ver` bump lands.
 
-| Asset | Size at caps (7 worlds) |
+| Asset | Size at caps (8 worlds) |
 |-------|--------------------------|
-| CHR (7 x 32 KB) | **224 KB** |
-| MAP screens (7 x 32 x 480 B) | **105 KB** |
-| MAP parallax (7 x 2 x 480 B) | **~6.6 KB** |
+| CHR (8 x 32 KB) | **256 KB** |
+| MAP screens (8 x 30 x 480 B) | **112 KB** |
+| MAP parallax (8 x 2 x 480 B) | **~7.5 KB** |
 | Global pals (8 BG rows + 8 sprite rows) | **256 B** |
 | Dirs / headers | **~3.6 KB** |
 | PRG | **128 KB** |
-| **Total / free** | **~478 KB** used, **~46 KB** free |
+| **Total / free** | **~508 KB** used, **~4.5 KB** free |
 
-At **32 KB** PRG (current export): **~380 KB** used, **~144 KB** free at the same world caps.
+**30 screens/world** (not 32) is the cart cap so **8 worlds** + **128 KB** PRG still fit **512 KB** flash with a small spare (~**4.5 KB**). Entity tables and alignment eat that margin in practice.
+
+At **32 KB** PRG (current export): **~412 KB** used, **~100 KB** free at the same world caps.
 
 **Banks:** live BG bank = per-tile attr bits 1-0. Live sprite bank = per-OAM attr bits 1-0. `$FE31`-`$FE37` are optional stamp helpers only.
 
@@ -134,14 +136,14 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 
 ## Cart image (`.retr01`)
 
-24-bit offsets. Magic **`retr01`** (lowercase ASCII). **`format_ver` = 1** (frozen in current Studio/Emu/Sim packers). **`format_ver` = 2** (planned): **7** worlds max, **128 KB** PRG, `$FE80` bank register.
+24-bit offsets. Magic **`retr01`** (lowercase ASCII). **`format_ver` = 1** (frozen in current Studio/Emu/Sim packers): **7** world table slots, **32 KB** PRG. **`format_ver` = 2** (planned): **8** worlds max, **30 present screens**/world max, **128 KB** PRG, `$FE80` bank register.
 
 ```text
 +----------------------------------------------------------------+
 |  CART HEADER (16 B at offset 0)                                |
 |    magic[6]          'r','e','t','r','0','1'                   |
 |    format_ver        u8 (= 1)                                  |
-|    world_count       u8 (1..7)                                 |
+|    world_count       u8 (1..8)                                 |
 |    flags / reserved  (pad to 16 B)                             |
 |  POINTER TABLE (24 B, each field u24)                          |
 |    off_prg, len_prg                                            |
@@ -157,14 +159,14 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 |  PRG (one global section, max 128 KB, CPU window $8000 + I/O hole $FE00) |
 |    Phase 1 export: 32 KB stub. Planned: 128 KB banked (`$FE80`)        |
 +----------------------------------------------------------------+
-|  WORLD TABLE (7 slots x 8 B)                                   |
+|  WORLD TABLE (8 slots x 8 B)                                   |
 |    each slot: present u8, pad u8, off_world u24, len_world u24 |
 +----------------------------------------------------------------+
 |  WORLD 0 BLOB                                                  |
 |  +------------------------------------------------------------+|
 |  | WORLD HEADER (32 B)                                        ||
 |  |   start_col, start_row, default_bg_bank, default_spr_bank  ||
-|  |   default_pal_row (0..7), screen_count (= present count)   ||
+|  |   default_pal_row (0..7), screen_count (present, max **30**)   ||
 |  |   parallax_count (0..2)                                    ||
 |  |   off_chr u24, off_screen_dir u24, off_parallax_dir u24    ||
 |  |   entity_type_count u8, entity_inst_count u8               ||
@@ -225,7 +227,7 @@ PRG planning cap is **128 KB** in the cart image (4 x 32 KB banks). The CPU stil
 | `$FE08`/`$FE09` | pal addr/data | active indices 0-63, auto-inc |
 | `$FE10`-`$FE12` | VRAM addr/data | auto-inc |
 | `$FE20`/`$FE21` | OAM addr/data | auto-inc. Entry `Y,tile,attr,X` x64. **Host Play:** X/Y are **viewport-relative signed** coords packed as `int8` in each byte (negative top-left allowed; raster clips to **128x120**). Unused slot: `tile == 0xFF` |
-| `$FE30` | `WORLD` | 0-6 |
+| `$FE30` | `WORLD` | 0-7 |
 | `$FE31`-`$FE37` | bank helpers | optional stamps, not live fetch |
 | `$FE38` | `PAL_ROW` | hint. Still copy `$FE08`/`$FE09` |
 | `$FE40`-`$FE5F` | APU | **ATmega328P** |

@@ -87,9 +87,9 @@ Current chip list: [`06`](06_hardware_v1_32ic.md) (**32 IC**). Roles:
 | RGBS active field | **256x240** (SCALE **2x** fills field, **1x** = centered 128x120) |
 | Tile size | **8x8** |
 | Color | **2bpp**, **64-entry Color PROM** on board (packed **R3G3B2**), cart holds **8 global BG rows + 8 global sprite rows** (indices only), **one synced row active** (4 BG + 4 sprite) |
-| Worlds | **7** max (indices 0-6) |
-| Screens per world | **32** max on sparse **8x8** virtual grid |
-| Cart / PRG | **512 KB** flash. **128 KB** PRG in image (4 banks, CPU window 32 KB + `$FE80`). Phase 1 export still **32 KB** until cart bump. ~**478 KB** full fill at 7-world caps |
+| Worlds | **8** max (indices 0-7) |
+| Screens per world | **30 present** max on sparse **8x8** virtual grid |
+| Cart / PRG | **512 KB** flash. **128 KB** PRG in image (4 banks, CPU window 32 KB + `$FE80`). Phase 1 export still **32 KB** until cart bump. ~**508 KB** full fill at 8-world caps |
 | CHR per world | **4 BG banks + 4 sprite banks**, **256 tiles each**, **32 KB** |
 | Sprites | **64 OAM**, **16 per logical scanline** max |
 | VRAM | **32 KB**, interleaved |

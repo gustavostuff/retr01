@@ -28,7 +28,7 @@ Technical specs: [`docs/01_architecture_overview.md`](docs/01_architecture_overv
 
 - **A real arcade-first board:** sticks, buttons, coin/start, analog RGBS/S-Video/composite pads for cabinet monitors. RGBS pads can also feed an off-the-shelf analog-to-HDMI converter if you want a modern TV
 - **A bold but readable look:** limited color per tile/sprite on purpose, with clarity over mush
-- **Big cartridge worlds:** up to **7 worlds**, **32 screens** each, on a **512 KB** cart
+- **Big cartridge worlds:** up to **8 worlds**, **30 screens** each, on a **512 KB** cart
 - **Chunky 128x120** playfields (**16x15** tiles) with board **2x** into a **256x240** RGBS raster (fills CRT, no letterbox)
 - **Smooth multi-screen scrolling:** cameras that cross screen borders using a 2x2 live nametable window (see [`docs/02`](docs/02_graphics_worlds_memory.md))
 - **Retr01 Studio:** visual tool to author worlds and export `.retr01` cart images
