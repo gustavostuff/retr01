@@ -133,76 +133,6 @@ int label_width(const char *text) {
     return snap8(font_text_width(text) + UI_UNIT);
 }
 
-void draw_radio_sprite(SDL_Renderer *r, int dx, int dy, int selected) {
-    int x, y;
-    int src_y0 = selected ? 8 : 0;
-    if (!g_radio_rgba || g_radio_w != 8 || g_radio_h != 16) {
-        return;
-    }
-    for (y = 0; y < 8; y++) {
-        for (x = 0; x < 8; x++) {
-            const uint8_t *p = &g_radio_rgba[((src_y0 + y) * g_radio_w + x) * 4u];
-            if (p[3] > 128) {
-                fill_rect(r, dx + x, dy + y, 1, 1, p[0], p[1], p[2]);
-            }
-        }
-    }
-}
-
-void draw_checkbox_sprite(SDL_Renderer *r, int dx, int dy, int checked) {
-    int x, y;
-    int src_y0 = checked ? 8 : 0;
-    if (!g_checkbox_rgba || g_checkbox_w != 8 || g_checkbox_h != 16) {
-        draw_rect(r, dx, dy, 8, 8, checked ? 240 : 120, checked ? 240 : 120, checked ? 240 : 120);
-        return;
-    }
-    for (y = 0; y < 8; y++) {
-        for (x = 0; x < 8; x++) {
-            const uint8_t *p = &g_checkbox_rgba[((src_y0 + y) * g_checkbox_w + x) * 4u];
-            if (p[3] > 128) {
-                fill_rect(r, dx + x, dy + y, 1, 1, p[0], p[1], p[2]);
-            }
-        }
-    }
-}
-
-void draw_spr_palette_grid(SDL_Renderer *r, const R01Project *p, int row, int pal_x, int pal_y, int sel_pal,
-                           int sel_color) {
-    int pal, c;
-    if (!p || !r) {
-        return;
-    }
-    if (row < 0 || row >= R01_PAL_ROWS) {
-        row = 0;
-    }
-    for (pal = 0; pal < R01_PALS_PER_ROW; pal++) {
-        for (c = 0; c < R01_PAL_COLORS; c++) {
-            uint8_t cr, cg, cb;
-            int x = pal_x + c * UI_PAL_SWATCH;
-            int y = pal_y + pal * UI_PAL_SWATCH;
-            r01_kit_rgb(p->global_pal_spr[row][pal].idx[c], &cr, &cg, &cb);
-            fill_rect(r, x, y, UI_PAL_SWATCH, UI_PAL_SWATCH, cr, cg, cb);
-            if (pal == sel_pal && c == sel_color) {
-                draw_rect(r, x, y, UI_PAL_SWATCH, UI_PAL_SWATCH, 255, 255, 255);
-            }
-        }
-    }
-}
-
-int spr_palette_hit(int lx, int ly, int pal_x, int pal_y, int *out_pal, int *out_color) {
-    if (lx < pal_x || lx >= pal_x + R01_PALS_PER_ROW * UI_PAL_SWATCH || ly < pal_y ||
-        ly >= pal_y + R01_PALS_PER_ROW * UI_PAL_SWATCH) {
-        return 0;
-    }
-    if (out_pal) {
-        *out_pal = (ly - pal_y) / UI_PAL_SWATCH;
-    }
-    if (out_color) {
-        *out_color = (lx - pal_x) / UI_PAL_SWATCH;
-    }
-    return 1;
-}
-
 void draw_brush_preview(SDL_Renderer *r, const R01Project *p, int row, int pal, int color, int mx, int my) {
     uint8_t cr, cg, cb;
     if (!p || !r) {
@@ -220,58 +150,6 @@ void draw_brush_preview(SDL_Renderer *r, const R01Project *p, int row, int pal, 
     r01_kit_rgb(p->global_pal_spr[row][pal].idx[color & 3u], &cr, &cg, &cb);
     fill_rect(r, mx + 10, my + 10, 8, 8, cr, cg, cb);
     draw_rect(r, mx + 10, my + 10, 8, 8, 200, 200, 200);
-}
-
-void draw_dot_strip(SDL_Renderer *r, int x, int y, int count, int selected, int unlocked_count) {
-    int i;
-    if (count < 1) {
-        count = UI_DOT_STRIP_N;
-    }
-    for (i = 0; i < count; i++) {
-        int dx = x + i * (UI_DOT_SIZE + UI_DOT_GAP);
-        int unlocked = (unlocked_count < 0) || (i < unlocked_count);
-        int on = (i == selected) && unlocked;
-        int px, py;
-        /* 8x8 slot BG: Play green when selected, darkest panel gray otherwise. */
-        if (on) {
-            fill_rect(r, dx, y, UI_DOT_SIZE, UI_DOT_SIZE, UI_COL_ACTIVE_R, UI_COL_ACTIVE_G, UI_COL_ACTIVE_B);
-        } else {
-            fill_rect(r, dx, y, UI_DOT_SIZE, UI_DOT_SIZE, UI_COL_PANEL_R, UI_COL_PANEL_G, UI_COL_PANEL_B);
-        }
-        /* Dot glyph painted as-is from ui_dot.png (alpha). */
-        if (g_dot_rgba && g_dot_w == UI_DOT_SIZE && g_dot_h == UI_DOT_SIZE) {
-            for (py = 0; py < UI_DOT_SIZE; py++) {
-                for (px = 0; px < UI_DOT_SIZE; px++) {
-                    const uint8_t *p = &g_dot_rgba[(py * g_dot_w + px) * 4u];
-                    if (p[3] > 128) {
-                        fill_rect(r, dx + px, y + py, 1, 1, p[0], p[1], p[2]);
-                    }
-                }
-            }
-        } else {
-            fill_rect(r, dx + 2, y + 2, 4, 4, 240, 240, 240);
-        }
-    }
-}
-
-int dot_strip_hit(int lx, int ly, int x, int y, int count, int *out_idx) {
-    int i;
-    if (count < 1) {
-        count = UI_DOT_STRIP_N;
-    }
-    if (ly < y || ly >= y + UI_DOT_SIZE) {
-        return 0;
-    }
-    for (i = 0; i < count; i++) {
-        int dx = x + i * (UI_DOT_SIZE + UI_DOT_GAP);
-        if (lx >= dx && lx < dx + UI_DOT_SIZE) {
-            if (out_idx) {
-                *out_idx = i;
-            }
-            return 1;
-        }
-    }
-    return 0;
 }
 
 void draw_ui_cross(SDL_Renderer *r, int cx, int cy) {
@@ -298,17 +176,6 @@ void draw_label(SDL_Renderer *r, int x, int y, const char *text) {
     font_draw_centered(r, x, y, w, UI_BTN_H, text, 230, 230, 230);
 }
 
-void draw_button(SDL_Renderer *r, int x, int y, int w, const char *text, int active, int hover) {
-    if (active) {
-        fill_rect(r, x, y, w, UI_BTN_H, UI_COL_ACTIVE_R, UI_COL_ACTIVE_G, UI_COL_ACTIVE_B);
-    } else {
-        fill_rect(r, x, y, w, UI_BTN_H, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
-    }
-    font_draw_centered(r, x, y, w, UI_BTN_H, text, 240, 240, 240);
-    if (hover) {
-        hover_overlay(r, x, y, w, UI_BTN_H);
-    }
-}
 void draw_chess_grid(SDL_Renderer *r, int x0, int y0, int cols, int rows, int cell) {
     int col, row;
     for (row = 0; row < rows; row++) {

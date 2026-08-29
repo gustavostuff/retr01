@@ -265,6 +265,16 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             {
                 int tx, ty;
+                int inst;
+                if (ui->screen_layer == UI_SCREEN_LAYER_SPR) {
+                    if (instance_hit_on_screen(ui, lx, ly, &inst)) {
+                        ui->sel_instance = inst;
+                        screen_sel_clear(ui);
+                        menu_open_instance(ui, lx, ly, inst);
+                        return 1;
+                    }
+                    return 1;
+                }
                 if (screen_hit(ui, lx, ly, &tx, &ty) && r01_project_active_screen(ui->project)) {
                     int min_x, min_y, max_x, max_y;
                     int in_sel = 0;
@@ -275,6 +285,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     if (!in_sel) {
                         screen_sel_set(ui, tx, ty, tx, ty);
                     }
+                    ui->sel_instance = -1;
                     menu_open_tile(ui, lx, ly, tx, ty);
                     return 1;
                 }
@@ -358,7 +369,19 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 ui->last_click_row = row;
                 return 1;
             }
+            if (!ui->play.active && screen_layer_hit(ui, lx, ly, &mode_row)) {
+                ui->screen_layer = mode_row;
+                if (ui->screen_layer == UI_SCREEN_LAYER_BG) {
+                    ui->sel_instance = -1;
+                } else {
+                    screen_sel_clear(ui);
+                }
+                return 1;
+            }
             if (!ui->play.active && screen_mode_hit(ui, lx, ly, &mode_row)) {
+                if (ui->screen_layer != UI_SCREEN_LAYER_BG) {
+                    return 1;
+                }
                 ui->screen_mode = mode_row;
                 if (mode_row == UI_SCREEN_MODE_PAINT && !ui->paint_stamp_valid) {
                     uint8_t tile, attr;
@@ -370,9 +393,13 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             if (!ui->play.active && screen_hit(ui, lx, ly, &tx, &ty)) {
                 int inst;
-                if (instance_hit_on_screen(ui, lx, ly, &inst)) {
-                    ui->sel_instance = inst;
-                    screen_sel_clear(ui);
+                if (ui->screen_layer == UI_SCREEN_LAYER_SPR) {
+                    if (instance_hit_on_screen(ui, lx, ly, &inst)) {
+                        ui->sel_instance = inst;
+                        screen_sel_clear(ui);
+                    } else {
+                        ui->sel_instance = -1;
+                    }
                     return 1;
                 }
                 ui->sel_instance = -1;
@@ -449,6 +476,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 }
                 if (idx >= 0) {
                     ui->sel_instance = idx;
+                    ui->screen_layer = UI_SCREEN_LAYER_SPR;
                     screen_sel_clear(ui);
                 }
             }
@@ -461,12 +489,13 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         !ui->metasprite_edit.open && !ui->entity_edit.open && !ui->menu.open && !ui->catalog_drag.active) {
         int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
         int tx, ty;
-        if (ui->screen_mode == UI_SCREEN_MODE_SEL && ui->sel_drag && shift &&
-            (e->motion.state & SDL_BUTTON_LMASK) && screen_hit(ui, lx, ly, &tx, &ty)) {
+        if (ui->screen_layer == UI_SCREEN_LAYER_BG && ui->screen_mode == UI_SCREEN_MODE_SEL && ui->sel_drag &&
+            shift && (e->motion.state & SDL_BUTTON_LMASK) && screen_hit(ui, lx, ly, &tx, &ty)) {
             screen_sel_set(ui, ui->sel_anchor_x, ui->sel_anchor_y, tx, ty);
             return 1;
         }
-        if (ui->screen_mode == UI_SCREEN_MODE_PAINT && (e->motion.state & SDL_BUTTON_LMASK) &&
+        if (ui->screen_layer == UI_SCREEN_LAYER_BG && ui->screen_mode == UI_SCREEN_MODE_PAINT &&
+            (e->motion.state & SDL_BUTTON_LMASK) &&
             !(SDL_GetModState() & KMOD_ALT) && ui->keys[SDL_SCANCODE_F] == 0) {
             if (screen_hit(ui, lx, ly, &tx, &ty)) {
                 ui_paint_tile(ui, tx, ty);

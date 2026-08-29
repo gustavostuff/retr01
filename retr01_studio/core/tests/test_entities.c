@@ -58,6 +58,31 @@ TEST_MAIN() {
     EXPECT(fr != NULL, "ensure frame 1");
     EXPECT(e->states[0].frame_count == 2, "frame count 2");
 
+    {
+        R01EntityState *st1 = r01_entity_ensure_state(e, 1);
+        EXPECT(st1 != NULL, "ensure state 1");
+        EXPECT(e->state_count == 2, "state count 2");
+        EXPECT(strcmp(st1->name, "Walk") == 0, "Walk default name");
+        EXPECT(r01_entity_ensure_state(e, 3) != NULL, "ensure state 3");
+        EXPECT(e->state_count == 4, "state count 4");
+        EXPECT(strcmp(e->states[2].name, "Hurt") == 0, "Hurt name");
+        EXPECT(strcmp(e->states[3].name, "Jump") == 0, "Jump name");
+        EXPECT(r01_entity_trim_last_state(e) == 1, "trim empty Jump");
+        EXPECT(e->state_count == 3, "after trim state");
+        EXPECT(r01_entity_trim_last_state(e) == 1, "trim empty Hurt");
+        EXPECT(r01_entity_trim_last_state(e) == 1, "trim empty Walk");
+        EXPECT(e->state_count == 1, "back to Idle");
+        EXPECT(r01_entity_trim_last_state(e) == 0, "cannot trim Idle");
+        EXPECT(r01_entity_ensure_frame(e, 0, 3) != NULL, "ensure frame 3");
+        EXPECT(e->states[0].frame_count == 4, "4 frames");
+        EXPECT(r01_entity_trim_last_frame(e, 0) == 1, "trim empty frame");
+        EXPECT(e->states[0].frame_count == 3, "3 frames");
+        while (e->states[0].frame_count > 1) {
+            EXPECT(r01_entity_trim_last_frame(e, 0) == 1, "trim frame");
+        }
+        EXPECT(r01_entity_trim_last_frame(e, 0) == 0, "keep frame 0");
+    }
+
     memset(&part, 0, sizeof(part));
     part.bank = bank;
     part.tile_id = id;

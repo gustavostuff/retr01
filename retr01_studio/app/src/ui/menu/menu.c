@@ -210,12 +210,44 @@ void menu_open_entity(UiState *ui, int x, int y, int type_idx) {
     ui->menu.world_screen_idx = -1;
     ui->menu.sprite_catalog_idx = -1;
     ui->menu.entity_type_idx = type_idx;
+    ui->menu.instance_idx = -1;
     ui->menu.item_count = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Edit entity");
     ui->menu.item_sub[ui->menu.item_count++] = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Remove");
     ui->menu.item_sub[ui->menu.item_count++] = 0;
     memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
+    ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
+    ui->menu.root_x = x;
+    ui->menu.root_y = y;
+    menu_clamp_xy(&ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
+}
+
+void menu_open_instance(UiState *ui, int x, int y, int instance_idx) {
+    R01World *w;
+    int type_idx = -1;
+    ui->menu.open = 1;
+    ui->menu.kind = UI_MENU_KIND_INSTANCE;
+    ui->menu.submenu = UI_MENU_SUB_NONE;
+    ui->menu.screen_tx = -1;
+    ui->menu.screen_ty = -1;
+    ui->menu.world_screen_idx = -1;
+    ui->menu.sprite_catalog_idx = -1;
+    ui->menu.instance_idx = instance_idx;
+    w = r01_project_active_world(ui->project);
+    if (w && instance_idx >= 0 && instance_idx < w->instance_count) {
+        type_idx = w->instances[instance_idx].type_id;
+    }
+    ui->menu.entity_type_idx = type_idx;
+    ui->menu.item_count = 0;
+    snprintf(ui->menu.items[ui->menu.item_count], 32, "Edit entity");
+    ui->menu.item_sub[ui->menu.item_count++] = 0;
+    snprintf(ui->menu.items[ui->menu.item_count], 32, "Remove instance");
+    ui->menu.item_sub[ui->menu.item_count++] = 0;
+    memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
+    if (type_idx < 0) {
+        ui->menu.item_disabled[0] = 1;
+    }
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
     ui->menu.root_x = x;
     ui->menu.root_y = y;
@@ -394,6 +426,23 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
         } else if (item == 1 && w) {
             r01_world_entity_remove(w, ui->menu.entity_type_idx);
             ui_toast(ui, "entity removed", 0);
+        }
+        menu_close(ui);
+        return;
+    }
+    if (ui->menu.kind == UI_MENU_KIND_INSTANCE) {
+        R01World *w = r01_project_active_world(ui->project);
+        if (item == 0 && ui->menu.entity_type_idx >= 0) {
+            entity_edit_open(ui, ui->menu.entity_type_idx);
+        } else if (item == 1 && w && ui->menu.instance_idx >= 0) {
+            if (r01_world_instance_remove(w, ui->menu.instance_idx) == 0) {
+                if (ui->sel_instance == ui->menu.instance_idx) {
+                    ui->sel_instance = -1;
+                } else if (ui->sel_instance > ui->menu.instance_idx) {
+                    ui->sel_instance--;
+                }
+                ui_toast(ui, "instance removed", 0);
+            }
         }
         menu_close(ui);
         return;

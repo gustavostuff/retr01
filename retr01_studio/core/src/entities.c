@@ -96,8 +96,27 @@ R01EntityFrame *r01_entity_frame(R01EntityType *e, int state_idx, int frame_idx)
     return &st->frames[frame_idx];
 }
 
+const char *r01_entity_default_state_name(int state_idx) {
+    static const char *names[R01_ENTITY_STATES_MAX] = {"Idle", "Walk", "Hurt", "Jump"};
+    if (state_idx < 0 || state_idx >= R01_ENTITY_STATES_MAX) {
+        return "State";
+    }
+    return names[state_idx];
+}
+
+R01EntityState *r01_entity_ensure_state(R01EntityType *e, int state_idx) {
+    if (!e || state_idx < 0 || state_idx >= R01_ENTITY_STATES_MAX) {
+        return NULL;
+    }
+    while (e->state_count <= state_idx) {
+        r01_entity_state_init(&e->states[e->state_count], r01_entity_default_state_name(e->state_count));
+        e->state_count++;
+    }
+    return &e->states[state_idx];
+}
+
 R01EntityFrame *r01_entity_ensure_frame(R01EntityType *e, int state_idx, int frame_idx) {
-    R01EntityState *st = r01_entity_state(e, state_idx);
+    R01EntityState *st = r01_entity_ensure_state(e, state_idx);
     if (!st || frame_idx < 0 || frame_idx >= R01_ENTITY_FRAMES_MAX) {
         return NULL;
     }
@@ -106,6 +125,48 @@ R01EntityFrame *r01_entity_ensure_frame(R01EntityType *e, int state_idx, int fra
         st->frame_count++;
     }
     return &st->frames[frame_idx];
+}
+
+static int frame_is_empty(const R01EntityFrame *fr) {
+    return !fr || fr->part_count < 1;
+}
+
+static int state_is_empty(const R01EntityState *st) {
+    int fi;
+    if (!st) {
+        return 1;
+    }
+    for (fi = 0; fi < st->frame_count; fi++) {
+        if (!frame_is_empty(&st->frames[fi])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int r01_entity_trim_last_frame(R01EntityType *e, int state_idx) {
+    R01EntityState *st = r01_entity_state(e, state_idx);
+    if (!st || st->frame_count <= 1) {
+        return 0;
+    }
+    if (!frame_is_empty(&st->frames[st->frame_count - 1])) {
+        return 0;
+    }
+    st->frame_count--;
+    memset(&st->frames[st->frame_count], 0, sizeof(st->frames[0]));
+    return 1;
+}
+
+int r01_entity_trim_last_state(R01EntityType *e) {
+    if (!e || e->state_count <= 1) {
+        return 0;
+    }
+    if (!state_is_empty(&e->states[e->state_count - 1])) {
+        return 0;
+    }
+    e->state_count--;
+    memset(&e->states[e->state_count], 0, sizeof(e->states[0]));
+    return 1;
 }
 
 int r01_entity_frame_add_part(R01EntityFrame *fr, const R01EntityPart *part) {

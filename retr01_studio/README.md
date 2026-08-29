@@ -14,10 +14,10 @@ Fixed **640x360** logical canvas, **8px** grid, dark gray chrome. Buttons/labels
 +-------------------------------------------------------------------+
 | SIDEBAR (128)          | MAIN                                     |
 | [>] Worlds             |              [ Play ]                    |
-|  [1][2][3][4][5][6][7][8] |      +------------------+  ( ) Sel    |
-|  +--------------+      |         | Screen 256x240   |  ( ) Paint  |
-|  | 128x128 map  |      |         | 128x120 @2x edit |             |
-|  +--------------+      |         +------------------+             |
+|  [1][2][3][4][5][6][7][8] | ( ) BG   +------------------+ ( ) Sel  |
+|  +--------------+      | ( ) SPR  | Screen 256x240   | ( ) Paint|
+|  | 128x128 map  |      |         | 128x120 @2x edit |           |
+|  +--------------+      |         +------------------+           |
 | [>] Palettes           |                                          |
 |  BG/SPR strips + [0-7] |                                          |
 | [>] Sprites            |                                          |
@@ -37,15 +37,17 @@ Fixed **640x360** logical canvas, **8px** grid, dark gray chrome. Buttons/labels
 | **Ctrl+click** present | Remove screen |
 | **Click** present | Select active screen (edit target) |
 | **Right-click** map cell | **Set default screen** / **Make default world** |
-| **Tile Sel / Paint** | Radio beside screen. Paint stamps armed tile+palette |
-| **Right-click tile** (sel mode) | Move to tile bank, add tile, edit tile, set palette/anim/solid |
+| **BG / Sprite layer** | Radios **left** of screen. **BG layer**: tile select/paint + tile context menu. **Sprite layer**: select instances + instance context menu (edit entity type / remove instance). Tile radios dim on sprite layer |
+| **Tile Sel / Paint** | Radios **right** of screen (BG layer only). Paint stamps armed tile+palette |
+| **Right-click tile** (BG layer) | Move to tile bank, add tile, edit tile, set palette/anim/solid |
+| **Right-click instance** (Sprite layer) | Edit entity type / Remove instance |
 | **Edit tile** modal | **288x160**, 4x4 palette picker, **128x128** pixel canvas |
 | **Set Solid** | Toggles `R01_ATTR_SOLID` (`0x40`) on matching tiles in active world (bank+pal+flips, not tile ID) |
 | **Palette strip** | Click BG/SPR strip -> **Global palettes** modal. Row **0-7** sets `default_pal_row` for the active world |
 | **Sprites** | List of SPR catalog entries (**1x** icons + bank tile index). Empty: **empty** + **Add**. Create/Edit modal: SPR bank dots + 16x16 tile grid, 4x4 SPR palette, LMB drag parts, RMB paint. Right-click: edit, remove, set palette, change sprite bank. New sprites fill bank **0**, then **1..3** |
 | **Metasprites** | Reusable multi-part SPR groups (no origin/hitbox). Empty: **empty** + **Add**. Modal: same compose flow as entities but assembly-only (SPR bank left, 16x16 compose right, 4x4 SPR palette, LMB/RMB). Right-click: edit, remove. **Studio-only**: not a separate cart table. Export flattens into entity parts |
-| **Entities** | List of entity types (composite icon + state-0 name). Empty: **empty** + **Add**. Modal: left **metasprite catalog** (drag onto compose). Right state/frame dots, name field, 16x16 compose @8x, origin cross + hitbox (guides checkbox), 4x4 SPR palette. LMB select/drag parts, origin, hitbox. RMB paint selected part. Selected part: **H/V** flips, **1-4** palette, Delete removes. States locked to **0** (Idle) for now. Right-click: edit, remove |
-| **Place on screen** | Drag a **Sprites**, **Metasprites**, or **Entities** row onto the screen preview. Sprite drop auto-creates a 1-state/1-frame/1-part entity and places an instance. Metasprite drop auto-creates an entity from the group and places an instance. Entity drop places that type. Instance `world_x/y` is the **user origin** (compose cross). Parts/hitbox draw as `(coord - origin)` relative to that. Sprites **clip to 128x120** when partially off-screen. Click instance to select (white outline). **Delete** removes. Visible in edit view and **Play** (OAM slot 0 = player. Instances fill 1+) |
+| **Entities** | List of entity types (composite icon + state-0 name). Empty: **empty** + **Add**. Modal: left **metasprite catalog** (drag onto compose). Right **State** / **Frame** dot strips (**1..4** each: click next slot to append. Delete with no part selected trims empty last frame/state). Name field, 16x16 compose @8x, origin cross + hitbox (guides checkbox), 4x4 SPR palette. LMB select/drag parts, origin, hitbox. RMB paint selected part. Selected part: **H/V** flips, **1-4** palette, Delete removes. JSON stores full state/frame tree. Play + cart still use **state 0 / frame 0** only. Right-click: edit, remove |
+| **Place on screen** | Drag a **Sprites**, **Metasprites**, or **Entities** row onto the screen preview (switches to **Sprite layer**). Sprite drop auto-creates a 1-state/1-frame/1-part entity and places an instance. Metasprite drop auto-creates an entity from the group and places an instance. Entity drop places that type. Instance `world_x/y` is the **user origin** (compose cross). Parts/hitbox draw as `(coord - origin)` relative to that. Sprites **clip to 128x120** when partially off-screen. On Sprite layer: click instance to select (white outline). **Delete** removes. Visible in edit view and **Play** (OAM slot 0 = player. Instances fill 1+) |
 
 PNG drop imports into the **active** world. Cart export packs **world 0** only (ignores `default_world`).
 
@@ -129,7 +131,7 @@ PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are
 | **3D** | Cart packs real SPR CHR + entity tables. Emu/sim Play OAM parity |
 | **3E** | Metasprites accordion + modal. Entity compose from metasprite catalog. JSON v7. Cart `format_ver` 2 (other screens incl. credits pages + RLE). Viewport sprite clipping (current) |
 
-**Out of scope (for now):** entity movement/collision, multi-state animation in Play, parallax planes / variable-thickness slices authoring, Generate, multi-world cart export, multi-world JSON save, dead-zone/fade scroll profiles, full 6502 gameplay loop.
+**Out of scope (for now):** entity movement/collision, multi-state animation in Play (authoring supports 1-4 states / 1-4 frames. Play/cart still state0/frame0), parallax planes / variable-thickness slices authoring, Generate, multi-world cart export, multi-world JSON save, dead-zone/fade scroll profiles, full 6502 gameplay loop.
 
 ---
 

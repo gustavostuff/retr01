@@ -87,6 +87,9 @@
 #define UI_SCREEN_MODE_SEL 0
 #define UI_SCREEN_MODE_PAINT 1
 
+#define UI_SCREEN_LAYER_BG 0
+#define UI_SCREEN_LAYER_SPR 1
+
 #define UI_MODAL_W 288
 #define UI_MODAL_H 160
 #define UI_TILE_CANVAS 128
@@ -107,6 +110,7 @@
 #define UI_MENU_KIND_SPRITE 3
 #define UI_MENU_KIND_METASPRITE 4
 #define UI_MENU_KIND_ENTITY 5
+#define UI_MENU_KIND_INSTANCE 6
 #define UI_MENU_SUB_NONE 0
 #define UI_MENU_SUB_BANK 1
 #define UI_MENU_SUB_PAL 2
@@ -134,6 +138,7 @@ typedef struct UiMenu {
     int sprite_catalog_idx;
     int metasprite_idx;
     int entity_type_idx;
+    int instance_idx; /* UI_MENU_KIND_INSTANCE */
 } UiMenu;
 
 typedef struct UiTileEdit {
@@ -194,8 +199,8 @@ typedef struct UiEntityEdit {
     int is_new;
     int type_idx; /* -1 when creating; commit on save */
     R01EntityType draft;
-    int state;      /* 0..3; UI locks to 0 for now */
-    int frame;      /* 0..3 */
+    int state;      /* 0..R01_ENTITY_STATES_MAX-1 */
+    int frame;      /* 0..R01_ENTITY_FRAMES_MAX-1 */
     int sel_part;   /* -1 or index in current frame */
     int paint_color;
     int paint_pal;
@@ -205,7 +210,6 @@ typedef struct UiEntityEdit {
     int drag_meta;   /* metasprite catalog idx when dragging */
     int drag_off_x;
     int drag_off_y;
-    int states_unlocked; /* 0 = only state 0 selectable */
     int name_focus;
 } UiEntityEdit;
 
@@ -249,7 +253,8 @@ typedef struct UiState {
     int paint_stamp_valid;
     uint8_t paint_stamp_tile;
     uint8_t paint_stamp_attr;
-    int screen_mode; /* UI_SCREEN_MODE_SEL or UI_SCREEN_MODE_PAINT */
+    int screen_mode;  /* UI_SCREEN_MODE_SEL or UI_SCREEN_MODE_PAINT */
+    int screen_layer; /* UI_SCREEN_LAYER_BG or UI_SCREEN_LAYER_SPR */
     int sel_x0, sel_y0, sel_x1, sel_y1; /* inclusive tile rect; invalid when sel_x0 < 0 */
     int sel_anchor_x, sel_anchor_y;
     int sel_drag;

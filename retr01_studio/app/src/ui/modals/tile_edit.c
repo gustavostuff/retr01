@@ -111,38 +111,15 @@ void draw_tile_modal(UiState *ui, SDL_Renderer *r) {
     TileModalLayout lo;
     const R01World *w = r01_project_active_world_const(ui->project);
     int row = w ? w->default_pal_row : 0;
-    int pal, c, sy, sx;
+    int sy, sx;
 
     tile_modal_layout(&lo);
-    fill_rect(r, 0, 0, UI_LOGIC_W, UI_LOGIC_H, 0, 0, 0);
-    {
-        /* dim overlay */
-        SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
-        SDL_SetRenderDrawColor(r, 0, 0, 0, 160);
-        {
-            SDL_Rect full = {0, 0, UI_LOGIC_W, UI_LOGIC_H};
-            SDL_RenderFillRect(r, &full);
-        }
-        SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
-    }
-    fill_rect(r, lo.mx, lo.my, UI_MODAL_W, UI_MODAL_H, UI_COL_BG_R, UI_COL_BG_G, UI_COL_BG_B);
-    draw_rect(r, lo.mx, lo.my, UI_MODAL_W, UI_MODAL_H, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
-
-    font_draw_centered(r, lo.mx, lo.my, UI_MODAL_W, UI_BTN_H, "Edit tile", 240, 240, 240);
+    ui_modal_scrim(r);
+    ui_modal_panel(r, lo.mx, lo.my, UI_MODAL_W, UI_MODAL_H, "Edit tile");
 
     draw_label(r, lo.pal_x, lo.pal_label_y, "Palette/color");
-    for (pal = 0; pal < R01_PALS_PER_ROW; pal++) {
-        for (c = 0; c < R01_PAL_COLORS; c++) {
-            uint8_t cr, cg, cb;
-            int x = lo.pal_x + c * UI_PAL_SWATCH;
-            int y = lo.pal_y + pal * UI_PAL_SWATCH;
-            r01_kit_rgb(ui->project->global_pal_bg[row][pal].idx[c], &cr, &cg, &cb);
-            fill_rect(r, x, y, UI_PAL_SWATCH, UI_PAL_SWATCH, cr, cg, cb);
-            if (pal == ui->tile_edit.pal && c == ui->tile_edit.color) {
-                draw_rect(r, x, y, UI_PAL_SWATCH, UI_PAL_SWATCH, 240, 240, 240);
-            }
-        }
-    }
+    ui_palette_grid_draw(r, ui->project, row, lo.pal_x, lo.pal_y, ui->tile_edit.pal, ui->tile_edit.color,
+                         UI_PAL_PLANE_BG);
 
     fill_rect(r, lo.canvas_x, lo.canvas_y, UI_TILE_CANVAS, UI_TILE_CANVAS, UI_COL_WELL_R, UI_COL_WELL_G,
               UI_COL_WELL_B);
@@ -156,27 +133,20 @@ void draw_tile_modal(UiState *ui, SDL_Renderer *r) {
         }
     }
 
-    {
-        int save_hover =
-            point_in_rect(ui->mouse_x, ui->mouse_y, lo.pal_x, lo.btn_y, lo.save_w, UI_BTN_H);
-        int cancel_hover = point_in_rect(ui->mouse_x, ui->mouse_y, lo.pal_x + lo.save_w + UI_UNIT, lo.btn_y,
-                                         lo.cancel_w, UI_BTN_H);
-        draw_button(r, lo.pal_x, lo.btn_y, lo.save_w, "Save", 1, save_hover);
-        draw_button(r, lo.pal_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, "Cancel", 0, cancel_hover);
-    }
+    ui_modal_save_cancel(r, lo.pal_x, lo.btn_y, lo.save_w, lo.cancel_w, ui->mouse_x, ui->mouse_y);
 }
 
 int tile_modal_handle(UiState *ui, int lx, int ly, int down) {
     TileModalLayout lo;
+    int pal, col;
     tile_modal_layout(&lo);
 
     if (!down) {
         return 1;
     }
-    if (lx >= lo.pal_x && lx < lo.pal_x + 4 * UI_PAL_SWATCH && ly >= lo.pal_y &&
-        ly < lo.pal_y + 4 * UI_PAL_SWATCH) {
-        ui->tile_edit.color = (lx - lo.pal_x) / UI_PAL_SWATCH;
-        ui->tile_edit.pal = (ly - lo.pal_y) / UI_PAL_SWATCH;
+    if (ui_palette_grid_hit(lx, ly, lo.pal_x, lo.pal_y, &pal, &col)) {
+        ui->tile_edit.color = col;
+        ui->tile_edit.pal = pal;
         return 1;
     }
     if (lx >= lo.canvas_x && lx < lo.canvas_x + UI_TILE_CANVAS && ly >= lo.canvas_y &&
@@ -186,12 +156,11 @@ int tile_modal_handle(UiState *ui, int lx, int ly, int down) {
         r01_tile_set_pixel(ui->tile_edit.chr, sx, sy, (uint8_t)ui->tile_edit.color);
         return 1;
     }
-    if (lx >= lo.pal_x && lx < lo.pal_x + lo.save_w && ly >= lo.btn_y && ly < lo.btn_y + UI_BTN_H) {
+    if (ui_modal_save_hit(lx, ly, lo.pal_x, lo.btn_y, lo.save_w)) {
         tile_edit_save(ui);
         return 1;
     }
-    if (lx >= lo.pal_x + lo.save_w + UI_UNIT && lx < lo.pal_x + lo.save_w + UI_UNIT + lo.cancel_w &&
-        ly >= lo.btn_y && ly < lo.btn_y + UI_BTN_H) {
+    if (ui_modal_cancel_hit(lx, ly, lo.pal_x, lo.btn_y, lo.save_w, lo.cancel_w)) {
         ui->tile_edit.open = 0;
         return 1;
     }

@@ -20,30 +20,59 @@ int ui_mode_panel_w(void) {
     return w0 > w1 ? w0 : w1;
 }
 
-void ui_editor_layout(const UiState *ui, int *screen_x, int *screen_y, int *mode_x, int *mode_y0) {
+int ui_layer_panel_w(void) {
+    int label_x = UI_MODE_RADIO + UI_MODE_GAP;
+    int w0 = label_x + label_width("BG layer");
+    int w1 = label_x + label_width("Sprite layer");
+    return w0 > w1 ? w0 : w1;
+}
+
+void ui_editor_layout(const UiState *ui, int *screen_x, int *screen_y, int *layer_x, int *mode_x, int *mode_y0) {
     int play_active = ui && ui->play.active;
-    int sx = UI_SIDEBAR_W + (UI_MAIN_W - UI_SCREEN_W) / 2;
+    int available = UI_LOGIC_W - UI_SIDEBAR_W;
+    int layer_w = ui_layer_panel_w();
+    int mode_w = ui_mode_panel_w();
+    int gap = UI_UNIT;
+    int block = layer_w + gap + UI_SCREEN_W + gap + mode_w;
+    int left = UI_SIDEBAR_W + (available - block) / 2;
+    int sx;
     int sy = (UI_LOGIC_H - UI_SCREEN_H) / 2;
-    int mx = sx + UI_SCREEN_W + UI_UNIT;
-    int my0 = sy;
-    int panel_w;
+    int lx;
+    int mx;
+    if (left < UI_SIDEBAR_W + UI_UNIT) {
+        left = UI_SIDEBAR_W + UI_UNIT;
+    }
+    lx = left;
+    sx = lx + layer_w + gap;
+    mx = sx + UI_SCREEN_W + gap;
+    if (mx + mode_w > UI_LOGIC_W - UI_UNIT) {
+        mx = UI_LOGIC_W - UI_UNIT - mode_w;
+        sx = mx - gap - UI_SCREEN_W;
+        lx = sx - gap - layer_w;
+        if (lx < UI_SIDEBAR_W + UI_UNIT) {
+            lx = UI_SIDEBAR_W + UI_UNIT;
+            sx = lx + layer_w + gap;
+            mx = sx + UI_SCREEN_W + gap;
+        }
+    }
     if (play_active) {
+        sx = UI_SIDEBAR_W + (available - UI_SCREEN_W) / 2;
         if (screen_x) {
             *screen_x = sx;
         }
         if (screen_y) {
             *screen_y = sy;
         }
-        return;
-    }
-    panel_w = ui_mode_panel_w();
-    mx = sx + UI_SCREEN_W + UI_UNIT;
-    if (mx + panel_w > UI_LOGIC_W - UI_UNIT) {
-        sx = UI_LOGIC_W - UI_UNIT - panel_w - UI_UNIT - UI_SCREEN_W;
-        if (sx < UI_SIDEBAR_W + UI_UNIT) {
-            sx = UI_SIDEBAR_W + UI_UNIT;
+        if (layer_x) {
+            *layer_x = sx;
         }
-        mx = sx + UI_SCREEN_W + UI_UNIT;
+        if (mode_x) {
+            *mode_x = sx;
+        }
+        if (mode_y0) {
+            *mode_y0 = sy;
+        }
+        return;
     }
     if (screen_x) {
         *screen_x = sx;
@@ -51,11 +80,14 @@ void ui_editor_layout(const UiState *ui, int *screen_x, int *screen_y, int *mode
     if (screen_y) {
         *screen_y = sy;
     }
+    if (layer_x) {
+        *layer_x = lx;
+    }
     if (mode_x) {
         *mode_x = mx;
     }
     if (mode_y0) {
-        *mode_y0 = my0;
+        *mode_y0 = sy;
     }
 }
 
@@ -64,12 +96,12 @@ int ui_mode_label_x(int mode_x) {
 }
 
 int screen_mode_row_hit(const UiState *ui, int lx, int ly, int row) {
-    int sx, sy, mx, my0;
+    int sx, sy, layer_x, mx, my0;
     int y;
     if (!ui || ui->play.active) {
         return 0;
     }
-    ui_editor_layout(ui, &sx, &sy, &mx, &my0);
+    ui_editor_layout(ui, &sx, &sy, &layer_x, &mx, &my0);
     y = my0 + row * UI_MODE_ROW_H;
     return point_in_rect(lx, ly, mx, y, ui_mode_panel_w(), UI_MODE_ROW_H);
 }
@@ -90,13 +122,40 @@ int screen_mode_hit(const UiState *ui, int lx, int ly, int *out_row) {
     return 0;
 }
 
+int screen_layer_row_hit(const UiState *ui, int lx, int ly, int row) {
+    int sx, sy, layer_x, mx, my0;
+    int y;
+    if (!ui || ui->play.active) {
+        return 0;
+    }
+    ui_editor_layout(ui, &sx, &sy, &layer_x, &mx, &my0);
+    y = my0 + row * UI_MODE_ROW_H;
+    return point_in_rect(lx, ly, layer_x, y, ui_layer_panel_w(), UI_MODE_ROW_H);
+}
+
+int screen_layer_hit(const UiState *ui, int lx, int ly, int *out_layer) {
+    if (screen_layer_row_hit(ui, lx, ly, 0)) {
+        if (out_layer) {
+            *out_layer = UI_SCREEN_LAYER_BG;
+        }
+        return 1;
+    }
+    if (screen_layer_row_hit(ui, lx, ly, 1)) {
+        if (out_layer) {
+            *out_layer = UI_SCREEN_LAYER_SPR;
+        }
+        return 1;
+    }
+    return 0;
+}
+
 int play_btn_w(const UiState *ui) {
     return label_width(ui->play.active ? "Stop" : "Play");
 }
 
 int play_btn_x(const UiState *ui) {
-    int sx, sy, mx, my0;
-    ui_editor_layout(ui, &sx, &sy, &mx, &my0);
+    int sx, sy, layer_x, mx, my0;
+    ui_editor_layout(ui, &sx, &sy, &layer_x, &mx, &my0);
     return sx + (UI_SCREEN_W - play_btn_w(ui)) / 2;
 }
 
@@ -112,8 +171,8 @@ int play_button_hit(const UiState *ui, int lx, int ly) {
 }
 
 void screen_origin(const UiState *ui, int *ox, int *oy) {
-    int sx, sy, mx, my0;
-    ui_editor_layout(ui, &sx, &sy, &mx, &my0);
+    int sx, sy, layer_x, mx, my0;
+    ui_editor_layout(ui, &sx, &sy, &layer_x, &mx, &my0);
     *ox = sx;
     *oy = sy;
 }

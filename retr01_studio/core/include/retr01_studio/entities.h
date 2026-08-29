@@ -17,8 +17,21 @@ const R01EntityType *r01_world_entity_const(const R01World *w, int type_idx);
 R01EntityState *r01_entity_state(R01EntityType *e, int state_idx);
 R01EntityFrame *r01_entity_frame(R01EntityType *e, int state_idx, int frame_idx);
 
+/* Default name for state index 0..3 (Idle/Walk/Hurt/Jump). */
+const char *r01_entity_default_state_name(int state_idx);
+
+/* Ensure state exists (extends state_count). Returns pointer or NULL. */
+R01EntityState *r01_entity_ensure_state(R01EntityType *e, int state_idx);
+
 /* Ensure frame exists (extends frame_count). Returns pointer or NULL. */
 R01EntityFrame *r01_entity_ensure_frame(R01EntityType *e, int state_idx, int frame_idx);
+
+/*
+ * Drop last state/frame when it is empty. Never removes index 0.
+ * Returns 1 if trimmed, 0 otherwise.
+ */
+int r01_entity_trim_last_state(R01EntityType *e);
+int r01_entity_trim_last_frame(R01EntityType *e, int state_idx);
 
 int r01_entity_frame_add_part(R01EntityFrame *fr, const R01EntityPart *part);
 int r01_entity_frame_remove_part(R01EntityFrame *fr, int part_idx);

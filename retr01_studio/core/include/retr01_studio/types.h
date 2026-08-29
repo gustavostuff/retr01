@@ -67,7 +67,7 @@
 #define R01_MAX_SPRITES 256
 #define R01_MAX_METASPRITES 64
 
-/* Entity types (docs/07). UI may lock state_count to 1; arrays sized for later. */
+/* Entity types (docs/07). Arrays sized for 1..4 states and frames. */
 #define R01_MAX_ENTITY_TYPES 64
 #define R01_ENTITY_STATES_MAX 4
 #define R01_ENTITY_FRAMES_MAX 4
@@ -154,7 +154,7 @@ typedef struct R01EntityState {
 typedef struct R01EntityType {
     int present;
     R01EntityState states[R01_ENTITY_STATES_MAX];
-    int state_count; /* UI may lock to 1; wire up to R01_ENTITY_STATES_MAX */
+    int state_count; /* 1..R01_ENTITY_STATES_MAX */
 } R01EntityType;
 
 /* Placed instance in world pixel space (world_x/y = user state origin). */

@@ -84,6 +84,7 @@ int ui_init(UiState *ui) {
     ui->last_paint_tx = -1;
     ui->last_paint_ty = -1;
     ui->screen_mode = UI_SCREEN_MODE_SEL;
+    ui->screen_layer = UI_SCREEN_LAYER_BG;
     ui->accordion_open = UI_ACC_WORLDS;
     ui->menu.world_screen_idx = -1;
     ui->sel_instance = -1;

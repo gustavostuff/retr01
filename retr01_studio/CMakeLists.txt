@@ -71,6 +71,13 @@ add_library(retr01_studio_app
   app/src/font/font.c
   app/src/ui/core.c
   app/src/ui/primitives.c
+  app/src/ui/widgets/dot_strip.c
+  app/src/ui/widgets/radio.c
+  app/src/ui/widgets/checkbox.c
+  app/src/ui/widgets/palette_grid.c
+  app/src/ui/widgets/button.c
+  app/src/ui/widgets/modal.c
+  app/src/ui/widgets/compose.c
   app/src/ui/layout.c
   app/src/ui/draw/frame.c
   app/src/ui/draw/sidebar.c

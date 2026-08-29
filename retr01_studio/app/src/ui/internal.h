@@ -2,6 +2,7 @@
 #define retr01_STUDIO_UI_INTERNAL_H
 
 #include "ui/ui.h"
+#include "ui/widgets/widgets.h"
 
 #include <SDL.h>
 #include <stdint.h>
@@ -108,25 +109,20 @@ void draw_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Ui
 void hover_overlay(SDL_Renderer *r, int x, int y, int w, int h);
 int point_in_rect(int lx, int ly, int x, int y, int w, int h);
 int label_width(const char *text);
-void draw_radio_sprite(SDL_Renderer *r, int dx, int dy, int selected);
-void draw_checkbox_sprite(SDL_Renderer *r, int dx, int dy, int checked);
-void draw_spr_palette_grid(SDL_Renderer *r, const R01Project *p, int row, int pal_x, int pal_y, int sel_pal,
-                           int sel_color);
-int spr_palette_hit(int lx, int ly, int pal_x, int pal_y, int *out_pal, int *out_color);
 void draw_brush_preview(SDL_Renderer *r, const R01Project *p, int row, int pal, int color, int mx, int my);
-void draw_dot_strip(SDL_Renderer *r, int x, int y, int count, int selected, int unlocked_count);
-int dot_strip_hit(int lx, int ly, int x, int y, int count, int *out_idx);
 void draw_ui_cross(SDL_Renderer *r, int cx, int cy);
 void draw_label(SDL_Renderer *r, int x, int y, const char *text);
-void draw_button(SDL_Renderer *r, int x, int y, int w, const char *text, int active, int hover);
 void draw_chess_grid(SDL_Renderer *r, int x0, int y0, int cols, int rows, int cell);
 
 /* ui/layout.c */
-void ui_editor_layout(const UiState *ui, int *screen_x, int *screen_y, int *mode_x, int *mode_y0);
+void ui_editor_layout(const UiState *ui, int *screen_x, int *screen_y, int *layer_x, int *mode_x, int *mode_y0);
 int screen_mode_hit(const UiState *ui, int lx, int ly, int *out_row);
 int screen_mode_row_hit(const UiState *ui, int lx, int ly, int row);
+int screen_layer_hit(const UiState *ui, int lx, int ly, int *out_layer);
+int screen_layer_row_hit(const UiState *ui, int lx, int ly, int row);
 int ui_mode_label_x(int mode_x);
 int ui_mode_panel_w(void);
+int ui_layer_panel_w(void);
 void screen_origin(const UiState *ui, int *ox, int *oy);
 int screen_hit(const UiState *ui, int lx, int ly, int *out_tx, int *out_ty);
 int screen_pixel_hit(const UiState *ui, int lx, int ly, int *out_px, int *out_py);
@@ -173,6 +169,7 @@ void menu_open_world_cell(UiState *ui, int x, int y, int screen_idx);
 void menu_open_sprite(UiState *ui, int x, int y, int catalog_idx);
 void menu_open_metasprite(UiState *ui, int x, int y, int meta_idx);
 void menu_open_entity(UiState *ui, int x, int y, int type_idx);
+void menu_open_instance(UiState *ui, int x, int y, int instance_idx);
 int menu_hit(const UiState *ui, int lx, int ly, int *out_item, int *out_sub);
 void menu_update_hover(UiState *ui, int lx, int ly);
 void handle_menu_pick(UiState *ui, int item, int is_sub);
