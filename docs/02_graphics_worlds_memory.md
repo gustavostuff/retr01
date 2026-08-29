@@ -32,7 +32,15 @@ Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 | PRG | **128 KB** |
 | **Total / free** | **~508 KB** used, **~4.5 KB** free |
 
-**30 screens/world** (not 32) is the cart cap so **8 worlds** + **128 KB** PRG still fit **512 KB** flash with a small spare (~**4.5 KB**). Entity tables and alignment eat that margin in practice.
+**30 screens/world** (not 32) is the cart cap so **8 worlds** + **128 KB** PRG still fit **512 KB** flash with a small spare (~**4.5 KB**). Planned use of that spare ([Other screens and credits](#other-screens-and-credits-global-rom)):
+
+| Spare slice (at max fill) | Size |
+|---------------------------|------|
+| **Other screens** (title + interstitial MAPs) | **~1 KB** |
+| **Credits text** (cart ROM, not PRG) | **up to 1 KB** |
+| Entity tables + alignment | **~2.5 KB** remainder |
+
+World blobs hold **playfield** screens and **parallax** only. Title, level interstitials, and credits are **global** (see below). They do **not** count toward the **30 present screens**/world cap.
 
 At **32 KB** PRG (current export): **~412 KB** used, **~100 KB** free at the same world caps.
 
@@ -134,9 +142,33 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 
 **Fallback (software, load time):** cart global rows -> else kit defaults. Bare metal with no `$FE08`/`$FE09` writes = **garbage colors**. Hardware never auto-loads.
 
+## Other screens and credits (global ROM)
+
+Non-playfield UI that is **not** on the world grid. Lives in cart flash as **MAP-readable data** (same `$FE90`-`$FE93` port as world MAP). **Not** in the **128 KB** PRG image -- PRG holds boot/load/scroll **code** only.
+
+| Kind | Cart storage | Dev workflow |
+|------|--------------|--------------|
+| **Title** | Fixed **480 B** MAP in **other screens** slot **0** | Stream to VRAM slot **0**, scroll **0,0**. Studio may export later; hand-pack OK for now |
+| **Level interstitial** | One shared **480 B** MAP in slot **1** | Reuse one canvas between levels; patch tiles/attrs in **C/ASM**, or overlay small PRG patch tables. No per-level MAP slot in cart |
+| **Credits** | **Credits ROM** blob (**<= 1024 B** ASCII text) | PRG scroll/draw routine reads text via MAP; optional one-time copy to sys RAM. **No** credits MAP screen |
+
+**Other screen ids (planned):** `0` = **TITLE**, `1` = **INTER** (interstitial). Max **2** MAP payloads in v1 (~**992 B** including dir/header).
+
+**Credits ROM (planned caps):**
+
+| Field | Value |
+|-------|-------|
+| `len_credits` max | **1024 B** |
+| Author budget (tooling) | **~1000** characters including line breaks |
+| Encoding | **8-bit ASCII** v1. **`0x0A`** (LF) = newline. No UTF-8 in blob |
+| Runtime read | MAP seek `off_credits`, read `len_credits` bytes via `$FE93` |
+| PRG | Scroll/glyph routine only; font tiles reuse world/other CHR |
+
+CHR for title/interstitial/credits glyphs comes from existing BG banks (often shared with world **0** or baked into other-screen export). No extra CHR budget line for v1.
+
 ## Cart image (`.retr01`)
 
-24-bit offsets. Magic **`retr01`** (lowercase ASCII). **`format_ver` = 1** (frozen in current Studio/Emu/Sim packers): **7** world table slots, **32 KB** PRG. **`format_ver` = 2** (planned): **8** worlds max, **30 present screens**/world max, **128 KB** PRG, `$FE80` bank register.
+24-bit offsets. Magic **`retr01`** (lowercase ASCII). **`format_ver` = 1** (frozen in current Studio/Emu/Sim packers): **7** world table slots, **32 KB** PRG, no other-screens/credits blobs. **`format_ver` = 2** (planned): **8** worlds max, **30 present screens**/world max, **128 KB** PRG, `$FE80` bank register, **other screens** + **credits ROM** pointers.
 
 ```text
 +----------------------------------------------------------------+
@@ -145,11 +177,13 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 |    format_ver        u8 (= 1)                                  |
 |    world_count       u8 (1..8)                                 |
 |    flags / reserved  (pad to 16 B)                             |
-|  POINTER TABLE (24 B, each field u24)                          |
+|  POINTER TABLE (24 B in v1; +12 B in v2 -- each field u24)     |
 |    off_prg, len_prg                                            |
 |    off_pal_bg, len_pal_bg                                      |
 |    off_pal_spr, len_pal_spr                                    |
 |    off_world_table, len_world_table                            |
+|    [v2] off_other, len_other    -- other screens blob          |
+|    [v2] off_credits, len_credits -- credits ROM (len max 1024) |
 +----------------------------------------------------------------+
 | GLOBAL PALETTES                                                |
 |    BG:     8 rows x 4 pals x 4 master indices = 128 B          |
@@ -158,6 +192,16 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 +----------------------------------------------------------------+
 |  PRG (one global section, max 128 KB, CPU window $8000 + I/O hole $FE00) |
 |    Phase 1 export: 32 KB stub. Planned: 128 KB banked (`$FE80`)        |
+|    Code only -- credits strings live in CREDITS ROM below              |
++----------------------------------------------------------------+
+|  OTHER SCREENS (global, v2 -- not in world blobs)              |
+|    other_count u8 (max 2 v1: 0=TITLE, 1=INTER)                 |
+|    pad[3]                                                      |
+|    DIR: other_count x 8 B { id, flags, pad u16, off_payload u24 } |
+|    PAYLOADS: other_count x 480 B (240 tile + 240 attr each)  |
++----------------------------------------------------------------+
+|  CREDITS ROM (global, v2 -- not PRG)                           |
+|    raw ASCII text, len_credits <= 1024                         |
 +----------------------------------------------------------------+
 |  WORLD TABLE (8 slots x 8 B)                                   |
 |    each slot: present u8, pad u8, off_world u24, len_world u24 |
@@ -192,7 +236,7 @@ Kit / Studio **logical** swatches below are full 24-bit reference colors. Studio
 
 OAM attr packing matches BG: bank bits 1-0, pal bits 3-2, `FLIP_H=0x10`, `FLIP_V=0x20`. Instance `world_x/y` is the **user origin**; host Play draws parts at `world + (dx,dy) - origin` (Studio `r01_entity_world_x/y`). SPR bank 0 **tile 1** is reserved as the solid player stub (OAM slot 0).
 
-Boot: magic -> pointers -> world header -> screen dir / parallax dir -> `off_payload`. Load grid screens into VRAM slots 0-3. Load parallax dir entries into slots 4-5. MAP port: `$FE90`-`$FE92` addr, `$FE93` data auto-inc.
+Boot: magic -> pointers -> **[v2] other screens / credits ROM** -> world header -> screen dir / parallax dir -> `off_payload`. Load grid screens into VRAM slots 0-3. Load parallax dir entries into slots 4-5. Title/interstitial: stream chosen **other** payload into slot 0 (full **128x120**). MAP port: `$FE90`-`$FE92` addr, `$FE93` data auto-inc.
 
 **Debugging carts:** Studio Play and editor chrome are **not** the cart. Runner helpers differ:
 
