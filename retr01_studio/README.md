@@ -1,12 +1,12 @@
 # Retr01 Studio
 
-Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. **Phase 3E** (current): **Metasprites** accordion + modal (assemble multi-part SPR groups), entity compose from metasprite catalog, JSON v7. **Phase 3D**: cart packs real SPR CHR + entity type/instance tables. Emu/sim Play OAM parity with Studio. **Phase 3C**: drag sprite/metasprite/entity onto screen, place instances, Studio Play OAM. **Phase 3B**: Entities accordion + Add/Edit entity modal. **Phase 3A**: Sprites accordion + Create/Edit sprite modal, SPR bank CHR catalog. **Phase 2** still applies: multi-world sidebar, screen create/delete, tile edit/paint, solid collision attrs, global palette editor, default spawn screen. **Phase 1** still applies: PNG import, Play preview, export. Hardware: [`docs/02`](../docs/02_graphics_worlds_memory.md).
+Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. **Phase 4** (current): named entities/metasprites, **Mark as player**, Play spawn at the placed instance, player **hitbox** vs BG solid, cart/emu/sim parity. **Phase 3E**: Metasprites accordion + modal, entity compose from metasprite catalog, JSON v7, cart `format_ver` 2, viewport sprite clipping. **Phase 3D**: cart packs real SPR CHR + entity tables. **Phase 3C–3A / 2 / 1** still apply (place instances, sprites, multi-world sidebar, PNG import, export). Hardware: [`docs/02`](../docs/02_graphics_worlds_memory.md).
 
 **Stack:** C11 + SDL2 + FreeType (Proggy Tiny), `libretr01_studio_core` + thin shell.
 
 ---
 
-## UI (Phase 2 + 3A-3E)
+## UI (Phase 2–4)
 
 Fixed **640x360** logical canvas, **8px** grid, dark gray chrome. Buttons/labels **16px** tall. Proggy Tiny (`assets/proggy-tiny.ttf`).
 
@@ -47,26 +47,25 @@ Fixed **640x360** logical canvas, **8px** grid, dark gray chrome. Buttons/labels
 | **Palette strip** | Click BG/SPR strip -> **Global palettes** modal. Row **0-7** sets `default_pal_row` for the active world |
 | **Sprites** | List of SPR catalog entries (**1x** icons + bank tile index). Empty: **empty** + **Add**. Create/Edit modal: SPR bank dots + 16x16 tile grid, 4x4 SPR palette, LMB drag parts, RMB paint. Right-click: edit, remove, set palette, change sprite bank. New sprites fill bank **0**, then **1..3** |
 | **Metasprites** | Reusable multi-part SPR groups (no origin/hitbox). Empty: **empty** + **Add**. Modal: **Name** field (caret/selection/scroll) + derived id (`w_NN_slug`), SPR bank left, 16x16 compose right, 4x4 SPR palette, LMB/RMB. Sidebar: 16x16 centered preview + clipped names; hover tooltip shows name + id. Right-click: edit, remove. **Studio-only**: not a separate cart table. Export flattens into entity parts |
-| **Entities** | List of entity types (16x16 centered preview + **entity name**, clipped). Empty: **empty** + **Add**. Modal: left **metasprite catalog**. Right **Name** / state name text fields, **State**/**Frame** strips, live frame id, compose, guides, SPR palette. Sidebar hover: name + type id. Right-click: **Edit** / **Mark as player** (or Unmark) / **Remove**. Marked player is drawn in Play from **state 0 / frame 0** at the spawn/move position (falls back to stub tile 1). Esc blurs field then closes; click scrim closes. Cart still packs state0/frame0 for all types |
+| **Entities** | List of entity types (16x16 centered preview + **entity name**, clipped). Empty: **empty** + **Add**. Modal: left **metasprite catalog**. Right **Name** / state name text fields, **State**/**Frame** strips, live frame id, compose, guides, SPR palette. Sidebar hover: name + type id. Right-click: **Edit** / **Mark as player** (or Unmark) / **Remove**. Esc blurs field then closes; click scrim closes. Cart packs state0/frame0 for all types |
 | **Place on screen** | Drag a **Sprites**, **Metasprites**, or **Entities** row onto the screen preview (switches to **Sprite layer**). Sprite drop auto-creates a 1-state/1-frame/1-part entity and places an instance. Metasprite drop auto-creates an entity from the group and places an instance. Entity drop places that type. Instance `world_x/y` is the **user origin** (compose cross). Parts/hitbox draw as `(coord - origin)` relative to that. Optional instance `fh`/`fv` mirrors parts around the origin (JSON `"fh"`/`"fv"`, cart instance flags bit0/bit1). Sprites **clip to 128x120** when partially off-screen. On Sprite layer: click/drag instance to move (white outline). **H/V** mirrors. **Delete** removes. Visible in edit view and **Play** (OAM slot 0 = player. Instances fill 1+) |
 
 PNG drop imports into the **active** world. Cart export packs **world 0** only (ignores `default_world`).
 
 ---
 
-## Play (Smooth + Eagle View)
+## Play
 
 | | |
 |--|--|
 | **Entry world** | Play calls `begin_play` -> switches to **`default_world`** (map menu -> **Make default world**), not necessarily the sidebar selection |
-| **Scroll** | Smooth pixel scroll. Camera follows player. No dead zone |
-| **Player** | One hardcoded **8x8** sprite. Color from sprite pal row 0, index 1 |
-| **Collision** | **8x8** AABB vs tiles with `R01_ATTR_SOLID` on present screens |
-| **Start** | Center of **`default_screen`** in the play world. Fallback grid **(2,0)** or first present |
-| **Player sprite** | World **`player_entity`** (Entities context **Mark as player**). Play starts at the **first placed instance** of that type (editor origin); if none, center of the default spawn screen. Draws **state 0 / frame 0** at the player origin and collides with that state’s **hitbox**. If unset/empty, solid stub **SPR bank 0 tile 1** with an 8x8 box at the origin. Cart packs `player_entity` + hitbox into the world header — **re-export** after marking. Placed instances of the player type are skipped in Play OAM |
+| **Scroll** | Smooth pixel scroll. Camera follows player origin. No dead zone |
+| **Player** | World **`player_entity`** (Entities context **Mark as player**). Draws that type’s **state 0 / frame 0**. If unset/empty, solid stub **SPR bank 0 tile 1**. Placed instances of the player type are skipped in Play OAM |
+| **Start** | **First placed instance** of the marked player type (editor origin). If none / unmarked: center of **`default_screen`**. Fallback grid **(2,0)** or first present |
+| **Collision** | Marked player’s state-0 **hitbox** (offset from origin) vs `R01_ATTR_SOLID` on present screens. Stub player: **8x8** at the origin |
 | **Warps** | **X** -> screen (0,0). **Y** -> screen (1,0). Phase 1 test hooks, no Events UI yet |
 
-Play SoT: `core/src/play.c` + `collision.c`. Emu/sim mirror the same rules (separate source copies). Re-export after solid edits. Host collision reads **cart MAP attrs**, not the PRG collision stub. OAM X/Y are **viewport-relative signed** coords. Tiles fully outside **128x120** are skipped. Partial tiles clip at viewport edges (Studio, emu, sim).
+Cart packs `player_entity` + hitbox into the world header — **re-export** after marking or solid edits. Play SoT: `core/src/play.c` + `collision.c`. Emu/sim mirror the same rules (separate source copies). Host collision reads **cart MAP attrs**, not the PRG collision stub. OAM X/Y are **viewport-relative signed** coords. Tiles fully outside **128x120** are skipped; partial tiles clip at viewport edges.
 
 ---
 
@@ -141,9 +140,10 @@ PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are
 | **3B** | Entities accordion + Add/Edit entity modal (compose / hitbox / origin) |
 | **3C** | Drag sprite/entity onto screen. Studio Play OAM (origin-relative) |
 | **3D** | Cart packs real SPR CHR + entity tables. Emu/sim Play OAM parity |
-| **3E** | Metasprites accordion + modal. Entity compose from metasprite catalog. JSON v7. Cart `format_ver` 2 (other screens incl. credits pages + RLE). Viewport sprite clipping (current) |
+| **3E** | Metasprites accordion + modal. Entity compose from metasprite catalog. JSON v7. Cart `format_ver` 2 (other screens incl. credits pages + RLE). Viewport sprite clipping |
+| **4** | **Mark as player**; Play/cart/emu/sim draw state0/frame0, spawn at first placed instance, collide with authored hitbox. Entity/metasprite **names** + derived ids. Text fields, Esc/scrim modal dismiss, readable sidebar context menus |
 
-**Out of scope (for now):** entity movement/collision, multi-state animation in Play (authoring supports 1-4 states / 1-4 frames. Play/cart still state0/frame0), parallax planes / variable-thickness slices authoring, Generate, multi-world cart export, multi-world JSON save, dead-zone/fade scroll profiles, full 6502 gameplay loop.
+**Out of scope (for now):** multi-state animation in Play (authoring supports 1-4 states / 1-4 frames; Play/cart still state0/frame0), entity-vs-entity collision, NPC AI, parallax planes / variable-thickness slices authoring, Generate, multi-world cart export, multi-world JSON save, dead-zone/fade scroll profiles, full 6502 gameplay loop.
 
 ---
 
@@ -182,7 +182,7 @@ ctest --test-dir build --output-on-failure
 | Add / edit metasprite | Metasprites accordion -> **Add**, or right-click -> Edit |
 | Metasprite context menu | Right-click metasprite row (edit / remove) |
 | Add / edit entity | Entities accordion -> **Add**, or right-click -> Edit |
-| Entity context menu | Right-click entity row (edit / remove) |
+| Mark / unmark player | Right-click entity row -> **Mark as player** / **Unmark as player** |
 | Place catalog on screen | Drag Sprites / Metasprites / Entities row onto screen preview |
 | Play / pause | **Space** / **PLAY** |
 | Move player | **WASD** / arrows |

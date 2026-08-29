@@ -10,7 +10,7 @@ When docs disagree, use this order.
 | Locked decisions + open questions | [`04`](04_costs_and_open_questions.md) | Does not replace `02` for register text |
 | Retr01-A **HW BOM** (current) | [`05`](05_hardware_v1_32ic.md) | **32 IC** system. Does not invent `$FExx` |
 | Protoboard island bring-up | [`03`](03_hardware_implementation.md) | Bench checklist for the **32 IC** netlist |
-| Studio Phase 3D+ (product) | [`retr01_studio/README.md`](../retr01_studio/README.md) | Authoring + Play + export. Metasprites, JSON v7, cart `format_ver` 2 |
+| Studio Phase 4 (product) | [`retr01_studio/README.md`](../retr01_studio/README.md) | Authoring + Play + export. Marked player, names/ids, JSON v7, cart `format_ver` 2 |
 | Emulator Phase 1 | [`retr01_emu/README.md`](../retr01_emu/README.md) | Soft cart runtime matching Studio Play |
 | Audio / APU protocol | [`06`](06_audio_architecture.md) | 6502 sequencer + 328P mixer, `$FE4x` bus bridge |
 | Board IC simulator | [`retr01_sim/README.md`](../retr01_sim/README.md) | Pin/netlist models of the 32-IC BOM |
