@@ -26,8 +26,6 @@ Software is still a WIP. This is the overall hardware roadmap:
 
 Same **32 KB PRG** as classic NES NROM games (Exitebike, Balloon Fight, Ice Climbers) but it buys far more game: **4.5x** more CPU cycles per frame at **8 MHz**, **32 KB** system RAM (not 2 KB). Scroll, sprite line fill and world map streaming are hardware jobs, so PRG stays game logic, not VBlank nametable tricks. [`Why_32kb_prg_is_good_enough.md`](docs/why_32kb_prg_is_good_enough.md)
 
-Full map, cart layout, and `$FExx` ports: [`docs/02_graphics_worlds_memory.md`](docs/02_graphics_worlds_memory.md). Terminology and BOM: [`docs/01_architecture_overview.md`](docs/01_architecture_overview.md).
-
 ## Where to go next
 
 - [`docs/01`](docs/01_architecture_overview.md): architecture, terminology, doc index
