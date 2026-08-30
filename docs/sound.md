@@ -40,7 +40,7 @@ On Retr01, **"the Bus Bridge"** is **not** a separate named IC. It is the **CPU 
 2. **Isolation**: the **CPU-domain 74HC245** (one of three board HC245s) plus PHI2 / `/OE` gating ([`hardware.md`](hardware.md) bus split).
 3. **Capture**: the 328P sees register-like writes on its port (or a latch clocked on the write). It owns synthesis timing after that.
 
-Game code does ordinary `STA $FE4x`. The bridge is **decode + bus isolation + APU-side latch/port**, same pattern as other `$FExx` peripherals. Exact GPIO pinout is schematic TBD. The **software contract** is the 32-byte window.
+Game code does ordinary `STA $FE4x`. The bridge is **decode + bus isolation + APU-side latch/port**, same pattern as other `$FExx` peripherals. Exact GPIO pinout is schematic TBD. The **software contract** is the **32-byte** window at `$FE40`-`$FE5F`. Byte meaning inside that window is the semantic hex protocol below (not a fixed ASIC register map).
 
 ---
 

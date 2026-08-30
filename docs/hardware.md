@@ -73,6 +73,8 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
 
 **SCALE DIP:** **2x** default (128x120 logical fills **256x240** RGBS). **1x** centers 128x120. Raster timing unchanged.
 
+**VRAM interleave (island G):** PHI2 high = CPU may R/W `$FE10`-`$FE12`. PHI2 low = BG fetch owns VRAM. Three HC157 mux low address bits between CPU latch and beam VA (line-buffer uses the other three). Details: [`memory.md`](memory.md).
+
 ---
 
 ## Signal paths
@@ -90,6 +92,12 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
 2. During **HBlank**, 1284 reads CHR from cart and writes the **next** scanline into one half of line-buffer SRAM.
 3. Beam reads the **other** half for the visible line. Cap **16** sprites per logical scanline.
 
+### Pads
+
+1. Cabinet / console sticks and buttons feed the **1284**.
+2. CPU reads packed bits at **`$FE60`** (P1) and **`$FE61`** (P2). Bit set = pressed ([`graphics.md`](graphics.md)).
+3. Retr01-C may insert a 3-wire pad MCU later. Software contract stays the same two ports.
+
 ### Audio
 
 1. CPU writes **`$FE40`-`$FE5F`** (bytecode to 328P). See [`sound.md`](sound.md).
@@ -99,6 +107,16 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
 
 1. `$FE04` compare value latched in HC573.
 2. Y-beam PLD match ---> **IRQB** to 6502.
+
+### Five ATF22V10 roles (target)
+
+| PLD | Job |
+|-----|-----|
+| Decode | Chip-selects for `$FExx` windows and bus `/OE` |
+| VRAM glue | Interleave enable with PHI2 + HC157 AB |
+| Beam X | Dot counter / H timing inside 341 |
+| Beam Y | Line counter / `$FE04` compare / NMI edges |
+| Compositor | BG vs sprite priority + Color PROM index |
 
 ---
 

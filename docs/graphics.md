@@ -15,6 +15,29 @@ How the picture is built: VRAM workbench, BG fetch, sprites, palettes. Software-
 | Clocks | CPU **8.000 MHz**, dot **5.369318 MHz**, ~**60.098 Hz** |
 | SCALE DIP | **2x** default (fills CRT). **1x** centers 128x120. Not a `$FExx` bit |
 
+Games author and scroll in **128x120**. Hardware scales that rectangle into the RGBS field. Emulators draw the logical field (often presented 2x for pixels).
+
+---
+
+## Tiles (CHR)
+
+| Item | Value |
+|------|-------|
+| Size | **8x8** pixels |
+| Depth | **2 bpp** (color index **0-3** inside a 4-color palette) |
+| Bytes | **16** per tile (NES-style bitplanes) |
+| Banks | **4** BG + **4** sprite per world (**256** tiles each, **4 KB**/bank) |
+
+Layout of one tile:
+
+```text
+ bytes 0-7   bitplane 0 (LSB of color index), one byte per row
+ bytes 8-15  bitplane 1 (MSB of color index), one byte per row
+ bit 7 = leftmost pixel
+```
+
+Color index **0** is transparent for sprites and shared backdrop for BG. Final RGB comes from active palette indices -> board Color PROM. CHR lives in **cart flash**, not CPU address space. Attr **BANK** bits pick which of the four banks supplies the tile.
+
 ---
 
 ## VRAM workbench
@@ -27,6 +50,13 @@ Six live nametable slots in 32 KB VRAM. Each slot **512 B** (240 tile + 240 attr
 | **4-5** | Parallax planes (**two** resident at a time) |
 
 Scroll `$FE02`/`$FE03`: **0-127** / **0-119**. Hardware does **not** auto-load MAP. Crossing a screen border = software streams **480 B**/screen via `$FE12` (or MAP `$FE93` -> VRAM).
+
+**How scroll works in practice:**
+
+1. Keep four neighboring screens loaded in slots **0-3** (the 2x2 workbench).
+2. Write scroll latches as the camera moves inside that 128x120 window.
+3. When the camera would leave the workbench, stream the newly needed screen(s) into the far slots (interleaved VRAM writes), then keep scrolling.
+4. Mid-frame scroll changes apply on the **next** tile fetch.
 
 ```text
 +-------------+-------------+
@@ -63,7 +93,7 @@ MAP grid (6 screens)             VRAM slots (2x2 load)
 | `$0C00`-`$3FFF` | Scratch |
 | `$4000`-`$7FFF` | Reserved |
 
-**Streaming cost:** ~480 B per screen (~**11** CRT lines @ ~12 cyc/B with interleave). Scroll 1 px = 1-2 latch writes.
+**Streaming cost:** ~480 B per screen (~**11** CRT lines @ ~12 cyc/B with interleave). Scroll 1 px = 1-2 latch writes. See [`memory.md`](memory.md) for PHI2 CPU/PPU phases.
 
 ---
 
@@ -120,13 +150,14 @@ Cap **16** sprites per **logical** scanline. Host Play packs X/Y as signed viewp
 
 ## Palettes
 
-- **Cart:** 8 global BG rows + 8 global sprite rows (**256 B** total). Indices into Color PROM only.
-- **Active row:** one row N selects **4 BG + 4 sprite** palettes together via `$FE08`/`$FE09`.
-- **Color PROM (board):** 64 entries, R3G3B2. Studio quantizes kit swatches to PROM on burn.
-- **Shared color 0** across all 8 active palettes.
-- **`$FE38` PAL_ROW:** hint only. Software still copies into `$FE08`/`$FE09`.
+Two layers: **cart indices** and **board Color PROM**.
 
-No `$FE08`/`$FE09` load at boot = undefined colors until PRG writes them.
+1. **Cart** stores 8 global BG rows + 8 global sprite rows (**256 B** total). Each entry is a **6-bit master index** (0-63), not RGB.
+2. **Active row:** software picks row N (often via `$FE38` hint) then copies **4 BG + 4 sprite** palettes (**32** indices) into `$FE08`/`$FE09`.
+3. **Color PROM (board):** 64 entries of packed **R3G3B2**. Studio quantizes kit swatches when burning the PROM.
+4. **Shared color 0** across all 8 active palettes (backdrop / transparency).
+
+`$FE08` = address into the 32-byte active buffer. `$FE09` = data with auto-inc. No `$FE08`/`$FE09` load at boot = undefined colors until PRG writes them. Phase 1 boot PRG streams the start row from cart pals.
 
 ---
 
@@ -159,20 +190,23 @@ World/screen/cart caps: [`memory.md`](memory.md).
 
 | Addr | Name | Role |
 |------|------|------|
-| `$FE00` | `PPUCTRL` | BG/sprite/NMI enables, camera slot mode |
-| `$FE01` | `PPUSTATUS` | VBlank, raster hit (read clears) |
-| `$FE02`/`$FE03` | scroll X/Y | 0-127 / 0-119 |
+| `$FE00` | `PPUCTRL` | bit0 BG enable, bit7 NMI enable, camera slot mode bits TBD |
+| `$FE01` | `PPUSTATUS` | bit7 VBlank, bit6 raster hit (read clears latched bits) |
+| `$FE02`/`$FE03` | scroll X/Y | 0-127 / 0-119 inside the 2x2 workbench |
 | `$FE04`/`$FE05` | raster / IRQ | Scanline compare + control |
 | `$FE06`/`$FE07` | plane band | Parallax band + scroll |
-| `$FE08`/`$FE09` | pal addr/data | Active master indices, auto-inc |
-| `$FE10`-`$FE12` | VRAM addr/data | auto-inc |
-| `$FE20`/`$FE21` | OAM addr/data | auto-inc |
+| `$FE08`/`$FE09` | pal addr/data | Active master indices (**32 B**), auto-inc |
+| `$FE10`-`$FE12` | VRAM addr/data | hi, lo, data auto-inc (interleaved) |
+| `$FE20`/`$FE21` | OAM addr/data | auto-inc into 1284 OAM |
+| `$FE30` | `WORLD` | Active world index **0-7** (select helper) |
 | `$FE31`-`$FE37` | bank helpers | Optional attr stamps |
-| `$FE38` | `PAL_ROW` | Palette row hint |
+| `$FE38` | `PAL_ROW` | Palette row hint (software still copies `$FE08`/`$FE09`) |
+| `$FE40`-`$FE5F` | APU | Bytecode window to 328P ([`sound.md`](sound.md)) |
+| `$FE60`/`$FE61` | pads P1/P2 | Bit set = pressed (R L D U X Y Coin Start) |
+| `$FE70`-`$FE72` | machine EEPROM | Handshake TBD ([`memory.md`](memory.md)) |
+| `$FE90`-`$FE93` | MAP | Cart seek + read auto-inc ([`memory.md`](memory.md)) |
 
-Pads, APU, MAP, EEPROM: [`memory.md`](memory.md), [`sound.md`](sound.md).
-
-Silicon packs `$FExx` into **9x HC573** (bitfield table still TBD).
+`$FE80` unused. Silicon packs many ports into **9x HC573** (bitfield table still TBD).
 
 ---
 
@@ -184,3 +218,4 @@ Silicon packs `$FExx` into **9x HC573** (bitfield table still TBD).
 | BG `ANIM` rate | Global vs per-game |
 | Living-tile list cap | **32** vs **64** cells (`retr01_ANIM_MAX`) |
 | `$FE07` band end | Second latch may be needed |
+| `PPUCTRL` camera mode bits | Exact bitfield TBD |

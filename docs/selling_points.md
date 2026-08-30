@@ -60,7 +60,7 @@ Same tracker *feel*, different silicon. Details: [`sound.md`](sound.md).
 |--|-----|--------|
 | Typical cart | 32 KB PRG + 8 KB CHR (NROM) | **512 KB** flash: PRG + CHR + MAP + palettes |
 | Worlds | Usually one game world | Up to **8** worlds, **32** screens each |
-| Tile art banks | Often fixed CHR page | **4 BG + 4 sprite** banks per world (**256** tiles each) |
+| Tile art banks | Often fixed CHR page | **4** BG + **4** sprite banks per world (**256** tiles each, **32 KB** CHR total) |
 | Saves | Battery RAM (mapper-dependent) | **I2C EEPROM** on cart |
 | Authoring | Assembler + tile editors | **Retr01 Studio** -> `.r01proj` + export |
 
@@ -77,6 +77,8 @@ Because graphics streaming is hardware-assisted:
 - Audio driver feeding the 328P bytecode protocol
 
 Classic NES **32 KB** games (Balloon Fight, Ice Climber, Excitebike) already shipped full experiences under tighter CPU/RAM. Retr01 targets the same PRG size with **~4.5x** more cycles per frame and **16x** more RAM for game state.
+
+**Soft CPU budget:** Host tools chart game-busy cycles against a soft max of **~50k** cycles/frame (`R01E_CPU_BUDGET_CYCLES`). That is a design guide for Phase 1 games, not a hard silicon clamp. Full frame still has ~**133k** CPU cycles available.
 
 ---
 
