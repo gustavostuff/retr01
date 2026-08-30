@@ -621,7 +621,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         !ui->metasprite_edit.open && !ui->entity_edit.open && !ui->play.active) {
         AccordionLayout lo;
         accordion_layout(ui, &lo);
-        if (lo.sprites_open && lx < UI_SIDEBAR_W) {
+        if (lo.sprites_body_h > UI_BTN_H && lx < UI_SIDEBAR_W) {
             const R01World *w = r01_project_active_world_const(ui->project);
             int vis = (UI_SPRITES_BODY_H - UI_BTN_H) / UI_SPRITE_ROW_H;
             int max_scroll = 0;
@@ -637,7 +637,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             return 1;
         }
-        if (lo.metasprites_open && lx < UI_SIDEBAR_W) {
+        if (lo.metasprites_body_h > UI_BTN_H && lx < UI_SIDEBAR_W) {
             const R01World *w = r01_project_active_world_const(ui->project);
             int vis = (UI_METASPRITES_BODY_H - UI_BTN_H) / UI_SPRITE_ROW_H;
             int max_scroll = 0;
@@ -653,7 +653,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             return 1;
         }
-        if (lo.entities_open && lx < UI_SIDEBAR_W) {
+        if (lo.entities_body_h > UI_BTN_H && lx < UI_SIDEBAR_W) {
             const R01World *w = r01_project_active_world_const(ui->project);
             int vis = (UI_ENTITIES_BODY_H - UI_BTN_H) / UI_SPRITE_ROW_H;
             int max_scroll = 0;

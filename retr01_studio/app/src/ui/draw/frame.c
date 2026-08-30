@@ -22,14 +22,12 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
     SDL_RenderClear(r);
 
     draw_sidebar(ui, r);
-    draw_button(r, play_btn_x(ui), play_btn_y(ui), play_btn_w(ui), ui->play.active ? "Stop" : "Play", 1,
-                play_button_hit(ui, ui->mouse_x, ui->mouse_y));
+    draw_ctrl_sidebar(ui, r);
 
     if (ui->play.active) {
         draw_play_view(ui, r);
     } else {
         draw_screen_editor(ui, r, r01_project_active_screen(ui->project));
-        draw_screen_mode(ui, r);
     }
 
     if (ui->toast_until > SDL_GetTicks() && ui->toast[0]) {

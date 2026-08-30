@@ -5,20 +5,19 @@
 void draw_screen_mode(UiState *ui, SDL_Renderer *r) {
     static const char *const mode_labels[2] = {"Tile selection", "Tile paint"};
     static const char *const layer_labels[2] = {"BG layer", "Sprite layer"};
-    int sx, sy, layer_x, mx, my0;
+    int layer_x, mx, my0;
     int row;
-    if (ui->play.active) {
-        return;
-    }
-    ui_editor_layout(ui, &sx, &sy, &layer_x, &mx, &my0);
+    int dim_all = ui->play.active;
+
+    ui_editor_layout(ui, NULL, NULL, &layer_x, &mx, &my0);
 
     for (row = 0; row < 2; row++) {
         int y = my0 + row * UI_MODE_ROW_H;
         int selected = ui->screen_layer == row;
-        int hover = screen_layer_row_hit(ui, ui->mouse_x, ui->mouse_y, row);
-        ui_radio_draw(r, layer_x, y + (UI_MODE_ROW_H - UI_MODE_RADIO) / 2, selected);
+        int hover = !dim_all && screen_layer_row_hit(ui, ui->mouse_x, ui->mouse_y, row);
+        ui_radio_draw(r, layer_x, y + (UI_MODE_ROW_H - UI_MODE_RADIO) / 2, selected && !dim_all);
         font_draw_centered(r, ui_mode_label_x(layer_x), y, label_width(layer_labels[row]), UI_MODE_ROW_H,
-                           layer_labels[row], 230, 230, 230);
+                           layer_labels[row], dim_all ? 120 : 230, dim_all ? 120 : 230, dim_all ? 130 : 230);
         if (hover) {
             hover_overlay(r, layer_x, y, ui_layer_panel_w(), UI_MODE_ROW_H);
         }
@@ -27,8 +26,8 @@ void draw_screen_mode(UiState *ui, SDL_Renderer *r) {
     for (row = 0; row < 2; row++) {
         int y = my0 + (2 + row) * UI_MODE_ROW_H;
         int selected = ui->screen_mode == row;
-        int hover = screen_mode_row_hit(ui, ui->mouse_x, ui->mouse_y, row);
-        int dim = ui->screen_layer != UI_SCREEN_LAYER_BG;
+        int hover = !dim_all && screen_mode_row_hit(ui, ui->mouse_x, ui->mouse_y, row);
+        int dim = dim_all || ui->screen_layer != UI_SCREEN_LAYER_BG;
         ui_radio_draw(r, mx, y + (UI_MODE_ROW_H - UI_MODE_RADIO) / 2, selected && !dim);
         font_draw_centered(r, ui_mode_label_x(mx), y, label_width(mode_labels[row]), UI_MODE_ROW_H, mode_labels[row],
                            dim ? 120 : 230, dim ? 120 : 230, dim ? 130 : 230);
@@ -36,6 +35,16 @@ void draw_screen_mode(UiState *ui, SDL_Renderer *r) {
             hover_overlay(r, mx, y, ui_mode_panel_w(), UI_MODE_ROW_H);
         }
     }
+}
+
+void draw_ctrl_sidebar(UiState *ui, SDL_Renderer *r) {
+    if (!ui || !r) {
+        return;
+    }
+    fill_rect(r, ui_ctrl_x(ui), 0, UI_CTRL_SIDEBAR_W, ui_logic_h(ui), UI_COL_PANEL_R, UI_COL_PANEL_G, UI_COL_PANEL_B);
+    draw_button(r, play_btn_x(ui), play_btn_y(ui), play_btn_w(ui), ui->play.active ? "Stop" : "Play", 1,
+                play_button_hit(ui, ui->mouse_x, ui->mouse_y));
+    draw_screen_mode(ui, r);
 }
 
 void ui_update_cursor(const UiState *ui) {

@@ -39,6 +39,7 @@
 #define UI_UNIT 8
 #define UI_BTN_H 16
 #define UI_SIDEBAR_W 128
+#define UI_CTRL_SIDEBAR_W 128
 #define UI_WORLD_BTN 16
 #define UI_WORLD_CELL 16
 #define UI_WORLD_VIEW 128
@@ -55,7 +56,9 @@
 #define UI_ACC_METASPRITES 3
 #define UI_ACC_ENTITIES 4
 /* When 1, all accordion sections stay expanded and headers do not collapse. */
-#define UI_ACCORDION_ALWAYS_EXPANDED 1
+#define UI_ACCORDION_ALWAYS_EXPANDED 0
+#define UI_ACCORDION_ANIM_MS 250
+#define UI_ACC_SECTIONS 5
 
 #define UI_SPRITES_BODY_H 96
 #define UI_SPRITE_ROW_H 16
@@ -293,6 +296,8 @@ typedef struct UiState {
     int last_click_col;
     int last_click_row;
     int accordion_open; /* UI_ACC_* or UI_ACC_NONE */
+    int accordion_body_h[UI_ACC_SECTIONS]; /* animated body height per section */
+    Uint32 accordion_anim_last_ms;
     int sprites_scroll;
     int metasprites_scroll;
     int entities_scroll;
@@ -324,7 +329,20 @@ static inline int ui_screen_h(const UiState *ui) {
 }
 
 static inline int ui_main_w(const UiState *ui) {
-    return ui_logic_w(ui) - UI_SIDEBAR_W;
+    return ui_logic_w(ui) - UI_SIDEBAR_W - UI_CTRL_SIDEBAR_W;
+}
+
+static inline int ui_ctrl_x(const UiState *ui) {
+    return ui_logic_w(ui) - UI_CTRL_SIDEBAR_W;
+}
+
+static inline int ui_preview_x(const UiState *ui) {
+    int pane = ui_main_w(ui);
+    int x = UI_SIDEBAR_W + (pane - ui_screen_w(ui)) / 2;
+    if (x < UI_SIDEBAR_W) {
+        x = UI_SIDEBAR_W;
+    }
+    return x;
 }
 
 int ui_init(UiState *ui);

@@ -16,6 +16,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+static void accordion_body_clip(SDL_Renderer *r, int body_y, int body_h, UiClipStack *stack) {
+    ui_clip_push(r, 0, body_y, UI_SIDEBAR_W, body_h, stack);
+}
+
+static void accordion_body_clip_pop(SDL_Renderer *r, const UiClipStack *stack) {
+    ui_clip_pop(r, stack);
+}
+
 static void draw_worlds_body(UiState *ui, SDL_Renderer *r, const AccordionLayout *lo) {
     R01World *w = r01_project_active_world(ui->project);
     int col, row;
@@ -313,6 +321,7 @@ static void draw_entities_body(UiState *ui, SDL_Renderer *r, const AccordionLayo
 
 void draw_sidebar(UiState *ui, SDL_Renderer *r) {
     AccordionLayout lo;
+    UiClipStack clip;
     int lx = ui->mouse_x;
     int ly = ui->mouse_y;
 
@@ -320,33 +329,40 @@ void draw_sidebar(UiState *ui, SDL_Renderer *r) {
     ui_tooltip_clear(ui);
     fill_rect(r, 0, 0, UI_SIDEBAR_W, ui_logic_h(ui), UI_COL_PANEL_R, UI_COL_PANEL_G, UI_COL_PANEL_B);
 
+    if (lo.worlds_body_h > 0) {
+        accordion_body_clip(r, lo.worlds_btns_y, lo.worlds_body_h, &clip);
+        draw_worlds_body(ui, r, &lo);
+        accordion_body_clip_pop(r, &clip);
+    }
+    if (lo.pals_body_h > 0) {
+        accordion_body_clip(r, lo.pals_body_y, lo.pals_body_h, &clip);
+        draw_palettes(ui, r, &lo);
+        accordion_body_clip_pop(r, &clip);
+    }
+    if (lo.sprites_body_h > 0) {
+        accordion_body_clip(r, lo.sprites_body_y, lo.sprites_body_h, &clip);
+        draw_sprites_body(ui, r, &lo);
+        accordion_body_clip_pop(r, &clip);
+    }
+    if (lo.metasprites_body_h > 0) {
+        accordion_body_clip(r, lo.metasprites_body_y, lo.metasprites_body_h, &clip);
+        draw_metasprites_body(ui, r, &lo);
+        accordion_body_clip_pop(r, &clip);
+    }
+    if (lo.entities_body_h > 0) {
+        accordion_body_clip(r, lo.entities_body_y, lo.entities_body_h, &clip);
+        draw_entities_body(ui, r, &lo);
+        accordion_body_clip_pop(r, &clip);
+    }
+
     draw_accordion_header(r, lo.worlds_hdr_y, "Worlds", lo.worlds_open,
                           point_in_rect(lx, ly, 0, lo.worlds_hdr_y, UI_SIDEBAR_W, UI_BTN_H));
-    if (lo.worlds_open) {
-        draw_worlds_body(ui, r, &lo);
-    }
-
     draw_accordion_header(r, lo.pals_hdr_y, "Palettes", lo.pals_open,
                           point_in_rect(lx, ly, 0, lo.pals_hdr_y, UI_SIDEBAR_W, UI_BTN_H));
-    if (lo.pals_open) {
-        draw_palettes(ui, r, &lo);
-    }
-
     draw_accordion_header(r, lo.sprites_hdr_y, "Sprites", lo.sprites_open,
                           point_in_rect(lx, ly, 0, lo.sprites_hdr_y, UI_SIDEBAR_W, UI_BTN_H));
-    if (lo.sprites_open) {
-        draw_sprites_body(ui, r, &lo);
-    }
-
     draw_accordion_header(r, lo.metasprites_hdr_y, "Metasprites", lo.metasprites_open,
                           point_in_rect(lx, ly, 0, lo.metasprites_hdr_y, UI_SIDEBAR_W, UI_BTN_H));
-    if (lo.metasprites_open) {
-        draw_metasprites_body(ui, r, &lo);
-    }
-
     draw_accordion_header(r, lo.entities_hdr_y, "Entities", lo.entities_open,
                           point_in_rect(lx, ly, 0, lo.entities_hdr_y, UI_SIDEBAR_W, UI_BTN_H));
-    if (lo.entities_open) {
-        draw_entities_body(ui, r, &lo);
-    }
 }

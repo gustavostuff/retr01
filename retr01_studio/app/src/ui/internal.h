@@ -7,23 +7,33 @@
 #include <SDL.h>
 #include <stdint.h>
 
+typedef struct UiClipStack {
+    SDL_Rect prev;
+    SDL_bool had_clip;
+} UiClipStack;
+
 typedef struct AccordionLayout {
     int worlds_hdr_y;
     int worlds_btns_y;
     int worlds_grid_y;
     int worlds_open;
+    int worlds_body_h;
     int pals_hdr_y;
     int pals_body_y;
     int pals_open;
+    int pals_body_h;
     int sprites_hdr_y;
     int sprites_body_y;
     int sprites_open;
+    int sprites_body_h;
     int metasprites_hdr_y;
     int metasprites_body_y;
     int metasprites_open;
+    int metasprites_body_h;
     int entities_hdr_y;
     int entities_body_y;
     int entities_open;
+    int entities_body_h;
 } AccordionLayout;
 
 static inline void ui_world_btn_pos(int wi, int btns_y, int *out_x, int *out_y) {
@@ -114,6 +124,8 @@ void ui_tooltip_set(UiState *ui, int x, int y, const char *line1, const char *li
 void ui_tooltip_clear(UiState *ui);
 void draw_tooltip(UiState *ui, SDL_Renderer *r);
 void fill_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B);
+void ui_clip_push(SDL_Renderer *r, int x, int y, int w, int h, UiClipStack *stack);
+void ui_clip_pop(SDL_Renderer *r, const UiClipStack *stack);
 void draw_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B);
 void hover_overlay(SDL_Renderer *r, int x, int y, int w, int h);
 /* Draw text clipped to a rectangle (scissor). */
@@ -139,6 +151,8 @@ int ui_layer_panel_w(void);
 void screen_origin(const UiState *ui, int *ox, int *oy);
 int screen_hit(const UiState *ui, int lx, int ly, int *out_tx, int *out_ty);
 int screen_pixel_hit(const UiState *ui, int lx, int ly, int *out_px, int *out_py);
+void accordion_init_heights(UiState *ui);
+void accordion_anim_tick(UiState *ui);
 void accordion_layout(const UiState *ui, AccordionLayout *lo);
 int world_cell_hit(const UiState *ui, int lx, int ly, int *out_col, int *out_row);
 int world_btn_hit(const UiState *ui, int lx, int ly, int *out_wi);
@@ -248,6 +262,7 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r);
 /* ui/draw/mode.c */
 void ui_update_cursor(const UiState *ui);
 void draw_screen_mode(UiState *ui, SDL_Renderer *r);
+void draw_ctrl_sidebar(UiState *ui, SDL_Renderer *r);
 
 /* ui/draw/sidebar.c */
 void draw_sidebar(UiState *ui, SDL_Renderer *r);

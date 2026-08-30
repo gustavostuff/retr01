@@ -96,7 +96,7 @@ void ui_compose_draw_frame_icon(SDL_Renderer *r, const R01Project *p, const R01W
     int i;
     int min_x = 0, min_y = 0, max_x = 0, max_y = 0;
     int cx, cy, off_x, off_y;
-    SDL_Rect clip;
+    UiClipStack stack;
     fill_rect(r, dx, dy, icon_size, icon_size, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
     if (!fr || fr->part_count < 1 || !p || !w) {
         return;
@@ -124,18 +124,14 @@ void ui_compose_draw_frame_icon(SDL_Renderer *r, const R01Project *p, const R01W
     cy = (min_y + max_y) / 2;
     off_x = icon_size / 2 - cx;
     off_y = icon_size / 2 - cy;
-    clip.x = dx;
-    clip.y = dy;
-    clip.w = icon_size;
-    clip.h = icon_size;
-    SDL_RenderSetClipRect(r, &clip);
+    ui_clip_push(r, dx, dy, icon_size, icon_size, &stack);
     for (i = 0; i < fr->part_count; i++) {
         R01EntityPart ghost = fr->parts[i];
         ghost.dx = fr->parts[i].dx + off_x;
         ghost.dy = fr->parts[i].dy + off_y;
         ui_compose_draw_part(r, p, w, &ghost, dx, dy, 1, 0);
     }
-    SDL_RenderSetClipRect(r, NULL);
+    ui_clip_pop(r, &stack);
 }
 
 int ui_compose_part_at(const R01EntityFrame *fr, int px, int py, int prefer_sel) {

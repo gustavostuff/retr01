@@ -186,6 +186,58 @@ void fill_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Ui
     SDL_RenderFillRect(r, &rc);
 }
 
+static SDL_Rect ui_clip_intersect(const SDL_Rect *a, const SDL_Rect *b) {
+    SDL_Rect out;
+    int x1;
+    int y1;
+    int x2;
+    int y2;
+
+    x1 = a->x > b->x ? a->x : b->x;
+    y1 = a->y > b->y ? a->y : b->y;
+    x2 = a->x + a->w < b->x + b->w ? a->x + a->w : b->x + b->w;
+    y2 = a->y + a->h < b->y + b->h ? a->y + a->h : b->y + b->h;
+    out.x = x1;
+    out.y = y1;
+    out.w = x2 - x1;
+    out.h = y2 - y1;
+    if (out.w < 0) {
+        out.w = 0;
+    }
+    if (out.h < 0) {
+        out.h = 0;
+    }
+    return out;
+}
+
+void ui_clip_push(SDL_Renderer *r, int x, int y, int w, int h, UiClipStack *stack) {
+    SDL_Rect next = {x, y, w, h};
+    SDL_Rect prev;
+
+    if (!r || !stack || w < 1 || h < 1) {
+        return;
+    }
+    stack->had_clip = SDL_FALSE;
+    SDL_RenderGetClipRect(r, &prev);
+    if (prev.w > 0 && prev.h > 0) {
+        stack->had_clip = SDL_TRUE;
+        stack->prev = prev;
+        next = ui_clip_intersect(&prev, &next);
+    }
+    SDL_RenderSetClipRect(r, &next);
+}
+
+void ui_clip_pop(SDL_Renderer *r, const UiClipStack *stack) {
+    if (!r || !stack) {
+        return;
+    }
+    if (stack->had_clip) {
+        SDL_RenderSetClipRect(r, &stack->prev);
+    } else {
+        SDL_RenderSetClipRect(r, NULL);
+    }
+}
+
 void draw_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B) {
     SDL_Rect rc = {x, y, w, h};
     SDL_SetRenderDrawColor(r, R, G, B, 255);
@@ -201,13 +253,13 @@ void hover_overlay(SDL_Renderer *r, int x, int y, int w, int h) {
 
 void font_draw_clipped(SDL_Renderer *r, int x, int y, int clip_x, int clip_y, int clip_w, int clip_h,
                        const char *text, Uint8 R, Uint8 G, Uint8 B) {
-    SDL_Rect clip = {clip_x, clip_y, clip_w, clip_h};
+    UiClipStack stack;
     if (clip_w < 1 || clip_h < 1 || !text) {
         return;
     }
-    SDL_RenderSetClipRect(r, &clip);
+    ui_clip_push(r, clip_x, clip_y, clip_w, clip_h, &stack);
     font_draw(r, x, y, text, R, G, B);
-    SDL_RenderSetClipRect(r, NULL);
+    ui_clip_pop(r, &stack);
 }
 
 int point_in_rect(int lx, int ly, int x, int y, int w, int h) {

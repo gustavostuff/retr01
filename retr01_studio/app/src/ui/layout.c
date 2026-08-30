@@ -46,43 +46,14 @@ void ui_preview_size(const UiState *ui, int *out_w, int *out_h) {
 }
 
 void ui_editor_layout(const UiState *ui, int *screen_x, int *screen_y, int *layer_x, int *mode_x, int *mode_y0) {
-    int available = ui_main_w(ui);
-    int radio_w = ui_mode_panel_w();
-    int gap = UI_UNIT;
-    int prev_w, prev_h;
-    int block;
-    int left;
-    int sx;
+    int sx = ui_preview_x(ui);
     int sy;
-    int lx;
+    int ctrl_inner = ui_ctrl_x(ui) + UI_UNIT;
+    int radios_y = UI_UNIT + UI_BTN_H + UI_UNIT;
 
-    ui_preview_size(ui, &prev_w, &prev_h);
-    /* Layer + mode radios stacked on the left of the screen (edit only). */
-    block = radio_w + gap + prev_w;
-    left = UI_SIDEBAR_W + (available - block) / 2;
-    sy = (ui_logic_h(ui) - prev_h) / 2;
-    if (sy < UI_BTN_H + UI_UNIT * 2) {
-        sy = UI_BTN_H + UI_UNIT * 2;
-    }
-    if (left < UI_SIDEBAR_W + UI_UNIT) {
-        left = UI_SIDEBAR_W + UI_UNIT;
-    }
-    lx = left;
-    sx = lx + radio_w + gap;
-    if (ui && ui->play.active) {
-        /* Play: no radios. Center the preview alone in the main pane. */
-        sx = UI_SIDEBAR_W + (available - prev_w) / 2;
-        if (sx < UI_SIDEBAR_W + UI_UNIT) {
-            sx = UI_SIDEBAR_W + UI_UNIT;
-        }
-        lx = sx;
-    } else if (sx + prev_w > ui_logic_w(ui) - UI_UNIT) {
-        sx = ui_logic_w(ui) - UI_UNIT - prev_w;
-        lx = sx - gap - radio_w;
-        if (lx < UI_SIDEBAR_W + UI_UNIT) {
-            lx = UI_SIDEBAR_W + UI_UNIT;
-            sx = lx + radio_w + gap;
-        }
+    sy = (ui_logic_h(ui) - ui_screen_h(ui)) / 2;
+    if (sy < UI_UNIT) {
+        sy = UI_UNIT;
     }
     if (screen_x) {
         *screen_x = sx;
@@ -91,14 +62,13 @@ void ui_editor_layout(const UiState *ui, int *screen_x, int *screen_y, int *laye
         *screen_y = sy;
     }
     if (layer_x) {
-        *layer_x = lx;
+        *layer_x = ctrl_inner;
     }
-    /* mode_x shares the left radio column (rows 2-3). */
     if (mode_x) {
-        *mode_x = lx;
+        *mode_x = ctrl_inner;
     }
     if (mode_y0) {
-        *mode_y0 = sy;
+        *mode_y0 = radios_y;
     }
 }
 
@@ -166,17 +136,14 @@ int play_btn_w(const UiState *ui) {
 }
 
 int play_btn_x(const UiState *ui) {
-    int sx, sy, layer_x, mx, my0;
-    int prev_w;
-    ui_editor_layout(ui, &sx, &sy, &layer_x, &mx, &my0);
-    ui_preview_size(ui, &prev_w, NULL);
-    return sx + (prev_w - play_btn_w(ui)) / 2;
+    int w = play_btn_w(ui);
+    (void)ui;
+    return ui_ctrl_x(ui) + (UI_CTRL_SIDEBAR_W - w) / 2;
 }
 
 int play_btn_y(const UiState *ui) {
-    int sx, sy, layer_x, mx, my0;
-    ui_editor_layout(ui, &sx, &sy, &layer_x, &mx, &my0);
-    return sy - UI_UNIT - UI_BTN_H;
+    (void)ui;
+    return UI_UNIT;
 }
 
 int play_button_hit(const UiState *ui, int lx, int ly) {
@@ -238,14 +205,40 @@ int screen_pixel_hit(const UiState *ui, int lx, int ly, int *out_px, int *out_py
 void accordion_layout(const UiState *ui, AccordionLayout *lo) {
     int y = 0;
     int always = UI_ACCORDION_ALWAYS_EXPANDED;
-    (void)ui;
+    int worlds_h;
+    int pals_h;
+    int sprites_h;
+    int metasprites_h;
+    int entities_h;
+
+    if (always) {
+        worlds_h = UI_WORLDS_BODY_H;
+        pals_h = UI_PAL_BODY_H;
+        sprites_h = UI_SPRITES_BODY_H;
+        metasprites_h = UI_METASPRITES_BODY_H;
+        entities_h = UI_ENTITIES_BODY_H;
+    } else if (ui) {
+        worlds_h = ui->accordion_body_h[UI_ACC_WORLDS];
+        pals_h = ui->accordion_body_h[UI_ACC_PALS];
+        sprites_h = ui->accordion_body_h[UI_ACC_SPRITES];
+        metasprites_h = ui->accordion_body_h[UI_ACC_METASPRITES];
+        entities_h = ui->accordion_body_h[UI_ACC_ENTITIES];
+    } else {
+        worlds_h = 0;
+        pals_h = 0;
+        sprites_h = 0;
+        metasprites_h = 0;
+        entities_h = 0;
+    }
+
     lo->worlds_hdr_y = y;
     y += UI_BTN_H;
     lo->worlds_open = always || (ui && ui->accordion_open == UI_ACC_WORLDS);
-    if (lo->worlds_open) {
+    lo->worlds_body_h = worlds_h;
+    if (worlds_h > 0) {
         lo->worlds_btns_y = y;
         lo->worlds_grid_y = y + UI_WORLD_BTN;
-        y += UI_WORLDS_BODY_H;
+        y += worlds_h;
     } else {
         lo->worlds_btns_y = -1;
         lo->worlds_grid_y = -1;
@@ -253,38 +246,123 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
     lo->pals_hdr_y = y;
     y += UI_BTN_H;
     lo->pals_open = always || (ui && ui->accordion_open == UI_ACC_PALS);
-    if (lo->pals_open) {
+    lo->pals_body_h = pals_h;
+    if (pals_h > 0) {
         lo->pals_body_y = y;
-        y += UI_PAL_BODY_H;
+        y += pals_h;
     } else {
         lo->pals_body_y = -1;
     }
     lo->sprites_hdr_y = y;
     y += UI_BTN_H;
     lo->sprites_open = always || (ui && ui->accordion_open == UI_ACC_SPRITES);
-    if (lo->sprites_open) {
+    lo->sprites_body_h = sprites_h;
+    if (sprites_h > 0) {
         lo->sprites_body_y = y;
-        y += UI_SPRITES_BODY_H;
+        y += sprites_h;
     } else {
         lo->sprites_body_y = -1;
     }
     lo->metasprites_hdr_y = y;
     y += UI_BTN_H;
     lo->metasprites_open = always || (ui && ui->accordion_open == UI_ACC_METASPRITES);
-    if (lo->metasprites_open) {
+    lo->metasprites_body_h = metasprites_h;
+    if (metasprites_h > 0) {
         lo->metasprites_body_y = y;
-        y += UI_METASPRITES_BODY_H;
+        y += metasprites_h;
     } else {
         lo->metasprites_body_y = -1;
     }
     lo->entities_hdr_y = y;
     y += UI_BTN_H;
     lo->entities_open = always || (ui && ui->accordion_open == UI_ACC_ENTITIES);
-    if (lo->entities_open) {
+    lo->entities_body_h = entities_h;
+    if (entities_h > 0) {
         lo->entities_body_y = y;
-        y += UI_ENTITIES_BODY_H;
+        y += entities_h;
     } else {
         lo->entities_body_y = -1;
+    }
+}
+
+static int accordion_section_full_h(int section) {
+    switch (section) {
+    case UI_ACC_WORLDS:
+        return UI_WORLDS_BODY_H;
+    case UI_ACC_PALS:
+        return UI_PAL_BODY_H;
+    case UI_ACC_SPRITES:
+        return UI_SPRITES_BODY_H;
+    case UI_ACC_METASPRITES:
+        return UI_METASPRITES_BODY_H;
+    case UI_ACC_ENTITIES:
+        return UI_ENTITIES_BODY_H;
+    default:
+        return 0;
+    }
+}
+
+void accordion_init_heights(UiState *ui) {
+    int i;
+    if (!ui) {
+        return;
+    }
+    for (i = 0; i < UI_ACC_SECTIONS; i++) {
+        int full = accordion_section_full_h(i);
+        if (UI_ACCORDION_ALWAYS_EXPANDED || ui->accordion_open == i) {
+            ui->accordion_body_h[i] = full;
+        } else {
+            ui->accordion_body_h[i] = 0;
+        }
+    }
+    ui->accordion_anim_last_ms = SDL_GetTicks();
+}
+
+void accordion_anim_tick(UiState *ui) {
+    Uint32 now;
+    Uint32 dt;
+    int i;
+
+    if (!ui) {
+        return;
+    }
+    now = SDL_GetTicks();
+    dt = now - ui->accordion_anim_last_ms;
+    ui->accordion_anim_last_ms = now;
+    if (dt > 100u) {
+        dt = 100u;
+    }
+    if (UI_ACCORDION_ALWAYS_EXPANDED) {
+        for (i = 0; i < UI_ACC_SECTIONS; i++) {
+            ui->accordion_body_h[i] = accordion_section_full_h(i);
+        }
+        return;
+    }
+    for (i = 0; i < UI_ACC_SECTIONS; i++) {
+        int full = accordion_section_full_h(i);
+        int target = (ui->accordion_open == i) ? full : 0;
+        int cur = ui->accordion_body_h[i];
+        int step;
+
+        if (cur == target || full <= 0) {
+            continue;
+        }
+        step = (int)((long long)full * (long long)dt / UI_ACCORDION_ANIM_MS);
+        if (step < 1) {
+            step = 1;
+        }
+        if (cur < target) {
+            cur += step;
+            if (cur > target) {
+                cur = target;
+            }
+        } else {
+            cur -= step;
+            if (cur < target) {
+                cur = target;
+            }
+        }
+        ui->accordion_body_h[i] = cur;
     }
 }
 int world_cell_hit(const UiState *ui, int lx, int ly, int *out_col, int *out_row) {
@@ -293,11 +371,14 @@ int world_cell_hit(const UiState *ui, int lx, int ly, int *out_col, int *out_row
     int y0;
     int col, row;
     accordion_layout(ui, &lo);
-    if (!lo.worlds_open) {
+    if (lo.worlds_body_h < 1) {
         return 0;
     }
     y0 = lo.worlds_grid_y;
-    if (lx < x0 || ly < y0 || lx >= x0 + UI_WORLD_VIEW || ly >= y0 + UI_WORLD_VIEW) {
+    if (lo.worlds_body_h <= UI_WORLD_BTN || y0 < 0) {
+        return 0;
+    }
+    if (lx < x0 || ly < y0 || lx >= x0 + UI_WORLD_VIEW || ly >= lo.worlds_btns_y + lo.worlds_body_h) {
         return 0;
     }
     col = (lx - x0) / UI_WORLD_CELL;
@@ -319,11 +400,11 @@ int world_btn_hit(const UiState *ui, int lx, int ly, int *out_wi) {
     int i;
     int y;
     accordion_layout(ui, &lo);
-    if (!lo.worlds_open) {
+    if (lo.worlds_body_h < 1) {
         return 0;
     }
     y = lo.worlds_btns_y;
-    if (ly < y || ly >= y + UI_WORLD_BTN) {
+    if (y < 0 || ly < y || ly >= y + UI_WORLD_BTN || ly >= y + lo.worlds_body_h) {
         return 0;
     }
     for (i = 0; i < R01_MAX_WORLDS; i++) {
@@ -541,7 +622,7 @@ int metasprites_list_hit(const UiState *ui, int lx, int ly, int *out_idx) {
         return 0;
     }
     accordion_layout(ui, &lo);
-    if (!lo.metasprites_open) {
+    if (lo.metasprites_body_h < 1) {
         return 0;
     }
     w = r01_project_active_world_const(ui->project);
@@ -550,7 +631,7 @@ int metasprites_list_hit(const UiState *ui, int lx, int ly, int *out_idx) {
     }
     rows = (UI_METASPRITES_BODY_H - UI_BTN_H) / UI_SPRITE_ROW_H;
     if (lx < UI_WORLDS_X || lx >= UI_SIDEBAR_W || ly < lo.metasprites_body_y ||
-        ly >= lo.metasprites_body_y + rows * UI_SPRITE_ROW_H) {
+        ly >= lo.metasprites_body_y + lo.metasprites_body_h) {
         return 0;
     }
     row = (ly - lo.metasprites_body_y) / UI_SPRITE_ROW_H;
@@ -572,12 +653,13 @@ int metasprites_add_hit(const UiState *ui, int lx, int ly) {
         return 0;
     }
     accordion_layout(ui, &lo);
-    if (!lo.metasprites_open) {
+    if (lo.metasprites_body_h < UI_BTN_H) {
         return 0;
     }
     add_y = lo.metasprites_body_y + UI_METASPRITES_BODY_H - UI_BTN_H;
     add_w = label_width("Add");
-    return point_in_rect(lx, ly, UI_WORLDS_X + UI_UNIT, add_y, add_w, UI_BTN_H);
+    return point_in_rect(lx, ly, UI_WORLDS_X + UI_UNIT, add_y, add_w, UI_BTN_H) &&
+           ly < lo.metasprites_body_y + lo.metasprites_body_h;
 }
 
 int entities_list_hit(const UiState *ui, int lx, int ly, int *out_type_idx) {
@@ -588,7 +670,7 @@ int entities_list_hit(const UiState *ui, int lx, int ly, int *out_type_idx) {
         return 0;
     }
     accordion_layout(ui, &lo);
-    if (!lo.entities_open) {
+    if (lo.entities_body_h < 1) {
         return 0;
     }
     w = r01_project_active_world_const(ui->project);
@@ -597,7 +679,7 @@ int entities_list_hit(const UiState *ui, int lx, int ly, int *out_type_idx) {
     }
     rows = (UI_ENTITIES_BODY_H - UI_BTN_H) / UI_SPRITE_ROW_H;
     if (lx < UI_WORLDS_X || lx >= UI_SIDEBAR_W || ly < lo.entities_body_y ||
-        ly >= lo.entities_body_y + rows * UI_SPRITE_ROW_H) {
+        ly >= lo.entities_body_y + lo.entities_body_h) {
         return 0;
     }
     row = (ly - lo.entities_body_y) / UI_SPRITE_ROW_H;
@@ -619,12 +701,13 @@ int entities_add_hit(const UiState *ui, int lx, int ly) {
         return 0;
     }
     accordion_layout(ui, &lo);
-    if (!lo.entities_open) {
+    if (lo.entities_body_h < UI_BTN_H) {
         return 0;
     }
     add_y = lo.entities_body_y + UI_ENTITIES_BODY_H - UI_BTN_H;
     add_w = label_width("Add");
-    return point_in_rect(lx, ly, UI_WORLDS_X + UI_UNIT, add_y, add_w, UI_BTN_H);
+    return point_in_rect(lx, ly, UI_WORLDS_X + UI_UNIT, add_y, add_w, UI_BTN_H) &&
+           ly < lo.entities_body_y + lo.entities_body_h;
 }
 
 static int sprites_visible_rows(void) {
@@ -640,7 +723,7 @@ int sprites_list_hit(const UiState *ui, int lx, int ly, int *out_catalog_idx) {
         return 0;
     }
     accordion_layout(ui, &lo);
-    if (!lo.sprites_open) {
+    if (lo.sprites_body_h < 1) {
         return 0;
     }
     w = r01_project_active_world_const(ui->project);
@@ -649,7 +732,7 @@ int sprites_list_hit(const UiState *ui, int lx, int ly, int *out_catalog_idx) {
     }
     rows = sprites_visible_rows();
     if (lx < UI_WORLDS_X || lx >= UI_SIDEBAR_W || ly < lo.sprites_body_y ||
-        ly >= lo.sprites_body_y + rows * UI_SPRITE_ROW_H) {
+        ly >= lo.sprites_body_y + lo.sprites_body_h) {
         return 0;
     }
     row = (ly - lo.sprites_body_y) / UI_SPRITE_ROW_H;
@@ -671,10 +754,11 @@ int sprites_add_hit(const UiState *ui, int lx, int ly) {
         return 0;
     }
     accordion_layout(ui, &lo);
-    if (!lo.sprites_open) {
+    if (lo.sprites_body_h < UI_BTN_H) {
         return 0;
     }
     add_y = lo.sprites_body_y + UI_SPRITES_BODY_H - UI_BTN_H;
     add_w = label_width("Add");
-    return point_in_rect(lx, ly, UI_WORLDS_X + UI_UNIT, add_y, add_w, UI_BTN_H);
+    return point_in_rect(lx, ly, UI_WORLDS_X + UI_UNIT, add_y, add_w, UI_BTN_H) &&
+           ly < lo.sprites_body_y + lo.sprites_body_h;
 }

@@ -77,12 +77,12 @@ int palette_strip_hit(const UiState *ui, int lx, int ly) {
     int y0;
     int row_btns_y;
     accordion_layout(ui, &lo);
-    if (!lo.pals_open) {
+    if (lo.pals_body_h < 1) {
         return 0;
     }
     y0 = lo.pals_body_y;
     row_btns_y = y0 + UI_PAL_SWATCH * 2;
-    if (lx < 0 || lx >= UI_SIDEBAR_W || ly < y0 || ly >= row_btns_y + UI_BTN_H) {
+    if (lx < 0 || lx >= UI_SIDEBAR_W || ly < y0 || ly >= y0 + lo.pals_body_h) {
         return 0;
     }
     if (ly >= row_btns_y && ly < row_btns_y + UI_BTN_H) {
@@ -96,11 +96,11 @@ int palette_row_btn_hit(const UiState *ui, int lx, int ly, int *out_row) {
     int row_btns_y;
     int i;
     accordion_layout(ui, &lo);
-    if (!lo.pals_open) {
+    if (lo.pals_body_h < UI_BTN_H) {
         return 0;
     }
     row_btns_y = lo.pals_body_y + UI_PAL_SWATCH * 2;
-    if (lx < 0 || lx >= UI_SIDEBAR_W || ly < row_btns_y || ly >= row_btns_y + UI_BTN_H) {
+    if (lx < 0 || lx >= UI_SIDEBAR_W || ly < row_btns_y || ly >= lo.pals_body_y + lo.pals_body_h) {
         return 0;
     }
     for (i = 0; i < R01_PAL_ROWS; i++) {

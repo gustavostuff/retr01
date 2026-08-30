@@ -87,6 +87,7 @@ int ui_init(UiState *ui) {
     ui->screen_mode = UI_SCREEN_MODE_SEL;
     ui->screen_layer = UI_SCREEN_LAYER_BG;
     ui->accordion_open = UI_ACC_WORLDS;
+    accordion_init_heights(ui);
     ui->logic_scale = 1;
     ui->menu.world_screen_idx = -1;
     ui->sel_instance = -1;
@@ -125,8 +126,12 @@ void ui_shutdown(UiState *ui) {
 
 void ui_tick(UiState *ui) {
     uint8_t pad = 0;
-    if (!ui || !ui->play.active || ui->play.booting || !ui->play.machine) {
-        if (ui && ui->play.booting) {
+    if (!ui) {
+        return;
+    }
+    accordion_anim_tick(ui);
+    if (!ui->play.active || ui->play.booting || !ui->play.machine) {
+        if (ui->play.booting) {
             ui->play.spin++;
         }
         return;

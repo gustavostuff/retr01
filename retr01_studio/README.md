@@ -15,22 +15,17 @@ There is **no** Studio-only host Play path. Preview always goes through export t
 
 ## Authoring (UI)
 
-Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Window present size stays **1280x720** (640x360 is drawn **2x**, nearest). **8px** grid, dark gray chrome. Buttons/labels **16px** tall. Proggy Tiny (`assets/proggy-tiny.ttf`). Screen / Play previews scale with canvas (sharp nearest). Sidebar accordion sections stay expanded (`UI_ACCORDION_ALWAYS_EXPANDED`).
+Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Window present size stays **1280x720** (640x360 is drawn **2x**, nearest). **8px** grid, dark gray chrome. Buttons/labels **16px** tall. Proggy Tiny (`assets/proggy-tiny.ttf`). Screen / Play previews scale with canvas (sharp nearest). Sidebar accordion: per-section expand/collapse (`UI_ACCORDION_ALWAYS_EXPANDED`), **250ms** open/close animation (`UI_ACCORDION_ANIM_MS`).
 
 ```text
-+-------------------------------------------------------------------+
-| SIDEBAR (128)          | MAIN                                     |
-| Worlds                 |              [ Play ]                    |
-|  [1][2][3][4][5][6][7][8] | ( ) BG   +------------------+         |
-|  +--------------+      | ( ) SPR  | Screen preview   |         |
-|  | 128x128 map  |      | ( ) Sel  | (128x120 @2x/4x) |         |
-|  +--------------+      | ( ) Paint+------------------+         |
-| Palettes               |                                          |
-|  BG/SPR strips + [0-7] |                                          |
-| Sprites                |                                          |
-| Metasprites            |                                          |
-| Entities               |                                          |
-+-------------------------------------------------------------------+
++--------------------------------------------------------------------------------+
+| SIDEBAR (128) | PREVIEW (centered)              | CTRL (128)                  |
+| Worlds        | +------------------+            | [ Play ]                    |
+|  [1]..[8]     | | screen preview   |            | ( ) BG layer                |
+|  world map    | | (same slot for   |            | ( ) SPR layer               |
+| Palettes..    | |  edit + play)    |            | ( ) Tile sel                |
+| Sprites..     | +------------------+            | ( ) Tile paint              |
++--------------------------------------------------------------------------------+
 ```
 
 | Control | Behavior |
@@ -41,8 +36,8 @@ Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Win
 | **Ctrl+click** present | Remove screen |
 | **Click** present | Select active screen (edit target) |
 | **Right-click** map cell | **Set default screen** / **Make default world** |
-| **BG / Sprite layer** | Radios **left** of screen. **BG layer**: tile select/paint + tile context menu. **Sprite layer**: select/drag instances, **H/V** or context **Mirror H/V** (per-instance: remaps part X/Y + toggles `FLIP_H`/`FLIP_V` for OAM), instance context menu (edit entity type / remove). Tile radios dim on sprite layer |
-| **Tile Sel / Paint** | Radios **left** under layer radios (BG layer only). Paint stamps armed tile+palette |
+| **BG / Sprite layer** | Radios in **control sidebar** (right column). **BG layer**: tile select/paint + tile context menu. **Sprite layer**: select/drag instances, **H/V** or context **Mirror H/V** (per-instance: remaps part X/Y + toggles `FLIP_H`/`FLIP_V` for OAM), instance context menu (edit entity type / remove). Tile radios dim on sprite layer |
+| **Tile Sel / Paint** | Radios in **control sidebar** under layer radios (BG layer only). Paint stamps armed tile+palette |
 | **Right-click tile** (BG layer) | Move to tile bank, add tile, edit tile, set palette/anim/solid |
 | **Right-click instance** (Sprite layer) | Mirror H / Mirror V / Edit entity type / Remove instance |
 | **Edit tile** modal | **288x160**, 4x4 palette picker, **128x128** pixel canvas. **Ctrl+V** pastes clipboard PNG (transparent -> index 0, opaque matched by brightness to the selected palette) |
