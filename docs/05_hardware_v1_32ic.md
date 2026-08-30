@@ -11,7 +11,7 @@
 
 Game-visible graphics model: 32 KB sys / VRAM / linebuf, 512 KB cart, interleaved VRAM, 341x262, `$FE4x` APU on 328P. Software notes: **`$FE70-$FE72` is a 1284 EEPROM handshake**, packed Color PROM, bit-packed latches, cart I2C saves. See [`02`](02_graphics_worlds_memory.md).
 
-Target: **through-hole DIP**, compact **12 x 12 cm** 4-layer PCB.
+Target: **through-hole DIP**, compact **14 x 12 cm** minimum 4-layer PCB.
 
 **Related:** software [`02`](02_graphics_worlds_memory.md). Decisions [`04`](04_costs_and_open_questions.md). Overview [`01`](01_architecture_overview.md). Protoboard islands [`03`](03_hardware_implementation.md).
 
@@ -179,7 +179,7 @@ Phase B: Board-specific merges
   - Cart I2C save path
 
 Phase C: First integrated PCB
-  32 IC system (12 x 12 cm mobo + cart)
+  32 IC system (14 x 12 cm mobo + cart)
 ```
 
 ## Risk summary

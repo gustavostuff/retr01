@@ -1,63 +1,72 @@
 <img src="img/logo_v3.png" alt="Logo V3" />
 
-<img src="retr01_sim/assets/board.png" alt="PCB concept">
+<img src="img/emulator.png" alt="Retr01 Emulator with debug panel" />
 
-(this is a concept PCB, not a final design. That said, the quantity/shape of ICs is accurate-ish)
+Retr01 is a discrete-logic 8-bit hardware family built to be understood, hacked, and shipped. One CPU model, one graphics model, one cart format across three planned form factors. The repo holds the architecture spec, **Retr01 Studio** authoring tool, cart emulator, and pin-level board simulator.
 
-The Retr01 project is a modern, discrete-logic 8-bit hardware family, built to be understood, hacked, and shipped. 3 hardware variants are planned, starting by the arcade board.
+**Status:** Docs, design, emulation, and simulation. Hardware v1 target is the **32-IC** Retr01-A arcade board (~14 x 12 cm THT minimum).
 
-Project status: Docs, Design, Emulation and Simulation.
+## Roadmap
 
-Overall roadmap:
-
-| Stage | Device/PCB | Description |
+| Stage | Device | Description |
 |---|---|---|
-| 1 | **Retr01-A** | Arcade motherboard, the first build. Uses THT components and doesn't worry too much about PCB size.  |
-| 2 | **Retr01-C** | Home console. We'll have to mind the board size for this one and use controllers (3-cable line planned). |
-| 3 | **Retr01-H** | Handheld. This is the most challenging task. It will use SMD parts, contact pads, screen + screen driver, battery, etc. |
+| 1 | **Retr01-A** | Arcade motherboard. THT, cabinet sticks/buttons, RGBS / S-Video / composite. First build. |
+| 2 | **Retr01-C** | Home console. Same architecture, smaller board, 3-wire controllers. |
+| 3 | **Retr01-H** | Handheld. SMD, battery, LCD + driver, contact pads. Same software contract. |
 
-The arcade board: something you can drop into a cabinet, wire to sticks and buttons, and run games that look and play like classic 8-bit tile/sprite games. A world model and CPU budget built for large designs.
+Retr01-A drops into a cabinet and runs tile/sprite games with multi-screen worlds, smooth scrolling, and parallax-friendly VRAM. Not a NES clone ---> a redesigned 8-bit pipeline for large maps.
 
-## Why it exists
+## At a glance
 
-Most retro projects either emulate the past exactly or leave the aesthetic behind. Retr01 keeps the 8-bit look (8x8 tiles, 2bpp art, cartridge games) and redesigns the plumbing for multi-screen worlds, smoother scrolling, and simple parallax, without VBlank-only nametable updates. Studio supports multi-world **authoring** today. Cart export is **world 0** only.
+| | |
+|--|--|
+| CPU | W65C02S @ **8 MHz** |
+| Playfield | **128 x 120** logical (**16 x 15** tiles), board **2x** ---> **256 x 240** RGBS |
+| Art | **8 x 8** tiles, **2 bpp**, **64** master colors on-board Color PROM |
+| Worlds | Up to **8** worlds, **32** screens each on a **512 KB** cart (**32 KB** PRG) |
+| Scroll | **2 x 2** live nametable window crossing screen borders |
+| Sprites | **64** OAM entries, **16** per scanline |
+| VRAM / RAM | **32 KB** interleaved VRAM + **32 KB** system RAM |
 
-Technical specs: [`docs/01_architecture_overview.md`](docs/01_architecture_overview.md), [`docs/02_graphics_worlds_memory.md`](docs/02_graphics_worlds_memory.md).
+Same **32 KB PRG** as classic NES NROM, but it buys far more game: **~4.5x** cycles per frame at **8 MHz**, **32 KB** system RAM (not 2 KB), and scroll, sprite line fill, and MAP streaming are hardware jobs ---> PRG stays game logic, not VBlank nametable tricks. [`why_32kb_prg_is_good_enough.md`](docs/why_32kb_prg_is_good_enough.md)
 
-## What you get (in plain terms)
+Full map, cart layout, and `$FExx` ports: [`docs/02_graphics_worlds_memory.md`](docs/02_graphics_worlds_memory.md). Terminology and BOM: [`docs/01_architecture_overview.md`](docs/01_architecture_overview.md).
 
-- **A real arcade-first board:** sticks, buttons, coin/start, analog RGBS/S-Video/composite pads for cabinet monitors. RGBS pads can also feed an off-the-shelf analog-to-HDMI converter if you want a modern TV
-- **A bold but readable look:** limited color per tile/sprite on purpose, with clarity over mush
-- **Big cartridge worlds:** up to **8 worlds**, **32 screens** each, on a **512 KB** cart with **32 KB PRG**
-- **Chunky 128x120** playfields (**16x15** tiles) with board **2x** into a **256x240** RGBS raster (fills CRT, no letterbox)
-- **Smooth multi-screen scrolling:** cameras that cross screen borders using a 2x2 live nametable window (see [`docs/02`](docs/02_graphics_worlds_memory.md))
-- **Retr01 Studio:** visual tool to author worlds and export `.retr01` cart images
+## Software
 
-Later editions (console and handheld) share the same soul: one architecture, different shells.
+Three tools share one cart image (`.retr01`) and one Play contract (`common/` runtime):
 
-### Scripts
+| Tool | Role |
+|------|------|
+| [**Retr01 Studio**](retr01_studio/README.md) | Author worlds, tiles, sprites, entities. **Play** preview. **Ctrl+E** export ---> cart + generated `output/C/`, `output/ASM/`, `output/data/`. |
+| [**Retr01 Emulator**](retr01_emu/README.md) | Software-visible 65C02 + `$FExx` + video. Loads a cart, runs PRG boot catchup, host Play for movement/camera. |
+| [**Board simulator**](retr01_sim/README.md) | Pin-level model of the **32-IC** netlist. Interactive SDL board UI, island tests, same cart boot path as emu. |
 
-Thin wrappers at the repo root forward to [`scripts/`](scripts/):
 
-| Script | Usage |
-|--------|--------|
-| [`studio`](studio) | `./studio output/test.r01proj` |
-| [`emu`](emu) | `./emu output/test.retr01` |
-| [`sim`](sim) | `./sim output/test.retr01` |
-| [`unit-tests`](unit-tests) | build + ctest for Studio, Emu, and Sim |
-| [`export-rom`](export-rom) | `./export-rom [project.r01proj] [stem]` |
-| [`build-all`](build-all) | Release builds -> `release/retr01_{studio,emu,sim}` |
+Studio **Save** writes `output/<stem>.r01proj`. Export packs **world 0** today (multi-world authoring in UI, single-world cart). User hooks live in `output/C/custom_logic.c` (created once, never overwritten).
+
+## Quick start
 
 ```bash
 ./build-all
 ./unit-tests
-./studio output/test.r01proj
-./export-rom output/test.r01proj
+./studio output/test.r01proj    # author + Play
+./export-rom                    # or Ctrl+E in Studio
 ./emu output/test.retr01
 ./sim output/test.retr01
 ```
 
-**Export output:** Studio **Ctrl+E** (or `./export-rom`) writes cart images and generated game tree under [`output/`](output/) at the repo root.
+Root wrappers (`studio`, `emu`, `sim`, ...) forward to [`scripts/`](scripts/). Release binaries land in `release/`.
+
+## Documentation
+
+| | |
+|--|--|
+| [`docs/01`](docs/01_architecture_overview.md) | Architecture, terminology, doc index |
+| [`docs/02`](docs/02_graphics_worlds_memory.md) | Software SoT: VRAM, cart, registers |
+| [`docs/05`](docs/05_hardware_v1_32ic.md) | 32-IC BOM and netlist |
+| [`docs/07`](docs/07_game_modules.md) | Movement, camera, entities, CPU budgets |
+| [`hw/`](hw/) | Datasheet PDFs + [`hw/md/`](hw/md/) chip notes |
 
 ---
 

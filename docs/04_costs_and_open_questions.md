@@ -10,7 +10,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 |------|----------|
 | Name/family | **Retr01**, rollout **A -> C -> H** |
 | Retr01-A HW BOM | **32 IC** system ([`05`](05_hardware_v1_32ic.md)): 31 motherboard + 1 cart I2C save. Escape +1 PLD -> 33 |
-| PCB envelope (A) | ~**12 x 12 cm** 4-layer THT target |
+| PCB envelope (A) | ~**14 x 12 cm** minimum 4-layer THT target |
 | Worlds | **8** max (indices 0-7) |
 | World layout | sparse virtual grid up to **8x8**, **32 present screens max** per world (playfield). **Other screens** (title / interstitial / credits pages) are global ROM, not on grid |
 | Parallax (per world) | **0..8** screens (`PARALLAX_MAX` = **8**). **Single** (repeat H/V) or **pair** (2 screens side-by-side or stacked). Live VRAM slots **4-5** only. Optional **slices**: **1..120** bands of variable thickness (H-band or V-band offsets. Roads/curves). Not mid-frame playfield camera shifts. See [`02`](02_graphics_worlds_memory.md#parallax) |

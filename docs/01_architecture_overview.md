@@ -17,7 +17,7 @@ When docs disagree, use this order.
 | Studio game modules (movement, camera, entities, collision budgets) | [`07`](07_game_modules.md) | Attachable gameplay profiles. Studio phases implement subsets later |
 | IC pin/behavior detail | [`hw/md/`](../hw/md/) + datasheet PDFs | Sim and schematics |
 
-**Current product board:** [`05`](05_hardware_v1_32ic.md), **32 ICs**, ~**12x12 cm** 4-layer THT (chip roles and netlist there).
+**Current product board:** [`05`](05_hardware_v1_32ic.md), **32 ICs**, ~**14 x 12 cm** minimum 4-layer THT (chip roles and netlist there).
 
 This folder is the current architecture spec for **Retr01**.
 
@@ -104,7 +104,7 @@ Current chip list: [`05`](05_hardware_v1_32ic.md) (**32 IC**). Roles:
 
 ### Retr01-A
 
-- Through-hole motherboard, **32 IC** system ([`05`](05_hardware_v1_32ic.md)), ~**12 x 12 cm** target
+- Through-hole motherboard, **32 IC** system ([`05`](05_hardware_v1_32ic.md)), ~**14 x 12 cm** minimum target
 - RGBS + S-Video + composite pads
 - **SCALE** DIP (**2x** default / **1x** optional)
 - 20-pin IDC for cabinet controls
