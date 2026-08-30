@@ -8,7 +8,7 @@
 #define R01_PLAY_CAM_AXIS_H 1
 #define R01_PLAY_CAM_AXIS_V 2
 
-/* deadzone_x/y: width/height of the centered viewport rectangle (see docs/07_game_modules.md). */
+/* deadzone_x/y: width/height of the centered viewport rectangle (see docs/selling_points.md). */
 void r01_play_camera_update(int *cam_x, int *cam_y, int anchor_x, int anchor_y, int player_w, int player_h,
                             int screen_w, int screen_h, int deadzone_x, int deadzone_y, int axis_lock);
 

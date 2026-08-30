@@ -19,6 +19,6 @@ Keyboard-friendly notes for each motherboard IC: what it is, package/pins, speed
 - Active-low signals keep the datasheet **B** / **#** suffix (`IRQB`, `CE#`).
 - Retr01 clocks: CPU **8.000 MHz** PHI2, dot **5.369318 MHz**, 1284 **20 MHz**, 328P **16 MHz**.
 - Accuracy level for sim timing is not frozen. Docs list datasheet numbers so models can tighten later.
-- Current BOM ([`05`](../../docs/05_hardware_v1_32ic.md)): 328P APU, 3x HC245, cart **24C64** I2C save, 1284 internal machine EEPROM, 1x Color PROM.
+- Current BOM ([`05`](../../docs/hardware_architecture.md)): 328P APU, 3x HC245, cart **24C64** I2C save, 1284 internal machine EEPROM, 1x Color PROM.
 - **Authority:** vendor PDF in `hw/` -> these markdown notes -> C chip models. Soft glue in `board.c` is system wiring, not a redefinition of the IC.
 - **Package outlines:** use [`packages_dip.md`](packages_dip.md) for body LxW. Do not invent footprints from the sim alone.

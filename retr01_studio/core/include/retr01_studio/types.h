@@ -14,10 +14,10 @@
 #define R01_GRID_MAX 8
 #define R01_DEFAULT_GRID 3
 #define R01_MAX_SCREENS (R01_GRID_MAX * R01_GRID_MAX)
-#define R01_MAX_PRESENT_SCREENS 32 /* cart cap (docs/02): 8 worlds x 32 + 32 KiB PRG in 512 KiB */
+#define R01_MAX_PRESENT_SCREENS 32 /* cart cap (docs/graphics): 8 worlds x 32 + 32 KiB PRG in 512 KiB */
 #define R01_PARALLAX_MIN 0
 #define R01_PARALLAX_MAX 8 /* per world; live VRAM slots 4-5 only */
-#define R01_PARALLAX_SLICE_MAX 120 /* max bands; variable thickness (docs/02) */
+#define R01_PARALLAX_SLICE_MAX 120 /* max bands; variable thickness (docs/graphics) */
 #define R01_START_COL 2
 #define R01_START_ROW 0
 
@@ -67,7 +67,7 @@
 #define R01_MAX_SPRITES 256
 #define R01_MAX_METASPRITES 64
 
-/* Entity types (docs/07). Arrays sized for 1..4 states and frames. */
+/* Entity types (docs/selling_points). Arrays sized for 1..4 states and frames. */
 #define R01_MAX_ENTITY_TYPES 64
 #define R01_ENTITY_STATES_MAX 4
 #define R01_ENTITY_FRAMES_MAX 4
@@ -86,7 +86,7 @@
 #define R01_WARP_FADE_IN 0x02u
 #define R01_WARP_FADE_WHITE 0x04u
 
-/* BG attr (docs/02) */
+/* BG attr (docs/graphics) */
 #define R01_ATTR_BANK_MASK 0x03u
 #define R01_ATTR_PAL_MASK 0x0Cu
 #define R01_ATTR_PAL_SHIFT 2
@@ -194,7 +194,7 @@ typedef struct R01WarpExit {
     uint8_t flags; /* R01_WARP_FADE_* */
 } R01WarpExit;
 
-/* Global off-grid MAP payloads (title, interstitial, credits pages). See docs/02. */
+/* Global off-grid MAP payloads (title, interstitial, credits pages). See docs/graphics. */
 typedef struct R01OtherScreen {
     int present; /* 0 = omit from cart; title/inter always present after init */
     uint8_t tiles[R01_TILES_PER_SCREEN];
@@ -232,7 +232,7 @@ typedef struct R01Project {
     int default_world; /* Play entry world (begin_play); cart export always uses worlds[0] */
     int active_world;  /* 0..R01_MAX_WORLDS-1 */
     int active_screen; /* index into worlds[active_world].screens */
-    /* 8 rows x 4 pals each (docs/02). Index [row][pal]. */
+    /* 8 rows x 4 pals each (docs/graphics). Index [row][pal]. */
     R01PalRow global_pal_bg[R01_PAL_ROWS][R01_PALS_PER_ROW];
     R01PalRow global_pal_spr[R01_PAL_ROWS][R01_PALS_PER_ROW];
     R01OtherScreen other_screens[R01_CART_OTHER_MAX]; /* [0]=title [1]=inter [2+]=credits */

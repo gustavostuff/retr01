@@ -1,8 +1,31 @@
-# Retr01 Graphics, Worlds, and Memory
+# Retr01 Graphics
 
 Display, worlds, VRAM, palettes, cart image, and `$FExx`.
 
-**Authority:** this file is the **software-visible** source of truth (see [`01`](01_architecture_overview.md)). Current HW BOM: [`05`](05_hardware_v1_32ic.md) (**32 IC**). HW must not invent CPU ports here. Open mailbox/I2C/bitfield items stay listed as TBD below.
+**Authority:** this file is the **software-visible** source of truth. Current HW BOM: [`hardware_architecture.md`](hardware_architecture.md) (**32 IC**). HW must not invent CPU ports here. Open mailbox/I2C/bitfield items stay listed as TBD below.
+
+## Canonical terminology
+
+| Term | Meaning |
+|------|---------|
+| **World** | One cart chapter: sparse MAP atlas + **4 BG banks + 4 sprite banks** in CHR |
+| **Screen** | One stored **16x15** tilemap (**128x120**) + **one attr byte per tile** in MAP-ROM |
+| **Grid position** | One `(col, row)` coordinate in a world's sparse virtual grid |
+| **Camera nametable slots** | VRAM slots **0-3**: the live 2x2 playfield field |
+| **Plane nametable slots** | VRAM slots **4-5**: live parallax storage (**2** slots). Cart may hold up to **8** parallax screens/world. Optional **slices** (**1..120** bands, variable thickness, H or V offsets) bend the plane without moving playfield camera (curved roads in racing games) |
+| **BG bank** | **256 BG tiles**, arranged as a **16x16** tile grid, **4 KB** (CHR) |
+| **Sprite bank** | **256 sprite tiles**, arranged as a **16x16** tile grid, **4 KB** (CHR) |
+| **BG bank (runtime)** | Per **8x8 tile**: attr bits select CHR BG bank **0-3** (not per screen) |
+| **Sprite bank (runtime)** | Per **OAM entry**: attr bits select CHR sprite bank **0-3** |
+| **BG bank helper** | Optional `$FE31`-`$FE36` bulk stamp into slot attrs. Not the live fetch source |
+| **Sprite bank helper** | Optional `$FE37` bulk stamp into OAM attrs. Not the live fetch source |
+| **Global BG palettes** | Cart-wide store of **32 BG palettes** (**8 palette rows x 4 palettes**) |
+| **Global sprite palettes** | Cart-wide store of **32 sprite palettes** (**8 palette rows x 4 palettes**) |
+| **Palette row** | **4 palettes** in one plane, index **0-7**. BG row N and sprite row N are selected together |
+| **Palette** | One 4-color set (**4 master indices** into the Color PROM) |
+| **Active palette buffer** | **8 palettes** on screen: **4 BG + 4 sprite** from the currently selected palette row |
+| **Color PROM** | Board-resident **64-entry** master palette (packed **R3G3B2** on current boards, not in cart) |
+| **SCALE** | Board DIP: **2x** default (**128x120** -> **256x240**, fills CRT) or **1x** (centered **128x120**) |
 
 ## Display
 
@@ -122,7 +145,7 @@ Line N+1| fill N+1         |        | SHOW             |
 
 ## Palettes
 
-**Color PROM** (board): **64 master indices**, packed **`{RRRGGGBB}`** (R3 G3 B2) in **one** PROM/OTP chip, 1-dot pipeline ([`05`](05_hardware_v1_32ic.md)). Active buffer: **4 BG + 4 sprite** via `$FE08`/`$FE09` (indices held in packed HC573 / decode path on the 32-IC board, no separate palette RAM IC). Shared color 0. BG+sprite row index always locked together.
+**Color PROM** (board): **64 master indices**, packed **`{RRRGGGBB}`** (R3 G3 B2) in **one** PROM/OTP chip, 1-dot pipeline ([`hardware_architecture.md`](hardware_architecture.md)). Active buffer: **4 BG + 4 sprite** via `$FE08`/`$FE09` (indices held in packed HC573 / decode path on the 32-IC board, no separate palette RAM IC). Shared color 0. BG+sprite row index always selected together.
 
 **Cart storage:** **8 BG palette rows** + **8 sprite palette rows**. Each row is **4 palettes x 4 master indices = 16 B**. Totals: **128 B** BG + **128 B** sprite = **256 B**. Software selects a row (`$FE38` hint) and copies it into `$FE08`/`$FE09`.
 
@@ -148,7 +171,7 @@ Per-world MAP payloads used as scrolling backdrop planes. **Not** on the playfie
 | `parallax_count` | **0..8** (`PARALLAX_MIN` = **0**, `PARALLAX_MAX` = **8**) |
 | Payload | Same **480 B** as a playfield screen (240 tile + 240 attr), raw |
 | Live VRAM | Slots **4-5** only (**2** resident at a time). PRG loads/swaps from the up-to-**8** cart payloads |
-| Scroll ports | Plane band `$FE06`/`$FE07` (phase 2+). Main camera may lock per [04](04_costs_and_open_questions.md) when a band is active |
+| Scroll ports | Plane band `$FE06`/`$FE07` (phase 2+). Main camera may lock per axis when a band is active (see [Parallax](#parallax)) |
 | Slices | **1..120** bands of **variable thickness** on the live plane (H or V). See below. Not playfield camera mid-frame shifts |
 
 **Layouts** (dir `flags`: PRG interprets. Hardware only sees the loaded slot(s)):
@@ -349,7 +372,7 @@ Phase 1 PRG boot streams **one** start screen only (no full 2x2 seam PRG yet). H
 
 ## CPU map and `$FExx`
 
-Logical CPU addresses below are the software SoT. Silicon uses **9x HC573** with bit-packing ([`05`](05_hardware_v1_32ic.md)). The **bitfield packing table is still TBD** (Q21). Prefer these logical addresses + Zero Page shadows until it lands.
+Logical CPU addresses below are the software SoT. Silicon uses **9x HC573** with bit-packing ([`hardware_architecture.md`](hardware_architecture.md)). The **bitfield packing table is still TBD**. Prefer these logical addresses + Zero Page shadows until it lands.
 
 | Range | Region |
 |-------|--------|
@@ -378,8 +401,18 @@ PRG is a **32 KB** image mapped at `$8000-$FFFF` with the `$FE00-$FEFF` I/O hole
 | `$FE70`-`$FE72` | machine EEPROM | **1284 internal EEPROM** handshake (protocol TBD) |
 | `$FE80` | (reserved) | Unused. Leave **0**. No PRG banking |
 | `$FE90`-`$FE93` | MAP | 24-bit seek + read auto-inc |
-| (TBD) | cart save | **Cart I2C EEPROM** via HAL (`cart_save_*`). CPU port TBD (Q20) |
+| (TBD) | cart save | **Cart I2C EEPROM** via HAL (`cart_save_*`). CPU port TBD |
 
 **HAL:** PRG should use `machine_eeprom_*` and `cart_save_*` helpers so games are not welded to a specific mailbox layout. APU may use direct `$FE4x` stores.
 
-**Open before shipping carts that need saves / machine config:** freeze mailbox protocol + cart I2C `$FExx` (Q20), and HC573 bitfield packing (Q21) in this doc.
+**Before shipping carts that need saves / machine config:** finalize mailbox protocol + cart I2C `$FExx`, and HC573 bitfield packing in this doc.
+
+## Open topics (software / cart)
+
+| Topic | Note |
+|-------|------|
+| OAM attr bitfields | bank/pal/flip/priority/size defined above. 8x16 tile-pair fetch detail on 1284 firmware still evolving |
+| PRG/CHR/MAP offsets inside **512 KB** flash | `format_ver` **2**: 36 B pointer table, **8** world slots, **32 present screens**/world max, **other screens** (title/inter/credits pages, RLE or raw). Legacy credits ASCII ptrs reserved **0**. PRG **32 KB** (no banking) |
+| Default living-tile list cap | Recommend **32** vs **64** cells per camera workbench (`retr01_ANIM_MAX`) |
+| BG anim rate | Fixed global `rate_shift`, or per-game constant only? |
+| Parallax camera lock | If **any** H or V parallax band is enabled, main camera locks to that axis for the **whole frame** |

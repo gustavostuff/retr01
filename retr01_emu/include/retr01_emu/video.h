@@ -15,7 +15,7 @@ typedef struct R01eVideo {
     /* 1 if VRAM camera slot 0-3 holds a present screen (else backdrop). */
     uint8_t slot_present[4];
 
-    /* 2x2 camera workbench origin in world grid (docs/02). */
+    /* 2x2 camera workbench origin in world grid (docs/graphics). */
     int cam_origin_col;
     int cam_origin_row;
     int cam_x;
@@ -26,7 +26,7 @@ typedef struct R01eVideo {
     uint8_t fb[R01E_VISIBLE_W * R01E_VISIBLE_H * 3]; /* SCALE 2x RGB */
     /* Debug: 2x2 VRAM workbench at 1:1 (256x240). */
     uint8_t vram_atlas[R01E_VRAM_ATLAS_W * R01E_VRAM_ATLAS_H * 3];
-    /* Expanded H-band slice table: additive dx per logical row (docs/02). Unused = 0. */
+    /* Expanded H-band slice table: additive dx per logical row (docs/graphics). Unused = 0. */
     int8_t plane_h_slice[R01E_PARALLAX_SLICE_MAX];
 } R01eVideo;
 

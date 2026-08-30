@@ -1,6 +1,6 @@
-# Retr01 Audio Architecture
+# Retr01 Sounds
 
-Software + hardware specification for the dedicated APU path. Channel map, DPCM, and bytecode protocol follow the audio design brief (NES-style tracker on 6502 + software mixer on AVR). Silicon placement matches the **32-IC BOM** ([`05`](05_hardware_v1_32ic.md)). Register window: **`$FE40`-`$FE5F`** ([`02`](02_graphics_worlds_memory.md)).
+Software + hardware specification for the dedicated APU path. Channel map, DPCM, and bytecode protocol follow the audio design brief (NES-style tracker on 6502 + software mixer on AVR). Silicon placement matches the **32-IC BOM** ([`hardware_architecture.md`](hardware_architecture.md)). Register window: **`$FE40`-`$FE5F`** ([`graphics.md`](graphics.md)).
 
 ---
 
@@ -37,7 +37,7 @@ Flow:
 On Retr01, **"the Bus Bridge"** is **not** a separate named IC. It is the **CPU -> APU write path** that lets an 8 MHz 6502 hand bytes to a 16 MHz AVR without sharing a raw, always-on data bus:
 
 1. **Decode**: PLD (and `$FExx` latches where needed) maps CPU accesses in **`$FE40`-`$FE5F`** to the APU window.
-2. **Isolation**: the **CPU-domain 74HC245** (one of three board HC245s) plus PHI2 / `/OE` gating so only one master drives that domain at a time ([`05`](05_hardware_v1_32ic.md) bus split).
+2. **Isolation**: the **CPU-domain 74HC245** (one of three board HC245s) plus PHI2 / `/OE` gating so only one master drives that domain at a time ([`hardware_architecture.md`](hardware_architecture.md) bus split).
 3. **Capture**: the 328P sees register-like writes on its port (or a latch clocked on the write). It owns synthesis timing after that.
 
 Game code does ordinary `STA $FE4x`. The bridge is **decode + bus isolation + APU-side latch/port**, same pattern as other `$FExx` peripherals. Exact GPIO pinout is schematic TBD. The **software contract** is the 32-byte window.
@@ -210,8 +210,7 @@ The sequencer is driven entirely by the W65C02S **NMI** (~60x/s). **BGM** and **
 
 ## Related
 
-- Memory map / `$FExx`: [`02`](02_graphics_worlds_memory.md)
-- 32-IC BOM / APU path: [`05`](05_hardware_v1_32ic.md)
-- Game module budgets: [`07`](07_game_modules.md)
+- Memory map / `$FExx`: [`graphics.md`](graphics.md)
+- 32-IC BOM / APU path: [`hardware_architecture.md`](hardware_architecture.md)
+- Game module budgets: [`selling_points.md`](selling_points.md)
 - 328P chip notes: [`hw/md/ATmega328P.md`](../hw/md/ATmega328P.md)
-- Overview index: [`01`](01_architecture_overview.md)

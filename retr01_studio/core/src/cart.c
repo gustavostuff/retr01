@@ -85,7 +85,7 @@ static void put_u16(uint8_t *p, uint16_t v) {
     p[1] = (uint8_t)((v >> 8) & 0xFFu);
 }
 
-/* Byte-RLE over a 480 B screen payload (docs/02). Returns compressed length, or 0 on fail. */
+/* Byte-RLE over a 480 B screen payload (docs/graphics). Returns compressed length, or 0 on fail. */
 static size_t rle_encode_480(const uint8_t in[R01_CART_SCREEN_PAYLOAD], uint8_t *out, size_t out_cap) {
     size_t ip = 0;
     size_t op = 0;

@@ -1,6 +1,6 @@
 # Retr01 Board Simulator
 
-IC-first board simulator for Retr01-A. Separate from Retr01 Studio (authoring). Pin/behavior: [`hw/md/`](../hw/md/). BOM: [`docs/05_hardware_v1_32ic.md`](../docs/05_hardware_v1_32ic.md). Island checklist: [`docs/03_hardware_implementation.md`](../docs/03_hardware_implementation.md).
+IC-first board simulator for Retr01-A. Separate from Retr01 Studio (authoring). Pin/behavior: [`hw/md/`](../hw/md/). BOM and islands: [`docs/hardware_architecture.md`](../docs/hardware_architecture.md).
 
 **Goal:** simulate the Retr01-A motherboard as discrete ICs (pins, package, datasheet behavior) wired like the real board. End state: boot a cart, accept pad input, show a digital playfield (logical 128x120 inside a 256x240 RGBS field / LCD sink). Accuracy tightens as tests demand it.
 
@@ -38,7 +38,7 @@ Why the worker exists: [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md).
   Layer 1: Unit (one IC)
        |
        v
-  Layer 2: Island (few ICs + wires). See docs/03 + test_island_abcdeghiojklmnp.c
+  Layer 2: Island (few ICs + wires). See docs/hardware_architecture.md + test_island_abcdeghiojklmnp.c
        |
        v
   Layer 3: System (full board + cart + input + screen)
@@ -56,7 +56,7 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 |-------|----------|----------------------|--------|
 | **Studio editor** | `output/test.r01proj` (+ UI) | **No** | Authoring only. Does not execute PRG |
 | **Studio Play** | export then shared emu | **Yes** (via cart) | Same path as **Ctrl+E** + emu render. No Studio-only soft preview |
-| **Cart image** | `output/test.retr01` (+ `test_flash.bin`) | **Yes** (flash) | Packed bytes SoT for PRG/CHR/MAP/pals. Layout in [`docs/02`](../docs/02_graphics_worlds_memory.md) |
+| **Cart image** | `output/test.retr01` (+ `test_flash.bin`) | **Yes** (flash) | Packed bytes SoT for PRG/CHR/MAP/pals. Layout in [`docs/graphics.md`](../docs/graphics.md) |
 | **Color PROM burn** | `test_prom.bin` | **Yes** (motherboard) | Not inside the cart. Kit -> R3G3B2. Board AT28C16 |
 | **Boot asm listing** | `test_boot.s` | Human-readable only | Binary inside `.retr01` is what runners execute |
 | **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Default: PRG catchup streams pals + start MAP. Softboot opt-in (`R01E_SOFTBOOT=1`). Host Play for camera/player. Used by Studio Play and standalone `./emu` |

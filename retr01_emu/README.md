@@ -2,7 +2,7 @@
 
 Software-visible C emulator for Retr01-A **Phase 1** carts. Separate from the IC board
 simulator ([`retr01_sim/`](../retr01_sim/)). Contract:
-[`docs/02_graphics_worlds_memory.md`](../docs/02_graphics_worlds_memory.md).
+[`docs/graphics.md`](../docs/graphics.md).
 
 Repo helper: [`scripts/run-emu`](../scripts/run-emu).
 
@@ -20,7 +20,7 @@ Studio **Play** uses this same emu core after export (shared library + standalon
 
 **Sync contract:** Emu Host Play (`src/play.c` + `common/`) is the Phase 1 gameplay SoT. Studio no longer keeps a parallel preview. Export packs present screens + play table (`$8100`) + `R01P`. Soft-boot (`R01E_SOFTBOOT=1`) keeps the old host memcpy boot path for triage. Default boot runs cart PRG stream catchup like sim.
 
-**Studio integration:** Studio **Play** / **Space** always exports, then embeds this render path in Studio. A shared **UI tabs** component (also used for **Worlds**) hosts **Emu render** and **Debug** tab contents. Export wait uses a Studio-local spinning boot message. Standalone `./emu` stays for triage. **Sim is not part of this path.** Locked: [`docs/04`](../docs/04_costs_and_open_questions.md) Q22.
+**Studio integration:** Studio **Play** / **Space** always exports, then embeds this render path in Studio. Export wait uses a Studio-local spinning boot message. Standalone `./emu` stays for triage. **Sim is not part of this path.**
 
 **Collision:** Host Play reads **cart MAP attrs** (`R01_ATTR_SOLID`). Player hitbox follows the **current anim state** from the cart player anim blob when present. PRG collision stub at `$8500` is packed for future 6502 use, not used by host movement today.
 
@@ -45,7 +45,7 @@ cmake --build build
 
 **Env:** `R01E_SOFTBOOT=1`, host memcpy VRAM/pals at boot (debug). Default runs cart PRG MAP/pal stream catchup.
 
-**Debug (standalone `./emu`):** separate OS window with VRAM 2x2 workbench (256x240, red = viewport, sprites via OAM) beside a world map (blue = present, gold = current screen). Active **BG** and **SPR** palette rows along the bottom of that row. Below: **CPU busy** chart (2 samples/s, 20 bars). Cyan = busy cycles in active display, orange = busy in VBlank (excludes `$FE01` VBlank-wait spins). Red line = soft max **50k** cycles/frame (`R01E_CPU_BUDGET_CYCLES`, see [`docs/07`](../docs/07_game_modules.md) for design budgets). Studio shows the same debug *content* in the Play **Debug** tab.
+**Debug (standalone `./emu`):** separate OS window with VRAM 2x2 workbench (256x240, red = viewport, sprites via OAM) beside a world map (blue = present, gold = current screen). Active **BG** and **SPR** palette rows along the bottom of that row. Below: **CPU busy** chart (2 samples/s, 20 bars). Cyan = busy cycles in active display, orange = busy in VBlank (excludes `$FE01` VBlank-wait spins). Red line = soft max **50k** cycles/frame (`R01E_CPU_BUDGET_CYCLES`, see [`docs/selling_points.md`](../docs/selling_points.md) for design budgets).
 
 ## Layout
 

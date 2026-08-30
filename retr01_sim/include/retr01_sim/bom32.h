@@ -2,7 +2,7 @@
 #define retr01_SIM_BOM32_H
 
 /*
- * retr01-A 32-IC BOM ([docs/05_hardware_v1_32ic.md]).
+ * retr01-A 32-IC BOM ([docs/hardware_architecture.md]).
  * Counts are discrete silicon packages on the motherboard + cart save EEPROM.
  * Support parts (PWR, oscillators, LCD sink) are not in this tally.
  */
@@ -12,7 +12,7 @@
 #define R01S_BOM_PLD_N   5
 #define R01S_BOM_IC_N    32
 
-/* Packed HC573 assignments (logical ports: bitfields TBD in docs/02). */
+/* Packed HC573 assignments (logical ports: bitfields TBD in docs/graphics). */
 enum {
     R01S_LATCH_FE02 = 0, /* scroll X */
     R01S_LATCH_FE03,     /* scroll Y */

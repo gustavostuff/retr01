@@ -5,7 +5,7 @@
 
 /*
  * retr01 pad byte @ $FE60 (P1) / $FE61 (P2). 1 = pressed.
- * docs/02_graphics_worlds_memory.md
+ * docs/graphics.md
  */
 #define R01S_PAD_RIGHT  (1u << 0)
 #define R01S_PAD_LEFT   (1u << 1)

@@ -5,9 +5,9 @@ Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. Stu
 1. **Authoring (UI)**. Edit worlds, tiles, palettes, sprites, entities, and instances.
 2. **Export + Play**. **Ctrl+E** (or **Play**) writes a packed cart and generated game tree under `output/`. **Play** then opens the **emulator render screen** on that cart so Studio preview matches standalone `./emu` pixel-for-pixel.
 
-Authoring state lives in `output/<stem>.r01proj` (JSON). **`custom_logic.c`** is created on first export and never overwritten. Hardware contract: [`docs/02`](../docs/02_graphics_worlds_memory.md).
+Authoring state lives in `output/<stem>.r01proj` (JSON). **`custom_logic.c`** is created on first export and never overwritten. Hardware contract: [`docs/graphics.md`](../docs/graphics.md).
 
-There is **no** Studio-only host Play path. Preview always goes through export then shared emu core ([`retr01_emu/`](../retr01_emu/README.md)). **Sim is not involved.** Locked UX: [`docs/04`](../docs/04_costs_and_open_questions.md) Q22 (shared **tabs** UI for Worlds + Play Emu/Debug).
+There is **no** Studio-only host Play path. Preview always goes through export then shared emu core ([`retr01_emu/`](../retr01_emu/README.md)). **Sim is not involved.**
 
 **Stack:** C11 + SDL2 + FreeType (Proggy Tiny), `libretr01_studio_core` + thin shell + shared `retr01_emu` core for Play.
 
@@ -30,7 +30,7 @@ Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Win
 
 | Control | Behavior |
 |---------|----------|
-| **Worlds** | **8** world buttons (**1-8**, internal indices **0-7**). World 1 starts with **3x3** blank screens on an **8x8** slot map. Worlds 2-8 start empty until first click. Cart cap: **32 present screens**/world ([`docs/02`](../docs/02_graphics_worlds_memory.md)) |
+| **Worlds** | **8** world buttons (**1-8**, internal indices **0-7**). World 1 starts with **3x3** blank screens on an **8x8** slot map. Worlds 2-8 start empty until first click. Cart cap: **32 present screens**/world ([`docs/graphics.md`](../docs/graphics.md)) |
 | **World map** | **16px** cell pitch. Present = blue. White fill = default spawn. White outline = selected |
 | **Double-click** empty slot | Create screen |
 | **Ctrl+click** present | Remove screen |
@@ -66,7 +66,7 @@ Shared emu core with standalone [`retr01_emu`](../retr01_emu/README.md). Standal
 | | |
 |--|--|
 | **Entry world** | Cart boots **world 0**. Editor **`default_world`** / sidebar selection do not change Phase 1 cart boot until multi-world export lands |
-| **Camera** | **Dead-zone** profile ([`docs/07`](../docs/07_game_modules.md) section 2.A). `r01_camera_set_deadzone(ctx, W, H)` in **`custom_logic.c`**. Export packs bytes **30-31** of the world header. Emu Host Play reads them. Logic: `common/r01_play_camera.c` |
+| **Camera** | **Dead-zone** profile ([`docs/selling_points.md`](../docs/selling_points.md) section 2.A). `r01_camera_set_deadzone(ctx, W, H)` in **`custom_logic.c`**. Export packs bytes **30-31** of the world header. Emu Host Play reads them. Logic: `common/r01_play_camera.c` |
 | **Scroll** | Smooth pixel scroll. Spawn/warp **snap** centers the view on the player, then clamps origin inside the dead zone |
 | **Player** | World **`player_entity`** (Entities context **Mark as player**). **8-dir idle/walk** from cart **player anim blob** (`PA` magic) driven by `custom_logic.c` hooks scanned at export. Stub: **SPR bank 0 tile 1** |
 | **Other entities** | **State 0 / frame 0** only in Phase 1 Host Play |
@@ -135,7 +135,7 @@ See generated `output/C/include/r01_*.h` for the full engine API (camera, player
 
 ## Palettes
 
-Kit **master indices** only ([`docs/02`](../docs/02_graphics_worlds_memory.md)). No per-tile RGB editor. Strip shows active BG/SPR row for the **active world**. Modal edits all **8 BG + 8 SPR** rows project-wide. Preview and cart burn quantize through Color PROM (**R3G3B2**).
+Kit **master indices** only ([`docs/graphics.md`](../docs/graphics.md)). No per-tile RGB editor. Strip shows active BG/SPR row for the **active world**. Modal edits all **8 BG + 8 SPR** rows project-wide. Preview and cart burn quantize through Color PROM (**R3G3B2**).
 
 ---
 
@@ -176,7 +176,7 @@ Compile from `output/C/` with `-Iinclude` (or `#include "include/r01_engine.h"` 
 - **World 0** only in cart export. Worlds 1-7 are session-only in the UI until multi-world save lands. Studio Play therefore previews world 0 only.
 - No entity-vs-entity collision, NPC AI, parallax authoring, or full on-cart 6502 gameplay loop yet.
 - No ca65 / `make` step in the default export path.
-- Studio Play uses embedded emu after export ([`docs/04`](../docs/04_costs_and_open_questions.md) Q22). Studio-only `core/src/play.c` remains for unit tests only.
+- Studio Play uses embedded emu after export. Studio-only `core/src/play.c` remains for unit tests only.
 
 Shared host runtime (not duplicated in export tree): `common/r01_play_camera.c`, `common/r01_play_anim*.c`, `common/r01_custom_logic_scan.c`. Emu Host Play owns cart-backed preview.
 
@@ -232,7 +232,7 @@ ctest --test-dir build --output-on-failure
 
 | Doc | Topic |
 |-----|--------|
-| [`docs/02`](../docs/02_graphics_worlds_memory.md) | Screens, VRAM, palettes, cart layout |
-| [`docs/07`](../docs/07_game_modules.md) | Game modules (movement, camera dead zone, entities) |
+| [`docs/graphics.md`](../docs/graphics.md) | Screens, VRAM, palettes, cart layout |
+| [`docs/selling_points.md`](../docs/selling_points.md) | Game modules (movement, camera dead zone, entities) |
 | [`retr01_sim/README.md`](../retr01_sim/README.md) | Board sim + cart triage |
 | [`retr01_emu/README.md`](../retr01_emu/README.md) | Cart runtime emulator |

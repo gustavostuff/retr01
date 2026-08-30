@@ -24,14 +24,15 @@ Software is still a WIP. This is the overall hardware roadmap:
 | Sprites | **64** OAM entries, **16** per scanline |
 | VRAM / RAM | **32 KB** interleaved VRAM + **32 KB** system RAM |
 
-Same **32 KB PRG** as classic NES NROM games (Exitebike, Balloon Fight, Ice Climbers) but it buys far more game: **4.5x** more CPU cycles per frame at **8 MHz**, **32 KB** system RAM (not 2 KB). Scroll, sprite line fill and world map streaming are hardware jobs, so PRG stays game logic, not VBlank nametable tricks. [`Why_32kb_prg_is_good_enough.md`](docs/why_32kb_prg_is_good_enough.md)
+Same **32 KB PRG** as classic NES NROM games (Exitebike, Balloon Fight, Ice Climbers) but it buys far more game: **4.5x** more CPU cycles per frame at **8 MHz**, **32 KB** system RAM (not 2 KB). Scroll, sprite line fill and world map streaming are hardware jobs, so PRG stays game logic, not VBlank nametable tricks. See [`docs/selling_points.md`](docs/selling_points.md).
 
 ## Where to go next
 
-- [`docs/01`](docs/01_architecture_overview.md): architecture, terminology, doc index
-- [`docs/02`](docs/02_graphics_worlds_memory.md): software SoT: VRAM, cart, registers
-- [`docs/05`](docs/05_hardware_v1_32ic.md): 32-IC BOM and netlist
-- [`docs/07`](docs/07_game_modules.md): movement, camera, entities, CPU budgets
+- [`docs/README.md`](docs/README.md): documentation index
+- [`docs/hardware_architecture.md`](docs/hardware_architecture.md): 32-IC BOM, bring-up, silicon
+- [`docs/graphics.md`](docs/graphics.md): VRAM, cart, registers, palettes
+- [`docs/sounds.md`](docs/sounds.md): APU and bytecode
+- [`docs/selling_points.md`](docs/selling_points.md): product pitch, game modules, PRG headroom
 - [`hw/`](hw/): datasheet PDFs + [`hw/md/`](hw/md/) chip notes
 
 ---

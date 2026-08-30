@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-/* RGBS active field (docs/02). LCD framebuffer matches CRT visible area. */
+/* RGBS active field (docs/graphics). LCD framebuffer matches CRT visible area. */
 #define R01S_VIDEO_W 256
 #define R01S_VIDEO_H 240
 /* Game / Studio logical resolution (16x15 tiles). */

@@ -27,12 +27,12 @@
 #define R01S_CART_OTHER_FLAG_RLE 0x01u
 #define R01S_CART_SCREEN_PAYLOAD 480u
 
-/* Cart layout caps (docs/02_graphics_worlds_memory.md). */
+/* Cart layout caps (docs/graphics.md). */
 #define R01S_MAX_WORLDS 8
 #define R01S_MAX_PRESENT_SCREENS 32 /* 8 worlds x 32 present screens */
 #define R01S_PARALLAX_MIN 0
 #define R01S_PARALLAX_MAX 8 /* per world; live VRAM 4-5 */
-#define R01S_PARALLAX_SLICE_MAX 120 /* max bands; variable thickness (docs/02) */
+#define R01S_PARALLAX_SLICE_MAX 120 /* max bands; variable thickness (docs/graphics) */
 #define R01S_CART_PRG_BYTES 0x8000u /* fixed 32 KB PRG */
 
 /* Pin digital level (tri-state aware). */
