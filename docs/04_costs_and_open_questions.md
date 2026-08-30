@@ -107,6 +107,7 @@ Flash + I2C save on cart PCB. Motherboard + cart proto still targets roughly the
 | Q17 | BG anim rate | Fixed global `rate_shift`, or per-game constant only? |
 | Q18 | BG flip+bank silicon timing | Prove on BG fetch island before locking attr UI in a later Studio phase |
 | Q19 | Cart flash part | **Locked:** **SST39SF040** (512 KB, DIP-32) |
+| Q22 | Studio Play -> emu | **Locked.** Studio Play always exports, then runs **embedded** emu render inside Studio (no Studio-only Play). Shared `retr01_emu` core. Standalone `./emu` remains. **UI tabs component** (shared): switches tab *contents*. Used for **Worlds** in the left sidebar and for **Play** main area (**Emu render** tab + **Debug** tab). Export wait UI: spinning `Booting console...` style text (Studio-local, same idea as sim boot spinner, **no** sim linkage). **Sim is out of scope.** See [`retr01_studio/README.md`](../retr01_studio/README.md) |
 
 ## Practical next decisions
 

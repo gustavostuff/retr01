@@ -77,22 +77,7 @@
       ]
     },
     {
-      "name": "Entity",
-      "state_count": 1,
-      "states": [
-        {
-          "name": "Idle",
-          "origin_x": 0, "origin_y": 0,
-          "hitbox_x": 0, "hitbox_y": 0, "hitbox_w": 8, "hitbox_h": 8,
-          "frame_count": 1,
-          "frames": [
-            {"parts": [{"bank":0,"tile":9,"pal":1,"fh":0,"fv":0,"dx":0,"dy":0}]}
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Entity",
+      "name": "Martian",
       "state_count": 1,
       "states": [
         {
@@ -108,9 +93,8 @@
     }
   ],
   "instances": [
-    {"type": 1, "x": 160, "y": 206},
-    {"type": 2, "x": 159, "y": 172},
-    {"type": 0, "x": 193, "y": 181}
+    {"type": 1, "x": 184, "y": 152},
+    {"type": 0, "x": 222, "y": 185}
   ],
   "warp_entrances": [
   ],

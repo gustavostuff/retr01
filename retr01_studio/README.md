@@ -2,12 +2,14 @@
 
 Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. Studio is two tools in one app:
 
-1. **Authoring (UI)**. Edit worlds, tiles, palettes, sprites, entities, and instances. Preview with **Play**.
-2. **Export (codegen)**. Write a game tree under `output/` (packed cart + generated C, 6502 ASM, and binary data).
+1. **Authoring (UI)**. Edit worlds, tiles, palettes, sprites, entities, and instances.
+2. **Export + Play**. **Ctrl+E** (or **Play**) writes a packed cart and generated game tree under `output/`. **Play** then opens the **emulator render screen** on that cart so Studio preview matches standalone `./emu` pixel-for-pixel.
 
-Authoring state lives in `output/<stem>.r01proj` (JSON). **Ctrl+E** regenerates cart bytes and the generated tree. **`custom_logic.c`** is created on first export and never overwritten. Hardware contract: [`docs/02`](../docs/02_graphics_worlds_memory.md).
+Authoring state lives in `output/<stem>.r01proj` (JSON). **`custom_logic.c`** is created on first export and never overwritten. Hardware contract: [`docs/02`](../docs/02_graphics_worlds_memory.md).
 
-**Stack:** C11 + SDL2 + FreeType (Proggy Tiny), `libretr01_studio_core` + thin shell.
+There is **no** Studio-only host Play path. Preview always goes through export then shared emu core ([`retr01_emu/`](../retr01_emu/README.md)). **Sim is not involved.** Code catch-up is pending. Locked UX: [`docs/04`](../docs/04_costs_and_open_questions.md) Q22 (shared **tabs** UI for Worlds + Play Emu/Debug).
+
+**Stack:** C11 + SDL2 + FreeType (Proggy Tiny), `libretr01_studio_core` + thin shell + shared `retr01_emu` core for Play.
 
 ---
 
@@ -53,7 +55,7 @@ Fixed **640x360** logical canvas, **8px** grid, dark gray chrome. Buttons/labels
 | **Sprites** | List of SPR catalog entries (**1x** icons + bank tile index). Empty: **empty** + **Add**. Create/Edit modal: SPR bank dots + 16x16 tile grid, 4x4 SPR palette, LMB drag parts, RMB paint. Right-click: edit, remove, set palette, change sprite bank. New sprites fill bank **0**, then **1..3** |
 | **Metasprites** | Reusable multi-part SPR groups (no origin/hitbox). Empty: **empty** + **Add**. Modal: **Name** field (caret/selection/scroll) + derived id (`w_NN_slug`), SPR bank left, 16x16 compose right, 4x4 SPR palette, LMB/RMB. Sidebar: 16x16 centered preview + clipped names; hover tooltip shows name + id. Right-click: edit, remove. **Studio-only**: not a separate cart table. Export flattens into entity parts |
 | **Entities** | List of entity types (16x16 centered preview + **entity name**, clipped). Empty: **empty** + **Add**. Modal: left **metasprite catalog**. Right **Name** / state name text fields, **State**/**Frame** strips, live frame id, compose, guides, SPR palette. Sidebar hover: name + type id. Right-click: **Edit** / **Mark as player** (or Unmark) / **Remove**. Esc blurs field then closes; click scrim closes. Cart packs state0/frame0 for all types |
-| **Place on screen** | Drag a **Sprites**, **Metasprites**, or **Entities** row onto the screen preview (switches to **Sprite layer**). Sprite drop auto-creates a 1-state/1-frame/1-part entity and places an instance. Metasprite drop auto-creates an entity from the group and places an instance. Entity drop places that type. Instance `world_x/y` is the **user origin** (compose cross). Parts/hitbox draw as `(coord - origin)` relative to that. Optional instance `fh`/`fv` mirrors parts around the origin (JSON `"fh"`/`"fv"`, cart instance flags bit0/bit1). Sprites **clip to 128x120** when partially off-screen. On Sprite layer: click/drag instance to move (white outline). **H/V** mirrors. **Delete** removes. Visible in edit view and **Play** (OAM slot 0 = player. Instances fill 1+) |
+| **Place on screen** | Drag a **Sprites**, **Metasprites**, or **Entities** row onto the screen preview (switches to **Sprite layer**). Sprite drop auto-creates a 1-state/1-frame/1-part entity and places an instance. Metasprite drop auto-creates an entity from the group and places an instance. Entity drop places that type. Instance `world_x/y` is the **user origin** (compose cross). Parts/hitbox draw as `(coord - origin)` relative to that. Optional instance `fh`/`fv` mirrors parts around the origin (JSON `"fh"`/`"fv"`, cart instance flags bit0/bit1). Sprites **clip to 128x120** when partially off-screen. On Sprite layer: click/drag instance to move (white outline). **H/V** mirrors. **Delete** removes. Visible in the editor screen preview (not a separate Studio Play compositor) |
 
 PNG drop imports into the **active** world. Cart export packs **world 0** only (ignores `default_world`).
 
@@ -61,18 +63,28 @@ PNG drop imports into the **active** world. Cart export packs **world 0** only (
 
 ## Play
 
+**Play** (button or **Space**) is not an in-editor soft preview. It:
+
+1. Always runs the same **export** path as **Ctrl+E** (pack `.retr01` + regenerate `output/C/`, `output/ASM/`, `output/data/` as needed), even if the project is unsaved.
+2. While export runs, shows a Studio-local **boot wait** UI (spinning `Booting console...` style text, same idea as the sim boot spinner, no sim code link).
+3. Embeds the **emulator** in Studio via a shared **UI tabs** component (also used for **Worlds** in the left sidebar):
+   - **Emu render** tab: normal game framebuffer (same role as today's Play surface).
+   - **Debug** tab: emu debug output (VRAM atlas / world map / pals / CPU budget), not a separate OS window.
+
+Shared emu core with standalone [`retr01_emu`](../retr01_emu/README.md). Standalone `./emu` remains for triage (may keep its own debug window). Cart export is still **world 0** only. **Sim is out of scope.**
+
 | | |
 |--|--|
-| **Entry world** | Play calls `begin_play` -> switches to **`default_world`** (map menu -> **Make default world**), not necessarily the sidebar selection |
-| **Camera** | **Dead-zone** profile ([`docs/07`](../docs/07_game_modules.md) section 2.A). `r01_camera_set_deadzone(ctx, W, H)` in **`custom_logic.c`** sets the **width and height of a rectangle centered on the 128x120 viewport**. The camera scrolls only when the player **origin** crosses that inner rect. `(0, 0)` = immediate center-follow (no dead zone). Default when unset: **32x30**. Studio Play parses the same call from sibling `output/C/custom_logic.c` at start. **Ctrl+E** packs bytes **30-31** of the world header for emu/sim. Logic: `common/r01_play_camera.c` (shared with Studio, emu, sim) |
+| **Entry world** | Cart boots **world 0**. Editor **`default_world`** / sidebar selection do not change Phase 1 cart boot until multi-world export lands |
+| **Camera** | **Dead-zone** profile ([`docs/07`](../docs/07_game_modules.md) section 2.A). `r01_camera_set_deadzone(ctx, W, H)` in **`custom_logic.c`**. Export packs bytes **30-31** of the world header. Emu Host Play reads them. Logic: `common/r01_play_camera.c` |
 | **Scroll** | Smooth pixel scroll. Spawn/warp **snap** centers the view on the player, then clamps origin inside the dead zone |
-| **Player** | World **`player_entity`** (Entities context **Mark as player**). **8-dir idle/walk** animation from cart **player anim blob** (`PA` magic, after instances) driven by `custom_logic.c` (`r01_player_anim_set_idle_state`, `r01_player_anim_set_walk_all`, `r01_entity_state_frame_delay_set`, optional `r01_player_default_face_set`). If unset/empty type, solid stub **SPR bank 0 tile 1**. Placed instances of the player type are skipped in Play OAM (player uses slot 0) |
-| **Other entities** | **State 0 / frame 0** only in Play preview |
-| **Start** | **First placed instance** of the marked player type (editor origin). If none / unmarked: center of **`default_screen`**. Fallback grid **(2,0)** or first present |
-| **Collision** | Marked player's **current anim state** hitbox (offset from origin) vs `R01_ATTR_SOLID` on present screens. Stub player: **8x8** at the origin |
-| **Warps** | **X** -> screen (0,0). **Y** -> screen (1,0). Test hooks only; no Events UI yet |
+| **Player** | World **`player_entity`** (Entities context **Mark as player**). **8-dir idle/walk** from cart **player anim blob** (`PA` magic) driven by `custom_logic.c` hooks scanned at export. Stub: **SPR bank 0 tile 1** |
+| **Other entities** | **State 0 / frame 0** only in Phase 1 Host Play |
+| **Start** | **First placed instance** of the marked player type. If none / unmarked: center of **`default_screen`**. Fallback grid **(2,0)** or first present |
+| **Collision** | Current anim-state hitbox vs `R01_ATTR_SOLID` on cart MAP attrs (not PRG collision stub) |
+| **Warps** | **X** -> screen (0,0). **Y** -> screen (1,0). Test hooks only |
 
-Cart packs `player_entity`, hitbox, dead zone, and optional player anim blob. **Re-export** after marking the player, editing `custom_logic.c`, or solid edits. Play SoT: `core/src/play.c` + `game_runtime.c` + `common/r01_play_camera.c`. Emu/sim use the same shared camera/anim parsers. Host collision reads **cart MAP attrs**, not the PRG collision stub. OAM X/Y are **viewport-relative signed** coords. Tiles fully outside **128x120** are skipped. Partial tiles clip at viewport edges.
+Gameplay SoT for Phase 1: emu Host Play (`retr01_emu/src/play.c` + `common/`). Studio does not maintain a parallel `core/src/play.c` preview.
 
 ### `custom_logic.c` hooks (host export)
 
@@ -163,19 +175,20 @@ PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are
 | `ASM/**` | Subdivided 6502 sources (`boot/`, `game/`, `io/`, `player/`, `sprite/`, `collision/`, `tables/`) |
 | `data/*` | Palette, CHR, and per-screen MAP bins for `.incbin` |
 
-The packer still builds PRG bytes in `prg_phase1.c` (byte-compatible with pre-codegen export). The on-disk `ASM/` and `data/` trees are the stable layout for a future ca65 build; they are not assembled during export today. Host **Play** in Studio remains the in-editor preview source of truth (`core/src/play.c`).
+The packer still builds PRG bytes in `prg_phase1.c` (byte-compatible with pre-codegen export). The on-disk `ASM/` and `data/` trees are the stable layout for a future ca65 build; they are not assembled during export today. **Play** always consumes the packed cart through the shared emu path (not an in-editor compositor).
 
 Compile from `output/C/` with `-Iinclude` (or `#include "include/r01_engine.h"` as generated).
 
 ### Limitations (current)
 
-- **NPC / non-player** instances use **state 0 / frame 0** only in Play (player uses full anim blob).
+- **NPC / non-player** instances use **state 0 / frame 0** only in Phase 1 Host Play (player uses full anim blob).
 - Dead zone is configured in **`custom_logic.c`** only (no Studio UI slider yet).
-- **World 0** only in cart export. Worlds 1-7 are session-only in the UI until multi-world save lands.
+- **World 0** only in cart export. Worlds 1-7 are session-only in the UI until multi-world save lands. Studio Play therefore previews world 0 only.
 - No entity-vs-entity collision, NPC AI, parallax authoring, or full on-cart 6502 gameplay loop yet.
 - No ca65 / `make` step in the default export path.
+- Studio Play -> emu UX is locked ([`docs/04`](../docs/04_costs_and_open_questions.md) Q22). Code still has the old Studio-only Play until the refactor lands.
 
-Shared host runtime (not duplicated in export tree): `common/r01_play_camera.c`, `common/r01_play_anim*.c`, `common/r01_custom_logic_scan.c`.
+Shared host runtime (not duplicated in export tree): `common/r01_play_camera.c`, `common/r01_play_anim*.c`, `common/r01_custom_logic_scan.c`. Emu Host Play owns cart-backed preview.
 
 ---
 
@@ -216,7 +229,7 @@ ctest --test-dir build --output-on-failure
 | Add / edit entity | Entities accordion -> **Add**, or right-click -> Edit |
 | Mark / unmark player | Right-click entity row -> **Mark as player** / **Unmark as player** |
 | Place catalog on screen | Drag Sprites / Metasprites / Entities row onto screen preview |
-| Play / pause | **Space** / **PLAY** |
+| Play / pause | **Space** / **PLAY** (export cart, then open emu render) |
 | Move player | **WASD** / arrows |
 | Warp test | **X** -> (0,0), **Y** -> (1,0) |
 | Save / load | **Ctrl+S** / **Ctrl+O** -> `output/test.r01proj` |

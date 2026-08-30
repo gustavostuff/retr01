@@ -146,7 +146,7 @@ The player is a **Game entity** slot that mainly follows pad input (`$FE60` / `$
 ### 1.1 Free 8-way smooth (default)
 
 - Pixel movement on X/Y. 8 directions from pad.
-- Matches current host Play feel (smooth follow, dead-zone camera from `custom_logic.c`).
+- Matches current emu Host Play feel (smooth follow, dead-zone camera from `custom_logic.c`).
 - Good default for open exploration.
 
 ### 1.2 Grid-tied 4-way
@@ -189,7 +189,7 @@ Pick **one** camera strategy per game. Player cannot mix free dead-zone, rail, a
 
 Movement axes (game setting): **free (X+Y)**, **X only**, or **Y only**.
 
-Dead zone is centered on the viewport unless Studio later allows offsets. `r01_camera_set_deadzone(ctx, W, H)` sets the **width and height** of that inner rectangle (not edge margins). Host Play in Studio, emu, and sim implements this profile today via `common/r01_play_camera.c`. Export packs `W`/`H` into the world header for cart runners.
+Dead zone is centered on the viewport unless Studio later allows offsets. `r01_camera_set_deadzone(ctx, W, H)` sets the **width and height** of that inner rectangle (not edge margins). Host Play in emu and sim implements this profile today via `common/r01_play_camera.c`. Export packs `W`/`H` into the world header. Studio Play uses the same cart path (export then emu).
 
 | Dead zone | Behavior |
 |-----------|----------|
@@ -265,7 +265,7 @@ Rules:
 
 - The player is a normal entity **slot** (counts toward budgets).
 - Input-driven. Uses the attached **Player movement** profile.
-- Host Play (Studio / emu / sim): **8-dir idle/walk** animation from the cart player anim blob when `custom_logic.c` configures states. Collision uses the **current state** hitbox. Other entities remain state0/frame0 in preview.
+- Host Play (emu / sim, and Studio Play via shared emu): **8-dir idle/walk** animation from the cart player anim blob when `custom_logic.c` configures states. Collision uses the **current state** hitbox. Other entities remain state0/frame0 in preview.
 
 ### 3.3 Non-player AI (v1 document)
 
@@ -361,8 +361,8 @@ Entity-entity among all NPCs is **opt-in** and expensive. Default generated loop
 ### 5.3 Studio behavior
 
 - Author `SOLID` on tiles via tile context **Set Solid**.
-- Author entity **origins** and **hitboxes** in the entity modal (guides checkbox toggles overlay + interaction). Studio Play uses the marked player’s hitbox vs BG solid; entity-vs-entity collision is still future.
-- Play preview uses the same region rules (ACTIVE only). Sprites **clip to the 128x120 viewport** when partially off-screen (Studio, emu, sim Host Play).
+- Author entity **origins** and **hitboxes** in the entity modal (guides checkbox toggles overlay + interaction). Emu Host Play uses the marked player’s hitbox vs BG solid; entity-vs-entity collision is still future.
+- Play preview (Studio via emu, standalone emu, sim Host Play) uses the same region rules (ACTIVE only). Sprites **clip to the 128x120 viewport** when partially off-screen.
 - Show hitboxes / solids as optional overlay in Play (implementation phase TBD).
 - Camera rail / auto-scroll must pause or redefine collision during transitions if pads are muted (rail: typically freeze gameplay collisions until scroll ends).
 

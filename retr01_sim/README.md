@@ -48,17 +48,18 @@ Layer 1: per-chip harness tests in `tests/`. Layer 2: island smoke in `tests/tes
 
 ## Cart ROM vs runners (triage)
 
-When something looks wrong on screen, do not assume the `.retr01` is bad and do not assume the emu/sim is bad. Studio, cart image, emu, and sim are four different layers.
+When something looks wrong on screen, do not assume the `.retr01` is bad and do not assume the emu/sim is bad. Studio authoring, cart image, emu, and sim are different layers.
 
 ### Who owns what
 
 | Layer | Artifact | On silicon / runners? | Notes |
 |-------|----------|----------------------|--------|
-| **Studio editor / Play** | `output/test.r01proj` (+ UI) | **No** | Host preview only. Never executes PRG or `$FExx` |
+| **Studio editor** | `output/test.r01proj` (+ UI) | **No** | Authoring only. Does not execute PRG |
+| **Studio Play** | export then shared emu | **Yes** (via cart) | Same path as **Ctrl+E** + emu render. No Studio-only soft preview |
 | **Cart image** | `output/test.retr01` (+ `test_flash.bin`) | **Yes** (flash) | Packed bytes SoT for PRG/CHR/MAP/pals. Layout in [`docs/02`](../docs/02_graphics_worlds_memory.md) |
 | **Color PROM burn** | `test_prom.bin` | **Yes** (motherboard) | Not inside the cart. Kit -> R3G3B2. Board AT28C16 |
 | **Boot asm listing** | `test_boot.s` | Human-readable only | Binary inside `.retr01` is what runners execute |
-| **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Default: PRG catchup streams pals + start MAP. Softboot opt-in (`R01E_SOFTBOOT=1`). Host Play for camera/player |
+| **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Default: PRG catchup streams pals + start MAP. Softboot opt-in (`R01E_SOFTBOOT=1`). Host Play for camera/player. Used by Studio Play and standalone `./emu` |
 | **Board sim** | `retr01_sim` | IC / island netlist | Loaded cart PRG runs as-is. Bring-up overlay only when **no cart file**. Catchup ~12k pin-level steps. Softboot opt-in (`R01S_SOFTBOOT=1`). Host Play after catchup |
 
 ### What is in `test.retr01` today
@@ -76,7 +77,7 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 | **Not** in ROM | Meaning |
 |----------------|---------|
 | **Metasprite catalog** | Studio JSON only. Export flattens parts into entity type records |
-| Studio Play motion, camera dead zone, player anim, warps | Host `play.c` + `common/r01_play_camera.c` / emu Play / sim Host Play |
+| Host Play motion, camera dead zone, player anim, warps | Emu / sim Host Play + `common/r01_play_camera.c` (cart-backed). Not a Studio-only preview |
 | Host collision source | Cart flash MAP attrs (`R01_ATTR_SOLID`). PRG collision stub not used by host runners |
 | Editor UI state | UI only. Cart boots world **0** |
 | Live camera seam streaming (2x2 shift) | Phase 1 PRG loads start screen only |
@@ -86,7 +87,7 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 
 1. **Hex / dump the cart first.** If the dump is wrong, it is Studio export. If right, blame the runner or soft helpers.
 2. **Same `.retr01` on emu and sim.** Both wrong the same way -> ROM/content or shared contract (`02`). Only one fails -> that runner.
-3. **Never use Studio Play as proof the cart boots.** Play bypasses PRG.
+3. **Studio Play is cart-backed.** It exports then runs emu. If Studio Play looks wrong, dump the cart. Do not assume a separate Studio compositor.
 4. **Call out soft helpers.** `R01E_SOFTBOOT=1` / `R01S_SOFTBOOT=1` are opt-in host poke only.
 5. **Color wrong?** Check `*_prom.bin` / board PROM path separately from cart palette indices.
 

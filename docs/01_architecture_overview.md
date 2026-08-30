@@ -10,8 +10,8 @@ When docs disagree, use this order.
 | Locked decisions + open questions | [`04`](04_costs_and_open_questions.md) | Does not replace `02` for register text |
 | Retr01-A **HW BOM** (current) | [`05`](05_hardware_v1_32ic.md) | **32 IC** system. Does not invent `$FExx` |
 | Protoboard island bring-up | [`03`](03_hardware_implementation.md) | Bench checklist for the **32 IC** netlist |
-| Retr01 Studio | [`retr01_studio/README.md`](../retr01_studio/README.md) | UI authoring, Play preview, export (`output/` cart + C/ASM/data codegen) |
-| Emulator | [`retr01_emu/README.md`](../retr01_emu/README.md) | Soft cart runtime matching Studio Play |
+| Retr01 Studio | [`retr01_studio/README.md`](../retr01_studio/README.md) | UI authoring + export. **Play** exports then runs the shared emu render path |
+| Emulator | [`retr01_emu/README.md`](../retr01_emu/README.md) | Soft cart runtime (standalone `./emu` + library used by Studio Play) |
 | Audio / APU protocol | [`06`](06_audio_architecture.md) | 6502 sequencer + 328P mixer, `$FE4x` bus bridge |
 | Board IC simulator | [`retr01_sim/README.md`](../retr01_sim/README.md) | Pin/netlist models of the 32-IC BOM |
 | Studio game modules (movement, camera, entities, collision budgets) | [`07`](07_game_modules.md) | Attachable gameplay profiles. Studio phases implement subsets later |
@@ -135,7 +135,9 @@ Current chip list: [`05`](05_hardware_v1_32ic.md) (**32 IC**). Roles:
 
 **Retr01 Studio** (authoring + export) and **Retr01 Emulator** (cart runtime) are the active software tools. Studio **Save** writes `output/<stem>.r01proj`. **Export** regenerates `output/C/`, `output/ASM/`, `output/data/`, and packed cart bytes. See [`retr01_studio/README.md`](../retr01_studio/README.md) and [`retr01_emu/README.md`](../retr01_emu/README.md). **Board IC simulator** ([`retr01_sim/`](../retr01_sim/)) validates the 32-IC netlist.
 
-**Host Play** (Studio preview, emu, sim) shares motion rules via `common/r01_play_camera.c` and `common/r01_play_anim*.c`. Studio `core/src/play.c` is the behavioral SoT. Emu and sim must stay in sync when Play features change.
+**Studio Play** does **not** keep a separate host preview. **Play** / **Space** always exports (same path as **Ctrl+E**), shows a brief boot-wait spinner, then runs the **emulator render embedded** in Studio. A shared **UI tabs** component switches tab contents: **Worlds** (left sidebar) and **Play** (**Emu render** | **Debug**). Studio and standalone `./emu` share emu core code. **Sim is not involved** in this path.
+
+**Host Play** (cart-backed movement / camera / OAM in emu) lives in `retr01_emu` + `common/r01_play_camera.c` / `r01_play_anim*.c`. Emu Host Play is the Phase 1 gameplay SoT. Studio-only `core/src/play.c` preview is removed (code catch-up pending).
 
 ## Doc index (`docs/`)
 

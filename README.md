@@ -2,8 +2,8 @@
 
 The Retr01 project is a software + hardware tool chain family. Software includes:
 
-- **Retr01 Studio**: visual authoring for worlds, screens and game entities.
-- **Retr01 Emu**: software-visible 65C02 + `$FExx` I/O + video. Loads a cart, runs PRG and host Play for movement, camera, and collision.
+- **Retr01 Studio**: visual authoring for worlds, screens and game entities. **Play** exports a cart and opens the shared emulator render screen (same pixels as standalone emu).
+- **Retr01 Emu**: software-visible 65C02 + `$FExx` I/O + video. Standalone `./emu` and the library Studio Play uses. Loads a cart, runs PRG boot catchup and Host Play for movement, camera, and collision.
 - **Retr01 Sim**: pin-level model of the **32-IC** Retr01-A netlist. Interactive SDL board UI with draggable islands, per-chip tests, and the same cart boot path as the emulator.
 
 Software is still a WIP. This is the overall hardware roadmap:
