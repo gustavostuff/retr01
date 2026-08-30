@@ -304,7 +304,7 @@ Studio exports RLE when it shrinks the payload. Otherwise raw. Decode before VRA
 |  | WORLD HEADER (32 B)                                             |     |
 |  |   start_col, start_row, default_bg_bank, default_spr_bank       |     |
 |  |   default_pal_row (0..7), screen_count (present, max **32**)    |     |
-|  |   parallax_count (0..8), flags u8 (bit0 = player_anim blob)    |     |
+|  |   parallax_count (0..8), flags u8 (bit0 = player_anim blob)     |     |
 |  |   off_chr u24, off_screen_dir u24, off_parallax_dir u24         |     |
 |  |   entity_type_count u8, entity_inst_count u8                    |     |
 |  |   off_entity_types u24, off_entity_insts u24                    |     |
@@ -326,7 +326,7 @@ Studio exports RLE when it shrinks the payload. Otherwise raw. Decode before VRA
 |  | INSTANCES: 6 B each {type_id, flags, world_x u16, world_y u16}  |     |
 |  |   flags bit0 = flip_h, bit1 = flip_v (mirror around origin)     |     |
 |  | PLAYER ANIM (optional): magic `PA`, per-state origin/hitbox,    |     |
-|  |   drawable frames, parts. Appended when flags.player_anim set    |     |
+|  |   drawable frames, parts. Appended when flags.player_anim set   |     |
 |  +-----------------------------------------------------------------+     |
 +--------------------------------------------------------------------------+
 |  WORLD 1 .. N                                                            |
