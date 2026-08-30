@@ -17,42 +17,71 @@ int ui_mode_panel_w(void) {
     int label_x = UI_MODE_RADIO + UI_MODE_GAP;
     int w0 = label_x + label_width("Tile selection");
     int w1 = label_x + label_width("Tile paint");
-    return w0 > w1 ? w0 : w1;
+    int w2 = label_x + label_width("BG layer");
+    int w3 = label_x + label_width("Sprite layer");
+    int w = w0;
+    if (w1 > w) {
+        w = w1;
+    }
+    if (w2 > w) {
+        w = w2;
+    }
+    if (w3 > w) {
+        w = w3;
+    }
+    return w;
 }
 
 int ui_layer_panel_w(void) {
-    int label_x = UI_MODE_RADIO + UI_MODE_GAP;
-    int w0 = label_x + label_width("BG layer");
-    int w1 = label_x + label_width("Sprite layer");
-    return w0 > w1 ? w0 : w1;
+    return ui_mode_panel_w();
+}
+
+void ui_preview_size(const UiState *ui, int *out_w, int *out_h) {
+    if (out_w) {
+        *out_w = ui_screen_w(ui);
+    }
+    if (out_h) {
+        *out_h = ui_screen_h(ui);
+    }
 }
 
 void ui_editor_layout(const UiState *ui, int *screen_x, int *screen_y, int *layer_x, int *mode_x, int *mode_y0) {
-    int available = UI_LOGIC_W - UI_SIDEBAR_W;
-    int layer_w = ui_layer_panel_w();
-    int mode_w = ui_mode_panel_w();
+    int available = ui_main_w(ui);
+    int radio_w = ui_mode_panel_w();
     int gap = UI_UNIT;
-    int block = layer_w + gap + UI_SCREEN_W + gap + mode_w;
-    int left = UI_SIDEBAR_W + (available - block) / 2;
+    int prev_w, prev_h;
+    int block;
+    int left;
     int sx;
-    int sy = (UI_LOGIC_H - UI_SCREEN_H) / 2;
+    int sy;
     int lx;
-    int mx;
-    (void)ui;
+
+    ui_preview_size(ui, &prev_w, &prev_h);
+    /* Layer + mode radios stacked on the left of the screen (edit only). */
+    block = radio_w + gap + prev_w;
+    left = UI_SIDEBAR_W + (available - block) / 2;
+    sy = (ui_logic_h(ui) - prev_h) / 2;
+    if (sy < UI_BTN_H + UI_UNIT * 2) {
+        sy = UI_BTN_H + UI_UNIT * 2;
+    }
     if (left < UI_SIDEBAR_W + UI_UNIT) {
         left = UI_SIDEBAR_W + UI_UNIT;
     }
     lx = left;
-    sx = lx + layer_w + gap;
-    mx = sx + UI_SCREEN_W + gap;
-    if (mx + mode_w > UI_LOGIC_W - UI_UNIT) {
-        mx = UI_LOGIC_W - UI_UNIT - mode_w;
-        sx = mx - gap - UI_SCREEN_W;
-        lx = sx - gap - layer_w;
+    sx = lx + radio_w + gap;
+    if (ui && ui->play.active) {
+        /* Play: no radios. Center the preview alone in the main pane. */
+        sx = UI_SIDEBAR_W + (available - prev_w) / 2;
+        if (sx < UI_SIDEBAR_W + UI_UNIT) {
+            sx = UI_SIDEBAR_W + UI_UNIT;
+        }
+        lx = sx;
+    } else if (sx + prev_w > ui_logic_w(ui) - UI_UNIT) {
+        sx = ui_logic_w(ui) - UI_UNIT - prev_w;
+        lx = sx - gap - radio_w;
         if (lx < UI_SIDEBAR_W + UI_UNIT) {
             lx = UI_SIDEBAR_W + UI_UNIT;
-            sx = lx + layer_w + gap;
-            mx = sx + UI_SCREEN_W + gap;
+            sx = lx + radio_w + gap;
         }
     }
     if (screen_x) {
@@ -64,8 +93,9 @@ void ui_editor_layout(const UiState *ui, int *screen_x, int *screen_y, int *laye
     if (layer_x) {
         *layer_x = lx;
     }
+    /* mode_x shares the left radio column (rows 2-3). */
     if (mode_x) {
-        *mode_x = mx;
+        *mode_x = lx;
     }
     if (mode_y0) {
         *mode_y0 = sy;
@@ -83,7 +113,8 @@ int screen_mode_row_hit(const UiState *ui, int lx, int ly, int row) {
         return 0;
     }
     ui_editor_layout(ui, &sx, &sy, &layer_x, &mx, &my0);
-    y = my0 + row * UI_MODE_ROW_H;
+    /* Mode radios sit under layer radios (rows 2 and 3). */
+    y = my0 + (2 + row) * UI_MODE_ROW_H;
     return point_in_rect(lx, ly, mx, y, ui_mode_panel_w(), UI_MODE_ROW_H);
 }
 
@@ -136,17 +167,21 @@ int play_btn_w(const UiState *ui) {
 
 int play_btn_x(const UiState *ui) {
     int sx, sy, layer_x, mx, my0;
+    int prev_w;
     ui_editor_layout(ui, &sx, &sy, &layer_x, &mx, &my0);
-    return sx + (UI_SCREEN_W - play_btn_w(ui)) / 2;
+    ui_preview_size(ui, &prev_w, NULL);
+    return sx + (prev_w - play_btn_w(ui)) / 2;
 }
 
-int play_btn_y(void) {
-    return (UI_LOGIC_H - UI_SCREEN_H) / 2 - UI_UNIT - UI_BTN_H;
+int play_btn_y(const UiState *ui) {
+    int sx, sy, layer_x, mx, my0;
+    ui_editor_layout(ui, &sx, &sy, &layer_x, &mx, &my0);
+    return sy - UI_UNIT - UI_BTN_H;
 }
 
 int play_button_hit(const UiState *ui, int lx, int ly) {
     int x = play_btn_x(ui);
-    int y = play_btn_y();
+    int y = play_btn_y(ui);
     int w = play_btn_w(ui);
     return lx >= x && lx < x + w && ly >= y && ly < y + UI_BTN_H;
 }
@@ -162,11 +197,11 @@ int screen_hit(const UiState *ui, int lx, int ly, int *out_tx, int *out_ty) {
     int ox, oy;
     int lx0, ly0;
     screen_origin(ui, &ox, &oy);
-    if (lx < ox || ly < oy || lx >= ox + UI_SCREEN_W || ly >= oy + UI_SCREEN_H) {
+    if (lx < ox || ly < oy || lx >= ox + ui_screen_w(ui) || ly >= oy + ui_screen_h(ui)) {
         return 0;
     }
-    lx0 = (lx - ox) / UI_SCREEN_SCALE;
-    ly0 = (ly - oy) / UI_SCREEN_SCALE;
+    lx0 = (lx - ox) / ui_screen_scale(ui);
+    ly0 = (ly - oy) / ui_screen_scale(ui);
     if (lx0 >= R01_SCREEN_PX_W || ly0 >= R01_SCREEN_PX_H) {
         return 0;
     }
@@ -183,11 +218,11 @@ int screen_pixel_hit(const UiState *ui, int lx, int ly, int *out_px, int *out_py
     int ox, oy;
     int px, py;
     screen_origin(ui, &ox, &oy);
-    if (lx < ox || ly < oy || lx >= ox + UI_SCREEN_W || ly >= oy + UI_SCREEN_H) {
+    if (lx < ox || ly < oy || lx >= ox + ui_screen_w(ui) || ly >= oy + ui_screen_h(ui)) {
         return 0;
     }
-    px = (lx - ox) / UI_SCREEN_SCALE;
-    py = (ly - oy) / UI_SCREEN_SCALE;
+    px = (lx - ox) / ui_screen_scale(ui);
+    py = (ly - oy) / ui_screen_scale(ui);
     if (px < 0 || py < 0 || px >= R01_SCREEN_PX_W || py >= R01_SCREEN_PX_H) {
         return 0;
     }
@@ -202,9 +237,11 @@ int screen_pixel_hit(const UiState *ui, int lx, int ly, int *out_px, int *out_py
 
 void accordion_layout(const UiState *ui, AccordionLayout *lo) {
     int y = 0;
+    int always = UI_ACCORDION_ALWAYS_EXPANDED;
+    (void)ui;
     lo->worlds_hdr_y = y;
     y += UI_BTN_H;
-    lo->worlds_open = (ui->accordion_open == UI_ACC_WORLDS);
+    lo->worlds_open = always || (ui && ui->accordion_open == UI_ACC_WORLDS);
     if (lo->worlds_open) {
         lo->worlds_btns_y = y;
         lo->worlds_grid_y = y + UI_WORLD_BTN;
@@ -215,7 +252,7 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
     }
     lo->pals_hdr_y = y;
     y += UI_BTN_H;
-    lo->pals_open = (ui->accordion_open == UI_ACC_PALS);
+    lo->pals_open = always || (ui && ui->accordion_open == UI_ACC_PALS);
     if (lo->pals_open) {
         lo->pals_body_y = y;
         y += UI_PAL_BODY_H;
@@ -224,7 +261,7 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
     }
     lo->sprites_hdr_y = y;
     y += UI_BTN_H;
-    lo->sprites_open = (ui->accordion_open == UI_ACC_SPRITES);
+    lo->sprites_open = always || (ui && ui->accordion_open == UI_ACC_SPRITES);
     if (lo->sprites_open) {
         lo->sprites_body_y = y;
         y += UI_SPRITES_BODY_H;
@@ -233,7 +270,7 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
     }
     lo->metasprites_hdr_y = y;
     y += UI_BTN_H;
-    lo->metasprites_open = (ui->accordion_open == UI_ACC_METASPRITES);
+    lo->metasprites_open = always || (ui && ui->accordion_open == UI_ACC_METASPRITES);
     if (lo->metasprites_open) {
         lo->metasprites_body_y = y;
         y += UI_METASPRITES_BODY_H;
@@ -242,9 +279,10 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
     }
     lo->entities_hdr_y = y;
     y += UI_BTN_H;
-    lo->entities_open = (ui->accordion_open == UI_ACC_ENTITIES);
+    lo->entities_open = always || (ui && ui->accordion_open == UI_ACC_ENTITIES);
     if (lo->entities_open) {
         lo->entities_body_y = y;
+        y += UI_ENTITIES_BODY_H;
     } else {
         lo->entities_body_y = -1;
     }
@@ -303,6 +341,9 @@ int world_btn_hit(const UiState *ui, int lx, int ly, int *out_wi) {
 
 int accordion_header_hit(const UiState *ui, int lx, int ly, int *out_section) {
     AccordionLayout lo;
+    if (UI_ACCORDION_ALWAYS_EXPANDED) {
+        return 0;
+    }
     if (lx < 0 || lx >= UI_SIDEBAR_W) {
         return 0;
     }
@@ -341,6 +382,9 @@ int accordion_header_hit(const UiState *ui, int lx, int ly, int *out_section) {
 }
 
 void accordion_toggle(UiState *ui, int section) {
+    if (UI_ACCORDION_ALWAYS_EXPANDED) {
+        return;
+    }
     if (ui->accordion_open == section) {
         ui->accordion_open = UI_ACC_NONE;
     } else {
@@ -355,21 +399,21 @@ void draw_accordion_header(SDL_Renderer *r, int y, const char *title, int open, 
         fill_rect(r, 0, y, UI_SIDEBAR_W, UI_BTN_H, UI_COL_PANEL_R, UI_COL_PANEL_G, UI_COL_PANEL_B);
     }
     font_draw_centered(r, 0, y, UI_SIDEBAR_W, UI_BTN_H, title, 230, 230, 230);
-    if (hover) {
+    if (hover && !UI_ACCORDION_ALWAYS_EXPANDED) {
         hover_overlay(r, 0, y, UI_SIDEBAR_W, UI_BTN_H);
     }
 }
-static int modal_x(void) {
-    return (UI_LOGIC_W - UI_MODAL_W) / 2;
+static int modal_x(const UiState *ui) {
+    return (ui_logic_w(ui) - UI_MODAL_W) / 2;
 }
 
-static int modal_y(void) {
-    return (UI_LOGIC_H - UI_MODAL_H) / 2;
+static int modal_y(const UiState *ui) {
+    return (ui_logic_h(ui) - UI_MODAL_H) / 2;
 }
 
-void tile_modal_layout(TileModalLayout *lo) {
-    lo->mx = modal_x();
-    lo->my = modal_y();
+void tile_modal_layout(const UiState *ui, TileModalLayout *lo) {
+    lo->mx = modal_x(ui);
+    lo->my = modal_y(ui);
     lo->pal_x = lo->mx + UI_UNIT * 2;
     lo->pal_label_y = lo->my + UI_MODAL_BODY_Y;
     lo->pal_y = lo->pal_label_y + UI_BTN_H;
@@ -380,17 +424,17 @@ void tile_modal_layout(TileModalLayout *lo) {
     lo->cancel_w = label_width("Cancel");
 }
 
-static int pal_modal_x(void) {
-    return (UI_LOGIC_W - UI_PAL_MODAL_W) / 2;
+static int pal_modal_x(const UiState *ui) {
+    return (ui_logic_w(ui) - UI_PAL_MODAL_W) / 2;
 }
 
-static int pal_modal_y(void) {
-    return (UI_LOGIC_H - UI_PAL_MODAL_H) / 2;
+static int pal_modal_y(const UiState *ui) {
+    return (ui_logic_h(ui) - UI_PAL_MODAL_H) / 2;
 }
 
-void pal_modal_layout(PalModalLayout *lo) {
-    lo->mx = pal_modal_x();
-    lo->my = pal_modal_y();
+void pal_modal_layout(const UiState *ui, PalModalLayout *lo) {
+    lo->mx = pal_modal_x(ui);
+    lo->my = pal_modal_y(ui);
     lo->master_x = lo->mx + UI_UNIT * 2;
     lo->master_y = lo->my + UI_MODAL_BODY_Y + UI_BTN_H;
     lo->bg_label_y = lo->master_y + UI_MASTER_ROWS * UI_MASTER_CELL + UI_UNIT;
@@ -404,9 +448,9 @@ void pal_modal_layout(PalModalLayout *lo) {
     lo->cancel_w = label_width("Cancel");
 }
 
-void sprite_modal_layout(SpriteModalLayout *lo) {
-    lo->mx = modal_x();
-    lo->my = modal_y();
+void sprite_modal_layout(const UiState *ui, SpriteModalLayout *lo) {
+    lo->mx = modal_x(ui);
+    lo->my = modal_y(ui);
     lo->pal_x = lo->mx + UI_UNIT * 2;
     lo->pal_label_y = lo->my + UI_MODAL_BODY_Y;
     lo->pal_y = lo->pal_label_y + UI_BTN_H;
@@ -417,9 +461,9 @@ void sprite_modal_layout(SpriteModalLayout *lo) {
     lo->cancel_w = label_width("Cancel");
 }
 
-void metasprite_modal_layout(MetaspriteModalLayout *lo) {
-    int mx = (UI_LOGIC_W - UI_ENTITY_MODAL_W) / 2;
-    int my = (UI_LOGIC_H - UI_ENTITY_MODAL_H) / 2;
+void metasprite_modal_layout(const UiState *ui, MetaspriteModalLayout *lo) {
+    int mx = (ui_logic_w(ui) - UI_ENTITY_MODAL_W) / 2;
+    int my = (ui_logic_h(ui) - UI_ENTITY_MODAL_H) / 2;
     int left_x = mx + UI_UNIT * 2;
     int right_x = mx + UI_ENTITY_MODAL_W / 2 + UI_UNIT;
     lo->mx = mx;
@@ -446,9 +490,9 @@ void metasprite_modal_layout(MetaspriteModalLayout *lo) {
     lo->cancel_w = label_width("Cancel");
 }
 
-void entity_modal_layout(EntityModalLayout *lo) {
-    int mx = (UI_LOGIC_W - UI_ENTITY_MODAL_W) / 2;
-    int my = (UI_LOGIC_H - UI_ENTITY_MODAL_H) / 2;
+void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
+    int mx = (ui_logic_w(ui) - UI_ENTITY_MODAL_W) / 2;
+    int my = (ui_logic_h(ui) - UI_ENTITY_MODAL_H) / 2;
     int left_x = mx + UI_UNIT * 2;
     int right_x = mx + UI_ENTITY_MODAL_W / 2 + UI_UNIT;
     lo->mx = mx;

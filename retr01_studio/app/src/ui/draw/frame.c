@@ -22,7 +22,7 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
     SDL_RenderClear(r);
 
     draw_sidebar(ui, r);
-    draw_button(r, play_btn_x(ui), play_btn_y(), play_btn_w(ui), ui->play.active ? "Stop" : "Play", 1,
+    draw_button(r, play_btn_x(ui), play_btn_y(ui), play_btn_w(ui), ui->play.active ? "Stop" : "Play", 1,
                 play_button_hit(ui, ui->mouse_x, ui->mouse_y));
 
     if (ui->play.active) {
@@ -34,7 +34,7 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
 
     if (ui->toast_until > SDL_GetTicks() && ui->toast[0]) {
         int tw = label_width(ui->toast);
-        int ty = UI_LOGIC_H - UI_BTN_H - UI_UNIT;
+        int ty = ui_logic_h(ui) - UI_BTN_H - UI_UNIT;
         fill_rect(r, UI_UNIT, ty, tw, UI_BTN_H, ui->toast_error ? 60 : 30, ui->toast_error ? 24 : 36,
                   ui->toast_error ? 24 : 42);
         font_draw_centered(r, UI_UNIT, ty, tw, UI_BTN_H, ui->toast, 240, 240, 240);

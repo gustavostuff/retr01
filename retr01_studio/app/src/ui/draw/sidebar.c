@@ -18,36 +18,21 @@
 
 static void draw_worlds_body(UiState *ui, SDL_Renderer *r, const AccordionLayout *lo) {
     R01World *w = r01_project_active_world(ui->project);
-    int i, col, row;
+    int col, row;
     int lx = ui->mouse_x;
     int ly = ui->mouse_y;
+    static const char *const world_labs[R01_MAX_WORLDS] = {"1", "2", "3", "4", "5", "6", "7", "8"};
+    UiTabsLayout tabs;
 
-    for (i = 0; i < R01_MAX_WORLDS; i++) {
-        char num[4];
-        int x, y;
-        int on = (i == ui->project->active_world);
-        int hover;
+    ui_tabs_layout(world_labs, R01_MAX_WORLDS, UI_WORLDS_X, lo->worlds_btns_y, UI_WORLD_BTN, &tabs);
+    ui_tabs_draw(r, &tabs, ui->project->active_world, lx, ly);
 
-        ui_world_btn_pos(i, lo->worlds_btns_y, &x, &y);
-        hover = point_in_rect(lx, ly, x, y, UI_WORLD_BTN, UI_WORLD_BTN);
-
-        if (on) {
-            fill_rect(r, x, y, UI_WORLD_BTN, UI_WORLD_BTN, UI_COL_ACTIVE_R, UI_COL_ACTIVE_G, UI_COL_ACTIVE_B);
-        } else {
-            fill_rect(r, x, y, UI_WORLD_BTN, UI_WORLD_BTN, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
-        }
-        snprintf(num, sizeof(num), "%d", i + 1);
-        font_draw(r, x + 2, y + 2, num, 240, 240, 240);
-        if (hover) {
-            hover_overlay(r, x, y, UI_WORLD_BTN, UI_WORLD_BTN);
-        }
-    }
     draw_chess_grid(r, UI_WORLDS_X, lo->worlds_grid_y, R01_GRID_MAX, R01_GRID_MAX, UI_WORLD_CELL);
     if (!w || !w->present) {
         return;
     }
     {
-        int mark_idx = ui->play.active ? r01_play_screen_index(&ui->play, w) : w->default_screen;
+        int mark_idx = ui->play.active ? ui_play_screen_mark(ui) : w->default_screen;
         if (mark_idx < 0 || mark_idx >= w->screen_count || !w->screens[mark_idx].present) {
             mark_idx = r01_world_default_screen(w);
         }
@@ -333,7 +318,7 @@ void draw_sidebar(UiState *ui, SDL_Renderer *r) {
 
     accordion_layout(ui, &lo);
     ui_tooltip_clear(ui);
-    fill_rect(r, 0, 0, UI_SIDEBAR_W, UI_LOGIC_H, UI_COL_PANEL_R, UI_COL_PANEL_G, UI_COL_PANEL_B);
+    fill_rect(r, 0, 0, UI_SIDEBAR_W, ui_logic_h(ui), UI_COL_PANEL_R, UI_COL_PANEL_G, UI_COL_PANEL_B);
 
     draw_accordion_header(r, lo.worlds_hdr_y, "Worlds", lo.worlds_open,
                           point_in_rect(lx, ly, 0, lo.worlds_hdr_y, UI_SIDEBAR_W, UI_BTN_H));

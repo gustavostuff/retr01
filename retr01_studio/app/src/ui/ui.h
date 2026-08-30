@@ -2,13 +2,13 @@
 #define retr01_STUDIO_UI_H
 
 #include "retr01_studio/metasprites.h"
-#include "retr01_studio/play.h"
 #include "retr01_studio/project.h"
+#include "retr01_emu/machine.h"
 
 #include <SDL.h>
 
-#define UI_LOGIC_W 640
-#define UI_LOGIC_H 360
+#define UI_LOGIC_BASE_W 640
+#define UI_LOGIC_BASE_H 360
 
 /* Phase 2 chrome: dark / darker gray, 8px grid. */
 #define UI_COL_BG_R 34
@@ -54,6 +54,8 @@
 #define UI_ACC_SPRITES 2
 #define UI_ACC_METASPRITES 3
 #define UI_ACC_ENTITIES 4
+/* When 1, all accordion sections stay expanded and headers do not collapse. */
+#define UI_ACCORDION_ALWAYS_EXPANDED 1
 
 #define UI_SPRITES_BODY_H 96
 #define UI_SPRITE_ROW_H 16
@@ -74,11 +76,6 @@
 #define UI_CATALOG_DRAG_SPRITE 1
 #define UI_CATALOG_DRAG_METASPRITE 2
 #define UI_CATALOG_DRAG_ENTITY 3
-
-#define UI_MAIN_W (UI_LOGIC_W - UI_SIDEBAR_W)
-#define UI_SCREEN_SCALE 2
-#define UI_SCREEN_W (R01_SCREEN_PX_W * UI_SCREEN_SCALE)
-#define UI_SCREEN_H (R01_SCREEN_PX_H * UI_SCREEN_SCALE)
 
 #define UI_MODE_ROW_H UI_BTN_H
 #define UI_MODE_RADIO 8
@@ -242,9 +239,20 @@ typedef struct UiTextEdit {
     int drag;   /* mouse-drag selecting */
 } UiTextEdit;
 
+/* Embedded emu Play session (export then cart-backed Host Play). */
+typedef struct UiPlaySession {
+    int active;  /* playing or booting (blocks editor) */
+    int booting; /* export + machine init pending after first boot frame */
+    int spin;
+    Uint32 last_tick;
+    R01eMachine *machine;
+    SDL_Texture *fb_tex;
+    char err[256];
+} UiPlaySession;
+
 typedef struct UiState {
     R01Project *project;
-    R01PlayState play;
+    UiPlaySession play;
     char project_path[R01_PATH_MAX];
     char toast[96];
     Uint32 toast_until;
@@ -254,7 +262,7 @@ typedef struct UiState {
     int tooltip_y;
     int tooltip_active;
     int scale;
-    Uint32 play_last_tick;
+    int logic_scale; /* 1 = 640x360, 2 = 1280x720 */
     Uint8 keys[512];
     int mouse_x;
     int mouse_y;
@@ -290,10 +298,40 @@ typedef struct UiState {
     int entities_scroll;
 } UiState;
 
+static inline int ui_logic_scale(const UiState *ui) {
+    int s = ui ? ui->logic_scale : 2;
+    return (s == 1) ? 1 : 2;
+}
+
+static inline int ui_logic_w(const UiState *ui) {
+    return UI_LOGIC_BASE_W * ui_logic_scale(ui);
+}
+
+static inline int ui_logic_h(const UiState *ui) {
+    return UI_LOGIC_BASE_H * ui_logic_scale(ui);
+}
+
+static inline int ui_screen_scale(const UiState *ui) {
+    return 2 * ui_logic_scale(ui);
+}
+
+static inline int ui_screen_w(const UiState *ui) {
+    return R01_SCREEN_PX_W * ui_screen_scale(ui);
+}
+
+static inline int ui_screen_h(const UiState *ui) {
+    return R01_SCREEN_PX_H * ui_screen_scale(ui);
+}
+
+static inline int ui_main_w(const UiState *ui) {
+    return ui_logic_w(ui) - UI_SIDEBAR_W;
+}
+
 int ui_init(UiState *ui);
 void ui_shutdown(UiState *ui);
 void ui_tick(UiState *ui);
 void ui_draw(UiState *ui, SDL_Renderer *r);
+void ui_toggle_logic_scale(UiState *ui);
 int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly);
 int ui_handle_drop_file(UiState *ui, const char *path, int lx, int ly);
 

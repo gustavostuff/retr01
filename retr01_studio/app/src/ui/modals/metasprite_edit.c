@@ -110,8 +110,8 @@ void draw_metasprite_modal(UiState *ui, SDL_Renderer *r) {
     char spr_label[16];
     const char *title = ui->metasprite_edit.is_new ? "Add metasprite" : "Edit metasprite";
 
-    metasprite_modal_layout(&lo);
-    ui_modal_scrim(r);
+    metasprite_modal_layout(ui, &lo);
+    ui_modal_scrim(r, ui);
     ui_modal_panel(r, lo.mx, lo.my, UI_ENTITY_MODAL_W, UI_ENTITY_MODAL_H, title);
 
     font_draw(r, lo.left_grid_x, lo.left_label_y + 4, "Sprite bank", 230, 230, 230);
@@ -165,7 +165,7 @@ int metasprite_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button)
     int idx, pal, col;
     int right = (button == SDL_BUTTON_RIGHT);
 
-    metasprite_modal_layout(&lo);
+    metasprite_modal_layout(ui, &lo);
 
     if (!down) {
         if (!right && ui->metasprite_edit.dragging == 4 &&
@@ -287,7 +287,7 @@ void metasprite_modal_drag(UiState *ui, int lx, int ly, Uint32 buttons) {
     if (!ui || !ui->metasprite_edit.open) {
         return;
     }
-    metasprite_modal_layout(&lo);
+    metasprite_modal_layout(ui, &lo);
     if (ui->text.drag && ui->text.field_id == 1) {
         ui_text_mouse_drag(ui, lx, lo.right_name_x, lo.right_name_w);
         return;

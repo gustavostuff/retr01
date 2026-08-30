@@ -15,6 +15,7 @@ int app_shell_init(AppShell *app, int headless);
 void app_shell_shutdown(AppShell *app);
 void app_shell_draw(AppShell *app);
 void app_shell_frame(AppShell *app);
+void app_shell_apply_logic_scale(AppShell *app);
 int app_shell_handle_event(AppShell *app, const SDL_Event *e);
 
 #endif

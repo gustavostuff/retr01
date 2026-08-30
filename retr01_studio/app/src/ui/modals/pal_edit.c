@@ -173,10 +173,10 @@ void pal_edit_open(UiState *ui) {
     ui->menu.open = 0;
 }
 
-int pal_modal_master_hit(int lx, int ly, int *out_col, int *out_row) {
+int pal_modal_master_hit(const UiState *ui, int lx, int ly, int *out_col, int *out_row) {
     PalModalLayout lo;
     int col, row;
-    pal_modal_layout(&lo);
+    pal_modal_layout(ui, &lo);
     if (lx < lo.master_x || ly < lo.master_y ||
         lx >= lo.master_x + UI_MASTER_COLS * UI_MASTER_CELL ||
         ly >= lo.master_y + UI_MASTER_ROWS * UI_MASTER_CELL) {
@@ -193,10 +193,10 @@ int pal_modal_master_hit(int lx, int ly, int *out_col, int *out_row) {
     return 1;
 }
 
-int pal_modal_plane_hit(int lx, int ly, int plane, int *out_pal, int *out_color) {
+int pal_modal_plane_hit(const UiState *ui, int lx, int ly, int plane, int *out_pal, int *out_color) {
     PalModalLayout lo;
     int x0, y0, pal, color;
-    pal_modal_layout(&lo);
+    pal_modal_layout(ui, &lo);
     x0 = plane ? lo.spr_x : lo.bg_x;
     y0 = plane ? lo.spr_y : lo.bg_y;
     if (lx < x0 || ly < y0 || lx >= x0 + R01_PALS_PER_ROW * UI_PAL_EDIT_CELL ||
@@ -238,7 +238,7 @@ int pal_modal_handle(UiState *ui, int lx, int ly, int down) {
     if (!down) {
         return 1;
     }
-    pal_modal_layout(&lo);
+    pal_modal_layout(ui, &lo);
     if (ui_modal_overlay_hit(lx, ly, lo.mx, lo.my, UI_PAL_MODAL_W, UI_PAL_MODAL_H)) {
         pal_edit_cancel(ui);
         return 1;
@@ -252,17 +252,17 @@ int pal_modal_handle(UiState *ui, int lx, int ly, int down) {
         pal_edit_cancel(ui);
         return 1;
     }
-    if (pal_modal_master_hit(lx, ly, &col, &row)) {
+    if (pal_modal_master_hit(ui, lx, ly, &col, &row)) {
         pal_edit_set_master(ui, row * UI_MASTER_COLS + col);
         return 1;
     }
-    if (pal_modal_plane_hit(lx, ly, 0, &pal, &color)) {
+    if (pal_modal_plane_hit(ui, lx, ly, 0, &pal, &color)) {
         ui->pal_edit.plane = 0;
         ui->pal_edit.pal = pal;
         ui->pal_edit.color = color;
         return 1;
     }
-    if (pal_modal_plane_hit(lx, ly, 1, &pal, &color)) {
+    if (pal_modal_plane_hit(ui, lx, ly, 1, &pal, &color)) {
         ui->pal_edit.plane = 1;
         ui->pal_edit.pal = pal;
         ui->pal_edit.color = color;

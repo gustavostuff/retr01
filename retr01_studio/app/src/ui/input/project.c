@@ -121,7 +121,7 @@ void ui_reset_after_project_load(UiState *ui) {
         return;
     }
     if (ui->play.active) {
-        r01_play_stop(&ui->play);
+        ui_play_stop(ui);
     }
     ui->tile_edit.open = 0;
     ui->pal_edit.open = 0;

@@ -160,10 +160,10 @@ void draw_tooltip(UiState *ui, SDL_Renderer *r) {
     th = line2[0] ? (UI_BTN_H * 2) : UI_BTN_H;
     x = ui->tooltip_x + UI_UNIT;
     y = ui->tooltip_y + UI_UNIT;
-    if (x + tw > UI_LOGIC_W - UI_UNIT) {
-        x = UI_LOGIC_W - UI_UNIT - tw;
+    if (x + tw > ui_logic_w(ui) - UI_UNIT) {
+        x = ui_logic_w(ui) - UI_UNIT - tw;
     }
-    if (y + th > UI_LOGIC_H - UI_UNIT) {
+    if (y + th > ui_logic_h(ui) - UI_UNIT) {
         y = ui->tooltip_y - th - 2;
     }
     if (x < UI_UNIT) {

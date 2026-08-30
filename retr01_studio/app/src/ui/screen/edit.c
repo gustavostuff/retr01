@@ -14,19 +14,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-void ui_toggle_play(UiState *ui) {
-    if (ui->play.active) {
-        r01_play_stop(&ui->play);
-    } else {
-        r01_project_begin_play(ui->project);
-        if (!r01_play_start(&ui->play, ui->project, ui->project_path)) {
-            ui_toast(ui, "no screens - create one first", 1);
-        } else {
-            ui->play_last_tick = SDL_GetTicks();
-        }
-    }
-}
-
 static void screen_refresh_tile(R01World *w, R01Screen *s) {
     if (w && s && s->present) {
         r01_screen_fill_pixels_from_bank(w, s);

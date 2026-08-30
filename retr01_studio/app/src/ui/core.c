@@ -87,6 +87,7 @@ int ui_init(UiState *ui) {
     ui->screen_mode = UI_SCREEN_MODE_SEL;
     ui->screen_layer = UI_SCREEN_LAYER_BG;
     ui->accordion_open = UI_ACC_WORLDS;
+    ui->logic_scale = 1;
     ui->menu.world_screen_idx = -1;
     ui->sel_instance = -1;
     return 0;
@@ -96,6 +97,7 @@ void ui_shutdown(UiState *ui) {
     if (!ui) {
         return;
     }
+    ui_play_stop(ui);
     free(ui->project);
     ui->project = NULL;
     free(g_radio_rgba);
@@ -122,28 +124,40 @@ void ui_shutdown(UiState *ui) {
 }
 
 void ui_tick(UiState *ui) {
-    int dx = 0, dy = 0;
-    if (!ui || !ui->play.active) {
+    uint8_t pad = 0;
+    if (!ui || !ui->play.active || ui->play.booting || !ui->play.machine) {
+        if (ui && ui->play.booting) {
+            ui->play.spin++;
+        }
         return;
     }
     {
         Uint32 now = SDL_GetTicks();
-        if (now - ui->play_last_tick < 16u) {
+        if (now - ui->play.last_tick < 16u) {
             return;
         }
-        ui->play_last_tick = now;
+        ui->play.last_tick = now;
     }
-    if (ui->keys[SDL_SCANCODE_W] || ui->keys[SDL_SCANCODE_UP]) {
-        dy = -1;
+    if (ui->keys[SDL_SCANCODE_RIGHT] || ui->keys[SDL_SCANCODE_D]) {
+        pad |= R01E_PAD_RIGHT;
     }
-    if (ui->keys[SDL_SCANCODE_S] || ui->keys[SDL_SCANCODE_DOWN]) {
-        dy = 1;
+    if (ui->keys[SDL_SCANCODE_LEFT] || ui->keys[SDL_SCANCODE_A]) {
+        pad |= R01E_PAD_LEFT;
     }
-    if (ui->keys[SDL_SCANCODE_A] || ui->keys[SDL_SCANCODE_LEFT]) {
-        dx = -1;
+    if (ui->keys[SDL_SCANCODE_DOWN] || ui->keys[SDL_SCANCODE_S]) {
+        pad |= R01E_PAD_DOWN;
     }
-    if (ui->keys[SDL_SCANCODE_D] || ui->keys[SDL_SCANCODE_RIGHT]) {
-        dx = 1;
+    if (ui->keys[SDL_SCANCODE_UP] || ui->keys[SDL_SCANCODE_W]) {
+        pad |= R01E_PAD_UP;
     }
-    r01_play_tick(&ui->play, ui->project, dx, dy);
+    r01e_machine_set_pad(ui->play.machine, 0, pad);
+    (void)r01e_machine_frame(ui->play.machine);
+}
+
+void ui_toggle_logic_scale(UiState *ui) {
+    if (!ui) {
+        return;
+    }
+    ui->logic_scale = (ui->logic_scale == 1) ? 2 : 1;
+    ui_toast(ui, ui->logic_scale == 2 ? "1280x720" : "640x360", 0);
 }

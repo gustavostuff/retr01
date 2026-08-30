@@ -8,9 +8,9 @@
 #include "retr01_studio/metasprites.h"
 #include "retr01_studio/json_io.h"
 #include "retr01_studio/palette.h"
-#include "retr01_studio/play.h"
 #include "retr01_studio/project.h"
 #include "retr01_studio/sprites.h"
+#include "retr01_emu/types.h"
 
 #include <png.h>
 #include <stdio.h>
@@ -126,7 +126,7 @@ static void draw_entity_at_screen(UiState *ui, SDL_Renderer *r, const R01World *
         draw_pt = *pt;
         draw_pt.flip_h = fh;
         draw_pt.flip_v = fv;
-        draw_spr_tile_px(ui, r, w, &draw_pt, px, py, ox, oy, UI_SCREEN_SCALE, 1);
+        draw_spr_tile_px(ui, r, w, &draw_pt, px, py, ox, oy, ui_screen_scale(ui), 1);
         if (px < min_x) {
             min_x = px;
         }
@@ -160,8 +160,8 @@ static void draw_entity_at_screen(UiState *ui, SDL_Renderer *r, const R01World *
             sel_h = R01_SCREEN_PX_H - sel_y;
         }
         if (sel_w > 0 && sel_h > 0) {
-            draw_rect(r, ox + sel_x * UI_SCREEN_SCALE, oy + sel_y * UI_SCREEN_SCALE, sel_w * UI_SCREEN_SCALE,
-                      sel_h * UI_SCREEN_SCALE, 255, 255, 255);
+            draw_rect(r, ox + sel_x * ui_screen_scale(ui), oy + sel_y * ui_screen_scale(ui),
+                      sel_w * ui_screen_scale(ui), sel_h * ui_screen_scale(ui), 255, 255, 255);
         }
     }
 }
@@ -242,8 +242,8 @@ int instance_hit_on_screen(const UiState *ui, int lx, int ly, int *out_inst) {
     return 0;
 }
 
-static void set_viewport_clip(SDL_Renderer *r, int ox, int oy) {
-    SDL_Rect clip = {ox, oy, UI_SCREEN_W, UI_SCREEN_H};
+static void set_viewport_clip(SDL_Renderer *r, const UiState *ui, int ox, int oy) {
+    SDL_Rect clip = {ox, oy, ui_screen_w(ui), ui_screen_h(ui)};
     SDL_RenderSetClipRect(r, &clip);
 }
 
@@ -259,10 +259,10 @@ static void draw_warp_markers(UiState *ui, SDL_Renderer *r, const R01World *w, c
         if (!we->present || we->screen_col != s->col || we->screen_row != s->row) {
             continue;
         }
-        tile.x = ox + we->tile_col * 8 * UI_SCREEN_SCALE;
-        tile.y = oy + we->tile_row * 8 * UI_SCREEN_SCALE;
-        tile.w = 8 * UI_SCREEN_SCALE;
-        tile.h = 8 * UI_SCREEN_SCALE;
+        tile.x = ox + we->tile_col * 8 * ui_screen_scale(ui);
+        tile.y = oy + we->tile_row * 8 * ui_screen_scale(ui);
+        tile.w = 8 * ui_screen_scale(ui);
+        tile.h = 8 * ui_screen_scale(ui);
         SDL_SetRenderDrawColor(r, 80, 220, 120, 255);
         SDL_RenderDrawRect(r, &tile);
         SDL_RenderDrawRect(r, &tile);
@@ -273,10 +273,10 @@ static void draw_warp_markers(UiState *ui, SDL_Renderer *r, const R01World *w, c
         if (!wx->present || wx->dest_screen_col != s->col || wx->dest_screen_row != s->row) {
             continue;
         }
-        tile.x = ox + wx->dest_tile_col * 8 * UI_SCREEN_SCALE;
-        tile.y = oy + wx->dest_tile_row * 8 * UI_SCREEN_SCALE;
-        tile.w = 8 * UI_SCREEN_SCALE;
-        tile.h = 8 * UI_SCREEN_SCALE;
+        tile.x = ox + wx->dest_tile_col * 8 * ui_screen_scale(ui);
+        tile.y = oy + wx->dest_tile_row * 8 * ui_screen_scale(ui);
+        tile.w = 8 * ui_screen_scale(ui);
+        tile.h = 8 * ui_screen_scale(ui);
         SDL_SetRenderDrawColor(r, 120, 160, 255, 255);
         SDL_RenderDrawRect(r, &tile);
         SDL_RenderDrawRect(r, &tile);
@@ -288,9 +288,9 @@ void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s) {
     int ox, oy, y, x;
     R01World *w = r01_project_active_world(ui->project);
     screen_origin(ui, &ox, &oy);
-    fill_rect(r, ox, oy, UI_SCREEN_W, UI_SCREEN_H, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
+    fill_rect(r, ox, oy, ui_screen_w(ui), ui_screen_h(ui), UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
     if (!s || !w) {
-        font_draw_centered(r, ox, oy, UI_SCREEN_W, UI_SCREEN_H, "No screen", 160, 160, 170);
+        font_draw_centered(r, ox, oy, ui_screen_w(ui), ui_screen_h(ui), "No screen", 160, 160, 170);
         return;
     }
     for (y = 0; y < R01_SCREEN_PX_H; y++) {
@@ -298,15 +298,15 @@ void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s) {
             uint8_t cr, cg, cb;
             SDL_Rect px;
             r01_screen_pixel_rgb(ui->project, w, s, x, y, &cr, &cg, &cb);
-            px.x = ox + x * UI_SCREEN_SCALE;
-            px.y = oy + y * UI_SCREEN_SCALE;
-            px.w = UI_SCREEN_SCALE;
-            px.h = UI_SCREEN_SCALE;
+            px.x = ox + x * ui_screen_scale(ui);
+            px.y = oy + y * ui_screen_scale(ui);
+            px.w = ui_screen_scale(ui);
+            px.h = ui_screen_scale(ui);
             SDL_SetRenderDrawColor(r, cr, cg, cb, 255);
             SDL_RenderFillRect(r, &px);
         }
     }
-    set_viewport_clip(r, ox, oy);
+    set_viewport_clip(r, ui, ox, oy);
     draw_instances_on_screen(ui, r, w, s, ox, oy);
     draw_warp_markers(ui, r, w, s, ox, oy);
     SDL_RenderSetClipRect(r, NULL);
@@ -314,96 +314,45 @@ void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s) {
         int min_x, min_y, max_x, max_y;
         int sx, sy, sw, sh;
         screen_sel_bounds(ui, &min_x, &min_y, &max_x, &max_y);
-        sx = ox + min_x * 8 * UI_SCREEN_SCALE;
-        sy = oy + min_y * 8 * UI_SCREEN_SCALE;
-        sw = (max_x - min_x + 1) * 8 * UI_SCREEN_SCALE;
-        sh = (max_y - min_y + 1) * 8 * UI_SCREEN_SCALE;
+        sx = ox + min_x * 8 * ui_screen_scale(ui);
+        sy = oy + min_y * 8 * ui_screen_scale(ui);
+        sw = (max_x - min_x + 1) * 8 * ui_screen_scale(ui);
+        sh = (max_y - min_y + 1) * 8 * ui_screen_scale(ui);
         draw_rect(r, sx, sy, sw, sh, 255, 255, 255);
     }
 }
 
-static void draw_oam_sprites(UiState *ui, SDL_Renderer *r, int ox, int oy) {
-    R01OamEntry oam[R01_OAM_MAX];
-    const R01World *w = r01_project_active_world_const(ui->project);
-    int n = r01_play_build_oam(ui->project, &ui->play, oam, R01_OAM_MAX);
-    int i;
-    if (!w) {
+static void draw_play_boot(UiState *ui, SDL_Renderer *r, int ox, int oy) {
+    static const char spin_chars[] = {'|', '/', '-', '\\'};
+    char line[48];
+    char spin;
+    fill_rect(r, ox, oy, ui_screen_w(ui), ui_screen_h(ui), 0, 0, 0);
+    spin = spin_chars[ui->play.spin & 3];
+    snprintf(line, sizeof(line), "Booting console... %c", spin);
+    font_draw_centered(r, ox, oy + ui_screen_h(ui) / 2 - UI_BTN_H / 2, ui_screen_w(ui), UI_BTN_H, line, 200, 200, 200);
+}
+
+static void draw_play_game(UiState *ui, SDL_Renderer *r, int ox, int oy) {
+    SDL_Rect dst;
+    if (!ui->play.machine || !ui->play.fb_tex) {
         return;
     }
-    for (i = 0; i < n; i++) {
-        R01EntityPart pt;
-        memset(&pt, 0, sizeof(pt));
-        pt.bank = oam[i].bank;
-        pt.tile_id = oam[i].tile_id;
-        pt.pal = oam[i].pal;
-        pt.flip_h = oam[i].flip_h;
-        pt.flip_v = oam[i].flip_v;
-        if (r01_oam_tile_off_screen(oam[i].x, oam[i].y)) {
-            continue;
-        }
-        /* Stub player only (leading OAM when no marked entity). Do not paint every
-         * bank0/tile1 part solid -- authored CHR may use tile 1. */
-        if (i == 0 && r01_world_player_entity(w) < 0 && oam[i].bank == 0 &&
-            oam[i].tile_id == R01_SPR_PLAYER_TILE_ID) {
-            int pcx, pcy;
-            uint8_t pr, pg, pb;
-            r01_project_player_rgb(ui->project, &pr, &pg, &pb);
-            for (pcy = 0; pcy < R01_PLAY_PLAYER_H; pcy++) {
-                for (pcx = 0; pcx < R01_PLAY_PLAYER_W; pcx++) {
-                    int vx = oam[i].x + pcx;
-                    int vy = oam[i].y + pcy;
-                    SDL_Rect px;
-                    if (vx < 0 || vy < 0 || vx >= R01_SCREEN_PX_W || vy >= R01_SCREEN_PX_H) {
-                        continue;
-                    }
-                    px.x = ox + vx * UI_SCREEN_SCALE;
-                    px.y = oy + vy * UI_SCREEN_SCALE;
-                    px.w = UI_SCREEN_SCALE;
-                    px.h = UI_SCREEN_SCALE;
-                    SDL_SetRenderDrawColor(r, pr, pg, pb, 255);
-                    SDL_RenderFillRect(r, &px);
-                }
-            }
-            continue;
-        }
-        draw_spr_tile_px(ui, r, w, &pt, oam[i].x, oam[i].y, ox, oy, UI_SCREEN_SCALE, 1);
-    }
+    SDL_UpdateTexture(ui->play.fb_tex, NULL, ui->play.machine->video.fb, R01E_VISIBLE_W * 3);
+    dst.x = ox;
+    dst.y = oy;
+    dst.w = ui_screen_w(ui);
+    dst.h = ui_screen_h(ui);
+    SDL_RenderCopy(r, ui->play.fb_tex, NULL, &dst);
 }
 
 void draw_play_view(UiState *ui, SDL_Renderer *r) {
-    int ox, oy, vy, vx;
+    int ox, oy;
+
     screen_origin(ui, &ox, &oy);
-    for (vy = 0; vy < R01_SCREEN_PX_H; vy++) {
-        for (vx = 0; vx < R01_SCREEN_PX_W; vx++) {
-            uint8_t cr = 0, cg = 0, cb = 0;
-            SDL_Rect px;
-            r01_play_sample_bg(ui->project, &ui->play, vx, vy, &cr, &cg, &cb);
-            px.x = ox + vx * UI_SCREEN_SCALE;
-            px.y = oy + vy * UI_SCREEN_SCALE;
-            px.w = UI_SCREEN_SCALE;
-            px.h = UI_SCREEN_SCALE;
-            SDL_SetRenderDrawColor(r, cr, cg, cb, 255);
-            SDL_RenderFillRect(r, &px);
-        }
-    }
-    set_viewport_clip(r, ox, oy);
-    draw_oam_sprites(ui, r, ox, oy);
-    SDL_RenderSetClipRect(r, NULL);
-    {
-        int fade = r01_play_fade_level(&ui->play);
-        if (fade > 0) {
-            SDL_Rect overlay = {ox, oy, UI_SCREEN_W, UI_SCREEN_H};
-            int c = r01_play_fade_color(&ui->play);
-            Uint8 alpha = (Uint8)((fade * 255) / 255);
-            if (c == R01_FADE_WHITE) {
-                SDL_SetRenderDrawColor(r, 255, 255, 255, alpha);
-            } else {
-                SDL_SetRenderDrawColor(r, 0, 0, 0, alpha);
-            }
-            SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
-            SDL_RenderFillRect(r, &overlay);
-            SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
-        }
+    if (ui->play.booting || !ui->play.machine) {
+        draw_play_boot(ui, r, ox, oy);
+    } else {
+        draw_play_game(ui, r, ox, oy);
     }
 }
 

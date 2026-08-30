@@ -128,6 +128,7 @@ void draw_chess_grid(SDL_Renderer *r, int x0, int y0, int cols, int rows, int ce
 
 /* ui/layout.c */
 void ui_editor_layout(const UiState *ui, int *screen_x, int *screen_y, int *layer_x, int *mode_x, int *mode_y0);
+void ui_preview_size(const UiState *ui, int *out_w, int *out_h);
 int screen_mode_hit(const UiState *ui, int lx, int ly, int *out_row);
 int screen_mode_row_hit(const UiState *ui, int lx, int ly, int row);
 int screen_layer_hit(const UiState *ui, int lx, int ly, int *out_layer);
@@ -144,14 +145,14 @@ int world_btn_hit(const UiState *ui, int lx, int ly, int *out_wi);
 int accordion_header_hit(const UiState *ui, int lx, int ly, int *out_section);
 void accordion_toggle(UiState *ui, int section);
 void draw_accordion_header(SDL_Renderer *r, int y, const char *title, int open, int hover);
-void tile_modal_layout(TileModalLayout *lo);
-void pal_modal_layout(PalModalLayout *lo);
-void sprite_modal_layout(SpriteModalLayout *lo);
-void metasprite_modal_layout(MetaspriteModalLayout *lo);
-void entity_modal_layout(EntityModalLayout *lo);
+void tile_modal_layout(const UiState *ui, TileModalLayout *lo);
+void pal_modal_layout(const UiState *ui, PalModalLayout *lo);
+void sprite_modal_layout(const UiState *ui, SpriteModalLayout *lo);
+void metasprite_modal_layout(const UiState *ui, MetaspriteModalLayout *lo);
+void entity_modal_layout(const UiState *ui, EntityModalLayout *lo);
 int play_btn_w(const UiState *ui);
 int play_btn_x(const UiState *ui);
-int play_btn_y(void);
+int play_btn_y(const UiState *ui);
 int play_button_hit(const UiState *ui, int lx, int ly);
 int sprites_list_hit(const UiState *ui, int lx, int ly, int *out_catalog_idx);
 int sprites_add_hit(const UiState *ui, int lx, int ly);
@@ -169,8 +170,8 @@ void pal_edit_save(UiState *ui);
 void pal_edit_open(UiState *ui);
 void pal_edit_set_row(UiState *ui, int row, int commit_default);
 void pal_edit_nudge_master(UiState *ui, int wheel_y, int shift);
-int pal_modal_master_hit(int lx, int ly, int *out_col, int *out_row);
-int pal_modal_plane_hit(int lx, int ly, int plane, int *out_pal, int *out_color);
+int pal_modal_master_hit(const UiState *ui, int lx, int ly, int *out_col, int *out_row);
+int pal_modal_plane_hit(const UiState *ui, int lx, int ly, int plane, int *out_pal, int *out_color);
 int pal_modal_handle(UiState *ui, int lx, int ly, int down);
 void draw_pal_modal(UiState *ui, SDL_Renderer *r);
 
@@ -203,6 +204,9 @@ void ui_flood_fill(UiState *ui, int tx, int ty);
 
 /* ui/screen/edit.c */
 void ui_toggle_play(UiState *ui);
+void ui_play_stop(UiState *ui);
+void ui_play_boot_finish(UiState *ui, SDL_Renderer *ren);
+int ui_play_screen_mark(const UiState *ui);
 void screen_set_sel_bank(UiState *ui, int bank);
 void screen_set_sel_pal(UiState *ui, int pal);
 void screen_toggle_sel_flag(UiState *ui, uint8_t flag);

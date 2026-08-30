@@ -25,7 +25,7 @@ void draw_screen_mode(UiState *ui, SDL_Renderer *r) {
     }
 
     for (row = 0; row < 2; row++) {
-        int y = my0 + row * UI_MODE_ROW_H;
+        int y = my0 + (2 + row) * UI_MODE_ROW_H;
         int selected = ui->screen_mode == row;
         int hover = screen_mode_row_hit(ui, ui->mouse_x, ui->mouse_y, row);
         int dim = ui->screen_layer != UI_SCREEN_LAYER_BG;
@@ -45,28 +45,28 @@ void ui_update_cursor(const UiState *ui) {
 
     if (ui->pal_edit.open) {
         PalModalLayout lo;
-        pal_modal_layout(&lo);
-        hand = pal_modal_master_hit(lx, ly, NULL, NULL) || pal_modal_plane_hit(lx, ly, 0, NULL, NULL) ||
-               pal_modal_plane_hit(lx, ly, 1, NULL, NULL) ||
+        pal_modal_layout(ui, &lo);
+        hand = pal_modal_master_hit(ui, lx, ly, NULL, NULL) || pal_modal_plane_hit(ui, lx, ly, 0, NULL, NULL) ||
+               pal_modal_plane_hit(ui, lx, ly, 1, NULL, NULL) ||
                point_in_rect(lx, ly, lo.master_x, lo.btn_y, lo.save_w, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.master_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);
     } else if (ui->tile_edit.open) {
         TileModalLayout lo;
-        tile_modal_layout(&lo);
+        tile_modal_layout(ui, &lo);
         hand = point_in_rect(lx, ly, lo.pal_x, lo.pal_y, 4 * UI_PAL_SWATCH, 4 * UI_PAL_SWATCH) ||
                point_in_rect(lx, ly, lo.canvas_x, lo.canvas_y, UI_TILE_CANVAS, UI_TILE_CANVAS) ||
                point_in_rect(lx, ly, lo.pal_x, lo.btn_y, lo.save_w, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.pal_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);
     } else if (ui->sprite_edit.open) {
         SpriteModalLayout lo;
-        sprite_modal_layout(&lo);
+        sprite_modal_layout(ui, &lo);
         hand = point_in_rect(lx, ly, lo.pal_x, lo.pal_y, 4 * UI_PAL_SWATCH, 4 * UI_PAL_SWATCH) ||
                point_in_rect(lx, ly, lo.canvas_x, lo.canvas_y, UI_TILE_CANVAS, UI_TILE_CANVAS) ||
                point_in_rect(lx, ly, lo.pal_x, lo.btn_y, lo.save_w, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.pal_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);
     } else if (ui->metasprite_edit.open) {
         MetaspriteModalLayout lo;
-        metasprite_modal_layout(&lo);
+        metasprite_modal_layout(ui, &lo);
         hand = point_in_rect(lx, ly, lo.left_grid_x, lo.left_grid_y, UI_ENTITY_BANK_GRID, UI_ENTITY_BANK_GRID) ||
                point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE) ||
                point_in_rect(lx, ly, lo.pal_x, lo.pal_y, 4 * UI_PAL_SWATCH, 4 * UI_PAL_SWATCH) ||
@@ -74,7 +74,7 @@ void ui_update_cursor(const UiState *ui) {
                point_in_rect(lx, ly, lo.left_grid_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);
     } else if (ui->entity_edit.open) {
         EntityModalLayout lo;
-        entity_modal_layout(&lo);
+        entity_modal_layout(ui, &lo);
         hand = point_in_rect(lx, ly, lo.left_list_x, lo.left_list_y, UI_ENTITY_BANK_GRID, lo.left_list_h) ||
                point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE) ||
                point_in_rect(lx, ly, lo.pal_x, lo.pal_y, 4 * UI_PAL_SWATCH, 4 * UI_PAL_SWATCH) ||

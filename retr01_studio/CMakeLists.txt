@@ -5,6 +5,16 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 add_compile_options(-Wall -Wextra -Wpedantic)
 
+set(R01_REPO_ROOT "${CMAKE_SOURCE_DIR}/.." CACHE PATH "Retr01 repo root")
+set(R01_OUTPUT_DIR "${R01_REPO_ROOT}/output")
+set(R01_TEST_CART "${R01_OUTPUT_DIR}/test.retr01")
+set(R01_TEST_PROJECT "${R01_OUTPUT_DIR}/test.r01proj")
+
+# Shared emu core for Studio Play (standalone ./emu still built from retr01_emu).
+if(NOT TARGET retr01_emu_core)
+  add_subdirectory(${R01_REPO_ROOT}/retr01_emu ${CMAKE_BINARY_DIR}/retr01_emu EXCLUDE_FROM_ALL)
+endif()
+
 add_library(retr01_studio_core
   core/src/project.c
   core/src/chr_pack.c
@@ -22,18 +32,13 @@ add_library(retr01_studio_core
   core/src/warps.c
   core/src/game_runtime.c
   core/src/player_anim.c
-  ${CMAKE_SOURCE_DIR}/../common/r01_play_camera.c
-  ${CMAKE_SOURCE_DIR}/../common/r01_custom_logic_scan.c
 )
 target_include_directories(retr01_studio_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include
-  ${CMAKE_SOURCE_DIR}/../common
+  ${R01_REPO_ROOT}/common
 )
-set(R01_REPO_ROOT "${CMAKE_SOURCE_DIR}/.." CACHE PATH "Retr01 repo root")
-set(R01_OUTPUT_DIR "${R01_REPO_ROOT}/output")
-set(R01_TEST_CART "${R01_OUTPUT_DIR}/test.retr01")
-set(R01_TEST_PROJECT "${R01_OUTPUT_DIR}/test.r01proj")
 target_compile_definitions(retr01_studio_core PUBLIC "R01_REPO_ROOT=\"${R01_REPO_ROOT}\"")
+target_link_libraries(retr01_studio_core PUBLIC r01_play_common)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBPNG REQUIRED IMPORTED_TARGET libpng)
@@ -88,6 +93,7 @@ add_library(retr01_studio_app
   app/src/ui/widgets/checkbox.c
   app/src/ui/widgets/palette_grid.c
   app/src/ui/widgets/button.c
+  app/src/ui/widgets/tabs.c
   app/src/ui/widgets/modal.c
   app/src/ui/widgets/textfield.c
   app/src/ui/widgets/compose.c
@@ -99,6 +105,7 @@ add_library(retr01_studio_app
   app/src/ui/screen/paint.c
   app/src/ui/screen/edit.c
   app/src/ui/screen/draw.c
+  app/src/ui/screen/play_emu.c
   app/src/ui/input/event.c
   app/src/ui/input/project.c
   app/src/ui/input/world.c
@@ -113,8 +120,9 @@ add_library(retr01_studio_app
 )
 target_include_directories(retr01_studio_app PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/app/src
+  ${R01_REPO_ROOT}/retr01_emu/include
 )
-target_link_libraries(retr01_studio_app PUBLIC retr01_studio_core PkgConfig::SDL2 PkgConfig::FREETYPE PkgConfig::LIBPNG)
+target_link_libraries(retr01_studio_app PUBLIC retr01_studio_core retr01_emu_core PkgConfig::SDL2 PkgConfig::FREETYPE PkgConfig::LIBPNG)
 find_package(X11)
 if(X11_FOUND)
   target_compile_definitions(retr01_studio_app PRIVATE R01_HAS_X11=1)

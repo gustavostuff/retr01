@@ -128,8 +128,8 @@ void draw_sprite_modal(UiState *ui, SDL_Renderer *r) {
     int sy, sx;
     const char *title = ui->sprite_edit.is_new ? "Create sprite" : "Edit sprite";
 
-    sprite_modal_layout(&lo);
-    ui_modal_scrim(r);
+    sprite_modal_layout(ui, &lo);
+    ui_modal_scrim(r, ui);
     ui_modal_panel(r, lo.mx, lo.my, UI_MODAL_W, UI_MODAL_H, title);
 
     draw_label(r, lo.pal_x, lo.pal_label_y, "Palette/color");
@@ -154,7 +154,7 @@ void draw_sprite_modal(UiState *ui, SDL_Renderer *r) {
 int sprite_modal_handle(UiState *ui, int lx, int ly, int down) {
     SpriteModalLayout lo;
     int pal, col;
-    sprite_modal_layout(&lo);
+    sprite_modal_layout(ui, &lo);
 
     if (!down) {
         return 1;

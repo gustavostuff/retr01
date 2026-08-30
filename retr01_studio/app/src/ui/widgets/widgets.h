@@ -25,7 +25,21 @@ int ui_palette_grid_hit(int lx, int ly, int pal_x, int pal_y, int *out_pal, int 
 
 void ui_button_draw(SDL_Renderer *r, int x, int y, int w, const char *text, int active, int hover);
 
-void ui_modal_scrim(SDL_Renderer *r);
+#define UI_TABS_MAX 16
+
+typedef struct UiTabsLayout {
+    int x, y;
+    int tab_w;
+    int tab_h;
+    int count;
+    const char *label[UI_TABS_MAX];
+} UiTabsLayout;
+
+void ui_tabs_layout(const char *const *labels, int count, int x, int y, int tab_w, UiTabsLayout *out);
+void ui_tabs_draw(SDL_Renderer *r, const UiTabsLayout *lo, int selected, int mouse_x, int mouse_y);
+int ui_tabs_hit(const UiTabsLayout *lo, int lx, int ly, int *out_idx);
+
+void ui_modal_scrim(SDL_Renderer *r, const UiState *ui);
 void ui_modal_panel(SDL_Renderer *r, int mx, int my, int w, int h, const char *title);
 void ui_modal_save_cancel(SDL_Renderer *r, int x, int y, int save_w, int cancel_w, int mouse_x, int mouse_y);
 int ui_modal_save_hit(int lx, int ly, int x, int y, int save_w);

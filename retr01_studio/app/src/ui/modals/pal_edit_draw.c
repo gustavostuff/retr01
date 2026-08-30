@@ -53,9 +53,9 @@ void draw_pal_modal(UiState *ui, SDL_Renderer *r) {
     char row_label[24];
     int save_hover, cancel_hover;
 
-    pal_modal_layout(&lo);
+    pal_modal_layout(ui, &lo);
 
-    ui_modal_scrim(r);
+    ui_modal_scrim(r, ui);
     ui_modal_panel(r, lo.mx, lo.my, UI_PAL_MODAL_W, UI_PAL_MODAL_H, "Global palettes");
 
     draw_label(r, lo.master_x, lo.my + UI_MODAL_BODY_Y, "Master 16x4");

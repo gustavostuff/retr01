@@ -46,12 +46,12 @@ static int menu_panel_w(char items[UI_MENU_MAX][32], int count, uint8_t *item_su
     return w;
 }
 
-static void menu_clamp_xy(int *x, int *y, int w, int h) {
-    if (*x + w > UI_LOGIC_W) {
-        *x = UI_LOGIC_W - w;
+static void menu_clamp_xy(const UiState *ui, int *x, int *y, int w, int h) {
+    if (*x + w > ui_logic_w(ui)) {
+        *x = ui_logic_w(ui) - w;
     }
-    if (*y + h > UI_LOGIC_H) {
-        *y = UI_LOGIC_H - h;
+    if (*y + h > ui_logic_h(ui)) {
+        *y = ui_logic_h(ui) - h;
     }
     if (*x < 0) {
         *x = 0;
@@ -63,10 +63,10 @@ static void menu_clamp_xy(int *x, int *y, int w, int h) {
 
 /* Prefer parking the menu over the main canvas when opened from the sidebar. */
 static void menu_place_root(UiState *ui) {
-    menu_clamp_xy(&ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
+    menu_clamp_xy(ui, &ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
     if (ui->menu.root_x < UI_SIDEBAR_W) {
         ui->menu.root_x = UI_SIDEBAR_W;
-        menu_clamp_xy(&ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
+        menu_clamp_xy(ui, &ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
     }
 }
 
@@ -117,11 +117,11 @@ static void menu_place_submenu(UiState *ui, int root_item) {
     sub_h = ui->menu.sub_count * UI_BTN_H;
     ui->menu.sub_x = ui->menu.root_x + ui->menu.root_w;
     ui->menu.sub_y = ui->menu.root_y + root_item * UI_BTN_H;
-    if (ui->menu.sub_x + ui->menu.sub_w > UI_LOGIC_W) {
+    if (ui->menu.sub_x + ui->menu.sub_w > ui_logic_w(ui)) {
         ui->menu.sub_x = ui->menu.root_x - ui->menu.sub_w;
     }
-    if (ui->menu.sub_y + sub_h > UI_LOGIC_H) {
-        ui->menu.sub_y = UI_LOGIC_H - sub_h;
+    if (ui->menu.sub_y + sub_h > ui_logic_h(ui)) {
+        ui->menu.sub_y = ui_logic_h(ui) - sub_h;
     }
     if (ui->menu.sub_y < 0) {
         ui->menu.sub_y = 0;

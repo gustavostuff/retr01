@@ -9,6 +9,8 @@
 #include "retr01_studio/metasprites.h"
 #include "retr01_studio/palette.h"
 #include "retr01_studio/project.h"
+#include "retr01_emu/play.h"
+#include "retr01_emu/video.h"
 
 #include <png.h>
 #include <stdio.h>
@@ -160,6 +162,9 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             if (e->key.keysym.sym == SDLK_f) {
                 return 2;
             }
+            if ((e->key.keysym.mod & KMOD_SHIFT) && e->key.keysym.sym == SDLK_r) {
+                return 4;
+            }
         }
         if (e->key.keysym.sym == SDLK_ESCAPE && ui->menu.open) {
             if (ui->menu.submenu != UI_MENU_SUB_NONE) {
@@ -206,12 +211,18 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             return 1;
         }
         if (ui->play.active) {
-            if (e->key.keysym.sym == SDLK_x) {
-                r01_play_button(&ui->play, ui->project, R01_PLAY_BTN_X);
+            if (e->key.keysym.sym == SDLK_x && ui->play.machine && !ui->play.booting) {
+                r01e_machine_set_pad(ui->play.machine, 0, R01E_PAD_X);
+                r01e_play_tick(ui->play.machine);
+                r01e_video_render_frame(ui->play.machine);
+                r01e_machine_set_pad(ui->play.machine, 0, 0);
                 return 1;
             }
-            if (e->key.keysym.sym == SDLK_y) {
-                r01_play_button(&ui->play, ui->project, R01_PLAY_BTN_Y);
+            if (e->key.keysym.sym == SDLK_y && ui->play.machine && !ui->play.booting) {
+                r01e_machine_set_pad(ui->play.machine, 0, R01E_PAD_Y);
+                r01e_play_tick(ui->play.machine);
+                r01e_video_render_frame(ui->play.machine);
+                r01e_machine_set_pad(ui->play.machine, 0, 0);
                 return 1;
             }
         }
@@ -588,7 +599,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
     if (e->type == SDL_MOUSEWHEEL && ui->entity_edit.open) {
         EntityModalLayout lo;
         const R01World *w = r01_project_active_world_const(ui->project);
-        entity_modal_layout(&lo);
+        entity_modal_layout(ui, &lo);
         if (point_in_rect(lx, ly, lo.left_list_x, lo.left_list_y, lo.right_grid_x - lo.left_list_x - UI_UNIT,
                           lo.left_list_h)) {
             int vis = lo.left_list_h / UI_SPRITE_ROW_H;

@@ -12,14 +12,13 @@ static const uint8_t play_present[8] = {7, 7, 7, 4, 12, 0, 0, 0};
 static const uint8_t play_spawn_col = 1;
 static const uint8_t play_spawn_row = 1;
 static const int player_entity = 0;
-static const R01InstRec entity_insts[3] = {
-    {1, 160, 206},
-    {2, 159, 172},
-    {0, 193, 181}
+static const R01InstRec entity_insts[2] = {
+    {1, 184, 152},
+    {0, 216, 199}
 };
-static const int entity_inst_count = 3;
-static const int player_inst_x = 193;
-static const int player_inst_y = 181;
+static const int entity_inst_count = 2;
+static const int player_inst_x = 216;
+static const int player_inst_y = 199;
 static const int player_hit_x = 3;
 static const int player_hit_y = 8;
 static const int player_hit_w = 8;

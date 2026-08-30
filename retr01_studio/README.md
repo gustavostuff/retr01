@@ -7,7 +7,7 @@ Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. Stu
 
 Authoring state lives in `output/<stem>.r01proj` (JSON). **`custom_logic.c`** is created on first export and never overwritten. Hardware contract: [`docs/02`](../docs/02_graphics_worlds_memory.md).
 
-There is **no** Studio-only host Play path. Preview always goes through export then shared emu core ([`retr01_emu/`](../retr01_emu/README.md)). **Sim is not involved.** Code catch-up is pending. Locked UX: [`docs/04`](../docs/04_costs_and_open_questions.md) Q22 (shared **tabs** UI for Worlds + Play Emu/Debug).
+There is **no** Studio-only host Play path. Preview always goes through export then shared emu core ([`retr01_emu/`](../retr01_emu/README.md)). **Sim is not involved.** Locked UX: [`docs/04`](../docs/04_costs_and_open_questions.md) Q22 (shared **tabs** UI for Worlds + Play Emu/Debug).
 
 **Stack:** C11 + SDL2 + FreeType (Proggy Tiny), `libretr01_studio_core` + thin shell + shared `retr01_emu` core for Play.
 
@@ -15,24 +15,21 @@ There is **no** Studio-only host Play path. Preview always goes through export t
 
 ## Authoring (UI)
 
-Fixed **640x360** logical canvas, **8px** grid, dark gray chrome. Buttons/labels **16px** tall. Proggy Tiny (`assets/proggy-tiny.ttf`).
+Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Window present size stays **1280x720** (640x360 is drawn **2x**, nearest). **8px** grid, dark gray chrome. Buttons/labels **16px** tall. Proggy Tiny (`assets/proggy-tiny.ttf`). Screen / Play previews scale with canvas (sharp nearest). Sidebar accordion sections stay expanded (`UI_ACCORDION_ALWAYS_EXPANDED`).
 
 ```text
 +-------------------------------------------------------------------+
 | SIDEBAR (128)          | MAIN                                     |
-| [>] Worlds             |              [ Play ]                    |
-|  [1][2][3][4][5][6][7][8] | ( ) BG   +------------------+ ( ) Sel  |
-|  +--------------+      | ( ) SPR  | Screen 256x240   | ( ) Paint|
-|  | 128x128 map  |      |         | 128x120 @2x edit |           |
-|  +--------------+      |         +------------------+           |
-| [>] Palettes           |                                          |
+| Worlds                 |              [ Play ]                    |
+|  [1][2][3][4][5][6][7][8] | ( ) BG   +------------------+         |
+|  +--------------+      | ( ) SPR  | Screen preview   |         |
+|  | 128x128 map  |      | ( ) Sel  | (128x120 @2x/4x) |         |
+|  +--------------+      | ( ) Paint+------------------+         |
+| Palettes               |                                          |
 |  BG/SPR strips + [0-7] |                                          |
-| [>] Sprites            |                                          |
-|  icons + tile index    |                                          |
-| [>] Metasprites        |                                          |
-|  multi-part icons      |                                          |
-| [>] Entities           |                                          |
-|  icons + state name    |                                          |
+| Sprites                |                                          |
+| Metasprites            |                                          |
+| Entities               |                                          |
 +-------------------------------------------------------------------+
 ```
 
@@ -45,7 +42,7 @@ Fixed **640x360** logical canvas, **8px** grid, dark gray chrome. Buttons/labels
 | **Click** present | Select active screen (edit target) |
 | **Right-click** map cell | **Set default screen** / **Make default world** |
 | **BG / Sprite layer** | Radios **left** of screen. **BG layer**: tile select/paint + tile context menu. **Sprite layer**: select/drag instances, **H/V** or context **Mirror H/V** (per-instance: remaps part X/Y + toggles `FLIP_H`/`FLIP_V` for OAM), instance context menu (edit entity type / remove). Tile radios dim on sprite layer |
-| **Tile Sel / Paint** | Radios **right** of screen (BG layer only). Paint stamps armed tile+palette |
+| **Tile Sel / Paint** | Radios **left** under layer radios (BG layer only). Paint stamps armed tile+palette |
 | **Right-click tile** (BG layer) | Move to tile bank, add tile, edit tile, set palette/anim/solid |
 | **Right-click instance** (Sprite layer) | Mirror H / Mirror V / Edit entity type / Remove instance |
 | **Edit tile** modal | **288x160**, 4x4 palette picker, **128x128** pixel canvas. **Ctrl+V** pastes clipboard PNG (transparent -> index 0, opaque matched by brightness to the selected palette) |
@@ -67,9 +64,7 @@ PNG drop imports into the **active** world. Cart export packs **world 0** only (
 
 1. Always runs the same **export** path as **Ctrl+E** (pack `.retr01` + regenerate `output/C/`, `output/ASM/`, `output/data/` as needed), even if the project is unsaved.
 2. While export runs, shows a Studio-local **boot wait** UI (spinning `Booting console...` style text, same idea as the sim boot spinner, no sim code link).
-3. Embeds the **emulator** in Studio via a shared **UI tabs** component (also used for **Worlds** in the left sidebar):
-   - **Emu render** tab: normal game framebuffer (same role as today's Play surface).
-   - **Debug** tab: emu debug output (VRAM atlas / world map / pals / CPU budget), not a separate OS window.
+3. Embeds the **emulator** in Studio via shared emu core. **Play** shows the game framebuffer only (debug pane stays in standalone `./emu`).
 
 Shared emu core with standalone [`retr01_emu`](../retr01_emu/README.md). Standalone `./emu` remains for triage (may keep its own debug window). Cart export is still **world 0** only. **Sim is out of scope.**
 
@@ -186,7 +181,7 @@ Compile from `output/C/` with `-Iinclude` (or `#include "include/r01_engine.h"` 
 - **World 0** only in cart export. Worlds 1-7 are session-only in the UI until multi-world save lands. Studio Play therefore previews world 0 only.
 - No entity-vs-entity collision, NPC AI, parallax authoring, or full on-cart 6502 gameplay loop yet.
 - No ca65 / `make` step in the default export path.
-- Studio Play -> emu UX is locked ([`docs/04`](../docs/04_costs_and_open_questions.md) Q22). Code still has the old Studio-only Play until the refactor lands.
+- Studio Play uses embedded emu after export ([`docs/04`](../docs/04_costs_and_open_questions.md) Q22). Studio-only `core/src/play.c` remains for unit tests only.
 
 Shared host runtime (not duplicated in export tree): `common/r01_play_camera.c`, `common/r01_play_anim*.c`, `common/r01_custom_logic_scan.c`. Emu Host Play owns cart-backed preview.
 
@@ -234,6 +229,7 @@ ctest --test-dir build --output-on-failure
 | Warp test | **X** -> (0,0), **Y** -> (1,0) |
 | Save / load | **Ctrl+S** / **Ctrl+O** -> `output/test.r01proj` |
 | Export cart | **Ctrl+E** -> `output/test.retr01` (+ `C/`, `ASM/`, `data/`) |
+| Toggle canvas | **Ctrl+Shift+R** -> **640x360** / **1280x720** |
 
 ---
 

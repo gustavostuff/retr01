@@ -137,7 +137,7 @@ Current chip list: [`05`](05_hardware_v1_32ic.md) (**32 IC**). Roles:
 
 **Studio Play** does **not** keep a separate host preview. **Play** / **Space** always exports (same path as **Ctrl+E**), shows a brief boot-wait spinner, then runs the **emulator render embedded** in Studio. A shared **UI tabs** component switches tab contents: **Worlds** (left sidebar) and **Play** (**Emu render** | **Debug**). Studio and standalone `./emu` share emu core code. **Sim is not involved** in this path.
 
-**Host Play** (cart-backed movement / camera / OAM in emu) lives in `retr01_emu` + `common/r01_play_camera.c` / `r01_play_anim*.c`. Emu Host Play is the Phase 1 gameplay SoT. Studio-only `core/src/play.c` preview is removed (code catch-up pending).
+**Host Play** (cart-backed movement / camera / OAM in emu) lives in `retr01_emu` + `common/r01_play_camera.c` / `r01_play_anim*.c`. Emu Host Play is the Phase 1 gameplay SoT. Studio UI Play uses the shared emu core after export. `retr01_studio/core/src/play.c` remains for Studio unit tests only.
 
 ## Doc index (`docs/`)
 

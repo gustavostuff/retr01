@@ -3,7 +3,7 @@
   "name": "untitled",
   "default_world": 0,
   "active_world": 0,
-  "active_screen": 9,
+  "active_screen": 2,
   "default_screen": 9,
   "default_pal_row": 0,
   "player_entity": 0,
@@ -94,7 +94,7 @@
   ],
   "instances": [
     {"type": 1, "x": 184, "y": 152},
-    {"type": 0, "x": 222, "y": 185}
+    {"type": 0, "x": 216, "y": 199}
   ],
   "warp_entrances": [
   ],

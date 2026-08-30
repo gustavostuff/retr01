@@ -56,7 +56,7 @@ static int modal_meta_list_hit(UiState *ui, int lx, int ly, int *out_idx) {
     EntityModalLayout lo;
     const R01World *w;
     int row, idx;
-    entity_modal_layout(&lo);
+    entity_modal_layout(ui, &lo);
     w = r01_project_active_world_const(ui->project);
     if (!w || w->metasprite_count < 1) {
         return 0;
@@ -160,8 +160,8 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
     char spr_label[16];
     const char *title = ui->entity_edit.is_new ? "Add entity" : "Edit entity";
 
-    entity_modal_layout(&lo);
-    ui_modal_scrim(r);
+    entity_modal_layout(ui, &lo);
+    ui_modal_scrim(r, ui);
     ui_modal_panel(r, lo.mx, lo.my, UI_ENTITY_MODAL_W, UI_ENTITY_MODAL_H, title);
 
     font_draw(r, lo.left_list_x, lo.left_label_y + 4, "Metasprites", 230, 230, 230);
@@ -294,7 +294,7 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
     int idx, pal, col;
     int right = (button == SDL_BUTTON_RIGHT);
 
-    entity_modal_layout(&lo);
+    entity_modal_layout(ui, &lo);
     st = edit_state(ui);
     fr = edit_frame(ui);
     w = r01_project_active_world_const(ui->project);
@@ -447,7 +447,7 @@ void entity_modal_drag(UiState *ui, int lx, int ly, Uint32 buttons) {
     if (!ui || !ui->entity_edit.open) {
         return;
     }
-    entity_modal_layout(&lo);
+    entity_modal_layout(ui, &lo);
     if (ui->text.drag && ui->text.field_id == 1) {
         ui_text_mouse_drag(ui, lx, lo.right_ent_name_x, lo.right_ent_name_w);
         return;

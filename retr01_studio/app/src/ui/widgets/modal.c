@@ -2,11 +2,11 @@
 #include "ui/internal.h"
 #include "font/font.h"
 
-void ui_modal_scrim(SDL_Renderer *r) {
+void ui_modal_scrim(SDL_Renderer *r, const UiState *ui) {
     SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(r, 0, 0, 0, 160);
     {
-        SDL_Rect full = {0, 0, UI_LOGIC_W, UI_LOGIC_H};
+        SDL_Rect full = {0, 0, ui_logic_w(ui), ui_logic_h(ui)};
         SDL_RenderFillRect(r, &full);
     }
 }

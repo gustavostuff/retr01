@@ -113,8 +113,8 @@ void draw_tile_modal(UiState *ui, SDL_Renderer *r) {
     int row = w ? w->default_pal_row : 0;
     int sy, sx;
 
-    tile_modal_layout(&lo);
-    ui_modal_scrim(r);
+    tile_modal_layout(ui, &lo);
+    ui_modal_scrim(r, ui);
     ui_modal_panel(r, lo.mx, lo.my, UI_MODAL_W, UI_MODAL_H, "Edit tile");
 
     draw_label(r, lo.pal_x, lo.pal_label_y, "Palette/color");
@@ -139,7 +139,7 @@ void draw_tile_modal(UiState *ui, SDL_Renderer *r) {
 int tile_modal_handle(UiState *ui, int lx, int ly, int down) {
     TileModalLayout lo;
     int pal, col;
-    tile_modal_layout(&lo);
+    tile_modal_layout(ui, &lo);
 
     if (!down) {
         return 1;
