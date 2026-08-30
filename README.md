@@ -2,19 +2,19 @@
 
 The Retr01 project is a software + hardware tool chain family. Software includes:
 
-- **Retr01 Studio**: visual authoring for worlds, tiles, sprites, and entities. **Play** preview in the editor. **Ctrl+E** export writes a packed `.retr01` cart plus generated `output/C/`, `output/ASM/`, and `output/data/`.
-- **Retr01 Emulator**: software-visible 65C02 + `$FExx` I/O + video. Loads a cart, runs PRG boot catchup, and host Play for movement, camera, and collision. Debug pane shows the 2x2 VRAM workbench, world map, palettes, and CPU budget.
+- **Retr01 Studio**: visual authoring for worlds, screens and game entities.
+- **Retr01 Emu**: software-visible 65C02 + `$FExx` I/O + video. Loads a cart, runs PRG and host Play for movement, camera, and collision.
 - **Retr01 Sim**: pin-level model of the **32-IC** Retr01-A netlist. Interactive SDL board UI with draggable islands, per-chip tests, and the same cart boot path as the emulator.
 
 Software is still a WIP. This is the overall hardware roadmap:
 
-- **Retr01-A (stage 1)**: arcade motherboard, first build. THT, ~14 x 12 cm minimum. Cabinet sticks/buttons, coin/start, RGBS / S-Video / composite.
-- **Retr01-C (stage 2)**: home console. Same architecture and cart format, smaller board, 3-wire controllers.
-- **Retr01-H (stage 3)**: handheld. SMD, battery, LCD + driver, contact pads. Same software contract.
+- **Retr01-A (stage 1)**: Arcade motherboard, first build. THT, ~14 x 12 cm PCB, cabinet sticks/buttons, RGBS, S-Video and composite.
+- **Retr01-C (stage 2)**: Home console. Same architecture and cart format, smaller board, 2 controller ports (3-cable line).
+- **Retr01-H (stage 3)**: Handheld. SMD components, battery, LCD + driver, contact pads. Same software contract.
 
 ## At a glance
 
-| | |
+| Aspect | Description |
 |--|--|
 | CPU | W65C02S @ **8 MHz** |
 | Playfield | **128 x 120** logical (**16 x 15** tiles), board **2x** to **256 x 240** RGBS |
