@@ -502,6 +502,8 @@ static void sample_vram_slot_px(R01eMachine *m, int slot, int local_x, int local
     kit_rgb(master, r, g, b);
 }
 
+static void composite_sprites_atlas(R01eMachine *m);
+
 void r01e_video_render_vram_atlas(R01eMachine *m) {
     R01eVideo *vid;
     int ay, ax;
@@ -530,6 +532,7 @@ void r01e_video_render_vram_atlas(R01eMachine *m) {
             vid->vram_atlas[i + 2] = b;
         }
     }
+    composite_sprites_atlas(m);
 }
 
 static void flip_tile16(uint8_t tile16[16], uint8_t attr) {
@@ -579,6 +582,17 @@ static void put_fb_px2x(R01eVideo *vid, int lx, int ly, uint8_t r, uint8_t g, ui
     }
 }
 
+static void put_atlas_px(R01eVideo *vid, int ax, int ay, uint8_t r, uint8_t g, uint8_t b) {
+    size_t i;
+    if (ax < 0 || ay < 0 || ax >= R01E_VRAM_ATLAS_W || ay >= R01E_VRAM_ATLAS_H) {
+        return;
+    }
+    i = ((size_t)ay * R01E_VRAM_ATLAS_W + (size_t)ax) * 3u;
+    vid->vram_atlas[i] = r;
+    vid->vram_atlas[i + 1] = g;
+    vid->vram_atlas[i + 2] = b;
+}
+
 static void blit_spr_tile(R01eMachine *m, int sx, int sy, uint8_t tile, uint8_t attr,
                           uint8_t line_count[R01E_SCREEN_PX_H]) {
     uint8_t bank = (uint8_t)(attr & R01E_ATTR_BANK_MASK);
@@ -617,6 +631,44 @@ static void blit_spr_tile(R01eMachine *m, int sx, int sy, uint8_t tile, uint8_t 
     }
 }
 
+static void blit_spr_tile_atlas(R01eMachine *m, int ax, int ay, uint8_t tile, uint8_t attr,
+                                uint8_t line_count[R01E_VRAM_ATLAS_H]) {
+    uint8_t bank = (uint8_t)(attr & R01E_ATTR_BANK_MASK);
+    uint8_t pal = (uint8_t)((attr & R01E_ATTR_PAL_MASK) >> R01E_ATTR_PAL_SHIFT);
+    const uint8_t *chr = m->video.chr[4 + (bank & 3u)];
+    uint8_t tile16[16];
+    int px, py;
+
+    memcpy(tile16, chr + (size_t)tile * R01E_TILE_BYTES, R01E_TILE_BYTES);
+    flip_tile16(tile16, attr);
+    for (py = 0; py < 8; py++) {
+        int row = ay + py;
+        if (row < 0 || row >= R01E_VRAM_ATLAS_H) {
+            continue;
+        }
+        if (line_count[row] >= R01E_SPRITES_PER_LINE) {
+            continue;
+        }
+        for (px = 0; px < 8; px++) {
+            int col = ax + px;
+            uint8_t c;
+            uint8_t master;
+            uint8_t r, g, b;
+            if (col < 0 || col >= R01E_VRAM_ATLAS_W) {
+                continue;
+            }
+            c = tile_pix(tile16, px, py);
+            if (c == 0) {
+                continue;
+            }
+            master = m->io.pal[16u + (pal & 3u) * 4u + (c & 3u)] & 63u;
+            kit_rgb(master, &r, &g, &b);
+            put_atlas_px(&m->video, col, row, r, g, b);
+        }
+        line_count[row]++;
+    }
+}
+
 static void composite_sprites(R01eMachine *m) {
     uint8_t line_count[R01E_SCREEN_PX_H];
     int ei;
@@ -637,7 +689,40 @@ static void composite_sprites(R01eMachine *m) {
         }
         blit_spr_tile(m, sx, sy, tile, attr, line_count);
         if (tall) {
-            blit_spr_tile(m, (int)sx, (int)sy + 8, (uint8_t)(tile | 1u), attr, line_count);
+            blit_spr_tile(m, sx, sy + 8, (uint8_t)(tile | 1u), attr, line_count);
+        }
+    }
+}
+
+static void composite_sprites_atlas(R01eMachine *m) {
+    R01eVideo *vid = &m->video;
+    uint8_t line_count[R01E_VRAM_ATLAS_H];
+    int origin_px = vid->cam_origin_col * R01E_SCREEN_PX_W;
+    int origin_py = vid->cam_origin_row * R01E_SCREEN_PX_H;
+    int ei;
+
+    if (!(m->io.ctrl & R01E_PPUCTRL_BG_EN)) {
+        return;
+    }
+    memset(line_count, 0, sizeof(line_count));
+    for (ei = 0; ei < R01E_OAM_ENTRIES; ei++) {
+        const uint8_t *e = &m->io.oam[(size_t)ei * R01E_OAM_ENTRY_BYTES];
+        uint8_t sy_u = e[0];
+        uint8_t tile = e[1];
+        uint8_t attr = e[2];
+        uint8_t sx_u = e[3];
+        int sy = r01e_oam_coord_from_u8(sy_u);
+        int sx = r01e_oam_coord_from_u8(sx_u);
+        int ax = vid->cam_x + sx - origin_px;
+        int ay = vid->cam_y + sy - origin_py;
+        int tall = (attr & R01E_OAM_SIZE_16) != 0;
+
+        if (tile == 0xFFu) {
+            continue;
+        }
+        blit_spr_tile_atlas(m, ax, ay, tile, attr, line_count);
+        if (tall) {
+            blit_spr_tile_atlas(m, ax, ay + 8, (uint8_t)(tile | 1u), attr, line_count);
         }
     }
 }

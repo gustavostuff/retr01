@@ -70,4 +70,8 @@ Root wrappers (`studio`, `emu`, `sim`, ...) forward to [`scripts/`](scripts/). R
 
 ---
 
+Here's a picture of teh emulator, just for fun:
+
+<img src="img/emulator.png" alt="Emu" />
+
 Built for people who want to *make* 8-bit games, not only play them.

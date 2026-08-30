@@ -147,47 +147,6 @@ static void draw_world_map(SDL_Renderer *ren, R01eMachine *m, int ox, int oy) {
     }
 }
 
-/* Player in 2x2 VRAM atlas space (cam_origin-relative), clipped to the buffer. */
-static void draw_vram_player(SDL_Renderer *ren, const R01eMachine *m) {
-    SDL_Rect cell;
-    int ax, ay, x0, y0, x1, y1;
-    uint8_t pr, pg, pb;
-
-    if (!m->play.enabled) {
-        return;
-    }
-    r01e_play_player_rgb(m, &pr, &pg, &pb);
-    ax = m->play.player_x - m->video.cam_origin_col * R01E_SCREEN_PX_W;
-    ay = m->play.player_y - m->video.cam_origin_row * R01E_SCREEN_PX_H;
-    x0 = ax;
-    y0 = ay;
-    x1 = ax + R01E_PLAY_PLAYER_W;
-    y1 = ay + R01E_PLAY_PLAYER_H;
-    if (x0 < 0) {
-        x0 = 0;
-    }
-    if (y0 < 0) {
-        y0 = 0;
-    }
-    if (x1 > R01E_VRAM_ATLAS_W) {
-        x1 = R01E_VRAM_ATLAS_W;
-    }
-    if (y1 > R01E_VRAM_ATLAS_H) {
-        y1 = R01E_VRAM_ATLAS_H;
-    }
-    if (x1 <= x0 || y1 <= y0) {
-        return;
-    }
-    cell.x = x0;
-    cell.y = y0;
-    cell.w = x1 - x0;
-    cell.h = y1 - y0;
-    SDL_SetRenderDrawColor(ren, pr, pg, pb, 255);
-    SDL_RenderFillRect(ren, &cell);
-    SDL_SetRenderDrawColor(ren, 20, 20, 20, 255);
-    SDL_RenderDrawRect(ren, &cell);
-}
-
 /* 5x7 uppercase glyphs (MSB = leftmost). */
 static const uint8_t DBG_GLYPH_B[7] = {0x1E, 0x11, 0x11, 0x1E, 0x11, 0x11, 0x1E};
 static const uint8_t DBG_GLYPH_G[7] = {0x0E, 0x11, 0x10, 0x17, 0x11, 0x11, 0x0E};
@@ -428,7 +387,6 @@ static void present_debug_pane(SDL_Renderer *dbg_ren, SDL_Texture *vram_tex, R01
         SDL_RenderDrawRect(dbg_ren, &vp);
     }
 
-    draw_vram_player(dbg_ren, m);
     draw_world_map(dbg_ren, m, R01E_VRAM_ATLAS_W + DBG_GAP, 0);
     draw_active_palettes(dbg_ren, m, 4, R01E_VRAM_ATLAS_H + DBG_GAP);
     chart_y = R01E_VRAM_ATLAS_H + DBG_GAP + DBG_PAL_H + DBG_GAP;
