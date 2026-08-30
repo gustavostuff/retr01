@@ -26,3 +26,6 @@ ui_layout.json
 
 # Release binaries (scripts/build-all.sh)
 release/
+
+# Other
+ai-rules.txt

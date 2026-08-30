@@ -146,7 +146,7 @@ The player is a **Game entity** slot that mainly follows pad input (`$FE60` / `$
 ### 1.1 Free 8-way smooth (default)
 
 - Pixel movement on X/Y. 8 directions from pad.
-- Matches current host Play feel (smooth follow, no grid snap).
+- Matches current host Play feel (smooth follow, dead-zone camera from `custom_logic.c`).
 - Good default for open exploration.
 
 ### 1.2 Grid-tied 4-way
@@ -189,13 +189,13 @@ Pick **one** camera strategy per game. Player cannot mix free dead-zone, rail, a
 
 Movement axes (game setting): **free (X+Y)**, **X only**, or **Y only**.
 
-Dead zone is centered on the viewport unless Studio later allows offsets.
+Dead zone is centered on the viewport unless Studio later allows offsets. `r01_camera_set_deadzone(ctx, W, H)` sets the **width and height** of that inner rectangle (not edge margins). Host Play in Studio, emu, and sim implements this profile today via `common/r01_play_camera.c`. Export packs `W`/`H` into the world header for cart runners.
 
 | Dead zone | Behavior |
 |-----------|----------|
 | **0 x 0** | Camera tracks immediately. Player stays centered |
 | **128 x 120** | Camera never moves (player walks inside fixed view) |
-| e.g. **32 x 30** | Camera moves once the player crosses that inner rect |
+| e.g. **32 x 30** | Camera moves once the player origin crosses that centered inner rect |
 | **X range only** | Vertical cam locked. Horizontal dead range only |
 | **Y range only** | Horizontal cam locked. Vertical dead range only |
 
@@ -265,6 +265,7 @@ Rules:
 
 - The player is a normal entity **slot** (counts toward budgets).
 - Input-driven. Uses the attached **Player movement** profile.
+- Host Play (Studio / emu / sim): **8-dir idle/walk** animation from the cart player anim blob when `custom_logic.c` configures states. Collision uses the **current state** hitbox. Other entities remain state0/frame0 in preview.
 
 ### 3.3 Non-player AI (v1 document)
 

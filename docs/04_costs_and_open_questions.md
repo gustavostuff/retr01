@@ -27,7 +27,7 @@ This doc merges the old cost sheet and decision log into one planning file.
 | Color PROM (encoding) | **1x** PROM/OTP: packed **R3G3B2** `{RRRGGGBB}`, 1-dot pipeline. Studio quantizes kit swatches |
 | Cart global palettes | **8 BG palette rows** + **8 sprite palette rows** (**32 + 32** palettes, **256 B** total), indices only |
 | MAP / cart layout | Fixed header + **pointer table**, world table, per-world CHR + screen dir + payloads. See [`02`](02_graphics_worlds_memory.md) *Cart image* |
-| MAP world header | `start_col`/`start_row`, **`default_bg_bank`**, **`default_spr_bank`**, optional `default_pal_row` (**0-7**) |
+| MAP world header | `start_col`/`start_row`, banks, `player_entity` + hitbox, `cam_deadzone_x/y` (centered W x H), `flags.player_anim`. See [`02`](02_graphics_worlds_memory.md) *Cart image* |
 | Palette cart storage | **uncompressed** master **indices** in the two global blobs. **Pointer table** locates them. **No** master RGB in cart |
 | Active palette buffer | **4 BG + 4 sprite palettes** from one selected **palette row** via `$FE08`/`$FE09` (indices into Color PROM) |
 | Palette row selection | BG palette row **N** and sprite palette row **N** are always selected together |

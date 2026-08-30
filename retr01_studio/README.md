@@ -2,10 +2,10 @@
 
 Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. Studio is two tools in one app:
 
-1. **Authoring (UI)** — edit worlds, tiles, palettes, sprites, entities, and instances; preview with **Play**.
-2. **Export (codegen)** — write a game tree under `output/` (packed cart + generated C, 6502 ASM, and binary data).
+1. **Authoring (UI)**. Edit worlds, tiles, palettes, sprites, entities, and instances. Preview with **Play**.
+2. **Export (codegen)**. Write a game tree under `output/` (packed cart + generated C, 6502 ASM, and binary data).
 
-Authoring state lives in `output/<stem>.r01proj` (JSON). **Ctrl+E** regenerates cart bytes and the generated tree; **`custom_logic.c`** is created on first export and never overwritten. Hardware contract: [`docs/02`](../docs/02_graphics_worlds_memory.md).
+Authoring state lives in `output/<stem>.r01proj` (JSON). **Ctrl+E** regenerates cart bytes and the generated tree. **`custom_logic.c`** is created on first export and never overwritten. Hardware contract: [`docs/02`](../docs/02_graphics_worlds_memory.md).
 
 **Stack:** C11 + SDL2 + FreeType (Proggy Tiny), `libretr01_studio_core` + thin shell.
 
@@ -64,13 +64,31 @@ PNG drop imports into the **active** world. Cart export packs **world 0** only (
 | | |
 |--|--|
 | **Entry world** | Play calls `begin_play` -> switches to **`default_world`** (map menu -> **Make default world**), not necessarily the sidebar selection |
-| **Scroll** | Smooth pixel scroll. Camera follows player origin. No dead zone |
-| **Player** | World **`player_entity`** (Entities context **Mark as player**). Draws that type’s **state 0 / frame 0**. If unset/empty, solid stub **SPR bank 0 tile 1**. Placed instances of the player type are skipped in Play OAM |
+| **Camera** | **Dead-zone** profile ([`docs/07`](../docs/07_game_modules.md) section 2.A). `r01_camera_set_deadzone(ctx, W, H)` in **`custom_logic.c`** sets the **width and height of a rectangle centered on the 128x120 viewport**. The camera scrolls only when the player **origin** crosses that inner rect. `(0, 0)` = immediate center-follow (no dead zone). Default when unset: **32x30**. Studio Play parses the same call from sibling `output/C/custom_logic.c` at start. **Ctrl+E** packs bytes **30-31** of the world header for emu/sim. Logic: `common/r01_play_camera.c` (shared with Studio, emu, sim) |
+| **Scroll** | Smooth pixel scroll. Spawn/warp **snap** centers the view on the player, then clamps origin inside the dead zone |
+| **Player** | World **`player_entity`** (Entities context **Mark as player**). **8-dir idle/walk** animation from cart **player anim blob** (`PA` magic, after instances) driven by `custom_logic.c` (`r01_player_anim_set_idle_state`, `r01_player_anim_set_walk_all`, `r01_entity_state_frame_delay_set`, optional `r01_player_default_face_set`). If unset/empty type, solid stub **SPR bank 0 tile 1**. Placed instances of the player type are skipped in Play OAM (player uses slot 0) |
+| **Other entities** | **State 0 / frame 0** only in Play preview |
 | **Start** | **First placed instance** of the marked player type (editor origin). If none / unmarked: center of **`default_screen`**. Fallback grid **(2,0)** or first present |
-| **Collision** | Marked player’s state-0 **hitbox** (offset from origin) vs `R01_ATTR_SOLID` on present screens. Stub player: **8x8** at the origin |
+| **Collision** | Marked player's **current anim state** hitbox (offset from origin) vs `R01_ATTR_SOLID` on present screens. Stub player: **8x8** at the origin |
 | **Warps** | **X** -> screen (0,0). **Y** -> screen (1,0). Test hooks only; no Events UI yet |
 
-Cart packs `player_entity` + hitbox into the world header — **re-export** after marking or solid edits. Play SoT: `core/src/play.c` + `collision.c`. Emu/sim mirror the same rules (separate source copies). Host collision reads **cart MAP attrs**, not the PRG collision stub. OAM X/Y are **viewport-relative signed** coords. Tiles fully outside **128x120** are skipped; partial tiles clip at viewport edges.
+Cart packs `player_entity`, hitbox, dead zone, and optional player anim blob. **Re-export** after marking the player, editing `custom_logic.c`, or solid edits. Play SoT: `core/src/play.c` + `game_runtime.c` + `common/r01_play_camera.c`. Emu/sim use the same shared camera/anim parsers. Host collision reads **cart MAP attrs**, not the PRG collision stub. OAM X/Y are **viewport-relative signed** coords. Tiles fully outside **128x120** are skipped. Partial tiles clip at viewport edges.
+
+### `custom_logic.c` hooks (host export)
+
+Created on first export. Never overwritten. Typical init:
+
+```c
+void r01_custom_on_init(R01GameCtx *ctx) {
+    r01_player_anim_set_idle_state(ctx, 0);
+    r01_player_anim_set_walk_all(ctx, 1);
+    r01_entity_state_frame_delay_set(ctx, 0, 10);
+    r01_entity_state_frame_delay_set(ctx, 1, 4);
+    r01_camera_set_deadzone(ctx, 32, 30);  /* centered rect W x H */
+}
+```
+
+See generated `output/C/include/r01_*.h` for the full engine API (camera, player anim, projectiles, fades, warps, button events).
 
 ---
 
@@ -140,7 +158,7 @@ PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are
 |------|------|
 | `C/base_game.c` | Regenerated each export: frozen tables, init/tick/vblank, calls into `custom_logic` |
 | `C/r01_runtime.c` | Regenerated host stubs (pad helpers, warp, button events) |
-| `C/custom_logic.c` | **User file** — template on first export; hooks for game-specific logic |
+| `C/custom_logic.c` | **User file**. Template on first export. Hooks for game-specific logic (camera dead zone, player anim, events) |
 | `C/include/*.h` | `R01GameCtx`, engine API (`r01_input.h`, `r01_player.h`, …) |
 | `ASM/**` | Subdivided 6502 sources (`boot/`, `game/`, `io/`, `player/`, `sprite/`, `collision/`, `tables/`) |
 | `data/*` | Palette, CHR, and per-screen MAP bins for `.incbin` |
@@ -151,10 +169,13 @@ Compile from `output/C/` with `-Iinclude` (or `#include "include/r01_engine.h"` 
 
 ### Limitations (current)
 
-- Play and cart runtime use **state 0 / frame 0** only (authoring supports more states/frames).
-- **World 0** only in cart export; worlds 1–7 are session-only in the UI until multi-world save lands.
+- **NPC / non-player** instances use **state 0 / frame 0** only in Play (player uses full anim blob).
+- Dead zone is configured in **`custom_logic.c`** only (no Studio UI slider yet).
+- **World 0** only in cart export. Worlds 1-7 are session-only in the UI until multi-world save lands.
 - No entity-vs-entity collision, NPC AI, parallax authoring, or full on-cart 6502 gameplay loop yet.
 - No ca65 / `make` step in the default export path.
+
+Shared host runtime (not duplicated in export tree): `common/r01_play_camera.c`, `common/r01_play_anim*.c`, `common/r01_custom_logic_scan.c`.
 
 ---
 
@@ -208,5 +229,6 @@ ctest --test-dir build --output-on-failure
 | Doc | Topic |
 |-----|--------|
 | [`docs/02`](../docs/02_graphics_worlds_memory.md) | Screens, VRAM, palettes, cart layout |
+| [`docs/07`](../docs/07_game_modules.md) | Game modules (movement, camera dead zone, entities) |
 | [`retr01_sim/README.md`](../retr01_sim/README.md) | Board sim + cart triage |
 | [`retr01_emu/README.md`](../retr01_emu/README.md) | Cart runtime emulator |

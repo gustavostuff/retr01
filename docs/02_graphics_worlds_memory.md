@@ -304,12 +304,12 @@ Studio exports RLE when it shrinks the payload. Otherwise raw. Decode before VRA
 |  | WORLD HEADER (32 B)                                             |     |
 |  |   start_col, start_row, default_bg_bank, default_spr_bank       |     |
 |  |   default_pal_row (0..7), screen_count (present, max **32**)    |     |
-|  |   parallax_count (0..8)                                         |     |
+|  |   parallax_count (0..8), flags u8 (bit0 = player_anim blob)    |     |
 |  |   off_chr u24, off_screen_dir u24, off_parallax_dir u24         |     |
 |  |   entity_type_count u8, entity_inst_count u8                    |     |
 |  |   off_entity_types u24, off_entity_insts u24                    |     |
-|  |   pad u8, player_entity u8 (0xFF=stub), hit_x/y/w/h u8          |     |
-|  |   reserved to 32 B                                              |     |
+|  |   player_entity u8 (0xFF=stub), hit_x/y/w/h u8                  |     |
+|  |   cam_deadzone_x/y u8 (centered rect W/H; 0 = use default 32x30)|     |
 |  +-----------------------------------------------------------------+     |
 |  | CHR: BG 0..3 + SPR 0..3 (4 KB each; real spr_banks)             |     |
 |  | SCREEN DIR: 12 B per present screen                             |     |
@@ -325,13 +325,15 @@ Studio exports RLE when it shrinks the payload. Otherwise raw. Decode before VRA
 |  |   4x {tile, attr, dx i8, dy i8} (unused parts zero)             |     |
 |  | INSTANCES: 6 B each {type_id, flags, world_x u16, world_y u16}  |     |
 |  |   flags bit0 = flip_h, bit1 = flip_v (mirror around origin)     |     |
+|  | PLAYER ANIM (optional): magic `PA`, per-state origin/hitbox,    |     |
+|  |   drawable frames, parts. Appended when flags.player_anim set    |     |
 |  +-----------------------------------------------------------------+     |
 +--------------------------------------------------------------------------+
 |  WORLD 1 .. N                                                            |
 +--------------------------------------------------------------------------+
 ```
 
-OAM attr packing matches BG: bank bits 1-0, pal bits 3-2, `FLIP_H=0x10`, `FLIP_V=0x20`. Instance `world_x/y` is the **user origin**. Host Play draws parts at `world + (dx,dy) - origin` (Studio `r01_entity_world_x/y`). Instance flags bit0/bit1 (`flip_h`/`flip_v`) mirror each part: `dx' = 2*origin_x - dx - 8` / `dy' = 2*origin_y - dy - 8` and XOR part `FLIP_H` / `FLIP_V` (Studio `r01_entity_part_instance_pose`). World header `player_entity` selects the Play-driven type (state0/frame0); `0xFF` falls back to SPR bank 0 **tile 1** (solid stub). Player collision uses the packed hitbox at `origin + (hit - state_origin)`.
+OAM attr packing matches BG: bank bits 1-0, pal bits 3-2, `FLIP_H=0x10`, `FLIP_V=0x20`. Instance `world_x/y` is the **user origin**. Host Play draws parts at `world + (dx,dy) - origin` (Studio `r01_entity_world_x/y`). Instance flags bit0/bit1 (`flip_h`/`flip_v`) mirror each part: `dx' = 2*origin_x - dx - 8` / `dy' = 2*origin_y - dy - 8` and XOR part `FLIP_H` / `FLIP_V` (Studio `r01_entity_part_instance_pose`). World header `player_entity` selects the Play-driven type. When `flags.player_anim` is set, host Play uses the **player anim blob** (8-dir idle/walk, per-state hitboxes). Otherwise state0/frame0. `0xFF` player_entity falls back to SPR bank 0 **tile 1** (solid stub). `cam_deadzone_x/y` pack the centered dead-zone **W x H** from export (`r01_camera_set_deadzone` in `custom_logic.c`. Studio Play scans the same file). Player collision uses the **current anim state** hitbox at `origin + (hit - state_origin)`.
 
 Boot: magic -> pointers -> other screens -> world header -> screen dir / parallax dir -> `off_payload`. Load grid screens into VRAM slots 0-3. Load up to **two** active parallax payloads into slots 4-5 (from the world's up to **8** cart entries). Title/interstitial/credits page: decode chosen **other** payload (RLE or raw) into slot 0 (full **128x120**). MAP port: `$FE90`-`$FE92` addr, `$FE93` data auto-inc.
 

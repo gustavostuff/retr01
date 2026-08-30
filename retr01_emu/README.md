@@ -13,14 +13,16 @@ Later emulator phases are **not** specified here. They will be defined when work
 | Layer | What runs today |
 |-------|-----------------|
 | **Cart** | Load `.retr01` (Studio packs present screens only). CHR, pals, Phase 1 PRG (`R01P`) |
-| **Play** | **Studio Play SoT**. Same move / camera / collision / X/Y warps as Studio |
+| **Play** | **Studio Play SoT**. Same move / **dead-zone camera** / player anim / collision / X/Y warps as Studio |
 | **CPU** | Boots world 0. Default: PRG streams pals + start MAP (`$FE93`->`$FE12`). Gameplay still host Play |
 | **Video** | Main FB = **VRAM + scroll** + **OAM composite** (SCALE 2x). Play host-fills 2x2 seams via `sync_camera` |
 | **Host** | SDL. WASD/arrows move. **X**/**Y** warp (same as Studio) |
 
 **Sync contract:** Studio Play (`play.c`) is the source of truth for motion. Export packs present screens + play table (`$8100`) + `R01P`. Soft-boot (`R01E_SOFTBOOT=1`) keeps the old host memcpy boot path for triage. Default boot runs cart PRG stream catchup like sim.
 
-**Collision:** Host Play reads **cart MAP attrs** (`R01_ATTR_SOLID`). PRG collision stub at `$8500` is packed for future 6502 use, not used by host movement today.
+**Collision:** Host Play reads **cart MAP attrs** (`R01_ATTR_SOLID`). Player hitbox follows the **current anim state** from the cart player anim blob when present. PRG collision stub at `$8500` is packed for future 6502 use, not used by host movement today.
+
+**Camera:** Dead zone W x H from world header bytes 30-31 (packed from `r01_camera_set_deadzone` in `custom_logic.c` on export). Centered rectangle on the 128x120 viewport. Shared `common/r01_play_camera.c`.
 
 **Runtime:** World **0** only (`R01E_PHASE1_WORLDS=1`).
 

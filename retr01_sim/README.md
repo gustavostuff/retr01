@@ -76,7 +76,7 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 | **Not** in ROM | Meaning |
 |----------------|---------|
 | **Metasprite catalog** | Studio JSON only. Export flattens parts into entity type records |
-| Studio Play motion, camera, warps | Host `play.c` / emu Play / sim Host Play |
+| Studio Play motion, camera dead zone, player anim, warps | Host `play.c` + `common/r01_play_camera.c` / emu Play / sim Host Play |
 | Host collision source | Cart flash MAP attrs (`R01_ATTR_SOLID`). PRG collision stub not used by host runners |
 | Editor UI state | UI only. Cart boots world **0** |
 | Live camera seam streaming (2x2 shift) | Phase 1 PRG loads start screen only |
@@ -132,7 +132,7 @@ scripts/run-sim output/test.retr01
 
 **Layout persistence:** island frames + chip positions saved to `retr01_sim/ui_layout.json` (override with `R01S_LAYOUT`).
 
-**Gamepads (island E -> `$FE60`/`$FE61`):** bottom-left panels or keyboard. After boot catchup, **Host Play** uses P1 for move + warps (Studio/emu rules, collision from cart MAP attrs):
+**Gamepads (island E -> `$FE60`/`$FE61`):** bottom-left panels or keyboard. After boot catchup, **Host Play** uses P1 for move + warps (Studio/emu rules: dead-zone camera, player anim blob, collision from cart MAP attrs):
 
 | | Stick | X (warp -> screen 0,0) | Y (warp -> screen 1,0) | Coin | Start |
 |--|-------|----------------------|----------------------|------|-------|

@@ -133,7 +133,9 @@ Current chip list: [`05`](05_hardware_v1_32ic.md) (**32 IC**). Roles:
 
 ## Near-term software focus
 
-**Retr01 Studio** (authoring + export) and **Retr01 Emulator** (cart runtime) are the active software tools. Studio **Save** writes `output/<stem>.r01proj`; **Export** regenerates `output/C/`, `output/ASM/`, `output/data/`, and packed cart bytes. See [`retr01_studio/README.md`](../retr01_studio/README.md) and [`retr01_emu/README.md`](../retr01_emu/README.md). **Board IC simulator** ([`retr01_sim/`](../retr01_sim/)) validates the 32-IC netlist.
+**Retr01 Studio** (authoring + export) and **Retr01 Emulator** (cart runtime) are the active software tools. Studio **Save** writes `output/<stem>.r01proj`. **Export** regenerates `output/C/`, `output/ASM/`, `output/data/`, and packed cart bytes. See [`retr01_studio/README.md`](../retr01_studio/README.md) and [`retr01_emu/README.md`](../retr01_emu/README.md). **Board IC simulator** ([`retr01_sim/`](../retr01_sim/)) validates the 32-IC netlist.
+
+**Host Play** (Studio preview, emu, sim) shares motion rules via `common/r01_play_camera.c` and `common/r01_play_anim*.c`. Studio `core/src/play.c` is the behavioral SoT. Emu and sim must stay in sync when Play features change.
 
 ## Doc index (`docs/`)
 
