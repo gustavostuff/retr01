@@ -2,23 +2,22 @@
 
 <img src="img/emulator.png" alt="Retr01 Emulator with debug panel" />
 
-Retr01 is a discrete-logic 8-bit hardware family built to be understood, hacked, and shipped. One CPU model, one graphics model, one cart format across three planned form factors. The repo holds the architecture spec, **Retr01 Studio** authoring tool, cart emulator, and pin-level board simulator.
+The Retr01 project is a software + hardware tool chain family. Software includes:
 
-**Status:** Docs, design, emulation, and simulation. Hardware v1 target is the **32-IC** Retr01-A arcade board (~14 x 12 cm THT minimum).
+1. Retr01 Studio: World authoring + ROM export.
+2. Retr01 Emu: low level emulator.
+3. Retr01 Sim: IC behavior + netlist hardware simulation.
 
-## Roadmap
+Software is still a WIP. This is the overall hardware roadmap.
 
-| Stage | Device | Description |
+| Stage | Device/PCB | Description |
 |---|---|---|
 | 1 | **Retr01-A** | Arcade motherboard. THT, cabinet sticks/buttons, RGBS / S-Video / composite. First build. |
 | 2 | **Retr01-C** | Home console. Same architecture, smaller board, 3-wire controllers. |
 | 3 | **Retr01-H** | Handheld. SMD, battery, LCD + driver, contact pads. Same software contract. |
 
-Retr01-A drops into a cabinet and runs tile/sprite games with multi-screen worlds, smooth scrolling, and parallax-friendly VRAM. Not a NES clone ---> a redesigned 8-bit pipeline for large maps.
-
 ## At a glance
 
-| | |
 |--|--|
 | CPU | W65C02S @ **8 MHz** |
 | Playfield | **128 x 120** logical (**16 x 15** tiles), board **2x** ---> **256 x 240** RGBS |
@@ -60,7 +59,6 @@ Root wrappers (`studio`, `emu`, `sim`, ...) forward to [`scripts/`](scripts/). R
 
 ## Documentation
 
-| | |
 |--|--|
 | [`docs/01`](docs/01_architecture_overview.md) | Architecture, terminology, doc index |
 | [`docs/02`](docs/02_graphics_worlds_memory.md) | Software SoT: VRAM, cart, registers |
