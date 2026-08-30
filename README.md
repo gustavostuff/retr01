@@ -24,34 +24,11 @@ Software is still a WIP. This is the overall hardware roadmap:
 | Sprites | **64** OAM entries, **16** per scanline |
 | VRAM / RAM | **32 KB** interleaved VRAM + **32 KB** system RAM |
 
-Same **32 KB PRG** as classic NES NROM, but it buys far more game: **~4.5x** cycles per frame at **8 MHz**, **32 KB** system RAM (not 2 KB), and scroll, sprite line fill, and MAP streaming are hardware jobs, so PRG stays game logic, not VBlank nametable tricks. [`why_32kb_prg_is_good_enough.md`](docs/why_32kb_prg_is_good_enough.md)
+Same **32 KB PRG** as classic NES NROM games (Exitebike, Balloon Fight, Ice Climbers) but it buys far more game: **4.5x** more CPU cycles per frame at **8 MHz**, **32 KB** system RAM (not 2 KB). Scroll, sprite line fill and world map streaming are hardware jobs, so PRG stays game logic, not VBlank nametable tricks. [`Why_32kb_prg_is_good_enough.md`](docs/why_32kb_prg_is_good_enough.md)
 
 Full map, cart layout, and `$FExx` ports: [`docs/02_graphics_worlds_memory.md`](docs/02_graphics_worlds_memory.md). Terminology and BOM: [`docs/01_architecture_overview.md`](docs/01_architecture_overview.md).
 
-## Software
-
-Three tools share one cart image (`.retr01`) and one Play contract (`common/` runtime):
-
-- [**Retr01 Studio**](retr01_studio/README.md): author worlds, tiles, sprites, entities. **Play** preview. **Ctrl+E** export writes cart + generated `output/C/`, `output/ASM/`, `output/data/`.
-- [**Retr01 Emulator**](retr01_emu/README.md): software-visible 65C02 + `$FExx` + video. Loads a cart, runs PRG boot catchup, host Play for movement/camera.
-- [**Board simulator**](retr01_sim/README.md): pin-level model of the **32-IC** netlist. Interactive SDL board UI, island tests, same cart boot path as emu.
-
-Studio **Save** writes `output/<stem>.r01proj`. Export packs **world 0** today (multi-world authoring in UI, single-world cart). User hooks live in `output/C/custom_logic.c` (created once, never overwritten).
-
-## Quick start
-
-```bash
-./build-all
-./unit-tests
-./studio output/test.r01proj    # author + Play
-./export-rom                    # or Ctrl+E in Studio
-./emu output/test.retr01
-./sim output/test.retr01
-```
-
-Root wrappers (`studio`, `emu`, `sim`, ...) forward to [`scripts/`](scripts/). Release binaries land in `release/`.
-
-## Documentation
+## Where to go next
 
 - [`docs/01`](docs/01_architecture_overview.md): architecture, terminology, doc index
 - [`docs/02`](docs/02_graphics_worlds_memory.md): software SoT: VRAM, cart, registers
