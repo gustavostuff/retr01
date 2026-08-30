@@ -2,7 +2,7 @@
 
 Discrete-logic 2D hardware for the Retr01 family (**Retr01-A** arcade, **Retr01-C** console, **Retr01-H** handheld). Same CPU model, memory map, and cartridge format across form factors.
 
-**Related docs:** [`graphics.md`](graphics.md) (software-visible map, cart, VRAM). [`sounds.md`](sounds.md) (APU). [`selling_points.md`](selling_points.md) (product pitch, gameplay modules, PRG headroom). Tool READMEs: [`retr01_studio/`](../retr01_studio/README.md), [`retr01_emu/`](../retr01_emu/README.md), [`retr01_sim/`](../retr01_sim/README.md). IC notes: [`hw/md/`](../hw/md/).
+**Related docs:** [`graphics.md`](graphics.md) (software-visible map, cart, VRAM). [`sound.md`](sound.md) (APU). [`selling_points.md`](selling_points.md) (product pitch, gameplay modules, PRG headroom). Tool READMEs: [`retr01_studio/`](../retr01_studio/README.md), [`retr01_emu/`](../retr01_emu/README.md), [`retr01_sim/`](../retr01_sim/README.md). IC notes: [`hw/md/`](../hw/md/).
 
 ---
 
@@ -15,7 +15,7 @@ When docs disagree, use this order.
 | Software-visible behavior (CPU map, `$FExx` logical ports, cart image, worlds/VRAM/palettes) | [`graphics.md`](graphics.md) |
 | Retr01-A **HW BOM** (32 IC netlist, PCB, silicon pathways) | **This file** |
 | Protoboard island bring-up | **This file** (island checklist below) |
-| Audio / APU protocol | [`sounds.md`](sounds.md) |
+| Audio / APU protocol | [`sound.md`](sound.md) |
 | Gameplay modules, budgets, Studio product contract | [`selling_points.md`](selling_points.md) |
 | Retr01 Studio UI + export | [`retr01_studio/README.md`](../retr01_studio/README.md) |
 | Emulator runtime | [`retr01_emu/README.md`](../retr01_emu/README.md) |
@@ -146,7 +146,7 @@ Datasheets: [W65C02S](https://westerndesigncenter.com/wdc/documentation/w65c02s.
 
 ### APU path (328P)
 
-1. W65C02S writes `$FE40-$FE5F` (sequencer / bytecode, see [`sounds.md`](sounds.md)).
+1. W65C02S writes `$FE40-$FE5F` (sequencer / bytecode, see [`sound.md`](sound.md)).
 2. **Bus bridge** = decode + CPU-domain HC245 isolation + 328P port/latch (not a separate IC).
 3. ATmega328P services APU continuously (mix / DAC).
 4. ATmega1284P does **not** synthesize audio.

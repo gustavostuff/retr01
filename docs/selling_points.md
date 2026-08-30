@@ -2,7 +2,7 @@
 
 Why Retr01 exists, what you can build with it, and how the software toolchain helps.
 
-**Related:** [`graphics.md`](graphics.md) (VRAM, cart, registers). [`hardware_architecture.md`](hardware_architecture.md) (32-IC BOM). [`sounds.md`](sounds.md) (APU). Tools: [`retr01_studio/`](../retr01_studio/README.md), [`retr01_emu/`](../retr01_emu/README.md), [`retr01_sim/`](../retr01_sim/README.md).
+**Related:** [`graphics.md`](graphics.md) (VRAM, cart, registers). [`hardware_architecture.md`](hardware_architecture.md) (32-IC BOM). [`sound.md`](sound.md) (APU). Tools: [`retr01_studio/`](../retr01_studio/README.md), [`retr01_emu/`](../retr01_emu/README.md), [`retr01_sim/`](../retr01_sim/README.md).
 
 ---
 
@@ -103,7 +103,7 @@ Flash + I2C save on cart PCB. Motherboard + cart proto still targets roughly the
 
 Gameplay modules are **attachable functionalities** that define mechanics and runtime behavior for a game (cart). Studio implements subsets of this contract over time. This section is the **product / runtime contract**.
 
-**Related:** [`graphics.md`](graphics.md). Collision is software-only. Audio protocol [`sounds.md`](sounds.md).
+**Related:** [`graphics.md`](graphics.md). Collision is software-only. Audio protocol [`sound.md`](sound.md).
 
 ## Scope and attachment
 
@@ -423,12 +423,12 @@ Rules for **BG boss**:
 
 ## 4. BGM and SFX module (TBD)
 
-Short stub only. Full protocol lives in [`sounds.md`](sounds.md).
+Short stub only. Full protocol lives in [`sound.md`](sound.md).
 
 | Intent | Notes |
 |--------|-------|
 | Role | Studio tools + generated ASM macros/routines to start/stop BGM and fire SFX |
-| Hardware | 6502 sequencer -> `$FE40`-`$FE5F` -> ATmega328P mixer ([`sounds.md`](sounds.md)) |
+| Hardware | 6502 sequencer -> `$FE40`-`$FE5F` -> ATmega328P mixer ([`sound.md`](sound.md)) |
 | Status | **TBD**. Channel map, bytecode authoring UI, and module profiles TBD |
 
 ---
@@ -511,7 +511,7 @@ Not a full HAL yet. Shape the codegen toward this:
 | Scroll / camera | `$FE02` / `$FE03` (+ MAP `$FE90`-`$FE93`, VRAM `$FE10`-`$FE12`) |
 | Sprites | OAM `$FE20` / `$FE21` (1284 fill, **16**/line) |
 | BG solid data | MAP/VRAM attrs. CPU tests `SOLID` |
-| Audio | `$FE40`-`$FE5F` ([`sounds.md`](sounds.md)) |
+| Audio | `$FE40`-`$FE5F` ([`sound.md`](sound.md)) |
 
 ---
 
@@ -523,7 +523,7 @@ Not a full HAL yet. Shape the codegen toward this:
 - BG boss scroll recipe (main `$FE02`/`$FE03` vs plane slots 4-5 vs scripted MAP)
 - Trigger volumes as first-class colliders
 - Whether FROZEN entities may keep cheap timers (currently: **no** updates)
-- BGM/SFX Studio profiles ([`sounds.md`](sounds.md))
+- BGM/SFX Studio profiles ([`sound.md`](sound.md))
 
 ---
 
@@ -533,5 +533,5 @@ Not a full HAL yet. Shape the codegen toward this:
 |-----|-------|
 | [`hardware_architecture.md`](hardware_architecture.md) | 32-IC BOM, bring-up islands, silicon pathways |
 | [`graphics.md`](graphics.md) | VRAM, cart image, `$FExx`, palettes |
-| [`sounds.md`](sounds.md) | APU, bytecode, 8-channel mixer |
+| [`sound.md`](sound.md) | APU, bytecode, 8-channel mixer |
 | **This file** | Product pitch, PRG headroom, game modules |
