@@ -2,7 +2,7 @@
 #define retr01_SIM_BOM32_H
 
 /*
- * retr01-A 32-IC BOM ([docs/hardware_architecture.md]).
+ * retr01-A 32-IC BOM ([docs/hardware.md]).
  * Counts are discrete silicon packages on the motherboard + cart save EEPROM.
  * Support parts (PWR, oscillators, LCD sink) are not in this tally.
  */

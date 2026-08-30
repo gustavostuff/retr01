@@ -66,7 +66,7 @@ Shared emu core with standalone [`retr01_emu`](../retr01_emu/README.md). Standal
 | | |
 |--|--|
 | **Entry world** | Cart boots **world 0**. Editor **`default_world`** / sidebar selection do not change Phase 1 cart boot until multi-world export lands |
-| **Camera** | **Dead-zone** profile ([`docs/selling_points.md`](../docs/selling_points.md) section 2.A). `r01_camera_set_deadzone(ctx, W, H)` in **`custom_logic.c`**. Export packs bytes **30-31** of the world header. Emu Host Play reads them. Logic: `common/r01_play_camera.c` |
+| **Camera** | **Dead-zone** profile (below). `r01_camera_set_deadzone(ctx, W, H)` in **`custom_logic.c`**. Export packs bytes **30-31** of the world header. Emu Host Play reads them. Logic: `common/r01_play_camera.c` |
 | **Scroll** | Smooth pixel scroll. Spawn/warp **snap** centers the view on the player, then clamps origin inside the dead zone |
 | **Player** | World **`player_entity`** (Entities context **Mark as player**). **8-dir idle/walk** from cart **player anim blob** (`PA` magic) driven by `custom_logic.c` hooks scanned at export. Stub: **SPR bank 0 tile 1** |
 | **Other entities** | **State 0 / frame 0** only in Phase 1 Host Play |

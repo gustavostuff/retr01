@@ -1,6 +1,6 @@
 # Retr01 Board Simulator
 
-IC-first board simulator for Retr01-A. Separate from Retr01 Studio (authoring). Pin/behavior: [`hw/md/`](../hw/md/). BOM and islands: [`docs/hardware_architecture.md`](../docs/hardware_architecture.md).
+IC-first board simulator for Retr01-A. Separate from Retr01 Studio (authoring). Pin/behavior: [`hw/md/`](../hw/md/). BOM and islands: [`docs/hardware.md`](../docs/hardware.md).
 
 **Goal:** simulate the Retr01-A motherboard as discrete ICs (pins, package, datasheet behavior) wired like the real board. End state: boot a cart, accept pad input, show a digital playfield (logical 128x120 inside a 256x240 RGBS field / LCD sink). Accuracy tightens as tests demand it.
 
@@ -38,7 +38,7 @@ Why the worker exists: [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md).
   Layer 1: Unit (one IC)
        |
        v
-  Layer 2: Island (few ICs + wires). See docs/hardware_architecture.md + test_island_abcdeghiojklmnp.c
+  Layer 2: Island (few ICs + wires). See docs/hardware.md + test_island_abcdeghiojklmnp.c
        |
        v
   Layer 3: System (full board + cart + input + screen)

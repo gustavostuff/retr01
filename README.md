@@ -28,10 +28,11 @@ Same **32 KB PRG** as classic NES NROM games (Exitebike, Balloon Fight, Ice Clim
 
 ## Where to go next
 
-- [`docs/hardware_architecture.md`](docs/hardware_architecture.md): 32-IC BOM, bring-up, silicon
-- [`docs/graphics.md`](docs/graphics.md): VRAM, cart, registers, palettes
+- [`docs/graphics.md`](docs/graphics.md): VRAM, sprites, palettes, graphics ports
+- [`docs/memory.md`](docs/memory.md): chips, cart layout, read/write timing
+- [`docs/hardware.md`](docs/hardware.md): 32-IC BOM, PCB block diagram, bring-up
 - [`docs/sound.md`](docs/sound.md): APU and bytecode
-- [`docs/selling_points.md`](docs/selling_points.md): product pitch, game modules, PRG headroom
+- [`docs/selling_points.md`](docs/selling_points.md): NES vs Retr01 comparison
 - [`hw/`](hw/): datasheet PDFs + [`hw/md/`](hw/md/) chip notes
 
 ---

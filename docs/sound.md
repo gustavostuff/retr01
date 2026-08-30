@@ -1,6 +1,6 @@
-# Retr01 Sounds
+# Retr01 Sound
 
-Software + hardware specification for the dedicated APU path. Channel map, DPCM, and bytecode protocol follow the audio design brief (NES-style tracker on 6502 + software mixer on AVR). Silicon placement matches the **32-IC BOM** ([`hardware_architecture.md`](hardware_architecture.md)). Register window: **`$FE40`-`$FE5F`** ([`graphics.md`](graphics.md)).
+Software + hardware specification for the dedicated APU path. Channel map, DPCM, and bytecode protocol (NES-style tracker on 6502 + software mixer on AVR). Silicon: [`hardware.md`](hardware.md). Register window: **`$FE40`-`$FE5F`** ([`graphics.md`](graphics.md)).
 
 ---
 
@@ -37,7 +37,7 @@ Flow:
 On Retr01, **"the Bus Bridge"** is **not** a separate named IC. It is the **CPU -> APU write path** that lets an 8 MHz 6502 hand bytes to a 16 MHz AVR without sharing a raw, always-on data bus:
 
 1. **Decode**: PLD (and `$FExx` latches where needed) maps CPU accesses in **`$FE40`-`$FE5F`** to the APU window.
-2. **Isolation**: the **CPU-domain 74HC245** (one of three board HC245s) plus PHI2 / `/OE` gating so only one master drives that domain at a time ([`hardware_architecture.md`](hardware_architecture.md) bus split).
+2. **Isolation**: the **CPU-domain 74HC245** (one of three board HC245s) plus PHI2 / `/OE` gating ([`hardware.md`](hardware.md) bus split).
 3. **Capture**: the 328P sees register-like writes on its port (or a latch clocked on the write). It owns synthesis timing after that.
 
 Game code does ordinary `STA $FE4x`. The bridge is **decode + bus isolation + APU-side latch/port**, same pattern as other `$FExx` peripherals. Exact GPIO pinout is schematic TBD. The **software contract** is the 32-byte window.
@@ -210,7 +210,7 @@ The sequencer is driven entirely by the W65C02S **NMI** (~60x/s). **BGM** and **
 
 ## Related
 
-- Memory map / `$FExx`: [`graphics.md`](graphics.md)
-- 32-IC BOM / APU path: [`hardware_architecture.md`](hardware_architecture.md)
-- Game module budgets: [`selling_points.md`](selling_points.md)
+- Memory map / `$FExx`: [`memory.md`](memory.md), [`graphics.md`](graphics.md)
+- 32-IC BOM / APU path: [`hardware.md`](hardware.md)
+- NES comparison: [`selling_points.md`](selling_points.md)
 - 328P chip notes: [`hw/md/ATmega328P.md`](../hw/md/ATmega328P.md)

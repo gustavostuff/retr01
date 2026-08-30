@@ -33,4 +33,4 @@ Each IC is a struct that **starts with** an `R01sEntity`, plus an `R01sEntityVTa
 | glue | `sn74hc04.c` | SN74HC04 | Hex inverter |
 | - | `stub14.c` | STUB14 | UI scaffold demo only |
 
-References: [`hw/md/`](../../hw/md/), islands in [`docs/hardware_architecture.md`](../../docs/hardware_architecture.md).
+References: [`hw/md/`](../../hw/md/), islands in [`docs/hardware.md`](../../docs/hardware.md).
