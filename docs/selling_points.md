@@ -33,7 +33,7 @@ On NES, a large share of PRG and every frame went to **making the picture move**
 | Scroll | Software nametable updates, often VBlank-only | Hardware scroll latches + **480 B** MAP stream into VRAM |
 | Multi-screen worlds | Bank switching, manual nametable layout | Sparse world grid, **32** L1 screens/world in cart MAP |
 | Second BG | Mapper tricks / limited layers | Structured **L0 / BG0** (1..8 screens), show-through under L1 color **0**, proportional scroll |
-| Sprites | 64 OAM, **8** per scanline (typical pain point) | 64 OAM, **16** per scanline, line-buffer / sprite field in 1284 |
+| Sprites | 64 OAM, **8** per scanline (typical pain point) | 64 OAM, **16** per scanline, VBlank sprite field in 1284 |
 | Background | Tile + attribute tables in VRAM | Per-tile bank/pal/flip in attr byte, CHR on cart |
 | Mid-frame effects | Sprite-0 hit | **Raster compare** IRQ (`$FE04`) |
 | Master palette | Fixed PPU palette | **64** colors on board Color PROM, cart holds indices |

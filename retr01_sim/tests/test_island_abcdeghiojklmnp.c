@@ -147,9 +147,8 @@ int main(void) {
             saw_linebuf = 1;
         }
         if (b->health_saw_sprites ||
-            r01s_as6c62256_peek(&b->linebuf, (uint16_t)(((b->linebuf_show_half & 1u) << 7) | 0x20)) == 0x01 ||
             r01s_as6c62256_peek(&b->linebuf, 0x20) == 0x01 ||
-            r01s_as6c62256_peek(&b->linebuf, 0xA0) == 0x01) {
+            r01s_as6c62256_peek(&b->linebuf, (uint16_t)(16u * 128u + 0x20u)) == 0x01) {
             saw_sprites = 1;
         }
         if (b->health_saw_nmi || b->nmi_pulses >= 1) {
@@ -176,7 +175,7 @@ int main(void) {
     expect_true(saw_apu, "island K APU PWM tone edges");
     expect_true(saw_oam, "island L OAM $FE21 readback + clk");
     expect_true(saw_linebuf, "island L linebuf mux both paths");
-    expect_true(saw_sprites, "1284 OAM fill -> linebuf sprites");
+    expect_true(saw_sprites, "1284 OAM fill -> VBlank sprite field");
     expect_true(saw_nmi, "beam island H VBlank NMI pulse");
     expect_true(b->health_saw_nmi, "health saw NMI");
     expect_true(b->nmi_pulses >= 1, "NMI pulse count");

@@ -574,7 +574,7 @@ int r01s_play_start(R01sBoard *board) {
     r01s_beam_xy_rewind(board->beam_impl.beam_x);
     board->linebuf_prev_hblank = 0;
     board->vblank_prev = 0;
-    board->linebuf_show_half = 0;
+    board->l0_show_half = 0;
     if (board->mcu_lb_impl.sram) {
         uint16_t ai;
         for (ai = 0; ai < 256u; ai++) {

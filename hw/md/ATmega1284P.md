@@ -23,7 +23,7 @@ AVR 8-bit MCU: **128 KB Flash**, **16 KB SRAM**, **4 KB EEPROM**, 32 GPIO lines 
 | Port / duty | Retr01 map |
 |-------------|------------|
 | OAM storage + evaluate | CPU writes via `$FE20` (addr) / `$FE21` (data), auto-inc. 64 entries `Y,tile,attr,X` |
-| Sprite line buffer | During **HBlank**, write next line into AS6C62256 line-buffer SRAM (ping-pong 128 px halves) |
+| Sprite line buffer | During **VBlank**, write full **120x128** sprite field. During **HBlank**, write next L0 line (ping-pong) |
 | Pads | Present `$FE60` / `$FE61` (R L D U X Y coin start, **1 = pressed**) |
 | Machine EEPROM | Internal 4 KB. CPU handshake via `$FE70` band (protocol TBD in `02`) |
 | CHR in HBlank | May own cart CHR bus while BG path is idle (do not share until island N proven) |
@@ -77,16 +77,8 @@ The 6502 does **not** DMA into 1284. Pattern:
 
 1. Decode PLD selects 1284 when CPU writes/reads `$FE20`/`$FE21` or `$FE60`/`$FE61`.
 2. 1284 firmware treats those as register windows (addr latch + data with auto-inc for OAM).
-3. Each HBlank (or line IRQ from beam logic), firmware:
-   - Scans OAM for sprites on the next logical Y
-   - Fetches CHR tiles (when bus granted)
-   - Writes **128 bytes** into the **next** line-buffer half
-4. Beam hardware reads the **current** half while 1284 fills the other.
-
-```text
-Line N:   half A SHOW (beam)   | half B FILL N+1 (1284)
-Line N+1: half A FILL N+2      | half B SHOW
-```
+3. Each **VBlank**, firmware plots the sprite field from OAM (+ CHR). Each **HBlank**, firmware fills the next L0 line. Beam reads sprites from the field and L0 from the prepared line (L1 color-0 mask) during active display.
+4. Cap: **16 sprites per logical scanline**. Not a RGB framebuffer.
 
 ### Expected CPU-visible behavior
 

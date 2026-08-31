@@ -614,7 +614,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                    ctx->health_saw_linebuf) {
             ih->health = R01S_HEALTH_OK;
             snprintf(ih->activity, sizeof(ih->activity), "P1=$%02X OAM+LB show=%u", p1,
-                     (unsigned)ctx->linebuf_show_half);
+                     (unsigned)ctx->l0_show_half);
         } else if (ctx->health_saw_oam || ctx->health_saw_linebuf) {
             ih->health = R01S_HEALTH_WARN;
             snprintf(ih->activity, sizeof(ih->activity), "OAM/LB partial pads=%d spr=%d",
@@ -631,7 +631,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  "oam0=$%02X show=%u mux_mcu=%d mux_beam=%d spr_fills=%u",
                  r01s_health_tag(ih->health), ctx->health_saw_pad, ctx->health_saw_oam,
                  ctx->health_saw_sprites, ctx->health_saw_linebuf, p1,
-                 r01s_atmega1284p_oam_peek(mcu, 0), (unsigned)ctx->linebuf_show_half,
+                 r01s_atmega1284p_oam_peek(mcu, 0), (unsigned)ctx->l0_show_half,
                  ctx->linebuf_saw_mux_mcu, ctx->linebuf_saw_mux_beam,
                  (unsigned)r01s_sprite_fetch_fill_count(sf));
         (void)lb;
@@ -1271,9 +1271,33 @@ static void wire_vram(R01sBoard *ctx) {
 
 /*
  * Island M: sprite line-buffer SRAM (no CPU port).
- * Soft 1284 fill on HBlank entry; beam reads show half on visible dots.
- * HC157: AB low = MCU fill addr, AB high = beam X.
+ * Soft 1284: full 120x128 sprite field in VBlank. L0 line ping-pong in HBlank.
+ * HC157: AB low = MCU fill addr, AB high = beam read addr.
  */
+#define R01S_SPR_FIELD_BASE 0u
+#define R01S_SPR_FIELD_STRIDE 128u
+#define R01S_L0_LINE_BASE 0x4000u
+
+static uint16_t spr_field_addr(int ly, int lx) {
+    if (ly < 0) {
+        ly = 0;
+    }
+    if (lx < 0) {
+        lx = 0;
+    }
+    if (ly >= R01S_LOGICAL_H) {
+        ly = R01S_LOGICAL_H - 1;
+    }
+    if (lx >= R01S_LOGICAL_W) {
+        lx = R01S_LOGICAL_W - 1;
+    }
+    return (uint16_t)(R01S_SPR_FIELD_BASE + (unsigned)ly * R01S_SPR_FIELD_STRIDE + (unsigned)lx);
+}
+
+static uint16_t l0_line_addr(int half, int lx) {
+    return (uint16_t)(R01S_L0_LINE_BASE + ((half & 1) << 7) + (lx & 0x7F));
+}
+
 static void linebuf_drive_addr(R01sBoard *ctx, uint16_t addr, int mcu_sel) {
     R01sEntity *sram = r01s_as6c62256_entity(ctx->mcu_lb_impl.sram);
     R01sEntity *mux = r01s_sn74hc157_entity(ctx->mcu_lb_impl.mux157[R01S_MUX157_LINEBUF0]);
@@ -1304,21 +1328,6 @@ static void linebuf_drive_addr(R01sBoard *ctx, uint16_t addr, int mcu_sel) {
         snprintf(an, sizeof(an), "A%d", i);
         drive_level_bit(sram, an, (addr >> i) & 1);
     }
-}
-
-static void linebuf_write_byte(R01sBoard *ctx, uint16_t addr, uint8_t data) {
-    R01sEntity *sram = r01s_as6c62256_entity(ctx->mcu_lb_impl.sram);
-    linebuf_drive_addr(ctx, addr, 1);
-    ctx->linebuf_saw_mux_mcu = 1;
-    r01s_entity_drive(sram, "CE#", R01S_LVL_L);
-    r01s_entity_drive(sram, "OE#", R01S_LVL_H);
-    r01s_entity_drive(sram, "WE#", R01S_LVL_L);
-    r01s_bus_write(sram, "DQ", 8, data);
-    r01s_entity_eval(sram);
-    r01s_entity_drive(sram, "WE#", R01S_LVL_H);
-    r01s_entity_eval(sram);
-    r01s_entity_drive(sram, "CE#", R01S_LVL_H);
-    r01s_bus_hiz(sram, "DQ", 8);
 }
 
 #define R01S_CHR_TILE_BYTES 16u
@@ -1496,7 +1505,7 @@ static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     slot = slot_y * 2 + slot_x;
     /* Match emu Host Play: missing L1 slot -> L0 show-through, else backdrop. */
     if (!ctx->vram_slot_present[slot & 3]) {
-        master = board_l0_master_at(ctx, lx, ly);
+        master = r01s_as6c62256_peek(ctx->mcu_lb_impl.sram, l0_line_addr(ctx->l0_show_half, lx));
         ctx->chr_last_master = master;
         return master;
     }
@@ -1517,7 +1526,8 @@ static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     }
     if (color == 0) {
         flash_chr_release(ctx);
-        master = board_l0_master_at(ctx, lx, ly);
+        /* L1 color 0 mask: L0 line prepared in HBlank (not live CHR here). */
+        master = r01s_as6c62256_peek(ctx->mcu_lb_impl.sram, l0_line_addr(ctx->l0_show_half, lx));
         ctx->chr_last_master = master;
         return master;
     }
@@ -1530,24 +1540,15 @@ static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
 
 
 
-/* Island N: clear half, OAM-scan logical Y, paint <=16 sprites (CHR via flash CE in HBlank). */
-static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
-    int i;
+/* Island N: paint one logical Y into the VBlank sprite field (soft poke). */
+static void linebuf_oam_paint_y(R01sBoard *ctx, int logical_y) {
     int si;
     int painted = 0;
     uint32_t pixels = 0;
     uint8_t hit_x = 0;
     uint8_t hit_color = 0;
-    uint16_t base = (uint16_t)((half & 1) << 7);
     R01sAtmega1284p *mcu = ctx->mcu_lb_impl.mcu;
     R01sSpriteFetch *sf = ctx->sprites_impl.fetch;
-
-    /* HBlank steals flash from PRG: dedicated CHR window. */
-    flash_yield_for_chr(ctx);
-
-    for (i = 0; i < 128; i++) {
-        linebuf_write_byte(ctx, (uint16_t)(base + (unsigned)i), 0);
-    }
 
     for (si = 0; si < 64 && painted < 16; si++) {
         uint8_t oy_u = r01s_atmega1284p_oam_peek(mcu, (uint8_t)(si * 4 + 0));
@@ -1567,14 +1568,14 @@ static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
         }
         painted++;
         {
-            int row = logical_y - (int)oy;
+            int row = logical_y - oy;
             uint8_t pal = (uint8_t)((attr & R01S_ATTR_PAL) >> R01S_ATTR_PAL_SHIFT);
             uint32_t spr_chr = ctx->cart_off_chr ? (ctx->cart_off_chr + 4u * R01S_CHR_BANK_BYTES) : 0;
             for (px = 0; px < 8; px++) {
-                int x = (int)ox + px;
+                int x = ox + px;
                 uint8_t master;
                 int chr_ok = 1;
-                if (x < 0 || x >= 128) {
+                if (x < 0 || x >= R01S_LOGICAL_W) {
                     continue;
                 }
                 if (spr_chr) {
@@ -1589,7 +1590,7 @@ static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
                         continue;
                     }
                 }
-                linebuf_write_byte(ctx, (uint16_t)(base + (unsigned)x), master);
+                r01s_as6c62256_poke(ctx->mcu_lb_impl.sram, spr_field_addr(logical_y, x), master);
                 pixels++;
                 if (!hit_color) {
                     hit_x = (uint8_t)x;
@@ -1599,16 +1600,48 @@ static void linebuf_oam_fill_half(R01sBoard *ctx, int half, int logical_y) {
         }
     }
 
-    flash_chr_release(ctx);
-
     r01s_sprite_fetch_note_fill(sf, (uint8_t)(logical_y & 0xFF), (uint8_t)painted, pixels, hit_x,
                                 hit_color);
-    /* Opaque pixels or an OAM hit on this line (CHR may be blank for smoke tile). */
     if (pixels > 0 || painted > 0) {
         ctx->health_saw_sprites = 1;
     }
 }
 
+/* VBlank: clear + plot full 120x128 sprite field. HBlank must not steal this work. */
+static void linebuf_oam_fill_field(R01sBoard *ctx) {
+    int ly;
+    int i;
+
+    flash_yield_for_chr(ctx);
+    linebuf_drive_addr(ctx, spr_field_addr(0, 0), 1);
+    ctx->linebuf_saw_mux_mcu = 1;
+
+    for (i = 0; i < R01S_LOGICAL_H * R01S_LOGICAL_W; i++) {
+        r01s_as6c62256_poke(ctx->mcu_lb_impl.sram, (uint16_t)(R01S_SPR_FIELD_BASE + (unsigned)i), 0);
+    }
+    for (ly = 0; ly < R01S_LOGICAL_H; ly++) {
+        linebuf_oam_paint_y(ctx, ly);
+    }
+
+    flash_chr_release(ctx);
+}
+
+/* HBlank: prepare next L0 / BG0 line (show-through under L1 color 0 on active dots). */
+static void linebuf_l0_fill_half(R01sBoard *ctx, int half, int logical_y) {
+    int x;
+
+    flash_yield_for_chr(ctx);
+    linebuf_drive_addr(ctx, l0_line_addr(half, 0), 1);
+    ctx->linebuf_saw_mux_mcu = 1;
+
+    for (x = 0; x < R01S_LOGICAL_W; x++) {
+        uint8_t master = board_l0_master_at(ctx, x, logical_y);
+        r01s_as6c62256_poke(ctx->mcu_lb_impl.sram, l0_line_addr(half, x), master);
+    }
+
+    flash_chr_release(ctx);
+    ctx->health_saw_linebuf = 1;
+}
 
 static void wire_linebuf(R01sBoard *ctx) {
     R01sEntity *sram = r01s_as6c62256_entity(ctx->mcu_lb_impl.sram);
@@ -1620,7 +1653,7 @@ static void wire_linebuf(R01sBoard *ctx) {
     int scale_2x = r01s_video_sink_scale_2x(ctx->video_impl.sink);
     uint16_t show_addr;
 
-    /* Entering HBlank: OAM-fill next half for next logical Y, then show it. */
+    /* Entering HBlank: fill next L0 line only (sprites are a VBlank field). */
     if (hblank && !ctx->linebuf_prev_hblank) {
         int next_by = by + 1;
         int next_ly;
@@ -1629,12 +1662,11 @@ static void wire_linebuf(R01sBoard *ctx) {
         if (next_by >= R01S_BEAM_DOTS_Y) {
             next_by = 0;
         }
-        fill_half = ctx->linebuf_show_half ^ 1;
+        fill_half = ctx->l0_show_half ^ 1;
         if (r01s_rgbs_beam_to_logical(scale_2x, probe_x, next_by, &lx, &next_ly)) {
-            linebuf_oam_fill_half(ctx, fill_half, next_ly);
-            ctx->linebuf_show_half = (uint8_t)(fill_half & 1);
+            linebuf_l0_fill_half(ctx, fill_half, next_ly);
+            ctx->l0_show_half = (uint8_t)(fill_half & 1);
         }
-        /* Border / VBlank lines: keep prior half (no OAM fill). */
     }
     ctx->linebuf_prev_hblank = (uint8_t)(hblank ? 1 : 0);
 
@@ -1644,7 +1676,8 @@ static void wire_linebuf(R01sBoard *ctx) {
     r01s_bus_hiz(sram, "DQ", 8);
 
     if (!hblank && r01s_rgbs_beam_to_logical(scale_2x, bx, by, &lx, &ly)) {
-        show_addr = (uint16_t)(((ctx->linebuf_show_half & 1u) << 7) | (lx & 0x7F));
+        /* Beam mux path reads L0 show line (sprite field is soft-peeked in video). */
+        show_addr = l0_line_addr(ctx->l0_show_half, lx);
         linebuf_drive_addr(ctx, show_addr, 0);
         ctx->linebuf_saw_mux_beam = 1;
         r01s_entity_drive(sram, "CE#", R01S_LVL_L);
@@ -1739,8 +1772,7 @@ static void wire_video_dot(R01sBoard *ctx) {
     bg = board_bg_master_at(ctx, lx, ly);
     r01s_compositor_set_bg(comp, bg);
     {
-        uint16_t spr_addr = (uint16_t)(((ctx->linebuf_show_half & 1u) << 7) | (lx & 0x7F));
-        uint8_t spr = r01s_as6c62256_peek(ctx->mcu_lb_impl.sram, spr_addr);
+        uint8_t spr = r01s_as6c62256_peek(ctx->mcu_lb_impl.sram, spr_field_addr(ly, lx));
         r01s_compositor_set_sprite(comp, (uint8_t)(spr & 0x3Fu), spr != 0);
         if (spr != 0) {
             ctx->health_saw_sprites = 1;
@@ -2817,7 +2849,7 @@ static void board_reset(R01sIslandGroup *group) {
     ctx->health_saw_nmi = 0;
     ctx->nmi_prev = R01S_LVL_H;
     ctx->nmi_pulses = 0;
-    ctx->linebuf_show_half = 0;
+    ctx->l0_show_half = 0;
 
     ctx->linebuf_prev_hblank = 0;
     ctx->vblank_prev = 0;
@@ -2931,6 +2963,8 @@ static void board_step(R01sIslandGroup *group) {
                         r01s_video_sink_on_vblank(ctx->video_impl.sink);
                     }
                     r01s_play_on_vblank(ctx);
+                    /* After Host Play OAM update: plot full sprite field for next frame. */
+                    linebuf_oam_fill_field(ctx);
                 }
                 ctx->vblank_prev = (uint8_t)(vb ? 1 : 0);
             }

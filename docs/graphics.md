@@ -136,9 +136,7 @@ OAM attr byte
 |________________ SIZE (0=8x8, 1=8x16 tile pair)
 ```
 
-**Locked raster split (with L0):** fill the **full 120x128** sprite field in **VBlank** (walk Y in 8 px or 16 px bands). Give **HBlank** to L0 line fill. Beam reads sprite pixels from the field during active display. Cap **16** sprites per **logical** scanline. Host Play packs X/Y as signed viewport-relative bytes. Sprites clip to **128x120**.
-
-Phase 1 bring-up may still use a simpler HBlank sprite line path until the full VBlank field lands. Software-visible priority and clip rules stay the same.
+**Locked raster split (with L0):** fill the **full 120x128** sprite field in **VBlank** (walk Y in 8 px or 16 px bands). Give **HBlank** to L0 / BG0 line fill. Beam reads sprite pixels from the field during active display. Where L1 color index is **0**, the compositor shows the prepared L0 line (BG1 mask / show-through). Cap **16** sprites per **logical** scanline. Host Play packs X/Y as signed viewport-relative bytes. Sprites clip to **128x120**.
 
 ```text
 Priority (opaque wins):
@@ -184,7 +182,7 @@ else if L1 index != 0 -> L1
 else                  -> L0 (or backdrop)
 ```
 
-Emu and Sim Host Play already composite this way from the cart BG0 cache (host overlay, not IC VRAM slots 4-7). Silicon target: live L1 on active dots, L0 line fill in **HBlank** from slots 4-7 + cart CHR.
+Emu Host Play composites L0 under L1 color 0 from the cart BG0 cache in the full-frame renderer. Sim prepares each L0 line in **HBlank** and applies the L1 color-0 mask on active dots. Silicon target matches that split (VRAM slots 4-7 + cart CHR on the L0 path).
 
 ### Proportional scroll
 
@@ -232,6 +230,6 @@ World/screen/cart caps: [`memory.md`](memory.md).
 | 8x16 sprite fetch | 1284 tile-pair timing still evolving |
 | BG `ANIM` rate | Global vs per-game |
 | Living-tile list cap | **32** vs **64** cells (`retr01_ANIM_MAX`) |
-| VBlank sprite field | Full 120x128 clear+plot vs Phase 1 HBlank line path |
-| L0 HBlank fill | Linebuf halves + cart CHR arbitration with MAP |
+| VBlank sprite field | Full 120x128 clear+plot in sim (`linebuf_oam_fill_field`) |
+| L0 HBlank fill | Next L0 line into linebuf `$4000` ping-pong. Active dots mask with L1 color 0 |
 | `PPUCTRL` camera mode bits | Exact bitfield TBD |

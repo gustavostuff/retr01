@@ -262,8 +262,8 @@ typedef struct R01sBoard {
     uint8_t health_saw_nmi;
     R01sLevel nmi_prev; /* beam NMI# edge detect */
     uint32_t nmi_pulses;
-    /* Island M ping-pong state (no CPU port; filled by Island N OAM eval). */
-    uint8_t linebuf_show_half; /* 0 = $000-$07F showing, 1 = $080-$0FF */
+    /* Island M: sprite field (VBlank) + L0 line ping-pong (HBlank). */
+    uint8_t l0_show_half; /* 0/1 within L0 line region at R01S_L0_LINE_BASE */
     uint8_t linebuf_prev_hblank;
     uint8_t vblank_prev;
     uint8_t linebuf_saw_mux_mcu;

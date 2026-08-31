@@ -49,15 +49,15 @@ PRG is **32 KB** mapped at `$8000-$FFFF` with an I/O hole at `$FE00-$FEFF`. No P
 
 The CPU never shares a raw fight with the beam. Streaming MAP during active display is intentional: write on CPU phases while dots fetch on PPU phases. Auto-inc on `$FE12` commits on the next PHI2 rising edge in the sim model.
 
-### Sprite line buffer (32 KB SRAM, 128 px used per half)
+### Sprite line buffer (32 KB SRAM)
 
 | | |
 |--|--|
 | **CPU port** | None direct |
-| **Who writes** | ATmega1284P during HBlank (scanline N+1) |
-| **Who reads** | Compositor/beam for scanline N |
-| **Layout** | Ping-pong halves at `$000-$07F` and `$080-$0FF` per bank |
-| **Content** | Resolved sprite pixels for one logical scanline, not a framebuffer |
+| **Sprite field** | ATmega1284P fills the full **120x128** playfield in **VBlank** (soft field in sim). Beam/compositor reads per visible dot |
+| **L0 lines** | 1284 fills the next L0 / BG0 line in **HBlank** (ping-pong). Active dots use that line where L1 color index is **0** (show-through mask) |
+| **Layout (sim)** | Sprite field at `$0000` (120x128). L0 ping-pong halves at `$4000` / `$4080` |
+| **Content** | Resolved sprite / L0 master indices, not a full RGB framebuffer |
 
 ---
 
@@ -67,7 +67,7 @@ The CPU never shares a raw fight with the beam. Streaming MAP during active disp
 |--|--|
 | **CPU read** | PRG at `$8000+`, MAP via `$FE90`-`$FE93`, CHR indirectly via BG/1284 fetch |
 | **CPU write** | Flash programming only (not runtime gameplay) |
-| **CHR read** | BG path on visible dots. 1284 during HBlank for sprites |
+| **CHR read** | BG path on visible dots. 1284 uses cart CHR in **VBlank** (sprite field) and **HBlank** (L0 line) |
 | **MAP read** | `$FE90`-`$FE92` set 24-bit seek, `$FE93` data auto-inc |
 
 One `.retr01` image holds PRG, global palettes, world blobs (CHR + screen MAP + entities), and optional title/credits screens. CHR is **not** memory-mapped into the 6502 address space. The CPU seeks MAP bytes through `$FE93`. Video logic fetches CHR tiles by bank+index from flash.
