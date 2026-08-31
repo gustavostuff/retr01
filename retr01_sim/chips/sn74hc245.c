@@ -37,26 +37,40 @@ static void hc245_drive_side(R01sEntity *e, char side, uint8_t v) {
 }
 
 static void hc245_reset(R01sEntity *e) {
+    R01sSn74hc245 *c = (R01sSn74hc245 *)e;
+    r01s_delay_u8_reset(&c->out_delay, 0);
+    c->driving_b = 1;
     hc245_hiz_side(e, 'A');
     hc245_hiz_side(e, 'B');
 }
 
 static void hc245_eval(R01sEntity *e) {
+    R01sSn74hc245 *c = (R01sSn74hc245 *)e;
     R01sLevel oe = r01s_entity_sense(e, "OE");
     R01sLevel dir = r01s_entity_sense(e, "DIR");
+    uint8_t ideal;
+    uint8_t out;
+    int drive_b;
 
     if (!r01s_level_is_low(oe)) {
         /* Chip releases both ports; does not overwrite external drivers mid-net. */
+        r01s_delay_u8_reset(&c->out_delay, c->out_delay.out);
         hc245_hiz_side(e, 'A');
         hc245_hiz_side(e, 'B');
         return;
     }
-    if (r01s_level_is_high(dir)) {
-        /* A inputs, B outputs -- leave A levels alone. */
-        hc245_drive_side(e, 'B', hc245_read_side(e, 'A'));
+    drive_b = r01s_level_is_high(dir) ? 1 : 0;
+    ideal = drive_b ? hc245_read_side(e, 'A') : hc245_read_side(e, 'B');
+    if (drive_b != c->driving_b) {
+        /* Direction change: retarget delay; do not Hi-Z the new input side. */
+        c->driving_b = drive_b;
+        r01s_delay_u8_reset(&c->out_delay, ideal);
+    }
+    out = r01s_delay_u8_update(&c->out_delay, ideal, r01s_timing_pin_tpd_ns(R01S_TPD_PART_HC245));
+    if (drive_b) {
+        hc245_drive_side(e, 'B', out);
     } else {
-        /* B inputs, A outputs -- leave B levels alone. */
-        hc245_drive_side(e, 'A', hc245_read_side(e, 'B'));
+        hc245_drive_side(e, 'A', out);
     }
 }
 

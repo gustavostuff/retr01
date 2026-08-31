@@ -48,7 +48,7 @@ Before chasing antennas, budget chip-to-chip delay:
 
 - PHI2 / decode / HC245 / latch / SRAM / PLD paths must close inside the 8 MHz and dot-clock windows.
 - Use datasheet **min/typ/max** propagation; worst-case stacks matter more than RF folklore.
-- Sim (`retr01_sim`) and island bring-up are the right places to catch this early.
+- Sim (`retr01_sim`): default is zero-delay for catchup. Opt in with **`./sim … DELAY=typical|max`** (or env `R01S_PROP_DELAY`) to print HC/PLD/SRAM path budget vs PHI2 half — pin netlist stays combinatorial. See `tests/test_timing.c` and [`PERFORMANCE.md`](../retr01_sim/PERFORMANCE.md).
 
 ---
 
@@ -180,4 +180,4 @@ Further reading that clarifies stackup and return paths: Rick Hartley lectures o
 | TRS pin map (T/R = VCC/DATA) | Lock at schematic; document for third-party pads |
 | PPTC Ihold per pad port | Bench ATtiny85 + LED budget, then pick family (e.g. Bourns MF-MSMF / Littelfuse 1206L) |
 | First-spin RF | TEM comparative + ferrite/clamp tweaks; formal CE only if selling into marked markets |
-| Prop-delay budget | Capture HC / PLD / SRAM stacks in sim before PCB freeze |
+| Prop-delay budget | Sim: `./sim cart.retr01 DELAY=typical|max` (or env `R01S_PROP_DELAY`). Capture HC / PLD / SRAM stacks before PCB freeze |

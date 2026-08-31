@@ -96,7 +96,7 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 
 | Topic | Choice |
 |-------|--------|
-| Time base | PHI2 half-steps from `OSC8M`. Combinatorial parts settle in wire pass |
+| Time base | PHI2 half-steps from `OSC8M` (`R01S_PHI2_HALF_NS`). Combinatorial settle. `DELAY=typical|max` prints datasheet path budget (pin netlist stays zero-delay so catchup works) |
 | Bus | Settle loop (`R01S_SETTLE_PASSES`). H+L -> hard abort. Undriven -> pull-up HIGH (`$FF`) |
 | Wiring | Explicit `wire_*` in `board.c`. Global netlist deferred |
 | Boot UX | Worker-thread MAP catchup. See [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md) |
@@ -126,9 +126,13 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 ## Run
 
 ```bash
-scripts/run-sim output/test.retr01
-# or: ./build/retr01_sim /path/to/cart.retr01
+./sim output/test.retr01
+./sim output/test.retr01 DELAY=typical   # print typ path budget vs PHI2 half
+./sim output/test.retr01 DELAY=max       # print max (worst-case) path budget
+# or: scripts/run-sim output/test.retr01 DELAY=max
 ```
+
+`DELAY=typical|max` selects the datasheet corner and prints **path budget** (decode+245+573 vs PHI2 half). The pin netlist stays combinatorial — deferred HC/PLD outputs miss `STA $FExx` in this settle model. Wall-clock UI FPS ≠ sim ns. See [`PERFORMANCE.md`](PERFORMANCE.md).
 
 **Controls:** `Space` pause/resume * `Ctrl+R` reset * `R` rotate selected IC * **SCALE 1X/2X** (left sidebar or `G`. **2X** grows the video island to fit SCR1) * `.` single-step (while paused) * **COMPACT / ISLANDS** (HUD) * **left-drag chip** move * **right-click chip** orient H/V * **left-drag empty island** move frame * **bottom-right grip** resize * **Shift+arrows / wheel / middle-drag** pan * `Esc` quit.
 

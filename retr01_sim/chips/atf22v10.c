@@ -1,6 +1,7 @@
 #include "atf22v10.h"
 
 #include "retr01_sim/bus.h"
+#include "retr01_sim/timing.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -18,31 +19,38 @@ static void pld_drive_named(R01sEntity *e, const char *name, int on) {
     r01s_entity_drive(e, name, on ? R01S_LVL_H : R01S_LVL_L);
 }
 
+static void pld_drive_sel_mask(R01sEntity *e, uint8_t off, int hit) {
+    pld_drive_named(e, "SEL_FE02", hit && off == 0x02u);
+    pld_drive_named(e, "SEL_FE03", hit && off == 0x03u);
+    pld_drive_named(e, "SEL_FE04", hit && off == 0x04u);
+    pld_drive_named(e, "SEL_FE08", hit && off == 0x08u);
+    pld_drive_named(e, "SEL_FE10", hit && off == 0x10u);
+    pld_drive_named(e, "SEL_FE11", hit && off == 0x11u);
+    pld_drive_named(e, "SEL_FE12", hit && off == 0x12u);
+    pld_drive_named(e, "SEL_FE90", hit && off == 0x90u);
+    pld_drive_named(e, "SEL_FE91", hit && off == 0x91u);
+    pld_drive_named(e, "SEL_FE92", hit && off == 0x92u);
+    pld_drive_named(e, "SEL_FE93", hit && off == 0x93u);
+}
+
 static void pld_reset(R01sEntity *e) {
     R01sAtf22v10 *c = (R01sAtf22v10 *)e;
     c->p_bus = 0;
     c->q_bus = 0;
     c->eq = 0;
+    r01s_delay_u8_reset(&c->out_delay, 0xFFu); /* 0xFF = no SEL */
     if (c->role == R01S_PLD_BEAM_Y) {
+        r01s_delay_u8_reset(&c->out_delay, 0);
         pld_drive_byte(e, "Y", 0);
         r01s_entity_drive(e, "EQ#", R01S_LVL_H);
         return;
     }
     if (c->role == R01S_PLD_DECODE) {
-        pld_drive_named(e, "SEL_FE02", 0);
-        pld_drive_named(e, "SEL_FE03", 0);
-        pld_drive_named(e, "SEL_FE04", 0);
-        pld_drive_named(e, "SEL_FE08", 0);
-        pld_drive_named(e, "SEL_FE10", 0);
-        pld_drive_named(e, "SEL_FE11", 0);
-        pld_drive_named(e, "SEL_FE90", 0);
-        pld_drive_named(e, "SEL_FE91", 0);
-        pld_drive_named(e, "SEL_FE92", 0);
-        pld_drive_named(e, "SEL_FE93", 0);
-        pld_drive_named(e, "SEL_FE12", 0);
+        pld_drive_sel_mask(e, 0, 0);
         return;
     }
     /* VRAM glue: I->Y passthrough until interleave equations land. */
+    r01s_delay_u8_reset(&c->out_delay, 0);
     pld_drive_byte(e, "Y", 0);
 }
 
@@ -65,18 +73,19 @@ static void pld_eval_decode(R01sEntity *e) {
     int be = r01s_level_is_high(r01s_entity_sense(e, "BE"));
     uint8_t off = pld_sense_a_lo(e);
     int hit = fe && be;
+    uint8_t ideal = hit ? off : 0xFFu;
 
-    pld_drive_named(e, "SEL_FE02", hit && off == 0x02u);
-    pld_drive_named(e, "SEL_FE03", hit && off == 0x03u);
-    pld_drive_named(e, "SEL_FE04", hit && off == 0x04u);
-    pld_drive_named(e, "SEL_FE08", hit && off == 0x08u);
-    pld_drive_named(e, "SEL_FE10", hit && off == 0x10u);
-    pld_drive_named(e, "SEL_FE11", hit && off == 0x11u);
-    pld_drive_named(e, "SEL_FE12", hit && off == 0x12u);
-    pld_drive_named(e, "SEL_FE90", hit && off == 0x90u);
-    pld_drive_named(e, "SEL_FE91", hit && off == 0x91u);
-    pld_drive_named(e, "SEL_FE92", hit && off == 0x92u);
-    pld_drive_named(e, "SEL_FE93", hit && off == 0x93u);
+    /*
+     * Decode SEL must be combinatorial in this netlist: wire_io pulses HC573 LE
+     * in the same settle pass. Deferred SEL misses STA $FExx (catchup FAIL).
+     * Path delay is still counted in r01s_timing_path_decode_bus_latch_ns().
+     */
+    (void)r01s_delay_u8_update(&c->out_delay, ideal, 0);
+    if (ideal == 0xFFu) {
+        pld_drive_sel_mask(e, 0, 0);
+    } else {
+        pld_drive_sel_mask(e, ideal, 1);
+    }
     c->p_bus = off;
     c->q_bus = hit ? off : 0;
 }
@@ -87,6 +96,7 @@ static void pld_eval(R01sEntity *e) {
     uint8_t p = 0;
     uint8_t q = 0;
     char pn[8], qn[8];
+    uint8_t delayed;
 
     if (c->role == R01S_PLD_DECODE) {
         pld_eval_decode(e);
@@ -107,7 +117,9 @@ static void pld_eval(R01sEntity *e) {
         c->p_bus = p;
         c->q_bus = q;
         c->eq = (p == q);
-        r01s_entity_drive(e, "EQ#", c->eq ? R01S_LVL_L : R01S_LVL_H);
+        delayed = r01s_delay_u8_update(&c->out_delay, (uint8_t)(c->eq ? 1u : 0u),
+                                      r01s_timing_pin_tpd_ns(R01S_TPD_PART_ATF22));
+        r01s_entity_drive(e, "EQ#", (delayed & 1u) ? R01S_LVL_L : R01S_LVL_H);
         return;
     }
 
@@ -120,8 +132,9 @@ static void pld_eval(R01sEntity *e) {
         }
     }
     c->p_bus = p;
-    c->q_bus = p;
-    pld_drive_byte(e, "Y", c->q_bus);
+    delayed = r01s_delay_u8_update(&c->out_delay, p, r01s_timing_pin_tpd_ns(R01S_TPD_PART_ATF22));
+    c->q_bus = delayed;
+    pld_drive_byte(e, "Y", delayed);
 }
 
 static void pld_tick(R01sEntity *e) {

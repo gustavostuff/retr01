@@ -39,6 +39,7 @@ static void hc573_drive_q(R01sEntity *e, uint8_t v) {
 static void hc573_reset(R01sEntity *e) {
     R01sSn74hc573 *c = (R01sSn74hc573 *)e;
     c->latched = 0;
+    r01s_delay_u8_reset(&c->q_delay, 0);
     hc573_hiz_q(e);
 }
 
@@ -46,15 +47,19 @@ static void hc573_eval(R01sEntity *e) {
     R01sSn74hc573 *c = (R01sSn74hc573 *)e;
     R01sLevel oe = r01s_entity_sense(e, "OE");
     R01sLevel le = r01s_entity_sense(e, "LE");
+    uint8_t q;
 
     if (r01s_level_is_high(oe)) {
+        /* OE disable: release bus immediately (tdis not modeled separately). */
+        r01s_delay_u8_reset(&c->q_delay, c->latched);
         hc573_hiz_q(e);
         return;
     }
     if (r01s_level_is_high(le)) {
         c->latched = hc573_read_d(e);
     }
-    hc573_drive_q(e, c->latched);
+    q = r01s_delay_u8_update(&c->q_delay, c->latched, r01s_timing_pin_tpd_ns(R01S_TPD_PART_HC573));
+    hc573_drive_q(e, q);
 }
 
 static void hc573_tick(R01sEntity *e) {
@@ -112,5 +117,6 @@ void r01s_sn74hc573_poke_q(R01sSn74hc573 *chip, uint8_t value) {
         return;
     }
     chip->latched = value;
+    r01s_delay_u8_reset(&chip->q_delay, value);
     hc573_drive_q(&chip->base, value);
 }

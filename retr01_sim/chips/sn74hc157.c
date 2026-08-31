@@ -16,18 +16,27 @@ static const struct {
     {"4A", "4B", "4Y"},
 };
 
-static void hc157_reset(R01sEntity *e) {
+static void hc157_drive_y_nibble(R01sEntity *e, uint8_t y4) {
     int i;
     for (i = 0; i < 4; i++) {
-        r01s_entity_drive(e, HC157_GATES[i].y, R01S_LVL_L);
+        r01s_entity_drive(e, HC157_GATES[i].y, (y4 & (1u << i)) ? R01S_LVL_H : R01S_LVL_L);
     }
 }
 
+static void hc157_reset(R01sEntity *e) {
+    R01sSn74hc157 *c = (R01sSn74hc157 *)e;
+    r01s_delay_u8_reset(&c->y_delay, 0);
+    hc157_drive_y_nibble(e, 0);
+}
+
 static void hc157_eval(R01sEntity *e) {
+    R01sSn74hc157 *c = (R01sSn74hc157 *)e;
     int i;
     R01sLevel g = r01s_entity_sense(e, "G#");
     R01sLevel ab = r01s_entity_sense(e, "AB");
     int select_b = r01s_level_is_high(ab);
+    uint8_t ideal = 0;
+    uint8_t y4;
 
     for (i = 0; i < 4; i++) {
         R01sLevel y;
@@ -36,13 +45,18 @@ static void hc157_eval(R01sEntity *e) {
         } else {
             R01sLevel in = r01s_entity_sense(e, select_b ? HC157_GATES[i].b : HC157_GATES[i].a);
             if (in == R01S_LVL_Z || in == R01S_LVL_X) {
-                y = R01S_LVL_X;
+                /* Treat unknown as L for delay packing; X still rare on address mux. */
+                y = R01S_LVL_L;
             } else {
                 y = r01s_level_is_high(in) ? R01S_LVL_H : R01S_LVL_L;
             }
         }
-        r01s_entity_drive(e, HC157_GATES[i].y, y);
+        if (y == R01S_LVL_H) {
+            ideal |= (uint8_t)(1u << i);
+        }
     }
+    y4 = r01s_delay_u8_update(&c->y_delay, ideal, r01s_timing_pin_tpd_ns(R01S_TPD_PART_HC157));
+    hc157_drive_y_nibble(e, y4);
 }
 
 static void hc157_tick(R01sEntity *e) {

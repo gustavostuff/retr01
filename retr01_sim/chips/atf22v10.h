@@ -3,6 +3,7 @@
 
 #include "retr01_sim/bom32.h"
 #include "retr01_sim/entity.h"
+#include "retr01_sim/timing.h"
 
 #include <stdint.h>
 
@@ -11,6 +12,7 @@
  * DECODE: $FExx select equations -> SEL_FE* (board pulses HC573 LE from these).
  * VRAM: I->Y passthrough stub until interleave equations land.
  * BEAM_Y: P==Q -> EQ#. Beam-X / compositor / BG fetch are dedicated models.
+ * With R01S_PROP_DELAY, SEL / Y / EQ# update after PLD tPD.
  */
 typedef struct R01sAtf22v10 {
     R01sEntity base;
@@ -18,6 +20,7 @@ typedef struct R01sAtf22v10 {
     uint8_t p_bus;
     uint8_t q_bus;
     int eq; /* beam-Y raster compare result */
+    R01sDelayU8 out_delay; /* decode SEL mask, VRAM Y, or EQ# bit0 */
 } R01sAtf22v10;
 
 void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role);

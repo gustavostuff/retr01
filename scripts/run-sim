@@ -7,7 +7,7 @@ source "$ROOT/scripts/r01-common.sh"
 
 CART="${1:-}"
 shift || true
-[[ -n "$CART" ]] || r01_usage_die "usage: scripts/run-sim <cart.retr01> [-- sim-args...]"
+[[ -n "$CART" ]] || r01_usage_die "usage: scripts/run-sim <cart.retr01> [DELAY=typical|max] [--debug]"
 
 SIM="$R01_ROOT/retr01_sim"
 BIN="$SIM/build/retr01_sim"

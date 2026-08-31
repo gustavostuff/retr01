@@ -20,6 +20,7 @@ add_library(retr01_sim_core
   src/board.c
   src/board_debug.c
   src/play.c
+  src/timing.c
   chips/stub14.c
   chips/pwr5v.c
   chips/osc8m.c
@@ -98,6 +99,7 @@ function(r01s_unit_test name)
   add_test(NAME ${name} COMMAND ${name} ${R01_TEST_CART})
 endfunction()
 
+r01s_unit_test(test_timing)
 r01s_unit_test(test_entity)
 r01s_unit_test(test_bus)
 r01s_unit_test(test_gamepad)

@@ -7,6 +7,8 @@
 static void sram_reset(R01sEntity *e) {
     R01sAs6c62256 *c = (R01sAs6c62256 *)e;
     memset(c->mem, 0, sizeof(c->mem));
+    r01s_delay_u8_reset(&c->dq_delay, 0);
+    c->dq_driving = 0;
     r01s_bus_hiz(e, "DQ", 8);
 }
 
@@ -16,20 +18,32 @@ static void sram_eval(R01sEntity *e) {
     int oe = r01s_level_is_low(r01s_entity_sense(e, "OE#"));
     int we = r01s_level_is_low(r01s_entity_sense(e, "WE#"));
     uint16_t addr = (uint16_t)(r01s_bus_read(e, "A", 15) & 0x7FFFu);
+    uint8_t data;
 
     if (!ce) {
+        r01s_delay_u8_reset(&c->dq_delay, c->dq_delay.out);
+        c->dq_driving = 0;
         r01s_bus_hiz(e, "DQ", 8);
         return;
     }
     if (we) {
+        /* Write commits immediately (tWP not separately modeled yet). */
         c->mem[addr] = (uint8_t)r01s_bus_read(e, "DQ", 8);
+        r01s_delay_u8_reset(&c->dq_delay, c->mem[addr]);
+        c->dq_driving = 0;
         r01s_bus_hiz(e, "DQ", 8);
         return;
     }
     if (oe) {
-        r01s_bus_write(e, "DQ", 8, c->mem[addr]);
+        /* Same-settle reads (wire_vram / MAP) need DQ this pass; tAA is budget-only. */
+        data = c->mem[addr];
+        (void)r01s_delay_u8_update(&c->dq_delay, data, 0);
+        c->dq_driving = 1;
+        r01s_bus_write(e, "DQ", 8, data);
         return;
     }
+    r01s_delay_u8_reset(&c->dq_delay, c->dq_delay.out);
+    c->dq_driving = 0;
     r01s_bus_hiz(e, "DQ", 8);
 }
 

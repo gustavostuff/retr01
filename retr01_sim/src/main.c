@@ -2,6 +2,7 @@
 #include "board_debug.h"
 
 #include "retr01_sim/board.h"
+#include "retr01_sim/timing.h"
 
 #include <SDL.h>
 #include <stdio.h>
@@ -24,13 +25,67 @@ static int want_debug(int argc, char **argv) {
     return 0;
 }
 
+/*
+ * DELAY=typical|typ|max  -- print datasheet path budget (corner); pin model unchanged.
+ * Aliases: FAST= / PROP= / TPD= / R01S_PROP_DELAY=
+ * Returns 0 ok, -1 bad value (message already printed).
+ */
+static int apply_delay_args(int argc, char **argv) {
+    int i;
+    for (i = 1; i < argc; i++) {
+        const char *a = argv[i];
+        const char *val = NULL;
+        if (strncmp(a, "DELAY=", 6) == 0) {
+            val = a + 6;
+        } else if (strncmp(a, "FAST=", 5) == 0) {
+            val = a + 5;
+        } else if (strncmp(a, "PROP=", 5) == 0) {
+            val = a + 5;
+        } else if (strncmp(a, "TPD=", 4) == 0) {
+            val = a + 4;
+        } else if (strncmp(a, "R01S_PROP_DELAY=", 16) == 0) {
+            val = a + 16;
+        } else {
+            continue;
+        }
+        if (strcmp(val, "max") == 0 || strcmp(val, "MAX") == 0) {
+            r01s_timing_set_prop_override(1, R01S_TPD_MAX);
+            fprintf(stderr, "timing: prop delay ON (max corner)\n");
+            r01s_timing_print_budget(stderr);
+        } else if (strcmp(val, "typical") == 0 || strcmp(val, "typ") == 0 || strcmp(val, "TYP") == 0 ||
+                   strcmp(val, "1") == 0) {
+            r01s_timing_set_prop_override(1, R01S_TPD_TYP);
+            fprintf(stderr, "timing: prop delay ON (typical corner)\n");
+            r01s_timing_print_budget(stderr);
+        } else if (strcmp(val, "0") == 0 || strcmp(val, "off") == 0 || strcmp(val, "OFF") == 0) {
+            r01s_timing_set_prop_override(0, R01S_TPD_TYP);
+            fprintf(stderr, "timing: prop delay OFF\n");
+        } else {
+            fprintf(stderr, "timing: bad %s (use DELAY=typical|max)\n", a);
+            return -1;
+        }
+    }
+    return 0;
+}
+
+static int is_option_arg(const char *a) {
+    if (!a || !a[0]) {
+        return 0;
+    }
+    if (a[0] == '-') {
+        return 1;
+    }
+    if (strncmp(a, "DELAY=", 6) == 0 || strncmp(a, "FAST=", 5) == 0 || strncmp(a, "PROP=", 5) == 0 ||
+        strncmp(a, "TPD=", 4) == 0 || strncmp(a, "R01S_PROP_DELAY=", 16) == 0) {
+        return 1;
+    }
+    return 0;
+}
+
 static const char *first_cart_arg(int argc, char **argv) {
     int i;
     for (i = 1; i < argc; i++) {
-        if (argv[i][0] == '-') {
-            if (strcmp(argv[i], "--debug") == 0 || strcmp(argv[i], "-d") == 0) {
-                continue;
-            }
+        if (is_option_arg(argv[i])) {
             continue;
         }
         return argv[i];
@@ -82,6 +137,10 @@ static int setup_board(R01sApp *app, int argc, char **argv) {
 int main(int argc, char **argv) {
     R01sApp app;
     int debug = want_debug(argc, argv);
+
+    if (apply_delay_args(argc, argv) != 0) {
+        return 1;
+    }
 
     if (r01s_app_init(&app, 0) != 0) {
         return 1;

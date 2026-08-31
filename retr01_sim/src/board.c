@@ -5,6 +5,7 @@
 #include "retr01_sim/entity.h"
 #include "retr01_sim/health.h"
 #include "retr01_sim/play.h"
+#include "retr01_sim/timing.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -907,6 +908,15 @@ static int pld_sel(R01sEntity *pld, const char *name) {
     return r01s_level_is_high(r01s_entity_sense(pld, name));
 }
 
+/*
+ * Combinatorial $FExx hit for LE / port strobes.
+ * Must not use delayed PLD SEL pins: wire_io pulses LE in the same pass as
+ * decode, so DELAY on ATF22 would miss the write (boot WARN / catchup fail).
+ */
+static int io_port_sel(uint16_t addr, int be, uint8_t port) {
+    return be && ((addr & 0xFF00u) == 0xFE00u) && ((uint8_t)(addr & 0xFFu) == port);
+}
+
 /* Drive decode PLD from CPU A/BE; SEL_FE* qualify HC573 / MAP / VRAM ports. */
 static void wire_decode(R01sBoard *ctx) {
     R01sEntity *cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
@@ -955,14 +965,16 @@ static void wire_io(R01sBoard *ctx) {
     int ai;
 
     wire_decode(ctx);
-    sel_fe02 = pld_sel(pld, "SEL_FE02");
-    sel_fe03 = pld_sel(pld, "SEL_FE03");
-    sel_fe04 = pld_sel(pld, "SEL_FE04");
-    sel_fe08 = pld_sel(pld, "SEL_FE08");
-    sel_fe90 = pld_sel(pld, "SEL_FE90");
-    sel_fe91 = pld_sel(pld, "SEL_FE91");
-    sel_fe92 = pld_sel(pld, "SEL_FE92");
-    sel_fe93 = pld_sel(pld, "SEL_FE93");
+    /* LE strobes from combo decode (not delayed SEL pins). */
+    sel_fe02 = io_port_sel(addr, be, 0x02u);
+    sel_fe03 = io_port_sel(addr, be, 0x03u);
+    sel_fe04 = io_port_sel(addr, be, 0x04u);
+    sel_fe08 = io_port_sel(addr, be, 0x08u);
+    sel_fe90 = io_port_sel(addr, be, 0x90u);
+    sel_fe91 = io_port_sel(addr, be, 0x91u);
+    sel_fe92 = io_port_sel(addr, be, 0x92u);
+    sel_fe93 = io_port_sel(addr, be, 0x93u);
+    (void)pld;
     hit_map_data = sel_fe93;
 
     /* Default: I/O devices idle */
@@ -1185,17 +1197,16 @@ static void wire_vram(R01sBoard *ctx) {
     uint16_t sram_addr;
     int i;
 
-    /* FE10/FE11 via decode SEL -> HC573 (not PHI2-gated). */
+    /* FE10/FE11 via combo decode -> HC573 (not PHI2-gated; not delayed SEL). */
     wire_decode(ctx);
-    latch_port_cycle(ctx, fe10, cpu, pld_sel(pld, "SEL_FE10"), read);
-    latch_port_cycle(ctx, fe11, cpu, pld_sel(pld, "SEL_FE11"), read);
-    if (pld_sel(pld, "SEL_FE10") || pld_sel(pld, "SEL_FE11")) {
+    latch_port_cycle(ctx, fe10, cpu, io_port_sel(cpu_addr, be, 0x10u), read);
+    latch_port_cycle(ctx, fe11, cpu, io_port_sel(cpu_addr, be, 0x11u), read);
+    if (io_port_sel(cpu_addr, be, 0x10u) || io_port_sel(cpu_addr, be, 0x11u)) {
         sync_vram_addr_from_latches(ctx);
     }
-    hit_data = pld_sel(pld, "SEL_FE12");
+    hit_data = io_port_sel(cpu_addr, be, 0x12u);
     va = (uint16_t)(ctx->vram_addr & 0x7FFFu);
-    (void)cpu_addr;
-    (void)be;
+    (void)pld;
 
     /* HC157: A = CPU VRAM addr[3:0], B = PPU fetch VA[3:0], AB = !cpu_phase */
     r01s_entity_drive(mux, "G#", R01S_LVL_L);
@@ -2776,6 +2787,7 @@ static void board_reset(R01sIslandGroup *group) {
     if (!ctx) {
         return;
     }
+    r01s_timing_reset();
     ctx->reset_hold = R01S_RESET_HOLD;
     ctx->cycles = 0;
     ctx->phi2_prev = R01S_LVL_L;
@@ -2874,6 +2886,8 @@ static void board_step(R01sIslandGroup *group) {
     if (!ctx || !group->powered) {
         return;
     }
+    /* Sim time: one PHI2 half per board step (wall-clock FPS is independent). */
+    r01s_timing_advance_ns(R01S_PHI2_HALF_NS);
     osc = r01s_osc8m_entity(ctx->power_clk_impl.osc);
     cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
     beam_dots = R01S_BEAM_DOTS_PER_STEP;
