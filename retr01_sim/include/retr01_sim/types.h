@@ -30,9 +30,7 @@
 /* Cart layout caps (docs/graphics.md). */
 #define R01S_MAX_WORLDS 8
 #define R01S_MAX_PRESENT_SCREENS 32 /* 8 worlds x 32 present screens */
-#define R01S_PARALLAX_MIN 0
-#define R01S_PARALLAX_MAX 8 /* per world; live VRAM 4-5 */
-#define R01S_PARALLAX_SLICE_MAX 120 /* max bands; variable thickness (docs/graphics) */
+#define R01S_BG0_SCREENS_MAX 8 /* L0 / structured second BG (replaces old parallax) */
 #define R01S_CART_PRG_BYTES 0x8000u /* fixed 32 KB PRG */
 
 /* Pin digital level (tri-state aware). */

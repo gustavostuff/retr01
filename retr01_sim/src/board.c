@@ -1410,6 +1410,65 @@ static void board_vram_cell_at(const R01sBoard *ctx, int lx, int ly, uint8_t *ti
 
 static uint32_t board_map_off_for_screen(const R01sBoard *board, int col, int row);
 
+/* Host Play L0 sample under L1 color 0 / missing slot (cart BG0 cache + CHR via flash). */
+static uint8_t board_l0_master_at(R01sBoard *ctx, int lx, int ly) {
+    int wx, wy, gc, gr, local_x, local_y, tx, ty, cell, i;
+    uint8_t tile, attr, color, pal, master;
+    int chr_ok = 1;
+    const uint8_t *map = NULL;
+
+    if (!ctx || ctx->bg0_count < 1) {
+        return (uint8_t)(ctx ? (ctx->active_pal[0] & 63u) : 0);
+    }
+    wx = ctx->l0_cam_x + lx;
+    wy = ctx->l0_cam_y + ly;
+    if (wx < 0 || wy < 0) {
+        return (uint8_t)(ctx->active_pal[0] & 63u);
+    }
+    gc = wx / R01S_BG_SCREEN_PX_W;
+    gr = wy / R01S_BG_SCREEN_PX_H;
+    for (i = 0; i < ctx->bg0_count; i++) {
+        if (ctx->bg0[i].present && (int)ctx->bg0[i].col == gc && (int)ctx->bg0[i].row == gr) {
+            map = ctx->bg0[i].map;
+            break;
+        }
+    }
+    if (!map || ctx->cart_off_chr == 0) {
+        return (uint8_t)(ctx->active_pal[0] & 63u);
+    }
+    local_x = wx - gc * R01S_BG_SCREEN_PX_W;
+    local_y = wy - gr * R01S_BG_SCREEN_PX_H;
+    tx = local_x / 8;
+    ty = local_y / 8;
+    if (tx < 0) {
+        tx = 0;
+    }
+    if (ty < 0) {
+        ty = 0;
+    }
+    if (tx >= R01S_BG_SCREEN_TILES_X) {
+        tx = R01S_BG_SCREEN_TILES_X - 1;
+    }
+    if (ty >= 15) {
+        ty = 14;
+    }
+    cell = ty * R01S_BG_SCREEN_TILES_X + tx;
+    tile = map[cell];
+    attr = map[R01S_BG_ATTR_OFF + cell];
+    color = board_chr_color(ctx, ctx->cart_off_chr, tile, attr, local_x & 7, local_y & 7, &chr_ok);
+    if (!chr_ok) {
+        return ctx->chr_last_master;
+    }
+    if (color == 0) {
+        flash_chr_release(ctx);
+        return (uint8_t)(ctx->active_pal[0] & 63u);
+    }
+    pal = (uint8_t)((attr & R01S_ATTR_PAL) >> R01S_ATTR_PAL_SHIFT);
+    master = board_pal_master(ctx, 0, pal, color);
+    flash_chr_release(ctx);
+    return master;
+}
+
 static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     uint8_t tile, attr, color, pal, master;
     int local_x, local_y;
@@ -1424,9 +1483,9 @@ static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     slot_x = (sx / R01S_BG_SCREEN_PX_W) & 1;
     slot_y = (sy / R01S_BG_SCREEN_PX_H) & 1;
     slot = slot_y * 2 + slot_x;
-    /* Match emu/Studio: missing directory screens -> shared backdrop (not CHR tile 0). */
+    /* Match emu Host Play: missing L1 slot -> L0 show-through, else backdrop. */
     if (!ctx->vram_slot_present[slot & 3]) {
-        master = (uint8_t)(ctx->active_pal[0] & 63u);
+        master = board_l0_master_at(ctx, lx, ly);
         ctx->chr_last_master = master;
         return master;
     }
@@ -1444,6 +1503,12 @@ static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     if (!chr_ok) {
         /* PRG/MAP owns flash /CE: hold last master (no fight). */
         return ctx->chr_last_master;
+    }
+    if (color == 0) {
+        flash_chr_release(ctx);
+        master = board_l0_master_at(ctx, lx, ly);
+        ctx->chr_last_master = master;
+        return master;
     }
     pal = (uint8_t)((attr & R01S_ATTR_PAL) >> R01S_ATTR_PAL_SHIFT);
     master = board_pal_master(ctx, 0, pal, color);
@@ -1974,6 +2039,19 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     board->cart_screen_count = 0;
     board->cart_start_col = 0;
     board->cart_start_row = 0;
+    board->cart_bg0_count = 0;
+    board->cart_bg0_cols_hdr = 0;
+    board->cart_bg0_rows_hdr = 0;
+    board->cart_off_bg0_dir = 0;
+    board->bg0_count = 0;
+    board->bg0_cols = 0;
+    board->bg0_rows = 0;
+    board->l1_cols = 1;
+    board->l1_rows = 1;
+    board->l1_origin_x = 0;
+    board->l1_origin_y = 0;
+    board->l0_cam_x = 0;
+    board->l0_cam_y = 0;
     board->cart_entity_type_count = 0;
     board->cart_entity_inst_count = 0;
     board->cart_off_entity_types = 0;
@@ -2044,10 +2122,19 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     board->cart_start_col = start_col;
     board->cart_start_row = start_row;
     board->cart_screen_count = screen_count;
+    board->cart_bg0_count = hdr[6];
+    board->cart_bg0_cols_hdr = (uint8_t)(hdr[3] & 0x0Fu);
+    board->cart_bg0_rows_hdr = (uint8_t)((hdr[3] >> 4) & 0x0Fu);
+    {
+        uint32_t off_bg0 = get_u24(hdr + 14);
+        board->cart_off_bg0_dir = off_bg0 ? (world_base + off_bg0) : 0;
+    }
     if ((size_t)world_base + (size_t)off_sdir + (size_t)screen_count * 12u > sizeof(board->cart_flash.mem)) {
         board->cart_off_chr = 0;
         board->cart_world_base = 0;
         board->cart_screen_count = 0;
+        board->cart_bg0_count = 0;
+        board->cart_off_bg0_dir = 0;
         return;
     }
     board->cart_off_sdir = world_base + off_sdir;
@@ -2082,8 +2169,10 @@ static void board_resolve_cart_meta(R01sBoard *board) {
         }
         poff = get_u24(e + 4);
         board->cart_off_map_screen0 = world_base + poff;
-        return;
+        break;
     }
+    /* Host Play L0 cache (does not touch IC VRAM slots 4-7). */
+    r01s_board_load_bg0(board);
 }
 
 static void board_install_bringup_prg(R01sBoard *board) {
@@ -2451,6 +2540,146 @@ void r01s_board_mark_map_ready(R01sBoard *board) {
         return;
     }
     poke_map_addr_latches(board, board->cart_off_map_screen0 + 480u);
+}
+
+void r01s_board_update_bg0_scroll(R01sBoard *board, int cam_x, int cam_y) {
+    int rel_x;
+    int rel_y;
+
+    if (!board) {
+        return;
+    }
+    /* Match emu: relative to L1 present bbox origin, scaled by present grid W/H. */
+    rel_x = cam_x - board->l1_origin_x;
+    rel_y = cam_y - board->l1_origin_y;
+    if (rel_x < 0) {
+        rel_x = 0;
+    }
+    if (rel_y < 0) {
+        rel_y = 0;
+    }
+    if (board->bg0_cols < 2 || board->l1_cols < 1 || board->bg0_cols >= board->l1_cols) {
+        board->l0_cam_x = 0;
+    } else {
+        board->l0_cam_x = (rel_x * board->bg0_cols) / board->l1_cols;
+    }
+    if (board->bg0_rows < 2 || board->l1_rows < 1 || board->bg0_rows >= board->l1_rows) {
+        board->l0_cam_y = 0;
+    } else {
+        board->l0_cam_y = (rel_y * board->bg0_rows) / board->l1_rows;
+    }
+}
+
+void r01s_board_load_bg0(R01sBoard *board) {
+    const uint8_t *img;
+    const uint8_t *dir;
+    int si;
+    int n;
+    int min_c = 99, min_r = 99, max_c = 0, max_r = 0;
+    int l1_min_c = 99, l1_min_r = 99, l1_max_c = 0, l1_max_r = 0;
+
+    if (!board) {
+        return;
+    }
+    memset(board->bg0, 0, sizeof(board->bg0));
+    board->bg0_count = 0;
+    board->bg0_cols = 0;
+    board->bg0_rows = 0;
+    board->l0_cam_x = 0;
+    board->l0_cam_y = 0;
+    board->l1_cols = 1;
+    board->l1_rows = 1;
+    board->l1_origin_x = 0;
+    board->l1_origin_y = 0;
+    if (!board->cart_loaded || board->cart_world_base == 0) {
+        return;
+    }
+    img = board->cart_flash.mem;
+
+    /* L1 present bbox (same rule as emu prepare_world). */
+    if (board->cart_off_sdir != 0 && board->cart_screen_count > 0 &&
+        (size_t)board->cart_off_sdir + (size_t)board->cart_screen_count * 12u <=
+            sizeof(board->cart_flash.mem)) {
+        dir = img + board->cart_off_sdir;
+        for (si = 0; si < (int)board->cart_screen_count; si++) {
+            const uint8_t *e = dir + (size_t)si * 12u;
+            int c = (int)e[0];
+            int r = (int)e[1];
+            if (c < l1_min_c) {
+                l1_min_c = c;
+            }
+            if (r < l1_min_r) {
+                l1_min_r = r;
+            }
+            if (c > l1_max_c) {
+                l1_max_c = c;
+            }
+            if (r > l1_max_r) {
+                l1_max_r = r;
+            }
+        }
+        if (l1_min_c <= l1_max_c) {
+            board->l1_cols = l1_max_c - l1_min_c + 1;
+            board->l1_rows = l1_max_r - l1_min_r + 1;
+            if (board->l1_cols < 1) {
+                board->l1_cols = 1;
+            }
+            if (board->l1_rows < 1) {
+                board->l1_rows = 1;
+            }
+            board->l1_origin_x = l1_min_c * R01S_BG_SCREEN_PX_W;
+            board->l1_origin_y = l1_min_r * R01S_BG_SCREEN_PX_H;
+        }
+    }
+
+    if (board->cart_bg0_count == 0 || board->cart_off_bg0_dir == 0) {
+        return;
+    }
+    n = (int)board->cart_bg0_count;
+    if (n > R01S_BG0_SCREENS_MAX) {
+        n = R01S_BG0_SCREENS_MAX;
+    }
+    if ((size_t)board->cart_off_bg0_dir + (size_t)n * 12u > sizeof(board->cart_flash.mem)) {
+        return;
+    }
+    dir = img + board->cart_off_bg0_dir;
+    for (si = 0; si < n; si++) {
+        const uint8_t *e = dir + (size_t)si * 12u;
+        uint32_t poff = get_u24(e + 4);
+        uint32_t abs = board->cart_world_base + poff;
+        int c = (int)e[0];
+        int r = (int)e[1];
+        if ((size_t)abs + R01S_CART_SCREEN_PAYLOAD > sizeof(board->cart_flash.mem)) {
+            continue;
+        }
+        board->bg0[board->bg0_count].present = 1;
+        board->bg0[board->bg0_count].col = (uint8_t)c;
+        board->bg0[board->bg0_count].row = (uint8_t)r;
+        memcpy(board->bg0[board->bg0_count].map, img + abs, R01S_CART_SCREEN_PAYLOAD);
+        if (c < min_c) {
+            min_c = c;
+        }
+        if (r < min_r) {
+            min_r = r;
+        }
+        if (c > max_c) {
+            max_c = c;
+        }
+        if (r > max_r) {
+            max_r = r;
+        }
+        board->bg0_count++;
+    }
+    if (board->bg0_count > 0) {
+        board->bg0_cols = max_c - min_c + 1;
+        board->bg0_rows = max_r - min_r + 1;
+        if (board->bg0_cols < 1) {
+            board->bg0_cols = 1;
+        }
+        if (board->bg0_rows < 1) {
+            board->bg0_rows = 1;
+        }
+    }
 }
 
 int r01s_board_softboot_start_screen(R01sBoard *board) {

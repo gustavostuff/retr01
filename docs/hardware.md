@@ -90,7 +90,7 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
 
 1. Software keeps L0 screens in VRAM slots **4-7** and sets `$FE06`/`$FE07` (often proportional to L1 scroll).
 2. Target silicon: **HBlank** fills the next L0 line from slots 4-7 + cart CHR into the linebuf SRAM (sprites use VBlank for a full playfield field so they do not steal HBlank).
-3. Host Play already composites L0 under L1 color 0 from the cart BG0 cache ([`graphics.md`](graphics.md)).
+3. Emu and Sim Host Play already composite L0 under L1 color 0 from the cart BG0 cache (preview overlay, not pin-level HBlank fill). See [`graphics.md`](graphics.md).
 
 ### Sprites
 

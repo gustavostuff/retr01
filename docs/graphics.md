@@ -184,7 +184,7 @@ else if L1 index != 0 -> L1
 else                  -> L0 (or backdrop)
 ```
 
-Host Play already composites this way from the cart BG0 cache. Silicon target: live L1 on active dots, L0 line fill in **HBlank** from slots 4-7 + cart CHR.
+Emu and Sim Host Play already composite this way from the cart BG0 cache (host overlay, not IC VRAM slots 4-7). Silicon target: live L1 on active dots, L0 line fill in **HBlank** from slots 4-7 + cart CHR.
 
 ### Proportional scroll
 
