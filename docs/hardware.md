@@ -81,16 +81,22 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
 
 ### Background video
 
-1. Beam PLDs step **341x262** and fetch tile/attr from **VRAM** on PPU phases.
-2. Scroll latches (`$FE02`/`$FE03`) offset into the 2x2 slot workbench ([`graphics.md`](graphics.md)).
+1. Beam PLDs step **341x262** and fetch tile/attr from **VRAM** on PPU phases (L1 slots 0-3).
+2. L1 scroll latches (`$FE02`/`$FE03`) offset into the L1 2x2 workbench ([`graphics.md`](graphics.md)).
 3. Attr **BANK** picks CHR tile from cart flash. Active palette indices -> **Color PROM** -> DAC.
-4. Compositor PLD muxes BG vs sprite line-buffer pixel by priority.
+4. Compositor PLD muxes sprite vs L1 vs L0 (show-through when L1 index is **0**) vs backdrop.
+
+### Second background (L0)
+
+1. Software keeps L0 screens in VRAM slots **4-7** and sets `$FE06`/`$FE07` (often proportional to L1 scroll).
+2. Target silicon: **HBlank** fills the next L0 line from slots 4-7 + cart CHR into the linebuf SRAM (sprites use VBlank for a full playfield field so they do not steal HBlank).
+3. Host Play already composites L0 under L1 color 0 from the cart BG0 cache ([`graphics.md`](graphics.md)).
 
 ### Sprites
 
 1. CPU fills **OAM** in 1284 via `$FE20`/`$FE21`.
-2. During **HBlank**, 1284 reads CHR from cart and writes the **next** scanline into one half of line-buffer SRAM.
-3. Beam reads the **other** half for the visible line. Cap **16** sprites per logical scanline.
+2. Locked split with L0: **VBlank** plots the full **120x128** sprite field. **HBlank** is for L0. Cap **16** sprites per logical scanline.
+3. Phase 1 bring-up may still fill one scanline in HBlank until the full VBlank field lands.
 
 ### Pads
 
@@ -116,7 +122,7 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
 | VRAM glue | Interleave enable with PHI2 + HC157 AB |
 | Beam X | Dot counter / H timing inside 341 |
 | Beam Y | Line counter / `$FE04` compare / NMI edges |
-| Compositor | BG vs sprite priority + Color PROM index |
+| Compositor | Sprite vs L1 vs L0 show-through + Color PROM index |
 
 ---
 

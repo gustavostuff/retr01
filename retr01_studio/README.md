@@ -32,9 +32,9 @@ Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Win
 |---------|----------|
 | **Worlds** | **8** world buttons (**1-8**, internal indices **0-7**). World 1 starts with **3x3** blank screens on an **8x8** slot map. Worlds 2-8 start empty until first click. Cart cap: **32 present screens**/world ([`docs/graphics.md`](../docs/graphics.md)). Selected world shows a **16x7** sub-button (**BG1** / **BG0**) under that tab only |
 | **World map (BG1)** | Sparse **8x8** playfield map. **16px** cell pitch. Present = blue. White fill = default spawn. White outline = selected |
-| **World map (BG0)** | Structured second BG (L0). Authoring grid is hardcoded **2x2** for now (full chess like BG1). Model allows any rectangle with **1..8** screens (`bg0_cols` x `bg0_rows`). Export packs present BG0 screens into the cart; Host Play composites them under L1 **color 0** |
+| **World map (BG0)** | Structured second BG (L0). Authoring grid is hardcoded **2x2** for now (full chess like BG1). Model allows any rectangle with **1..8** screens. Export packs present BG0 screens into the cart. Host Play composites under L1 **color 0** with proportional scroll from present extents ([`docs/graphics.md`](../docs/graphics.md)) |
 | **Double-click** empty slot | Create screen (BG1 or BG0 plane) |
-| **Click** any slot | Select grid cell (empty or present; white outline). Present also becomes the edit target |
+| **Click** any slot | Select grid cell (empty or present, white outline). Present also becomes the edit target |
 | **Ctrl+C / Ctrl+V** | Copy / paste entire selected screen (tiles+attrs) on BG0 or BG1. Paste creates the slot if empty |
 | **Delete** | Remove selected present screen (BG0 or BG1). Prefer instance Delete when a sprite is selected |
 | **Ctrl+click** present | Remove screen |
@@ -178,7 +178,7 @@ Compile from `output/C/` with `-Iinclude` (or `#include "include/r01_engine.h"` 
 - **NPC / non-player** instances use **state 0 / frame 0** only in Phase 1 Host Play (player uses full anim blob).
 - Dead zone is configured in **`custom_logic.c`** only (no Studio UI slider yet).
 - **World 0** only in cart export. Worlds 1-7 are session-only in the UI until multi-world save lands. Studio Play therefore previews world 0 only.
-- No entity-vs-entity collision, NPC AI, parallax authoring, or full on-cart 6502 gameplay loop yet.
+- No entity-vs-entity collision, NPC AI, or full on-cart 6502 gameplay loop yet.
 - No ca65 / `make` step in the default export path.
 - Studio Play uses embedded emu after export. Studio-only `core/src/play.c` remains for unit tests only.
 

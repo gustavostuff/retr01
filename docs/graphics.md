@@ -42,19 +42,19 @@ Color index **0** is transparent for sprites and shared backdrop for BG. Final R
 
 ## VRAM workbench
 
-Six live nametable slots in 32 KB VRAM. Each slot **512 B** (240 tile + 240 attr at `+0xF0`).
+Eight live nametable slots in 32 KB VRAM. Each slot **512 B** (240 tile + 240 attr at `+0xF0`).
 
 | Slots | Role |
 |-------|------|
-| **0-3** | 2x2 camera field (**256x240** logical tiles) |
-| **4-5** | Parallax planes (**two** resident at a time) |
+| **0-3** | L1 / BG1 camera field (**2x2**, main playfield) |
+| **4-7** | L0 / BG0 camera field (**2x2**, structured second BG) |
 
-Scroll `$FE02`/`$FE03`: **0-127** / **0-119**. Hardware does **not** auto-load MAP. Crossing a screen border = software streams **480 B**/screen via `$FE12` (or MAP `$FE93` -> VRAM).
+Scroll `$FE02`/`$FE03` (L1): **0-127** / **0-119**. Scroll `$FE06`/`$FE07` (L0): same ranges for the far plane. Hardware does **not** auto-load MAP. Crossing a screen border = software streams **480 B**/screen via `$FE12` (or MAP `$FE93` -> VRAM).
 
-**How scroll works in practice:**
+**How L1 scroll works in practice:**
 
-1. Keep four neighboring screens loaded in slots **0-3** (the 2x2 workbench).
-2. Write scroll latches as the camera moves inside that 128x120 window.
+1. Keep four neighboring playfield screens loaded in slots **0-3** (the 2x2 workbench).
+2. Write L1 scroll latches as the camera moves inside that 128x120 window.
 3. When the camera would leave the workbench, stream the newly needed screen(s) into the far slots (interleaved VRAM writes), then keep scrolling.
 4. Mid-frame scroll changes apply on the **next** tile fetch.
 
@@ -64,7 +64,7 @@ Scroll `$FE02`/`$FE03`: **0-127** / **0-119**. Hardware does **not** auto-load M
 +-------------+-------------+
 |  Slot 2     |  Slot 3     |
 +-------------+-------------+
-        ^ 128x120 viewport (scroll)
+        ^ 128x120 viewport (L1 scroll)
 ```
 
 ```text
@@ -88,9 +88,9 @@ MAP grid (6 screens)             VRAM slots (2x2 load)
 
 | VRAM offset | Use |
 |-------------|-----|
-| `$0000`-`$07FF` | Camera slots 0-3 |
-| `$0800`-`$0BFF` | Parallax slots 4-5 |
-| `$0C00`-`$3FFF` | Scratch |
+| `$0000`-`$07FF` | L1 camera slots 0-3 |
+| `$0800`-`$0FFF` | L0 camera slots 4-7 |
+| `$1000`-`$3FFF` | Scratch |
 | `$4000`-`$7FFF` | Reserved |
 
 **Streaming cost:** ~480 B per screen (~**11** CRT lines @ ~12 cyc/B with interleave). Scroll 1 px = 1-2 latch writes. See [`memory.md`](memory.md) for PHI2 CPU/PPU phases.
@@ -101,10 +101,10 @@ MAP grid (6 screens)             VRAM slots (2x2 load)
 
 Each visible dot:
 
-1. Beam + scroll ---> VRAM tile index + attr byte.
+1. Beam + L1 scroll ---> VRAM tile index + attr byte (slots 0-3).
 2. Attr **BANK** (bits 1-0) ---> cart CHR tile fetch.
 3. Attr **PAL** + active palette row ---> master index ---> **Color PROM** (board).
-4. Compositor picks BG vs sprite pixel.
+4. Compositor picks sprite vs L1 vs L0 vs backdrop (see **Second background** below).
 
 Mid-frame scroll applies on the **next** tile fetch. Do not edit a nametable cell under the beam (tear).
 
@@ -136,15 +136,14 @@ OAM attr byte
 |________________ SIZE (0=8x8, 1=8x16 tile pair)
 ```
 
-**Pipeline:** 1284 evaluates OAM, fetches CHR in **HBlank**, fills **next** scanline into line-buffer SRAM. Beam reads **current** line from the other half. Not a framebuffer.
+**Locked raster split (with L0):** fill the **full 120x128** sprite field in **VBlank** (walk Y in 8 px or 16 px bands). Give **HBlank** to L0 line fill. Beam reads sprite pixels from the field during active display. Cap **16** sprites per **logical** scanline. Host Play packs X/Y as signed viewport-relative bytes. Sprites clip to **128x120**.
+
+Phase 1 bring-up may still use a simpler HBlank sprite line path until the full VBlank field lands. Software-visible priority and clip rules stay the same.
 
 ```text
-         Half A ($000-$07F)          Half B ($080-$0FF)
-Line N  | SHOW (beam)      |        | fill N+1 (HBlank)|
-Line N+1| fill N+1         |        | SHOW             |
+Priority (opaque wins):
+  sprite  >  L1  >  L0  >  backdrop
 ```
-
-Cap **16** sprites per **logical** scanline. Host Play packs X/Y as signed viewport-relative bytes. Sprites clip to **128x120**.
 
 ---
 
@@ -155,32 +154,48 @@ Two layers: **cart indices** and **board Color PROM**.
 1. **Cart** stores 8 global BG rows + 8 global sprite rows (**256 B** total). Each entry is a **6-bit master index** (0-63), not RGB.
 2. **Active row:** software picks row N (often via `$FE38` hint) then copies **4 BG + 4 sprite** palettes (**32** indices) into `$FE08`/`$FE09`.
 3. **Color PROM (board):** 64 entries of packed **R3G3B2**. Studio quantizes kit swatches when burning the PROM.
-4. **Shared color 0** across all 8 active palettes (backdrop / transparency).
+4. **Shared color 0** across all 8 active palettes (backdrop / L1 show-through / sprite transparency).
 
 `$FE08` = address into the 32-byte active buffer. `$FE09` = data with auto-inc. No `$FE08`/`$FE09` load at boot = undefined colors until PRG writes them. Phase 1 boot PRG streams the start row from cart pals.
 
 ---
 
-## Parallax (slots 4-5)
+## Second background (L0 / BG0)
 
-Up to **8** payloads per world in cart. PRG loads **two** into VRAM slots **4-5**. Same **480 B** shape as playfield screens.
+Structured far plane. Studio name **BG0**. Hardware / docs name **L0**. Main playfield is **L1** / **BG1**.
 
-| Mode | Behavior |
-|------|----------|
-| **Single** | One **128x120** map, scroll/repeat H and/or V |
-| **Pair H** | Two screens side-by-side (**256x120**), horizontal repeat |
-| **Pair V** | Two stacked (**128x240**), vertical repeat |
+This **replaces** the old two-slot parallax payload model (former slots 4-5 only, Single / Pair H / Pair V).
 
-Plane scroll/band: `$FE06`/`$FE07`. When a parallax band is active, main camera may lock on that axis for the frame.
+| Item | Value |
+|------|-------|
+| Layout | Filled rectangle, `cols * rows` in **1..8** (examples: 1x1 static, 2x2, 2x3, 4x2) |
+| Live window | VRAM slots **4-7** (2x2), same MAP stream path as L1 |
+| Scroll | `$FE06` / `$FE07` (0-127 / 0-119 inside the L0 workbench) |
+| Cart | Up to **8** present L0 screens per world (dir + **480 B** payloads after L1 MAP) |
+| Authoring | Studio Worlds sub-button toggles BG1 vs BG0. BG0 chess is hardcoded **2x2** for now |
 
-**Slices (optional):** **1..120** bands of variable thickness with per-band H or V offset (roads/curves). Data in system RAM or future `$FExx`. Applies to slots **4-5** only, not playfield slots **0-3**.
+### Show-through
+
+Where L1 palette index is **0**, the compositor shows the L0 pixel (else backdrop if L0 is also transparent).
 
 ```text
-H-band example (120 rows):
-  Y 0-59:  1 px bands, fine dx ramp
-  Y 60-89: 30 px band, constant dx
-  Y 90-119: 30 px band, constant dx
+if sprite opaque      -> sprite
+else if L1 index != 0 -> L1
+else                  -> L0 (or backdrop)
 ```
+
+Host Play already composites this way from the cart BG0 cache. Silicon target: live L1 on active dots, L0 line fill in **HBlank** from slots 4-7 + cart CHR.
+
+### Proportional scroll
+
+Default is software (6502 or Host Play), not a PLD auto-ratio:
+
+```text
+scroll_L0_x = scroll_L1_x * cols_L0 / cols_L1
+scroll_L0_y = scroll_L1_y * rows_L0 / rows_L1
+```
+
+`cols_*` / `rows_*` are the **enclosing present extents** of each plane (used screens bbox), not the virtual 8x8. Example: L0 **2x2**, L1 **4x4** -> L0 scrolls at half rate on both axes. If `cols_L0 == 1`, X stays 0 (same for rows). Absolute L0 scroll override is allowed for cutscenes.
 
 World/screen/cart caps: [`memory.md`](memory.md).
 
@@ -192,9 +207,9 @@ World/screen/cart caps: [`memory.md`](memory.md).
 |------|------|------|
 | `$FE00` | `PPUCTRL` | bit0 BG enable, bit7 NMI enable, camera slot mode bits TBD |
 | `$FE01` | `PPUSTATUS` | bit7 VBlank, bit6 raster hit (read clears latched bits) |
-| `$FE02`/`$FE03` | scroll X/Y | 0-127 / 0-119 inside the 2x2 workbench |
+| `$FE02`/`$FE03` | L1 scroll X/Y | 0-127 / 0-119 inside the L1 2x2 workbench |
 | `$FE04`/`$FE05` | raster / IRQ | Scanline compare + control |
-| `$FE06`/`$FE07` | plane band | Parallax band + scroll |
+| `$FE06`/`$FE07` | L0 scroll X/Y | 0-127 / 0-119 inside the L0 2x2 workbench |
 | `$FE08`/`$FE09` | pal addr/data | Active master indices (**32 B**), auto-inc |
 | `$FE10`-`$FE12` | VRAM addr/data | hi, lo, data auto-inc (interleaved) |
 | `$FE20`/`$FE21` | OAM addr/data | auto-inc into 1284 OAM |
@@ -217,5 +232,6 @@ World/screen/cart caps: [`memory.md`](memory.md).
 | 8x16 sprite fetch | 1284 tile-pair timing still evolving |
 | BG `ANIM` rate | Global vs per-game |
 | Living-tile list cap | **32** vs **64** cells (`retr01_ANIM_MAX`) |
-| `$FE07` band end | Second latch may be needed |
+| VBlank sprite field | Full 120x128 clear+plot vs Phase 1 HBlank line path |
+| L0 HBlank fill | Linebuf halves + cart CHR arbitration with MAP |
 | `PPUCTRL` camera mode bits | Exact bitfield TBD |

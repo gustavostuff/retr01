@@ -28,7 +28,7 @@ PRG is **32 KB** mapped at `$8000-$FFFF` with an I/O hole at `$FE00-$FEFF`. No P
 | **Who writes** | W65C02S only |
 | **Who reads** | W65C02S only |
 | **When** | Any CPU cycle. Never touched by video or AVRs |
-| **Typical use** | Entity state, scroll helpers, parallax slice tables, stacks, ZP shadows |
+| **Typical use** | Entity state, scroll helpers, L0 proportional scroll temps, stacks, ZP shadows |
 
 ### VRAM (32 KB, interleaved)
 
@@ -37,7 +37,7 @@ PRG is **32 KB** mapped at `$8000-$FFFF` with an I/O hole at `$FE00-$FEFF`. No P
 | **CPU port** | `$FE10` addr hi, `$FE11` addr lo, `$FE12` data (auto-inc) |
 | **CPU writes** | PHI2 high (CPU phase) via HC157 mux + PLD `/OE` |
 | **PPU reads** | PHI2 low (PPU phase): beam/BG fetch owns address and data |
-| **Layout** | Slots 0-3 camera (512 B each), 4-5 parallax (512 B each), rest scratch/reserved ([`graphics.md`](graphics.md)) |
+| **Layout** | Slots 0-3 L1 camera (512 B each), slots 4-7 L0 camera (512 B each), rest scratch/reserved ([`graphics.md`](graphics.md)) |
 | **Tear rule** | Do not poke a cell the beam is fetching. Off-screen slots and VBlank are safe |
 
 **How interleave works:** one AS6C62256 serves both the 6502 and the video path. On each **8 MHz** PHI2 cycle the mux picks who owns the VRAM address bus:
@@ -141,8 +141,8 @@ Magic **`retr01`**, **`format_ver` = 2**. Studio re-export required for older im
 | PRG 32 KB                                                        |
 | OTHER SCREENS (title / interstitial / credits, raw or RLE)       |
 | WORLD TABLE 8 x 8 B                                              |
-| WORLD BLOBS: header, CHR 32 KB, screen dir, parallax dir,        |
-|   screen payloads 480 B each, entity types/instances, player anim|
+| WORLD BLOBS: header, CHR 32 KB, L1 screen dir + payloads,        |
+|   L0 / BG0 dir + payloads, entity types/instances, player anim   |
 +------------------------------------------------------------------+
 ```
 
@@ -163,16 +163,20 @@ Six `(offset, length)` pairs as little-endian **u24** (3+3 bytes each):
 
 | Piece | Size / note |
 |-------|-------------|
-| World header | **32 B** (spawn col/row, default banks/pal row, present count, CHR/dir offsets, entity counts, player entity + hitbox, camera dead-zone bytes **30-31**) |
+| World header | **32 B** (spawn col/row, default banks/pal row, L1 present count, L0 present count, CHR/dir offsets, entity counts, player entity + hitbox, camera dead-zone bytes **30-31**) |
 | CHR | **4** BG banks + **4** SPR banks x **4096 B** = **32 KB** total |
-| Screen directory | **12 B** per present screen (grid col/row + payload offset) |
-| Screen payloads | **480 B** each (present only, sparse) |
+| L1 screen directory | **12 B** per present playfield screen (grid col/row + payload offset) |
+| L1 screen payloads | **480 B** each (present only, sparse **8x8**) |
+| L0 / BG0 directory | **12 B** per present L0 screen (same shape as L1 dir). Offset **0** if none |
+| L0 / BG0 payloads | **480 B** each (filled rectangle, up to **8** screens) |
 | Entity types / instances | Packed records. Metasprite catalog is Studio-only and flattened here |
 | Player anim | Optional `PA` blob when a player entity is marked |
 
-**Screen payload:** **480 B** = 240 tile bytes + 240 attr bytes (**16x15**, **128x120**).
+**World header notes (L0):** byte **3** packs present L0 extent (`cols | rows<<4`). Byte **6** is L0 present count (was legacy parallax count). Bytes **14-16** are L0 directory offset (u24), or **0** if none.
 
-**World caps:** **8** worlds, **32 present screens**/world on sparse **8x8** grid, **0..8** parallax payloads/world, **4** BG + **4** sprite CHR banks/world (**256** tiles x **16 B** each bank).
+**Screen payload:** **480 B** = 240 tile bytes + 240 attr bytes (**16x15**, **128x120**). Same shape for L1 and L0.
+
+**World caps:** **8** worlds, **32 present L1 screens**/world on sparse **8x8** grid, **0..8** L0 screens/world (rectangle area 1..8), **4** BG + **4** sprite CHR banks/world (**256** tiles x **16 B** each bank).
 
 **Flash budget at max fill:** ~**442 KB** used, ~**70 KB** free in **512 KB** (room for other screens, entity data).
 
