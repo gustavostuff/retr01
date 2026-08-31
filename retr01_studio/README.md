@@ -30,7 +30,7 @@ Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Win
 
 | Control | Behavior |
 |---------|----------|
-| **Worlds** | **8** world buttons (**1-8**, internal indices **0-7**). World 1 starts with **3x3** blank screens on an **8x8** slot map. Worlds 2-8 start empty until first click. Cart cap: **32 present screens**/world ([`docs/graphics.md`](../docs/graphics.md)). Selected world: active strip **11px** + **7px** **BG1**/**BG0** sub-button. Inactive dual-view world tabs stay **16x16** so the row height matches |
+| **Worlds** | **8** world buttons (**1-8**, internal indices **0-7**). World 1 starts with **3x3** blank screens on an **8x8** slot map. Worlds 2-8 start empty until first click. Cart cap: **32 present screens**/world ([`docs/graphics.md`](../docs/graphics.md)). Selected world: active strip **11px** + **7px** **BG1**/**BG0** sub-button. Inactive dual-view world tabs fill **18px** (tab+sub stack) so the row height matches |
 | **World map (BG1)** | Sparse **8x8** playfield map. **16px** cell pitch. Present = blue. White fill = default spawn. White outline = selected |
 | **World map (BG0)** | Structured second BG (L0). Full **8x8** chess. Present screens use the Mode rectangle (1x1 / 2x2 / 2x4 / 4x2 / 1x8 / 8x1), centered on the chess so they clear the Mode button. **Mode** (32x16, top-left, 2px margin) cycles those shapes and repacks screens LTR/TTB. If screens do not fit: yellow **Warn: N screens won't render** at the grid bottom-right. Export packs present BG0 screens. Emu and Sim Host Play composite under L1 color 0. L0 scrolls on an axis only when BG0 extent is **smaller** than L1 on that axis ([`docs/graphics.md`](../docs/graphics.md)) |
 | **Double-click** empty slot | Create screen (BG1 or BG0 plane) |
@@ -100,7 +100,7 @@ See generated `output/C/include/r01_*.h` for the full engine API (camera, player
 
 ## Save / load (JSON v7)
 
-**Ctrl+S** / **Ctrl+O** -> `output/test.r01proj` by default.
+**Ctrl+S** / **Ctrl+O** -> `output/test.r01proj` by default. Quit does **not** auto-save (use **Ctrl+S**).
 
 | Field | Behavior |
 |-------|----------|

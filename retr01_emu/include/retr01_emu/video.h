@@ -45,6 +45,10 @@ typedef struct R01eVideo {
     uint8_t fb[R01E_VISIBLE_W * R01E_VISIBLE_H * 3]; /* SCALE 2x RGB */
     /* Debug: 2x2 VRAM workbench at 1:1 (256x240). */
     uint8_t vram_atlas[R01E_VRAM_ATLAS_W * R01E_VRAM_ATLAS_H * 3];
+    /* Debug: BG0 / L0 2x2 workbench (cart cache, same layout as vram_atlas). */
+    uint8_t bg0_atlas[R01E_VRAM_ATLAS_W * R01E_VRAM_ATLAS_H * 3];
+    /* Debug: L1 opacity mask for the live viewport (128x120, black=transparent). */
+    uint8_t l1_mask[R01E_SCREEN_PX_W * R01E_SCREEN_PX_H * 3];
     /* Expanded H-band slice table: additive dx per logical row (docs/graphics). Unused = 0. */
     int8_t plane_h_slice[R01E_PARALLAX_SLICE_MAX];
 } R01eVideo;
@@ -86,6 +90,10 @@ void r01e_video_render_frame(struct R01eMachine *m);
 
 /* Render 2x2 VRAM slots into vram_atlas (256x240, 1:1). */
 void r01e_video_render_vram_atlas(struct R01eMachine *m);
+
+/* Debug: BG0 2x2 cart cache + L1 viewport opacity mask (128x120). */
+void r01e_video_render_bg0_atlas(struct R01eMachine *m);
+void r01e_video_render_l1_mask(struct R01eMachine *m);
 
 /* Load structured BG0 (L0) screens from cart into host cache. */
 void r01e_video_load_bg0(struct R01eMachine *m, const R01eWorldView *wv);

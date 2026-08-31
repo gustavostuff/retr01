@@ -48,7 +48,8 @@
 #define UI_WORLDS_X 0
 #define UI_WORLDS_SUB_H 7
 #define UI_TABS_TAB_H 11 /* world / dual-view tab strip (sub-button stays 7px) */
-#define UI_WORLDS_BODY_H (UI_TABS_TAB_H + UI_WORLDS_SUB_H + UI_WORLD_VIEW)
+#define UI_WORLDS_TAB_STACK_H (UI_TABS_TAB_H + UI_WORLDS_SUB_H) /* inactive dual-view tab fill height */
+#define UI_WORLDS_BODY_H (UI_WORLDS_TAB_STACK_H + UI_WORLD_VIEW)
 #define UI_PAL_BODY_H (UI_PAL_SWATCH * 2 + UI_BTN_H)
 
 #define UI_WORLDS_PLANE_BG1 0

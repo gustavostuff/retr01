@@ -237,7 +237,7 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
     lo->worlds_body_h = worlds_h;
     if (worlds_h > 0) {
         lo->worlds_btns_y = y;
-        lo->worlds_grid_y = y + UI_TABS_TAB_H + UI_WORLDS_SUB_H;
+        lo->worlds_grid_y = y + UI_WORLDS_TAB_STACK_H;
         y += worlds_h;
     } else {
         lo->worlds_btns_y = -1;
@@ -378,7 +378,7 @@ int world_cell_hit(const UiState *ui, int lx, int ly, int *out_col, int *out_row
         return 0;
     }
     y0 = lo.worlds_grid_y;
-    if (lo.worlds_body_h <= UI_TABS_TAB_H + UI_WORLDS_SUB_H || y0 < 0) {
+    if (lo.worlds_body_h <= UI_WORLDS_TAB_STACK_H || y0 < 0) {
         return 0;
     }
     if (lx < x0 || ly < y0 || lx >= x0 + R01_GRID_MAX * UI_WORLD_CELL ||

@@ -687,6 +687,137 @@ void r01e_video_render_vram_atlas(R01eMachine *m) {
     composite_sprites_atlas(m);
 }
 
+static void sample_bg0_screen_px(R01eMachine *m, int col, int row, int local_x, int local_y, uint8_t *r,
+                                 uint8_t *g, uint8_t *b) {
+    const R01eBg0Screen *s;
+    int tx, ty, cell, px, py;
+    uint8_t tile, attr, bank, pal, col_i;
+    const uint8_t *chr;
+    uint8_t tile16[16];
+    uint8_t master;
+
+    backdrop_rgb(m, r, g, b);
+    s = bg0_find(&m->video, col, row);
+    if (!s || local_x < 0 || local_y < 0 || local_x >= R01E_SCREEN_PX_W || local_y >= R01E_SCREEN_PX_H) {
+        return;
+    }
+    tx = local_x / 8;
+    ty = local_y / 8;
+    cell = ty * R01E_SCREEN_TILES_X + tx;
+    tile = s->map[cell];
+    attr = s->map[0xF0 + cell];
+    bank = (uint8_t)(attr & R01E_ATTR_BANK_MASK);
+    pal = (uint8_t)((attr & R01E_ATTR_PAL_MASK) >> R01E_ATTR_PAL_SHIFT);
+    chr = m->video.chr[bank & 3u];
+    memcpy(tile16, chr + (size_t)tile * R01E_TILE_BYTES, R01E_TILE_BYTES);
+    decode_tile16(tile16, attr);
+    px = local_x & 7;
+    py = local_y & 7;
+    col_i = tile_pix(tile16, px, py);
+    if (col_i == 0) {
+        return;
+    }
+    master = m->io.pal[(pal & 3u) * 4u + (col_i & 3u)] & 63u;
+    kit_rgb(master, r, g, b);
+}
+
+void r01e_video_render_bg0_atlas(R01eMachine *m) {
+    R01eVideo *vid;
+    int ay, ax;
+    int bench_col;
+    int bench_row;
+
+    if (!m) {
+        return;
+    }
+    vid = &m->video;
+    memset(vid->bg0_atlas, 0, sizeof(vid->bg0_atlas));
+    if (!vid->chr_loaded || vid->bg0_count < 1) {
+        return;
+    }
+    bench_col = vid->l0_cam_x / R01E_SCREEN_PX_W;
+    bench_row = vid->l0_cam_y / R01E_SCREEN_PX_H;
+    for (ay = 0; ay < R01E_VRAM_ATLAS_H; ay++) {
+        for (ax = 0; ax < R01E_VRAM_ATLAS_W; ax++) {
+            int slot_x = ax / R01E_SCREEN_PX_W;
+            int slot_y = ay / R01E_SCREEN_PX_H;
+            int lx = ax - slot_x * R01E_SCREEN_PX_W;
+            int ly = ay - slot_y * R01E_SCREEN_PX_H;
+            uint8_t r, g, b;
+            size_t i = ((size_t)ay * R01E_VRAM_ATLAS_W + (size_t)ax) * 3u;
+            sample_bg0_screen_px(m, bench_col + slot_x, bench_row + slot_y, lx, ly, &r, &g, &b);
+            vid->bg0_atlas[i] = r;
+            vid->bg0_atlas[i + 1] = g;
+            vid->bg0_atlas[i + 2] = b;
+        }
+    }
+}
+
+/* Return 2bpp CHR color index for scrolled L1 at viewport (lx,ly). -1 = missing slot. */
+static int sample_l1_chr_color(R01eMachine *m, int lx, int ly) {
+    R01eVideo *vid = &m->video;
+    int sx = (int)m->io.scroll_x + lx;
+    int sy = (int)m->io.scroll_y + ly;
+    int slot_x = sx / R01E_SCREEN_PX_W;
+    int slot_y = sy / R01E_SCREEN_PX_H;
+    int slot;
+    int local_x, local_y, tx, ty, cell, px, py;
+    const uint8_t *base;
+    uint8_t tile, attr, bank;
+    const uint8_t *chr;
+    uint8_t tile16[16];
+
+    if (slot_x < 0 || slot_x > 1 || slot_y < 0 || slot_y > 1) {
+        return -1;
+    }
+    slot = slot_y * 2 + slot_x;
+    if (!vid->slot_present[slot]) {
+        return -1;
+    }
+    local_x = sx - slot_x * R01E_SCREEN_PX_W;
+    local_y = sy - slot_y * R01E_SCREEN_PX_H;
+    tx = local_x / 8;
+    ty = local_y / 8;
+    cell = ty * R01E_SCREEN_TILES_X + tx;
+    base = vid->vram + (size_t)slot * R01E_VRAM_SLOT_BYTES;
+    tile = base[cell];
+    attr = base[0xF0 + cell];
+    bank = (uint8_t)(attr & R01E_ATTR_BANK_MASK);
+    chr = vid->chr[bank & 3u];
+    memcpy(tile16, chr + (size_t)tile * R01E_TILE_BYTES, R01E_TILE_BYTES);
+    decode_tile16(tile16, attr);
+    px = local_x & 7;
+    py = local_y & 7;
+    return (int)tile_pix(tile16, px, py);
+}
+
+void r01e_video_render_l1_mask(R01eMachine *m) {
+    R01eVideo *vid;
+    int ly, lx;
+
+    if (!m) {
+        return;
+    }
+    vid = &m->video;
+    memset(vid->l1_mask, 0, sizeof(vid->l1_mask));
+    if (!vid->chr_loaded) {
+        return;
+    }
+    for (ly = 0; ly < R01E_SCREEN_PX_H; ly++) {
+        for (lx = 0; lx < R01E_SCREEN_PX_W; lx++) {
+            int ci = sample_l1_chr_color(m, lx, ly);
+            size_t i = ((size_t)ly * R01E_SCREEN_PX_W + (size_t)lx) * 3u;
+            if (ci > 0) {
+                /* Opaque L1 pixel (palette index != 0). */
+                vid->l1_mask[i] = 255;
+                vid->l1_mask[i + 1] = 140;
+                vid->l1_mask[i + 2] = 0;
+            }
+            /* else black = transparent / show-through */
+        }
+    }
+}
+
 static void flip_tile16(uint8_t tile16[16], uint8_t attr) {
     int i;
     if (attr & R01E_ATTR_FLIP_H) {

@@ -45,7 +45,7 @@ cmake --build build
 
 **Env:** `R01E_SOFTBOOT=1`, host memcpy VRAM/pals at boot (debug). Default runs cart PRG MAP/pal stream catchup.
 
-**Debug (standalone `./emu`):** separate OS window with VRAM 2x2 workbench (256x240, red = viewport, sprites via OAM) beside a world map (blue = present, gold = current screen). Active **BG** and **SPR** palette rows along the bottom of that row. Below: **CPU busy** chart (2 samples/s, 20 bars). Cyan = busy cycles in active display, orange = busy in VBlank (excludes `$FE01` VBlank-wait spins). Red line = soft max **50k** cycles/frame (`R01E_CPU_BUDGET_CYCLES`, see [`docs/selling_points.md`](../docs/selling_points.md) for design budgets).
+**Debug (standalone `./emu`):** separate OS window with **L1** VRAM 2x2 (256x240, red viewport, sprites via OAM), **BG0** 2x2 cart cache (green viewport), **L1 opacity mask** (128x120, black=transparent, orange=opaque), world map (blue=present, gold=current), active **BG**/**SPR** palette rows, and **CPU busy** chart (2 samples/s, 20 bars). Cyan = busy cycles in active display, orange = busy in VBlank. Red line = soft max **50k** cycles/frame (`R01E_CPU_BUDGET_CYCLES`).
 
 ## Layout
 

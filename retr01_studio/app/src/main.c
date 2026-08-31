@@ -40,12 +40,6 @@ int main(int argc, char **argv) {
         app_shell_frame(&app);
     }
 
-    {
-        char err[128];
-        if (app.ui.project_path[0]) {
-            r01_project_save_json(app.ui.project, app.ui.project_path, err, sizeof(err));
-        }
-    }
     app_shell_shutdown(&app);
     return 0;
 }

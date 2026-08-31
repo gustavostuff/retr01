@@ -32,8 +32,14 @@
 #define DBG_CHART_H 72
 #define DBG_CHART_PAD 6
 #define DBG_CHART_LABEL_H 12
-#define DBG_WIN_W (R01E_VRAM_ATLAS_W + DBG_GAP + DBG_MAP_W)
-#define DBG_WIN_H (R01E_VRAM_ATLAS_H + DBG_GAP + DBG_PAL_H + DBG_GAP + DBG_CHART_H + DBG_CHART_LABEL_H)
+#define DBG_ATLAS_W R01E_VRAM_ATLAS_W
+#define DBG_ATLAS_H R01E_VRAM_ATLAS_H
+#define DBG_MASK_W R01E_SCREEN_PX_W
+#define DBG_MASK_H R01E_SCREEN_PX_H
+#define DBG_TOP_ROW_H DBG_ATLAS_H
+#define DBG_WIN_W (DBG_ATLAS_W + DBG_GAP + DBG_ATLAS_W + DBG_GAP + DBG_MAP_W)
+#define DBG_ROW2_Y (DBG_TOP_ROW_H + DBG_GAP)
+#define DBG_WIN_H (DBG_ROW2_Y + DBG_MASK_H + DBG_GAP + DBG_PAL_H + DBG_GAP + DBG_CHART_H + DBG_CHART_LABEL_H)
 
 static uint8_t read_pads(const Uint8 *keys) {
     uint8_t b = 0;
@@ -124,7 +130,7 @@ static void draw_world_map(SDL_Renderer *ren, R01eMachine *m, int ox, int oy) {
 
     /* Center the used bounding box in the map pane. */
     map_ox = ox + (DBG_MAP_W - DBG_MAP_CELL * cols) / 2;
-    map_oy = oy + (R01E_VRAM_ATLAS_H - DBG_MAP_CELL * rows) / 2;
+    map_oy = oy + (DBG_ATLAS_H - DBG_MAP_CELL * rows) / 2;
 
     for (r = min_r; r <= max_r; r++) {
         for (c = min_c; c <= max_c; c++) {
@@ -355,23 +361,37 @@ static void draw_cpu_budget_chart(SDL_Renderer *ren, const DbgCpuChart *ch, int 
     }
 }
 
-static void present_debug_pane(SDL_Renderer *dbg_ren, SDL_Texture *vram_tex, R01eMachine *m,
-                              const DbgCpuChart *chart) {
+static void present_debug_pane(SDL_Renderer *dbg_ren, SDL_Texture *vram_tex, SDL_Texture *bg0_tex,
+                              SDL_Texture *mask_tex, R01eMachine *m, const DbgCpuChart *chart) {
     SDL_Rect dst;
     SDL_Rect vp;
     int chart_y;
+    int bg0_x = DBG_ATLAS_W + DBG_GAP;
+    int map_x = DBG_ATLAS_W + DBG_GAP + DBG_ATLAS_W + DBG_GAP;
+    int l0_sx;
+    int l0_sy;
 
     r01e_video_render_vram_atlas(m);
-    SDL_UpdateTexture(vram_tex, NULL, m->video.vram_atlas, R01E_VRAM_ATLAS_W * 3);
+    r01e_video_render_bg0_atlas(m);
+    r01e_video_render_l1_mask(m);
+    SDL_UpdateTexture(vram_tex, NULL, m->video.vram_atlas, DBG_ATLAS_W * 3);
+    SDL_UpdateTexture(bg0_tex, NULL, m->video.bg0_atlas, DBG_ATLAS_W * 3);
+    SDL_UpdateTexture(mask_tex, NULL, m->video.l1_mask, DBG_MASK_W * 3);
 
     SDL_SetRenderDrawColor(dbg_ren, 12, 14, 18, 255);
     SDL_RenderClear(dbg_ren);
 
     dst.x = 0;
     dst.y = 0;
-    dst.w = R01E_VRAM_ATLAS_W;
-    dst.h = R01E_VRAM_ATLAS_H;
+    dst.w = DBG_ATLAS_W;
+    dst.h = DBG_ATLAS_H;
     SDL_RenderCopy(dbg_ren, vram_tex, NULL, &dst);
+
+    dst.x = bg0_x;
+    dst.y = 0;
+    dst.w = DBG_ATLAS_W;
+    dst.h = DBG_ATLAS_H;
+    SDL_RenderCopy(dbg_ren, bg0_tex, NULL, &dst);
 
     vp.x = (int)m->io.scroll_x;
     vp.y = (int)m->io.scroll_y;
@@ -387,9 +407,32 @@ static void present_debug_pane(SDL_Renderer *dbg_ren, SDL_Texture *vram_tex, R01
         SDL_RenderDrawRect(dbg_ren, &vp);
     }
 
-    draw_world_map(dbg_ren, m, R01E_VRAM_ATLAS_W + DBG_GAP, 0);
-    draw_active_palettes(dbg_ren, m, 4, R01E_VRAM_ATLAS_H + DBG_GAP);
-    chart_y = R01E_VRAM_ATLAS_H + DBG_GAP + DBG_PAL_H + DBG_GAP;
+    l0_sx = m->video.l0_cam_x % R01E_SCREEN_PX_W;
+    l0_sy = m->video.l0_cam_y % R01E_SCREEN_PX_H;
+    vp.x = bg0_x + l0_sx;
+    vp.y = l0_sy;
+    vp.w = R01E_SCREEN_PX_W;
+    vp.h = R01E_SCREEN_PX_H;
+    SDL_SetRenderDrawColor(dbg_ren, 80, 220, 120, 255);
+    SDL_RenderDrawRect(dbg_ren, &vp);
+    vp.x += 1;
+    vp.y += 1;
+    vp.w -= 2;
+    vp.h -= 2;
+    if (vp.w > 0 && vp.h > 0) {
+        SDL_RenderDrawRect(dbg_ren, &vp);
+    }
+
+    draw_world_map(dbg_ren, m, map_x, 0);
+
+    dst.x = 0;
+    dst.y = DBG_ROW2_Y;
+    dst.w = DBG_MASK_W;
+    dst.h = DBG_MASK_H;
+    SDL_RenderCopy(dbg_ren, mask_tex, NULL, &dst);
+
+    draw_active_palettes(dbg_ren, m, 4, DBG_ROW2_Y + DBG_MASK_H + DBG_GAP);
+    chart_y = DBG_ROW2_Y + DBG_MASK_H + DBG_GAP + DBG_PAL_H + DBG_GAP;
     draw_cpu_budget_chart(dbg_ren, chart, 0, chart_y);
     SDL_RenderPresent(dbg_ren);
 }
@@ -404,6 +447,8 @@ int main(int argc, char **argv) {
     SDL_Renderer *dbg_ren = NULL;
     SDL_Texture *tex = NULL;
     SDL_Texture *vram_tex = NULL;
+    SDL_Texture *bg0_tex = NULL;
+    SDL_Texture *mask_tex = NULL;
     int scale = 3;
     int running = 1;
     int paused = 0;
@@ -455,12 +500,24 @@ int main(int argc, char **argv) {
     dbg_ren = dbg_win ? SDL_CreateRenderer(dbg_win, -1, SDL_RENDERER_ACCELERATED) : NULL;
     if (dbg_ren) {
         SDL_RenderSetLogicalSize(dbg_ren, DBG_WIN_W, DBG_WIN_H);
-        vram_tex = SDL_CreateTexture(dbg_ren, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING,
-                                     R01E_VRAM_ATLAS_W, R01E_VRAM_ATLAS_H);
+        vram_tex = SDL_CreateTexture(dbg_ren, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, DBG_ATLAS_W,
+                                     DBG_ATLAS_H);
+        bg0_tex = SDL_CreateTexture(dbg_ren, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, DBG_ATLAS_W,
+                                    DBG_ATLAS_H);
+        mask_tex = SDL_CreateTexture(dbg_ren, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, DBG_MASK_W,
+                                     DBG_MASK_H);
     }
-    if (!dbg_win || !dbg_ren || !vram_tex) {
+    if (!dbg_win || !dbg_ren || !vram_tex || !bg0_tex || !mask_tex) {
         fprintf(stderr, "retr01_emu: debug window unavailable (%s) -- continuing without it\n",
                 SDL_GetError());
+        if (mask_tex) {
+            SDL_DestroyTexture(mask_tex);
+            mask_tex = NULL;
+        }
+        if (bg0_tex) {
+            SDL_DestroyTexture(bg0_tex);
+            bg0_tex = NULL;
+        }
         if (vram_tex) {
             SDL_DestroyTexture(vram_tex);
             vram_tex = NULL;
@@ -485,7 +542,7 @@ int main(int argc, char **argv) {
     }
     printf("Studio Play SoT: WASD/arrows move  |  X/Y warp  |  Space pause  |  R reset  |  Esc quit\n");
     if (dbg_win) {
-        printf("Debug: VRAM 2x2 + world map + BG/SPR pals + CPU busy budget (2 Hz, 50k red line)\n");
+        printf("Debug: L1/BG0 2x2 + L1 mask + world map + pals + CPU budget (2 Hz, 50k red line)\n");
     }
 
     /* Present boot frame while still hidden, then show. */
@@ -494,8 +551,8 @@ int main(int argc, char **argv) {
     SDL_RenderClear(ren);
     SDL_RenderCopy(ren, tex, NULL, NULL);
     SDL_RenderPresent(ren);
-    if (dbg_win && dbg_ren && vram_tex) {
-        present_debug_pane(dbg_ren, vram_tex, &machine, &cpu_chart);
+    if (dbg_win && dbg_ren && vram_tex && bg0_tex && mask_tex) {
+        present_debug_pane(dbg_ren, vram_tex, bg0_tex, mask_tex, &machine, &cpu_chart);
         SDL_ShowWindow(dbg_win);
     }
     SDL_ShowWindow(win);
@@ -510,10 +567,14 @@ int main(int argc, char **argv) {
                 running = 0;
             } else if (ev.type == SDL_WINDOWEVENT && ev.window.event == SDL_WINDOWEVENT_CLOSE) {
                 if (dbg_win && (Uint32)ev.window.windowID == SDL_GetWindowID(dbg_win)) {
+                    SDL_DestroyTexture(mask_tex);
+                    SDL_DestroyTexture(bg0_tex);
                     SDL_DestroyTexture(vram_tex);
                     SDL_DestroyRenderer(dbg_ren);
                     SDL_DestroyWindow(dbg_win);
                     vram_tex = NULL;
+                    bg0_tex = NULL;
+                    mask_tex = NULL;
                     dbg_ren = NULL;
                     dbg_win = NULL;
                 } else {
@@ -555,11 +616,17 @@ int main(int argc, char **argv) {
         SDL_RenderCopy(ren, tex, NULL, NULL);
         SDL_RenderPresent(ren);
 
-        if (dbg_win && dbg_ren && vram_tex) {
-            present_debug_pane(dbg_ren, vram_tex, &machine, &cpu_chart);
+        if (dbg_win && dbg_ren && vram_tex && bg0_tex && mask_tex) {
+            present_debug_pane(dbg_ren, vram_tex, bg0_tex, mask_tex, &machine, &cpu_chart);
         }
     }
 
+    if (mask_tex) {
+        SDL_DestroyTexture(mask_tex);
+    }
+    if (bg0_tex) {
+        SDL_DestroyTexture(bg0_tex);
+    }
     if (vram_tex) {
         SDL_DestroyTexture(vram_tex);
     }

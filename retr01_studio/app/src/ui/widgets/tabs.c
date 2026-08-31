@@ -1,4 +1,5 @@
 #include "ui/widgets/widgets.h"
+#include "ui/ui.h"
 #include "ui/internal.h"
 #include "font/font.h"
 
@@ -87,8 +88,8 @@ void ui_tabs_draw(SDL_Renderer *r, const UiTabsLayout *lo, int selected, int mou
         int tx = lo->x + i * lo->tab_w;
         int ty = lo->y;
         int on = (i == selected);
-        /* Dual-view: inactive tabs fill 16x16 so the sub-row gap is not empty. */
-        int th = (lo->dual_view && !on) ? UI_WORLD_BTN : lo->tab_h;
+        /* Dual-view: inactive tabs fill the full tab+sub stack (no 2px gap). */
+        int th = (lo->dual_view && !on) ? UI_WORLDS_TAB_STACK_H : lo->tab_h;
         int hover = point_in_rect(mouse_x, mouse_y, tx, ty, lo->tab_w, th);
         if (on) {
             fill_rect(r, tx, ty, lo->tab_w, th, UI_COL_ACTIVE_R, UI_COL_ACTIVE_G, UI_COL_ACTIVE_B);
@@ -127,8 +128,8 @@ int ui_tabs_hit(const UiTabsLayout *lo, int lx, int ly, int *out_idx) {
     if (!lo) {
         return 0;
     }
-    /* Dual-view inactive tabs are 16px tall. Active sub is hit separately first. */
-    max_h = lo->dual_view ? UI_WORLD_BTN : lo->tab_h;
+    /* Dual-view inactive tabs fill tab+sub stack height. */
+    max_h = lo->dual_view ? UI_WORLDS_TAB_STACK_H : lo->tab_h;
     if (lx < lo->x || ly < lo->y || ly >= lo->y + max_h) {
         return 0;
     }
