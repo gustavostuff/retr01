@@ -27,7 +27,7 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
     if (ui->play.active) {
         draw_play_view(ui, r);
     } else {
-        draw_screen_editor(ui, r, r01_project_active_screen(ui->project));
+        draw_screen_editor(ui, r, ui_edit_map_screen(ui));
     }
 
     if (ui->toast_until > SDL_GetTicks() && ui->toast[0]) {

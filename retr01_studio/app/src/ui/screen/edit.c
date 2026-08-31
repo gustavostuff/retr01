@@ -22,13 +22,13 @@ static void screen_refresh_tile(R01World *w, R01Screen *s) {
 
 void screen_refresh_sel(UiState *ui) {
     R01World *w = r01_project_active_world(ui->project);
-    R01Screen *s = r01_project_active_screen(ui->project);
+    R01Screen *s = ui_edit_map_screen(ui);
     screen_refresh_tile(w, s);
 }
 
 static void screen_set_sel_attr(UiState *ui, int bank, int pal, int flip_h, int flip_v) {
     R01World *w = r01_project_active_world(ui->project);
-    R01Screen *s = r01_project_active_screen(ui->project);
+    R01Screen *s = ui_edit_map_screen(ui);
     int min_x, min_y, max_x, max_y, ty, tx;
     if (!w || !s || !screen_sel_valid(ui)) {
         return;
@@ -46,7 +46,7 @@ static void screen_set_sel_attr(UiState *ui, int bank, int pal, int flip_h, int 
 
 void screen_set_sel_bank(UiState *ui, int bank) {
     R01World *w = r01_project_active_world(ui->project);
-    R01Screen *s = r01_project_active_screen(ui->project);
+    R01Screen *s = ui_edit_map_screen(ui);
     int min_x, min_y, max_x, max_y, ty, tx;
     if (!w || !s || !screen_sel_valid(ui)) {
         return;
@@ -65,7 +65,7 @@ void screen_set_sel_bank(UiState *ui, int bank) {
 
 void screen_set_sel_pal(UiState *ui, int pal) {
     R01World *w = r01_project_active_world(ui->project);
-    R01Screen *s = r01_project_active_screen(ui->project);
+    R01Screen *s = ui_edit_map_screen(ui);
     int min_x, min_y, max_x, max_y, ty, tx;
     if (!w || !s || !screen_sel_valid(ui)) {
         return;
@@ -83,7 +83,7 @@ void screen_set_sel_pal(UiState *ui, int pal) {
 }
 
 void screen_toggle_sel_flag(UiState *ui, uint8_t flag) {
-    R01Screen *s = r01_project_active_screen(ui->project);
+    R01Screen *s = ui_edit_map_screen(ui);
     int min_x, min_y, max_x, max_y, ty, tx;
     if (!s || !screen_sel_valid(ui)) {
         return;
@@ -99,7 +99,7 @@ void screen_toggle_sel_flag(UiState *ui, uint8_t flag) {
 
 void screen_set_solid_by_hw(UiState *ui, int ref_tx, int ref_ty) {
     R01World *w = r01_project_active_world(ui->project);
-    R01Screen *s = r01_project_active_screen(ui->project);
+    R01Screen *s = ui_edit_map_screen(ui);
     int cell;
     uint8_t ref_attr;
     uint8_t hw_key;

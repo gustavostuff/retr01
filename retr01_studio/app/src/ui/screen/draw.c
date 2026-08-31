@@ -287,10 +287,12 @@ static void draw_warp_markers(UiState *ui, SDL_Renderer *r, const R01World *w, c
 void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s) {
     int ox, oy, y, x;
     R01World *w = r01_project_active_world(ui->project);
+    int plane_bg0 = (ui->worlds_plane == UI_WORLDS_PLANE_BG0);
     screen_origin(ui, &ox, &oy);
     fill_rect(r, ox, oy, ui_screen_w(ui), ui_screen_h(ui), UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
     if (!s || !w) {
-        font_draw_centered(r, ox, oy, ui_screen_w(ui), ui_screen_h(ui), "No screen", 160, 160, 170);
+        font_draw_centered(r, ox, oy, ui_screen_w(ui), ui_screen_h(ui),
+                           plane_bg0 ? "No BG0 screen" : "No screen", 160, 160, 170);
         return;
     }
     for (y = 0; y < R01_SCREEN_PX_H; y++) {
@@ -306,10 +308,13 @@ void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s) {
             SDL_RenderFillRect(r, &px);
         }
     }
-    set_viewport_clip(r, ui, ox, oy);
-    draw_instances_on_screen(ui, r, w, s, ox, oy);
-    draw_warp_markers(ui, r, w, s, ox, oy);
-    SDL_RenderSetClipRect(r, NULL);
+    /* BG0 authoring preview is map-only (no instances / warps). */
+    if (!plane_bg0) {
+        set_viewport_clip(r, ui, ox, oy);
+        draw_instances_on_screen(ui, r, w, s, ox, oy);
+        draw_warp_markers(ui, r, w, s, ox, oy);
+        SDL_RenderSetClipRect(r, NULL);
+    }
     if (screen_sel_valid(ui) && ui->screen_mode == UI_SCREEN_MODE_SEL && ui->sel_instance < 0) {
         int min_x, min_y, max_x, max_y;
         int sx, sy, sw, sh;

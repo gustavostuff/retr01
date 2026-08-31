@@ -62,6 +62,22 @@ static void menu_clamp_xy(const UiState *ui, int *x, int *y, int w, int h) {
 }
 
 /* Prefer parking the menu over the main canvas when opened from the sidebar. */
+void menu_sync_tile_edit_label(UiState *ui) {
+    int shift;
+    const char *lab;
+    if (!ui || !ui->menu.open || ui->menu.kind != UI_MENU_KIND_TILE || ui->menu.item_count <= 2 ||
+        ui->menu.item_disabled[2]) {
+        return;
+    }
+    shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
+    lab = shift ? "Edit tile (all)" : "Edit tile";
+    if (strcmp(ui->menu.items[2], lab) == 0) {
+        return;
+    }
+    snprintf(ui->menu.items[2], 32, "%s", lab);
+    ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
+}
+
 static void menu_place_root(UiState *ui) {
     menu_clamp_xy(ui, &ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
     if (ui->menu.root_x < UI_SIDEBAR_W) {
@@ -144,7 +160,10 @@ void menu_open_tile(UiState *ui, int x, int y, int tx, int ty) {
     ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_BANK;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Add new tile here");
     ui->menu.item_sub[ui->menu.item_count++] = 0;
-    snprintf(ui->menu.items[ui->menu.item_count], 32, "Edit tile");
+    {
+        int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
+        snprintf(ui->menu.items[ui->menu.item_count], 32, shift ? "Edit tile (all)" : "Edit tile");
+    }
     ui->menu.item_sub[ui->menu.item_count++] = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Set tile palette");
     ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_PAL;
@@ -350,6 +369,7 @@ void menu_update_hover(UiState *ui, int lx, int ly) {
     if (!ui->menu.open) {
         return;
     }
+    menu_sync_tile_edit_label(ui);
     root_h = ui->menu.item_count * UI_BTN_H;
     if (menu_sub_hit(ui, lx, ly, NULL)) {
         return;
@@ -416,7 +436,7 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
             }
         } else if (ui->menu.submenu == UI_MENU_SUB_WARP) {
             R01World *w = r01_project_active_world(ui->project);
-            R01Screen *s = r01_project_active_screen(ui->project);
+            R01Screen *s = ui_edit_map_screen(ui);
             if (!w || !s || ui->menu.screen_tx < 0 || ui->menu.screen_ty < 0) {
                 menu_close(ui);
                 return;
@@ -551,7 +571,11 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
         tile_edit_open_new(ui, ui->menu.screen_tx, ui->menu.screen_ty);
         break;
     case 2:
-        tile_edit_open(ui, ui->menu.screen_tx, ui->menu.screen_ty);
+        if ((SDL_GetModState() & KMOD_SHIFT) != 0) {
+            tile_edit_open_all(ui, ui->menu.screen_tx, ui->menu.screen_ty);
+        } else {
+            tile_edit_open(ui, ui->menu.screen_tx, ui->menu.screen_ty);
+        }
         break;
     case 4:
         menu_ensure_tile_sel(ui);

@@ -237,6 +237,9 @@ void r01e_play_sync_video(R01eMachine *m) {
     }
     if (origin_changed) {
         (void)r01e_video_sync_camera(m);
+    } else {
+        /* L0 must track every pixel of L1 cam, not only screen crosses. */
+        r01e_video_update_bg0_scroll(vid);
     }
 }
 

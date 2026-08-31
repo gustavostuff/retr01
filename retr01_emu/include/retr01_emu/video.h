@@ -8,6 +8,13 @@
 
 struct R01eMachine;
 
+typedef struct R01eBg0Screen {
+    uint8_t present;
+    uint8_t col;
+    uint8_t row;
+    uint8_t map[R01E_SCREEN_PAYLOAD]; /* tiles||attrs */
+} R01eBg0Screen;
+
 typedef struct R01eVideo {
     uint8_t vram[R01E_VRAM_BYTES];
     uint8_t chr[8][R01E_CHR_BANK_BYTES]; /* BG0-3 + SPR0-3 for active world */
@@ -22,6 +29,18 @@ typedef struct R01eVideo {
     int cam_y;
     int cam_max_x;
     int cam_max_y;
+
+    /* Structured L0 / BG0 host cache (cart dir after MAP; show-through under L1 color 0). */
+    R01eBg0Screen bg0[R01E_PARALLAX_MAX];
+    int bg0_count;
+    int bg0_cols; /* L0 grid W (present extent) */
+    int bg0_rows; /* L0 grid H (present extent) */
+    int l1_cols;  /* L1 present bounding-box W (not virtual 8x8) */
+    int l1_rows;
+    int l1_origin_x; /* min present screen * px (for relative proportional scroll) */
+    int l1_origin_y;
+    int l0_cam_x; /* proportional pixel scroll */
+    int l0_cam_y;
 
     uint8_t fb[R01E_VISIBLE_W * R01E_VISIBLE_H * 3]; /* SCALE 2x RGB */
     /* Debug: 2x2 VRAM workbench at 1:1 (256x240). */
@@ -54,6 +73,9 @@ int r01e_video_boot_world(struct R01eMachine *m, int world);
 /* Reload VRAM slots 0-3 at cam_origin; mirror scroll regs from camera. */
 int r01e_video_sync_camera(struct R01eMachine *m);
 
+/* Recompute L0 cam from L1 cam using present L1 bbox vs BG0 grid (call every camera move). */
+void r01e_video_update_bg0_scroll(R01eVideo *vid);
+
 /*
  * Host atlas pan (tests / debug). dx/dy in logical pixels.
  */
@@ -65,7 +87,10 @@ void r01e_video_render_frame(struct R01eMachine *m);
 /* Render 2x2 VRAM slots into vram_atlas (256x240, 1:1). */
 void r01e_video_render_vram_atlas(struct R01eMachine *m);
 
-/* Phase 2+: load parallax payloads into VRAM slots 4-5. */
+/* Load structured BG0 (L0) screens from cart into host cache. */
+void r01e_video_load_bg0(struct R01eMachine *m, const R01eWorldView *wv);
+
+/* Deprecated alias kept for call sites during rename. */
 void r01e_video_load_parallax(struct R01eMachine *m, const R01eWorldView *wv);
 
 /*

@@ -46,6 +46,18 @@ int ui_init(UiState *ui) {
             "assets/checkbox.png",
             NULL,
         };
+        static const char *const bg0_paths[] = {
+            R01_STUDIO_ASSETS_DIR "/bg0_button.png",
+            "retr01_studio/assets/bg0_button.png",
+            "assets/bg0_button.png",
+            NULL,
+        };
+        static const char *const bg1_paths[] = {
+            R01_STUDIO_ASSETS_DIR "/bg1_button.png",
+            "retr01_studio/assets/bg1_button.png",
+            "assets/bg1_button.png",
+            NULL,
+        };
         int i;
         for (i = 0; radio_paths[i]; i++) {
             if (ui_load_png_rgba(radio_paths[i], &g_radio_rgba, &g_radio_w, &g_radio_h) == 0) {
@@ -67,6 +79,16 @@ int ui_init(UiState *ui) {
                 break;
             }
         }
+        for (i = 0; bg0_paths[i]; i++) {
+            if (ui_load_png_rgba(bg0_paths[i], &g_bg0_btn_rgba, &g_bg0_btn_w, &g_bg0_btn_h) == 0) {
+                break;
+            }
+        }
+        for (i = 0; bg1_paths[i]; i++) {
+            if (ui_load_png_rgba(bg1_paths[i], &g_bg1_btn_rgba, &g_bg1_btn_w, &g_bg1_btn_h) == 0) {
+                break;
+            }
+        }
     }
     ui->project = (R01Project *)calloc(1, sizeof(R01Project));
     if (!ui->project) {
@@ -76,6 +98,9 @@ int ui_init(UiState *ui) {
     ui->project_path[0] = '\0';
     ui->last_click_col = -1;
     ui->last_click_row = -1;
+    ui->world_sel_col = -1;
+    ui->world_sel_row = -1;
+    ui->screen_clip_valid = 0;
     ui->sel_x0 = -1;
     ui->sel_y0 = -1;
     ui->sel_x1 = -1;
@@ -113,6 +138,18 @@ void ui_shutdown(UiState *ui) {
     g_cross_rgba = NULL;
     g_cross_w = 0;
     g_cross_h = 0;
+    free(g_checkbox_rgba);
+    g_checkbox_rgba = NULL;
+    g_checkbox_w = 0;
+    g_checkbox_h = 0;
+    free(g_bg0_btn_rgba);
+    g_bg0_btn_rgba = NULL;
+    g_bg0_btn_w = 0;
+    g_bg0_btn_h = 0;
+    free(g_bg1_btn_rgba);
+    g_bg1_btn_rgba = NULL;
+    g_bg1_btn_w = 0;
+    g_bg1_btn_h = 0;
     if (g_cursor_arrow) {
         SDL_FreeCursor(g_cursor_arrow);
         g_cursor_arrow = NULL;

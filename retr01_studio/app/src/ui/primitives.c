@@ -25,6 +25,12 @@ int g_checkbox_h;
 uint8_t *g_cross_rgba;
 int g_cross_w;
 int g_cross_h;
+uint8_t *g_bg0_btn_rgba;
+int g_bg0_btn_w;
+int g_bg0_btn_h;
+uint8_t *g_bg1_btn_rgba;
+int g_bg1_btn_w;
+int g_bg1_btn_h;
 
 int ui_load_png_rgba(const char *path, uint8_t **out_px, int *out_w, int *out_h) {
     FILE *fp;

@@ -45,6 +45,7 @@ void draw_menu(UiState *ui, SDL_Renderer *r) {
     if (!ui->menu.open) {
         return;
     }
+    menu_sync_tile_edit_label(ui);
     draw_menu_panel(r, ui->menu.root_x, ui->menu.root_y, ui->menu.root_w, ui->menu.item_count, ui->menu.items,
                     ui->menu.item_sub, ui->menu.item_disabled, ui->mouse_x, ui->mouse_y);
     if (ui->menu.submenu != UI_MENU_SUB_NONE) {

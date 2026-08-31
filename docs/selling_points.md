@@ -29,7 +29,7 @@ On NES, a large share of PRG and every frame went to **making the picture move**
 
 | | NES | Retr01 |
 |--|-----|--------|
-| Playfield | 256x240, nametable tricks | **128x120** logical, **2x2** live VRAM window |
+| Playfield | 256x240, nametable tricks | **128x120** logical (yes, deliberate chunky pixels), **2x2** live VRAM window |
 | Scroll | Software nametable updates, often VBlank-only | Hardware scroll latches + **480 B** MAP stream into VRAM |
 | Multi-screen worlds | Bank switching, manual nametable layout | Sparse world grid, **32 screens**/world in cart MAP |
 | Sprites | 64 OAM, **8** per scanline (typical pain point) | 64 OAM, **16** per scanline, line-buffer fill in 1284 |

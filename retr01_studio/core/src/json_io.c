@@ -594,6 +594,35 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
         free(tl);
         free(at);
     }
+    fprintf(f, "\n  ],\n");
+    fprintf(f, "  \"bg0_cols\": %d,\n", w->bg0_cols);
+    fprintf(f, "  \"bg0_rows\": %d,\n", w->bg0_rows);
+    fprintf(f, "  \"bg0_active_screen\": %d,\n", w->bg0_active_screen);
+    fprintf(f, "  \"bg0_screens\": [\n");
+    wrote = 0;
+    for (i = 0; i < w->bg0_screen_count && i < R01_BG0_SCREENS_MAX; i++) {
+        const R01Screen *s = &w->bg0_screens[i];
+        char *tl;
+        char *at;
+        if (!s->present) {
+            continue;
+        }
+        tl = encode_b64(s->tiles, sizeof(s->tiles));
+        at = encode_b64(s->attrs, sizeof(s->attrs));
+        if (!tl || !at) {
+            free(tl);
+            free(at);
+            fclose(f);
+            set_err(err_buf, err_cap, "oom");
+            return -1;
+        }
+        fprintf(f, "%s    {\"col\": %d, \"row\": %d,\n", wrote ? ",\n" : "", s->col, s->row);
+        fprintf(f, "     \"tiles_b64\": \"%s\",\n", tl);
+        fprintf(f, "     \"attrs_b64\": \"%s\"}", at);
+        wrote = 1;
+        free(tl);
+        free(at);
+    }
     fprintf(f, "\n  ]\n");
     fprintf(f, "}\n");
     fclose(f);
@@ -873,6 +902,28 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
     if (grid_cols >= 1 && grid_cols <= R01_GRID_MAX && grid_rows >= 1 && grid_rows <= R01_GRID_MAX) {
         r01_world_set_grid(r01_project_world0(p), grid_cols, grid_rows);
     }
+    {
+        int bg0_cols = R01_BG0_DEFAULT_COLS;
+        int bg0_rows = R01_BG0_DEFAULT_ROWS;
+        int bg0_shape = -1;
+        if (json_int_after(buf, "\"bg0_cols\"", &bg0_cols) && json_int_after(buf, "\"bg0_rows\"", &bg0_rows) &&
+            r01_bg0_grid_ok(bg0_cols, bg0_rows)) {
+            (void)r01_world_bg0_set_grid(r01_project_world0(p), bg0_cols, bg0_rows);
+        } else if (json_int_after(buf, "\"bg0_shape\"", &bg0_shape)) {
+            /* Legacy fixed-shape enum -> cols/rows. */
+            static const int legacy_cols[4] = {1, 8, 2, 4};
+            static const int legacy_rows[4] = {8, 1, 4, 2};
+            if (bg0_shape >= 0 && bg0_shape < 4) {
+                (void)r01_world_bg0_set_grid(r01_project_world0(p), legacy_cols[bg0_shape],
+                                             legacy_rows[bg0_shape]);
+            } else {
+                (void)r01_world_bg0_set_grid(r01_project_world0(p), R01_BG0_DEFAULT_COLS,
+                                             R01_BG0_DEFAULT_ROWS);
+            }
+        } else {
+            (void)r01_world_bg0_set_grid(r01_project_world0(p), R01_BG0_DEFAULT_COLS, R01_BG0_DEFAULT_ROWS);
+        }
+    }
     if (default_world >= 0 && default_world < R01_MAX_WORLDS) {
         p->default_world = default_world;
     }
@@ -899,10 +950,11 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
     section = json_find(buf, "\"screens\"");
     {
         int tilemaps_loaded = 0;
+        const char *screens_end = json_find(buf, "\"bg0_screens\"");
         if (section) {
             R01World *w = r01_project_world0(p);
             obj = strchr(section, '{');
-            while (obj && obj < buf + sz) {
+            while (obj && obj < buf + sz && (!screens_end || obj < screens_end)) {
                 const char *end = strchr(obj, '}');
                 size_t olen;
                 char *slice;
@@ -954,6 +1006,77 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                 }
                 free(slice);
                 obj = strchr(end + 1, '{');
+            }
+        }
+
+        {
+            const char *bg0sec = json_find(buf, "\"bg0_screens\"");
+            R01World *w = r01_project_world0(p);
+            int bg0_active = -1;
+            json_int_after(buf, "\"bg0_active_screen\"", &bg0_active);
+            if (bg0sec && w) {
+                obj = strchr(bg0sec, '{');
+                while (obj && obj < buf + sz) {
+                    const char *end = strchr(obj, '}');
+                    size_t olen;
+                    char *slice;
+                    int col = 0, row = 0, si;
+                    R01Screen *s;
+                    if (!end) {
+                        break;
+                    }
+                    olen = (size_t)(end - obj + 1);
+                    slice = (char *)malloc(olen + 1u);
+                    if (!slice) {
+                        break;
+                    }
+                    memcpy(slice, obj, olen);
+                    slice[olen] = '\0';
+                    json_int_after(slice, "\"col\"", &col);
+                    json_int_after(slice, "\"row\"", &row);
+                    si = r01_world_bg0_screen_index(w, col, row);
+                    if (si < 0) {
+                        free(slice);
+                        obj = strchr(end + 1, '{');
+                        continue;
+                    }
+                    s = &w->bg0_screens[si];
+                    s->present = 1;
+                    s->col = col;
+                    s->row = row;
+                    if (load_screen_field(slice, "\"tiles_b64\"", "\"tiles_rle_hex\"", "\"tiles_hex\"", s->tiles,
+                                          sizeof(s->tiles)) != 0 ||
+                        load_screen_field(slice, "\"attrs_b64\"", "\"attrs_rle_hex\"", "\"attrs_hex\"", s->attrs,
+                                          sizeof(s->attrs)) != 0) {
+                        free(slice);
+                        free(buf);
+                        set_err(err_buf, err_cap, "bg0 screen decode failed");
+                        return -1;
+                    }
+                    free(slice);
+                    obj = strchr(end + 1, '{');
+                }
+            }
+            if (w) {
+                if (bg0_active >= 0 && bg0_active < w->bg0_screen_count &&
+                    w->bg0_screens[bg0_active].present) {
+                    w->bg0_active_screen = bg0_active;
+                } else {
+                    w->bg0_active_screen = -1;
+                    {
+                        int bi;
+                        for (bi = 0; bi < w->bg0_screen_count; bi++) {
+                            if (w->bg0_screens[bi].present) {
+                                w->bg0_active_screen = bi;
+                                break;
+                            }
+                        }
+                    }
+                }
+                /* Authoring UI is hardcoded 2x2 for now; drop stale larger grids. */
+                if (w->bg0_cols != R01_BG0_DEFAULT_COLS || w->bg0_rows != R01_BG0_DEFAULT_ROWS) {
+                    (void)r01_world_bg0_set_grid(w, R01_BG0_DEFAULT_COLS, R01_BG0_DEFAULT_ROWS);
+                }
             }
         }
 

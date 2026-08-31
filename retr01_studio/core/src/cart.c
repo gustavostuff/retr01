@@ -553,17 +553,26 @@ static int resolve_custom_logic_path(const char *cart_or_stem_path, char *out, s
 static int build_world_blob(Buf *blob, const R01World *w, const char *custom_logic_path) {
     uint8_t hdr[WORLD_HDR_SIZE];
     uint8_t dir[R01_MAX_SCREENS * SCREEN_DIR_ENT];
-    size_t off_chr, off_sdir, off_spay, off_types, off_insts;
+    uint8_t bg0_dir[R01_BG0_SCREENS_MAX * SCREEN_DIR_ENT];
+    size_t off_chr, off_sdir, off_spay, off_bg0_dir, off_bg0_pay, off_types, off_insts;
     int si, bi, present_n = 0;
+    int bg0_n = 0;
     int type_n, inst_n;
     int remap_b0_tile1 = -1;
     uint32_t payload_base;
+    uint32_t bg0_payload_base;
 
     memset(hdr, 0, sizeof(hdr));
     memset(dir, 0, sizeof(dir));
+    memset(bg0_dir, 0, sizeof(bg0_dir));
     for (si = 0; si < w->screen_count; si++) {
         if (w->screens[si].present) {
             present_n++;
+        }
+    }
+    for (si = 0; si < w->bg0_screen_count && si < R01_BG0_SCREENS_MAX; si++) {
+        if (w->bg0_screens[si].present) {
+            bg0_n++;
         }
     }
     if (present_n > R01_MAX_PRESENT_SCREENS) {
@@ -571,6 +580,9 @@ static int build_world_blob(Buf *blob, const R01World *w, const char *custom_log
     }
     if (present_n > 255) {
         present_n = 255;
+    }
+    if (bg0_n > R01_BG0_SCREENS_MAX) {
+        bg0_n = R01_BG0_SCREENS_MAX;
     }
     type_n = w->entity_count;
     if (type_n > 255) {
@@ -591,7 +603,10 @@ static int build_world_blob(Buf *blob, const R01World *w, const char *custom_log
     off_sdir = off_chr + (size_t)R01_BG_BANKS * R01_CHR_BANK_BYTES + (size_t)R01_SPR_BANKS * R01_CHR_BANK_BYTES;
     off_spay = off_sdir + (size_t)present_n * SCREEN_DIR_ENT;
     payload_base = (uint32_t)off_spay;
-    off_types = off_spay + (size_t)present_n * SCREEN_PAYLOAD;
+    off_bg0_dir = off_spay + (size_t)present_n * SCREEN_PAYLOAD;
+    off_bg0_pay = off_bg0_dir + (size_t)bg0_n * SCREEN_DIR_ENT;
+    bg0_payload_base = (uint32_t)off_bg0_pay;
+    off_types = off_bg0_pay + (size_t)bg0_n * SCREEN_PAYLOAD;
     off_insts = off_types + (size_t)type_n * R01_CART_ENTITY_TYPE_SIZE;
 
     {
@@ -601,13 +616,45 @@ static int build_world_blob(Buf *blob, const R01World *w, const char *custom_log
         put_u8(hdr + 1, (uint8_t)spawn->row);
     }
     put_u8(hdr + 2, (uint8_t)(w->default_bg_bank & 3));
-    put_u8(hdr + 3, 0); /* default_spr_bank */
+    /* hdr[3]: BG0 present extent (cols | rows<<4). 0 when no BG0. */
+    if (bg0_n > 0) {
+        int min_c = 99, min_r = 99, max_c = 0, max_r = 0;
+        int pc, pr;
+        for (si = 0; si < w->bg0_screen_count && si < R01_BG0_SCREENS_MAX; si++) {
+            if (!w->bg0_screens[si].present) {
+                continue;
+            }
+            if (w->bg0_screens[si].col < min_c) {
+                min_c = w->bg0_screens[si].col;
+            }
+            if (w->bg0_screens[si].row < min_r) {
+                min_r = w->bg0_screens[si].row;
+            }
+            if (w->bg0_screens[si].col > max_c) {
+                max_c = w->bg0_screens[si].col;
+            }
+            if (w->bg0_screens[si].row > max_r) {
+                max_r = w->bg0_screens[si].row;
+            }
+        }
+        pc = max_c - min_c + 1;
+        pr = max_r - min_r + 1;
+        if (pc < 1) {
+            pc = 1;
+        }
+        if (pr < 1) {
+            pr = 1;
+        }
+        put_u8(hdr + 3, (uint8_t)((pc & 0x0f) | ((pr & 0x0f) << 4)));
+    } else {
+        put_u8(hdr + 3, 0);
+    }
     put_u8(hdr + 4, (uint8_t)(w->default_pal_row & 7));
     put_u8(hdr + 5, (uint8_t)present_n);
-    put_u8(hdr + 6, 0);
+    put_u8(hdr + 6, (uint8_t)bg0_n); /* BG0 / L0 present count (hdr was parallax_count) */
     put_u24(hdr + 8, (uint32_t)off_chr);
     put_u24(hdr + 11, (uint32_t)off_sdir);
-    put_u24(hdr + 14, 0);
+    put_u24(hdr + 14, bg0_n > 0 ? (uint32_t)off_bg0_dir : 0u);
     put_u8(hdr + R01_CART_WHDR_TYPE_COUNT, (uint8_t)type_n);
     put_u8(hdr + R01_CART_WHDR_INST_COUNT, (uint8_t)inst_n);
     put_u24(hdr + R01_CART_WHDR_OFF_TYPES, (uint32_t)off_types);
@@ -662,8 +709,6 @@ static int build_world_blob(Buf *blob, const R01World *w, const char *custom_log
         }
         memcpy(bank, w->spr_banks[bi].chr, n);
         if (bi == 0) {
-            /* Tile 1 reserved: solid color-1 player (Studio/emu/sim OAM slot 0).
-             * Relocate any user art that still sits there (pre-reservation projects). */
             remap_b0_tile1 = relocate_spr0_tile1(bank, w);
             fill_solid_tile(bank + (size_t)R01_SPR_PLAYER_TILE_ID * R01_TILE_BYTES, 1);
         }
@@ -693,6 +738,37 @@ static int build_world_blob(Buf *blob, const R01World *w, const char *custom_log
         }
         for (si = 0; si < w->screen_count; si++) {
             const R01Screen *s = &w->screens[si];
+            if (!s->present) {
+                continue;
+            }
+            if (buf_append(blob, s->tiles, R01_TILES_PER_SCREEN) != 0 ||
+                buf_append(blob, s->attrs, R01_ATTRS_PER_SCREEN) != 0) {
+                return -1;
+            }
+        }
+    }
+    if (bg0_n > 0) {
+        int di = 0;
+        for (si = 0; si < w->bg0_screen_count && si < R01_BG0_SCREENS_MAX; si++) {
+            const R01Screen *s = &w->bg0_screens[si];
+            uint8_t *e;
+            if (!s->present) {
+                continue;
+            }
+            e = bg0_dir + (size_t)di * SCREEN_DIR_ENT;
+            put_u8(e + 0, (uint8_t)s->col);
+            put_u8(e + 1, (uint8_t)s->row);
+            put_u8(e + 2, 0);
+            put_u8(e + 3, 0);
+            put_u24(e + 4, bg0_payload_base + (uint32_t)di * SCREEN_PAYLOAD);
+            put_u24(e + 7, 0);
+            di++;
+        }
+        if (buf_append(blob, bg0_dir, (size_t)bg0_n * SCREEN_DIR_ENT) != 0) {
+            return -1;
+        }
+        for (si = 0; si < w->bg0_screen_count && si < R01_BG0_SCREENS_MAX; si++) {
+            const R01Screen *s = &w->bg0_screens[si];
             if (!s->present) {
                 continue;
             }

@@ -6,7 +6,7 @@
 
 ---
 
-## 32 IC at a glance
+## 32 IC parts is the current goal
 
 | Block | Parts | Role on PCB |
 |------|-------|-------------|

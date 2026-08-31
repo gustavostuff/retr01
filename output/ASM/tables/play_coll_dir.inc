@@ -9,6 +9,5 @@
         .byte $01, $02, $90, $94  ; screen (1,2)
         .byte $02, $02, $80, $95  ; screen (2,2)
         .byte $02, $03, $70, $96  ; screen (2,3)
-        .byte $02, $04, $60, $97  ; screen (2,4)
-        .byte $03, $04, $50, $98  ; screen (3,4)
-play_coll_count: .byte $0C
+        .byte $03, $03, $60, $97  ; screen (3,3)
+play_coll_count: .byte $0B

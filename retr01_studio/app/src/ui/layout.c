@@ -237,7 +237,7 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
     lo->worlds_body_h = worlds_h;
     if (worlds_h > 0) {
         lo->worlds_btns_y = y;
-        lo->worlds_grid_y = y + UI_WORLD_BTN;
+        lo->worlds_grid_y = y + UI_WORLD_BTN + UI_WORLDS_SUB_H;
         y += worlds_h;
     } else {
         lo->worlds_btns_y = -1;
@@ -370,20 +370,29 @@ int world_cell_hit(const UiState *ui, int lx, int ly, int *out_col, int *out_row
     int x0 = UI_WORLDS_X;
     int y0;
     int col, row;
+    int max_cols = R01_GRID_MAX;
+    int max_rows = R01_GRID_MAX;
     accordion_layout(ui, &lo);
     if (lo.worlds_body_h < 1) {
         return 0;
     }
     y0 = lo.worlds_grid_y;
-    if (lo.worlds_body_h <= UI_WORLD_BTN || y0 < 0) {
+    if (lo.worlds_body_h <= UI_WORLD_BTN + UI_WORLDS_SUB_H || y0 < 0) {
         return 0;
     }
-    if (lx < x0 || ly < y0 || lx >= x0 + UI_WORLD_VIEW || ly >= lo.worlds_btns_y + lo.worlds_body_h) {
+    if (ui && ui->worlds_plane == UI_WORLDS_PLANE_BG0) {
+        max_cols = R01_BG0_DEFAULT_COLS;
+        max_rows = R01_BG0_DEFAULT_ROWS;
+    }
+    if (lx < x0 || ly < y0 || lx >= x0 + max_cols * UI_WORLD_CELL || ly >= y0 + max_rows * UI_WORLD_CELL) {
+        return 0;
+    }
+    if (ly >= lo.worlds_btns_y + lo.worlds_body_h) {
         return 0;
     }
     col = (lx - x0) / UI_WORLD_CELL;
     row = (ly - y0) / UI_WORLD_CELL;
-    if (col < 0 || row < 0 || col >= R01_GRID_MAX || row >= R01_GRID_MAX) {
+    if (col < 0 || row < 0 || col >= max_cols || row >= max_rows) {
         return 0;
     }
     if (out_col) {
@@ -397,27 +406,40 @@ int world_cell_hit(const UiState *ui, int lx, int ly, int *out_col, int *out_row
 
 int world_btn_hit(const UiState *ui, int lx, int ly, int *out_wi) {
     AccordionLayout lo;
-    int i;
-    int y;
+    UiTabsLayout tabs;
+    static const char *const world_labs[R01_MAX_WORLDS] = {"1", "2", "3", "4", "5", "6", "7", "8"};
     accordion_layout(ui, &lo);
-    if (lo.worlds_body_h < 1) {
+    if (lo.worlds_body_h < 1 || lo.worlds_btns_y < 0) {
         return 0;
     }
-    y = lo.worlds_btns_y;
-    if (y < 0 || ly < y || ly >= y + UI_WORLD_BTN || ly >= y + lo.worlds_body_h) {
+    ui_tabs_layout(world_labs, R01_MAX_WORLDS, UI_WORLDS_X, lo.worlds_btns_y, UI_WORLD_BTN, &tabs);
+    return ui_tabs_hit(&tabs, lx, ly, out_wi);
+}
+
+void worlds_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
+    AccordionLayout lo;
+    static const char *const world_labs[R01_MAX_WORLDS] = {"1", "2", "3", "4", "5", "6", "7", "8"};
+    int view;
+    if (!out) {
+        return;
+    }
+    accordion_layout(ui, &lo);
+    ui_tabs_layout(world_labs, R01_MAX_WORLDS, UI_WORLDS_X, lo.worlds_btns_y, UI_WORLD_BTN, out);
+    view = (ui && ui->worlds_plane == UI_WORLDS_PLANE_BG0) ? 0 : 1;
+    /* view 0 shows BG0 asset (far plane selected), view 1 shows BG1 asset */
+    ui_tabs_set_dual(out, 1, view, g_bg0_btn_rgba, g_bg0_btn_w, g_bg0_btn_h, g_bg1_btn_rgba, g_bg1_btn_w,
+                     g_bg1_btn_h);
+}
+
+int world_sub_hit(const UiState *ui, int lx, int ly) {
+    UiTabsLayout tabs;
+    int sel;
+    if (!ui || !ui->project) {
         return 0;
     }
-    for (i = 0; i < R01_MAX_WORLDS; i++) {
-        int x;
-        ui_world_btn_pos(i, y, &x, NULL);
-        if (lx >= x && lx < x + UI_WORLD_BTN) {
-            if (out_wi) {
-                *out_wi = i;
-            }
-            return 1;
-        }
-    }
-    return 0;
+    worlds_tabs_prepare(ui, &tabs);
+    sel = ui->project->active_world;
+    return ui_tabs_sub_hit(&tabs, sel, lx, ly);
 }
 
 int accordion_header_hit(const UiState *ui, int lx, int ly, int *out_section) {

@@ -30,6 +30,157 @@ int r01_world_screen_index(const R01World *w, int col, int row) {
     return row * w->grid_cols + col;
 }
 
+int r01_bg0_grid_ok(int cols, int rows) {
+    if (cols < 1 || rows < 1) {
+        return 0;
+    }
+    if (cols > R01_BG0_SCREENS_MAX || rows > R01_BG0_SCREENS_MAX) {
+        return 0;
+    }
+    return (cols * rows) <= R01_BG0_SCREENS_MAX;
+}
+
+int r01_world_bg0_screen_index(const R01World *w, int col, int row) {
+    if (!w || col < 0 || row < 0 || col >= w->bg0_cols || row >= w->bg0_rows) {
+        return -1;
+    }
+    return row * w->bg0_cols + col;
+}
+
+R01Screen *r01_world_bg0_screen_at(R01World *w, int col, int row) {
+    int i = r01_world_bg0_screen_index(w, col, row);
+    if (i < 0 || i >= w->bg0_screen_count) {
+        return NULL;
+    }
+    return &w->bg0_screens[i];
+}
+
+int r01_world_bg0_present_count(const R01World *w) {
+    int i;
+    int n = 0;
+    if (!w) {
+        return 0;
+    }
+    for (i = 0; i < w->bg0_screen_count && i < R01_BG0_SCREENS_MAX; i++) {
+        if (w->bg0_screens[i].present) {
+            n++;
+        }
+    }
+    return n;
+}
+
+int r01_world_bg0_set_grid(R01World *w, int cols, int rows) {
+    R01Screen keep[R01_BG0_SCREENS_MAX];
+    int keep_n = 0;
+    int col, row, i, idx;
+    if (!w || !r01_bg0_grid_ok(cols, rows)) {
+        return -1;
+    }
+    for (i = 0; i < w->bg0_screen_count && i < R01_BG0_SCREENS_MAX; i++) {
+        if (w->bg0_screens[i].present && keep_n < R01_BG0_SCREENS_MAX) {
+            keep[keep_n++] = w->bg0_screens[i];
+        }
+    }
+    w->bg0_cols = cols;
+    w->bg0_rows = rows;
+    w->bg0_screen_count = cols * rows;
+    for (i = 0; i < R01_BG0_SCREENS_MAX; i++) {
+        init_screen(&w->bg0_screens[i], 0, 0);
+    }
+    for (row = 0; row < rows; row++) {
+        for (col = 0; col < cols; col++) {
+            idx = row * cols + col;
+            if (idx >= R01_BG0_SCREENS_MAX) {
+                continue;
+            }
+            init_screen(&w->bg0_screens[idx], col, row);
+        }
+    }
+    for (i = 0; i < keep_n; i++) {
+        col = keep[i].col;
+        row = keep[i].row;
+        if (col < 0 || row < 0 || col >= cols || row >= rows) {
+            continue;
+        }
+        idx = row * cols + col;
+        w->bg0_screens[idx] = keep[i];
+        w->bg0_screens[idx].col = col;
+        w->bg0_screens[idx].row = row;
+        w->bg0_screens[idx].present = 1;
+    }
+    w->bg0_active_screen = -1;
+    for (i = 0; i < w->bg0_screen_count; i++) {
+        if (w->bg0_screens[i].present) {
+            w->bg0_active_screen = i;
+            break;
+        }
+    }
+    return 0;
+}
+
+int r01_world_bg0_create_screen(R01World *w, int col, int row) {
+    R01Screen *s;
+    if (!w) {
+        return -1;
+    }
+    if (!r01_bg0_grid_ok(w->bg0_cols, w->bg0_rows)) {
+        if (r01_world_bg0_set_grid(w, R01_BG0_DEFAULT_COLS, R01_BG0_DEFAULT_ROWS) != 0) {
+            return -1;
+        }
+    }
+    s = r01_world_bg0_screen_at(w, col, row);
+    if (!s) {
+        return -1;
+    }
+    if (!s->present) {
+        if (r01_world_bg0_present_count(w) >= R01_BG0_SCREENS_MAX) {
+            return -1;
+        }
+        init_screen(s, col, row);
+        s->present = 1;
+    }
+    w->bg0_active_screen = r01_world_bg0_screen_index(w, col, row);
+    return w->bg0_active_screen;
+}
+
+int r01_world_bg0_remove_screen(R01World *w, int col, int row) {
+    int idx;
+    R01Screen *s;
+    if (!w) {
+        return -1;
+    }
+    s = r01_world_bg0_screen_at(w, col, row);
+    idx = r01_world_bg0_screen_index(w, col, row);
+    if (!s || idx < 0) {
+        return -1;
+    }
+    init_screen(s, col, row);
+    if (w->bg0_active_screen == idx) {
+        w->bg0_active_screen = -1;
+        for (idx = 0; idx < w->bg0_screen_count; idx++) {
+            if (w->bg0_screens[idx].present) {
+                w->bg0_active_screen = idx;
+                break;
+            }
+        }
+    }
+    return 0;
+}
+
+R01Screen *r01_project_active_bg0_screen(R01Project *p) {
+    R01World *w = r01_project_active_world(p);
+    if (!p || !w || !w->present) {
+        return NULL;
+    }
+    if (w->bg0_active_screen < 0 || w->bg0_active_screen >= w->bg0_screen_count) {
+        return NULL;
+    }
+    if (!w->bg0_screens[w->bg0_active_screen].present) {
+        return NULL;
+    }
+    return &w->bg0_screens[w->bg0_active_screen];
+}
+
 int r01_world_set_grid(R01World *w, int cols, int rows) {
     int col, row, i;
     if (!w || cols < 1 || rows < 1 || cols > R01_GRID_MAX || rows > R01_GRID_MAX) {
@@ -82,6 +233,7 @@ void r01_world_init_phase1(R01World *w) {
     w->default_bg_bank = 0;
     w->default_pal_row = 0;
     w->player_entity = -1;
+    w->bg0_active_screen = -1;
     r01_world_warps_init(w);
     /* Full 8x8 map slots; default authored region is 3x3 present blank screens. */
     r01_world_set_grid(w, R01_GRID_MAX, R01_GRID_MAX);
@@ -94,6 +246,7 @@ void r01_world_init_phase1(R01World *w) {
         }
     }
     r01_world_sync_default_screen(w);
+    (void)r01_world_bg0_set_grid(w, R01_BG0_DEFAULT_COLS, R01_BG0_DEFAULT_ROWS);
 }
 
 void r01_world_init_empty(R01World *w) {
@@ -105,9 +258,11 @@ void r01_world_init_empty(R01World *w) {
     w->default_bg_bank = 0;
     w->default_pal_row = 0;
     w->player_entity = -1;
+    w->bg0_active_screen = -1;
     r01_world_warps_init(w);
     r01_world_set_grid(w, R01_GRID_MAX, R01_GRID_MAX);
     r01_world_sync_default_screen(w);
+    (void)r01_world_bg0_set_grid(w, R01_BG0_DEFAULT_COLS, R01_BG0_DEFAULT_ROWS);
 }
 
 void r01_project_init(R01Project *p, const char *name) {

@@ -28,7 +28,7 @@ void ui_paint_stamp_from_cell(UiState *ui, int tx, int ty) {
     if (!ui || tx < 0 || ty < 0) {
         return;
     }
-    s = r01_project_active_screen(ui->project);
+    s = ui_edit_map_screen(ui);
     if (!s) {
         return;
     }
@@ -43,7 +43,7 @@ int ui_paint_stamp_from_sel(const UiState *ui, uint8_t *out_tile, uint8_t *out_a
     if (!screen_sel_valid(ui)) {
         return 0;
     }
-    s = r01_project_active_screen(ui->project);
+    s = ui_edit_map_screen(ui);
     if (!s) {
         return 0;
     }
@@ -86,7 +86,7 @@ void ui_paint_tile(UiState *ui, int tx, int ty) {
         return;
     }
     w = r01_project_active_world(ui->project);
-    s = r01_project_active_screen(ui->project);
+    s = ui_edit_map_screen(ui);
     if (!w || !s) {
         return;
     }
@@ -112,7 +112,7 @@ void ui_flood_fill(UiState *ui, int tx, int ty) {
         return;
     }
     w = r01_project_active_world(ui->project);
-    s = r01_project_active_screen(ui->project);
+    s = ui_edit_map_screen(ui);
     if (!w || !s) {
         return;
     }

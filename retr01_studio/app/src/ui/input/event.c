@@ -101,14 +101,19 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             return 1;
         }
         if ((e->key.keysym.sym == SDLK_DELETE || e->key.keysym.sym == SDLK_BACKSPACE) &&
-            !ui->play.active && !ui->menu.open && ui->sel_instance >= 0) {
-            R01World *w = r01_project_active_world(ui->project);
-            if (w && r01_world_instance_remove(w, ui->sel_instance) == 0) {
-                ui->sel_instance = -1;
-                ui->inst_drag = 0;
-                ui_toast(ui, "instance removed", 0);
+            !ui->play.active && !ui->menu.open) {
+            if (ui->sel_instance >= 0) {
+                R01World *w = r01_project_active_world(ui->project);
+                if (w && r01_world_instance_remove(w, ui->sel_instance) == 0) {
+                    ui->sel_instance = -1;
+                    ui->inst_drag = 0;
+                    ui_toast(ui, "instance removed", 0);
+                }
+                return 1;
             }
-            return 1;
+            if (ui_world_screen_remove(ui)) {
+                return 1;
+            }
         }
         if (!ui->play.active && !ui->menu.open && ui->screen_layer == UI_SCREEN_LAYER_SPR &&
             ui->sel_instance >= 0 && (e->key.keysym.sym == SDLK_h || e->key.keysym.sym == SDLK_v)) {
@@ -140,6 +145,16 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             if (e->key.keysym.sym == SDLK_s) {
                 ui_save(ui);
                 return 1;
+            }
+            if (e->key.keysym.sym == SDLK_c) {
+                if (ui_world_screen_copy(ui)) {
+                    return 1;
+                }
+            }
+            if (e->key.keysym.sym == SDLK_v) {
+                if (ui_world_screen_paste(ui)) {
+                    return 1;
+                }
             }
             if (e->key.keysym.sym == SDLK_e) {
                 ui_export(ui);
@@ -324,7 +339,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     }
                     return 1;
                 }
-                if (screen_hit(ui, lx, ly, &tx, &ty) && r01_project_active_screen(ui->project)) {
+                if (screen_hit(ui, lx, ly, &tx, &ty) && ui_edit_map_screen(ui)) {
                     int min_x, min_y, max_x, max_y;
                     int in_sel = 0;
                     if (screen_sel_valid(ui)) {
@@ -347,24 +362,29 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             int alt = (SDL_GetModState() & KMOD_ALT) != 0;
             int flood = ui->keys[SDL_SCANCODE_F] != 0;
 
+            ui->arm_kind = UI_ARM_NONE;
             if (play_button_hit(ui, lx, ly)) {
-                ui_toggle_play(ui);
+                ui->arm_kind = UI_ARM_PLAY;
                 return 1;
             }
             if (lx < UI_SIDEBAR_W && accordion_header_hit(ui, lx, ly, &acc_sec)) {
-                accordion_toggle(ui, acc_sec);
+                ui->arm_kind = UI_ARM_ACCORDION;
+                ui->arm_a = acc_sec;
                 return 1;
             }
             if (!ui->play.active && sprites_add_hit(ui, lx, ly)) {
-                sprite_edit_open_new(ui);
+                ui->arm_kind = UI_ARM_CATALOG_ADD;
+                ui->arm_a = 0;
                 return 1;
             }
             if (!ui->play.active && metasprites_add_hit(ui, lx, ly)) {
-                metasprite_edit_open_new(ui);
+                ui->arm_kind = UI_ARM_CATALOG_ADD;
+                ui->arm_a = 1;
                 return 1;
             }
             if (!ui->play.active && entities_add_hit(ui, lx, ly)) {
-                entity_edit_open_new(ui);
+                ui->arm_kind = UI_ARM_CATALOG_ADD;
+                ui->arm_a = 2;
                 return 1;
             }
             {
@@ -394,51 +414,36 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             if (!ui->play.active && palette_strip_hit(ui, lx, ly)) {
                 int prow;
                 if (palette_row_btn_hit(ui, lx, ly, &prow)) {
-                    if (ui->pal_edit.open) {
-                        ui->pal_edit.row = prow;
-                    } else {
-                        pal_edit_set_row(ui, prow, 1);
-                    }
-                } else if (!ui->pal_edit.open) {
-                    pal_edit_open(ui);
+                    ui->arm_kind = UI_ARM_PAL_ROW;
+                    ui->arm_a = prow;
+                } else {
+                    ui->arm_kind = UI_ARM_PAL_STRIP;
                 }
+                return 1;
+            }
+            if (world_sub_hit(ui, lx, ly)) {
+                ui->arm_kind = UI_ARM_WORLD_SUB;
                 return 1;
             }
             if (world_btn_hit(ui, lx, ly, &wi)) {
-                r01_project_set_active_world(ui->project, wi);
+                ui->arm_kind = UI_ARM_WORLD_TAB;
+                ui->arm_a = wi;
                 return 1;
             }
             if (!ui->play.active && world_cell_hit(ui, lx, ly, &col, &row)) {
-                Uint32 now = SDL_GetTicks();
-                int dbl = (col == ui->last_click_col && row == ui->last_click_row &&
-                           now - ui->last_click_ms < 350u);
-                handle_world_click(ui, col, row, ctrl, dbl);
-                ui->last_click_ms = now;
-                ui->last_click_col = col;
-                ui->last_click_row = row;
+                ui->arm_kind = UI_ARM_WORLD_CELL;
+                ui->arm_a = col;
+                ui->arm_b = row;
                 return 1;
             }
             if (!ui->play.active && screen_layer_hit(ui, lx, ly, &mode_row)) {
-                ui->screen_layer = mode_row;
-                if (ui->screen_layer == UI_SCREEN_LAYER_BG) {
-                    ui->sel_instance = -1;
-                    ui->inst_drag = 0;
-                } else {
-                    screen_sel_clear(ui);
-                }
+                ui->arm_kind = UI_ARM_LAYER;
+                ui->arm_a = mode_row;
                 return 1;
             }
             if (!ui->play.active && screen_mode_hit(ui, lx, ly, &mode_row)) {
-                if (ui->screen_layer != UI_SCREEN_LAYER_BG) {
-                    return 1;
-                }
-                ui->screen_mode = mode_row;
-                if (mode_row == UI_SCREEN_MODE_PAINT && !ui->paint_stamp_valid) {
-                    uint8_t tile, attr;
-                    if (ui_paint_stamp_from_sel(ui, &tile, &attr)) {
-                        ui_paint_stamp_set(ui, tile, attr);
-                    }
-                }
+                ui->arm_kind = UI_ARM_MODE;
+                ui->arm_a = mode_row;
                 return 1;
             }
             if (!ui->play.active && screen_hit(ui, lx, ly, &tx, &ty)) {
@@ -497,6 +502,109 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         ui->last_paint_ty = -1;
         ui->sel_drag = 0;
         ui->inst_drag = 0;
+        if (ui->arm_kind != UI_ARM_NONE) {
+            int kind = ui->arm_kind;
+            int a = ui->arm_a;
+            int b = ui->arm_b;
+            int wi, col, row, acc_sec, mode_row, prow;
+            ui->arm_kind = UI_ARM_NONE;
+            if (kind == UI_ARM_PLAY && play_button_hit(ui, lx, ly)) {
+                ui_toggle_play(ui);
+                return 1;
+            }
+            if (kind == UI_ARM_ACCORDION && lx < UI_SIDEBAR_W && accordion_header_hit(ui, lx, ly, &acc_sec) &&
+                acc_sec == a) {
+                accordion_toggle(ui, acc_sec);
+                return 1;
+            }
+            if (kind == UI_ARM_CATALOG_ADD && !ui->play.active) {
+                if (a == 0 && sprites_add_hit(ui, lx, ly)) {
+                    sprite_edit_open_new(ui);
+                    return 1;
+                }
+                if (a == 1 && metasprites_add_hit(ui, lx, ly)) {
+                    metasprite_edit_open_new(ui);
+                    return 1;
+                }
+                if (a == 2 && entities_add_hit(ui, lx, ly)) {
+                    entity_edit_open_new(ui);
+                    return 1;
+                }
+            }
+            if (kind == UI_ARM_PAL_ROW && !ui->play.active && palette_row_btn_hit(ui, lx, ly, &prow) &&
+                prow == a) {
+                if (ui->pal_edit.open) {
+                    ui->pal_edit.row = prow;
+                } else {
+                    pal_edit_set_row(ui, prow, 1);
+                }
+                return 1;
+            }
+            if (kind == UI_ARM_PAL_STRIP && !ui->play.active && palette_strip_hit(ui, lx, ly) &&
+                !palette_row_btn_hit(ui, lx, ly, &prow) && !ui->pal_edit.open) {
+                pal_edit_open(ui);
+                return 1;
+            }
+            if (kind == UI_ARM_WORLD_SUB && world_sub_hit(ui, lx, ly)) {
+                ui->worlds_plane =
+                    (ui->worlds_plane == UI_WORLDS_PLANE_BG0) ? UI_WORLDS_PLANE_BG1 : UI_WORLDS_PLANE_BG0;
+                if (ui->worlds_plane == UI_WORLDS_PLANE_BG0) {
+                    R01World *ww = r01_project_active_world(ui->project);
+                    ui->screen_layer = UI_SCREEN_LAYER_BG;
+                    ui->sel_instance = -1;
+                    ui->inst_drag = 0;
+                    screen_sel_clear(ui);
+                    if (ww && (ww->bg0_cols != R01_BG0_DEFAULT_COLS || ww->bg0_rows != R01_BG0_DEFAULT_ROWS)) {
+                        (void)r01_world_bg0_set_grid(ww, R01_BG0_DEFAULT_COLS, R01_BG0_DEFAULT_ROWS);
+                    }
+                }
+                return 1;
+            }
+            if (kind == UI_ARM_WORLD_TAB && world_btn_hit(ui, lx, ly, &wi) && wi == a) {
+                r01_project_set_active_world(ui->project, wi);
+                ui->world_sel_col = -1;
+                ui->world_sel_row = -1;
+                return 1;
+            }
+            if (kind == UI_ARM_WORLD_CELL && !ui->play.active && world_cell_hit(ui, lx, ly, &col, &row) &&
+                col == a && row == b) {
+                Uint32 now = SDL_GetTicks();
+                int dbl = (col == ui->last_click_col && row == ui->last_click_row &&
+                           now - ui->last_click_ms < 350u);
+                int up_ctrl = (SDL_GetModState() & KMOD_CTRL) != 0;
+                handle_world_click(ui, col, row, up_ctrl, dbl);
+                ui->last_click_ms = now;
+                ui->last_click_col = col;
+                ui->last_click_row = row;
+                return 1;
+            }
+            if (kind == UI_ARM_LAYER && !ui->play.active && screen_layer_hit(ui, lx, ly, &mode_row) &&
+                mode_row == a) {
+                ui->screen_layer = mode_row;
+                if (ui->screen_layer == UI_SCREEN_LAYER_BG) {
+                    ui->sel_instance = -1;
+                    ui->inst_drag = 0;
+                } else {
+                    screen_sel_clear(ui);
+                }
+                return 1;
+            }
+            if (kind == UI_ARM_MODE && !ui->play.active && screen_mode_hit(ui, lx, ly, &mode_row) &&
+                mode_row == a) {
+                if (ui->screen_layer != UI_SCREEN_LAYER_BG) {
+                    return 1;
+                }
+                ui->screen_mode = mode_row;
+                if (mode_row == UI_SCREEN_MODE_PAINT && !ui->paint_stamp_valid) {
+                    uint8_t tile, attr;
+                    if (ui_paint_stamp_from_sel(ui, &tile, &attr)) {
+                        ui_paint_stamp_set(ui, tile, attr);
+                    }
+                }
+                return 1;
+            }
+            return 1;
+        }
         if (ui->metasprite_edit.open) {
             metasprite_modal_handle(ui, lx, ly, 0, e->button.button);
             return 1;

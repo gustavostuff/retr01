@@ -30,6 +30,11 @@
 /* SPR bank 0 tile reserved for cart/Play player stub (solid color-1). */
 #define R01_SPR_PLAYER_TILE_ID 1
 
+#define R01_BG0_SCREENS_MAX 8
+/* Default authoring footprint until a shape picker returns. Any cols*rows in 1..8 is valid. */
+#define R01_BG0_DEFAULT_COLS 2
+#define R01_BG0_DEFAULT_ROWS 2
+
 #define R01_MASTER_COLORS 64
 #define R01_PAL_COLORS 4
 #define R01_PALS_PER_ROW 4
@@ -57,7 +62,7 @@
 
 #define R01_NAME_MAX 64
 #define R01_PATH_MAX 512
-#define R01_JSON_VER 8
+#define R01_JSON_VER 10
 
 #define R01_OUTPUT_DIR "output"
 #define R01_DEFAULT_PROJECT R01_OUTPUT_DIR "/test.r01proj"
@@ -210,6 +215,12 @@ typedef struct R01World {
     int default_screen; /* index into screens[]; spawn / play start */
     R01Screen screens[R01_MAX_SCREENS];
     int screen_count;
+    /* Structured L0 / BG0 plane (rectangle, 1..8 screens total). */
+    int bg0_cols;
+    int bg0_rows;
+    R01Screen bg0_screens[R01_BG0_SCREENS_MAX];
+    int bg0_screen_count;  /* bg0_cols * bg0_rows slot count */
+    int bg0_active_screen; /* index into bg0_screens[]; -1 none */
     R01BgBank bg_banks[R01_BG_BANKS];
     R01SprBank spr_banks[R01_SPR_BANKS];
     R01SpriteDef sprites[R01_MAX_SPRITES];

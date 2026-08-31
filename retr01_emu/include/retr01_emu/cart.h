@@ -35,10 +35,12 @@ typedef struct R01eWorldView {
     uint8_t default_bg_bank;
     uint8_t default_pal_row;
     uint8_t screen_count;
-    uint8_t parallax_count;
+    uint8_t bg0_count; /* L0 / structured second BG present screens (hdr[6]; was parallax) */
+    uint8_t bg0_cols;  /* L0 authored grid W (hdr[3] low nibble; 0 = infer from dir) */
+    uint8_t bg0_rows;  /* L0 authored grid H (hdr[3] high nibble) */
     uint32_t off_chr; /* relative to world base */
     uint32_t off_screen_dir;
-    uint32_t off_parallax_dir;
+    uint32_t off_bg0_dir; /* 12 B/entry like screen dir; 0 if none */
     /* Phase 3D entity tables (relative to world base; 0 count = none). */
     uint8_t entity_type_count;
     uint8_t entity_inst_count;

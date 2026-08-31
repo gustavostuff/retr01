@@ -30,17 +30,21 @@ Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Win
 
 | Control | Behavior |
 |---------|----------|
-| **Worlds** | **8** world buttons (**1-8**, internal indices **0-7**). World 1 starts with **3x3** blank screens on an **8x8** slot map. Worlds 2-8 start empty until first click. Cart cap: **32 present screens**/world ([`docs/graphics.md`](../docs/graphics.md)) |
-| **World map** | **16px** cell pitch. Present = blue. White fill = default spawn. White outline = selected |
-| **Double-click** empty slot | Create screen |
+| **Worlds** | **8** world buttons (**1-8**, internal indices **0-7**). World 1 starts with **3x3** blank screens on an **8x8** slot map. Worlds 2-8 start empty until first click. Cart cap: **32 present screens**/world ([`docs/graphics.md`](../docs/graphics.md)). Selected world shows a **16x7** sub-button (**BG1** / **BG0**) under that tab only |
+| **World map (BG1)** | Sparse **8x8** playfield map. **16px** cell pitch. Present = blue. White fill = default spawn. White outline = selected |
+| **World map (BG0)** | Structured second BG (L0). Authoring grid is hardcoded **2x2** for now (full chess like BG1). Model allows any rectangle with **1..8** screens (`bg0_cols` x `bg0_rows`). Export packs present BG0 screens into the cart; Host Play composites them under L1 **color 0** |
+| **Double-click** empty slot | Create screen (BG1 or BG0 plane) |
+| **Click** any slot | Select grid cell (empty or present; white outline). Present also becomes the edit target |
+| **Ctrl+C / Ctrl+V** | Copy / paste entire selected screen (tiles+attrs) on BG0 or BG1. Paste creates the slot if empty |
+| **Delete** | Remove selected present screen (BG0 or BG1). Prefer instance Delete when a sprite is selected |
 | **Ctrl+click** present | Remove screen |
-| **Click** present | Select active screen (edit target) |
-| **Right-click** map cell | **Set default screen** / **Make default world** |
+| **Right-click** map cell | **Set default screen** / **Make default world** (BG1) |
+| **Chrome clicks** | Tabs, sub-button, shape, accordion, radios, and similar chrome commit on **mouse release** over the same control (paint/drag tools stay press-and-hold) |
 | **BG / Sprite layer** | Radios in **control sidebar** (right column). **BG layer**: tile select/paint + tile context menu. **Sprite layer**: select/drag instances, **H/V** or context **Mirror H/V** (per-instance: remaps part X/Y + toggles `FLIP_H`/`FLIP_V` for OAM), instance context menu (edit entity type / remove). Tile radios dim on sprite layer |
 | **Tile Sel / Paint** | Radios in **control sidebar** under layer radios (BG layer only). Paint stamps armed tile+palette |
-| **Right-click tile** (BG layer) | Move to tile bank, add tile, edit tile, set palette/anim/solid |
+| **Right-click tile** (BG layer) | Move to tile bank, add tile, edit tile, set palette/anim/solid. **Shift** turns **Edit tile** into **Edit tile (all)** |
 | **Right-click instance** (Sprite layer) | Mirror H / Mirror V / Edit entity type / Remove instance |
-| **Edit tile** modal | **288x160**, 4x4 palette picker, **128x128** pixel canvas. **Ctrl+V** pastes clipboard PNG (transparent -> index 0, opaque matched by brightness to the selected palette) |
+| **Edit tile** modal | **288x160**, 4x4 palette picker, **128x128** pixel canvas. **Ctrl+V** pastes clipboard PNG (transparent -> index 0, opaque matched by brightness to the selected palette). **(all)** save writes CHR and applies bank/pal/H/V to every world cell (BG1+BG0) that matched the original tile id + attrs |
 | **Edit sprite** modal | Same canvas as tile. **Ctrl+V** pastes clipboard PNG onto the SPR canvas (same rules, SPR palette) |
 | **Set Solid** | Toggles `R01_ATTR_SOLID` (`0x40`) on matching tiles in active world (bank+pal+flips, not tile ID) |
 | **Palette strip** | Click BG/SPR strip -> **Global palettes** modal. Row **0-7** sets `default_pal_row` for the active world |

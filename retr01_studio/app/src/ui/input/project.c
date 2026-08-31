@@ -142,6 +142,9 @@ void ui_reset_after_project_load(UiState *ui) {
     ui->paint_stamp_valid = 0;
     ui->last_paint_tx = -1;
     ui->last_paint_ty = -1;
+    ui->world_sel_col = -1;
+    ui->world_sel_row = -1;
+    ui->screen_clip_valid = 0;
 }
 
 void ui_save(UiState *ui) {

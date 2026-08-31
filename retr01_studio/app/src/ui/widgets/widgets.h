@@ -26,6 +26,8 @@ int ui_palette_grid_hit(int lx, int ly, int pal_x, int pal_y, int *out_pal, int 
 void ui_button_draw(SDL_Renderer *r, int x, int y, int w, const char *text, int active, int hover);
 
 #define UI_TABS_MAX 16
+#define UI_TABS_SUB_W 16
+#define UI_TABS_SUB_H 7
 
 typedef struct UiTabsLayout {
     int x, y;
@@ -33,11 +35,22 @@ typedef struct UiTabsLayout {
     int tab_h;
     int count;
     const char *label[UI_TABS_MAX];
+    /* Dual-view (opt-in): sub-button only under selected tab. */
+    int dual_view;
+    int view; /* 0 = A, 1 = B */
+    const uint8_t *sub_rgba[2];
+    int sub_w;
+    int sub_h;
 } UiTabsLayout;
 
 void ui_tabs_layout(const char *const *labels, int count, int x, int y, int tab_w, UiTabsLayout *out);
+void ui_tabs_set_dual(UiTabsLayout *lo, int enabled, int view, const uint8_t *rgba_a, int wa, int ha,
+                      const uint8_t *rgba_b, int wb, int hb);
+int ui_tabs_body_y(const UiTabsLayout *lo);
 void ui_tabs_draw(SDL_Renderer *r, const UiTabsLayout *lo, int selected, int mouse_x, int mouse_y);
 int ui_tabs_hit(const UiTabsLayout *lo, int lx, int ly, int *out_idx);
+/* 1 if (lx,ly) hits the sub-button under selected tab (dual-view only). */
+int ui_tabs_sub_hit(const UiTabsLayout *lo, int selected, int lx, int ly);
 
 void ui_modal_scrim(SDL_Renderer *r, const UiState *ui);
 void ui_modal_panel(SDL_Renderer *r, int mx, int my, int w, int h, const char *title);

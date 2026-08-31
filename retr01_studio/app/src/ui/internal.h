@@ -109,6 +109,12 @@ extern int g_checkbox_h;
 extern uint8_t *g_cross_rgba;
 extern int g_cross_w;
 extern int g_cross_h;
+extern uint8_t *g_bg0_btn_rgba;
+extern int g_bg0_btn_w;
+extern int g_bg0_btn_h;
+extern uint8_t *g_bg1_btn_rgba;
+extern int g_bg1_btn_w;
+extern int g_bg1_btn_h;
 
 extern SDL_Cursor *g_cursor_arrow;
 extern SDL_Cursor *g_cursor_hand;
@@ -156,6 +162,8 @@ void accordion_anim_tick(UiState *ui);
 void accordion_layout(const UiState *ui, AccordionLayout *lo);
 int world_cell_hit(const UiState *ui, int lx, int ly, int *out_col, int *out_row);
 int world_btn_hit(const UiState *ui, int lx, int ly, int *out_wi);
+int world_sub_hit(const UiState *ui, int lx, int ly);
+void worlds_tabs_prepare(const UiState *ui, UiTabsLayout *out);
 int accordion_header_hit(const UiState *ui, int lx, int ly, int *out_section);
 void accordion_toggle(UiState *ui, int section);
 void draw_accordion_header(SDL_Renderer *r, int y, const char *title, int open, int hover);
@@ -191,6 +199,7 @@ void draw_pal_modal(UiState *ui, SDL_Renderer *r);
 
 /* ui/menu/menu.c */
 void menu_close(UiState *ui);
+void menu_sync_tile_edit_label(UiState *ui);
 void menu_open_tile(UiState *ui, int x, int y, int tx, int ty);
 void menu_open_world_cell(UiState *ui, int x, int y, int screen_idx);
 void menu_open_sprite(UiState *ui, int x, int y, int catalog_idx);
@@ -234,6 +243,7 @@ int instance_hit_on_screen(const UiState *ui, int lx, int ly, int *out_inst);
 
 /* ui/modals/tile_edit.c */
 void tile_edit_open(UiState *ui, int tx, int ty);
+void tile_edit_open_all(UiState *ui, int tx, int ty);
 void tile_edit_open_new(UiState *ui, int tx, int ty);
 int tile_modal_handle(UiState *ui, int lx, int ly, int down);
 void draw_tile_modal(UiState *ui, SDL_Renderer *r);
@@ -277,6 +287,10 @@ void ui_export(UiState *ui);
 
 /* ui/input/world.c */
 int ui_screen_nav(UiState *ui, int dcol, int drow);
+R01Screen *ui_edit_map_screen(const UiState *ui);
 void handle_world_click(UiState *ui, int col, int row, int ctrl, int dbl);
+int ui_world_screen_copy(UiState *ui);
+int ui_world_screen_paste(UiState *ui);
+int ui_world_screen_remove(UiState *ui);
 
 #endif

@@ -46,8 +46,24 @@
 #define UI_PAL_SWATCH 8
 
 #define UI_WORLDS_X 0
-#define UI_WORLDS_BODY_H (UI_WORLD_BTN + UI_WORLD_VIEW)
+#define UI_WORLDS_SUB_H 7
+#define UI_WORLDS_BODY_H (UI_WORLD_BTN + UI_WORLDS_SUB_H + UI_WORLD_VIEW)
 #define UI_PAL_BODY_H (UI_PAL_SWATCH * 2 + UI_BTN_H)
+
+#define UI_WORLDS_PLANE_BG1 0
+#define UI_WORLDS_PLANE_BG0 1
+
+#define UI_ARM_NONE 0
+#define UI_ARM_WORLD_TAB 1
+#define UI_ARM_WORLD_SUB 2
+#define UI_ARM_WORLD_CELL 3
+#define UI_ARM_ACCORDION 4
+#define UI_ARM_LAYER 5
+#define UI_ARM_MODE 6
+#define UI_ARM_PAL_STRIP 7
+#define UI_ARM_PAL_ROW 8
+#define UI_ARM_PLAY 9
+#define UI_ARM_CATALOG_ADD 10
 
 #define UI_ACC_NONE (-1)
 #define UI_ACC_WORLDS 0
@@ -152,6 +168,9 @@ typedef struct UiTileEdit {
     int flip_h;
     int flip_v;
     int is_new;
+    int edit_all; /* Shift: apply save to all matching tile+attr cells in world */
+    uint8_t match_tile_id;
+    uint8_t match_attr_hw; /* bank/pal/flips at open (R01_ATTR_HW_MASK) */
     uint8_t chr[R01_TILE_BYTES];
     int paint_tx, paint_ty; /* screen tile that opened the editor (-1 if none) */
 } UiTileEdit;
@@ -295,6 +314,14 @@ typedef struct UiState {
     Uint32 last_click_ms;
     int last_click_col;
     int last_click_row;
+    int worlds_plane; /* UI_WORLDS_PLANE_BG1 or BG0 */
+    int world_sel_col; /* grid selection (-1 none); empty slots allowed */
+    int world_sel_row;
+    int screen_clip_valid;
+    R01Screen screen_clip; /* Ctrl+C / Ctrl+V whole-screen buffer */
+    int arm_kind;     /* UI_ARM_* chrome press-arm for release commit */
+    int arm_a;
+    int arm_b;
     int accordion_open; /* UI_ACC_* or UI_ACC_NONE */
     int accordion_body_h[UI_ACC_SECTIONS]; /* animated body height per section */
     Uint32 accordion_anim_last_ms;

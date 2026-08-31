@@ -29,17 +29,25 @@ static void draw_worlds_body(UiState *ui, SDL_Renderer *r, const AccordionLayout
     int col, row;
     int lx = ui->mouse_x;
     int ly = ui->mouse_y;
-    static const char *const world_labs[R01_MAX_WORLDS] = {"1", "2", "3", "4", "5", "6", "7", "8"};
     UiTabsLayout tabs;
+    int cols = R01_GRID_MAX;
+    int rows = R01_GRID_MAX;
+    int plane_bg0 = (ui->worlds_plane == UI_WORLDS_PLANE_BG0);
 
-    ui_tabs_layout(world_labs, R01_MAX_WORLDS, UI_WORLDS_X, lo->worlds_btns_y, UI_WORLD_BTN, &tabs);
+    worlds_tabs_prepare(ui, &tabs);
     ui_tabs_draw(r, &tabs, ui->project->active_world, lx, ly);
 
-    draw_chess_grid(r, UI_WORLDS_X, lo->worlds_grid_y, R01_GRID_MAX, R01_GRID_MAX, UI_WORLD_CELL);
-    if (!w || !w->present) {
+    if (plane_bg0) {
+        /* Hardcoded 2x2 authoring grid for now (model still allows any 1..8 rectangle). */
+        cols = R01_BG0_DEFAULT_COLS;
+        rows = R01_BG0_DEFAULT_ROWS;
+    }
+    draw_chess_grid(r, UI_WORLDS_X, lo->worlds_grid_y, cols, rows, UI_WORLD_CELL);
+
+    if (!w || (!plane_bg0 && !w->present)) {
         return;
     }
-    {
+    if (!plane_bg0) {
         int mark_idx = ui->play.active ? ui_play_screen_mark(ui) : w->default_screen;
         if (mark_idx < 0 || mark_idx >= w->screen_count || !w->screens[mark_idx].present) {
             mark_idx = r01_world_default_screen(w);
@@ -64,14 +72,40 @@ static void draw_worlds_body(UiState *ui, SDL_Renderer *r, const AccordionLayout
                 }
             }
         }
-        if (!ui->play.active) {
-            int sel = ui->project->active_screen;
-            if (sel >= 0 && sel < w->screen_count && w->screens[sel].present) {
-                int x = UI_WORLDS_X + w->screens[sel].col * UI_WORLD_CELL;
-                int y = lo->worlds_grid_y + w->screens[sel].row * UI_WORLD_CELL;
-                draw_rect(r, x, y, UI_WORLD_CELL, UI_WORLD_CELL, 255, 255, 255);
+        if (!ui->play.active && ui->world_sel_col >= 0 && ui->world_sel_row >= 0 &&
+            ui->world_sel_col < R01_GRID_MAX && ui->world_sel_row < R01_GRID_MAX) {
+            int x = UI_WORLDS_X + ui->world_sel_col * UI_WORLD_CELL;
+            int y = lo->worlds_grid_y + ui->world_sel_row * UI_WORLD_CELL;
+            draw_rect(r, x, y, UI_WORLD_CELL, UI_WORLD_CELL, 255, 255, 255);
+        }
+        return;
+    }
+
+    for (row = 0; row < rows; row++) {
+        for (col = 0; col < cols; col++) {
+            int idx = r01_world_bg0_screen_index(w, col, row);
+            int x = UI_WORLDS_X + col * UI_WORLD_CELL;
+            int y = lo->worlds_grid_y + row * UI_WORLD_CELL;
+            int present = (idx >= 0 && idx < w->bg0_screen_count && w->bg0_screens[idx].present);
+            int marked = present && idx == w->bg0_active_screen;
+            int hover = point_in_rect(lx, ly, x, y, UI_WORLD_CELL, UI_WORLD_CELL);
+            if (present && !marked) {
+                fill_rect(r, x, y, UI_WORLD_CELL, UI_WORLD_CELL, UI_COL_PRESENT_R, UI_COL_PRESENT_G,
+                          UI_COL_PRESENT_B);
+            }
+            if (marked) {
+                fill_rect(r, x, y, UI_WORLD_CELL, UI_WORLD_CELL, UI_COL_MARK_R, UI_COL_MARK_G, UI_COL_MARK_B);
+            }
+            if (hover) {
+                hover_overlay(r, x, y, UI_WORLD_CELL, UI_WORLD_CELL);
             }
         }
+    }
+    if (!ui->play.active && ui->world_sel_col >= 0 && ui->world_sel_row >= 0 && ui->world_sel_col < cols &&
+        ui->world_sel_row < rows) {
+        int x = UI_WORLDS_X + ui->world_sel_col * UI_WORLD_CELL;
+        int y = lo->worlds_grid_y + ui->world_sel_row * UI_WORLD_CELL;
+        draw_rect(r, x, y, UI_WORLD_CELL, UI_WORLD_CELL, 255, 255, 255);
     }
 }
 

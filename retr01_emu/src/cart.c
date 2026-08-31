@@ -175,13 +175,16 @@ int r01e_cart_world(const R01eCart *c, int index, R01eWorldView *out) {
     if (out->screen_count > R01E_MAX_PRESENT_SCREENS) {
         return -1;
     }
-    out->parallax_count = hdr[6];
-    if (out->parallax_count > R01E_PARALLAX_MAX) {
+    out->bg0_count = hdr[6];
+    if (out->bg0_count > R01E_PARALLAX_MAX) {
         return -1;
     }
+    /* hdr[3]: was default_spr_bank (always 0). Now BG0 cols|rows<<4 when BG0 present. */
+    out->bg0_cols = (uint8_t)(hdr[3] & 0x0fu);
+    out->bg0_rows = (uint8_t)((hdr[3] >> 4) & 0x0fu);
     out->off_chr = get_u24(hdr + 8);
     out->off_screen_dir = get_u24(hdr + 11);
-    out->off_parallax_dir = get_u24(hdr + 14);
+    out->off_bg0_dir = get_u24(hdr + 14);
     out->entity_type_count = hdr[R01E_CART_WHDR_TYPE_COUNT];
     out->entity_inst_count = hdr[R01E_CART_WHDR_INST_COUNT];
     out->off_entity_types = get_u24(hdr + R01E_CART_WHDR_OFF_TYPES);

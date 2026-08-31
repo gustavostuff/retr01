@@ -30,6 +30,15 @@ R01Screen *r01_world_screen_at(R01World *w, int col, int row);
 /* Count screens with present=1 (cart export uses this; max R01_MAX_PRESENT_SCREENS). */
 int r01_world_present_count(const R01World *w);
 
+int r01_bg0_grid_ok(int cols, int rows);
+int r01_world_bg0_screen_index(const R01World *w, int col, int row);
+R01Screen *r01_world_bg0_screen_at(R01World *w, int col, int row);
+int r01_world_bg0_set_grid(R01World *w, int cols, int rows);
+int r01_world_bg0_create_screen(R01World *w, int col, int row);
+int r01_world_bg0_remove_screen(R01World *w, int col, int row);
+int r01_world_bg0_present_count(const R01World *w);
+R01Screen *r01_project_active_bg0_screen(R01Project *p);
+
 int r01_project_import_png(R01Project *p, const char *path, char *err_buf, size_t err_cap);
 
 int r01_path_ensure_parent(const char *path, char *err_buf, size_t err_cap);
