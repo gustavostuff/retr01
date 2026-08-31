@@ -35,10 +35,4 @@ Same **32 KB PRG** as classic NES NROM games (Exitebike, Balloon Fight, Ice Clim
 - [`docs/selling_points.md`](docs/selling_points.md): NES vs Retr01 comparison
 - [`hw/`](hw/): datasheet PDFs + [`hw/md/`](hw/md/) chip notes
 
----
-
-Here's a picture of the emulator, just for fun:
-
-<img src="img/emulator.png" alt="Retr01 Emulator with debug panel" />
-
 Built for people who want to *make* 8-bit games, not only play them.
