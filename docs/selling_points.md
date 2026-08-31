@@ -82,18 +82,6 @@ Same tracker *feel*, different silicon. Details: [`sound.md`](sound.md).
 
 ---
 
-## Cartridge and worlds
-
-| | NES | Retr01 |
-|--|-----|--------|
-| Typical cart | 32 KB PRG + 8 KB CHR (NROM) | **512 KB** flash: PRG + CHR + MAP + palettes |
-| Worlds | Usually one game world | Up to **8** worlds, **32** L1 screens each, plus optional L0 / BG0 rectangle |
-| Tile art banks | Often fixed CHR page | **4** BG + **4** sprite banks per world (**256** tiles each, **32 KB** CHR total) |
-| Saves | Battery RAM (mapper-dependent) | **I2C EEPROM** on cart |
-| Authoring | Assembler + tile editors | **Retr01 Studio** -> `.r01proj` + export |
-
----
-
 ## What fits in 32 KB PRG on Retr01
 
 Because graphics streaming is hardware-assisted:
