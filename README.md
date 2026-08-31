@@ -26,6 +26,22 @@ Software is still a WIP. This is the overall hardware roadmap:
 
 Same **32 KB PRG** as classic NES NROM games (Exitebike, Balloon Fight, Ice Climbers) but it buys far more game: **4.5x** more CPU cycles per frame at **8 MHz**, **32 KB** system RAM (not 2 KB). Scroll, sprite line fill and world map streaming are hardware jobs, so PRG stays game logic, not VBlank nametable tricks. See [`docs/selling_points.md`](docs/selling_points.md).
 
+## Screenshots
+
+Peek at Retr01 Studio:
+
+<img src="img/studio.png" alt="Studio" />
+
+Emulator + Debug screen:
+
+<img src="img/emu.png" alt="Emu" />
+
+<img src="img/debug.png" alt="Debug" />
+
+Sim:
+
+<img src="img/sim.png" alt="Sim" />
+
 ## Where to go next
 
 - [`docs/graphics.md`](docs/graphics.md): VRAM, L0/L1, sprites, palettes, graphics ports

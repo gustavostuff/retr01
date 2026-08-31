@@ -42,6 +42,33 @@ NES developers became experts at **VBlank choreography**. Retr01 developers stre
 
 ---
 
+## Hardware vs software
+
+On silicon, the **picture** is built in discrete video logic and AVRs. The **6502** streams MAP bytes, sets scroll latches, and runs the game. Phase 1 **Host Play** (Emu / Sim) stands in for some CPU work until cart PRG owns it.
+
+**Hardware (motherboard + cart CHR/MAP read path):**
+
+- Beam timing and tile/attr fetch for **L1** from VRAM slots **0-3** using `$FE02` / `$FE03` scroll
+- **L0** line fill from VRAM slots **4-7** + cart CHR (HBlank target), scroll via `$FE06` / `$FE07`
+- Compositor on every dot: **sprite > L1 > L0 show-through (L1 color 0) > backdrop**
+- Color PROM lookup (cart palette indices to **64** RGB masters)
+- VRAM interleave (CPU writes on PHI2 high, video fetch on PHI2 low)
+- Sprite line buffer (1284 fills, compositor reads per scanline)
+- OAM assist, pad ports (`$FE60` / `$FE61`), raster IRQ (`$FE04`)
+- APU mix on **328P** from CPU bytecode (`$FE40`-`$FE5F`)
+
+**Software (6502 PRG, or Host Play today):**
+
+- Stream **480 B** screen payloads from cart MAP into VRAM when the camera leaves the **2x2** workbench (L1 slots **0-3**, L0 slots **4-7**)
+- Default **proportional L0 scroll** from L1 camera (`cols_L0 / cols_L1`, per axis)
+- Copy active palette row into `$FE08` / `$FE09`, world select, boot flow
+- Gameplay: movement, camera dead zone, collision, entities, warps, AI
+- Audio driver feeding the 328P bytecode protocol
+
+Both BGs appear on screen together because the **compositor** merges them each dot. **Loading** new screens and **parallax scroll math** stay on the CPU unless you add a PLD ratio later.
+
+---
+
 ## Audio
 
 | | NES | Retr01 |
