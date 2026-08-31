@@ -14,7 +14,7 @@ IC-first board simulator for the Retr01 motherboard (arcade + console share one 
 | A Power+clk | `PWR5V` + `OSC8M` + `SN74HC14` |
 | C CPU + decode | `W65C02S`, `AS6C62256`, `ATF22V10` decode, CPU `SN74HC245` |
 | D `$FExx` latch | **9x** `SN74HC573` (`$FE02`-`$FE04`, `$FE08`, `$FE10`-`$FE12`, `$FE90`-`$FE92`) |
-| E Pads | `$FE60`/`$FE61` via 1284 (sim model, not on canvas) |
+| E Pads | `$FE60`/`$FE61` via 1284 (software contract. Arcade headers / 35RAPC TRS are silicon/PCB targets, not separate sim islands yet) |
 | G VRAM | 2nd `AS6C62256` + **3x** `SN74HC157` + `ATF22V10` VRAM glue |
 | H Beam | `OSC_DOT` + `BEAM_XY` (X PLD) + `ATF22V10` Y compare vs `$FE04` |
 | I BG fetch | `BG_FETCH` PLD, nametable VA from beam+scroll (not on canvas) |
@@ -132,7 +132,7 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 # or: scripts/run-sim output/test.retr01 DELAY=max
 ```
 
-`DELAY=typical|max` selects the datasheet corner and prints **path budget** (decode+245+573 vs PHI2 half). The pin netlist stays combinatorial — deferred HC/PLD outputs miss `STA $FExx` in this settle model. Wall-clock UI FPS ≠ sim ns. See [`PERFORMANCE.md`](PERFORMANCE.md).
+`DELAY=typical|max` selects the datasheet corner and prints **path budget** (decode+245+573 vs PHI2 half). The pin netlist stays combinatorial. Deferred HC/PLD outputs miss `STA $FExx` in this settle model. Wall-clock UI FPS != sim ns. See [`PERFORMANCE.md`](PERFORMANCE.md).
 
 **Controls:** `Space` pause/resume * `Ctrl+R` reset * `R` rotate selected IC * **SCALE 1X/2X** (left sidebar or `G`. **2X** grows the video island to fit SCR1) * `.` single-step (while paused) * **COMPACT / ISLANDS** (HUD) * **left-drag chip** move * **right-click chip** orient H/V * **left-drag empty island** move frame * **bottom-right grip** resize * **Shift+arrows / wheel / middle-drag** pan * `Esc` quit.
 

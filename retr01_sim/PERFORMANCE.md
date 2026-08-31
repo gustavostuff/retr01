@@ -19,7 +19,7 @@ Rule: new cost should be a **data-structure win** that does not change pin behav
 
 1. **Pin-name hash** - `r01s_entity_pin_hash_build` + lazy lookup in `r01s_entity_pin_named` (kills hot-path linear `strcmp` scans).
 2. **CPU bus from chip model** - `board_cpu_addr` / `board_cpu_read` / write-data sample use `r01s_w65c02s_ab` / `rwb` / `a` instead of re-reading 16+8 pins every wire pass.
-3. **Propagation delay budget (opt-in)** - CLI `DELAY=typical|max` prints path budget vs PHI2 half. Pin model stays combinatorial (pin tpd breaks MAP catchup in this settle model). Delay helper covered in `tests/test_timing.c`. Default zero-delay. Wall-clock FPS ≠ sim ns.
+3. **Propagation delay budget (opt-in)** - CLI `DELAY=typical|max` prints path budget vs PHI2 half. Pin model stays combinatorial (pin tpd breaks MAP catchup in this settle model). Delay helper covered in `tests/test_timing.c`. Default zero-delay. Wall-clock FPS != sim ns.
 
 **Host Play** (pad tick, spawn/camera, OAM sprite shortcut, LCD hold bypass) runs after MAP catchup - it is a host preview scaffold, not silicon contract.
 

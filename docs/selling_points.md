@@ -102,17 +102,19 @@ Classic NES **32 KB** games (Balloon Fight, Ice Climber, Excitebike) already shi
 
 | Variant | Role |
 |---------|------|
-| **Arcade / console** | **Same motherboard.** Arcade headers (microswitches) + 2× 35RAPC TRS footprints; shell and BOM population differ |
+| **Arcade / console** | **Same motherboard.** Arcade headers (microswitches) + 2x 35RAPC TRS footprints. Shell and BOM population differ |
 | **Retr01-H** | Handheld later, same software contract |
 
 ### Controllers (shared board)
 
-Every motherboard has:
+Every motherboard (silicon / PCB target) has:
 
-1. **Arcade controller** connections — headers for sticks/buttons as simple microswitch circuits into the 1284 (`$FE60` / `$FE61`).
-2. **2× Switchcraft 35RAPC** female 3.5 mm TRS footprints — optional aux pads (ATtiny85 draft on the pad board, male–male aux cable, VCC/DATA/GND). PPTC + ESD on the TRS path so a mangled cable cannot take down the board.
+1. **Arcade controller** connections. Headers for sticks/buttons as simple microswitch circuits into the 1284 (`$FE60` / `$FE61`).
+2. **2x Switchcraft 35RAPC** female 3.5 mm TRS footprints. Optional aux pads (ATtiny85 draft on the pad board, male-male aux cable, VCC/DATA/GND). PPTC + ESD on the TRS path so a mangled cable cannot take down the board.
 
-Populate TRS jacks for console / portable sticks; leave DNP in a sealed cabinet if you only wire the arcade headers. Details: [`passive_rf_etc.md`](passive_rf_etc.md).
+Populate TRS jacks for console / portable sticks. Leave DNP in a sealed cabinet if you only wire the arcade headers. Details: [`passive_rf_etc.md`](passive_rf_etc.md).
+
+Emu / Sim Host Play today use the `$FE60` / `$FE61` software contract only (not separate TRS or header island models).
 
 Built for people who want to **make** 8-bit games, not only play them. Tools: **Studio** (author), **Emu** (runtime), **Sim** (hardware bring-up).
 

@@ -2,7 +2,7 @@
 
 **IC-focused** doc: the 32-chip Retr01 motherboard + cart (shared by arcade and console shells), how those blocks connect, and island bring-up. Through-hole DIP target, ~**14 x 12 cm** minimum 4-layer PCB.
 
-Passives, connectors, stackup, ESD/PPTC, and RF practice live in [`passive_rf_etc.md`](passive_rf_etc.md) — not here.
+Passives, connectors, stackup, ESD/PPTC, and RF practice live in [`passive_rf_etc.md`](passive_rf_etc.md). Not here.
 
 **Related:** [`memory.md`](memory.md) (chips, read/write timing). [`graphics.md`](graphics.md) (VRAM, sprites). [`sound.md`](sound.md) (APU). [`passive_rf_etc.md`](passive_rf_etc.md) (non-IC). Per-chip notes: [`hw/md/`](../hw/md/). Bring-up sim: [`retr01_sim/`](../retr01_sim/README.md).
 
@@ -103,10 +103,11 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
 ### Pads
 
 1. All pad paths feed the **ATmega1284P**. CPU reads packed bits at **`$FE60`** (P1) and **`$FE61`** (P2). Bit set = pressed ([`graphics.md`](graphics.md)).
-2. **One motherboard** carries **both** I/O styles (arcade vs console is shell / population, not a different PCB):
+2. **Silicon / PCB target:** one motherboard carries **both** I/O styles (arcade vs console is shell / population, not a different PCB):
    - **Arcade controllers:** headers / IDC for sticks and buttons as simple **microswitch-to-GND** circuits (series R + optional TVS at the connector) into the 1284.
-   - **Aux pad ports:** PCB footprints / solder holes for **2× Switchcraft 35RAPC** female 3.5 mm TRS. Optional pad boards (ATtiny85 draft) talk a **3-wire** VCC / DATA / GND link over a male–male aux cable. Populate the jacks when using pads; leave unstuffed in a pure cabinet build if desired.
-3. Ports / ESD / PPTC: [`passive_rf_etc.md`](passive_rf_etc.md).
+   - **Aux pad ports:** PCB footprints / solder holes for **2x Switchcraft 35RAPC** female 3.5 mm TRS. Optional pad boards (ATtiny85 draft) talk a **3-wire** VCC / DATA / GND link over a male-male aux cable. Populate the jacks when using pads. Leave unstuffed in a pure cabinet build if desired.
+3. **Runners today (Emu / Sim):** Host Play and pad UI drive the same `$FE60` / `$FE61` contract. They do not model TRS jacks or arcade header pinouts as separate netlist islands yet.
+4. Ports / ESD / PPTC: [`passive_rf_etc.md`](passive_rf_etc.md).
 
 ### Audio
 
@@ -160,7 +161,7 @@ Full letter list, sim canvas grouping, and port smoke checks: [`retr01_sim/READM
 | Variant | What differs |
 |---------|----------------|
 | **Arcade shell** | Same motherboard. Wire **arcade controller** headers to cabinet microswitches. RGBS / S-Video / composite, 5 V barrel. TRS jacks optional (DNP OK). |
-| **Console shell** | **Same motherboard.** Populate **2× 35RAPC** TRS for aux pads; arcade headers still present for DIY sticks / fight sticks. Same AV + cart. |
+| **Console shell** | **Same motherboard.** Populate **2x 35RAPC** TRS for aux pads. Arcade headers still present for DIY sticks / fight sticks. Same AV + cart. |
 | **Retr01-H** | Handheld SMD later, same cart / `$FExx` software contract |
 
 Ports and passives: [`passive_rf_etc.md`](passive_rf_etc.md).

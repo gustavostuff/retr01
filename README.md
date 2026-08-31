@@ -8,7 +8,7 @@ The Retr01 project is a software + hardware tool chain family. Software includes
 
 Software is still a WIP. This is the overall hardware roadmap:
 
-- **Shared motherboard (stage 1)**: One THT board (~**14 x 12 cm**, 4-layer) for both **arcade** and **home console** shells. Same 32-IC core, cart, RGBS / S-Video / composite, 5 V barrel. **Arcade controller** headers (microswitch sticks/buttons into the 1284) **and** PCB holes / footprints for **2× Switchcraft 35RAPC** female 3.5 mm TRS (aux pad ports; populate when needed). Arcade vs console is enclosure + which I/O you wire — not two different mobos.
+- **Shared motherboard (stage 1)**: One THT board (~**14 x 12 cm**, 4-layer) for both **arcade** and **home console** shells. Same 32-IC core, cart, RGBS / S-Video / composite, 5 V barrel. **Arcade controller** headers (microswitch sticks/buttons into the 1284) **and** PCB holes / footprints for **2x Switchcraft 35RAPC** female 3.5 mm TRS (aux pad ports, populate when needed). Arcade vs console is enclosure + which I/O you wire, not two different mobos.
 - **Retr01-H (stage 2)**: Handheld. SMD, battery, LCD + driver, contact pads. Same software contract.
 
 ## At a glance

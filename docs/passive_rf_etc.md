@@ -10,7 +10,7 @@ Power assumption: **stable external 5 V** (barrel / PSU). No on-board switching 
 
 ## What actually bites first
 
-RF emissions are real, but they rarely keep a discrete 5 V game board from **booting and painting**. Function-first risks are usually **propagation delay** across HC / PLD / SRAM paths (datasheet ranges; worth simulating). MCU clocks sit mostly **inside** the package; board clocks (PHI2, dot) matter more for layout than for “will it work.”
+RF emissions are real, but they rarely keep a discrete 5 V game board from **booting and painting**. Function-first risks are usually **propagation delay** across HC / PLD / SRAM paths (datasheet ranges, worth simulating). MCU clocks sit mostly **inside** the package. Board clocks (PHI2, dot) matter more for layout than for "will it work."
 
 Take CE / FCC seriously when selling into regulated markets. Until then, prefer **direct traces**, a **continuous return path**, and comparative RF checks over over-engineering every harmonic.
 
@@ -18,27 +18,27 @@ Take CE / FCC seriously when selling into regulated markets. Until then, prefer 
 
 ## 4-layer stackup (return path first)
 
-The highest-frequency content on this board is not the clock fundamental — it is the **harmonics of sharp digital edges**. Those currents need a **continuous, nearby return**.
+The highest-frequency content on this board is not the clock fundamental. It is the **harmonics of sharp digital edges**. Those currents need a **continuous, nearby return**.
 
-**Avoid** the common trap **signal–power–ground–signal**:
+**Avoid** the common trap **signal-power-ground-signal**:
 
 - HF return wants to hug the adjacent plane.
 - A layer change from top signal to bottom signal jumps the return from the power plane to the ground plane (or vice versa).
 - That discontinuity radiates.
-- Stitch caps between power and ground can pass some of that return (high-pass between planes), but real caps have inductance; the **highest** frequencies still see an open. Cap impedance vs frequency is **V-shaped** — audio “bypass” intuition does not map cleanly onto digital edge harmonics.
+- Stitch caps between power and ground can pass some of that return (high-pass between planes), but real caps have inductance. The **highest** frequencies still see an open. Cap impedance vs frequency is **V-shaped**. Audio "bypass" intuition does not map cleanly onto digital edge harmonics.
 
 **Target stackup for Retr01:**
 
 | Layer | Role |
 |-------|------|
-| Top | Signals + **5 V pours** (flood around traces; pour last) |
+| Top | Signals + **5 V pours** (flood around traces, pour last) |
 | Inner 1 | **GND** |
 | Inner 2 | **GND** |
 | Bottom | Signals + **5 V pours** as needed |
 
 Both inners as ground keeps a solid reference under every signal layer and avoids power-plane return hops. Distribute 5 V with shapes on the outer layers, not a dedicated mid-board power plane.
 
-Still: keep high-activity nets relatively **direct**, return to ground ** ASAP** (vias, stitching at connectors and under DIPs), and keep clocks / bus runs off long pad-port cables.
+Still: keep high-activity nets relatively **direct**, return to ground **ASAP** (vias, stitching at connectors and under DIPs), and keep clocks / bus runs off long pad-port cables.
 
 ---
 
@@ -47,8 +47,8 @@ Still: keep high-activity nets relatively **direct**, return to ground ** ASAP**
 Before chasing antennas, budget chip-to-chip delay:
 
 - PHI2 / decode / HC245 / latch / SRAM / PLD paths must close inside the 8 MHz and dot-clock windows.
-- Use datasheet **min/typ/max** propagation; worst-case stacks matter more than RF folklore.
-- Sim (`retr01_sim`): default is zero-delay for catchup. Opt in with **`./sim … DELAY=typical|max`** (or env `R01S_PROP_DELAY`) to print HC/PLD/SRAM path budget vs PHI2 half — pin netlist stays combinatorial. See `tests/test_timing.c` and [`PERFORMANCE.md`](../retr01_sim/PERFORMANCE.md).
+- Use datasheet **min/typ/max** propagation. Worst-case stacks matter more than RF folklore.
+- Sim (`retr01_sim`): default is zero-delay for catchup. Opt in with **`./sim ... DELAY=typical|max`** (or env `R01S_PROP_DELAY`) to print HC/PLD/SRAM path budget vs PHI2 half. Pin netlist stays combinatorial. See `tests/test_timing.c` and [`PERFORMANCE.md`](../retr01_sim/PERFORMANCE.md).
 
 ---
 
@@ -61,11 +61,11 @@ External 5 V is trusted for regulation, not for abuse or cable noise. Treat the 
 | Barrel jack (2.1 mm class) | 5 V in (shared motherboard) |
 | Series PPTC on VIN | Board-level short / overload. Hold above full-board idle, trip on hard short |
 | Reverse-polarity diode (or P-FET ideal diode) | Blocks reverse barrel plug |
-| Bulk cap at entry (**100–470 µF** low-ESR electrolytic or polymer) | Holds rail through plug bounce and load steps |
+| Bulk cap at entry (**100-470 uF** low-ESR electrolytic or polymer) | Holds rail through plug bounce and load steps |
 | Input ferrite (or CMC on 5 V / GND pair) | Damps cable-borne RF before the pours |
-| Local **100 nF X7R** on every IC VCC pin (mm from pin) | HF bypass; mandatory for HC / PLD / AVR edge rates |
-| Local **1–10 µF** ceramic per island / large DIP | Mid-band reservoir (6502, 1284, 328P, PLD cluster, SRAM bank) |
-| Ferrite + **10 µF** into **analog / video** spur | Isolates Color PROM R-2R and APU DAC from digital di/dt |
+| Local **100 nF X7R** on every IC VCC pin (mm from pin) | HF bypass. Mandatory for HC / PLD / AVR edge rates |
+| Local **1-10 uF** ceramic per island / large DIP | Mid-band reservoir (6502, 1284, 328P, PLD cluster, SRAM bank) |
+| Ferrite + **10 uF** into **analog / video** spur | Isolates Color PROM R-2R and APU DAC from digital di/dt |
 
 Never snake return current through video or pad-port copper. Stitch GND vias at every connector shell and under each DIP.
 
@@ -76,13 +76,13 @@ Never snake return current through video or pad-port copper. Stitch GND vias at 
 | Item | Role |
 |------|------|
 | Canned oscillators (PHI2 8 MHz, dot ~5.369 MHz) | Prefer cans over bare crystals for edge control |
-| Crystals + load caps for AVRs if not using cans | 20 MHz (1284), 16 MHz (328P); keep loops tiny |
-| Series damping **22–47 Ω** on clock nets leaving a can / buffer | Softens edges into long traces |
+| Crystals + load caps for AVRs if not using cans | 20 MHz (1284), 16 MHz (328P). Keep loops tiny |
+| Series damping **22-47 ohm** on clock nets leaving a can / buffer | Softens edges into long traces |
 | **74HC14** (outside 32-count if needed) | Schmitt cleanup for reset / slow edges |
-| RC + Schmitt (or supervisor, e.g. MCP120-class) on `/RESB` and AVR `RESET` | Power-on reset; hold low until 5 V is solid |
-| Pull-ups on open-drain resets / IRQB | Typical **4.7–10 kΩ** |
+| RC + Schmitt (or supervisor, e.g. MCP120-class) on `/RESB` and AVR `RESET` | Power-on reset. Hold low until 5 V is solid |
+| Pull-ups on open-drain resets / IRQB | Typical **4.7-10 kohm** |
 
-Board clocks matter for layout cleanliness; they are not automatically a show-stopper for RF. Keep traces short, away from cart edge and pad jacks. No unterminated stubs.
+Board clocks matter for layout cleanliness. They are not automatically a show-stopper for RF. Keep traces short, away from cart edge and pad jacks. No unterminated stubs.
 
 ---
 
@@ -91,8 +91,8 @@ Board clocks matter for layout cleanliness; they are not automatically a show-st
 | Item | Role |
 |------|------|
 | Color PROM **R-2R** ladder (**1%** metal film) | R3G3B2 -> analog guns ([`AT28C16`](../hw/md/AT28C16.md)) |
-| **75 Ω** series per R/G/B (+ sync termination as needed) | Drive RGBS into 75 Ω video plant |
-| Optional ferrite beads on RGBS | Cable RF; place at connector |
+| **75 ohm** series per R/G/B (+ sync termination as needed) | Drive RGBS into 75 ohm video plant |
+| Optional ferrite beads on RGBS | Cable RF. Place at connector |
 | APU **R-2R** (or PWM RC) from 328P | Line-level mix ([`sound.md`](sound.md)) |
 | AC-coupling cap + series build-out on audio out | Blocks DC into TVs / amps |
 | Video / AV connectors | RGBS (+ S-Video / composite path TBD). Levels bench-tuned |
@@ -106,14 +106,16 @@ Anything a human can touch gets a clamp **at the connector**, then a series limi
 | Item | Role |
 |------|------|
 | TVS array (5 V working, e.g. PESD5V0-class) on cart address/data/control as needed | ESD into flash / HC245 domain |
-| Series **22–100 Ω** on slow GPIO / pad DATA | Limits IC clamp current; damps cable resonances |
-| SCALE DIP + pull-ups/downs | 1x / 2x select; define idle state |
+| Series **22-100 ohm** on slow GPIO / pad DATA | Limits IC clamp current. Damps cable resonances |
+| SCALE DIP + pull-ups/downs | 1x / 2x select. Define idle state |
 
 ---
 
 ## Controller I/O (shared motherboard)
 
-Arcade and console use the **same PCB**. Both I/O styles are on every board: arcade microswitch headers **and** footprints for two TRS jacks. Shell / BOM population chooses which path you use; software stays `$FE60` / `$FE61` via the 1284.
+**Silicon / PCB target:** arcade and console use the **same PCB**. Both I/O styles are on every board (arcade microswitch headers **and** footprints for two TRS jacks). Shell / BOM population chooses which path you use. Software stays `$FE60` / `$FE61` via the 1284.
+
+**Runners today:** Emu / Sim Host Play drive `$FE60` / `$FE61` only. They do not model TRS jacks or arcade header pinouts as separate netlist islands yet.
 
 ### Arcade controllers (microswitches)
 
@@ -122,22 +124,22 @@ Simple **switch-to-GND** (or switch-to-common) circuits: sticks and buttons clos
 | Item | Role |
 |------|------|
 | Headers / IDC (or discrete pads) | P1 / P2 button and stick lines into **ATmega1284P** GPIO |
-| Series **22–100 Ω** per line | Limits clamp current; damps cable |
+| Series **22-100 ohm** per line | Limits clamp current. Damps cable |
 | Optional TVS at connector | ESD on cabinet harness |
 | Bit contract | Same as pads: `$FE60` / `$FE61`, bit set = pressed |
 
 ### Aux pad ports (3.5 mm TRS footprints)
 
-Design goal: **female jack on the motherboard** (2×) and on each optional pad board. Interconnect = commodity **male–male 3.5 mm aux**. No proprietary tether. Jacks may be **DNP** on a pure arcade build; **footprints / solder holes stay on the PCB**.
+Design goal: **female jack on the motherboard** (2x) and on each optional pad board. Interconnect = commodity **male-male 3.5 mm aux**. No proprietary tether. Jacks may be **DNP** on a pure arcade build. **Footprints / solder holes stay on the PCB**.
 
 | Item | Spec / role |
 |------|-------------|
-| Jack | **Switchcraft 35RAPC** series, **TRS (stereo)** — e.g. **35RAPC3BH3** (horizontal, threaded bushing). Same family on pad PCBs |
-| Conductors | **Tip / Ring / Sleeve** = **VCC / DATA / GND** (exact T/R assignment locked at schematic; Sleeve = GND + shell) |
+| Jack | **Switchcraft 35RAPC** series, **TRS (stereo)**. Example: **35RAPC3BH3** (horizontal, threaded bushing). Same family on pad PCBs |
+| Conductors | **Tip / Ring / Sleeve** = **VCC / DATA / GND** (exact T/R assignment locked at schematic. Sleeve = GND + shell) |
 | Port count | **2** (P1, P2) footprints on the motherboard |
-| Pad MCU | **ATtiny85** draft on the controller board; 1284 still presents `$FE60` / `$FE61` |
-| PPTC (Polyfuse) per port on **VCC** | Shorted aux tip–ring or crushed cable must not toast the plane. Size **Ihold** for one ATtiny85 + switches/LEDs (roughly **100–250 mA** class, **Vmax ≥ 6 V**); place on the mobo **and** consider a mate on the pad board |
-| TVS to GND on VCC and DATA at each jack | ESD / hot-plug; PTC alone is too slow for ESD |
+| Pad MCU | **ATtiny85** draft on the controller board. 1284 still presents `$FE60` / `$FE61` |
+| PPTC (Polyfuse) per port on **VCC** | Shorted aux tip-ring or crushed cable must not toast the plane. Size **Ihold** for one ATtiny85 + switches/LEDs (roughly **100-250 mA** class, **Vmax >= 6 V**). Place on the mobo **and** consider a mate on the pad board |
+| TVS to GND on VCC and DATA at each jack | ESD / hot-plug. PTC alone is too slow for ESD |
 | Series **R** on DATA (both ends if practical) | Current limit into MCU pins + RF damping on long aux runs |
 | Local **100 nF** on port VCC after the PTC | Decouples the cable stub |
 
@@ -161,12 +163,12 @@ A long aux is still an antenna: keep the on-board DATA run short to the bridge, 
 
 Exact E24 values land at schematic time. Budget order-of-magnitude for one shared mobo (+ optional 2 pad boards):
 
-- **~40–60×** 100 nF decoupling
-- **~10–15×** 1–10 µF island caps + **1×** bulk at barrel
-- **R-2R** networks (video + audio) + **75 Ω** build-outs
-- **2×** port PPTC (TRS) + arcade-header series R / TVS as needed + entry PPTC/ferrite
+- **~40-60x** 100 nF decoupling
+- **~10-15x** 1-10 uF island caps + **1x** bulk at barrel
+- **R-2R** networks (video + audio) + **75 ohm** build-outs
+- **2x** port PPTC (TRS) + arcade-header series R / TVS as needed + entry PPTC/ferrite
 - **TVS** packs at cart + both TRS footprints (+ audio/video if exposed)
-- **2×** Switchcraft 35RAPC footprints on mobo (+ **1×** per optional pad board when built)
+- **2x** Switchcraft 35RAPC footprints on mobo (+ **1x** per optional pad board when built)
 - Arcade controller headers / IDC
 - Oscillators / crystals, reset RC, pull-ups, SCALE DIP, barrel, AV connectors
 
@@ -174,11 +176,11 @@ Exact E24 values land at schematic time. Budget order-of-magnitude for one share
 
 ## Measuring RF (comparative)
 
-For pre-compliance gut checks without a lab: a DIY **TEM cell** (copper foil + cardboard works; aluminum foil is a possible substitute) is enough for **comparative** measurements — change a pour, ferrite, or clock damper and see if the reading moves. Conceptually it is a coax expanded so the DUT sits between the center conductor and the shield. Open-sided builds leak external noise; treat results as relative, not absolute CE numbers.
+For pre-compliance gut checks without a lab: a DIY **TEM cell** (copper foil + cardboard works, aluminum foil is a possible substitute) is enough for **comparative** measurements. Change a pour, ferrite, or clock damper and see if the reading moves. Conceptually it is a coax expanded so the DUT sits between the center conductor and the shield. Open-sided builds leak external noise. Treat results as relative, not absolute CE numbers.
 
-Formal **CE / FCC** work comes later (Crowd Supply–class EU sales need marking). Expect ferrite / clamp iteration on the first real spin if emissions matter for distribution.
+Formal **CE / FCC** work comes later (Crowd Supply-class EU sales need marking). Expect ferrite / clamp iteration on the first real spin if emissions matter for distribution.
 
-Further reading that clarifies stackup and return paths: Rick Hartley lectures on PCB layer arrangement (search by name; long-form video).
+Further reading that clarifies stackup and return paths: Rick Hartley lectures on PCB layer arrangement (search by name, long-form video).
 
 ---
 
@@ -186,7 +188,7 @@ Further reading that clarifies stackup and return paths: Rick Hartley lectures o
 
 | Topic | Note |
 |-------|------|
-| TRS pin map (T/R = VCC/DATA) | Lock at schematic; document for third-party pads |
+| TRS pin map (T/R = VCC/DATA) | Lock at schematic. Document for third-party pads |
 | PPTC Ihold per pad port | Bench ATtiny85 + LED budget, then pick family (e.g. Bourns MF-MSMF / Littelfuse 1206L) |
-| First-spin RF | TEM comparative + ferrite/clamp tweaks; formal CE only if selling into marked markets |
+| First-spin RF | TEM comparative + ferrite/clamp tweaks. Formal CE only if selling into marked markets |
 | Prop-delay budget | Sim: `./sim cart.retr01 DELAY=typical|max` (or env `R01S_PROP_DELAY`). Capture HC / PLD / SRAM stacks before PCB freeze |
