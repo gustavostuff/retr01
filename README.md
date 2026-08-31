@@ -46,7 +46,7 @@ Sim:
 
 - [`docs/graphics.md`](docs/graphics.md): VRAM, L0/L1, sprites, palettes, graphics ports
 - [`docs/memory.md`](docs/memory.md): chips, cart layout, read/write timing
-- [`docs/hardware.md`](docs/hardware.md): 32-IC BOM, PCB block diagram, bring-up
+- [`docs/hardware.md`](docs/hardware.md): IC BOM, block diagram, bring-up (chips only)
 - [`docs/passive_rf_etc.md`](docs/passive_rf_etc.md): passives, ports, stackup / RF
 - [`docs/sound.md`](docs/sound.md): APU and bytecode
 - [`docs/selling_points.md`](docs/selling_points.md): NES vs Retr01 comparison

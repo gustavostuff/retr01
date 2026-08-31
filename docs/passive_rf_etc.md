@@ -1,6 +1,6 @@
 # Retr01 Passives, Ports, and RF
 
-Non-IC parts and board-level RF / EMC practice. ICs and bus architecture stay in [`hardware.md`](hardware.md).
+Non-IC parts and board-level RF / EMC practice. ICs, bus architecture, and island bring-up stay in [`hardware.md`](hardware.md) (that doc is chip-focused on purpose).
 
 **Related:** [`hardware.md`](hardware.md) (32-IC BOM, islands). [`sound.md`](sound.md) (APU DAC). Color PROM path: [`hw/md/AT28C16.md`](../hw/md/AT28C16.md).
 

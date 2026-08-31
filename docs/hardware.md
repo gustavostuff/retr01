@@ -1,8 +1,10 @@
 # Retr01 Hardware
 
-32-IC Retr01-A motherboard + cart. Through-hole DIP target, ~**14 x 12 cm** minimum 4-layer PCB.
+**IC-focused** doc: the 32-chip Retr01-A motherboard + cart, how those blocks connect, and island bring-up. Through-hole DIP target, ~**14 x 12 cm** minimum 4-layer PCB.
 
-**Related:** [`memory.md`](memory.md) (chips, read/write timing). [`graphics.md`](graphics.md) (VRAM, sprites). [`sound.md`](sound.md) (APU). Passives / ports / RF: [`passive_rf_etc.md`](passive_rf_etc.md). IC notes: [`hw/md/`](../hw/md/). Bring-up sim: [`retr01_sim/`](../retr01_sim/README.md).
+Passives, connectors, stackup, ESD/PPTC, and RF practice live in [`passive_rf_etc.md`](passive_rf_etc.md) — not here.
+
+**Related:** [`memory.md`](memory.md) (chips, read/write timing). [`graphics.md`](graphics.md) (VRAM, sprites). [`sound.md`](sound.md) (APU). [`passive_rf_etc.md`](passive_rf_etc.md) (non-IC). Per-chip notes: [`hw/md/`](../hw/md/). Bring-up sim: [`retr01_sim/`](../retr01_sim/README.md).
 
 ---
 
