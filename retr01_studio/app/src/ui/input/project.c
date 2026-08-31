@@ -144,6 +144,7 @@ void ui_reset_after_project_load(UiState *ui) {
     ui->last_paint_ty = -1;
     ui->world_sel_col = -1;
     ui->world_sel_row = -1;
+    ui->bg0_fit_warn = 0;
     ui->screen_clip_valid = 0;
 }
 

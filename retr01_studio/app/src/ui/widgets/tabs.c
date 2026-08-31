@@ -23,7 +23,7 @@ void ui_tabs_layout(const char *const *labels, int count, int x, int y, int tab_
     out->x = x;
     out->y = y;
     out->tab_w = tab_w > 0 ? tab_w : UI_WORLD_BTN;
-    out->tab_h = UI_BTN_H;
+    out->tab_h = UI_TABS_TAB_H;
     out->dual_view = 0;
     out->view = 0;
     out->sub_rgba[0] = NULL;
@@ -86,16 +86,18 @@ void ui_tabs_draw(SDL_Renderer *r, const UiTabsLayout *lo, int selected, int mou
     for (i = 0; i < lo->count; i++) {
         int tx = lo->x + i * lo->tab_w;
         int ty = lo->y;
-        int hover = point_in_rect(mouse_x, mouse_y, tx, ty, lo->tab_w, lo->tab_h);
         int on = (i == selected);
+        /* Dual-view: inactive tabs fill 16x16 so the sub-row gap is not empty. */
+        int th = (lo->dual_view && !on) ? UI_WORLD_BTN : lo->tab_h;
+        int hover = point_in_rect(mouse_x, mouse_y, tx, ty, lo->tab_w, th);
         if (on) {
-            fill_rect(r, tx, ty, lo->tab_w, lo->tab_h, UI_COL_ACTIVE_R, UI_COL_ACTIVE_G, UI_COL_ACTIVE_B);
+            fill_rect(r, tx, ty, lo->tab_w, th, UI_COL_ACTIVE_R, UI_COL_ACTIVE_G, UI_COL_ACTIVE_B);
         } else {
-            fill_rect(r, tx, ty, lo->tab_w, lo->tab_h, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
+            fill_rect(r, tx, ty, lo->tab_w, th, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
         }
-        font_draw_centered(r, tx, ty, lo->tab_w, lo->tab_h, lo->label[i], 240, 240, 240);
+        font_draw_centered(r, tx, ty, lo->tab_w, th, lo->label[i], 240, 240, 240);
         if (hover) {
-            hover_overlay(r, tx, ty, lo->tab_w, lo->tab_h);
+            hover_overlay(r, tx, ty, lo->tab_w, th);
         }
     }
     if (lo->dual_view && selected >= 0 && selected < lo->count) {
@@ -121,7 +123,13 @@ void ui_tabs_draw(SDL_Renderer *r, const UiTabsLayout *lo, int selected, int mou
 
 int ui_tabs_hit(const UiTabsLayout *lo, int lx, int ly, int *out_idx) {
     int i;
-    if (!lo || lx < lo->x || ly < lo->y || ly >= lo->y + lo->tab_h) {
+    int max_h;
+    if (!lo) {
+        return 0;
+    }
+    /* Dual-view inactive tabs are 16px tall. Active sub is hit separately first. */
+    max_h = lo->dual_view ? UI_WORLD_BTN : lo->tab_h;
+    if (lx < lo->x || ly < lo->y || ly >= lo->y + max_h) {
         return 0;
     }
     for (i = 0; i < lo->count; i++) {

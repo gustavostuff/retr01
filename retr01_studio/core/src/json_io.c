@@ -1073,10 +1073,6 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         }
                     }
                 }
-                /* Authoring UI is hardcoded 2x2 for now; drop stale larger grids. */
-                if (w->bg0_cols != R01_BG0_DEFAULT_COLS || w->bg0_rows != R01_BG0_DEFAULT_ROWS) {
-                    (void)r01_world_bg0_set_grid(w, R01_BG0_DEFAULT_COLS, R01_BG0_DEFAULT_ROWS);
-                }
             }
         }
 

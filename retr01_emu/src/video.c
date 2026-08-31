@@ -258,12 +258,12 @@ static void bg0_update_scroll(R01eVideo *vid) {
     if (rel_y < 0) {
         rel_y = 0;
     }
-    if (vid->bg0_cols < 2 || vid->l1_cols < 1) {
+    if (vid->bg0_cols < 2 || vid->l1_cols < 1 || vid->bg0_cols >= vid->l1_cols) {
         vid->l0_cam_x = 0;
     } else {
         vid->l0_cam_x = (rel_x * vid->bg0_cols) / vid->l1_cols;
     }
-    if (vid->bg0_rows < 2 || vid->l1_rows < 1) {
+    if (vid->bg0_rows < 2 || vid->l1_rows < 1 || vid->bg0_rows >= vid->l1_rows) {
         vid->l0_cam_y = 0;
     } else {
         vid->l0_cam_y = (rel_y * vid->bg0_rows) / vid->l1_rows;

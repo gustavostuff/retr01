@@ -47,11 +47,16 @@
 
 #define UI_WORLDS_X 0
 #define UI_WORLDS_SUB_H 7
-#define UI_WORLDS_BODY_H (UI_WORLD_BTN + UI_WORLDS_SUB_H + UI_WORLD_VIEW)
+#define UI_TABS_TAB_H 11 /* world / dual-view tab strip (sub-button stays 7px) */
+#define UI_WORLDS_BODY_H (UI_TABS_TAB_H + UI_WORLDS_SUB_H + UI_WORLD_VIEW)
 #define UI_PAL_BODY_H (UI_PAL_SWATCH * 2 + UI_BTN_H)
 
 #define UI_WORLDS_PLANE_BG1 0
 #define UI_WORLDS_PLANE_BG0 1
+
+#define UI_BG0_MODE_W 32
+#define UI_BG0_MODE_H 16
+#define UI_BG0_MODE_MARGIN 2
 
 #define UI_ARM_NONE 0
 #define UI_ARM_WORLD_TAB 1
@@ -64,6 +69,7 @@
 #define UI_ARM_PAL_ROW 8
 #define UI_ARM_PLAY 9
 #define UI_ARM_CATALOG_ADD 10
+#define UI_ARM_BG0_MODE 11
 
 #define UI_ACC_NONE (-1)
 #define UI_ACC_WORLDS 0
@@ -317,6 +323,7 @@ typedef struct UiState {
     int worlds_plane; /* UI_WORLDS_PLANE_BG1 or BG0 */
     int world_sel_col; /* grid selection (-1 none); empty slots allowed */
     int world_sel_row;
+    int bg0_fit_warn; /* screens dropped by last BG0 Mode change (0 = no warn) */
     int screen_clip_valid;
     R01Screen screen_clip; /* Ctrl+C / Ctrl+V whole-screen buffer */
     int arm_kind;     /* UI_ARM_* chrome press-arm for release commit */

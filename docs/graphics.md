@@ -172,7 +172,7 @@ This **replaces** the old two-slot parallax payload model (former slots 4-5 only
 | Live window | VRAM slots **4-7** (2x2), same MAP stream path as L1 |
 | Scroll | `$FE06` / `$FE07` (0-127 / 0-119 inside the L0 workbench) |
 | Cart | Up to **8** present L0 screens per world (dir + **480 B** payloads after L1 MAP) |
-| Authoring | Studio Worlds sub-button toggles BG1 vs BG0. BG0 chess is hardcoded **2x2** for now |
+| Authoring | Studio Worlds: BG1/BG0 sub-button. BG0 **Mode** cycles 1x1 / 2x2 / 2x4 / 4x2 / 1x8 / 8x1 (centered on 8x8 chess) |
 
 ### Show-through
 
@@ -195,7 +195,7 @@ scroll_L0_x = scroll_L1_x * cols_L0 / cols_L1
 scroll_L0_y = scroll_L1_y * rows_L0 / rows_L1
 ```
 
-`cols_*` / `rows_*` are the **enclosing present extents** of each plane (used screens bbox), not the virtual 8x8. Example: L0 **2x2**, L1 **4x4** -> L0 scrolls at half rate on both axes. If `cols_L0 == 1`, X stays 0 (same for rows). Absolute L0 scroll override is allowed for cutscenes.
+`cols_*` / `rows_*` are the **enclosing present extents** of each plane (used screens bbox), not the virtual 8x8. Example: L0 **2x2**, L1 **4x4** -> L0 scrolls at half rate on both axes. If `cols_L0 == 1`, X stays 0 (same for rows). If L0 extent is **equal or larger** than L1 on an axis (`cols_L0 >= cols_L1`), that axis does not scroll. Absolute L0 scroll override is allowed for cutscenes.
 
 World/screen/cart caps: [`memory.md`](memory.md).
 

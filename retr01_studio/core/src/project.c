@@ -69,16 +69,26 @@ int r01_world_bg0_present_count(const R01World *w) {
     return n;
 }
 
-int r01_world_bg0_set_grid(R01World *w, int cols, int rows) {
+int r01_world_bg0_set_grid_ex(R01World *w, int cols, int rows, int *out_dropped) {
     R01Screen keep[R01_BG0_SCREENS_MAX];
     int keep_n = 0;
-    int col, row, i, idx;
+    int col, row, i, idx, cap, placed;
+    if (out_dropped) {
+        *out_dropped = 0;
+    }
     if (!w || !r01_bg0_grid_ok(cols, rows)) {
         return -1;
     }
-    for (i = 0; i < w->bg0_screen_count && i < R01_BG0_SCREENS_MAX; i++) {
-        if (w->bg0_screens[i].present && keep_n < R01_BG0_SCREENS_MAX) {
-            keep[keep_n++] = w->bg0_screens[i];
+    /* Collect present in current grid order (LTR, top to bottom). */
+    for (row = 0; row < w->bg0_rows; row++) {
+        for (col = 0; col < w->bg0_cols; col++) {
+            idx = r01_world_bg0_screen_index(w, col, row);
+            if (idx < 0 || idx >= w->bg0_screen_count || !w->bg0_screens[idx].present) {
+                continue;
+            }
+            if (keep_n < R01_BG0_SCREENS_MAX) {
+                keep[keep_n++] = w->bg0_screens[idx];
+            }
         }
     }
     w->bg0_cols = cols;
@@ -90,23 +100,31 @@ int r01_world_bg0_set_grid(R01World *w, int cols, int rows) {
     for (row = 0; row < rows; row++) {
         for (col = 0; col < cols; col++) {
             idx = row * cols + col;
-            if (idx >= R01_BG0_SCREENS_MAX) {
-                continue;
+            if (idx < R01_BG0_SCREENS_MAX) {
+                init_screen(&w->bg0_screens[idx], col, row);
             }
-            init_screen(&w->bg0_screens[idx], col, row);
         }
     }
-    for (i = 0; i < keep_n; i++) {
-        col = keep[i].col;
-        row = keep[i].row;
-        if (col < 0 || row < 0 || col >= cols || row >= rows) {
-            continue;
-        }
+    cap = cols * rows;
+    if (cap > R01_BG0_SCREENS_MAX) {
+        cap = R01_BG0_SCREENS_MAX;
+    }
+    placed = 0;
+    for (i = 0; i < keep_n && placed < cap; i++) {
+        col = placed % cols;
+        row = placed / cols;
         idx = row * cols + col;
         w->bg0_screens[idx] = keep[i];
         w->bg0_screens[idx].col = col;
         w->bg0_screens[idx].row = row;
         w->bg0_screens[idx].present = 1;
+        placed++;
+    }
+    if (out_dropped) {
+        *out_dropped = keep_n - placed;
+        if (*out_dropped < 0) {
+            *out_dropped = 0;
+        }
     }
     w->bg0_active_screen = -1;
     for (i = 0; i < w->bg0_screen_count; i++) {
@@ -116,6 +134,31 @@ int r01_world_bg0_set_grid(R01World *w, int cols, int rows) {
         }
     }
     return 0;
+}
+
+int r01_world_bg0_set_grid(R01World *w, int cols, int rows) {
+    return r01_world_bg0_set_grid_ex(w, cols, rows, NULL);
+}
+
+int r01_world_bg0_cycle_mode(R01World *w) {
+    static const int mode_cols[] = {1, 2, 2, 4, 1, 8};
+    static const int mode_rows[] = {1, 2, 4, 2, 8, 1};
+    const int nmodes = (int)(sizeof(mode_cols) / sizeof(mode_cols[0]));
+    int i, next, dropped = 0;
+    if (!w) {
+        return -1;
+    }
+    next = 0;
+    for (i = 0; i < nmodes; i++) {
+        if (w->bg0_cols == mode_cols[i] && w->bg0_rows == mode_rows[i]) {
+            next = (i + 1) % nmodes;
+            break;
+        }
+    }
+    if (r01_world_bg0_set_grid_ex(w, mode_cols[next], mode_rows[next], &dropped) != 0) {
+        return -1;
+    }
+    return dropped;
 }
 
 int r01_world_bg0_create_screen(R01World *w, int col, int row) {

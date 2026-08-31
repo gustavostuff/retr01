@@ -425,6 +425,10 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 ui->arm_kind = UI_ARM_WORLD_SUB;
                 return 1;
             }
+            if (!ui->play.active && world_bg0_mode_hit(ui, lx, ly)) {
+                ui->arm_kind = UI_ARM_BG0_MODE;
+                return 1;
+            }
             if (world_btn_hit(ui, lx, ly, &wi)) {
                 ui->arm_kind = UI_ARM_WORLD_TAB;
                 ui->arm_a = wi;
@@ -549,13 +553,24 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 ui->worlds_plane =
                     (ui->worlds_plane == UI_WORLDS_PLANE_BG0) ? UI_WORLDS_PLANE_BG1 : UI_WORLDS_PLANE_BG0;
                 if (ui->worlds_plane == UI_WORLDS_PLANE_BG0) {
-                    R01World *ww = r01_project_active_world(ui->project);
                     ui->screen_layer = UI_SCREEN_LAYER_BG;
                     ui->sel_instance = -1;
                     ui->inst_drag = 0;
                     screen_sel_clear(ui);
-                    if (ww && (ww->bg0_cols != R01_BG0_DEFAULT_COLS || ww->bg0_rows != R01_BG0_DEFAULT_ROWS)) {
-                        (void)r01_world_bg0_set_grid(ww, R01_BG0_DEFAULT_COLS, R01_BG0_DEFAULT_ROWS);
+                }
+                return 1;
+            }
+            if (kind == UI_ARM_BG0_MODE && world_bg0_mode_hit(ui, lx, ly)) {
+                R01World *ww = r01_project_active_world(ui->project);
+                int dropped;
+                if (ww) {
+                    dropped = r01_world_bg0_cycle_mode(ww);
+                    if (dropped < 0) {
+                        ui_toast(ui, "BG0 Mode failed", 1);
+                    } else {
+                        ui->bg0_fit_warn = dropped;
+                        ui->world_sel_col = -1;
+                        ui->world_sel_row = -1;
                     }
                 }
                 return 1;
@@ -564,6 +579,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 r01_project_set_active_world(ui->project, wi);
                 ui->world_sel_col = -1;
                 ui->world_sel_row = -1;
+                ui->bg0_fit_warn = 0;
                 return 1;
             }
             if (kind == UI_ARM_WORLD_CELL && !ui->play.active && world_cell_hit(ui, lx, ly, &col, &row) &&

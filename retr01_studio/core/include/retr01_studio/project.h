@@ -33,7 +33,11 @@ int r01_world_present_count(const R01World *w);
 int r01_bg0_grid_ok(int cols, int rows);
 int r01_world_bg0_screen_index(const R01World *w, int col, int row);
 R01Screen *r01_world_bg0_screen_at(R01World *w, int col, int row);
+/* Resize BG0 grid. Present screens are packed LTR/TTB. *out_dropped = screens that did not fit. */
 int r01_world_bg0_set_grid(R01World *w, int cols, int rows);
+int r01_world_bg0_set_grid_ex(R01World *w, int cols, int rows, int *out_dropped);
+/* Cycle Mode: 1x1, 2x2, 2x4, 4x2, 1x8, 8x1. Returns dropped count. */
+int r01_world_bg0_cycle_mode(R01World *w);
 int r01_world_bg0_create_screen(R01World *w, int col, int row);
 int r01_world_bg0_remove_screen(R01World *w, int col, int row);
 int r01_world_bg0_present_count(const R01World *w);
