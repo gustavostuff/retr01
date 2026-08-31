@@ -2,7 +2,7 @@
 
 Retr01 vs classic 8-bit constraints (especially NES-era). Same spirit, more headroom for game logic.
 
-**Related:** [`graphics.md`](graphics.md), [`memory.md`](memory.md), [`hardware.md`](hardware.md). Authoring: [`retr01_studio/README.md`](../retr01_studio/README.md).
+**Related:** [`graphics.md`](graphics.md), [`memory.md`](memory.md), [`hardware.md`](hardware.md), [`passive_rf_etc.md`](passive_rf_etc.md). Authoring: [`retr01_studio/README.md`](../retr01_studio/README.md).
 
 ---
 
@@ -120,7 +120,7 @@ Classic NES **32 KB** games (Balloon Fight, Ice Climber, Excitebike) already shi
 
 ### Retr01-C controllers
 
-Pads use **female 3.5 mm TRS** jacks on **both** the console and each controller. The link is any standard **male–male aux** cable — pick whatever length you want; no proprietary tether. Inside: a **3-wire** VCC / DATA / GND run (ATtiny85 draft on the pad) into the same `$FE60` / `$FE61` contract as the arcade shell. Console ports get **PPTC short protection** plus ESD clamps so a mangled cable cannot take down the board. Jack family target: **Switchcraft 35RAPC** (see [`hardware.md`](hardware.md)).
+Pads use **female 3.5 mm TRS** jacks on **both** the console and each controller. The link is any standard **male–male aux** cable — pick whatever length you want; no proprietary tether. Inside: a **3-wire** VCC / DATA / GND run (ATtiny85 draft on the pad) into the same `$FE60` / `$FE61` contract as the arcade shell. Console ports get **PPTC short protection** plus ESD clamps so a mangled cable cannot take down the board. Jack family target: **Switchcraft 35RAPC** (see [`passive_rf_etc.md`](passive_rf_etc.md)).
 
 Built for people who want to **make** 8-bit games, not only play them. Tools: **Studio** (author), **Emu** (runtime), **Sim** (hardware bring-up).
 
