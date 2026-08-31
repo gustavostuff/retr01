@@ -55,9 +55,9 @@ TEST_MAIN() {
         R01EntityFrame fr;
         memset(&fr, 0, sizeof(fr));
         /* Drop near the right edge: whole group must clamp so both tiles fit. */
-        EXPECT(r01_entity_frame_add_metasprite(&fr, ms, 7, 0) == 0, "clamp drop");
+        EXPECT(r01_entity_frame_add_metasprite(&fr, ms, 30, 0) == 0, "clamp drop");
         EXPECT(fr.part_count == 2, "clamp keeps both parts");
-        EXPECT(fr.parts[0].dx == 0 && fr.parts[1].dx == 8, "clamped to fit");
+        EXPECT(fr.parts[0].dx == 16 && fr.parts[1].dx == 24, "clamped to fit");
     }
 
     type_id = r01_world_entity_from_metasprite(w, meta);

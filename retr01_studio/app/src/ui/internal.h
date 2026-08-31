@@ -85,18 +85,19 @@ typedef struct MetaspriteModalLayout {
 
 typedef struct EntityModalLayout {
     int mx, my, mw, mh;
+    int left_name_x, left_name_y, left_name_w;
     int left_label_y;
     int left_list_x, left_list_y, left_list_h;
-    int right_ent_name_x, right_ent_name_y, right_ent_name_w;
     int right_state_y;
     int right_dots_x, right_dots_y;
+    int right_state_name_y;
     int right_name_x, right_name_y, right_name_w;
     int right_frame_y;
     int frame_dots_x, frame_dots_y;
     int right_id_y;
     int right_grid_x, right_grid_y;
     int guides_x, guides_y;
-    int pal_label_x, pal_label_y;
+    int help_x, help_y, help_h, help_w;
     int pal_x, pal_y;
     int btn_y, save_w, cancel_w;
 } EntityModalLayout;
@@ -142,6 +143,9 @@ void ui_tooltip_frame_begin(UiState *ui);
 void ui_tooltip_frame_end(UiState *ui);
 void ui_tooltip_clear(UiState *ui);
 void draw_tooltip(UiState *ui, SDL_Renderer *r);
+void ui_focus_set(UiState *ui, int focus);
+int ui_focus_get(const UiState *ui);
+void ui_focus_clear(UiState *ui);
 void fill_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B);
 void fill_rect_alpha(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B, Uint8 A);
 void ui_clip_push(SDL_Renderer *r, int x, int y, int w, int h, UiClipStack *stack);
@@ -292,6 +296,8 @@ void entity_edit_open(UiState *ui, int type_idx);
 int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button);
 void entity_modal_drag(UiState *ui, int lx, int ly, Uint32 buttons);
 void entity_modal_key(UiState *ui, SDL_Keycode sym);
+void entity_modal_zoom_wheel(UiState *ui, int lx, int ly, int wheel_y);
+int entity_modal_wheel(UiState *ui, int lx, int ly, int wheel_y, int shift);
 void draw_entity_modal(UiState *ui, SDL_Renderer *r);
 
 /* ui/draw/mode.c */

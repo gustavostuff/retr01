@@ -147,9 +147,12 @@ void ui_tooltip_hover(UiState *ui, int x, int y, const char *line1, const char *
     } else {
         snprintf(key, sizeof(key), "%s", line1 ? line1 : "");
     }
-    if (strcmp(ui->tooltip_key, key) != 0) {
+    /* Any cursor move (or target change) hides immediately and restarts the delay. */
+    if (strcmp(ui->tooltip_key, key) != 0 || ui->tooltip_arm_x != x || ui->tooltip_arm_y != y) {
         snprintf(ui->tooltip_key, sizeof(ui->tooltip_key), "%s", key);
         snprintf(ui->tooltip, sizeof(ui->tooltip), "%s", key);
+        ui->tooltip_arm_x = x;
+        ui->tooltip_arm_y = y;
         ui->tooltip_since_ms = SDL_GetTicks();
         ui->tooltip_active = 0;
     }
@@ -174,6 +177,8 @@ void ui_tooltip_frame_end(UiState *ui) {
         ui->tooltip[0] = '\0';
         ui->tooltip_key[0] = '\0';
         ui->tooltip_since_ms = 0;
+        ui->tooltip_arm_x = 0;
+        ui->tooltip_arm_y = 0;
         return;
     }
     if (!ui->tooltip_active && ui->tooltip_since_ms != 0 &&
@@ -191,6 +196,23 @@ void ui_tooltip_clear(UiState *ui) {
     ui->tooltip[0] = '\0';
     ui->tooltip_key[0] = '\0';
     ui->tooltip_since_ms = 0;
+    ui->tooltip_arm_x = 0;
+    ui->tooltip_arm_y = 0;
+}
+
+void ui_focus_set(UiState *ui, int focus) {
+    if (!ui) {
+        return;
+    }
+    ui->focus = focus;
+}
+
+int ui_focus_get(const UiState *ui) {
+    return ui ? ui->focus : UI_FOCUS_NONE;
+}
+
+void ui_focus_clear(UiState *ui) {
+    ui_focus_set(ui, UI_FOCUS_NONE);
 }
 
 void draw_tooltip(UiState *ui, SDL_Renderer *r) {

@@ -83,7 +83,7 @@ int ui_text_input(UiState *ui, const char *utf8);
 
 int ui_compose_clamp_part(int v);
 int ui_compose_clamp_origin(int v);
-void ui_compose_draw_grid(SDL_Renderer *r, int ox, int oy, int size_px);
+void ui_compose_draw_grid(SDL_Renderer *r, int ox, int oy, int size_px, int cell_px);
 void ui_compose_draw_part(SDL_Renderer *r, const R01Project *p, const struct R01World *w, const R01EntityPart *pt,
                           int ox, int oy, int scale, int selected);
 void ui_compose_draw_frame(SDL_Renderer *r, const R01Project *p, const struct R01World *w, const R01EntityFrame *fr,

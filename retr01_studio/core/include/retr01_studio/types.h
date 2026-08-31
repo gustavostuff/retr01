@@ -78,7 +78,7 @@
 #define R01_ENTITY_STATES_MAX 4
 #define R01_ENTITY_FRAMES_MAX 4
 #define R01_ENTITY_PARTS_MAX 4 /* 2x2 tile frame budget */
-#define R01_ENTITY_COMPOSE_PX 16
+#define R01_ENTITY_COMPOSE_PX 32 /* authoring canvas (px); Studio viewport zooms into this */
 #define R01_ENTITY_NAME_MAX 32
 #define R01_ID_MAX 96
 #define R01_ENTITY_HITBOX_W 8

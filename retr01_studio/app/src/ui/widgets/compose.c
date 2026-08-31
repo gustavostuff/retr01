@@ -28,12 +28,16 @@ int ui_compose_clamp_origin(int v) {
     return v;
 }
 
-void ui_compose_draw_grid(SDL_Renderer *r, int ox, int oy, int size_px) {
+void ui_compose_draw_grid(SDL_Renderer *r, int ox, int oy, int size_px, int cell_px) {
     int i;
-    int cells = size_px / 8;
+    int cells;
+    if (cell_px < 1) {
+        cell_px = 8;
+    }
+    cells = size_px / cell_px;
     fill_rect(r, ox, oy, size_px, size_px, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
     for (i = 1; i < cells; i++) {
-        int g = i * 8;
+        int g = i * cell_px;
         SDL_SetRenderDrawColor(r, 50, 50, 58, 255);
         {
             SDL_Rect hr = {ox, oy + g, size_px, 1};

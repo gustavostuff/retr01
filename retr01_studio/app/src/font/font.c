@@ -168,3 +168,112 @@ void font_draw_centered(SDL_Renderer *r, int x, int y, int w, int h, const char 
     int ty = y + (h - th) / 2;
     font_draw(r, tx, ty, text, R, G, B);
 }
+
+static int font_wrap_next_line(const char *text, int max_w, int *out_len) {
+    int i;
+    int last_space = -1;
+    int w = 0;
+    if (!text || !text[0] || max_w < 1) {
+        if (out_len) {
+            *out_len = 0;
+        }
+        return 0;
+    }
+    for (i = 0; text[i]; i++) {
+        char ch = text[i];
+        int cw;
+        if (ch == '\n') {
+            if (out_len) {
+                *out_len = i;
+            }
+            return 1; /* caller advances past newline */
+        }
+        if (ch == ' ') {
+            last_space = i;
+        }
+        cw = font_text_width_n(&ch, 1);
+        if (w + cw > max_w && i > 0) {
+            if (last_space > 0) {
+                if (out_len) {
+                    *out_len = last_space;
+                }
+                return 1;
+            }
+            if (out_len) {
+                *out_len = i;
+            }
+            return 1;
+        }
+        w += cw;
+    }
+    if (out_len) {
+        *out_len = i;
+    }
+    return 0;
+}
+
+int font_measure_wrapped(const char *text, int max_w) {
+    const char *p = text;
+    int lines = 0;
+    int lh = font_line_h();
+    if (!text || !text[0]) {
+        return 0;
+    }
+    if (max_w < 1) {
+        max_w = 1;
+    }
+    while (*p) {
+        int len = 0;
+        int more = font_wrap_next_line(p, max_w, &len);
+        lines++;
+        p += len;
+        if (*p == '\n' || (*p == ' ' && more)) {
+            p++;
+        }
+        if (!more && !*p) {
+            break;
+        }
+        if (!more) {
+            break;
+        }
+    }
+    if (lines < 1) {
+        lines = 1;
+    }
+    return lines * lh;
+}
+
+int font_draw_wrapped(SDL_Renderer *r, int x, int y, int max_w, const char *text, Uint8 R, Uint8 G, Uint8 B) {
+    const char *p = text;
+    int yy = y;
+    int lh = font_line_h();
+    char line[256];
+    if (!r || !text || !text[0]) {
+        return 0;
+    }
+    if (max_w < 1) {
+        max_w = 1;
+    }
+    while (*p) {
+        int len = 0;
+        int more = font_wrap_next_line(p, max_w, &len);
+        if (len < 0) {
+            len = 0;
+        }
+        if (len >= (int)sizeof(line)) {
+            len = (int)sizeof(line) - 1;
+        }
+        memcpy(line, p, (size_t)len);
+        line[len] = '\0';
+        font_draw(r, x, yy, line, R, G, B);
+        yy += lh;
+        p += len;
+        if (*p == '\n' || (*p == ' ' && more)) {
+            p++;
+        }
+        if (!more) {
+            break;
+        }
+    }
+    return yy - y;
+}

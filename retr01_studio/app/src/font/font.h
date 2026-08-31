@@ -24,4 +24,8 @@ void font_draw_sized_alpha(SDL_Renderer *r, int x, int y, int px, const char *te
 void font_draw_centered(SDL_Renderer *r, int x, int y, int w, int h, const char *text, Uint8 R, Uint8 G,
                         Uint8 B);
 
+/* Word-wrap at max_w. Returns height used (line_h * lines). Soft-wrap on spaces; hard-break if needed. */
+int font_measure_wrapped(const char *text, int max_w);
+int font_draw_wrapped(SDL_Renderer *r, int x, int y, int max_w, const char *text, Uint8 R, Uint8 G, Uint8 B);
+
 #endif

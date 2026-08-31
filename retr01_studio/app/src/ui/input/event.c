@@ -59,12 +59,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             return 1;
         }
         if (ui->entity_edit.open) {
-            EntityModalLayout lo;
-            entity_modal_layout(ui, &lo);
-            if (!point_in_rect(lx, ly, lo.left_list_x, lo.left_list_y,
-                               lo.right_grid_x - lo.left_list_x - UI_UNIT, lo.left_list_h)) {
-                ui_palette_grid_nudge(ui->project, row, UI_PAL_PLANE_SPR, ui->entity_edit.paint_pal,
-                                     ui->entity_edit.paint_color, e->wheel.y, shift);
+            if (entity_modal_wheel(ui, lx, ly, e->wheel.y, shift)) {
                 return 1;
             }
         }
@@ -115,6 +110,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     ui_text_blur(ui);
                 } else {
                     ui->entity_edit.open = 0;
+                    ui_focus_clear(ui);
                     ui_text_blur(ui);
                 }
                 return 1;
@@ -800,23 +796,8 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         return 1;
     }
     if (e->type == SDL_MOUSEWHEEL && ui->entity_edit.open) {
-        EntityModalLayout lo;
-        const R01World *w = r01_project_active_world_const(ui->project);
-        entity_modal_layout(ui, &lo);
-        if (point_in_rect(lx, ly, lo.left_list_x, lo.left_list_y, lo.right_grid_x - lo.left_list_x - UI_UNIT,
-                          lo.left_list_h)) {
-            int vis = lo.left_list_h / UI_SPRITE_ROW_H;
-            int max_scroll = 0;
-            if (w && w->metasprite_count > vis) {
-                max_scroll = w->metasprite_count - vis;
-            }
-            ui->entity_edit.meta_scroll -= e->wheel.y;
-            if (ui->entity_edit.meta_scroll < 0) {
-                ui->entity_edit.meta_scroll = 0;
-            }
-            if (ui->entity_edit.meta_scroll > max_scroll) {
-                ui->entity_edit.meta_scroll = max_scroll;
-            }
+        int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
+        if (entity_modal_wheel(ui, lx, ly, e->wheel.y, shift)) {
             return 1;
         }
     }

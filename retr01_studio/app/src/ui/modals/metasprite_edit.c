@@ -137,7 +137,7 @@ void draw_metasprite_modal(UiState *ui, SDL_Renderer *r) {
                           lo.right_name_y + UI_BTN_H, id_w, UI_BTN_H, mid, 160, 160, 170);
     }
 
-    ui_compose_draw_grid(r, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE);
+    ui_compose_draw_grid(r, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, 8);
     ui_compose_draw_frame(r, ui->project, w, fr, lo.right_grid_x, lo.right_grid_y, 8, ui->metasprite_edit.sel_part);
 
     if (ui->metasprite_edit.dragging == 4) {

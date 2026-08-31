@@ -89,10 +89,8 @@ void ui_update_cursor(const UiState *ui) {
         hand = point_in_rect(lx, ly, lo.left_list_x, lo.left_list_y, UI_ENTITY_BANK_GRID, lo.left_list_h) ||
                point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE) ||
                point_in_rect(lx, ly, lo.pal_x, lo.pal_y, UI_PAL_GRID_SIZE, UI_PAL_GRID_SIZE) ||
-               point_in_rect(lx, ly, lo.right_dots_x, lo.right_dots_y, UI_DOT_STRIP_N * (UI_DOT_SIZE + UI_DOT_GAP),
-                             UI_DOT_SIZE) ||
-               point_in_rect(lx, ly, lo.frame_dots_x, lo.frame_dots_y, UI_DOT_STRIP_N * (UI_DOT_SIZE + UI_DOT_GAP),
-                             UI_DOT_SIZE) ||
+               point_in_rect(lx, ly, lo.right_dots_x, lo.right_dots_y, UI_DOT_STRIP_N * UI_DOT_SIZE, UI_DOT_SIZE) ||
+               point_in_rect(lx, ly, lo.frame_dots_x, lo.frame_dots_y, UI_DOT_STRIP_N * UI_DOT_SIZE, UI_DOT_SIZE) ||
                point_in_rect(lx, ly, lo.guides_x, lo.guides_y, UI_CHECKBOX + UI_UNIT * 12, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.left_list_x, lo.btn_y, lo.save_w, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.left_list_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);

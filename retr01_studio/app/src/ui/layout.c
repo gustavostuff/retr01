@@ -713,8 +713,8 @@ void metasprite_modal_layout(const UiState *ui, MetaspriteModalLayout *lo) {
     mh = lo->btn_y + UI_BTN_H + UI_UNIT;
     mx = (ui_logic_w(ui) - mw) / 2;
     my = (ui_logic_h(ui) - mh) / 2;
-    left_x = mx + UI_UNIT * 2;
-    right_x = mx + UI_UNIT * 2 + UI_ENTITY_BANK_GRID + UI_UNIT * 2;
+    left_x = mx + UI_UNIT;
+    right_x = mx + UI_UNIT + UI_ENTITY_BANK_GRID + UI_UNIT;
     lo->mx = mx;
     lo->my = my;
     lo->mw = mw;
@@ -726,7 +726,7 @@ void metasprite_modal_layout(const UiState *ui, MetaspriteModalLayout *lo) {
     lo->left_grid_y += my;
     lo->right_name_x = right_x + label_width("Name") + UI_UNIT;
     lo->right_name_y += my;
-    lo->right_name_w = mx + mw - UI_UNIT * 2 - lo->right_name_x;
+    lo->right_name_w = mx + mw - UI_UNIT - lo->right_name_x;
     if (lo->right_name_w < UI_UNIT * 8) {
         lo->right_name_w = UI_UNIT * 8;
     }
@@ -748,56 +748,107 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
     int my;
     int left_x;
     int right_x;
-    lo->right_ent_name_y = UI_BTN_H + UI_UNIT;
-    lo->right_state_y = lo->right_ent_name_y + UI_BTN_H;
-    lo->right_frame_y = lo->right_state_y + UI_BTN_H;
+    int body_y;
+    int name_lab;
+    int state_lab;
+    int sname_lab;
+    int frame_lab;
+    int pad = UI_UNIT;
+    const char *help = "Ctrl + click = drag zoomed viewport";
+    int help_w;
+    int help_h;
+
+    body_y = UI_BTN_H + UI_UNIT;
+    help_w = UI_ENTITY_COMPOSE;
+    help_h = font_measure_wrapped(help, help_w);
+    if (help_h < UI_BTN_H) {
+        help_h = UI_BTN_H;
+    }
+    /* Snap help block to 8px grid. */
+    help_h = ((help_h + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
+
+    /* Right column drives height: state, state name, frame, id, workbench, guides, help. */
+    lo->right_state_y = body_y;
+    lo->right_state_name_y = lo->right_state_y + UI_BTN_H;
+    lo->right_frame_y = lo->right_state_name_y + UI_BTN_H;
     lo->right_id_y = lo->right_frame_y + UI_BTN_H;
     lo->right_grid_y = lo->right_id_y + UI_BTN_H;
-    lo->left_list_y = lo->right_grid_y;
     lo->guides_y = lo->right_grid_y + UI_ENTITY_COMPOSE + UI_UNIT;
-    lo->pal_label_y = lo->guides_y;
-    lo->pal_y = lo->pal_label_y + UI_BTN_H;
-    lo->btn_y = lo->pal_y + UI_PAL_GRID_SIZE + UI_UNIT;
-    lo->left_list_h = (lo->pal_y + UI_PAL_GRID_SIZE) - lo->left_list_y;
+    lo->help_y = lo->guides_y + UI_BTN_H;
+    lo->help_h = help_h;
+    lo->help_w = help_w;
+    lo->btn_y = lo->help_y + help_h + UI_UNIT;
     mh = lo->btn_y + UI_BTN_H + UI_UNIT;
+
+    /* Left: Name, Metasprites label, list, palette, then Save/Cancel on btn row. */
+    lo->left_name_y = body_y;
+    lo->left_label_y = body_y + UI_BTN_H;
+    lo->left_list_y = lo->left_label_y + UI_BTN_H;
+    lo->pal_y = lo->btn_y - UI_UNIT - UI_PAL_GRID_SIZE;
+    lo->left_list_h = lo->pal_y - lo->left_list_y;
+    if (lo->left_list_h < UI_SPRITE_ROW_H) {
+        lo->left_list_h = UI_SPRITE_ROW_H;
+        lo->pal_y = lo->left_list_y + lo->left_list_h;
+        lo->btn_y = lo->pal_y + UI_PAL_GRID_SIZE + UI_UNIT;
+        if (lo->btn_y < lo->help_y + help_h + UI_UNIT) {
+            lo->btn_y = lo->help_y + help_h + UI_UNIT;
+        }
+        mh = lo->btn_y + UI_BTN_H + UI_UNIT;
+    }
+
     mx = (ui_logic_w(ui) - mw) / 2;
     my = (ui_logic_h(ui) - mh) / 2;
-    left_x = mx + UI_UNIT * 2;
-    right_x = mx + UI_UNIT * 2 + UI_ENTITY_BANK_GRID + UI_UNIT * 2;
+    left_x = mx + pad;
+    right_x = mx + pad + UI_ENTITY_BANK_GRID + UI_UNIT;
+
+    name_lab = ((label_width("Name") + UI_UNIT + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
+    state_lab = ((label_width("State") + UI_UNIT + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
+    sname_lab = ((label_width("State name") + UI_UNIT + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
+    frame_lab = ((label_width("Frame") + UI_UNIT + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
+
     lo->mx = mx;
     lo->my = my;
     lo->mw = mw;
     lo->mh = mh;
-    lo->right_ent_name_y += my;
-    lo->right_ent_name_x = right_x + label_width("Name") + UI_UNIT;
-    lo->right_ent_name_w = mx + mw - UI_UNIT * 2 - lo->right_ent_name_x;
-    if (lo->right_ent_name_w < UI_UNIT * 8) {
-        lo->right_ent_name_w = UI_UNIT * 8;
+
+    lo->left_name_y += my;
+    lo->left_name_x = left_x + name_lab;
+    lo->left_name_w = left_x + UI_ENTITY_BANK_GRID - lo->left_name_x;
+    lo->left_name_w = (lo->left_name_w / UI_UNIT) * UI_UNIT;
+    if (lo->left_name_w < UI_UNIT * 8) {
+        lo->left_name_w = UI_UNIT * 8;
     }
+
+    lo->left_label_y += my;
+    lo->left_list_x = left_x;
+    lo->left_list_y += my;
+    lo->pal_x = left_x;
+    lo->pal_y += my;
+
     lo->right_state_y += my;
-    lo->right_dots_x = right_x + label_width("State") + UI_UNIT;
+    lo->right_dots_x = right_x + state_lab;
     lo->right_dots_y = lo->right_state_y + (UI_BTN_H - UI_DOT_SIZE) / 2;
-    lo->right_name_x = lo->right_dots_x + UI_DOT_STRIP_N * (UI_DOT_SIZE + UI_DOT_GAP) + UI_UNIT;
-    lo->right_name_y = lo->right_state_y;
-    lo->right_name_w = mx + mw - UI_UNIT * 2 - lo->right_name_x;
+
+    lo->right_state_name_y += my;
+    lo->right_name_y = lo->right_state_name_y;
+    lo->right_name_x = right_x + sname_lab;
+    lo->right_name_w = mx + mw - pad - lo->right_name_x;
+    lo->right_name_w = (lo->right_name_w / UI_UNIT) * UI_UNIT;
     if (lo->right_name_w < UI_UNIT * 8) {
         lo->right_name_w = UI_UNIT * 8;
     }
+
     lo->right_frame_y += my;
-    lo->frame_dots_x = right_x + label_width("Frame") + UI_UNIT;
+    lo->frame_dots_x = right_x + frame_lab;
     lo->frame_dots_y = lo->right_frame_y + (UI_BTN_H - UI_DOT_SIZE) / 2;
+
     lo->right_id_y += my;
     lo->right_grid_x = right_x;
     lo->right_grid_y += my;
-    lo->left_list_x = left_x;
-    lo->left_list_y += my;
-    lo->left_label_y = lo->left_list_y - UI_BTN_H;
     lo->guides_x = right_x;
     lo->guides_y += my;
-    lo->pal_label_x = lo->guides_x + UI_UNIT * 14;
-    lo->pal_label_y += my;
-    lo->pal_x = lo->pal_label_x;
-    lo->pal_y += my;
+    lo->help_x = right_x;
+    lo->help_y += my;
     lo->btn_y += my;
     lo->save_w = label_width("Save");
     lo->cancel_w = label_width("Cancel");

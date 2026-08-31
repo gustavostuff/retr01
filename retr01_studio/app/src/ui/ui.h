@@ -103,15 +103,21 @@
 #define UI_METASPRITES_BODY_H 96
 #define UI_ENTITIES_BODY_H 96
 
-#define UI_ENTITY_MODAL_W (UI_UNIT * 2 + UI_ENTITY_BANK_GRID + UI_UNIT * 2 + UI_ENTITY_COMPOSE + UI_UNIT * 2)
+#define UI_ENTITY_MODAL_W (UI_UNIT + UI_ENTITY_BANK_GRID + UI_UNIT + UI_ENTITY_COMPOSE + UI_UNIT)
 #define UI_METASPRITE_MODAL_H 304
 #define UI_ENTITY_MODAL_H 336
-#define UI_ENTITY_BANK_GRID 128 /* 16x16 tiles @ 8px */
-#define UI_ENTITY_COMPOSE 128   /* 16px @ 8x scale */
+#define UI_ENTITY_BANK_GRID 128 /* left column width (list / bank sheet) */
+#define UI_ENTITY_COMPOSE 128   /* workbench viewport: 32px @ 4x (zoom 2/4 crop) */
 #define UI_ENTITY_LIST_H 128
 #define UI_DOT_SIZE 8
-#define UI_DOT_GAP 8
+#define UI_DOT_GAP 0 /* packed strip, no gaps between dots */
 #define UI_DOT_STRIP_N 4
+
+/* Widget focus: wheel / keyboard route to the focused control. */
+#define UI_FOCUS_NONE 0
+#define UI_FOCUS_PALETTE 1
+#define UI_FOCUS_WORKBENCH 2
+#define UI_FOCUS_LIST 3
 
 #define UI_CATALOG_DRAG_SPRITE 1
 #define UI_CATALOG_DRAG_METASPRITE 2
@@ -256,7 +262,12 @@ typedef struct UiEntityEdit {
     int paint_pal;
     int show_guides; /* origin cross + hitbox */
     int meta_scroll; /* left metasprite list */
-    int dragging;    /* 0 none, 1 part, 2 hitbox, 3 origin, 6 metasprite ghost, 5 paint */
+    int zoom;        /* 1, 2, or 4 (full 32 / 16 / 8 world px in viewport) */
+    int view_x;      /* workbench pan in compose px */
+    int view_y;
+    int pan_x0;      /* view at Ctrl+drag pan start */
+    int pan_y0;
+    int dragging;    /* 0 none, 1 part, 2 hitbox, 3 origin, 5 paint, 6 meta ghost, 7 pan */
     int drag_meta;   /* metasprite catalog idx when dragging */
     int drag_off_x;
     int drag_off_y;
@@ -311,6 +322,8 @@ typedef struct UiState {
     char tooltip[160];
     int tooltip_x;
     int tooltip_y;
+    int tooltip_arm_x; /* hover arm point; any move clears + resets delay */
+    int tooltip_arm_y;
     int tooltip_active;
     int tooltip_hit; /* armed this frame via ui_tooltip_hover */
     Uint32 tooltip_since_ms;
@@ -364,6 +377,7 @@ typedef struct UiState {
     int metatiles_scroll;
     int metasprites_scroll;
     int entities_scroll;
+    int focus; /* UI_FOCUS_* — which control owns wheel / key routing */
 } UiState;
 
 static inline int ui_logic_scale(const UiState *ui) {
