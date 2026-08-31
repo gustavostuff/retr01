@@ -53,7 +53,7 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
 
 ```text
                     +------------------+
-  Cart SST39SF040 --| PRG / CHR / MAP  |-- CHR read (BG dots + 1284 HBlank)
+  Cart SST39SF040 --| PRG / CHR / MAP  |-- CHR read (BG dots + 1284 VBlank/HBlank)
                     +--------+---------+
                              |
   W65C02S -------------------+------- $FExx latches (HC573) + PLD decode

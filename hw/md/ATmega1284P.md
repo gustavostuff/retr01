@@ -16,27 +16,27 @@
 
 ## What it is
 
-AVR 8-bit MCU: **128 KB Flash**, **16 KB SRAM**, **4 KB EEPROM**, 32 GPIO lines on four ports (A/B/C/D), timers with PWM, USART, SPI, TWI, ADC, JTAG. Retr01 uses it as a **dedicated helper MCU**, not the game CPU: it owns **OAM**, **sprite line-buffer fill**, **controller bytes**, and **machine EEPROM**. APU stays on **328P** ([`hardware.md`](../../docs/hardware.md)).
+AVR 8-bit MCU: **128 KB Flash**, **16 KB SRAM**, **4 KB EEPROM**, 32 GPIO lines on four ports (A/B/C/D), timers with PWM, USART, SPI, TWI, ADC, JTAG. Retr01 uses it as a **dedicated helper MCU**, not the game CPU: it owns **OAM**, the **VBlank sprite field** + **HBlank L0 line fill**, **controller bytes**, and **machine EEPROM**. APU stays on **328P** ([`hardware.md`](../../docs/hardware.md)).
 
 ## Retr01 role
 
 | Port / duty | Retr01 map |
 |-------------|------------|
 | OAM storage + evaluate | CPU writes via `$FE20` (addr) / `$FE21` (data), auto-inc. 64 entries `Y,tile,attr,X` |
-| Sprite line buffer | During **VBlank**, write full **120x128** sprite field. During **HBlank**, write next L0 line (ping-pong) |
+| Sprite field + L0 | During **VBlank**, write full **120x128** sprite field. During **HBlank**, write next L0 line (ping-pong) |
 | Pads | Present `$FE60` / `$FE61` (R L D U X Y coin start, **1 = pressed**) |
 | Machine EEPROM | Internal 4 KB. CPU handshake via `$FE70` band (protocol TBD in `02`) |
-| CHR in HBlank | May own cart CHR bus while BG path is idle (do not share until island N proven) |
+| CHR bus | May own cart CHR in **VBlank** (sprite field) and **HBlank** (L0 line) while BG path is idle (do not share until island N proven) |
 
 **Not** the BG beam path. **Not** the APU: that is ATmega328P.
 
-Cap: **16 sprites per logical scanline**. Pipeline is one line ahead. Not a framebuffer.
+Cap: **16 sprites per logical scanline**. L0 line is prepared one line ahead. Sprite field is full-playfield in VBlank. Not an RGB framebuffer.
 
 ## On-chip memory
 
 | Space | Size | Notes |
 |-------|------|-------|
-| Flash | 128 KB | Firmware (sprite eval, OAM port, pads, machine EEPROM) |
+| Flash | 128 KB | Firmware (OAM port, VBlank sprite field, HBlank L0, pads, machine EEPROM) |
 | SRAM | 16 KB | OAM shadow, line work, stacks |
 | EEPROM | 4 KB | **Machine config** (not game saves: those are cart I2C) |
 

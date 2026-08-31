@@ -8,7 +8,7 @@ Retr01 vs classic 8-bit constraints (especially NES-era). Same spirit, more head
 
 ## What the NES proved
 
-The NES showed that **32 KB PRG** and **2 KB RAM** could deliver complete, memorable games. Tile maps, tight sprite budgets, and clever VBlank work were features of the platform, not bugs. Retr01 keeps that craft but moves scrolling, sprite line fill, and world streaming into hardware so PRG can focus on **play**.
+The NES showed that **32 KB PRG** and **2 KB RAM** could deliver complete, memorable games. Tile maps, tight sprite budgets, and clever VBlank work were features of the platform, not bugs. Retr01 keeps that craft but moves scrolling, the VBlank sprite field, and world streaming into hardware so PRG can focus on **play**.
 
 ---
 
