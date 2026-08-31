@@ -1,6 +1,6 @@
-# Hardware datasheets (Retr01-A)
+# Hardware datasheets (Retr01 motherboard)
 
-Official / vendor datasheets for Retr01-A. These are reference PDFs (pinouts, AC timing, package drawings). They are **not** Retr01 schematics.
+Official / vendor datasheets for the shared Retr01 motherboard (arcade + console). These are reference PDFs (pinouts, AC timing, package drawings). They are **not** Retr01 schematics.
 
 **Markdown IC notes (sim / bring-up):** [`md/`](md/) - start with [`md/README.md`](md/README.md). Current BOM: [`../docs/hardware.md`](../docs/hardware.md). Simulator: [`../retr01_sim/README.md`](../retr01_sim/README.md).
 

@@ -1,6 +1,6 @@
 # Retr01 Emulator
 
-Software-visible C emulator for Retr01-A **Phase 1** carts. Separate from the IC board
+Software-visible C emulator for Retr01 **Phase 1** carts. Separate from the IC board
 simulator ([`retr01_sim/`](../retr01_sim/)). Contract:
 [`docs/graphics.md`](../docs/graphics.md).
 

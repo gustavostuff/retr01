@@ -4,13 +4,12 @@ The Retr01 project is a software + hardware tool chain family. Software includes
 
 - **Retr01 Studio**: visual authoring for worlds, screens and game entities. **Play** exports a cart and opens the shared emulator render screen (same pixels as standalone emu).
 - **Retr01 Emu**: software-visible 65C02 + `$FExx` I/O + video. Standalone `./emu` and the library Studio Play uses. Loads a cart, runs PRG boot catchup and Host Play for movement, camera, and collision.
-- **Retr01 Sim**: pin-level model of the **32-IC** Retr01-A netlist. Interactive SDL board UI with draggable islands, per-chip tests, and the same cart boot path as the emulator.
+- **Retr01 Sim**: pin-level model of the **32-IC** motherboard netlist. Interactive SDL board UI with draggable islands, per-chip tests, and the same cart boot path as the emulator.
 
 Software is still a WIP. This is the overall hardware roadmap:
 
-- **Retr01-A (stage 1)**: Arcade motherboard, first build. THT, ~14 x 12 cm PCB, cabinet (micro switch) sticks and buttons, RGBS, S-Video and composite.
-- **Retr01-C (stage 2)**: Home console. Same architecture and cart format, smaller board, 2 controller ports (female 3.5 mm TRS on console and pads; standard male–male aux cable).
-- **Retr01-H (stage 3)**: Handheld. SMD components, battery, LCD + driver, contact pads. Same software contract.
+- **Shared motherboard (stage 1)**: One THT board (~**14 x 12 cm**, 4-layer) for both **arcade** and **home console** shells. Same 32-IC core, cart, RGBS / S-Video / composite, 5 V barrel. **Arcade controller** headers (microswitch sticks/buttons into the 1284) **and** PCB holes / footprints for **2× Switchcraft 35RAPC** female 3.5 mm TRS (aux pad ports; populate when needed). Arcade vs console is enclosure + which I/O you wire — not two different mobos.
+- **Retr01-H (stage 2)**: Handheld. SMD, battery, LCD + driver, contact pads. Same software contract.
 
 ## At a glance
 

@@ -1,8 +1,8 @@
 # Retr01 Board Simulator
 
-IC-first board simulator for Retr01-A. Separate from Retr01 Studio (authoring). Pin/behavior: [`hw/md/`](../hw/md/). BOM and islands: [`docs/hardware.md`](../docs/hardware.md).
+IC-first board simulator for the Retr01 motherboard (arcade + console share one netlist). Separate from Retr01 Studio (authoring). Pin/behavior: [`hw/md/`](../hw/md/). BOM and islands: [`docs/hardware.md`](../docs/hardware.md).
 
-**Goal:** simulate the Retr01-A motherboard as discrete ICs (pins, package, datasheet behavior) wired like the real board. End state: boot a cart, accept pad input, show a digital playfield (logical 128x120 inside a 256x240 RGBS field / LCD sink). Accuracy tightens as tests demand it.
+**Goal:** simulate the Retr01 motherboard as discrete ICs (pins, package, datasheet behavior) wired like the real board. End state: boot a cart, accept pad input, show a digital playfield (logical 128x120 inside a 256x240 RGBS field / LCD sink). Accuracy tightens as tests demand it.
 
 ## Status
 

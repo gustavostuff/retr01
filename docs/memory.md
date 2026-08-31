@@ -81,6 +81,7 @@ One `.retr01` image holds PRG, global palettes, world blobs (CHR + screen MAP + 
 | **Who** | ATmega1284P (island E / L path). Not a separate pad IC |
 | **Layout** | Bit set = pressed. Same mask for P1 (`$FE60`) and P2 (`$FE61`) |
 | **Bits** | 0 Right, 1 Left, 2 Down, 3 Up, 4 X, 5 Y, 6 Coin, 7 Start |
+| **Board I/O** | Shared mobo: arcade microswitch headers **and** 2× 35RAPC TRS footprints ([`passive_rf_etc.md`](passive_rf_etc.md)) |
 
 Host Play (emu/sim) samples P1 for move and warps. Game PRG can poll the same ports.
 

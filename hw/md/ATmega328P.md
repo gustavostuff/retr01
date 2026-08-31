@@ -1,7 +1,7 @@
 # ATmega328P: APU MCU
 
 **PDF:** [`../ATmega328P_mcu.pdf`](../ATmega328P_mcu.pdf) (family sheet includes 48/88/168/328).  
-**Package (Retr01-A):** 28-pin PDIP.  
+**Package (Retr01 motherboard):** 28-pin PDIP.  
 **Qty:** **1** (current 32-IC BOM: dedicated APU).  
 **Clock (Retr01):** **16 MHz** (5 V).
 

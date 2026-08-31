@@ -102,13 +102,17 @@ Classic NES **32 KB** games (Balloon Fight, Ice Climber, Excitebike) already shi
 
 | Variant | Role |
 |---------|------|
-| **Retr01-A** | Arcade motherboard, first hardware target |
-| **Retr01-C** | Home console shell, same cart |
+| **Arcade / console** | **Same motherboard.** Arcade headers (microswitches) + 2× 35RAPC TRS footprints; shell and BOM population differ |
 | **Retr01-H** | Handheld later, same software contract |
 
-### Retr01-C controllers
+### Controllers (shared board)
 
-Pads use **female 3.5 mm TRS** jacks on **both** the console and each controller. The link is any standard **male–male aux** cable — pick whatever length you want; no proprietary tether. Inside: a **3-wire** VCC / DATA / GND run (ATtiny85 draft on the pad) into the same `$FE60` / `$FE61` contract as the arcade shell. Console ports get **PPTC short protection** plus ESD clamps so a mangled cable cannot take down the board. Jack family target: **Switchcraft 35RAPC** (see [`passive_rf_etc.md`](passive_rf_etc.md)).
+Every motherboard has:
+
+1. **Arcade controller** connections — headers for sticks/buttons as simple microswitch circuits into the 1284 (`$FE60` / `$FE61`).
+2. **2× Switchcraft 35RAPC** female 3.5 mm TRS footprints — optional aux pads (ATtiny85 draft on the pad board, male–male aux cable, VCC/DATA/GND). PPTC + ESD on the TRS path so a mangled cable cannot take down the board.
+
+Populate TRS jacks for console / portable sticks; leave DNP in a sealed cabinet if you only wire the arcade headers. Details: [`passive_rf_etc.md`](passive_rf_etc.md).
 
 Built for people who want to **make** 8-bit games, not only play them. Tools: **Studio** (author), **Emu** (runtime), **Sim** (hardware bring-up).
 

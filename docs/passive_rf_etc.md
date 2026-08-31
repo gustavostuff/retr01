@@ -58,7 +58,7 @@ External 5 V is trusted for regulation, not for abuse or cable noise. Treat the 
 
 | Item | Role |
 |------|------|
-| Barrel jack (2.1 mm class) | 5 V in. Retr01-A / -C |
+| Barrel jack (2.1 mm class) | 5 V in (shared motherboard) |
 | Series PPTC on VIN | Board-level short / overload. Hold above full-board idle, trip on hard short |
 | Reverse-polarity diode (or P-FET ideal diode) | Blocks reverse barrel plug |
 | Bulk cap at entry (**100–470 µF** low-ESR electrolytic or polymer) | Holds rail through plug bounce and load steps |
@@ -95,7 +95,7 @@ Board clocks matter for layout cleanliness; they are not automatically a show-st
 | Optional ferrite beads on RGBS | Cable RF; place at connector |
 | APU **R-2R** (or PWM RC) from 328P | Line-level mix ([`sound.md`](sound.md)) |
 | AC-coupling cap + series build-out on audio out | Blocks DC into TVs / amps |
-| Video / AV connectors | Retr01-A: RGBS (+ S-Video / composite path TBD). Levels bench-tuned |
+| Video / AV connectors | RGBS (+ S-Video / composite path TBD). Levels bench-tuned |
 
 ---
 
@@ -111,54 +111,63 @@ Anything a human can touch gets a clamp **at the connector**, then a series limi
 
 ---
 
-## Retr01-C controller ports (3.5 mm TRS)
+## Controller I/O (shared motherboard)
 
-Design goal: **female jack on console and on each controller**. The interconnect is a commodity **male–male 3.5 mm aux** cable of any length. No proprietary tether.
+Arcade and console use the **same PCB**. Both I/O styles are on every board: arcade microswitch headers **and** footprints for two TRS jacks. Shell / BOM population chooses which path you use; software stays `$FE60` / `$FE61` via the 1284.
+
+### Arcade controllers (microswitches)
+
+Simple **switch-to-GND** (or switch-to-common) circuits: sticks and buttons close contacts. No pad MCU on this path.
+
+| Item | Role |
+|------|------|
+| Headers / IDC (or discrete pads) | P1 / P2 button and stick lines into **ATmega1284P** GPIO |
+| Series **22–100 Ω** per line | Limits clamp current; damps cable |
+| Optional TVS at connector | ESD on cabinet harness |
+| Bit contract | Same as pads: `$FE60` / `$FE61`, bit set = pressed |
+
+### Aux pad ports (3.5 mm TRS footprints)
+
+Design goal: **female jack on the motherboard** (2×) and on each optional pad board. Interconnect = commodity **male–male 3.5 mm aux**. No proprietary tether. Jacks may be **DNP** on a pure arcade build; **footprints / solder holes stay on the PCB**.
 
 | Item | Spec / role |
 |------|-------------|
-| Jack | **Switchcraft 35RAPC** series, **TRS (stereo)** — e.g. **35RAPC3BH3** (horizontal, threaded bushing) for panel/PCB. Same family on pad PCBs |
+| Jack | **Switchcraft 35RAPC** series, **TRS (stereo)** — e.g. **35RAPC3BH3** (horizontal, threaded bushing). Same family on pad PCBs |
 | Conductors | **Tip / Ring / Sleeve** = **VCC / DATA / GND** (exact T/R assignment locked at schematic; Sleeve = GND + shell) |
-| Port count | **2** (P1, P2) on console |
+| Port count | **2** (P1, P2) footprints on the motherboard |
 | Pad MCU | **ATtiny85** draft on the controller board; 1284 still presents `$FE60` / `$FE61` |
-| PPTC (Polyfuse) per port on **VCC** | Shorted aux tip–ring or crushed cable must not toast the plane. Size **Ihold** for one ATtiny85 + switches/LEDs (roughly **100–250 mA** class, **Vmax ≥ 6 V**); place on the console **and** consider a mate on the pad board |
+| PPTC (Polyfuse) per port on **VCC** | Shorted aux tip–ring or crushed cable must not toast the plane. Size **Ihold** for one ATtiny85 + switches/LEDs (roughly **100–250 mA** class, **Vmax ≥ 6 V**); place on the mobo **and** consider a mate on the pad board |
 | TVS to GND on VCC and DATA at each jack | ESD / hot-plug; PTC alone is too slow for ESD |
 | Series **R** on DATA (both ends if practical) | Current limit into MCU pins + RF damping on long aux runs |
 | Local **100 nF** on port VCC after the PTC | Decouples the cable stub |
 
 ```text
-  Console 5 V --[PPTC]--+--[TVS]-- Tip (VCC) ---- aux M-M ---- Tip --[TVS]--+--> pad 5 V
-                        |                                                 |
-                     100 nF                                              MCU
-                        |                                                 |
-  GND plane ------------+-- Sleeve (GND) ---------------- Sleeve ---------+
-                        |
-  1284 / pad bridge ----+--[R]--[TVS]-- Ring (DATA) ---- Ring --[R]--[TVS]--> ATtiny85
+  Mobo 5 V --[PPTC]--+--[TVS]-- Tip (VCC) ---- aux M-M ---- Tip --[TVS]--+--> pad 5 V
+                     |                                                 |
+                  100 nF                                              MCU
+                     |                                                 |
+  GND plane ---------+-- Sleeve (GND) ---------------- Sleeve ---------+
+                     |
+  1284 / pad bridge -+--[R]--[TVS]-- Ring (DATA) ---- Ring --[R]--[TVS]--> ATtiny85
 ```
 
 **Why PTC + TVS:** PPTC covers **sustained shorts** (user cables). TVS covers **nanosecond ESD**. Neither replaces the other.
 
-A long aux is still an antenna: keep the on-console DATA run short to the bridge, clamp at the jack, and avoid routing DATA parallel to PHI2 / dot clocks.
-
-### Retr01-A cabinet I/O (contrast)
-
-| Item | Role |
-|------|------|
-| IDC / discrete wiring to sticks and buttons | Direct GPIO into 1284 (with series R + optional TVS) |
-| No 3.5 mm pad ports on the arcade shell | Controllers are built into the cabinet |
+A long aux is still an antenna: keep the on-board DATA run short to the bridge, clamp at the jack, and avoid routing DATA parallel to PHI2 / dot clocks.
 
 ---
 
 ## Passive count mindset (planning)
 
-Exact E24 values land at schematic time. Budget order-of-magnitude for a Retr01-C mobo + 2 pads:
+Exact E24 values land at schematic time. Budget order-of-magnitude for one shared mobo (+ optional 2 pad boards):
 
 - **~40–60×** 100 nF decoupling
 - **~10–15×** 1–10 µF island caps + **1×** bulk at barrel
 - **R-2R** networks (video + audio) + **75 Ω** build-outs
-- **2×** port PPTC + **2–4×** board/entry PPTC/ferrite as needed
-- **TVS** packs at cart + both pad jacks (+ audio/video if exposed)
-- **4×** Switchcraft 35RAPC TRS (2 console + 1 per controller)
+- **2×** port PPTC (TRS) + arcade-header series R / TVS as needed + entry PPTC/ferrite
+- **TVS** packs at cart + both TRS footprints (+ audio/video if exposed)
+- **2×** Switchcraft 35RAPC footprints on mobo (+ **1×** per optional pad board when built)
+- Arcade controller headers / IDC
 - Oscillators / crystals, reset RC, pull-ups, SCALE DIP, barrel, AV connectors
 
 ---
