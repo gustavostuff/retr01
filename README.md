@@ -9,7 +9,7 @@ The Retr01 project is a software + hardware tool chain family. Software includes
 Software is still a WIP. This is the overall hardware roadmap:
 
 - **Retr01-A (stage 1)**: Arcade motherboard, first build. THT, ~14 x 12 cm PCB, cabinet (micro switch) sticks and buttons, RGBS, S-Video and composite.
-- **Retr01-C (stage 2)**: Home console. Same architecture and cart format, smaller board, 2 controller ports (3-cable line).
+- **Retr01-C (stage 2)**: Home console. Same architecture and cart format, smaller board, 2 controller ports (female 3.5 mm TRS on console and pads; standard male–male aux cable).
 - **Retr01-H (stage 3)**: Handheld. SMD components, battery, LCD + driver, contact pads. Same software contract.
 
 ## At a glance

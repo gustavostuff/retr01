@@ -2,7 +2,7 @@
 
 32-IC Retr01-A motherboard + cart. Through-hole DIP target, ~**14 x 12 cm** minimum 4-layer PCB.
 
-**Related:** [`memory.md`](memory.md) (chips, read/write timing). [`graphics.md`](graphics.md) (VRAM, sprites). [`sound.md`](sound.md) (APU). IC notes: [`hw/md/`](../hw/md/). Bring-up sim: [`retr01_sim/`](../retr01_sim/README.md).
+**Related:** [`memory.md`](memory.md) (chips, read/write timing). [`graphics.md`](graphics.md) (VRAM, sprites). [`sound.md`](sound.md) (APU). IC notes: [`hw/md/`](../hw/md/). Bring-up sim: [`retr01_sim/`](../retr01_sim/README.md). Passives / ports / protection: **Non-IC components** below.
 
 ---
 
@@ -102,7 +102,8 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
 
 1. Cabinet / console sticks and buttons feed the **1284**.
 2. CPU reads packed bits at **`$FE60`** (P1) and **`$FE61`** (P2). Bit set = pressed ([`graphics.md`](graphics.md)).
-3. Retr01-C may insert a 3-wire pad MCU later. Software contract stays the same two ports.
+3. **Retr01-A:** cabinet microswitches / IDC into the 1284.
+4. **Retr01-C:** each pad is a small board with an **ATtiny85** (draft) talking a **3-wire** link (VCC / DATA / GND) into the console. Both console and controllers use **female 3.5 mm TRS** jacks; the cable is any standard **male–male 3.5 mm aux** (user picks length). Software contract stays `$FE60` / `$FE61`.
 
 ### Audio
 
@@ -156,8 +157,117 @@ Full letter list, sim canvas grouping, and port smoke checks: [`retr01_sim/READM
 | Variant | Shell |
 |---------|-------|
 | **Retr01-A** | Arcade mobo, RGBS/S-Video/composite, cabinet IDC, 5 V barrel |
-| **Retr01-C** | Console, same core, 3-wire pads (ATtiny85 draft) |
+| **Retr01-C** | Console, same core, 2x female 3.5 mm TRS pad ports + ATtiny85 pads (draft) |
 | **Retr01-H** | Handheld SMD later, same cart contract |
+
+---
+
+## Non-IC components (passives, ports, protection)
+
+ICs are the 32-count BOM above. Everything else exists to **power**, **clock**, **terminate**, **protect**, and **exit** the board. Power assumption: **stable external 5 V** (barrel / PSU). No on-board switching regulator in the baseline.
+
+### Power entry and rail hygiene
+
+External 5 V is trusted for regulation, not for abuse or RF. Treat the barrel as a noisy cable entry.
+
+| Item | Role |
+|------|------|
+| Barrel jack (2.1 mm class) | 5 V in. Retr01-A / -C |
+| Series PPTC on VIN | Board-level short / overload. Hold above full-board idle, trip on hard short |
+| Reverse-polarity diode (or P-FET ideal diode) | Blocks reverse barrel plug |
+| Bulk cap at entry (**100–470 µF** low-ESR electrolytic or polymer) | Holds rail through plug bounce and load steps |
+| Input ferrite (or CMC on 5 V / GND pair) | Damps cable-borne RF before the plane |
+| Local **100 nF X7R** on every IC VCC pin (mm from pin) | HF bypass; mandatory for HC / PLD / AVR edge rates |
+| Local **1–10 µF** ceramic per island / large DIP | Mid-band reservoir (6502, 1284, 328P, PLD cluster, SRAM bank) |
+| Ferrite + **10 µF** into **analog / video** spur | Isolates Color PROM R-2R and APU DAC from digital di/dt |
+
+**Layout:** 4-layer with a solid GND plane. Star or short-fat 5 V pours from entry; never snake return current through video or pad-port copper. Stitch GND vias at every connector shell and under each DIP.
+
+### Clocks and reset (RF-sensitive)
+
+Four domains (**8.000**, **5.369318**, **20**, **16 MHz**) are the primary conducted/radiated emitters.
+
+| Item | Role |
+|------|------|
+| Canned oscillators (PHI2 8 MHz, dot ~5.369 MHz) | Prefer cans over bare crystals for edge control and lower stray radiation |
+| Crystals + load caps for AVRs if not using cans | 20 MHz (1284), 16 MHz (328P); keep loops tiny |
+| Series damping **22–47 Ω** on clock nets leaving a can / buffer | Softens edges into long traces; cuts harmonic splash |
+| **74HC14** (outside 32-count if needed) | Schmitt cleanup for reset / slow edges |
+| RC + Schmitt (or supervisor, e.g. MCP120-class) on `/RESB` and AVR `RESET` | Power-on reset; hold low until 5 V is solid |
+| Pull-ups on open-drain resets / IRQB | Typical **4.7–10 kΩ** |
+
+Keep clock traces short, away from cart edge and pad jacks. No unterminated stubs.
+
+### Video and audio analog (outside the 32)
+
+| Item | Role |
+|------|------|
+| Color PROM **R-2R** ladder (**1%** metal film) | R3G3B2 -> analog guns ([`AT28C16`](../hw/md/AT28C16.md)) |
+| **75 Ω** series per R/G/B (+ sync termination as needed) | Drive RGBS into 75 Ω video plant |
+| Optional ferrite beads on RGBS | Cable RF; place at connector |
+| APU **R-2R** (or PWM RC) from 328P | Line-level mix ([`sound.md`](sound.md)) |
+| AC-coupling cap + series build-out on audio out | Blocks DC into TVs / amps |
+| Video / AV connectors | Retr01-A: RGBS (+ S-Video / composite path TBD). Levels bench-tuned |
+
+### Cart edge and user I/O ESD
+
+Anything a human can touch gets a clamp **at the connector**, then a series limiter, then the IC.
+
+| Item | Role |
+|------|------|
+| TVS array (5 V working, e.g. PESD5V0-class) on cart address/data/control as needed | ESD into flash / HC245 domain |
+| Series **22–100 Ω** on slow GPIO / pad DATA | Limits IC clamp current; damps cable resonances |
+| SCALE DIP + pull-ups/downs | 1x / 2x select; define idle state |
+
+### Retr01-C controller ports (3.5 mm TRS)
+
+Design goal: **female jack on console and on each controller**. The interconnect is a commodity **male–male 3.5 mm aux** cable of any length. No proprietary tether.
+
+| Item | Spec / role |
+|------|-------------|
+| Jack | **Switchcraft 35RAPC** series, **TRS (stereo)** — e.g. **35RAPC3BH3** (horizontal, threaded bushing) for panel/PCB. Same family on pad PCBs |
+| Conductors | **Tip / Ring / Sleeve** = **VCC / DATA / GND** (exact T/R assignment locked at schematic; Sleeve = GND + shell) |
+| Port count | **2** (P1, P2) on console |
+| Pad MCU | **ATtiny85** draft on the controller board; 1284 still presents `$FE60` / `$FE61` |
+| PPTC (Polyfuse) per port on **VCC** | Shorted aux tip–ring or crushed cable must not toast the plane. Size **Ihold** for one ATtiny85 + switches/LEDs (roughly **100–250 mA** class, **Vmax ≥ 6 V**); place on the console **and** consider a mate on the pad board |
+| TVS to GND on VCC and DATA at each jack | ESD / hot-plug; PTC alone is too slow for ESD |
+| Series **R** on DATA (both ends if practical) | Current limit into MCU pins + RF damping on long aux runs |
+| Local **100 nF** on port VCC after the PTC | Decouples the cable stub |
+
+```text
+  Console 5 V --[PPTC]--+--[TVS]-- Tip (VCC) ---- aux M-M ---- Tip --[TVS]--+--> pad 5 V
+                        |                                                 |
+                     100 nF                                              MCU
+                        |                                                 |
+  GND plane ------------+-- Sleeve (GND) ---------------- Sleeve ---------+
+                        |
+  1284 / pad bridge ----+--[R]--[TVS]-- Ring (DATA) ---- Ring --[R]--[TVS]--> ATtiny85
+```
+
+**Why PTC + TVS:** PPTC covers **sustained shorts** (user cables). TVS covers **nanosecond ESD**. Neither replaces the other.
+
+**RF note:** a long floating aux is an antenna. Keep the on-console DATA run short to the bridge, clamp at the jack, and avoid routing DATA parallel to PHI2 / dot clocks.
+
+### Retr01-A cabinet I/O (contrast)
+
+| Item | Role |
+|------|------|
+| IDC / discrete wiring to sticks and buttons | Direct GPIO into 1284 (with series R + optional TVS) |
+| No 3.5 mm pad ports on the arcade shell | Controllers are built into the cabinet |
+
+### Passive count mindset (planning)
+
+Exact E24 values land at schematic time. Budget order-of-magnitude for a Retr01-C mobo + 2 pads:
+
+- **~40–60×** 100 nF decoupling
+- **~10–15×** 1–10 µF island caps + **1×** bulk at barrel
+- **R-2R** networks (video + audio) + **75 Ω** build-outs
+- **2×** port PPTC + **2–4×** board/entry PPTC/ferrite as needed
+- **TVS** packs at cart + both pad jacks (+ audio/video if exposed)
+- **4×** Switchcraft 35RAPC TRS (2 console + 1 per controller)
+- Oscillators / crystals, reset RC, pull-ups, SCALE DIP, barrel, AV connectors
+
+Passives are **outside** the 32-IC goal.
 
 ---
 
@@ -170,3 +280,6 @@ Full letter list, sim canvas grouping, and port smoke checks: [`retr01_sim/READM
 | HC573 bitfield packing | 9-chip map still TBD in [`graphics.md`](graphics.md) |
 | Cart I2C / machine EEPROM API | Mailbox protocol TBD in [`memory.md`](memory.md) |
 | Retr01-C pad timing | 3-wire poll edges TBD |
+| TRS pin map (T/R = VCC/DATA) | Lock at schematic; document for third-party pads |
+| PPTC Ihold per pad port | Bench ATtiny85 + LED budget, then pick family (e.g. Bourns MF-MSMF / Littelfuse 1206L) |
+| FCC / CE pre-compliance | 4 clocks + long aux: expect ferrite + clamp iteration on first spin |
