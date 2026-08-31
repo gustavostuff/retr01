@@ -31,6 +31,12 @@ int g_bg0_btn_h;
 uint8_t *g_bg1_btn_rgba;
 int g_bg1_btn_w;
 int g_bg1_btn_h;
+uint8_t *g_bg_bank_btn_rgba;
+int g_bg_bank_btn_w;
+int g_bg_bank_btn_h;
+uint8_t *g_spr_bank_btn_rgba;
+int g_spr_bank_btn_w;
+int g_spr_bank_btn_h;
 
 int ui_load_png_rgba(const char *path, uint8_t **out_px, int *out_w, int *out_h) {
     FILE *fp;
@@ -113,16 +119,66 @@ void ui_toast(UiState *ui, const char *msg, int is_error) {
 }
 
 void ui_tooltip_set(UiState *ui, int x, int y, const char *line1, const char *line2) {
+    /* Immediate show (legacy). Prefer ui_tooltip_hover for delayed cursor tooltips. */
     if (!ui) {
         return;
     }
     ui->tooltip_active = 1;
+    ui->tooltip_hit = 1;
     ui->tooltip_x = x;
     ui->tooltip_y = y;
+    ui->tooltip_since_ms = 0;
     if (line2 && line2[0]) {
         snprintf(ui->tooltip, sizeof(ui->tooltip), "%s\n%s", line1 ? line1 : "", line2);
+        snprintf(ui->tooltip_key, sizeof(ui->tooltip_key), "%s\n%s", line1 ? line1 : "", line2);
     } else {
         snprintf(ui->tooltip, sizeof(ui->tooltip), "%s", line1 ? line1 : "");
+        snprintf(ui->tooltip_key, sizeof(ui->tooltip_key), "%s", line1 ? line1 : "");
+    }
+}
+
+void ui_tooltip_hover(UiState *ui, int x, int y, const char *line1, const char *line2) {
+    char key[160];
+    if (!ui) {
+        return;
+    }
+    if (line2 && line2[0]) {
+        snprintf(key, sizeof(key), "%s\n%s", line1 ? line1 : "", line2);
+    } else {
+        snprintf(key, sizeof(key), "%s", line1 ? line1 : "");
+    }
+    if (strcmp(ui->tooltip_key, key) != 0) {
+        snprintf(ui->tooltip_key, sizeof(ui->tooltip_key), "%s", key);
+        snprintf(ui->tooltip, sizeof(ui->tooltip), "%s", key);
+        ui->tooltip_since_ms = SDL_GetTicks();
+        ui->tooltip_active = 0;
+    }
+    ui->tooltip_x = x;
+    ui->tooltip_y = y;
+    ui->tooltip_hit = 1;
+}
+
+void ui_tooltip_frame_begin(UiState *ui) {
+    if (!ui) {
+        return;
+    }
+    ui->tooltip_hit = 0;
+}
+
+void ui_tooltip_frame_end(UiState *ui) {
+    if (!ui) {
+        return;
+    }
+    if (!ui->tooltip_hit) {
+        ui->tooltip_active = 0;
+        ui->tooltip[0] = '\0';
+        ui->tooltip_key[0] = '\0';
+        ui->tooltip_since_ms = 0;
+        return;
+    }
+    if (!ui->tooltip_active && ui->tooltip_since_ms != 0 &&
+        SDL_GetTicks() - ui->tooltip_since_ms >= UI_TOOLTIP_DELAY_MS) {
+        ui->tooltip_active = 1;
     }
 }
 
@@ -131,11 +187,15 @@ void ui_tooltip_clear(UiState *ui) {
         return;
     }
     ui->tooltip_active = 0;
+    ui->tooltip_hit = 0;
     ui->tooltip[0] = '\0';
+    ui->tooltip_key[0] = '\0';
+    ui->tooltip_since_ms = 0;
 }
 
 void draw_tooltip(UiState *ui, SDL_Renderer *r) {
     int tw, th, x, y;
+    int pad = UI_UNIT;
     const char *nl;
     char line1[160];
     char line2[160];
@@ -163,32 +223,48 @@ void draw_tooltip(UiState *ui, SDL_Renderer *r) {
             tw = w2;
         }
     }
+    tw = snap8(tw + pad * 2);
     th = line2[0] ? (UI_BTN_H * 2) : UI_BTN_H;
-    x = ui->tooltip_x + UI_UNIT;
-    y = ui->tooltip_y + UI_UNIT;
-    if (x + tw > ui_logic_w(ui) - UI_UNIT) {
-        x = ui_logic_w(ui) - UI_UNIT - tw;
+    /* Prefer lower-right of cursor. Flip to keep the full tip on-screen. */
+    x = ui->tooltip_x + pad;
+    y = ui->tooltip_y + pad;
+    if (x + tw > ui_logic_w(ui) - pad) {
+        x = ui->tooltip_x - tw - pad;
     }
-    if (y + th > ui_logic_h(ui) - UI_UNIT) {
-        y = ui->tooltip_y - th - 2;
+    if (y + th > ui_logic_h(ui) - pad) {
+        y = ui->tooltip_y - th - pad;
     }
-    if (x < UI_UNIT) {
-        x = UI_UNIT;
+    if (x < pad) {
+        x = pad;
     }
-    if (y < UI_UNIT) {
-        y = UI_UNIT;
+    if (y < pad) {
+        y = pad;
     }
-    fill_rect(r, x, y, tw, th, 24, 24, 30);
-    draw_rect(r, x, y, tw, th, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
-    font_draw(r, x + 4, y + 4, line1, 240, 240, 240);
+    if (x + tw > ui_logic_w(ui) - pad) {
+        x = ui_logic_w(ui) - pad - tw;
+    }
+    if (y + th > ui_logic_h(ui) - pad) {
+        y = ui_logic_h(ui) - pad - th;
+    }
+    /* Soft yellow BG, black FG. */
+    fill_rect(r, x, y, tw, th, 250, 230, 140);
+    draw_rect(r, x, y, tw, th, 40, 40, 40);
+    font_draw(r, x + pad, y + 4, line1, 0, 0, 0);
     if (line2[0]) {
-        font_draw(r, x + 4, y + UI_BTN_H + 4, line2, 180, 180, 190);
+        font_draw(r, x + pad, y + UI_BTN_H + 4, line2, 0, 0, 0);
     }
 }
 
 void fill_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B) {
     SDL_Rect rc = {x, y, w, h};
     SDL_SetRenderDrawColor(r, R, G, B, 255);
+    SDL_RenderFillRect(r, &rc);
+}
+
+void fill_rect_alpha(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B, Uint8 A) {
+    SDL_Rect rc = {x, y, w, h};
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(r, R, G, B, A);
     SDL_RenderFillRect(r, &rc);
 }
 

@@ -29,6 +29,7 @@ add_library(retr01_studio_core
   core/src/sprites.c
   core/src/entities.c
   core/src/metasprites.c
+  core/src/metatiles.c
   core/src/warps.c
   core/src/game_runtime.c
   core/src/player_anim.c

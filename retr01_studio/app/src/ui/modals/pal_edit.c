@@ -48,7 +48,7 @@ void pal_edit_nudge_master(UiState *ui, int wheel_y, int shift) {
     if (!slot) {
         return;
     }
-    step = wheel_y > 0 ? 1 : -1;
+    step = wheel_y < 0 ? 1 : -1;
     master = *slot & 63;
     row = master / UI_MASTER_COLS;
     col = master % UI_MASTER_COLS;

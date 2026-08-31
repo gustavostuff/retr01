@@ -22,12 +22,15 @@ void ui_checkbox_draw(SDL_Renderer *r, int dx, int dy, int checked);
 void ui_palette_grid_draw(SDL_Renderer *r, const R01Project *p, int row, int pal_x, int pal_y, int sel_pal,
                           int sel_color, UiPalPlane plane);
 int ui_palette_grid_hit(int lx, int ly, int pal_x, int pal_y, int *out_pal, int *out_color);
+/* Nudge selected slot master index on the conceptual 16x4 kit (wheel=rows, Shift+wheel=cols). */
+void ui_palette_grid_nudge(R01Project *p, int row, UiPalPlane plane, int pal, int color, int wheel_y,
+                           int shift);
 
 void ui_button_draw(SDL_Renderer *r, int x, int y, int w, const char *text, int active, int hover);
 
 #define UI_TABS_MAX 16
 #define UI_TABS_SUB_W 16
-#define UI_TABS_SUB_H 7
+#define UI_TABS_SUB_H 8
 
 typedef struct UiTabsLayout {
     int x, y;
@@ -35,20 +38,27 @@ typedef struct UiTabsLayout {
     int tab_h;
     int count;
     const char *label[UI_TABS_MAX];
+    int use_dot; /* draw ui_dot.png instead of label text */
     /* Dual-view (opt-in): sub-button only under selected tab. */
     int dual_view;
     int view; /* 0 = A, 1 = B */
     const uint8_t *sub_rgba[2];
-    int sub_w;
-    int sub_h;
+    const char *sub_label[2];
+    int sub_w;  /* slot width (usually 16) */
+    int sub_h;  /* slot height (always UI_TABS_SUB_H = 8) */
+    int sub_iw[2]; /* asset width per view */
+    int sub_ih[2]; /* asset height per view */
 } UiTabsLayout;
 
 void ui_tabs_layout(const char *const *labels, int count, int x, int y, int tab_w, UiTabsLayout *out);
 void ui_tabs_set_dual(UiTabsLayout *lo, int enabled, int view, const uint8_t *rgba_a, int wa, int ha,
                       const uint8_t *rgba_b, int wb, int hb);
+void ui_tabs_set_dot(UiTabsLayout *lo, int enabled);
+void ui_tabs_set_sub_labels(UiTabsLayout *lo, const char *label_a, const char *label_b);
 int ui_tabs_body_y(const UiTabsLayout *lo);
 void ui_tabs_draw(SDL_Renderer *r, const UiTabsLayout *lo, int selected, int mouse_x, int mouse_y);
-int ui_tabs_hit(const UiTabsLayout *lo, int lx, int ly, int *out_idx);
+/* selected = active tab index (needed so inactive dual tabs keep full 16x16 hit). */
+int ui_tabs_hit(const UiTabsLayout *lo, int selected, int lx, int ly, int *out_idx);
 /* 1 if (lx,ly) hits the sub-button under selected tab (dual-view only). */
 int ui_tabs_sub_hit(const UiTabsLayout *lo, int selected, int lx, int ly);
 

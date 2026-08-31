@@ -9,6 +9,7 @@
 #include "retr01_studio/project.h"
 #include "retr01_studio/entities.h"
 #include "retr01_studio/metasprites.h"
+#include "retr01_studio/metatiles.h"
 #include "retr01_studio/sprites.h"
 #include "retr01_studio/warps.h"
 
@@ -93,6 +94,10 @@ static void menu_build_sub(UiState *ui, int sub_kind) {
         sub_kind == UI_MENU_SUB_SPR_PAL) {
         for (i = 0; i < 4; i++) {
             snprintf(ui->menu.sub_items[ui->menu.sub_count++], 24, "%d", i + 1);
+        }
+    } else if (sub_kind == UI_MENU_SUB_MOVE_BANK) {
+        for (i = 0; i < 4; i++) {
+            snprintf(ui->menu.sub_items[ui->menu.sub_count++], 24, "%d", i);
         }
     } else if (sub_kind == UI_MENU_SUB_WARP) {
         R01World *w = ui ? r01_project_active_world(ui->project) : NULL;
@@ -229,6 +234,81 @@ void menu_open_sprite(UiState *ui, int x, int y, int catalog_idx) {
     menu_place_root(ui);
 }
 
+static int bank_cell_is_empty(const R01World *w, int bank, int tile_id, int plane) {
+    const uint8_t *tile;
+    int i;
+    if (!w || bank < 0 || bank >= UI_BANKS_N || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
+        return 1;
+    }
+    if (plane == UI_BANKS_PLANE_SPR) {
+        tile = r01_chr_spr_tile(w, bank, tile_id);
+    } else if (tile_id < w->bg_banks[bank].tile_count) {
+        tile = w->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+    } else {
+        return 1;
+    }
+    if (!tile) {
+        return 1;
+    }
+    for (i = 0; i < R01_TILE_BYTES; i++) {
+        if (tile[i]) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static int bank_cell_catalog_idx(const R01World *w, int bank, int tile_id) {
+    int i;
+    if (!w) {
+        return -1;
+    }
+    for (i = 0; i < w->sprite_count; i++) {
+        if (w->sprites[i].bank == bank && w->sprites[i].tile_id == tile_id) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int plane) {
+    const R01World *w = r01_project_active_world_const(ui->project);
+    int empty = bank_cell_is_empty(w, bank, tile_id, plane);
+    int cat = (plane == UI_BANKS_PLANE_SPR) ? bank_cell_catalog_idx(w, bank, tile_id) : -1;
+    ui->menu.open = 1;
+    ui->menu.kind = UI_MENU_KIND_BANK_CELL;
+    ui->menu.submenu = UI_MENU_SUB_NONE;
+    ui->menu.screen_tx = -1;
+    ui->menu.screen_ty = -1;
+    ui->menu.world_screen_idx = -1;
+    ui->menu.sprite_catalog_idx = cat;
+    ui->menu.bank_idx = bank;
+    ui->menu.bank_tile_id = tile_id;
+    ui->menu.bank_plane = plane;
+    ui->menu.entity_type_idx = -1;
+    ui->menu.item_count = 0;
+    if (plane == UI_BANKS_PLANE_SPR) {
+        snprintf(ui->menu.items[ui->menu.item_count], 32, empty ? "Add sprite" : "Edit sprite");
+        ui->menu.item_sub[ui->menu.item_count++] = 0;
+        if (!empty) {
+            snprintf(ui->menu.items[ui->menu.item_count], 32, "Move to Bank");
+            ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_MOVE_BANK;
+        }
+    } else {
+        snprintf(ui->menu.items[ui->menu.item_count], 32, empty ? "Add tile" : "Edit tile");
+        ui->menu.item_sub[ui->menu.item_count++] = 0;
+        if (!empty) {
+            snprintf(ui->menu.items[ui->menu.item_count], 32, "Move to Bank");
+            ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_MOVE_BANK;
+        }
+    }
+    memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
+    ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
+    ui->menu.root_x = x;
+    ui->menu.root_y = y;
+    menu_place_root(ui);
+}
+
 void menu_open_metasprite(UiState *ui, int x, int y, int meta_idx) {
     ui->menu.open = 1;
     ui->menu.kind = UI_MENU_KIND_METASPRITE;
@@ -238,10 +318,32 @@ void menu_open_metasprite(UiState *ui, int x, int y, int meta_idx) {
     ui->menu.world_screen_idx = -1;
     ui->menu.sprite_catalog_idx = -1;
     ui->menu.metasprite_idx = meta_idx;
+    ui->menu.metatile_idx = -1;
     ui->menu.entity_type_idx = -1;
     ui->menu.item_count = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Edit metasprite");
     ui->menu.item_sub[ui->menu.item_count++] = 0;
+    snprintf(ui->menu.items[ui->menu.item_count], 32, "Remove");
+    ui->menu.item_sub[ui->menu.item_count++] = 0;
+    memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
+    ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
+    ui->menu.root_x = x;
+    ui->menu.root_y = y;
+    menu_place_root(ui);
+}
+
+void menu_open_metatile(UiState *ui, int x, int y, int metatile_idx) {
+    ui->menu.open = 1;
+    ui->menu.kind = UI_MENU_KIND_METATILE;
+    ui->menu.submenu = UI_MENU_SUB_NONE;
+    ui->menu.screen_tx = -1;
+    ui->menu.screen_ty = -1;
+    ui->menu.world_screen_idx = -1;
+    ui->menu.sprite_catalog_idx = -1;
+    ui->menu.metasprite_idx = -1;
+    ui->menu.metatile_idx = metatile_idx;
+    ui->menu.entity_type_idx = -1;
+    ui->menu.item_count = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Remove");
     ui->menu.item_sub[ui->menu.item_count++] = 0;
     memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
@@ -434,6 +536,21 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
             } else {
                 ui_toast(ui, "cannot move sprite bank", 1);
             }
+        } else if (ui->menu.submenu == UI_MENU_SUB_MOVE_BANK) {
+            R01World *w = r01_project_active_world(ui->project);
+            if (ui->menu.kind == UI_MENU_KIND_BANK_CELL && ui->menu.bank_plane == UI_BANKS_PLANE_SPR) {
+                int cat = ui->menu.sprite_catalog_idx;
+                if (cat < 0 && w) {
+                    cat = r01_world_sprite_add(w, ui->menu.bank_idx, ui->menu.bank_tile_id, 0);
+                }
+                if (w && cat >= 0 && r01_world_sprite_move_bank(w, cat, item) == 0) {
+                    ui_toast(ui, "moved to bank", 0);
+                } else {
+                    ui_toast(ui, "cannot move to bank", 1);
+                }
+            } else {
+                ui_toast(ui, "BG bank move not supported yet", 1);
+            }
         } else if (ui->menu.submenu == UI_MENU_SUB_WARP) {
             R01World *w = r01_project_active_world(ui->project);
             R01Screen *s = ui_edit_map_screen(ui);
@@ -510,6 +627,24 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
         menu_close(ui);
         return;
     }
+    if (ui->menu.kind == UI_MENU_KIND_BANK_CELL) {
+        int empty;
+        const R01World *wc = r01_project_active_world_const(ui->project);
+        empty = bank_cell_is_empty(wc, ui->menu.bank_idx, ui->menu.bank_tile_id, ui->menu.bank_plane);
+        if (item == 0) {
+            if (ui->menu.bank_plane == UI_BANKS_PLANE_SPR) {
+                if (ui->menu.sprite_catalog_idx >= 0) {
+                    sprite_edit_open(ui, ui->menu.sprite_catalog_idx);
+                } else {
+                    sprite_edit_open_slot(ui, ui->menu.bank_idx, ui->menu.bank_tile_id);
+                }
+            } else {
+                tile_edit_open_bank(ui, ui->menu.bank_idx, ui->menu.bank_tile_id, empty);
+            }
+        }
+        menu_close(ui);
+        return;
+    }
     if (ui->menu.kind == UI_MENU_KIND_METASPRITE) {
         R01World *w = r01_project_active_world(ui->project);
         if (item == 0) {
@@ -517,6 +652,15 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
         } else if (item == 1 && w) {
             r01_world_metasprite_remove(w, ui->menu.metasprite_idx);
             ui_toast(ui, "metasprite removed", 0);
+        }
+        menu_close(ui);
+        return;
+    }
+    if (ui->menu.kind == UI_MENU_KIND_METATILE) {
+        R01World *w = r01_project_active_world(ui->project);
+        if (item == 0 && w) {
+            r01_world_metatile_remove(w, ui->menu.metatile_idx);
+            ui_toast(ui, "metatile removed", 0);
         }
         menu_close(ui);
         return;

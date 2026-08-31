@@ -7,6 +7,7 @@
 #include "retr01_studio/entities.h"
 #include "retr01_studio/json_io.h"
 #include "retr01_studio/metasprites.h"
+#include "retr01_studio/metatiles.h"
 #include "retr01_studio/palette.h"
 #include "retr01_studio/project.h"
 #include "retr01_emu/play.h"
@@ -35,6 +36,38 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
         pal_edit_nudge_master(ui, e->wheel.y, shift);
         return 1;
+    }
+    if (e->type == SDL_MOUSEWHEEL &&
+        (ui->tile_edit.open || ui->sprite_edit.open || ui->metasprite_edit.open || ui->entity_edit.open)) {
+        int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
+        int row;
+        const R01World *w = r01_project_active_world_const(ui->project);
+        row = w ? w->default_pal_row : 0;
+        if (ui->tile_edit.open) {
+            ui_palette_grid_nudge(ui->project, row, UI_PAL_PLANE_BG, ui->tile_edit.pal, ui->tile_edit.color,
+                                 e->wheel.y, shift);
+            return 1;
+        }
+        if (ui->sprite_edit.open) {
+            ui_palette_grid_nudge(ui->project, row, UI_PAL_PLANE_SPR, ui->sprite_edit.pal, ui->sprite_edit.color,
+                                 e->wheel.y, shift);
+            return 1;
+        }
+        if (ui->metasprite_edit.open) {
+            ui_palette_grid_nudge(ui->project, row, UI_PAL_PLANE_SPR, ui->metasprite_edit.paint_pal,
+                                 ui->metasprite_edit.paint_color, e->wheel.y, shift);
+            return 1;
+        }
+        if (ui->entity_edit.open) {
+            EntityModalLayout lo;
+            entity_modal_layout(ui, &lo);
+            if (!point_in_rect(lx, ly, lo.left_list_x, lo.left_list_y,
+                               lo.right_grid_x - lo.left_list_x - UI_UNIT, lo.left_list_h)) {
+                ui_palette_grid_nudge(ui->project, row, UI_PAL_PLANE_SPR, ui->entity_edit.paint_pal,
+                                     ui->entity_edit.paint_color, e->wheel.y, shift);
+                return 1;
+            }
+        }
     }
     if (e->type == SDL_TEXTINPUT) {
         if (ui->text.field_id > 0) {
@@ -309,9 +342,23 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 menu_open_sprite(ui, lx, ly, spr_idx);
                 return 1;
             }
+            {
+                int tile_id;
+                if (banks_cell_hit(ui, lx, ly, &tile_id)) {
+                    menu_open_bank_cell(ui, lx, ly, ui->banks_idx, tile_id, ui->banks_plane);
+                    return 1;
+                }
+            }
             if (metasprites_list_hit(ui, lx, ly, &meta_idx)) {
                 menu_open_metasprite(ui, lx, ly, meta_idx);
                 return 1;
+            }
+            {
+                int mt_idx;
+                if (metatiles_list_hit(ui, lx, ly, &mt_idx)) {
+                    menu_open_metatile(ui, lx, ly, mt_idx);
+                    return 1;
+                }
             }
             if (entities_list_hit(ui, lx, ly, &ent_idx)) {
                 menu_open_entity(ui, lx, ly, ent_idx);
@@ -382,6 +429,11 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 ui->arm_a = 1;
                 return 1;
             }
+            if (!ui->play.active && metatiles_add_hit(ui, lx, ly)) {
+                ui->arm_kind = UI_ARM_CATALOG_ADD;
+                ui->arm_a = 3;
+                return 1;
+            }
             if (!ui->play.active && entities_add_hit(ui, lx, ly)) {
                 ui->arm_kind = UI_ARM_CATALOG_ADD;
                 ui->arm_a = 2;
@@ -423,6 +475,15 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             if (world_sub_hit(ui, lx, ly)) {
                 ui->arm_kind = UI_ARM_WORLD_SUB;
+                return 1;
+            }
+            if (banks_sub_hit(ui, lx, ly)) {
+                ui->arm_kind = UI_ARM_BANK_SUB;
+                return 1;
+            }
+            if (banks_tab_hit(ui, lx, ly, &wi)) {
+                ui->arm_kind = UI_ARM_BANK_TAB;
+                ui->arm_a = wi;
                 return 1;
             }
             if (!ui->play.active && world_bg0_mode_hit(ui, lx, ly)) {
@@ -530,6 +591,15 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     metasprite_edit_open_new(ui);
                     return 1;
                 }
+                if (a == 3 && metatiles_add_hit(ui, lx, ly)) {
+                    R01World *w = r01_project_active_world(ui->project);
+                    if (w && r01_world_metatile_add(w) >= 0) {
+                        ui_toast(ui, "metatile created", 0);
+                    } else {
+                        ui_toast(ui, "metatile catalog full", 1);
+                    }
+                    return 1;
+                }
                 if (a == 2 && entities_add_hit(ui, lx, ly)) {
                     entity_edit_open_new(ui);
                     return 1;
@@ -558,6 +628,15 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     ui->inst_drag = 0;
                     screen_sel_clear(ui);
                 }
+                return 1;
+            }
+            if (kind == UI_ARM_BANK_SUB && banks_sub_hit(ui, lx, ly)) {
+                ui->banks_plane =
+                    (ui->banks_plane == UI_BANKS_PLANE_BG) ? UI_BANKS_PLANE_SPR : UI_BANKS_PLANE_BG;
+                return 1;
+            }
+            if (kind == UI_ARM_BANK_TAB && banks_tab_hit(ui, lx, ly, &wi) && wi == a) {
+                ui->banks_idx = wi;
                 return 1;
             }
             if (kind == UI_ARM_BG0_MODE && world_bg0_mode_hit(ui, lx, ly)) {
@@ -774,6 +853,22 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             if (ui->metasprites_scroll > max_scroll) {
                 ui->metasprites_scroll = max_scroll;
+            }
+            return 1;
+        }
+        if (lo.metatiles_body_h > UI_BTN_H && lx < UI_SIDEBAR_W) {
+            const R01World *w = r01_project_active_world_const(ui->project);
+            int vis = (UI_METATILES_BODY_H - UI_BTN_H) / UI_SPRITE_ROW_H;
+            int max_scroll = 0;
+            if (w && w->metatile_count > vis) {
+                max_scroll = w->metatile_count - vis;
+            }
+            ui->metatiles_scroll -= e->wheel.y;
+            if (ui->metatiles_scroll < 0) {
+                ui->metatiles_scroll = 0;
+            }
+            if (ui->metatiles_scroll > max_scroll) {
+                ui->metatiles_scroll = max_scroll;
             }
             return 1;
         }

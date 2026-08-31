@@ -62,14 +62,14 @@ void ui_update_cursor(const UiState *ui) {
     } else if (ui->tile_edit.open) {
         TileModalLayout lo;
         tile_modal_layout(ui, &lo);
-        hand = point_in_rect(lx, ly, lo.pal_x, lo.pal_y, 4 * UI_PAL_SWATCH, 4 * UI_PAL_SWATCH) ||
+        hand = point_in_rect(lx, ly, lo.pal_x, lo.pal_y, UI_PAL_GRID_SIZE, UI_PAL_GRID_SIZE) ||
                point_in_rect(lx, ly, lo.canvas_x, lo.canvas_y, UI_TILE_CANVAS, UI_TILE_CANVAS) ||
                point_in_rect(lx, ly, lo.pal_x, lo.btn_y, lo.save_w, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.pal_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);
     } else if (ui->sprite_edit.open) {
         SpriteModalLayout lo;
         sprite_modal_layout(ui, &lo);
-        hand = point_in_rect(lx, ly, lo.pal_x, lo.pal_y, 4 * UI_PAL_SWATCH, 4 * UI_PAL_SWATCH) ||
+        hand = point_in_rect(lx, ly, lo.pal_x, lo.pal_y, UI_PAL_GRID_SIZE, UI_PAL_GRID_SIZE) ||
                point_in_rect(lx, ly, lo.canvas_x, lo.canvas_y, UI_TILE_CANVAS, UI_TILE_CANVAS) ||
                point_in_rect(lx, ly, lo.pal_x, lo.btn_y, lo.save_w, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.pal_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);
@@ -78,7 +78,9 @@ void ui_update_cursor(const UiState *ui) {
         metasprite_modal_layout(ui, &lo);
         hand = point_in_rect(lx, ly, lo.left_grid_x, lo.left_grid_y, UI_ENTITY_BANK_GRID, UI_ENTITY_BANK_GRID) ||
                point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE) ||
-               point_in_rect(lx, ly, lo.pal_x, lo.pal_y, 4 * UI_PAL_SWATCH, 4 * UI_PAL_SWATCH) ||
+               point_in_rect(lx, ly, lo.pal_x, lo.pal_y, UI_PAL_GRID_SIZE, UI_PAL_GRID_SIZE) ||
+               point_in_rect(lx, ly, lo.left_dots_x, lo.left_dots_y, UI_DOT_STRIP_N * (UI_DOT_SIZE + UI_DOT_GAP),
+                             UI_DOT_SIZE) ||
                point_in_rect(lx, ly, lo.left_grid_x, lo.btn_y, lo.save_w, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.left_grid_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);
     } else if (ui->entity_edit.open) {
@@ -86,19 +88,27 @@ void ui_update_cursor(const UiState *ui) {
         entity_modal_layout(ui, &lo);
         hand = point_in_rect(lx, ly, lo.left_list_x, lo.left_list_y, UI_ENTITY_BANK_GRID, lo.left_list_h) ||
                point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE) ||
-               point_in_rect(lx, ly, lo.pal_x, lo.pal_y, 4 * UI_PAL_SWATCH, 4 * UI_PAL_SWATCH) ||
+               point_in_rect(lx, ly, lo.pal_x, lo.pal_y, UI_PAL_GRID_SIZE, UI_PAL_GRID_SIZE) ||
+               point_in_rect(lx, ly, lo.right_dots_x, lo.right_dots_y, UI_DOT_STRIP_N * (UI_DOT_SIZE + UI_DOT_GAP),
+                             UI_DOT_SIZE) ||
+               point_in_rect(lx, ly, lo.frame_dots_x, lo.frame_dots_y, UI_DOT_STRIP_N * (UI_DOT_SIZE + UI_DOT_GAP),
+                             UI_DOT_SIZE) ||
+               point_in_rect(lx, ly, lo.guides_x, lo.guides_y, UI_CHECKBOX + UI_UNIT * 12, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.left_list_x, lo.btn_y, lo.save_w, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.left_list_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);
     } else if (ui->menu.open) {
         hand = menu_hit(ui, lx, ly, NULL, NULL);
     } else {
         hand = play_button_hit(ui, lx, ly) || accordion_header_hit(ui, lx, ly, NULL) ||
-               world_btn_hit(ui, lx, ly, NULL) || world_cell_hit(ui, lx, ly, NULL, NULL) ||
-               palette_strip_hit(ui, lx, ly) || palette_row_btn_hit(ui, lx, ly, NULL) ||
-               sprites_add_hit(ui, lx, ly) || sprites_list_hit(ui, lx, ly, NULL) ||
-               metasprites_add_hit(ui, lx, ly) || metasprites_list_hit(ui, lx, ly, NULL) ||
-               entities_add_hit(ui, lx, ly) || entities_list_hit(ui, lx, ly, NULL) ||
-               (!ui->play.active && (screen_mode_hit(ui, lx, ly, NULL) || screen_layer_hit(ui, lx, ly, NULL)));
+               world_btn_hit(ui, lx, ly, NULL) || world_sub_hit(ui, lx, ly) || world_bg0_mode_hit(ui, lx, ly) ||
+               world_cell_hit(ui, lx, ly, NULL, NULL) || palette_strip_hit(ui, lx, ly) ||
+               palette_row_btn_hit(ui, lx, ly, NULL) || banks_tab_hit(ui, lx, ly, NULL) || banks_sub_hit(ui, lx, ly) ||
+               banks_cell_hit(ui, lx, ly, NULL) || metatiles_add_hit(ui, lx, ly) ||
+               metatiles_list_hit(ui, lx, ly, NULL) || metasprites_add_hit(ui, lx, ly) ||
+               metasprites_list_hit(ui, lx, ly, NULL) || entities_add_hit(ui, lx, ly) ||
+               entities_list_hit(ui, lx, ly, NULL) ||
+               (!ui->play.active && (screen_mode_hit(ui, lx, ly, NULL) || screen_layer_hit(ui, lx, ly, NULL) ||
+                                     screen_hit(ui, lx, ly, NULL, NULL)));
     }
     SDL_SetCursor(hand && g_cursor_hand ? g_cursor_hand : g_cursor_arrow);
 }

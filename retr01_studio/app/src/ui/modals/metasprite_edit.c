@@ -112,7 +112,7 @@ void draw_metasprite_modal(UiState *ui, SDL_Renderer *r) {
 
     metasprite_modal_layout(ui, &lo);
     ui_modal_scrim(r, ui);
-    ui_modal_panel(r, lo.mx, lo.my, UI_ENTITY_MODAL_W, UI_ENTITY_MODAL_H, title);
+    ui_modal_panel(r, lo.mx, lo.my, lo.mw, lo.mh, title);
 
     font_draw(r, lo.left_grid_x, lo.left_label_y + 4, "Sprite bank", 230, 230, 230);
     ui_dot_strip_draw(r, lo.left_dots_x, lo.left_dots_y, UI_DOT_STRIP_N, ui->metasprite_edit.bank, R01_SPR_BANKS);
@@ -129,7 +129,7 @@ void draw_metasprite_modal(UiState *ui, SDL_Renderer *r) {
         const char *mname = r01_metasprite_display_name(&ui->metasprite_edit.draft);
         char mid[R01_ID_MAX];
         int wi = ui->project ? ui->project->active_world : 0;
-        int id_w = lo.mx + UI_ENTITY_MODAL_W - UI_UNIT * 2 - lo.right_grid_x;
+        int id_w = lo.mx + lo.mw - UI_UNIT * 2 - lo.right_grid_x;
         font_draw(r, lo.right_grid_x, lo.right_name_y + 4, "Name", 230, 230, 230);
         ui_text_draw(ui, r, lo.right_name_x, lo.right_name_y, lo.right_name_w, mname, 1);
         r01_metasprite_id(mid, sizeof(mid), wi, &ui->metasprite_edit.draft);
@@ -203,7 +203,7 @@ int metasprite_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button)
         return 1;
     }
 
-    if (ui_modal_overlay_hit(lx, ly, lo.mx, lo.my, UI_ENTITY_MODAL_W, UI_ENTITY_MODAL_H)) {
+    if (ui_modal_overlay_hit(lx, ly, lo.mx, lo.my, lo.mw, lo.mh)) {
         ui->metasprite_edit.open = 0;
         ui_text_blur(ui);
         return 1;

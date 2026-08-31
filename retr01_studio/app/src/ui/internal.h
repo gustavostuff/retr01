@@ -26,6 +26,10 @@ typedef struct AccordionLayout {
     int sprites_body_y;
     int sprites_open;
     int sprites_body_h;
+    int metatiles_hdr_y;
+    int metatiles_body_y;
+    int metatiles_open;
+    int metatiles_body_h;
     int metasprites_hdr_y;
     int metasprites_body_y;
     int metasprites_open;
@@ -68,7 +72,7 @@ typedef struct SpriteModalLayout {
 } SpriteModalLayout;
 
 typedef struct MetaspriteModalLayout {
-    int mx, my;
+    int mx, my, mw, mh;
     int left_label_y;
     int left_dots_x, left_dots_y;
     int left_grid_x, left_grid_y;
@@ -80,7 +84,7 @@ typedef struct MetaspriteModalLayout {
 } MetaspriteModalLayout;
 
 typedef struct EntityModalLayout {
-    int mx, my;
+    int mx, my, mw, mh;
     int left_label_y;
     int left_list_x, left_list_y, left_list_h;
     int right_ent_name_x, right_ent_name_y, right_ent_name_w;
@@ -115,6 +119,12 @@ extern int g_bg0_btn_h;
 extern uint8_t *g_bg1_btn_rgba;
 extern int g_bg1_btn_w;
 extern int g_bg1_btn_h;
+extern uint8_t *g_bg_bank_btn_rgba;
+extern int g_bg_bank_btn_w;
+extern int g_bg_bank_btn_h;
+extern uint8_t *g_spr_bank_btn_rgba;
+extern int g_spr_bank_btn_w;
+extern int g_spr_bank_btn_h;
 
 extern SDL_Cursor *g_cursor_arrow;
 extern SDL_Cursor *g_cursor_hand;
@@ -127,9 +137,13 @@ int ui_paste_clipboard_png_tile(UiState *ui, uint8_t chr[R01_TILE_BYTES], int pa
 int snap8(int v);
 void ui_toast(UiState *ui, const char *msg, int is_error);
 void ui_tooltip_set(UiState *ui, int x, int y, const char *line1, const char *line2);
+void ui_tooltip_hover(UiState *ui, int x, int y, const char *line1, const char *line2);
+void ui_tooltip_frame_begin(UiState *ui);
+void ui_tooltip_frame_end(UiState *ui);
 void ui_tooltip_clear(UiState *ui);
 void draw_tooltip(UiState *ui, SDL_Renderer *r);
 void fill_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B);
+void fill_rect_alpha(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B, Uint8 A);
 void ui_clip_push(SDL_Renderer *r, int x, int y, int w, int h, UiClipStack *stack);
 void ui_clip_pop(SDL_Renderer *r, const UiClipStack *stack);
 void draw_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B);
@@ -179,6 +193,12 @@ int play_btn_y(const UiState *ui);
 int play_button_hit(const UiState *ui, int lx, int ly);
 int sprites_list_hit(const UiState *ui, int lx, int ly, int *out_catalog_idx);
 int sprites_add_hit(const UiState *ui, int lx, int ly);
+int banks_cell_hit(const UiState *ui, int lx, int ly, int *out_tile_id);
+int banks_tab_hit(const UiState *ui, int lx, int ly, int *out_idx);
+int banks_sub_hit(const UiState *ui, int lx, int ly);
+void banks_tabs_prepare(const UiState *ui, UiTabsLayout *out);
+int metatiles_list_hit(const UiState *ui, int lx, int ly, int *out_idx);
+int metatiles_add_hit(const UiState *ui, int lx, int ly);
 int metasprites_list_hit(const UiState *ui, int lx, int ly, int *out_idx);
 int metasprites_add_hit(const UiState *ui, int lx, int ly);
 int entities_list_hit(const UiState *ui, int lx, int ly, int *out_type_idx);
@@ -204,7 +224,9 @@ void menu_sync_tile_edit_label(UiState *ui);
 void menu_open_tile(UiState *ui, int x, int y, int tx, int ty);
 void menu_open_world_cell(UiState *ui, int x, int y, int screen_idx);
 void menu_open_sprite(UiState *ui, int x, int y, int catalog_idx);
+void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int plane);
 void menu_open_metasprite(UiState *ui, int x, int y, int meta_idx);
+void menu_open_metatile(UiState *ui, int x, int y, int metatile_idx);
 void menu_open_entity(UiState *ui, int x, int y, int type_idx);
 void menu_open_instance(UiState *ui, int x, int y, int instance_idx);
 int menu_hit(const UiState *ui, int lx, int ly, int *out_item, int *out_sub);
@@ -252,6 +274,8 @@ void draw_tile_modal(UiState *ui, SDL_Renderer *r);
 /* ui/modals/sprite_edit.c */
 void sprite_edit_open_new(UiState *ui);
 void sprite_edit_open(UiState *ui, int catalog_idx);
+void sprite_edit_open_slot(UiState *ui, int bank, int tile_id);
+void tile_edit_open_bank(UiState *ui, int bank, int tile_id, int is_new);
 int sprite_modal_handle(UiState *ui, int lx, int ly, int down);
 void draw_sprite_modal(UiState *ui, SDL_Renderer *r);
 

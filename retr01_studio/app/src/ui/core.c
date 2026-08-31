@@ -58,6 +58,18 @@ int ui_init(UiState *ui) {
             "assets/bg1_button.png",
             NULL,
         };
+        static const char *const bg_bank_paths[] = {
+            R01_STUDIO_ASSETS_DIR "/bg_bank_button.png",
+            "retr01_studio/assets/bg_bank_button.png",
+            "assets/bg_bank_button.png",
+            NULL,
+        };
+        static const char *const spr_bank_paths[] = {
+            R01_STUDIO_ASSETS_DIR "/sprite_bank_button.png",
+            "retr01_studio/assets/sprite_bank_button.png",
+            "assets/sprite_bank_button.png",
+            NULL,
+        };
         int i;
         for (i = 0; radio_paths[i]; i++) {
             if (ui_load_png_rgba(radio_paths[i], &g_radio_rgba, &g_radio_w, &g_radio_h) == 0) {
@@ -89,6 +101,18 @@ int ui_init(UiState *ui) {
                 break;
             }
         }
+        for (i = 0; bg_bank_paths[i]; i++) {
+            if (ui_load_png_rgba(bg_bank_paths[i], &g_bg_bank_btn_rgba, &g_bg_bank_btn_w, &g_bg_bank_btn_h) ==
+                0) {
+                break;
+            }
+        }
+        for (i = 0; spr_bank_paths[i]; i++) {
+            if (ui_load_png_rgba(spr_bank_paths[i], &g_spr_bank_btn_rgba, &g_spr_bank_btn_w,
+                                 &g_spr_bank_btn_h) == 0) {
+                break;
+            }
+        }
     }
     ui->project = (R01Project *)calloc(1, sizeof(R01Project));
     if (!ui->project) {
@@ -112,6 +136,8 @@ int ui_init(UiState *ui) {
     ui->last_paint_ty = -1;
     ui->screen_mode = UI_SCREEN_MODE_SEL;
     ui->screen_layer = UI_SCREEN_LAYER_BG;
+    ui->banks_idx = 0;
+    ui->banks_plane = UI_BANKS_PLANE_SPR;
     ui->accordion_open = UI_ACC_WORLDS;
     accordion_init_heights(ui);
     ui->logic_scale = 1;
@@ -151,6 +177,14 @@ void ui_shutdown(UiState *ui) {
     g_bg1_btn_rgba = NULL;
     g_bg1_btn_w = 0;
     g_bg1_btn_h = 0;
+    free(g_bg_bank_btn_rgba);
+    g_bg_bank_btn_rgba = NULL;
+    g_bg_bank_btn_w = 0;
+    g_bg_bank_btn_h = 0;
+    free(g_spr_bank_btn_rgba);
+    g_spr_bank_btn_rgba = NULL;
+    g_spr_bank_btn_w = 0;
+    g_spr_bank_btn_h = 0;
     if (g_cursor_arrow) {
         SDL_FreeCursor(g_cursor_arrow);
         g_cursor_arrow = NULL;

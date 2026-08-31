@@ -44,20 +44,28 @@
 #define UI_WORLD_CELL 16
 #define UI_WORLD_VIEW 128
 #define UI_PAL_SWATCH 8
+#define UI_PAL_GRID_CELL 16 /* 4x4 picker cell (2x swatch) */
+#define UI_PAL_GRID_SIZE (R01_PALS_PER_ROW * UI_PAL_GRID_CELL)
 
 #define UI_WORLDS_X 0
-#define UI_WORLDS_SUB_H 7
-#define UI_TABS_TAB_H 11 /* world / dual-view tab strip (sub-button stays 7px) */
-#define UI_WORLDS_TAB_STACK_H (UI_TABS_TAB_H + UI_WORLDS_SUB_H) /* inactive dual-view tab fill height */
+#define UI_WORLDS_SUB_H 8
+#define UI_TABS_TAB_H 8  /* active main tab height (16x16 inactive stack fill) */
+#define UI_WORLDS_TAB_STACK_H 16 /* inactive dual-view tab fill / active main+sub */
 #define UI_WORLDS_BODY_H (UI_WORLDS_TAB_STACK_H + UI_WORLD_VIEW)
 #define UI_PAL_BODY_H (UI_PAL_SWATCH * 2 + UI_BTN_H)
 
 #define UI_WORLDS_PLANE_BG1 0
 #define UI_WORLDS_PLANE_BG0 1
 
+#define UI_BANKS_PLANE_BG 0
+#define UI_BANKS_PLANE_SPR 1
+#define UI_BANKS_N 4
+#define UI_BANKS_GRID 128 /* 16x16 tiles @ 8px */
+#define UI_BANKS_BODY_H (UI_WORLDS_TAB_STACK_H + UI_BANKS_GRID)
+
 #define UI_BG0_MODE_W 32
 #define UI_BG0_MODE_H 16
-#define UI_BG0_MODE_MARGIN 2
+#define UI_BG0_MODE_MARGIN 8
 
 #define UI_ARM_NONE 0
 #define UI_ARM_WORLD_TAB 1
@@ -71,32 +79,38 @@
 #define UI_ARM_PLAY 9
 #define UI_ARM_CATALOG_ADD 10
 #define UI_ARM_BG0_MODE 11
+#define UI_ARM_BANK_TAB 12
+#define UI_ARM_BANK_SUB 13
 
 #define UI_ACC_NONE (-1)
 #define UI_ACC_WORLDS 0
 #define UI_ACC_PALS 1
-#define UI_ACC_SPRITES 2
-#define UI_ACC_METASPRITES 3
-#define UI_ACC_ENTITIES 4
+#define UI_ACC_BANKS 2
+#define UI_ACC_SPRITES UI_ACC_BANKS /* legacy alias */
+#define UI_ACC_METATILES 3
+#define UI_ACC_METASPRITES 4
+#define UI_ACC_ENTITIES 5
 /* When 1, all accordion sections stay expanded and headers do not collapse. */
 #define UI_ACCORDION_ALWAYS_EXPANDED 0
 #define UI_ACCORDION_ANIM_MS 250
-#define UI_ACC_SECTIONS 5
+#define UI_ACC_SECTIONS 6
 
-#define UI_SPRITES_BODY_H 96
+#define UI_SPRITES_BODY_H UI_BANKS_BODY_H
 #define UI_SPRITE_ROW_H 16
 #define UI_SPRITE_ICON 8
 #define UI_PREVIEW_ICON 16 /* metasprite / entity sidebar + modal list thumbs */
+#define UI_METATILES_BODY_H 96
 #define UI_METASPRITES_BODY_H 96
 #define UI_ENTITIES_BODY_H 96
 
-#define UI_ENTITY_MODAL_W 448
-#define UI_ENTITY_MODAL_H 352
+#define UI_ENTITY_MODAL_W (UI_UNIT * 2 + UI_ENTITY_BANK_GRID + UI_UNIT * 2 + UI_ENTITY_COMPOSE + UI_UNIT * 2)
+#define UI_METASPRITE_MODAL_H 304
+#define UI_ENTITY_MODAL_H 336
 #define UI_ENTITY_BANK_GRID 128 /* 16x16 tiles @ 8px */
 #define UI_ENTITY_COMPOSE 128   /* 16px @ 8x scale */
 #define UI_ENTITY_LIST_H 128
 #define UI_DOT_SIZE 8
-#define UI_DOT_GAP 4
+#define UI_DOT_GAP 8
 #define UI_DOT_STRIP_N 4
 
 #define UI_CATALOG_DRAG_SPRITE 1
@@ -105,7 +119,7 @@
 
 #define UI_MODE_ROW_H UI_BTN_H
 #define UI_MODE_RADIO 8
-#define UI_MODE_GAP 4
+#define UI_MODE_GAP 8
 #define UI_CHECKBOX 8
 
 #define UI_SCREEN_MODE_SEL 0
@@ -115,18 +129,19 @@
 #define UI_SCREEN_LAYER_SPR 1
 
 #define UI_MODAL_W 288
-#define UI_MODAL_H 160
+#define UI_MODAL_H 184
 #define UI_TILE_CANVAS 128
 #define UI_MODAL_BODY_Y (UI_BTN_H + UI_UNIT)
 
 #define UI_PAL_MODAL_W 320
-#define UI_PAL_MODAL_H 184
+#define UI_PAL_MODAL_H 192
 #define UI_MASTER_COLS 16
 #define UI_MASTER_ROWS 4
 #define UI_MASTER_CELL 8
-#define UI_PAL_EDIT_CELL 10
+#define UI_PAL_EDIT_CELL UI_PAL_GRID_CELL
 
 #define UI_TOAST_MS 2800
+#define UI_TOOLTIP_DELAY_MS 400
 
 #define UI_MENU_MAX 16
 #define UI_MENU_KIND_TILE 1
@@ -135,12 +150,15 @@
 #define UI_MENU_KIND_METASPRITE 4
 #define UI_MENU_KIND_ENTITY 5
 #define UI_MENU_KIND_INSTANCE 6
+#define UI_MENU_KIND_BANK_CELL 7
+#define UI_MENU_KIND_METATILE 8
 #define UI_MENU_SUB_NONE 0
 #define UI_MENU_SUB_BANK 1
 #define UI_MENU_SUB_PAL 2
 #define UI_MENU_SUB_SPR_BANK 3
 #define UI_MENU_SUB_SPR_PAL 4
 #define UI_MENU_SUB_WARP 5
+#define UI_MENU_SUB_MOVE_BANK 6
 
 typedef struct UiMenu {
     int open;
@@ -162,8 +180,12 @@ typedef struct UiMenu {
     int world_screen_idx;
     int sprite_catalog_idx;
     int metasprite_idx;
+    int metatile_idx;
     int entity_type_idx;
     int instance_idx; /* UI_MENU_KIND_INSTANCE */
+    int bank_idx;     /* UI_MENU_KIND_BANK_CELL */
+    int bank_tile_id;
+    int bank_plane; /* UI_BANKS_PLANE_* */
 } UiMenu;
 
 typedef struct UiTileEdit {
@@ -290,6 +312,9 @@ typedef struct UiState {
     int tooltip_x;
     int tooltip_y;
     int tooltip_active;
+    int tooltip_hit; /* armed this frame via ui_tooltip_hover */
+    Uint32 tooltip_since_ms;
+    char tooltip_key[160];
     int scale;
     int logic_scale; /* 1 = 640x360, 2 = 1280x720 */
     Uint8 keys[512];
@@ -322,6 +347,8 @@ typedef struct UiState {
     int last_click_col;
     int last_click_row;
     int worlds_plane; /* UI_WORLDS_PLANE_BG1 or BG0 */
+    int banks_idx;    /* 0..3 CHR bank tab */
+    int banks_plane;  /* UI_BANKS_PLANE_BG or SPR */
     int world_sel_col; /* grid selection (-1 none); empty slots allowed */
     int world_sel_row;
     int bg0_fit_warn; /* screens dropped by last BG0 Mode change (0 = no warn) */
@@ -334,6 +361,7 @@ typedef struct UiState {
     int accordion_body_h[UI_ACC_SECTIONS]; /* animated body height per section */
     Uint32 accordion_anim_last_ms;
     int sprites_scroll;
+    int metatiles_scroll;
     int metasprites_scroll;
     int entities_scroll;
 } UiState;

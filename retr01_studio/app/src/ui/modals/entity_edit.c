@@ -162,7 +162,7 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
 
     entity_modal_layout(ui, &lo);
     ui_modal_scrim(r, ui);
-    ui_modal_panel(r, lo.mx, lo.my, UI_ENTITY_MODAL_W, UI_ENTITY_MODAL_H, title);
+    ui_modal_panel(r, lo.mx, lo.my, lo.mw, lo.mh, title);
 
     font_draw(r, lo.left_list_x, lo.left_label_y + 4, "Metasprites", 230, 230, 230);
     fill_rect(r, lo.left_list_x, lo.left_list_y, UI_ENTITY_BANK_GRID, lo.left_list_h, UI_COL_WELL_R,
@@ -223,7 +223,7 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
         r01_entity_frame_id(fid, sizeof(fid), wi, &ui->entity_edit.draft, ui->entity_edit.state,
                             ui->entity_edit.frame);
         font_draw_clipped(r, lo.right_grid_x, lo.right_id_y + 4, lo.right_grid_x, lo.right_id_y,
-                          lo.mx + UI_ENTITY_MODAL_W - UI_UNIT * 2 - lo.right_grid_x, UI_BTN_H, fid, 160, 160,
+                          lo.mx + lo.mw - UI_UNIT * 2 - lo.right_grid_x, UI_BTN_H, fid, 160, 160,
                           170);
     }
 
@@ -317,7 +317,7 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
         return 1;
     }
 
-    if (ui_modal_overlay_hit(lx, ly, lo.mx, lo.my, UI_ENTITY_MODAL_W, UI_ENTITY_MODAL_H)) {
+    if (ui_modal_overlay_hit(lx, ly, lo.mx, lo.my, lo.mw, lo.mh)) {
         ui->entity_edit.open = 0;
         ui_text_blur(ui);
         return 1;

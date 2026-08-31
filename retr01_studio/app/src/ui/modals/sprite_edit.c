@@ -67,6 +67,52 @@ void sprite_edit_open(UiState *ui, int catalog_idx) {
     }
 }
 
+void sprite_edit_open_slot(UiState *ui, int bank, int tile_id) {
+    R01World *w;
+    const uint8_t *raw;
+    int cat;
+    int i;
+    int empty = 1;
+    if (!ui) {
+        return;
+    }
+    w = r01_project_active_world(ui->project);
+    if (!w || bank < 0 || bank >= R01_SPR_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
+        return;
+    }
+    cat = -1;
+    for (i = 0; i < w->sprite_count; i++) {
+        if (w->sprites[i].bank == bank && w->sprites[i].tile_id == tile_id) {
+            cat = i;
+            break;
+        }
+    }
+    if (cat >= 0) {
+        sprite_edit_open(ui, cat);
+        return;
+    }
+    memset(&ui->sprite_edit, 0, sizeof(ui->sprite_edit));
+    ui->sprite_edit.open = 1;
+    ui->sprite_edit.catalog_idx = -1;
+    ui->sprite_edit.bank = bank;
+    ui->sprite_edit.tile_id = tile_id;
+    ui->sprite_edit.pal = 0;
+    ui->sprite_edit.color = 1;
+    raw = r01_chr_spr_tile(w, bank, tile_id);
+    if (raw) {
+        memcpy(ui->sprite_edit.chr, raw, R01_TILE_BYTES);
+        for (i = 0; i < R01_TILE_BYTES; i++) {
+            if (raw[i]) {
+                empty = 0;
+                break;
+            }
+        }
+    } else {
+        memset(ui->sprite_edit.chr, 0, sizeof(ui->sprite_edit.chr));
+    }
+    ui->sprite_edit.is_new = empty ? 1 : 0;
+}
+
 static void sprite_edit_save(UiState *ui) {
     R01World *w = r01_project_active_world(ui->project);
     uint8_t canonical[R01_TILE_BYTES];
@@ -76,7 +122,21 @@ static void sprite_edit_save(UiState *ui) {
         return;
     }
     r01_tile_orient(ui->sprite_edit.chr, ui->sprite_edit.flip_h, ui->sprite_edit.flip_v, canonical);
-    if (ui->sprite_edit.is_new || ui->sprite_edit.tile_id < 0) {
+    if (ui->sprite_edit.is_new && ui->sprite_edit.tile_id >= 0) {
+        id = ui->sprite_edit.tile_id;
+        if (r01_chr_write_spr_tile(w, ui->sprite_edit.bank, id, canonical) != 0) {
+            ui_toast(ui, "sprite write failed", 1);
+            return;
+        }
+        cat = r01_world_sprite_add(w, ui->sprite_edit.bank, id, ui->sprite_edit.pal);
+        if (cat < 0) {
+            ui_toast(ui, "sprite catalog full", 1);
+            return;
+        }
+        ui->sprite_edit.catalog_idx = cat;
+        ui->sprite_edit.is_new = 0;
+        ui_toast(ui, "sprite created", 0);
+    } else if (ui->sprite_edit.is_new || ui->sprite_edit.tile_id < 0) {
         id = r01_chr_alloc_spr_tile(w, ui->sprite_edit.bank);
         if (id < 0) {
             /* Prefer next bank if current filled while modal was open. */

@@ -5,6 +5,7 @@
 #include "retr01_studio/sprites.h"
 #include "retr01_studio/entities.h"
 #include "retr01_studio/metasprites.h"
+#include "retr01_studio/metatiles.h"
 #include "retr01_studio/warps.h"
 
 #include <stdio.h>
@@ -440,6 +441,19 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
                         pi ? "," : "", pt->bank, pt->tile_id, pt->pal, pt->flip_h, pt->flip_v, pt->dx, pt->dy);
             }
             fprintf(f, "]}%s\n", mi + 1 < w->metasprite_count ? "," : "");
+        }
+    }
+    fprintf(f, "  ],\n");
+    fprintf(f, "  \"metatiles\": [\n");
+    {
+        int ti;
+        for (ti = 0; ti < w->metatile_count; ti++) {
+            const R01MetatileDef *mt = &w->metatiles[ti];
+            fprintf(f,
+                    "    {\"name\": \"%s\", \"tiles\": [%u,%u,%u,%u], \"attrs\": [%u,%u,%u,%u]}%s\n",
+                    mt->name[0] ? mt->name : "Metatile", (unsigned)mt->tile[0], (unsigned)mt->tile[1],
+                    (unsigned)mt->tile[2], (unsigned)mt->tile[3], (unsigned)mt->attr[0], (unsigned)mt->attr[1],
+                    (unsigned)mt->attr[2], (unsigned)mt->attr[3], ti + 1 < w->metatile_count ? "," : "");
         }
     }
     fprintf(f, "  ],\n");
@@ -1257,6 +1271,66 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                                 pt_obj = strchr(pt_end + 1, '{');
                             }
                         }
+                        free(slice);
+                        obj2 = strchr(end + 1, '{');
+                    }
+                }
+            }
+            {
+                const char *mt_sec = json_find(buf, "\"metatiles\":");
+                const char *mt_end = json_array_end(mt_sec);
+                w->metatile_count = 0;
+                memset(w->metatiles, 0, sizeof(w->metatiles));
+                if (mt_sec && mt_end) {
+                    const char *obj2 = strchr(mt_sec, '{');
+                    while (obj2 && obj2 < mt_end && w->metatile_count < R01_MAX_METATILES) {
+                        const char *end = json_object_end(obj2);
+                        size_t olen;
+                        char *slice;
+                        char *name_str;
+                        int midx;
+                        R01MetatileDef *mt;
+                        int t0 = 0, t1 = 0, t2 = 0, t3 = 0;
+                        int a0 = 0, a1 = 0, a2 = 0, a3 = 0;
+                        if (!end || end >= mt_end) {
+                            break;
+                        }
+                        olen = (size_t)(end - obj2 + 1);
+                        slice = (char *)malloc(olen + 1u);
+                        if (!slice) {
+                            break;
+                        }
+                        memcpy(slice, obj2, olen);
+                        slice[olen] = '\0';
+                        midx = r01_world_metatile_add(w);
+                        if (midx < 0) {
+                            free(slice);
+                            break;
+                        }
+                        mt = &w->metatiles[midx];
+                        name_str = json_string_field_dup(slice, "\"name\"");
+                        if (name_str && name_str[0]) {
+                            strncpy(mt->name, name_str, R01_ENTITY_NAME_MAX - 1);
+                        }
+                        free(name_str);
+                        {
+                            const char *tiles = strstr(slice, "\"tiles\"");
+                            const char *attrs = strstr(slice, "\"attrs\"");
+                            if (tiles) {
+                                (void)sscanf(tiles, "%*[^[][%d,%d,%d,%d]", &t0, &t1, &t2, &t3);
+                            }
+                            if (attrs) {
+                                (void)sscanf(attrs, "%*[^[][%d,%d,%d,%d]", &a0, &a1, &a2, &a3);
+                            }
+                        }
+                        mt->tile[0] = (uint8_t)t0;
+                        mt->tile[1] = (uint8_t)t1;
+                        mt->tile[2] = (uint8_t)t2;
+                        mt->tile[3] = (uint8_t)t3;
+                        mt->attr[0] = (uint8_t)a0;
+                        mt->attr[1] = (uint8_t)a1;
+                        mt->attr[2] = (uint8_t)a2;
+                        mt->attr[3] = (uint8_t)a3;
                         free(slice);
                         obj2 = strchr(end + 1, '{');
                     }

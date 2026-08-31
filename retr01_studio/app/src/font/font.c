@@ -99,7 +99,8 @@ int font_text_width_n(const char *text, int n) {
     return w;
 }
 
-void font_draw(SDL_Renderer *r, int x, int y, const char *text, Uint8 R, Uint8 G, Uint8 B) {
+static void font_draw_internal(SDL_Renderer *r, int x, int y, const char *text, Uint8 R, Uint8 G, Uint8 B,
+                               Uint8 alpha) {
     int pen_x;
     int baseline;
     const unsigned char *p;
@@ -124,15 +125,39 @@ void font_draw(SDL_Renderer *r, int x, int y, const char *text, Uint8 R, Uint8 G
         for (row = 0; row < (int)bm->rows; row++) {
             for (col = 0; col < (int)bm->width; col++) {
                 unsigned char a = bm->buffer[row * (int)bm->pitch + col];
+                unsigned int aa;
                 if (a == 0) {
                     continue;
                 }
-                SDL_SetRenderDrawColor(r, R, G, B, a);
+                aa = ((unsigned int)a * (unsigned int)alpha) / 255u;
+                if (aa == 0) {
+                    continue;
+                }
+                SDL_SetRenderDrawColor(r, R, G, B, (Uint8)aa);
                 SDL_RenderDrawPoint(r, pen_x + slot->bitmap_left + col, baseline - slot->bitmap_top + row);
             }
         }
         pen_x += (int)(slot->advance.x >> 6);
     }
+}
+
+void font_draw(SDL_Renderer *r, int x, int y, const char *text, Uint8 R, Uint8 G, Uint8 B) {
+    font_draw_internal(r, x, y, text, R, G, B, 255);
+}
+
+void font_draw_sized_alpha(SDL_Renderer *r, int x, int y, int px, const char *text, Uint8 R, Uint8 G, Uint8 B,
+                           Uint8 alpha) {
+    if (font_init() != 0) {
+        return;
+    }
+    if (px < 4) {
+        px = 4;
+    }
+    if (FT_Set_Pixel_Sizes(g_ft_face, 0, (FT_UInt)px) != 0) {
+        return;
+    }
+    font_draw_internal(r, x, y, text, R, G, B, alpha);
+    FT_Set_Pixel_Sizes(g_ft_face, 0, R01_UI_FONT_PX);
 }
 
 void font_draw_centered(SDL_Renderer *r, int x, int y, int w, int h, const char *text, Uint8 R, Uint8 G,

@@ -31,15 +31,32 @@ static void draw_pal_plane_grid(SDL_Renderer *r, R01Project *p, int row, int pla
         for (color = 0; color < R01_PAL_COLORS; color++) {
             uint8_t cr, cg, cb;
             uint8_t master;
+            uint8_t lr, lg, lb;
+            char code[8];
             int x = x0 + color * UI_PAL_EDIT_CELL;
             int y = y0 + pal * UI_PAL_EDIT_CELL;
+            int luma;
             if (plane) {
                 master = p->global_pal_spr[row][pal].idx[color];
             } else {
                 master = p->global_pal_bg[row][pal].idx[color];
             }
+            master = (uint8_t)(master & 63u);
             r01_kit_rgb(master, &cr, &cg, &cb);
             fill_rect(r, x, y, UI_PAL_EDIT_CELL, UI_PAL_EDIT_CELL, cr, cg, cb);
+            snprintf(code, sizeof(code), "%02X", (unsigned)master);
+            luma = (299 * (int)cr + 587 * (int)cg + 114 * (int)cb) / 1000;
+            if (luma >= 128) {
+                lr = lg = lb = 0;
+            } else {
+                lr = lg = lb = 255;
+            }
+            {
+                int tw = font_text_width(code);
+                font_draw_sized_alpha(r, x + (UI_PAL_EDIT_CELL - tw) / 2,
+                                      y + (UI_PAL_EDIT_CELL - font_line_h()) / 2, R01_UI_FONT_PX, code, lr, lg, lb,
+                                      128);
+            }
             if (plane == sel_plane && pal == sel_pal && color == sel_color) {
                 draw_rect(r, x, y, UI_PAL_EDIT_CELL, UI_PAL_EDIT_CELL, 255, 255, 255);
             }

@@ -10,9 +10,9 @@
   "grid_cols": 8,
   "grid_rows": 8,
   "global_pal_bg": [[0, 16, 32, 48], [0, 19, 36, 52], [0, 28, 44, 59], [0, 46, 62, 48], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51]],
-  "global_pal_spr": [[0, 18, 34, 50], [0, 40, 58, 48], [0, 46, 63, 48], [0, 44, 55, 0], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34]],
+  "global_pal_spr": [[0, 31, 34, 50], [0, 40, 58, 48], [0, 46, 63, 48], [0, 44, 55, 0], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34]],
   "bg_bank0_tiles": 7,
-  "bg_bank0_b64": "+8d+7Ma/Y3PWvvnbPXr+zAAAAAAAAAAAAAAAAAAAAAAAQEBAfAAAAAAAAAAAAAAAAAAAIAAAAAAAACBwIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAQAAAAAAAAABAAAAAAAAA==",
+  "bg_bank0_b64": "+8d+7Ma/Y3PWvvnbPXr+zAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAACBwIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAQAAAAAAAAABAAAAAAAAA==",
   "spr_banks": [
     {"tiles": 10, "b64": "Hj4+PMYALDYAFBQAODgAAAAABx87Pzc3AAAAAQcFDQ8AAADA4ODw8AAAAADAQECAPH8LHz8fAQYDAAwYMAAGB8Dg8ODw8ADAAGAwAAAAwMC/HwUBw6P/d4EAEhLAgYAyPH8LHz8fAQYDAAwYMAAGBsDg8ODw8CBAAGAwAAAA4EA8fwsfPx8JDAMADBgwAA4MJDx+/Dz+q6kAABQUAAAAAA=="},
     {"tiles": 0, "b64": ""},
@@ -33,6 +33,9 @@
     {"name": "idle metasprite", "parts": [{"bank":0,"tile":1,"pal":0,"fh":0,"fv":0,"dx":0,"dy":0},{"bank":0,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":0},{"bank":0,"tile":3,"pal":0,"fh":0,"fv":0,"dx":0,"dy":8},{"bank":0,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":8}]},
     {"name": "walking meta sprite frame 01", "parts": [{"bank":0,"tile":1,"pal":0,"fh":0,"fv":0,"dx":0,"dy":0},{"bank":0,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":0},{"bank":0,"tile":7,"pal":0,"fh":0,"fv":0,"dx":8,"dy":8},{"bank":0,"tile":6,"pal":0,"fh":0,"fv":0,"dx":0,"dy":8}]},
     {"name": "walking metasprite frame 02", "parts": [{"bank":0,"tile":1,"pal":0,"fh":0,"fv":0,"dx":0,"dy":0},{"bank":0,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":0},{"bank":0,"tile":8,"pal":0,"fh":0,"fv":0,"dx":0,"dy":8},{"bank":0,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":8}]}
+  ],
+  "metatiles": [
+    {"name": "Metatile", "tiles": [0,0,0,0], "attrs": [0,0,0,0]}
   ],
   "entities": [
     {

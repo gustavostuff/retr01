@@ -70,6 +70,32 @@ void tile_edit_open_new(UiState *ui, int tx, int ty) {
     memset(ui->tile_edit.chr, 0, sizeof(ui->tile_edit.chr));
 }
 
+void tile_edit_open_bank(UiState *ui, int bank, int tile_id, int is_new) {
+    R01World *w;
+    if (!ui) {
+        return;
+    }
+    w = r01_project_active_world(ui->project);
+    memset(&ui->tile_edit, 0, sizeof(ui->tile_edit));
+    ui->tile_edit.open = 1;
+    ui->tile_edit.paint_tx = -1;
+    ui->tile_edit.paint_ty = -1;
+    ui->tile_edit.bank = bank;
+    ui->tile_edit.tile_id = tile_id;
+    ui->tile_edit.pal = 0;
+    ui->tile_edit.color = 1;
+    ui->tile_edit.edit_all = 0;
+    ui->tile_edit.is_new = is_new ? 1 : 0;
+    if (w && bank >= 0 && bank < R01_BG_BANKS && tile_id >= 0 && tile_id < w->bg_banks[bank].tile_count) {
+        const uint8_t *raw = w->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+        memcpy(ui->tile_edit.chr, raw, R01_TILE_BYTES);
+        ui->tile_edit.is_new = 0;
+    } else {
+        memset(ui->tile_edit.chr, 0, sizeof(ui->tile_edit.chr));
+        ui->tile_edit.is_new = 1;
+    }
+}
+
 static int tile_edit_apply_matching(R01World *w, R01Screen *s, int id, int bank, int pal, int flip_h,
                                     int flip_v, uint8_t match_tile_id, uint8_t match_attr_hw) {
     int cell;

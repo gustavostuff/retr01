@@ -71,6 +71,7 @@
 /* Per-world sprite catalog (CHR patterns in spr_banks + authoring metadata). */
 #define R01_MAX_SPRITES 256
 #define R01_MAX_METASPRITES 64
+#define R01_MAX_METATILES 64
 
 /* Entity types (docs/selling_points). Arrays sized for 1..4 states and frames. */
 #define R01_MAX_ENTITY_TYPES 64
@@ -151,6 +152,13 @@ typedef struct R01MetaspriteDef {
     R01EntityFrame frame;
 } R01MetaspriteDef;
 
+/* 2x2 BG tile group (TL, TR, BL, BR). */
+typedef struct R01MetatileDef {
+    char name[R01_ENTITY_NAME_MAX];
+    uint8_t tile[4];
+    uint8_t attr[4];
+} R01MetatileDef;
+
 typedef struct R01EntityState {
     char name[R01_ENTITY_NAME_MAX]; /* authoring label (idle, walk, ...) */
     int origin_x;
@@ -227,6 +235,8 @@ typedef struct R01World {
     int sprite_count;
     R01MetaspriteDef metasprites[R01_MAX_METASPRITES];
     int metasprite_count;
+    R01MetatileDef metatiles[R01_MAX_METATILES];
+    int metatile_count;
     R01EntityType entities[R01_MAX_ENTITY_TYPES];
     int entity_count;
     int player_entity; /* type index marked as Play player; -1 = stub tile */
