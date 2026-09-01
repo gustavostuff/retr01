@@ -118,7 +118,7 @@ int hit_board_top(const R01sUi *ui, int lx, int ly, int *chip_out, int *island_o
         return 0;
     }
 
-    if (ui->group && !ui->layout_compact) {
+    if (ui->group && !ui_layout_flat(ui)) {
         nstack = island_hit_stack(ui, stack, R01S_MAX_ISLANDS);
         for (s = 0; s < nstack; s++) {
             int ii = stack[s];
@@ -218,7 +218,7 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 ui->ctx_chip = chip_i;
                 ui->ctx_x = logic_x;
                 ui->ctx_y = logic_y;
-                if (ui->layout_compact) {
+                if (ui_layout_flat(ui)) {
                     if (!ui->chip_sel[chip_i]) {
                         ui_sel_set_one(ui, chip_i);
                     } else {
@@ -277,7 +277,7 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         return 1;
     }
     if (e->type == SDL_MOUSEMOTION && ui->drag_chip >= 0) {
-        if (ui->layout_compact && ui_sel_count(ui) > 1) {
+        if (ui_layout_flat(ui) && ui_sel_count(ui) > 1) {
             move_selection_drag(ui, board_mx, board_my);
         } else {
             move_chip_drag(ui, ui->drag_chip, board_mx, board_my);
@@ -496,6 +496,14 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             return 1;
         }
 
+        if (ui_layout_conn(ui) && (SDL_GetModState() & KMOD_CTRL)) {
+            int bx, by;
+            ui_logic_to_board(ui, logic_x, logic_y, &bx, &by);
+            if (ui_conn_ctrl_click(ui, bx, by)) {
+                return 1;
+            }
+        }
+
         {
             int chip_i = -1;
             int island_i = -1;
@@ -514,18 +522,18 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 return 1;
             }
             if (kind == 1 && chip_i >= 0 && chip_i < ui->chip_count && ui->chips[chip_i]) {
-                if (ui->layout_compact) {
+                if (ui_layout_flat(ui)) {
                     r01s_ui_chip_z_raise(ui, chip_i);
                     ui->layout_dirty = 1;
                 } else if (island_i >= 0) {
                     r01s_ui_island_z_raise(ui, island_i);
                 }
-                if (ui->layout_compact && shift) {
+                if (ui_layout_flat(ui) && shift) {
                     ui_sel_toggle(ui, chip_i);
                     snprintf(ui->status, sizeof(ui->status), "selected %d", ui_sel_count(ui));
                     return 1;
                 }
-                if (ui->layout_compact && ui->chip_sel[chip_i] && ui_sel_count(ui) > 1) {
+                if (ui_layout_flat(ui) && ui->chip_sel[chip_i] && ui_sel_count(ui) > 1) {
                     /* Drag whole selection; keep multi-select. */
                     ui->selected = chip_i;
                     ui->drag_chip = chip_i;
@@ -535,7 +543,7 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                     snprintf(ui->status, sizeof(ui->status), "drag %d chips", ui_sel_count(ui));
                     return 1;
                 }
-                if (ui->layout_compact) {
+                if (ui_layout_flat(ui)) {
                     ui_sel_set_one(ui, chip_i);
                 } else {
                     ui_sel_clear(ui);
@@ -563,7 +571,7 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 return 1;
             }
             /* Compact empty board: start marquee select. */
-            if (ui->layout_compact) {
+            if (ui_layout_flat(ui)) {
                 if (!shift) {
                     ui_sel_clear(ui);
                 }

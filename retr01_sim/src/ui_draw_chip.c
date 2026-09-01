@@ -258,6 +258,71 @@ static void dip_pin_pos(const R01sEntity *e, int pin_num, int *along, int *side_
     *along = margin + idx * pitch;
 }
 
+int r01s_ui_chip_pin_tip(const R01sEntity *e, const char *pin_name, int *out_bx, int *out_by) {
+    const R01sPin *p;
+    int i;
+    if (!e || !pin_name || !out_bx || !out_by) {
+        return 0;
+    }
+    p = r01s_entity_pin_named_const(e, pin_name);
+    if (!p) {
+        return 0;
+    }
+    if (e->visual == R01S_ENTITY_VIS_IC) {
+        int along;
+        int side_pin1;
+        int horiz = (e->orient != R01S_ORIENT_V);
+        int dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
+        if (p->number < 1 || p->number > dip) {
+            *out_bx = e->board_x + e->body_w / 2;
+            *out_by = e->board_y + e->body_h / 2;
+            return 1;
+        }
+        dip_pin_pos(e, p->number, &along, &side_pin1);
+        if (horiz) {
+            *out_bx = e->board_x + along;
+            *out_by = side_pin1 ? (e->board_y + e->body_h + R01S_UI_PIN_H)
+                                : (e->board_y - R01S_UI_PIN_H);
+        } else {
+            *out_by = e->board_y + along;
+            *out_bx = side_pin1 ? (e->board_x - R01S_UI_PIN_H) : (e->board_x + e->body_w + R01S_UI_PIN_H);
+        }
+        return 1;
+    }
+    /* Glyphs: match draw_glyph_pins left/right stub placement. */
+    {
+        int li = 0;
+        int ri = 0;
+        for (i = 0; i < e->pin_count; i++) {
+            int side_left;
+            int idx;
+            int py;
+            if (e->pins[i].dir == R01S_PIN_PWR || e->pins[i].dir == R01S_PIN_NC) {
+                continue;
+            }
+            side_left = (e->pins[i].dir == R01S_PIN_IN || e->pins[i].dir == R01S_PIN_IO) ? 1 : 0;
+            if (side_left) {
+                idx = li++;
+            } else {
+                idx = ri++;
+            }
+            if (&e->pins[i] != p) {
+                continue;
+            }
+            py = e->board_y + 5 + idx * 5;
+            if (py > e->board_y + e->body_h - 3) {
+                py = e->board_y + e->body_h - 3;
+            }
+            *out_by = py;
+            *out_bx = side_left ? (e->board_x - R01S_UI_PIN_H) : (e->board_x + e->body_w + R01S_UI_PIN_H);
+            return 1;
+        }
+    }
+    *out_bx = e->board_x + e->body_w / 2;
+    *out_by = e->board_y + e->body_h / 2;
+    return 1;
+}
+
 static void draw_chip(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int selected) {
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);

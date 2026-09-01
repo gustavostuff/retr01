@@ -4,6 +4,7 @@
 #include "retr01_sim/bus.h"
 #include "retr01_sim/entity.h"
 #include "retr01_sim/health.h"
+#include "retr01_sim/netlist.h"
 #include "retr01_sim/play.h"
 #include "retr01_sim/timing.h"
 
@@ -737,7 +738,7 @@ static void copy_bus_named(R01sBoard *ctx, R01sEntity *dst, const char *dst_pref
     for (i = 0; i < width; i++) {
         snprintf(dn, sizeof(dn), "%s%d", dst_prefix, i);
         snprintf(sn, sizeof(sn), "%s%d", src_prefix, i);
-        r01s_entity_drive(dst, dn, r01s_entity_sense(src, sn));
+        r01s_entity_tie(dst, dn, src, sn);
     }
 }
 
@@ -749,7 +750,7 @@ static void copy_cpu_d_to_latch_d(R01sBoard *ctx, R01sEntity *latch, R01sEntity 
     for (i = 0; i < 8; i++) {
         snprintf(ln, sizeof(ln), "%dD", i + 1);
         snprintf(cn, sizeof(cn), "D%d", i);
-        r01s_entity_drive(latch, ln, r01s_entity_sense(cpu, cn));
+        r01s_entity_tie(latch, ln, cpu, cn);
     }
 }
 
@@ -761,7 +762,7 @@ static void copy_latch_q_to_cpu_d(R01sBoard *ctx, R01sEntity *cpu, R01sEntity *l
     for (i = 0; i < 8; i++) {
         snprintf(ln, sizeof(ln), "%dQ", i + 1);
         snprintf(cn, sizeof(cn), "D%d", i);
-        r01s_entity_drive(cpu, cn, r01s_entity_sense(latch, ln));
+        r01s_entity_tie(cpu, cn, latch, ln);
     }
 }
 
@@ -1151,25 +1152,25 @@ static void wire_beam(R01sBoard *ctx, R01sIslandGroup *group) {
     r01s_entity_drive(osc, "VDD", vdd);
     r01s_entity_drive(osc, "OE#", R01S_LVL_H);
     r01s_entity_drive(beam, "RES#", resb);
-    r01s_entity_drive(beam, "DOT", r01s_entity_sense(osc, "DOT"));
+    r01s_entity_tie(beam, "DOT", osc, "DOT");
 
     /* P = beam Y[7:0], Q = $FE04 latch */
     for (i = 0; i < 8; i++) {
         snprintf(pn, sizeof(pn), "P%d", i);
         snprintf(yn, sizeof(yn), "Y%d", i);
         snprintf(qn, sizeof(qn), "Q%d", i);
-        r01s_entity_drive(beam_y, pn, r01s_entity_sense(beam, yn));
+        r01s_entity_tie(beam_y, pn, beam, yn);
         {
             char ln[16];
             snprintf(ln, sizeof(ln), "%dQ", i + 1);
-            r01s_entity_drive(beam_y, qn, r01s_entity_sense(raster, ln));
+            r01s_entity_tie(beam_y, qn, raster, ln);
         }
     }
     r01s_entity_drive(beam_y, "OE#", R01S_LVL_L);
     r01s_entity_eval(beam);
     r01s_entity_eval(beam_y);
     /* Active-low raster match -> IRQB (CPU IRQ service still Phase-1 stub). */
-    r01s_entity_drive(cpu, "IRQB", r01s_entity_sense(beam_y, "EQ#"));
+    r01s_entity_tie(cpu, "IRQB", beam_y, "EQ#");
 }
 
 /*
@@ -1227,7 +1228,7 @@ static void wire_vram(R01sBoard *ctx) {
         char yn[4], an[8];
         snprintf(yn, sizeof(yn), "%dY", i + 1);
         snprintf(an, sizeof(an), "A%d", i);
-        r01s_entity_drive(vram, an, r01s_entity_sense(mux, yn));
+        r01s_entity_tie(vram, an, mux, yn);
     }
     for (i = 4; i < 15; i++) {
         char an[8];
@@ -1321,7 +1322,7 @@ static void linebuf_drive_addr(R01sBoard *ctx, uint16_t addr, int mcu_sel) {
         char yn[4], an[8];
         snprintf(yn, sizeof(yn), "%dY", i + 1);
         snprintf(an, sizeof(an), "A%d", i);
-        r01s_entity_drive(sram, an, r01s_entity_sense(mux, yn));
+        r01s_entity_tie(sram, an, mux, yn);
     }
     for (i = 4; i < 15; i++) {
         char an[8];
@@ -1887,6 +1888,11 @@ static void wire_power_clock_reset(R01sBoard *ctx, R01sIslandGroup *group) {
     r01s_entity_eval(hc);
 
     r01s_entity_drive(cpu, "PHI2", phi2 == R01S_LVL_H ? R01S_LVL_H : R01S_LVL_L);
+    /* Structural nets for Connections mode (levels also driven above). */
+    r01s_net_link(osc, "VDD", pwr, "VDD");
+    r01s_net_link(cpu, "PHI2", osc, "PHI2");
+    r01s_net_link(hc, "1A", osc, "PHI2");
+    r01s_net_link(hc, "2A", cpu, "RESB");
 }
 
 static void board_settle_n(R01sBoard *ctx, R01sIslandGroup *group, int passes) {
@@ -2942,7 +2948,7 @@ static void board_step(R01sIslandGroup *group) {
         flash_yield_for_chr(ctx);
         for (di = 0; di < beam_dots; di++) {
             r01s_entity_tick(dot_osc);
-            r01s_entity_drive(beam, "DOT", r01s_entity_sense(dot_osc, "DOT"));
+            r01s_entity_tie(beam, "DOT", dot_osc, "DOT");
             r01s_entity_tick(beam);
             {
                 R01sLevel nmi = r01s_entity_sense(beam, "NMI#");
@@ -3072,6 +3078,7 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         return -1;
     }
     memset(board, 0, sizeof(*board));
+    r01s_net_clear();
 
     r01s_island_builder_bind(b, &BOARD_GROUP_VT, board);
 

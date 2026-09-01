@@ -52,6 +52,8 @@ void font_draw_a_rot90ccw(SDL_Renderer *r, int x, int y, const char *text, Uint8
 
 /* ui_draw_chip.c */
 void pin_level_rgb(R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg, Uint8 *pb);
+/* Board-space tip of a named pin (1 = ok). Works for DIP and glyph packages. */
+int r01s_ui_chip_pin_tip(const R01sEntity *e, const char *pin_name, int *out_bx, int *out_by);
 void draw_segment_btn(SDL_Renderer *r, const SDL_Rect *rc, int selected, const char *label);
 void draw_led(SDL_Renderer *r, int x, int y, int on, Uint8 R, Uint8 G, Uint8 B, const char *label);
 void draw_board_item(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e, int selected);
@@ -74,6 +76,12 @@ void ui_toggle_compact(R01sUi *ui);
 void compact_btn_rect(const R01sUi *ui, SDL_Rect *rc);
 void save_btn_rect(const R01sUi *ui, SDL_Rect *rc);
 void ui_save_layout_now(R01sUi *ui);
+void ui_draw_connections(R01sUi *ui, SDL_Renderer *r);
+/* Ctrl+click in Connections mode: insert a route vertex. Returns 1 if handled. */
+int ui_conn_ctrl_click(R01sUi *ui, int board_x, int board_y);
+R01sWireRoute *ui_wire_find(R01sUi *ui, const char *ref_a, const char *pin_a, const char *ref_b,
+                            const char *pin_b);
+R01sWireRoute *ui_wire_ensure(R01sUi *ui, const R01sNetEdge *edge);
 int ui_lcd_scale_2x(const R01sUi *ui);
 int ui_screen_render_mode(const R01sUi *ui);
 void ui_set_lcd_scale(R01sUi *ui, int scale_2x);

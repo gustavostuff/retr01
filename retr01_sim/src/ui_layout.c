@@ -83,7 +83,18 @@ static void capture_snapshots(R01sUi *ui) {
      * chips -- keep the last island-mode frame/chip snapshot (do not derive frames
      * from live group, which may still be builder defaults or a prior bad arrange).
      */
-    if (ui->layout_compact) {
+    if (ui_layout_conn(ui)) {
+        if (!island_frames_saved(ui)) {
+            r01s_ui_snapshot_island_frames(ui);
+        }
+        for (i = 0; i < ui->chip_count; i++) {
+            const R01sEntity *e = ui->chips[i];
+            ui->conn_chip_x[i] = e ? e->board_x : 0;
+            ui->conn_chip_y[i] = e ? e->board_y : 0;
+            ui->conn_chip_orient[i] = e ? (uint8_t)e->orient : (uint8_t)R01S_ORIENT_H;
+        }
+        ui->conn_saved = 1;
+    } else if (ui_layout_flat(ui)) {
         if (!island_frames_saved(ui)) {
             r01s_ui_snapshot_island_frames(ui);
         }
@@ -120,7 +131,10 @@ int r01s_ui_layout_save(R01sUi *ui) {
     n_islands = r01s_island_group_count(ui->group);
     fprintf(f, "{\n");
     fprintf(f, "  \"version\": %d,\n", R01S_LAYOUT_VERSION);
-    fprintf(f, "  \"mode\": \"%s\",\n", ui->layout_compact ? "compact" : "islands");
+    fprintf(f, "  \"mode\": \"%s\",\n",
+            ui->layout_mode == R01S_LAYOUT_CONN      ? "connections"
+            : ui->layout_mode == R01S_LAYOUT_COMPACT ? "compact"
+                                                    : "islands");
     fprintf(f, "  \"pan_x\": %d,\n", ui->pan_x);
     fprintf(f, "  \"pan_y\": %d,\n", ui->pan_y);
 
@@ -178,7 +192,7 @@ int r01s_ui_layout_save(R01sUi *ui) {
             continue;
         }
         id = e->refdes;
-        if (ui->layout_compact) {
+        if (ui_layout_flat(ui)) {
             /* Compact mode -- keep last island-relative snapshot, not board coords. */
             rx = ui->save_chip_x[i];
             ry = ui->save_chip_y[i];
@@ -227,6 +241,47 @@ int r01s_ui_layout_save(R01sUi *ui) {
                     ui->compact_chip_orient[i] == (uint8_t)R01S_ORIENT_V ? "V" : "H",
                     r01s_ui_chip_z_rank(ui, i));
         }
+    }
+    fprintf(f, "\n  ],\n");
+
+    fprintf(f, "  \"conn_chips\": [\n");
+    first = 1;
+    if (ui->conn_saved) {
+        for (i = 0; i < ui->chip_count; i++) {
+            const R01sEntity *e = ui->chips[i];
+            const char *id;
+            if (!e || !e->refdes) {
+                continue;
+            }
+            id = e->refdes;
+            if (!first) {
+                fprintf(f, ",\n");
+            }
+            first = 0;
+            fprintf(f, "    {\"id\": \"%s\", \"x\": %d, \"y\": %d, \"orient\": \"%s\"}", id, ui->conn_chip_x[i],
+                    ui->conn_chip_y[i], ui->conn_chip_orient[i] == (uint8_t)R01S_ORIENT_V ? "V" : "H");
+        }
+    }
+    fprintf(f, "\n  ],\n");
+
+    fprintf(f, "  \"wires\": [\n");
+    first = 1;
+    for (i = 0; i < ui->wire_count; i++) {
+        const R01sWireRoute *w = &ui->wires[i];
+        int vi;
+        if (w->nverts < 1) {
+            continue;
+        }
+        if (!first) {
+            fprintf(f, ",\n");
+        }
+        first = 0;
+        fprintf(f, "    {\"a\": \"%s\", \"pa\": \"%s\", \"b\": \"%s\", \"pb\": \"%s\", \"verts\": [", w->ref_a,
+                w->pin_a, w->ref_b, w->pin_b);
+        for (vi = 0; vi < w->nverts; vi++) {
+            fprintf(f, "%s{\"x\": %d, \"y\": %d}", vi ? "," : "", w->vx[vi], w->vy[vi]);
+        }
+        fprintf(f, "]}");
     }
     fprintf(f, "\n  ]\n");
     fprintf(f, "}\n");
@@ -323,6 +378,7 @@ int r01s_ui_layout_load(R01sUi *ui) {
     int i;
     int file_version = 1;
     int mode_compact = 0;
+    int mode_conn = 0;
     int pan_x = 0;
     int pan_y = 0;
     char mode[16];
@@ -388,6 +444,7 @@ int r01s_ui_layout_load(R01sUi *ui) {
     }
     json_string_after(buf, "\"mode\"", mode, sizeof(mode));
     mode_compact = (strcmp(mode, "compact") == 0);
+    mode_conn = (strcmp(mode, "connections") == 0);
     json_int_after(buf, "\"pan_x\"", &pan_x);
     json_int_after(buf, "\"pan_y\"", &pan_y);
 
@@ -492,8 +549,12 @@ int r01s_ui_layout_load(R01sUi *ui) {
 
     section = json_find(buf, "\"compact_chips\"");
     if (section) {
+        const char *stop = json_find(buf, "\"conn_chips\"");
+        if (!stop) {
+            stop = json_find(buf, "\"wires\"");
+        }
         obj = json_next_object(section);
-        while (obj) {
+        while (obj && (!stop || obj < stop)) {
             char slice[320];
             char id[32];
             char orient[8];
@@ -530,14 +591,118 @@ int r01s_ui_layout_load(R01sUi *ui) {
         }
     }
 
+    section = json_find(buf, "\"conn_chips\"");
+    if (section) {
+        const char *stop = json_find(buf, "\"wires\"");
+        obj = json_next_object(section);
+        while (obj && (!stop || obj < stop)) {
+            char slice[320];
+            char id[32];
+            char orient[8];
+            int x = 0, y = 0;
+            int ci;
+            end = json_object_end(obj);
+            if (!end || (size_t)(end - obj) >= sizeof(slice)) {
+                break;
+            }
+            memcpy(slice, obj, (size_t)(end - obj));
+            slice[end - obj] = '\0';
+            id[0] = '\0';
+            orient[0] = 'H';
+            orient[1] = '\0';
+            if (json_string_after(slice, "\"id\"", id, sizeof(id))) {
+                json_int_after(slice, "\"x\"", &x);
+                json_int_after(slice, "\"y\"", &y);
+                json_string_after(slice, "\"orient\"", orient, sizeof(orient));
+                ci = chip_index_by_refdes(ui, id);
+                if (ci >= 0) {
+                    ui->conn_chip_x[ci] = x;
+                    ui->conn_chip_y[ci] = y;
+                    ui->conn_chip_orient[ci] =
+                        (orient[0] == 'V' || orient[0] == 'v') ? (uint8_t)R01S_ORIENT_V
+                                                               : (uint8_t)R01S_ORIENT_H;
+                    ui->conn_saved = 1;
+                }
+            }
+            obj = json_next_object(end);
+        }
+    }
+
+    section = json_find(buf, "\"wires\"");
+    if (section) {
+        ui->wire_count = 0;
+        obj = json_next_object(section);
+        while (obj && ui->wire_count < R01S_WIRE_MAX_EDGES) {
+            char slice[768];
+            char ra[12], pa[16], rb[12], pb[16];
+            R01sWireRoute *w;
+            const char *vp;
+            end = json_object_end(obj);
+            if (!end || (size_t)(end - obj) >= sizeof(slice)) {
+                break;
+            }
+            memcpy(slice, obj, (size_t)(end - obj));
+            slice[end - obj] = '\0';
+            ra[0] = pa[0] = rb[0] = pb[0] = '\0';
+            if (json_string_after(slice, "\"a\"", ra, sizeof(ra)) &&
+                json_string_after(slice, "\"pa\"", pa, sizeof(pa)) &&
+                json_string_after(slice, "\"b\"", rb, sizeof(rb)) &&
+                json_string_after(slice, "\"pb\"", pb, sizeof(pb))) {
+                w = &ui->wires[ui->wire_count];
+                memset(w, 0, sizeof(*w));
+                snprintf(w->ref_a, sizeof(w->ref_a), "%s", ra);
+                snprintf(w->pin_a, sizeof(w->pin_a), "%s", pa);
+                snprintf(w->ref_b, sizeof(w->ref_b), "%s", rb);
+                snprintf(w->pin_b, sizeof(w->pin_b), "%s", pb);
+                vp = strstr(slice, "\"verts\"");
+                if (vp) {
+                    const char *p = strchr(vp, '[');
+                    while (p && w->nverts < R01S_WIRE_MAX_VERTS) {
+                        int vx = 0, vy = 0;
+                        const char *nx = strstr(p, "\"x\"");
+                        const char *ny;
+                        if (!nx || nx > end) {
+                            break;
+                        }
+                        if (!json_int_after(nx, "\"x\"", &vx)) {
+                            break;
+                        }
+                        ny = strstr(nx, "\"y\"");
+                        if (!ny || !json_int_after(ny, "\"y\"", &vy)) {
+                            break;
+                        }
+                        w->vx[w->nverts] = vx;
+                        w->vy[w->nverts] = vy;
+                        w->nverts++;
+                        p = strchr(ny, '}');
+                        if (!p) {
+                            break;
+                        }
+                        p++;
+                        while (*p == ',' || *p == ' ' || *p == '\n' || *p == '\r' || *p == '\t') {
+                            p++;
+                        }
+                        if (*p == ']') {
+                            break;
+                        }
+                    }
+                }
+                if (w->nverts > 0) {
+                    ui->wire_count++;
+                }
+            }
+            obj = json_next_object(end);
+        }
+    }
+
     /* Apply island-mode geometry (frames first, then island-relative chips). */
-    if (ui->layout_saved && !mode_compact) {
+    if (ui->layout_saved && !mode_compact && !mode_conn) {
         r01s_ui_load_island_layout(ui, file_version);
     }
 
     ui->pan_x = pan_x;
     ui->pan_y = pan_y;
-    ui->layout_compact = 0;
+    ui->layout_mode = R01S_LAYOUT_ISLANDS;
     if (mode_compact && ui->compact_saved) {
         for (i = 0; i < ui->chip_count; i++) {
             R01sEntity *e = ui->chips[i];
@@ -549,7 +714,20 @@ int r01s_ui_layout_load(R01sUi *ui) {
             }
             r01s_entity_place(e, ui->compact_chip_x[i], ui->compact_chip_y[i]);
         }
-        ui->layout_compact = 1;
+        ui->layout_mode = R01S_LAYOUT_COMPACT;
+    }
+    if (mode_conn && ui->conn_saved) {
+        for (i = 0; i < ui->chip_count; i++) {
+            R01sEntity *e = ui->chips[i];
+            if (!e) {
+                continue;
+            }
+            if (e->visual == R01S_ENTITY_VIS_IC) {
+                r01s_entity_set_orient(e, (R01sPkgOrient)ui->conn_chip_orient[i]);
+            }
+            r01s_entity_place(e, ui->conn_chip_x[i], ui->conn_chip_y[i]);
+        }
+        ui->layout_mode = R01S_LAYOUT_CONN;
     }
     if (chip_z_loaded) {
         r01s_ui_chip_z_apply(ui, chip_z_by_index, ui->chip_count);
@@ -558,7 +736,8 @@ int r01s_ui_layout_load(R01sUi *ui) {
     }
     r01s_ui_clamp_pan(ui);
     ui->layout_dirty = 0;
-    fprintf(stderr, "layout: loaded %s (%s)\n", path ? path : "?", mode_compact ? "compact" : "islands");
+    fprintf(stderr, "layout: loaded %s (%s)\n", path ? path : "?",
+            mode_conn ? "connections" : mode_compact ? "compact" : "islands");
     free(buf);
     return 0;
 }
