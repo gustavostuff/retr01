@@ -12,6 +12,8 @@
 #include <SDL.h>
 #include <stdint.h>
 
+struct R01sApp;
+
 #define R01S_BOARD_MAX_CHIPS 64
 #define R01S_UI_GAMEPAD_COUNT 2
 
@@ -39,8 +41,12 @@
 #define R01S_UI_ISLANDS_STRIP_DEFAULT_Y 8
 #define R01S_UI_LEGEND_STRIP_DEFAULT_X 8
 #define R01S_UI_LEGEND_STRIP_DEFAULT_Y (R01S_UI_ISLANDS_STRIP_DEFAULT_Y + R01S_UI_FLOAT_STRIP_H + 4)
+#define R01S_UI_LEGEND_STRIP_H (12 + 5 * 8 + 4 * 2)
+#define R01S_UI_CONTROL_STRIP_DEFAULT_X 8
+#define R01S_UI_CONTROL_STRIP_DEFAULT_Y (R01S_UI_LEGEND_STRIP_DEFAULT_Y + R01S_UI_LEGEND_STRIP_H + 4)
 
 typedef struct R01sUi {
+    struct R01sApp *app;
     R01sIslandGroup *group;
     R01sEntity *chips[R01S_BOARD_MAX_CHIPS];
     uint8_t chip_island[R01S_BOARD_MAX_CHIPS];
@@ -94,6 +100,12 @@ typedef struct R01sUi {
     int drag_legend_ox;
     int drag_legend_oy;
     int legend_strip_moved;
+    int control_strip_x;
+    int control_strip_y;
+    int drag_control_strip;
+    int drag_control_ox;
+    int drag_control_oy;
+    int control_strip_moved;
     int modal;        /* R01S_UI_MODAL_* */
     int modal_result; /* R01S_UI_MODAL_RES_* when user picks an action */
     int fps;            /* rolling 1s frame rate for HUD */
@@ -126,6 +138,7 @@ int r01s_ui_init(R01sUi *ui);
 void r01s_ui_shutdown(R01sUi *ui);
 
 void r01s_ui_bind_group(R01sUi *ui, R01sIslandGroup *group);
+void r01s_ui_bind_app(R01sUi *ui, struct R01sApp *app);
 
 void r01s_ui_island_z_init(R01sUi *ui);
 void r01s_ui_island_z_apply(R01sUi *ui, const int *z_by_index, int n);

@@ -32,6 +32,8 @@ typedef enum R01sEntityVisual {
     R01S_ENTITY_VIS_PWR,
     R01S_ENTITY_VIS_OSC,
     R01S_ENTITY_VIS_DISPLAY,
+    R01S_ENTITY_VIS_BUTTON,
+    R01S_ENTITY_VIS_PANEL, /* labeled connector / host block (not LCD) */
     R01S_ENTITY_VIS_NONE,
 } R01sEntityVisual;
 

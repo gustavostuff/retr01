@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "retr01_sim/ui_button.h"
 #include "ui_internal.h"
 
 #include "retr01_sim/board.h"
@@ -222,13 +223,58 @@ static void draw_osc_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *
     blit_rgba_scaled(r, ix, iy, R01S_UI_OSC_RGBA, R01S_UI_OSC_W, R01S_UI_OSC_H, 1);
 }
 
+static void draw_button_glyph(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e, int selected) {
+    const R01sUiButton *btn = (const R01sUiButton *)e;
+    int x = ui_board_sx(ui, e->board_x);
+    int y = ui_board_sy(ui, e->board_y);
+    int pressed = btn && btn->pressed > 0;
+    Uint8 br = pressed ? 90 : 55;
+    Uint8 bg = pressed ? 120 : 80;
+    Uint8 bb = pressed ? 150 : 110;
+    int tw;
+    int fh = font_line_h();
+
+    fill_rect(r, x, y, e->body_w, e->body_h, br, bg, bb);
+    draw_rect(r, x, y, e->body_w, e->body_h, selected ? 255 : 180, selected ? 220 : 200, selected ? 80 : 160);
+    if (btn && btn->label[0]) {
+        tw = font_text_width(btn->label);
+        if (tw <= e->body_w - 4) {
+            font_draw(r, x + (e->body_w - tw) / 2, y + (e->body_h - fh) / 2, btn->label, 230, 235, 240);
+        }
+    }
+}
+
+static void draw_panel_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int selected) {
+    const char *label;
+    int x = ui_board_sx(ui, e->board_x);
+    int y = ui_board_sy(ui, e->board_y);
+    int tw;
+    int fh = font_line_h();
+
+    (void)ui;
+    fill_rect(r, x, y, e->body_w, e->body_h, 38, 42, 48);
+    draw_rect(r, x, y, e->body_w, e->body_h, selected ? 255 : 120, selected ? 220 : 100, selected ? 80 : 85);
+    label = e->part ? e->part : e->refdes;
+    if (label && label[0]) {
+        tw = font_text_width(label);
+        if (tw <= e->body_w - 4) {
+            font_draw(r, x + (e->body_w - tw) / 2, y + (e->body_h - fh) / 2, label, 180, 185, 195);
+        }
+    }
+}
+
 static void draw_display_glyph(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e, int selected) {
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);
-    const R01sVideoSink *sink = (const R01sVideoSink *)e;
+    const R01sVideoSink *sink;
     int lcd_w;
     int lcd_h;
 
+    if (!e->part || strcmp(e->part, "SCREEN_SINK") != 0) {
+        draw_panel_glyph(r, ui, e, selected);
+        return;
+    }
+    sink = (const R01sVideoSink *)e;
     r01s_video_sink_lcd_size(sink, &lcd_w, &lcd_h);
     draw_glyph_pins(r, ui, e, e->board_x, e->board_y);
     draw_video_pixels(r, ui, (R01sVideoSink *)(void *)sink, x, y, lcd_w, lcd_h);
@@ -374,6 +420,12 @@ void draw_board_item(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e, int selec
         break;
     case R01S_ENTITY_VIS_DISPLAY:
         draw_display_glyph(r, ui, e, selected);
+        break;
+    case R01S_ENTITY_VIS_BUTTON:
+        draw_button_glyph(r, ui, e, selected);
+        break;
+    case R01S_ENTITY_VIS_PANEL:
+        draw_panel_glyph(r, ui, e, selected);
         break;
     case R01S_ENTITY_VIS_IC:
     default:

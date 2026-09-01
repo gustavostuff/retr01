@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "retr01_sim/ui_button.h"
 #include "ui_internal.h"
 
 #include "retr01_sim/board.h"
@@ -193,6 +194,13 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
     if (ui_logic_in_view(logic_x, logic_y)) {
         ui_logic_to_board(ui, logic_x, logic_y, &board_mx, &board_my);
     }
+    if (e->type == SDL_MOUSEMOTION && ui->drag_control_strip) {
+        ui->control_strip_x = logic_x - R01S_UI_VIEW_X - ui->drag_control_ox;
+        ui->control_strip_y = logic_y - R01S_UI_VIEW_Y - ui->drag_control_oy;
+        ui->control_strip_moved = 1;
+        ui_control_strip_clamp(ui);
+        return 1;
+    }
     if (e->type == SDL_MOUSEMOTION && ui->drag_legend_strip) {
         ui->legend_strip_x = logic_x - R01S_UI_VIEW_X - ui->drag_legend_ox;
         ui->legend_strip_y = logic_y - R01S_UI_VIEW_Y - ui->drag_legend_oy;
@@ -205,6 +213,16 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         ui->islands_strip_y = logic_y - R01S_UI_VIEW_Y - ui->drag_islands_oy;
         ui->islands_strip_moved = 1;
         ui_islands_strip_clamp(ui);
+        return 1;
+    }
+    if (e->type == SDL_MOUSEBUTTONDOWN &&
+        (e->button.button == SDL_BUTTON_LEFT || e->button.button == SDL_BUTTON_RIGHT) &&
+        ui_control_strip_contains(ui, logic_x, logic_y)) {
+        ui->drag_control_strip = 1;
+        ui->drag_control_ox = logic_x - (R01S_UI_VIEW_X + ui->control_strip_x);
+        ui->drag_control_oy = logic_y - (R01S_UI_VIEW_Y + ui->control_strip_y);
+        ui->control_strip_moved = 0;
+        ui->ctx_chip = -1;
         return 1;
     }
     if (e->type == SDL_MOUSEBUTTONDOWN &&
@@ -273,6 +291,16 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
     }
     if (e->type == SDL_MOUSEBUTTONUP &&
         (e->button.button == SDL_BUTTON_LEFT || e->button.button == SDL_BUTTON_RIGHT)) {
+        if (ui->drag_control_strip) {
+            int moved = ui->control_strip_moved;
+            ui->drag_control_strip = 0;
+            if (moved) {
+                ui->layout_dirty = 1;
+            } else if (e->button.button == SDL_BUTTON_LEFT) {
+                ui_control_strip_activate(ui, logic_x, logic_y);
+            }
+            return 1;
+        }
         if (ui->drag_legend_strip) {
             int moved = ui->legend_strip_moved;
             ui->drag_legend_strip = 0;
@@ -400,7 +428,8 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             int chip_i = -1;
             if (hit_board_top(ui, logic_x, logic_y, &chip_i, NULL, NULL) == 1 && chip_i >= 0 &&
                 chip_i < ui->chip_count && ui->chips[chip_i] &&
-                ui->chips[chip_i]->visual == R01S_ENTITY_VIS_DISPLAY) {
+                ui->chips[chip_i]->visual == R01S_ENTITY_VIS_DISPLAY && ui->chips[chip_i]->part &&
+                strcmp(ui->chips[chip_i]->part, "SCREEN_SINK") == 0) {
                 ui_toggle_lcd_scale(ui);
                 return 1;
             }
@@ -479,6 +508,12 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 return 1;
             }
             if (kind == 1 && chip_i >= 0 && chip_i < ui->chip_count && ui->chips[chip_i]) {
+                if (ui->chips[chip_i]->visual == R01S_ENTITY_VIS_BUTTON) {
+                    r01s_ui_button_press((R01sUiButton *)ui->chips[chip_i]);
+                    snprintf(ui->status, sizeof(ui->status), "button %s",
+                             ui->chips[chip_i]->refdes ? ui->chips[chip_i]->refdes : "?");
+                    return 1;
+                }
                 if (ui->layout_compact) {
                     r01s_ui_chip_z_raise(ui, chip_i);
                     ui->layout_dirty = 1;

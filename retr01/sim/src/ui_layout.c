@@ -128,6 +128,8 @@ int r01s_ui_layout_save(R01sUi *ui) {
     fprintf(f, "  \"islands_strip_y\": %d,\n", ui->islands_strip_y);
     fprintf(f, "  \"legend_strip_x\": %d,\n", ui->legend_strip_x);
     fprintf(f, "  \"legend_strip_y\": %d,\n", ui->legend_strip_y);
+    fprintf(f, "  \"control_strip_x\": %d,\n", ui->control_strip_x);
+    fprintf(f, "  \"control_strip_y\": %d,\n", ui->control_strip_y);
 
     /* Always persist both layouts in the same file:
      * - islands + island_chips: island-mode frames and island-relative chips
@@ -334,6 +336,8 @@ int r01s_ui_layout_load(R01sUi *ui) {
     int islands_strip_y = R01S_UI_ISLANDS_STRIP_DEFAULT_Y;
     int legend_strip_x = R01S_UI_LEGEND_STRIP_DEFAULT_X;
     int legend_strip_y = R01S_UI_LEGEND_STRIP_DEFAULT_Y;
+    int control_strip_x = R01S_UI_CONTROL_STRIP_DEFAULT_X;
+    int control_strip_y = R01S_UI_CONTROL_STRIP_DEFAULT_Y;
     char mode[16];
     const char *section;
     const char *obj;
@@ -403,6 +407,8 @@ int r01s_ui_layout_load(R01sUi *ui) {
     json_int_after(buf, "\"islands_strip_y\"", &islands_strip_y);
     json_int_after(buf, "\"legend_strip_x\"", &legend_strip_x);
     json_int_after(buf, "\"legend_strip_y\"", &legend_strip_y);
+    json_int_after(buf, "\"control_strip_x\"", &control_strip_x);
+    json_int_after(buf, "\"control_strip_y\"", &control_strip_y);
 
     n_islands = r01s_island_group_count(ui->group);
     /* Clear prior frame snapshot so a missing/empty islands[] cannot look "valid". */
@@ -554,6 +560,8 @@ int r01s_ui_layout_load(R01sUi *ui) {
     ui->islands_strip_y = islands_strip_y;
     ui->legend_strip_x = legend_strip_x;
     ui->legend_strip_y = legend_strip_y;
+    ui->control_strip_x = control_strip_x;
+    ui->control_strip_y = control_strip_y;
     ui->layout_compact = 0;
     if (mode_compact && ui->compact_saved) {
         for (i = 0; i < ui->chip_count; i++) {
@@ -576,6 +584,7 @@ int r01s_ui_layout_load(R01sUi *ui) {
     r01s_ui_clamp_pan(ui);
     ui_islands_strip_clamp(ui);
     ui_legend_strip_clamp(ui);
+    ui_control_strip_clamp(ui);
     ui->layout_dirty = 0;
     fprintf(stderr, "layout: loaded %s (%s)\n", path ? path : "?", mode_compact ? "compact" : "islands");
     free(buf);

@@ -363,7 +363,7 @@ void r01s_ui_pin_net_build(R01sBoard *board) {
     cpu = r01s_w65c02s_entity(&board->cpu);
     ram = r01s_as6c62256_entity(&board->ram);
     prg = r01s_prg_rom_entity(&board->prg);
-    flash = r01s_sst39sf040_entity(&board->cart_flash);
+    flash = r01s_sst39sf040_entity(&board->cart_module.flash);
     vram = r01s_as6c62256_entity(&board->vram);
     mcu = r01s_atmega1284p_entity(&board->mcu1284);
     apu = r01s_atmega328p_entity(&board->apu);

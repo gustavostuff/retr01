@@ -23,9 +23,9 @@ static void player_hit_rect(R01sBoard *b, int origin_x, int origin_y, int state_
     if (b && b->cart_loaded && b->cart_player_entity != 0xFF &&
         b->cart_player_entity < b->cart_entity_type_count) {
         if (b->cart_off_player_anim != 0) {
-            const uint8_t *img = b->cart_flash.mem;
+            const uint8_t *img = b->cart_module.flash.mem;
             const uint8_t *blob = img + b->cart_off_player_anim;
-            size_t blob_len = sizeof(b->cart_flash.mem) - (size_t)b->cart_off_player_anim;
+            size_t blob_len = sizeof(b->cart_module.flash.mem) - (size_t)b->cart_off_player_anim;
             R01CartPlayerAnim anim;
             const uint8_t *st = NULL;
             if (r01_cart_player_anim_parse(blob, blob_len, &anim) == 0) {
@@ -42,7 +42,7 @@ static void player_hit_rect(R01sBoard *b, int origin_x, int origin_y, int state_
                 }
             }
         } else if (b->cart_off_entity_types != 0) {
-            const uint8_t *img = b->cart_flash.mem;
+            const uint8_t *img = b->cart_module.flash.mem;
             const uint8_t *trec =
                 img + b->cart_off_entity_types + (size_t)b->cart_player_entity * 20u;
             int origin_ax = (int)trec[0];
@@ -130,9 +130,9 @@ static int player_instance_spawn(R01sBoard *b, int *out_x, int *out_y) {
         b->cart_off_entity_insts == 0) {
         return 0;
     }
-    img = b->cart_flash.mem;
+    img = b->cart_module.flash.mem;
     if ((size_t)b->cart_off_entity_insts + (size_t)b->cart_entity_inst_count * 6u >
-        sizeof(b->cart_flash.mem)) {
+        sizeof(b->cart_module.flash.mem)) {
         return 0;
     }
     insts = img + b->cart_off_entity_insts;
@@ -160,7 +160,7 @@ static int spawn_screen(R01sBoard *b, int *out_col, int *out_row) {
         return 0;
     }
     if (b->cart_off_prg != 0 && b->cart_len_prg > 0x0109u) {
-        prg = b->cart_flash.mem + b->cart_off_prg;
+        prg = b->cart_module.flash.mem + b->cart_off_prg;
         if (prg[0x00F0] == 'R' && prg[0x00F1] == '0' && prg[0x00F2] == '1' && prg[0x00F3] == 'P') {
             sc = (int)prg[0x0108];
             sr = (int)prg[0x0109];
@@ -191,7 +191,7 @@ static int spawn_screen(R01sBoard *b, int *out_col, int *out_row) {
 
 static int write_player_oam(R01sBoard *b, int *slot) {
     R01sPlay *pl = &b->play;
-    const uint8_t *img = b->cart_flash.mem;
+    const uint8_t *img = b->cart_module.flash.mem;
     const uint8_t *types;
     int player_type;
 
@@ -207,7 +207,7 @@ static int write_player_oam(R01sBoard *b, int *slot) {
 
     if (b->cart_off_player_anim != 0) {
         const uint8_t *blob = img + b->cart_off_player_anim;
-        size_t blob_len = sizeof(b->cart_flash.mem) - (size_t)b->cart_off_player_anim;
+        size_t blob_len = sizeof(b->cart_module.flash.mem) - (size_t)b->cart_off_player_anim;
         R01CartPlayerAnim anim;
         int state_idx = r01_play_anim_entity_state(&pl->anim);
         int frame_slot = r01_play_anim_frame(&pl->anim);
@@ -301,10 +301,10 @@ static void write_oam(R01sBoard *b) {
     /* Clear all slots unused (tile == 0xFF); match emu / docs. */
     memset(b->mcu1284.oam, 0xFF, sizeof(b->mcu1284.oam));
 
-    img = b->cart_flash.mem;
+    img = b->cart_module.flash.mem;
     if (b->cart_loaded && b->cart_entity_type_count > 0 && b->cart_off_entity_types != 0 &&
         (size_t)b->cart_off_entity_types + (size_t)b->cart_entity_type_count * 20u <=
-            sizeof(b->cart_flash.mem)) {
+            sizeof(b->cart_module.flash.mem)) {
         types = img + b->cart_off_entity_types;
         if (b->cart_player_entity != 0xFF && b->cart_player_entity < b->cart_entity_type_count) {
             player_type = (int)b->cart_player_entity;
@@ -331,7 +331,7 @@ static void write_oam(R01sBoard *b) {
         return;
     }
     if ((size_t)b->cart_off_entity_insts + (size_t)b->cart_entity_inst_count * 6u >
-        sizeof(b->cart_flash.mem)) {
+        sizeof(b->cart_module.flash.mem)) {
         return;
     }
     insts = img + b->cart_off_entity_insts;
@@ -498,8 +498,8 @@ static void step_move_from_pad(R01sBoard *b) {
     }
     update_camera(b);
     if (b->cart_off_player_anim != 0) {
-        const uint8_t *blob = b->cart_flash.mem + b->cart_off_player_anim;
-        size_t blob_len = sizeof(b->cart_flash.mem) - (size_t)b->cart_off_player_anim;
+        const uint8_t *blob = b->cart_module.flash.mem + b->cart_off_player_anim;
+        size_t blob_len = sizeof(b->cart_module.flash.mem) - (size_t)b->cart_off_player_anim;
         R01CartPlayerAnim anim;
         if (r01_cart_player_anim_parse(blob, blob_len, &anim) == 0) {
             r01_play_anim_tick_cart(&pl->anim, &anim);

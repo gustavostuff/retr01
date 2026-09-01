@@ -5,13 +5,17 @@
 #include "retr01_sim/entity.h"
 #include "retr01_sim/health.h"
 #include "retr01_sim/play.h"
-#include "retr01_sim/timing.h"
+#include "retr01_sim/board_flasher.h"
+#include "retr01_sim/cart_module.h"
+#include "retr01_sim/cart_slot.h"
+#include "retr01_sim/flasher_bench.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #define R01S_RESET_HOLD 12
+#define R01S_RESET_NMI_PULSE 8
 #define R01S_CART_HDR_SIZE 16
 
 #define R01S_PAL_ROW_BYTES 16u
@@ -222,9 +226,9 @@ static void board_apply_active_pals_from_cart(R01sBoard *board) {
                   : off_bg + R01S_PAL_ROW_BYTES;
     for (i = 0; i < R01S_PAL_ROW_BYTES; i++) {
         board->active_pal[i] =
-            (uint8_t)(r01s_sst39sf040_peek(&board->cart_flash, off_bg + i) & 63u);
+            (uint8_t)(r01s_sst39sf040_peek(&board->cart_module.flash, off_bg + i) & 63u);
         board->active_pal[R01S_PAL_ROW_BYTES + i] =
-            (uint8_t)(r01s_sst39sf040_peek(&board->cart_flash, off_spr + i) & 63u);
+            (uint8_t)(r01s_sst39sf040_peek(&board->cart_module.flash, off_spr + i) & 63u);
     }
     board->chr_last_master = (uint8_t)(board->active_pal[0] & 63u);
 }
@@ -235,6 +239,36 @@ static R01sBoard *board_from_group(R01sIslandGroup *group) {
 
 R01sBoard *r01s_board_from_group(R01sIslandGroup *group) {
     return board_from_group(group);
+}
+
+void r01s_board_set_power(R01sBoard *board, R01sIslandGroup *group, int on) {
+    int was_on;
+    if (!board || !group) {
+        return;
+    }
+    was_on = group->powered;
+    group->powered = on ? 1 : 0;
+    if (group->powered && !was_on && group->vt && group->vt->reset) {
+        group->vt->reset(group);
+    }
+    r01s_island_group_eval_idle(group);
+}
+
+void r01s_board_toggle_power(R01sBoard *board, R01sIslandGroup *group) {
+    if (!group) {
+        return;
+    }
+    r01s_board_set_power(board, group, !group->powered);
+}
+
+void r01s_board_console_reset(R01sBoard *board, R01sIslandGroup *group) {
+    if (!board || !group || !group->powered) {
+        return;
+    }
+    if (group->vt && group->vt->reset) {
+        group->vt->reset(group);
+    }
+    board->reset_nmi_pulse = R01S_RESET_NMI_PULSE;
 }
 
 static const char *phase_name(R01sCpuPhase p) {
@@ -568,7 +602,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  "saw_map=%d flash0=$%02X",
                  r01s_health_tag(ih->health), ctx->cart_loaded, ctx->cart_label[0] ? ctx->cart_label : "-",
                  (unsigned)ctx->cart_off_prg, (unsigned)ctx->cart_len_prg, (unsigned)(ctx->map_addr & 0xFFFFFFu),
-                 ctx->health_saw_map, r01s_sst39sf040_peek(ctx->cart_impl.flash, 0));
+                 ctx->health_saw_map, r01s_sst39sf040_peek(&ctx->cart_module.flash, 0));
     }
 
     /* Island K: ATmega328P APU */
@@ -780,6 +814,9 @@ static int board_map_byte_is_cart_magic(const R01sBoard *ctx, uint8_t dq) {
 
 /* Soft PLD: $FE02-$FE04 latches + $FE40-$FE5F APU + $FE60/$FE61 pads + $FE90-$FE93 MAP. */
 static void flash_deselect(R01sEntity *flash) {
+    if (!flash) {
+        return;
+    }
     r01s_entity_drive(flash, "CE#", R01S_LVL_H);
     r01s_entity_drive(flash, "OE#", R01S_LVL_H);
     r01s_entity_drive(flash, "WE#", R01S_LVL_H);
@@ -813,10 +850,16 @@ enum {
     R01S_FLASH_CE_CHR = 3,
 };
 
+static R01sEntity *board_flash_entity(R01sBoard *ctx) {
+    return ctx && ctx->cart_impl.flash ? r01s_sst39sf040_entity(ctx->cart_impl.flash) : NULL;
+}
+
 /* Yield flash so CHR (DOT / HBlank) can own /CE without fighting a stale PRG claim. */
 static void flash_yield_for_chr(R01sBoard *ctx) {
-    R01sEntity *flash = r01s_sst39sf040_entity(ctx->cart_impl.flash);
-    flash_deselect(flash);
+    R01sEntity *flash = board_flash_entity(ctx);
+    if (flash) {
+        flash_deselect(flash);
+    }
     ctx->flash_ce_owner = R01S_FLASH_CE_NONE;
 }
 
@@ -829,7 +872,10 @@ static int flash_chr_read_byte(R01sBoard *ctx, uint32_t abs, uint8_t *out) {
     if (ctx->flash_ce_owner == R01S_FLASH_CE_PRG || ctx->flash_ce_owner == R01S_FLASH_CE_MAP) {
         return 0;
     }
-    flash = r01s_sst39sf040_entity(ctx->cart_impl.flash);
+    flash = board_flash_entity(ctx);
+    if (!flash) {
+        return 0;
+    }
     ctx->flash_ce_owner = R01S_FLASH_CE_CHR;
     flash_read_selected(flash, abs);
     *out = (uint8_t)r01s_bus_read(flash, "DQ", 8);
@@ -837,10 +883,14 @@ static int flash_chr_read_byte(R01sBoard *ctx, uint32_t abs, uint8_t *out) {
 }
 
 static void flash_chr_release(R01sBoard *ctx) {
+    R01sEntity *flash;
     if (!ctx || ctx->flash_ce_owner != R01S_FLASH_CE_CHR) {
         return;
     }
-    flash_deselect(r01s_sst39sf040_entity(ctx->cart_impl.flash));
+    flash = board_flash_entity(ctx);
+    if (flash) {
+        flash_deselect(flash);
+    }
     ctx->flash_ce_owner = R01S_FLASH_CE_NONE;
 }
 
@@ -949,7 +999,7 @@ static void wire_io(R01sBoard *ctx) {
     R01sEntity *pads = r01s_pads_entity(ctx->pads_impl.pads);
     R01sEntity *apu = r01s_atmega328p_entity(ctx->apu_impl.apu);
     R01sEntity *mcu = r01s_atmega1284p_entity(ctx->mcu_lb_impl.mcu);
-    R01sEntity *flash = r01s_sst39sf040_entity(ctx->cart_impl.flash);
+    R01sEntity *flash = board_flash_entity(ctx);
     uint16_t addr = board_cpu_addr(ctx, cpu);
     int read = board_cpu_read(ctx, cpu);
     int be = board_cpu_be(ctx, cpu);
@@ -1101,7 +1151,7 @@ static void wire_io(R01sBoard *ctx) {
     }
 
     /* Island J: MAP $FE93: flash CE via decode SEL (seek from HC573 FE90-92). */
-    if (hit_map_data && read && ctx->cart_loaded &&
+    if (hit_map_data && read && flash && ctx->cart_loaded &&
         r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu) == R01S_CPU_OP_DATA) {
         uint8_t dq;
         sync_map_addr_from_latches(ctx);
@@ -1113,7 +1163,7 @@ static void wire_io(R01sBoard *ctx) {
             ctx->health_saw_map = 1; /* cart magic 'r' at seek 0 */
         }
         ctx->map_fe93_armed = 1;
-    } else if (hit_map_data) {
+    } else if (hit_map_data && flash) {
         flash_deselect(flash);
         if (ctx->flash_ce_owner == R01S_FLASH_CE_MAP) {
             ctx->flash_ce_owner = R01S_FLASH_CE_NONE;
@@ -1341,7 +1391,7 @@ static void linebuf_drive_addr(R01sBoard *ctx, uint16_t addr, int mcu_sel) {
 
 /* CHR plane byte via flash /CE. Returns 0 on CE deny (caller should hold). */
 static int board_chr_flash_byte(R01sBoard *ctx, uint32_t abs, uint8_t *out) {
-    if (!ctx || !out || abs >= sizeof(ctx->cart_flash.mem)) {
+    if (!ctx || !out || abs >= sizeof(ctx->cart_module.flash.mem)) {
         return 0;
     }
     return flash_chr_read_byte(ctx, abs, out);
@@ -1790,7 +1840,7 @@ static void wire_memory(R01sBoard *ctx) {
     R01sEntity *cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
     R01sEntity *ram = r01s_as6c62256_entity(ctx->cpu_mem_impl.ram);
     R01sEntity *prg = r01s_prg_rom_entity(ctx->cpu_mem_impl.prg);
-    R01sEntity *flash = r01s_sst39sf040_entity(ctx->cart_impl.flash);
+    R01sEntity *flash = ctx->cart_impl.flash ? r01s_sst39sf040_entity(ctx->cart_impl.flash) : NULL;
     uint16_t addr = (uint16_t)r01s_bus_read(cpu, "A", 16);
     int read = r01s_level_is_high(r01s_entity_sense(cpu, "RWB"));
     int a15 = (addr & 0x8000u) != 0;
@@ -1805,7 +1855,7 @@ static void wire_memory(R01sBoard *ctx) {
     r01s_bus_hiz(ram, "DQ", 8);
     r01s_bus_hiz(prg, "DQ", 8);
     /* PRG vs MAP vs CHR: only one flash /CE. MAP owns flash inside wire_io on $FE93. */
-    if (!(io && addr == 0xFE93u)) {
+    if (!(io && addr == 0xFE93u) && flash) {
         flash_deselect(flash);
         if (ctx->flash_ce_owner == R01S_FLASH_CE_PRG || ctx->flash_ce_owner == R01S_FLASH_CE_CHR) {
             ctx->flash_ce_owner = R01S_FLASH_CE_NONE;
@@ -1835,10 +1885,13 @@ static void wire_memory(R01sBoard *ctx) {
         r01s_entity_eval(prg);
     } else if (use_cart_prg && read) {
         uint32_t off = (uint32_t)(addr - 0x8000u);
-        if (off < ctx->cart_len_prg) {
+        if (off < ctx->cart_len_prg && flash) {
             flash_read_selected(flash, ctx->cart_off_prg + off);
             copy_bus_named(ctx, cpu, "D", flash, "DQ", 8);
             ctx->flash_ce_owner = R01S_FLASH_CE_PRG;
+        } else if (off < ctx->cart_len_prg) {
+            r01s_cart_slot_log_warn("PRG read: cart not in console socket");
+            r01s_bus_write(cpu, "D", 8, 0xFFu);
         }
         r01s_entity_eval(prg);
         r01s_entity_eval(ram);
@@ -2014,13 +2067,28 @@ static void island_video_init(R01sIsland *island) {
 
 static void island_cart_init(R01sIsland *island) {
     R01sIslandCartImpl *impl = (R01sIslandCartImpl *)island->impl;
-    r01s_sst39sf040_init(impl->flash, "U40");
-    r01s_i2c_eeprom_init(impl->save_eeprom, "U50");
-    r01s_island_add_entity(island, r01s_sst39sf040_entity(impl->flash));
-    r01s_island_add_entity(island, r01s_i2c_eeprom_entity(impl->save_eeprom));
     if (impl->bus245_cart) {
         r01s_sn74hc245_init(impl->bus245_cart, "U20C");
         r01s_island_add_entity(island, r01s_sn74hc245_entity(impl->bus245_cart));
+    }
+}
+
+static void island_flasher_init(R01sIsland *island) {
+    R01sIslandFlasherImpl *impl = (R01sIslandFlasherImpl *)island->impl;
+    if (!impl) {
+        return;
+    }
+    if (impl->mcu) {
+        r01s_island_add_entity(island, r01s_atmega32u4_entity(impl->mcu));
+    }
+    if (impl->shift_lo) {
+        r01s_island_add_entity(island, r01s_sn74hc595_entity(impl->shift_lo));
+    }
+    if (impl->shift_hi) {
+        r01s_island_add_entity(island, r01s_sn74hc595_entity(impl->shift_hi));
+    }
+    if (impl->usb) {
+        r01s_island_add_entity(island, r01s_usbc_receptacle_entity(impl->usb));
     }
 }
 
@@ -2051,6 +2119,8 @@ static const R01sIslandVTable ISLAND_IO_VT = {island_io_latch_init, NULL, NULL, 
 static const R01sIslandVTable ISLAND_VRAM_VT = {island_vram_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_BEAM_VT = {island_beam_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CART_VT = {island_cart_init, NULL, NULL, NULL, NULL};
+static const R01sIslandVTable ISLAND_FLASHER_VT = {island_flasher_init, NULL, NULL, NULL, NULL};
+static const R01sIslandVTable ISLAND_CART_MOD_VT = {r01s_island_cart_module_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_APU_VT = {island_apu_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_MCU_LB_VT = {island_mcu_lb_init, NULL, NULL, NULL, NULL};
 
@@ -2114,7 +2184,7 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     if (!board || !board->cart_loaded) {
         return;
     }
-    img = board->cart_flash.mem;
+    img = board->cart_module.flash.mem;
     if (memcmp(img, "retr01", 6) != 0) {
         return;
     }
@@ -2136,10 +2206,10 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     (void)get_u24(ptrs + 30);
     (void)get_u24(ptrs + 33);
     board->cart_off_other_title =
-        cart_other_payload_abs(img, sizeof(board->cart_flash.mem), board->cart_off_other, board->cart_len_other, 0);
+        cart_other_payload_abs(img, sizeof(board->cart_module.flash.mem), board->cart_off_other, board->cart_len_other, 0);
     board->cart_off_other_inter =
-        cart_other_payload_abs(img, sizeof(board->cart_flash.mem), board->cart_off_other, board->cart_len_other, 1);
-    if ((size_t)off_wtable + 8u > sizeof(board->cart_flash.mem)) {
+        cart_other_payload_abs(img, sizeof(board->cart_module.flash.mem), board->cart_off_other, board->cart_len_other, 1);
+    if ((size_t)off_wtable + 8u > sizeof(board->cart_module.flash.mem)) {
         return;
     }
     slot = img + off_wtable;
@@ -2147,7 +2217,7 @@ static void board_resolve_cart_meta(R01sBoard *board) {
         return;
     }
     world_base = get_u24(slot + 2);
-    if ((size_t)world_base + 32u > sizeof(board->cart_flash.mem)) {
+    if ((size_t)world_base + 32u > sizeof(board->cart_module.flash.mem)) {
         return;
     }
     hdr = img + world_base;
@@ -2172,7 +2242,7 @@ static void board_resolve_cart_meta(R01sBoard *board) {
         uint32_t off_bg0 = get_u24(hdr + 14);
         board->cart_off_bg0_dir = off_bg0 ? (world_base + off_bg0) : 0;
     }
-    if ((size_t)world_base + (size_t)off_sdir + (size_t)screen_count * 12u > sizeof(board->cart_flash.mem)) {
+    if ((size_t)world_base + (size_t)off_sdir + (size_t)screen_count * 12u > sizeof(board->cart_module.flash.mem)) {
         board->cart_off_chr = 0;
         board->cart_world_base = 0;
         board->cart_screen_count = 0;
@@ -2262,12 +2332,12 @@ static void board_install_bringup_prg(R01sBoard *board) {
 
     base = board->cart_off_prg;
     for (i = 0; i < R01S_CART_PRG_BYTES; i++) {
-        r01s_sst39sf040_poke(&board->cart_flash, base + i, 0xEA);
+        r01s_sst39sf040_poke(&board->cart_module.flash, base + i, 0xEA);
     }
-    r01s_sst39sf040_load(&board->cart_flash, base, buf, (uint32_t)n);
+    r01s_sst39sf040_load(&board->cart_module.flash, base, buf, (uint32_t)n);
     /* Reset vector at CPU $FFFC/$FFFD => PRG offset $7FFC/$7FFD */
-    r01s_sst39sf040_poke(&board->cart_flash, base + 0x7FFCu, 0x00);
-    r01s_sst39sf040_poke(&board->cart_flash, base + 0x7FFDu, 0x80);
+    r01s_sst39sf040_poke(&board->cart_module.flash, base + 0x7FFCu, 0x00);
+    r01s_sst39sf040_poke(&board->cart_module.flash, base + 0x7FFDu, 0x80);
 
 }
 
@@ -2308,10 +2378,10 @@ static void board_install_synthetic_cart(R01sBoard *board) {
         pals[R01S_PAL_PLANE_BYTES + i * 4u + 3] = 34;
     }
 
-    memset(board->cart_flash.mem, 0xFF, sizeof(board->cart_flash.mem));
-    r01s_sst39sf040_load(&board->cart_flash, 0, hdr, R01S_CART_HDR_SIZE);
-    r01s_sst39sf040_load(&board->cart_flash, R01S_CART_HDR_SIZE, ptrs, R01S_CART_PTR_TABLE_BYTES);
-    r01s_sst39sf040_load(&board->cart_flash, off_pal_bg, pals, (uint32_t)sizeof(pals));
+    memset(board->cart_module.flash.mem, 0xFF, sizeof(board->cart_module.flash.mem));
+    r01s_sst39sf040_load(&board->cart_module.flash, 0, hdr, R01S_CART_HDR_SIZE);
+    r01s_sst39sf040_load(&board->cart_module.flash, R01S_CART_HDR_SIZE, ptrs, R01S_CART_PTR_TABLE_BYTES);
+    r01s_sst39sf040_load(&board->cart_module.flash, off_pal_bg, pals, (uint32_t)sizeof(pals));
     board->cart_off_prg = off_prg;
     board->cart_len_prg = R01S_CART_PRG_BYTES;
     board->cart_loaded = 1;
@@ -2332,8 +2402,8 @@ static int board_parse_cart_image(R01sBoard *board, const uint8_t *img, size_t l
         if (len > R01S_FLASH_BYTES) {
             len = R01S_FLASH_BYTES;
         }
-        memset(board->cart_flash.mem, 0xFF, sizeof(board->cart_flash.mem));
-        r01s_sst39sf040_load(&board->cart_flash, 0, img, (uint32_t)len);
+        memset(board->cart_module.flash.mem, 0xFF, sizeof(board->cart_module.flash.mem));
+        r01s_sst39sf040_load(&board->cart_module.flash, 0, img, (uint32_t)len);
         board->cart_off_prg = R01S_CART_HDR_SIZE + R01S_CART_PTR_TABLE_BYTES + 2u * 128u;
         board->cart_len_prg = R01S_CART_PRG_BYTES;
         board->cart_loaded = 1;
@@ -2352,11 +2422,11 @@ static int board_parse_cart_image(R01sBoard *board, const uint8_t *img, size_t l
     if ((size_t)off_prg + len_prg > len && (size_t)off_prg >= len) {
         return -1;
     }
-    memset(board->cart_flash.mem, 0xFF, sizeof(board->cart_flash.mem));
+    memset(board->cart_module.flash.mem, 0xFF, sizeof(board->cart_module.flash.mem));
     if (len > R01S_FLASH_BYTES) {
         len = R01S_FLASH_BYTES;
     }
-    r01s_sst39sf040_load(&board->cart_flash, 0, img, (uint32_t)len);
+    r01s_sst39sf040_load(&board->cart_module.flash, 0, img, (uint32_t)len);
     board->cart_off_prg = off_prg;
     board->cart_len_prg = len_prg;
     board->cart_loaded = 1;
@@ -2400,6 +2470,7 @@ int r01s_board_load_cart(R01sBoard *board, const char *path) {
     {
         const char *slash = strrchr(path, '/');
         snprintf(board->cart_label, sizeof(board->cart_label), "%s", slash ? slash + 1 : path);
+        snprintf(board->cart_path, sizeof(board->cart_path), "%s", path);
     }
     /* Cart PRG in flash is executed as-is (Studio export includes MAP boot). */
     return 0;
@@ -2415,7 +2486,7 @@ int r01s_board_has_screen(const R01sBoard *board, int col, int row) {
     if (col < 0 || row < 0 || col > 255 || row > 255) {
         return 0;
     }
-    dir = board->cart_flash.mem + board->cart_off_sdir;
+    dir = board->cart_module.flash.mem + board->cart_off_sdir;
     for (si = 0; si < (int)board->cart_screen_count; si++) {
         const uint8_t *e = dir + (size_t)si * 12u;
         if (e[0] == (uint8_t)col && e[1] == (uint8_t)row) {
@@ -2432,7 +2503,7 @@ int r01s_board_first_screen(const R01sBoard *board, int *out_col, int *out_row) 
     if (!board || board->cart_off_sdir == 0 || board->cart_screen_count == 0) {
         return 0;
     }
-    dir = board->cart_flash.mem + board->cart_off_sdir;
+    dir = board->cart_module.flash.mem + board->cart_off_sdir;
     e = dir;
     if (out_col) {
         *out_col = (int)e[0];
@@ -2450,7 +2521,7 @@ static uint32_t board_map_off_for_screen(const R01sBoard *board, int col, int ro
     if (!board || board->cart_off_sdir == 0) {
         return 0;
     }
-    dir = board->cart_flash.mem + board->cart_off_sdir;
+    dir = board->cart_module.flash.mem + board->cart_off_sdir;
     for (si = 0; si < (int)board->cart_screen_count; si++) {
         const uint8_t *e = dir + (size_t)si * 12u;
         if (e[0] == (uint8_t)col && e[1] == (uint8_t)row) {
@@ -2478,11 +2549,11 @@ int r01s_board_attr_at(const R01sBoard *board, int wx, int wy, uint8_t *out_attr
     tx = lx / 8;
     ty = ly / 8;
     cell = ty * 16 + tx;
-    if (pay + 240u + (uint32_t)cell >= sizeof(board->cart_flash.mem)) {
+    if (pay + 240u + (uint32_t)cell >= sizeof(board->cart_module.flash.mem)) {
         return -1;
     }
     if (out_attr) {
-        *out_attr = r01s_sst39sf040_peek(&board->cart_flash, pay + 240u + (uint32_t)cell);
+        *out_attr = r01s_sst39sf040_peek(&board->cart_module.flash, pay + 240u + (uint32_t)cell);
     }
     return 0;
 }
@@ -2543,7 +2614,7 @@ static void board_load_screen_slot(R01sBoard *board, int col, int row, int slot)
         return;
     }
     for (i = 0; i < 480u; i++) {
-        uint8_t b = r01s_sst39sf040_peek(&board->cart_flash, map_off + i);
+        uint8_t b = r01s_sst39sf040_peek(&board->cart_module.flash, map_off + i);
         r01s_as6c62256_poke(&board->vram, (uint16_t)(base + i), b);
     }
     board->vram_slot_present[slot] = 1;
@@ -2638,12 +2709,12 @@ void r01s_board_load_bg0(R01sBoard *board) {
     if (!board->cart_loaded || board->cart_world_base == 0) {
         return;
     }
-    img = board->cart_flash.mem;
+    img = board->cart_module.flash.mem;
 
     /* BG1 present bbox (same rule as emu prepare_world). */
     if (board->cart_off_sdir != 0 && board->cart_screen_count > 0 &&
         (size_t)board->cart_off_sdir + (size_t)board->cart_screen_count * 12u <=
-            sizeof(board->cart_flash.mem)) {
+            sizeof(board->cart_module.flash.mem)) {
         dir = img + board->cart_off_sdir;
         for (si = 0; si < (int)board->cart_screen_count; si++) {
             const uint8_t *e = dir + (size_t)si * 12u;
@@ -2683,7 +2754,7 @@ void r01s_board_load_bg0(R01sBoard *board) {
     if (n > R01S_BG0_SCREENS_MAX) {
         n = R01S_BG0_SCREENS_MAX;
     }
-    if ((size_t)board->cart_off_bg0_dir + (size_t)n * 12u > sizeof(board->cart_flash.mem)) {
+    if ((size_t)board->cart_off_bg0_dir + (size_t)n * 12u > sizeof(board->cart_module.flash.mem)) {
         return;
     }
     dir = img + board->cart_off_bg0_dir;
@@ -2693,7 +2764,7 @@ void r01s_board_load_bg0(R01sBoard *board) {
         uint32_t abs = board->cart_world_base + poff;
         int c = (int)e[0];
         int r = (int)e[1];
-        if ((size_t)abs + R01S_CART_SCREEN_PAYLOAD > sizeof(board->cart_flash.mem)) {
+        if ((size_t)abs + R01S_CART_SCREEN_PAYLOAD > sizeof(board->cart_module.flash.mem)) {
             continue;
         }
         board->bg0[board->bg0_count].present = 1;
@@ -2737,7 +2808,7 @@ int r01s_board_softboot_start_screen(R01sBoard *board) {
         return -1;
     }
     for (i = 0; i < 480u; i++) {
-        uint8_t b = r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_map_screen0 + i);
+        uint8_t b = r01s_sst39sf040_peek(&board->cart_module.flash, board->cart_off_map_screen0 + i);
         r01s_as6c62256_poke(&board->vram, (uint16_t)i, b);
     }
     board->vram_slot_present[0] = 1;
@@ -2781,7 +2852,7 @@ int r01s_board_catchup_bringup(R01sBoard *board, R01sIslandGroup *group) {
 
     /* Default: run bring-up PRG MAP stream on the pin-level netlist (~12k steps). */
     target = board->cart_off_map_screen0 + 480u;
-    expect0 = r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_map_screen0);
+    expect0 = r01s_sst39sf040_peek(&board->cart_module.flash, board->cart_off_map_screen0);
     board->catchup_cancel = 0;
     if (!group) {
         return -1;
@@ -2822,6 +2893,7 @@ static void board_reset(R01sIslandGroup *group) {
     }
     r01s_timing_reset();
     ctx->reset_hold = R01S_RESET_HOLD;
+    ctx->reset_nmi_pulse = 0;
     ctx->cycles = 0;
     ctx->phi2_prev = R01S_LVL_L;
     ctx->vram_addr = 0;
@@ -2892,7 +2964,9 @@ static void board_reset(R01sIslandGroup *group) {
     r01s_entity_reset(r01s_compositor_entity(ctx->video_impl.comp));
     r01s_entity_reset(r01s_at28c16_entity(ctx->video_impl.prom));
     r01s_entity_reset(r01s_video_sink_entity(ctx->video_impl.sink));
-    r01s_entity_reset(r01s_sst39sf040_entity(ctx->cart_impl.flash));
+    if (ctx->cart_impl.flash) {
+        r01s_entity_reset(r01s_sst39sf040_entity(ctx->cart_impl.flash));
+    }
     r01s_entity_reset(r01s_atmega328p_entity(ctx->apu_impl.apu));
     r01s_entity_reset(r01s_atmega1284p_entity(ctx->mcu_lb_impl.mcu));
     r01s_entity_reset(r01s_as6c62256_entity(ctx->mcu_lb_impl.sram));
@@ -2947,6 +3021,10 @@ static void board_step(R01sIslandGroup *group) {
             r01s_entity_tick(beam);
             {
                 R01sLevel nmi = r01s_entity_sense(beam, "NMI#");
+                if (ctx->reset_nmi_pulse > 0) {
+                    nmi = R01S_LVL_L;
+                    ctx->reset_nmi_pulse--;
+                }
                 r01s_entity_drive(cpu_e, "NMIB", nmi);
                 if (nmi == R01S_LVL_L && ctx->nmi_prev != R01S_LVL_L) {
                     ctx->nmi_pulses++;
@@ -3106,8 +3184,7 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     board->video_impl.comp = &board->compositor;
     board->video_impl.prom = &board->color_prom;
     board->video_impl.sink = &board->video_sink;
-    board->cart_impl.flash = &board->cart_flash;
-    board->cart_impl.save_eeprom = &board->cart_eeprom;
+    r01s_board_init_flasher_hw(board);
     board->apu_impl.apu = &board->apu;
     board->mcu_lb_impl.mcu = &board->mcu1284;
     board->mcu_lb_impl.sram = &board->linebuf;
@@ -3157,7 +3234,7 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     if (r01s_island_builder_add(b, &ISLAND_BEAM_VT, "ISLAND H  BEAM NMI", 0, 0, 1, 1, &board->beam_impl) < 0) {
         return -1;
     }
-    if (r01s_island_builder_add(b, &ISLAND_CART_VT, "ISLAND J  CART FLASH", 0, 0, 1, 1,
+    if (r01s_island_builder_add(b, &ISLAND_CART_VT, "ISLAND J  CART SOCKET", 0, 0, 1, 1,
                                 &board->cart_impl) < 0) {
         return -1;
     }
@@ -3166,6 +3243,14 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     }
     if (r01s_island_builder_add(b, &ISLAND_MCU_LB_VT, "ISLAND L  1284+LINEBUF", 0, 0, 1, 1,
                                 &board->mcu_lb_impl) < 0) {
+        return -1;
+    }
+    if (r01s_island_builder_add(b, &ISLAND_FLASHER_VT, "ISLAND F  FLASHER USB", 0, 0, 1, 1,
+                                &board->flasher_impl) < 0) {
+        return -1;
+    }
+    if (r01s_island_builder_add(b, &ISLAND_CART_MOD_VT, "ISLAND N  CART MODULE", 0, 0, 1, 1,
+                                &board->cart_mod_impl) < 0) {
         return -1;
     }
 
@@ -3245,15 +3330,8 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         r01s_island_builder_mount_rel(b, beam_y, R01S_ISLAND_BEAM, x, 0);
     }
     {
-        R01sEntity *flash_e = r01s_sst39sf040_entity(&board->cart_flash);
-        R01sEntity *ee_e = r01s_i2c_eeprom_entity(&board->cart_eeprom);
         R01sEntity *buf_e = r01s_sn74hc245_entity(&board->bus245[R01S_BUS245_CART_OAM]);
-        int x = 0;
-        r01s_island_builder_mount_rel(b, flash_e, R01S_ISLAND_CART, 0, 0);
-        x = flash_e->body_w + R01S_CHIP_GAP;
-        r01s_island_builder_mount_rel(b, ee_e, R01S_ISLAND_CART, x, 0);
-        x += ee_e->body_w + R01S_CHIP_GAP;
-        r01s_island_builder_mount_rel(b, buf_e, R01S_ISLAND_CART, x, 0);
+        r01s_island_builder_mount_rel(b, buf_e, R01S_ISLAND_CART, 0, 0);
     }
     r01s_island_builder_mount_rel(b, r01s_atmega328p_entity(&board->apu), R01S_ISLAND_APU, 0, 0);
     {
@@ -3275,14 +3353,37 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
             x += mux_e->body_w + R01S_CHIP_GAP;
         }
     }
+    {
+        R01sEntity *mcu_e = r01s_atmega32u4_entity(&board->flasher_mcu);
+        R01sEntity *lo_e = r01s_sn74hc595_entity(&board->flasher_shift_lo);
+        R01sEntity *hi_e = r01s_sn74hc595_entity(&board->flasher_shift_hi);
+        R01sEntity *usb_e = r01s_usbc_receptacle_entity(&board->flasher_usb);
+        int x = 0;
+        r01s_island_builder_mount_rel(b, mcu_e, R01S_ISLAND_FLASHER, 0, 0);
+        x += mcu_e->body_w + R01S_CHIP_GAP;
+        r01s_island_builder_mount_rel(b, lo_e, R01S_ISLAND_FLASHER, x, 0);
+        x += lo_e->body_w + R01S_CHIP_GAP;
+        r01s_island_builder_mount_rel(b, hi_e, R01S_ISLAND_FLASHER, x, 0);
+        x += hi_e->body_w + R01S_CHIP_GAP;
+        r01s_island_builder_mount_rel(b, usb_e, R01S_ISLAND_FLASHER, x, 0);
+    }
+    {
+        R01sEntity *flash_e = r01s_sst39sf040_entity(&board->cart_module.flash);
+        R01sEntity *ee_e = r01s_i2c_eeprom_entity(&board->cart_module.save);
+        int x = 0;
+        r01s_island_builder_mount_rel(b, flash_e, R01S_ISLAND_CART_MOD, 0, 0);
+        x = flash_e->body_w + R01S_CHIP_GAP;
+        r01s_island_builder_mount_rel(b, ee_e, R01S_ISLAND_CART_MOD, x, 0);
+    }
 
     r01s_island_builder_fit_all(b);
     r01s_island_builder_arrange_rows(b, 40, 40, R01S_ISLAND_GAP, R01S_ISLAND_GAP, R01S_ISLAND_ROW_MAX_W);
 
     {
         int bom_ic = r01s_island_builder_count_visual(b, R01S_ENTITY_VIS_IC);
-        if (bom_ic != R01S_BOM_IC_N) {
-            fprintf(stderr, "board: expected %d BOM IC mounts, got %d\n", R01S_BOM_IC_N, bom_ic);
+        /* Motherboard BOM (32) + flasher bench (32U4 + 2x595). */
+        if (bom_ic != R01S_BOM_IC_N + 3) {
+            fprintf(stderr, "board: expected %d BOM+flasher IC mounts, got %d\n", R01S_BOM_IC_N + 3, bom_ic);
             return -1;
         }
     }

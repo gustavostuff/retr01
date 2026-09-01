@@ -214,7 +214,8 @@ void ui_set_lcd_scale(R01sUi *ui, int scale_2x) {
         for (i = 0; i < ui->chip_count; i++) {
             R01sEntity *e = ui->chips[i];
             int ii;
-            if (!e || e->visual != R01S_ENTITY_VIS_DISPLAY) {
+            if (!e || e->visual != R01S_ENTITY_VIS_DISPLAY || !e->part ||
+                strcmp(e->part, "SCREEN_SINK") != 0) {
                 continue;
             }
             ii = (int)ui->chip_island[i];
@@ -232,7 +233,8 @@ void ui_set_lcd_scale(R01sUi *ui, int scale_2x) {
         }
         for (i = 0; i < ui->chip_count; i++) {
             R01sEntity *e = ui->chips[i];
-            if (e && e->visual == R01S_ENTITY_VIS_DISPLAY) {
+            if (e && e->visual == R01S_ENTITY_VIS_DISPLAY && e->part &&
+                strcmp(e->part, "SCREEN_SINK") == 0) {
                 clamp_chip(ui, e, (int)ui->chip_island[i]);
             }
         }
@@ -1366,6 +1368,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     /* Floating overlays */
     draw_islands_strip(r, ui);
     draw_legend_strip(r, ui);
+    ui_control_strip_draw(r, ui);
     draw_controller_overlay(r, 0, &ui->gamepad[0]);
     draw_controller_overlay(r, 1, &ui->gamepad[1]);
 

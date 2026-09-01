@@ -55,9 +55,9 @@ int main(void) {
     group = r01s_island_builder_group(&builder);
     expect_true(group != NULL, "group");
     expect_true(r01s_island_group_count(group) == R01S_ISLAND_COUNT,
-                "9 islands O+A+C+D+G+H+J+K+L");
-    expect_true(r01s_island_builder_count_visual(&builder, R01S_ENTITY_VIS_IC) == R01S_BOM_IC_N,
-                "32 BOM IC visuals mounted");
+                "11 islands incl flasher+cart mod");
+    expect_true(r01s_island_builder_count_visual(&builder, R01S_ENTITY_VIS_IC) == R01S_BOM_IC_N + 3,
+                "32 BOM + 3 flasher IC visuals mounted");
     expect_true(r01s_island_group_at(group, R01S_ISLAND_VIDEO) != NULL, "video island present");
     expect_true(r01s_island_group_at(group, R01S_ISLAND_VIDEO)->title != NULL &&
                     strstr(r01s_island_group_at(group, R01S_ISLAND_VIDEO)->title, "VIDEO") != NULL,
@@ -83,8 +83,8 @@ int main(void) {
     b = r01s_board_from_group(group);
     expect_true(b != NULL, "board ctx");
     expect_true(b->cart_loaded, "cart loaded");
-    expect_true(r01s_sst39sf040_peek(&b->cart_flash, 0) == 'r', "flash magic r (retr01)");
-    expect_true(r01s_sst39sf040_peek(&b->cart_flash, 1) == 'e', "flash magic e (retr01)");
+    expect_true(r01s_sst39sf040_peek(&b->cart_module.flash, 0) == 'r', "flash magic r (retr01)");
+    expect_true(r01s_sst39sf040_peek(&b->cart_module.flash, 1) == 'e', "flash magic e (retr01)");
 
     r01s_pads_set(&b->pads, 0, 0xA5);
     {
@@ -200,8 +200,8 @@ int main(void) {
         for (pi = 0; paths[pi]; pi++) {
             if (r01s_board_load_cart(b, paths[pi]) == 0) {
                 loaded = 1;
-                expect_true(r01s_sst39sf040_peek(&b->cart_flash, 0) == 'r', "studio cart magic");
-                expect_true(r01s_sst39sf040_peek(&b->cart_flash, b->cart_off_prg) == 0x78,
+                expect_true(r01s_sst39sf040_peek(&b->cart_module.flash, 0) == 'r', "studio cart magic");
+                expect_true(r01s_sst39sf040_peek(&b->cart_module.flash, b->cart_off_prg) == 0x78,
                             "studio cart PRG SEI (not sim overlay)");
                 expect_true(b->cart_off_chr != 0, "world0 CHR base from cart");
                 expect_true(b->cart_off_map_screen0 != 0, "world0 start-screen MAP payload");
@@ -210,7 +210,7 @@ int main(void) {
                 expect_true(b->map_addr >= b->cart_off_map_screen0 + 480u, "MAP addr past start screen");
                 {
                     uint8_t expect0 =
-                        r01s_sst39sf040_peek(&b->cart_flash, b->cart_off_map_screen0);
+                        r01s_sst39sf040_peek(&b->cart_module.flash, b->cart_off_map_screen0);
                     expect_true(r01s_as6c62256_peek(&b->vram, 0) == expect0,
                                 "VRAM[0] matches streamed MAP byte");
                 }

@@ -108,13 +108,13 @@ static void write_snapshot(R01sBoard *b, uint32_t wall_ms, const char *why) {
             "prg0=%02X%02X%02X%02X (expect A9..=LDA if bring-up overlay)\n",
             b->cart_loaded, b->cart_label[0] ? b->cart_label : "-", (unsigned)prg0,
             (unsigned)b->cart_len_prg, (unsigned)b->cart_off_chr, (unsigned)b->cart_off_map_screen0,
-            (unsigned)b->cart_off_pal_bg, r01s_sst39sf040_peek(&b->cart_flash, 0),
-            r01s_sst39sf040_peek(&b->cart_flash, 1), r01s_sst39sf040_peek(&b->cart_flash, 2),
-            r01s_sst39sf040_peek(&b->cart_flash, 3), r01s_sst39sf040_peek(&b->cart_flash, 4),
-            r01s_sst39sf040_peek(&b->cart_flash, 5), r01s_sst39sf040_peek(&b->cart_flash, prg0 + 0),
-            r01s_sst39sf040_peek(&b->cart_flash, prg0 + 1),
-            r01s_sst39sf040_peek(&b->cart_flash, prg0 + 2),
-            r01s_sst39sf040_peek(&b->cart_flash, prg0 + 3));
+            (unsigned)b->cart_off_pal_bg, r01s_sst39sf040_peek(&b->cart_module.flash, 0),
+            r01s_sst39sf040_peek(&b->cart_module.flash, 1), r01s_sst39sf040_peek(&b->cart_module.flash, 2),
+            r01s_sst39sf040_peek(&b->cart_module.flash, 3), r01s_sst39sf040_peek(&b->cart_module.flash, 4),
+            r01s_sst39sf040_peek(&b->cart_module.flash, 5), r01s_sst39sf040_peek(&b->cart_module.flash, prg0 + 0),
+            r01s_sst39sf040_peek(&b->cart_module.flash, prg0 + 1),
+            r01s_sst39sf040_peek(&b->cart_module.flash, prg0 + 2),
+            r01s_sst39sf040_peek(&b->cart_module.flash, prg0 + 3));
     fprintf(g_log,
             "health bits=%04X latch=%d vram_w=%d vram_r=%d pad=%d beam=%d bg=%d video=%d map=%d "
             "apu=%d oam=%d linebuf=%d spr=%d nmi=%d nmi_pulses=%u\n",

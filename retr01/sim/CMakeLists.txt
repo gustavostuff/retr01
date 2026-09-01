@@ -37,6 +37,7 @@ add_library(retr01_sim_core
   chips/as6c62256.c
   chips/prg_rom.c
   chips/pads.c
+  chips/flasher_bus.c
   chips/sst39sf040.c
   chips/w65c02s.c
   chips/osc_dot.c
@@ -47,8 +48,17 @@ add_library(retr01_sim_core
   chips/video_sink.c
   chips/atmega328p.c
   chips/atmega1284p.c
+  chips/atmega32u4.c
+  chips/sn74hc595.c
+  chips/usbc_receptacle.c
+  chips/pc_host.c
   chips/sprite_fetch.c
   chips/integration.c
+  src/cart_module.c
+  src/cart_slot.c
+  src/board_flasher.c
+  src/ui_button.c
+  src/flasher_bench.c
 )
 set(R01_PKG_ROOT "${CMAKE_SOURCE_DIR}/..")
 set(R01_REPO_ROOT "${R01_PKG_ROOT}/.." CACHE PATH "Retr01 repo root")
@@ -69,12 +79,16 @@ target_include_directories(retr01_sim_core PUBLIC
 )
 target_link_libraries(retr01_sim_core PUBLIC r01_play_common)
 
+set(R01_OUTPUT_DIR "${R01_REPO_ROOT}/output")
+set(R01_TEST_CART "${R01_OUTPUT_DIR}/test.retr01")
+
 add_library(retr01_sim_app
   src/ui.c
   src/ui_font.c
   src/ui_draw_chip.c
   src/ui_placement.c
   src/ui_draw.c
+  src/ui_control_strip.c
   src/ui_input.c
   src/ui_pin_net.c
   src/ui_layout.c
@@ -87,15 +101,14 @@ target_include_directories(retr01_sim_app PUBLIC
 target_link_libraries(retr01_sim_app PUBLIC retr01_sim_core PkgConfig::SDL2 PkgConfig::FREETYPE)
 target_compile_definitions(retr01_sim_app PRIVATE
   "R01S_ASSETS_DIR=\"${R01_ASSETS_OTHER}\""
-  "R01S_ASSETS_PNG_DIR=\"${R01_ASSETS_PNG}\"")
+  "R01S_ASSETS_PNG_DIR=\"${R01_ASSETS_PNG}\""
+  "R01S_CART_PATH_A=\"${R01_OUTPUT_DIR}/test.retr01\""
+  "R01S_CART_PATH_B=\"${R01_OUTPUT_DIR}/test_2.retr01\"")
 
 add_executable(retr01_sim src/main.c)
 target_link_libraries(retr01_sim PRIVATE retr01_sim_app)
 
 enable_testing()
-
-set(R01_OUTPUT_DIR "${R01_REPO_ROOT}/output")
-set(R01_TEST_CART "${R01_OUTPUT_DIR}/test.retr01")
 
 function(r01s_unit_test name)
   add_executable(${name} tests/${name}.c)
@@ -125,6 +138,13 @@ r01s_unit_test(test_sst39sf040)
 r01s_unit_test(test_w65c02s)
 r01s_unit_test(test_atmega328p)
 r01s_unit_test(test_atmega1284p)
+r01s_unit_test(test_atmega32u4)
+r01s_unit_test(test_sn74hc595)
+r01s_unit_test(test_usbc_pc_host)
+r01s_unit_test(test_cart_slot)
+r01s_unit_test(test_island_cart_module)
+r01s_unit_test(test_island_flasher)
+r01s_unit_test(test_cart_flash_flow)
 r01s_unit_test(test_island_abcdeghiojklmnp)
 r01s_unit_test(test_pads)
 r01s_unit_test(test_cart)

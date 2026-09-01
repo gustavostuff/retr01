@@ -3,7 +3,7 @@
 
 #include "retr01_sim/entity.h"
 
-#define R01S_ISLAND_MAX_ENTITIES 16
+#define R01S_ISLAND_MAX_ENTITIES 20
 
 typedef struct R01sIsland R01sIsland;
 

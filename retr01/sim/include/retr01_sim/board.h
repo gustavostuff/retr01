@@ -25,6 +25,12 @@
 #include "sn74hc573.h"
 #include "integration.h"
 #include "sprite_fetch.h"
+#include "atmega32u4.h"
+#include "pc_host.h"
+#include "retr01_sim/cart_module.h"
+#include "retr01_sim/cart_slot.h"
+#include "retr01_sim/flasher_bench.h"
+#include "sn74hc595.h"
 #include "sst39sf040.h"
 #include "video_sink.h"
 #include "w65c02s.h"
@@ -34,7 +40,7 @@
 /* Combinatorial settle passes per wire/eval half-step (PLD/glue depth). */
 #define R01S_SETTLE_PASSES 2
 
-/* 9 canvas islands: support chips co-located; pads/sprites/NMI/BG-fetch stay wired-only. */
+/* 11 canvas islands: mobo + detachable cart + flasher bench. */
 enum {
     R01S_ISLAND_VIDEO = 0,     /* O: LCD / RGBS (top-left) */
     R01S_ISLAND_POWER_CLK = 1, /* A+B: 5V + OSC/HC14 */
@@ -42,10 +48,12 @@ enum {
     R01S_ISLAND_IO_LATCH = 3,  /* D */
     R01S_ISLAND_VRAM = 4,      /* G */
     R01S_ISLAND_BEAM = 5,      /* H */
-    R01S_ISLAND_CART = 6,      /* J: flash + cart HC245 */
+    R01S_ISLAND_CART = 6,      /* J: cart socket HC245 */
     R01S_ISLAND_APU = 7,       /* K */
     R01S_ISLAND_MCU_LB = 8,    /* L+M: 1284 + linebuf */
-    R01S_ISLAND_COUNT = 9,
+    R01S_ISLAND_FLASHER = 9,   /* USB flasher + Flash ROM button */
+    R01S_ISLAND_CART_MOD = 10, /* detachable cart module */
+    R01S_ISLAND_COUNT = 11,
 };
 
 typedef struct R01sIslandPowerClkImpl {
@@ -139,7 +147,8 @@ typedef struct R01sBoard {
     R01sAs6c62256 ram;
     R01sAs6c62256 vram;
     R01sAs6c62256 linebuf;
-    R01sSst39sf040 cart_flash;
+    R01sCartModule cart_module;
+    R01sCartSlotMgr cart_slot;
     R01sAtmega328p apu;
     R01sAtmega1284p mcu1284;
     R01sAt28c16 color_prom;
@@ -152,7 +161,14 @@ typedef struct R01sBoard {
     R01sAtf22v10 pld_beam_y;
     R01sBgFetch bg_fetch;
     R01sCompositor compositor;
-    R01sI2cEeprom cart_eeprom;
+    /* Flasher bench (not in 32-IC BOM). */
+    R01sUsbcReceptacle flasher_usb;
+    R01sAtmega32u4 flasher_mcu;
+    R01sSn74hc595 flasher_shift_lo;
+    R01sSn74hc595 flasher_shift_hi;
+    R01sPcHost pc_host;
+    R01sIslandFlasherImpl flasher_impl;
+    R01sIslandCartModuleImpl cart_mod_impl;
     R01sIslandPowerClkImpl power_clk_impl;
     R01sIslandCpuMemImpl cpu_mem_impl;
     R01sIslandIoLatchImpl io_latch_impl;
@@ -217,6 +233,7 @@ typedef struct R01sBoard {
     uint32_t cart_len_credits;
     int cart_loaded;
     char cart_label[48];
+    char cart_path[256];
     /* Active palette RAM (soft); addr index from HC573 FE08. */
     uint8_t active_pal[32];
     uint8_t pal_addr;
@@ -244,6 +261,7 @@ typedef struct R01sBoard {
     R01sPlay play;
     int catchup_cancel; /* cooperative cancel for threaded IC catchup */
     int reset_hold;
+    int reset_nmi_pulse; /* post-reset NMI strobe (NES reset+ hook) */
     uint32_t cycles;
     R01sLevel phi2_prev;
     /* Bring-up milestones (sticky, cleared on reset). */
@@ -312,6 +330,17 @@ void r01s_board_mark_map_ready(R01sBoard *board);
 /* Host Play BG0: load from cart meta and update proportional scroll from play cam. */
 void r01s_board_load_bg0(R01sBoard *board);
 void r01s_board_update_bg0_scroll(R01sBoard *board, int cam_x, int cam_y);
+
+void r01s_board_set_power(R01sBoard *board, R01sIslandGroup *group, int on);
+void r01s_board_toggle_power(R01sBoard *board, R01sIslandGroup *group);
+void r01s_board_console_reset(R01sBoard *board, R01sIslandGroup *group);
+int r01s_board_cart_inserted(const R01sBoard *board);
+int r01s_board_select_cart(R01sBoard *board, const char *path);
+const char *r01s_board_cart_path(const R01sBoard *board);
+void r01s_board_toggle_cart(R01sBoard *board);
+int r01s_board_start_flash(R01sBoard *board, const char *rom_path);
+int r01s_board_flash_active(const R01sBoard *board);
+int r01s_board_flash_poll(R01sBoard *board, int budget);
 
 R01sBoard *r01s_board_from_group(R01sIslandGroup *group);
 

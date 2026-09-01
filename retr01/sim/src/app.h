@@ -41,4 +41,8 @@ void r01s_app_mount_builder(R01sApp *app);
 void r01s_app_start_ic_catchup(R01sApp *app, struct R01sBoard *board);
 int r01s_app_catchup_active(const R01sApp *app);
 
+/* Control-strip power / reset (re-run IC catchup like Ctrl+R). */
+void r01s_app_toggle_power(R01sApp *app);
+void r01s_app_console_reset(R01sApp *app);
+
 #endif

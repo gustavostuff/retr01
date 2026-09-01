@@ -114,7 +114,7 @@ static int catchup_thread_fn_yielding(void *userdata) {
     SDL_LockMutex(app->board_mu);
     board->catchup_cancel = 0;
     target = board->cart_off_map_screen0 + 480u;
-    expect0 = r01s_sst39sf040_peek(&board->cart_flash, board->cart_off_map_screen0);
+    expect0 = r01s_sst39sf040_peek(&board->cart_module.flash, board->cart_off_map_screen0);
     SDL_UnlockMutex(app->board_mu);
 
     i = 0;
@@ -166,6 +166,68 @@ static int catchup_thread_fn_yielding(void *userdata) {
 
 int r01s_app_catchup_active(const R01sApp *app) {
     return app && SDL_AtomicGet((SDL_atomic_t *)&app->catchup_active) != 0;
+}
+
+static void app_cancel_catchup(R01sApp *app) {
+    if (!app || !r01s_app_catchup_active(app)) {
+        return;
+    }
+    if (app->catchup_board) {
+        app->catchup_board->catchup_cancel = 1;
+    }
+    catchup_join(app);
+}
+
+void r01s_app_toggle_power(R01sApp *app) {
+    R01sIslandGroup *group;
+    R01sBoard *board;
+    int was_on;
+
+    if (!app) {
+        return;
+    }
+    group = r01s_island_builder_group(&app->builder);
+    board = r01s_board_from_group(group);
+    if (!group || !board) {
+        return;
+    }
+    app_cancel_catchup(app);
+    was_on = group->powered;
+    if (app->board_mu) {
+        SDL_LockMutex(app->board_mu);
+    }
+    r01s_board_toggle_power(board, group);
+    if (app->board_mu) {
+        SDL_UnlockMutex(app->board_mu);
+    }
+    snprintf(app->ui.status, sizeof(app->ui.status), "power %s", group->powered ? "on" : "off");
+    if (group->powered && !was_on) {
+        r01s_app_start_ic_catchup(app, board);
+    }
+}
+
+void r01s_app_console_reset(R01sApp *app) {
+    R01sIslandGroup *group;
+    R01sBoard *board;
+
+    if (!app) {
+        return;
+    }
+    group = r01s_island_builder_group(&app->builder);
+    board = r01s_board_from_group(group);
+    if (!group || !board || !group->powered) {
+        return;
+    }
+    app_cancel_catchup(app);
+    if (app->board_mu) {
+        SDL_LockMutex(app->board_mu);
+    }
+    r01s_board_console_reset(board, group);
+    if (app->board_mu) {
+        SDL_UnlockMutex(app->board_mu);
+    }
+    r01s_app_start_ic_catchup(app, board);
+    snprintf(app->ui.status, sizeof(app->ui.status), "console reset");
 }
 
 /* Draw + present boot UI; reveal window on first paint so setup never flashes empty. */
@@ -262,6 +324,7 @@ void r01s_app_mount_builder(R01sApp *app) {
     }
     b = &app->builder;
     r01s_ui_bind_group(&app->ui, &b->group);
+    r01s_ui_bind_app(&app->ui, app);
     r01s_ui_pin_net_build(r01s_board_from_group(&b->group));
     for (i = 0; i < b->mount_count; i++) {
         R01sEntity *e = b->mounts[i].entity;
@@ -275,8 +338,9 @@ void r01s_app_mount_builder(R01sApp *app) {
     }
     {
         int bom_ic = r01s_island_builder_count_visual(b, R01S_ENTITY_VIS_IC);
-        if (bom_ic != R01S_BOM_IC_N) {
-            fprintf(stderr, "ui: expected %d BOM IC visuals, mounted %d ui chips\n", R01S_BOM_IC_N, bom_ic);
+        if (bom_ic != R01S_BOM_IC_N + 3) {
+            fprintf(stderr, "ui: expected %d BOM+flasher IC visuals, mounted %d ui chips\n", R01S_BOM_IC_N + 3,
+                    bom_ic);
         }
     }
     if (r01s_ui_layout_load(&app->ui) != 0) {
@@ -433,6 +497,9 @@ void r01s_app_frame(R01sApp *app) {
             app->ui.probe_pad_p1 = r01s_pads_get(&board->pads, 0);
             app->ui.probe_pad_p2 = r01s_pads_get(&board->pads, 1);
             r01s_play_tick(board, pad0);
+            if (r01s_board_flash_active(board)) {
+                r01s_board_flash_poll(board, 8192);
+            }
         }
         if (group) {
             if (group->running) {
