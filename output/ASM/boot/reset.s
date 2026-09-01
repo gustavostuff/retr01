@@ -10,6 +10,6 @@ reset:
         sta WORLD
         sta SCROLL_X
         sta SCROLL_Y
-        lda #1
+        lda #PPUCTRL_BOOT
         sta PPUCTRL
         jmp boot_stream
