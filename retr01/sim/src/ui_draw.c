@@ -1076,6 +1076,102 @@ uint8_t r01s_ui_gamepad_port(const R01sUi *ui, int player) {
     return r01s_gamepad_encode(&ui->gamepad[player]);
 }
 
+static const struct {
+    const char *text;
+    const char *chip_refdes; /* Chip to highlight */
+} TUTORIAL_STEPS[] = {
+    {"Welcome to Teaching Mode! The 65C02 CPU (U1) is the brain of the system. It fetches instructions and controls all other chips.", "U1"},
+    {"Address decoding is handled by the ATF22V10 (UPLDA). It watches the CPU's address lines and selects which chip (RAM, ROM, I/O) should wake up.", "UPLDA"},
+    {"The CPU fetches game logic instructions from the Cartridge PRG ROM (U40).", "U40"},
+    {"The CPU stores variables and stack data in the 32KB System RAM (U3).", "U3"},
+    {"While the CPU works, the Video Compositor (UPLDV) and counters constantly fetch background and sprite data from VRAM (U7A-U7F) to draw the screen.", "UPLDV"},
+    {"The CPU cannot talk directly to VRAM. It sends data to the Graphics Port (UPLDB) during VBlank, which forwards it to VRAM.", "UPLDB"},
+};
+#define TUTORIAL_MAX_STEPS (sizeof(TUTORIAL_STEPS) / sizeof(TUTORIAL_STEPS[0]))
+
+static void draw_tutorial_overlay(R01sUi *ui, SDL_Renderer *r) {
+    if (!ui->layout_teaching) return;
+    int step = ui->tutorial_step;
+    if (step < 0) step = 0;
+    if (step >= (int)TUTORIAL_MAX_STEPS) step = TUTORIAL_MAX_STEPS - 1;
+    ui->tutorial_step = step;
+
+    /* Dim the board slightly */
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+    fill_rect_a(r, R01S_UI_VIEW_X, R01S_UI_VIEW_Y, R01S_UI_VIEW_W, R01S_UI_VIEW_H, 0, 0, 0, 150);
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
+
+    /* Highlight the target chip */
+    const char *target = TUTORIAL_STEPS[step].chip_refdes;
+    if (target) {
+        int i;
+        for (i = 0; i < ui->chip_count; i++) {
+            if (ui->chips[i] && ui->chips[i]->refdes && strcmp(ui->chips[i]->refdes, target) == 0) {
+                int cx = ui_board_sx(ui, ui->chips[i]->board_x);
+                int cy = ui_board_sy(ui, ui->chips[i]->board_y);
+                draw_rect(r, cx - 4, cy - 4, ui->chips[i]->body_w + 8, ui->chips[i]->body_h + 8, 255, 255, 0);
+                draw_rect(r, cx - 5, cy - 5, ui->chips[i]->body_w + 10, ui->chips[i]->body_h + 10, 255, 255, 0);
+                /* Draw the chip again so it stands out above the dim overlay */
+                draw_board_item(r, ui, ui->chips[i], 1);
+            }
+        }
+    }
+
+    /* Draw tutorial box */
+    int box_w = R01S_UI_VIEW_W - 64;
+    int box_h = 100;
+    int box_x = R01S_UI_VIEW_X + 32;
+    int box_y = R01S_UI_VIEW_Y + R01S_UI_VIEW_H - box_h - 60;
+    fill_rect(r, box_x, box_y, box_w, box_h, 30, 30, 80);
+    draw_rect(r, box_x, box_y, box_w, box_h, 200, 200, 255);
+    
+    {
+        int text_x = box_x + 16;
+        int text_y = box_y + 16;
+        const char *p = TUTORIAL_STEPS[step].text;
+        char line[256] = {0};
+        
+        while (*p) {
+            char word[64];
+            int wl = 0;
+            while (*p == ' ') p++;
+            while (*p && *p != ' ' && wl < 63) {
+                word[wl++] = *p++;
+            }
+            word[wl] = '\0';
+            if (wl == 0) break;
+            
+            char test_line[256];
+            if (line[0]) snprintf(test_line, sizeof(test_line), "%s %s", line, word);
+            else snprintf(test_line, sizeof(test_line), "%s", word);
+            
+            if (font_text_width(test_line) > box_w - 32) {
+                font_draw(r, text_x, text_y, line, 255, 255, 255);
+                text_y += font_line_h() + 4;
+                snprintf(line, sizeof(line), "%s", word);
+            } else {
+                snprintf(line, sizeof(line), "%s", test_line);
+            }
+        }
+        if (line[0]) {
+            font_draw(r, text_x, text_y, line, 255, 255, 255);
+        }
+    }
+
+    /* Next / Prev buttons */
+    SDL_Rect next_btn, prev_btn;
+    tutorial_btn_rect(ui, 1, &next_btn);
+    tutorial_btn_rect(ui, 0, &prev_btn);
+
+    fill_rect(r, prev_btn.x, prev_btn.y, prev_btn.w, prev_btn.h, 60, 60, 100);
+    draw_rect(r, prev_btn.x, prev_btn.y, prev_btn.w, prev_btn.h, 150, 150, 200);
+    font_draw(r, prev_btn.x + 10, prev_btn.y + 4, "PREV", 255, 255, 255);
+
+    fill_rect(r, next_btn.x, next_btn.y, next_btn.w, next_btn.h, 60, 100, 60);
+    draw_rect(r, next_btn.x, next_btn.y, next_btn.w, next_btn.h, 150, 200, 150);
+    font_draw(r, next_btn.x + 10, next_btn.y + 4, "NEXT", 255, 255, 255);
+}
+
 void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     int i;
     SDL_Rect view_clip = {R01S_UI_VIEW_X, R01S_UI_VIEW_Y, R01S_UI_VIEW_W, R01S_UI_VIEW_H};
@@ -1175,6 +1271,10 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
 
     draw_rect(r, R01S_UI_VIEW_X, R01S_UI_VIEW_Y, R01S_UI_VIEW_W, R01S_UI_VIEW_H, 48, 64, 52);
 
+    if (ui->layout_teaching) {
+        draw_tutorial_overlay(ui, r);
+    }
+
     /* Fixed HUD */
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_UI_HUD_TOP, 12, 14, 16);
     font_draw(r, R01S_UI_UNIT, R01S_UI_UNIT, "Retr01 Sim", 200, 210, 220);
@@ -1212,6 +1312,24 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
         draw_rect(r, cbtn.x, cbtn.y, cbtn.w, cbtn.h, 120, 160, 130);
         font_draw(r, cbtn.x + (cbtn.w - font_text_width(clabel)) / 2, cbtn.y + (cbtn.h - font_line_h()) / 2, clabel, 200, 220,
                   180);
+    }
+    {
+        SDL_Rect tbtn;
+        const char *tlabel = "TEACH";
+        teach_btn_rect(ui, &tbtn);
+        fill_rect(r, tbtn.x, tbtn.y, tbtn.w, tbtn.h, ui->layout_teaching ? 40 : 28, ui->layout_teaching ? 70 : 40,
+                  ui->layout_teaching ? 100 : 32);
+        draw_rect(r, tbtn.x, tbtn.y, tbtn.w, tbtn.h, 120, 160, 130);
+        font_draw(r, tbtn.x + (tbtn.w - font_text_width(tlabel)) / 2, tbtn.y + (tbtn.h - font_line_h()) / 2, tlabel, 200, 220,
+                  180);
+    }
+    if (ui->layout_compact && !ui->layout_teaching) {
+        SDL_Rect sbtn;
+        const char *slabel = "SORT";
+        sort_btn_rect(ui, &sbtn);
+        fill_rect(r, sbtn.x, sbtn.y, sbtn.w, sbtn.h, 28, 40, 32);
+        draw_rect(r, sbtn.x, sbtn.y, sbtn.w, sbtn.h, 120, 160, 130);
+        font_draw(r, sbtn.x + (sbtn.w - font_text_width(slabel)) / 2, sbtn.y + (sbtn.h - font_line_h()) / 2, slabel, 200, 220, 180);
     }
 
     /* Left sidebar: system status, probe, controllers (scrollable). */

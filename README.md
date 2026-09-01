@@ -1,4 +1,4 @@
-<img src="retr01/assets/png/logo_v2.png" alt="Logo V3" />
+<img src="retr01/assets/png/logo_v2.png" alt="Logo V2" />
 
 The Retr01 project is a software tool chain + hardware family. Software includes:
 

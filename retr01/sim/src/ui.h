@@ -78,6 +78,8 @@ typedef struct R01sUi {
     int ctx_x;          /* menu anchor in logic space */
     int ctx_y;
     int layout_compact; /* 1 = pack chips like a PCB (no island frames) */
+    int layout_teaching; /* 1 = interactive tutorial mode active */
+    int tutorial_step;   /* Current step in the tutorial */
     /* Snapshot of island-mode geometry while compact (restored on toggle off). */
     int layout_saved;
     /* Island-mode chip positions relative to island board_x/board_y. */

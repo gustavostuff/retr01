@@ -417,6 +417,46 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             }
         }
 
+        /* Teaching mode toggle (top HUD). */
+        {
+            SDL_Rect tbtn;
+            teach_btn_rect(ui, &tbtn);
+            if (logic_x >= tbtn.x && logic_x < tbtn.x + tbtn.w && logic_y >= tbtn.y &&
+                logic_y < tbtn.y + tbtn.h) {
+                ui_toggle_teaching(ui);
+                return 1;
+            }
+        }
+
+        /* Sort toggle (top HUD). */
+        if (ui->layout_compact && !ui->layout_teaching) {
+            SDL_Rect sbtn;
+            sort_btn_rect(ui, &sbtn);
+            if (logic_x >= sbtn.x && logic_x < sbtn.x + sbtn.w && logic_y >= sbtn.y &&
+                logic_y < sbtn.y + sbtn.h) {
+                ui_apply_compact_layout(ui);
+                ui->layout_dirty = 1;
+                return 1;
+            }
+        }
+
+        /* Teaching mode Next/Prev buttons. */
+        if (ui->layout_teaching) {
+            SDL_Rect next_btn, prev_btn;
+            tutorial_btn_rect(ui, 1, &next_btn);
+            tutorial_btn_rect(ui, 0, &prev_btn);
+            if (logic_x >= next_btn.x && logic_x < next_btn.x + next_btn.w && logic_y >= next_btn.y && logic_y < next_btn.y + next_btn.h) {
+                ui->tutorial_step++;
+                return 1;
+            }
+            if (logic_x >= prev_btn.x && logic_x < prev_btn.x + prev_btn.w && logic_y >= prev_btn.y && logic_y < prev_btn.y + prev_btn.h) {
+                if (ui->tutorial_step > 0) {
+                    ui->tutorial_step--;
+                }
+                return 1;
+            }
+        }
+
         /* STATUS: copy WARN/FAIL rows or system header to clipboard. */
         if (sidebar_hit(logic_x, logic_y) && ui_health_copy_at(ui, logic_x, logic_y)) {
             return 1;
