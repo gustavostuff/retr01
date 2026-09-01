@@ -30,26 +30,74 @@ int r01_world_screen_index(const R01World *w, int col, int row) {
     return row * w->grid_cols + col;
 }
 
-int r01_bg0_grid_ok(int cols, int rows) {
-    if (cols < 1 || rows < 1) {
-        return 0;
+void r01_world_bg0_recompute_extent(R01World *w) {
+    int i, min_c = 99, min_r = 99, max_c = 0, max_r = 0, n = 0;
+    if (!w) {
+        return;
     }
-    if (cols > R01_BG0_SCREENS_MAX || rows > R01_BG0_SCREENS_MAX) {
-        return 0;
+    for (i = 0; i < w->bg0_screen_count && i < R01_BG0_SCREENS_MAX; i++) {
+        if (!w->bg0_screens[i].present) {
+            continue;
+        }
+        n++;
+        if (w->bg0_screens[i].col < min_c) {
+            min_c = w->bg0_screens[i].col;
+        }
+        if (w->bg0_screens[i].row < min_r) {
+            min_r = w->bg0_screens[i].row;
+        }
+        if (w->bg0_screens[i].col > max_c) {
+            max_c = w->bg0_screens[i].col;
+        }
+        if (w->bg0_screens[i].row > max_r) {
+            max_r = w->bg0_screens[i].row;
+        }
     }
-    return (cols * rows) <= R01_BG0_SCREENS_MAX;
+    if (n < 1) {
+        w->bg0_cols = 0;
+        w->bg0_rows = 0;
+        return;
+    }
+    w->bg0_cols = max_c - min_c + 1;
+    w->bg0_rows = max_r - min_r + 1;
+    if (w->bg0_cols < 1) {
+        w->bg0_cols = 1;
+    }
+    if (w->bg0_rows < 1) {
+        w->bg0_rows = 1;
+    }
+}
+
+void r01_world_bg0_clear(R01World *w) {
+    int i;
+    if (!w) {
+        return;
+    }
+    for (i = 0; i < R01_BG0_SCREENS_MAX; i++) {
+        init_screen(&w->bg0_screens[i], 0, 0);
+    }
+    w->bg0_screen_count = 0;
+    w->bg0_active_screen = -1;
+    w->bg0_cols = 0;
+    w->bg0_rows = 0;
 }
 
 int r01_world_bg0_screen_index(const R01World *w, int col, int row) {
-    if (!w || col < 0 || row < 0 || col >= w->bg0_cols || row >= w->bg0_rows) {
+    int i;
+    if (!w || col < 0 || row < 0 || col >= R01_GRID_MAX || row >= R01_GRID_MAX) {
         return -1;
     }
-    return row * w->bg0_cols + col;
+    for (i = 0; i < w->bg0_screen_count && i < R01_BG0_SCREENS_MAX; i++) {
+        if (w->bg0_screens[i].present && w->bg0_screens[i].col == col && w->bg0_screens[i].row == row) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 R01Screen *r01_world_bg0_screen_at(R01World *w, int col, int row) {
     int i = r01_world_bg0_screen_index(w, col, row);
-    if (i < 0 || i >= w->bg0_screen_count) {
+    if (i < 0) {
         return NULL;
     }
     return &w->bg0_screens[i];
@@ -69,121 +117,37 @@ int r01_world_bg0_present_count(const R01World *w) {
     return n;
 }
 
-int r01_world_bg0_set_grid_ex(R01World *w, int cols, int rows, int *out_dropped) {
-    R01Screen keep[R01_BG0_SCREENS_MAX];
-    int keep_n = 0;
-    int col, row, i, idx, cap, placed;
-    if (out_dropped) {
-        *out_dropped = 0;
-    }
-    if (!w || !r01_bg0_grid_ok(cols, rows)) {
-        return -1;
-    }
-    /* Collect present in current grid order (LTR, top to bottom). */
-    for (row = 0; row < w->bg0_rows; row++) {
-        for (col = 0; col < w->bg0_cols; col++) {
-            idx = r01_world_bg0_screen_index(w, col, row);
-            if (idx < 0 || idx >= w->bg0_screen_count || !w->bg0_screens[idx].present) {
-                continue;
-            }
-            if (keep_n < R01_BG0_SCREENS_MAX) {
-                keep[keep_n++] = w->bg0_screens[idx];
-            }
-        }
-    }
-    w->bg0_cols = cols;
-    w->bg0_rows = rows;
-    w->bg0_screen_count = cols * rows;
-    for (i = 0; i < R01_BG0_SCREENS_MAX; i++) {
-        init_screen(&w->bg0_screens[i], 0, 0);
-    }
-    for (row = 0; row < rows; row++) {
-        for (col = 0; col < cols; col++) {
-            idx = row * cols + col;
-            if (idx < R01_BG0_SCREENS_MAX) {
-                init_screen(&w->bg0_screens[idx], col, row);
-            }
-        }
-    }
-    cap = cols * rows;
-    if (cap > R01_BG0_SCREENS_MAX) {
-        cap = R01_BG0_SCREENS_MAX;
-    }
-    placed = 0;
-    for (i = 0; i < keep_n && placed < cap; i++) {
-        col = placed % cols;
-        row = placed / cols;
-        idx = row * cols + col;
-        w->bg0_screens[idx] = keep[i];
-        w->bg0_screens[idx].col = col;
-        w->bg0_screens[idx].row = row;
-        w->bg0_screens[idx].present = 1;
-        placed++;
-    }
-    if (out_dropped) {
-        *out_dropped = keep_n - placed;
-        if (*out_dropped < 0) {
-            *out_dropped = 0;
-        }
-    }
-    w->bg0_active_screen = -1;
-    for (i = 0; i < w->bg0_screen_count; i++) {
-        if (w->bg0_screens[i].present) {
-            w->bg0_active_screen = i;
-            break;
-        }
-    }
-    return 0;
-}
-
-int r01_world_bg0_set_grid(R01World *w, int cols, int rows) {
-    return r01_world_bg0_set_grid_ex(w, cols, rows, NULL);
-}
-
-int r01_world_bg0_cycle_mode(R01World *w) {
-    static const int mode_cols[] = {1, 2, 2, 4, 1, 8};
-    static const int mode_rows[] = {1, 2, 4, 2, 8, 1};
-    const int nmodes = (int)(sizeof(mode_cols) / sizeof(mode_cols[0]));
-    int i, next, dropped = 0;
-    if (!w) {
-        return -1;
-    }
-    next = 0;
-    for (i = 0; i < nmodes; i++) {
-        if (w->bg0_cols == mode_cols[i] && w->bg0_rows == mode_rows[i]) {
-            next = (i + 1) % nmodes;
-            break;
-        }
-    }
-    if (r01_world_bg0_set_grid_ex(w, mode_cols[next], mode_rows[next], &dropped) != 0) {
-        return -1;
-    }
-    return dropped;
-}
-
 int r01_world_bg0_create_screen(R01World *w, int col, int row) {
-    R01Screen *s;
-    if (!w) {
+    int i, free_i, idx;
+    if (!w || col < 0 || row < 0 || col >= R01_GRID_MAX || row >= R01_GRID_MAX) {
         return -1;
     }
-    if (!r01_bg0_grid_ok(w->bg0_cols, w->bg0_rows)) {
-        if (r01_world_bg0_set_grid(w, R01_BG0_DEFAULT_COLS, R01_BG0_DEFAULT_ROWS) != 0) {
-            return -1;
-        }
+    idx = r01_world_bg0_screen_index(w, col, row);
+    if (idx >= 0) {
+        w->bg0_active_screen = idx;
+        return idx;
     }
-    s = r01_world_bg0_screen_at(w, col, row);
-    if (!s) {
+    if (r01_world_bg0_present_count(w) >= R01_BG0_SCREENS_MAX) {
         return -1;
     }
-    if (!s->present) {
-        if (r01_world_bg0_present_count(w) >= R01_BG0_SCREENS_MAX) {
+    free_i = -1;
+    for (i = 0; i < w->bg0_screen_count && i < R01_BG0_SCREENS_MAX; i++) {
+        if (!w->bg0_screens[i].present) {
+            free_i = i;
+            break;
+        }
+    }
+    if (free_i < 0) {
+        if (w->bg0_screen_count >= R01_BG0_SCREENS_MAX) {
             return -1;
         }
-        init_screen(s, col, row);
-        s->present = 1;
+        free_i = w->bg0_screen_count++;
     }
-    w->bg0_active_screen = r01_world_bg0_screen_index(w, col, row);
-    return w->bg0_active_screen;
+    init_screen(&w->bg0_screens[free_i], col, row);
+    w->bg0_screens[free_i].present = 1;
+    w->bg0_active_screen = free_i;
+    r01_world_bg0_recompute_extent(w);
+    return free_i;
 }
 
 int r01_world_bg0_remove_screen(R01World *w, int col, int row) {
@@ -192,11 +156,11 @@ int r01_world_bg0_remove_screen(R01World *w, int col, int row) {
     if (!w) {
         return -1;
     }
-    s = r01_world_bg0_screen_at(w, col, row);
     idx = r01_world_bg0_screen_index(w, col, row);
-    if (!s || idx < 0) {
+    if (idx < 0) {
         return -1;
     }
+    s = &w->bg0_screens[idx];
     init_screen(s, col, row);
     if (w->bg0_active_screen == idx) {
         w->bg0_active_screen = -1;
@@ -207,6 +171,7 @@ int r01_world_bg0_remove_screen(R01World *w, int col, int row) {
             }
         }
     }
+    r01_world_bg0_recompute_extent(w);
     return 0;
 }
 
@@ -289,7 +254,7 @@ void r01_world_init_phase1(R01World *w) {
         }
     }
     r01_world_sync_default_screen(w);
-    (void)r01_world_bg0_set_grid(w, R01_BG0_DEFAULT_COLS, R01_BG0_DEFAULT_ROWS);
+    r01_world_bg0_clear(w);
 }
 
 void r01_world_init_empty(R01World *w) {
@@ -305,7 +270,7 @@ void r01_world_init_empty(R01World *w) {
     r01_world_warps_init(w);
     r01_world_set_grid(w, R01_GRID_MAX, R01_GRID_MAX);
     r01_world_sync_default_screen(w);
-    (void)r01_world_bg0_set_grid(w, R01_BG0_DEFAULT_COLS, R01_BG0_DEFAULT_ROWS);
+    r01_world_bg0_clear(w);
 }
 
 void r01_project_init(R01Project *p, const char *name) {

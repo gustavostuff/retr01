@@ -482,10 +482,6 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 ui->arm_a = wi;
                 return 1;
             }
-            if (!ui->play.active && world_bg0_mode_hit(ui, lx, ly)) {
-                ui->arm_kind = UI_ARM_BG0_MODE;
-                return 1;
-            }
             if (world_btn_hit(ui, lx, ly, &wi)) {
                 ui->arm_kind = UI_ARM_WORLD_TAB;
                 ui->arm_a = wi;
@@ -635,26 +631,10 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 ui->banks_idx = wi;
                 return 1;
             }
-            if (kind == UI_ARM_BG0_MODE && world_bg0_mode_hit(ui, lx, ly)) {
-                R01World *ww = r01_project_active_world(ui->project);
-                int dropped;
-                if (ww) {
-                    dropped = r01_world_bg0_cycle_mode(ww);
-                    if (dropped < 0) {
-                        ui_toast(ui, "BG0 Mode failed", 1);
-                    } else {
-                        ui->bg0_fit_warn = dropped;
-                        ui->world_sel_col = -1;
-                        ui->world_sel_row = -1;
-                    }
-                }
-                return 1;
-            }
             if (kind == UI_ARM_WORLD_TAB && world_btn_hit(ui, lx, ly, &wi) && wi == a) {
                 r01_project_set_active_world(ui->project, wi);
                 ui->world_sel_col = -1;
                 ui->world_sel_row = -1;
-                ui->bg0_fit_warn = 0;
                 return 1;
             }
             if (kind == UI_ARM_WORLD_CELL && !ui->play.active && world_cell_hit(ui, lx, ly, &col, &row) &&

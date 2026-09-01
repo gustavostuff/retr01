@@ -917,25 +917,9 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
         r01_world_set_grid(r01_project_world0(p), grid_cols, grid_rows);
     }
     {
-        int bg0_cols = R01_BG0_DEFAULT_COLS;
-        int bg0_rows = R01_BG0_DEFAULT_ROWS;
-        int bg0_shape = -1;
-        if (json_int_after(buf, "\"bg0_cols\"", &bg0_cols) && json_int_after(buf, "\"bg0_rows\"", &bg0_rows) &&
-            r01_bg0_grid_ok(bg0_cols, bg0_rows)) {
-            (void)r01_world_bg0_set_grid(r01_project_world0(p), bg0_cols, bg0_rows);
-        } else if (json_int_after(buf, "\"bg0_shape\"", &bg0_shape)) {
-            /* Legacy fixed-shape enum -> cols/rows. */
-            static const int legacy_cols[4] = {1, 8, 2, 4};
-            static const int legacy_rows[4] = {8, 1, 4, 2};
-            if (bg0_shape >= 0 && bg0_shape < 4) {
-                (void)r01_world_bg0_set_grid(r01_project_world0(p), legacy_cols[bg0_shape],
-                                             legacy_rows[bg0_shape]);
-            } else {
-                (void)r01_world_bg0_set_grid(r01_project_world0(p), R01_BG0_DEFAULT_COLS,
-                                             R01_BG0_DEFAULT_ROWS);
-            }
-        } else {
-            (void)r01_world_bg0_set_grid(r01_project_world0(p), R01_BG0_DEFAULT_COLS, R01_BG0_DEFAULT_ROWS);
+        R01World *ww = r01_project_world0(p);
+        if (ww) {
+            r01_world_bg0_clear(ww);
         }
     }
     if (default_world >= 0 && default_world < R01_MAX_WORLDS) {
@@ -1029,6 +1013,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
             int bg0_active = -1;
             json_int_after(buf, "\"bg0_active_screen\"", &bg0_active);
             if (bg0sec && w) {
+                r01_world_bg0_clear(w);
                 obj = strchr(bg0sec, '{');
                 while (obj && obj < buf + sz) {
                     const char *end = strchr(obj, '}');
@@ -1048,16 +1033,13 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                     slice[olen] = '\0';
                     json_int_after(slice, "\"col\"", &col);
                     json_int_after(slice, "\"row\"", &row);
-                    si = r01_world_bg0_screen_index(w, col, row);
+                    si = r01_world_bg0_create_screen(w, col, row);
                     if (si < 0) {
                         free(slice);
                         obj = strchr(end + 1, '{');
                         continue;
                     }
                     s = &w->bg0_screens[si];
-                    s->present = 1;
-                    s->col = col;
-                    s->row = row;
                     if (load_screen_field(slice, "\"tiles_b64\"", "\"tiles_rle_hex\"", "\"tiles_hex\"", s->tiles,
                                           sizeof(s->tiles)) != 0 ||
                         load_screen_field(slice, "\"attrs_b64\"", "\"attrs_rle_hex\"", "\"attrs_hex\"", s->attrs,
@@ -1070,6 +1052,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                     free(slice);
                     obj = strchr(end + 1, '{');
                 }
+                r01_world_bg0_recompute_extent(w);
             }
             if (w) {
                 if (bg0_active >= 0 && bg0_active < w->bg0_screen_count &&

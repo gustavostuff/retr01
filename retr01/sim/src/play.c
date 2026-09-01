@@ -417,7 +417,7 @@ static void queue_video(R01sBoard *b) {
     pl->pending_origin_row = oy;
     pl->pending_camera_reload = origin_changed;
     pl->video_pending = 1;
-    /* Host Play L0: update every camera move (match emu, not only screen crosses). */
+    /* Host Play BG0: update every camera move (match emu, not only screen crosses). */
     r01s_board_update_bg0_scroll(b, pl->cam_x, pl->cam_y);
 }
 

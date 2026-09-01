@@ -135,7 +135,7 @@ static int prepare_world_common(R01eMachine *m, int world, R01eWorldView *wv) {
     if (vid->cam_max_y < vid->cam_y) {
         vid->cam_max_y = vid->cam_y;
     }
-    /* L1 extent = present-screen bounding box (not the virtual 8x8). */
+    /* BG1 extent = present-screen bounding box (not the virtual 8x8). */
     vid->l1_cols = max_c - min_c + 1;
     vid->l1_rows = max_r - min_r + 1;
     if (vid->l1_cols < 1) {
@@ -249,7 +249,8 @@ static void bg0_update_scroll(R01eVideo *vid) {
     if (!vid) {
         return;
     }
-    /* Scroll relative to L1 present bbox origin, scaled by grid W/H. */
+    /* Scroll relative to BG1 present bbox origin, scaled by grid W/H.
+     * No scroll on an axis when BG0 enclosing extent is equal or larger than BG1. */
     rel_x = vid->cam_x - vid->l1_origin_x;
     rel_y = vid->cam_y - vid->l1_origin_y;
     if (rel_x < 0) {
@@ -331,7 +332,7 @@ void r01e_video_load_bg0(R01eMachine *m, const R01eWorldView *wv) {
     }
     if (vid->bg0_count > 0) {
         /*
-         * Scroll ratio uses present-screen bounding box of L0 (same rule as L1),
+         * Scroll ratio uses present-screen bounding box of BG0 (same rule as BG1),
          * not a larger authored slot grid with empty rows/cols.
          */
         vid->bg0_cols = max_c - min_c + 1;
@@ -753,7 +754,7 @@ void r01e_video_render_bg0_atlas(R01eMachine *m) {
     }
 }
 
-/* Return 2bpp CHR color index for scrolled L1 at viewport (lx,ly). -1 = missing slot. */
+/* Return 2bpp CHR color index for scrolled BG1 at viewport (lx,ly). -1 = missing slot. */
 static int sample_l1_chr_color(R01eMachine *m, int lx, int ly) {
     R01eVideo *vid = &m->video;
     int sx = (int)m->io.scroll_x + lx;
@@ -808,7 +809,7 @@ void r01e_video_render_l1_mask(R01eMachine *m) {
             int ci = sample_l1_chr_color(m, lx, ly);
             size_t i = ((size_t)ly * R01E_SCREEN_PX_W + (size_t)lx) * 3u;
             if (ci > 0) {
-                /* Opaque L1 pixel (palette index != 0). */
+                /* Opaque BG1 pixel (palette index != 0). */
                 vid->l1_mask[i] = 255;
                 vid->l1_mask[i + 1] = 140;
                 vid->l1_mask[i + 2] = 0;

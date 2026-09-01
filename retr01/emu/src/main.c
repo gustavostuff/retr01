@@ -542,7 +542,7 @@ int main(int argc, char **argv) {
     }
     printf("Studio Play SoT: WASD/arrows move  |  X/Y warp  |  Space pause  |  R reset  |  Esc quit\n");
     if (dbg_win) {
-        printf("Debug: L1/BG0 2x2 + L1 mask + world map + pals + CPU budget (2 Hz, 50k red line)\n");
+        printf("Debug: BG1/BG0 2x2 + BG1 mask + world map + pals + CPU budget (2 Hz, 50k red line)\n");
     }
 
     /* Present boot frame while still hidden, then show. */

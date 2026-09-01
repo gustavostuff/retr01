@@ -1271,7 +1271,7 @@ static void wire_vram(R01sBoard *ctx) {
 
 /*
  * Island M: sprite line-buffer SRAM (no CPU port).
- * Soft 1284: full 120x128 sprite field in VBlank. L0 line ping-pong in HBlank.
+ * Soft 1284: full 120x128 sprite field in VBlank. BG0 line ping-pong in HBlank.
  * HC157: AB low = MCU fill addr, AB high = beam read addr.
  */
 #define R01S_SPR_FIELD_BASE 0u
@@ -1430,7 +1430,7 @@ static void board_vram_cell_at(const R01sBoard *ctx, int lx, int ly, uint8_t *ti
 
 static uint32_t board_map_off_for_screen(const R01sBoard *board, int col, int row);
 
-/* Host Play L0 sample under L1 color 0 / missing slot (cart BG0 cache + CHR via flash). */
+/* Host Play BG0 sample under BG1 color 0 / missing slot (cart BG0 cache + CHR via flash). */
 static uint8_t board_l0_master_at(R01sBoard *ctx, int lx, int ly) {
     int wx, wy, gc, gr, local_x, local_y, tx, ty, cell, i;
     uint8_t tile, attr, color, pal, master;
@@ -1503,7 +1503,7 @@ static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     slot_x = (sx / R01S_BG_SCREEN_PX_W) & 1;
     slot_y = (sy / R01S_BG_SCREEN_PX_H) & 1;
     slot = slot_y * 2 + slot_x;
-    /* Match emu Host Play: missing L1 slot -> L0 show-through, else backdrop. */
+    /* Match emu Host Play: missing BG1 slot -> BG0 show-through, else backdrop. */
     if (!ctx->vram_slot_present[slot & 3]) {
         master = r01s_as6c62256_peek(ctx->mcu_lb_impl.sram, l0_line_addr(ctx->l0_show_half, lx));
         ctx->chr_last_master = master;
@@ -1526,7 +1526,7 @@ static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     }
     if (color == 0) {
         flash_chr_release(ctx);
-        /* L1 color 0 mask: L0 line prepared in HBlank (not live CHR here). */
+        /* BG1 color 0 mask: BG0 line prepared in HBlank (not live CHR here). */
         master = r01s_as6c62256_peek(ctx->mcu_lb_impl.sram, l0_line_addr(ctx->l0_show_half, lx));
         ctx->chr_last_master = master;
         return master;
@@ -1626,7 +1626,7 @@ static void linebuf_oam_fill_field(R01sBoard *ctx) {
     flash_chr_release(ctx);
 }
 
-/* HBlank: prepare next L0 / BG0 line (show-through under L1 color 0 on active dots). */
+/* HBlank: prepare next BG0 line (show-through under BG1 color 0 on active dots). */
 static void linebuf_l0_fill_half(R01sBoard *ctx, int half, int logical_y) {
     int x;
 
@@ -1653,7 +1653,7 @@ static void wire_linebuf(R01sBoard *ctx) {
     int scale_2x = r01s_video_sink_scale_2x(ctx->video_impl.sink);
     uint16_t show_addr;
 
-    /* Entering HBlank: fill next L0 line only (sprites are a VBlank field). */
+    /* Entering HBlank: fill next BG0 line only (sprites are a VBlank field). */
     if (hblank && !ctx->linebuf_prev_hblank) {
         int next_by = by + 1;
         int next_ly;
@@ -1676,7 +1676,7 @@ static void wire_linebuf(R01sBoard *ctx) {
     r01s_bus_hiz(sram, "DQ", 8);
 
     if (!hblank && r01s_rgbs_beam_to_logical(scale_2x, bx, by, &lx, &ly)) {
-        /* Beam mux path reads L0 show line (sprite field is soft-peeked in video). */
+        /* Beam mux path reads BG0 show line (sprite field is soft-peeked in video). */
         show_addr = l0_line_addr(ctx->l0_show_half, lx);
         linebuf_drive_addr(ctx, show_addr, 0);
         ctx->linebuf_saw_mux_beam = 1;
@@ -2214,7 +2214,7 @@ static void board_resolve_cart_meta(R01sBoard *board) {
         board->cart_off_map_screen0 = world_base + poff;
         break;
     }
-    /* Host Play L0 cache (does not touch IC VRAM slots 4-7). */
+    /* Host Play BG0 cache (does not touch IC VRAM slots 4-7). */
     r01s_board_load_bg0(board);
 }
 
@@ -2592,7 +2592,8 @@ void r01s_board_update_bg0_scroll(R01sBoard *board, int cam_x, int cam_y) {
     if (!board) {
         return;
     }
-    /* Match emu: relative to L1 present bbox origin, scaled by present grid W/H. */
+    /* Match emu: relative to BG1 present bbox origin, scaled by present grid W/H.
+     * No scroll on an axis when BG0 enclosing extent is equal or larger than BG1. */
     rel_x = cam_x - board->l1_origin_x;
     rel_y = cam_y - board->l1_origin_y;
     if (rel_x < 0) {
@@ -2639,7 +2640,7 @@ void r01s_board_load_bg0(R01sBoard *board) {
     }
     img = board->cart_flash.mem;
 
-    /* L1 present bbox (same rule as emu prepare_world). */
+    /* BG1 present bbox (same rule as emu prepare_world). */
     if (board->cart_off_sdir != 0 && board->cart_screen_count > 0 &&
         (size_t)board->cart_off_sdir + (size_t)board->cart_screen_count * 12u <=
             sizeof(board->cart_flash.mem)) {

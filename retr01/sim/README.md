@@ -78,7 +78,7 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 |----------------|---------|
 | **Metasprite catalog** | Studio JSON only. Export flattens parts into entity type records |
 | Host Play motion, camera dead zone, player anim, warps | Emu / sim Host Play + `../common/r01_play_camera.c` (cart-backed). Not a Studio-only preview |
-| Host Play L0 / BG0 | Emu + sim Host Play: cart BG0 cache, show-through under L1 color 0, proportional scroll from present extents. Host overlay only (does not drive IC VRAM slots 4-7 or `$FE06`/`$FE07`) |
+| Host Play BG0 | Emu + sim Host Play: cart BG0 cache, show-through under BG1 color 0, proportional scroll from present extents. Host overlay only (does not drive IC VRAM slots 4-7 or `$FE06`/`$FE07`) |
 | Host collision source | Cart flash MAP attrs (`R01_ATTR_SOLID`). PRG collision stub not used by host runners |
 | Editor UI state | UI only. Cart boots world **0** |
 | Live camera seam streaming (2x2 shift) | Phase 1 PRG loads start screen only |

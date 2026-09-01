@@ -30,14 +30,11 @@ R01Screen *r01_world_screen_at(R01World *w, int col, int row);
 /* Count screens with present=1 (cart export uses this; max R01_MAX_PRESENT_SCREENS). */
 int r01_world_present_count(const R01World *w);
 
-int r01_bg0_grid_ok(int cols, int rows);
+/* BG0: free layout on 8x8, max R01_BG0_SCREENS_MAX present screens. */
+void r01_world_bg0_clear(R01World *w);
+void r01_world_bg0_recompute_extent(R01World *w);
 int r01_world_bg0_screen_index(const R01World *w, int col, int row);
 R01Screen *r01_world_bg0_screen_at(R01World *w, int col, int row);
-/* Resize BG0 grid. Present screens are packed LTR/TTB. *out_dropped = screens that did not fit. */
-int r01_world_bg0_set_grid(R01World *w, int cols, int rows);
-int r01_world_bg0_set_grid_ex(R01World *w, int cols, int rows, int *out_dropped);
-/* Cycle Mode: 1x1, 2x2, 2x4, 4x2, 1x8, 8x1. Returns dropped count. */
-int r01_world_bg0_cycle_mode(R01World *w);
 int r01_world_bg0_create_screen(R01World *w, int col, int row);
 int r01_world_bg0_remove_screen(R01World *w, int col, int row);
 int r01_world_bg0_present_count(const R01World *w);

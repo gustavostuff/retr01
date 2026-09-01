@@ -29,10 +29,10 @@ On NES, a large share of PRG and every frame went to **making the picture move**
 
 | | NES | Retr01 |
 |--|-----|--------|
-| Playfield | 256x240, nametable tricks | **128x120** logical (yes, deliberate chunky pixels), **2x2** live VRAM window (L1) |
+| Playfield | 256x240, nametable tricks | **128x120** logical (yes, deliberate chunky pixels), **2x2** live VRAM window (BG1) |
 | Scroll | Software nametable updates, often VBlank-only | Hardware scroll latches + **480 B** MAP stream into VRAM |
-| Multi-screen worlds | Bank switching, manual nametable layout | Sparse world grid, **32** L1 screens/world in cart MAP |
-| Second BG | Mapper tricks / limited layers | Structured **L0 / BG0** (1..8 screens), show-through under L1 color **0**, proportional scroll |
+| Multi-screen worlds | Bank switching, manual nametable layout | Sparse world grid, **32** BG1 screens/world in cart MAP |
+| Second BG | Mapper tricks / limited layers | Structured **BG0** (1..8 screens), show-through under BG1 color **0**, proportional scroll |
 | Sprites | 64 OAM, **8** per scanline (typical pain point) | 64 OAM, **16** per scanline, VBlank sprite field in 1284 |
 | Background | Tile + attribute tables in VRAM | Per-tile bank/pal/flip in attr byte, CHR on cart |
 | Mid-frame effects | Sprite-0 hit | **Raster compare** IRQ (`$FE04`) |
@@ -48,9 +48,9 @@ On silicon, the **picture** is built in discrete video logic and AVRs. The **650
 
 **Hardware (motherboard + cart CHR/MAP read path):**
 
-- Beam timing and tile/attr fetch for **L1** from VRAM slots **0-3** using `$FE02` / `$FE03` scroll
-- **L0** line fill from VRAM slots **4-7** + cart CHR (HBlank target), scroll via `$FE06` / `$FE07`
-- Compositor on every dot: **sprite > L1 > L0 show-through (L1 color 0) > backdrop**
+- Beam timing and tile/attr fetch for **BG1** from VRAM slots **0-3** using `$FE02` / `$FE03` scroll
+- **BG0** line fill from VRAM slots **4-7** + cart CHR (HBlank target), scroll via `$FE06` / `$FE07`
+- Compositor on every dot: **sprite > BG1 > BG0 show-through (BG1 color 0) > backdrop**
 - Color PROM lookup (cart palette indices to **64** RGB masters)
 - VRAM interleave (CPU writes on PHI2 high, video fetch on PHI2 low)
 - Sprite line buffer (1284 fills, compositor reads per scanline)
@@ -59,8 +59,8 @@ On silicon, the **picture** is built in discrete video logic and AVRs. The **650
 
 **Software (6502 PRG, or Host Play today):**
 
-- Stream **480 B** screen payloads from cart MAP into VRAM when the camera leaves the **2x2** workbench (L1 slots **0-3**, L0 slots **4-7**)
-- Default **proportional L0 scroll** from L1 camera (`cols_L0 / cols_L1`, per axis)
+- Stream **480 B** screen payloads from cart MAP into VRAM when the camera leaves the **2x2** workbench (BG1 slots **0-3**, BG0 slots **4-7**)
+- Default **proportional BG0 scroll** from BG1 camera (`cols_BG0 / cols_BG1`, per axis)
 - Copy active palette row into `$FE08` / `$FE09`, world select, boot flow
 - Gameplay: movement, camera dead zone, collision, entities, warps, AI
 - Audio driver feeding the 328P bytecode protocol

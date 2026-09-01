@@ -32,14 +32,14 @@ Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Win
 |---------|----------|
 | **Worlds** | **8** world buttons (**1-8**, internal indices **0-7**). World 1 starts with **3x3** blank screens on an **8x8** slot map. Worlds 2-8 start empty until first click. Cart cap: **32 present screens**/world ([`docs/graphics.md`](../../docs/graphics.md)). Selected world: active strip **11px** + **7px** **BG1**/**BG0** sub-button. Inactive dual-view world tabs fill **18px** (tab+sub stack) so the row height matches |
 | **World map (BG1)** | Sparse **8x8** playfield map. **16px** cell pitch. Present = blue. White fill = default spawn. White outline = selected |
-| **World map (BG0)** | Structured second BG (L0). Full **8x8** chess. Present screens use the Mode rectangle (1x1 / 2x2 / 2x4 / 4x2 / 1x8 / 8x1), centered on the chess so they clear the Mode button. **Mode** (32x16, top-left, 2px margin) cycles those shapes and repacks screens LTR/TTB. If screens do not fit: yellow **Warn: N screens won't render** at the grid bottom-right. Export packs present BG0 screens. Emu and Sim Host Play composite under L1 color 0. L0 scrolls on an axis only when BG0 extent is **smaller** than L1 on that axis ([`docs/graphics.md`](../../docs/graphics.md)) |
+| **World map (BG0)** | Second BG plane. Sparse **8x8** chess like BG1. Up to **8** present screens anywhere (double-click to create). Export packs present BG0 screens (coords normalized to the present bbox origin). Emu and Sim Host Play composite under BG1 color 0. BG0 scrolls on an axis only when its enclosing present extent is **smaller** than BG1 on that axis ([`docs/graphics.md`](../../docs/graphics.md)) |
 | **Double-click** empty slot | Create screen (BG1 or BG0 plane) |
 | **Click** any slot | Select grid cell (empty or present, white outline). Present also becomes the edit target |
 | **Ctrl+C / Ctrl+V** | Copy / paste entire selected screen (tiles+attrs) on BG0 or BG1. Paste creates the slot if empty |
 | **Delete** | Remove selected present screen (BG0 or BG1). Prefer instance Delete when a sprite is selected |
 | **Ctrl+click** present | Remove screen |
 | **Right-click** map cell | **Set default screen** / **Make default world** (BG1) |
-| **Chrome clicks** | Tabs, sub-button, Mode, accordion, radios, and similar chrome commit on **mouse release** over the same control (paint/drag tools stay press-and-hold) |
+| **Chrome clicks** | Tabs, sub-button, accordion, radios, and similar chrome commit on **mouse release** over the same control (paint/drag tools stay press-and-hold) |
 | **BG / Sprite layer** | Radios in **control sidebar** (right column). **BG layer**: tile select/paint + tile context menu. **Sprite layer**: select/drag instances, **H/V** or context **Mirror H/V** (per-instance: remaps part X/Y + toggles `FLIP_H`/`FLIP_V` for OAM), instance context menu (edit entity type / remove). Tile radios dim on sprite layer |
 | **Tile Sel / Paint** | Radios in **control sidebar** under layer radios (BG layer only). Paint stamps armed tile+palette |
 | **Right-click tile** (BG layer) | Move to tile bank, add tile, edit tile, set palette/anim/solid. **Shift** turns **Edit tile** into **Edit tile (all)** |

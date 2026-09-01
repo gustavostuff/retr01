@@ -15,27 +15,27 @@
 
 ## What it is
 
-AVR 8-bit MCU: **128 KB Flash**, **16 KB SRAM**, **4 KB EEPROM**, 32 GPIO lines on four ports (A/B/C/D), timers with PWM, USART, SPI, TWI, ADC, JTAG. Retr01 uses it as a **dedicated helper MCU**, not the game CPU: it owns **OAM**, the **VBlank sprite field** + **HBlank L0 line fill**, **controller bytes**, and **machine EEPROM**. APU stays on **328P** ([`hardware.md`](../../docs/hardware.md)).
+AVR 8-bit MCU: **128 KB Flash**, **16 KB SRAM**, **4 KB EEPROM**, 32 GPIO lines on four ports (A/B/C/D), timers with PWM, USART, SPI, TWI, ADC, JTAG. Retr01 uses it as a **dedicated helper MCU**, not the game CPU: it owns **OAM**, the **VBlank sprite field** + **HBlank BG0 line fill**, **controller bytes**, and **machine EEPROM**. APU stays on **328P** ([`hardware.md`](../../docs/hardware.md)).
 
 ## Retr01 role
 
 | Port / duty | Retr01 map |
 |-------------|------------|
 | OAM storage + evaluate | CPU writes via `$FE20` (addr) / `$FE21` (data), auto-inc. 64 entries `Y,tile,attr,X` |
-| Sprite field + L0 | During **VBlank**, write full **120x128** sprite field. During **HBlank**, write next L0 line (ping-pong) |
+| Sprite field + BG0 | During **VBlank**, write full **120x128** sprite field. During **HBlank**, write next BG0 line (ping-pong) |
 | Pads | Present `$FE60` / `$FE61` (R L D U X Y coin start, **1 = pressed**) |
 | Machine EEPROM | Internal 4 KB. CPU handshake via `$FE70` band (protocol TBD in `02`) |
-| CHR bus | May own cart CHR in **VBlank** (sprite field) and **HBlank** (L0 line) while BG path is idle (do not share until island N proven) |
+| CHR bus | May own cart CHR in **VBlank** (sprite field) and **HBlank** (BG0 line) while BG path is idle (do not share until island N proven) |
 
 **Not** the BG beam path. **Not** the APU: that is ATmega328P.
 
-Cap: **16 sprites per logical scanline**. L0 line is prepared one line ahead. Sprite field is full-playfield in VBlank. Not an RGB framebuffer.
+Cap: **16 sprites per logical scanline**. BG0 line is prepared one line ahead. Sprite field is full-playfield in VBlank. Not an RGB framebuffer.
 
 ## On-chip memory
 
 | Space | Size | Notes |
 |-------|------|-------|
-| Flash | 128 KB | Firmware (OAM port, VBlank sprite field, HBlank L0, pads, machine EEPROM) |
+| Flash | 128 KB | Firmware (OAM port, VBlank sprite field, HBlank BG0, pads, machine EEPROM) |
 | SRAM | 16 KB | OAM shadow, line work, stacks |
 | EEPROM | 4 KB | **Machine config** (not game saves: those are cart I2C) |
 
@@ -76,7 +76,7 @@ The 6502 does **not** DMA into 1284. Pattern:
 
 1. Decode PLD selects 1284 when CPU writes/reads `$FE20`/`$FE21` or `$FE60`/`$FE61`.
 2. 1284 firmware treats those as register windows (addr latch + data with auto-inc for OAM).
-3. Each **VBlank**, firmware plots the sprite field from OAM (+ CHR). Each **HBlank**, firmware fills the next L0 line. Beam reads sprites from the field and L0 from the prepared line (L1 color-0 mask) during active display.
+3. Each **VBlank**, firmware plots the sprite field from OAM (+ CHR). Each **HBlank**, firmware fills the next BG0 line. Beam reads sprites from the field and BG0 from the prepared line (BG1 color-0 mask) during active display.
 4. Cap: **16 sprites per logical scanline**. Not a RGB framebuffer.
 
 ### Expected CPU-visible behavior

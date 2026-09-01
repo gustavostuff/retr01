@@ -383,12 +383,9 @@ void accordion_anim_tick(UiState *ui) {
 }
 int world_cell_hit(const UiState *ui, int lx, int ly, int *out_col, int *out_row) {
     AccordionLayout lo;
-    const R01World *w;
     int x0 = UI_WORLDS_X;
     int y0;
     int col, row;
-    int ox = 0, oy = 0;
-    int bg0_cols, bg0_rows;
     accordion_layout(ui, &lo);
     if (lo.worlds_body_h < 1) {
         return 0;
@@ -409,21 +406,6 @@ int world_cell_hit(const UiState *ui, int lx, int ly, int *out_col, int *out_row
     if (col < 0 || row < 0 || col >= R01_GRID_MAX || row >= R01_GRID_MAX) {
         return 0;
     }
-    if (ui && ui->worlds_plane == UI_WORLDS_PLANE_BG0) {
-        if (world_bg0_mode_hit(ui, lx, ly)) {
-            return 0;
-        }
-        w = r01_project_active_world_const(ui->project);
-        bg0_cols = (w && w->bg0_cols > 0) ? w->bg0_cols : R01_BG0_DEFAULT_COLS;
-        bg0_rows = (w && w->bg0_rows > 0) ? w->bg0_rows : R01_BG0_DEFAULT_ROWS;
-        ox = (R01_GRID_MAX - bg0_cols) / 2;
-        oy = (R01_GRID_MAX - bg0_rows) / 2;
-        if (col < ox || row < oy || col >= ox + bg0_cols || row >= oy + bg0_rows) {
-            return 0;
-        }
-        col -= ox;
-        row -= oy;
-    }
     if (out_col) {
         *out_col = col;
     }
@@ -431,21 +413,6 @@ int world_cell_hit(const UiState *ui, int lx, int ly, int *out_col, int *out_row
         *out_row = row;
     }
     return 1;
-}
-
-int world_bg0_mode_hit(const UiState *ui, int lx, int ly) {
-    AccordionLayout lo;
-    int x, y;
-    if (!ui || ui->worlds_plane != UI_WORLDS_PLANE_BG0) {
-        return 0;
-    }
-    accordion_layout(ui, &lo);
-    if (lo.worlds_body_h < 1 || lo.worlds_grid_y < 0) {
-        return 0;
-    }
-    x = UI_WORLDS_X + UI_BG0_MODE_MARGIN;
-    y = lo.worlds_grid_y + UI_BG0_MODE_MARGIN;
-    return point_in_rect(lx, ly, x, y, UI_BG0_MODE_W, UI_BG0_MODE_H);
 }
 
 int world_btn_hit(const UiState *ui, int lx, int ly, int *out_wi) {

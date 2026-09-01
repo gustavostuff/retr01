@@ -63,10 +63,6 @@
 #define UI_BANKS_GRID 128 /* 16x16 tiles @ 8px */
 #define UI_BANKS_BODY_H (UI_WORLDS_TAB_STACK_H + UI_BANKS_GRID)
 
-#define UI_BG0_MODE_W 32
-#define UI_BG0_MODE_H 16
-#define UI_BG0_MODE_MARGIN 8
-
 #define UI_ARM_NONE 0
 #define UI_ARM_WORLD_TAB 1
 #define UI_ARM_WORLD_SUB 2
@@ -78,7 +74,6 @@
 #define UI_ARM_PAL_ROW 8
 #define UI_ARM_PLAY 9
 #define UI_ARM_CATALOG_ADD 10
-#define UI_ARM_BG0_MODE 11
 #define UI_ARM_BANK_TAB 12
 #define UI_ARM_BANK_SUB 13
 
@@ -364,7 +359,6 @@ typedef struct UiState {
     int banks_plane;  /* UI_BANKS_PLANE_BG or SPR */
     int world_sel_col; /* grid selection (-1 none); empty slots allowed */
     int world_sel_row;
-    int bg0_fit_warn; /* screens dropped by last BG0 Mode change (0 = no warn) */
     int screen_clip_valid;
     R01Screen screen_clip; /* Ctrl+C / Ctrl+V whole-screen buffer */
     int arm_kind;     /* UI_ARM_* chrome press-arm for release commit */

@@ -69,7 +69,7 @@ void handle_world_click(UiState *ui, int col, int row, int ctrl, int dbl) {
         }
         if (dbl) {
             if (r01_world_bg0_create_screen(w, col, row) < 0) {
-                ui_toast(ui, "BG0 screen create failed", 1);
+                ui_toast(ui, "8 BG0 screens max", 1);
             }
             return;
         }

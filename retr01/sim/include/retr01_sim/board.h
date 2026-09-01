@@ -190,10 +190,10 @@ typedef struct R01sBoard {
     uint8_t cart_screen_count;
     uint8_t cart_start_col;
     uint8_t cart_start_row;
-    uint8_t cart_bg0_count;       /* L0 present count (hdr[6]) */
+    uint8_t cart_bg0_count;       /* BG0 present count (hdr[6]) */
     uint8_t cart_bg0_cols_hdr;    /* authored extent nibble (informational) */
     uint8_t cart_bg0_rows_hdr;
-    uint32_t cart_off_bg0_dir;    /* absolute L0 dir, 0 if none */
+    uint32_t cart_off_bg0_dir;    /* absolute BG0 dir, 0 if none */
     /* Phase 3D entity tables (absolute flash offsets). */
     uint8_t cart_entity_type_count;
     uint8_t cart_entity_inst_count;
@@ -224,7 +224,7 @@ typedef struct R01sBoard {
     uint8_t chr_last_master; /* hold last BG/sprite master when CHR CE denied */
     /* 2x2 workbench: 1 = screen dir hit loaded into slot (absent -> backdrop / L0). */
     uint8_t vram_slot_present[4];
-    /* Host Play L0 / BG0 cache (cart-backed show-through under L1 color 0). Not IC path. */
+    /* Host Play BG0 cache (cart-backed show-through under BG1 color 0). Not IC path. */
     struct {
         uint8_t present;
         uint8_t col;
@@ -232,9 +232,9 @@ typedef struct R01sBoard {
         uint8_t map[R01S_CART_SCREEN_PAYLOAD];
     } bg0[R01S_BG0_SCREENS_MAX];
     int bg0_count;
-    int bg0_cols; /* present L0 bbox */
+    int bg0_cols; /* present BG0 bbox */
     int bg0_rows;
-    int l1_cols; /* present L1 bbox */
+    int l1_cols; /* present BG1 bbox */
     int l1_rows;
     int l1_origin_x;
     int l1_origin_y;
@@ -262,8 +262,8 @@ typedef struct R01sBoard {
     uint8_t health_saw_nmi;
     R01sLevel nmi_prev; /* beam NMI# edge detect */
     uint32_t nmi_pulses;
-    /* Island M: sprite field (VBlank) + L0 line ping-pong (HBlank). */
-    uint8_t l0_show_half; /* 0/1 within L0 line region at R01S_L0_LINE_BASE */
+    /* Island M: sprite field (VBlank) + BG0 line ping-pong (HBlank). */
+    uint8_t l0_show_half; /* 0/1 within BG0 line region at R01S_L0_LINE_BASE */
     uint8_t linebuf_prev_hblank;
     uint8_t vblank_prev;
     uint8_t linebuf_saw_mux_mcu;
@@ -309,7 +309,7 @@ void r01s_board_set_scroll(R01sBoard *board, uint8_t scroll_x, uint8_t scroll_y)
 /* Host Play: MAP/VRAM already loaded via catchup; keep stream gate open. */
 void r01s_board_mark_map_ready(R01sBoard *board);
 
-/* Host Play L0 / BG0: load from cart meta and update proportional scroll from play cam. */
+/* Host Play BG0: load from cart meta and update proportional scroll from play cam. */
 void r01s_board_load_bg0(R01sBoard *board);
 void r01s_board_update_bg0_scroll(R01sBoard *board, int cam_x, int cam_y);
 

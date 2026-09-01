@@ -124,7 +124,6 @@ int ui_init(UiState *ui) {
     ui->last_click_row = -1;
     ui->world_sel_col = -1;
     ui->world_sel_row = -1;
-    ui->bg0_fit_warn = 0;
     ui->screen_clip_valid = 0;
     ui->sel_x0 = -1;
     ui->sel_y0 = -1;

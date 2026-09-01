@@ -31,7 +31,7 @@
 #define R01E_MAX_WORLDS 8
 #define R01E_MAX_PRESENT_SCREENS 32 /* cart cap: 8 worlds x 32 (docs/graphics) */
 #define R01E_PARALLAX_MIN 0
-#define R01E_PARALLAX_MAX 8 /* L0 / BG0 screens max (legacy name kept for ABI) */
+#define R01E_PARALLAX_MAX 8 /* BG0 screens max (legacy name kept for ABI) */
 #define R01E_PARALLAX_SLICE_MAX 120 /* max bands; variable thickness (docs/graphics) */
 #define R01E_PHASE1_WORLDS 1 /* Studio Phase 1: world 0 only */
 #define R01E_BG_BANKS 4

@@ -651,7 +651,7 @@ static int build_world_blob(Buf *blob, const R01World *w, const char *custom_log
     }
     put_u8(hdr + 4, (uint8_t)(w->default_pal_row & 7));
     put_u8(hdr + 5, (uint8_t)present_n);
-    put_u8(hdr + 6, (uint8_t)bg0_n); /* BG0 / L0 present count (hdr was parallax_count) */
+    put_u8(hdr + 6, (uint8_t)bg0_n); /* BG0 present count (hdr was parallax_count) */
     put_u24(hdr + 8, (uint32_t)off_chr);
     put_u24(hdr + 11, (uint32_t)off_sdir);
     put_u24(hdr + 14, bg0_n > 0 ? (uint32_t)off_bg0_dir : 0u);
@@ -749,6 +749,19 @@ static int build_world_blob(Buf *blob, const R01World *w, const char *custom_log
     }
     if (bg0_n > 0) {
         int di = 0;
+        int min_c = 99, min_r = 99;
+        /* Cart BG0 coords are origin-relative to the present bbox (Host Play samples from 0). */
+        for (si = 0; si < w->bg0_screen_count && si < R01_BG0_SCREENS_MAX; si++) {
+            if (!w->bg0_screens[si].present) {
+                continue;
+            }
+            if (w->bg0_screens[si].col < min_c) {
+                min_c = w->bg0_screens[si].col;
+            }
+            if (w->bg0_screens[si].row < min_r) {
+                min_r = w->bg0_screens[si].row;
+            }
+        }
         for (si = 0; si < w->bg0_screen_count && si < R01_BG0_SCREENS_MAX; si++) {
             const R01Screen *s = &w->bg0_screens[si];
             uint8_t *e;
@@ -756,8 +769,8 @@ static int build_world_blob(Buf *blob, const R01World *w, const char *custom_log
                 continue;
             }
             e = bg0_dir + (size_t)di * SCREEN_DIR_ENT;
-            put_u8(e + 0, (uint8_t)s->col);
-            put_u8(e + 1, (uint8_t)s->row);
+            put_u8(e + 0, (uint8_t)(s->col - min_c));
+            put_u8(e + 1, (uint8_t)(s->row - min_r));
             put_u8(e + 2, 0);
             put_u8(e + 3, 0);
             put_u24(e + 4, bg0_payload_base + (uint32_t)di * SCREEN_PAYLOAD);

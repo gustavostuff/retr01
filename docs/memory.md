@@ -28,7 +28,7 @@ PRG is **32 KB** mapped at `$8000-$FFFF` with an I/O hole at `$FE00-$FEFF`. No P
 | **Who writes** | W65C02S only |
 | **Who reads** | W65C02S only |
 | **When** | Any CPU cycle. Never touched by video or AVRs |
-| **Typical use** | Entity state, scroll helpers, L0 proportional scroll temps, stacks, ZP shadows |
+| **Typical use** | Entity state, scroll helpers, BG0 proportional scroll temps, stacks, ZP shadows |
 
 ### VRAM (32 KB, interleaved)
 
@@ -37,7 +37,7 @@ PRG is **32 KB** mapped at `$8000-$FFFF` with an I/O hole at `$FE00-$FEFF`. No P
 | **CPU port** | `$FE10` addr hi, `$FE11` addr lo, `$FE12` data (auto-inc) |
 | **CPU writes** | PHI2 high (CPU phase) via HC157 mux + PLD `/OE` |
 | **PPU reads** | PHI2 low (PPU phase): beam/BG fetch owns address and data |
-| **Layout** | Slots 0-3 L1 camera (512 B each), slots 4-7 L0 camera (512 B each), rest scratch/reserved ([`graphics.md`](graphics.md)) |
+| **Layout** | Slots 0-3 BG1 camera (512 B each), slots 4-7 BG0 camera (512 B each), rest scratch/reserved ([`graphics.md`](graphics.md)) |
 | **Tear rule** | Do not poke a cell the beam is fetching. Off-screen slots and VBlank are safe |
 
 **How interleave works:** one AS6C62256 serves both the 6502 and the video path. On each **8 MHz** PHI2 cycle the mux picks who owns the VRAM address bus:
@@ -55,9 +55,9 @@ The CPU never shares a raw fight with the beam. Streaming MAP during active disp
 |--|--|
 | **CPU port** | None direct |
 | **Sprite field** | ATmega1284P fills the full **120x128** playfield in **VBlank** (soft field in sim). Beam/compositor reads per visible dot |
-| **L0 lines** | 1284 fills the next L0 / BG0 line in **HBlank** (ping-pong). Active dots use that line where L1 color index is **0** (show-through mask) |
-| **Layout (sim)** | Sprite field at `$0000` (120x128). L0 ping-pong halves at `$4000` / `$4080` |
-| **Content** | Resolved sprite / L0 master indices, not a full RGB framebuffer |
+| **BG0 lines** | 1284 fills the next BG0 line in **HBlank** (ping-pong). Active dots use that line where BG1 color index is **0** (show-through mask) |
+| **Layout (sim)** | Sprite field at `$0000` (120x128). BG0 ping-pong halves at `$4000` / `$4080` |
+| **Content** | Resolved sprite / BG0 master indices, not a full RGB framebuffer |
 
 ---
 
@@ -67,7 +67,7 @@ The CPU never shares a raw fight with the beam. Streaming MAP during active disp
 |--|--|
 | **CPU read** | PRG at `$8000+`, MAP via `$FE90`-`$FE93`, CHR indirectly via BG/1284 fetch |
 | **CPU write** | Flash programming only (not runtime gameplay) |
-| **CHR read** | BG path on visible dots. 1284 uses cart CHR in **VBlank** (sprite field) and **HBlank** (L0 line) |
+| **CHR read** | BG path on visible dots. 1284 uses cart CHR in **VBlank** (sprite field) and **HBlank** (BG0 line) |
 | **MAP read** | `$FE90`-`$FE92` set 24-bit seek, `$FE93` data auto-inc |
 
 One `.retr01` image holds PRG, global palettes, world blobs (CHR + screen MAP + entities), and optional title/credits screens. CHR is **not** memory-mapped into the 6502 address space. The CPU seeks MAP bytes through `$FE93`. Video logic fetches CHR tiles by bank+index from flash.
@@ -142,8 +142,8 @@ Magic **`retr01`**, **`format_ver` = 2**. Studio re-export required for older im
 | PRG 32 KB                                                        |
 | OTHER SCREENS (title / interstitial / credits, raw or RLE)       |
 | WORLD TABLE 8 x 8 B                                              |
-| WORLD BLOBS: header, CHR 32 KB, L1 screen dir + payloads,        |
-|   L0 / BG0 dir + payloads, entity types/instances, player anim   |
+| WORLD BLOBS: header, CHR 32 KB, BG1 screen dir + payloads,        |
+|   BG0 dir + payloads, entity types/instances, player anim   |
 +------------------------------------------------------------------+
 ```
 
@@ -164,20 +164,20 @@ Six `(offset, length)` pairs as little-endian **u24** (3+3 bytes each):
 
 | Piece | Size / note |
 |-------|-------------|
-| World header | **32 B** (spawn col/row, default banks/pal row, L1 present count, L0 present count, CHR/dir offsets, entity counts, player entity + hitbox, camera dead-zone bytes **30-31**) |
+| World header | **32 B** (spawn col/row, default banks/pal row, BG1 present count, BG0 present count, CHR/dir offsets, entity counts, player entity + hitbox, camera dead-zone bytes **30-31**) |
 | CHR | **4** BG banks + **4** SPR banks x **4096 B** = **32 KB** total |
-| L1 screen directory | **12 B** per present playfield screen (grid col/row + payload offset) |
-| L1 screen payloads | **480 B** each (present only, sparse **8x8**) |
-| L0 / BG0 directory | **12 B** per present L0 screen (same shape as L1 dir). Offset **0** if none |
-| L0 / BG0 payloads | **480 B** each (filled rectangle, up to **8** screens) |
+| BG1 screen directory | **12 B** per present playfield screen (grid col/row + payload offset) |
+| BG1 screen payloads | **480 B** each (present only, sparse **8x8**) |
+| BG0 directory | **12 B** per present BG0 screen (same shape as BG1 dir). Offset **0** if none |
+| BG0 payloads | **480 B** each (up to **8** present screens, sparse on **8x8**) |
 | Entity types / instances | Packed records. Metasprite catalog is Studio-only and flattened here |
 | Player anim | Optional `PA` blob when a player entity is marked |
 
-**World header notes (L0):** byte **3** packs present L0 extent (`cols | rows<<4`). Byte **6** is L0 present count (was legacy parallax count). Bytes **14-16** are L0 directory offset (u24), or **0** if none.
+**World header notes (BG0):** byte **3** packs present BG0 extent (`cols | rows<<4`). Byte **6** is BG0 present count (was legacy parallax count). Bytes **14-16** are BG0 directory offset (u24), or **0** if none.
 
-**Screen payload:** **480 B** = 240 tile bytes + 240 attr bytes (**16x15**, **128x120**). Same shape for L1 and L0.
+**Screen payload:** **480 B** = 240 tile bytes + 240 attr bytes (**16x15**, **128x120**). Same shape for BG1 and BG0.
 
-**World caps:** **8** worlds, **32 present L1 screens**/world on sparse **8x8** grid, **0..8** L0 screens/world (rectangle area 1..8), **4** BG + **4** sprite CHR banks/world (**256** tiles x **16 B** each bank).
+**World caps:** **8** worlds, **32 present BG1 screens**/world on sparse **8x8** grid, **0..8** BG0 screens/world (free layout on **8x8**), **4** BG + **4** sprite CHR banks/world (**256** tiles x **16 B** each bank).
 
 **Flash budget at max fill:** ~**442 KB** used, ~**70 KB** free in **512 KB** (room for other screens, entity data).
 

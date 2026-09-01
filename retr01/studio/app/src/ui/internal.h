@@ -181,7 +181,6 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo);
 int world_cell_hit(const UiState *ui, int lx, int ly, int *out_col, int *out_row);
 int world_btn_hit(const UiState *ui, int lx, int ly, int *out_wi);
 int world_sub_hit(const UiState *ui, int lx, int ly);
-int world_bg0_mode_hit(const UiState *ui, int lx, int ly);
 void worlds_tabs_prepare(const UiState *ui, UiTabsLayout *out);
 int accordion_header_hit(const UiState *ui, int lx, int ly, int *out_section);
 void accordion_toggle(UiState *ui, int section);

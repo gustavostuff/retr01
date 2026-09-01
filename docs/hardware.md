@@ -66,7 +66,7 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
                                     |
   Dot clock + beam PLDs ------------+---> tile/attr -> cart CHR -> palette -> PROM
                                     |
-  ATmega1284P ---------------------> AS6C62256 (sprite field + L0 ping-pong)
+  ATmega1284P ---------------------> AS6C62256 (sprite field + BG0 ping-pong)
                                     |
   Compositor PLD -------------------> RGBS (+ SCALE DIP 1x/2x)
 ```
@@ -83,21 +83,21 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
 
 ### Background video
 
-1. Beam PLDs step **341x262** and fetch tile/attr from **VRAM** on PPU phases (L1 slots 0-3).
-2. L1 scroll latches (`$FE02`/`$FE03`) offset into the L1 2x2 workbench ([`graphics.md`](graphics.md)).
+1. Beam PLDs step **341x262** and fetch tile/attr from **VRAM** on PPU phases (BG1 slots 0-3).
+2. BG1 scroll latches (`$FE02`/`$FE03`) offset into the BG1 2x2 workbench ([`graphics.md`](graphics.md)).
 3. Attr **BANK** picks CHR tile from cart flash. Active palette indices -> **Color PROM** -> DAC.
-4. Compositor PLD muxes sprite vs L1 vs L0 (show-through when L1 index is **0**) vs backdrop.
+4. Compositor PLD muxes sprite vs BG1 vs BG0 (show-through when BG1 index is **0**) vs backdrop.
 
-### Second background (L0)
+### Second background (BG0)
 
-1. Software keeps L0 screens in VRAM slots **4-7** and sets `$FE06`/`$FE07` (often proportional to L1 scroll).
-2. Target silicon / sim: **HBlank** fills the next L0 line from slots 4-7 + cart CHR (sim uses cart BG0 cache into linebuf). Sprites use **VBlank** for a full playfield field so they do not steal HBlank.
-3. Emu Host Play composites L0 under L1 color 0 from the cart BG0 cache in the full-frame renderer (not a separate HBlank worker). See [`graphics.md`](graphics.md).
+1. Software keeps BG0 screens in VRAM slots **4-7** and sets `$FE06`/`$FE07` (often proportional to BG1 scroll).
+2. Target silicon / sim: **HBlank** fills the next BG0 line from slots 4-7 + cart CHR (sim uses cart BG0 cache into linebuf). Sprites use **VBlank** for a full playfield field so they do not steal HBlank.
+3. Emu Host Play composites BG0 under BG1 color 0 from the cart BG0 cache in the full-frame renderer (not a separate HBlank worker). See [`graphics.md`](graphics.md).
 
 ### Sprites
 
 1. CPU fills **OAM** in 1284 via `$FE20`/`$FE21`.
-2. Locked split with L0: **VBlank** plots the full **120x128** sprite field. **HBlank** fills the next L0 / BG0 line. Active dots apply L1 color-0 show-through. Cap **16** sprites per logical scanline.
+2. Locked split with BG0: **VBlank** plots the full **120x128** sprite field. **HBlank** fills the next BG0 line. Active dots apply BG1 color-0 show-through. Cap **16** sprites per logical scanline.
 
 ### Pads
 
@@ -126,7 +126,7 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
 | VRAM glue | Interleave enable with PHI2 + HC157 AB |
 | Beam X | Dot counter / H timing inside 341 |
 | Beam Y | Line counter / `$FE04` compare / NMI edges |
-| Compositor | Sprite vs L1 vs L0 show-through + Color PROM index |
+| Compositor | Sprite vs BG1 vs BG0 show-through + Color PROM index |
 
 ---
 

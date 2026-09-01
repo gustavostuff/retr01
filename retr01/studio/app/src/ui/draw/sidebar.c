@@ -32,9 +32,6 @@ static void draw_worlds_body(UiState *ui, SDL_Renderer *r, const AccordionLayout
     int ly = ui->mouse_y;
     UiTabsLayout tabs;
     int plane_bg0 = (ui->worlds_plane == UI_WORLDS_PLANE_BG0);
-    int bg0_cols = R01_BG0_DEFAULT_COLS;
-    int bg0_rows = R01_BG0_DEFAULT_ROWS;
-    int ox = 0, oy = 0;
 
     worlds_tabs_prepare(ui, &tabs);
     ui_tabs_draw(r, &tabs, ui->project->active_world, lx, ly);
@@ -79,20 +76,12 @@ static void draw_worlds_body(UiState *ui, SDL_Renderer *r, const AccordionLayout
         return;
     }
 
-    if (w->bg0_cols > 0) {
-        bg0_cols = w->bg0_cols;
-    }
-    if (w->bg0_rows > 0) {
-        bg0_rows = w->bg0_rows;
-    }
-    ox = (R01_GRID_MAX - bg0_cols) / 2;
-    oy = (R01_GRID_MAX - bg0_rows) / 2;
-    for (row = 0; row < bg0_rows; row++) {
-        for (col = 0; col < bg0_cols; col++) {
+    for (row = 0; row < R01_GRID_MAX; row++) {
+        for (col = 0; col < R01_GRID_MAX; col++) {
             int idx = r01_world_bg0_screen_index(w, col, row);
-            int x = UI_WORLDS_X + (ox + col) * UI_WORLD_CELL;
-            int y = lo->worlds_grid_y + (oy + row) * UI_WORLD_CELL;
-            int present = (idx >= 0 && idx < w->bg0_screen_count && w->bg0_screens[idx].present);
+            int x = UI_WORLDS_X + col * UI_WORLD_CELL;
+            int y = lo->worlds_grid_y + row * UI_WORLD_CELL;
+            int present = (idx >= 0);
             int marked = present && idx == w->bg0_active_screen;
             int hover = point_in_rect(lx, ly, x, y, UI_WORLD_CELL, UI_WORLD_CELL);
             if (present && !marked) {
@@ -108,33 +97,11 @@ static void draw_worlds_body(UiState *ui, SDL_Renderer *r, const AccordionLayout
             }
         }
     }
-    if (!ui->play.active && ui->world_sel_col >= 0 && ui->world_sel_row >= 0 && ui->world_sel_col < bg0_cols &&
-        ui->world_sel_row < bg0_rows) {
-        int x = UI_WORLDS_X + (ox + ui->world_sel_col) * UI_WORLD_CELL;
-        int y = lo->worlds_grid_y + (oy + ui->world_sel_row) * UI_WORLD_CELL;
+    if (!ui->play.active && ui->world_sel_col >= 0 && ui->world_sel_row >= 0 &&
+        ui->world_sel_col < R01_GRID_MAX && ui->world_sel_row < R01_GRID_MAX) {
+        int x = UI_WORLDS_X + ui->world_sel_col * UI_WORLD_CELL;
+        int y = lo->worlds_grid_y + ui->world_sel_row * UI_WORLD_CELL;
         draw_rect(r, x, y, UI_WORLD_CELL, UI_WORLD_CELL, 255, 255, 255);
-    }
-    {
-        int mx = UI_WORLDS_X + UI_BG0_MODE_MARGIN;
-        int my = lo->worlds_grid_y + UI_BG0_MODE_MARGIN;
-        int hover = point_in_rect(lx, ly, mx, my, UI_BG0_MODE_W, UI_BG0_MODE_H);
-        fill_rect(r, mx, my, UI_BG0_MODE_W, UI_BG0_MODE_H, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
-        font_draw_centered(r, mx, my, UI_BG0_MODE_W, UI_BG0_MODE_H, "Mode", 240, 240, 240);
-        if (hover) {
-            hover_overlay(r, mx, my, UI_BG0_MODE_W, UI_BG0_MODE_H);
-        }
-    }
-    if (ui->bg0_fit_warn > 0) {
-        char warn[48];
-        int grid_r = lo->worlds_grid_y + R01_GRID_MAX * UI_WORLD_CELL;
-        int approx, wx;
-        snprintf(warn, sizeof(warn), "Warn: %d screens won't render", ui->bg0_fit_warn);
-        approx = (int)strlen(warn) * 6;
-        wx = UI_WORLDS_X + R01_GRID_MAX * UI_WORLD_CELL - approx;
-        if (wx < UI_WORLDS_X) {
-            wx = UI_WORLDS_X;
-        }
-        font_draw(r, wx, grid_r - UI_BTN_H + 2, warn, 240, 220, 40);
     }
 }
 

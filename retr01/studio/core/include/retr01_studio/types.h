@@ -31,9 +31,6 @@
 #define R01_SPR_PLAYER_TILE_ID 1
 
 #define R01_BG0_SCREENS_MAX 8
-/* Default authoring footprint until a shape picker returns. Any cols*rows in 1..8 is valid. */
-#define R01_BG0_DEFAULT_COLS 2
-#define R01_BG0_DEFAULT_ROWS 2
 
 #define R01_MASTER_COLORS 64
 #define R01_PAL_COLORS 4
@@ -223,11 +220,11 @@ typedef struct R01World {
     int default_screen; /* index into screens[]; spawn / play start */
     R01Screen screens[R01_MAX_SCREENS];
     int screen_count;
-    /* Structured L0 / BG0 plane (rectangle, 1..8 screens total). */
-    int bg0_cols;
-    int bg0_rows;
+    /* Structured BG0 plane: up to 8 present screens anywhere on the 8x8 map. */
+    int bg0_cols; /* present enclosing extent W (derived) */
+    int bg0_rows; /* present enclosing extent H (derived) */
     R01Screen bg0_screens[R01_BG0_SCREENS_MAX];
-    int bg0_screen_count;  /* bg0_cols * bg0_rows slot count */
+    int bg0_screen_count;  /* slots used in bg0_screens[] (0..8, may include holes) */
     int bg0_active_screen; /* index into bg0_screens[]; -1 none */
     R01BgBank bg_banks[R01_BG_BANKS];
     R01SprBank spr_banks[R01_SPR_BANKS];
