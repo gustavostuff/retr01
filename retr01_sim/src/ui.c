@@ -55,7 +55,7 @@ int r01s_ui_rotate_selected(R01sUi *ui) {
     }
 
     /* Compact multi-select: rotate every selected IC. */
-    if (ui_layout_flat(ui)) {
+    if (ui->layout_compact) {
         for (i = 0; i < ui->chip_count; i++) {
             R01sEntity *te;
             if (!ui->chip_sel[i]) {

@@ -21,7 +21,6 @@ add_library(retr01_sim_core
   src/board_debug.c
   src/play.c
   src/timing.c
-  src/netlist.c
   chips/stub14.c
   chips/pwr5v.c
   chips/osc8m.c
@@ -69,7 +68,6 @@ add_library(retr01_sim_app
   src/ui.c
   src/ui_font.c
   src/ui_draw_chip.c
-  src/ui_draw_wires.c
   src/ui_placement.c
   src/ui_draw.c
   src/ui_input.c

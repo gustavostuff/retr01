@@ -5,7 +5,6 @@
 #include "retr01_sim/gamepad.h"
 #include "retr01_sim/health.h"
 #include "retr01_sim/island_group.h"
-#include "retr01_sim/netlist.h"
 #include "retr01_sim/types.h"
 
 /* R01S_MAX_ISLANDS comes from island_group.h */
@@ -15,24 +14,6 @@
 
 #define R01S_BOARD_MAX_CHIPS 64
 #define R01S_UI_GAMEPAD_COUNT 2
-
-/* Layout modes (cycle: Islands -> Compact -> Connections). */
-#define R01S_LAYOUT_ISLANDS 0
-#define R01S_LAYOUT_COMPACT 1
-#define R01S_LAYOUT_CONN 2
-
-#define R01S_WIRE_MAX_EDGES R01S_NET_MAX_EDGES
-#define R01S_WIRE_MAX_VERTS 12
-
-typedef struct R01sWireRoute {
-    char ref_a[12];
-    char pin_a[R01S_NET_PIN_NAME];
-    char ref_b[12];
-    char pin_b[R01S_NET_PIN_NAME];
-    int nverts; /* intermediate board-space vertices (endpoints come from pins) */
-    int vx[R01S_WIRE_MAX_VERTS];
-    int vy[R01S_WIRE_MAX_VERTS];
-} R01sWireRoute;
 
 /* Fixed HUD chrome -- board draws only in the center viewport. */
 #define R01S_UI_UNIT 8
@@ -96,8 +77,8 @@ typedef struct R01sUi {
     int ctx_chip;       /* context-menu chip index, or -1 */
     int ctx_x;          /* menu anchor in logic space */
     int ctx_y;
-    int layout_mode; /* R01S_LAYOUT_ISLANDS / COMPACT / CONN */
-    /* Snapshot of island-mode geometry while compact/conn (restored on toggle off). */
+    int layout_compact; /* 1 = pack chips like a PCB (no island frames) */
+    /* Snapshot of island-mode geometry while compact (restored on toggle off). */
     int layout_saved;
     /* Island-mode chip positions relative to island board_x/board_y. */
     int save_chip_x[R01S_BOARD_MAX_CHIPS];
@@ -112,24 +93,9 @@ typedef struct R01sUi {
     int compact_chip_x[R01S_BOARD_MAX_CHIPS];
     int compact_chip_y[R01S_BOARD_MAX_CHIPS];
     uint8_t compact_chip_orient[R01S_BOARD_MAX_CHIPS];
-    /* Connections-mode placements + editable wire routes. */
-    int conn_saved;
-    int conn_chip_x[R01S_BOARD_MAX_CHIPS];
-    int conn_chip_y[R01S_BOARD_MAX_CHIPS];
-    uint8_t conn_chip_orient[R01S_BOARD_MAX_CHIPS];
-    R01sWireRoute wires[R01S_WIRE_MAX_EDGES];
-    int wire_count;
     int layout_dirty; /* 1 = unsaved layout edits (SAVE / S to write ui_layout.json) */
     SDL_Texture *lcd_tex; /* 256x240 LCD framebuffer upload (streaming) */
 } R01sUi;
-
-static inline int ui_layout_flat(const R01sUi *ui) {
-    return ui && ui->layout_mode != R01S_LAYOUT_ISLANDS;
-}
-
-static inline int ui_layout_conn(const R01sUi *ui) {
-    return ui && ui->layout_mode == R01S_LAYOUT_CONN;
-}
 
 int r01s_ui_init(R01sUi *ui);
 void r01s_ui_shutdown(R01sUi *ui);

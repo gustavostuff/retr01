@@ -143,7 +143,7 @@ void clamp_chip(R01sUi *ui, R01sEntity *e, int island_index) {
     if (!ui) {
         return;
     }
-    if (ui_layout_flat(ui)) {
+    if (ui->layout_compact) {
         clamp_chip_to_board(e);
     } else {
         clamp_chip_in_island(ui, e, island_index);
@@ -1207,124 +1207,7 @@ static void ui_apply_compact_layout(R01sUi *ui) {
     r01s_ui_chip_z_init(ui);
 }
 
-static void ui_save_conn_layout(R01sUi *ui) {
-    int i;
-    for (i = 0; i < ui->chip_count; i++) {
-        const R01sEntity *e = ui->chips[i];
-        ui->conn_chip_x[i] = e ? e->board_x : 0;
-        ui->conn_chip_y[i] = e ? e->board_y : 0;
-        ui->conn_chip_orient[i] = e ? (uint8_t)e->orient : (uint8_t)R01S_ORIENT_H;
-    }
-    ui->conn_saved = 1;
-}
-
-static void ui_restore_conn_layout(R01sUi *ui) {
-    int i;
-    if (!ui || !ui->conn_saved) {
-        return;
-    }
-    for (i = 0; i < ui->chip_count; i++) {
-        R01sEntity *e = ui->chips[i];
-        if (!e) {
-            continue;
-        }
-        if (e->visual == R01S_ENTITY_VIS_IC) {
-            r01s_entity_set_orient(e, (R01sPkgOrient)ui->conn_chip_orient[i]);
-        }
-        r01s_entity_place(e, ui->conn_chip_x[i], ui->conn_chip_y[i]);
-    }
-}
-
-static void ui_apply_conn_layout(R01sUi *ui) {
-    R01sPackItem items[R01S_BOARD_MAX_CHIPS];
-    int place_x[R01S_BOARD_MAX_CHIPS];
-    int place_y[R01S_BOARD_MAX_CHIPS];
-    int best_x[R01S_BOARD_MAX_CHIPS];
-    int best_y[R01S_BOARD_MAX_CHIPS];
-    int n = 0;
-    int i;
-    int area = 0;
-    int side;
-    int best_score = 0x7fffffff;
-    int t;
-
-    if (!ui) {
-        return;
-    }
-    for (i = 0; i < ui->chip_count; i++) {
-        const R01sEntity *e = ui->chips[i];
-        if (!e || e->visual == R01S_ENTITY_VIS_NONE || e->body_w <= 0 || e->body_h <= 0) {
-            continue;
-        }
-        items[n].idx = i;
-        chip_pack_footprint(e, &items[n].pw, &items[n].ph);
-        area += items[n].pw * items[n].ph;
-        n++;
-    }
-    if (n == 0) {
-        return;
-    }
-    qsort(items, (size_t)n, sizeof(items[0]), pack_item_taller);
-    side = ui_isqrt(area);
-    if (side < items[0].pw) {
-        side = items[0].pw;
-    }
-    /* Spread wider than compact so wire paths stay readable. */
-    side = side + side / 2 + R01S_CONN_GAP * 4;
-
-    for (t = 0; t < 24; t++) {
-        int max_row = side + (t - 8) * (side / 8 + 8);
-        int bb_w = 0;
-        int bb_h = 0;
-        int score;
-        int diff;
-        if (max_row < items[0].pw) {
-            max_row = items[0].pw;
-        }
-        pack_shelves(items, n, max_row, R01S_CONN_GAP, R01S_CONN_ORIGIN_X, R01S_CONN_ORIGIN_Y, place_x, place_y,
-                     &bb_w, &bb_h);
-        diff = bb_w > bb_h ? bb_w - bb_h : bb_h - bb_w;
-        score = diff * 4 + bb_w + bb_h;
-        if (score < best_score) {
-            best_score = score;
-            memcpy(best_x, place_x, (size_t)n * sizeof(int));
-            memcpy(best_y, place_y, (size_t)n * sizeof(int));
-        }
-    }
-
-    for (i = 0; i < n; i++) {
-        R01sEntity *e = ui->chips[items[i].idx];
-        int bx = best_x[i];
-        int by = best_y[i];
-        int pw, ph;
-        if (!e) {
-            continue;
-        }
-        chip_pack_footprint(e, &pw, &ph);
-        bx += (pw - e->body_w) / 2;
-        by += (ph - e->body_h) / 2;
-        r01s_entity_place(e, r01s_grid_snap(bx), r01s_grid_snap(by));
-        clamp_chip_to_board(e);
-    }
-
-    ui->pan_x = 0;
-    ui->pan_y = 0;
-    r01s_ui_clamp_pan(ui);
-    r01s_ui_chip_z_init(ui);
-}
-
-static const char *layout_mode_label(int mode) {
-    if (mode == R01S_LAYOUT_COMPACT) {
-        return "COMPACT";
-    }
-    if (mode == R01S_LAYOUT_CONN) {
-        return "CONN";
-    }
-    return "ISLANDS";
-}
-
 void ui_toggle_compact(R01sUi *ui) {
-    int cur;
     if (!ui) {
         return;
     }
@@ -1336,8 +1219,7 @@ void ui_toggle_compact(R01sUi *ui) {
     ui->box_sel = 0;
     memset(ui->chip_sel, 0, sizeof(ui->chip_sel));
 
-    cur = ui->layout_mode;
-    if (cur == R01S_LAYOUT_ISLANDS) {
+    if (!ui->layout_compact) {
         ui_save_island_layout(ui);
         if (ui->compact_saved) {
             ui_restore_compact_layout(ui);
@@ -1348,33 +1230,21 @@ void ui_toggle_compact(R01sUi *ui) {
         if (ui->chip_z_count != ui->chip_count) {
             r01s_ui_chip_z_init(ui);
         }
-        ui->layout_mode = R01S_LAYOUT_COMPACT;
-        snprintf(ui->status, sizeof(ui->status), "compact PCB layout");
-    } else if (cur == R01S_LAYOUT_COMPACT) {
-        ui_save_compact_layout(ui);
-        if (ui->conn_saved) {
-            ui_restore_conn_layout(ui);
-        } else {
-            ui_apply_conn_layout(ui);
-            ui_save_conn_layout(ui);
-        }
-        if (ui->chip_z_count != ui->chip_count) {
-            r01s_ui_chip_z_init(ui);
-        }
-        ui->layout_mode = R01S_LAYOUT_CONN;
-        snprintf(ui->status, sizeof(ui->status), "connections -- Ctrl+click wire to add vertex");
+        ui->layout_compact = 1;
+        ui->layout_dirty = 1;
+        snprintf(ui->status, sizeof(ui->status), "compact PCB layout -- click ISLANDS to restore frames");
     } else {
-        ui_save_conn_layout(ui);
+        ui_save_compact_layout(ui);
         ui_restore_island_layout(ui);
-        ui->layout_mode = R01S_LAYOUT_ISLANDS;
+        ui->layout_compact = 0;
+        ui->layout_dirty = 1;
         snprintf(ui->status, sizeof(ui->status), "island layout restored");
         r01s_ui_clamp_pan(ui);
     }
-    ui->layout_dirty = 1;
 }
 
 void compact_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
-    const char *label = layout_mode_label(ui ? ui->layout_mode : R01S_LAYOUT_ISLANDS);
+    const char *label = (ui && ui->layout_compact) ? "ISLANDS" : "COMPACT";
     int tw = font_text_width(label) + R01S_UI_UNIT * 2;
     rc->x = R01S_LOGIC_W - tw - R01S_UI_UNIT;
     rc->y = R01S_UI_UNIT / 2;

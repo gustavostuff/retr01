@@ -1,7 +1,6 @@
 #include "retr01_sim/bus.h"
 
 #include "retr01_sim/entity.h"
-#include "retr01_sim/netlist.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -91,11 +90,6 @@ void r01s_entity_drive(R01sEntity *e, const char *name, R01sLevel level) {
 R01sLevel r01s_entity_sense(const R01sEntity *e, const char *name) {
     const R01sPin *p = r01s_entity_pin_named_const(e, name);
     return p ? p->level : R01S_LVL_Z;
-}
-
-void r01s_entity_tie(R01sEntity *dst, const char *dst_pin, R01sEntity *src, const char *src_pin) {
-    r01s_net_link(dst, dst_pin, src, src_pin);
-    r01s_entity_drive(dst, dst_pin, r01s_entity_sense(src, src_pin));
 }
 
 int r01s_level_is_low(R01sLevel level) {

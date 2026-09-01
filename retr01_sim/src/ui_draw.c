@@ -1094,8 +1094,8 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     SDL_RenderSetClipRect(r, &view_clip);
 
     /* Islands back->front as complete units so a front island fully occludes
-     * anything behind it (frame fill + chips + header). Compact/Conn: chips only. */
-    if (ui->group && !ui_layout_flat(ui)) {
+     * anything behind it (frame fill + chips + header). Compact: chips only. */
+    if (ui->group && !ui->layout_compact) {
         int rank;
         int n_islands = ui->island_z_count;
         if (n_islands <= 0) {
@@ -1135,9 +1135,6 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     } else {
         int rank;
         int n_chips = ui->chip_z_count;
-        if (ui_layout_conn(ui)) {
-            ui_draw_connections(ui, r);
-        }
         if (n_chips <= 0) {
             n_chips = ui->chip_count;
         }
@@ -1193,9 +1190,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
         if (hint_max < 24) {
             hint_max = 24;
         }
-        hint = ui_layout_conn(ui)   ? "CONN  Ctrl+CLICK wire  S SAVE  R ROT"
-               : ui_layout_flat(ui) ? "BOX SEL  S SAVE  R ROT  G SCALE"
-                                    : "S SAVE  R ROT  G SCALE  PAN  DRAG";
+        hint = ui->layout_compact ? "BOX SEL  S SAVE  R ROT  G SCALE" : "S SAVE  R ROT  G SCALE  PAN  DRAG";
         font_draw_ellipsize(r, hint_x, text_y, hint, hint_max, 120, 130, 140);
     }
     {
@@ -1210,13 +1205,10 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     }
     {
         SDL_Rect cbtn;
-        const char *clabel =
-            ui->layout_mode == R01S_LAYOUT_COMPACT ? "COMPACT"
-            : ui->layout_mode == R01S_LAYOUT_CONN  ? "CONN"
-                                                  : "ISLANDS";
+        const char *clabel = ui->layout_compact ? "ISLANDS" : "COMPACT";
         compact_btn_rect(ui, &cbtn);
-        fill_rect(r, cbtn.x, cbtn.y, cbtn.w, cbtn.h, ui_layout_flat(ui) ? 40 : 28, ui_layout_flat(ui) ? 70 : 40,
-                  ui_layout_flat(ui) ? 50 : 32);
+        fill_rect(r, cbtn.x, cbtn.y, cbtn.w, cbtn.h, ui->layout_compact ? 40 : 28, ui->layout_compact ? 70 : 40,
+                  ui->layout_compact ? 50 : 32);
         draw_rect(r, cbtn.x, cbtn.y, cbtn.w, cbtn.h, 120, 160, 130);
         font_draw(r, cbtn.x + (cbtn.w - font_text_width(clabel)) / 2, cbtn.y + (cbtn.h - font_line_h()) / 2, clabel, 200, 220,
                   180);

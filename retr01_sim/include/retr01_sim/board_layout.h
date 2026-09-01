@@ -26,11 +26,6 @@
 #define R01S_COMPACT_ORIGIN_X R01S_GRID
 #define R01S_COMPACT_ORIGIN_Y R01S_GRID
 
-/* Connections mode: larger gaps so H/V/45 wire paths stay readable. */
-#define R01S_CONN_GAP 40
-#define R01S_CONN_ORIGIN_X R01S_GRID
-#define R01S_CONN_ORIGIN_Y R01S_GRID
-
 /* Default wrap width for multi-row island packing (fits sim center viewport). */
 #define R01S_ISLAND_ROW_MAX_W 520
 
