@@ -6,12 +6,56 @@
 
 #include <string.h>
 
+static uint16_t cartee_addr(const R01eIo *io) {
+    return (uint16_t)(((uint16_t)io->cartee_hi << 8) | io->cartee_lo) & (uint16_t)(R01E_CARTEE_BYTES - 1u);
+}
+
+static uint16_t meeprom_addr(const R01eIo *io) {
+    return (uint16_t)(((uint16_t)(io->meeprom_ah & 0x0Fu) << 8) | io->meeprom_al) &
+           (uint16_t)(R01E_MEEPROM_BYTES - 1u);
+}
+
+static uint8_t cartee_data_access(R01eMachine *m, uint8_t write_val, int is_write) {
+    uint16_t addr;
+    uint8_t cmd;
+
+    if (!m) {
+        return 0;
+    }
+    cmd = m->io.cartee_fe22_last;
+    addr = cartee_addr(&m->io);
+    if (is_write) {
+        if (cmd == R01E_CARTEE_CMD_WRITE) {
+            m->cart_save[addr] = write_val;
+        }
+        return write_val;
+    }
+    if (cmd == R01E_CARTEE_CMD_READ) {
+        return m->cart_save[addr];
+    }
+    return 0;
+}
+
+static uint8_t meeprom_data_access(R01eMachine *m, uint8_t write_val, int is_write) {
+    uint16_t addr;
+
+    if (!m) {
+        return 0;
+    }
+    addr = meeprom_addr(&m->io);
+    if (is_write) {
+        m->machine_eeprom[addr] = write_val;
+        return write_val;
+    }
+    return m->machine_eeprom[addr];
+}
+
 void r01e_io_reset(R01eIo *io) {
     if (!io) {
         return;
     }
     memset(io, 0, sizeof(*io));
-    io->ctrl = R01E_PPUCTRL_BG_EN;
+    io->ctrl = R01E_PPUCTRL_L1_EN;
     memset(io->oam, 0xFF, sizeof(io->oam));
 }
 
@@ -36,6 +80,10 @@ uint8_t r01e_io_read(R01eMachine *m, uint16_t addr) {
         return io->raster_y;
     case 0xFE05:
         return io->raster_ctrl;
+    case 0xFE06:
+        return io->bg0_scroll_x;
+    case 0xFE07:
+        return io->bg0_scroll_y;
     case 0xFE09:
         v = io->pal[io->pal_addr & 31u];
         io->pal_addr = (uint8_t)((io->pal_addr + 1) & 31u);
@@ -48,6 +96,12 @@ uint8_t r01e_io_read(R01eMachine *m, uint16_t addr) {
         v = io->oam[io->oam_addr];
         io->oam_addr++;
         return v;
+    case 0xFE22:
+        return io->cartee_fe22_last;
+    case 0xFE23:
+        return io->cartee_lo;
+    case 0xFE24:
+        return cartee_data_access(m, 0, 0);
     case 0xFE30:
         return io->world;
     case 0xFE38:
@@ -56,6 +110,12 @@ uint8_t r01e_io_read(R01eMachine *m, uint16_t addr) {
         return io->pad0;
     case 0xFE61:
         return io->pad1;
+    case 0xFE70:
+        return io->meeprom_al;
+    case 0xFE71:
+        return io->meeprom_ah;
+    case 0xFE72:
+        return meeprom_data_access(m, 0, 0);
     case 0xFE93:
         v = r01e_cart_read(&m->cart, io->map_addr);
         io->map_addr = (io->map_addr + 1) & 0xFFFFFFu;
@@ -66,9 +126,6 @@ uint8_t r01e_io_read(R01eMachine *m, uint16_t addr) {
         }
         if (addr >= 0xFE31 && addr <= 0xFE37) {
             return io->bank_helper[addr - 0xFE30];
-        }
-        if (addr >= 0xFE70 && addr <= 0xFE72) {
-            return io->eeprom[addr - 0xFE70];
         }
         return 0;
     }
@@ -94,10 +151,14 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
         io->raster_ctrl = v;
         break;
     case 0xFE06:
-        io->plane_lo = v;
+        io->bg0_scroll_x = (uint8_t)(v & 127u);
+        m->video.bg0_scroll_manual = 1;
+        m->video.l0_cam_x = io->bg0_scroll_x;
         break;
     case 0xFE07:
-        io->plane_hi = v;
+        io->bg0_scroll_y = (uint8_t)(v < 120u ? v : 119u);
+        m->video.bg0_scroll_manual = 1;
+        m->video.l0_cam_y = io->bg0_scroll_y;
         break;
     case 0xFE08:
         io->pal_addr = (uint8_t)(v & 31u);
@@ -123,6 +184,18 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
     case 0xFE21:
         io->oam[io->oam_addr++] = v;
         break;
+    case 0xFE22:
+        io->cartee_fe22_last = v;
+        if (v != R01E_CARTEE_CMD_READ && v != R01E_CARTEE_CMD_WRITE) {
+            io->cartee_hi = v;
+        }
+        break;
+    case 0xFE23:
+        io->cartee_lo = v;
+        break;
+    case 0xFE24:
+        (void)cartee_data_access(m, v, 1);
+        break;
     case 0xFE30:
         io->world = (uint8_t)(v & 7u);
         if (r01e_video_softboot_enabled()) {
@@ -140,6 +213,15 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
     case 0xFE60:
     case 0xFE61:
         break; /* host-driven pads */
+    case 0xFE70:
+        io->meeprom_al = v;
+        break;
+    case 0xFE71:
+        io->meeprom_ah = v;
+        break;
+    case 0xFE72:
+        (void)meeprom_data_access(m, v, 1);
+        break;
     case 0xFE90:
         io->map_addr = (io->map_addr & 0xFFFF00u) | v;
         break;
@@ -156,8 +238,6 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
             io->apu[addr - 0xFE40] = v;
         } else if (addr >= 0xFE31 && addr <= 0xFE37) {
             io->bank_helper[addr - 0xFE30] = v;
-        } else if (addr >= 0xFE70 && addr <= 0xFE72) {
-            io->eeprom[addr - 0xFE70] = v;
         }
         break;
     }

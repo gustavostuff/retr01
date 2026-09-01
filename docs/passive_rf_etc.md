@@ -2,7 +2,7 @@
 
 Non-IC parts and board-level RF / EMC practice. ICs, bus architecture, and island bring-up stay in [`hardware.md`](hardware.md) (that doc is chip-focused on purpose).
 
-**Related:** [`hardware.md`](hardware.md) (32-IC BOM, islands). [`sound.md`](sound.md) (APU DAC). Color PROM path: [`hw/md/AT28C16.md`](../hw/md/AT28C16.md).
+**Related:** [`hardware.md`](hardware.md) (32-IC BOM, islands). [`sound.md`](sound.md) (APU DAC). [`cart.md`](cart.md) (36-pin edge). Color PROM: [`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md). Pads: [`controllers.md`](controllers.md).
 
 Power assumption: **stable external 5 V** (barrel / PSU). No on-board switching regulator in the baseline. Passives are **outside** the 32-IC goal.
 
@@ -90,8 +90,8 @@ Board clocks matter for layout cleanliness. They are not automatically a show-st
 
 | Item | Role |
 |------|------|
-| Color PROM **R-2R** ladder (**1%** metal film) | R3G3B2 -> analog guns ([`AT28C16`](../hw/md/AT28C16.md)) |
-| **75 ohm** series per R/G/B (+ sync termination as needed) | Drive RGBS into 75 ohm video plant |
+| Color PROM **R-2R** ladder (**1%** metal film) | R3G3B2 -> analog guns ([`AT27C256R`](../hw/md/AT27C256R.md)) |
+| **75 ohm** to **GND** on each R/G/B (and sync as needed) | Termination -> **~0.7 Vpp** into 75 ohm video plant |
 | Optional ferrite beads on RGBS | Cable RF. Place at connector |
 | APU **R-2R** (or PWM RC) from 328P | Line-level mix ([`sound.md`](sound.md)) |
 | AC-coupling cap + series build-out on audio out | Blocks DC into TVs / amps |
@@ -101,7 +101,7 @@ Board clocks matter for layout cleanliness. They are not automatically a show-st
 
 ## Cart edge and user I/O ESD
 
-Anything a human can touch gets a clamp **at the connector**, then a series limiter, then the IC.
+Anything a human can touch gets a clamp **at the connector**, then a series limiter, then the IC. **36-pin** cart pinout: [`cart.md`](cart.md).
 
 | Item | Role |
 |------|------|
@@ -137,7 +137,7 @@ Design goal: **female jack on the motherboard** (2x) and on each optional pad bo
 | Jack | **Switchcraft 35RAPC** series, **TRS (stereo)**. Example: **35RAPC3BH3** (horizontal, threaded bushing). Same family on pad PCBs |
 | Conductors | **Tip / Ring / Sleeve** = **VCC / DATA / GND** (exact T/R assignment locked at schematic. Sleeve = GND + shell) |
 | Port count | **2** (P1, P2) footprints on the motherboard |
-| Pad MCU | **ATtiny85** draft on the controller board. 1284 still presents `$FE60` / `$FE61` |
+| Pad MCU | **ATtiny85** on the controller board ([`controllers.md`](controllers.md)). 1284 still presents `$FE60` / `$FE61` |
 | PPTC (Polyfuse) per port on **VCC** | Shorted aux tip-ring or crushed cable must not toast the plane. Size **Ihold** for one ATtiny85 + switches/LEDs (roughly **100-250 mA** class, **Vmax >= 6 V**). Place on the mobo **and** consider a mate on the pad board |
 | TVS to GND on VCC and DATA at each jack | ESD / hot-plug. PTC alone is too slow for ESD |
 | Series **R** on DATA (both ends if practical) | Current limit into MCU pins + RF damping on long aux runs |
@@ -188,7 +188,6 @@ Further reading that clarifies stackup and return paths: Rick Hartley lectures o
 
 | Topic | Note |
 |-------|------|
-| TRS pin map (T/R = VCC/DATA) | Lock at schematic. Document for third-party pads |
 | PPTC Ihold per pad port | Bench ATtiny85 + LED budget, then pick family (e.g. Bourns MF-MSMF / Littelfuse 1206L) |
 | First-spin RF | TEM comparative + ferrite/clamp tweaks. Formal CE only if selling into marked markets |
 | Prop-delay budget | Sim: `./sim cart.retr01 DELAY=typical|max` (or env `R01S_PROP_DELAY`). Capture HC / PLD / SRAM stacks before PCB freeze |

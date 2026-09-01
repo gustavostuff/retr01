@@ -8,7 +8,7 @@ The Retr01 project is a software tool chain + hardware family. Software includes
 
 Software is still a WIP. This is the overall hardware roadmap:
 
-- **Shared motherboard (stage 1)**: One THT board (~**14 x 12 cm**, 4-layer) for both **arcade** and **home console** shells. Same 32-IC core, cart, RGBS / S-Video / composite, 5 V barrel. **Arcade controller** headers (microswitch sticks/buttons into the 1284) **and** PCB holes / footprints for **2x Switchcraft 35RAPC** female 3.5 mm TRS (aux pad ports, populate when needed). Arcade vs console is enclosure + which I/O you wire, not two different mobos.
+- **Retr01-A (stage 1 arcade)** / **Retr01-C (stage 1 console)**: One THT board (~**14 x 12 cm**, 4-layer) for both shells. Same 32-IC core, [**36-pin cart**](docs/cart.md), RGBS / S-Video / composite, 5 V barrel. Arcade microswitch headers **and** PCB footprints for **2x Switchcraft 35RAPC** TRS ([`docs/controllers.md`](docs/controllers.md)). Shell + population choose I/O path, not two mobos.
 - **Retr01-H (stage 2)**: Handheld. SMD, battery, LCD + driver, contact pads. Same software contract.
 
 ## Software tree
@@ -30,7 +30,7 @@ Apps and shared code live under [`retr01/`](retr01/):
 |--|--|
 | CPU | W65C02S @ **8 MHz** |
 | Playfield | **128 x 120** logical (**16 x 15** tiles), board **2x** to **256 x 240** RGBS |
-| Art | **8 x 8** tiles, **2 bpp**, **64** master colors on-board Color PROM |
+| Art | **8 x 8** tiles, **2 bpp**, **64** master colors on-board Color PROM (**AT27C256R**) |
 | Worlds | up to **8** worlds, **32** BG1 screens each + optional **BG0** on a **512 KB** cart (**32 KB** PRG) |
 | Scroll | **2 x 2** live nametable window (BG1) + structured second BG (BG0) with show-through |
 | Sprites | **64** OAM entries, **16** per scanline |
@@ -59,6 +59,8 @@ Sim:
 - [`docs/graphics.md`](docs/graphics.md): VRAM, BG0/BG1, sprites, palettes, graphics ports
 - [`docs/memory.md`](docs/memory.md): chips, cart layout, read/write timing
 - [`docs/hardware.md`](docs/hardware.md): IC BOM, block diagram, bring-up (chips only)
+- [`docs/cart.md`](docs/cart.md): cartridge pinout, form factor, USB-C flasher
+- [`docs/controllers.md`](docs/controllers.md): Retr01-A arcade vs Retr01-C pad protocol
 - [`docs/passive_rf_etc.md`](docs/passive_rf_etc.md): passives, ports, stackup / RF
 - [`docs/sound.md`](docs/sound.md): APU and bytecode
 - [`docs/selling_points.md`](docs/selling_points.md): NES vs Retr01 comparison

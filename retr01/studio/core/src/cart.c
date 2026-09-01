@@ -390,11 +390,12 @@ int r01_prg_write_asm(const R01Project *p, const char *path, char *err_buf, size
     fprintf(f, "SCROLL_Y  = $FE03\n");
     fprintf(f, "PPUCTRL   = $FE00\n");
     fprintf(f, "PPUSTATUS = $FE01\n");
+    fprintf(f, "PPUCTRL_BOOT = $07\n");
     fprintf(f, "PAD0      = $FE60\n");
     fprintf(f, ".segment \"CODE\"\n.org $8000\n");
     fprintf(f, "reset:\n        sei\n        cld\n        ldx #$ff\n        txs\n");
     fprintf(f, "        lda #0\n        sta WORLD\n        sta SCROLL_X\n        sta SCROLL_Y\n");
-    fprintf(f, "        lda #1\n        sta PPUCTRL\n");
+    fprintf(f, "        lda #PPUCTRL_BOOT\n        sta PPUCTRL\n");
     fprintf(f, "; palette + MAP stream patched at export -- see prg_phase1.c\n");
     fprintf(f, "main:\n        lda PPUSTATUS\n        and #$80\n        beq main\n");
     fprintf(f, "        lda PAD0\n        sta $00FE\n        jmp main\n");

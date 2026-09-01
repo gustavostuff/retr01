@@ -102,7 +102,7 @@ Classic NES **32 KB** games (Balloon Fight, Ice Climber, Excitebike) already shi
 
 | Variant | Role |
 |---------|------|
-| **Arcade / console** | **Same motherboard.** Arcade headers (microswitches) + 2x 35RAPC TRS footprints. Shell and BOM population differ |
+| **Retr01-A** / **Retr01-C** | **Same motherboard.** Arcade headers (microswitches) + 2x 35RAPC TRS footprints. Shell and BOM population differ ([`controllers.md`](controllers.md)) |
 | **Retr01-H** | Handheld later, same software contract |
 
 ### Controllers (shared board)
@@ -110,7 +110,7 @@ Classic NES **32 KB** games (Balloon Fight, Ice Climber, Excitebike) already shi
 Every motherboard (silicon / PCB target) has:
 
 1. **Arcade controller** connections. Headers for sticks/buttons as simple microswitch circuits into the 1284 (`$FE60` / `$FE61`).
-2. **2x Switchcraft 35RAPC** female 3.5 mm TRS footprints. Optional aux pads (ATtiny85 draft on the pad board, male-male aux cable, VCC/DATA/GND). PPTC + ESD on the TRS path so a mangled cable cannot take down the board.
+2. **2x Switchcraft 35RAPC** female 3.5 mm TRS footprints. **Retr01-C** aux pads: **ATtiny85** + 3-wire half-duplex UART at **115200** ([`controllers.md`](controllers.md)). PPTC + ESD on the TRS path.
 
 Populate TRS jacks for console / portable sticks. Leave DNP in a sealed cabinet if you only wire the arcade headers. Details: [`passive_rf_etc.md`](passive_rf_etc.md).
 

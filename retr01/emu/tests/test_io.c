@@ -84,7 +84,39 @@ int main(int argc, char **argv) {
         return fail("$FE80 write ignored");
     }
 
-    printf("ok io scroll/vram/map/fe80\n");
+    /* Cart save mailbox $FE22-$FE24. */
+    r01e_mem_write(&m, 0xFE23, 0x34);
+    r01e_mem_write(&m, 0xFE22, 0x12);
+    r01e_mem_write(&m, 0xFE22, R01E_CARTEE_CMD_WRITE);
+    r01e_mem_write(&m, 0xFE24, 0xAB);
+    r01e_mem_write(&m, 0xFE22, R01E_CARTEE_CMD_READ);
+    v = r01e_mem_read(&m, 0xFE24);
+    if (v != 0xAB) {
+        r01e_machine_shutdown(&m);
+        return fail("cart save EEPROM readback");
+    }
+
+    /* Machine EEPROM $FE70-$FE72. */
+    r01e_mem_write(&m, 0xFE70, 0x56);
+    r01e_mem_write(&m, 0xFE71, 0x01);
+    r01e_mem_write(&m, 0xFE72, 0xCD);
+    r01e_mem_write(&m, 0xFE70, 0x56);
+    r01e_mem_write(&m, 0xFE71, 0x01);
+    v = r01e_mem_read(&m, 0xFE72);
+    if (v != 0xCD) {
+        r01e_machine_shutdown(&m);
+        return fail("machine EEPROM readback");
+    }
+
+    /* BG0 scroll $FE06/$FE07. */
+    r01e_mem_write(&m, 0xFE06, 0x10);
+    r01e_mem_write(&m, 0xFE07, 0x20);
+    if (m.io.bg0_scroll_x != 0x10 || m.io.bg0_scroll_y != 0x20) {
+        r01e_machine_shutdown(&m);
+        return fail("BG0 scroll latch");
+    }
+
+    printf("ok io scroll/vram/map/fe80/eeprom\n");
     r01e_machine_shutdown(&m);
     return 0;
 }

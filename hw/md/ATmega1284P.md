@@ -23,8 +23,9 @@ AVR 8-bit MCU: **128 KB Flash**, **16 KB SRAM**, **4 KB EEPROM**, 32 GPIO lines 
 |-------------|------------|
 | OAM storage + evaluate | CPU writes via `$FE20` (addr) / `$FE21` (data), auto-inc. 64 entries `Y,tile,attr,X` |
 | Sprite field + BG0 | During **VBlank**, write full **120x128** sprite field. During **HBlank**, write next BG0 line (ping-pong) |
-| Pads | Present `$FE60` / `$FE61` (R L D U X Y coin start, **1 = pressed**) |
-| Machine EEPROM | Internal 4 KB. CPU handshake via `$FE70` band (protocol TBD in `02`) |
+| Pads | Present `$FE60` / `$FE61`. Arcade GPIO or Retr01-C UART pads ([`controllers.md`](../../docs/controllers.md)) |
+| Machine EEPROM | Internal 4 KB. CPU mailbox `$FE70`-`$FE72` + `RDY` ([`memory.md`](../../docs/memory.md)) |
+| Cart save I2C | Master to cart 24C64 via `$FE22`-`$FE24` |
 | CHR bus | May own cart CHR in **VBlank** (sprite field) and **HBlank** (BG0 line) while BG path is idle (do not share until island N proven) |
 
 **Not** the BG beam path. **Not** the APU: that is ATmega328P.

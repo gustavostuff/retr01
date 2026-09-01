@@ -4,7 +4,27 @@
 
 Passives, connectors, stackup, ESD/PPTC, and RF practice live in [`passive_rf_etc.md`](passive_rf_etc.md). Not here.
 
-**Related:** [`memory.md`](memory.md) (chips, read/write timing). [`graphics.md`](graphics.md) (VRAM, sprites). [`sound.md`](sound.md) (APU). [`passive_rf_etc.md`](passive_rf_etc.md) (non-IC). Per-chip notes: [`hw/md/`](../hw/md/). Bring-up sim: [`retr01/sim/`](../retr01/sim/README.md).
+**Related:** [`memory.md`](memory.md) (chips, read/write timing). [`graphics.md`](graphics.md) (VRAM, sprites). [`sound.md`](sound.md) (APU). [`cart.md`](cart.md) (cartridge + flasher). [`controllers.md`](controllers.md) (pads). [`passive_rf_etc.md`](passive_rf_etc.md) (non-IC). Per-chip notes: [`hw/md/`](../hw/md/). Bring-up sim: [`retr01/sim/`](../retr01/sim/README.md).
+
+---
+
+## Runners today vs silicon target
+
+**Emu / Sim Host Play / Studio Play** are the source of truth for what runs in software today. **Silicon** sections in this doc family describe the motherboard and cart we are building toward. When they differ, runners win until code is updated.
+
+| Topic | Runners today | Silicon / roadmap target |
+|-------|---------------|---------------------------|
+| Cart image | `.retr01` loaded from host file path | SST39SF040 on 36-pin cart, USB-C flasher ([`cart.md`](cart.md)) |
+| Color PROM | Sim chip model **AT28C16** (64-entry table) | **AT27C256R** OTP ([`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md)) |
+| `PPUCTRL` (`$FE00`) | Emu honors L1/L0/SPR enable + NMI. Camera-wrap bits stored, not enforced | Full bitfield incl. wrap modes ([`graphics.md`](graphics.md#ppuctrl-fe00)) |
+| HC573 map | Sim netlist still ties VRAM addr to FE10/FE11 latches | Nine-chip U5A-U5I map ([`graphics.md`](graphics.md#hc573-latch-map-9-chips)) |
+| Cart save | `$FE22`-`$FE24` in-memory 8 KB buffer, no `RDY` stall | 1284 I2C master + `RDY` stall ([`memory.md`](memory.md)) |
+| Machine EEPROM | `$FE70`-`$FE72` in-memory 4 KB buffer, no `RDY` stall | 1284 internal EEPROM + `RDY` stall ([`memory.md`](memory.md)) |
+| Pads | `$FE60` / `$FE61` from Host Play / UI | Arcade GPIO or Retr01-C UART ([`controllers.md`](controllers.md)) |
+| Pad UART netlist | Not modeled | 115200 open-drain on TRS DATA |
+| BG0 scroll | `$FE06` / `$FE07` latched. Host Play uses proportional scroll unless CPU overrides | Same ports, HC573 silicon path TBD |
+
+Studio Play uses the same Emu core as standalone `./emu`.
 
 ---
 
@@ -15,9 +35,9 @@ Passives, connectors, stackup, ESD/PPTC, and RF practice live in [`passive_rf_et
 | CPU | W65C02S | Game logic, `$FExx` writes, MAP/VRAM streaming |
 | Helper MCUs | ATmega1284P, ATmega328P | Sprites/pads/EEPROM vs dedicated APU |
 | SRAM x3 | AS6C62256 | System RAM, interleaved VRAM, sprite line buffer |
-| Cart storage | SST39SF040 + 24C64 | 512 KB flash on cart + I2C save EEPROM |
+| Cart storage | SST39SF040 + 24C64 | 512 KB flash on cart + I2C save EEPROM ([`cart.md`](cart.md)) |
 | Video glue | 5x ATF22V10, 6x HC157, 9x HC573, 3x HC245 | Decode, beam, interleave, latches, bus isolation |
-| Color out | AT28C16 (or OTP) | 64-entry R3G3B2 PROM -> R-2R -> RGBS |
+| Color out | AT27C256R OTP | 64-entry R3G3B2 PROM -> R-2R -> RGBS (75 ohm to GND) |
 
 **Count:** **32** (31 mobo + 1 cart save). Escape **+1 PLD** if compositor overflows. **74HC14** for reset/clock is outside the 32 if not absorbed.
 
@@ -40,7 +60,7 @@ Passives, connectors, stackup, ESD/PPTC, and RF practice live in [`passive_rf_et
 | 9 | 74HC573 | Bit-packed `$FExx` latches |
 | 6 | 74HC157 | VRAM + line-buffer address mux |
 | 3 | 74HC245 | CPU / video / cart-OAM bus isolation |
-| 1 | AT28C16 | Color PROM (6-bit index -> R3G3B2) |
+| 1 | AT27C256R | Color PROM (6-bit index -> R3G3B2, 45 ns OTP) |
 | 1 | 24C64 (cart) | Per-game save EEPROM |
 
 Vendor datasheets (WDC, Alliance, Microchip / Atmel, SST): look up each part by name on the manufacturer site when pinouts or AC timing matter.
@@ -101,11 +121,11 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
 
 ### Pads
 
-1. All pad paths feed the **ATmega1284P**. CPU reads packed bits at **`$FE60`** (P1) and **`$FE61`** (P2). Bit set = pressed ([`graphics.md`](graphics.md)).
+1. All pad paths feed the **ATmega1284P**. CPU reads packed bits at **`$FE60`** (P1) and **`$FE61`** (P2). Bit set = pressed ([`controllers.md`](controllers.md)).
 2. **Silicon / PCB target:** one motherboard carries **both** I/O styles (arcade vs console is shell / population, not a different PCB):
-   - **Arcade controllers:** headers / IDC for sticks and buttons as simple **microswitch-to-GND** circuits (series R + optional TVS at the connector) into the 1284.
-   - **Aux pad ports:** PCB footprints / solder holes for **2x Switchcraft 35RAPC** female 3.5 mm TRS. Optional pad boards (ATtiny85 draft) talk a **3-wire** VCC / DATA / GND link over a male-male aux cable. Populate the jacks when using pads. Leave unstuffed in a pure cabinet build if desired.
-3. **Runners today (Emu / Sim):** Host Play and pad UI drive the same `$FE60` / `$FE61` contract. They do not model TRS jacks or arcade header pinouts as separate netlist islands yet.
+   - **Retr01-A (arcade):** headers / IDC for sticks and buttons as simple **microswitch-to-GND** circuits into the 1284.
+   - **Retr01-C (console):** **2x Switchcraft 35RAPC** TRS for aux pads. Pad boards use **ATtiny85** on a **3-wire** (5 V / DATA / GND) half-duplex UART link ([`controllers.md`](controllers.md)). Populate jacks for console. DNP OK on pure arcade builds.
+3. **Runners today (Emu / Sim):** Host Play drives `$FE60` / `$FE61` directly. TRS / UART not modeled in the netlist yet.
 4. Ports / ESD / PPTC: [`passive_rf_etc.md`](passive_rf_etc.md).
 
 ### Audio
@@ -159,21 +179,30 @@ Full letter list, sim canvas grouping, and port smoke checks: [`retr01/sim/READM
 
 | Variant | What differs |
 |---------|----------------|
-| **Arcade shell** | Same motherboard. Wire **arcade controller** headers to cabinet microswitches. RGBS / S-Video / composite, 5 V barrel. TRS jacks optional (DNP OK). |
-| **Console shell** | **Same motherboard.** Populate **2x 35RAPC** TRS for aux pads. Arcade headers still present for DIY sticks / fight sticks. Same AV + cart. |
+| **Retr01-A** | Arcade shell. Wire **arcade controller** headers to cabinet microswitches. RGBS / S-Video / composite, 5 V barrel. TRS jacks optional (DNP OK). |
+| **Retr01-C** | Console shell. **Same motherboard.** Populate **2x 35RAPC** TRS for aux pads ([`controllers.md`](controllers.md)). Arcade headers still present for DIY sticks. Same AV + cart ([`cart.md`](cart.md)). |
 | **Retr01-H** | Handheld SMD later, same cart / `$FExx` software contract |
+
+**Cart programming:** USB-C **cartridge flasher** (ATmega32U4 bench board). Not on the motherboard. See [`cart.md`](cart.md).
 
 Ports and passives: [`passive_rf_etc.md`](passive_rf_etc.md).
 
 ---
 
-## Open topics
+## Resolved / deferred topics
 
-| Topic | Note |
-|-------|------|
-| RGBS analog tuning | Digital timing set, bench levels TBD |
-| Color PROM part speed | AT28C16 150 ns vs faster OTP, 1-dot pipeline |
-| HC573 bitfield packing | 9-chip map still TBD in [`graphics.md`](graphics.md) |
-| Cart I2C / machine EEPROM API | Mailbox protocol TBD in [`memory.md`](memory.md) |
-| Aux pad 3-wire poll timing | Edges TBD (ATtiny85 draft) |
-| Arcade header pinout | Lock at schematic (switch matrix / common GND) |
+| Topic | Resolution |
+|-------|------------|
+| Color PROM speed | **AT27C256R** 45 ns OTP ([`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md)). Unused address pins tied **GND**. R-2R outputs through **75 ohm** to ground -> **~0.7 Vpp** RGBS. |
+| HC573 latch packing | Nine chips -> nine `$FExx` bytes ([`graphics.md`](graphics.md#hc573-latch-map-9-chips)). |
+| Cart I2C save API | `$FE22`-`$FE24` via 1284 master ([`memory.md`](memory.md#cart-save-eeprom-24c64-on-cartridge)). |
+| Machine EEPROM API | `$FE70`-`$FE72` + `RDY` stall ([`memory.md`](memory.md#atmega1284p-internal-eeprom-4-kb)). |
+| Aux pad protocol | Retr01-C 3-wire UART ([`controllers.md`](controllers.md)). |
+| Cart edge + flasher | 36-pin pinout + USB-C flasher ([`cart.md`](cart.md)). |
+| VBlank sprite budget | 1284 @ 20 MHz: ~25k cycles in VBlank. Full 64-entry 8x16 field ~9.6k cycles ([`graphics.md`](graphics.md#sprites)). |
+
+| Topic | Still open |
+|-------|------------|
+| RGBS analog tuning | Digital timing set. Bench levels on first spin |
+| Arcade header pinout | Lock at schematic |
+| Flasher USB protocol | With PC cart tooling |

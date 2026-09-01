@@ -10,8 +10,7 @@ struct R01eMachine;
 /*
  * Logical $FE00-$FEFF register file (docs/graphics).
  * Phase 1: scroll, world, VRAM, palette, pads, MAP read, beam tick.
- * Later: raster IRQ ($FE04/$FE05), APU ($FE40-$FE5F), EEPROM ($FE70-$FE72),
- *        OAM sprite pipeline ($FE20/$FE21), parallax plane band ($FE06/$FE07),
+ * Later: raster IRQ ($FE04/$FE05), APU ($FE40-$FE5F),
  *        plane slices (max R01E_PARALLAX_SLICE_MAX bands; docs/graphics).
  */
 typedef struct R01eIo {
@@ -21,8 +20,8 @@ typedef struct R01eIo {
     uint8_t scroll_y;    /* $FE03 0..119 */
     uint8_t raster_y;    /* $FE04 -- compare (phase 8+) */
     uint8_t raster_ctrl; /* $FE05 -- enable/ack (phase 8+) */
-    uint8_t plane_lo;    /* $FE06 -- parallax band (phase 2+) */
-    uint8_t plane_hi;    /* $FE07 */
+    uint8_t bg0_scroll_x; /* $FE06 BG0 scroll 0..127 */
+    uint8_t bg0_scroll_y; /* $FE07 BG0 scroll 0..119 */
 
     uint8_t pal_addr; /* $FE08 */
     uint8_t pal[R01E_ACTIVE_PAL_BYTES];
@@ -39,7 +38,15 @@ typedef struct R01eIo {
     uint8_t apu[0x20];    /* $FE40-$FE5F -- phase 9+ */
     uint8_t pad0;         /* $FE60 */
     uint8_t pad1;         /* $FE61 */
-    uint8_t eeprom[3];    /* $FE70-$FE72 -- phase 10+ save protocol */
+
+    /* Cart save mailbox $FE22-$FE24 (docs/memory.md). */
+    uint8_t cartee_hi;
+    uint8_t cartee_lo;
+    uint8_t cartee_fe22_last;
+
+    /* Machine EEPROM mailbox $FE70-$FE72. */
+    uint8_t meeprom_al;
+    uint8_t meeprom_ah;
 
     uint32_t map_addr; /* $FE90-$FE92 seek; $FE93 read auto-inc */
 

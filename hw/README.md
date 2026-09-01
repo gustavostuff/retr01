@@ -15,7 +15,7 @@ Swap / alternate parts notes live under [`candidates/`](candidates/).
 | ATmega328P | APU |
 | AS6C62256 | System / VRAM / line-buffer SRAM |
 | SST39SF040 | Cart flash 512 KB |
-| AT28C16 | Color PROM (packed R3G3B2) |
+| AT27C256R | Color PROM (packed R3G3B2, OTP) |
 | ATF22V10 | Decode / beam / compositor PLDs |
 | 74HC157 | Addr mux (3 VRAM + 3 linebuf) |
 | 74HC245 | Bus isolation (x3) |

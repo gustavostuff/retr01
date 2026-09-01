@@ -10,7 +10,7 @@ IC-first board simulator for the Retr01 motherboard (arcade + console share one 
 
 | Island | Components (canvas) |
 |--------|---------------------|
-| O Video | `COMPOSITOR` + `AT28C16` + `LCD_SINK` + video `SN74HC245` (top-left) |
+| O Video | `COMPOSITOR` + `AT28C16` (sim; target **AT27C256R**) + `LCD_SINK` + video `SN74HC245` (top-left) |
 | A Power+clk | `PWR5V` + `OSC8M` + `SN74HC14` |
 | C CPU + decode | `W65C02S`, `AS6C62256`, `ATF22V10` decode, CPU `SN74HC245` |
 | D `$FExx` latch | **9x** `SN74HC573` (`$FE02`-`$FE04`, `$FE08`, `$FE10`-`$FE12`, `$FE90`-`$FE92`) |
@@ -57,7 +57,7 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 | **Studio editor** | `output/test.r01proj` (+ UI) | **No** | Authoring only. Does not execute PRG |
 | **Studio Play** | export then shared emu | **Yes** (via cart) | Same path as **Ctrl+E** + emu render. No Studio-only soft preview |
 | **Cart image** | `output/test.retr01` (+ `test_flash.bin`) | **Yes** (flash) | Packed bytes SoT for PRG/CHR/MAP/pals. Layout in [`docs/graphics.md`](../../docs/graphics.md) |
-| **Color PROM burn** | `test_prom.bin` | **Yes** (motherboard) | Not inside the cart. Kit -> R3G3B2. Board AT28C16 |
+| **Color PROM burn** | `test_prom.bin` | **Yes** (motherboard) | Not inside the cart. Kit -> R3G3B2. Target part **AT27C256R** ([`hw/md/AT27C256R.md`](../../hw/md/AT27C256R.md)) |
 | **Boot asm listing** | `test_boot.s` | Human-readable only | Binary inside `.retr01` is what runners execute |
 | **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Default: PRG catchup streams pals + start MAP. Softboot opt-in (`R01E_SOFTBOOT=1`). Host Play for camera/player. Used by Studio Play and standalone `./emu` |
 | **Board sim** | `retr01_sim` | IC / island netlist | Loaded cart PRG runs as-is. Bring-up overlay only when **no cart file**. Catchup ~12k pin-level steps. Softboot opt-in (`R01S_SOFTBOOT=1`). Host Play after catchup |

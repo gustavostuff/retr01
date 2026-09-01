@@ -2,7 +2,7 @@
 
 What each storage chip holds, who reads it, and when. Cart layout lives here too.
 
-**Related:** [`graphics.md`](graphics.md) (VRAM slots, palettes). [`hardware.md`](hardware.md) (BOM, PCB paths). Register text for `$FExx`: [`graphics.md`](graphics.md).
+**Related:** [`graphics.md`](graphics.md) (VRAM slots, palettes). [`hardware.md`](hardware.md) (BOM, PCB paths). [`cart.md`](cart.md) (edge pinout, flasher). Register text for `$FExx`: [`graphics.md`](graphics.md).
 
 ---
 
@@ -92,8 +92,21 @@ Host Play (emu/sim) samples P1 for move and warps. Game PRG can poll the same po
 | | |
 |--|--|
 | **Purpose** | Per-game save data |
-| **Host** | 6502 bit-bang or 1284 as I2C master via `$FExx` window (protocol TBD) |
-| **API** | Games use `cart_save_*` HAL, not raw GPIO |
+| **Host** | **ATmega1284P** is I2C master to cart **SDA** / **SCL** (6502 does not bit-bang) |
+| **CPU ports** | Mailbox at **`$FE22`-`$FE24`** |
+| **API** | Games use `cart_save_*` HAL, not raw ports |
+
+### `$FE22`-`$FE24` mailbox
+
+| Addr | Name | Write | Read |
+|------|------|-------|------|
+| `$FE22` | `CARTEE_CMD` | High address byte **or** command: **`0x80`** = read, **`0x40`** = write | Last command / high addr |
+| `$FE23` | `CARTEE_ADDR` | Low address byte (13-bit effective into 8 KB device) | Low address |
+| `$FE24` | `CARTEE_DATA` | Data byte. **Write** starts I2C **program** sequence | Data byte. **Read** starts I2C **read** |
+
+**Flow:** CPU writes command + address bytes, then touches **`$FE24`**. The 1284 performs the I2C transaction on the cart edge and **asserts `RDY` low** on the 6502 until the EEPROM ACK completes (same stall model as machine EEPROM). Games should use the HAL so retry / busy policy stays in firmware.
+
+**Bring-up:** Emu implements an in-memory 8 KB buffer with instant access (no `RDY` stall). Sim not yet. Silicon target is 1284 I2C master + `RDY` stall ([`hardware.md`](hardware.md#runners-today-vs-silicon-target)).
 
 ---
 
@@ -102,8 +115,22 @@ Host Play (emu/sim) samples P1 for move and warps. Game PRG can poll the same po
 | | |
 |--|--|
 | **Purpose** | Machine config (not game saves) |
-| **CPU port** | `$FE70`-`$FE72` handshake (protocol TBD) |
+| **CPU port** | **`$FE70`-`$FE72`** handshake |
 | **API** | `machine_eeprom_*` HAL |
+
+### `$FE70`-`$FE72` mailbox
+
+| Addr | Name | Role |
+|------|------|------|
+| `$FE70` | `MEEPROM_AL` | Address low byte |
+| `$FE71` | `MEEPROM_AH` | Address high byte (4 KB, use low 12 bits) |
+| `$FE72` | `MEEPROM_DATA` | Data byte. **Read or write** triggers the 1284 EEPROM access |
+
+On **`$FE72`** access the 1284 runs the internal EEPROM read/program cycle and **holds `RDY` low** on the W65C02S until the AVR finishes (~3-4 ms program). CPU code should poll `RDY` or use the HAL blocking helper.
+
+Cart saves use the **cart 24C64** at `$FE22`-`$FE24`, not this window.
+
+**Runners today:** Emu uses in-memory 4 KB storage at `$FE70`-`$FE72` with no `RDY` stall. Silicon target is 1284-backed access with stall ([`hardware.md`](hardware.md#runners-today-vs-silicon-target)).
 
 ---
 
@@ -118,14 +145,20 @@ Host Play (emu/sim) samples P1 for move and warps. Game PRG can poll the same po
 
 ---
 
-## Color PROM (AT28C16 or OTP)
+## Color PROM (AT27C256R OTP)
 
 | | |
 |--|--|
+| **Part** | **AT27C256R** (45 ns OTP). Replaces slower AT28C16-class parts |
 | **Content** | **64** master colors as packed **R3G3B2** `{RRRGGGBB}` |
 | **CPU access** | None at runtime |
-| **Video read** | Compositor supplies 6-bit palette index each dot (1-dot pipeline) |
-| **Cart** | Holds palette **indices** only. Master RGB lives on the board |
+| **Video read** | Compositor supplies 6-bit palette index each dot |
+| **Analog** | R-2R ladder -> **75 ohm** termination to GND -> **~0.7 Vpp** RGBS |
+| **Wiring** | Use **A5-A0** for index. Unused address pins tied **GND** |
+
+**Runners today:** Sim chip model is still **AT28C16**. Silicon target is **AT27C256R** ([`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md)).
+
+Details: [`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md).
 
 Active palette indices are latched via `$FE08`/`$FE09` (HC573 path), not a separate palette RAM chip.
 
@@ -210,18 +243,20 @@ Boot flow (Phase 1 PRG): seek palette + start MAP via `$FE90`-`$FE93` -> copy ac
 | `$FE20`-`$FE21` | OAM in 1284 |
 | `$FE30`-`$FE38` | World + bank helpers + `PAL_ROW` hint |
 | `$FE40`-`$FE5F` | APU (328P) ([`sound.md`](sound.md)) |
-| `$FE60`-`$FE61` | Pads (1284) |
-| `$FE70`-`$FE72` | Machine EEPROM handshake (TBD) |
+| `$FE60`-`$FE61` | Pads (1284) ([`controllers.md`](controllers.md)) |
+| `$FE22`-`$FE24` | Cart save EEPROM mailbox (1284 I2C master) |
+| `$FE70`-`$FE72` | Machine EEPROM mailbox (1284 internal EEPROM) |
 | `$FE90`-`$FE93` | Cart MAP seek/read |
 
-`$FE80` unused. Silicon packs many of these into **9x HC573** (bitfield map TBD).
+`$FE80` unused. Nine **HC573** packages latch the bytes in [`graphics.md`](graphics.md#hc573-latch-map-9-chips). Other `$FExx` ports (VRAM, OAM, BG0 scroll, palette data) use decode-qualified paths documented in [`graphics.md`](graphics.md).
 
 ---
 
-## Open topics
+## Resolved topics
 
-| Topic | Note |
-|-------|------|
-| Cart save `$FExx` | Port and mailbox layout TBD |
-| Machine EEPROM handshake | `$FE70`-`$FE72` protocol TBD |
-| HC573 bit packing | Logical `$FExx` vs silicon bitfields TBD |
+| Topic | Resolution |
+|-------|------------|
+| Cart save API | `$FE22`-`$FE24` (above) |
+| Machine EEPROM | `$FE70`-`$FE72` + `RDY` (above) |
+| HC573 packing | [`graphics.md`](graphics.md#hc573-latch-map-9-chips) |
+| Cart hardware | [`cart.md`](cart.md) |

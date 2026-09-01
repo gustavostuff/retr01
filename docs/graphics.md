@@ -136,7 +136,9 @@ OAM attr byte
 |________________ SIZE (0=8x8, 1=8x16 tile pair)
 ```
 
-**Locked raster split (with BG0):** fill the **full 120x128** sprite field in **VBlank** (walk Y in 8 px or 16 px bands). Give **HBlank** to BG0 line fill. Beam reads sprite pixels from the field during active display. Where BG1 color index is **0**, the compositor shows the prepared BG0 line (BG1 mask / show-through). Cap **16** sprites per **logical** scanline. Host Play packs X/Y as signed viewport-relative bytes. Sprites clip to **128x120**.
+**Locked raster split (with BG0):** fill the **full 120x128** sprite field in **VBlank** (walk Y in 8 px or 16 px bands). Give **HBlank** to BG0 line fill. Beam reads sprite pixels from the field during active display. Where BG1 color index is **0**, the compositor shows the prepared BG0 line (BG1 mask / show-through). Cap **16** sprites per **logical** scanline.
+
+**VBlank budget (1284 @ 20 MHz):** ~20 scanlines of vertical blank, about **25,000** CPU cycles. Evaluating all **64** OAM entries and plotting **8x16** tiles into the line-buffer SRAM costs about **9,600** cycles. Large margin before active video. Sim models this as `linebuf_oam_fill_field` during VBlank.
 
 ```text
 Priority (opaque wins):
@@ -203,33 +205,72 @@ World/screen/cart caps: [`memory.md`](memory.md).
 
 | Addr | Name | Role |
 |------|------|------|
-| `$FE00` | `PPUCTRL` | bit0 BG enable, bit7 NMI enable, camera slot mode bits TBD |
+| `$FE00` | `PPUCTRL` | See [bitfield](#ppuctrl-fe00) |
 | `$FE01` | `PPUSTATUS` | bit7 VBlank, bit6 raster hit (read clears latched bits) |
 | `$FE02`/`$FE03` | BG1 scroll X/Y | 0-127 / 0-119 inside the BG1 2x2 workbench |
-| `$FE04`/`$FE05` | raster / IRQ | Scanline compare + control |
+| `$FE04`/`$FE05` | raster / IRQ | Scanline compare Y (`$FE04`) + raster control (`$FE05`) |
 | `$FE06`/`$FE07` | BG0 scroll X/Y | 0-127 / 0-119 inside the BG0 2x2 workbench |
-| `$FE08`/`$FE09` | pal addr/data | Active master indices (**32 B**), auto-inc |
+| `$FE08`/`$FE09` | pal addr/data | Active master indices (**32 B**), auto-inc on `$FE09` |
 | `$FE10`-`$FE12` | VRAM addr/data | hi, lo, data auto-inc (interleaved) |
 | `$FE20`/`$FE21` | OAM addr/data | auto-inc into 1284 OAM |
+| `$FE22`-`$FE24` | cart EEPROM | Save mailbox via 1284 ([`memory.md`](memory.md)) |
 | `$FE30` | `WORLD` | Active world index **0-7** (select helper) |
 | `$FE31`-`$FE37` | bank helpers | Optional attr stamps |
 | `$FE38` | `PAL_ROW` | Palette row hint (software still copies `$FE08`/`$FE09`) |
 | `$FE40`-`$FE5F` | APU | Bytecode window to 328P ([`sound.md`](sound.md)) |
-| `$FE60`/`$FE61` | pads P1/P2 | Bit set = pressed (R L D U X Y Coin Start) |
-| `$FE70`-`$FE72` | machine EEPROM | Handshake TBD ([`memory.md`](memory.md)) |
+| `$FE60`/`$FE61` | pads P1/P2 | Bit set = pressed ([`controllers.md`](controllers.md)) |
+| `$FE70`-`$FE72` | machine EEPROM | 1284 internal EEPROM mailbox ([`memory.md`](memory.md)) |
 | `$FE90`-`$FE93` | MAP | Cart seek + read auto-inc ([`memory.md`](memory.md)) |
 
-`$FE80` unused. Silicon packs many ports into **9x HC573** (bitfield table still TBD).
+`$FE80` unused.
+
+### `PPUCTRL` (`$FE00`)
+
+**Silicon target** bitfield:
+
+| Bit | Name | Meaning |
+|-----|------|---------|
+| 7 | NMI_EN | **1** = assert CPU **NMI** on VBlank |
+| 6-5 | L1_CAM | BG1 camera mode: **00** clamp, **01** wrap H, **10** wrap V, **11** wrap both |
+| 4-3 | L0_CAM | BG0 camera mode (same encoding) |
+| 2 | SPR_EN | Sprites enable |
+| 1 | L0_EN | Layer 0 / BG0 enable |
+| 0 | L1_EN | Layer 1 / BG1 enable |
+
+**Runners today (Emu):** **L1_EN**, **L0_EN**, **SPR_EN**, and **NMI_EN** affect rendering. Camera-wrap bits (4-3, 6-5) are stored but not enforced yet. See [`hardware.md`](hardware.md#runners-today-vs-silicon-target).
+
+### HC573 latch map (9 chips)
+
+Each **SN74HC573** holds one byte written by the CPU. Decode PLD strobes **LE** on `STA $FExx` for that port.
+
+| HC573 (refdes) | Port | Latched byte |
+|----------------|------|--------------|
+| U5A | `$FE00` | `PPUCTRL` |
+| U5B | `$FE02` | BG1 scroll X |
+| U5C | `$FE03` | BG1 scroll Y |
+| U5D | `$FE04` | Raster compare Y |
+| U5E | `$FE05` | Raster control (IRQ enables) |
+| U5F | `$FE08` | Palette address (into 32-byte active buffer) |
+| U5G | `$FE90` | MAP seek low |
+| U5H | `$FE91` | MAP seek mid |
+| U5I | `$FE92` | MAP seek high |
+
+Ports **not** in this table (`$FE06`/`$FE07` BG0 scroll, `$FE09` palette data, `$FE10`-`$FE12` VRAM, OAM, APU, mailboxes) use other paths (MCU, qualified strobes, or direct read ports).
+
+**Sim note:** netlist still assigns some VRAM addr bytes to HC573 until schematic freeze. Behavior at `$FE10`-`$FE12` is authoritative in [`memory.md`](memory.md). See [runners vs silicon](hardware.md#runners-today-vs-silicon-target).
 
 ---
 
-## Open topics
+## Resolved topics
 
-| Topic | Note |
-|-------|------|
-| 8x16 sprite fetch | 1284 tile-pair timing still evolving |
+| Topic | Resolution |
+|-------|------------|
+| `PPUCTRL` camera bits | Bitfield above |
+| HC573 packing | Table above |
+| 8x16 sprite VBlank timing | ~9.6k / ~25k cycles ([sprites](#sprites)) |
+| BG0 HBlank fill | Next BG0 line into linebuf `$4000` ping-pong. BG1 color-0 mask on active dots |
+
+| Topic | Still open |
+|-------|------------|
 | BG `ANIM` rate | Global vs per-game |
 | Living-tile list cap | **32** vs **64** cells (`retr01_ANIM_MAX`) |
-| VBlank sprite field | Full 120x128 clear+plot in sim (`linebuf_oam_fill_field`) |
-| BG0 HBlank fill | Next BG0 line into linebuf `$4000` ping-pong. Active dots mask with BG1 color 0 |
-| `PPUCTRL` camera mode bits | Exact bitfield TBD |

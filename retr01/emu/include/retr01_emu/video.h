@@ -39,8 +39,9 @@ typedef struct R01eVideo {
     int l1_rows;
     int l1_origin_x; /* min present screen * px (for relative proportional scroll) */
     int l1_origin_y;
-    int l0_cam_x; /* proportional pixel scroll */
+    int l0_cam_x; /* proportional or $FE06/$FE07 pixel scroll */
     int l0_cam_y;
+    int bg0_scroll_manual; /* 1 after CPU writes $FE06/$FE07 */
 
     uint8_t fb[R01E_VISIBLE_W * R01E_VISIBLE_H * 3]; /* SCALE 2x RGB */
     /* Debug: 2x2 VRAM workbench at 1:1 (256x240). */
@@ -78,7 +79,7 @@ int r01e_video_boot_world(struct R01eMachine *m, int world);
 int r01e_video_sync_camera(struct R01eMachine *m);
 
 /* Recompute BG0 cam from BG1 cam using present BG1 bbox vs BG0 grid (call every camera move). */
-void r01e_video_update_bg0_scroll(R01eVideo *vid);
+void r01e_video_update_bg0_scroll(struct R01eMachine *m);
 
 /*
  * Host atlas pan (tests / debug). dx/dy in logical pixels.

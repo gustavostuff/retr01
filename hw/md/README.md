@@ -11,7 +11,7 @@ Keyboard-friendly notes for each motherboard IC: what it is, package/pins, speed
 |-------|--------|-------|
 | **0. Packages** | Done | [`packages_dip.md`](packages_dip.md) (JEDEC / Microchip PDIP outlines + 4 px/mm canvas scale) |
 | **1. CPU / MCU** | Done | [`W65C02S.md`](W65C02S.md), [`ATmega1284P.md`](ATmega1284P.md), [`ATmega328P.md`](ATmega328P.md) |
-| **2. Memory** | Done | [`AS6C62256.md`](AS6C62256.md), [`SST39SF040.md`](SST39SF040.md), [`AT28C16.md`](AT28C16.md), [`24C64.md`](24C64.md) (cart I2C save) |
+| **2. Memory** | Done | [`AS6C62256.md`](AS6C62256.md), [`SST39SF040.md`](SST39SF040.md), [`AT27C256R.md`](AT27C256R.md), [`AT28C16.md`](AT28C16.md) (legacy note), [`24C64.md`](24C64.md) (cart I2C save) |
 | **3. Logic / video glue** | Done | [`ATF22V10.md`](ATF22V10.md), [`SN74HC157.md`](SN74HC157.md), [`SN74HC245.md`](SN74HC245.md), [`SN74HC573.md`](SN74HC573.md), [`SN74HC_glue.md`](SN74HC_glue.md) (HC00/04/08/14/32/86) |
 
 ## How to use these notes

@@ -31,6 +31,9 @@ typedef struct R01eMachine {
     /* Full frame cycle totals (including wait) -- debug / sanity only. */
     uint64_t prof_acc_idle;
     uint64_t prof_last_idle;
+
+    uint8_t cart_save[R01E_CARTEE_BYTES];
+    uint8_t machine_eeprom[R01E_MEEPROM_BYTES];
 } R01eMachine;
 
 int r01e_machine_init(R01eMachine *m, const char *cart_path, char *err, size_t err_cap);

@@ -742,12 +742,21 @@ static int write_asm_tree(const char *asm_dir, const R01World *w, char *err_buf,
     snprintf(path, sizeof(path), "%s/include/r01_hw.inc", asm_dir);
     if (write_text(path,
                    "; Retr01 I/O map (CPU view)\n"
-                   "PPUCTRL   = $FE00\nPPUSTATUS = $FE01\n"
-                   "SCROLL_X  = $FE02\nSCROLL_Y  = $FE03\n"
-                   "PAD0      = $FE60\n"
-                   "OAM_ADDR  = $FE20\nOAM_DATA  = $FE21\n"
-                   "MAP_LO    = $FE90\nMAP_MID   = $FE91\nMAP_HI    = $FE92\n"
-                   "MAP_CTRL  = $FE93\n",
+                   "PPUCTRL       = $FE00\nPPUSTATUS     = $FE01\n"
+                   "SCROLL_X      = $FE02\nSCROLL_Y      = $FE03\n"
+                   "BG0_SCROLL_X  = $FE06\nBG0_SCROLL_Y  = $FE07\n"
+                   "PAL_ADDR      = $FE08\nPAL_DATA      = $FE09\n"
+                   "VRAM_ADDR_LO  = $FE10\nVRAM_ADDR_HI  = $FE11\nVRAM_DATA = $FE12\n"
+                   "OAM_ADDR      = $FE20\nOAM_DATA      = $FE21\n"
+                   "CARTEE_CMD    = $FE22\nCARTEE_ADDR   = $FE23\nCARTEE_DATA   = $FE24\n"
+                   "WORLD         = $FE30\n"
+                   "PAD0          = $FE60\nPAD1          = $FE61\n"
+                   "MEEPROM_AL    = $FE70\nMEEPROM_AH    = $FE71\nMEEPROM_DATA  = $FE72\n"
+                   "MAP_LO        = $FE90\nMAP_MID       = $FE91\nMAP_HI        = $FE92\n"
+                   "MAP_CTRL      = $FE93\n"
+                   "PPUCTRL_L1_EN = $01\nPPUCTRL_L0_EN = $02\nPPUCTRL_SPR_EN = $04\n"
+                   "PPUCTRL_NMI_EN = $80\nPPUCTRL_BOOT  = $07\n"
+                   "CARTEE_CMD_READ  = $80\nCARTEE_CMD_WRITE = $40\n",
                    err_buf, err_cap) != 0) {
         return -1;
     }
@@ -810,7 +819,7 @@ static int write_asm_tree(const char *asm_dir, const R01World *w, char *err_buf,
                    ".segment \"CODE\"\n.org $8000\n"
                    "reset:\n        sei\n        cld\n        ldx #$ff\n        txs\n"
                    "        lda #0\n        sta WORLD\n        sta SCROLL_X\n        sta SCROLL_Y\n"
-                   "        lda #1\n        sta PPUCTRL\n"
+                   "        lda #PPUCTRL_BOOT\n        sta PPUCTRL\n"
                    "        jmp boot_stream\n",
                    err_buf, err_cap) != 0) {
         return -1;

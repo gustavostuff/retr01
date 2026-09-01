@@ -244,9 +244,17 @@ static int load_screen_into_slot(R01eMachine *m, const R01eWorldView *wv, int co
     return 0;
 }
 
-static void bg0_update_scroll(R01eVideo *vid) {
+static void bg0_apply_scroll(R01eMachine *m) {
+    R01eVideo *vid;
     int rel_x, rel_y;
-    if (!vid) {
+
+    if (!m) {
+        return;
+    }
+    vid = &m->video;
+    if (vid->bg0_scroll_manual) {
+        vid->l0_cam_x = m->io.bg0_scroll_x;
+        vid->l0_cam_y = m->io.bg0_scroll_y;
         return;
     }
     /* Scroll relative to BG1 present bbox origin, scaled by grid W/H.
@@ -271,8 +279,12 @@ static void bg0_update_scroll(R01eVideo *vid) {
     }
 }
 
-void r01e_video_update_bg0_scroll(R01eVideo *vid) {
-    bg0_update_scroll(vid);
+void r01e_video_update_bg0_scroll(R01eMachine *m) {
+    if (!m) {
+        return;
+    }
+    m->video.bg0_scroll_manual = 0;
+    bg0_apply_scroll(m);
 }
 
 void r01e_video_load_bg0(R01eMachine *m, const R01eWorldView *wv) {
@@ -344,7 +356,7 @@ void r01e_video_load_bg0(R01eMachine *m, const R01eWorldView *wv) {
             vid->bg0_rows = 1;
         }
     }
-    bg0_update_scroll(vid);
+    bg0_apply_scroll(m);
 }
 
 void r01e_video_load_parallax(R01eMachine *m, const R01eWorldView *wv) {
@@ -398,7 +410,7 @@ int r01e_video_sync_camera(R01eMachine *m) {
     if (m->io.scroll_y > 119) {
         m->io.scroll_y = 119;
     }
-    bg0_update_scroll(vid);
+    bg0_apply_scroll(m);
     return 0;
 }
 
@@ -510,6 +522,10 @@ static void sample_l0(R01eMachine *m, int lx, int ly, uint8_t *r, uint8_t *g, ui
     uint8_t tile16[16];
     uint8_t master;
 
+    if (!(m->io.ctrl & R01E_PPUCTRL_L0_EN)) {
+        backdrop_rgb(m, r, g, b);
+        return;
+    }
     if (vid->bg0_count < 1 || wx < 0 || wy < 0) {
         backdrop_rgb(m, r, g, b);
         return;
@@ -559,6 +575,10 @@ static void sample_bg(R01eMachine *m, int lx, int ly, uint8_t *r, uint8_t *g, ui
     int px, py;
     uint8_t master;
 
+    if (!(m->io.ctrl & R01E_PPUCTRL_L1_EN)) {
+        sample_l0(m, lx, ly, r, g, b);
+        return;
+    }
     if (slot_x < 0 || slot_x > 1 || slot_y < 0 || slot_y > 1) {
         sample_l0(m, lx, ly, r, g, b);
         return;
@@ -957,6 +977,9 @@ static void composite_sprites(R01eMachine *m) {
     uint8_t line_count[R01E_SCREEN_PX_H];
     int ei;
 
+    if (!(m->io.ctrl & R01E_PPUCTRL_SPR_EN)) {
+        return;
+    }
     memset(line_count, 0, sizeof(line_count));
     for (ei = 0; ei < R01E_OAM_ENTRIES; ei++) {
         const uint8_t *e = &m->io.oam[(size_t)ei * R01E_OAM_ENTRY_BYTES];
@@ -985,7 +1008,7 @@ static void composite_sprites_atlas(R01eMachine *m) {
     int origin_py = vid->cam_origin_row * R01E_SCREEN_PX_H;
     int ei;
 
-    if (!(m->io.ctrl & R01E_PPUCTRL_BG_EN)) {
+    if (!(m->io.ctrl & R01E_PPUCTRL_SPR_EN)) {
         return;
     }
     memset(line_count, 0, sizeof(line_count));
@@ -1014,13 +1037,15 @@ static void composite_sprites_atlas(R01eMachine *m) {
 void r01e_video_render_frame(R01eMachine *m) {
     R01eVideo *vid;
     int lx, ly, ox, oy;
+    uint8_t ctrl;
 
     if (!m) {
         return;
     }
     vid = &m->video;
-    bg0_update_scroll(vid);
-    if (!(m->io.ctrl & R01E_PPUCTRL_BG_EN) || !vid->chr_loaded) {
+    ctrl = m->io.ctrl;
+    bg0_apply_scroll(m);
+    if (!(ctrl & (R01E_PPUCTRL_L1_EN | R01E_PPUCTRL_L0_EN | R01E_PPUCTRL_SPR_EN)) || !vid->chr_loaded) {
         memset(vid->fb, 0, sizeof(vid->fb));
         return;
     }

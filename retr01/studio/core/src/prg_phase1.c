@@ -1,6 +1,8 @@
 #include "retr01_studio/collision.h"
 #include "retr01_studio/play.h"
 #include "retr01_studio/prg_phase1.h"
+
+#include "r01_hw_regs.h"
 #include "retr01_studio/project.h"
 
 #include "play_collision_bin.h"
@@ -249,8 +251,8 @@ void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01World *w, const R0
         0x8D, 0x02, 0xFE, /* STA $FE02 SCROLL_X */
         0xA9, 0x00,       /* LDA #scroll_y (R01_PRG_INIT_SCROLL_Y) */
         0x8D, 0x03, 0xFE, /* STA $FE03 SCROLL_Y */
-        0xA9, 0x01,       /* LDA #1 */
-        0x8D, 0x00, 0xFE, /* STA $FE00 PPUCTRL (BG on) */
+        0xA9, R01_PPUCTRL_BOOT,
+        0x8D, 0x00, 0xFE, /* STA $FE00 PPUCTRL */
     };
     uint8_t scroll_x = 0;
     uint8_t scroll_y = 0;

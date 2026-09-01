@@ -239,7 +239,7 @@ void r01e_play_sync_video(R01eMachine *m) {
         (void)r01e_video_sync_camera(m);
     } else {
         /* L0 must track every pixel of BG1 cam, not only screen crosses. */
-        r01e_video_update_bg0_scroll(vid);
+        r01e_video_update_bg0_scroll(m);
     }
 }
 
