@@ -200,7 +200,10 @@ static void draw_pwr_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *
     int ix = x + (e->body_w - img_w) / 2;
     int iy = y + 2;
     draw_glyph_pins(r, ui, e, e->board_x, e->board_y);
-    draw_rect(r, x, y, e->body_w, e->body_h, selected ? 255 : 80, selected ? 220 : 90, selected ? 80 : 70);
+    fill_rect(r, x, y, e->body_w, e->body_h, 0, 0, 0);
+    if (selected) {
+        draw_rect(r, x, y, e->body_w, e->body_h, 255, 220, 80);
+    }
     blit_rgba_scaled(r, ix, iy, R01S_UI_BATTERY_RGBA, R01S_UI_BATTERY_W, R01S_UI_BATTERY_H, 1);
 }
 
@@ -212,7 +215,10 @@ static void draw_osc_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *
     int ix = x + (e->body_w - img_w) / 2;
     int iy = y + (e->body_h - img_h) / 2 - 2;
     draw_glyph_pins(r, ui, e, e->board_x, e->board_y);
-    draw_rect(r, x, y, e->body_w, e->body_h, selected ? 255 : 80, selected ? 220 : 100, selected ? 80 : 110);
+    fill_rect(r, x, y, e->body_w, e->body_h, 0, 0, 0);
+    if (selected) {
+        draw_rect(r, x, y, e->body_w, e->body_h, 255, 220, 80);
+    }
     blit_rgba_scaled(r, ix, iy, R01S_UI_OSC_RGBA, R01S_UI_OSC_W, R01S_UI_OSC_H, 1);
 }
 

@@ -19,12 +19,26 @@
 #define R01S_UI_UNIT 8
 #define R01S_UI_HUD_TOP (R01S_UI_UNIT + 16)
 #define R01S_UI_HUD_BOTTOM (R01S_UI_UNIT + 16)
-#define R01S_UI_SIDEBAR_L 125
+#define R01S_UI_SIDEBAR_L 0
 #define R01S_UI_SIDEBAR_R 0
 #define R01S_UI_VIEW_X R01S_UI_SIDEBAR_L
 #define R01S_UI_VIEW_Y R01S_UI_HUD_TOP
 #define R01S_UI_VIEW_W (R01S_LOGIC_W - R01S_UI_SIDEBAR_L - R01S_UI_SIDEBAR_R)
 #define R01S_UI_VIEW_H (R01S_LOGIC_H - R01S_UI_HUD_TOP - R01S_UI_HUD_BOTTOM)
+
+#define R01S_UI_MODAL_NONE 0
+#define R01S_UI_MODAL_QUIT 1
+
+#define R01S_UI_MODAL_RES_NONE 0
+#define R01S_UI_MODAL_RES_SAVE 1
+#define R01S_UI_MODAL_RES_DISCARD 2
+#define R01S_UI_MODAL_RES_CANCEL 3
+
+#define R01S_UI_FLOAT_STRIP_H 20
+#define R01S_UI_ISLANDS_STRIP_DEFAULT_X 8
+#define R01S_UI_ISLANDS_STRIP_DEFAULT_Y 8
+#define R01S_UI_LEGEND_STRIP_DEFAULT_X 8
+#define R01S_UI_LEGEND_STRIP_DEFAULT_Y (R01S_UI_ISLANDS_STRIP_DEFAULT_Y + R01S_UI_FLOAT_STRIP_H + 4)
 
 typedef struct R01sUi {
     R01sIslandGroup *group;
@@ -63,23 +77,32 @@ typedef struct R01sUi {
     uint8_t probe_pad_p1;
     uint8_t probe_pad_p2;
     R01sGamepadInput gamepad[R01S_UI_GAMEPAD_COUNT];
-    int drag_stick; /* player index or -1 */
-    int drag_btn;   /* player*4 + btn index, or -1 */
-    int mouse_btn[R01S_UI_GAMEPAD_COUNT][4]; /* X Y COIN START held by mouse */
     int mouse_lx; /* last logic-space mouse (for tooltips) */
     int mouse_ly;
-    int sidebar_scroll; /* px offset into left sidebar content */
+    int tip_stable_mx; /* mouse position when hover timer last reset */
+    int tip_stable_my;
+    Uint32 tip_show_at; /* SDL tick before tooltip may appear */
+    int islands_strip_x; /* viewport-relative origin */
+    int islands_strip_y;
+    int drag_islands_strip;
+    int drag_islands_ox;
+    int drag_islands_oy;
+    int islands_strip_moved;
+    int legend_strip_x; /* viewport-relative origin */
+    int legend_strip_y;
+    int drag_legend_strip;
+    int drag_legend_ox;
+    int drag_legend_oy;
+    int legend_strip_moved;
+    int modal;        /* R01S_UI_MODAL_* */
+    int modal_result; /* R01S_UI_MODAL_RES_* when user picks an action */
     int fps;            /* rolling 1s frame rate for HUD */
     int sim_steps;      /* board steps taken in the last UI frame */
     int pins_quiet;     /* 1 = IC pin stubs static gray (no level colors) */
-    int show_cart_flash;  /* 1 = draw SST39SF040 (U40) */
-    int show_cart_eeprom; /* 1 = draw 24C64 (U50) */
     int ctx_chip;       /* context-menu chip index, or -1 */
     int ctx_x;          /* menu anchor in logic space */
     int ctx_y;
     int layout_compact; /* 1 = pack chips like a PCB (no island frames) */
-    int layout_teaching; /* 1 = interactive tutorial mode active */
-    int tutorial_step;   /* Current step in the tutorial */
     /* Snapshot of island-mode geometry while compact (restored on toggle off). */
     int layout_saved;
     /* Island-mode chip positions relative to island board_x/board_y. */
@@ -124,6 +147,12 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r);
 /* Black boot screen during IC catchup. spin_frame advances on worker->main ticks. */
 void r01s_ui_draw_boot(R01sUi *ui, SDL_Renderer *r, int spin_frame);
 int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_y);
+
+void r01s_ui_modal_open_quit(R01sUi *ui);
+void r01s_ui_modal_cancel(R01sUi *ui);
+int r01s_ui_modal_active(const R01sUi *ui);
+int r01s_ui_modal_take_result(R01sUi *ui);
+int r01s_ui_modal_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_y);
 
 /* Rotate selected DIP (H<->V). Returns 1 if rotated. */
 int r01s_ui_rotate_selected(R01sUi *ui);

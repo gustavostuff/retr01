@@ -20,16 +20,17 @@ int r01s_ui_init(R01sUi *ui) {
     ui->drag_chip = -1;
     ui->drag_island = -1;
     ui->resize_island = -1;
-    ui->drag_stick = -1;
-    ui->drag_btn = -1;
     ui->ctx_chip = -1;
     ui->box_sel = 0;
     memset(ui->chip_sel, 0, sizeof(ui->chip_sel));
-    ui->show_cart_flash = 1;
-    ui->show_cart_eeprom = 1;
+    ui->tip_show_at = SDL_GetTicks() + R01S_UI_TOOLTIP_DELAY_MS;
+    ui->islands_strip_x = R01S_UI_ISLANDS_STRIP_DEFAULT_X;
+    ui->islands_strip_y = R01S_UI_ISLANDS_STRIP_DEFAULT_Y;
+    ui->legend_strip_x = R01S_UI_LEGEND_STRIP_DEFAULT_X;
+    ui->legend_strip_y = R01S_UI_LEGEND_STRIP_DEFAULT_Y;
     (void)font_ensure();
     snprintf(ui->status, sizeof(ui->status),
-             "SPACE pause. S save layout. R rotate. G scale. Sidebar: SCALE / CART / pads. COMPACT/ISLANDS");
+             "SPACE pause. S save. R rotate. DBL-CLK SCR1 scale. WASD/ARROWS pads.");
     return 0;
 }
 

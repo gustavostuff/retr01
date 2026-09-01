@@ -506,43 +506,38 @@ void r01s_app_frame(R01sApp *app) {
     SDL_RenderPresent(app->ren);
 }
 
-/* 1 = proceed with quit, 0 = stay open. */
-static int app_confirm_quit(R01sApp *app) {
-    const SDL_MessageBoxButtonData buttons[] = {
-        {SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 0, "Save"},
-        {0, 1, "Don't Save"},
-        {SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 2, "Cancel"},
-    };
-    SDL_MessageBoxData data;
-    int button = 2;
-
+/* 1 = proceed with quit, 0 = stay open (modal pending). */
+static int app_request_quit(R01sApp *app) {
     if (!app) {
         return 1;
     }
     if (!app->ui.layout_dirty) {
         return 1;
     }
-    memset(&data, 0, sizeof(data));
-    data.flags = SDL_MESSAGEBOX_WARNING;
-    data.window = app->win;
-    data.title = "Unsaved layout";
-    data.message = "Layout has changed. Save layout before closing?";
-    data.numbuttons = 3;
-    data.buttons = buttons;
-    if (SDL_ShowMessageBox(&data, &button) < 0) {
-        fprintf(stderr, "layout: quit prompt failed (%s)\n", SDL_GetError());
-        return 1;
+    r01s_ui_modal_open_quit(&app->ui);
+    return 0;
+}
+
+static void app_apply_modal_result(R01sApp *app) {
+    int res;
+    if (!app) {
+        return;
     }
-    if (button == 0) {
+    res = r01s_ui_modal_take_result(&app->ui);
+    if (res == R01S_UI_MODAL_RES_SAVE) {
         if (r01s_ui_layout_save(&app->ui) != 0) {
             fprintf(stderr, "layout: save failed on quit\n");
         }
-        return 1;
+        if (app->catchup_board) {
+            app->catchup_board->catchup_cancel = 1;
+        }
+        app->running = 0;
+    } else if (res == R01S_UI_MODAL_RES_DISCARD) {
+        if (app->catchup_board) {
+            app->catchup_board->catchup_cancel = 1;
+        }
+        app->running = 0;
     }
-    if (button == 1) {
-        return 1;
-    }
-    return 0;
 }
 
 void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
@@ -553,7 +548,7 @@ void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
     }
     group = r01s_island_builder_group(&app->builder);
     if (e->type == SDL_QUIT) {
-        if (!app_confirm_quit(app)) {
+        if (!app_request_quit(app)) {
             return;
         }
         if (app->catchup_board) {
@@ -565,7 +560,11 @@ void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
     if (e->type == SDL_KEYDOWN && group) {
         switch (e->key.keysym.sym) {
         case SDLK_ESCAPE:
-            if (!app_confirm_quit(app)) {
+            if (r01s_ui_modal_active(&app->ui)) {
+                r01s_ui_modal_cancel(&app->ui);
+                return;
+            }
+            if (!app_request_quit(app)) {
                 return;
             }
             if (app->catchup_board) {
@@ -637,5 +636,6 @@ void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
         }
         logic_from_window(app, mx, my, &lx, &ly);
         r01s_ui_handle_event(&app->ui, e, lx, ly);
+        app_apply_modal_result(app);
     }
 }

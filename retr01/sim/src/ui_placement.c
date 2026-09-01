@@ -1252,69 +1252,15 @@ void compact_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
     rc->h = R01S_UI_UNIT * 2;
 }
 
-void ui_toggle_teaching(R01sUi *ui) {
-    if (!ui || !ui->group) {
-        return;
-    }
-    ui->layout_teaching = !ui->layout_teaching;
-    if (ui->layout_teaching) {
-        /* Force compact mode for predictable tutorial overlays */
-        if (!ui->layout_compact) {
-            ui_toggle_compact(ui);
-        }
-        ui->tutorial_step = 0;
-        snprintf(ui->status, sizeof(ui->status), "TEACHING mode active -- follow the tutorial steps.");
-    } else {
-        snprintf(ui->status, sizeof(ui->status), "TEACHING mode ended.");
-    }
-}
-
-void teach_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
+void save_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
     SDL_Rect cbtn;
-    const char *label = "TEACH";
+    const char *label = "SAVE";
     int tw = font_text_width(label) + R01S_UI_UNIT * 2;
     compact_btn_rect(ui, &cbtn);
     rc->w = tw;
     rc->h = R01S_UI_UNIT * 2;
     rc->y = R01S_UI_UNIT / 2;
     rc->x = cbtn.x - tw - R01S_UI_UNIT;
-}
-
-void sort_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
-    SDL_Rect prev;
-    const char *label = "SORT";
-    int tw = font_text_width(label) + R01S_UI_UNIT * 2;
-    save_btn_rect(ui, &prev);
-    rc->w = tw;
-    rc->h = R01S_UI_UNIT * 2;
-    rc->y = R01S_UI_UNIT / 2;
-    rc->x = prev.x - tw - R01S_UI_UNIT;
-}
-
-void tutorial_btn_rect(const R01sUi *ui, int is_next, SDL_Rect *rc) {
-    int btn_w = 60;
-    int btn_h = 24;
-    int cx = R01S_UI_VIEW_X + (R01S_UI_VIEW_W / 2);
-    int cy = R01S_LOGIC_H - 120 + 70; /* Below tutorial box */
-    rc->w = btn_w;
-    rc->h = btn_h;
-    rc->y = cy;
-    if (is_next) {
-        rc->x = cx + 10;
-    } else {
-        rc->x = cx - 10 - btn_w;
-    }
-}
-
-void save_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
-    SDL_Rect tbtn;
-    const char *label = "SAVE";
-    int tw = font_text_width(label) + R01S_UI_UNIT * 2;
-    teach_btn_rect(ui, &tbtn);
-    rc->w = tw;
-    rc->h = R01S_UI_UNIT * 2;
-    rc->y = R01S_UI_UNIT / 2;
-    rc->x = tbtn.x - tw - R01S_UI_UNIT;
 }
 
 void ui_save_layout_now(R01sUi *ui) {

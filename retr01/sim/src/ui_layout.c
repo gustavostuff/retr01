@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "ui_internal.h"
 
 #include "retr01_sim/board_layout.h"
 
@@ -123,6 +124,10 @@ int r01s_ui_layout_save(R01sUi *ui) {
     fprintf(f, "  \"mode\": \"%s\",\n", ui->layout_compact ? "compact" : "islands");
     fprintf(f, "  \"pan_x\": %d,\n", ui->pan_x);
     fprintf(f, "  \"pan_y\": %d,\n", ui->pan_y);
+    fprintf(f, "  \"islands_strip_x\": %d,\n", ui->islands_strip_x);
+    fprintf(f, "  \"islands_strip_y\": %d,\n", ui->islands_strip_y);
+    fprintf(f, "  \"legend_strip_x\": %d,\n", ui->legend_strip_x);
+    fprintf(f, "  \"legend_strip_y\": %d,\n", ui->legend_strip_y);
 
     /* Always persist both layouts in the same file:
      * - islands + island_chips: island-mode frames and island-relative chips
@@ -325,6 +330,10 @@ int r01s_ui_layout_load(R01sUi *ui) {
     int mode_compact = 0;
     int pan_x = 0;
     int pan_y = 0;
+    int islands_strip_x = R01S_UI_ISLANDS_STRIP_DEFAULT_X;
+    int islands_strip_y = R01S_UI_ISLANDS_STRIP_DEFAULT_Y;
+    int legend_strip_x = R01S_UI_LEGEND_STRIP_DEFAULT_X;
+    int legend_strip_y = R01S_UI_LEGEND_STRIP_DEFAULT_Y;
     char mode[16];
     const char *section;
     const char *obj;
@@ -390,6 +399,10 @@ int r01s_ui_layout_load(R01sUi *ui) {
     mode_compact = (strcmp(mode, "compact") == 0);
     json_int_after(buf, "\"pan_x\"", &pan_x);
     json_int_after(buf, "\"pan_y\"", &pan_y);
+    json_int_after(buf, "\"islands_strip_x\"", &islands_strip_x);
+    json_int_after(buf, "\"islands_strip_y\"", &islands_strip_y);
+    json_int_after(buf, "\"legend_strip_x\"", &legend_strip_x);
+    json_int_after(buf, "\"legend_strip_y\"", &legend_strip_y);
 
     n_islands = r01s_island_group_count(ui->group);
     /* Clear prior frame snapshot so a missing/empty islands[] cannot look "valid". */
@@ -537,6 +550,10 @@ int r01s_ui_layout_load(R01sUi *ui) {
 
     ui->pan_x = pan_x;
     ui->pan_y = pan_y;
+    ui->islands_strip_x = islands_strip_x;
+    ui->islands_strip_y = islands_strip_y;
+    ui->legend_strip_x = legend_strip_x;
+    ui->legend_strip_y = legend_strip_y;
     ui->layout_compact = 0;
     if (mode_compact && ui->compact_saved) {
         for (i = 0; i < ui->chip_count; i++) {
@@ -557,6 +574,8 @@ int r01s_ui_layout_load(R01sUi *ui) {
         r01s_ui_chip_z_init(ui);
     }
     r01s_ui_clamp_pan(ui);
+    ui_islands_strip_clamp(ui);
+    ui_legend_strip_clamp(ui);
     ui->layout_dirty = 0;
     fprintf(stderr, "layout: loaded %s (%s)\n", path ? path : "?", mode_compact ? "compact" : "islands");
     free(buf);

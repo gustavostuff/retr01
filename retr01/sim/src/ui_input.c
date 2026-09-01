@@ -28,7 +28,7 @@ static int hit_island_frame(const R01sUi *ui, const R01sIsland *island, int lx, 
     return lx >= x && lx < x + island->board_w && ly >= y && ly < y + island->board_h;
 }
 
-/* Returns corner id, or -1 if miss. */
+/* Returns corner id, or -1 if miss. Bottom-right grip only. */
 static int hit_island_resize(const R01sUi *ui, const R01sIsland *island, int lx, int ly) {
     int x = ui_board_sx(ui, island->board_x);
     int y = ui_board_sy(ui, island->board_y);
@@ -38,15 +38,6 @@ static int hit_island_resize(const R01sUi *ui, const R01sIsland *island, int lx,
 
     if (lx >= right - hs && lx < right && ly >= bottom - hs && ly < bottom) {
         return R01S_ISLAND_CORNER_BR;
-    }
-    if (lx >= x && lx < x + hs && ly >= bottom - hs && ly < bottom) {
-        return R01S_ISLAND_CORNER_BL;
-    }
-    if (lx >= right - hs && lx < right && ly >= y && ly < y + hs) {
-        return R01S_ISLAND_CORNER_TR;
-    }
-    if (lx >= x && lx < x + hs && ly >= y && ly < y + hs) {
-        return R01S_ISLAND_CORNER_TL;
     }
     return -1;
 }
@@ -184,7 +175,6 @@ int hit_board_top(const R01sUi *ui, int lx, int ly, int *chip_out, int *island_o
 }
 
 int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_y) {
-    int i;
     int board_mx = 0;
     int board_my = 0;
     if (!ui || !e) {
@@ -192,15 +182,52 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
     }
     ui->mouse_lx = logic_x;
     ui->mouse_ly = logic_y;
+    if (r01s_ui_modal_handle_event(ui, e, logic_x, logic_y)) {
+        return 1;
+    }
+    if (e->type == SDL_MOUSEMOTION) {
+        if (logic_x != ui->tip_stable_mx || logic_y != ui->tip_stable_my) {
+            ui_tip_reset(ui, logic_x, logic_y);
+        }
+    }
     if (ui_logic_in_view(logic_x, logic_y)) {
         ui_logic_to_board(ui, logic_x, logic_y, &board_mx, &board_my);
     }
+    if (e->type == SDL_MOUSEMOTION && ui->drag_legend_strip) {
+        ui->legend_strip_x = logic_x - R01S_UI_VIEW_X - ui->drag_legend_ox;
+        ui->legend_strip_y = logic_y - R01S_UI_VIEW_Y - ui->drag_legend_oy;
+        ui->legend_strip_moved = 1;
+        ui_legend_strip_clamp(ui);
+        return 1;
+    }
+    if (e->type == SDL_MOUSEMOTION && ui->drag_islands_strip) {
+        ui->islands_strip_x = logic_x - R01S_UI_VIEW_X - ui->drag_islands_ox;
+        ui->islands_strip_y = logic_y - R01S_UI_VIEW_Y - ui->drag_islands_oy;
+        ui->islands_strip_moved = 1;
+        ui_islands_strip_clamp(ui);
+        return 1;
+    }
+    if (e->type == SDL_MOUSEBUTTONDOWN &&
+        (e->button.button == SDL_BUTTON_LEFT || e->button.button == SDL_BUTTON_RIGHT) &&
+        ui_legend_strip_contains(ui, logic_x, logic_y)) {
+        ui->drag_legend_strip = 1;
+        ui->drag_legend_ox = logic_x - (R01S_UI_VIEW_X + ui->legend_strip_x);
+        ui->drag_legend_oy = logic_y - (R01S_UI_VIEW_Y + ui->legend_strip_y);
+        ui->legend_strip_moved = 0;
+        ui->ctx_chip = -1;
+        return 1;
+    }
+    if (e->type == SDL_MOUSEBUTTONDOWN &&
+        (e->button.button == SDL_BUTTON_LEFT || e->button.button == SDL_BUTTON_RIGHT) &&
+        ui_islands_strip_contains(ui, logic_x, logic_y)) {
+        ui->drag_islands_strip = 1;
+        ui->drag_islands_ox = logic_x - (R01S_UI_VIEW_X + ui->islands_strip_x);
+        ui->drag_islands_oy = logic_y - (R01S_UI_VIEW_Y + ui->islands_strip_y);
+        ui->islands_strip_moved = 0;
+        ui->ctx_chip = -1;
+        return 1;
+    }
     if (e->type == SDL_MOUSEWHEEL) {
-        if (sidebar_hit(logic_x, logic_y)) {
-            ui->sidebar_scroll -= e->wheel.y * R01S_UI_STATUS_ROW_H;
-            sidebar_clamp_scroll(ui);
-            return 1;
-        }
         if (ui_logic_in_view(logic_x, logic_y)) {
             ui->pan_x -= e->wheel.x * 32;
             ui->pan_y -= e->wheel.y * 32;
@@ -245,6 +272,27 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         return 1;
     }
     if (e->type == SDL_MOUSEBUTTONUP &&
+        (e->button.button == SDL_BUTTON_LEFT || e->button.button == SDL_BUTTON_RIGHT)) {
+        if (ui->drag_legend_strip) {
+            int moved = ui->legend_strip_moved;
+            ui->drag_legend_strip = 0;
+            if (moved) {
+                ui->layout_dirty = 1;
+            }
+            return 1;
+        }
+        if (ui->drag_islands_strip) {
+            int moved = ui->islands_strip_moved;
+            ui->drag_islands_strip = 0;
+            if (moved) {
+                ui->layout_dirty = 1;
+            } else if (e->button.button == SDL_BUTTON_LEFT) {
+                ui_health_copy_at(ui, logic_x, logic_y);
+            }
+            return 1;
+        }
+    }
+    if (e->type == SDL_MOUSEBUTTONUP &&
         (e->button.button == SDL_BUTTON_MIDDLE || e->button.button == SDL_BUTTON_RIGHT)) {
         ui->drag_pan = 0;
         return 1;
@@ -257,10 +305,6 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         }
         ui->drag_last_x = logic_x;
         ui->drag_last_y = logic_y;
-        return 1;
-    }
-    if (e->type == SDL_MOUSEMOTION && ui->drag_stick >= 0) {
-        gp_stick_from_point(ui, &ui->gamepad[ui->drag_stick], ui->drag_stick, logic_x, logic_y);
         return 1;
     }
     if (e->type == SDL_MOUSEMOTION && ui->resize_island >= 0) {
@@ -296,12 +340,6 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 return 1;
             }
         }
-        if (!(e->key.keysym.mod & KMOD_CTRL) && e->key.keysym.sym == SDLK_g) {
-            if (r01s_board_from_group(ui->group)) {
-                ui_toggle_lcd_scale(ui);
-                return 1;
-            }
-        }
         if (mods[SDL_SCANCODE_LSHIFT] || mods[SDL_SCANCODE_RSHIFT]) {
             if (e->key.keysym.sym == SDLK_LEFT) {
                 ui->pan_x -= step;
@@ -328,17 +366,6 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
     if (e->type == SDL_MOUSEBUTTONUP && e->button.button == SDL_BUTTON_LEFT) {
         int was_layout_drag =
             (ui->drag_chip >= 0 || ui->drag_island >= 0 || ui->resize_island >= 0);
-        if (ui->drag_stick >= 0) {
-            ui->gamepad[ui->drag_stick].stick_x = 0;
-            ui->gamepad[ui->drag_stick].stick_y = 0;
-            ui->drag_stick = -1;
-            return 1;
-        }
-        if (ui->drag_btn >= 0) {
-            ui->mouse_btn[ui->drag_btn / 4][ui->drag_btn % 4] = 0;
-            ui->drag_btn = -1;
-            return 1;
-        }
         if (ui->box_sel) {
             int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
             int w = ui->box_bx1 - ui->box_bx0;
@@ -367,9 +394,17 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         return ui->selected >= 0 || ui_sel_count(ui) > 0;
     }
     if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT) {
-        int gp_player = 0;
-        int gp_btn = -1;
-        int hit;
+
+        /* Double-click SCR1 toggles LCD 1X/2X scale. */
+        if (e->button.clicks == 2 && ui_logic_in_view(logic_x, logic_y) && r01s_board_from_group(ui->group)) {
+            int chip_i = -1;
+            if (hit_board_top(ui, logic_x, logic_y, &chip_i, NULL, NULL) == 1 && chip_i >= 0 &&
+                chip_i < ui->chip_count && ui->chips[chip_i] &&
+                ui->chips[chip_i]->visual == R01S_ENTITY_VIS_DISPLAY) {
+                ui_toggle_lcd_scale(ui);
+                return 1;
+            }
+        }
 
         /* Context menu: toggle package orientation. */
         if (ui->ctx_chip >= 0 && ui->ctx_chip < ui->chip_count) {
@@ -417,116 +452,6 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             }
         }
 
-        /* Teaching mode toggle (top HUD). */
-        {
-            SDL_Rect tbtn;
-            teach_btn_rect(ui, &tbtn);
-            if (logic_x >= tbtn.x && logic_x < tbtn.x + tbtn.w && logic_y >= tbtn.y &&
-                logic_y < tbtn.y + tbtn.h) {
-                ui_toggle_teaching(ui);
-                return 1;
-            }
-        }
-
-        /* Sort toggle (top HUD). */
-        if (ui->layout_compact && !ui->layout_teaching) {
-            SDL_Rect sbtn;
-            sort_btn_rect(ui, &sbtn);
-            if (logic_x >= sbtn.x && logic_x < sbtn.x + sbtn.w && logic_y >= sbtn.y &&
-                logic_y < sbtn.y + sbtn.h) {
-                ui_apply_compact_layout(ui);
-                ui->layout_dirty = 1;
-                return 1;
-            }
-        }
-
-        /* Teaching mode Next/Prev buttons. */
-        if (ui->layout_teaching) {
-            SDL_Rect next_btn, prev_btn;
-            tutorial_btn_rect(ui, 1, &next_btn);
-            tutorial_btn_rect(ui, 0, &prev_btn);
-            if (logic_x >= next_btn.x && logic_x < next_btn.x + next_btn.w && logic_y >= next_btn.y && logic_y < next_btn.y + next_btn.h) {
-                ui->tutorial_step++;
-                return 1;
-            }
-            if (logic_x >= prev_btn.x && logic_x < prev_btn.x + prev_btn.w && logic_y >= prev_btn.y && logic_y < prev_btn.y + prev_btn.h) {
-                if (ui->tutorial_step > 0) {
-                    ui->tutorial_step--;
-                }
-                return 1;
-            }
-        }
-
-        /* STATUS: copy WARN/FAIL rows or system header to clipboard. */
-        if (sidebar_hit(logic_x, logic_y) && ui_health_copy_at(ui, logic_x, logic_y)) {
-            return 1;
-        }
-
-        /* PROBE: gray pin stubs toggle. */
-        {
-            SDL_Rect rc;
-            sidebar_probe_quiet_btn_rect(ui, sidebar_sy(ui, sidebar_probe_content_y(ui)), &rc);
-            if (sidebar_hit(logic_x, logic_y) && radio_hit(&rc, logic_x, logic_y)) {
-                ui->pins_quiet = !ui->pins_quiet;
-                snprintf(ui->status, sizeof(ui->status), ui->pins_quiet ? "Pin stubs: gray (quiet)"
-                                                                           : "Pin stubs: live levels");
-                return 1;
-            }
-        }
-
-        /* CART: show/hide flash + EEPROM. */
-        if (sidebar_hit(logic_x, logic_y)) {
-            SDL_Rect rc;
-            sidebar_cart_btn_rect(ui, 0, &rc);
-            if (radio_hit(&rc, logic_x, logic_y)) {
-                ui->show_cart_flash = !ui->show_cart_flash;
-                if (!ui->show_cart_flash && ui->selected >= 0 && ui->selected < ui->chip_count &&
-                    ui_chip_is_cart_flash(ui->chips[ui->selected])) {
-                    ui->selected = -1;
-                }
-                snprintf(ui->status, sizeof(ui->status),
-                         ui->show_cart_flash ? "Cart FLASH (U40) shown" : "Cart FLASH (U40) hidden");
-                return 1;
-            }
-            sidebar_cart_btn_rect(ui, 1, &rc);
-            if (radio_hit(&rc, logic_x, logic_y)) {
-                ui->show_cart_eeprom = !ui->show_cart_eeprom;
-                if (!ui->show_cart_eeprom && ui->selected >= 0 && ui->selected < ui->chip_count &&
-                    ui_chip_is_cart_eeprom(ui->chips[ui->selected])) {
-                    ui->selected = -1;
-                }
-                snprintf(ui->status, sizeof(ui->status),
-                         ui->show_cart_eeprom ? "Cart 24C64 (U50) shown" : "Cart 24C64 (U50) hidden");
-                return 1;
-            }
-        }
-
-        /* SCALE: 1X / 2X LCD preview. */
-        if (sidebar_hit(logic_x, logic_y) && r01s_board_from_group(ui->group)) {
-            SDL_Rect rc;
-            sidebar_scale_btn_rect(ui, 0, &rc);
-            if (radio_hit(&rc, logic_x, logic_y)) {
-                ui_set_lcd_scale(ui, 0);
-                return 1;
-            }
-            sidebar_scale_btn_rect(ui, 1, &rc);
-            if (radio_hit(&rc, logic_x, logic_y)) {
-                ui_set_lcd_scale(ui, 1);
-                return 1;
-            }
-        }
-
-        hit = gp_hit_any(ui, logic_x, logic_y, &gp_player, &gp_btn);
-        if (hit == 2) {
-            ui->drag_btn = gp_player * 4 + gp_btn;
-            ui->mouse_btn[gp_player][gp_btn] = 1;
-            return 1;
-        }
-        if (hit == 1) {
-            ui->drag_stick = gp_player;
-            gp_stick_from_point(ui, &ui->gamepad[gp_player], gp_player, logic_x, logic_y);
-            return 1;
-        }
         ui->selected = -1;
         ui->drag_chip = -1;
         ui->drag_island = -1;

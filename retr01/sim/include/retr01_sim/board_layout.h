@@ -6,7 +6,7 @@
 
 /* Island frame insets (must match ui.c clamp/draw). */
 #define R01S_ISLAND_PAD_X 5
-#define R01S_ISLAND_HEADER_H 20
+#define R01S_ISLAND_HEADER_H 11
 #define R01S_ISLAND_PAD_TOP (R01S_ISLAND_HEADER_H + R01S_GRID)
 #define R01S_ISLAND_PAD_BOTTOM 5
 #define R01S_CHIP_PIN_OUT 5
@@ -16,6 +16,11 @@
 #define R01S_BOARD_BG_R 22
 #define R01S_BOARD_BG_G 50
 #define R01S_BOARD_BG_B 34
+
+/* Island chrome (#1b5032 base when OK). */
+#define R01S_ISLAND_OK_R 27
+#define R01S_ISLAND_OK_G 80
+#define R01S_ISLAND_OK_B 50
 
 /* Gap between chips inside an island, and between island frames. */
 #define R01S_CHIP_GAP 5
