@@ -7,6 +7,8 @@
 #include <SDL.h>
 #include <stdint.h>
 
+typedef struct R01sBoard R01sBoard;
+
 #ifndef R01S_ASSETS_DIR
 #define R01S_ASSETS_DIR "retr01/assets/other"
 #endif
@@ -16,6 +18,12 @@
 
 #define R01S_UI_FONT_PX 16
 
+#define R01S_UI_CHIP_CART_R 13
+#define R01S_UI_CHIP_CART_G 29
+#define R01S_UI_CHIP_CART_B 57
+#define R01S_UI_CHIP_ATTINY_R 57
+#define R01S_UI_CHIP_ATTINY_G 13
+#define R01S_UI_CHIP_ATTINY_B 25
 #define R01S_UI_PIN_GRAY_R 179
 #define R01S_UI_PIN_GRAY_G 179
 #define R01S_UI_PIN_GRAY_B 204
@@ -86,12 +94,23 @@ void ui_set_screen_render_mode(R01sUi *ui, int mode);
 void ui_toggle_lcd_scale(R01sUi *ui);
 int ui_chip_is_cart_flash(const R01sEntity *e);
 int ui_chip_is_cart_eeprom(const R01sEntity *e);
+int ui_chip_is_controller_attiny(const R01sEntity *e);
+void ui_chip_body_rgb(const R01sEntity *e, int selected, Uint8 *r, Uint8 *g, Uint8 *b);
 int ui_chip_hidden(const R01sUi *ui, const R01sEntity *e);
 
 /* ui_draw.c */
 int hit_board_top(const R01sUi *ui, int lx, int ly, int *chip_out, int *island_out, int *corner_out);
 int ui_health_copy_at(R01sUi *ui, int lx, int ly);
 void ui_tip_reset(R01sUi *ui, int mx, int my);
+void ui_chip_dip_pin_pos(const R01sEntity *e, int pin_num, int *along, int *side_pin1);
+int ui_chip_pin_screen_center(const R01sUi *ui, const R01sEntity *e, int pin_index, int *sx, int *sy);
+void ui_chip_pin_rgb(const R01sUi *ui, R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg, Uint8 *pb);
+
+/* ui_pin_net.c */
+void r01s_ui_pin_net_build(R01sBoard *board);
+int ui_hit_chip_pin(const R01sUi *ui, int lx, int ly, int *chip_out, int *pin_out);
+int ui_pin_net_peer(const R01sUi *ui, int chip_i, int pin_i, int *peer_chip_out, int *peer_pin_out);
+void ui_draw_pin_wire_overlay(SDL_Renderer *r, R01sUi *ui);
 int ui_islands_strip_contains(const R01sUi *ui, int lx, int ly);
 void ui_islands_strip_clamp(R01sUi *ui);
 int ui_legend_strip_contains(const R01sUi *ui, int lx, int ly);

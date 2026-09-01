@@ -50,8 +50,8 @@ void pin_level_rgb(R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg, Uint8 *p
     }
 }
 
-static void ui_chip_pin_rgb(const R01sUi *ui, R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg,
-                            Uint8 *pb) {
+void ui_chip_pin_rgb(const R01sUi *ui, R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg,
+                     Uint8 *pb) {
     if (ui && ui->pins_quiet) {
         *pr = R01S_UI_PIN_GRAY_R;
         *pg = R01S_UI_PIN_GRAY_G;
@@ -239,7 +239,7 @@ static void draw_display_glyph(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e,
 
 /* Pin along-axis board coord + which side (1 = pin1 side: bottom if H, left if V).
  * Pitch is always JEDEC 0.100" (R01S_DIP_PIN_PITCH_PX); end margin centers the row. */
-static void dip_pin_pos(const R01sEntity *e, int pin_num, int *along, int *side_pin1) {
+void ui_chip_dip_pin_pos(const R01sEntity *e, int pin_num, int *along, int *side_pin1) {
     int dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
     int half = dip / 2;
     int idx;
@@ -264,12 +264,52 @@ static void dip_pin_pos(const R01sEntity *e, int pin_num, int *along, int *side_
     *along = margin + idx * pitch;
 }
 
+int ui_chip_pin_screen_center(const R01sUi *ui, const R01sEntity *e, int pin_index, int *sx, int *sy) {
+    int num;
+    int along;
+    int side_pin1;
+    int dip;
+    int horiz;
+    int x;
+    int y;
+
+    if (!ui || !e || !sx || !sy || pin_index < 0 || pin_index >= e->pin_count) {
+        return 0;
+    }
+    num = e->pins[pin_index].number;
+    dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
+    if (num < 1 || num > dip) {
+        return 0;
+    }
+    ui_chip_dip_pin_pos(e, num, &along, &side_pin1);
+    x = ui_board_sx(ui, e->board_x);
+    y = ui_board_sy(ui, e->board_y);
+    horiz = (e->orient != R01S_ORIENT_V);
+    if (horiz) {
+        *sx = x + along;
+        if (side_pin1) {
+            *sy = y + e->body_h + R01S_UI_PIN_H / 2;
+        } else {
+            *sy = y - R01S_UI_PIN_H / 2;
+        }
+    } else {
+        *sy = y + along;
+        if (side_pin1) {
+            *sx = x - R01S_UI_PIN_H / 2;
+        } else {
+            *sx = x + e->body_w + R01S_UI_PIN_H / 2;
+        }
+    }
+    return 1;
+}
+
 static void draw_chip(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int selected) {
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);
     int i;
     int horiz = (e->orient != R01S_ORIENT_V);
     int dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
+    Uint8 br, bg, bb;
 
     for (i = 0; i < e->pin_count; i++) {
         int num = e->pins[i].number;
@@ -281,7 +321,7 @@ static void draw_chip(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, in
         if (num < 1 || num > dip) {
             continue;
         }
-        dip_pin_pos(e, num, &along, &side_pin1);
+        ui_chip_dip_pin_pos(e, num, &along, &side_pin1);
         ui_chip_pin_rgb(ui, e->pins[i].level, e->pins[i].dir, &pr, &pg, &pb);
         if (horiz) {
             draw_dip_pad_h(r, x + along, side_pin1 ? (y + e->body_h) : y, side_pin1, pr, pg, pb);
@@ -290,7 +330,8 @@ static void draw_chip(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, in
         }
     }
 
-    fill_rect(r, x, y, e->body_w, e->body_h, selected ? 40 : 28, selected ? 48 : 32, selected ? 36 : 28);
+    ui_chip_body_rgb(e, selected, &br, &bg, &bb);
+    fill_rect(r, x, y, e->body_w, e->body_h, br, bg, bb);
     if (selected) {
         draw_rect(r, x, y, e->body_w, e->body_h, 255, 220, 80);
     }

@@ -76,6 +76,7 @@ add_library(retr01_sim_app
   src/ui_placement.c
   src/ui_draw.c
   src/ui_input.c
+  src/ui_pin_net.c
   src/ui_layout.c
   src/app.c
 )

@@ -564,6 +564,39 @@ int ui_chip_is_cart_eeprom(const R01sEntity *e) {
     return e->part && strcmp(e->part, "24C64") == 0;
 }
 
+int ui_chip_is_controller_attiny(const R01sEntity *e) {
+    if (!e || !e->part) {
+        return 0;
+    }
+    if (strncmp(e->part, "ATtiny", 6) == 0 || strncmp(e->part, "ATTINY", 6) == 0) {
+        return 1;
+    }
+    return 0;
+}
+
+void ui_chip_body_rgb(const R01sEntity *e, int selected, Uint8 *r, Uint8 *g, Uint8 *b) {
+    if (!r || !g || !b) {
+        return;
+    }
+    if (ui_chip_is_cart_flash(e) || ui_chip_is_cart_eeprom(e)) {
+        *r = R01S_UI_CHIP_CART_R;
+        *g = R01S_UI_CHIP_CART_G;
+        *b = R01S_UI_CHIP_CART_B;
+        (void)selected;
+        return;
+    }
+    if (ui_chip_is_controller_attiny(e)) {
+        *r = R01S_UI_CHIP_ATTINY_R;
+        *g = R01S_UI_CHIP_ATTINY_G;
+        *b = R01S_UI_CHIP_ATTINY_B;
+        (void)selected;
+        return;
+    }
+    *r = selected ? (Uint8)40 : (Uint8)28;
+    *g = selected ? (Uint8)48 : (Uint8)32;
+    *b = selected ? (Uint8)36 : (Uint8)28;
+}
+
 int ui_chip_hidden(const R01sUi *ui, const R01sEntity *e) {
     (void)ui;
     (void)e;
@@ -1228,6 +1261,24 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
                 }
                 draw_board_item(r, ui, ui->chips[j], j == ui->selected);
             }
+        }
+        ui_draw_pin_wire_overlay(r, ui);
+        for (rank = 0; rank < n_islands; rank++) {
+            const R01sIsland *island;
+            const R01sIslandHealth *ih = NULL;
+            int i;
+            if (rank >= ui->island_z_count) {
+                i = rank;
+            } else {
+                i = ui->island_z_order[rank];
+            }
+            island = r01s_island_group_at(ui->group, i);
+            if (!island) {
+                continue;
+            }
+            if (i < ui->health.island_count) {
+                ih = &ui->health.islands[i];
+            }
             draw_island_header(r, ui, island, ih, i);
         }
     } else {
@@ -1246,6 +1297,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
             }
             draw_board_item(r, ui, ui->chips[ci], ui->chip_sel[ci] || ci == ui->selected);
         }
+        ui_draw_pin_wire_overlay(r, ui);
         if (ui->box_sel) {
             int x0 = ui_board_sx(ui, ui->box_bx0 < ui->box_bx1 ? ui->box_bx0 : ui->box_bx1);
             int y0 = ui_board_sy(ui, ui->box_by0 < ui->box_by1 ? ui->box_by0 : ui->box_by1);

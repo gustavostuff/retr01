@@ -6,6 +6,7 @@
 #include "retr01_sim/island_builder.h"
 #include "retr01_sim/play.h"
 #include "pads.h"
+#include "ui_internal.h"
 #include "video_sink.h"
 
 #include <stdio.h>
@@ -261,6 +262,7 @@ void r01s_app_mount_builder(R01sApp *app) {
     }
     b = &app->builder;
     r01s_ui_bind_group(&app->ui, &b->group);
+    r01s_ui_pin_net_build(r01s_board_from_group(&b->group));
     for (i = 0; i < b->mount_count; i++) {
         R01sEntity *e = b->mounts[i].entity;
         if (!e || e->visual == R01S_ENTITY_VIS_NONE) {
