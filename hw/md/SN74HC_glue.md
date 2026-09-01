@@ -1,13 +1,5 @@
 # SN74HC glue: DIP-14 gates (v0)
 
-**PDFs:**  
-[`../SN74HC00_nand.pdf`](../SN74HC00_nand.pdf),  
-[`../SN74HC04_inverter.pdf`](../SN74HC04_inverter.pdf),  
-[`../SN74HC08_and.pdf`](../SN74HC08_and.pdf),  
-[`../SN74HC14_schmitt.pdf`](../SN74HC14_schmitt.pdf),  
-[`../SN74HC32_or.pdf`](../SN74HC32_or.pdf),  
-[`../SN74HC86_xor.pdf`](../SN74HC86_xor.pdf).
-
 **Package:** 14-pin PDIP (N). **VCC** pin 14, **GND** pin 7 on all of these.  
 **Qty (v0):** **10** total: HC14 x1, HC00 x2, HC04 x2, HC08 x2, HC32 x2, HC86 x1.  
 **Qty (v1):** **0**. Equations move into ATF22V10.
@@ -80,7 +72,7 @@ Scattered between CPU decode, reset, beam wrap, IRQ polarity. v1 deletes these p
 
 ## Sim notes
 
-One tiny module type per gate family (NAND2, AND2, OR2, XOR2, INV, SCHMITT_INV) with instance count from the netlist. No need for full TI PDF switching tables until timing closure.
+One tiny module type per gate family (NAND2, AND2, OR2, XOR2, INV, SCHMITT_INV) with instance count from the netlist. No need for full TI switching tables until timing closure.
 
 ## Package dimensions
 

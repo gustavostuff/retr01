@@ -204,7 +204,7 @@ The sequencer is driven entirely by the W65C02S **NMI** (~60x/s). **BGM** and **
 |-------|--------|
 | Design (this doc) | 8-ch mixer, DPCM-in-AVR-flash, semantic hex + NMI dual tracker |
 | HW BOM | 328P + `$FE40`-`$FE5F` + CPU HC245 domain |
-| Board sim | Island **K** stub: period/vol **PWM square** smoke. Not full mixer/DPCM yet ([`retr01_sim/README.md`](../retr01_sim/README.md)) |
+| Board sim | Island **K** stub: period/vol **PWM square** smoke. Not full mixer/DPCM yet ([`retr01/sim/README.md`](../retr01/sim/README.md)) |
 
 ---
 

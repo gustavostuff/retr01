@@ -19,14 +19,17 @@ Testing/
 *.swp
 *~
 .DS_Store
-retr01_sim/debug/
-retr01_sim/ui_layout.json
+retr01/sim/debug/
+retr01/sim/ui_layout.json
 ui_layout.json
 .cursor/
 
-# Release binaries (scripts/build-all.sh)
-release/
+# Release binaries (./build-all)
+bin/
 
 # Other
 ai-rules.txt
 temp/
+
+# Vendor / local datasheets (keep on disk, do not commit)
+*.pdf

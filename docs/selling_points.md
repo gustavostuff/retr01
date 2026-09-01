@@ -2,7 +2,7 @@
 
 Retr01 vs classic 8-bit constraints (especially NES-era). Same spirit, more headroom for game logic.
 
-**Related:** [`graphics.md`](graphics.md), [`memory.md`](memory.md), [`hardware.md`](hardware.md), [`passive_rf_etc.md`](passive_rf_etc.md). Authoring: [`retr01_studio/README.md`](../retr01_studio/README.md).
+**Related:** [`graphics.md`](graphics.md), [`memory.md`](memory.md), [`hardware.md`](hardware.md), [`passive_rf_etc.md`](passive_rf_etc.md). Authoring: [`retr01/studio/README.md`](../retr01/studio/README.md).
 
 ---
 
@@ -124,4 +124,4 @@ Built for people who want to **make** 8-bit games, not only play them. Tools: **
 
 32-IC mobo + cart proto targets ~**$200** qty-1 (parts + PCB share). See [`hardware.md`](hardware.md) BOM.
 
-Game module profiles (movement, camera, entities): [`retr01_studio/README.md`](../retr01_studio/README.md).
+Game module profiles (movement, camera, entities): [`retr01/studio/README.md`](../retr01/studio/README.md).

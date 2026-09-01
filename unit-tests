@@ -1,4 +1,27 @@
 #!/usr/bin/env bash
+# Configure, build, and run unit tests for studio, emu, and sim.
 set -euo pipefail
+
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-exec "$ROOT/scripts/run-unit-tests" "$@"
+STUDIO="$ROOT/retr01/studio"
+EMU="$ROOT/retr01/emu"
+SIM="$ROOT/retr01/sim"
+
+build_and_test() {
+  local proj="$1"
+  shift
+  cmake -S "$proj" -B "$proj/build" -DCMAKE_BUILD_TYPE=Release
+  cmake --build "$proj/build" -j"$(nproc)"
+  ctest --test-dir "$proj/build" --output-on-failure "$@"
+}
+
+echo "== studio =="
+build_and_test "$STUDIO"
+
+echo "== emu =="
+build_and_test "$EMU"
+
+echo "== sim =="
+build_and_test "$SIM" -R '^test_'
+
+echo "all unit tests passed"

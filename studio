@@ -1,4 +1,26 @@
 #!/usr/bin/env bash
+# Run the Release studio binary from bin/ (build with ./build-all first).
 set -euo pipefail
+
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-exec "$ROOT/scripts/run-studio" "$@"
+BIN="$ROOT/bin/studio"
+PROJECT="${1:-}"
+
+die() { echo "error: $*" >&2; exit 1; }
+usage() { echo "usage: ./studio <project.r01proj>" >&2; exit 2; }
+
+[[ -n "$PROJECT" ]] || usage
+[[ -x "$BIN" ]] || die "missing $BIN -- run ./build-all first"
+
+if [[ "$PROJECT" != /* ]]; then
+  if [[ -f "$ROOT/$PROJECT" ]]; then
+    PROJECT="$ROOT/$PROJECT"
+  elif [[ -f "$PROJECT" ]]; then
+    PROJECT="$(cd "$(dirname "$PROJECT")" && pwd)/$(basename "$PROJECT")"
+  else
+    PROJECT="$ROOT/$PROJECT"
+  fi
+fi
+[[ -f "$PROJECT" ]] || die "project not found: $1"
+
+exec "$BIN" "$PROJECT"

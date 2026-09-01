@@ -4,7 +4,7 @@
 
 Passives, connectors, stackup, ESD/PPTC, and RF practice live in [`passive_rf_etc.md`](passive_rf_etc.md). Not here.
 
-**Related:** [`memory.md`](memory.md) (chips, read/write timing). [`graphics.md`](graphics.md) (VRAM, sprites). [`sound.md`](sound.md) (APU). [`passive_rf_etc.md`](passive_rf_etc.md) (non-IC). Per-chip notes: [`hw/md/`](../hw/md/). Bring-up sim: [`retr01_sim/`](../retr01_sim/README.md).
+**Related:** [`memory.md`](memory.md) (chips, read/write timing). [`graphics.md`](graphics.md) (VRAM, sprites). [`sound.md`](sound.md) (APU). [`passive_rf_etc.md`](passive_rf_etc.md) (non-IC). Per-chip notes: [`hw/md/`](../hw/md/). Bring-up sim: [`retr01/sim/`](../retr01/sim/README.md).
 
 ---
 
@@ -43,7 +43,7 @@ Passives, connectors, stackup, ESD/PPTC, and RF practice live in [`passive_rf_et
 | 1 | AT28C16 | Color PROM (6-bit index -> R3G3B2) |
 | 1 | 24C64 (cart) | Per-game save EEPROM |
 
-Datasheets: [W65C02S](https://westerndesigncenter.com/wdc/documentation/w65c02s.pdf), [AS6C62256](https://www.alliancememory.com/wp-content/uploads/pdf/datasheets/AS6C62256.pdf), [ATF22V10](https://ww1.microchip.com/downloads/en/DeviceDoc/ATF22V10-Datasheet-DS50002239D.pdf), [ATmega1284P](https://ww1.microchip.com/downloads/en/DeviceDoc/40002047A.pdf), [ATmega328P](https://ww1.microchip.com/downloads/en/DeviceDoc/ATmega328P-DS-DS40002061A.pdf), [SST39SF040](https://ww1.microchip.com/downloads/en/DeviceDoc/20005051C.pdf).
+Vendor datasheets (WDC, Alliance, Microchip / Atmel, SST): look up each part by name on the manufacturer site when pinouts or AC timing matter.
 
 ---
 
@@ -151,7 +151,7 @@ L 1284 --> M Line buf --> N Sprites --------------------------------------------
 | **N** Sprites | Expected pixels in line buffer |
 | **O** Video | RGBS stable at 2x or 1x SCALE |
 
-Full letter list, sim canvas grouping, and port smoke checks: [`retr01_sim/README.md`](../retr01_sim/README.md).
+Full letter list, sim canvas grouping, and port smoke checks: [`retr01/sim/README.md`](../retr01/sim/README.md).
 
 ---
 

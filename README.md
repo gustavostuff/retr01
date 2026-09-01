@@ -1,6 +1,6 @@
-<img src="img/logo_v3.png" alt="Logo V3" />
+<img src="retr01/assets/png/logo_v2.png" alt="Logo V3" />
 
-The Retr01 project is a software + hardware tool chain family. Software includes:
+The Retr01 project is a software tool chain + hardware family. Software includes:
 
 - **Retr01 Studio**: visual authoring for worlds, screens and game entities. **Play** exports a cart and opens the shared emulator render screen (same pixels as standalone emu).
 - **Retr01 Emu**: software-visible 65C02 + `$FExx` I/O + video. Standalone `./emu` and the library Studio Play uses. Loads a cart, runs PRG boot catchup and Host Play for movement, camera, and collision.
@@ -10,6 +10,19 @@ Software is still a WIP. This is the overall hardware roadmap:
 
 - **Shared motherboard (stage 1)**: One THT board (~**14 x 12 cm**, 4-layer) for both **arcade** and **home console** shells. Same 32-IC core, cart, RGBS / S-Video / composite, 5 V barrel. **Arcade controller** headers (microswitch sticks/buttons into the 1284) **and** PCB holes / footprints for **2x Switchcraft 35RAPC** female 3.5 mm TRS (aux pad ports, populate when needed). Arcade vs console is enclosure + which I/O you wire, not two different mobos.
 - **Retr01-H (stage 2)**: Handheld. SMD, battery, LCD + driver, contact pads. Same software contract.
+
+## Software tree
+
+Apps and shared code live under [`retr01/`](retr01/):
+
+| Path | Role |
+|--|--|
+| `retr01/studio/` | Authoring app |
+| `retr01/emu/` | Cart emulator (+ Studio Play core) |
+| `retr01/sim/` | Pin-level board simulator |
+| `bin/` | Release binaries from `./build-all` (`studio`, `emu`, `sim`) |
+
+`./build-all` builds Release binaries into `bin/`. `./studio`, `./emu`, and `./sim` only run those binaries. `./unit-tests` runs the test suites.
 
 ## At a glance
 
@@ -29,17 +42,17 @@ Same **32 KB PRG** as classic NES NROM games (Exitebike, Balloon Fight, Ice Clim
 
 Peek at Retr01 Studio:
 
-<img src="img/studio.png" alt="Studio" />
+<img src="retr01/assets/png/studio.png" alt="Studio" />
 
 Emulator + Debug screen:
 
-<img src="img/emu.png" alt="Emu" />
+<img src="retr01/assets/png/emu.png" alt="Emu" />
 
-<img src="img/debug.png" alt="Debug" />
+<img src="retr01/assets/png/debug.png" alt="Debug" />
 
 Sim:
 
-<img src="img/sim.png" alt="Sim" />
+<img src="retr01/assets/png/sim.png" alt="Sim" />
 
 ## Where to go next
 
@@ -49,6 +62,6 @@ Sim:
 - [`docs/passive_rf_etc.md`](docs/passive_rf_etc.md): passives, ports, stackup / RF
 - [`docs/sound.md`](docs/sound.md): APU and bytecode
 - [`docs/selling_points.md`](docs/selling_points.md): NES vs Retr01 comparison
-- [`hw/`](hw/): datasheet PDFs + [`hw/md/`](hw/md/) chip notes
+- [`hw/`](hw/): part list + [`hw/md/`](hw/md/) chip notes
 
 Built for people who want to *make* 8-bit games, not only play them.

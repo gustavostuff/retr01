@@ -1,4 +1,32 @@
 #!/usr/bin/env bash
+# Build Studio, Emu, and Sim (Release) and install binaries into bin/.
 set -euo pipefail
+
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-exec "$ROOT/scripts/build-all.sh" "$@"
+BIN="$ROOT/bin"
+STUDIO="$ROOT/retr01/studio"
+EMU="$ROOT/retr01/emu"
+SIM="$ROOT/retr01/sim"
+
+build_one() {
+  local proj="$1"
+  local target="$2"
+  local out_name="$3"
+  cmake -S "$proj" -B "$proj/build" -DCMAKE_BUILD_TYPE=Release
+  cmake --build "$proj/build" --target "$target" -j"$(nproc)"
+  install -Dm755 "$proj/build/$target" "$BIN/$out_name"
+}
+
+mkdir -p "$BIN"
+
+echo "== studio =="
+build_one "$STUDIO" retr01_studio studio
+
+echo "== emu =="
+build_one "$EMU" retr01_emu emu
+
+echo "== sim =="
+build_one "$SIM" retr01_sim sim
+
+echo "binaries:"
+ls -lh "$BIN"/studio "$BIN"/emu "$BIN"/sim
