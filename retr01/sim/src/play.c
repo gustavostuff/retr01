@@ -1,6 +1,7 @@
 #include "retr01_sim/play.h"
 
 #include "retr01_sim/board.h"
+#include "retr01_sim/frame_log.h"
 #include "retr01_sim/gamepad.h"
 #include "atmega1284p.h"
 #include "as6c62256.h"
@@ -515,6 +516,7 @@ void r01s_play_on_vblank(R01sBoard *b) {
     step_move_from_pad(b);
     apply_video_latch(b);
     write_oam(b);
+    r01s_frame_log_note(R01S_FLOG_PLAY, "VBlank Host Play: pad step + OAM");
 }
 
 static int warp_to(R01sBoard *b, int col, int row) {
@@ -583,6 +585,7 @@ int r01s_play_start(R01sBoard *board) {
     }
     board->play.enabled = 1;
     write_oam(board);
+    r01s_frame_log_note(R01S_FLOG_PLAY, "Host Play enabled (scroll latched, OAM written, beam rewind)");
     return 1;
 }
 

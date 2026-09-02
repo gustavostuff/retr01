@@ -12,8 +12,12 @@ static const uint8_t play_present[8] = {0, 0, 0, 24, 24, 0, 0, 0};
 static const uint8_t play_spawn_col = 3;
 static const uint8_t play_spawn_row = 3;
 static const int player_entity = 0;
-static const R01InstRec *entity_insts = 0;
-static const int entity_inst_count = 0;
+static const R01InstRec entity_insts[1] = {
+    {0, 444, 444}
+};
+static const int entity_inst_count = 1;
+static const int player_inst_x = 444;
+static const int player_inst_y = 444;
 static const int player_hit_x = 3;
 static const int player_hit_y = 8;
 static const int player_hit_w = 8;

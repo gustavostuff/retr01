@@ -4,6 +4,7 @@
 #include "retr01_sim/board.h"
 #include "retr01_sim/board_layout.h"
 #include "retr01_sim/bus.h"
+#include "retr01_sim/frame_log.h"
 #include "ui_assets.h"
 #include "video_sink.h"
 
@@ -1216,6 +1217,62 @@ uint8_t r01s_ui_gamepad_port(const R01sUi *ui, int player) {
     return r01s_gamepad_encode(&ui->gamepad[player]);
 }
 
+static void draw_frame_log_panel(SDL_Renderer *r, R01sUi *ui) {
+    static const char *const cat_tag[R01S_FLOG_CAT_N] = {"SYS", "CPU", "FLH", "MAP", "VRM", "IO ",
+                                                         "BEM", "BG0", "SPR", "VID", "PLY"};
+    int page;
+    int pages;
+    int start;
+    int i;
+    int y;
+    int panel_h;
+    int line_h;
+    char hdr[96];
+    char body[R01S_FLOG_LINE_LEN + 16];
+
+    (void)ui;
+    if (!r01s_frame_log_enabled()) {
+        return;
+    }
+    line_h = font_line_h();
+    if (line_h < 10) {
+        line_h = 10;
+    }
+    panel_h = 16 + (R01S_FLOG_PAGE_LINES + 1) * line_h + 8;
+    if (panel_h > R01S_LOGIC_H - 24) {
+        panel_h = R01S_LOGIC_H - 24;
+    }
+    fill_rect_a(r, 8, R01S_LOGIC_H - panel_h - 8, R01S_LOGIC_W - 16, panel_h, 8, 10, 14, 220);
+    draw_rect(r, 8, R01S_LOGIC_H - panel_h - 8, R01S_LOGIC_W - 16, panel_h, 90, 110, 100);
+
+    page = r01s_frame_log_page();
+    pages = r01s_frame_log_page_count();
+    snprintf(hdr, sizeof(hdr), "1_FRAME_DEBUG  %s  lines=%d  page %d/%d  [ ] PgUp/PgDn",
+             r01s_frame_log_sealed() ? "SEALED" : (r01s_frame_log_active() ? "LOGGING" : "off"),
+             r01s_frame_log_line_count(), page + 1, pages);
+    font_draw(r, 14, R01S_LOGIC_H - panel_h - 4, hdr, 200, 220, 180);
+
+    start = page * R01S_FLOG_PAGE_LINES;
+    y = R01S_LOGIC_H - panel_h - 4 + line_h + 4;
+    for (i = 0; i < R01S_FLOG_PAGE_LINES; i++) {
+        const R01sFrameLogLine *ln = r01s_frame_log_line(start + i);
+        uint8_t cr, cg, cb;
+        const char *tag;
+        if (!ln) {
+            break;
+        }
+        r01s_frame_log_cat_rgb(ln->cat, &cr, &cg, &cb);
+        tag = ((int)ln->cat >= 0 && ln->cat < R01S_FLOG_CAT_N) ? cat_tag[ln->cat] : "???";
+        if (ln->count > 1) {
+            snprintf(body, sizeof(body), "%s %s  x%u", tag, ln->text, (unsigned)ln->count);
+        } else {
+            snprintf(body, sizeof(body), "%s %s", tag, ln->text);
+        }
+        font_draw_ellipsize(r, 14, y, body, R01S_LOGIC_W - 36, cr, cg, cb);
+        y += line_h;
+    }
+}
+
 void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     SDL_Rect view_clip = {R01S_UI_VIEW_X, R01S_UI_VIEW_Y, R01S_UI_VIEW_W, R01S_UI_VIEW_H};
     char fps_buf[16];
@@ -1370,6 +1427,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     draw_legend_strip(r, ui);
     draw_controller_overlay(r, 0, &ui->gamepad[0]);
     draw_controller_overlay(r, 1, &ui->gamepad[1]);
+    draw_frame_log_panel(r, ui);
 
     fill_rect(r, 0, R01S_LOGIC_H - R01S_UI_HUD_BOTTOM, R01S_LOGIC_W, R01S_UI_HUD_BOTTOM, 12, 14, 16);
     snprintf(fps_buf, sizeof(fps_buf), "%d FPS %d STP", ui->fps, ui->sim_steps);

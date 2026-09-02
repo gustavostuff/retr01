@@ -2,6 +2,7 @@
 #include "board_debug.h"
 
 #include "retr01_sim/board.h"
+#include "retr01_sim/frame_log.h"
 #include "retr01_sim/timing.h"
 
 #include <SDL.h>
@@ -149,6 +150,8 @@ int main(int argc, char **argv) {
     if (apply_delay_args(argc, argv) != 0) {
         return 1;
     }
+
+    r01s_frame_log_configure_from_env();
 
     if (r01s_app_init(&app, 0) != 0) {
         return 1;

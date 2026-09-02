@@ -1,0 +1,1580 @@
+retr01_sim 1_FRAME_DEBUG trace
+sealed: Wed Sep  2 16:34:26 2026
+lines: 1576  bg_ready=1 sprite_ready=1
+
+[0] 1_FRAME_DEBUG armed (byte-scale IC log, paginate [ ] or PgUp/PgDn)
+[3] MAP RD flash $000034=00  x15
+[3] MAP RD flash $000034..$000035 n=2 first=00 last=10
+[3] MAP RD flash $000035=10  x14
+[3] MAP RD flash $000035..$000036 n=2 first=10 last=20
+[3] MAP RD flash $000036=20  x14
+[3] MAP RD flash $000036..$000037 n=2 first=20 last=30
+[3] MAP RD flash $000037=30  x14
+[3] MAP RD flash $000037..$000038 n=2 first=30 last=00
+[3] MAP RD flash $000038=00  x14
+[3] MAP RD flash $000038..$000039 n=2 first=00 last=13
+[3] MAP RD flash $000039=13  x14
+[3] MAP RD flash $000039..$00003A n=2 first=13 last=24
+[3] MAP RD flash $00003A=24  x14
+[3] MAP RD flash $00003A..$00003B n=2 first=24 last=34
+[3] MAP RD flash $00003B=34  x14
+[3] MAP RD flash $00003B..$00003C n=2 first=34 last=00
+[3] MAP RD flash $00003C=00  x14
+[3] MAP RD flash $00003C..$00003D n=2 first=00 last=1C
+[3] MAP RD flash $00003D=1C  x14
+[3] MAP RD flash $00003D..$00003E n=2 first=1C last=2C
+[3] MAP RD flash $00003E=2C  x14
+[3] MAP RD flash $00003E..$00003F n=2 first=2C last=3B
+[3] MAP RD flash $00003F=3B  x14
+[3] MAP RD flash $00003F..$000040 n=2 first=3B last=00
+[3] MAP RD flash $000040=00  x14
+[3] MAP RD flash $000040..$000041 n=2 first=00 last=2E
+[3] MAP RD flash $000041=2E  x14
+[3] MAP RD flash $000041..$000042 n=2 first=2E last=3E
+[3] MAP RD flash $000042=3E  x14
+[3] MAP RD flash $000042..$000043 n=2 first=3E last=30
+[3] MAP RD flash $000043=30  x15
+[3] MAP RD flash $0000B4=00  x15
+[3] MAP RD flash $0000B4..$0000B5 n=2 first=00 last=1F
+[3] MAP RD flash $0000B5=1F  x14
+[3] MAP RD flash $0000B5..$0000B6 n=2 first=1F last=22
+[3] MAP RD flash $0000B6=22  x14
+[3] MAP RD flash $0000B6..$0000B7 n=2 first=22 last=32
+[3] MAP RD flash $0000B7=32  x14
+[3] MAP RD flash $0000B7..$0000B8 n=2 first=32 last=00
+[3] MAP RD flash $0000B8=00  x14
+[3] MAP RD flash $0000B8..$0000B9 n=2 first=00 last=28
+[3] MAP RD flash $0000B9=28  x14
+[3] MAP RD flash $0000B9..$0000BA n=2 first=28 last=3A
+[3] MAP RD flash $0000BA=3A  x14
+[3] MAP RD flash $0000BA..$0000BB n=2 first=3A last=30
+[3] MAP RD flash $0000BB=30  x14
+[3] MAP RD flash $0000BB..$0000BC n=2 first=30 last=00
+[3] MAP RD flash $0000BC=00  x14
+[3] MAP RD flash $0000BC..$0000BD n=2 first=00 last=2E
+[3] MAP RD flash $0000BD=2E  x14
+[3] MAP RD flash $0000BD..$0000BE n=2 first=2E last=3F
+[3] MAP RD flash $0000BE=3F  x14
+[3] MAP RD flash $0000BE..$0000BF n=2 first=3F last=30
+[3] MAP RD flash $0000BF=30  x14
+[3] MAP RD flash $0000BF..$0000C0 n=2 first=30 last=00
+[3] MAP RD flash $0000C0=00  x14
+[3] MAP RD flash $0000C0..$0000C1 n=2 first=00 last=2C
+[3] MAP RD flash $0000C1=2C  x14
+[3] MAP RD flash $0000C1..$0000C2 n=2 first=2C last=37
+[3] MAP RD flash $0000C2=37  x14
+[3] MAP RD flash $0000C2..$0000C3 n=2 first=37 last=00
+[3] MAP RD flash $0000C3=00  x15
+[3] MAP RD flash $01262C=00  x16
+[4] VRAM WR $000000=00  x10
+[3] MAP RD flash $01262D=00  x16
+[4] VRAM WR $000001=00  x10
+[3] MAP RD flash $01262E=00  x16
+[4] VRAM WR $000002=00  x10
+[3] MAP RD flash $01262F=00  x16
+[4] VRAM WR $000003=00  x10
+[3] MAP RD flash $012630=00  x16
+[4] VRAM WR $000004=00  x10
+[3] MAP RD flash $012631=00  x16
+[4] VRAM WR $000005=00  x10
+[3] MAP RD flash $012632=00  x16
+[4] VRAM WR $000006=00  x10
+[3] MAP RD flash $012633=00  x16
+[4] VRAM WR $000007=00  x10
+[3] MAP RD flash $012634=00  x16
+[4] VRAM WR $000008=00  x10
+[3] MAP RD flash $012635=00  x16
+[4] VRAM WR $000009=00  x10
+[3] MAP RD flash $012636=00  x16
+[4] VRAM WR $00000A=00  x10
+[3] MAP RD flash $012637=00  x16
+[4] VRAM WR $00000B=00  x10
+[3] MAP RD flash $012638=01  x16
+[4] VRAM WR $00000C=01  x10
+[3] MAP RD flash $012639=01  x16
+[4] VRAM WR $00000D=01  x10
+[3] MAP RD flash $01263A=01  x16
+[4] VRAM WR $00000E=01  x10
+[3] MAP RD flash $01263B=01  x16
+[4] VRAM WR $00000F=01  x10
+[3] MAP RD flash $01263C=00  x16
+[4] VRAM WR $000010=00  x10
+[3] MAP RD flash $01263D=00  x16
+[4] VRAM WR $000011=00  x10
+[3] MAP RD flash $01263E=01  x16
+[4] VRAM WR $000012=01  x10
+[3] MAP RD flash $01263F=01  x16
+[4] VRAM WR $000013=01  x10
+[3] MAP RD flash $012640=01  x16
+[4] VRAM WR $000014=01  x10
+[3] MAP RD flash $012641=01  x16
+[4] VRAM WR $000015=01  x10
+[3] MAP RD flash $012642=01  x16
+[4] VRAM WR $000016=01  x10
+[3] MAP RD flash $012643=00  x16
+[4] VRAM WR $000017=00  x10
+[3] MAP RD flash $012644=00  x16
+[4] VRAM WR $000018=00  x10
+[3] MAP RD flash $012645=01  x16
+[4] VRAM WR $000019=01  x10
+[3] MAP RD flash $012646=01  x16
+[4] VRAM WR $00001A=01  x10
+[3] MAP RD flash $012647=01  x16
+[4] VRAM WR $00001B=01  x10
+[3] MAP RD flash $012648=01  x16
+[4] VRAM WR $00001C=01  x10
+[3] MAP RD flash $012649=01  x16
+[4] VRAM WR $00001D=01  x10
+[3] MAP RD flash $01264A=01  x16
+[4] VRAM WR $00001E=01  x10
+[3] MAP RD flash $01264B=01  x16
+[4] VRAM WR $00001F=01  x10
+[3] MAP RD flash $01264C=00  x16
+[4] VRAM WR $000020=00  x10
+[3] MAP RD flash $01264D=00  x16
+[4] VRAM WR $000021=00  x10
+[3] MAP RD flash $01264E=01  x16
+[4] VRAM WR $000022=01  x10
+[3] MAP RD flash $01264F=01  x16
+[4] VRAM WR $000023=01  x10
+[3] MAP RD flash $012650=01  x16
+[4] VRAM WR $000024=01  x10
+[3] MAP RD flash $012651=01  x16
+[4] VRAM WR $000025=01  x10
+[3] MAP RD flash $012652=01  x16
+[4] VRAM WR $000026=01  x10
+[3] MAP RD flash $012653=00  x16
+[4] VRAM WR $000027=00  x10
+[3] MAP RD flash $012654=00  x16
+[4] VRAM WR $000028=00  x10
+[3] MAP RD flash $012655=01  x16
+[4] VRAM WR $000029=01  x10
+[3] MAP RD flash $012656=01  x16
+[4] VRAM WR $00002A=01  x10
+[3] MAP RD flash $012657=01  x16
+[4] VRAM WR $00002B=01  x10
+[3] MAP RD flash $012658=01  x16
+[4] VRAM WR $00002C=01  x10
+[3] MAP RD flash $012659=01  x16
+[4] VRAM WR $00002D=01  x10
+[3] MAP RD flash $01265A=00  x16
+[4] VRAM WR $00002E=00  x10
+[3] MAP RD flash $01265B=00  x16
+[4] VRAM WR $00002F=00  x10
+[3] MAP RD flash $01265C=00  x16
+[4] VRAM WR $000030=00  x10
+[3] MAP RD flash $01265D=00  x16
+[4] VRAM WR $000031=00  x10
+[3] MAP RD flash $01265E=01  x16
+[4] VRAM WR $000032=01  x10
+[3] MAP RD flash $01265F=01  x16
+[4] VRAM WR $000033=01  x10
+[3] MAP RD flash $012660=01  x16
+[4] VRAM WR $000034=01  x10
+[3] MAP RD flash $012661=01  x16
+[4] VRAM WR $000035=01  x10
+[3] MAP RD flash $012662=01  x16
+[4] VRAM WR $000036=01  x10
+[3] MAP RD flash $012663=00  x16
+[4] VRAM WR $000037=00  x10
+[3] MAP RD flash $012664=01  x16
+[4] VRAM WR $000038=01  x10
+[3] MAP RD flash $012665=01  x16
+[4] VRAM WR $000039=01  x10
+[3] MAP RD flash $012666=01  x16
+[4] VRAM WR $00003A=01  x10
+[3] MAP RD flash $012667=01  x16
+[4] VRAM WR $00003B=01  x10
+[3] MAP RD flash $012668=01  x16
+[4] VRAM WR $00003C=01  x10
+[3] MAP RD flash $012669=00  x16
+[4] VRAM WR $00003D=00  x10
+[3] MAP RD flash $01266A=00  x16
+[4] VRAM WR $00003E=00  x10
+[3] MAP RD flash $01266B=00  x16
+[4] VRAM WR $00003F=00  x10
+[3] MAP RD flash $01266C=00  x16
+[4] VRAM WR $000040=00  x10
+[3] MAP RD flash $01266D=00  x16
+[4] VRAM WR $000041=00  x10
+[3] MAP RD flash $01266E=01  x16
+[4] VRAM WR $000042=01  x10
+[3] MAP RD flash $01266F=01  x16
+[4] VRAM WR $000043=01  x10
+[3] MAP RD flash $012670=01  x16
+[4] VRAM WR $000044=01  x10
+[3] MAP RD flash $012671=01  x16
+[4] VRAM WR $000045=01  x10
+[3] MAP RD flash $012672=01  x16
+[4] VRAM WR $000046=01  x10
+[3] MAP RD flash $012673=00  x16
+[4] VRAM WR $000047=00  x10
+[3] MAP RD flash $012674=01  x16
+[4] VRAM WR $000048=01  x10
+[3] MAP RD flash $012675=01  x16
+[4] VRAM WR $000049=01  x10
+[3] MAP RD flash $012676=01  x16
+[4] VRAM WR $00004A=01  x10
+[3] MAP RD flash $012677=00  x16
+[4] VRAM WR $00004B=00  x10
+[3] MAP RD flash $012678=00  x16
+[4] VRAM WR $00004C=00  x10
+[3] MAP RD flash $012679=00  x16
+[4] VRAM WR $00004D=00  x10
+[3] MAP RD flash $01267A=00  x16
+[4] VRAM WR $00004E=00  x10
+[3] MAP RD flash $01267B=00  x16
+[4] VRAM WR $00004F=00  x10
+[3] MAP RD flash $01267C=00  x16
+[4] VRAM WR $000050=00  x10
+[3] MAP RD flash $01267D=00  x16
+[4] VRAM WR $000051=00  x10
+[3] MAP RD flash $01267E=01  x16
+[4] VRAM WR $000052=01  x10
+[3] MAP RD flash $01267F=01  x16
+[4] VRAM WR $000053=01  x10
+[3] MAP RD flash $012680=01  x16
+[4] VRAM WR $000054=01  x10
+[3] MAP RD flash $012681=01  x16
+[4] VRAM WR $000055=01  x10
+[3] MAP RD flash $012682=01  x16
+[4] VRAM WR $000056=01  x10
+[3] MAP RD flash $012683=01  x16
+[4] VRAM WR $000057=01  x10
+[3] MAP RD flash $012684=01  x16
+[4] VRAM WR $000058=01  x10
+[3] MAP RD flash $012685=01  x16
+[4] VRAM WR $000059=01  x10
+[3] MAP RD flash $012686=01  x16
+[4] VRAM WR $00005A=01  x10
+[3] MAP RD flash $012687=01  x16
+[4] VRAM WR $00005B=01  x10
+[3] MAP RD flash $012688=00  x16
+[4] VRAM WR $00005C=00  x10
+[3] MAP RD flash $012689=00  x16
+[4] VRAM WR $00005D=00  x10
+[3] MAP RD flash $01268A=00  x16
+[4] VRAM WR $00005E=00  x10
+[3] MAP RD flash $01268B=01  x16
+[4] VRAM WR $00005F=01  x10
+[3] MAP RD flash $01268C=00  x16
+[4] VRAM WR $000060=00  x10
+[3] MAP RD flash $01268D=01  x16
+[4] VRAM WR $000061=01  x10
+[3] MAP RD flash $01268E=01  x16
+[4] VRAM WR $000062=01  x10
+[3] MAP RD flash $01268F=01  x16
+[4] VRAM WR $000063=01  x10
+[3] MAP RD flash $012690=01  x16
+[4] VRAM WR $000064=01  x10
+[3] MAP RD flash $012691=01  x16
+[4] VRAM WR $000065=01  x10
+[3] MAP RD flash $012692=01  x16
+[4] VRAM WR $000066=01  x10
+[3] MAP RD flash $012693=01  x16
+[4] VRAM WR $000067=01  x10
+[3] MAP RD flash $012694=01  x16
+[4] VRAM WR $000068=01  x10
+[3] MAP RD flash $012695=01  x16
+[4] VRAM WR $000069=01  x10
+[3] MAP RD flash $012696=01  x16
+[4] VRAM WR $00006A=01  x10
+[3] MAP RD flash $012697=01  x16
+[4] VRAM WR $00006B=01  x10
+[3] MAP RD flash $012698=01  x16
+[4] VRAM WR $00006C=01  x10
+[3] MAP RD flash $012699=01  x16
+[4] VRAM WR $00006D=01  x10
+[3] MAP RD flash $01269A=00  x16
+[4] VRAM WR $00006E=00  x10
+[3] MAP RD flash $01269B=01  x16
+[4] VRAM WR $00006F=01  x10
+[3] MAP RD flash $01269C=01  x16
+[4] VRAM WR $000070=01  x10
+[3] MAP RD flash $01269D=01  x16
+[4] VRAM WR $000071=01  x10
+[3] MAP RD flash $01269E=01  x16
+[4] VRAM WR $000072=01  x10
+[3] MAP RD flash $01269F=01  x16
+[4] VRAM WR $000073=01  x10
+[3] MAP RD flash $0126A0=01  x16
+[4] VRAM WR $000074=01  x10
+[3] MAP RD flash $0126A1=01  x16
+[4] VRAM WR $000075=01  x10
+[3] MAP RD flash $0126A2=01  x16
+[4] VRAM WR $000076=01  x10
+[3] MAP RD flash $0126A3=01  x16
+[4] VRAM WR $000077=01  x10
+[3] MAP RD flash $0126A4=01  x16
+[4] VRAM WR $000078=01  x10
+[3] MAP RD flash $0126A5=01  x16
+[4] VRAM WR $000079=01  x10
+[3] MAP RD flash $0126A6=01  x16
+[4] VRAM WR $00007A=01  x10
+[3] MAP RD flash $0126A7=01  x16
+[4] VRAM WR $00007B=01  x10
+[3] MAP RD flash $0126A8=01  x16
+[4] VRAM WR $00007C=01  x10
+[3] MAP RD flash $0126A9=01  x16
+[4] VRAM WR $00007D=01  x10
+[3] MAP RD flash $0126AA=01  x16
+[4] VRAM WR $00007E=01  x10
+[3] MAP RD flash $0126AB=01  x16
+[4] VRAM WR $00007F=01  x10
+[3] MAP RD flash $0126AC=01  x16
+[4] VRAM WR $000080=01  x10
+[3] MAP RD flash $0126AD=01  x16
+[4] VRAM WR $000081=01  x10
+[3] MAP RD flash $0126AE=01  x16
+[4] VRAM WR $000082=01  x10
+[3] MAP RD flash $0126AF=01  x16
+[4] VRAM WR $000083=01  x10
+[3] MAP RD flash $0126B0=01  x16
+[4] VRAM WR $000084=01  x10
+[3] MAP RD flash $0126B1=01  x16
+[4] VRAM WR $000085=01  x10
+[3] MAP RD flash $0126B2=01  x16
+[4] VRAM WR $000086=01  x10
+[3] MAP RD flash $0126B3=01  x16
+[4] VRAM WR $000087=01  x10
+[3] MAP RD flash $0126B4=01  x16
+[4] VRAM WR $000088=01  x10
+[3] MAP RD flash $0126B5=01  x16
+[4] VRAM WR $000089=01  x10
+[3] MAP RD flash $0126B6=01  x16
+[4] VRAM WR $00008A=01  x10
+[3] MAP RD flash $0126B7=01  x16
+[4] VRAM WR $00008B=01  x10
+[3] MAP RD flash $0126B8=01  x16
+[4] VRAM WR $00008C=01  x10
+[3] MAP RD flash $0126B9=01  x16
+[4] VRAM WR $00008D=01  x10
+[3] MAP RD flash $0126BA=01  x16
+[4] VRAM WR $00008E=01  x10
+[3] MAP RD flash $0126BB=01  x16
+[4] VRAM WR $00008F=01  x10
+[3] MAP RD flash $0126BC=01  x16
+[4] VRAM WR $000090=01  x10
+[3] MAP RD flash $0126BD=01  x16
+[4] VRAM WR $000091=01  x10
+[3] MAP RD flash $0126BE=01  x16
+[4] VRAM WR $000092=01  x10
+[3] MAP RD flash $0126BF=01  x16
+[4] VRAM WR $000093=01  x10
+[3] MAP RD flash $0126C0=01  x16
+[4] VRAM WR $000094=01  x10
+[3] MAP RD flash $0126C1=01  x16
+[4] VRAM WR $000095=01  x10
+[3] MAP RD flash $0126C2=01  x16
+[4] VRAM WR $000096=01  x10
+[3] MAP RD flash $0126C3=00  x16
+[4] VRAM WR $000097=00  x10
+[3] MAP RD flash $0126C4=01  x16
+[4] VRAM WR $000098=01  x10
+[3] MAP RD flash $0126C5=01  x16
+[4] VRAM WR $000099=01  x10
+[3] MAP RD flash $0126C6=01  x16
+[4] VRAM WR $00009A=01  x10
+[3] MAP RD flash $0126C7=01  x16
+[4] VRAM WR $00009B=01  x10
+[3] MAP RD flash $0126C8=01  x16
+[4] VRAM WR $00009C=01  x10
+[3] MAP RD flash $0126C9=01  x16
+[4] VRAM WR $00009D=01  x10
+[3] MAP RD flash $0126CA=01  x16
+[4] VRAM WR $00009E=01  x10
+[3] MAP RD flash $0126CB=01  x16
+[4] VRAM WR $00009F=01  x10
+[3] MAP RD flash $0126CC=01  x16
+[4] VRAM WR $0000A0=01  x10
+[3] MAP RD flash $0126CD=01  x16
+[4] VRAM WR $0000A1=01  x10
+[3] MAP RD flash $0126CE=01  x16
+[4] VRAM WR $0000A2=01  x10
+[3] MAP RD flash $0126CF=00  x16
+[4] VRAM WR $0000A3=00  x10
+[3] MAP RD flash $0126D0=00  x16
+[4] VRAM WR $0000A4=00  x10
+[3] MAP RD flash $0126D1=00  x16
+[4] VRAM WR $0000A5=00  x10
+[3] MAP RD flash $0126D2=00  x16
+[4] VRAM WR $0000A6=00  x10
+[3] MAP RD flash $0126D3=00  x16
+[4] VRAM WR $0000A7=00  x10
+[3] MAP RD flash $0126D4=01  x16
+[4] VRAM WR $0000A8=01  x10
+[3] MAP RD flash $0126D5=01  x16
+[4] VRAM WR $0000A9=01  x10
+[3] MAP RD flash $0126D6=01  x16
+[4] VRAM WR $0000AA=01  x10
+[3] MAP RD flash $0126D7=01  x16
+[4] VRAM WR $0000AB=01  x10
+[3] MAP RD flash $0126D8=01  x16
+[4] VRAM WR $0000AC=01  x10
+[3] MAP RD flash $0126D9=01  x16
+[4] VRAM WR $0000AD=01  x10
+[3] MAP RD flash $0126DA=01  x16
+[4] VRAM WR $0000AE=01  x10
+[3] MAP RD flash $0126DB=01  x16
+[4] VRAM WR $0000AF=01  x10
+[3] MAP RD flash $0126DC=00  x16
+[4] VRAM WR $0000B0=00  x10
+[3] MAP RD flash $0126DD=00  x16
+[4] VRAM WR $0000B1=00  x10
+[3] MAP RD flash $0126DE=00  x16
+[4] VRAM WR $0000B2=00  x10
+[3] MAP RD flash $0126DF=00  x16
+[4] VRAM WR $0000B3=00  x10
+[3] MAP RD flash $0126E0=00  x16
+[4] VRAM WR $0000B4=00  x10
+[3] MAP RD flash $0126E1=00  x16
+[4] VRAM WR $0000B5=00  x10
+[3] MAP RD flash $0126E2=00  x16
+[4] VRAM WR $0000B6=00  x10
+[3] MAP RD flash $0126E3=01  x16
+[4] VRAM WR $0000B7=01  x10
+[3] MAP RD flash $0126E4=01  x16
+[4] VRAM WR $0000B8=01  x10
+[3] MAP RD flash $0126E5=01  x16
+[4] VRAM WR $0000B9=01  x10
+[3] MAP RD flash $0126E6=01  x16
+[4] VRAM WR $0000BA=01  x10
+[3] MAP RD flash $0126E7=01  x16
+[4] VRAM WR $0000BB=01  x10
+[3] MAP RD flash $0126E8=01  x16
+[4] VRAM WR $0000BC=01  x10
+[3] MAP RD flash $0126E9=01  x16
+[4] VRAM WR $0000BD=01  x10
+[3] MAP RD flash $0126EA=01  x16
+[4] VRAM WR $0000BE=01  x10
+[3] MAP RD flash $0126EB=01  x16
+[4] VRAM WR $0000BF=01  x10
+[3] MAP RD flash $0126EC=00  x16
+[4] VRAM WR $0000C0=00  x10
+[3] MAP RD flash $0126ED=00  x16
+[4] VRAM WR $0000C1=00  x10
+[3] MAP RD flash $0126EE=00  x16
+[4] VRAM WR $0000C2=00  x10
+[3] MAP RD flash $0126EF=00  x16
+[4] VRAM WR $0000C3=00  x10
+[3] MAP RD flash $0126F0=00  x16
+[4] VRAM WR $0000C4=00  x10
+[3] MAP RD flash $0126F1=00  x16
+[4] VRAM WR $0000C5=00  x10
+[3] MAP RD flash $0126F2=00  x16
+[4] VRAM WR $0000C6=00  x10
+[3] MAP RD flash $0126F3=01  x16
+[4] VRAM WR $0000C7=01  x10
+[3] MAP RD flash $0126F4=01  x16
+[4] VRAM WR $0000C8=01  x10
+[3] MAP RD flash $0126F5=01  x16
+[4] VRAM WR $0000C9=01  x10
+[3] MAP RD flash $0126F6=01  x16
+[4] VRAM WR $0000CA=01  x10
+[3] MAP RD flash $0126F7=01  x16
+[4] VRAM WR $0000CB=01  x10
+[3] MAP RD flash $0126F8=01  x16
+[4] VRAM WR $0000CC=01  x10
+[3] MAP RD flash $0126F9=01  x16
+[4] VRAM WR $0000CD=01  x10
+[3] MAP RD flash $0126FA=01  x16
+[4] VRAM WR $0000CE=01  x10
+[3] MAP RD flash $0126FB=00  x16
+[4] VRAM WR $0000CF=00  x10
+[3] MAP RD flash $0126FC=00  x16
+[4] VRAM WR $0000D0=00  x10
+[3] MAP RD flash $0126FD=00  x16
+[4] VRAM WR $0000D1=00  x10
+[3] MAP RD flash $0126FE=00  x16
+[4] VRAM WR $0000D2=00  x10
+[3] MAP RD flash $0126FF=00  x16
+[4] VRAM WR $0000D3=00  x10
+[3] MAP RD flash $012700=00  x16
+[4] VRAM WR $0000D4=00  x10
+[3] MAP RD flash $012701=00  x16
+[4] VRAM WR $0000D5=00  x10
+[3] MAP RD flash $012702=01  x16
+[4] VRAM WR $0000D6=01  x10
+[3] MAP RD flash $012703=01  x16
+[4] VRAM WR $0000D7=01  x10
+[3] MAP RD flash $012704=01  x16
+[4] VRAM WR $0000D8=01  x10
+[3] MAP RD flash $012705=01  x16
+[4] VRAM WR $0000D9=01  x10
+[3] MAP RD flash $012706=01  x16
+[4] VRAM WR $0000DA=01  x10
+[3] MAP RD flash $012707=01  x16
+[4] VRAM WR $0000DB=01  x10
+[3] MAP RD flash $012708=00  x16
+[4] VRAM WR $0000DC=00  x10
+[3] MAP RD flash $012709=00  x16
+[4] VRAM WR $0000DD=00  x10
+[3] MAP RD flash $01270A=00  x16
+[4] VRAM WR $0000DE=00  x10
+[3] MAP RD flash $01270B=00  x16
+[4] VRAM WR $0000DF=00  x10
+[3] MAP RD flash $01270C=00  x16
+[4] VRAM WR $0000E0=00  x10
+[3] MAP RD flash $01270D=00  x16
+[4] VRAM WR $0000E1=00  x10
+[3] MAP RD flash $01270E=00  x16
+[4] VRAM WR $0000E2=00  x10
+[3] MAP RD flash $01270F=00  x16
+[4] VRAM WR $0000E3=00  x10
+[3] MAP RD flash $012710=00  x16
+[4] VRAM WR $0000E4=00  x10
+[3] MAP RD flash $012711=00  x16
+[4] VRAM WR $0000E5=00  x10
+[3] MAP RD flash $012712=01  x16
+[4] VRAM WR $0000E6=01  x10
+[3] MAP RD flash $012713=01  x16
+[4] VRAM WR $0000E7=01  x10
+[3] MAP RD flash $012714=01  x16
+[4] VRAM WR $0000E8=01  x10
+[3] MAP RD flash $012715=01  x16
+[4] VRAM WR $0000E9=01  x10
+[3] MAP RD flash $012716=00  x16
+[4] VRAM WR $0000EA=00  x10
+[3] MAP RD flash $012717=00  x16
+[4] VRAM WR $0000EB=00  x10
+[3] MAP RD flash $012718=00  x16
+[4] VRAM WR $0000EC=00  x10
+[3] MAP RD flash $012719=00  x16
+[4] VRAM WR $0000ED=00  x10
+[3] MAP RD flash $01271A=00  x16
+[4] VRAM WR $0000EE=00  x10
+[3] MAP RD flash $01271B=00  x16
+[4] VRAM WR $0000EF=00  x10
+[3] MAP RD flash $01271C=44  x16
+[4] VRAM WR $0000F0=44  x10
+[3] MAP RD flash $01271D=44  x16
+[4] VRAM WR $0000F1=44  x10
+[3] MAP RD flash $01271E=44  x16
+[4] VRAM WR $0000F2=44  x10
+[3] MAP RD flash $01271F=44  x16
+[4] VRAM WR $0000F3=44  x10
+[3] MAP RD flash $012720=44  x16
+[4] VRAM WR $0000F4=44  x10
+[3] MAP RD flash $012721=44  x16
+[4] VRAM WR $0000F5=44  x10
+[3] MAP RD flash $012722=44  x16
+[4] VRAM WR $0000F6=44  x10
+[3] MAP RD flash $012723=44  x16
+[4] VRAM WR $0000F7=44  x10
+[3] MAP RD flash $012724=44  x16
+[4] VRAM WR $0000F8=44  x10
+[3] MAP RD flash $012725=44  x16
+[4] VRAM WR $0000F9=44  x10
+[3] MAP RD flash $012726=44  x16
+[4] VRAM WR $0000FA=44  x10
+[3] MAP RD flash $012727=44  x16
+[4] VRAM WR $0000FB=44  x10
+[3] MAP RD flash $012728=00  x16
+[4] VRAM WR $0000FC=00  x10
+[3] MAP RD flash $012729=00  x16
+[4] VRAM WR $0000FD=00  x10
+[3] MAP RD flash $01272A=00  x16
+[4] VRAM WR $0000FE=00  x10
+[3] MAP RD flash $01272B=00  x16
+[4] VRAM WR $0000FF=00  x10
+[3] MAP RD flash $01272C=44  x16
+[4] VRAM WR $000100=44  x10
+[3] MAP RD flash $01272D=44  x16
+[4] VRAM WR $000101=44  x10
+[3] MAP RD flash $01272E=00  x16
+[4] VRAM WR $000102=00  x10
+[3] MAP RD flash $01272F=00  x16
+[4] VRAM WR $000103=00  x10
+[3] MAP RD flash $012730=00  x16
+[4] VRAM WR $000104=00  x10
+[3] MAP RD flash $012731=00  x16
+[4] VRAM WR $000105=00  x10
+[3] MAP RD flash $012732=00  x16
+[4] VRAM WR $000106=00  x10
+[3] MAP RD flash $012733=44  x16
+[4] VRAM WR $000107=44  x10
+[3] MAP RD flash $012734=44  x16
+[4] VRAM WR $000108=44  x10
+[3] MAP RD flash $012735=00  x16
+[4] VRAM WR $000109=00  x10
+[3] MAP RD flash $012736=00  x16
+[4] VRAM WR $00010A=00  x10
+[3] MAP RD flash $012737=00  x16
+[4] VRAM WR $00010B=00  x10
+[3] MAP RD flash $012738=00  x16
+[4] VRAM WR $00010C=00  x10
+[3] MAP RD flash $012739=00  x16
+[4] VRAM WR $00010D=00  x10
+[3] MAP RD flash $01273A=00  x16
+[4] VRAM WR $00010E=00  x10
+[3] MAP RD flash $01273B=00  x16
+[4] VRAM WR $00010F=00  x10
+[3] MAP RD flash $01273C=44  x16
+[4] VRAM WR $000110=44  x10
+[3] MAP RD flash $01273D=44  x16
+[4] VRAM WR $000111=44  x10
+[3] MAP RD flash $01273E=00  x16
+[4] VRAM WR $000112=00  x10
+[3] MAP RD flash $01273F=00  x16
+[4] VRAM WR $000113=00  x10
+[3] MAP RD flash $012740=00  x16
+[4] VRAM WR $000114=00  x10
+[3] MAP RD flash $012741=00  x16
+[4] VRAM WR $000115=00  x10
+[3] MAP RD flash $012742=00  x16
+[4] VRAM WR $000116=00  x10
+[3] MAP RD flash $012743=44  x16
+[4] VRAM WR $000117=44  x10
+[3] MAP RD flash $012744=44  x16
+[4] VRAM WR $000118=44  x10
+[3] MAP RD flash $012745=00  x16
+[4] VRAM WR $000119=00  x10
+[3] MAP RD flash $012746=00  x16
+[4] VRAM WR $00011A=00  x10
+[3] MAP RD flash $012747=00  x16
+[4] VRAM WR $00011B=00  x10
+[3] MAP RD flash $012748=00  x16
+[4] VRAM WR $00011C=00  x10
+[3] MAP RD flash $012749=00  x16
+[4] VRAM WR $00011D=00  x10
+[3] MAP RD flash $01274A=44  x16
+[4] VRAM WR $00011E=44  x10
+[3] MAP RD flash $01274B=44  x16
+[4] VRAM WR $00011F=44  x10
+[3] MAP RD flash $01274C=44  x16
+[4] VRAM WR $000120=44  x10
+[3] MAP RD flash $01274D=44  x16
+[4] VRAM WR $000121=44  x10
+[3] MAP RD flash $01274E=00  x16
+[4] VRAM WR $000122=00  x10
+[3] MAP RD flash $01274F=00  x16
+[4] VRAM WR $000123=00  x10
+[3] MAP RD flash $012750=00  x16
+[4] VRAM WR $000124=00  x10
+[3] MAP RD flash $012751=00  x16
+[4] VRAM WR $000125=00  x10
+[3] MAP RD flash $012752=00  x16
+[4] VRAM WR $000126=00  x10
+[3] MAP RD flash $012753=44  x16
+[4] VRAM WR $000127=44  x10
+[3] MAP RD flash $012754=00  x16
+[4] VRAM WR $000128=00  x10
+[3] MAP RD flash $012755=00  x16
+[4] VRAM WR $000129=00  x10
+[3] MAP RD flash $012756=00  x16
+[4] VRAM WR $00012A=00  x10
+[3] MAP RD flash $012757=00  x16
+[4] VRAM WR $00012B=00  x10
+[3] MAP RD flash $012758=00  x16
+[4] VRAM WR $00012C=00  x10
+[3] MAP RD flash $012759=44  x16
+[4] VRAM WR $00012D=44  x10
+[3] MAP RD flash $01275A=44  x16
+[4] VRAM WR $00012E=44  x10
+[3] MAP RD flash $01275B=44  x16
+[4] VRAM WR $00012F=44  x10
+[3] MAP RD flash $01275C=44  x16
+[4] VRAM WR $000130=44  x10
+[3] MAP RD flash $01275D=44  x16
+[4] VRAM WR $000131=44  x10
+[3] MAP RD flash $01275E=00  x16
+[4] VRAM WR $000132=00  x10
+[3] MAP RD flash $01275F=00  x16
+[4] VRAM WR $000133=00  x10
+[3] MAP RD flash $012760=00  x16
+[4] VRAM WR $000134=00  x10
+[3] MAP RD flash $012761=00  x16
+[4] VRAM WR $000135=00  x10
+[3] MAP RD flash $012762=00  x16
+[4] VRAM WR $000136=00  x10
+[3] MAP RD flash $012763=44  x16
+[4] VRAM WR $000137=44  x10
+[3] MAP RD flash $012764=00  x16
+[4] VRAM WR $000138=00  x10
+[3] MAP RD flash $012765=00  x16
+[4] VRAM WR $000139=00  x10
+[3] MAP RD flash $012766=00  x16
+[4] VRAM WR $00013A=00  x10
+[3] MAP RD flash $012767=44  x16
+[4] VRAM WR $00013B=44  x10
+[3] MAP RD flash $012768=44  x16
+[4] VRAM WR $00013C=44  x10
+[3] MAP RD flash $012769=44  x16
+[4] VRAM WR $00013D=44  x10
+[3] MAP RD flash $01276A=44  x16
+[4] VRAM WR $00013E=44  x10
+[3] MAP RD flash $01276B=44  x16
+[4] VRAM WR $00013F=44  x10
+[3] MAP RD flash $01276C=44  x16
+[4] VRAM WR $000140=44  x10
+[3] MAP RD flash $01276D=04  x16
+[4] VRAM WR $000141=04  x10
+[3] MAP RD flash $01276E=00  x16
+[4] VRAM WR $000142=00  x10
+[3] MAP RD flash $01276F=00  x16
+[4] VRAM WR $000143=00  x10
+[3] MAP RD flash $012770=00  x16
+[4] VRAM WR $000144=00  x10
+[3] MAP RD flash $012771=00  x16
+[4] VRAM WR $000145=00  x10
+[3] MAP RD flash $012772=00  x16
+[4] VRAM WR $000146=00  x10
+[3] MAP RD flash $012773=00  x16
+[4] VRAM WR $000147=00  x10
+[3] MAP RD flash $012774=00  x16
+[4] VRAM WR $000148=00  x10
+[3] MAP RD flash $012775=00  x16
+[4] VRAM WR $000149=00  x10
+[3] MAP RD flash $012776=00  x16
+[4] VRAM WR $00014A=00  x10
+[3] MAP RD flash $012777=00  x16
+[4] VRAM WR $00014B=00  x10
+[3] MAP RD flash $012778=44  x16
+[4] VRAM WR $00014C=44  x10
+[3] MAP RD flash $012779=44  x16
+[4] VRAM WR $00014D=44  x10
+[3] MAP RD flash $01277A=44  x16
+[4] VRAM WR $00014E=44  x10
+[3] MAP RD flash $01277B=00  x16
+[4] VRAM WR $00014F=00  x10
+[3] MAP RD flash $01277C=44  x16
+[4] VRAM WR $000150=44  x10
+[3] MAP RD flash $01277D=00  x16
+[4] VRAM WR $000151=00  x10
+[3] MAP RD flash $01277E=00  x16
+[4] VRAM WR $000152=00  x10
+[3] MAP RD flash $01277F=00  x16
+[4] VRAM WR $000153=00  x10
+[3] MAP RD flash $012780=00  x16
+[4] VRAM WR $000154=00  x10
+[3] MAP RD flash $012781=00  x16
+[4] VRAM WR $000155=00  x10
+[3] MAP RD flash $012782=00  x16
+[4] VRAM WR $000156=00  x10
+[3] MAP RD flash $012783=00  x16
+[4] VRAM WR $000157=00  x10
+[3] MAP RD flash $012784=00  x16
+[4] VRAM WR $000158=00  x10
+[3] MAP RD flash $012785=00  x16
+[4] VRAM WR $000159=00  x10
+[3] MAP RD flash $012786=00  x16
+[4] VRAM WR $00015A=00  x10
+[3] MAP RD flash $012787=00  x16
+[4] VRAM WR $00015B=00  x10
+[3] MAP RD flash $012788=00  x16
+[4] VRAM WR $00015C=00  x10
+[3] MAP RD flash $012789=00  x16
+[4] VRAM WR $00015D=00  x10
+[3] MAP RD flash $01278A=44  x16
+[4] VRAM WR $00015E=44  x10
+[3] MAP RD flash $01278B=00  x16
+[4] VRAM WR $00015F=00  x10
+[3] MAP RD flash $01278C=00  x16
+[4] VRAM WR $000160=00  x10
+[3] MAP RD flash $01278D=00  x16
+[4] VRAM WR $000161=00  x10
+[3] MAP RD flash $01278E=00  x16
+[4] VRAM WR $000162=00  x10
+[3] MAP RD flash $01278F=00  x16
+[4] VRAM WR $000163=00  x10
+[3] MAP RD flash $012790=00  x16
+[4] VRAM WR $000164=00  x10
+[3] MAP RD flash $012791=00  x16
+[4] VRAM WR $000165=00  x10
+[3] MAP RD flash $012792=00  x16
+[4] VRAM WR $000166=00  x10
+[3] MAP RD flash $012793=00  x16
+[4] VRAM WR $000167=00  x10
+[3] MAP RD flash $012794=00  x16
+[4] VRAM WR $000168=00  x10
+[3] MAP RD flash $012795=00  x16
+[4] VRAM WR $000169=00  x10
+[3] MAP RD flash $012796=00  x16
+[4] VRAM WR $00016A=00  x10
+[3] MAP RD flash $012797=00  x16
+[4] VRAM WR $00016B=00  x10
+[3] MAP RD flash $012798=00  x16
+[4] VRAM WR $00016C=00  x10
+[3] MAP RD flash $012799=00  x16
+[4] VRAM WR $00016D=00  x10
+[3] MAP RD flash $01279A=00  x16
+[4] VRAM WR $00016E=00  x10
+[3] MAP RD flash $01279B=00  x16
+[4] VRAM WR $00016F=00  x10
+[3] MAP RD flash $01279C=00  x16
+[4] VRAM WR $000170=00  x10
+[3] MAP RD flash $01279D=00  x16
+[4] VRAM WR $000171=00  x10
+[3] MAP RD flash $01279E=00  x16
+[4] VRAM WR $000172=00  x10
+[3] MAP RD flash $01279F=00  x16
+[4] VRAM WR $000173=00  x10
+[3] MAP RD flash $0127A0=00  x16
+[4] VRAM WR $000174=00  x10
+[3] MAP RD flash $0127A1=00  x16
+[4] VRAM WR $000175=00  x10
+[3] MAP RD flash $0127A2=00  x16
+[4] VRAM WR $000176=00  x10
+[3] MAP RD flash $0127A3=00  x16
+[4] VRAM WR $000177=00  x10
+[3] MAP RD flash $0127A4=00  x16
+[4] VRAM WR $000178=00  x10
+[3] MAP RD flash $0127A5=00  x16
+[4] VRAM WR $000179=00  x10
+[3] MAP RD flash $0127A6=00  x16
+[4] VRAM WR $00017A=00  x10
+[3] MAP RD flash $0127A7=00  x16
+[4] VRAM WR $00017B=00  x10
+[3] MAP RD flash $0127A8=00  x16
+[4] VRAM WR $00017C=00  x10
+[3] MAP RD flash $0127A9=00  x16
+[4] VRAM WR $00017D=00  x10
+[3] MAP RD flash $0127AA=00  x16
+[4] VRAM WR $00017E=00  x10
+[3] MAP RD flash $0127AB=00  x16
+[4] VRAM WR $00017F=00  x10
+[3] MAP RD flash $0127AC=00  x16
+[4] VRAM WR $000180=00  x10
+[3] MAP RD flash $0127AD=00  x16
+[4] VRAM WR $000181=00  x10
+[3] MAP RD flash $0127AE=00  x16
+[4] VRAM WR $000182=00  x10
+[3] MAP RD flash $0127AF=00  x16
+[4] VRAM WR $000183=00  x10
+[3] MAP RD flash $0127B0=00  x16
+[4] VRAM WR $000184=00  x10
+[3] MAP RD flash $0127B1=00  x16
+[4] VRAM WR $000185=00  x10
+[3] MAP RD flash $0127B2=00  x16
+[4] VRAM WR $000186=00  x10
+[3] MAP RD flash $0127B3=44  x16
+[4] VRAM WR $000187=44  x10
+[3] MAP RD flash $0127B4=00  x16
+[4] VRAM WR $000188=00  x10
+[3] MAP RD flash $0127B5=00  x16
+[4] VRAM WR $000189=00  x10
+[3] MAP RD flash $0127B6=00  x16
+[4] VRAM WR $00018A=00  x10
+[3] MAP RD flash $0127B7=00  x16
+[4] VRAM WR $00018B=00  x10
+[3] MAP RD flash $0127B8=00  x16
+[4] VRAM WR $00018C=00  x10
+[3] MAP RD flash $0127B9=00  x16
+[4] VRAM WR $00018D=00  x10
+[3] MAP RD flash $0127BA=00  x16
+[4] VRAM WR $00018E=00  x10
+[3] MAP RD flash $0127BB=00  x16
+[4] VRAM WR $00018F=00  x10
+[3] MAP RD flash $0127BC=00  x16
+[4] VRAM WR $000190=00  x10
+[3] MAP RD flash $0127BD=00  x16
+[4] VRAM WR $000191=00  x10
+[3] MAP RD flash $0127BE=00  x16
+[4] VRAM WR $000192=00  x10
+[3] MAP RD flash $0127BF=44  x16
+[4] VRAM WR $000193=44  x10
+[3] MAP RD flash $0127C0=44  x16
+[4] VRAM WR $000194=44  x10
+[3] MAP RD flash $0127C1=44  x16
+[4] VRAM WR $000195=44  x10
+[3] MAP RD flash $0127C2=44  x16
+[4] VRAM WR $000196=44  x10
+[3] MAP RD flash $0127C3=44  x16
+[4] VRAM WR $000197=44  x10
+[3] MAP RD flash $0127C4=00  x16
+[4] VRAM WR $000198=00  x10
+[3] MAP RD flash $0127C5=00  x16
+[4] VRAM WR $000199=00  x10
+[3] MAP RD flash $0127C6=00  x16
+[4] VRAM WR $00019A=00  x10
+[3] MAP RD flash $0127C7=00  x16
+[4] VRAM WR $00019B=00  x10
+[3] MAP RD flash $0127C8=00  x16
+[4] VRAM WR $00019C=00  x10
+[3] MAP RD flash $0127C9=00  x16
+[4] VRAM WR $00019D=00  x10
+[3] MAP RD flash $0127CA=00  x16
+[4] VRAM WR $00019E=00  x10
+[3] MAP RD flash $0127CB=00  x16
+[4] VRAM WR $00019F=00  x10
+[3] MAP RD flash $0127CC=44  x16
+[4] VRAM WR $0001A0=44  x10
+[3] MAP RD flash $0127CD=44  x16
+[4] VRAM WR $0001A1=44  x10
+[3] MAP RD flash $0127CE=44  x16
+[4] VRAM WR $0001A2=44  x10
+[3] MAP RD flash $0127CF=44  x16
+[4] VRAM WR $0001A3=44  x10
+[3] MAP RD flash $0127D0=44  x16
+[4] VRAM WR $0001A4=44  x10
+[3] MAP RD flash $0127D1=44  x16
+[4] VRAM WR $0001A5=44  x10
+[3] MAP RD flash $0127D2=44  x16
+[4] VRAM WR $0001A6=44  x10
+[3] MAP RD flash $0127D3=00  x16
+[4] VRAM WR $0001A7=00  x10
+[3] MAP RD flash $0127D4=00  x16
+[4] VRAM WR $0001A8=00  x10
+[3] MAP RD flash $0127D5=00  x16
+[4] VRAM WR $0001A9=00  x10
+[3] MAP RD flash $0127D6=00  x16
+[4] VRAM WR $0001AA=00  x10
+[3] MAP RD flash $0127D7=00  x16
+[4] VRAM WR $0001AB=00  x10
+[3] MAP RD flash $0127D8=00  x16
+[4] VRAM WR $0001AC=00  x10
+[3] MAP RD flash $0127D9=00  x16
+[4] VRAM WR $0001AD=00  x10
+[3] MAP RD flash $0127DA=00  x16
+[4] VRAM WR $0001AE=00  x10
+[3] MAP RD flash $0127DB=00  x16
+[4] VRAM WR $0001AF=00  x10
+[3] MAP RD flash $0127DC=44  x16
+[4] VRAM WR $0001B0=44  x10
+[3] MAP RD flash $0127DD=44  x16
+[4] VRAM WR $0001B1=44  x10
+[3] MAP RD flash $0127DE=44  x16
+[4] VRAM WR $0001B2=44  x10
+[3] MAP RD flash $0127DF=44  x16
+[4] VRAM WR $0001B3=44  x10
+[3] MAP RD flash $0127E0=44  x16
+[4] VRAM WR $0001B4=44  x10
+[3] MAP RD flash $0127E1=44  x16
+[4] VRAM WR $0001B5=44  x10
+[3] MAP RD flash $0127E2=44  x16
+[4] VRAM WR $0001B6=44  x10
+[3] MAP RD flash $0127E3=00  x16
+[4] VRAM WR $0001B7=00  x10
+[3] MAP RD flash $0127E4=00  x16
+[4] VRAM WR $0001B8=00  x10
+[3] MAP RD flash $0127E5=00  x16
+[4] VRAM WR $0001B9=00  x10
+[3] MAP RD flash $0127E6=00  x16
+[4] VRAM WR $0001BA=00  x10
+[3] MAP RD flash $0127E7=00  x16
+[4] VRAM WR $0001BB=00  x10
+[3] MAP RD flash $0127E8=00  x16
+[4] VRAM WR $0001BC=00  x10
+[3] MAP RD flash $0127E9=00  x16
+[4] VRAM WR $0001BD=00  x10
+[3] MAP RD flash $0127EA=00  x16
+[4] VRAM WR $0001BE=00  x10
+[3] MAP RD flash $0127EB=44  x16
+[4] VRAM WR $0001BF=44  x10
+[3] MAP RD flash $0127EC=44  x16
+[4] VRAM WR $0001C0=44  x10
+[3] MAP RD flash $0127ED=44  x16
+[4] VRAM WR $0001C1=44  x10
+[3] MAP RD flash $0127EE=44  x16
+[4] VRAM WR $0001C2=44  x10
+[3] MAP RD flash $0127EF=44  x16
+[4] VRAM WR $0001C3=44  x10
+[3] MAP RD flash $0127F0=44  x16
+[4] VRAM WR $0001C4=44  x10
+[3] MAP RD flash $0127F1=44  x16
+[4] VRAM WR $0001C5=44  x10
+[3] MAP RD flash $0127F2=00  x16
+[4] VRAM WR $0001C6=00  x10
+[3] MAP RD flash $0127F3=00  x16
+[4] VRAM WR $0001C7=00  x10
+[3] MAP RD flash $0127F4=00  x16
+[4] VRAM WR $0001C8=00  x10
+[3] MAP RD flash $0127F5=00  x16
+[4] VRAM WR $0001C9=00  x10
+[3] MAP RD flash $0127F6=00  x16
+[4] VRAM WR $0001CA=00  x10
+[3] MAP RD flash $0127F7=00  x16
+[4] VRAM WR $0001CB=00  x10
+[3] MAP RD flash $0127F8=44  x16
+[4] VRAM WR $0001CC=44  x10
+[3] MAP RD flash $0127F9=44  x16
+[4] VRAM WR $0001CD=44  x10
+[3] MAP RD flash $0127FA=44  x16
+[4] VRAM WR $0001CE=44  x10
+[3] MAP RD flash $0127FB=44  x16
+[4] VRAM WR $0001CF=44  x10
+[3] MAP RD flash $0127FC=44  x16
+[4] VRAM WR $0001D0=44  x10
+[3] MAP RD flash $0127FD=44  x16
+[4] VRAM WR $0001D1=44  x10
+[3] MAP RD flash $0127FE=44  x16
+[4] VRAM WR $0001D2=44  x10
+[3] MAP RD flash $0127FF=44  x16
+[4] VRAM WR $0001D3=44  x10
+[3] MAP RD flash $012800=44  x16
+[4] VRAM WR $0001D4=44  x10
+[3] MAP RD flash $012801=44  x16
+[4] VRAM WR $0001D5=44  x10
+[3] MAP RD flash $012802=00  x16
+[4] VRAM WR $0001D6=00  x10
+[3] MAP RD flash $012803=00  x16
+[4] VRAM WR $0001D7=00  x10
+[3] MAP RD flash $012804=00  x16
+[4] VRAM WR $0001D8=00  x10
+[3] MAP RD flash $012805=00  x16
+[4] VRAM WR $0001D9=00  x10
+[3] MAP RD flash $012806=44  x16
+[4] VRAM WR $0001DA=44  x10
+[3] MAP RD flash $012807=44  x16
+[4] VRAM WR $0001DB=44  x10
+[3] MAP RD flash $012808=44  x16
+[4] VRAM WR $0001DC=44  x10
+[3] MAP RD flash $012809=44  x16
+[4] VRAM WR $0001DD=44  x10
+[3] MAP RD flash $01280A=44  x16
+[4] VRAM WR $0001DE=44  x10
+[3] MAP RD flash $01280B=44  x16
+[0] BG ready (MAP->VRAM / video hold lifted)
+[10] Host Play enabled (scroll latched, OAM written, beam rewind)
+[1] PRG RD $0001AD=8D  x13
+[1] PRG RD $0001AD..$0001AE n=2 first=8D last=12
+[1] PRG RD $0001AE=12  x14
+[1] PRG RD $0001AE..$0001AF n=2 first=12 last=FE
+[1] PRG RD $0001AF=FE  x15
+[4] VRAM WR $0001DF=44  x10
+[1] PRG RD $0001B0=CA  x15
+[1] PRG RD $0001B0..$0001B1 n=2 first=CA last=D0
+[1] PRG RD $0001B1=D0  x14
+[1] PRG RD $0001B1..$0001B2 n=2 first=D0 last=F7
+[1] PRG RD $0001B2=F7  x14
+[1] PRG RD $0001B2..$0001B3 n=2 first=F7 last=AD
+[1] PRG RD $0001B3=AD  x14
+[1] PRG RD $0001B3..$0001B4 n=2 first=AD last=01
+[1] PRG RD $0001B4=01  x14
+[1] PRG RD $0001B4..$0001B5 n=2 first=01 last=FE
+[1] PRG RD $0001B5=FE  x14
+[1] PRG RD $0001B5..$0001B6 n=2 first=FE last=29
+[1] PRG RD $0001B6=29  x14
+[1] PRG RD $0001B6..$0001B7 n=2 first=29 last=80
+[1] PRG RD $0001B7=80  x14
+[1] PRG RD $0001B7..$0001B8 n=2 first=80 last=F0
+[1] PRG RD $0001B8=F0  x14
+[1] PRG RD $0001B8..$0001B9 n=2 first=F0 last=F9
+[1] PRG RD $0001B9=F9  x14
+[1] PRG RD $0001B9..$0001BA n=2 first=F9 last=AD
+[1] PRG RD $0001BA=AD  x14
+[1] PRG RD $0001BA..$0001BB n=2 first=AD last=60
+[1] PRG RD $0001BB=60  x14
+[1] PRG RD $0001BB..$0001BC n=2 first=60 last=FE
+[1] PRG RD $0001BC=FE  x14
+[1] PRG RD $0001BC..$0001BD n=2 first=FE last=8D
+[1] PRG RD $0001BD=8D  x14
+[1] PRG RD $0001BD..$0001BE n=2 first=8D last=FE
+[1] PRG RD $0001BE=FE  x14
+[1] PRG RD $0001BE..$0001BF n=2 first=FE last=00
+[1] PRG RD $0001BF=00  x14
+[1] PRG RD $0001BF..$0001C0 n=2 first=00 last=4C
+[1] PRG RD $0001C0=4C  x14
+[1] PRG RD $0001C0..$0001C1 n=2 first=4C last=7F
+[1] PRG RD $0001C1=7F  x14
+[1] PRG RD $0001C1..$0001C2 n=2 first=7F last=80
+[1] PRG RD $0001C2=80  x15
+[1] PRG RD $0001B3=AD  x15
+[1] PRG RD $0001B3..$0001B4 n=2 first=AD last=01
+[1] PRG RD $0001B4=01  x14
+[1] PRG RD $0001B4..$0001B5 n=2 first=01 last=FE
+[1] PRG RD $0001B5=FE  x14
+[1] PRG RD $0001B5..$0001B6 n=2 first=FE last=29
+[1] PRG RD $0001B6=29  x14
+[1] PRG RD $0001B6..$0001B7 n=2 first=29 last=80
+[1] PRG RD $0001B7=80  x11
+[7] HBlank BG0 fill ly=0 half=1
+[1] PRG RD $0001B7=80  x3
+[1] PRG RD $0001B7..$0001B8 n=2 first=80 last=F0
+[1] PRG RD $0001B8=F0  x5
+[9] active scan ly=0 bg0=00
+[7] HBlank BG0 fill ly=1 half=0
+[1] PRG RD $0001B8=F0  x6
+[9] active scan ly=1 bg0=00
+[7] HBlank BG0 fill ly=2 half=1
+[1] PRG RD $0001B8=F0  x3
+[1] PRG RD $0001B8..$0001B9 n=2 first=F0 last=F9
+[1] PRG RD $0001B9=F9  x5
+[9] active scan ly=2 bg0=00
+[7] HBlank BG0 fill ly=3 half=0
+[1] PRG RD $0001B9=F9  x6
+[9] active scan ly=3 bg0=00
+[7] HBlank BG0 fill ly=4 half=1
+[1] PRG RD $0001B9=F9  x3
+[1] PRG RD $0001B9..$0001BA n=2 first=F9 last=AD
+[1] PRG RD $0001BA=AD  x5
+[9] active scan ly=4 bg0=00
+[7] HBlank BG0 fill ly=5 half=0
+[1] PRG RD $0001BA=AD  x6
+[9] active scan ly=5 bg0=00
+[1] PRG RD $0001BA=AD  x3
+[1] PRG RD $0001BA..$0001BB n=2 first=AD last=60
+[1] PRG RD $0001BB=60  x5
+[7] HBlank BG0 fill ly=6 half=1
+[9] active scan ly=6 bg0=00
+[1] PRG RD $0001BB=60  x6
+[7] HBlank BG0 fill ly=7 half=0
+[9] active scan ly=7 bg0=00
+[1] PRG RD $0001BB=60  x3
+[1] PRG RD $0001BB..$0001BC n=2 first=60 last=FE
+[1] PRG RD $0001BC=FE  x5
+[7] HBlank BG0 fill ly=8 half=1
+[9] active scan ly=8 bg0=00
+[1] PRG RD $0001BC=FE  x6
+[7] HBlank BG0 fill ly=9 half=0
+[9] active scan ly=9 bg0=00
+[1] PRG RD $0001BC=FE  x4
+[7] HBlank BG0 fill ly=10 half=1
+[9] active scan ly=10 bg0=00
+[7] HBlank BG0 fill ly=11 half=0
+[9] active scan ly=11 bg0=00
+[1] PRG RD $0001BD=8D  x6
+[7] HBlank BG0 fill ly=12 half=1
+[9] active scan ly=12 bg0=00
+[1] PRG RD $0001BD=8D  x6
+[7] HBlank BG0 fill ly=13 half=0
+[9] active scan ly=13 bg0=00
+[1] PRG RD $0001BD=8D  x3
+[1] PRG RD $0001BD..$0001BE n=2 first=8D last=FE
+[1] PRG RD $0001BE=FE  x5
+[7] HBlank BG0 fill ly=14 half=1
+[1] PRG RD $0001BE=FE  x6
+[9] active scan ly=14 bg0=00
+[7] HBlank BG0 fill ly=15 half=0
+[1] PRG RD $0001BE=FE  x3
+[1] PRG RD $0001BE..$0001BF n=2 first=FE last=00
+[1] PRG RD $0001BF=00  x5
+[9] active scan ly=15 bg0=00
+[7] HBlank BG0 fill ly=16 half=1
+[1] PRG RD $0001BF=00  x6
+[9] active scan ly=16 bg0=00
+[7] HBlank BG0 fill ly=17 half=0
+[1] PRG RD $0001BF=00  x4
+[9] active scan ly=17 bg0=00
+[7] HBlank BG0 fill ly=18 half=1
+[9] active scan ly=18 bg0=00
+[7] HBlank BG0 fill ly=19 half=0
+[1] PRG RD $0001C0=4C  x6
+[9] active scan ly=19 bg0=00
+[7] HBlank BG0 fill ly=20 half=1
+[1] PRG RD $0001C0=4C  x6
+[9] active scan ly=20 bg0=00
+[1] PRG RD $0001C0=4C  x3
+[1] PRG RD $0001C0..$0001C1 n=2 first=4C last=7F
+[1] PRG RD $0001C1=7F  x5
+[7] HBlank BG0 fill ly=21 half=0
+[9] active scan ly=21 bg0=00
+[1] PRG RD $0001C1=7F  x6
+[7] HBlank BG0 fill ly=22 half=1
+[9] active scan ly=22 bg0=00
+[1] PRG RD $0001C1=7F  x3
+[1] PRG RD $0001C1..$0001C2 n=2 first=7F last=80
+[1] PRG RD $0001C2=80  x5
+[7] HBlank BG0 fill ly=23 half=0
+[9] active scan ly=23 bg0=00
+[1] PRG RD $0001C2=80  x6
+[7] HBlank BG0 fill ly=24 half=1
+[9] active scan ly=24 bg0=00
+[1] PRG RD $0001C2=80  x4
+[1] PRG RD $0001B3=AD  x6
+[7] HBlank BG0 fill ly=25 half=0
+[9] active scan ly=25 bg0=00
+[1] PRG RD $0001B3=AD  x6
+[7] HBlank BG0 fill ly=26 half=1
+[9] active scan ly=26 bg0=00
+[1] PRG RD $0001B3=AD  x3
+[1] PRG RD $0001B3..$0001B4 n=2 first=AD last=01
+[1] PRG RD $0001B4=01  x5
+[7] HBlank BG0 fill ly=27 half=0
+[9] active scan ly=27 bg0=00
+[1] PRG RD $0001B4=01  x6
+[7] HBlank BG0 fill ly=28 half=1
+[9] active scan ly=28 bg0=00
+[1] PRG RD $0001B4=01  x3
+[1] PRG RD $0001B4..$0001B5 n=2 first=01 last=FE
+[1] PRG RD $0001B5=FE  x5
+[7] HBlank BG0 fill ly=29 half=0
+[1] PRG RD $0001B5=FE  x6
+[9] active scan ly=29 bg0=00
+[7] HBlank BG0 fill ly=30 half=1
+[1] PRG RD $0001B5=FE  x4
+[9] active scan ly=30 bg0=00
+[7] HBlank BG0 fill ly=31 half=0
+[9] active scan ly=31 bg0=00
+[7] HBlank BG0 fill ly=32 half=1
+[1] PRG RD $0001B6=29  x6
+[9] active scan ly=32 bg0=00
+[7] HBlank BG0 fill ly=33 half=0
+[1] PRG RD $0001B6=29  x6
+[9] active scan ly=33 bg0=00
+[7] HBlank BG0 fill ly=34 half=1
+[1] PRG RD $0001B6=29  x3
+[1] PRG RD $0001B6..$0001B7 n=2 first=29 last=80
+[1] PRG RD $0001B7=80  x5
+[9] active scan ly=34 bg0=00
+[7] HBlank BG0 fill ly=35 half=0
+[1] PRG RD $0001B7=80  x6
+[9] active scan ly=35 bg0=00
+[1] PRG RD $0001B7=80  x3
+[1] PRG RD $0001B7..$0001B8 n=2 first=80 last=F0
+[1] PRG RD $0001B8=F0  x5
+[7] HBlank BG0 fill ly=36 half=1
+[9] active scan ly=36 bg0=00
+[1] PRG RD $0001B8=F0  x6
+[7] HBlank BG0 fill ly=37 half=0
+[9] active scan ly=37 bg0=00
+[1] PRG RD $0001B8=F0  x3
+[1] PRG RD $0001B8..$0001B9 n=2 first=F0 last=F9
+[1] PRG RD $0001B9=F9  x5
+[7] HBlank BG0 fill ly=38 half=1
+[9] active scan ly=38 bg0=00
+[1] PRG RD $0001B9=F9  x6
+[7] HBlank BG0 fill ly=39 half=0
+[9] active scan ly=39 bg0=00
+[1] PRG RD $0001B9=F9  x3
+[1] PRG RD $0001B9..$0001BA n=2 first=F9 last=AD
+[1] PRG RD $0001BA=AD  x5
+[7] HBlank BG0 fill ly=40 half=1
+[9] active scan ly=40 bg0=00
+[1] PRG RD $0001BA=AD  x6
+[7] HBlank BG0 fill ly=41 half=0
+[9] active scan ly=41 bg0=00
+[1] PRG RD $0001BA=AD  x3
+[1] PRG RD $0001BA..$0001BB n=2 first=AD last=60
+[1] PRG RD $0001BB=60  x5
+[7] HBlank BG0 fill ly=42 half=1
+[9] active scan ly=42 bg0=00
+[1] PRG RD $0001BB=60  x6
+[7] HBlank BG0 fill ly=43 half=0
+[9] active scan ly=43 bg0=00
+[1] PRG RD $0001BB=60  x3
+[1] PRG RD $0001BB..$0001BC n=2 first=60 last=FE
+[1] PRG RD $0001BC=FE  x5
+[7] HBlank BG0 fill ly=44 half=1
+[1] PRG RD $0001BC=FE  x6
+[9] active scan ly=44 bg0=00
+[7] HBlank BG0 fill ly=45 half=0
+[1] PRG RD $0001BC=FE  x4
+[9] active scan ly=45 bg0=00
+[7] HBlank BG0 fill ly=46 half=1
+[9] active scan ly=46 bg0=00
+[7] HBlank BG0 fill ly=47 half=0
+[1] PRG RD $0001BD=8D  x6
+[9] active scan ly=47 bg0=00
+[7] HBlank BG0 fill ly=48 half=1
+[1] PRG RD $0001BD=8D  x6
+[9] active scan ly=48 bg0=00
+[7] HBlank BG0 fill ly=49 half=0
+[1] PRG RD $0001BD=8D  x3
+[1] PRG RD $0001BD..$0001BE n=2 first=8D last=FE
+[1] PRG RD $0001BE=FE  x5
+[9] active scan ly=49 bg0=00
+[7] HBlank BG0 fill ly=50 half=1
+[1] PRG RD $0001BE=FE  x6
+[9] active scan ly=50 bg0=00
+[1] PRG RD $0001BE=FE  x3
+[1] PRG RD $0001BE..$0001BF n=2 first=FE last=00
+[1] PRG RD $0001BF=00  x5
+[7] HBlank BG0 fill ly=51 half=0
+[9] active scan ly=51 bg0=00
+[1] PRG RD $0001BF=00  x6
+[7] HBlank BG0 fill ly=52 half=1
+[9] active scan ly=52 bg0=00
+[1] PRG RD $0001BF=00  x4
+[7] HBlank BG0 fill ly=53 half=0
+[9] active scan ly=53 bg0=00
+[7] HBlank BG0 fill ly=54 half=1
+[9] active scan ly=54 bg0=00
+[1] PRG RD $0001C0=4C  x6
+[7] HBlank BG0 fill ly=55 half=0
+[9] active scan ly=55 bg0=00
+[1] PRG RD $0001C0=4C  x6
+[7] HBlank BG0 fill ly=56 half=1
+[9] active scan ly=56 bg0=00
+[1] PRG RD $0001C0=4C  x3
+[1] PRG RD $0001C0..$0001C1 n=2 first=4C last=7F
+[1] PRG RD $0001C1=7F  x5
+[7] HBlank BG0 fill ly=57 half=0
+[9] active scan ly=57 bg0=00
+[1] PRG RD $0001C1=7F  x6
+[7] HBlank BG0 fill ly=58 half=1
+[9] active scan ly=58 bg0=00
+[1] PRG RD $0001C1=7F  x3
+[1] PRG RD $0001C1..$0001C2 n=2 first=7F last=80
+[1] PRG RD $0001C2=80  x5
+[7] HBlank BG0 fill ly=59 half=0
+[1] PRG RD $0001C2=80  x6
+[9] active scan ly=59 bg0=00
+[7] HBlank BG0 fill ly=60 half=1
+[1] PRG RD $0001C2=80  x4
+[1] PRG RD $0001B3=AD  x6
+[9] active scan ly=60 bg0=00
+[7] HBlank BG0 fill ly=61 half=0
+[1] PRG RD $0001B3=AD  x6
+[9] active scan ly=61 bg0=34
+[7] HBlank BG0 fill ly=62 half=1
+[1] PRG RD $0001B3=AD  x3
+[1] PRG RD $0001B3..$0001B4 n=2 first=AD last=01
+[1] PRG RD $0001B4=01  x5
+[9] active scan ly=62 bg0=34
+[7] HBlank BG0 fill ly=63 half=0
+[1] PRG RD $0001B4=01  x6
+[9] active scan ly=63 bg0=24
+[7] HBlank BG0 fill ly=64 half=1
+[1] PRG RD $0001B4=01  x3
+[1] PRG RD $0001B4..$0001B5 n=2 first=01 last=FE
+[1] PRG RD $0001B5=FE  x5
+[9] active scan ly=64 bg0=34
+[7] HBlank BG0 fill ly=65 half=0
+[1] PRG RD $0001B5=FE  x6
+[9] active scan ly=65 bg0=13
+[1] PRG RD $0001B5=FE  x4
+[7] HBlank BG0 fill ly=66 half=1
+[9] active scan ly=66 bg0=13
+[7] HBlank BG0 fill ly=67 half=0
+[9] active scan ly=67 bg0=24
+[1] PRG RD $0001B6=29  x6
+[7] HBlank BG0 fill ly=68 half=1
+[9] active scan ly=68 bg0=24
+[1] PRG RD $0001B6=29  x6
+[7] HBlank BG0 fill ly=69 half=0
+[9] active scan ly=69 bg0=34
+[1] PRG RD $0001B6=29  x3
+[1] PRG RD $0001B6..$0001B7 n=2 first=29 last=80
+[1] PRG RD $0001B7=80  x5
+[7] HBlank BG0 fill ly=70 half=1
+[9] active scan ly=70 bg0=34
+[1] PRG RD $0001B7=80  x6
+[7] HBlank BG0 fill ly=71 half=0
+[9] active scan ly=71 bg0=24
+[1] PRG RD $0001B7=80  x3
+[1] PRG RD $0001B7..$0001B8 n=2 first=80 last=F0
+[1] PRG RD $0001B8=F0  x5
+[7] HBlank BG0 fill ly=72 half=1
+[9] active scan ly=72 bg0=34
+[1] PRG RD $0001B8=F0  x6
+[7] HBlank BG0 fill ly=73 half=0
+[9] active scan ly=73 bg0=13
+[1] PRG RD $0001B8=F0  x3
+[1] PRG RD $0001B8..$0001B9 n=2 first=F0 last=F9
+[1] PRG RD $0001B9=F9  x5
+[7] HBlank BG0 fill ly=74 half=1
+[9] active scan ly=74 bg0=13
+[1] PRG RD $0001B9=F9  x6
+[7] HBlank BG0 fill ly=75 half=0
+[1] PRG RD $0001B9=F9  x3
+[1] PRG RD $0001B9..$0001BA n=2 first=F9 last=AD
+[1] PRG RD $0001BA=AD  x5
+[9] active scan ly=75 bg0=24
+[7] HBlank BG0 fill ly=76 half=1
+[1] PRG RD $0001BA=AD  x6
+[9] active scan ly=76 bg0=24
+[7] HBlank BG0 fill ly=77 half=0
+[1] PRG RD $0001BA=AD  x3
+[1] PRG RD $0001BA..$0001BB n=2 first=AD last=60
+[1] PRG RD $0001BB=60  x5
+[9] active scan ly=77 bg0=34
+[7] HBlank BG0 fill ly=78 half=1
+[1] PRG RD $0001BB=60  x6
+[9] active scan ly=78 bg0=34
+[7] HBlank BG0 fill ly=79 half=0
+[1] PRG RD $0001BB=60  x3
+[1] PRG RD $0001BB..$0001BC n=2 first=60 last=FE
+[1] PRG RD $0001BC=FE  x5
+[9] active scan ly=79 bg0=24
+[7] HBlank BG0 fill ly=80 half=1
+[1] PRG RD $0001BC=FE  x6
+[9] active scan ly=80 bg0=34
+[7] HBlank BG0 fill ly=81 half=0
+[1] PRG RD $0001BC=FE  x4
+[9] active scan ly=81 bg0=13
+[7] HBlank BG0 fill ly=82 half=1
+[9] active scan ly=82 bg0=13
+[1] PRG RD $0001BD=8D  x6
+[7] HBlank BG0 fill ly=83 half=0
+[9] active scan ly=83 bg0=24
+[1] PRG RD $0001BD=8D  x6
+[7] HBlank BG0 fill ly=84 half=1
+[9] active scan ly=84 bg0=24
+[1] PRG RD $0001BD=8D  x3
+[1] PRG RD $0001BD..$0001BE n=2 first=8D last=FE
+[1] PRG RD $0001BE=FE  x5
+[7] HBlank BG0 fill ly=85 half=0
+[9] active scan ly=85 bg0=34
+[1] PRG RD $0001BE=FE  x6
+[7] HBlank BG0 fill ly=86 half=1
+[9] active scan ly=86 bg0=34
+[1] PRG RD $0001BE=FE  x3
+[1] PRG RD $0001BE..$0001BF n=2 first=FE last=00
+[1] PRG RD $0001BF=00  x5
+[7] HBlank BG0 fill ly=87 half=0
+[9] active scan ly=87 bg0=24
+[1] PRG RD $0001BF=00  x6
+[7] HBlank BG0 fill ly=88 half=1
+[9] active scan ly=88 bg0=34
+[1] PRG RD $0001BF=00  x4
+[7] HBlank BG0 fill ly=89 half=0
+[9] active scan ly=89 bg0=13
+[7] HBlank BG0 fill ly=90 half=1
+[1] PRG RD $0001C0=4C  x6
+[9] active scan ly=90 bg0=13
+[7] HBlank BG0 fill ly=91 half=0
+[1] PRG RD $0001C0=4C  x6
+[9] active scan ly=91 bg0=24
+[7] HBlank BG0 fill ly=92 half=1
+[1] PRG RD $0001C0=4C  x3
+[1] PRG RD $0001C0..$0001C1 n=2 first=4C last=7F
+[1] PRG RD $0001C1=7F  x5
+[9] active scan ly=92 bg0=24
+[7] HBlank BG0 fill ly=93 half=0
+[1] PRG RD $0001C1=7F  x6
+[9] active scan ly=93 bg0=34
+[7] HBlank BG0 fill ly=94 half=1
+[1] PRG RD $0001C1=7F  x3
+[1] PRG RD $0001C1..$0001C2 n=2 first=7F last=80
+[1] PRG RD $0001C2=80  x5
+[9] active scan ly=94 bg0=34
+[7] HBlank BG0 fill ly=95 half=0
+[1] PRG RD $0001C2=80  x6
+[9] active scan ly=95 bg0=24
+[7] HBlank BG0 fill ly=96 half=1
+[1] PRG RD $0001C2=80  x4
+[1] PRG RD $0001B3=AD  x6
+[9] active scan ly=96 bg0=34
+[1] PRG RD $0001B3=AD  x6
+[7] HBlank BG0 fill ly=97 half=0
+[9] active scan ly=97 bg0=13
+[1] PRG RD $0001B3=AD  x3
+[1] PRG RD $0001B3..$0001B4 n=2 first=AD last=01
+[1] PRG RD $0001B4=01  x5
+[7] HBlank BG0 fill ly=98 half=1
+[9] active scan ly=98 bg0=13
+[1] PRG RD $0001B4=01  x6
+[7] HBlank BG0 fill ly=99 half=0
+[9] active scan ly=99 bg0=24
+[1] PRG RD $0001B4=01  x3
+[1] PRG RD $0001B4..$0001B5 n=2 first=01 last=FE
+[1] PRG RD $0001B5=FE  x5
+[7] HBlank BG0 fill ly=100 half=1
+[9] active scan ly=100 bg0=24
+[1] PRG RD $0001B5=FE  x6
+[7] HBlank BG0 fill ly=101 half=0
+[9] active scan ly=101 bg0=34
+[1] PRG RD $0001B5=FE  x4
+[7] HBlank BG0 fill ly=102 half=1
+[9] active scan ly=102 bg0=34
+[7] HBlank BG0 fill ly=103 half=0
+[9] active scan ly=103 bg0=24
+[1] PRG RD $0001B6=29  x6
+[7] HBlank BG0 fill ly=104 half=1
+[9] active scan ly=104 bg0=34
+[1] PRG RD $0001B6=29  x6
+[7] HBlank BG0 fill ly=105 half=0
+[1] PRG RD $0001B6=29  x3
+[1] PRG RD $0001B6..$0001B7 n=2 first=29 last=80
+[1] PRG RD $0001B7=80  x5
+[9] active scan ly=105 bg0=13
+[7] HBlank BG0 fill ly=106 half=1
+[1] PRG RD $0001B7=80  x6
+[9] active scan ly=106 bg0=13
+[7] HBlank BG0 fill ly=107 half=0
+[1] PRG RD $0001B7=80  x3
+[1] PRG RD $0001B7..$0001B8 n=2 first=80 last=F0
+[1] PRG RD $0001B8=F0  x5
+[9] active scan ly=107 bg0=24
+[7] HBlank BG0 fill ly=108 half=1
+[1] PRG RD $0001B8=F0  x6
+[9] active scan ly=108 bg0=24
+[7] HBlank BG0 fill ly=109 half=0
+[1] PRG RD $0001B8=F0  x3
+[1] PRG RD $0001B8..$0001B9 n=2 first=F0 last=F9
+[1] PRG RD $0001B9=F9  x5
+[9] active scan ly=109 bg0=34
+[7] HBlank BG0 fill ly=110 half=1
+[1] PRG RD $0001B9=F9  x6
+[9] active scan ly=110 bg0=34
+[7] HBlank BG0 fill ly=111 half=0
+[1] PRG RD $0001B9=F9  x3
+[1] PRG RD $0001B9..$0001BA n=2 first=F9 last=AD
+[1] PRG RD $0001BA=AD  x5
+[9] active scan ly=111 bg0=24
+[1] PRG RD $0001BA=AD  x6
+[7] HBlank BG0 fill ly=112 half=1
+[9] active scan ly=112 bg0=34
+[1] PRG RD $0001BA=AD  x3
+[1] PRG RD $0001BA..$0001BB n=2 first=AD last=60
+[1] PRG RD $0001BB=60  x5
+[7] HBlank BG0 fill ly=113 half=0
+[9] active scan ly=113 bg0=13
+[1] PRG RD $0001BB=60  x6
+[7] HBlank BG0 fill ly=114 half=1
+[9] active scan ly=114 bg0=13
+[1] PRG RD $0001BB=60  x3
+[1] PRG RD $0001BB..$0001BC n=2 first=60 last=FE
+[1] PRG RD $0001BC=FE  x5
+[7] HBlank BG0 fill ly=115 half=0
+[9] active scan ly=115 bg0=24
+[1] PRG RD $0001BC=FE  x6
+[7] HBlank BG0 fill ly=116 half=1
+[9] active scan ly=116 bg0=24
+[1] PRG RD $0001BC=FE  x4
+[7] HBlank BG0 fill ly=117 half=0
+[9] active scan ly=117 bg0=34
+[7] HBlank BG0 fill ly=118 half=1
+[9] active scan ly=118 bg0=34
+[1] PRG RD $0001BD=8D  x6
+[7] HBlank BG0 fill ly=119 half=0
+[9] active scan ly=119 bg0=24
+[1] PRG RD $0001BD=8D  x9
+[1] PRG RD $0001BD..$0001BE n=2 first=8D last=FE
+[1] PRG RD $0001BE=FE  x14
+[1] PRG RD $0001BE..$0001BF n=2 first=FE last=00
+[1] PRG RD $0001BF=00  x14
+[1] PRG RD $0001BF..$0001C0 n=2 first=00 last=4C
+[1] PRG RD $0001C0=4C  x14
+[1] PRG RD $0001C0..$0001C1 n=2 first=4C last=7F
+[1] PRG RD $0001C1=7F  x14
+[1] PRG RD $0001C1..$0001C2 n=2 first=7F last=80
+[1] PRG RD $0001C2=80  x15
+[1] PRG RD $0001B3=AD  x15
+[1] PRG RD $0001B3..$0001B4 n=2 first=AD last=01
+[1] PRG RD $0001B4=01  x14
+[1] PRG RD $0001B4..$0001B5 n=2 first=01 last=FE
+[1] PRG RD $0001B5=FE  x14
+[1] PRG RD $0001B5..$0001B6 n=2 first=FE last=29
+[1] PRG RD $0001B6=29  x14
+[1] PRG RD $0001B6..$0001B7 n=2 first=29 last=80
+[1] PRG RD $0001B7=80  x14
+[1] PRG RD $0001B7..$0001B8 n=2 first=80 last=F0
+[1] PRG RD $0001B8=F0  x14
+[1] PRG RD $0001B8..$0001B9 n=2 first=F0 last=F9
+[1] PRG RD $0001B9=F9  x14
+[1] PRG RD $0001B9..$0001BA n=2 first=F9 last=AD
+[1] PRG RD $0001BA=AD  x14
+[1] PRG RD $0001BA..$0001BB n=2 first=AD last=60
+[1] PRG RD $0001BB=60  x14
+[1] PRG RD $0001BB..$0001BC n=2 first=60 last=FE
+[1] PRG RD $0001BC=FE  x14
+[1] PRG RD $0001BC..$0001BD n=2 first=FE last=8D
+[1] PRG RD $0001BD=8D  x14
+[1] PRG RD $0001BD..$0001BE n=2 first=8D last=FE
+[1] PRG RD $0001BE=FE  x14
+[1] PRG RD $0001BE..$0001BF n=2 first=FE last=00
+[1] PRG RD $0001BF=00  x14
+[1] PRG RD $0001BF..$0001C0 n=2 first=00 last=4C
+[1] PRG RD $0001C0=4C  x14
+[1] PRG RD $0001C0..$0001C1 n=2 first=4C last=7F
+[1] PRG RD $0001C1=7F  x14
+[1] PRG RD $0001C1..$0001C2 n=2 first=7F last=80
+[1] PRG RD $0001C2=80  x15
+[1] PRG RD $0001B3=AD  x15
+[1] PRG RD $0001B3..$0001B4 n=2 first=AD last=01
+[1] PRG RD $0001B4=01  x14
+[1] PRG RD $0001B4..$0001B5 n=2 first=01 last=FE
+[1] PRG RD $0001B5=FE  x14
+[1] PRG RD $0001B5..$0001B6 n=2 first=FE last=29
+[1] PRG RD $0001B6=29  x14
+[1] PRG RD $0001B6..$0001B7 n=2 first=29 last=80
+[1] PRG RD $0001B7=80  x14
+[1] PRG RD $0001B7..$0001B8 n=2 first=80 last=F0
+[1] PRG RD $0001B8=F0  x11
+[6] VBlank enter beam_y=240
+[10] VBlank Host Play: pad step + OAM
+[8] VBlank: painted sprite field from OAM
+[8] sprite field fill complete (120x128)
+[0] SEALED: BG + sprite fields ready (1576 lines). [ ] or PgUp/PgDn

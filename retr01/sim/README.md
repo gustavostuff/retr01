@@ -31,6 +31,8 @@ Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8
 
 **Cart flasher:** isolated from the main sim. Use `flasher_bench` + `test_cart_flash_flow` / `test_island_flasher`.
 
+**1_FRAME_DEBUG:** `1_FRAME_DEBUG=true ./sim cart.retr01` logs byte-scale IC traffic (PRG/MAP/VRAM/beam/BG0/sprites/play) into a paginated on-screen panel (`[` `]` or PgUp/PgDn). Logging stops once BG (MAP->VRAM) and the first sprite field fill are done. Full dump: `retr01_sim/debug/frame1_trace.log`.
+
 Why the worker exists: [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md).
 
 **Next:** optional machine EEPROM (1284 path). Retire bring-up overlay when game PRG owns MAP.

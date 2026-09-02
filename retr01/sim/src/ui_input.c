@@ -5,6 +5,7 @@
 #include "retr01_sim/board.h"
 #include "retr01_sim/board_layout.h"
 #include "retr01_sim/bus.h"
+#include "retr01_sim/frame_log.h"
 #include "ui_assets.h"
 #include "video_sink.h"
 
@@ -332,6 +333,16 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
     if (e->type == SDL_KEYDOWN) {
         const Uint8 *mods = SDL_GetKeyboardState(NULL);
         int step = 48;
+        if (r01s_frame_log_enabled()) {
+            if (e->key.keysym.sym == SDLK_LEFTBRACKET || e->key.keysym.sym == SDLK_PAGEUP) {
+                r01s_frame_log_page_delta(-1);
+                return 1;
+            }
+            if (e->key.keysym.sym == SDLK_RIGHTBRACKET || e->key.keysym.sym == SDLK_PAGEDOWN) {
+                r01s_frame_log_page_delta(1);
+                return 1;
+            }
+        }
         if (!(e->key.keysym.mod & KMOD_CTRL) && e->key.keysym.sym == SDLK_s) {
             ui_save_layout_now(ui);
             return 1;

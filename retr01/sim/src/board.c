@@ -8,6 +8,7 @@
 #include "retr01_sim/board_flasher.h"
 #include "retr01_sim/cart_module.h"
 #include "retr01_sim/cart_slot.h"
+#include "retr01_sim/frame_log.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1128,6 +1129,7 @@ static void wire_io(R01sBoard *ctx) {
         copy_bus_named(ctx, cpu, "D", flash, "DQ", 8);
         dq = board_cpu_d_sample(ctx, cpu);
         ctx->flash_ce_owner = R01S_FLASH_CE_MAP;
+        r01s_frame_log_xfer(R01S_FLOG_MAP, "MAP RD flash", ctx->map_addr, dq);
         if (board_map_byte_is_cart_magic(ctx, dq)) {
             ctx->health_saw_map = 1; /* cart magic 'r' at seek 0 */
         }
@@ -1267,11 +1269,13 @@ static void wire_vram(R01sBoard *ctx) {
             r01s_entity_drive(vram, "WE#", R01S_LVL_H);
             r01s_entity_eval(vram);
             copy_bus_named(ctx, cpu, "D", vram, "DQ", 8);
+            r01s_frame_log_xfer(R01S_FLOG_VRAM, "VRAM RD", va, board_cpu_d_sample(ctx, cpu));
         } else {
             r01s_entity_drive(vram, "OE#", R01S_LVL_H);
             r01s_entity_drive(vram, "WE#", R01S_LVL_L);
             copy_bus_named(ctx, vram, "DQ", cpu, "D", 8);
             r01s_entity_eval(vram);
+            r01s_frame_log_xfer(R01S_FLOG_VRAM, "VRAM WR", va, board_cpu_d_sample(ctx, cpu));
         }
         ctx->vram_fe12_armed = 1;
     } else if (!cpu_phase && r01s_bg_fetch_active(bg)) {
@@ -1643,6 +1647,10 @@ static void linebuf_oam_fill_field(R01sBoard *ctx) {
     }
 
     flash_chr_release(ctx);
+    if (ctx->play.enabled) {
+        r01s_frame_log_note(R01S_FLOG_SPR, "VBlank: painted sprite field from OAM");
+        r01s_frame_log_mark_sprite_field();
+    }
 }
 
 /* HBlank: prepare next BG0 line (show-through under BG1 color 0 on active dots). */
@@ -1685,6 +1693,9 @@ static void wire_linebuf(R01sBoard *ctx) {
         if (r01s_rgbs_beam_to_logical(scale_2x, probe_x, next_by, &lx, &next_ly)) {
             linebuf_l0_fill_half(ctx, fill_half, next_ly);
             ctx->l0_show_half = (uint8_t)(fill_half & 1);
+            if (ctx->play.enabled) {
+                r01s_frame_log_note(R01S_FLOG_BG0, "HBlank BG0 fill ly=%d half=%d", next_ly, fill_half);
+            }
         }
     }
     ctx->linebuf_prev_hblank = (uint8_t)(hblank ? 1 : 0);
@@ -1791,6 +1802,13 @@ static void wire_video_dot(R01sBoard *ctx) {
     bg = board_bg_master_at(ctx, lx, ly);
     r01s_compositor_set_bg(comp, bg);
     {
+        static int s_last_ly = -1;
+        if (ctx->play.enabled && ly != s_last_ly) {
+            r01s_frame_log_note(R01S_FLOG_VIDEO, "active scan ly=%d bg0=%02X", ly, bg);
+            s_last_ly = ly;
+        }
+    }
+    {
         uint8_t spr = r01s_as6c62256_peek(ctx->mcu_lb_impl.sram, spr_field_addr(ly, lx));
         r01s_compositor_set_sprite(comp, (uint8_t)(spr & 0x3Fu), spr != 0);
         if (spr != 0) {
@@ -1855,9 +1873,15 @@ static void wire_memory(R01sBoard *ctx) {
     } else if (use_cart_prg && read) {
         uint32_t off = (uint32_t)(addr - 0x8000u);
         if (off < ctx->cart_len_prg && flash) {
+            uint8_t dq;
             flash_read_selected(flash, ctx->cart_off_prg + off);
             copy_bus_named(ctx, cpu, "D", flash, "DQ", 8);
+            dq = board_cpu_d_sample(ctx, cpu);
             ctx->flash_ce_owner = R01S_FLASH_CE_PRG;
+            /* Catchup is almost all PRG traffic -- log PRG only once Host Play is up. */
+            if (ctx->play.enabled) {
+                r01s_frame_log_xfer(R01S_FLOG_CPU, "PRG RD", ctx->cart_off_prg + off, dq);
+            }
         } else if (off < ctx->cart_len_prg) {
             r01s_cart_slot_log_warn("PRG read: cart not in console socket");
             r01s_bus_write(cpu, "D", 8, 0xFFu);
@@ -2603,6 +2627,7 @@ void r01s_board_mark_map_ready(R01sBoard *board) {
         return;
     }
     poke_map_addr_latches(board, board->cart_off_map_screen0 + 480u);
+    r01s_frame_log_mark_bg_ready();
 }
 
 void r01s_board_update_bg0_scroll(R01sBoard *board, int cam_x, int cam_y) {
@@ -2989,6 +3014,10 @@ static void board_step(R01sIslandGroup *group) {
                 if (vb && !ctx->vblank_prev) {
                     if (ctx->video_impl.sink) {
                         r01s_video_sink_on_vblank(ctx->video_impl.sink);
+                    }
+                    if (ctx->play.enabled) {
+                        r01s_frame_log_note(R01S_FLOG_BEAM, "VBlank enter beam_y=%d",
+                                           r01s_beam_xy_y(ctx->beam_impl.beam_x));
                     }
                     r01s_play_on_vblank(ctx);
                     /* After Host Play OAM update: plot full sprite field for next frame. */
