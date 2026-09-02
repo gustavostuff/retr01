@@ -14,7 +14,8 @@ Passives, connectors, stackup, ESD/PPTC, and RF practice live in [`passive_rf_et
 
 | Topic | Runners today | Silicon / roadmap target |
 |-------|---------------|---------------------------|
-| Cart image | `.retr01` loaded from host file path | SST39SF040 on 36-pin cart, USB-C flasher ([`cart.md`](cart.md)) |
+| Cart image | `.retr01` loaded from host file path (Sim default: `output/test_2.retr01` into cart flash) | SST39SF040 on 36-pin cart, USB-C flasher ([`cart.md`](cart.md)) |
+| Cart flasher | Sim island **F** is visual only; programming path tested via `flasher_bench` harness (**WIP** in main sim UI) | USB-C bench programs cart in socket ([`cart.md`](cart.md#usb-c-cartridge-flasher)) |
 | Color PROM | Sim chip model **AT28C16** (64-entry table) | **AT27C256R** OTP ([`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md)) |
 | `PPUCTRL` (`$FE00`) | Emu honors L1/L0/SPR enable + NMI. Camera-wrap bits stored, not enforced | Full bitfield incl. wrap modes ([`graphics.md`](graphics.md#ppuctrl-fe00)) |
 | HC573 map | Sim netlist still ties VRAM addr to FE10/FE11 latches | Nine-chip U5A-U5I map ([`graphics.md`](graphics.md#hc573-latch-map-9-chips)) |
@@ -157,11 +158,11 @@ Prove **islands** on breadboard before full PCB. Pass = island smoke test, not a
 ```text
 A Power --> B Clocks --> C CPU+RAM+PRG --> D $FExx latch --> E Pads
                               |
-                              +--> G VRAM interleave --> H Beam --> I BG fetch --+
+                              +--> G VRAM interleave --> H Beam --> I BG fetch ----+
                               |                                                    |
 J Cart flash -----------------+                                                    +--> O RGBS --> P Integration
 K 328P APU ------------------------------------------------------------------------+
-L 1284 --> M Line buf --> N Sprites ------------------------------------------------+
+L 1284 --> M Line buf --> N Sprites -----------------------------------------------+
 ```
 
 | Island | Pass |
@@ -171,7 +172,7 @@ L 1284 --> M Line buf --> N Sprites --------------------------------------------
 | **N** Sprites | Expected pixels in line buffer |
 | **O** Video | RGBS stable at 2x or 1x SCALE |
 
-Full letter list, sim canvas grouping, and port smoke checks: [`retr01/sim/README.md`](../retr01/sim/README.md).
+Full letter list, sim canvas grouping (11 frames), and port smoke checks: [`retr01/sim/README.md`](../retr01/sim/README.md). Sim canvas **N** is the cart module. Silicon bring-up **N** in the diagram below is the sprite path (wired via 1284/L, not a separate sim frame).
 
 ---
 
@@ -183,7 +184,7 @@ Full letter list, sim canvas grouping, and port smoke checks: [`retr01/sim/READM
 | **Retr01-C** | Console shell. **Same motherboard.** Populate **2x 35RAPC** TRS for aux pads ([`controllers.md`](controllers.md)). Arcade headers still present for DIY sticks. Same AV + cart ([`cart.md`](cart.md)). |
 | **Retr01-H** | Handheld SMD later, same cart / `$FExx` software contract |
 
-**Cart programming:** USB-C **cartridge flasher** (ATmega32U4 bench board). Not on the motherboard. See [`cart.md`](cart.md).
+**Cart programming:** USB-C **cartridge flasher** (ATmega32U4 bench board). Not on the motherboard. See [`cart.md`](cart.md). **Sim:** flasher island is on the canvas for layout; USB programming is **WIP** (harness tests only).
 
 Ports and passives: [`passive_rf_etc.md`](passive_rf_etc.md).
 

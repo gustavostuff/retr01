@@ -28,8 +28,6 @@ int r01s_ui_init(R01sUi *ui) {
     ui->islands_strip_y = R01S_UI_ISLANDS_STRIP_DEFAULT_Y;
     ui->legend_strip_x = R01S_UI_LEGEND_STRIP_DEFAULT_X;
     ui->legend_strip_y = R01S_UI_LEGEND_STRIP_DEFAULT_Y;
-    ui->control_strip_x = R01S_UI_CONTROL_STRIP_DEFAULT_X;
-    ui->control_strip_y = R01S_UI_CONTROL_STRIP_DEFAULT_Y;
     (void)font_ensure();
     snprintf(ui->status, sizeof(ui->status),
              "SPACE pause. S save. R rotate. DBL-CLK SCR1 scale. WASD/ARROWS pads.");
@@ -112,12 +110,6 @@ void r01s_ui_bind_group(R01sUi *ui, R01sIslandGroup *group) {
     if (ui) {
         ui->group = group;
         r01s_ui_island_z_init(ui);
-    }
-}
-
-void r01s_ui_bind_app(R01sUi *ui, struct R01sApp *app) {
-    if (ui) {
-        ui->app = app;
     }
 }
 

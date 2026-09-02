@@ -175,8 +175,8 @@ Magic **`retr01`**, **`format_ver` = 2**. Studio re-export required for older im
 | PRG 32 KB                                                        |
 | OTHER SCREENS (title / interstitial / credits, raw or RLE)       |
 | WORLD TABLE 8 x 8 B                                              |
-| WORLD BLOBS: header, CHR 32 KB, BG1 screen dir + payloads,        |
-|   BG0 dir + payloads, entity types/instances, player anim   |
+| WORLD BLOBS: header, CHR 32 KB, BG1 screen dir + payloads,       |
+|   BG0 dir + payloads, entity types/instances, player anim        |
 +------------------------------------------------------------------+
 ```
 

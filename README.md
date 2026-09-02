@@ -4,7 +4,7 @@ The Retr01 project is a software tool chain + hardware family. Software includes
 
 - **Retr01 Studio**: visual authoring for worlds, screens and game entities. **Play** exports a cart and opens the shared emulator render screen (same pixels as standalone emu).
 - **Retr01 Emu**: software-visible 65C02 + `$FExx` I/O + video. Standalone `./emu` and the library Studio Play uses. Loads a cart, runs PRG boot catchup and Host Play for movement, camera, and collision.
-- **Retr01 Sim**: pin-level model of the **32-IC** motherboard netlist. Interactive SDL board UI with draggable islands, per-chip tests, and the same cart boot path as the emulator.
+- **Retr01 Sim**: pin-level model of the **32-IC** motherboard netlist. Interactive SDL board UI with draggable islands and per-chip tests. Loads **`output/test_2.retr01`** into cart flash by default (override with a path arg). Cart USB flasher island is on the canvas for layout only (**WIP**, see [`docs/cart.md`](docs/cart.md)). Same Host Play contract as Emu after boot catchup.
 
 Software is still a WIP. This is the overall hardware roadmap:
 

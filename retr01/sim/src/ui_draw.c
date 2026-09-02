@@ -1368,7 +1368,6 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     /* Floating overlays */
     draw_islands_strip(r, ui);
     draw_legend_strip(r, ui);
-    ui_control_strip_draw(r, ui);
     draw_controller_overlay(r, 0, &ui->gamepad[0]);
     draw_controller_overlay(r, 1, &ui->gamepad[1]);
 

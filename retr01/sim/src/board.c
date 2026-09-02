@@ -241,36 +241,6 @@ R01sBoard *r01s_board_from_group(R01sIslandGroup *group) {
     return board_from_group(group);
 }
 
-void r01s_board_set_power(R01sBoard *board, R01sIslandGroup *group, int on) {
-    int was_on;
-    if (!board || !group) {
-        return;
-    }
-    was_on = group->powered;
-    group->powered = on ? 1 : 0;
-    if (group->powered && !was_on && group->vt && group->vt->reset) {
-        group->vt->reset(group);
-    }
-    r01s_island_group_eval_idle(group);
-}
-
-void r01s_board_toggle_power(R01sBoard *board, R01sIslandGroup *group) {
-    if (!group) {
-        return;
-    }
-    r01s_board_set_power(board, group, !group->powered);
-}
-
-void r01s_board_console_reset(R01sBoard *board, R01sIslandGroup *group) {
-    if (!board || !group || !group->powered) {
-        return;
-    }
-    if (group->vt && group->vt->reset) {
-        group->vt->reset(group);
-    }
-    board->reset_nmi_pulse = R01S_RESET_NMI_PULSE;
-}
-
 static const char *phase_name(R01sCpuPhase p) {
     switch (p) {
     case R01S_CPU_RES_HOLD:

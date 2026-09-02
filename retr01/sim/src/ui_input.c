@@ -194,13 +194,6 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
     if (ui_logic_in_view(logic_x, logic_y)) {
         ui_logic_to_board(ui, logic_x, logic_y, &board_mx, &board_my);
     }
-    if (e->type == SDL_MOUSEMOTION && ui->drag_control_strip) {
-        ui->control_strip_x = logic_x - R01S_UI_VIEW_X - ui->drag_control_ox;
-        ui->control_strip_y = logic_y - R01S_UI_VIEW_Y - ui->drag_control_oy;
-        ui->control_strip_moved = 1;
-        ui_control_strip_clamp(ui);
-        return 1;
-    }
     if (e->type == SDL_MOUSEMOTION && ui->drag_legend_strip) {
         ui->legend_strip_x = logic_x - R01S_UI_VIEW_X - ui->drag_legend_ox;
         ui->legend_strip_y = logic_y - R01S_UI_VIEW_Y - ui->drag_legend_oy;
@@ -213,16 +206,6 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         ui->islands_strip_y = logic_y - R01S_UI_VIEW_Y - ui->drag_islands_oy;
         ui->islands_strip_moved = 1;
         ui_islands_strip_clamp(ui);
-        return 1;
-    }
-    if (e->type == SDL_MOUSEBUTTONDOWN &&
-        (e->button.button == SDL_BUTTON_LEFT || e->button.button == SDL_BUTTON_RIGHT) &&
-        ui_control_strip_contains(ui, logic_x, logic_y)) {
-        ui->drag_control_strip = 1;
-        ui->drag_control_ox = logic_x - (R01S_UI_VIEW_X + ui->control_strip_x);
-        ui->drag_control_oy = logic_y - (R01S_UI_VIEW_Y + ui->control_strip_y);
-        ui->control_strip_moved = 0;
-        ui->ctx_chip = -1;
         return 1;
     }
     if (e->type == SDL_MOUSEBUTTONDOWN &&
@@ -291,16 +274,6 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
     }
     if (e->type == SDL_MOUSEBUTTONUP &&
         (e->button.button == SDL_BUTTON_LEFT || e->button.button == SDL_BUTTON_RIGHT)) {
-        if (ui->drag_control_strip) {
-            int moved = ui->control_strip_moved;
-            ui->drag_control_strip = 0;
-            if (moved) {
-                ui->layout_dirty = 1;
-            } else if (e->button.button == SDL_BUTTON_LEFT) {
-                ui_control_strip_activate(ui, logic_x, logic_y);
-            }
-            return 1;
-        }
         if (ui->drag_legend_strip) {
             int moved = ui->legend_strip_moved;
             ui->drag_legend_strip = 0;

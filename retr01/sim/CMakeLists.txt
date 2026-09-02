@@ -81,6 +81,7 @@ target_link_libraries(retr01_sim_core PUBLIC r01_play_common)
 
 set(R01_OUTPUT_DIR "${R01_REPO_ROOT}/output")
 set(R01_TEST_CART "${R01_OUTPUT_DIR}/test.retr01")
+set(R01_DEFAULT_CART "${R01_OUTPUT_DIR}/test_2.retr01")
 
 add_library(retr01_sim_app
   src/ui.c
@@ -88,7 +89,6 @@ add_library(retr01_sim_app
   src/ui_draw_chip.c
   src/ui_placement.c
   src/ui_draw.c
-  src/ui_control_strip.c
   src/ui_input.c
   src/ui_pin_net.c
   src/ui_layout.c
@@ -101,12 +101,11 @@ target_include_directories(retr01_sim_app PUBLIC
 target_link_libraries(retr01_sim_app PUBLIC retr01_sim_core PkgConfig::SDL2 PkgConfig::FREETYPE)
 target_compile_definitions(retr01_sim_app PRIVATE
   "R01S_ASSETS_DIR=\"${R01_ASSETS_OTHER}\""
-  "R01S_ASSETS_PNG_DIR=\"${R01_ASSETS_PNG}\""
-  "R01S_CART_PATH_A=\"${R01_OUTPUT_DIR}/test.retr01\""
-  "R01S_CART_PATH_B=\"${R01_OUTPUT_DIR}/test_2.retr01\"")
+  "R01S_ASSETS_PNG_DIR=\"${R01_ASSETS_PNG}\"")
 
 add_executable(retr01_sim src/main.c)
 target_link_libraries(retr01_sim PRIVATE retr01_sim_app)
+target_compile_definitions(retr01_sim PRIVATE "R01S_DEFAULT_CART=\"${R01_DEFAULT_CART}\"")
 
 enable_testing()
 

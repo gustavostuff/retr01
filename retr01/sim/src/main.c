@@ -9,6 +9,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef R01S_DEFAULT_CART
+#define R01S_DEFAULT_CART "../output/test_2.retr01"
+#endif
+
 static R01sBoard g_board;
 
 static int want_debug(int argc, char **argv) {
@@ -96,7 +100,7 @@ static const char *first_cart_arg(int argc, char **argv) {
 static int try_load_cart(R01sBoard *board, int argc, char **argv) {
     const char *path = first_cart_arg(argc, argv);
     if (!path) {
-        return 0;
+        path = R01S_DEFAULT_CART;
     }
     if (r01s_board_load_cart(board, path) != 0) {
         fprintf(stderr, "cart: failed to load %s\n", path);

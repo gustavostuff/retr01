@@ -168,68 +168,6 @@ int r01s_app_catchup_active(const R01sApp *app) {
     return app && SDL_AtomicGet((SDL_atomic_t *)&app->catchup_active) != 0;
 }
 
-static void app_cancel_catchup(R01sApp *app) {
-    if (!app || !r01s_app_catchup_active(app)) {
-        return;
-    }
-    if (app->catchup_board) {
-        app->catchup_board->catchup_cancel = 1;
-    }
-    catchup_join(app);
-}
-
-void r01s_app_toggle_power(R01sApp *app) {
-    R01sIslandGroup *group;
-    R01sBoard *board;
-    int was_on;
-
-    if (!app) {
-        return;
-    }
-    group = r01s_island_builder_group(&app->builder);
-    board = r01s_board_from_group(group);
-    if (!group || !board) {
-        return;
-    }
-    app_cancel_catchup(app);
-    was_on = group->powered;
-    if (app->board_mu) {
-        SDL_LockMutex(app->board_mu);
-    }
-    r01s_board_toggle_power(board, group);
-    if (app->board_mu) {
-        SDL_UnlockMutex(app->board_mu);
-    }
-    snprintf(app->ui.status, sizeof(app->ui.status), "power %s", group->powered ? "on" : "off");
-    if (group->powered && !was_on) {
-        r01s_app_start_ic_catchup(app, board);
-    }
-}
-
-void r01s_app_console_reset(R01sApp *app) {
-    R01sIslandGroup *group;
-    R01sBoard *board;
-
-    if (!app) {
-        return;
-    }
-    group = r01s_island_builder_group(&app->builder);
-    board = r01s_board_from_group(group);
-    if (!group || !board || !group->powered) {
-        return;
-    }
-    app_cancel_catchup(app);
-    if (app->board_mu) {
-        SDL_LockMutex(app->board_mu);
-    }
-    r01s_board_console_reset(board, group);
-    if (app->board_mu) {
-        SDL_UnlockMutex(app->board_mu);
-    }
-    r01s_app_start_ic_catchup(app, board);
-    snprintf(app->ui.status, sizeof(app->ui.status), "console reset");
-}
-
 /* Draw + present boot UI; reveal window on first paint so setup never flashes empty. */
 static void app_present_boot(R01sApp *app, int spin) {
     int ww, wh, scale, draw_w, draw_h;
@@ -324,7 +262,6 @@ void r01s_app_mount_builder(R01sApp *app) {
     }
     b = &app->builder;
     r01s_ui_bind_group(&app->ui, &b->group);
-    r01s_ui_bind_app(&app->ui, app);
     r01s_ui_pin_net_build(r01s_board_from_group(&b->group));
     for (i = 0; i < b->mount_count; i++) {
         R01sEntity *e = b->mounts[i].entity;
@@ -497,9 +434,6 @@ void r01s_app_frame(R01sApp *app) {
             app->ui.probe_pad_p1 = r01s_pads_get(&board->pads, 0);
             app->ui.probe_pad_p2 = r01s_pads_get(&board->pads, 1);
             r01s_play_tick(board, pad0);
-            if (r01s_board_flash_active(board)) {
-                r01s_board_flash_poll(board, 8192);
-            }
         }
         if (group) {
             if (group->running) {

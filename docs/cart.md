@@ -149,7 +149,9 @@ Bench tool to program a cart **in the socket** without desoldering the flash IC.
 
 Firmware presents a USB device (vendor protocol TBD when Studio / CLI tooling lands).
 
-**Runners today:** Emu / Sim load `.retr01` from a host file path. On-board flash image and multi-ROM selection are follow-on work ([`hardware.md`](hardware.md#runners-today-vs-silicon-target)).
+**Runners today:** Emu / Sim load `.retr01` from a host file path (Sim default: `output/test_2.retr01`). On-board flash image and multi-ROM selection are follow-on work ([`hardware.md`](hardware.md#runners-today-vs-silicon-target)).
+
+**Sim (WIP):** Island **F** on the board canvas shows the flasher BOM (**ATmega32U4**, **2x 74HC595**, **USB-C**) for layout and bring-up. The interactive sim does **not** program carts over USB yet (no PC host stream, no cart-in-flasher-socket workflow in the main UI). Lower-level models and `flasher_bench` unit tests (`test_island_flasher`, `test_cart_flash_flow`, `test_usbc_pc_host`) exercise the programming path off-canvas. Treat cart flashing in Sim as **work in progress** until bench UI lands.
 
 ### Safety
 
@@ -163,5 +165,6 @@ Firmware presents a USB device (vendor protocol TBD when Studio / CLI tooling la
 | Topic | Note |
 |-------|------|
 | Flasher USB protocol | HID vs CDC vs vendor bulk. Lock when PC tooling ships |
+| Sim cart flasher UI | Island **F** on canvas; USB program flow **WIP** (`flasher_bench` tests only) |
 | Cart shell / label | Mechanical only |
 | Multi-ROM menu | Software + flash layout (post docs) |

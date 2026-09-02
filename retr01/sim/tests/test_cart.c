@@ -50,15 +50,6 @@ int main(int argc, char **argv) {
 
     expect_true(r01s_board_load_cart(b, path) == 0, "load studio cart");
     expect_true(b->cart_loaded, "cart loaded flag");
-
-    expect_true(r01s_board_cart_inserted(b), "cart inserted at boot");
-    expect_true(r01s_board_select_cart(b, path) != 0, "reject select while inserted");
-    r01s_board_toggle_cart(b);
-    expect_true(!r01s_board_cart_inserted(b), "cart removed");
-    expect_true(r01s_board_select_cart(b, path) == 0, "select cart while out");
-    expect_true(r01s_board_cart_path(b) != NULL, "cart path set");
-    expect_true(strcmp(r01s_board_cart_path(b), path) == 0, "cart path matches");
-
     expect_true(b->cart_format_ver == R01S_CART_FORMAT_VER, "format_ver 2");
     expect_true(r01s_sst39sf040_peek(&b->cart_module.flash, 0) == 'r', "cart magic r");
     expect_true(r01s_sst39sf040_peek(&b->cart_module.flash, 1) == 'e', "cart magic e");

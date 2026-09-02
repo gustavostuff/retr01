@@ -26,7 +26,6 @@
 #include "integration.h"
 #include "sprite_fetch.h"
 #include "atmega32u4.h"
-#include "pc_host.h"
 #include "retr01_sim/cart_module.h"
 #include "retr01_sim/cart_slot.h"
 #include "retr01_sim/flasher_bench.h"
@@ -51,7 +50,7 @@ enum {
     R01S_ISLAND_CART = 6,      /* J: cart socket HC245 */
     R01S_ISLAND_APU = 7,       /* K */
     R01S_ISLAND_MCU_LB = 8,    /* L+M: 1284 + linebuf */
-    R01S_ISLAND_FLASHER = 9,   /* USB flasher + Flash ROM button */
+    R01S_ISLAND_FLASHER = 9,   /* F: USB flasher bench (visual in sim, program WIP) */
     R01S_ISLAND_CART_MOD = 10, /* detachable cart module */
     R01S_ISLAND_COUNT = 11,
 };
@@ -166,7 +165,6 @@ typedef struct R01sBoard {
     R01sAtmega32u4 flasher_mcu;
     R01sSn74hc595 flasher_shift_lo;
     R01sSn74hc595 flasher_shift_hi;
-    R01sPcHost pc_host;
     R01sIslandFlasherImpl flasher_impl;
     R01sIslandCartModuleImpl cart_mod_impl;
     R01sIslandPowerClkImpl power_clk_impl;
@@ -330,17 +328,6 @@ void r01s_board_mark_map_ready(R01sBoard *board);
 /* Host Play BG0: load from cart meta and update proportional scroll from play cam. */
 void r01s_board_load_bg0(R01sBoard *board);
 void r01s_board_update_bg0_scroll(R01sBoard *board, int cam_x, int cam_y);
-
-void r01s_board_set_power(R01sBoard *board, R01sIslandGroup *group, int on);
-void r01s_board_toggle_power(R01sBoard *board, R01sIslandGroup *group);
-void r01s_board_console_reset(R01sBoard *board, R01sIslandGroup *group);
-int r01s_board_cart_inserted(const R01sBoard *board);
-int r01s_board_select_cart(R01sBoard *board, const char *path);
-const char *r01s_board_cart_path(const R01sBoard *board);
-void r01s_board_toggle_cart(R01sBoard *board);
-int r01s_board_start_flash(R01sBoard *board, const char *rom_path);
-int r01s_board_flash_active(const R01sBoard *board);
-int r01s_board_flash_poll(R01sBoard *board, int budget);
 
 R01sBoard *r01s_board_from_group(R01sIslandGroup *group);
 

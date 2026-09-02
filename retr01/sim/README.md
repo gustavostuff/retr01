@@ -6,27 +6,29 @@ IC-first board simulator for the Retr01 motherboard (arcade + console share one 
 
 ## Status
 
-**9 canvas islands (O first / top-left) + wired-only E/I/N/P, 32-IC BOM, layer-2 smoke.** SDL board UI.
+**11 canvas islands (O first / top-left) + wired-only E/I/P sprite glue, 32-IC BOM + flasher bench ICs, layer-2 smoke.** SDL board UI. No control-strip power/reset/cart UI (cart image comes from the default `.retr01` path).
 
 | Island | Components (canvas) |
 |--------|---------------------|
-| O Video | `COMPOSITOR` + `AT28C16` (sim; target **AT27C256R**) + `LCD_SINK` + video `SN74HC245` (top-left) |
+| O Video | `COMPOSITOR` + `AT28C16` (sim, target **AT27C256R**) + `LCD_SINK` + video `SN74HC245` (top-left) |
 | A Power+clk | `PWR5V` + `OSC8M` + `SN74HC14` |
 | C CPU + decode | `W65C02S`, `AS6C62256`, `ATF22V10` decode, CPU `SN74HC245` |
 | D `$FExx` latch | **9x** `SN74HC573` (`$FE02`-`$FE04`, `$FE08`, `$FE10`-`$FE12`, `$FE90`-`$FE92`) |
-| E Pads | `$FE60`/`$FE61` via 1284 (software contract. Arcade headers / 35RAPC TRS are silicon/PCB targets, not separate sim islands yet) |
 | G VRAM | 2nd `AS6C62256` + **3x** `SN74HC157` + `ATF22V10` VRAM glue |
 | H Beam | `OSC_DOT` + `BEAM_XY` (X PLD) + `ATF22V10` Y compare vs `$FE04` |
-| I BG fetch | `BG_FETCH` PLD, nametable VA from beam+scroll (not on canvas) |
-| J Cart | `SST39SF040` + cart `24C64` + cart/OAM `SN74HC245` |
+| J Cart | cart `SN74HC245` (mobo socket path) |
 | K APU | `ATMEGA328P` stub, `$FE40`-`$FE5F` regs + digital PWM square |
 | L MCU+linebuf | `ATMEGA1284P` + linebuf `AS6C62256` + **3x** `SN74HC157` |
-| N Sprites | stats via 1284/OAM (not on canvas) |
-| P Integration | NMI / bus-fight stats (not on canvas) |
+| F Flasher | **WIP:** `ATMEGA32U4` + **2x** `SN74HC595` + `USB-C` on canvas only. No interactive USB program flow in the main sim yet. See `flasher_bench` + `test_cart_flash_flow` |
+| N Cart module | `SST39SF040` + cart `24C64` (detachable module, flash loaded from host `.retr01`) |
+
+**Wired on the netlist, not separate canvas frames:** **E** pads (`$FE60`/`$FE61` via 1284), **I** `BG_FETCH`, sprite field fill stats, **P** integration / NMI stats.
 
 Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8000+`.
 
-**Cart load:** `./sim output/test.retr01` (cart path required). The **6502 executes cart PRG from flash** (Studio export includes palette + MAP->VRAM boot via `$FE93`->`$FE12`). Startup catchup runs that stream on a **worker thread** (~12k pin-level steps) so the SDL window stays responsive. Synthetic test cart still uses sim bring-up overlay for island smoke. Host softboot is opt-in only (`R01S_SOFTBOOT=1`). See [`PERFORMANCE.md`](PERFORMANCE.md).
+**Letter note:** Silicon bring-up docs use **N** for the sprite path ([`docs/hardware.md`](../../docs/hardware.md)). On the sim canvas, **N** is the detachable **cart module** island. Sprite milestones still show as **N** in the health strip detail line.
+
+**Cart load:** default **`output/test_2.retr01`** into cart flash (override: `./sim path/to/cart.retr01`). The **6502 executes cart PRG from flash** (Studio export includes palette + MAP->VRAM boot via `$FE93`->`$FE12`). Startup catchup runs that stream on a **worker thread** (~12k pin-level steps) so the SDL window stays responsive. Synthetic test cart still uses sim bring-up overlay when no file loads. Host softboot is opt-in only (`R01S_SOFTBOOT=1`). See [`PERFORMANCE.md`](PERFORMANCE.md).
 
 Why the worker exists: [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md).
 
@@ -60,7 +62,7 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 | **Color PROM burn** | `test_prom.bin` | **Yes** (motherboard) | Not inside the cart. Kit -> R3G3B2. Target part **AT27C256R** ([`hw/md/AT27C256R.md`](../../hw/md/AT27C256R.md)) |
 | **Boot asm listing** | `test_boot.s` | Human-readable only | Binary inside `.retr01` is what runners execute |
 | **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Default: PRG catchup streams pals + start MAP. Softboot opt-in (`R01E_SOFTBOOT=1`). Host Play for camera/player. Used by Studio Play and standalone `./emu` |
-| **Board sim** | `retr01_sim` | IC / island netlist | Loaded cart PRG runs as-is. Bring-up overlay only when **no cart file**. Catchup ~12k pin-level steps. Softboot opt-in (`R01S_SOFTBOOT=1`). Host Play after catchup |
+| **Board sim** | `retr01_sim` | IC / island netlist | Loads `output/test_2.retr01` by default into cart flash. Bring-up overlay when load fails. Catchup ~12k pin-level steps. **Cart flasher (island F): WIP**, visual only. Use `flasher_bench` tests for program path. Softboot opt-in (`R01S_SOFTBOOT=1`). Host Play after catchup |
 
 ### What is in `test.retr01` today
 
@@ -102,7 +104,7 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 | Boot UX | Worker-thread MAP catchup. See [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md) |
 | Perf | [`PERFORMANCE.md`](PERFORMANCE.md) |
 
-**Model:** every IC is an `R01sEntity` (pins + vtable). Islands hold entities. Island groups wire them. `r01s_board_build()` binds the full netlist onto 9 canvas frames. Undriven pins pull high. H+L aborts with a bus-fight report.
+**Model:** every IC is an `R01sEntity` (pins + vtable). Islands hold entities. Island groups wire them. `r01s_board_build()` binds the full netlist onto **11** canvas frames. Undriven pins pull high. H+L aborts with a bus-fight report.
 
 ## Build
 
@@ -110,7 +112,7 @@ From the repo root:
 
 ```bash
 ./build-all
-./sim output/test.retr01
+./sim
 ./unit-tests
 ```
 
@@ -129,10 +131,11 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 ## Run
 
 ```bash
-./sim output/test.retr01
-./sim output/test.retr01 DELAY=typical   # print typ path budget vs PHI2 half
-./sim output/test.retr01 DELAY=max       # print max (worst-case) path budget
-# or: ./sim output/test.retr01 DELAY=max
+./sim
+./sim output/other.retr01
+./sim DELAY=typical   # print typ path budget vs PHI2 half
+./sim DELAY=max       # print max (worst-case) path budget
+# or: ./sim output/test_2.retr01 DELAY=max
 ```
 
 `DELAY=typical|max` selects the datasheet corner and prints **path budget** (decode+245+573 vs PHI2 half). The pin netlist stays combinatorial. Deferred HC/PLD outputs miss `STA $FExx` in this settle model. Wall-clock UI FPS != sim ns. See [`PERFORMANCE.md`](PERFORMANCE.md).
@@ -155,7 +158,7 @@ Live probe (top-right) shows **VDD / PHI2 / RESB**. Status bar shows CPU `PC` / 
 | Path | Role |
 |------|------|
 | `include/retr01/sim/` | Public headers (`entity`, `pin`, `bus`, `board`, `island*`, `types`) |
-| `src/board.c` | Board recipe. 9 canvas islands, wiring, settle loop |
+| `src/board.c` | Board recipe. 11 canvas islands, wiring, settle loop |
 | `src/main.c` | SDL entry |
 | `chips/` | Per-part models |
 | `tests/` | Layer-1 unit tests + `test_island_abcdeghiojklmnp` (layer 2) |

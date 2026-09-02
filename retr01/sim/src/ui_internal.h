@@ -115,9 +115,5 @@ int ui_islands_strip_contains(const R01sUi *ui, int lx, int ly);
 void ui_islands_strip_clamp(R01sUi *ui);
 int ui_legend_strip_contains(const R01sUi *ui, int lx, int ly);
 void ui_legend_strip_clamp(R01sUi *ui);
-int ui_control_strip_contains(const R01sUi *ui, int lx, int ly);
-void ui_control_strip_clamp(R01sUi *ui);
-void ui_control_strip_draw(SDL_Renderer *r, R01sUi *ui);
-int ui_control_strip_activate(R01sUi *ui, int lx, int ly);
 
 #endif
