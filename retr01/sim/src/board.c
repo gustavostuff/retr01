@@ -8,7 +8,6 @@
 #include "retr01_sim/board_flasher.h"
 #include "retr01_sim/cart_module.h"
 #include "retr01_sim/cart_slot.h"
-#include "retr01_sim/flasher_bench.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -2043,25 +2042,6 @@ static void island_cart_init(R01sIsland *island) {
     }
 }
 
-static void island_flasher_init(R01sIsland *island) {
-    R01sIslandFlasherImpl *impl = (R01sIslandFlasherImpl *)island->impl;
-    if (!impl) {
-        return;
-    }
-    if (impl->mcu) {
-        r01s_island_add_entity(island, r01s_atmega32u4_entity(impl->mcu));
-    }
-    if (impl->shift_lo) {
-        r01s_island_add_entity(island, r01s_sn74hc595_entity(impl->shift_lo));
-    }
-    if (impl->shift_hi) {
-        r01s_island_add_entity(island, r01s_sn74hc595_entity(impl->shift_hi));
-    }
-    if (impl->usb) {
-        r01s_island_add_entity(island, r01s_usbc_receptacle_entity(impl->usb));
-    }
-}
-
 static void island_apu_init(R01sIsland *island) {
     R01sIslandApuImpl *impl = (R01sIslandApuImpl *)island->impl;
     r01s_atmega328p_init(impl->apu, "U328");
@@ -2089,7 +2069,6 @@ static const R01sIslandVTable ISLAND_IO_VT = {island_io_latch_init, NULL, NULL, 
 static const R01sIslandVTable ISLAND_VRAM_VT = {island_vram_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_BEAM_VT = {island_beam_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CART_VT = {island_cart_init, NULL, NULL, NULL, NULL};
-static const R01sIslandVTable ISLAND_FLASHER_VT = {island_flasher_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CART_MOD_VT = {r01s_island_cart_module_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_APU_VT = {island_apu_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_MCU_LB_VT = {island_mcu_lb_init, NULL, NULL, NULL, NULL};
@@ -3154,7 +3133,7 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     board->video_impl.comp = &board->compositor;
     board->video_impl.prom = &board->color_prom;
     board->video_impl.sink = &board->video_sink;
-    r01s_board_init_flasher_hw(board);
+    r01s_board_init_cart_hw(board);
     board->apu_impl.apu = &board->apu;
     board->mcu_lb_impl.mcu = &board->mcu1284;
     board->mcu_lb_impl.sram = &board->linebuf;
@@ -3213,10 +3192,6 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     }
     if (r01s_island_builder_add(b, &ISLAND_MCU_LB_VT, "ISLAND L  1284+LINEBUF", 0, 0, 1, 1,
                                 &board->mcu_lb_impl) < 0) {
-        return -1;
-    }
-    if (r01s_island_builder_add(b, &ISLAND_FLASHER_VT, "ISLAND F  FLASHER USB", 0, 0, 1, 1,
-                                &board->flasher_impl) < 0) {
         return -1;
     }
     if (r01s_island_builder_add(b, &ISLAND_CART_MOD_VT, "ISLAND N  CART MODULE", 0, 0, 1, 1,
@@ -3324,20 +3299,6 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         }
     }
     {
-        R01sEntity *mcu_e = r01s_atmega32u4_entity(&board->flasher_mcu);
-        R01sEntity *lo_e = r01s_sn74hc595_entity(&board->flasher_shift_lo);
-        R01sEntity *hi_e = r01s_sn74hc595_entity(&board->flasher_shift_hi);
-        R01sEntity *usb_e = r01s_usbc_receptacle_entity(&board->flasher_usb);
-        int x = 0;
-        r01s_island_builder_mount_rel(b, mcu_e, R01S_ISLAND_FLASHER, 0, 0);
-        x += mcu_e->body_w + R01S_CHIP_GAP;
-        r01s_island_builder_mount_rel(b, lo_e, R01S_ISLAND_FLASHER, x, 0);
-        x += lo_e->body_w + R01S_CHIP_GAP;
-        r01s_island_builder_mount_rel(b, hi_e, R01S_ISLAND_FLASHER, x, 0);
-        x += hi_e->body_w + R01S_CHIP_GAP;
-        r01s_island_builder_mount_rel(b, usb_e, R01S_ISLAND_FLASHER, x, 0);
-    }
-    {
         R01sEntity *flash_e = r01s_sst39sf040_entity(&board->cart_module.flash);
         R01sEntity *ee_e = r01s_i2c_eeprom_entity(&board->cart_module.save);
         int x = 0;
@@ -3351,9 +3312,9 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
 
     {
         int bom_ic = r01s_island_builder_count_visual(b, R01S_ENTITY_VIS_IC);
-        /* Motherboard BOM (32) + flasher bench (32U4 + 2x595). */
-        if (bom_ic != R01S_BOM_IC_N + 3) {
-            fprintf(stderr, "board: expected %d BOM+flasher IC mounts, got %d\n", R01S_BOM_IC_N + 3, bom_ic);
+        /* Motherboard BOM (32). Cart flasher is flasher_bench only. */
+        if (bom_ic != R01S_BOM_IC_N) {
+            fprintf(stderr, "board: expected %d BOM IC mounts, got %d\n", R01S_BOM_IC_N, bom_ic);
             return -1;
         }
     }
@@ -3361,7 +3322,10 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     if (r01s_island_builder_finish(b) != 0) {
         return -1;
     }
-    /* After island init (flash memset): install bring-up cart image. */
+    /*
+     * Fallback image so board_build alone has a valid cart for unit tests.
+     * Main sim overwrites this with the argv .retr01 via r01s_board_load_cart.
+     */
     board_install_synthetic_cart(board);
     return 0;
 }

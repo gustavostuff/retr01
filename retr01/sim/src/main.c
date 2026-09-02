@@ -103,9 +103,11 @@ static int try_load_cart(R01sBoard *board, int argc, char **argv) {
         path = R01S_DEFAULT_CART;
     }
     if (r01s_board_load_cart(board, path) != 0) {
-        fprintf(stderr, "cart: failed to load %s\n", path);
+        fprintf(stderr, "cart: failed to load %s into SST39SF040\n", path);
         return -1;
     }
+    fprintf(stderr, "cart: loaded %s into SST39SF040 (label=%s prg_off=0x%06x prg_len=0x%06x)\n", path,
+            board->cart_label, (unsigned)board->cart_off_prg, (unsigned)board->cart_len_prg);
     return 0;
 }
 
@@ -123,13 +125,15 @@ static int setup_board(R01sApp *app, int argc, char **argv) {
     if (r01s_board_build(&g_board, &app->builder) != 0) {
         return -1;
     }
-    if (try_load_cart(&g_board, argc, argv) != 0) {
-        return -1;
-    }
     r01s_app_mount_builder(app);
     {
         R01sIslandGroup *group = r01s_island_builder_group(&app->builder);
+        /* Reset pin/state only. Flash mem is preserved across entity reset. */
         r01s_island_group_reset(group);
+        /* Argv .retr01 is the image copied into cart SST39SF040 (after reset). */
+        if (try_load_cart(&g_board, argc, argv) != 0) {
+            return -1;
+        }
         /* Non-blocking: worker thread runs IC MAP stream; UI stays responsive. */
         r01s_app_start_ic_catchup(app, &g_board);
     }

@@ -6,7 +6,7 @@ IC-first board simulator for the Retr01 motherboard (arcade + console share one 
 
 ## Status
 
-**11 canvas islands (O first / top-left) + wired-only E/I/P sprite glue, 32-IC BOM + flasher bench ICs, layer-2 smoke.** SDL board UI. No control-strip power/reset/cart UI (cart image comes from the default `.retr01` path).
+**10 canvas islands (O first / top-left) + wired-only E/I/P sprite glue, 32-IC BOM, layer-2 smoke.** SDL board UI. No control-strip power/reset/cart UI (cart image comes from the argv `.retr01` path). Cart USB flasher is **not** on the main canvas: unit-tested via `flasher_bench` only.
 
 | Island | Components (canvas) |
 |--------|---------------------|
@@ -19,8 +19,7 @@ IC-first board simulator for the Retr01 motherboard (arcade + console share one 
 | J Cart | cart `SN74HC245` (mobo socket path) |
 | K APU | `ATMEGA328P` stub, `$FE40`-`$FE5F` regs + digital PWM square |
 | L MCU+linebuf | `ATMEGA1284P` + linebuf `AS6C62256` + **3x** `SN74HC157` |
-| F Flasher | **WIP:** `ATMEGA32U4` + **2x** `SN74HC595` + `USB-C` on canvas only. No interactive USB program flow in the main sim yet. See `flasher_bench` + `test_cart_flash_flow` |
-| N Cart module | `SST39SF040` + cart `24C64` (detachable module, flash loaded from host `.retr01`) |
+| N Cart module | `SST39SF040` + cart `24C64` (detachable module. Argv `.retr01` is copied into flash) |
 
 **Wired on the netlist, not separate canvas frames:** **E** pads (`$FE60`/`$FE61` via 1284), **I** `BG_FETCH`, sprite field fill stats, **P** integration / NMI stats.
 
@@ -28,7 +27,9 @@ Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8
 
 **Letter note:** Silicon bring-up docs use **N** for the sprite path ([`docs/hardware.md`](../../docs/hardware.md)). On the sim canvas, **N** is the detachable **cart module** island. Sprite milestones still show as **N** in the health strip detail line.
 
-**Cart load:** default **`output/test_2.retr01`** into cart flash (override: `./sim path/to/cart.retr01`). The **6502 executes cart PRG from flash** (Studio export includes palette + MAP->VRAM boot via `$FE93`->`$FE12`). Startup catchup runs that stream on a **worker thread** (~12k pin-level steps) so the SDL window stays responsive. Synthetic test cart still uses sim bring-up overlay when no file loads. Host softboot is opt-in only (`R01S_SOFTBOOT=1`). See [`PERFORMANCE.md`](PERFORMANCE.md).
+**Cart load:** argv / default **`output/test_2.retr01`** is copied into cart `SST39SF040` after board reset (override: `./sim path/to/cart.retr01`). The **6502 executes cart PRG from flash** (Studio export includes palette + MAP->VRAM boot via `$FE93`->`$FE12`). Startup catchup runs that stream on a **worker thread** (~12k pin-level steps) so the SDL window stays responsive. `board_build` still installs a synthetic image for unit tests that do not call `r01s_board_load_cart`. Host softboot is opt-in only (`R01S_SOFTBOOT=1`). See [`PERFORMANCE.md`](PERFORMANCE.md).
+
+**Cart flasher:** isolated from the main sim. Use `flasher_bench` + `test_cart_flash_flow` / `test_island_flasher`.
 
 Why the worker exists: [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md).
 
@@ -62,7 +63,7 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 | **Color PROM burn** | `test_prom.bin` | **Yes** (motherboard) | Not inside the cart. Kit -> R3G3B2. Target part **AT27C256R** ([`hw/md/AT27C256R.md`](../../hw/md/AT27C256R.md)) |
 | **Boot asm listing** | `test_boot.s` | Human-readable only | Binary inside `.retr01` is what runners execute |
 | **Emulator** | `retr01_emu` | Software-visible CPU/`$FExx` | Loads `.retr01`. Default: PRG catchup streams pals + start MAP. Softboot opt-in (`R01E_SOFTBOOT=1`). Host Play for camera/player. Used by Studio Play and standalone `./emu` |
-| **Board sim** | `retr01_sim` | IC / island netlist | Loads `output/test_2.retr01` by default into cart flash. Bring-up overlay when load fails. Catchup ~12k pin-level steps. **Cart flasher (island F): WIP**, visual only. Use `flasher_bench` tests for program path. Softboot opt-in (`R01S_SOFTBOOT=1`). Host Play after catchup |
+| **Board sim** | `retr01_sim` | IC / island netlist | Copies argv/default `.retr01` into cart `SST39SF040`. Catchup ~12k pin-level steps. Flasher is `flasher_bench` unit tests only (not on main canvas). Softboot opt-in (`R01S_SOFTBOOT=1`). Host Play after catchup |
 
 ### What is in `test.retr01` today
 
@@ -158,7 +159,7 @@ Live probe (top-right) shows **VDD / PHI2 / RESB**. Status bar shows CPU `PC` / 
 | Path | Role |
 |------|------|
 | `include/retr01/sim/` | Public headers (`entity`, `pin`, `bus`, `board`, `island*`, `types`) |
-| `src/board.c` | Board recipe. 11 canvas islands, wiring, settle loop |
+| `src/board.c` | Board recipe. 10 canvas islands, wiring, settle loop |
 | `src/main.c` | SDL entry |
 | `chips/` | Per-part models |
 | `tests/` | Layer-1 unit tests + `test_island_abcdeghiojklmnp` (layer 2) |

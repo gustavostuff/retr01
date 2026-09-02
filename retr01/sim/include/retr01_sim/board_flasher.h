@@ -3,6 +3,7 @@
 
 struct R01sBoard;
 
-void r01s_board_init_flasher_hw(struct R01sBoard *board);
+/* Cart module + console socket only. Flasher bench is separate (flasher_bench). */
+void r01s_board_init_cart_hw(struct R01sBoard *board);
 
 #endif

@@ -275,9 +275,8 @@ void r01s_app_mount_builder(R01sApp *app) {
     }
     {
         int bom_ic = r01s_island_builder_count_visual(b, R01S_ENTITY_VIS_IC);
-        if (bom_ic != R01S_BOM_IC_N + 3) {
-            fprintf(stderr, "ui: expected %d BOM+flasher IC visuals, mounted %d ui chips\n", R01S_BOM_IC_N + 3,
-                    bom_ic);
+        if (bom_ic != R01S_BOM_IC_N) {
+            fprintf(stderr, "ui: expected %d BOM IC visuals, mounted %d ui chips\n", R01S_BOM_IC_N, bom_ic);
         }
     }
     if (r01s_ui_layout_load(&app->ui) != 0) {

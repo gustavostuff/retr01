@@ -55,9 +55,9 @@ int main(void) {
     group = r01s_island_builder_group(&builder);
     expect_true(group != NULL, "group");
     expect_true(r01s_island_group_count(group) == R01S_ISLAND_COUNT,
-                "11 islands incl flasher+cart mod");
-    expect_true(r01s_island_builder_count_visual(&builder, R01S_ENTITY_VIS_IC) == R01S_BOM_IC_N + 3,
-                "32 BOM + 3 flasher IC visuals mounted");
+                "10 islands incl cart mod (no flasher)");
+    expect_true(r01s_island_builder_count_visual(&builder, R01S_ENTITY_VIS_IC) == R01S_BOM_IC_N,
+                "32 BOM IC visuals mounted");
     expect_true(r01s_island_group_at(group, R01S_ISLAND_VIDEO) != NULL, "video island present");
     expect_true(r01s_island_group_at(group, R01S_ISLAND_VIDEO)->title != NULL &&
                     strstr(r01s_island_group_at(group, R01S_ISLAND_VIDEO)->title, "VIDEO") != NULL,
