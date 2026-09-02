@@ -2,7 +2,7 @@
 
 Retr01 vs classic 8-bit constraints (especially NES-era). Same spirit, more headroom for game logic.
 
-**Related:** [`graphics.md`](graphics.md), [`memory.md`](memory.md), [`hardware.md`](hardware.md), [`passive_rf_etc.md`](passive_rf_etc.md). Authoring: [`retr01/studio/README.md`](../retr01/studio/README.md).
+**Related:** [`graphics.md`](graphics.md), [`memory.md`](memory.md), [`hardware.md`](hardware.md), [`passive_rf_etc.md`](passive_rf_etc.md), [`lightgun.md`](lightgun.md) (CRT accessory, roadmap). Authoring: [`retr01/studio/README.md`](../retr01/studio/README.md).
 
 ---
 
@@ -115,6 +115,8 @@ Every motherboard (silicon / PCB target) has:
 Populate TRS jacks for console / portable sticks. Leave DNP in a sealed cabinet if you only wire the arcade headers. Details: [`passive_rf_etc.md`](passive_rf_etc.md).
 
 Emu / Sim Host Play today use the `$FE60` / `$FE61` software contract only (not separate TRS or header island models).
+
+**Light gun (roadmap):** A native CRT accessory on the same **3-wire** TRS port is specced in [`lightgun.md`](lightgun.md). Buffered timer in the gun enables **2-frame** multi-target hits vs classic per-sprite flashing. Not in Emu / Sim yet.
 
 Built for people who want to **make** 8-bit games, not only play them. Tools: **Studio** (author), **Emu** (runtime), **Sim** (hardware bring-up).
 

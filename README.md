@@ -61,6 +61,7 @@ Sim:
 - [`docs/hardware.md`](docs/hardware.md): IC BOM, block diagram, bring-up (chips only)
 - [`docs/cart.md`](docs/cart.md): cartridge pinout, form factor, USB-C flasher
 - [`docs/controllers.md`](docs/controllers.md): Retr01-A arcade vs Retr01-C pad protocol
+- [`docs/lightgun.md`](docs/lightgun.md): CRT light gun accessory (roadmap)
 - [`docs/passive_rf_etc.md`](docs/passive_rf_etc.md): passives, ports, stackup / RF
 - [`docs/sound.md`](docs/sound.md): APU and bytecode
 - [`docs/selling_points.md`](docs/selling_points.md): NES vs Retr01 comparison

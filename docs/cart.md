@@ -165,6 +165,6 @@ Firmware presents a USB device (vendor protocol TBD when Studio / CLI tooling la
 | Topic | Note |
 |-------|------|
 | Flasher USB protocol | HID vs CDC vs vendor bulk. Lock when PC tooling ships |
-| Sim cart flasher UI | Island **F** on canvas; USB program flow **WIP** (`flasher_bench` tests only) |
+| Sim cart flasher UI | Island **F** on canvas. USB program flow **WIP** (`flasher_bench` tests only) |
 | Cart shell / label | Mechanical only |
 | Multi-ROM menu | Software + flash layout (post docs) |

@@ -2,7 +2,7 @@
 
 Input paths for the **shared motherboard** (arcade **Retr01-A** and console **Retr01-C**). Software contract is always **`$FE60`** (P1) and **`$FE61`** (P2): bit set = pressed. Layout: [`graphics.md`](graphics.md#graphics-fexx-ports).
 
-**Related:** [`hardware.md`](hardware.md) (pads section, [runners vs silicon](hardware.md#runners-today-vs-silicon-target)). TRS jack passives: [`passive_rf_etc.md`](passive_rf_etc.md).
+**Related:** [`hardware.md`](hardware.md) (pads section, [runners vs silicon](hardware.md#runners-today-vs-silicon-target)). TRS jack passives: [`passive_rf_etc.md`](passive_rf_etc.md). Light gun extension (roadmap): [`lightgun.md`](lightgun.md).
 
 ---
 
@@ -108,3 +108,4 @@ Pads that miss a poll hold last state until the next good frame.
 | P2 poll byte | Confirm `0xAA` vs alternate at 1284 firmware bring-up |
 | Debounce | Pad-side vs 1284-side threshold |
 | Arcade header pinout | Lock P1/P2 pin order at schematic |
+| Light gun | Identify **`0x02`**, timer read **`0x5A`**. See [`lightgun.md`](lightgun.md) |
