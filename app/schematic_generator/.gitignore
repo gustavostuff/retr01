@@ -1,0 +1,8 @@
+# Retr01 schematic generator outputs
+output/
+*.net
+__pycache__/
+*.pyc
+.venv/
+.skidl/
+.matplotlib/

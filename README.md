@@ -20,6 +20,7 @@ Apps and shared code live under [`app/`](app/):
 | `app/studio/` | Authoring app |
 | `app/emu/` | Cart emulator (+ Studio Play core) |
 | `app/sim/` | Pin-level board simulator |
+| `app/schematic_generator/` | SKiDL netlist from sim wiring (Code-to-Copper) |
 | `bin/` | Release binaries from `./build-all` (`studio`, `emu`, `sim`) |
 
 `./build-all` builds Release binaries into `bin/`. `./studio`, `./emu`, and `./sim` only run those binaries. `./unit-tests` runs the test suites.

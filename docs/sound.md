@@ -12,7 +12,7 @@ Retr01 has **no fixed-function audio ASIC**. Roles split like the rest of the bo
 |------|-----|
 | Sequencer / tracker | **W65C02S** (game PRG), driven by **60 Hz NMI** |
 | Synthesizer / mixer (APU) | **ATmega328P** @ 16 MHz (island **K**) |
-| Analog out | 328P **8-bit digital mix** -> discrete **R-2R** resistor ladder DAC (PWM/RC alternate TBD) |
+| Analog out | 328P **8-bit digital mix** -> discrete **R-2R** (**R = 10.0 kΩ**, **2R = 20.0 kΩ**, 1%) + **1 kΩ** / **10 µF** AC build-out ([`passive_rf_etc.md`](passive_rf_etc.md)) |
 
 Flow:
 

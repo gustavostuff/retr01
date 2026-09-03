@@ -109,7 +109,7 @@ Classic NES **32 KB** games (Balloon Fight, Ice Climber, Excitebike) already shi
 
 Every motherboard (silicon / PCB target) has:
 
-1. **Arcade controller** connections. Headers for sticks/buttons as simple microswitch circuits into the 1284 (`$FE60` / `$FE61`).
+1. **Arcade controller** connections. **J5/J6** 1×10 headers (bitfield order) + **J7** 1×4 power/reset into the 1284 (`$FE60` / `$FE61`). See [`controllers.md`](controllers.md#locked-headers-schematic-freeze).
 2. **2x Switchcraft 35RAPC** female 3.5 mm TRS footprints. **Retr01-C** aux pads: **ATtiny85** + 3-wire half-duplex UART at **115200** ([`controllers.md`](controllers.md)). PPTC + ESD on the TRS path.
 
 Populate TRS jacks for console / portable sticks. Leave DNP in a sealed cabinet if you only wire the arcade headers. Details: [`passive_rf_etc.md`](passive_rf_etc.md).

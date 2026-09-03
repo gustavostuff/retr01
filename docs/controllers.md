@@ -29,15 +29,74 @@ The **ATmega1284P** owns pad sampling and presents bytes at `$FE60` / `$FE61`. T
 
 ## Retr01-A: Arcade (direct GPIO)
 
-Sticks and buttons are **microswitch-to-GND** (or common) circuits wired into **1284** GPIO via headers / IDC.
+Sticks and buttons are **microswitch-to-GND** circuits into the **ATmega1284P**. Each switch closes its signal pin to the header **GND**.
 
 | Item | Spec |
 |------|------|
-| MCU | ATmega1284P reads switches directly |
-| Harness | Series **22-100 ohm** per line. Optional TVS at connector |
+| MCU | ATmega1284P samples GPIO and packs `$FE60` / `$FE61` |
+| Harness | Series **47 ohm** per signal (22–100 ohm class). TVS at layout later |
 | TRS jacks | May be **DNP** on pure cabinet builds |
 
 No serial protocol on this path. Debouncing is firmware policy on the 1284.
+
+### Locked headers (schematic freeze)
+
+Three connectors on the motherboard:
+
+| Refdes | Part | Role |
+|--------|------|------|
+| **J5** | **1×10** pin header, 2.54 mm | Player 1 controls |
+| **J6** | **1×10** pin header, 2.54 mm | Player 2 controls |
+| **J7** | **1×4** pin header, 2.54 mm | Cabinet **+5 V / GND / RESET** |
+
+Pin 1 is marked on the silkscreen (square pad). Headers face the cabinet harness edge.
+
+#### J5 — Player 1 (1×10)
+
+Pin order matches the `$FE60` bitfield (**LSB = pin 1**):
+
+| Pin | Net | `$FE60` bit | Switch |
+|-----|-----|-------------|--------|
+| 1 | `P1_RIGHT` | 0 | Right |
+| 2 | `P1_LEFT` | 1 | Left |
+| 3 | `P1_DOWN` | 2 | Down |
+| 4 | `P1_UP` | 3 | Up |
+| 5 | `P1_X` | 4 | X |
+| 6 | `P1_Y` | 5 | Y |
+| 7 | `P1_COIN` | 6 | Coin |
+| 8 | `P1_START` | 7 | Start |
+| 9 | `GND` | — | Switch common |
+| 10 | `GND` | — | Switch common (spare) |
+
+#### J6 — Player 2 (1×10)
+
+Same physical order as J5 for `$FE61`:
+
+| Pin | Net | `$FE61` bit | Switch |
+|-----|-----|-------------|--------|
+| 1 | `P2_RIGHT` | 0 | Right |
+| 2 | `P2_LEFT` | 1 | Left |
+| 3 | `P2_DOWN` | 2 | Down |
+| 4 | `P2_UP` | 3 | Up |
+| 5 | `P2_X` | 4 | X |
+| 6 | `P2_Y` | 5 | Y |
+| 7 | `P2_COIN` | 6 | Coin |
+| 8 | `P2_START` | 7 | Start |
+| 9 | `GND` | — | Switch common |
+| 10 | `GND` | — | Switch common (spare) |
+
+#### J7 — Power / reset (1×4)
+
+Shared cabinet feed for lamps / coin door / front-panel reset. **Does not** replace the barrel jack (J1); it is a harness tap from the post-ferrite **+5 V** rail.
+
+| Pin | Net | Role |
+|-----|-----|------|
+| 1 | `+5V` | Fused board 5 V out to cabinet |
+| 2 | `GND` | Ground |
+| 3 | `RESET_N` | Active-low reset (momentary to GND). Ties into HC14 / `RESB` reset tree |
+| 4 | `GND` | Ground (return / keying spare) |
+
+**Why 10 + 10 + 4:** eight bitfield lines need eight pins; dual GND on each player header simplifies harness commons without a third connector; power and reset stay off the control ribbons so a shorted stick wire cannot backfeed the rail through a signal pin.
 
 ---
 
@@ -72,7 +131,7 @@ Both ends release high (idle). Either side pulls low to transmit.
 |-----------|-------|
 | Baud | **115200** 8N1 |
 | Frame budget | **< 200 us** per exchange (fits in **VBlank**) |
-| Poll (host -> pad) | Host sends **1 byte**: **`0x55`** = P1 poll, **`0xAA`** = P2 poll (second port, exact P2 byte lock with schematic) |
+| Poll (host -> pad) | Host sends **1 byte**: **`0x55`** = P1 poll, **`0xAA`** = P2 poll (**locked**) |
 | Reply (pad -> host) | Pad samples buttons, then sends **1 byte** state using the bitfield table above |
 
 **Per-frame sequence (once per vertical blank):**
@@ -105,7 +164,6 @@ Pads that miss a poll hold last state until the next good frame.
 
 | Topic | Note |
 |-------|------|
-| P2 poll byte | Confirm `0xAA` vs alternate at 1284 firmware bring-up |
 | Debounce | Pad-side vs 1284-side threshold |
-| Arcade header pinout | Lock P1/P2 pin order at schematic |
 | Light gun | Identify **`0x02`**, timer read **`0x5A`**. See [`lightgun.md`](lightgun.md) |
+| Arcade series-R / TVS footprints | **47 ohm** locked; TVS arrays at layout ([`passive_rf_etc.md`](passive_rf_etc.md)) |

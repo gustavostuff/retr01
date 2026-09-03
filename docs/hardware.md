@@ -124,7 +124,7 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
 
 1. All pad paths feed the **ATmega1284P**. CPU reads packed bits at **`$FE60`** (P1) and **`$FE61`** (P2). Bit set = pressed ([`controllers.md`](controllers.md)).
 2. **Silicon / PCB target:** one motherboard carries **both** I/O styles (arcade vs console is shell / population, not a different PCB):
-   - **Retr01-A (arcade):** headers / IDC for sticks and buttons as simple **microswitch-to-GND** circuits into the 1284.
+   - **Retr01-A (arcade):** **J5/J6** 1×10 microswitch headers + **J7** 1×4 power/reset ([`controllers.md`](controllers.md#locked-headers-schematic-freeze)).
    - **Retr01-C (console):** **2x Switchcraft 35RAPC** TRS for aux pads. Pad boards use **ATtiny85** on a **3-wire** (5 V / DATA / GND) half-duplex UART link ([`controllers.md`](controllers.md)). Populate jacks for console. DNP OK on pure arcade builds.
 3. **Runners today (Emu / Sim):** Host Play drives `$FE60` / `$FE61` directly. TRS / UART not modeled in the netlist yet.
 4. Ports / ESD / PPTC: [`passive_rf_etc.md`](passive_rf_etc.md).

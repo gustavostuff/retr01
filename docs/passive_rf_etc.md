@@ -88,14 +88,18 @@ Board clocks matter for layout cleanliness. They are not automatically a show-st
 
 ## Video and audio analog
 
-| Item | Role |
-|------|------|
+| Item | Role / locked value |
+|------|---------------------|
 | Color PROM **R-2R** ladder (**1%** metal film) | R3G3B2 -> analog guns ([`AT27C256R`](../hw/md/AT27C256R.md)) |
-| **75 ohm** to **GND** on each R/G/B (and sync as needed) | Termination -> **~0.7 Vpp** into 75 ohm video plant |
+| Video R-2R unit **R** | **1.00 kΩ** (bits weight R / 2R / 4R from LSB) |
+| Video R-2R unit **2R** | **2.00 kΩ** |
+| **75.0 Ω** to **GND** on each R/G/B | Termination -> **~0.7 Vpp** into 75 ohm video plant |
 | Optional ferrite beads on RGBS | Cable RF. Place at connector |
-| APU **R-2R** (or PWM RC) from 328P | Line-level mix ([`sound.md`](sound.md)) |
-| AC-coupling cap + series build-out on audio out | Blocks DC into TVs / amps |
+| APU **R-2R** from 328P `AUD0`–`AUD7` | **R = 10.0 kΩ**, **2R = 20.0 kΩ** (1%), then AC-couple to line out ([`sound.md`](sound.md)) |
+| APU build-out | **1.0 kΩ** series + **10 µF** AC-coupling toward jack |
 | Video / AV connectors | RGBS (+ S-Video / composite path TBD). Levels bench-tuned |
+| **SCALE** select | Single SPST DIP/`SW_SCALE`: **open = 2×** (default, soft pull-down on `SCALE_1X`), **closed = 1×** (ties `SCALE_1X` to +5 V). See [`hardware.md`](hardware.md) |
+
 
 ---
 
@@ -107,7 +111,8 @@ Anything a human can touch gets a clamp **at the connector**, then a series limi
 |------|------|
 | TVS array (5 V working, e.g. PESD5V0-class) on cart address/data/control as needed | ESD into flash / HC245 domain |
 | Series **22-100 ohm** on slow GPIO / pad DATA | Limits IC clamp current. Damps cable resonances |
-| SCALE DIP + pull-ups/downs | 1x / 2x select. Define idle state |
+| SCALE DIP + pull-ups/downs | **Locked:** open = **2×** default; closed drives `SCALE_1X` high for **1×** |
+
 
 ---
 
@@ -119,14 +124,16 @@ Anything a human can touch gets a clamp **at the connector**, then a series limi
 
 ### Arcade controllers (microswitches)
 
-Simple **switch-to-GND** (or switch-to-common) circuits: sticks and buttons close contacts. No pad MCU on this path.
+Simple **switch-to-GND** circuits: sticks and buttons close contacts. No pad MCU on this path.
 
-| Item | Role |
+| Item | Spec |
 |------|------|
-| Headers / IDC (or discrete pads) | P1 / P2 button and stick lines into **ATmega1284P** GPIO |
-| Series **22-100 ohm** per line | Limits clamp current. Damps cable |
-| Optional TVS at connector | ESD on cabinet harness |
-| Bit contract | Same as pads: `$FE60` / `$FE61`, bit set = pressed |
+| **J5** | **1×10** P1 header — pinout locked in [`controllers.md`](controllers.md#j5--player-1-110) |
+| **J6** | **1×10** P2 header — same order for `$FE61` |
+| **J7** | **1×4** `+5V` / `GND` / `RESET_N` / `GND` cabinet tap |
+| Series **R** | **47 ohm** per signal line |
+| Optional TVS | At connector (layout) |
+| Bit contract | `$FE60` / `$FE61`, bit set = pressed |
 
 ### Aux pad ports (3.5 mm TRS footprints)
 
