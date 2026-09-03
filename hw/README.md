@@ -2,7 +2,7 @@
 
 Parts list and vendor datasheet notes for the shared Retr01 motherboard (arcade + console). This folder may hold local datasheet copies on disk. They are gitignored and are **not** Retr01 schematics.
 
-**Markdown IC notes (sim / bring-up):** [`md/`](md/) - start with [`md/README.md`](md/README.md). Current BOM: [`../docs/hardware.md`](../docs/hardware.md). Simulator: [`../retr01/sim/README.md`](../retr01/sim/README.md).
+**Markdown IC notes (sim / bring-up):** [`md/`](md/) - start with [`md/README.md`](md/README.md). Current BOM: [`../docs/hardware.md`](../docs/hardware.md). Simulator: [`../app/sim/README.md`](../app/sim/README.md).
 
 Swap / alternate parts notes live under [`candidates/`](candidates/).
 

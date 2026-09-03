@@ -26,13 +26,13 @@ static int font_try_open(const char *path) {
 }
 
 #ifndef R01_STUDIO_FONT_DIR
-#define R01_STUDIO_FONT_DIR "retr01/assets/other"
+#define R01_STUDIO_FONT_DIR "app/assets/other"
 #endif
 
 int font_init(void) {
     static const char *const paths[] = {
         R01_STUDIO_FONT_DIR "/proggy-tiny.ttf",
-        "retr01/assets/other/proggy-tiny.ttf",
+        "app/assets/other/proggy-tiny.ttf",
         "../assets/other/proggy-tiny.ttf",
         "assets/other/proggy-tiny.ttf",
         NULL,

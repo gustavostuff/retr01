@@ -122,7 +122,7 @@ From the repo root:
 Developer rebuild of this tree only:
 
 ```bash
-cd retr01/sim
+cd app/sim
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ctest --test-dir build --output-on-failure
@@ -145,7 +145,7 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 
 **Controls:** `Space` pause/resume * `Ctrl+R` reset * `R` rotate selected IC * **SCALE 1X/2X** (left sidebar or `G`. **2X** grows the video island to fit SCR1) * `.` single-step (while paused) * **COMPACT / ISLANDS** (HUD) * **left-drag chip** move * **right-click chip** orient H/V * **left-drag empty island** move frame * **bottom-right grip** resize * **Shift+arrows / wheel / middle-drag** pan * `Esc` quit.
 
-**Layout persistence:** island frames + chip positions saved to `retr01/sim/ui_layout.json` (override with `R01S_LAYOUT`).
+**Layout persistence:** island frames + chip positions saved to `app/sim/ui_layout.json` (override with `R01S_LAYOUT`).
 
 **Gamepads (island E -> `$FE60`/`$FE61`):** bottom-left panels or keyboard. After boot catchup, **Host Play** uses P1 for move + warps (Studio/emu rules: dead-zone camera, player anim blob, collision from cart MAP attrs):
 
@@ -160,7 +160,7 @@ Live probe (top-right) shows **VDD / PHI2 / RESB**. Status bar shows CPU `PC` / 
 
 | Path | Role |
 |------|------|
-| `include/retr01/sim/` | Public headers (`entity`, `pin`, `bus`, `board`, `island*`, `types`) |
+| `include/retr01_sim/` | Public headers (`entity`, `pin`, `bus`, `board`, `island*`, `types`) |
 | `src/board.c` | Board recipe. 10 canvas islands, wiring, settle loop |
 | `src/main.c` | SDL entry |
 | `chips/` | Per-part models |

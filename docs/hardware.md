@@ -4,7 +4,7 @@
 
 Passives, connectors, stackup, ESD/PPTC, and RF practice live in [`passive_rf_etc.md`](passive_rf_etc.md). Not here.
 
-**Related:** [`memory.md`](memory.md) (chips, read/write timing). [`graphics.md`](graphics.md) (VRAM, sprites). [`sound.md`](sound.md) (APU). [`cart.md`](cart.md) (cartridge + flasher). [`controllers.md`](controllers.md) (pads). [`passive_rf_etc.md`](passive_rf_etc.md) (non-IC). Per-chip notes: [`hw/md/`](../hw/md/). Bring-up sim: [`retr01/sim/`](../retr01/sim/README.md).
+**Related:** [`memory.md`](memory.md) (chips, read/write timing). [`graphics.md`](graphics.md) (VRAM, sprites). [`sound.md`](sound.md) (APU). [`cart.md`](cart.md) (cartridge + flasher). [`controllers.md`](controllers.md) (pads). [`passive_rf_etc.md`](passive_rf_etc.md) (non-IC). Per-chip notes: [`hw/md/`](../hw/md/). Bring-up sim: [`app/sim/`](../app/sim/README.md).
 
 ---
 
@@ -172,7 +172,7 @@ L 1284 --> M Line buf --> N Sprites --------------------------------------------
 | **N** Sprites | Expected pixels in line buffer |
 | **O** Video | RGBS stable at 2x or 1x SCALE |
 
-Full letter list, sim canvas grouping (11 frames), and port smoke checks: [`retr01/sim/README.md`](../retr01/sim/README.md). Sim canvas **N** is the cart module. Silicon bring-up **N** in the diagram below is the sprite path (wired via 1284/L, not a separate sim frame).
+Full letter list, sim canvas grouping (11 frames), and port smoke checks: [`app/sim/README.md`](../app/sim/README.md). Sim canvas **N** is the cart module. Silicon bring-up **N** in the diagram below is the sprite path (wired via 1284/L, not a separate sim frame).
 
 ---
 

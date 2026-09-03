@@ -1,12 +1,12 @@
 # Retr01 Emulator
 
 Software-visible C emulator for Retr01 **Phase 1** carts. Separate from the IC board
-simulator ([`retr01/sim/`](../sim/)). Contract:
+simulator ([`app/sim/`](../sim/)). Contract:
 [`docs/graphics.md`](../../docs/graphics.md).
 
 Run from repo root: `./emu output/test.retr01` (after `./build-all`).
 
-Studio **Play** uses this same emu core after export (shared library + standalone `./emu`). See [`retr01/studio/README.md`](../studio/README.md). Later emulator phases are **not** specified here.
+Studio **Play** uses this same emu core after export (shared library + standalone `./emu`). See [`app/studio/README.md`](../studio/README.md). Later emulator phases are **not** specified here.
 
 ## Phase 1 scope (active)
 
@@ -18,7 +18,7 @@ Studio **Play** uses this same emu core after export (shared library + standalon
 | **Video** | Main FB = **VRAM + scroll** + **OAM** + **BG0** show-through under BG1 color 0 (SCALE 2x). Play host-fills BG1 2x2 seams via `sync_camera` |
 | **Host** | SDL. WASD/arrows move. **X**/**Y** warp |
 
-**Sync contract:** Emu Host Play (`src/play.c` + `retr01/common/`) is the Phase 1 gameplay SoT. Studio no longer keeps a parallel preview. Export packs present screens + play table (`$8100`) + `R01P`. Soft-boot (`R01E_SOFTBOOT=1`) keeps the old host memcpy boot path for triage. Default boot runs cart PRG stream catchup like sim.
+**Sync contract:** Emu Host Play (`src/play.c` + `app/common/`) is the Phase 1 gameplay SoT. Studio no longer keeps a parallel preview. Export packs present screens + play table (`$8100`) + `R01P`. Soft-boot (`R01E_SOFTBOOT=1`) keeps the old host memcpy boot path for triage. Default boot runs cart PRG stream catchup like sim.
 
 **Studio integration:** Studio **Play** / **Space** always exports, then embeds this render path in Studio. Export wait uses a Studio-local spinning boot message. Standalone `./emu` stays for triage. **Sim is not part of this path.**
 
@@ -41,7 +41,7 @@ From the repo root:
 Developer rebuild of this tree only:
 
 ```bash
-cd retr01/emu
+cd app/emu
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ./build/retr01_emu ../../output/test.retr01
@@ -57,12 +57,12 @@ cmake --build build
 
 | Path | Role |
 |------|------|
-| `include/retr01/emu/types.h` | Shared constants |
-| `include/retr01/emu/cart.h` | `.retr01` parser |
-| `include/retr01/emu/cpu.h` | 65C02 core |
-| `include/retr01/emu/io.h` | `$FExx` register file |
-| `include/retr01/emu/video.h` | CHR / VRAM / render / softboot opt-in / OAM composite |
-| `include/retr01/emu/play.h` | Host Play runtime (Phase 1 SoT) |
-| `include/retr01/emu/machine.h` | Bus + frame loop |
+| `include/retr01_emu/types.h` | Shared constants |
+| `include/retr01_emu/cart.h` | `.retr01` parser |
+| `include/retr01_emu/cpu.h` | 65C02 core |
+| `include/retr01_emu/io.h` | `$FExx` register file |
+| `include/retr01_emu/video.h` | CHR / VRAM / render / softboot opt-in / OAM composite |
+| `include/retr01_emu/play.h` | Host Play runtime (Phase 1 SoT) |
+| `include/retr01_emu/machine.h` | Bus + frame loop |
 | `src/main.c` | Standalone SDL host |
 | `tests/` | Cart + boot + play smoke tests |

@@ -17,7 +17,7 @@ set(R01E_CORE_SRCS
   src/machine.c
 )
 
-# Package root is retr01/ (sibling: common, studio, sim, assets).
+# Package root is app/ (sibling: common, studio, sim, assets).
 set(R01_PKG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
 # Repo root holds docs/, hw/, output/, bin/.
 set(R01_REPO_ROOT "${R01_PKG_ROOT}/.." CACHE PATH "Retr01 repo root")

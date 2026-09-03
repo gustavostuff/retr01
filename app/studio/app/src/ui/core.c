@@ -24,49 +24,49 @@ int ui_init(UiState *ui) {
     {
         static const char *const radio_paths[] = {
             R01_STUDIO_ASSETS_DIR "/radio_button.png",
-            "retr01/assets/png/radio_button.png",
+            "app/assets/png/radio_button.png",
             "assets/png/radio_button.png",
             NULL,
         };
         static const char *const dot_paths[] = {
             R01_STUDIO_ASSETS_DIR "/ui_dot.png",
-            "retr01/assets/png/ui_dot.png",
+            "app/assets/png/ui_dot.png",
             "assets/png/ui_dot.png",
             NULL,
         };
         static const char *const cross_paths[] = {
             R01_STUDIO_ASSETS_DIR "/ui_cross.png",
-            "retr01/assets/png/ui_cross.png",
+            "app/assets/png/ui_cross.png",
             "assets/png/ui_cross.png",
             NULL,
         };
         static const char *const checkbox_paths[] = {
             R01_STUDIO_ASSETS_DIR "/checkbox.png",
-            "retr01/assets/png/checkbox.png",
+            "app/assets/png/checkbox.png",
             "assets/png/checkbox.png",
             NULL,
         };
         static const char *const bg0_paths[] = {
             R01_STUDIO_ASSETS_DIR "/bg0_button.png",
-            "retr01/assets/png/bg0_button.png",
+            "app/assets/png/bg0_button.png",
             "assets/png/bg0_button.png",
             NULL,
         };
         static const char *const bg1_paths[] = {
             R01_STUDIO_ASSETS_DIR "/bg1_button.png",
-            "retr01/assets/png/bg1_button.png",
+            "app/assets/png/bg1_button.png",
             "assets/png/bg1_button.png",
             NULL,
         };
         static const char *const bg_bank_paths[] = {
             R01_STUDIO_ASSETS_DIR "/bg_bank_button.png",
-            "retr01/assets/png/bg_bank_button.png",
+            "app/assets/png/bg_bank_button.png",
             "assets/png/bg_bank_button.png",
             NULL,
         };
         static const char *const spr_bank_paths[] = {
             R01_STUDIO_ASSETS_DIR "/sprite_bank_button.png",
-            "retr01/assets/png/sprite_bank_button.png",
+            "app/assets/png/sprite_bank_button.png",
             "assets/png/sprite_bank_button.png",
             NULL,
         };

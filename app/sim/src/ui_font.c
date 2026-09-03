@@ -36,7 +36,7 @@ static int font_try_open(const char *path) {
 int font_ensure(void) {
     static const char *const paths[] = {
         R01S_ASSETS_DIR "/proggy-tiny.ttf",
-        "retr01/assets/other/proggy-tiny.ttf",
+        "app/assets/other/proggy-tiny.ttf",
         "../assets/other/proggy-tiny.ttf",
         "assets/other/proggy-tiny.ttf",
         NULL,

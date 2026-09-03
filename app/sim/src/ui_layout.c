@@ -10,8 +10,8 @@
 #define R01S_LAYOUT_VERSION 2
 
 static const char *const LAYOUT_READ_PATHS[] = {
-    "retr01/sim/ui_layout.json",
-    "../retr01/sim/ui_layout.json",
+    "app/sim/ui_layout.json",
+    "../app/sim/ui_layout.json",
     "ui_layout.json",
     NULL,
 };
@@ -23,16 +23,16 @@ static const char *layout_write_path(void) {
     if (env && env[0]) {
         return env;
     }
-    /* Prefer creating/updating under retr01/sim/ when that dir exists. */
-    f = fopen("retr01/sim/ui_layout.json", "r");
+    /* Prefer creating/updating under app/sim/ when that dir exists. */
+    f = fopen("app/sim/ui_layout.json", "r");
     if (f) {
         fclose(f);
-        return "retr01/sim/ui_layout.json";
+        return "app/sim/ui_layout.json";
     }
-    f = fopen("retr01/sim/.", "r");
+    f = fopen("app/sim/.", "r");
     if (f) {
         fclose(f);
-        return "retr01/sim/ui_layout.json";
+        return "app/sim/ui_layout.json";
     }
     for (i = 0; LAYOUT_READ_PATHS[i]; i++) {
         f = fopen(LAYOUT_READ_PATHS[i], "r");

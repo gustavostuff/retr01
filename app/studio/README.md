@@ -7,7 +7,7 @@ Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. Stu
 
 Authoring state lives in `output/<stem>.r01proj` (JSON). **`custom_logic.c`** is created on first export and never overwritten. Hardware contract: [`docs/graphics.md`](../../docs/graphics.md).
 
-There is **no** Studio-only host Play path. Preview always goes through export then shared emu core ([`retr01/emu/`](../emu/README.md)). **Sim is not involved.**
+There is **no** Studio-only host Play path. Preview always goes through export then shared emu core ([`app/emu/`](../emu/README.md)). **Sim is not involved.**
 
 **Stack:** C11 + SDL2 + FreeType (Proggy Tiny), `libretr01_studio_core` + thin shell + shared `retr01_emu` core for Play.
 
@@ -78,7 +78,7 @@ Shared emu core with standalone [`emu`](../emu/README.md). Standalone `./emu` re
 | **Collision** | Current anim-state hitbox vs `R01_ATTR_SOLID` on cart MAP attrs (not PRG collision stub) |
 | **Warps** | **X** -> screen (0,0). **Y** -> screen (1,0). Test hooks only |
 
-Gameplay SoT for Phase 1: emu Host Play (`retr01/emu/src/play.c` + `retr01/common/`). Studio does not maintain a parallel `core/src/play.c` preview.
+Gameplay SoT for Phase 1: emu Host Play (`app/emu/src/play.c` + `app/common/`). Studio does not maintain a parallel `core/src/play.c` preview.
 
 ### `custom_logic.c` hooks (host export)
 
@@ -156,7 +156,7 @@ Kit **master indices** only ([`docs/graphics.md`](../../docs/graphics.md)). No p
 | `<stem>_prom.bin` | 64-byte Color PROM image (motherboard, not in cart) |
 | `<stem>_flash.bin` | Cart padded to **512 KB** |
 
-PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are for future on-cart 6502 use. Editor chrome is not burned into the cart. See [`retr01/sim/README.md`](../sim/README.md#cart-rom-vs-runners-triage).
+PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are for future on-cart 6502 use. Editor chrome is not burned into the cart. See [`app/sim/README.md`](../sim/README.md#cart-rom-vs-runners-triage).
 
 ### Generated game tree
 
@@ -199,7 +199,7 @@ From the repo root:
 Developer rebuild of this tree only:
 
 ```bash
-cd retr01/studio
+cd app/studio
 cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build
 ctest --test-dir build --output-on-failure
 ./build/retr01_studio
@@ -241,5 +241,5 @@ ctest --test-dir build --output-on-failure
 |-----|--------|
 | [`docs/graphics.md`](../../docs/graphics.md) | Screens, VRAM, palettes, cart layout |
 | [`docs/selling_points.md`](../../docs/selling_points.md) | Game modules (movement, camera dead zone, entities) |
-| [`retr01/sim/README.md`](../sim/README.md) | Board sim + cart triage |
-| [`retr01/emu/README.md`](../emu/README.md) | Cart runtime emulator |
+| [`app/sim/README.md`](../sim/README.md) | Board sim + cart triage |
+| [`app/emu/README.md`](../emu/README.md) | Cart runtime emulator |

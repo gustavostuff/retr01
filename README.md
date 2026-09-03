@@ -1,4 +1,4 @@
-<img src="retr01/assets/png/logo_v2.png" alt="Logo V2" />
+<img src="app/assets/png/logo_v2.png" alt="Logo V2" />
 
 The Retr01 project is a software tool chain + hardware family. Software includes:
 
@@ -13,13 +13,13 @@ Software is still a WIP. This is the overall hardware roadmap:
 
 ## Software tree
 
-Apps and shared code live under [`retr01/`](retr01/):
+Apps and shared code live under [`app/`](app/):
 
 | Path | Role |
 |--|--|
-| `retr01/studio/` | Authoring app |
-| `retr01/emu/` | Cart emulator (+ Studio Play core) |
-| `retr01/sim/` | Pin-level board simulator |
+| `app/studio/` | Authoring app |
+| `app/emu/` | Cart emulator (+ Studio Play core) |
+| `app/sim/` | Pin-level board simulator |
 | `bin/` | Release binaries from `./build-all` (`studio`, `emu`, `sim`) |
 
 `./build-all` builds Release binaries into `bin/`. `./studio`, `./emu`, and `./sim` only run those binaries. `./unit-tests` runs the test suites.
@@ -42,17 +42,17 @@ Same **32 KB PRG** as classic NES NROM games (Exitebike, Balloon Fight, Ice Clim
 
 Peek at Retr01 Studio:
 
-<img src="retr01/assets/png/studio.png" alt="Studio" />
+<img src="app/assets/png/studio.png" alt="Studio" />
 
 Emulator + Debug screen:
 
-<img src="retr01/assets/png/emu.png" alt="Emu" />
+<img src="app/assets/png/emu.png" alt="Emu" />
 
-<img src="retr01/assets/png/debug.png" alt="Debug" />
+<img src="app/assets/png/debug.png" alt="Debug" />
 
 Sim:
 
-<img src="retr01/assets/png/sim.png" alt="Sim" />
+<img src="app/assets/png/sim.png" alt="Sim" />
 
 ## Where to go next
 

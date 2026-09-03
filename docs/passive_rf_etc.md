@@ -48,7 +48,7 @@ Before chasing antennas, budget chip-to-chip delay:
 
 - PHI2 / decode / HC245 / latch / SRAM / PLD paths must close inside the 8 MHz and dot-clock windows.
 - Use datasheet **min/typ/max** propagation. Worst-case stacks matter more than RF folklore.
-- Sim (`retr01/sim`): default is zero-delay for catchup. Opt in with **`./sim ... DELAY=typical|max`** (or env `R01S_PROP_DELAY`) to print HC/PLD/SRAM path budget vs PHI2 half. Pin netlist stays combinatorial. See `tests/test_timing.c` and [`PERFORMANCE.md`](../retr01/sim/PERFORMANCE.md).
+- Sim (`app/sim`): default is zero-delay for catchup. Opt in with **`./sim ... DELAY=typical|max`** (or env `R01S_PROP_DELAY`) to print HC/PLD/SRAM path budget vs PHI2 half. Pin netlist stays combinatorial. See `tests/test_timing.c` and [`PERFORMANCE.md`](../app/sim/PERFORMANCE.md).
 
 ---
 

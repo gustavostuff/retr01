@@ -8,7 +8,7 @@
 
 #include <string.h>
 
-/* Emu Host Play SoT (docs). Keep algorithms aligned with retr01/sim/src/play.c. */
+/* Emu Host Play SoT (docs). Keep algorithms aligned with app/sim/src/play.c. */
 
 static int cart_is_phase1_play(const R01eCart *c) {
     const uint8_t *prg = r01e_cart_prg(c);

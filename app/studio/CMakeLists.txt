@@ -14,7 +14,7 @@ set(R01_ASSETS_DIR "${R01_PKG_ROOT}/assets")
 set(R01_ASSETS_PNG "${R01_ASSETS_DIR}/png")
 set(R01_ASSETS_OTHER "${R01_ASSETS_DIR}/other")
 
-# Shared emu core for Studio Play (standalone ./emu still built from retr01/emu).
+# Shared emu core for Studio Play (standalone ./emu still built from app/emu).
 if(NOT TARGET retr01_emu_core)
   add_subdirectory(${R01_PKG_ROOT}/emu ${CMAKE_BINARY_DIR}/retr01_emu EXCLUDE_FROM_ALL)
 endif()

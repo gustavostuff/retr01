@@ -10,10 +10,10 @@
 typedef struct R01sBoard R01sBoard;
 
 #ifndef R01S_ASSETS_DIR
-#define R01S_ASSETS_DIR "retr01/assets/other"
+#define R01S_ASSETS_DIR "app/assets/other"
 #endif
 #ifndef R01S_ASSETS_PNG_DIR
-#define R01S_ASSETS_PNG_DIR "retr01/assets/png"
+#define R01S_ASSETS_PNG_DIR "app/assets/png"
 #endif
 
 #define R01S_UI_FONT_PX 16

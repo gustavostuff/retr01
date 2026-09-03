@@ -3,9 +3,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-STUDIO="$ROOT/retr01/studio"
-EMU="$ROOT/retr01/emu"
-SIM="$ROOT/retr01/sim"
+STUDIO="$ROOT/app/studio"
+EMU="$ROOT/app/emu"
+SIM="$ROOT/app/sim"
 
 build_and_test() {
   local proj="$1"
