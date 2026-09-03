@@ -119,6 +119,11 @@ typedef struct R01sUi {
     int compact_chip_x[R01S_BOARD_MAX_CHIPS];
     int compact_chip_y[R01S_BOARD_MAX_CHIPS];
     uint8_t compact_chip_orient[R01S_BOARD_MAX_CHIPS];
+    /* One-shot undo for Ctrl+. compact sort (board pose before the sort). */
+    int undo_pose_valid;
+    int undo_chip_x[R01S_BOARD_MAX_CHIPS];
+    int undo_chip_y[R01S_BOARD_MAX_CHIPS];
+    uint8_t undo_chip_orient[R01S_BOARD_MAX_CHIPS];
     int layout_dirty; /* 1 = unsaved layout edits (SAVE / S to write ui_layout.json) */
     SDL_Texture *lcd_tex; /* 256x240 LCD framebuffer upload (streaming) */
 } R01sUi;

@@ -1207,6 +1207,171 @@ void ui_apply_compact_layout(R01sUi *ui) {
     r01s_ui_chip_z_init(ui);
 }
 
+/* qsort context for type+responsibility ordering (set only around one qsort). */
+static const R01sUi *g_pack_sort_ui;
+
+static int pack_item_by_type_resp(const void *a, const void *b) {
+    const R01sPackItem *pa = a;
+    const R01sPackItem *pb = b;
+    const R01sEntity *ea;
+    const R01sEntity *eb;
+    const char *sa;
+    const char *sb;
+    int ia;
+    int ib;
+    int c;
+
+    if (!g_pack_sort_ui) {
+        return 0;
+    }
+    ea = g_pack_sort_ui->chips[pa->idx];
+    eb = g_pack_sort_ui->chips[pb->idx];
+    sa = (ea && ea->part) ? ea->part : "";
+    sb = (eb && eb->part) ? eb->part : "";
+    c = strcmp(sa, sb);
+    if (c != 0) {
+        return c;
+    }
+    ia = (int)g_pack_sort_ui->chip_island[pa->idx];
+    ib = (int)g_pack_sort_ui->chip_island[pb->idx];
+    if (ia != ib) {
+        return ia - ib;
+    }
+    sa = (ea && ea->refdes) ? ea->refdes : "";
+    sb = (eb && eb->refdes) ? eb->refdes : "";
+    return strcmp(sa, sb);
+}
+
+static void ui_snapshot_undo_pose(R01sUi *ui) {
+    int i;
+    if (!ui) {
+        return;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        const R01sEntity *e = ui->chips[i];
+        ui->undo_chip_x[i] = e ? e->board_x : 0;
+        ui->undo_chip_y[i] = e ? e->board_y : 0;
+        ui->undo_chip_orient[i] = e ? (uint8_t)e->orient : (uint8_t)R01S_ORIENT_H;
+    }
+    ui->undo_pose_valid = 1;
+}
+
+/*
+ * Compact only: shelf-pack chips ordered by part type, then island responsibility,
+ * then refdes. Snapshots pose first so Ctrl+Z can restore.
+ */
+int ui_sort_compact_by_type(R01sUi *ui) {
+    R01sPackItem items[R01S_BOARD_MAX_CHIPS];
+    int place_x[R01S_BOARD_MAX_CHIPS];
+    int place_y[R01S_BOARD_MAX_CHIPS];
+    int best_x[R01S_BOARD_MAX_CHIPS];
+    int best_y[R01S_BOARD_MAX_CHIPS];
+    int n = 0;
+    int i;
+    int area = 0;
+    int side;
+    int best_score = 0x7fffffff;
+    int t;
+
+    if (!ui || !ui->layout_compact) {
+        return 0;
+    }
+
+    for (i = 0; i < ui->chip_count; i++) {
+        const R01sEntity *e = ui->chips[i];
+        if (!e || e->visual == R01S_ENTITY_VIS_NONE || e->body_w <= 0 || e->body_h <= 0) {
+            continue;
+        }
+        items[n].idx = i;
+        chip_pack_footprint(e, &items[n].pw, &items[n].ph);
+        area += items[n].pw * items[n].ph;
+        n++;
+    }
+    if (n == 0) {
+        return 0;
+    }
+
+    ui_snapshot_undo_pose(ui);
+
+    g_pack_sort_ui = ui;
+    qsort(items, (size_t)n, sizeof(items[0]), pack_item_by_type_resp);
+    g_pack_sort_ui = NULL;
+
+    side = ui_isqrt(area);
+    if (side < items[0].pw) {
+        side = items[0].pw;
+    }
+
+    for (t = 0; t < 24; t++) {
+        int max_row = side + (t - 8) * (side / 8 + 8);
+        int bb_w = 0;
+        int bb_h = 0;
+        int score;
+        int diff;
+        if (max_row < items[0].pw) {
+            max_row = items[0].pw;
+        }
+        pack_shelves(items, n, max_row, R01S_COMPACT_GAP, R01S_COMPACT_ORIGIN_X, R01S_COMPACT_ORIGIN_Y,
+                     place_x, place_y, &bb_w, &bb_h);
+        diff = bb_w > bb_h ? bb_w - bb_h : bb_h - bb_w;
+        score = diff * 4 + bb_w + bb_h;
+        if (score < best_score) {
+            best_score = score;
+            memcpy(best_x, place_x, (size_t)n * sizeof(int));
+            memcpy(best_y, place_y, (size_t)n * sizeof(int));
+        }
+    }
+
+    for (i = 0; i < n; i++) {
+        R01sEntity *e = ui->chips[items[i].idx];
+        int bx = best_x[i];
+        int by = best_y[i];
+        int pw, ph;
+        if (!e) {
+            continue;
+        }
+        chip_pack_footprint(e, &pw, &ph);
+        bx += (pw - e->body_w) / 2;
+        by += (ph - e->body_h) / 2;
+        r01s_entity_place(e, r01s_grid_snap(bx), r01s_grid_snap(by));
+        clamp_chip_to_board(e);
+    }
+
+    ui_save_compact_layout(ui);
+    ui->layout_dirty = 1;
+    ui->pan_x = 0;
+    ui->pan_y = 0;
+    r01s_ui_clamp_pan(ui);
+    r01s_ui_chip_z_init(ui);
+    snprintf(ui->status, sizeof(ui->status), "sorted by type / island -- Ctrl+Z to undo");
+    return 1;
+}
+
+int ui_undo_compact_pose(R01sUi *ui) {
+    int i;
+
+    if (!ui || !ui->layout_compact || !ui->undo_pose_valid) {
+        return 0;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        R01sEntity *e = ui->chips[i];
+        if (!e) {
+            continue;
+        }
+        if (e->visual == R01S_ENTITY_VIS_IC) {
+            r01s_entity_set_orient(e, (R01sPkgOrient)ui->undo_chip_orient[i]);
+        }
+        r01s_entity_place(e, ui->undo_chip_x[i], ui->undo_chip_y[i]);
+        clamp_chip_to_board(e);
+    }
+    ui->undo_pose_valid = 0;
+    ui_save_compact_layout(ui);
+    ui->layout_dirty = 1;
+    r01s_ui_clamp_pan(ui);
+    snprintf(ui->status, sizeof(ui->status), "layout undo");
+    return 1;
+}
+
 void ui_toggle_compact(R01sUi *ui) {
     if (!ui) {
         return;
@@ -1217,6 +1382,7 @@ void ui_toggle_compact(R01sUi *ui) {
     ui->selected = -1;
     ui->ctx_chip = -1;
     ui->box_sel = 0;
+    ui->undo_pose_valid = 0;
     memset(ui->chip_sel, 0, sizeof(ui->chip_sel));
 
     if (!ui->layout_compact) {

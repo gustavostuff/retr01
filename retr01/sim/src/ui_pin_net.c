@@ -803,33 +803,26 @@ static void ui_draw_pin_wire(SDL_Renderer *r, const R01sEntity *e0, int x0, int 
     }
 }
 
-void ui_draw_pin_wire_overlay(SDL_Renderer *r, R01sUi *ui) {
-    int chip_i;
-    int pin_i;
-    int peer_chip;
-    int peer_pin;
+/* Draw one Manhattan wire from (chip_i, pin_i) to (peer_chip, peer_pin). */
+static void ui_draw_pin_wire_pair(SDL_Renderer *r, const R01sUi *ui, int chip_i, int pin_i, int peer_chip,
+                                  int peer_pin) {
+    const R01sEntity *src;
+    const R01sEntity *peer;
     int x0;
     int y0;
     int x1;
     int y1;
-    const R01sEntity *src;
-    const R01sEntity *peer;
     Uint8 cr;
     Uint8 cg;
     Uint8 cb;
 
-    if (!ui || !r) {
-        return;
-    }
-    if (!ui_hit_chip_pin(ui, ui->mouse_lx, ui->mouse_ly, &chip_i, &pin_i)) {
-        return;
-    }
-    if (!ui_pin_net_peer(ui, chip_i, pin_i, &peer_chip, &peer_pin)) {
+    if (!ui || chip_i < 0 || chip_i >= ui->chip_count || peer_chip < 0 || peer_chip >= ui->chip_count) {
         return;
     }
     src = ui->chips[chip_i];
     peer = ui->chips[peer_chip];
-    if (!src || !peer) {
+    if (!src || !peer || pin_i < 0 || pin_i >= src->pin_count || peer_pin < 0 ||
+        peer_pin >= peer->pin_count) {
         return;
     }
     if (!ui_chip_pin_screen_center(ui, src, pin_i, &x0, &y0)) {
@@ -840,4 +833,203 @@ void ui_draw_pin_wire_overlay(SDL_Renderer *r, R01sUi *ui) {
     }
     ui_chip_pin_rgb(ui, src->pins[pin_i].level, src->pins[pin_i].dir, &cr, &cg, &cb);
     ui_draw_pin_wire(r, src, x0, y0, peer, x1, y1, cr, cg, cb);
+}
+
+/*
+ * For one source pin, draw a wire to every other IC on the same net (closest pin
+ * on that IC) and mark those ICs in connected[].
+ */
+static void ui_draw_pin_peers_all(SDL_Renderer *r, const R01sUi *ui, int chip_i, int pin_i,
+                                  uint8_t *connected) {
+    R01sUiPinNet *g = &g_pin_net;
+    const R01sEntity *src;
+    const R01sPin *src_pin;
+    int src_slot;
+    int sx;
+    int sy;
+    int root = -1;
+    int peer_best_pin[R01S_BOARD_MAX_CHIPS];
+    int peer_best_dist[R01S_BOARD_MAX_CHIPS];
+    uint8_t peer_hit[R01S_BOARD_MAX_CHIPS];
+    int i;
+    int ci;
+
+    if (!ui || !connected || chip_i < 0 || chip_i >= ui->chip_count || pin_i < 0) {
+        return;
+    }
+    src = ui->chips[chip_i];
+    if (!src || pin_i >= src->pin_count) {
+        return;
+    }
+    src_pin = &src->pins[pin_i];
+    if (pin_skip_wire(src_pin) || !ui_pin_dip_package(src, pin_i)) {
+        return;
+    }
+    if (!ui_chip_pin_screen_center(ui, src, pin_i, &sx, &sy)) {
+        return;
+    }
+
+    memset(peer_hit, 0, sizeof(peer_hit));
+    for (i = 0; i < R01S_BOARD_MAX_CHIPS; i++) {
+        peer_best_pin[i] = -1;
+        peer_best_dist[i] = 999999;
+    }
+
+    src_slot = pin_net_find_slot(g, (R01sEntity *)(void *)src, pin_i);
+    if (src_slot >= 0) {
+        root = pin_net_root(g, src_slot);
+    }
+
+    if (root >= 0) {
+        for (i = 0; i < g->slot_count; i++) {
+            const R01sEntity *peer_e;
+            int peer_chip;
+            int peer_pin;
+            int px;
+            int py;
+            int dx;
+            int dy;
+            int dist;
+
+            if (pin_net_root(g, i) != root || i == src_slot) {
+                continue;
+            }
+            peer_e = g->slots[i].entity;
+            peer_pin = g->slots[i].pin_index;
+            if (!peer_e || peer_e == src || !ui_pin_dip_package(peer_e, peer_pin)) {
+                continue;
+            }
+            peer_chip = ui_chip_index(ui, peer_e);
+            if (peer_chip < 0 || peer_chip >= R01S_BOARD_MAX_CHIPS) {
+                continue;
+            }
+            if (!ui_chip_pin_screen_center(ui, peer_e, peer_pin, &px, &py)) {
+                continue;
+            }
+            dx = px - sx;
+            dy = py - sy;
+            dist = dx * dx + dy * dy;
+            peer_hit[peer_chip] = 1;
+            if (dist < peer_best_dist[peer_chip]) {
+                peer_best_dist[peer_chip] = dist;
+                peer_best_pin[peer_chip] = peer_pin;
+            }
+        }
+    } else {
+        /* Name-match fallback when the pin is not in the union-find graph. */
+        for (ci = 0; ci < ui->chip_count; ci++) {
+            const R01sEntity *e = ui->chips[ci];
+            int pi;
+            if (!e || e == src || e->visual != R01S_ENTITY_VIS_IC || ui_chip_hidden(ui, e)) {
+                continue;
+            }
+            for (pi = 0; pi < e->pin_count; pi++) {
+                int px;
+                int py;
+                int dx;
+                int dy;
+                int dist;
+                if (!ui_pin_dip_package(e, pi) || !pin_signals_match(src_pin, &e->pins[pi])) {
+                    continue;
+                }
+                if (!ui_chip_pin_screen_center(ui, e, pi, &px, &py)) {
+                    continue;
+                }
+                dx = px - sx;
+                dy = py - sy;
+                dist = dx * dx + dy * dy;
+                peer_hit[ci] = 1;
+                if (dist < peer_best_dist[ci]) {
+                    peer_best_dist[ci] = dist;
+                    peer_best_pin[ci] = pi;
+                }
+            }
+        }
+    }
+
+    for (ci = 0; ci < ui->chip_count && ci < R01S_BOARD_MAX_CHIPS; ci++) {
+        if (!peer_hit[ci] || peer_best_pin[ci] < 0) {
+            continue;
+        }
+        connected[ci] = 1;
+        if (r) {
+            ui_draw_pin_wire_pair(r, ui, chip_i, pin_i, ci, peer_best_pin[ci]);
+        }
+    }
+}
+
+/* Count distinct ICs connected to chip_i; optionally draw every off-chip wire. */
+int ui_ic_connected_peers(SDL_Renderer *r, const R01sUi *ui, int chip_i) {
+    const R01sEntity *src;
+    uint8_t connected[R01S_BOARD_MAX_CHIPS];
+    int pi;
+    int ci;
+    int count = 0;
+
+    if (!ui || chip_i < 0 || chip_i >= ui->chip_count) {
+        return 0;
+    }
+    src = ui->chips[chip_i];
+    if (!src || src->visual != R01S_ENTITY_VIS_IC) {
+        return 0;
+    }
+
+    memset(connected, 0, sizeof(connected));
+    for (pi = 0; pi < src->pin_count; pi++) {
+        ui_draw_pin_peers_all(r, ui, chip_i, pi, connected);
+    }
+    for (ci = 0; ci < ui->chip_count && ci < R01S_BOARD_MAX_CHIPS; ci++) {
+        if (connected[ci]) {
+            count++;
+        }
+    }
+    return count;
+}
+
+/* Ctrl+hover IC body: all off-chip connection wires. */
+static int ui_draw_ic_connection_overlay(SDL_Renderer *r, R01sUi *ui) {
+    int chip_i = -1;
+    int kind;
+    const R01sEntity *src;
+
+    if (!ui || !r) {
+        return 0;
+    }
+    if (!(SDL_GetModState() & KMOD_CTRL)) {
+        return 0;
+    }
+    if (!ui_logic_in_view(ui->mouse_lx, ui->mouse_ly)) {
+        return 0;
+    }
+    kind = hit_board_top(ui, ui->mouse_lx, ui->mouse_ly, &chip_i, NULL, NULL);
+    if (kind != 1 || chip_i < 0 || chip_i >= ui->chip_count) {
+        return 0;
+    }
+    src = ui->chips[chip_i];
+    if (!src || src->visual != R01S_ENTITY_VIS_IC) {
+        return 0;
+    }
+    (void)ui_ic_connected_peers(r, ui, chip_i);
+    return 1;
+}
+
+void ui_draw_pin_wire_overlay(SDL_Renderer *r, R01sUi *ui) {
+    int chip_i;
+    int pin_i;
+    int peer_chip;
+    int peer_pin;
+
+    if (!ui || !r) {
+        return;
+    }
+    if (ui_draw_ic_connection_overlay(r, ui)) {
+        return;
+    }
+    if (!ui_hit_chip_pin(ui, ui->mouse_lx, ui->mouse_ly, &chip_i, &pin_i)) {
+        return;
+    }
+    if (!ui_pin_net_peer(ui, chip_i, pin_i, &peer_chip, &peer_pin)) {
+        return;
+    }
+    ui_draw_pin_wire_pair(r, ui, chip_i, pin_i, peer_chip, peer_pin);
 }

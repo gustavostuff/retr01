@@ -352,6 +352,20 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 return 1;
             }
         }
+        if ((e->key.keysym.mod & KMOD_CTRL) && e->key.keysym.sym == SDLK_PERIOD) {
+            if (ui_sort_compact_by_type(ui)) {
+                return 1;
+            }
+            snprintf(ui->status, sizeof(ui->status), "Ctrl+. sort only in compact view");
+            return 1;
+        }
+        if ((e->key.keysym.mod & KMOD_CTRL) && e->key.keysym.sym == SDLK_z) {
+            if (ui_undo_compact_pose(ui)) {
+                return 1;
+            }
+            snprintf(ui->status, sizeof(ui->status), "nothing to undo");
+            return 1;
+        }
         if (mods[SDL_SCANCODE_LSHIFT] || mods[SDL_SCANCODE_RSHIFT]) {
             if (e->key.keysym.sym == SDLK_LEFT) {
                 ui->pan_x -= step;

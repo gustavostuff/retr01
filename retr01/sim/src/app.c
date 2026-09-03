@@ -603,6 +603,10 @@ void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
             /* Bare R falls through to UI (rotate selected IC). */
             break;
         case SDLK_PERIOD:
+            /* Ctrl+. is compact sort (UI); bare . still single-steps when paused. */
+            if (e->key.keysym.mod & KMOD_CTRL) {
+                break;
+            }
             if (r01s_app_catchup_active(app)) {
                 return;
             }

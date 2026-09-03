@@ -824,6 +824,19 @@ static void ui_fill_tooltip(const R01sUi *ui, char *out, size_t out_len) {
     }
     out[0] = '\0';
 
+    if ((SDL_GetModState() & KMOD_CTRL) && ui_logic_in_view(ui->mouse_lx, ui->mouse_ly) &&
+        hit_board_top(ui, ui->mouse_lx, ui->mouse_ly, &chip_i, NULL, NULL) == 1 && chip_i >= 0 &&
+        chip_i < ui->chip_count && ui->chips[chip_i] &&
+        ui->chips[chip_i]->visual == R01S_ENTITY_VIS_IC) {
+        int n = ui_ic_connected_peers(NULL, ui, chip_i);
+        if (n == 1) {
+            snprintf(out, out_len, "1 IC connected");
+        } else {
+            snprintf(out, out_len, "%d ICs connected", n);
+        }
+        return;
+    }
+
     if (SDL_GetTicks() < ui->tip_show_at) {
         return;
     }
@@ -1397,7 +1410,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
         if (hint_max < 24) {
             hint_max = 24;
         }
-        hint = ui->layout_compact ? "BOX SEL  S SAVE  R ROT  DBL-CLK SCR SCALE"
+        hint = ui->layout_compact ? "BOX SEL  S SAVE  R ROT  Ctrl+. SORT  Ctrl+Z UNDO  DBL-CLK SCR"
                                   : "S SAVE  R ROT  DBL-CLK SCR SCALE  PAN  DRAG";
         font_draw_ellipsize(r, hint_x, text_y, hint, hint_max, 120, 130, 140);
     }

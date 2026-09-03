@@ -84,6 +84,8 @@ void move_island_drag(R01sUi *ui, int island_index, int board_mx, int board_my);
 void resize_island_drag(R01sUi *ui, int island_index, int board_mx, int board_my);
 void ui_toggle_compact(R01sUi *ui);
 void ui_apply_compact_layout(R01sUi *ui);
+int ui_sort_compact_by_type(R01sUi *ui);
+int ui_undo_compact_pose(R01sUi *ui);
 void compact_btn_rect(const R01sUi *ui, SDL_Rect *rc);
 void save_btn_rect(const R01sUi *ui, SDL_Rect *rc);
 void ui_save_layout_now(R01sUi *ui);
@@ -110,6 +112,7 @@ void ui_chip_pin_rgb(const R01sUi *ui, R01sLevel lvl, R01sPinDir dir, Uint8 *pr,
 void r01s_ui_pin_net_build(R01sBoard *board);
 int ui_hit_chip_pin(const R01sUi *ui, int lx, int ly, int *chip_out, int *pin_out);
 int ui_pin_net_peer(const R01sUi *ui, int chip_i, int pin_i, int *peer_chip_out, int *peer_pin_out);
+int ui_ic_connected_peers(SDL_Renderer *r, const R01sUi *ui, int chip_i);
 void ui_draw_pin_wire_overlay(SDL_Renderer *r, R01sUi *ui);
 int ui_islands_strip_contains(const R01sUi *ui, int lx, int ly);
 void ui_islands_strip_clamp(R01sUi *ui);
