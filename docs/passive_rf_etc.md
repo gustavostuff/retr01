@@ -58,7 +58,7 @@ External 5 V is trusted for regulation, not for abuse or cable noise. Treat the 
 
 | Item | Role |
 |------|------|
-| Barrel jack (2.1 mm class) | 5 V in (shared motherboard) |
+| Barrel jack | **CUI PJ-063AH** (2.1 mm ID, horizontal) | 5 V in (shared motherboard) |
 | Series PPTC on VIN | Board-level short / overload. Hold above full-board idle, trip on hard short |
 | Reverse-polarity diode (or P-FET ideal diode) | Blocks reverse barrel plug |
 | Bulk cap at entry (**100-470 uF** low-ESR electrolytic or polymer) | Holds rail through plug bounce and load steps |
@@ -73,12 +73,15 @@ Never snake return current through video or pad-port copper. Stitch GND vias at 
 
 ## Clocks and reset
 
-| Item | Role |
-|------|------|
-| Canned oscillators (PHI2 8 MHz, dot ~5.369 MHz) | Prefer cans over bare crystals for edge control |
-| Crystals + load caps for AVRs if not using cans | 20 MHz (1284), 16 MHz (328P). Keep loops tiny |
+| Item | Locked part / value |
+|------|---------------------|
+| **Y1** PHI2 | **Abracon ACO-8.000MHZ-EK** — 8.000 MHz, 5 V HCMOS, full-size DIP-14 can. Footprint `Oscillator:Oscillator_DIP-14` (pins **1=OE, 7=GND, 8=OUT, 14=Vcc**). OE tied high |
+| **Y2** dot | **Abracon ACO-5.369318MHZ-EK** — same package/footprint. Exact NTSC/3 frequency; often **factory-order** from Abracon (not always DigiKey shelf stock). Any 5 V HCMOS ACO-footprint XO at **5.369318 MHz ±50 ppm** is OK |
+| **Y3** AD725 4FSC | **Abracon ACO-14.31818MHZ-EK** — same package/footprint |
+| **Y4** 1284 | **Abracon ABLS7M-20.000MHZ-D2Y-T** HC-49/U + **2× 22 pF** to GND |
+| **Y5** 328P | **Abracon ABLS7M-16.000MHZ-D2Y-T** HC-49/U + **2× 22 pF** to GND |
 | Series damping **22-47 ohm** on clock nets leaving a can / buffer | Softens edges into long traces |
-| **74HC14** (outside 32-count if needed) | Schmitt cleanup for reset / slow edges |
+| **74HC14** (outside 32-count) | Schmitt cleanup for reset / slow edges |
 | RC + Schmitt (or supervisor, e.g. MCP120-class) on `/RESB` and AVR `RESET` | Power-on reset. Hold low until 5 V is solid |
 | Pull-ups on open-drain resets / IRQB | Typical **4.7-10 kohm** |
 
@@ -86,18 +89,36 @@ Board clocks matter for layout cleanliness. They are not automatically a show-st
 
 ---
 
+## Locked connectors (buy list)
+
+| Ref | Locked MPN | Footprint notes |
+|-----|------------|-----------------|
+| **J1** | **CUI PJ-063AH** (2.1 mm ID barrel) | Stock KiCad `BarrelJack_CUI_PJ-063AH_Horizontal` (1=tip, 2=sleeve, MP→GND) |
+| **J2** | 1×5 pin header 2.54 mm | Stock `PinHeader_1x05_P2.54mm_Vertical` — RGBS harness |
+| **J3/J4** | **Switchcraft 35RAPC2BVN4** | **Custom** `Retr01_Lib:Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical` |
+| **J5/J6** | 1×10 pin header 2.54 mm | Stock vertical |
+| **J7** | 1×4 pin header 2.54 mm | Stock vertical |
+| **J8** | **CUI RCJ-012** (black RCA, audio) | **Custom** `Retr01_Lib:CUI_RCJ-01x_Vertical` (shared with J9) |
+| **J9** | **CUI RCJ-014** (yellow RCA, composite) | Same footprint as J8 |
+| **J36** | **EDAC 395-036-559-212** (right-angle 2×18) | Stock stand-in `PinSocket_2x18_P2.54mm_Horizontal` until EDAC CAD; arcade alt **395-036-520-201** (straight) is shell-only, not dual-footprint |
+| **U725** | **AD725ARZ** | Stock `SOIC-16_3.9x9.9mm_P1.27mm` |
+
+**You build yourself:** TRS jack footprint + RCJ RCA footprint (same holes for color variants). Optionally refine J36 from EDAC drawing.
+
+---
+
 ## Video and audio analog
 
 | Item | Role / locked value |
 |------|---------------------|
-| Color PROM **R-2R** ladder (**1%** metal film) | R3G3B2 -> analog guns ([`AT27C256R`](../hw/md/AT27C256R.md)) |
-| Video R-2R unit **R** | **1.00 kΩ** (bits weight R / 2R / 4R from LSB) |
-| Video R-2R unit **2R** | **2.00 kΩ** |
-| **75.0 Ω** to **GND** on each R/G/B | Termination -> **~0.7 Vpp** into 75 ohm video plant |
+| Color PROM **binary-weighted** DAC (**1%** metal film) | R3G3B2 → analog guns ([`AT27C256R`](../hw/md/AT27C256R.md)). Packing `(R<<5)\|(G<<2)\|B` |
+| Video bit resistors (LSB→MSB) | Red/Green: **4.00 / 2.00 / 1.00 kΩ**. Blue: **2.00 / 1.00 kΩ** |
+| **75.0 Ω** to **GND** on each R/G/B | Termination → **~0.7 Vpp** into 75 ohm video plant |
 | Optional ferrite beads on RGBS | Cable RF. Place at connector |
-| APU **R-2R** from 328P `AUD0`–`AUD7` | **R = 10.0 kΩ**, **2R = 20.0 kΩ** (1%), then AC-couple to line out ([`sound.md`](sound.md)) |
+| Composite encoder | **AD725** (SOIC-16): RGBS guns AC-coupled in, **CSYNC** on HSYNC, **NTSC**, **14.31818 MHz** 4FSC can. COMP → 75 Ω → J9. Outside 32-IC logic count (like 74HC14). **No S-Video jack** (LUMA/CRMA unpopulated) |
+| APU **R-2R** from 328P `AUD0`–`AUD7` | Classic ladder **R = 10.0 kΩ**, **2R = 20.0 kΩ** (1%), then AC-couple to line out ([`sound.md`](sound.md)) |
 | APU build-out | **1.0 kΩ** series + **10 µF** AC-coupling toward jack |
-| Video / AV connectors | RGBS (+ S-Video / composite path TBD). Levels bench-tuned |
+| Video / AV connectors | **J2** RGBS header + **J8** RCJ-012 audio RCA + **J9** RCJ-014 composite RCA. Levels bench-tuned |
 | **SCALE** select | Single SPST DIP/`SW_SCALE`: **open = 2×** (default, soft pull-down on `SCALE_1X`), **closed = 1×** (ties `SCALE_1X` to +5 V). See [`hardware.md`](hardware.md) |
 
 
@@ -141,7 +162,7 @@ Design goal: **female jack on the motherboard** (2x) and on each optional pad bo
 
 | Item | Spec / role |
 |------|-------------|
-| Jack | **Switchcraft 35RAPC** series, **TRS (stereo)**. Example: **35RAPC3BH3** (horizontal, threaded bushing). Same family on pad PCBs |
+| Jack | **Switchcraft 35RAPC** series, **TRS (stereo)**. Mobo SKU lock: **35RAPC2BVN4** (vertical, non-threaded). Same family on pad PCBs |
 | Conductors | **Tip / Ring / Sleeve** = **VCC / DATA / GND** (exact T/R assignment locked at schematic. Sleeve = GND + shell) |
 | Port count | **2** (P1, P2) footprints on the motherboard |
 | Pad MCU | **ATtiny85** on the controller board ([`controllers.md`](controllers.md)). 1284 still presents `$FE60` / `$FE61` |

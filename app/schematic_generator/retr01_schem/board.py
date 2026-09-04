@@ -71,15 +71,30 @@ def add_decoupling(
 
 
 def add_r2r_passives(parts: Dict[str, object]) -> None:
-    """Instantiate R-2R / termination / APU resistors referenced by the manifest."""
+    """Instantiate video weighted DAC + audio R-2R + termination passives."""
     if not skidl_available():
         return
-    for ref in [f"RR{i}" for i in range(3)] + [f"RG{i}" for i in range(3)] + [f"RB{i}" for i in range(2)]:
-        parts[ref] = make_passive("R_R2R", ref, _R0603)
+    # Video: binary-weighted into each gun (MSB=1k, mid=2k, LSB=4k). Studio packing
+    # (rr<<5)|(gg<<2)|bb → PROM D7..D5=R, D4..D2=G, D1..D0=B (docs/passive_rf_etc.md).
+    for ref, mpn in (
+        ("RR0", "R_4K"),
+        ("RR1", "R_2K"),
+        ("RR2", "R_1K"),
+        ("RG0", "R_4K"),
+        ("RG1", "R_2K"),
+        ("RG2", "R_1K"),
+        ("RB0", "R_2K"),
+        ("RB1", "R_1K"),
+    ):
+        parts[ref] = make_passive(mpn, ref, _R0603)
     for ref in ("R75R", "R75G", "R75B"):
         parts[ref] = make_passive("R_75", ref, _R0603)
+    # Audio: classic 8-bit R-2R (R=10k, 2R=20k). AUD0=LSB .. AUD7=MSB.
     for i in range(8):
-        parts[f"RA{i}"] = make_passive("R_10K", f"RA{i}", _R0603)
+        parts[f"Ra2r{i}"] = make_passive("R_20K", f"Ra2r{i}", _R0603)
+    for i in range(7):
+        parts[f"Rar{i}"] = make_passive("R_10K", f"Rar{i}", _R0603)
+    parts["Raterm"] = make_passive("R_20K", "Raterm", _R0603)
     parts["Raud"] = make_passive("R_1K", "Raud", _R0603)
     parts["Caud"] = make_passive("C_10U_AUD", "Caud", _C0603)
 

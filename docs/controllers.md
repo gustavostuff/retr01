@@ -102,7 +102,7 @@ Shared cabinet feed for lamps / coin door / front-panel reset. **Does not** repl
 
 ## Retr01-C: Aux pads (3-wire + ATtiny85)
 
-Console builds populate **2x Switchcraft 35RAPC** TRS jacks (P1, P2). Optional **pad boards** use an **ATtiny85** and a **male-male 3.5 mm aux** cable (no proprietary tether).
+Console builds populate **2x Switchcraft 35RAPC2BVN4** TRS jacks (P1, P2; vertical). Optional **pad boards** use an **ATtiny85** and a **male-male 3.5 mm aux** cable (no proprietary tether).
 
 ### Cable (3 conductors)
 

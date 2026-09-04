@@ -21,15 +21,19 @@ SKiDL still instantiates inline `Part(tool=SKIDL)` parts, but every pin **name a
 | ATmega328P | MCU_Microchip_ATmega | **ATmega328P-P** |
 | R / C | Device | **R**, **C** |
 
-## Still need custom Retr01_Lib symbols
+## Still need custom Retr01_Lib symbols / footprints
 
 | Part | Why |
 |------|-----|
-| W65C02S | Not in stock CPU lib |
+| W65C02S | Not in stock CPU lib (symbol) |
 | ATF22V10 | No 22V10 stock symbol |
-| OSC cans, cart edge, arcade/TRS/barrel | Connectors / cans |
+| Switchcraft **35RAPC2BVN4** | Custom TRS footprint (locked MPN) |
+| CUI **RCJ-01x** | No stock RCA .kicad_mod (locked RCJ-012 / RCJ-014) |
+| EDAC **395-036-559-212** | Optional: replace PinSocket stand-in with manufacturer CAD |
 
-Pin numbers for those come from `hw/md/*.md` / datasheets (same physical DIP numbering).
+**Stock now (do not reinvent):** Abracon **ACO** cans → KiCad `Oscillator:ACO-xxxMHz-A` + `Oscillator_DIP-14`; **AD725ARZ** → SOIC-16; **CUI PJ-063AH** barrel; HC/AVR/memory symbols per table above.
+
+Pin numbers for custom silicon come from `hw/md/*.md` / datasheets (same physical DIP numbering).
 
 ## Workflow
 

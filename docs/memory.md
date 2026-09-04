@@ -153,7 +153,7 @@ Cart saves use the **cart 24C64** at `$FE22`-`$FE24`, not this window.
 | **Content** | **64** master colors as packed **R3G3B2** `{RRRGGGBB}` |
 | **CPU access** | None at runtime |
 | **Video read** | Compositor supplies 6-bit palette index each dot |
-| **Analog** | R-2R ladder -> **75 ohm** termination to GND -> **~0.7 Vpp** RGBS |
+| Analog | Binary-weighted DAC -> **75 ohm** termination to GND -> **~0.7 Vpp** RGBS |
 | **Wiring** | Use **A5-A0** for index. Unused address pins tied **GND** |
 
 **Runners today:** Sim chip model is still **AT28C16**. Silicon target is **AT27C256R** ([`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md)).

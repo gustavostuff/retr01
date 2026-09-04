@@ -53,11 +53,18 @@ class TestBom(unittest.TestCase):
             self.assertIn(ref, BOM_BY_REFDES)
 
     def test_kicad_stock_footprints(self):
-        self.assertIn("PinHeader_2x18", BOM_BY_REFDES["J36"].footprint)
-        self.assertIn("SJ1-3533NG", BOM_BY_REFDES["J3"].footprint)
+        self.assertIn("PinSocket_2x18", BOM_BY_REFDES["J36"].footprint)
+        self.assertIn("35RAPC2BVN4", BOM_BY_REFDES["J3"].footprint)
         self.assertEqual(BOM_BY_REFDES["J3"].footprint, BOM_BY_REFDES["J4"].footprint)
-        self.assertIn("BNC_", BOM_BY_REFDES["J8"].footprint)
+        for ref in ("Cpad1", "Cpad2", "TvsV1", "TvsV2", "TvsD1", "TvsD2", "Rdata1", "Rdata2", "Rpu1", "F2", "F3"):
+            self.assertIn(ref, BOM_BY_REFDES)
+        self.assertIn("RCJ-01x", BOM_BY_REFDES["J8"].footprint)
         self.assertEqual(BOM_BY_REFDES["J8"].footprint, BOM_BY_REFDES["J9"].footprint)
+        self.assertIn("Oscillator_DIP-14", BOM_BY_REFDES["Y1"].footprint)
+        self.assertEqual(BOM_BY_REFDES["Y1"].footprint, BOM_BY_REFDES["Y2"].footprint)
+        self.assertEqual(BOM_BY_REFDES["Y1"].footprint, BOM_BY_REFDES["Y3"].footprint)
+        self.assertIn("PJ-063AH", BOM_BY_REFDES["J1"].footprint)
+        self.assertIn("AD725ARZ", BOM_BY_REFDES["U725"].role)
 
     def test_arcade_pin_names(self):
         from retr01_schem.pinmap import M1284_P1, M1284_P2, PIN_TEMPLATES
@@ -74,7 +81,7 @@ class TestBom(unittest.TestCase):
         self.assertEqual(HC573_LE, "11")
         self.assertEqual(HC245_DIR, "1")
         self.assertEqual(SRAM_A[0], "10")
-        letter_ok = {"T", "R", "S", "GND", "+5V"}
+        letter_ok = {"T", "R", "S", "GND", "+5V", "MP"}
         for c in build_manifest()[:50]:
             if c.a_refdes not in ("GND", "+5V", "+5V_ANALOG"):
                 self.assertTrue(
@@ -161,11 +168,33 @@ class TestManifest(unittest.TestCase):
         self.assertIn("P2_START", nets)
         self.assertIn("SCALE_1X", nets)
         self.assertIn("AUDIO_SUM", nets)
+        self.assertIn("COMPOSITE_OUT", nets)
+        self.assertIn("FSC4", nets)
         refs = {c.a_refdes for c in build_manifest()} | {c.b_refdes for c in build_manifest()}
         self.assertIn("J7", refs)
         self.assertIn("SW1", refs)
         self.assertIn("J8", refs)
         self.assertIn("J9", refs)
+        self.assertIn("U725", refs)
+        self.assertIn("Y3", refs)
+        self.assertIn("Ra2r0", refs)
+        self.assertIn("Raterm", refs)
+        self.assertIn("RR2", refs)  # red MSB 1k
+
+    def test_video_prom_bit_mapping(self):
+        """Studio packing (R<<5)|(G<<2)|B → D7..D5 red, D4..D2 green, D1..D0 blue."""
+        m = build_manifest()
+        red_nets = {c.net for c in m if {c.a_refdes, c.b_refdes} & {"RR0", "RR1", "RR2"} and c.net.startswith("PROM_D")}
+        self.assertEqual(red_nets, {"PROM_D5", "PROM_D6", "PROM_D7"})
+        green_nets = {c.net for c in m if {c.a_refdes, c.b_refdes} & {"RG0", "RG1", "RG2"} and c.net.startswith("PROM_D")}
+        self.assertEqual(green_nets, {"PROM_D2", "PROM_D3", "PROM_D4"})
+        blue_nets = {c.net for c in m if {c.a_refdes, c.b_refdes} & {"RB0", "RB1"} and c.net.startswith("PROM_D")}
+        self.assertEqual(blue_nets, {"PROM_D0", "PROM_D1"})
+
+    def test_ad725_outside_ic_count(self):
+        self.assertIn("U725", BOM_BY_REFDES)
+        self.assertFalse(BOM_BY_REFDES["U725"].in_ic_count)
+        self.assertIn("SOIC-16", BOM_BY_REFDES["U725"].footprint)
 
 
 if __name__ == "__main__":

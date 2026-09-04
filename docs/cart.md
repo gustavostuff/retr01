@@ -17,42 +17,13 @@ Target footprint is **Game Boy-sized** (~**55 mm** PCB width) with a **low-profi
 
 ### Connector parts (2x18, 2.54 mm pitch)
 
-**Right-angle (recommended for console)**
+**Locked (motherboard J36):** [EDAC **395-036-559-212**](https://www.digikey.com/en/products/detail/edac-inc/395-036-559-212/11138956) — black, **right-angle** 2×18. Matches Retr01-C face-up insert. SKiDL uses KiCad `PinSocket_2x18_P2.54mm_Horizontal` as the hole-pattern stand-in until manufacturer CAD is dropped into `Retr01_Lib`.
 
-| Part | Notes |
-|------|-------|
-| [EDAC 395-036-559-212](https://www.digikey.com/en/products/detail/edac-inc/395-036-559-212/11138956) | Black, right-angle 2x18 |
-| Sullins **EBC18DRAN** | Right-angle 2x18 |
+**Arcade / top-load alternate (shell BOM only, not a second mobo footprint):** [EDAC **395-036-520-201**](https://www.digikey.com/en/products/detail/edac-inc/395-036-520-201/1297144) straight 2×18, or Sullins **EBC18DRXN**. Same electrical pinout.
 
-**Straight (arcade / top-load)**
+**Optional industrial card-edge (flasher / specials):** TE **5645235-4** Standard Edge II (straight female). Cart gold-finger geometry must match that series — do not mix with EDAC pin-socket hole patterns.
 
-| Part | Notes |
-|------|-------|
-| [EDAC 395-036-520-201](https://www.digikey.com/en/products/detail/edac-inc/395-036-520-201/1297144) | Black, straight 2x18 |
-| Sullins **EBC18DRXN** | Straight 2x18 |
-
-**Optional: TE Standard Edge II receptacle (straight female)**
-
-Industrial card-edge **receptacle** on the **motherboard** (or flasher). The cart is a **PCB card edge** that slides into the slot. No mating pin-header on the cart. Same **36 contacts**, **2.54 mm** pitch, **2x18** rows (**4.85 mm** row spacing). Use when you want a molded housing and gold fingers instead of dual-row pin sockets.
-
-| Part | Notes |
-|------|-------|
-| [TE Connectivity **5645235-4**](https://www.mouser.mx/en/ProductDetail/TE-Connectivity-AMP/5645235-4?qs=sGAEpiMZZMvlX3nhDDO4AEduDnuFsUToyijPionwouY%3D) (Mouser) | **Standard Edge II**, 36-pos **female**, straight, through-hole solder tail |
-| Series | TE **AMP Standard Edge II**, board-to-board card edge, power and signal |
-
-| Spec | Value |
-|------|-------|
-| Positions | **36** (18 per row) |
-| Pitch | **2.54 mm** (0.1 in) |
-| Row spacing | **4.85 mm** |
-| Orientation | **Vertical** (straight receptacle) |
-| Mating | Cart PCB **gold fingers** on **~1.57 mm** (0.062 in) card. Slot depth **~7.5 mm** |
-| Contacts | Phosphor bronze, **gold** mating area |
-| Current | **3 A** max per contact (far above cart bus needs) |
-
-**Layout notes:** Footprint and finger geometry come from the TE datasheet. Do not assume interchangeability with EDAC/Sullins pin-header patterns. Lock **A1/B1** keying and finger numbering against the [36-pin pinout](#36-pin-edge-pinout) at schematic. Cart PCB thickness and bevel must match **Standard Edge II** card requirements.
-
-Motherboard and flasher use the **same 36-pin electrical pinout**. Pick socket orientation per enclosure. ESD and series-R practice: [`passive_rf_etc.md`](passive_rf_etc.md).
+Motherboard and flasher use the **same 36-pin electrical pinout**. Motherboard copper is locked to the **right-angle EDAC**; arcade shells that need vertical insert use a harness/adapter or a flasher-style straight socket off-board. ESD and series-R practice: [`passive_rf_etc.md`](passive_rf_etc.md).
 
 ---
 

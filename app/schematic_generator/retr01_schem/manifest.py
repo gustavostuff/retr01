@@ -29,6 +29,8 @@ def _manifest_core() -> List[Connection]:
     m += [
         Connection("+5V", "Y1", P.OSC_VDD, "U1", P.CPU_VDD, "wire_power_clock_reset"),
         Connection("+5V", "Y1", P.OSC_VDD, "U2", P.HC14_VCC, "wire_power_clock_reset"),
+        Connection("+5V", "Y1", P.OSC_OE, "+5V", "+5V", "Abracon ACO OE high=run"),
+        Connection("GND", "Y1", P.OSC_GND, "GND", "GND", "wire_power_clock_reset"),
         Connection("PHI2", "Y1", P.OSC_OUT, "U1", P.CPU_PHI2, "wire_power_clock_reset"),
         Connection("PHI2", "Y1", P.OSC_OUT, "U2", P.HC14_1A, "wire_power_clock_reset"),
         Connection("PHI2_BUF", "U2", P.HC14_1Y, "U1", P.CPU_PHI2, "docs/passive_rf_etc"),
@@ -67,6 +69,9 @@ def _manifest_core() -> List[Connection]:
         m.append(Connection(f"CPU_D{i}", "U1", P.CPU_D[i], "UPLDB", P.UPLDB_LD[i], "docs/memory.md FE1x"))
 
     m += [
+        Connection("+5V", "Y2", P.OSC_VDD, "+5V", "+5V", "wire_beam"),
+        Connection("+5V", "Y2", P.OSC_OE, "+5V", "+5V", "Abracon ACO OE high=run"),
+        Connection("GND", "Y2", P.OSC_GND, "GND", "GND", "wire_beam"),
         Connection("DOT_CLK", "Y2", P.OSC_OUT, "UPLDX", P.UPLDX_DOT, "wire_beam"),
         Connection("IRQ_N", "UPLDY", P.UPLDY_EQ, "U1", P.CPU_IRQB, "wire_beam"),
     ]
@@ -163,6 +168,7 @@ def _manifest_power_io() -> List[Connection]:
     m += [
         Connection("VIN_RAW", "J1", "1", "D1", "1", src),
         Connection("GND", "J1", "2", "GND", "GND", src),
+        Connection("GND", "J1", "MP", "GND", "GND", src),
         Connection("VIN_PROT", "D1", "2", "F1", "1", src),
         Connection("VIN_FUSED", "F1", "2", "FB1", "1", src),
         Connection("+5V", "FB1", "2", "Cbulk", "1", src),
@@ -171,15 +177,17 @@ def _manifest_power_io() -> List[Connection]:
         Connection("+5V", "FB2", "1", "+5V", "+5V", src),
         Connection("GND", "Cva", "2", "GND", "GND", src),
     ]
-    for i in range(3):
-        m.append(Connection(f"PROM_D{i}", "U24", P.PROM_D[i], f"RR{i}", "1", "docs R-2R red"))
-        m.append(Connection("VIDEO_R", f"RR{i}", "2", "J2", "1", "docs R-2R red"))
-    for i in range(3):
-        m.append(Connection(f"PROM_D{i + 3}", "U24", P.PROM_D[i + 3], f"RG{i}", "1", "docs R-2R green"))
-        m.append(Connection("VIDEO_G", f"RG{i}", "2", "J2", "2", "docs R-2R green"))
-    for i in range(2):
-        m.append(Connection(f"PROM_D{i + 6}", "U24", P.PROM_D[i + 6], f"RB{i}", "1", "docs R-2R blue"))
-        m.append(Connection("VIDEO_B", f"RB{i}", "2", "J2", "3", "docs R-2R blue"))
+    # Color PROM → binary-weighted guns. Packing (rr<<5)|(gg<<2)|bb (studio palette.c).
+    # RR/RG: LSB=4k, mid=2k, MSB=1k. RB: LSB=2k, MSB=1k. Then 75Ω to GND → J2.
+    for i, bit in enumerate((5, 6, 7)):  # red D5..D7 LSB→MSB
+        m.append(Connection(f"PROM_D{bit}", "U24", P.PROM_D[bit], f"RR{i}", "1", "docs video DAC"))
+        m.append(Connection("VIDEO_R", f"RR{i}", "2", "J2", "1", "docs video DAC"))
+    for i, bit in enumerate((2, 3, 4)):  # green D2..D4
+        m.append(Connection(f"PROM_D{bit}", "U24", P.PROM_D[bit], f"RG{i}", "1", "docs video DAC"))
+        m.append(Connection("VIDEO_G", f"RG{i}", "2", "J2", "2", "docs video DAC"))
+    for i, bit in enumerate((0, 1)):  # blue D0..D1
+        m.append(Connection(f"PROM_D{bit}", "U24", P.PROM_D[bit], f"RB{i}", "1", "docs video DAC"))
+        m.append(Connection("VIDEO_B", f"RB{i}", "2", "J2", "3", "docs video DAC"))
     m += [
         Connection("VIDEO_R", "R75R", "1", "J2", "1", "docs 75 ohm"),
         Connection("GND", "R75R", "2", "GND", "GND", "docs 75 ohm"),
@@ -192,18 +200,68 @@ def _manifest_power_io() -> List[Connection]:
         Connection("+5V_ANALOG", "U24", P.PROM_VCC, "+5V_ANALOG", "+5V_ANALOG", src),
         Connection("GND", "U24", P.PROM_GND, "GND", "GND", src),
     ]
-    ctrl = "docs/controllers.md"
+    # AD725 composite (NTSC): tap RGBS guns, CSYNC on HSYNC, VSYNC/STND/CE high.
+    # COMP → 75Ω series → J9. S-Video (LUMA/CRMA) left unconnected. No S-Video jack.
+    av = "docs/passive_rf_etc.md AD725"
     m += [
-        Connection("PAD_VCC_P1", "F2", "2", "J3", "T", ctrl),
+        Connection("VIDEO_R", "CinR", "1", "J2", "1", av),
+        Connection("AD725_RIN", "CinR", "2", "U725", P.AD725_RIN, av),
+        Connection("VIDEO_G", "CinG", "1", "J2", "2", av),
+        Connection("AD725_GIN", "CinG", "2", "U725", P.AD725_GIN, av),
+        Connection("VIDEO_B", "CinB", "1", "J2", "3", av),
+        Connection("AD725_BIN", "CinB", "2", "U725", P.AD725_BIN, av),
+        Connection("CSYNC", "UPLDV", P.UPLDV_EQ, "U725", P.AD725_HSYNC, av),
+        Connection("+5V", "U725", P.AD725_VSYNC, "+5V", "+5V", av),
+        Connection("+5V", "U725", P.AD725_STND, "+5V", "+5V", av),
+        Connection("+5V", "U725", P.AD725_CE, "+5V", "+5V", av),
+        Connection("+5V_ANALOG", "U725", P.AD725_APOS, "+5V_ANALOG", "+5V_ANALOG", av),
+        Connection("+5V_ANALOG", "U725", P.AD725_DPOS, "+5V_ANALOG", "+5V_ANALOG", av),
+        Connection("GND", "U725", P.AD725_AGND, "GND", "GND", av),
+        Connection("GND", "U725", P.AD725_DGND, "GND", "GND", av),
+        Connection("+5V_ANALOG", "Cd725a", "1", "U725", P.AD725_APOS, av),
+        Connection("GND", "Cd725a", "2", "GND", "GND", av),
+        Connection("+5V_ANALOG", "Cd725d", "1", "U725", P.AD725_DPOS, av),
+        Connection("GND", "Cd725d", "2", "GND", "GND", av),
+        Connection("FSC4", "Y3", P.OSC_OUT, "U725", P.AD725_4FSC, av),
+        Connection("+5V", "Y3", P.OSC_VDD, "+5V", "+5V", av),
+        Connection("+5V", "Y3", P.OSC_OE, "+5V", "+5V", av),
+        Connection("GND", "Y3", P.OSC_GND, "GND", "GND", av),
+        Connection("YTRAP", "U725", P.AD725_YTRAP, "Lytrap", "1", av),
+        Connection("YTRAP_MID", "Lytrap", "2", "Cytrap", "1", av),
+        Connection("GND", "Cytrap", "2", "GND", "GND", av),
+        Connection("COMP_RAW", "U725", P.AD725_COMP, "R75C", "1", av),
+        Connection("COMPOSITE_OUT", "R75C", "2", "J9", "1", av),
+        Connection("GND", "J9", "2", "GND", "GND", av),
+    ]
+    # TRS: Tip=VCC (PPTC + 100nF + TVS), Ring=DATA (series R + TVS), Sleeve=GND.
+    # Rpu1 on MCU-side PAD_DATA; Rdata* isolate jack stubs (docs/passive_rf_etc.md).
+    ctrl = "docs/controllers.md"
+    passives = "docs/passive_rf_etc.md"
+    m += [
         Connection("+5V", "F2", "1", "+5V", "+5V", ctrl),
-        Connection("PAD_DATA", "U1284", P.M1284_PAD_DATA, "J3", "R", ctrl),
+        Connection("PAD_VCC_P1", "F2", "2", "J3", "T", ctrl),
+        Connection("PAD_VCC_P1", "Cpad1", "1", "J3", "T", passives),
+        Connection("GND", "Cpad1", "2", "GND", "GND", passives),
+        Connection("PAD_VCC_P1", "TvsV1", "1", "J3", "T", passives),
+        Connection("GND", "TvsV1", "2", "GND", "GND", passives),
         Connection("GND", "J3", "S", "GND", "GND", ctrl),
-        Connection("PAD_VCC_P2", "F3", "2", "J4", "T", ctrl),
         Connection("+5V", "F3", "1", "+5V", "+5V", ctrl),
-        Connection("PAD_DATA", "U1284", P.M1284_PAD_DATA, "J4", "R", ctrl),
+        Connection("PAD_VCC_P2", "F3", "2", "J4", "T", ctrl),
+        Connection("PAD_VCC_P2", "Cpad2", "1", "J4", "T", passives),
+        Connection("GND", "Cpad2", "2", "GND", "GND", passives),
+        Connection("PAD_VCC_P2", "TvsV2", "1", "J4", "T", passives),
+        Connection("GND", "TvsV2", "2", "GND", "GND", passives),
         Connection("GND", "J4", "S", "GND", "GND", ctrl),
         Connection("+5V", "Rpu1", "1", "+5V", "+5V", ctrl),
         Connection("PAD_DATA", "Rpu1", "2", "U1284", P.M1284_PAD_DATA, ctrl),
+        Connection("PAD_DATA", "U1284", P.M1284_PAD_DATA, "Rdata1", "1", passives),
+        Connection("PAD_DATA_P1", "Rdata1", "2", "J3", "R", passives),
+        Connection("PAD_DATA_P1", "TvsD1", "1", "J3", "R", passives),
+        Connection("GND", "TvsD1", "2", "GND", "GND", passives),
+        Connection("PAD_DATA", "U1284", P.M1284_PAD_DATA, "Rdata2", "1", passives),
+        Connection("PAD_DATA_P2", "Rdata2", "2", "J4", "R", passives),
+        Connection("PAD_DATA_P2", "TvsD2", "1", "J4", "R", passives),
+        Connection("GND", "TvsD2", "2", "GND", "GND", passives),
     ]
     labels = ("RIGHT", "LEFT", "DOWN", "UP", "X", "Y", "COIN", "START")
     for i, _lab in enumerate(labels):
@@ -223,15 +281,34 @@ def _manifest_power_io() -> List[Connection]:
         Connection("SCALE_1X", "SW1", "1", "UPLDV", P.UPLDV_SCALE, "SCALE"),
         Connection("+5V", "SW1", "2", "+5V", "+5V", "SCALE"),
     ]
+    # APU classic R-2R: AUD[i]--2R--node; LSB node--2R--GND; nodes linked by R; MSB→build-out.
     for i in range(8):
-        m.append(Connection(f"AUD{i}", "U328", P.M328_AUD[i], f"RA{i}", "1", "docs APU R-2R"))
-        m.append(Connection("AUDIO_SUM", f"RA{i}", "2", "Raud", "1", "docs APU R-2R"))
+        m.append(Connection(f"AUD{i}", "U328", P.M328_AUD[i], f"Ra2r{i}", "1", "docs APU R-2R"))
+    m += [
+        Connection("ASUM0", "Ra2r0", "2", "Raterm", "1", "docs APU R-2R"),
+        Connection("GND", "Raterm", "2", "GND", "GND", "docs APU R-2R"),
+    ]
+    for i in range(7):
+        m.append(Connection(f"ASUM{i}", f"Rar{i}", "1", f"Ra2r{i}", "2", "docs APU R-2R"))
+        next_net = "AUDIO_SUM" if i == 6 else f"ASUM{i + 1}"
+        m.append(Connection(next_net, f"Rar{i}", "2", f"Ra2r{i + 1}", "2", "docs APU R-2R"))
     m += [
         Connection("AUDIO_SUM", "Raud", "1", "Caud", "1", "docs APU"),
         Connection("AUDIO_OUT", "Caud", "2", "J8", "1", "docs APU RCA"),
         Connection("GND", "J8", "2", "GND", "GND", "docs APU RCA"),
-        # Composite connector present; encoder / Y+C mix path still TBD.
-        Connection("GND", "J9", "2", "GND", "GND", "docs composite RCA"),
+        # AVR crystals (HC-49/U + 22 pF)
+        Connection("XTAL1284", "Y4", "1", "U1284", P.M1284_XTAL1, "docs AVR xtal"),
+        Connection("XTAL1284b", "Y4", "2", "U1284", P.M1284_XTAL2, "docs AVR xtal"),
+        Connection("XTAL1284", "Cxtal4a", "1", "U1284", P.M1284_XTAL1, "docs AVR xtal"),
+        Connection("GND", "Cxtal4a", "2", "GND", "GND", "docs AVR xtal"),
+        Connection("XTAL1284b", "Cxtal4b", "1", "U1284", P.M1284_XTAL2, "docs AVR xtal"),
+        Connection("GND", "Cxtal4b", "2", "GND", "GND", "docs AVR xtal"),
+        Connection("XTAL328", "Y5", "1", "U328", P.M328_XTAL1, "docs AVR xtal"),
+        Connection("XTAL328b", "Y5", "2", "U328", P.M328_XTAL2, "docs AVR xtal"),
+        Connection("XTAL328", "Cxtal5a", "1", "U328", P.M328_XTAL1, "docs AVR xtal"),
+        Connection("GND", "Cxtal5a", "2", "GND", "GND", "docs AVR xtal"),
+        Connection("XTAL328b", "Cxtal5b", "1", "U328", P.M328_XTAL2, "docs AVR xtal"),
+        Connection("GND", "Cxtal5b", "2", "GND", "GND", "docs AVR xtal"),
     ]
     return m
 
@@ -242,13 +319,16 @@ def build_manifest() -> List[Connection]:
 
 def manifest_gaps() -> List[str]:
     return [
-        "TVS arrays on cart/TRS/arcade — layout",
+        "TVS arrays on cart / arcade headers — layout",
         "Arcade series 47 ohm footprints — layout",
-        "Retr01_Lib .kicad_sym for W65C02S / ATF22V10 / connectors (no stock KiCad symbols)",
+        "Retr01_Lib Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical footprint (user-built)",
+        "Retr01_Lib CUI_RCJ-01x_Vertical RCA footprint (user-built; RCJ-012/014 share holes)",
+        "Optional: replace PinSocket_2x18 with EDAC 395-036-559-212 manufacturer CAD",
+        "Retr01_Lib .kicad_sym for W65C02S / ATF22V10 / connectors (ACO/AD725 stock OK)",
         "UPLDA SEL_FE10/FE11 share pin 23 until JEDEC pin lock",
         "HC245 DIR/OE driven from UPLDB (UPLDA I/O budget); confirm in fuse map",
-        "Composite encoder / Y+C mix into J9 — TBD (connector footprint present)",
-        "J8/J9 footprints are stock BNC; swap to Cinch/RCA .kicad_mod when available",
+        "AD725 RGB black-level / 0.7 Vpp bench tune; optional LUMA/CRMA test pads",
+        "Y2 ACO-5.369318MHZ-EK may be Abracon factory-order (not always DigiKey shelf)",
     ]
 
 

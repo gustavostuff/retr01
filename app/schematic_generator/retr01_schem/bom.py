@@ -52,17 +52,24 @@ _DIP14 = "Package_DIP:DIP-14_W7.62mm"
 _DIP8 = "Package_DIP:DIP-8_W7.62mm"
 _C0603 = "Capacitor_SMD:C_0603_1608Metric"
 _R0603 = "Resistor_SMD:R_0603_1608Metric"
-# Placeholder 2x18 header until a real card-edge .kicad_mod is added.
-_EDGE36 = "Connector_PinHeader_2.54mm:PinHeader_2x18_P2.54mm_Vertical"
-_BARREL = "Connector_BarrelJack:BarrelJack_Horizontal"
+# Abracon ACO full-size DIP-14 can (pins 1/7/8/14). KiCad: Oscillator:Oscillator_DIP-14.
+_OSC14 = "Oscillator:Oscillator_DIP-14"
+# Locked EDAC right-angle 2x18; KiCad pin-socket is the stock hole pattern stand-in until Retr01_Lib CAD.
+_EDGE36 = "Connector_PinSocket_2.54mm:PinSocket_2x18_P2.54mm_Horizontal"
+# CUI PJ-063AH 2.1 mm ID — stock KiCad footprint (pads 1=tip, 2=sleeve, MP).
+_BARREL = "Connector_BarrelJack:BarrelJack_CUI_PJ-063AH_Horizontal"
 _RGBS = "Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical"
-# KiCad 10 stock name includes _Horizontal (35RAPC not in fp-lib-table).
-_TRS = "Connector_Audio:Jack_3.5mm_CUI_SJ1-3533NG_Horizontal"
+# Custom footprint (user-built). Was CUI SJ1-3533NG placeholder — not hole-compatible.
+_TRS = "Retr01_Lib:Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical"
 _ARCADE10 = "Connector_PinHeader_2.54mm:PinHeader_1x10_P2.54mm_Vertical"
 _HDR4 = "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical"
 _HDR2 = "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
-# Stock coaxial (BNC) placeholder for RCA — KiCad has no Cinch/RCA .kicad_mod.
-_RCA = "Connector_Coaxial:BNC_PanelMountable_Vertical"
+# CUI RCJ-01x PCB RCA (color variants share holes). Custom .kicad_mod until upstream Cinch lands.
+_RCA = "Retr01_Lib:CUI_RCJ-01x_Vertical"
+_TVS = "Diode_SMD:D_SOD-323"
+_SOIC16 = "Package_SO:SOIC-16_3.9x9.9mm_P1.27mm"
+_L0603 = "Inductor_SMD:L_0603_1608Metric"
+_XTAL = "Crystal:Crystal_HC49-U_Vertical"
 
 # Silicon target HC573 map (docs/graphics.md#hc573-latch-map-9-chips).
 HC573_REFDES = ("U5A", "U5B", "U5C", "U5D", "U5E", "U5F", "U5G", "U5H", "U5I")
@@ -179,13 +186,92 @@ BOM: List[BomEntry] = [
     *_hc245_entries(),
     # Support (outside 32-IC count)
     BomEntry("U2", "SN74HC14", "reset / PHI2 conditioning", IslandId.POWER_CLK, 14, _DIP14, in_ic_count=False),
-    BomEntry("Y1", "OSC8M", "PHI2 8 MHz", IslandId.POWER_CLK, 8, _DIP8, in_ic_count=False, vcc_pin="VDD", gnd_pin="GND"),
-    BomEntry("Y2", "OSC_DOT", "dot clock ~5.37 MHz", IslandId.BEAM, 8, _DIP8, in_ic_count=False, vcc_pin="VDD", gnd_pin="GND"),
+    # Board clocks: Abracon ACO full-size DIP-14, 5 V HCMOS, -EK (±30 ppm, -20..+70 °C)
+    BomEntry(
+        "Y1",
+        "OSC8M",
+        "Abracon ACO-8.000MHZ-EK (PHI2)",
+        IslandId.POWER_CLK,
+        14,
+        _OSC14,
+        in_ic_count=False,
+        vcc_pin="VDD",
+        gnd_pin="GND",
+    ),
+    BomEntry(
+        "Y2",
+        "OSC_DOT",
+        "Abracon ACO-5.369318MHZ-EK (dot; factory freq)",
+        IslandId.BEAM,
+        14,
+        _OSC14,
+        in_ic_count=False,
+        vcc_pin="VDD",
+        gnd_pin="GND",
+    ),
+    # Composite AV path (outside 32-IC logic BOM)
+    BomEntry(
+        "U725",
+        "AD725",
+        "AD725ARZ RGB→NTSC composite encoder",
+        IslandId.VIDEO,
+        16,
+        _SOIC16,
+        in_ic_count=False,
+        vcc_pin=None,
+        gnd_pin=None,
+    ),
+    BomEntry(
+        "Y3",
+        "OSC_4FSC",
+        "Abracon ACO-14.31818MHZ-EK (AD725 4FSC)",
+        IslandId.VIDEO,
+        14,
+        _OSC14,
+        in_ic_count=False,
+        vcc_pin="VDD",
+        gnd_pin="GND",
+    ),
+    # AVR crystals (HC-49/U) — not cans; XTAL pins on 1284 / 328P
+    BomEntry(
+        "Y4",
+        "XTAL_20M",
+        "Abracon ABLS7M-20.000MHZ-D2Y-T (1284)",
+        IslandId.MCU_LINEBUF,
+        2,
+        _XTAL,
+        in_ic_count=False,
+        vcc_pin=None,
+        gnd_pin=None,
+    ),
+    BomEntry(
+        "Y5",
+        "XTAL_16M",
+        "Abracon ABLS7M-16.000MHZ-D2Y-T (328P)",
+        IslandId.APU,
+        2,
+        _XTAL,
+        in_ic_count=False,
+        vcc_pin=None,
+        gnd_pin=None,
+    ),
+    BomEntry("Cxtal4a", "C_22P", "Y4 load", IslandId.MCU_LINEBUF, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Cxtal4b", "C_22P", "Y4 load", IslandId.MCU_LINEBUF, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Cxtal5a", "C_22P", "Y5 load", IslandId.APU, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Cxtal5b", "C_22P", "Y5 load", IslandId.APU, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("CinR", "C_100N", "AD725 RIN AC couple", IslandId.VIDEO, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("CinG", "C_100N", "AD725 GIN AC couple", IslandId.VIDEO, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("CinB", "C_100N", "AD725 BIN AC couple", IslandId.VIDEO, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("R75C", "R_75", "composite reverse-term series", IslandId.VIDEO, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Lytrap", "L_YTRAP", "AD725 YTRAP ~68uH NTSC", IslandId.VIDEO, 2, _L0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Cytrap", "C_100N", "AD725 YTRAP resonate C", IslandId.VIDEO, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Cd725a", "C_100N", "AD725 APOS decouple", IslandId.VIDEO, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Cd725d", "C_100N", "AD725 DPOS decouple", IslandId.VIDEO, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     # Cart edge on both boards (same electrical pinout / net names). Cart copy is CART_EDGE.
     BomEntry(
         "J36",
         "CART_EDGE_36",
-        "36-pin cart edge (mobo receptacle)",
+        "EDAC 395-036-559-212 right-angle 2x18 (mobo)",
         IslandId.CART_SOCKET,
         36,
         _EDGE36,
@@ -196,7 +282,7 @@ BOM: List[BomEntry] = [
     BomEntry(
         "J36",
         "CART_EDGE_36",
-        "36-pin cart edge (cart fingers)",
+        "cart gold fingers (mate to EDAC 395-036-559-212)",
         IslandId.CART_MODULE,
         36,
         _EDGE36,
@@ -205,10 +291,20 @@ BOM: List[BomEntry] = [
         vcc_pin=None,
         gnd_pin=None,
     ),
-    BomEntry("J1", "BARREL_5V", "5 V barrel jack", IslandId.POWER_CLK, 3, _BARREL, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry(
+        "J1",
+        "BARREL_5V",
+        "CUI PJ-063AH 2.1 mm barrel",
+        IslandId.POWER_CLK,
+        3,
+        _BARREL,
+        in_ic_count=False,
+        vcc_pin=None,
+        gnd_pin=None,
+    ),
     BomEntry("J2", "RGBS_HDR", "RGBS video out", IslandId.VIDEO, 5, _RGBS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    BomEntry("J3", "TRS_P1", "Switchcraft 35RAPC P1", IslandId.MCU_LINEBUF, 3, _TRS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    BomEntry("J4", "TRS_P2", "Switchcraft 35RAPC P2", IslandId.MCU_LINEBUF, 3, _TRS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("J3", "TRS_P1", "Switchcraft 35RAPC2BVN4 P1 (vertical)", IslandId.MCU_LINEBUF, 3, _TRS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("J4", "TRS_P2", "Switchcraft 35RAPC2BVN4 P2 (vertical)", IslandId.MCU_LINEBUF, 3, _TRS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("J5", "ARCADE_P1", "arcade P1 1x10", IslandId.MCU_LINEBUF, 10, _ARCADE10, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("J6", "ARCADE_P2", "arcade P2 1x10", IslandId.MCU_LINEBUF, 10, _ARCADE10, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("J7", "CAB_PWR_RST", "cabinet +5V/GND/RESET 1x4", IslandId.POWER_CLK, 4, _HDR4, in_ic_count=False, vcc_pin=None, gnd_pin=None),
@@ -217,7 +313,7 @@ BOM: List[BomEntry] = [
     BomEntry(
         "J8",
         "AUDIO_OUT",
-        "mono audio RCA (BNC placeholder)",
+        "CUI RCJ-012 black RCA (audio)",
         IslandId.APU,
         2,
         _RCA,
@@ -228,7 +324,7 @@ BOM: List[BomEntry] = [
     BomEntry(
         "J9",
         "COMPOSITE_OUT",
-        "composite video RCA (BNC placeholder)",
+        "CUI RCJ-014 yellow RCA (composite)",
         IslandId.VIDEO,
         2,
         _RCA,
@@ -243,9 +339,18 @@ BOM: List[BomEntry] = [
     BomEntry("Cbulk", "C_BULK", "100-470uF entry bulk", IslandId.POWER_CLK, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("FB2", "FERRITE", "analog video ferrite", IslandId.VIDEO, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("Cva", "C_10U", "10uF analog spur", IslandId.VIDEO, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    # TRS aux pads (docs/passive_rf_etc.md + controllers.md): PPTC, 100nF, TVS, series-R, pull-up
     BomEntry("F2", "PPTC", "TRS P1 VCC PPTC", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("F3", "PPTC", "TRS P2 VCC PPTC", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    BomEntry("Rpu1", "R_4K7", "pad DATA pull-up", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Cpad1", "C_100N", "TRS P1 VCC decouple after PPTC", IslandId.MCU_LINEBUF, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Cpad2", "C_100N", "TRS P2 VCC decouple after PPTC", IslandId.MCU_LINEBUF, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("TvsV1", "TVS_5V", "TRS P1 Tip ESD (PESD5V0-class)", IslandId.MCU_LINEBUF, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("TvsV2", "TVS_5V", "TRS P2 Tip ESD", IslandId.MCU_LINEBUF, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("TvsD1", "TVS_5V", "TRS P1 DATA ESD", IslandId.MCU_LINEBUF, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("TvsD2", "TVS_5V", "TRS P2 DATA ESD", IslandId.MCU_LINEBUF, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Rdata1", "R_47", "TRS P1 DATA series", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Rdata2", "R_47", "TRS P2 DATA series", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Rpu1", "R_4K7", "pad DATA pull-up (MCU side)", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     # Sim / bench only
     BomEntry("U4", "PRG_ROM", "breadboard PRG fallback", IslandId.CPU, 28, _DIP28, in_ic_count=False, sim_only=True, vcc_pin=None, gnd_pin=None),
     BomEntry("SCR1", "SCREEN_SINK", "LCD sim sink", IslandId.VIDEO, 0, "", in_ic_count=False, sim_only=True, vcc_pin=None, gnd_pin=None),

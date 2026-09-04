@@ -203,14 +203,22 @@ M1284_SCL, M1284_SDA = "22", "23"  # PC0/PC1 TWI
 M1284_PAD_DATA = "16"  # PD2
 M1284_HBLANK = "17"  # PD3
 M1284_FE06, M1284_FE07 = "18", "19"  # PD4/PD5
+M1284_XTAL2, M1284_XTAL1 = "12", "13"
 M1284_DQ = ("14", "15", "16", "17", "18", "19", "20", "21")  # PD0..PD7 — conflicts noted
 # Prefer PC2-PC7 + PD6-PD7 for DQ to free PD2-5:
 M1284_DQ = ("24", "25", "26", "27", "28", "29", "20", "21")  # PC2-7, PD6-7
 M1284_LB_A = {i: str(1 + i) for i in range(8)}  # reuse PB for linebuf addr soft
 
 M328_RESET, M328_VCC, M328_GND = "1", "7", "8"
+M328_XTAL1, M328_XTAL2 = "9", "10"
 M328_DQ = ("2", "3", "4", "5", "6", "11", "12", "13")  # PD0-4, PD5-7
-M328_AUD = ("14", "15", "16", "17", "18", "19", "23", "24")  # PB0-5, PC0-1
+M328_AUD = ("14", "15", "16", "17", "18", "19", "23", "24")  # PB0-5, PC0-1 = AUD0(LSB)..AUD7(MSB)
+
+# AD725 RGB→NTSC/PAL encoder (SOIC-16)
+AD725_STND, AD725_AGND, AD725_4FSC, AD725_APOS = "1", "2", "3", "4"
+AD725_CE, AD725_RIN, AD725_GIN, AD725_BIN = "5", "6", "7", "8"
+AD725_CRMA, AD725_COMP, AD725_LUMA, AD725_YTRAP = "9", "10", "11", "12"
+AD725_DGND, AD725_DPOS, AD725_VSYNC, AD725_HSYNC = "13", "14", "15", "16"
 
 # ---------------------------------------------------------------------------
 # Passives / connectors / oscillators (KiCad Device R/C = pins 1,2)
@@ -219,8 +227,8 @@ M328_AUD = ("14", "15", "16", "17", "18", "19", "23", "24")  # PB0-5, PC0-1
 R1, R2 = "1", "2"
 C1, C2 = "1", "2"
 
-# OSC cans (no stock symbol) — 4-pin footprint convention
-OSC_VDD, OSC_OUT, OSC_OE, OSC_GND = "1", "2", "3", "4"
+# OSC cans — Abracon ACO / KiCad CXO_DIP14 / ACO-xxxMHz-A pinout
+OSC_OE, OSC_GND, OSC_OUT, OSC_VDD = "1", "7", "8", "14"
 
 # Cart edge 36 — A1..A18 = 1..18, B1..B18 = 19..36
 def cart_a(n: int) -> str:
@@ -252,18 +260,22 @@ PIN_TEMPLATES: Dict[str, List[str]] = {
     "AT27C256R": _nums(28),
     "24C64": _nums(8),
     "SN74HC14": _nums(14),
-    "OSC8M": _nums(8),  # DIP-8 can; unused pins go to NC
-    "OSC_DOT": _nums(8),
+    "OSC8M": ["1", "7", "8", "14"],  # Abracon ACO / KiCad ACO-xxxMHz-A
+    "OSC_DOT": ["1", "7", "8", "14"],
+    "OSC_4FSC": ["1", "7", "8", "14"],
+    "XTAL_20M": _nums(2),
+    "XTAL_16M": _nums(2),
+    "AD725": _nums(16),
     "CART_EDGE_36": _nums(36),
-    "BARREL_5V": _nums(3),
+    "BARREL_5V": ["1", "2", "MP"],  # CUI PJ-063AH / KiCad Barrel_Jack_MountingPin
     "RGBS_HDR": _nums(5),
-    "TRS_P1": ["T", "R", "S"],  # CUI SJ1-3533NG pad names
+    "TRS_P1": ["T", "R", "S"],  # Switchcraft 35RAPC2BVN4 Tip/Ring/Sleeve
     "TRS_P2": ["T", "R", "S"],
     "ARCADE_P1": _nums(10),
     "ARCADE_P2": _nums(10),
     "CAB_PWR_RST": _nums(4),
     "SCALE_SW": _nums(2),
-    "AUDIO_OUT": _nums(2),  # Conn_Coaxial: 1=In, 2=Ext (RCA via BNC placeholder)
+    "AUDIO_OUT": _nums(2),  # RCJ: 1=center, 2=shell
     "COMPOSITE_OUT": _nums(2),
     "PPTC": _nums(2),
     "FERRITE": _nums(2),
@@ -271,11 +283,17 @@ PIN_TEMPLATES: Dict[str, List[str]] = {
     "C_BULK": _nums(2),
     "C_10U": _nums(2),
     "C_100N": _nums(2),
+    "C_22P": _nums(2),
     "C_10U_AUD": _nums(2),
+    "L_YTRAP": _nums(2),
+    "TVS_5V": _nums(2),
     "R_4K7": _nums(2),
+    "R_47": _nums(2),
     "R_10K": _nums(2),
+    "R_20K": _nums(2),
     "R_1K": _nums(2),
     "R_2K": _nums(2),
+    "R_4K": _nums(2),
     "R_75": _nums(2),
     "R_R2R": _nums(2),
 }
@@ -514,10 +532,42 @@ KICAD_ALIASES: Dict[str, Dict[str, str]] = {
     },
     "R_R2R": {"1": "1", "2": "2"},
     "R_75": {"1": "1", "2": "2"},
+    "R_47": {"1": "1", "2": "2"},
+    "R_4K7": {"1": "1", "2": "2"},
     "R_10K": {"1": "1", "2": "2"},
+    "R_20K": {"1": "1", "2": "2"},
     "R_1K": {"1": "1", "2": "2"},
+    "R_2K": {"1": "1", "2": "2"},
+    "R_4K": {"1": "1", "2": "2"},
     "C_100N": {"1": "1", "2": "2"},
     "C_10U_AUD": {"1": "1", "2": "2"},
+    "TVS_5V": {"1": "1", "2": "2"},
+    "PPTC": {"1": "1", "2": "2"},
+    "L_YTRAP": {"1": "1", "2": "2"},
+    "OSC_4FSC": {"1": "Tri-State", "7": "GND", "8": "OUT", "14": "Vcc"},
+    "OSC8M": {"1": "Tri-State", "7": "GND", "8": "OUT", "14": "Vcc"},
+    "OSC_DOT": {"1": "Tri-State", "7": "GND", "8": "OUT", "14": "Vcc"},
+    "XTAL_20M": {"1": "1", "2": "2"},
+    "XTAL_16M": {"1": "1", "2": "2"},
+    "C_22P": {"1": "1", "2": "2"},
+    "AD725": {
+        "1": "STND",
+        "2": "AGND",
+        "3": "4FSC",
+        "4": "APOS",
+        "5": "CE",
+        "6": "RIN",
+        "7": "GIN",
+        "8": "BIN",
+        "9": "CRMA",
+        "10": "COMP",
+        "11": "LUMA",
+        "12": "YTRAP",
+        "13": "DGND",
+        "14": "DPOS",
+        "15": "VSYNC",
+        "16": "HSYNC",
+    },
 }
 
 
@@ -538,5 +588,6 @@ def power_pin_nums(mpn: str) -> Optional[Tuple[str, str]]:
         "SN74HC14": (HC14_VCC, HC14_GND),
         "OSC8M": (OSC_VDD, OSC_GND),
         "OSC_DOT": (OSC_VDD, OSC_GND),
+        "OSC_4FSC": (OSC_VDD, OSC_GND),
     }
     return table.get(mpn)
