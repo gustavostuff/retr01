@@ -197,22 +197,24 @@ Six `(offset, length)` pairs as little-endian **u24** (3+3 bytes each):
 
 | Piece | Size / note |
 |-------|-------------|
-| World header | **32 B** (spawn col/row, default banks/pal row, BG1 present count, BG0 present count, CHR/dir offsets, entity counts, player entity + hitbox, camera dead-zone bytes **30-31**) |
+| World header | **32 B** (spawn cell as nibble-packed col/row, default banks/pal row, BG1 present count, BG0 present count, CHR/dir offsets, entity counts, player entity + hitbox, camera dead-zone bytes **30-31**) |
 | CHR | **4** BG banks + **4** SPR banks x **4096 B** = **32 KB** total |
-| BG1 screen directory | **12 B** per present playfield screen (grid col/row + payload offset) |
-| BG1 screen payloads | **480 B** each (present only, sparse **8x8**) |
+| BG1 screen directory | **12 B** per present playfield screen (grid cell + payload offset) |
+| BG1 screen payloads | **480 B** each (present only, sparse **16x16**) |
 | BG0 directory | **12 B** per present BG0 screen (same shape as BG1 dir). Offset **0** if none |
-| BG0 payloads | **480 B** each (up to **8** present screens, sparse on **8x8**) |
+| BG0 payloads | **480 B** each (up to **8** present screens, sparse on **16x16**) |
 | Entity types / instances | Packed records. Metasprite catalog is Studio-only and flattened here |
 | Player anim | Optional `PA` blob when a player entity is marked |
+
+**Grid cell byte:** virtual map is **16x16** (col/row **0-15**). Pack both coords in **1 byte** as nibbles: `col | (row << 4)`. Same packing for BG1/BG0 directory entries and world-header spawn cell.
 
 **World header notes (BG0):** byte **3** packs present BG0 extent (`cols | rows<<4`). Byte **6** is BG0 present count (was legacy parallax count). Bytes **14-16** are BG0 directory offset (u24), or **0** if none.
 
 **Screen payload:** **480 B** = 240 tile bytes + 240 attr bytes (**16x15**, **128x120**). Same shape for BG1 and BG0.
 
-**World caps:** **8** worlds, **32 present BG1 screens**/world on sparse **8x8** grid, **0..8** BG0 screens/world (free layout on **8x8**), **4** BG + **4** sprite CHR banks/world (**256** tiles x **16 B** each bank).
+**World caps:** **8** worlds, **48 present BG1 screens**/world on sparse **16x16** grid, **0..8** BG0 screens/world (free layout on **16x16**), **4** BG + **4** sprite CHR banks/world (**256** tiles x **16 B** each bank).
 
-**Flash budget at max fill:** ~**442 KB** used, ~**70 KB** free in **512 KB** (room for other screens, entity data).
+**Flash budget at max fill:** ~**504 KB** used (**515700 B**), ~**8.4 KB** free (**8588 B**) in **512 KB** (tight headroom for other screens / entity data).
 
 ### Other screens (global ROM)
 

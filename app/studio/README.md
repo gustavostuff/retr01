@@ -30,9 +30,9 @@ Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Win
 
 | Control | Behavior |
 |---------|----------|
-| **Worlds** | **8** world buttons (**1-8**, internal indices **0-7**). World 1 starts with **3x3** blank screens on an **8x8** slot map. Worlds 2-8 start empty until first click. Cart cap: **32 present screens**/world ([`docs/graphics.md`](../../docs/graphics.md)). Selected world: active strip **11px** + **7px** **BG1**/**BG0** sub-button. Inactive dual-view world tabs fill **18px** (tab+sub stack) so the row height matches |
-| **World map (BG1)** | Sparse **8x8** playfield map. **16px** cell pitch. Present = blue. White fill = default spawn. White outline = selected |
-| **World map (BG0)** | Second BG plane. Sparse **8x8** chess like BG1. Up to **8** present screens anywhere (double-click to create). Export packs present BG0 screens (coords normalized to the present bbox origin). Emu and Sim Host Play composite under BG1 color 0. BG0 scrolls on an axis only when its enclosing present extent is **smaller** than BG1 on that axis ([`docs/graphics.md`](../../docs/graphics.md)) |
+| **Worlds** | **8** world buttons (**1-8**, internal indices **0-7**). World 1 starts with **3x3** blank screens on a **16x16** slot map. Worlds 2-8 start empty until first click. Cart cap: **48 present BG1 screens**/world ([`docs/graphics.md`](../../docs/graphics.md), [`docs/memory.md`](../../docs/memory.md)). Selected world: active strip **11px** + **7px** **BG1**/**BG0** sub-button. Inactive dual-view world tabs fill **18px** (tab+sub stack) so the row height matches |
+| **World map (BG1)** | Sparse **16x16** playfield map (col/row **0-15**, packed as nibbles in cart). Present = blue. White fill = default spawn. White outline = selected |
+| **World map (BG0)** | Second BG plane. Sparse **16x16** chess like BG1. Up to **8** present screens anywhere (double-click to create). Export packs present BG0 screens (coords normalized to the present bbox origin). Emu and Sim Host Play composite under BG1 color 0. BG0 scrolls on an axis only when its enclosing present extent is **smaller** than BG1 on that axis ([`docs/graphics.md`](../../docs/graphics.md)) |
 | **Double-click** empty slot | Create screen (BG1 or BG0 plane) |
 | **Click** any slot | Select grid cell (empty or present, white outline). Present also becomes the edit target |
 | **Ctrl+C / Ctrl+V** | Copy / paste entire selected screen (tiles+attrs) on BG0 or BG1. Paste creates the slot if empty |
@@ -120,7 +120,7 @@ See generated `output/C/include/r01_*.h` for the full engine API (camera, player
 |------|--------|
 | Drop target | Anywhere on window -> **active** world, **BG bank 0** |
 | Cell size | **128x120** px. PNG must be a multiple thereof |
-| Grid | Sets world to **NxM** from atlas (max **8x8**) |
+| Grid | Sets world to **NxM** from atlas (max **16x16**) |
 | Limits | <= **256** unique 8x8 tiles. <= **4** colors per PNG |
 | Transparent cells | Skipped (screen not forced present) |
 | Palettes | BG rows remapped to nearest kit masters after import |

@@ -168,11 +168,11 @@ This **replaces** the old two-slot parallax payload model (former slots 4-5 only
 
 | Item | Value |
 |------|-------|
-| Layout | Up to **8** present screens anywhere on the **8x8** map. Scroll ratio uses the enclosing present bbox |
+| Layout | Up to **8** present screens anywhere on the **16x16** map. Scroll ratio uses the enclosing present bbox |
 | Live window | VRAM slots **4-7** (2x2), same MAP stream path as BG1 |
 | Scroll | `$FE06` / `$FE07` (0-127 / 0-119 inside the BG0 workbench) |
 | Cart | Up to **8** present BG0 screens per world (dir + **480 B** payloads after BG1 MAP). Dir coords are bbox-origin relative |
-| Authoring | Studio Worlds: BG1/BG0 sub-button. Place screens freely on the **8x8** chess (max **8** present) |
+| Authoring | Studio Worlds: BG1/BG0 sub-button. Place screens freely on the **16x16** chess (max **8** present) |
 
 ### Show-through
 
@@ -195,9 +195,9 @@ scroll_BG0_x = scroll_BG1_x * cols_BG0 / cols_BG1
 scroll_BG0_y = scroll_BG1_y * rows_BG0 / rows_BG1
 ```
 
-`cols_*` / `rows_*` are the **enclosing present extents** of each plane (used screens bbox), not the virtual 8x8. Example: BG0 **2x2**, BG1 **4x4** -> BG0 scrolls at half rate on both axes. If `cols_BG0 == 1`, X stays 0 (same for rows). If BG0 extent is **equal or larger** than BG1 on an axis (`cols_BG0 >= cols_BG1`), that axis does not scroll. Absolute BG0 scroll override is allowed for cutscenes.
+`cols_*` / `rows_*` are the **enclosing present extents** of each plane (used screens bbox), not the virtual **16x16**. Example: BG0 **2x2**, BG1 **4x4** -> BG0 scrolls at half rate on both axes. If `cols_BG0 == 1`, X stays 0 (same for rows). If BG0 extent is **equal or larger** than BG1 on an axis (`cols_BG0 >= cols_BG1`), that axis does not scroll. Absolute BG0 scroll override is allowed for cutscenes.
 
-World/screen/cart caps: [`memory.md`](memory.md).
+World/screen/cart caps: [`memory.md`](memory.md) (**48** BG1 present/world, **16x16** virtual grid, cell coords as nibbles).
 
 ---
 

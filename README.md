@@ -32,7 +32,7 @@ Apps and shared code live under [`app/`](app/):
 | CPU | W65C02S @ **8 MHz** |
 | Playfield | **128 x 120** logical (**16 x 15** tiles), board **2x** to **256 x 240** RGBS |
 | Art | **8 x 8** tiles, **2 bpp**, **64** master colors on-board Color PROM (**AT27C256R**) |
-| Worlds | up to **8** worlds, **32** BG1 screens each + optional **BG0** on a **512 KB** cart (**32 KB** PRG) |
+| Worlds | up to **8** worlds, **48** BG1 screens each on a **16x16** grid + optional **BG0** on a **512 KB** cart (**32 KB** PRG) |
 | Scroll | **2 x 2** live nametable window (BG1) + structured second BG (BG0) with show-through |
 | Sprites | **64** OAM entries, **16** per scanline |
 | VRAM / RAM | **32 KB** interleaved VRAM + **32 KB** system RAM |
