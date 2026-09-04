@@ -457,6 +457,20 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             ui->ctx_chip = -1; /* click elsewhere dismisses */
         }
 
+        /* Arcade / Pads input toggle (top HUD). */
+        {
+            SDL_Rect ibtn;
+            input_mode_btn_rect(ui, &ibtn);
+            if (logic_x >= ibtn.x && logic_x < ibtn.x + ibtn.w && logic_y >= ibtn.y &&
+                logic_y < ibtn.y + ibtn.h) {
+                ui->input_mode = (ui->input_mode == R01S_INPUT_PADS) ? R01S_INPUT_ARCADE : R01S_INPUT_PADS;
+                snprintf(ui->status, sizeof(ui->status),
+                         ui->input_mode == R01S_INPUT_PADS ? "input: pads (ATtiny UART)"
+                                                          : "input: arcade (direct GPIO)");
+                return 1;
+            }
+        }
+
         /* Save layout (top HUD). */
         {
             SDL_Rect sbtn;

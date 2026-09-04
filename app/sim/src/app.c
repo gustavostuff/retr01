@@ -274,7 +274,7 @@ void r01s_app_mount_builder(R01sApp *app) {
         }
     }
     {
-        int bom_ic = r01s_island_builder_count_visual(b, R01S_ENTITY_VIS_IC);
+        int bom_ic = r01s_island_builder_count_bom_ic(b);
         if (bom_ic != R01S_BOM_IC_N) {
             fprintf(stderr, "ui: expected %d BOM IC visuals, mounted %d ui chips\n", R01S_BOM_IC_N, bom_ic);
         }
@@ -427,9 +427,17 @@ void r01s_app_frame(R01sApp *app) {
         board = r01s_board_from_group(group);
         if (board) {
             uint8_t pad0 = r01s_ui_gamepad_port(&app->ui, 0);
-            r01s_pads_set(&board->pads, 0, pad0);
-            r01s_pads_set(&board->pads, 1, r01s_ui_gamepad_port(&app->ui, 1));
-            r01s_pads_refresh_preview(&board->pads);
+            uint8_t pad1 = r01s_ui_gamepad_port(&app->ui, 1);
+            if (app->ui.input_mode == R01S_INPUT_PADS) {
+                r01s_attiny85_set_buttons(&board->pad_mcu[0], pad0);
+                r01s_attiny85_set_buttons(&board->pad_mcu[1], pad1);
+                r01s_pad_uart_service(&board->pads, &board->pad_mcu[0], &board->pad_mcu[1]);
+                pad0 = r01s_pads_get(&board->pads, 0);
+            } else {
+                r01s_pads_set(&board->pads, 0, pad0);
+                r01s_pads_set(&board->pads, 1, pad1);
+                r01s_pads_refresh_preview(&board->pads);
+            }
             app->ui.probe_pad_p1 = r01s_pads_get(&board->pads, 0);
             app->ui.probe_pad_p2 = r01s_pads_get(&board->pads, 1);
             r01s_play_tick(board, pad0);

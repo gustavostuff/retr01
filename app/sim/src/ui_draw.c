@@ -911,7 +911,7 @@ static void gp_overlay_pixel(SDL_Renderer *r, int ox, int oy, int px, int py, in
     }
 }
 
-static void draw_controller_overlay(SDL_Renderer *r, int player, const R01sGamepadInput *gp) {
+static void draw_controller_overlay(SDL_Renderer *r, int player, const R01sGamepadInput *gp, int input_mode) {
     int ox, oy;
     int x, y;
     uint8_t stick;
@@ -921,6 +921,10 @@ static void draw_controller_overlay(SDL_Renderer *r, int player, const R01sGamep
         return;
     }
     gp_overlay_origin(player, &ox, &oy);
+    if (player == 0) {
+        const char *tag = (input_mode == R01S_INPUT_PADS) ? "PADS" : "ARCADE";
+        font_draw(r, ox, oy - font_line_h() - 2, tag, 140, 160, 190);
+    }
     for (y = 0; y < R01S_UI_GP_OVERLAY_H; y++) {
         for (x = 0; x < R01S_UI_GP_OVERLAY_W; x++) {
             fill_rect(r, ox + x * R01S_UI_GP_OVERLAY_SCALE, oy + y * R01S_UI_GP_OVERLAY_SCALE,
@@ -1399,20 +1403,30 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_UI_HUD_TOP, 12, 14, 16);
     font_draw(r, R01S_UI_UNIT, R01S_UI_UNIT, "Retr01 Sim", 200, 210, 220);
     {
-        SDL_Rect sbtn;
+        SDL_Rect ibtn;
         const char *hint;
         int hint_x;
         int hint_max;
         int text_y = R01S_UI_UNIT;
-        save_btn_rect(ui, &sbtn);
+        input_mode_btn_rect(ui, &ibtn);
         hint_x = R01S_UI_VIEW_X + R01S_UI_UNIT;
-        hint_max = sbtn.x - hint_x - R01S_UI_UNIT;
+        hint_max = ibtn.x - hint_x - R01S_UI_UNIT;
         if (hint_max < 24) {
             hint_max = 24;
         }
         hint = ui->layout_compact ? "BOX SEL  S SAVE  R ROT  Ctrl+. SORT  Ctrl+Z UNDO  DBL-CLK SCR"
                                   : "S SAVE  R ROT  DBL-CLK SCR SCALE  PAN  DRAG";
         font_draw_ellipsize(r, hint_x, text_y, hint, hint_max, 120, 130, 140);
+    }
+    {
+        SDL_Rect ibtn;
+        const char *ilabel = ui->input_mode == R01S_INPUT_PADS ? "PADS" : "ARCADE";
+        input_mode_btn_rect(ui, &ibtn);
+        fill_rect(r, ibtn.x, ibtn.y, ibtn.w, ibtn.h, ui->input_mode == R01S_INPUT_PADS ? 40 : 28,
+                  ui->input_mode == R01S_INPUT_PADS ? 55 : 40, ui->input_mode == R01S_INPUT_PADS ? 70 : 32);
+        draw_rect(r, ibtn.x, ibtn.y, ibtn.w, ibtn.h, 120, 140, 180);
+        font_draw(r, ibtn.x + (ibtn.w - font_text_width(ilabel)) / 2, ibtn.y + (ibtn.h - font_line_h()) / 2, ilabel,
+                  200, 210, 230);
     }
     {
         SDL_Rect sbtn;
@@ -1438,8 +1452,8 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     /* Floating overlays */
     draw_islands_strip(r, ui);
     draw_legend_strip(r, ui);
-    draw_controller_overlay(r, 0, &ui->gamepad[0]);
-    draw_controller_overlay(r, 1, &ui->gamepad[1]);
+    draw_controller_overlay(r, 0, &ui->gamepad[0], ui->input_mode);
+    draw_controller_overlay(r, 1, &ui->gamepad[1], ui->input_mode);
     draw_frame_log_panel(r, ui);
 
     fill_rect(r, 0, R01S_LOGIC_H - R01S_UI_HUD_BOTTOM, R01S_LOGIC_W, R01S_UI_HUD_BOTTOM, 12, 14, 16);

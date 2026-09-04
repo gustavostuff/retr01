@@ -118,7 +118,48 @@ Bench tool to program a cart **in the socket** without desoldering the flash IC.
 | **WE#** | MCU GPIO. JEDEC command cycles (`$5555`/`$AA`, etc. on SST39SF040) |
 | **OE#** | MCU GPIO. Read path during verify |
 
-Firmware presents a USB device (vendor protocol TBD when Studio / CLI tooling lands).
+Firmware presents a **USB CDC ACM** serial port (virtual COM). Protocol below is locked for Studio / CLI tooling.
+
+### Flasher USB protocol (locked)
+
+**Transport:** USB CDC ACM, **115200 8N1** (rate is not critical; framing is). Host opens the COM port and exchanges binary frames.
+
+**Frame** (both directions):
+
+| Byte(s) | Field |
+|---------|--------|
+| 0 | `0xAA` sync |
+| 1 | `0x55` sync |
+| 2 | `cmd` |
+| 3–4 | `len` (uint16 LE) = payload byte count |
+| 5… | `payload` (`len` bytes) |
+| last | `xor` of all bytes from `cmd` through end of payload |
+
+**Host → flasher `cmd`:**
+
+| cmd | Name | Payload | Action |
+|-----|------|---------|--------|
+| `0x01` | `PING` | empty | Reply `PONG` |
+| `0x02` | `INFO` | empty | Reply flash ID / fw version ASCII |
+| `0x10` | `ERASE_CHIP` | empty | Full-chip erase SST39SF040 |
+| `0x11` | `ERASE_SECTOR` | `addr` u24 LE | Erase 4 KB sector containing addr |
+| `0x20` | `WRITE` | `addr` u24 LE + data (1–256 B) | Program bytes (host must erase first) |
+| `0x21` | `READ` | `addr` u24 LE + `n` u16 LE | Read `n` bytes (1–256) |
+| `0x22` | `VERIFY` | `addr` u24 LE + data | Read-back compare; status in reply |
+
+**Flasher → host `cmd`:**
+
+| cmd | Name | Payload |
+|-----|------|---------|
+| `0x81` | `PONG` | empty |
+| `0x82` | `INFO_R` | ASCII `Retr01Flasher;SST39SF040;v1` |
+| `0x90` | `OK` | empty (or echo addr) |
+| `0x91` | `DATA` | raw bytes (READ) |
+| `0x9E` | `NAK` | `errno` u8 (`1`=bad xor, `2`=busy, `3`=verify fail, `4`=bad len) |
+
+**Flow for a full cart image:** `PING` → `INFO` → `ERASE_CHIP` → loop `WRITE` 256 B pages → optional `VERIFY` pages → `PING`.
+
+No USB HID, no vendor bulk required for v1. Upgrade path later if needed.
 
 **Runners today:** Emu / Sim load `.retr01` from a host file path (Sim default: `output/test_2.retr01`). On-board flash image and multi-ROM selection are follow-on work ([`hardware.md`](hardware.md#runners-today-vs-silicon-target)).
 
@@ -135,7 +176,6 @@ Firmware presents a USB device (vendor protocol TBD when Studio / CLI tooling la
 
 | Topic | Note |
 |-------|------|
-| Flasher USB protocol | HID vs CDC vs vendor bulk. Lock when PC tooling ships |
 | Sim cart flasher UI | Island **F** on canvas. USB program flow **WIP** (`flasher_bench` tests only) |
 | Cart shell / label | Mechanical only |
 | Multi-ROM menu | Software + flash layout (post docs) |

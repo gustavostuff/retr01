@@ -31,8 +31,9 @@ def _manifest_core() -> List[Connection]:
         Connection("+5V", "Y1", P.OSC_VDD, "U2", P.HC14_VCC, "wire_power_clock_reset"),
         Connection("+5V", "Y1", P.OSC_OE, "+5V", "+5V", "Abracon ACO OE high=run"),
         Connection("GND", "Y1", P.OSC_GND, "GND", "GND", "wire_power_clock_reset"),
-        Connection("PHI2", "Y1", P.OSC_OUT, "U1", P.CPU_PHI2, "wire_power_clock_reset"),
-        Connection("PHI2", "Y1", P.OSC_OUT, "U2", P.HC14_1A, "wire_power_clock_reset"),
+        Connection("PHI2_SRC", "Y1", P.OSC_OUT, "Rphi", "1", "docs/passive_rf_etc clock damp"),
+        Connection("PHI2", "Rphi", "2", "U1", P.CPU_PHI2, "wire_power_clock_reset"),
+        Connection("PHI2", "Rphi", "2", "U2", P.HC14_1A, "wire_power_clock_reset"),
         Connection("PHI2_BUF", "U2", P.HC14_1Y, "U1", P.CPU_PHI2, "docs/passive_rf_etc"),
         Connection("RESET_N", "U2", P.HC14_2A, "U1", P.CPU_RESB, "wire_power_clock_reset"),
         Connection("RESET_N", "U1", P.CPU_RESB, "UPLDX", P.UPLDX_RES, "wire_beam"),
@@ -72,7 +73,8 @@ def _manifest_core() -> List[Connection]:
         Connection("+5V", "Y2", P.OSC_VDD, "+5V", "+5V", "wire_beam"),
         Connection("+5V", "Y2", P.OSC_OE, "+5V", "+5V", "Abracon ACO OE high=run"),
         Connection("GND", "Y2", P.OSC_GND, "GND", "GND", "wire_beam"),
-        Connection("DOT_CLK", "Y2", P.OSC_OUT, "UPLDX", P.UPLDX_DOT, "wire_beam"),
+        Connection("DOT_SRC", "Y2", P.OSC_OUT, "Rdot", "1", "docs/passive_rf_etc clock damp"),
+        Connection("DOT_CLK", "Rdot", "2", "UPLDX", P.UPLDX_DOT, "wire_beam"),
         Connection("IRQ_N", "UPLDY", P.UPLDY_EQ, "U1", P.CPU_IRQB, "wire_beam"),
     ]
     for i in range(8):
@@ -81,7 +83,7 @@ def _manifest_core() -> List[Connection]:
 
     for mux in ("U7A", "U7B", "U7C"):
         m += [
-            Connection("MUX_AB", "Y1", P.OSC_OUT, mux, P.HC157_S, "wire_vram"),
+            Connection("MUX_AB", "Rphi", "2", mux, P.HC157_S, "wire_vram"),
             Connection("MUX_G_N", "GND", "GND", mux, P.HC157_E, "wire_vram"),
         ]
     for mux, base in (("U7A", 0), ("U7B", 4), ("U7C", 8)):
@@ -124,7 +126,11 @@ def _manifest_core() -> List[Connection]:
     ]
 
     for i in range(8):
-        m.append(Connection(f"CART_D{i}", "J36", P.cart_b(i + 4), "U20C", P.HC245_B[i], "docs/cart.md"))
+        # Cart data: MCU 245 -- 33Ω -- edge + TVS (docs/passive_rf_etc.md)
+        m.append(Connection(f"CART_D{i}_MCU", "U20C", P.HC245_B[i], f"Rcd{i}", "1", "docs/cart.md ESD"))
+        m.append(Connection(f"CART_D{i}", f"Rcd{i}", "2", "J36", P.cart_b(i + 4), "docs/cart.md ESD"))
+        m.append(Connection(f"CART_D{i}", f"TvsCd{i}", "1", "J36", P.cart_b(i + 4), "docs/cart.md ESD"))
+        m.append(Connection("GND", f"TvsCd{i}", "2", "GND", "GND", "docs/cart.md ESD"))
         m.append(Connection(f"CPU_D{i}", "U1", P.CPU_D[i], "U20C", P.HC245_A[i], "cart 245"))
         m.append(Connection(f"CPU_D{i}", "U1", P.CPU_D[i], "U1284", P.M1284_DQ[i], "wire_io OAM"))
         m.append(Connection(f"CPU_D{i}", "U1", P.CPU_D[i], "U328", P.M328_DQ[i], "wire_io APU"))
@@ -145,20 +151,36 @@ def _manifest_cart_edge() -> List[Connection]:
     for pin in (P.cart_a(2), P.cart_b(2)):
         m.append(Connection("+5V", "J36", pin, "+5V", "+5V", src))
     m += [
-        Connection("I2C_SDA", "U1284", P.M1284_SDA, "J36", P.cart_a(3), src),
-        Connection("I2C_SCL", "U1284", P.M1284_SCL, "J36", P.cart_b(3), src),
+        Connection("I2C_SDA_MCU", "U1284", P.M1284_SDA, "Rcsda", "1", src),
+        Connection("I2C_SDA", "Rcsda", "2", "J36", P.cart_a(3), src),
+        Connection("I2C_SDA", "TvsSda", "1", "J36", P.cart_a(3), src),
+        Connection("GND", "TvsSda", "2", "GND", "GND", src),
+        Connection("I2C_SCL_MCU", "U1284", P.M1284_SCL, "Rcscl", "1", src),
+        Connection("I2C_SCL", "Rcscl", "2", "J36", P.cart_b(3), src),
+        Connection("I2C_SCL", "TvsScl", "1", "J36", P.cart_b(3), src),
+        Connection("GND", "TvsScl", "2", "GND", "GND", src),
     ]
     for i in range(14):
         edge = P.cart_a(i + 4)
         m.append(Connection(f"CART_A{i}", "U1", P.CPU_A[i], "J36", edge, src))
+        m.append(Connection(f"CART_A{i}", f"TvsCa{i}", "1", "J36", edge, src))
+        m.append(Connection("GND", f"TvsCa{i}", "2", "GND", "GND", src))
     for i, edge_n in enumerate(range(13, 18)):
         bit = 14 + i
         latch = ("U5G", "U5H", "U5I")[min(i, 2)]
         m.append(Connection(f"CART_A{bit}", latch, P.HC573_Q[i % 8], "J36", P.cart_b(edge_n), src))
-    # CART_D0..7: U20C B-side ↔ J36 already in _manifest_core.
+        m.append(Connection(f"CART_A{bit}", f"TvsCa{bit}", "1", "J36", P.cart_b(edge_n), src))
+        m.append(Connection("GND", f"TvsCa{bit}", "2", "GND", "GND", src))
+    # CART_D0..7: series+TVS already in _manifest_core.
     m += [
-        Connection("CART_OE_N", "UPLDB", P.UPLDB_CART_OE, "J36", P.cart_b(12), src),
-        Connection("CART_WE_N", "UPLDB", P.UPLDB_CART_WE, "J36", P.cart_b(18), src),
+        Connection("CART_OE_MCU", "UPLDB", P.UPLDB_CART_OE, "Rcoe", "1", src),
+        Connection("CART_OE_N", "Rcoe", "2", "J36", P.cart_b(12), src),
+        Connection("CART_OE_N", "TvsOe", "1", "J36", P.cart_b(12), src),
+        Connection("GND", "TvsOe", "2", "GND", "GND", src),
+        Connection("CART_WE_MCU", "UPLDB", P.UPLDB_CART_WE, "Rcwe", "1", src),
+        Connection("CART_WE_N", "Rcwe", "2", "J36", P.cart_b(18), src),
+        Connection("CART_WE_N", "TvsWe", "1", "J36", P.cart_b(18), src),
+        Connection("GND", "TvsWe", "2", "GND", "GND", src),
     ]
     return m
 
@@ -233,40 +255,43 @@ def _manifest_power_io() -> List[Connection]:
         Connection("COMPOSITE_OUT", "R75C", "2", "J9", "1", av),
         Connection("GND", "J9", "2", "GND", "GND", av),
     ]
-    # TRS: Tip=VCC (PPTC + 100nF + TVS), Ring=DATA (series R + TVS), Sleeve=GND.
-    # Rpu1 on MCU-side PAD_DATA; Rdata* isolate jack stubs (docs/passive_rf_etc.md).
+    # TRS: Tip=pad4 VCC (PPTC + 100nF + TVS), Ring=pad2 DATA (series R + TVS), Sleeve=pad1 GND.
+    # Pads 3+5 NC on 35RAPC2BVN4 (mechanical only). Rpu1 on MCU-side PAD_DATA.
     ctrl = "docs/controllers.md"
     passives = "docs/passive_rf_etc.md"
     m += [
         Connection("+5V", "F2", "1", "+5V", "+5V", ctrl),
-        Connection("PAD_VCC_P1", "F2", "2", "J3", "T", ctrl),
-        Connection("PAD_VCC_P1", "Cpad1", "1", "J3", "T", passives),
+        Connection("PAD_VCC_P1", "F2", "2", "J3", P.TRS_TIP, ctrl),
+        Connection("PAD_VCC_P1", "Cpad1", "1", "J3", P.TRS_TIP, passives),
         Connection("GND", "Cpad1", "2", "GND", "GND", passives),
-        Connection("PAD_VCC_P1", "TvsV1", "1", "J3", "T", passives),
+        Connection("PAD_VCC_P1", "TvsV1", "1", "J3", P.TRS_TIP, passives),
         Connection("GND", "TvsV1", "2", "GND", "GND", passives),
-        Connection("GND", "J3", "S", "GND", "GND", ctrl),
+        Connection("GND", "J3", P.TRS_SLEEVE, "GND", "GND", ctrl),
         Connection("+5V", "F3", "1", "+5V", "+5V", ctrl),
-        Connection("PAD_VCC_P2", "F3", "2", "J4", "T", ctrl),
-        Connection("PAD_VCC_P2", "Cpad2", "1", "J4", "T", passives),
+        Connection("PAD_VCC_P2", "F3", "2", "J4", P.TRS_TIP, ctrl),
+        Connection("PAD_VCC_P2", "Cpad2", "1", "J4", P.TRS_TIP, passives),
         Connection("GND", "Cpad2", "2", "GND", "GND", passives),
-        Connection("PAD_VCC_P2", "TvsV2", "1", "J4", "T", passives),
+        Connection("PAD_VCC_P2", "TvsV2", "1", "J4", P.TRS_TIP, passives),
         Connection("GND", "TvsV2", "2", "GND", "GND", passives),
-        Connection("GND", "J4", "S", "GND", "GND", ctrl),
+        Connection("GND", "J4", P.TRS_SLEEVE, "GND", "GND", ctrl),
         Connection("+5V", "Rpu1", "1", "+5V", "+5V", ctrl),
         Connection("PAD_DATA", "Rpu1", "2", "U1284", P.M1284_PAD_DATA, ctrl),
         Connection("PAD_DATA", "U1284", P.M1284_PAD_DATA, "Rdata1", "1", passives),
-        Connection("PAD_DATA_P1", "Rdata1", "2", "J3", "R", passives),
-        Connection("PAD_DATA_P1", "TvsD1", "1", "J3", "R", passives),
+        Connection("PAD_DATA_P1", "Rdata1", "2", "J3", P.TRS_RING, passives),
+        Connection("PAD_DATA_P1", "TvsD1", "1", "J3", P.TRS_RING, passives),
         Connection("GND", "TvsD1", "2", "GND", "GND", passives),
         Connection("PAD_DATA", "U1284", P.M1284_PAD_DATA, "Rdata2", "1", passives),
-        Connection("PAD_DATA_P2", "Rdata2", "2", "J4", "R", passives),
-        Connection("PAD_DATA_P2", "TvsD2", "1", "J4", "R", passives),
+        Connection("PAD_DATA_P2", "Rdata2", "2", "J4", P.TRS_RING, passives),
+        Connection("PAD_DATA_P2", "TvsD2", "1", "J4", P.TRS_RING, passives),
         Connection("GND", "TvsD2", "2", "GND", "GND", passives),
     ]
     labels = ("RIGHT", "LEFT", "DOWN", "UP", "X", "Y", "COIN", "START")
-    for i, _lab in enumerate(labels):
-        m.append(Connection(f"P1_{labels[i]}", "J5", str(i + 1), "U1284", P.M1284_P1[i], f"{ctrl} J5"))
-        m.append(Connection(f"P2_{labels[i]}", "J6", str(i + 1), "U1284", P.M1284_P2[i], f"{ctrl} J6"))
+    for i, lab in enumerate(labels):
+        n = i + 1
+        m.append(Connection(f"P1_{lab}_J", "J5", str(n), f"Rarc1_{n}", "1", f"{ctrl} J5"))
+        m.append(Connection(f"P1_{lab}", f"Rarc1_{n}", "2", "U1284", P.M1284_P1[i], f"{ctrl} J5"))
+        m.append(Connection(f"P2_{lab}_J", "J6", str(n), f"Rarc2_{n}", "1", f"{ctrl} J6"))
+        m.append(Connection(f"P2_{lab}", f"Rarc2_{n}", "2", "U1284", P.M1284_P2[i], f"{ctrl} J6"))
     m += [
         Connection("GND", "J5", "9", "GND", "GND", f"{ctrl} J5"),
         Connection("GND", "J5", "10", "GND", "GND", f"{ctrl} J5"),
@@ -319,16 +344,10 @@ def build_manifest() -> List[Connection]:
 
 def manifest_gaps() -> List[str]:
     return [
-        "TVS arrays on cart / arcade headers — layout",
-        "Arcade series 47 ohm footprints — layout",
-        "Retr01_Lib Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical footprint (user-built)",
-        "Retr01_Lib CUI_RCJ-01x_Vertical RCA footprint (user-built; RCJ-012/014 share holes)",
+        "PCB J3/J4 still CUI SJ1-3533NG horizontal — swap to Retr01_Lib:Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical before fab",
         "Optional: replace PinSocket_2x18 with EDAC 395-036-559-212 manufacturer CAD",
-        "Retr01_Lib .kicad_sym for W65C02S / ATF22V10 / connectors (ACO/AD725 stock OK)",
-        "UPLDA SEL_FE10/FE11 share pin 23 until JEDEC pin lock",
-        "HC245 DIR/OE driven from UPLDB (UPLDA I/O budget); confirm in fuse map",
-        "AD725 RGB black-level / 0.7 Vpp bench tune; optional LUMA/CRMA test pads",
-        "Y2 ACO-5.369318MHZ-EK may be Abracon factory-order (not always DigiKey shelf)",
+        "Retr01_Lib .kicad_sym for W65C02S / ATF22V10 (netlist/Quilter OK without; human sch later)",
+        "AD725 / RGBS 0.7 Vpp bench tune on first spin",
     ]
 
 

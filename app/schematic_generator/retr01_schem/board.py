@@ -43,8 +43,13 @@ def add_decoupling(
 
     from skidl import Net
 
-    vcc = nets.get("+5V") or Net("+5V")
-    gnd = nets.get("GND") or Net("GND")
+    from .connect import rail_net
+
+    vcc = nets.get("+5V") or rail_net("+5V")
+    gnd = nets.get("GND") or rail_net("GND")
+    # Keep canonical names if SKiDL tried to rename after merges.
+    vcc.name = "+5V"
+    gnd.name = "GND"
     nets["+5V"] = vcc
     nets["GND"] = gnd
 
@@ -148,6 +153,18 @@ def connect_unused_pins_to_nc() -> None:
             pin += dummy
 
 
+def _force_rail_net_names() -> None:
+    """Ensure power rails keep stable KiCad names after island merges."""
+    from .connect import rail_net
+
+    for name in ("GND", "+5V", "+5V_ANALOG"):
+        try:
+            n = rail_net(name)
+            n.name = name
+        except Exception:
+            continue
+
+
 def generate_netlist(out_dir: Path, basename: str = "retr01_mobo") -> Path:
     if not skidl_available():
         raise RuntimeError("skidl is not installed; pip install -r requirements.txt")
@@ -160,6 +177,7 @@ def generate_netlist(out_dir: Path, basename: str = "retr01_mobo") -> Path:
     else:
         build_board(include_sim_only=False)
     connect_unused_pins_to_nc()
+    _force_rail_net_names()
     out_dir.mkdir(parents=True, exist_ok=True)
     net_path = out_dir / f"{basename}.net"
     generate_netlist(file=str(net_path))

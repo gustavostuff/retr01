@@ -5,6 +5,7 @@
 #include "as6c62256.h"
 #include "atmega1284p.h"
 #include "atmega328p.h"
+#include "attiny85.h"
 #include "atf22v10.h"
 #include "beam_xy.h"
 #include "bg_fetch.h"
@@ -13,6 +14,7 @@
 #include "osc8m.h"
 #include "osc_dot.h"
 #include "pads.h"
+#include "pad_uart.h"
 #include "prg_rom.h"
 #include "pwr5v.h"
 #include "retr01_sim/bom32.h"
@@ -135,6 +137,7 @@ typedef struct R01sBoard {
     R01sVideoSink video_sink;
     R01sPrgRom prg; /* bench PRG: not mounted when cart owns $8000+ */
     R01sPads pads;  /* wired via 1284 on silicon; kept for bring-up tests */
+    R01sAttiny85 pad_mcu[2]; /* Retr01-C pad boards: P1=0x55, P2=0xAA (support) */
     R01sSpriteFetch sprite_fetch;
     R01sIntegration integration;
     /* 32-IC BOM silicon. */

@@ -2916,6 +2916,8 @@ static void board_reset(R01sIslandGroup *group) {
         poke_pal_addr_latch(ctx, 0);
     }
     r01s_entity_reset(r01s_pads_entity(ctx->pads_impl.pads));
+    r01s_entity_reset(r01s_attiny85_entity(&ctx->pad_mcu[0]));
+    r01s_entity_reset(r01s_attiny85_entity(&ctx->pad_mcu[1]));
     r01s_entity_reset(r01s_as6c62256_entity(ctx->vram_impl.vram));
     {
         int mi;
@@ -3185,6 +3187,8 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     board->integration_impl.integ = &board->integration;
 
     r01s_pads_init(&board->pads, "PAD");
+    r01s_attiny85_init(&board->pad_mcu[0], "UPAD1", 0x55u);
+    r01s_attiny85_init(&board->pad_mcu[1], "UPAD2", 0xAAu);
     r01s_sprite_fetch_init(&board->sprite_fetch, "UPLDN");
     r01s_integration_init(&board->integration, "UPLDP");
     r01s_bg_fetch_init(&board->bg_fetch, "UPLDI");
@@ -3326,6 +3330,13 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
             r01s_island_builder_mount_rel(b, mux_e, R01S_ISLAND_MCU_LB, x, mux_y);
             x += mux_e->body_w + R01S_CHIP_GAP;
         }
+        {
+            R01sEntity *p1 = r01s_attiny85_entity(&board->pad_mcu[0]);
+            R01sEntity *p2 = r01s_attiny85_entity(&board->pad_mcu[1]);
+            int y = mcu_e->body_h + R01S_CHIP_GAP;
+            r01s_island_builder_mount_rel(b, p1, R01S_ISLAND_MCU_LB, 0, y);
+            r01s_island_builder_mount_rel(b, p2, R01S_ISLAND_MCU_LB, p1->body_w + R01S_CHIP_GAP, y);
+        }
     }
     {
         R01sEntity *flash_e = r01s_sst39sf040_entity(&board->cart_module.flash);
@@ -3340,8 +3351,8 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     r01s_island_builder_arrange_rows(b, 40, 40, R01S_ISLAND_GAP, R01S_ISLAND_GAP, R01S_ISLAND_ROW_MAX_W);
 
     {
-        int bom_ic = r01s_island_builder_count_visual(b, R01S_ENTITY_VIS_IC);
-        /* Motherboard BOM (32). Cart flasher is flasher_bench only. */
+        int bom_ic = r01s_island_builder_count_bom_ic(b);
+        /* Motherboard BOM (32). Support ATtiny85 pads excluded. Cart flasher is flasher_bench only. */
         if (bom_ic != R01S_BOM_IC_N) {
             fprintf(stderr, "board: expected %d BOM IC mounts, got %d\n", R01S_BOM_IC_N, bom_ic);
             return -1;

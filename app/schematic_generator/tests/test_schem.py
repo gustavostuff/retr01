@@ -81,7 +81,7 @@ class TestBom(unittest.TestCase):
         self.assertEqual(HC573_LE, "11")
         self.assertEqual(HC245_DIR, "1")
         self.assertEqual(SRAM_A[0], "10")
-        letter_ok = {"T", "R", "S", "GND", "+5V", "MP"}
+        letter_ok = {"GND", "+5V", "MP"}
         for c in build_manifest()[:50]:
             if c.a_refdes not in ("GND", "+5V", "+5V_ANALOG"):
                 self.assertTrue(
@@ -93,6 +93,22 @@ class TestBom(unittest.TestCase):
                     c.b_pin.isdigit() or c.b_pin in letter_ok,
                     f"bad pin {c}",
                 )
+
+    def test_trs_five_pad_pinout(self):
+        from retr01_schem.pinmap import PIN_TEMPLATES, TRS_NC, TRS_RING, TRS_SLEEVE, TRS_TIP
+
+        self.assertEqual(PIN_TEMPLATES["TRS_P1"], ["1", "2", "3", "4", "5"])
+        self.assertEqual(BOM_BY_REFDES["J3"].dip_pins, 5)
+        self.assertEqual((TRS_TIP, TRS_RING, TRS_SLEEVE), ("4", "2", "1"))
+        m = build_manifest()
+        j3 = [(c.net, c.a_pin if c.a_refdes == "J3" else c.b_pin) for c in m if "J3" in (c.a_refdes, c.b_refdes)]
+        pins = {p for _, p in j3}
+        self.assertIn(TRS_TIP, pins)
+        self.assertIn(TRS_RING, pins)
+        self.assertIn(TRS_SLEEVE, pins)
+        self.assertTrue(set(TRS_NC).isdisjoint(pins))  # NC pads left unconnected
+        tip_nets = {n for n, p in j3 if p == TRS_TIP}
+        self.assertIn("PAD_VCC_P1", tip_nets)
 
     def test_hc573_silicon_map(self):
         self.assertEqual(HC573_PORT_HEX, ("00", "02", "03", "04", "05", "08", "90", "91", "92"))
@@ -180,6 +196,10 @@ class TestManifest(unittest.TestCase):
         self.assertIn("Ra2r0", refs)
         self.assertIn("Raterm", refs)
         self.assertIn("RR2", refs)  # red MSB 1k
+        self.assertIn("Rcd0", refs)
+        self.assertIn("TvsCa0", refs)
+        self.assertIn("Rarc1_1", refs)
+        self.assertIn("Rphi", refs)
 
     def test_video_prom_bit_mapping(self):
         """Studio packing (R<<5)|(G<<2)|B → D7..D5 red, D4..D2 green, D1..D0 blue."""

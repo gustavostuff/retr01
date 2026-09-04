@@ -41,7 +41,7 @@ def add_library_paths(extra: Optional[Sequence[str]] = None) -> None:
 
 
 def _pin_num(n: str):
-    """KiCad pad id: integer for DIP pads, letter for audio jacks (T/R/S)."""
+    """KiCad pad id: integer for DIP / TRS pads, letter for barrel MP."""
     try:
         return int(n)
     except ValueError:

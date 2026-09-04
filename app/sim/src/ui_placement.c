@@ -1429,6 +1429,17 @@ void save_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
     rc->x = cbtn.x - tw - R01S_UI_UNIT;
 }
 
+void input_mode_btn_rect(const R01sUi *ui, SDL_Rect *rc) {
+    SDL_Rect sbtn;
+    const char *label = (ui && ui->input_mode == R01S_INPUT_PADS) ? "PADS" : "ARCADE";
+    int tw = font_text_width(label) + R01S_UI_UNIT * 2;
+    save_btn_rect(ui, &sbtn);
+    rc->w = tw;
+    rc->h = R01S_UI_UNIT * 2;
+    rc->y = R01S_UI_UNIT / 2;
+    rc->x = sbtn.x - tw - R01S_UI_UNIT;
+}
+
 void ui_save_layout_now(R01sUi *ui) {
     if (!ui || !ui->group) {
         return;

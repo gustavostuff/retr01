@@ -1,0 +1,241 @@
+(footprint "Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "Switchcraft 35RAPC2BVN4 vertical 3.5mm TRS (VN4 CD). 5 PTH Ø2.00mm. Tip=4 Ring=2 Sleeve=1; pads 3+5 NC on 2BVN4 (mechanical). https://www.mouser.com/datasheet/2/144/35rapc_vn4_cd-1311116.pdf")
+	(tags "TRS audio jack stereo vertical Switchcraft 35RAPC2BVN4")
+	(property "Reference" "REF**"
+		(at 6.5 -4.5 0)
+		(layer "F.SilkS")
+		(uuid "6105445b-9b25-41b4-a36e-80aadda7da9b")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical"
+		(at 6.5 5.5 0)
+		(layer "F.Fab")
+		(uuid "6f9445f7-f54f-4b89-956d-657ae3eb814d")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" "https://www.mouser.com/datasheet/2/144/35rapc_vn4_cd-1311116.pdf"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "2a488a62-2af5-4cfb-8a58-6ceb5f15a183")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" "35RAPC2BVN4 vertical; Tip=pad4 Ring=pad2 Sleeve=pad1"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "932a689e-faad-4dcf-83ae-129f1fa766df")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr through_hole)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_line
+		(start -4 -2.6)
+		(end -4 3.75)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "c99d95a9-b606-405c-be9d-21614712d07b")
+	)
+	(fp_line
+		(start -4 3.75)
+		(end 14 3.75)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "a5fd0ce7-9465-4a94-aacd-8c59c003979b")
+	)
+	(fp_line
+		(start 14 3.75)
+		(end 14 -2.6)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "ffdce612-1222-4cb7-afbb-ed3f44ce7da2")
+	)
+	(fp_line
+		(start 14 -2.6)
+		(end -4 -2.6)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "3192ec4b-e047-4acd-9541-b74502aa05e6")
+	)
+	(fp_circle
+		(center -4 0.575)
+		(end -1 0.575)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+		(uuid "e8d218f9-e27c-4957-a5ad-fac45c0ebc02")
+	)
+	(fp_line
+		(start -4 -2.6)
+		(end -4 3.75)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "82eceae6-1313-4701-87e2-a511a545ec92")
+	)
+	(fp_line
+		(start -4 3.75)
+		(end 14 3.75)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "905c6a8a-f6a3-4f4d-a92c-2f0baa2db67d")
+	)
+	(fp_line
+		(start 14 3.75)
+		(end 14 -2.6)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "32f1996c-7386-4dc4-ab1e-d10d9626f4aa")
+	)
+	(fp_line
+		(start 14 -2.6)
+		(end -4 -2.6)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "982e93ca-9c93-4b29-9c4e-21b0a80f9476")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 6.5 0.575 0)
+		(layer "F.Fab")
+		(uuid "e2e2e693-3da7-48a1-a069-b0e2fc53b2bd")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_line
+		(start -4.5 -3.1)
+		(end -4.5 4.25)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "47400ca9-ff05-472b-a119-edbe1b683463")
+	)
+	(fp_line
+		(start -4.5 4.25)
+		(end 14.5 4.25)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "08e65f64-e697-446b-90cc-117c3fdf1b42")
+	)
+	(fp_line
+		(start 14.5 4.25)
+		(end 14.5 -3.1)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "3d57e530-ea04-4563-9c70-3910bdbe0f01")
+	)
+	(fp_line
+		(start 14.5 -3.1)
+		(end -4.5 -3.1)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "fd67d94f-3c40-4c42-b9e6-66534281dc4e")
+	)
+	(pad "1" thru_hole circle
+		(at 0 0)
+		(size 3.2 3.2)
+		(drill 2)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "ce1f2134-34f7-4cc7-a169-663ec7403f64")
+	)
+	(pad "2" thru_hole circle
+		(at 3.65 1.15)
+		(size 3.2 3.2)
+		(drill 2)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "47e49947-cddc-4f24-b7e2-781fda237c0f")
+	)
+	(pad "3" thru_hole circle
+		(at 7.35 0)
+		(size 3.2 3.2)
+		(drill 2)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "2c2b4ec9-0e0c-47ac-a933-89d0a2ca4580")
+	)
+	(pad "4" thru_hole circle
+		(at 9.25 1.15)
+		(size 3.2 3.2)
+		(drill 2)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "da36af9d-7e3c-4318-a018-e469171aebbb")
+	)
+	(pad "5" thru_hole circle
+		(at 13 0)
+		(size 3.2 3.2)
+		(drill 2)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "3c32ce7d-a0e3-4649-bf02-3b06435851e3")
+	)
+	(embedded_fonts no)
+)

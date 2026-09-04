@@ -21,8 +21,8 @@ Passives, connectors, stackup, ESD/PPTC, and RF practice live in [`passive_rf_et
 | HC573 map | Sim netlist still ties VRAM addr to FE10/FE11 latches | Nine-chip U5A-U5I map ([`graphics.md`](graphics.md#hc573-latch-map-9-chips)) |
 | Cart save | `$FE22`-`$FE24` in-memory 8 KB buffer, no `RDY` stall | 1284 I2C master + `RDY` stall ([`memory.md`](memory.md)) |
 | Machine EEPROM | `$FE70`-`$FE72` in-memory 4 KB buffer, no `RDY` stall | 1284 internal EEPROM + `RDY` stall ([`memory.md`](memory.md)) |
-| Pads | `$FE60` / `$FE61` from Host Play / UI | Arcade GPIO or Retr01-C UART ([`controllers.md`](controllers.md)) |
-| Pad UART netlist | Not modeled | 115200 open-drain on TRS DATA |
+| Pads | `$FE60` / `$FE61` from Host Play / UI (Sim: ARCADE direct or PADS via ATtiny85 poll) | Arcade GPIO or Retr01-C UART ([`controllers.md`](controllers.md)) |
+| Pad UART netlist | Sim Pads mode: byte-level OD poll/reply on ATtiny85 entities (no TRS / 1284 USART) | 115200 open-drain on TRS DATA |
 | BG0 scroll | `$FE06` / `$FE07` latched. Host Play uses proportional scroll unless CPU overrides | Same ports, HC573 silicon path TBD |
 
 Studio Play uses the same Emu core as standalone `./emu`.
@@ -127,7 +127,7 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
 2. **Silicon / PCB target:** one motherboard carries **both** I/O styles (arcade vs console is shell / population, not a different PCB):
    - **Retr01-A (arcade):** **J5/J6** 1×10 microswitch headers + **J7** 1×4 power/reset ([`controllers.md`](controllers.md#locked-headers-schematic-freeze)).
    - **Retr01-C (console):** **2x Switchcraft 35RAPC** TRS for aux pads. Pad boards use **ATtiny85** on a **3-wire** (5 V / DATA / GND) half-duplex UART link ([`controllers.md`](controllers.md)). Populate jacks for console. DNP OK on pure arcade builds.
-3. **Runners today (Emu / Sim):** Host Play drives `$FE60` / `$FE61` directly. TRS / UART not modeled in the netlist yet.
+3. **Runners today (Emu / Sim):** Host Play drives `$FE60` / `$FE61`. Sim HUD **ARCADE** = direct inject; **PADS** = ATtiny85 poll/reply into those ports. TRS jack netlist / 1284 USART not modeled yet.
 4. Ports / ESD / PPTC: [`passive_rf_etc.md`](passive_rf_etc.md).
 
 ### Audio
@@ -206,6 +206,7 @@ Ports and passives: [`passive_rf_etc.md`](passive_rf_etc.md).
 
 | Topic | Still open |
 |-------|------------|
-| RGBS analog tuning | Digital timing set. Bench levels on first spin |
-| Arcade header pinout | Lock at schematic |
-| Flasher USB protocol | With PC cart tooling |
+| RGBS / AD725 analog tuning | Targets locked in [`passive_rf_etc.md`](passive_rf_etc.md); bench on first spin |
+| Flasher firmware | Protocol locked in [`cart.md`](cart.md); implement on 32U4 |
+| UPLDA pin 23 | **Accepted this spin:** `SEL_FE10`/`SEL_FE11` share until fuse map or +1 PLD |
+| HC245 DIR/OE | **Accepted this spin:** driven from UPLDB (UPLDA I/O budget) |

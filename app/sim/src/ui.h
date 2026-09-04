@@ -34,6 +34,10 @@
 #define R01S_UI_MODAL_RES_DISCARD 2
 #define R01S_UI_MODAL_RES_CANCEL 3
 
+/* Host input path: arcade microswitch bitfield vs Retr01-C ATtiny UART pads. */
+#define R01S_INPUT_ARCADE 0
+#define R01S_INPUT_PADS 1
+
 #define R01S_UI_FLOAT_STRIP_H 20
 #define R01S_UI_ISLANDS_STRIP_DEFAULT_X 8
 #define R01S_UI_ISLANDS_STRIP_DEFAULT_Y 8
@@ -78,6 +82,7 @@ typedef struct R01sUi {
     uint8_t probe_pad_p1;
     uint8_t probe_pad_p2;
     R01sGamepadInput gamepad[R01S_UI_GAMEPAD_COUNT];
+    int input_mode; /* R01S_INPUT_ARCADE or R01S_INPUT_PADS */
     int mouse_lx; /* last logic-space mouse (for tooltips) */
     int mouse_ly;
     int tip_stable_mx; /* mouse position when hover timer last reset */

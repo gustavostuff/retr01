@@ -1,0 +1,225 @@
+(footprint "CUI_RCJ-01x_Vertical"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "CUI/Same Sky RCJ-01x right-angle RCA (RCJ-012 black / RCJ-014 yellow share holes). Pad1=center Tip, Pad2=shell (×2). PCB: Ø2.6 @ tip+(0,0), shell+(5,±5). https://www.sameskydevices.com/product/resource/rcj-01.pdf")
+	(tags "RCA phono jack RCJ-01 CUI SameSky audio video")
+	(property "Reference" "REF**"
+		(at 2.5 -8.5 0)
+		(layer "F.SilkS")
+		(uuid "a7a40bf4-26e0-4775-ab66-2821af541dbd")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "CUI_RCJ-01x_Vertical"
+		(at 2.5 8.5 0)
+		(layer "F.Fab")
+		(uuid "f152af02-baa9-44b6-88e9-b2a3e1d2c59c")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" "https://www.sameskydevices.com/product/resource/rcj-01.pdf"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "df26ba34-7ed0-4a1f-b3de-842b83680383")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" "RCJ-01x RA RCA; 1=tip 2=shell"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "726353f2-54f6-4ba8-ad25-2ea8a4ee3eb2")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr through_hole)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_line
+		(start -3 -6)
+		(end -3 6)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "7152bc64-d778-4043-a185-d8e6058a1802")
+	)
+	(fp_line
+		(start -3 6)
+		(end 12 6)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "000bc02a-edfb-4f69-baaa-79a7548efc18")
+	)
+	(fp_line
+		(start 12 6)
+		(end 12 -6)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "3444a98c-012c-4f15-9886-b813e01bb7b9")
+	)
+	(fp_line
+		(start 12 -6)
+		(end -3 -6)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "e686388b-78ff-4931-9f23-4cf903353499")
+	)
+	(fp_circle
+		(center -3 0)
+		(end -0.5 0)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+		(uuid "998741b6-ac66-42b8-a377-a591f0231333")
+	)
+	(fp_line
+		(start -3 -6)
+		(end -3 6)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "a570575b-5842-4d14-a90a-6911ad987aea")
+	)
+	(fp_line
+		(start -3 6)
+		(end 12 6)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "8853dd82-7455-44f3-83bf-b98b200460dc")
+	)
+	(fp_line
+		(start 12 6)
+		(end 12 -6)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "bdc93258-83ba-4448-bc97-829a70c1a903")
+	)
+	(fp_line
+		(start 12 -6)
+		(end -3 -6)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "379cee50-2747-4314-8231-e0700f1fd9aa")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 4.5 0 0)
+		(layer "F.Fab")
+		(uuid "47ff8f3f-2a9f-45be-8d54-4ee8f762ee6d")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_line
+		(start -3.5 -6.5)
+		(end -3.5 6.5)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "8cb71efe-5298-4e74-b363-5e8d6c946b38")
+	)
+	(fp_line
+		(start -3.5 6.5)
+		(end 12.5 6.5)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "5a846d07-e7ae-4b13-ad3a-cba64f48d55b")
+	)
+	(fp_line
+		(start 12.5 6.5)
+		(end 12.5 -6.5)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "d6dc3b6a-0459-476e-ad8b-167ab8985036")
+	)
+	(fp_line
+		(start 12.5 -6.5)
+		(end -3.5 -6.5)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "16be0d73-80f5-4c6f-9afe-67d092772736")
+	)
+	(pad "1" thru_hole circle
+		(at 0 0)
+		(size 3.8 3.8)
+		(drill 2.6)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "1b18ca58-d3a8-4c80-87b0-867d140e792e")
+	)
+	(pad "2" thru_hole circle
+		(at 5 5)
+		(size 3.8 3.8)
+		(drill 2.6)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "881635c6-f0c2-4d94-8067-4d28e2e0c70f")
+	)
+	(pad "2" thru_hole circle
+		(at 5 -5)
+		(size 3.8 3.8)
+		(drill 2.6)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "fefd76d6-6f8f-4e11-b761-5b5f3dbdf6d3")
+	)
+	(embedded_fonts no)
+)

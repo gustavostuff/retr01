@@ -201,7 +201,7 @@ BOM: List[BomEntry] = [
     BomEntry(
         "Y2",
         "OSC_DOT",
-        "Abracon ACO-5.369318MHZ-EK (dot; factory freq)",
+        "Abracon ACO-5.369318MHZ-EK (dot; Abracon factory-order OK)",
         IslandId.BEAM,
         14,
         _OSC14,
@@ -303,8 +303,8 @@ BOM: List[BomEntry] = [
         gnd_pin=None,
     ),
     BomEntry("J2", "RGBS_HDR", "RGBS video out", IslandId.VIDEO, 5, _RGBS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    BomEntry("J3", "TRS_P1", "Switchcraft 35RAPC2BVN4 P1 (vertical)", IslandId.MCU_LINEBUF, 3, _TRS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    BomEntry("J4", "TRS_P2", "Switchcraft 35RAPC2BVN4 P2 (vertical)", IslandId.MCU_LINEBUF, 3, _TRS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("J3", "TRS_P1", "Switchcraft 35RAPC2BVN4 P1 (vertical)", IslandId.MCU_LINEBUF, 5, _TRS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("J4", "TRS_P2", "Switchcraft 35RAPC2BVN4 P2 (vertical)", IslandId.MCU_LINEBUF, 5, _TRS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("J5", "ARCADE_P1", "arcade P1 1x10", IslandId.MCU_LINEBUF, 10, _ARCADE10, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("J6", "ARCADE_P2", "arcade P2 1x10", IslandId.MCU_LINEBUF, 10, _ARCADE10, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("J7", "CAB_PWR_RST", "cabinet +5V/GND/RESET 1x4", IslandId.POWER_CLK, 4, _HDR4, in_ic_count=False, vcc_pin=None, gnd_pin=None),
@@ -336,7 +336,7 @@ BOM: List[BomEntry] = [
     BomEntry("F1", "PPTC", "VIN PPTC", IslandId.POWER_CLK, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("FB1", "FERRITE", "5 V input ferrite", IslandId.POWER_CLK, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("D1", "SCHOTTKY", "reverse polarity", IslandId.POWER_CLK, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    BomEntry("Cbulk", "C_BULK", "100-470uF entry bulk", IslandId.POWER_CLK, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Cbulk", "C_BULK", "220uF entry bulk (locked)", IslandId.POWER_CLK, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("FB2", "FERRITE", "analog video ferrite", IslandId.VIDEO, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("Cva", "C_10U", "10uF analog spur", IslandId.VIDEO, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     # TRS aux pads (docs/passive_rf_etc.md + controllers.md): PPTC, 100nF, TVS, series-R, pull-up
@@ -351,6 +351,39 @@ BOM: List[BomEntry] = [
     BomEntry("Rdata1", "R_47", "TRS P1 DATA series", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("Rdata2", "R_47", "TRS P2 DATA series", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("Rpu1", "R_4K7", "pad DATA pull-up (MCU side)", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    # Clock edge damping (docs/passive_rf_etc.md)
+    BomEntry("Rphi", "R_33", "PHI2 series damp at Y1", IslandId.POWER_CLK, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Rdot", "R_33", "DOT_CLK series damp at Y2", IslandId.BEAM, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    # Cart edge ESD: series 33Ω on D/OE/WE/I2C; TVS on those + all address (no series on A — timing)
+    *[
+        BomEntry(f"Rcd{i}", "R_33", f"cart D{i} series", IslandId.CART_SOCKET, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None)
+        for i in range(8)
+    ],
+    BomEntry("Rcoe", "R_33", "cart OE# series", IslandId.CART_SOCKET, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Rcwe", "R_33", "cart WE# series", IslandId.CART_SOCKET, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Rcsda", "R_33", "cart SDA series", IslandId.CART_SOCKET, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Rcscl", "R_33", "cart SCL series", IslandId.CART_SOCKET, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    *[
+        BomEntry(f"TvsCd{i}", "TVS_5V", f"cart D{i} ESD", IslandId.CART_SOCKET, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None)
+        for i in range(8)
+    ],
+    BomEntry("TvsOe", "TVS_5V", "cart OE# ESD", IslandId.CART_SOCKET, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("TvsWe", "TVS_5V", "cart WE# ESD", IslandId.CART_SOCKET, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("TvsSda", "TVS_5V", "cart SDA ESD", IslandId.CART_SOCKET, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("TvsScl", "TVS_5V", "cart SCL ESD", IslandId.CART_SOCKET, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    *[
+        BomEntry(f"TvsCa{i}", "TVS_5V", f"cart A{i} ESD", IslandId.CART_SOCKET, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None)
+        for i in range(19)
+    ],
+    # Arcade headers: 47Ω series on each bitfield line (docs/controllers.md)
+    *[
+        BomEntry(f"Rarc1_{i}", "R_47", f"arcade P1 bit {i} series", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None)
+        for i in range(1, 9)
+    ],
+    *[
+        BomEntry(f"Rarc2_{i}", "R_47", f"arcade P2 bit {i} series", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None)
+        for i in range(1, 9)
+    ],
     # Sim / bench only
     BomEntry("U4", "PRG_ROM", "breadboard PRG fallback", IslandId.CPU, 28, _DIP28, in_ic_count=False, sim_only=True, vcc_pin=None, gnd_pin=None),
     BomEntry("SCR1", "SCREEN_SINK", "LCD sim sink", IslandId.VIDEO, 0, "", in_ic_count=False, sim_only=True, vcc_pin=None, gnd_pin=None),

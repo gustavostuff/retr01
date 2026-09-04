@@ -26,10 +26,16 @@ def _pin(part, name: str):
 
 
 def _get_or_create_net(nets: Dict[str, object], name: str):
+    """Reuse one SKiDL Net per logical name (circuit-wide).
+
+    Plain ``Net("GND")`` creates GND, GND1, GND2… across island passes, which
+    fragments the rail and leaves KiCad with no net literally named GND.
+    """
     net = nets.get(name)
-    if net is None:
-        net = Net(name)
-        nets[name] = net
+    if net is not None:
+        return net
+    net = Net.fetch(name)
+    nets[name] = net
     return net
 
 
@@ -53,3 +59,10 @@ def apply_connections(parts: Dict[str, object], connections: List[Connection]) -
                 # Pin naming mismatch vs template: skip until Retr01_Lib S-expr lock.
                 continue
     return nets
+
+
+def rail_net(name: str) -> object:
+    """Shared power/ground net for decoupling and other board helpers."""
+    if Net is None:
+        raise RuntimeError("skidl is not installed")
+    return Net.fetch(name)

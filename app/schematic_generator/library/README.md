@@ -27,13 +27,13 @@ SKiDL still instantiates inline `Part(tool=SKIDL)` parts, but every pin **name a
 |------|-----|
 | W65C02S | Not in stock CPU lib (symbol) |
 | ATF22V10 | No 22V10 stock symbol |
-| Switchcraft **35RAPC2BVN4** | Custom TRS footprint (locked MPN) |
-| CUI **RCJ-01x** | No stock RCA .kicad_mod (locked RCJ-012 / RCJ-014) |
+| Switchcraft **35RAPC2BVN4** | Custom TRS footprint — **done** (`Retr01_Lib.pretty`, Tip=4 / Ring=2 / Sleeve=1) |
+| CUI **RCJ-01x** | Custom RCA footprint — **done** (`CUI_RCJ-01x_Vertical`; RCJ-012/014 share holes) |
 | EDAC **395-036-559-212** | Optional: replace PinSocket stand-in with manufacturer CAD |
 
-**Stock now (do not reinvent):** Abracon **ACO** cans → KiCad `Oscillator:ACO-xxxMHz-A` + `Oscillator_DIP-14`; **AD725ARZ** → SOIC-16; **CUI PJ-063AH** barrel; HC/AVR/memory symbols per table above.
+**Stock now (do not reinvent):** Abracon **ACO** cans → KiCad `Oscillator:ACO-xxxMHz-A` + `Oscillator_DIP-14`; **AD725ARZ** → SOIC-16; **CUI PJ-063AH** barrel; HC/AVR/memory symbols per table above. RCA uses stock symbol **`Conn_Coaxial`** + custom RCJ footprint.
 
-Pin numbers for custom silicon come from `hw/md/*.md` / datasheets (same physical DIP numbering).
+**You do not need to intervene for Quilter / netlist:** SKiDL emits pin numbers + footprints. Draw W65C02S / ATF22V10 `.kicad_sym` only when you want a human-readable KiCad schematic.
 
 ## Workflow
 

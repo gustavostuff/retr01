@@ -22,6 +22,7 @@ int r01s_ui_init(R01sUi *ui) {
     ui->resize_island = -1;
     ui->ctx_chip = -1;
     ui->box_sel = 0;
+    ui->input_mode = R01S_INPUT_ARCADE;
     memset(ui->chip_sel, 0, sizeof(ui->chip_sel));
     ui->tip_show_at = SDL_GetTicks() + R01S_UI_TOOLTIP_DELAY_MS;
     ui->islands_strip_x = R01S_UI_ISLANDS_STRIP_DEFAULT_X;

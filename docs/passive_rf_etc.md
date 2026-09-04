@@ -58,14 +58,14 @@ External 5 V is trusted for regulation, not for abuse or cable noise. Treat the 
 
 | Item | Role |
 |------|------|
-| Barrel jack | **CUI PJ-063AH** (2.1 mm ID, horizontal) | 5 V in (shared motherboard) |
+| Barrel jack (**CUI PJ-063AH**, 2.1 mm ID) | 5 V in (shared motherboard) |
 | Series PPTC on VIN | Board-level short / overload. Hold above full-board idle, trip on hard short |
 | Reverse-polarity diode (or P-FET ideal diode) | Blocks reverse barrel plug |
-| Bulk cap at entry (**100-470 uF** low-ESR electrolytic or polymer) | Holds rail through plug bounce and load steps |
+| Bulk cap at entry (**220 uF** low-ESR electrolytic or polymer, locked) | Holds rail through plug bounce and load steps |
 | Input ferrite (or CMC on 5 V / GND pair) | Damps cable-borne RF before the pours |
 | Local **100 nF X7R** on every IC VCC pin (mm from pin) | HF bypass. Mandatory for HC / PLD / AVR edge rates |
-| Local **1-10 uF** ceramic per island / large DIP | Mid-band reservoir (6502, 1284, 328P, PLD cluster, SRAM bank) |
-| Ferrite + **10 uF** into **analog / video** spur | Isolates Color PROM R-2R and APU DAC from digital di/dt |
+| Local **4.7 uF** ceramic per island / large DIP (default in 1–10 uF class) | Mid-band reservoir (6502, 1284, 328P, PLD cluster, SRAM bank) |
+| Ferrite + **10 uF** into **analog / video** spur | Isolates Color PROM DAC and APU DAC from digital di/dt |
 
 Never snake return current through video or pad-port copper. Stitch GND vias at every connector shell and under each DIP.
 
@@ -76,11 +76,11 @@ Never snake return current through video or pad-port copper. Stitch GND vias at 
 | Item | Locked part / value |
 |------|---------------------|
 | **Y1** PHI2 | **Abracon ACO-8.000MHZ-EK** — 8.000 MHz, 5 V HCMOS, full-size DIP-14 can. Footprint `Oscillator:Oscillator_DIP-14` (pins **1=OE, 7=GND, 8=OUT, 14=Vcc**). OE tied high |
-| **Y2** dot | **Abracon ACO-5.369318MHZ-EK** — same package/footprint. Exact NTSC/3 frequency; often **factory-order** from Abracon (not always DigiKey shelf stock). Any 5 V HCMOS ACO-footprint XO at **5.369318 MHz ±50 ppm** is OK |
+| **Y2** dot | **Abracon ACO-5.369318MHZ-EK** — same package/footprint. Exact NTSC÷3. **Primary:** Abracon factory-order. **Alternate:** any 5 V HCMOS DIP-14 XO at **5.369318 MHz ±50 ppm** (Abracon/IQD/ECS custom). Do **not** use 5.000/6.000 MHz for video |
 | **Y3** AD725 4FSC | **Abracon ACO-14.31818MHZ-EK** — same package/footprint |
 | **Y4** 1284 | **Abracon ABLS7M-20.000MHZ-D2Y-T** HC-49/U + **2× 22 pF** to GND |
 | **Y5** 328P | **Abracon ABLS7M-16.000MHZ-D2Y-T** HC-49/U + **2× 22 pF** to GND |
-| Series damping **22-47 ohm** on clock nets leaving a can / buffer | Softens edges into long traces |
+| Series damping | **33 Ω** locked (`Rphi`, `Rdot`) on PHI2 and DOT at the can output |
 | **74HC14** (outside 32-count) | Schmitt cleanup for reset / slow edges |
 | RC + Schmitt (or supervisor, e.g. MCP120-class) on `/RESB` and AVR `RESET` | Power-on reset. Hold low until 5 V is solid |
 | Pull-ups on open-drain resets / IRQB | Typical **4.7-10 kohm** |
@@ -95,15 +95,15 @@ Board clocks matter for layout cleanliness. They are not automatically a show-st
 |-----|------------|-----------------|
 | **J1** | **CUI PJ-063AH** (2.1 mm ID barrel) | Stock KiCad `BarrelJack_CUI_PJ-063AH_Horizontal` (1=tip, 2=sleeve, MP→GND) |
 | **J2** | 1×5 pin header 2.54 mm | Stock `PinHeader_1x05_P2.54mm_Vertical` — RGBS harness |
-| **J3/J4** | **Switchcraft 35RAPC2BVN4** | **Custom** `Retr01_Lib:Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical` |
+| **J3/J4** | **Switchcraft 35RAPC2BVN4** (vertical) | `Retr01_Lib:Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical` — **5 PTH Ø2.00 mm** (VN4 CD). Tip=**4**, Ring=**2**, Sleeve=**1**; pads **3/5** NC (mechanical). PCB still has CUI SJ1-3533NG — **swap before fab** |
 | **J5/J6** | 1×10 pin header 2.54 mm | Stock vertical |
 | **J7** | 1×4 pin header 2.54 mm | Stock vertical |
-| **J8** | **CUI RCJ-012** (black RCA, audio) | **Custom** `Retr01_Lib:CUI_RCJ-01x_Vertical` (shared with J9) |
-| **J9** | **CUI RCJ-014** (yellow RCA, composite) | Same footprint as J8 |
+| **J8** | **CUI RCJ-012** (black RCA, audio) | Symbol: stock **`Conn_Coaxial`**. Footprint: `Retr01_Lib:CUI_RCJ-01x_Vertical` (pad **1**=tip, **2**=shell×2) |
+| **J9** | **CUI RCJ-014** (yellow RCA, composite) | Same symbol + footprint as J8 |
 | **J36** | **EDAC 395-036-559-212** (right-angle 2×18) | Stock stand-in `PinSocket_2x18_P2.54mm_Horizontal` until EDAC CAD; arcade alt **395-036-520-201** (straight) is shell-only, not dual-footprint |
 | **U725** | **AD725ARZ** | Stock `SOIC-16_3.9x9.9mm_P1.27mm` |
 
-**You build yourself:** TRS jack footprint + RCJ RCA footprint (same holes for color variants). Optionally refine J36 from EDAC drawing.
+**You build yourself:** Optionally refine J36 from EDAC drawing. TRS + RCJ footprints are in `Retr01_Lib.pretty`.
 
 ---
 
@@ -115,7 +115,8 @@ Board clocks matter for layout cleanliness. They are not automatically a show-st
 | Video bit resistors (LSB→MSB) | Red/Green: **4.00 / 2.00 / 1.00 kΩ**. Blue: **2.00 / 1.00 kΩ** |
 | **75.0 Ω** to **GND** on each R/G/B | Termination → **~0.7 Vpp** into 75 ohm video plant |
 | Optional ferrite beads on RGBS | Cable RF. Place at connector |
-| Composite encoder | **AD725** (SOIC-16): RGBS guns AC-coupled in, **CSYNC** on HSYNC, **NTSC**, **14.31818 MHz** 4FSC can. COMP → 75 Ω → J9. Outside 32-IC logic count (like 74HC14). **No S-Video jack** (LUMA/CRMA unpopulated) |
+| Composite encoder | **AD725ARZ** (SOIC-16): RGB AC-coupled in, **CSYNC** on HSYNC, **NTSC**, **14.31818 MHz** 4FSC. COMP → 75 Ω → J9. Outside 32-IC count. **No S-Video** |
+| Bench video levels (locked targets) | Guns **~0.7 Vpp** into 75 Ω. AD725 RGB inputs **0–714 mV** AC-coupled (datasheet black ~0.8 V DC after clamp). No BOM change until first-spin scope |
 | APU **R-2R** from 328P `AUD0`–`AUD7` | Classic ladder **R = 10.0 kΩ**, **2R = 20.0 kΩ** (1%), then AC-couple to line out ([`sound.md`](sound.md)) |
 | APU build-out | **1.0 kΩ** series + **10 µF** AC-coupling toward jack |
 | Video / AV connectors | **J2** RGBS header + **J8** RCJ-012 audio RCA + **J9** RCJ-014 composite RCA. Levels bench-tuned |
@@ -130,8 +131,9 @@ Anything a human can touch gets a clamp **at the connector**, then a series limi
 
 | Item | Role |
 |------|------|
-| TVS array (5 V working, e.g. PESD5V0-class) on cart address/data/control as needed | ESD into flash / HC245 domain |
-| Series **22-100 ohm** on slow GPIO / pad DATA | Limits IC clamp current. Damps cable resonances |
+| **TVS** (PESD5V0-class SOD-323) on cart **A0–A18**, **D0–D7**, **OE#**, **WE#**, **SDA**, **SCL** at J36 | ESD into flash / HC245 domain. In SKiDL as `TvsCa*` / `TvsCd*` / `TvsOe` / `TvsWe` / `TvsSda` / `TvsScl` |
+| Series **33 Ω** on cart **D0–D7**, **OE#**, **WE#**, **SDA**, **SCL** (not on address — timing) | Clamp current + cable damp |
+| Arcade **47 Ω** series on each J5/J6 bitfield line | Locked in SKiDL (`Rarc1_*` / `Rarc2_*`) |
 | SCALE DIP + pull-ups/downs | **Locked:** open = **2×** default; closed drives `SCALE_1X` high for **1×** |
 
 
@@ -152,7 +154,7 @@ Simple **switch-to-GND** circuits: sticks and buttons close contacts. No pad MCU
 | **J5** | **1×10** P1 header — pinout locked in [`controllers.md`](controllers.md#j5--player-1-110) |
 | **J6** | **1×10** P2 header — same order for `$FE61` |
 | **J7** | **1×4** `+5V` / `GND` / `RESET_N` / `GND` cabinet tap |
-| Series **R** | **47 ohm** per signal line |
+| Series **R** | **47 ohm** per signal line — in SKiDL (`Rarc1_1`…`Rarc1_8`, `Rarc2_*`) |
 | Optional TVS | At connector (layout) |
 | Bit contract | `$FE60` / `$FE61`, bit set = pressed |
 

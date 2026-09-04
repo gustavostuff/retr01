@@ -12,6 +12,7 @@ Each IC is a struct that **starts with** an `R01sEntity`, plus an `R01sEntityVTa
 | C | `prg_rom.c` | PRG_ROM | Tiny 32 KB read-only PRG stub |
 | D | `sn74hc573.c` | SN74HC573 | Octal latch (`$FE02` on board) |
 | E | `pads.c` | PADS | `$FE60`/`$FE61` stub (1=pressed) |
+| E / L | `attiny85.c` + `pad_uart.c` | ATtiny85 | Retr01-C pad MCU + host poll (`0x55`/`0xAA`); support DIPs on island L |
 | G | `as6c62256.c` | AS6C62256 | 2nd instance - interleaved VRAM |
 | G | `sn74hc157.c` | SN74HC157 | PHI2 CPU/PPU addr mux (low nybble) |
 | H | `osc_dot.c` | OSC_DOT | ~5.37 MHz dot can (independent of PHI2) |

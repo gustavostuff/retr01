@@ -147,7 +147,7 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 
 **Layout persistence:** island frames + chip positions saved to `app/sim/ui_layout.json` (override with `R01S_LAYOUT`).
 
-**Gamepads (island E -> `$FE60`/`$FE61`):** bottom-left panels or keyboard. After boot catchup, **Host Play** uses P1 for move + warps (Studio/emu rules: dead-zone camera, player anim blob, collision from cart MAP attrs):
+**Gamepads (island E -> `$FE60`/`$FE61`):** bottom-left panels or keyboard. HUD **ARCADE** (default) injects the bitfield directly; **PADS** routes through ATtiny85 poll/reply (`0x55`/`0xAA`) then into the same ports. After boot catchup, **Host Play** uses P1 for move + warps (Studio/emu rules: dead-zone camera, player anim blob, collision from cart MAP attrs):
 
 | | Stick | X (warp -> screen 0,0) | Y (warp -> screen 1,0) | Coin | Start |
 |--|-------|----------------------|----------------------|------|-------|

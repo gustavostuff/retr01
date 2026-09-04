@@ -201,6 +201,9 @@ M1284_P2 = ("1", "2", "3", "4", "5", "6", "7", "8")  # PB0..PB7
 M1284_RESET, M1284_VCC, M1284_GND = "9", "10", "11"
 M1284_SCL, M1284_SDA = "22", "23"  # PC0/PC1 TWI
 M1284_PAD_DATA = "16"  # PD2
+# Switchcraft 35RAPC2BVN4 (VN4 CD / 3BVN4 schematic family): Tip=4 Ring=2 Sleeve=1.
+TRS_TIP, TRS_RING, TRS_SLEEVE = "4", "2", "1"
+TRS_NC = ("3", "5")  # no switch contacts on 2BVN4; still plated for mechanical hold
 M1284_HBLANK = "17"  # PD3
 M1284_FE06, M1284_FE07 = "18", "19"  # PD4/PD5
 M1284_XTAL2, M1284_XTAL1 = "12", "13"
@@ -269,8 +272,9 @@ PIN_TEMPLATES: Dict[str, List[str]] = {
     "CART_EDGE_36": _nums(36),
     "BARREL_5V": ["1", "2", "MP"],  # CUI PJ-063AH / KiCad Barrel_Jack_MountingPin
     "RGBS_HDR": _nums(5),
-    "TRS_P1": ["T", "R", "S"],  # Switchcraft 35RAPC2BVN4 Tip/Ring/Sleeve
-    "TRS_P2": ["T", "R", "S"],
+    # 35RAPC2BVN4: VN4 5-pad layout. Tip=4 Ring=2 Sleeve=1; 3+5 NC (no switch).
+    "TRS_P1": _nums(5),
+    "TRS_P2": _nums(5),
     "ARCADE_P1": _nums(10),
     "ARCADE_P2": _nums(10),
     "CAB_PWR_RST": _nums(4),
@@ -289,6 +293,7 @@ PIN_TEMPLATES: Dict[str, List[str]] = {
     "TVS_5V": _nums(2),
     "R_4K7": _nums(2),
     "R_47": _nums(2),
+    "R_33": _nums(2),
     "R_10K": _nums(2),
     "R_20K": _nums(2),
     "R_1K": _nums(2),
@@ -533,6 +538,7 @@ KICAD_ALIASES: Dict[str, Dict[str, str]] = {
     "R_R2R": {"1": "1", "2": "2"},
     "R_75": {"1": "1", "2": "2"},
     "R_47": {"1": "1", "2": "2"},
+    "R_33": {"1": "1", "2": "2"},
     "R_4K7": {"1": "1", "2": "2"},
     "R_10K": {"1": "1", "2": "2"},
     "R_20K": {"1": "1", "2": "2"},

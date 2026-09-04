@@ -7604,7 +7604,7 @@
 	(footprint "Connector_Coaxial:BNC_PanelMountable_Vertical"
 		(layer "F.Cu")
 		(uuid "491fb903-42f3-4ca8-9ee8-1b4ef97a453c")
-		(at 153.5 43.7 -90)
+		(at 153 43.7 -90)
 		(descr "Panel-mountable BNC connector mounted through PCB, vertical")
 		(tags "BNC connector")
 		(property "Reference" "J8"
@@ -25486,7 +25486,7 @@
 		(property "Reference" "J9"
 			(at -2.75 -5.5 90)
 			(layer "F.SilkS")
-			(uuid "3288e246-90b2-4d4c-b436-4f74599e85e0")
+			(uuid "b7b2e47a-829d-42ae-8dd8-888133ffbb0f")
 			(effects
 				(font
 					(size 1 1)
@@ -25497,7 +25497,7 @@
 		(property "Value" "COMPOSITE_OUT"
 			(at -0.15 5.3 90)
 			(layer "F.Fab")
-			(uuid "5047da22-6db6-43dd-8252-23f17362617d")
+			(uuid "18eebc52-cc44-45e7-bf5b-e6f8b2e5f550")
 			(effects
 				(font
 					(size 1 1)
@@ -25510,7 +25510,7 @@
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "c93613db-1acc-4f77-b447-5e6220e44f44")
+			(uuid "84cb1b94-623a-4963-933d-f6adb7b7fa94")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25523,7 +25523,7 @@
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "0f6b8573-2444-46b9-8e5c-33cf45ab0689")
+			(uuid "878ec5b6-09b1-4949-9eec-0a9d1a5cff5b")
 			(effects
 				(font
 					(size 1.27 1.27)

@@ -69,4 +69,7 @@ R01sIslandGroup *r01s_island_builder_group(R01sIslandBuilder *builder);
 /* Count mounted entities with a given canvas visual (e.g. R01S_ENTITY_VIS_IC for BOM DIP count). */
 int r01s_island_builder_count_visual(const R01sIslandBuilder *builder, R01sEntityVisual visual);
 
+/* Motherboard BOM ICs only: VIS_IC mounts excluding support ATtiny85 pad MCUs. */
+int r01s_island_builder_count_bom_ic(const R01sIslandBuilder *builder);
+
 #endif

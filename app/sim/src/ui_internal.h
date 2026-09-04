@@ -88,6 +88,7 @@ int ui_sort_compact_by_type(R01sUi *ui);
 int ui_undo_compact_pose(R01sUi *ui);
 void compact_btn_rect(const R01sUi *ui, SDL_Rect *rc);
 void save_btn_rect(const R01sUi *ui, SDL_Rect *rc);
+void input_mode_btn_rect(const R01sUi *ui, SDL_Rect *rc);
 void ui_save_layout_now(R01sUi *ui);
 int ui_lcd_scale_2x(const R01sUi *ui);
 int ui_screen_render_mode(const R01sUi *ui);

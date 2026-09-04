@@ -34,7 +34,7 @@ Sticks and buttons are **microswitch-to-GND** circuits into the **ATmega1284P**.
 | Item | Spec |
 |------|------|
 | MCU | ATmega1284P samples GPIO and packs `$FE60` / `$FE61` |
-| Harness | Series **47 ohm** per signal (22–100 ohm class). TVS at layout later |
+| Harness | Series **47 ohm** per signal (in SKiDL). TVS optional at layout |
 | TRS jacks | May be **DNP** on pure cabinet builds |
 
 No serial protocol on this path. Debouncing is firmware policy on the 1284.
@@ -108,11 +108,11 @@ Console builds populate **2x Switchcraft 35RAPC2BVN4** TRS jacks (P1, P2; vertic
 
 | Conductor | Signal |
 |-----------|--------|
-| Tip | **5 V** |
-| Ring | **DATA** |
-| Sleeve | **GND** (shell tied to ground) |
+| Tip | **5 V** (jack pad **4**) |
+| Ring | **DATA** (jack pad **2**) |
+| Sleeve | **GND** (jack pad **1**; shell) |
 
-Exact tip/ring assignment is fixed at schematic time. Table above is the locked mapping. Protection (PPTC on VCC, TVS, series R on DATA): [`passive_rf_etc.md`](passive_rf_etc.md).
+Pads **3** and **5** are plated for mechanical hold on the VN4 footprint; they are **NC** on **35RAPC2BVN4** (no internal switches). Exact tip/ring assignment is fixed at schematic time. Protection (PPTC on VCC, TVS, series R on DATA): [`passive_rf_etc.md`](passive_rf_etc.md).
 
 ### Electrical: open-drain UART bus
 
@@ -155,7 +155,7 @@ Pads that miss a poll hold last state until the next good frame.
 | Layer | Status |
 |-------|--------|
 | Silicon / docs | Protocol locked (this file) |
-| Sim / emu | Host Play drives `$FE60` / `$FE61` directly. **No** TRS or UART netlist yet |
+| Sim / emu | **Arcade** (default): Host Play drives `$FE60`/`$FE61` directly. **Pads**: Sim ATtiny85 entities + poll/reply into those ports (HUD ARCADE/PADS toggle). No TRS netlist / 1284 USART yet |
 | Firmware | 1284 pad firmware + ATtiny85 pad sketch. Post-schematic |
 
 ---
@@ -166,4 +166,4 @@ Pads that miss a poll hold last state until the next good frame.
 |-------|------|
 | Debounce | Pad-side vs 1284-side threshold |
 | Light gun | Identify **`0x02`**, timer read **`0x5A`**. See [`lightgun.md`](lightgun.md) |
-| Arcade series-R / TVS footprints | **47 ohm** locked; TVS arrays at layout ([`passive_rf_etc.md`](passive_rf_etc.md)) |
+| Arcade series-R / TVS footprints | **47 Ω** in SKiDL; optional TVS at layout |

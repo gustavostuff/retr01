@@ -38,6 +38,8 @@ add_library(retr01_sim_core
   chips/as6c62256.c
   chips/prg_rom.c
   chips/pads.c
+  chips/attiny85.c
+  chips/pad_uart.c
   chips/flasher_bus.c
   chips/sst39sf040.c
   chips/w65c02s.c
@@ -147,6 +149,8 @@ r01s_unit_test(test_island_flasher)
 r01s_unit_test(test_cart_flash_flow)
 r01s_unit_test(test_island_abcdeghiojklmnp)
 r01s_unit_test(test_pads)
+r01s_unit_test(test_attiny85)
+r01s_unit_test(test_pad_uart)
 r01s_unit_test(test_cart)
 r01s_unit_test(test_compositor)
 r01s_unit_test(test_sprite_fetch)

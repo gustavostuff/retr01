@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "Retr01_Lib")(type "KiCad")(uri "${KIPRJMOD}/../Retr01_Lib.pretty")(options "")(descr "Retr01 custom footprints"))
+)
