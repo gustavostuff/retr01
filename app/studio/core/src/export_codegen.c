@@ -135,18 +135,21 @@ static int ensure_codegen_dirs(const char *out_dir, char *err_buf, size_t err_ca
     return 0;
 }
 
-static void fill_present_mask(uint8_t mask[8], const R01World *w) {
+static void fill_present_mask(uint8_t mask[32], const R01World *w) {
     int i;
-    memset(mask, 0, 8);
+    memset(mask, 0, 32);
     if (!w) {
         return;
     }
     for (i = 0; i < w->screen_count; i++) {
         const R01Screen *s = &w->screens[i];
-        if (!s->present || s->col < 0 || s->col > 7 || s->row < 0 || s->row > 7) {
+        unsigned bit;
+        if (!s->present || s->col < 0 || s->col >= R01_GRID_MAX || s->row < 0 || s->row >= R01_GRID_MAX) {
             continue;
         }
-        mask[s->row] = (uint8_t)(mask[s->row] | (uint8_t)(1u << (unsigned)s->col));
+        bit = (unsigned)s->col;
+        mask[(size_t)s->row * 2u + bit / 8u] =
+            (uint8_t)(mask[(size_t)s->row * 2u + bit / 8u] | (uint8_t)(1u << (bit % 8u)));
     }
 }
 
@@ -429,7 +432,7 @@ static int write_warp_ids_header(const char *inc_dir, const R01World *w, char *e
 
 static int write_base_game(FILE *f, const R01Project *p) {
     const R01World *w = p ? &p->worlds[0] : NULL;
-    uint8_t mask[8];
+    uint8_t mask[32];
     int spawn_c = R01_START_COL, spawn_r = R01_START_ROW;
     int pe;
     int i;
@@ -456,11 +459,13 @@ static int write_base_game(FILE *f, const R01Project *p) {
     fprintf(f, "    int world_x;\n");
     fprintf(f, "    int world_y;\n");
     fprintf(f, "} R01InstRec;\n\n");
-    fprintf(f, "static const uint8_t play_present[8] = {");
-    for (i = 0; i < 8; i++) {
+    fprintf(f, "static const uint8_t play_present[32] = {");
+    for (i = 0; i < 32; i++) {
         fprintf(f, "%s%u", i ? ", " : "", (unsigned)mask[i]);
     }
     fprintf(f, "};\n");
+    fprintf(f, "static const uint8_t play_spawn_cell = 0x%02Xu;\n",
+            (unsigned)R01_CELL_PACK(spawn_c, spawn_r));
     fprintf(f, "static const uint8_t play_spawn_col = %d;\n", spawn_c);
     fprintf(f, "static const uint8_t play_spawn_row = %d;\n", spawn_r);
     fprintf(f, "static const int player_entity = %d;\n", pe);
@@ -600,7 +605,7 @@ static int write_asm_tables(const char *asm_dir, const R01World *w, char *err_bu
     char path[R01_PATH_MAX];
     char tables_dir[R01_PATH_MAX];
     FILE *f;
-    uint8_t mask[8];
+    uint8_t mask[32];
     int spawn_c, spawn_r;
     int di = 0;
     int si;
@@ -615,8 +620,8 @@ static int write_asm_tables(const char *asm_dir, const R01World *w, char *err_bu
         set_err(err_buf, err_cap, "cannot write tables");
         return -1;
     }
-    fprintf(f, "; screen present mask (8 bytes @ PLAY+$00)\nplay_present:\n        .byte ");
-    for (si = 0; si < 8; si++) {
+    fprintf(f, "; screen present mask (32 bytes @ PLAY+$00, 16 rows x u16 LE)\nplay_present:\n        .byte ");
+    for (si = 0; si < 32; si++) {
         fprintf(f, "%s$%02X", si ? ", " : "", mask[si]);
     }
     fprintf(f, "\n");
@@ -628,7 +633,8 @@ static int write_asm_tables(const char *asm_dir, const R01World *w, char *err_bu
         set_err(err_buf, err_cap, "cannot write tables");
         return -1;
     }
-    fprintf(f, "play_spawn_col: .byte $%02X\nplay_spawn_row: .byte $%02X\n", spawn_c & 0xFF, spawn_r & 0xFF);
+    fprintf(f, "play_spawn_cell: .byte $%02X ; col|(row<<4)\n",
+            (unsigned)R01_CELL_PACK(spawn_c, spawn_r));
     fclose(f);
 
     snprintf(path, sizeof(path), "%s/play_coll_dir.inc", tables_dir);
@@ -643,7 +649,7 @@ static int write_asm_tables(const char *asm_dir, const R01World *w, char *err_bu
         for (si = 0; si < w->screen_count; si++) {
             const R01Screen *s = &w->screens[si];
             uint16_t tab_addr;
-            if (!s->present || s->col < 0 || s->col > 7 || s->row < 0 || s->row > 7) {
+            if (!s->present || s->col < 0 || s->col >= R01_GRID_MAX || s->row < 0 || s->row >= R01_GRID_MAX) {
                 continue;
             }
             tab_addr = (uint16_t)(0x8700u + data_off);
@@ -767,8 +773,8 @@ static int write_asm_tree(const char *asm_dir, const R01World *w, char *err_buf,
                    "PLAY_PRESENT    = $8100\n"
                    "PLAY_SPAWN_C    = $8108\n"
                    "PLAY_SPAWN_R    = $8109\n"
-                   "PLAY_COLL_COUNT = $810A\n"
-                   "PLAY_COLL_DIR   = $810B\n"
+                   "PLAY_COLL_COUNT = $8121\n"
+                   "PLAY_COLL_DIR   = $8122\n"
                    "R01P_MARKER     = $80F0\n",
                    err_buf, err_cap) != 0) {
         return -1;

@@ -1617,6 +1617,23 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
     } else {
         r01_project_select_start_screen(p);
     }
+    /* Migrate older 8x8 (or partial) projects to the full 16x16 slot map. */
+    {
+        R01World *w0 = r01_project_world0(p);
+        int ac = -1;
+        int ar = -1;
+        if (p->active_screen >= 0 && p->active_screen < w0->screen_count &&
+            w0->screens[p->active_screen].present) {
+            ac = w0->screens[p->active_screen].col;
+            ar = w0->screens[p->active_screen].row;
+        }
+        r01_world_ensure_full_grid(w0);
+        if (ac >= 0) {
+            p->active_screen = r01_world_screen_index(w0, ac, ar);
+        } else {
+            r01_project_select_start_screen(p);
+        }
+    }
     /* File data lives in world 0; show that world after load. */
     p->active_world = 0;
     free(buf);

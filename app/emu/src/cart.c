@@ -167,8 +167,8 @@ int r01e_cart_world(const R01eCart *c, int index, R01eWorldView *out) {
     out->present = 1;
     out->base = base;
     out->len = wlen;
-    out->start_col = hdr[0];
-    out->start_row = hdr[1];
+    out->start_col = (uint8_t)R01E_CELL_COL(hdr[0]);
+    out->start_row = (uint8_t)R01E_CELL_ROW(hdr[0]);
     out->default_bg_bank = hdr[2] & 3u;
     out->default_pal_row = hdr[4] & 7u;
     out->screen_count = hdr[5];
@@ -224,7 +224,7 @@ int r01e_cart_has_screen(const R01eCart *c, int world, int col, int row) {
     }
     for (si = 0; si < wv.screen_count; si++) {
         const uint8_t *e = dir + (size_t)si * 12u;
-        if ((int)e[0] == col && (int)e[1] == row) {
+        if (R01E_CELL_COL(e[0]) == col && R01E_CELL_ROW(e[0]) == row) {
             return 1;
         }
     }
@@ -245,7 +245,7 @@ static int cart_screen_payload(const R01eCart *c, int world, int col, int row, u
     }
     for (si = 0; si < wv.screen_count; si++) {
         const uint8_t *e = dir + (size_t)si * 12u;
-        if ((int)e[0] == col && (int)e[1] == row) {
+        if (R01E_CELL_COL(e[0]) == col && R01E_CELL_ROW(e[0]) == row) {
             if (out_off) {
                 *out_off = wv.base + get_u24(e + 4);
             }

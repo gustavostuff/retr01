@@ -35,7 +35,7 @@ typedef struct R01eVideo {
     int bg0_count;
     int bg0_cols; /* BG0 grid W (present extent) */
     int bg0_rows; /* BG0 grid H (present extent) */
-    int l1_cols;  /* BG1 present bounding-box W (not virtual 8x8) */
+    int l1_cols;  /* BG1 present bounding-box W (not virtual 16x16) */
     int l1_rows;
     int l1_origin_x; /* min present screen * px (for relative proportional scroll) */
     int l1_origin_y;

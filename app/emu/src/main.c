@@ -18,8 +18,8 @@
 
 /* Debug pane: VRAM atlas + world map + active BG/SPR palette rows + CPU budget. */
 #define DBG_GAP 8
-#define DBG_MAP_CELL 20
-#define DBG_MAP_MAX_CELLS 8
+#define DBG_MAP_CELL 10
+#define DBG_MAP_MAX_CELLS 16
 #define DBG_MAP_W (DBG_MAP_CELL * DBG_MAP_MAX_CELLS)
 #define DBG_MAP_H (DBG_MAP_CELL * DBG_MAP_MAX_CELLS)
 #define DBG_PAL_SWATCH 8
@@ -95,8 +95,8 @@ static void draw_world_map(SDL_Renderer *ren, R01eMachine *m, int ox, int oy) {
     if (dir) {
         for (si = 0; si < wv.screen_count; si++) {
             const uint8_t *e = dir + (size_t)si * 12u;
-            int col = (int)e[0];
-            int row = (int)e[1];
+            int col = R01E_CELL_COL(e[0]);
+            int row = R01E_CELL_ROW(e[0]);
             if (col >= 0 && col < DBG_MAP_MAX_CELLS && row >= 0 && row < DBG_MAP_MAX_CELLS) {
                 present[row][col] = 1;
                 if (col < min_c) {

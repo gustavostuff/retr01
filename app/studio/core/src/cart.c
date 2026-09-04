@@ -382,7 +382,7 @@ int r01_prg_write_asm(const R01Project *p, const char *path, char *err_buf, size
     w = p ? &p->worlds[0] : NULL;
     fprintf(f, "; retr01 Phase 1 -- boot streams palette + start MAP, then VBlank pad poll.\n");
     fprintf(f, "; Gameplay: Studio play.c / emu cart runtime (marker R01P @ $80F0).\n");
-    fprintf(f, "; Play table @ $8100: present[8], spawn, coll_dir @ $810A.\n");
+    fprintf(f, "; Play table @ $8100: present[32], spawn_cell @ $8120, coll_dir @ $8122.\n");
     fprintf(f, "; play_pos_ok @ $8500 (PRG+$0500): solid shadow probe via ($20),Y.\n");
     fprintf(f, ".setcpu \"65C02\"\n");
     fprintf(f, "WORLD     = $FE30\n");
@@ -553,7 +553,7 @@ static int resolve_custom_logic_path(const char *cart_or_stem_path, char *out, s
 
 static int build_world_blob(Buf *blob, const R01World *w, const char *custom_logic_path) {
     uint8_t hdr[WORLD_HDR_SIZE];
-    uint8_t dir[R01_MAX_SCREENS * SCREEN_DIR_ENT];
+    uint8_t dir[R01_MAX_PRESENT_SCREENS * SCREEN_DIR_ENT];
     uint8_t bg0_dir[R01_BG0_SCREENS_MAX * SCREEN_DIR_ENT];
     size_t off_chr, off_sdir, off_spay, off_bg0_dir, off_bg0_pay, off_types, off_insts;
     int si, bi, present_n = 0;
@@ -613,8 +613,8 @@ static int build_world_blob(Buf *blob, const R01World *w, const char *custom_log
     {
         int ds = r01_world_default_screen(w);
         const R01Screen *spawn = &w->screens[ds];
-        put_u8(hdr + 0, (uint8_t)spawn->col);
-        put_u8(hdr + 1, (uint8_t)spawn->row);
+        put_u8(hdr + 0, R01_CELL_PACK(spawn->col, spawn->row));
+        put_u8(hdr + 1, 0);
     }
     put_u8(hdr + 2, (uint8_t)(w->default_bg_bank & 3));
     /* hdr[3]: BG0 present extent (cols | rows<<4). 0 when no BG0. */
@@ -726,8 +726,8 @@ static int build_world_blob(Buf *blob, const R01World *w, const char *custom_log
                 continue;
             }
             e = dir + (size_t)di * SCREEN_DIR_ENT;
-            put_u8(e + 0, (uint8_t)s->col);
-            put_u8(e + 1, (uint8_t)s->row);
+            put_u8(e + 0, R01_CELL_PACK(s->col, s->row));
+            put_u8(e + 1, 0);
             put_u8(e + 2, 0);
             put_u8(e + 3, 0);
             put_u24(e + 4, payload_base + (uint32_t)di * SCREEN_PAYLOAD);
@@ -770,8 +770,8 @@ static int build_world_blob(Buf *blob, const R01World *w, const char *custom_log
                 continue;
             }
             e = bg0_dir + (size_t)di * SCREEN_DIR_ENT;
-            put_u8(e + 0, (uint8_t)(s->col - min_c));
-            put_u8(e + 1, (uint8_t)(s->row - min_r));
+            put_u8(e + 0, R01_CELL_PACK(s->col - min_c, s->row - min_r));
+            put_u8(e + 1, 0);
             put_u8(e + 2, 0);
             put_u8(e + 3, 0);
             put_u24(e + 4, bg0_payload_base + (uint32_t)di * SCREEN_PAYLOAD);

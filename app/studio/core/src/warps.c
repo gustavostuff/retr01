@@ -28,7 +28,8 @@ int r01_world_warp_entrance_add(R01World *w, int screen_col, int screen_row, int
                                 int tile_row) {
     R01WarpEntrance *e;
     int idx;
-    if (!w || screen_col < 0 || screen_col > 7 || screen_row < 0 || screen_row > 7 || tile_col < 0 ||
+    if (!w || screen_col < 0 || screen_col >= R01_GRID_MAX || screen_row < 0 ||
+        screen_row >= R01_GRID_MAX || tile_col < 0 ||
         tile_col >= R01_SCREEN_TILES_X || tile_row < 0 || tile_row >= R01_SCREEN_TILES_Y) {
         return -1;
     }
@@ -60,9 +61,9 @@ int r01_world_warp_exit_set(R01World *w, int entrance_idx, int dest_screen_col, 
     int i;
     int slot = -1;
     if (!w || entrance_idx < 0 || entrance_idx >= R01_MAX_WARP_ENTRANCES ||
-        !w->warp_entrances[entrance_idx].present || dest_screen_col < 0 || dest_screen_col > 7 ||
-        dest_screen_row < 0 || dest_screen_row > 7 || dest_tile_col < 0 ||
-        dest_tile_col >= R01_SCREEN_TILES_X || dest_tile_row < 0 ||
+        !w->warp_entrances[entrance_idx].present || dest_screen_col < 0 ||
+        dest_screen_col >= R01_GRID_MAX || dest_screen_row < 0 || dest_screen_row >= R01_GRID_MAX ||
+        dest_tile_col < 0 || dest_tile_col >= R01_SCREEN_TILES_X || dest_tile_row < 0 ||
         dest_tile_row >= R01_SCREEN_TILES_Y) {
         return -1;
     }

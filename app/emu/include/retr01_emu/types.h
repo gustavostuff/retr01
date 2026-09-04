@@ -31,7 +31,11 @@
 #define R01E_VRAM_BYTES 0x4000u
 
 #define R01E_MAX_WORLDS 8
-#define R01E_MAX_PRESENT_SCREENS 32 /* cart cap: 8 worlds x 32 (docs/graphics) */
+#define R01E_GRID_MAX 16
+#define R01E_MAX_PRESENT_SCREENS 48 /* cart cap: 8 worlds x 48 BG1 on 16x16 (docs/memory.md) */
+#define R01E_CELL_PACK(col, row) ((uint8_t)(((unsigned)(col)&0x0fu) | (((unsigned)(row)&0x0fu) << 4)))
+#define R01E_CELL_COL(b) ((int)((unsigned)(b)&0x0fu))
+#define R01E_CELL_ROW(b) ((int)(((unsigned)(b) >> 4) & 0x0fu))
 #define R01E_PARALLAX_MIN 0
 #define R01E_PARALLAX_MAX 8 /* BG0 screens max (legacy name kept for ABI) */
 #define R01E_PARALLAX_SLICE_MAX 120 /* max bands; variable thickness (docs/graphics) */

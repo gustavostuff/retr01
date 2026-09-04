@@ -135,7 +135,7 @@ static int prepare_world_common(R01eMachine *m, int world, R01eWorldView *wv) {
     if (vid->cam_max_y < vid->cam_y) {
         vid->cam_max_y = vid->cam_y;
     }
-    /* BG1 extent = present-screen bounding box (not the virtual 8x8). */
+    /* BG1 extent = present-screen bounding box (not the virtual 16x16). */
     vid->l1_cols = max_c - min_c + 1;
     vid->l1_rows = max_r - min_r + 1;
     if (vid->l1_cols < 1) {
@@ -192,8 +192,8 @@ static void world_bounds(const R01eCart *cart, const R01eWorldView *wv, int *min
     }
     for (si = 0; si < wv->screen_count; si++) {
         const uint8_t *e = dir + (size_t)si * 12u;
-        int c = (int)e[0];
-        int r = (int)e[1];
+        int c = R01E_CELL_COL(e[0]);
+        int r = R01E_CELL_ROW(e[0]);
         if (c < *min_c) {
             *min_c = c;
         }
@@ -227,7 +227,7 @@ static int load_screen_into_slot(R01eMachine *m, const R01eWorldView *wv, int co
         uint32_t poff;
         const uint8_t *pay;
 
-        if ((int)e[0] != col || (int)e[1] != row) {
+        if (R01E_CELL_COL(e[0]) != col || R01E_CELL_ROW(e[0]) != row) {
             continue;
         }
         poff = get_u24(e + 4);
@@ -319,8 +319,8 @@ void r01e_video_load_bg0(R01eMachine *m, const R01eWorldView *wv) {
         const uint8_t *e = dir + (size_t)pi * 12u;
         uint32_t poff = get_u24(e + 4);
         const uint8_t *pay = r01e_cart_ptr(&m->cart, wv->base + poff, R01E_SCREEN_PAYLOAD);
-        int c = (int)e[0];
-        int r = (int)e[1];
+        int c = R01E_CELL_COL(e[0]);
+        int r = R01E_CELL_ROW(e[0]);
         if (!pay) {
             continue;
         }

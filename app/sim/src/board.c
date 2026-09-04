@@ -2194,8 +2194,8 @@ static void board_resolve_cart_meta(R01sBoard *board) {
         return;
     }
     hdr = img + world_base;
-    start_col = hdr[0];
-    start_row = hdr[1];
+    start_col = (uint8_t)R01S_CELL_COL(hdr[0]);
+    start_row = (uint8_t)R01S_CELL_ROW(hdr[0]);
     board->cart_default_pal_row = (uint8_t)(hdr[4] & 7u);
     screen_count = hdr[5];
     if (screen_count > R01S_MAX_PRESENT_SCREENS) {
@@ -2250,7 +2250,7 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     for (si = 0; si < (int)screen_count; si++) {
         const uint8_t *e = dir + (size_t)si * 12u;
         uint32_t poff;
-        if (e[0] != start_col || e[1] != start_row) {
+        if (R01S_CELL_COL(e[0]) != (int)start_col || R01S_CELL_ROW(e[0]) != (int)start_row) {
             continue;
         }
         poff = get_u24(e + 4);
@@ -2462,7 +2462,7 @@ int r01s_board_has_screen(const R01sBoard *board, int col, int row) {
     dir = board->cart_module.flash.mem + board->cart_off_sdir;
     for (si = 0; si < (int)board->cart_screen_count; si++) {
         const uint8_t *e = dir + (size_t)si * 12u;
-        if (e[0] == (uint8_t)col && e[1] == (uint8_t)row) {
+        if (R01S_CELL_COL(e[0]) == col && R01S_CELL_ROW(e[0]) == row) {
             return 1;
         }
     }
@@ -2479,10 +2479,10 @@ int r01s_board_first_screen(const R01sBoard *board, int *out_col, int *out_row) 
     dir = board->cart_module.flash.mem + board->cart_off_sdir;
     e = dir;
     if (out_col) {
-        *out_col = (int)e[0];
+        *out_col = R01S_CELL_COL(e[0]);
     }
     if (out_row) {
-        *out_row = (int)e[1];
+        *out_row = R01S_CELL_ROW(e[0]);
     }
     return 1;
 }
@@ -2497,7 +2497,7 @@ static uint32_t board_map_off_for_screen(const R01sBoard *board, int col, int ro
     dir = board->cart_module.flash.mem + board->cart_off_sdir;
     for (si = 0; si < (int)board->cart_screen_count; si++) {
         const uint8_t *e = dir + (size_t)si * 12u;
-        if (e[0] == (uint8_t)col && e[1] == (uint8_t)row) {
+        if (R01S_CELL_COL(e[0]) == col && R01S_CELL_ROW(e[0]) == row) {
             return board->cart_world_base + get_u24(e + 4);
         }
     }
@@ -2692,8 +2692,8 @@ void r01s_board_load_bg0(R01sBoard *board) {
         dir = img + board->cart_off_sdir;
         for (si = 0; si < (int)board->cart_screen_count; si++) {
             const uint8_t *e = dir + (size_t)si * 12u;
-            int c = (int)e[0];
-            int r = (int)e[1];
+            int c = R01S_CELL_COL(e[0]);
+            int r = R01S_CELL_ROW(e[0]);
             if (c < l1_min_c) {
                 l1_min_c = c;
             }
@@ -2736,8 +2736,8 @@ void r01s_board_load_bg0(R01sBoard *board) {
         const uint8_t *e = dir + (size_t)si * 12u;
         uint32_t poff = get_u24(e + 4);
         uint32_t abs = board->cart_world_base + poff;
-        int c = (int)e[0];
-        int r = (int)e[1];
+        int c = R01S_CELL_COL(e[0]);
+        int r = R01S_CELL_ROW(e[0]);
         if ((size_t)abs + R01S_CART_SCREEN_PAYLOAD > sizeof(board->cart_module.flash.mem)) {
             continue;
         }

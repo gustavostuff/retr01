@@ -27,10 +27,14 @@
 #define R01S_CART_OTHER_FLAG_RLE 0x01u
 #define R01S_CART_SCREEN_PAYLOAD 480u
 
-/* Cart layout caps (docs/graphics.md). */
+/* Cart layout caps (docs/memory.md). */
 #define R01S_MAX_WORLDS 8
-#define R01S_MAX_PRESENT_SCREENS 32 /* 8 worlds x 32 present screens */
+#define R01S_GRID_MAX 16
+#define R01S_MAX_PRESENT_SCREENS 48 /* 8 worlds x 48 BG1 on 16x16 */
 #define R01S_BG0_SCREENS_MAX 8 /* L0 / structured second BG (replaces old parallax) */
+#define R01S_CELL_PACK(col, row) ((uint8_t)(((unsigned)(col)&0x0fu) | (((unsigned)(row)&0x0fu) << 4)))
+#define R01S_CELL_COL(b) ((int)((unsigned)(b)&0x0fu))
+#define R01S_CELL_ROW(b) ((int)(((unsigned)(b) >> 4) & 0x0fu))
 #define R01S_CART_PRG_BYTES 0x8000u /* fixed 32 KB PRG */
 
 /* Pin digital level (tri-state aware). */

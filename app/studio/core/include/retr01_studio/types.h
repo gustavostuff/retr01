@@ -11,10 +11,14 @@
 #define R01_TILES_PER_SCREEN 240
 #define R01_ATTRS_PER_SCREEN 240
 
-#define R01_GRID_MAX 8
+#define R01_GRID_MAX 16
 #define R01_DEFAULT_GRID 3
 #define R01_MAX_SCREENS (R01_GRID_MAX * R01_GRID_MAX)
-#define R01_MAX_PRESENT_SCREENS 32 /* cart cap (docs/graphics): 8 worlds x 32 + 32 KiB PRG in 512 KiB */
+#define R01_MAX_PRESENT_SCREENS 48 /* cart cap: 8 worlds x 48 BG1 on 16x16 (docs/memory.md) */
+/* Virtual grid cell: col/row 0-15 packed as nibbles (cart dir + world spawn). */
+#define R01_CELL_PACK(col, row) ((uint8_t)(((unsigned)(col)&0x0fu) | (((unsigned)(row)&0x0fu) << 4)))
+#define R01_CELL_COL(b) ((int)((unsigned)(b)&0x0fu))
+#define R01_CELL_ROW(b) ((int)(((unsigned)(b) >> 4) & 0x0fu))
 #define R01_PARALLAX_MIN 0
 #define R01_PARALLAX_MAX 8 /* per world; live VRAM slots 4-5 only */
 #define R01_PARALLAX_SLICE_MAX 120 /* max bands; variable thickness (docs/graphics) */
@@ -220,7 +224,7 @@ typedef struct R01World {
     int default_screen; /* index into screens[]; spawn / play start */
     R01Screen screens[R01_MAX_SCREENS];
     int screen_count;
-    /* Structured BG0 plane: up to 8 present screens anywhere on the 8x8 map. */
+    /* Structured BG0 plane: up to 8 present screens anywhere on the 16x16 map. */
     int bg0_cols; /* present enclosing extent W (derived) */
     int bg0_rows; /* present enclosing extent H (derived) */
     R01Screen bg0_screens[R01_BG0_SCREENS_MAX];

@@ -9,6 +9,8 @@ void r01_project_init_other_screens(R01Project *p);
 void r01_world_init_phase1(R01World *w);
 void r01_world_init_empty(R01World *w);
 int r01_world_set_grid(R01World *w, int cols, int rows);
+/* Expand sparse/partial grid to full R01_GRID_MAX, remapping default_screen by col/row. */
+void r01_world_ensure_full_grid(R01World *w);
 int r01_world_screen_index(const R01World *w, int col, int row);
 
 R01World *r01_project_world0(R01Project *p);
@@ -30,7 +32,7 @@ R01Screen *r01_world_screen_at(R01World *w, int col, int row);
 /* Count screens with present=1 (cart export uses this; max R01_MAX_PRESENT_SCREENS). */
 int r01_world_present_count(const R01World *w);
 
-/* BG0: free layout on 8x8, max R01_BG0_SCREENS_MAX present screens. */
+/* BG0: free layout on 16x16, max R01_BG0_SCREENS_MAX present screens. */
 void r01_world_bg0_clear(R01World *w);
 void r01_world_bg0_recompute_extent(R01World *w);
 int r01_world_bg0_screen_index(const R01World *w, int col, int row);

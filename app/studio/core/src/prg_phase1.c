@@ -13,10 +13,10 @@
 #define PLAY_OFF 0x0100u /* PRG+$0100 -> CPU $8100 */
 
 #define PLAY_PRESENT 0
-#define PLAY_SPAWN_C 8
-#define PLAY_SPAWN_R 9
-#define PLAY_COLL_COUNT 10
-#define PLAY_COLL_DIR 11 /* 4 bytes/screen: col, row, tab_lo, tab_hi (CPU addr) */
+#define PLAY_PRESENT_BYTES 32 /* 16 rows x u16 LE bitmasks */
+#define PLAY_SPAWN_CELL 32    /* col|(row<<4) */
+#define PLAY_COLL_COUNT 33
+#define PLAY_COLL_DIR 34 /* 4 bytes/screen: col, row, tab_lo, tab_hi (CPU addr) */
 
 #define R01P_OFF 0x00F0u
 #define R01P_VER_COLLISION 2u
@@ -48,18 +48,21 @@ static uint32_t pal_row_off(uint32_t plane_off, uint32_t plane_len, unsigned row
     return plane_off;
 }
 
-static void fill_present_mask(uint8_t mask[8], const R01World *w) {
+static void fill_present_mask(uint8_t mask[32], const R01World *w) {
     int i;
-    memset(mask, 0, 8);
+    memset(mask, 0, 32);
     if (!w) {
         return;
     }
     for (i = 0; i < w->screen_count; i++) {
         const R01Screen *s = &w->screens[i];
-        if (!s->present || s->col < 0 || s->col > 7 || s->row < 0 || s->row > 7) {
+        unsigned bit;
+        if (!s->present || s->col < 0 || s->col >= R01_GRID_MAX || s->row < 0 || s->row >= R01_GRID_MAX) {
             continue;
         }
-        mask[s->row] = (uint8_t)(mask[s->row] | (uint8_t)(1u << (unsigned)s->col));
+        bit = (unsigned)s->col;
+        mask[(size_t)s->row * 2u + bit / 8u] =
+            (uint8_t)(mask[(size_t)s->row * 2u + bit / 8u] | (uint8_t)(1u << (bit % 8u)));
     }
 }
 
@@ -205,7 +208,7 @@ static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01World *w)
         int cell;
         uint16_t tab_addr;
         uint8_t *ent;
-        if (!s->present || s->col < 0 || s->col > 7 || s->row < 0 || s->row > 7) {
+        if (!s->present || s->col < 0 || s->col >= R01_GRID_MAX || s->row < 0 || s->row >= R01_GRID_MAX) {
             continue;
         }
         if (data_off + R01_TILES_PER_SCREEN > R01_PRG_BYTES) {
@@ -236,7 +239,7 @@ static void install_collision_code(uint8_t prg[R01_PRG_BYTES]) {
 }
 
 void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01World *w, const R01PrgCartLayout *layout) {
-    uint8_t mask[8];
+    uint8_t mask[PLAY_PRESENT_BYTES];
     int spawn_c = R01_START_COL, spawn_r = R01_START_ROW;
     size_t n = 0;
     uint16_t main_pc;
@@ -282,9 +285,8 @@ void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01World *w, const R0
     n += sizeof(main_loop);
 
     fill_present_mask(mask, w);
-    memcpy(prg + PLAY_OFF + PLAY_PRESENT, mask, 8);
-    prg[PLAY_OFF + PLAY_SPAWN_C] = (uint8_t)spawn_c;
-    prg[PLAY_OFF + PLAY_SPAWN_R] = (uint8_t)spawn_r;
+    memcpy(prg + PLAY_OFF + PLAY_PRESENT, mask, PLAY_PRESENT_BYTES);
+    prg[PLAY_OFF + PLAY_SPAWN_CELL] = R01_CELL_PACK(spawn_c, spawn_r);
 
     install_collision_code(prg);
     fill_collision_tables(prg, w);

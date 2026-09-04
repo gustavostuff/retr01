@@ -17,7 +17,7 @@ TEST_MAIN() {
     r01_project_init(p, "test");
     w = &p->worlds[0];
 
-    EXPECT(w->screen_count == R01_GRID_MAX * R01_GRID_MAX, "8x8 screen slots");
+    EXPECT(w->screen_count == R01_GRID_MAX * R01_GRID_MAX, "16x16 screen slots");
     EXPECT(w->screens[2].col == 2 && w->screens[2].row == 0, "start screen 2,0");
     EXPECT(w->screens[0].present && w->screens[3].present == 0, "default 3x3 present region");
     EXPECT(p->active_screen == 2, "active start 2,0");

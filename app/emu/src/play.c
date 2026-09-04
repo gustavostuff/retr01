@@ -198,10 +198,10 @@ static int spawn_screen(R01eMachine *m, int *out_col, int *out_row) {
         for (si = 0; si < wv.screen_count; si++) {
             const uint8_t *e = dir + (size_t)si * 12u;
             if (out_col) {
-                *out_col = (int)e[0];
+                *out_col = R01E_CELL_COL(e[0]);
             }
             if (out_row) {
-                *out_row = (int)e[1];
+                *out_row = R01E_CELL_ROW(e[0]);
             }
             return 1;
         }

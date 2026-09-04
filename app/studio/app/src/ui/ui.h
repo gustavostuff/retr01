@@ -41,7 +41,7 @@
 #define UI_SIDEBAR_W 128
 #define UI_CTRL_SIDEBAR_W 128
 #define UI_WORLD_BTN 16
-#define UI_WORLD_CELL 16
+#define UI_WORLD_CELL 8 /* 16x16 map fits 128px sidebar */
 #define UI_WORLD_VIEW 128
 #define UI_PAL_SWATCH 8
 #define UI_PAL_GRID_CELL 16 /* 4x4 picker cell (2x swatch) */

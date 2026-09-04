@@ -1,11 +1,13 @@
-; Phase 1 player vs BG solid (PRG solid shadow tables, directory @ CPU $810A).
+; Phase 1 player vs BG solid (PRG solid shadow tables, directory @ CPU $8122).
 ; ZP: $10-$11 px, $12-$13 py (16-bit LE). Returns A=0 ok, A=1 blocked.
+; Present mask: 32 bytes @ $8100 (16 rows x u16 LE). Spawn cell @ $8120.
 .setcpu "65c02"
 
 PLAY_BASE       = $8500
 PLAY_PRESENT    = $8100
-PLAY_COLL_COUNT = $810A
-PLAY_COLL_DIR   = $810B
+PLAY_SPAWN_CELL = $8120
+PLAY_COLL_COUNT = $8121
+PLAY_COLL_DIR   = $8122
 
 .segment "CODE"
 .org PLAY_BASE
@@ -63,34 +65,37 @@ blocked:
         rts
 
 ; A=0 all present screens under AABB, A=1 missing screen.
+; Uses $26=c0 $27=c1 $28=r0 $29=r1 $2a=col $2b=row $2c=bit
 present_ok:
         lda $10
         sta $24
         lda $11
         sta $25
         jsr div128
-        sta $26          ; c0
+        sta $26
         lda $14
         sta $24
         lda $15
         sta $25
         jsr div128
-        sta $27          ; c1
+        sta $27
         lda $12
         sta $24
         lda $13
         sta $25
         jsr div120
-        stx $28          ; r0
+        stx $28
         lda $16
         sta $24
         lda $17
         sta $25
         jsr div120
-        stx $29          ; r1
-        ldx $28
+        stx $29
+        lda $28
+        sta $2b
 @row:
-        cpx $29
+        lda $2b
+        cmp $29
         bcs @ok
         lda $26
         sta $2a
@@ -98,18 +103,27 @@ present_ok:
         lda $2a
         cmp $27
         bcs @nrow
+        ; byte = PLAY_PRESENT + row*2 + col/8
+        lda $2b
+        asl
+        sta $2c
+        lda $2a
+        lsr
+        lsr
+        lsr
+        clc
+        adc $2c
+        tax
+        lda $2a
+        and #$07
         tay
-        txa
-        pha
         lda PLAY_PRESENT,x
         and bit_mask,y
-        pla
-        tax
         beq @bad
         inc $2a
         jmp @col
 @nrow:
-        inx
+        inc $2b
         jmp @row
 @ok:
         lda #0
@@ -118,7 +132,7 @@ present_ok:
         lda #1
         rts
 
-; $24/$25 = 16-bit LE in, A = value/128
+; $24/$25 = 16-bit LE in, A = value/128 (0-15)
 div128:
         ldx #7
 @sh:
@@ -127,19 +141,20 @@ div128:
         dex
         bne @sh
         lda $24
-        and #$07
+        and #$0F
         rts
 
-; $24/$25 = wy in, X = wy/120
+; $24/$25 = wy in, X = wy/120 (0-15). Remainder left in $24.
 div120:
         ldx #0
 @d:
         lda $25
-        ora $24
-        beq @out
+        bne @sub
         lda $24
         cmp #120
         bcc @out
+@sub:
+        lda $24
         sec
         sbc #120
         sta $24
@@ -147,33 +162,34 @@ div120:
         sbc #0
         sta $25
         inx
-        cpx #8
+        cpx #16
         bcc @d
 @out:
         rts
 
 solid_point:
-        lda $19
-        lsr
-        lsr
-        lsr
-        lsr
-        lsr
-        lsr
-        lsr
-        sta $1c
+        ; screen col = wx / 128
         lda $18
         sta $24
         lda $19
         sta $25
-        jsr div120
-        stx $1d
+        jsr div128
+        sta $1c
+        ; local x tile
         lda $18
         and #$7f
         lsr
         lsr
         lsr
         sta $1e
+        ; screen row = wy / 120
+        lda $1a
+        sta $24
+        lda $1b
+        sta $25
+        jsr div120
+        stx $1d
+        ; local y tile from remainder
         lda $24
         lsr
         lsr

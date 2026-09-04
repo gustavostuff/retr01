@@ -14,8 +14,7 @@
 #define CART_PTR_SIZE 36u
 #define CART_PAL_PLANE_BYTES 128u
 #define CART_PRG_OFF (CART_HDR_SIZE + CART_PTR_SIZE + 2u * CART_PAL_PLANE_BYTES)
-#define PRG_PLAY_SPAWN_C 0x0108u
-#define PRG_PLAY_SPAWN_R 0x0109u
+#define PRG_PLAY_SPAWN_CELL 0x0120u
 #define WORLD_SLOT_SIZE 8u
 #define WORLD_HDR_SIZE 32u
 
@@ -143,10 +142,9 @@ TEST_MAIN() {
                 EXPECT(fread(&fmt, 1, 1, f) == 1, "read format_ver");
                 EXPECT(fmt == R01_CART_FORMAT_VER, "cart format_ver 2");
             }
-            EXPECT(fseek(f, prg_off + (long)PRG_PLAY_SPAWN_C, SEEK_SET) == 0, "seek prg spawn");
-            EXPECT(fread(prg_spawn, 1, 2, f) == 2, "read prg spawn");
-            EXPECT(prg_spawn[0] == 2, "prg spawn col matches default screen");
-            EXPECT(prg_spawn[1] == 0, "prg spawn row matches default screen");
+            EXPECT(fseek(f, prg_off + (long)PRG_PLAY_SPAWN_CELL, SEEK_SET) == 0, "seek prg spawn");
+            EXPECT(fread(prg_spawn, 1, 1, f) == 1, "read prg spawn");
+            EXPECT(prg_spawn[0] == R01_CELL_PACK(2, 0), "prg spawn cell matches default screen");
 
             EXPECT(fseek(f, 0, SEEK_END) == 0, "seek end");
             flen = ftell(f);

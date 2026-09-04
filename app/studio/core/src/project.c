@@ -206,6 +206,48 @@ int r01_world_set_grid(R01World *w, int cols, int rows) {
     return 0;
 }
 
+void r01_world_ensure_full_grid(R01World *w) {
+    R01Screen *old;
+    int n;
+    int i;
+    int def_c = -1;
+    int def_r = -1;
+    if (!w || (w->grid_cols == R01_GRID_MAX && w->grid_rows == R01_GRID_MAX)) {
+        return;
+    }
+    n = w->screen_count;
+    if (n < 1) {
+        r01_world_set_grid(w, R01_GRID_MAX, R01_GRID_MAX);
+        return;
+    }
+    if (w->default_screen >= 0 && w->default_screen < n && w->screens[w->default_screen].present) {
+        def_c = w->screens[w->default_screen].col;
+        def_r = w->screens[w->default_screen].row;
+    }
+    old = (R01Screen *)malloc(sizeof(R01Screen) * (size_t)n);
+    if (!old) {
+        return;
+    }
+    memcpy(old, w->screens, sizeof(R01Screen) * (size_t)n);
+    r01_world_set_grid(w, R01_GRID_MAX, R01_GRID_MAX);
+    for (i = 0; i < n; i++) {
+        R01Screen *s;
+        if (!old[i].present) {
+            continue;
+        }
+        s = r01_world_screen_at(w, old[i].col, old[i].row);
+        if (s) {
+            *s = old[i];
+        }
+    }
+    free(old);
+    if (def_c >= 0) {
+        w->default_screen = r01_world_screen_index(w, def_c, def_r);
+    } else {
+        r01_world_sync_default_screen(w);
+    }
+}
+
 void r01_other_screen_init(R01OtherScreen *s) {
     int c;
     if (!s) {
@@ -243,7 +285,7 @@ void r01_world_init_phase1(R01World *w) {
     w->player_entity = -1;
     w->bg0_active_screen = -1;
     r01_world_warps_init(w);
-    /* Full 8x8 map slots; default authored region is 3x3 present blank screens. */
+    /* Full 16x16 map slots; default authored region is 3x3 present blank screens. */
     r01_world_set_grid(w, R01_GRID_MAX, R01_GRID_MAX);
     for (row = 0; row < R01_DEFAULT_GRID; row++) {
         for (col = 0; col < R01_DEFAULT_GRID; col++) {
@@ -460,10 +502,14 @@ int r01_world_create_screen(R01World *w, int col, int row) {
     }
     if (w->grid_cols < R01_GRID_MAX || w->grid_rows < R01_GRID_MAX) {
         /* Expand to full map while preserving present screens. */
-        R01Screen old[R01_MAX_SCREENS];
+        R01Screen *old;
         int n = w->screen_count;
         int i;
-        memcpy(old, w->screens, sizeof(old));
+        old = (R01Screen *)malloc(sizeof(R01Screen) * (size_t)n);
+        if (!old) {
+            return -1;
+        }
+        memcpy(old, w->screens, sizeof(R01Screen) * (size_t)n);
         r01_world_set_grid(w, R01_GRID_MAX, R01_GRID_MAX);
         for (i = 0; i < n; i++) {
             if (!old[i].present) {
@@ -474,6 +520,7 @@ int r01_world_create_screen(R01World *w, int col, int row) {
                 *s = old[i];
             }
         }
+        free(old);
     }
     s = r01_world_screen_at(w, col, row);
     if (!s) {
@@ -678,7 +725,7 @@ int r01_project_import_png(R01Project *p, const char *path, char *err_buf, size_
     cols = (int)(width / (png_uint_32)R01_SCREEN_PX_W);
     rows = (int)(height / (png_uint_32)R01_SCREEN_PX_H);
     if (cols > R01_GRID_MAX || rows > R01_GRID_MAX) {
-        set_err(err_buf, err_cap, "png grid exceeds 8x8");
+        set_err(err_buf, err_cap, "png grid exceeds 16x16");
         goto fail;
     }
 
