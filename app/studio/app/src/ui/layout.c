@@ -1027,16 +1027,17 @@ void sound_editor_layout(const UiState *ui, SoundEditorLayout *lo) {
     }
     memset(lo, 0, sizeof(*lo));
     lo->content_y = chrome;
-    tab_w = label_width("BGM");
-    if (label_width("SFX") > tab_w) {
-        tab_w = label_width("SFX");
+    /* Compact text-sized tabs, flush left (same edge as Graphics|Audio). */
+    tab_w = font_text_width("BGM");
+    if (font_text_width("SFX") > tab_w) {
+        tab_w = font_text_width("SFX");
     }
-    tab_w += UI_UNIT * 2;
-    if (tab_w < 40) {
-        tab_w = 40;
+    tab_w += UI_UNIT;
+    if (tab_w < 1) {
+        tab_w = 1;
     }
     lo->plane_tab_w = tab_w;
-    lo->plane_tabs_x = UI_UNIT;
+    lo->plane_tabs_x = 0;
     lo->plane_tabs_y = chrome;
     lo->track_list_y = chrome + UI_BTN_H + UI_UNIT;
     lo->track_row_h = UI_SPRITE_ROW_H;

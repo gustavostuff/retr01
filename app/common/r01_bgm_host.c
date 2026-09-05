@@ -8,6 +8,8 @@
 #define R01_BGM_AUDIO_RATE 44100
 #define R01_BGM_TEMPO_BPM 140
 #define R01_BGM_STEPS_PER_BEAT 4
+/* Small callback buffer: 256 @ 44.1kHz ≈ 5.8ms (1024 was ~23ms and felt laggy). */
+#define R01_BGM_AUDIO_SAMPLES 256
 /* Master host level: BGM and SFX share one gain (full softsynth / 4). */
 #define R01_HOST_MIX_GAIN 0.25f
 /* Peak matches ~pulse voice in r01_nes_synth so SFX ≈ BGM before master gain. */
@@ -202,16 +204,18 @@ int r01_bgm_host_init(void) {
     want.freq = R01_BGM_AUDIO_RATE;
     want.format = AUDIO_S16SYS;
     want.channels = 1;
-    want.samples = 1024;
+    want.samples = R01_BGM_AUDIO_SAMPLES;
     want.callback = bgm_audio_cb;
     want.userdata = &g_bgm;
-    g_bgm.dev = SDL_OpenAudioDevice(NULL, 0, &want, &have,
-                                    SDL_AUDIO_ALLOW_FREQUENCY_CHANGE | SDL_AUDIO_ALLOW_SAMPLES_CHANGE);
+    /* Keep requested buffer size — ALLOW_SAMPLES_CHANGE often inflates latency. */
+    g_bgm.dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
     if (!g_bgm.dev) {
         fprintf(stderr, "SDL_OpenAudioDevice: %s\n", SDL_GetError());
         return -1;
     }
     g_bgm.sample_rate = have.freq > 0 ? have.freq : R01_BGM_AUDIO_RATE;
+    fprintf(stderr, "r01_bgm_host: audio %d Hz, %u samples (%.1f ms)\n", g_bgm.sample_rate,
+            (unsigned)have.samples, (1000.0 * (double)have.samples) / (double)g_bgm.sample_rate);
     r01_nes_synth_init(&g_bgm.synth, g_bgm.sample_rate);
     g_bgm.samples_per_step = (g_bgm.sample_rate * 60) / (R01_BGM_TEMPO_BPM * R01_BGM_STEPS_PER_BEAT);
     if (g_bgm.samples_per_step < 256) {
