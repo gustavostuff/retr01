@@ -1,5 +1,6 @@
 #include "ui/ui.h"
 #include "ui/internal.h"
+#include "ui/sound/bgm_edit.h"
 #include "font/font.h"
 
 #include "retr01_studio/cart.h"
@@ -39,17 +40,35 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
     }
     if (e->type == SDL_MOUSEWHEEL && ui->app_mode == UI_APP_SOUNDS &&
         ui->sound.plane == UI_SOUND_PLANE_BGM) {
-        int max_scroll = UI_SOUND_STEPS - UI_SOUND_VISIBLE_ROWS;
-        if (max_scroll < 0) {
-            max_scroll = 0;
+        SoundEditorLayout lo;
+        int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
+        int mx = lx;
+        int my = ly;
+        int ch, region, handle;
+        sound_editor_layout(ui, &lo);
+        /* Prefer live coords; fall back to last motion position. */
+        if (mx == 0 && my == 0 && (ui->mouse_x || ui->mouse_y)) {
+            mx = ui->mouse_x;
+            my = ui->mouse_y;
         }
-        ui->sound.scroll -= e->wheel.y;
-        if (ui->sound.scroll < 0) {
-            ui->sound.scroll = 0;
+        ui->mouse_x = mx;
+        ui->mouse_y = my;
+        /* Pitch only when wheel is over the selected strip; otherwise always scroll. */
+        if (ui->sound.sel_kind == UI_SOUND_SEL_REGION &&
+            sound_region_hit(ui, mx, my, &ch, &region, &handle) && handle >= 1 &&
+            ch == ui->sound.sel_ch && region == ui->sound.sel_region) {
+            int track = ui->sound.track_idx;
+            if (track < 0 || track >= ui->sound.track_count) {
+                track = 0;
+            }
+            if (ch >= 0 && ch < UI_SOUND_BGM_CH && region >= 0 &&
+                region < ui->sound.region_count[track][ch]) {
+                ui_bgm_nudge_region(&ui->sound.region[track][ch][region], ch, e->wheel.y > 0 ? 1 : -1, shift);
+                return 1;
+            }
         }
-        if (ui->sound.scroll > max_scroll) {
-            ui->sound.scroll = max_scroll;
-        }
+        ui->sound.scroll_x -= e->wheel.y; /* down (y<0) → scroll right */
+        ui_bgm_clamp_scroll(ui, lo.visible_ticks);
         return 1;
     }
     if (e->type == SDL_MOUSEWHEEL &&
@@ -191,11 +210,22 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 return 1;
             }
             if (e->key.keysym.sym == SDLK_c) {
+                if (ui->app_mode == UI_APP_SOUNDS && ui->sound.plane == UI_SOUND_PLANE_BGM) {
+                    ui_bgm_copy_sel(ui);
+                    if (ui->sound.clip_valid) {
+                        ui_toast(ui, "copied", 0);
+                    }
+                    return 1;
+                }
                 if (ui_world_screen_copy(ui)) {
                     return 1;
                 }
             }
             if (e->key.keysym.sym == SDLK_v) {
+                if (ui->app_mode == UI_APP_SOUNDS && ui->sound.plane == UI_SOUND_PLANE_BGM) {
+                    ui_bgm_paste_sel(ui);
+                    return 1;
+                }
                 if (ui_world_screen_paste(ui)) {
                     return 1;
                 }
@@ -273,6 +303,28 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             return 1;
         }
+        if (e->key.keysym.sym == SDLK_p && ui->app_mode == UI_APP_SOUNDS &&
+            ui->sound.plane == UI_SOUND_PLANE_BGM) {
+            ui_sound_play_pause(ui);
+            return 1;
+        }
+        if ((e->key.keysym.sym == SDLK_DELETE || e->key.keysym.sym == SDLK_BACKSPACE) &&
+            ui->app_mode == UI_APP_SOUNDS && ui->sound.plane == UI_SOUND_PLANE_BGM &&
+            ui->sound.sel_kind == UI_SOUND_SEL_REGION) {
+            int track = ui->sound.track_idx;
+            int ch = ui->sound.sel_ch;
+            int region = ui->sound.sel_region;
+            if (track < 0 || track >= ui->sound.track_count) {
+                track = 0;
+            }
+            if (ch >= 0 && ch < UI_SOUND_BGM_CH && region >= 0 &&
+                region < ui->sound.region_count[track][ch]) {
+                ui_bgm_remove_region(ui, track, ch, region);
+                ui->sound.sel_kind = UI_SOUND_SEL_NONE;
+                ui->sound.sel_region = -1;
+            }
+            return 1;
+        }
         /* Face buttons: Sim map (P1 G/H) is sampled each frame in ui_tick. */
     }
     if (e->type == SDL_KEYUP) {
@@ -323,7 +375,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
 
         if (ui->app_mode == UI_APP_SOUNDS) {
             if (e->button.button == SDL_BUTTON_LEFT) {
-                int idx, row, col, ch;
+                int idx, ch, tick, region, handle;
                 ui->arm_kind = UI_ARM_NONE;
                 if (sound_plane_tab_hit(ui, lx, ly, &idx)) {
                     ui->arm_kind = UI_ARM_SOUND_PLANE;
@@ -333,6 +385,14 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 if (ui->sound.plane == UI_SOUND_PLANE_BGM) {
                     if (sound_play_hit(ui, lx, ly)) {
                         ui->arm_kind = UI_ARM_SOUND_PLAY;
+                        return 1;
+                    }
+                    if (sound_pause_hit(ui, lx, ly)) {
+                        ui->arm_kind = UI_ARM_SOUND_PAUSE;
+                        return 1;
+                    }
+                    if (sound_stop_hit(ui, lx, ly)) {
+                        ui->arm_kind = UI_ARM_SOUND_STOP;
                         return 1;
                     }
                     if (sound_add_hit(ui, lx, ly)) {
@@ -349,12 +409,50 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                         ui->arm_a = ch;
                         return 1;
                     }
-                    if (sound_grid_hit(ui, lx, ly, &row, &col)) {
-                        if (row >= 0 && row < UI_SOUND_STEPS) {
-                            ui->sound.sel_row = row;
-                            ui->sound.sel_col = col;
-                            ui->sound.channel = col;
+                    handle = sound_region_hit(ui, lx, ly, &ch, &region, NULL);
+                    if (handle == 2 || handle == 3) {
+                        int track = ui->sound.track_idx;
+                        const UiBgmRegion *rg;
+                        if (track < 0 || track >= ui->sound.track_count) {
+                            track = 0;
                         }
+                        rg = &ui->sound.region[track][ch][region];
+                        ui->sound.drag = (handle == 2) ? UI_SOUND_DRAG_RESIZE_L : UI_SOUND_DRAG_RESIZE_R;
+                        ui->sound.drag_ch = ch;
+                        ui->sound.drag_region = region;
+                        ui->sound.drag_origin = rg->start;
+                        ui->sound.drag_start0 = rg->start;
+                        ui->sound.drag_len0 = rg->len;
+                        ui->sound.drag_mx0 = lx;
+                        ui->sound.sel_kind = UI_SOUND_SEL_REGION;
+                        ui->sound.sel_ch = ch;
+                        ui->sound.sel_region = region;
+                        return 1;
+                    }
+                    if (handle == 1) {
+                        /* Toggle: re-click selected strip clears selection. */
+                        if (ui->sound.sel_kind == UI_SOUND_SEL_REGION && ui->sound.sel_ch == ch &&
+                            ui->sound.sel_region == region) {
+                            ui->sound.sel_kind = UI_SOUND_SEL_NONE;
+                        } else {
+                            ui->sound.sel_kind = UI_SOUND_SEL_REGION;
+                            ui->sound.sel_ch = ch;
+                            ui->sound.sel_region = region;
+                        }
+                        return 1;
+                    }
+                    if (sound_timeline_hit(ui, lx, ly, &ch, &tick)) {
+                        ui->sound.drag = UI_SOUND_DRAG_PAINT;
+                        ui->sound.drag_ch = ch;
+                        ui->sound.drag_origin = tick;
+                        ui->sound.drag_region = -1;
+                        ui->sound.drag_start0 = tick;
+                        ui->sound.drag_len0 = 0;
+                        ui->sound.drag_mx0 = lx;
+                        /* Empty click clears strip selection; pivot kept for paste. */
+                        ui->sound.sel_kind = UI_SOUND_SEL_EMPTY;
+                        ui->sound.sel_ch = ch;
+                        ui->sound.sel_tick = tick;
                         return 1;
                     }
                 }
@@ -613,6 +711,25 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         ui->last_paint_ty = -1;
         ui->sel_drag = 0;
         ui->inst_drag = 0;
+        if (ui->sound.drag != UI_SOUND_DRAG_NONE) {
+            int drag = ui->sound.drag;
+            ui->sound.drag = UI_SOUND_DRAG_NONE;
+            if (drag == UI_SOUND_DRAG_PAINT && ui->sound.drag_len0 == 0) {
+                /* Click empty: clear strip selection; keep empty paste pivot. */
+                ui->sound.sel_kind = UI_SOUND_SEL_EMPTY;
+                ui->sound.sel_ch = ui->sound.drag_ch;
+                ui->sound.sel_tick = ui->sound.drag_origin;
+            } else if (drag == UI_SOUND_DRAG_PAINT && ui->sound.drag_region >= 0) {
+                ui->sound.sel_kind = UI_SOUND_SEL_REGION;
+                ui->sound.sel_ch = ui->sound.drag_ch;
+                ui->sound.sel_region = ui->sound.drag_region;
+            } else if (drag == UI_SOUND_DRAG_RESIZE_L || drag == UI_SOUND_DRAG_RESIZE_R) {
+                ui->sound.sel_kind = UI_SOUND_SEL_REGION;
+                ui->sound.sel_ch = ui->sound.drag_ch;
+                ui->sound.sel_region = ui->sound.drag_region;
+            }
+            return 1;
+        }
         if (ui->arm_kind != UI_ARM_NONE) {
             int kind = ui->arm_kind;
             int a = ui->arm_a;
@@ -665,12 +782,33 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             if (kind == UI_ARM_SOUND_CH) {
                 int ch;
                 if (sound_channel_hit(ui, lx, ly, &ch) && ch == a) {
-                    ui->sound.channel = a;
+                    ui->sound.solo_ch = a;
+                    /* Re-apply isolation if preview is running. */
+                    if (ui->sound.playing || ui->sound.paused) {
+                        int was_paused = ui->sound.paused;
+                        float pos = ui->sound.play_pos;
+                        ui_sound_play_stop(ui);
+                        ui_sound_play_start(ui);
+                        if (was_paused) {
+                            ui_sound_play_pause(ui);
+                            if (pos >= 0.f) {
+                                ui->sound.play_pos = pos;
+                            }
+                        }
+                    }
                     return 1;
                 }
             }
             if (kind == UI_ARM_SOUND_PLAY && sound_play_hit(ui, lx, ly)) {
-                ui_sound_play_toggle(ui);
+                ui_sound_play_start(ui);
+                return 1;
+            }
+            if (kind == UI_ARM_SOUND_PAUSE && sound_pause_hit(ui, lx, ly)) {
+                ui_sound_play_pause(ui);
+                return 1;
+            }
+            if (kind == UI_ARM_SOUND_STOP && sound_stop_hit(ui, lx, ly)) {
+                ui_sound_play_stop(ui);
                 return 1;
             }
             if (kind == UI_ARM_PLAY && ui->app_mode == UI_APP_GRAPHICS && play_button_hit(ui, lx, ly)) {
@@ -831,6 +969,97 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             ui->catalog_drag.active = 0;
             return 1;
         }
+    }
+
+    if (e->type == SDL_MOUSEMOTION && ui->app_mode == UI_APP_SOUNDS && ui->sound.plane == UI_SOUND_PLANE_BGM &&
+        ui->sound.drag != UI_SOUND_DRAG_NONE && (e->motion.state & SDL_BUTTON_LMASK)) {
+        int ch, tick;
+        int track = ui->sound.track_idx;
+        if (track < 0 || track >= ui->sound.track_count) {
+            track = 0;
+        }
+        if (!sound_timeline_hit(ui, lx, ly, &ch, &tick)) {
+            SoundEditorLayout lo;
+            sound_editor_layout(ui, &lo);
+            if (point_in_rect(lx, ly, lo.timeline_x - 64, lo.timeline_y, lo.timeline_w + 128, lo.timeline_h)) {
+                tick = ui->sound.scroll_x + (lx - lo.timeline_x) / lo.px_per_tick;
+                if (tick < 0) {
+                    tick = 0;
+                }
+                if (tick >= UI_SOUND_STEPS_MAX) {
+                    tick = UI_SOUND_STEPS_MAX - 1;
+                }
+                ch = ui->sound.drag_ch;
+            } else {
+                return 1;
+            }
+        }
+        if (ui->sound.drag == UI_SOUND_DRAG_PAINT) {
+            int start = ui->sound.drag_origin;
+            int end = tick;
+            int len;
+            int dx;
+            UiBgmRegion rg;
+            dx = lx - ui->sound.drag_mx0;
+            if (dx < 0) {
+                dx = -dx;
+            }
+            /* Ignore tiny jitter so a click selects empty pivot. */
+            if (ui->sound.drag_len0 == 0 && tick == ui->sound.drag_origin && dx < UI_SOUND_PX_PER_TICK / 2) {
+                return 1;
+            }
+            if (end < start) {
+                int tmp = start;
+                start = end;
+                end = tmp;
+            }
+            len = end - start + 1;
+            if (len < 1) {
+                len = 1;
+            }
+            memset(&rg, 0, sizeof(rg));
+            rg.start = start;
+            rg.len = len;
+            ui_bgm_default_tok(ui->sound.drag_ch, rg.tok, &rg.midi);
+            if (ui->sound.drag_region >= 0) {
+                ui_bgm_remove_region(ui, track, ui->sound.drag_ch, ui->sound.drag_region);
+                ui->sound.drag_region = -1;
+            }
+            ui->sound.drag_region = ui_bgm_place_region(ui, track, ui->sound.drag_ch, &rg);
+            ui->sound.drag_len0 = len;
+            ui->sound.sel_kind = UI_SOUND_SEL_REGION;
+            ui->sound.sel_ch = ui->sound.drag_ch;
+            ui->sound.sel_region = ui->sound.drag_region;
+            return 1;
+        }
+        if (ui->sound.drag == UI_SOUND_DRAG_RESIZE_L || ui->sound.drag == UI_SOUND_DRAG_RESIZE_R) {
+            int start = ui->sound.drag_start0;
+            int end = ui->sound.drag_start0 + ui->sound.drag_len0;
+            int new_start, new_len, idx;
+            if (ui->sound.drag == UI_SOUND_DRAG_RESIZE_L) {
+                new_start = tick;
+                if (new_start > end - 1) {
+                    new_start = end - 1;
+                }
+                if (new_start < 0) {
+                    new_start = 0;
+                }
+                new_len = end - new_start;
+            } else {
+                new_start = start;
+                new_len = tick - start + 1;
+                if (new_len < 1) {
+                    new_len = 1;
+                }
+            }
+            idx = ui_bgm_resize_region(ui, track, ui->sound.drag_ch, ui->sound.drag_region, new_start, new_len);
+            if (idx >= 0) {
+                ui->sound.drag_region = idx;
+                ui->sound.sel_region = idx;
+            }
+            return 1;
+        }
+        return 1;
     }
 
     if (e->type == SDL_MOUSEMOTION && !ui->play.active && !ui->tile_edit.open && !ui->sprite_edit.open &&

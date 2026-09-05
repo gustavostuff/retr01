@@ -1,5 +1,6 @@
 #include "ui/ui.h"
 #include "ui/internal.h"
+#include "ui/sound/bgm_edit.h"
 #include "font/font.h"
 
 #include "retr01_studio/cart.h"
@@ -180,15 +181,10 @@ void ui_export(UiState *ui) {
     /* Host BGM sidecar for emu / Studio Play (Track 1). */
     {
         char path[R01_PATH_MAX];
-        char cells[32][5][5];
+        char cells[R01_BGM_STEPS][R01_BGM_CH][R01_BGM_TOKEN];
         FILE *f;
-        int r, c;
-        memset(cells, 0, sizeof(cells));
-        for (r = 0; r < 32 && r < UI_SOUND_STEPS; r++) {
-            for (c = 0; c < 5 && c < UI_SOUND_BGM_CH; c++) {
-                memcpy(cells[r][c], ui->sound.cell[0][r][c], 5);
-            }
-        }
+        int steps;
+        steps = ui_bgm_flatten(ui, 0, cells, 0);
         if (r01_path_resolve(R01_OUTPUT_DIR "/data/bgm_track1.bin", path, sizeof(path)) == 0) {
             char *slash = strrchr(path, '/');
             if (slash) {
@@ -198,7 +194,7 @@ void ui_export(UiState *ui) {
             }
             f = fopen(path, "wb");
             if (f) {
-                fwrite(cells, 1, sizeof(cells), f);
+                fwrite(cells, 1, (size_t)steps * R01_BGM_CH * R01_BGM_TOKEN, f);
                 fclose(f);
             }
         }

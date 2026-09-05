@@ -14,6 +14,7 @@
 
 SDL_Cursor *g_cursor_arrow;
 SDL_Cursor *g_cursor_hand;
+SDL_Cursor *g_cursor_sizewe;
 
 int ui_init(UiState *ui) {
     if (!ui) {
@@ -25,6 +26,7 @@ int ui_init(UiState *ui) {
     }
     g_cursor_arrow = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
     g_cursor_hand = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
+    g_cursor_sizewe = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEWE);
     {
         static const char *const radio_paths[] = {
             R01_STUDIO_ASSETS_DIR "/radio_button.png",
@@ -202,6 +204,10 @@ void ui_shutdown(UiState *ui) {
     if (g_cursor_hand) {
         SDL_FreeCursor(g_cursor_hand);
         g_cursor_hand = NULL;
+    }
+    if (g_cursor_sizewe) {
+        SDL_FreeCursor(g_cursor_sizewe);
+        g_cursor_sizewe = NULL;
     }
     font_shutdown();
 }

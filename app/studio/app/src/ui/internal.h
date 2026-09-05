@@ -46,11 +46,17 @@ typedef struct SoundEditorLayout {
     int track_list_y, track_row_h;
     int add_x, add_y, add_w;
     int hdr_y;
-    int col_hdr_y;
-    int grid_x, grid_y, grid_w, grid_h;
-    int cell_w, row_h;
+    int lane_label_x, lane_label_w;
+    int timeline_x, timeline_y, timeline_w, timeline_h;
+    int lane_h, lane_gap;
+    int px_per_tick;
+    int visible_ticks;
+    int ruler_h;
+    int minimap_y, minimap_h;
     int insp_x, insp_y;
     int play_x, play_y, play_w;
+    int pause_x, pause_y, pause_w;
+    int stop_x, stop_y, stop_w;
     int ch_radio_y0;
 } SoundEditorLayout;
 
@@ -143,6 +149,7 @@ extern int g_spr_bank_btn_h;
 
 extern SDL_Cursor *g_cursor_arrow;
 extern SDL_Cursor *g_cursor_hand;
+extern SDL_Cursor *g_cursor_sizewe;
 
 /* ui/primitives.c */
 int ui_load_png_rgba(const char *path, uint8_t **out_px, int *out_w, int *out_h);
@@ -207,14 +214,19 @@ void sound_plane_tabs_prepare(const UiState *ui, UiTabsLayout *out);
 int sound_plane_tab_hit(const UiState *ui, int lx, int ly, int *out_idx);
 int sound_track_hit(const UiState *ui, int lx, int ly, int *out_idx);
 int sound_add_hit(const UiState *ui, int lx, int ly);
-int sound_grid_hit(const UiState *ui, int lx, int ly, int *out_row, int *out_col);
+int sound_timeline_hit(const UiState *ui, int lx, int ly, int *out_ch, int *out_tick);
+/* hit: 0 miss, 1 body, 2 left handle, 3 right handle; out_region set on hit */
+int sound_region_hit(const UiState *ui, int lx, int ly, int *out_ch, int *out_region, int *out_handle);
 int sound_channel_hit(const UiState *ui, int lx, int ly, int *out_ch);
 int sound_play_hit(const UiState *ui, int lx, int ly);
+int sound_pause_hit(const UiState *ui, int lx, int ly);
+int sound_stop_hit(const UiState *ui, int lx, int ly);
 void ui_sound_init(UiState *ui);
 int ui_sound_audio_init(void);
 void ui_sound_audio_shutdown(void);
 void ui_sound_play_start(UiState *ui);
 void ui_sound_play_stop(UiState *ui);
+void ui_sound_play_pause(UiState *ui);
 void ui_sound_play_toggle(UiState *ui);
 void ui_sound_play_poll(UiState *ui);
 int ui_sound_play_step(void);

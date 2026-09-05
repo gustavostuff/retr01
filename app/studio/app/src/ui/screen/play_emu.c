@@ -1,5 +1,6 @@
 #include "ui/ui.h"
 #include "ui/internal.h"
+#include "ui/sound/bgm_edit.h"
 #include "font/font.h"
 
 #include "retr01_studio/cart.h"
@@ -50,17 +51,11 @@ static void ui_write_bgm_track1_bin(const UiState *ui) {
     char path[R01_PATH_MAX];
     char cells[R01_BGM_STEPS][R01_BGM_CH][R01_BGM_TOKEN];
     FILE *f;
-    int r, c, t;
+    int steps;
     if (!ui) {
         return;
     }
-    t = 0;
-    memset(cells, 0, sizeof(cells));
-    for (r = 0; r < R01_BGM_STEPS && r < UI_SOUND_STEPS; r++) {
-        for (c = 0; c < R01_BGM_CH && c < UI_SOUND_BGM_CH; c++) {
-            memcpy(cells[r][c], ui->sound.cell[t][r][c], R01_BGM_TOKEN);
-        }
-    }
+    steps = ui_bgm_flatten(ui, 0, cells, 0);
     if (r01_path_resolve(R01_OUTPUT_DIR "/data/bgm_track1.bin", path, sizeof(path)) != 0) {
         snprintf(path, sizeof(path), "%s", R01_OUTPUT_DIR "/data/bgm_track1.bin");
     }
@@ -80,7 +75,7 @@ static void ui_write_bgm_track1_bin(const UiState *ui) {
     if (!f) {
         return;
     }
-    fwrite(cells, 1, sizeof(cells), f);
+    fwrite(cells, 1, (size_t)steps * R01_BGM_CH * R01_BGM_TOKEN, f);
     fclose(f);
 }
 

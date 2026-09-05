@@ -207,6 +207,8 @@ int app_shell_handle_event(AppShell *app, const SDL_Event *e) {
     } else if (e->type == SDL_MOUSEBUTTONDOWN || e->type == SDL_MOUSEBUTTONUP) {
         wx = e->button.x;
         wy = e->button.y;
+    } else if (e->type == SDL_MOUSEWHEEL) {
+        SDL_GetMouseState(&wx, &wy);
     }
     logic_from_window(app, wx, wy, &lx, &ly);
     rc = ui_handle_event(&app->ui, e, lx, ly);

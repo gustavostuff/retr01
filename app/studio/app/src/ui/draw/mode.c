@@ -50,6 +50,7 @@ void draw_ctrl_sidebar(UiState *ui, SDL_Renderer *r) {
 
 void ui_update_cursor(const UiState *ui) {
     int hand = 0;
+    int sizewe = 0;
     int lx = ui->mouse_x;
     int ly = ui->mouse_y;
 
@@ -98,9 +99,18 @@ void ui_update_cursor(const UiState *ui) {
     } else if (ui->menu.open) {
         hand = menu_hit(ui, lx, ly, NULL, NULL);
     } else if (ui->app_mode == UI_APP_SOUNDS) {
-        hand = app_mode_tab_hit(ui, lx, ly, NULL) || sound_plane_tab_hit(ui, lx, ly, NULL) ||
-               sound_track_hit(ui, lx, ly, NULL) || sound_add_hit(ui, lx, ly) || sound_play_hit(ui, lx, ly) ||
-               sound_channel_hit(ui, lx, ly, NULL) || sound_grid_hit(ui, lx, ly, NULL, NULL);
+        int handle = 0;
+        if (ui->sound.plane == UI_SOUND_PLANE_BGM) {
+            int hit = sound_region_hit(ui, lx, ly, NULL, NULL, &handle);
+            if (hit == 2 || hit == 3 || ui->sound.drag == UI_SOUND_DRAG_RESIZE_L ||
+                ui->sound.drag == UI_SOUND_DRAG_RESIZE_R) {
+                sizewe = 1;
+            }
+        }
+        hand = !sizewe && (app_mode_tab_hit(ui, lx, ly, NULL) || sound_plane_tab_hit(ui, lx, ly, NULL) ||
+                           sound_track_hit(ui, lx, ly, NULL) || sound_add_hit(ui, lx, ly) ||
+                           sound_play_hit(ui, lx, ly) || sound_pause_hit(ui, lx, ly) || sound_stop_hit(ui, lx, ly) ||
+                           sound_channel_hit(ui, lx, ly, NULL) || sound_timeline_hit(ui, lx, ly, NULL, NULL));
     } else {
         hand = app_mode_tab_hit(ui, lx, ly, NULL) || play_button_hit(ui, lx, ly) ||
                accordion_header_hit(ui, lx, ly, NULL) || world_btn_hit(ui, lx, ly, NULL) || world_sub_hit(ui, lx, ly) ||
@@ -113,5 +123,9 @@ void ui_update_cursor(const UiState *ui) {
                (!ui->play.active && (screen_mode_hit(ui, lx, ly, NULL) || screen_layer_hit(ui, lx, ly, NULL) ||
                                      screen_hit(ui, lx, ly, NULL, NULL)));
     }
-    SDL_SetCursor(hand && g_cursor_hand ? g_cursor_hand : g_cursor_arrow);
+    if (sizewe && g_cursor_sizewe) {
+        SDL_SetCursor(g_cursor_sizewe);
+    } else {
+        SDL_SetCursor(hand && g_cursor_hand ? g_cursor_hand : g_cursor_arrow);
+    }
 }

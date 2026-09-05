@@ -4,6 +4,7 @@
 #include "retr01_studio/metasprites.h"
 #include "retr01_studio/project.h"
 #include "retr01_emu/machine.h"
+#include "r01_bgm_host.h"
 
 #include <SDL.h>
 
@@ -82,6 +83,8 @@
 #define UI_ARM_SOUND_ADD 17
 #define UI_ARM_SOUND_CH 18
 #define UI_ARM_SOUND_PLAY 19
+#define UI_ARM_SOUND_PAUSE 20
+#define UI_ARM_SOUND_STOP 21
 
 #define UI_APP_GRAPHICS 0
 #define UI_APP_SOUNDS 1 /* Audio tab (historical enum name) */
@@ -90,11 +93,27 @@
 #define UI_SOUND_PLANE_BGM 0
 #define UI_SOUND_PLANE_SFX 1
 #define UI_SOUND_BGM_CH 5 /* Pulse1 Pulse2 Tri Noise DPCM */
-#define UI_SOUND_STEPS 32
+#define UI_SOUND_SOLO_ALL (-1) /* isolate radios: hear all channels */
+#define UI_SOUND_SNAP_DIV R01_BGM_NOTE_DIV
+#define UI_SOUND_STEPS_MAX R01_BGM_STEPS
 #define UI_SOUND_TRACKS_MAX 8
-#define UI_SOUND_CELL_W 40
-#define UI_SOUND_ROW_H 14
-#define UI_SOUND_VISIBLE_ROWS 16
+#define UI_SOUND_REGIONS_MAX 128
+#define UI_SOUND_CLIP_MAX 32
+#define UI_SOUND_PX_PER_TICK 24
+#define UI_SOUND_LANE_H 28
+#define UI_SOUND_LANE_GAP 2
+#define UI_SOUND_HANDLE_W 4
+#define UI_SOUND_MINIMAP_H 10
+#define UI_SOUND_SCROLL_PAD 4 /* unused for max; kept for content padding hints */
+
+#define UI_SOUND_SEL_NONE 0
+#define UI_SOUND_SEL_REGION 1
+#define UI_SOUND_SEL_EMPTY 2
+
+#define UI_SOUND_DRAG_NONE 0
+#define UI_SOUND_DRAG_PAINT 1
+#define UI_SOUND_DRAG_RESIZE_L 2
+#define UI_SOUND_DRAG_RESIZE_R 3
 
 #define UI_ACC_NONE (-1)
 #define UI_ACC_WORLDS 0
@@ -304,19 +323,42 @@ typedef struct UiCatalogDrag {
     int off_y;
 } UiCatalogDrag;
 
-/* UI-only BGM shell (not project JSON). Cells are display tokens, not cart bytes. */
+/* Painted note strip on a channel lane (UI source of truth; flattened for host). */
+typedef struct UiBgmRegion {
+    int start;   /* ticks */
+    int len;     /* ticks, >= 1 */
+    int midi;    /* melodic MIDI; noise period 0..15; DPCM kind stub */
+    char tok[5]; /* host token */
+} UiBgmRegion;
+
+/* UI-only BGM shell (not project JSON). */
 typedef struct UiSoundEdit {
     int plane; /* UI_SOUND_PLANE_BGM or SFX */
     int track_idx;
     int track_count;
     char track_name[UI_SOUND_TRACKS_MAX][24];
-    int channel; /* 0..UI_SOUND_BGM_CH-1 */
-    int scroll;  /* first visible step row */
-    int sel_row;
-    int sel_col;
-    int playing;  /* BGM softsynth preview */
-    int play_row; /* -1 idle; else current step */
-    char cell[UI_SOUND_TRACKS_MAX][UI_SOUND_STEPS][UI_SOUND_BGM_CH][5];
+    int solo_ch; /* UI_SOUND_SOLO_ALL, or 0..UI_SOUND_BGM_CH-1 to isolate */
+    int scroll_x; /* first visible tick */
+    int sel_kind; /* UI_SOUND_SEL_* */
+    int sel_ch;
+    int sel_region; /* index when SEL_REGION */
+    int sel_tick;   /* empty pivot tick when SEL_EMPTY */
+    int playing;    /* host advancing */
+    int paused;     /* halted but playhead retained */
+    float play_pos; /* fractional tick; -1 idle */
+    int drag;       /* UI_SOUND_DRAG_* */
+    int drag_ch;
+    int drag_region;
+    int drag_origin;
+    int drag_start0;
+    int drag_len0;
+    int drag_mx0; /* mouse x at paint/resize down (click vs drag) */
+    int clip_valid;
+    int clip_ch;
+    int clip_count;
+    UiBgmRegion clip[UI_SOUND_CLIP_MAX];
+    int region_count[UI_SOUND_TRACKS_MAX][UI_SOUND_BGM_CH];
+    UiBgmRegion region[UI_SOUND_TRACKS_MAX][UI_SOUND_BGM_CH][UI_SOUND_REGIONS_MAX];
 } UiSoundEdit;
 
 /* Single active text field (web-like caret / selection / scroll). */

@@ -18,11 +18,11 @@ There is **no** Studio-only host Play path. Preview always goes through export t
 ```text
 +---------------- Graphics | Audio ------------------------------------------+
 | SIDEBAR (128) | PREVIEW (centered in remaining) | CTRL (128)               |  Graphics
-| Tracks list   | BGM tracker grid (ch 1-5)       | Channel inspector        |  Audio
+| Tracks list   | BGM horizontal timeline (5 lanes) | Play/Pause/Stop + ch |  Audio
 +--------------------------------------------------------------------------------+
 ```
 
-Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Present scale **Ctrl+1** / **Ctrl+2** (1x / 2x window). **8px** grid, dark gray chrome. Top **Graphics | Audio** app tabs (`UI_APP_CHROME_H`), flush left. Buttons/labels **16px** tall. Proggy Tiny (`assets/proggy-tiny.ttf`). Screen / Play previews scale with canvas (sharp nearest). Sidebar accordion: per-section expand/collapse (`UI_ACCORDION_ALWAYS_EXPANDED`), **250ms** open/close animation (`UI_ACCORDION_ANIM_MS`). **Audio** tab: compact left-aligned **BGM | SFX** plane tabs, BGM tracker shell, and **Play/Stop** via a first-party NES-like softsynth (pulse/tri/noise/DPCM stub over SDL2 audio). Not cart-protocol playback. Graphics **Play** remains emu-only (host BGM + P1 X/Y SFX). **Sim is not involved** and does not play host audio.
+Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Present scale **Ctrl+1** / **Ctrl+2** (1x / 2x window). **8px** grid, dark gray chrome. Top **Graphics | Audio** app tabs (`UI_APP_CHROME_H`), flush left. Buttons/labels **16px** tall. Proggy Tiny (`assets/proggy-tiny.ttf`). Screen / Play previews scale with canvas (sharp nearest). Sidebar accordion: per-section expand/collapse (`UI_ACCORDION_ALWAYS_EXPANDED`), **250ms** open/close animation (`UI_ACCORDION_ANIM_MS`). **Audio** tab: compact left-aligned **BGM | SFX** plane tabs; BGM is a horizontal multi-lane timeline (paint/resize note strips on a quarter-note snap grid via `R01_BGM_NOTE_DIV` / `UI_SOUND_SNAP_DIV`, wheel to change pitch, Ctrl+C/V copy/paste, Play/Pause/Stop playhead). Preview uses a first-party NES-like softsynth (pulse/tri/noise/DPCM stub over SDL2 audio). Not cart-protocol playback. Graphics **Play** remains emu-only (host BGM + P1 X/Y SFX). **Sim is not involved** and does not play host audio.
 
 | Control | Behavior |
 |---------|----------|
