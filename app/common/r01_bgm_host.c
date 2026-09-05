@@ -10,7 +10,7 @@
 /* Small callback buffer: 256 @ 44.1kHz ≈ 5.8ms (1024 was ~23ms and felt laggy). */
 #define R01_BGM_AUDIO_SAMPLES 256
 /* Master host level (full softsynth / 4). */
-#define R01_HOST_MIX_GAIN 0.25f
+#define R01_HOST_MIX_GAIN 1.0f
 /* Per-track relative volume vs master. Hardcoded for all tracks until UI exists. */
 #define R01_BGM_TRACK_VOL_DEFAULT 0.5f
 /* Peak matches ~pulse voice in r01_nes_synth so SFX ≈ BGM before master gain. */
