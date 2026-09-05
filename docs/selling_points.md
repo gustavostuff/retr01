@@ -32,13 +32,40 @@ On NES, a large share of PRG and every frame went to **making the picture move**
 | Playfield | 256x240, nametable tricks | **128x120** logical (yes, deliberate chunky pixels), **2x2** live VRAM window (BG1) |
 | Scroll | Software nametable updates, often VBlank-only | Hardware scroll latches + **480 B** MAP stream into VRAM |
 | Multi-screen worlds | Bank switching, manual nametable layout | Sparse **16x16** world grid, **48** BG1 screens/world in cart MAP |
-| Second BG | Mapper tricks / limited layers | Structured **BG0** (1..8 screens), show-through under BG1 color **0**, proportional scroll |
+| Second BG / parallax | Mapper tricks, split-screen hacks, fake “depth” | **True second layer (BG0)** — authored map, live 2x2 window, compositor show-through |
 | Sprites | 64 OAM, **8** per scanline (typical pain point) | 64 OAM, **16** per scanline, VBlank sprite field in 1284 |
 | Background | Tile + attribute tables in VRAM | Per-tile bank/pal/flip in attr byte, CHR on cart |
 | Mid-frame effects | Sprite-0 hit | **Raster compare** IRQ (`$FE04`) |
 | Master palette | Fixed PPU palette | **64** colors on board Color PROM, cart holds indices |
 
 NES developers became experts at **VBlank choreography**. Retr01 developers stream screens into a hardware workbench and scroll inside it.
+
+---
+
+## SNES-like parallax (BG0)
+
+Classic NES games sold depth with **one** background and clever art. The SNES sold depth with **layers that actually move at different rates**. Retr01 takes that second idea seriously on a 6502-class cart:
+
+```text
+  sprites  (players, enemies, pickups)
+     |
+  BG1      (playfield — collision, platforms, foreground art)
+     |        color 0 = "window" into the far plane
+  BG0      (sky, mountains, city silhouette — scrolls slower)
+     |
+  backdrop
+```
+
+**What you get (not a hack):**
+
+- A **real second tilemap** (BG0), up to **8** screens per world, authored in Studio beside BG1 — same tile/attr pipeline, own scroll latches (`$FE06` / `$FE07`).
+- **Color-0 show-through:** wherever BG1 is transparent (palette index **0**), the compositor reveals BG0. Paint caves, arches, and canopy gaps in BG1; the far plane stays continuous underneath.
+- **Automatic parallax ratio:** Host Play / PRG default is `scroll_BG0 = scroll_BG1 × (BG0 extent / BG1 extent)` per axis. Make the far world **smaller** than the playfield (e.g. BG0 **2×2**, BG1 **4×4**) and the mountains slide at half speed for free. Equal-or-larger BG0 on an axis → that axis stays locked (foreground-only scroll).
+- **Hardware merge every dot:** sprite > BG1 > BG0 > backdrop. Both layers are on screen together because the **compositor** draws them, not because software blits a fake backdrop into nametable VBlank.
+
+**Vs NES “parallax”:** no mid-frame nametable rewrite, no status-bar split pretending to be a second world, no mapper IRQ gymnastics to fake depth. You place a second map; the machine scrolls it.
+
+**Authoring path:** Studio Worlds → **BG0** sub-button → drop up to 8 screens on the 16×16 chess → leave BG1 color 0 where the far plane should show → Play. Details and ports: [`graphics.md`](graphics.md#second-background-bg0).
 
 ---
 
@@ -65,7 +92,7 @@ On silicon, the **picture** is built in discrete video logic and AVRs. The **650
 - Gameplay: movement, camera dead zone, collision, entities, warps, AI
 - Audio driver feeding the 328P bytecode protocol
 
-Both BGs appear on screen together because the **compositor** merges them each dot. **Loading** new screens and **parallax scroll math** stay on the CPU unless you add a PLD ratio later.
+Both BGs appear on screen together because the **compositor** merges them each dot. **Loading** new screens and the default **parallax scroll ratio** stay on the CPU (or Host Play) unless you add a PLD auto-ratio later — see [SNES-like parallax](#snes-like-parallax-bg0).
 
 ---
 
@@ -87,6 +114,7 @@ Same tracker *feel*, different silicon. Details: [`sound.md`](sound.md).
 Because graphics streaming is hardware-assisted:
 
 - Multi-screen exploration with dead-zone or rail camera
+- **Dual-layer worlds** — BG1 playfield + BG0 far plane with automatic parallax ratio
 - Dozens of entities with simple AI and software collision
 - Platformer or top-down movement with inventory and game flow
 - Title, world select, up to **8** worlds, credits as cart MAP data

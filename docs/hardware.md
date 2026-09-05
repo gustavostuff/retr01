@@ -112,6 +112,8 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
 
 ### Second background (BG0)
 
+SNES-like far plane: authored second tilemap, color-0 show-through under BG1, proportional scroll for depth ([`selling_points.md`](selling_points.md#snes-like-parallax-bg0)).
+
 1. Software keeps BG0 screens in VRAM slots **4-7** and sets `$FE06`/`$FE07` (often proportional to BG1 scroll).
 2. Target silicon / sim: **HBlank** fills the next BG0 line from slots 4-7 + cart CHR (sim uses cart BG0 cache into linebuf). Sprites use **VBlank** for a full playfield field so they do not steal HBlank.
 3. Emu Host Play composites BG0 under BG1 color 0 from the cart BG0 cache in the full-frame renderer (not a separate HBlank worker). See [`graphics.md`](graphics.md).

@@ -162,6 +162,8 @@ Two layers: **cart indices** and **board Color PROM**.
 
 ## Second background (BG0)
 
+**Pitch:** Retr01’s SNES-like parallax plane. BG1 is the playfield; BG0 is a real second tilemap that scrolls underneath wherever BG1 uses palette index **0**. Make the far world’s present bbox smaller than BG1’s and you get slower motion for free (`scroll_BG0 = scroll_BG1 × extent_BG0 / extent_BG1`). Not a mapper IRQ trick — compositor show-through every dot. Selling narrative: [`selling_points.md`](selling_points.md#snes-like-parallax-bg0).
+
 Structured far plane (**BG0**). Main playfield is **BG1**.
 
 This **replaces** the old two-slot parallax payload model (former slots 4-5 only, Single / Pair H / Pair V).
@@ -186,16 +188,16 @@ else                  -> BG0 (or backdrop)
 
 Emu Host Play composites BG0 under BG1 color 0 from the cart BG0 cache in the full-frame renderer. Sim prepares each BG0 line in **HBlank** and applies the BG1 color-0 mask on active dots. Silicon target matches that split (VRAM slots 4-7 + cart CHR on the BG0 path).
 
-### Proportional scroll
+### Proportional scroll (parallax)
 
-Default is software (6502 or Host Play), not a PLD auto-ratio:
+Default is software (6502 or Host Play), not a PLD auto-ratio — this is the **parallax depth** knob:
 
 ```text
 scroll_BG0_x = scroll_BG1_x * cols_BG0 / cols_BG1
 scroll_BG0_y = scroll_BG1_y * rows_BG0 / rows_BG1
 ```
 
-`cols_*` / `rows_*` are the **enclosing present extents** of each plane (used screens bbox), not the virtual **16x16**. Example: BG0 **2x2**, BG1 **4x4** -> BG0 scrolls at half rate on both axes. If `cols_BG0 == 1`, X stays 0 (same for rows). If BG0 extent is **equal or larger** than BG1 on an axis (`cols_BG0 >= cols_BG1`), that axis does not scroll. Absolute BG0 scroll override is allowed for cutscenes.
+`cols_*` / `rows_*` are the **enclosing present extents** of each plane (used screens bbox), not the virtual **16x16**. Example: BG0 **2x2**, BG1 **4x4** -> BG0 scrolls at half rate on both axes (mountains crawl while the playfield runs). If `cols_BG0 == 1`, X stays 0 (same for rows). If BG0 extent is **equal or larger** than BG1 on an axis (`cols_BG0 >= cols_BG1`), that axis does not scroll. Absolute BG0 scroll override is allowed for cutscenes.
 
 World/screen/cart caps: [`memory.md`](memory.md) (**48** BG1 present/world, **16x16** virtual grid, cell coords as nibbles).
 
