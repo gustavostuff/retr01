@@ -8,32 +8,22 @@ The Retr01 project is a software tool chain + hardware family. Software includes
 
 Software is still a WIP. This is the overall hardware roadmap:
 
-- **Retr01-A (stage 1 arcade)** / **Retr01-C (stage 1 console)**: One THT board (~**14 x 12 cm**, 4-layer) for both shells. Same 32-IC core, [**36-pin cart**](docs/cart.md), **RGBS + composite**, 5 V barrel. Arcade microswitch headers **and** PCB footprints for **2x Switchcraft 35RAPC** TRS ([`docs/controllers.md`](docs/controllers.md)). Shell + population choose I/O path, not two mobos.
-- **Retr01-H (stage 2)**: Handheld. SMD, battery, LCD + driver, contact pads. Same software contract.
+- **Retr01-A and Retr01-C (Arcade and Console): One THT board for both shells. Same 32-IC core, [**36-pin cart**](docs/cart.md), **RGBS + composite**, 5 V barrel. Arcade microswitch headers **and** PCB footprints for **2x Switchcraft 35RAPC** TRS ([`docs/controllers.md`](docs/controllers.md)).
+- **Retr01-H (stage 2)**: Handheld. SMD, battery, LCD + driver, contact pads. Same software contract. It will also include 3.5mm ports for controllers and possibly one more for mono audio + composite.
 
-## Software tree
+## Apps
 
-Apps and shared code live under [`app/`](app/):
+`./build-all` builds Release binaries into `bin/`. `./studio`, `./emu`, and `./sim` (at root) run those binaries. `./unit-tests` runs the test suites.
 
-| Path | Role |
-|--|--|
-| `app/studio/` | Authoring app |
-| `app/emu/` | Cart emulator (+ Studio Play core) |
-| `app/sim/` | Pin-level board simulator |
-| `app/schematic_generator/` | SKiDL netlist from sim wiring (Code-to-Copper) |
-| `bin/` | Release binaries from `./build-all` (`studio`, `emu`, `sim`) |
-
-`./build-all` builds Release binaries into `bin/`. `./studio`, `./emu`, and `./sim` only run those binaries. `./unit-tests` runs the test suites.
-
-## At a glance
+## Main specs
 
 | Aspect | Description |
 |--|--|
 | CPU | W65C02S @ **8 MHz** |
-| Playfield | **128 x 120** logical (**16 x 15** tiles), board **2x** to **256 x 240** RGBS |
-| Art | **8 x 8** tiles, **2 bpp**, **64** master colors on-board Color PROM (**AT27C256R**) |
-| Worlds | up to **8** worlds, **48** BG1 screens each on a **16x16** grid + optional **BG0** on a **512 KB** cart (**32 KB** PRG) |
-| Scroll | **2 x 2** live nametable window (BG1) + structured second BG (BG0) with show-through |
+| Playfield | **128 x 120** of logical resolution (**16 x 15** tiles), board **2x** to **256 x 240** RGBS field |
+| Art | **8 x 8** tiles, **2 bpp**, **64** master colors on-board Color PROM IC |
+| Worlds | up to **8** worlds x **48** screens each (384-screen "real state"). All within a 512KB cartridge |
+| Scroll | **2 x 2** live nametable/screen window + true SNES-like parallax as "second" BG layer |
 | Sprites | **64** OAM entries, **16** per scanline |
 | VRAM / RAM | **32 KB** interleaved VRAM + **32 KB** system RAM |
 
