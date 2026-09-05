@@ -170,12 +170,14 @@ UPLDA_SEL = {
     "10": "23", "11": "23", "06": "14", "07": "15", "12": "23", "93": "22",
 }
 
-# UPLDB VRAM glue + HC245/cart bus enables (decode pin budget exhausted on UPLDA)
+# UPLDB VRAM glue + HC245/cart bus enables (decode pin budget exhausted on UPLDA).
+# Never map signals onto PLD_GND (12) or PLD_VCC (24): that shorts the rail into a
+# signal net and KiCad loses the literal name "GND" (merged net becomes e.g. PPU_VA10).
 UPLDB_LD = {i: str(2 + i) for i in range(8)}
-UPLDB_CPU_VA = {i: str(2 + i) for i in range(11)}
-UPLDB_CPU_VA.update({11: "14", 12: "15", 13: "16", 14: "17"})
-UPLDB_VA = {i: str(2 + i) for i in range(11)}
-UPLDB_VA.update({11: "14", 12: "15", 13: "16", 14: "17"})
+UPLDB_CPU_VA = {i: str(2 + i) for i in range(10)}  # bits 0-9 -> pins 2-11
+UPLDB_CPU_VA.update({10: "13", 11: "14", 12: "15", 13: "16", 14: "17"})
+UPLDB_VA = {i: str(2 + i) for i in range(10)}
+UPLDB_VA.update({10: "13", 11: "14", 12: "15", 13: "16", 14: "17"})
 UPLDB_DIR_CPU, UPLDB_OE_CPU = "14", "15"
 UPLDB_DIR_VID, UPLDB_OE_VID = "16", "17"
 UPLDB_DIR_CART, UPLDB_OE_CART = "18", "19"
