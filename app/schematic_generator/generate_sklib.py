@@ -87,4 +87,7 @@ generate = SchLib(tool=SKIDL).add_parts(*[
             Pin(num='36',name='36',func=pin_types.UNSPEC)] }),
         Part(**{ 'name':'C_100N', 'dest':TEMPLATE, 'tool':SKIDL, 'aliases':Alias({'C_100N'}), 'ref_prefix':'U', 'fplist':None, 'footprint':'Capacitor_SMD:C_0603_1608Metric', 'keywords':None, 'description':'', 'datasheet':None, 'pins':[
             Pin(num='1',name='1',func=pin_types.UNSPEC),
+            Pin(num='2',name='2',func=pin_types.UNSPEC)] }),
+        Part(**{ 'name':'R_0', 'dest':TEMPLATE, 'tool':SKIDL, 'aliases':Alias({'R_0'}), 'ref_prefix':'U', 'fplist':None, 'footprint':'Resistor_SMD:R_0603_1608Metric', 'keywords':None, 'description':'', 'datasheet':None, 'pins':[
+            Pin(num='1',name='1',func=pin_types.UNSPEC),
             Pin(num='2',name='2',func=pin_types.UNSPEC)] })])

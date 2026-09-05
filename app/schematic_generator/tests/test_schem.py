@@ -218,5 +218,78 @@ class TestManifest(unittest.TestCase):
         self.assertIn("DIP-16", BOM_BY_REFDES["U725"].footprint)
 
 
+class TestDecouplingQuilter(unittest.TestCase):
+    """Per-IC local VCC nets so Quilter can parent each CD* bypass cap."""
+
+    @classmethod
+    def setUpClass(cls):
+        from retr01_schem.parts import skidl_available
+
+        cls.skidl = skidl_available()
+
+    def test_local_vcc_nets_exclusive(self):
+        if not self.skidl:
+            self.skipTest("skidl not installed")
+        from skidl import reset
+
+        from retr01_schem.board import build_board
+        from retr01_schem.bom import silicon_ic_entries, BoardId
+        from retr01_schem.pinmap import power_pin_nums
+
+        reset()
+        built = build_board(include_sim_only=False)
+        parts = built["parts"]
+        nets = built["nets"]
+        entries = silicon_ic_entries(BoardId.MOBO)
+        for n, entry in enumerate(entries, start=1):
+            pins = power_pin_nums(entry.mpn)
+            if pins is None:
+                continue
+            local_name = f"+5V_{entry.refdes}"
+            self.assertIn(local_name, nets, msg=entry.refdes)
+            self.assertIn(f"CD{n}", parts, msg=entry.refdes)
+            self.assertIn(f"RD{n}", parts, msg=entry.refdes)
+            local = nets[local_name]
+            pin_refs = []
+            for pin in local.pins:
+                ref = getattr(getattr(pin, "part", None), "ref", None)
+                if ref:
+                    pin_refs.append(ref)
+            # Local net: IC VCC + CD* + RD* only (no other silicon).
+            self.assertIn(entry.refdes, pin_refs)
+            self.assertIn(f"CD{n}", pin_refs)
+            self.assertIn(f"RD{n}", pin_refs)
+            others = [
+                r
+                for r in pin_refs
+                if r not in (entry.refdes, f"CD{n}", f"RD{n}") and r.startswith("U")
+            ]
+            self.assertEqual(others, [], msg=f"{local_name} leaked to {others}")
+
+    def test_u24_bridges_to_analog(self):
+        if not self.skidl:
+            self.skipTest("skidl not installed")
+        from skidl import reset
+
+        from retr01_schem.board import build_board
+
+        reset()
+        built = build_board(include_sim_only=False)
+        parts = built["parts"]
+        # Find which CD/RD index is U24.
+        from retr01_schem.bom import silicon_ic_entries, BoardId
+        from retr01_schem.pinmap import power_pin_nums
+
+        idx = None
+        for n, entry in enumerate(silicon_ic_entries(BoardId.MOBO), start=1):
+            if entry.refdes == "U24" and power_pin_nums(entry.mpn):
+                idx = n
+                break
+        self.assertIsNotNone(idx)
+        bridge = parts[f"RD{idx}"]
+        names = {str(getattr(n, "name", "") or "") for n in bridge["2"].nets}
+        self.assertIn("+5V_ANALOG", names)
+
+
 if __name__ == "__main__":
     unittest.main()

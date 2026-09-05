@@ -11,7 +11,7 @@ Aligned with `temp/AI_flow_for_PCB.pdf`:
 3. **Lock symbols** - populate `library/Retr01_Lib` from KiCad S-expressions (see `library/README.md`).
 4. **Generate netlists** - `python generate.py` -> `output/retr01_mobo.net` + `output/retr01_cart.net`.
 5. **Mechanical layout** - two KiCad projects: motherboard + cartridge. Lock I/O / edge.
-6. **Route** - Quilter AI (flag `CRITICAL_NETS` in `retr01_schem/nets.py`).
+6. **Route** - Quilter AI (flag `CRITICAL_NETS` in `retr01_schem/nets.py`). Bypass caps use per-IC local nets (`+5V_<refdes>` + `RD*` 0 ohm + `CD*`) so Quilter can parent each cap with high confidence.
 
 ## Layout
 
@@ -77,3 +77,4 @@ python -m unittest discover -s tests
 - Add Retr01_Lib `.kicad_sym` files and switch `parts.py` from inline pins to library parts (needs KiCad).
 - Lock arcade header pin order in `docs/controllers.md`, then update `manifest.py`.
 - Import `output/retr01_mobo.net` into KiCad. Lock I/O. Quilter on `CRITICAL_NETS`.
+- Decoupling: each silicon IC gets `CD*` (100 nF) on a private `+5V_<refdes>` net, fed from `+5V` (or `+5V_ANALOG` for U24) through a populated `RD*` **0 ohm**. That exclusive net is what Quilter needs for high-confidence bypass parent assignment. Do not DNP the `RD*` parts. They are the power feed.

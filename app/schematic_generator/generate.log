@@ -2,496 +2,559 @@ WARNING: fp-lib-table file was not found. Component footprints are not available
 WARNING: fp-lib-table file was not found. Component footprints are not available.
 WARNING: fp-lib-table file was not found. Component footprints are not available.
 WARNING: fp-lib-table file was not found. Component footprints are not available.
-WARNING: Merging two named nets (+5V and +5V_ANALOG) into +5V. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (MUX_AB and PHI2_BUF) into MUX_AB. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (PHI2 and MUX_AB) into PHI2. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_A_LO0 and CPU_A0) into CPU_A_LO0. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CART_A0 and CPU_A_LO0) into CART_A0. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_A1 and CART_A1) into CPU_A1. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_A_LO1 and CPU_A1) into CPU_A_LO1. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_A2 and CART_A2) into CPU_A2. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_A_LO2 and CPU_A2) into CPU_A_LO2. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_A3 and CART_A3) into CPU_A3. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_A_LO3 and CPU_A3) into CPU_A_LO3. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_A4 and CART_A4) into CPU_A4. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_A_LO4 and CPU_A4) into CPU_A_LO4. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_A5 and CPU_A_LO5) into CPU_A5. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CART_A5 and CPU_A5) into CART_A5. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_A6 and CPU_A_LO6) into CPU_A6. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CART_A6 and CPU_A6) into CART_A6. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_A7 and CPU_A_LO7) into CPU_A7. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CART_A7 and CPU_A7) into CART_A7. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CART_A8 and CPU_A8) into CART_A8. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_A9 and CART_A9) into CPU_A9. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_A10 and CART_A10) into CPU_A10. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CART_A11 and CPU_A11) into CART_A11. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_A12 and CART_A12) into CPU_A12. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CART_A13 and CPU_A13) into CART_A13. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (PPU_VA0 and CPU_VA0) into PPU_VA0. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_D0 and PPU_VA0) into CPU_D0. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_D1 and CPU_VA1) into CPU_D1. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (PPU_VA1 and CPU_D1) into PPU_VA1. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (PPU_VA2 and CPU_D2) into PPU_VA2. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_VA2 and PPU_VA2) into CPU_VA2. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (PPU_VA3 and CPU_VA3) into PPU_VA3. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_D3 and PPU_VA3) into CPU_D3. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (PPU_VA4 and CPU_VA4) into PPU_VA4. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_D4 and PPU_VA4) into CPU_D4. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_VA5 and CPU_D5) into CPU_VA5. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (PPU_VA5 and CPU_VA5) into PPU_VA5. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (PPU_VA6 and CPU_D6) into PPU_VA6. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_VA6 and PPU_VA6) into CPU_VA6. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_VA7 and CPU_D7) into CPU_VA7. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (PPU_VA7 and CPU_VA7) into PPU_VA7. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (SEL_FE06 and SEL_FE00) into SEL_FE06. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (SEL_FE02 and SEL_FE07) into SEL_FE02. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (SEL_FE11 and SEL_FE10) into SEL_FE11. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (PPU_VA11 and CPU_VA11) into PPU_VA11. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (DIR_CPU245 and PPU_VA11) into DIR_CPU245. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (OE_CPU245 and VRAM_A12) into OE_CPU245. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (CPU_VA8 and PPU_VA8) into CPU_VA8. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (PPU_VA9 and CPU_VA9) into PPU_VA9. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (PPU_VA10 and CPU_VA10) into PPU_VA10. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (DIR_VID245 and VRAM_A13) into DIR_VID245. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (OE_VID245 and VRAM_A14) into OE_VID245. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (BEAM_Y0 and BEAM_LB_A8) into BEAM_Y0. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (BEAM_LB_A4 and BEAM_LB_A0) into BEAM_LB_A4. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (BEAM_Y0 and BEAM_LB_A4) into BEAM_Y0. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (BEAM_LB_A9 and BEAM_LB_A5) into BEAM_LB_A9. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (BEAM_LB_A1 and BEAM_Y1) into BEAM_LB_A1. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (BEAM_LB_A9 and BEAM_LB_A1) into BEAM_LB_A9. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (BEAM_LB_A10 and BEAM_LB_A6) into BEAM_LB_A10. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (BEAM_LB_A2 and BEAM_Y2) into BEAM_LB_A2. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (BEAM_LB_A10 and BEAM_LB_A2) into BEAM_LB_A10. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (BEAM_LB_A11 and BEAM_LB_A3) into BEAM_LB_A11. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (BEAM_LB_A7 and BEAM_Y3) into BEAM_LB_A7. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (BEAM_LB_A11 and BEAM_LB_A7) into BEAM_LB_A11. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (MCU_LB_A8 and P2_RIGHT) into MCU_LB_A8. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (MCU_LB_A0 and MCU_LB_A8) into MCU_LB_A0. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (MCU_LB_A1 and MCU_LB_A9) into MCU_LB_A1. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (P2_LEFT and MCU_LB_A1) into P2_LEFT. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (P2_DOWN and MCU_LB_A10) into P2_DOWN. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (MCU_LB_A2 and P2_DOWN) into MCU_LB_A2. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (MCU_LB_A3 and MCU_LB_A11) into MCU_LB_A3. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (P2_UP and MCU_LB_A3) into P2_UP. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (P2_X and LB_A12) into P2_X. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (MCU_LB_A4 and P2_X) into MCU_LB_A4. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (MCU_LB_A5 and LB_A13) into MCU_LB_A5. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (P2_Y and MCU_LB_A5) into P2_Y. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (LB_A14 and MCU_LB_A6) into LB_A14. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (P2_COIN and LB_A14) into P2_COIN. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
-WARNING: Merging two named nets (P2_START and MCU_LB_A7) into P2_START. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:190=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:183]
+WARNING: Merging two named nets (MUX_AB and PHI2_BUF) into MUX_AB. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (PHI2 and MUX_AB) into PHI2. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_A0 and CART_A0) into CPU_A0. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_A_LO0 and CPU_A0) into CPU_A_LO0. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_A1 and CART_A1) into CPU_A1. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_A_LO1 and CPU_A1) into CPU_A_LO1. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_A2 and CART_A2) into CPU_A2. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_A_LO2 and CPU_A2) into CPU_A_LO2. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_A3 and CPU_A_LO3) into CPU_A3. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CART_A3 and CPU_A3) into CART_A3. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_A4 and CPU_A_LO4) into CPU_A4. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CART_A4 and CPU_A4) into CART_A4. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_A5 and CPU_A_LO5) into CPU_A5. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CART_A5 and CPU_A5) into CART_A5. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_A6 and CPU_A_LO6) into CPU_A6. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CART_A6 and CPU_A6) into CART_A6. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_A_LO7 and CART_A7) into CPU_A_LO7. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_A7 and CPU_A_LO7) into CPU_A7. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_A8 and CART_A8) into CPU_A8. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CART_A9 and CPU_A9) into CART_A9. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CART_A10 and CPU_A10) into CART_A10. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CART_A11 and CPU_A11) into CART_A11. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_A12 and CART_A12) into CPU_A12. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CART_A13 and CPU_A13) into CART_A13. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (PPU_VA0 and CPU_VA0) into PPU_VA0. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_D0 and PPU_VA0) into CPU_D0. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_D1 and CPU_VA1) into CPU_D1. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (PPU_VA1 and CPU_D1) into PPU_VA1. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_VA2 and PPU_VA2) into CPU_VA2. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_D2 and CPU_VA2) into CPU_D2. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_VA3 and CPU_D3) into CPU_VA3. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (PPU_VA3 and CPU_VA3) into PPU_VA3. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_VA4 and CPU_D4) into CPU_VA4. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (PPU_VA4 and CPU_VA4) into PPU_VA4. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (PPU_VA5 and CPU_VA5) into PPU_VA5. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_D5 and PPU_VA5) into CPU_D5. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (PPU_VA6 and CPU_D6) into PPU_VA6. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_VA6 and PPU_VA6) into CPU_VA6. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_VA7 and CPU_D7) into CPU_VA7. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (PPU_VA7 and CPU_VA7) into PPU_VA7. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (SEL_FE06 and SEL_FE00) into SEL_FE06. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (SEL_FE07 and SEL_FE02) into SEL_FE07. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (SEL_FE11 and SEL_FE10) into SEL_FE11. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (PPU_VA11 and CPU_VA11) into PPU_VA11. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (DIR_CPU245 and PPU_VA11) into DIR_CPU245. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (OE_CPU245 and VRAM_A12) into OE_CPU245. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (PPU_VA8 and CPU_VA8) into PPU_VA8. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (PPU_VA9 and CPU_VA9) into PPU_VA9. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (CPU_VA10 and PPU_VA10) into CPU_VA10. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (VRAM_A13 and DIR_VID245) into VRAM_A13. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (VRAM_A14 and OE_VID245) into VRAM_A14. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (BEAM_LB_A8 and BEAM_LB_A4) into BEAM_LB_A8. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (BEAM_LB_A0 and BEAM_Y0) into BEAM_LB_A0. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (BEAM_LB_A8 and BEAM_LB_A0) into BEAM_LB_A8. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (BEAM_LB_A9 and BEAM_LB_A1) into BEAM_LB_A9. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (BEAM_LB_A5 and BEAM_Y1) into BEAM_LB_A5. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (BEAM_LB_A9 and BEAM_LB_A5) into BEAM_LB_A9. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (BEAM_LB_A10 and BEAM_LB_A2) into BEAM_LB_A10. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (BEAM_LB_A6 and BEAM_Y2) into BEAM_LB_A6. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (BEAM_LB_A10 and BEAM_LB_A6) into BEAM_LB_A10. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (BEAM_LB_A7 and BEAM_LB_A3) into BEAM_LB_A7. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (BEAM_Y3 and BEAM_LB_A11) into BEAM_Y3. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (BEAM_LB_A7 and BEAM_Y3) into BEAM_LB_A7. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (P2_RIGHT and MCU_LB_A8) into P2_RIGHT. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (MCU_LB_A0 and P2_RIGHT) into MCU_LB_A0. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (P2_LEFT and MCU_LB_A9) into P2_LEFT. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (MCU_LB_A1 and P2_LEFT) into MCU_LB_A1. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (P2_DOWN and MCU_LB_A10) into P2_DOWN. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (MCU_LB_A2 and P2_DOWN) into MCU_LB_A2. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (P2_UP and MCU_LB_A11) into P2_UP. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (MCU_LB_A3 and P2_UP) into MCU_LB_A3. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (P2_X and LB_A12) into P2_X. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (MCU_LB_A4 and P2_X) into MCU_LB_A4. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (P2_Y and MCU_LB_A5) into P2_Y. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (LB_A13 and P2_Y) into LB_A13. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (LB_A14 and MCU_LB_A6) into LB_A14. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (P2_COIN and LB_A14) into P2_COIN. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
+WARNING: Merging two named nets (MCU_LB_A7 and P2_START) into MCU_LB_A7. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:241=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:234]
 WARNING: Missing tag on W65C02S instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag u1S8Cv40X9 generated for W65C02S.
+WARNING: Random tag Z65UOESHag generated for W65C02S.
 WARNING: Missing tag on AS6C62256 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag w2IqwO8PNn generated for AS6C62256.
+WARNING: Random tag fA5QjBBSNu generated for AS6C62256.
 WARNING: Missing tag on ATmega1284P instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag FlE46Fqf6u generated for ATmega1284P.
+WARNING: Random tag xI4obFFE5l generated for ATmega1284P.
 WARNING: Missing tag on ATmega328P instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag Lv7w6vPAMn generated for ATmega328P.
+WARNING: Random tag vlzd2GiwVI generated for ATmega328P.
 WARNING: Missing tag on AS6C62256 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag RN0kz93z4Z generated for AS6C62256.
+WARNING: Random tag iZHOwPGpTd generated for AS6C62256.
 WARNING: Missing tag on AS6C62256 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag 1EaLDEq4Xe generated for AS6C62256.
+WARNING: Random tag Ldeo_uU_Hy generated for AS6C62256.
 WARNING: Missing tag on AT27C256R instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag xgXah4loeK generated for AT27C256R.
+WARNING: Random tag 8KLrJd5Tks generated for AT27C256R.
 WARNING: Missing tag on ATF22V10 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag 57VhZ7ZP2Z generated for ATF22V10.
+WARNING: Random tag y0KZKzs8id generated for ATF22V10.
 WARNING: Missing tag on ATF22V10 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag b6onVcSbU6 generated for ATF22V10.
+WARNING: Random tag XCKFDzALnB generated for ATF22V10.
 WARNING: Missing tag on ATF22V10 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag VUVoj0_8pL generated for ATF22V10.
+WARNING: Random tag 4qwGIeoXaJ generated for ATF22V10.
 WARNING: Missing tag on ATF22V10 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag svtHxS3DQ9 generated for ATF22V10.
+WARNING: Random tag upsi3V181e generated for ATF22V10.
 WARNING: Missing tag on ATF22V10 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag Le0xb84rt7 generated for ATF22V10.
+WARNING: Random tag yqYH5tbkMD generated for ATF22V10.
 WARNING: Missing tag on SN74HC573 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag lO0bnGdyyt generated for SN74HC573.
+WARNING: Random tag X61k_pFdET generated for SN74HC573.
 WARNING: Missing tag on SN74HC573 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag F19wetNtw8 generated for SN74HC573.
+WARNING: Random tag FV28vAxbOC generated for SN74HC573.
 WARNING: Missing tag on SN74HC573 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag CIJ5k9cTFu generated for SN74HC573.
+WARNING: Random tag zN6JGA_l9U generated for SN74HC573.
 WARNING: Missing tag on SN74HC573 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag ltGjq72Tjs generated for SN74HC573.
+WARNING: Random tag ckYP7KlWoU generated for SN74HC573.
 WARNING: Missing tag on SN74HC573 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag FRMf293onP generated for SN74HC573.
+WARNING: Random tag iSNztu1VRm generated for SN74HC573.
 WARNING: Missing tag on SN74HC573 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag rhDzymJSr_ generated for SN74HC573.
+WARNING: Random tag R5ney0kSMf generated for SN74HC573.
 WARNING: Missing tag on SN74HC573 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag DFOL1pBq5N generated for SN74HC573.
+WARNING: Random tag 4FHEofirOy generated for SN74HC573.
 WARNING: Missing tag on SN74HC573 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag 0IdKlRoe6i generated for SN74HC573.
+WARNING: Random tag 5cpNjmayaI generated for SN74HC573.
 WARNING: Missing tag on SN74HC573 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag Rcqp3sC_Zn generated for SN74HC573.
+WARNING: Random tag 3gXV2pZraV generated for SN74HC573.
 WARNING: Missing tag on SN74HC157 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag dpMKe_Vc48 generated for SN74HC157.
+WARNING: Random tag D1fRBmn14V generated for SN74HC157.
 WARNING: Missing tag on SN74HC157 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag wJI45xYesC generated for SN74HC157.
+WARNING: Random tag egNYIEnTtD generated for SN74HC157.
 WARNING: Missing tag on SN74HC157 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag yD_6AYOyct generated for SN74HC157.
+WARNING: Random tag N2zhPpiBEM generated for SN74HC157.
 WARNING: Missing tag on SN74HC157 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag cJy1sGpTd6 generated for SN74HC157.
+WARNING: Random tag hW2nZPrjTD generated for SN74HC157.
 WARNING: Missing tag on SN74HC157 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag mF8BuO2ff1 generated for SN74HC157.
+WARNING: Random tag naE6bPPoep generated for SN74HC157.
 WARNING: Missing tag on SN74HC157 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag jPLjnen4cg generated for SN74HC157.
+WARNING: Random tag 3VooqB88gH generated for SN74HC157.
 WARNING: Missing tag on SN74HC245 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag voJrQ0hR8L generated for SN74HC245.
+WARNING: Random tag k4_LJx0rBw generated for SN74HC245.
 WARNING: Missing tag on SN74HC245 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag dRoMAK29Aa generated for SN74HC245.
+WARNING: Random tag Szf1sIymMY generated for SN74HC245.
 WARNING: Missing tag on SN74HC245 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag ZKjcI5KnSZ generated for SN74HC245.
+WARNING: Random tag jrGpg1gwGt generated for SN74HC245.
 WARNING: Missing tag on SN74HC14 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag pHY6j5FAHo generated for SN74HC14.
+WARNING: Random tag if5niNlJ0B generated for SN74HC14.
 WARNING: Missing tag on OSC8M instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag bVmLnLevJe generated for OSC8M.
+WARNING: Random tag kP5GXS9JTa generated for OSC8M.
 WARNING: Missing tag on OSC_DOT instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag hWKu3KegCB generated for OSC_DOT.
+WARNING: Random tag mGlyWFWrOp generated for OSC_DOT.
 WARNING: Missing tag on AD725 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag 6H4HpvkoDY generated for AD725.
+WARNING: Random tag e_jb8I2v0M generated for AD725.
 WARNING: Missing tag on OSC_4FSC instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag 4coSVwdl9p generated for OSC_4FSC.
+WARNING: Random tag RT5yOlyb3O generated for OSC_4FSC.
 WARNING: Missing tag on XTAL_20M instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag FfFNTVYzTi generated for XTAL_20M.
+WARNING: Random tag uqyETc9S1H generated for XTAL_20M.
 WARNING: Missing tag on XTAL_16M instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag jjTVVvWJxs generated for XTAL_16M.
+WARNING: Random tag KmLhkIQJl7 generated for XTAL_16M.
 WARNING: Missing tag on C_22P instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag vVRq5JV06A generated for C_22P.
+WARNING: Random tag oeGYPceHM6 generated for C_22P.
 WARNING: Missing tag on C_22P instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag fBz5mJ3rcC generated for C_22P.
+WARNING: Random tag A0P9TCYWny generated for C_22P.
 WARNING: Missing tag on C_22P instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag nFF5qRUeRw generated for C_22P.
+WARNING: Random tag d3OJaZhAYs generated for C_22P.
 WARNING: Missing tag on C_22P instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag huFPCF_Unt generated for C_22P.
+WARNING: Random tag yiLq91pAEO generated for C_22P.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag ijq85qUddO generated for C_100N.
+WARNING: Random tag wYzdgh7quE generated for C_100N.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag 68fpIF8Gm3 generated for C_100N.
+WARNING: Random tag NtlwVuB3zO generated for C_100N.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag qFBKWjDLgJ generated for C_100N.
+WARNING: Random tag F4brMvriC3 generated for C_100N.
 WARNING: Missing tag on R_75 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag s_KW3SxTpE generated for R_75.
+WARNING: Random tag fkMBBnWm3h generated for R_75.
 WARNING: Missing tag on L_YTRAP instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag 5BmH2EbyVt generated for L_YTRAP.
+WARNING: Random tag lgq_5QyUWz generated for L_YTRAP.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag bvjaX7Ai9d generated for C_100N.
+WARNING: Random tag vwnQEzsT_C generated for C_100N.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag mu3WHMBm7T generated for C_100N.
+WARNING: Random tag Wd5WTJ1HXk generated for C_100N.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag FPyDimgobU generated for C_100N.
+WARNING: Random tag qMStY9dL_x generated for C_100N.
 WARNING: Missing tag on CART_EDGE_36 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag z0TbDzIJtW generated for CART_EDGE_36.
+WARNING: Random tag wHyYQ6rjxp generated for CART_EDGE_36.
 WARNING: Missing tag on BARREL_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag RrtOYYF6PH generated for BARREL_5V.
+WARNING: Random tag G5IUDI5lBu generated for BARREL_5V.
 WARNING: Missing tag on RGBS_HDR instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag kNnf2fO2k2 generated for RGBS_HDR.
+WARNING: Random tag _fjPXjc32W generated for RGBS_HDR.
 WARNING: Missing tag on TRS_P1 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag eZ_0Nlzr8k generated for TRS_P1.
+WARNING: Random tag ZXoz0rBFDP generated for TRS_P1.
 WARNING: Missing tag on TRS_P2 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag ulrBK4LNhJ generated for TRS_P2.
+WARNING: Random tag nVFnc2PcIp generated for TRS_P2.
 WARNING: Missing tag on ARCADE_P1 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag uAnxn61bwt generated for ARCADE_P1.
+WARNING: Random tag DdeNMnRxba generated for ARCADE_P1.
 WARNING: Missing tag on ARCADE_P2 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag D83HVJ1tZY generated for ARCADE_P2.
+WARNING: Random tag dxosIacUpQ generated for ARCADE_P2.
 WARNING: Missing tag on CAB_PWR_RST instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag QH4qMObUzU generated for CAB_PWR_RST.
+WARNING: Random tag zx_f0pz1Pi generated for CAB_PWR_RST.
 WARNING: Missing tag on SCALE_SW instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag 8TcV3plZyo generated for SCALE_SW.
+WARNING: Random tag bqIqbeOp52 generated for SCALE_SW.
 WARNING: Missing tag on R_10K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag mMtAQfszZZ generated for R_10K.
+WARNING: Random tag RrrIEDIvOV generated for R_10K.
 WARNING: Missing tag on AUDIO_OUT instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag idE7BgQyRv generated for AUDIO_OUT.
+WARNING: Random tag LaPse2umPl generated for AUDIO_OUT.
 WARNING: Missing tag on COMPOSITE_OUT instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag BEnR5BHLr9 generated for COMPOSITE_OUT.
+WARNING: Random tag _c55W5S9Ec generated for COMPOSITE_OUT.
 WARNING: Missing tag on PPTC instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag ZPOBRB8tYX generated for PPTC.
+WARNING: Random tag H3FfWdYWO3 generated for PPTC.
 WARNING: Missing tag on FERRITE instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag eONWs0kAzp generated for FERRITE.
+WARNING: Random tag AzDt_FXXgC generated for FERRITE.
 WARNING: Missing tag on SCHOTTKY instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag rOOI9RNt9U generated for SCHOTTKY.
+WARNING: Random tag M_RwkFq6fe generated for SCHOTTKY.
 WARNING: Missing tag on C_BULK instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag xRpfGTXBR1 generated for C_BULK.
+WARNING: Random tag qG2lHXm5tU generated for C_BULK.
 WARNING: Missing tag on FERRITE instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag ZuGxAgur0V generated for FERRITE.
+WARNING: Random tag RlF3laWcT4 generated for FERRITE.
 WARNING: Missing tag on C_10U instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag QgtAuLYVFw generated for C_10U.
+WARNING: Random tag 5gf9LopbwY generated for C_10U.
 WARNING: Missing tag on PPTC instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag jN1HVwK7Sj generated for PPTC.
+WARNING: Random tag PB1UHD3acb generated for PPTC.
 WARNING: Missing tag on PPTC instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag bRwtYsRmzK generated for PPTC.
+WARNING: Random tag Cect13EGZm generated for PPTC.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag Q42PMUQYfV generated for C_100N.
+WARNING: Random tag HJvdipqN81 generated for C_100N.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag Amxgtj2wxW generated for C_100N.
+WARNING: Random tag XWpI5LQ1Xk generated for C_100N.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag ZJp0f7p7fX generated for TVS_5V.
+WARNING: Random tag SL4oXikAzJ generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag c3x5PCoGUW generated for TVS_5V.
+WARNING: Random tag V0fultli6X generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag nNrB82msit generated for TVS_5V.
+WARNING: Random tag ekTlYENOYj generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag ej1NLpTGxP generated for TVS_5V.
+WARNING: Random tag SpAtdYcWoD generated for TVS_5V.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag _7SETjlRDn generated for R_47.
+WARNING: Random tag W98TdTTR4l generated for R_47.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag KZJHyuJ5dE generated for R_47.
+WARNING: Random tag tNQPpnT6Jc generated for R_47.
 WARNING: Missing tag on R_4K7 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag qmw5yTGOmw generated for R_4K7.
+WARNING: Random tag Jd0YUF9slj generated for R_4K7.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag 9DLhXGiJjn generated for R_33.
+WARNING: Random tag TgCVN1h0WZ generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag CHC43LNkCQ generated for R_33.
+WARNING: Random tag dHS7ndAzdF generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag vTcHjAZI6f generated for R_33.
+WARNING: Random tag O_2JYfJy3y generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag 3Hcd6VnWRN generated for R_33.
+WARNING: Random tag ImEmjMzmue generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag Dasyl4DYeb generated for R_33.
+WARNING: Random tag ecT0A96g2p generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag a4WefUylBZ generated for R_33.
+WARNING: Random tag iyIIMDKGEN generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag HnuuCh3HhB generated for R_33.
+WARNING: Random tag u0GSTJaaHr generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag cDS_AsuBx1 generated for R_33.
+WARNING: Random tag SjGGPQvEHF generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag GyWXL6jTSh generated for R_33.
+WARNING: Random tag vK02HExgXz generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag Rc1dpm9NQY generated for R_33.
+WARNING: Random tag qBt9F1nMiS generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag MGwtlztHKF generated for R_33.
+WARNING: Random tag j01ijfMPvG generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag uGs0GsdPzP generated for R_33.
+WARNING: Random tag cBRxlZLc0O generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag hrjpGneK4O generated for R_33.
+WARNING: Random tag B2D7xTQ83l generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag VNYggx45dd generated for R_33.
+WARNING: Random tag 750WydLVCR generated for R_33.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag 4hx_QXCUqu generated for TVS_5V.
+WARNING: Random tag 570CuXMlod generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag 4DgSRtWVQe generated for TVS_5V.
+WARNING: Random tag T9aKMxDOlV generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag aisZznb0s0 generated for TVS_5V.
+WARNING: Random tag ljKoc6mrel generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag u8GeyKVHl8 generated for TVS_5V.
+WARNING: Random tag _pKqYqLolj generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag 82YoKu6SkC generated for TVS_5V.
+WARNING: Random tag 2eq678al9L generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag vJsDPbSGL1 generated for TVS_5V.
+WARNING: Random tag MBJxbbgiIc generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag rnEJkfsycB generated for TVS_5V.
+WARNING: Random tag 0d2ODQXijb generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag uIuw9kLhY0 generated for TVS_5V.
+WARNING: Random tag uvNA4DvXms generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag v4d54E7Wxb generated for TVS_5V.
+WARNING: Random tag Ju7wj9BE_7 generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag kf8VrcSMpj generated for TVS_5V.
+WARNING: Random tag d_YwrdmgkM generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag QLIiLNmlfH generated for TVS_5V.
+WARNING: Random tag 9guLEjRwMS generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag qFINoSlRG3 generated for TVS_5V.
+WARNING: Random tag jphpjwiY1Y generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag _W7m9VAgIT generated for TVS_5V.
+WARNING: Random tag BTpycLGGvb generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag 31KWiR6mXA generated for TVS_5V.
+WARNING: Random tag lRKI_ay0sf generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag pCY_bz7oeM generated for TVS_5V.
+WARNING: Random tag YTwyUn_e3Z generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag c5oBj1Xpzw generated for TVS_5V.
+WARNING: Random tag LSjBhjv3q5 generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag BIsvYUgTx0 generated for TVS_5V.
+WARNING: Random tag 9j915OMDt6 generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag QDesWXAsiS generated for TVS_5V.
+WARNING: Random tag HRLShSeXbO generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag Mq12cECz23 generated for TVS_5V.
+WARNING: Random tag ajKlLvD1H2 generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag wqchUWUMMM generated for TVS_5V.
+WARNING: Random tag sG760_R5iz generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag Qqp6qM0Til generated for TVS_5V.
+WARNING: Random tag W_77Hk2S1_ generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag KBncHtNefg generated for TVS_5V.
+WARNING: Random tag X0YsGDHXpv generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag JWObTk2FAd generated for TVS_5V.
+WARNING: Random tag lcTypUmmV8 generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag aBeA2W45vg generated for TVS_5V.
+WARNING: Random tag 4XEaVulXXm generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag OJUMePxfRl generated for TVS_5V.
+WARNING: Random tag mana9J_ZML generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag a1kkAKeuzH generated for TVS_5V.
+WARNING: Random tag PgbDpuVnTs generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag n7OT5KfsrB generated for TVS_5V.
+WARNING: Random tag wcQ8U4XsvH generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag 7VuJHpLXCs generated for TVS_5V.
+WARNING: Random tag bkMYScWfN1 generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag V3Hwk8KymQ generated for TVS_5V.
+WARNING: Random tag CGYAzY7gm3 generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag sL3lQtKm58 generated for TVS_5V.
+WARNING: Random tag dKgfw9KWd3 generated for TVS_5V.
 WARNING: Missing tag on TVS_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag G0sy9GJZn8 generated for TVS_5V.
+WARNING: Random tag SOeccZcBgx generated for TVS_5V.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag sYOFpTAEP3 generated for R_47.
+WARNING: Random tag u11kT7pqyy generated for R_47.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag S_TEYpOUqs generated for R_47.
+WARNING: Random tag I3ZtXXJprU generated for R_47.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag U3tQOpkmFp generated for R_47.
+WARNING: Random tag JU9WzNjU_k generated for R_47.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag VX0aTSylSC generated for R_47.
+WARNING: Random tag w24OGxsUxH generated for R_47.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag PTyqz7M9tZ generated for R_47.
+WARNING: Random tag 7nvEVK5VBu generated for R_47.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag H1ednnouXa generated for R_47.
+WARNING: Random tag lNrMW6xuph generated for R_47.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag O4hrWSB8Cj generated for R_47.
+WARNING: Random tag RE2wfKDukL generated for R_47.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag TbsTPlqbMP generated for R_47.
+WARNING: Random tag bkEoixnpKE generated for R_47.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag u_ysatZ7QS generated for R_47.
+WARNING: Random tag 1SQuGe6Rf0 generated for R_47.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag j9kYlc_lYL generated for R_47.
+WARNING: Random tag HSjmRIQfZA generated for R_47.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag JBivz3O7SV generated for R_47.
+WARNING: Random tag EuIjxVYcZ9 generated for R_47.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag mXL6xsy6bb generated for R_47.
+WARNING: Random tag v3mmNjJlZd generated for R_47.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag CsSPTD5qTS generated for R_47.
+WARNING: Random tag PnDAR8pWor generated for R_47.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag kFQnAJlgjx generated for R_47.
+WARNING: Random tag FYZpX8Qh06 generated for R_47.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag XJ7pazGq1O generated for R_47.
+WARNING: Random tag 2uNKyU6oYW generated for R_47.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag fDzdRMhXbZ generated for R_47.
+WARNING: Random tag 547FpIqnRz generated for R_47.
 WARNING: Missing tag on R_4K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag DoT_t9a9vP generated for R_4K.
+WARNING: Random tag hzp7CjnfIp generated for R_4K.
 WARNING: Missing tag on R_2K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag UVJw96QRwS generated for R_2K.
+WARNING: Random tag QAU61OcoXC generated for R_2K.
 WARNING: Missing tag on R_1K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag EZtdGDO58U generated for R_1K.
+WARNING: Random tag 3u1BxrD82_ generated for R_1K.
 WARNING: Missing tag on R_4K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag yahK5nd5C2 generated for R_4K.
+WARNING: Random tag dZkz5vFoZD generated for R_4K.
 WARNING: Missing tag on R_2K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag 1hXJuAdhEl generated for R_2K.
+WARNING: Random tag YysaSLfdfl generated for R_2K.
 WARNING: Missing tag on R_1K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag g8cnKsZ_Jn generated for R_1K.
+WARNING: Random tag JpgJmNAzLB generated for R_1K.
 WARNING: Missing tag on R_2K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag nco_q3RUtP generated for R_2K.
+WARNING: Random tag JwOAkLSP1V generated for R_2K.
 WARNING: Missing tag on R_1K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag USCygQpGdW generated for R_1K.
+WARNING: Random tag El31xRyrhS generated for R_1K.
 WARNING: Missing tag on R_75 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag 4cqsJUzWSh generated for R_75.
+WARNING: Random tag 0yEDbyIGYr generated for R_75.
 WARNING: Missing tag on R_75 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag GruxV7P2Vc generated for R_75.
+WARNING: Random tag jtJ3L0VvXW generated for R_75.
 WARNING: Missing tag on R_75 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag 3dUUZ3REHx generated for R_75.
+WARNING: Random tag aMxDV1Jzwu generated for R_75.
 WARNING: Missing tag on R_20K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag B0h1VocJpu generated for R_20K.
+WARNING: Random tag F1k_17Ea7T generated for R_20K.
 WARNING: Missing tag on R_20K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag MVKD9Fe_za generated for R_20K.
+WARNING: Random tag afxZMJ84Vd generated for R_20K.
 WARNING: Missing tag on R_20K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag tGG80ZLc5y generated for R_20K.
+WARNING: Random tag E2lUbDoBX8 generated for R_20K.
 WARNING: Missing tag on R_20K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag yfx8H1L9xq generated for R_20K.
+WARNING: Random tag PEsZOFfJQo generated for R_20K.
 WARNING: Missing tag on R_20K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag Zya70s5WXg generated for R_20K.
+WARNING: Random tag 8Nr1THJ3c5 generated for R_20K.
 WARNING: Missing tag on R_20K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag n7o_Uh5bMI generated for R_20K.
+WARNING: Random tag eH9wrYTz_q generated for R_20K.
 WARNING: Missing tag on R_20K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag 5U0hSZZ659 generated for R_20K.
+WARNING: Random tag 1M_IxgbqS8 generated for R_20K.
 WARNING: Missing tag on R_20K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag ujP_Cfr0HL generated for R_20K.
+WARNING: Random tag OCCsHzcuiz generated for R_20K.
 WARNING: Missing tag on R_10K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag XjB0aYBjiV generated for R_10K.
+WARNING: Random tag Jyx7aZbld8 generated for R_10K.
 WARNING: Missing tag on R_10K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag Lj8swAISMU generated for R_10K.
+WARNING: Random tag VU2dkxLOEW generated for R_10K.
 WARNING: Missing tag on R_10K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag uge1LRwMr0 generated for R_10K.
+WARNING: Random tag Tag7e8QoEq generated for R_10K.
 WARNING: Missing tag on R_10K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag iOF5eFbZOe generated for R_10K.
+WARNING: Random tag R903L5e82_ generated for R_10K.
 WARNING: Missing tag on R_10K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag SlJfEM54ui generated for R_10K.
+WARNING: Random tag kmguHoj6tI generated for R_10K.
 WARNING: Missing tag on R_10K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag zNAYhO732P generated for R_10K.
+WARNING: Random tag axzt2ID0n0 generated for R_10K.
 WARNING: Missing tag on R_10K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag jomJd876l3 generated for R_10K.
+WARNING: Random tag y826lHRVk2 generated for R_10K.
 WARNING: Missing tag on R_20K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag 1KoaL5lpj_ generated for R_20K.
+WARNING: Random tag Eqo7boLiOV generated for R_20K.
 WARNING: Missing tag on R_1K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag mq_eW8QfVu generated for R_1K.
+WARNING: Random tag 99qL3xOjmF generated for R_1K.
 WARNING: Missing tag on C_10U_AUD instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag 1jNYxBwXLd generated for C_10U_AUD.
+WARNING: Random tag RRAkIAXkKR generated for C_10U_AUD.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag 7kCd43WVjf generated for C_100N.
+WARNING: Random tag Ca2jySPLUJ generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag I6qxCU37qc generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag loJL4TEjZb generated for C_100N.
+WARNING: Random tag 996xvVBYZk generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag oUFrnrZ6ho generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag yD0O8mIwVC generated for C_100N.
+WARNING: Random tag ASaxGpX6lI generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag QNJWCfA96x generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag teCW6us2Ip generated for C_100N.
+WARNING: Random tag fD0jBZjmrz generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag oADrRgIjKt generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag D20tupQLHg generated for C_100N.
+WARNING: Random tag aNfl3xysdm generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag B1t2Gutckf generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag 0znLAPlopG generated for C_100N.
+WARNING: Random tag ZEfFGb2wvL generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag IOE48UVU2U generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag q8mifP7jhT generated for C_100N.
+WARNING: Random tag UIu_YhgJsX generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag KDv_V5nhu0 generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag CTWoUpjOzW generated for C_100N.
+WARNING: Random tag vGGXDQl7dY generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag EGb97AMOM8 generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag zW8VAcfuBV generated for C_100N.
+WARNING: Random tag Gz5D5vzi2a generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag 21JC46h1zC generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag URtynS6FQR generated for C_100N.
+WARNING: Random tag NIWvicsEgh generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag 4QOrkQAdzH generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag xs3nEj_dhf generated for C_100N.
+WARNING: Random tag xBFTTeWosO generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag vXaYg_IWeD generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag 4lXXH_Dskb generated for C_100N.
+WARNING: Random tag 0aGNohUb8L generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag wfK8w0NJdX generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag 6tjRnBX1BP generated for C_100N.
+WARNING: Random tag m7ZuicQQ9Y generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag jZaIGtnNz0 generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag 2lHjcTeUlk generated for C_100N.
+WARNING: Random tag bcCQWkpwuz generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag TEGvOqEYsv generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag aAYmcyzqek generated for C_100N.
+WARNING: Random tag A8VZHxT6vL generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag 1BEgERHw6f generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag 3kaUzmSiMZ generated for C_100N.
+WARNING: Random tag FVPSKVtOF2 generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag 0Goa27fizc generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag tcHs_XlMt_ generated for C_100N.
+WARNING: Random tag 5ca7rjByQr generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag OKSgM1qXKk generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag qIUDdUARPO generated for C_100N.
+WARNING: Random tag U7vy2uBgUb generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag k0D8IGg1ik generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag yr8f3UkFXS generated for C_100N.
+WARNING: Random tag wwwvybfy9R generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag HVgoz_pmU4 generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag YqcAo76mbW generated for C_100N.
+WARNING: Random tag t6MwSnWRv8 generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag ck7KxJgjD6 generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag zswQejZnfH generated for C_100N.
+WARNING: Random tag 0uEitnzhqq generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag E0P1oPtycq generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag AQE2RZtrIx generated for C_100N.
+WARNING: Random tag PQEpcUTTsY generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag N5eXWBvEi8 generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag foi08vTdBK generated for C_100N.
+WARNING: Random tag yp_vp3V6Yw generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag 93w2hOp62r generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag FW_GkK1vUF generated for C_100N.
+WARNING: Random tag moj3twVGvy generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag VzbhH5gtks generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag 5UvLyZp4EO generated for C_100N.
+WARNING: Random tag inZswP6a3k generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag R_81DDTT1p generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag oVF5IOXj1s generated for C_100N.
+WARNING: Random tag jlCO8P42sL generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag xmlFf2kMNb generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag vX7efGkHL7 generated for C_100N.
+WARNING: Random tag TMSMgYO8Rx generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag zMMqBx4OTG generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag KhsiD63jXJ generated for C_100N.
+WARNING: Random tag L6La2o1j8s generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag 0PS9naTEpl generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag Xv6e6EVk5p generated for C_100N.
+WARNING: Random tag gQGP1VcZ0X generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag xBKg5dEbME generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag _8sJPBHVOI generated for C_100N.
-WARNING: Missing tag on  instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:174.
-INFO: 480 warnings found while generating netlist.
+WARNING: Random tag _TIMFY9KWH generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag avnGuwLeph generated for R_0.
+WARNING: Missing tag on  instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:225.
+INFO: 539 warnings found while generating netlist.
 INFO: 0 errors found while generating netlist.
 
 WARNING: Missing tag on SST39SF040 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag laKtKRleg1 generated for SST39SF040.
+WARNING: Random tag 775eF0C3Mq generated for SST39SF040.
 WARNING: Missing tag on 24C64 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag uZHCNsB11e generated for 24C64.
+WARNING: Random tag EfVWpkLp8S generated for 24C64.
 WARNING: Missing tag on CART_EDGE_36 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:73.
-WARNING: Random tag W9EeWNWDPW generated for CART_EDGE_36.
+WARNING: Random tag PC2tFw8KBC generated for CART_EDGE_36.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag wOhGTedn9W generated for C_100N.
+WARNING: Random tag mn2dyyMVqQ generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag Pq1qJfSKuI generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
-WARNING: Random tag kqvTMUCVZN generated for C_100N.
-WARNING: Missing tag on  instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:174.
-INFO: 412 warnings found while generating netlist.
+WARNING: Random tag kiZ3JkBTKE generated for C_100N.
+WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:88.
+WARNING: Random tag 30HrOd_js9 generated for R_0.
+WARNING: Missing tag on  instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:225.
+INFO: 476 warnings found while generating netlist.
 INFO: 0 errors found while generating netlist.
 

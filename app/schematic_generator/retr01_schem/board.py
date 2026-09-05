@@ -32,12 +32,41 @@ def export_manifest_json(path: Path, *, board: BoardId = BoardId.MOBO) -> None:
     path.write_text(json.dumps({"board": board.value, "connections": payload, "gaps": gaps}, indent=2) + "\n")
 
 
+def _rail_name(net) -> str:
+    return str(getattr(net, "name", "") or "")
+
+
+def _pick_supply_rail(pin, vcc, analog):
+    """Prefer an existing named rail on the pin (e.g. +5V_ANALOG for U24)."""
+    for n in list(getattr(pin, "nets", None) or []):
+        name = _rail_name(n)
+        if name == "+5V_ANALOG":
+            return analog
+        if name == "+5V":
+            return vcc
+    return vcc
+
+
 def add_decoupling(
     parts: Dict[str, object],
     nets: Dict[str, object],
     board: BoardId = BoardId.MOBO,
 ) -> Dict[str, object]:
-    """100nF across VCC/GND for every silicon IC on this board."""
+    """100nF bypass per silicon IC with Quilter-friendly exclusive VCC nets.
+
+    Quilter assigns bypass parents with high confidence when the cap shares a
+    net with **one** IC power pin (explicit local net), not a shared +5V label.
+    Pattern per IC::
+
+        +5V --[RD*]-- +5V_<refdes> -- IC.VCC
+                           |
+                          CD*
+                           |
+                          GND
+
+    RD* is a populated 0 ohm (power path). Cap pin 1 lives only on +5V_<refdes>
+    with that IC VCC and the 0R, so Circuit Comprehension can parent CD* to the IC.
+    """
     if not skidl_available():
         return nets
 
@@ -47,11 +76,14 @@ def add_decoupling(
 
     vcc = nets.get("+5V") or rail_net("+5V")
     gnd = nets.get("GND") or rail_net("GND")
+    analog = nets.get("+5V_ANALOG") or rail_net("+5V_ANALOG")
     # Keep canonical names if SKiDL tried to rename after merges.
     vcc.name = "+5V"
     gnd.name = "GND"
+    analog.name = "+5V_ANALOG"
     nets["+5V"] = vcc
     nets["GND"] = gnd
+    nets["+5V_ANALOG"] = analog
 
     for n, entry in enumerate(silicon_ic_entries(board), start=1):
         pins = power_pin_nums(entry.mpn)
@@ -61,14 +93,33 @@ def add_decoupling(
         part = parts.get(entry.refdes)
         if part is None:
             continue
-        cap = make_passive("C_100N", f"CD{n}", _C0603)
-        parts[f"CD{n}"] = cap
+        cap_ref = f"CD{n}"
+        bridge_ref = f"RD{n}"
+        local_name = f"+5V_{entry.refdes}"
         try:
             vp = part[vcc_name]
             gp = part[gnd_name]
-            vp += vcc
+            supply = _pick_supply_rail(vp, vcc, analog)
+            # Drop any prior direct rail tie (manifest may have put VCC on +5V).
+            vp.disconnect()
+            local = Net(local_name)
+            local.name = local_name
+            nets[local_name] = local
+
+            cap = make_passive("C_100N", cap_ref, _C0603)
+            bridge = make_passive("R_0", bridge_ref, _R0603)
+            try:
+                bridge.value = "0"
+            except Exception:
+                pass
+            parts[cap_ref] = cap
+            parts[bridge_ref] = bridge
+
+            vp += local
+            cap["1"] += local
+            bridge["1"] += local
+            bridge["2"] += supply
             gp += gnd
-            cap["1"] += vcc
             cap["2"] += gnd
         except Exception:
             continue

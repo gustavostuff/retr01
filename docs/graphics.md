@@ -49,7 +49,7 @@ Eight live nametable slots in 32 KB VRAM. Each slot **512 B** (240 tile + 240 at
 | **0-3** | BG1 camera field (**2x2**, main playfield) |
 | **4-7** | BG0 camera field (**2x2**, second BG behind BG1) |
 
-**BG1** is the normal graphics layer: the playable, navigable screens (camera, collision, platforms). **BG0** is the second background behind that main BG. It shows through where BG1 uses color index **0**. Details: [Second background (BG0)](#second-background-bg0).
+**BG1** is the normal graphics layer: the playable, navigable screens (camera, collision, platforms). **BG0** is the second background behind that main BG. It shows through where BG1 uses color index **0**. This BG is not interactive for the player. Details: [Second background (BG0)](#second-background-bg0).
 
 Scroll `$FE02`/`$FE03` (BG1): **0-127** / **0-119**. Scroll `$FE06`/`$FE07` (BG0): same ranges for the far plane. Hardware does **not** auto-load MAP. Crossing a screen border = software streams **480 B**/screen via `$FE12` (or MAP `$FE93` -> VRAM).
 
