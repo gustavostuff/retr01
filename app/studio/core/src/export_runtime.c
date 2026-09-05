@@ -416,6 +416,23 @@ void r01_camera_set_deadzone(R01GameCtx *ctx, int dx, int dy) {
     ctx->cam_deadzone_y = dy;
 }
 
+void r01_bgm_play(R01GameCtx *ctx, int track) {
+    if (!ctx) {
+        return;
+    }
+    if (track < 1) {
+        track = 1;
+    }
+    ctx->bgm_track = track;
+}
+
+void r01_bgm_stop(R01GameCtx *ctx) {
+    if (!ctx) {
+        return;
+    }
+    ctx->bgm_track = 0;
+}
+
 void r01_camera_set_axis_lock(R01GameCtx *ctx, int mode) {
     if (!ctx) {
         return;

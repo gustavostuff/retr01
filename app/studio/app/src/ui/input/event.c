@@ -37,6 +37,21 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         pal_edit_nudge_master(ui, e->wheel.y, shift);
         return 1;
     }
+    if (e->type == SDL_MOUSEWHEEL && ui->app_mode == UI_APP_SOUNDS &&
+        ui->sound.plane == UI_SOUND_PLANE_BGM) {
+        int max_scroll = UI_SOUND_STEPS - UI_SOUND_VISIBLE_ROWS;
+        if (max_scroll < 0) {
+            max_scroll = 0;
+        }
+        ui->sound.scroll -= e->wheel.y;
+        if (ui->sound.scroll < 0) {
+            ui->sound.scroll = 0;
+        }
+        if (ui->sound.scroll > max_scroll) {
+            ui->sound.scroll = max_scroll;
+        }
+        return 1;
+    }
     if (e->type == SDL_MOUSEWHEEL &&
         (ui->tile_edit.open || ui->sprite_edit.open || ui->metasprite_edit.open || ui->entity_edit.open)) {
         int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
@@ -251,7 +266,11 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
         }
         if (e->key.keysym.sym == SDLK_SPACE) {
-            ui_toggle_play(ui);
+            if (ui->app_mode == UI_APP_SOUNDS) {
+                ui_sound_play_toggle(ui);
+            } else if (ui->app_mode == UI_APP_GRAPHICS) {
+                ui_toggle_play(ui);
+            }
             return 1;
         }
         if (ui->play.active) {
@@ -305,6 +324,56 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
 
         if (ui->tile_edit.open) {
             tile_modal_handle(ui, lx, ly, 1);
+            return 1;
+        }
+
+        if (e->button.button == SDL_BUTTON_LEFT) {
+            int app_tab;
+            if (app_mode_tab_hit(ui, lx, ly, &app_tab)) {
+                ui->arm_kind = UI_ARM_APP_TAB;
+                ui->arm_a = app_tab;
+                return 1;
+            }
+        }
+
+        if (ui->app_mode == UI_APP_SOUNDS) {
+            if (e->button.button == SDL_BUTTON_LEFT) {
+                int idx, row, col, ch;
+                ui->arm_kind = UI_ARM_NONE;
+                if (sound_plane_tab_hit(ui, lx, ly, &idx)) {
+                    ui->arm_kind = UI_ARM_SOUND_PLANE;
+                    ui->arm_a = idx;
+                    return 1;
+                }
+                if (ui->sound.plane == UI_SOUND_PLANE_BGM) {
+                    if (sound_play_hit(ui, lx, ly)) {
+                        ui->arm_kind = UI_ARM_SOUND_PLAY;
+                        return 1;
+                    }
+                    if (sound_add_hit(ui, lx, ly)) {
+                        ui->arm_kind = UI_ARM_SOUND_ADD;
+                        return 1;
+                    }
+                    if (sound_track_hit(ui, lx, ly, &idx)) {
+                        ui->arm_kind = UI_ARM_SOUND_TRACK;
+                        ui->arm_a = idx;
+                        return 1;
+                    }
+                    if (sound_channel_hit(ui, lx, ly, &ch)) {
+                        ui->arm_kind = UI_ARM_SOUND_CH;
+                        ui->arm_a = ch;
+                        return 1;
+                    }
+                    if (sound_grid_hit(ui, lx, ly, &row, &col)) {
+                        if (row >= 0 && row < UI_SOUND_STEPS) {
+                            ui->sound.sel_row = row;
+                            ui->sound.sel_col = col;
+                            ui->sound.channel = col;
+                        }
+                        return 1;
+                    }
+                }
+            }
             return 1;
         }
 
@@ -565,7 +634,61 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             int b = ui->arm_b;
             int wi, col, row, acc_sec, mode_row, prow;
             ui->arm_kind = UI_ARM_NONE;
-            if (kind == UI_ARM_PLAY && play_button_hit(ui, lx, ly)) {
+            if (kind == UI_ARM_APP_TAB) {
+                int app_tab;
+                if (app_mode_tab_hit(ui, lx, ly, &app_tab) && app_tab == a) {
+                    if (a == UI_APP_SOUNDS && ui->play.active) {
+                        ui_play_stop(ui);
+                    }
+                    if (a != UI_APP_SOUNDS) {
+                        ui_sound_play_stop(ui);
+                    }
+                    ui->app_mode = a;
+                    return 1;
+                }
+            }
+            if (kind == UI_ARM_SOUND_PLANE) {
+                int idx;
+                if (sound_plane_tab_hit(ui, lx, ly, &idx) && idx == a) {
+                    ui->sound.plane = a;
+                    if (a == UI_SOUND_PLANE_SFX) {
+                        ui_sound_play_stop(ui);
+                        ui_toast(ui, "SFX editor coming soon", 0);
+                    }
+                    return 1;
+                }
+            }
+            if (kind == UI_ARM_SOUND_TRACK) {
+                int idx;
+                if (sound_track_hit(ui, lx, ly, &idx) && idx == a) {
+                    ui->sound.track_idx = a;
+                    return 1;
+                }
+            }
+            if (kind == UI_ARM_SOUND_ADD && sound_add_hit(ui, lx, ly)) {
+                if (ui->sound.track_count < UI_SOUND_TRACKS_MAX) {
+                    int n = ui->sound.track_count;
+                    snprintf(ui->sound.track_name[n], sizeof(ui->sound.track_name[n]), "Track %d", n + 1);
+                    ui->sound.track_count++;
+                    ui->sound.track_idx = n;
+                    ui_toast(ui, "track added (UI stub)", 0);
+                } else {
+                    ui_toast(ui, "track limit", 1);
+                }
+                return 1;
+            }
+            if (kind == UI_ARM_SOUND_CH) {
+                int ch;
+                if (sound_channel_hit(ui, lx, ly, &ch) && ch == a) {
+                    ui->sound.channel = a;
+                    return 1;
+                }
+            }
+            if (kind == UI_ARM_SOUND_PLAY && sound_play_hit(ui, lx, ly)) {
+                ui_sound_play_toggle(ui);
+                return 1;
+            }
+            if (kind == UI_ARM_PLAY && ui->app_mode == UI_APP_GRAPHICS && play_button_hit(ui, lx, ly)) {
                 ui_toggle_play(ui);
                 return 1;
             }

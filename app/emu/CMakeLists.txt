@@ -31,8 +31,10 @@ if(NOT TARGET r01_play_common)
     ${R01_COMMON_DIR}/r01_play_anim_cart.c
     ${R01_COMMON_DIR}/r01_play_camera.c
     ${R01_COMMON_DIR}/r01_custom_logic_scan.c
+    ${R01_COMMON_DIR}/r01_nes_synth.c
   )
   target_include_directories(r01_play_common PUBLIC ${R01_COMMON_DIR})
+  target_link_libraries(r01_play_common PUBLIC m)
 endif()
 
 if(NOT TARGET retr01_emu_core)
@@ -49,7 +51,7 @@ target_compile_definitions(retr01_emu_core PUBLIC "R01_DEFAULT_CART=\"${R01_TEST
 
 # Standalone app + tests only when this is the top-level project.
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-  add_executable(retr01_emu src/main.c)
+  add_executable(retr01_emu src/main.c ${R01_COMMON_DIR}/r01_bgm_host.c)
   target_link_libraries(retr01_emu PRIVATE retr01_emu_core PkgConfig::SDL2)
 
   enable_testing()

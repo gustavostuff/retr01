@@ -41,7 +41,8 @@ void draw_ctrl_sidebar(UiState *ui, SDL_Renderer *r) {
     if (!ui || !r) {
         return;
     }
-    fill_rect(r, ui_ctrl_x(ui), 0, UI_CTRL_SIDEBAR_W, ui_logic_h(ui), UI_COL_PANEL_R, UI_COL_PANEL_G, UI_COL_PANEL_B);
+    fill_rect(r, ui_ctrl_x(ui), UI_APP_CHROME_H, UI_CTRL_SIDEBAR_W, ui_logic_h(ui) - UI_APP_CHROME_H, UI_COL_PANEL_R,
+              UI_COL_PANEL_G, UI_COL_PANEL_B);
     draw_button(r, play_btn_x(ui), play_btn_y(ui), play_btn_w(ui), ui->play.active ? "Stop" : "Play", 1,
                 play_button_hit(ui, ui->mouse_x, ui->mouse_y));
     draw_screen_mode(ui, r);
@@ -96,9 +97,13 @@ void ui_update_cursor(const UiState *ui) {
                point_in_rect(lx, ly, lo.left_list_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);
     } else if (ui->menu.open) {
         hand = menu_hit(ui, lx, ly, NULL, NULL);
+    } else if (ui->app_mode == UI_APP_SOUNDS) {
+        hand = app_mode_tab_hit(ui, lx, ly, NULL) || sound_plane_tab_hit(ui, lx, ly, NULL) ||
+               sound_track_hit(ui, lx, ly, NULL) || sound_add_hit(ui, lx, ly) || sound_play_hit(ui, lx, ly) ||
+               sound_channel_hit(ui, lx, ly, NULL) || sound_grid_hit(ui, lx, ly, NULL, NULL);
     } else {
-        hand = play_button_hit(ui, lx, ly) || accordion_header_hit(ui, lx, ly, NULL) ||
-               world_btn_hit(ui, lx, ly, NULL) || world_sub_hit(ui, lx, ly) ||
+        hand = app_mode_tab_hit(ui, lx, ly, NULL) || play_button_hit(ui, lx, ly) ||
+               accordion_header_hit(ui, lx, ly, NULL) || world_btn_hit(ui, lx, ly, NULL) || world_sub_hit(ui, lx, ly) ||
                world_cell_hit(ui, lx, ly, NULL, NULL) || palette_strip_hit(ui, lx, ly) ||
                palette_row_btn_hit(ui, lx, ly, NULL) || banks_tab_hit(ui, lx, ly, NULL) || banks_sub_hit(ui, lx, ly) ||
                banks_cell_hit(ui, lx, ly, NULL) || metatiles_add_hit(ui, lx, ly) ||

@@ -1,6 +1,8 @@
 #include "retr01_emu/machine.h"
 #include "retr01_emu/play.h"
 #include "retr01_emu/video.h"
+#include "r01_bgm_host.h"
+#include "r01_custom_logic_scan.h"
 
 #include <SDL.h>
 
@@ -463,13 +465,24 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS) != 0) {
         fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
         r01e_machine_shutdown(&machine);
         return 1;
     }
     /* Before any renderer/texture: nearest-neighbor upscale. */
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+
+    {
+        int track = 0;
+        const char *logic = "../../output/C/custom_logic.c";
+        const char *bin = "../../output/data/bgm_track1.bin";
+        if (r01_custom_logic_scan_bgm_play(logic, &track) == 0) {
+            if (r01_bgm_host_play(track, bin) != 0) {
+                (void)r01_bgm_host_play(track, NULL);
+            }
+        }
+    }
 
     /* Hidden until first frame is presented -- avoids empty-window flash. */
     win = SDL_CreateWindow("Retr01 Emulator (Phase 1)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -640,6 +653,7 @@ int main(int argc, char **argv) {
     SDL_DestroyRenderer(ren);
     SDL_DestroyWindow(win);
     SDL_Quit();
+    r01_bgm_host_shutdown();
     r01e_machine_shutdown(&machine);
     return 0;
 }

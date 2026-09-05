@@ -21,6 +21,8 @@ void r01_custom_on_init(R01GameCtx *ctx) {
     r01_entity_state_frame_delay_set(ctx, 1, 4);
     r01_camera_set_deadzone(ctx, 20, 20);
 
+    r01_bgm_play(ctx, 1); /* loop Track 1 (host Play / emu softsynth) */
+
     r01_event_on_button(R01_BTN_X, on_fire);
     r01_event_on_button(R01_BTN_Y, on_cycle_face);
 }

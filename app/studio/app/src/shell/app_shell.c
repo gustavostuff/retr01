@@ -67,7 +67,7 @@ int app_shell_init(AppShell *app, int headless) {
     }
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0"); /* nearest when stretching logic canvas */
 
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS) != 0) {
         fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
         return -1;
     }

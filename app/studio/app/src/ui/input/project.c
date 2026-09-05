@@ -13,6 +13,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 static int uri_hex(int c) {
     if (c >= '0' && c <= '9') {
@@ -174,6 +176,32 @@ void ui_export(UiState *ui) {
     if (r01_export_bundle(ui->project, stem, err, sizeof(err)) != 0) {
         ui_toast(ui, err, 1);
         return;
+    }
+    /* Host BGM sidecar for emu / Studio Play (Track 1). */
+    {
+        char path[R01_PATH_MAX];
+        char cells[32][5][5];
+        FILE *f;
+        int r, c;
+        memset(cells, 0, sizeof(cells));
+        for (r = 0; r < 32 && r < UI_SOUND_STEPS; r++) {
+            for (c = 0; c < 5 && c < UI_SOUND_BGM_CH; c++) {
+                memcpy(cells[r][c], ui->sound.cell[0][r][c], 5);
+            }
+        }
+        if (r01_path_resolve(R01_OUTPUT_DIR "/data/bgm_track1.bin", path, sizeof(path)) == 0) {
+            char *slash = strrchr(path, '/');
+            if (slash) {
+                *slash = '\0';
+                mkdir(path, 0755);
+                *slash = '/';
+            }
+            f = fopen(path, "wb");
+            if (f) {
+                fwrite(cells, 1, sizeof(cells), f);
+                fclose(f);
+            }
+        }
     }
     ui_toast(ui, R01_OUTPUT_DIR "/test.retr01 exported", 0);
 }

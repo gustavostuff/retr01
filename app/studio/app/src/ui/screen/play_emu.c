@@ -7,10 +7,14 @@
 #include "retr01_studio/project.h"
 #include "retr01_emu/machine.h"
 #include "retr01_emu/play.h"
+#include "r01_bgm_host.h"
+#include "r01_custom_logic_scan.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 static void play_destroy_textures(UiPlaySession *pl) {
     if (!pl) {
@@ -34,10 +38,69 @@ static void play_shutdown_machine(UiPlaySession *pl) {
     play_destroy_textures(pl);
 }
 
+static void ui_write_bgm_track1_bin(const UiState *ui) {
+    char path[R01_PATH_MAX];
+    char cells[R01_BGM_STEPS][R01_BGM_CH][R01_BGM_TOKEN];
+    FILE *f;
+    int r, c, t;
+    if (!ui) {
+        return;
+    }
+    t = 0;
+    memset(cells, 0, sizeof(cells));
+    for (r = 0; r < R01_BGM_STEPS && r < UI_SOUND_STEPS; r++) {
+        for (c = 0; c < R01_BGM_CH && c < UI_SOUND_BGM_CH; c++) {
+            memcpy(cells[r][c], ui->sound.cell[t][r][c], R01_BGM_TOKEN);
+        }
+    }
+    if (r01_path_resolve(R01_OUTPUT_DIR "/data/bgm_track1.bin", path, sizeof(path)) != 0) {
+        snprintf(path, sizeof(path), "%s", R01_OUTPUT_DIR "/data/bgm_track1.bin");
+    }
+    {
+        char *slash = strrchr(path, '/');
+        if (slash) {
+            *slash = '\0';
+#if defined(_WIN32)
+            _mkdir(path);
+#else
+            mkdir(path, 0755);
+#endif
+            *slash = '/';
+        }
+    }
+    f = fopen(path, "wb");
+    if (!f) {
+        return;
+    }
+    fwrite(cells, 1, sizeof(cells), f);
+    fclose(f);
+}
+
+static void ui_play_start_bgm(UiState *ui) {
+    char logic[R01_PATH_MAX];
+    char bin[R01_PATH_MAX];
+    int track = 0;
+    (void)ui;
+    ui_sound_play_stop(ui);
+    if (r01_path_resolve(R01_OUTPUT_DIR "/C/custom_logic.c", logic, sizeof(logic)) != 0) {
+        snprintf(logic, sizeof(logic), "%s", R01_OUTPUT_DIR "/C/custom_logic.c");
+    }
+    if (r01_custom_logic_scan_bgm_play(logic, &track) != 0) {
+        return;
+    }
+    if (r01_path_resolve(R01_OUTPUT_DIR "/data/bgm_track1.bin", bin, sizeof(bin)) != 0) {
+        bin[0] = '\0';
+    }
+    if (r01_bgm_host_play(track, bin[0] ? bin : NULL) != 0) {
+        (void)r01_bgm_host_play(track, NULL);
+    }
+}
+
 void ui_play_stop(UiState *ui) {
     if (!ui) {
         return;
     }
+    r01_bgm_host_stop();
     play_shutdown_machine(&ui->play);
     ui->play.active = 0;
     ui->play.booting = 0;
@@ -90,6 +153,7 @@ void ui_play_boot_finish(UiState *ui, SDL_Renderer *ren) {
         ui_play_stop(ui);
         return;
     }
+    ui_write_bgm_track1_bin(ui);
     snprintf(cart, sizeof(cart), "%s.retr01", stem);
 
     m = (R01eMachine *)calloc(1, sizeof(R01eMachine));
@@ -123,6 +187,7 @@ void ui_play_boot_finish(UiState *ui, SDL_Renderer *ren) {
     ui->play.machine = m;
     ui->play.booting = 0;
     ui->play.last_tick = SDL_GetTicks();
+    ui_play_start_bgm(ui);
 }
 
 int ui_play_screen_mark(const UiState *ui) {

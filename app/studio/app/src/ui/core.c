@@ -142,6 +142,11 @@ int ui_init(UiState *ui) {
     ui->logic_scale = 1;
     ui->menu.world_screen_idx = -1;
     ui->sel_instance = -1;
+    ui->app_mode = UI_APP_GRAPHICS;
+    ui_sound_init(ui);
+    if (ui_sound_audio_init() != 0) {
+        /* Non-fatal: Sounds Play will toast if pressed. */
+    }
     return 0;
 }
 
@@ -149,6 +154,8 @@ void ui_shutdown(UiState *ui) {
     if (!ui) {
         return;
     }
+    ui_sound_play_stop(ui);
+    ui_sound_audio_shutdown();
     ui_play_stop(ui);
     free(ui->project);
     ui->project = NULL;

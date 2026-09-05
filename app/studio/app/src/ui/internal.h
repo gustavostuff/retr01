@@ -40,6 +40,20 @@ typedef struct AccordionLayout {
     int entities_body_h;
 } AccordionLayout;
 
+typedef struct SoundEditorLayout {
+    int content_y;
+    int plane_tabs_x, plane_tabs_y, plane_tab_w;
+    int track_list_y, track_row_h;
+    int add_x, add_y, add_w;
+    int hdr_y;
+    int col_hdr_y;
+    int grid_x, grid_y, grid_w, grid_h;
+    int cell_w, row_h;
+    int insp_x, insp_y;
+    int play_x, play_y, play_w;
+    int ch_radio_y0;
+} SoundEditorLayout;
+
 static inline void ui_world_btn_pos(int wi, int btns_y, int *out_x, int *out_y) {
     if (out_x) {
         *out_x = UI_WORLDS_X + wi * UI_WORLD_BTN;
@@ -185,6 +199,25 @@ void worlds_tabs_prepare(const UiState *ui, UiTabsLayout *out);
 int accordion_header_hit(const UiState *ui, int lx, int ly, int *out_section);
 void accordion_toggle(UiState *ui, int section);
 void draw_accordion_header(SDL_Renderer *r, int y, const char *title, int open, int hover);
+void app_mode_tabs_prepare(const UiState *ui, UiTabsLayout *out);
+int app_mode_tab_hit(const UiState *ui, int lx, int ly, int *out_idx);
+void draw_app_mode_tabs(UiState *ui, SDL_Renderer *r);
+void sound_editor_layout(const UiState *ui, SoundEditorLayout *lo);
+void sound_plane_tabs_prepare(const UiState *ui, UiTabsLayout *out);
+int sound_plane_tab_hit(const UiState *ui, int lx, int ly, int *out_idx);
+int sound_track_hit(const UiState *ui, int lx, int ly, int *out_idx);
+int sound_add_hit(const UiState *ui, int lx, int ly);
+int sound_grid_hit(const UiState *ui, int lx, int ly, int *out_row, int *out_col);
+int sound_channel_hit(const UiState *ui, int lx, int ly, int *out_ch);
+int sound_play_hit(const UiState *ui, int lx, int ly);
+void ui_sound_init(UiState *ui);
+int ui_sound_audio_init(void);
+void ui_sound_audio_shutdown(void);
+void ui_sound_play_start(UiState *ui);
+void ui_sound_play_stop(UiState *ui);
+void ui_sound_play_toggle(UiState *ui);
+void ui_sound_play_poll(UiState *ui);
+int ui_sound_play_step(void);
 void tile_modal_layout(const UiState *ui, TileModalLayout *lo);
 void pal_modal_layout(const UiState *ui, PalModalLayout *lo);
 void sprite_modal_layout(const UiState *ui, SpriteModalLayout *lo);
@@ -303,6 +336,9 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r);
 void ui_update_cursor(const UiState *ui);
 void draw_screen_mode(UiState *ui, SDL_Renderer *r);
 void draw_ctrl_sidebar(UiState *ui, SDL_Renderer *r);
+
+/* ui/sound/draw.c */
+void draw_sound_editor(UiState *ui, SDL_Renderer *r);
 
 /* ui/draw/sidebar.c */
 void draw_sidebar(UiState *ui, SDL_Renderer *r);

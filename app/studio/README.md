@@ -15,18 +15,14 @@ There is **no** Studio-only host Play path. Preview always goes through export t
 
 ## Authoring (UI)
 
-Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Window present size stays **1280x720** (640x360 is drawn **2x**, nearest). **8px** grid, dark gray chrome. Buttons/labels **16px** tall. Proggy Tiny (`assets/proggy-tiny.ttf`). Screen / Play previews scale with canvas (sharp nearest). Sidebar accordion: per-section expand/collapse (`UI_ACCORDION_ALWAYS_EXPANDED`), **250ms** open/close animation (`UI_ACCORDION_ANIM_MS`).
-
 ```text
-+--------------------------------------------------------------------------------+
-| SIDEBAR (128) | PREVIEW (centered)              | CTRL (128)                  |
-| Worlds        | +------------------+            | [ Play ]                    |
-|  [1]..[8]     | | screen preview   |            | ( ) BG layer                |
-|  world map    | | (same slot for   |            | ( ) SPR layer               |
-| Palettes..    | |  edit + play)    |            | ( ) Tile sel                |
-| Sprites..     | +------------------+            | ( ) Tile paint              |
++---------------- Graphics | Audio ------------------------------------------+
+| SIDEBAR (128) | PREVIEW (centered in remaining) | CTRL (128)               |  Graphics
+| Tracks list   | BGM tracker grid (ch 1-5)       | Channel inspector        |  Audio
 +--------------------------------------------------------------------------------+
 ```
+
+Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Window present size stays **1280x720** (640x360 is drawn **2x**, nearest). **8px** grid, dark gray chrome. Top **Graphics | Audio** app tabs (`UI_APP_CHROME_H`). Buttons/labels **16px** tall. Proggy Tiny (`assets/proggy-tiny.ttf`). Screen / Play previews scale with canvas (sharp nearest). Sidebar accordion: per-section expand/collapse (`UI_ACCORDION_ALWAYS_EXPANDED`), **250ms** open/close animation (`UI_ACCORDION_ANIM_MS`). **Audio** tab includes a BGM UI shell and **Play/Stop** preview via a first-party NES-like softsynth (pulse/tri/noise/DPCM stub over SDL2 audio). Not cart-protocol playback. Graphics **Play** remains emu-only.
 
 | Control | Behavior |
 |---------|----------|

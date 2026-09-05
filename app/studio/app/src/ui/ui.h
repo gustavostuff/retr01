@@ -76,6 +76,25 @@
 #define UI_ARM_CATALOG_ADD 10
 #define UI_ARM_BANK_TAB 12
 #define UI_ARM_BANK_SUB 13
+#define UI_ARM_APP_TAB 14
+#define UI_ARM_SOUND_PLANE 15
+#define UI_ARM_SOUND_TRACK 16
+#define UI_ARM_SOUND_ADD 17
+#define UI_ARM_SOUND_CH 18
+#define UI_ARM_SOUND_PLAY 19
+
+#define UI_APP_GRAPHICS 0
+#define UI_APP_SOUNDS 1 /* Audio tab (historical enum name) */
+#define UI_APP_CHROME_H UI_BTN_H /* Graphics|Audio strip, flush to content */
+
+#define UI_SOUND_PLANE_BGM 0
+#define UI_SOUND_PLANE_SFX 1
+#define UI_SOUND_BGM_CH 5 /* Pulse1 Pulse2 Tri Noise DPCM */
+#define UI_SOUND_STEPS 32
+#define UI_SOUND_TRACKS_MAX 8
+#define UI_SOUND_CELL_W 40
+#define UI_SOUND_ROW_H 14
+#define UI_SOUND_VISIBLE_ROWS 16
 
 #define UI_ACC_NONE (-1)
 #define UI_ACC_WORLDS 0
@@ -285,6 +304,21 @@ typedef struct UiCatalogDrag {
     int off_y;
 } UiCatalogDrag;
 
+/* UI-only BGM shell (not project JSON). Cells are display tokens, not cart bytes. */
+typedef struct UiSoundEdit {
+    int plane; /* UI_SOUND_PLANE_BGM or SFX */
+    int track_idx;
+    int track_count;
+    char track_name[UI_SOUND_TRACKS_MAX][24];
+    int channel; /* 0..UI_SOUND_BGM_CH-1 */
+    int scroll;  /* first visible step row */
+    int sel_row;
+    int sel_col;
+    int playing;  /* BGM softsynth preview */
+    int play_row; /* -1 idle; else current step */
+    char cell[UI_SOUND_TRACKS_MAX][UI_SOUND_STEPS][UI_SOUND_BGM_CH][5];
+} UiSoundEdit;
+
 /* Single active text field (web-like caret / selection / scroll). */
 typedef struct UiTextEdit {
     char *buf;
@@ -337,6 +371,8 @@ typedef struct UiState {
     UiTextEdit text;
     UiBrush brush;
     UiCatalogDrag catalog_drag;
+    UiSoundEdit sound;
+    int app_mode; /* UI_APP_GRAPHICS or UI_APP_SOUNDS */
     int paint_stamp_valid;
     uint8_t paint_stamp_tile;
     uint8_t paint_stamp_attr;

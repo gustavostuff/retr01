@@ -11,5 +11,6 @@
 #include "r01_warp.h"
 #include "r01_projectile.h"
 #include "r01_player_anim.h"
+#include "r01_bgm.h"
 
 #endif

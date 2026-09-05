@@ -410,7 +410,8 @@ void draw_sidebar(UiState *ui, SDL_Renderer *r) {
 
     accordion_layout(ui, &lo);
     ui_tooltip_frame_begin(ui);
-    fill_rect(r, 0, 0, UI_SIDEBAR_W, ui_logic_h(ui), UI_COL_PANEL_R, UI_COL_PANEL_G, UI_COL_PANEL_B);
+    fill_rect(r, 0, UI_APP_CHROME_H, UI_SIDEBAR_W, ui_logic_h(ui) - UI_APP_CHROME_H, UI_COL_PANEL_R, UI_COL_PANEL_G,
+              UI_COL_PANEL_B);
 
     if (lo.worlds_body_h > 0) {
         accordion_body_clip(r, lo.worlds_btns_y, lo.worlds_body_h, &clip);

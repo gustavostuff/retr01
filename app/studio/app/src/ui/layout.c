@@ -48,12 +48,15 @@ void ui_preview_size(const UiState *ui, int *out_w, int *out_h) {
 void ui_editor_layout(const UiState *ui, int *screen_x, int *screen_y, int *layer_x, int *mode_x, int *mode_y0) {
     int sx = ui_preview_x(ui);
     int sy;
+    int chrome = UI_APP_CHROME_H;
+    int content_h;
     int ctrl_inner = ui_ctrl_x(ui) + UI_UNIT;
-    int radios_y = UI_UNIT + UI_BTN_H + UI_UNIT;
+    int radios_y = chrome + UI_BTN_H + UI_UNIT;
 
-    sy = (ui_logic_h(ui) - ui_screen_h(ui)) / 2;
-    if (sy < UI_UNIT) {
-        sy = UI_UNIT;
+    content_h = ui_logic_h(ui) - chrome;
+    sy = chrome + (content_h - ui_screen_h(ui)) / 2;
+    if (sy < chrome + UI_UNIT) {
+        sy = chrome + UI_UNIT;
     }
     if (screen_x) {
         *screen_x = sx;
@@ -143,7 +146,7 @@ int play_btn_x(const UiState *ui) {
 
 int play_btn_y(const UiState *ui) {
     (void)ui;
-    return UI_UNIT;
+    return UI_APP_CHROME_H;
 }
 
 int play_button_hit(const UiState *ui, int lx, int ly) {
@@ -203,7 +206,7 @@ int screen_pixel_hit(const UiState *ui, int lx, int ly, int *out_px, int *out_py
 }
 
 void accordion_layout(const UiState *ui, AccordionLayout *lo) {
-    int y = 0;
+    int y = UI_APP_CHROME_H;
     int always = UI_ACCORDION_ALWAYS_EXPANDED;
     int worlds_h;
     int pals_h;
@@ -979,4 +982,242 @@ int sprites_add_hit(const UiState *ui, int lx, int ly) {
     (void)lx;
     (void)ly;
     return 0;
+}
+
+void app_mode_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
+    static const char *const labs[] = {"Graphics", "Audio"};
+    int tab_w;
+    (void)ui;
+    if (!out) {
+        return;
+    }
+    tab_w = label_width("Graphics");
+    if (label_width("Audio") > tab_w) {
+        tab_w = label_width("Audio");
+    }
+    tab_w += UI_UNIT * 2;
+    if (tab_w < 64) {
+        tab_w = 64;
+    }
+    ui_tabs_layout(labs, 2, 0, 0, tab_w, out);
+    out->tab_h = UI_BTN_H;
+}
+
+int app_mode_tab_hit(const UiState *ui, int lx, int ly, int *out_idx) {
+    UiTabsLayout tabs;
+    app_mode_tabs_prepare(ui, &tabs);
+    return ui_tabs_hit(&tabs, ui ? ui->app_mode : 0, lx, ly, out_idx);
+}
+
+void draw_app_mode_tabs(UiState *ui, SDL_Renderer *r) {
+    UiTabsLayout tabs;
+    if (!ui || !r) {
+        return;
+    }
+    fill_rect(r, 0, 0, ui_logic_w(ui), UI_APP_CHROME_H, UI_COL_PANEL_R, UI_COL_PANEL_G, UI_COL_PANEL_B);
+    app_mode_tabs_prepare(ui, &tabs);
+    ui_tabs_draw(r, &tabs, ui->app_mode, ui->mouse_x, ui->mouse_y);
+}
+
+void sound_editor_layout(const UiState *ui, SoundEditorLayout *lo) {
+    int chrome = UI_APP_CHROME_H;
+    int tab_w;
+    if (!lo) {
+        return;
+    }
+    memset(lo, 0, sizeof(*lo));
+    lo->content_y = chrome;
+    tab_w = label_width("BGM");
+    if (label_width("SFX") > tab_w) {
+        tab_w = label_width("SFX");
+    }
+    tab_w += UI_UNIT * 2;
+    if (tab_w < 40) {
+        tab_w = 40;
+    }
+    lo->plane_tab_w = tab_w;
+    lo->plane_tabs_x = UI_UNIT;
+    lo->plane_tabs_y = chrome;
+    lo->track_list_y = chrome + UI_BTN_H + UI_UNIT;
+    lo->track_row_h = UI_SPRITE_ROW_H;
+    lo->add_w = label_width("Add");
+    lo->add_x = UI_WORLDS_X + UI_UNIT;
+    lo->add_y = ui_logic_h(ui) - UI_BTN_H - UI_UNIT;
+    if (lo->add_y < lo->track_list_y + UI_BTN_H) {
+        lo->add_y = lo->track_list_y + UI_BTN_H;
+    }
+
+    lo->grid_x = UI_SIDEBAR_W + UI_UNIT * 4;
+    lo->hdr_y = chrome + UI_UNIT;
+    lo->col_hdr_y = lo->hdr_y + UI_BTN_H;
+    lo->grid_y = lo->col_hdr_y + UI_BTN_H;
+    lo->cell_w = UI_SOUND_CELL_W;
+    lo->row_h = UI_SOUND_ROW_H;
+    lo->grid_w = UI_SOUND_BGM_CH * lo->cell_w;
+    lo->grid_h = UI_SOUND_VISIBLE_ROWS * lo->row_h;
+    {
+        int max_w = ui_ctrl_x(ui) - UI_UNIT - lo->grid_x;
+        if (lo->grid_w > max_w && max_w > lo->cell_w) {
+            lo->cell_w = max_w / UI_SOUND_BGM_CH;
+            lo->grid_w = UI_SOUND_BGM_CH * lo->cell_w;
+        }
+    }
+
+    lo->insp_x = ui_ctrl_x(ui) + UI_UNIT;
+    lo->insp_y = chrome + UI_UNIT;
+    lo->play_w = label_width("Stop");
+    if (label_width("Play") > lo->play_w) {
+        lo->play_w = label_width("Play");
+    }
+    lo->play_x = lo->insp_x;
+    lo->play_y = lo->insp_y;
+    lo->ch_radio_y0 = lo->play_y + UI_BTN_H + UI_UNIT + UI_BTN_H;
+}
+
+void sound_plane_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
+    static const char *const labs[] = {"BGM", "SFX"};
+    SoundEditorLayout lo;
+    sound_editor_layout(ui, &lo);
+    if (!out) {
+        return;
+    }
+    ui_tabs_layout(labs, 2, lo.plane_tabs_x, lo.plane_tabs_y, lo.plane_tab_w, out);
+    out->tab_h = UI_BTN_H;
+}
+
+int sound_plane_tab_hit(const UiState *ui, int lx, int ly, int *out_idx) {
+    UiTabsLayout tabs;
+    sound_plane_tabs_prepare(ui, &tabs);
+    return ui_tabs_hit(&tabs, ui ? ui->sound.plane : 0, lx, ly, out_idx);
+}
+
+int sound_track_hit(const UiState *ui, int lx, int ly, int *out_idx) {
+    SoundEditorLayout lo;
+    int i;
+    int n;
+    if (!ui) {
+        return 0;
+    }
+    sound_editor_layout(ui, &lo);
+    n = ui->sound.track_count;
+    if (n < 0) {
+        n = 0;
+    }
+    if (n > UI_SOUND_TRACKS_MAX) {
+        n = UI_SOUND_TRACKS_MAX;
+    }
+    for (i = 0; i < n; i++) {
+        int y = lo.track_list_y + i * lo.track_row_h;
+        if (point_in_rect(lx, ly, 0, y, UI_SIDEBAR_W, lo.track_row_h)) {
+            if (out_idx) {
+                *out_idx = i;
+            }
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int sound_add_hit(const UiState *ui, int lx, int ly) {
+    SoundEditorLayout lo;
+    if (!ui) {
+        return 0;
+    }
+    sound_editor_layout(ui, &lo);
+    return point_in_rect(lx, ly, lo.add_x, lo.add_y, lo.add_w, UI_BTN_H);
+}
+
+int sound_grid_hit(const UiState *ui, int lx, int ly, int *out_row, int *out_col) {
+    SoundEditorLayout lo;
+    int rx, ry;
+    if (!ui) {
+        return 0;
+    }
+    sound_editor_layout(ui, &lo);
+    if (!point_in_rect(lx, ly, lo.grid_x, lo.grid_y, lo.grid_w, lo.grid_h)) {
+        return 0;
+    }
+    rx = (ly - lo.grid_y) / lo.row_h;
+    ry = (lx - lo.grid_x) / lo.cell_w;
+    if (rx < 0 || rx >= UI_SOUND_VISIBLE_ROWS || ry < 0 || ry >= UI_SOUND_BGM_CH) {
+        return 0;
+    }
+    if (out_row) {
+        *out_row = ui->sound.scroll + rx;
+    }
+    if (out_col) {
+        *out_col = ry;
+    }
+    return 1;
+}
+
+int sound_channel_hit(const UiState *ui, int lx, int ly, int *out_ch) {
+    SoundEditorLayout lo;
+    int i;
+    if (!ui) {
+        return 0;
+    }
+    sound_editor_layout(ui, &lo);
+    for (i = 0; i < UI_SOUND_BGM_CH; i++) {
+        int y = lo.ch_radio_y0 + i * (UI_MODE_ROW_H + 2);
+        if (point_in_rect(lx, ly, lo.insp_x, y, UI_CTRL_SIDEBAR_W - UI_UNIT * 2, UI_MODE_ROW_H)) {
+            if (out_ch) {
+                *out_ch = i;
+            }
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int sound_play_hit(const UiState *ui, int lx, int ly) {
+    SoundEditorLayout lo;
+    if (!ui) {
+        return 0;
+    }
+    sound_editor_layout(ui, &lo);
+    return point_in_rect(lx, ly, lo.play_x, lo.play_y, lo.play_w, UI_BTN_H);
+}
+
+void ui_sound_init(UiState *ui) {
+    UiSoundEdit *s;
+    int t, r, c;
+    static const char *demo[][UI_SOUND_BGM_CH] = {
+        {"C4", "E4", "G3", "--", "--"},
+        {"--", "--", "--", "8F", "--"},
+        {"D4", "F4", "A3", "--", "FD"},
+        {"--", "--", "--", "--", "--"},
+        {"E4", "G4", "B3", "--", "--"},
+        {"--", "--", "G3", "8F", "--"},
+        {"C4", "--", "--", "--", "--"},
+        {"--", "E4", "--", "--", "--"},
+    };
+    if (!ui) {
+        return;
+    }
+    s = &ui->sound;
+    memset(s, 0, sizeof(*s));
+    s->plane = UI_SOUND_PLANE_BGM;
+    s->track_count = 2;
+    s->track_idx = 0;
+    s->channel = 0;
+    s->scroll = 0;
+    s->sel_row = 0;
+    s->sel_col = 0;
+    s->playing = 0;
+    s->play_row = -1;
+    snprintf(s->track_name[0], sizeof(s->track_name[0]), "Track 1");
+    snprintf(s->track_name[1], sizeof(s->track_name[1]), "Track 2");
+    for (t = 0; t < UI_SOUND_TRACKS_MAX; t++) {
+        for (r = 0; r < UI_SOUND_STEPS; r++) {
+            for (c = 0; c < UI_SOUND_BGM_CH; c++) {
+                snprintf(s->cell[t][r][c], sizeof(s->cell[t][r][c]), "--");
+            }
+        }
+    }
+    for (r = 0; r < (int)(sizeof(demo) / sizeof(demo[0])); r++) {
+        for (c = 0; c < UI_SOUND_BGM_CH; c++) {
+            snprintf(s->cell[0][r][c], sizeof(s->cell[0][r][c]), "%s", demo[r][c]);
+        }
+    }
 }
