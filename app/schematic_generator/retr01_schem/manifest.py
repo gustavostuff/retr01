@@ -344,9 +344,10 @@ def build_manifest() -> List[Connection]:
 
 def manifest_gaps() -> List[str]:
     return [
-        "PCB J3/J4 still CUI SJ1-3533NG horizontal — swap to Retr01_Lib:Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical before fab",
+        "PCB J3/J4 still CUI SJ1-3533NG horizontal - swap to Retr01_Lib:Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical before fab",
         "Optional: replace PinSocket_2x18 with EDAC 395-036-559-212 manufacturer CAD",
-        "Retr01_Lib .kicad_sym for W65C02S / ATF22V10 (netlist/Quilter OK without; human sch later)",
+        "Retr01_Lib .kicad_sym for W65C02S / ATF22V10 (netlist/Quilter OK without. Human sch later)",
+        "U725 AD725: first spin fully THT - replace SOIC footprint with DIP-16 + SOIC-to-DIP adapter before fab",
         "AD725 / RGBS 0.7 Vpp bench tune on first spin",
     ]
 

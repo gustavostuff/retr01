@@ -101,7 +101,7 @@ Board clocks matter for layout cleanliness. They are not automatically a show-st
 | **J8** | **CUI RCJ-012** (black RCA, audio) | Symbol: stock **`Conn_Coaxial`**. Footprint: `Retr01_Lib:CUI_RCJ-01x_Vertical` (pad **1**=tip, **2**=shellx2) |
 | **J9** | **CUI RCJ-014** (yellow RCA, composite) | Same symbol + footprint as J8 |
 | **J36** | **EDAC 395-036-559-212** (right-angle 2x18) | Stock stand-in `PinSocket_2x18_P2.54mm_Horizontal` until EDAC CAD. Arcade alt **395-036-520-201** (straight) is shell-only, not dual-footprint |
-| **U725** | **AD725ARZ** | Stock `SOIC-16_3.9x9.9mm_P1.27mm` |
+| **U725** | **AD725ARZ** | Chip is **SOIC-16 only** (no DIP from ADI). **First-spin / v2 mobo: fully THT** - do **not** solder SOIC to the board. Replace with a **SOIC-16-to-DIP adapter** (or other THT carrier) on a **DIP-16** footprint. Later spins may go direct SOIC. |
 
 **You build yourself:** Optionally refine J36 from EDAC drawing. TRS + RCJ footprints are in `Retr01_Lib.pretty`.
 
@@ -115,7 +115,7 @@ Board clocks matter for layout cleanliness. They are not automatically a show-st
 | Video bit resistors (LSB->MSB) | Red/Green: **4.00 / 2.00 / 1.00 kohm**. Blue: **2.00 / 1.00 kohm** |
 | **75.0 ohm** to **GND** on each R/G/B | Termination -> **~0.7 Vpp** into 75 ohm video plant |
 | Optional ferrite beads on RGBS | Cable RF. Place at connector |
-| Composite encoder | **AD725ARZ** (SOIC-16): RGB AC-coupled in, **CSYNC** on HSYNC, **NTSC**, **14.31818 MHz** 4FSC. COMP -> 75 ohm -> J9. Outside 32-IC count. **No S-Video** |
+| Composite encoder | **AD725ARZ**: RGB AC-coupled in, **CSYNC** on HSYNC, **NTSC**, **14.31818 MHz** 4FSC. COMP -> 75 ohm -> J9. Outside 32-IC count. **No S-Video**. Silicon package is SOIC-16 only. **First PCB spin is fully THT:** mount via **SOIC-to-DIP adapter** on DIP-16 pads (see connectors table **U725**) |
 | Bench video levels (locked targets) | Guns **~0.7 Vpp** into 75 ohm. AD725 RGB inputs **0-714 mV** AC-coupled (datasheet black ~0.8 V DC after clamp). No BOM change until first-spin scope |
 | APU **R-2R** from 328P `AUD0`-`AUD7` | Classic ladder **R = 10.0 kohm**, **2R = 20.0 kohm** (1%), then AC-couple to line out ([`sound.md`](sound.md)) |
 | APU build-out | **1.0 kohm** series + **10 uF** AC-coupling toward jack |
@@ -218,6 +218,7 @@ Further reading that clarifies stackup and return paths: Rick Hartley lectures o
 
 | Topic | Note |
 |-------|------|
+| **U725 AD725 THT** | **Replace SMD on first spin.** AD725 has no THT SKU. Use SOIC-16-to-DIP adapter + DIP-16 footprint before fab freeze |
 | PPTC Ihold per pad port | Bench ATtiny85 + LED budget, then pick family (e.g. Bourns MF-MSMF / Littelfuse 1206L) |
 | First-spin RF | TEM comparative + ferrite/clamp tweaks. Formal CE only if selling into marked markets |
 | Prop-delay budget | Sim: `./sim cart.retr01 DELAY=typical|max` (or env `R01S_PROP_DELAY`). Capture HC / PLD / SRAM stacks before PCB freeze |

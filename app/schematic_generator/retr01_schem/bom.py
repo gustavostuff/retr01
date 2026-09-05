@@ -213,7 +213,7 @@ BOM: List[BomEntry] = [
     BomEntry(
         "U725",
         "AD725",
-        "AD725ARZ RGB→NTSC composite encoder",
+        "AD725ARZ RGB->NTSC encoder (SOIC-16 die). First spin: THT via SOIC-to-DIP adapter on DIP-16 pads",
         IslandId.VIDEO,
         16,
         _SOIC16,
