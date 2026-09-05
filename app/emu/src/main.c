@@ -505,7 +505,7 @@ int main(int argc, char **argv) {
     SDL_Texture *vram_tex = NULL;
     SDL_Texture *bg0_tex = NULL;
     SDL_Texture *mask_tex = NULL;
-    int scale = 3;
+    int scale = 2;
     int running = 1;
     int paused = 0;
     Uint32 last_ticks;
@@ -602,7 +602,7 @@ int main(int argc, char **argv) {
     }
     printf("Pads (Sim map): P1 WASD + G/H X/Y, 1 coin, 2 start  |  "
            "P2 arrows + ,/. X/Y, Shift coin, Enter start\n");
-    printf("Space pause  |  R reset  |  Esc quit\n");
+    printf("Space pause  |  R reset  |  Ctrl+1/2 scale  |  Esc quit\n");
     if (dbg_win) {
         printf("Debug: BG1/BG0 2x2 + BG1 mask + world map + pals + CPU budget (2 Hz, 50k red line)\n");
     }
@@ -649,6 +649,12 @@ int main(int argc, char **argv) {
                     paused = !paused;
                 } else if (ev.key.keysym.sym == SDLK_r) {
                     r01e_machine_reset(&machine);
+                } else if ((ev.key.keysym.mod & KMOD_CTRL) && ev.key.keysym.sym == SDLK_1) {
+                    scale = 1;
+                    SDL_SetWindowSize(win, R01E_VISIBLE_W * scale, R01E_VISIBLE_H * scale);
+                } else if ((ev.key.keysym.mod & KMOD_CTRL) && ev.key.keysym.sym == SDLK_2) {
+                    scale = 2;
+                    SDL_SetWindowSize(win, R01E_VISIBLE_W * scale, R01E_VISIBLE_H * scale);
                 }
             }
         }

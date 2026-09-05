@@ -209,6 +209,13 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         ui_islands_strip_clamp(ui);
         return 1;
     }
+    if (e->type == SDL_MOUSEMOTION && ui->drag_wave_monitor) {
+        ui->wave_monitor_x = logic_x - R01S_UI_VIEW_X - ui->drag_wave_ox;
+        ui->wave_monitor_y = logic_y - R01S_UI_VIEW_Y - ui->drag_wave_oy;
+        ui->wave_monitor_moved = 1;
+        ui_wave_monitor_clamp(ui);
+        return 1;
+    }
     if (e->type == SDL_MOUSEBUTTONDOWN &&
         (e->button.button == SDL_BUTTON_LEFT || e->button.button == SDL_BUTTON_RIGHT) &&
         ui_legend_strip_contains(ui, logic_x, logic_y)) {
@@ -226,6 +233,16 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         ui->drag_islands_ox = logic_x - (R01S_UI_VIEW_X + ui->islands_strip_x);
         ui->drag_islands_oy = logic_y - (R01S_UI_VIEW_Y + ui->islands_strip_y);
         ui->islands_strip_moved = 0;
+        ui->ctx_chip = -1;
+        return 1;
+    }
+    if (e->type == SDL_MOUSEBUTTONDOWN &&
+        (e->button.button == SDL_BUTTON_LEFT || e->button.button == SDL_BUTTON_RIGHT) &&
+        ui_wave_monitor_contains(ui, logic_x, logic_y)) {
+        ui->drag_wave_monitor = 1;
+        ui->drag_wave_ox = logic_x - (R01S_UI_VIEW_X + ui->wave_monitor_x);
+        ui->drag_wave_oy = logic_y - (R01S_UI_VIEW_Y + ui->wave_monitor_y);
+        ui->wave_monitor_moved = 0;
         ui->ctx_chip = -1;
         return 1;
     }
@@ -290,6 +307,14 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 ui->layout_dirty = 1;
             } else if (e->button.button == SDL_BUTTON_LEFT) {
                 ui_health_copy_at(ui, logic_x, logic_y);
+            }
+            return 1;
+        }
+        if (ui->drag_wave_monitor) {
+            int moved = ui->wave_monitor_moved;
+            ui->drag_wave_monitor = 0;
+            if (moved) {
+                ui->layout_dirty = 1;
             }
             return 1;
         }

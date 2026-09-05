@@ -4,15 +4,6 @@
 #include <stdio.h>
 #include <string.h>
 
-/* Physical window / present size is always 2x the base canvas (1280x720). */
-#define UI_PRESENT_W (UI_LOGIC_BASE_W * 2)
-#define UI_PRESENT_H (UI_LOGIC_BASE_H * 2)
-
-static int present_scale_for_logic(const UiState *ui) {
-    /* logic 640x360 -> 2x present, logic 1280x720 -> 1x present. */
-    return 2 / ui_logic_scale(ui);
-}
-
 static void logic_from_window(const AppShell *app, int win_x, int win_y, int *lx, int *ly) {
     int ww, wh, draw_w, draw_h, ox, oy, scale;
     SDL_GetWindowSize(app->win, &ww, &wh);
@@ -43,6 +34,31 @@ static int recreate_target(AppShell *app) {
     return 0;
 }
 
+void app_shell_set_render_scale(AppShell *app, int scale) {
+    int lw;
+    int lh;
+    if (!app || !app->win) {
+        return;
+    }
+    if (scale < 1) {
+        scale = 1;
+    }
+    if (scale > 2) {
+        scale = 2;
+    }
+    app->render_scale = scale;
+    app->scale = scale;
+    app->ui.scale = scale;
+    lw = ui_logic_w(&app->ui);
+    lh = ui_logic_h(&app->ui);
+    SDL_SetWindowSize(app->win, lw * scale, lh * scale);
+}
+
+static void app_shell_set_render_scale_toast(AppShell *app, int scale) {
+    app_shell_set_render_scale(app, scale);
+    ui_toast(&app->ui, scale == 2 ? "scale 2x" : "scale 1x", 0);
+}
+
 void app_shell_apply_logic_scale(AppShell *app) {
     if (!app || !app->win || !app->ren) {
         return;
@@ -50,13 +66,16 @@ void app_shell_apply_logic_scale(AppShell *app) {
     if (recreate_target(app) != 0) {
         return;
     }
-    app->scale = present_scale_for_logic(&app->ui);
-    app->ui.scale = app->scale;
-    SDL_SetWindowSize(app->win, UI_PRESENT_W, UI_PRESENT_H);
+    if (app->render_scale < 1) {
+        app->render_scale = 2;
+    }
+    app_shell_set_render_scale(app, app->render_scale);
 }
 
 int app_shell_init(AppShell *app, int headless) {
     Uint32 flags;
+    int lw;
+    int lh;
     memset(app, 0, sizeof(*app));
 
     if (headless) {
@@ -75,13 +94,16 @@ int app_shell_init(AppShell *app, int headless) {
         SDL_Quit();
         return -1;
     }
-    app->scale = present_scale_for_logic(&app->ui);
-    app->ui.scale = app->scale;
+    app->render_scale = 2;
+    app->scale = 2;
+    app->ui.scale = 2;
+    lw = ui_logic_w(&app->ui);
+    lh = ui_logic_h(&app->ui);
 
     flags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
 
-    app->win = SDL_CreateWindow("Retr01 Studio", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, UI_PRESENT_W,
-                                UI_PRESENT_H, flags);
+    app->win = SDL_CreateWindow("Retr01 Studio", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, lw * app->render_scale,
+                                lh * app->render_scale, flags);
     if (!app->win) {
         ui_shutdown(&app->ui);
         SDL_Quit();
@@ -163,6 +185,17 @@ void app_shell_frame(AppShell *app) {
 
 int app_shell_handle_event(AppShell *app, const SDL_Event *e) {
     int wx = 0, wy = 0, lx = 0, ly = 0, rc;
+    if (e->type == SDL_KEYDOWN && (e->key.keysym.mod & KMOD_CTRL) && !(e->key.keysym.mod & KMOD_SHIFT) &&
+        !(e->key.keysym.mod & KMOD_ALT)) {
+        if (e->key.keysym.sym == SDLK_1) {
+            app_shell_set_render_scale_toast(app, 1);
+            return 1;
+        }
+        if (e->key.keysym.sym == SDLK_2) {
+            app_shell_set_render_scale_toast(app, 2);
+            return 1;
+        }
+    }
     if (e->type == SDL_DROPFILE) {
         rc = ui_handle_drop_file(&app->ui, e->drop.file, 0, 0);
         SDL_free(e->drop.file);

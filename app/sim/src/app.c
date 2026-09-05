@@ -55,6 +55,22 @@ static void logic_from_window(const R01sApp *app, int win_x, int win_y, int *lx,
     *ly = (win_y - oy) / scale;
 }
 
+static void app_set_render_scale(R01sApp *app, int scale) {
+    if (!app || !app->win) {
+        return;
+    }
+    if (scale < 1) {
+        scale = 1;
+    }
+    if (scale > 2) {
+        scale = 2;
+    }
+    app->render_scale = scale;
+    app->scale = scale;
+    SDL_SetWindowSize(app->win, R01S_LOGIC_W * scale, R01S_LOGIC_H * scale);
+    snprintf(app->ui.status, sizeof(app->ui.status), "scale %dx", scale);
+}
+
 static void catchup_join(R01sApp *app) {
     if (!app || !app->catchup_th) {
         return;
@@ -287,7 +303,8 @@ void r01s_app_mount_builder(R01sApp *app) {
 int r01s_app_init(R01sApp *app, int headless) {
     Uint32 flags;
     memset(app, 0, sizeof(*app));
-    app->scale = headless ? 1 : 2;
+    app->render_scale = headless ? 1 : 2;
+    app->scale = app->render_scale;
     app->running = 1;
     SDL_AtomicSet(&app->catchup_active, 0);
     SDL_AtomicSet(&app->catchup_ui_req, 0);
@@ -582,6 +599,18 @@ void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
             }
             app->running = 0;
             return;
+        case SDLK_1:
+            if (e->key.keysym.mod & KMOD_CTRL) {
+                app_set_render_scale(app, 1);
+                return;
+            }
+            break;
+        case SDLK_2:
+            if (e->key.keysym.mod & KMOD_CTRL) {
+                app_set_render_scale(app, 2);
+                return;
+            }
+            break;
         case SDLK_SPACE:
             if (r01s_app_catchup_active(app)) {
                 return;

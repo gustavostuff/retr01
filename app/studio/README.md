@@ -22,7 +22,7 @@ There is **no** Studio-only host Play path. Preview always goes through export t
 +--------------------------------------------------------------------------------+
 ```
 
-Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Window present size stays **1280x720** (640x360 is drawn **2x**, nearest). **8px** grid, dark gray chrome. Top **Graphics | Audio** app tabs (`UI_APP_CHROME_H`), flush left. Buttons/labels **16px** tall. Proggy Tiny (`assets/proggy-tiny.ttf`). Screen / Play previews scale with canvas (sharp nearest). Sidebar accordion: per-section expand/collapse (`UI_ACCORDION_ALWAYS_EXPANDED`), **250ms** open/close animation (`UI_ACCORDION_ANIM_MS`). **Audio** tab: compact left-aligned **BGM | SFX** plane tabs, BGM tracker shell, and **Play/Stop** via a first-party NES-like softsynth (pulse/tri/noise/DPCM stub over SDL2 audio). Not cart-protocol playback. Graphics **Play** remains emu-only (host BGM + P1 X/Y SFX). **Sim is not involved** and does not play host audio.
+Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Present scale **Ctrl+1** / **Ctrl+2** (1x / 2x window). **8px** grid, dark gray chrome. Top **Graphics | Audio** app tabs (`UI_APP_CHROME_H`), flush left. Buttons/labels **16px** tall. Proggy Tiny (`assets/proggy-tiny.ttf`). Screen / Play previews scale with canvas (sharp nearest). Sidebar accordion: per-section expand/collapse (`UI_ACCORDION_ALWAYS_EXPANDED`), **250ms** open/close animation (`UI_ACCORDION_ANIM_MS`). **Audio** tab: compact left-aligned **BGM | SFX** plane tabs, BGM tracker shell, and **Play/Stop** via a first-party NES-like softsynth (pulse/tri/noise/DPCM stub over SDL2 audio). Not cart-protocol playback. Graphics **Play** remains emu-only (host BGM + P1 X/Y SFX). **Sim is not involved** and does not play host audio.
 
 | Control | Behavior |
 |---------|----------|
@@ -228,6 +228,7 @@ ctest --test-dir build --output-on-failure
 | Save / load | **Ctrl+S** / **Ctrl+O** -> `output/test.r01proj` |
 | Export cart | **Ctrl+E** -> `output/test.retr01` (+ `C/`, `ASM/`, `data/`) |
 | Toggle canvas | **Ctrl+Shift+R** -> **640x360** / **1280x720** |
+| Present scale | **Ctrl+1** / **Ctrl+2** -> 1x / 2x window |
 
 ---
 

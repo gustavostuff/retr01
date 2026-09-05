@@ -44,6 +44,9 @@
 #define R01S_UI_LEGEND_STRIP_DEFAULT_X 8
 #define R01S_UI_LEGEND_STRIP_DEFAULT_Y (R01S_UI_ISLANDS_STRIP_DEFAULT_Y + R01S_UI_FLOAT_STRIP_H + 4)
 #define R01S_UI_LEGEND_STRIP_H (12 + 5 * 8 + 4 * 2)
+#define R01S_UI_WAVE_MONITOR_DEFAULT_X 8
+/* Default Y is bottom-left. Computed at init/clamp from panel height. */
+#define R01S_UI_WAVE_MONITOR_DEFAULT_Y (-1)
 
 typedef struct R01sUi {
     R01sIslandGroup *group;
@@ -100,6 +103,12 @@ typedef struct R01sUi {
     int drag_legend_ox;
     int drag_legend_oy;
     int legend_strip_moved;
+    int wave_monitor_x; /* viewport-relative origin */
+    int wave_monitor_y;
+    int drag_wave_monitor;
+    int drag_wave_ox;
+    int drag_wave_oy;
+    int wave_monitor_moved;
     int modal;        /* R01S_UI_MODAL_* */
     int modal_result; /* R01S_UI_MODAL_RES_* when user picks an action */
     int fps;            /* rolling 1s frame rate for HUD */

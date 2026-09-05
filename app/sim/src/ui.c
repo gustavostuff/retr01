@@ -30,6 +30,8 @@ int r01s_ui_init(R01sUi *ui) {
     ui->legend_strip_x = R01S_UI_LEGEND_STRIP_DEFAULT_X;
     ui->legend_strip_y = R01S_UI_LEGEND_STRIP_DEFAULT_Y;
     (void)font_ensure();
+    ui->wave_monitor_x = R01S_UI_WAVE_MONITOR_DEFAULT_X;
+    ui->wave_monitor_y = ui_wave_monitor_default_y();
     snprintf(ui->status, sizeof(ui->status),
              "SPACE pause. S save. R rotate. DBL-CLK SCR1 scale. WASD/ARROWS pads.");
     return 0;

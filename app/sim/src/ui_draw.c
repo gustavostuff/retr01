@@ -955,14 +955,95 @@ static void draw_controller_overlay(SDL_Renderer *r, int player, const R01sGamep
     gp_overlay_pixel(r, ox, oy, 10, 3, gp->btn_y);
 }
 
-static void wave_monitor_origin(int *ox, int *oy) {
-    int total_h = R01S_UI_WAVE_LANES * (R01S_UI_WAVE_LANE_H + R01S_UI_WAVE_GAP) + font_line_h() + 4;
-    if (ox) {
-        *ox = R01S_UI_VIEW_X + R01S_UI_WAVE_MARGIN;
+static int wave_monitor_w(void) {
+    return R01S_UI_WAVE_LABEL_W + R01S_UI_WAVE_LANE_W + 6;
+}
+
+static int wave_monitor_h(void) {
+    return font_line_h() + 2 + R01S_UI_WAVE_LANES * (R01S_UI_WAVE_LANE_H + R01S_UI_WAVE_GAP);
+}
+
+int ui_wave_monitor_default_y(void) {
+    int y = R01S_UI_VIEW_H - wave_monitor_h() - R01S_UI_WAVE_MARGIN;
+    if (y < 0) {
+        y = 0;
     }
-    if (oy) {
-        *oy = R01S_UI_VIEW_Y + R01S_UI_VIEW_H - total_h - R01S_UI_WAVE_MARGIN;
+    return y;
+}
+
+static void wave_monitor_screen_origin(const R01sUi *ui, int *sx, int *sy) {
+    if (!ui) {
+        if (sx) {
+            *sx = R01S_UI_VIEW_X + R01S_UI_WAVE_MONITOR_DEFAULT_X;
+        }
+        if (sy) {
+            *sy = R01S_UI_VIEW_Y + ui_wave_monitor_default_y();
+        }
+        return;
     }
+    if (sx) {
+        *sx = R01S_UI_VIEW_X + ui->wave_monitor_x;
+    }
+    if (sy) {
+        *sy = R01S_UI_VIEW_Y + ui->wave_monitor_y;
+    }
+}
+
+static void wave_monitor_bounds(const R01sUi *ui, SDL_Rect *rc) {
+    int sx = 0;
+    int sy = 0;
+    if (!rc) {
+        return;
+    }
+    wave_monitor_screen_origin(ui, &sx, &sy);
+    rc->x = sx;
+    rc->y = sy;
+    rc->w = wave_monitor_w();
+    rc->h = wave_monitor_h();
+}
+
+static void wave_monitor_clamp(R01sUi *ui) {
+    int max_x;
+    int max_y;
+    if (!ui) {
+        return;
+    }
+    if (ui->wave_monitor_y < 0) {
+        ui->wave_monitor_y = ui_wave_monitor_default_y();
+    }
+    max_x = R01S_UI_VIEW_W - wave_monitor_w();
+    max_y = R01S_UI_VIEW_H - wave_monitor_h();
+    if (max_x < 0) {
+        max_x = 0;
+    }
+    if (max_y < 0) {
+        max_y = 0;
+    }
+    if (ui->wave_monitor_x < 0) {
+        ui->wave_monitor_x = 0;
+    }
+    if (ui->wave_monitor_y < 0) {
+        ui->wave_monitor_y = 0;
+    }
+    if (ui->wave_monitor_x > max_x) {
+        ui->wave_monitor_x = max_x;
+    }
+    if (ui->wave_monitor_y > max_y) {
+        ui->wave_monitor_y = max_y;
+    }
+}
+
+int ui_wave_monitor_contains(const R01sUi *ui, int lx, int ly) {
+    SDL_Rect rc;
+    if (!ui) {
+        return 0;
+    }
+    wave_monitor_bounds(ui, &rc);
+    return lx >= rc.x && ly >= rc.y && lx < rc.x + rc.w && ly < rc.y + rc.h;
+}
+
+void ui_wave_monitor_clamp(R01sUi *ui) {
+    wave_monitor_clamp(ui);
 }
 
 static void wave_lane_rgb(int ch, Uint8 *r, Uint8 *g, Uint8 *b) {
@@ -1082,9 +1163,10 @@ static void draw_wave_monitor(SDL_Renderer *r, R01sUi *ui) {
         return;
     }
     apu = &board->apu;
-    wave_monitor_origin(&ox, &oy);
-    panel_w = R01S_UI_WAVE_LABEL_W + R01S_UI_WAVE_LANE_W + 6;
-    panel_h = font_line_h() + 2 + R01S_UI_WAVE_LANES * (R01S_UI_WAVE_LANE_H + R01S_UI_WAVE_GAP);
+    wave_monitor_clamp(ui);
+    wave_monitor_screen_origin(ui, &ox, &oy);
+    panel_w = wave_monitor_w();
+    panel_h = wave_monitor_h();
     fill_rect(r, ox - 2, oy - 2, panel_w + 4, panel_h + 4, 10, 12, 14);
     draw_rect(r, ox - 2, oy - 2, panel_w + 4, panel_h + 4, 50, 55, 60);
     font_draw(r, ox, oy, "WAVE", 160, 170, 180);
@@ -1108,7 +1190,6 @@ static void draw_wave_monitor(SDL_Renderer *r, R01sUi *ui) {
         font_draw(r, ox, ly + 1, wave_lane_label(R01S_APU_CH_N), cr, cg, cb);
         draw_wave_lane_scope(r, lx, ly, R01S_UI_WAVE_LANE_W, R01S_UI_WAVE_LANE_H, scope, scope_n, cr, cg, cb);
     }
-    (void)ui;
 }
 
 void draw_video_pixels(SDL_Renderer *r, R01sUi *ui, R01sVideoSink *sink, int px, int py, int dw, int dh) {

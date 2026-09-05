@@ -119,5 +119,8 @@ int ui_islands_strip_contains(const R01sUi *ui, int lx, int ly);
 void ui_islands_strip_clamp(R01sUi *ui);
 int ui_legend_strip_contains(const R01sUi *ui, int lx, int ly);
 void ui_legend_strip_clamp(R01sUi *ui);
+int ui_wave_monitor_contains(const R01sUi *ui, int lx, int ly);
+void ui_wave_monitor_clamp(R01sUi *ui);
+int ui_wave_monitor_default_y(void);
 
 #endif

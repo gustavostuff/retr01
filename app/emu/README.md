@@ -47,7 +47,7 @@ cmake --build build
 ./build/retr01_emu ../../output/test.retr01
 ```
 
-**Controls:** WASD or arrows = move. **X**/**Y** = warp. Space = pause. R = reset. Esc = quit
+**Controls:** WASD or arrows = move. **X**/**Y** = warp. Space = pause. R = reset. **Ctrl+1** / **Ctrl+2** = present scale. Esc = quit
 
 **Env:** `R01E_SOFTBOOT=1`, host memcpy VRAM/pals at boot (debug). Default runs cart PRG MAP/pal stream catchup.
 

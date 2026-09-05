@@ -13,6 +13,7 @@ typedef struct R01sApp {
     SDL_Renderer *ren;
     SDL_Texture *target;
     int scale;
+    int render_scale; /* preferred 1 or 2 via Ctrl+1 / Ctrl+2 */
     int running;
     Uint32 fps_last_ms;
     int fps_frames;

@@ -143,7 +143,7 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 
 `DELAY=typical|max` selects the datasheet corner and prints **path budget** (decode+245+573 vs PHI2 half). The pin netlist stays combinatorial. Deferred HC/PLD outputs miss `STA $FExx` in this settle model. Wall-clock UI FPS != sim ns. See [`PERFORMANCE.md`](PERFORMANCE.md).
 
-**Controls:** `Space` pause/resume * `Ctrl+R` reset * `R` rotate selected IC * **SCALE 1X/2X** (left sidebar or `G`. **2X** grows the video island to fit SCR1) * `.` single-step (while paused) * **COMPACT / ISLANDS** (HUD) * **left-drag chip** move * **right-click chip** orient H/V * **left-drag empty island** move frame * **bottom-right grip** resize * **Shift+arrows / wheel / middle-drag** pan * `Esc` quit.
+**Controls:** `Space` pause/resume * `Ctrl+R` reset * `Ctrl+1` / `Ctrl+2` present scale * `R` rotate selected IC * **SCALE 1X/2X** (left sidebar or `G`. **2X** grows the video island to fit SCR1) * `.` single-step (while paused) * **COMPACT / ISLANDS** (HUD) * **left-drag chip** move * **right-click chip** orient H/V * **left-drag empty island** move frame * **bottom-right grip** resize * **Shift+arrows / wheel / middle-drag** pan * `Esc` quit.
 
 **Layout persistence:** island frames + chip positions saved to `app/sim/ui_layout.json` (override with `R01S_LAYOUT`).
 
@@ -156,7 +156,7 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 
 Same keyboard map is used by standalone **emu** and Studio Play.
 
-**Wave monitor (island K):** bottom-left overlay. Lanes **B1-B5** (BGM pulse/pulse/tri/noise/DPCM) and **S6-S8** (SFX) draw mathematical waveforms from voice period/duty/type. Bottom **A** lane plots the mixed analog sample ring (R-2R stand-in). Bring-up smoke still drives B1 via `$FE40`. Sim does **not** play BGM/SFX on the host speaker (timebase). See TODO in [`docs/sound.md`](../../docs/sound.md) for richer WAVE monitor feed later.
+**Wave monitor (island K):** bottom-left overlay (drag like Islands / pin legend. Position saved in `ui_layout.json`). Lanes **B1-B5** (BGM pulse/pulse/tri/noise/DPCM) and **S6-S8** (SFX) draw mathematical waveforms from voice period/duty/type. Bottom **A** lane plots the mixed analog sample ring (R-2R stand-in). Bring-up smoke still drives B1 via `$FE40`. Sim does **not** play BGM/SFX on the host speaker (timebase). See TODO in [`docs/sound.md`](../../docs/sound.md) for richer WAVE monitor feed later.
 
 Live probe (top-right) shows **VDD / PHI2 / RESB**. Status bar shows CPU `PC` / `AB` / phase / cycle count.
 
