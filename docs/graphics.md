@@ -162,7 +162,7 @@ Two layers: **cart indices** and **board Color PROM**.
 
 ## Second background (BG0)
 
-**Pitch:** Retr01’s SNES-like parallax plane. BG1 is the playfield; BG0 is a real second tilemap that scrolls underneath wherever BG1 uses palette index **0**. Make the far world’s present bbox smaller than BG1’s and you get slower motion for free (`scroll_BG0 = scroll_BG1 × extent_BG0 / extent_BG1`). Not a mapper IRQ trick — compositor show-through every dot. Selling narrative: [`selling_points.md`](selling_points.md#snes-like-parallax-bg0).
+**Pitch:** Retr01's SNES-like parallax plane. BG1 is the playfield. BG0 is a real second tilemap that scrolls underneath wherever BG1 uses palette index **0**. Make the far world's present bbox smaller than BG1's and you get slower motion for free (`scroll_BG0 = scroll_BG1 * extent_BG0 / extent_BG1`). Not a mapper IRQ trick. Compositor show-through every dot (Sim / silicon). Emu Host Play composites the same order in the full-frame renderer. Selling narrative: [`selling_points.md`](selling_points.md#snes-like-parallax-bg0).
 
 Structured far plane (**BG0**). Main playfield is **BG1**.
 
@@ -190,7 +190,7 @@ Emu Host Play composites BG0 under BG1 color 0 from the cart BG0 cache in the fu
 
 ### Proportional scroll (parallax)
 
-Default is software (6502 or Host Play), not a PLD auto-ratio — this is the **parallax depth** knob:
+Default is software (6502 or Host Play), not a PLD auto-ratio. This is the **parallax depth** knob:
 
 ```text
 scroll_BG0_x = scroll_BG1_x * cols_BG0 / cols_BG1
