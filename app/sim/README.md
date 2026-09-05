@@ -17,7 +17,7 @@ IC-first board simulator for the Retr01 motherboard (arcade + console share one 
 | G VRAM | 2nd `AS6C62256` + **3x** `SN74HC157` + `ATF22V10` VRAM glue |
 | H Beam | `OSC_DOT` + `BEAM_XY` (X PLD) + `ATF22V10` Y compare vs `$FE04` |
 | J Cart | cart `SN74HC245` (mobo socket path) |
-| K APU | `ATMEGA328P` stub, `$FE40`-`$FE5F` regs + digital PWM square |
+| K APU | `ATMEGA328P` stub, `$FE40`-`$FE5F`, 8-voice mix (BGM+SFX) + digital PWM; wave monitor overlay |
 | L MCU+linebuf | `ATMEGA1284P` + linebuf `AS6C62256` + **3x** `SN74HC157` |
 | N Cart module | `SST39SF040` + cart `24C64` (detachable module. Argv `.retr01` is copied into flash) |
 
@@ -147,12 +147,14 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 
 **Layout persistence:** island frames + chip positions saved to `app/sim/ui_layout.json` (override with `R01S_LAYOUT`).
 
-**Gamepads (island E -> `$FE60`/`$FE61`):** bottom-left panels or keyboard. HUD **ARCADE** (default) injects the bitfield directly; **PADS** routes through ATtiny85 poll/reply (`0x55`/`0xAA`) then into the same ports. After boot catchup, **Host Play** uses P1 for move + warps (Studio/emu rules: dead-zone camera, player anim blob, collision from cart MAP attrs):
+**Gamepads (island E -> `$FE60`/`$FE61`):** bottom-right panels or keyboard. HUD **ARCADE** (default) injects the bitfield directly; **PADS** routes through ATtiny85 poll/reply (`0x55`/`0xAA`) then into the same ports. After boot catchup, **Host Play** uses P1 for move + warps (Studio/emu rules: dead-zone camera, player anim blob, collision from cart MAP attrs):
 
 | | Stick | X (warp -> screen 0,0) | Y (warp -> screen 1,0) | Coin | Start |
 |--|-------|----------------------|----------------------|------|-------|
 | **P1** | Arrows or WASD (8-way) | **X** or Z | **Y** | 1 | Enter |
 | **P2** | IJKL (8-way) | N | M | 2 | Backspace |
+
+**Wave monitor (island K):** bottom-left overlay. Lanes **B1–B5** (BGM pulse/pulse/tri/noise/DPCM) and **S6–S8** (SFX) draw mathematical waveforms from voice period/duty/type. Bottom **A** lane plots the mixed analog sample ring (R-2R stand-in). Bring-up smoke still drives B1 via `$FE40`; full BGM / Select-Start SFX come later.
 
 Live probe (top-right) shows **VDD / PHI2 / RESB**. Status bar shows CPU `PC` / `AB` / phase / cycle count.
 

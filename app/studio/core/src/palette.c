@@ -136,22 +136,12 @@ void r01_project_backdrop_rgb(const R01Project *p, const R01World *w, uint8_t *r
     r01_kit_rgb(master, r, g, b);
 }
 
-void r01_screen_pixel_rgb(const R01Project *p, const R01World *w, const R01Screen *s, int px, int py, uint8_t *r,
-                          uint8_t *g, uint8_t *b) {
-    int tx, ty, sx, sy, cell, bank, prow;
-    uint8_t attr, color, master, tile_id;
+uint8_t r01_screen_pixel_color(const R01World *w, const R01Screen *s, int px, int py) {
+    int tx, ty, sx, sy, cell, bank;
+    uint8_t attr, tile_id;
     const uint8_t *tile;
-    if (!p || !s || px < 0 || py < 0 || px >= R01_SCREEN_PX_W || py >= R01_SCREEN_PX_H) {
-        if (r) {
-            *r = 0;
-        }
-        if (g) {
-            *g = 0;
-        }
-        if (b) {
-            *b = 0;
-        }
-        return;
+    if (!s || px < 0 || py < 0 || px >= R01_SCREEN_PX_W || py >= R01_SCREEN_PX_H) {
+        return 0;
     }
     tx = px / 8;
     ty = py / 8;
@@ -169,11 +159,74 @@ void r01_screen_pixel_rgb(const R01Project *p, const R01World *w, const R01Scree
     }
     if (w && bank >= 0 && bank < R01_BG_BANKS && tile_id < (uint8_t)w->bg_banks[bank].tile_count) {
         tile = w->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
-        color = r01_tile_pixel_color(tile, sx, sy);
-    } else {
-        color = s->pixels[(ty * 8 + sy) * R01_SCREEN_PX_W + (tx * 8 + sx)] & 3u;
+        return r01_tile_pixel_color(tile, sx, sy) & 3u;
     }
+    return s->pixels[(ty * 8 + sy) * R01_SCREEN_PX_W + (tx * 8 + sx)] & 3u;
+}
+
+void r01_screen_pixel_rgb(const R01Project *p, const R01World *w, const R01Screen *s, int px, int py, uint8_t *r,
+                          uint8_t *g, uint8_t *b) {
+    int tx, ty, cell, prow;
+    uint8_t attr, color, master;
+    if (!p || !s || px < 0 || py < 0 || px >= R01_SCREEN_PX_W || py >= R01_SCREEN_PX_H) {
+        if (r) {
+            *r = 0;
+        }
+        if (g) {
+            *g = 0;
+        }
+        if (b) {
+            *b = 0;
+        }
+        return;
+    }
+    tx = px / 8;
+    ty = py / 8;
+    cell = ty * R01_SCREEN_TILES_X + tx;
+    attr = s->attrs[cell];
+    color = r01_screen_pixel_color(w, s, px, py);
     prow = clamp_pal_row(w ? w->default_pal_row : 0);
     master = p->global_pal_bg[prow][r01_attr_pal(attr)].idx[color];
     r01_kit_rgb(master, r, g, b);
+}
+
+void r01_compose_screen_pixel_rgb(const R01Project *p, const R01World *w, const R01Screen *bg1,
+                                  const R01Screen *bg0, int px, int py, uint8_t *r, uint8_t *g, uint8_t *b) {
+    uint8_t col1;
+    if (!p) {
+        if (r) {
+            *r = 0;
+        }
+        if (g) {
+            *g = 0;
+        }
+        if (b) {
+            *b = 0;
+        }
+        return;
+    }
+    if (!bg1) {
+        if (bg0) {
+            r01_screen_pixel_rgb(p, w, bg0, px, py, r, g, b);
+            if (r01_screen_pixel_color(w, bg0, px, py) == 0) {
+                r01_project_backdrop_rgb(p, w, r, g, b);
+            }
+        } else {
+            r01_project_backdrop_rgb(p, w, r, g, b);
+        }
+        return;
+    }
+    col1 = r01_screen_pixel_color(w, bg1, px, py);
+    if (col1 != 0) {
+        r01_screen_pixel_rgb(p, w, bg1, px, py, r, g, b);
+        return;
+    }
+    /* BG1 color 0 show-through: BG0 pixel, else shared backdrop. */
+    if (bg0) {
+        if (r01_screen_pixel_color(w, bg0, px, py) != 0) {
+            r01_screen_pixel_rgb(p, w, bg0, px, py, r, g, b);
+            return;
+        }
+    }
+    r01_project_backdrop_rgb(p, w, r, g, b);
 }

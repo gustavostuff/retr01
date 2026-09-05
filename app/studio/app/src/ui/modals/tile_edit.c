@@ -254,7 +254,11 @@ int tile_modal_handle(UiState *ui, int lx, int ly, int down) {
         ly < lo.canvas_y + UI_TILE_CANVAS) {
         int sx = (lx - lo.canvas_x) / 16;
         int sy = (ly - lo.canvas_y) / 16;
-        r01_tile_set_pixel(ui->tile_edit.chr, sx, sy, (uint8_t)ui->tile_edit.color);
+        if (ui->keys[SDL_SCANCODE_F]) {
+            r01_tile_flood_fill(ui->tile_edit.chr, sx, sy, (uint8_t)ui->tile_edit.color);
+        } else {
+            r01_tile_set_pixel(ui->tile_edit.chr, sx, sy, (uint8_t)ui->tile_edit.color);
+        }
         return 1;
     }
     if (ui_modal_save_hit(lx, ly, lo.pal_x, lo.btn_y, lo.save_w)) {

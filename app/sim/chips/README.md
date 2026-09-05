@@ -22,7 +22,7 @@ Each IC is a struct that **starts with** an `R01sEntity`, plus an `R01sEntityVTa
 | O | `at28c16.c` | AT28C16 | Color PROM (kit R3G3B2, 64 entries) |
 | O | `video_sink.c` | LCD_SINK | 256x240 RGBS field (SCALE 2x/1x) |
 | J | `sst39sf040.c` | SST39SF040 | 512 KB flash, **read-only stub** |
-| K | `atmega328p.c` | ATmega328P | APU regs `$FE40-$FE5F` + PWM square stub |
+| K | `atmega328p.c` | ATmega328P | APU `$FE40-$FE5F` + 8-voice mix (BGM 1-5 / SFX 6-8) + PWM + wave monitor |
 | L | `atmega1284p.c` | ATmega1284P | OAM `$FE20/$FE21` + 20 MHz tick stub |
 | M | `as6c62256.c` + `sn74hc157.c` | AS6C62256 + HC157 | Line-buffer ping-pong + addr mux |
 | N | `sprite_fetch.c` | SPRITE_FETCH | OAM->linebuf fill stats. Board paints sprites |

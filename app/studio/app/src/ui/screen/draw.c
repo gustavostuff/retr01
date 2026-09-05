@@ -288,6 +288,8 @@ void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s) {
     int ox, oy, y, x;
     R01World *w = r01_project_active_world(ui->project);
     int plane_bg0 = (ui->worlds_plane == UI_WORLDS_PLANE_BG0);
+    const R01Screen *bg1 = NULL;
+    const R01Screen *bg0 = NULL;
     screen_origin(ui, &ox, &oy);
     fill_rect(r, ox, oy, ui_screen_w(ui), ui_screen_h(ui), UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
     if (!s || !w) {
@@ -295,11 +297,27 @@ void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s) {
                            plane_bg0 ? "No BG0 screen" : "No screen", 160, 160, 170);
         return;
     }
+    /*
+     * Composite BG0 under BG1 color 0 (same as emu/hardware). Same absolute
+     * chess cell; orphan BG0 outside the BG1 present bbox is ignored when
+     * viewing BG1 (no underlay). Viewing BG0 alone still composites if a
+     * present BG1 screen shares that cell.
+     */
+    if (plane_bg0) {
+        bg0 = s;
+        bg1 = r01_world_screen_at(w, s->col, s->row);
+        if (bg1 && !bg1->present) {
+            bg1 = NULL;
+        }
+    } else {
+        bg1 = s;
+        bg0 = r01_world_bg0_screen_at(w, s->col, s->row);
+    }
     for (y = 0; y < R01_SCREEN_PX_H; y++) {
         for (x = 0; x < R01_SCREEN_PX_W; x++) {
             uint8_t cr, cg, cb;
             SDL_Rect px;
-            r01_screen_pixel_rgb(ui->project, w, s, x, y, &cr, &cg, &cb);
+            r01_compose_screen_pixel_rgb(ui->project, w, bg1, bg0, x, y, &cr, &cg, &cb);
             px.x = ox + x * ui_screen_scale(ui);
             px.y = oy + y * ui_screen_scale(ui);
             px.w = ui_screen_scale(ui);
@@ -308,7 +326,7 @@ void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s) {
             SDL_RenderFillRect(r, &px);
         }
     }
-    /* BG0 authoring preview is map-only (no instances / warps). */
+    /* Instance / warp overlays only on BG1 authoring plane. */
     if (!plane_bg0) {
         set_viewport_clip(r, ui, ox, oy);
         draw_instances_on_screen(ui, r, w, s, ox, oy);

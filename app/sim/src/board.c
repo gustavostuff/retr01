@@ -1453,7 +1453,7 @@ static void board_vram_cell_at(const R01sBoard *ctx, int lx, int ly, uint8_t *ti
 
 static uint32_t board_map_off_for_screen(const R01sBoard *board, int col, int row);
 
-/* Host Play BG0 sample under BG1 color 0 / missing slot (cart BG0 cache + CHR via flash). */
+/* Host Play BG0 sample under BG1 color 0 (cart BG0 cache + CHR via flash). */
 static uint8_t board_l0_master_at(R01sBoard *ctx, int lx, int ly) {
     int wx, wy, gc, gr, local_x, local_y, tx, ty, cell, i;
     uint8_t tile, attr, color, pal, master;
@@ -1470,6 +1470,13 @@ static uint8_t board_l0_master_at(R01sBoard *ctx, int lx, int ly) {
     }
     gc = wx / R01S_BG_SCREEN_PX_W;
     gr = wy / R01S_BG_SCREEN_PX_H;
+    /* Clip to present BG0 bbox (not the virtual 16x16 chess). */
+    if (ctx->bg0_cols > 0 && gc >= ctx->bg0_cols) {
+        return (uint8_t)(ctx->active_pal[0] & 63u);
+    }
+    if (ctx->bg0_rows > 0 && gr >= ctx->bg0_rows) {
+        return (uint8_t)(ctx->active_pal[0] & 63u);
+    }
     for (i = 0; i < ctx->bg0_count; i++) {
         if (ctx->bg0[i].present && (int)ctx->bg0[i].col == gc && (int)ctx->bg0[i].row == gr) {
             map = ctx->bg0[i].map;
@@ -1526,9 +1533,9 @@ static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     slot_x = (sx / R01S_BG_SCREEN_PX_W) & 1;
     slot_y = (sy / R01S_BG_SCREEN_PX_H) & 1;
     slot = slot_y * 2 + slot_x;
-    /* Match emu Host Play: missing BG1 slot -> BG0 show-through, else backdrop. */
+    /* Match emu: missing BG1 slot -> backdrop (world bbox); color 0 -> BG0 line. */
     if (!ctx->vram_slot_present[slot & 3]) {
-        master = r01s_as6c62256_peek(ctx->mcu_lb_impl.sram, l0_line_addr(ctx->l0_show_half, lx));
+        master = (uint8_t)(ctx->active_pal[0] & 63u);
         ctx->chr_last_master = master;
         return master;
     }

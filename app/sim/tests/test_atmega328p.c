@@ -76,5 +76,24 @@ int main(void) {
                     "no free-run after disable");
     }
 
+    /* 8-voice mix + math wave draw. */
+    r01s_atmega328p_voice_set(&chip, 0, R01S_APU_WAVE_PULSE, 1, 8, 2, 32);
+    r01s_atmega328p_voice_set(&chip, 2, R01S_APU_WAVE_TRIANGLE, 1, 15, 0, 48);
+    r01s_atmega328p_voice_set(&chip, 3, R01S_APU_WAVE_NOISE, 1, 8, 0, 16);
+    for (i = 0; i < 128; i++) {
+        r01s_entity_tick(e);
+    }
+    expect_true(r01s_atmega328p_voice(&chip, 0)->sample != 0 || r01s_atmega328p_voice(&chip, 2)->sample != 0,
+                "voices produce samples");
+    expect_true(r01s_apu_voice_wave_y(r01s_atmega328p_voice(&chip, 0), 0, 64) !=
+                    r01s_apu_voice_wave_y(r01s_atmega328p_voice(&chip, 0), 40, 64) ||
+                r01s_apu_voice_wave_y(r01s_atmega328p_voice(&chip, 0), 0, 64) != 0,
+                "pulse math draw varies");
+    {
+        uint8_t scope[32];
+        int n = r01s_atmega328p_scope_copy(&chip, scope, 32);
+        expect_true(n > 0, "analog scope has samples");
+    }
+
     return test_done("test_atmega328p");
 }

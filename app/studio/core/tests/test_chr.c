@@ -27,6 +27,24 @@ TEST_MAIN() {
     r01_tile_set_pixel(tile, 3, 4, 2);
     EXPECT(r01_tile_pixel_color(tile, 3, 4) == 2, "tile set/get pixel");
 
+    {
+        uint8_t fill[R01_TILE_BYTES];
+        int i;
+        memset(fill, 0, sizeof(fill));
+        r01_tile_set_pixel(fill, 0, 0, 1);
+        r01_tile_set_pixel(fill, 1, 0, 1);
+        r01_tile_set_pixel(fill, 0, 1, 1);
+        r01_tile_set_pixel(fill, 7, 7, 2);
+        r01_tile_flood_fill(fill, 0, 0, 3);
+        EXPECT(r01_tile_pixel_color(fill, 0, 0) == 3, "flood seed");
+        EXPECT(r01_tile_pixel_color(fill, 1, 0) == 3, "flood neighbor x");
+        EXPECT(r01_tile_pixel_color(fill, 0, 1) == 3, "flood neighbor y");
+        EXPECT(r01_tile_pixel_color(fill, 7, 7) == 2, "flood stops at other color");
+        for (i = 0; i < 8; i++) {
+            EXPECT(r01_tile_pixel_color(fill, 2, i) == 0, "unrelated stays 0");
+        }
+    }
+
     r01_tile_orient(tile, 1, 0, tmp);
     r01_tile_orient(tmp, 1, 0, tile);
     EXPECT(r01_tile_pixel_color(tile, 3, 4) == 2, "flip_h is self-inverse");

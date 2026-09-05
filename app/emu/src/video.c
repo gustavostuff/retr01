@@ -532,6 +532,15 @@ static void sample_l0(R01eMachine *m, int lx, int ly, uint8_t *r, uint8_t *g, ui
     }
     gc = wx / R01E_SCREEN_PX_W;
     gr = wy / R01E_SCREEN_PX_H;
+    /* Clip to present BG0 bbox (not the virtual 16x16 chess). */
+    if (vid->bg0_cols > 0 && gc >= vid->bg0_cols) {
+        backdrop_rgb(m, r, g, b);
+        return;
+    }
+    if (vid->bg0_rows > 0 && gr >= vid->bg0_rows) {
+        backdrop_rgb(m, r, g, b);
+        return;
+    }
     s = bg0_find(vid, gc, gr);
     if (!s) {
         backdrop_rgb(m, r, g, b);
@@ -579,13 +588,18 @@ static void sample_bg(R01eMachine *m, int lx, int ly, uint8_t *r, uint8_t *g, ui
         sample_l0(m, lx, ly, r, g, b);
         return;
     }
+    /*
+     * Outside the BG1 2x2 workbench or a missing present screen: backdrop.
+     * Hardware only streams world-bbox screens into VRAM; empty slots are not
+     * BG0 show-through (that is reserved for BG1 color index 0).
+     */
     if (slot_x < 0 || slot_x > 1 || slot_y < 0 || slot_y > 1) {
-        sample_l0(m, lx, ly, r, g, b);
+        backdrop_rgb(m, r, g, b);
         return;
     }
     slot = slot_y * 2 + slot_x;
     if (!vid->slot_present[slot]) {
-        sample_l0(m, lx, ly, r, g, b);
+        backdrop_rgb(m, r, g, b);
         return;
     }
     local_x = sx - slot_x * R01E_SCREEN_PX_W;

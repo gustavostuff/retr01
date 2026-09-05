@@ -188,6 +188,52 @@ void r01_tile_set_pixel(uint8_t tile[R01_TILE_BYTES], int sx, int sy, uint8_t co
         (uint8_t)((tile[sy + 8] & (uint8_t)~(1u << bit)) | (((color & 2u) ? 1u : 0u) << bit));
 }
 
+void r01_tile_flood_fill(uint8_t tile[R01_TILE_BYTES], int sx, int sy, uint8_t color) {
+    uint8_t seed;
+    uint8_t fill = (uint8_t)(color & 3u);
+    uint8_t visited[64];
+    int queue[64];
+    int qhead = 0;
+    int qtail = 0;
+    static const int dx[4] = {1, -1, 0, 0};
+    static const int dy[4] = {0, 0, 1, -1};
+
+    if (!tile || sx < 0 || sx > 7 || sy < 0 || sy > 7) {
+        return;
+    }
+    seed = r01_tile_pixel_color(tile, sx, sy) & 3u;
+    if (seed == fill) {
+        return;
+    }
+    memset(visited, 0, sizeof(visited));
+    queue[qtail++] = sy * 8 + sx;
+    visited[sy * 8 + sx] = 1;
+    while (qhead < qtail) {
+        int cell = queue[qhead++];
+        int cx = cell % 8;
+        int cy = cell / 8;
+        int d;
+        r01_tile_set_pixel(tile, cx, cy, fill);
+        for (d = 0; d < 4; d++) {
+            int nx = cx + dx[d];
+            int ny = cy + dy[d];
+            int ncell;
+            if (nx < 0 || ny < 0 || nx > 7 || ny > 7) {
+                continue;
+            }
+            ncell = ny * 8 + nx;
+            if (visited[ncell]) {
+                continue;
+            }
+            if ((r01_tile_pixel_color(tile, nx, ny) & 3u) != seed) {
+                continue;
+            }
+            visited[ncell] = 1;
+            queue[qtail++] = ncell;
+        }
+    }
+}
+
 static int rgb_brightness(uint8_t r, uint8_t g, uint8_t b) {
     return (int)r + (int)g + (int)b;
 }

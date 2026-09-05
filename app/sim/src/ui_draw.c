@@ -1,6 +1,7 @@
 #include "ui.h"
 #include "ui_internal.h"
 
+#include "atmega328p.h"
 #include "retr01_sim/board.h"
 #include "retr01_sim/board_layout.h"
 #include "retr01_sim/bus.h"
@@ -61,6 +62,14 @@ static void draw_health_dot(SDL_Renderer *r, int x, int y, R01sHealth h) {
 #define R01S_UI_GP_OVERLAY_SCALE 2
 #define R01S_UI_GP_OVERLAY_GAP 6
 #define R01S_UI_GP_OVERLAY_MARGIN 8
+
+/* Wave monitor: 8 digital lanes + analog mix (bottom-left). */
+#define R01S_UI_WAVE_LANE_W 96
+#define R01S_UI_WAVE_LANE_H 10
+#define R01S_UI_WAVE_GAP 2
+#define R01S_UI_WAVE_LABEL_W 18
+#define R01S_UI_WAVE_MARGIN 8
+#define R01S_UI_WAVE_LANES (R01S_APU_CH_N + 1) /* + MIX */
 #define R01S_UI_SCREEN_MODE_N 3
 
 static int health_needs_debug(R01sHealth h) {
@@ -946,6 +955,162 @@ static void draw_controller_overlay(SDL_Renderer *r, int player, const R01sGamep
     gp_overlay_pixel(r, ox, oy, 10, 3, gp->btn_y);
 }
 
+static void wave_monitor_origin(int *ox, int *oy) {
+    int total_h = R01S_UI_WAVE_LANES * (R01S_UI_WAVE_LANE_H + R01S_UI_WAVE_GAP) + font_line_h() + 4;
+    if (ox) {
+        *ox = R01S_UI_VIEW_X + R01S_UI_WAVE_MARGIN;
+    }
+    if (oy) {
+        *oy = R01S_UI_VIEW_Y + R01S_UI_VIEW_H - total_h - R01S_UI_WAVE_MARGIN;
+    }
+}
+
+static void wave_lane_rgb(int ch, Uint8 *r, Uint8 *g, Uint8 *b) {
+    static const Uint8 RGB[R01S_UI_WAVE_LANES][3] = {
+        {80, 200, 120},  /* B1 pulse */
+        {80, 180, 200},  /* B2 pulse */
+        {200, 160, 80},  /* B3 triangle */
+        {180, 120, 200}, /* B4 noise */
+        {200, 100, 100}, /* B5 DPCM */
+        {120, 200, 160}, /* S6 */
+        {120, 160, 200}, /* S7 */
+        {160, 140, 200}, /* S8 */
+        {220, 220, 180}, /* MIX */
+    };
+    int i = ch;
+    if (i < 0) {
+        i = 0;
+    }
+    if (i >= R01S_UI_WAVE_LANES) {
+        i = R01S_UI_WAVE_LANES - 1;
+    }
+    *r = RGB[i][0];
+    *g = RGB[i][1];
+    *b = RGB[i][2];
+}
+
+static const char *wave_lane_label(int ch) {
+    static const char *const LABELS[R01S_UI_WAVE_LANES] = {"B1", "B2", "B3", "B4", "B5", "S6", "S7", "S8", "A"};
+    if (ch < 0 || ch >= R01S_UI_WAVE_LANES) {
+        return "?";
+    }
+    return LABELS[ch];
+}
+
+static void draw_wave_lane_math(SDL_Renderer *r, int lx, int ly, int lw, int lh, const R01sApuVoice *v,
+                                Uint8 cr, Uint8 cg, Uint8 cb) {
+    int x;
+    int mid = ly + lh / 2;
+    int prev_y = mid;
+    fill_rect(r, lx, ly, lw, lh, 18, 20, 22);
+    draw_rect(r, lx, ly, lw, lh, 40, 44, 48);
+    /* Center line. */
+    fill_rect(r, lx, mid, lw, 1, 32, 36, 40);
+    for (x = 0; x < lw; x++) {
+        int amp = r01s_apu_voice_wave_y(v, x, lw);
+        int y = mid - (amp * (lh / 2 - 1)) / 128;
+        if (y < ly + 1) {
+            y = ly + 1;
+        }
+        if (y > ly + lh - 2) {
+            y = ly + lh - 2;
+        }
+        if (x > 0) {
+            int y0 = prev_y;
+            int y1 = y;
+            int step = (y1 >= y0) ? 1 : -1;
+            int yy;
+            for (yy = y0; yy != y1; yy += step) {
+                fill_rect(r, lx + x, yy, 1, 1, cr, cg, cb);
+            }
+        }
+        fill_rect(r, lx + x, y, 1, 1, cr, cg, cb);
+        prev_y = y;
+    }
+}
+
+static void draw_wave_lane_scope(SDL_Renderer *r, int lx, int ly, int lw, int lh, const uint8_t *scope, int n,
+                                 Uint8 cr, Uint8 cg, Uint8 cb) {
+    int x;
+    int mid = ly + lh / 2;
+    int prev_y = mid;
+    fill_rect(r, lx, ly, lw, lh, 18, 20, 22);
+    draw_rect(r, lx, ly, lw, lh, 40, 44, 48);
+    fill_rect(r, lx, mid, lw, 1, 32, 36, 40);
+    if (!scope || n < 2) {
+        return;
+    }
+    for (x = 0; x < lw; x++) {
+        int idx = (x * (n - 1)) / (lw > 1 ? lw - 1 : 1);
+        int amp = (int)scope[idx] - 128;
+        int y = mid - (amp * (lh / 2 - 1)) / 128;
+        if (y < ly + 1) {
+            y = ly + 1;
+        }
+        if (y > ly + lh - 2) {
+            y = ly + lh - 2;
+        }
+        if (x > 0) {
+            int y0 = prev_y;
+            int y1 = y;
+            int step = (y1 >= y0) ? 1 : -1;
+            int yy;
+            for (yy = y0; yy != y1; yy += step) {
+                fill_rect(r, lx + x, yy, 1, 1, cr, cg, cb);
+            }
+        }
+        fill_rect(r, lx + x, y, 1, 1, cr, cg, cb);
+        prev_y = y;
+    }
+}
+
+static void draw_wave_monitor(SDL_Renderer *r, R01sUi *ui) {
+    R01sBoard *board;
+    const R01sAtmega328p *apu;
+    int ox, oy;
+    int ch;
+    uint8_t scope[R01S_APU_SCOPE_N];
+    int scope_n;
+    int panel_w;
+    int panel_h;
+
+    if (!r || !ui) {
+        return;
+    }
+    board = r01s_board_from_group(ui->group);
+    if (!board) {
+        return;
+    }
+    apu = &board->apu;
+    wave_monitor_origin(&ox, &oy);
+    panel_w = R01S_UI_WAVE_LABEL_W + R01S_UI_WAVE_LANE_W + 6;
+    panel_h = font_line_h() + 2 + R01S_UI_WAVE_LANES * (R01S_UI_WAVE_LANE_H + R01S_UI_WAVE_GAP);
+    fill_rect(r, ox - 2, oy - 2, panel_w + 4, panel_h + 4, 10, 12, 14);
+    draw_rect(r, ox - 2, oy - 2, panel_w + 4, panel_h + 4, 50, 55, 60);
+    font_draw(r, ox, oy, "WAVE", 160, 170, 180);
+
+    scope_n = r01s_atmega328p_scope_copy(apu, scope, R01S_APU_SCOPE_N);
+
+    for (ch = 0; ch < R01S_APU_CH_N; ch++) {
+        const R01sApuVoice *v = r01s_atmega328p_voice(apu, ch);
+        Uint8 cr, cg, cb;
+        int ly = oy + font_line_h() + 2 + ch * (R01S_UI_WAVE_LANE_H + R01S_UI_WAVE_GAP);
+        int lx = ox + R01S_UI_WAVE_LABEL_W;
+        wave_lane_rgb(ch, &cr, &cg, &cb);
+        font_draw(r, ox, ly + 1, wave_lane_label(ch), cr, cg, cb);
+        draw_wave_lane_math(r, lx, ly, R01S_UI_WAVE_LANE_W, R01S_UI_WAVE_LANE_H, v, cr, cg, cb);
+    }
+    {
+        Uint8 cr, cg, cb;
+        int ly = oy + font_line_h() + 2 + R01S_APU_CH_N * (R01S_UI_WAVE_LANE_H + R01S_UI_WAVE_GAP);
+        int lx = ox + R01S_UI_WAVE_LABEL_W;
+        wave_lane_rgb(R01S_APU_CH_N, &cr, &cg, &cb);
+        font_draw(r, ox, ly + 1, wave_lane_label(R01S_APU_CH_N), cr, cg, cb);
+        draw_wave_lane_scope(r, lx, ly, R01S_UI_WAVE_LANE_W, R01S_UI_WAVE_LANE_H, scope, scope_n, cr, cg, cb);
+    }
+    (void)ui;
+}
+
 void draw_video_pixels(SDL_Renderer *r, R01sUi *ui, R01sVideoSink *sink, int px, int py, int dw, int dh) {
     const uint8_t *rgb;
     SDL_Rect dst;
@@ -1454,6 +1619,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     draw_legend_strip(r, ui);
     draw_controller_overlay(r, 0, &ui->gamepad[0], ui->input_mode);
     draw_controller_overlay(r, 1, &ui->gamepad[1], ui->input_mode);
+    draw_wave_monitor(r, ui);
     draw_frame_log_panel(r, ui);
 
     fill_rect(r, 0, R01S_LOGIC_H - R01S_UI_HUD_BOTTOM, R01S_LOGIC_W, R01S_UI_HUD_BOTTOM, 12, 14, 16);
