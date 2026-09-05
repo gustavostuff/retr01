@@ -31,7 +31,7 @@ SKiDL still instantiates inline `Part(tool=SKIDL)` parts, but every pin **name a
 | CUI **RCJ-01x** | Custom RCA footprint - **done** (`CUI_RCJ-01x_Vertical`. RCJ-012/014 share holes) |
 | EDAC **395-036-559-212** | Optional: replace PinSocket stand-in with manufacturer CAD |
 
-**Stock now (do not reinvent):** Abracon **ACO** cans -> KiCad `Oscillator:ACO-xxxMHz-A` + `Oscillator_DIP-14`. **AD725ARZ** silicon is SOIC-16 only. **First PCB spin is fully THT:** use a SOIC-16-to-DIP adapter on a DIP-16 footprint (do not place direct SOIC on the mobo). **CUI PJ-063AH** barrel. HC/AVR/memory symbols per table above. RCA uses stock symbol **`Conn_Coaxial`** + custom RCJ footprint.
+**Stock now (do not reinvent):** Abracon **ACO** cans -> KiCad `Oscillator:ACO-xxxMHz-A` + `Oscillator_DIP-14`. **AD725ARZ** chip is wide SOIC-16. **Mobo places DIP-16** for **Proto Advantage PA0006** (SOIC-16 300 mil to DIP-16). **CUI PJ-063AH** barrel. HC/AVR/memory symbols per table above. RCA uses stock symbol **`Conn_Coaxial`** + custom RCJ footprint.
 
 **You do not need to intervene for Quilter / netlist:** SKiDL emits pin numbers + footprints. Draw W65C02S / ATF22V10 `.kicad_sym` only when you want a human-readable KiCad schematic.
 

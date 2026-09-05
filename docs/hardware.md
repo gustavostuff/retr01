@@ -39,7 +39,7 @@ Studio Play uses the same Emu core as standalone `./emu`.
 | Cart storage | SST39SF040 + 24C64 | 512 KB flash on cart + I2C save EEPROM ([`cart.md`](cart.md)) |
 | Video glue | 5x ATF22V10, 6x HC157, 9x HC573, 3x HC245 | Decode, beam, interleave, latches, bus isolation |
 | Color out | AT27C256R OTP | 64-entry R3G3B2 PROM -> binary-weighted DAC -> RGBS (75 ohm to GND) |
-| Composite (support) | AD725 + 14.31818 MHz can | RGB->NTSC into J9. Outside the 32-IC logic count. Chip is SOIC-16 only. **First spin: THT via SOIC-to-DIP adapter** ([`passive_rf_etc.md`](passive_rf_etc.md)) |
+| Composite (support) | AD725 + 14.31818 MHz can | RGB->NTSC into J9. Outside the 32-IC logic count. Chip is wide SOIC-16. **Mobo: DIP-16 + Proto Advantage PA0006** ([`passive_rf_etc.md`](passive_rf_etc.md)) |
 
 **Count:** **32** (31 mobo + 1 cart save). Escape **+1 PLD** if compositor overflows. **74HC14** (reset/clock) and **AD725** (composite) are outside the 32 if not absorbed.
 
@@ -196,7 +196,7 @@ Ports and passives: [`passive_rf_etc.md`](passive_rf_etc.md).
 | Topic | Resolution |
 |-------|------------|
 | Color PROM speed | **AT27C256R** 45 ns OTP ([`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md)). Unused address pins tied **GND**. Binary-weighted outputs through **75 ohm** to ground -> **~0.7 Vpp** RGBS. |
-| Composite | **AD725** NTSC from RGBS + CSYNC ([`passive_rf_etc.md`](passive_rf_etc.md)). **AV outs: RGBS + composite.** **First PCB: THT adapter** (no direct SOIC on board). |
+| Composite | **AD725** NTSC from RGBS + CSYNC ([`passive_rf_etc.md`](passive_rf_etc.md)). **AV outs: RGBS + composite.** Mobo footprint is **DIP-16** (Proto Advantage **PA0006** SOIC-to-DIP). |
 | HC573 latch packing | Nine chips -> nine `$FExx` bytes ([`graphics.md`](graphics.md#hc573-latch-map-9-chips)). |
 | Cart I2C save API | `$FE22`-`$FE24` via 1284 master ([`memory.md`](memory.md#cart-save-eeprom-24c64-on-cartridge)). |
 | Machine EEPROM API | `$FE70`-`$FE72` + `RDY` stall ([`memory.md`](memory.md#atmega1284p-internal-eeprom-4-kb)). |
@@ -206,7 +206,6 @@ Ports and passives: [`passive_rf_etc.md`](passive_rf_etc.md).
 
 | Topic | Still open |
 |-------|------------|
-| **U725 first-spin THT** | Swap SOIC footprint for DIP-16 + SOIC-to-DIP adapter before fab ([`passive_rf_etc.md`](passive_rf_etc.md)) |
 | RGBS / AD725 analog tuning | Targets locked in [`passive_rf_etc.md`](passive_rf_etc.md). Bench on first spin |
 | Flasher firmware | Protocol locked in [`cart.md`](cart.md). Implement on 32U4 |
 | UPLDA pin 23 | **Accepted this spin:** `SEL_FE10`/`SEL_FE11` share until fuse map or +1 PLD |

@@ -67,7 +67,6 @@ _HDR2 = "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
 # CUI RCJ-01x PCB RCA (color variants share holes). Custom .kicad_mod until upstream Cinch lands.
 _RCA = "Retr01_Lib:CUI_RCJ-01x_Vertical"
 _TVS = "Diode_SMD:D_SOD-323"
-_SOIC16 = "Package_SO:SOIC-16_3.9x9.9mm_P1.27mm"
 _L0603 = "Inductor_SMD:L_0603_1608Metric"
 _XTAL = "Crystal:Crystal_HC49-U_Vertical"
 
@@ -209,14 +208,15 @@ BOM: List[BomEntry] = [
         vcc_pin="VDD",
         gnd_pin="GND",
     ),
-    # Composite AV path (outside 32-IC logic BOM)
+    # Composite AV path (outside 32-IC logic BOM). AD725 silicon is wide SOIC-16.
+    # Mobo footprint is DIP-16 for Proto Advantage PA0006 (first-spin fully THT).
     BomEntry(
         "U725",
         "AD725",
-        "AD725ARZ RGB->NTSC encoder (SOIC-16 die). First spin: THT via SOIC-to-DIP adapter on DIP-16 pads",
+        "AD725ARZ RGB->NTSC on DIP-16 via Proto Advantage PA0006 (chip wide SOIC-16)",
         IslandId.VIDEO,
         16,
-        _SOIC16,
+        _DIP16,
         in_ic_count=False,
         vcc_pin=None,
         gnd_pin=None,

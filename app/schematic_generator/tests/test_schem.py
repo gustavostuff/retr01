@@ -65,6 +65,7 @@ class TestBom(unittest.TestCase):
         self.assertEqual(BOM_BY_REFDES["Y1"].footprint, BOM_BY_REFDES["Y3"].footprint)
         self.assertIn("PJ-063AH", BOM_BY_REFDES["J1"].footprint)
         self.assertIn("AD725ARZ", BOM_BY_REFDES["U725"].role)
+        self.assertIn("DIP-16", BOM_BY_REFDES["U725"].footprint)
 
     def test_arcade_pin_names(self):
         from retr01_schem.pinmap import M1284_P1, M1284_P2, PIN_TEMPLATES
@@ -214,7 +215,7 @@ class TestManifest(unittest.TestCase):
     def test_ad725_outside_ic_count(self):
         self.assertIn("U725", BOM_BY_REFDES)
         self.assertFalse(BOM_BY_REFDES["U725"].in_ic_count)
-        self.assertIn("SOIC-16", BOM_BY_REFDES["U725"].footprint)
+        self.assertIn("DIP-16", BOM_BY_REFDES["U725"].footprint)
 
 
 if __name__ == "__main__":
