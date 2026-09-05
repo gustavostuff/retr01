@@ -87,7 +87,7 @@ void draw_sound_editor(UiState *ui, SDL_Renderer *r) {
         if ((i % 4) == 0) {
             char lab[16];
             snprintf(lab, sizeof(lab), "%d", i);
-            font_draw(r, x + 2, lo.timeline_y - lo.ruler_h + 4, lab, 160, 160, 170);
+            font_draw(r, x + 2, lo.timeline_y - lo.ruler_h + (lo.ruler_h - 8) / 2, lab, 160, 160, 170);
             fill_rect(r, x, lo.timeline_y - 4, 1, 4, 120, 120, 130);
         } else {
             fill_rect(r, x, lo.timeline_y - 2, 1, 2, 90, 90, 100);
@@ -138,12 +138,12 @@ void draw_sound_editor(UiState *ui, SDL_Renderer *r) {
             if (w < 1) {
                 w = 1;
             }
-            fill_rect(r, x0, y + 2, w, lo.lane_h - 4, k_ch_col[ch][0], k_ch_col[ch][1], k_ch_col[ch][2]);
+            fill_rect(r, x0, y, w, lo.lane_h, k_ch_col[ch][0], k_ch_col[ch][1], k_ch_col[ch][2]);
             sel = (ui->sound.sel_kind == UI_SOUND_SEL_REGION && ui->sound.sel_ch == ch && ui->sound.sel_region == i);
             if (sel) {
-                draw_rect(r, x0, y + 2, w, lo.lane_h - 4, 245, 245, 245);
+                draw_rect(r, x0, y, w, lo.lane_h, 245, 245, 245);
             }
-            font_draw_clipped(r, x0 + 3, y + (lo.lane_h - 8) / 2, x0, y, w, lo.lane_h, rg->tok[0] ? rg->tok : "?",
+            font_draw_clipped(r, x0 + 2, y + (lo.lane_h - 8) / 2, x0, y, w, lo.lane_h, rg->tok[0] ? rg->tok : "?",
                               20, 20, 24);
         }
     }
@@ -168,19 +168,28 @@ void draw_sound_editor(UiState *ui, SDL_Renderer *r) {
         int map_h = lo.minimap_h;
         int span = UI_SOUND_STEPS_MAX;
         int lane_strip_h;
+        int used_h;
         int vx, vw;
         if (span < 1) {
             span = 1;
         }
-        fill_rect(r, map_x, map_y, map_w, map_h, 40, 40, 48);
+        /* Equal rows per channel; do not stretch the last lane into leftover pixels. */
         lane_strip_h = map_h / UI_SOUND_BGM_CH;
         if (lane_strip_h < 1) {
             lane_strip_h = 1;
         }
+        used_h = lane_strip_h * UI_SOUND_BGM_CH;
+        if (used_h > map_h) {
+            used_h = map_h;
+        }
+        fill_rect(r, map_x, map_y, map_w, used_h, 40, 40, 48);
         for (ch = 0; ch < UI_SOUND_BGM_CH; ch++) {
             int n = ui->sound.region_count[tid][ch];
             int ly0 = map_y + ch * lane_strip_h;
-            int lh = (ch == UI_SOUND_BGM_CH - 1) ? (map_y + map_h - ly0) : lane_strip_h;
+            int lh = lane_strip_h;
+            if (ly0 + lh > map_y + used_h) {
+                break;
+            }
             for (i = 0; i < n; i++) {
                 const UiBgmRegion *rg = &ui->sound.region[tid][ch][i];
                 int x0 = map_x + (rg->start * map_w) / span;
@@ -203,28 +212,40 @@ void draw_sound_editor(UiState *ui, SDL_Renderer *r) {
         if (vx < map_x) {
             vx = map_x;
         }
-        fill_rect_alpha(r, vx, map_y, vw, map_h, 255, 255, 255, 70);
+        fill_rect_alpha(r, vx, map_y, vw, used_h, 255, 255, 255, 70);
     }
 
     draw_button(r, lo.play_x, lo.play_y, lo.play_w, "Play", 1, sound_play_hit(ui, lx, ly));
     draw_button(r, lo.pause_x, lo.pause_y, lo.pause_w, "Pause", 1, sound_pause_hit(ui, lx, ly));
     draw_button(r, lo.stop_x, lo.stop_y, lo.stop_w, "Stop", 1, sound_stop_hit(ui, lx, ly));
-    font_draw(r, lo.insp_x, lo.play_y + UI_BTN_H + 2, "Isolate", 200, 200, 210);
-    for (i = 0; i < UI_SOUND_BGM_CH + 1; i++) {
-        int y = lo.ch_radio_y0 + i * (UI_MODE_ROW_H + 2);
-        int solo = i - 1; /* -1 = All */
-        int sel = (solo == ui->sound.solo_ch);
-        int hover = point_in_rect(lx, ly, lo.insp_x, y, UI_CTRL_SIDEBAR_W - UI_UNIT * 2, UI_MODE_ROW_H);
-        const char *lab = (solo < 0) ? "All" : k_ch_label[solo];
-        ui_radio_draw(r, lo.insp_x, y + (UI_MODE_ROW_H - UI_MODE_RADIO) / 2, sel);
-        font_draw(r, lo.insp_x + UI_MODE_RADIO + UI_MODE_GAP, y + (UI_MODE_ROW_H - 8) / 2, lab, 230, 230, 230);
-        if (hover) {
-            hover_overlay(r, lo.insp_x, y, UI_CTRL_SIDEBAR_W - UI_UNIT * 2, UI_MODE_ROW_H);
+    /* Isolate radios: All on ruler row; channel radios centered on each lane. */
+    {
+        int all_y = lo.timeline_y - lo.ruler_h;
+        int all_cy = all_y + (lo.ruler_h - UI_MODE_ROW_H) / 2;
+        int hover_all = point_in_rect(lx, ly, lo.insp_x, all_y, UI_CTRL_SIDEBAR_W - UI_UNIT * 2, lo.ruler_h);
+        ui_radio_draw(r, lo.insp_x, all_cy + (UI_MODE_ROW_H - UI_MODE_RADIO) / 2,
+                      ui->sound.solo_ch == UI_SOUND_SOLO_ALL);
+        font_draw(r, lo.insp_x + UI_MODE_RADIO + UI_MODE_GAP, all_cy + (UI_MODE_ROW_H - 8) / 2, "All", 230, 230,
+                  230);
+        if (hover_all) {
+            hover_overlay(r, lo.insp_x, all_y, UI_CTRL_SIDEBAR_W - UI_UNIT * 2, lo.ruler_h);
         }
-    }
-    if (ui->sound.solo_ch >= 0 && ui->sound.solo_ch < UI_SOUND_BGM_CH) {
-        int c = ui->sound.solo_ch;
-        int y = lo.ch_radio_y0 + (UI_SOUND_BGM_CH + 1) * (UI_MODE_ROW_H + 2) + UI_UNIT;
-        font_draw(r, lo.insp_x, y, k_ch_role[c], 160, 160, 170);
+        for (i = 0; i < UI_SOUND_BGM_CH; i++) {
+            int y = lo.timeline_y + i * (lo.lane_h + lo.lane_gap);
+            int cy = y + (lo.lane_h - UI_MODE_ROW_H) / 2;
+            int sel = (i == ui->sound.solo_ch);
+            int hover = point_in_rect(lx, ly, lo.insp_x, y, UI_CTRL_SIDEBAR_W - UI_UNIT * 2, lo.lane_h);
+            ui_radio_draw(r, lo.insp_x, cy + (UI_MODE_ROW_H - UI_MODE_RADIO) / 2, sel);
+            font_draw(r, lo.insp_x + UI_MODE_RADIO + UI_MODE_GAP, cy + (UI_MODE_ROW_H - 8) / 2, k_ch_label[i], 230,
+                      230, 230);
+            if (hover) {
+                hover_overlay(r, lo.insp_x, y, UI_CTRL_SIDEBAR_W - UI_UNIT * 2, lo.lane_h);
+            }
+        }
+        if (ui->sound.solo_ch >= 0 && ui->sound.solo_ch < UI_SOUND_BGM_CH) {
+            int c = ui->sound.solo_ch;
+            int y = lo.minimap_y + lo.minimap_h + UI_UNIT;
+            font_draw(r, lo.insp_x, y, k_ch_role[c], 160, 160, 170);
+        }
     }
 }

@@ -1023,7 +1023,7 @@ void draw_app_mode_tabs(UiState *ui, SDL_Renderer *r) {
 void sound_editor_layout(const UiState *ui, SoundEditorLayout *lo) {
     int chrome = UI_APP_CHROME_H;
     int tab_w;
-    int btn_gap;
+    int btn_gap = UI_UNIT;
     if (!lo) {
         return;
     }
@@ -1035,35 +1035,37 @@ void sound_editor_layout(const UiState *ui, SoundEditorLayout *lo) {
         tab_w = font_text_width("SFX");
     }
     tab_w += UI_UNIT;
-    if (tab_w < 1) {
-        tab_w = 1;
+    tab_w = ((tab_w + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
+    if (tab_w < UI_UNIT) {
+        tab_w = UI_UNIT;
     }
     lo->plane_tab_w = tab_w;
     lo->plane_tabs_x = 0;
     lo->plane_tabs_y = chrome;
     lo->track_list_y = chrome + UI_BTN_H + UI_UNIT;
-    lo->track_row_h = UI_SPRITE_ROW_H;
-    lo->add_w = label_width("Add");
+    lo->track_row_h = UI_SPRITE_ROW_H; /* 16 */
+    lo->add_w = ((label_width("Add") + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
     lo->add_x = UI_WORLDS_X + UI_UNIT;
     lo->add_y = ui_logic_h(ui) - UI_BTN_H - UI_UNIT;
     if (lo->add_y < lo->track_list_y + UI_BTN_H) {
         lo->add_y = lo->track_list_y + UI_BTN_H;
     }
 
-    lo->lane_label_w = label_width("Pulse1") + UI_UNIT;
+    lo->lane_label_w = ((label_width("Pulse1") + UI_UNIT + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
     lo->lane_label_x = UI_SIDEBAR_W + UI_UNIT;
     lo->timeline_x = lo->lane_label_x + lo->lane_label_w;
     lo->hdr_y = chrome + UI_UNIT;
-    lo->ruler_h = UI_BTN_H;
+    lo->ruler_h = UI_BTN_H; /* 16 */
     lo->timeline_y = lo->hdr_y + UI_BTN_H + lo->ruler_h;
     lo->lane_h = UI_SOUND_LANE_H;
     lo->lane_gap = UI_SOUND_LANE_GAP;
     lo->px_per_tick = UI_SOUND_PX_PER_TICK;
     lo->timeline_h = UI_SOUND_BGM_CH * (lo->lane_h + lo->lane_gap) - lo->lane_gap;
     lo->minimap_h = UI_SOUND_MINIMAP_H;
-    lo->minimap_y = lo->timeline_y + lo->timeline_h + UI_UNIT / 2;
+    lo->minimap_y = lo->timeline_y + lo->timeline_h + UI_UNIT;
     {
         int max_w = ui_ctrl_x(ui) - UI_UNIT - lo->timeline_x;
+        max_w = (max_w / UI_UNIT) * UI_UNIT;
         if (max_w < lo->px_per_tick * 4) {
             max_w = lo->px_per_tick * 4;
         }
@@ -1076,20 +1078,17 @@ void sound_editor_layout(const UiState *ui, SoundEditorLayout *lo) {
 
     lo->insp_x = ui_ctrl_x(ui) + UI_UNIT;
     lo->insp_y = chrome + UI_UNIT;
-    lo->play_w = label_width("Play");
-    lo->pause_w = label_width("Pause");
-    lo->stop_w = label_width("Stop");
+    lo->play_w = ((label_width("Play") + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
+    lo->pause_w = ((label_width("Pause") + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
+    lo->stop_w = ((label_width("Stop") + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
     lo->play_x = lo->insp_x;
     lo->play_y = lo->insp_y;
-    btn_gap = UI_UNIT / 2;
-    if (btn_gap < 2) {
-        btn_gap = 2;
-    }
     lo->pause_x = lo->play_x + lo->play_w + btn_gap;
     lo->pause_y = lo->play_y;
     lo->stop_x = lo->pause_x + lo->pause_w + btn_gap;
     lo->stop_y = lo->play_y;
-    lo->ch_radio_y0 = lo->play_y + UI_BTN_H + UI_UNIT + UI_BTN_H;
+    /* Isolate radios: All on ruler row, channels centered on each lane. */
+    lo->ch_radio_y0 = lo->timeline_y - lo->ruler_h;
 }
 
 void sound_plane_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
@@ -1241,14 +1240,26 @@ int sound_channel_hit(const UiState *ui, int lx, int ly, int *out_ch) {
         return 0;
     }
     sound_editor_layout(ui, &lo);
-    /* Row 0 = All (out_ch = UI_SOUND_SOLO_ALL); rows 1..5 = channels 0..4. */
+    /* All: ruler band; channels: each lane. */
     for (i = 0; i < UI_SOUND_BGM_CH + 1; i++) {
-        int y = lo.ch_radio_y0 + i * (UI_MODE_ROW_H + 2);
-        if (point_in_rect(lx, ly, lo.insp_x, y, UI_CTRL_SIDEBAR_W - UI_UNIT * 2, UI_MODE_ROW_H)) {
-            if (out_ch) {
-                *out_ch = i - 1;
+        int solo = i - 1;
+        int y;
+        if (solo < 0) {
+            y = lo.timeline_y - lo.ruler_h;
+            if (point_in_rect(lx, ly, lo.insp_x, y, UI_CTRL_SIDEBAR_W - UI_UNIT * 2, lo.ruler_h)) {
+                if (out_ch) {
+                    *out_ch = UI_SOUND_SOLO_ALL;
+                }
+                return 1;
             }
-            return 1;
+        } else {
+            y = lo.timeline_y + solo * (lo.lane_h + lo.lane_gap);
+            if (point_in_rect(lx, ly, lo.insp_x, y, UI_CTRL_SIDEBAR_W - UI_UNIT * 2, lo.lane_h)) {
+                if (out_ch) {
+                    *out_ch = solo;
+                }
+                return 1;
+            }
         }
     }
     return 0;

@@ -99,11 +99,11 @@
 #define UI_SOUND_TRACKS_MAX 8
 #define UI_SOUND_REGIONS_MAX 128
 #define UI_SOUND_CLIP_MAX 32
-#define UI_SOUND_PX_PER_TICK 24
-#define UI_SOUND_LANE_H 28
-#define UI_SOUND_LANE_GAP 2
-#define UI_SOUND_HANDLE_W 4
-#define UI_SOUND_MINIMAP_H 10
+#define UI_SOUND_PX_PER_TICK 16 /* one 1/4-note tick = 2 grid cells */
+#define UI_SOUND_LANE_H 16      /* channel strip height (2 grid cells) */
+#define UI_SOUND_LANE_GAP 0
+#define UI_SOUND_HANDLE_W 8
+#define UI_SOUND_MINIMAP_H 8
 #define UI_SOUND_SCROLL_PAD 4 /* unused for max; kept for content padding hints */
 
 #define UI_SOUND_SEL_NONE 0

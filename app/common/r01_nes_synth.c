@@ -195,17 +195,11 @@ void r01_nes_synth_render(R01NesSynth *s, int16_t *out, int frames) {
     }
     for (i = 0; i < frames; i++) {
         int32_t mix = 0;
-        int active = 0;
         for (ch = 0; ch < R01_NES_CH_N; ch++) {
-            int16_t sample = voice_sample(s, &s->v[ch]);
-            if (s->v[ch].enable) {
-                mix += sample;
-                active++;
-            }
+            mix += voice_sample(s, &s->v[ch]);
         }
-        if (active > 1) {
-            mix /= active > 3 ? 3 : active; /* soft headroom */
-        }
+        /* Fixed headroom so solo and multi keep the same per-voice level. */
+        mix /= R01_NES_CH_N;
         if (mix > 32767) {
             mix = 32767;
         }

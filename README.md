@@ -43,7 +43,9 @@ Same **32 KB PRG** as classic NES NROM games (Exitebike, Balloon Fight, Ice Clim
 
 Peek at Retr01 Studio:
 
-<img src="app/assets/png/studio.png" alt="Studio" />
+<img src="app/assets/png/studio.png" alt="Studio - Graphics" />
+
+<img src="app/assets/png/audio.png" alt="Studio - Audio" />
 
 Emulator + Debug screen:
 
@@ -54,6 +56,10 @@ Emulator + Debug screen:
 Sim:
 
 <img src="app/assets/png/sim.png" alt="Sim" />
+
+PCB prototype V3 (not tested):
+
+<img src="app/assets/png/pcb_v3_proto.png" alt="PCB V3" />
 
 ## Where to go next
 
