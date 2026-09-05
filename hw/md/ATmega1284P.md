@@ -1,7 +1,7 @@
 # ATmega1284P: Sprite / OAM / pad MCU
 
-**Package (Retr01 motherboard):** 40-pin PDIP.  
-**Qty:** 1.  
+**Package (Retr01 motherboard):** 40-pin PDIP.
+**Qty:** 1.
 **Clock (Retr01):** **20 MHz** (requires VCC 4.5-5.5 V for 20 MHz grade).
 
 ## Package dimensions

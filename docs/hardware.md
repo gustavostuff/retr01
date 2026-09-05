@@ -38,8 +38,8 @@ Studio Play uses the same Emu core as standalone `./emu`.
 | SRAM x3 | AS6C62256 | System RAM, interleaved VRAM, sprite line buffer |
 | Cart storage | SST39SF040 + 24C64 | 512 KB flash on cart + I2C save EEPROM ([`cart.md`](cart.md)) |
 | Video glue | 5x ATF22V10, 6x HC157, 9x HC573, 3x HC245 | Decode, beam, interleave, latches, bus isolation |
-| Color out | AT27C256R OTP | 64-entry R3G3B2 PROM → binary-weighted DAC → RGBS (75 ohm to GND) |
-| Composite (support) | AD725 + 14.31818 MHz can | RGB→NTSC into J9. Outside the 32-IC logic count |
+| Color out | AT27C256R OTP | 64-entry R3G3B2 PROM -> binary-weighted DAC -> RGBS (75 ohm to GND) |
+| Composite (support) | AD725 + 14.31818 MHz can | RGB->NTSC into J9. Outside the 32-IC logic count |
 
 **Count:** **32** (31 mobo + 1 cart save). Escape **+1 PLD** if compositor overflows. **74HC14** (reset/clock) and **AD725** (composite) are outside the 32 if not absorbed.
 
@@ -125,9 +125,9 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
 
 1. All pad paths feed the **ATmega1284P**. CPU reads packed bits at **`$FE60`** (P1) and **`$FE61`** (P2). Bit set = pressed ([`controllers.md`](controllers.md)).
 2. **Silicon / PCB target:** one motherboard carries **both** I/O styles (arcade vs console is shell / population, not a different PCB):
-   - **Retr01-A (arcade):** **J5/J6** 1×10 microswitch headers + **J7** 1×4 power/reset ([`controllers.md`](controllers.md#locked-headers-schematic-freeze)).
-   - **Retr01-C (console):** **2x Switchcraft 35RAPC** TRS for aux pads. Pad boards use **ATtiny85** on a **3-wire** (5 V / DATA / GND) half-duplex UART link ([`controllers.md`](controllers.md)). Populate jacks for console. DNP OK on pure arcade builds.
-3. **Runners today (Emu / Sim):** Host Play drives `$FE60` / `$FE61`. Sim HUD **ARCADE** = direct inject; **PADS** = ATtiny85 poll/reply into those ports. TRS jack netlist / 1284 USART not modeled yet.
+ - **Retr01-A (arcade):** **J5/J6** 1x10 microswitch headers + **J7** 1x4 power/reset ([`controllers.md`](controllers.md#locked-headers-schematic-freeze)).
+ - **Retr01-C (console):** **2x Switchcraft 35RAPC** TRS for aux pads. Pad boards use **ATtiny85** on a **3-wire** (5 V / DATA / GND) half-duplex UART link ([`controllers.md`](controllers.md)). Populate jacks for console. DNP OK on pure arcade builds.
+3. **Runners today (Emu / Sim):** Host Play drives `$FE60` / `$FE61`. Sim HUD **ARCADE** = direct inject. **PADS** = ATtiny85 poll/reply into those ports. TRS jack netlist / 1284 USART not modeled yet.
 4. Ports / ESD / PPTC: [`passive_rf_etc.md`](passive_rf_etc.md).
 
 ### Audio
@@ -195,7 +195,7 @@ Ports and passives: [`passive_rf_etc.md`](passive_rf_etc.md).
 
 | Topic | Resolution |
 |-------|------------|
-| Color PROM speed | **AT27C256R** 45 ns OTP ([`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md)). Unused address pins tied **GND**. Binary-weighted outputs through **75 ohm** to ground → **~0.7 Vpp** RGBS. |
+| Color PROM speed | **AT27C256R** 45 ns OTP ([`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md)). Unused address pins tied **GND**. Binary-weighted outputs through **75 ohm** to ground -> **~0.7 Vpp** RGBS. |
 | Composite | **AD725** NTSC from RGBS + CSYNC ([`passive_rf_etc.md`](passive_rf_etc.md)). No S-Video on this spin. |
 | HC573 latch packing | Nine chips -> nine `$FExx` bytes ([`graphics.md`](graphics.md#hc573-latch-map-9-chips)). |
 | Cart I2C save API | `$FE22`-`$FE24` via 1284 master ([`memory.md`](memory.md#cart-save-eeprom-24c64-on-cartridge)). |
@@ -206,7 +206,7 @@ Ports and passives: [`passive_rf_etc.md`](passive_rf_etc.md).
 
 | Topic | Still open |
 |-------|------------|
-| RGBS / AD725 analog tuning | Targets locked in [`passive_rf_etc.md`](passive_rf_etc.md); bench on first spin |
-| Flasher firmware | Protocol locked in [`cart.md`](cart.md); implement on 32U4 |
+| RGBS / AD725 analog tuning | Targets locked in [`passive_rf_etc.md`](passive_rf_etc.md). Bench on first spin |
+| Flasher firmware | Protocol locked in [`cart.md`](cart.md). Implement on 32U4 |
 | UPLDA pin 23 | **Accepted this spin:** `SEL_FE10`/`SEL_FE11` share until fuse map or +1 PLD |
 | HC245 DIR/OE | **Accepted this spin:** driven from UPLDB (UPLDA I/O budget) |

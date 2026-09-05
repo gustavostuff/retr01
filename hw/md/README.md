@@ -2,7 +2,7 @@
 
 Keyboard-friendly notes for each motherboard IC: what it is, package/pins, speed and memory, Retr01 role, pin behavior, and how it talks to the rest of the board. Written for **simulator authors** and island bring-up. Confirm timing and pinouts against the vendor datasheet for the frozen part.
 
-**Simulator:** [`app/sim/README.md`](../../app/sim/README.md).  
+**Simulator:** [`app/sim/README.md`](../../app/sim/README.md).
 **PDIP body sizes (mm + sim px):** [`packages_dip.md`](packages_dip.md).
 
 ## Doc batches

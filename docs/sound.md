@@ -12,7 +12,7 @@ Retr01 has **no fixed-function audio ASIC**. Roles split like the rest of the bo
 |------|-----|
 | Sequencer / tracker | **W65C02S** (game PRG), driven by **60 Hz NMI** |
 | Synthesizer / mixer (APU) | **ATmega328P** @ 16 MHz (island **K**) |
-| Analog out | 328P **8-bit digital mix** -> discrete **R-2R** (**R = 10.0 kΩ**, **2R = 20.0 kΩ**, 1%) + **1 kΩ** / **10 µF** AC build-out ([`passive_rf_etc.md`](passive_rf_etc.md)) |
+| Analog out | 328P **8-bit digital mix** -> discrete **R-2R** (**R = 10.0 kohm**, **2R = 20.0 kohm**, 1%) + **1 kohm** / **10 uF** AC build-out ([`passive_rf_etc.md`](passive_rf_etc.md)) |
 
 Flow:
 
@@ -153,7 +153,7 @@ These ride with channel data through the bus bridge:
 
 #### `FD` bitmask (decompression bridge)
 
-1. Next byte is an **8-bit mask** (bit 0 = ch1 ... bit 7 = ch8).
+1. Next byte is an **8-bit mask** (bit 0 = ch1... Bit 7 = ch8).
 2. The 6502 counts set bits -> that many **note / command bytes** follow in ROM.
 3. If **bit 4** is set, one of those bytes is the **DPCM trigger ID** for channel 5.
 4. CPU pushes **`FD` + mask + payload bytes** through `$FE4x` to the 328P latch.
@@ -168,11 +168,11 @@ The sequencer is driven entirely by the W65C02S **NMI** (~60x/s). **BGM** and **
 
 1. Decrement `BGM_Delay_Counter`. If still **> 0**, skip to Step 2.
 2. Read the byte at `BGM_Read_Pointer`.
-3. If **playback control** (`FA` / `FB` / `FE` ...): execute loop, stop, or wait.
+3. If **playback control** (`FA` / `FB` / `FE`...): execute loop, stop, or wait.
 4. If **`FD`**:
-   - Read the mask byte.
-   - Pull exactly as many note/command bytes as the mask requires (including DPCM ID when bit 4 is set).
-   - Push `FD`, mask, and data bytes to the ATmega latch via the bus bridge.
+ - Read the mask byte.
+ - Pull exactly as many note/command bytes as the mask requires (including DPCM ID when bit 4 is set).
+ - Push `FD`, mask, and data bytes to the ATmega latch via the bus bridge.
 5. Advance `BGM_Read_Pointer` as needed.
 
 ### Step 2: Evaluate SFX (channels 6-8)
@@ -198,14 +198,19 @@ The sequencer is driven entirely by the W65C02S **NMI** (~60x/s). **BGM** and **
 
 ---
 
-## 7. Status vs sim
+## 7. Status vs runners
 
 | Layer | Today |
 |-------|--------|
 | Design (this doc) | 8-ch mixer, DPCM-in-AVR-flash, semantic hex + NMI dual tracker |
 | HW BOM | 328P + `$FE40`-`$FE5F` + CPU HC245 domain |
-| Board sim | Island **K**: 8-voice software mix (BGM pulse/pulse/tri/noise/DPCM + SFX), legacy `$FE40` smoke on ch1, analog mix scope + **WAVE** monitor overlay. Full hex protocol / cart BGM / Select-Start SFX still later |
-| Studio Audio tab | BGM UI shell + softsynth; `r01_bgm_play(ctx,1)` loops Track 1 on Host Play; P1 **G** (X) / **H** (Y) play fixed SFX (pulse blip / noise tick); host mix = softsynth / 4, BGM and SFX matched |
+| Board sim | Island **K**: 8-voice math mix + `$FE40` smoke on ch1 + **WAVE** monitor overlay. **No host speaker BGM/SFX** (sim timebase would make music too slow or hold the same wave for ages). Full `$FE4x` hex protocol / cart BGM still later |
+| Studio Audio tab | BGM UI shell + host softsynth Play/Stop. Compact left-aligned BGM/SFX plane tabs. Not cart-protocol playback |
+| Studio / emu Host Play | `r01_bgm_play(ctx, 1)` loops Track 1. P1 **G** (X) / **H** (Y) play fixed SFX (pulse blip / noise tick). Host mix = softsynth / 4. Shared pad map via `r01_pad_keys` |
+
+### TODO
+
+- **Sim WAVE monitor (later):** feed B1-B5 / S6-S8 (and mix lane **A**) from richer APU / Host Play intent so patterns are visible on the overlay **without** playing BGM or SFX through the host speaker.
 
 ---
 

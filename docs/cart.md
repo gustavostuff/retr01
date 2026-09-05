@@ -17,13 +17,13 @@ Target footprint is **Game Boy-sized** (~**55 mm** PCB width) with a **low-profi
 
 ### Connector parts (2x18, 2.54 mm pitch)
 
-**Locked (motherboard J36):** [EDAC **395-036-559-212**](https://www.digikey.com/en/products/detail/edac-inc/395-036-559-212/11138956) — black, **right-angle** 2×18. Matches Retr01-C face-up insert. SKiDL uses KiCad `PinSocket_2x18_P2.54mm_Horizontal` as the hole-pattern stand-in until manufacturer CAD is dropped into `Retr01_Lib`.
+**Locked (motherboard J36):** [EDAC **395-036-559-212**](https://www.digikey.com/en/products/detail/edac-inc/395-036-559-212/11138956) - black, **right-angle** 2x18. Matches Retr01-C face-up insert. SKiDL uses KiCad `PinSocket_2x18_P2.54mm_Horizontal` as the hole-pattern stand-in until manufacturer CAD is dropped into `Retr01_Lib`.
 
-**Arcade / top-load alternate (shell BOM only, not a second mobo footprint):** [EDAC **395-036-520-201**](https://www.digikey.com/en/products/detail/edac-inc/395-036-520-201/1297144) straight 2×18, or Sullins **EBC18DRXN**. Same electrical pinout.
+**Arcade / top-load alternate (shell BOM only, not a second mobo footprint):** [EDAC **395-036-520-201**](https://www.digikey.com/en/products/detail/edac-inc/395-036-520-201/1297144) straight 2x18, or Sullins **EBC18DRXN**. Same electrical pinout.
 
-**Optional industrial card-edge (flasher / specials):** TE **5645235-4** Standard Edge II (straight female). Cart gold-finger geometry must match that series — do not mix with EDAC pin-socket hole patterns.
+**Optional industrial card-edge (flasher / specials):** TE **5645235-4** Standard Edge II (straight female). Cart gold-finger geometry must match that series - do not mix with EDAC pin-socket hole patterns.
 
-Motherboard and flasher use the **same 36-pin electrical pinout**. Motherboard copper is locked to the **right-angle EDAC**; arcade shells that need vertical insert use a harness/adapter or a flasher-style straight socket off-board. ESD and series-R practice: [`passive_rf_etc.md`](passive_rf_etc.md).
+Motherboard and flasher use the **same 36-pin electrical pinout**. Motherboard copper is locked to the **right-angle EDAC**. Arcade shells that need vertical insert use a harness/adapter or a flasher-style straight socket off-board. ESD and series-R practice: [`passive_rf_etc.md`](passive_rf_etc.md).
 
 ---
 
@@ -122,7 +122,7 @@ Firmware presents a **USB CDC ACM** serial port (virtual COM). Protocol below is
 
 ### Flasher USB protocol (locked)
 
-**Transport:** USB CDC ACM, **115200 8N1** (rate is not critical; framing is). Host opens the COM port and exchanges binary frames.
+**Transport:** USB CDC ACM, **115200 8N1** (rate is not critical. Framing is). Host opens the COM port and exchanges binary frames.
 
 **Frame** (both directions):
 
@@ -131,11 +131,11 @@ Firmware presents a **USB CDC ACM** serial port (virtual COM). Protocol below is
 | 0 | `0xAA` sync |
 | 1 | `0x55` sync |
 | 2 | `cmd` |
-| 3–4 | `len` (uint16 LE) = payload byte count |
-| 5… | `payload` (`len` bytes) |
+| 3-4 | `len` (uint16 LE) = payload byte count |
+| 5... | `payload` (`len` bytes) |
 | last | `xor` of all bytes from `cmd` through end of payload |
 
-**Host → flasher `cmd`:**
+**Host -> flasher `cmd`:**
 
 | cmd | Name | Payload | Action |
 |-----|------|---------|--------|
@@ -143,11 +143,11 @@ Firmware presents a **USB CDC ACM** serial port (virtual COM). Protocol below is
 | `0x02` | `INFO` | empty | Reply flash ID / fw version ASCII |
 | `0x10` | `ERASE_CHIP` | empty | Full-chip erase SST39SF040 |
 | `0x11` | `ERASE_SECTOR` | `addr` u24 LE | Erase 4 KB sector containing addr |
-| `0x20` | `WRITE` | `addr` u24 LE + data (1–256 B) | Program bytes (host must erase first) |
-| `0x21` | `READ` | `addr` u24 LE + `n` u16 LE | Read `n` bytes (1–256) |
-| `0x22` | `VERIFY` | `addr` u24 LE + data | Read-back compare; status in reply |
+| `0x20` | `WRITE` | `addr` u24 LE + data (1-256 B) | Program bytes (host must erase first) |
+| `0x21` | `READ` | `addr` u24 LE + `n` u16 LE | Read `n` bytes (1-256) |
+| `0x22` | `VERIFY` | `addr` u24 LE + data | Read-back compare. Status in reply |
 
-**Flasher → host `cmd`:**
+**Flasher -> host `cmd`:**
 
 | cmd | Name | Payload |
 |-----|------|---------|
@@ -157,7 +157,7 @@ Firmware presents a **USB CDC ACM** serial port (virtual COM). Protocol below is
 | `0x91` | `DATA` | raw bytes (READ) |
 | `0x9E` | `NAK` | `errno` u8 (`1`=bad xor, `2`=busy, `3`=verify fail, `4`=bad len) |
 
-**Flow for a full cart image:** `PING` → `INFO` → `ERASE_CHIP` → loop `WRITE` 256 B pages → optional `VERIFY` pages → `PING`.
+**Flow for a full cart image:** `PING` -> `INFO` -> `ERASE_CHIP` -> loop `WRITE` 256 B pages -> optional `VERIFY` pages -> `PING`.
 
 No USB HID, no vendor bulk required for v1. Upgrade path later if needed.
 

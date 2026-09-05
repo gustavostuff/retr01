@@ -45,13 +45,13 @@ Three connectors on the motherboard:
 
 | Refdes | Part | Role |
 |--------|------|------|
-| **J5** | **1×10** pin header, 2.54 mm | Player 1 controls |
-| **J6** | **1×10** pin header, 2.54 mm | Player 2 controls |
-| **J7** | **1×4** pin header, 2.54 mm | Cabinet **+5 V / GND / RESET** |
+| **J5** | **1x10** pin header, 2.54 mm | Player 1 controls |
+| **J6** | **1x10** pin header, 2.54 mm | Player 2 controls |
+| **J7** | **1x4** pin header, 2.54 mm | Cabinet **+5 V / GND / RESET** |
 
 Pin 1 is marked on the silkscreen (square pad). Headers face the cabinet harness edge.
 
-#### J5 — Player 1 (1×10)
+#### J5 - Player 1 (1x10)
 
 Pin order matches the `$FE60` bitfield (**LSB = pin 1**):
 
@@ -65,10 +65,10 @@ Pin order matches the `$FE60` bitfield (**LSB = pin 1**):
 | 6 | `P1_Y` | 5 | Y |
 | 7 | `P1_COIN` | 6 | Coin |
 | 8 | `P1_START` | 7 | Start |
-| 9 | `GND` | — | Switch common |
-| 10 | `GND` | — | Switch common (spare) |
+| 9 | `GND` | - | Switch common |
+| 10 | `GND` | - | Switch common (spare) |
 
-#### J6 — Player 2 (1×10)
+#### J6 - Player 2 (1x10)
 
 Same physical order as J5 for `$FE61`:
 
@@ -82,12 +82,12 @@ Same physical order as J5 for `$FE61`:
 | 6 | `P2_Y` | 5 | Y |
 | 7 | `P2_COIN` | 6 | Coin |
 | 8 | `P2_START` | 7 | Start |
-| 9 | `GND` | — | Switch common |
-| 10 | `GND` | — | Switch common (spare) |
+| 9 | `GND` | - | Switch common |
+| 10 | `GND` | - | Switch common (spare) |
 
-#### J7 — Power / reset (1×4)
+#### J7 - Power / reset (1x4)
 
-Shared cabinet feed for lamps / coin door / front-panel reset. **Does not** replace the barrel jack (J1); it is a harness tap from the post-ferrite **+5 V** rail.
+Shared cabinet feed for lamps / coin door / front-panel reset. **Does not** replace the barrel jack (J1). It is a harness tap from the post-ferrite **+5 V** rail.
 
 | Pin | Net | Role |
 |-----|-----|------|
@@ -96,13 +96,13 @@ Shared cabinet feed for lamps / coin door / front-panel reset. **Does not** repl
 | 3 | `RESET_N` | Active-low reset (momentary to GND). Ties into HC14 / `RESB` reset tree |
 | 4 | `GND` | Ground (return / keying spare) |
 
-**Why 10 + 10 + 4:** eight bitfield lines need eight pins; dual GND on each player header simplifies harness commons without a third connector; power and reset stay off the control ribbons so a shorted stick wire cannot backfeed the rail through a signal pin.
+**Why 10 + 10 + 4:** eight bitfield lines need eight pins. Dual GND on each player header simplifies harness commons without a third connector. Power and reset stay off the control ribbons so a shorted stick wire cannot backfeed the rail through a signal pin.
 
 ---
 
 ## Retr01-C: Aux pads (3-wire + ATtiny85)
 
-Console builds populate **2x Switchcraft 35RAPC2BVN4** TRS jacks (P1, P2; vertical). Optional **pad boards** use an **ATtiny85** and a **male-male 3.5 mm aux** cable (no proprietary tether).
+Console builds populate **2x Switchcraft 35RAPC2BVN4** TRS jacks (P1, P2, vertical). Optional **pad boards** use an **ATtiny85** and a **male-male 3.5 mm aux** cable (no proprietary tether).
 
 ### Cable (3 conductors)
 
@@ -110,9 +110,9 @@ Console builds populate **2x Switchcraft 35RAPC2BVN4** TRS jacks (P1, P2; vertic
 |-----------|--------|
 | Tip | **5 V** (jack pad **4**) |
 | Ring | **DATA** (jack pad **2**) |
-| Sleeve | **GND** (jack pad **1**; shell) |
+| Sleeve | **GND** (jack pad **1**, shell) |
 
-Pads **3** and **5** are plated for mechanical hold on the VN4 footprint; they are **NC** on **35RAPC2BVN4** (no internal switches). Exact tip/ring assignment is fixed at schematic time. Protection (PPTC on VCC, TVS, series R on DATA): [`passive_rf_etc.md`](passive_rf_etc.md).
+Pads **3** and **5** are plated for mechanical hold on the VN4 footprint. They are **NC** on **35RAPC2BVN4** (no internal switches). Exact tip/ring assignment is fixed at schematic time. Protection (PPTC on VCC, TVS, series R on DATA): [`passive_rf_etc.md`](passive_rf_etc.md).
 
 ### Electrical: open-drain UART bus
 
@@ -166,4 +166,4 @@ Pads that miss a poll hold last state until the next good frame.
 |-------|------|
 | Debounce | Pad-side vs 1284-side threshold |
 | Light gun | Identify **`0x02`**, timer read **`0x5A`**. See [`lightgun.md`](lightgun.md) |
-| Arcade series-R / TVS footprints | **47 Ω** in SKiDL; optional TVS at layout |
+| Arcade series-R / TVS footprints | **47 ohm** in SKiDL. Optional TVS at layout |

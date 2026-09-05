@@ -83,7 +83,7 @@ On boot (or hot-plug), the **ATmega1284P** host sends **`0xFF`** (identify).
 
 ### Standard poll (every VBlank)
 
-Host sends the normal port poll byte (**`0x55`** for P1, **`0xAA`** for P2 — locked in [`controllers.md`](controllers.md)).
+Host sends the normal port poll byte (**`0x55`** for P1, **`0xAA`** for P2 - locked in [`controllers.md`](controllers.md)).
 
 1. Gun UART RX ISR fires on the poll byte. The **stop bit edge** **resets** the 16-bit beam timer to **0** (VBlank sync lock).
 2. Gun replies with **one byte** button state (gun layout, not identical to the stick bit names):

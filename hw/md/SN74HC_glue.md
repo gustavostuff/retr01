@@ -1,7 +1,7 @@
 # SN74HC glue: DIP-14 gates (v0)
 
-**Package:** 14-pin PDIP (N). **VCC** pin 14, **GND** pin 7 on all of these.  
-**Qty (v0):** **10** total: HC14 x1, HC00 x2, HC04 x2, HC08 x2, HC32 x2, HC86 x1.  
+**Package:** 14-pin PDIP (N). **VCC** pin 14, **GND** pin 7 on all of these.
+**Qty (v0):** **10** total: HC14 x1, HC00 x2, HC04 x2, HC08 x2, HC32 x2, HC86 x1.
 **Qty (v1):** **0**. Equations move into ATF22V10.
 
 Family: 74HC, 2-6 V, Retr01 at **5 V**. Propagation delays typically teens of ns.
@@ -68,7 +68,7 @@ Drive A (and B). Y matches Boolean above within `tpd`. Unused inputs must be tie
 
 ## Communication
 
-Scattered between CPU decode, reset, beam wrap, IRQ polarity. v1 deletes these packages once PLD equations cover the same nets.
+Scattered between CPU decode, reset, beam wrap, IRQ polarity. V1 deletes these packages once PLD equations cover the same nets.
 
 ## Sim notes
 

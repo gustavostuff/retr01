@@ -176,7 +176,7 @@ This **replaces** the old two-slot parallax payload model (former slots 4-5 only
 
 ### Show-through
 
-Where BG1 palette index is **0**, the compositor shows the BG0 pixel (else backdrop if BG0 is also transparent). **Missing / unloaded BG1 VRAM slots** (outside the present-screen world bbox streamed into the 2x2 workbench) show **backdrop**, not BG0 — only true color-0 show-through reveals the far plane.
+Where BG1 palette index is **0**, the compositor shows the BG0 pixel (else backdrop if BG0 is also transparent). **Missing / unloaded BG1 VRAM slots** (outside the present-screen world bbox streamed into the 2x2 workbench) show **backdrop**, not BG0 - only true color-0 show-through reveals the far plane.
 
 ```text
 if sprite opaque      -> sprite

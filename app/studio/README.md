@@ -22,13 +22,13 @@ There is **no** Studio-only host Play path. Preview always goes through export t
 +--------------------------------------------------------------------------------+
 ```
 
-Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Window present size stays **1280x720** (640x360 is drawn **2x**, nearest). **8px** grid, dark gray chrome. Top **Graphics | Audio** app tabs (`UI_APP_CHROME_H`). Buttons/labels **16px** tall. Proggy Tiny (`assets/proggy-tiny.ttf`). Screen / Play previews scale with canvas (sharp nearest). Sidebar accordion: per-section expand/collapse (`UI_ACCORDION_ALWAYS_EXPANDED`), **250ms** open/close animation (`UI_ACCORDION_ANIM_MS`). **Audio** tab includes a BGM UI shell and **Play/Stop** preview via a first-party NES-like softsynth (pulse/tri/noise/DPCM stub over SDL2 audio). Not cart-protocol playback. Graphics **Play** remains emu-only.
+Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Window present size stays **1280x720** (640x360 is drawn **2x**, nearest). **8px** grid, dark gray chrome. Top **Graphics | Audio** app tabs (`UI_APP_CHROME_H`), flush left. Buttons/labels **16px** tall. Proggy Tiny (`assets/proggy-tiny.ttf`). Screen / Play previews scale with canvas (sharp nearest). Sidebar accordion: per-section expand/collapse (`UI_ACCORDION_ALWAYS_EXPANDED`), **250ms** open/close animation (`UI_ACCORDION_ANIM_MS`). **Audio** tab: compact left-aligned **BGM | SFX** plane tabs, BGM tracker shell, and **Play/Stop** via a first-party NES-like softsynth (pulse/tri/noise/DPCM stub over SDL2 audio). Not cart-protocol playback. Graphics **Play** remains emu-only (host BGM + P1 X/Y SFX). **Sim is not involved** and does not play host audio.
 
 | Control | Behavior |
 |---------|----------|
 | **Worlds** | **8** world buttons (**1-8**, internal indices **0-7**). World 1 starts with **3x3** blank screens on a **16x16** slot map. Worlds 2-8 start empty until first click. Cart cap: **48 present BG1 screens**/world ([`docs/graphics.md`](../../docs/graphics.md), [`docs/memory.md`](../../docs/memory.md)). Selected world: active strip **11px** + **7px** **BG1**/**BG0** sub-button. Inactive dual-view world tabs fill **18px** (tab+sub stack) so the row height matches |
 | **World map (BG1)** | Sparse **16x16** playfield map (col/row **0-15**, packed as nibbles in cart). Present = blue. White fill = default spawn. White outline = selected |
-| **World map (BG0)** | Second BG plane. Sparse **16x16** chess like BG1. Up to **8** present screens anywhere (double-click to create). Export packs present BG0 screens (coords normalized to the present bbox origin). Non-Play screen preview and Host Play composite BG0 under BG1 color 0; missing BG1 slots / outside the present-screen bbox show backdrop (not BG0). BG0 scrolls on an axis only when its enclosing present extent is **smaller** than BG1 on that axis ([`docs/graphics.md`](../../docs/graphics.md)) |
+| **World map (BG0)** | Second BG plane. Sparse **16x16** chess like BG1. Up to **8** present screens anywhere (double-click to create). Export packs present BG0 screens (coords normalized to the present bbox origin). Non-Play screen preview and Host Play composite BG0 under BG1 color 0. Missing BG1 slots / outside the present-screen bbox show backdrop (not BG0). BG0 scrolls on an axis only when its enclosing present extent is **smaller** than BG1 on that axis ([`docs/graphics.md`](../../docs/graphics.md)) |
 | **Double-click** empty slot | Create screen (BG1 or BG0 plane) |
 | **Click** any slot | Select grid cell (empty or present, white outline). Present also becomes the edit target |
 | **Ctrl+C / Ctrl+V** | Copy / paste entire selected screen (tiles+attrs) on BG0 or BG1. Paste creates the slot if empty |
@@ -161,7 +161,7 @@ PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are
 | `C/base_game.c` | Regenerated each export: frozen tables, init/tick/vblank, calls into `custom_logic` |
 | `C/r01_runtime.c` | Regenerated host stubs (pad helpers, warp, button events) |
 | `C/custom_logic.c` | **User file**. Template on first export. Hooks for game-specific logic (camera dead zone, player anim, events) |
-| `C/include/*.h` | `R01GameCtx`, engine API (`r01_input.h`, `r01_player.h`, ...) |
+| `C/include/*.h` | `R01GameCtx`, engine API (`r01_input.h`, `r01_player.h`,...) |
 | `ASM/**` | Subdivided 6502 sources (`boot/`, `game/`, `io/`, `player/`, `sprite/`, `collision/`, `tables/`) |
 | `data/*` | Palette, CHR, and per-screen MAP bins for `.incbin` |
 

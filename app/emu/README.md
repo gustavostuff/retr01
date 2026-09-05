@@ -16,7 +16,7 @@ Studio **Play** uses this same emu core after export (shared library + standalon
 | **Play** | **Emu Host Play SoT**. Move / **dead-zone camera** / player anim / collision / X/Y warps from cart bytes |
 | **CPU** | Boots world 0. Default: PRG streams pals + start MAP (`$FE93`->`$FE12`). Gameplay still host Play |
 | **Video** | Main FB = **VRAM + scroll** + **OAM** + **BG0** show-through under BG1 color 0 (SCALE 2x). Play host-fills BG1 2x2 seams via `sync_camera` |
-| **Host** | SDL. Sim pad map: P1 WASD+G/H, P2 arrows+,/.  P1 X/Y edge = warp + fixed SFX |
+| **Host** | SDL. Shared Sim pad map: P1 WASD+G/H, P2 arrows+,/. P1 X/Y edge = warp + fixed SFX. Host softsynth BGM (mix / 4). Not cart `$FE40` audio |
 
 **Sync contract:** Emu Host Play (`src/play.c` + `app/common/`) is the Phase 1 gameplay SoT. Studio no longer keeps a parallel preview. Export packs present screens + play table (`$8100`) + `R01P`. Soft-boot (`R01E_SOFTBOOT=1`) keeps the old host memcpy boot path for triage. Default boot runs cart PRG stream catchup like sim.
 

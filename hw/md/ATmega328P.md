@@ -1,7 +1,7 @@
 # ATmega328P: APU MCU
 
-**Package (Retr01 motherboard):** 28-pin PDIP.  
-**Qty:** **1** (current 32-IC BOM: dedicated APU).  
+**Package (Retr01 motherboard):** 28-pin PDIP.
+**Qty:** **1** (current 32-IC BOM: dedicated APU).
 **Clock (Retr01):** **16 MHz** (5 V).
 
 ## Package dimensions
@@ -59,14 +59,14 @@ Speed grade at 5 V: up to **20 MHz**. Retr01 plans **16 MHz**.
          +------------+
 ```
 
-(Pin 1 = PC6/RESET, 2 = PD0/RXD, ... 13 = PD7, 14 = PB0, ... classic Arduino-compatible map.)
+(Pin 1 = PC6/RESET, 2 = PD0/RXD,... 13 = PD7, 14 = PB0,... Classic Arduino-compatible map.)
 
 GPIO-to-`$FE4x` wiring is **schematic TBD**. Sim contract: **32-byte APU window** + PWM sample stream.
 
 ## How it works (behavioral)
 
 1. 6502 `STA $FE4x` (or block) -> decode asserts chip select / strobes data into 328P (parallel port or latched bus).
-2. Firmware updates channel state (period, volume, enable, length, ...).
+2. Firmware updates channel state (period, volume, enable, length,...).
 3. ISR or main loop mixes channels. **hardware timer** outputs PWM continuously.
 4. CPU is not blocked on audio sample rate beyond the register write.
 
