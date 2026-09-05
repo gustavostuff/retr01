@@ -2,13 +2,13 @@
 
 The Retr01 project is a software tool chain + hardware family. Software includes:
 
-- **Retr01 Studio**: visual authoring for worlds, screens and game entities. **Play** exports a cart and opens the shared emulator render screen (same pixels as standalone emu).
-- **Retr01 Emu**: software-visible 65C02 + `$FExx` I/O + video. Standalone `./emu` and the library Studio Play uses. Loads a cart, runs PRG boot catchup and Host Play for movement, camera, and collision.
-- **Retr01 Sim**: pin-level model of the **32-IC** motherboard netlist. Interactive SDL board UI with draggable islands and per-chip tests. Loads **`output/test_2.retr01`** into cart flash by default (override with a path arg). Cart USB flasher island is on the canvas for layout only (**WIP**, see [`docs/cart.md`](docs/cart.md)). Same Host Play contract as Emu after boot catchup.
+- **Retr01 Studio**: the game editor. Draw maps, tiles, and sprites, then hit **Play** to try your game (same picture as the emulator).
+- **Retr01 Emu**: the standalone game player. Runs a cartridge image on your computer. Studio Play uses this same engine.
+- **Retr01 Sim**: the board simulator. Shows the ICs and wiring of the motherboard so we can bring up the real design before hardware.
 
 Software is still a WIP. This is the overall hardware roadmap:
 
-- **Retr01-A (stage 1 arcade)** / **Retr01-C (stage 1 console)**: One THT board (~**14 x 12 cm**, 4-layer) for both shells. Same 32-IC core, [**36-pin cart**](docs/cart.md), RGBS / S-Video / composite, 5 V barrel. Arcade microswitch headers **and** PCB footprints for **2x Switchcraft 35RAPC** TRS ([`docs/controllers.md`](docs/controllers.md)). Shell + population choose I/O path, not two mobos.
+- **Retr01-A (stage 1 arcade)** / **Retr01-C (stage 1 console)**: One THT board (~**14 x 12 cm**, 4-layer) for both shells. Same 32-IC core, [**36-pin cart**](docs/cart.md), **RGBS + composite**, 5 V barrel. Arcade microswitch headers **and** PCB footprints for **2x Switchcraft 35RAPC** TRS ([`docs/controllers.md`](docs/controllers.md)). Shell + population choose I/O path, not two mobos.
 - **Retr01-H (stage 2)**: Handheld. SMD, battery, LCD + driver, contact pads. Same software contract.
 
 ## Software tree

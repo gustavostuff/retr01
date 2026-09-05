@@ -223,7 +223,7 @@ def _manifest_power_io() -> List[Connection]:
         Connection("GND", "U24", P.PROM_GND, "GND", "GND", src),
     ]
     # AD725 composite (NTSC): tap RGBS guns, CSYNC on HSYNC, VSYNC/STND/CE high.
-    # COMP → 75Ω series → J9. S-Video (LUMA/CRMA) left unconnected. No S-Video jack.
+    # COMP -> 75 ohm series -> J9. AV outs are RGBS + composite (AD725 pins 9/11 unused).
     av = "docs/passive_rf_etc.md AD725"
     m += [
         Connection("VIDEO_R", "CinR", "1", "J2", "1", av),

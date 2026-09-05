@@ -196,7 +196,7 @@ Ports and passives: [`passive_rf_etc.md`](passive_rf_etc.md).
 | Topic | Resolution |
 |-------|------------|
 | Color PROM speed | **AT27C256R** 45 ns OTP ([`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md)). Unused address pins tied **GND**. Binary-weighted outputs through **75 ohm** to ground -> **~0.7 Vpp** RGBS. |
-| Composite | **AD725** NTSC from RGBS + CSYNC ([`passive_rf_etc.md`](passive_rf_etc.md)). No S-Video on this spin. **First PCB: THT adapter** (no direct SOIC on board). |
+| Composite | **AD725** NTSC from RGBS + CSYNC ([`passive_rf_etc.md`](passive_rf_etc.md)). **AV outs: RGBS + composite.** **First PCB: THT adapter** (no direct SOIC on board). |
 | HC573 latch packing | Nine chips -> nine `$FExx` bytes ([`graphics.md`](graphics.md#hc573-latch-map-9-chips)). |
 | Cart I2C save API | `$FE22`-`$FE24` via 1284 master ([`memory.md`](memory.md#cart-save-eeprom-24c64-on-cartridge)). |
 | Machine EEPROM API | `$FE70`-`$FE72` + `RDY` stall ([`memory.md`](memory.md#atmega1284p-internal-eeprom-4-kb)). |
