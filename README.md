@@ -39,7 +39,7 @@ Apps and shared code live under [`app/`](app/):
 
 Same **32 KB PRG** as classic NES NROM games (Exitebike, Balloon Fight, Ice Climbers) but it buys far more game: **4.5x** more CPU cycles per frame at **8 MHz**, **32 KB** system RAM (not 2 KB). Scroll, sprite line fill and world map streaming are hardware jobs, so PRG stays game logic, not VBlank nametable tricks. See [`docs/selling_points.md`](docs/selling_points.md).
 
-## Screenshots
+## Screenshots (scaled to 1x)
 
 Peek at Retr01 Studio:
 
