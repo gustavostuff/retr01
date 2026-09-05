@@ -4,10 +4,12 @@
 static int s_face = R01_PLAYER_FACE_RIGHT;
 
 static void on_fire(R01GameCtx *ctx) {
+    r01_sfx_play(ctx, R01_SFX_X); /* pulse blip */
     r01_projectile_fire(ctx, 1, 0, 4);
 }
 
 static void on_cycle_face(R01GameCtx *ctx) {
+    r01_sfx_play(ctx, R01_SFX_Y); /* noise tick */
     s_face = (s_face + 1) % 4;
     r01_player_default_face_set(ctx, s_face);
 }

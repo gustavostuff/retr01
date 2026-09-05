@@ -3,12 +3,14 @@
 #include "retr01_emu/video.h"
 #include "r01_bgm_host.h"
 #include "r01_custom_logic_scan.h"
+#include "r01_pad_keys.h"
 
 #include <SDL.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #ifdef R01_DEFAULT_CART
 #define R01E_DEFAULT_CART R01_DEFAULT_CART
@@ -18,6 +20,92 @@
 #define R01E_DEFAULT_CART "../../output/test.retr01"
 #endif
 
+static int path_is_file(const char *path) {
+    struct stat st;
+    return path && path[0] && stat(path, &st) == 0 && S_ISREG(st.st_mode);
+}
+
+/* output/test.retr01 -> output */
+static void cart_output_dir(const char *cart_path, char *out, size_t out_cap) {
+    const char *slash;
+    size_t n;
+    if (!out || out_cap < 2) {
+        return;
+    }
+    out[0] = '\0';
+    if (!cart_path || !cart_path[0]) {
+        return;
+    }
+    slash = strrchr(cart_path, '/');
+    if (!slash) {
+        snprintf(out, out_cap, ".");
+        return;
+    }
+    n = (size_t)(slash - cart_path);
+    if (n + 1 > out_cap) {
+        n = out_cap - 1;
+    }
+    memcpy(out, cart_path, n);
+    out[n] = '\0';
+}
+
+static void emu_sfx_x(void) {
+    r01_bgm_host_sfx_play(R01_SFX_X);
+}
+
+static void emu_sfx_y(void) {
+    r01_bgm_host_sfx_play(R01_SFX_Y);
+}
+
+static void emu_start_host_bgm(const char *cart_path) {
+    char out_dir[512];
+    char logic[576];
+    char bin[576];
+    int track = 0;
+    int i;
+    static const char *const logic_fallbacks[] = {
+        "output/C/custom_logic.c",
+        "../output/C/custom_logic.c",
+        "../../output/C/custom_logic.c",
+        NULL,
+    };
+    static const char *const bin_fallbacks[] = {
+        "output/data/bgm_track1.bin",
+        "../output/data/bgm_track1.bin",
+        "../../output/data/bgm_track1.bin",
+        NULL,
+    };
+
+    cart_output_dir(cart_path && cart_path[0] ? cart_path : R01E_DEFAULT_CART, out_dir, sizeof(out_dir));
+    snprintf(logic, sizeof(logic), "%s/C/custom_logic.c", out_dir);
+    snprintf(bin, sizeof(bin), "%s/data/bgm_track1.bin", out_dir);
+
+    if (!path_is_file(logic)) {
+        for (i = 0; logic_fallbacks[i]; i++) {
+            if (path_is_file(logic_fallbacks[i])) {
+                snprintf(logic, sizeof(logic), "%s", logic_fallbacks[i]);
+                break;
+            }
+        }
+    }
+    if (!path_is_file(bin)) {
+        for (i = 0; bin_fallbacks[i]; i++) {
+            if (path_is_file(bin_fallbacks[i])) {
+                snprintf(bin, sizeof(bin), "%s", bin_fallbacks[i]);
+                break;
+            }
+        }
+    }
+
+    if (r01_custom_logic_scan_bgm_play(logic, &track) != 0) {
+        return;
+    }
+    if (r01_bgm_host_play(track, path_is_file(bin) ? bin : NULL) != 0) {
+        if (r01_bgm_host_play(track, NULL) != 0) {
+            fprintf(stderr, "retr01_emu: BGM host start failed (%s)\n", SDL_GetError());
+        }
+    }
+}
 /* Debug pane: VRAM atlas + world map + active BG/SPR palette rows + CPU budget. */
 #define DBG_GAP 8
 #define DBG_MAP_CELL 10
@@ -42,40 +130,6 @@
 #define DBG_WIN_W (DBG_ATLAS_W + DBG_GAP + DBG_ATLAS_W + DBG_GAP + DBG_MAP_W)
 #define DBG_ROW2_Y (DBG_TOP_ROW_H + DBG_GAP)
 #define DBG_WIN_H (DBG_ROW2_Y + DBG_MASK_H + DBG_GAP + DBG_PAL_H + DBG_GAP + DBG_CHART_H + DBG_CHART_LABEL_H)
-
-static uint8_t read_pads(const Uint8 *keys) {
-    uint8_t b = 0;
-
-    if (keys[SDL_SCANCODE_RIGHT] || keys[SDL_SCANCODE_D]) {
-        b |= R01E_PAD_RIGHT;
-    }
-    if (keys[SDL_SCANCODE_LEFT] || keys[SDL_SCANCODE_A]) {
-        b |= R01E_PAD_LEFT;
-    }
-    if (keys[SDL_SCANCODE_DOWN] || keys[SDL_SCANCODE_S]) {
-        b |= R01E_PAD_DOWN;
-    }
-    if (keys[SDL_SCANCODE_UP] || keys[SDL_SCANCODE_W]) {
-        b |= R01E_PAD_UP;
-    }
-    return b;
-}
-
-static void on_key_down(R01eMachine *m, SDL_Keycode sym) {
-    if (sym == SDLK_x) {
-        m->io.pad0 = (uint8_t)(m->io.pad0 | R01E_PAD_X);
-        r01e_play_tick(m);
-        r01e_video_render_frame(m);
-        m->play.pad_prev = m->io.pad0;
-        m->io.pad0 = (uint8_t)(m->io.pad0 & (uint8_t)~R01E_PAD_X);
-    } else if (sym == SDLK_y) {
-        m->io.pad0 = (uint8_t)(m->io.pad0 | R01E_PAD_Y);
-        r01e_play_tick(m);
-        r01e_video_render_frame(m);
-        m->play.pad_prev = m->io.pad0;
-        m->io.pad0 = (uint8_t)(m->io.pad0 & (uint8_t)~R01E_PAD_Y);
-    }
-}
 
 static void draw_world_map(SDL_Renderer *ren, R01eMachine *m, int ox, int oy) {
     R01eWorldView wv;
@@ -473,16 +527,9 @@ int main(int argc, char **argv) {
     /* Before any renderer/texture: nearest-neighbor upscale. */
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 
-    {
-        int track = 0;
-        const char *logic = "../../output/C/custom_logic.c";
-        const char *bin = "../../output/data/bgm_track1.bin";
-        if (r01_custom_logic_scan_bgm_play(logic, &track) == 0) {
-            if (r01_bgm_host_play(track, bin) != 0) {
-                (void)r01_bgm_host_play(track, NULL);
-            }
-        }
-    }
+    emu_start_host_bgm(path);
+    r01e_play_set_sfx_on_x(emu_sfx_x);
+    r01e_play_set_sfx_on_y(emu_sfx_y);
 
     /* Hidden until first frame is presented -- avoids empty-window flash. */
     win = SDL_CreateWindow("Retr01 Emulator (Phase 1)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -553,7 +600,9 @@ int main(int argc, char **argv) {
                    (unsigned)wv.start_col, (unsigned)wv.start_row);
         }
     }
-    printf("Studio Play SoT: WASD/arrows move  |  X/Y warp  |  Space pause  |  R reset  |  Esc quit\n");
+    printf("Pads (Sim map): P1 WASD + G/H X/Y, 1 coin, 2 start  |  "
+           "P2 arrows + ,/. X/Y, Shift coin, Enter start\n");
+    printf("Space pause  |  R reset  |  Esc quit\n");
     if (dbg_win) {
         printf("Debug: BG1/BG0 2x2 + BG1 mask + world map + pals + CPU budget (2 Hz, 50k red line)\n");
     }
@@ -600,14 +649,13 @@ int main(int argc, char **argv) {
                     paused = !paused;
                 } else if (ev.key.keysym.sym == SDLK_r) {
                     r01e_machine_reset(&machine);
-                } else {
-                    on_key_down(&machine, ev.key.keysym.sym);
                 }
             }
         }
 
         keys = SDL_GetKeyboardState(NULL);
-        r01e_machine_set_pad(&machine, 0, read_pads(keys));
+        r01e_machine_set_pad(&machine, 0, r01_pad_bits_p1(keys));
+        r01e_machine_set_pad(&machine, 1, r01_pad_bits_p2(keys));
 
         {
             Uint32 now = SDL_GetTicks();

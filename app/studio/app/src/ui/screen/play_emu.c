@@ -16,6 +16,14 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+static void play_sfx_x(void) {
+    r01_bgm_host_sfx_play(R01_SFX_X);
+}
+
+static void play_sfx_y(void) {
+    r01_bgm_host_sfx_play(R01_SFX_Y);
+}
+
 static void play_destroy_textures(UiPlaySession *pl) {
     if (!pl) {
         return;
@@ -188,6 +196,8 @@ void ui_play_boot_finish(UiState *ui, SDL_Renderer *ren) {
     ui->play.booting = 0;
     ui->play.last_tick = SDL_GetTicks();
     ui_play_start_bgm(ui);
+    r01e_play_set_sfx_on_x(play_sfx_x);
+    r01e_play_set_sfx_on_y(play_sfx_y);
 }
 
 int ui_play_screen_mark(const UiState *ui) {

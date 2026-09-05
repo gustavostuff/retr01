@@ -4,6 +4,10 @@
 
 #include "retr01_studio/project.h"
 
+#include "retr01_emu/machine.h"
+#include "retr01_emu/play.h"
+#include "r01_pad_keys.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -203,7 +207,7 @@ void ui_shutdown(UiState *ui) {
 }
 
 void ui_tick(UiState *ui) {
-    uint8_t pad = 0;
+    const Uint8 *keys;
     if (!ui) {
         return;
     }
@@ -221,19 +225,9 @@ void ui_tick(UiState *ui) {
         }
         ui->play.last_tick = now;
     }
-    if (ui->keys[SDL_SCANCODE_RIGHT] || ui->keys[SDL_SCANCODE_D]) {
-        pad |= R01E_PAD_RIGHT;
-    }
-    if (ui->keys[SDL_SCANCODE_LEFT] || ui->keys[SDL_SCANCODE_A]) {
-        pad |= R01E_PAD_LEFT;
-    }
-    if (ui->keys[SDL_SCANCODE_DOWN] || ui->keys[SDL_SCANCODE_S]) {
-        pad |= R01E_PAD_DOWN;
-    }
-    if (ui->keys[SDL_SCANCODE_UP] || ui->keys[SDL_SCANCODE_W]) {
-        pad |= R01E_PAD_UP;
-    }
-    r01e_machine_set_pad(ui->play.machine, 0, pad);
+    keys = SDL_GetKeyboardState(NULL);
+    r01e_machine_set_pad(ui->play.machine, 0, r01_pad_bits_p1(keys));
+    r01e_machine_set_pad(ui->play.machine, 1, r01_pad_bits_p2(keys));
     (void)r01e_machine_frame(ui->play.machine);
 }
 

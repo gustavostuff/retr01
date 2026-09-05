@@ -205,7 +205,7 @@ The sequencer is driven entirely by the W65C02S **NMI** (~60x/s). **BGM** and **
 | Design (this doc) | 8-ch mixer, DPCM-in-AVR-flash, semantic hex + NMI dual tracker |
 | HW BOM | 328P + `$FE40`-`$FE5F` + CPU HC245 domain |
 | Board sim | Island **K**: 8-voice software mix (BGM pulse/pulse/tri/noise/DPCM + SFX), legacy `$FE40` smoke on ch1, analog mix scope + **WAVE** monitor overlay. Full hex protocol / cart BGM / Select-Start SFX still later |
-| Studio Audio tab | BGM UI shell + NES-like softsynth preview; `r01_bgm_play(ctx, 1)` in `custom_logic.c` starts looping Track 1 on Studio/emu Host Play |
+| Studio Audio tab | BGM UI shell + softsynth; `r01_bgm_play(ctx,1)` loops Track 1 on Host Play; P1 **G** (X) / **H** (Y) play fixed SFX (pulse blip / noise tick); host mix = softsynth / 4, BGM and SFX matched |
 
 ---
 

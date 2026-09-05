@@ -149,10 +149,12 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 
 **Gamepads (island E -> `$FE60`/`$FE61`):** bottom-right panels or keyboard. HUD **ARCADE** (default) injects the bitfield directly; **PADS** routes through ATtiny85 poll/reply (`0x55`/`0xAA`) then into the same ports. After boot catchup, **Host Play** uses P1 for move + warps (Studio/emu rules: dead-zone camera, player anim blob, collision from cart MAP attrs):
 
-| | Stick | X (warp -> screen 0,0) | Y (warp -> screen 1,0) | Coin | Start |
-|--|-------|----------------------|----------------------|------|-------|
-| **P1** | Arrows or WASD (8-way) | **X** or Z | **Y** | 1 | Enter |
-| **P2** | IJKL (8-way) | N | M | 2 | Backspace |
+| | Stick | X | Y | Coin | Start |
+|--|-------|---|---|------|-------|
+| **P1** | WASD (8-way) | **G** | **H** | 1 | 2 |
+| **P2** | Arrows (8-way) | **,** / KP1 | **.** / KP2 | Shift | Enter |
+
+Same keyboard map is used by standalone **emu** and Studio Play.
 
 **Wave monitor (island K):** bottom-left overlay. Lanes **B1–B5** (BGM pulse/pulse/tri/noise/DPCM) and **S6–S8** (SFX) draw mathematical waveforms from voice period/duty/type. Bottom **A** lane plots the mixed analog sample ring (R-2R stand-in). Bring-up smoke still drives B1 via `$FE40`; full BGM / Select-Start SFX come later.
 

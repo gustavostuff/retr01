@@ -31,5 +31,8 @@ bin/
 ai-rules.txt
 temp/
 
+# KiCad local auto-save / PCB history (not the live board)
+hw/kicad/**/.history/
+
 # Vendor / local datasheets (keep on disk, do not commit)
 *.pdf

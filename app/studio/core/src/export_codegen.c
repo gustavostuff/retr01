@@ -231,7 +231,8 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "#include \"r01_warp.h\"\n"
                    "#include \"r01_projectile.h\"\n"
                    "#include \"r01_player_anim.h\"\n"
-                   "#include \"r01_bgm.h\"\n\n"
+                   "#include \"r01_bgm.h\"\n"
+                   "#include \"r01_sfx.h\"\n\n"
                    "#endif\n",
                    err_buf, err_cap) != 0) {
         return -1;
@@ -243,6 +244,18 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "/* Start looping BGM track (1-based). Host Play / emu softsynth today. */\n"
                    "void r01_bgm_play(R01GameCtx *ctx, int track);\n"
                    "void r01_bgm_stop(R01GameCtx *ctx);\n\n"
+                   "#endif\n",
+                   err_buf, err_cap) != 0) {
+        return -1;
+    }
+    snprintf(path, sizeof(path), "%s/r01_sfx.h", inc_dir);
+    if (write_text(path,
+                   "#ifndef R01_SFX_H\n#define R01_SFX_H\n\n"
+                   "typedef struct R01GameCtx R01GameCtx;\n"
+                   "#define R01_SFX_X 1 /* pulse blip (P1 X / fire) */\n"
+                   "#define R01_SFX_Y 2 /* noise tick (P1 Y / face) */\n"
+                   "/* Short SFX. Host Play/emu softsynth uses fixed voices for X/Y. */\n"
+                   "void r01_sfx_play(R01GameCtx *ctx, int id);\n\n"
                    "#endif\n",
                    err_buf, err_cap) != 0) {
         return -1;

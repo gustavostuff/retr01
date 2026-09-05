@@ -15,6 +15,10 @@ void r01_bgm_host_shutdown(void);
 int r01_bgm_host_play(int track, const char *path);
 void r01_bgm_host_play_cells(char cells[R01_BGM_STEPS][R01_BGM_CH][R01_BGM_TOKEN]);
 void r01_bgm_host_stop(void);
+/* Fixed short one-shots (P1 face buttons). id: R01_SFX_X / R01_SFX_Y */
+#define R01_SFX_X 1
+#define R01_SFX_Y 2
+void r01_bgm_host_sfx_play(int id);
 int r01_bgm_host_playing(void);
 int r01_bgm_host_step(void); /* current step or -1 */
 

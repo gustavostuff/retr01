@@ -54,6 +54,11 @@ void r01e_play_tick(struct R01eMachine *m);
 void r01e_play_draw(struct R01eMachine *m);
 void r01e_play_player_rgb(const struct R01eMachine *m, uint8_t *r, uint8_t *g, uint8_t *b);
 
+/* Optional host hooks: short SFX on P1 X / Y (Studio/emu softsynth). */
+typedef void (*R01ePlaySfxFn)(void);
+void r01e_play_set_sfx_on_x(R01ePlaySfxFn fn);
+void r01e_play_set_sfx_on_y(R01ePlaySfxFn fn);
+
 /* Mirror play camera into video scroll / 2x2 workbench. */
 void r01e_play_sync_video(struct R01eMachine *m);
 void r01e_play_post_event(R01ePlay *play, R01eEvent evt);

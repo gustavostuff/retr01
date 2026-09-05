@@ -10,6 +10,17 @@
 
 /* Emu Host Play SoT (docs). Keep algorithms aligned with app/sim/src/play.c. */
 
+static R01ePlaySfxFn s_sfx_on_x;
+static R01ePlaySfxFn s_sfx_on_y;
+
+void r01e_play_set_sfx_on_x(R01ePlaySfxFn fn) {
+    s_sfx_on_x = fn;
+}
+
+void r01e_play_set_sfx_on_y(R01ePlaySfxFn fn) {
+    s_sfx_on_y = fn;
+}
+
 static int cart_is_phase1_play(const R01eCart *c) {
     const uint8_t *prg = r01e_cart_prg(c);
     if (!prg || c->len_prg < 0x0105u) {
@@ -505,11 +516,17 @@ void r01e_play_tick(R01eMachine *m) {
     edge = (uint8_t)(pad & (uint8_t)~pl->pad_prev);
     pl->pad_prev = pad;
 
-    /* Studio: X -> (0,0), Y -> (1,0) */
+    /* Studio: X -> (0,0) + SFX_X, Y -> (1,0) + SFX_Y (P1 only). */
     if (edge & R01E_PAD_X) {
+        if (s_sfx_on_x) {
+            s_sfx_on_x();
+        }
         (void)warp_to(m, 0, 0);
     }
     if (edge & R01E_PAD_Y) {
+        if (s_sfx_on_y) {
+            s_sfx_on_y();
+        }
         (void)warp_to(m, 1, 0);
     }
 

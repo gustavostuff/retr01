@@ -273,22 +273,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             return 1;
         }
-        if (ui->play.active) {
-            if (e->key.keysym.sym == SDLK_x && ui->play.machine && !ui->play.booting) {
-                r01e_machine_set_pad(ui->play.machine, 0, R01E_PAD_X);
-                r01e_play_tick(ui->play.machine);
-                r01e_video_render_frame(ui->play.machine);
-                r01e_machine_set_pad(ui->play.machine, 0, 0);
-                return 1;
-            }
-            if (e->key.keysym.sym == SDLK_y && ui->play.machine && !ui->play.booting) {
-                r01e_machine_set_pad(ui->play.machine, 0, R01E_PAD_Y);
-                r01e_play_tick(ui->play.machine);
-                r01e_video_render_frame(ui->play.machine);
-                r01e_machine_set_pad(ui->play.machine, 0, 0);
-                return 1;
-            }
-        }
+        /* Face buttons: Sim map (P1 G/H) is sampled each frame in ui_tick. */
     }
     if (e->type == SDL_KEYUP) {
         ui->keys[e->key.keysym.scancode] = 0;

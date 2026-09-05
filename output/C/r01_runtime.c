@@ -433,6 +433,13 @@ void r01_bgm_stop(R01GameCtx *ctx) {
     ctx->bgm_track = 0;
 }
 
+void r01_sfx_play(R01GameCtx *ctx, int id) {
+    (void)ctx;
+    (void)id;
+    /* Host Play / emu: softsynth overlay is triggered from P1 X/Y pad edges.
+     * This stub records intent for exported C builds (R01_SFX_X / R01_SFX_Y). */
+}
+
 void r01_camera_set_axis_lock(R01GameCtx *ctx, int mode) {
     if (!ctx) {
         return;

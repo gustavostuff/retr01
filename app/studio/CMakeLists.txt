@@ -108,6 +108,7 @@ add_library(retr01_studio_app
   app/src/ui/sound/draw.c
   app/src/ui/sound/audio.c
   ${R01_PKG_ROOT}/common/r01_bgm_host.c
+  ${R01_PKG_ROOT}/common/r01_pad_keys.c
   app/src/ui/screen/selection.c
   app/src/ui/screen/paint.c
   app/src/ui/screen/edit.c
