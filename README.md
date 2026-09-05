@@ -8,7 +8,7 @@ The Retr01 project is a software tool chain + hardware family. Software includes
 
 Software is still a WIP. This is the overall hardware roadmap:
 
-- **Retr01-A and Retr01-C (Arcade and Console): One THT board for both shells. Same 32-IC core, [**36-pin cart**](docs/cart.md), **RGBS + composite**, 5 V barrel. Arcade microswitch headers **and** PCB footprints for **2x Switchcraft 35RAPC** TRS ([`docs/controllers.md`](docs/controllers.md)).
+- **Retr01-A and Retr01-C** (Arcade and Console): One THT board for both shells. Same 32-IC core, [**36-pin cart**](docs/cart.md), **RGBS + composite**, 5 V barrel. Arcade microswitch headers **and** PCB footprints for **2x Switchcraft 35RAPC** TRS ([`docs/controllers.md`](docs/controllers.md)).
 - **Retr01-H (stage 2)**: Handheld. SMD, battery, LCD + driver, contact pads. Same software contract. It will also include 3.5mm ports for controllers and possibly one more for mono audio + composite.
 
 ## Apps
