@@ -115,6 +115,18 @@ SKiDL uses per-IC `+5V_<refdes>` stubs (via `RD*` 0 ohm) so Quilter can parent e
 
 Quick rule: pour only on bare `+5V` and `+5V_ANALOG`. Everything else in that table is a stub, input chain, or a misclassified signal.
 
+### Quilter bypass capacitors (Circuit Comprehension)
+
+Quilter auto-lists many caps as IC bypass. Keep only true VCC/pin bypass. Trash the rest before place/route.
+
+| Action | Caps |
+|--------|------|
+| **Keep** | `CD1`-`CD21` (per-IC 100 nF on `+5V_<refdes>`). `Cd725a` / `Cd725d` (U725 APOS pin **4** / DPOS pin **14**) |
+| **Delete** | `Cbulk` (entry bulk, often parented to `RDbulk`). `Cva` (analog spur reservoir). `Cxtal4a`/`Cxtal4b`/`Cxtal5a`/`Cxtal5b` (Y4/Y5 **load** caps, 22 pF. Crystal Oscillators section owns those). `Cytrap` if listed (YTRAP tank C, not pin bypass) |
+| **Delete (optional)** | `Cpad1` / `Cpad2` (TRS VCC after PPTC at J3/J4. Correct near the jack, wrong for the bypass engine) |
+
+Expected keep set: **23** rows (21x `CD*` + 2x `Cd725*`). Do not chase high confidence on deleted rows. They are not IC bypass by design.
+
 ---
 
 ## Clocks and reset
