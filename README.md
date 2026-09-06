@@ -2,7 +2,7 @@
 
 Retr01 is an MCU-assisted 8-bit system, complemented by a software toolchain. The software consists of 3 different (WIP) packages:
 
-- **Retr01 Studio**: the game editor. Draw maps, tiles, and sprites, then hit **Play** to try your game (same picture as the emulator).
+- **Retr01 Studio**: the game editor. Draw maps, tiles, and sprites, then hit **Play** to try your game (uses the emulator render code).
 - **Retr01 Emu**: the standalone game player. Runs a cartridge image on your computer. Studio Play uses this same engine.
 - **Retr01 Sim**: the board simulator. Shows the ICs and wiring of the motherboard so we can bring up the real design before hardware.
 
