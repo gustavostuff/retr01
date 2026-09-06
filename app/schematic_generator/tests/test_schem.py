@@ -77,6 +77,8 @@ class TestBom(unittest.TestCase):
         # Wide DIPs stay 600 mil where the silicon is.
         self.assertIn("DIP-28_W15.24mm", BOM_BY_REFDES["U3"].footprint)
         self.assertIn("DIP-40_W15.24mm", BOM_BY_REFDES["U1"].footprint)
+        self.assertIn("DO-41", BOM_BY_REFDES["D1"].footprint)
+        self.assertIn("DO-35", BOM_BY_REFDES["TvsV1"].footprint)
         # KiCad 9+/10 vertical axials (standing) for board density.
         self.assertIn("P2.54mm_Vertical", BOM_BY_REFDES["Rphi"].footprint)
         self.assertIn("P2.54mm_Vertical", BOM_BY_REFDES["TvsV1"].footprint)

@@ -86,8 +86,10 @@ _DIP8 = "Package_DIP:DIP-8_W7.62mm"
 _C_CER = "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm"  # 22pF / 100nF class
 _C_ELEC = "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm"  # 10uF / 220uF class
 _R_AX = "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"  # 1/4 W axial standing
-_TVS = "Diode_THT:D_DO-35_SOD27_P2.54mm_Vertical_CathodeUp"  # axial ESD / Schottky standing
+_TVS = "Diode_THT:D_DO-35_SOD27_P2.54mm_Vertical_CathodeUp"  # axial ESD stand-in (real PESD is SOD-323)
+_SCHOTTKY = "Diode_THT:D_DO-41_SOD81_P2.54mm_Vertical_CathodeUp"  # reverse-polarity rectifier (1N581x class)
 _L_AX = "Inductor_THT:L_Axial_L11.0mm_D4.5mm_P5.08mm_Vertical_Fastron_MECC"  # ~68uH YTRAP
+# PPTC / ferrite: no locked THT MPN yet. DIN0207 vertical is a hole-pattern stand-in only.
 # board.py still imports _C0603 / _R0603 names for decoupling / R-2R helpers.
 _C0603 = _C_CER
 _R0603 = _R_AX
@@ -356,7 +358,7 @@ BOM: List[BomEntry] = [
     # Power-entry / rail passives (docs/passive_rf_etc.md)
     BomEntry("F1", "PPTC", "VIN PPTC", IslandId.POWER_CLK, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("FB1", "FERRITE", "5 V input ferrite", IslandId.POWER_CLK, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    BomEntry("D1", "SCHOTTKY", "reverse polarity", IslandId.POWER_CLK, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("D1", "SCHOTTKY", "reverse polarity", IslandId.POWER_CLK, 2, _SCHOTTKY, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("Cbulk", "C_BULK", "220uF entry bulk (locked)", IslandId.POWER_CLK, 2, _C_ELEC, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("FB2", "FERRITE", "analog video ferrite", IslandId.VIDEO, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("Cva", "C_10U", "10uF analog spur", IslandId.VIDEO, 2, _C_ELEC, in_ic_count=False, vcc_pin=None, gnd_pin=None),

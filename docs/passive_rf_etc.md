@@ -71,7 +71,28 @@ Never snake return current through video or pad-port copper. Stitch GND vias at 
 
 **Package policy (arcade / console):** all mobo passives are **THT** (axial R, disc ceramic C, radial electrolytic where noted, axial TVS/inductor). The only SMD silicon is **AD725ARZ** on **Proto Advantage PA0006** (DIP-16 holes on the PCB). Retr01-H may revisit SMD later.
 
-**KiCad footprints** (from `bom.py`): standing axials for density. R `Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical`, TVS/diode `Diode_THT:D_DO-35_SOD27_P2.54mm_Vertical_CathodeUp`, YTRAP L `Inductor_THT:L_Axial_L11.0mm_D4.5mm_P5.08mm_Vertical_Fastron_MECC`.
+**KiCad footprints** (from `bom.py`): standing axials for density. R `Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical`, ESD TVS stand-in `Diode_THT:D_DO-35_SOD27_P2.54mm_Vertical_CathodeUp`, reverse Schottky `Diode_THT:D_DO-41_SOD81_P2.54mm_Vertical_CathodeUp`, YTRAP L `Inductor_THT:L_Axial_L11.0mm_D4.5mm_P5.08mm_Vertical_Fastron_MECC`. PPTC / ferrite beads reuse the resistor axial hole pattern until a THT MPN is locked.
+
+### Footprint audit (KiCad vs locked silicon)
+
+| Class | Verdict |
+|-------|---------|
+| **ATF22V10**, **ATmega328P** | `DIP-*_W7.62mm` (300 mil). Was wrongly 600 mil until fixed |
+| **AS6C62256**, **AT27C256R**, **SST39SF040**, **W65C02S**, **ATmega1284P** | `DIP-*_W15.24mm` (600 mil). Correct |
+| **74HC*** | `DIP-*_W7.62mm`. Correct |
+| **Y1-Y3** ACH half-size | `Oscillator_DIP-8`. Correct |
+| **Y4/Y5** ABLS7M | `Crystal_HC49-U_Vertical`. Correct |
+| **U725** AD725 | DIP-16 for **PA0006** adapter. Intentional |
+| **R / disc C / YTRAP L** | Vertical THT class footprints. OK for 1/4 W / disc / MECC-class |
+| **Cbulk / Cva** | `CP_Radial_D8.0mm_P3.50mm`. Fine for many 10 uF. Confirm **220 uF** can body when locking MPN (some need D10 / P5.00) |
+| **D1** Schottky | **DO-41** (not DO-35). 1N581x rectifier class |
+| **Tvs*** | DO-35 THT stand-in. Docs target SOD-323 PESD for production SMD |
+| **F1/F2/F3 PPTC**, **FB1/FB2** ferrite | Resistor-axial **stand-in** until THT MPN locked |
+| **J36** | PinSocket stand-in for EDAC hole pattern |
+| **J3/J4**, **J8/J9** | Custom `Retr01_Lib` (locked drawings) |
+| **SW1** SCALE | 1x02 header stand-in for SPST / DIP switch |
+
+Do not assume pin-count defaults (24/28 pin => 600 mil). Match each MPN datasheet package code (24P3 / 28P3 = 300 mil).
 
 **Passive profiles** (`python generate.py`):
 
