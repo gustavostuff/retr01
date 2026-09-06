@@ -12,18 +12,18 @@ Target footprint is **Game Boy-sized** (~**55 mm** PCB width) with a **low-profi
 
 | Orientation | Use case |
 |-------------|----------|
-| **Right-angle (90 deg) edge socket** | **Retr01-C** console: cart and motherboard share a parallel plane (PC Engine / SMS card style, face-up insert). **Primary recommendation.** |
-| **Straight (vertical) socket** | **Retr01-A** arcade or top-loading shells. Electrically identical. |
+| **Straight (vertical) socket** | **Retr01-A** arcade / bring-up: cart inserts perpendicular to the motherboard. **Locked for this spin.** |
+| **Right-angle (90 deg) edge socket** | **Retr01-C** console later: cart and motherboard share a parallel plane (PC Engine / SMS card style, face-up insert). Same electrical pinout, different hole pattern. |
 
 ### Connector parts (2x18, 2.54 mm pitch)
 
-**Locked (motherboard J36):** [EDAC **395-036-559-212**](https://www.digikey.com/en/products/detail/edac-inc/395-036-559-212/11138956) - black, **right-angle** 2x18. Matches Retr01-C face-up insert. SKiDL uses KiCad `PinSocket_2x18_P2.54mm_Horizontal` as the hole-pattern stand-in until manufacturer CAD is dropped into `Retr01_Lib`.
+**Locked (motherboard J36, this spin):** [EDAC **395-036-520-201**](https://www.digikey.com/en/products/detail/edac-inc/395-036-520-201/1297144) - **straight / vertical** 2x18 (or Sullins **EBC18DRXN**). SKiDL uses KiCad `PinSocket_2x18_P2.54mm_Vertical` as the hole-pattern stand-in until manufacturer CAD is dropped into `Retr01_Lib`.
 
-**Arcade / top-load alternate (shell BOM only, not a second mobo footprint):** [EDAC **395-036-520-201**](https://www.digikey.com/en/products/detail/edac-inc/395-036-520-201/1297144) straight 2x18, or Sullins **EBC18DRXN**. Same electrical pinout.
+**Retr01-C console (later shell BOM, not this mobo footprint):** [EDAC **395-036-559-212**](https://www.digikey.com/en/products/detail/edac-inc/395-036-559-212/11138956) black **right-angle** 2x18. Would need `PinSocket_2x18_P2.54mm_Horizontal` (or EDAC CAD) on a console-specific board.
 
 **Optional industrial card-edge (flasher / specials):** TE **5645235-4** Standard Edge II (straight female). Cart gold-finger geometry must match that series - do not mix with EDAC pin-socket hole patterns.
 
-Motherboard and flasher use the **same 36-pin electrical pinout**. Motherboard copper is locked to the **right-angle EDAC**. Arcade shells that need vertical insert use a harness/adapter or a flasher-style straight socket off-board. ESD and series-R practice: [`passive_rf_etc.md`](passive_rf_etc.md).
+Motherboard and flasher use the **same 36-pin electrical pinout**. Motherboard copper is locked to the **straight / vertical EDAC**. Console builds swap the socket footprint later. ESD and series-R practice: [`passive_rf_etc.md`](passive_rf_etc.md).
 
 ---
 
@@ -107,7 +107,7 @@ Bench tool to program a cart **in the socket** without desoldering the flash IC.
 | MCU | **ATmega32U4-AU** (QFP-44) |
 | Address shift | **2x 74HC595** (daisy-chained SPI -> **A0-A15**) |
 | USB | **USB-C** 16-pin receptacle. **5.1 kohm** on **CC1** and **CC2** (USB-C sink, bus power) |
-| Cart interface | **36-pin** 2.54 mm edge slot (straight or right-angle, match your workflow) |
+| Cart interface | **36-pin** 2.54 mm edge slot (**straight / vertical** on this mobo. Right-angle for Retr01-C later) |
 | Passives | Decoupling per IC, USB series resistors as required by layout |
 
 ### Operation

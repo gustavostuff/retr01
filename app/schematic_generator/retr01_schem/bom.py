@@ -91,8 +91,10 @@ _C0603 = _C_CER
 _R0603 = _R_AX
 # Abracon ACH half-size DIP-8 can (pins 1/4/5/8). KiCad: Oscillator:Oscillator_DIP-8.
 _OSC8 = "Oscillator:Oscillator_DIP-8"
-# Locked EDAC right-angle 2x18; KiCad pin-socket is the stock hole pattern stand-in until Retr01_Lib CAD.
-_EDGE36 = "Connector_PinSocket_2.54mm:PinSocket_2x18_P2.54mm_Horizontal"
+# Locked EDAC straight (vertical insert) 2x18 for arcade / bring-up.
+# Retr01-C console later: right-angle EDAC 395-036-559-212 + Horizontal stand-in.
+# KiCad pin-socket is the stock hole pattern stand-in until Retr01_Lib CAD.
+_EDGE36 = "Connector_PinSocket_2.54mm:PinSocket_2x18_P2.54mm_Vertical"
 # CUI PJ-063AH 2.1 mm ID. Stock KiCad footprint (pads 1=tip, 2=sleeve, MP).
 _BARREL = "Connector_BarrelJack:BarrelJack_CUI_PJ-063AH_Horizontal"
 _RGBS = "Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical"
@@ -288,7 +290,7 @@ BOM: List[BomEntry] = [
     BomEntry(
         "J36",
         "CART_EDGE_36",
-        "EDAC 395-036-559-212 right-angle 2x18 (mobo)",
+        "EDAC 395-036-520-201 straight vertical 2x18 (mobo)",
         IslandId.CART_SOCKET,
         36,
         _EDGE36,
@@ -299,7 +301,7 @@ BOM: List[BomEntry] = [
     BomEntry(
         "J36",
         "CART_EDGE_36",
-        "cart gold fingers (mate to EDAC 395-036-559-212)",
+        "cart gold fingers (mate to EDAC 395-036-520-201)",
         IslandId.CART_MODULE,
         36,
         _EDGE36,

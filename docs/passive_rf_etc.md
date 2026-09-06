@@ -82,6 +82,18 @@ Never snake return current through video or pad-port copper. Stitch GND vias at 
 
 Populate TVS / arcade series on a later spin or regenerate with `--full-esd` when you want the full I/O protection BOM.
 
+### Quilter power nets (Circuit Comprehension)
+
+SKiDL uses per-IC `+5V_<refdes>` stubs (via `RD*` 0 ohm) so Quilter can parent each bypass cap. Quilter often auto-lists those stubs plus some signal nets as high-current / power. Fix the list before pour:
+
+| Action | Nets |
+|--------|------|
+| **Pour on** (only these) | `+5V`, `+5V_ANALOG` |
+| **Keep listed, pour off** | every `+5V_U*`, `+5V_BULK`, `VIN_RAW`, `VIN_PROT`, `VIN_FUSED` |
+| **Delete from Power Nets** | `VIDEO_R` / `VIDEO_G` / `VIDEO_B`, all `VRAM_A*` (DAC outs and address bus, not power) |
+
+Quick rule: pour only on bare `+5V` and `+5V_ANALOG`. Everything else in that table is a stub, input chain, or a misclassified signal.
+
 ---
 
 ## Clocks and reset
@@ -113,7 +125,7 @@ Board clocks matter for layout cleanliness. They are not automatically a show-st
 | **J7** | 1x4 pin header 2.54 mm | Stock vertical |
 | **J8** | **CUI RCJ-012** (black RCA, audio) | Symbol: stock **`Conn_Coaxial`**. Footprint: `Retr01_Lib:CUI_RCJ-01x_Vertical` (pad **1**=tip, **2**=shellx2) |
 | **J9** | **CUI RCJ-014** (yellow RCA, composite) | Same symbol + footprint as J8 |
-| **J36** | **EDAC 395-036-559-212** (right-angle 2x18) | Stock stand-in `PinSocket_2x18_P2.54mm_Horizontal` until EDAC CAD. Arcade alt **395-036-520-201** (straight) is shell-only, not dual-footprint |
+| **J36** | **EDAC 395-036-520-201** (straight / vertical 2x18) | Stock stand-in `PinSocket_2x18_P2.54mm_Vertical` until EDAC CAD. Retr01-C console later: **395-036-559-212** right-angle + Horizontal stand-in (separate board, not dual-footprint) |
 | **U725** | **AD725ARZ** | Chip is **wide-body SOIC-16** (7.50 mm / 300 mil, no DIP SKU from ADI). **Only intentional SMD IC on the mobo.** **Mobo footprint: DIP-16** (`Package_DIP:DIP-16_W7.62mm`). Adapter: **Proto Advantage PA0006** (SOIC-16 300 mil to DIP-16), [store link](http://www.proto-advantage.com/store/product_info.php?products_id=2200006). First-spin board stays fully THT via that adapter. |
 
 **You build yourself:** Optionally refine J36 from EDAC drawing. TRS + RCJ footprints are in `Retr01_Lib.pretty`.

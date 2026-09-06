@@ -48,7 +48,7 @@ generate = SchLib(tool=SKIDL).add_parts(*[
             Pin(num='6',name='6',func=pin_types.UNSPEC),
             Pin(num='7',name='7',func=pin_types.UNSPEC),
             Pin(num='8',name='8',func=pin_types.UNSPEC)] }),
-        Part(**{ 'name':'CART_EDGE_36', 'dest':TEMPLATE, 'tool':SKIDL, 'aliases':Alias({'CART_EDGE_36'}), 'ref_prefix':'U', 'fplist':None, 'footprint':'Connector_PinSocket_2.54mm:PinSocket_2x18_P2.54mm_Horizontal', 'keywords':None, 'description':'', 'datasheet':None, 'pins':[
+        Part(**{ 'name':'CART_EDGE_36', 'dest':TEMPLATE, 'tool':SKIDL, 'aliases':Alias({'CART_EDGE_36'}), 'ref_prefix':'U', 'fplist':None, 'footprint':'Connector_PinSocket_2.54mm:PinSocket_2x18_P2.54mm_Vertical', 'keywords':None, 'description':'', 'datasheet':None, 'pins':[
             Pin(num='1',name='1',func=pin_types.UNSPEC),
             Pin(num='2',name='2',func=pin_types.UNSPEC),
             Pin(num='3',name='3',func=pin_types.UNSPEC),
