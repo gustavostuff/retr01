@@ -65,7 +65,7 @@ Five **ATF22V10** (or ATF22V10CQZ-class) packages: decode, VRAM/timing glue, bea
 | **Afterburner** (open ATF programmer) | Community favorite for Microchip/Atmel ATF15xx and **ATF22V10** families. USB, socket adapters, open firmware. Strong fit for Retr01 DIP-24 parts. |
 | **Microchip ATDH1150USB** (+ ATMISP / vendor flow) | Official Atmel/Microchip ATF path. Heavier and costlier. Use if you want vendor-supported production tooling. |
 
-Generic “universal” programmers sometimes list ATF22V10. Prefer a tool whose **ATF** algorithm is known-good (Afterburner or Microchip). Do not assume every TL866 profile programs CQZ grades correctly without a verify pass on a known JEDEC.
+Generic "universal" programmers sometimes list ATF22V10. Prefer a tool whose **ATF** algorithm is known-good (Afterburner or Microchip). Do not assume every TL866 profile programs CQZ grades correctly without a verify pass on a known JEDEC.
 
 **Blank / unprogrammed PLDs:** treat outputs as undefined. Always load JEDEC before expecting decode or beam behavior.
 
