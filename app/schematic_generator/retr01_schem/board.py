@@ -126,6 +126,173 @@ def add_decoupling(
     return nets
 
 
+def add_ad725_decoupling(parts: Dict[str, object], nets: Dict[str, object]) -> Dict[str, object]:
+    """Exclusive VCC+GND locals for AD725 APOS/DPOS bypass (Quilter parents).
+
+    Cap pin1 and the power pin share one net. Cap pin2 and the matching ground
+    pin share another. 0R bridges back to +5V_ANALOG / GND. That pin-to-pin
+    pair is what Quilter treats as high-confidence (shared GND with AGND+DGND
+    was leaving Cd725a at medium confidence).
+    """
+    if not skidl_available():
+        return nets
+
+    from skidl import Net
+
+    from .connect import rail_net
+    from .pinmap import AD725_AGND, AD725_APOS, AD725_DGND, AD725_DPOS
+
+    u725 = parts.get("U725")
+    if u725 is None:
+        return nets
+
+    analog = nets.get("+5V_ANALOG") or rail_net("+5V_ANALOG")
+    gnd = nets.get("GND") or rail_net("GND")
+    analog.name = "+5V_ANALOG"
+    gnd.name = "GND"
+    nets["+5V_ANALOG"] = analog
+    nets["GND"] = gnd
+
+    def _pair(
+        vpin: str,
+        gpin: str,
+        vlocal: str,
+        glocal: str,
+        cap_ref: str,
+        rdv: str,
+        rdg: str,
+    ) -> None:
+        vp = u725[vpin]
+        gp = u725[gpin]
+        vp.disconnect()
+        gp.disconnect()
+        vn = Net(vlocal)
+        gn = Net(glocal)
+        vn.name = vlocal
+        gn.name = glocal
+        nets[vlocal] = vn
+        nets[glocal] = gn
+        bv = make_passive("R_0", rdv, _R0603)
+        bg = make_passive("R_0", rdg, _R0603)
+        try:
+            bv.value = "0R"
+            bg.value = "0R"
+        except Exception:
+            pass
+        parts[rdv] = bv
+        parts[rdg] = bg
+        vp += vn
+        bv["1"] += vn
+        bv["2"] += analog
+        gp += gn
+        bg["1"] += gn
+        bg["2"] += gnd
+        cap = parts.get(cap_ref)
+        if cap is None:
+            return
+        try:
+            cap["1"].disconnect()
+            cap["2"].disconnect()
+        except Exception:
+            pass
+        cap["1"] += vn
+        cap["2"] += gn
+
+    _pair(
+        AD725_APOS,
+        AD725_AGND,
+        "+5V_U725_APOS",
+        "GND_U725_AGND",
+        "Cd725a",
+        "RD725a",
+        "RD725ag",
+    )
+    _pair(
+        AD725_DPOS,
+        AD725_DGND,
+        "+5V_U725_DPOS",
+        "GND_U725_DGND",
+        "Cd725d",
+        "RD725d",
+        "RD725dg",
+    )
+    return nets
+
+
+def isolate_non_bypass_caps(parts: Dict[str, object], nets: Dict[str, object]) -> Dict[str, object]:
+    """Keep Cbulk / Cytrap from looking like IC bypass to Quilter.
+
+    Quilter flags any C that sits on a power rail + GND shared with IC pins.
+    Cbulk is entry bulk (not U2 bypass). Cytrap is the YTRAP tank C (not an L
+    bypass). Pull them onto private nets with no IC power pins.
+    """
+    if not skidl_available():
+        return nets
+
+    from skidl import Net
+
+    from .connect import rail_net
+
+    vcc = nets.get("+5V") or rail_net("+5V")
+    gnd = nets.get("GND") or rail_net("GND")
+    vcc.name = "+5V"
+    gnd.name = "GND"
+    nets["+5V"] = vcc
+    nets["GND"] = gnd
+
+    # Cbulk: FB1 output stub, then 0R into the main +5V rail.
+    cbulk = parts.get("Cbulk")
+    fb1 = parts.get("FB1")
+    if cbulk is not None and fb1 is not None:
+        try:
+            fb1["2"].disconnect()
+            cbulk["1"].disconnect()
+            cbulk["2"].disconnect()
+        except Exception:
+            pass
+        bulk = Net("+5V_BULK")
+        bulk.name = "+5V_BULK"
+        nets["+5V_BULK"] = bulk
+        bridge = make_passive("R_0", "RDbulk", _R0603)
+        try:
+            bridge.value = "0R"
+        except Exception:
+            pass
+        parts["RDbulk"] = bridge
+        fb1["2"] += bulk
+        cbulk["1"] += bulk
+        bridge["1"] += bulk
+        bridge["2"] += vcc
+        cbulk["2"] += gnd
+        try:
+            cbulk.value = "220uF"
+        except Exception:
+            pass
+
+    # Cytrap: keep series L-C, but return through YTRAP_RET (not a GND-named net)
+    # so Quilter does not classify it as bypass-to-ground.
+    cytrap = parts.get("Cytrap")
+    if cytrap is not None:
+        try:
+            cytrap["2"].disconnect()
+        except Exception:
+            pass
+        ret = Net("YTRAP_RET")
+        ret.name = "YTRAP_RET"
+        nets["YTRAP_RET"] = ret
+        bridge = make_passive("R_0", "RDytrap", _R0603)
+        try:
+            bridge.value = "0R"
+        except Exception:
+            pass
+        parts["RDytrap"] = bridge
+        cytrap["2"] += ret
+        bridge["1"] += ret
+        bridge["2"] += gnd
+
+    return nets
+
+
 def add_r2r_passives(parts: Dict[str, object]) -> None:
     """Instantiate video weighted DAC + audio R-2R + termination passives."""
     if not skidl_available():
@@ -168,6 +335,8 @@ def build_board(include_sim_only: bool = False) -> Dict[str, Any]:
         nets.update(island.wire(parts, island.LETTER))
     nets.update(apply_connections(parts, manifest))
     nets = add_decoupling(parts, nets, BoardId.MOBO)
+    nets = add_ad725_decoupling(parts, nets)
+    nets = isolate_non_bypass_caps(parts, nets)
     return {"parts": parts, "nets": nets, "manifest": manifest}
 
 

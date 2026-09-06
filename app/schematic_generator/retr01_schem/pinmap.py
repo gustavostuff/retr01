@@ -232,8 +232,8 @@ AD725_DGND, AD725_DPOS, AD725_VSYNC, AD725_HSYNC = "13", "14", "15", "16"
 R1, R2 = "1", "2"
 C1, C2 = "1", "2"
 
-# OSC cans — Abracon ACO / KiCad CXO_DIP14 / ACO-xxxMHz-A pinout
-OSC_OE, OSC_GND, OSC_OUT, OSC_VDD = "1", "7", "8", "14"
+# OSC cans — Abracon ACH half-size DIP-8 (KiCad Oscillator_DIP-8 pads 1/4/5/8)
+OSC_OE, OSC_GND, OSC_OUT, OSC_VDD = "1", "4", "5", "8"
 
 # Cart edge 36 — A1..A18 = 1..18, B1..B18 = 19..36
 def cart_a(n: int) -> str:
@@ -265,9 +265,9 @@ PIN_TEMPLATES: Dict[str, List[str]] = {
     "AT27C256R": _nums(28),
     "24C64": _nums(8),
     "SN74HC14": _nums(14),
-    "OSC8M": ["1", "7", "8", "14"],  # Abracon ACO / KiCad ACO-xxxMHz-A
-    "OSC_DOT": ["1", "7", "8", "14"],
-    "OSC_4FSC": ["1", "7", "8", "14"],
+    "OSC8M": ["1", "4", "5", "8"],  # Abracon ACH / KiCad Oscillator_DIP-8
+    "OSC_DOT": ["1", "4", "5", "8"],
+    "OSC_4FSC": ["1", "4", "5", "8"],
     "XTAL_20M": _nums(2),
     "XTAL_16M": _nums(2),
     "AD725": _nums(16),
@@ -554,9 +554,9 @@ KICAD_ALIASES: Dict[str, Dict[str, str]] = {
     "TVS_5V": {"1": "1", "2": "2"},
     "PPTC": {"1": "1", "2": "2"},
     "L_YTRAP": {"1": "1", "2": "2"},
-    "OSC_4FSC": {"1": "Tri-State", "7": "GND", "8": "OUT", "14": "Vcc"},
-    "OSC8M": {"1": "Tri-State", "7": "GND", "8": "OUT", "14": "Vcc"},
-    "OSC_DOT": {"1": "Tri-State", "7": "GND", "8": "OUT", "14": "Vcc"},
+    "OSC_4FSC": {"1": "Tri-State", "4": "GND", "5": "OUT", "8": "Vcc"},
+    "OSC8M": {"1": "Tri-State", "4": "GND", "5": "OUT", "8": "Vcc"},
+    "OSC_DOT": {"1": "Tri-State", "4": "GND", "5": "OUT", "8": "Vcc"},
     "XTAL_20M": {"1": "1", "2": "2"},
     "XTAL_16M": {"1": "1", "2": "2"},
     "C_22P": {"1": "1", "2": "2"},

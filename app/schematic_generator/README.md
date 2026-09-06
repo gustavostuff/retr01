@@ -20,7 +20,7 @@ app/schematic_generator/
 +-- generate.py              # CLI entry point (writes both netlists)
 +-- requirements.txt         # skidl
 +-- retr01_schem/
-|   +-- bom.py               # System 32-IC BOM; board=mobo|cart
+|   +-- bom.py               # System 32-IC BOM (board=mobo|cart)
 |   +-- manifest.py          # Motherboard wiring (stops at J36)
 |   +-- cart_manifest.py     # Cartridge wiring (J36 <-> U40/U50)
 |   +-- parts.py             # SKiDL Part templates
@@ -77,4 +77,4 @@ python -m unittest discover -s tests
 - Add Retr01_Lib `.kicad_sym` files and switch `parts.py` from inline pins to library parts (needs KiCad).
 - Lock arcade header pin order in `docs/controllers.md`, then update `manifest.py`.
 - Import `output/retr01_mobo.net` into KiCad. Lock I/O. Quilter on `CRITICAL_NETS`.
-- Decoupling: each silicon IC gets `CD*` (100 nF) on a private `+5V_<refdes>` net, fed from `+5V` (or `+5V_ANALOG` for U24) through a populated `RD*` **0 ohm**. That exclusive net is what Quilter needs for high-confidence bypass parent assignment. Do not DNP the `RD*` parts. They are the power feed.
+- Decoupling: each silicon IC gets `CD*` (100 nF) on a private `+5V_<refdes>` net, fed from `+5V` (or `+5V_ANALOG` for U24) through a populated `RD*` **0 ohm**. AD725 uses pin-pair locals for `Cd725a`/`Cd725d` (APOS+AGND / DPOS+DGND). `Cbulk` sits on `+5V_BULK` (not the IC +5V rail). `Cytrap` returns on `YTRAP_RET` so Quilter does not treat it as bypass-to-GND. Do not DNP the `RD*` / `RDbulk` / `RDytrap` parts.

@@ -52,8 +52,8 @@ _DIP14 = "Package_DIP:DIP-14_W7.62mm"
 _DIP8 = "Package_DIP:DIP-8_W7.62mm"
 _C0603 = "Capacitor_SMD:C_0603_1608Metric"
 _R0603 = "Resistor_SMD:R_0603_1608Metric"
-# Abracon ACO full-size DIP-14 can (pins 1/7/8/14). KiCad: Oscillator:Oscillator_DIP-14.
-_OSC14 = "Oscillator:Oscillator_DIP-14"
+# Abracon ACH half-size DIP-8 can (pins 1/4/5/8). KiCad: Oscillator:Oscillator_DIP-8.
+_OSC8 = "Oscillator:Oscillator_DIP-8"
 # Locked EDAC right-angle 2x18; KiCad pin-socket is the stock hole pattern stand-in until Retr01_Lib CAD.
 _EDGE36 = "Connector_PinSocket_2.54mm:PinSocket_2x18_P2.54mm_Horizontal"
 # CUI PJ-063AH 2.1 mm ID — stock KiCad footprint (pads 1=tip, 2=sleeve, MP).
@@ -185,14 +185,14 @@ BOM: List[BomEntry] = [
     *_hc245_entries(),
     # Support (outside 32-IC count)
     BomEntry("U2", "SN74HC14", "reset / PHI2 conditioning", IslandId.POWER_CLK, 14, _DIP14, in_ic_count=False),
-    # Board clocks: Abracon ACO full-size DIP-14, 5 V HCMOS, -EK (±30 ppm, -20..+70 °C)
+    # Board clocks: Abracon ACH half-size DIP-8, 5 V HCMOS, -EK (+/-30 ppm, -20..+70 C)
     BomEntry(
         "Y1",
         "OSC8M",
-        "Abracon ACO-8.000MHZ-EK (PHI2)",
+        "Abracon ACH-8.000MHZ-EK (PHI2)",
         IslandId.POWER_CLK,
-        14,
-        _OSC14,
+        8,
+        _OSC8,
         in_ic_count=False,
         vcc_pin="VDD",
         gnd_pin="GND",
@@ -200,10 +200,10 @@ BOM: List[BomEntry] = [
     BomEntry(
         "Y2",
         "OSC_DOT",
-        "Abracon ACO-5.369318MHZ-EK (dot; Abracon factory-order OK)",
+        "Abracon ACH-5.369318MHZ-EK (dot; Abracon factory-order OK)",
         IslandId.BEAM,
-        14,
-        _OSC14,
+        8,
+        _OSC8,
         in_ic_count=False,
         vcc_pin="VDD",
         gnd_pin="GND",
@@ -224,10 +224,10 @@ BOM: List[BomEntry] = [
     BomEntry(
         "Y3",
         "OSC_4FSC",
-        "Abracon ACO-14.31818MHZ-EK (AD725 4FSC)",
+        "Abracon ACH-14.31818MHZ-EK (AD725 4FSC)",
         IslandId.VIDEO,
-        14,
-        _OSC14,
+        8,
+        _OSC8,
         in_ic_count=False,
         vcc_pin="VDD",
         gnd_pin="GND",

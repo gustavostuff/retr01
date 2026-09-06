@@ -29,7 +29,7 @@ def _manifest_core() -> List[Connection]:
     m += [
         Connection("+5V", "Y1", P.OSC_VDD, "U1", P.CPU_VDD, "wire_power_clock_reset"),
         Connection("+5V", "Y1", P.OSC_VDD, "U2", P.HC14_VCC, "wire_power_clock_reset"),
-        Connection("+5V", "Y1", P.OSC_OE, "+5V", "+5V", "Abracon ACO OE high=run"),
+        Connection("+5V", "Y1", P.OSC_OE, "+5V", "+5V", "Abracon ACH OE high=run"),
         Connection("GND", "Y1", P.OSC_GND, "GND", "GND", "wire_power_clock_reset"),
         Connection("PHI2_SRC", "Y1", P.OSC_OUT, "Rphi", "1", "docs/passive_rf_etc clock damp"),
         Connection("PHI2", "Rphi", "2", "U1", P.CPU_PHI2, "wire_power_clock_reset"),
@@ -71,7 +71,7 @@ def _manifest_core() -> List[Connection]:
 
     m += [
         Connection("+5V", "Y2", P.OSC_VDD, "+5V", "+5V", "wire_beam"),
-        Connection("+5V", "Y2", P.OSC_OE, "+5V", "+5V", "Abracon ACO OE high=run"),
+        Connection("+5V", "Y2", P.OSC_OE, "+5V", "+5V", "Abracon ACH OE high=run"),
         Connection("GND", "Y2", P.OSC_GND, "GND", "GND", "wire_beam"),
         Connection("DOT_SRC", "Y2", P.OSC_OUT, "Rdot", "1", "docs/passive_rf_etc clock damp"),
         Connection("DOT_CLK", "Rdot", "2", "UPLDX", P.UPLDX_DOT, "wire_beam"),
@@ -240,10 +240,7 @@ def _manifest_power_io() -> List[Connection]:
         Connection("+5V_ANALOG", "U725", P.AD725_DPOS, "+5V_ANALOG", "+5V_ANALOG", av),
         Connection("GND", "U725", P.AD725_AGND, "GND", "GND", av),
         Connection("GND", "U725", P.AD725_DGND, "GND", "GND", av),
-        Connection("+5V_ANALOG", "Cd725a", "1", "U725", P.AD725_APOS, av),
-        Connection("GND", "Cd725a", "2", "GND", "GND", av),
-        Connection("+5V_ANALOG", "Cd725d", "1", "U725", P.AD725_DPOS, av),
-        Connection("GND", "Cd725d", "2", "GND", "GND", av),
+        # Cd725a/d wired in board.add_ad725_decoupling() (exclusive local nets for Quilter)
         Connection("FSC4", "Y3", P.OSC_OUT, "U725", P.AD725_4FSC, av),
         Connection("+5V", "Y3", P.OSC_VDD, "+5V", "+5V", av),
         Connection("+5V", "Y3", P.OSC_OE, "+5V", "+5V", av),

@@ -48,6 +48,36 @@ def _pin_num(n: str):
         return n
 
 
+# Human-readable values for Quilter / KiCad (MPN alone is not a capacitance).
+PASSIVE_VALUES = {
+    "C_100N": "100nF",
+    "C_22P": "22pF",
+    "C_10U": "10uF",
+    "C_10U_AUD": "10uF",
+    "C_BULK": "220uF",
+    "R_0": "0R",
+    "R_33": "33R",
+    "R_47": "47R",
+    "R_75": "75R",
+    "R_1K": "1k",
+    "R_2K": "2k",
+    "R_4K": "4k",
+    "R_4K7": "4.7k",
+    "R_10K": "10k",
+    "R_20K": "20k",
+}
+
+
+def _apply_value(part, mpn: str) -> None:
+    val = PASSIVE_VALUES.get(mpn)
+    if val is None:
+        return
+    try:
+        part.value = val
+    except Exception:
+        pass
+
+
 def _skidl_pins(mpn: str, numbers: Sequence[str]) -> List:
     """Pin num and name match footprint pads; attach KiCad aliases when present."""
     aliases = KICAD_ALIASES.get(mpn, {})
@@ -70,13 +100,15 @@ def make_part(entry: BomEntry, *, refdes_override: Optional[str] = None):
     if numbers is None:
         raise KeyError(f"no pin template for MPN {entry.mpn}")
 
-    return Part(
+    part = Part(
         tool=SKIDL,
         name=entry.mpn,
         ref=refdes_override or entry.refdes,
         footprint=entry.footprint,
         pins=_skidl_pins(entry.mpn, numbers),
     )
+    _apply_value(part, entry.mpn)
+    return part
 
 
 def make_passive(mpn: str, refdes: str, footprint: str):
@@ -85,13 +117,15 @@ def make_passive(mpn: str, refdes: str, footprint: str):
     numbers = PIN_TEMPLATES.get(mpn)
     if numbers is None:
         raise KeyError(f"no pin template for MPN {mpn}")
-    return Part(
+    part = Part(
         tool=SKIDL,
         name=mpn,
         ref=refdes,
         footprint=footprint,
         pins=_skidl_pins(mpn, numbers),
     )
+    _apply_value(part, mpn)
+    return part
 
 
 def instantiate_bom(

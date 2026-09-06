@@ -60,9 +60,10 @@ class TestBom(unittest.TestCase):
             self.assertIn(ref, BOM_BY_REFDES)
         self.assertIn("RCJ-01x", BOM_BY_REFDES["J8"].footprint)
         self.assertEqual(BOM_BY_REFDES["J8"].footprint, BOM_BY_REFDES["J9"].footprint)
-        self.assertIn("Oscillator_DIP-14", BOM_BY_REFDES["Y1"].footprint)
+        self.assertIn("Oscillator_DIP-8", BOM_BY_REFDES["Y1"].footprint)
         self.assertEqual(BOM_BY_REFDES["Y1"].footprint, BOM_BY_REFDES["Y2"].footprint)
         self.assertEqual(BOM_BY_REFDES["Y1"].footprint, BOM_BY_REFDES["Y3"].footprint)
+        self.assertIn("ACH-", BOM_BY_REFDES["Y1"].role)
         self.assertIn("PJ-063AH", BOM_BY_REFDES["J1"].footprint)
         self.assertIn("AD725ARZ", BOM_BY_REFDES["U725"].role)
         self.assertIn("DIP-16", BOM_BY_REFDES["U725"].footprint)
@@ -289,6 +290,65 @@ class TestDecouplingQuilter(unittest.TestCase):
         bridge = parts[f"RD{idx}"]
         names = {str(getattr(n, "name", "") or "") for n in bridge["2"].nets}
         self.assertIn("+5V_ANALOG", names)
+
+    def test_ad725_local_bypass_nets(self):
+        if not self.skidl:
+            self.skipTest("skidl not installed")
+        from skidl import reset
+
+        from retr01_schem.board import build_board
+
+        reset()
+        built = build_board(include_sim_only=False)
+        nets = built["nets"]
+        parts = built["parts"]
+        self.assertIn("+5V_U725_APOS", nets)
+        self.assertIn("+5V_U725_DPOS", nets)
+        self.assertIn("RD725a", parts)
+        self.assertIn("RD725d", parts)
+        a_refs = {
+            getattr(getattr(p, "part", None), "ref", None) for p in nets["+5V_U725_APOS"].pins
+        }
+        d_refs = {
+            getattr(getattr(p, "part", None), "ref", None) for p in nets["+5V_U725_DPOS"].pins
+        }
+        self.assertEqual(a_refs, {"U725", "Cd725a", "RD725a"})
+        self.assertEqual(d_refs, {"U725", "Cd725d", "RD725d"})
+        ag = {
+            getattr(getattr(p, "part", None), "ref", None) for p in nets["GND_U725_AGND"].pins
+        }
+        dg = {
+            getattr(getattr(p, "part", None), "ref", None) for p in nets["GND_U725_DGND"].pins
+        }
+        self.assertEqual(ag, {"U725", "Cd725a", "RD725ag"})
+        self.assertEqual(dg, {"U725", "Cd725d", "RD725dg"})
+
+    def test_cbulk_cytrap_isolated(self):
+        if not self.skidl:
+            self.skipTest("skidl not installed")
+        from skidl import reset
+
+        from retr01_schem.board import build_board
+
+        reset()
+        built = build_board(include_sim_only=False)
+        nets = built["nets"]
+        parts = built["parts"]
+        self.assertIn("+5V_BULK", nets)
+        self.assertIn("YTRAP_RET", nets)
+        self.assertIn("RDbulk", parts)
+        self.assertIn("RDytrap", parts)
+        bulk_refs = {
+            getattr(getattr(p, "part", None), "ref", None) for p in nets["+5V_BULK"].pins
+        }
+        # No silicon IC on the bulk stub.
+        self.assertTrue(bulk_refs <= {"Cbulk", "FB1", "RDbulk"})
+        self.assertNotIn("U2", bulk_refs)
+        ret_refs = {
+            getattr(getattr(p, "part", None), "ref", None) for p in nets["YTRAP_RET"].pins
+        }
+        self.assertEqual(ret_refs, {"Cytrap", "RDytrap"})
+        self.assertEqual(str(getattr(parts["Cbulk"], "value", "")), "220uF")
 
 
 if __name__ == "__main__":

@@ -75,9 +75,9 @@ Never snake return current through video or pad-port copper. Stitch GND vias at 
 
 | Item | Locked part / value |
 |------|---------------------|
-| **Y1** PHI2 | **Abracon ACO-8.000MHZ-EK** - 8.000 MHz, 5 V HCMOS, full-size DIP-14 can. Footprint `Oscillator:Oscillator_DIP-14` (pins **1=OE, 7=GND, 8=OUT, 14=Vcc**). OE tied high |
-| **Y2** dot | **Abracon ACO-5.369318MHZ-EK** - same package/footprint. Exact NTSC/3. **Primary:** Abracon factory-order. **Alternate:** any 5 V HCMOS DIP-14 XO at **5.369318 MHz +/-50 ppm** (Abracon/IQD/ECS custom). Do **not** use 5.000/6.000 MHz for video |
-| **Y3** AD725 4FSC | **Abracon ACO-14.31818MHZ-EK** - same package/footprint |
+| **Y1** PHI2 | **Abracon ACH-8.000MHZ-EK** - 8.000 MHz, 5 V HCMOS, half-size DIP-8 can (~12.7x12.7 mm). Footprint `Oscillator:Oscillator_DIP-8` (pins **1=OE, 4=GND, 5=OUT, 8=Vcc**). OE tied high |
+| **Y2** dot | **Abracon ACH-5.369318MHZ-EK** - same package/footprint. Exact NTSC/3. **Primary:** Abracon factory-order. **Alternate:** any 5 V HCMOS DIP-8 XO at **5.369318 MHz +/-50 ppm**. Do **not** use 5.000/6.000 MHz for video |
+| **Y3** AD725 4FSC | **Abracon ACH-14.31818MHZ-EK** - same package/footprint |
 | **Y4** 1284 | **Abracon ABLS7M-20.000MHZ-D2Y-T** HC-49/U + **2x 22 pF** to GND |
 | **Y5** 328P | **Abracon ABLS7M-16.000MHZ-D2Y-T** HC-49/U + **2x 22 pF** to GND |
 | Series damping | **33 ohm** locked (`Rphi`, `Rdot`) on PHI2 and DOT at the can output |
