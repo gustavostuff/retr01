@@ -282,6 +282,158 @@ void font_draw_a_rot90ccw(SDL_Renderer *r, int x, int y, const char *text, Uint8
     free(buf);
 }
 
+int ui_label_bounce_scroll(int text_w, int view_w, unsigned phase_seed) {
+    int overflow = text_w - view_w;
+    Uint32 now_ms;
+    Uint32 t;
+    int scroll_ms;
+    int pause_ms = R01S_UI_LABEL_PAUSE_MS;
+    int cycle;
+
+    if (overflow <= 0 || view_w <= 0) {
+        return 0;
+    }
+
+    scroll_ms = (int)((long long)overflow * 1000 / R01S_UI_LABEL_SCROLL_PX_PER_SEC);
+    if (scroll_ms < 1) {
+        scroll_ms = 1;
+    }
+    cycle = pause_ms + scroll_ms + pause_ms + scroll_ms;
+
+    now_ms = SDL_GetTicks();
+    t = (now_ms + phase_seed) % (Uint32)cycle;
+
+    if (t < (Uint32)pause_ms) {
+        return 0;
+    }
+    t -= (Uint32)pause_ms;
+    if (t < (Uint32)scroll_ms) {
+        return (int)((long long)t * overflow / scroll_ms);
+    }
+    t -= (Uint32)scroll_ms;
+    if (t < (Uint32)pause_ms) {
+        return overflow;
+    }
+    t -= (Uint32)pause_ms;
+    return overflow - (int)((long long)t * overflow / scroll_ms);
+}
+
+static int ui_clip_intersect(const SDL_Rect *a, const SDL_Rect *b, SDL_Rect *out) {
+    int x0 = a->x > b->x ? a->x : b->x;
+    int y0 = a->y > b->y ? a->y : b->y;
+    int x1 = (a->x + a->w) < (b->x + b->w) ? (a->x + a->w) : (b->x + b->w);
+    int y1 = (a->y + a->h) < (b->y + b->h) ? (a->y + a->h) : (b->y + b->h);
+
+    if (x1 <= x0 || y1 <= y0) {
+        return 0;
+    }
+    out->x = x0;
+    out->y = y0;
+    out->w = x1 - x0;
+    out->h = y1 - y0;
+    return 1;
+}
+
+static int ui_push_clip(SDL_Renderer *r, const SDL_Rect *want, SDL_Rect *prev_out, SDL_bool *had_out) {
+    SDL_Rect clip;
+    SDL_bool had = SDL_RenderIsClipEnabled(r);
+
+    *had_out = had;
+    if (had) {
+        SDL_RenderGetClipRect(r, prev_out);
+        if (!ui_clip_intersect(prev_out, want, &clip)) {
+            return 0;
+        }
+    } else {
+        clip = *want;
+    }
+    SDL_RenderSetClipRect(r, &clip);
+    return 1;
+}
+
+static void ui_pop_clip(SDL_Renderer *r, const SDL_Rect *prev, SDL_bool had) {
+    if (had) {
+        SDL_RenderSetClipRect(r, prev);
+    } else {
+        SDL_RenderSetClipRect(r, NULL);
+    }
+}
+
+void ui_draw_label_bounce(SDL_Renderer *r, int x, int y, int view_w, int view_h, const char *text,
+                          unsigned phase_seed, Uint8 R, Uint8 G, Uint8 B, Uint8 A) {
+    int tw;
+    int fh;
+    int scroll;
+    int draw_x;
+    int draw_y;
+    SDL_Rect want;
+    SDL_Rect prev;
+    SDL_bool had;
+
+    if (!r || !text || !text[0] || view_w <= 0 || view_h <= 0 || A == 0) {
+        return;
+    }
+    tw = font_text_width(text);
+    fh = font_line_h();
+    if (tw <= 0 || fh <= 0) {
+        return;
+    }
+    scroll = ui_label_bounce_scroll(tw, view_w, phase_seed);
+    if (tw <= view_w) {
+        draw_x = x + (view_w - tw) / 2;
+    } else {
+        draw_x = x - scroll;
+    }
+    draw_y = y + (view_h - fh) / 2;
+    want.x = x;
+    want.y = y;
+    want.w = view_w;
+    want.h = view_h;
+    if (!ui_push_clip(r, &want, &prev, &had)) {
+        return;
+    }
+    font_draw_a(r, draw_x, draw_y, text, R, G, B, A);
+    ui_pop_clip(r, &prev, had);
+}
+
+void ui_draw_label_bounce_rot90ccw(SDL_Renderer *r, int x, int y, int view_w, int view_h, const char *text,
+                                   unsigned phase_seed, Uint8 R, Uint8 G, Uint8 B, Uint8 A) {
+    int tw;
+    int fh;
+    int scroll;
+    int draw_x;
+    int draw_y;
+    SDL_Rect want;
+    SDL_Rect prev;
+    SDL_bool had;
+
+    if (!r || !text || !text[0] || view_w <= 0 || view_h <= 0 || A == 0) {
+        return;
+    }
+    tw = font_text_width(text);
+    fh = font_line_h();
+    if (tw <= 0 || fh <= 0) {
+        return;
+    }
+    /* Rotated AABB is fh wide x tw tall. Bounce along the tall axis (view_h). */
+    scroll = ui_label_bounce_scroll(tw, view_h, phase_seed);
+    draw_x = x + (view_w - fh) / 2;
+    if (tw <= view_h) {
+        draw_y = y + (view_h - tw) / 2;
+    } else {
+        draw_y = y - scroll;
+    }
+    want.x = x;
+    want.y = y;
+    want.w = view_w;
+    want.h = view_h;
+    if (!ui_push_clip(r, &want, &prev, &had)) {
+        return;
+    }
+    font_draw_a_rot90ccw(r, draw_x, draw_y, text, R, G, B, A);
+    ui_pop_clip(r, &prev, had);
+}
+
 /* Draw text clipped to max_w; append "..." when truncated. Returns 1 if truncated. */
 static int font_draw_ellipsize_a(SDL_Renderer *r, int x, int y, const char *text, int max_w, Uint8 R, Uint8 G,
                                  Uint8 B, Uint8 A) {

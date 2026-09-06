@@ -248,18 +248,18 @@ static void draw_panel_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity
     const char *label;
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);
-    int tw;
-    int fh = font_line_h();
 
     (void)ui;
     fill_rect(r, x, y, e->body_w, e->body_h, 38, 42, 48);
     draw_rect(r, x, y, e->body_w, e->body_h, selected ? 255 : 120, selected ? 220 : 100, selected ? 80 : 85);
     label = e->part ? e->part : e->refdes;
-    if (label && label[0]) {
-        tw = font_text_width(label);
-        if (tw <= e->body_w - 4) {
-            font_draw(r, x + (e->body_w - tw) / 2, y + (e->body_h - fh) / 2, label, 180, 185, 195);
+    if (label && label[0] && e->body_w > 4 && e->body_h > 4) {
+        unsigned seed = 0;
+        const char *s;
+        for (s = e->refdes ? e->refdes : label; *s; s++) {
+            seed = seed * 131u + (unsigned char)*s;
         }
+        ui_draw_label_bounce(r, x + 2, y + 2, e->body_w - 4, e->body_h - 4, label, seed, 180, 185, 195, 255);
     }
 }
 
@@ -387,21 +387,32 @@ static void draw_chip(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, in
     } else {
         fill_rect(r, x + e->body_w / 2 - 2, y - 1, 4, 2, 20, 22, 20);
     }
-    /* Part label centered on body, 50% opaque white. Skip if it won't fit fully.
-     * Vertical packages get the label rotated 90 deg CW (reads top->bottom). */
+    /* Part label centered on body, 50% opaque white. Bounce-scroll when too wide
+     * (same timing as island titles). Vertical packages: rot90 CCW, scroll along height. */
     {
         const char *label = e->part ? e->part : e->refdes;
         if (label && label[0]) {
-            int fh = font_line_h();
-            int tw = font_text_width(label);
+            unsigned seed = 0;
+            const char *s;
+            int pad = 2;
+            int view_w = e->body_w - pad * 2;
+            int view_h = e->body_h - pad * 2;
+            for (s = e->refdes ? e->refdes : label; *s; s++) {
+                seed = seed * 131u + (unsigned char)*s;
+            }
+            if (view_w < 1) {
+                view_w = e->body_w;
+                pad = 0;
+            }
+            if (view_h < 1) {
+                view_h = e->body_h;
+                pad = 0;
+            }
             if (horiz) {
-                if (tw <= e->body_w - 4 && fh <= e->body_h - 4) {
-                    font_draw_a(r, x + (e->body_w - tw) / 2, y + (e->body_h - fh) / 2, label, 255, 255, 255, 128);
-                }
-            } else if (tw <= e->body_h - 4 && fh <= e->body_w - 4) {
-                /* Rotated AABB is fh wide x tw tall. */
-                font_draw_a_rot90ccw(r, x + (e->body_w - fh) / 2, y + (e->body_h - tw) / 2, label, 255, 255, 255,
-                                     128);
+                ui_draw_label_bounce(r, x + pad, y + pad, view_w, view_h, label, seed, 255, 255, 255, 128);
+            } else {
+                ui_draw_label_bounce_rot90ccw(r, x + pad, y + pad, view_w, view_h, label, seed, 255, 255, 255,
+                                             128);
             }
         }
     }

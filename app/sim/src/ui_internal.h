@@ -18,6 +18,10 @@ typedef struct R01sBoard R01sBoard;
 
 #define R01S_UI_FONT_PX 16
 
+/* Bounce/scroll for island titles and IC part labels that overflow their clip. */
+#define R01S_UI_LABEL_PAUSE_MS 700
+#define R01S_UI_LABEL_SCROLL_PX_PER_SEC 28
+
 #define R01S_UI_CHIP_CART_R 13
 #define R01S_UI_CHIP_CART_G 29
 #define R01S_UI_CHIP_CART_B 57
@@ -61,6 +65,15 @@ void font_draw_a(SDL_Renderer *r, int x, int y, const char *text, Uint8 R, Uint8
 int font_draw_ellipsize(SDL_Renderer *r, int x, int y, const char *text, int max_w, Uint8 R, Uint8 G, Uint8 B);
 int font_text_width(const char *text);
 void font_draw_a_rot90ccw(SDL_Renderer *r, int x, int y, const char *text, Uint8 R, Uint8 G, Uint8 B, Uint8 A);
+
+/* Pause-scroll-pause bounce offset (px). phase_seed desyncs multiple labels. */
+int ui_label_bounce_scroll(int text_w, int view_w, unsigned phase_seed);
+/* Horizontal label clipped to view_w x view_h at (x,y). Centers when it fits. */
+void ui_draw_label_bounce(SDL_Renderer *r, int x, int y, int view_w, int view_h, const char *text,
+                          unsigned phase_seed, Uint8 R, Uint8 G, Uint8 B, Uint8 A);
+/* Vertical (rot90 CCW) label clipped to view_w x view_h at (x,y). Centers when it fits. */
+void ui_draw_label_bounce_rot90ccw(SDL_Renderer *r, int x, int y, int view_w, int view_h, const char *text,
+                                   unsigned phase_seed, Uint8 R, Uint8 G, Uint8 B, Uint8 A);
 
 /* ui_draw_chip.c */
 void pin_level_rgb(R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg, Uint8 *pb);

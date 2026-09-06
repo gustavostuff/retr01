@@ -620,77 +620,31 @@ static void draw_island_resize_grip(SDL_Renderer *r, int hx, int hy) {
     draw_rect(r, hx, hy, sz, sz, 255, 255, 255);
 }
 
-#define R01S_ISLAND_TITLE_PAUSE_MS 700
-#define R01S_ISLAND_TITLE_SCROLL_PX_PER_SEC 28
-
-static int rect_intersect(const SDL_Rect *a, const SDL_Rect *b, SDL_Rect *out) {
-    int x0 = a->x > b->x ? a->x : b->x;
-    int y0 = a->y > b->y ? a->y : b->y;
-    int x1 = (a->x + a->w) < (b->x + b->w) ? (a->x + a->w) : (b->x + b->w);
-    int y1 = (a->y + a->h) < (b->y + b->h) ? (a->y + a->h) : (b->y + b->h);
-
-    if (x1 <= x0 || y1 <= y0) {
-        return 0;
-    }
-    out->x = x0;
-    out->y = y0;
-    out->w = x1 - x0;
-    out->h = y1 - y0;
-    return 1;
-}
-
-static int island_title_scroll_offset(const char *title, int view_w, int island_index) {
-    const char *text = title && title[0] ? title : "ISLAND";
-    int tw = font_text_width(text);
-    int overflow = tw - view_w;
-    Uint32 now_ms;
-    Uint32 t;
-    int scroll_ms;
-    int pause_ms = R01S_ISLAND_TITLE_PAUSE_MS;
-    int cycle;
-
-    if (overflow <= 0) {
-        return 0;
-    }
-
-    scroll_ms = (int)((long long)overflow * 1000 / R01S_ISLAND_TITLE_SCROLL_PX_PER_SEC);
-    if (scroll_ms < 1) {
-        scroll_ms = 1;
-    }
-    cycle = pause_ms + scroll_ms + pause_ms + scroll_ms;
-
-    now_ms = SDL_GetTicks();
-    t = (now_ms + (Uint32)island_index * 251u) % (Uint32)cycle;
-
-    if (t < (Uint32)pause_ms) {
-        return 0;
-    }
-    t -= (Uint32)pause_ms;
-    if (t < (Uint32)scroll_ms) {
-        return (int)((long long)t * overflow / scroll_ms);
-    }
-    t -= (Uint32)scroll_ms;
-    if (t < (Uint32)pause_ms) {
-        return overflow;
-    }
-    t -= (Uint32)pause_ms;
-    return overflow - (int)((long long)t * overflow / scroll_ms);
-}
-
 static void draw_island_scrolling_title(SDL_Renderer *r, int title_x, int y, const char *title, int title_max,
                                         int island_index) {
     const char *text = title && title[0] ? title : "ISLAND";
-    int scroll = island_title_scroll_offset(text, title_max, island_index);
+    int scroll = ui_label_bounce_scroll(font_text_width(text), title_max, (unsigned)island_index * 251u);
     SDL_Rect title_clip = {title_x, y, title_max, R01S_ISLAND_HEADER_H};
     SDL_Rect prev_clip;
     SDL_Rect clip;
     SDL_bool had_clip = SDL_RenderIsClipEnabled(r);
+    int x0, y0, x1, y1;
 
     if (had_clip) {
         SDL_RenderGetClipRect(r, &prev_clip);
-        if (!rect_intersect(&prev_clip, &title_clip, &clip)) {
+        x0 = prev_clip.x > title_clip.x ? prev_clip.x : title_clip.x;
+        y0 = prev_clip.y > title_clip.y ? prev_clip.y : title_clip.y;
+        x1 = (prev_clip.x + prev_clip.w) < (title_clip.x + title_clip.w) ? (prev_clip.x + prev_clip.w)
+                                                                         : (title_clip.x + title_clip.w);
+        y1 = (prev_clip.y + prev_clip.h) < (title_clip.y + title_clip.h) ? (prev_clip.y + prev_clip.h)
+                                                                         : (title_clip.y + title_clip.h);
+        if (x1 <= x0 || y1 <= y0) {
             return;
         }
+        clip.x = x0;
+        clip.y = y0;
+        clip.w = x1 - x0;
+        clip.h = y1 - y0;
     } else {
         clip = title_clip;
     }
