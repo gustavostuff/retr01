@@ -36,7 +36,7 @@ Cart netlist `J36` uses `Retr01_Lib:Cart_Edge_2x18_P2.54mm` (pads **1-18** = A /
 4. Place `J36` with origin on the insert edge. Pads point into the board (+X in the footprint). Silk **A1** marks side A pin 1.
 5. Place U40 / U50 / caps and route.
 
-**Quilter (cart):** Circuit Comprehension checklist is in [`docs/passive_rf_etc.md`](../../docs/passive_rf_etc.md#quilter-circuit-comprehension---cartridge-pcb) (pour `+5V` + `GND` only, stubs pour off, `CD1`/`CD2` only). KiCad: `J36` and `Edge.Cuts` locked, GND pours stop above fingers, `FINGER_KEEPOUT` on the tongue. After reopen, **Edit → Fill All Zones** if you want local pours before upload.
+**Quilter (cart):** Circuit Comprehension checklist is in [`docs/passive_rf_etc.md`](../../docs/passive_rf_etc.md#quilter-circuit-comprehension---cartridge-pcb) (pour `+5V` + `GND` only, stubs pour off, `CD1`/`CD2` only). KiCad: `J36` and `Edge.Cuts` locked, GND pours stop above fingers, `FINGER_KEEPOUT` on the tongue. After reopen, **Edit -> Fill All Zones** if you want local pours before upload.
 
 Confirm `fp-lib-table` resolves `Retr01_Lib` (already set for `cartridge/`).
 

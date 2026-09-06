@@ -131,7 +131,7 @@ Expected keep set: **23** rows (21x `CD*` + 2x `Cd725*`). Do not chase high conf
 
 Project: [`hw/kicad/cartridge/`](../hw/kicad/cartridge/). Same stub pattern as the mobo (`RD*` 0 ohm into `+5V_U*`), fewer parts.
 
-**Stackup:** 2-layer CircuitHub profiles often leave both coppers as **Signal** (no editable Ground class). Ignore the "no ground layer" advisory. **GND** still pours as Primary Ground on signal layers.
+**Stackup:** In KiCad, **B.Cu** is typed **power** (GND plane preference); **F.Cu** stays **signal**. CircuitHub 2-layer profiles may still show both as Signal with no editable Ground class. If Quilter still warns "no ground layer", ignore it. **GND** remains **Primary Ground** and pours on both sides.
 
 **Power nets:**
 
@@ -140,6 +140,8 @@ Project: [`hw/kicad/cartridge/`](../hw/kicad/cartridge/). Same stub pattern as t
 | **Pour on** | `+5V` only (**Attempt Power Pour** checked). ~**500 mA** is fine |
 | **Keep listed, pour off** | `+5V_U40`, `+5V_U50` (uncheck **Attempt Power Pour**) |
 | **Ground** | `GND` = **Primary Ground** |
+
+On the cart KiCad board, `+5V` must reach **J36** A2/B2 and both **RD*** pin-2 pads (the four copper nodes on bare `+5V`). Keep `J36` seated on `Edge.Cuts` with fingers **on** the board (not hanging past the outline) or Quilter reports **Net is not fully connected**.
 
 **Bypass capacitors:**
 
