@@ -2,10 +2,11 @@
 
 | Path | Role |
 |--|--|
-| [`studio/`](studio/) | Authoring app |
-| [`emu/`](emu/) | Cart emulator (also Studio Play core) |
-| [`sim/`](sim/) | Pin-level board simulator. Default cart: `output/test_2.retr01`. USB flasher island is visual only (WIP) |
-| [`pld_tests/`](pld_tests/) | Headless ATF22V10 / GAL22V10 equation fit + PLD scenarios (galette) |
+| [`studio/`](studio/) | Authoring app (**build-all**) |
+| [`emu/`](emu/) | Cart emulator / Studio Play core (**build-all**) |
+| [`sim/`](sim/) | Pin-level board simulator (**build-all**). Default cart: `output/test_2.retr01` |
+| [`pld_tests/`](pld_tests/) | Headless ATF22V10 fit + scenarios (galette). Via `./unit-tests`, not build-all |
+| [`schematic_generator/`](schematic_generator/) | Skidl netlist generator. Separate Python venv |
 | [`common/`](common/) | Shared Host Play helpers |
 | [`assets/png/`](assets/png/) | Shared PNG images (UI + docs screenshots) |
 | [`assets/other/`](assets/other/) | Fonts, licenses, XCF sources |
