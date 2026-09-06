@@ -8,7 +8,7 @@ Aligned with `temp/AI_flow_for_PCB.pdf`:
 
 1. **Verify logic** - run `./sim`, per-chip tests, and `./unit-tests`.
 2. **Define wiring** - this package: modular island modules + `manifest.py` (from `app/sim/src/board.c`).
-3. **Lock symbols** - populate `library/Retr01_Lib` from KiCad S-expressions (see `library/README.md`).
+3. **Lock symbols / footprints** - custom footprints live in [`hw/kicad/Retr01_Lib.pretty`](../../hw/kicad/Retr01_Lib.pretty) (symlinked from `library/`). See `library/README.md`.
 4. **Generate netlists** - `python generate.py` -> `output/retr01_mobo.net` + `output/retr01_cart.net`.
 5. **Mechanical layout** - two KiCad projects: motherboard + cartridge. Lock I/O / edge.
 6. **Route** - Quilter AI (flag `CRITICAL_NETS` in `retr01_schem/nets.py`). Bypass caps use per-IC local nets (`+5V_<refdes>` + `RD*` 0 ohm + `CD*`) so Quilter can parent each cap with high confidence.
@@ -28,7 +28,7 @@ app/schematic_generator/
 |   +-- board.py             # Mobo + cart assembly + J36 contract check
 |   +-- nets.py              # Named net constants
 |   +-- islands/             # One module per sim canvas island (A-O)
-+-- library/                 # Retr01_Lib KiCad symbols (TBD)
++-- library/                 # README + symlink to hw/kicad/Retr01_Lib.pretty
 +-- output/                  # Generated netlists + manifest JSON
 +-- tests/
 ```

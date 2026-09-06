@@ -26,9 +26,11 @@ SKiDL still instantiates inline `Part(tool=SKIDL)` parts, but every pin **name a
 |------|-----|
 | W65C02S | Not in stock CPU lib (symbol) |
 | ATF22V10 | No 22V10 stock symbol |
-| Switchcraft **35RAPC2BVN4** | Custom TRS footprint - **done** (`Retr01_Lib.pretty`, Tip=4 / Ring=2 / Sleeve=1) |
+| Switchcraft **35RAPC2BVN4** | Custom TRS footprint - **done** ([`hw/kicad/Retr01_Lib.pretty`](../../../hw/kicad/Retr01_Lib.pretty), Tip=4 / Ring=2 / Sleeve=1) |
 | CUI **RCJ-01x** | Custom RCA footprint - **done** (`CUI_RCJ-01x_Vertical`. RCJ-012/014 share holes) |
 | EDAC **395-036-520-201** (vertical) | Optional: replace PinSocket stand-in with manufacturer CAD. Console later: **395-036-559-212** right-angle |
+
+**Footprint library (authority):** [`hw/kicad/Retr01_Lib.pretty`](../../../hw/kicad/Retr01_Lib.pretty). This folder has a symlink `Retr01_Lib.pretty` -> that path so SKiDL / docs stay consistent. PCB projects live under [`hw/kicad/`](../../../hw/kicad/README.md).
 
 **Stock now (do not reinvent):** Abracon **ACH** half-size cans -> KiCad `Oscillator:Oscillator_DIP-8` (pins 1/4/5/8). **AD725ARZ** chip is wide SOIC-16. **Mobo places DIP-16** for **Proto Advantage PA0006** (SOIC-16 300 mil to DIP-16). **CUI PJ-063AH** barrel. HC/AVR/memory symbols per table above. RCA uses stock symbol **`Conn_Coaxial`** + custom RCJ footprint.
 

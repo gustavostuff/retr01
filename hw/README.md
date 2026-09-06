@@ -4,6 +4,8 @@ Parts list and vendor datasheet notes for the shared Retr01 motherboard (arcade 
 
 **Markdown IC notes (sim / bring-up):** [`md/`](md/) - start with [`md/README.md`](md/README.md). Current BOM: [`../docs/hardware.md`](../docs/hardware.md). Simulator: [`../app/sim/README.md`](../app/sim/README.md).
 
+**KiCad PCB projects:** [`kicad/`](kicad/) - live motherboard + cartridge, custom `Retr01_Lib.pretty`, archives. Start with [`kicad/README.md`](kicad/README.md).
+
 Swap / alternate parts notes live under [`candidates/`](candidates/).
 
 ## Core BOM parts

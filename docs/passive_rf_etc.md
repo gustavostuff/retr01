@@ -161,7 +161,7 @@ Board clocks matter for layout cleanliness. They are not automatically a show-st
 | **J36** | **EDAC 395-036-520-201** (straight / vertical 2x18) | Stock stand-in `PinSocket_2x18_P2.54mm_Vertical` until EDAC CAD. Retr01-C console later: **395-036-559-212** right-angle + Horizontal stand-in (separate board, not dual-footprint) |
 | **U725** | **AD725ARZ** | Chip is **wide-body SOIC-16** (7.50 mm / 300 mil, no DIP SKU from ADI). **Only intentional SMD IC on the mobo.** **Mobo footprint: DIP-16** (`Package_DIP:DIP-16_W7.62mm`). Adapter: **Proto Advantage PA0006** (SOIC-16 300 mil to DIP-16), [store link](http://www.proto-advantage.com/store/product_info.php?products_id=2200006). First-spin board stays fully THT via that adapter. |
 
-**You build yourself:** Optionally refine J36 from EDAC drawing. TRS + RCJ footprints are in `Retr01_Lib.pretty`.
+**You build yourself:** Optionally refine J36 from EDAC drawing. TRS + RCJ footprints are in [`hw/kicad/Retr01_Lib.pretty`](../hw/kicad/Retr01_Lib.pretty). PCB projects: [`hw/kicad/README.md`](../hw/kicad/README.md).
 
 ---
 
