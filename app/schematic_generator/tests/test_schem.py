@@ -69,6 +69,12 @@ class TestBom(unittest.TestCase):
         self.assertIn("PJ-063AH", BOM_BY_REFDES["J1"].footprint)
         self.assertIn("AD725ARZ", BOM_BY_REFDES["U725"].role)
         self.assertIn("DIP-16", BOM_BY_REFDES["U725"].footprint)
+        # KiCad 9+/10 vertical axials (standing) for board density.
+        self.assertIn("P2.54mm_Vertical", BOM_BY_REFDES["Rphi"].footprint)
+        self.assertIn("P2.54mm_Vertical", BOM_BY_REFDES["TvsV1"].footprint)
+        self.assertIn("Vertical_Fastron_MECC", BOM_BY_REFDES["Lytrap"].footprint)
+        self.assertTrue(BOM_BY_REFDES["TvsV1"].bringup_omit)
+        self.assertTrue(BOM_BY_REFDES["Rarc1_1"].bringup_omit)
 
     def test_arcade_pin_names(self):
         from retr01_schem.pinmap import M1284_P1, M1284_P2, PIN_TEMPLATES
@@ -214,9 +220,27 @@ class TestManifest(unittest.TestCase):
         self.assertIn("Raterm", refs)
         self.assertIn("RR2", refs)  # red MSB 1k
         self.assertIn("Rcd0", refs)
-        self.assertIn("TvsCa0", refs)
-        self.assertIn("Rarc1_1", refs)
         self.assertIn("Rphi", refs)
+        # Default BRINGUP profile: no TVS / arcade series on the netlist.
+        self.assertNotIn("TvsCa0", refs)
+        self.assertNotIn("Rarc1_1", refs)
+        self.assertIn("J5", refs)
+
+    def test_full_esd_profile_has_tvs_and_arcade_series(self):
+        from retr01_schem.bom import PassiveProfile, set_passive_profile
+
+        set_passive_profile(PassiveProfile.FULL)
+        try:
+            refs = {c.a_refdes for c in build_manifest()} | {c.b_refdes for c in build_manifest()}
+            self.assertIn("TvsCa0", refs)
+            self.assertIn("Rarc1_1", refs)
+            from retr01_schem.bom import entries_for_board, BoardId
+
+            populated = {e.refdes for e in entries_for_board(BoardId.MOBO)}
+            self.assertIn("TvsCa0", populated)
+            self.assertIn("Rarc1_1", populated)
+        finally:
+            set_passive_profile(PassiveProfile.BRINGUP)
 
     def test_video_prom_bit_mapping(self):
         """Studio packing (R<<5)|(G<<2)|B → D7..D5 red, D4..D2 green, D1..D0 blue."""

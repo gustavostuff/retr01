@@ -24,7 +24,7 @@ from retr01_schem.board import (
     generate_both_netlists,
     validate_bom_counts,
 )
-from retr01_schem.bom import BoardId
+from retr01_schem.bom import BoardId, PassiveProfile, get_passive_profile, set_passive_profile
 from retr01_schem.cart_manifest import build_cart_manifest
 from retr01_schem.manifest import build_manifest, manifest_gaps
 
@@ -39,7 +39,14 @@ def main() -> int:
     )
     ap.add_argument("--manifest-only", action="store_true", help="write wiring manifest JSON only")
     ap.add_argument("--check", action="store_true", help="validate BOM counts + J36 contract and exit")
+    ap.add_argument(
+        "--full-esd",
+        action="store_true",
+        help="FULL passive profile: cart/TRS TVS + arcade 47 ohm series (default is BRINGUP)",
+    )
     args = ap.parse_args()
+
+    set_passive_profile(PassiveProfile.FULL if args.full_esd else PassiveProfile.BRINGUP)
 
     errs = validate_bom_counts()
     if errs:
@@ -49,7 +56,7 @@ def main() -> int:
 
     if args.check:
         print(
-            f"OK: BOM + J36 contract "
+            f"OK: BOM + J36 contract profile={get_passive_profile().value} "
             f"({len(build_manifest())} mobo / {len(build_cart_manifest())} cart connections)"
         )
         return 0
@@ -67,6 +74,7 @@ def main() -> int:
         return 0
 
     paths = generate_both_netlists(args.out)
+    print(f"profile: {get_passive_profile().value}")
     print(f"wrote {paths['mobo']}")
     print(f"wrote {paths['cart']}")
     print(f"wrote {args.out / 'retr01_wiring_manifest.json'}")

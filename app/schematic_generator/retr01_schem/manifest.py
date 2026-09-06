@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import List
 
 from . import pinmap as P
+from .bom import include_arcade_series, include_esd_tvs
 
 
 @dataclass(frozen=True)
@@ -138,11 +139,12 @@ def _manifest_core() -> List[Connection]:
     ]
 
     for i in range(8):
-        # Cart data: MCU 245 -- 33Ω -- edge + TVS (docs/passive_rf_etc.md)
+        # Cart data: MCU 245 -- 33Ω -- edge (+ TVS when FULL profile)
         m.append(Connection(f"CART_D{i}_MCU", "U20C", P.HC245_B[i], f"Rcd{i}", "1", "docs/cart.md ESD"))
         m.append(Connection(f"CART_D{i}", f"Rcd{i}", "2", "J36", P.cart_b(i + 4), "docs/cart.md ESD"))
-        m.append(Connection(f"CART_D{i}", f"TvsCd{i}", "1", "J36", P.cart_b(i + 4), "docs/cart.md ESD"))
-        m.append(Connection("GND", f"TvsCd{i}", "2", "GND", "GND", "docs/cart.md ESD"))
+        if include_esd_tvs():
+            m.append(Connection(f"CART_D{i}", f"TvsCd{i}", "1", "J36", P.cart_b(i + 4), "docs/cart.md ESD"))
+            m.append(Connection("GND", f"TvsCd{i}", "2", "GND", "GND", "docs/cart.md ESD"))
         m.append(Connection(f"CPU_D{i}", "U1", P.CPU_D[i], "U20C", P.HC245_A[i], "cart 245"))
         m.append(Connection(f"CPU_D{i}", "U1", P.CPU_D[i], "U1284", P.M1284_DQ[i], "wire_io OAM"))
         m.append(Connection(f"CPU_D{i}", "U1", P.CPU_D[i], "U328", P.M328_DQ[i], "wire_io APU"))
@@ -182,18 +184,22 @@ def _manifest_cart_edge() -> List[Connection]:
     m += [
         Connection("I2C_SDA_MCU", "U1284", P.M1284_SDA, "Rcsda", "1", src),
         Connection("I2C_SDA", "Rcsda", "2", "J36", P.cart_a(3), src),
-        Connection("I2C_SDA", "TvsSda", "1", "J36", P.cart_a(3), src),
-        Connection("GND", "TvsSda", "2", "GND", "GND", src),
         Connection("I2C_SCL_MCU", "U1284", P.M1284_SCL, "Rcscl", "1", src),
         Connection("I2C_SCL", "Rcscl", "2", "J36", P.cart_b(3), src),
-        Connection("I2C_SCL", "TvsScl", "1", "J36", P.cart_b(3), src),
-        Connection("GND", "TvsScl", "2", "GND", "GND", src),
     ]
+    if include_esd_tvs():
+        m += [
+            Connection("I2C_SDA", "TvsSda", "1", "J36", P.cart_a(3), src),
+            Connection("GND", "TvsSda", "2", "GND", "GND", src),
+            Connection("I2C_SCL", "TvsScl", "1", "J36", P.cart_b(3), src),
+            Connection("GND", "TvsScl", "2", "GND", "GND", src),
+        ]
     for i in range(14):
         edge = P.cart_a(i + 4)
         m.append(Connection(f"CART_A{i}", "U1", P.CPU_A[i], "J36", edge, src))
-        m.append(Connection(f"CART_A{i}", f"TvsCa{i}", "1", "J36", edge, src))
-        m.append(Connection("GND", f"TvsCa{i}", "2", "GND", "GND", src))
+        if include_esd_tvs():
+            m.append(Connection(f"CART_A{i}", f"TvsCa{i}", "1", "J36", edge, src))
+            m.append(Connection("GND", f"TvsCa{i}", "2", "GND", "GND", src))
     for i, edge_n in enumerate(range(13, 18)):
         bit = 14 + i
         m.append(
@@ -206,19 +212,23 @@ def _manifest_cart_edge() -> List[Connection]:
                 src,
             )
         )
-        m.append(Connection(f"CART_A{bit}", f"TvsCa{bit}", "1", "J36", P.cart_b(edge_n), src))
-        m.append(Connection("GND", f"TvsCa{bit}", "2", "GND", "GND", src))
-    # CART_D0..7: series+TVS already in _manifest_core.
+        if include_esd_tvs():
+            m.append(Connection(f"CART_A{bit}", f"TvsCa{bit}", "1", "J36", P.cart_b(edge_n), src))
+            m.append(Connection("GND", f"TvsCa{bit}", "2", "GND", "GND", src))
+    # CART_D0..7: series (+ TVS when FULL) already in _manifest_core.
     m += [
         Connection("CART_OE_MCU", "UPLDB", P.UPLDB_CART_OE, "Rcoe", "1", src),
         Connection("CART_OE_N", "Rcoe", "2", "J36", P.cart_b(12), src),
-        Connection("CART_OE_N", "TvsOe", "1", "J36", P.cart_b(12), src),
-        Connection("GND", "TvsOe", "2", "GND", "GND", src),
         Connection("CART_WE_MCU", "UPLDB", P.UPLDB_CART_WE, "Rcwe", "1", src),
         Connection("CART_WE_N", "Rcwe", "2", "J36", P.cart_b(18), src),
-        Connection("CART_WE_N", "TvsWe", "1", "J36", P.cart_b(18), src),
-        Connection("GND", "TvsWe", "2", "GND", "GND", src),
     ]
+    if include_esd_tvs():
+        m += [
+            Connection("CART_OE_N", "TvsOe", "1", "J36", P.cart_b(12), src),
+            Connection("GND", "TvsOe", "2", "GND", "GND", src),
+            Connection("CART_WE_N", "TvsWe", "1", "J36", P.cart_b(18), src),
+            Connection("GND", "TvsWe", "2", "GND", "GND", src),
+        ]
     return m
 
 def _manifest_power_io() -> List[Connection]:
@@ -298,34 +308,42 @@ def _manifest_power_io() -> List[Connection]:
         Connection("PAD_VCC_P1", "F2", "2", "J3", P.TRS_TIP, ctrl),
         Connection("PAD_VCC_P1", "Cpad1", "1", "J3", P.TRS_TIP, passives),
         Connection("GND", "Cpad1", "2", "GND", "GND", passives),
-        Connection("PAD_VCC_P1", "TvsV1", "1", "J3", P.TRS_TIP, passives),
-        Connection("GND", "TvsV1", "2", "GND", "GND", passives),
         Connection("GND", "J3", P.TRS_SLEEVE, "GND", "GND", ctrl),
         Connection("+5V", "F3", "1", "+5V", "+5V", ctrl),
         Connection("PAD_VCC_P2", "F3", "2", "J4", P.TRS_TIP, ctrl),
         Connection("PAD_VCC_P2", "Cpad2", "1", "J4", P.TRS_TIP, passives),
         Connection("GND", "Cpad2", "2", "GND", "GND", passives),
-        Connection("PAD_VCC_P2", "TvsV2", "1", "J4", P.TRS_TIP, passives),
-        Connection("GND", "TvsV2", "2", "GND", "GND", passives),
         Connection("GND", "J4", P.TRS_SLEEVE, "GND", "GND", ctrl),
         Connection("+5V", "Rpu1", "1", "+5V", "+5V", ctrl),
         Connection("PAD_DATA", "Rpu1", "2", "U1284", P.M1284_PAD_DATA, ctrl),
         Connection("PAD_DATA", "U1284", P.M1284_PAD_DATA, "Rdata1", "1", passives),
         Connection("PAD_DATA_P1", "Rdata1", "2", "J3", P.TRS_RING, passives),
-        Connection("PAD_DATA_P1", "TvsD1", "1", "J3", P.TRS_RING, passives),
-        Connection("GND", "TvsD1", "2", "GND", "GND", passives),
         Connection("PAD_DATA", "U1284", P.M1284_PAD_DATA, "Rdata2", "1", passives),
         Connection("PAD_DATA_P2", "Rdata2", "2", "J4", P.TRS_RING, passives),
-        Connection("PAD_DATA_P2", "TvsD2", "1", "J4", P.TRS_RING, passives),
-        Connection("GND", "TvsD2", "2", "GND", "GND", passives),
     ]
+    if include_esd_tvs():
+        m += [
+            Connection("PAD_VCC_P1", "TvsV1", "1", "J3", P.TRS_TIP, passives),
+            Connection("GND", "TvsV1", "2", "GND", "GND", passives),
+            Connection("PAD_VCC_P2", "TvsV2", "1", "J4", P.TRS_TIP, passives),
+            Connection("GND", "TvsV2", "2", "GND", "GND", passives),
+            Connection("PAD_DATA_P1", "TvsD1", "1", "J3", P.TRS_RING, passives),
+            Connection("GND", "TvsD1", "2", "GND", "GND", passives),
+            Connection("PAD_DATA_P2", "TvsD2", "1", "J4", P.TRS_RING, passives),
+            Connection("GND", "TvsD2", "2", "GND", "GND", passives),
+        ]
     labels = ("RIGHT", "LEFT", "DOWN", "UP", "X", "Y", "COIN", "START")
     for i, lab in enumerate(labels):
         n = i + 1
-        m.append(Connection(f"P1_{lab}_J", "J5", str(n), f"Rarc1_{n}", "1", f"{ctrl} J5"))
-        m.append(Connection(f"P1_{lab}", f"Rarc1_{n}", "2", "U1284", P.M1284_P1[i], f"{ctrl} J5"))
-        m.append(Connection(f"P2_{lab}_J", "J6", str(n), f"Rarc2_{n}", "1", f"{ctrl} J6"))
-        m.append(Connection(f"P2_{lab}", f"Rarc2_{n}", "2", "U1284", P.M1284_P2[i], f"{ctrl} J6"))
+        if include_arcade_series():
+            m.append(Connection(f"P1_{lab}_J", "J5", str(n), f"Rarc1_{n}", "1", f"{ctrl} J5"))
+            m.append(Connection(f"P1_{lab}", f"Rarc1_{n}", "2", "U1284", P.M1284_P1[i], f"{ctrl} J5"))
+            m.append(Connection(f"P2_{lab}_J", "J6", str(n), f"Rarc2_{n}", "1", f"{ctrl} J6"))
+            m.append(Connection(f"P2_{lab}", f"Rarc2_{n}", "2", "U1284", P.M1284_P2[i], f"{ctrl} J6"))
+        else:
+            # BRINGUP: headers wire straight to 1284 (no 47 ohm series).
+            m.append(Connection(f"P1_{lab}", "J5", str(n), "U1284", P.M1284_P1[i], f"{ctrl} J5"))
+            m.append(Connection(f"P2_{lab}", "J6", str(n), "U1284", P.M1284_P2[i], f"{ctrl} J6"))
     m += [
         Connection("GND", "J5", "9", "GND", "GND", f"{ctrl} J5"),
         Connection("GND", "J5", "10", "GND", "GND", f"{ctrl} J5"),

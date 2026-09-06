@@ -71,6 +71,17 @@ Never snake return current through video or pad-port copper. Stitch GND vias at 
 
 **Package policy (arcade / console):** all mobo passives are **THT** (axial R, disc ceramic C, radial electrolytic where noted, axial TVS/inductor). The only SMD silicon is **AD725ARZ** on **Proto Advantage PA0006** (DIP-16 holes on the PCB). Retr01-H may revisit SMD later.
 
+**KiCad footprints** (from `bom.py`): standing axials for density. R `Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical`, TVS/diode `Diode_THT:D_DO-35_SOD27_P2.54mm_Vertical_CathodeUp`, YTRAP L `Inductor_THT:L_Axial_L11.0mm_D4.5mm_P5.08mm_Vertical_Fastron_MECC`.
+
+**Passive profiles** (`python generate.py`):
+
+| Profile | Flag | What changes |
+|---------|------|--------------|
+| **BRINGUP** (default) | (none) | No cart/TRS **TVS**. No arcade **47 ohm** series (J5/J6 wire straight to 1284). Keeps cart **33 ohm** series, R-2R, bypass, Quilter 0R bridges. |
+| **FULL** | `--full-esd` | Production ESD clamps + arcade series resistors. |
+
+Populate TVS / arcade series on a later spin or regenerate with `--full-esd` when you want the full I/O protection BOM.
+
 ---
 
 ## Clocks and reset
@@ -133,7 +144,7 @@ Anything a human can touch gets a clamp **at the connector**, then a series limi
 
 | Item | Role |
 |------|------|
-| **TVS** (PESD5V0-class SOD-323) on cart **A0-A18**, **D0-D7**, **OE#**, **WE#**, **SDA**, **SCL** at J36 | ESD into flash / HC245 domain. In SKiDL as `TvsCa*` / `TvsCd*` / `TvsOe` / `TvsWe` / `TvsSda` / `TvsScl` |
+| **TVS** (PESD5V0-class SOD-323) on cart **A0-A18**, **D0-D7**, **OE#**, **WE#**, **SDA**, **SCL** at J36 | ESD into flash / HC245 domain. In SKiDL as `TvsCa*` / `TvsCd*` / `TvsOe` / `TvsWe` / `TvsSda` / `TvsScl`. **BRINGUP** netlist omits these (`python generate.py`). Use `--full-esd` for production. |
 | Series **33 ohm** on cart **D0-D7**, **OE#**, **WE#**, **SDA**, **SCL** (not on address - timing) | Clamp current + cable damp |
 | Arcade **47 ohm** series on each J5/J6 bitfield line | Locked in SKiDL (`Rarc1_*` / `Rarc2_*`) |
 | SCALE DIP + pull-ups/downs | **Locked:** open = **2x** default. Closed drives `SCALE_1X` high for **1x** |

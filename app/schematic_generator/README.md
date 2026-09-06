@@ -42,9 +42,12 @@ pip install -r requirements.txt
 
 python generate.py --check          # BOM validation only
 python generate.py --manifest-only  # wiring JSON + gap list
-python generate.py                  # KiCad netlist
+python generate.py                  # KiCad netlist (BRINGUP: no TVS / arcade series)
+python generate.py --full-esd       # production ESD + arcade 47 ohm series
 python -m unittest discover -s tests
 ```
+
+Default **BRINGUP** profile uses standing (vertical) axial footprints and omits cart/TRS TVS plus arcade series resistors. See [`docs/passive_rf_etc.md`](../../docs/passive_rf_etc.md).
 
 ## Source of truth
 

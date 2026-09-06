@@ -28,6 +28,30 @@ class BoardId(str, Enum):
     CART = "cart"
 
 
+class PassiveProfile(str, Enum):
+    """Board passive population.
+
+    BRINGUP (default generate): vertical axials, no cart/TRS TVS, no arcade series R.
+    FULL: production ESD clamps + arcade 47 ohm series.
+    """
+
+    BRINGUP = "bringup"
+    FULL = "full"
+
+
+_PASSIVE_PROFILE = PassiveProfile.BRINGUP
+
+
+def get_passive_profile() -> PassiveProfile:
+    return _PASSIVE_PROFILE
+
+
+def set_passive_profile(profile: PassiveProfile | str) -> PassiveProfile:
+    global _PASSIVE_PROFILE
+    _PASSIVE_PROFILE = PassiveProfile(profile)
+    return _PASSIVE_PROFILE
+
+
 @dataclass(frozen=True)
 class BomEntry:
     refdes: str
@@ -42,6 +66,8 @@ class BomEntry:
     # Power pin names for automated decoupling (None = skip).
     vcc_pin: Optional[str] = "VCC"
     gnd_pin: Optional[str] = "GND"
+    # Omit from BRINGUP netlist (still listed in BOM for FULL / docs).
+    bringup_omit: bool = False
 
 
 # KiCad footprints (Package_DIP library). Tune when Retr01_Lib symbols land.
@@ -54,11 +80,12 @@ _DIP16 = "Package_DIP:DIP-16_W7.62mm"
 _DIP14 = "Package_DIP:DIP-14_W7.62mm"
 _DIP8 = "Package_DIP:DIP-8_W7.62mm"
 # Arcade/console first spin is fully THT. Only AD725 silicon is SOIC (on PA0006 DIP adapter).
+# Vertical axials (P2.54) for board density. KiCad 9+ needs _Horizontal/_Vertical suffix.
 _C_CER = "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm"  # 22pF / 100nF class
 _C_ELEC = "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm"  # 10uF / 220uF class
-_R_AX = "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm"  # 1/4 W axial
-_TVS = "Diode_THT:D_DO-35_SOD27_P7.62mm"  # axial ESD / small-signal
-_L_AX = "Inductor_THT:L_Axial_L10.0mm_D4.5mm_P15.00mm"
+_R_AX = "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"  # 1/4 W axial standing
+_TVS = "Diode_THT:D_DO-35_SOD27_P2.54mm_Vertical_CathodeUp"  # axial ESD / Schottky standing
+_L_AX = "Inductor_THT:L_Axial_L11.0mm_D4.5mm_P5.08mm_Vertical_Fastron_MECC"  # ~68uH YTRAP
 # board.py still imports _C0603 / _R0603 names for decoupling / R-2R helpers.
 _C0603 = _C_CER
 _R0603 = _R_AX
@@ -334,10 +361,10 @@ BOM: List[BomEntry] = [
     BomEntry("F3", "PPTC", "TRS P2 VCC PPTC", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("Cpad1", "C_100N", "TRS P1 VCC decouple after PPTC", IslandId.MCU_LINEBUF, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("Cpad2", "C_100N", "TRS P2 VCC decouple after PPTC", IslandId.MCU_LINEBUF, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    BomEntry("TvsV1", "TVS_5V", "TRS P1 Tip ESD (PESD5V0-class)", IslandId.MCU_LINEBUF, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    BomEntry("TvsV2", "TVS_5V", "TRS P2 Tip ESD", IslandId.MCU_LINEBUF, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    BomEntry("TvsD1", "TVS_5V", "TRS P1 DATA ESD", IslandId.MCU_LINEBUF, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    BomEntry("TvsD2", "TVS_5V", "TRS P2 DATA ESD", IslandId.MCU_LINEBUF, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("TvsV1", "TVS_5V", "TRS P1 Tip ESD (PESD5V0-class)", IslandId.MCU_LINEBUF, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None, bringup_omit=True),
+    BomEntry("TvsV2", "TVS_5V", "TRS P2 Tip ESD", IslandId.MCU_LINEBUF, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None, bringup_omit=True),
+    BomEntry("TvsD1", "TVS_5V", "TRS P1 DATA ESD", IslandId.MCU_LINEBUF, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None, bringup_omit=True),
+    BomEntry("TvsD2", "TVS_5V", "TRS P2 DATA ESD", IslandId.MCU_LINEBUF, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None, bringup_omit=True),
     BomEntry("Rdata1", "R_47", "TRS P1 DATA series", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("Rdata2", "R_47", "TRS P2 DATA series", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("Rpu1", "R_4K7", "pad DATA pull-up (MCU side)", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
@@ -354,24 +381,24 @@ BOM: List[BomEntry] = [
     BomEntry("Rcsda", "R_33", "cart SDA series", IslandId.CART_SOCKET, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("Rcscl", "R_33", "cart SCL series", IslandId.CART_SOCKET, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     *[
-        BomEntry(f"TvsCd{i}", "TVS_5V", f"cart D{i} ESD", IslandId.CART_SOCKET, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None)
+        BomEntry(f"TvsCd{i}", "TVS_5V", f"cart D{i} ESD", IslandId.CART_SOCKET, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None, bringup_omit=True)
         for i in range(8)
     ],
-    BomEntry("TvsOe", "TVS_5V", "cart OE# ESD", IslandId.CART_SOCKET, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    BomEntry("TvsWe", "TVS_5V", "cart WE# ESD", IslandId.CART_SOCKET, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    BomEntry("TvsSda", "TVS_5V", "cart SDA ESD", IslandId.CART_SOCKET, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    BomEntry("TvsScl", "TVS_5V", "cart SCL ESD", IslandId.CART_SOCKET, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("TvsOe", "TVS_5V", "cart OE# ESD", IslandId.CART_SOCKET, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None, bringup_omit=True),
+    BomEntry("TvsWe", "TVS_5V", "cart WE# ESD", IslandId.CART_SOCKET, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None, bringup_omit=True),
+    BomEntry("TvsSda", "TVS_5V", "cart SDA ESD", IslandId.CART_SOCKET, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None, bringup_omit=True),
+    BomEntry("TvsScl", "TVS_5V", "cart SCL ESD", IslandId.CART_SOCKET, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None, bringup_omit=True),
     *[
-        BomEntry(f"TvsCa{i}", "TVS_5V", f"cart A{i} ESD", IslandId.CART_SOCKET, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None)
+        BomEntry(f"TvsCa{i}", "TVS_5V", f"cart A{i} ESD", IslandId.CART_SOCKET, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None, bringup_omit=True)
         for i in range(19)
     ],
-    # Arcade headers: 47Ω series on each bitfield line (docs/controllers.md)
+    # Arcade headers: 47Ω series on each bitfield line (docs/controllers.md). BRINGUP wires direct.
     *[
-        BomEntry(f"Rarc1_{i}", "R_47", f"arcade P1 bit {i} series", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None)
+        BomEntry(f"Rarc1_{i}", "R_47", f"arcade P1 bit {i} series", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None, bringup_omit=True)
         for i in range(1, 9)
     ],
     *[
-        BomEntry(f"Rarc2_{i}", "R_47", f"arcade P2 bit {i} series", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None)
+        BomEntry(f"Rarc2_{i}", "R_47", f"arcade P2 bit {i} series", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None, bringup_omit=True)
         for i in range(1, 9)
     ],
     # Sim / bench only
@@ -390,11 +417,25 @@ CART_IC_COUNT = 2
 
 
 def entries_for_board(board: BoardId, *, include_sim_only: bool = False) -> List[BomEntry]:
-    return [
-        e
-        for e in BOM
-        if e.board == board and (include_sim_only or not e.sim_only)
-    ]
+    profile = get_passive_profile()
+    out: List[BomEntry] = []
+    for e in BOM:
+        if e.board != board:
+            continue
+        if e.sim_only and not include_sim_only:
+            continue
+        if profile == PassiveProfile.BRINGUP and e.bringup_omit:
+            continue
+        out.append(e)
+    return out
+
+
+def include_esd_tvs() -> bool:
+    return get_passive_profile() == PassiveProfile.FULL
+
+
+def include_arcade_series() -> bool:
+    return get_passive_profile() == PassiveProfile.FULL
 
 
 def silicon_ic_entries(board: Optional[BoardId] = BoardId.MOBO) -> List[BomEntry]:

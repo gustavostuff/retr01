@@ -85,9 +85,9 @@ generate = SchLib(tool=SKIDL).add_parts(*[
             Pin(num='34',name='34',func=pin_types.UNSPEC),
             Pin(num='35',name='35',func=pin_types.UNSPEC),
             Pin(num='36',name='36',func=pin_types.UNSPEC)] }),
-        Part(**{ 'name':'C_100N', 'dest':TEMPLATE, 'tool':SKIDL, 'aliases':Alias({'C_100N'}), 'ref_prefix':'U', 'fplist':None, 'footprint':'Capacitor_SMD:C_0603_1608Metric', 'keywords':None, 'description':'', 'datasheet':None, 'pins':[
+        Part(**{ 'name':'C_100N', 'dest':TEMPLATE, 'tool':SKIDL, 'aliases':Alias({'C_100N'}), 'ref_prefix':'U', 'fplist':None, 'footprint':'Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm', 'keywords':None, 'description':'', 'datasheet':None, 'pins':[
             Pin(num='1',name='1',func=pin_types.UNSPEC),
             Pin(num='2',name='2',func=pin_types.UNSPEC)] }),
-        Part(**{ 'name':'R_0', 'dest':TEMPLATE, 'tool':SKIDL, 'aliases':Alias({'R_0'}), 'ref_prefix':'U', 'fplist':None, 'footprint':'Resistor_SMD:R_0603_1608Metric', 'keywords':None, 'description':'', 'datasheet':None, 'pins':[
+        Part(**{ 'name':'R_0', 'dest':TEMPLATE, 'tool':SKIDL, 'aliases':Alias({'R_0'}), 'ref_prefix':'U', 'fplist':None, 'footprint':'Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical', 'keywords':None, 'description':'', 'datasheet':None, 'pins':[
             Pin(num='1',name='1',func=pin_types.UNSPEC),
             Pin(num='2',name='2',func=pin_types.UNSPEC)] })])
