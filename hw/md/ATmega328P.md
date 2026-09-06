@@ -15,7 +15,7 @@
 
 ## What it is
 
-AVR 8-bit MCU. For **ATmega328P** specifically: **32 KB Flash**, **2 KB SRAM**, **1 KB EEPROM**, 23 I/O lines, timers/PWM, USART, SPI, TWI, ADC. Retr01 dedicates it to a **NES-style APU**: the 6502 writes register-like bytes in `$FE40-$FE5F`. This chip synthesizes audio (PWM or similar analog-friendly output).
+AVR 8-bit MCU. For **ATmega328P** specifically: **32 KB Flash**, **2 KB SRAM**, **1 KB EEPROM**, 23 I/O lines, timers/PWM, USART, SPI, TWI, ADC. Retr01 dedicates it to a **NES-style APU**: the 6502 writes register-like bytes in `$FE40-$FE5F`. This chip synthesizes audio (PWM or similar analog-friendly output). Program via 5 V ISP ([`programming.md`](../../docs/programming.md)).
 
 ## Retr01 role
 

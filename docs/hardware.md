@@ -4,7 +4,7 @@
 
 Passives, connectors, stackup, ESD/PPTC, and RF practice live in [`passive_rf_etc.md`](passive_rf_etc.md). Not here.
 
-**Related:** [`memory.md`](memory.md) (chips, read/write timing). [`graphics.md`](graphics.md) (VRAM, sprites). [`sound.md`](sound.md) (APU). [`cart.md`](cart.md) (cartridge + flasher). [`controllers.md`](controllers.md) (pads). [`passive_rf_etc.md`](passive_rf_etc.md) (non-IC). Per-chip notes: [`hw/md/`](../hw/md/). Bring-up sim: [`app/sim/`](../app/sim/README.md).
+**Related:** [`memory.md`](memory.md) (chips, read/write timing). [`graphics.md`](graphics.md) (VRAM, sprites). [`sound.md`](sound.md) (APU). [`cart.md`](cart.md) (cartridge + flasher). [`programming.md`](programming.md) (AVR / PLD / OTP / cart flash tools). [`controllers.md`](controllers.md) (pads). [`passive_rf_etc.md`](passive_rf_etc.md) (non-IC). Per-chip notes: [`hw/md/`](../hw/md/). Bring-up sim: [`app/sim/`](../app/sim/README.md).
 
 ---
 
@@ -204,6 +204,7 @@ Ports and passives: [`passive_rf_etc.md`](passive_rf_etc.md).
 | Machine EEPROM API | `$FE70`-`$FE72` + `RDY` stall ([`memory.md`](memory.md#atmega1284p-internal-eeprom-4-kb)). |
 | Aux pad protocol | Retr01-C 3-wire UART ([`controllers.md`](controllers.md)). |
 | Cart edge + flasher | 36-pin pinout + USB-C flasher ([`cart.md`](cart.md)). |
+| Chip programming | AVR ISP, ATF JEDEC, Color PROM OTP, cart flash ([`programming.md`](programming.md)). |
 | VBlank sprite budget | 1284 @ 20 MHz: ~25k cycles in VBlank. Full 64-entry 8x16 field ~9.6k cycles ([`graphics.md`](graphics.md#sprites)). |
 
 | Topic | Still open |

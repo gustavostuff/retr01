@@ -15,7 +15,7 @@
 
 ## What it is
 
-AVR 8-bit MCU: **128 KB Flash**, **16 KB SRAM**, **4 KB EEPROM**, 32 GPIO lines on four ports (A/B/C/D), timers with PWM, USART, SPI, TWI, ADC, JTAG. Retr01 uses it as a **dedicated helper MCU**, not the game CPU: it owns **OAM**, the **VBlank sprite field** + **HBlank BG0 line fill**, **controller bytes**, and **machine EEPROM**. APU stays on **328P** ([`hardware.md`](../../docs/hardware.md)).
+AVR 8-bit MCU: **128 KB Flash**, **16 KB SRAM**, **4 KB EEPROM**, 32 GPIO lines on four ports (A/B/C/D), timers with PWM, USART, SPI, TWI, ADC, JTAG. Retr01 uses it as a **dedicated helper MCU**, not the game CPU: it owns **OAM**, the **VBlank sprite field** + **HBlank BG0 line fill**, **controller bytes**, and **machine EEPROM**. APU stays on **328P** ([`hardware.md`](../../docs/hardware.md)). Program via 5 V ISP ([`programming.md`](../../docs/programming.md)).
 
 ## Retr01 role
 

@@ -156,7 +156,7 @@ Pads that miss a poll hold last state until the next good frame.
 |-------|--------|
 | Silicon / docs | Protocol locked (this file) |
 | Sim / emu | **Arcade** (default): Host Play drives `$FE60`/`$FE61` directly. **Pads**: Sim ATtiny85 entities + poll/reply into those ports (HUD ARCADE/PADS toggle). No TRS netlist / 1284 USART yet |
-| Firmware | 1284 pad firmware + ATtiny85 pad sketch. Post-schematic |
+| Firmware | 1284 pad firmware + ATtiny85 pad sketch. Post-schematic. Flash tools: [`programming.md`](programming.md) |
 
 ---
 

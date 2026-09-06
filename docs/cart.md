@@ -2,7 +2,7 @@
 
 Physical cartridge, edge connector, and USB-C programming hardware. Software image layout (`.retr01`) stays in [`memory.md`](memory.md).
 
-**Related:** [`hardware.md`](hardware.md) (motherboard cart path, [runners vs silicon](hardware.md#runners-today-vs-silicon-target)). [`memory.md`](memory.md) (flash map, MAP port). Save EEPROM API: [`memory.md`](memory.md#cart-save-eeprom-24c64-on-cartridge). Flasher is a **bench tool**, not part of the 32-IC motherboard count.
+**Related:** [`hardware.md`](hardware.md) (motherboard cart path, [runners vs silicon](hardware.md#runners-today-vs-silicon-target)). [`memory.md`](memory.md) (flash map, MAP port). Save EEPROM API: [`memory.md`](memory.md#cart-save-eeprom-24c64-on-cartridge). Bench programmers for all programmable parts: [`programming.md`](programming.md). Flasher is a **bench tool**, not part of the 32-IC motherboard count.
 
 ---
 
