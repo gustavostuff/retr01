@@ -70,6 +70,13 @@ class TestBom(unittest.TestCase):
         self.assertIn("PJ-063AH", BOM_BY_REFDES["J1"].footprint)
         self.assertIn("AD725ARZ", BOM_BY_REFDES["U725"].role)
         self.assertIn("DIP-16", BOM_BY_REFDES["U725"].footprint)
+        # Skinny DIPs (real parts are 0.300"). Do not use W15.24mm for these.
+        self.assertIn("DIP-24_W7.62mm", BOM_BY_REFDES["UPLDA"].footprint)
+        self.assertEqual(BOM_BY_REFDES["UPLDA"].footprint, BOM_BY_REFDES["UPLDV"].footprint)
+        self.assertIn("DIP-28_W7.62mm", BOM_BY_REFDES["U328"].footprint)
+        # Wide DIPs stay 600 mil where the silicon is.
+        self.assertIn("DIP-28_W15.24mm", BOM_BY_REFDES["U3"].footprint)
+        self.assertIn("DIP-40_W15.24mm", BOM_BY_REFDES["U1"].footprint)
         # KiCad 9+/10 vertical axials (standing) for board density.
         self.assertIn("P2.54mm_Vertical", BOM_BY_REFDES["Rphi"].footprint)
         self.assertIn("P2.54mm_Vertical", BOM_BY_REFDES["TvsV1"].footprint)

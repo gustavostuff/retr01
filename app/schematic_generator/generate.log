@@ -84,335 +84,335 @@ WARNING: Merging two named nets (LB_A14 and P2_COIN) into LB_A14. @ [/home/g/Rep
 WARNING: Merging two named nets (MCU_LB_A6 and LB_A14) into MCU_LB_A6. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:410=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:403]
 WARNING: Merging two named nets (MCU_LB_A7 and P2_START) into MCU_LB_A7. @ [/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:410=>/home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:403]
 WARNING: Missing tag on W65C02S instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag hPlzQI48H8 generated for W65C02S.
+WARNING: Random tag YSS2t5ZPWU generated for W65C02S.
 WARNING: Missing tag on AS6C62256 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag AqvM7oAjh8 generated for AS6C62256.
+WARNING: Random tag uvTL6xEwWs generated for AS6C62256.
 WARNING: Missing tag on ATmega1284P instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag iqIOdj2Xyz generated for ATmega1284P.
+WARNING: Random tag 8BBZr6sl1y generated for ATmega1284P.
 WARNING: Missing tag on ATmega328P instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 3hKpVZ0xrx generated for ATmega328P.
+WARNING: Random tag 7k1QSPXYIN generated for ATmega328P.
 WARNING: Missing tag on AS6C62256 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag as_7GEfgx3 generated for AS6C62256.
+WARNING: Random tag XEJtI5w4X9 generated for AS6C62256.
 WARNING: Missing tag on AS6C62256 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag R14yixx8Bp generated for AS6C62256.
+WARNING: Random tag ULTYGxhBoq generated for AS6C62256.
 WARNING: Missing tag on AT27C256R instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 41ja7eSuD9 generated for AT27C256R.
+WARNING: Random tag FkbkjFZvwr generated for AT27C256R.
 WARNING: Missing tag on ATF22V10 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag a16dx9A2eR generated for ATF22V10.
+WARNING: Random tag sR0pDbVq0F generated for ATF22V10.
 WARNING: Missing tag on ATF22V10 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 4BgYc2ss4z generated for ATF22V10.
+WARNING: Random tag 7tG4NFk1KM generated for ATF22V10.
 WARNING: Missing tag on ATF22V10 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag EWXUQ2ltVd generated for ATF22V10.
+WARNING: Random tag Q02obQIpaE generated for ATF22V10.
 WARNING: Missing tag on ATF22V10 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag hHwiim0xVe generated for ATF22V10.
+WARNING: Random tag bkAztrCNjr generated for ATF22V10.
 WARNING: Missing tag on ATF22V10 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag erxKPTmiFz generated for ATF22V10.
+WARNING: Random tag f9911btLqm generated for ATF22V10.
 WARNING: Missing tag on SN74HC157 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 2gtIPaUvYN generated for SN74HC157.
+WARNING: Random tag eEtpYnRjYE generated for SN74HC157.
 WARNING: Missing tag on SN74HC157 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag _E1P15hzqz generated for SN74HC157.
+WARNING: Random tag gYxryhGUi1 generated for SN74HC157.
 WARNING: Missing tag on SN74HC157 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag uUvPzlRqng generated for SN74HC157.
+WARNING: Random tag 1XrKrehbWP generated for SN74HC157.
 WARNING: Missing tag on SN74HC157 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag ezo0jm8sxU generated for SN74HC157.
+WARNING: Random tag sLyvRSI_c5 generated for SN74HC157.
 WARNING: Missing tag on SN74HC157 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag Vw6vGRaoF0 generated for SN74HC157.
+WARNING: Random tag M86o7xkbqX generated for SN74HC157.
 WARNING: Missing tag on SN74HC157 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag CZMnBMMJML generated for SN74HC157.
+WARNING: Random tag 3CJUPQmpe4 generated for SN74HC157.
 WARNING: Missing tag on SN74HC245 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag uHUfJP3hya generated for SN74HC245.
+WARNING: Random tag 5UnZJLWhce generated for SN74HC245.
 WARNING: Missing tag on SN74HC245 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag yzL6pd_5l5 generated for SN74HC245.
+WARNING: Random tag TDvR176fiJ generated for SN74HC245.
 WARNING: Missing tag on SN74HC245 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag hvgimKtHOX generated for SN74HC245.
+WARNING: Random tag CUKP7iJWEP generated for SN74HC245.
 WARNING: Missing tag on SN74HC14 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag GKyxsPvvXq generated for SN74HC14.
+WARNING: Random tag 367L3mrbAx generated for SN74HC14.
 WARNING: Missing tag on OSC8M instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag FYzIdhZ6Ut generated for OSC8M.
+WARNING: Random tag xGYHWnHpqS generated for OSC8M.
 WARNING: Missing tag on OSC_DOT instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag ru4cyBUKgI generated for OSC_DOT.
+WARNING: Random tag vhmj1Q4bDS generated for OSC_DOT.
 WARNING: Missing tag on AD725 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag d6F2BgPB2H generated for AD725.
+WARNING: Random tag pCkSRM7QfW generated for AD725.
 WARNING: Missing tag on OSC_4FSC instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag LKcpcgl8_V generated for OSC_4FSC.
+WARNING: Random tag vHAzqyt7WZ generated for OSC_4FSC.
 WARNING: Missing tag on XTAL_20M instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag lLRvTYHRrY generated for XTAL_20M.
+WARNING: Random tag Vi3GUvK0dN generated for XTAL_20M.
 WARNING: Missing tag on XTAL_16M instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 1_hIb48atZ generated for XTAL_16M.
+WARNING: Random tag NOjO3GhnTc generated for XTAL_16M.
 WARNING: Missing tag on C_22P instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 35r2SqWDRB generated for C_22P.
+WARNING: Random tag ScwPhl32RK generated for C_22P.
 WARNING: Missing tag on C_22P instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 143aeRUHl0 generated for C_22P.
+WARNING: Random tag a2qdRnfAPU generated for C_22P.
 WARNING: Missing tag on C_22P instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag sZVlzptyrA generated for C_22P.
+WARNING: Random tag 77UC6zNpD_ generated for C_22P.
 WARNING: Missing tag on C_22P instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag OAFBs_SlTC generated for C_22P.
+WARNING: Random tag 2KcbLjqaUG generated for C_22P.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag Ocqgyjj9H5 generated for C_100N.
+WARNING: Random tag iwCGRsVWg1 generated for C_100N.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag NQlrLwwLgY generated for C_100N.
+WARNING: Random tag KZDB7dFnn_ generated for C_100N.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag YmfzbQysUO generated for C_100N.
+WARNING: Random tag KJ5zgdjGj6 generated for C_100N.
 WARNING: Missing tag on R_75 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag bR_1UwW2vF generated for R_75.
+WARNING: Random tag tKKTAivOs4 generated for R_75.
 WARNING: Missing tag on L_YTRAP instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag HILK1Z38gO generated for L_YTRAP.
+WARNING: Random tag l5GH3E1_Z0 generated for L_YTRAP.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag JAQUBTjXgR generated for C_100N.
+WARNING: Random tag xlY71Jyds8 generated for C_100N.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag mhJ03Fd1YI generated for C_100N.
+WARNING: Random tag hFvUfTnrty generated for C_100N.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag Uv6gBGvGSX generated for C_100N.
+WARNING: Random tag 6wugqF1KnN generated for C_100N.
 WARNING: Missing tag on CART_EDGE_36 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag FF7bp3F_w6 generated for CART_EDGE_36.
+WARNING: Random tag C9v_XysUSL generated for CART_EDGE_36.
 WARNING: Missing tag on BARREL_5V instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag ikxz57jfPX generated for BARREL_5V.
+WARNING: Random tag tPQzuhr8LF generated for BARREL_5V.
 WARNING: Missing tag on RGBS_HDR instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 778wAsg3jr generated for RGBS_HDR.
+WARNING: Random tag ojl393XSui generated for RGBS_HDR.
 WARNING: Missing tag on TRS_P1 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag MKnZkRggPl generated for TRS_P1.
+WARNING: Random tag Wov4nmoAv6 generated for TRS_P1.
 WARNING: Missing tag on TRS_P2 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 9KRZF7_rWs generated for TRS_P2.
+WARNING: Random tag MBeEecd_D7 generated for TRS_P2.
 WARNING: Missing tag on ARCADE_P1 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 7ysSFnZ8JF generated for ARCADE_P1.
+WARNING: Random tag 1cW2fRf9Wq generated for ARCADE_P1.
 WARNING: Missing tag on ARCADE_P2 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag zOhEiy_haR generated for ARCADE_P2.
+WARNING: Random tag Ptyhoq6qIP generated for ARCADE_P2.
 WARNING: Missing tag on CAB_PWR_RST instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 31UbUDlB1R generated for CAB_PWR_RST.
+WARNING: Random tag A4Jya9gTsx generated for CAB_PWR_RST.
 WARNING: Missing tag on SCALE_SW instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag am0cZWm4OA generated for SCALE_SW.
+WARNING: Random tag kPh53wJt2C generated for SCALE_SW.
 WARNING: Missing tag on R_10K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag gikaZ6IKhX generated for R_10K.
+WARNING: Random tag NND6WFd4Vp generated for R_10K.
 WARNING: Missing tag on AUDIO_OUT instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag ES5cnHoDp6 generated for AUDIO_OUT.
+WARNING: Random tag fe7YJrLrRc generated for AUDIO_OUT.
 WARNING: Missing tag on COMPOSITE_OUT instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 13_qwHoBcn generated for COMPOSITE_OUT.
+WARNING: Random tag qMXnCOUHWi generated for COMPOSITE_OUT.
 WARNING: Missing tag on PPTC instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 7UrqDbWOMA generated for PPTC.
+WARNING: Random tag AQt0gZQmwL generated for PPTC.
 WARNING: Missing tag on FERRITE instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag dCkHIr91iy generated for FERRITE.
+WARNING: Random tag rLTbkfq_pU generated for FERRITE.
 WARNING: Missing tag on SCHOTTKY instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag rY0BsB6krM generated for SCHOTTKY.
+WARNING: Random tag ylqqc_nITS generated for SCHOTTKY.
 WARNING: Missing tag on C_BULK instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag EaBO343lK6 generated for C_BULK.
+WARNING: Random tag IBxaDTehIT generated for C_BULK.
 WARNING: Missing tag on FERRITE instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 7S0T8ZqRsk generated for FERRITE.
+WARNING: Random tag uj5niCmQv5 generated for FERRITE.
 WARNING: Missing tag on C_10U instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag vtyAVNU4bN generated for C_10U.
+WARNING: Random tag 69hCjHhVaZ generated for C_10U.
 WARNING: Missing tag on PPTC instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag J00iW6D8V3 generated for PPTC.
+WARNING: Random tag QG4PE1RJRO generated for PPTC.
 WARNING: Missing tag on PPTC instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 3P1yItD6yY generated for PPTC.
+WARNING: Random tag 3GihYue4AT generated for PPTC.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag ScCo35OLHT generated for C_100N.
+WARNING: Random tag oatOnWjbak generated for C_100N.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 6ViG4NEfw4 generated for C_100N.
+WARNING: Random tag cfYUsNK71Q generated for C_100N.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag bJDirR30TB generated for R_47.
+WARNING: Random tag I_3ZExCz_i generated for R_47.
 WARNING: Missing tag on R_47 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag ldrgkF8pAp generated for R_47.
+WARNING: Random tag MZ7oLF0EXr generated for R_47.
 WARNING: Missing tag on R_4K7 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag qxIMvUtYfJ generated for R_4K7.
+WARNING: Random tag PnfciTB1q7 generated for R_4K7.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag gUkE2JW_gb generated for R_33.
+WARNING: Random tag OkbuZ3EMn9 generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 67jmYyFui_ generated for R_33.
+WARNING: Random tag bfHrL7El20 generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag xyhTiIrjUs generated for R_33.
+WARNING: Random tag FhBGQWYLv5 generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag FHVxJeL5g3 generated for R_33.
+WARNING: Random tag 5_eqp40SUa generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag eTuN5sOpxk generated for R_33.
+WARNING: Random tag 5bsnL2eCbU generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag OSIoG8eNad generated for R_33.
+WARNING: Random tag dypWRKAITw generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag TBxK_DkPzv generated for R_33.
+WARNING: Random tag 5gZAOmL4PS generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 2Pvf7UHgkx generated for R_33.
+WARNING: Random tag kA2Uiwnprn generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag uPNEKSKHWz generated for R_33.
+WARNING: Random tag bjZMI6Ej8S generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag pAHeHs20zV generated for R_33.
+WARNING: Random tag YLSeFUCLTA generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag hOqeGNOfY4 generated for R_33.
+WARNING: Random tag HTQEQOv4GX generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag DgmaNcUt8m generated for R_33.
+WARNING: Random tag t56y0WR9pT generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag zOHIU4lHDS generated for R_33.
+WARNING: Random tag BWXxtLFV_P generated for R_33.
 WARNING: Missing tag on R_33 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag KWUC22BT_c generated for R_33.
+WARNING: Random tag eWbFWipseR generated for R_33.
 WARNING: Missing tag on R_4K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag gmtc73WeeP generated for R_4K.
+WARNING: Random tag vvIEug_jeA generated for R_4K.
 WARNING: Missing tag on R_2K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag pS7HmAU8fg generated for R_2K.
+WARNING: Random tag qxzxCUNxrf generated for R_2K.
 WARNING: Missing tag on R_1K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag gMY0j84cSX generated for R_1K.
+WARNING: Random tag h8ieS8Bdkk generated for R_1K.
 WARNING: Missing tag on R_4K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag kVse9O2TLn generated for R_4K.
+WARNING: Random tag oW0LKGXDXM generated for R_4K.
 WARNING: Missing tag on R_2K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag Sa4a2_J7ut generated for R_2K.
+WARNING: Random tag vAZz7HAU0L generated for R_2K.
 WARNING: Missing tag on R_1K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag irAugOYt25 generated for R_1K.
+WARNING: Random tag ETXAAGM1Kw generated for R_1K.
 WARNING: Missing tag on R_2K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag nwHELTnx4N generated for R_2K.
+WARNING: Random tag 0bLeVtKyYg generated for R_2K.
 WARNING: Missing tag on R_1K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag H4Wmd6H_Jg generated for R_1K.
+WARNING: Random tag CEkE1xPtzj generated for R_1K.
 WARNING: Missing tag on R_75 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag xdAo3BXhHS generated for R_75.
+WARNING: Random tag P8S_CXp2gl generated for R_75.
 WARNING: Missing tag on R_75 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag tTereHfUBd generated for R_75.
+WARNING: Random tag N7gstyPUj9 generated for R_75.
 WARNING: Missing tag on R_75 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag OAxPfD9ft5 generated for R_75.
+WARNING: Random tag G8xaKPSEgi generated for R_75.
 WARNING: Missing tag on R_20K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag 0pWVeRGgHF generated for R_20K.
+WARNING: Random tag nKJOBoKmr0 generated for R_20K.
 WARNING: Missing tag on R_20K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag SNTlewN425 generated for R_20K.
+WARNING: Random tag 4mshToTBro generated for R_20K.
 WARNING: Missing tag on R_20K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag 754sVkuU53 generated for R_20K.
+WARNING: Random tag H67cj14BqV generated for R_20K.
 WARNING: Missing tag on R_20K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag cHC3PKS3Dl generated for R_20K.
+WARNING: Random tag owpNgBZ7yc generated for R_20K.
 WARNING: Missing tag on R_20K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag myA49r_gng generated for R_20K.
+WARNING: Random tag oGeUQheQHS generated for R_20K.
 WARNING: Missing tag on R_20K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag 2mj4izcGTG generated for R_20K.
+WARNING: Random tag nj7h26TJi5 generated for R_20K.
 WARNING: Missing tag on R_20K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag DOLPlG_7dK generated for R_20K.
+WARNING: Random tag qwlGxyKEba generated for R_20K.
 WARNING: Missing tag on R_20K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag Xr42hZy7wf generated for R_20K.
+WARNING: Random tag ZxL99xMZFu generated for R_20K.
 WARNING: Missing tag on R_10K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag Lkx6sVuoDJ generated for R_10K.
+WARNING: Random tag R4bRbZ1yLE generated for R_10K.
 WARNING: Missing tag on R_10K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag lXYElVuO3R generated for R_10K.
+WARNING: Random tag Y3MaauOcm2 generated for R_10K.
 WARNING: Missing tag on R_10K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag ODSB1vowGk generated for R_10K.
+WARNING: Random tag WLtXXX1Fav generated for R_10K.
 WARNING: Missing tag on R_10K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag 1Zf1IJg8un generated for R_10K.
+WARNING: Random tag NB_MoJGwXC generated for R_10K.
 WARNING: Missing tag on R_10K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag eewdfPdtOk generated for R_10K.
+WARNING: Random tag NNBzrLpyZO generated for R_10K.
 WARNING: Missing tag on R_10K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag 0wAynrBowC generated for R_10K.
+WARNING: Random tag QXXxg15tFD generated for R_10K.
 WARNING: Missing tag on R_10K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag CrqJNqTM1x generated for R_10K.
+WARNING: Random tag OyYnH8sRVd generated for R_10K.
 WARNING: Missing tag on R_20K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag J1rVz3cHrh generated for R_20K.
+WARNING: Random tag Fxgiu7iKzp generated for R_20K.
 WARNING: Missing tag on R_1K instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag EJM_j2Q5fq generated for R_1K.
+WARNING: Random tag RhSOiBFUym generated for R_1K.
 WARNING: Missing tag on C_10U_AUD instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag q6TGujEDed generated for C_10U_AUD.
+WARNING: Random tag d0I4N69fjP generated for C_10U_AUD.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag 58REiEB4_Y generated for C_100N.
+WARNING: Random tag NyDz6_KcED generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag upZrlHjDi9 generated for R_0.
+WARNING: Random tag tBbBoV7K97 generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag fZgSdNz5Ud generated for C_100N.
+WARNING: Random tag xi_fh_PGZF generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag eNKeDqa4VM generated for R_0.
+WARNING: Random tag jnDrBVLMbY generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag RlKw_D2XrL generated for C_100N.
+WARNING: Random tag V4gCFecqw9 generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag 5rxuor3mKz generated for R_0.
+WARNING: Random tag iiMhLBllqm generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag 1ShFpZHsm4 generated for C_100N.
+WARNING: Random tag FZuCfqHjcT generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag ZUlgOopUwq generated for R_0.
+WARNING: Random tag 7Pbfrdb9qp generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag nS05TCJGbR generated for C_100N.
+WARNING: Random tag YeqWm5iU8B generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag zL6hePkLor generated for R_0.
+WARNING: Random tag Z5X4jXKu59 generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag LAAAv6ecFx generated for C_100N.
+WARNING: Random tag SSA2txwCN7 generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag mmXjMWLpha generated for R_0.
+WARNING: Random tag kpiDR8An85 generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag Bszdh5f8Of generated for C_100N.
+WARNING: Random tag pAJsbqfpm5 generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag RmqphGotam generated for R_0.
+WARNING: Random tag 10qH9TjOSG generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag SUutavvD2J generated for C_100N.
+WARNING: Random tag TbozItOGcL generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag XmuZVh6E3s generated for R_0.
+WARNING: Random tag 3K0Ut3qj1n generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag 7UJhJDHhMw generated for C_100N.
+WARNING: Random tag 7YYQQqwPgz generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag unJob32XoF generated for R_0.
+WARNING: Random tag CkJFi_W6Pm generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag HFmIeOgb9Q generated for C_100N.
+WARNING: Random tag qnowwFRK5L generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag dPM7kjP2qs generated for R_0.
+WARNING: Random tag Y87srm89t6 generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag 2gJ5QYmkFM generated for C_100N.
+WARNING: Random tag Udl6a0Ik7n generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag oU9JdXsWVa generated for R_0.
+WARNING: Random tag LaVIwu8lKd generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag 9O1dUwpBDT generated for C_100N.
+WARNING: Random tag BiIpYUdLEj generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag V9cWjHpfLE generated for R_0.
+WARNING: Random tag STBVLiN0bg generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag j8gB07uLDX generated for C_100N.
+WARNING: Random tag mTMbt_n55g generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag vVqctxjXjp generated for R_0.
+WARNING: Random tag D2H431XHLD generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag wMDmmW7BMA generated for C_100N.
+WARNING: Random tag GOgJErpZz7 generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag xG0WBgXBPU generated for R_0.
+WARNING: Random tag f3XpKiMuPq generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag lkvwQrCJDQ generated for C_100N.
+WARNING: Random tag ZFrUBmiFcj generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag kbGjzrtOfs generated for R_0.
+WARNING: Random tag 3UjvK9Caou generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag 6bj8n6QQtc generated for C_100N.
+WARNING: Random tag r4phMii6qN generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag hElsCSYdyn generated for R_0.
+WARNING: Random tag 6SI7bmiqqF generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag QL3LEsN8rj generated for C_100N.
+WARNING: Random tag IhmNHWpaZ7 generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag AdUKeCPYSm generated for R_0.
+WARNING: Random tag CVdFS8IipI generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag 91SWA7NXam generated for C_100N.
+WARNING: Random tag rtD54WOjsW generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag goEtDegMWw generated for R_0.
+WARNING: Random tag g042OCCMvq generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag zZQyaWRmHI generated for C_100N.
+WARNING: Random tag nKreXeGo_0 generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag cXTPFpQGNw generated for R_0.
+WARNING: Random tag Q5GLm07sBm generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag TlbxgxOQmJ generated for C_100N.
+WARNING: Random tag 2t4f2YTTNq generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag rs2awSotJx generated for R_0.
+WARNING: Random tag QxEw_0c4xq generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag 8AxTKPw6YP generated for C_100N.
+WARNING: Random tag b7DvbKWWfz generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag _I2fvIzWvT generated for R_0.
+WARNING: Random tag PraFakPQhf generated for R_0.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag EpTNHvM8de generated for R_0.
+WARNING: Random tag y_tujHCCH_ generated for R_0.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag PAedMfnEoi generated for R_0.
+WARNING: Random tag Ok9UTXeY_G generated for R_0.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag f9AN4p0SaY generated for R_0.
+WARNING: Random tag tUzzEfEDf4 generated for R_0.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag jsYjeIJOvu generated for R_0.
+WARNING: Random tag dZJZqx0vcM generated for R_0.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag aV4AcfAnjb generated for R_0.
+WARNING: Random tag zdI3GXDJcT generated for R_0.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag 3dONAZOAKk generated for R_0.
+WARNING: Random tag Uy3oqdNd9u generated for R_0.
 WARNING: Missing tag on  instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:394.
 INFO: 398 warnings found while generating netlist.
 INFO: 0 errors found while generating netlist.
 
 WARNING: Missing tag on SST39SF040 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 8CB_Y27Dgo generated for SST39SF040.
+WARNING: Random tag t7CBKwoK0H generated for SST39SF040.
 WARNING: Missing tag on 24C64 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag c4adAJPmkk generated for 24C64.
+WARNING: Random tag L0pu1jK29H generated for 24C64.
 WARNING: Missing tag on CART_EDGE_36 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:103.
-WARNING: Random tag 4ADAQmAf2H generated for CART_EDGE_36.
+WARNING: Random tag mgTbSp3qhK generated for CART_EDGE_36.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag _rhnnVrQac generated for C_100N.
+WARNING: Random tag Hn5WUgtPO7 generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag 4hAOyAtiQC generated for R_0.
+WARNING: Random tag La0IkUyG8S generated for R_0.
 WARNING: Missing tag on C_100N instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag NVPxqG3xfg generated for C_100N.
+WARNING: Random tag CVtz2mZZQ2 generated for C_100N.
 WARNING: Missing tag on R_0 instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/parts.py:120.
-WARNING: Random tag yCIXc_xAgQ generated for R_0.
+WARNING: Random tag DISpJ5LBCk generated for R_0.
 WARNING: Missing tag on  instantiated at /home/g/Repos/retr01/app/schematic_generator/retr01_schem/board.py:394.
 INFO: 332 warnings found while generating netlist.
 INFO: 0 errors found while generating netlist.

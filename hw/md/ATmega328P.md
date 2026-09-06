@@ -8,7 +8,7 @@
 
 | | |
 |--|--|
-| Outline | PDIP-28, 600 mil |
+| Outline | PDIP-28, **300 mil** (ATmega328P-PU / 28P3) |
 | Body (nom.) | **35 x 8 mm** (length x width) |
 | Sim @ 4 px/mm | **140 x 32 px** horizontal (default) |
 | Reference | [`packages_dip.md`](packages_dip.md) |

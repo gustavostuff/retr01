@@ -21,10 +21,10 @@ JEDEC-class 600 mil for larger counts).
 |------|------|---------------|-------------------------|-------|
 | **W65C02S** | 40 | **52 x 16** | 208 x 64 | Measured / vendor. WDC DS omits outline |
 | **SST39SF040** | 32 | **42 x 14** | 168 x 56 | |
-| **AS6C62256** | 28 | **37 x 13** | 148 x 52 | |
-| **ATF22V10** | 24 | **32 x 8** | 128 x 32 | Narrow body |
-| **ATmega1284P** | 40 | **53 x 14** | 212 x 56 | |
-| **ATmega328P** | 28 | **35 x 8** | 140 x 32 | Narrow body |
+| **AS6C62256** | 28 | **37 x 13** | 148 x 52 | 600 mil |
+| **ATF22V10** | 24 | **32 x 8** | 128 x 32 | **300 mil**. KiCad `DIP-24_W7.62mm` |
+| **ATmega1284P** | 40 | **53 x 14** | 212 x 56 | 600 mil |
+| **ATmega328P** | 28 | **35 x 8** | 140 x 32 | **300 mil**. KiCad `DIP-28_W7.62mm` |
 
 ## 74HC family DIP (N / through-hole)
 
@@ -46,8 +46,9 @@ Used by: 74HC00/04/08/14/32 (14), 74HC157/161 (16), 74HC245/573/688 (20).
 | 14 | 300 mil | **19** | **6** | HC 14-pin |
 | 16 | 300 mil | **20** | **6** | HC 16-pin |
 | 20 | 300 mil | **25** | **6** | HC 20-pin |
-| 24 | 600 mil | **32** | **14** | AT28C16, PLD shells without override |
-| 28 | 600 mil | **36** | **14** | PRG stub, etc. |
+| 24 | 300 mil | **32** | **8** | ATF22V10 (not 600 mil) |
+| 28 | 600 mil | **36** | **14** | SRAM / EPROM class |
+| 28n | 300 mil | **35** | **8** | ATmega328P-PU |
 | 32 | 600 mil | **42** | **14** | default 32-pin |
 | 40 | 600 mil | **52** | **14** | default 40-pin |
 

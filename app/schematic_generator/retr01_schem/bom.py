@@ -71,10 +71,12 @@ class BomEntry:
 
 
 # KiCad footprints (Package_DIP library). Tune when Retr01_Lib symbols land.
-_DIP28 = "Package_DIP:DIP-28_W15.24mm"
+# Width: W7.62mm = 0.300" skinny, W15.24mm = 0.600" wide (JEDEC memory / 40-pin).
+_DIP28 = "Package_DIP:DIP-28_W15.24mm"  # AS6C62256, AT27C256R (600 mil)
+_DIP28N = "Package_DIP:DIP-28_W7.62mm"  # ATmega328P-PU (300 mil skinny)
 _DIP32 = "Package_DIP:DIP-32_W15.24mm"
 _DIP40 = "Package_DIP:DIP-40_W15.24mm"
-_DIP24 = "Package_DIP:DIP-24_W15.24mm"
+_DIP24 = "Package_DIP:DIP-24_W7.62mm"  # ATF22V10CQZ-20PU (300 mil skinny, not 600)
 _DIP20 = "Package_DIP:DIP-20_W7.62mm"
 _DIP16 = "Package_DIP:DIP-16_W7.62mm"
 _DIP14 = "Package_DIP:DIP-14_W7.62mm"
@@ -174,7 +176,7 @@ BOM: List[BomEntry] = [
     BomEntry("U1", "W65C02S", "game CPU 8 MHz", IslandId.CPU, 40, _DIP40, vcc_pin="VDD", gnd_pin="VSS"),
     BomEntry("U3", "AS6C62256", "system RAM", IslandId.CPU, 28, _DIP28, vcc_pin="VDD", gnd_pin="VSS"),
     BomEntry("U1284", "ATmega1284P", "OAM sprites pads EEPROM", IslandId.MCU_LINEBUF, 40, _DIP40),
-    BomEntry("U328", "ATmega328P", "APU", IslandId.APU, 28, _DIP28),
+    BomEntry("U328", "ATmega328P", "APU", IslandId.APU, 28, _DIP28N),
     BomEntry("U6", "AS6C62256", "interleaved VRAM", IslandId.VRAM, 28, _DIP28, vcc_pin="VDD", gnd_pin="VSS"),
     BomEntry("U41", "AS6C62256", "sprite line buffer", IslandId.MCU_LINEBUF, 28, _DIP28, vcc_pin="VDD", gnd_pin="VSS"),
     BomEntry("U24", "AT27C256R", "color PROM", IslandId.VIDEO, 28, _DIP28, vcc_pin="VCC", gnd_pin="VSS"),
