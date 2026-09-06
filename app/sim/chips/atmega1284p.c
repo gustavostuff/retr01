@@ -13,6 +13,17 @@ static void mcu_reset(R01sEntity *e) {
     memset(c->oam, 0xFF, sizeof(c->oam)); /* unused slots: tile == 0xFF */
     memset(c->eeprom_mb, 0, sizeof(c->eeprom_mb));
     c->oam_addr = 0;
+    c->soft_ppuctrl = 0;
+    c->soft_raster_ctrl = 0;
+    c->soft_bg0_x = 0;
+    c->soft_bg0_y = 0;
+    c->soft_pal_addr = 0;
+    c->soft_map_lo = 0;
+    c->soft_map_mid = 0;
+    c->soft_map_hi = 0;
+    c->soft_map_addr = 0;
+    c->soft_cart_a14_18 = 0;
+    c->soft_last_strobe = 0xFF;
     c->last_dq = 0;
     c->we_prev = 0;
     c->oe_prev = 0;
@@ -166,6 +177,81 @@ void r01s_atmega1284p_eeprom_poke(R01sAtmega1284p *chip, unsigned i, uint8_t dat
         return;
     }
     chip->eeprom_mb[i] = data;
+}
+
+static void soft_sync_map(R01sAtmega1284p *c) {
+    c->soft_map_addr =
+        ((uint32_t)c->soft_map_hi << 16) | ((uint32_t)c->soft_map_mid << 8) | c->soft_map_lo;
+    c->soft_cart_a14_18 = (uint8_t)((c->soft_map_addr >> 14) & 0x1Fu);
+}
+
+int r01s_atmega1284p_soft_write(R01sAtmega1284p *chip, uint8_t port, uint8_t data) {
+    if (!chip) {
+        return 0;
+    }
+    switch (port) {
+    case 0x00:
+        chip->soft_ppuctrl = data;
+        break;
+    case 0x05:
+        chip->soft_raster_ctrl = data;
+        break;
+    case 0x06:
+        chip->soft_bg0_x = data;
+        break;
+    case 0x07:
+        chip->soft_bg0_y = data;
+        break;
+    case 0x08:
+        chip->soft_pal_addr = (uint8_t)(data & 0x1Fu);
+        break;
+    case 0x90:
+        chip->soft_map_lo = data;
+        soft_sync_map(chip);
+        break;
+    case 0x91:
+        chip->soft_map_mid = data;
+        soft_sync_map(chip);
+        break;
+    case 0x92:
+        chip->soft_map_hi = data;
+        soft_sync_map(chip);
+        break;
+    default:
+        return 0;
+    }
+    chip->soft_last_strobe = port;
+    return 1;
+}
+
+uint8_t r01s_atmega1284p_soft_read(const R01sAtmega1284p *chip, uint8_t port) {
+    if (!chip) {
+        return 0;
+    }
+    switch (port) {
+    case 0x00:
+        return chip->soft_ppuctrl;
+    case 0x05:
+        return chip->soft_raster_ctrl;
+    case 0x06:
+        return chip->soft_bg0_x;
+    case 0x07:
+        return chip->soft_bg0_y;
+    case 0x08:
+        return chip->soft_pal_addr;
+    case 0x90:
+        return chip->soft_map_lo;
+    case 0x91:
+        return chip->soft_map_mid;
+    case 0x92:
+        return chip->soft_map_hi;
+    default:
+        return 0;
+    }
+}
+
+uint32_t r01s_atmega1284p_soft_map_addr(const R01sAtmega1284p *chip) {
+    return chip ? chip->soft_map_addr : 0;
 }
 
 uint32_t r01s_atmega1284p_clk_ticks(const R01sAtmega1284p *chip) {

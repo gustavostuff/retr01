@@ -27,8 +27,10 @@ HC logic (HC157 / HC245), SRAM, oscillators, and AD725 are **not** programmed. (
 
 | Ref (typical) | Part | Clock | Firmware job |
 |---------------|------|-------|--------------|
-| U1284 | ATmega1284P | 20 MHz | OAM / sprites, pads, machine EEPROM, cart I2C save |
+| U1284 | ATmega1284P | 20 MHz | OAM / sprites, pads, machine EEPROM, cart I2C save, soft `$FExx` |
 | U328 | ATmega328P | 16 MHz | APU (`$FE40`-`$FE5F`) |
+
+Soft `$FExx` stub (HC573-zero bank): [`fw/mcu1284/`](../fw/mcu1284/). Full sprite/pad firmware still TBD.
 
 **Interface:** 5 V **ISP** (SPI): `MOSI`, `MISO`, `SCK`, `RESET`, `VCC`, `GND`. Prefer a **6-pin** (2x3) ISP header or pogo pads per MCU so chips can stay in-socket.
 

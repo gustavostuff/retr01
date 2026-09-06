@@ -69,5 +69,13 @@ int main(void) {
     r01s_atmega1284p_eeprom_poke(&chip, 0, 0xA5);
     expect_true(r01s_atmega1284p_eeprom_peek(&chip, 0) == 0xA5, "eeprom mailbox");
 
+    expect_true(r01s_atmega1284p_soft_write(&chip, 0x08u, 0x15), "soft FE08 write");
+    expect_true(r01s_atmega1284p_soft_read(&chip, 0x08u) == 0x15, "soft FE08 read");
+    expect_true(r01s_atmega1284p_soft_write(&chip, 0x90u, 0x34), "soft FE90");
+    expect_true(r01s_atmega1284p_soft_write(&chip, 0x91u, 0x12), "soft FE91");
+    expect_true(r01s_atmega1284p_soft_write(&chip, 0x92u, 0x00), "soft FE92");
+    expect_true(r01s_atmega1284p_soft_map_addr(&chip) == 0x001234u, "soft map_addr");
+    expect_true(chip.soft_cart_a14_18 == (uint8_t)((0x001234u >> 14) & 0x1Fu), "cart A14-18");
+
     return test_done("test_atmega1284p");
 }

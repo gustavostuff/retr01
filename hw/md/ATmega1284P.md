@@ -27,7 +27,7 @@ AVR 8-bit MCU: **128 KB Flash**, **16 KB SRAM**, **4 KB EEPROM**, 32 GPIO lines 
 | Machine EEPROM | Internal 4 KB. CPU mailbox `$FE70`-`$FE72` + `RDY` ([`memory.md`](../../docs/memory.md)) |
 | Cart save I2C | Master to cart 24C64 via `$FE22`-`$FE24` |
 | CHR bus | May own cart CHR in **VBlank** (sprite field) and **HBlank** (BG0 line) while BG path is idle (do not share until island N proven) |
-| Soft `$FExx` (HC573-zero) | `$FE00`, `$FE05`, `$FE06`/`$FE07`, `$FE08`, `$FE90`-`$FE92` soft registers. Decode SEL strobes + CPU D |
+| Soft `$FExx` (HC573-zero) | `$FE00`, `$FE05`, `$FE06`/`$FE07`, `$FE08`, `$FE90`-`$FE92` soft registers. Decode SEL strobes + CPU D. AVR stub: [`fw/mcu1284/`](../../fw/mcu1284/) |
 | MAP seek | Soft 24-bit seek. Cart `A14`-`A18` driven by UPLDV registered export (hard pin path) |
 
 **Not** the BG beam path. **Not** the APU: that is ATmega328P.
@@ -46,7 +46,7 @@ Firmware contract (schematic pinmap):
 
 On strobe + write: sample DQ into the soft register bank. On MAP mid/hi writes, UPLDV also loads CART_A14-A18 from CPU D (hardware). Keep soft `map_addr` in sync for `$FE93` auto-inc.
 
-Sim: `r01s_board_peek_fe` / `r01s_board_poke_fe` on the board soft regs (no discrete HC573).
+Sim: `r01s_board_peek_fe` / `r01s_board_poke_fe` on the board soft regs, mirrored into `r01s_atmega1284p_soft_*`. AVR stub sources: [`fw/mcu1284/`](../../fw/mcu1284/).
 
 Cap: **16 sprites per logical scanline**. BG0 line is prepared one line ahead. Sprite field is full-playfield in VBlank. Not an RGB framebuffer.
 

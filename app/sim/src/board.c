@@ -926,6 +926,21 @@ void r01s_board_poke_fe(R01sBoard *b, uint8_t port, uint8_t v) {
     default:
         break;
     }
+    /* Soft ports owned by 1284 firmware also update the MCU soft bank. */
+    switch (port) {
+    case 0x00u:
+    case 0x05u:
+    case 0x06u:
+    case 0x07u:
+    case 0x08u:
+    case 0x90u:
+    case 0x91u:
+    case 0x92u:
+        (void)r01s_atmega1284p_soft_write(&b->mcu1284, port, v);
+        break;
+    default:
+        break;
+    }
 }
 
 static void poke_vram_addr(R01sBoard *ctx, uint16_t va) {
