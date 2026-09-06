@@ -325,13 +325,13 @@ def add_r2r_passives(parts: Dict[str, object]) -> None:
 def build_board(include_sim_only: bool = False) -> Dict[str, Any]:
     """Instantiate motherboard BOM and apply mobo manifest (no cart silicon)."""
     from .connect import apply_connections
-    from .islands import apu, beam, cart_socket, cpu, io_latch, mcu_linebuf, power_clk, video, vram
+    from .islands import apu, beam, cart_socket, cpu, soft_fe, mcu_linebuf, power_clk, video, vram
 
     manifest = build_manifest()
     parts = instantiate_bom(include_sim_only=include_sim_only, board=BoardId.MOBO)
     add_r2r_passives(parts)
     nets: Dict[str, object] = {}
-    for island in (power_clk, cpu, io_latch, vram, beam, cart_socket, apu, mcu_linebuf, video):
+    for island in (power_clk, cpu, soft_fe, vram, beam, cart_socket, apu, mcu_linebuf, video):
         nets.update(island.wire(parts, island.LETTER))
     nets.update(apply_connections(parts, manifest))
     nets = add_decoupling(parts, nets, BoardId.MOBO)

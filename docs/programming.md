@@ -19,7 +19,7 @@ Which Retr01 parts need a programmed image, what file each takes, and which benc
 | 24C64 | Cartridge | Save image / blank at factory | Yes (I2C) | Cart flasher path or I2C tool |
 | ATmega32U4 | Cart **flasher** PCB | `.hex` (USB CDC firmware) | Yes | ISP or DFU (32U4 bootloader) |
 
-HC logic (HC157 / HC245), SRAM, oscillators, and AD725 are **not** programmed. (HC573 retired from silicon BOM.)
+HC logic (HC157 / HC245), SRAM, oscillators, and AD725 are **not** programmed.
 
 ---
 
@@ -30,7 +30,7 @@ HC logic (HC157 / HC245), SRAM, oscillators, and AD725 are **not** programmed. (
 | U1284 | ATmega1284P | 20 MHz | OAM / sprites, pads, machine EEPROM, cart I2C save, soft `$FExx` |
 | U328 | ATmega328P | 16 MHz | APU (`$FE40`-`$FE5F`) |
 
-Soft `$FExx` stub (HC573-zero bank): [`fw/mcu1284/`](../fw/mcu1284/). Full sprite/pad firmware still TBD.
+Soft `$FExx` stub (bank): [`fw/mcu1284/`](../fw/mcu1284/). Full sprite/pad firmware still TBD.
 
 **Interface:** 5 V **ISP** (SPI): `MOSI`, `MISO`, `SCK`, `RESET`, `VCC`, `GND`. Prefer a **6-pin** (2x3) ISP header or pogo pads per MCU so chips can stay in-socket.
 

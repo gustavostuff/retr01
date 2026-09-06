@@ -1,4 +1,4 @@
-# Retr01 ATF22V10 equation stubs (HC573-zero)
+# Retr01 ATF22V10 equation stubs
 
 Draft CUPL-style equations for WinCUPL / Afterburner. Not fitted JEDEC yet.
 **Fit gate:** [`../../app/pld_tests/`](../../app/pld_tests/) runs [galette](https://github.com/simon-frankau/galette) on GALasm `.pld` twins under `equations/expect_fit/`. Escape: +1 PLD or 1-2 discrete latches.

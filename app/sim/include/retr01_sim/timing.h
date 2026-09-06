@@ -13,7 +13,7 @@
  *
  * DELAY=typical|max (aliases FAST=/PROP=/TPD=/R01S_PROP_DELAY=) selects the
  * datasheet corner and prints path budget vs PHI2 half. Typ @ 5 V; max =
- * worst-case stress. Wall-clock UI FPS ≠ sim ns.
+ * worst-case stress. Wall-clock UI FPS is not sim ns.
  */
 
 #define R01S_PHI2_NS 125u       /* 8.000 MHz period */
@@ -21,8 +21,6 @@
 #define R01S_DOT_NS 186u        /* ~5.369 MHz period (informational) */
 
 /* Datasheet-ish ns (5 V). typ from hw/md; max for budget stress. */
-#define R01S_TPD_HC573_TYP_NS 21u
-#define R01S_TPD_HC573_MAX_NS 40u
 #define R01S_TPD_HC245_TYP_NS 12u
 #define R01S_TPD_HC245_MAX_NS 30u
 #define R01S_TPD_HC157_TYP_NS 11u
@@ -38,14 +36,13 @@ typedef enum R01sTpdCorner {
 } R01sTpdCorner;
 
 typedef enum R01sTpdPart {
-    R01S_TPD_PART_HC573 = 0,
-    R01S_TPD_PART_HC245,
+    R01S_TPD_PART_HC245 = 0,
     R01S_TPD_PART_HC157,
     R01S_TPD_PART_ATF22,
     R01S_TPD_PART_SRAM_TAA
 } R01sTpdPart;
 
-/* Delayed uint8 bus (HC573 Q, HC245 side, SRAM DQ, HC157 Y nibble, PLD SEL mask). */
+/* Delayed uint8 bus (HC245 side, SRAM DQ, HC157 Y nibble, PLD SEL / reg). */
 typedef struct R01sDelayU8 {
     uint8_t out;
     uint8_t next;
@@ -80,8 +77,8 @@ void r01s_delay_u8_reset(R01sDelayU8 *d, uint8_t v);
  */
 uint8_t r01s_delay_u8_update(R01sDelayU8 *d, uint8_t ideal, uint32_t tpd_ns);
 
-/* Hot path stack for budget notes: decode + HC245 + HC573 (ns). */
-uint32_t r01s_timing_path_decode_bus_latch_ns(void);
+/* Hot path stack for budget notes: decode + HC245 + PLD reg (ns). */
+uint32_t r01s_timing_path_decode_bus_reg_ns(void);
 
 /* Print path budget vs PHI2 half (stderr if out is NULL). */
 void r01s_timing_print_budget(FILE *out);

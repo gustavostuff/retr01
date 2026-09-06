@@ -1,10 +1,10 @@
 # ATmega1284P firmware stub (soft `$FExx`)
 
-Behavioral AVR-C for the HC573-zero soft ports. Not a full sprite/pad firmware yet.
+Behavioral AVR-C for soft `$FExx` ports. Not a full sprite/pad firmware yet.
 Build later with `avr-gcc -mmcu=atmega1284p` when the ISP toolchain is ready.
 
-**Contract:** [`hw/md/ATmega1284P.md`](../../hw/md/ATmega1284P.md#soft-fexx-hc573-zero)
-**Ownership table:** [`docs/graphics.md`](../../docs/graphics.md#fexx-ownership-hc573-zero)
+**Contract:** [`hw/md/ATmega1284P.md`](../../hw/md/ATmega1284P.md#soft-fexx)
+**Ownership table:** [`docs/graphics.md`](../../docs/graphics.md#fexx-ownership)
 
 ## Soft ports
 

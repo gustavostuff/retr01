@@ -6,14 +6,14 @@ IC-first board simulator for the Retr01 motherboard (arcade + console share one 
 
 ## Status
 
-**10 canvas islands (O first / top-left) + wired-only E/I/P sprite glue, 23-IC soft $FExx (aligned with silicon HC573-zero), layer-2 smoke.** SDL board UI. No control-strip power/reset/cart UI (cart image comes from the argv `.retr01` path). Cart USB flasher is **not** on the main canvas: unit-tested via `flasher_bench` only.
+**10 canvas islands (O first / top-left) + wired-only E/I/P sprite glue, 23-IC soft `$FExx`, layer-2 smoke.** SDL board UI. No control-strip power/reset/cart UI (cart image comes from the argv `.retr01` path). Cart USB flasher is **not** on the main canvas: unit-tested via `flasher_bench` only.
 
 | Island | Components (canvas) |
 |--------|---------------------|
 | O Video | `COMPOSITOR` + `AT28C16` (sim, target **AT27C256R**) + `LCD_SINK` + video `SN74HC245` (top-left) |
 | A Power+clk | `PWR5V` + `OSC8M` + `SN74HC14` |
 | C CPU + decode | `W65C02S`, `AS6C62256`, `ATF22V10` decode, CPU `SN74HC245` |
-| D soft `$FExx` | Soft registers on `R01sBoard` (no HC573 mounts). Host Play scroll + STA `$FExx` smoke |
+| D soft `$FExx` | Soft registers on `R01sBoard`. Host Play scroll + STA `$FExx` smoke |
 | G VRAM | 2nd `AS6C62256` + **3x** `SN74HC157` + `ATF22V10` VRAM glue |
 | H Beam | `OSC_DOT` + `BEAM_XY` (X PLD) + `ATF22V10` Y compare vs soft `$FE04` |
 | J Cart | cart `SN74HC245` (mobo socket path) |

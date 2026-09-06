@@ -76,7 +76,7 @@ Pin **A** = top side of cart PCB, **B** = bottom. **18 positions per row**, 2.54
 
 **Play:** motherboard drives address/data/`OE#`. `WE#` is inactive. **Program:** external flasher asserts `WE#` and runs JEDEC unlock on the SST39SF040 ([`hw/md/SST39SF040.md`](../hw/md/SST39SF040.md)).
 
-**Address drivers (HC573-zero):** `A0`-`A13` from W65C02S `CPU_A`. `A14`-`A18` from UPLDV registered MAP export (1284 soft-owns the 24-bit seek). See [`graphics.md`](graphics.md#fexx-ownership-hc573-zero).
+**Address drivers :** `A0`-`A13` from W65C02S `CPU_A`. `A14`-`A18` from UPLDV registered MAP export (1284 soft-owns the 24-bit seek). See [`graphics.md`](graphics.md#fexx-ownership).
 
 ---
 

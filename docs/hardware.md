@@ -18,7 +18,7 @@ Passives, connectors, stackup, ESD/PPTC, and RF practice live in [`passive_rf_et
 | Cart flasher | Sim island **F** is visual only. Programming path tested via `flasher_bench` harness (**WIP** in main sim UI) | USB-C bench programs cart in socket ([`cart.md`](cart.md#usb-c-cartridge-flasher)) |
 | Color PROM | Sim chip model **AT28C16** (64-entry table) | **AT27C256R** OTP ([`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md)) |
 | `PPUCTRL` (`$FE00`) | Emu honors L1/L0/SPR enable + NMI. Camera-wrap bits stored, not enforced | Full bitfield incl. wrap modes ([`graphics.md`](graphics.md#ppuctrl-fe00)) |
-| `$FExx` latches | Sim soft-mirrors former latch ports on `R01sBoard` (no nine HC573 chips) | **Zero HC573.** Scroll/raster in ATF22V10. Soft ports on 1284 ([`graphics.md`](graphics.md#fexx-ownership-hc573-zero)) |
+| `$FExx` ports | Soft `$FExx` on `R01sBoard` (`peek_fe` / `poke_fe`) | Scroll/raster in ATF22V10. Soft ports on 1284 ([`graphics.md`](graphics.md#fexx-ownership)) |
 | Cart save | `$FE22`-`$FE24` in-memory 8 KB buffer, no `RDY` stall | 1284 I2C master + `RDY` stall ([`memory.md`](memory.md)) |
 | Machine EEPROM | `$FE70`-`$FE72` in-memory 4 KB buffer, no `RDY` stall | 1284 internal EEPROM + `RDY` stall ([`memory.md`](memory.md)) |
 | Pads | `$FE60` / `$FE61` from Host Play / UI (Sim: ARCADE direct or PADS via ATtiny85 poll) | Arcade GPIO or Retr01-C UART ([`controllers.md`](controllers.md)) |
@@ -41,7 +41,7 @@ Studio Play uses the same Emu core as standalone `./emu`.
 | Color out | AT27C256R OTP | 64-entry R3G3B2 PROM -> binary-weighted DAC -> RGBS (75 ohm to GND) |
 | Composite (support) | AD725 + 14.31818 MHz can | RGB->NTSC into J9. Outside the 23-IC logic count. Chip is wide SOIC-16. **Mobo: DIP-16 + Proto Advantage PA0006** ([`passive_rf_etc.md`](passive_rf_etc.md)) |
 
-**Count:** **23** (21 mobo + 2 cart). Escape **+1 PLD** if compositor or scroll/raster fit overflows. **74HC14** (reset/clock) and **AD725** (composite) are outside the 23. Former **9x HC573** removed (HC573-zero).
+**Count:** **23** (21 mobo + 2 cart). Escape **+1 PLD** if compositor or scroll/raster fit overflows. **74HC14** (reset/clock) and **AD725** (composite) are outside the 23.
 
 **Clocks:** CPU **8.000 MHz**, dot **5.369318 MHz**, 1284 **20 MHz**, 328P **16 MHz**. Raster **341x262**, ~**60.098 Hz**.
 
@@ -158,7 +158,7 @@ SNES-like far plane: authored second tilemap, color-0 show-through under BG1, pr
 Prove **islands** on breadboard before full PCB. Pass = island smoke test, not a shipped game.
 
 ```text
-A Power --> B Clocks --> C CPU+RAM+PRG --> D (retired HC573) --> E Pads
+A Power --> B Clocks --> C CPU+RAM+PRG --> D soft $FExx --> E Pads
                               |
                               +--> G VRAM interleave --> H Beam --> I BG fetch ----+
                               |                                                    |
@@ -198,7 +198,7 @@ Ports and passives: [`passive_rf_etc.md`](passive_rf_etc.md).
 |-------|------------|
 | Color PROM speed | **AT27C256R** 45 ns OTP ([`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md)). Unused address pins tied **GND**. Binary-weighted outputs through **75 ohm** to ground -> **~0.7 Vpp** RGBS. |
 | Composite | **AD725** NTSC from RGBS + CSYNC ([`passive_rf_etc.md`](passive_rf_etc.md)). **AV outs: RGBS + composite.** Mobo footprint is **DIP-16** (Proto Advantage **PA0006** SOIC-to-DIP). |
-| HC573-zero `$FExx` | Scroll/raster in PLDs. Soft ports on 1284. Zero HC573 packages ([`graphics.md`](graphics.md#fexx-ownership-hc573-zero)). |
+| `$FExx` | Scroll/raster in PLDs. Soft ports on 1284 ([`graphics.md`](graphics.md#fexx-ownership)). |
 | Cart I2C save API | `$FE22`-`$FE24` via 1284 master ([`memory.md`](memory.md#cart-save-eeprom-24c64-on-cartridge)). |
 | Machine EEPROM API | `$FE70`-`$FE72` + `RDY` stall ([`memory.md`](memory.md#atmega1284p-internal-eeprom-4-kb)). |
 | Aux pad protocol | Retr01-C 3-wire UART ([`controllers.md`](controllers.md)). |
@@ -213,4 +213,10 @@ Ports and passives: [`passive_rf_etc.md`](passive_rf_etc.md).
 | UPLDA SEL pin sharing | **Accepted this spin:** pin 14=`FE00`/`FE06`, 15=`FE02`/`FE07`, 22=`FE92`/`FE93`, 23=`FE10`/`FE11`/`FE12`. Soft ports that share a SEL need address demux or +1 PLD before freeze. See [`hw/md/ATF22V10.md`](../hw/md/ATF22V10.md#uplda-sel-sharing) |
 | UPLDB FE10/FE11 | **Accepted:** both on pin 22 after FE02 took pin 23 |
 | HC245 DIR/OE | **Accepted this spin:** driven from UPLDB (UPLDA I/O budget) |
-| 1284 soft strobe pins | Only PD0/PD1 free for FE08 + MAP family. FE00/FE05 share FE06/FE08 pins. Firmware contract: [`hw/md/ATmega1284P.md`](../hw/md/ATmega1284P.md#soft-fexx-hc573-zero) |
+| 1284 soft strobe pins | Only PD0/PD1 free for FE08 + MAP family. FE00/FE05 share FE06/FE08 pins. Firmware contract: [`hw/md/ATmega1284P.md`](../hw/md/ATmega1284P.md#soft-fexx) |
+
+---
+
+## Historical note
+
+Nine SN74HC573 latches once held `$FExx` I/O. They are gone from the BOM. Port ownership is in [`graphics.md`](graphics.md#fexx-ownership).

@@ -63,9 +63,9 @@ python -m unittest discover -s tests
 |--------|--------|---------|
 | A | `islands/power_clk.py` | Y1, U2 |
 | C | `islands/cpu.py` | U1, U3, UPLDA, U20A |
-| D | `islands/io_latch.py` | Retired (HC573-zero). Sim still has island D mirrors |
+| D | `islands/soft_fe.py` | Soft `$FExx` (no discrete packages on this letter) |
 | G | `islands/vram.py` | U6, U7A-U7C, UPLDB |
-| H | `islands/beam.py` | UPLDX/Y, Y2, U5D (raster Y) |
+| H | `islands/beam.py` | UPLDX/Y, Y2 (raster Y in UPLDY) |
 | J | `islands/cart_socket.py` | J36, U20C |
 | K | `islands/apu.py` | U328 |
 | L | `islands/mcu_linebuf.py` | U1284, U41, U7D-U7F |

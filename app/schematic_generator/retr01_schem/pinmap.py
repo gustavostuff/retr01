@@ -2,8 +2,8 @@
 Physical DIP pin numbers for Retr01 parts.
 
 Authority for stock parts: KiCad 10 symbols under /usr/share/kicad/symbols/
-(see kicad_pin_extract.json). HC573/HC157 use 74LS* symbols (identical DIP pinout;
-KiCad has no discrete 74HC573/157). Custom silicon (W65C02S, ATF22V10, oscillators,
+(see kicad_pin_extract.json). HC157 uses 74LS* symbols (identical DIP pinout;
+KiCad has no discrete 74HC157). Custom silicon (W65C02S, ATF22V10, oscillators,
 connectors) uses datasheet / hw/md pin numbers.
 
 Manifest and connect.py address pins by these number strings ("1".."40").
@@ -17,13 +17,6 @@ from typing import Dict, List, Optional, Tuple
 # KiCad 74xx (74LS573 / 74LS157 / 74HC245 / 74HC14)
 # ---------------------------------------------------------------------------
 
-# 74LS573 / SN74HC573 — KiCad names: OE, D0-D7, Load, Q0-Q7
-HC573_OE = "1"
-HC573_D = ("2", "3", "4", "5", "6", "7", "8", "9")  # D0..D7
-HC573_GND = "10"
-HC573_LE = "11"  # KiCad "Load"
-HC573_Q = ("19", "18", "17", "16", "15", "14", "13", "12")  # Q0..Q7
-HC573_VCC = "20"
 
 # 74LS157 / SN74HC157 — S=select, I0*=A, I1*=B, Z*=Y, E=enable(~G)
 HC157_S = "1"
@@ -170,7 +163,7 @@ UPLDA_SEL = {
     "10": "23", "11": "23", "06": "14", "07": "15", "12": "23", "93": "22",
 }
 
-# UPLDB VRAM glue + HC245/cart bus enables + scroll X register (HC573-zero).
+# UPLDB VRAM glue + HC245/cart bus enables + scroll X register.
 # Never map signals onto PLD_GND (12) or PLD_VCC (24): that shorts the rail into a
 # signal net and KiCad loses the literal name "GND" (merged net becomes e.g. PPU_VA10).
 UPLDB_LD = {i: str(2 + i) for i in range(8)}  # CPU D load data (scroll X / FE1x)
@@ -185,7 +178,7 @@ UPLDB_DIR_CART, UPLDB_OE_CART = "18", "19"
 UPLDB_CART_OE, UPLDB_CART_WE = "20", "21"
 UPLDB_SEL10, UPLDB_SEL11 = "22", "22"  # FE10/FE11 share pin 22 after FE02 took 23
 
-# UPLDX beam X + scroll Y register (HC573-zero).
+# UPLDX beam X + scroll Y register.
 UPLDX_DOT, UPLDX_RES, UPLDX_NMI = "1", "13", "14"
 UPLDX_Y = {i: str(15 + i) for i in range(8)}
 UPLDX_LD = {i: str(2 + i) for i in range(8)}  # CPU D -> scroll Y (pins 2-9)
@@ -220,7 +213,7 @@ TRS_TIP, TRS_RING, TRS_SLEEVE = "4", "2", "1"
 TRS_NC = ("3", "5")  # no switch contacts on 2BVN4; still plated for mechanical hold
 M1284_HBLANK = "17"  # PD3
 M1284_FE06, M1284_FE07 = "18", "19"  # PD4/PD5 (BG0 scroll). SEL_FE00 shares UPLDA pin with FE06.
-# Soft $FExx (HC573-zero): palette + MAP seek strobes. Only PD0/PD1 free after DQ remap.
+# Soft $FExx: palette + MAP seek strobes. Only PD0/PD1 free after DQ remap.
 M1284_FE08 = "14"  # PD0 SEL_FE08 palette addr
 M1284_FE90 = "15"  # PD1 SEL_FE90 MAP lo (FE91/FE92 also strobe via UPLDV_LE_MAP path)
 M1284_XTAL2, M1284_XTAL1 = "12", "13"
@@ -269,7 +262,6 @@ def _nums(n: int) -> List[str]:
 PIN_TEMPLATES: Dict[str, List[str]] = {
     "W65C02S": _nums(40),
     "AS6C62256": _nums(28),
-    "SN74HC573": _nums(20),
     "SN74HC157": _nums(16),
     "SN74HC245": _nums(20),
     "ATF22V10": _nums(24),
@@ -323,28 +315,6 @@ PIN_TEMPLATES: Dict[str, List[str]] = {
 
 # KiCad official pin name aliases (num -> kicad name) for documentation / Part aliases
 KICAD_ALIASES: Dict[str, Dict[str, str]] = {
-    "SN74HC573": {
-        "1": "OE",
-        "2": "D0",
-        "3": "D1",
-        "4": "D2",
-        "5": "D3",
-        "6": "D4",
-        "7": "D5",
-        "8": "D6",
-        "9": "D7",
-        "10": "GND",
-        "11": "Load",
-        "12": "Q7",
-        "13": "Q6",
-        "14": "Q5",
-        "15": "Q4",
-        "16": "Q3",
-        "17": "Q2",
-        "18": "Q1",
-        "19": "Q0",
-        "20": "VCC",
-    },
     "SN74HC157": {
         "1": "S",
         "2": "I0a",
@@ -600,7 +570,6 @@ def power_pin_nums(mpn: str) -> Optional[Tuple[str, str]]:
     table = {
         "W65C02S": (CPU_VDD, CPU_VSS),
         "AS6C62256": (SRAM_VCC, SRAM_GND),
-        "SN74HC573": (HC573_VCC, HC573_GND),
         "SN74HC157": (HC157_VCC, HC157_GND),
         "SN74HC245": (HC245_VCC, HC245_GND),
         "ATF22V10": (PLD_VCC, PLD_GND),

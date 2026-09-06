@@ -1,6 +1,6 @@
 # PLD fit tests (ATF22V10 / GAL22V10)
 
-Headless galette harness for HC573-zero PLD equations. Not part of Sim.
+Headless galette harness for soft `$FExx` / PLD register equations. Not part of Sim.
 Sim models behavior. This pack checks whether equations **fit** the 22V10
 product-term map, plus behavioral scenarios for decode / registers / EQ.
 

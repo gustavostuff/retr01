@@ -243,9 +243,9 @@ World/screen/cart caps: [`memory.md`](memory.md) (**48** BG1 present/world, **16
 
 **Runners today (Emu):** **L1_EN**, **L0_EN**, **SPR_EN**, and **NMI_EN** affect rendering. Camera-wrap bits (4-3, 6-5) are stored but not enforced yet. See [`hardware.md`](hardware.md#runners-today-vs-silicon-target).
 
-### `$FExx` ownership (HC573-zero)
+### `$FExx` ownership
 
-Silicon target: **zero SN74HC573**. Critical real-time bytes are registered inside existing ATF22V10s. Soft bytes live on the ATmega1284P. Software still writes the same `$FExx` addresses.
+Critical real-time bytes are registered inside existing ATF22V10s. Soft bytes live on the ATmega1284P. Software writes the same `$FExx` addresses either way.
 
 | Port | Owner | Notes |
 |------|-------|-------|
@@ -262,9 +262,9 @@ Silicon target: **zero SN74HC573**. Critical real-time bytes are registered insi
 
 Ports **not** in this table (`$FE09` palette data, `$FE10`-`$FE12` VRAM, OAM, APU, mailboxes) use other paths (MCU, qualified strobes, or direct read ports).
 
-**Sim note:** soft `$FExx` on `R01sBoard` (`peek_fe` / `poke_fe`). Island D has no HC573 chips. Silicon schematic has no U5A-U5I. See [runners vs silicon](hardware.md#runners-today-vs-silicon-target).
+**Sim note:** soft `$FExx` on `R01sBoard` (`peek_fe` / `poke_fe`). Island D is a canvas letter only (no discrete packages). See [runners vs silicon](hardware.md#runners-today-vs-silicon-target).
 
-**Fitter escape:** if product terms or pins overflow on the three PLDs holding 24 scroll/raster bits, keep 1-2 discrete latches or +1 ATF22V10 for those bits only.
+**Fitter escape:** if product terms or pins overflow on the three PLDs holding 24 scroll/raster bits, add +1 ATF22V10 for those bits only.
 
 ---
 
@@ -273,7 +273,7 @@ Ports **not** in this table (`$FE09` palette data, `$FE10`-`$FE12` VRAM, OAM, AP
 | Topic | Resolution |
 |-------|------------|
 | `PPUCTRL` camera bits | Bitfield above |
-| `$FExx` ownership | HC573-zero table above |
+| `$FExx` ownership | table above |
 | 8x16 sprite VBlank timing | ~9.6k / ~25k cycles ([sprites](#sprites)) |
 | BG0 HBlank fill | Next BG0 line into linebuf `$4000` ping-pong. BG1 color-0 mask on active dots |
 

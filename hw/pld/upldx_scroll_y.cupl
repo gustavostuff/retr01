@@ -8,7 +8,7 @@ Assembly None ;
 Location UPLDX ;
 Device   g22v10 ;
 
-/* HC573-zero: registered BG1 scroll Y ($FE03).
+/* Registered BG1 scroll Y ($FE03).
  * Load enable = SEL_FE03 on UPLDX_LE_FE03 (pin 11).
  * Data = CPU D on pins 2..9.
  * Beam X counter + NMI remain primary job. Fit with scroll Y carefully.

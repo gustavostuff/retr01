@@ -30,4 +30,4 @@ S10 = FE * BE * /RWB * /A7 * /A6 * /A5 *  A4 * /A3 * /A2 * /A1 * /A0 +
       FE * BE * /RWB * /A7 * /A6 * /A5 *  A4 * /A3 * /A2 *  A1 * /A0
 
 DESCRIPTION
-UPLDA address decode with locked SEL shares (HC573-zero).
+UPLDA address decode with locked SEL shares.

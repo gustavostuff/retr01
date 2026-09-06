@@ -9,7 +9,6 @@ SKiDL still instantiates inline `Part(tool=SKIDL)` parts, but every pin **name a
 
 | Retr01 MPN | KiCad lib | KiCad symbol |
 |------------|-----------|--------------|
-| SN74HC573 | 74xx | **74LS573** (no HC573 in lib. Same DIP) |
 | SN74HC157 | 74xx | **74LS157** |
 | SN74HC245 | 74xx | **74HC245** -> extends 74LS245 |
 | SN74HC14 | 74xx | **74HC14** |

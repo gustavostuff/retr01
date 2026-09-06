@@ -74,15 +74,13 @@ class TestBom(unittest.TestCase):
         from retr01_schem.pinmap import M1284_P1, M1284_P2, PIN_TEMPLATES
 
         self.assertEqual(PIN_TEMPLATES["ARCADE_P1"][0], "1")
-        self.assertEqual(PIN_TEMPLATES["SN74HC573"][-1], "20")
+        self.assertEqual(PIN_TEMPLATES["SN74HC245"][-1], "20")
         self.assertEqual(M1284_P1[0], "40")  # PA0
         self.assertEqual(M1284_P2[0], "1")  # PB0
 
     def test_pins_are_physical_numbers(self):
-        from retr01_schem.pinmap import HC573_D, HC573_LE, HC245_DIR, SRAM_A
+        from retr01_schem.pinmap import HC245_DIR, SRAM_A
 
-        self.assertEqual(HC573_D[0], "2")
-        self.assertEqual(HC573_LE, "11")
         self.assertEqual(HC245_DIR, "1")
         self.assertEqual(SRAM_A[0], "10")
         letter_ok = {"GND", "+5V", "MP"}
@@ -114,7 +112,7 @@ class TestBom(unittest.TestCase):
         tip_nets = {n for n, p in j3 if p == TRS_TIP}
         self.assertIn("PAD_VCC_P1", tip_nets)
 
-    def test_hc573_zero_ownership(self):
+    def test_fexx_ownership(self):
         self.assertEqual(FE_HARD_PLD_HEX, ("02", "03", "04"))
         self.assertEqual(FE_SOFT_1284_HEX, ("00", "05", "08", "90", "91", "92"))
         self.assertEqual(SYSTEM_IC_COUNT, 23)
@@ -124,7 +122,7 @@ class TestBom(unittest.TestCase):
         self.assertIn("SEL_FE08", nets)
         refs = {c.a_refdes for c in build_manifest()} | {c.b_refdes for c in build_manifest()}
         self.assertNotIn("U5A", refs)
-        # Cart high-A from UPLDV, not HC573.
+        # Cart high-A from UPLDV.
         cart_hi = [
             c
             for c in build_manifest()

@@ -1,7 +1,6 @@
 """23-IC BOM and refdes map (authority: docs/hardware.md + graphics.md).
 
-Sim bom32.h still counts 32 with nine HC573 mirrors (runner lag).
-Silicon target: zero HC573. Scroll/raster in ATF22V10. Soft $FExx on 1284.
+Scroll/raster in ATF22V10. Soft $FExx on 1284. CART_A14-A18 on UPLDV.
 """
 
 from __future__ import annotations
@@ -14,7 +13,7 @@ from typing import Dict, List, Optional, Tuple
 class IslandId(str, Enum):
     POWER_CLK = "A"
     CPU = "C"
-    IO_LATCH = "D"  # retired (HC573-zero). Kept for sim island letter compatibility.
+    SOFT_FE = "D"  # soft $FExx canvas letter (no discrete packages)
     VRAM = "G"
     BEAM = "H"
     CART_SOCKET = "J"
@@ -74,8 +73,7 @@ _TVS = "Diode_SMD:D_SOD-323"
 _L0603 = "Inductor_SMD:L_0603_1608Metric"
 _XTAL = "Crystal:Crystal_HC49-U_Vertical"
 
-# Former HC573 ports (qty 0). Ownership: docs/graphics.md $FExx table.
-# Hard PLD-registered: FE02/FE03/FE04. Soft on 1284: FE00/FE05/FE08/FE90-92.
+# $FExx ownership: docs/graphics.md. Hard PLD: FE02/FE03/FE04. Soft 1284: FE00/05/08/90-92.
 FE_HARD_PLD_HEX = ("02", "03", "04")
 FE_SOFT_1284_HEX = ("00", "05", "08", "90", "91", "92")
 # BG0 scroll already soft on 1284 (FE06/FE07).
@@ -380,7 +378,7 @@ BOM_BY_REFDES: Dict[str, BomEntry] = {
     e.refdes: e for e in BOM if e.board == BoardId.MOBO
 }
 
-# System silicon goal (mobo + cart). Sim bom32.h still says 32 (HC573 lag).
+# System silicon goal (mobo + cart).
 SYSTEM_IC_COUNT = 23
 IC_COUNT_TARGET = 21  # motherboard silicon only (U40/U50 live on cart)
 CART_IC_COUNT = 2

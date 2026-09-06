@@ -51,7 +51,7 @@ def _manifest_core() -> List[Connection]:
         Connection("IO_FE_N", "UPLDA", P.UPLDA_FE, "UPLDA", P.UPLDA_FE, "wire_decode"),
     ]
 
-    # HC573-zero: hard scroll/raster registers inside existing PLDs.
+    # Hard scroll/raster registers inside existing PLDs.
     for i in range(8):
         m.append(Connection(f"CPU_D{i}", "U1", P.CPU_D[i], "UPLDB", P.UPLDB_LD[i], "docs/graphics.md FE02 scroll X"))
         m.append(Connection(f"CPU_D{i}", "U1", P.CPU_D[i], "UPLDX", P.UPLDX_LD[i], "docs/graphics.md FE03 scroll Y"))
@@ -62,7 +62,7 @@ def _manifest_core() -> List[Connection]:
         Connection("SEL_FE04", "UPLDA", P.UPLDA_SEL["04"], "UPLDY", P.UPLDY_LE_FE04, "docs/graphics.md LE raster Y"),
     ]
 
-    # Soft $FExx on 1284 (former HC573 FE00/05/08/90-92 + existing BG0 FE06/07).
+    # Soft $FExx on 1284 (FE00/05/08/90-92 + BG0 FE06/07).
     m += [
         Connection("SEL_FE06", "UPLDA", P.UPLDA_SEL["06"], "U1284", P.M1284_FE06, "docs/graphics.md FE06"),
         Connection("SEL_FE07", "UPLDA", P.UPLDA_SEL["07"], "U1284", P.M1284_FE07, "docs/graphics.md FE07"),

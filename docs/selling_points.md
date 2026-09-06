@@ -152,6 +152,6 @@ Built for people who want to **make** 8-bit games, not only play them. Tools: **
 
 ## Rough cost (planning)
 
-23-IC mobo + cart proto targets ~**$175** qty-1 (parts + PCB share). Down from ~$200 at the old 32-IC BOM (nine HC573 removed). See [`hardware.md`](hardware.md) BOM.
+23-IC mobo + cart proto targets ~**$175** qty-1 (parts + PCB share). See [`hardware.md`](hardware.md) BOM.
 
 Game module profiles (movement, camera, entities): [`app/studio/README.md`](../app/studio/README.md).

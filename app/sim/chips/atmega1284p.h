@@ -15,7 +15,7 @@
  *   $FE20  OAM address latch (A0=0)
  *   $FE21  OAM data + auto-inc (A0=1) -- 64 entries Y,tile,attr,X
  *   $FE70-$FE72 mailbox stub (board poke; protocol TBD)
- *   Soft $FExx (HC573-zero): FE00/05/06/07/08/90-92 via soft_* API
+ *   Soft $FExx: FE00/05/06/07/08/90-92 via soft_* API
  *     (mirrors fw/mcu1284; board also keeps R01sBoard soft mirrors)
  *
  * Pads stay on Island E until N merges 1284 pad path.
@@ -29,7 +29,7 @@ typedef struct R01sAtmega1284p {
     uint8_t oam[R01S_OAM_BYTES];
     uint8_t oam_addr;
     uint8_t eeprom_mb[R01S_MCU1284_EEPROM_MAILBOX];
-    /* Soft $FExx bank (HC573-zero). Same fields as fw/mcu1284/soft_fexx.h */
+    /* Soft $FExx bank. Same fields as fw/mcu1284/soft_fexx.h */
     uint8_t soft_ppuctrl;
     uint8_t soft_raster_ctrl;
     uint8_t soft_bg0_x;
@@ -58,7 +58,7 @@ void r01s_atmega1284p_oam_poke(R01sAtmega1284p *chip, uint8_t addr, uint8_t data
 uint8_t r01s_atmega1284p_eeprom_peek(const R01sAtmega1284p *chip, unsigned i);
 void r01s_atmega1284p_eeprom_poke(R01sAtmega1284p *chip, unsigned i, uint8_t data);
 
-/* Soft $FExx (HC573-zero). port = low byte of $FExx. */
+/* Soft $FExx. port = low byte of $FExx. */
 int r01s_atmega1284p_soft_write(R01sAtmega1284p *chip, uint8_t port, uint8_t data);
 uint8_t r01s_atmega1284p_soft_read(const R01sAtmega1284p *chip, uint8_t port);
 uint32_t r01s_atmega1284p_soft_map_addr(const R01sAtmega1284p *chip);

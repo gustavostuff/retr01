@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-/* Soft $FExx bank (HC573-zero). Host CPU still writes the same addresses. */
+/* Soft $FExx bank. Host CPU still writes the same addresses. */
 
 typedef struct R01SoftFexx {
     uint8_t ppuctrl;      /* $FE00 */

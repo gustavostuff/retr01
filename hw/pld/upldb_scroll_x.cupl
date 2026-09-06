@@ -8,7 +8,7 @@ Assembly None ;
 Location UPLDB ;
 Device   g22v10 ;
 
-/* HC573-zero: registered BG1 scroll X ($FE02).
+/* Registered BG1 scroll X ($FE02).
  * Load enable = SEL_FE02 (from UPLDA) qualified with write (RWB low).
  * Data = CPU D[7:0] on UPLDB_LD pins.
  * Scroll bits stay internal for BG VA generation (equations TBD with interleave).

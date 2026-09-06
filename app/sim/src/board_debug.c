@@ -26,7 +26,7 @@ static uint16_t g_prev_pc;
 static char g_path[512];
 
 static uint32_t health_bits(const R01sBoard *b) {
-    return ((uint32_t)b->health_saw_latch << 0) | ((uint32_t)b->health_saw_vram << 1) |
+    return ((uint32_t)b->health_saw_fexx << 0) | ((uint32_t)b->health_saw_vram << 1) |
            ((uint32_t)b->health_saw_vram_read << 2) | ((uint32_t)b->health_saw_pad << 3) |
            ((uint32_t)b->health_saw_beam << 4) | ((uint32_t)b->health_saw_bg_fetch << 5) |
            ((uint32_t)b->health_saw_video << 6) | ((uint32_t)b->health_saw_map << 7) |
@@ -118,7 +118,7 @@ static void write_snapshot(R01sBoard *b, uint32_t wall_ms, const char *why) {
     fprintf(g_log,
             "health bits=%04X latch=%d vram_w=%d vram_r=%d pad=%d beam=%d bg=%d video=%d map=%d "
             "apu=%d oam=%d linebuf=%d spr=%d nmi=%d nmi_pulses=%u\n",
-            (unsigned)bits, b->health_saw_latch, b->health_saw_vram, b->health_saw_vram_read,
+            (unsigned)bits, b->health_saw_fexx, b->health_saw_vram, b->health_saw_vram_read,
             b->health_saw_pad, b->health_saw_beam, b->health_saw_bg_fetch, b->health_saw_video,
             b->health_saw_map, b->health_saw_apu, b->health_saw_oam, b->health_saw_linebuf,
             b->health_saw_sprites, b->health_saw_nmi, (unsigned)b->nmi_pulses);

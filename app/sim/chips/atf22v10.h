@@ -9,7 +9,7 @@
 
 /*
  * ATF22V10 -- behavioral PLD shell (32-IC BOM has five).
- * DECODE: $FExx select equations -> SEL_FE* (board pulses HC573 LE from these).
+ * DECODE: $FExx select equations -> SEL_FE* (board qualifies soft / PLD reg loads).
  * VRAM: I->Y passthrough stub until interleave equations land.
  * BEAM_Y: P==Q -> EQ#. Beam-X / compositor / BG fetch are dedicated models.
  * With R01S_PROP_DELAY, SEL / Y / EQ# update after PLD tPD.

@@ -250,7 +250,7 @@ Boot flow (Phase 1 PRG): seek palette + start MAP via `$FE90`-`$FE93` -> copy ac
 | `$FE70`-`$FE72` | Machine EEPROM mailbox (1284 internal EEPROM) |
 | `$FE90`-`$FE93` | Cart MAP seek/read |
 
-`$FE80` unused. `$FExx` ownership (PLD vs 1284 soft) is in [`graphics.md`](graphics.md#fexx-ownership-hc573-zero). Other `$FExx` ports (VRAM, OAM, BG0 scroll, palette data) use decode-qualified paths documented in [`graphics.md`](graphics.md).
+`$FE80` unused. `$FExx` ownership (PLD vs 1284 soft) is in [`graphics.md`](graphics.md#fexx-ownership). Other `$FExx` ports (VRAM, OAM, BG0 scroll, palette data) use decode-qualified paths documented in [`graphics.md`](graphics.md).
 
 ---
 
@@ -260,5 +260,5 @@ Boot flow (Phase 1 PRG): seek palette + start MAP via `$FE90`-`$FE93` -> copy ac
 |-------|------------|
 | Cart save API | `$FE22`-`$FE24` (above) |
 | Machine EEPROM | `$FE70`-`$FE72` + `RDY` (above) |
-| `$FExx` ownership | [`graphics.md`](graphics.md#fexx-ownership-hc573-zero) |
+| `$FExx` ownership | [`graphics.md`](graphics.md#fexx-ownership) |
 | Cart hardware | [`cart.md`](cart.md) |

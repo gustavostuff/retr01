@@ -27,12 +27,12 @@ AVR 8-bit MCU: **128 KB Flash**, **16 KB SRAM**, **4 KB EEPROM**, 32 GPIO lines 
 | Machine EEPROM | Internal 4 KB. CPU mailbox `$FE70`-`$FE72` + `RDY` ([`memory.md`](../../docs/memory.md)) |
 | Cart save I2C | Master to cart 24C64 via `$FE22`-`$FE24` |
 | CHR bus | May own cart CHR in **VBlank** (sprite field) and **HBlank** (BG0 line) while BG path is idle (do not share until island N proven) |
-| Soft `$FExx` (HC573-zero) | `$FE00`, `$FE05`, `$FE06`/`$FE07`, `$FE08`, `$FE90`-`$FE92` soft registers. Decode SEL strobes + CPU D. AVR stub: [`fw/mcu1284/`](../../fw/mcu1284/) |
+| Soft `$FExx`  | `$FE00`, `$FE05`, `$FE06`/`$FE07`, `$FE08`, `$FE90`-`$FE92` soft registers. Decode SEL strobes + CPU D. AVR stub: [`fw/mcu1284/`](../../fw/mcu1284/) |
 | MAP seek | Soft 24-bit seek. Cart `A14`-`A18` driven by UPLDV registered export (hard pin path) |
 
 **Not** the BG beam path. **Not** the APU: that is ATmega328P.
 
-### Soft `$FExx` (HC573-zero)
+### Soft `$FExx`
 
 Firmware contract (schematic pinmap):
 

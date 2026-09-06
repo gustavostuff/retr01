@@ -8,7 +8,7 @@ Assembly None ;
 Location UPLDV ;
 Device   g22v10 ;
 
-/* HC573-zero: CART_A14..A18 registered export.
+/* CART_A14..A18 registered export.
  * Soft MAP seek ($FE90-$FE92) lives on ATmega1284P.
  * This PLD holds the five high address bits for the cart edge (hard every-cycle path).
  * Load from CPU D[4:0] on SEL_FE91 or SEL_FE92 (UPLDV_LE_MAP).

@@ -76,8 +76,6 @@ R01sTpdCorner r01s_timing_corner(void) {
 uint32_t r01s_timing_tpd_ns(R01sTpdPart part) {
     int maxc = (r01s_timing_corner() == R01S_TPD_MAX);
     switch (part) {
-    case R01S_TPD_PART_HC573:
-        return maxc ? R01S_TPD_HC573_MAX_NS : R01S_TPD_HC573_TYP_NS;
     case R01S_TPD_PART_HC245:
         return maxc ? R01S_TPD_HC245_MAX_NS : R01S_TPD_HC245_TYP_NS;
     case R01S_TPD_PART_HC157:
@@ -97,9 +95,10 @@ uint32_t r01s_timing_pin_tpd_ns(R01sTpdPart part) {
     return 0;
 }
 
-uint32_t r01s_timing_path_decode_bus_latch_ns(void) {
+uint32_t r01s_timing_path_decode_bus_reg_ns(void) {
+    /* Decode PLD + bus transceiver + registered PLD output (scroll/raster/MAP). */
     return r01s_timing_tpd_ns(R01S_TPD_PART_ATF22) + r01s_timing_tpd_ns(R01S_TPD_PART_HC245) +
-           r01s_timing_tpd_ns(R01S_TPD_PART_HC573);
+           r01s_timing_tpd_ns(R01S_TPD_PART_ATF22);
 }
 
 void r01s_timing_print_budget(FILE *out) {
@@ -110,10 +109,10 @@ void r01s_timing_print_budget(FILE *out) {
         out = stderr;
     }
     c = r01s_timing_corner();
-    path = r01s_timing_path_decode_bus_latch_ns();
+    path = r01s_timing_path_decode_bus_reg_ns();
     sram = r01s_timing_tpd_ns(R01S_TPD_PART_SRAM_TAA);
     fprintf(out,
-            "timing: budget corner=%s  decode+245+573=%uns  SRAM tAA=%uns  PHI2 half=%uns  %s\n",
+            "timing: budget corner=%s  decode+245+pld_reg=%uns  SRAM tAA=%uns  PHI2 half=%uns  %s\n",
             c == R01S_TPD_MAX ? "max" : "typical", (unsigned)path, (unsigned)sram,
             (unsigned)R01S_PHI2_HALF_NS, path > R01S_PHI2_HALF_NS ? "WARN path>half" : "path OK");
     fprintf(out,

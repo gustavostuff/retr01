@@ -5,9 +5,8 @@
  * retr01-A BOM ([docs/hardware.md]).
  * Counts are discrete silicon packages on the motherboard + cart save EEPROM.
  * Support parts (PWR, oscillators, LCD sink) are not in this tally.
- * 23-IC silicon (HC573-zero). Sim soft-mirrors former latch ports.
+ * 23-IC silicon. Soft $FExx on R01sBoard / 1284. Scroll/raster/MAP high in PLDs.
  */
-#define R01S_BOM_HC573_N 0
 #define R01S_BOM_HC157_N 6
 #define R01S_BOM_HC245_N 3
 #define R01S_BOM_PLD_N   5

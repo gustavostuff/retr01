@@ -30,7 +30,6 @@ add_library(retr01_sim_core
   chips/sn74hc00.c
   chips/sn74hc08.c
   chips/sn74hc32.c
-  chips/sn74hc573.c
   chips/sn74hc245.c
   chips/atf22v10.c
   chips/i2c_eeprom.c
@@ -128,7 +127,6 @@ r01s_unit_test(test_pwr5v)
 r01s_unit_test(test_osc8m)
 r01s_unit_test(test_sn74hc14)
 r01s_unit_test(test_sn74hc_glue)
-r01s_unit_test(test_sn74hc573)
 r01s_unit_test(test_sn74hc245)
 r01s_unit_test(test_sn74hc157)
 r01s_unit_test(test_beam_xy)

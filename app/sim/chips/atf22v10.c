@@ -76,9 +76,9 @@ static void pld_eval_decode(R01sEntity *e) {
     uint8_t ideal = hit ? off : 0xFFu;
 
     /*
-     * Decode SEL must be combinatorial in this netlist: wire_io pulses HC573 LE
-     * in the same settle pass. Deferred SEL misses STA $FExx (catchup FAIL).
-     * Path delay is still counted in r01s_timing_path_decode_bus_latch_ns().
+     * Decode SEL must be combinatorial in this netlist: soft / PLD loads sample
+     * on the same settle pass. Deferred SEL misses STA $FExx (catchup FAIL).
+     * Path delay is still counted in r01s_timing_path_decode_bus_reg_ns().
      */
     (void)r01s_delay_u8_update(&c->out_delay, ideal, 0);
     if (ideal == 0xFFu) {

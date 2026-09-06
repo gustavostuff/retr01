@@ -132,7 +132,7 @@ static void pin_net_link_cpu_d_latch(R01sUiPinNet *g, R01sEntity *cpu, R01sEntit
     int i;
     char ln[8];
     char cn[8];
-    /* Stub: HC573-zero (no latch entities on board). */
+    /* Soft $FExx: no discrete latch entities on board. */
     (void)g;
     (void)cpu;
     (void)latch;
@@ -392,7 +392,7 @@ void r01s_ui_pin_net_build(R01sBoard *board) {
     pin_net_link(g, cpu, "BE", pld, "BE");
     pin_net_link(g, cpu, "RWB", pld, "RWB");
 
-    /* Soft $FExx: no HC573 entity pin links (HC573-zero). */
+    /* Soft $FExx: no discrete latch pin links. */
     (void)pin_net_link_cpu_d_latch;
     (void)pin_net_link_beam_y_raster;
     (void)pin_net_link_latch_q_vram;

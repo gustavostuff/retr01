@@ -8,7 +8,7 @@ Assembly None ;
 Location UPLDY ;
 Device   g22v10 ;
 
-/* HC573-zero: raster compare Y ($FE04) registered inside this PLD.
+/* Raster compare Y ($FE04) registered inside this PLD.
  * No external Q hop from a discrete latch.
  * P[7:0] = beam Y from UPLDX. Q regs load from CPU D on SEL_FE04.
  * EQ# = (P == Q) active low -> CPU IRQB.

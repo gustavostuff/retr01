@@ -19,7 +19,6 @@ Swap / alternate parts notes live under [`candidates/`](candidates/).
 | ATF22V10 | Decode / beam / compositor PLDs |
 | 74HC157 | Addr mux (3 VRAM + 3 linebuf) |
 | 74HC245 | Bus isolation (x3) |
-| 74HC573 | `$FExx` latches (x9) |
 | 74HC14 | Reset / clocks (support. Not always in 32 count) |
 | 74HC00 | Glue (often absorbed into PLD) |
 | 74HC04 | Glue |
