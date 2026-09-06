@@ -32,6 +32,22 @@ AVR 8-bit MCU: **128 KB Flash**, **16 KB SRAM**, **4 KB EEPROM**, 32 GPIO lines 
 
 **Not** the BG beam path. **Not** the APU: that is ATmega328P.
 
+### Soft `$FExx` (HC573-zero)
+
+Firmware contract (schematic pinmap):
+
+| Port | 1284 strobe pin | Notes |
+|------|-----------------|-------|
+| `$FE06` / `$FE00` | PD4 (pin 18) | Shared UPLDA SEL pin 14. Demux TBD or avoid dual use |
+| `$FE07` | PD5 (pin 19) | Shares UPLDA SEL with `$FE02` (PLD load). Ignore strobe when not owning write |
+| `$FE08` / `$FE05` | PD0 (pin 14) | Shared soft strobe |
+| `$FE90`-`$FE92` | PD1 (pin 15) | Shared MAP family strobe. Sequence lo/mid/hi in firmware |
+| Data | PC2-7 + PD6-7 | Same DQ as OAM |
+
+On strobe + write: sample DQ into the soft register bank. On MAP mid/hi writes, UPLDV also loads CART_A14-A18 from CPU D (hardware). Keep soft `map_addr` in sync for `$FE93` auto-inc.
+
+Sim: `r01s_board_peek_fe` / `r01s_board_poke_fe` on the board soft regs (no discrete HC573).
+
 Cap: **16 sprites per logical scanline**. BG0 line is prepared one line ahead. Sprite field is full-playfield in VBlank. Not an RGB framebuffer.
 
 ## On-chip memory

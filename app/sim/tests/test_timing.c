@@ -75,7 +75,7 @@ int main(void) {
     path_typ = r01s_timing_path_decode_bus_latch_ns();
     expect_true(path_max > path_typ, "max path > typ path");
     expect_true(path_typ == R01S_TPD_ATF22_TYP_NS + R01S_TPD_HC245_TYP_NS + R01S_TPD_HC573_TYP_NS,
-                "typ path sum");
+                "typ path sum (historical decode+245+573 budget)");
     expect_true(path_max > R01S_PHI2_HALF_NS, "max decode+245+573 exceeds PHI2 half (budget flag)");
 
     /* SRAM tAA helper. */

@@ -432,8 +432,8 @@ static void apply_video_latch(R01sBoard *b) {
     pl = &b->play;
     sink = b->video_impl.sink;
     if (sink) {
-        int scroll_changed = pl->pending_scroll_x != r01s_sn74hc573_peek_q(b->io_latch_impl.latch573[R01S_LATCH_FE02]) ||
-                             pl->pending_scroll_y != r01s_sn74hc573_peek_q(b->io_latch_impl.latch573[R01S_LATCH_FE03]);
+        int scroll_changed = pl->pending_scroll_x != r01s_board_peek_fe(b, 0x02u) ||
+                             pl->pending_scroll_y != r01s_board_peek_fe(b, 0x03u);
         int origin_changed = pl->pending_origin_col != pl->origin_col || pl->pending_origin_row != pl->origin_row;
         int mode = r01s_video_sink_render_mode(sink);
         int do_clear = 0;

@@ -1,0 +1,50 @@
+Name     upldv_map_a ;
+PartNo   ATF22V10 ;
+Date     2026-09-06 ;
+Revision 01 ;
+Designer Retr01 ;
+Company  Retr01 ;
+Assembly None ;
+Location UPLDV ;
+Device   g22v10 ;
+
+/* HC573-zero: CART_A14..A18 registered export.
+ * Soft MAP seek ($FE90-$FE92) lives on ATmega1284P.
+ * This PLD holds the five high address bits for the cart edge (hard every-cycle path).
+ * Load from CPU D[4:0] on SEL_FE91 or SEL_FE92 (UPLDV_LE_MAP).
+ *
+ * pinmap: UPLDV_CART_A, UPLDV_LD_MAP, UPLDV_LE_MAP, UPLDV_IDX (compositor)
+ */
+
+PIN 1   = CLK ;
+PIN 8   = D0 ;
+PIN 9   = D1 ;
+PIN 10  = D2 ;
+PIN 11  = D3 ;
+PIN 21  = D4 ;
+PIN 15  = A14 ;
+PIN 16  = A15 ;
+PIN 17  = A16 ;
+PIN 18  = A17 ;
+PIN 19  = A18 ;
+PIN 20  = LE_MAP ;
+
+A14.D    = D0 ;
+A14.C    = CLK ;
+A14.CE   = LE_MAP ;
+A15.D    = D1 ;
+A15.C    = CLK ;
+A15.CE   = LE_MAP ;
+A16.D    = D2 ;
+A16.C    = CLK ;
+A16.CE   = LE_MAP ;
+A17.D    = D3 ;
+A17.C    = CLK ;
+A17.CE   = LE_MAP ;
+A18.D    = D4 ;
+A18.C    = CLK ;
+A18.CE   = LE_MAP ;
+
+/* TODO: compositor priority / PROM index equations on pins 2..7, 13, 14.
+ * Bit steering: which FE91/FE92 data bits map to A14..A18 (see docs/cart.md).
+ */

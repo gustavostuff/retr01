@@ -270,7 +270,7 @@ static void board_update_milestones(R01sBoard *ctx) {
     if (!ctx) {
         return;
     }
-    if (r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE02]) == 0x55) {
+    if (r01s_board_peek_fe(ctx, 0x02u) == 0x55) {
         ctx->health_saw_latch = 1;
     }
     if (r01s_as6c62256_peek(ctx->vram_impl.vram, 0) == 0xAA) {
@@ -428,24 +428,24 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_level_name(r01s_entity_sense(cpu_e, "BE")), (unsigned)ctx->cycles, conflicts);
     }
 
-    /* Island D: $FExx latches */
+    /* Island D: soft $FExx (HC573-zero) */
     {
         R01sIslandHealth *ih = &out->islands[R01S_ISLAND_IO_LATCH];
-        uint8_t le = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE02]);
-        uint8_t ry = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE04]);
+        uint8_t le = r01s_board_peek_fe(ctx, 0x02u);
+        uint8_t ry = r01s_board_peek_fe(ctx, 0x04u);
         ih->letter = 'D';
         if (booting) {
             ih->health = R01S_HEALTH_BOOT;
             snprintf(ih->activity, sizeof(ih->activity), "await boot STA $FE02");
         } else if (ctx->health_saw_latch) {
             ih->health = R01S_HEALTH_OK;
-            snprintf(ih->activity, sizeof(ih->activity), "scroll latched $%02X", le);
+            snprintf(ih->activity, sizeof(ih->activity), "scroll soft $%02X", le);
         } else {
             ih->health = R01S_HEALTH_WARN;
             snprintf(ih->activity, sizeof(ih->activity), "await STA $FE02 ($%02X)", le);
         }
         snprintf(ih->debug, sizeof(ih->debug),
-                 "island=D IO_LATCH health=%s saw_latch=%d FE02_Q=$%02X FE04_Q=$%02X expect_FE02=$55",
+                 "island=D soft_$FExx health=%s saw_latch=%d FE02=$%02X FE04=$%02X expect_FE02=$55",
                  r01s_health_tag(ih->health), ctx->health_saw_latch, le, ry);
     }
 
@@ -513,7 +513,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_health_tag(ih->health), ctx->health_saw_beam, ctx->health_saw_nmi, pulses, bx, by,
                  hb, vb,
                  r01s_level_name(r01s_entity_sense(r01s_atf22v10_entity(ctx->beam_impl.beam_y), "EQ#")),
-                 r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE04]));
+                 r01s_board_peek_fe(ctx, 0x04u));
     }
 
     /* Island O: Color PROM + compositor + LCD sink */
@@ -745,30 +745,6 @@ static void copy_bus_named(R01sBoard *ctx, R01sEntity *dst, const char *dst_pref
     }
 }
 
-static void copy_cpu_d_to_latch_d(R01sBoard *ctx, R01sEntity *latch, R01sEntity *cpu) {
-    int i;
-    char ln[8], cn[8];
-
-    (void)ctx;
-    for (i = 0; i < 8; i++) {
-        snprintf(ln, sizeof(ln), "%dD", i + 1);
-        snprintf(cn, sizeof(cn), "D%d", i);
-        r01s_entity_drive(latch, ln, r01s_entity_sense(cpu, cn));
-    }
-}
-
-static void copy_latch_q_to_cpu_d(R01sBoard *ctx, R01sEntity *cpu, R01sEntity *latch) {
-    int i;
-    char ln[8], cn[8];
-
-    (void)ctx;
-    for (i = 0; i < 8; i++) {
-        snprintf(ln, sizeof(ln), "%dQ", i + 1);
-        snprintf(cn, sizeof(cn), "D%d", i);
-        r01s_entity_drive(cpu, cn, r01s_entity_sense(latch, ln));
-    }
-}
-
 static void drive_level_bit(R01sEntity *e, const char *name, int bit_on) {
     r01s_entity_drive(e, name, bit_on ? R01S_LVL_H : R01S_LVL_L);
 }
@@ -782,7 +758,7 @@ static int board_map_byte_is_cart_magic(const R01sBoard *ctx, uint8_t dq) {
     return ctx && ctx->map_addr == 0 && dq == (uint8_t)'r';
 }
 
-/* Soft PLD: $FE02-$FE04 latches + $FE40-$FE5F APU + $FE60/$FE61 pads + $FE90-$FE93 MAP. */
+/* Soft $FExx + $FE40-$FE5F APU + $FE60/$FE61 pads + $FE90-$FE93 MAP. */
 static void flash_deselect(R01sEntity *flash) {
     if (!flash) {
         return;
@@ -864,80 +840,133 @@ static void flash_chr_release(R01sBoard *ctx) {
     ctx->flash_ce_owner = R01S_FLASH_CE_NONE;
 }
 
-static void sync_vram_addr_from_latches(R01sBoard *ctx) {
-    uint8_t lo = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE10]);
-    uint8_t hi = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE11]);
-    ctx->vram_addr = (uint16_t)((((uint16_t)hi << 8) | lo) & 0x7FFFu);
+uint8_t r01s_board_peek_fe(const R01sBoard *b, uint8_t port) {
+    if (!b) {
+        return 0;
+    }
+    switch (port) {
+    case 0x00u:
+        return b->fe00_ctrl;
+    case 0x02u:
+        return b->fe02_scroll_x;
+    case 0x03u:
+        return b->fe03_scroll_y;
+    case 0x04u:
+        return b->fe04_raster_y;
+    case 0x05u:
+        return b->fe05_raster_ctrl;
+    case 0x06u:
+        return b->fe06_bg0_x;
+    case 0x07u:
+        return b->fe07_bg0_y;
+    case 0x08u:
+        return (uint8_t)(b->pal_addr & 0x1Fu);
+    case 0x10u:
+        return (uint8_t)(b->vram_addr & 0xFFu);
+    case 0x11u:
+        return (uint8_t)((b->vram_addr >> 8) & 0xFFu);
+    case 0x90u:
+        return (uint8_t)(b->map_addr & 0xFFu);
+    case 0x91u:
+        return (uint8_t)((b->map_addr >> 8) & 0xFFu);
+    case 0x92u:
+        return (uint8_t)((b->map_addr >> 16) & 0xFFu);
+    default:
+        return 0;
+    }
 }
 
-static void sync_map_addr_from_latches(R01sBoard *ctx) {
-    uint32_t lo = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE90]);
-    uint32_t mid = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE91]);
-    uint32_t hi = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE92]);
-    ctx->map_addr = (hi << 16) | (mid << 8) | lo;
+void r01s_board_poke_fe(R01sBoard *b, uint8_t port, uint8_t v) {
+    if (!b) {
+        return;
+    }
+    switch (port) {
+    case 0x00u:
+        b->fe00_ctrl = v;
+        break;
+    case 0x02u:
+        b->fe02_scroll_x = (v > 127u) ? 127u : v;
+        b->health_saw_latch = 1;
+        break;
+    case 0x03u:
+        b->fe03_scroll_y = (v > 119u) ? 119u : v;
+        break;
+    case 0x04u:
+        b->fe04_raster_y = v;
+        break;
+    case 0x05u:
+        b->fe05_raster_ctrl = v;
+        break;
+    case 0x06u:
+        b->fe06_bg0_x = v;
+        break;
+    case 0x07u:
+        b->fe07_bg0_y = v;
+        break;
+    case 0x08u:
+        b->pal_addr = (uint8_t)(v & 0x1Fu);
+        break;
+    case 0x10u:
+        b->vram_addr = (uint16_t)(((b->vram_addr & 0xFF00u) | v) & 0x7FFFu);
+        break;
+    case 0x11u:
+        b->vram_addr = (uint16_t)(((b->vram_addr & 0x00FFu) | ((uint16_t)v << 8)) & 0x7FFFu);
+        break;
+    case 0x90u:
+        b->map_addr = (b->map_addr & 0xFFFF00u) | v;
+        break;
+    case 0x91u:
+        b->map_addr = (b->map_addr & 0xFF00FFu) | ((uint32_t)v << 8);
+        b->cart_a14_18 = (uint8_t)((b->map_addr >> 14) & 0x1Fu);
+        break;
+    case 0x92u:
+        b->map_addr = (b->map_addr & 0x00FFFFu) | ((uint32_t)v << 16);
+        b->cart_a14_18 = (uint8_t)((b->map_addr >> 14) & 0x1Fu);
+        break;
+    default:
+        break;
+    }
 }
 
-static void sync_pal_addr_from_latch(R01sBoard *ctx) {
-    ctx->pal_addr =
-        (uint8_t)(r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE08]) & 0x1Fu);
-}
-
-static void poke_vram_addr_latches(R01sBoard *ctx, uint16_t va) {
+static void poke_vram_addr(R01sBoard *ctx, uint16_t va) {
     va &= 0x7FFFu;
-    r01s_sn74hc573_poke_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE10], (uint8_t)(va & 0xFFu));
-    r01s_sn74hc573_poke_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE11], (uint8_t)((va >> 8) & 0xFFu));
     ctx->vram_addr = va;
 }
 
-static void poke_map_addr_latches(R01sBoard *ctx, uint32_t ma) {
+static void poke_map_addr(R01sBoard *ctx, uint32_t ma) {
     ma &= 0xFFFFFFu;
-    r01s_sn74hc573_poke_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE90], (uint8_t)(ma & 0xFFu));
-    r01s_sn74hc573_poke_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE91], (uint8_t)((ma >> 8) & 0xFFu));
-    r01s_sn74hc573_poke_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE92], (uint8_t)((ma >> 16) & 0xFFu));
     ctx->map_addr = ma;
+    ctx->cart_a14_18 = (uint8_t)((ma >> 14) & 0x1Fu);
 }
 
-static void poke_pal_addr_latch(R01sBoard *ctx, uint8_t pa) {
-    pa &= 0x1Fu;
-    r01s_sn74hc573_poke_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE08], pa);
-    ctx->pal_addr = pa;
+static void poke_pal_addr(R01sBoard *ctx, uint8_t pa) {
+    ctx->pal_addr = (uint8_t)(pa & 0x1Fu);
 }
 
-/* Pulse HC573 LE from decode SEL; route D<->Q on pin path. */
-static void latch_port_cycle(R01sBoard *ctx, R01sEntity *latch, R01sEntity *cpu, int selected,
-                             int read) {
-    r01s_entity_drive(latch, "OE", R01S_LVL_L);
-    r01s_entity_drive(latch, "LE", R01S_LVL_L);
+/* Soft $FExx port: write on DATA phase, read drives CPU D. */
+static void soft_fe_port_cycle(R01sBoard *ctx, R01sEntity *cpu, uint8_t port, int selected, int read) {
     if (!selected) {
-        r01s_entity_eval(latch);
         return;
     }
-    copy_cpu_d_to_latch_d(ctx, latch, cpu);
-    if (!read) {
-        r01s_entity_drive(latch, "LE", R01S_LVL_H);
-    }
-    r01s_entity_eval(latch);
     if (read) {
-        copy_latch_q_to_cpu_d(ctx, cpu, latch);
+        r01s_bus_write(cpu, "D", 8, r01s_board_peek_fe(ctx, port));
+        return;
     }
-    r01s_entity_drive(latch, "LE", R01S_LVL_L);
-    r01s_entity_eval(latch);
-}
-
-static int pld_sel(R01sEntity *pld, const char *name) {
-    return r01s_level_is_high(r01s_entity_sense(pld, name));
+    if (r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu) == R01S_CPU_OP_DATA) {
+        r01s_board_poke_fe(ctx, port, board_cpu_d_sample(ctx, cpu));
+    }
 }
 
 /*
- * Combinatorial $FExx hit for LE / port strobes.
- * Must not use delayed PLD SEL pins: wire_io pulses LE in the same pass as
+ * Combinatorial $FExx hit for soft port strobes.
+ * Must not use delayed PLD SEL pins: wire_io updates soft regs in the same pass as
  * decode, so DELAY on ATF22 would miss the write (boot WARN / catchup fail).
  */
 static int io_port_sel(uint16_t addr, int be, uint8_t port) {
     return be && ((addr & 0xFF00u) == 0xFE00u) && ((uint8_t)(addr & 0xFFu) == port);
 }
 
-/* Drive decode PLD from CPU A/BE; SEL_FE* qualify HC573 / MAP / VRAM ports. */
+/* Drive decode PLD from CPU A/BE; SEL_FE* qualify soft $FExx / MAP / VRAM ports. */
 static void wire_decode(R01sBoard *ctx) {
     R01sEntity *cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
     R01sEntity *pld = r01s_atf22v10_entity(ctx->cpu_mem_impl.pld_decode);
@@ -959,13 +988,6 @@ static void wire_decode(R01sBoard *ctx) {
 static void wire_io(R01sBoard *ctx) {
     R01sEntity *cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
     R01sEntity *pld = r01s_atf22v10_entity(ctx->cpu_mem_impl.pld_decode);
-    R01sEntity *latch = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE02]);
-    R01sEntity *scroll_y = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE03]);
-    R01sEntity *raster = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE04]);
-    R01sEntity *pal_latch = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE08]);
-    R01sEntity *map_lo = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE90]);
-    R01sEntity *map_mid = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE91]);
-    R01sEntity *map_hi = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE92]);
     R01sEntity *pads = r01s_pads_entity(ctx->pads_impl.pads);
     R01sEntity *apu = r01s_atmega328p_entity(ctx->apu_impl.apu);
     R01sEntity *mcu = r01s_atmega1284p_entity(ctx->mcu_lb_impl.mcu);
@@ -981,14 +1003,19 @@ static void wire_io(R01sBoard *ctx) {
     int hit_pads = (addr == 0xFE60u || addr == 0xFE61u);
     int hit_pal_data = (addr == 0xFE09u);
     int hit_map_data;
-    int sel_fe02, sel_fe03, sel_fe04, sel_fe08, sel_fe90, sel_fe91, sel_fe92, sel_fe93;
+    int sel_fe00, sel_fe02, sel_fe03, sel_fe04, sel_fe05, sel_fe06, sel_fe07;
+    int sel_fe08, sel_fe90, sel_fe91, sel_fe92, sel_fe93;
     int ai;
 
     wire_decode(ctx);
-    /* LE strobes from combo decode (not delayed SEL pins). */
+    /* Soft $FExx strobes from combo decode (not delayed SEL pins). */
+    sel_fe00 = io_port_sel(addr, be, 0x00u);
     sel_fe02 = io_port_sel(addr, be, 0x02u);
     sel_fe03 = io_port_sel(addr, be, 0x03u);
     sel_fe04 = io_port_sel(addr, be, 0x04u);
+    sel_fe05 = io_port_sel(addr, be, 0x05u);
+    sel_fe06 = io_port_sel(addr, be, 0x06u);
+    sel_fe07 = io_port_sel(addr, be, 0x07u);
     sel_fe08 = io_port_sel(addr, be, 0x08u);
     sel_fe90 = io_port_sel(addr, be, 0x90u);
     sel_fe91 = io_port_sel(addr, be, 0x91u);
@@ -1015,13 +1042,6 @@ static void wire_io(R01sBoard *ctx) {
                       r01s_beam_xy_hblank(ctx->beam_impl.beam_x) ? R01S_LVL_H : R01S_LVL_L);
 
     if (!be || !addr_is_io(addr)) {
-        latch_port_cycle(ctx, latch, cpu, 0, read);
-        latch_port_cycle(ctx, scroll_y, cpu, 0, read);
-        latch_port_cycle(ctx, raster, cpu, 0, read);
-        latch_port_cycle(ctx, pal_latch, cpu, 0, read);
-        latch_port_cycle(ctx, map_lo, cpu, 0, read);
-        latch_port_cycle(ctx, map_mid, cpu, 0, read);
-        latch_port_cycle(ctx, map_hi, cpu, 0, read);
         r01s_entity_eval(pads);
         r01s_entity_eval(apu);
         r01s_entity_eval(mcu);
@@ -1045,20 +1065,18 @@ static void wire_io(R01sBoard *ctx) {
         }
     }
 
-    /* Decode PLD SEL -> HC573 LE (BOM latches on pin path). */
-    latch_port_cycle(ctx, latch, cpu, sel_fe02, read);
-    latch_port_cycle(ctx, scroll_y, cpu, sel_fe03, read);
-    latch_port_cycle(ctx, raster, cpu, sel_fe04, read);
-    latch_port_cycle(ctx, pal_latch, cpu, sel_fe08, read);
-    latch_port_cycle(ctx, map_lo, cpu, sel_fe90, read);
-    latch_port_cycle(ctx, map_mid, cpu, sel_fe91, read);
-    latch_port_cycle(ctx, map_hi, cpu, sel_fe92, read);
-    if (sel_fe08) {
-        sync_pal_addr_from_latch(ctx);
-    }
-    if (sel_fe90 || sel_fe91 || sel_fe92) {
-        sync_map_addr_from_latches(ctx);
-    }
+    /* Soft $FExx (HC573-zero). */
+    soft_fe_port_cycle(ctx, cpu, 0x00u, sel_fe00, read);
+    soft_fe_port_cycle(ctx, cpu, 0x02u, sel_fe02, read);
+    soft_fe_port_cycle(ctx, cpu, 0x03u, sel_fe03, read);
+    soft_fe_port_cycle(ctx, cpu, 0x04u, sel_fe04, read);
+    soft_fe_port_cycle(ctx, cpu, 0x05u, sel_fe05, read);
+    soft_fe_port_cycle(ctx, cpu, 0x06u, sel_fe06, read);
+    soft_fe_port_cycle(ctx, cpu, 0x07u, sel_fe07, read);
+    soft_fe_port_cycle(ctx, cpu, 0x08u, sel_fe08, read);
+    soft_fe_port_cycle(ctx, cpu, 0x90u, sel_fe90, read);
+    soft_fe_port_cycle(ctx, cpu, 0x91u, sel_fe91, read);
+    soft_fe_port_cycle(ctx, cpu, 0x92u, sel_fe92, read);
 
     /* Island L: OAM $FE20/$FE21 (hold WE#/OE# across settle; chip edge-inc). */
     if (hit_oam) {
@@ -1120,11 +1138,10 @@ static void wire_io(R01sBoard *ctx) {
         r01s_entity_eval(pads);
     }
 
-    /* Island J: MAP $FE93: flash CE via decode SEL (seek from HC573 FE90-92). */
+    /* Island J: MAP $FE93: flash CE via decode SEL (seek from soft $FE90-92). */
     if (hit_map_data && read && flash && ctx->cart_loaded &&
         r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu) == R01S_CPU_OP_DATA) {
         uint8_t dq;
-        sync_map_addr_from_latches(ctx);
         flash_read_selected(flash, ctx->map_addr);
         copy_bus_named(ctx, cpu, "D", flash, "DQ", 8);
         dq = board_cpu_d_sample(ctx, cpu);
@@ -1141,30 +1158,28 @@ static void wire_io(R01sBoard *ctx) {
         }
     }
 
-    /* $FE09 palette data; addr index from HC573 FE08. */
+    /* $FE09 palette data; addr index from soft $FE08. */
     if (hit_pal_data && !read &&
         r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu) == R01S_CPU_OP_DATA && !ctx->pal_fe09_wrote) {
-        sync_pal_addr_from_latch(ctx);
         ctx->active_pal[ctx->pal_addr & 0x1Fu] = board_cpu_d_sample(ctx, cpu);
-        poke_pal_addr_latch(ctx, (uint8_t)((ctx->pal_addr + 1u) & 0x1Fu));
+        poke_pal_addr(ctx, (uint8_t)((ctx->pal_addr + 1u) & 0x1Fu));
         ctx->pal_fe09_wrote = 1;
     }
     if (hit_pal_data && read) {
-        sync_pal_addr_from_latch(ctx);
         r01s_bus_write(cpu, "D", 8, ctx->active_pal[ctx->pal_addr & 0x1Fu]);
     }
 }
 
-/* Island H: DOT osc + beam PLD + Y-compare vs $FE04; EQ# drives CPU IRQB. */
+/* Island H: DOT osc + beam PLD + Y-compare vs soft $FE04; EQ# drives CPU IRQB. */
 static void wire_beam(R01sBoard *ctx, R01sIslandGroup *group) {
     R01sEntity *pwr = r01s_pwr5v_entity(ctx->power_clk_impl.pwr);
     R01sEntity *osc = r01s_osc_dot_entity(ctx->beam_impl.osc_dot);
     R01sEntity *beam = r01s_beam_xy_entity(ctx->beam_impl.beam_x);
     R01sEntity *beam_y = r01s_atf22v10_entity(ctx->beam_impl.beam_y);
-    R01sEntity *raster = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE04]);
     R01sEntity *cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
     R01sLevel vdd = r01s_entity_sense(pwr, "VDD");
     R01sLevel resb = (ctx->reset_hold > 0) ? R01S_LVL_L : R01S_LVL_H;
+    uint8_t raster_y = ctx->fe04_raster_y;
     int i;
     char pn[8], qn[8], yn[8];
 
@@ -1174,17 +1189,13 @@ static void wire_beam(R01sBoard *ctx, R01sIslandGroup *group) {
     r01s_entity_drive(beam, "RES#", resb);
     r01s_entity_drive(beam, "DOT", r01s_entity_sense(osc, "DOT"));
 
-    /* P = beam Y[7:0], Q = $FE04 latch */
+    /* P = beam Y[7:0], Q = soft $FE04 */
     for (i = 0; i < 8; i++) {
         snprintf(pn, sizeof(pn), "P%d", i);
         snprintf(yn, sizeof(yn), "Y%d", i);
         snprintf(qn, sizeof(qn), "Q%d", i);
         r01s_entity_drive(beam_y, pn, r01s_entity_sense(beam, yn));
-        {
-            char ln[16];
-            snprintf(ln, sizeof(ln), "%dQ", i + 1);
-            r01s_entity_drive(beam_y, qn, r01s_entity_sense(raster, ln));
-        }
+        r01s_entity_drive(beam_y, qn, (raster_y & (1u << i)) ? R01S_LVL_H : R01S_LVL_L);
     }
     r01s_entity_drive(beam_y, "OE#", R01S_LVL_L);
     r01s_entity_eval(beam);
@@ -1195,9 +1206,9 @@ static void wire_beam(R01sBoard *ctx, R01sIslandGroup *group) {
 
 /*
  * Island G: VRAM port $FE10/$FE11/$FE12 + PHI2 interleave.
- * CPU phase (PHI2 high): CPU may R/W via HC573 FE10/FE11 + FE12.
+ * CPU phase (PHI2 high): CPU may R/W via soft FE10/FE11 + FE12.
  * PPU phase (PHI2 low): mux selects BG fetch VA; VRAM OE for nametable.
- * Auto-inc arms on FE12 access; committed on next PHI2 rising edge (poke latches).
+ * Auto-inc arms on FE12 access; committed on next PHI2 rising edge.
  */
 static void wire_vram(R01sBoard *ctx) {
     R01sEntity *cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
@@ -1205,8 +1216,6 @@ static void wire_vram(R01sBoard *ctx) {
     R01sEntity *vram = r01s_as6c62256_entity(ctx->vram_impl.vram);
     R01sEntity *mux = r01s_sn74hc157_entity(ctx->vram_impl.mux157[R01S_MUX157_VRAM0]);
     R01sEntity *osc = r01s_osc8m_entity(ctx->power_clk_impl.osc);
-    R01sEntity *fe10 = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE10]);
-    R01sEntity *fe11 = r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[R01S_LATCH_FE11]);
     R01sBgFetch *bg = ctx->bg_fetch_impl.fetch;
     uint16_t cpu_addr = board_cpu_addr(ctx, cpu);
     int read = board_cpu_read(ctx, cpu);
@@ -1218,13 +1227,10 @@ static void wire_vram(R01sBoard *ctx) {
     uint16_t sram_addr;
     int i;
 
-    /* FE10/FE11 via combo decode -> HC573 (not PHI2-gated; not delayed SEL). */
+    /* FE10/FE11 soft poke (not PHI2-gated; not delayed SEL). */
     wire_decode(ctx);
-    latch_port_cycle(ctx, fe10, cpu, io_port_sel(cpu_addr, be, 0x10u), read);
-    latch_port_cycle(ctx, fe11, cpu, io_port_sel(cpu_addr, be, 0x11u), read);
-    if (io_port_sel(cpu_addr, be, 0x10u) || io_port_sel(cpu_addr, be, 0x11u)) {
-        sync_vram_addr_from_latches(ctx);
-    }
+    soft_fe_port_cycle(ctx, cpu, 0x10u, io_port_sel(cpu_addr, be, 0x10u), read);
+    soft_fe_port_cycle(ctx, cpu, 0x11u, io_port_sel(cpu_addr, be, 0x11u), read);
     hit_data = io_port_sel(cpu_addr, be, 0x12u);
     va = (uint16_t)(ctx->vram_addr & 0x7FFFu);
     (void)pld;
@@ -1415,8 +1421,8 @@ static void board_vram_cell_at(const R01sBoard *ctx, int lx, int ly, uint8_t *ti
     int sy;
     int slot_x, slot_y, slot, local_x, local_y, tx, ty, cell;
     uint16_t addr;
-    uint8_t scroll_x = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE02]);
-    uint8_t scroll_y = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE03]);
+    uint8_t scroll_x = r01s_board_peek_fe(ctx, 0x02u);
+    uint8_t scroll_y = r01s_board_peek_fe(ctx, 0x03u);
 
     *tile_out = 0;
     *attr_out = 0;
@@ -1526,8 +1532,8 @@ static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     int sx, sy, slot_x, slot_y, slot;
     int chr_ok = 1;
 
-    scroll_x = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE02]);
-    scroll_y = r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE03]);
+    scroll_x = r01s_board_peek_fe(ctx, 0x02u);
+    scroll_y = r01s_board_peek_fe(ctx, 0x03u);
     sx = (int)(scroll_x & 127u) + lx;
     sy = (int)(scroll_y < 120u ? scroll_y : 119u) + ly;
     slot_x = (sx / R01S_BG_SCREEN_PX_W) & 1;
@@ -1737,8 +1743,8 @@ static void wire_bg_fetch(R01sBoard *ctx) {
     r01s_bg_fetch_set_beam(bg, r01s_beam_xy_x(ctx->beam_impl.beam_x), r01s_beam_xy_y(ctx->beam_impl.beam_x),
                            r01s_beam_xy_hblank(ctx->beam_impl.beam_x),
                            r01s_beam_xy_vblank(ctx->beam_impl.beam_x));
-    r01s_bg_fetch_set_scroll(bg, r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE02]),
-                             r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE03]));
+    r01s_bg_fetch_set_scroll(bg, r01s_board_peek_fe(ctx, 0x02u),
+                             r01s_board_peek_fe(ctx, 0x03u));
     r01s_bg_fetch_set_cpu_phase(bg, cpu_phase);
     r01s_entity_eval(r01s_bg_fetch_entity(bg));
 }
@@ -1967,7 +1973,7 @@ void r01s_board_catchup_finish(R01sBoard *board) {
         return;
     }
     if (board->cart_off_map_screen0 != 0) {
-        poke_map_addr_latches(board, board->cart_off_map_screen0 + 480u);
+        poke_map_addr(board, board->cart_off_map_screen0 + 480u);
         board->health_saw_map = 1;
     }
     if (board->cart_off_sdir != 0) {
@@ -2016,15 +2022,8 @@ static void island_cpu_mem_init(R01sIsland *island) {
 }
 
 static void island_io_latch_init(R01sIsland *island) {
-    R01sIslandIoLatchImpl *impl = (R01sIslandIoLatchImpl *)island->impl;
-    static const char *const refdes[R01S_BOM_HC573_N] = {
-        "U5A", "U5B", "U5C", "U5D", "U5E", "U5F", "U5G", "U5H", "U5I",
-    };
-    int i;
-    for (i = 0; i < R01S_BOM_HC573_N; i++) {
-        r01s_sn74hc573_init(impl->latch573[i], refdes[i]);
-        r01s_island_add_entity(island, r01s_sn74hc573_entity(impl->latch573[i]));
-    }
+    /* Soft $FExx on R01sBoard; no HC573 entities (HC573-zero). */
+    (void)island;
 }
 
 static void island_beam_init(R01sIsland *island) {
@@ -2624,16 +2623,15 @@ void r01s_board_set_scroll(R01sBoard *board, uint8_t scroll_x, uint8_t scroll_y)
     if (scroll_y > 119) {
         scroll_y = 119;
     }
-    r01s_sn74hc573_poke_q(board->io_latch_impl.latch573[R01S_LATCH_FE02], scroll_x);
-    r01s_sn74hc573_poke_q(board->io_latch_impl.latch573[R01S_LATCH_FE03], scroll_y);
-    board->health_saw_latch = 1;
+    r01s_board_poke_fe(board, 0x02u, scroll_x);
+    r01s_board_poke_fe(board, 0x03u, scroll_y);
 }
 
 void r01s_board_mark_map_ready(R01sBoard *board) {
     if (!board || board->cart_off_map_screen0 == 0) {
         return;
     }
-    poke_map_addr_latches(board, board->cart_off_map_screen0 + 480u);
+    poke_map_addr(board, board->cart_off_map_screen0 + 480u);
     r01s_frame_log_mark_bg_ready();
 }
 
@@ -2797,7 +2795,7 @@ int r01s_board_softboot_start_screen(R01sBoard *board) {
     board->vram_slot_present[2] = 0;
     board->vram_slot_present[3] = 0;
     board_apply_active_pals_from_cart(board);
-    poke_map_addr_latches(board, board->cart_off_map_screen0 + 480u);
+    poke_map_addr(board, board->cart_off_map_screen0 + 480u);
     if (board->cart_off_sdir != 0) {
         (void)r01s_board_load_camera_2x2(board, (int)board->cart_start_col, (int)board->cart_start_row);
     }
@@ -2914,13 +2912,17 @@ static void board_reset(R01sIslandGroup *group) {
     r01s_entity_reset(r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu));
     r01s_entity_reset(r01s_osc8m_entity(ctx->power_clk_impl.osc));
     {
-        int li;
-        for (li = 0; li < R01S_BOM_HC573_N; li++) {
-            r01s_entity_reset(r01s_sn74hc573_entity(ctx->io_latch_impl.latch573[li]));
-        }
-        poke_vram_addr_latches(ctx, 0);
-        poke_map_addr_latches(ctx, 0);
-        poke_pal_addr_latch(ctx, 0);
+        ctx->fe00_ctrl = 0;
+        ctx->fe02_scroll_x = 0;
+        ctx->fe03_scroll_y = 0;
+        ctx->fe04_raster_y = 0;
+        ctx->fe05_raster_ctrl = 0;
+        ctx->fe06_bg0_x = 0;
+        ctx->fe07_bg0_y = 0;
+        ctx->cart_a14_18 = 0;
+        poke_vram_addr(ctx, 0);
+        poke_map_addr(ctx, 0);
+        poke_pal_addr(ctx, 0);
     }
     r01s_entity_reset(r01s_pads_entity(ctx->pads_impl.pads));
     r01s_entity_reset(r01s_attiny85_entity(&ctx->pad_mcu[0]));
@@ -3060,11 +3062,11 @@ static void board_step(R01sIslandGroup *group) {
             /* Auto-inc after a completed DATA cycle that touched $FE12 / $FE93. */
             if (ph_before == R01S_CPU_OP_DATA) {
                 if (ctx->vram_fe12_armed) {
-                    poke_vram_addr_latches(ctx, (uint16_t)((ctx->vram_addr + 1u) & 0x7FFFu));
+                    poke_vram_addr(ctx, (uint16_t)((ctx->vram_addr + 1u) & 0x7FFFu));
                     ctx->vram_fe12_armed = 0;
                 }
                 if (ctx->map_fe93_armed) {
-                    poke_map_addr_latches(ctx, (ctx->map_addr + 1u) & 0xFFFFFFu);
+                    poke_map_addr(ctx, (ctx->map_addr + 1u) & 0xFFFFFFu);
                     ctx->map_fe93_armed = 0;
                 }
                 ctx->pal_fe09_wrote = 0;
@@ -3096,7 +3098,7 @@ static void board_status(R01sIslandGroup *group, char *buf, size_t buf_len) {
              r01s_w65c02s_pc(ctx->cpu_mem_impl.cpu), r01s_w65c02s_a(ctx->cpu_mem_impl.cpu),
              (unsigned)r01s_bus_read(cpu, "A", 16), ctx->cpu.ir,
              phase_name(r01s_w65c02s_phase(ctx->cpu_mem_impl.cpu)),
-             r01s_sn74hc573_peek_q(ctx->io_latch_impl.latch573[R01S_LATCH_FE02]), (unsigned)(ctx->vram_addr & 0x7FFFu),
+             r01s_board_peek_fe(ctx, 0x02u), (unsigned)(ctx->vram_addr & 0x7FFFu),
              r01s_as6c62256_peek(ctx->vram_impl.vram, 0), r01s_pads_get(ctx->pads_impl.pads, 0),
              r01s_pads_get(ctx->pads_impl.pads, 1), r01s_beam_xy_x(ctx->beam_impl.beam_x),
              r01s_beam_xy_y(ctx->beam_impl.beam_x), r01s_beam_xy_hblank(ctx->beam_impl.beam_x) ? " HB" : "",
@@ -3148,12 +3150,6 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     board->cpu_mem_impl.ram = &board->ram;
     board->cpu_mem_impl.prg = &board->prg;
     board->cpu_mem_impl.pld_decode = &board->pld_decode;
-    {
-        int i;
-        for (i = 0; i < R01S_BOM_HC573_N; i++) {
-            board->io_latch_impl.latch573[i] = &board->latch573[i];
-        }
-    }
     board->pads_impl.pads = &board->pads;
     board->vram_impl.vram = &board->vram;
     {
@@ -3213,7 +3209,7 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
                                 &board->cpu_mem_impl) < 0) {
         return -1;
     }
-    if (r01s_island_builder_add(b, &ISLAND_IO_VT, "ISLAND D  FExx LATCH x9", 0, 0, 1, 1,
+    if (r01s_island_builder_add(b, &ISLAND_IO_VT, "ISLAND D  soft $FExx", 0, 0, 1, 1,
                                 &board->io_latch_impl) < 0) {
         return -1;
     }
@@ -3272,20 +3268,7 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         r01s_island_builder_mount_rel(b, r01s_sn74hc245_entity(&board->bus245[R01S_BUS245_CPU]),
                                       R01S_ISLAND_CPU, x, 0);
     }
-    {
-        int i;
-        int x = 0;
-        int y = 0;
-        for (i = 0; i < R01S_BOM_HC573_N; i++) {
-            R01sEntity *e = r01s_sn74hc573_entity(&board->latch573[i]);
-            r01s_island_builder_mount_rel(b, e, R01S_ISLAND_IO_LATCH, x, y);
-            x += e->body_w + R01S_CHIP_GAP;
-            if (x > 560) {
-                x = 0;
-                y += e->body_h + R01S_CHIP_GAP;
-            }
-        }
-    }
+    /* Island D: soft $FExx only (no HC573 mounts). */
     {
         R01sEntity *vram_e = r01s_as6c62256_entity(&board->vram);
         int x = 0;

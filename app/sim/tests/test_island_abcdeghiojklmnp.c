@@ -10,7 +10,6 @@
 #include "retr01_sim/entity.h"
 #include "retr01_sim/island_builder.h"
 #include "atf22v10.h"
-#include "sn74hc573.h"
 #include "sst39sf040.h"
 #include "test_common.h"
 #include "video_sink.h"
@@ -57,7 +56,7 @@ int main(void) {
     expect_true(r01s_island_group_count(group) == R01S_ISLAND_COUNT,
                 "10 islands incl cart mod (no flasher)");
     expect_true(r01s_island_builder_count_bom_ic(&builder) == R01S_BOM_IC_N,
-                "32 BOM IC visuals mounted");
+                "23 BOM IC visuals mounted");
     expect_true(r01s_island_group_at(group, R01S_ISLAND_VIDEO) != NULL, "video island present");
     expect_true(r01s_island_group_at(group, R01S_ISLAND_VIDEO)->title != NULL &&
                     strstr(r01s_island_group_at(group, R01S_ISLAND_VIDEO)->title, "VIDEO") != NULL,
@@ -87,23 +86,11 @@ int main(void) {
     expect_true(r01s_sst39sf040_peek(&b->cart_module.flash, 1) == 'e', "flash magic e (retr01)");
 
     r01s_pads_set(&b->pads, 0, 0xA5);
-    {
-        R01sEntity *raster = r01s_sn74hc573_entity(&b->latch573[R01S_LATCH_FE04]);
-        int bi;
-        char dn[8];
-        for (bi = 0; bi < 8; bi++) {
-            snprintf(dn, sizeof(dn), "%dD", bi + 1);
-            r01s_entity_drive(raster, dn, R01S_LVL_L);
-        }
-        r01s_entity_drive(raster, "OE", R01S_LVL_L);
-        r01s_entity_drive(raster, "LE", R01S_LVL_H);
-        r01s_entity_eval(raster);
-        r01s_entity_drive(raster, "LE", R01S_LVL_L);
-    }
+    r01s_board_poke_fe(b, 0x04u, 0); /* force raster compare Y=0 for EQ# smoke */
 
     for (i = 0; i < 250000; i++) {
         r01s_island_group_step(group);
-        if (r01s_sn74hc573_peek_q(&b->latch573[R01S_LATCH_FE02]) == 0x55) {
+        if (r01s_board_peek_fe(b, 0x02u) == 0x55) {
             saw_latch = 1;
         }
         if (r01s_as6c62256_peek(&b->vram, 0) == 0xAA) {
@@ -161,7 +148,7 @@ int main(void) {
         }
     }
 
-    expect_true(saw_latch, "STA $FE02 hit island D latch");
+    expect_true(saw_latch, "STA $FE02 hit soft $FExx");
     expect_true(saw_vram, "STA $FE12 wrote $AA to VRAM[0]");
     expect_true(saw_vram_read, "LDA $FE12 read VRAM back into A");
     expect_true(saw_pad, "LDA $FE60 read pads (1284 island L)");

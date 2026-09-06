@@ -262,7 +262,7 @@ Silicon target: **zero SN74HC573**. Critical real-time bytes are registered insi
 
 Ports **not** in this table (`$FE09` palette data, `$FE10`-`$FE12` VRAM, OAM, APU, mailboxes) use other paths (MCU, qualified strobes, or direct read ports).
 
-**Sim note:** island D still models nine HC573 mirrors (runner lag). Silicon schematic has no U5A-U5I. See [runners vs silicon](hardware.md#runners-today-vs-silicon-target).
+**Sim note:** soft `$FExx` on `R01sBoard` (`peek_fe` / `poke_fe`). Island D has no HC573 chips. Silicon schematic has no U5A-U5I. See [runners vs silicon](hardware.md#runners-today-vs-silicon-target).
 
 **Fitter escape:** if product terms or pins overflow on the three PLDs holding 24 scroll/raster bits, keep 1-2 discrete latches or +1 ATF22V10 for those bits only.
 

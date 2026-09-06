@@ -128,5 +128,6 @@ That covers every programmable part in the BOM without overlapping the game-imag
 | [`sound.md`](sound.md) | 328P APU firmware expectations |
 | [`controllers.md`](controllers.md) | ATtiny85 pad firmware |
 | [`hw/md/ATF22V10.md`](../hw/md/ATF22V10.md) | PLD resources / JEDEC |
+| [`hw/pld/`](../hw/pld/) | CUPL stubs (scroll / raster / MAP A14-18) |
 | [`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md) | Color PROM packing |
 | [`hw/md/SST39SF040.md`](../hw/md/SST39SF040.md) | Flash command set |

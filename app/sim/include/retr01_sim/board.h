@@ -24,7 +24,6 @@
 #include "sn74hc14.h"
 #include "sn74hc157.h"
 #include "sn74hc245.h"
-#include "sn74hc573.h"
 #include "integration.h"
 #include "sprite_fetch.h"
 #include "retr01_sim/cart_module.h"
@@ -43,7 +42,7 @@ enum {
     R01S_ISLAND_VIDEO = 0,     /* O: LCD / RGBS (top-left) */
     R01S_ISLAND_POWER_CLK = 1, /* A+B: 5V + OSC/HC14 */
     R01S_ISLAND_CPU = 2,       /* C: CPU RAM PLD + CPU HC245 */
-    R01S_ISLAND_IO_LATCH = 3,  /* D */
+    R01S_ISLAND_IO_LATCH = 3,  /* D: soft $FExx (HC573-zero) */
     R01S_ISLAND_VRAM = 4,      /* G */
     R01S_ISLAND_BEAM = 5,      /* H */
     R01S_ISLAND_CART = 6,      /* J: cart socket HC245 */
@@ -67,8 +66,9 @@ typedef struct R01sIslandCpuMemImpl {
     R01sSn74hc245 *bus245_cpu;
 } R01sIslandCpuMemImpl;
 
+/* Island D kept for canvas layout; soft $FExx live on R01sBoard. */
 typedef struct R01sIslandIoLatchImpl {
-    R01sSn74hc573 *latch573[R01S_BOM_HC573_N];
+    int unused;
 } R01sIslandIoLatchImpl;
 
 typedef struct R01sIslandPadsImpl {
@@ -127,9 +127,9 @@ typedef struct R01sIslandIntegrationImpl {
     R01sIntegration *integ; /* NMI / system-ok stats (Island P) */
 } R01sIslandIntegrationImpl;
 
-/* Full 32-IC BOM netlist + bench/support parts (PWR/OSC/LCD). */
+/* Full 23-IC BOM netlist + bench/support parts (PWR/OSC/LCD). Soft $FExx. */
 typedef struct R01sBoard {
-    /* Support (not in 32-IC count). */
+    /* Support (not in 23-IC count). */
     R01sPwr5v pwr;
     R01sOsc8m osc;
     R01sSn74hc14 hc14;
@@ -140,7 +140,7 @@ typedef struct R01sBoard {
     R01sAttiny85 pad_mcu[2]; /* Retr01-C pad boards: P1=0x55, P2=0xAA (support) */
     R01sSpriteFetch sprite_fetch;
     R01sIntegration integration;
-    /* 32-IC BOM silicon. */
+    /* 23-IC BOM silicon. */
     R01sW65C02S cpu;
     R01sAs6c62256 ram;
     R01sAs6c62256 vram;
@@ -150,7 +150,6 @@ typedef struct R01sBoard {
     R01sAtmega328p apu;
     R01sAtmega1284p mcu1284;
     R01sAt28c16 color_prom;
-    R01sSn74hc573 latch573[R01S_BOM_HC573_N];
     R01sSn74hc157 mux157[R01S_BOM_HC157_N];
     R01sSn74hc245 bus245[R01S_BOM_HC245_N];
     R01sAtf22v10 pld_decode;
@@ -174,10 +173,19 @@ typedef struct R01sBoard {
     R01sIslandBusImpl bus_impl;
     R01sIslandSpritesImpl sprites_impl;
     R01sIslandIntegrationImpl integration_impl;
-    /* VRAM addr = HC573 FE10|FE11 (cache); $FE12 auto-inc via poke. */
+    /* Soft $FExx (HC573-zero): mirrors former latch ports. */
+    uint8_t fe00_ctrl;
+    uint8_t fe02_scroll_x;
+    uint8_t fe03_scroll_y;
+    uint8_t fe04_raster_y;
+    uint8_t fe05_raster_ctrl;
+    uint8_t fe06_bg0_x;
+    uint8_t fe07_bg0_y;
+    uint8_t cart_a14_18; /* optional (map_addr>>14)&0x1F */
+    /* VRAM addr soft ($FE10|$FE11); $FE12 auto-inc via poke. */
     uint16_t vram_addr;
     int vram_fe12_armed;
-    /* MAP seek = HC573 FE90|FE91|FE92 (cache); $FE93 auto-inc via poke. */
+    /* MAP seek soft ($FE90|$FE91|$FE92); $FE93 auto-inc via poke. */
     uint32_t map_addr;
     int map_fe93_armed;
     /* Flash /CE owner: PRG, MAP, and CHR are mutually exclusive. */
@@ -225,7 +233,7 @@ typedef struct R01sBoard {
     int cart_loaded;
     char cart_label[48];
     char cart_path[256];
-    /* Active palette RAM (soft); addr index from HC573 FE08. */
+    /* Active palette RAM (soft); addr index from soft $FE08. */
     uint8_t active_pal[32];
     uint8_t pal_addr;
     int pal_fe09_wrote; /* one write+inc per DATA cycle */
@@ -281,6 +289,10 @@ typedef struct R01sBoard {
 } R01sBoard;
 
 int r01s_board_build(R01sBoard *board, R01sIslandBuilder *builder);
+
+/* Soft $FExx register file (HC573-zero). */
+uint8_t r01s_board_peek_fe(const R01sBoard *b, uint8_t port);
+void r01s_board_poke_fe(R01sBoard *b, uint8_t port, uint8_t v);
 
 /* Load `.retr01` or 512 KB flash image into Island J. Re-applies bring-up smoke PRG
  * into the cart PRG window so A-O island checks still run (overlay: not Studio ROM). */

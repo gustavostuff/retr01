@@ -2,28 +2,16 @@
 #define retr01_SIM_BOM32_H
 
 /*
- * retr01-A 32-IC BOM ([docs/hardware.md]).
+ * retr01-A BOM ([docs/hardware.md]).
  * Counts are discrete silicon packages on the motherboard + cart save EEPROM.
  * Support parts (PWR, oscillators, LCD sink) are not in this tally.
+ * 23-IC silicon (HC573-zero). Sim soft-mirrors former latch ports.
  */
-#define R01S_BOM_HC573_N 9
+#define R01S_BOM_HC573_N 0
 #define R01S_BOM_HC157_N 6
 #define R01S_BOM_HC245_N 3
 #define R01S_BOM_PLD_N   5
-#define R01S_BOM_IC_N    32
-
-/* Packed HC573 assignments (logical ports: bitfields TBD in docs/graphics). */
-enum {
-    R01S_LATCH_FE02 = 0, /* scroll X */
-    R01S_LATCH_FE03,     /* scroll Y */
-    R01S_LATCH_FE04,     /* raster compare Y */
-    R01S_LATCH_FE10,     /* VRAM addr lo */
-    R01S_LATCH_FE11,     /* VRAM addr hi */
-    R01S_LATCH_FE90,     /* MAP seek lo */
-    R01S_LATCH_FE91,     /* MAP seek mid */
-    R01S_LATCH_FE92,     /* MAP seek hi */
-    R01S_LATCH_FE08,     /* palette addr (low 5 bits used) */
-};
+#define R01S_BOM_IC_N    23
 
 enum {
     R01S_MUX157_VRAM0 = 0, /* VRAM CPU/PPU interleave nybble 0 */

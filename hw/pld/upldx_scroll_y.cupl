@@ -1,0 +1,51 @@
+Name     upldx_scroll_y ;
+PartNo   ATF22V10 ;
+Date     2026-09-06 ;
+Revision 01 ;
+Designer Retr01 ;
+Company  Retr01 ;
+Assembly None ;
+Location UPLDX ;
+Device   g22v10 ;
+
+/* HC573-zero: registered BG1 scroll Y ($FE03).
+ * Load enable = SEL_FE03 on UPLDX_LE_FE03 (pin 11).
+ * Data = CPU D on pins 2..9.
+ * Beam X counter + NMI remain primary job. Fit with scroll Y carefully.
+ *
+ * pinmap: UPLDX_LD, UPLDX_LE_FE03, UPLDX_Y, UPLDX_DOT, UPLDX_NMI
+ */
+
+PIN 1   = DOT_CLK ;
+PIN 2   = D0 ;
+PIN 3   = D1 ;
+PIN 4   = D2 ;
+PIN 5   = D3 ;
+PIN 6   = D4 ;
+PIN 7   = D5 ;
+PIN 8   = D6 ;
+PIN 9   = D7 ;
+PIN 11  = LE_FE03 ;
+PIN 13  = RES ;
+PIN 14  = NMI ;
+
+/* Example scroll Y regs (may need different OLMC pins after beam fit) */
+PIN 15  = SY0 ;
+PIN 16  = SY1 ;
+PIN 17  = SY2 ;
+PIN 18  = SY3 ;
+
+SY0.D    = D0 ;
+SY0.C    = DOT_CLK ;
+SY0.CE   = LE_FE03 ;
+SY1.D    = D1 ;
+SY1.C    = DOT_CLK ;
+SY1.CE   = LE_FE03 ;
+SY2.D    = D2 ;
+SY2.C    = DOT_CLK ;
+SY2.CE   = LE_FE03 ;
+SY3.D    = D3 ;
+SY3.C    = DOT_CLK ;
+SY3.CE   = LE_FE03 ;
+
+/* TODO: SY4..SY7 + beam X counter 0..340 + HBlank/VBlank/NMI equations. */

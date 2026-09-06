@@ -132,24 +132,19 @@ static void pin_net_link_cpu_d_latch(R01sUiPinNet *g, R01sEntity *cpu, R01sEntit
     int i;
     char ln[8];
     char cn[8];
-    for (i = 0; i < 8; i++) {
-        snprintf(ln, sizeof(ln), "%dD", i + 1);
-        snprintf(cn, sizeof(cn), "D%d", i);
-        pin_net_link(g, cpu, cn, latch, ln);
-        snprintf(ln, sizeof(ln), "%dQ", i + 1);
-        pin_net_link(g, cpu, cn, latch, ln);
-    }
+    /* Stub: HC573-zero (no latch entities on board). */
+    (void)g;
+    (void)cpu;
+    (void)latch;
+    (void)i;
+    (void)ln;
+    (void)cn;
 }
 
 static void pin_net_link_beam_y_raster(R01sUiPinNet *g, R01sEntity *beam_y, R01sEntity *raster) {
-    int i;
-    char qn[8];
-    char ln[16];
-    for (i = 0; i < 8; i++) {
-        snprintf(qn, sizeof(qn), "Q%d", i);
-        snprintf(ln, sizeof(ln), "%dQ", i + 1);
-        pin_net_link(g, beam_y, qn, raster, ln);
-    }
+    (void)g;
+    (void)beam_y;
+    (void)raster;
 }
 
 static void pin_net_link_beam_y_beam(R01sUiPinNet *g, R01sEntity *beam_y, R01sEntity *beam) {
@@ -189,18 +184,17 @@ static void pin_net_link_245_cpu_side(R01sUiPinNet *g, R01sEntity *cpu, R01sEnti
 }
 
 static void pin_net_link_latch_q_vram(R01sUiPinNet *g, R01sEntity *latch, R01sEntity *vram, int addr_base) {
-    int i;
-    char qn[8];
-    char an[8];
-    for (i = 0; i < 8; i++) {
-        snprintf(qn, sizeof(qn), "%dQ", i + 1);
-        snprintf(an, sizeof(an), "A%d", addr_base + i);
-        pin_net_link(g, latch, qn, vram, an);
-    }
+    (void)g;
+    (void)latch;
+    (void)vram;
+    (void)addr_base;
 }
 
 static void pin_net_link_latch_le_pld(R01sUiPinNet *g, R01sEntity *pld, R01sEntity *latch, const char *sel) {
-    pin_net_link(g, pld, sel, latch, "LE");
+    (void)g;
+    (void)pld;
+    (void)latch;
+    (void)sel;
 }
 
 static int pin_skip_wire(const R01sPin *p) {
@@ -341,13 +335,10 @@ void r01s_ui_pin_net_build(R01sBoard *board) {
     R01sEntity *pads;
     R01sEntity *beam;
     R01sEntity *beam_y;
-    R01sEntity *raster;
     R01sEntity *dot_osc;
     R01sEntity *osc;
     R01sEntity *hc;
     R01sEntity *pld;
-    R01sEntity *fe10;
-    R01sEntity *fe11;
     R01sEntity *mux_vram;
     R01sEntity *mux_lb;
     R01sEntity *sram_lb;
@@ -370,13 +361,10 @@ void r01s_ui_pin_net_build(R01sBoard *board) {
     pads = r01s_pads_entity(&board->pads);
     beam = r01s_beam_xy_entity(&board->pld_beam_x);
     beam_y = r01s_atf22v10_entity(&board->pld_beam_y);
-    raster = r01s_sn74hc573_entity(board->io_latch_impl.latch573[R01S_LATCH_FE04]);
     dot_osc = r01s_osc_dot_entity(&board->osc_dot);
     osc = r01s_osc8m_entity(&board->osc);
     hc = r01s_sn74hc14_entity(&board->hc14);
     pld = r01s_atf22v10_entity(&board->pld_decode);
-    fe10 = r01s_sn74hc573_entity(board->io_latch_impl.latch573[R01S_LATCH_FE10]);
-    fe11 = r01s_sn74hc573_entity(board->io_latch_impl.latch573[R01S_LATCH_FE11]);
     mux_vram = r01s_sn74hc157_entity(board->vram_impl.mux157[R01S_MUX157_VRAM0]);
     mux_lb = r01s_sn74hc157_entity(board->mcu_lb_impl.mux157[R01S_MUX157_LINEBUF0]);
     sram_lb = r01s_as6c62256_entity(&board->linebuf);
@@ -404,37 +392,11 @@ void r01s_ui_pin_net_build(R01sBoard *board) {
     pin_net_link(g, cpu, "BE", pld, "BE");
     pin_net_link(g, cpu, "RWB", pld, "RWB");
 
-    for (i = 0; i < R01S_BOM_HC573_N; i++) {
-        R01sEntity *latch = r01s_sn74hc573_entity(&board->latch573[i]);
-        pin_net_link_cpu_d_latch(g, cpu, latch);
-    }
-
-    pin_net_link_latch_le_pld(g, pld, r01s_sn74hc573_entity(board->io_latch_impl.latch573[R01S_LATCH_FE02]),
-                              "SEL_FE02");
-    pin_net_link_latch_le_pld(g, pld, r01s_sn74hc573_entity(board->io_latch_impl.latch573[R01S_LATCH_FE03]),
-                              "SEL_FE03");
-    pin_net_link_latch_le_pld(g, pld, raster, "SEL_FE04");
-    pin_net_link_latch_le_pld(g, pld, fe10, "SEL_FE10");
-    pin_net_link_latch_le_pld(g, pld, fe11, "SEL_FE11");
-    pin_net_link_latch_le_pld(g, pld, r01s_sn74hc573_entity(board->io_latch_impl.latch573[R01S_LATCH_FE08]),
-                              "SEL_FE08");
-    pin_net_link_latch_le_pld(g, pld, r01s_sn74hc573_entity(board->io_latch_impl.latch573[R01S_LATCH_FE90]),
-                              "SEL_FE90");
-    pin_net_link_latch_le_pld(g, pld, r01s_sn74hc573_entity(board->io_latch_impl.latch573[R01S_LATCH_FE91]),
-                              "SEL_FE91");
-    pin_net_link_latch_le_pld(g, pld, r01s_sn74hc573_entity(board->io_latch_impl.latch573[R01S_LATCH_FE92]),
-                              "SEL_FE92");
-
-    pin_net_link_latch_q_vram(g, fe10, vram, 0);
-    pin_net_link_latch_q_vram(g, fe11, vram, 8);
-
-    for (i = 0; i < 4; i++) {
-        char mn[8];
-        char qn[8];
-        snprintf(mn, sizeof(mn), "%dA", i + 1);
-        snprintf(qn, sizeof(qn), "%dQ", i + 1);
-        pin_net_link(g, fe10, qn, mux_vram, mn);
-    }
+    /* Soft $FExx: no HC573 entity pin links (HC573-zero). */
+    (void)pin_net_link_cpu_d_latch;
+    (void)pin_net_link_beam_y_raster;
+    (void)pin_net_link_latch_q_vram;
+    (void)pin_net_link_latch_le_pld;
 
     pin_net_link_245_internal(g, buf_cpu);
     pin_net_link_245_cpu_side(g, cpu, buf_cpu);
@@ -450,7 +412,6 @@ void r01s_ui_pin_net_build(R01sBoard *board) {
 
     pin_net_link(g, beam, "DOT", dot_osc, "DOT");
     pin_net_link_beam_y_beam(g, beam_y, beam);
-    pin_net_link_beam_y_raster(g, beam_y, raster);
     pin_net_link(g, cpu, "IRQB", beam_y, "EQ#");
 
     pin_net_link(g, vram, "A0", mux_vram, "1Y");

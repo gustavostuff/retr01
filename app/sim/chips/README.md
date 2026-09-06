@@ -10,7 +10,7 @@ Each IC is a struct that **starts with** an `R01sEntity`, plus an `R01sEntityVTa
 | C | `w65c02s.c` | W65C02S | Reset + vector fetch + fetch cycles (ISA later) |
 | C | `as6c62256.c` | AS6C62256 | 32 KB SRAM truth table |
 | C | `prg_rom.c` | PRG_ROM | Tiny 32 KB read-only PRG stub |
-| D | `sn74hc573.c` | SN74HC573 | Octal latch (`$FE02` on board) |
+| D | `sn74hc573.c` | SN74HC573 | Unit-test chip only. Board uses soft `$FExx` (HC573-zero) |
 | E | `pads.c` | PADS | `$FE60`/`$FE61` stub (1=pressed) |
 | E / L | `attiny85.c` + `pad_uart.c` | ATtiny85 | Retr01-C pad MCU + host poll (`0x55`/`0xAA`). Support DIPs on island L |
 | G | `as6c62256.c` | AS6C62256 | 2nd instance - interleaved VRAM |
