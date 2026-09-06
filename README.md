@@ -13,7 +13,7 @@ This is the overall hardware roadmap:
 
 ## Apps
 
-`./build-all` builds Release binaries into `bin/`. `./studio`, `./emu`, and `./sim` (at root) run those binaries. `./unit-tests` runs the test suites.
+`./build-all` builds Release binaries into `bin/`. `./studio`, `./emu`, and `./sim` (at root) run those binaries. `./unit-tests` runs studio/emu/sim tests plus [`app/pld_tests/`](app/pld_tests/) (PLD equation fit).
 
 ## Main specs
 

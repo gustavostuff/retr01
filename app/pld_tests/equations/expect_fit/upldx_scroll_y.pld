@@ -1,0 +1,17 @@
+GAL22V10
+UPLDXSY
+
+CLK   D0    D1    D2    D3    D4    D5    D6    D7    LE   NC   GND
+NC    SY0   SY1   SY2   SY3   SY4   SY5   SY6   SY7   NC   NC   VCC
+
+SY0.R = LE * D0 + /LE * SY0
+SY1.R = LE * D1 + /LE * SY1
+SY2.R = LE * D2 + /LE * SY2
+SY3.R = LE * D3 + /LE * SY3
+SY4.R = LE * D4 + /LE * SY4
+SY5.R = LE * D5 + /LE * SY5
+SY6.R = LE * D6 + /LE * SY6
+SY7.R = LE * D7 + /LE * SY7
+
+DESCRIPTION
+UPLDX registered scroll Y ($FE03) with clock enable.

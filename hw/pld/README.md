@@ -1,7 +1,7 @@
 # Retr01 ATF22V10 equation stubs (HC573-zero)
 
 Draft CUPL-style equations for WinCUPL / Afterburner. Not fitted JEDEC yet.
-Run the fitter before freezing pin maps. Escape: +1 PLD or 1-2 discrete latches.
+**Fit gate:** [`../../app/pld_tests/`](../../app/pld_tests/) runs [galette](https://github.com/simon-frankau/galette) on GALasm `.pld` twins under `equations/expect_fit/`. Escape: +1 PLD or 1-2 discrete latches.
 
 **Pin authority:** [`../md/ATF22V10.md`](../md/ATF22V10.md), [`../../app/schematic_generator/retr01_schem/pinmap.py`](../../app/schematic_generator/retr01_schem/pinmap.py).
 
@@ -12,4 +12,4 @@ Run the fitter before freezing pin maps. Escape: +1 PLD or 1-2 discrete latches.
 | [`upldy_raster.cupl`](upldy_raster.cupl) | UPLDY | Raster Y register + internal compare |
 | [`upldv_map_a.cupl`](upldv_map_a.cupl) | UPLDV | CART_A14-A18 MAP export |
 
-Decode (UPLDA) SEL equations are assumed present. Soft `$FExx` on 1284 need no PLD registers.
+Decode (UPLDA) SEL equations live in `app/pld_tests/equations/expect_fit/uplda_decode.pld`. Soft `$FExx` on 1284 need no PLD registers.

@@ -1,0 +1,20 @@
+GAL22V10
+UPLDYEQ
+
+CLK   P0    P1    P2    P3    P4    P5    P6    P7    Q0   Q1   GND
+Q2    Q3    Q4    Q5    Q6    Q7    NElo  NEhi  EQ    NC   NC   VCC
+
+NElo = P0 * /Q0 + /P0 * Q0 +
+       P1 * /Q1 + /P1 * Q1 +
+       P2 * /Q2 + /P2 * Q2 +
+       P3 * /Q3 + /P3 * Q3
+
+NEhi = P4 * /Q4 + /P4 * Q4 +
+       P5 * /Q5 + /P5 * Q5 +
+       P6 * /Q6 + /P6 * Q6 +
+       P7 * /Q7 + /P7 * Q7
+
+EQ = NElo + NEhi
+
+DESCRIPTION
+UPLDY 8-bit inequality (EQ high when P!=Q) via cascaded helpers.

@@ -1,0 +1,10 @@
+# Local galette build / clone
+.cache/
+third_party/
+bin/
+
+# Galette outputs next to .pld
+*.jed
+*.fus
+*.pin
+*.chp

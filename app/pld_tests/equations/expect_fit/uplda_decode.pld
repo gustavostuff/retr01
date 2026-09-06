@@ -1,0 +1,33 @@
+GAL22V10
+UPLDA
+
+PHI2  A0    A1    A2    A3    A4    A5    A6    A7    FE   RWB  GND
+BE    S00   S02   S03   S04   S05   S08   S90   S91   S92  S10  VCC
+
+S00 = FE * BE * /RWB * /A7 * /A6 * /A5 * /A4 * /A3 * /A2 * /A1 * /A0 +
+      FE * BE * /RWB * /A7 * /A6 * /A5 * /A4 * /A3 *  A2 *  A1 * /A0
+
+S02 = FE * BE * /RWB * /A7 * /A6 * /A5 * /A4 * /A3 * /A2 *  A1 * /A0 +
+      FE * BE * /RWB * /A7 * /A6 * /A5 * /A4 * /A3 *  A2 *  A1 *  A0
+
+S03 = FE * BE * /RWB * /A7 * /A6 * /A5 * /A4 * /A3 * /A2 *  A1 *  A0
+
+S04 = FE * BE * /RWB * /A7 * /A6 * /A5 * /A4 * /A3 *  A2 * /A1 * /A0
+
+S05 = FE * BE * /RWB * /A7 * /A6 * /A5 * /A4 * /A3 *  A2 * /A1 *  A0
+
+S08 = FE * BE * /RWB * /A7 * /A6 * /A5 * /A4 *  A3 * /A2 * /A1 * /A0
+
+S90 = FE * BE * /RWB *  A7 * /A6 * /A5 *  A4 * /A3 * /A2 * /A1 * /A0
+
+S91 = FE * BE * /RWB *  A7 * /A6 * /A5 *  A4 * /A3 * /A2 * /A1 *  A0
+
+S92 = FE * BE * /RWB *  A7 * /A6 * /A5 *  A4 * /A3 * /A2 *  A1 * /A0 +
+      FE * BE * /RWB *  A7 * /A6 * /A5 *  A4 * /A3 * /A2 *  A1 *  A0
+
+S10 = FE * BE * /RWB * /A7 * /A6 * /A5 *  A4 * /A3 * /A2 * /A1 * /A0 +
+      FE * BE * /RWB * /A7 * /A6 * /A5 *  A4 * /A3 * /A2 * /A1 *  A0 +
+      FE * BE * /RWB * /A7 * /A6 * /A5 *  A4 * /A3 * /A2 *  A1 * /A0
+
+DESCRIPTION
+UPLDA address decode with locked SEL shares (HC573-zero).

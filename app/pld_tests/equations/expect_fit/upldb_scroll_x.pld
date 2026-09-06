@@ -1,0 +1,17 @@
+GAL22V10
+UPLDBSX
+
+CLK   D0    D1    D2    D3    D4    D5    D6    D7    LE   NC   GND
+NC    SX0   SX1   SX2   SX3   SX4   SX5   SX6   SX7   NC   NC   VCC
+
+SX0.R = LE * D0 + /LE * SX0
+SX1.R = LE * D1 + /LE * SX1
+SX2.R = LE * D2 + /LE * SX2
+SX3.R = LE * D3 + /LE * SX3
+SX4.R = LE * D4 + /LE * SX4
+SX5.R = LE * D5 + /LE * SX5
+SX6.R = LE * D6 + /LE * SX6
+SX7.R = LE * D7 + /LE * SX7
+
+DESCRIPTION
+UPLDB registered scroll X ($FE02) with clock enable.

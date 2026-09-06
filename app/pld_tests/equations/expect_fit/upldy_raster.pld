@@ -1,0 +1,21 @@
+GAL22V10
+UPLDYR
+
+CLK   D0    D1    D2    D3    D4    D5    D6    D7    LE   NC   GND
+NC    Q0    Q1    Q2    Q3    Q4    Q5    Q6    Q7    EQ   NC   VCC
+
+Q0.R = LE * D0 + /LE * Q0
+Q1.R = LE * D1 + /LE * Q1
+Q2.R = LE * D2 + /LE * Q2
+Q3.R = LE * D3 + /LE * Q3
+Q4.R = LE * D4 + /LE * Q4
+Q5.R = LE * D5 + /LE * Q5
+Q6.R = LE * D6 + /LE * Q6
+Q7.R = LE * D7 + /LE * Q7
+
+; EQ# active low when equal: drive EQ high on inequality (OR of XORs).
+; Pin 22 is edge OLMC (8 terms) - 16 XOR terms will not fit alone.
+; This stub only registers Q. See upldy_eq8.pld for cascaded compare fit.
+
+DESCRIPTION
+UPLDY registered raster Y ($FE04). EQ packing is in upldy_eq8.pld.

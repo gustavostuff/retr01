@@ -1,0 +1,14 @@
+GAL22V10
+UPLDVMAP
+
+CLK   D0    D1    D2    D3    D4    LE    NC    NC    NC   NC   GND
+NC    A14   A15   A16   A17   A18   NC    NC    NC    NC   NC   VCC
+
+A14.R = LE * D0 + /LE * A14
+A15.R = LE * D1 + /LE * A15
+A16.R = LE * D2 + /LE * A16
+A17.R = LE * D3 + /LE * A17
+A18.R = LE * D4 + /LE * A18
+
+DESCRIPTION
+UPLDV CART_A14-A18 registered MAP export.

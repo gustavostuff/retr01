@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Configure, build, and run unit tests for studio, emu, and sim.
+# Configure, build, and run unit tests for studio, emu, sim, and pld_tests.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 STUDIO="$ROOT/app/studio"
 EMU="$ROOT/app/emu"
 SIM="$ROOT/app/sim"
+PLD="$ROOT/app/pld_tests"
 
 build_and_test() {
   local proj="$1"
@@ -23,5 +24,8 @@ build_and_test "$EMU"
 
 echo "== sim =="
 build_and_test "$SIM" -R '^test_'
+
+echo "== pld_tests =="
+"$PLD/run_tests.py"
 
 echo "all unit tests passed"
