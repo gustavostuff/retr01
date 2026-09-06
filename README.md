@@ -37,19 +37,14 @@ Peek at Retr01 Studio:
 
 <img src="app/assets/png/audio.png" alt="Studio - Audio" />
 
-Emulator + Debug screen:
+Emulator:
 
 <img src="app/assets/png/emu.png" alt="Emu" />
-
-<img src="app/assets/png/debug.png" alt="Debug" />
 
 Sim:
 
 <img src="app/assets/png/sim.png" alt="Sim" />
 
-PCB prototype V3 (not tested):
-
-<img src="app/assets/png/pcb_v3_proto.png" alt="PCB V3" />
 
 ## Where to go next
 
