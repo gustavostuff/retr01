@@ -37,7 +37,7 @@ PRG is **32 KB** mapped at `$8000-$FFFF` with an I/O hole at `$FE00-$FEFF`. No P
 | **CPU port** | `$FE10` addr hi, `$FE11` addr lo, `$FE12` data (auto-inc) |
 | **CPU writes** | PHI2 high (CPU phase) via HC157 mux + PLD `/OE` |
 | **PPU reads** | PHI2 low (PPU phase): beam/BG fetch owns address and data |
-| **Layout** | Slots 0-3 BG1 camera (512 B each), slots 4-7 BG0 camera (512 B each), rest scratch/reserved ([`graphics.md`](graphics.md)) |
+| **Layout** | Slots 0-3 BG1 camera (**512 B** each), slots 4-7 BG0 camera (**512 B** each). **480 B** screen data + **32 B** pad per slot ([`graphics.md`](graphics.md)). Rest scratch/reserved |
 | **Tear rule** | Do not poke a cell the beam is fetching. Off-screen slots and VBlank are safe |
 
 **How interleave works:** one AS6C62256 serves both the 6502 and the video path. On each **8 MHz** PHI2 cycle the mux picks who owns the VRAM address bus:

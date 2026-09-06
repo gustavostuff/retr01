@@ -42,7 +42,7 @@ Color index **0** is transparent for sprites and shared backdrop for BG. Final R
 
 ## VRAM workbench
 
-Eight live nametable slots in 32 KB VRAM. Each slot **512 B** (240 tile + 240 attr at `+0xF0`).
+Eight live nametable slots in 32 KB VRAM. Each slot **512 B** (**480 B** used: 240 tile + 240 attr at `+0xF0`, **32 B** pad).
 
 | Slots | Role |
 |-------|------|

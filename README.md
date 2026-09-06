@@ -62,6 +62,6 @@ PCB prototype V3 (not tested):
 - [`docs/lightgun.md`](docs/lightgun.md): CRT light gun accessory (roadmap)
 - [`docs/passive_rf_etc.md`](docs/passive_rf_etc.md): passives, ports, stackup / RF
 - [`docs/sound.md`](docs/sound.md): APU and bytecode
-- [`hw/`](hw/): part list + [`hw/md/`](hw/md/) chip notes
+- [`hw/`](hw/): part list + [`hw/md/`](hw/md/) chip notes. Live KiCad: [`hw/kicad/`](hw/kicad/README.md)
 
 Built for people who want to *make* 8-bit games, not only play them.
