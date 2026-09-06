@@ -2,7 +2,7 @@
 
 Physical cartridge, edge connector, and USB-C programming hardware. Software image layout (`.retr01`) stays in [`memory.md`](memory.md).
 
-**Related:** [`hardware.md`](hardware.md) (motherboard cart path, [runners vs silicon](hardware.md#runners-today-vs-silicon-target)). [`memory.md`](memory.md) (flash map, MAP port). Save EEPROM API: [`memory.md`](memory.md#cart-save-eeprom-24c64-on-cartridge). Bench programmers for all programmable parts: [`programming.md`](programming.md). Flasher is a **bench tool**, not part of the 32-IC motherboard count.
+**Related:** [`hardware.md`](hardware.md) (motherboard cart path, [runners vs silicon](hardware.md#runners-today-vs-silicon-target)). [`memory.md`](memory.md) (flash map, MAP port). Save EEPROM API: [`memory.md`](memory.md#cart-save-eeprom-24c64-on-cartridge). Bench programmers for all programmable parts: [`programming.md`](programming.md). Flasher is a **bench tool**, not part of the 23-IC motherboard count.
 
 ---
 
@@ -75,6 +75,8 @@ Pin **A** = top side of cart PCB, **B** = bottom. **18 positions per row**, 2.54
 | B9 | D5 | Data 5 | B18 | WE# | Flash write enable (programming) |
 
 **Play:** motherboard drives address/data/`OE#`. `WE#` is inactive. **Program:** external flasher asserts `WE#` and runs JEDEC unlock on the SST39SF040 ([`hw/md/SST39SF040.md`](../hw/md/SST39SF040.md)).
+
+**Address drivers (HC573-zero):** `A0`-`A13` from W65C02S `CPU_A`. `A14`-`A18` from UPLDV registered MAP export (1284 soft-owns the 24-bit seek). See [`graphics.md`](graphics.md#fexx-ownership-hc573-zero).
 
 ---
 

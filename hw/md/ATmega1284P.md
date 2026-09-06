@@ -27,6 +27,8 @@ AVR 8-bit MCU: **128 KB Flash**, **16 KB SRAM**, **4 KB EEPROM**, 32 GPIO lines 
 | Machine EEPROM | Internal 4 KB. CPU mailbox `$FE70`-`$FE72` + `RDY` ([`memory.md`](../../docs/memory.md)) |
 | Cart save I2C | Master to cart 24C64 via `$FE22`-`$FE24` |
 | CHR bus | May own cart CHR in **VBlank** (sprite field) and **HBlank** (BG0 line) while BG path is idle (do not share until island N proven) |
+| Soft `$FExx` (HC573-zero) | `$FE00`, `$FE05`, `$FE06`/`$FE07`, `$FE08`, `$FE90`-`$FE92` soft registers. Decode SEL strobes + CPU D |
+| MAP seek | Soft 24-bit seek. Cart `A14`-`A18` driven by UPLDV registered export (hard pin path) |
 
 **Not** the BG beam path. **Not** the APU: that is ATmega328P.
 
@@ -75,8 +77,8 @@ Exact GPIO-to-`$FExx` bit wiring is **schematic TBD**. Sim should expose a **fir
 
 The 6502 does **not** DMA into 1284. Pattern:
 
-1. Decode PLD selects 1284 when CPU writes/reads `$FE20`/`$FE21` or `$FE60`/`$FE61`.
-2. 1284 firmware treats those as register windows (addr latch + data with auto-inc for OAM).
+1. Decode PLD selects 1284 when CPU writes/reads `$FE20`/`$FE21`, `$FE60`/`$FE61`, or soft `$FExx` ports (`$FE00`/`$FE05`/`$FE06`-`$FE08`/`$FE90`-`$FE92`).
+2. 1284 firmware treats those as register windows (addr latch + data with auto-inc for OAM, soft copies for MAP/palette/PPUCTRL).
 3. Each **VBlank**, firmware plots the sprite field from OAM (+ CHR). Each **HBlank**, firmware fills the next BG0 line. Beam reads sprites from the field and BG0 from the prepared line (BG1 color-0 mask) during active display.
 4. Cap: **16 sprites per logical scanline**. Not a RGB framebuffer.
 

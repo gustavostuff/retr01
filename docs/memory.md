@@ -160,7 +160,7 @@ Cart saves use the **cart 24C64** at `$FE22`-`$FE24`, not this window.
 
 Details: [`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md).
 
-Active palette indices are latched via `$FE08`/`$FE09` (HC573 path), not a separate palette RAM chip.
+Active palette indices use `$FE08`/`$FE09` (1284 soft addr + data path). Not a separate palette RAM chip.
 
 ---
 
@@ -250,7 +250,7 @@ Boot flow (Phase 1 PRG): seek palette + start MAP via `$FE90`-`$FE93` -> copy ac
 | `$FE70`-`$FE72` | Machine EEPROM mailbox (1284 internal EEPROM) |
 | `$FE90`-`$FE93` | Cart MAP seek/read |
 
-`$FE80` unused. Nine **HC573** packages latch the bytes in [`graphics.md`](graphics.md#hc573-latch-map-9-chips). Other `$FExx` ports (VRAM, OAM, BG0 scroll, palette data) use decode-qualified paths documented in [`graphics.md`](graphics.md).
+`$FE80` unused. `$FExx` ownership (PLD vs 1284 soft) is in [`graphics.md`](graphics.md#fexx-ownership-hc573-zero). Other `$FExx` ports (VRAM, OAM, BG0 scroll, palette data) use decode-qualified paths documented in [`graphics.md`](graphics.md).
 
 ---
 
@@ -260,5 +260,5 @@ Boot flow (Phase 1 PRG): seek palette + start MAP via `$FE90`-`$FE93` -> copy ac
 |-------|------------|
 | Cart save API | `$FE22`-`$FE24` (above) |
 | Machine EEPROM | `$FE70`-`$FE72` + `RDY` (above) |
-| HC573 packing | [`graphics.md`](graphics.md#hc573-latch-map-9-chips) |
+| `$FExx` ownership | [`graphics.md`](graphics.md#fexx-ownership-hc573-zero) |
 | Cart hardware | [`cart.md`](cart.md) |

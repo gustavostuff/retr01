@@ -217,6 +217,6 @@ The sequencer is driven entirely by the W65C02S **NMI** (~60x/s). **BGM** and **
 ## Related
 
 - Memory map / `$FExx`: [`memory.md`](memory.md), [`graphics.md`](graphics.md)
-- 32-IC BOM / APU path: [`hardware.md`](hardware.md)
+- 23-IC BOM / APU path: [`hardware.md`](hardware.md)
 - NES comparison: [`selling_points.md`](selling_points.md)
 - 328P chip notes: [`hw/md/ATmega328P.md`](../hw/md/ATmega328P.md)

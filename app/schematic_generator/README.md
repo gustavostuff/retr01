@@ -1,6 +1,6 @@
 # Retr01 schematic generator (SKiDL)
 
-Python codebase that turns the Retr01 **32-IC** motherboard wiring into a KiCad netlist. It mirrors the pin-level sim (`app/sim/`) and hardware docs so logic is verified in C first, then exported to copper.
+Python codebase that turns the Retr01 **23-IC** motherboard wiring into a KiCad netlist. It mirrors the pin-level sim (`app/sim/`) and hardware docs so logic is verified in C first, then exported to copper.
 
 ## Code-to-copper pipeline
 
@@ -20,7 +20,7 @@ app/schematic_generator/
 +-- generate.py              # CLI entry point (writes both netlists)
 +-- requirements.txt         # skidl
 +-- retr01_schem/
-|   +-- bom.py               # System 32-IC BOM (board=mobo|cart)
+|   +-- bom.py               # System 23-IC BOM (board=mobo|cart)
 |   +-- manifest.py          # Motherboard wiring (stops at J36)
 |   +-- cart_manifest.py     # Cartridge wiring (J36 <-> U40/U50)
 |   +-- parts.py             # SKiDL Part templates
@@ -63,7 +63,7 @@ python -m unittest discover -s tests
 |--------|--------|---------|
 | A | `islands/power_clk.py` | Y1, U2 |
 | C | `islands/cpu.py` | U1, U3, UPLDA, U20A |
-| D | `islands/io_latch.py` | U5A-U5I |
+| D | `islands/io_latch.py` | Retired (HC573-zero). Sim still has island D mirrors |
 | G | `islands/vram.py` | U6, U7A-U7C, UPLDB |
 | H | `islands/beam.py` | UPLDX/Y, Y2, U5D (raster Y) |
 | J | `islands/cart_socket.py` | J36, U20C |

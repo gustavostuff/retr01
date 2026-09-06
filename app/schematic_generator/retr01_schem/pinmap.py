@@ -170,10 +170,11 @@ UPLDA_SEL = {
     "10": "23", "11": "23", "06": "14", "07": "15", "12": "23", "93": "22",
 }
 
-# UPLDB VRAM glue + HC245/cart bus enables (decode pin budget exhausted on UPLDA).
+# UPLDB VRAM glue + HC245/cart bus enables + scroll X register (HC573-zero).
 # Never map signals onto PLD_GND (12) or PLD_VCC (24): that shorts the rail into a
 # signal net and KiCad loses the literal name "GND" (merged net becomes e.g. PPU_VA10).
-UPLDB_LD = {i: str(2 + i) for i in range(8)}
+UPLDB_LD = {i: str(2 + i) for i in range(8)}  # CPU D load data (scroll X / FE1x)
+UPLDB_LE_FE02 = "23"  # scroll X register clock enable (was SEL11 share. FE11 stays pin 22)
 UPLDB_CPU_VA = {i: str(2 + i) for i in range(10)}  # bits 0-9 -> pins 2-11
 UPLDB_CPU_VA.update({10: "13", 11: "14", 12: "15", 13: "16", 14: "17"})
 UPLDB_VA = {i: str(2 + i) for i in range(10)}
@@ -182,16 +183,27 @@ UPLDB_DIR_CPU, UPLDB_OE_CPU = "14", "15"
 UPLDB_DIR_VID, UPLDB_OE_VID = "16", "17"
 UPLDB_DIR_CART, UPLDB_OE_CART = "18", "19"
 UPLDB_CART_OE, UPLDB_CART_WE = "20", "21"
-UPLDB_SEL10, UPLDB_SEL11 = "22", "23"
+UPLDB_SEL10, UPLDB_SEL11 = "22", "22"  # FE10/FE11 share pin 22 after FE02 took 23
 
-# UPLDX beam X / UPLDY beam Y / UPLDV compositor
+# UPLDX beam X + scroll Y register (HC573-zero).
 UPLDX_DOT, UPLDX_RES, UPLDX_NMI = "1", "13", "14"
 UPLDX_Y = {i: str(15 + i) for i in range(8)}
+UPLDX_LD = {i: str(2 + i) for i in range(8)}  # CPU D -> scroll Y (pins 2-9)
+UPLDX_LE_FE03 = "11"  # scroll Y load enable
+
+# UPLDY beam Y: raster compare is internal (registered $FE04). No external Q hop.
 UPLDY_P = {i: str(2 + i) for i in range(8)}
-UPLDY_Q = {i: str(14 + i) for i in range(8)}
+UPLDY_LD = {i: str(14 + i) for i in range(8)}  # CPU D -> raster Y regs (pins 14-21)
+UPLDY_LE_FE04 = "23"  # raster Y load enable
 UPLDY_EQ = "22"
+
+# UPLDV compositor + CART_A14-A18 MAP high export (1284 GPIO budget exhausted).
 UPLDV_IDX = {i: str(2 + i) for i in range(6)}
 UPLDV_SCALE, UPLDV_EQ = "13", "14"
+UPLDV_CART_A = {14 + i: str(15 + i) for i in range(5)}  # A14..A18 -> pins 15..19
+UPLDV_LE_MAP = "20"  # load enable: SEL_FE91/FE92 for A14-A18
+# MAP load data (5 bits). Pins 8-11,21 free of IDX/CART_A.
+UPLDV_LD_MAP = {0: "8", 1: "9", 2: "10", 3: "11", 4: "21"}
 
 # ---------------------------------------------------------------------------
 # ATmega1284P-P / ATmega328P-P (KiCad MCU_Microchip_ATmega)
@@ -207,9 +219,11 @@ M1284_PAD_DATA = "16"  # PD2
 TRS_TIP, TRS_RING, TRS_SLEEVE = "4", "2", "1"
 TRS_NC = ("3", "5")  # no switch contacts on 2BVN4; still plated for mechanical hold
 M1284_HBLANK = "17"  # PD3
-M1284_FE06, M1284_FE07 = "18", "19"  # PD4/PD5
+M1284_FE06, M1284_FE07 = "18", "19"  # PD4/PD5 (BG0 scroll). SEL_FE00 shares UPLDA pin with FE06.
+# Soft $FExx (HC573-zero): palette + MAP seek strobes. Only PD0/PD1 free after DQ remap.
+M1284_FE08 = "14"  # PD0 SEL_FE08 palette addr
+M1284_FE90 = "15"  # PD1 SEL_FE90 MAP lo (FE91/FE92 also strobe via UPLDV_LE_MAP path)
 M1284_XTAL2, M1284_XTAL1 = "12", "13"
-M1284_DQ = ("14", "15", "16", "17", "18", "19", "20", "21")  # PD0..PD7 — conflicts noted
 # Prefer PC2-PC7 + PD6-PD7 for DQ to free PD2-5:
 M1284_DQ = ("24", "25", "26", "27", "28", "29", "20", "21")  # PC2-7, PD6-7
 M1284_LB_A = {i: str(1 + i) for i in range(8)}  # reuse PB for linebuf addr soft

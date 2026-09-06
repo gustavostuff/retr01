@@ -1,7 +1,7 @@
 # ATmega328P: APU MCU
 
 **Package (Retr01 motherboard):** 28-pin PDIP.
-**Qty:** **1** (current 32-IC BOM: dedicated APU).
+**Qty:** **1** (current 23-IC BOM: dedicated APU).
 **Clock (Retr01):** **16 MHz** (5 V).
 
 ## Package dimensions
@@ -94,11 +94,11 @@ No connection to VRAM or sprite line buffer. Optional shared reset with system R
 
 Island **K** pass: independent tone without the rest of the video board.
 
-## v0 vs current (32-IC)
+## v0 vs current (23-IC)
 
 Current BOM **keeps** a dedicated 328P for APU ([`hardware.md`](../../docs/hardware.md)). 1284 does **not** own `$FE40-$FE5F`.
 
-| | Earlier sketches | Current 32-IC |
+| | Earlier sketches | Current 23-IC |
 |--|---------------------|---------------|
 | Chip present | Yes | **Yes** (dedicated APU) |
 | `$FE40-$FE5F` | 328P | **328P** |

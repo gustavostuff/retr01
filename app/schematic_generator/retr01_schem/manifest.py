@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from typing import List
 
 from . import pinmap as P
-from .bom import HC573_PORT_HEX, HC573_REFDES
 
 
 @dataclass(frozen=True)
@@ -52,14 +51,27 @@ def _manifest_core() -> List[Connection]:
         Connection("IO_FE_N", "UPLDA", P.UPLDA_FE, "UPLDA", P.UPLDA_FE, "wire_decode"),
     ]
 
-    for ref, port in zip(HC573_REFDES, HC573_PORT_HEX):
-        for i in range(8):
-            m.append(Connection(f"CPU_D{i}", "U1", P.CPU_D[i], ref, P.HC573_D[i], "docs/graphics.md HC573"))
-        m.append(Connection(f"SEL_FE{port}", "UPLDA", P.UPLDA_SEL[port], ref, P.HC573_LE, "docs/graphics.md LE"))
+    # HC573-zero: hard scroll/raster registers inside existing PLDs.
+    for i in range(8):
+        m.append(Connection(f"CPU_D{i}", "U1", P.CPU_D[i], "UPLDB", P.UPLDB_LD[i], "docs/graphics.md FE02 scroll X"))
+        m.append(Connection(f"CPU_D{i}", "U1", P.CPU_D[i], "UPLDX", P.UPLDX_LD[i], "docs/graphics.md FE03 scroll Y"))
+        m.append(Connection(f"CPU_D{i}", "U1", P.CPU_D[i], "UPLDY", P.UPLDY_LD[i], "docs/graphics.md FE04 raster Y"))
+    m += [
+        Connection("SEL_FE02", "UPLDA", P.UPLDA_SEL["02"], "UPLDB", P.UPLDB_LE_FE02, "docs/graphics.md LE scroll X"),
+        Connection("SEL_FE03", "UPLDA", P.UPLDA_SEL["03"], "UPLDX", P.UPLDX_LE_FE03, "docs/graphics.md LE scroll Y"),
+        Connection("SEL_FE04", "UPLDA", P.UPLDA_SEL["04"], "UPLDY", P.UPLDY_LE_FE04, "docs/graphics.md LE raster Y"),
+    ]
 
+    # Soft $FExx on 1284 (former HC573 FE00/05/08/90-92 + existing BG0 FE06/07).
     m += [
         Connection("SEL_FE06", "UPLDA", P.UPLDA_SEL["06"], "U1284", P.M1284_FE06, "docs/graphics.md FE06"),
         Connection("SEL_FE07", "UPLDA", P.UPLDA_SEL["07"], "U1284", P.M1284_FE07, "docs/graphics.md FE07"),
+        Connection("SEL_FE08", "UPLDA", P.UPLDA_SEL["08"], "U1284", P.M1284_FE08, "docs/graphics.md FE08"),
+        Connection("SEL_FE90", "UPLDA", P.UPLDA_SEL["90"], "U1284", P.M1284_FE90, "docs/graphics.md FE90"),
+        Connection("SEL_FE91", "UPLDA", P.UPLDA_SEL["91"], "U1284", P.M1284_FE90, "docs/graphics.md FE91 share strobe"),
+        Connection("SEL_FE92", "UPLDA", P.UPLDA_SEL["92"], "U1284", P.M1284_FE90, "docs/graphics.md FE92 share strobe"),
+        Connection("SEL_FE00", "UPLDA", P.UPLDA_SEL["00"], "U1284", P.M1284_FE06, "docs/graphics.md FE00 share FE06 pin"),
+        Connection("SEL_FE05", "UPLDA", P.UPLDA_SEL["05"], "U1284", P.M1284_FE08, "docs/graphics.md FE05 share FE08 pin"),
     ]
 
     m += [
@@ -79,7 +91,7 @@ def _manifest_core() -> List[Connection]:
     ]
     for i in range(8):
         m.append(Connection(f"BEAM_Y{i}", "UPLDX", P.UPLDX_Y[i], "UPLDY", P.UPLDY_P[i], "wire_beam"))
-        m.append(Connection(f"RASTER_Y{i}", "U5D", P.HC573_Q[i], "UPLDY", P.UPLDY_Q[i], "wire_beam U5D"))
+    # Raster Y is registered inside UPLDY (no external RASTER_Y* nets).
 
     for mux in ("U7A", "U7B", "U7C"):
         m += [
@@ -138,6 +150,23 @@ def _manifest_core() -> List[Connection]:
     for i in range(6):
         m.append(Connection(f"PROM_A{i}", "UPLDV", P.UPLDV_IDX[i], "U24", P.PROM_A[i], "wire_video_prom"))
 
+    # MAP high cart address: UPLDV registered export (1284 soft-owns seek, pin path hard).
+    for i in range(5):
+        m.append(
+            Connection(
+                f"CPU_D{i}",
+                "U1",
+                P.CPU_D[i],
+                "UPLDV",
+                P.UPLDV_LD_MAP[i],
+                "docs/cart.md MAP load",
+            )
+        )
+    m += [
+        Connection("SEL_FE91", "UPLDA", P.UPLDA_SEL["91"], "UPLDV", P.UPLDV_LE_MAP, "docs/cart.md MAP LE"),
+        Connection("SEL_FE92", "UPLDA", P.UPLDA_SEL["92"], "UPLDV", P.UPLDV_LE_MAP, "docs/cart.md MAP LE"),
+    ]
+
     m.append(Connection("NMI_N", "UPLDX", P.UPLDX_NMI, "U1", P.CPU_NMIB, "board_step"))
     return m
 
@@ -167,8 +196,16 @@ def _manifest_cart_edge() -> List[Connection]:
         m.append(Connection("GND", f"TvsCa{i}", "2", "GND", "GND", src))
     for i, edge_n in enumerate(range(13, 18)):
         bit = 14 + i
-        latch = ("U5G", "U5H", "U5I")[min(i, 2)]
-        m.append(Connection(f"CART_A{bit}", latch, P.HC573_Q[i % 8], "J36", P.cart_b(edge_n), src))
+        m.append(
+            Connection(
+                f"CART_A{bit}",
+                "UPLDV",
+                P.UPLDV_CART_A[bit],
+                "J36",
+                P.cart_b(edge_n),
+                src,
+            )
+        )
         m.append(Connection(f"CART_A{bit}", f"TvsCa{bit}", "1", "J36", P.cart_b(edge_n), src))
         m.append(Connection("GND", f"TvsCa{bit}", "2", "GND", "GND", src))
     # CART_D0..7: series+TVS already in _manifest_core.

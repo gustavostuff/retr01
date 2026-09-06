@@ -243,25 +243,28 @@ World/screen/cart caps: [`memory.md`](memory.md) (**48** BG1 present/world, **16
 
 **Runners today (Emu):** **L1_EN**, **L0_EN**, **SPR_EN**, and **NMI_EN** affect rendering. Camera-wrap bits (4-3, 6-5) are stored but not enforced yet. See [`hardware.md`](hardware.md#runners-today-vs-silicon-target).
 
-### HC573 latch map (9 chips)
+### `$FExx` ownership (HC573-zero)
 
-Each **SN74HC573** holds one byte written by the CPU. Decode PLD strobes **LE** on `STA $FExx` for that port.
+Silicon target: **zero SN74HC573**. Critical real-time bytes are registered inside existing ATF22V10s. Soft bytes live on the ATmega1284P. Software still writes the same `$FExx` addresses.
 
-| HC573 (refdes) | Port | Latched byte |
-|----------------|------|--------------|
-| U5A | `$FE00` | `PPUCTRL` |
-| U5B | `$FE02` | BG1 scroll X |
-| U5C | `$FE03` | BG1 scroll Y |
-| U5D | `$FE04` | Raster compare Y |
-| U5E | `$FE05` | Raster control (IRQ enables) |
-| U5F | `$FE08` | Palette address (into 32-byte active buffer) |
-| U5G | `$FE90` | MAP seek low |
-| U5H | `$FE91` | MAP seek mid |
-| U5I | `$FE92` | MAP seek high |
+| Port | Owner | Notes |
+|------|-------|-------|
+| `$FE02` | UPLDB (scroll X reg) | Load on `SEL_FE02` + CPU D. Used every beam/dot. |
+| `$FE03` | UPLDX (scroll Y reg) | Load on `SEL_FE03`. |
+| `$FE04` | UPLDY (raster Y reg) | Internal compare vs beam Y. `EQ#` -> IRQB. No external Q hop. |
+| `$FE00` | ATmega1284P soft | `PPUCTRL` |
+| `$FE05` | ATmega1284P soft | Raster control |
+| `$FE06` / `$FE07` | ATmega1284P soft | BG0 scroll (already soft) |
+| `$FE08` | ATmega1284P soft | Palette address |
+| `$FE90`-`$FE92` | ATmega1284P soft | Full 24-bit MAP seek |
+| `CART_A0`-`A13` | W65C02S `CPU_A` | Unchanged direct to J36 |
+| `CART_A14`-`A18` | UPLDV registered export | Hard pin path for MAP high bits (1284 GPIO budget exhausted). Loaded from CPU D on `SEL_FE91`/`FE92`. |
 
-Ports **not** in this table (`$FE06`/`$FE07` BG0 scroll, `$FE09` palette data, `$FE10`-`$FE12` VRAM, OAM, APU, mailboxes) use other paths (MCU, qualified strobes, or direct read ports).
+Ports **not** in this table (`$FE09` palette data, `$FE10`-`$FE12` VRAM, OAM, APU, mailboxes) use other paths (MCU, qualified strobes, or direct read ports).
 
-**Sim note:** netlist still assigns some VRAM addr bytes to HC573 until schematic freeze. Behavior at `$FE10`-`$FE12` is authoritative in [`memory.md`](memory.md). See [runners vs silicon](hardware.md#runners-today-vs-silicon-target).
+**Sim note:** island D still models nine HC573 mirrors (runner lag). Silicon schematic has no U5A-U5I. See [runners vs silicon](hardware.md#runners-today-vs-silicon-target).
+
+**Fitter escape:** if product terms or pins overflow on the three PLDs holding 24 scroll/raster bits, keep 1-2 discrete latches or +1 ATF22V10 for those bits only.
 
 ---
 
@@ -270,7 +273,7 @@ Ports **not** in this table (`$FE06`/`$FE07` BG0 scroll, `$FE09` palette data, `
 | Topic | Resolution |
 |-------|------------|
 | `PPUCTRL` camera bits | Bitfield above |
-| HC573 packing | Table above |
+| `$FExx` ownership | HC573-zero table above |
 | 8x16 sprite VBlank timing | ~9.6k / ~25k cycles ([sprites](#sprites)) |
 | BG0 HBlank fill | Next BG0 line into linebuf `$4000` ping-pong. BG1 color-0 mask on active dots |
 

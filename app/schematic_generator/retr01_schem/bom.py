@@ -1,4 +1,8 @@
-"""32-IC BOM and refdes map (authority: bom32.h + docs/hardware.md + graphics.md)."""
+"""23-IC BOM and refdes map (authority: docs/hardware.md + graphics.md).
+
+Sim bom32.h still counts 32 with nine HC573 mirrors (runner lag).
+Silicon target: zero HC573. Scroll/raster in ATF22V10. Soft $FExx on 1284.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +14,7 @@ from typing import Dict, List, Optional, Tuple
 class IslandId(str, Enum):
     POWER_CLK = "A"
     CPU = "C"
-    IO_LATCH = "D"
+    IO_LATCH = "D"  # retired (HC573-zero). Kept for sim island letter compatibility.
     VRAM = "G"
     BEAM = "H"
     CART_SOCKET = "J"
@@ -70,21 +74,12 @@ _TVS = "Diode_SMD:D_SOD-323"
 _L0603 = "Inductor_SMD:L_0603_1608Metric"
 _XTAL = "Crystal:Crystal_HC49-U_Vertical"
 
-# Silicon target HC573 map (docs/graphics.md#hc573-latch-map-9-chips).
-HC573_REFDES = ("U5A", "U5B", "U5C", "U5D", "U5E", "U5F", "U5G", "U5H", "U5I")
-HC573_PORTS = (
-    "FE00 PPUCTRL",
-    "FE02 BG1 scroll X",
-    "FE03 BG1 scroll Y",
-    "FE04 raster Y",
-    "FE05 raster control",
-    "FE08 palette addr",
-    "FE90 MAP seek lo",
-    "FE91 MAP seek mid",
-    "FE92 MAP seek hi",
-)
-# Port hex suffix for decode SEL_FExx nets (graphics.md table order).
-HC573_PORT_HEX = ("00", "02", "03", "04", "05", "08", "90", "91", "92")
+# Former HC573 ports (qty 0). Ownership: docs/graphics.md $FExx table.
+# Hard PLD-registered: FE02/FE03/FE04. Soft on 1284: FE00/FE05/FE08/FE90-92.
+FE_HARD_PLD_HEX = ("02", "03", "04")
+FE_SOFT_1284_HEX = ("00", "05", "08", "90", "91", "92")
+# BG0 scroll already soft on 1284 (FE06/FE07).
+FE_SOFT_1284_BG0_HEX = ("06", "07")
 
 HC157_REFDES = ("U7A", "U7B", "U7C", "U7D", "U7E", "U7F")
 HC157_ROLES = (
@@ -99,21 +94,14 @@ HC157_ROLES = (
 PLD_REFDES = ("UPLDA", "UPLDB", "UPLDX", "UPLDY", "UPLDV")
 PLD_ROLES = (
     "decode $FExx",
-    "VRAM glue",
-    "beam X / dot",
-    "beam Y compare",
-    "compositor priority",
+    "VRAM glue + scroll X reg",
+    "beam X / dot + scroll Y reg",
+    "beam Y compare + raster Y reg",
+    "compositor + cart A14-18 MAP export",
 )
 
 HC245_REFDES = ("U20A", "U20B", "U20C")
 HC245_ROLES = ("CPU data bus", "video peek", "cart flash data")
-
-
-def _hc573_entries() -> List[BomEntry]:
-    return [
-        BomEntry(r, "SN74HC573", f"HC573 {port}", IslandId.IO_LATCH, 20, _DIP20)
-        for r, port in zip(HC573_REFDES, HC573_PORTS)
-    ]
 
 
 def _hc157_entries() -> List[BomEntry]:
@@ -158,7 +146,7 @@ BOM: List[BomEntry] = [
     BomEntry("U6", "AS6C62256", "interleaved VRAM", IslandId.VRAM, 28, _DIP28, vcc_pin="VDD", gnd_pin="VSS"),
     BomEntry("U41", "AS6C62256", "sprite line buffer", IslandId.MCU_LINEBUF, 28, _DIP28, vcc_pin="VDD", gnd_pin="VSS"),
     BomEntry("U24", "AT27C256R", "color PROM", IslandId.VIDEO, 28, _DIP28, vcc_pin="VCC", gnd_pin="VSS"),
-    # Cart PCB only (still counted in system 32-IC goal; not on motherboard netlist).
+    # Cart PCB only (counted in system 23-IC goal; not on motherboard netlist).
     BomEntry(
         "U40",
         "SST39SF040",
@@ -180,10 +168,9 @@ BOM: List[BomEntry] = [
         board=BoardId.CART,
     ),
     *_pld_entries(),
-    *_hc573_entries(),
     *_hc157_entries(),
     *_hc245_entries(),
-    # Support (outside 32-IC count)
+    # Support (outside 23-IC count)
     BomEntry("U2", "SN74HC14", "reset / PHI2 conditioning", IslandId.POWER_CLK, 14, _DIP14, in_ic_count=False),
     # Board clocks: Abracon ACH half-size DIP-8, 5 V HCMOS, -EK (+/-30 ppm, -20..+70 C)
     BomEntry(
@@ -208,7 +195,7 @@ BOM: List[BomEntry] = [
         vcc_pin="VDD",
         gnd_pin="GND",
     ),
-    # Composite AV path (outside 32-IC logic BOM). AD725 silicon is wide SOIC-16.
+    # Composite AV path (outside 23-IC logic BOM). AD725 silicon is wide SOIC-16.
     # Mobo footprint is DIP-16 for Proto Advantage PA0006 (first-spin fully THT).
     BomEntry(
         "U725",
@@ -393,9 +380,9 @@ BOM_BY_REFDES: Dict[str, BomEntry] = {
     e.refdes: e for e in BOM if e.board == BoardId.MOBO
 }
 
-# System silicon goal (mobo + cart) matches bom32.h / docs/hardware.md.
-SYSTEM_IC_COUNT = 32
-IC_COUNT_TARGET = 30  # motherboard silicon only (U40/U50 live on cart)
+# System silicon goal (mobo + cart). Sim bom32.h still says 32 (HC573 lag).
+SYSTEM_IC_COUNT = 23
+IC_COUNT_TARGET = 21  # motherboard silicon only (U40/U50 live on cart)
 CART_IC_COUNT = 2
 
 

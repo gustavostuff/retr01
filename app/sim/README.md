@@ -6,7 +6,7 @@ IC-first board simulator for the Retr01 motherboard (arcade + console share one 
 
 ## Status
 
-**10 canvas islands (O first / top-left) + wired-only E/I/P sprite glue, 32-IC BOM, layer-2 smoke.** SDL board UI. No control-strip power/reset/cart UI (cart image comes from the argv `.retr01` path). Cart USB flasher is **not** on the main canvas: unit-tested via `flasher_bench` only.
+**10 canvas islands (O first / top-left) + wired-only E/I/P sprite glue, 32-IC sim BOM (HC573 lag vs 23-IC silicon), layer-2 smoke.** SDL board UI. No control-strip power/reset/cart UI (cart image comes from the argv `.retr01` path). Cart USB flasher is **not** on the main canvas: unit-tested via `flasher_bench` only.
 
 | Island | Components (canvas) |
 |--------|---------------------|

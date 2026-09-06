@@ -1,6 +1,6 @@
 # Retr01 Hardware
 
-**IC-focused** doc: the 32-chip Retr01 motherboard + cart (shared by arcade and console shells), how those blocks connect, and island bring-up. Through-hole DIP target, ~**14 x 12 cm** minimum 4-layer PCB.
+**IC-focused** doc: the **23-chip** Retr01 motherboard + cart (shared by arcade and console shells), how those blocks connect, and island bring-up. Through-hole DIP target, ~**14 x 12 cm** minimum 4-layer PCB.
 
 Passives, connectors, stackup, ESD/PPTC, and RF practice live in [`passive_rf_etc.md`](passive_rf_etc.md). Not here.
 
@@ -18,30 +18,30 @@ Passives, connectors, stackup, ESD/PPTC, and RF practice live in [`passive_rf_et
 | Cart flasher | Sim island **F** is visual only. Programming path tested via `flasher_bench` harness (**WIP** in main sim UI) | USB-C bench programs cart in socket ([`cart.md`](cart.md#usb-c-cartridge-flasher)) |
 | Color PROM | Sim chip model **AT28C16** (64-entry table) | **AT27C256R** OTP ([`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md)) |
 | `PPUCTRL` (`$FE00`) | Emu honors L1/L0/SPR enable + NMI. Camera-wrap bits stored, not enforced | Full bitfield incl. wrap modes ([`graphics.md`](graphics.md#ppuctrl-fe00)) |
-| HC573 map | Sim netlist still ties VRAM addr to FE10/FE11 latches | Nine-chip U5A-U5I map ([`graphics.md`](graphics.md#hc573-latch-map-9-chips)) |
+| `$FExx` latches | Sim still models **nine HC573** (island D) for scroll/raster/MAP/palette | **Zero HC573.** Scroll/raster in ATF22V10. Soft ports on 1284 ([`graphics.md`](graphics.md#fexx-ownership-hc573-zero)) |
 | Cart save | `$FE22`-`$FE24` in-memory 8 KB buffer, no `RDY` stall | 1284 I2C master + `RDY` stall ([`memory.md`](memory.md)) |
 | Machine EEPROM | `$FE70`-`$FE72` in-memory 4 KB buffer, no `RDY` stall | 1284 internal EEPROM + `RDY` stall ([`memory.md`](memory.md)) |
 | Pads | `$FE60` / `$FE61` from Host Play / UI (Sim: ARCADE direct or PADS via ATtiny85 poll) | Arcade GPIO or Retr01-C UART ([`controllers.md`](controllers.md)) |
 | Pad UART netlist | Sim Pads mode: byte-level OD poll/reply on ATtiny85 entities (no TRS / 1284 USART) | 115200 open-drain on TRS DATA |
-| BG0 scroll | `$FE06` / `$FE07` latched. Host Play uses proportional scroll unless CPU overrides | Same ports, HC573 silicon path TBD |
+| BG0 scroll | `$FE06` / `$FE07` latched. Host Play uses proportional scroll unless CPU overrides | Soft on 1284 (`SEL_FE06`/`FE07`) |
 
 Studio Play uses the same Emu core as standalone `./emu`.
 
 ---
 
-## 32 IC parts is the current goal
+## 23 IC parts is the current goal
 
 | Block | Parts | Role on PCB |
 |------|-------|-------------|
 | CPU | W65C02S | Game logic, `$FExx` writes, MAP/VRAM streaming |
-| Helper MCUs | ATmega1284P, ATmega328P | Sprites/pads/EEPROM vs dedicated APU |
+| Helper MCUs | ATmega1284P, ATmega328P | Sprites/pads/EEPROM/soft `$FExx` vs dedicated APU |
 | SRAM x3 | AS6C62256 | System RAM, interleaved VRAM, sprite line buffer |
 | Cart storage | SST39SF040 + 24C64 | 512 KB flash on cart + I2C save EEPROM ([`cart.md`](cart.md)) |
-| Video glue | 5x ATF22V10, 6x HC157, 9x HC573, 3x HC245 | Decode, beam, interleave, latches, bus isolation |
+| Video glue | 5x ATF22V10, 6x HC157, 3x HC245 | Decode, beam, interleave, registered scroll/raster, bus isolation |
 | Color out | AT27C256R OTP | 64-entry R3G3B2 PROM -> binary-weighted DAC -> RGBS (75 ohm to GND) |
-| Composite (support) | AD725 + 14.31818 MHz can | RGB->NTSC into J9. Outside the 32-IC logic count. Chip is wide SOIC-16. **Mobo: DIP-16 + Proto Advantage PA0006** ([`passive_rf_etc.md`](passive_rf_etc.md)) |
+| Composite (support) | AD725 + 14.31818 MHz can | RGB->NTSC into J9. Outside the 23-IC logic count. Chip is wide SOIC-16. **Mobo: DIP-16 + Proto Advantage PA0006** ([`passive_rf_etc.md`](passive_rf_etc.md)) |
 
-**Count:** **32** (31 mobo + 1 cart save). Escape **+1 PLD** if compositor overflows. **74HC14** (reset/clock) and **AD725** (composite) are outside the 32 if not absorbed.
+**Count:** **23** (21 mobo + 2 cart). Escape **+1 PLD** if compositor or scroll/raster fit overflows. **74HC14** (reset/clock) and **AD725** (composite) are outside the 23. Former **9x HC573** removed (HC573-zero).
 
 **Clocks:** CPU **8.000 MHz**, dot **5.369318 MHz**, 1284 **20 MHz**, 328P **16 MHz**. Raster **341x262**, ~**60.098 Hz**.
 
@@ -52,14 +52,13 @@ Studio Play uses the same Emu core as standalone `./emu`.
 | Qty | Part | PCB role |
 |-----|------|----------|
 | 1 | W65C02S | 8 MHz game CPU |
-| 1 | ATmega1284P | 20 MHz: OAM, sprite line fill, pads, machine EEPROM |
+| 1 | ATmega1284P | 20 MHz: OAM, sprite line fill, pads, machine EEPROM, soft `$FExx` |
 | 1 | ATmega328P | 16 MHz: APU (`$FE40`-`$FE5F`) |
 | 1 | AS6C62256 | 32 KB system RAM |
 | 1 | AS6C62256 | 32 KB interleaved VRAM |
 | 1 | AS6C62256 | 32 KB sprite line-buffer SRAM |
 | 1 | SST39SF040 | 512 KB cart flash (socket on mobo early) |
-| 5 | ATF22V10 | Decode, VRAM interleave, X/Y beam, compositor priority |
-| 9 | 74HC573 | Bit-packed `$FExx` latches |
+| 5 | ATF22V10 | Decode, VRAM+scroll X, beam X+scroll Y, beam Y+raster, compositor+MAP A14-18 |
 | 6 | 74HC157 | VRAM + line-buffer address mux |
 | 3 | 74HC245 | CPU / video / cart-OAM bus isolation |
 | 1 | AT27C256R | Color PROM (6-bit index -> R3G3B2, 45 ns OTP) |
@@ -78,11 +77,11 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
   Cart SST39SF040 --| PRG / CHR / MAP  |-- CHR read (BG dots + 1284 VBlank/HBlank)
                     +--------+---------+
                              |
-  W65C02S -------------------+------- $FExx latches (HC573) + PLD decode
+  W65C02S -------------------+------- $FExx (PLD regs + 1284 soft) + PLD decode
        |                     |              |
        | PHI2                |              +---> ATmega328P (APU)
        v                     |
-  AS6C62256 sys RAM          +---> ATmega1284P (OAM, pads, machine EEPROM)
+  AS6C62256 sys RAM          +---> ATmega1284P (OAM, pads, EEPROM, soft $FExx)
        |
        +-- $FE10-$FE12 -----> AS6C62256 VRAM (interleaved with BG fetch)
                                     |
@@ -97,7 +96,7 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
 
 **SCALE DIP:** **2x** default (128x120 logical fills **256x240** RGBS). **1x** centers 128x120. Raster timing unchanged.
 
-**VRAM interleave (island G):** PHI2 high = CPU may R/W `$FE10`-`$FE12`. PHI2 low = BG fetch owns VRAM. Three HC157 mux low address bits between CPU latch and beam VA (line-buffer uses the other three). Details: [`memory.md`](memory.md).
+**VRAM interleave (island G):** PHI2 high = CPU may R/W `$FE10`-`$FE12`. PHI2 low = BG fetch owns VRAM. Three HC157 mux low address bits between CPU path and beam VA (line-buffer uses the other three). Details: [`memory.md`](memory.md).
 
 ---
 
@@ -106,7 +105,7 @@ Four compute domains share **5 V** and **never** paint a full framebuffer:
 ### Background video
 
 1. Beam PLDs step **341x262** and fetch tile/attr from **VRAM** on PPU phases (BG1 slots 0-3).
-2. BG1 scroll latches (`$FE02`/`$FE03`) offset into the BG1 2x2 workbench ([`graphics.md`](graphics.md)).
+2. BG1 scroll (`$FE02`/`$FE03`) is registered inside VRAM-glue / beam-X PLDs and offsets into the BG1 2x2 workbench ([`graphics.md`](graphics.md)).
 3. Attr **BANK** picks CHR tile from cart flash. Active palette indices -> **Color PROM** -> DAC.
 4. Compositor PLD muxes sprite vs BG1 vs BG0 (show-through when BG1 index is **0**) vs backdrop.
 
@@ -139,18 +138,18 @@ SNES-like far plane: authored second tilemap, color-0 show-through under BG1, pr
 
 ### Raster IRQ
 
-1. `$FE04` compare value latched in HC573.
-2. Y-beam PLD match ---> **IRQB** to 6502.
+1. `$FE04` compare value is registered inside the beam-Y PLD (load on `SEL_FE04`).
+2. Y-beam match ---> **IRQB** to 6502.
 
 ### Five ATF22V10 roles (target)
 
 | PLD | Job |
 |-----|-----|
-| Decode | Chip-selects for `$FExx` windows and bus `/OE` |
-| VRAM glue | Interleave enable with PHI2 + HC157 AB |
-| Beam X | Dot counter / H timing inside 341 |
-| Beam Y | Line counter / `$FE04` compare / NMI edges |
-| Compositor | Sprite vs BG1 vs BG0 show-through + Color PROM index |
+| Decode (UPLDA) | Chip-selects for `$FExx` windows and bus `/OE` |
+| VRAM glue (UPLDB) | Interleave enable with PHI2 + HC157 AB + **scroll X** register |
+| Beam X (UPLDX) | Dot counter / H timing inside 341 + **scroll Y** register |
+| Beam Y (UPLDY) | Line counter / **raster Y** register + compare / NMI edges |
+| Compositor (UPLDV) | Sprite vs BG1 vs BG0 show-through + Color PROM index + **CART_A14-A18** MAP export |
 
 ---
 
@@ -159,13 +158,13 @@ SNES-like far plane: authored second tilemap, color-0 show-through under BG1, pr
 Prove **islands** on breadboard before full PCB. Pass = island smoke test, not a shipped game.
 
 ```text
-A Power --> B Clocks --> C CPU+RAM+PRG --> D $FExx latch --> E Pads
+A Power --> B Clocks --> C CPU+RAM+PRG --> D (retired HC573) --> E Pads
                               |
                               +--> G VRAM interleave --> H Beam --> I BG fetch ----+
                               |                                                    |
 J Cart flash -----------------+                                                    +--> O RGBS --> P Integration
 K 328P APU ------------------------------------------------------------------------+
-L 1284 --> M Line buf --> N Sprites -----------------------------------------------+
+L 1284 soft $FExx / OAM --> M Line buf --> N Sprites ------------------------------+
 ```
 
 | Island | Pass |
@@ -199,7 +198,7 @@ Ports and passives: [`passive_rf_etc.md`](passive_rf_etc.md).
 |-------|------------|
 | Color PROM speed | **AT27C256R** 45 ns OTP ([`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md)). Unused address pins tied **GND**. Binary-weighted outputs through **75 ohm** to ground -> **~0.7 Vpp** RGBS. |
 | Composite | **AD725** NTSC from RGBS + CSYNC ([`passive_rf_etc.md`](passive_rf_etc.md)). **AV outs: RGBS + composite.** Mobo footprint is **DIP-16** (Proto Advantage **PA0006** SOIC-to-DIP). |
-| HC573 latch packing | Nine chips -> nine `$FExx` bytes ([`graphics.md`](graphics.md#hc573-latch-map-9-chips)). |
+| HC573-zero `$FExx` | Scroll/raster in PLDs. Soft ports on 1284. Zero HC573 packages ([`graphics.md`](graphics.md#fexx-ownership-hc573-zero)). |
 | Cart I2C save API | `$FE22`-`$FE24` via 1284 master ([`memory.md`](memory.md#cart-save-eeprom-24c64-on-cartridge)). |
 | Machine EEPROM API | `$FE70`-`$FE72` + `RDY` stall ([`memory.md`](memory.md#atmega1284p-internal-eeprom-4-kb)). |
 | Aux pad protocol | Retr01-C 3-wire UART ([`controllers.md`](controllers.md)). |

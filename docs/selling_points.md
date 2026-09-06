@@ -152,6 +152,6 @@ Built for people who want to **make** 8-bit games, not only play them. Tools: **
 
 ## Rough cost (planning)
 
-32-IC mobo + cart proto targets ~**$200** qty-1 (parts + PCB share). See [`hardware.md`](hardware.md) BOM.
+23-IC mobo + cart proto targets ~**$200** qty-1 (parts + PCB share). See [`hardware.md`](hardware.md) BOM.
 
 Game module profiles (movement, camera, entities): [`app/studio/README.md`](../app/studio/README.md).

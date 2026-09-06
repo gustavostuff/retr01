@@ -19,7 +19,7 @@ Which Retr01 parts need a programmed image, what file each takes, and which benc
 | 24C64 | Cartridge | Save image / blank at factory | Yes (I2C) | Cart flasher path or I2C tool |
 | ATmega32U4 | Cart **flasher** PCB | `.hex` (USB CDC firmware) | Yes | ISP or DFU (32U4 bootloader) |
 
-HC logic (HC157 / HC245 / HC573), SRAM, oscillators, and AD725 are **not** programmed.
+HC logic (HC157 / HC245), SRAM, oscillators, and AD725 are **not** programmed. (HC573 retired from silicon BOM.)
 
 ---
 
@@ -122,7 +122,7 @@ That covers every programmable part in the BOM without overlapping the game-imag
 
 | Doc | Covers |
 |-----|--------|
-| [`hardware.md`](hardware.md) | 32-IC BOM, islands, PLD roles |
+| [`hardware.md`](hardware.md) | 23-IC BOM, islands, PLD roles |
 | [`cart.md`](cart.md) | Edge pinout, USB-C flasher protocol |
 | [`memory.md`](memory.md) | `.retr01` layout, EEPROM mailboxes |
 | [`sound.md`](sound.md) | 328P APU firmware expectations |

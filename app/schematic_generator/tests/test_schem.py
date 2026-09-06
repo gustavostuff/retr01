@@ -15,10 +15,10 @@ from retr01_schem.bom import (
     BOM_BY_REFDES,
     BoardId,
     CART_IC_COUNT,
+    FE_HARD_PLD_HEX,
+    FE_SOFT_1284_HEX,
     HC157_REFDES,
     HC245_REFDES,
-    HC573_PORT_HEX,
-    HC573_REFDES,
     IC_COUNT_TARGET,
     PLD_REFDES,
     SYSTEM_IC_COUNT,
@@ -45,8 +45,10 @@ class TestBom(unittest.TestCase):
         self.assertEqual(cart_refs, {"U40", "U50"})
 
     def test_expected_families(self):
-        for ref in HC573_REFDES + HC157_REFDES + HC245_REFDES + PLD_REFDES:
+        for ref in HC157_REFDES + HC245_REFDES + PLD_REFDES:
             self.assertIn(ref, BOM_BY_REFDES)
+        for ref in ("U5A", "U5B", "U5C", "U5D", "U5E", "U5F", "U5G", "U5H", "U5I"):
+            self.assertNotIn(ref, BOM_BY_REFDES)
 
     def test_cart_edge_and_connectors(self):
         for ref in ("J36", "J1", "J2", "J3", "J4", "J5", "J6", "J7", "J8", "J9"):
@@ -112,9 +114,24 @@ class TestBom(unittest.TestCase):
         tip_nets = {n for n, p in j3 if p == TRS_TIP}
         self.assertIn("PAD_VCC_P1", tip_nets)
 
-    def test_hc573_silicon_map(self):
-        self.assertEqual(HC573_PORT_HEX, ("00", "02", "03", "04", "05", "08", "90", "91", "92"))
-        self.assertIn("FE00", BOM_BY_REFDES["U5A"].role)
+    def test_hc573_zero_ownership(self):
+        self.assertEqual(FE_HARD_PLD_HEX, ("02", "03", "04"))
+        self.assertEqual(FE_SOFT_1284_HEX, ("00", "05", "08", "90", "91", "92"))
+        self.assertEqual(SYSTEM_IC_COUNT, 23)
+        self.assertEqual(IC_COUNT_TARGET, 21)
+        nets = {c.net for c in build_manifest()}
+        self.assertIn("SEL_FE02", nets)
+        self.assertIn("SEL_FE08", nets)
+        refs = {c.a_refdes for c in build_manifest()} | {c.b_refdes for c in build_manifest()}
+        self.assertNotIn("U5A", refs)
+        # Cart high-A from UPLDV, not HC573.
+        cart_hi = [
+            c
+            for c in build_manifest()
+            if c.net.startswith("CART_A1") and "J36" in (c.a_refdes, c.b_refdes)
+        ]
+        drivers = {c.a_refdes if c.b_refdes == "J36" else c.b_refdes for c in cart_hi}
+        self.assertIn("UPLDV", drivers)
 
     def test_validate_helper(self):
         self.assertEqual(validate_bom_counts(), [])

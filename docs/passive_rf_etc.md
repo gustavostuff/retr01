@@ -2,9 +2,9 @@
 
 Non-IC parts and board-level RF / EMC practice. ICs, bus architecture, and island bring-up stay in [`hardware.md`](hardware.md) (that doc is chip-focused on purpose).
 
-**Related:** [`hardware.md`](hardware.md) (32-IC BOM, islands). [`sound.md`](sound.md) (APU DAC). [`cart.md`](cart.md) (36-pin edge). Color PROM: [`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md). Pads: [`controllers.md`](controllers.md).
+**Related:** [`hardware.md`](hardware.md) (23-IC BOM, islands). [`sound.md`](sound.md) (APU DAC). [`cart.md`](cart.md) (36-pin edge). Color PROM: [`hw/md/AT27C256R.md`](../hw/md/AT27C256R.md). Pads: [`controllers.md`](controllers.md).
 
-Power assumption: **stable external 5 V** (barrel / PSU). No on-board switching regulator in the baseline. Passives are **outside** the 32-IC goal.
+Power assumption: **stable external 5 V** (barrel / PSU). No on-board switching regulator in the baseline. Passives are **outside** the 23-IC goal.
 
 ---
 
@@ -115,7 +115,7 @@ Board clocks matter for layout cleanliness. They are not automatically a show-st
 | Video bit resistors (LSB->MSB) | Red/Green: **4.00 / 2.00 / 1.00 kohm**. Blue: **2.00 / 1.00 kohm** |
 | **75.0 ohm** to **GND** on each R/G/B | Termination -> **~0.7 Vpp** into 75 ohm video plant |
 | Optional ferrite beads on RGBS | Cable RF. Place at connector |
-| Composite encoder | **AD725ARZ**: RGB AC-coupled in, **CSYNC** on HSYNC, **NTSC**, **14.31818 MHz** 4FSC. COMP -> 75 ohm -> J9. Outside 32-IC count. **AV outs: RGBS + composite** (AD725 pins 9/11 unused). Chip is wide SOIC-16. **Board: DIP-16 + Proto Advantage PA0006** (see **U725**) |
+| Composite encoder | **AD725ARZ**: RGB AC-coupled in, **CSYNC** on HSYNC, **NTSC**, **14.31818 MHz** 4FSC. COMP -> 75 ohm -> J9. Outside 23-IC count. **AV outs: RGBS + composite** (AD725 pins 9/11 unused). Chip is wide SOIC-16. **Board: DIP-16 + Proto Advantage PA0006** (see **U725**) |
 | Bench video levels (locked targets) | Guns **~0.7 Vpp** into 75 ohm. AD725 RGB inputs **0-714 mV** AC-coupled (datasheet black ~0.8 V DC after clamp). No BOM change until first-spin scope |
 | APU **R-2R** from 328P `AUD0`-`AUD7` | Classic ladder **R = 10.0 kohm**, **2R = 20.0 kohm** (1%), then AC-couple to line out ([`sound.md`](sound.md)) |
 | APU build-out | **1.0 kohm** series + **10 uF** AC-coupling toward jack |
