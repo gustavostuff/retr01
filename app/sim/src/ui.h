@@ -196,4 +196,7 @@ void r01s_ui_load_island_layout(R01sUi *ui, int file_version);
 /* v1 JSON stored absolute board coords -- convert to island-relative using live frames. */
 void r01s_ui_layout_migrate_v1_chips(R01sUi *ui);
 
+/* Keep U40/U50 on island N even if a stale layout parked them on J. */
+void r01s_ui_ensure_cart_module_chips(R01sUi *ui);
+
 #endif

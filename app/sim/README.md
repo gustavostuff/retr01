@@ -6,22 +6,21 @@ IC-first board simulator for the Retr01 motherboard (arcade + console share one 
 
 ## Status
 
-**10 canvas islands (O first / top-left) + wired-only E/I/P sprite glue, 23-IC soft `$FExx`, layer-2 smoke.** SDL board UI. No control-strip power/reset/cart UI (cart image comes from the argv `.retr01` path). Cart USB flasher is **not** on the main canvas: unit-tested via `flasher_bench` only.
+**9 canvas islands (O first / top-left) + wired-only E/I/P sprite glue, 23-IC soft `$FExx` on L, layer-2 smoke.** SDL board UI. No control-strip power/reset/cart UI (cart image comes from the argv `.retr01` path). Cart USB flasher is **not** on the main canvas: unit-tested via `flasher_bench` only.
 
 | Island | Components (canvas) |
 |--------|---------------------|
 | O Video | `COMPOSITOR` + `AT28C16` (sim, target **AT27C256R**) + `LCD_SINK` + video `SN74HC245` (top-left) |
 | A Power+clk | `PWR5V` + `OSC8M` + `SN74HC14` |
 | C CPU + decode | `W65C02S`, `AS6C62256`, `ATF22V10` decode, CPU `SN74HC245` |
-| D soft `$FExx` | Soft registers on `R01sBoard`. Host Play scroll + STA `$FExx` smoke |
 | G VRAM | 2nd `AS6C62256` + **3x** `SN74HC157` + `ATF22V10` VRAM glue |
 | H Beam | `OSC_DOT` + `BEAM_XY` (X PLD) + `ATF22V10` Y compare vs soft `$FE04` |
 | J Cart | cart `SN74HC245` (mobo socket path) |
 | K APU | `ATMEGA328P` stub, `$FE40`-`$FE5F`, 8-voice mix (BGM+SFX) + digital PWM + WAVE monitor (no host speaker audio) |
-| L MCU+linebuf | `ATMEGA1284P` + linebuf `AS6C62256` + **3x** `SN74HC157` |
+| L MCU+linebuf | `ATMEGA1284P` (soft `$FExx`) + linebuf `AS6C62256` + **3x** `SN74HC157` |
 | N Cart module | `SST39SF040` + cart `24C64` (detachable module. Argv `.retr01` is copied into flash) |
 
-**Wired on the netlist, not separate canvas frames:** **E** pads (`$FE60`/`$FE61` via 1284), **I** `BG_FETCH`, sprite field fill stats, **P** integration / NMI stats.
+**Wired on the netlist, not separate canvas frames:** soft `$FExx` (no DIP island), **E** pads (`$FE60`/`$FE61` via 1284), **I** `BG_FETCH`, sprite field fill stats, **P** integration / NMI stats.
 
 Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8000+`.
 
@@ -165,7 +164,7 @@ Live probe (top-right) shows **VDD / PHI2 / RESB**. Status bar shows CPU `PC` / 
 | Path | Role |
 |------|------|
 | `include/retr01_sim/` | Public headers (`entity`, `pin`, `bus`, `board`, `island*`, `types`) |
-| `src/board.c` | Board recipe. 10 canvas islands, wiring, settle loop |
+| `src/board.c` | Board recipe. 9 canvas islands, wiring, settle loop |
 | `src/main.c` | SDL entry |
 | `chips/` | Per-part models |
 | `tests/` | Layer-1 unit tests + `test_island_abcdeghiojklmnp` (layer 2) |

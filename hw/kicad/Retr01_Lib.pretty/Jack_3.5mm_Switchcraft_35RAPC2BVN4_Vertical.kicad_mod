@@ -3,7 +3,7 @@
 	(generator "pcbnew")
 	(generator_version "10.0")
 	(layer "F.Cu")
-	(descr "Switchcraft 35RAPC2BVN4 vertical 3.5mm TRS (VN4 CD). 5 PTH Ø2.00mm. Tip=4 Ring=2 Sleeve=1; pads 3+5 NC on 2BVN4 (mechanical). https://www.mouser.com/datasheet/2/144/35rapc_vn4_cd-1311116.pdf")
+	(descr "Switchcraft 35RAPC2BVN4 vertical 3.5mm TRS. VN4 CD 5 PTH dia 2.00mm (pads 1/3/5 on baseline, 2/4 offset +1.15mm). Tip=4 Ring=2 Sleeve=1. Pads 3+5 NC on 2BVN4 (mechanical). Same holes fit 3BVN4/4BVN4 mechanically. Not a dual-geometry footprint for unrelated jacks. https://www.mouser.com/datasheet/2/144/35rapc_vn4_cd-1311116.pdf")
 	(tags "TRS audio jack stereo vertical Switchcraft 35RAPC2BVN4")
 	(property "Reference" "REF**"
 		(at 6.5 -4.5 0)

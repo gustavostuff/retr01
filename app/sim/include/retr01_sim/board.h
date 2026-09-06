@@ -37,19 +37,19 @@
 /* Combinatorial settle passes per wire/eval half-step (PLD/glue depth). */
 #define R01S_SETTLE_PASSES 2
 
-/* 10 canvas islands: mobo + detachable cart. Flasher is unit-tested via flasher_bench only. */
+/* 9 canvas islands: mobo + detachable cart. Soft $FExx is on L (1284), not a DIP island.
+ * Flasher is unit-tested via flasher_bench only. */
 enum {
     R01S_ISLAND_VIDEO = 0,     /* O: LCD / RGBS (top-left) */
     R01S_ISLAND_POWER_CLK = 1, /* A+B: 5V + OSC/HC14 */
     R01S_ISLAND_CPU = 2,       /* C: CPU RAM PLD + CPU HC245 */
-    R01S_ISLAND_SOFT_FE = 3,  /* D: soft $FExx */
-    R01S_ISLAND_VRAM = 4,      /* G */
-    R01S_ISLAND_BEAM = 5,      /* H */
-    R01S_ISLAND_CART = 6,      /* J: cart socket HC245 */
-    R01S_ISLAND_APU = 7,       /* K */
-    R01S_ISLAND_MCU_LB = 8,    /* L+M: 1284 + linebuf */
-    R01S_ISLAND_CART_MOD = 9,  /* N: detachable cart module (SST39SF040 + 24C64) */
-    R01S_ISLAND_COUNT = 10,
+    R01S_ISLAND_VRAM = 3,      /* G */
+    R01S_ISLAND_BEAM = 4,      /* H */
+    R01S_ISLAND_CART = 5,      /* J: cart socket HC245 */
+    R01S_ISLAND_APU = 6,       /* K */
+    R01S_ISLAND_MCU_LB = 7,    /* L+M: 1284 + linebuf + soft $FExx */
+    R01S_ISLAND_CART_MOD = 8,  /* N: detachable cart module (SST39SF040 + 24C64) */
+    R01S_ISLAND_COUNT = 9,
 };
 
 typedef struct R01sIslandPowerClkImpl {
@@ -65,11 +65,6 @@ typedef struct R01sIslandCpuMemImpl {
     R01sAtf22v10 *pld_decode;
     R01sSn74hc245 *bus245_cpu;
 } R01sIslandCpuMemImpl;
-
-/* Island D kept for canvas layout; soft $FExx live on R01sBoard. */
-typedef struct R01sIslandSoftFeImpl {
-    int unused;
-} R01sIslandSoftFeImpl;
 
 typedef struct R01sIslandPadsImpl {
     R01sPads *pads; /* $FE60 / $FE61 */
@@ -161,7 +156,6 @@ typedef struct R01sBoard {
     R01sIslandCartModuleImpl cart_mod_impl;
     R01sIslandPowerClkImpl power_clk_impl;
     R01sIslandCpuMemImpl cpu_mem_impl;
-    R01sIslandSoftFeImpl soft_fe_impl;
     R01sIslandPadsImpl pads_impl;
     R01sIslandVramImpl vram_impl;
     R01sIslandBeamImpl beam_impl;

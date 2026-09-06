@@ -54,10 +54,15 @@ int main(void) {
     group = r01s_island_builder_group(&builder);
     expect_true(group != NULL, "group");
     expect_true(r01s_island_group_count(group) == R01S_ISLAND_COUNT,
-                "10 islands incl cart mod (no flasher)");
+                "9 islands incl cart mod (no flasher, no soft-FE DIP island)");
     expect_true(r01s_island_builder_count_bom_ic(&builder) == R01S_BOM_IC_N,
                 "23 BOM IC visuals mounted");
-    expect_true(r01s_island_group_at(group, R01S_ISLAND_VIDEO) != NULL, "video island present");
+    expect_true(r01s_island_group_at(group, R01S_ISLAND_CART_MOD) != NULL &&
+                    r01s_island_group_at(group, R01S_ISLAND_CART_MOD)->entity_count == 2,
+                "cart module island mounts U40+U50");
+    expect_true(r01s_island_group_at(group, R01S_ISLAND_CART) != NULL &&
+                    r01s_island_group_at(group, R01S_ISLAND_CART)->entity_count == 1,
+                "cart socket island mounts HC245 only");
     expect_true(r01s_island_group_at(group, R01S_ISLAND_VIDEO)->title != NULL &&
                     strstr(r01s_island_group_at(group, R01S_ISLAND_VIDEO)->title, "VIDEO") != NULL,
                 "video island titled");

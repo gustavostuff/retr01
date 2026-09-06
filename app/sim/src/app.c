@@ -297,6 +297,7 @@ void r01s_app_mount_builder(R01sApp *app) {
     }
     if (r01s_ui_layout_load(&app->ui) != 0) {
         /* No saved layout -- keep builder defaults. */
+        r01s_ui_ensure_cart_module_chips(&app->ui);
     }
 }
 

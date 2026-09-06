@@ -69,6 +69,8 @@ External 5 V is trusted for regulation, not for abuse or cable noise. Treat the 
 
 Never snake return current through video or pad-port copper. Stitch GND vias at every connector shell and under each DIP.
 
+**Package policy (arcade / console):** all mobo passives are **THT** (axial R, disc ceramic C, radial electrolytic where noted, axial TVS/inductor). The only SMD silicon is **AD725ARZ** on **Proto Advantage PA0006** (DIP-16 holes on the PCB). Retr01-H may revisit SMD later.
+
 ---
 
 ## Clocks and reset
@@ -95,13 +97,13 @@ Board clocks matter for layout cleanliness. They are not automatically a show-st
 |-----|------------|-----------------|
 | **J1** | **CUI PJ-063AH** (2.1 mm ID barrel) | Stock KiCad `BarrelJack_CUI_PJ-063AH_Horizontal` (1=tip, 2=sleeve, MP->GND) |
 | **J2** | 1x5 pin header 2.54 mm | Stock `PinHeader_1x05_P2.54mm_Vertical` - RGBS harness |
-| **J3/J4** | **Switchcraft 35RAPC2BVN4** (vertical) | `Retr01_Lib:Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical` - **5 PTH dia 2.00 mm** (VN4 CD). Tip=**4**, Ring=**2**, Sleeve=**1**, pads **3/5** NC (mechanical). PCB still has CUI SJ1-3533NG - **swap before fab** |
+| **J3/J4** | **Switchcraft 35RAPC2BVN4** (vertical) | `Retr01_Lib:Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical`. Switchcraft **VN4 CD** recommended layout: **5 PTH dia 2.00 mm**. Tip=**4**, Ring=**2**, Sleeve=**1**. Pads **3** and **5** are plated for mechanical hold and stay **NC** on **2BVN4** (no switch contacts). Same hole pattern also accepts **35RAPC3BVN4** / **4BVN4** mechanically (those SKUs use pads 3/5 for switches. We do not wire them). This is **not** a dual footprint for arbitrary "all pins in-line" vs "2+1 offset" third-party jacks. Locked to the VN4 family drawing only. |
 | **J5/J6** | 1x10 pin header 2.54 mm | Stock vertical |
 | **J7** | 1x4 pin header 2.54 mm | Stock vertical |
 | **J8** | **CUI RCJ-012** (black RCA, audio) | Symbol: stock **`Conn_Coaxial`**. Footprint: `Retr01_Lib:CUI_RCJ-01x_Vertical` (pad **1**=tip, **2**=shellx2) |
 | **J9** | **CUI RCJ-014** (yellow RCA, composite) | Same symbol + footprint as J8 |
 | **J36** | **EDAC 395-036-559-212** (right-angle 2x18) | Stock stand-in `PinSocket_2x18_P2.54mm_Horizontal` until EDAC CAD. Arcade alt **395-036-520-201** (straight) is shell-only, not dual-footprint |
-| **U725** | **AD725ARZ** | Chip is **wide-body SOIC-16** (7.50 mm / 300 mil, no DIP SKU from ADI). **Mobo footprint: DIP-16** (`Package_DIP:DIP-16_W7.62mm`). Adapter: **Proto Advantage PA0006** (SOIC-16 300 mil to DIP-16), [store link](http://www.proto-advantage.com/store/product_info.php?products_id=2200006). First-spin fully THT via adapter. |
+| **U725** | **AD725ARZ** | Chip is **wide-body SOIC-16** (7.50 mm / 300 mil, no DIP SKU from ADI). **Only intentional SMD IC on the mobo.** **Mobo footprint: DIP-16** (`Package_DIP:DIP-16_W7.62mm`). Adapter: **Proto Advantage PA0006** (SOIC-16 300 mil to DIP-16), [store link](http://www.proto-advantage.com/store/product_info.php?products_id=2200006). First-spin board stays fully THT via that adapter. |
 
 **You build yourself:** Optionally refine J36 from EDAC drawing. TRS + RCJ footprints are in `Retr01_Lib.pretty`.
 

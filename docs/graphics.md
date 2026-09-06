@@ -262,7 +262,7 @@ Critical real-time bytes are registered inside existing ATF22V10s. Soft bytes li
 
 Ports **not** in this table (`$FE09` palette data, `$FE10`-`$FE12` VRAM, OAM, APU, mailboxes) use other paths (MCU, qualified strobes, or direct read ports).
 
-**Sim note:** soft `$FExx` on `R01sBoard` (`peek_fe` / `poke_fe`). Island D is a canvas letter only (no discrete packages). See [runners vs silicon](hardware.md#runners-today-vs-silicon-target).
+**Sim note:** soft `$FExx` on `R01sBoard` (`peek_fe` / `poke_fe`) and health under island L (1284). No separate soft-$FExx DIP island on the Sim canvas. See [runners vs silicon](hardware.md#runners-today-vs-silicon-target).
 
 **Fitter escape:** if product terms or pins overflow on the three PLDs holding 24 scroll/raster bits, add +1 ATF22V10 for those bits only.
 

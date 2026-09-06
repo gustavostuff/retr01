@@ -1,13 +1,15 @@
 #include "ui.h"
 #include "ui_internal.h"
 
+#include "retr01_sim/board.h"
 #include "retr01_sim/board_layout.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define R01S_LAYOUT_VERSION 2
+#define R01S_LAYOUT_VERSION 3
+/* Pre-v3 layouts had empty soft-$FExx island D at index 3. */
 
 static const char *const LAYOUT_READ_PATHS[] = {
     "app/sim/ui_layout.json",
@@ -420,8 +422,16 @@ int r01s_ui_layout_load(R01sUi *ui) {
     }
     section = json_find(buf, "\"islands\"");
     if (section) {
+        int raw_x[R01S_MAX_ISLANDS];
+        int raw_y[R01S_MAX_ISLANDS];
+        int raw_w[R01S_MAX_ISLANDS];
+        int raw_h[R01S_MAX_ISLANDS];
+        int raw_ok[R01S_MAX_ISLANDS];
         const char *stop = json_find(buf, "\"island_chips\"");
         int got_frame = 0;
+        for (i = 0; i < R01S_MAX_ISLANDS; i++) {
+            raw_ok[i] = 0;
+        }
         obj = json_next_object(section);
         while (obj && (!stop || obj < stop)) {
             int idx = -1, x = 0, y = 0, w = 0, h = 0, z = 0;
@@ -432,8 +442,7 @@ int r01s_ui_layout_load(R01sUi *ui) {
             }
             memcpy(slice, obj, (size_t)(end - obj));
             slice[end - obj] = '\0';
-            if (json_int_after(slice, "\"i\"", &idx) && idx >= 0 && idx < n_islands &&
-                idx < R01S_MAX_ISLANDS) {
+            if (json_int_after(slice, "\"i\"", &idx) && idx >= 0 && idx < R01S_MAX_ISLANDS) {
                 json_int_after(slice, "\"x\"", &x);
                 json_int_after(slice, "\"y\"", &y);
                 json_int_after(slice, "\"w\"", &w);
@@ -443,14 +452,36 @@ int r01s_ui_layout_load(R01sUi *ui) {
                     island_z_loaded = 1;
                 }
                 if (w > 0 && h > 0) {
-                    ui->save_island_x[idx] = x;
-                    ui->save_island_y[idx] = y;
-                    ui->save_island_w[idx] = w;
-                    ui->save_island_h[idx] = h;
-                    got_frame = 1;
+                    raw_x[idx] = x;
+                    raw_y[idx] = y;
+                    raw_w[idx] = w;
+                    raw_h[idx] = h;
+                    raw_ok[idx] = 1;
                 }
             }
             obj = json_next_object(end);
+        }
+        /* v3: drop empty soft-$FExx island D (old index 3). */
+        if (file_version < 3) {
+            for (i = 3; i + 1 < R01S_MAX_ISLANDS; i++) {
+                raw_x[i] = raw_x[i + 1];
+                raw_y[i] = raw_y[i + 1];
+                raw_w[i] = raw_w[i + 1];
+                raw_h[i] = raw_h[i + 1];
+                raw_ok[i] = raw_ok[i + 1];
+                island_z_by_index[i] = island_z_by_index[i + 1];
+            }
+            raw_ok[R01S_MAX_ISLANDS - 1] = 0;
+        }
+        for (i = 0; i < n_islands && i < R01S_MAX_ISLANDS; i++) {
+            if (!raw_ok[i]) {
+                continue;
+            }
+            ui->save_island_x[i] = raw_x[i];
+            ui->save_island_y[i] = raw_y[i];
+            ui->save_island_w[i] = raw_w[i];
+            ui->save_island_h[i] = raw_h[i];
+            got_frame = 1;
         }
         if (got_frame) {
             ui->layout_saved = 1;
@@ -492,6 +523,17 @@ int r01s_ui_layout_load(R01sUi *ui) {
                 }
                 json_int_after(slice, "\"island\"", &island);
                 json_string_after(slice, "\"orient\"", orient, sizeof(orient));
+                if (file_version < 3) {
+                    if (island == 3) {
+                        island = -1;
+                    } else if (island > 3) {
+                        island--;
+                    }
+                }
+                /* Cart flash/EEPROM always belong on island N (never socket J). */
+                if (strcmp(id, "U40") == 0 || strcmp(id, "U50") == 0) {
+                    island = R01S_ISLAND_CART_MOD;
+                }
                 ci = chip_index_by_refdes(ui, id);
                 if (ci >= 0) {
                     ui->save_chip_x[ci] = rx;
@@ -586,6 +628,7 @@ int r01s_ui_layout_load(R01sUi *ui) {
     ui_legend_strip_clamp(ui);
     ui_wave_monitor_clamp(ui);
     ui->layout_dirty = 0;
+    r01s_ui_ensure_cart_module_chips(ui);
     fprintf(stderr, "layout: loaded %s (%s)\n", path ? path : "?", mode_compact ? "compact" : "islands");
     free(buf);
     return 0;

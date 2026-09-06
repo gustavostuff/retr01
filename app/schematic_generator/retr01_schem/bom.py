@@ -53,24 +53,29 @@ _DIP20 = "Package_DIP:DIP-20_W7.62mm"
 _DIP16 = "Package_DIP:DIP-16_W7.62mm"
 _DIP14 = "Package_DIP:DIP-14_W7.62mm"
 _DIP8 = "Package_DIP:DIP-8_W7.62mm"
-_C0603 = "Capacitor_SMD:C_0603_1608Metric"
-_R0603 = "Resistor_SMD:R_0603_1608Metric"
+# Arcade/console first spin is fully THT. Only AD725 silicon is SOIC (on PA0006 DIP adapter).
+_C_CER = "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm"  # 22pF / 100nF class
+_C_ELEC = "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm"  # 10uF / 220uF class
+_R_AX = "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm"  # 1/4 W axial
+_TVS = "Diode_THT:D_DO-35_SOD27_P7.62mm"  # axial ESD / small-signal
+_L_AX = "Inductor_THT:L_Axial_L10.0mm_D4.5mm_P15.00mm"
+# board.py still imports _C0603 / _R0603 names for decoupling / R-2R helpers.
+_C0603 = _C_CER
+_R0603 = _R_AX
 # Abracon ACH half-size DIP-8 can (pins 1/4/5/8). KiCad: Oscillator:Oscillator_DIP-8.
 _OSC8 = "Oscillator:Oscillator_DIP-8"
 # Locked EDAC right-angle 2x18; KiCad pin-socket is the stock hole pattern stand-in until Retr01_Lib CAD.
 _EDGE36 = "Connector_PinSocket_2.54mm:PinSocket_2x18_P2.54mm_Horizontal"
-# CUI PJ-063AH 2.1 mm ID — stock KiCad footprint (pads 1=tip, 2=sleeve, MP).
+# CUI PJ-063AH 2.1 mm ID. Stock KiCad footprint (pads 1=tip, 2=sleeve, MP).
 _BARREL = "Connector_BarrelJack:BarrelJack_CUI_PJ-063AH_Horizontal"
 _RGBS = "Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical"
-# Custom footprint (user-built). Was CUI SJ1-3533NG placeholder — not hole-compatible.
+# Switchcraft VN4 CD 5-hole pattern (see docs/passive_rf_etc.md). Locked SKU 35RAPC2BVN4.
 _TRS = "Retr01_Lib:Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical"
 _ARCADE10 = "Connector_PinHeader_2.54mm:PinHeader_1x10_P2.54mm_Vertical"
 _HDR4 = "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical"
 _HDR2 = "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
 # CUI RCJ-01x PCB RCA (color variants share holes). Custom .kicad_mod until upstream Cinch lands.
 _RCA = "Retr01_Lib:CUI_RCJ-01x_Vertical"
-_TVS = "Diode_SMD:D_SOD-323"
-_L0603 = "Inductor_SMD:L_0603_1608Metric"
 _XTAL = "Crystal:Crystal_HC49-U_Vertical"
 
 # $FExx ownership: docs/graphics.md. Hard PLD: FE02/FE03/FE04. Soft 1284: FE00/05/08/90-92.
@@ -248,7 +253,7 @@ BOM: List[BomEntry] = [
     BomEntry("CinG", "C_100N", "AD725 GIN AC couple", IslandId.VIDEO, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("CinB", "C_100N", "AD725 BIN AC couple", IslandId.VIDEO, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("R75C", "R_75", "composite reverse-term series", IslandId.VIDEO, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    BomEntry("Lytrap", "L_YTRAP", "AD725 YTRAP ~68uH NTSC", IslandId.VIDEO, 2, _L0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Lytrap", "L_YTRAP", "AD725 YTRAP ~68uH NTSC", IslandId.VIDEO, 2, _L_AX, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("Cytrap", "C_100N", "AD725 YTRAP resonate C", IslandId.VIDEO, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("Cd725a", "C_100N", "AD725 APOS decouple", IslandId.VIDEO, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("Cd725d", "C_100N", "AD725 DPOS decouple", IslandId.VIDEO, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
@@ -320,10 +325,10 @@ BOM: List[BomEntry] = [
     # Power-entry / rail passives (docs/passive_rf_etc.md)
     BomEntry("F1", "PPTC", "VIN PPTC", IslandId.POWER_CLK, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("FB1", "FERRITE", "5 V input ferrite", IslandId.POWER_CLK, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    BomEntry("D1", "SCHOTTKY", "reverse polarity", IslandId.POWER_CLK, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    BomEntry("Cbulk", "C_BULK", "220uF entry bulk (locked)", IslandId.POWER_CLK, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("D1", "SCHOTTKY", "reverse polarity", IslandId.POWER_CLK, 2, _TVS, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Cbulk", "C_BULK", "220uF entry bulk (locked)", IslandId.POWER_CLK, 2, _C_ELEC, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("FB2", "FERRITE", "analog video ferrite", IslandId.VIDEO, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    BomEntry("Cva", "C_10U", "10uF analog spur", IslandId.VIDEO, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
+    BomEntry("Cva", "C_10U", "10uF analog spur", IslandId.VIDEO, 2, _C_ELEC, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     # TRS aux pads (docs/passive_rf_etc.md + controllers.md): PPTC, 100nF, TVS, series-R, pull-up
     BomEntry("F2", "PPTC", "TRS P1 VCC PPTC", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("F3", "PPTC", "TRS P2 VCC PPTC", IslandId.MCU_LINEBUF, 2, _R0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),

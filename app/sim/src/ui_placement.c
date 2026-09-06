@@ -1006,6 +1006,51 @@ void r01s_ui_layout_migrate_v1_chips(R01sUi *ui) {
     }
 }
 
+void r01s_ui_ensure_cart_module_chips(R01sUi *ui) {
+    int i;
+    int moved = 0;
+    int on_n = 0;
+
+    if (!ui || !ui->group) {
+        return;
+    }
+    if (R01S_ISLAND_CART_MOD >= r01s_island_group_count(ui->group)) {
+        return;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        R01sEntity *e = ui->chips[i];
+        if (!e || !e->refdes) {
+            continue;
+        }
+        if (strcmp(e->refdes, "U40") != 0 && strcmp(e->refdes, "U50") != 0) {
+            continue;
+        }
+        if (ui->chip_island[i] != (uint8_t)R01S_ISLAND_CART_MOD) {
+            ui->chip_island[i] = (uint8_t)R01S_ISLAND_CART_MOD;
+            moved = 1;
+        }
+        on_n++;
+    }
+    if (on_n == 0) {
+        return;
+    }
+    if (moved || !island_saved_chip_layout_sane(ui, R01S_ISLAND_CART_MOD) ||
+        island_chips_overlap(ui, R01S_ISLAND_CART_MOD)) {
+        ui_pack_island_chips(ui, R01S_ISLAND_CART_MOD);
+    } else if (!ui->layout_compact) {
+        for (i = 0; i < ui->chip_count; i++) {
+            if (ui->chip_island[i] != (uint8_t)R01S_ISLAND_CART_MOD) {
+                continue;
+            }
+            ui_chip_place_rel(ui, i, ui->save_chip_x[i], ui->save_chip_y[i]);
+        }
+    }
+    ui_expand_island_to_chips(ui, R01S_ISLAND_CART_MOD);
+    if (!ui->layout_compact) {
+        r01s_ui_snapshot_island_layout(ui);
+    }
+}
+
 void r01s_ui_load_island_layout(R01sUi *ui, int file_version) {
     int i;
     int n_islands;

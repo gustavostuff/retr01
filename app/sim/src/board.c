@@ -428,27 +428,6 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_level_name(r01s_entity_sense(cpu_e, "BE")), (unsigned)ctx->cycles, conflicts);
     }
 
-    /* Island D: soft $FExx */
-    {
-        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_SOFT_FE];
-        uint8_t le = r01s_board_peek_fe(ctx, 0x02u);
-        uint8_t ry = r01s_board_peek_fe(ctx, 0x04u);
-        ih->letter = 'D';
-        if (booting) {
-            ih->health = R01S_HEALTH_BOOT;
-            snprintf(ih->activity, sizeof(ih->activity), "await boot STA $FE02");
-        } else if (ctx->health_saw_fexx) {
-            ih->health = R01S_HEALTH_OK;
-            snprintf(ih->activity, sizeof(ih->activity), "scroll soft $%02X", le);
-        } else {
-            ih->health = R01S_HEALTH_WARN;
-            snprintf(ih->activity, sizeof(ih->activity), "await STA $FE02 ($%02X)", le);
-        }
-        snprintf(ih->debug, sizeof(ih->debug),
-                 "island=D soft_$FExx health=%s saw_latch=%d FE02=$%02X FE04=$%02X expect_FE02=$55",
-                 r01s_health_tag(ih->health), ctx->health_saw_fexx, le, ry);
-    }
-
     /* Island G: VRAM + BG nametable fetch (VRAM PLD) */
     {
         R01sIslandHealth *ih = &out->islands[R01S_ISLAND_VRAM];
@@ -549,13 +528,13 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_video_sink_pixel_packed(sink, 0, 0));
     }
 
-    /* Island J: cart flash SST39SF040 */
+    /* Island J: cart socket HC245 (MAP window via bus) */
     {
         R01sIslandHealth *ih = &out->islands[R01S_ISLAND_CART];
         ih->letter = 'J';
         if (booting) {
             ih->health = R01S_HEALTH_BOOT;
-            snprintf(ih->activity, sizeof(ih->activity), "cart idle");
+            snprintf(ih->activity, sizeof(ih->activity), "cart socket idle");
         } else if (!ctx->cart_loaded) {
             ih->health = R01S_HEALTH_FAIL;
             snprintf(ih->activity, sizeof(ih->activity), "no cart image");
@@ -568,11 +547,35 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
             snprintf(ih->activity, sizeof(ih->activity), "await LDA $FE93 ('r')");
         }
         snprintf(ih->debug, sizeof(ih->debug),
-                 "island=J CART health=%s loaded=%d label=%s off_prg=$%06X len_prg=$%04X map=$%06X "
-                 "saw_map=%d flash0=$%02X",
+                 "island=J CART_SOCKET health=%s loaded=%d label=%s off_prg=$%06X len_prg=$%04X map=$%06X "
+                 "saw_map=%d",
                  r01s_health_tag(ih->health), ctx->cart_loaded, ctx->cart_label[0] ? ctx->cart_label : "-",
                  (unsigned)ctx->cart_off_prg, (unsigned)ctx->cart_len_prg, (unsigned)(ctx->map_addr & 0xFFFFFFu),
-                 ctx->health_saw_map, r01s_sst39sf040_peek(&ctx->cart_module.flash, 0));
+                 ctx->health_saw_map);
+    }
+
+    /* Island N: detachable cart module (SST39SF040 + 24C64) */
+    {
+        R01sIslandHealth *ih = &out->islands[R01S_ISLAND_CART_MOD];
+        uint8_t flash0 = r01s_sst39sf040_peek(&ctx->cart_module.flash, 0);
+        ih->letter = 'N';
+        if (booting) {
+            ih->health = R01S_HEALTH_BOOT;
+            snprintf(ih->activity, sizeof(ih->activity), "cart module idle");
+        } else if (!ctx->cart_loaded) {
+            ih->health = R01S_HEALTH_FAIL;
+            snprintf(ih->activity, sizeof(ih->activity), "U40 empty");
+        } else if (flash0 == 'r') {
+            ih->health = R01S_HEALTH_OK;
+            snprintf(ih->activity, sizeof(ih->activity), "U40+U50 ok");
+        } else {
+            ih->health = R01S_HEALTH_WARN;
+            snprintf(ih->activity, sizeof(ih->activity), "U40 flash0=$%02X", flash0);
+        }
+        snprintf(ih->debug, sizeof(ih->debug),
+                 "island=N CART_MOD health=%s loaded=%d label=%s flash0=$%02X",
+                 r01s_health_tag(ih->health), ctx->cart_loaded, ctx->cart_label[0] ? ctx->cart_label : "-",
+                 flash0);
     }
 
     /* Island K: ATmega328P APU */
@@ -603,42 +606,41 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
                  r01s_level_name(r01s_entity_sense(r01s_atmega328p_entity(apu), "PWM")));
     }
 
-    /* Island L: ATmega1284P + linebuf (merged canvas) */
+    /* Island L: ATmega1284P + linebuf + soft $FExx (merged canvas) */
     {
         R01sIslandHealth *ih = &out->islands[R01S_ISLAND_MCU_LB];
         R01sAtmega1284p *mcu = ctx->mcu_lb_impl.mcu;
         R01sAs6c62256 *lb = ctx->mcu_lb_impl.sram;
         R01sSpriteFetch *sf = ctx->sprites_impl.fetch;
         uint8_t p1 = r01s_pads_get(ctx->pads_impl.pads, 0);
+        uint8_t le = r01s_board_peek_fe(ctx, 0x02u);
         ih->letter = 'L';
         if (booting) {
             ih->health = R01S_HEALTH_BOOT;
             snprintf(ih->activity, sizeof(ih->activity), "1284/linebuf idle");
         } else if (ctx->health_saw_pad && ctx->health_saw_oam && ctx->health_saw_sprites &&
-                   ctx->health_saw_linebuf) {
+                   ctx->health_saw_linebuf && ctx->health_saw_fexx) {
             ih->health = R01S_HEALTH_OK;
-            snprintf(ih->activity, sizeof(ih->activity), "P1=$%02X OAM+LB show=%u", p1,
-                     (unsigned)ctx->l0_show_half);
-        } else if (ctx->health_saw_oam || ctx->health_saw_linebuf) {
+            snprintf(ih->activity, sizeof(ih->activity), "P1=$%02X soft+$FE OAM", p1);
+        } else if (ctx->health_saw_oam || ctx->health_saw_linebuf || ctx->health_saw_fexx) {
             ih->health = R01S_HEALTH_WARN;
-            snprintf(ih->activity, sizeof(ih->activity), "OAM/LB partial pads=%d spr=%d",
+            snprintf(ih->activity, sizeof(ih->activity), "FE02=$%02X pads=%d spr=%d", le,
                      ctx->health_saw_pad, ctx->health_saw_sprites);
         } else if (r01s_atmega1284p_alive(mcu)) {
             ih->health = R01S_HEALTH_WARN;
-            snprintf(ih->activity, sizeof(ih->activity), "clk ok await OAM/LB");
+            snprintf(ih->activity, sizeof(ih->activity), "clk ok await soft $FExx");
         } else {
             ih->health = R01S_HEALTH_WARN;
             snprintf(ih->activity, sizeof(ih->activity), "await 20 MHz / OAM");
         }
         snprintf(ih->debug, sizeof(ih->debug),
-                 "island=L MCU+LB health=%s saw_pad=%d saw_oam=%d saw_sprites=%d saw_lb=%d P1=$%02X "
-                 "oam0=$%02X show=%u mux_mcu=%d mux_beam=%d spr_fills=%u",
-                 r01s_health_tag(ih->health), ctx->health_saw_pad, ctx->health_saw_oam,
-                 ctx->health_saw_sprites, ctx->health_saw_linebuf, p1,
-                 r01s_atmega1284p_oam_peek(mcu, 0), (unsigned)ctx->l0_show_half,
-                 ctx->linebuf_saw_mux_mcu, ctx->linebuf_saw_mux_beam,
-                 (unsigned)r01s_sprite_fetch_fill_count(sf));
+                 "island=L MCU+LB+soft_FE health=%s saw_fexx=%d FE02=$%02X saw_pad=%d saw_oam=%d "
+                 "saw_sprites=%d saw_lb=%d P1=$%02X oam0=$%02X show=%u",
+                 r01s_health_tag(ih->health), ctx->health_saw_fexx, le, ctx->health_saw_pad,
+                 ctx->health_saw_oam, ctx->health_saw_sprites, ctx->health_saw_linebuf, p1,
+                 r01s_atmega1284p_oam_peek(mcu, 0), (unsigned)ctx->l0_show_half);
         (void)lb;
+        (void)sf;
     }
 
     for (i = 0; i < out->island_count; i++) {
@@ -2036,11 +2038,6 @@ static void island_cpu_mem_init(R01sIsland *island) {
     }
 }
 
-static void island_soft_fe_init(R01sIsland *island) {
-    /* Soft $FExx on R01sBoard. */
-    (void)island;
-}
-
 static void island_beam_init(R01sIsland *island) {
     R01sIslandBeamImpl *impl = (R01sIslandBeamImpl *)island->impl;
     r01s_osc_dot_init(impl->osc_dot, "Y2");
@@ -2110,7 +2107,6 @@ static void island_mcu_lb_init(R01sIsland *island) {
 static const R01sIslandVTable ISLAND_VIDEO_VT = {island_video_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_POWER_CLK_VT = {island_power_clk_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CPU_VT = {island_cpu_mem_init, NULL, NULL, NULL, NULL};
-static const R01sIslandVTable ISLAND_IO_VT = {island_soft_fe_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_VRAM_VT = {island_vram_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_BEAM_VT = {island_beam_init, NULL, NULL, NULL, NULL};
 static const R01sIslandVTable ISLAND_CART_VT = {island_cart_init, NULL, NULL, NULL, NULL};
@@ -3224,10 +3220,6 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
                                 &board->cpu_mem_impl) < 0) {
         return -1;
     }
-    if (r01s_island_builder_add(b, &ISLAND_IO_VT, "ISLAND D  soft $FExx", 0, 0, 1, 1,
-                                &board->soft_fe_impl) < 0) {
-        return -1;
-    }
     if (r01s_island_builder_add(b, &ISLAND_VRAM_VT, "ISLAND G  VRAM+PLD", 0, 0, 1, 1, &board->vram_impl) < 0) {
         return -1;
     }
@@ -3241,7 +3233,7 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     if (r01s_island_builder_add(b, &ISLAND_APU_VT, "ISLAND K  APU 328P", 0, 0, 1, 1, &board->apu_impl) < 0) {
         return -1;
     }
-    if (r01s_island_builder_add(b, &ISLAND_MCU_LB_VT, "ISLAND L  1284+LINEBUF", 0, 0, 1, 1,
+    if (r01s_island_builder_add(b, &ISLAND_MCU_LB_VT, "ISLAND L  1284+soft$FExx+LB", 0, 0, 1, 1,
                                 &board->mcu_lb_impl) < 0) {
         return -1;
     }
@@ -3283,7 +3275,6 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         r01s_island_builder_mount_rel(b, r01s_sn74hc245_entity(&board->bus245[R01S_BUS245_CPU]),
                                       R01S_ISLAND_CPU, x, 0);
     }
-    /* Island D: soft $FExx (no discrete packages). */
     {
         R01sEntity *vram_e = r01s_as6c62256_entity(&board->vram);
         int x = 0;
