@@ -57,6 +57,11 @@ class TestBom(unittest.TestCase):
     def test_kicad_stock_footprints(self):
         self.assertIn("PinSocket_2x18_P2.54mm_Vertical", BOM_BY_REFDES["J36"].footprint)
         self.assertIn("520-201", BOM_BY_REFDES["J36"].role)
+        from retr01_schem.bom import BoardId, entries_for_board
+
+        cart_j36 = [e for e in entries_for_board(BoardId.CART) if e.refdes == "J36"]
+        self.assertEqual(len(cart_j36), 1)
+        self.assertIn("Cart_Edge_2x18_P2.54mm", cart_j36[0].footprint)
         self.assertIn("35RAPC2BVN4", BOM_BY_REFDES["J3"].footprint)
         self.assertEqual(BOM_BY_REFDES["J3"].footprint, BOM_BY_REFDES["J4"].footprint)
         for ref in ("Cpad1", "Cpad2", "TvsV1", "TvsV2", "TvsD1", "TvsD2", "Rdata1", "Rdata2", "Rpu1", "F2", "F3"):

@@ -19,6 +19,8 @@ Target footprint is **Game Boy-sized** (~**55 mm** PCB width) with a **low-profi
 
 **Locked (motherboard J36, this spin):** [EDAC **395-036-520-201**](https://www.digikey.com/en/products/detail/edac-inc/395-036-520-201/1297144) - **straight / vertical** 2x18 (or Sullins **EBC18DRXN**). SKiDL uses KiCad `PinSocket_2x18_P2.54mm_Vertical` as the hole-pattern stand-in until manufacturer CAD is dropped into `Retr01_Lib`.
 
+**Cart PCB (gold fingers):** footprint `Retr01_Lib:Cart_Edge_2x18_P2.54mm`. Pads **1-18** = side A (F.Cu), **19-36** = side B (B.Cu under A). Pitch **2.54 mm**. Board thickness **1.6 mm**. Place J36 with origin on the insert `Edge.Cuts`, copper toward the ICs. Regenerate `retr01_cart.net` after BOM changes.
+
 **Retr01-C console (later shell BOM, not this mobo footprint):** [EDAC **395-036-559-212**](https://www.digikey.com/en/products/detail/edac-inc/395-036-559-212/11138956) black **right-angle** 2x18. Would need `PinSocket_2x18_P2.54mm_Horizontal` (or EDAC CAD) on a console-specific board.
 
 **Optional industrial card-edge (flasher / specials):** TE **5645235-4** Standard Edge II (straight female). Cart gold-finger geometry must match that series - do not mix with EDAC pin-socket hole patterns.

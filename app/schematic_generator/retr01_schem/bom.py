@@ -97,8 +97,10 @@ _R0603 = _R_AX
 _OSC8 = "Oscillator:Oscillator_DIP-8"
 # Locked EDAC straight (vertical insert) 2x18 for arcade / bring-up.
 # Retr01-C console later: right-angle EDAC 395-036-559-212 + Horizontal stand-in.
-# KiCad pin-socket is the stock hole pattern stand-in until Retr01_Lib CAD.
-_EDGE36 = "Connector_PinSocket_2.54mm:PinSocket_2x18_P2.54mm_Vertical"
+# Mobo: pin-socket hole stand-in until EDAC manufacturer CAD.
+# Cart: gold fingers in Retr01_Lib (mate to EDAC card-edge).
+_EDGE36_MOBO = "Connector_PinSocket_2.54mm:PinSocket_2x18_P2.54mm_Vertical"
+_EDGE36_CART = "Retr01_Lib:Cart_Edge_2x18_P2.54mm"
 # CUI PJ-063AH 2.1 mm ID. Stock KiCad footprint (pads 1=tip, 2=sleeve, MP).
 _BARREL = "Connector_BarrelJack:BarrelJack_CUI_PJ-063AH_Horizontal"
 _RGBS = "Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical"
@@ -290,14 +292,14 @@ BOM: List[BomEntry] = [
     BomEntry("Cytrap", "C_100N", "AD725 YTRAP resonate C", IslandId.VIDEO, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("Cd725a", "C_100N", "AD725 APOS decouple", IslandId.VIDEO, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
     BomEntry("Cd725d", "C_100N", "AD725 DPOS decouple", IslandId.VIDEO, 2, _C0603, in_ic_count=False, vcc_pin=None, gnd_pin=None),
-    # Cart edge on both boards (same electrical pinout / net names). Cart copy is CART_EDGE.
+    # Cart edge on both boards (same electrical pinout / net names).
     BomEntry(
         "J36",
         "CART_EDGE_36",
         "EDAC 395-036-520-201 straight vertical 2x18 (mobo)",
         IslandId.CART_SOCKET,
         36,
-        _EDGE36,
+        _EDGE36_MOBO,
         in_ic_count=False,
         vcc_pin=None,
         gnd_pin=None,
@@ -308,7 +310,7 @@ BOM: List[BomEntry] = [
         "cart gold fingers (mate to EDAC 395-036-520-201)",
         IslandId.CART_MODULE,
         36,
-        _EDGE36,
+        _EDGE36_CART,
         in_ic_count=False,
         board=BoardId.CART,
         vcc_pin=None,
