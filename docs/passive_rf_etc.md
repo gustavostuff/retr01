@@ -103,7 +103,7 @@ Do not assume pin-count defaults (24/28 pin => 600 mil). Match each MPN datashee
 
 Populate TVS / arcade series on a later spin or regenerate with `--full-esd` when you want the full I/O protection BOM.
 
-### Quilter power nets (Circuit Comprehension)
+### Quilter power nets (Circuit Comprehension) - motherboard
 
 SKiDL uses per-IC `+5V_<refdes>` stubs (via `RD*` 0 ohm) so Quilter can parent each bypass cap. Quilter often auto-lists those stubs plus some signal nets as high-current / power. Fix the list before pour:
 
@@ -115,7 +115,7 @@ SKiDL uses per-IC `+5V_<refdes>` stubs (via `RD*` 0 ohm) so Quilter can parent e
 
 Quick rule: pour only on bare `+5V` and `+5V_ANALOG`. Everything else in that table is a stub, input chain, or a misclassified signal.
 
-### Quilter bypass capacitors (Circuit Comprehension)
+### Quilter bypass capacitors (Circuit Comprehension) - motherboard
 
 Quilter auto-lists many caps as IC bypass. Keep only true VCC/pin bypass. Trash the rest before place/route.
 
@@ -126,6 +126,29 @@ Quilter auto-lists many caps as IC bypass. Keep only true VCC/pin bypass. Trash 
 | **Delete (optional)** | `Cpad1` / `Cpad2` (TRS VCC after PPTC at J3/J4. Correct near the jack, wrong for the bypass engine) |
 
 Expected keep set: **23** rows (21x `CD*` + 2x `Cd725*`). Do not chase high confidence on deleted rows. They are not IC bypass by design.
+
+### Quilter (Circuit Comprehension) - cartridge PCB
+
+Project: [`hw/kicad/cartridge/`](../hw/kicad/cartridge/). Same stub pattern as the mobo (`RD*` 0 ohm into `+5V_U*`), fewer parts.
+
+**Stackup:** 2-layer CircuitHub profiles often leave both coppers as **Signal** (no editable Ground class). Ignore the "no ground layer" advisory. **GND** still pours as Primary Ground on signal layers.
+
+**Power nets:**
+
+| Action | Nets |
+|--------|------|
+| **Pour on** | `+5V` only (**Attempt Power Pour** checked). ~**500 mA** is fine |
+| **Keep listed, pour off** | `+5V_U40`, `+5V_U50` (uncheck **Attempt Power Pour**) |
+| **Ground** | `GND` = **Primary Ground** |
+
+**Bypass capacitors:**
+
+| Action | Caps |
+|--------|------|
+| **Keep** | `CD1` -> U40 pin **32**, `CD2` -> U50 pin **8**, both **100 nF** (high confidence is expected) |
+| **Delete** | anything else Quilter invents |
+
+**Placement locks / keepouts** (KiCad before upload): lock `J36` gold fingers and `Edge.Cuts`. Finger tongue keepout blocks copper pour on the edge (tracks to pads OK). Details: [`hw/kicad/README.md`](../hw/kicad/README.md#cartridge-gold-fingers).
 
 ---
 

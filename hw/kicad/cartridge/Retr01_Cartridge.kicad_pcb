@@ -90,11 +90,11 @@
 	(footprint "Package_DIP:DIP-32_W15.24mm"
 		(layer "F.Cu")
 		(uuid "1593387c-2e4f-46d8-aee0-1cb4c1a8af03")
-		(at 22.95 37.62 90)
+		(at 24.38 39.24 90)
 		(descr "32-lead though-hole mounted DIP package, row spacing 15.24mm (600 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 15.24mm 600mil")
 		(property "Reference" "U40"
-			(at 7.62 -2.33 90)
+			(at 7.62 43.05 90)
 			(layer "F.SilkS")
 			(uuid "7e98a78f-a915-4fb1-b997-7b781d25d9ef")
 			(effects
@@ -313,7 +313,7 @@
 			)
 		)
 		(point
-			(at 42 30)
+			(at 43.43 31.62)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "29c1d887-bcbc-4551-ac55-25a211b0d130")
@@ -655,7 +655,7 @@
 	(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "3aa94dc0-de26-4e06-ac39-ccc8409a91c6")
-		(at 44 47 90)
+		(at 45.43 48.62 90)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "RD2"
@@ -670,8 +670,9 @@
 			)
 		)
 		(property "Value" "0"
-			(at 1.27 2.37 90)
+			(at -2.38 -0.43 180)
 			(layer "F.Fab")
+			(hide yes)
 			(uuid "f1f75946-d898-46d9-b458-25d97570a21b")
 			(effects
 				(font
@@ -844,7 +845,7 @@
 	(footprint "Package_DIP:DIP-8_W7.62mm"
 		(layer "F.Cu")
 		(uuid "58fb21b7-1d45-4306-ac83-0bce0f75a2aa")
-		(at 57.81 50 180)
+		(at 59.24 51.62 180)
 		(descr "8-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "U50"
@@ -1055,19 +1056,8 @@
 			(layer "F.Fab")
 			(uuid "461691aa-a3e6-48d4-9312-81dbcdbba365")
 		)
-		(fp_text user "${REFERENCE}"
-			(at 6.475 -4.545 90)
-			(layer "F.Fab")
-			(uuid "8cadb44e-82f5-4d81-80ac-f16c43e7e282")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
 		(point
-			(at 54 46.19)
+			(at 55.43 47.81)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "804606d9-4e1f-4af8-9735-ae06caae6810")
@@ -1169,7 +1159,7 @@
 	(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "81c63e9d-fcda-4ecb-bcf9-8a309a4c3cc4")
-		(at 24 47 90)
+		(at 25.43 48.62 90)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "CD1"
@@ -1184,7 +1174,7 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at 2.5 2.5 90)
+			(at -2.38 -0.43 180)
 			(layer "F.Fab")
 			(uuid "dd4199d9-0e48-4f47-8832-7133c5fbd84e")
 			(effects
@@ -1387,7 +1377,7 @@
 	(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "c03e649e-adf0-46b5-863d-427c0d9fa7d0")
-		(at 30.95 47 90)
+		(at 32.38 48.62 90)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "CD2"
@@ -1402,7 +1392,7 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at 4.01 5.5 90)
+			(at -2.38 -0.38 180)
 			(layer "F.Fab")
 			(uuid "f87149ad-3917-4b5e-a727-10628f2c40c9")
 			(effects
@@ -1603,15 +1593,16 @@
 		)
 	)
 	(footprint "Retr01_Lib:Cart_Edge_2x18_P2.54mm"
+		(locked yes)
 		(layer "F.Cu")
 		(uuid "c59a1827-d581-43e2-86bd-168a298fac3b")
-		(at 25.76 74.5 90)
+		(at 25.84 74 90)
 		(descr "Retr01 cart gold fingers 2x18 2.54mm. Pads 1-18=A1-A18 (F.Cu), 19-36=B1-B18 (B.Cu under A). Mate EDAC 395-036-520-201. Board 1.6mm. Place origin on Edge.Cuts insert edge, copper toward +X. docs/cart.md")
 		(tags "cart edge gold finger Retr01 EDAC 2.54mm")
 		(property "Reference" "J36"
 			(at 10 -2 90)
 			(layer "F.SilkS")
-			(uuid "6cb043c6-b978-4f33-afc8-3eeac36e7e86")
+			(uuid "1834bb59-4091-4b63-9162-b51ef754dfe7")
 			(effects
 				(font
 					(size 1 1)
@@ -1620,9 +1611,9 @@
 			)
 		)
 		(property "Value" "CART_EDGE_36"
-			(at 10 45.18 90)
+			(at 13 5.16 180)
 			(layer "F.Fab")
-			(uuid "78527819-e596-43d2-b16d-00c3d6b24668")
+			(uuid "9de26cb1-b2d8-4824-b765-0a361ab8a36f")
 			(effects
 				(font
 					(size 1 1)
@@ -1635,7 +1626,7 @@
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "dbfa5ce2-d398-4dd2-9b6b-7037c7686ce4")
+			(uuid "7887c2ba-c74a-4eb7-8fb8-6cac39613f66")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1648,7 +1639,7 @@
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "9a9a9e4f-8431-4f44-bf4f-5afd58d2b6a8")
+			(uuid "5552c868-863a-42e1-abca-23ef71b60303")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1800,7 +1791,7 @@
 		)
 		(pad "1" smd rect
 			(at 4 0 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "F.Cu" "F.Mask")
 			(net "GND")
 			(pintype "UNSPECIFIED")
@@ -1808,7 +1799,7 @@
 		)
 		(pad "2" smd rect
 			(at 4 2.54 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "F.Cu" "F.Mask")
 			(net "+5V")
 			(pintype "UNSPECIFIED")
@@ -1816,7 +1807,7 @@
 		)
 		(pad "3" smd rect
 			(at 4 5.08 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "F.Cu" "F.Mask")
 			(net "I2C_SDA")
 			(pintype "UNSPECIFIED")
@@ -1824,7 +1815,7 @@
 		)
 		(pad "4" smd rect
 			(at 4 7.62 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "F.Cu" "F.Mask")
 			(net "CART_A0")
 			(pintype "UNSPECIFIED")
@@ -1832,7 +1823,7 @@
 		)
 		(pad "5" smd rect
 			(at 4 10.16 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "F.Cu" "F.Mask")
 			(net "CART_A1")
 			(pintype "UNSPECIFIED")
@@ -1840,7 +1831,7 @@
 		)
 		(pad "6" smd rect
 			(at 4 12.7 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "F.Cu" "F.Mask")
 			(net "CART_A2")
 			(pintype "UNSPECIFIED")
@@ -1848,7 +1839,7 @@
 		)
 		(pad "7" smd rect
 			(at 4 15.24 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "F.Cu" "F.Mask")
 			(net "CART_A3")
 			(pintype "UNSPECIFIED")
@@ -1856,7 +1847,7 @@
 		)
 		(pad "8" smd rect
 			(at 4 17.78 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "F.Cu" "F.Mask")
 			(net "CART_A4")
 			(pintype "UNSPECIFIED")
@@ -1864,7 +1855,7 @@
 		)
 		(pad "9" smd rect
 			(at 4 20.32 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "F.Cu" "F.Mask")
 			(net "CART_A5")
 			(pintype "UNSPECIFIED")
@@ -1872,7 +1863,7 @@
 		)
 		(pad "10" smd rect
 			(at 4 22.86 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "F.Cu" "F.Mask")
 			(net "CART_A6")
 			(pintype "UNSPECIFIED")
@@ -1880,7 +1871,7 @@
 		)
 		(pad "11" smd rect
 			(at 4 25.4 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "F.Cu" "F.Mask")
 			(net "CART_A7")
 			(pintype "UNSPECIFIED")
@@ -1888,7 +1879,7 @@
 		)
 		(pad "12" smd rect
 			(at 4 27.94 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "F.Cu" "F.Mask")
 			(net "CART_A8")
 			(pintype "UNSPECIFIED")
@@ -1896,7 +1887,7 @@
 		)
 		(pad "13" smd rect
 			(at 4 30.48 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "F.Cu" "F.Mask")
 			(net "CART_A9")
 			(pintype "UNSPECIFIED")
@@ -1904,7 +1895,7 @@
 		)
 		(pad "14" smd rect
 			(at 4 33.02 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "F.Cu" "F.Mask")
 			(net "CART_A10")
 			(pintype "UNSPECIFIED")
@@ -1912,7 +1903,7 @@
 		)
 		(pad "15" smd rect
 			(at 4 35.56 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "F.Cu" "F.Mask")
 			(net "CART_A11")
 			(pintype "UNSPECIFIED")
@@ -1920,7 +1911,7 @@
 		)
 		(pad "16" smd rect
 			(at 4 38.1 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "F.Cu" "F.Mask")
 			(net "CART_A12")
 			(pintype "UNSPECIFIED")
@@ -1928,7 +1919,7 @@
 		)
 		(pad "17" smd rect
 			(at 4 40.64 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "F.Cu" "F.Mask")
 			(net "CART_A13")
 			(pintype "UNSPECIFIED")
@@ -1936,7 +1927,7 @@
 		)
 		(pad "18" smd rect
 			(at 4 43.18 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "F.Cu" "F.Mask")
 			(net "GND")
 			(pintype "UNSPECIFIED")
@@ -1944,7 +1935,7 @@
 		)
 		(pad "19" smd rect
 			(at 4 0 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "B.Cu" "B.Mask")
 			(net "GND")
 			(pintype "UNSPECIFIED")
@@ -1952,7 +1943,7 @@
 		)
 		(pad "20" smd rect
 			(at 4 2.54 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "B.Cu" "B.Mask")
 			(net "+5V")
 			(pintype "UNSPECIFIED")
@@ -1960,7 +1951,7 @@
 		)
 		(pad "21" smd rect
 			(at 4 5.08 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "B.Cu" "B.Mask")
 			(net "I2C_SCL")
 			(pintype "UNSPECIFIED")
@@ -1968,7 +1959,7 @@
 		)
 		(pad "22" smd rect
 			(at 4 7.62 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "B.Cu" "B.Mask")
 			(net "CART_D0")
 			(pintype "UNSPECIFIED")
@@ -1976,7 +1967,7 @@
 		)
 		(pad "23" smd rect
 			(at 4 10.16 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "B.Cu" "B.Mask")
 			(net "CART_D1")
 			(pintype "UNSPECIFIED")
@@ -1984,7 +1975,7 @@
 		)
 		(pad "24" smd rect
 			(at 4 12.7 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "B.Cu" "B.Mask")
 			(net "CART_D2")
 			(pintype "UNSPECIFIED")
@@ -1992,7 +1983,7 @@
 		)
 		(pad "25" smd rect
 			(at 4 15.24 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "B.Cu" "B.Mask")
 			(net "CART_D3")
 			(pintype "UNSPECIFIED")
@@ -2000,7 +1991,7 @@
 		)
 		(pad "26" smd rect
 			(at 4 17.78 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "B.Cu" "B.Mask")
 			(net "CART_D4")
 			(pintype "UNSPECIFIED")
@@ -2008,7 +1999,7 @@
 		)
 		(pad "27" smd rect
 			(at 4 20.32 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "B.Cu" "B.Mask")
 			(net "CART_D5")
 			(pintype "UNSPECIFIED")
@@ -2016,7 +2007,7 @@
 		)
 		(pad "28" smd rect
 			(at 4 22.86 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "B.Cu" "B.Mask")
 			(net "CART_D6")
 			(pintype "UNSPECIFIED")
@@ -2024,7 +2015,7 @@
 		)
 		(pad "29" smd rect
 			(at 4 25.4 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "B.Cu" "B.Mask")
 			(net "CART_D7")
 			(pintype "UNSPECIFIED")
@@ -2032,7 +2023,7 @@
 		)
 		(pad "30" smd rect
 			(at 4 27.94 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "B.Cu" "B.Mask")
 			(net "CART_OE_N")
 			(pintype "UNSPECIFIED")
@@ -2040,7 +2031,7 @@
 		)
 		(pad "31" smd rect
 			(at 4 30.48 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "B.Cu" "B.Mask")
 			(net "CART_A14")
 			(pintype "UNSPECIFIED")
@@ -2048,7 +2039,7 @@
 		)
 		(pad "32" smd rect
 			(at 4 33.02 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "B.Cu" "B.Mask")
 			(net "CART_A15")
 			(pintype "UNSPECIFIED")
@@ -2056,7 +2047,7 @@
 		)
 		(pad "33" smd rect
 			(at 4 35.56 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "B.Cu" "B.Mask")
 			(net "CART_A16")
 			(pintype "UNSPECIFIED")
@@ -2064,7 +2055,7 @@
 		)
 		(pad "34" smd rect
 			(at 4 38.1 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "B.Cu" "B.Mask")
 			(net "CART_A17")
 			(pintype "UNSPECIFIED")
@@ -2072,7 +2063,7 @@
 		)
 		(pad "35" smd rect
 			(at 4 40.64 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "B.Cu" "B.Mask")
 			(net "CART_A18")
 			(pintype "UNSPECIFIED")
@@ -2080,7 +2071,7 @@
 		)
 		(pad "36" smd rect
 			(at 4 43.18 90)
-			(size 8 1.4)
+			(size 8 1.7)
 			(layers "B.Cu" "B.Mask")
 			(net "CART_WE_N")
 			(pintype "UNSPECIFIED")
@@ -2088,10 +2079,116 @@
 		)
 		(embedded_fonts no)
 	)
+	(footprint "MountingHole:MountingHole_2.2mm_M2"
+		(layer "F.Cu")
+		(uuid "dd43933b-7e25-41fa-9464-0e7b5541e9de")
+		(at 47.5 59)
+		(descr "Mounting Hole 2.2mm, M2, no annular, generated by kicad-footprint-generator mountinghole.py")
+		(tags "mountinghole M2")
+		(property "Reference" "Hole"
+			(at 0 -3.15 0)
+			(layer "F.SilkS")
+			(uuid "c3c48a45-84a1-438d-9f34-78cd0b0e1313")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "MountingHole_2.2mm_M2"
+			(at 0 3.15 0)
+			(layer "F.Fab")
+			(uuid "d3faf706-acb1-4cf7-a15e-a3421bc23c5d")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "44b3cd07-6c92-482f-833c-20b121c35aa7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "b0131a05-03cc-4e2c-b84e-85bcbe081149")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "KiLib_Generator" "mounting_hardware/mounting_hole"
+			(at 0 0 0)
+			(layer "F.SilkS")
+			(hide yes)
+			(uuid "892f68bb-4eb0-450f-9a26-e08e307cd063")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(attr exclude_from_pos_files exclude_from_bom)
+		(duplicate_pad_numbers_are_jumpers no)
+		(fp_circle
+			(center 0 0)
+			(end 2.2 0)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(fill no)
+			(layer "Cmts.User")
+			(uuid "55ee4e3f-6225-49f0-8623-06122ce879c8")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.45 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.CrtYd")
+			(uuid "143cf8f9-35e1-44f2-b987-0809bebf2ef1")
+		)
+		(fp_text user "${REFERENCE}"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(uuid "55af61b7-80c9-4521-aa96-4724a09da688")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(pad "" np_thru_hole circle
+			(at 0 0)
+			(size 2.2 2.2)
+			(drill 2.2)
+			(layers "*.Cu" "*.Mask")
+			(uuid "05b9c69e-6afe-4406-9516-14aa32db5d35")
+		)
+		(embedded_fonts no)
+	)
 	(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "e39d21a8-c74d-4018-a717-0bb9f8dc6798")
-		(at 38 47 90)
+		(at 39.43 48.62 90)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "RD1"
@@ -2106,8 +2203,9 @@
 			)
 		)
 		(property "Value" "0"
-			(at 1.27 2.37 90)
+			(at -2.38 -0.43 180)
 			(layer "F.Fab")
+			(hide yes)
 			(uuid "bc6f5420-d28a-4955-aed6-2220c4378fd2")
 			(effects
 				(font
@@ -2286,8 +2384,82 @@
 			(type default)
 		)
 		(fill no)
+		(locked yes)
 		(layer "Edge.Cuts")
-		(uuid "d02e781f-34e3-4b0e-bef9-7e85f64c07ab")
+		(uuid "2ef045b3-e923-407f-8fba-024e8dcb0c37")
+	)
+	(zone
+		(net "GND")
+		(layer "F.Cu")
+		(uuid "e652c0a9-714a-4677-8fdc-702ab9fe3bfe")
+		(name "GND_F")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0.25)
+		)
+		(min_thickness 0.2)
+		(fill
+			(thermal_gap 0.3)
+			(thermal_bridge_width 0.3)
+			(island_removal_mode 1)
+		)
+		(polygon
+			(pts
+				(xy 21 21) (xy 74 21) (xy 74 64) (xy 21 64)
+			)
+		)
+	)
+	(zone
+		(layers "F.Cu" "B.Cu")
+		(uuid "bda2e2ce-574e-4c64-8eeb-3d152399beda")
+		(name "FINGER_KEEPOUT")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0)
+		)
+		(min_thickness 0.25)
+		(keepout
+			(tracks allowed)
+			(vias not_allowed)
+			(pads allowed)
+			(copperpour not_allowed)
+			(footprints not_allowed)
+		)
+		(placement
+			(enabled no)
+			(sheetname "")
+		)
+		(fill
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+			(island_removal_mode 0)
+		)
+		(polygon
+			(pts
+				(xy 20.5 64) (xy 74.5 64) (xy 74.5 75.2) (xy 20.5 75.2)
+			)
+		)
+	)
+	(zone
+		(net "GND")
+		(layer "B.Cu")
+		(uuid "8a05aaf3-43a1-4703-a4e8-cc7ba9537fb4")
+		(name "GND_B")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0.25)
+		)
+		(min_thickness 0.2)
+		(fill
+			(thermal_gap 0.3)
+			(thermal_bridge_width 0.3)
+			(island_removal_mode 1)
+		)
+		(polygon
+			(pts
+				(xy 21 21) (xy 74 21) (xy 74 64) (xy 21 64)
+			)
+		)
 	)
 	(embedded_fonts no)
 )

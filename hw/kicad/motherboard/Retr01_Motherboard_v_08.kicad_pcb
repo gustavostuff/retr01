@@ -11251,9 +11251,10 @@
 		)
 	)
 	(footprint "Connector_PinSocket_2.54mm:PinSocket_2x18_P2.54mm_Vertical"
+		(locked yes)
 		(layer "F.Cu")
 		(uuid "3c8d8fb6-b740-4b6c-903b-029d1e4c179c")
-		(at -114.33 80.27 -90)
+		(at 132 79 -90)
 		(descr "Through hole straight socket strip, 2x18, 2.54mm pitch, double rows (from Kicad 4.0.7), script generated")
 		(tags "Through hole socket strip THT 2x18 2.54mm double row")
 		(property "Reference" "J36"
