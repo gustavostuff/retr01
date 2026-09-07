@@ -27,7 +27,7 @@ The highest-frequency content on this board is not the clock fundamental. It is 
 - That discontinuity radiates.
 - Stitch caps between power and ground can pass some of that return (high-pass between planes), but real caps have inductance. The **highest** frequencies still see an open. Cap impedance vs frequency is **V-shaped**. Audio "bypass" intuition does not map cleanly onto digital edge harmonics.
 
-**Target stackup for Retr01:**
+**Target stackup for Retr01** (motherboard and cartridge):
 
 | Layer | Role |
 |-------|------|
@@ -131,15 +131,15 @@ Expected keep set: **23** rows (21x `CD*` + 2x `Cd725*`). Do not chase high conf
 
 Project: [`hw/kicad/cartridge/`](../hw/kicad/cartridge/). Same stub pattern as the mobo (`RD*` 0 ohm into `+5V_U*`), fewer parts.
 
-**Stackup:** In KiCad, **B.Cu** is typed **power** (GND plane preference); **F.Cu** stays **signal**. CircuitHub 2-layer profiles may still show both as Signal with no editable Ground class. If Quilter still warns "no ground layer", ignore it. **GND** remains **Primary Ground** and pours on both sides.
+**Stackup (4-layer, matches motherboard):** **F.Cu** signal · **In1.Cu** GND · **In2.Cu** GND · **B.Cu** signal. Board thickness **1.6 mm** (edge-connector mating). Inner planes are solid `GND` pours over the full board. Outers carry signals + full-board `+5V` pours (clearance around non-power finger pads). Pick Quilter’s **4-layer** profile; map inners as ground.
 
 **Power nets:**
 
 | Action | Nets |
 |--------|------|
-| **Pour on** | `+5V` only (**Attempt Power Pour** checked). ~**500 mA** is fine |
+| **Pour on** | `+5V` only on **F.Cu / B.Cu** (**Attempt Power Pour** checked). ~**500 mA** is fine |
 | **Keep listed, pour off** | `+5V_U40`, `+5V_U50` (uncheck **Attempt Power Pour**) |
-| **Ground** | `GND` = **Primary Ground** |
+| **Ground** | `GND` = **Primary Ground** (planes on **In1 / In2**) |
 
 On the cart KiCad board, `+5V` must reach **J36** A2/B2 and both **RD*** pin-2 pads (the four copper nodes on bare `+5V`). Keep `J36` seated on `Edge.Cuts` with fingers **on** the board (not hanging past the outline) or Quilter reports **Net is not fully connected**.
 
@@ -150,7 +150,7 @@ On the cart KiCad board, `+5V` must reach **J36** A2/B2 and both **RD*** pin-2 p
 | **Keep** | `CD1` -> U40 pin **32**, `CD2` -> U50 pin **8**, both **100 nF** (high confidence is expected) |
 | **Delete** | anything else Quilter invents |
 
-**Placement locks / keepouts** (KiCad before upload): lock `J36` gold fingers and `Edge.Cuts`. Finger tongue keepout blocks copper pour on the edge (tracks to pads OK). Details: [`hw/kicad/README.md`](../hw/kicad/README.md#cartridge-gold-fingers).
+**Placement locks** (KiCad before upload): lock `J36` gold fingers and `Edge.Cuts`. Copper zones cover the full board (no tongue keepout). Details: [`hw/kicad/README.md`](../hw/kicad/README.md#cartridge-gold-fingers).
 
 ---
 
