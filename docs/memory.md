@@ -67,7 +67,7 @@ Six `(offset, length)` pairs as little-endian **u24** (3+3 bytes each):
 | World header | **32 B** (spawn cell as nibble-packed col/row, default banks/pal row, BG1 present count, BG0 present count, CHR/dir offsets, entity counts, player entity + hitbox, camera dead-zone bytes **30-31**) |
 | CHR | **4** BG banks + **4** SPR banks x **4096 B** = **32 KB** total |
 | BG1 screen directory | **12 B** per present playfield screen (grid cell + payload offset) |
-| BG1 screen payloads | **480 B** each (present only, sparse **16x16**) |
+| BG1 screen payloads | **480 B** each (present only, sparse **16x16**, max **32**/world) |
 | BG0 directory | **12 B** per present BG0 screen (same shape as BG1 dir). Offset **0** if none |
 | BG0 payloads | **480 B** each (up to **8** present screens, sparse on **16x16**) |
 | Entity types / instances | Packed records. Metasprite catalog is Studio-only and flattened here |
@@ -79,18 +79,18 @@ Six `(offset, length)` pairs as little-endian **u24** (3+3 bytes each):
 
 **Screen payload:** **480 B** = 240 tile bytes + 240 attr bytes (**16x15**, **128x120**). Same shape for BG1 and BG0.
 
-**World caps:** **8** worlds, **48 present BG1 screens**/world on sparse **16x16**, **0..8** BG0 screens/world, **4** BG + **4** sprite CHR banks/world (**256** tiles x **16 B** each bank).
+**World caps:** **8** worlds, **32 present BG1 screens**/world on sparse **16x16**, **0..8** BG0 screens/world, **4** BG + **4** sprite CHR banks/world (**256** tiles x **16 B** each bank).
 
 ### Flash budget at max fill
 
-Worst case (PRG + full unique CHR and max screens for all 8 worlds, sparse dirs, headers):
+Worst case (PRG + header/pals/world table + full unique CHR and max screens for all 8 worlds, sparse dirs, no entity/other blobs yet):
 
 | Item | Bytes | KB |
 | --- | ---: | ---: |
-| Used (prior project count) | ~515700 | ~504 |
-| Free in 512 KB | ~8588 | ~8.4 |
+| Used | ~452980 | ~442 |
+| Free in 512 KB | ~71308 | ~69.6 |
 
-That free window is shared by **other screens**, **entity / PA blobs**, and any extra padding. Max fill of every world cap at once leaves only tight headroom. Real games that leave screens or CHR unused free space quickly for globals and entities.
+That free window is for **other screens**, **entity / PA blobs**, and padding. About **247** maxed entity defs @ 288 B fit in the free space alone (see `software-api.md`). Real games that leave CHR or screens unused free even more.
 
 ### Other screens (global ROM)
 
@@ -135,5 +135,5 @@ Small I2C EEPROM on the cart for per-game saves. **24C64**, mailbox **`$7F22`-`$
 - Flat contiguous 32 KB PRG at `$8000-$FFFF` (no I/O hole)
 - I/O page `$7F00-$7FFF` (old `$FExx` low bytes kept where useful)
 - `.retr01` header, pointer table, world blob shape, sparse dirs, other-screens, MAP port
-- World caps (8 / 48 / 0..8 BG0)
+- World caps (8 worlds / 32 BG1 / 0..8 BG0)
 - Three AVR128DB28 helpers (MCU-M / S1 / S2) as in `hardware.md`

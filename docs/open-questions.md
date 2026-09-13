@@ -54,9 +54,9 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### Entity / PA packed sizes (from cart map)
 
-**Open:** World blob entity type/instance and optional `PA` record layouts are still "packed records" without a byte schema. Max-fill flash headroom (~8.4 KB) is shared with other screens.
+**Partly sized:** A maxed entity **definition** is **288 B** (or **290 B** with a 2 B header). About **3** fit in **1 KB**. See `software-api.md`. Instance records and optional `PA` blobs are still undefined. With **32 BG1 + 8 BG0** caps, max-fill flash headroom is ~**69.6 KB** for entities / other screens.
 
-**Suggestion:** Freeze a tiny entity def + instance format that fits real games first, then document worst-case bytes in `memory.md`.
+**Suggestion:** Freeze instance + `PA` next, then document worst-case bytes per world in `memory.md`.
 
 **Touches:** `memory.md`, `software-api.md`
 
@@ -78,9 +78,9 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 **Resolved:** Bank and palette attr fields are **0-3**. Documented in `video-graphics.md`.
 
-### 7. BG0 screen budget
+### 7. Screen budgets (BG1 / BG0)
 
-**Resolved:** **0..8** BG0 screens per world.
+**Resolved:** **32** present BG1 screens per world. **0..8** BG0 screens per world. Max-fill free space ~**69.6 KB**. See `memory.md`.
 
 ### 8. Console-side cart flashing
 
@@ -101,6 +101,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-13 | PRG banking | No PRG banks. Single flat 32 KB PRG region. |
 | 2026-09-13 | Cart image | Adopt prior `.retr01` map into `memory.md`. |
 | 2026-09-13 | BG0 screens | Firm cap 0..8 present BG0 screens per world. |
+| 2026-09-13 | BG1 screens | Cap cut from 48 to **32** present BG1 screens per world (~69.6 KB free at max fill). |
 | 2026-09-13 | PRG vs I/O | Contiguous PRG `$8000-$FFFF`. I/O `$7F00-$7FFF`. |
 | 2026-09-13 | MCU set | 3x AVR128DB28 (M / S1 / S2). Old role split. |
 | 2026-09-13 | Color path | AT27C256R master colors. Cart holds indices only. |
