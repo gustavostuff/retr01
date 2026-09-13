@@ -1,0 +1,9 @@
+/home/g/Repos/retr01/netlist_sim/build/CMakeFiles/netlist_sim.dir
+/home/g/Repos/retr01/netlist_sim/build/CMakeFiles/test_ns_entity.dir
+/home/g/Repos/retr01/netlist_sim/build/CMakeFiles/test_ns_bus.dir
+/home/g/Repos/retr01/netlist_sim/build/CMakeFiles/test_ns_chip_registry.dir
+/home/g/Repos/retr01/netlist_sim/build/CMakeFiles/test_ns_health_outline.dir
+/home/g/Repos/retr01/netlist_sim/build/CMakeFiles/example_nand.dir
+/home/g/Repos/retr01/netlist_sim/build/CMakeFiles/test.dir
+/home/g/Repos/retr01/netlist_sim/build/CMakeFiles/edit_cache.dir
+/home/g/Repos/retr01/netlist_sim/build/CMakeFiles/rebuild_cache.dir

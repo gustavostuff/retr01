@@ -1,0 +1,1 @@
+/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/test_ns_entity.dir/link.d CMakeFiles/test_ns_entity.dir/tests/test_entity.c.o -o test_ns_entity  libnetlist_sim.a /usr/lib/libSDL2.so

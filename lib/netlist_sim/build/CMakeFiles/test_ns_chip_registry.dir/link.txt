@@ -1,0 +1,1 @@
+/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/test_ns_chip_registry.dir/link.d CMakeFiles/test_ns_chip_registry.dir/tests/test_chip_registry.c.o -o test_ns_chip_registry  libnetlist_sim.a /usr/lib/libSDL2.so

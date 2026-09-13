@@ -1,0 +1,1 @@
+/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/example_nand.dir/link.d CMakeFiles/example_nand.dir/examples/example_nand_IC.c.o CMakeFiles/example_nand.dir/examples/example_nand_island.c.o CMakeFiles/example_nand.dir/examples/example_nand_main.c.o -o example_nand  libnetlist_sim.a /usr/lib/libSDL2.so
