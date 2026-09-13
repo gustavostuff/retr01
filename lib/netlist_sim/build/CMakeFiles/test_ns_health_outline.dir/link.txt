@@ -1,1 +1,0 @@
-/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/test_ns_health_outline.dir/link.d CMakeFiles/test_ns_health_outline.dir/tests/test_health_outline.c.o -o test_ns_health_outline  libnetlist_sim.a /usr/lib/libSDL2.so

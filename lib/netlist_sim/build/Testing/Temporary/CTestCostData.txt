@@ -1,5 +1,0 @@
-test_ns_entity 4 0.00042458
-test_ns_bus 4 0.000358731
-test_ns_chip_registry 4 0.000624445
-test_ns_health_outline 4 0.000430175
----

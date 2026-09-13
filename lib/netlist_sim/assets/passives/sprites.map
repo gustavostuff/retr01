@@ -1,8 +1,0 @@
-# Passive sprites (nano scaled_down, breadboard pitch 5).
-# kind  file              pivot_col  pivot_row  pin2_span_px
-# Pivot is pin-1 tip. Filename KIND_x_y.png matches pivot. Not a marker pixel.
-R       R_0_2.png         0  2   20
-CCAP    CCAP_2_12.png     2  12  5
-ECAP    ECAP_2_19.png     2  19  5
-OSC     OSC_5_11.png      5  11  5
-D       D_0_2.png         0  2   15
