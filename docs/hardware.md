@@ -261,4 +261,4 @@ Black anti-spoof then white hitboxes on all targets, then `0x5A`. Two flash fram
 
 ## Related
 
-`memory.md` | `cartridge.md` | `video-graphics.md` | `world-scrolling.md` | `software-api.md` | `open-questions.md`
+`memory.md` | `cartridge.md` | `video-graphics.md` | `world-scrolling.md` | `software-api.md` | `open-questions.md` | `ic_behavior/`
