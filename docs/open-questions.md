@@ -1,32 +1,10 @@
 # Open questions and TBDs
 
-Items left open in the rough specs, plus a practical way to close each one. Update this file when a decision lands, then fold the answer into the matching doc.
+Items still open, plus how to close them. Update this file when a decision lands, then fold the answer into the matching doc.
 
-## 1. AVR duty split
+## Still open
 
-**Open:** Two AVR128DB28 chips help the 6502. What exactly does each one own beyond "sprites in vblank" and "entities"?
-
-**Suggestion:** Write a one-page ownership table: bus mastership per phase, IRQ sources, shared memory windows, and max work per frame (cycles and bytes). Prototype the sprite-composite path first on one AVR. Put entity update and DMA-ish sprite list build on the other. Revisit only if timing fails in a cycle budget spreadsheet or a cheap FPGA/CPLD stand-in for the video glue.
-
-**Touches:** `hardware.md`, `software-api.md`, `video-graphics.md`
-
-## 2. Hardware video scope
-
-**Open:** "Most video logic in hardware" needs a concrete list (scroll regs, nametable fetch, BG compose, sprite limits, palette apply, and so on).
-
-**Suggestion:** Draw a block diagram with boxes that must be discrete logic or a small CPLD versus boxes that may stay in AVR firmware. Anything that must run every pixel or every cycle on a scanline should not depend on AVR code. Anything that can finish in vblank may stay on an AVR.
-
-**Touches:** `hardware.md`, `video-graphics.md`
-
-## 3. Cartridge binary map
-
-**Resolved:** Adopt the prior-project `.retr01` layout in `memory.md` (header, u24 pointer table, global pals, PRG, other screens, world table, world blobs with sparse 12 B dirs, MAP at `$7F90`-`$7F93`). I/O is **`$7F00-$7FFF`**, not a hole inside PRG.
-
-**Still soft:** entity/PA packed record sizes inside the world blob, and exact free-byte split between other screens and entities at max fill.
-
-**Touches:** `memory.md`, `cartridge.md`, `world-scrolling.md`
-
-## 4. Animated tiles (BG attr bit 7)
+### 4. Animated tiles (BG attr bit 7)
 
 **Open:** Software iterates a set of tile patterns. Timing and where the set lives are undefined.
 
@@ -34,7 +12,7 @@ Items left open in the rough specs, plus a practical way to close each one. Upda
 
 **Touches:** `video-graphics.md`, `software-api.md`
 
-## 5. Sprite attr bits 6 and 7
+### 5. Sprite attr bits 6 and 7
 
 **Open:** Reserved. No use yet.
 
@@ -42,45 +20,15 @@ Items left open in the rough specs, plus a practical way to close each one. Upda
 
 **Touches:** `video-graphics.md`
 
-## 6. Attribute index ranges (0-3 vs 0-4)
+### 10. Palette buffer and row select
 
-**Open:** Draft text said bank and palette fields as 0-4 while those fields are two bits and there are four banks.
+**Open:** How PRG selects the active palette row / buffer and keeps BG/sprite row pairing (shared BG color) is not fully specified beyond soft ports on MCU-M.
 
-**Suggestion:** Lock to **0-3** for bank and palette nibble halves. Fix docs and any sample data. If a fifth bank is ever required, that is a format bump, not a silent stretch of two bits.
+**Suggestion:** Lock register meanings under `$7F08`/`$7F09` (and friends) in a short register map. Copy from cart palette planes into the active buffer in vblank only.
 
-**Touches:** `video-graphics.md`, `cartridge.md`
+**Touches:** `video-graphics.md`, `hardware.md`, `memory.md`
 
-## 7. BG0 screen budget
-
-**Resolved:** Cap is **0..8** BG0 screens per world (sparse), matching `memory.md`.
-
-**Touches:** `memory.md`, `world-scrolling.md`
-
-## 8. Console-side cart flashing
-
-**Open:** Want to program carts from the console, maybe with USBasp or Adafruit UPDI Friend.
-
-**Suggestion:** Split into (A) in-system flash of the cart ROM while seated, and (B) a dock or pass-through that only needs the AVR programmer for cart MCU/EEPROM if any. For v1, a dedicated flash header on the cart plus a PC tool may ship faster than full console-mediated flashing. Design the edge connector with the flash pins reserved either way.
-
-**Touches:** `cartridge.md`, `hardware.md`
-
-## 9. Interleaved VRAM timing
-
-**Open:** CPU and video take turns by CPU phase. Exact arbitration, wait states, and safe write windows are unspecified.
-
-**Suggestion:** Document phi2 (or equivalent) ownership on paper first. State when PRG may write nametables and when sprite AVR may write the overlay buffer. Add a hard rule: no mid-scanline PRG VRAM writes in v1 if that simplifies glue.
-
-**Touches:** `hardware.md`, `world-scrolling.md`
-
-## 10. Palette buffer and row select
-
-**Open:** How PRG selects the 8-palette buffer and keeps BG/sprite row pairing (shared BG color) is not fully specified.
-
-**Suggestion:** Memory-map a small set of registers: current row index, optional force of shared BG index, and a DMA or copy path from cart palette rows into the active buffer during vblank only.
-
-**Touches:** `video-graphics.md`
-
-## 11. Entity and sprite budget coupling
+### 11. Entity and sprite budget coupling
 
 **Open:** 64 sprites, 16 per line, entities up to 4x4x4 sprites. How spawning fails under pressure is unclear.
 
@@ -88,7 +36,7 @@ Items left open in the rough specs, plus a practical way to close each one. Upda
 
 **Touches:** `software-api.md`, `video-graphics.md`
 
-## 12. Platformer physics scope
+### 12. Platformer physics scope
 
 **Open:** "Simple physics" needs bounds (gravity, jump, one-way, slopes, moving platforms).
 
@@ -96,15 +44,7 @@ Items left open in the rough specs, plus a practical way to close each one. Upda
 
 **Touches:** `software-api.md`
 
-## 13. 16 IC budget
-
-**Open:** Max 16 ICs on the main board. No draft BOM yet.
-
-**Suggestion:** Start a living BOM with CPU, two AVRs, RAM, VRAM, AD724, glue (or one CPLD counted as one IC), and I/O. Anything past 16 forces function into an AVR or a larger programmable device. Track count in `hardware.md` when the first schematic pass exists.
-
-**Touches:** `hardware.md`
-
-## 14. Scroll edge cases
+### 14. Scroll edge cases
 
 **Open:** Sparse maps, missing neighbor screens, and simultaneous BG0/BG1 window shifts need rules.
 
@@ -112,11 +52,60 @@ Items left open in the rough specs, plus a practical way to close each one. Upda
 
 **Touches:** `world-scrolling.md`
 
-## Decision log (fill as you go)
+### Entity / PA packed sizes (from cart map)
+
+**Open:** World blob entity type/instance and optional `PA` record layouts are still "packed records" without a byte schema. Max-fill flash headroom (~8.4 KB) is shared with other screens.
+
+**Suggestion:** Freeze a tiny entity def + instance format that fits real games first, then document worst-case bytes in `memory.md`.
+
+**Touches:** `memory.md`, `software-api.md`
+
+## Resolved (kept for history)
+
+### 1. AVR duty split
+
+**Resolved:** Three AVR128DB28. **MCU-M** soft `$7Fxx` / SPI / cart I2C / RDY. **MCU-S1** OAM + sprite field + HBlank BG0. **MCU-S2** pads + APU PWM. Entity logic stays on the 6502. See `hardware.md`.
+
+### 2. Hardware video scope
+
+**Resolved (baseline):** Beam X / Beam Y / Compositor on 3x ATF22V10. Color PROM index in compositor. VRAM mux on PHI2. Sprite/BG0 field on S1. Details in `hardware.md`. Fine pixel rules can still grow in `video-graphics.md`.
+
+### 3. Cartridge binary map
+
+**Resolved:** `.retr01` layout in `memory.md`. I/O page `$7F00-$7FFF`.
+
+### 6. Attribute index ranges
+
+**Resolved:** Bank and palette attr fields are **0-3**. Documented in `video-graphics.md`.
+
+### 7. BG0 screen budget
+
+**Resolved:** **0..8** BG0 screens per world.
+
+### 8. Console-side cart flashing
+
+**Resolved for v1:** USB-C bench flasher on the 36-pin edge (`hardware.md`). Console-seated flash later. `WE#` already on the edge.
+
+### 9. Interleaved VRAM timing
+
+**Resolved (baseline):** PHI2 high = CPU `$7F10`-`$7F12`. PHI2 low = BG fetch. 3x HC157. Tear rule: do not poke a cell the beam is fetching. Off-screen slots and VBlank are safe. See `hardware.md` / prior memory notes.
+
+### 13. IC budget
+
+**Resolved:** **16** motherboard + **2** cart = **18**. AD724 and flasher sit outside that count. BOM in `hardware.md`.
+
+## Decision log
 
 | Date | Item | Decision |
 | --- | --- | --- |
-| 2026-09-13 | PRG banking | No PRG banks. Single flat 32 KB PRG region. Documented in `selling-points.md` and `cartridge.md`. |
-| 2026-09-13 | Cart image | Adopt prior `.retr01` map into `memory.md` (format_ver 2 layout, sparse dirs, other screens, MAP port). |
+| 2026-09-13 | PRG banking | No PRG banks. Single flat 32 KB PRG region. |
+| 2026-09-13 | Cart image | Adopt prior `.retr01` map into `memory.md`. |
 | 2026-09-13 | BG0 screens | Firm cap 0..8 present BG0 screens per world. |
-| 2026-09-13 | PRG vs I/O | Contiguous PRG `$8000-$FFFF`. I/O page `$7F00-$7FFF`. No low/high PRG split and no `$FExx` hole in ROM. |
+| 2026-09-13 | PRG vs I/O | Contiguous PRG `$8000-$FFFF`. I/O `$7F00-$7FFF`. |
+| 2026-09-13 | MCU set | 3x AVR128DB28 (M / S1 / S2). Old role split. |
+| 2026-09-13 | Color path | AT27C256R master colors. Cart holds indices only. |
+| 2026-09-13 | Composite | AD724 outside IC-18 (better CSYNC or H/V fit than AD725). |
+| 2026-09-13 | Sync out | One header supports CSYNC or H/V via jumper/cable mode. |
+| 2026-09-13 | Branding | One product name: Retr01 (no A/C SKU split in docs). |
+| 2026-09-13 | Attr fields | Bank/palette nibbles are 0-3. |
+| 2026-09-13 | Flash v1 | Bench USB-C flasher first. |

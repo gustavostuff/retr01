@@ -6,7 +6,7 @@ Working docs for the Retr01 console and arcade board. Split so each area can mov
 | --- | --- |
 | [overview.md](overview.md) | Vision, inspirations, product scope |
 | [selling-points.md](selling-points.md) | Bells and whistles (flat 32 KB PRG, and more as they land) |
-| [hardware.md](hardware.md) | Main board, CPU, memory, I/O, IC budget |
+| [hardware.md](hardware.md) | Main board, 3x AVR, PLDs, BOM, I/O |
 | [video-graphics.md](video-graphics.md) | Resolution, tiles, sprites, palettes, BG layers |
 | [world-scrolling.md](world-scrolling.md) | Worlds, screens, VRAM buffers, scroll behavior |
 | [cartridge.md](cartridge.md) | Cart hardware, saves, flashing |

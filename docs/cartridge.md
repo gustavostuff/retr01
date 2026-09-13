@@ -5,10 +5,8 @@ Physical cart and how it ties to the board. **Byte layout of the game image** li
 ## Hardware on the cart
 
 - 512 KB flash ROM (whole `.retr01` image: PRG, palettes, worlds, other screens).
-- A small EEPROM IC for saves (I2C, helper MCU as master).
-- Aim for about 18 pins/pads per side. Candidate connector:
-  [EDAC 395-036-520-201](https://www.digikey.com/en/products/detail/edac-inc/395-036-520-201/1297144)
-  or similar.
+- A small EEPROM IC for saves (I2C, **MCU-M** as master).
+- EDAC **395-036-520-201** 2x18 (or RA **395-036-559-212**). Full pinout in `hardware.md`.
 
 ## Logical contents (pointer)
 
@@ -22,4 +20,6 @@ See `memory.md` for the full map. Short version:
 
 ## Desired workflow
 
-Flash the cartridge through the console itself, possibly with USBasp or an Adafruit UPDI Friend in the loop. Exact path is open. See `open-questions.md`.
+**v1:** program carts on the bench with the USB-C flasher (same 36-pin edge). Protocol and cmds are in `hardware.md`.
+
+Console-seated flashing can come later. Edge already has `WE#` / `OE#` / data for that path.

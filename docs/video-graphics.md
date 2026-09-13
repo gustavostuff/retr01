@@ -19,8 +19,8 @@ Logical pipeline for tiles, sprites, palettes, and the two BG layers. Scroll and
 
 Do not mix these two ideas:
 
-1. **64 RGB values** live in AVR EEPROM on the main board. These are the real colors.
-2. **64 individual palettes** live in the cartridge. Each individual palette is four numbers. Each number is a color index in 0..63 pointing into the RGB table.
+1. **64 RGB values** live in the board **AT27C256R** color PROM (packed R3G3B2). These are the real colors. Video reads them by 6-bit index. No CPU runtime poke path.
+2. **64 individual palettes** live in the cartridge. Each individual palette is four numbers. Each number is a color index in 0..63 pointing into the PROM.
 
 ### Rows and selection
 
@@ -57,14 +57,14 @@ Software controls how much BG0 scrolls relative to BG1 to set depth. See `world-
 
 | Bits | Meaning |
 | --- | --- |
-| 0-1 | Bank index |
-| 2-3 | Palette index |
+| 0-1 | Bank index (**0-3**) |
+| 2-3 | Palette index (**0-3**) |
 | 4 | H flip |
 | 5 | V flip |
 | 6 | Solid tile flag (software) |
 | 7 | Animated tile (software). Pattern set iteration details TBD |
 
-Note: the rough draft wrote ranges like 0-4 for two-bit fields and four banks. Treat valid indices as 0-3 until we decide otherwise. See `open-questions.md`.
+Valid bank and palette field values are **0-3** (two bits, four banks / four palettes per row). Do not document 0-4.
 
 ### Sprite attribute byte
 

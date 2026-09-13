@@ -2,7 +2,7 @@
 
 What lives where, how the CPU sees PRG and MAP, and the on-cart `.retr01` layout.
 
-Adapted from an earlier Retr01 `memory.md`. Cart image rules below are the baseline for this repo. Chip part numbers and some `$7Fxx` owners may still shift with the current dual AVR128DB28 board. See notes at the end.
+Adapted from an earlier Retr01 `memory.md`. Cart image rules below are the baseline for this repo. Soft `$7Fxx` owners follow `hardware.md` (3x AVR128DB28).
 
 **Related:** `hardware.md`, `cartridge.md` (physical cart), `video-graphics.md`, `world-scrolling.md`.
 
@@ -120,28 +120,20 @@ Typical boot: seek palette + start MAP via `$7F90`-`$7F93`, copy an active palet
 | System RAM `$0000-$7EFF` | 32 KB minus the I/O page (**32512 B**). CPU only. Game state, stacks, helpers |
 | VRAM 32 KB interleaved | CPU and video take turns by PHI2 phase. Camera window holds BG1 slots and BG0 slots (see `world-scrolling.md`). CPU data port low bytes follow the old map under `$7Fxx` (was `$FE10`-`$FE12`) |
 
-Exact VRAM slot sizes and `$7Fxx` ownership stay with the video docs as the new board settles.
+Exact VRAM slot sizes follow `world-scrolling.md` / video bring-up. Soft port owners are in `hardware.md`.
 
 ## Cart save EEPROM
 
-Small I2C EEPROM on the cart for per-game saves. Prior design: 24C64, mailbox was `$FE22`-`$FE24`, helper MCU as I2C master with `RDY` stall. Same mailbox low bytes under **`$7F22`-`$7F24`** unless the dual-AVR board picks a different layout.
+Small I2C EEPROM on the cart for per-game saves. **24C64**, mailbox **`$7F22`-`$7F24`**, MCU-M as I2C master with `RDY` stall. See `hardware.md`.
 
-## Carry-over vs revisit
+## Color master table
 
-Still apply from the old doc:
+**AT27C256R** on the motherboard holds the 64 RGB values. Cart global palette planes are indices only. See `hardware.md` and `video-graphics.md`.
 
-- Flat 32 KB PRG (here: **contiguous** `$8000-$FFFF`, no I/O cut)
-- `.retr01` header, pointer table, world blob shape, sparse dirs, other-screens, MAP port idea
+## Notes
+
+- Flat contiguous 32 KB PRG at `$8000-$FFFF` (no I/O hole)
+- I/O page `$7F00-$7FFF` (old `$FExx` low bytes kept where useful)
+- `.retr01` header, pointer table, world blob shape, sparse dirs, other-screens, MAP port
 - World caps (8 / 48 / 0..8 BG0)
-- Global palette planes as **indices** into a 64-color master table
-
-Changed on purpose:
-
-- I/O page is **`$7F00-$7FFF`**, not `$FE00-$FEFF`
-- No "PRG low" / "PRG high" split
-
-Revisit against current silicon (`hardware.md`, `open-questions.md`):
-
-- Helper MCU was ATmega1284P. Now a pair of AVR128DB28
-- Master RGB table was a color PROM in that tree. Current specs put 64 RGB values in AVR EEPROM
-- OAM, pad, APU, and exact `$7Fxx` owners may move with the new split
+- Three AVR128DB28 helpers (MCU-M / S1 / S2) as in `hardware.md`

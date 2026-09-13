@@ -38,4 +38,4 @@ More helpers can wait. Prefer a solid core over a huge day-one API.
 
 ## Ownership
 
-Entities are managed by one of the AVRs. How that AVR talks to the 6502 and to sprite VRAM is still open. See `open-questions.md`.
+Entity **logic and instance state** live in system RAM / PRG on the 6502. Drawing goes through OAM (`$7F20`/`$7F21` on MCU-M, SPI to MCU-S1 for the sprite field). See `hardware.md` for the M / S1 / S2 split.

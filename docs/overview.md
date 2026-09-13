@@ -16,4 +16,4 @@ Retr01 is a home console and arcade board in one. GPIO drives arcade microswitch
 
 ## Doc map
 
-Hardware details live in `hardware.md`. Video and palettes in `video-graphics.md`. World layout and scrolling in `world-scrolling.md`. Cart format in `cartridge.md`. Entity API and modes in `software-api.md`. Open decisions in `open-questions.md`.
+Hardware details live in `hardware.md` (3x AVR128DB28, PLDs, BOM). CPU map and `.retr01` image in `memory.md`. Video and palettes in `video-graphics.md`. World layout and scrolling in `world-scrolling.md`. Cart physical notes in `cartridge.md`. Entity API and modes in `software-api.md`. Open decisions in `open-questions.md`.
