@@ -11,7 +11,8 @@ Logical pipeline for tiles, sprites, palettes, and the two BG layers. Scroll and
 
 - Tile based. 8x8 tiles and 8x8 sprites only. No 8x16 sprites.
 - Up to 64 hardware sprites on screen. Up to 16 per scanline.
-- Sprite overlay is drawn in vblank by one of the AVRs.
+- Sprite overlay is drawn in vblank by MCU-S1 from OAM.
+- If more than 16 sprites land on one scanline, **later OAM entries on that line are not drawn** (priority by OAM order, no flicker mode in v1).
 - Pixel format: 2bpp.
 - Up to 25 simultaneous colors on screen (NES-style).
 
@@ -32,7 +33,20 @@ As an abstraction:
 
 Each pair of BG and sprite palette selection shares the same background color index. If BG palette row index N is selected, sprite palette row N is selected too, and that sprite row uses the same BG color index.
 
-There is an 8-palette buffer that holds the selected BG and sprite palettes for active use.
+There is an **active palette buffer** that holds the selected BG and sprite palettes for the current frame.
+
+### Active row select (locked)
+
+| Port | Role |
+| --- | --- |
+| `$7F08` | `PAL_ROW`. Write **0-7** to select the active palette **row**. BG row N and sprite row N are always selected together. Both share the same backdrop color (color index **0** of that row pair). |
+| `$7F09` | `PAL_DATA`. Auto-inc data window used while PRG (or a helper) copies the chosen cart palette plane bytes into the active buffer |
+
+Rules:
+
+- Change `$7F08` only in **vblank** (or with video off). Mid-frame row swaps are undefined.
+- Load / refresh the active buffer from the cart global palette planes in **vblank only** (MAP seek + `$7F09`, or an MCU-M assisted copy).
+- Games do not poke individual PROM RGB values. They only pick rows and supply cart **indices**.
 
 ## Background layers
 

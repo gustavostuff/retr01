@@ -18,3 +18,7 @@ That is the same PRG size class as classic NES NROM games (Excitebike, Balloon F
 | What 32 KB of PRG is for | Game logic **plus** a lot of video housekeeping | Mostly game logic and data tables |
 
 NES already shipped complete, polished games on NROM with those limits. That bar matters. Retr01 turns many of those limits into polished plumbing so authors spend the same PRG budget on play instead of fighting the display.
+
+## Entity catalog headroom
+
+No hard limit on how many different entity **types** you put on a cart. On a max-filled world/screen/CHR cart there is still enough flash for **more than 100** distinct entities with space to spare. Per-world sprite CHR without tile reuse tops out around **16** fully unique maxed entities. Definitions are world-scoped data. Behavior is PRG code in C/ASM. Details in `memory.md` and `software-api.md`.

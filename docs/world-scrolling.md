@@ -24,6 +24,8 @@ Each world has:
 
 Each bank is 256 patterns of 8x8 at 2bpp.
 
+Sprite CHR without tile reuse can feed about **16** fully maxed unique-tile entities per world (1024 tiles / 64 slots). Entity **type** count on the cart is not hard-capped and targets **100+** with headroom. See `memory.md`.
+
 ## Movement modes
 
 Two ways the player moves between screens (not mutually exclusive per game or world):
@@ -121,6 +123,12 @@ From that state:
 ```
 
 Rule of thumb: stay inside the four-screen buffer without cart traffic, then stream the missing row, column, or corner screens when the camera crosses into a new 2x2.
+
+### Empty or missing screens (locked)
+
+If the camera window covers a sparse grid **slot with no present screen** (or a neighbor that does not exist), that area is drawn as empty fill using the **current backdrop color**: the shared BG color index **0** of the active palette row (`$7F08`). No wrap to the opposite side of the map for v1. Camera motion **clamps** at the edges of the present playfield unless PRG implements a portal / instant switch.
+
+Corner reloads that need three new screens may spill past one frame of DMA. That is allowed. Prefer finishing the stream before unlocking free camera motion again if tear would show.
 
 ### BG0 independence
 

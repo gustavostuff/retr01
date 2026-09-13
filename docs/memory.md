@@ -70,7 +70,7 @@ Six `(offset, length)` pairs as little-endian **u24** (3+3 bytes each):
 | BG1 screen payloads | **480 B** each (present only, sparse **16x16**, max **32**/world) |
 | BG0 directory | **12 B** per present BG0 screen (same shape as BG1 dir). Offset **0** if none |
 | BG0 payloads | **480 B** each (up to **8** present screens, sparse on **16x16**) |
-| Entity types / instances | Packed records. Metasprite catalog is Studio-only and flattened here |
+| Entity types / instances | Packed **definitions** and placements at **world scope**. Behavior is not stored here (that is PRG / C/ASM). See entity capacity below |
 | Player anim | Optional `PA` blob when a player entity is marked |
 
 **Grid cell byte:** virtual map is **16x16** (col/row **0-15**). Pack both coords in **1 byte** as nibbles: `col | (row << 4)`. Same packing for BG1/BG0 directory entries and world-header spawn cell.
@@ -90,7 +90,31 @@ Worst case (PRG + header/pals/world table + full unique CHR and max screens for 
 | Used | ~452980 | ~442 |
 | Free in 512 KB | ~71308 | ~69.6 |
 
-That free window is for **other screens**, **entity / PA blobs**, and padding. About **247** maxed entity defs @ 288 B fit in the free space alone (see `software-api.md`). Real games that leave CHR or screens unused free even more.
+That free window is for **other screens**, **entity / PA blobs**, and padding. Details in the next section.
+
+### Entity catalog capacity (cart flash)
+
+**Definition:** an entity is a game being/object built from up to 4 states x 4 frames x 4 sprites. Full wording in `software-api.md`.
+
+| Piece | Lives in |
+| --- | --- |
+| Entity **definitions** (looks / anim metadata) | **World scope** inside the world blob on cart |
+| Entity **behavior** (what it does) | **PRG**, authored in **C/ASM** |
+| Spawn instances | World blob (placements). Cheap vs defs |
+
+Layout size for a maxed def is **288 B** (see `software-api.md`).
+
+| Topic | Value |
+| --- | --- |
+| Hard cart limit on entity **types** | **None** |
+| Author / Studio signal | **More than 100** distinct game entities, with space to spare |
+| Example | 100 maxed defs ≈ **28 KB**, leaves ~**40 KB** of the free window for other screens, instances, `PA` |
+| Absolute if the whole free window were defs only | ~**247** maxed defs @ 288 B |
+| Per-world CHR (zero tile reuse) | ~**16** fully maxed unique-tile entities (1024 sprite tiles / 64 slots) |
+
+Reuse of sprite tiles across frames, states, or entity types is normal and expected. That is how you get past the ~16 unique-maxed CHR story while still packing **100+** different defs on the cart.
+
+Spawn **instances** (placements) are separate packed records and stay cheap compared to defs.
 
 ### Other screens (global ROM)
 

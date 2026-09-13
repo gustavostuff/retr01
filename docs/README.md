@@ -20,11 +20,11 @@ Working docs are split so each area can move on its own. Prefer these markdown f
 
 | Doc | Focus |
 | --- | --- |
-| [selling-points.md](selling-points.md) | Bells and whistles (flat 32 KB PRG, and more as they land) |
+| [selling-points.md](selling-points.md) | Bells and whistles (flat 32 KB PRG, 100+ entities, more as they land) |
 | [hardware.md](hardware.md) | Main board, 3x AVR, PLDs, BOM, I/O |
 | [video-graphics.md](video-graphics.md) | Resolution, tiles, sprites, palettes, BG layers |
 | [world-scrolling.md](world-scrolling.md) | Worlds, screens, VRAM buffers, scroll behavior |
 | [cartridge.md](cartridge.md) | Cart hardware, saves, flashing |
-| [memory.md](memory.md) | CPU map, MAP port, `.retr01` cart image |
-| [software-api.md](software-api.md) | Entities, C/ASM API, game modes |
+| [memory.md](memory.md) | CPU map, MAP port, `.retr01` image, entity flash capacity |
+| [software-api.md](software-api.md) | What an entity is, def size, C/ASM API, game modes |
 | [open-questions.md](open-questions.md) | TBD items and how to resolve them |

@@ -16,7 +16,7 @@ See `memory.md` for the full map. Short version:
 - Global palette index planes (256 B total).
 - Up to **8** world blobs (each with 32 KB CHR, up to **32** BG1 + **8** BG0 screens, entities).
 - Global **other screens** (title, interstitial, credits).
-- Max fill of every world cap leaves ~**69.6 KB** free for entities / extra globals.
+- Max fill of every world cap leaves ~**69.6 KB** free. **No hard entity type cap.** Signal **100+** distinct entities with headroom. CHR unique-maxed ~**16**/world without tile reuse. See `memory.md`.
 
 ## Desired workflow
 

@@ -20,43 +20,11 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 **Touches:** `video-graphics.md`
 
-### 10. Palette buffer and row select
-
-**Open:** How PRG selects the active palette row / buffer and keeps BG/sprite row pairing (shared BG color) is not fully specified beyond soft ports on MCU-M.
-
-**Suggestion:** Lock register meanings under `$7F08`/`$7F09` (and friends) in a short register map. Copy from cart palette planes into the active buffer in vblank only.
-
-**Touches:** `video-graphics.md`, `hardware.md`, `memory.md`
-
-### 11. Entity and sprite budget coupling
-
-**Open:** 64 sprites, 16 per line, entities up to 4x4x4 sprites. How spawning fails under pressure is unclear.
-
-**Suggestion:** Define soft caps (for example max active entities, max sprites claimed by entities) and a clear error or drop policy. Add a scanline overflow behavior (flicker, priority drop, or hard clip) and test it in the platformer sample.
-
-**Touches:** `software-api.md`, `video-graphics.md`
-
-### 12. Platformer physics scope
-
-**Open:** "Simple physics" needs bounds (gravity, jump, one-way, slopes, moving platforms).
-
-**Suggestion:** v1: axis-separated movement, solid tiles via attr bit 6, AABB vs entity hitboxes, no slopes. Add slopes only if a vertical slice demo needs them.
-
-**Touches:** `software-api.md`
-
-### 14. Scroll edge cases
-
-**Open:** Sparse maps, missing neighbor screens, and simultaneous BG0/BG1 window shifts need rules.
-
-**Suggestion:** Define empty slots as solid color or wrap/clamp. Sequence cart DMA so a corner move (three screens) cannot miss a frame. Prefer double-buffering the 2x2 window descriptors if glue allows.
-
-**Touches:** `world-scrolling.md`
-
 ### Entity / PA packed sizes (from cart map)
 
-**Partly sized:** A maxed entity **definition** is **288 B** (or **290 B** with a 2 B header). About **3** fit in **1 KB**. See `software-api.md`. Instance records and optional `PA` blobs are still undefined. With **32 BG1 + 8 BG0** caps, max-fill flash headroom is ~**69.6 KB** for entities / other screens.
+**Partly sized:** Maxed entity def = **288 B**. Canonical capacity write-up is in `memory.md`. Instance + `PA` byte schemas still open.
 
-**Suggestion:** Freeze instance + `PA` next, then document worst-case bytes per world in `memory.md`.
+**Suggestion:** Freeze instance + `PA` next.
 
 **Touches:** `memory.md`, `software-api.md`
 
@@ -68,7 +36,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### 2. Hardware video scope
 
-**Resolved (baseline):** Beam X / Beam Y / Compositor on 3x ATF22V10. Color PROM index in compositor. VRAM mux on PHI2. Sprite/BG0 field on S1. Details in `hardware.md`. Fine pixel rules can still grow in `video-graphics.md`.
+**Resolved (baseline):** Beam X / Beam Y / Compositor on 3x ATF22V10. Color PROM index in compositor. VRAM mux on PHI2. Sprite/BG0 field on S1. Details in `hardware.md`.
 
 ### 3. Cartridge binary map
 
@@ -84,15 +52,31 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### 8. Console-side cart flashing
 
-**Resolved for v1:** USB-C bench flasher on the 36-pin edge (`hardware.md`). Console-seated flash later. `WE#` already on the edge.
+**Resolved for v1:** USB-C bench flasher on the 36-pin edge (`hardware.md`). Console-seated flash later.
 
 ### 9. Interleaved VRAM timing
 
-**Resolved (baseline):** PHI2 high = CPU `$7F10`-`$7F12`. PHI2 low = BG fetch. 3x HC157. Tear rule: do not poke a cell the beam is fetching. Off-screen slots and VBlank are safe. See `hardware.md` / prior memory notes.
+**Resolved (baseline):** PHI2 high = CPU `$7F10`-`$7F12`. PHI2 low = BG fetch. 3x HC157. Tear rule in `hardware.md`.
+
+### 10. Palette buffer and row select
+
+**Resolved:** `$7F08` = `PAL_ROW` (0-7, BG+sprite paired, shared backdrop). `$7F09` = `PAL_DATA` auto-inc. Load active buffer from cart in **vblank only**. See `video-graphics.md`.
+
+### 11. Entity and sprite budget coupling
+
+**Resolved:** Spawn / frame-change **fails** if OAM cannot fit. Scanline overflow drops later OAM entries on that line (no flicker). See `software-api.md` and `video-graphics.md`.
+
+### 12. Platformer physics scope
+
+**Resolved (v1):** Axis-separated movement, solids via attr bit 6, AABB hitboxes, simple gravity/jump. No slopes, moving platforms, or one-ways yet. See `software-api.md`.
 
 ### 13. IC budget
 
-**Resolved:** **16** motherboard + **2** cart = **18**. AD724 and flasher sit outside that count. BOM in `hardware.md`.
+**Resolved:** **16** motherboard + **2** cart = **18**. AD724 and flasher outside that count. BOM in `hardware.md`.
+
+### 14. Scroll edge cases
+
+**Resolved (baseline):** Empty / missing screen slots fill with the **current backdrop color** (shared BG color index 0 of the active palette row). No map wrap in v1. Camera clamps. Corner DMA may take more than one frame. See `world-scrolling.md`.
 
 ## Decision log
 
@@ -102,6 +86,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-13 | Cart image | Adopt prior `.retr01` map into `memory.md`. |
 | 2026-09-13 | BG0 screens | Firm cap 0..8 present BG0 screens per world. |
 | 2026-09-13 | BG1 screens | Cap cut from 48 to **32** present BG1 screens per world (~69.6 KB free at max fill). |
+| 2026-09-13 | Entity catalog | No hard cart limit on entity types. Signal **100+** distinct defs with headroom. CHR unique-maxed ~16/world without tile reuse. |
 | 2026-09-13 | PRG vs I/O | Contiguous PRG `$8000-$FFFF`. I/O `$7F00-$7FFF`. |
 | 2026-09-13 | MCU set | 3x AVR128DB28 (M / S1 / S2). Old role split. |
 | 2026-09-13 | Color path | AT27C256R master colors. Cart holds indices only. |
@@ -110,3 +95,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-13 | Branding | One product name: Retr01 (no A/C SKU split in docs). |
 | 2026-09-13 | Attr fields | Bank/palette nibbles are 0-3. |
 | 2026-09-13 | Flash v1 | Bench USB-C flasher first. |
+| 2026-09-13 | Palette ports | `$7F08` row, `$7F09` data, vblank loads, paired BG/sprite rows. |
+| 2026-09-13 | OAM pressure | Fail spawn on OAM shortfall. Drop overflow sprites per scanline. |
+| 2026-09-13 | Platformer v1 | Axis-separated, bit-6 solids, AABB, gravity/jump. No slopes/movers/one-ways. |
+| 2026-09-13 | Empty screens | Fill with active backdrop (BG color index 0). Clamp, no wrap. |
