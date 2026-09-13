@@ -20,11 +20,11 @@ Items left open in the rough specs, plus a practical way to close each one. Upda
 
 ## 3. Cartridge binary map
 
-**Open:** High-level world/screen model exists. On-cart byte layout does not.
+**Resolved:** Adopt the prior-project `.retr01` layout in `memory.md` (header, u24 pointer table, global pals, PRG, other screens, world table, world blobs with sparse 12 B dirs, MAP at `$7F90`-`$7F93`). I/O is **`$7F00-$7FFF`**, not a hole inside PRG.
 
-**Suggestion:** Freeze a v0 header (magic, version, world count, offsets). Put pattern banks, palettes, then world tables, then screen blobs. Keep offsets 16-bit or 24-bit consistently. Ship a tiny packer tool early so games do not hand-edit binaries.
+**Still soft:** entity/PA packed record sizes inside the world blob, and exact free-byte split between other screens and entities at max fill.
 
-**Touches:** `cartridge.md`, `world-scrolling.md`
+**Touches:** `memory.md`, `cartridge.md`, `world-scrolling.md`
 
 ## 4. Animated tiles (BG attr bit 7)
 
@@ -52,11 +52,9 @@ Items left open in the rough specs, plus a practical way to close each one. Upda
 
 ## 7. BG0 screen budget
 
-**Open:** "Up to 12 BG0 screens per world" was a soft guess.
+**Resolved:** Cap is **0..8** BG0 screens per world (sparse), matching `memory.md`.
 
-**Suggestion:** Size from VRAM and cart budget. Four screens in VRAM at a time already matches the BG1 window. Cap BG0 screens by flash and by how large a sparse map you want to author. Pick a firm number (8, 12, or 16) when the cart map lands, then stop saying "about".
-
-**Touches:** `world-scrolling.md`, `cartridge.md`
+**Touches:** `memory.md`, `world-scrolling.md`
 
 ## 8. Console-side cart flashing
 
@@ -118,4 +116,7 @@ Items left open in the rough specs, plus a practical way to close each one. Upda
 
 | Date | Item | Decision |
 | --- | --- | --- |
-| | | |
+| 2026-09-13 | PRG banking | No PRG banks. Single flat 32 KB PRG region. Documented in `selling-points.md` and `cartridge.md`. |
+| 2026-09-13 | Cart image | Adopt prior `.retr01` map into `memory.md` (format_ver 2 layout, sparse dirs, other screens, MAP port). |
+| 2026-09-13 | BG0 screens | Firm cap 0..8 present BG0 screens per world. |
+| 2026-09-13 | PRG vs I/O | Contiguous PRG `$8000-$FFFF`. I/O page `$7F00-$7FFF`. No low/high PRG split and no `$FExx` hole in ROM. |

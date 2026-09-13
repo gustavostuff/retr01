@@ -4,7 +4,7 @@ How games are laid out in worlds and screens, how VRAM holds a sliding window of
 
 ## World layout (high level)
 
-Binary cart map is TBD. Conceptually:
+Binary cart map is in `memory.md` (`.retr01` world blobs). Conceptually:
 
 - Up to **8 worlds** per game.
 - Up to **48 BG1 screens** per world.
@@ -13,7 +13,7 @@ Binary cart map is TBD. Conceptually:
 
 That supports linear levels up to 16 screens tall or wide, labyrinth worlds, open NxM grids, and other shapes.
 
-Worlds may also have a set of **BG0 screens** for depth. Rough target: up to **12 BG0 screens** per world (not firm).
+Worlds may also have **BG0 screens** for depth: **0..8** present screens per world (sparse on the same 16x16 idea).
 
 ### Pattern banks per world
 

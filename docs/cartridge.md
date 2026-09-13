@@ -1,28 +1,25 @@
 # Cartridge
 
-Physical cart and what it stores. Connector pin target is also noted in `hardware.md`.
+Physical cart and how it ties to the board. **Byte layout of the game image** lives in `memory.md`.
 
 ## Hardware on the cart
 
-- 512 KB flash ROM for the game.
-- A small EEPROM IC for saves.
+- 512 KB flash ROM (whole `.retr01` image: PRG, palettes, worlds, other screens).
+- A small EEPROM IC for saves (I2C, helper MCU as master).
 - Aim for about 18 pins/pads per side. Candidate connector:
   [EDAC 395-036-520-201](https://www.digikey.com/en/products/detail/edac-inc/395-036-520-201/1297144)
   or similar.
 
+## Logical contents (pointer)
+
+See `memory.md` for the full map. Short version:
+
+- Flat **32 KB PRG** (no banking). See `selling-points.md`.
+- Global palette index planes (256 B total).
+- Up to **8** world blobs (each with 32 KB CHR, sparse BG1/BG0 screens, entities).
+- Global **other screens** (title, interstitial, credits).
+- Max fill of every world cap leaves ~**8.4 KB** free for entities / extra globals.
+
 ## Desired workflow
 
 Flash the cartridge through the console itself, possibly with USBasp or an Adafruit UPDI Friend in the loop. Exact path is open. See `open-questions.md`.
-
-## Content the cart holds (logical)
-
-Exact binary map is TBD. Expected pieces:
-
-- PRG / game code.
-- World and screen maps (BG1 and optional BG0), including sparse slot placement.
-- Tile and sprite pattern banks (per world: 4 BG + 4 sprite banks, 256 tiles each, 2bpp).
-- 32 BG palettes and 32 sprite palettes (user defined), as rows of individual palettes. Each individual palette is four indexes into the board RGB table (0..63). The 64 RGB values themselves live on a main-board AVR EEPROM, not as the cart palette payload.
-
-Screen size reminder: 16x15 tiles, 240 tile bytes + 240 attribute bytes per screen.
-
-Limits reminder: up to 8 worlds, up to 48 BG1 screens per world, up to about 12 BG0 screens per world (soft number).

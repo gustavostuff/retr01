@@ -1,12 +1,13 @@
 # Hardware
 
-Main board and fixed I/O. Cart edge details that are physical live here. Cart content layout is in `cartridge.md`.
+Main board and fixed I/O. Cart edge details that are physical live here. Cart image layout is in `memory.md`. Physical cart notes are in `cartridge.md`.
 
 ## CPU and memory
 
 - W65C02 at 8 MHz.
-- 32 KB system RAM.
+- 32 KB system RAM (CPU map uses `$0000-$7EFF`, with `$7F00-$7FFF` as I/O. See `memory.md`).
 - 32 KB interleaved VRAM. CPU and video bus take turns on VRAM by CPU phase.
+- Contiguous 32 KB PRG at `$8000-$FFFF` (no I/O hole in PRG).
 
 ## Coprocessors
 
@@ -42,4 +43,4 @@ Target about 18 pins/pads per side so a connector like
 [EDAC 395-036-520-201](https://www.digikey.com/en/products/detail/edac-inc/395-036-520-201/1297144)
 (or similar) can be used.
 
-Cart contents and flashing are covered in `cartridge.md`.
+Cart contents and flashing are covered in `cartridge.md`. The `.retr01` byte map is in `memory.md`.
