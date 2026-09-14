@@ -18,7 +18,7 @@ Docs are per **part**. Later they will also be tagged by where they live:
 | --- | --- |
 | Main motherboard | CPU, AVRs, SRAM, PLDs, mux/latches, color PROM |
 | Cart | Flash, save EEPROM |
-| Pads / controllers | ATtiny85 in the TRS pad (outside the 18-IC count) |
+| Pads / controllers | ATtiny85 in the TRS pad (outside the 19-IC count) |
 
 ## Written so far
 

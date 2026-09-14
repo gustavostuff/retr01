@@ -2,7 +2,7 @@
 
 One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. Board outline **170 x 120 mm** (locked for the initial design). Initial design: motherboard, cart, and pad PCBs all **2-layer** (locked for now). Revisit **4-layer** later only if bring-up or a commercial SMD revision really needs it (EMI / RF / regulatory).
 
-**Packages (initial THT DIY board):** All counted BOM ICs use **through-hole** packages (DIP / SPDIP / PDIP). The composite encoder **AD724** is the allowed SMD exception (**SOIC-16** only from Analog). Same spirit on the cart and pad (THT parts). A later commercial spin can swap in SMD footprints where dual-sourcing exists.
+**Packages (initial THT DIY board):** The motherboard is **100% through-hole** at the board level. Counted BOM ICs use DIP / SPDIP / PDIP footprints. **AD724** only exists as **SOIC-16**, so it mounts on a **SOIC-16 to DIP-16 adapter** that plugs into a DIP-16 socket (or soldered DIP pads) on the motherboard. Cart and pad stay THT. A later commercial spin can place AD724 (and other SMD parts) directly.
 
 Cart image layout: `memory.md`. Physical cart notes: `cartridge.md`. Video rules: `video-graphics.md`.
 
@@ -20,13 +20,13 @@ Logical playfield **128 x 120**, hardware-scaled **2x** to **256 x 240** by defa
 
 ## IC budget
 
-**16** ICs on the motherboard + **2** on the cart = **18** counted parts.
+**17** ICs on the motherboard + **2** on the cart = **19** counted parts.
 
 | Scope | Count |
 | --- | --- |
-| Motherboard | 16 |
+| Motherboard | 17 (includes **AD724**) |
 | Cart (flash + save EEPROM) | 2 |
-| Outside the 18 | **AD724** composite encoder, 74HC14, crystals. **Adafruit's UPDI Friend** is the DIY programming accessory, not a BOM IC |
+| Outside the 19 | 74HC14, crystals. **Adafruit's UPDI Friend** is the DIY programming accessory, not a BOM IC |
 
 ### Bus discipline
 
@@ -34,9 +34,9 @@ Several chips can touch the CPU data bus **D[7:0]** (cart flash, system RAM, MCU
 
 The PLD decode asserts the right `/OE` (and related selects) for the current address. The cart flash `/OE` is gated the same way. When MCU-M is not serving a soft `$7Fxx` cycle, it keeps its CPU data pins in **hi-Z**. That three-way rule (PLD `/OE` + cart `/OE` + MCU 3-state) is the whole bus discipline story.
 
-If soft decode ever runs out of PLD room, preferred escapes in order: demux more SELs on MCU-M, add a fourth ATF22V10, move MAP onto M GPIO with `RDY` stalls, and only then add an HC245 on CPU D (that last step breaks the 16-mobo count).
+If soft decode ever runs out of PLD room, preferred escapes in order: demux more SELs on MCU-M, add a fourth ATF22V10, move MAP onto M GPIO with `RDY` stalls, and only then add an HC245 on CPU D (that last step breaks the 17-mobo count).
 
-## BOM (locked 18)
+## BOM (locked 19)
 
 | Qty | Part | Role | THT (v1) | SMD also? |
 | --- | --- | --- | --- | --- |
@@ -50,8 +50,9 @@ If soft decode ever runs out of PLD room, preferred escapes in order: demux more
 | 1 | 74HC573 | Field A[7:0] latch (ALE from S1) | DIP-20 | Yes (SOIC/TSSOP/etc.) |
 | 1 | 74HC574 | BG1 scroll X `$7F02` | DIP-20 | Yes (SOIC/TSSOP/etc.) |
 | 1 | AT27C256R | Color PROM (45 ns OTP, packed R3G3B2) | PDIP-28 | Yes (SOIC-28, PLCC-32, TSOP-28) |
+| 1 | AD724 | RGB to NTSC/PAL composite encoder | DIP-16 via **SOIC-16 to DIP adapter** | Native SOIC-16 (direct later) |
 
-**Outside the 18:** **AD724** composite encoder is **SOIC-16 only** (no DIP). **74HC14** inverter and crystals have common THT options. Pad **ATtiny85**: DIP-8 and SOIC-8 both exist.
+**Still outside the count:** **74HC14** inverter and crystals (common THT). Pad **ATtiny85**: DIP-8 and SOIC-8 both exist. **Adafruit's UPDI Friend** is an accessory, not a BOM IC. The SOIC-to-DIP adapter is a mechanical carrier, not an extra counted IC.
 
 ### What kind of system is this?
 
@@ -66,12 +67,15 @@ Retr01 is a **multi-chip discrete console** (separate CPU, RAM, glue, video path
 | **Cart memories** | SST39SF040, 24C64 | Yes (game image / saves) | **Yes** (cart flash via MCU-M bridge) |
 | **Motherboard memories** | 3x AS6C62256 | No logic. Volatile storage only | No |
 | **Fixed glue logic** | 3x 74HC157, 74HC573, 74HC574 | **No.** Hardwired mux / latch | No |
-| **Outside the 18** | AD724, 74HC14, crystals | Fixed analog / invert / timing | No |
+| **Composite encoder** | AD724 | Fixed analog (RGB to NTSC/PAL) | No |
+| **Outside the 19** | 74HC14, crystals | Fixed invert / timing | No |
 | **Pad MCU** | ATtiny85 (in controller) | Yes (pad firmware) | **No** (pre-programmed or DIY ISP) |
 
 ### Composite encoder (frozen): AD724
 
-**AD724** is the locked choice for composite (outside the 18). Package is **SOIC-16** (Analog does not offer a DIP). It accepts **CSYNC or separate HSYNC+VSYNC**, which matches the dual-sync J2 header. Clocking is flexible (FSC crystal, FSC clock, or 4FSC). **AD725** stays off the BOM (4FSC-oriented, luma-trap focused, worse fit here).
+**AD724** is on the motherboard BOM (one of the **17**). Analog only sells it as **SOIC-16**. For the initial DIY board, mount it on a **SOIC-16 to DIP-16 adapter** so the motherboard footprint stays **DIP-16** (socket recommended). That keeps the main PCB **100% THT**. Direct SOIC footprint is fine on a later SMD commercial spin.
+
+It accepts **CSYNC or separate HSYNC+VSYNC**, which matches the dual-sync J2 header. Clocking is flexible (FSC crystal, FSC clock, or 4FSC). **AD725** stays off the BOM (4FSC-oriented, luma-trap focused, worse fit here).
 
 RGB analog always comes from the color PROM DAC. Composite is AD724 -> J9 RCA.
 
@@ -265,7 +269,7 @@ Prefer programming PLDs and the color PROM **before** they go into the motherboa
 
 **Arcade:** J5/J6 **1x10** (pins 1-8 = bits 0-7, 9-10 GND). J7 **1x4** (`+5V`/`GND`/`RESET_N`/`GND`). Microswitch to GND. Series **47 ohm**. P1 -> PA0-7. P2 bits 0-3 -> PC0-3, 4-6 -> PD1-3, Start -> PF6.
 
-**TRS (home shell):** 2x Switchcraft **35RAPC2BVN4**. Tip=5 V, Ring=DATA, Sleeve=GND. **4.7 kohm** pull-up on DATA (PF0). OD half-duplex UART. Pad MCU = **ATtiny85** (in the controller, not on the 18). Pad PCB is **2-layer**. **115200** 8N1. **< 200 us**/exchange. Poll `0x55`=P1, `0xAA`=P2. Reply = 1 byte bitfield.
+**TRS (home shell):** 2x Switchcraft **35RAPC2BVN4**. Tip=5 V, Ring=DATA, Sleeve=GND. **4.7 kohm** pull-up on DATA (PF0). OD half-duplex UART. Pad MCU = **ATtiny85** (in the controller, not on the 19). Pad PCB is **2-layer**. **115200** 8N1. **< 200 us**/exchange. Poll `0x55`=P1, `0xAA`=P2. Reply = 1 byte bitfield.
 
 ## Video out / sync header
 
@@ -291,7 +295,7 @@ Mode select (solder jumper or 1x3 header next to J2):
 
 Same pins, same connector body. Cable or jumper chooses the story. Do not drive CSYNC and H/V meanings onto pin 4 at once.
 
-**Composite:** AD724 -> J9 RCA (outside IC-18). S-video pair can hang off AD724 Y/C later if we want the pads.
+**Composite:** AD724 -> J9 RCA. S-video pair can hang off AD724 Y/C later if we want the pads.
 
 ## PCB layout practices
 
