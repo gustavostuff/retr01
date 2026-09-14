@@ -1,6 +1,8 @@
 # Hardware
 
-One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. Through-hole DIP where practical. About **14 x 12 cm** minimum. Initial design: motherboard, cart, and pad PCBs all **2-layer** (locked for now). Revisit **4-layer** later only if bring-up or a commercial SMD revision really needs it (EMI / RF / regulatory).
+One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. About **14 x 12 cm** minimum. Initial design: motherboard, cart, and pad PCBs all **2-layer** (locked for now). Revisit **4-layer** later only if bring-up or a commercial SMD revision really needs it (EMI / RF / regulatory).
+
+**Packages (initial THT DIY board):** All counted BOM ICs use **through-hole** packages (DIP / SPDIP / PDIP). The composite encoder **AD724** is the allowed SMD exception (**SOIC-16** only from Analog). Same spirit on the cart and pad (THT parts). A later commercial spin can swap in SMD footprints where dual-sourcing exists.
 
 Cart image layout: `memory.md`. Physical cart notes: `cartridge.md`. Video rules: `video-graphics.md`.
 
@@ -36,18 +38,20 @@ If soft decode ever runs out of PLD room, preferred escapes in order: demux more
 
 ## BOM (locked 18)
 
-| Qty | Part | Role |
-| --- | --- | --- |
-| 1 | W65C02S | Game CPU @ 8 MHz |
-| 3 | AVR128DB28-I/SP | MCU-M / MCU-S1 / MCU-S2 @ 24 MHz |
-| 3 | AS6C62256 | Sys RAM, interleaved VRAM, sprite field + BG0 ping-pong |
-| 1 | SST39SF040 | 512 KB cart flash |
-| 1 | 24C64 | Cart save EEPROM (8 KB I2C) |
-| 3 | ATF22V10 | Beam X, Beam Y, Compositor + decode |
-| 3 | 74HC157 | VRAM A[11:0] mux (CPU vs beam) |
-| 1 | 74HC573 | Field A[7:0] latch (ALE from S1) |
-| 1 | 74HC574 | BG1 scroll X `$7F02` |
-| 1 | AT27C256R | Color PROM (45 ns OTP, packed R3G3B2) |
+| Qty | Part | Role | THT (v1) | SMD also? |
+| --- | --- | --- | --- | --- |
+| 1 | W65C02S | Game CPU @ 8 MHz | PDIP-40 | Yes (PLCC-44, QFP-44) |
+| 3 | AVR128DB28-I/SP | MCU-M / MCU-S1 / MCU-S2 @ 24 MHz | SPDIP-28 | Yes (SOIC-28, SSOP-28, plus larger pin-count QFN/TQFP siblings) |
+| 3 | AS6C62256 | Sys RAM, interleaved VRAM, sprite field + BG0 ping-pong | PDIP-28 | Yes (SOP-28, sTSOP-28) |
+| 1 | SST39SF040 | 512 KB cart flash | PDIP-32 | Yes (PLCC-32, TSOP-32) |
+| 1 | 24C64 | Cart save EEPROM (8 KB I2C) | DIP-8 | Yes (SOIC/SOP/TSSOP/etc.) |
+| 3 | ATF22V10 | Beam X, Beam Y, Compositor + decode | PDIP-24 | Yes (SOIC-24, PLCC-28) |
+| 3 | 74HC157 | VRAM A[11:0] mux (CPU vs beam) | DIP-16 | Yes (SOIC-16, TSSOP, etc.) |
+| 1 | 74HC573 | Field A[7:0] latch (ALE from S1) | DIP-20 | Yes (SOIC/TSSOP/etc.) |
+| 1 | 74HC574 | BG1 scroll X `$7F02` | DIP-20 | Yes (SOIC/TSSOP/etc.) |
+| 1 | AT27C256R | Color PROM (45 ns OTP, packed R3G3B2) | PDIP-28 | Yes (SOIC-28, PLCC-32, TSOP-28) |
+
+**Outside the 18:** **AD724** composite encoder is **SOIC-16 only** (no DIP). **74HC14** inverter and crystals have common THT options. Pad **ATtiny85**: DIP-8 and SOIC-8 both exist.
 
 ### What kind of system is this?
 
@@ -67,7 +71,7 @@ Retr01 is a **multi-chip discrete console** (separate CPU, RAM, glue, video path
 
 ### Composite encoder (frozen): AD724
 
-**AD724** is the locked choice for composite (outside the 18). It accepts **CSYNC or separate HSYNC+VSYNC**, which matches the dual-sync J2 header. Clocking is flexible (FSC crystal, FSC clock, or 4FSC). **AD725** stays off the BOM (4FSC-oriented, luma-trap focused, worse fit here).
+**AD724** is the locked choice for composite (outside the 18). Package is **SOIC-16** (Analog does not offer a DIP). It accepts **CSYNC or separate HSYNC+VSYNC**, which matches the dual-sync J2 header. Clocking is flexible (FSC crystal, FSC clock, or 4FSC). **AD725** stays off the BOM (4FSC-oriented, luma-trap focused, worse fit here).
 
 RGB analog always comes from the color PROM DAC. Composite is AD724 -> J9 RCA.
 
