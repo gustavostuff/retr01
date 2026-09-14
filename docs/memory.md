@@ -39,7 +39,7 @@ Magic **`retr01`**, **`format_ver` = 2**. Bump only when the layout breaks old t
 | | HEADER          16 B |  | POINTER TABLE                     36 B | |
 | | magic, format_ver,   |  | slots: PRG, BG pals, SPR pals,         | |
 | | flags, ...           |  |        worlds, other screens,          | |
-| +----------------------+  |        entity catalog                 | |
+| +----------------------+  |        entity catalog                  | |
 |                           +----------------------------------------+ |
 +----------------------------------------------------------------------+
 | +------------------------------------------------------------------+ |
