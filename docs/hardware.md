@@ -1,6 +1,6 @@
 # Hardware
 
-One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. Through-hole DIP where practical. About **14 x 12 cm** minimum. Motherboard **4-layer** (locked). Cart and pad PCBs **2-layer**.
+One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. Through-hole DIP where practical. About **14 x 12 cm** minimum. Initial design: motherboard, cart, and pad PCBs all **2-layer** (locked for now). Revisit **4-layer** later only if bring-up or a commercial SMD revision really needs it (EMI / RF / regulatory).
 
 Cart image layout: `memory.md`. Physical cart notes: `cartridge.md`. Video rules: `video-graphics.md`.
 
@@ -291,7 +291,11 @@ Same pins, same connector body. Cable or jumper chooses the story. Do not drive 
 
 ## PCB layout practices
 
-**Stackup (locked, motherboard):** Top signal+5V / Inner GND / Inner GND / Bottom signal+5V. Two solid ground planes. Prefer continuous copper. Avoid carving slots under clocks or the CPU/dot buses.
+**Stackup (locked for initial design):** Motherboard is **2-layer**. Typical approach: top = signal + local 5 V pours, bottom = mostly unbroken **GND** pour (stitch often). Keep ground continuous under clocks and the CPU/dot buses. Do not swiss-cheese the ground with long bottom-side runs when a top detour works.
+
+**4-layer later (optional):** Only if hardware bring-up shows real need, or for a commercial **SMD** product spin aimed at lower EMI / RF noise and easier regulatory compliance. Not assumed for the first THT DIY board.
+
+Cart and pad PCBs are **2-layer** as well.
 
 | Ref | Locked |
 | --- | --- |
@@ -341,19 +345,19 @@ Starter set (roles can grow):
 
 ### Layout rules (bring-up friendly)
 
-These track common practice (TI / Infineon-class layout notes) for the **4-layer** motherboard:
+These track common practice for a careful **2-layer** digital + video board (same ideas scale to 4-layer if we ever go there):
 
-- **Decoupling:** **100 nF** (or similar) at every IC VCC pin, pad as close as practical to the pin, short path into the ground plane (via near the cap). Bulk **220 uF** at the 5 V entry. Smallest HF caps closest to the pin.
-- **Return paths:** High-frequency return wants a short loop back to ground under the signal. Do not route clocks or fast buses across ground-plane cuts. Stitch grounds with vias when a signal changes layer.
+- **Decoupling:** **100 nF** (or similar) at every IC VCC pin, pad as close as practical to the pin, short path into ground (via to the GND pour). Bulk **220 uF** at the 5 V entry. Smallest HF caps closest to the pin.
+- **Return paths:** High-frequency return wants a short loop back to ground under the signal. Protect the bottom GND pour. Prefer top-layer crossings. Stitch top ground fills to bottom with vias.
 - **Keep clocks short:** PHI2, DOT, AVR clocks, and FSC stays. Crystals and their load caps next to the part. Series **33 ohm** already noted on PHI2/DOT.
 - **Board edges:** Do not run high-speed or clock traces along the PCB perimeter. Edge copper couples into chassis and EMI. Prefer clocks toward the middle of the board. Connectors and video out may sit on the edge by nature. Keep their stub lengths short.
 - **Spacing / corners:** Prefer 45-degree bends over sharp 90s on faster nets. Give PHI2 / DOT / RGB analog some clearance from noisy switching and from each other where layout allows.
 - **Analog video:** AD724 / DAC / RCA area quieter. Local decoupling. Short RGB and sync runs to J2/J9. Keep digital buses from cutting through that island.
-- **Power:** Fat 5 V pours or planes. Star or plane feed from the barrel. Do not daisy-thin power through long skinny traces to hungry chips.
+- **Power:** Fat 5 V pours on top (or a dedicated pour). Feed from the barrel without daisy-thin power through long skinny traces.
 - **Mounting / ESD:** Leave keepout around mounting holes. Tie chassis/mounting strategy deliberately (not accidental floating metal next to edge traces).
 - **Silkscreen:** Refdes, polarity, DIP `M/S1/S2/CART` and `ALL OFF = SAFE`, TP names, LED names.
 
-**Cart and pad PCBs (2-layer).** Simpler boards. Same spirit on a budget stackup: local caps next to the ICs, short stubs to the edge connector or TRS jack, one side mostly ground pour with stitching vias, labeled TPs for `+5V` / `GND` (and cart `WE#` if space allows).
+**Cart and pad PCBs (2-layer).** Same spirit: local caps next to the ICs, short stubs to the edge connector or TRS jack, one side mostly ground pour with stitching vias, labeled TPs for `+5V` / `GND` (and cart `WE#` if space allows).
 
 ## Light gun (roadmap)
 

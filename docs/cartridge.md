@@ -7,7 +7,7 @@ Physical cart and how it ties to the board. **Byte layout of the game image** li
 - 512 KB flash ROM (whole `.retr01` image: PRG, palettes, worlds, other screens, entities).
 - A small EEPROM IC for saves (I2C, **MCU-M** as master).
 - EDAC **395-036-520-201** 2x18 (or RA **395-036-559-212**). Full pinout in `hardware.md`.
-- Cart PCB: **2-layer** (locked). Motherboard stays **4-layer**.
+- Cart PCB: **2-layer** (locked). Motherboard initial design is **2-layer** too (see `hardware.md`).
 
 ## Logical contents (pointer)
 

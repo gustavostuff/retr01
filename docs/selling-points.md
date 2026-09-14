@@ -45,7 +45,7 @@ One DIY tool: **Adafruit's UPDI Friend**, clipped onto one shared set of motherb
 
 ## Through-hole DIY friendly layout
 
-Test points for bring-up, full-size THT status LEDs, motherboard **4-layer** ground planes, cart/pad **2-layer**, and the usual decoupling / short-clock / keep-off-the-edge rules. See `hardware.md`.
+Test points for bring-up, full-size THT status LEDs, initial **2-layer** PCBs (mobo / cart / pads), and the usual decoupling / short-clock / keep-off-the-edge rules. A **4-layer** mobo stays an option later only if bring-up or a commercial SMD spin needs it. See `hardware.md`.
 
 ## Three helper AVRs
 

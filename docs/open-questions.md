@@ -94,4 +94,4 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-14 | Entity pack | Offset-table format, max 356 B. |
 | 2026-09-14 | Anim tiles | base..base+3 wrap in bank, default delay 6. |
 | 2026-09-14 | Video timing | Sprites VBlank pass. BG0 HBlank ping-pong only. |
-| 2026-09-14 | PCB layers | Motherboard 4-layer. Cart and pad PCBs 2-layer. |
+| 2026-09-14 | PCB layers | Initial: motherboard, cart, and pads all 2-layer. 4-layer mobo only later if bring-up / commercial SMD needs it. |
