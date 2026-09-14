@@ -134,17 +134,31 @@ Entity **spawn locations** are **not** on the cart. PRG owns who appears where (
 
 ### Flash budget at max fill
 
-Worst case: PRG + header/pals/world table + full unique CHR and max screens for all 8 worlds (sparse dirs) + **128** fully maxed entity defs + **16** other screens at raw **480 B** each. RLE and unused other-screen slots free more. Spawn locations cost **PRG**, not cart flash.
+Worst case: all fixed image pieces + **8** worlds at full CHR and max present screens (sparse dirs) + **128** fully maxed entity defs + **16** other screens at raw **480 B** each. RLE and unused other-screen slots free more. Spawn locations cost **PRG**, not cart flash.
 
-| Item | Bytes | KB |
+One maxed world blob (no `PA`) is **52480 B** (~51.2 KB):
+**1 x 32** (header) + **1 x 32768** (CHR) + **32 x 12** (BG1 dir) + **32 x 480** (BG1 payloads) + **8 x 12** (BG0 dir) + **8 x 480** (BG0 payloads).
+
+| Item | Number of bytes | Kilobytes |
 | --- | ---: | ---: |
-| Worlds / PRG / pals / dirs | ~452980 | ~442.4 |
-| Entity catalog (128 x 356 B maxed) | **45568** | **~44.5** |
-| Other screens (16 x 480 B raw) | **7680** | **~7.5** |
-| **Used (maxed worlds + defs + other screens)** | **~506228** | **~494.4** |
-| Free in 512 KB (`524288`) | **~18060** | **~17.6** |
+| Header (1 x 16 B) | **16** | ~0.0 |
+| Pointer table (6 slots x 6 B) | **36** | ~0.0 |
+| Global BG palettes (1 plane x 128 B) | **128** | ~0.1 |
+| Global sprite palettes (1 plane x 128 B) | **128** | ~0.1 |
+| PRG (1 x 32768 B) | **32768** | **32.0** |
+| World table (8 worlds x 8 B) | **64** | ~0.1 |
+| World headers (8 worlds x 32 B) | **256** | ~0.3 |
+| CHR (8 worlds x 32768 B) | **262144** | **256.0** |
+| BG1 directories (8 worlds x 32 screens x 12 B) | **3072** | **3.0** |
+| BG1 payloads (8 worlds x 32 screens x 480 B) | **122880** | **120.0** |
+| BG0 directories (8 worlds x 8 screens x 12 B) | **768** | ~0.8 |
+| BG0 payloads (8 worlds x 8 screens x 480 B) | **30720** | **30.0** |
+| Entity catalog (128 defs x 356 B maxed) | **45568** | **~44.5** |
+| Other screens (16 screens x 480 B raw) | **7680** | **~7.5** |
+| **Used (sum of rows above)** | **506228** | **~494.4** |
+| Free (524288 flash - 506228 used) | **18060** | **~17.6** |
 
-That free slice is for optional `PA`, directory glue, and packing slack.
+That free slice is for optional `PA`, packing slack, and anything else that does not fit the capped blobs above.
 
 ### Entity catalog (global, cart flash)
 
