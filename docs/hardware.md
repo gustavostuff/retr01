@@ -1,6 +1,6 @@
 # Hardware
 
-Shared motherboard for arcade cabinet wiring and home console shells. Same PCB. Shell and BOM population choose the I/O path (microswitch headers and/or TRS pads). Through-hole DIP where practical. About **14 x 12 cm** minimum. **4-layer**.
+One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. Through-hole DIP where practical. About **14 x 12 cm** minimum. Motherboard **4-layer** (locked). Cart and pad PCBs **2-layer**.
 
 Cart image layout: `memory.md`. Physical cart notes: `cartridge.md`. Video rules: `video-graphics.md`.
 
@@ -12,9 +12,9 @@ Cart image layout: `memory.md`. Physical cart notes: `cartridge.md`. Video rules
 | Dot | **5.369318 MHz** |
 | Each AVR128DB28 | **24 MHz** internal HFOSC |
 | Raster | **341 x 262**, about **60.098 Hz** |
-| Composite subcarrier helper | FSC crystal for **AD724** (NTSC **3.579545 MHz** or PAL **4.433618 MHz**) |
+| Composite subcarrier | FSC crystal for **AD724** (NTSC **3.579545 MHz** or PAL **4.433618 MHz**) |
 
-Logical playfield **128 x 120**, hardware **2x** to **256 x 240** by default (`SCALE` open). Closed `SCALE_1X` to +5 V selects 1x. Raster size stays the same.
+Logical playfield **128 x 120**, hardware-scaled **2x** to **256 x 240** by default (`SCALE` open). Closing `SCALE_1X` to +5 V selects 1x. Raster size stays the same.
 
 ## IC budget
 
@@ -24,9 +24,15 @@ Logical playfield **128 x 120**, hardware **2x** to **256 x 240** by default (`S
 | --- | --- |
 | Motherboard | 16 |
 | Cart (flash + save EEPROM) | 2 |
-| Outside the 18 | AD724 composite encoder, 74HC14, crystals, USB-C flasher MCU and its glue |
+| Outside the 18 | **AD724** composite encoder, 74HC14, crystals. **Adafruit's UPDI Friend** is the DIY programming accessory, not a BOM IC |
 
-Bus discipline: PLD `/OE` + cart `/OE` + MCU 3-state on D[7:0]. Escapes if decode runs out (ordered): soft SEL + A demux on MCU-M, then +1 ATF22V10, then MAP on M GPIO with `RDY` stall, then +1 HC245 on CPU D (that last one pushes past 16 mobo).
+### Bus discipline
+
+Several chips can touch the CPU data bus **D[7:0]** (cart flash, system RAM, MCU-M soft ports, and so on). Only one driver may be active at a time.
+
+The PLD decode asserts the right `/OE` (and related selects) for the current address. The cart flash `/OE` is gated the same way. When MCU-M is not serving a soft `$7Fxx` cycle, it keeps its CPU data pins in **hi-Z**. That three-way rule (PLD `/OE` + cart `/OE` + MCU 3-state) is the whole bus discipline story.
+
+If soft decode ever runs out of PLD room, preferred escapes in order: demux more SELs on MCU-M, add a fourth ATF22V10, move MAP onto M GPIO with `RDY` stalls, and only then add an HC245 on CPU D (that last step breaks the 16-mobo count).
 
 ## BOM (locked 18)
 
@@ -34,7 +40,7 @@ Bus discipline: PLD `/OE` + cart `/OE` + MCU 3-state on D[7:0]. Escapes if decod
 | --- | --- | --- |
 | 1 | W65C02S | Game CPU @ 8 MHz |
 | 3 | AVR128DB28-I/SP | MCU-M / MCU-S1 / MCU-S2 @ 24 MHz |
-| 3 | AS6C62256 | Sys RAM, interleaved VRAM, sprite/BG0 field |
+| 3 | AS6C62256 | Sys RAM, interleaved VRAM, sprite field + BG0 ping-pong |
 | 1 | SST39SF040 | 512 KB cart flash |
 | 1 | 24C64 | Cart save EEPROM (8 KB I2C) |
 | 3 | ATF22V10 | Beam X, Beam Y, Compositor + decode |
@@ -43,7 +49,26 @@ Bus discipline: PLD `/OE` + cart `/OE` + MCU 3-state on D[7:0]. Escapes if decod
 | 1 | 74HC574 | BG1 scroll X `$7F02` |
 | 1 | AT27C256R | Color PROM (45 ns OTP, packed R3G3B2) |
 
-**Why AD724 (outside the 18), not AD725:** we want one analog RGB path that can feed **CSYNC or separate H/V** into the same encoder without drama. AD724 accepts HSYNC+VSYNC or CSYNC, and is flexible on FSC / 4FSC / crystal. AD725 is built around 4FSC and a luma-trap pin. Fine chip, worse fit for a dual-sync header story. Composite still lands on its own RCA. RGB analog always comes from the color PROM DAC.
+### What kind of system is this?
+
+Retr01 is a **multi-chip discrete console** (separate CPU, RAM, glue, video path), not an FPGA soft system. It is **not** a fully discrete-logic machine in the TTL-only sense. Game behavior and helper work live in programmable parts. Fixed 74xx-class chips only do mux/latch glue.
+
+| Class | Parts | Programmable? |
+| --- | --- | --- |
+| **CPU** | W65C02S | Yes (runs cart **PRG**) |
+| **MCU helpers** | 3x AVR128DB28 | Yes (firmware: soft I/O, sprites/BG0, pads/audio, cart bridge) |
+| **PLDs** | 3x ATF22V10 | Yes (beam X/Y, compositor + decode equations) |
+| **OTP color table** | AT27C256R | Program once (factory/DIY blow). Fixed afterward |
+| **Cart memories** | SST39SF040, 24C64 | Yes (game image / saves). Not “logic” |
+| **Motherboard memories** | 3x AS6C62256 | No logic. Volatile storage only |
+| **Fixed glue logic** | 3x: 74HC157, 74HC573, 74HC574 | **No.** Hardwired mux / latch behavior |
+| **Outside the 18** | AD724, 74HC14, crystals | Fixed analog / invert / timing. Pad **ATtiny85** is programmable (in the controller) |
+
+### Composite encoder (frozen): AD724
+
+**AD724** is the locked choice for composite (outside the 18). It accepts **CSYNC or separate HSYNC+VSYNC**, which matches the dual-sync J2 header. Clocking is flexible (FSC crystal, FSC clock, or 4FSC). **AD725** stays off the BOM (4FSC-oriented, luma-trap focused, worse fit here).
+
+RGB analog always comes from the color PROM DAC. Composite is AD724 -> J9 RCA.
 
 ## MCU roles (3x AVR128DB28)
 
@@ -67,17 +92,19 @@ Bus discipline: PLD `/OE` + cart `/OE` + MCU 3-state on D[7:0]. Escapes if decod
 
 | Chip | Owns |
 | --- | --- |
-| **MCU-M** | Soft `$7Fxx`, OAM/APU mailboxes, machine EEPROM **512 B**, cart **24C64** I2C, `RDY`, SPI master to S1/S2 |
-| **MCU-S1** | OAM apply, VBlank sprite field, HBlank BG0 line, field SRAM via AD mux + HC573 |
+| **MCU-M** | Soft `$7Fxx`, OAM/APU mailboxes, machine EEPROM **512 B**, cart **24C64** I2C, `RDY`, SPI master to S1/S2, **cart-flash bridge** when Adafruit's UPDI Friend is clipped onto the program header |
+| **MCU-S1** | OAM apply, **full sprite field in VBlank**, **BG0 next-line fill in HBlank only** (ping-pong), field SRAM via AD mux + HC573 |
 | **MCU-S2** | `$7F60`/`$7F61` pads, `$7F40`-`$7F5F` APU mailbox, **PWM** audio on PF1 |
 
 OAM `$7F20`/`$7F21` latches on M then SPI to S1. APU forwards M to S2. Cart I2C `$7F22`-`$7F24` on M. Machine EE `$7F70`-`$7F72` on M.
 
-Game **entities** live in system RAM / PRG. Hardware path for drawing them is OAM + S1 field fill, not a fourth MCU role.
+HBlank is short, so S1 only prepares the **next BG0 line** there. Sprites are composited in one VBlank pass into the field buffer (no sprite line ping-pong). See `video-graphics.md`.
+
+Game **entities** live in system RAM / PRG. Drawing goes through OAM + S1 field fill.
 
 ## Pin freeze essentials
 
-**GPIO (SPDIP-28):** `PA[7:0]`, `PC[3:0]`, `PD[7:1]`, `PF[6,1,0]` = **22**. **UPDI** = dedicated **pin 19** (not PF6). **VDDIO2** = VDD (5 V). Three 1x3 UPDI headers (UPDI / VCC / GND).
+**GPIO (SPDIP-28):** `PA[7:0]`, `PC[3:0]`, `PD[7:1]`, `PF[6,1,0]` = **22**. **UPDI** = dedicated **pin 19** (not PF6). **VDDIO2** = VDD (5 V). Shared program header for **Adafruit's UPDI Friend**, plus a **4-pos DIP** footprint to select MCU-M / S1 / S2 / cart (default all OFF). Exact pinout TBD.
 
 | Lock | Value |
 | --- | --- |
@@ -140,7 +167,7 @@ Rising edge + latched `A[7:0]` via `CPU_A_SAMPLE` (PD4).
 
 Never route hard LE or beam through an MCU. VRAM: PHI2 high = CPU `$7F10`-`$7F12`, PHI2 low = BG fetch (3x HC157).
 
-Macrocell pressure note from the prior bring-up: SY(8)+Q(8)+MAP(5) = **21** vs **30** MC on a 22V10. Stay honest about that budget when adding features.
+Macrocell pressure note: SY(8)+Q(8)+MAP(5) = **21** vs **30** MC on a 22V10. Stay honest about that budget when adding features.
 
 ## On-board memory (chips)
 
@@ -148,7 +175,7 @@ Macrocell pressure note from the prior bring-up: SY(8)+Q(8)+MAP(5) = **21** vs *
 | --- | --- |
 | AS6C62256 #1 | System RAM behind `$0000-$7EFF` |
 | AS6C62256 #2 | Interleaved VRAM (CPU PHI2 high, beam PHI2 low) |
-| AS6C62256 #3 | Sprite field + BG0 ping-pong lines (S1) |
+| AS6C62256 #3 | Sprite field (filled in VBlank) + BG0 **ping-pong line buffers** (filled in HBlank) |
 | AT27C256R | **64** master colors, packed **R3G3B2** `{RRRGGGBB}`. Video reads by 6-bit index. No CPU runtime access |
 
 **Color DAC** (1% metal film). LSB->MSB: R/G **4.00 / 2.00 / 1.00 kohm**. B **2.00 / 1.00 kohm**. **75.0 ohm** to GND each gun -> **~0.7 Vpp**. Unused PROM address pins to GND.
@@ -157,7 +184,7 @@ Cart palettes are **indices only** into this PROM. See `memory.md` and `video-gr
 
 ## Cartridge
 
-Game Boy-sized (~**55 mm** width). Passive cart: **SST39SF040** + **24C64**. No mapper. `CE#` tied active. Mobo gates `OE#`. `WE#` for program only. Socket: EDAC **395-036-520-201** straight 2x18 (right-angle option **395-036-559-212** for tight shells). Pitch **2.54 mm**. Cart **1.6 mm**, 4-layer F/GND/GND/B. A0-A13 from CPU. A14-A18 from Compositor MAP.
+Game Boy-sized (~**55 mm** width). Passive cart: **SST39SF040** + **24C64**. No mapper. `CE#` tied active. Mobo gates `OE#`. `WE#` for program (console flash path) and is idle in normal play. Socket: EDAC **395-036-520-201** straight 2x18 (right-angle option **395-036-559-212** for tight shells). Pitch **2.54 mm**. Cart **1.6 mm**, **2-layer** PCB. A0-A13 from CPU. A14-A18 from Compositor MAP.
 
 ### Side A / Side B (36-pin)
 
@@ -173,25 +200,35 @@ Game Boy-sized (~**55 mm** width). Passive cart: **SST39SF040** + **24C64**. No 
 | A8 | A4 | A17 | A13 | B8 | D4 | B17 | A18 |
 | A9 | A5 | A18 | GND | B9 | D5 | B18 | WE# |
 
-### USB-C flasher (bench, outside the 18)
+### Console as programmer (locked): Adafruit's UPDI Friend
 
-**ATmega32U4-AU** 16 MHz / 5 V USB. **2x 74HC595** -> A0-A15. GPIO -> A16-A18, WE#, OE#. Port -> D0-D7. USB-C **5.1 kohm** on CC1/CC2. Same 36-pin edge. Never drive cart from flasher and console together.
+Locked accessory: **Adafruit's UPDI Friend**. USB-C stays on that adapter (PC side only). The console, cart, and pads have **no USB**. You clip Adafruit's UPDI Friend wires onto male header pins on the motherboard, same idea as the breadboard photo (PWR / GND / data).
 
-**Frame:** `0xAA 0x55` | cmd | len u16 LE | payload | xor(cmd..payload). CDC **115200 8N1**.
+Adafruit's UPDI Friend is a CH340E USB-serial with the usual 1K RX/TX loopback for SerialUPDI. No USBASP. No separate flasher PCB.
 
-| cmd | Name | Payload |
-| --- | --- | --- |
-| `0x01` | PING | empty |
-| `0x02` | INFO | empty |
-| `0x10` | ERASE_CHIP | empty |
-| `0x11` | ERASE_SECTOR | addr u24 LE |
-| `0x20` | WRITE | addr u24 LE + 1-256 B |
-| `0x21` | READ | addr u24 LE + n u16 LE |
-| `0x22` | VERIFY | addr u24 LE + data |
+**Same header, target select via DIP switch.** One shared program header (PWR / GND / data). A through-hole **4-position DIP switch** footprint on the motherboard routes the Friend data line to exactly one target:
 
-Replies: `0x81` PONG, `0x82` INFO_R, `0x90` OK, `0x91` DATA, `0x9E` NAK(+errno). Flow: PING -> INFO -> ERASE_CHIP -> WRITE -> optional VERIFY.
+| DIP pos | ON selects |
+| --- | --- |
+| 1 | **MCU-M** UPDI |
+| 2 | **MCU-S1** UPDI |
+| 3 | **MCU-S2** UPDI |
+| 4 | **Cart** flash path (Friend data into MCU-M bridge / prog pin, then cart `WE#` / bus) |
 
-Console-mediated flash (cart seated in a live Retr01) can come later. Bench flasher is the v1 path.
+**Default = all OFF.** Shipping and normal play leave every switch off so the Friend data pin is disconnected from all AVRs and from the cart bridge. That cuts accidental flash risk if someone plugs Adafruit's UPDI Friend in without meaning to program anything.
+
+**One ON at a time.** Never enable two UPDI targets together (would short UPDI pins). Cart mode (pos 4) should be alone as well. Silkscreen can say `M / S1 / S2 / CART` and `ALL OFF = SAFE`.
+
+Feasibility check (2026-09): AVR128DB28 is UPDI-only on pin 19. DxCore / avrdude **SerialUPDI** talk to it through this adapter. Cart ROM is **SST39SF040** parallel NOR, so cart writes still go through the MCU-M bridge when DIP pos 4 is ON.
+
+| Job | Path |
+| --- | --- |
+| Reflash an AVR (on board) | Friend on header, matching DIP ON -> that AVR **UPDI** |
+| Program cart flash (on board) | Friend on header, DIP pos 4 ON -> **MCU-M** bridge -> cart |
+
+**DIY before soldering.** Someone building a console can program each AVR128DB28 on a breadboard with Adafruit's UPDI Friend first (PWR / GND / UPDI), then solder the flashed chips. On-board header + DIP remain available later for updates and cart programming.
+
+Keep each AVR's UPDI pin configured as **UPDI** (not reset/GPIO) so Adafruit's UPDI Friend works. Adafruit's High Voltage UPDI Friend is only a recovery tool if someone bricks that fuse. Exact header pin numbers and host command protocol stay **TBD**.
 
 ## Controllers
 
@@ -203,13 +240,13 @@ Console-mediated flash (cart seated in a live Retr01) can come later. Bench flas
 
 **Arcade:** J5/J6 **1x10** (pins 1-8 = bits 0-7, 9-10 GND). J7 **1x4** (`+5V`/`GND`/`RESET_N`/`GND`). Microswitch to GND. Series **47 ohm**. P1 -> PA0-7. P2 bits 0-3 -> PC0-3, 4-6 -> PD1-3, Start -> PF6.
 
-**TRS (home shell):** 2x Switchcraft **35RAPC2BVN4**. Tip=5 V, Ring=DATA, Sleeve=GND. **4.7 kohm** pull-up on DATA (PF0). OD half-duplex UART. Pad MCU = **ATtiny85** (in the controller, not on the 18). **115200** 8N1. **< 200 us**/exchange. Poll `0x55`=P1, `0xAA`=P2. Reply = 1 byte bitfield.
+**TRS (home shell):** 2x Switchcraft **35RAPC2BVN4**. Tip=5 V, Ring=DATA, Sleeve=GND. **4.7 kohm** pull-up on DATA (PF0). OD half-duplex UART. Pad MCU = **ATtiny85** (in the controller, not on the 18). Pad PCB is **2-layer**. **115200** 8N1. **< 200 us**/exchange. Poll `0x55`=P1, `0xAA`=P2. Reply = 1 byte bitfield.
 
 ## Video out / sync header
 
 Analog RGB from the PROM DAC always. Sync is flexible on **one** header footprint so cabinets and SCART-style cables can pick a mode without a second connector family.
 
-### J2 sync-capable RGB header (proposal)
+### J2 sync-capable RGB header (locked with AD724)
 
 | Pin | RGBS / CSYNC mode | RGBHV mode |
 | --- | --- | --- |
@@ -224,14 +261,16 @@ Mode select (solder jumper or 1x3 header next to J2):
 
 | Mode | Beam PLD drives | Encoder / cable notes |
 | --- | --- | --- |
-| **CSYNC** | Pin 4 = composite sync. Pin 5 tied to GND at the jumper | AD724 CSYNC input. Simple TV / RGBS boxes |
-| **H/V** | Pin 4 = HSYNC, pin 5 = VSYNC | AD724 H+V inputs. RGBHV monitors and some upscalers |
+| **CSYNC** | Pin 4 = composite sync. Pin 5 tied to GND at the jumper | AD724 CSYNC input |
+| **H/V** | Pin 4 = HSYNC, pin 5 = VSYNC | AD724 H+V inputs |
 
 Same pins, same connector body. Cable or jumper chooses the story. Do not drive CSYNC and H/V meanings onto pin 4 at once.
 
 **Composite:** AD724 -> J9 RCA (outside IC-18). S-video pair can hang off AD724 Y/C later if we want the pads.
 
-**Stackup:** Top signal+5V / Inner GND / Inner GND / Bottom signal+5V.
+## PCB layout practices
+
+**Stackup (locked, motherboard):** Top signal+5V / Inner GND / Inner GND / Bottom signal+5V. Two solid ground planes. Prefer continuous copper. Avoid carving slots under clocks or the CPU/dot buses.
 
 | Ref | Locked |
 | --- | --- |
@@ -245,7 +284,55 @@ Same pins, same connector body. Cable or jumper chooses the story. Do not drive 
 | J36 | EDAC **395-036-520-201** |
 | Y1 / Y2 / Y3 | Abracon ACH **8.000** / **5.369318** / FSC for AD724 |
 
-Series **33 ohm** on PHI2 and DOT. Entry bulk **220 uF**. **100 nF** per IC VCC. Cart D/OE/WE/SDA/SCL series **33 ohm**.
+Series **33 ohm** on PHI2 and DOT. Entry bulk **220 uF**. Cart D/OE/WE/SDA/SCL series **33 ohm**.
+
+### Test points
+
+Exposed copper pads (circles or plated holes) for multimeter / scope probes. Prefer one accessible side. Label in silkscreen. Keep clear of tall THT bodies and board-edge keepouts.
+
+Minimum set (expand as layout needs):
+
+| TP | Net / use |
+| --- | --- |
+| Several **GND** | Probe return (spread around the board) |
+| **+5V** | After barrel / regulator entry |
+| **PHI2**, **DOT** | Clock sanity |
+| **RESET_N** | Bring-up |
+| **UPDI_HDR** (Friend data) | Program path alive |
+| Cart **WE#**, **OE#** | Flash / bus checks |
+| Soft I/O sample (ex. one `$7Fxx` SEL) | Decode smoke test |
+
+Aim for about **1.0 mm** pad diameter and comfortable probe spacing (about **1.27 mm**+ center-to-center).
+
+### Status LEDs (THT only for now)
+
+Full-size **through-hole** LEDs only in v1 (no SMD indicators yet). Series resistors as usual. Clear cathode mark on silkscreen. Place where a shell window or open chassis can see them.
+
+Starter set (roles can grow):
+
+| LED | Meaning |
+| --- | --- |
+| Power | +5 V present |
+| Heartbeat M | MCU-M alive (firmware toggles) |
+| Heartbeat S1 | MCU-S1 alive |
+| Heartbeat S2 | MCU-S2 alive |
+| Prog / activity | Optional. Blinks while Adafruit's UPDI Friend / cart-bridge path is busy (if firmware can drive it) |
+
+### Layout rules (bring-up friendly)
+
+These track common practice (TI / Infineon-class layout notes) for the **4-layer** motherboard:
+
+- **Decoupling:** **100 nF** (or similar) at every IC VCC pin, pad as close as practical to the pin, short path into the ground plane (via near the cap). Bulk **220 uF** at the 5 V entry. Smallest HF caps closest to the pin.
+- **Return paths:** High-frequency return wants a short loop back to ground under the signal. Do not route clocks or fast buses across ground-plane cuts. Stitch grounds with vias when a signal changes layer.
+- **Keep clocks short:** PHI2, DOT, AVR clocks, and FSC stays. Crystals and their load caps next to the part. Series **33 ohm** already noted on PHI2/DOT.
+- **Board edges:** Do not run high-speed or clock traces along the PCB perimeter. Edge copper couples into chassis and EMI. Prefer clocks toward the middle of the board. Connectors and video out may sit on the edge by nature. Keep their stub lengths short.
+- **Spacing / corners:** Prefer 45-degree bends over sharp 90s on faster nets. Give PHI2 / DOT / RGB analog some clearance from noisy switching and from each other where layout allows.
+- **Analog video:** AD724 / DAC / RCA area quieter. Local decoupling. Short RGB and sync runs to J2/J9. Keep digital buses from cutting through that island.
+- **Power:** Fat 5 V pours or planes. Star or plane feed from the barrel. Do not daisy-thin power through long skinny traces to hungry chips.
+- **Mounting / ESD:** Leave keepout around mounting holes. Tie chassis/mounting strategy deliberately (not accidental floating metal next to edge traces).
+- **Silkscreen:** Refdes, polarity, DIP `M/S1/S2/CART` and `ALL OFF = SAFE`, TP names, LED names.
+
+**Cart and pad PCBs (2-layer).** Simpler boards. Same spirit on a budget stackup: local caps next to the ICs, short stubs to the edge connector or TRS jack, one side mostly ground pour with stitching vias, labeled TPs for `+5V` / `GND` (and cart `WE#` if space allows).
 
 ## Light gun (roadmap)
 

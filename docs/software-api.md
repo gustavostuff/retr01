@@ -12,75 +12,121 @@ An entity is a being, object, or graphic in the game. It is composed of:
 - Each state: up to **4 frames**.
 - Each frame: up to **4 sprites** (8x8), with positions relative to each other, frame delays, and related metadata (hitbox per state, flips, and so on).
 
-That range covers very simple games (**1** state, **1** frame, **1** sprite) and richer ones. It is meant to leave room for creativity. Complex bosses can be several entities working together in software (for example left leg, head, right leg, eyes).
+That range covers very simple games (**1** state, **1** frame, **1** sprite) and richer ones. Complex bosses can be several entities working together in software (for example left leg, head, right leg, eyes).
 
 ### Definitions vs behavior
 
 | Piece | Where it lives | Who writes it |
 | --- | --- | --- |
-| **Entity definition** (states, frames, sprites, relative positions, delays, hitboxes, and so on) | **World scope** on the cart (inside the world blob) | Studio / data tools pack it into the `.retr01` image |
-| **Entity behavior** (AI, input, physics reactions, when to change state, spawn rules, and so on) | **PRG** (the flat 32 KB code region) | The author, in **C and/or ASM** |
-| **Live instance state** (position, velocity, current state/frame, flags) | System RAM at runtime | PRG, via the entity API |
+| **Entity definition** (states, frames, sprites, relative positions, delays, hitboxes) | Cart **global entity catalog** | Studio packs into `.retr01` |
+| **Entity behavior** (AI, input, physics, state changes, spawn rules) | **PRG** | Author in **C and/or ASM** |
+| **Live instance state** (position, velocity, current state/frame, flags) | System RAM | PRG via the entity API |
 
-Definitions are data. Behavior is code. The C/ASM API should manipulate an entity as a whole, not as loose sprites. Console hardware still draws sprites. MCU-S1 fills the sprite field from OAM. See Ownership below.
+### Hard caps (Studio-friendly)
 
-### Maxed entity definition size
+| Scope | Cap |
+| --- | --- |
+| Entity types (global catalog / cart) | **128** |
+| Per-world type list | **None** (any world may use any catalog id) |
 
-Worst case for one **type** record (all 4 states, 4 frames, 4 sprites used). Fixed full slots, no sparse compression:
+Why global: share types across worlds (world 1 places A/B/C, world 2 places C/D/E) without duplicating defs.
 
-| Piece | Bytes | Notes |
-| --- | ---: | --- |
-| One sprite | 4 | tile, rel_x, rel_y, attr (bank/pal/flip) |
-| One frame | 17 | 1 delay + 4 sprites |
-| One state | 72 | hitbox x,y,w,h (4) + 4 frames |
-| One entity def | **288** | 4 states, no extra header |
-| + small header | **290** | optional flags / default state (2 B) |
+### Packed definition format (locked)
 
-Content floor if sprites drop attr to a shared frame byte and you only store raw unique fields: about **224 B** (64 x (tile,x,y) + 16 delays + 4 hitboxes). Prefer budgeting with **288 B** so tools can keep a simple fixed layout.
+Little-endian. Offsets are **byte offsets from the start of the block that owns them** (`0` = unused slot).
 
-| Budget | Maxed defs that fit |
+```text
+EntityDef (variable length, max 356 B when fully populated)
++0   u8  flags
++1   u8  state_count          (1..4)
++2   u8  default_state        (0..state_count-1)
++3   u8  reserved0
++4   u16 state_off[4]         // offset from EntityDef base, 0 = absent
+     ... State blocks ...
+
+State (at EntityDef + state_off[s])
++0   u8  frame_count          (1..4)
++1   u8  reserved1
++2   u8  hitbox_x
++3   u8  hitbox_y
++4   u8  hitbox_w
++5   u8  hitbox_h
++6   u16 frame_off[4]         // offset from this State base, 0 = absent
+     ... Frame blocks ...
+
+Frame (at State + frame_off[f])
++0   u8  delay                (display duration in frames, min 1)
++1   u8  sprite_count         (1..4)
++2   Sprite sprites[4]        // only first sprite_count are live
+     Sprite = { u8 tile, i8 rel_x, i8 rel_y, u8 attr }  // 4 B each
+```
+
+**Lookup state S, frame F** (what hardware helpers / PRG use when advancing an entity):
+
+1. `base` = entity def address (MAP or RAM copy).
+2. `soff = u16(base + 4 + 2*S)`. If `soff == 0` or `S >= state_count`, invalid.
+3. `state = base + soff`.
+4. `foff = u16(state + 6 + 2*F)`. If `foff == 0` or `F >= frame_count`, invalid.
+5. `frame = state + foff`. Read `delay`, `sprite_count`, then `sprites[0..sprite_count)`.
+
+| Piece | Max bytes |
 | --- | ---: |
-| **1 KB** (1024 B) | **3** at 288 B (864 B used, 160 B left) |
-| 1 KB at 290 B | **3** (870 B used) |
-| 1 KB at 224 B lean floor | **4** (896 B used) |
+| EntityDef header | 12 |
+| One State header | 14 |
+| One Frame (4 sprites) | 18 |
+| **Fully maxed def** (4x4x4) | **356** |
+| 128 maxed defs (global catalog) | **45568** (~44.5 KB) |
 
-That is the **definition** catalog only. Spawn **instances** (type id, screen, x, y, and so on) are separate and much smaller.
+Spawn **instances** live in each world blob and stay small (`catalog_id`, screen/cell, x, y, flags). Exact instance record can follow later. Optional `PA` (player anim) remains an opaque blob for now.
 
-### How many entity defs fit on a cart
+### Starter API (locked signatures)
 
-Canonical flash numbers live in `memory.md` (entity catalog capacity). Short version:
+Types are illustrative C. `EntityId` is a small handle into the live instance table. Returns `0` on success, non-zero on error (OAM full, bad id, and so on).
 
-- **No hard cart limit** on entity type count.
-- Signal: **more than 100** distinct entities on a full cart, with headroom.
-- Per-world sprite CHR without tile reuse: about **16** fully maxed unique-tile entities. Reuse tiles to define many more types from the same banks.
+```c
+/* catalog_id: 0..127 index into the global entity catalog */
+int  spawn_entity(u8 catalog_id, u8 screen_cell, i16 x, i16 y, EntityId *out_id);
 
-### Starter API (illustrative)
+int  despawn_entity(EntityId id);
 
-Aim for whole-entity ops, not raw sprite poking:
+int  move_entity(EntityId id, i16 x, i16 y);           /* absolute draw origin */
+int  change_entity_velocity(EntityId id, i16 vx, i16 vy);
 
-1. `spawn_entity()`
-2. `despawn_entity()`
-3. `move_entity()`
-4. `change_entity_velocity()`
-5. `rotate_entity()` (90 degree turns only)
-6. `flip_entity()` (whole entity as one graphic)
-7. `set_entity_draw_origin()`
-8. `set_entity_hitbox()` (likely one hitbox per entity state, not per frame)
-9. `do_entities_collide()`
+int  set_entity_state(EntityId id, u8 state);         /* 0..3, must exist in def */
+int  set_entity_frame(EntityId id, u8 frame);         /* 0..3 within current state */
+int  advance_entity_anim(EntityId id);                /* step frame using Frame.delay */
 
-More helpers can wait. Prefer a solid core over a huge day-one API.
+int  rotate_entity(EntityId id, u8 turns_cw);         /* 90deg units only, 0..3 */
+int  flip_entity(EntityId id, u8 h, u8 v);            /* whole entity as one graphic */
+
+int  set_entity_draw_origin(EntityId id, i16 ox, i16 oy);
+int  set_entity_hitbox(EntityId id, u8 state, u8 x, u8 y, u8 w, u8 h);
+
+int  do_entities_collide(EntityId a, EntityId b);     /* 1 = overlap, 0 = no, <0 = err */
+```
+
+Behavior:
+
+| Call | Does |
+| --- | --- |
+| `spawn_entity` | Allocates a live instance, copies def header refs, sets pose, claims OAM for current frame. Fails if OAM cannot fit |
+| `despawn_entity` | Frees instance and OAM slots |
+| `move_entity` / `change_entity_velocity` | Updates RAM. Drawing uses origin + sprite rel offsets |
+| `set_entity_state` / `set_entity_frame` | Resolves pack offsets (see above) and rebuilds OAM for that frame. Fails if OAM short |
+| `advance_entity_anim` | Uses current `Frame.delay` as the tick period |
+| `rotate_entity` / `flip_entity` | Transforms the whole metasprite (90deg steps / mirror) |
+| `set_entity_hitbox` | Overrides or sets the per-state AABB used by collisions |
+| `do_entities_collide` | AABB test using each entity's **current state** hitbox |
 
 ### Runtime sprite / entity pressure (locked)
 
-Hardware caps: **64** OAM entries, **16** sprites per scanline.
+Hardware caps: **64** OAM entries, **16** sprites per scanline. Catalog cap: **128** global types.
 
 | Situation | v1 behavior |
 | --- | --- |
-| `spawn_entity()` would need more OAM slots than free for its **current** frame | Spawn **fails** (API returns an error / no-op). No partial spawn |
-| A frame change would need more slots than free | Keep the previous frame drawn, or refuse the state/frame change (API error). Do not corrupt OAM |
-| More than 16 sprites on one scanline | Draw the first 16 in OAM order for that line. Drop the rest for that line only |
-
-There is no separate hard “max entities” counter beyond OAM. Tiny 1-sprite entities can pack denser than maxed 4-sprite ones. Authors should budget OAM in PRG.
+| `spawn_entity` needs more OAM than free | Fail (no partial spawn) |
+| State/frame change needs more OAM than free | Fail, keep previous frame |
+| More than 16 sprites on one scanline | Draw first 16 in OAM order. Drop the rest for that line |
 
 ## Game mechanics (initial)
 
@@ -93,21 +139,21 @@ There is no separate hard “max entities” counter beyond OAM. Tiny 1-sprite e
 | --- | --- |
 | Movement | Axis-separated (resolve X then Y, or the reverse, consistently) |
 | Solids | BG tiles with attr **bit 6** set |
-| Colliders | Entity AABB hitboxes (per state). `do_entities_collide()` for entity-entity |
-| Gravity / jump | Simple constant gravity + jump impulse (PRG tunes the numbers) |
+| Colliders | Entity AABB hitboxes (per state) |
+| Gravity / jump | Simple constant gravity + jump impulse (PRG tunes numbers) |
 | Slopes | **No** |
 | Moving platforms | **No** |
-| One-way platforms | **No** (can add later if a demo needs them) |
+| One-way platforms | **No** |
 
-Top-down mode skips gravity and uses the same solid / AABB rules on the playfield.
+Top-down mode skips gravity and uses the same solid / AABB rules.
 
 ## Ownership
 
 | Piece | Owner |
 | --- | --- |
-| Entity **definitions** | World blob on cart (MAP-readable data) |
-| Entity **behavior** | PRG on the 6502, written in C/ASM |
+| Entity **definitions** | Cart pack (MAP-readable) |
+| Entity **behavior** | PRG on the 6502 (C/ASM) |
 | Live instance state | System RAM |
-| Drawing | OAM `$7F20`/`$7F21` on MCU-M, SPI to MCU-S1 for the sprite field |
+| Drawing | OAM `$7F20`/`$7F21` on MCU-M, SPI to MCU-S1 (**VBlank** field fill) |
 
 See `hardware.md` for the M / S1 / S2 split.

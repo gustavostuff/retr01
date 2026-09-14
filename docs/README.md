@@ -20,8 +20,8 @@ Working docs are split so each area can move on its own. Prefer these markdown f
 
 | Doc | Focus |
 | --- | --- |
-| [selling-points.md](selling-points.md) | Bells and whistles (flat 32 KB PRG, 100+ entities, more as they land) |
-| [hardware.md](hardware.md) | Main board, 3x AVR, PLDs, BOM, I/O |
+| [selling-points.md](selling-points.md) | Bells and whistles (shared PCB, dual sync, entities, flasher, more) |
+| [hardware.md](hardware.md) | Main board, 3x AVR, PLDs, BOM, I/O, PCB practices |
 | [video-graphics.md](video-graphics.md) | Resolution, tiles, sprites, palettes, BG layers |
 | [world-scrolling.md](world-scrolling.md) | Worlds, screens, VRAM buffers, scroll behavior |
 | [cartridge.md](cartridge.md) | Cart hardware, saves, flashing |

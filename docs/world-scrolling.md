@@ -24,7 +24,7 @@ Each world has:
 
 Each bank is 256 patterns of 8x8 at 2bpp.
 
-Sprite CHR without tile reuse can feed about **16** fully maxed unique-tile entities per world (1024 tiles / 64 slots). Entity **type** count on the cart is not hard-capped and targets **100+** with headroom. See `memory.md`.
+Hard cap: **128** entity types in a **global** catalog (shared across worlds). Sprite CHR without tile reuse still tops out around **16** fully maxed unique-tile entities visible per world (1024 / 64). See `memory.md` and `software-api.md`.
 
 ## Movement modes
 
