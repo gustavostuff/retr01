@@ -206,19 +206,32 @@ Cart palettes are **indices only** into this PROM. See `memory.md` and `video-gr
 
 Game Boy-sized (~**55 mm** width). Passive cart: **SST39SF040** + **24C64**. No mapper. `CE#` tied active. Mobo gates `OE#`. `WE#` for program (console flash path) and is idle in normal play. Socket: EDAC **395-036-520-201** straight 2x18 (right-angle option **395-036-559-212** for tight shells). Pitch **2.54 mm**. Cart **1.6 mm**, **2-layer** PCB. A0-A13 from CPU. A14-A18 from Compositor MAP.
 
-### Side A / Side B (36-pin)
+### Cart edge pinout (2x18 = 36 contacts)
 
-| A | Sig | A | Sig | B | Sig | B | Sig |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| A1 | GND | A10 | A6 | B1 | GND | B10 | D6 |
-| A2 | VCC | A11 | A7 | B2 | VCC | B11 | D7 |
-| A3 | SDA | A12 | A8 | B3 | SCL | B12 | OE# |
-| A4 | A0 | A13 | A9 | B4 | D0 | B13 | A14 |
-| A5 | A1 | A14 | A10 | B5 | D1 | B14 | A15 |
-| A6 | A2 | A15 | A11 | B6 | D2 | B15 | A16 |
-| A7 | A3 | A16 | A12 | B7 | D3 | B16 | A17 |
-| A8 | A4 | A17 | A13 | B8 | D4 | B17 | A18 |
-| A9 | A5 | A18 | GND | B9 | D5 | B18 | WE# |
+EDAC **395-036-*** style. Looking into the console socket (or at the cart edge fingers): **Side A** is one row, **Side B** the other. Same pin number = opposite faces of the edge.
+
+| Pin | Side A | Side B |
+| --- | --- | --- |
+| 1 | GND | GND |
+| 2 | VCC (+5 V) | VCC (+5 V) |
+| 3 | SDA (I2C save) | SCL (I2C save) |
+| 4 | A0 | D0 |
+| 5 | A1 | D1 |
+| 6 | A2 | D2 |
+| 7 | A3 | D3 |
+| 8 | A4 | D4 |
+| 9 | A5 | D5 |
+| 10 | A6 | D6 |
+| 11 | A7 | D7 |
+| 12 | A8 | OE# (mobo gated) |
+| 13 | A9 | A14 (MAP) |
+| 14 | A10 | A15 (MAP) |
+| 15 | A11 | A16 (MAP) |
+| 16 | A12 | A17 (MAP) |
+| 17 | A13 | A18 (MAP) |
+| 18 | GND | WE# (flash path, idle in play) |
+
+**Groups:** A0-A13 from the CPU. A14-A18 from the Compositor MAP port. D0-D7 data. OE# / WE# for flash. SDA/SCL for the 24C64.
 
 ### Console as programmer (locked): Adafruit's UPDI Friend
 
