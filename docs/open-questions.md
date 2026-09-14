@@ -74,7 +74,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### 14. Scroll edge cases
 
-**Resolved (baseline):** Empty slots = backdrop color index 0. Clamp, no wrap.
+**Resolved (baseline):** Empty BG1 slots = backdrop color index 0. BG1 camera clamps, no wrap. **BG0** may programmatically scroll and wrap repeating strips (infinite clouds / space bands). See `world-scrolling.md`. API TBD.
 
 ### 15. Entity CHR home world
 
@@ -109,3 +109,4 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-14 | Video timing | Sprites VBlank pass. BG0 HBlank ping-pong only. |
 | 2026-09-14 | PCB layers | Initial: motherboard, cart, and pads all 2-layer. 4-layer mobo only later if bring-up / commercial SMD needs it. |
 | 2026-09-14 | Mobo size | 170 x 120 mm. |
+| 2026-09-14 | BG0 wrap | PRG may autoscroll/wrap BG0 strips (infinite parallax). BG1 still clamps. |

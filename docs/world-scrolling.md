@@ -126,13 +126,24 @@ Rule of thumb: stay inside the four-screen buffer without cart traffic, then str
 
 ### Empty or missing screens (locked)
 
-If the camera window covers a sparse grid **slot with no present screen** (or a neighbor that does not exist), that area is drawn as empty fill using the **current backdrop color**: the shared BG color index **0** of the active palette row (`$7F08`). No wrap to the opposite side of the map for v1. Camera motion **clamps** at the edges of the present playfield unless PRG implements a portal / instant switch.
+If the camera window covers a sparse grid **slot with no present screen** (or a neighbor that does not exist), that area is drawn as empty fill using the **current backdrop color**: the shared BG color index **0** of the active palette row (`$7F08`). For **BG1** / the playfield camera in v1: no wrap to the opposite side of the map. Camera motion **clamps** at the edges of the present playfield unless PRG implements a portal / instant switch. **BG0** may wrap under PRG control (see below).
 
 Corner reloads that need three new screens may spill past one frame of DMA. That is allowed. Prefer finishing the stream before unlocking free camera motion again if tear would show.
 
 ### BG0 independence
 
-The same windowing applies to BG0. Updating BG0 VRAM slots is independent of BG1 because scroll rates can differ.
+The same 2x2 windowing applies to BG0. Updating BG0 VRAM slots is independent of BG1 because scroll rates can differ.
+
+### BG0 programmatic scroll and wrap (locked intent)
+
+PRG can drive **BG0 scroll on its own**, not only as a slave of the player / BG1 camera. That includes:
+
+- Scrolling BG0 while the player stands still (fast clouds, drifting stars).
+- Warping / wrapping BG0 after **N** screens so a short strip repeats as an infinite backdrop.
+
+Example: a space fly-through with a few star/planet BG0 screens that loop once the strip has scrolled past. Same idea for repeating cloud bands.
+
+Wrap here means the **BG0 plane** modulo its present strip (reload the next VRAM slot from the start of the loop). It does **not** change the BG1 clamp rule above. Exact ports / helper API for “BG0 autoscroll + wrap period” stay TBD in `software-api.md`, but the behavior is in scope for v1 authors.
 
 ## Parallax scroll rate
 
