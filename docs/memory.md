@@ -136,12 +136,16 @@ Six `(offset, length)` pairs as little-endian **u24** (3+3 bytes each):
 
 ### Flash budget at max fill
 
-Worst case (PRG + header/pals/world table + full unique CHR and max screens for all 8 worlds, sparse dirs, before entities/other screens):
+Worst case: PRG + header/pals/world table + full unique CHR and max screens for all 8 worlds (sparse dirs) + **128** fully maxed entity defs. Other screens and entity spawn locations are extra (spawn locations stay small).
 
 | Item | Bytes | KB |
 | --- | ---: | ---: |
-| Used (no entities / other screens) | ~452980 | ~442 |
-| Free in 512 KB | ~71308 | ~69.6 |
+| Worlds / PRG / pals / dirs (no entities, no other screens) | ~452980 | ~442.4 |
+| Entity catalog (128 x 356 B maxed) | **45568** | **~44.5** |
+| **Used (with maxed entity catalog)** | **~498548** | **~486.9** |
+| Free in 512 KB (`524288`) | **~25740** | **~25.1** |
+
+That free slice is for other screens, spawn-location lists, and any packing slack. A full maxed catalog still fits.
 
 ### Entity catalog (global, cart flash)
 
