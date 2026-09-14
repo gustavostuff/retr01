@@ -12,7 +12,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### Instance + PA byte schemas
 
-**Partly sized:** Entity **defs** are locked (offset-table pack, max **356 B**). Spawn instance records and optional `PA` blobs still need a frozen byte layout.
+**Partly sized:** Entity **defs** are locked (offset-table pack, max **356 B**). Entity spawn location records and optional `PA` blobs still need a frozen byte layout.
 
 **Touches:** `memory.md`, `software-api.md`
 

@@ -14,9 +14,9 @@ Cart image rules below are the baseline for this repo. Soft `$7Fxx` owners follo
 | `$7F00-$7FFF` | I/O latches / MCUs | CPU read/write per port |
 | `$8000-$FFFF` | Cart flash (PRG) | CPU read (fetch). No write in normal play |
 
-**One flat PRG region:** **32 KB** at `$8000-$FFFF`, including reset/IRQ/NMI vectors at the top. No PRG banking. No I/O hole inside PRG.
+**One flat PRG region:** **32 KB** at `$8000-$FFFF`, including reset/IRQ/NMI vectors at the top. No PRG banking. No I/O "hole" inside PRG.
 
-I/O lives in `$7F00-$7FFF` (last page below PRG). That page is not system RAM. `$7F80` is reserved for the light-gun roadmap.
+I/O lives in `$7F00-$7FFF` (the 256-byte page immediately before PRG at `$8000`). That page is not system RAM. `$7F80` is reserved for the light-gun roadmap.
 
 ## Cart flash (512 KB)
 
@@ -91,7 +91,8 @@ Magic **`retr01`**, **`format_ver` = 2**. Bump only when the layout breaks old t
 | | | 12 B x present   |  | up to 8 present screens                | | |
 | | +------------------+  +----------------------------------------+ | |
 | | +--------------------------------------------------------------+ | |
-| | | SPAWN INSTANCES (catalog_id refs into global entity catalog) | | |
+| | | ENTITY SPAWN LOCATIONS                                       | | |
+| | | (catalog_id refs into global entity catalog)                 | | |
 | | | + optional PA blob                                           | | |
 | | +--------------------------------------------------------------+ | |
 | +------------------------------------------------------------------+ |
@@ -122,7 +123,7 @@ Six `(offset, length)` pairs as little-endian **u24** (3+3 bytes each):
 | BG1 screen payloads | **480 B** each (present only, sparse **16x16**, max **32**/world) |
 | BG0 directory | **12 B** per present BG0 screen (same shape as BG1 dir). Offset **0** if none |
 | BG0 payloads | **480 B** each (up to **8** present screens, sparse on **16x16**) |
-| Entity spawn instances | Placements that reference a **global** `catalog_id` (**0..127**). Behavior is PRG / C/ASM. Defs live in the global catalog |
+| Entity spawn locations | Placements that reference a **global** `catalog_id` (**0..127**). Behavior is PRG / C/ASM. Defs live in the global catalog |
 | Player anim | Optional `PA` blob when a player entity is marked |
 
 **Grid cell byte:** virtual map is **16x16** (col/row **0-15**). Pack both coords in **1 byte** as nibbles: `col | (row << 4)`. Same packing for BG1/BG0 directory entries and world-header spawn cell.
@@ -152,7 +153,7 @@ One **global catalog** for the whole cart (pointer table slot **5**). Worlds do 
 | --- | --- |
 | Entity **definitions** (looks / anim metadata) | Global entity catalog (cart-wide) |
 | Entity **behavior** (what it does) | **PRG**, authored in **C/ASM** |
-| Spawn instances | World blob (placements with `catalog_id`). Cheap vs defs |
+| Entity spawn locations | World blob (placements with `catalog_id`). Cheap vs defs |
 
 | Topic | Value |
 | --- | --- |

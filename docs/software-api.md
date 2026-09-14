@@ -77,7 +77,7 @@ Frame (at State + frame_off[f])
 | **Fully maxed def** (4x4x4) | **356** |
 | 128 maxed defs (global catalog) | **45568** (~44.5 KB) |
 
-Spawn **instances** live in each world blob and stay small (`catalog_id`, screen/cell, x, y, flags). Exact instance record can follow later. Optional `PA` (player anim) remains an opaque blob for now.
+**Entity spawn locations** live in each world blob and stay small (`catalog_id`, screen/cell, x, y, flags). Exact record layout can follow later. Optional `PA` (player anim) remains an opaque blob for now.
 
 ### Starter API (locked signatures)
 
