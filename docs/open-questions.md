@@ -12,7 +12,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### Instance + PA byte schemas
 
-**Partly sized:** Entity **defs** are locked (offset-table pack, max **356 B**). Live instance records in system RAM and optional `PA` blobs still need a frozen byte layout. Spawn locations are **PRG-side** (not cart).
+**Partly sized:** Entity **defs** are locked (offset-table pack, max **356 B**, **16**/world). Live instance records in system RAM and optional `PA` blobs still need a frozen byte layout. Spawn locations are **PRG-side** (not cart).
 
 **Touches:** `memory.md`, `software-api.md`
 
@@ -46,7 +46,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### 7. Screen + entity budgets
 
-**Resolved:** **32** BG1 / **0..8** BG0 per world. Entity types: **128** global (shared across worlds). Maxed def **356 B**. See `memory.md`, `software-api.md`.
+**Resolved:** **32** BG1 / **0..8** BG0 per world. Entity types: **16 per world** (catalog in the world blob). Maxed def **356 B**. See `memory.md`, `software-api.md`.
 
 ### 8. Cart flashing
 
@@ -62,7 +62,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### 11. Entity and sprite budget coupling
 
-**Resolved:** Fail spawn/frame-change on OAM shortfall. Drop overflow sprites per scanline. Catalog caps 16/128.
+**Resolved:** Fail spawn/frame-change on OAM shortfall. Drop overflow sprites per scanline. Catalog cap **16** types per world.
 
 ### 12. Platformer physics scope
 
@@ -75,6 +75,14 @@ Items still open, plus how to close them. Update this file when a decision lands
 ### 14. Scroll edge cases
 
 **Resolved (baseline):** Empty slots = backdrop color index 0. Clamp, no wrap.
+
+### 15. Entity CHR home world
+
+**Superseded:** Dropped global catalog + `chr_world`. Entities are **16**/world. Sprite banks use the current world's SPR CHR. See item 16.
+
+### 16. Entity caps (per world)
+
+**Resolved:** **16** entity types per world, catalog inside each world blob. No global shared catalog. `format_ver` **3** (pointer table 5 slots). Sprite banks = current world SPR CHR. See `memory.md`, `software-api.md`.
 
 ## Decision log
 
@@ -95,7 +103,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-13 | Sync out | One header, CSYNC or H/V mode. |
 | 2026-09-13 | Branding | One product: Retr01. |
 | 2026-09-14 | Flasher | Console + Adafruit's UPDI Friend. Shared header. 4-pos DIP: M/S1/S2/cart, default all OFF. Scope: AVRs + cart only. |
-| 2026-09-14 | Entity caps | 128 types global catalog (shared across worlds). Dropped 16/world. |
+| 2026-09-14 | Entity caps | 16 types per world (catalog in world blob). Dropped global 128 + `chr_world`. format_ver 3. |
 | 2026-09-14 | Entity pack | Offset-table format, max 356 B. |
 | 2026-09-14 | Anim tiles | base..base+3 wrap in bank, default delay 6. |
 | 2026-09-14 | Video timing | Sprites VBlank pass. BG0 HBlank ping-pong only. |

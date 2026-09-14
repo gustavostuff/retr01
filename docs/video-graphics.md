@@ -119,3 +119,5 @@ If bit **7** is **1**, that cell's pattern index is animated in hardware (or a d
 ### Sprite attribute byte
 
 Same layout as BG for bits 0-5. Bits 6 and 7 are reserved (leave **0** until a real need appears).
+
+For entities, bank bits **0-1** index SPR banks of the **current world** (the world whose catalog owns the def). BG nametable attrs use that world's BG banks the same way.

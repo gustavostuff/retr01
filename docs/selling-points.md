@@ -37,7 +37,7 @@ NES already shipped complete, polished games on NROM with those limits. That bar
 
 Authors think in **entities** (up to 4 states x 4 frames x 4 sprites), not raw sprites. Definitions are cart data. Behavior is C/ASM in PRG.
 
-Studio-friendly hard cap: **128** entity types in one **global** catalog. Worlds share that catalog (place A/B/C in world 1 and C/D/E in world 2). Packed defs use offset tables so PRG can seek state S / frame F (see `software-api.md`).
+Studio-friendly hard cap: **16** entity types **per world**. Each world blob carries its own catalog and SPR CHR. Packed defs use offset tables so PRG can seek state S / frame F (see `software-api.md`).
 
 ## Console programs its own carts
 

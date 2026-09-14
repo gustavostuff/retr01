@@ -18,7 +18,7 @@ That range covers very simple games (**1** state, **1** frame, **1** sprite) and
 
 | Piece | Where it lives | Who writes it |
 | --- | --- | --- |
-| **Entity definition** (states, frames, sprites, relative positions, delays, hitboxes) | Cart **global entity catalog** | Studio packs into `.retr01` |
+| **Entity definition** (states, frames, sprites, relative positions, delays, hitboxes) | Cart **per-world entity catalog** | Studio packs into that world blob |
 | **Entity behavior** (AI, input, physics, state changes, spawn rules) | **PRG** | Author in **C and/or ASM** |
 | **Entity spawn locations** (placements) | **PRG** | Author tables / code (`spawn_entity`) |
 | **Live instance state** (position, velocity, current state/frame, flags) | System RAM | PRG via the entity API |
@@ -27,10 +27,10 @@ That range covers very simple games (**1** state, **1** frame, **1** sprite) and
 
 | Scope | Cap |
 | --- | --- |
-| Entity types (global catalog / cart) | **128** |
-| Per-world type list | **None** (any world may use any catalog id) |
+| Entity types per world | **16** |
+| Global shared catalog | **None** |
 
-Why global: share types across worlds (world 1 places A/B/C, world 2 places C/D/E) without duplicating defs.
+Types belong to one world. Same look in another world means another def (and tiles) in that world's blob. Sprite attr bank bits index **this world's** SPR banks. If the wrong world CHR is active, entities look wrong on purpose. That glitch is the tell.
 
 ### Packed definition format (locked)
 
@@ -69,6 +69,7 @@ Frame (at State + frame_off[f])
 3. `state = base + soff`.
 4. `foff = u16(state + 6 + 2*F)`. If `foff == 0` or `F >= frame_count`, invalid.
 5. `frame = state + foff`. Read `delay`, `sprite_count`, then `sprites[0..sprite_count)`.
+6. For each sprite, resolve CHR from the **current world's** SPR bank (attr bits 0-1) + tile.
 
 | Piece | Max bytes |
 | --- | ---: |
@@ -76,17 +77,18 @@ Frame (at State + frame_off[f])
 | One State header | 14 |
 | One Frame (4 sprites) | 18 |
 | **Fully maxed def** (4x4x4) | **356** |
-| 128 maxed defs (global catalog) | **45568** (~44.5 KB) |
+| 16 maxed defs (one world) | **5696** (~5.6 KB) |
+| 8 worlds x 16 maxed defs | **45568** (~44.5 KB) |
 
-**Entity spawn locations** live in **PRG** (data tables and/or code that calls `spawn_entity`), not in the cart world blob. Cart holds defs in the global catalog only. Optional `PA` (player anim) may still hang off a world blob as an opaque blob for now.
+**Entity spawn locations** live in **PRG** (data tables and/or code that calls `spawn_entity`), not in the world blob. Cart holds defs in the **per-world** catalog only. Optional `PA` (player anim) may still hang off a world blob as an opaque blob for now.
 
 ### Starter API (locked signatures)
 
 Types are illustrative C. `EntityId` is a small handle into the live instance table. Returns `0` on success, non-zero on error (OAM full, bad id, and so on).
 
 ```c
-/* catalog_id: 0..127 index into the global entity catalog */
-int  spawn_entity(u8 catalog_id, u8 screen_cell, i16 x, i16 y, EntityId *out_id);
+/* type_id: 0..15 index into the *current world's* entity catalog */
+int  spawn_entity(u8 type_id, u8 screen_cell, i16 x, i16 y, EntityId *out_id);
 
 int  despawn_entity(EntityId id);
 
@@ -110,7 +112,7 @@ Behavior:
 
 | Call | Does |
 | --- | --- |
-| `spawn_entity` | Allocates a live instance, copies def header refs, sets pose, claims OAM for current frame. Fails if OAM cannot fit |
+| `spawn_entity` | Allocates a live instance from the current world's catalog, sets pose, claims OAM for current frame. Fails if OAM cannot fit or `type_id` is absent |
 | `despawn_entity` | Frees instance and OAM slots |
 | `move_entity` / `change_entity_velocity` | Updates RAM. Drawing uses origin + sprite rel offsets |
 | `set_entity_state` / `set_entity_frame` | Resolves pack offsets (see above) and rebuilds OAM for that frame. Fails if OAM short |
@@ -121,7 +123,7 @@ Behavior:
 
 ### Runtime sprite / entity pressure (locked)
 
-Hardware caps: **64** OAM entries, **16** sprites per scanline. Catalog cap: **128** global types.
+Hardware caps: **64** OAM entries, **16** sprites per scanline. Catalog cap: **16** types per world.
 
 | Situation | v1 behavior |
 | --- | --- |
@@ -152,7 +154,7 @@ Top-down mode skips gravity and uses the same solid / AABB rules.
 
 | Piece | Owner |
 | --- | --- |
-| Entity **definitions** | Cart pack (MAP-readable) |
+| Entity **definitions** | Cart pack per world (MAP-readable) |
 | Entity **behavior** | PRG on the 6502 (C/ASM) |
 | Live instance state | System RAM |
 | Drawing | OAM `$7F20`/`$7F21` on MCU-M, SPI to MCU-S1 (**VBlank** field fill) |
