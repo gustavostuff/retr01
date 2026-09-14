@@ -17,7 +17,7 @@ See `memory.md` for the full map. Short version:
 - Global palette index planes (256 B total).
 - Up to **8** world blobs (each with 32 KB CHR, up to **32** BG1 + **8** BG0 screens).
 - Up to **128** sprite-entity types in a **global** catalog, shared across worlds. See `software-api.md`.
-- Global **other screens** (title, interstitial, credits).
+- Global **other screens**: max **16** total (title / interstitial / credits share the pool).
 
 ## Programming workflow
 

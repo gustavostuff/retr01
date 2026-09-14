@@ -57,10 +57,9 @@ Magic **`retr01`**, **`format_ver` = 2**. Bump only when the layout breaks old t
 | +------------------------------------------------------------------+ |
 +----------------------------------------------------------------------+
 | +------------------------------------------------------------------+ |
-| | OTHER SCREENS (global, not on world grid)                        | |
-| |  +--------+  +--------------+  +-------------------------------+ | |
-| |  | Title  |  | Interstitial |  | Credits pages (raw or RLE)    | | |
-| |  +--------+  +--------------+  +-------------------------------+ | |
+| | OTHER SCREENS (global, max 16 total)                             | |
+| |  title / interstitial / credits share one pool (ids 0..15)       | |
+| |  each payload 480 B raw or RLE                                   | |
 | +------------------------------------------------------------------+ |
 +----------------------------------------------------------------------+
 | +------------------------------------------------------------------+ |
@@ -91,9 +90,7 @@ Magic **`retr01`**, **`format_ver` = 2**. Bump only when the layout breaks old t
 | | | 12 B x present   |  | up to 8 present screens                | | |
 | | +------------------+  +----------------------------------------+ | |
 | | +--------------------------------------------------------------+ | |
-| | | ENTITY SPAWN LOCATIONS                                       | | |
-| | | (catalog_id refs into global entity catalog)                 | | |
-| | | + optional PA blob                                           | | |
+| | | optional PA blob (player anim), if used                      | | |
 | | +--------------------------------------------------------------+ | |
 | +------------------------------------------------------------------+ |
 | ... up to 8 world blobs ...                                          |
@@ -117,14 +114,15 @@ Six `(offset, length)` pairs as little-endian **u24** (3+3 bytes each):
 
 | Piece | Size / note |
 | --- | --- |
-| World header | **32 B** (spawn cell as nibble-packed col/row, default banks/pal row, BG1 present count, BG0 present count, CHR/dir offsets, entity counts, player entity + hitbox, camera dead-zone bytes **30-31**) |
+| World header | **32 B** (spawn cell as nibble-packed col/row, default banks/pal row, BG1 present count, BG0 present count, CHR/dir offsets, player entity + hitbox, camera dead-zone bytes **30-31**) |
 | CHR | **4** BG banks + **4** SPR banks x **4096 B** = **32 KB** total |
 | BG1 screen directory | **12 B** per present playfield screen (grid cell + payload offset) |
 | BG1 screen payloads | **480 B** each (present only, sparse **16x16**, max **32**/world) |
 | BG0 directory | **12 B** per present BG0 screen (same shape as BG1 dir). Offset **0** if none |
 | BG0 payloads | **480 B** each (up to **8** present screens, sparse on **16x16**) |
-| Entity spawn locations | Placements that reference a **global** `catalog_id` (**0..127**). Behavior is PRG / C/ASM. Defs live in the global catalog |
 | Player anim | Optional `PA` blob when a player entity is marked |
+
+Entity **spawn locations** are **not** on the cart. PRG owns who appears where (tables or code calling `spawn_entity`). Defs stay in the global catalog.
 
 **Grid cell byte:** virtual map is **16x16** (col/row **0-15**). Pack both coords in **1 byte** as nibbles: `col | (row << 4)`. Same packing for BG1/BG0 directory entries and world-header spawn cell.
 
@@ -136,16 +134,17 @@ Six `(offset, length)` pairs as little-endian **u24** (3+3 bytes each):
 
 ### Flash budget at max fill
 
-Worst case: PRG + header/pals/world table + full unique CHR and max screens for all 8 worlds (sparse dirs) + **128** fully maxed entity defs. Other screens and entity spawn locations are extra (spawn locations stay small).
+Worst case: PRG + header/pals/world table + full unique CHR and max screens for all 8 worlds (sparse dirs) + **128** fully maxed entity defs + **16** other screens at raw **480 B** each. RLE and unused other-screen slots free more. Spawn locations cost **PRG**, not cart flash.
 
 | Item | Bytes | KB |
 | --- | ---: | ---: |
-| Worlds / PRG / pals / dirs (no entities, no other screens) | ~452980 | ~442.4 |
+| Worlds / PRG / pals / dirs | ~452980 | ~442.4 |
 | Entity catalog (128 x 356 B maxed) | **45568** | **~44.5** |
-| **Used (with maxed entity catalog)** | **~498548** | **~486.9** |
-| Free in 512 KB (`524288`) | **~25740** | **~25.1** |
+| Other screens (16 x 480 B raw) | **7680** | **~7.5** |
+| **Used (maxed worlds + defs + other screens)** | **~506228** | **~494.4** |
+| Free in 512 KB (`524288`) | **~18060** | **~17.6** |
 
-That free slice is for other screens, spawn-location lists, and any packing slack. A full maxed catalog still fits.
+That free slice is for optional `PA`, directory glue, and packing slack.
 
 ### Entity catalog (global, cart flash)
 
@@ -157,7 +156,7 @@ One **global catalog** for the whole cart (pointer table slot **5**). Worlds do 
 | --- | --- |
 | Entity **definitions** (looks / anim metadata) | Global entity catalog (cart-wide) |
 | Entity **behavior** (what it does) | **PRG**, authored in **C/ASM** |
-| Entity spawn locations | World blob (placements with `catalog_id`). Cheap vs defs |
+| Entity **spawn locations** (who appears where) | **PRG** (tables and/or `spawn_entity` calls). Not packed in the world blob |
 
 | Topic | Value |
 | --- | --- |
@@ -173,11 +172,9 @@ Studio: author up to **128** types once, then pick which to place in each world.
 
 Not on the world grid. Read through the MAP port like world data.
 
-| Id | Kind |
-| --- | --- |
-| **0** | Title |
-| **1** | Level interstitial |
-| **2+** | Credits pages (0..46 max) |
+**Hard cap: 16 screens** total (ids **0..15**). Title, interstitial, credits, and any other non-world pages share that one pool. There is no separate credits budget.
+
+Roles are labels on indexes inside the pool (Studio / PRG convention). Example: id **0** = title, id **1** = interstitial, credits = indexes **N..M** within **0..15**. Credits do not need a large contiguous run beyond what you allocate inside the 16.
 
 Payload **480 B** raw or **RLE** (`flags` bit 0). RLE: `C < 0x80` copy `C+1` literals, `C >= 0x80` repeat next byte `C-0x7F` times.
 
@@ -213,4 +210,5 @@ Small I2C EEPROM on the cart for per-game saves. **24C64**, mailbox **`$7F22`-`$
 - I/O page `$7F00-$7FFF`
 - World caps: 8 worlds / 32 BG1 / 0..8 BG0
 - Global entity catalog: **128** types, shared across worlds
+- Other screens: max **16** (shared pool)
 - Console programs the cart (and can program AVRs). Details TBD in `hardware.md`

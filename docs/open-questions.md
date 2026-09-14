@@ -12,7 +12,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### Instance + PA byte schemas
 
-**Partly sized:** Entity **defs** are locked (offset-table pack, max **356 B**). Entity spawn location records and optional `PA` blobs still need a frozen byte layout.
+**Partly sized:** Entity **defs** are locked (offset-table pack, max **356 B**). Live instance records in system RAM and optional `PA` blobs still need a frozen byte layout. Spawn locations are **PRG-side** (not cart).
 
 **Touches:** `memory.md`, `software-api.md`
 
@@ -90,6 +90,8 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-14 | IC budget | AD724 counted on motherboard. 17 mobo + 2 cart = 19. |
 | 2026-09-14 | AD724 mount | SOIC-16 on SOIC-to-DIP adapter. Main PCB 100% THT. |
 | 2026-09-14 | 74HC14 | Optional. Skip if canned PHI2/DOT + simple reset. Add if soft edges or reset chatter. |
+| 2026-09-14 | Other screens | Max 16 total shared pool (title/interstitial/credits). Dropped 46 credits cap. |
+| 2026-09-14 | Entity spawns | Spawn locations in PRG, not cart world blobs. |
 | 2026-09-13 | Sync out | One header, CSYNC or H/V mode. |
 | 2026-09-13 | Branding | One product: Retr01. |
 | 2026-09-14 | Flasher | Console + Adafruit's UPDI Friend. Shared header. 4-pos DIP: M/S1/S2/cart, default all OFF. Scope: AVRs + cart only. |

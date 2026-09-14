@@ -20,6 +20,7 @@ That range covers very simple games (**1** state, **1** frame, **1** sprite) and
 | --- | --- | --- |
 | **Entity definition** (states, frames, sprites, relative positions, delays, hitboxes) | Cart **global entity catalog** | Studio packs into `.retr01` |
 | **Entity behavior** (AI, input, physics, state changes, spawn rules) | **PRG** | Author in **C and/or ASM** |
+| **Entity spawn locations** (placements) | **PRG** | Author tables / code (`spawn_entity`) |
 | **Live instance state** (position, velocity, current state/frame, flags) | System RAM | PRG via the entity API |
 
 ### Hard caps (Studio-friendly)
@@ -77,7 +78,7 @@ Frame (at State + frame_off[f])
 | **Fully maxed def** (4x4x4) | **356** |
 | 128 maxed defs (global catalog) | **45568** (~44.5 KB) |
 
-**Entity spawn locations** live in each world blob and stay small (`catalog_id`, screen/cell, x, y, flags). Exact record layout can follow later. Optional `PA` (player anim) remains an opaque blob for now.
+**Entity spawn locations** live in **PRG** (data tables and/or code that calls `spawn_entity`), not in the cart world blob. Cart holds defs in the global catalog only. Optional `PA` (player anim) may still hang off a world blob as an opaque blob for now.
 
 ### Starter API (locked signatures)
 
