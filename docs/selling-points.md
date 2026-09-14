@@ -16,6 +16,10 @@ True dual BG planes (BG1 over BG0 show-through), hardware scroll, cart MAP/namet
 
 Multi-chip board (CPU + AVRs + PLDs + 74xx glue), not an FPGA soft console and not pure TTL discrete logic. See the programmable-vs-fixed table in `hardware.md`.
 
+## NES-sharp pixels, SNES-true parallax
+
+Art stays in the crisp, color-reduced NES lane (tight palettes, readable 8x8 tiles). Depth is real SNES-style hardware parallax: two BG planes with independent scroll (BG1 over BG0 show-through), not a fake layered blit in software.
+
 ## Single 32 KB PRG region
 
 One flat **32 KB PRG** window on the cart. No PRG banking.
@@ -50,3 +54,7 @@ Test points for bring-up, full-size THT status LEDs, initial **2-layer** PCBs (m
 ## Three helper AVRs
 
 MCU-M (soft I/O, saves, SPI), MCU-S1 (sprites + BG0 HBlank), MCU-S2 (pads + audio). Clear ownership, room to grow firmware without starving PRG.
+
+## Light-gun ready hit detect (later)
+
+The beam path is sketched so a light gun can land later without redesigning the console. Hit detect paints a black anti-spoof frame, then **all target hitboxes as white rectangles in one frame**, then reads the gun timer (`0x5A` / proposed `$7F80`-`$7F81`). That is a roadmap feature, not a v1 ship requirement. See `hardware.md`.
