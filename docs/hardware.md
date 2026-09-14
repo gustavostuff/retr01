@@ -135,7 +135,7 @@ Game **entities** live in system RAM / PRG. Drawing goes through OAM + S1 field 
 | Pad UART | USART2 OD on **PF0** |
 | Field | AD[7:0] + ALE -> HC573. A[14:8] direct. S1 drives ALE + `/WE` only. `/OE`/`/CE` from PLD |
 
-**Soft SEL** (I/O page `$7F00-$7FFF`, low bytes match the old `$FExx` map):
+**Soft SEL** (I/O page `$7F00-$7FFF`):
 
 | SEL | Covers (examples) |
 | --- | --- |
@@ -401,7 +401,7 @@ Same TRS bus as pads. ATtiny85 + photodiode + LM393 + 16-bit beam timer (1 us ti
 | `0x55`/`0xAA` | VBlank poll. Stop bit resets timer. Reply bit5 = Trigger |
 | Host `0x5A` | Timer HI, LO. Miss = `0xFFFF` |
 
-Black anti-spoof then white hitboxes on all targets, then `0x5A`. Two flash frames + one read. Proposed `$7F80`/`$7F81` (GUN_HI/LO). `$7F80` was reserved unused in the I/O page map.
+Black anti-spoof then white hitboxes on all targets, then `0x5A`. Two flash frames + one read. Proposed `$7F80`/`$7F81` (GUN_HI/LO).
 
 ## Related
 

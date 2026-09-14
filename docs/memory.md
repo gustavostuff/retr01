@@ -16,7 +16,7 @@ Cart image rules below are the baseline for this repo. Soft `$7Fxx` owners follo
 
 **One flat PRG region:** **32 KB** at `$8000-$FFFF`, including reset/IRQ/NMI vectors at the top. No PRG banking. No I/O hole inside PRG.
 
-I/O lives in `$7F00-$7FFF` (last page below PRG). That page is not system RAM. Within the I/O page, keep the same low-byte offsets as the old `$FExx` map where useful (example: old `$FE90` becomes `$7F90`). `$7F80` reserved for light-gun roadmap.
+I/O lives in `$7F00-$7FFF` (last page below PRG). That page is not system RAM. `$7F80` is reserved for the light-gun roadmap.
 
 ## Cart flash (512 KB)
 
