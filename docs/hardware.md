@@ -1,6 +1,6 @@
 # Hardware
 
-One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. About **14 x 12 cm** minimum. Initial design: motherboard, cart, and pad PCBs all **2-layer** (locked for now). Revisit **4-layer** later only if bring-up or a commercial SMD revision really needs it (EMI / RF / regulatory).
+One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. Board outline **170 x 120 mm** (locked for the initial design). Initial design: motherboard, cart, and pad PCBs all **2-layer** (locked for now). Revisit **4-layer** later only if bring-up or a commercial SMD revision really needs it (EMI / RF / regulatory).
 
 **Packages (initial THT DIY board):** All counted BOM ICs use **through-hole** packages (DIP / SPDIP / PDIP). The composite encoder **AD724** is the allowed SMD exception (**SOIC-16** only from Analog). Same spirit on the cart and pad (THT parts). A later commercial spin can swap in SMD footprints where dual-sourcing exists.
 
