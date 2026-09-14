@@ -53,16 +53,17 @@ If soft decode ever runs out of PLD room, preferred escapes in order: demux more
 
 Retr01 is a **multi-chip discrete console** (separate CPU, RAM, glue, video path), not an FPGA soft system. It is **not** a fully discrete-logic machine in the TTL-only sense. Game behavior and helper work live in programmable parts. Fixed 74xx-class chips only do mux/latch glue.
 
-| Class | Parts | Programmable? |
-| --- | --- | --- |
-| **CPU** | W65C02S | Yes (runs cart **PRG**) |
-| **MCU helpers** | 3x AVR128DB28 | Yes (firmware: soft I/O, sprites/BG0, pads/audio, cart bridge) |
-| **PLDs** | 3x ATF22V10 | Yes (beam X/Y, compositor + decode equations) |
-| **OTP color table** | AT27C256R | Program once (factory/DIY blow). Fixed afterward |
-| **Cart memories** | SST39SF040, 24C64 | Yes (game image / saves). Not “logic” |
-| **Motherboard memories** | 3x AS6C62256 | No logic. Volatile storage only |
-| **Fixed glue logic** | 3x: 74HC157, 74HC573, 74HC574 | **No.** Hardwired mux / latch behavior |
-| **Outside the 18** | AD724, 74HC14, crystals | Fixed analog / invert / timing. Pad **ATtiny85** is programmable (in the controller) |
+| Class | Parts | Programmable? | Flashed through the console? |
+| --- | --- | --- | --- |
+| **CPU** | W65C02S | Yes (runs cart **PRG**) | No (executes cart code, is not flashed) |
+| **MCU helpers** | 3x AVR128DB28 | Yes (firmware) | **Yes** (Adafruit's UPDI Friend header) |
+| **PLDs** | 3x ATF22V10 | Yes (beam / decode equations) | **No** (pre-programmed or DIY PLD tool) |
+| **OTP color table** | AT27C256R | Program once (factory/DIY blow) | **No** (pre-programmed or DIY PROM tool) |
+| **Cart memories** | SST39SF040, 24C64 | Yes (game image / saves) | **Yes** (cart flash via MCU-M bridge) |
+| **Motherboard memories** | 3x AS6C62256 | No logic. Volatile storage only | No |
+| **Fixed glue logic** | 3x 74HC157, 74HC573, 74HC574 | **No.** Hardwired mux / latch | No |
+| **Outside the 18** | AD724, 74HC14, crystals | Fixed analog / invert / timing | No |
+| **Pad MCU** | ATtiny85 (in controller) | Yes (pad firmware) | **No** (pre-programmed or DIY ISP) |
 
 ### Composite encoder (frozen): AD724
 
@@ -202,9 +203,11 @@ Game Boy-sized (~**55 mm** width). Passive cart: **SST39SF040** + **24C64**. No 
 
 ### Console as programmer (locked): Adafruit's UPDI Friend
 
-Locked accessory: **Adafruit's UPDI Friend**. USB-C stays on that adapter (PC side only). The console, cart, and pads have **no USB**. You clip Adafruit's UPDI Friend wires onto male header pins on the motherboard, same idea as the breadboard photo (PWR / GND / data).
+The console (+ **Adafruit's UPDI Friend**) is a flasher for **only** the **three AVRs** and a **seated cartridge**. It does **not** program the ATF22V10 PLDs, the AT27C256R color PROM, or the pad ATtiny85. Those still need their own tools (PLD programmer, OTP/PROM burner, AVR ISP for the pad) before or beside assembly.
 
-Adafruit's UPDI Friend is a CH340E USB-serial with the usual 1K RX/TX loopback for SerialUPDI. No USBASP. No separate flasher PCB.
+USB-C stays on Adafruit's UPDI Friend (PC side only). The console, cart, and pads have **no USB**. You clip the wires onto male header pins on the motherboard.
+
+Adafruit's UPDI Friend is a CH340E USB-serial with the usual 1K RX/TX loopback for SerialUPDI. No USBASP. No separate flasher PCB for AVR/cart work.
 
 **Same header, target select via DIP switch.** One shared program header (PWR / GND / data). A through-hole **4-position DIP switch** footprint on the motherboard routes the Friend data line to exactly one target:
 
@@ -225,10 +228,28 @@ Feasibility check (2026-09): AVR128DB28 is UPDI-only on pin 19. DxCore / avrdude
 | --- | --- |
 | Reflash an AVR (on board) | Friend on header, matching DIP ON -> that AVR **UPDI** |
 | Program cart flash (on board) | Friend on header, DIP pos 4 ON -> **MCU-M** bridge -> cart |
+| PLDs / color PROM / pad MCU | **Out of scope** for this header (see below) |
 
-**DIY before soldering.** Someone building a console can program each AVR128DB28 on a breadboard with Adafruit's UPDI Friend first (PWR / GND / UPDI), then solder the flashed chips. On-board header + DIP remain available later for updates and cart programming.
+**DIY before soldering.** Someone building a console can program each AVR128DB28 on a breadboard with Adafruit's UPDI Friend first (PWR / GND / UPDI), then solder the flashed chips. On-board header + DIP remain available later for AVR updates and cart programming.
 
 Keep each AVR's UPDI pin configured as **UPDI** (not reset/GPIO) so Adafruit's UPDI Friend works. Adafruit's High Voltage UPDI Friend is only a recovery tool if someone bricks that fuse. Exact header pin numbers and host command protocol stay **TBD**.
+
+### PLDs, color PROM, and pad MCU (not Adafruit's UPDI Friend)
+
+Adafruit's UPDI Friend cannot program these. **Locked:** there is **no** high-voltage programming path on the motherboard (no ~12 V PLD EDIT / no ~13 V PROM VPP injected on-board). Those ICs are programmed **off the console PCB**, then installed (sockets recommended so they can be swapped).
+
+Two practical paths for builders:
+
+1. **Buy them pre-programmed.** Blank stock is the default from distributors. Programming services (distributor / MicrochipDirect-style / kit vendor selling Retr01-ready parts) can ship ATF22V10s with the beam/compositor JEDEC images, an AT27C256R blown with the 64-color table, and pad ATtiny85s with pad firmware. That is the easiest path for non-tinkerers. Note: the color PROM is **OTP** (one-time). A wrong blow means a new chip.
+2. **Program them yourself** with a separate tool (off the console PCB):
+
+| Part | DIY options (examples) |
+| --- | --- |
+| **ATF22V10** | Arduino **Uno/Nano**-based GAL programmers (e.g. Afterburner), or a TL866-class universal programmer that lists ATF22V10 |
+| **AT27C256R** | Parallel EPROM/OTP programmer (TL866-class or similar) that supports 27C256 and the required VPP/VCC programming voltages |
+| **ATtiny85** (pad) | **ISP**: Arduino as ISP (Nano/Uno), USBasp, USBtinyISP, and so on. Optional ISP header on the pad PCB is fine (5 V only, no HV) |
+
+Prefer programming PLDs and the color PROM **before** they go into the motherboard (or drop pre-programmed parts into sockets). Same for the pad MCU before closing the controller shell.
 
 ## Controllers
 

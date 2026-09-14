@@ -18,7 +18,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### Console program header / flash protocol
 
-**Device locked:** Adafruit's UPDI Friend on one shared motherboard header. **4-pos DIP** selects MCU-M / S1 / S2 / cart. Default **all OFF** (safe). Breadboard pre-flash of AVRs before soldering is supported. Still **TBD:** header pin numbers and host commands.
+**Device locked:** Adafruit's UPDI Friend on one shared motherboard header. **4-pos DIP** selects MCU-M / S1 / S2 / cart. Default **all OFF** (safe). Flasher scope: **AVRs + cart only**. PLDs / color PROM / pad MCU: pre-programmed buy option or DIY external tools. Still **TBD:** header pin numbers and host commands.
 
 **Touches:** `hardware.md`, `cartridge.md`
 
@@ -50,7 +50,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### 8. Cart flashing
 
-**Resolved:** Console + **Adafruit's UPDI Friend**. Shared header. **4-pos DIP** selects M / S1 / S2 / cart (default all OFF). Cart via MCU-M bridge. Header pin numbers / protocol TBD.
+**Resolved:** Console + **Adafruit's UPDI Friend**. Shared header. **4-pos DIP** selects M / S1 / S2 / cart (default all OFF). Flashes **AVRs + cart only**. PLDs / color PROM / pad MCU: pre-programmed buy option or DIY external tools. Header pin numbers / protocol TBD.
 
 ### 9. Interleaved VRAM timing
 
@@ -89,7 +89,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-13 | Composite | **AD724** frozen (CSYNC or H/V). |
 | 2026-09-13 | Sync out | One header, CSYNC or H/V mode. |
 | 2026-09-13 | Branding | One product: Retr01. |
-| 2026-09-14 | Flasher | Console + Adafruit's UPDI Friend. Shared header. 4-pos DIP: M/S1/S2/cart, default all OFF. |
+| 2026-09-14 | Flasher | Console + Adafruit's UPDI Friend. Shared header. 4-pos DIP: M/S1/S2/cart, default all OFF. Scope: AVRs + cart only. |
 | 2026-09-14 | Entity caps | 128 types global catalog (shared across worlds). Dropped 16/world. |
 | 2026-09-14 | Entity pack | Offset-table format, max 356 B. |
 | 2026-09-14 | Anim tiles | base..base+3 wrap in bank, default delay 6. |

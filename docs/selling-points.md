@@ -41,7 +41,7 @@ Studio-friendly hard cap: **128** entity types in one **global** catalog. Worlds
 
 ## Console programs its own carts
 
-One DIY tool: **Adafruit's UPDI Friend**, clipped onto one shared set of motherboard male pins (no USB on console/cart/pads). A **4-pos DIP** picks MCU-M / S1 / S2 / cart. Default **all OFF** so nothing is armed. Builders may also flash AVRs on a breadboard before soldering. No separate flasher PCB. Header pin numbers and protocol TBD.
+One DIY tool: **Adafruit's UPDI Friend**, clipped onto one shared set of motherboard male pins (no USB on console/cart/pads). A **4-pos DIP** picks MCU-M / S1 / S2 / cart. Default **all OFF** so nothing is armed. Scope is **AVRs + cart only**. PLDs, color PROM, and pad MCUs: buy **pre-programmed**, or DIY with a separate tool (Arduino Nano/Uno GAL programmers, TL866-class, Arduino-as-ISP). See `hardware.md`.
 
 ## Through-hole DIY friendly layout
 
