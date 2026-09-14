@@ -89,6 +89,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-13 | Composite | **AD724** frozen (CSYNC or H/V). |
 | 2026-09-14 | IC budget | AD724 counted on motherboard. 17 mobo + 2 cart = 19. |
 | 2026-09-14 | AD724 mount | SOIC-16 on SOIC-to-DIP adapter. Main PCB 100% THT. |
+| 2026-09-14 | 74HC14 | Optional. Skip if canned PHI2/DOT + simple reset. Add if soft edges or reset chatter. |
 | 2026-09-13 | Sync out | One header, CSYNC or H/V mode. |
 | 2026-09-13 | Branding | One product: Retr01. |
 | 2026-09-14 | Flasher | Console + Adafruit's UPDI Friend. Shared header. 4-pos DIP: M/S1/S2/cart, default all OFF. Scope: AVRs + cart only. |

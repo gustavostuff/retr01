@@ -26,7 +26,7 @@ Logical playfield **128 x 120**, hardware-scaled **2x** to **256 x 240** by defa
 | --- | --- |
 | Motherboard | 17 (includes **AD724**) |
 | Cart (flash + save EEPROM) | 2 |
-| Outside the 19 | 74HC14, crystals. **Adafruit's UPDI Friend** is the DIY programming accessory, not a BOM IC |
+| Outside the 19 | Crystals. **74HC14** optional (see skip conditions below). **Adafruit's UPDI Friend** is the DIY programming accessory, not a BOM IC |
 
 ### Bus discipline
 
@@ -52,7 +52,17 @@ If soft decode ever runs out of PLD room, preferred escapes in order: demux more
 | 1 | AT27C256R | Color PROM (45 ns OTP, packed R3G3B2) | PDIP-28 | Yes (SOIC-28, PLCC-32, TSOP-28) |
 | 1 | AD724 | RGB to NTSC/PAL composite encoder | DIP-16 via **SOIC-16 to DIP adapter** | Native SOIC-16 (direct later) |
 
-**Still outside the count:** **74HC14** inverter and crystals (common THT). Pad **ATtiny85**: DIP-8 and SOIC-8 both exist. **Adafruit's UPDI Friend** is an accessory, not a BOM IC. The SOIC-to-DIP adapter is a mechanical carrier, not an extra counted IC.
+**Still outside the count:** crystals (common THT). Pad **ATtiny85**: DIP-8 and SOIC-8 both exist. **Adafruit's UPDI Friend** is an accessory, not a BOM IC. The SOIC-to-DIP adapter is a mechanical carrier, not an extra counted IC.
+
+### Optional: 74HC14 (hex Schmitt inverter)
+
+**Not in the counted 19.** Skip it on the first board when all of these hold:
+
+- **PHI2** and **DOT** come from **canned oscillators** (or other already-square CMOS clock sources), not a raw crystal amp that needs squaring
+- Series **33 ohm** (already planned) is enough damping on those clock nets
+- **Reset** is a simple pull-up + switch, or a small supervisor IC, with short traces and no visible bounce/chatter on a scope
+
+Add the 74HC14 (or populate its footprint) if bring-up shows soft clock edges, crystal-buffer duty you cannot avoid, or a noisy/slow reset rail that needs Schmitt cleanup.
 
 ### What kind of system is this?
 
@@ -68,7 +78,8 @@ Retr01 is a **multi-chip discrete console** (separate CPU, RAM, glue, video path
 | **Motherboard memories** | 3x AS6C62256 | No logic. Volatile storage only | No |
 | **Fixed glue logic** | 3x 74HC157, 74HC573, 74HC574 | **No.** Hardwired mux / latch | No |
 | **Composite encoder** | AD724 | Fixed analog (RGB to NTSC/PAL) | No |
-| **Outside the 19** | 74HC14, crystals | Fixed invert / timing | No |
+| **Outside the 19** | crystals | Fixed timing | No |
+| **Optional glue** | 74HC14 (hex Schmitt) | Skip if canned PHI2/DOT + simple reset. Add if edges/reset need cleanup | No |
 | **Pad MCU** | ATtiny85 (in controller) | Yes (pad firmware) | **No** (pre-programmed or DIY ISP) |
 
 ### Composite encoder (frozen): AD724
