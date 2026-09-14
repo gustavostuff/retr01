@@ -164,7 +164,7 @@ That free slice is for optional `PA`, packing slack, and anything else that does
 
 **Definition:** an entity is a game being/object built from up to 4 states x 4 frames x 4 sprites. Full wording and **byte pack format** in `software-api.md`.
 
-One **global catalog** for the whole cart (pointer table slot **5**). Worlds do **not** own their own type lists. Any world can spawn any catalog entry, so enemies and props can be shared (world 1 uses A/B/C, world 2 uses C/D/E).
+One **global catalog** for the whole cart (pointer table slot **5**). Worlds do **not** own their own type lists. Any world can spawn any catalog entry, so enemies and props can be shared. World 1 uses A/B/C, world 2 uses C/D/E (for instance).
 
 | Piece | Lives in |
 | --- | --- |
