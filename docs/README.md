@@ -30,4 +30,4 @@ The Retr01 is an MCU-assisted 8-bit system, ready for both arcade and console se
 | [memory.md](memory.md) | CPU map, MAP port, `.retr01` image, entity flash capacity |
 | [software-api.md](software-api.md) | What an entity is, def size, C/ASM API, game modes |
 | [open-questions.md](open-questions.md) | TBD items and how to resolve them |
-| [ic_behavior/](ic_behavior/README.md) | Per-chip behavior (CPU, AVRs, more as added) |
+| [ic_behavior/](ic_behavior/README.md) | Per-chip behavior (all 19 BOM ICs + pad / optional) |
