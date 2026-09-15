@@ -133,8 +133,9 @@ Hardware caps: **64** OAM entries, **16** sprites per scanline. Catalog cap: **1
 
 ## Game mechanics (initial)
 
+- **Player movement** and **camera movement** are separate. See `world-scrolling.md` (dead zone, axis lock, follow vs auto).
 - Camera: instant screen switch and/or smooth scrolling. Both allowed in one game or world.
-- **BG0** may autoscroll and wrap on a repeating strip under PRG (independent of player motion). See `world-scrolling.md`. API TBD.
+- **BG0** and **BG1** may each autoscroll and/or wrap on a repeating strip under PRG (independent of player motion). See `world-scrolling.md`. API TBD.
 - Modes: **platformer** and **top-down**.
 
 ### Platformer physics (v1, locked)

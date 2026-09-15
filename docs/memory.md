@@ -111,7 +111,7 @@ Five `(offset, length)` pairs as little-endian **u24** (3+3 bytes each):
 
 | Piece | Size / note |
 | --- | --- |
-| World header | **32 B** (spawn cell as nibble-packed col/row, default banks/pal row, BG1/BG0 present counts, entity type count **0..16**, CHR/dir/entity-catalog offsets, player entity + hitbox, camera dead-zone bytes **30-31**) |
+| World header | **32 B** (spawn cell as nibble-packed col/row, default banks/pal row, BG1/BG0 present counts, entity type count **0..16**, CHR/dir/entity-catalog offsets, player entity + hitbox, camera dead-zone **width/height** at bytes **30-31**) |
 | CHR | **4** BG banks + **4** SPR banks x **4096 B** = **32 KB** total |
 | BG1 screen directory | **12 B** per present playfield screen (grid cell + payload offset) |
 | BG1 screen payloads | **480 B** each (present only, sparse **16x16**, max **32**/world) |
