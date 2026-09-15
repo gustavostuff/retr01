@@ -265,7 +265,7 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 | `+$01C1` | `$81C1` | Instance table (`count` x 6 B: type, flip flags, world_x/y LE) |
 | `+$00F0` | `$80F0` | `R01P` marker + version byte |
 
-Full entity defs still use the locked pack in `software-api.md`. Studio may temporarily pack a reduced type snapshot for Host Play until the packer emits the full offset-table format.
+Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs at `OFF_TYPES`).
 
 ## Notes
 

@@ -84,7 +84,7 @@ Frame (at State + frame_off[f])
 
 Phase 1 Studio carts also embed a compact **instance table** in PRG (see `memory.md`). That table feeds Host Play / emu until authors switch to full `spawn_entity` tables.
 
-**Studio packer gap:** the locked EntityDef above is SoT. Today's Studio `.retr01` still writes a **reduced 20 B** type snapshot (state 0 / frame 0 only) for bring-up. That is interim. Tools must catch up to this offset-table pack. Do not treat the 20 B snapshot as the long-term format.
+**Catalog on cart:** at world `OFF_TYPES`, a **`u16` directory** (`type_count` entries, offset from catalog base, little-endian) then concatenated **EntityDef** blobs (this locked pack). `OFF_INSTS` points past the catalog (PA start when present). Studio packs hitbox and sprite `rel_*` in **draw-origin** space (authoring origin baked in at export).
 
 ### Camera helpers (locked intent)
 

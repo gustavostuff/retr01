@@ -159,7 +159,6 @@ TEST_MAIN() {
                 uint8_t hdr[WORLD_HDR_SIZE];
                 uint32_t off_prg, off_wtable, world_base, off_chr, off_types, off_insts;
                 uint8_t type_n, inst_n;
-                uint8_t trec[R01_CART_ENTITY_TYPE_SIZE];
                 uint8_t irec[R01_CART_INSTANCE_SIZE];
                 uint8_t spr_tile2[R01_TILE_BYTES];
 
@@ -200,8 +199,9 @@ TEST_MAIN() {
                 EXPECT(type_n == 2, "type count");
                 EXPECT(inst_n == 0, "inst count zero in cart (placements in PRG)");
                 EXPECT(hdr[R01_CART_WHDR_PLAYER_ENTITY] == 0, "player entity packed");
-                EXPECT(hdr[R01_CART_WHDR_PLAYER_HIT_X] == 1 && hdr[R01_CART_WHDR_PLAYER_HIT_Y] == 2,
-                       "player hitbox xy");
+                /* Hitbox baked to draw-origin space (author origin 2,3 hit 1,2 -> 0,0). */
+                EXPECT(hdr[R01_CART_WHDR_PLAYER_HIT_X] == 0 && hdr[R01_CART_WHDR_PLAYER_HIT_Y] == 0,
+                       "player hitbox xy draw-origin");
                 EXPECT(hdr[R01_CART_WHDR_PLAYER_HIT_W] == R01_ENTITY_HITBOX_W &&
                            hdr[R01_CART_WHDR_PLAYER_HIT_H] == R01_ENTITY_HITBOX_H,
                        "player hitbox wh");
@@ -222,20 +222,34 @@ TEST_MAIN() {
                     EXPECT(relocated[0] == 0x11 && relocated[8] == 0x22, "relocated tile1 art");
                 }
 
-                memcpy(trec, img + world_base + off_types, R01_CART_ENTITY_TYPE_SIZE);
-                EXPECT(trec[0] == 2 && trec[1] == 3, "type origin");
-                EXPECT(trec[2] == 1, "part count");
-                EXPECT(trec[4] == 2, "part tile");
-                EXPECT(trec[6] == 4 && trec[7] == 5, "part dx dy");
-
-                memcpy(trec, img + world_base + off_types + R01_CART_ENTITY_TYPE_SIZE,
-                       R01_CART_ENTITY_TYPE_SIZE);
-                EXPECT(trec[2] == 1, "legacy part count");
-                EXPECT(trec[4] == 3, "legacy tile remapped off player stub");
-
-                /* OFF_INSTS marks end of types / start of optional PA blob. */
-                EXPECT(off_insts == off_types + (uint32_t)type_n * R01_CART_ENTITY_TYPE_SIZE,
-                       "off_insts at end of types");
+                /* Locked EntityDef catalog: u16 dir + defs. */
+                {
+                    uint16_t d0 = rd_u16(img + world_base + off_types);
+                    uint16_t d1 = rd_u16(img + world_base + off_types + 2);
+                    const uint8_t *def0;
+                    const uint8_t *def1;
+                    const uint8_t *st;
+                    const uint8_t *fr;
+                    EXPECT(d0 == 4, "dir0 after 2-entry directory");
+                    EXPECT(d1 > d0, "dir1 after def0");
+                    def0 = img + world_base + off_types + d0;
+                    EXPECT(def0[1] == 1, "def0 state count");
+                    st = def0 + rd_u16(def0 + 4);
+                    EXPECT(st[0] == 1, "def0 frame count");
+                    fr = st + rd_u16(st + 6);
+                    EXPECT(fr[0] == R01_CART_ENTITY_FRAME_DELAY_DEFAULT, "def0 frame delay");
+                    EXPECT(fr[1] == 1, "def0 sprite count");
+                    EXPECT(fr[2] == 2, "def0 sprite tile");
+                    EXPECT((int8_t)fr[3] == 2 && (int8_t)fr[4] == 2, "def0 sprite rel");
+                    def1 = img + world_base + off_types + d1;
+                    EXPECT(def1[1] == 1, "def1 state count");
+                    st = def1 + rd_u16(def1 + 4);
+                    fr = st + rd_u16(st + 6);
+                    EXPECT(fr[1] == 1, "def1 sprite count");
+                    EXPECT(fr[2] == 3, "legacy tile remapped off player stub");
+                    EXPECT(off_insts > off_types + 4, "catalog non-empty");
+                    EXPECT(world_base + off_insts <= (uint32_t)flen, "off_insts in cart");
+                }
                 {
                     uint8_t prg_inst_n = img[off_prg + PRG_PLAY_INST_COUNT];
                     EXPECT(prg_inst_n == 2, "prg inst count");

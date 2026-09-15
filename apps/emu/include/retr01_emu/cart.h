@@ -75,7 +75,7 @@ typedef struct R01eWorldView {
 #define R01E_CART_WHDR_FLAG_PLAYER_ANIM 0x01u
 #define R01E_CART_PLAYER_ENTITY_NONE 0xFFu
 #define R01E_CART_ENTITY_PARTS_MAX 4
-#define R01E_CART_ENTITY_TYPE_SIZE 20
+#define R01E_CART_ENTITY_DEF_MAX 356
 #define R01E_CART_INSTANCE_SIZE 6
 
 #define R01E_CART_OTHER_TITLE 0
@@ -92,6 +92,11 @@ void r01e_cart_free(R01eCart *c);
 
 const uint8_t *r01e_cart_prg(const R01eCart *c);
 int r01e_cart_world(const R01eCart *c, int index, R01eWorldView *out);
+
+/* EntityDef catalog (docs/software-api.md). */
+const uint8_t *r01e_cart_entity_def(const R01eCart *c, const R01eWorldView *wv, int type_id);
+int r01e_cart_entity_frame(const uint8_t *def, int state, int frame, const uint8_t **out_sprites,
+                           int *out_count);
 
 /* Return 1 if world has a screen at grid col,row. */
 int r01e_cart_has_screen(const R01eCart *c, int world, int col, int row);

@@ -207,6 +207,90 @@ int r01e_cart_world(const R01eCart *c, int index, R01eWorldView *out) {
     return 0;
 }
 
+static uint16_t cart_u16(const uint8_t *p) {
+    return (uint16_t)p[0] | ((uint16_t)p[1] << 8);
+}
+
+const uint8_t *r01e_cart_entity_def(const R01eCart *c, const R01eWorldView *wv, int type_id) {
+    const uint8_t *dir;
+    uint16_t off;
+    size_t dir_bytes;
+    uint32_t cat_abs;
+    uint32_t cat_end;
+
+    if (!c || !wv || type_id < 0 || type_id >= (int)wv->entity_type_count) {
+        return NULL;
+    }
+    dir_bytes = (size_t)wv->entity_type_count * 2u;
+    cat_abs = wv->base + wv->off_entity_types;
+    cat_end = wv->base + wv->off_entity_insts;
+    if (cat_end < cat_abs + dir_bytes) {
+        return NULL;
+    }
+    dir = r01e_cart_ptr(c, cat_abs, dir_bytes);
+    if (!dir) {
+        return NULL;
+    }
+    off = cart_u16(dir + (size_t)type_id * 2u);
+    if (off == 0 || (uint32_t)off + 12u > cat_end - cat_abs) {
+        return NULL;
+    }
+    return r01e_cart_ptr(c, cat_abs + off, 12u);
+}
+
+int r01e_cart_entity_frame(const uint8_t *def, int state, int frame, const uint8_t **out_sprites,
+                           int *out_count) {
+    uint8_t state_count;
+    uint16_t soff;
+    uint16_t foff;
+    const uint8_t *st;
+    const uint8_t *fr;
+    int fc;
+    int scount;
+
+    if (out_sprites) {
+        *out_sprites = NULL;
+    }
+    if (out_count) {
+        *out_count = 0;
+    }
+    if (!def) {
+        return -1;
+    }
+    state_count = def[1];
+    if (state < 0 || state >= (int)state_count || state >= 4) {
+        return -1;
+    }
+    soff = cart_u16(def + 4 + (size_t)state * 2u);
+    if (soff == 0) {
+        return -1;
+    }
+    st = def + soff;
+    fc = (int)st[0];
+    if (frame < 0 || frame >= fc || frame >= 4) {
+        return -1;
+    }
+    foff = cart_u16(st + 6 + (size_t)frame * 2u);
+    if (foff == 0) {
+        return -1;
+    }
+    fr = st + foff;
+    scount = (int)fr[1];
+    if (scount < 1) {
+        return -1;
+    }
+    if (scount > R01E_CART_ENTITY_PARTS_MAX) {
+        scount = R01E_CART_ENTITY_PARTS_MAX;
+    }
+    if (out_sprites) {
+        *out_sprites = fr + 2;
+    }
+    if (out_count) {
+        *out_count = scount;
+    }
+    return 0;
+}
+
 int r01e_cart_has_screen(const R01eCart *c, int world, int col, int row) {
     R01eWorldView wv;
     const uint8_t *dir;

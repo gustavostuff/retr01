@@ -22,7 +22,10 @@
 #define R01_CART_WHDR_CAM_DEADZONE_Y 31
 #define R01_CART_PLAYER_ENTITY_NONE 0xFFu
 #define R01_CART_ENTITY_PARTS_MAX 4
-#define R01_CART_ENTITY_TYPE_SIZE 20 /* origin_x,y + part_count + pad + 4x(tile,attr,dx,dy) */
+#define R01_CART_ENTITY_STATES_MAX 4
+#define R01_CART_ENTITY_FRAMES_MAX 4
+#define R01_CART_ENTITY_DEF_MAX 356 /* locked fully-populated size (docs/software-api.md) */
+#define R01_CART_ENTITY_FRAME_DELAY_DEFAULT 1
 #define R01_CART_INSTANCE_SIZE 6 /* type_id, flags (bit0 flip_h, bit1 flip_v), world_x u16 LE, world_y u16 LE */
 
 /* Other-screens dir entry (relative off_payload to other blob base). */

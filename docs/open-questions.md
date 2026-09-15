@@ -12,7 +12,9 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### Instance + PA byte schemas
 
-**Partly sized:** Entity **defs** are locked (offset-table pack, max **356 B**, **16**/world). Live instance records in system RAM and optional `PA` blobs still need a frozen byte layout. Spawn locations are **PRG-side** (not cart). Studio still packs a temporary **20 B** type snapshot for Host Play. That must move to the locked pack (`software-api.md`).
+**Partly sized:** Live instance records in system RAM and optional `PA` blobs still need a frozen byte layout. Spawn locations are **PRG-side** (not cart).
+
+**Entity cart pack (decision):** Studio writes the locked offset-table **EntityDef** from `software-api.md` (variable length, max **356 B**). World catalog = `u16` type directory + defs. The old fixed **20 B** snapshot is retired.
 
 **Touches:** `memory.md`, `software-api.md`
 
@@ -117,3 +119,4 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-14 | Player vs camera | Separate systems. Dead zone (e.g. 32x30). Axis lock, follow, or auto camera. |
 | 2026-09-15 | IC comms | Idle-safe pulls, RDY OD, OAM SPI early VBlank, scroll in NMI/VBlank, cart OE/WE rules. See `ic-comms-risks.md`. |
 | 2026-09-15 | Cart save UX | Multi-frame OK. Chunk I2C, short RDY, keep spinner/UI alive. No full-save picture freeze. |
+| 2026-09-15 | Entity cart bytes | Studio packs locked EntityDef + u16 type directory. Retired 20 B snapshot. |

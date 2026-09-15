@@ -63,17 +63,11 @@ static void player_hit_rect(R01eMachine *m, int origin_x, int origin_y, int stat
                 }
             }
         } else {
-            const uint8_t *types = r01e_cart_ptr(&m->cart, wv.base + wv.off_entity_types,
-                                                 (size_t)wv.entity_type_count * R01E_CART_ENTITY_TYPE_SIZE);
-            if (types) {
-                const uint8_t *trec = types + (size_t)wv.player_entity * R01E_CART_ENTITY_TYPE_SIZE;
-                int origin_ax = (int)trec[0];
-                int origin_ay = (int)trec[1];
-                box_x = origin_x + (int)wv.player_hit_x - origin_ax;
-                box_y = origin_y + (int)wv.player_hit_y - origin_ay;
-                box_w = (int)wv.player_hit_w;
-                box_h = (int)wv.player_hit_h;
-            }
+            /* Hitbox in WHDR is draw-origin relative (Studio bakes authoring origin). */
+            box_x = origin_x + (int)wv.player_hit_x;
+            box_y = origin_y + (int)wv.player_hit_y;
+            box_w = (int)wv.player_hit_w;
+            box_h = (int)wv.player_hit_h;
         }
     }
     if (hx) {
@@ -271,7 +265,6 @@ void r01e_play_sync_video(R01eMachine *m) {
 
 static int write_player_oam(R01eMachine *m, R01eWorldView *wv, int *slot) {
     R01ePlay *pl = &m->play;
-    const uint8_t *types;
     int player_type;
 
     if (!wv || !slot || *slot >= R01E_OAM_ENTRIES) {
@@ -281,11 +274,6 @@ static int write_player_oam(R01eMachine *m, R01eWorldView *wv, int *slot) {
         return 0;
     }
     player_type = (int)wv->player_entity;
-    types = r01e_cart_ptr(&m->cart, wv->base + wv->off_entity_types,
-                         (size_t)wv->entity_type_count * R01E_CART_ENTITY_TYPE_SIZE);
-    if (!types) {
-        return 0;
-    }
 
     if (wv->has_player_anim) {
         const uint8_t *blob = r01e_cart_ptr(&m->cart, wv->base + wv->off_player_anim,
@@ -340,27 +328,26 @@ static int write_player_oam(R01eMachine *m, R01eWorldView *wv, int *slot) {
     }
 
     {
-        const uint8_t *trec = types + (size_t)player_type * R01E_CART_ENTITY_TYPE_SIZE;
-        int origin_x = (int)trec[0];
-        int origin_y = (int)trec[1];
-        int part_count = (int)trec[2];
+        const uint8_t *def = r01e_cart_entity_def(&m->cart, wv, player_type);
+        const uint8_t *sprites = NULL;
+        int part_count = 0;
         int pi;
-        if (part_count > R01E_CART_ENTITY_PARTS_MAX) {
-            part_count = R01E_CART_ENTITY_PARTS_MAX;
+        if (!def || r01e_cart_entity_frame(def, 0, 0, &sprites, &part_count) != 0 || !sprites) {
+            return 0;
         }
         for (pi = 0; pi < part_count && *slot < R01E_OAM_ENTRIES; pi++) {
-            const uint8_t *part = trec + 4 + pi * 4;
-            int dx = (int)(int8_t)part[2];
-            int dy = (int)(int8_t)part[3];
-            int sx = pl->player_x + dx - origin_x - pl->cam_x;
-            int sy = pl->player_y + dy - origin_y - pl->cam_y;
+            const uint8_t *sp = sprites + (size_t)pi * 4u;
+            int rx = (int)(int8_t)sp[1];
+            int ry = (int)(int8_t)sp[2];
+            int sx = pl->player_x + rx - pl->cam_x;
+            int sy = pl->player_y + ry - pl->cam_y;
             uint8_t *oe = &m->io.oam[(size_t)*slot * R01E_OAM_ENTRY_BYTES];
             if (r01e_oam_tile_off_screen(sx, sy)) {
                 continue;
             }
             oe[0] = r01e_oam_coord_to_u8(sy);
-            oe[1] = part[0];
-            oe[2] = part[1];
+            oe[1] = sp[0];
+            oe[2] = sp[3];
             oe[3] = r01e_oam_coord_to_u8(sx);
             (*slot)++;
         }
@@ -371,25 +358,24 @@ static int write_player_oam(R01eMachine *m, R01eWorldView *wv, int *slot) {
 static void write_oam(R01eMachine *m) {
     R01ePlay *pl = &m->play;
     R01eWorldView wv;
-    const uint8_t *types = NULL;
     const uint8_t *prg = NULL;
     const uint8_t *insts = NULL;
     int inst_n = 0;
     int slot = 0;
     int ii;
     int player_type = -1;
+    int have_world = 0;
 
     memset(m->io.oam, 0xFF, sizeof(m->io.oam));
 
-    if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) == 0 && wv.entity_type_count > 0) {
-        types = r01e_cart_ptr(&m->cart, wv.base + wv.off_entity_types,
-                             (size_t)wv.entity_type_count * R01E_CART_ENTITY_TYPE_SIZE);
+    if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) == 0) {
+        have_world = 1;
         if (wv.player_entity != R01E_CART_PLAYER_ENTITY_NONE && wv.player_entity < wv.entity_type_count) {
             player_type = (int)wv.player_entity;
         }
     }
 
-    if (player_type >= 0 && types) {
+    if (player_type >= 0 && have_world) {
         (void)write_player_oam(m, &wv, &slot);
     }
     if (slot < 1) {
@@ -405,7 +391,7 @@ static void write_oam(R01eMachine *m) {
     }
 
     prg = r01e_cart_prg(&m->cart);
-    if (types && prg && cart_is_phase1_play(&m->cart) &&
+    if (have_world && prg && cart_is_phase1_play(&m->cart) &&
         m->cart.len_prg >= R01E_PRG_PLAY_INST_TABLE_OFF + R01E_CART_INSTANCE_SIZE) {
         inst_n = (int)prg[R01E_PRG_PLAY_INST_COUNT_OFF];
         if (inst_n > 0 &&
@@ -416,7 +402,7 @@ static void write_oam(R01eMachine *m) {
             inst_n = 0;
         }
     }
-    if (!types || !insts || inst_n < 1) {
+    if (!have_world || !insts || inst_n < 1) {
         return;
     }
     for (ii = 0; ii < inst_n && slot < R01E_OAM_ENTRIES; ii++) {
@@ -424,44 +410,43 @@ static void write_oam(R01eMachine *m) {
         uint8_t type_id = irec[0];
         int world_x = (int)((uint16_t)irec[2] | ((uint16_t)irec[3] << 8));
         int world_y = (int)((uint16_t)irec[4] | ((uint16_t)irec[5] << 8));
-        const uint8_t *trec;
-        int origin_x, origin_y, part_count, pi;
+        const uint8_t *def;
+        const uint8_t *sprites = NULL;
+        int part_count = 0;
+        int pi;
         if (type_id >= wv.entity_type_count) {
             continue;
         }
         if (player_type >= 0 && (int)type_id == player_type) {
             continue;
         }
-        trec = types + (size_t)type_id * R01E_CART_ENTITY_TYPE_SIZE;
-        origin_x = (int)trec[0];
-        origin_y = (int)trec[1];
-        part_count = (int)trec[2];
-        if (part_count > R01E_CART_ENTITY_PARTS_MAX) {
-            part_count = R01E_CART_ENTITY_PARTS_MAX;
+        def = r01e_cart_entity_def(&m->cart, &wv, (int)type_id);
+        if (!def || r01e_cart_entity_frame(def, 0, 0, &sprites, &part_count) != 0 || !sprites) {
+            continue;
         }
         for (pi = 0; pi < part_count && slot < R01E_OAM_ENTRIES; pi++) {
-            const uint8_t *part = trec + 4 + pi * 4;
-            int dx = (int)(int8_t)part[2];
-            int dy = (int)(int8_t)part[3];
-            uint8_t attr = part[1];
+            const uint8_t *sp = sprites + (size_t)pi * 4u;
+            int rx = (int)(int8_t)sp[1];
+            int ry = (int)(int8_t)sp[2];
+            uint8_t attr = sp[3];
             int sx, sy;
             uint8_t *oe;
             if (irec[1] & 1u) {
-                dx = 2 * origin_x - dx - 8;
+                rx = -rx - 8;
                 attr = (uint8_t)(attr ^ R01E_ATTR_FLIP_H);
             }
             if (irec[1] & 2u) {
-                dy = 2 * origin_y - dy - 8;
+                ry = -ry - 8;
                 attr = (uint8_t)(attr ^ R01E_ATTR_FLIP_V);
             }
-            sx = world_x + dx - origin_x - pl->cam_x;
-            sy = world_y + dy - origin_y - pl->cam_y;
+            sx = world_x + rx - pl->cam_x;
+            sy = world_y + ry - pl->cam_y;
             oe = &m->io.oam[(size_t)slot * R01E_OAM_ENTRY_BYTES];
             if (r01e_oam_tile_off_screen(sx, sy)) {
                 continue;
             }
             oe[0] = r01e_oam_coord_to_u8(sy);
-            oe[1] = part[0]; /* tile */
+            oe[1] = sp[0];
             oe[2] = attr;
             oe[3] = r01e_oam_coord_to_u8(sx);
             slot++;
