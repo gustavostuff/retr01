@@ -3,6 +3,7 @@
 #include "retr01_studio/prg_phase1.h"
 
 #include "r01_hw_regs.h"
+#include "retr01_studio/cart.h"
 #include "retr01_studio/project.h"
 
 #include "play_collision_bin.h"
@@ -17,9 +18,12 @@
 #define PLAY_SPAWN_CELL 32    /* col|(row<<4) */
 #define PLAY_COLL_COUNT 33
 #define PLAY_COLL_DIR 34 /* 4 bytes/screen: col, row, tab_lo, tab_hi (CPU addr) */
+/* Placements live in PRG (docs: not in cart world blob). Fits before collision code @ $8500. */
+#define PLAY_INST_COUNT 0xC0u /* PRG+$01C0: u8 count */
+#define PLAY_INST_TABLE 0xC1u /* PRG+$01C1: count * 6 B records */
 
 #define R01P_OFF 0x00F0u
-#define R01P_VER_COLLISION 2u
+#define R01P_VER_COLLISION 3u /* ver 3: PRG instance table at $81C0 */
 #define R01_PLAY_COLLISION_OFF 0x0500u /* CPU $8500 */
 #define R01_PLAY_SOLID_DATA_OFF 0x0700u /* CPU $8700 -- solid shadow tables */
 
@@ -194,6 +198,37 @@ static size_t append_boot_stream(uint8_t *out, const R01PrgCartLayout *layout) {
     return sizeof(stream);
 }
 
+static void fill_instance_table(uint8_t prg[R01_PRG_BYTES], const R01World *w) {
+    int n = 0;
+    int i;
+    size_t base = PLAY_OFF + PLAY_INST_TABLE;
+    size_t limit = R01_PLAY_COLLISION_OFF;
+
+    prg[PLAY_OFF + PLAY_INST_COUNT] = 0;
+    if (!w) {
+        return;
+    }
+    n = w->instance_count;
+    if (n > R01_MAX_ENTITY_INSTANCES) {
+        n = R01_MAX_ENTITY_INSTANCES;
+    }
+    if (n > 255) {
+        n = 255;
+    }
+    if (base + (size_t)n * R01_CART_INSTANCE_SIZE > limit) {
+        n = (int)((limit - base) / R01_CART_INSTANCE_SIZE);
+    }
+    for (i = 0; i < n; i++) {
+        uint8_t *rec = prg + base + (size_t)i * R01_CART_INSTANCE_SIZE;
+        const R01EntityInstance *inst = &w->instances[i];
+        rec[0] = (uint8_t)inst->type_id;
+        rec[1] = (uint8_t)((inst->flip_h ? 1u : 0u) | (inst->flip_v ? 2u : 0u));
+        put_u16_le(rec + 2, (uint16_t)inst->world_x);
+        put_u16_le(rec + 4, (uint16_t)inst->world_y);
+    }
+    prg[PLAY_OFF + PLAY_INST_COUNT] = (uint8_t)n;
+}
+
 static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01World *w) {
     size_t data_off = R01_PLAY_SOLID_DATA_OFF;
     int di = 0;
@@ -218,7 +253,7 @@ static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01World *w)
         for (cell = 0; cell < R01_TILES_PER_SCREEN; cell++) {
             prg[data_off++] = (s->attrs[cell] & R01_ATTR_SOLID) ? 1u : 0u;
         }
-        if (PLAY_OFF + PLAY_COLL_DIR + (size_t)(di + 1) * 4u > R01_PLAY_COLLISION_OFF) {
+        if (PLAY_OFF + PLAY_COLL_DIR + (size_t)(di + 1) * 4u > PLAY_OFF + PLAY_INST_COUNT) {
             break;
         }
         ent = prg + PLAY_OFF + PLAY_COLL_DIR + (size_t)di * 4u;
@@ -290,6 +325,7 @@ void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01World *w, const R0
 
     install_collision_code(prg);
     fill_collision_tables(prg, w);
+    fill_instance_table(prg, w);
 
     prg[R01P_OFF] = 'R';
     prg[R01P_OFF + 1] = '0';

@@ -37,7 +37,7 @@ TEST_MAIN() {
     EXPECT(prg[0] == 0x78, "SEI at reset");
     EXPECT(prg[0x00F0] == 'R' && prg[0x00F1] == '0' && prg[0x00F2] == '1' && prg[0x00F3] == 'P',
            "R01P marker");
-    EXPECT(prg[0x00F4] == 2, "R01P collision ver");
+    EXPECT(prg[0x00F4] == 3, "R01P instance-table ver");
 
     /* Play table lives at PRG+$0100 (CPU $8100). */
     EXPECT(prg[0x0100] != 0xEA || prg[0x0108] != 0xEA, "play table region written");

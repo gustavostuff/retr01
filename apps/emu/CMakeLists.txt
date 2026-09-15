@@ -59,17 +59,17 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 
   enable_testing()
 
-  # Cart-backed tests require argv cart path; skip when no fixture present.
-  set(R01_TEST_CART "${R01_OUTPUT_DIR}/test.retr01")
-  set(_r01e_cart_tests test_cart test_boot test_play test_cpu test_io)
-  foreach(_t ${_r01e_cart_tests})
+  # Self-contained unit tests (in-memory stub cart; no ROM / project fixture).
+  foreach(_t test_cart test_cpu test_io)
+    add_executable(${_t} tests/${_t}.c)
+    target_include_directories(${_t} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+    target_link_libraries(${_t} PRIVATE retr01_emu_core)
+    add_test(NAME ${_t} COMMAND ${_t})
+  endforeach()
+
+  # Optional integration binaries (need a real .retr01 on argv). Not part of ctest.
+  foreach(_t test_boot test_play)
     add_executable(${_t} tests/${_t}.c)
     target_link_libraries(${_t} PRIVATE retr01_emu_core)
-    if(EXISTS "${R01_TEST_CART}")
-      add_test(NAME ${_t} COMMAND ${_t} ${R01_TEST_CART})
-    else()
-      add_test(NAME ${_t} COMMAND ${_t})
-      set_tests_properties(${_t} PROPERTIES SKIP_RETURN_CODE 77)
-    endif()
   endforeach()
 endif()

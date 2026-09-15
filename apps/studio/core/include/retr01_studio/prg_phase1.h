@@ -20,6 +20,11 @@ typedef struct R01PrgCartLayout {
 /* play_pos_ok @ CPU $8500 (PRG+$0500). Solid shadow dir @ $8122. */
 #define R01_PLAY_COLLISION_CPU 0x8500u
 
+/* Entity placements in PRG (not cart world blob). CPU $81C0 / PRG+$01C0. */
+#define R01_PRG_PLAY_INST_COUNT_OFF 0x01C0u
+#define R01_PRG_PLAY_INST_TABLE_OFF 0x01C1u
+#define R01_PRG_PLAY_SPAWN_CELL_OFF 0x0120u
+
 /*
  * Phase 1 PRG: reset init, palette + start-screen MAP stream ($7F93->$7F12),
  * then VBlank pad poll. Play table at $8100. Main loop PC stored at PRG+$7FFA.

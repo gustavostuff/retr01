@@ -1,30 +1,25 @@
 #include "retr01_emu/cart.h"
+#include "stub_cart.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-
 
 static int fail(const char *msg) {
     fprintf(stderr, "FAIL %s\n", msg);
     return 1;
 }
 
-int main(int argc, char **argv) {
-    const char *path;
-    if (argc < 2 || !argv[1] || !argv[1][0]) {
-        fprintf(stderr, "skip: provide cart path argv\n");
-        return 77;
-    }
-    path = argv[1];
+int main(void) {
     R01eCart cart;
-    R01eWorldView wv;
     char err[256];
     const uint8_t *prg;
-    const uint8_t *other;
     uint8_t bad[64];
     R01eCart junk;
+    uint8_t *stub;
+    size_t stub_len = (size_t)R01E_STUB_CART_LEN;
 
-    /* --- reject bad format --- */
+    /* --- reject bad format (no external ROM) --- */
     memset(bad, 0, sizeof(bad));
     memcpy(bad, "retr01", 6);
     bad[6] = 1; /* legacy format_ver */
@@ -45,10 +40,21 @@ int main(int argc, char **argv) {
         return fail("accepted bad magic");
     }
 
-    if (r01e_cart_load_path(&cart, path, err, sizeof(err)) != 0) {
-        fprintf(stderr, "FAIL load: %s\n", err);
+    stub = (uint8_t *)malloc(stub_len);
+    if (!stub) {
+        return fail("oom stub");
+    }
+    if (r01e_test_stub_cart(stub, stub_len) != 0) {
+        free(stub);
+        return fail("build stub");
+    }
+    if (r01e_cart_load_mem(&cart, stub, stub_len, err, sizeof(err)) != 0) {
+        fprintf(stderr, "FAIL load stub: %s\n", err);
+        free(stub);
         return 1;
     }
+    free(stub);
+
     if (cart.format_ver != R01E_CART_FORMAT_VER) {
         r01e_cart_free(&cart);
         return fail("format_ver");
@@ -67,26 +73,8 @@ int main(int argc, char **argv) {
         r01e_cart_free(&cart);
         return 1;
     }
-    if (r01e_cart_world(&cart, 0, &wv) != 0 || !wv.present) {
-        r01e_cart_free(&cart);
-        return fail("world0");
-    }
 
-    other = r01e_cart_other_payload(&cart, R01E_CART_OTHER_TITLE);
-    (void)other;
-    {
-        uint8_t decoded[R01E_SCREEN_PAYLOAD];
-        (void)r01e_cart_other_decode(&cart, R01E_CART_OTHER_TITLE, decoded);
-    }
-
-    /* Collision helpers are callable on packed cart. */
-    (void)r01e_cart_solid_at(&cart, 0, wv.start_col * R01E_SCREEN_PX_W + 4,
-                             wv.start_row * R01E_SCREEN_PX_H + 4);
-    (void)r01e_cart_player_aabb_ok(&cart, 0, wv.start_col * R01E_SCREEN_PX_W + 60,
-                                   wv.start_row * R01E_SCREEN_PX_H + 56);
-
-    printf("ok cart %zu B worlds=%u prg=%u screens=%u other=%u\n", cart.len, (unsigned)cart.world_count,
-           (unsigned)cart.len_prg, (unsigned)wv.screen_count, (unsigned)cart.len_other);
+    printf("ok cart stub %zu B prg=%u\n", cart.len, (unsigned)cart.len_prg);
     r01e_cart_free(&cart);
     return 0;
 }

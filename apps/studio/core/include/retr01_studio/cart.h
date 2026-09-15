@@ -3,11 +3,11 @@
 
 #include "retr01_studio/types.h"
 
-/* Phase 3D: entity tables in world header reserved region (relative to world base). */
+/* Phase 3D: entity *type* catalog in world header; placements live in PRG. */
 #define R01_CART_WHDR_TYPE_COUNT 17
-#define R01_CART_WHDR_INST_COUNT 18
+#define R01_CART_WHDR_INST_COUNT 18 /* always 0; placements are PRG-side */
 #define R01_CART_WHDR_OFF_TYPES 19
-#define R01_CART_WHDR_OFF_INSTS 22
+#define R01_CART_WHDR_OFF_INSTS 22 /* points at end of types (PA blob start) */
 /* Play player: type index, or 0xFF = CHR stub. Hitbox snapshot from that type's state 0. */
 #define R01_CART_WHDR_FLAGS 7
 #define R01_CART_WHDR_FLAG_PLAYER_ANIM 0x01u

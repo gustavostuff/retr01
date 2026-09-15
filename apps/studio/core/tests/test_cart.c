@@ -11,10 +11,12 @@
 #include <string.h>
 
 #define CART_HDR_SIZE 16u
-#define CART_PTR_SIZE 36u
+#define CART_PTR_SIZE R01_CART_PTR_TABLE_BYTES
 #define CART_PAL_PLANE_BYTES 128u
 #define CART_PRG_OFF (CART_HDR_SIZE + CART_PTR_SIZE + 2u * CART_PAL_PLANE_BYTES)
 #define PRG_PLAY_SPAWN_CELL 0x0120u
+#define PRG_PLAY_INST_COUNT 0x01C0u
+#define PRG_PLAY_INST_TABLE 0x01C1u
 #define WORLD_SLOT_SIZE 8u
 #define WORLD_HDR_SIZE 32u
 
@@ -140,7 +142,7 @@ TEST_MAIN() {
             {
                 uint8_t fmt = 0;
                 EXPECT(fread(&fmt, 1, 1, f) == 1, "read format_ver");
-                EXPECT(fmt == R01_CART_FORMAT_VER, "cart format_ver 2");
+                EXPECT(fmt == R01_CART_FORMAT_VER, "cart format_ver 3");
             }
             EXPECT(fseek(f, prg_off + (long)PRG_PLAY_SPAWN_CELL, SEEK_SET) == 0, "seek prg spawn");
             EXPECT(fread(prg_spawn, 1, 1, f) == 1, "read prg spawn");
@@ -152,10 +154,10 @@ TEST_MAIN() {
             img = (uint8_t *)malloc((size_t)flen);
             EXPECT(img != NULL, "cart buf");
             if (img) {
-                uint8_t ptrs[36];
+                uint8_t ptrs[CART_PTR_SIZE];
                 uint8_t slot[8];
                 uint8_t hdr[WORLD_HDR_SIZE];
-                uint32_t off_wtable, world_base, off_chr, off_types, off_insts;
+                uint32_t off_prg, off_wtable, world_base, off_chr, off_types, off_insts;
                 uint8_t type_n, inst_n;
                 uint8_t trec[R01_CART_ENTITY_TYPE_SIZE];
                 uint8_t irec[R01_CART_INSTANCE_SIZE];
@@ -163,13 +165,13 @@ TEST_MAIN() {
 
                 EXPECT(fseek(f, 0, SEEK_SET) == 0, "rewind");
                 EXPECT(fread(img, 1, (size_t)flen, f) == (size_t)flen, "read cart");
-                memcpy(ptrs, img + CART_HDR_SIZE, 36);
+                memcpy(ptrs, img + CART_HDR_SIZE, CART_PTR_SIZE);
+                off_prg = rd_u24(ptrs + 0);
                 off_wtable = rd_u24(ptrs + 18);
+                EXPECT(off_prg == CART_PRG_OFF, "off_prg");
                 EXPECT(rd_u24(ptrs + 3) == R01_PRG_BYTES, "len_prg 32KB");
                 EXPECT(rd_u24(ptrs + 24) == CART_PRG_OFF + R01_PRG_BYTES, "off_other");
                 EXPECT(rd_u24(ptrs + 27) > 0, "len_other");
-                EXPECT(rd_u24(ptrs + 30) == 0, "credits ptr reserved 0");
-                EXPECT(rd_u24(ptrs + 33) == 0, "credits len reserved 0");
                 EXPECT(img[rd_u24(ptrs + 24)] == 3, "other_count title+inter+credits");
                 EXPECT(img[rd_u24(ptrs + 24) + 4u] == 0, "other dir0 id title");
                 {
@@ -196,7 +198,7 @@ TEST_MAIN() {
                 off_types = rd_u24(hdr + R01_CART_WHDR_OFF_TYPES);
                 off_insts = rd_u24(hdr + R01_CART_WHDR_OFF_INSTS);
                 EXPECT(type_n == 2, "type count");
-                EXPECT(inst_n == 2, "inst count");
+                EXPECT(inst_n == 0, "inst count zero in cart (placements in PRG)");
                 EXPECT(hdr[R01_CART_WHDR_PLAYER_ENTITY] == 0, "player entity packed");
                 EXPECT(hdr[R01_CART_WHDR_PLAYER_HIT_X] == 1 && hdr[R01_CART_WHDR_PLAYER_HIT_Y] == 2,
                        "player hitbox xy");
@@ -231,11 +233,18 @@ TEST_MAIN() {
                 EXPECT(trec[2] == 1, "legacy part count");
                 EXPECT(trec[4] == 3, "legacy tile remapped off player stub");
 
-                memcpy(irec, img + world_base + off_insts, R01_CART_INSTANCE_SIZE);
-                EXPECT(irec[0] == 0, "inst type");
-                EXPECT(irec[1] == 1, "inst flip_h flag");
-                EXPECT(rd_u16(irec + 2) == 40, "inst x");
-                EXPECT(rd_u16(irec + 4) == 50, "inst y");
+                /* OFF_INSTS marks end of types / start of optional PA blob. */
+                EXPECT(off_insts == off_types + (uint32_t)type_n * R01_CART_ENTITY_TYPE_SIZE,
+                       "off_insts at end of types");
+                {
+                    uint8_t prg_inst_n = img[off_prg + PRG_PLAY_INST_COUNT];
+                    EXPECT(prg_inst_n == 2, "prg inst count");
+                    memcpy(irec, img + off_prg + PRG_PLAY_INST_TABLE, R01_CART_INSTANCE_SIZE);
+                    EXPECT(irec[0] == 0, "prg inst type");
+                    EXPECT(irec[1] == 1, "prg inst flip_h flag");
+                    EXPECT(rd_u16(irec + 2) == 40, "prg inst x");
+                    EXPECT(rd_u16(irec + 4) == 50, "prg inst y");
+                }
                 free(img);
             }
             fclose(f);

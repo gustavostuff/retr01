@@ -41,11 +41,11 @@ typedef struct R01eWorldView {
     uint32_t off_chr; /* relative to world base */
     uint32_t off_screen_dir;
     uint32_t off_bg0_dir; /* 12 B/entry like screen dir; 0 if none */
-    /* Phase 3D entity tables (relative to world base; 0 count = none). */
+    /* Phase 3D entity type catalog (relative to world base). Placements in PRG. */
     uint8_t entity_type_count;
-    uint8_t entity_inst_count;
+    uint8_t entity_inst_count; /* always 0 in cart; PRG holds placements */
     uint32_t off_entity_types;
-    uint32_t off_entity_insts;
+    uint32_t off_entity_insts; /* end of types / start of optional PA blob */
     /* Play player type index, or R01E_CART_PLAYER_ENTITY_NONE. Hitbox from state 0. */
     uint8_t player_entity;
     uint8_t player_hit_x;

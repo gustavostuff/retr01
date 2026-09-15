@@ -46,6 +46,7 @@ typedef struct R01eMachine {
 } R01eMachine;
 
 int r01e_machine_init(R01eMachine *m, const char *cart_path, char *err, size_t err_cap);
+int r01e_machine_init_mem(R01eMachine *m, const uint8_t *img, size_t len, char *err, size_t err_cap);
 void r01e_machine_shutdown(R01eMachine *m);
 void r01e_machine_reset(R01eMachine *m);
 

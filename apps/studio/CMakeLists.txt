@@ -79,16 +79,11 @@ r01_studio_add_test(warps)
 r01_studio_add_test(game_runtime)
 r01_studio_add_test(player_anim)
 
-# Optional fixture test: skip when golden files are absent.
-set(R01_TEST_CART "${R01_OUTPUT_DIR}/test.retr01")
-set(R01_TEST_PROJECT "${R01_OUTPUT_DIR}/test.r01proj")
-if(EXISTS "${R01_TEST_PROJECT}" AND EXISTS "${R01_TEST_CART}")
-  add_executable(test_fixture core/tests/test_fixture.c ${STUDIO_TEST_HARNESS})
-  target_include_directories(test_fixture PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/core/tests)
-  target_link_libraries(test_fixture PRIVATE retr01_studio_core)
-  add_test(NAME fixture COMMAND test_fixture ${R01_TEST_PROJECT} ${R01_TEST_CART})
-  set_tests_properties(fixture PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-endif()
+# Optional golden-file integration binary (not registered with ctest).
+# Run manually: ./test_fixture path/to/test.r01proj path/to/test.retr01
+add_executable(test_fixture core/tests/test_fixture.c ${STUDIO_TEST_HARNESS})
+target_include_directories(test_fixture PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/core/tests)
+target_link_libraries(test_fixture PRIVATE retr01_studio_core)
 
 add_library(retr01_studio_app
   app/src/shell/app_shell.c

@@ -811,10 +811,11 @@ static int write_asm_tree(const char *asm_dir, const R01World *w, char *err_buf,
     if (write_text(path,
                    "PLAY_BASE       = $8100\n"
                    "PLAY_PRESENT    = $8100\n"
-                   "PLAY_SPAWN_C    = $8108\n"
-                   "PLAY_SPAWN_R    = $8109\n"
+                   "PLAY_SPAWN_CELL = $8120\n"
                    "PLAY_COLL_COUNT = $8121\n"
                    "PLAY_COLL_DIR   = $8122\n"
+                   "PLAY_INST_COUNT = $81C0\n"
+                   "PLAY_INST_TABLE = $81C1\n"
                    "R01P_MARKER     = $80F0\n",
                    err_buf, err_cap) != 0) {
         return -1;

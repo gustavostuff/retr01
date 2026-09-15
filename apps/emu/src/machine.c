@@ -49,6 +49,23 @@ int r01e_machine_init(R01eMachine *m, const char *cart_path, char *err, size_t e
     return 0;
 }
 
+int r01e_machine_init_mem(R01eMachine *m, const uint8_t *img, size_t len, char *err, size_t err_cap) {
+    if (!m || !img) {
+        if (err && err_cap) {
+            snprintf(err, err_cap, "bad args");
+        }
+        return -1;
+    }
+    memset(m, 0, sizeof(*m));
+    if (r01e_cart_load_mem(&m->cart, img, len, err, err_cap) != 0) {
+        return -1;
+    }
+    m->dot_num = R01E_DOT_HZ;
+    m->dot_den = R01E_CPU_HZ;
+    r01e_machine_reset(m);
+    return 0;
+}
+
 void r01e_machine_shutdown(R01eMachine *m) {
     if (!m) {
         return;

@@ -1,28 +1,35 @@
 #include "retr01_emu/machine.h"
+#include "stub_cart.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-
 
 static int fail(const char *msg) {
     fprintf(stderr, "FAIL %s\n", msg);
     return 1;
 }
 
-int main(int argc, char **argv) {
-    const char *path;
-    if (argc < 2 || !argv[1] || !argv[1][0]) {
-        fprintf(stderr, "skip: provide cart path argv\n");
-        return 77;
-    }
-    path = argv[1];
+int main(void) {
     R01eMachine m;
     char err[256];
+    uint8_t *stub;
+    size_t stub_len = (size_t)R01E_STUB_CART_LEN;
 
-    if (r01e_machine_init(&m, path, err, sizeof(err)) != 0) {
+    stub = (uint8_t *)malloc(stub_len);
+    if (!stub) {
+        return fail("oom stub");
+    }
+    if (r01e_test_stub_cart(stub, stub_len) != 0) {
+        free(stub);
+        return fail("build stub");
+    }
+    if (r01e_machine_init_mem(&m, stub, stub_len, err, sizeof(err)) != 0) {
         fprintf(stderr, "FAIL init: %s\n", err);
+        free(stub);
         return 1;
     }
+    free(stub);
 
     /* Tiny program in system RAM. */
     m.ram[0x0000] = 0xA9; /* LDA #$42 */

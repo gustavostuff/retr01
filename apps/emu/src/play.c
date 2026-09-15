@@ -8,7 +8,12 @@
 
 #include <string.h>
 
-/* Emu Host Play SoT (docs). Keep algorithms aligned with app/sim/src/play.c. */
+/* Emu Host Play SoT (docs). Keep algorithms aligned with Studio play.c. */
+
+/* Phase-1 PRG play table (must match apps/studio/core/src/prg_phase1.c). */
+#define R01E_PRG_PLAY_SPAWN_CELL_OFF 0x0120u
+#define R01E_PRG_PLAY_INST_COUNT_OFF 0x01C0u
+#define R01E_PRG_PLAY_INST_TABLE_OFF 0x01C1u
 
 static R01ePlaySfxFn s_sfx_on_x;
 static R01ePlaySfxFn s_sfx_on_y;
@@ -135,25 +140,34 @@ static void place_player_xy(R01ePlay *pl, int wx, int wy) {
     snap_camera(pl);
 }
 
-/* First cart instance of the marked player type (matches Studio placement). */
+/* First PRG instance of the marked player type (placements are not in the cart blob). */
 static int player_instance_spawn(R01eMachine *m, int *out_x, int *out_y) {
     R01eWorldView wv;
+    const uint8_t *prg;
     const uint8_t *insts;
+    int inst_n;
     int ii;
 
     if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) != 0) {
         return 0;
     }
-    if (wv.player_entity == R01E_CART_PLAYER_ENTITY_NONE || wv.player_entity >= wv.entity_type_count ||
-        wv.entity_inst_count < 1) {
+    if (wv.player_entity == R01E_CART_PLAYER_ENTITY_NONE || wv.player_entity >= wv.entity_type_count) {
         return 0;
     }
-    insts = r01e_cart_ptr(&m->cart, wv.base + wv.off_entity_insts,
-                          (size_t)wv.entity_inst_count * R01E_CART_INSTANCE_SIZE);
-    if (!insts) {
+    prg = r01e_cart_prg(&m->cart);
+    if (!prg || m->cart.len_prg < R01E_PRG_PLAY_INST_TABLE_OFF + R01E_CART_INSTANCE_SIZE ||
+        !cart_is_phase1_play(&m->cart)) {
         return 0;
     }
-    for (ii = 0; ii < (int)wv.entity_inst_count; ii++) {
+    inst_n = (int)prg[R01E_PRG_PLAY_INST_COUNT_OFF];
+    if (inst_n < 1) {
+        return 0;
+    }
+    if ((uint32_t)R01E_PRG_PLAY_INST_TABLE_OFF + (uint32_t)inst_n * R01E_CART_INSTANCE_SIZE > m->cart.len_prg) {
+        return 0;
+    }
+    insts = prg + R01E_PRG_PLAY_INST_TABLE_OFF;
+    for (ii = 0; ii < inst_n; ii++) {
         const uint8_t *irec = insts + (size_t)ii * R01E_CART_INSTANCE_SIZE;
         if (irec[0] != wv.player_entity) {
             continue;
@@ -173,9 +187,10 @@ static int spawn_screen(R01eMachine *m, int *out_col, int *out_row) {
     const uint8_t *prg = r01e_cart_prg(&m->cart);
     int sc, sr;
 
-    if (prg && m->cart.len_prg > 0x0109u && cart_is_phase1_play(&m->cart)) {
-        sc = (int)prg[0x0108];
-        sr = (int)prg[0x0109];
+    if (prg && m->cart.len_prg > R01E_PRG_PLAY_SPAWN_CELL_OFF && cart_is_phase1_play(&m->cart)) {
+        uint8_t cell = prg[R01E_PRG_PLAY_SPAWN_CELL_OFF];
+        sc = (int)(cell & 0x0fu);
+        sr = (int)((cell >> 4) & 0x0fu);
         if (r01e_cart_has_screen(&m->cart, (int)m->io.world, sc, sr)) {
             if (out_col) {
                 *out_col = sc;
@@ -357,7 +372,9 @@ static void write_oam(R01eMachine *m) {
     R01ePlay *pl = &m->play;
     R01eWorldView wv;
     const uint8_t *types = NULL;
+    const uint8_t *prg = NULL;
     const uint8_t *insts = NULL;
+    int inst_n = 0;
     int slot = 0;
     int ii;
     int player_type = -1;
@@ -387,15 +404,22 @@ static void write_oam(R01eMachine *m) {
         }
     }
 
-    if (!types || wv.entity_inst_count < 1) {
+    prg = r01e_cart_prg(&m->cart);
+    if (types && prg && cart_is_phase1_play(&m->cart) &&
+        m->cart.len_prg >= R01E_PRG_PLAY_INST_TABLE_OFF + R01E_CART_INSTANCE_SIZE) {
+        inst_n = (int)prg[R01E_PRG_PLAY_INST_COUNT_OFF];
+        if (inst_n > 0 &&
+            (uint32_t)R01E_PRG_PLAY_INST_TABLE_OFF + (uint32_t)inst_n * R01E_CART_INSTANCE_SIZE <=
+                m->cart.len_prg) {
+            insts = prg + R01E_PRG_PLAY_INST_TABLE_OFF;
+        } else {
+            inst_n = 0;
+        }
+    }
+    if (!types || !insts || inst_n < 1) {
         return;
     }
-    insts = r01e_cart_ptr(&m->cart, wv.base + wv.off_entity_insts,
-                          (size_t)wv.entity_inst_count * R01E_CART_INSTANCE_SIZE);
-    if (!insts) {
-        return;
-    }
-    for (ii = 0; ii < (int)wv.entity_inst_count && slot < R01E_OAM_ENTRIES; ii++) {
+    for (ii = 0; ii < inst_n && slot < R01E_OAM_ENTRIES; ii++) {
         const uint8_t *irec = insts + (size_t)ii * R01E_CART_INSTANCE_SIZE;
         uint8_t type_id = irec[0];
         int world_x = (int)((uint16_t)irec[2] | ((uint16_t)irec[3] << 8));

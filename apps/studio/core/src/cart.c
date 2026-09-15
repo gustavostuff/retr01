@@ -592,14 +592,8 @@ static int build_world_blob(Buf *blob, const R01World *w, const char *custom_log
     if (type_n > R01_MAX_ENTITY_TYPES) {
         type_n = R01_MAX_ENTITY_TYPES;
     }
-    inst_n = w->instance_count;
-    if (inst_n > 255) {
-        inst_n = 255;
-    }
-    if (inst_n > R01_MAX_ENTITY_INSTANCES) {
-        inst_n = R01_MAX_ENTITY_INSTANCES;
-    }
-
+    /* Placements ship in PRG ($81C0+), not the cart world blob (docs). */
+    inst_n = 0;
     off_chr = WORLD_HDR_SIZE;
     off_sdir = off_chr + (size_t)R01_BG_BANKS * R01_CHR_BANK_BYTES + (size_t)R01_SPR_BANKS * R01_CHR_BANK_BYTES;
     off_spay = off_sdir + (size_t)present_n * SCREEN_DIR_ENT;
@@ -802,21 +796,7 @@ static int build_world_blob(Buf *blob, const R01World *w, const char *custom_log
             }
         }
     }
-    {
-        int ii;
-        for (ii = 0; ii < inst_n; ii++) {
-            uint8_t rec[R01_CART_INSTANCE_SIZE];
-            const R01EntityInstance *inst = &w->instances[ii];
-            memset(rec, 0, sizeof(rec));
-            rec[0] = (uint8_t)inst->type_id;
-            rec[1] = (uint8_t)((inst->flip_h ? 1u : 0u) | (inst->flip_v ? 2u : 0u));
-            put_u16(rec + 2, (uint16_t)inst->world_x);
-            put_u16(rec + 4, (uint16_t)inst->world_y);
-            if (buf_append(blob, rec, sizeof(rec)) != 0) {
-                return -1;
-            }
-        }
-    }
+    /* Instance table omitted from cart; see r01_prg_fill_phase1 PLAY_INST_*. */
     {
         int pe = r01_world_player_entity(w);
         if (pe >= 0 && pe < type_n && append_player_anim_blob(blob, w, pe, remap_b0_tile1) == 0) {
