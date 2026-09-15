@@ -70,7 +70,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 return 1;
             }
         }
-        ui->sound.scroll_x -= e->wheel.y; /* down (y<0) → scroll right */
+        ui->sound.scroll_x -= e->wheel.y; /* down (y<0) -> scroll right */
         ui_bgm_clamp_scroll(ui, lo.visible_ticks);
         return 1;
     }

@@ -299,7 +299,7 @@ void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s) {
     }
     /*
      * BG1 plane: composite BG0 under BG1 color 0 (emu/hardware preview).
-     * BG0 plane: author BG0 alone — do not overlay BG1 or it looks like BG0
+     * BG0 plane: author BG0 alone - do not overlay BG1 or it looks like BG0
      * is drawing BG1 tiles wherever BG1 is opaque.
      */
     if (plane_bg0) {

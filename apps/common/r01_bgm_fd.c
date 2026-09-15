@@ -157,7 +157,7 @@ int r01_bgm_fd_encode_cells(const char cells[][R01_BGM_FD_CH][R01_BGM_FD_TOKEN],
      * Tracker FE n: this NMI + n countdown NMIs = n+1 wait frames after the FD,
      * so FE (frames-2) + FD frame = `frames` total when frames >= 2.
      * Run-length merge identical rows so long regions (e.g. Noise 80 x3, A4 x3)
-     * are one FD + one long hold — WAVE/audio keep the section for full duration.
+     * are one FD + one long hold - WAVE/audio keep the section for full duration.
      */
     for (step = 0; step < steps;) {
         uint8_t mask = 0;

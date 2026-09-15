@@ -36,7 +36,7 @@ uint16_t r01_apu_fd_note_period(uint8_t note) {
     int p;
 
     if (letter > 0 && letter < 0x0A) {
-        return 32u; /* reserved control — keep a short tick */
+        return 32u; /* reserved control - keep a short tick */
     }
     st = semitone[letter];
     if (flat) {

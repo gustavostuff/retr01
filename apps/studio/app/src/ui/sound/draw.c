@@ -13,11 +13,11 @@ static const char *const k_ch_role[UI_SOUND_BGM_CH] = {
 
 /* Distinct strip colors per channel (R,G,B). */
 static const Uint8 k_ch_col[UI_SOUND_BGM_CH][3] = {
-    {70, 140, 220},  /* Pulse1 — blue */
-    {90, 190, 120},  /* Pulse2 — green */
-    {220, 160, 70},  /* Tri — amber */
-    {180, 100, 200}, /* Noise — purple */
-    {200, 90, 90},   /* DPCM — red */
+    {70, 140, 220},  /* Pulse1 - blue */
+    {90, 190, 120},  /* Pulse2 - green */
+    {220, 160, 70},  /* Tri - amber */
+    {180, 100, 200}, /* Noise - purple */
+    {200, 90, 90},   /* DPCM - red */
 };
 
 void draw_sound_editor(UiState *ui, SDL_Renderer *r) {

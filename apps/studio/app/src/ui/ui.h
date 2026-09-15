@@ -468,7 +468,7 @@ typedef struct UiState {
     int metatiles_scroll;
     int metasprites_scroll;
     int entities_scroll;
-    int focus; /* UI_FOCUS_* — which control owns wheel / key routing */
+    int focus; /* UI_FOCUS_* - which control owns wheel / key routing */
 } UiState;
 
 static inline int ui_logic_scale(const UiState *ui) {

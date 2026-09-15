@@ -77,7 +77,7 @@ static int stream_tick(R01ApuStreamSm *s, uint8_t *regs, uint8_t family_mask) {
     if (op == R01_APU_CTRL_FA) {
         s->loop = 1u;
         s->pc = 0;
-        /* Rewind without burning an NMI — keep long regions tight at loop points. */
+        /* Rewind without burning an NMI - keep long regions tight at loop points. */
         if (s->len > 0u && s->rom[0] != R01_APU_CTRL_FA) {
             return stream_tick(s, regs, family_mask);
         }

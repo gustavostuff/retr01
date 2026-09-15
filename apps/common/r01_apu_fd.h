@@ -7,7 +7,7 @@
 
 /*
  * Thin cart hex FD bridge toward the 8x4 $7F40 window (docs/sound.md).
- * Encode/apply only — not the full 6502 NMI dual-stream tracker.
+ * Encode/apply only - not the full 6502 NMI dual-stream tracker.
  *
  * Frame: FD, mask (bit0=ch1..bit7=ch8), then one payload byte per set bit.
  * Payload:

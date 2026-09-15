@@ -6,15 +6,15 @@
 #include <string.h>
 
 #define R01_BGM_AUDIO_RATE 44100
-/* Keep in sync with R01_BGM_FD_TEMPO_BPM (r01_bgm_fd.h) — softsynth grid tempo. */
+/* Keep in sync with R01_BGM_FD_TEMPO_BPM (r01_bgm_fd.h) - softsynth grid tempo. */
 #define R01_BGM_TEMPO_BPM 140
-/* Small callback buffer: 256 @ 44.1kHz ≈ 5.8ms (1024 was ~23ms and felt laggy). */
+/* Small callback buffer: 256 @ 44.1kHz ~= 5.8ms (1024 was ~23ms and felt laggy). */
 #define R01_BGM_AUDIO_SAMPLES 256
 /* Master host level (full softsynth / 4). */
 #define R01_HOST_MIX_GAIN 1.0f
 /* Per-track relative volume vs master. Hardcoded for all tracks until UI exists. */
 #define R01_BGM_TRACK_VOL_DEFAULT 0.5f
-/* Peak matches ~pulse voice in r01_nes_synth so SFX ≈ BGM before master gain. */
+/* Peak matches ~pulse voice in r01_nes_synth so SFX ~= BGM before master gain. */
 #define R01_SFX_AMP 2000
 
 typedef struct R01SfxVoice {
@@ -214,7 +214,7 @@ int r01_bgm_host_init(void) {
     want.samples = R01_BGM_AUDIO_SAMPLES;
     want.callback = bgm_audio_cb;
     want.userdata = &g_bgm;
-    /* Keep requested buffer size — ALLOW_SAMPLES_CHANGE often inflates latency. */
+    /* Keep requested buffer size - ALLOW_SAMPLES_CHANGE often inflates latency. */
     g_bgm.dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
     if (!g_bgm.dev) {
         fprintf(stderr, "SDL_OpenAudioDevice: %s\n", SDL_GetError());

@@ -421,7 +421,7 @@ static int write_custom_logic(const char *c_dir, char *err_buf, size_t err_cap) 
         return 0;
     }
     return write_text(path,
-                      "/* User game logic — created once by Studio export; never overwritten. */\n"
+                      "/* User game logic - created once by Studio export; never overwritten. */\n"
                       "#include \"include/r01_engine.h\"\n\n"
                       "static void on_warp_x(R01GameCtx *ctx) {\n"
                       "    r01_player_warp(ctx, 0, 0);\n"
@@ -832,7 +832,7 @@ static int write_asm_tree(const char *asm_dir, const R01World *w, char *err_buf,
 
     snprintf(path, sizeof(path), "%s/main.s", asm_dir);
     if (write_text(path,
-                   "; Retr01 game PRG entry — include chain for ca65 (Phase 5C).\n"
+                   "; Retr01 game PRG entry - include chain for ca65 (Phase 5C).\n"
                    ".setcpu \"65c02\"\n"
                    ".include \"include/r01_hw.inc\"\n"
                    ".include \"include/r01_play.inc\"\n"
@@ -882,7 +882,7 @@ static int write_asm_tree(const char *asm_dir, const R01World *w, char *err_buf,
 
     snprintf(path, sizeof(path), "%s/boot/boot_stream.s", asm_dir);
     if (write_text(path,
-                   "; Palette + MAP boot stream — bytes patched by Studio packer (prg_phase1.c).\n"
+                   "; Palette + MAP boot stream - bytes patched by Studio packer (prg_phase1.c).\n"
                    "boot_stream:\n        jmp main\n",
                    err_buf, err_cap) != 0) {
         return -1;

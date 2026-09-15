@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 /* Compact NES 2A03-style softsynth (pulse x2, triangle, noise, DPCM stub).
- * Public-domain style first-party code aligned with Retr01 sim APU voices —
- * not a full cycle-accurate APU. */
+ * Public-domain style first-party code aligned with Retr01 sim APU voices.
+ * Not a full cycle-accurate APU. */
 
 #define R01_NES_CH_N 5
 

@@ -12,7 +12,7 @@ void ui_bgm_midi_to_tok(int midi, char tok[5]);
 int ui_bgm_tok_to_midi(const char *tok);
 void ui_bgm_default_tok(int ch, char tok[5], int *out_midi);
 
-/* Nudge region pitch: dir +1/-1; shift=1 → half-step, else whole step.
+/* Nudge region pitch: dir +1/-1; shift=1 -> half-step, else whole step.
  * Noise cycles period; DPCM cycles FD/FE. */
 void ui_bgm_nudge_region(UiBgmRegion *rg, int ch, int dir, int half_step);
 
