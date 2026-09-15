@@ -63,19 +63,21 @@
 #define R01_US_TO_CPU_CYCLES(us) ((uint32_t)(us) * (R01_CPU_HZ / 1000000u))
 
 /*
- * CPU_RDY holds after $7F24 / $7F72 (bring-up cycle stubs until real ACK/NVM).
- * Cart write ~tWC 5 ms (24LC64-class). Machine EEERWR typ ~10 ms (AVR128DB28).
+ * CPU_RDY holds after $7F24 / $7F72 (soft stubs until real ACK/NVM).
+ * Docs (ic-comms-risks, memory): short pulses for mailbox / page handoff, then
+ * release so PRG can run a spinner. Full 24C64 tWC / AVR EEERWR spans many
+ * VBlanks in firmware -- do not model that as one long RDY.
  * Reads are short I2C / NVM access stubs.
  */
-#define R01_RDY_CARTEE_WRITE_MS 5u
-#define R01_RDY_CARTEE_WRITE_HOLDS R01_MS_TO_CPU_CYCLES(R01_RDY_CARTEE_WRITE_MS) /* 40000 */
-#define R01_RDY_CARTEE_READ_HOLDS R01_US_TO_CPU_CYCLES(200u)                      /* 1600 */
+#define R01_RDY_CARTEE_WRITE_US 250u
+#define R01_RDY_CARTEE_WRITE_HOLDS R01_US_TO_CPU_CYCLES(R01_RDY_CARTEE_WRITE_US) /* 2000 */
+#define R01_RDY_CARTEE_READ_HOLDS R01_US_TO_CPU_CYCLES(200u)                     /* 1600 */
 
-#define R01_RDY_MEEPROM_WRITE_MS 10u
-#define R01_RDY_MEEPROM_WRITE_HOLDS R01_MS_TO_CPU_CYCLES(R01_RDY_MEEPROM_WRITE_MS) /* 80000 */
+#define R01_RDY_MEEPROM_WRITE_US 250u
+#define R01_RDY_MEEPROM_WRITE_HOLDS R01_US_TO_CPU_CYCLES(R01_RDY_MEEPROM_WRITE_US) /* 2000 */
 #define R01_RDY_MEEPROM_READ_HOLDS R01_US_TO_CPU_CYCLES(50u)                       /* 400 */
 
-/* Legacy alias: cart write (worst common game path). Prefer split holds. */
+/* Legacy alias: cart write handoff. Prefer split holds. */
 #define R01_RDY_EE_HOLDS R01_RDY_CARTEE_WRITE_HOLDS
 
 #endif

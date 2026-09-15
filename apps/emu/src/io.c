@@ -3,6 +3,7 @@
 #include "retr01_emu/cart.h"
 #include "retr01_emu/cpu.h"
 #include "retr01_emu/machine.h"
+#include "retr01_emu/play.h"
 #include "retr01_emu/video.h"
 #include "r01_apu_tracker.h"
 #include "r01_hw_regs.h"
@@ -58,6 +59,61 @@ static uint8_t meeprom_data_access(R01eMachine *m, uint8_t write_val, int is_wri
         return write_val;
     }
     return m->machine_eeprom[addr];
+}
+
+/* Scroll / palette: VBlank, video off, or first CRT frame (boot/catchup). */
+static int scroll_pal_immediate(const R01eMachine *m) {
+    const R01eIo *io = &m->io;
+    uint8_t layers = (uint8_t)(R01E_PPUCTRL_L1_EN | R01E_PPUCTRL_L0_EN | R01E_PPUCTRL_SPR_EN);
+
+    if ((io->ctrl & layers) == 0) {
+        return 1;
+    }
+    if (io->dot_y >= R01E_VISIBLE_H) {
+        return 1;
+    }
+    if (io->frame == 0) {
+        return 1;
+    }
+    return 0;
+}
+
+static void seed_scroll_pal_next(R01eIo *io) {
+    io->scroll_x_next = io->scroll_x;
+    io->scroll_y_next = io->scroll_y;
+    io->bg0_scroll_x_next = io->bg0_scroll_x;
+    io->bg0_scroll_y_next = io->bg0_scroll_y;
+    io->pal_row_next = io->pal_row;
+    io->pal_addr_next = io->pal_addr;
+    memcpy(io->pal_next, io->pal, sizeof(io->pal_next));
+}
+
+static void flush_scroll_pal(R01eMachine *m) {
+    R01eIo *io = &m->io;
+
+    if (!io->scroll_pal_pending) {
+        return;
+    }
+    io->scroll_x = io->scroll_x_next;
+    io->scroll_y = io->scroll_y_next;
+    io->bg0_scroll_x = io->bg0_scroll_x_next;
+    io->bg0_scroll_y = io->bg0_scroll_y_next;
+    if (m->video.bg0_scroll_manual) {
+        m->video.l0_cam_x = io->bg0_scroll_x;
+        m->video.l0_cam_y = io->bg0_scroll_y;
+    }
+    io->pal_row = io->pal_row_next;
+    io->pal_addr = io->pal_addr_next;
+    memcpy(io->pal, io->pal_next, sizeof(io->pal));
+    io->scroll_pal_pending = 0;
+    if (r01e_video_softboot_enabled()) {
+        r01e_video_load_active_pals(m);
+    }
+}
+
+static void latch_pads(R01eIo *io) {
+    io->pad0 = io->pad0_host;
+    io->pad1 = io->pad1_host;
 }
 
 void r01e_io_reset(R01eIo *io) {
@@ -147,16 +203,37 @@ uint8_t r01e_io_read(R01eMachine *m, uint16_t addr) {
 
 void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
     R01eIo *io = &m->io;
+    int apply_now;
 
     switch (addr) {
     case 0x7F00:
         io->ctrl = v;
         break;
     case 0x7F02:
-        io->scroll_x = (uint8_t)(v & 127u);
+        v = (uint8_t)(v & 127u);
+        apply_now = scroll_pal_immediate(m);
+        if (!apply_now && !io->scroll_pal_pending) {
+            seed_scroll_pal_next(io);
+        }
+        io->scroll_x_next = v;
+        if (apply_now) {
+            io->scroll_x = v;
+        } else {
+            io->scroll_pal_pending = 1;
+        }
         break;
     case 0x7F03:
-        io->scroll_y = (uint8_t)(v < 120u ? v : 119u);
+        v = (uint8_t)(v < 120u ? v : 119u);
+        apply_now = scroll_pal_immediate(m);
+        if (!apply_now && !io->scroll_pal_pending) {
+            seed_scroll_pal_next(io);
+        }
+        io->scroll_y_next = v;
+        if (apply_now) {
+            io->scroll_y = v;
+        } else {
+            io->scroll_pal_pending = 1;
+        }
         break;
     case 0x7F04:
         io->raster_y = v;
@@ -165,25 +242,70 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
         io->raster_ctrl = v;
         break;
     case 0x7F06:
-        io->bg0_scroll_x = (uint8_t)(v & 127u);
+        v = (uint8_t)(v & 127u);
+        apply_now = scroll_pal_immediate(m);
+        if (!apply_now && !io->scroll_pal_pending) {
+            seed_scroll_pal_next(io);
+        }
+        io->bg0_scroll_x_next = v;
         m->video.bg0_scroll_manual = 1;
-        m->video.l0_cam_x = io->bg0_scroll_x;
+        if (apply_now) {
+            io->bg0_scroll_x = v;
+            m->video.l0_cam_x = v;
+        } else {
+            io->scroll_pal_pending = 1;
+        }
         break;
     case 0x7F07:
-        io->bg0_scroll_y = (uint8_t)(v < 120u ? v : 119u);
+        v = (uint8_t)(v < 120u ? v : 119u);
+        apply_now = scroll_pal_immediate(m);
+        if (!apply_now && !io->scroll_pal_pending) {
+            seed_scroll_pal_next(io);
+        }
+        io->bg0_scroll_y_next = v;
         m->video.bg0_scroll_manual = 1;
-        m->video.l0_cam_y = io->bg0_scroll_y;
+        if (apply_now) {
+            io->bg0_scroll_y = v;
+            m->video.l0_cam_y = v;
+        } else {
+            io->scroll_pal_pending = 1;
+        }
         break;
     case 0x7F08:
-        io->pal_row = (uint8_t)(v & 7u);
-        io->pal_addr = 0;
-        if (r01e_video_softboot_enabled()) {
-            r01e_video_load_active_pals(m);
+        v = (uint8_t)(v & 7u);
+        apply_now = scroll_pal_immediate(m);
+        if (!apply_now && !io->scroll_pal_pending) {
+            seed_scroll_pal_next(io);
+        }
+        io->pal_row_next = v;
+        io->pal_addr_next = 0;
+        if (apply_now) {
+            io->pal_row = v;
+            io->pal_addr = 0;
+            if (r01e_video_softboot_enabled()) {
+                r01e_video_load_active_pals(m);
+            }
+        } else {
+            io->scroll_pal_pending = 1;
         }
         break;
     case 0x7F09:
-        io->pal[io->pal_addr & 31u] = (uint8_t)(v & 63u);
-        io->pal_addr = (uint8_t)((io->pal_addr + 1) & 31u);
+        v = (uint8_t)(v & 63u);
+        apply_now = scroll_pal_immediate(m);
+        if (!apply_now && !io->scroll_pal_pending) {
+            seed_scroll_pal_next(io);
+        }
+        if (apply_now) {
+            uint8_t a = (uint8_t)(io->pal_addr & 31u);
+            io->pal[a] = v;
+            io->pal_next[a] = v;
+            io->pal_addr = (uint8_t)((a + 1u) & 31u);
+            io->pal_addr_next = io->pal_addr;
+        } else {
+            io->pal_next[io->pal_addr_next & 31u] = v;
+            io->pal_addr_next = (uint8_t)((io->pal_addr_next + 1) & 31u);
+            io->scroll_pal_pending = 1;
+        }
         break;
     case 0x7F10:
         io->vram_addr = (uint16_t)((io->vram_addr & 0xFF00u) | v);
@@ -227,7 +349,7 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
         break;
     case 0x7F60:
     case 0x7F61:
-        break; /* host-driven pads */
+        break; /* host-driven pads via r01e_machine_set_pad */
     case 0x7F70:
         io->meeprom_al = v;
         break;
@@ -277,6 +399,11 @@ void r01e_io_dot(R01eMachine *m) {
     }
 
     if (entered_vblank) {
+        /* Early VBlank: pending scroll/pal, pad latch, Host Play OAM/scroll. */
+        flush_scroll_pal(m);
+        latch_pads(io);
+        r01e_play_tick(m);
+
         io->status |= R01E_PPUSTATUS_VBLANK;
         if (io->ctrl & R01E_PPUCTRL_NMI_EN) {
             m->nmi_pending = 1;

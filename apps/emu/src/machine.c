@@ -197,7 +197,7 @@ int r01e_machine_frame(R01eMachine *m) {
     m->prof_acc_active = 0;
     m->prof_acc_vblank = 0;
     m->prof_acc_idle = 0;
-    r01e_play_tick(m);
+    /* Host Play physics / OAM / scroll publish: early VBlank in r01e_io_dot. */
     if (!m->video.chr_loaded) {
         if (r01e_video_softboot_enabled()) {
             (void)r01e_video_boot_world(m, (int)m->io.world);
@@ -213,10 +213,11 @@ void r01e_machine_set_pad(R01eMachine *m, int player, uint8_t bits) {
     if (!m) {
         return;
     }
+    /* Host stages; CPU / Host Play see latched pads after VBlank enter. */
     if (player == 0) {
-        m->io.pad0 = bits;
+        m->io.pad0_host = bits;
     } else {
-        m->io.pad1 = bits;
+        m->io.pad1_host = bits;
     }
 }
 

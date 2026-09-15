@@ -120,3 +120,4 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-15 | IC comms | Idle-safe pulls, RDY OD, OAM SPI early VBlank, scroll in NMI/VBlank, cart OE/WE rules. See `ic-comms-risks.md`. |
 | 2026-09-15 | Cart save UX | Multi-frame OK. Chunk I2C, short RDY, keep spinner/UI alive. No full-save picture freeze. |
 | 2026-09-15 | Entity cart bytes | Studio packs locked EntityDef + u16 type directory. Retired 20 B snapshot. |
+| 2026-09-15 | Emu soft fences | Scroll/pal pending until VBlank; Host Play OAM/scroll at early VB; pads latch at VB; short EE RDY handoff (250 us). |

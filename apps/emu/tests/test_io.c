@@ -1,4 +1,5 @@
 #include "retr01_emu/cpu.h"
+#include "retr01_emu/io.h"
 #include "retr01_emu/machine.h"
 #include "r01_hw_regs.h"
 #include "stub_cart.h"
@@ -34,6 +35,11 @@ int main(void) {
         return 1;
     }
     free(stub);
+    /* Isolate I/O checks from Host Play; park beam in VBlank for scroll/pal. */
+    m.play.enabled = 0;
+    while (m.io.dot_y < R01E_VISIBLE_H) {
+        r01e_io_dot(&m);
+    }
     r01e_mem_write(&m, 0x7F02, 0x55);
     if (m.io.scroll_x != 0x55) {
         r01e_machine_shutdown(&m);
@@ -127,7 +133,7 @@ int main(void) {
         return fail("machine EEPROM 9-bit alias");
     }
 
-    /* RDY stall on $7F72 / $7F24 (ms-scale cycle stubs). */
+    /* RDY stall on $7F72 / $7F24 (short handoff stubs, not full tWC). */
     {
         uint64_t c0;
         uint32_t i;
@@ -232,6 +238,37 @@ int main(void) {
     if (m.io.bg0_scroll_x != 0x10 || m.io.bg0_scroll_y != 0x20) {
         r01e_machine_shutdown(&m);
         return fail("BG0 scroll latch");
+    }
+
+    /* Mid-active scroll holds until VBlank; pads latch at VBlank enter. */
+    {
+        m.play.enabled = 0; /* isolate I/O fences from Host Play publish */
+        m.io.frame = 1;
+        m.io.dot_y = 10;
+        m.io.dot_x = 0;
+        m.io.scroll_x = 0x11;
+        m.io.scroll_pal_pending = 0;
+        r01e_mem_write(&m, 0x7F02, 0x33);
+        if (m.io.scroll_x != 0x11 || !m.io.scroll_pal_pending || m.io.scroll_x_next != 0x33) {
+            r01e_machine_shutdown(&m);
+            return fail("mid-active scroll pending");
+        }
+        r01e_machine_set_pad(&m, 0, 0x55);
+        if (m.io.pad0 != 0 || m.io.pad0_host != 0x55) {
+            r01e_machine_shutdown(&m);
+            return fail("pad staged not latched");
+        }
+        while (m.io.dot_y < R01E_VISIBLE_H) {
+            r01e_io_dot(&m);
+        }
+        if (m.io.scroll_x != 0x33 || m.io.scroll_pal_pending) {
+            r01e_machine_shutdown(&m);
+            return fail("VBlank scroll flush");
+        }
+        if (m.io.pad0 != 0x55) {
+            r01e_machine_shutdown(&m);
+            return fail("VBlank pad latch");
+        }
     }
 
     printf("ok io scroll/vram/map/fe80/eeprom/oam/apu\n");
