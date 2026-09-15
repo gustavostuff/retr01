@@ -94,7 +94,7 @@ int font_text_width_n(const char *text, int n) {
     if (!text || font_init() != 0) {
         return 0;
     }
-    for (p = (const unsigned char *)text, i = 0; *p && (n < 0 || i < n); p++, i++) {
+    for (p = (const unsigned char *)text, i = 0; (n < 0 || i < n) && *p; p++, i++) {
         if (FT_Load_Char(g_ft_face, (FT_ULong)*p, FT_LOAD_DEFAULT) != 0) {
             continue;
         }

@@ -672,13 +672,13 @@ static void fill_screen_from_cell(R01Screen *s, const uint8_t *rgba, int png_w, 
 
 int r01_project_import_png(R01Project *p, const char *path, char *err_buf, size_t err_cap) {
     R01World *w;
-    FILE *fp = NULL;
+    FILE *volatile fp = NULL;
     png_structp png = NULL;
     png_infop info = NULL;
     png_uint_32 width = 0, height = 0;
     int bit_depth = 0;
-    png_bytep *row_ptrs = NULL;
-    uint8_t *rgba = NULL;
+    png_bytep *volatile row_ptrs = NULL;
+    uint8_t *volatile rgba = NULL;
     Rgb colors[4];
     int ncolors = 0;
     int cols, rows, col, row;

@@ -178,7 +178,12 @@ static void refresh_listing(UiState *ui) {
             continue;
         }
         if (is_dir) {
-            snprintf(pio->entries[n], sizeof(pio->entries[n]), "/%s", name);
+            size_t nlen = strlen(name);
+            if (nlen + 2u > sizeof(pio->entries[n])) {
+                continue;
+            }
+            pio->entries[n][0] = '/';
+            memcpy(pio->entries[n] + 1, name, nlen + 1u);
         } else {
             snprintf(pio->entries[n], sizeof(pio->entries[n]), "%s", name);
         }

@@ -298,32 +298,6 @@ static void set_err(char *err_buf, size_t err_cap, const char *msg) {
     }
 }
 
-static void json_fprint_escaped(FILE *f, const char *text) {
-    const unsigned char *p;
-    if (!f) {
-        return;
-    }
-    if (!text) {
-        return;
-    }
-    for (p = (const unsigned char *)text; *p; p++) {
-        if (*p == '\"' || *p == '\\') {
-            fputc('\\', f);
-            fputc((int)*p, f);
-        } else if (*p == '\n') {
-            fputs("\\n", f);
-        } else if (*p == '\r') {
-            fputs("\\r", f);
-        } else if (*p == '\t') {
-            fputs("\\t", f);
-        } else if (*p < 0x20u) {
-            fprintf(f, "\\u%04x", (unsigned)*p);
-        } else {
-            fputc((int)*p, f);
-        }
-    }
-}
-
 int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, size_t err_cap) {
     FILE *f;
     const R01World *w;
@@ -1554,8 +1528,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         {
                             int idx = r01_world_warp_entrance_add(w, sc, sr, tc, tr);
                             if (idx >= 0 && wid[0]) {
-                                strncpy(w->warp_entrances[idx].id, wid, R01_ID_MAX - 1u);
-                                w->warp_entrances[idx].id[R01_ID_MAX - 1u] = '\0';
+                                snprintf(w->warp_entrances[idx].id, R01_ID_MAX, "%s", wid);
                             }
                         }
                         obj2 = strchr(end + 1, '{');

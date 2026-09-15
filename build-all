@@ -1,11 +1,30 @@
 #!/usr/bin/env bash
 # Build Studio and Emu (Release) into bin/.
+# Usage: ./build-all [--clean|-c]
+#   --clean  Remove apps/*/build and bin/, then configure and compile from scratch.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 BIN="$ROOT/bin"
 STUDIO="$ROOT/apps/studio"
 EMU="$ROOT/apps/emu"
+CLEAN=0
+
+usage() {
+  echo "usage: ./build-all [--clean|-c]" >&2
+  exit 2
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --clean|-c) CLEAN=1 ;;
+    -h|--help) usage ;;
+    *)
+      echo "error: unknown argument: $arg" >&2
+      usage
+      ;;
+  esac
+done
 
 build_one() {
   local proj="$1"
@@ -21,6 +40,11 @@ build_one() {
   cmake --build "$proj/build" --target "$target" -j"$(nproc)"
   install -Dm755 "$proj/build/$target" "$BIN/$out_name"
 }
+
+if [ "$CLEAN" -eq 1 ]; then
+  echo "cleaning build trees and bin/"
+  rm -rf "$STUDIO/build" "$EMU/build" "$BIN"
+fi
 
 mkdir -p "$BIN"
 

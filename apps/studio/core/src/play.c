@@ -209,6 +209,7 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
 }
 
 int r01_play_button(R01PlayState *pl, const R01Project *p, int button) {
+    (void)p;
     if (button == R01_PLAY_BTN_X) {
         r01_player_warp(&pl->ctx, 0, 0);
         return 1;

@@ -227,9 +227,18 @@ R01EntityState *r01_entity_ensure_state(R01EntityType *e, int state_idx) {
     if (!e || state_idx < 0 || state_idx >= R01_ENTITY_STATES_MAX) {
         return NULL;
     }
-    while (e->state_count <= state_idx) {
+    if (e->state_count < 0) {
+        e->state_count = 0;
+    }
+    if (e->state_count > R01_ENTITY_STATES_MAX) {
+        e->state_count = R01_ENTITY_STATES_MAX;
+    }
+    while (e->state_count <= state_idx && e->state_count < R01_ENTITY_STATES_MAX) {
         r01_entity_state_init(&e->states[e->state_count], r01_entity_default_state_name(e->state_count));
         e->state_count++;
+    }
+    if (state_idx >= e->state_count) {
+        return NULL;
     }
     return &e->states[state_idx];
 }
