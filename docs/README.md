@@ -1,8 +1,6 @@
 # Retr01
 
-Home console and arcade board in one. GPIO drives arcade microswitches. Two players can also use controllers over 3.5mm jacks (three cables per pad).
-
-Working docs are split so each area can move on its own. Prefer these markdown files over the old specs PDF.
+The Retr01 is an MCU-assisted 8-bit system. ready for both arcade and console setups.
 
 ## Inspirations
 
