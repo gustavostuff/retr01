@@ -85,9 +85,9 @@ int ui_compose_clamp_part(int v);
 int ui_compose_clamp_origin(int v);
 void ui_compose_draw_grid(SDL_Renderer *r, int ox, int oy, int size_px, int cell_px);
 void ui_compose_draw_part(SDL_Renderer *r, const R01Project *p, const struct R01World *w, const R01EntityPart *pt,
-                          int ox, int oy, int scale, int selected);
+                          int ox, int oy, int scale, int selected, int outline);
 void ui_compose_draw_frame(SDL_Renderer *r, const R01Project *p, const struct R01World *w, const R01EntityFrame *fr,
-                           int ox, int oy, int scale, int sel_part);
+                           int ox, int oy, int scale, int sel_part, int show_outlines);
 /* Center parts on bbox mid-point inside icon_size x icon_size (clipped). */
 void ui_compose_draw_frame_icon(SDL_Renderer *r, const R01Project *p, const struct R01World *w,
                                 const R01EntityFrame *fr, int dx, int dy, int icon_size);

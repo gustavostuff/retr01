@@ -327,6 +327,19 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
     }
 
     if (e->type == SDL_MOUSEBUTTONDOWN) {
+        if (ui->menu.open) {
+            int item, is_sub;
+            if (menu_hit(ui, lx, ly, &item, &is_sub)) {
+                if (!is_sub && item >= 0 && item < ui->menu.item_count && ui->menu.item_disabled[item]) {
+                    return 1;
+                }
+                handle_menu_pick(ui, item, is_sub);
+            } else {
+                menu_close(ui);
+            }
+            return 1;
+        }
+
         if (ui->pal_edit.open) {
             int prow;
             if (palette_row_btn_hit(ui, lx, ly, &prow)) {
@@ -463,19 +476,6 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                         return 1;
                     }
                 }
-            }
-            return 1;
-        }
-
-        if (ui->menu.open) {
-            int item, is_sub;
-            if (menu_hit(ui, lx, ly, &item, &is_sub)) {
-                if (!is_sub && item >= 0 && item < ui->menu.item_count && ui->menu.item_disabled[item]) {
-                    return 1;
-                }
-                handle_menu_pick(ui, item, is_sub);
-            } else {
-                menu_close(ui);
             }
             return 1;
         }

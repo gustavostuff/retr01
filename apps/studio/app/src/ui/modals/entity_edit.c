@@ -45,80 +45,71 @@ static int frame_unlock_count(UiState *ui) {
     return n;
 }
 
-static int entity_zoom(const UiState *ui) {
-    int z = ui ? ui->entity_edit.zoom : 1;
-    if (z != 1 && z != 2 && z != 4) {
-        return 1;
-    }
-    return z;
-}
-
-static int entity_view_cells(int zoom) {
-    return R01_ENTITY_COMPOSE_PX / zoom;
-}
-
-static int entity_scale(int zoom) {
-    return UI_ENTITY_COMPOSE / entity_view_cells(zoom);
-}
-
-static void entity_clamp_view(UiState *ui) {
-    int z = entity_zoom(ui);
-    int vc = entity_view_cells(z);
-    int max_v = R01_ENTITY_COMPOSE_PX - vc;
-    if (max_v < 0) {
-        max_v = 0;
-    }
-    if (ui->entity_edit.view_x < 0) {
-        ui->entity_edit.view_x = 0;
-    }
-    if (ui->entity_edit.view_y < 0) {
-        ui->entity_edit.view_y = 0;
-    }
-    if (ui->entity_edit.view_x > max_v) {
-        ui->entity_edit.view_x = max_v;
-    }
-    if (ui->entity_edit.view_y > max_v) {
-        ui->entity_edit.view_y = max_v;
-    }
-}
-
-static void entity_screen_to_world(const UiState *ui, const EntityModalLayout *lo, int lx, int ly, int *wx,
-                                  int *wy) {
-    int z = entity_zoom(ui);
-    int sc = entity_scale(z);
-    int vx = ui->entity_edit.view_x;
-    int vy = ui->entity_edit.view_y;
+static void entity_screen_to_world(const EntityModalLayout *lo, int lx, int ly, int *wx, int *wy) {
+    int sc = UI_ENTITY_COMPOSE_SCALE;
     if (wx) {
-        *wx = vx + (lx - lo->right_grid_x) / sc;
+        *wx = (lx - lo->right_grid_x) / sc;
     }
     if (wy) {
-        *wy = vy + (ly - lo->right_grid_y) / sc;
+        *wy = (ly - lo->right_grid_y) / sc;
     }
 }
 
-static void draw_bank_tile(UiState *ui, SDL_Renderer *r, int bank, int tile_id, int dx, int dy, int scale) {
-    const R01World *w = r01_project_active_world_const(ui->project);
-    const uint8_t *tile;
-    int row = w ? w->default_pal_row : 0;
-    int sy, sx;
+static void entity_recompute_current_guides(UiState *ui) {
+    R01EntityState *st = edit_state(ui);
+    if (st) {
+        r01_entity_state_recompute_guides(st);
+    }
+}
+
+int entity_edit_add_sprite_at(UiState *ui, int wx, int wy) {
+    R01World *w;
+    R01EntityFrame *fr;
+    R01EntityPart part;
+    int bank;
+    int tile_id;
+    int idx;
+
+    if (!ui || !ui->entity_edit.open) {
+        return -1;
+    }
+    fr = edit_frame(ui);
+    if (!fr) {
+        return -1;
+    }
+    if (fr->part_count >= R01_ENTITY_PARTS_MAX) {
+        ui_toast(ui, "frame part limit (4)", 1);
+        return -1;
+    }
+    w = r01_project_active_world(ui->project);
     if (!w) {
-        return;
+        return -1;
     }
-    tile = r01_chr_spr_tile(w, bank, tile_id);
-    if (!tile) {
-        return;
+    bank = r01_chr_find_spr_bank_space(w);
+    if (bank < 0) {
+        ui_toast(ui, "sprite banks full", 1);
+        return -1;
     }
-    for (sy = 0; sy < 8; sy++) {
-        for (sx = 0; sx < 8; sx++) {
-            uint8_t col = r01_tile_pixel_color(tile, sx, sy);
-            uint8_t cr, cg, cb;
-            if (col == 0) {
-                continue;
-            }
-            r01_kit_rgb(ui->project->global_pal_spr[row][0].idx[col & 3u], &cr, &cg, &cb);
-            fill_rect(r, dx + sx * scale, dy + sy * scale, scale, scale, cr, cg, cb);
-        }
+    tile_id = r01_chr_alloc_spr_tile(w, bank);
+    if (tile_id < 0) {
+        ui_toast(ui, "sprite banks full", 1);
+        return -1;
     }
+    (void)r01_world_sprite_add(w, bank, tile_id, ui->entity_edit.paint_pal);
+    memset(&part, 0, sizeof(part));
+    part.bank = bank;
+    part.tile_id = tile_id;
+    part.pal = ui->entity_edit.paint_pal & 3;
+    part.dx = ui_compose_clamp_part(wx - 4);
+    part.dy = ui_compose_clamp_part(wy - 4);
+    idx = r01_entity_frame_add_part(fr, &part);
+    if (idx < 0) {
+        ui_toast(ui, "frame part limit (4)", 1);
+        return -1;
+    }
+    ui->entity_edit.sel_part = idx;
+    entity_recompute_current_guides(ui);
+    return idx;
 }
 
 void entity_edit_open_new(UiState *ui) {
@@ -136,10 +127,8 @@ void entity_edit_open_new(UiState *ui) {
     ui->entity_edit.paint_color = 1;
     ui->entity_edit.paint_pal = 0;
     ui->entity_edit.show_guides = 1;
-    ui->entity_edit.bank = 0;
-    ui->entity_edit.zoom = 1;
-    ui->entity_edit.view_x = 0;
-    ui->entity_edit.view_y = 0;
+    ui->entity_edit.paint_mode = 0;
+    ui->entity_edit.show_part_outlines = 0;
     ui_focus_set(ui, UI_FOCUS_WORKBENCH);
     ui_text_blur(ui);
 }
@@ -164,10 +153,8 @@ void entity_edit_open(UiState *ui, int type_idx) {
     ui->entity_edit.paint_color = 1;
     ui->entity_edit.paint_pal = 0;
     ui->entity_edit.show_guides = 1;
-    ui->entity_edit.bank = 0;
-    ui->entity_edit.zoom = 1;
-    ui->entity_edit.view_x = 0;
-    ui->entity_edit.view_y = 0;
+    ui->entity_edit.paint_mode = 0;
+    ui->entity_edit.show_part_outlines = 0;
     ui_focus_set(ui, UI_FOCUS_WORKBENCH);
     ui_text_blur(ui);
 }
@@ -175,11 +162,15 @@ void entity_edit_open(UiState *ui, int type_idx) {
 static void entity_edit_save(UiState *ui) {
     R01World *w = r01_project_active_world(ui->project);
     int idx;
+    int si;
     if (!w) {
         return;
     }
     if (ui->entity_edit.draft.state_count < 1) {
         ui->entity_edit.draft.state_count = 1;
+    }
+    for (si = 0; si < ui->entity_edit.draft.state_count; si++) {
+        r01_entity_state_recompute_guides(&ui->entity_edit.draft.states[si]);
     }
     if (ui->entity_edit.is_new || ui->entity_edit.type_idx < 0) {
         idx = r01_world_entity_add(w);
@@ -204,51 +195,6 @@ static void entity_edit_save(UiState *ui) {
     ui_text_blur(ui);
 }
 
-void entity_modal_zoom_wheel(UiState *ui, int lx, int ly, int wheel_y) {
-    EntityModalLayout lo;
-    int z, nz, sc, nsc, wx, wy;
-    if (!ui || !ui->entity_edit.open || wheel_y == 0) {
-        return;
-    }
-    entity_modal_layout(ui, &lo);
-    z = entity_zoom(ui);
-    sc = entity_scale(z);
-    /* Prefer cursor as zoom anchor when over the workbench; else viewport center. */
-    if (point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
-        wx = ui->entity_edit.view_x + (lx - lo.right_grid_x) / sc;
-        wy = ui->entity_edit.view_y + (ly - lo.right_grid_y) / sc;
-    } else {
-        wx = ui->entity_edit.view_x + entity_view_cells(z) / 2;
-        wy = ui->entity_edit.view_y + entity_view_cells(z) / 2;
-        lx = lo.right_grid_x + UI_ENTITY_COMPOSE / 2;
-        ly = lo.right_grid_y + UI_ENTITY_COMPOSE / 2;
-    }
-    if (wheel_y > 0) {
-        nz = (z == 1) ? 2 : 4;
-    } else {
-        nz = (z == 4) ? 2 : 1;
-    }
-    if (nz == z) {
-        return;
-    }
-    ui->entity_edit.zoom = nz;
-    nsc = entity_scale(nz);
-    ui->entity_edit.view_x = wx - (lx - lo.right_grid_x) / nsc;
-    ui->entity_edit.view_y = wy - (ly - lo.right_grid_y) / nsc;
-    entity_clamp_view(ui);
-}
-
-static void entity_bank_nudge(UiState *ui, int wheel_y) {
-    int bank = ui->entity_edit.bank - wheel_y;
-    if (bank < 0) {
-        bank = 0;
-    }
-    if (bank >= R01_SPR_BANKS) {
-        bank = R01_SPR_BANKS - 1;
-    }
-    ui->entity_edit.bank = bank;
-}
-
 int entity_modal_wheel(UiState *ui, int lx, int ly, int wheel_y, int shift) {
     EntityModalLayout lo;
     const R01World *w;
@@ -261,34 +207,18 @@ int entity_modal_wheel(UiState *ui, int lx, int ly, int wheel_y, int shift) {
     w = r01_project_active_world_const(ui->project);
     row = w ? w->default_pal_row : 0;
 
-    /* Hovering a wheelable control focuses it, then dispatches. */
-    if (point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
-        ui_focus_set(ui, UI_FOCUS_WORKBENCH);
-        entity_modal_zoom_wheel(ui, lx, ly, wheel_y);
-        return 1;
-    }
-    if (point_in_rect(lx, ly, lo.left_list_x, lo.left_list_y, UI_ENTITY_BANK_GRID, UI_ENTITY_BANK_GRID) ||
-        point_in_rect(lx, ly, lo.left_dots_x, lo.left_label_y, UI_DOT_STRIP_N * UI_DOT_SIZE, UI_BTN_H)) {
-        ui_focus_set(ui, UI_FOCUS_LIST);
-        entity_bank_nudge(ui, wheel_y);
-        return 1;
-    }
     if (point_in_rect(lx, ly, lo.pal_x, lo.pal_y, UI_PAL_GRID_SIZE, UI_PAL_GRID_SIZE)) {
         ui_focus_set(ui, UI_FOCUS_PALETTE);
         ui_palette_grid_nudge(ui->project, row, UI_PAL_PLANE_SPR, ui->entity_edit.paint_pal,
                               ui->entity_edit.paint_color, wheel_y, shift);
         return 1;
     }
+    if (point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
+        ui_focus_set(ui, UI_FOCUS_WORKBENCH);
+        return 1;
+    }
 
     focus = ui_focus_get(ui);
-    if (focus == UI_FOCUS_WORKBENCH) {
-        entity_modal_zoom_wheel(ui, lx, ly, wheel_y);
-        return 1;
-    }
-    if (focus == UI_FOCUS_LIST) {
-        entity_bank_nudge(ui, wheel_y);
-        return 1;
-    }
     if (focus == UI_FOCUS_PALETTE) {
         ui_palette_grid_nudge(ui->project, row, UI_PAL_PLANE_SPR, ui->entity_edit.paint_pal,
                               ui->entity_edit.paint_color, wheel_y, shift);
@@ -303,149 +233,99 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
     R01EntityState *st;
     R01EntityFrame *fr;
     int row = w ? w->default_pal_row : 0;
-    int z = entity_zoom(ui);
-    int sc = entity_scale(z);
-    int vx = ui->entity_edit.view_x;
-    int vy = ui->entity_edit.view_y;
-    int draw_ox;
-    int draw_oy;
+    int sc = UI_ENTITY_COMPOSE_SCALE;
     UiClipStack clip;
     const char *title = ui->entity_edit.is_new ? "Add entity" : "Edit entity";
 
-    entity_clamp_view(ui);
-    vx = ui->entity_edit.view_x;
-    vy = ui->entity_edit.view_y;
     entity_modal_layout(ui, &lo);
     ui_modal_scrim(r, ui);
     ui_modal_panel(r, lo.mx, lo.my, lo.mw, lo.mh, title);
 
     {
         const char *ename = ui->entity_edit.draft.name[0] ? ui->entity_edit.draft.name : "Entity";
-        font_draw(r, lo.left_list_x, lo.left_name_y + 4, "Name", 230, 230, 230);
-        ui_text_draw(ui, r, lo.left_name_x, lo.left_name_y, lo.left_name_w, ename, 1);
+        font_draw(r, lo.mx + UI_UNIT, lo.name_y + 4, "Name", 230, 230, 230);
+        ui_text_draw(ui, r, lo.name_x, lo.name_y, lo.name_w, ename, 1);
     }
 
-    font_draw(r, lo.left_list_x, lo.left_label_y + 4, "Sprite bank", 230, 230, 230);
-    ui_dot_strip_draw(r, lo.left_dots_x, lo.left_dots_y, UI_DOT_STRIP_N, ui->entity_edit.bank, R01_SPR_BANKS);
-    fill_rect(r, lo.left_list_x, lo.left_list_y, UI_ENTITY_BANK_GRID, UI_ENTITY_BANK_GRID, UI_COL_WELL_R,
-              UI_COL_WELL_G, UI_COL_WELL_B);
-    {
-        int tx, ty;
-        for (ty = 0; ty < 16; ty++) {
-            for (tx = 0; tx < 16; tx++) {
-                draw_bank_tile(ui, r, ui->entity_edit.bank, ty * 16 + tx, lo.left_list_x + tx * 8,
-                               lo.left_list_y + ty * 8, 1);
-            }
-        }
-    }
-
-    ui_palette_grid_draw(r, ui->project, row, lo.pal_x, lo.pal_y, ui->entity_edit.paint_pal,
-                         ui->entity_edit.paint_color, UI_PAL_PLANE_SPR);
-
-    font_draw(r, lo.right_grid_x, lo.right_state_y + 4, "State", 230, 230, 230);
-    ui_dot_strip_draw(r, lo.right_dots_x, lo.right_dots_y, UI_DOT_STRIP_N, ui->entity_edit.state,
-                      state_unlock_count(ui));
     {
         R01EntityState *s0 = edit_state(ui);
         const char *sname = (s0 && s0->name[0]) ? s0->name : "Idle";
-        font_draw(r, lo.right_grid_x, lo.right_state_name_y + 4, "State name", 230, 230, 230);
-        ui_text_draw(ui, r, lo.right_name_x, lo.right_name_y, lo.right_name_w, sname, 2);
+        font_draw(r, lo.mx + UI_UNIT, lo.state_name_y + 4, "State name", 230, 230, 230);
+        ui_text_draw(ui, r, lo.state_name_x, lo.state_name_y, lo.state_name_w, sname, 2);
     }
 
-    font_draw(r, lo.right_grid_x, lo.right_frame_y + 4, "Frame", 230, 230, 230);
+    font_draw(r, lo.mx + UI_UNIT, lo.state_y + 4, "State", 230, 230, 230);
+    ui_dot_strip_draw(r, lo.state_dots_x, lo.state_dots_y, UI_DOT_STRIP_N, ui->entity_edit.state,
+                      state_unlock_count(ui));
+
+    {
+        int frame_lab_x = lo.frame_dots_x - label_width("Frame");
+        if (frame_lab_x < lo.mx + UI_UNIT) {
+            frame_lab_x = lo.mx + UI_UNIT;
+        }
+        font_draw(r, frame_lab_x, lo.frame_y + 4, "Frame", 230, 230, 230);
+    }
     ui_dot_strip_draw(r, lo.frame_dots_x, lo.frame_dots_y, UI_DOT_STRIP_N, ui->entity_edit.frame,
                       frame_unlock_count(ui));
+
     {
         char fid[R01_ID_MAX];
         int wi = ui->project ? ui->project->active_world : 0;
         r01_entity_frame_id(fid, sizeof(fid), wi, &ui->entity_edit.draft, ui->entity_edit.state,
                             ui->entity_edit.frame);
-        font_draw_clipped(r, lo.right_grid_x, lo.right_id_y + 4, lo.right_grid_x, lo.right_id_y,
-                          lo.mx + lo.mw - UI_UNIT * 2 - lo.right_grid_x, UI_BTN_H, fid, 160, 160, 170);
+        font_draw_clipped(r, lo.frame_id_x, lo.frame_id_y + 4, lo.frame_id_x, lo.frame_id_y, lo.frame_id_w,
+                          UI_BTN_H, fid, 160, 160, 170);
     }
 
-    draw_ox = lo.right_grid_x - vx * sc;
-    draw_oy = lo.right_grid_y - vy * sc;
+    ui_palette_grid_draw(r, ui->project, row, lo.pal_x, lo.pal_y, ui->entity_edit.paint_pal,
+                         ui->entity_edit.paint_color, UI_PAL_PLANE_SPR);
+
     ui_compose_draw_grid(r, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, sc);
     st = edit_state(ui);
     fr = edit_frame(ui);
     ui_clip_push(r, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE, &clip);
-    ui_compose_draw_frame(r, ui->project, w, fr, draw_ox, draw_oy, sc, ui->entity_edit.sel_part);
+    ui_compose_draw_frame(r, ui->project, w, fr, lo.right_grid_x, lo.right_grid_y, sc, ui->entity_edit.sel_part,
+                          ui->entity_edit.show_part_outlines);
     if (st && ui->entity_edit.show_guides) {
         SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
         SDL_SetRenderDrawColor(r, 220, 40, 40, 90);
         {
-            SDL_Rect hb = {draw_ox + st->hitbox_x * sc, draw_oy + st->hitbox_y * sc, st->hitbox_w * sc,
-                           st->hitbox_h * sc};
+            SDL_Rect hb = {lo.right_grid_x + st->hitbox_x * sc, lo.right_grid_y + st->hitbox_y * sc,
+                           st->hitbox_w * sc, st->hitbox_h * sc};
             SDL_RenderFillRect(r, &hb);
         }
-        draw_ui_cross(r, draw_ox + st->origin_x * sc, draw_oy + st->origin_y * sc);
+        draw_ui_cross(r, lo.right_grid_x + st->origin_x * sc, lo.right_grid_y + st->origin_y * sc);
     }
     ui_clip_pop(r, &clip);
 
-    if (ui->entity_edit.dragging == 4) {
-        draw_bank_tile(ui, r, ui->entity_edit.bank, ui->entity_edit.drag_tile,
-                       ui->mouse_x - ui->entity_edit.drag_off_x, ui->mouse_y - ui->entity_edit.drag_off_y, 1);
-    }
-
     ui_checkbox_draw(r, lo.guides_x, lo.guides_y + 4, ui->entity_edit.show_guides);
     font_draw(r, lo.guides_x + UI_CHECKBOX + UI_MODE_GAP, lo.guides_y + 4, "Origin/hitbox", 230, 230, 230);
-    font_draw_wrapped(r, lo.help_x, lo.help_y + 2, lo.help_w, "Ctrl + click = drag zoomed viewport", 160, 160,
-                      170);
+    ui_checkbox_draw(r, lo.paint_x, lo.paint_y + 4, ui->entity_edit.paint_mode);
+    font_draw(r, lo.paint_x + UI_CHECKBOX + UI_MODE_GAP, lo.paint_y + 4, "Paint", 230, 230, 230);
 
     if (ui->entity_edit.dragging == 5) {
         draw_brush_preview(r, ui->project, row, ui->entity_edit.paint_pal, ui->entity_edit.paint_color, ui->mouse_x,
                            ui->mouse_y);
     }
 
-    ui_modal_save_cancel(r, lo.left_list_x, lo.btn_y, lo.save_w, lo.cancel_w, ui->mouse_x, ui->mouse_y);
+    ui_modal_save_cancel(r, lo.left_btn_x, lo.btn_y, lo.save_w, lo.cancel_w, ui->mouse_x, ui->mouse_y);
 }
 
 int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
     EntityModalLayout lo;
     R01EntityState *st;
     R01EntityFrame *fr;
-    const R01World *w;
     int idx, pal, col;
     int right = (button == SDL_BUTTON_RIGHT);
-    int ctrl = (SDL_GetModState() & KMOD_CTRL) != 0;
-    int z, sc, cx, cy;
+    int cx, cy;
 
     entity_modal_layout(ui, &lo);
     st = edit_state(ui);
     fr = edit_frame(ui);
-    w = r01_project_active_world_const(ui->project);
-    z = entity_zoom(ui);
-    sc = entity_scale(z);
 
     if (!down) {
-        if (!right && ui->entity_edit.dragging == 4 && fr &&
-            point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
-            R01EntityPart part;
-            int drop_x = ui->mouse_x - ui->entity_edit.drag_off_x;
-            int drop_y = ui->mouse_y - ui->entity_edit.drag_off_y;
-            entity_screen_to_world(ui, &lo, drop_x + 4, drop_y + 4, &cx, &cy);
-            memset(&part, 0, sizeof(part));
-            part.bank = ui->entity_edit.bank;
-            part.tile_id = ui->entity_edit.drag_tile;
-            part.pal = ui->entity_edit.paint_pal;
-            if (w) {
-                int si;
-                for (si = 0; si < w->sprite_count; si++) {
-                    if (w->sprites[si].bank == part.bank && w->sprites[si].tile_id == part.tile_id) {
-                        part.pal = w->sprites[si].pal;
-                        break;
-                    }
-                }
-            }
-            part.dx = ui_compose_clamp_part(cx - 4);
-            part.dy = ui_compose_clamp_part(cy - 4);
-            idx = r01_entity_frame_add_part(fr, &part);
-            if (idx >= 0) {
-                ui->entity_edit.sel_part = idx;
-            } else {
-                ui_toast(ui, "frame part limit", 1);
-            }
+        if (ui->entity_edit.dragging == 1) {
+            entity_recompute_current_guides(ui);
         }
         ui->entity_edit.dragging = 0;
         ui_text_mouse_up(ui);
@@ -459,10 +339,19 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
         return 1;
     }
 
-    if (point_in_rect(lx, ly, lo.guides_x, lo.guides_y, UI_UNIT * 16, UI_BTN_H)) {
+    if (point_in_rect(lx, ly, lo.guides_x, lo.guides_y, lo.paint_x - lo.guides_x, UI_BTN_H)) {
         ui_text_blur(ui);
         ui->entity_edit.show_guides = !ui->entity_edit.show_guides;
         return 1;
+    }
+    {
+        int paint_lab_w = UI_CHECKBOX + UI_MODE_GAP + label_width("Paint");
+        if (point_in_rect(lx, ly, lo.paint_x, lo.paint_y, paint_lab_w, UI_BTN_H)) {
+            ui_text_blur(ui);
+            ui->entity_edit.paint_mode = !ui->entity_edit.paint_mode;
+            ui->entity_edit.dragging = 0;
+            return 1;
+        }
     }
     if (ui_palette_grid_hit(lx, ly, lo.pal_x, lo.pal_y, &pal, &col)) {
         ui_text_blur(ui);
@@ -472,17 +361,17 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
         return 1;
     }
 
-    if (ui_text_mouse_down(ui, lx, ly, lo.left_name_x, lo.left_name_y, lo.left_name_w, ui->entity_edit.draft.name,
+    if (ui_text_mouse_down(ui, lx, ly, lo.name_x, lo.name_y, lo.name_w, ui->entity_edit.draft.name,
                            R01_ENTITY_NAME_MAX, 1)) {
         return 1;
     }
-    if (st && ui_text_mouse_down(ui, lx, ly, lo.right_name_x, lo.right_name_y, lo.right_name_w, st->name,
+    if (st && ui_text_mouse_down(ui, lx, ly, lo.state_name_x, lo.state_name_y, lo.state_name_w, st->name,
                                  R01_ENTITY_NAME_MAX, 2)) {
         return 1;
     }
     ui_text_blur(ui);
 
-    if (ui_dot_strip_hit(lx, ly, lo.right_dots_x, lo.right_dots_y, UI_DOT_STRIP_N, &idx)) {
+    if (ui_dot_strip_hit(lx, ly, lo.state_dots_x, lo.state_dots_y, UI_DOT_STRIP_N, &idx)) {
         int unlock = state_unlock_count(ui);
         if (idx < unlock) {
             if (!r01_entity_ensure_state(&ui->entity_edit.draft, idx)) {
@@ -504,84 +393,40 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
         return 1;
     }
 
-    if (ui_modal_save_hit(lx, ly, lo.left_list_x, lo.btn_y, lo.save_w)) {
+    if (ui_modal_save_hit(lx, ly, lo.left_btn_x, lo.btn_y, lo.save_w)) {
         entity_edit_save(ui);
         return 1;
     }
-    if (ui_modal_cancel_hit(lx, ly, lo.left_list_x, lo.btn_y, lo.save_w, lo.cancel_w)) {
+    if (ui_modal_cancel_hit(lx, ly, lo.left_btn_x, lo.btn_y, lo.save_w, lo.cancel_w)) {
         ui->entity_edit.open = 0;
         ui_focus_clear(ui);
         ui_text_blur(ui);
         return 1;
     }
 
-    if (ui_dot_strip_hit(lx, ly, lo.left_dots_x, lo.left_dots_y, UI_DOT_STRIP_N, &idx)) {
-        if (idx < R01_SPR_BANKS) {
-            ui->entity_edit.bank = idx;
-            ui_focus_set(ui, UI_FOCUS_LIST);
-        }
-        return 1;
-    }
-    if (!right && point_in_rect(lx, ly, lo.left_list_x, lo.left_list_y, UI_ENTITY_BANK_GRID, UI_ENTITY_BANK_GRID)) {
-        int txx = (lx - lo.left_list_x) / 8;
-        int tyy = (ly - lo.left_list_y) / 8;
-        ui_focus_set(ui, UI_FOCUS_LIST);
-        ui->entity_edit.dragging = 4;
-        ui->entity_edit.drag_tile = tyy * 16 + txx;
-        ui->entity_edit.drag_off_x = lx - (lo.left_list_x + txx * 8);
-        ui->entity_edit.drag_off_y = ly - (lo.left_list_y + tyy * 8);
-        return 1;
-    }
-
-    if (st && point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
+    if (point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
         ui_focus_set(ui, UI_FOCUS_WORKBENCH);
-        entity_screen_to_world(ui, &lo, lx, ly, &cx, &cy);
-        if (!right && ctrl && z > 1) {
-            ui->entity_edit.dragging = 7;
-            ui->entity_edit.drag_off_x = lx;
-            ui->entity_edit.drag_off_y = ly;
-            ui->entity_edit.pan_x0 = ui->entity_edit.view_x;
-            ui->entity_edit.pan_y0 = ui->entity_edit.view_y;
+        entity_screen_to_world(&lo, lx, ly, &cx, &cy);
+        if (right) {
+            menu_open_entity_compose(ui, lx, ly, cx, cy);
             return 1;
         }
-        if (right) {
-            idx = ui_compose_part_at(fr, cx, cy, ui->entity_edit.sel_part);
-            if (idx >= 0) {
-                if (idx != ui->entity_edit.sel_part) {
-                    ui->entity_edit.sel_part = idx;
-                    return 1;
+        if (ui->entity_edit.paint_mode) {
+            idx = ui_compose_part_at(fr, cx, cy, -1);
+            if (idx >= 0 && fr) {
+                R01World *ww = r01_project_active_world(ui->project);
+                if (ww) {
+                    ui_compose_paint_part(ui->project, ww, &fr->parts[idx], cx, cy, ui->entity_edit.paint_color);
                 }
-                {
-                    R01World *ww = r01_project_active_world(ui->project);
-                    if (ww && fr) {
-                        ui_compose_paint_part(ui->project, ww, &fr->parts[idx], cx, cy,
-                                              ui->entity_edit.paint_color);
-                    }
-                }
+                ui->entity_edit.sel_part = idx;
                 ui->entity_edit.dragging = 5;
-            } else {
-                ui->entity_edit.sel_part = -1;
             }
-        } else if (ui->entity_edit.show_guides) {
-            int ox = st->origin_x;
-            int oy = st->origin_y;
-            if (cx >= ox - 1 && cx <= ox + 1 && cy >= oy - 1 && cy <= oy + 1) {
-                ui->entity_edit.dragging = 3;
-                ui->entity_edit.drag_off_x = cx - ox;
-                ui->entity_edit.drag_off_y = cy - oy;
-                return 1;
-            }
-            if (cx >= st->hitbox_x && cx < st->hitbox_x + st->hitbox_w && cy >= st->hitbox_y &&
-                cy < st->hitbox_y + st->hitbox_h) {
-                ui->entity_edit.dragging = 2;
-                ui->entity_edit.drag_off_x = cx - st->hitbox_x;
-                ui->entity_edit.drag_off_y = cy - st->hitbox_y;
-                return 1;
-            }
+            return 1;
         }
         if (fr) {
-            idx = ui_compose_part_at(fr, cx, cy, ui->entity_edit.sel_part);
+            idx = ui_compose_part_at(fr, cx, cy, -1);
             if (idx >= 0) {
+                idx = r01_entity_frame_bring_part_front(fr, idx);
                 ui->entity_edit.sel_part = idx;
                 ui->entity_edit.dragging = 1;
                 ui->entity_edit.drag_off_x = cx - fr->parts[idx].dx;
@@ -592,66 +437,47 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
         }
         return 1;
     }
-    (void)sc;
+    (void)st;
     return 1;
 }
 
 void entity_modal_drag(UiState *ui, int lx, int ly, Uint32 buttons) {
     EntityModalLayout lo;
-    R01EntityState *st;
     R01EntityFrame *fr;
-    int z, sc, cx, cy;
+    int cx, cy;
     if (!ui || !ui->entity_edit.open) {
         return;
     }
     entity_modal_layout(ui, &lo);
-    z = entity_zoom(ui);
-    sc = entity_scale(z);
     if (ui->text.drag && ui->text.field_id == 1) {
-        ui_text_mouse_drag(ui, lx, lo.left_name_x, lo.left_name_w);
+        ui_text_mouse_drag(ui, lx, lo.name_x, lo.name_w);
         return;
     }
     if (ui->text.drag && ui->text.field_id == 2) {
-        ui_text_mouse_drag(ui, lx, lo.right_name_x, lo.right_name_w);
+        ui_text_mouse_drag(ui, lx, lo.state_name_x, lo.state_name_w);
         return;
     }
     if (!ui->entity_edit.dragging) {
         return;
     }
-    st = edit_state(ui);
     fr = edit_frame(ui);
-    if (ui->entity_edit.dragging == 7 && (buttons & SDL_BUTTON_LMASK)) {
-        ui->entity_edit.view_x = ui->entity_edit.pan_x0 - (lx - ui->entity_edit.drag_off_x) / sc;
-        ui->entity_edit.view_y = ui->entity_edit.pan_y0 - (ly - ui->entity_edit.drag_off_y) / sc;
-        entity_clamp_view(ui);
-        return;
-    }
-    if (ui->entity_edit.dragging == 5 && (buttons & SDL_BUTTON_RMASK) &&
+    if (ui->entity_edit.dragging == 5 && (buttons & SDL_BUTTON_LMASK) &&
         point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
-        entity_screen_to_world(ui, &lo, lx, ly, &cx, &cy);
+        entity_screen_to_world(&lo, lx, ly, &cx, &cy);
         {
             R01World *ww = r01_project_active_world(ui->project);
-            if (ww && fr && ui->entity_edit.sel_part >= 0 && ui->entity_edit.sel_part < fr->part_count) {
-                ui_compose_paint_part(ui->project, ww, &fr->parts[ui->entity_edit.sel_part], cx, cy,
-                                      ui->entity_edit.paint_color);
+            int idx = ui_compose_part_at(fr, cx, cy, -1);
+            if (ww && fr && idx >= 0) {
+                ui_compose_paint_part(ui->project, ww, &fr->parts[idx], cx, cy, ui->entity_edit.paint_color);
+                ui->entity_edit.sel_part = idx;
             }
         }
     } else if (ui->entity_edit.dragging == 1 && fr && ui->entity_edit.sel_part >= 0 &&
                ui->entity_edit.sel_part < fr->part_count &&
                point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
-        entity_screen_to_world(ui, &lo, lx, ly, &cx, &cy);
+        entity_screen_to_world(&lo, lx, ly, &cx, &cy);
         fr->parts[ui->entity_edit.sel_part].dx = ui_compose_clamp_part(cx - ui->entity_edit.drag_off_x);
         fr->parts[ui->entity_edit.sel_part].dy = ui_compose_clamp_part(cy - ui->entity_edit.drag_off_y);
-    } else if (ui->entity_edit.dragging == 2 && st && ui->entity_edit.show_guides &&
-               point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
-        entity_screen_to_world(ui, &lo, lx, ly, &cx, &cy);
-        st->hitbox_x = ui_compose_clamp_part(cx - ui->entity_edit.drag_off_x);
-        st->hitbox_y = ui_compose_clamp_part(cy - ui->entity_edit.drag_off_y);
-    } else if (ui->entity_edit.dragging == 3 && st && ui->entity_edit.show_guides &&
-               point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
-        entity_screen_to_world(ui, &lo, lx, ly, &cx, &cy);
-        st->origin_x = ui_compose_clamp_origin(cx - ui->entity_edit.drag_off_x);
-        st->origin_y = ui_compose_clamp_origin(cy - ui->entity_edit.drag_off_y);
     }
 }
 
@@ -664,6 +490,10 @@ void entity_modal_key(UiState *ui, SDL_Keycode sym) {
     }
     if (ui->text.field_id > 0) {
         ui_text_key(ui, sym, SDL_GetModState());
+        return;
+    }
+    if (sym == SDLK_SPACE) {
+        ui->entity_edit.show_part_outlines = !ui->entity_edit.show_part_outlines;
         return;
     }
     st = edit_state(ui);
@@ -685,6 +515,7 @@ void entity_modal_key(UiState *ui, SDL_Keycode sym) {
         if (sym == SDLK_DELETE || sym == SDLK_BACKSPACE) {
             r01_entity_frame_remove_part(fr, ui->entity_edit.sel_part);
             ui->entity_edit.sel_part = -1;
+            entity_recompute_current_guides(ui);
             return;
         }
         return;

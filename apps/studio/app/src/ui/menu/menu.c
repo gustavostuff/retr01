@@ -62,7 +62,6 @@ static void menu_clamp_xy(const UiState *ui, int *x, int *y, int w, int h) {
     }
 }
 
-/* Prefer parking the menu over the main canvas when opened from the sidebar. */
 void menu_sync_tile_edit_label(UiState *ui) {
     int shift;
     const char *lab;
@@ -79,12 +78,16 @@ void menu_sync_tile_edit_label(UiState *ui) {
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
 }
 
+/* Keep the root panel near the click; flip if it would leave the window. */
 static void menu_place_root(UiState *ui) {
-    menu_clamp_xy(ui, &ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
-    if (ui->menu.root_x < UI_SIDEBAR_W) {
-        ui->menu.root_x = UI_SIDEBAR_W;
-        menu_clamp_xy(ui, &ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, ui->menu.item_count * UI_BTN_H);
+    int h = ui->menu.item_count * UI_BTN_H;
+    if (ui->menu.root_x + ui->menu.root_w > ui_logic_w(ui)) {
+        ui->menu.root_x -= ui->menu.root_w;
     }
+    if (ui->menu.root_y + h > ui_logic_h(ui)) {
+        ui->menu.root_y -= h;
+    }
+    menu_clamp_xy(ui, &ui->menu.root_x, &ui->menu.root_y, ui->menu.root_w, h);
 }
 
 static void menu_build_sub(UiState *ui, int sub_kind) {
@@ -365,6 +368,8 @@ void menu_open_entity(UiState *ui, int x, int y, int type_idx) {
     ui->menu.sprite_catalog_idx = -1;
     ui->menu.entity_type_idx = type_idx;
     ui->menu.instance_idx = -1;
+    ui->menu.compose_wx = 0;
+    ui->menu.compose_wy = 0;
     ui->menu.item_count = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Edit entity");
     ui->menu.item_sub[ui->menu.item_count++] = 0;
@@ -376,6 +381,44 @@ void menu_open_entity(UiState *ui, int x, int y, int type_idx) {
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Remove");
     ui->menu.item_sub[ui->menu.item_count++] = 0;
     memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
+    ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
+    ui->menu.root_x = x;
+    ui->menu.root_y = y;
+    menu_place_root(ui);
+}
+
+void menu_open_entity_compose(UiState *ui, int x, int y, int compose_wx, int compose_wy) {
+    R01EntityFrame *fr;
+    int full = 0;
+    int banks_full = 0;
+    R01World *w;
+    if (!ui) {
+        return;
+    }
+    fr = r01_entity_frame(&ui->entity_edit.draft, ui->entity_edit.state, ui->entity_edit.frame);
+    if (fr && fr->part_count >= R01_ENTITY_PARTS_MAX) {
+        full = 1;
+    }
+    w = r01_project_active_world(ui->project);
+    if (!w || r01_chr_find_spr_bank_space(w) < 0) {
+        banks_full = 1;
+    }
+    ui->menu.open = 1;
+    ui->menu.kind = UI_MENU_KIND_ENTITY_COMPOSE;
+    ui->menu.submenu = UI_MENU_SUB_NONE;
+    ui->menu.screen_tx = -1;
+    ui->menu.screen_ty = -1;
+    ui->menu.world_screen_idx = -1;
+    ui->menu.sprite_catalog_idx = -1;
+    ui->menu.entity_type_idx = -1;
+    ui->menu.instance_idx = -1;
+    ui->menu.compose_wx = compose_wx;
+    ui->menu.compose_wy = compose_wy;
+    ui->menu.item_count = 0;
+    snprintf(ui->menu.items[ui->menu.item_count], 32, "Add sprite");
+    ui->menu.item_sub[ui->menu.item_count++] = 0;
+    memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
+    ui->menu.item_disabled[0] = (full || banks_full) ? 1 : 0;
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
     ui->menu.root_x = x;
     ui->menu.root_y = y;
@@ -680,6 +723,15 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
         } else if (item == 2 && w) {
             r01_world_entity_remove(w, ui->menu.entity_type_idx);
             ui_toast(ui, "entity removed", 0);
+        }
+        menu_close(ui);
+        return;
+    }
+    if (ui->menu.kind == UI_MENU_KIND_ENTITY_COMPOSE) {
+        if (item == 0) {
+            if (entity_edit_add_sprite_at(ui, ui->menu.compose_wx, ui->menu.compose_wy) >= 0) {
+                ui_toast(ui, "sprite added", 0);
+            }
         }
         menu_close(ui);
         return;

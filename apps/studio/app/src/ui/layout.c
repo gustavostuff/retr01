@@ -692,7 +692,7 @@ void sprite_modal_layout(const UiState *ui, SpriteModalLayout *lo) {
 }
 
 void metasprite_modal_layout(const UiState *ui, MetaspriteModalLayout *lo) {
-    int mw = UI_ENTITY_MODAL_W;
+    int mw = UI_UNIT + UI_ENTITY_BANK_GRID + UI_UNIT + UI_METASPRITE_COMPOSE + UI_UNIT;
     int mh;
     int mx;
     int my;
@@ -702,7 +702,7 @@ void metasprite_modal_layout(const UiState *ui, MetaspriteModalLayout *lo) {
     lo->left_grid_y = lo->left_label_y + UI_BTN_H;
     lo->right_name_y = lo->left_label_y;
     lo->right_grid_y = lo->right_name_y + UI_BTN_H * 2;
-    lo->pal_label_y = lo->right_grid_y + UI_ENTITY_COMPOSE + UI_UNIT;
+    lo->pal_label_y = lo->right_grid_y + UI_METASPRITE_COMPOSE + UI_UNIT;
     lo->pal_y = lo->pal_label_y + UI_BTN_H;
     lo->btn_y = lo->pal_y + UI_PAL_GRID_SIZE + UI_UNIT;
     mh = lo->btn_y + UI_BTN_H + UI_UNIT;
@@ -741,107 +741,105 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
     int mh;
     int mx;
     int my;
-    int left_x;
-    int right_x;
+    int pad = UI_UNIT;
     int body_y;
     int name_lab;
-    int state_lab;
     int sname_lab;
+    int state_lab;
     int frame_lab;
-    int pad = UI_UNIT;
-    const char *help = "Ctrl + click = drag zoomed viewport";
-    int help_w;
-    int help_h;
+    int left_x;
+    int right_x;
+    int left_w = UI_ENTITY_LEFT_W;
+    int right_w = UI_ENTITY_COMPOSE;
+    int row_y;
+    int body_top;
+    int body_h;
+    int mid_x;
 
-    body_y = UI_BTN_H + UI_UNIT;
-    help_w = UI_ENTITY_COMPOSE;
-    help_h = font_measure_wrapped(help, help_w);
-    if (help_h < UI_BTN_H) {
-        help_h = UI_BTN_H;
+    (void)ui;
+    body_y = UI_BTN_H + pad;
+
+    /* Top: Name, State name (full width); State | Frame on one row; frame id above canvas. */
+    lo->name_y = body_y;
+    lo->state_name_y = lo->name_y + UI_BTN_H + pad;
+    lo->state_y = lo->state_name_y + UI_BTN_H + pad;
+    lo->frame_y = lo->state_y;
+    lo->frame_id_y = lo->state_y + UI_BTN_H + pad;
+
+    body_top = lo->frame_id_y + UI_BTN_H + pad;
+    body_h = UI_ENTITY_COMPOSE;
+    if (body_h < UI_PAL_GRID_SIZE) {
+        body_h = UI_PAL_GRID_SIZE;
     }
-    /* Snap help block to 8px grid. */
-    help_h = ((help_h + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
 
-    /* Right column drives height: state, state name, frame, id, workbench, guides, help. */
-    lo->right_state_y = body_y;
-    lo->right_state_name_y = lo->right_state_y + UI_BTN_H;
-    lo->right_frame_y = lo->right_state_name_y + UI_BTN_H;
-    lo->right_id_y = lo->right_frame_y + UI_BTN_H;
-    lo->right_grid_y = lo->right_id_y + UI_BTN_H;
-    lo->guides_y = lo->right_grid_y + UI_ENTITY_COMPOSE + UI_UNIT;
-    lo->help_y = lo->guides_y + UI_BTN_H;
-    lo->help_h = help_h;
-    lo->help_w = help_w;
-    lo->btn_y = lo->help_y + help_h + UI_UNIT;
-    mh = lo->btn_y + UI_BTN_H + UI_UNIT;
-
-    /* Left: Name, Sprite bank + tile grid, palette, Save/Cancel on btn row. */
-    lo->left_name_y = body_y;
-    lo->left_label_y = body_y + UI_BTN_H;
-    lo->left_list_y = lo->left_label_y + UI_BTN_H;
-    lo->left_list_h = UI_ENTITY_BANK_GRID;
-    lo->pal_y = lo->left_list_y + UI_ENTITY_BANK_GRID + UI_UNIT;
-    if (lo->pal_y + UI_PAL_GRID_SIZE + UI_UNIT + UI_BTN_H + UI_UNIT > mh) {
-        lo->btn_y = lo->pal_y + UI_PAL_GRID_SIZE + UI_UNIT;
-        mh = lo->btn_y + UI_BTN_H + UI_UNIT;
-    }
+    lo->guides_y = body_top + body_h + pad;
+    lo->paint_y = lo->guides_y;
+    lo->btn_y = lo->guides_y + UI_BTN_H + pad;
+    mh = lo->btn_y + UI_BTN_H + pad;
 
     mx = (ui_logic_w(ui) - mw) / 2;
     my = (ui_logic_h(ui) - mh) / 2;
-    left_x = mx + pad;
-    right_x = mx + pad + UI_ENTITY_BANK_GRID + UI_UNIT;
 
-    name_lab = ((label_width("Name") + UI_UNIT + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
-    state_lab = ((label_width("State") + UI_UNIT + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
-    sname_lab = ((label_width("State name") + UI_UNIT + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
-    frame_lab = ((label_width("Frame") + UI_UNIT + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
+    name_lab = ((label_width("Name") + pad + pad - 1) / pad) * pad;
+    sname_lab = ((label_width("State name") + pad + pad - 1) / pad) * pad;
+    state_lab = ((label_width("State") + pad + pad - 1) / pad) * pad;
+    frame_lab = ((label_width("Frame") + pad + pad - 1) / pad) * pad;
 
     lo->mx = mx;
     lo->my = my;
     lo->mw = mw;
     lo->mh = mh;
 
-    lo->left_name_y += my;
-    lo->left_name_x = left_x + name_lab;
-    lo->left_name_w = left_x + UI_ENTITY_BANK_GRID - lo->left_name_x;
-    lo->left_name_w = (lo->left_name_w / UI_UNIT) * UI_UNIT;
-    if (lo->left_name_w < UI_UNIT * 8) {
-        lo->left_name_w = UI_UNIT * 8;
+    mid_x = mx + mw / 2;
+
+    lo->name_y += my;
+    lo->name_x = mx + pad + name_lab;
+    lo->name_w = mx + mw - pad - lo->name_x;
+    lo->name_w = (lo->name_w / pad) * pad;
+    if (lo->name_w < pad * 8) {
+        lo->name_w = pad * 8;
     }
 
-    lo->left_label_y += my;
-    lo->left_dots_x = left_x + ((label_width("Sprite bank") + UI_UNIT + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
-    lo->left_dots_y = lo->left_label_y + (UI_BTN_H - UI_DOT_SIZE) / 2;
-    lo->left_list_x = left_x;
-    lo->left_list_y += my;
-    lo->pal_x = left_x;
-    lo->pal_y += my;
-
-    lo->right_state_y += my;
-    lo->right_dots_x = right_x + state_lab;
-    lo->right_dots_y = lo->right_state_y + (UI_BTN_H - UI_DOT_SIZE) / 2;
-
-    lo->right_state_name_y += my;
-    lo->right_name_y = lo->right_state_name_y;
-    lo->right_name_x = right_x + sname_lab;
-    lo->right_name_w = mx + mw - pad - lo->right_name_x;
-    lo->right_name_w = (lo->right_name_w / UI_UNIT) * UI_UNIT;
-    if (lo->right_name_w < UI_UNIT * 8) {
-        lo->right_name_w = UI_UNIT * 8;
+    lo->state_name_y += my;
+    lo->state_name_x = mx + pad + sname_lab;
+    lo->state_name_w = mx + mw - pad - lo->state_name_x;
+    lo->state_name_w = (lo->state_name_w / pad) * pad;
+    if (lo->state_name_w < pad * 8) {
+        lo->state_name_w = pad * 8;
     }
 
-    lo->right_frame_y += my;
-    lo->frame_dots_x = right_x + frame_lab;
-    lo->frame_dots_y = lo->right_frame_y + (UI_BTN_H - UI_DOT_SIZE) / 2;
+    lo->state_y += my;
+    lo->state_dots_x = mx + pad + state_lab;
+    lo->state_dots_y = lo->state_y + (UI_BTN_H - UI_DOT_SIZE) / 2;
 
-    lo->right_id_y += my;
+    lo->frame_y += my;
+    lo->frame_dots_x = mid_x + pad + frame_lab;
+    lo->frame_dots_y = lo->frame_y + (UI_BTN_H - UI_DOT_SIZE) / 2;
+
+    left_x = mx + pad;
+    right_x = mx + pad + left_w + pad;
+    lo->left_x = left_x;
+    lo->left_w = left_w;
+    lo->right_x = right_x;
+    lo->right_w = right_w;
+
+    lo->frame_id_y += my;
+    lo->frame_id_x = right_x;
+    lo->frame_id_w = right_w;
+
+    row_y = body_top + my;
+    lo->pal_x = left_x + (left_w - UI_PAL_GRID_SIZE) / 2;
+    lo->pal_y = row_y + (body_h - UI_PAL_GRID_SIZE) / 2;
     lo->right_grid_x = right_x;
-    lo->right_grid_y += my;
-    lo->guides_x = right_x;
+    lo->right_grid_y = row_y + (body_h - UI_ENTITY_COMPOSE) / 2;
+
     lo->guides_y += my;
-    lo->help_x = right_x;
-    lo->help_y += my;
+    lo->paint_y += my;
+    lo->guides_x = right_x;
+    lo->paint_x = right_x + UI_CHECKBOX + UI_MODE_GAP + label_width("Origin/hitbox") + pad;
+
     lo->btn_y += my;
+    lo->left_btn_x = left_x;
     lo->save_w = label_width("Save");
     lo->cancel_w = label_width("Cancel");
 }
@@ -1010,14 +1008,8 @@ void app_mode_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
     if (!out) {
         return;
     }
-    tab_w = label_width("Graphics");
-    if (label_width("Audio") > tab_w) {
-        tab_w = label_width("Audio");
-    }
-    tab_w += UI_UNIT * 2;
-    if (tab_w < 64) {
-        tab_w = 64;
-    }
+    /* Equal tabs fill the left sidebar so labels sit centered in the top-left chrome. */
+    tab_w = UI_SIDEBAR_W / 2;
     ui_tabs_layout(labs, 2, 0, 0, tab_w, out);
     out->tab_h = UI_BTN_H;
 }

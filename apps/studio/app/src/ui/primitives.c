@@ -348,6 +348,38 @@ void draw_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Ui
     SDL_RenderDrawRect(r, &rc);
 }
 
+#define UI_ANTS_DASH 4
+#define UI_ANTS_MS 80
+
+void draw_marching_ants(SDL_Renderer *r, int x, int y, int w, int h) {
+    int phase;
+    int i;
+    int len;
+    if (!r || w < 2 || h < 2) {
+        return;
+    }
+    phase = (int)((SDL_GetTicks() / UI_ANTS_MS) % (UI_ANTS_DASH * 2));
+    SDL_SetRenderDrawColor(r, 255, 255, 255, 255);
+    /* Top and bottom edges (left -> right). */
+    len = w;
+    for (i = 0; i < len; i++) {
+        int on = ((i + phase) % (UI_ANTS_DASH * 2)) < UI_ANTS_DASH;
+        if (on) {
+            SDL_RenderDrawPoint(r, x + i, y);
+            SDL_RenderDrawPoint(r, x + i, y + h - 1);
+        }
+    }
+    /* Left and right edges (top -> bottom), skip corners already drawn. */
+    len = h - 2;
+    for (i = 0; i < len; i++) {
+        int on = ((i + 1 + phase) % (UI_ANTS_DASH * 2)) < UI_ANTS_DASH;
+        if (on) {
+            SDL_RenderDrawPoint(r, x, y + 1 + i);
+            SDL_RenderDrawPoint(r, x + w - 1, y + 1 + i);
+        }
+    }
+}
+
 void hover_overlay(SDL_Renderer *r, int x, int y, int w, int h) {
     SDL_Rect rc = {x, y, w, h};
     SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);

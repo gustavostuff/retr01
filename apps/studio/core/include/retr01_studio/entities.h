@@ -51,6 +51,14 @@ int r01_entity_trim_last_frame(R01EntityType *e, int state_idx);
 
 int r01_entity_frame_add_part(R01EntityFrame *fr, const R01EntityPart *part);
 int r01_entity_frame_remove_part(R01EntityFrame *fr, int part_idx);
+/* Move part to end of frame (top of draw/hit z-order). Returns new index or -1. */
+int r01_entity_frame_bring_part_front(R01EntityFrame *fr, int part_idx);
+/*
+ * Recompute state origin + fixed 8x8 hitbox from the union of all parts across
+ * frames in this state. Empty: origin/hitbox at 0,0. Else origin = AABB center,
+ * hitbox centered on origin and clamped into the compose grid.
+ */
+void r01_entity_state_recompute_guides(R01EntityState *st);
 
 /* Simple 1-state / 1-frame / 1-part entity from a sprite catalog entry (for phase C). */
 int r01_world_entity_from_sprite(R01World *w, int sprite_catalog_idx);

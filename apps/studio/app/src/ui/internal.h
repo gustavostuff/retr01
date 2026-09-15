@@ -105,22 +105,21 @@ typedef struct MetaspriteModalLayout {
 
 typedef struct EntityModalLayout {
     int mx, my, mw, mh;
-    int left_name_x, left_name_y, left_name_w;
-    int left_label_y;
-    int left_dots_x, left_dots_y;
-    int left_list_x, left_list_y, left_list_h;
-    int right_state_y;
-    int right_dots_x, right_dots_y;
-    int right_state_name_y;
-    int right_name_x, right_name_y, right_name_w;
-    int right_frame_y;
+    int name_x, name_y, name_w;
+    int state_name_x, state_name_y, state_name_w;
+    int state_y;
+    int state_dots_x, state_dots_y;
+    int frame_y;
     int frame_dots_x, frame_dots_y;
-    int right_id_y;
+    int frame_id_x, frame_id_y, frame_id_w;
+    int left_x, left_w; /* left body column (palette) */
+    int pal_x, pal_y;
+    int right_x, right_w; /* right body column (canvas) */
     int right_grid_x, right_grid_y;
     int guides_x, guides_y;
-    int help_x, help_y, help_h, help_w;
-    int pal_x, pal_y;
+    int paint_x, paint_y;
     int btn_y, save_w, cancel_w;
+    int left_btn_x;
 } EntityModalLayout;
 
 extern uint8_t *g_radio_rgba;
@@ -173,6 +172,8 @@ void fill_rect_alpha(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8
 void ui_clip_push(SDL_Renderer *r, int x, int y, int w, int h, UiClipStack *stack);
 void ui_clip_pop(SDL_Renderer *r, const UiClipStack *stack);
 void draw_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B);
+/* Animated 1px dashed selection border (phase from SDL_GetTicks). */
+void draw_marching_ants(SDL_Renderer *r, int x, int y, int w, int h);
 void hover_overlay(SDL_Renderer *r, int x, int y, int w, int h);
 /* Draw text clipped to a rectangle (scissor). */
 void font_draw_clipped(SDL_Renderer *r, int x, int y, int clip_x, int clip_y, int clip_w, int clip_h,
@@ -277,6 +278,7 @@ void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int p
 void menu_open_metasprite(UiState *ui, int x, int y, int meta_idx);
 void menu_open_metatile(UiState *ui, int x, int y, int metatile_idx);
 void menu_open_entity(UiState *ui, int x, int y, int type_idx);
+void menu_open_entity_compose(UiState *ui, int x, int y, int compose_wx, int compose_wy);
 void menu_open_instance(UiState *ui, int x, int y, int instance_idx);
 int menu_hit(const UiState *ui, int lx, int ly, int *out_item, int *out_sub);
 void menu_update_hover(UiState *ui, int lx, int ly);
@@ -341,8 +343,9 @@ void entity_edit_open(UiState *ui, int type_idx);
 int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button);
 void entity_modal_drag(UiState *ui, int lx, int ly, Uint32 buttons);
 void entity_modal_key(UiState *ui, SDL_Keycode sym);
-void entity_modal_zoom_wheel(UiState *ui, int lx, int ly, int wheel_y);
 int entity_modal_wheel(UiState *ui, int lx, int ly, int wheel_y, int shift);
+/* Alloc blank SPR tile + place part at compose (wx, wy). Returns part idx or -1. */
+int entity_edit_add_sprite_at(UiState *ui, int wx, int wy);
 void draw_entity_modal(UiState *ui, SDL_Renderer *r);
 
 /* ui/draw/mode.c */

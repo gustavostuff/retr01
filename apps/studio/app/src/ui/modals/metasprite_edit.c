@@ -137,8 +137,8 @@ void draw_metasprite_modal(UiState *ui, SDL_Renderer *r) {
                           lo.right_name_y + UI_BTN_H, id_w, UI_BTN_H, mid, 160, 160, 170);
     }
 
-    ui_compose_draw_grid(r, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, 8);
-    ui_compose_draw_frame(r, ui->project, w, fr, lo.right_grid_x, lo.right_grid_y, 8, ui->metasprite_edit.sel_part);
+    ui_compose_draw_grid(r, lo.right_grid_x, lo.right_grid_y, UI_METASPRITE_COMPOSE, 8);
+    ui_compose_draw_frame(r, ui->project, w, fr, lo.right_grid_x, lo.right_grid_y, 8, ui->metasprite_edit.sel_part, 0);
 
     if (ui->metasprite_edit.dragging == 4) {
         draw_bank_tile(ui, r, ui->metasprite_edit.bank, ui->metasprite_edit.drag_tile,
@@ -169,7 +169,7 @@ int metasprite_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button)
 
     if (!down) {
         if (!right && ui->metasprite_edit.dragging == 4 &&
-            point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
+            point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_METASPRITE_COMPOSE, UI_METASPRITE_COMPOSE)) {
             R01EntityPart part;
             int cx = (lx - lo.right_grid_x) / 8;
             int cy = (ly - lo.right_grid_y) / 8;
@@ -244,7 +244,7 @@ int metasprite_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button)
         ui->metasprite_edit.drag_off_y = ly - (lo.left_grid_y + tyy * 8);
         return 1;
     }
-    if (point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
+    if (point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_METASPRITE_COMPOSE, UI_METASPRITE_COMPOSE)) {
         int cx = (lx - lo.right_grid_x) / 8;
         int cy = (ly - lo.right_grid_y) / 8;
         if (right) {
@@ -296,7 +296,7 @@ void metasprite_modal_drag(UiState *ui, int lx, int ly, Uint32 buttons) {
         return;
     }
     if (ui->metasprite_edit.dragging == 5 && (buttons & SDL_BUTTON_RMASK) &&
-        point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
+        point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_METASPRITE_COMPOSE, UI_METASPRITE_COMPOSE)) {
         int cx = (lx - lo.right_grid_x) / 8;
         int cy = (ly - lo.right_grid_y) / 8;
         R01World *ww = r01_project_active_world(ui->project);
@@ -306,7 +306,7 @@ void metasprite_modal_drag(UiState *ui, int lx, int ly, Uint32 buttons) {
         }
     } else if (ui->metasprite_edit.dragging == 1 && ui->metasprite_edit.sel_part >= 0 &&
                ui->metasprite_edit.sel_part < fr->part_count &&
-               point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
+               point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_METASPRITE_COMPOSE, UI_METASPRITE_COMPOSE)) {
         int cx = (lx - lo.right_grid_x) / 8;
         int cy = (ly - lo.right_grid_y) / 8;
         fr->parts[ui->metasprite_edit.sel_part].dx = ui_compose_clamp_part(cx - ui->metasprite_edit.drag_off_x);

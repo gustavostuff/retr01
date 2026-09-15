@@ -140,11 +140,13 @@
 #define UI_METASPRITES_BODY_H 96
 #define UI_ENTITIES_BODY_H 96
 
-#define UI_ENTITY_MODAL_W (UI_UNIT + UI_ENTITY_BANK_GRID + UI_UNIT + UI_ENTITY_COMPOSE + UI_UNIT)
+#define UI_ENTITY_COMPOSE_SCALE 5 /* display px per compose world px (32 -> 160) */
+#define UI_ENTITY_COMPOSE (R01_ENTITY_COMPOSE_PX * UI_ENTITY_COMPOSE_SCALE) /* 160 */
+#define UI_ENTITY_LEFT_W (UI_PAL_GRID_SIZE + UI_UNIT * 2) /* palette + side pad */
+#define UI_ENTITY_MODAL_W (UI_UNIT + UI_ENTITY_LEFT_W + UI_UNIT + UI_ENTITY_COMPOSE + UI_UNIT)
 #define UI_METASPRITE_MODAL_H 304
-#define UI_ENTITY_MODAL_H 336
-#define UI_ENTITY_BANK_GRID 128 /* left column width (list / bank sheet) */
-#define UI_ENTITY_COMPOSE 128   /* workbench viewport: 32px @ 4x (zoom 2/4 crop) */
+#define UI_ENTITY_BANK_GRID 128 /* metasprite left bank sheet */
+#define UI_METASPRITE_COMPOSE 128 /* metasprite workbench (legacy 16px @ 8x) */
 #define UI_ENTITY_LIST_H 128
 #define UI_DOT_SIZE 8
 #define UI_DOT_GAP 0 /* packed strip, no gaps between dots */
@@ -195,6 +197,7 @@
 #define UI_MENU_KIND_INSTANCE 6
 #define UI_MENU_KIND_BANK_CELL 7
 #define UI_MENU_KIND_METATILE 8
+#define UI_MENU_KIND_ENTITY_COMPOSE 9 /* Add sprite on entity modal canvas */
 #define UI_MENU_SUB_NONE 0
 #define UI_MENU_SUB_BANK 1
 #define UI_MENU_SUB_PAL 2
@@ -229,6 +232,8 @@ typedef struct UiMenu {
     int bank_idx;     /* UI_MENU_KIND_BANK_CELL */
     int bank_tile_id;
     int bank_plane; /* UI_BANKS_PLANE_* */
+    int compose_wx; /* UI_MENU_KIND_ENTITY_COMPOSE click in compose px */
+    int compose_wy;
 } UiMenu;
 
 typedef struct UiTileEdit {
@@ -297,15 +302,10 @@ typedef struct UiEntityEdit {
     int sel_part;   /* -1 or index in current frame */
     int paint_color;
     int paint_pal;
-    int show_guides; /* origin cross + hitbox */
-    int bank;        /* SPR bank for left tile grid */
-    int zoom;        /* 1, 2, or 4 (full 32 / 16 / 8 world px in viewport) */
-    int view_x;      /* workbench pan in compose px */
-    int view_y;
-    int pan_x0;      /* view at Ctrl+drag pan start */
-    int pan_y0;
-    int dragging;    /* 0 none, 1 part, 2 hitbox, 3 origin, 4 tile ghost, 5 paint, 7 pan */
-    int drag_tile;   /* SPR tile id when dragging from bank grid */
+    int show_guides;       /* origin cross + hitbox (display only) */
+    int paint_mode;        /* 1 = LMB paints topmost part only */
+    int show_part_outlines; /* Space: light outline on every part */
+    int dragging;          /* 0 none, 1 part, 5 paint stroke */
     int drag_off_x;
     int drag_off_y;
 } UiEntityEdit;

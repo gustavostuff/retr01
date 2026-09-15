@@ -85,7 +85,7 @@
 #define R01_ENTITY_FRAMES_MAX 4
 #define R01_ENTITY_PARTS_MAX 4 /* hard: no frame may exceed 4 sprites */
 #define R01_ENTITY_ONSCREEN_MAX 16 /* live instances (OAM headroom allows 32 at 4 parts) */
-#define R01_ENTITY_COMPOSE_PX 32 /* authoring canvas (px). Studio viewport zooms into this */
+#define R01_ENTITY_COMPOSE_PX 32 /* authoring canvas (px). Studio shows full grid at fixed scale */
 #define R01_ENTITY_NAME_MAX 32
 #define R01_ID_MAX 96
 #define R01_ENTITY_HITBOX_W 8

@@ -46,7 +46,6 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
     }
 
     if (ui->app_mode == UI_APP_GRAPHICS) {
-        draw_menu(ui, r);
         if (ui->pal_edit.open) {
             draw_pal_modal(ui, r);
         } else if (ui->sprite_edit.open) {
@@ -58,6 +57,7 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
         } else if (ui->tile_edit.open) {
             draw_tile_modal(ui, r);
         }
+        draw_menu(ui, r);
         draw_catalog_drag_ghost(ui, r);
     }
     if (ui_project_io_is_open(ui)) {

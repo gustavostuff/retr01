@@ -49,11 +49,12 @@ void ui_compose_draw_grid(SDL_Renderer *r, int ox, int oy, int size_px, int cell
 }
 
 void ui_compose_draw_part(SDL_Renderer *r, const R01Project *p, const R01World *w, const R01EntityPart *pt, int ox,
-                          int oy, int scale, int selected) {
+                          int oy, int scale, int selected, int outline) {
     uint8_t oriented[R01_TILE_BYTES];
     const uint8_t *raw;
     int row = w ? w->default_pal_row : 0;
     int sy, sx;
+    int bx, by, bw, bh;
     if (!p || !w || !pt) {
         return;
     }
@@ -73,13 +74,19 @@ void ui_compose_draw_part(SDL_Renderer *r, const R01Project *p, const R01World *
             fill_rect(r, ox + (pt->dx + sx) * scale, oy + (pt->dy + sy) * scale, scale, scale, cr, cg, cb);
         }
     }
+    bx = ox + pt->dx * scale;
+    by = oy + pt->dy * scale;
+    bw = 8 * scale;
+    bh = 8 * scale;
     if (selected) {
-        draw_rect(r, ox + pt->dx * scale, oy + pt->dy * scale, 8 * scale, 8 * scale, 240, 240, 240);
+        draw_marching_ants(r, bx, by, bw, bh);
+    } else if (outline) {
+        draw_rect(r, bx, by, bw, bh, 140, 140, 150);
     }
 }
 
 void ui_compose_draw_frame(SDL_Renderer *r, const R01Project *p, const R01World *w, const R01EntityFrame *fr, int ox,
-                           int oy, int scale, int sel_part) {
+                           int oy, int scale, int sel_part, int show_outlines) {
     int i;
     if (!fr) {
         return;
@@ -88,10 +95,10 @@ void ui_compose_draw_frame(SDL_Renderer *r, const R01Project *p, const R01World 
         if (i == sel_part) {
             continue;
         }
-        ui_compose_draw_part(r, p, w, &fr->parts[i], ox, oy, scale, 0);
+        ui_compose_draw_part(r, p, w, &fr->parts[i], ox, oy, scale, 0, show_outlines);
     }
     if (sel_part >= 0 && sel_part < fr->part_count) {
-        ui_compose_draw_part(r, p, w, &fr->parts[sel_part], ox, oy, scale, 1);
+        ui_compose_draw_part(r, p, w, &fr->parts[sel_part], ox, oy, scale, 1, 0);
     }
 }
 
@@ -133,7 +140,7 @@ void ui_compose_draw_frame_icon(SDL_Renderer *r, const R01Project *p, const R01W
         R01EntityPart ghost = fr->parts[i];
         ghost.dx = fr->parts[i].dx + off_x;
         ghost.dy = fr->parts[i].dy + off_y;
-        ui_compose_draw_part(r, p, w, &ghost, dx, dy, 1, 0);
+        ui_compose_draw_part(r, p, w, &ghost, dx, dy, 1, 0, 0);
     }
     ui_clip_pop(r, &stack);
 }
