@@ -1,5 +1,6 @@
 #include "ui/ui.h"
 #include "ui/internal.h"
+#include "ui/undo/undo_cmds.h"
 #include "font/font.h"
 
 #include "retr01_studio/chr_pack.h"
@@ -135,6 +136,7 @@ static void sprite_edit_save(UiState *ui) {
         }
         ui->sprite_edit.catalog_idx = cat;
         ui->sprite_edit.is_new = 0;
+        ui_undo_push_sprite_add(ui, cat);
         ui_toast(ui, "sprite created", 0);
     } else if (ui->sprite_edit.is_new || ui->sprite_edit.tile_id < 0) {
         id = r01_chr_alloc_spr_tile(w, ui->sprite_edit.bank);
@@ -164,6 +166,7 @@ static void sprite_edit_save(UiState *ui) {
         }
         ui->sprite_edit.catalog_idx = cat;
         ui->sprite_edit.is_new = 0;
+        ui_undo_push_sprite_add(ui, cat);
         ui_toast(ui, "sprite created", 0);
     } else {
         id = ui->sprite_edit.tile_id;

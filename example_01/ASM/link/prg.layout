@@ -1,0 +1,3 @@
+# Host packer segment layout (see prg_phase1.c)
+CODE=$8000
+PLAY=$8100

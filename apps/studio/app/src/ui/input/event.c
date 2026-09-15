@@ -1,5 +1,7 @@
 #include "ui/ui.h"
 #include "ui/internal.h"
+#include "ui/undo/undo.h"
+#include "ui/undo/undo_cmds.h"
 #include "ui/sound/bgm_edit.h"
 #include "ui/modals/project_io.h"
 #include "font/font.h"
@@ -188,10 +190,15 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             if (ui->app_mode == UI_APP_GRAPHICS) {
                 if (ui->sel_instance >= 0) {
                     R01World *w = r01_project_active_world(ui->project);
-                    if (w && r01_world_instance_remove(w, ui->sel_instance) == 0) {
-                        ui->sel_instance = -1;
-                        ui->inst_drag = 0;
-                        ui_toast(ui, "instance removed", 0);
+                    if (w && ui->sel_instance < w->instance_count) {
+                        R01EntityInstance removed = w->instances[ui->sel_instance];
+                        int idx = ui->sel_instance;
+                        if (r01_world_instance_remove(w, idx) == 0) {
+                            ui_undo_push_instance_remove(ui, idx, &removed);
+                            ui->sel_instance = -1;
+                            ui->inst_drag = 0;
+                            ui_toast(ui, "instance removed", 0);
+                        }
                     }
                     return 1;
                 }
@@ -227,6 +234,18 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
         }
         if (e->key.keysym.mod & KMOD_CTRL) {
+            if (ui->text.field_id < 1 && (e->key.keysym.sym == SDLK_z || e->key.keysym.sym == SDLK_y)) {
+                if (e->key.keysym.sym == SDLK_z) {
+                    if (e->key.keysym.mod & KMOD_SHIFT) {
+                        (void)ui_undo_redo(ui);
+                    } else {
+                        (void)ui_undo_undo(ui);
+                    }
+                } else {
+                    (void)ui_undo_redo(ui);
+                }
+                return 1;
+            }
             if (e->key.keysym.sym == SDLK_s) {
                 ui_project_io_request_save(ui, (e->key.keysym.mod & KMOD_SHIFT) != 0);
                 return 1;
@@ -696,6 +715,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     }
                     ui->last_paint_tx = -1;
                     ui->last_paint_ty = -1;
+                    (void)ui_undo_paint_begin(ui);
                     ui_paint_tile(ui, tx, ty);
                     return 1;
                 }
@@ -714,6 +734,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
     }
 
     if (e->type == SDL_MOUSEBUTTONUP && e->button.button == SDL_BUTTON_LEFT) {
+        ui_undo_paint_end(ui);
         ui->last_paint_tx = -1;
         ui->last_paint_ty = -1;
         ui->sel_drag = 0;
@@ -839,7 +860,9 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 }
                 if (a == 3 && metatiles_add_hit(ui, lx, ly)) {
                     R01World *w = r01_project_active_world(ui->project);
-                    if (w && r01_world_metatile_add(w) >= 0) {
+                    int idx;
+                    if (w && (idx = r01_world_metatile_add(w)) >= 0) {
+                        ui_undo_push_metatile_add(ui, idx);
                         ui_toast(ui, "metatile created", 0);
                     } else {
                         ui_toast(ui, "metatile catalog full", 1);
@@ -969,6 +992,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     }
                 }
                 if (idx >= 0) {
+                    ui_undo_push_instance_add(ui, idx);
                     ui->sel_instance = idx;
                     ui->screen_layer = UI_SCREEN_LAYER_SPR;
                     screen_sel_clear(ui);

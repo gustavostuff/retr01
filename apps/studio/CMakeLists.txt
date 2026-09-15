@@ -100,6 +100,8 @@ add_library(retr01_studio_app
   app/src/ui/widgets/modal.c
   app/src/ui/widgets/textfield.c
   app/src/ui/widgets/compose.c
+  app/src/ui/undo/undo.c
+  app/src/ui/undo/undo_cmds.c
   app/src/ui/layout.c
   app/src/ui/draw/frame.c
   app/src/ui/draw/sidebar.c

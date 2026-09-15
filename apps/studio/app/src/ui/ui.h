@@ -5,6 +5,7 @@
 #include "retr01_studio/project.h"
 #include "retr01_emu/machine.h"
 #include "r01_bgm_host.h"
+#include "ui/undo/undo.h"
 
 #include <SDL.h>
 
@@ -469,6 +470,8 @@ typedef struct UiState {
     int metasprites_scroll;
     int entities_scroll;
     int focus; /* UI_FOCUS_* - which control owns wheel / key routing */
+    UiUndoStack undo;
+    void *undo_paint; /* open UiUndoPaintStroke* during a paint drag, else NULL */
 } UiState;
 
 static inline int ui_logic_scale(const UiState *ui) {

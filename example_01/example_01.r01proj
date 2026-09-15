@@ -1,12 +1,12 @@
 {
   "version": 11,
-  "name": "entities",
+  "name": "example_01",
   "default_world": 0,
   "active_world": 0,
   "active_screen": 2,
-  "default_screen": 0,
+  "default_screen": 2,
   "default_pal_row": 0,
-  "player_entity": 0,
+  "player_entity": -1,
   "grid_cols": 16,
   "grid_rows": 16,
   "global_pal_bg": [[0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51]],
@@ -14,85 +14,20 @@
   "bg_bank0_tiles": 0,
   "bg_bank0_b64": "",
   "spr_banks": [
-    {"tiles": 1, "b64": "EQAAAAAAAAAiAAAAAAAAAA=="},
+    {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""}
   ],
   "sprites": [
-    {"bank": 0, "tile": 0, "pal": 1}
   ],
   "metasprites": [
-    {"name": "Blob", "parts": [{"bank":0,"tile":0,"pal":1,"fh":1,"fv":0,"dx":1,"dy":0},{"bank":0,"tile":0,"pal":1,"fh":1,"fv":0,"dx":2,"dy":0}]}
   ],
   "metatiles": [
   ],
   "entities": [
-    {
-      "name": "Hero",
-      "state_count": 1,
-      "states": [
-        {
-          "name": "Walk",
-          "origin_x": 3, "origin_y": 5,
-          "hitbox_x": 1, "hitbox_y": 2, "hitbox_w": 8, "hitbox_h": 8,
-          "frame_count": 1,
-          "frames": [
-            {"parts": [{"bank":0,"tile":0,"pal":1,"fh":1,"fv":0,"dx":4,"dy":2}]}
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Entity",
-      "state_count": 1,
-      "states": [
-        {
-          "name": "Idle",
-          "origin_x": 0, "origin_y": 0,
-          "hitbox_x": 0, "hitbox_y": 0, "hitbox_w": 8, "hitbox_h": 8,
-          "frame_count": 1,
-          "frames": [
-            {"parts": [{"bank":0,"tile":0,"pal":1,"fh":0,"fv":0,"dx":0,"dy":0}]}
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Entity",
-      "state_count": 1,
-      "states": [
-        {
-          "name": "Idle",
-          "origin_x": 0, "origin_y": 0,
-          "hitbox_x": 0, "hitbox_y": 0, "hitbox_w": 8, "hitbox_h": 8,
-          "frame_count": 1,
-          "frames": [
-            {"parts": [{"bank":0,"tile":0,"pal":1,"fh":0,"fv":0,"dx":0,"dy":0}]}
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Blob",
-      "state_count": 1,
-      "states": [
-        {
-          "name": "Idle",
-          "origin_x": 0, "origin_y": 0,
-          "hitbox_x": 0, "hitbox_y": 0, "hitbox_w": 8, "hitbox_h": 8,
-          "frame_count": 1,
-          "frames": [
-            {"parts": [{"bank":0,"tile":0,"pal":1,"fh":1,"fv":0,"dx":1,"dy":0},{"bank":0,"tile":0,"pal":1,"fh":1,"fv":0,"dx":2,"dy":0}]}
-          ]
-        }
-      ]
-    }
   ],
   "instances": [
-    {"type": 0, "x": 40, "y": 50, "fh": 1},
-    {"type": 2, "x": 10, "y": 20},
-    {"type": 3, "x": 64, "y": 72}
   ],
   "warp_entrances": [
   ],
@@ -138,9 +73,22 @@
 
   ],
   "bgm": {
-    "track_count": 0,
+    "track_count": 2,
     "tracks": [
-
+      {"name": "Track 1", "channels": [
+        [],
+        [],
+        [],
+        [],
+        []
+      ]},
+      {"name": "Track 2", "channels": [
+        [],
+        [],
+        [],
+        [],
+        []
+      ]}
     ]
   }
 }

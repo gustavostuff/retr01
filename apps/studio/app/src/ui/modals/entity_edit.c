@@ -1,5 +1,6 @@
 #include "ui/ui.h"
 #include "ui/internal.h"
+#include "ui/undo/undo_cmds.h"
 #include "font/font.h"
 
 #include "retr01_studio/chr_pack.h"
@@ -181,6 +182,7 @@ static void entity_edit_save(UiState *ui) {
         w->entities[idx] = ui->entity_edit.draft;
         ui->entity_edit.type_idx = idx;
         ui->entity_edit.is_new = 0;
+        ui_undo_push_entity_add(ui, idx);
         ui_toast(ui, "entity created", 0);
     } else {
         if (ui->entity_edit.type_idx >= w->entity_count) {

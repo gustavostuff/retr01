@@ -1,5 +1,7 @@
 #include "ui/ui.h"
 #include "ui/internal.h"
+#include "ui/undo/undo.h"
+#include "ui/undo/undo_cmds.h"
 #include "font/font.h"
 
 #include "retr01_studio/cart.h"
@@ -64,12 +66,20 @@ void handle_world_click(UiState *ui, int col, int row, int ctrl, int dbl) {
     world_sel_set(ui, col, row);
     if (ui->worlds_plane == UI_WORLDS_PLANE_BG0) {
         if (ctrl) {
-            (void)r01_world_bg0_remove_screen(w, col, row);
+            int bi = r01_world_bg0_screen_index(w, col, row);
+            if (bi >= 0 && bi < w->bg0_screen_count && w->bg0_screens[bi].present) {
+                R01Screen removed = w->bg0_screens[bi];
+                if (r01_world_bg0_remove_screen(w, col, row) == 0) {
+                    ui_undo_push_screen_remove(ui, UI_WORLDS_PLANE_BG0, col, row, &removed);
+                }
+            }
             return;
         }
         if (dbl) {
             if (r01_world_bg0_create_screen(w, col, row) < 0) {
                 ui_toast(ui, "8 BG0 screens max", 1);
+            } else {
+                ui_undo_push_screen_create(ui, UI_WORLDS_PLANE_BG0, col, row);
             }
             return;
         }
@@ -81,8 +91,14 @@ void handle_world_click(UiState *ui, int col, int row, int ctrl, int dbl) {
     }
     if (ctrl) {
         idx = r01_world_screen_index(w, col, row);
-        if (r01_world_remove_screen(w, col, row) == 0 && ui->project->active_screen == idx) {
-            r01_project_select_start_screen(ui->project);
+        if (idx >= 0 && idx < w->screen_count && w->screens[idx].present) {
+            R01Screen removed = w->screens[idx];
+            if (r01_world_remove_screen(w, col, row) == 0) {
+                ui_undo_push_screen_remove(ui, UI_WORLDS_PLANE_BG1, col, row, &removed);
+                if (ui->project->active_screen == idx) {
+                    r01_project_select_start_screen(ui->project);
+                }
+            }
         }
         return;
     }
@@ -90,6 +106,7 @@ void handle_world_click(UiState *ui, int col, int row, int ctrl, int dbl) {
         idx = r01_world_create_screen(w, col, row);
         if (idx >= 0) {
             ui->project->active_screen = idx;
+            ui_undo_push_screen_create(ui, UI_WORLDS_PLANE_BG1, col, row);
         } else if (r01_world_present_count(w) >= R01_MAX_PRESENT_SCREENS) {
             ui_toast(ui, "32 present screens max", 1);
         }
@@ -149,7 +166,10 @@ int ui_world_screen_copy(UiState *ui) {
 int ui_world_screen_paste(UiState *ui) {
     R01World *w;
     R01Screen *dst;
+    R01Screen before;
     int col, row, idx;
+    int had_before = 0;
+    int plane;
     if (world_edit_blocked(ui)) {
         return 0;
     }
@@ -164,8 +184,14 @@ int ui_world_screen_paste(UiState *ui) {
     }
     col = ui->world_sel_col;
     row = ui->world_sel_row;
-    if (ui->worlds_plane == UI_WORLDS_PLANE_BG0) {
-        if (r01_world_bg0_create_screen(w, col, row) < 0) {
+    plane = ui->worlds_plane;
+    if (plane == UI_WORLDS_PLANE_BG0) {
+        idx = r01_world_bg0_screen_index(w, col, row);
+        if (idx >= 0 && idx < w->bg0_screen_count && w->bg0_screens[idx].present) {
+            before = w->bg0_screens[idx];
+            had_before = 1;
+        }
+        if (r01_world_bg0_create_screen(w, col, row) < 0 && !had_before) {
             ui_toast(ui, "BG0 paste failed", 1);
             return 1;
         }
@@ -177,14 +203,20 @@ int ui_world_screen_paste(UiState *ui) {
         dst = &w->bg0_screens[idx];
         w->bg0_active_screen = idx;
     } else {
-        idx = r01_world_create_screen(w, col, row);
-        if (idx < 0) {
-            if (r01_world_present_count(w) >= R01_MAX_PRESENT_SCREENS) {
-                ui_toast(ui, "32 present screens max", 1);
-            } else {
-                ui_toast(ui, "paste failed", 1);
+        idx = r01_world_find_screen(w, col, row);
+        if (idx >= 0 && w->screens[idx].present) {
+            before = w->screens[idx];
+            had_before = 1;
+        } else {
+            idx = r01_world_create_screen(w, col, row);
+            if (idx < 0) {
+                if (r01_world_present_count(w) >= R01_MAX_PRESENT_SCREENS) {
+                    ui_toast(ui, "32 present screens max", 1);
+                } else {
+                    ui_toast(ui, "paste failed", 1);
+                }
+                return 1;
             }
-            return 1;
         }
         dst = &w->screens[idx];
         ui->project->active_screen = idx;
@@ -196,6 +228,7 @@ int ui_world_screen_paste(UiState *ui) {
     dst->row = row;
     dst->present = 1;
     r01_screen_fill_pixels_from_bank(w, dst);
+    ui_undo_push_screen_paste(ui, plane, idx, had_before ? &before : NULL);
     ui_toast(ui, "screen pasted", 0);
     return 1;
 }
@@ -214,17 +247,34 @@ int ui_world_screen_remove(UiState *ui) {
     col = ui->world_sel_col;
     row = ui->world_sel_row;
     if (ui->worlds_plane == UI_WORLDS_PLANE_BG0) {
-        if (r01_world_bg0_remove_screen(w, col, row) != 0) {
+        idx = r01_world_bg0_screen_index(w, col, row);
+        if (idx < 0 || !w->bg0_screens[idx].present) {
             ui_toast(ui, "select a present screen to remove", 1);
             return 1;
+        }
+        {
+            R01Screen removed = w->bg0_screens[idx];
+            if (r01_world_bg0_remove_screen(w, col, row) != 0) {
+                ui_toast(ui, "select a present screen to remove", 1);
+                return 1;
+            }
+            ui_undo_push_screen_remove(ui, UI_WORLDS_PLANE_BG0, col, row, &removed);
         }
         ui_toast(ui, "screen removed", 0);
         return 1;
     }
     idx = r01_world_screen_index(w, col, row);
-    if (r01_world_remove_screen(w, col, row) != 0) {
+    if (idx < 0 || !w->screens[idx].present) {
         ui_toast(ui, "select a present screen to remove", 1);
         return 1;
+    }
+    {
+        R01Screen removed = w->screens[idx];
+        if (r01_world_remove_screen(w, col, row) != 0) {
+            ui_toast(ui, "select a present screen to remove", 1);
+            return 1;
+        }
+        ui_undo_push_screen_remove(ui, UI_WORLDS_PLANE_BG1, col, row, &removed);
     }
     if (ui->project->active_screen == idx) {
         r01_project_select_start_screen(ui->project);

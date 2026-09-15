@@ -1,5 +1,6 @@
 #include "ui/ui.h"
 #include "ui/internal.h"
+#include "ui/undo/undo_cmds.h"
 #include "font/font.h"
 
 #include "retr01_studio/cart.h"
@@ -721,8 +722,14 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
                 ui_toast(ui, "marked as player", 0);
             }
         } else if (item == 2 && w) {
-            r01_world_entity_remove(w, ui->menu.entity_type_idx);
-            ui_toast(ui, "entity removed", 0);
+            int tidx = ui->menu.entity_type_idx;
+            if (tidx >= 0 && tidx < w->entity_count) {
+                R01EntityType removed = w->entities[tidx];
+                int was_player = (r01_world_player_entity(w) == tidx);
+                r01_world_entity_remove(w, tidx);
+                ui_undo_push_entity_remove(ui, tidx, &removed, was_player);
+                ui_toast(ui, "entity removed", 0);
+            }
         }
         menu_close(ui);
         return;

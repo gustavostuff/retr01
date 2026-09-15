@@ -1,6 +1,8 @@
 #include "ui/ui.h"
 #include "ui/internal.h"
 #include "ui/modals/project_io.h"
+#include "ui/undo/undo.h"
+#include "ui/undo/undo_cmds.h"
 #include "font/font.h"
 
 #include "retr01_studio/project.h"
@@ -151,6 +153,8 @@ int ui_init(UiState *ui) {
     ui->menu.world_screen_idx = -1;
     ui->sel_instance = -1;
     ui->app_mode = UI_APP_GRAPHICS;
+    ui_undo_init(&ui->undo);
+    ui->undo_paint = NULL;
     ui_sound_init(ui);
     if (ui_sound_audio_init() != 0) {
         /* Non-fatal: Sounds Play will toast if pressed. */
@@ -162,6 +166,8 @@ void ui_shutdown(UiState *ui) {
     if (!ui) {
         return;
     }
+    ui_undo_paint_end(ui);
+    ui_undo_shutdown(&ui->undo);
     ui_sound_play_stop(ui);
     ui_sound_audio_shutdown();
     ui_play_stop(ui);

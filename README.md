@@ -1,4 +1,4 @@
-<img src="logos/v_01.png" alt="Logo V1" />
+<img src="logos/v_02.png" alt="Logo V2" />
 
 The Retr01 is an MCU-assisted 8-bit system, ready for both arcade and console setups.
 

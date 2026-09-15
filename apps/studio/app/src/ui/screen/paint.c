@@ -1,5 +1,6 @@
 #include "ui/ui.h"
 #include "ui/internal.h"
+#include "ui/undo/undo_cmds.h"
 #include "font/font.h"
 
 #include "retr01_studio/cart.h"
@@ -75,6 +76,8 @@ void ui_paint_tile(UiState *ui, int tx, int ty) {
     R01World *w;
     R01Screen *s;
     uint8_t tile_id, attr;
+    uint8_t old_tile, old_attr;
+    int cell;
     if (!ui || ui->play.active || tx < 0 || ty < 0) {
         return;
     }
@@ -90,6 +93,10 @@ void ui_paint_tile(UiState *ui, int tx, int ty) {
     if (!w || !s) {
         return;
     }
+    cell = ty * R01_SCREEN_TILES_X + tx;
+    old_tile = s->tiles[cell];
+    old_attr = s->attrs[cell];
+    ui_undo_paint_record_cell(ui, tx, ty, old_tile, old_attr, tile_id, attr);
     r01_screen_paint_tile(w, s, tx, ty, tile_id, attr);
     ui->last_paint_tx = tx;
     ui->last_paint_ty = ty;
@@ -121,6 +128,7 @@ void ui_flood_fill(UiState *ui, int tx, int ty) {
     if (seed_tile == stamp_tile && seed_attr == stamp_attr) {
         return;
     }
+    (void)ui_undo_paint_begin(ui);
     memset(visited, 0, sizeof(visited));
     queue[qtail++] = ty * R01_SCREEN_TILES_X + tx;
     visited[ty * R01_SCREEN_TILES_X + tx] = 1;
@@ -131,6 +139,9 @@ void ui_flood_fill(UiState *ui, int tx, int ty) {
         int cx = cell % R01_SCREEN_TILES_X;
         int cy = cell / R01_SCREEN_TILES_X;
         int d;
+        uint8_t old_tile = s->tiles[cell];
+        uint8_t old_attr = s->attrs[cell];
+        ui_undo_paint_record_cell(ui, cx, cy, old_tile, old_attr, stamp_tile, stamp_attr);
         r01_screen_paint_tile(w, s, cx, cy, stamp_tile, stamp_attr);
         for (d = 0; d < 4; d++) {
             int nx = cx + dx[d];
@@ -150,4 +161,5 @@ void ui_flood_fill(UiState *ui, int tx, int ty) {
             queue[qtail++] = ncell;
         }
     }
+    ui_undo_paint_end(ui);
 }

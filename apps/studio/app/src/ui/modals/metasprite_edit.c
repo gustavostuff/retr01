@@ -1,5 +1,6 @@
 #include "ui/ui.h"
 #include "ui/internal.h"
+#include "ui/undo/undo_cmds.h"
 #include "font/font.h"
 
 #include "retr01_studio/chr_pack.h"
@@ -88,6 +89,7 @@ static void metasprite_edit_save(UiState *ui) {
         w->metasprites[idx] = ui->metasprite_edit.draft;
         ui->metasprite_edit.meta_idx = idx;
         ui->metasprite_edit.is_new = 0;
+        ui_undo_push_metasprite_add(ui, idx);
         ui_toast(ui, "metasprite created", 0);
     } else {
         if (ui->metasprite_edit.meta_idx >= w->metasprite_count) {

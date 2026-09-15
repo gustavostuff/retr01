@@ -223,6 +223,7 @@ ctest --test-dir build --output-on-failure
 | Move player | **WASD** / arrows |
 | Warp test | **X** -> (0,0), **Y** -> (1,0) |
 | Save / load | **Ctrl+S** / **Ctrl+O** current project path |
+| Undo / redo | **Ctrl+Z** / **Ctrl+Y** (or **Ctrl+Shift+Z**). Covers paint strokes, flood fill, add tile/sprite/entity/metasprite/metatile, place/remove instance, create/remove/paste screen |
 | Export cart | **Ctrl+E** beside project (or `output/<name>`) (+ `C/`, `ASM/`, `data/`) |
 | Toggle canvas | **Ctrl+Shift+R** -> **640x360** / **1280x720** |
 | Present scale | **Ctrl+1** / **Ctrl+2** -> 1x / 2x window |

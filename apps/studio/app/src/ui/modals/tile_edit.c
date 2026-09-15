@@ -1,5 +1,6 @@
 #include "ui/ui.h"
 #include "ui/internal.h"
+#include "ui/undo/undo_cmds.h"
 #include "font/font.h"
 
 #include "retr01_studio/cart.h"
@@ -141,12 +142,18 @@ static void tile_edit_save(UiState *ui) {
     int si;
     int touched = 0;
     int edit_all;
+    int was_new;
+    int old_tile_count = 0;
+    int painted = 0;
+    uint8_t old_tile = 0, old_attr = 0, new_attr = 0;
     uint8_t canonical[R01_TILE_BYTES];
     if (!w) {
         return;
     }
     edit_all = ui->tile_edit.edit_all;
-    if (ui->tile_edit.is_new || ui->tile_edit.tile_id < 0) {
+    was_new = ui->tile_edit.is_new || ui->tile_edit.tile_id < 0;
+    if (was_new) {
+        old_tile_count = w->bg_banks[ui->tile_edit.bank].tile_count;
         id = r01_chr_alloc_tile(w, ui->tile_edit.bank);
         if (id < 0) {
             ui_toast(ui, "CHR bank full", 1);
@@ -176,11 +183,20 @@ static void tile_edit_save(UiState *ui) {
         tile_edit_refresh_screens(w);
         s = ui_edit_map_screen(ui);
         if (s && ui->tile_edit.paint_tx >= 0 && ui->tile_edit.paint_ty >= 0) {
-            r01_screen_paint_tile(w, s, ui->tile_edit.paint_tx, ui->tile_edit.paint_ty, (uint8_t)id,
-                                  r01_attr_pack(ui->tile_edit.bank, ui->tile_edit.pal, ui->tile_edit.flip_h,
-                                                ui->tile_edit.flip_v));
+            int cell = ui->tile_edit.paint_ty * R01_SCREEN_TILES_X + ui->tile_edit.paint_tx;
+            old_tile = s->tiles[cell];
+            old_attr = s->attrs[cell];
+            new_attr = r01_attr_pack(ui->tile_edit.bank, ui->tile_edit.pal, ui->tile_edit.flip_h,
+                                     ui->tile_edit.flip_v);
+            r01_screen_paint_tile(w, s, ui->tile_edit.paint_tx, ui->tile_edit.paint_ty, (uint8_t)id, new_attr);
+            painted = 1;
             touched = 1;
         }
+    }
+
+    if (was_new) {
+        ui_undo_push_tile_create(ui, ui->tile_edit.bank, id, old_tile_count, painted, ui->tile_edit.paint_tx,
+                                 ui->tile_edit.paint_ty, old_tile, old_attr, (uint8_t)id, new_attr);
     }
 
     ui->brush.armed = 1;
