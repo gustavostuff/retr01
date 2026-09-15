@@ -471,7 +471,8 @@ typedef struct UiState {
     int entities_scroll;
     int focus; /* UI_FOCUS_* - which control owns wheel / key routing */
     UiUndoStack undo;
-    void *undo_paint; /* open UiUndoPaintStroke* during a paint drag, else NULL */
+    void *undo_paint;     /* open UiUndoPaintStroke* during a map paint drag, else NULL */
+    void *undo_spr_paint; /* open UiUndoSprPaintStroke* during compose sprite paint, else NULL */
 } UiState;
 
 static inline int ui_logic_scale(const UiState *ui) {

@@ -148,9 +148,23 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 if (ui->text.field_id > 0) {
                     ui_text_blur(ui);
                 } else {
+                    ui_undo_spr_paint_end(ui);
                     ui->entity_edit.open = 0;
                     ui_focus_clear(ui);
                     ui_text_blur(ui);
+                }
+                return 1;
+            }
+            if ((e->key.keysym.mod & KMOD_CTRL) && ui->text.field_id < 1 &&
+                (e->key.keysym.sym == SDLK_z || e->key.keysym.sym == SDLK_y)) {
+                if (e->key.keysym.sym == SDLK_z) {
+                    if (e->key.keysym.mod & KMOD_SHIFT) {
+                        (void)ui_undo_redo(ui);
+                    } else {
+                        (void)ui_undo_undo(ui);
+                    }
+                } else {
+                    (void)ui_undo_redo(ui);
                 }
                 return 1;
             }

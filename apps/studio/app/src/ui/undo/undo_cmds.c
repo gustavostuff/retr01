@@ -899,3 +899,165 @@ void ui_undo_push_tile_create(UiState *ui, int bank, int tile_id, int old_tile_c
     }
     (void)ui_undo_push(&ui->undo, &tile_create_vt, d, "add tile");
 }
+
+/* ---- sprite CHR paint stroke (entity / compose) ---- */
+
+typedef struct UiUndoSprPaintTile {
+    int bank;
+    int tile_id;
+    uint8_t old_chr[R01_TILE_BYTES];
+    uint8_t new_chr[R01_TILE_BYTES];
+} UiUndoSprPaintTile;
+
+typedef struct UiUndoSprPaintStroke {
+    int world_idx;
+    UiUndoSprPaintTile *tiles;
+    int count;
+    int cap;
+} UiUndoSprPaintStroke;
+
+static void spr_paint_destroy(void *data) {
+    UiUndoSprPaintStroke *st = (UiUndoSprPaintStroke *)data;
+    if (!st) {
+        return;
+    }
+    free(st->tiles);
+    free(st);
+}
+
+static void spr_paint_apply(UiState *ui, UiUndoSprPaintStroke *st, int use_new) {
+    R01World *w;
+    int i;
+    if (!ui || !st || !ui->project) {
+        return;
+    }
+    if (st->world_idx < 0 || st->world_idx >= R01_MAX_WORLDS) {
+        return;
+    }
+    w = &ui->project->worlds[st->world_idx];
+    for (i = 0; i < st->count; i++) {
+        UiUndoSprPaintTile *t = &st->tiles[i];
+        (void)r01_chr_write_spr_tile(w, t->bank, t->tile_id, use_new ? t->new_chr : t->old_chr);
+    }
+}
+
+static void spr_paint_undo(UiState *ui, void *data) {
+    spr_paint_apply(ui, (UiUndoSprPaintStroke *)data, 0);
+}
+
+static void spr_paint_redo(UiState *ui, void *data) {
+    spr_paint_apply(ui, (UiUndoSprPaintStroke *)data, 1);
+}
+
+static const UiUndoVTable spr_paint_vt = {spr_paint_undo, spr_paint_redo, spr_paint_destroy};
+
+static int spr_paint_ensure_cap(UiUndoSprPaintStroke *st, int need) {
+    UiUndoSprPaintTile *ntiles;
+    int ncap;
+    if (!st || need <= st->cap) {
+        return 0;
+    }
+    ncap = st->cap < 4 ? 4 : st->cap * 2;
+    while (ncap < need) {
+        ncap *= 2;
+    }
+    ntiles = (UiUndoSprPaintTile *)realloc(st->tiles, (size_t)ncap * sizeof(*ntiles));
+    if (!ntiles) {
+        return -1;
+    }
+    st->tiles = ntiles;
+    st->cap = ncap;
+    return 0;
+}
+
+static int spr_paint_find(const UiUndoSprPaintStroke *st, int bank, int tile_id) {
+    int i;
+    if (!st) {
+        return -1;
+    }
+    for (i = 0; i < st->count; i++) {
+        if (st->tiles[i].bank == bank && st->tiles[i].tile_id == tile_id) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int ui_undo_spr_paint_begin(UiState *ui) {
+    UiUndoSprPaintStroke *st;
+    if (!ui || !ui->project) {
+        return -1;
+    }
+    ui_undo_spr_paint_end(ui);
+    st = (UiUndoSprPaintStroke *)calloc(1, sizeof(*st));
+    if (!st) {
+        return -1;
+    }
+    st->world_idx = ui->project->active_world;
+    ui->undo_spr_paint = st;
+    return 0;
+}
+
+void ui_undo_spr_paint_end(UiState *ui) {
+    UiUndoSprPaintStroke *st;
+    R01World *w;
+    int i;
+    int changed = 0;
+    if (!ui || !ui->undo_spr_paint) {
+        return;
+    }
+    st = (UiUndoSprPaintStroke *)ui->undo_spr_paint;
+    ui->undo_spr_paint = NULL;
+    if (st->count < 1 || !ui->project || st->world_idx < 0 || st->world_idx >= R01_MAX_WORLDS) {
+        spr_paint_destroy(st);
+        return;
+    }
+    w = &ui->project->worlds[st->world_idx];
+    for (i = 0; i < st->count; i++) {
+        const uint8_t *src = r01_chr_spr_tile(w, st->tiles[i].bank, st->tiles[i].tile_id);
+        if (src) {
+            memcpy(st->tiles[i].new_chr, src, R01_TILE_BYTES);
+        }
+        if (memcmp(st->tiles[i].old_chr, st->tiles[i].new_chr, R01_TILE_BYTES) != 0) {
+            changed = 1;
+        }
+    }
+    if (!changed) {
+        spr_paint_destroy(st);
+        return;
+    }
+    if (ui_undo_push(&ui->undo, &spr_paint_vt, st, "paint sprite") != 0) {
+        spr_paint_destroy(st);
+    }
+}
+
+void ui_undo_spr_paint_touch_tile(UiState *ui, int bank, int tile_id) {
+    UiUndoSprPaintStroke *st;
+    R01World *w;
+    const uint8_t *src;
+    int idx;
+    if (!ui || !ui->undo_spr_paint || !ui->project) {
+        return;
+    }
+    st = (UiUndoSprPaintStroke *)ui->undo_spr_paint;
+    if (st->world_idx < 0 || st->world_idx >= R01_MAX_WORLDS) {
+        return;
+    }
+    w = &ui->project->worlds[st->world_idx];
+    idx = spr_paint_find(st, bank, tile_id);
+    if (idx >= 0) {
+        return;
+    }
+    src = r01_chr_spr_tile(w, bank, tile_id);
+    if (!src) {
+        return;
+    }
+    if (spr_paint_ensure_cap(st, st->count + 1) != 0) {
+        return;
+    }
+    st->tiles[st->count].bank = bank;
+    st->tiles[st->count].tile_id = tile_id;
+    memcpy(st->tiles[st->count].old_chr, src, R01_TILE_BYTES);
+    memcpy(st->tiles[st->count].new_chr, src, R01_TILE_BYTES);
+    st->count++;
+}

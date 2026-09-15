@@ -743,23 +743,23 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
     int my;
     int pad = UI_UNIT;
     int body_y;
-    int name_lab;
-    int sname_lab;
+    int lab_w;
     int state_lab;
     int frame_lab;
     int left_x;
     int right_x;
     int left_w = UI_ENTITY_LEFT_W;
     int right_w = UI_ENTITY_COMPOSE;
-    int row_y;
     int body_top;
     int body_h;
-    int mid_x;
+    int field_w;
+    int half;
 
     (void)ui;
     body_y = UI_BTN_H + pad;
 
-    /* Top: Name, State name (full width); State | Frame on one row; frame id above canvas. */
+    /* Top: Name + State name (shared field width). State | Frame + frame id sit in the
+     * canvas column, then palette/canvas share the same top Y. */
     lo->name_y = body_y;
     lo->state_name_y = lo->name_y + UI_BTN_H + pad;
     lo->state_y = lo->state_name_y + UI_BTN_H + pad;
@@ -780,8 +780,7 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
     mx = (ui_logic_w(ui) - mw) / 2;
     my = (ui_logic_h(ui) - mh) / 2;
 
-    name_lab = ((label_width("Name") + pad + pad - 1) / pad) * pad;
-    sname_lab = ((label_width("State name") + pad + pad - 1) / pad) * pad;
+    lab_w = ((label_width("State name") + pad + pad - 1) / pad) * pad;
     state_lab = ((label_width("State") + pad + pad - 1) / pad) * pad;
     frame_lab = ((label_width("Frame") + pad + pad - 1) / pad) * pad;
 
@@ -790,31 +789,19 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
     lo->mw = mw;
     lo->mh = mh;
 
-    mid_x = mx + mw / 2;
+    field_w = mw - pad * 2 - lab_w;
+    field_w = (field_w / pad) * pad;
+    if (field_w < pad * 8) {
+        field_w = pad * 8;
+    }
 
     lo->name_y += my;
-    lo->name_x = mx + pad + name_lab;
-    lo->name_w = mx + mw - pad - lo->name_x;
-    lo->name_w = (lo->name_w / pad) * pad;
-    if (lo->name_w < pad * 8) {
-        lo->name_w = pad * 8;
-    }
+    lo->name_x = mx + pad + lab_w;
+    lo->name_w = field_w;
 
     lo->state_name_y += my;
-    lo->state_name_x = mx + pad + sname_lab;
-    lo->state_name_w = mx + mw - pad - lo->state_name_x;
-    lo->state_name_w = (lo->state_name_w / pad) * pad;
-    if (lo->state_name_w < pad * 8) {
-        lo->state_name_w = pad * 8;
-    }
-
-    lo->state_y += my;
-    lo->state_dots_x = mx + pad + state_lab;
-    lo->state_dots_y = lo->state_y + (UI_BTN_H - UI_DOT_SIZE) / 2;
-
-    lo->frame_y += my;
-    lo->frame_dots_x = mid_x + pad + frame_lab;
-    lo->frame_dots_y = lo->frame_y + (UI_BTN_H - UI_DOT_SIZE) / 2;
+    lo->state_name_x = lo->name_x;
+    lo->state_name_w = field_w;
 
     left_x = mx + pad;
     right_x = mx + pad + left_w + pad;
@@ -823,15 +810,23 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
     lo->right_x = right_x;
     lo->right_w = right_w;
 
+    lo->state_y += my;
+    lo->state_dots_x = right_x + state_lab;
+    lo->state_dots_y = lo->state_y + (UI_BTN_H - UI_DOT_SIZE) / 2;
+
+    half = (right_w / 2 / pad) * pad;
+    lo->frame_y += my;
+    lo->frame_dots_x = right_x + half + frame_lab;
+    lo->frame_dots_y = lo->frame_y + (UI_BTN_H - UI_DOT_SIZE) / 2;
+
     lo->frame_id_y += my;
     lo->frame_id_x = right_x;
     lo->frame_id_w = right_w;
 
-    row_y = body_top + my;
     lo->pal_x = left_x + (left_w - UI_PAL_GRID_SIZE) / 2;
-    lo->pal_y = row_y + (body_h - UI_PAL_GRID_SIZE) / 2;
     lo->right_grid_x = right_x;
-    lo->right_grid_y = row_y + (body_h - UI_ENTITY_COMPOSE) / 2;
+    lo->right_grid_y = body_top + my;
+    lo->pal_y = lo->right_grid_y;
 
     lo->guides_y += my;
     lo->paint_y += my;

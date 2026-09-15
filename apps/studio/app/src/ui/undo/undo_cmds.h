@@ -29,6 +29,11 @@ void ui_undo_paint_end(struct UiState *ui);
 void ui_undo_paint_record_cell(struct UiState *ui, int tx, int ty, uint8_t old_tile, uint8_t old_attr,
                                uint8_t new_tile, uint8_t new_attr);
 
+/* Compose / entity modal: undo a drag of SPR CHR pixel paints (tile snapshots). */
+int ui_undo_spr_paint_begin(struct UiState *ui);
+void ui_undo_spr_paint_end(struct UiState *ui);
+void ui_undo_spr_paint_touch_tile(struct UiState *ui, int bank, int tile_id);
+
 void ui_undo_push_entity_add(struct UiState *ui, int type_idx);
 void ui_undo_push_entity_remove(struct UiState *ui, int type_idx, const R01EntityType *removed, int was_player);
 void ui_undo_push_sprite_add(struct UiState *ui, int catalog_idx);

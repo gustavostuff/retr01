@@ -92,7 +92,8 @@ void ui_compose_draw_frame(SDL_Renderer *r, const R01Project *p, const struct R0
 void ui_compose_draw_frame_icon(SDL_Renderer *r, const R01Project *p, const struct R01World *w,
                                 const R01EntityFrame *fr, int dx, int dy, int icon_size);
 int ui_compose_part_at(const R01EntityFrame *fr, int px, int py, int prefer_sel);
-void ui_compose_paint_part(R01Project *p, struct R01World *w, R01EntityPart *pt, int cx, int cy, int paint_color);
+/* Returns 1 if a pixel was written. */
+int ui_compose_paint_part(R01Project *p, struct R01World *w, R01EntityPart *pt, int cx, int cy, int paint_color);
 
 /* Compatibility aliases (existing call sites). */
 #define draw_dot_strip ui_dot_strip_draw

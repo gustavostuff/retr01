@@ -151,6 +151,7 @@ void ui_reset_after_project_load(UiState *ui) {
     ui->world_sel_row = -1;
     ui->screen_clip_valid = 0;
     ui_undo_paint_end(ui);
+    ui_undo_spr_paint_end(ui);
     ui_undo_clear(&ui->undo);
     ui_sound_play_stop(ui);
     ui_bgm_apply_from_project(ui);

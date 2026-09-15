@@ -155,6 +155,7 @@ int ui_init(UiState *ui) {
     ui->app_mode = UI_APP_GRAPHICS;
     ui_undo_init(&ui->undo);
     ui->undo_paint = NULL;
+    ui->undo_spr_paint = NULL;
     ui_sound_init(ui);
     if (ui_sound_audio_init() != 0) {
         /* Non-fatal: Sounds Play will toast if pressed. */
@@ -167,6 +168,7 @@ void ui_shutdown(UiState *ui) {
         return;
     }
     ui_undo_paint_end(ui);
+    ui_undo_spr_paint_end(ui);
     ui_undo_shutdown(&ui->undo);
     ui_sound_play_stop(ui);
     ui_sound_audio_shutdown();
