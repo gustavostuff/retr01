@@ -48,8 +48,8 @@ There is an **active palette buffer** that holds the selected BG and sprite pale
 
 | Port | Role |
 | --- | --- |
-| `$7F08` | `PAL_ROW`. Write **0-7** to select the active palette **row**. BG row N and sprite row N are always selected together. Both share the same backdrop color (color index **0** of that row pair). |
-| `$7F09` | `PAL_DATA`. Auto-inc data window used while PRG (or a helper) copies the chosen cart palette plane bytes into the active buffer |
+| `$7F08` | `PAL_ROW`. Write **0-7** to select the active palette **row**. BG row N and sprite row N are always selected together. Both share the same backdrop color (color index **0** of that row pair). Writing `$7F08` also **resets** the `$7F09` fill cursor to the start of the active buffer. |
+| `$7F09` | `PAL_DATA`. Auto-inc data window. PRG (or a helper) copies **32** master indices into the active buffer: **16** BG then **16** SPR for the selected row. |
 
 Rules:
 
@@ -57,6 +57,34 @@ Rules:
 - Load / refresh the active buffer from the cart global palette planes in **vblank only**.
 - Games do not poke individual PROM RGB values. They only pick rows and supply cart **indices**.
 - Same vblank rule for scroll ports `$7F02` / `$7F03` (and raster `$7F04` unless a deliberate split-screen IRQ effect is defined). See `world-scrolling.md`.
+
+Typical boot fill (matches Phase 1 PRG):
+
+1. Seek MAP to the cart BG palette plane row (`$7F90`-`$7F92`).
+2. `STA $7F08` with the row index (0-7). Cursor resets.
+3. Copy 16 bytes from `$7F93` into `$7F09`.
+4. Seek MAP to the SPR plane for the same row.
+5. Copy 16 more bytes into `$7F09` (cursor continues at offset 16).
+
+### Motherboard color kit (locked SoT)
+
+The AT27C256R holds **this** 64-color kit (8-bit preview RGB). Studio and Emu use the same table. Burn tools write packed **R3G3B2** (`{RRRGGGBB}`) into PROM address `N` for kit index `N`.
+
+Indices **0..15** are darkest, **16..31** mid-dark, **32..47** mid, **48..63** bright. Cart palette bytes are kit indices only.
+
+```text
+# idx   RRGGBB hex preview (not PROM bytes)
+ 0 000000  1 290514  2 2A0507  3 230F06  4 1E1306  5 1A1605  6 141807  7 061A07
+ 8 051A13  9 071918 10 08181C 11 071722 12 030B3D 13 16033A 14 20052D 15 260420
+16 363636 17 740A40 18 77091A 19 693512 20 5D3F0E 21 514617 22 424C19 23 13511A
+24 16503F 25 114E4D 26 164D58 27 164A66 28 163794 29 472990 30 5F167D 31 6C115F
+32 949494 33 C04A7A 34 C54A4D 35 B8601B 36 A27326 37 8F7E2F 38 77872D 39 209030
+40 2E8E72 41 318B89 42 1F889C 43 2483B5 44 4D77D7 45 7E6AD3 46 9D5DBF 47 B352A0
+48 FFFFFF 49 F1A2BB 50 F1A6A1 51 F1A983 52 EEAC44 53 D4BA33 54 B0C841 55 73D275
+56 22D0A6 57 3BCDC9 58 48C9E4 59 88C4ED 60 A4BDEF 61 BBB5F1 62 D5A9EF 63 F09BDD
+```
+
+Studio export may also write `<stem>_prom.bin` (64 packed R3G3B2 bytes) for OTP burners. That file must match this kit.
 
 ## Background layers
 

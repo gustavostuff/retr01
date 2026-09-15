@@ -176,7 +176,7 @@ int main(void) {
         return fail("$7F00 readback");
     }
 
-    /* OAM $7F20/$7F21: wrap past 256 into high half. */
+    /* OAM $7F20/$7F21: 64 sprites x 4 B = 256 B, auto-inc wraps. */
     {
         int i;
         r01e_mem_write(&m, 0x7F20, 0x00);
@@ -192,13 +192,13 @@ int main(void) {
         for (i = 0; i < 256; i++) {
             r01e_mem_write(&m, 0x7F21, 0xEE);
         }
-        /* addr == 256 after 256 stores from 0 */
+        /* After 256 stores, addr wrapped to 0. */
         r01e_mem_write(&m, 0x7F21, 0x42);
-        if (m.io.oam[256] != 0x42) {
+        if (m.io.oam[0] != 0x42) {
             r01e_machine_shutdown(&m);
-            return fail("OAM wrap to [256]");
+            return fail("OAM wrap to [0]");
         }
-        r01e_mem_write(&m, 0x7F20, 0x00);
+        r01e_mem_write(&m, 0x7F20, 0x01);
         if (r01e_mem_read(&m, 0x7F21) != 0xEE) {
             r01e_machine_shutdown(&m);
             return fail("OAM readback");

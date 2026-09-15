@@ -12,7 +12,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### Instance + PA byte schemas
 
-**Partly sized:** Entity **defs** are locked (offset-table pack, max **356 B**, **16**/world). Live instance records in system RAM and optional `PA` blobs still need a frozen byte layout. Spawn locations are **PRG-side** (not cart).
+**Partly sized:** Entity **defs** are locked (offset-table pack, max **356 B**, **16**/world). Live instance records in system RAM and optional `PA` blobs still need a frozen byte layout. Spawn locations are **PRG-side** (not cart). Studio still packs a temporary **20 B** type snapshot for Host Play. That must move to the locked pack (`software-api.md`).
 
 **Touches:** `memory.md`, `software-api.md`
 

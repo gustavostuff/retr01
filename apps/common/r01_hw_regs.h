@@ -14,7 +14,7 @@
 #define R01_PORT_RASTER_CTRL 0x7F05u
 #define R01_PORT_BG0_SCROLL_X 0x7F06u
 #define R01_PORT_BG0_SCROLL_Y 0x7F07u
-#define R01_PORT_PAL_ADDR 0x7F08u
+#define R01_PORT_PAL_ROW 0x7F08u
 #define R01_PORT_PAL_DATA 0x7F09u
 #define R01_PORT_VRAM_ADDR_LO 0x7F10u
 #define R01_PORT_VRAM_ADDR_HI 0x7F11u
@@ -35,7 +35,7 @@
 #define R01_PORT_MAP_HI 0x7F92u
 #define R01_PORT_MAP_DATA 0x7F93u
 
-/* PPUCTRL ($7F00) -- docs/graphics.md */
+/* PPUCTRL ($7F00) -- docs/video-graphics.md */
 #define R01_PPUCTRL_L1_EN 0x01u
 #define R01_PPUCTRL_L0_EN 0x02u
 #define R01_PPUCTRL_SPR_EN 0x04u

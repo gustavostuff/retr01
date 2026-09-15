@@ -75,11 +75,11 @@
 
 /* Per-world sprite catalog (CHR patterns in spr_banks + authoring metadata). */
 #define R01_MAX_SPRITES 256
-/* Authoring leftovers in project JSON (not cart / C API). See docs/graphics.md. */
+/* Authoring leftovers in project JSON (not cart / C API). See docs/video-graphics.md. */
 #define R01_MAX_METASPRITES 64
 #define R01_MAX_METATILES 64
 
-/* Entity types (docs/graphics.md). Soft on-screen live cap is 16. */
+/* Entity types (docs/video-graphics.md). Soft on-screen live cap is 16. */
 #define R01_MAX_ENTITY_TYPES 16
 #define R01_ENTITY_STATES_MAX 4
 #define R01_ENTITY_FRAMES_MAX 4
@@ -91,7 +91,7 @@
 #define R01_ENTITY_HITBOX_W 8
 #define R01_ENTITY_HITBOX_H 8
 #define R01_MAX_ENTITY_INSTANCES 64 /* world placement table (may exceed live 16) */
-#define R01_OAM_MAX 128
+#define R01_OAM_MAX 64
 
 #define R01_MAX_WARP_ENTRANCES 32
 #define R01_MAX_WARP_EXITS 32

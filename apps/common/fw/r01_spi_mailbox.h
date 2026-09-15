@@ -22,7 +22,7 @@
 
 #define R01_MB_STATUS_BUSY 0x01u
 
-#define R01_OAM_ENTRIES 128u
+#define R01_OAM_ENTRIES 64u
 #define R01_OAM_BYTES (R01_OAM_ENTRIES * 4u)
 #define R01_APU_REGS 0x20u /* $7F40-$7F5F */
 #define R01_CHR_TILE_BYTES 16u

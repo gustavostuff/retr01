@@ -289,7 +289,7 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "#ifndef R01_ENTITY_H\n#define R01_ENTITY_H\n\n"
                    "#include <stdint.h>\n"
                    "typedef struct R01GameCtx R01GameCtx;\n\n"
-                   "/* Soft contract: docs/graphics.md (4x4x4 parts, 16 live). */\n"
+                   "/* Soft contract: docs/video-graphics.md (4x4x4 parts, 16 live). */\n"
                    "#define R01_ENTITY_ONSCREEN_MAX 16\n\n"
                    "int  r01_entity_spawn(uint8_t type, int wx, int wy);\n"
                    "void r01_entity_remove(int inst);\n"
@@ -791,7 +791,7 @@ static int write_asm_tree(const char *asm_dir, const R01World *w, char *err_buf,
                    "PPUCTRL       = $7F00\nPPUSTATUS     = $7F01\n"
                    "SCROLL_X      = $7F02\nSCROLL_Y      = $7F03\n"
                    "BG0_SCROLL_X  = $7F06\nBG0_SCROLL_Y  = $7F07\n"
-                   "PAL_ADDR      = $7F08\nPAL_DATA      = $7F09\n"
+                   "PAL_ROW       = $7F08\nPAL_DATA      = $7F09\n"
                    "VRAM_ADDR_LO  = $7F10\nVRAM_ADDR_HI  = $7F11\nVRAM_DATA = $7F12\n"
                    "OAM_ADDR      = $7F20\nOAM_DATA      = $7F21\n"
                    "CARTEE_CMD    = $7F22\nCARTEE_ADDR   = $7F23\nCARTEE_DATA   = $7F24\n"
@@ -825,7 +825,7 @@ static int write_asm_tree(const char *asm_dir, const R01World *w, char *err_buf,
     if (write_text(path,
                    "SCREEN_TILES_X = 16\nSCREEN_TILES_Y = 15\n"
                    "SCREEN_PX_W    = 128\nSCREEN_PX_H    = 120\n"
-                   "OAM_MAX        = 128\n",
+                   "OAM_MAX        = 64\n",
                    err_buf, err_cap) != 0) {
         return -1;
     }

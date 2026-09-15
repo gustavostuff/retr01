@@ -200,6 +200,29 @@ Payload **480 B** raw or **RLE** (`flags` bit 0). RLE: `C < 0x80` copy `C+1` lit
 
 Typical boot: seek palette + start MAP via `$7F90`-`$7F93`, copy an active palette row into the palette ports, stream the start screen into VRAM.
 
+## Soft `$7Fxx` map (summary)
+
+Owners and timing live in `hardware.md` / `ic-comms-risks.md`. Port roles:
+
+| Addr | Role |
+| --- | --- |
+| `$7F00` | PPUCTRL (layer enables, NMI enable) |
+| `$7F01` | PPUSTATUS (VBlank bit, and so on) |
+| `$7F02` / `$7F03` | BG1 scroll X / Y (hard latches) |
+| `$7F04` / `$7F05` | Raster compare / ctrl |
+| `$7F06` / `$7F07` | BG0 scroll X / Y |
+| `$7F08` / `$7F09` | PAL_ROW / PAL_DATA (see `video-graphics.md`) |
+| `$7F10`-`$7F12` | VRAM addr lo/hi + data (PHI2 high) |
+| `$7F20` / `$7F21` | OAM addr / data (**64** sprites x 4 B) |
+| `$7F22`-`$7F24` | Cart save EEPROM mailbox |
+| `$7F30` | WORLD select (0-7), soft helper |
+| `$7F40`-`$7F5F` | APU mailbox (8 voices x 4 regs, MCU-S2) |
+| `$7F60` / `$7F61` | Pad P1 / P2 bitfields |
+| `$7F70`-`$7F72` | Machine EEPROM mailbox |
+| `$7F90`-`$7F93` | MAP seek + auto-inc data |
+
+`$7F80` stays reserved (light-gun roadmap).
+
 ## System RAM and VRAM (summary)
 
 | Topic | Detail |
@@ -226,7 +249,23 @@ See `hardware.md` and `ic-comms-risks.md`.
 
 ## Color master table
 
-**AT27C256R** on the motherboard holds the 64 RGB values. Cart global palette planes are indices only. See `hardware.md` and `video-graphics.md`.
+**AT27C256R** on the motherboard holds the **locked 64-color kit** (packed R3G3B2). Cart global palette planes are **indices only** into that kit. The kit RGB list, `$7F08`/`$7F09` fill rules, and `_prom.bin` burn note are in `video-graphics.md`.
+
+## Phase 1 PRG play tables (Studio / Emu)
+
+Authoring spawns live in the project JSON. Packed carts put **placements in PRG**, not the world blob (see entity catalog above). Phase 1 PRG layout (CPU `$8000` = PRG+$0000):
+
+| PRG off | CPU | Role |
+| --- | --- | --- |
+| `+$0100` | `$8100` | Present-screen bitmasks (32 B) |
+| `+$0120` | `$8120` | Spawn cell (`col | row<<4`) |
+| `+$0121` | `$8121` | Collision dir count |
+| `+$0122` | `$8122` | Collision dir entries |
+| `+$01C0` | `$81C0` | Instance count (u8) |
+| `+$01C1` | `$81C1` | Instance table (`count` x 6 B: type, flip flags, world_x/y LE) |
+| `+$00F0` | `$80F0` | `R01P` marker + version byte |
+
+Full entity defs still use the locked pack in `software-api.md`. Studio may temporarily pack a reduced type snapshot for Host Play until the packer emits the full offset-table format.
 
 ## Notes
 

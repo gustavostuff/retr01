@@ -6,7 +6,7 @@
 #include "r01_spi_mailbox.h"
 
 /*
- * Thin cart hex FD bridge toward the 8x4 $7F40 window (docs/sound.md §5).
+ * Thin cart hex FD bridge toward the 8x4 $7F40 window (docs/sound.md).
  * Encode/apply only — not the full 6502 NMI dual-stream tracker.
  *
  * Frame: FD, mask (bit0=ch1..bit7=ch8), then one payload byte per set bit.
@@ -14,7 +14,7 @@
  *   8X = volume X (0-15)
  *   9X = duty/noise-type X (0-3 used)
  *   7X = DPCM sample id X (channel 5 / index 4 only)
- *   else = note letter byte (docs/sound.md §4) -> period
+ *   else = note letter byte (docs/sound.md) -> period
  */
 
 #define R01_APU_FD_OP 0xFDu

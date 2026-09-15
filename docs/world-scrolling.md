@@ -51,9 +51,9 @@ PRG owns both. The camera may follow the player, ignore the player, or move on a
 World header bytes **30-31** hold the camera dead-zone size (**width**, **height**) in pixels inside the logical **128x120** view.
 
 - **No dead zone** (0x0, or disabled): the camera tracks the player one-for-one. When the player moves, the camera moves with them (within clamp rules).
-- **Dead zone set** (example **32x30**): the camera stays put while the player walks inside a central box of that size. As soon as the player entity leaves that box, the camera starts moving so the player stays at the edge of the zone (classic follow-with-slack).
+- **Dead zone set** (default **32x30** when enabled): the camera stays put while the player walks inside a central box of that size. As soon as the player entity leaves that box, the camera starts moving so the player stays at the edge of the zone (classic follow-with-slack).
 
-Exact packing of bytes 30-31 (and a disable flag if needed) stays with the world-header byte map when that is frozen. The behavior above is locked intent.
+World header bytes **30-31** pack width and height. **0,0** means no dead zone (1:1 track). Defaults and axis-lock helpers are in `software-api.md`.
 
 ### Camera drive modes (examples)
 

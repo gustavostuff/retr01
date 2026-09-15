@@ -7,7 +7,7 @@
 #include "r01_spi_mailbox.h"
 
 /*
- * 6502-side NMI dual-stream tracker (docs/sound.md §5-6), host C MVP.
+ * 6502-side NMI dual-stream tracker (docs/sound.md), host C MVP.
  * BGM (ch1-5) + SFX (ch6-8). Emits FD frames into the 8x4 $7F40 window.
  * Not a full cart PRG asm port — shared by emu / sim Host Play.
  */

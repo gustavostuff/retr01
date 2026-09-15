@@ -82,6 +82,14 @@ Frame (at State + frame_off[f])
 
 **Entity spawn locations** live in **PRG** (data tables and/or code that calls `spawn_entity`), not in the world blob. Cart holds defs in the **per-world** catalog only. Optional `PA` (player anim) may still hang off a world blob as an opaque blob for now.
 
+Phase 1 Studio carts also embed a compact **instance table** in PRG (see `memory.md`). That table feeds Host Play / emu until authors switch to full `spawn_entity` tables.
+
+**Studio packer gap:** the locked EntityDef above is SoT. Today's Studio `.retr01` still writes a **reduced 20 B** type snapshot (state 0 / frame 0 only) for bring-up. That is interim. Tools must catch up to this offset-table pack. Do not treat the 20 B snapshot as the long-term format.
+
+### Camera helpers (locked intent)
+
+Default dead zone **32x30** pixels inside the 128x120 view when world header bytes 30-31 are non-zero. Axis lock may be **both**, **H only**, or **V only**. See `world-scrolling.md`. Studio may pack dead-zone size from `r01_camera_set_deadzone` in author `custom_logic.c` at export time.
+
 ### Starter API (locked signatures)
 
 Types are illustrative C. `EntityId` is a small handle into the live instance table. Returns `0` on success, non-zero on error (OAM full, bad id, and so on).

@@ -14,7 +14,7 @@ static inline int r01_soft_port_in_soft0(uint8_t port) {
 }
 
 static inline int r01_soft_port_in_soft1(uint8_t port) {
-    return (port == 0x05u || port == 0x08u) ? 1 : 0;
+    return (port == 0x05u || port == 0x08u || port == 0x09u) ? 1 : 0;
 }
 
 static inline int r01_soft_port_in_soft2(uint8_t port) {
@@ -33,6 +33,7 @@ static inline int r01_soft_port_in_soft2(uint8_t port) {
     case 0x90u:
     case 0x91u:
     case 0x92u:
+    case 0x93u:
         return 1;
     default:
         return 0;

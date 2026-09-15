@@ -1003,15 +1003,11 @@ static void composite_sprites(R01eMachine *m) {
         uint8_t sx_u = e[3];
         int sy = r01e_oam_coord_from_u8(sy_u);
         int sx = r01e_oam_coord_from_u8(sx_u);
-        int tall = (attr & R01E_OAM_SIZE_16) != 0;
 
         if (tile == 0xFFu) {
             continue;
         }
         blit_spr_tile(m, sx, sy, tile, attr, line_count);
-        if (tall) {
-            blit_spr_tile(m, sx, sy + 8, (uint8_t)(tile | 1u), attr, line_count);
-        }
     }
 }
 
@@ -1036,15 +1032,11 @@ static void composite_sprites_atlas(R01eMachine *m) {
         int sx = r01e_oam_coord_from_u8(sx_u);
         int ax = vid->cam_x + sx - origin_px;
         int ay = vid->cam_y + sy - origin_py;
-        int tall = (attr & R01E_OAM_SIZE_16) != 0;
 
         if (tile == 0xFFu) {
             continue;
         }
         blit_spr_tile_atlas(m, ax, ay, tile, attr, line_count);
-        if (tall) {
-            blit_spr_tile_atlas(m, ax, ay + 8, (uint8_t)(tile | 1u), attr, line_count);
-        }
     }
 }
 

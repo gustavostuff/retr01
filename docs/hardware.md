@@ -159,9 +159,11 @@ Game **entities** live in system RAM / PRG. Drawing goes through OAM + S1 field 
 
 | SEL | Covers (examples) |
 | --- | --- |
-| `SEL_SOFT0` | `$7F00` / `$7F06` / `$7F07` |
-| `SEL_SOFT1` | `$7F05` / `$7F08` |
-| `SEL_SOFT2` | MAP/OAM/APU/EE family (`$7F90`-`$7F92`, `$7F20`/`$7F21`, `$7F40`-`$7F5F`, `$7F22`-`$7F24`, `$7F70`-`$7F72`) |
+| `SEL_SOFT0` | `$7F00` PPUCTRL, `$7F06`/`$7F07` BG0 scroll |
+| `SEL_SOFT1` | `$7F05` raster ctrl, `$7F08` PAL_ROW, `$7F09` PAL_DATA |
+| `SEL_SOFT2` | OAM `$7F20`/`$7F21`, cart EE `$7F22`-`$7F24`, APU `$7F40`-`$7F5F`, machine EE `$7F70`-`$7F72`, MAP `$7F90`-`$7F93` |
+
+Hard (not soft SEL): scroll/raster latches `$7F02`-`$7F04`, VRAM `$7F10`-`$7F12` (`SEL_VRAM`). Pads `$7F60`/`$7F61` are served by MCU-S2 via the soft path after SPI/GPIO sample.
 
 Rising edge + latched `A[7:0]` via `CPU_A_SAMPLE` (PD4).
 
@@ -433,4 +435,4 @@ Black anti-spoof then white hitboxes on all targets, then `0x5A`. Two flash fram
 
 ## Related
 
-`memory.md` | `cartridge.md` | `video-graphics.md` | `world-scrolling.md` | `software-api.md` | `open-questions.md` | `ic_behavior/` | `ic-comms-risks.md`
+`memory.md` | `cartridge.md` | `video-graphics.md` | `world-scrolling.md` | `software-api.md` | `sound.md` | `open-questions.md` | `ic_behavior/` | `ic-comms-risks.md`

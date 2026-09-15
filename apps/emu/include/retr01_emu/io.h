@@ -8,8 +8,8 @@
 struct R01eMachine;
 
 /*
- * Logical $7F00-$7FFF register file (docs/graphics.md). Soft contract for
- * Emu / Studio Play: no DIP / Soft SEL / SPI mailbox.
+ * Logical $7F00-$7FFF register file (docs/memory.md, docs/video-graphics.md).
+ * Soft contract for Emu / Studio Play: no DIP / Soft SEL / SPI mailbox.
  * Hard (SoT PLD/HC574): $7F02-$7F04. Soft0/1/2 families: see r01_soft_sel_demux.h.
  * $7F40-$7F5F = 8x4 voice window (r01_apu_window.h). Host Play also fills via
  * NMI dual-stream tracker (r01_apu_tracker). Softsynth speaker is separate.
@@ -25,17 +25,17 @@ typedef struct R01eIo {
     uint8_t bg0_scroll_x; /* $7F06 Soft0 */
     uint8_t bg0_scroll_y; /* $7F07 Soft0 */
 
-    uint8_t pal_addr; /* $7F08 Soft1 */
+    uint8_t pal_row;  /* $7F08 Soft1 PAL_ROW */
+    uint8_t pal_addr; /* fill cursor for $7F09 (internal, resets on PAL_ROW write) */
     uint8_t pal[R01E_ACTIVE_PAL_BYTES];
 
     uint16_t vram_addr; /* $7F10/$7F11 */
 
-    uint16_t oam_addr;             /* $7F20 Soft2; auto-inc wraps at 512 */
-    uint8_t oam[R01E_OAM_ENTRIES * R01E_OAM_ENTRY_BYTES]; /* phase 6+ composite */
+    uint16_t oam_addr;             /* $7F20 Soft2; auto-inc wraps at OAM bytes */
+    uint8_t oam[R01E_OAM_ENTRIES * R01E_OAM_ENTRY_BYTES];
 
     uint8_t world; /* $7F30 0..7 */
-    uint8_t bank_helper[8]; /* $7F31-$7F37 + $7F38 pal row hint */
-    uint8_t pal_row;
+    uint8_t bank_helper[8]; /* $7F30-$7F37 helpers */
 
     uint8_t apu[0x20];    /* $7F40-$7F5F Soft2 8x4 window (R01_APU_REGS) */
     uint8_t pad0;         /* $7F60 */

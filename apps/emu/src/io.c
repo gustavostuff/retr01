@@ -97,7 +97,7 @@ uint8_t r01e_io_read(R01eMachine *m, uint16_t addr) {
     case 0x7F07:
         return io->bg0_scroll_y;
     case 0x7F08:
-        return (uint8_t)(io->pal_addr & 31u);
+        return (uint8_t)(io->pal_row & 7u);
     case 0x7F09:
         v = io->pal[io->pal_addr & 31u];
         io->pal_addr = (uint8_t)((io->pal_addr + 1) & 31u);
@@ -119,8 +119,6 @@ uint8_t r01e_io_read(R01eMachine *m, uint16_t addr) {
         return cartee_data_access(m, 0, 0);
     case 0x7F30:
         return io->world;
-    case 0x7F38:
-        return io->pal_row;
     case 0x7F60:
         return io->pad0;
     case 0x7F61:
@@ -177,7 +175,11 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
         m->video.l0_cam_y = io->bg0_scroll_y;
         break;
     case 0x7F08:
-        io->pal_addr = (uint8_t)(v & 31u);
+        io->pal_row = (uint8_t)(v & 7u);
+        io->pal_addr = 0;
+        if (r01e_video_softboot_enabled()) {
+            r01e_video_load_active_pals(m);
+        }
         break;
     case 0x7F09:
         io->pal[io->pal_addr & 31u] = (uint8_t)(v & 63u);
@@ -195,7 +197,7 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
         io->vram_addr = (uint16_t)((io->vram_addr + 1) & (R01E_VRAM_BYTES - 1));
         break;
     case 0x7F20:
-        /* Load bits [7:0], clear bit 8. Sequential $7F21 fill reaches OAM[256..511]. */
+        /* Load bits [7:0]. Sequential $7F21 fill wraps at 64*4 = 256 B. */
         io->oam_addr = v;
         break;
     case 0x7F21:
@@ -221,12 +223,6 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
             (void)r01e_video_boot_world(m, (int)io->world);
         } else {
             (void)r01e_video_prepare_world(m, (int)io->world);
-        }
-        break;
-    case 0x7F38:
-        io->pal_row = (uint8_t)(v & 7u);
-        if (r01e_video_softboot_enabled()) {
-            r01e_video_load_active_pals(m);
         }
         break;
     case 0x7F60:

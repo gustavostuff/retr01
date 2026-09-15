@@ -6,7 +6,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* Cart / world layout -- docs/graphics.md */
+/* Cart / world layout -- docs/video-graphics.md */
 #define R01E_CART_MAGIC "retr01"
 #define R01E_CART_FORMAT_VER 3
 #define R01E_CART_PTR_TABLE_BYTES 30u
@@ -53,8 +53,9 @@
 #define R01E_PAL_PLANE_BYTES (R01E_PAL_ROWS * R01E_PAL_ROW_BYTES) /* 128 */
 #define R01E_ACTIVE_PAL_BYTES 32 /* 4 BG + 4 sprite pals loaded from one row */
 
-#define R01E_OAM_ENTRIES 128
+#define R01E_OAM_ENTRIES 64
 #define R01E_OAM_ENTRY_BYTES 4 /* Y, tile, attr, X */
+#define R01E_OAM_BYTES (R01E_OAM_ENTRIES * R01E_OAM_ENTRY_BYTES)
 
 #define R01E_DOTS_X 341
 #define R01E_DOTS_Y 262
@@ -67,7 +68,7 @@
 #define R01E_DOT_HZ 5369318u
 /* Nominal CPU cycles per CRT frame (8 MHz / ~60.098 Hz). Use 64-bit mul -- 8e6*1000 overflows u32. */
 #define R01E_CYCLES_PER_FRAME ((uint64_t)R01E_CPU_HZ * 1000ull / 60098ull)
-/* Soft max for game logic (docs/software.md): bars scale to this; red line = 100%. */
+/* Soft max for game logic (docs/software-api.md): bars scale to this; red line = 100%. */
 #define R01E_CPU_BUDGET_CYCLES 50000ull
 
 #define R01E_ATTR_BANK_MASK 0x03u
@@ -76,11 +77,10 @@
 #define R01E_ATTR_FLIP_H 0x10u
 #define R01E_ATTR_FLIP_V 0x20u
 #define R01E_ATTR_SOLID 0x40u
-#define R01E_OAM_PRIORITY 0x40u
-#define R01E_OAM_SIZE_16 0x80u /* 0=8x8, 1=8x16 */
+#define R01E_OAM_PRIORITY 0x40u /* reserved bit6 leave 0 (docs/video-graphics.md) */
 #define R01E_SPRITES_PER_LINE 16
 
-/* Pads $7F60/$7F61 -- docs/graphics */
+/* Pads $7F60/$7F61 -- docs/hardware.md */
 #define R01E_PAD_RIGHT 0x01u
 #define R01E_PAD_LEFT 0x02u
 #define R01E_PAD_DOWN 0x04u
