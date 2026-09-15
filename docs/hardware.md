@@ -34,7 +34,22 @@ Several chips can touch the CPU data bus **D[7:0]** (cart flash, system RAM, MCU
 
 The PLD decode asserts the right `/OE` (and related selects) for the current address. The cart flash `/OE` is gated the same way. When MCU-M is not serving a soft `$7Fxx` cycle, it keeps its CPU data pins in **hi-Z**. That three-way rule (PLD `/OE` + cart `/OE` + MCU 3-state) is the whole bus discipline story.
 
+**Idle-safe defaults (locked):** undriven enables must not fight the bus. Board pull-ups / pull-downs so that with AVRs still booting (or crashed) the safe state is:
+
+| Net | Idle-safe |
+| --- | --- |
+| Cart **`WE#`** | Pull-up (high = no program pulse) |
+| Cart **`OE#`** | Inactive unless decode asserts it |
+| **`/SS_S1`**, **`/SS_S2`** | Pull-up (deselected) |
+| Field **ALE** | Low (latch holding) |
+| Field **`/WE`** | Pull-up (high = no write) |
+| **`CPU_RDY`** | Pull-up. MCU-M drives **open-drain only** (never push-pull) |
+
+MCU-M after reset: CPU D pins stay **inputs / hi-Z** until a proven soft-read window. Soft `$7Fxx` handling is a hard real-time path (edge / CCL / ISR). If the PHI2 window is too tight, assert **`CPU_RDY`** before PHI2 fall, finish the work, then release. Do not run SPI or I2C inside a soft-read cycle unless RDY is already low.
+
 If soft decode ever runs out of PLD room, preferred escapes in order: demux more SELs on MCU-M, add a fourth ATF22V10, move MAP onto M GPIO with `RDY` stalls, and only then add an HC245 on CPU D (that last step breaks the 17-mobo count).
+
+Full failure modes and bring-up order: `ic-comms-risks.md`.
 
 ## BOM (locked 19)
 
@@ -42,7 +57,7 @@ If soft decode ever runs out of PLD room, preferred escapes in order: demux more
 | --- | --- | --- | --- | --- |
 | 1 | W65C02S | Game CPU @ 8 MHz | PDIP-40 | Yes (PLCC-44, QFP-44) |
 | 3 | AVR128DB28-I/SP | MCU-M / MCU-S1 / MCU-S2 @ 24 MHz | SPDIP-28 | Yes (SOIC-28, SSOP-28, plus larger pin-count QFN/TQFP siblings) |
-| 3 | AS6C62256 | Sys RAM, interleaved VRAM, sprite field + BG0 ping-pong | PDIP-28 | Yes (SOP-28, sTSOP-28) |
+| 3 | AS6C62256 | Sys RAM, interleaved VRAM, sprite field + BG0 ping-pong. Prefer **-55** (55 ns) | PDIP-28 | Yes (SOP-28, sTSOP-28) |
 | 1 | SST39SF040 | 512 KB cart flash | PDIP-32 | Yes (PLCC-32, TSOP-32) |
 | 1 | 24C64 | Cart save EEPROM (8 KB I2C) | DIP-8 | Yes (SOIC/SOP/TSSOP/etc.) |
 | 3 | ATF22V10 | Beam X, Beam Y, Compositor + decode | PDIP-24 | Yes (SOIC-24, PLCC-28) |
@@ -118,7 +133,11 @@ RGB analog always comes from the color PROM DAC. Composite is AD724 -> J9 RCA.
 
 OAM `$7F20`/`$7F21` latches on M then SPI to S1. APU forwards M to S2. Cart I2C `$7F22`-`$7F24` on M. Machine EE `$7F70`-`$7F72` on M.
 
+**SPI mailbox rules (locked):** exactly one of `/SS_S1` or `/SS_S2` low at a time. Idle both high. OAM blocks go to S1 in **early VBlank** only, or when **`S1_RDY`** says ready. Do **not** blast OAM SPI during HBlank (that window is for BG0 line fill). Separate message IDs / lengths for S1 vs S2 so a mis-select fails closed.
+
 HBlank is short, so S1 only prepares the **next BG0 line** there. Sprites are composited in one VBlank pass into the field buffer (no sprite line ping-pong). See `video-graphics.md`.
+
+**Field AD rules (locked):** S1 uses a state machine with dead cycles between ALE address latch and data `/WE`. AD[7:0] stay **hi-Z** outside an owned write window. PLD field `/OE` (beam read) and S1 `/WE` are mutually exclusive by equation.
 
 Game **entities** live in system RAM / PRG. Drawing goes through OAM + S1 field fill.
 
@@ -134,6 +153,7 @@ Game **entities** live in system RAM / PRG. Drawing goes through OAM + S1 field 
 | DAC / audio | On-chip DAC on PD6 unused. S2 audio = TCA0 WO1 **PF1** |
 | Pad UART | USART2 OD on **PF0** |
 | Field | AD[7:0] + ALE -> HC573. A[14:8] direct. S1 drives ALE + `/WE` only. `/OE`/`/CE` from PLD |
+| Async into AVRs | Synchronize `VBL`, `SEL_SOFT*`, and other beam/CPU edges with two flops (or the event system) before acting |
 
 **Soft SEL** (I/O page `$7F00-$7FFF`):
 
@@ -185,9 +205,11 @@ Rising edge + latched `A[7:0]` via `CPU_A_SAMPLE` (PD4).
 | **Beam Y** | Line / V. Raster Y `$7F04` + cascaded EQ -> IRQB |
 | **Compositor** | Priority, Color PROM index, MAP A14-A18. `LE_7F02`/`03`/`04`, `SEL_VRAM`, `LE_MAP`, three `SEL_SOFT*`, residual `/OE` |
 
-Never route hard LE or beam through an MCU. VRAM: PHI2 high = CPU `$7F10`-`$7F12`, PHI2 low = BG fetch (3x HC157).
+Never route hard LE or beam through an MCU. VRAM: PHI2 high = CPU `$7F10`-`$7F12`, PHI2 low = BG fetch (3x HC157). Prefer **AS6C62256-55**. Keep VRAM mux / decode traces short. HC157 **G** must never float (G high forces Y low, not Hi-Z).
 
-Macrocell pressure note: SY(8)+Q(8)+MAP(5) = **21** vs **30** MC on a 22V10. Stay honest about that budget when adding features.
+**Cart `OE#` (locked):** assert only for PRG `$8000-$FFFF` reads and intentional MAP/CHR fetch windows. Never together with system RAM or soft `$7Fxx` selects.
+
+Macrocell pressure note: SY(8)+Q(8)+MAP(5) = **21** vs **30** MC on a 22V10. Stay honest about that budget when adding features. Prefer a **1-dot** Color PROM index latch in the Compositor if fit allows.
 
 ## On-board memory (chips)
 
@@ -204,7 +226,7 @@ Cart palettes are **indices only** into this PROM. See `memory.md` and `video-gr
 
 ## Cartridge
 
-Game Boy-sized (~**55 mm** width). Passive cart: **SST39SF040** + **24C64**. No mapper. `CE#` tied active. Mobo gates `OE#`. `WE#` for program (console flash path) and is idle in normal play. Socket: EDAC **395-036-520-201** straight 2x18 (right-angle option **395-036-559-212** for tight shells). Pitch **2.54 mm**. Cart **1.6 mm**, **2-layer** PCB. A0-A13 from CPU. A14-A18 from Compositor MAP.
+Game Boy-sized (~**55 mm** width). Passive cart: **SST39SF040** + **24C64**. No mapper. `CE#` tied active. Mobo gates `OE#`. `WE#` for program (console flash path) and is idle in normal play (**board pull-up**). Socket: EDAC **395-036-520-201** straight 2x18 (right-angle option **395-036-559-212** for tight shells). Pitch **2.54 mm**. Cart **1.6 mm**, **2-layer** PCB. A0-A13 from CPU. A14-A18 from Compositor MAP.
 
 ### Cart edge pinout (2x18 = 36 contacts)
 
@@ -254,6 +276,8 @@ Adafruit's UPDI Friend is a CH340E USB-serial with the usual 1K RX/TX loopback f
 
 **One ON at a time.** Never enable two UPDI targets together (would short UPDI pins). Cart mode (pos 4) should be alone as well. Silkscreen can say `M / S1 / S2 / CART` and `ALL OFF = SAFE`.
 
+**Firmware (locked):** MCU-M refuses cart-bridge / `WE#` commands unless it reads cart mode from the DIP (or an equivalent strap). Do not leave cart mode ON while a game is running.
+
 Feasibility check (2026-09): AVR128DB28 is UPDI-only on pin 19. DxCore / avrdude **SerialUPDI** talk to it through this adapter. Cart ROM is **SST39SF040** parallel NOR, so cart writes still go through the MCU-M bridge when DIP pos 4 is ON.
 
 | Job | Path |
@@ -293,7 +317,7 @@ Prefer programming PLDs and the color PROM **before** they go into the motherboa
 
 **Arcade:** J5/J6 **1x10** (pins 1-8 = bits 0-7, 9-10 GND). J7 **1x4** (`+5V`/`GND`/`RESET_N`/`GND`). Microswitch to GND. Series **47 ohm**. P1 -> PA0-7. P2 bits 0-3 -> PC0-3, 4-6 -> PD1-3, Start -> PF6.
 
-**TRS (home shell):** 2x Switchcraft **35RAPC2BVN4**. Tip=5 V, Ring=DATA, Sleeve=GND. **4.7 kohm** pull-up on DATA (PF0). OD half-duplex UART. Pad MCU = **ATtiny85** (in the controller, not on the 19). Pad PCB is **2-layer**. **115200** 8N1. **< 200 us**/exchange. Poll `0x55`=P1, `0xAA`=P2. Reply = 1 byte bitfield.
+**TRS (home shell):** 2x Switchcraft **35RAPC2BVN4**. Tip=5 V, Ring=DATA, Sleeve=GND. **4.7 kohm** pull-up on DATA (PF0). OD half-duplex UART (pad and host both **open-drain**, never push-pull). Pad MCU = **ATtiny85** (in the controller, not on the 19). Pad PCB is **2-layer**. **115200** 8N1. **< 200 us**/exchange with a hard timeout. Poll `0x55`=P1, `0xAA`=P2 in **VBlank**. Reply = 1 byte bitfield. On timeout, keep last good or clear. Arcade headers and TRS pads are alternate input paths. Do not require pads when the cabinet uses microswitches.
 
 ## Video out / sync header
 
@@ -341,7 +365,7 @@ Cart and pad PCBs are **2-layer** as well.
 | J36 | EDAC **395-036-520-201** |
 | Y1 / Y2 / Y3 | Abracon ACH **8.000** / **5.369318** / FSC for AD724 |
 
-Series **33 ohm** on PHI2 and DOT. Entry bulk **220 uF**. Cart D/OE/WE/SDA/SCL series **33 ohm**.
+Series **33 ohm** on PHI2 and DOT. Entry bulk **220 uF**. Cart D/OE/WE/SDA/SCL series **33 ohm**. Hold **RESB** until PHI2/DOT are up (RC or supervisor). Prefer sockets for the three ATF22V10s so a bad JEDEC can be swapped.
 
 ### Test points
 
@@ -370,7 +394,7 @@ Starter set (roles can grow):
 | LED | Meaning |
 | --- | --- |
 | Power | +5 V present |
-| Heartbeat M | MCU-M alive (firmware toggles) |
+| Heartbeat M | MCU-M alive (firmware toggles on a timer even while `CPU_RDY` pulses) |
 | Heartbeat S1 | MCU-S1 alive |
 | Heartbeat S2 | MCU-S2 alive |
 | Prog / activity | Optional. Blinks while Adafruit's UPDI Friend / cart-bridge path is busy (if firmware can drive it) |

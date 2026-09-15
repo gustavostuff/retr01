@@ -4,7 +4,7 @@ What lives where, how the CPU sees PRG and MAP, and the on-cart `.retr01` layout
 
 Cart image rules below are the baseline for this repo. Soft `$7Fxx` owners follow `hardware.md` (3x AVR128DB28).
 
-**Related:** `hardware.md`, `cartridge.md`, `video-graphics.md`, `world-scrolling.md`, `software-api.md`.
+**Related:** `hardware.md`, `cartridge.md`, `video-graphics.md`, `world-scrolling.md`, `software-api.md`, `ic-comms-risks.md`.
 
 ## CPU address map
 
@@ -211,7 +211,15 @@ Soft port owners are in `hardware.md`.
 
 ## Cart save EEPROM
 
-Small I2C EEPROM on the cart for per-game saves. **24C64**, mailbox **`$7F22`-`$7F24`**, MCU-M as I2C master with `RDY` stall. See `hardware.md`.
+Small I2C EEPROM on the cart for per-game saves. **24C64**, mailbox **`$7F22`-`$7F24`**, MCU-M as I2C master.
+
+**Rules (locked):**
+
+- Saves are **explicit** PRG calls (not background). MCU-M asserts **`CPU_RDY`** while the I2C write / ACK poll runs, with a fail-safe timeout then release.
+- Machine / cabinet config stays on MCU-M internal EEPROM (`$7F70`-`$7F72`). It must not depend on a seated cart.
+- Series **33 ohm** on SDA/SCL (see `hardware.md`).
+
+See `hardware.md` and `ic-comms-risks.md`.
 
 ## Color master table
 

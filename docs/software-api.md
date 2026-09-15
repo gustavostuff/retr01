@@ -159,6 +159,17 @@ Top-down mode skips gravity and uses the same solid / AABB rules.
 | Entity **definitions** | Cart pack per world (MAP-readable) |
 | Entity **behavior** | PRG on the 6502 (C/ASM) |
 | Live instance state | System RAM |
-| Drawing | OAM `$7F20`/`$7F21` on MCU-M, SPI to MCU-S1 (**VBlank** field fill) |
+| Drawing | OAM `$7F20`/`$7F21` on MCU-M, SPI to MCU-S1 (**early VBlank** / `S1_RDY`, then S1 field fill) |
 
-See `hardware.md` for the M / S1 / S2 split.
+See `hardware.md` for the M / S1 / S2 split. Shared-bus timing: `ic-comms-risks.md`.
+
+## Timing conventions (locked)
+
+| Work | When |
+| --- | --- |
+| Scroll `$7F02` / `$7F03`, palette `$7F08` / `$7F09` | NMI / VBlank (or video off) |
+| OAM publish to S1 | Early VBlank or wait for `S1_RDY`. Never during HBlank |
+| Cart save `$7F22`-`$7F24` | Explicit save call. MCU-M holds **`CPU_RDY`** for the I2C write/poll. Bound with a timeout |
+| Machine EE `$7F70`-`$7F72` | Separate from cart saves. Same RDY rule if the cycle cannot close in one PHI2 |
+
+Do not use **STP** in normal play. **WAI** only with a clear NMI/IRQ wake.

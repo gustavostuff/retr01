@@ -174,7 +174,14 @@ PRG can drive **BG0 and/or BG1** scroll on their own, not only as a slave of pla
 
 Example: a space fly-through with a few star/planet screens that loop once the strip has scrolled past. Same idea for repeating cloud bands. That can be BG0, BG1, or both at different rates.
 
-Wrap means: when scroll on that plane reaches the end of its present strip of screens, PRG (or a helper) loads the **start** of the strip again into the next VRAM slot so the backdrop loops. Autoscroll without wrap stops at the last screen of the strip unless PRG turns wrap on. Exact ports / helper API for “autoscroll + wrap period per plane” stay TBD in `software-api.md`, but the behavior is in scope for v1 authors.
+Wrap means: when scroll on that plane reaches the end of its present strip of screens, PRG (or a helper) loads the **start** of the strip again into the next VRAM slot so the backdrop loops. Autoscroll without wrap stops at the last screen of the strip unless PRG turns wrap on. Exact ports / helper API for "autoscroll + wrap period per plane" stay TBD in `software-api.md`, but the behavior is in scope for v1 authors.
+
+### When to write scroll registers (locked)
+
+Update `$7F02` (scroll X / HC574) and `$7F03` (scroll Y / Beam X) in **NMI / VBlank** only, same as `$7F08`/`$7F09`. Mid-active-display writes can tear the picture or change MAP banks mid-line.
+
+Raster compare `$7F04` may be written outside VBlank only for a **deliberate** split-screen / IRQ effect with documented rules. Do not invent mid-frame scroll by accident.
+
 ## Parallax scroll rate
 
 Example: BG1 screens fill a solid 4x4 grid (16 screens). BG0 is a 2x2 grid. The enclosing box for BG1 is double BG0 on both axes, so BG0 scrolls at half the rate of BG1.

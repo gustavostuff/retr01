@@ -84,6 +84,10 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 **Resolved:** **16** entity types per world, catalog inside each world blob. No global shared catalog. `format_ver` **3** (pointer table 5 slots). Sprite banks = current world SPR CHR. See `memory.md`, `software-api.md`.
 
+### 17. IC comms mitigations folded into design docs
+
+**Resolved:** Idle-safe enable pulls, soft-port / `RDY` rules, OAM SPI in early VBlank only, scroll writes in NMI/VBlank, cart `OE#`/`WE#` play-vs-program, save RDY+timeout. Catalog in `ic-comms-risks.md`. Normative copies in `hardware.md`, `video-graphics.md`, `world-scrolling.md`, `software-api.md`, `memory.md`, `cartridge.md`.
+
 ## Decision log
 
 | Date | Item | Decision |
@@ -111,3 +115,4 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-14 | Mobo size | 170 x 120 mm. |
 | 2026-09-14 | BG autoscroll | BG0 and BG1 may each autoscroll and/or wrap strips. Default is clamp. |
 | 2026-09-14 | Player vs camera | Separate systems. Dead zone (e.g. 32x30). Axis lock, follow, or auto camera. |
+| 2026-09-15 | IC comms | Idle-safe pulls, RDY OD, OAM SPI early VBlank, scroll in NMI/VBlank, cart OE/WE rules. See `ic-comms-risks.md`. |

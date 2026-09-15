@@ -23,9 +23,10 @@ See `memory.md` for the full map. Short version:
 The **console is the flasher** for the **three AVRs** and a **seated cart** only. Accessory is **Adafruit's UPDI Friend**, clipped onto **one** shared motherboard header. A **4-pos DIP** selects MCU-M, MCU-S1, MCU-S2, or cart (default **all OFF** = safe / nothing connected).
 
 - **AVRs (on board):** turn on the matching DIP, SerialUPDI into that chip's UPDI pin.
-- **Cart image:** turn on the cart DIP, MCU-M bridges onto the cart bus and fills the SST39SF040 (and save EEPROM if needed).
+- **Cart image:** turn on the cart DIP, MCU-M bridges onto the cart bus and fills the SST39SF040 (and save EEPROM if needed). MCU-M must **refuse** bridge / `WE#` work unless cart mode is selected. Do not leave cart mode ON during gameplay.
+- **Play vs program:** cart `WE#` stays pulled up and idle in play. Motherboard gates `OE#` only for PRG / MAP / CHR windows (never with RAM or soft `$7Fxx`).
 
-PLDs (ATF22V10), the color PROM (AT27C256R), and pad MCUs are **not** flashed through this console header. Builders can **buy them pre-programmed** or program them themselves (Arduino Nano/Uno-based GAL tools such as Afterburner, a TL866-class PROM/PLD programmer, Arduino-as-ISP for the ATtiny85). A fuller programming guide will come later. See `hardware.md`.
+PLDs (ATF22V10), the color PROM (AT27C256R), and pad MCUs are **not** flashed through this console header. Builders can **buy them pre-programmed** or program them themselves (Arduino Nano/Uno-based GAL tools such as Afterburner, a TL866-class PROM/PLD programmer, Arduino-as-ISP for the ATtiny85). Prefer programming PLDs and the color PROM **before** first power-on with the CPU populated. A fuller programming guide will come later. See `hardware.md` and `ic-comms-risks.md`.
 
 Builders can also flash each AVR on a **breadboard** with Adafruit's UPDI Friend before soldering, then use the on-board header later for cart programming and AVR updates.
 

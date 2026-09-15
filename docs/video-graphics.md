@@ -19,10 +19,11 @@ Logical pipeline for tiles, sprites, palettes, and the two BG layers. Scroll and
 | Work | When | Who |
 | --- | --- | --- |
 | **Sprite field** | Entire overlay built in **VBlank**, one pass | MCU-S1 from OAM into field SRAM |
+| **OAM SPI M->S1** | **Early VBlank**, or when **`S1_RDY`** is ready. Never in HBlank | MCU-M master |
 | **BG0 next line** | **HBlank only** (ping-pong line buffer) | MCU-S1 |
 | BG1 fetch / compose | Active display (beam + PLDs) | Video path |
 
-HBlank is a small slice of time, so it only prepares the **next BG0 line**. That is intentional. Sprites are **not** line-ping-ponged. Doing all sprites in VBlank keeps HBlank free for BG0 show-through prep.
+HBlank is a small slice of time, so it only prepares the **next BG0 line**. That is intentional. Sprites are **not** line-ping-ponged. Doing all sprites in VBlank keeps HBlank free for BG0 show-through prep. OAM traffic must not steal that HBlank window (see `ic-comms-risks.md`).
 
 If more than 16 sprites land on one scanline, **later OAM entries on that line are not drawn** (priority by OAM order, no flicker mode in v1).
 
@@ -55,6 +56,7 @@ Rules:
 - Change `$7F08` only in **vblank** (or with video off). Mid-frame row swaps are undefined.
 - Load / refresh the active buffer from the cart global palette planes in **vblank only**.
 - Games do not poke individual PROM RGB values. They only pick rows and supply cart **indices**.
+- Same vblank rule for scroll ports `$7F02` / `$7F03` (and raster `$7F04` unless a deliberate split-screen IRQ effect is defined). See `world-scrolling.md`.
 
 ## Background layers
 
