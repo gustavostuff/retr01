@@ -50,4 +50,10 @@ void ui_undo_push_tile_create(struct UiState *ui, int bank, int tile_id, int old
                               int paint_tx, int paint_ty, uint8_t old_tile, uint8_t old_attr, uint8_t new_tile,
                               uint8_t new_attr);
 
+/* Entity compose modal: add/remove a frame part (also tracks catalog sprite when allocated). */
+void ui_undo_push_entity_part_add(struct UiState *ui, int state, int frame, int part_idx, const R01EntityPart *part,
+                                  int catalog_idx);
+void ui_undo_push_entity_part_remove(struct UiState *ui, int state, int frame, int part_idx,
+                                     const R01EntityPart *removed);
+
 #endif

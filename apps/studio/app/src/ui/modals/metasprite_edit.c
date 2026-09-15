@@ -141,6 +141,18 @@ void draw_metasprite_modal(UiState *ui, SDL_Renderer *r) {
 
     ui_compose_draw_grid(r, lo.right_grid_x, lo.right_grid_y, UI_METASPRITE_COMPOSE, 8);
     ui_compose_draw_frame(r, ui->project, w, fr, lo.right_grid_x, lo.right_grid_y, 8, ui->metasprite_edit.sel_part, 0);
+    if (ui->metasprite_edit.dragging != 4 && !ui->menu.open &&
+        point_in_rect(ui->mouse_x, ui->mouse_y, lo.right_grid_x, lo.right_grid_y, UI_METASPRITE_COMPOSE,
+                      UI_METASPRITE_COMPOSE)) {
+        int cx = (ui->mouse_x - lo.right_grid_x) / 8;
+        int cy = (ui->mouse_y - lo.right_grid_y) / 8;
+        int idx = ui_compose_part_at(fr, cx, cy, ui->metasprite_edit.sel_part);
+        if (idx >= 0) {
+            draw_paint_pixel_preview(r, ui->project, row, UI_PAL_PLANE_SPR, ui->metasprite_edit.paint_pal,
+                                     ui->metasprite_edit.paint_color, lo.right_grid_x + cx * 8,
+                                     lo.right_grid_y + cy * 8, 8);
+        }
+    }
 
     if (ui->metasprite_edit.dragging == 4) {
         draw_bank_tile(ui, r, ui->metasprite_edit.bank, ui->metasprite_edit.drag_tile,
@@ -152,11 +164,6 @@ void draw_metasprite_modal(UiState *ui, SDL_Renderer *r) {
     font_draw(r, lo.pal_label_x, lo.pal_label_y + 4, spr_label, 230, 230, 230);
     ui_palette_grid_draw(r, ui->project, row, lo.pal_x, lo.pal_y, ui->metasprite_edit.paint_pal,
                          ui->metasprite_edit.paint_color, UI_PAL_PLANE_SPR);
-
-    if (ui->metasprite_edit.dragging == 5) {
-        draw_brush_preview(r, ui->project, row, ui->metasprite_edit.paint_pal, ui->metasprite_edit.paint_color,
-                           ui->mouse_x, ui->mouse_y);
-    }
 
     ui_modal_save_cancel(r, lo.left_grid_x, lo.btn_y, lo.save_w, lo.cancel_w, ui->mouse_x, ui->mouse_y);
 }

@@ -527,7 +527,6 @@ void ui_project_io_draw(UiState *ui, SDL_Renderer *r) {
     }
 
     fill_rect(r, mx + UI_UNIT, list_y, mw - UI_UNIT * 2, list_h, 20, 24, 28);
-    draw_rect(r, mx + UI_UNIT, list_y, mw - UI_UNIT * 2, list_h, 60, 60, 60);
     for (i = 0; i < visible; i++) {
         int idx = pio->scroll + i;
         int y = list_y + i * row_h;

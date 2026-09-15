@@ -15,12 +15,24 @@
 #include <string.h>
 
 void ui_draw(UiState *ui, SDL_Renderer *r) {
+    int menu_blocks = 0;
+    int saved_mx = 0;
+    int saved_my = 0;
     if (!ui || !ui->project || !r) {
         return;
     }
     SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(r, UI_COL_BG_R, UI_COL_BG_G, UI_COL_BG_B, 255);
     SDL_RenderClear(r);
+
+    /* Context menus own the pointer: hide hover/hit feedback on chrome underneath. */
+    menu_blocks = ui->menu.open;
+    if (menu_blocks) {
+        saved_mx = ui->mouse_x;
+        saved_my = ui->mouse_y;
+        ui->mouse_x = -10000;
+        ui->mouse_y = -10000;
+    }
 
     draw_app_mode_tabs(ui, r);
 
@@ -57,8 +69,17 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
         } else if (ui->tile_edit.open) {
             draw_tile_modal(ui, r);
         }
+        if (menu_blocks) {
+            ui->mouse_x = saved_mx;
+            ui->mouse_y = saved_my;
+            menu_blocks = 0;
+        }
         draw_menu(ui, r);
         draw_catalog_drag_ghost(ui, r);
+    }
+    if (menu_blocks) {
+        ui->mouse_x = saved_mx;
+        ui->mouse_y = saved_my;
     }
     if (ui_project_io_is_open(ui)) {
         ui_project_io_draw(ui, r);

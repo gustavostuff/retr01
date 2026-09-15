@@ -27,6 +27,18 @@ void ui_palette_grid_nudge(R01Project *p, int row, UiPalPlane plane, int pal, in
                            int shift);
 
 void ui_button_draw(SDL_Renderer *r, int x, int y, int w, const char *text, int active, int hover);
+void ui_button_draw_ex(SDL_Renderer *r, int x, int y, int w, const char *text, int active, int hover, int enabled);
+
+/* Discrete horizontal slider; value is 0..count-1. Hit area is w x UI_BTN_H. */
+void ui_slider_discrete_draw(SDL_Renderer *r, int x, int y, int w, int value, int count);
+int ui_slider_discrete_hit(int lx, int ly, int x, int y, int w, int count, int *out_value);
+
+#define UI_MULTI_STATE_MAX 8
+int ui_multi_state_pref_width(const char *const *labels, int count);
+void ui_multi_state_draw(SDL_Renderer *r, int x, int y, int w, const char *const *labels, int count, int selected,
+                         int mouse_x, int mouse_y);
+/* Click cycles to the next state. Writes the next index to out_idx when non-NULL. */
+int ui_multi_state_hit(int lx, int ly, int x, int y, int w, int count, int selected, int *out_idx);
 
 #define UI_TABS_MAX 16
 #define UI_TABS_SUB_W 16
@@ -92,8 +104,14 @@ void ui_compose_draw_frame(SDL_Renderer *r, const R01Project *p, const struct R0
 void ui_compose_draw_frame_icon(SDL_Renderer *r, const R01Project *p, const struct R01World *w,
                                 const R01EntityFrame *fr, int dx, int dy, int icon_size);
 int ui_compose_part_at(const R01EntityFrame *fr, int px, int py, int prefer_sel);
+/* Returns 1 and writes 0..3 color when (cx,cy) hits the part. */
+int ui_compose_sample_part(struct R01World *w, const R01EntityPart *pt, int cx, int cy, int *out_color);
 /* Returns 1 if a pixel was written. */
 int ui_compose_paint_part(R01Project *p, struct R01World *w, R01EntityPart *pt, int cx, int cy, int paint_color);
+/* brush_size is 1..UI_BRUSH_SIZE_MAX. Returns 1 if any pixel was written. */
+int ui_compose_paint_brush(R01Project *p, struct R01World *w, R01EntityPart *pt, int cx, int cy, int paint_color,
+                           int brush_size);
+void ui_compose_brush_stamp(int brush_size, int *out_w, int *out_h, const uint8_t **out_bits);
 
 /* Compatibility aliases (existing call sites). */
 #define draw_dot_strip ui_dot_strip_draw

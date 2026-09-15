@@ -30,14 +30,22 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         ui->mouse_x = lx;
         ui->mouse_y = ly;
     }
+    if (e->type == SDL_KEYDOWN && (e->key.keysym.mod & KMOD_CTRL) && e->key.keysym.sym == SDLK_f) {
+        return 2; /* toggle fullscreen */
+    }
     if (ui_project_io_is_open(ui)) {
         return ui_project_io_event(ui, e, lx, ly);
     }
-    if (e->type == SDL_MOUSEMOTION) {
-        ui_update_cursor(ui);
-        if (ui->menu.open) {
+    if (ui->menu.open && (e->type == SDL_MOUSEMOTION || e->type == SDL_MOUSEWHEEL ||
+                          e->type == SDL_MOUSEBUTTONUP)) {
+        if (e->type == SDL_MOUSEMOTION) {
+            ui_update_cursor(ui);
             menu_update_hover(ui, lx, ly);
         }
+        return 1;
+    }
+    if (e->type == SDL_MOUSEMOTION) {
+        ui_update_cursor(ui);
     }
     if (e->type == SDL_MOUSEWHEEL && ui->pal_edit.open) {
         int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
@@ -292,9 +300,6 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             if (e->key.keysym.sym == SDLK_o) {
                 ui_project_io_open_browse(ui);
                 return 1;
-            }
-            if (e->key.keysym.sym == SDLK_f) {
-                return 2;
             }
             if ((e->key.keysym.mod & KMOD_SHIFT) && e->key.keysym.sym == SDLK_r) {
                 return 4;
@@ -747,6 +752,12 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         }
     }
 
+    if (e->type == SDL_MOUSEBUTTONUP &&
+        (e->button.button == SDL_BUTTON_RIGHT || e->button.button == SDL_BUTTON_MIDDLE) && ui->entity_edit.open) {
+        entity_modal_handle(ui, lx, ly, 0, e->button.button);
+        return 1;
+    }
+
     if (e->type == SDL_MOUSEBUTTONUP && e->button.button == SDL_BUTTON_LEFT) {
         ui_undo_paint_end(ui);
         ui->last_paint_tx = -1;
@@ -1187,7 +1198,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         return 1;
     }
     if (e->type == SDL_MOUSEMOTION && ui->entity_edit.open) {
-        if (e->motion.state & (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK)) {
+        if (e->motion.state & (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK | SDL_BUTTON_MMASK)) {
             entity_modal_drag(ui, lx, ly, e->motion.state);
         }
         return 1;

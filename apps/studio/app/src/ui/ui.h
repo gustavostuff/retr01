@@ -141,8 +141,15 @@
 #define UI_METASPRITES_BODY_H 96
 #define UI_ENTITIES_BODY_H 96
 
-#define UI_ENTITY_COMPOSE_SCALE 5 /* display px per compose world px (32 -> 160) */
-#define UI_ENTITY_COMPOSE (R01_ENTITY_COMPOSE_PX * UI_ENTITY_COMPOSE_SCALE) /* 160 */
+#define UI_ENTITY_COMPOSE_SCALE 5 /* display px per compose world px at zoom 1 (32 -> 160) */
+#define UI_ENTITY_COMPOSE (R01_ENTITY_COMPOSE_PX * UI_ENTITY_COMPOSE_SCALE) /* 160 viewport */
+#define UI_ENTITY_ZOOM_MIN 1
+#define UI_ENTITY_ZOOM_MAX 4
+#define UI_BRUSH_SIZE_MIN 1
+#define UI_BRUSH_SIZE_MAX 4
+#define UI_BRUSH_SIZE_COUNT 4
+#define UI_ENTITY_TOOL_SELECT 0
+#define UI_ENTITY_TOOL_EDIT 1
 #define UI_ENTITY_LEFT_W (UI_PAL_GRID_SIZE + UI_UNIT * 2) /* palette + side pad */
 #define UI_ENTITY_MODAL_W (UI_UNIT + UI_ENTITY_LEFT_W + UI_UNIT + UI_ENTITY_COMPOSE + UI_UNIT)
 #define UI_METASPRITE_MODAL_H 304
@@ -303,12 +310,18 @@ typedef struct UiEntityEdit {
     int sel_part;   /* -1 or index in current frame */
     int paint_color;
     int paint_pal;
-    int show_guides;       /* origin cross + hitbox (display only) */
-    int paint_mode;        /* 1 = LMB paints topmost part only */
+    int brush_size;         /* UI_BRUSH_SIZE_MIN..MAX pixel stamp */
+    int show_guides;        /* origin cross + hitbox (display only) */
+    int tool;               /* UI_ENTITY_TOOL_SELECT or UI_ENTITY_TOOL_EDIT */
     int show_part_outlines; /* Space: light outline on every part */
-    int dragging;          /* 0 none, 1 part, 5 paint stroke */
+    int zoom;               /* UI_ENTITY_ZOOM_MIN..MAX display scale multiplier */
+    int view_x;             /* viewport scroll in zoomed display px */
+    int view_y;
+    int dragging; /* 0 none, 1 part, 5 paint stroke, 6 viewport pan, 7 brush slider */
     int drag_off_x;
     int drag_off_y;
+    int pan_moved; /* set once viewport pan exceeds click slop */
+    int pan_btn;   /* SDL button that started pan */
 } UiEntityEdit;
 
 typedef struct UiBrush {

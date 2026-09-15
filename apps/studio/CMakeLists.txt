@@ -96,6 +96,8 @@ add_library(retr01_studio_app
   app/src/ui/widgets/checkbox.c
   app/src/ui/widgets/palette_grid.c
   app/src/ui/widgets/button.c
+  app/src/ui/widgets/slider.c
+  app/src/ui/widgets/multi_state.c
   app/src/ui/widgets/tabs.c
   app/src/ui/widgets/modal.c
   app/src/ui/widgets/textfield.c

@@ -29,23 +29,15 @@ int ui_compose_clamp_origin(int v) {
 }
 
 void ui_compose_draw_grid(SDL_Renderer *r, int ox, int oy, int size_px, int cell_px) {
-    int i;
     int cells;
     if (cell_px < 1) {
         cell_px = 8;
     }
     cells = size_px / cell_px;
-    fill_rect(r, ox, oy, size_px, size_px, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
-    for (i = 1; i < cells; i++) {
-        int g = i * cell_px;
-        SDL_SetRenderDrawColor(r, 50, 50, 58, 255);
-        {
-            SDL_Rect hr = {ox, oy + g, size_px, 1};
-            SDL_Rect vr = {ox + g, oy, 1, size_px};
-            SDL_RenderFillRect(r, &hr);
-            SDL_RenderFillRect(r, &vr);
-        }
+    if (cells < 1) {
+        cells = 1;
     }
+    draw_chess_grid(r, ox, oy, cells, cells, cell_px);
 }
 
 void ui_compose_draw_part(SDL_Renderer *r, const R01Project *p, const R01World *w, const R01EntityPart *pt, int ox,
@@ -165,6 +157,29 @@ int ui_compose_part_at(const R01EntityFrame *fr, int px, int py, int prefer_sel)
     return -1;
 }
 
+int ui_compose_sample_part(R01World *w, const R01EntityPart *pt, int cx, int cy, int *out_color) {
+    const uint8_t *src;
+    uint8_t oriented[R01_TILE_BYTES];
+    int lx, ly;
+    if (!w || !pt) {
+        return 0;
+    }
+    if (cx < pt->dx || cx >= pt->dx + 8 || cy < pt->dy || cy >= pt->dy + 8) {
+        return 0;
+    }
+    src = r01_chr_spr_tile(w, pt->bank, pt->tile_id);
+    if (!src) {
+        return 0;
+    }
+    r01_tile_orient(src, pt->flip_h, pt->flip_v, oriented);
+    lx = cx - pt->dx;
+    ly = cy - pt->dy;
+    if (out_color) {
+        *out_color = (int)(r01_tile_pixel_color(oriented, lx, ly) & 3u);
+    }
+    return 1;
+}
+
 int ui_compose_paint_part(R01Project *p, R01World *w, R01EntityPart *pt, int cx, int cy, int paint_color) {
     const uint8_t *src;
     uint8_t tile[R01_TILE_BYTES];
@@ -197,4 +212,79 @@ int ui_compose_paint_part(R01Project *p, R01World *w, R01EntityPart *pt, int cx,
     r01_tile_set_pixel(tile, lx, ly, (uint8_t)(paint_color & 3));
     (void)r01_chr_write_spr_tile(w, pt->bank, pt->tile_id, tile);
     return 1;
+}
+
+/* Brush stamps (world-pixel masks), sizes 1..4 from Studio brush reference. */
+static const uint8_t k_brush1[] = {1};
+static const uint8_t k_brush2[] = {1, 1, 1, 1};
+static const uint8_t k_brush3[] = {
+    0, 1, 1, 0,
+    1, 1, 1, 1,
+    1, 1, 1, 1,
+    0, 1, 1, 0,
+};
+static const uint8_t k_brush4[] = {
+    0, 1, 1, 1, 0,
+    1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1,
+    0, 1, 1, 1, 0,
+};
+
+void ui_compose_brush_stamp(int brush_size, int *out_w, int *out_h, const uint8_t **out_bits) {
+    int w = 1;
+    int h = 1;
+    const uint8_t *bits = k_brush1;
+    if (brush_size < UI_BRUSH_SIZE_MIN) {
+        brush_size = UI_BRUSH_SIZE_MIN;
+    }
+    if (brush_size > UI_BRUSH_SIZE_MAX) {
+        brush_size = UI_BRUSH_SIZE_MAX;
+    }
+    if (brush_size == 2) {
+        w = 2;
+        h = 2;
+        bits = k_brush2;
+    } else if (brush_size == 3) {
+        w = 4;
+        h = 4;
+        bits = k_brush3;
+    } else if (brush_size == 4) {
+        w = 5;
+        h = 5;
+        bits = k_brush4;
+    }
+    if (out_w) {
+        *out_w = w;
+    }
+    if (out_h) {
+        *out_h = h;
+    }
+    if (out_bits) {
+        *out_bits = bits;
+    }
+}
+
+int ui_compose_paint_brush(R01Project *p, R01World *w, R01EntityPart *pt, int cx, int cy, int paint_color,
+                           int brush_size) {
+    int bw, bh, ox, oy, x, y;
+    const uint8_t *bits;
+    int wrote = 0;
+    ui_compose_brush_stamp(brush_size, &bw, &bh, &bits);
+    if (!bits) {
+        return 0;
+    }
+    ox = (bw - 1) / 2;
+    oy = (bh - 1) / 2;
+    for (y = 0; y < bh; y++) {
+        for (x = 0; x < bw; x++) {
+            if (!bits[y * bw + x]) {
+                continue;
+            }
+            if (ui_compose_paint_part(p, w, pt, cx - ox + x, cy - oy + y, paint_color)) {
+                wrote = 1;
+            }
+        }
+    }
+    return wrote;
 }

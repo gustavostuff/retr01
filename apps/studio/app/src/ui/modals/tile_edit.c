@@ -245,6 +245,14 @@ void draw_tile_modal(UiState *ui, SDL_Renderer *r) {
             fill_rect(r, lo.canvas_x + sx * cell, lo.canvas_y + sy * cell, cell - 1, cell - 1, cr, cg, cb);
         }
     }
+    if (!ui->menu.open && point_in_rect(ui->mouse_x, ui->mouse_y, lo.canvas_x, lo.canvas_y, UI_TILE_CANVAS,
+                                       UI_TILE_CANVAS)) {
+        int cell = 16;
+        int hx = (ui->mouse_x - lo.canvas_x) / cell;
+        int hy = (ui->mouse_y - lo.canvas_y) / cell;
+        draw_paint_pixel_preview(r, ui->project, row, UI_PAL_PLANE_BG, ui->tile_edit.pal, ui->tile_edit.color,
+                                 lo.canvas_x + hx * cell, lo.canvas_y + hy * cell, cell - 1);
+    }
 
     ui_modal_save_cancel(r, lo.pal_x, lo.btn_y, lo.save_w, lo.cancel_w, ui->mouse_x, ui->mouse_y);
 }

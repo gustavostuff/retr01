@@ -155,10 +155,7 @@ void ui_text_draw(UiState *ui, SDL_Renderer *r, int x, int y, int w, const char 
 
     fill_rect(r, x, y, w, UI_BTN_H, 240, 240, 240);
     if (focused) {
-        draw_rect(r, x, y, w, UI_BTN_H, 45, 125, 70);
         ensure_caret_visible(&ui->text, w);
-    } else {
-        draw_rect(r, x, y, w, UI_BTN_H, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
     }
 
     clip.x = x + UI_TEXT_PAD;

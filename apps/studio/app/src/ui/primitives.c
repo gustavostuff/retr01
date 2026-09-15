@@ -407,8 +407,21 @@ int label_width(const char *text) {
 }
 
 void draw_brush_preview(SDL_Renderer *r, const R01Project *p, int row, int pal, int color, int mx, int my) {
+    (void)r;
+    (void)p;
+    (void)row;
+    (void)pal;
+    (void)color;
+    (void)mx;
+    (void)my;
+    /* Deprecated: callers draw a canvas-aligned paint ghost instead. */
+}
+
+void draw_paint_pixel_preview(SDL_Renderer *r, const R01Project *p, int row, UiPalPlane plane, int pal, int color,
+                              int px, int py, int cell) {
     uint8_t cr, cg, cb;
-    if (!p || !r) {
+    uint8_t idx;
+    if (!p || !r || cell < 1) {
         return;
     }
     if (row < 0 || row >= R01_PAL_ROWS) {
@@ -420,9 +433,13 @@ void draw_brush_preview(SDL_Renderer *r, const R01Project *p, int row, int pal, 
     if (color < 0 || color >= R01_PAL_COLORS) {
         color = 0;
     }
-    r01_kit_rgb(p->global_pal_spr[row][pal].idx[color & 3u], &cr, &cg, &cb);
-    fill_rect(r, mx + 10, my + 10, 8, 8, cr, cg, cb);
-    draw_rect(r, mx + 10, my + 10, 8, 8, 200, 200, 200);
+    if (plane == UI_PAL_PLANE_SPR) {
+        idx = p->global_pal_spr[row][pal].idx[color & 3u];
+    } else {
+        idx = p->global_pal_bg[row][pal].idx[color & 3u];
+    }
+    r01_kit_rgb(idx, &cr, &cg, &cb);
+    fill_rect(r, px, py, cell, cell, cr, cg, cb);
 }
 
 void draw_ui_cross(SDL_Renderer *r, int cx, int cy) {

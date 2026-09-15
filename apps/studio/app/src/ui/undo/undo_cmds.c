@@ -1061,3 +1061,209 @@ void ui_undo_spr_paint_touch_tile(UiState *ui, int bank, int tile_id) {
     memcpy(st->tiles[st->count].new_chr, src, R01_TILE_BYTES);
     st->count++;
 }
+
+/* ---- entity compose part add / remove ---- */
+
+typedef struct UiUndoEntityPart {
+    int world_idx;
+    int state;
+    int frame;
+    int part_idx;
+    R01EntityPart part;
+    int owns_catalog; /* 1 if add also created a catalog sprite (matched by bank/tile) */
+    R01SpriteDef spr;
+} UiUndoEntityPart;
+
+static R01EntityFrame *undo_entity_edit_frame(UiState *ui, int state, int frame) {
+    if (!ui || !ui->entity_edit.open) {
+        return NULL;
+    }
+    return r01_entity_ensure_frame(&ui->entity_edit.draft, state, frame);
+}
+
+static void undo_entity_edit_guides(UiState *ui, int state) {
+    R01EntityState *st;
+    if (!ui || !ui->entity_edit.open) {
+        return;
+    }
+    st = r01_entity_state(&ui->entity_edit.draft, state);
+    if (st) {
+        r01_entity_state_recompute_guides(st);
+    }
+}
+
+static int undo_frame_insert_part(R01EntityFrame *fr, int idx, const R01EntityPart *part) {
+    int i;
+    if (!fr || !part || fr->part_count >= R01_ENTITY_PARTS_MAX) {
+        return -1;
+    }
+    if (idx < 0) {
+        idx = 0;
+    }
+    if (idx > fr->part_count) {
+        idx = fr->part_count;
+    }
+    for (i = fr->part_count; i > idx; i--) {
+        fr->parts[i] = fr->parts[i - 1];
+    }
+    fr->parts[idx] = *part;
+    fr->part_count++;
+    return idx;
+}
+
+static int undo_find_sprite_catalog(const R01World *w, int bank, int tile_id) {
+    int i;
+    if (!w) {
+        return -1;
+    }
+    for (i = 0; i < w->sprite_count; i++) {
+        if (w->sprites[i].bank == bank && w->sprites[i].tile_id == tile_id) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static void entity_part_add_undo(UiState *ui, void *data) {
+    UiUndoEntityPart *d = (UiUndoEntityPart *)data;
+    R01EntityFrame *fr;
+    R01World *w;
+    int cat;
+    if (!ui || !d || !ui->project) {
+        return;
+    }
+    fr = undo_entity_edit_frame(ui, d->state, d->frame);
+    if (fr) {
+        (void)r01_entity_frame_remove_part(fr, d->part_idx);
+        if (ui->entity_edit.sel_part == d->part_idx) {
+            ui->entity_edit.sel_part = -1;
+        } else if (ui->entity_edit.sel_part > d->part_idx) {
+            ui->entity_edit.sel_part--;
+        }
+        undo_entity_edit_guides(ui, d->state);
+    }
+    if (d->owns_catalog) {
+        w = &ui->project->worlds[d->world_idx];
+        cat = undo_find_sprite_catalog(w, d->spr.bank, d->spr.tile_id);
+        if (cat >= 0) {
+            (void)r01_world_sprite_remove(w, cat);
+        }
+    }
+}
+
+static void entity_part_add_redo(UiState *ui, void *data) {
+    UiUndoEntityPart *d = (UiUndoEntityPart *)data;
+    R01EntityFrame *fr;
+    R01World *w;
+    int idx;
+    if (!ui || !d || !ui->project) {
+        return;
+    }
+    fr = undo_entity_edit_frame(ui, d->state, d->frame);
+    if (fr) {
+        idx = undo_frame_insert_part(fr, d->part_idx, &d->part);
+        if (idx >= 0) {
+            d->part_idx = idx;
+            ui->entity_edit.sel_part = idx;
+            undo_entity_edit_guides(ui, d->state);
+        }
+    }
+    if (d->owns_catalog) {
+        w = &ui->project->worlds[d->world_idx];
+        if (undo_find_sprite_catalog(w, d->spr.bank, d->spr.tile_id) < 0) {
+            (void)r01_world_sprite_add(w, d->spr.bank, d->spr.tile_id, d->spr.pal);
+        }
+    }
+}
+
+static const UiUndoVTable entity_part_add_vt = {entity_part_add_undo, entity_part_add_redo, free_ptr};
+
+void ui_undo_push_entity_part_add(UiState *ui, int state, int frame, int part_idx, const R01EntityPart *part,
+                                  int catalog_idx) {
+    UiUndoEntityPart *d;
+    R01World *w;
+    if (!ui || !ui->project || !part) {
+        return;
+    }
+    w = r01_project_active_world(ui->project);
+    if (!w) {
+        return;
+    }
+    d = (UiUndoEntityPart *)calloc(1, sizeof(*d));
+    if (!d) {
+        return;
+    }
+    d->world_idx = ui->project->active_world;
+    d->state = state;
+    d->frame = frame;
+    d->part_idx = part_idx;
+    d->part = *part;
+    d->owns_catalog = (catalog_idx >= 0);
+    if (catalog_idx >= 0 && catalog_idx < w->sprite_count) {
+        d->spr = w->sprites[catalog_idx];
+    } else {
+        d->spr.bank = part->bank;
+        d->spr.tile_id = part->tile_id;
+        d->spr.pal = part->pal;
+        d->owns_catalog = 0;
+    }
+    (void)ui_undo_push(&ui->undo, &entity_part_add_vt, d, "add sprite");
+}
+
+static void entity_part_remove_undo(UiState *ui, void *data) {
+    UiUndoEntityPart *d = (UiUndoEntityPart *)data;
+    R01EntityFrame *fr;
+    int idx;
+    if (!ui || !d) {
+        return;
+    }
+    fr = undo_entity_edit_frame(ui, d->state, d->frame);
+    if (!fr) {
+        return;
+    }
+    idx = undo_frame_insert_part(fr, d->part_idx, &d->part);
+    if (idx >= 0) {
+        d->part_idx = idx;
+        ui->entity_edit.sel_part = idx;
+        undo_entity_edit_guides(ui, d->state);
+    }
+}
+
+static void entity_part_remove_redo(UiState *ui, void *data) {
+    UiUndoEntityPart *d = (UiUndoEntityPart *)data;
+    R01EntityFrame *fr;
+    if (!ui || !d) {
+        return;
+    }
+    fr = undo_entity_edit_frame(ui, d->state, d->frame);
+    if (!fr) {
+        return;
+    }
+    (void)r01_entity_frame_remove_part(fr, d->part_idx);
+    if (ui->entity_edit.sel_part == d->part_idx) {
+        ui->entity_edit.sel_part = -1;
+    } else if (ui->entity_edit.sel_part > d->part_idx) {
+        ui->entity_edit.sel_part--;
+    }
+    undo_entity_edit_guides(ui, d->state);
+}
+
+static const UiUndoVTable entity_part_remove_vt = {entity_part_remove_undo, entity_part_remove_redo, free_ptr};
+
+void ui_undo_push_entity_part_remove(UiState *ui, int state, int frame, int part_idx, const R01EntityPart *removed) {
+    UiUndoEntityPart *d;
+    if (!ui || !removed) {
+        return;
+    }
+    d = (UiUndoEntityPart *)calloc(1, sizeof(*d));
+    if (!d) {
+        return;
+    }
+    d->world_idx = ui->project ? ui->project->active_world : 0;
+    d->state = state;
+    d->frame = frame;
+    d->part_idx = part_idx;
+    d->part = *removed;
+    d->owns_catalog = 0;
+    (void)ui_undo_push(&ui->undo, &entity_part_remove_vt, d, "remove sprite");
+}

@@ -116,8 +116,13 @@ typedef struct EntityModalLayout {
     int pal_x, pal_y;
     int right_x, right_w; /* right body column (canvas) */
     int right_grid_x, right_grid_y;
+    int add_spr_x, add_spr_y, add_spr_w;
+    int rem_spr_x, rem_spr_y, rem_spr_w;
+    int highlight_x, highlight_y, highlight_w; /* checkbox + "Highlight" */
+    int brush_lab_x, brush_lab_y;
+    int brush_x, brush_y, brush_w;
     int guides_x, guides_y;
-    int paint_x, paint_y;
+    int mode_x, mode_y, mode_w; /* Select | Edit multi-state */
     int btn_y, save_w, cancel_w;
     int left_btn_x;
 } EntityModalLayout;
@@ -181,6 +186,8 @@ void font_draw_clipped(SDL_Renderer *r, int x, int y, int clip_x, int clip_y, in
 int point_in_rect(int lx, int ly, int x, int y, int w, int h);
 int label_width(const char *text);
 void draw_brush_preview(SDL_Renderer *r, const R01Project *p, int row, int pal, int color, int mx, int my);
+void draw_paint_pixel_preview(SDL_Renderer *r, const R01Project *p, int row, UiPalPlane plane, int pal, int color,
+                              int px, int py, int cell);
 void draw_ui_cross(SDL_Renderer *r, int cx, int cy);
 void draw_label(SDL_Renderer *r, int x, int y, const char *text);
 void draw_chess_grid(SDL_Renderer *r, int x0, int y0, int cols, int rows, int cell);

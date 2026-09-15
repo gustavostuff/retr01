@@ -743,7 +743,6 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
     int my;
     int pad = UI_UNIT;
     int body_y;
-    int lab_w;
     int state_lab;
     int frame_lab;
     int left_x;
@@ -752,14 +751,14 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
     int right_w = UI_ENTITY_COMPOSE;
     int body_top;
     int body_h;
-    int field_w;
     int half;
+    int spr_btn_w;
 
     (void)ui;
     body_y = UI_BTN_H + pad;
 
-    /* Top: Name + State name (shared field width). State | Frame + frame id sit in the
-     * canvas column, then palette/canvas share the same top Y. */
+    /* Top: Name + State name aligned to canvas column. State | Frame + frame id sit above
+     * the canvas; Add/Remove sprite sit in the left column below the palette. */
     lo->name_y = body_y;
     lo->state_name_y = lo->name_y + UI_BTN_H + pad;
     lo->state_y = lo->state_name_y + UI_BTN_H + pad;
@@ -773,14 +772,13 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
     }
 
     lo->guides_y = body_top + body_h + pad;
-    lo->paint_y = lo->guides_y;
+    lo->mode_y = lo->guides_y;
     lo->btn_y = lo->guides_y + UI_BTN_H + pad;
     mh = lo->btn_y + UI_BTN_H + pad;
 
     mx = (ui_logic_w(ui) - mw) / 2;
     my = (ui_logic_h(ui) - mh) / 2;
 
-    lab_w = ((label_width("State name") + pad + pad - 1) / pad) * pad;
     state_lab = ((label_width("State") + pad + pad - 1) / pad) * pad;
     frame_lab = ((label_width("Frame") + pad + pad - 1) / pad) * pad;
 
@@ -789,26 +787,20 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
     lo->mw = mw;
     lo->mh = mh;
 
-    field_w = mw - pad * 2 - lab_w;
-    field_w = (field_w / pad) * pad;
-    if (field_w < pad * 8) {
-        field_w = pad * 8;
-    }
-
-    lo->name_y += my;
-    lo->name_x = mx + pad + lab_w;
-    lo->name_w = field_w;
-
-    lo->state_name_y += my;
-    lo->state_name_x = lo->name_x;
-    lo->state_name_w = field_w;
-
     left_x = mx + pad;
     right_x = mx + pad + left_w + pad;
     lo->left_x = left_x;
     lo->left_w = left_w;
     lo->right_x = right_x;
     lo->right_w = right_w;
+
+    lo->name_y += my;
+    lo->name_x = right_x;
+    lo->name_w = right_w;
+
+    lo->state_name_y += my;
+    lo->state_name_x = right_x;
+    lo->state_name_w = right_w;
 
     lo->state_y += my;
     lo->state_dots_x = right_x + state_lab;
@@ -828,10 +820,39 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
     lo->right_grid_y = body_top + my;
     lo->pal_y = lo->right_grid_y;
 
+    spr_btn_w = label_width("Remove");
+    if (spr_btn_w < label_width("Add")) {
+        spr_btn_w = label_width("Add");
+    }
+    if (spr_btn_w > left_w) {
+        spr_btn_w = left_w;
+    }
+    lo->add_spr_x = left_x;
+    lo->add_spr_y = lo->pal_y + UI_PAL_GRID_SIZE + pad;
+    lo->add_spr_w = spr_btn_w;
+    lo->rem_spr_x = left_x;
+    lo->rem_spr_y = lo->add_spr_y + UI_BTN_H + pad;
+    lo->rem_spr_w = spr_btn_w;
+    lo->highlight_x = left_x;
+    lo->highlight_y = lo->rem_spr_y + UI_BTN_H + pad;
+    lo->highlight_w = UI_CHECKBOX + UI_MODE_GAP + label_width("Highlight");
+    if (lo->highlight_w > left_w) {
+        lo->highlight_w = left_w;
+    }
+    lo->brush_lab_x = left_x;
+    lo->brush_lab_y = lo->highlight_y + UI_BTN_H + pad;
+    lo->brush_x = left_x;
+    lo->brush_y = lo->brush_lab_y + UI_BTN_H;
+    lo->brush_w = left_w;
+
     lo->guides_y += my;
-    lo->paint_y += my;
+    lo->mode_y += my;
     lo->guides_x = right_x;
-    lo->paint_x = right_x + UI_CHECKBOX + UI_MODE_GAP + label_width("Origin/hitbox") + pad;
+    {
+        static const char *const mode_labels[] = {"Select", "Edit"};
+        lo->mode_w = ui_multi_state_pref_width(mode_labels, 2);
+        lo->mode_x = right_x + UI_CHECKBOX + UI_MODE_GAP + label_width("Origin/hitbox") + pad;
+    }
 
     lo->btn_y += my;
     lo->left_btn_x = left_x;

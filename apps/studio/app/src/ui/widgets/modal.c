@@ -13,7 +13,6 @@ void ui_modal_scrim(SDL_Renderer *r, const UiState *ui) {
 
 void ui_modal_panel(SDL_Renderer *r, int mx, int my, int w, int h, const char *title) {
     fill_rect(r, mx, my, w, h, UI_COL_BG_R, UI_COL_BG_G, UI_COL_BG_B);
-    draw_rect(r, mx, my, w, h, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
     if (title) {
         font_draw_centered(r, mx, my, w, UI_BTN_H, title, 240, 240, 240);
     }

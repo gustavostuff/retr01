@@ -92,8 +92,11 @@ void ui_update_cursor(const UiState *ui) {
                point_in_rect(lx, ly, lo.pal_x, lo.pal_y, UI_PAL_GRID_SIZE, UI_PAL_GRID_SIZE) ||
                point_in_rect(lx, ly, lo.state_dots_x, lo.state_dots_y, UI_DOT_STRIP_N * UI_DOT_SIZE, UI_DOT_SIZE) ||
                point_in_rect(lx, ly, lo.frame_dots_x, lo.frame_dots_y, UI_DOT_STRIP_N * UI_DOT_SIZE, UI_DOT_SIZE) ||
-               point_in_rect(lx, ly, lo.guides_x, lo.guides_y, lo.paint_x - lo.guides_x + UI_CHECKBOX + UI_UNIT * 8,
-                             UI_BTN_H) ||
+               point_in_rect(lx, ly, lo.guides_x, lo.guides_y, lo.mode_x + lo.mode_w - lo.guides_x, UI_BTN_H) ||
+               point_in_rect(lx, ly, lo.add_spr_x, lo.add_spr_y, lo.add_spr_w, UI_BTN_H) ||
+               point_in_rect(lx, ly, lo.rem_spr_x, lo.rem_spr_y, lo.rem_spr_w, UI_BTN_H) ||
+               point_in_rect(lx, ly, lo.highlight_x, lo.highlight_y, lo.highlight_w, UI_BTN_H) ||
+               point_in_rect(lx, ly, lo.brush_x, lo.brush_y, lo.brush_w, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.left_btn_x, lo.btn_y, lo.save_w, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.left_btn_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);
     } else if (ui->menu.open) {
