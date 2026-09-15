@@ -66,7 +66,7 @@ Add the 74HC14 (or populate its footprint) if bring-up shows soft clock edges, c
 
 ### What kind of system is this?
 
-Retr01 is a **multi-chip discrete console** (separate CPU, RAM, glue, video path), not an FPGA soft system. It is **not** a fully discrete-logic machine in the TTL-only sense. Game behavior and helper work live in programmable parts. Fixed 74xx-class chips only do mux/latch glue.
+Retr01 is a **multi-chip 8-bit gaming system** (separate CPU, RAM, glue, video path), not an FPGA soft system and also **not** a fully discrete-logic machine in the TTL-only sense. Game behavior and helper work live in programmable parts. Fixed 74xx-class chips only do mux/latch glue.
 
 | Class | Parts | Programmable? | Flashed through the console? |
 | --- | --- | --- | --- |
