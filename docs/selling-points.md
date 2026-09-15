@@ -1,7 +1,5 @@
 # Selling points
 
-Bells and whistles of the Retr01. Add new items here as they land.
-
 ## One PCB for console and arcade
 
 A single motherboard footprint set covers **home console** and **arcade** installs. Populate TRS pad jacks, arcade microswitch headers, or both. Shell and BOM choose the path. No separate A/C SKUs.
@@ -31,8 +29,6 @@ One flat **32 KB PRG** window on the cart. No PRG banking. That is the same PRG 
 **NES games burned VBlank on the picture.** A large share of many NES titles (often **40-50%** of VBlank time) went into making the picture appear and move: OAM updates, scroll writes, nametable streaming, timed mid-frame tricks. That work ate the same CPU and PRG that also had to run the game.
 
 **Retr01 pushes video off PRG.** Work the NES piled onto the 6502 (OAM, scroll, nametable traffic) is handled here by PLDs, glue, and the helper AVRs: hardware scroll, cart MAP/nametable streaming, and sprites filled in **VBlank** by MCU-S1. On top of that, Retr01 adds dual BG planes with BG0 show-through and **HBlank** BG0 line prep, which the NES never had. Authors spend the same 32 KB mostly on play and behavior, not on fighting the display.
-
-NES already shipped complete, polished games on NROM with those limits. That bar matters. Retr01 keeps the flat 32 KB shape and turns the picture work into plumbing.
 
 ## Entity system with clear budgets
 
