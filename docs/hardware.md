@@ -391,6 +391,10 @@ These track common practice for a careful **2-layer** digital + video board (sam
 
 **Cart and pad PCBs (2-layer).** Same spirit: local caps next to the ICs, short stubs to the edge connector or TRS jack, one side mostly ground pour with stitching vias, labeled TPs for `+5V` / `GND` (and cart `WE#` if space allows).
 
+### IC communication risks
+
+Different clocks, shared buses, and Hi-Z hand-offs make IC-to-IC traffic the fragile part of this design. Full risk catalog and mitigations: **`ic-comms-risks.md`**.
+
 ## Light gun (roadmap)
 
 Same TRS bus as pads. ATtiny85 + photodiode + LM393 + 16-bit beam timer (1 us ticks).
@@ -405,4 +409,4 @@ Black anti-spoof then white hitboxes on all targets, then `0x5A`. Two flash fram
 
 ## Related
 
-`memory.md` | `cartridge.md` | `video-graphics.md` | `world-scrolling.md` | `software-api.md` | `open-questions.md` | `ic_behavior/`
+`memory.md` | `cartridge.md` | `video-graphics.md` | `world-scrolling.md` | `software-api.md` | `open-questions.md` | `ic_behavior/` | `ic-comms-risks.md`

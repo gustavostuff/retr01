@@ -24,6 +24,7 @@ The Retr01 is an MCU-assisted 8-bit system, ready for both arcade and console se
 | --- | --- |
 | [selling-points.md](selling-points.md) | Bells and whistles (shared PCB, dual sync, entities, flasher, more) |
 | [hardware.md](hardware.md) | Main board, 3x AVR, PLDs, BOM, I/O, PCB practices |
+| [ic-comms-risks.md](ic-comms-risks.md) | Shared-bus / multi-clock risks and mitigations |
 | [video-graphics.md](video-graphics.md) | Resolution, tiles, sprites, palettes, BG layers |
 | [world-scrolling.md](world-scrolling.md) | Worlds, screens, VRAM buffers, scroll behavior |
 | [cartridge.md](cartridge.md) | Cart hardware, saves, flashing |
