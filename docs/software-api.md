@@ -169,7 +169,9 @@ See `hardware.md` for the M / S1 / S2 split. Shared-bus timing: `ic-comms-risks.
 | --- | --- |
 | Scroll `$7F02` / `$7F03`, palette `$7F08` / `$7F09` | NMI / VBlank (or video off) |
 | OAM publish to S1 | Early VBlank or wait for `S1_RDY`. Never during HBlank |
-| Cart save `$7F22`-`$7F24` | Explicit save call. MCU-M holds **`CPU_RDY`** for the I2C write/poll. Bound with a timeout |
+| Cart save `$7F22`-`$7F24` | Explicit save only. May span **many VBlanks**. Chunk I2C with **short** `CPU_RDY` pulses, then release so PRG can animate a spinner / saving UI. Do not hold RDY for the whole EEPROM write |
 | Machine EE `$7F70`-`$7F72` | Separate from cart saves. Same RDY rule if the cycle cannot close in one PHI2 |
 
 Do not use **STP** in normal play. **WAI** only with a clear NMI/IRQ wake.
+
+**Performance anti-patterns** (RDY-as-default, full OAM every frame, saves in the hot path, and so on): see **Performance: what not to do** in `ic-comms-risks.md`.

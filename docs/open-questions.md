@@ -116,3 +116,4 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-14 | BG autoscroll | BG0 and BG1 may each autoscroll and/or wrap strips. Default is clamp. |
 | 2026-09-14 | Player vs camera | Separate systems. Dead zone (e.g. 32x30). Axis lock, follow, or auto camera. |
 | 2026-09-15 | IC comms | Idle-safe pulls, RDY OD, OAM SPI early VBlank, scroll in NMI/VBlank, cart OE/WE rules. See `ic-comms-risks.md`. |
+| 2026-09-15 | Cart save UX | Multi-frame OK. Chunk I2C, short RDY, keep spinner/UI alive. No full-save picture freeze. |
