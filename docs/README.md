@@ -11,8 +11,11 @@ The Retr01 is an MCU-assisted 8-bit system, ready for both arcade and console se
 ## Design goals
 
 - Hardware does most video work so PRG can stay on game logic.
-- Hardware scroll and MAP/nametable streaming from the cart.
-- Start small on software features. Grow the API later without locking the silicon early where we can avoid it.
+- Multi-chip board (CPU + AVRs + PLDs + glue logic), not FPGA soft console or pure TTL.
+- Flat 32 KB PRG with no banking; faster CPU (8 MHz) and larger RAM (32 KB) make it stretch farther than NES NROM.
+- Entity system with clear caps: up to 16 types per world, each with up to 4 states × 4 frames × 4 sprites.
+- Flexible world layout: up to 8 worlds, each with up to 32 BG1 screens, 0-8 BG0 screens on a sparse 16×16 grid.
+- Passive cartridge: no mapper, hardware streaming of MAP/nametable data from cart into VRAM buffers.
 
 ## Doc map
 
