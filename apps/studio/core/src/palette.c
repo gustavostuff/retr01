@@ -1,0 +1,232 @@
+#include "retr01_studio/palette.h"
+#include "retr01_studio/chr_pack.h"
+
+#include <string.h>
+static const uint8_t KIT_RGB[R01_MASTER_COLORS][3] = {
+    {0x00, 0x00, 0x00}, {0x29, 0x05, 0x14}, {0x2A, 0x05, 0x07}, {0x23, 0x0F, 0x06},
+    {0x1E, 0x13, 0x06}, {0x1A, 0x16, 0x05}, {0x14, 0x18, 0x07}, {0x06, 0x1A, 0x07},
+    {0x05, 0x1A, 0x13}, {0x07, 0x19, 0x18}, {0x08, 0x18, 0x1C}, {0x07, 0x17, 0x22},
+    {0x03, 0x0B, 0x3D}, {0x16, 0x03, 0x3A}, {0x20, 0x05, 0x2D}, {0x26, 0x04, 0x20},
+    {0x36, 0x36, 0x36}, {0x74, 0x0A, 0x40}, {0x77, 0x09, 0x1A}, {0x69, 0x35, 0x12},
+    {0x5D, 0x3F, 0x0E}, {0x51, 0x46, 0x17}, {0x42, 0x4C, 0x19}, {0x13, 0x51, 0x1A},
+    {0x16, 0x50, 0x3F}, {0x11, 0x4E, 0x4D}, {0x16, 0x4D, 0x58}, {0x16, 0x4A, 0x66},
+    {0x16, 0x37, 0x94}, {0x47, 0x29, 0x90}, {0x5F, 0x16, 0x7D}, {0x6C, 0x11, 0x5F},
+    {0x94, 0x94, 0x94}, {0xC0, 0x4A, 0x7A}, {0xC5, 0x4A, 0x4D}, {0xB8, 0x60, 0x1B},
+    {0xA2, 0x73, 0x26}, {0x8F, 0x7E, 0x2F}, {0x77, 0x87, 0x2D}, {0x20, 0x90, 0x30},
+    {0x2E, 0x8E, 0x72}, {0x31, 0x8B, 0x89}, {0x1F, 0x88, 0x9C}, {0x24, 0x83, 0xB5},
+    {0x4D, 0x77, 0xD7}, {0x7E, 0x6A, 0xD3}, {0x9D, 0x5D, 0xBF}, {0xB3, 0x52, 0xA0},
+    {0xFF, 0xFF, 0xFF}, {0xF1, 0xA2, 0xBB}, {0xF1, 0xA6, 0xA1}, {0xF1, 0xA9, 0x83},
+    {0xEE, 0xAC, 0x44}, {0xD4, 0xBA, 0x33}, {0xB0, 0xC8, 0x41}, {0x73, 0xD2, 0x75},
+    {0x22, 0xD0, 0xA6}, {0x3B, 0xCD, 0xC9}, {0x48, 0xC9, 0xE4}, {0x88, 0xC4, 0xED},
+    {0xA4, 0xBD, 0xEF}, {0xBB, 0xB5, 0xF1}, {0xD5, 0xA9, 0xEF}, {0xF0, 0x9B, 0xDD},
+};
+
+void r01_kit_rgb(int master_index, uint8_t *r, uint8_t *g, uint8_t *b) {
+    int i = master_index & 63;
+    if (r) {
+        *r = KIT_RGB[i][0];
+    }
+    if (g) {
+        *g = KIT_RGB[i][1];
+    }
+    if (b) {
+        *b = KIT_RGB[i][2];
+    }
+}
+
+uint8_t r01_quantize_r3g3b2(uint8_t r, uint8_t g, uint8_t b) {
+    uint8_t rr = (uint8_t)((r * 7 + 127) / 255);
+    uint8_t gg = (uint8_t)((g * 7 + 127) / 255);
+    uint8_t bb = (uint8_t)((b * 3 + 127) / 255);
+    return (uint8_t)((rr << 5) | (gg << 2) | bb);
+}
+
+int r01_kit_nearest_master(uint8_t r, uint8_t g, uint8_t b) {
+    int best = 0;
+    int best_d = 0x7fffffff;
+    int i;
+    for (i = 0; i < R01_MASTER_COLORS; i++) {
+        int dr = (int)r - (int)KIT_RGB[i][0];
+        int dg = (int)g - (int)KIT_RGB[i][1];
+        int db = (int)b - (int)KIT_RGB[i][2];
+        int d = dr * dr + dg * dg + db * db;
+        if (d < best_d) {
+            best_d = d;
+            best = i;
+        }
+    }
+    return best;
+}
+
+static void pal_phase1_bg(R01PalRow *pal, int column) {
+    int col = column & 3;
+    pal->idx[0] = 0;
+    pal->idx[1] = (uint8_t)(16 + col);
+    pal->idx[2] = (uint8_t)(32 + col);
+    pal->idx[3] = (uint8_t)(48 + col);
+}
+
+static void pal_phase1_spr(R01PalRow *pal) {
+    pal->idx[0] = 0;
+    pal->idx[1] = (uint8_t)R01_KIT_RED_MASTER;
+    pal->idx[2] = (uint8_t)R01_KIT_RED_MASTER;
+    pal->idx[3] = (uint8_t)R01_KIT_RED_MASTER;
+}
+
+uint8_t r01_project_player_master(const R01Project *p) {
+    if (!p) {
+        return (uint8_t)R01_KIT_RED_MASTER;
+    }
+    return p->global_pal_spr[R01_PLAYER_SPR_ROW][R01_PLAYER_SPR_PAL].idx[R01_PLAYER_SPR_COLOR];
+}
+
+void r01_project_player_rgb(const R01Project *p, uint8_t *r, uint8_t *g, uint8_t *b) {
+    r01_kit_rgb(r01_project_player_master(p), r, g, b);
+}
+
+void r01_project_init_phase1_pals(R01Project *p) {
+    int row, pal;
+    if (!p) {
+        return;
+    }
+    for (row = 0; row < R01_PAL_ROWS; row++) {
+        for (pal = 0; pal < R01_PALS_PER_ROW; pal++) {
+            /* Kit column = pal within row; rows 4-7 repeat columns 0-3. */
+            pal_phase1_bg(&p->global_pal_bg[row][pal], pal);
+            pal_phase1_spr(&p->global_pal_spr[row][pal]);
+        }
+    }
+}
+
+void r01_project_set_bg_pals_from_png(R01Project *p, const uint8_t master_for_index[4]) {
+    R01PalRow row;
+    int r, pal;
+    if (!p || !master_for_index) {
+        return;
+    }
+    row.idx[0] = master_for_index[0];
+    row.idx[1] = master_for_index[1];
+    row.idx[2] = master_for_index[2];
+    row.idx[3] = master_for_index[3];
+    for (r = 0; r < R01_PAL_ROWS; r++) {
+        for (pal = 0; pal < R01_PALS_PER_ROW; pal++) {
+            p->global_pal_bg[r][pal] = row;
+            p->global_pal_spr[r][pal].idx[0] = row.idx[0];
+        }
+    }
+}
+
+static int clamp_pal_row(int row) {
+    if (row < 0) {
+        return 0;
+    }
+    if (row >= R01_PAL_ROWS) {
+        return R01_PAL_ROWS - 1;
+    }
+    return row;
+}
+
+void r01_project_backdrop_rgb(const R01Project *p, const R01World *w, uint8_t *r, uint8_t *g, uint8_t *b) {
+    int prow;
+    uint8_t master = 0;
+    if (p) {
+        prow = clamp_pal_row(w ? w->default_pal_row : 0);
+        master = p->global_pal_bg[prow][0].idx[0];
+    }
+    r01_kit_rgb(master, r, g, b);
+}
+
+uint8_t r01_screen_pixel_color(const R01World *w, const R01Screen *s, int px, int py) {
+    int tx, ty, sx, sy, cell, bank;
+    uint8_t attr, tile_id;
+    const uint8_t *tile;
+    if (!s || px < 0 || py < 0 || px >= R01_SCREEN_PX_W || py >= R01_SCREEN_PX_H) {
+        return 0;
+    }
+    tx = px / 8;
+    ty = py / 8;
+    sx = px % 8;
+    sy = py % 8;
+    cell = ty * R01_SCREEN_TILES_X + tx;
+    attr = s->attrs[cell];
+    tile_id = s->tiles[cell];
+    bank = r01_attr_bank(attr);
+    if (r01_attr_flip_h(attr)) {
+        sx = 7 - sx;
+    }
+    if (r01_attr_flip_v(attr)) {
+        sy = 7 - sy;
+    }
+    if (w && bank >= 0 && bank < R01_BG_BANKS && tile_id < (uint8_t)w->bg_banks[bank].tile_count) {
+        tile = w->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+        return r01_tile_pixel_color(tile, sx, sy) & 3u;
+    }
+    return s->pixels[(ty * 8 + sy) * R01_SCREEN_PX_W + (tx * 8 + sx)] & 3u;
+}
+
+void r01_screen_pixel_rgb(const R01Project *p, const R01World *w, const R01Screen *s, int px, int py, uint8_t *r,
+                          uint8_t *g, uint8_t *b) {
+    int tx, ty, cell, prow;
+    uint8_t attr, color, master;
+    if (!p || !s || px < 0 || py < 0 || px >= R01_SCREEN_PX_W || py >= R01_SCREEN_PX_H) {
+        if (r) {
+            *r = 0;
+        }
+        if (g) {
+            *g = 0;
+        }
+        if (b) {
+            *b = 0;
+        }
+        return;
+    }
+    tx = px / 8;
+    ty = py / 8;
+    cell = ty * R01_SCREEN_TILES_X + tx;
+    attr = s->attrs[cell];
+    color = r01_screen_pixel_color(w, s, px, py);
+    prow = clamp_pal_row(w ? w->default_pal_row : 0);
+    master = p->global_pal_bg[prow][r01_attr_pal(attr)].idx[color];
+    r01_kit_rgb(master, r, g, b);
+}
+
+void r01_compose_screen_pixel_rgb(const R01Project *p, const R01World *w, const R01Screen *bg1,
+                                  const R01Screen *bg0, int px, int py, uint8_t *r, uint8_t *g, uint8_t *b) {
+    uint8_t col1;
+    if (!p) {
+        if (r) {
+            *r = 0;
+        }
+        if (g) {
+            *g = 0;
+        }
+        if (b) {
+            *b = 0;
+        }
+        return;
+    }
+    if (!bg1) {
+        if (bg0) {
+            r01_screen_pixel_rgb(p, w, bg0, px, py, r, g, b);
+            if (r01_screen_pixel_color(w, bg0, px, py) == 0) {
+                r01_project_backdrop_rgb(p, w, r, g, b);
+            }
+        } else {
+            r01_project_backdrop_rgb(p, w, r, g, b);
+        }
+        return;
+    }
+    col1 = r01_screen_pixel_color(w, bg1, px, py);
+    if (col1 != 0) {
+        r01_screen_pixel_rgb(p, w, bg1, px, py, r, g, b);
+        return;
+    }
+    /* BG1 color 0 show-through: BG0 pixel, else shared backdrop. */
+    if (bg0) {
+        if (r01_screen_pixel_color(w, bg0, px, py) != 0) {
+            r01_screen_pixel_rgb(p, w, bg0, px, py, r, g, b);
+            return;
+        }
+    }
+    r01_project_backdrop_rgb(p, w, r, g, b);
+}

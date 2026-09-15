@@ -1,1 +1,7 @@
 ai-rules.txt
+apps/studio/build/
+apps/emu/build/
+bin/
+output/
+*.o
+*.a

@@ -1,0 +1,251 @@
+#include "ui/ui.h"
+#include "ui/internal.h"
+#include "font/font.h"
+
+#include "retr01_studio/chr_pack.h"
+#include "retr01_studio/palette.h"
+#include "retr01_studio/project.h"
+#include "retr01_studio/sprites.h"
+
+#include <string.h>
+
+void sprite_edit_open_new(UiState *ui) {
+    R01World *w;
+    int bank;
+    if (!ui) {
+        return;
+    }
+    w = r01_project_active_world(ui->project);
+    if (!w) {
+        return;
+    }
+    bank = r01_chr_find_spr_bank_space(w);
+    if (bank < 0) {
+        ui_toast(ui, "all sprite banks full", 1);
+        return;
+    }
+    memset(&ui->sprite_edit, 0, sizeof(ui->sprite_edit));
+    ui->sprite_edit.open = 1;
+    ui->sprite_edit.is_new = 1;
+    ui->sprite_edit.catalog_idx = -1;
+    ui->sprite_edit.bank = bank;
+    ui->sprite_edit.tile_id = -1;
+    ui->sprite_edit.pal = 0;
+    ui->sprite_edit.color = 1;
+    ui->sprite_edit.flip_h = 0;
+    ui->sprite_edit.flip_v = 0;
+    memset(ui->sprite_edit.chr, 0, sizeof(ui->sprite_edit.chr));
+}
+
+void sprite_edit_open(UiState *ui, int catalog_idx) {
+    R01World *w;
+    const R01SpriteDef *sp;
+    const uint8_t *raw;
+    if (!ui) {
+        return;
+    }
+    w = r01_project_active_world(ui->project);
+    if (!w || catalog_idx < 0 || catalog_idx >= w->sprite_count) {
+        return;
+    }
+    sp = &w->sprites[catalog_idx];
+    memset(&ui->sprite_edit, 0, sizeof(ui->sprite_edit));
+    ui->sprite_edit.open = 1;
+    ui->sprite_edit.is_new = 0;
+    ui->sprite_edit.catalog_idx = catalog_idx;
+    ui->sprite_edit.bank = sp->bank;
+    ui->sprite_edit.tile_id = sp->tile_id;
+    ui->sprite_edit.pal = sp->pal;
+    ui->sprite_edit.color = 1;
+    ui->sprite_edit.flip_h = 0;
+    ui->sprite_edit.flip_v = 0;
+    raw = r01_chr_spr_tile(w, sp->bank, sp->tile_id);
+    if (raw) {
+        memcpy(ui->sprite_edit.chr, raw, R01_TILE_BYTES);
+    } else {
+        memset(ui->sprite_edit.chr, 0, sizeof(ui->sprite_edit.chr));
+    }
+}
+
+void sprite_edit_open_slot(UiState *ui, int bank, int tile_id) {
+    R01World *w;
+    const uint8_t *raw;
+    int cat;
+    int i;
+    int empty = 1;
+    if (!ui) {
+        return;
+    }
+    w = r01_project_active_world(ui->project);
+    if (!w || bank < 0 || bank >= R01_SPR_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
+        return;
+    }
+    cat = -1;
+    for (i = 0; i < w->sprite_count; i++) {
+        if (w->sprites[i].bank == bank && w->sprites[i].tile_id == tile_id) {
+            cat = i;
+            break;
+        }
+    }
+    if (cat >= 0) {
+        sprite_edit_open(ui, cat);
+        return;
+    }
+    memset(&ui->sprite_edit, 0, sizeof(ui->sprite_edit));
+    ui->sprite_edit.open = 1;
+    ui->sprite_edit.catalog_idx = -1;
+    ui->sprite_edit.bank = bank;
+    ui->sprite_edit.tile_id = tile_id;
+    ui->sprite_edit.pal = 0;
+    ui->sprite_edit.color = 1;
+    raw = r01_chr_spr_tile(w, bank, tile_id);
+    if (raw) {
+        memcpy(ui->sprite_edit.chr, raw, R01_TILE_BYTES);
+        for (i = 0; i < R01_TILE_BYTES; i++) {
+            if (raw[i]) {
+                empty = 0;
+                break;
+            }
+        }
+    } else {
+        memset(ui->sprite_edit.chr, 0, sizeof(ui->sprite_edit.chr));
+    }
+    ui->sprite_edit.is_new = empty ? 1 : 0;
+}
+
+static void sprite_edit_save(UiState *ui) {
+    R01World *w = r01_project_active_world(ui->project);
+    uint8_t canonical[R01_TILE_BYTES];
+    int id;
+    int cat;
+    if (!w) {
+        return;
+    }
+    r01_tile_orient(ui->sprite_edit.chr, ui->sprite_edit.flip_h, ui->sprite_edit.flip_v, canonical);
+    if (ui->sprite_edit.is_new && ui->sprite_edit.tile_id >= 0) {
+        id = ui->sprite_edit.tile_id;
+        if (r01_chr_write_spr_tile(w, ui->sprite_edit.bank, id, canonical) != 0) {
+            ui_toast(ui, "sprite write failed", 1);
+            return;
+        }
+        cat = r01_world_sprite_add(w, ui->sprite_edit.bank, id, ui->sprite_edit.pal);
+        if (cat < 0) {
+            ui_toast(ui, "sprite catalog full", 1);
+            return;
+        }
+        ui->sprite_edit.catalog_idx = cat;
+        ui->sprite_edit.is_new = 0;
+        ui_toast(ui, "sprite created", 0);
+    } else if (ui->sprite_edit.is_new || ui->sprite_edit.tile_id < 0) {
+        id = r01_chr_alloc_spr_tile(w, ui->sprite_edit.bank);
+        if (id < 0) {
+            /* Prefer next bank if current filled while modal was open. */
+            int bank = r01_chr_find_spr_bank_space(w);
+            if (bank < 0) {
+                ui_toast(ui, "sprite banks full", 1);
+                return;
+            }
+            ui->sprite_edit.bank = bank;
+            id = r01_chr_alloc_spr_tile(w, bank);
+            if (id < 0) {
+                ui_toast(ui, "sprite banks full", 1);
+                return;
+            }
+        }
+        ui->sprite_edit.tile_id = id;
+        if (r01_chr_write_spr_tile(w, ui->sprite_edit.bank, id, canonical) != 0) {
+            ui_toast(ui, "sprite write failed", 1);
+            return;
+        }
+        cat = r01_world_sprite_add(w, ui->sprite_edit.bank, id, ui->sprite_edit.pal);
+        if (cat < 0) {
+            ui_toast(ui, "sprite catalog full", 1);
+            return;
+        }
+        ui->sprite_edit.catalog_idx = cat;
+        ui->sprite_edit.is_new = 0;
+        ui_toast(ui, "sprite created", 0);
+    } else {
+        id = ui->sprite_edit.tile_id;
+        if (r01_chr_write_spr_tile(w, ui->sprite_edit.bank, id, canonical) != 0) {
+            ui_toast(ui, "sprite write failed", 1);
+            return;
+        }
+        if (ui->sprite_edit.catalog_idx >= 0 && ui->sprite_edit.catalog_idx < w->sprite_count) {
+            w->sprites[ui->sprite_edit.catalog_idx].pal = ui->sprite_edit.pal;
+            w->sprites[ui->sprite_edit.catalog_idx].bank = ui->sprite_edit.bank;
+            w->sprites[ui->sprite_edit.catalog_idx].tile_id = id;
+        }
+        ui_toast(ui, "sprite saved", 0);
+    }
+    ui->sprite_edit.open = 0;
+}
+
+void draw_sprite_modal(UiState *ui, SDL_Renderer *r) {
+    SpriteModalLayout lo;
+    const R01World *w = r01_project_active_world_const(ui->project);
+    int row = w ? w->default_pal_row : 0;
+    int sy, sx;
+    const char *title = ui->sprite_edit.is_new ? "Create sprite" : "Edit sprite";
+
+    sprite_modal_layout(ui, &lo);
+    ui_modal_scrim(r, ui);
+    ui_modal_panel(r, lo.mx, lo.my, UI_MODAL_W, UI_MODAL_H, title);
+
+    draw_label(r, lo.pal_x, lo.pal_label_y, "Palette/color");
+    ui_palette_grid_draw(r, ui->project, row, lo.pal_x, lo.pal_y, ui->sprite_edit.pal, ui->sprite_edit.color,
+                         UI_PAL_PLANE_SPR);
+
+    fill_rect(r, lo.canvas_x, lo.canvas_y, UI_TILE_CANVAS, UI_TILE_CANVAS, UI_COL_WELL_R, UI_COL_WELL_G,
+              UI_COL_WELL_B);
+    for (sy = 0; sy < 8; sy++) {
+        for (sx = 0; sx < 8; sx++) {
+            uint8_t col = r01_tile_pixel_color(ui->sprite_edit.chr, sx, sy);
+            uint8_t cr, cg, cb;
+            int cell = 16;
+            r01_kit_rgb(ui->project->global_pal_spr[row][ui->sprite_edit.pal].idx[col & 3u], &cr, &cg, &cb);
+            fill_rect(r, lo.canvas_x + sx * cell, lo.canvas_y + sy * cell, cell - 1, cell - 1, cr, cg, cb);
+        }
+    }
+
+    ui_modal_save_cancel(r, lo.pal_x, lo.btn_y, lo.save_w, lo.cancel_w, ui->mouse_x, ui->mouse_y);
+}
+
+int sprite_modal_handle(UiState *ui, int lx, int ly, int down) {
+    SpriteModalLayout lo;
+    int pal, col;
+    sprite_modal_layout(ui, &lo);
+
+    if (!down) {
+        return 1;
+    }
+    if (ui_modal_overlay_hit(lx, ly, lo.mx, lo.my, UI_MODAL_W, UI_MODAL_H)) {
+        ui->sprite_edit.open = 0;
+        return 1;
+    }
+    if (ui_palette_grid_hit(lx, ly, lo.pal_x, lo.pal_y, &pal, &col)) {
+        ui->sprite_edit.color = col;
+        ui->sprite_edit.pal = pal;
+        return 1;
+    }
+    if (lx >= lo.canvas_x && lx < lo.canvas_x + UI_TILE_CANVAS && ly >= lo.canvas_y &&
+        ly < lo.canvas_y + UI_TILE_CANVAS) {
+        int sx = (lx - lo.canvas_x) / 16;
+        int sy = (ly - lo.canvas_y) / 16;
+        if (ui->keys[SDL_SCANCODE_F]) {
+            r01_tile_flood_fill(ui->sprite_edit.chr, sx, sy, (uint8_t)ui->sprite_edit.color);
+        } else {
+            r01_tile_set_pixel(ui->sprite_edit.chr, sx, sy, (uint8_t)ui->sprite_edit.color);
+        }
+        return 1;
+    }
+    if (ui_modal_save_hit(lx, ly, lo.pal_x, lo.btn_y, lo.save_w)) {
+        sprite_edit_save(ui);
+        return 1;
+    }
+    if (ui_modal_cancel_hit(lx, ly, lo.pal_x, lo.btn_y, lo.save_w, lo.cancel_w)) {
+        ui->sprite_edit.open = 0;
+        return 1;
+    }
+    return 1;
+}

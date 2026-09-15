@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Run the Release studio binary from bin/ (build with ./build-all first).
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+BIN="$ROOT/bin/studio"
+ARG="${1:-}"
+
+die() { echo "error: $*" >&2; exit 1; }
+usage() { echo "usage: ./studio [project.r01proj|project_dir]" >&2; exit 2; }
+
+[[ -x "$BIN" ]] || die "missing $BIN -- run ./build-all first"
+
+# No args: launch with a new empty project.
+if [[ -z "$ARG" ]]; then
+  exec "$BIN"
+fi
+
+resolve_path() {
+  local p="$1"
+  if [[ "$p" != /* ]]; then
+    if [[ -e "$ROOT/$p" ]]; then
+      p="$ROOT/$p"
+    elif [[ -e "$p" ]]; then
+      p="$(cd "$(dirname "$p")" && pwd)/$(basename "$p")"
+    else
+      p="$ROOT/$p"
+    fi
+  fi
+  printf '%s' "$p"
+}
+
+PROJECT="$(resolve_path "$ARG")"
+
+if [[ -d "$PROJECT" ]]; then
+  # Project folder: pick the first *.r01proj inside.
+  shopt -s nullglob
+  local_matches=("$PROJECT"/*.r01proj)
+  shopt -u nullglob
+  if [[ ${#local_matches[@]} -lt 1 ]]; then
+    die "no .r01proj in folder: $ARG"
+  fi
+  PROJECT="${local_matches[0]}"
+elif [[ -f "$PROJECT" ]]; then
+  :
+else
+  die "project not found: $ARG"
+fi
+
+[[ -f "$PROJECT" ]] || die "project not found: $ARG"
+exec "$BIN" "$PROJECT"
