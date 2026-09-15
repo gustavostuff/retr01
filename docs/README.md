@@ -1,6 +1,6 @@
 # Retr01
 
-The Retr01 is an MCU-assisted 8-bit system. ready for both arcade and console setups.
+The Retr01 is an MCU-assisted 8-bit system, ready for both arcade and console setups.
 
 ## Inspirations
 
