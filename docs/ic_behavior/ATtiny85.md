@@ -69,7 +69,7 @@ Physical GPIO assignment is firmware-owned. A minimal sim pin shell used histori
          +------------+
 ```
 
-Wire button inputs and ISP to the pins your pad firmware actually uses. Keep **DATA** on the TRS ring.
+Wire button inputs and ISP to the pins the pad firmware actually uses. Keep **DATA** on the TRS ring.
 
 | Logical name | Dir | Notes |
 | --- | --- | --- |

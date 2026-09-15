@@ -112,7 +112,7 @@ Default start screen is E (center). No scroll yet. VRAM holds a 2x2 window (`#` 
 
 From that state:
 
-- Move a little bit to the **right** inside the current 2x2 window: no VRAM reload (we just partially show F).
+- Move a little bit to the **right** inside the current 2x2 window: no VRAM reload (the viewport only partially shows F).
 - Move a few pixels **up**: stream two new screens from cart (each 240 + 240 bytes). VRAM becomes B-C / E-F:
 
 ```

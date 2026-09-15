@@ -187,7 +187,7 @@ Not on the world grid. Read through the MAP port like world data.
 
 **Hard cap: 16 screens** total (ids **0..15**). Title, interstitial, credits, and any other non-world pages share that one pool. There is no separate credits budget.
 
-Roles are labels on indexes inside the pool (Studio / PRG convention). Example: id **0** = title, id **1** = interstitial, credits = indexes **N..M** within **0..15**. Credits do not need a large contiguous run beyond what you allocate inside the 16.
+Roles are labels on indexes inside the pool (Studio / PRG convention). Example: id **0** = title, id **1** = interstitial, credits = indexes **N..M** within **0..15**. Credits do not need a large contiguous run beyond the indexes reserved inside the 16.
 
 Payload **480 B** raw or **RLE** (`flags` bit 0). RLE: `C < 0x80` copy `C+1` literals, `C >= 0x80` repeat next byte `C-0x7F` times.
 

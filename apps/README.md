@@ -10,7 +10,7 @@ Repo wrappers (after copying binaries to `bin/`): `./studio` and `./emu`.
 
 ## Studio projects
 
-Each save creates a folder under `apps/studio/projects/` (or another parent you pick):
+Each save creates a folder under `apps/studio/projects/` (or another chosen parent folder):
 
 ```text
 MyGame/

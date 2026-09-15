@@ -140,7 +140,7 @@ Kit **master indices** only ([`docs/video-graphics.md`](../../docs/video-graphic
 
 ## Code generation & export
 
-**Ctrl+E** writes under `output/` (relative to launch cwd). **Save** (`Ctrl+S`) only updates the `.r01proj`. Export does not rewrite it unless you save first.
+**Ctrl+E** writes under `output/` (relative to launch cwd). **Save** (`Ctrl+S`) only updates the `.r01proj`. Export does not rewrite the project file unless it was saved first.
 
 ### Cart & sidecars
 

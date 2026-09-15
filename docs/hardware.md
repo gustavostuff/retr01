@@ -77,7 +77,7 @@ Full failure modes and bring-up order: `ic-comms-risks.md`.
 - Series **33 ohm** (already planned) is enough damping on those clock nets
 - **Reset** is a simple pull-up + switch, or a small supervisor IC, with short traces and no visible bounce/chatter on a scope
 
-Add the 74HC14 (or populate its footprint) if bring-up shows soft clock edges, crystal-buffer duty you cannot avoid, or a noisy/slow reset rail that needs Schmitt cleanup.
+Add the 74HC14 (or populate its footprint) if bring-up shows soft clock edges, unavoidable crystal-buffer duty, or a noisy/slow reset rail that needs Schmitt cleanup.
 
 ### What kind of system is this?
 
@@ -261,7 +261,7 @@ EDAC **395-036-*** style. Looking into the console socket (or at the cart edge f
 
 The console (+ **Adafruit's UPDI Friend**) is a flasher for **only** the **three AVRs** and a **seated cartridge**. It does **not** program the ATF22V10 PLDs, the AT27C256R color PROM, or the pad ATtiny85. Those still need their own tools (PLD programmer, OTP/PROM burner, AVR ISP for the pad) before or beside assembly.
 
-USB-C stays on Adafruit's UPDI Friend (PC side only). The console, cart, and pads have **no USB**. You clip the wires onto male header pins on the motherboard.
+USB-C stays on Adafruit's UPDI Friend (PC side only). The console, cart, and pads have **no USB**. The Friend wires clip onto male header pins on the motherboard.
 
 Adafruit's UPDI Friend is a CH340E USB-serial with the usual 1K RX/TX loopback for SerialUPDI. No USBASP. No separate flasher PCB for AVR/cart work.
 
@@ -299,7 +299,7 @@ Adafruit's UPDI Friend cannot program these. **Locked:** there is **no** high-vo
 Two practical paths for builders:
 
 1. **Buy them pre-programmed.** Blank stock is the default from distributors. Programming services (distributor / MicrochipDirect-style / kit vendor selling Retr01-ready parts) can ship ATF22V10s with the beam/compositor JEDEC images, an AT27C256R blown with the 64-color table, and pad ATtiny85s with pad firmware. That is the easiest path for non-tinkerers. Note: the color PROM is **OTP** (one-time). A wrong blow means a new chip.
-2. **Program them yourself** with a separate tool (off the console PCB):
+2. **Program them with a separate tool** (off the console PCB):
 
 | Part | DIY options (examples) |
 | --- | --- |
@@ -345,7 +345,7 @@ Mode select (solder jumper or 1x3 header next to J2):
 
 Same pins, same connector body. Cable or jumper chooses the story. Do not drive CSYNC and H/V meanings onto pin 4 at once.
 
-**Composite:** AD724 -> J9 RCA. S-video pair can hang off AD724 Y/C later if we want the pads.
+**Composite:** AD724 -> J9 RCA. An S-video pair can hang off AD724 Y/C later if those pads are needed.
 
 ## PCB layout practices
 
@@ -403,7 +403,7 @@ Starter set (roles can grow):
 
 ### Layout rules (bring-up friendly)
 
-These track common practice for a careful **2-layer** digital + video board (same ideas scale to 4-layer if we ever go there):
+These track common practice for a careful **2-layer** digital + video board (same ideas scale to 4-layer if a later revision needs it):
 
 - **Decoupling:** **100 nF** (or similar) at every IC VCC pin, pad as close as practical to the pin, short path into ground (via to the GND pour). Bulk **220 uF** at the 5 V entry. Smallest HF caps closest to the pin.
 - **Return paths:** High-frequency return wants a short loop back to ground under the signal. Protect the bottom GND pour. Prefer top-layer crossings. Stitch top ground fills to bottom with vias.
