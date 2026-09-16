@@ -4,13 +4,10 @@
 #include "ui/ui.h"
 #include "ui/widgets/widgets.h"
 
+/* fill_rect / snap8 / point_in_rect / draw_label / UiClipStack: retr01_ui */
+
 #include <SDL.h>
 #include <stdint.h>
-
-typedef struct UiClipStack {
-    SDL_Rect prev;
-    SDL_bool had_clip;
-} UiClipStack;
 
 typedef struct AccordionLayout {
     int worlds_hdr_y;
@@ -193,7 +190,6 @@ int ui_load_png_rgba(const char *path, uint8_t **out_px, int *out_w, int *out_h)
 
 /* Paste clipboard PNG into an 8x8 CHR buffer (alpha->0, brightness match to pal). spr_plane=1 for SPR pals. */
 int ui_paste_clipboard_png_tile(UiState *ui, uint8_t chr[R01_TILE_BYTES], int pal, int spr_plane);
-int snap8(int v);
 void ui_toast(UiState *ui, const char *msg, int is_error);
 void ui_tooltip_set(UiState *ui, int x, int y, const char *line1, const char *line2);
 void ui_tooltip_hover(UiState *ui, int x, int y, const char *line1, const char *line2);
@@ -204,24 +200,15 @@ void draw_tooltip(UiState *ui, SDL_Renderer *r);
 void ui_focus_set(UiState *ui, int focus);
 int ui_focus_get(const UiState *ui);
 void ui_focus_clear(UiState *ui);
-void fill_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B);
-void fill_rect_alpha(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B, Uint8 A);
-void ui_clip_push(SDL_Renderer *r, int x, int y, int w, int h, UiClipStack *stack);
-void ui_clip_pop(SDL_Renderer *r, const UiClipStack *stack);
-void draw_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B);
 /* Animated 1px dashed selection border (phase from SDL_GetTicks). */
 void draw_marching_ants(SDL_Renderer *r, int x, int y, int w, int h);
-void hover_overlay(SDL_Renderer *r, int x, int y, int w, int h);
 /* Draw text clipped to a rectangle (scissor). */
 void font_draw_clipped(SDL_Renderer *r, int x, int y, int clip_x, int clip_y, int clip_w, int clip_h,
                        const char *text, Uint8 R, Uint8 G, Uint8 B);
-int point_in_rect(int lx, int ly, int x, int y, int w, int h);
-int label_width(const char *text);
 void draw_brush_preview(SDL_Renderer *r, const R01Project *p, int row, int pal, int color, int mx, int my);
 void draw_paint_pixel_preview(SDL_Renderer *r, const R01Project *p, int row, UiPalPlane plane, int pal, int color,
                               int px, int py, int cell);
 void draw_ui_cross(SDL_Renderer *r, int cx, int cy);
-void draw_label(SDL_Renderer *r, int x, int y, const char *text);
 void draw_chess_grid(SDL_Renderer *r, int x0, int y0, int cols, int rows, int cell);
 
 /* ui/layout.c */

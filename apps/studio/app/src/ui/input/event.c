@@ -113,7 +113,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
     }
     if (e->type == SDL_TEXTINPUT) {
         if (ui->text.field_id > 0) {
-            ui_text_input(ui, e->text.text);
+            ui_text_input(&ui->text, e->text.text);
             return 1;
         }
         return 0;
@@ -141,10 +141,10 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         if (ui->metasprite_edit.open) {
             if (e->key.keysym.sym == SDLK_ESCAPE) {
                 if (ui->text.field_id > 0) {
-                    ui_text_blur(ui);
+                    ui_text_blur(&ui->text);
                 } else {
                     ui->metasprite_edit.open = 0;
-                    ui_text_blur(ui);
+                    ui_text_blur(&ui->text);
                 }
                 return 1;
             }
@@ -154,12 +154,12 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         if (ui->entity_edit.open) {
             if (e->key.keysym.sym == SDLK_ESCAPE) {
                 if (ui->text.field_id > 0) {
-                    ui_text_blur(ui);
+                    ui_text_blur(&ui->text);
                 } else {
                     ui_undo_spr_paint_end(ui);
                     ui->entity_edit.open = 0;
                     ui_focus_clear(ui);
-                    ui_text_blur(ui);
+                    ui_text_blur(&ui->text);
                 }
                 return 1;
             }

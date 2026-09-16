@@ -1,6 +1,5 @@
-#include "ui/widgets/widgets.h"
-#include "ui/internal.h"
-#include "font/font.h"
+#include "retr01_ui/widgets.h"
+#include "retr01_ui/font.h"
 
 int ui_multi_state_pref_width(const char *const *labels, int count) {
     int i;

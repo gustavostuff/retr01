@@ -1,7 +1,5 @@
-#include "ui/widgets/widgets.h"
-#include "ui/ui.h"
-#include "ui/internal.h"
-#include "font/font.h"
+#include "retr01_ui/widgets.h"
+#include "retr01_ui/font.h"
 
 #include <string.h>
 
@@ -20,7 +18,7 @@ void ui_tabs_layout(const char *const *labels, int count, int x, int y, int tab_
     out->count = count;
     out->x = x;
     out->y = y;
-    out->tab_w = tab_w > 0 ? tab_w : UI_WORLD_BTN;
+    out->tab_w = tab_w > 0 ? tab_w : UI_TABS_DEFAULT_W;
     out->tab_h = UI_TABS_TAB_H;
     out->dual_view = 0;
     out->view = 0;
@@ -75,7 +73,7 @@ int ui_tabs_body_y(const UiTabsLayout *lo) {
         return 0;
     }
     if (lo->dual_view) {
-        return lo->y + UI_WORLDS_TAB_STACK_H;
+        return lo->y + UI_TABS_STACK_H;
     }
     return lo->y + lo->tab_h;
 }
@@ -96,18 +94,19 @@ static void blit_rgba(SDL_Renderer *r, const uint8_t *rgba, int rw, int rh, int 
 }
 
 static void draw_tab_dot(SDL_Renderer *r, int tx, int ty, int tw, int th) {
+    const R01UiChrome *ch = r01_ui_chrome();
     int dx;
     int dy;
     int px, py;
-    if (!g_dot_rgba || g_dot_w < 1 || g_dot_h < 1) {
+    if (!ch->dot.rgba || ch->dot.w < 1 || ch->dot.h < 1) {
         fill_rect(r, tx + (tw - 4) / 2, ty + (th - 4) / 2, 4, 4, 240, 240, 240);
         return;
     }
-    dx = tx + (tw - g_dot_w) / 2;
-    dy = ty + (th - g_dot_h) / 2;
-    for (py = 0; py < g_dot_h; py++) {
-        for (px = 0; px < g_dot_w; px++) {
-            const uint8_t *p = &g_dot_rgba[(py * g_dot_w + px) * 4u];
+    dx = tx + (tw - ch->dot.w) / 2;
+    dy = ty + (th - ch->dot.h) / 2;
+    for (py = 0; py < ch->dot.h; py++) {
+        for (px = 0; px < ch->dot.w; px++) {
+            const uint8_t *p = &ch->dot.rgba[(py * ch->dot.w + px) * 4u];
             if (p[3] > 128) {
                 fill_rect(r, dx + px, dy + py, 1, 1, p[0], p[1], p[2]);
             }
@@ -149,7 +148,7 @@ void ui_tabs_draw(SDL_Renderer *r, const UiTabsLayout *lo, int selected, int mou
         int ty = lo->y;
         int on = (i == selected);
         /* Inactive dual tabs fill the full 16px stack. Active main is 8px (sub is separate). */
-        int th = (lo->dual_view && !on) ? UI_WORLDS_TAB_STACK_H : lo->tab_h;
+        int th = (lo->dual_view && !on) ? UI_TABS_STACK_H : lo->tab_h;
         int hover = point_in_rect(mouse_x, mouse_y, tx, ty, tw, th);
         if (on) {
             fill_rect(r, tx, ty, tw, th, UI_COL_ACTIVE_R, UI_COL_ACTIVE_G, UI_COL_ACTIVE_B);
@@ -201,7 +200,7 @@ int ui_tabs_hit(const UiTabsLayout *lo, int selected, int lx, int ly, int *out_i
     if (!lo) {
         return 0;
     }
-    max_h = lo->dual_view ? UI_WORLDS_TAB_STACK_H : lo->tab_h;
+    max_h = lo->dual_view ? UI_TABS_STACK_H : lo->tab_h;
     if (lx < lo->x || ly < lo->y || ly >= lo->y + max_h) {
         return 0;
     }

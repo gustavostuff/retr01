@@ -1,6 +1,5 @@
-#include "ui/widgets/widgets.h"
-#include "ui/internal.h"
-#include "font/font.h"
+#include "retr01_ui/widgets.h"
+#include "retr01_ui/font.h"
 
 void ui_button_draw(SDL_Renderer *r, int x, int y, int w, const char *text, int active, int hover) {
     ui_button_draw_ex(r, x, y, w, text, active, hover, 1);

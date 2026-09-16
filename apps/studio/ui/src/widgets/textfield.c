@@ -1,6 +1,5 @@
-#include "ui/widgets/widgets.h"
-#include "ui/internal.h"
-#include "font/font.h"
+#include "retr01_ui/widgets.h"
+#include "retr01_ui/font.h"
 
 #include <string.h>
 
@@ -74,38 +73,38 @@ static int caret_from_x(const UiTextEdit *t, int local_x) {
     return len;
 }
 
-void ui_text_blur(UiState *ui) {
-    if (!ui) {
+void ui_text_blur(UiTextEdit *t) {
+    if (!t) {
         return;
     }
-    ui->text.buf = NULL;
-    ui->text.cap = 0;
-    ui->text.field_id = 0;
-    ui->text.caret = 0;
-    ui->text.anchor = 0;
-    ui->text.scroll = 0;
-    ui->text.drag = 0;
+    t->buf = NULL;
+    t->cap = 0;
+    t->field_id = 0;
+    t->caret = 0;
+    t->anchor = 0;
+    t->scroll = 0;
+    t->drag = 0;
     SDL_StopTextInput();
 }
 
-void ui_text_focus(UiState *ui, char *buf, int cap, int field_id) {
+void ui_text_focus(UiTextEdit *t, char *buf, int cap, int field_id) {
     int len;
-    if (!ui || !buf || cap < 2 || field_id < 1) {
+    if (!t || !buf || cap < 2 || field_id < 1) {
         return;
     }
-    ui->text.buf = buf;
-    ui->text.cap = cap;
-    ui->text.field_id = field_id;
+    t->buf = buf;
+    t->cap = cap;
+    t->field_id = field_id;
     len = (int)strlen(buf);
-    ui->text.caret = len;
-    ui->text.anchor = len;
-    ui->text.scroll = 0;
-    ui->text.drag = 0;
+    t->caret = len;
+    t->anchor = len;
+    t->scroll = 0;
+    t->drag = 0;
     SDL_StartTextInput();
 }
 
-int ui_text_active(const UiState *ui, int field_id) {
-    return ui && ui->text.field_id == field_id && ui->text.buf != NULL;
+int ui_text_active(const UiTextEdit *t, int field_id) {
+    return t && t->field_id == field_id && t->buf != NULL;
 }
 
 static void delete_sel(UiTextEdit *t) {
@@ -144,9 +143,9 @@ static void insert_chars(UiTextEdit *t, const char *src) {
     }
 }
 
-void ui_text_draw(UiState *ui, SDL_Renderer *r, int x, int y, int w, const char *text, int field_id) {
+void ui_text_draw(UiTextEdit *t, SDL_Renderer *r, int x, int y, int w, const char *text, int field_id) {
     const char *show = text ? text : "";
-    int focused = ui_text_active(ui, field_id);
+    int focused = ui_text_active(t, field_id);
     SDL_Rect clip;
     int ty = y + (UI_BTN_H - font_line_h()) / 2;
     if (ty < y) {
@@ -155,7 +154,7 @@ void ui_text_draw(UiState *ui, SDL_Renderer *r, int x, int y, int w, const char 
 
     fill_rect(r, x, y, w, UI_BTN_H, 240, 240, 240);
     if (focused) {
-        ensure_caret_visible(&ui->text, w);
+        ensure_caret_visible(t, w);
     }
 
     clip.x = x + UI_TEXT_PAD;
@@ -168,7 +167,6 @@ void ui_text_draw(UiState *ui, SDL_Renderer *r, int x, int y, int w, const char 
     SDL_RenderSetClipRect(r, &clip);
 
     if (focused) {
-        UiTextEdit *t = &ui->text;
         int pen = x + UI_TEXT_PAD - t->scroll;
         if (has_sel(t)) {
             int x0 = pen + font_text_width_n(t->buf, sel_lo(t));
@@ -187,58 +185,56 @@ void ui_text_draw(UiState *ui, SDL_Renderer *r, int x, int y, int w, const char 
     SDL_RenderSetClipRect(r, NULL);
 }
 
-int ui_text_mouse_down(UiState *ui, int lx, int ly, int x, int y, int w, char *buf, int cap, int field_id) {
+int ui_text_mouse_down(UiTextEdit *t, int lx, int ly, int x, int y, int w, char *buf, int cap, int field_id) {
     int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
     int idx;
-    if (!ui || !buf || !point_in_rect(lx, ly, x, y, w, UI_BTN_H)) {
+    if (!t || !buf || !point_in_rect(lx, ly, x, y, w, UI_BTN_H)) {
         return 0;
     }
-    if (!ui_text_active(ui, field_id) || ui->text.buf != buf) {
-        ui_text_focus(ui, buf, cap, field_id);
+    if (!ui_text_active(t, field_id) || t->buf != buf) {
+        ui_text_focus(t, buf, cap, field_id);
     }
-    idx = caret_from_x(&ui->text, lx - x);
-    ui->text.caret = idx;
+    idx = caret_from_x(t, lx - x);
+    t->caret = idx;
     if (!shift) {
-        ui->text.anchor = idx;
+        t->anchor = idx;
     }
-    ui->text.drag = 1;
-    ensure_caret_visible(&ui->text, w);
+    t->drag = 1;
+    ensure_caret_visible(t, w);
     return 1;
 }
 
-void ui_text_mouse_up(UiState *ui) {
-    if (ui) {
-        ui->text.drag = 0;
+void ui_text_mouse_up(UiTextEdit *t) {
+    if (t) {
+        t->drag = 0;
     }
 }
 
-void ui_text_mouse_drag(UiState *ui, int lx, int x, int w) {
-    if (!ui || !ui->text.drag || !ui->text.buf) {
+void ui_text_mouse_drag(UiTextEdit *t, int lx, int x, int w) {
+    if (!t || !t->drag || !t->buf) {
         return;
     }
-    ui->text.caret = caret_from_x(&ui->text, lx - x);
-    text_clamp(&ui->text);
-    ensure_caret_visible(&ui->text, w);
+    t->caret = caret_from_x(t, lx - x);
+    text_clamp(t);
+    ensure_caret_visible(t, w);
 }
 
-int ui_text_key(UiState *ui, SDL_Keycode sym, Uint16 mod) {
-    UiTextEdit *t;
+int ui_text_key(UiTextEdit *t, SDL_Keycode sym, Uint16 mod) {
     int ctrl = (mod & KMOD_CTRL) != 0;
     int shift = (mod & KMOD_SHIFT) != 0;
     int len;
-    if (!ui || !ui->text.buf || ui->text.field_id < 1) {
+    if (!t || !t->buf || t->field_id < 1) {
         return 0;
     }
-    t = &ui->text;
     text_clamp(t);
     len = text_len(t);
 
     if (sym == SDLK_ESCAPE) {
-        ui_text_blur(ui);
+        ui_text_blur(t);
         return 1;
     }
     if (sym == SDLK_RETURN || sym == SDLK_KP_ENTER) {
-        ui_text_blur(ui);
+        ui_text_blur(t);
         return 1;
     }
     if (ctrl && sym == SDLK_a) {
@@ -324,10 +320,10 @@ int ui_text_key(UiState *ui, SDL_Keycode sym, Uint16 mod) {
     return 1;
 }
 
-int ui_text_input(UiState *ui, const char *utf8) {
-    if (!ui || !ui->text.buf || ui->text.field_id < 1 || !utf8) {
+int ui_text_input(UiTextEdit *t, const char *utf8) {
+    if (!t || !t->buf || t->field_id < 1 || !utf8) {
         return 0;
     }
-    insert_chars(&ui->text, utf8);
+    insert_chars(t, utf8);
     return 1;
 }

@@ -1,12 +1,11 @@
-#include "ui/widgets/widgets.h"
-#include "ui/internal.h"
-#include "font/font.h"
+#include "retr01_ui/widgets.h"
+#include "retr01_ui/font.h"
 
-void ui_modal_scrim(SDL_Renderer *r, const UiState *ui) {
+void ui_modal_scrim(SDL_Renderer *r, int logic_w, int logic_h) {
     SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(r, 0, 0, 0, 160);
     {
-        SDL_Rect full = {0, 0, ui_logic_w(ui), ui_logic_h(ui)};
+        SDL_Rect full = {0, 0, logic_w, logic_h};
         SDL_RenderFillRect(r, &full);
     }
 }

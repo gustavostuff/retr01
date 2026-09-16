@@ -1,4 +1,4 @@
-#include "font/font.h"
+#include "retr01_ui/font.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -25,16 +25,32 @@ static int font_try_open(const char *path) {
     return 0;
 }
 
-#ifndef R01_STUDIO_FONT_DIR
-#define R01_STUDIO_FONT_DIR "app/assets/other"
+#ifndef R01_UI_FONT_DIR
+#define R01_UI_FONT_DIR "assets"
 #endif
+
+int font_init_path(const char *ttf_path) {
+    if (g_ft_ready) {
+        return 0;
+    }
+    if (FT_Init_FreeType(&g_ft_lib) != 0) {
+        return -1;
+    }
+    if (font_try_open(ttf_path) != 0) {
+        FT_Done_FreeType(g_ft_lib);
+        g_ft_lib = NULL;
+        return -1;
+    }
+    g_ft_ready = 1;
+    return 0;
+}
 
 int font_init(void) {
     static const char *const paths[] = {
-        R01_STUDIO_FONT_DIR "/proggy-tiny.ttf",
-        "app/assets/other/proggy-tiny.ttf",
-        "../assets/other/proggy-tiny.ttf",
-        "assets/other/proggy-tiny.ttf",
+        R01_UI_FONT_DIR "/proggy-tiny.ttf",
+        "ui/assets/proggy-tiny.ttf",
+        "../ui/assets/proggy-tiny.ttf",
+        "assets/proggy-tiny.ttf",
         NULL,
     };
     int i;
@@ -53,7 +69,7 @@ int font_init(void) {
     }
     FT_Done_FreeType(g_ft_lib);
     g_ft_lib = NULL;
-    fprintf(stderr, "retr01_studio: failed to load proggy-tiny.ttf\n");
+    fprintf(stderr, "retr01_ui: failed to load proggy-tiny.ttf\n");
     return -1;
 }
 

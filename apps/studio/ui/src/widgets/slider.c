@@ -1,5 +1,4 @@
-#include "ui/widgets/widgets.h"
-#include "ui/internal.h"
+#include "retr01_ui/widgets.h"
 
 #define UI_SLIDER_TRACK_H 4
 #define UI_SLIDER_THUMB 8

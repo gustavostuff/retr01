@@ -7,39 +7,15 @@
 #include "r01_bgm_host.h"
 #include "ui/undo/undo.h"
 
+#include "retr01_ui/metrics.h"
+#include "retr01_ui/text.h"
+
 #include <SDL.h>
 
 #define UI_LOGIC_BASE_W 640
 #define UI_LOGIC_BASE_H 360
 
-/* Phase 2 chrome: dark / darker gray, 8px grid. */
-#define UI_COL_BG_R 34
-#define UI_COL_BG_G 34
-#define UI_COL_BG_B 38
-#define UI_COL_PANEL_R 26
-#define UI_COL_PANEL_G 26
-#define UI_COL_PANEL_B 30
-#define UI_COL_WELL_R 63
-#define UI_COL_WELL_G 63
-#define UI_COL_WELL_B 74
-#define UI_COL_ACTIVE_R 45
-#define UI_COL_ACTIVE_G 125
-#define UI_COL_ACTIVE_B 70
-#define UI_COL_PRESENT_R 55
-#define UI_COL_PRESENT_G 130
-#define UI_COL_PRESENT_B 220
-#define UI_COL_MARK_R 245
-#define UI_COL_MARK_G 245
-#define UI_COL_MARK_B 245
-#define UI_COL_CHESS_A_R 58
-#define UI_COL_CHESS_A_G 58
-#define UI_COL_CHESS_A_B 66
-#define UI_COL_CHESS_B_R 50
-#define UI_COL_CHESS_B_G 50
-#define UI_COL_CHESS_B_B 58
-
-#define UI_UNIT 8
-#define UI_BTN_H 16
+/* Shared chrome colors / UI_UNIT / UI_BTN_H: retr01_ui/metrics.h */
 #define UI_SIDEBAR_W 128
 #define UI_CTRL_SIDEBAR_W 128
 #define UI_WORLD_BTN 16
@@ -51,8 +27,7 @@
 
 #define UI_WORLDS_X 0
 #define UI_WORLDS_SUB_H 8
-#define UI_TABS_TAB_H 8  /* active main tab height (16x16 inactive stack fill) */
-#define UI_WORLDS_TAB_STACK_H 16 /* inactive dual-view tab fill / active main+sub */
+#define UI_WORLDS_TAB_STACK_H UI_TABS_STACK_H
 #define UI_WORLDS_BODY_H (UI_WORLDS_TAB_STACK_H + UI_WORLD_VIEW)
 #define UI_PAL_BODY_H (UI_PAL_SWATCH * 2 + UI_BTN_H)
 
@@ -157,10 +132,6 @@
 #define UI_ENTITY_BANK_GRID 128 /* metasprite left bank sheet */
 #define UI_METASPRITE_COMPOSE 128 /* metasprite workbench (legacy 16px @ 8x) */
 #define UI_ENTITY_LIST_H 128
-#define UI_DOT_SIZE 8
-#define UI_DOT_GAP 0 /* packed strip, no gaps between dots */
-#define UI_DOT_STRIP_N 4
-
 /* Widget focus: wheel / keyboard route to the focused control. */
 #define UI_FOCUS_NONE 0
 #define UI_FOCUS_PALETTE 1
@@ -378,16 +349,7 @@ typedef struct UiSoundEdit {
     UiBgmRegion region[UI_SOUND_TRACKS_MAX][UI_SOUND_BGM_CH][UI_SOUND_REGIONS_MAX];
 } UiSoundEdit;
 
-/* Single active text field (web-like caret / selection / scroll). */
-typedef struct UiTextEdit {
-    char *buf;
-    int cap;
-    int field_id; /* 0 = none; modal-specific otherwise */
-    int caret;
-    int anchor; /* selection other end; equals caret when collapsed */
-    int scroll; /* horizontal px */
-    int drag;   /* mouse-drag selecting */
-} UiTextEdit;
+/* UiTextEdit: retr01_ui/text.h */
 
 /* Embedded emu Play session (export then cart-backed Host Play). */
 typedef struct UiPlaySession {

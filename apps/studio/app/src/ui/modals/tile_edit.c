@@ -226,7 +226,7 @@ void draw_tile_modal(UiState *ui, SDL_Renderer *r) {
     int sy, sx;
 
     tile_modal_layout(ui, &lo);
-    ui_modal_scrim(r, ui);
+    ui_modal_scrim(r, ui_logic_w(ui), ui_logic_h(ui));
     ui_modal_panel(r, lo.mx, lo.my, lo.mw, lo.mh,
                    ui->tile_edit.edit_all ? "Edit tile (all)" : "Edit tile");
 #if UI_PANEL_DEBUG_GRID

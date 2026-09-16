@@ -50,7 +50,7 @@ void metasprite_edit_open_new(UiState *ui) {
     ui->metasprite_edit.sel_part = -1;
     ui->metasprite_edit.paint_color = 1;
     ui->metasprite_edit.paint_pal = 0;
-    ui_text_blur(ui);
+    ui_text_blur(&ui->text);
 }
 
 void metasprite_edit_open(UiState *ui, int meta_idx) {
@@ -71,7 +71,7 @@ void metasprite_edit_open(UiState *ui, int meta_idx) {
     ui->metasprite_edit.sel_part = -1;
     ui->metasprite_edit.paint_color = 1;
     ui->metasprite_edit.paint_pal = 0;
-    ui_text_blur(ui);
+    ui_text_blur(&ui->text);
 }
 
 static void metasprite_edit_save(UiState *ui) {
@@ -100,7 +100,7 @@ static void metasprite_edit_save(UiState *ui) {
         ui_toast(ui, "metasprite saved", 0);
     }
     ui->metasprite_edit.open = 0;
-    ui_text_blur(ui);
+    ui_text_blur(&ui->text);
 }
 
 void draw_metasprite_modal(UiState *ui, SDL_Renderer *r) {
@@ -113,7 +113,7 @@ void draw_metasprite_modal(UiState *ui, SDL_Renderer *r) {
     const char *title = ui->metasprite_edit.is_new ? "Add metasprite" : "Edit metasprite";
 
     metasprite_modal_layout(ui, &lo);
-    ui_modal_scrim(r, ui);
+    ui_modal_scrim(r, ui_logic_w(ui), ui_logic_h(ui));
     ui_modal_panel(r, lo.mx, lo.my, lo.mw, lo.mh, title);
 #if UI_PANEL_DEBUG_GRID
     ui_panel_debug_draw(r, &lo.dbg_panel);
@@ -135,7 +135,7 @@ void draw_metasprite_modal(UiState *ui, SDL_Renderer *r) {
         char mid[R01_ID_MAX];
         int wi = ui->project ? ui->project->active_world : 0;
         font_draw(r, lo.right_grid_x, lo.right_name_y + 4, "Name", 230, 230, 230);
-        ui_text_draw(ui, r, lo.right_name_x, lo.right_name_y, lo.right_name_w, mname, 1);
+        ui_text_draw(&ui->text, r, lo.right_name_x, lo.right_name_y, lo.right_name_w, mname, 1);
         r01_metasprite_id(mid, sizeof(mid), wi, &ui->metasprite_edit.draft);
         font_draw_clipped(r, lo.right_grid_x, lo.right_id_y + 4, lo.right_grid_x, lo.right_id_y, lo.right_id_w,
                           UI_BTN_H, mid, 160, 160, 170);
@@ -211,27 +211,27 @@ int metasprite_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button)
             }
         }
         ui->metasprite_edit.dragging = 0;
-        ui_text_mouse_up(ui);
+        ui_text_mouse_up(&ui->text);
         return 1;
     }
 
     if (ui_modal_overlay_hit(lx, ly, lo.mx, lo.my, lo.mw, lo.mh)) {
         ui->metasprite_edit.open = 0;
-        ui_text_blur(ui);
+        ui_text_blur(&ui->text);
         return 1;
     }
 
     if (ui_palette_grid_hit(lx, ly, lo.pal_x, lo.pal_y, &pal, &col)) {
-        ui_text_blur(ui);
+        ui_text_blur(&ui->text);
         ui->metasprite_edit.paint_pal = pal;
         ui->metasprite_edit.paint_color = col;
         return 1;
     }
-    if (ui_text_mouse_down(ui, lx, ly, lo.right_name_x, lo.right_name_y, lo.right_name_w,
+    if (ui_text_mouse_down(&ui->text, lx, ly, lo.right_name_x, lo.right_name_y, lo.right_name_w,
                            ui->metasprite_edit.draft.name, R01_ENTITY_NAME_MAX, 1)) {
         return 1;
     }
-    ui_text_blur(ui);
+    ui_text_blur(&ui->text);
     if (ui_dot_strip_hit(lx, ly, lo.left_dots_x, lo.left_dots_y, UI_DOT_STRIP_N, &idx)) {
         if (idx < R01_SPR_BANKS) {
             ui->metasprite_edit.bank = idx;
@@ -244,7 +244,7 @@ int metasprite_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button)
     }
     if (ui_modal_cancel_hit(lx, ly, lo.left_btn_x, lo.btn_y, lo.save_w, lo.cancel_w)) {
         ui->metasprite_edit.open = 0;
-        ui_text_blur(ui);
+        ui_text_blur(&ui->text);
         return 1;
     }
     if (!right && point_in_rect(lx, ly, lo.left_grid_x, lo.left_grid_y, UI_ENTITY_BANK_GRID, UI_ENTITY_BANK_GRID)) {
@@ -301,7 +301,7 @@ void metasprite_modal_drag(UiState *ui, int lx, int ly, Uint32 buttons) {
     }
     metasprite_modal_layout(ui, &lo);
     if (ui->text.drag && ui->text.field_id == 1) {
-        ui_text_mouse_drag(ui, lx, lo.right_name_x, lo.right_name_w);
+        ui_text_mouse_drag(&ui->text, lx, lo.right_name_x, lo.right_name_w);
         return;
     }
     if (!ui->metasprite_edit.dragging) {
@@ -333,7 +333,7 @@ void metasprite_modal_key(UiState *ui, SDL_Keycode sym) {
         return;
     }
     if (ui->text.field_id > 0) {
-        ui_text_key(ui, sym, SDL_GetModState());
+        ui_text_key(&ui->text, sym, SDL_GetModState());
         return;
     }
     if (sym >= SDLK_1 && sym <= SDLK_4) {

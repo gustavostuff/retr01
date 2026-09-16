@@ -1,5 +1,4 @@
-#include "ui/widgets/widgets.h"
-#include "ui/internal.h"
+#include "retr01_ui/widgets.h"
 
 #include <string.h>
 

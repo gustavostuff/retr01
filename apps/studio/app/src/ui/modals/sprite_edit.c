@@ -192,7 +192,7 @@ void draw_sprite_modal(UiState *ui, SDL_Renderer *r) {
     const char *title = ui->sprite_edit.is_new ? "Create sprite" : "Edit sprite";
 
     sprite_modal_layout(ui, &lo);
-    ui_modal_scrim(r, ui);
+    ui_modal_scrim(r, ui_logic_w(ui), ui_logic_h(ui));
     ui_modal_panel(r, lo.mx, lo.my, lo.mw, lo.mh, title);
 #if UI_PANEL_DEBUG_GRID
     ui_panel_debug_draw(r, &lo.dbg_panel);

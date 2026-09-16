@@ -52,6 +52,8 @@ pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 pkg_check_modules(FREETYPE REQUIRED IMPORTED_TARGET freetype2)
 target_link_libraries(retr01_studio_core PUBLIC PkgConfig::LIBPNG m)
 
+add_subdirectory(ui)
+
 enable_testing()
 
 set(STUDIO_TEST_HARNESS core/tests/test_harness.c)
@@ -87,21 +89,10 @@ target_link_libraries(test_fixture PRIVATE retr01_studio_core)
 
 add_library(retr01_studio_app
   app/src/shell/app_shell.c
-  app/src/font/font.c
   app/src/ui/core.c
   app/src/ui/primitives.c
   app/src/ui/clipboard.c
-  app/src/ui/widgets/dot_strip.c
-  app/src/ui/widgets/radio.c
-  app/src/ui/widgets/checkbox.c
   app/src/ui/widgets/palette_grid.c
-  app/src/ui/widgets/button.c
-  app/src/ui/widgets/slider.c
-  app/src/ui/widgets/multi_state.c
-  app/src/ui/widgets/tabs.c
-  app/src/ui/widgets/panel.c
-  app/src/ui/widgets/modal.c
-  app/src/ui/widgets/textfield.c
   app/src/ui/widgets/compose.c
   app/src/ui/undo/undo.c
   app/src/ui/undo/undo_cmds.c
@@ -129,8 +120,14 @@ add_library(retr01_studio_app
   app/src/ui/modals/tile_edit.c
   app/src/ui/modals/sprite_edit.c
   app/src/ui/modals/metasprite_edit.c
+  app/src/ui/modals/entity_helpers.c
   app/src/ui/modals/entity_edit.c
+  app/src/ui/modals/entity_draw.c
+  app/src/ui/modals/entity_input.c
+  app/src/ui/modals/entity_layout.c
+  app/src/ui/modals/project_io_fs.c
   app/src/ui/modals/project_io.c
+  app/src/ui/modals/project_io_ui.c
 )
 target_include_directories(retr01_studio_app PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/app/src
@@ -138,17 +135,16 @@ target_include_directories(retr01_studio_app PUBLIC
   ${R01_PKG_ROOT}/common
   ${R01_PKG_ROOT}/common/fw
 )
-target_link_libraries(retr01_studio_app PUBLIC retr01_studio_core retr01_emu_core PkgConfig::SDL2 PkgConfig::FREETYPE PkgConfig::LIBPNG)
+target_link_libraries(retr01_studio_app PUBLIC retr01_studio_core retr01_emu_core retr01_ui PkgConfig::SDL2 PkgConfig::FREETYPE PkgConfig::LIBPNG)
 find_package(X11)
 if(X11_FOUND)
   target_compile_definitions(retr01_studio_app PRIVATE R01_HAS_X11=1)
   target_include_directories(retr01_studio_app PRIVATE ${X11_INCLUDE_DIR})
   target_link_libraries(retr01_studio_app PUBLIC ${X11_LIBRARIES})
 endif()
-# PNG widgets live in assets/png; fonts in assets/other.
+# PNG chrome lives in assets/png (injected into retr01_ui).
 target_compile_definitions(retr01_studio_app PRIVATE
   "R01_STUDIO_ASSETS_DIR=\"${R01_ASSETS_PNG}\""
-  "R01_STUDIO_FONT_DIR=\"${R01_ASSETS_OTHER}\""
   "R01_STUDIO_PROJECTS_DIR=\"${CMAKE_SOURCE_DIR}/projects\"")
 
 add_executable(retr01_studio app/src/main.c)

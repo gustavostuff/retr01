@@ -4,6 +4,7 @@
 #include "ui/undo/undo.h"
 #include "ui/undo/undo_cmds.h"
 #include "font/font.h"
+#include "retr01_ui/chrome.h"
 
 #include "retr01_studio/project.h"
 
@@ -122,6 +123,19 @@ int ui_init(UiState *ui) {
                 break;
             }
         }
+        {
+            R01UiChrome chrome;
+            chrome.radio.rgba = g_radio_rgba;
+            chrome.radio.w = g_radio_w;
+            chrome.radio.h = g_radio_h;
+            chrome.checkbox.rgba = g_checkbox_rgba;
+            chrome.checkbox.w = g_checkbox_w;
+            chrome.checkbox.h = g_checkbox_h;
+            chrome.dot.rgba = g_dot_rgba;
+            chrome.dot.w = g_dot_w;
+            chrome.dot.h = g_dot_h;
+            r01_ui_chrome_set(&chrome);
+        }
     }
     ui->project = (R01Project *)calloc(1, sizeof(R01Project));
     if (!ui->project) {
@@ -206,6 +220,7 @@ void ui_shutdown(UiState *ui) {
     g_spr_bank_btn_rgba = NULL;
     g_spr_bank_btn_w = 0;
     g_spr_bank_btn_h = 0;
+    r01_ui_chrome_set(NULL);
     if (g_cursor_arrow) {
         SDL_FreeCursor(g_cursor_arrow);
         g_cursor_arrow = NULL;

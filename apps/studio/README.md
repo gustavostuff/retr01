@@ -9,7 +9,7 @@ Authoring state lives in `output/<stem>.r01proj` (JSON). **`custom_logic.c`** is
 
 There is **no** Studio-only host Play path. Preview always goes through export then shared emu core ([`app/emu/`](../emu/README.md)). **Sim is not involved.**
 
-**Stack:** C11 + SDL2 + FreeType (Proggy Tiny), `libretr01_studio_core` + thin shell + shared `retr01_emu` core for Play.
+**Stack:** C11 + SDL2 + FreeType, `retr01_ui` (Proggy Tiny + widgets) + `libretr01_studio_core` + thin shell + shared `retr01_emu` core for Play.
 
 ---
 
@@ -22,7 +22,7 @@ There is **no** Studio-only host Play path. Preview always goes through export t
 +--------------------------------------------------------------------------------+
 ```
 
-Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Present scale **Ctrl+1** / **Ctrl+2** (1x / 2x window). **8px** grid, dark gray chrome. Top **Graphics | Audio** app tabs (`UI_APP_CHROME_H`), flush left. Buttons/labels **16px** tall. Proggy Tiny (`assets/proggy-tiny.ttf`). Screen / Play previews scale with canvas (sharp nearest). Sidebar accordion: per-section expand/collapse (`UI_ACCORDION_ALWAYS_EXPANDED`), **250ms** open/close animation (`UI_ACCORDION_ANIM_MS`). **Audio** tab: compact left-aligned **BGM | SFX** plane tabs. BGM is a horizontal multi-lane timeline (paint/resize note strips on a quarter-note snap grid via `R01_BGM_NOTE_DIV` / `UI_SOUND_SNAP_DIV`, wheel to change pitch, Ctrl+C/V copy/paste, Play/Pause/Stop playhead). Preview uses a first-party NES-like softsynth (pulse/tri/noise/DPCM stub over SDL2 audio). Not cart-protocol playback. Graphics **Play** remains emu-only (host BGM + P1 X/Y SFX). **Sim is not involved** and does not play host audio.
+Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Present scale **Ctrl+1** / **Ctrl+2** (1x / 2x window). **8px** grid, dark gray chrome. Top **Graphics | Audio** app tabs (`UI_APP_CHROME_H`), flush left. Buttons/labels **16px** tall. Proggy Tiny (bundled in `ui/assets/proggy-tiny.ttf`). PNG chrome stays under `assets/png/` and is injected into `retr01_ui`. Screen / Play previews scale with canvas (sharp nearest). Sidebar accordion: per-section expand/collapse (`UI_ACCORDION_ALWAYS_EXPANDED`), **250ms** open/close animation (`UI_ACCORDION_ANIM_MS`). **Audio** tab: compact left-aligned **BGM | SFX** plane tabs. BGM is a horizontal multi-lane timeline (paint/resize note strips on a quarter-note snap grid via `R01_BGM_NOTE_DIV` / `UI_SOUND_SNAP_DIV`, wheel to change pitch, Ctrl+C/V copy/paste, Play/Pause/Stop playhead). Preview uses a first-party NES-like softsynth (pulse/tri/noise/DPCM stub over SDL2 audio). Not cart-protocol playback. Graphics **Play** remains emu-only (host BGM + P1 X/Y SFX). **Sim is not involved** and does not play host audio.
 
 | Control | Behavior |
 |---------|----------|

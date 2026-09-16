@@ -1,5 +1,4 @@
-#include "ui/widgets/widgets.h"
-#include "ui/internal.h"
+#include "retr01_ui/widgets.h"
 
 void ui_dot_strip_draw(SDL_Renderer *r, int x, int y, int count, int selected, int unlocked_count) {
     int i;
@@ -18,10 +17,12 @@ void ui_dot_strip_draw(SDL_Renderer *r, int x, int y, int count, int selected, i
         } else {
             fill_rect(r, dx, y, UI_DOT_SIZE, UI_DOT_SIZE, 40, 40, 46);
         }
-        if (g_dot_rgba && g_dot_w == UI_DOT_SIZE && g_dot_h == UI_DOT_SIZE) {
+        {
+            const R01UiChrome *ch = r01_ui_chrome();
+            if (ch->dot.rgba && ch->dot.w == UI_DOT_SIZE && ch->dot.h == UI_DOT_SIZE) {
             for (py = 0; py < UI_DOT_SIZE; py++) {
                 for (px = 0; px < UI_DOT_SIZE; px++) {
-                    const uint8_t *p = &g_dot_rgba[(py * g_dot_w + px) * 4u];
+                    const uint8_t *p = &ch->dot.rgba[(py * ch->dot.w + px) * 4u];
                     if (p[3] > 128) {
                         if (unlocked) {
                             fill_rect(r, dx + px, y + py, 1, 1, p[0], p[1], p[2]);
@@ -32,8 +33,9 @@ void ui_dot_strip_draw(SDL_Renderer *r, int x, int y, int count, int selected, i
                     }
                 }
             }
-        } else {
+            } else {
             fill_rect(r, dx + 2, y + 2, 4, 4, unlocked ? 240 : 100, unlocked ? 240 : 100, unlocked ? 240 : 100);
+            }
         }
     }
 }
