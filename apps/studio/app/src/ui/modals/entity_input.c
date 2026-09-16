@@ -196,7 +196,8 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
             R01World *ww = r01_project_active_world(ui->project);
             int col = 0;
             idx = ui_compose_part_at(fr, cx, cy, ui->entity_edit.sel_part);
-            if (ww && fr && idx >= 0 && ui_compose_sample_part(ww, &fr->parts[idx], cx, cy, &col)) {
+            if (ww && fr && idx >= 0 &&
+                ui_compose_sample_part(ui->project, ww, &fr->parts[idx], cx, cy, &col)) {
                 ui->entity_edit.sel_part = idx;
                 ui->entity_edit.paint_color = col;
                 ui->entity_edit.paint_pal = fr->parts[idx].pal & 3;

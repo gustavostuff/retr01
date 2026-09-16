@@ -23,9 +23,14 @@ int r01_world_entity_add(R01World *w);
 
 int r01_world_entity_remove(R01World *w, int type_idx);
 
-/* Mark which entity type is the Play player (-1 = CHR stub). One per world. */
+/* Mark which entity type is the Play player (-1 = CHR stub). One per world.
+ * Flag only; prefer r01_project_set_player_entity to also move CHR. */
 void r01_world_set_player_entity(R01World *w, int type_idx);
 int r01_world_player_entity(const R01World *w);
+
+/* Set player mark and move that entity's SPR patterns into project->player_bank
+ * (or restore them to world SPR banks on unmark / switch). Returns 0 or -1. */
+int r01_project_set_player_entity(R01Project *p, R01World *w, int type_idx);
 
 R01EntityType *r01_world_entity(R01World *w, int type_idx);
 const R01EntityType *r01_world_entity_const(const R01World *w, int type_idx);

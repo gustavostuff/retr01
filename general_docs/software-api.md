@@ -28,9 +28,12 @@ That range covers very simple games (**1** state, **1** frame, **1** sprite) and
 | Scope | Cap |
 | --- | --- |
 | Entity types per world | **16** |
-| Global shared catalog | **None** |
+| Global shared entity catalog | **None** |
+| Player item patterns (global bank) | **256** tiles (player inventory icons only). Pack TBD. See `memory.md` |
 
 Types belong to one world. Same look in another world means another def (and tiles) in that world's blob. Sprite attr bank bits index **this world's** SPR banks. If the wrong world CHR is active, entities look wrong on purpose. That glitch is the tell.
+
+The **player item bank** is separate: one cart-global **256-tile** pattern bank. Studio moves the marked player entity's SPR patterns there (and restores them on unmark). It is not an entity-type pool and is not shared with world catalogs.
 
 ### Packed definition format (locked)
 

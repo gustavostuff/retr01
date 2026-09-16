@@ -91,8 +91,9 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         const R01World *w = r01_project_active_world_const(ui->project);
         row = w ? w->default_pal_row : 0;
         if (ui->tile_edit.open) {
-            ui_palette_grid_nudge(ui->project, row, UI_PAL_PLANE_BG, ui->tile_edit.pal, ui->tile_edit.color,
-                                 e->wheel.y, shift);
+            int plane = ui->tile_edit.player_bank ? UI_PAL_PLANE_SPR : UI_PAL_PLANE_BG;
+            ui_palette_grid_nudge(ui->project, row, plane, ui->tile_edit.pal, ui->tile_edit.color, e->wheel.y,
+                                 shift);
             return 1;
         }
         if (ui->sprite_edit.open) {
@@ -571,6 +572,10 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 int tile_id;
                 if (banks_cell_hit(ui, lx, ly, &tile_id)) {
                     menu_open_bank_cell(ui, lx, ly, ui->banks_idx, tile_id, ui->banks_plane);
+                    return 1;
+                }
+                if (player_bank_cell_hit(ui, lx, ly, &tile_id)) {
+                    menu_open_bank_cell(ui, lx, ly, 0, tile_id, UI_BANKS_PLANE_PLAYER);
                     return 1;
                 }
             }

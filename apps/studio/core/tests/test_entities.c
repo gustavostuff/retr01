@@ -185,18 +185,27 @@ TEST_MAIN() {
         EXPECT(found, "instance 0 in oam");
     }
 
-    /* Mark entity 0 as player: Play uses state0/frame0 at player pos; skips its instances. */
+    /* Mark entity 0 as player: Play uses state0/frame0 at player pos; skips its instances.
+     * Patterns move into project->player_bank. */
     {
         R01OamEntry oam2[R01_OAM_MAX];
         int n2, found_player = 0, found_inst = 0, oi;
         int expect_px = r01_entity_world_x(pl.ctx.player_x, 3, 4) - pl.ctx.cam_x;
         int expect_py = r01_entity_world_y(pl.ctx.player_y, 5, 2) - pl.ctx.cam_y;
-        r01_world_set_player_entity(w, 0);
+        int old_bank = w->entities[0].states[0].frames[0].parts[0].bank;
+        int old_tile = w->entities[0].states[0].frames[0].parts[0].tile_id;
+        EXPECT(r01_project_set_player_entity(p, w, 0) == 0, "mark player moves chr");
         EXPECT(r01_world_player_entity(w) == 0, "player marked");
+        EXPECT(r01_is_player_chr_bank(w->entities[0].states[0].frames[0].parts[0].bank), "part on player bank");
+        EXPECT(p->player_bank.tile_count >= 1, "player bank has tiles");
+        EXPECT(r01_chr_resolve_spr(p, w, R01_PLAYER_CHR_BANK,
+                                   w->entities[0].states[0].frames[0].parts[0].tile_id) != NULL,
+               "resolve player tile");
         n2 = r01_play_build_oam(p, &pl, oam2, R01_OAM_MAX);
         EXPECT(n2 >= 1, "player entity oam");
         for (oi = 0; oi < n2; oi++) {
-            if (oam2[oi].tile_id == id && oam2[oi].x == expect_px && oam2[oi].y == expect_py) {
+            if (oam2[oi].tile_id == w->entities[0].states[0].frames[0].parts[0].tile_id &&
+                oam2[oi].x == expect_px && oam2[oi].y == expect_py) {
                 found_player = 1;
             }
             if (oam2[oi].tile_id == id && oam2[oi].x == r01_entity_world_x(40, 3, -6) - pl.ctx.cam_x) {
@@ -205,6 +214,13 @@ TEST_MAIN() {
         }
         EXPECT(found_player, "player uses entity art");
         EXPECT(!found_inst, "player type instance skipped");
+        EXPECT(r01_project_set_player_entity(p, w, -1) == 0, "unmark restores chr");
+        EXPECT(r01_world_player_entity(w) < 0, "player unmarked");
+        EXPECT(!r01_is_player_chr_bank(w->entities[0].states[0].frames[0].parts[0].bank), "part back on world");
+        EXPECT(p->player_bank.tile_count == 0, "player bank cleared");
+        (void)old_bank;
+        (void)old_tile;
+        EXPECT(r01_project_set_player_entity(p, w, 0) == 0, "re-mark player");
     }
 
     EXPECT(r01_project_save_json(p, "test_entities.r01proj", err, sizeof(err)) == 0, "save");
@@ -222,6 +238,9 @@ TEST_MAIN() {
     EXPECT(strcmp(p2->worlds[0].entities[0].states[0].name, "Walk") == 0, "name rt");
     EXPECT(p2->worlds[0].entities[0].states[0].origin_x == 3, "origin x");
     EXPECT(p2->worlds[0].entities[0].states[0].frames[0].parts[0].dx == 4, "part dx");
+    EXPECT(r01_is_player_chr_bank(p2->worlds[0].entities[0].states[0].frames[0].parts[0].bank),
+           "player bank rt");
+    EXPECT(p2->player_bank.tile_count >= 1, "player bank tiles rt");
 
     {
         char id[R01_ID_MAX];
@@ -236,6 +255,7 @@ TEST_MAIN() {
         EXPECT(strcmp(id, "w_01_player") == 0, "type id");
     }
 
+    EXPECT(r01_project_set_player_entity(p2, &p2->worlds[0], -1) == 0, "unmark before remove");
     EXPECT(r01_world_entity_remove(&p2->worlds[0], 0) == 0, "remove type");
     EXPECT(p2->worlds[0].entity_count == 3, "count after remove");
     EXPECT(p2->worlds[0].player_entity == -1, "player cleared on remove");

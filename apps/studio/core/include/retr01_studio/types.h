@@ -28,11 +28,17 @@
 #define R01_MAX_WORLDS 8
 #define R01_BG_BANKS 4
 #define R01_SPR_BANKS 4
+/* Authoring sentinel: part/sprite bank == this indexes project->player_bank (not world SPR). */
+#define R01_PLAYER_CHR_BANK R01_SPR_BANKS
 #define R01_TILES_PER_BANK 256
 #define R01_TILE_BYTES 16
 #define R01_BANK_CHR_BYTES (R01_TILES_PER_BANK * R01_TILE_BYTES)
 /* SPR bank 0 tile reserved for cart/Play player stub (solid color-1). */
 #define R01_SPR_PLAYER_TILE_ID 1
+
+static inline int r01_is_player_chr_bank(int bank) {
+    return bank == R01_PLAYER_CHR_BANK;
+}
 
 #define R01_BG0_SCREENS_MAX 8
 
@@ -66,7 +72,7 @@
 
 #define R01_NAME_MAX 64
 #define R01_PATH_MAX 512
-#define R01_JSON_VER 11
+#define R01_JSON_VER 12
 
 #define R01_OUTPUT_DIR "output"
 /* Empty: no default fixture paths. Export stem is project-relative when set. */
@@ -154,14 +160,14 @@ typedef R01ChrBank R01SprBank;
 
 /* Catalog entry: one 8x8 pattern in a SPR bank + default palette. */
 typedef struct R01SpriteDef {
-    int bank;    /* 0..R01_SPR_BANKS-1 */
-    int tile_id; /* index in spr_banks[bank] */
+    int bank;    /* 0..R01_SPR_BANKS-1, or R01_PLAYER_CHR_BANK */
+    int tile_id; /* index in spr_banks[bank] or player_bank */
     int pal;     /* 0..3 within the active sprite palette row */
 } R01SpriteDef;
 
 /* One OAM-like part in an entity frame (dx/dy relative to state origin). */
 typedef struct R01EntityPart {
-    int bank;
+    int bank; /* 0..R01_SPR_BANKS-1, or R01_PLAYER_CHR_BANK when marked player */
     int tile_id;
     int pal;
     int flip_h;
@@ -285,6 +291,8 @@ typedef struct R01Project {
     /* 8 rows x 4 pals each (general_docs/graphics). Index [row][pal]. */
     R01PalRow global_pal_bg[R01_PAL_ROWS][R01_PALS_PER_ROW];
     R01PalRow global_pal_spr[R01_PAL_ROWS][R01_PALS_PER_ROW];
+    /* Global player item pattern bank (256 tiles). Cart pack TBD; Studio authoring. */
+    R01ChrBank player_bank;
     R01OtherScreen other_screens[R01_CART_OTHER_MAX]; /* [0]=title [1]=inter [2+]=credits */
     R01World worlds[R01_MAX_WORLDS];
     R01BgmData bgm;

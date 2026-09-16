@@ -310,6 +310,26 @@ int r01_chr_write_tile(R01World *w, int bank, int tile_id, const uint8_t tile[R0
     return 0;
 }
 
+const uint8_t *r01_player_bank_tile(const R01Project *p, int tile_id) {
+    if (!p || tile_id < 0 || tile_id >= R01_TILES_PER_BANK || tile_id >= p->player_bank.tile_count) {
+        return NULL;
+    }
+    return p->player_bank.chr + (size_t)tile_id * R01_TILE_BYTES;
+}
+
+int r01_player_bank_write_tile(R01Project *p, int tile_id, const uint8_t tile[R01_TILE_BYTES]) {
+    R01ChrBank *b;
+    if (!p || !tile || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
+        return -1;
+    }
+    b = &p->player_bank;
+    if (tile_id >= b->tile_count) {
+        b->tile_count = tile_id + 1;
+    }
+    memcpy(b->chr + (size_t)tile_id * R01_TILE_BYTES, tile, R01_TILE_BYTES);
+    return 0;
+}
+
 void r01_screen_paint_tile(R01World *w, R01Screen *s, int tile_x, int tile_y, uint8_t tile_id, uint8_t attr) {
     int cell;
     int sy, sx;

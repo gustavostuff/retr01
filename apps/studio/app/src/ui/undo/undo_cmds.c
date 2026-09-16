@@ -228,7 +228,7 @@ static void entity_add_redo(UiState *ui, void *data) {
     w->entity_count++;
     d->idx = idx;
     if (d->was_player) {
-        w->player_entity = idx;
+        (void)r01_project_set_player_entity(ui->project, w, idx);
     }
 }
 
@@ -284,7 +284,7 @@ static void entity_remove_undo(UiState *ui, void *data) {
         }
     }
     if (d->was_player) {
-        w->player_entity = d->idx;
+        (void)r01_project_set_player_entity(ui->project, w, d->idx);
     } else if (w->player_entity >= d->idx) {
         w->player_entity++;
     }
@@ -292,10 +292,15 @@ static void entity_remove_undo(UiState *ui, void *data) {
 
 static void entity_remove_redo(UiState *ui, void *data) {
     UiUndoEntityRemove *d = (UiUndoEntityRemove *)data;
+    R01World *w;
     if (!ui || !d || !ui->project) {
         return;
     }
-    (void)r01_world_entity_remove(&ui->project->worlds[d->world_idx], d->idx);
+    w = &ui->project->worlds[d->world_idx];
+    if (d->was_player) {
+        (void)r01_project_set_player_entity(ui->project, w, -1);
+    }
+    (void)r01_world_entity_remove(w, d->idx);
 }
 
 static const UiUndoVTable entity_remove_vt = {entity_remove_undo, entity_remove_redo, free_ptr};
@@ -974,6 +979,52 @@ void ui_undo_push_bg_chr_edit(UiState *ui, int bank, int tile_id, const uint8_t 
     }
 }
 
+/* ---- player bank CHR edit ---- */
+
+typedef struct UiUndoPlayerChrEdit {
+    int tile_id;
+    uint8_t old_chr[R01_TILE_BYTES];
+    uint8_t new_chr[R01_TILE_BYTES];
+} UiUndoPlayerChrEdit;
+
+static void player_chr_edit_apply(UiState *ui, UiUndoPlayerChrEdit *d, int use_new) {
+    if (!ui || !d || !ui->project) {
+        return;
+    }
+    (void)r01_player_bank_write_tile(ui->project, d->tile_id, use_new ? d->new_chr : d->old_chr);
+}
+
+static void player_chr_edit_undo(UiState *ui, void *data) {
+    player_chr_edit_apply(ui, (UiUndoPlayerChrEdit *)data, 0);
+}
+
+static void player_chr_edit_redo(UiState *ui, void *data) {
+    player_chr_edit_apply(ui, (UiUndoPlayerChrEdit *)data, 1);
+}
+
+static const UiUndoVTable player_chr_edit_vt = {player_chr_edit_undo, player_chr_edit_redo, free_ptr};
+
+void ui_undo_push_player_chr_edit(UiState *ui, int tile_id, const uint8_t old_chr[R01_TILE_BYTES],
+                                  const uint8_t new_chr[R01_TILE_BYTES]) {
+    UiUndoPlayerChrEdit *d;
+    if (!ui || !ui->project || !old_chr || !new_chr) {
+        return;
+    }
+    if (memcmp(old_chr, new_chr, R01_TILE_BYTES) == 0) {
+        return;
+    }
+    d = (UiUndoPlayerChrEdit *)calloc(1, sizeof(*d));
+    if (!d) {
+        return;
+    }
+    d->tile_id = tile_id;
+    memcpy(d->old_chr, old_chr, R01_TILE_BYTES);
+    memcpy(d->new_chr, new_chr, R01_TILE_BYTES);
+    if (ui_undo_push(&ui->undo, &player_chr_edit_vt, d, "edit player tile") != 0) {
+        free(d);
+    }
+}
+
 /* ---- sprite CHR paint stroke (entity / compose) ---- */
 
 typedef struct UiUndoSprPaintTile {
@@ -1011,7 +1062,7 @@ static void spr_paint_apply(UiState *ui, UiUndoSprPaintStroke *st, int use_new) 
     w = &ui->project->worlds[st->world_idx];
     for (i = 0; i < st->count; i++) {
         UiUndoSprPaintTile *t = &st->tiles[i];
-        (void)r01_chr_write_spr_tile(w, t->bank, t->tile_id, use_new ? t->new_chr : t->old_chr);
+        (void)r01_chr_write_resolved_spr(ui->project, w, t->bank, t->tile_id, use_new ? t->new_chr : t->old_chr);
     }
 }
 
@@ -1088,7 +1139,7 @@ void ui_undo_spr_paint_end(UiState *ui) {
     }
     w = &ui->project->worlds[st->world_idx];
     for (i = 0; i < st->count; i++) {
-        const uint8_t *src = r01_chr_spr_tile(w, st->tiles[i].bank, st->tiles[i].tile_id);
+        const uint8_t *src = r01_chr_resolve_spr(ui->project, w, st->tiles[i].bank, st->tiles[i].tile_id);
         if (src) {
             memcpy(st->tiles[i].new_chr, src, R01_TILE_BYTES);
         }
@@ -1122,7 +1173,7 @@ void ui_undo_spr_paint_touch_tile(UiState *ui, int bank, int tile_id) {
     if (idx >= 0) {
         return;
     }
-    src = r01_chr_spr_tile(w, bank, tile_id);
+    src = r01_chr_resolve_spr(ui->project, w, bank, tile_id);
     if (!src) {
         return;
     }

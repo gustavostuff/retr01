@@ -89,7 +89,7 @@ void ui_compose_draw_part(SDL_Renderer *r, const R01Project *p, const R01World *
     if (!p || !w || !pt) {
         return;
     }
-    raw = r01_chr_spr_tile(w, pt->bank, pt->tile_id);
+    raw = r01_chr_resolve_spr(p, w, pt->bank, pt->tile_id);
     if (!raw) {
         return;
     }
@@ -201,17 +201,17 @@ int ui_compose_part_at(const R01EntityFrame *fr, int px, int py, int prefer_sel)
     return -1;
 }
 
-int ui_compose_sample_part(R01World *w, const R01EntityPart *pt, int cx, int cy, int *out_color) {
+int ui_compose_sample_part(R01Project *p, R01World *w, const R01EntityPart *pt, int cx, int cy, int *out_color) {
     const uint8_t *src;
     uint8_t oriented[R01_TILE_BYTES];
     int lx, ly;
-    if (!w || !pt) {
+    if (!p || !w || !pt) {
         return 0;
     }
     if (cx < pt->dx || cx >= pt->dx + 8 || cy < pt->dy || cy >= pt->dy + 8) {
         return 0;
     }
-    src = r01_chr_spr_tile(w, pt->bank, pt->tile_id);
+    src = r01_chr_resolve_spr(p, w, pt->bank, pt->tile_id);
     if (!src) {
         return 0;
     }
@@ -229,14 +229,13 @@ int ui_compose_paint_part(R01Project *p, R01World *w, R01EntityPart *pt, int cx,
     uint8_t tile[R01_TILE_BYTES];
     int lx, ly;
     uint8_t old_col;
-    (void)p;
-    if (!w || !pt) {
+    if (!p || !w || !pt) {
         return 0;
     }
     if (cx < pt->dx || cx >= pt->dx + 8 || cy < pt->dy || cy >= pt->dy + 8) {
         return 0;
     }
-    src = r01_chr_spr_tile(w, pt->bank, pt->tile_id);
+    src = r01_chr_resolve_spr(p, w, pt->bank, pt->tile_id);
     if (!src) {
         return 0;
     }
@@ -254,7 +253,7 @@ int ui_compose_paint_part(R01Project *p, R01World *w, R01EntityPart *pt, int cx,
         return 0;
     }
     r01_tile_set_pixel(tile, lx, ly, (uint8_t)(paint_color & 3));
-    (void)r01_chr_write_spr_tile(w, pt->bank, pt->tile_id, tile);
+    (void)r01_chr_write_resolved_spr(p, w, pt->bank, pt->tile_id, tile);
     return 1;
 }
 

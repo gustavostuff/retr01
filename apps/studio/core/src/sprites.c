@@ -1,4 +1,5 @@
 #include "retr01_studio/sprites.h"
+#include "retr01_studio/chr_pack.h"
 
 #include <string.h>
 
@@ -58,6 +59,21 @@ const uint8_t *r01_chr_spr_tile(const R01World *w, int bank, int tile_id) {
         return NULL;
     }
     return w->spr_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+}
+
+const uint8_t *r01_chr_resolve_spr(const R01Project *p, const R01World *w, int bank, int tile_id) {
+    if (r01_is_player_chr_bank(bank)) {
+        return r01_player_bank_tile(p, tile_id);
+    }
+    return r01_chr_spr_tile(w, bank, tile_id);
+}
+
+int r01_chr_write_resolved_spr(R01Project *p, R01World *w, int bank, int tile_id,
+                               const uint8_t tile[R01_TILE_BYTES]) {
+    if (r01_is_player_chr_bank(bank)) {
+        return r01_player_bank_write_tile(p, tile_id, tile);
+    }
+    return r01_chr_write_spr_tile(w, bank, tile_id, tile);
 }
 
 int r01_world_sprite_add(R01World *w, int bank, int tile_id, int pal) {

@@ -201,6 +201,32 @@ void tile_edit_open_bank(UiState *ui, int bank, int tile_id, int is_new) {
     }
 }
 
+void tile_edit_open_player_bank(UiState *ui, int tile_id, int is_new) {
+    const uint8_t *raw;
+    if (!ui || !ui->project) {
+        return;
+    }
+    memset(&ui->tile_edit, 0, sizeof(ui->tile_edit));
+    ui->tile_edit.open = 1;
+    ui->tile_edit.paint_tx = -1;
+    ui->tile_edit.paint_ty = -1;
+    ui->tile_edit.bank = 0;
+    ui->tile_edit.player_bank = 1;
+    ui->tile_edit.tile_id = tile_id;
+    ui->tile_edit.pal = 0;
+    ui->tile_edit.color = 1;
+    ui->tile_edit.edit_all = 0;
+    ui->tile_edit.is_new = is_new ? 1 : 0;
+    raw = r01_player_bank_tile(ui->project, tile_id);
+    if (raw) {
+        memcpy(ui->tile_edit.chr, raw, R01_TILE_BYTES);
+        ui->tile_edit.is_new = 0;
+    } else {
+        memset(ui->tile_edit.chr, 0, sizeof(ui->tile_edit.chr));
+        ui->tile_edit.is_new = 1;
+    }
+}
+
 static int tile_edit_apply_matching(R01World *w, R01Screen *s, int id, int bank, int pal, int flip_h,
                                     int flip_v, uint8_t match_tile_id, uint8_t match_attr_hw) {
     int cell;
@@ -252,6 +278,31 @@ static void tile_edit_save(UiState *ui) {
     uint8_t old_tile = 0, old_attr = 0, new_attr = 0;
     uint8_t old_chr[R01_TILE_BYTES];
     uint8_t canonical[R01_TILE_BYTES];
+
+    if (ui->tile_edit.player_bank) {
+        id = ui->tile_edit.tile_id;
+        if (!ui->project || id < 0 || id >= R01_TILES_PER_BANK) {
+            return;
+        }
+        memset(old_chr, 0, sizeof(old_chr));
+        {
+            const uint8_t *prev = r01_player_bank_tile(ui->project, id);
+            if (prev) {
+                memcpy(old_chr, prev, R01_TILE_BYTES);
+            }
+        }
+        r01_tile_orient(ui->tile_edit.chr, ui->tile_edit.flip_h, ui->tile_edit.flip_v, canonical);
+        if (r01_player_bank_write_tile(ui->project, id, canonical) != 0) {
+            ui_toast(ui, "player bank write failed", 1);
+            return;
+        }
+        ui_undo_push_player_chr_edit(ui, id, old_chr, canonical);
+        ui->tile_edit.is_new = 0;
+        ui->tile_edit.open = 0;
+        ui_toast(ui, "tile saved", 0);
+        return;
+    }
+
     if (!w) {
         return;
     }
@@ -334,6 +385,7 @@ void draw_tile_modal(UiState *ui, SDL_Renderer *r) {
     TileModalLayout lo;
     const R01World *w = r01_project_active_world_const(ui->project);
     int row = w ? w->default_pal_row : 0;
+    int pal_plane = ui->tile_edit.player_bank ? UI_PAL_PLANE_SPR : UI_PAL_PLANE_BG;
     int sy, sx;
 
     tile_modal_layout(ui, &lo);
@@ -346,7 +398,7 @@ void draw_tile_modal(UiState *ui, SDL_Renderer *r) {
 
     draw_label(r, lo.pal_x, lo.pal_label_y, "Palette/color");
     ui_palette_grid_draw(r, ui->project, row, lo.pal_x, lo.pal_y, ui->tile_edit.pal, ui->tile_edit.color,
-                         UI_PAL_PLANE_BG);
+                         pal_plane);
 
     fill_rect(r, lo.canvas_x, lo.canvas_y, UI_TILE_CANVAS, UI_TILE_CANVAS, UI_COL_WELL_R, UI_COL_WELL_G,
               UI_COL_WELL_B);
@@ -355,7 +407,11 @@ void draw_tile_modal(UiState *ui, SDL_Renderer *r) {
             uint8_t col = r01_tile_pixel_color(ui->tile_edit.chr, sx, sy);
             uint8_t cr, cg, cb;
             int cell = 16;
-            r01_kit_rgb(ui->project->global_pal_bg[row][ui->tile_edit.pal].idx[col & 3u], &cr, &cg, &cb);
+            if (pal_plane == UI_PAL_PLANE_SPR) {
+                r01_kit_rgb(ui->project->global_pal_spr[row][ui->tile_edit.pal].idx[col & 3u], &cr, &cg, &cb);
+            } else {
+                r01_kit_rgb(ui->project->global_pal_bg[row][ui->tile_edit.pal].idx[col & 3u], &cr, &cg, &cb);
+            }
             fill_rect(r, lo.canvas_x + sx * cell, lo.canvas_y + sy * cell, cell - 1, cell - 1, cr, cg, cb);
         }
     }
@@ -364,7 +420,7 @@ void draw_tile_modal(UiState *ui, SDL_Renderer *r) {
         int cell = 16;
         int hx = (ui->mouse_x - lo.canvas_x) / cell;
         int hy = (ui->mouse_y - lo.canvas_y) / cell;
-        draw_paint_pixel_preview(r, ui->project, row, UI_PAL_PLANE_BG, ui->tile_edit.pal, ui->tile_edit.color,
+        draw_paint_pixel_preview(r, ui->project, row, pal_plane, ui->tile_edit.pal, ui->tile_edit.color,
                                  lo.canvas_x + hx * cell, lo.canvas_y + hy * cell, cell - 1);
     }
 

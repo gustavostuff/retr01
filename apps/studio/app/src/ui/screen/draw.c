@@ -26,7 +26,7 @@ static void draw_spr_tile_px(UiState *ui, SDL_Renderer *r, const R01World *w, co
     if (row < 0 || row >= R01_PAL_ROWS) {
         row = 0;
     }
-    raw = r01_chr_spr_tile(w, pt->bank, pt->tile_id);
+    raw = r01_chr_resolve_spr(ui->project, w, pt->bank, pt->tile_id);
     if (!raw) {
         return;
     }

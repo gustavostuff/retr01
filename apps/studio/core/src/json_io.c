@@ -363,6 +363,18 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
     }
     fprintf(f, "],\n");
     {
+        size_t chr_bytes = (size_t)p->player_bank.tile_count * R01_TILE_BYTES;
+        char *bank_b64 = encode_b64(p->player_bank.chr, chr_bytes);
+        if (!bank_b64) {
+            fclose(f);
+            set_err(err_buf, err_cap, "oom");
+            return -1;
+        }
+        fprintf(f, "  \"player_bank_tiles\": %d,\n", p->player_bank.tile_count);
+        fprintf(f, "  \"player_bank_b64\": \"%s\",\n", bank_b64);
+        free(bank_b64);
+    }
+    {
         size_t chr_bytes = (size_t)w->bg_banks[0].tile_count * R01_TILE_BYTES;
         char *bank_b64 = encode_b64(w->bg_banks[0].chr, chr_bytes);
         if (!bank_b64) {
@@ -1088,6 +1100,25 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                     }
                 }
             }
+        }
+
+        {
+            int bank_tiles = 0;
+            char *bank_b64 = json_string_field_dup(buf, "\"player_bank_b64\"");
+            json_int_after(buf, "\"player_bank_tiles\"", &bank_tiles);
+            memset(p->player_bank.chr, 0, R01_BANK_CHR_BYTES);
+            p->player_bank.tile_count = 0;
+            if (bank_b64 && bank_tiles > 0 && bank_tiles <= R01_TILES_PER_BANK) {
+                size_t bin_len = 0;
+                size_t expect = (size_t)bank_tiles * R01_TILE_BYTES;
+                uint8_t *bin = decode_b64(bank_b64, &bin_len);
+                if (bin && bin_len == expect) {
+                    memcpy(p->player_bank.chr, bin, expect);
+                    p->player_bank.tile_count = bank_tiles;
+                }
+                free(bin);
+            }
+            free(bank_b64);
         }
 
         {

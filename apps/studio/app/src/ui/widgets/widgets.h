@@ -31,7 +31,8 @@ void ui_compose_clamp_hitbox(int *x, int *y, int *w, int *h);
 void ui_compose_draw_frame_icon(SDL_Renderer *r, const R01Project *p, const struct R01World *w,
                                 const R01EntityFrame *fr, int dx, int dy, int icon_size);
 int ui_compose_part_at(const R01EntityFrame *fr, int px, int py, int prefer_sel);
-int ui_compose_sample_part(struct R01World *w, const R01EntityPart *pt, int cx, int cy, int *out_color);
+int ui_compose_sample_part(R01Project *p, struct R01World *w, const R01EntityPart *pt, int cx, int cy,
+                           int *out_color);
 int ui_compose_paint_part(R01Project *p, struct R01World *w, R01EntityPart *pt, int cx, int cy, int paint_color);
 int ui_compose_paint_brush(R01Project *p, struct R01World *w, R01EntityPart *pt, int cx, int cy, int paint_color,
                            int brush_size);

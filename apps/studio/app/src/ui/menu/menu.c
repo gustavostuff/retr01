@@ -262,6 +262,21 @@ static int bank_cell_is_empty(const R01World *w, int bank, int tile_id, int plan
     return 1;
 }
 
+static int player_bank_cell_is_empty(const R01Project *p, int tile_id) {
+    const uint8_t *tile;
+    int i;
+    tile = r01_player_bank_tile(p, tile_id);
+    if (!tile) {
+        return 1;
+    }
+    for (i = 0; i < R01_TILE_BYTES; i++) {
+        if (tile[i]) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
 static int bank_cell_catalog_idx(const R01World *w, int bank, int tile_id) {
     int i;
     if (!w) {
@@ -277,8 +292,14 @@ static int bank_cell_catalog_idx(const R01World *w, int bank, int tile_id) {
 
 void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int plane) {
     const R01World *w = r01_project_active_world_const(ui->project);
-    int empty = bank_cell_is_empty(w, bank, tile_id, plane);
-    int cat = (plane == UI_BANKS_PLANE_SPR) ? bank_cell_catalog_idx(w, bank, tile_id) : -1;
+    int empty;
+    int cat = -1;
+    if (plane == UI_BANKS_PLANE_PLAYER) {
+        empty = player_bank_cell_is_empty(ui->project, tile_id);
+    } else {
+        empty = bank_cell_is_empty(w, bank, tile_id, plane);
+        cat = (plane == UI_BANKS_PLANE_SPR) ? bank_cell_catalog_idx(w, bank, tile_id) : -1;
+    }
     ui->menu.open = 1;
     ui->menu.kind = UI_MENU_KIND_BANK_CELL;
     ui->menu.submenu = UI_MENU_SUB_NONE;
@@ -301,7 +322,7 @@ void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int p
     } else {
         snprintf(ui->menu.items[ui->menu.item_count], 32, empty ? "Add tile" : "Edit tile");
         ui->menu.item_sub[ui->menu.item_count++] = 0;
-        if (!empty) {
+        if (!empty && plane != UI_BANKS_PLANE_PLAYER) {
             snprintf(ui->menu.items[ui->menu.item_count], 32, "Move to Bank");
             ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_MOVE_BANK;
         }
@@ -674,7 +695,11 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
     if (ui->menu.kind == UI_MENU_KIND_BANK_CELL) {
         int empty;
         const R01World *wc = r01_project_active_world_const(ui->project);
-        empty = bank_cell_is_empty(wc, ui->menu.bank_idx, ui->menu.bank_tile_id, ui->menu.bank_plane);
+        if (ui->menu.bank_plane == UI_BANKS_PLANE_PLAYER) {
+            empty = player_bank_cell_is_empty(ui->project, ui->menu.bank_tile_id);
+        } else {
+            empty = bank_cell_is_empty(wc, ui->menu.bank_idx, ui->menu.bank_tile_id, ui->menu.bank_plane);
+        }
         if (item == 0) {
             if (ui->menu.bank_plane == UI_BANKS_PLANE_SPR) {
                 if (ui->menu.sprite_catalog_idx >= 0) {
@@ -682,6 +707,8 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
                 } else {
                     sprite_edit_open_slot(ui, ui->menu.bank_idx, ui->menu.bank_tile_id);
                 }
+            } else if (ui->menu.bank_plane == UI_BANKS_PLANE_PLAYER) {
+                tile_edit_open_player_bank(ui, ui->menu.bank_tile_id, empty);
             } else {
                 tile_edit_open_bank(ui, ui->menu.bank_idx, ui->menu.bank_tile_id, empty);
             }
@@ -715,17 +742,29 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
             entity_edit_open(ui, ui->menu.entity_type_idx);
         } else if (item == 1 && w) {
             if (r01_world_player_entity(w) == ui->menu.entity_type_idx) {
-                r01_world_set_player_entity(w, -1);
-                ui_toast(ui, "player unmarked", 0);
+                if (r01_project_set_player_entity(ui->project, w, -1) != 0) {
+                    ui_toast(ui, "cannot unmark player", 1);
+                } else {
+                    ui_toast(ui, "player unmarked", 0);
+                }
             } else {
-                r01_world_set_player_entity(w, ui->menu.entity_type_idx);
-                ui_toast(ui, "marked as player", 0);
+                if (r01_project_set_player_entity(ui->project, w, ui->menu.entity_type_idx) != 0) {
+                    ui_toast(ui, "cannot mark player (bank full?)", 1);
+                } else {
+                    ui_toast(ui, "marked as player", 0);
+                }
             }
         } else if (item == 2 && w) {
             int tidx = ui->menu.entity_type_idx;
             if (tidx >= 0 && tidx < w->entity_count) {
                 R01EntityType removed = w->entities[tidx];
                 int was_player = (r01_world_player_entity(w) == tidx);
+                if (was_player) {
+                    (void)r01_project_set_player_entity(ui->project, w, -1);
+                    /* Unmark restored CHR into world banks; snapshot for undo still has player-bank refs.
+                     * Re-read entity after unmark so undo restore can re-mark. */
+                    removed = w->entities[tidx];
+                }
                 r01_world_entity_remove(w, tidx);
                 ui_undo_push_entity_remove(ui, tidx, &removed, was_player);
                 ui_toast(ui, "entity removed", 0);

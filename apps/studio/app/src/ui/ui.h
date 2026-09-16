@@ -36,9 +36,11 @@
 
 #define UI_BANKS_PLANE_BG 0
 #define UI_BANKS_PLANE_SPR 1
+#define UI_BANKS_PLANE_PLAYER 2
 #define UI_BANKS_N 4
 #define UI_BANKS_GRID 128 /* 16x16 tiles @ 8px */
 #define UI_BANKS_BODY_H (UI_WORLDS_TAB_STACK_H + UI_BANKS_GRID)
+#define UI_PLAYER_BANK_BODY_H UI_BANKS_GRID /* no plane/bank tabs */
 
 #define UI_ARM_NONE 0
 #define UI_ARM_WORLD_TAB 1
@@ -98,16 +100,17 @@
 #define UI_ACC_PALS 1
 #define UI_ACC_BANKS 2
 #define UI_ACC_SPRITES UI_ACC_BANKS /* legacy alias */
-#define UI_ACC_METATILES 3
-#define UI_ACC_METASPRITES 4
-#define UI_ACC_ENTITIES 5
+#define UI_ACC_PLAYER_BANK 3
+#define UI_ACC_METATILES 4
+#define UI_ACC_METASPRITES 5
+#define UI_ACC_ENTITIES 6
 /* Sidebar sections temporarily hidden (catalog/API still load/save). */
 #define UI_SHOW_METATILES 0
 #define UI_SHOW_METASPRITES 0
 /* When 1, all accordion sections stay expanded and headers do not collapse. */
 #define UI_ACCORDION_ALWAYS_EXPANDED 0
 #define UI_ACCORDION_ANIM_MS 250
-#define UI_ACC_SECTIONS 6
+#define UI_ACC_SECTIONS 7
 
 #define UI_SPRITES_BODY_H UI_BANKS_BODY_H
 #define UI_SPRITE_ROW_H 16
@@ -221,6 +224,7 @@ typedef struct UiTileEdit {
     int color; /* 0..3 within pal */
     int tile_id;
     int bank;
+    int player_bank; /* 1 = edit project player_bank patterns (SPR pal) */
     int flip_h;
     int flip_v;
     int is_new;

@@ -66,6 +66,13 @@ Magic **`retr01`**, **`format_ver` = 3**. Bump only when the layout breaks old t
 | | one directory row per world slot (present flag + blob offset)    | |
 | +------------------------------------------------------------------+ |
 +----------------------------------------------------------------------+
+| +------------------------------------------------------------------+ |
+| | PLAYER ITEM BANK (global)                                        | |
+| |  hard cap 256 patterns (item icons). Player inventory only.      | |
+| |  Not shared with world entity catalogs. Pack TBD.                | |
+| |  Packs after world table, before world blobs.                    | |
+| +------------------------------------------------------------------+ |
++----------------------------------------------------------------------+
 | +--------------------------- WORLD BLOB (per present world) -------+ |
 | | +--------------------+                                           | |
 | | | World header  32 B |  spawn, banks, counts, offsets, camera    | |
@@ -132,7 +139,7 @@ Entity **spawn locations** are **not** on the cart. PRG owns who appears where (
 
 ### Flash budget at max fill
 
-Worst case: all fixed image pieces + **8** worlds at full CHR, max present screens (sparse dirs), and **16** fully maxed entity defs each + **16** other screens at raw **480 B** each. RLE and unused slots free more. Spawn locations cost **PRG**, not cart flash.
+Worst case: all fixed image pieces + maxed **player item bank** (**4096 B**) + **8** worlds at full CHR, max present screens (sparse dirs), and **16** fully maxed entity defs each + **16** other screens at raw **480 B** each. RLE and unused slots free more. Spawn locations cost **PRG**, not cart flash.
 
 One maxed world blob (no `PA`) is **58176 B** (~56.8 KB):
 **1 x 32** (header) + **1 x 32768** (CHR) + **32 x 12** (BG1 dir) + **32 x 480** (BG1 payloads) + **8 x 12** (BG0 dir) + **8 x 480** (BG0 payloads) + **16 x 356** (entity defs).
@@ -145,6 +152,7 @@ One maxed world blob (no `PA`) is **58176 B** (~56.8 KB):
 | Global sprite palettes (1 plane x 128 B) | **128** | ~0.1 |
 | PRG (1 x 32768 B) | **32768** | **32.0** |
 | World table (8 worlds x 8 B) | **64** | ~0.1 |
+| Player item bank (256 tiles x 16 B) | **4096** | **4.0** |
 | World headers (8 worlds x 32 B) | **256** | ~0.3 |
 | CHR (8 worlds x 32768 B) | **262144** | **256.0** |
 | BG1 directories (8 worlds x 32 screens x 12 B) | **3072** | **3.0** |
@@ -153,10 +161,25 @@ One maxed world blob (no `PA`) is **58176 B** (~56.8 KB):
 | BG0 payloads (8 worlds x 8 screens x 480 B) | **30720** | **30.0** |
 | Entity defs (8 worlds x 16 defs x 356 B maxed) | **45568** | **~44.5** |
 | Other screens (16 screens x 480 B raw) | **7680** | **~7.5** |
-| **Used (sum of rows above)** | **506222** | **~494.4** |
-| Free (524288 flash - 506222 used) | **18066** | **~17.6** |
+| **Used (sum of rows above)** | **510318** | **~498.4** |
+| Free (524288 flash - 510318 used) | **13970** | **~13.6** |
 
-That free slice is for optional `PA`, packing slack, and anything else that does not fit the capped blobs above.
+That free slice covers optional `PA`, packing slack, and anything else that does not fit the capped blobs above.
+
+### Player item bank (global)
+
+One **global** catalog for the **player** only (inventory / equipment / collectibles the marked player can hold). Not per-world. Not used as a shared NPC/entity catalog.
+
+| Topic | Value |
+| --- | --- |
+| Hard cap | **256** patterns (one 16x16 CHR bank) |
+| Scope | Cart-global (one bank for the whole game) |
+| Consumers | Marked player entity patterns (Studio moves CHR here on mark / restores on unmark). Inventory metadata pack still **TBD** |
+| Art | Studio authors / relocates patterns into this global **256-tile** bank |
+| Pack format | **TBD** (no locked byte layout yet). Studio / cart slot come with the pack |
+| Flash layout | Packs **after the world table, before world blobs** (same order as the map above). Counted in the max-fill table as **4096 B**. A dedicated pointer-table slot means a `format_ver` bump |
+
+Live inventory state (counts, equipped slots, flags) stays in **system RAM** / save EEPROM. Cart holds defs only.
 
 ### Entity catalog (per world, cart flash)
 

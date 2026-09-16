@@ -17,6 +17,7 @@ See `memory.md` for the full map. Short version:
 - Global palette index planes (256 B total).
 - Up to **8** world blobs (each with 32 KB CHR, up to **32** BG1 + **8** BG0 screens, up to **16** entity types).
 - Global **other screens**: max **16** total (title / interstitial / credits share the pool).
+- Global **player item bank**: hard cap **256** patterns (player inventory icons only). See `memory.md`.
 
 ## Programming workflow
 

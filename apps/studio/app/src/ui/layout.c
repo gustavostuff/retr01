@@ -260,6 +260,7 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
     int worlds_h;
     int pals_h;
     int sprites_h;
+    int player_bank_h;
     int metatiles_h;
     int metasprites_h;
     int entities_h;
@@ -268,6 +269,7 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
         worlds_h = UI_WORLDS_BODY_H;
         pals_h = UI_PAL_BODY_H;
         sprites_h = UI_SPRITES_BODY_H;
+        player_bank_h = UI_PLAYER_BANK_BODY_H;
         metatiles_h = UI_SHOW_METATILES ? UI_METATILES_BODY_H : 0;
         metasprites_h = UI_SHOW_METASPRITES ? UI_METASPRITES_BODY_H : 0;
         entities_h = UI_ENTITIES_BODY_H;
@@ -275,6 +277,7 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
         worlds_h = ui->accordion_body_h[UI_ACC_WORLDS];
         pals_h = ui->accordion_body_h[UI_ACC_PALS];
         sprites_h = ui->accordion_body_h[UI_ACC_BANKS];
+        player_bank_h = ui->accordion_body_h[UI_ACC_PLAYER_BANK];
         metatiles_h = UI_SHOW_METATILES ? ui->accordion_body_h[UI_ACC_METATILES] : 0;
         metasprites_h = UI_SHOW_METASPRITES ? ui->accordion_body_h[UI_ACC_METASPRITES] : 0;
         entities_h = ui->accordion_body_h[UI_ACC_ENTITIES];
@@ -282,6 +285,7 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
         worlds_h = 0;
         pals_h = 0;
         sprites_h = 0;
+        player_bank_h = 0;
         metatiles_h = 0;
         metasprites_h = 0;
         entities_h = 0;
@@ -318,6 +322,16 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
         y += sprites_h;
     } else {
         lo->sprites_body_y = -1;
+    }
+    lo->player_bank_hdr_y = y;
+    y += UI_BTN_H;
+    lo->player_bank_open = always || (ui && ui->accordion_open == UI_ACC_PLAYER_BANK);
+    lo->player_bank_body_h = player_bank_h;
+    if (player_bank_h > 0) {
+        lo->player_bank_body_y = y;
+        y += player_bank_h;
+    } else {
+        lo->player_bank_body_y = -1;
     }
     if (UI_SHOW_METATILES) {
         lo->metatiles_hdr_y = y;
@@ -375,6 +389,8 @@ static int accordion_section_full_h(int section) {
         return UI_PAL_BODY_H;
     case UI_ACC_BANKS:
         return UI_BANKS_BODY_H;
+    case UI_ACC_PLAYER_BANK:
+        return UI_PLAYER_BANK_BODY_H;
     case UI_ACC_METATILES:
         return UI_SHOW_METATILES ? UI_METATILES_BODY_H : 0;
     case UI_ACC_METASPRITES:
@@ -596,6 +612,32 @@ int banks_cell_hit(const UiState *ui, int lx, int ly, int *out_tile_id) {
     return 1;
 }
 
+int player_bank_cell_hit(const UiState *ui, int lx, int ly, int *out_tile_id) {
+    AccordionLayout lo;
+    int grid_y;
+    int tx, ty;
+    if (!ui || ui->play.active) {
+        return 0;
+    }
+    accordion_layout(ui, &lo);
+    if (lo.player_bank_body_h < UI_PLAYER_BANK_BODY_H) {
+        return 0;
+    }
+    grid_y = lo.player_bank_body_y;
+    if (lx < UI_WORLDS_X || lx >= UI_WORLDS_X + UI_BANKS_GRID || ly < grid_y || ly >= grid_y + UI_BANKS_GRID) {
+        return 0;
+    }
+    tx = (lx - UI_WORLDS_X) / 8;
+    ty = (ly - grid_y) / 8;
+    if (tx < 0 || tx >= 16 || ty < 0 || ty >= 16) {
+        return 0;
+    }
+    if (out_tile_id) {
+        *out_tile_id = ty * 16 + tx;
+    }
+    return 1;
+}
+
 int world_sub_hit(const UiState *ui, int lx, int ly) {
     UiTabsLayout tabs;
     int sel;
@@ -631,6 +673,12 @@ int accordion_header_hit(const UiState *ui, int lx, int ly, int *out_section) {
     if (ly >= lo.sprites_hdr_y && ly < lo.sprites_hdr_y + UI_BTN_H) {
         if (out_section) {
             *out_section = UI_ACC_BANKS;
+        }
+        return 1;
+    }
+    if (ly >= lo.player_bank_hdr_y && ly < lo.player_bank_hdr_y + UI_BTN_H) {
+        if (out_section) {
+            *out_section = UI_ACC_PLAYER_BANK;
         }
         return 1;
     }
