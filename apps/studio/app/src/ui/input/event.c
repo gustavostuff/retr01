@@ -181,11 +181,32 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         }
         if (ui->tile_edit.open) {
             if (e->key.keysym.sym == SDLK_ESCAPE) {
+                tile_modal_stroke_end(ui);
                 ui->tile_edit.open = 0;
                 return 1;
             }
+            if ((e->key.keysym.mod & KMOD_CTRL) && (e->key.keysym.sym == SDLK_z || e->key.keysym.sym == SDLK_y)) {
+                if (e->key.keysym.sym == SDLK_z) {
+                    if (e->key.keysym.mod & KMOD_SHIFT) {
+                        (void)tile_edit_redo(ui);
+                    } else {
+                        (void)tile_edit_undo(ui);
+                    }
+                } else {
+                    (void)tile_edit_redo(ui);
+                }
+                return 1;
+            }
             if ((e->key.keysym.mod & KMOD_CTRL) && e->key.keysym.sym == SDLK_v) {
-                (void)ui_paste_clipboard_png_tile(ui, ui->tile_edit.chr, ui->tile_edit.pal, 0);
+                uint8_t before[R01_TILE_BYTES];
+                memcpy(before, ui->tile_edit.chr, R01_TILE_BYTES);
+                if (ui_paste_clipboard_png_tile(ui, ui->tile_edit.chr, ui->tile_edit.pal, 0) == 0) {
+                    tile_modal_stroke_end(ui);
+                    memcpy(ui->tile_edit.stroke_before, before, R01_TILE_BYTES);
+                    ui->tile_edit.stroke_open = 1;
+                    ui->tile_edit.stroke_dirty = 1;
+                    tile_modal_stroke_end(ui);
+                }
                 return 1;
             }
             return 1;
@@ -781,6 +802,10 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
     }
 
     if (e->type == SDL_MOUSEBUTTONUP && e->button.button == SDL_BUTTON_LEFT) {
+        if (ui->tile_edit.open) {
+            tile_modal_stroke_end(ui);
+            return 1;
+        }
         if (ui->sel_drag && ui_work_allows_bg(ui) && !ui->play.active) {
             int shift_up = (SDL_GetModState() & KMOD_SHIFT) != 0;
             if (!ui->sel_drag_moved && shift_up) {

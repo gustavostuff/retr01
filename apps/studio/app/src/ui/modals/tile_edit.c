@@ -15,6 +15,110 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define UI_TILE_EDIT_UNDO_MAX 32
+
+static void tile_edit_stroke_begin(UiState *ui) {
+    if (!ui || !ui->tile_edit.open || ui->tile_edit.stroke_open) {
+        return;
+    }
+    memcpy(ui->tile_edit.stroke_before, ui->tile_edit.chr, R01_TILE_BYTES);
+    ui->tile_edit.stroke_open = 1;
+    ui->tile_edit.stroke_dirty = 0;
+}
+
+void tile_modal_stroke_end(UiState *ui) {
+    UiTileEdit *te;
+    int i;
+    if (!ui || !ui->tile_edit.open || !ui->tile_edit.stroke_open) {
+        return;
+    }
+    te = &ui->tile_edit;
+    te->stroke_open = 0;
+    if (!te->stroke_dirty || memcmp(te->stroke_before, te->chr, R01_TILE_BYTES) == 0) {
+        te->stroke_dirty = 0;
+        return;
+    }
+    if (te->undo_cursor < te->undo_count) {
+        te->undo_count = te->undo_cursor;
+    }
+    if (te->undo_count >= UI_TILE_EDIT_UNDO_MAX) {
+        for (i = 1; i < UI_TILE_EDIT_UNDO_MAX; i++) {
+            memcpy(te->undo_before[i - 1], te->undo_before[i], R01_TILE_BYTES);
+            memcpy(te->undo_after[i - 1], te->undo_after[i], R01_TILE_BYTES);
+        }
+        te->undo_count = UI_TILE_EDIT_UNDO_MAX - 1;
+        te->undo_cursor = te->undo_count;
+    }
+    memcpy(te->undo_before[te->undo_count], te->stroke_before, R01_TILE_BYTES);
+    memcpy(te->undo_after[te->undo_count], te->chr, R01_TILE_BYTES);
+    te->undo_count++;
+    te->undo_cursor = te->undo_count;
+    te->stroke_dirty = 0;
+}
+
+int tile_edit_undo(UiState *ui) {
+    UiTileEdit *te;
+    if (!ui || !ui->tile_edit.open) {
+        return 0;
+    }
+    tile_modal_stroke_end(ui);
+    te = &ui->tile_edit;
+    if (te->undo_cursor < 1) {
+        return 0;
+    }
+    te->undo_cursor--;
+    memcpy(te->chr, te->undo_before[te->undo_cursor], R01_TILE_BYTES);
+    ui_toast(ui, "undo paint tile", 0);
+    return 1;
+}
+
+int tile_edit_redo(UiState *ui) {
+    UiTileEdit *te;
+    if (!ui || !ui->tile_edit.open) {
+        return 0;
+    }
+    tile_modal_stroke_end(ui);
+    te = &ui->tile_edit;
+    if (te->undo_cursor >= te->undo_count) {
+        return 0;
+    }
+    memcpy(te->chr, te->undo_after[te->undo_cursor], R01_TILE_BYTES);
+    te->undo_cursor++;
+    ui_toast(ui, "redo paint tile", 0);
+    return 1;
+}
+
+static void tile_edit_paint_pixel(UiState *ui, int sx, int sy) {
+    uint8_t old;
+    if (!ui || sx < 0 || sy < 0 || sx >= 8 || sy >= 8) {
+        return;
+    }
+    tile_edit_stroke_begin(ui);
+    old = r01_tile_pixel_color(ui->tile_edit.chr, sx, sy) & 3u;
+    if (old == ((uint8_t)ui->tile_edit.color & 3u)) {
+        return;
+    }
+    r01_tile_set_pixel(ui->tile_edit.chr, sx, sy, (uint8_t)ui->tile_edit.color);
+    ui->tile_edit.stroke_dirty = 1;
+}
+
+static void tile_edit_flood(UiState *ui, int sx, int sy) {
+    uint8_t before[R01_TILE_BYTES];
+    if (!ui || sx < 0 || sy < 0 || sx >= 8 || sy >= 8) {
+        return;
+    }
+    tile_modal_stroke_end(ui);
+    memcpy(before, ui->tile_edit.chr, R01_TILE_BYTES);
+    r01_tile_flood_fill(ui->tile_edit.chr, sx, sy, (uint8_t)ui->tile_edit.color);
+    if (memcmp(before, ui->tile_edit.chr, R01_TILE_BYTES) == 0) {
+        return;
+    }
+    memcpy(ui->tile_edit.stroke_before, before, R01_TILE_BYTES);
+    ui->tile_edit.stroke_open = 1;
+    ui->tile_edit.stroke_dirty = 1;
+    tile_modal_stroke_end(ui);
+}
+
 void tile_edit_open(UiState *ui, int tx, int ty) {
     R01World *w = r01_project_active_world(ui->project);
     R01Screen *s = ui_edit_map_screen(ui);
@@ -146,12 +250,14 @@ static void tile_edit_save(UiState *ui) {
     int old_tile_count = 0;
     int painted = 0;
     uint8_t old_tile = 0, old_attr = 0, new_attr = 0;
+    uint8_t old_chr[R01_TILE_BYTES];
     uint8_t canonical[R01_TILE_BYTES];
     if (!w) {
         return;
     }
     edit_all = ui->tile_edit.edit_all;
     was_new = ui->tile_edit.is_new || ui->tile_edit.tile_id < 0;
+    memset(old_chr, 0, sizeof(old_chr));
     if (was_new) {
         old_tile_count = w->bg_banks[ui->tile_edit.bank].tile_count;
         id = r01_chr_alloc_tile(w, ui->tile_edit.bank);
@@ -163,6 +269,9 @@ static void tile_edit_save(UiState *ui) {
         ui->tile_edit.is_new = 0;
     } else {
         id = ui->tile_edit.tile_id;
+        if (id >= 0 && id < w->bg_banks[ui->tile_edit.bank].tile_count) {
+            memcpy(old_chr, w->bg_banks[ui->tile_edit.bank].chr + (size_t)id * R01_TILE_BYTES, R01_TILE_BYTES);
+        }
     }
     r01_tile_orient(ui->tile_edit.chr, ui->tile_edit.flip_h, ui->tile_edit.flip_v, canonical);
     r01_chr_write_tile(w, ui->tile_edit.bank, id, canonical);
@@ -197,6 +306,8 @@ static void tile_edit_save(UiState *ui) {
     if (was_new) {
         ui_undo_push_tile_create(ui, ui->tile_edit.bank, id, old_tile_count, painted, ui->tile_edit.paint_tx,
                                  ui->tile_edit.paint_ty, old_tile, old_attr, (uint8_t)id, new_attr);
+    } else {
+        ui_undo_push_bg_chr_edit(ui, ui->tile_edit.bank, id, old_chr, canonical);
     }
 
     ui->brush.armed = 1;
@@ -266,9 +377,11 @@ int tile_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
     tile_modal_layout(ui, &lo);
 
     if (!down) {
+        tile_modal_stroke_end(ui);
         return 1;
     }
     if (ui_modal_overlay_hit(lx, ly, lo.mx, lo.my, lo.mw, lo.mh)) {
+        tile_modal_stroke_end(ui);
         ui->tile_edit.open = 0;
         return 1;
     }
@@ -289,17 +402,19 @@ int tile_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
             return 1;
         }
         if (ui->keys[SDL_SCANCODE_F]) {
-            r01_tile_flood_fill(ui->tile_edit.chr, sx, sy, (uint8_t)ui->tile_edit.color);
+            tile_edit_flood(ui, sx, sy);
         } else {
-            r01_tile_set_pixel(ui->tile_edit.chr, sx, sy, (uint8_t)ui->tile_edit.color);
+            tile_edit_paint_pixel(ui, sx, sy);
         }
         return 1;
     }
     if (ui_modal_save_hit(lx, ly, lo.left_btn_x, lo.btn_y, lo.save_w)) {
+        tile_modal_stroke_end(ui);
         tile_edit_save(ui);
         return 1;
     }
     if (ui_modal_cancel_hit(lx, ly, lo.left_btn_x, lo.btn_y, lo.save_w, lo.cancel_w)) {
+        tile_modal_stroke_end(ui);
         ui->tile_edit.open = 0;
         return 1;
     }

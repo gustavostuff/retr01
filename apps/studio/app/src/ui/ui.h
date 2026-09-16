@@ -229,6 +229,14 @@ typedef struct UiTileEdit {
     uint8_t match_attr_hw; /* bank/pal/flips at open (R01_ATTR_HW_MASK) */
     uint8_t chr[R01_TILE_BYTES];
     int paint_tx, paint_ty; /* screen tile that opened the editor (-1 if none) */
+    /* Modal-local pixel undo (draft CHR only; discarded on close). */
+    uint8_t undo_before[32][R01_TILE_BYTES];
+    uint8_t undo_after[32][R01_TILE_BYTES];
+    int undo_count;
+    int undo_cursor;
+    int stroke_open;
+    int stroke_dirty;
+    uint8_t stroke_before[R01_TILE_BYTES];
 } UiTileEdit;
 
 typedef struct UiPalEdit {

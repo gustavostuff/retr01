@@ -354,15 +354,17 @@ int instance_hit_on_screen(const UiState *ui, int lx, int ly, int *out_inst);
 void tile_edit_open(UiState *ui, int tx, int ty);
 void tile_edit_open_all(UiState *ui, int tx, int ty);
 void tile_edit_open_new(UiState *ui, int tx, int ty);
+void tile_edit_open_bank(UiState *ui, int bank, int tile_id, int is_new);
 int tile_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button);
-
+void tile_modal_stroke_end(UiState *ui);
+int tile_edit_undo(UiState *ui);
+int tile_edit_redo(UiState *ui);
 void draw_tile_modal(UiState *ui, SDL_Renderer *r);
 
 /* ui/modals/sprite_edit.c */
 void sprite_edit_open_new(UiState *ui);
 void sprite_edit_open(UiState *ui, int catalog_idx);
 void sprite_edit_open_slot(UiState *ui, int bank, int tile_id);
-void tile_edit_open_bank(UiState *ui, int bank, int tile_id, int is_new);
 int sprite_modal_handle(UiState *ui, int lx, int ly, int down);
 void draw_sprite_modal(UiState *ui, SDL_Renderer *r);
 

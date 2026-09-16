@@ -41,7 +41,7 @@ Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Pre
 | **App tabs** | **Graphics** / **Audio** / **Code** (Code screen TBD). Graphics and Audio keep equal half-sidebar widths; Code is sized to its label and sits to the right |
 | **Right-click tile** (BG / Both) | Move to tile bank, add tile, edit tile, set palette/anim/solid. **Shift** turns **Edit tile** into **Edit tile (all)** |
 | **Right-click instance** (Sprite / Both) | Mirror H / Mirror V / Edit entity type / Remove instance |
-| **Edit tile** modal | **288x160**, 4x4 palette picker, **128x128** pixel canvas. Left-click paints; **right-click** picks the pixel color. **F+click** flood-fills CHR color. **Ctrl+V** pastes clipboard PNG (transparent -> index 0, opaque matched by brightness to the selected palette). **(all)** save writes CHR and applies bank/pal/H/V to every world cell (BG1+BG0) that matched the original tile id + attrs |
+| **Edit tile** modal | **288x160**, 4x4 palette picker, **128x128** pixel canvas. Left-click paints; **right-click** picks the pixel color. **F+click** flood-fills CHR color. **Ctrl+Z** / **Ctrl+Y** (or **Ctrl+Shift+Z**) undo/redo pixel strokes while the modal is open. **Ctrl+V** pastes clipboard PNG (transparent -> index 0, opaque matched by brightness to the selected palette). **(all)** save writes CHR and applies bank/pal/H/V to every world cell (BG1+BG0) that matched the original tile id + attrs |
 | **Edit sprite** modal | Same canvas as tile (**F+click** flood-fill). **Ctrl+V** pastes clipboard PNG onto the SPR canvas (same rules, SPR palette) |
 | **Set Solid** | Toggles `R01_ATTR_SOLID` (`0x40`) on matching tiles in active world (bank+pal+flips, not tile ID) |
 | **Palette strip** | Click BG/SPR strip -> **Global palettes** modal. Row **0-7** sets `default_pal_row` for the active world |
@@ -224,7 +224,7 @@ ctest --test-dir build --output-on-failure
 | Move player | **WASD** / arrows |
 | Warp test | **X** -> (0,0), **Y** -> (1,0) |
 | Save / load | **Ctrl+S** / **Ctrl+O** current project path |
-| Undo / redo | **Ctrl+Z** / **Ctrl+Y** (or **Ctrl+Shift+Z**). Covers map paint strokes, flood fill, tile selection paste, entity compose sprite paint, add tile/sprite/entity/metasprite/metatile, place/remove instance, create/remove/paste screen |
+| Undo / redo | **Ctrl+Z** / **Ctrl+Y** (or **Ctrl+Shift+Z**). Central stack in `ui/undo/` (`undo.c` + `undo_cmds.c`). Map paint / flood / tile paste, **Edit tile** Save (`ui_undo_push_bg_chr_edit` restores bank CHR then refreshes all screen previews), entity compose SPR paint, catalog add/remove, screen create/remove/paste |
 | Export cart | **Ctrl+E** beside project (or `output/<name>`) (+ `C/`, `ASM/`, `data/`) |
 | Toggle canvas | **Ctrl+Shift+R** -> **640x360** / **1280x720** |
 | Fullscreen | **Ctrl+F** desktop fullscreen toggle |

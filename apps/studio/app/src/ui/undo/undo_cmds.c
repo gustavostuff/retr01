@@ -804,7 +804,24 @@ void ui_undo_push_screen_paste(UiState *ui, int plane, int screen_idx, const R01
     (void)ui_undo_push(&ui->undo, &screen_paste_vt, d, "paste screen");
 }
 
-/* ---- tile create ---- */
+/* ---- tile create / BG CHR edit ---- */
+
+static void undo_refresh_world_screens(R01World *w) {
+    int si;
+    if (!w) {
+        return;
+    }
+    for (si = 0; si < w->screen_count; si++) {
+        if (w->screens[si].present) {
+            r01_screen_fill_pixels_from_bank(w, &w->screens[si]);
+        }
+    }
+    for (si = 0; si < w->bg0_screen_count && si < R01_BG0_SCREENS_MAX; si++) {
+        if (w->bg0_screens[si].present) {
+            r01_screen_fill_pixels_from_bank(w, &w->bg0_screens[si]);
+        }
+    }
+}
 
 typedef struct UiUndoTileCreate {
     int world_idx;
@@ -841,6 +858,7 @@ static void tile_create_undo(UiState *ui, void *data) {
         d->old_tile_count <= R01_TILES_PER_BANK) {
         w->bg_banks[d->bank].tile_count = d->old_tile_count;
     }
+    undo_refresh_world_screens(w);
 }
 
 static void tile_create_redo(UiState *ui, void *data) {
@@ -858,6 +876,7 @@ static void tile_create_redo(UiState *ui, void *data) {
             r01_screen_paint_tile(w, s, d->paint_tx, d->paint_ty, d->new_tile, d->new_attr);
         }
     }
+    undo_refresh_world_screens(w);
 }
 
 static const UiUndoVTable tile_create_vt = {tile_create_undo, tile_create_redo, free_ptr};
@@ -898,6 +917,61 @@ void ui_undo_push_tile_create(UiState *ui, int bank, int tile_id, int old_tile_c
         memcpy(d->chr, w->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES, R01_TILE_BYTES);
     }
     (void)ui_undo_push(&ui->undo, &tile_create_vt, d, "add tile");
+}
+
+/* BG CHR edit: snapshot old/new tile bytes; refresh every screen preview from banks. */
+typedef struct UiUndoBgChrEdit {
+    int world_idx;
+    int bank;
+    int tile_id;
+    uint8_t old_chr[R01_TILE_BYTES];
+    uint8_t new_chr[R01_TILE_BYTES];
+} UiUndoBgChrEdit;
+
+static void bg_chr_edit_apply(UiState *ui, UiUndoBgChrEdit *d, int use_new) {
+    R01World *w;
+    if (!ui || !d || !ui->project) {
+        return;
+    }
+    if (d->world_idx < 0 || d->world_idx >= R01_MAX_WORLDS) {
+        return;
+    }
+    w = &ui->project->worlds[d->world_idx];
+    (void)r01_chr_write_tile(w, d->bank, d->tile_id, use_new ? d->new_chr : d->old_chr);
+    undo_refresh_world_screens(w);
+}
+
+static void bg_chr_edit_undo(UiState *ui, void *data) {
+    bg_chr_edit_apply(ui, (UiUndoBgChrEdit *)data, 0);
+}
+
+static void bg_chr_edit_redo(UiState *ui, void *data) {
+    bg_chr_edit_apply(ui, (UiUndoBgChrEdit *)data, 1);
+}
+
+static const UiUndoVTable bg_chr_edit_vt = {bg_chr_edit_undo, bg_chr_edit_redo, free_ptr};
+
+void ui_undo_push_bg_chr_edit(UiState *ui, int bank, int tile_id, const uint8_t old_chr[R01_TILE_BYTES],
+                              const uint8_t new_chr[R01_TILE_BYTES]) {
+    UiUndoBgChrEdit *d;
+    if (!ui || !ui->project || !old_chr || !new_chr) {
+        return;
+    }
+    if (memcmp(old_chr, new_chr, R01_TILE_BYTES) == 0) {
+        return;
+    }
+    d = (UiUndoBgChrEdit *)calloc(1, sizeof(*d));
+    if (!d) {
+        return;
+    }
+    d->world_idx = ui->project->active_world;
+    d->bank = bank;
+    d->tile_id = tile_id;
+    memcpy(d->old_chr, old_chr, R01_TILE_BYTES);
+    memcpy(d->new_chr, new_chr, R01_TILE_BYTES);
+    if (ui_undo_push(&ui->undo, &bg_chr_edit_vt, d, "edit tile") != 0) {
+        free(d);
+    }
 }
 
 /* ---- sprite CHR paint stroke (entity / compose) ---- */
