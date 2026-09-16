@@ -11,6 +11,15 @@
 #define R01_FADE_SPEED 8
 #define R01_FADE_MAX 255
 
+#define R01_AIM_X_NONE 0
+#define R01_AIM_X_RIGHT 1
+#define R01_AIM_X_LEFT (-1)
+#define R01_AIM_Y_NONE 0
+#define R01_AIM_Y_DOWN 1
+#define R01_AIM_Y_UP (-1)
+#define R01_PROJ_SPEED_DEFAULT 3
+#define R01_PROJ_SPEED_FAST 4
+
 #define R01_CAM_AXIS_BOTH 0
 #define R01_CAM_AXIS_H 1
 #define R01_CAM_AXIS_V 2

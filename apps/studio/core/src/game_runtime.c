@@ -9,7 +9,6 @@
 #include <string.h>
 
 #define R01_EVENT_SLOTS 4
-#define R01_PROJ_SPEED_DEFAULT 3
 #define R01_PROJ_FIXED_SHIFT 8
 
 static struct {

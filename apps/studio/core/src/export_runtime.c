@@ -150,7 +150,6 @@ static void play_camera_snap(int *cam_x, int *cam_y, int anchor_x, int anchor_y,
 #define R01_MAX_PROJECTILES 8
 #define R01_PROJECTILE_TTL 180
 #define R01_FADE_SPEED 8
-#define R01_PROJ_SPEED_DEFAULT 3
 #define R01_PROJ_FIXED_SHIFT 8
 #define R01_PLAY_PLAYER_W 8
 #define R01_PLAY_PLAYER_H 8

@@ -1,7 +1,117 @@
 #include "r01_custom_logic_scan.h"
 
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+
+/* Parse 0/1 or R01_BG0_*_ON/OFF after optional whitespace. Returns chars consumed, or 0. */
+static int parse_bg0_flag_token(const char *p, int *out) {
+    int n = 0;
+    while (*p && isspace((unsigned char)*p)) {
+        p++;
+        n++;
+    }
+    if (sscanf(p, "%d", out) == 1) {
+        int digits = 0;
+        const char *q = p;
+        if (*q == '+' || *q == '-') {
+            q++;
+        }
+        while (*q && isdigit((unsigned char)*q)) {
+            q++;
+            digits++;
+        }
+        if (digits < 1) {
+            return 0;
+        }
+        return n + (int)(q - p);
+    }
+    if (strncmp(p, "R01_BG0_WRAP_ON", 15) == 0) {
+        *out = 1;
+        return n + 15;
+    }
+    if (strncmp(p, "R01_BG0_WRAP_OFF", 16) == 0) {
+        *out = 0;
+        return n + 16;
+    }
+    if (strncmp(p, "R01_BG0_CLIP_ON", 15) == 0) {
+        *out = 1;
+        return n + 15;
+    }
+    if (strncmp(p, "R01_BG0_CLIP_OFF", 16) == 0) {
+        *out = 0;
+        return n + 16;
+    }
+    return 0;
+}
+
+static int parse_bg0_wrap_args(const char *args, int *out_wx, int *out_wy) {
+    const char *p = args;
+    int n0, n1;
+    if (!p || p[0] != '(') {
+        return -1;
+    }
+    p++;
+    while (*p && isspace((unsigned char)*p)) {
+        p++;
+    }
+    if (strncmp(p, "ctx", 3) != 0) {
+        return -1;
+    }
+    p += 3;
+    while (*p && isspace((unsigned char)*p)) {
+        p++;
+    }
+    if (*p != ',') {
+        return -1;
+    }
+    p++;
+    n0 = parse_bg0_flag_token(p, out_wx);
+    if (n0 <= 0) {
+        return -1;
+    }
+    p += n0;
+    while (*p && isspace((unsigned char)*p)) {
+        p++;
+    }
+    if (*p != ',') {
+        return -1;
+    }
+    p++;
+    n1 = parse_bg0_flag_token(p, out_wy);
+    if (n1 <= 0) {
+        return -1;
+    }
+    return 0;
+}
+
+static int parse_bg0_clip_args(const char *args, int *out_enable) {
+    const char *p = args;
+    int n;
+    if (!p || p[0] != '(') {
+        return -1;
+    }
+    p++;
+    while (*p && isspace((unsigned char)*p)) {
+        p++;
+    }
+    if (strncmp(p, "ctx", 3) != 0) {
+        return -1;
+    }
+    p += 3;
+    while (*p && isspace((unsigned char)*p)) {
+        p++;
+    }
+    if (*p != ',') {
+        return -1;
+    }
+    p++;
+    n = parse_bg0_flag_token(p, out_enable);
+    if (n <= 0) {
+        return -1;
+    }
+    return 0;
+}
 
 int r01_custom_logic_scan_deadzone(const char *path, int *out_dx, int *out_dy) {
     FILE *f;
@@ -48,19 +158,17 @@ int r01_custom_logic_scan_bg0_wrap(const char *path, int *out_wrap_x, int *out_w
     while (fgets(line, sizeof(line), f)) {
         const char *p = strstr(line, "r01_bg0_set_wrap");
         const char *args;
+        int wx = 0;
+        int wy = 0;
         if (!p) {
             continue;
         }
         args = strchr(p, '(');
-        if (args) {
-            int wx = 0;
-            int wy = 0;
-            if (sscanf(args, "(ctx, %d, %d)", &wx, &wy) == 2 || sscanf(args, "(ctx,%d,%d)", &wx, &wy) == 2) {
-                *out_wrap_x = wx;
-                *out_wrap_y = wy;
-                fclose(f);
-                return 0;
-            }
+        if (args && parse_bg0_wrap_args(args, &wx, &wy) == 0) {
+            *out_wrap_x = wx;
+            *out_wrap_y = wy;
+            fclose(f);
+            return 0;
         }
     }
     fclose(f);
@@ -80,17 +188,15 @@ int r01_custom_logic_scan_bg0_clip_bg1(const char *path, int *out_enable) {
     while (fgets(line, sizeof(line), f)) {
         const char *p = strstr(line, "r01_bg0_set_clip_to_bg1");
         const char *args;
+        int en = 0;
         if (!p) {
             continue;
         }
         args = strchr(p, '(');
-        if (args) {
-            int en = 0;
-            if (sscanf(args, "(ctx, %d)", &en) == 1 || sscanf(args, "(ctx,%d)", &en) == 1) {
-                *out_enable = en;
-                fclose(f);
-                return 0;
-            }
+        if (args && parse_bg0_clip_args(args, &en) == 0) {
+            *out_enable = en;
+            fclose(f);
+            return 0;
         }
     }
     fclose(f);

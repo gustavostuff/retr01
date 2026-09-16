@@ -25,7 +25,7 @@ TEST_MAIN() {
     ctx.player_y = 64;
 
     {
-        int slot = r01_projectile_fire(&ctx, 1, 0, 4);
+        int slot = r01_projectile_fire(&ctx, R01_AIM_X_RIGHT, R01_AIM_Y_NONE, R01_PROJ_SPEED_FAST);
         EXPECT(slot == 0, "projectile slot");
         EXPECT(r01_projectile_count_active(&ctx) == 1, "one active projectile");
         r01_projectile_tick(&ctx, w);
