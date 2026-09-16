@@ -719,14 +719,12 @@ void metasprite_modal_layout(const UiState *ui, MetaspriteModalLayout *lo) {
 }
 
 void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
+    /* Single panel: 3 cols (left 80 | gap 8 | right 160). Row heights follow shared
+     * vertical boundaries of the left tools column and the right canvas column. */
     enum {
         E_NAME = 1,
         E_STATE_NAME,
-        E_BODY,
         E_FOOTER,
-        E_LEFT,
-        E_SPACER,
-        E_RIGHT,
         E_PAL,
         E_STATE,
         E_FRAME,
@@ -737,37 +735,40 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
         E_BRUSH,
         E_FRAME_ID,
         E_CANVAS,
-        E_GUIDES
+        E_GUIDES,
+        E_SPACER
     };
-    static const UiPanelCell root_cells[] = {
-        {E_NAME, 0, 0, 1, 1},
-        {E_STATE_NAME, 0, 2, 1, 1},
-        {E_BODY, 0, 4, 1, 1},
-        {E_FOOTER, 0, 6, 1, 1},
+    /* Body-local row map (after header rows 0..3):
+     *  0:16  1:8  2:40  3:8  4:16  5:16  6:8  7:16  8:8  9:16 10:8
+     * 11:16 12:8 13:8 14:8 15:8 16:8  => 216px
+     * Global body starts at row 4. */
+    static const UiPanelCell cells[] = {
+        {E_NAME, 0, 0, 3, 1},
+        {E_STATE_NAME, 0, 2, 3, 1},
+        {E_PAL, 0, 4, 1, 3},       /* 16+8+40 = 64 */
+        {E_STATE, 0, 8, 1, 1},     /* global 4+4 */
+        {E_FRAME, 0, 9, 1, 1},
+        {E_ADD, 0, 11, 1, 1},
+        {E_REM, 0, 13, 1, 1},
+        {E_HIGHLIGHT, 0, 15, 1, 1},
+        {E_BRUSH_LAB, 0, 17, 1, 2}, /* 8+8 = 16 */
+        {E_BRUSH, 0, 19, 1, 2},     /* 8+8 = 16 */
+        {E_SPACER, 1, 4, 1, 17},    /* full body height */
+        {E_FRAME_ID, 2, 4, 1, 1},
+        {E_CANVAS, 2, 6, 1, 11},    /* from y24 through y184 */
+        {E_GUIDES, 2, 18, 1, 2},    /* y192-208 */
+        {E_FOOTER, 0, 22, 3, 1},
     };
-    static const UiPanelCell body_cells[] = {
-        {E_LEFT, 0, 0, 1, 1},
-        {E_SPACER, 1, 0, 1, 1},
-        {E_RIGHT, 2, 0, 1, 1},
+    static const int row_hs[] = {
+        /* 0-3 header */
+        UI_BTN_H, UI_UNIT, UI_BTN_H, UI_UNIT,
+        /* 4-20 body (17 rows) */
+        16, 8, 40, 8, 16, 16, 8, 16, 8, 16, 8, 16, 8, 8, 8, 8, 8,
+        /* 21 gap, 22 footer */
+        UI_UNIT, UI_BTN_H,
     };
-    static const UiPanelCell left_cells[] = {
-        {E_PAL, 0, 0, 1, 1},
-        {E_STATE, 0, 2, 1, 1},
-        {E_FRAME, 0, 3, 1, 1},
-        {E_ADD, 0, 5, 1, 1},
-        {E_REM, 0, 7, 1, 1},
-        {E_HIGHLIGHT, 0, 9, 1, 1},
-        {E_BRUSH_LAB, 0, 11, 1, 1},
-        {E_BRUSH, 0, 12, 1, 1},
-    };
-    static const UiPanelCell right_cells[] = {
-        {E_FRAME_ID, 0, 0, 1, 1},
-        {E_CANVAS, 0, 2, 1, 1},
-        {E_GUIDES, 0, 4, 1, 1},
-    };
-    UiPanel root, body, left, right;
+    UiPanel panel;
     int pad = UI_UNIT;
-    int body_h;
     int mx, my, mw, mh;
     int content_x, content_y;
     int cx, cy, cw, ch;
@@ -775,128 +776,79 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
     int dots_w;
     int spr_btn_w;
     int left_right;
+    int i;
 
     (void)ui;
 
-    /* Left tools: pal 64, gap, state, frame (0 gap), then gapped add/rem/highlight/brush. */
-    ui_panel_init(&left, 1, 13, UI_PANEL_CELL_MIN, UI_PANEL_CELL_MIN);
-    ui_panel_set_cells(&left, left_cells, (int)(sizeof(left_cells) / sizeof(left_cells[0])));
-    ui_panel_set_col_w(&left, 0, UI_ENTITY_LEFT_W);
-    ui_panel_set_row_h(&left, 0, UI_PAL_GRID_SIZE);
-    ui_panel_set_row_h(&left, 1, pad);
-    ui_panel_set_row_h(&left, 2, UI_BTN_H);
-    ui_panel_set_row_h(&left, 3, UI_BTN_H);
-    ui_panel_set_row_h(&left, 4, pad);
-    ui_panel_set_row_h(&left, 5, UI_BTN_H);
-    ui_panel_set_row_h(&left, 6, pad);
-    ui_panel_set_row_h(&left, 7, UI_BTN_H);
-    ui_panel_set_row_h(&left, 8, pad);
-    ui_panel_set_row_h(&left, 9, UI_BTN_H);
-    ui_panel_set_row_h(&left, 10, pad);
-    ui_panel_set_row_h(&left, 11, UI_BTN_H);
-    ui_panel_set_row_h(&left, 12, UI_BTN_H);
-    ui_panel_layout(&left, 0, 0);
+    ui_panel_init(&panel, 3, 23, UI_PANEL_CELL_MIN, UI_PANEL_CELL_MIN);
+    ui_panel_set_cells(&panel, cells, (int)(sizeof(cells) / sizeof(cells[0])));
+    ui_panel_set_col_w(&panel, 0, UI_ENTITY_LEFT_W);
+    ui_panel_set_col_w(&panel, 1, pad);
+    ui_panel_set_col_w(&panel, 2, UI_ENTITY_COMPOSE);
+    for (i = 0; i < (int)(sizeof(row_hs) / sizeof(row_hs[0])); i++) {
+        ui_panel_set_row_h(&panel, i, row_hs[i]);
+    }
+    ui_panel_layout(&panel, 0, 0);
 
-    ui_panel_init(&right, 1, 5, UI_PANEL_CELL_MIN, UI_PANEL_CELL_MIN);
-    ui_panel_set_cells(&right, right_cells, (int)(sizeof(right_cells) / sizeof(right_cells[0])));
-    ui_panel_set_col_w(&right, 0, UI_ENTITY_COMPOSE);
-    ui_panel_set_row_h(&right, 0, UI_BTN_H);
-    ui_panel_set_row_h(&right, 1, pad);
-    ui_panel_set_row_h(&right, 2, UI_ENTITY_COMPOSE);
-    ui_panel_set_row_h(&right, 3, pad);
-    ui_panel_set_row_h(&right, 4, UI_BTN_H);
-    ui_panel_layout(&right, 0, 0);
-
-    body_h = left.total_h > right.total_h ? left.total_h : right.total_h;
-
-    ui_panel_init(&body, 3, 1, UI_PANEL_CELL_MIN, UI_PANEL_CELL_MIN);
-    ui_panel_set_cells(&body, body_cells, (int)(sizeof(body_cells) / sizeof(body_cells[0])));
-    ui_panel_set_col_w(&body, 0, UI_ENTITY_LEFT_W);
-    ui_panel_set_col_w(&body, 1, pad);
-    ui_panel_set_col_w(&body, 2, UI_ENTITY_COMPOSE);
-    ui_panel_set_row_h(&body, 0, body_h);
-    ui_panel_layout(&body, 0, 0);
-
-    /* Root: name, gap, state_name, gap, body, gap, footer. */
-    ui_panel_init(&root, 1, 7, UI_PANEL_CELL_MIN, UI_PANEL_CELL_MIN);
-    ui_panel_set_cells(&root, root_cells, (int)(sizeof(root_cells) / sizeof(root_cells[0])));
-    ui_panel_set_col_w(&root, 0, body.total_w);
-    ui_panel_set_row_h(&root, 0, UI_BTN_H);
-    ui_panel_set_row_h(&root, 1, pad);
-    ui_panel_set_row_h(&root, 2, UI_BTN_H);
-    ui_panel_set_row_h(&root, 3, pad);
-    ui_panel_set_row_h(&root, 4, body_h);
-    ui_panel_set_row_h(&root, 5, pad);
-    ui_panel_set_row_h(&root, 6, UI_BTN_H);
-    ui_panel_layout(&root, 0, 0);
-
-    mw = pad + root.total_w + pad;
-    mh = UI_BTN_H + pad + root.total_h + pad;
+    mw = pad + panel.total_w + pad;
+    mh = UI_BTN_H + pad + panel.total_h + pad;
     mx = (ui_logic_w(ui) - mw) / 2;
     my = (ui_logic_h(ui) - mh) / 2;
     content_x = mx + pad;
     content_y = my + UI_BTN_H + pad;
-
-    ui_panel_layout(&root, content_x, content_y);
+    ui_panel_layout(&panel, content_x, content_y);
 
     lo->mx = mx;
     lo->my = my;
     lo->mw = mw;
     lo->mh = mh;
 
-    ui_panel_cell(&root, E_BODY, &cx, &cy, &cw, &ch);
-    ui_panel_layout(&body, cx, cy);
-    ui_panel_cell(&body, E_LEFT, &cx, &cy, &cw, &ch);
-    ui_panel_layout(&left, cx, cy);
-    ui_panel_cell(&body, E_RIGHT, &cx, &cy, &cw, &ch);
-    ui_panel_layout(&right, cx, cy);
-
-    lo->left_x = left.x;
-    lo->left_w = left.total_w;
-    lo->right_x = right.x;
-    lo->right_w = right.total_w;
+    lo->left_x = content_x;
+    lo->left_w = UI_ENTITY_LEFT_W;
+    lo->right_x = content_x + UI_ENTITY_LEFT_W + pad;
+    lo->right_w = UI_ENTITY_COMPOSE;
     left_right = lo->left_x + lo->left_w;
 
     name_lab = label_width("State name");
     if (name_lab < label_width("Name")) {
         name_lab = label_width("Name");
     }
-    name_lab = ((name_lab + pad - 1) / pad) * pad;
+    name_lab = ((name_lab + pad - 1) / pad) * pad + pad;
 
-    ui_panel_cell(&root, E_NAME, &cx, &cy, &cw, &ch);
+    ui_panel_cell(&panel, E_NAME, &cx, &cy, &cw, &ch);
     lo->name_y = cy;
     lo->name_x = content_x + name_lab + pad;
-    lo->name_w = (content_x + root.total_w) - lo->name_x;
+    lo->name_w = (content_x + panel.total_w) - lo->name_x;
     lo->name_w = (lo->name_w / pad) * pad;
     if (lo->name_w < UI_UNIT * 8) {
         lo->name_w = UI_UNIT * 8;
     }
 
-    ui_panel_cell(&root, E_STATE_NAME, &cx, &cy, &cw, &ch);
+    ui_panel_cell(&panel, E_STATE_NAME, &cx, &cy, &cw, &ch);
     lo->state_name_y = cy;
     lo->state_name_x = lo->name_x;
     lo->state_name_w = lo->name_w;
 
-    ui_panel_cell(&right, E_FRAME_ID, &cx, &cy, &cw, &ch);
+    ui_panel_cell(&panel, E_FRAME_ID, &cx, &cy, &cw, &ch);
     lo->frame_id_x = cx;
     lo->frame_id_y = cy;
     lo->frame_id_w = cw;
 
-    ui_panel_cell(&right, E_CANVAS, &cx, &cy, &cw, &ch);
+    ui_panel_cell(&panel, E_CANVAS, &cx, &cy, &cw, &ch);
     lo->right_grid_x = cx;
     lo->right_grid_y = cy;
 
-    ui_panel_cell(&left, E_PAL, &cx, &cy, &cw, &ch);
+    ui_panel_cell(&panel, E_PAL, &cx, &cy, &cw, &ch);
     lo->pal_y = cy;
     lo->pal_x = left_right - UI_PAL_GRID_SIZE;
 
     dots_w = UI_DOT_STRIP_N * UI_DOT_SIZE + (UI_DOT_STRIP_N > 0 ? (UI_DOT_STRIP_N - 1) * UI_DOT_GAP : 0);
-    ui_panel_cell(&left, E_STATE, &cx, &cy, &cw, &ch);
+    ui_panel_cell(&panel, E_STATE, &cx, &cy, &cw, &ch);
     lo->state_y = cy;
     lo->state_dots_x = left_right - dots_w;
     lo->state_dots_y = cy + (UI_BTN_H - UI_DOT_SIZE) / 2;
 
-    ui_panel_cell(&left, E_FRAME, &cx, &cy, &cw, &ch);
+    ui_panel_cell(&panel, E_FRAME, &cx, &cy, &cw, &ch);
     lo->frame_y = cy;
     lo->frame_dots_x = left_right - dots_w;
     lo->frame_dots_y = cy + (UI_BTN_H - UI_DOT_SIZE) / 2;
@@ -910,17 +862,17 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
         spr_btn_w = lo->left_w;
     }
 
-    ui_panel_cell(&left, E_ADD, &cx, &cy, &cw, &ch);
+    ui_panel_cell(&panel, E_ADD, &cx, &cy, &cw, &ch);
     lo->add_spr_y = cy;
     lo->add_spr_w = spr_btn_w;
     lo->add_spr_x = left_right - spr_btn_w;
 
-    ui_panel_cell(&left, E_REM, &cx, &cy, &cw, &ch);
+    ui_panel_cell(&panel, E_REM, &cx, &cy, &cw, &ch);
     lo->rem_spr_y = cy;
     lo->rem_spr_w = spr_btn_w;
     lo->rem_spr_x = left_right - spr_btn_w;
 
-    ui_panel_cell(&left, E_HIGHLIGHT, &cx, &cy, &cw, &ch);
+    ui_panel_cell(&panel, E_HIGHLIGHT, &cx, &cy, &cw, &ch);
     lo->highlight_y = cy;
     lo->highlight_w = UI_CHECKBOX + UI_MODE_GAP + label_width("Highlight");
     lo->highlight_w = ((lo->highlight_w + pad - 1) / pad) * pad;
@@ -929,32 +881,35 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
     }
     lo->highlight_x = left_right - lo->highlight_w;
 
-    ui_panel_cell(&left, E_BRUSH_LAB, &cx, &cy, &cw, &ch);
+    ui_panel_cell(&panel, E_BRUSH_LAB, &cx, &cy, &cw, &ch);
     lo->brush_lab_y = cy;
     lo->brush_lab_x = left_right - label_width("Brush");
 
-    ui_panel_cell(&left, E_BRUSH, &cx, &cy, &cw, &ch);
+    ui_panel_cell(&panel, E_BRUSH, &cx, &cy, &cw, &ch);
     lo->brush_y = cy;
     lo->brush_w = lo->left_w;
     lo->brush_x = left_right - lo->brush_w;
 
-    ui_panel_cell(&right, E_GUIDES, &cx, &cy, &cw, &ch);
+    ui_panel_cell(&panel, E_GUIDES, &cx, &cy, &cw, &ch);
     lo->guides_y = cy;
     lo->mode_y = cy;
     lo->guides_x = cx;
     {
-        static const char *const mode_labels[] = {"Select", "Edit"};
-        int origin_lab = ((label_width("Origin/hitbox") + pad - 1) / pad) * pad;
-        lo->mode_w = ui_multi_state_pref_width(mode_labels, 2);
+        static const char *const mode_labels[] = {"Sprite select", "Sprite paint", "Origin/hitbox"};
+        lo->mode_w = ui_multi_state_pref_width(mode_labels, 3);
         lo->mode_w = ((lo->mode_w + pad - 1) / pad) * pad;
-        lo->mode_x = cx + UI_CHECKBOX + UI_MODE_GAP + origin_lab + pad;
+        lo->mode_x = cx + cw - lo->mode_w;
     }
 
-    ui_panel_cell(&root, E_FOOTER, &cx, &cy, &cw, &ch);
+    ui_panel_cell(&panel, E_FOOTER, &cx, &cy, &cw, &ch);
     lo->btn_y = cy;
     lo->left_btn_x = content_x;
     lo->save_w = ((label_width("Save") + pad - 1) / pad) * pad;
     lo->cancel_w = ((label_width("Cancel") + pad - 1) / pad) * pad;
+
+#if UI_PANEL_DEBUG_GRID
+    lo->dbg_panel = panel;
+#endif
 }
 
 int metasprites_list_hit(const UiState *ui, int lx, int ly, int *out_idx) {

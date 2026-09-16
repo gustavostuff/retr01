@@ -81,6 +81,7 @@ void ui_update_cursor(const UiState *ui) {
                point_in_rect(lx, ly, lo.frame_dots_x, lo.frame_dots_y,
                              UI_DOT_STRIP_N * UI_DOT_SIZE + (UI_DOT_STRIP_N - 1) * UI_DOT_GAP, UI_DOT_SIZE) ||
                point_in_rect(lx, ly, lo.guides_x, lo.guides_y, lo.mode_x + lo.mode_w - lo.guides_x, UI_BTN_H) ||
+               point_in_rect(lx, ly, lo.mode_x, lo.mode_y, lo.mode_w, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.add_spr_x, lo.add_spr_y, lo.add_spr_w, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.rem_spr_x, lo.rem_spr_y, lo.rem_spr_w, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.highlight_x, lo.highlight_y, lo.highlight_w, UI_BTN_H) ||

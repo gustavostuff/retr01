@@ -19,10 +19,10 @@ static const R01InstRec entity_insts[1] = {
 static const int entity_inst_count = 1;
 static const int player_inst_x = 339;
 static const int player_inst_y = 68;
-static const int player_hit_x = 11;
-static const int player_hit_y = 13;
-static const int player_hit_w = 8;
-static const int player_hit_h = 8;
+static const int player_hit_x = 13;
+static const int player_hit_y = 15;
+static const int player_hit_w = 5;
+static const int player_hit_h = 10;
 const int player_state_frames[4] = {1, 1, 1, 1};
 
 typedef struct { const char *id; int sc, sr, tc, tr; } R01WarpEntRec;

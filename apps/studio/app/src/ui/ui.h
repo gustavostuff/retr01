@@ -149,7 +149,8 @@
 #define UI_BRUSH_SIZE_MAX 4
 #define UI_BRUSH_SIZE_COUNT 4
 #define UI_ENTITY_TOOL_SELECT 0
-#define UI_ENTITY_TOOL_EDIT 1
+#define UI_ENTITY_TOOL_PAINT 1
+#define UI_ENTITY_TOOL_GUIDES 2
 #define UI_ENTITY_LEFT_W (UI_PAL_GRID_SIZE + UI_UNIT * 2) /* palette + side pad */
 #define UI_ENTITY_MODAL_W (UI_UNIT + UI_ENTITY_LEFT_W + UI_UNIT + UI_ENTITY_COMPOSE + UI_UNIT)
 #define UI_METASPRITE_MODAL_H 304
@@ -308,15 +309,16 @@ typedef struct UiEntityEdit {
     int paint_color;
     int paint_pal;
     int brush_size;         /* UI_BRUSH_SIZE_MIN..MAX pixel stamp */
-    int show_guides;        /* origin cross + hitbox (display only) */
-    int tool;               /* UI_ENTITY_TOOL_SELECT or UI_ENTITY_TOOL_EDIT */
+    int tool; /* UI_ENTITY_TOOL_SELECT, PAINT, or GUIDES */
     int show_part_outlines; /* Space: light outline on every part */
     int zoom;               /* UI_ENTITY_ZOOM_MIN..MAX display scale multiplier */
     int view_x;             /* viewport scroll in zoomed display px */
     int view_y;
-    int dragging; /* 0 none, 1 part, 5 paint stroke, 6 viewport pan, 7 brush slider */
+    /* 0 none, 1 part, 2 origin, 3 hitbox move, 4 hitbox resize, 5 paint, 6 pan, 7 brush */
+    int dragging;
     int drag_off_x;
     int drag_off_y;
+    int drag_corner; /* 0 NW, 1 NE, 2 SE, 3 SW when resizing hitbox */
     int pan_moved; /* set once viewport pan exceeds click slop */
     int pan_btn;   /* SDL button that started pan */
 } UiEntityEdit;

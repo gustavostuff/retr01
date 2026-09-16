@@ -28,6 +28,45 @@ int ui_compose_clamp_origin(int v) {
     return v;
 }
 
+void ui_compose_clamp_hitbox(int *x, int *y, int *w, int *h) {
+    int hx, hy, hw, hh;
+    if (!x || !y || !w || !h) {
+        return;
+    }
+    hx = *x;
+    hy = *y;
+    hw = *w;
+    hh = *h;
+    if (hw < 1) {
+        hw = 1;
+    }
+    if (hh < 1) {
+        hh = 1;
+    }
+    if (hw > R01_ENTITY_COMPOSE_PX) {
+        hw = R01_ENTITY_COMPOSE_PX;
+    }
+    if (hh > R01_ENTITY_COMPOSE_PX) {
+        hh = R01_ENTITY_COMPOSE_PX;
+    }
+    if (hx < 0) {
+        hx = 0;
+    }
+    if (hy < 0) {
+        hy = 0;
+    }
+    if (hx > R01_ENTITY_COMPOSE_PX - hw) {
+        hx = R01_ENTITY_COMPOSE_PX - hw;
+    }
+    if (hy > R01_ENTITY_COMPOSE_PX - hh) {
+        hy = R01_ENTITY_COMPOSE_PX - hh;
+    }
+    *x = hx;
+    *y = hy;
+    *w = hw;
+    *h = hh;
+}
+
 void ui_compose_draw_grid(SDL_Renderer *r, int ox, int oy, int size_px, int cell_px) {
     int cells;
     if (cell_px < 1) {
@@ -41,7 +80,7 @@ void ui_compose_draw_grid(SDL_Renderer *r, int ox, int oy, int size_px, int cell
 }
 
 void ui_compose_draw_part(SDL_Renderer *r, const R01Project *p, const R01World *w, const R01EntityPart *pt, int ox,
-                          int oy, int scale, int selected, int outline) {
+                          int oy, int scale, int selected, int outline, Uint8 alpha) {
     uint8_t oriented[R01_TILE_BYTES];
     const uint8_t *raw;
     int row = w ? w->default_pal_row : 0;
@@ -63,7 +102,12 @@ void ui_compose_draw_part(SDL_Renderer *r, const R01Project *p, const R01World *
                 continue;
             }
             r01_kit_rgb(p->global_pal_spr[row][pt->pal & 3].idx[col & 3u], &cr, &cg, &cb);
-            fill_rect(r, ox + (pt->dx + sx) * scale, oy + (pt->dy + sy) * scale, scale, scale, cr, cg, cb);
+            if (alpha >= 255) {
+                fill_rect(r, ox + (pt->dx + sx) * scale, oy + (pt->dy + sy) * scale, scale, scale, cr, cg, cb);
+            } else {
+                fill_rect_alpha(r, ox + (pt->dx + sx) * scale, oy + (pt->dy + sy) * scale, scale, scale, cr, cg, cb,
+                                alpha);
+            }
         }
     }
     bx = ox + pt->dx * scale;
@@ -78,7 +122,7 @@ void ui_compose_draw_part(SDL_Renderer *r, const R01Project *p, const R01World *
 }
 
 void ui_compose_draw_frame(SDL_Renderer *r, const R01Project *p, const R01World *w, const R01EntityFrame *fr, int ox,
-                           int oy, int scale, int sel_part, int show_outlines) {
+                           int oy, int scale, int sel_part, int show_outlines, Uint8 alpha) {
     int i;
     if (!fr) {
         return;
@@ -87,10 +131,10 @@ void ui_compose_draw_frame(SDL_Renderer *r, const R01Project *p, const R01World 
         if (i == sel_part) {
             continue;
         }
-        ui_compose_draw_part(r, p, w, &fr->parts[i], ox, oy, scale, 0, show_outlines);
+        ui_compose_draw_part(r, p, w, &fr->parts[i], ox, oy, scale, 0, show_outlines, alpha);
     }
     if (sel_part >= 0 && sel_part < fr->part_count) {
-        ui_compose_draw_part(r, p, w, &fr->parts[sel_part], ox, oy, scale, 1, 0);
+        ui_compose_draw_part(r, p, w, &fr->parts[sel_part], ox, oy, scale, 1, 0, alpha);
     }
 }
 
@@ -132,7 +176,7 @@ void ui_compose_draw_frame_icon(SDL_Renderer *r, const R01Project *p, const R01W
         R01EntityPart ghost = fr->parts[i];
         ghost.dx = fr->parts[i].dx + off_x;
         ghost.dy = fr->parts[i].dy + off_y;
-        ui_compose_draw_part(r, p, w, &ghost, dx, dy, 1, 0, 0);
+        ui_compose_draw_part(r, p, w, &ghost, dx, dy, 1, 0, 0, 255);
     }
     ui_clip_pop(r, &stack);
 }

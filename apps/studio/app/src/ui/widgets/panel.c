@@ -1,4 +1,5 @@
 #include "ui/widgets/widgets.h"
+#include "ui/internal.h"
 
 #include <string.h>
 
@@ -171,4 +172,38 @@ int ui_panel_cell(const UiPanel *p, int id, int *x, int *y, int *w, int *h) {
         return 1;
     }
     return 0;
+}
+
+void ui_panel_debug_draw(SDL_Renderer *r, const UiPanel *p) {
+    int x, y, step;
+    int pw, ph;
+    if (!UI_PANEL_DEBUG_GRID || !r || !p) {
+        return;
+    }
+    pw = p->total_w;
+    ph = p->total_h;
+    if (pw < 1 || ph < 1) {
+        return;
+    }
+    step = UI_UNIT > 0 ? UI_UNIT : 8;
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+    /* Full panel chess at ~20% opacity so gaps and widgets stay visible. */
+    for (y = 0; y < ph; y += step) {
+        for (x = 0; x < pw; x += step) {
+            int tw = step;
+            int th = step;
+            int parity = ((x / step) + (y / step)) & 1;
+            if (x + tw > pw) {
+                tw = pw - x;
+            }
+            if (y + th > ph) {
+                th = ph - y;
+            }
+            if (parity) {
+                fill_rect_alpha(r, p->x + x, p->y + y, tw, th, 255, 105, 180, 51);
+            } else {
+                fill_rect_alpha(r, p->x + x, p->y + y, tw, th, 255, 20, 147, 51);
+            }
+        }
+    }
 }

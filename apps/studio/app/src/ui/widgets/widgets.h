@@ -109,6 +109,11 @@ void ui_panel_set_col_w(UiPanel *p, int col, int w);
 void ui_panel_set_row_h(UiPanel *p, int row, int h);
 void ui_panel_layout(UiPanel *p, int x, int y);
 int ui_panel_cell(const UiPanel *p, int id, int *x, int *y, int *w, int *h);
+/* Set to 1 to draw a pink chess overlay behind widgets over the full panel area. */
+#ifndef UI_PANEL_DEBUG_GRID
+#define UI_PANEL_DEBUG_GRID 1
+#endif
+void ui_panel_debug_draw(SDL_Renderer *r, const UiPanel *p);
 
 void ui_modal_scrim(SDL_Renderer *r, const UiState *ui);
 void ui_modal_panel(SDL_Renderer *r, int mx, int my, int w, int h, const char *title);
@@ -133,9 +138,10 @@ int ui_compose_clamp_part(int v);
 int ui_compose_clamp_origin(int v);
 void ui_compose_draw_grid(SDL_Renderer *r, int ox, int oy, int size_px, int cell_px);
 void ui_compose_draw_part(SDL_Renderer *r, const R01Project *p, const struct R01World *w, const R01EntityPart *pt,
-                          int ox, int oy, int scale, int selected, int outline);
+                          int ox, int oy, int scale, int selected, int outline, Uint8 alpha);
 void ui_compose_draw_frame(SDL_Renderer *r, const R01Project *p, const struct R01World *w, const R01EntityFrame *fr,
-                           int ox, int oy, int scale, int sel_part, int show_outlines);
+                           int ox, int oy, int scale, int sel_part, int show_outlines, Uint8 alpha);
+void ui_compose_clamp_hitbox(int *x, int *y, int *w, int *h);
 /* Center parts on bbox mid-point inside icon_size x icon_size (clipped). */
 void ui_compose_draw_frame_icon(SDL_Renderer *r, const R01Project *p, const struct R01World *w,
                                 const R01EntityFrame *fr, int dx, int dy, int icon_size);

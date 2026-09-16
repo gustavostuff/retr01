@@ -68,6 +68,63 @@ static void entity_screen_to_world(const UiState *ui, const EntityModalLayout *l
     }
 }
 
+static void entity_world_to_screen(const UiState *ui, const EntityModalLayout *lo, int wx, int wy, int *sx, int *sy) {
+    int sc = entity_compose_scale(ui);
+    if (sx) {
+        *sx = lo->right_grid_x - ui->entity_edit.view_x + wx * sc;
+    }
+    if (sy) {
+        *sy = lo->right_grid_y - ui->entity_edit.view_y + wy * sc;
+    }
+}
+
+/* 1 if (lx,ly) hits the origin cross glyph. */
+static int entity_origin_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityState *st, int lx,
+                             int ly) {
+    int sx, sy;
+    if (!st) {
+        return 0;
+    }
+    entity_world_to_screen(ui, lo, st->origin_x, st->origin_y, &sx, &sy);
+    return point_in_rect(lx, ly, sx - UI_DOT_SIZE / 2, sy - UI_DOT_SIZE / 2, UI_DOT_SIZE, UI_DOT_SIZE);
+}
+
+/* 1 if near a hitbox corner; out_corner 0=NW 1=NE 2=SE 3=SW. */
+static int entity_hitbox_corner_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityState *st, int lx,
+                                    int ly, int *out_corner) {
+    int sc = entity_compose_scale(ui);
+    int grab = sc > UI_UNIT ? sc : UI_UNIT;
+    int i;
+    int cx[4], cy[4];
+    if (!st || st->hitbox_w < 1 || st->hitbox_h < 1) {
+        return 0;
+    }
+    entity_world_to_screen(ui, lo, st->hitbox_x, st->hitbox_y, &cx[0], &cy[0]);
+    entity_world_to_screen(ui, lo, st->hitbox_x + st->hitbox_w, st->hitbox_y, &cx[1], &cy[1]);
+    entity_world_to_screen(ui, lo, st->hitbox_x + st->hitbox_w, st->hitbox_y + st->hitbox_h, &cx[2], &cy[2]);
+    entity_world_to_screen(ui, lo, st->hitbox_x, st->hitbox_y + st->hitbox_h, &cx[3], &cy[3]);
+    for (i = 0; i < 4; i++) {
+        if (point_in_rect(lx, ly, cx[i] - grab / 2, cy[i] - grab / 2, grab, grab)) {
+            if (out_corner) {
+                *out_corner = i;
+            }
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int entity_hitbox_body_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityState *st, int lx,
+                                  int ly) {
+    int x0, y0, x1, y1;
+    if (!st || st->hitbox_w < 1 || st->hitbox_h < 1) {
+        return 0;
+    }
+    entity_world_to_screen(ui, lo, st->hitbox_x, st->hitbox_y, &x0, &y0);
+    entity_world_to_screen(ui, lo, st->hitbox_x + st->hitbox_w, st->hitbox_y + st->hitbox_h, &x1, &y1);
+    return point_in_rect(lx, ly, x0, y0, x1 - x0, y1 - y0);
+}
+
 static void entity_view_max(const UiState *ui, int *out_max_x, int *out_max_y) {
     int sc = entity_compose_scale(ui);
     int full = R01_ENTITY_COMPOSE_PX * sc;
@@ -259,7 +316,6 @@ void entity_edit_open_new(UiState *ui) {
     ui->entity_edit.paint_color = 1;
     ui->entity_edit.paint_pal = 0;
     ui->entity_edit.brush_size = UI_BRUSH_SIZE_MIN;
-    ui->entity_edit.show_guides = 1;
     ui->entity_edit.tool = UI_ENTITY_TOOL_SELECT;
     ui->entity_edit.show_part_outlines = 0;
     ui->entity_edit.zoom = UI_ENTITY_ZOOM_MIN;
@@ -287,7 +343,6 @@ void entity_edit_open(UiState *ui, int type_idx) {
     ui->entity_edit.paint_color = 1;
     ui->entity_edit.paint_pal = 0;
     ui->entity_edit.brush_size = UI_BRUSH_SIZE_MIN;
-    ui->entity_edit.show_guides = 1;
     ui->entity_edit.tool = UI_ENTITY_TOOL_SELECT;
     ui->entity_edit.show_part_outlines = 0;
     ui->entity_edit.zoom = UI_ENTITY_ZOOM_MIN;
@@ -298,15 +353,11 @@ void entity_edit_open(UiState *ui, int type_idx) {
 static void entity_edit_save(UiState *ui) {
     R01World *w = r01_project_active_world(ui->project);
     int idx;
-    int si;
     if (!w) {
         return;
     }
     if (ui->entity_edit.draft.state_count < 1) {
         ui->entity_edit.draft.state_count = 1;
-    }
-    for (si = 0; si < ui->entity_edit.draft.state_count; si++) {
-        r01_entity_state_recompute_guides(&ui->entity_edit.draft.states[si]);
     }
     if (ui->entity_edit.is_new || ui->entity_edit.type_idx < 0) {
         idx = r01_world_entity_add(w);
@@ -398,14 +449,19 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
     int oy;
     int full = R01_ENTITY_COMPOSE_PX * sc;
     UiClipStack clip;
-    static const char *const mode_labels[] = {"Select", "Edit"};
+    static const char *const mode_labels[] = {"Sprite select", "Sprite paint", "Origin/hitbox"};
     const char *title = ui->entity_edit.is_new ? "Add entity" : "Edit entity";
+    int guides_mode = ui->entity_edit.tool == UI_ENTITY_TOOL_GUIDES;
+    Uint8 part_alpha = guides_mode ? 128 : 255;
 
     entity_modal_layout(ui, &lo);
     ox = lo.right_grid_x - ui->entity_edit.view_x;
     oy = lo.right_grid_y - ui->entity_edit.view_y;
     ui_modal_scrim(r, ui);
     ui_modal_panel(r, lo.mx, lo.my, lo.mw, lo.mh, title);
+#if UI_PANEL_DEBUG_GRID
+    ui_panel_debug_draw(r, &lo.dbg_panel);
+#endif
 
     {
         const char *ename = ui->entity_edit.draft.name[0] ? ui->entity_edit.draft.name : "Entity";
@@ -466,8 +522,8 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
     ui_clip_push(r, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE, &clip);
     ui_compose_draw_grid(r, ox, oy, full, sc);
     ui_compose_draw_frame(r, ui->project, w, fr, ox, oy, sc, ui->entity_edit.sel_part,
-                          ui->entity_edit.show_part_outlines);
-    if (st && ui->entity_edit.show_guides) {
+                          ui->entity_edit.show_part_outlines, part_alpha);
+    if (st && guides_mode) {
         SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
         SDL_SetRenderDrawColor(r, 220, 40, 40, 90);
         {
@@ -476,7 +532,7 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
         }
         draw_ui_cross(r, ox + st->origin_x * sc, oy + st->origin_y * sc);
     }
-    if (ui->entity_edit.tool == UI_ENTITY_TOOL_EDIT && !ui->menu.open &&
+    if (ui->entity_edit.tool == UI_ENTITY_TOOL_PAINT && !ui->menu.open &&
         point_in_rect(ui->mouse_x, ui->mouse_y, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE,
                       UI_ENTITY_COMPOSE)) {
         int cx, cy, idx;
@@ -508,9 +564,8 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
     }
     ui_clip_pop(r, &clip);
 
-    ui_checkbox_draw(r, lo.guides_x, lo.guides_y + 4, ui->entity_edit.show_guides);
-    font_draw(r, lo.guides_x + UI_CHECKBOX + UI_MODE_GAP, lo.guides_y + 4, "Origin/hitbox", 230, 230, 230);
-    ui_multi_state_draw(r, lo.mode_x, lo.mode_y, lo.mode_w, mode_labels, 2, ui->entity_edit.tool, ui->mouse_x,
+    font_draw(r, lo.guides_x, lo.guides_y + 4, "Mode", 230, 230, 230);
+    ui_multi_state_draw(r, lo.mode_x, lo.mode_y, lo.mode_w, mode_labels, 3, ui->entity_edit.tool, ui->mouse_x,
                         ui->mouse_y);
 
     ui_modal_save_cancel(r, lo.left_btn_x, lo.btn_y, lo.save_w, lo.cancel_w, ui->mouse_x, ui->mouse_y);
@@ -555,12 +610,7 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
         return 1;
     }
 
-    if (point_in_rect(lx, ly, lo.guides_x, lo.guides_y, lo.mode_x - lo.guides_x, UI_BTN_H)) {
-        ui_text_blur(ui);
-        ui->entity_edit.show_guides = !ui->entity_edit.show_guides;
-        return 1;
-    }
-    if (ui_multi_state_hit(lx, ly, lo.mode_x, lo.mode_y, lo.mode_w, 2, ui->entity_edit.tool, &idx)) {
+    if (ui_multi_state_hit(lx, ly, lo.mode_x, lo.mode_y, lo.mode_w, 3, ui->entity_edit.tool, &idx)) {
         ui_text_blur(ui);
         ui->entity_edit.tool = idx;
         ui->entity_edit.dragging = 0;
@@ -656,7 +706,7 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
     if (point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
         ui_focus_set(ui, UI_FOCUS_WORKBENCH);
         entity_screen_to_world(ui, &lo, lx, ly, &cx, &cy);
-        if (ui->entity_edit.tool == UI_ENTITY_TOOL_EDIT && right) {
+        if (ui->entity_edit.tool == UI_ENTITY_TOOL_PAINT && right) {
             R01World *ww = r01_project_active_world(ui->project);
             int col = 0;
             idx = ui_compose_part_at(fr, cx, cy, ui->entity_edit.sel_part);
@@ -675,7 +725,33 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
             ui->entity_edit.drag_off_y = ly;
             return 1;
         }
-        if (ui->entity_edit.tool == UI_ENTITY_TOOL_EDIT) {
+        if (ui->entity_edit.tool == UI_ENTITY_TOOL_GUIDES && st) {
+            int corner = 0;
+            if (entity_origin_hit(ui, &lo, st, lx, ly)) {
+                ui->entity_edit.dragging = 2;
+                ui->entity_edit.drag_off_x = cx - st->origin_x;
+                ui->entity_edit.drag_off_y = cy - st->origin_y;
+                return 1;
+            }
+            if (entity_hitbox_corner_hit(ui, &lo, st, lx, ly, &corner)) {
+                /* Anchor = opposite corner in world px. */
+                int ax = (corner == 1 || corner == 2) ? st->hitbox_x : st->hitbox_x + st->hitbox_w;
+                int ay = (corner == 2 || corner == 3) ? st->hitbox_y : st->hitbox_y + st->hitbox_h;
+                ui->entity_edit.dragging = 4;
+                ui->entity_edit.drag_corner = corner;
+                ui->entity_edit.drag_off_x = ax;
+                ui->entity_edit.drag_off_y = ay;
+                return 1;
+            }
+            if (entity_hitbox_body_hit(ui, &lo, st, lx, ly)) {
+                ui->entity_edit.dragging = 3;
+                ui->entity_edit.drag_off_x = cx - st->hitbox_x;
+                ui->entity_edit.drag_off_y = cy - st->hitbox_y;
+                return 1;
+            }
+            return 1;
+        }
+        if (ui->entity_edit.tool == UI_ENTITY_TOOL_PAINT) {
             idx = ui_compose_part_at(fr, cx, cy, ui->entity_edit.sel_part);
             if (idx >= 0 && fr) {
                 R01World *ww = r01_project_active_world(ui->project);
@@ -703,7 +779,6 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
         }
         return 1;
     }
-    (void)st;
     return 1;
 }
 
@@ -787,6 +862,67 @@ void entity_modal_drag(UiState *ui, int lx, int ly, Uint32 buttons) {
             if (ww && fr && idx >= 0) {
                 entity_paint_at(ui, ww, fr, idx, cx, cy);
             }
+        }
+    } else if (ui->entity_edit.dragging == 2 && (buttons & SDL_BUTTON_LMASK)) {
+        R01EntityState *st = edit_state(ui);
+        if (st) {
+            entity_screen_to_world(ui, &lo, lx, ly, &cx, &cy);
+            st->origin_x = ui_compose_clamp_origin(cx - ui->entity_edit.drag_off_x);
+            st->origin_y = ui_compose_clamp_origin(cy - ui->entity_edit.drag_off_y);
+        }
+    } else if (ui->entity_edit.dragging == 3 && (buttons & SDL_BUTTON_LMASK)) {
+        R01EntityState *st = edit_state(ui);
+        if (st) {
+            int hx, hy, hw, hh;
+            entity_screen_to_world(ui, &lo, lx, ly, &cx, &cy);
+            hx = cx - ui->entity_edit.drag_off_x;
+            hy = cy - ui->entity_edit.drag_off_y;
+            hw = st->hitbox_w;
+            hh = st->hitbox_h;
+            ui_compose_clamp_hitbox(&hx, &hy, &hw, &hh);
+            st->hitbox_x = hx;
+            st->hitbox_y = hy;
+            st->hitbox_w = hw;
+            st->hitbox_h = hh;
+        }
+    } else if (ui->entity_edit.dragging == 4 && (buttons & SDL_BUTTON_LMASK)) {
+        R01EntityState *st = edit_state(ui);
+        if (st) {
+            int ax = ui->entity_edit.drag_off_x;
+            int ay = ui->entity_edit.drag_off_y;
+            int x0, y0, x1, y1, hx, hy, hw, hh;
+            entity_screen_to_world(ui, &lo, lx, ly, &cx, &cy);
+            if (cx < 0) {
+                cx = 0;
+            }
+            if (cy < 0) {
+                cy = 0;
+            }
+            if (cx > R01_ENTITY_COMPOSE_PX) {
+                cx = R01_ENTITY_COMPOSE_PX;
+            }
+            if (cy > R01_ENTITY_COMPOSE_PX) {
+                cy = R01_ENTITY_COMPOSE_PX;
+            }
+            x0 = ax < cx ? ax : cx;
+            y0 = ay < cy ? ay : cy;
+            x1 = ax > cx ? ax : cx;
+            y1 = ay > cy ? ay : cy;
+            hx = x0;
+            hy = y0;
+            hw = x1 - x0;
+            hh = y1 - y0;
+            if (hw < 1) {
+                hw = 1;
+            }
+            if (hh < 1) {
+                hh = 1;
+            }
+            ui_compose_clamp_hitbox(&hx, &hy, &hw, &hh);
+            st->hitbox_x = hx;
+            st->hitbox_y = hy;
+            st->hitbox_w = hw;
+            st->hitbox_h = hh;
         }
     } else if (ui->entity_edit.dragging == 1 && fr && ui->entity_edit.sel_part >= 0 &&
                ui->entity_edit.sel_part < fr->part_count &&

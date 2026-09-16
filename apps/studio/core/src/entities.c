@@ -428,24 +428,35 @@ void r01_entity_state_recompute_guides(R01EntityState *st) {
     }
     st->origin_x = ox;
     st->origin_y = oy;
-    st->hitbox_w = R01_ENTITY_HITBOX_W;
-    st->hitbox_h = R01_ENTITY_HITBOX_H;
-    hx = ox - R01_ENTITY_HITBOX_W / 2;
-    hy = oy - R01_ENTITY_HITBOX_H / 2;
-    if (hx < 0) {
-        hx = 0;
+    /* Keep authored hitbox position/size; only clamp into the compose grid. */
+    {
+        int hw = st->hitbox_w > 0 ? st->hitbox_w : R01_ENTITY_HITBOX_W;
+        int hh = st->hitbox_h > 0 ? st->hitbox_h : R01_ENTITY_HITBOX_H;
+        hx = st->hitbox_x;
+        hy = st->hitbox_y;
+        if (hw > R01_ENTITY_COMPOSE_PX) {
+            hw = R01_ENTITY_COMPOSE_PX;
+        }
+        if (hh > R01_ENTITY_COMPOSE_PX) {
+            hh = R01_ENTITY_COMPOSE_PX;
+        }
+        if (hx < 0) {
+            hx = 0;
+        }
+        if (hy < 0) {
+            hy = 0;
+        }
+        if (hx > R01_ENTITY_COMPOSE_PX - hw) {
+            hx = R01_ENTITY_COMPOSE_PX - hw;
+        }
+        if (hy > R01_ENTITY_COMPOSE_PX - hh) {
+            hy = R01_ENTITY_COMPOSE_PX - hh;
+        }
+        st->hitbox_w = hw;
+        st->hitbox_h = hh;
+        st->hitbox_x = hx;
+        st->hitbox_y = hy;
     }
-    if (hy < 0) {
-        hy = 0;
-    }
-    if (hx > R01_ENTITY_COMPOSE_PX - R01_ENTITY_HITBOX_W) {
-        hx = R01_ENTITY_COMPOSE_PX - R01_ENTITY_HITBOX_W;
-    }
-    if (hy > R01_ENTITY_COMPOSE_PX - R01_ENTITY_HITBOX_H) {
-        hy = R01_ENTITY_COMPOSE_PX - R01_ENTITY_HITBOX_H;
-    }
-    st->hitbox_x = hx;
-    st->hitbox_y = hy;
 }
 
 int r01_world_entity_from_sprite(R01World *w, int sprite_catalog_idx) {

@@ -140,7 +140,8 @@ void draw_metasprite_modal(UiState *ui, SDL_Renderer *r) {
     }
 
     ui_compose_draw_grid(r, lo.right_grid_x, lo.right_grid_y, UI_METASPRITE_COMPOSE, 8);
-    ui_compose_draw_frame(r, ui->project, w, fr, lo.right_grid_x, lo.right_grid_y, 8, ui->metasprite_edit.sel_part, 0);
+    ui_compose_draw_frame(r, ui->project, w, fr, lo.right_grid_x, lo.right_grid_y, 8, ui->metasprite_edit.sel_part, 0,
+                          255);
     if (ui->metasprite_edit.dragging != 4 && !ui->menu.open &&
         point_in_rect(ui->mouse_x, ui->mouse_y, lo.right_grid_x, lo.right_grid_y, UI_METASPRITE_COMPOSE,
                       UI_METASPRITE_COMPOSE)) {

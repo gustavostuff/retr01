@@ -121,10 +121,13 @@ typedef struct EntityModalLayout {
     int highlight_x, highlight_y, highlight_w; /* checkbox + "Highlight" */
     int brush_lab_x, brush_lab_y;
     int brush_x, brush_y, brush_w;
-    int guides_x, guides_y;
-    int mode_x, mode_y, mode_w; /* Select | Edit multi-state */
+    int guides_x, guides_y;     /* "Mode" label */
+    int mode_x, mode_y, mode_w; /* Sprite select | paint | Origin/hitbox */
     int btn_y, save_w, cancel_w;
     int left_btn_x;
+#if UI_PANEL_DEBUG_GRID
+    UiPanel dbg_panel;
+#endif
 } EntityModalLayout;
 
 extern uint8_t *g_radio_rgba;

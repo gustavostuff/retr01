@@ -194,7 +194,7 @@ typedef struct R01EntityState {
     int origin_y;
     int hitbox_x;
     int hitbox_y;
-    int hitbox_w; /* fixed 8 for now */
+    int hitbox_w;
     int hitbox_h;
     R01EntityFrame frames[R01_ENTITY_FRAMES_MAX];
     int frame_count; /* 1..R01_ENTITY_FRAMES_MAX */

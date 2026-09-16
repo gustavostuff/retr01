@@ -54,9 +54,10 @@ int r01_entity_frame_remove_part(R01EntityFrame *fr, int part_idx);
 /* Move part to end of frame (top of draw/hit z-order). Returns new index or -1. */
 int r01_entity_frame_bring_part_front(R01EntityFrame *fr, int part_idx);
 /*
- * Recompute state origin + fixed 8x8 hitbox from the union of all parts across
- * frames in this state. Empty: origin/hitbox at 0,0. Else origin = AABB center,
- * hitbox centered on origin and clamped into the compose grid.
+ * Recompute state origin from the union of all parts across frames in this
+ * state. Empty: origin/hitbox at 0,0 with default size. Else origin = AABB
+ * center; authored hitbox x/y/w/h are kept and only clamped into the compose
+ * grid.
  */
 void r01_entity_state_recompute_guides(R01EntityState *st);
 
