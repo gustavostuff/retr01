@@ -12,7 +12,7 @@ Retr01 is a multi-clock, multi-driver board. The 6502, three AVRs, three PLDs, S
 | **DOT** | 5.369318 MHz (~186 ns) | Beam PLDs, VRAM beam half, Color PROM, compositor |
 | **AVR HFOSC** | 24 MHz internal (each) | MCU-M / S1 / S2 firmware |
 | **SPI** | firmware-chosen | M master <-> S1 / S2 slaves |
-| **I2C** | firmware-chosen | M <-> cart 24C64 |
+| **I2C** | firmware-chosen | M <-> cart save (24C64 or I2C FRAM) |
 | **Pad UART** | 115200 8N1 | S2 <-> ATtiny85 |
 | **FSC** | 3.58 / 4.43 MHz | AD724 only |
 
@@ -185,10 +185,12 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 
 **Mitigate:**
 
+- Prefer **I2C FRAM** (64 Kbit class, 24C64-protocol-adjacent, often DIP-8 compatible) on the cart when BOM cost allows. FRAM has **no multi-ms internal page program**. Writes complete at bus speed. That removes the main EEPROM charge-pump stall in this item. Transfer time remains: dumping ~8 KB over I2C still costs real milliseconds at 400 kHz / 1 MHz, so a naive full-array write under one long `CPU_RDY` can still freeze PRG for many frames. FRAM turns the problem into bus occupancy, not program wait.
+- With 24C64 (or any EEPROM): ACK polling with timeout after each page. Expect ~5 ms program gaps.
 - Saves are **explicit** only (pause / fade / dedicated saving screen). Never in the physics hot path.
-- **Multi-frame saves are expected and OK.** Chunk I2C work across VBlanks. Use **short** `CPU_RDY` pulses for mailbox handoff or one page program/poll, then **release RDY** so PRG can run.
-- **Keep the picture alive.** Beam / PLDs / S1 keep scanning. PRG updates a spinner (or other saving UI) each frame while the save state machine advances. Do **not** freeze the display for the whole EEPROM operation.
-- ACK polling with timeout. Series 33 ohm on SDA/SCL already planned.
+- **Multi-frame saves are expected and OK.** Chunk I2C work across VBlanks. Use **short** `CPU_RDY` pulses for mailbox handoff or one chunk (EEPROM: one page program/poll; FRAM: a bounded byte burst), then **release RDY** so PRG can run.
+- **Keep the picture alive.** Beam / PLDs / S1 keep scanning. PRG updates a spinner (or other saving UI) each frame while the save state machine advances. Do **not** freeze the display for the whole save operation.
+- Series 33 ohm on SDA/SCL already planned (layout / stub noise is unchanged by FRAM vs EEPROM).
 - Keep machine EEPROM (`$7F70-$7F72`) separate from cart saves so cabinet config cannot brick on a missing cart.
 
 ### 14. Scroll / palette mid-frame updates (Med)
@@ -260,7 +262,7 @@ They **do** hurt frame time or feel hitchy if `RDY` and VBlank become a dumping 
 | --- | --- | --- |
 | Soft `$7Fxx` that **always** needs `CPU_RDY` | Stalls the 6502 on routine I/O every frame | Fix MCU-M so common reads/writes close in one PHI2. RDY is the escape hatch, not the default |
 | Holding `CPU_RDY` across long SPI / I2C / flash work during play | Whole game freezes. S1 can miss VBlank work relative to PRG | Bound every RDY hold. Keep play-path SPI short. Saves are explicit only |
-| Cart save mid-action with no UI, or one long RDY for the whole EEPROM write | Multi-ms hitch, or a **frozen** picture with no spinner | Save on pause / fade / dedicated saving screen. **Chunk across many VBlanks.** Short RDY only. Keep UI (spinner) updating. Never in the physics hot path |
+| Cart save mid-action with no UI, or one long RDY for the whole save write | Multi-ms hitch (EEPROM program waits, or a long I2C dump), or a **frozen** picture with no spinner | Save on pause / fade / dedicated saving screen. Prefer FRAM to drop program stalls. **Chunk across many VBlanks.** Short RDY only. Keep UI (spinner) updating. Never in the physics hot path |
 | Full OAM table SPI every frame, or OAM during HBlank | Steals VBlank from sprite field fill. HBlank BG0 line fails | Dirty / delta OAM in **early VBlank** (or wait for `S1_RDY`). Never in HBlank |
 | Late VBlank OAM then expecting a full field rebuild | Sprite glitches or dropped frames of overlay | Publish OAM early enough that S1 still finishes the field before active display |
 | Mid-frame scroll / palette writes "because it works on the bench" | Tear, wrong MAP bank slice, palette flash | `$7F02`/`$7F03`/`$7F08`/`$7F09` in NMI/VBlank. Split-screen only via deliberate `$7F04` + IRQ rules |
@@ -272,7 +274,7 @@ They **do** hurt frame time or feel hitchy if `RDY` and VBlank become a dumping 
 1. **PHI2 soft I/O:** aim for zero RDY on the hot path. Measure. If RDY is common, that is a firmware bug.
 2. **VBlank:** OAM SPI + S1 sprite field must both fit. Leave margin. Do not treat VBlank as infinite DMA time.
 3. **HBlank:** BG0 next-line fill only. Nothing else from M or S1.
-4. **Saves:** rare, multi-frame OK. Chunk I2C, keep the saving UI alive. Not a substitute for streaming game state every frame.
+4. **Saves:** rare, multi-frame OK. Prefer FRAM when practical. Chunk I2C, keep the saving UI alive. Not a substitute for streaming game state every frame.
 
 Author-facing timing locks also live in `software-api.md`. Hardware mailbox locks in `hardware.md` and `video-graphics.md`.
 
