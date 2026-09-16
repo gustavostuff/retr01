@@ -143,7 +143,6 @@ int ui_init(UiState *ui) {
     ui->inst_drag = 0;
     ui->last_paint_tx = -1;
     ui->last_paint_ty = -1;
-    ui->screen_mode = UI_SCREEN_MODE_SEL;
     ui->screen_layer = UI_SCREEN_LAYER_BG;
     ui->banks_idx = 0;
     ui->banks_plane = UI_BANKS_PLANE_SPR;

@@ -71,7 +71,6 @@
 #define UI_ARM_WORLD_CELL 3
 #define UI_ARM_ACCORDION 4
 #define UI_ARM_LAYER 5
-#define UI_ARM_MODE 6
 #define UI_ARM_PAL_STRIP 7
 #define UI_ARM_PAL_ROW 8
 #define UI_ARM_PLAY 9
@@ -89,7 +88,8 @@
 
 #define UI_APP_GRAPHICS 0
 #define UI_APP_SOUNDS 1 /* Audio tab (historical enum name) */
-#define UI_APP_CHROME_H UI_BTN_H /* Graphics|Audio strip, flush to content */
+#define UI_APP_CODE 2   /* C code editor (TBD) */
+#define UI_APP_CHROME_H UI_BTN_H /* Graphics|Audio|Code strip, flush to content */
 
 #define UI_SOUND_PLANE_BGM 0
 #define UI_SOUND_PLANE_SFX 1
@@ -174,9 +174,6 @@
 #define UI_MODE_RADIO 8
 #define UI_MODE_GAP 8
 #define UI_CHECKBOX 8
-
-#define UI_SCREEN_MODE_SEL 0
-#define UI_SCREEN_MODE_PAINT 1
 
 #define UI_SCREEN_LAYER_BG 0
 #define UI_SCREEN_LAYER_SPR 1
@@ -447,15 +444,19 @@ typedef struct UiState {
     UiBrush brush;
     UiCatalogDrag catalog_drag;
     UiSoundEdit sound;
-    int app_mode; /* UI_APP_GRAPHICS or UI_APP_SOUNDS */
+    int app_mode; /* UI_APP_GRAPHICS, UI_APP_SOUNDS, or UI_APP_CODE */
     int paint_stamp_valid;
-    uint8_t paint_stamp_tile;
+    int paint_stamp_w; /* stamp size in tiles (1..screen) */
+    int paint_stamp_h;
+    uint8_t paint_stamp_tiles[R01_TILES_PER_SCREEN];
+    uint8_t paint_stamp_attrs[R01_TILES_PER_SCREEN];
+    uint8_t paint_stamp_tile; /* first cell (flood / legacy) */
     uint8_t paint_stamp_attr;
-    int screen_mode;  /* UI_SCREEN_MODE_SEL or UI_SCREEN_MODE_PAINT */
     int screen_layer; /* UI_SCREEN_LAYER_BG or UI_SCREEN_LAYER_SPR */
     int sel_x0, sel_y0, sel_x1, sel_y1; /* inclusive tile rect; invalid when sel_x0 < 0 */
     int sel_anchor_x, sel_anchor_y;
     int sel_drag;
+    int sel_drag_moved; /* 1 once Shift-drag rubber-band moved */
     int inst_drag;
     int inst_drag_off_x;
     int inst_drag_off_y;

@@ -36,8 +36,9 @@ Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Pre
 | **Ctrl+click** present | Remove screen |
 | **Right-click** map cell | **Set default screen** / **Make default world** (BG1) |
 | **Chrome clicks** | Tabs, sub-button, accordion, radios, and similar chrome commit on **mouse release** over the same control (paint/drag tools stay press-and-hold) |
-| **BG / Sprite layer** | Radios in **control sidebar** (right column). **BG layer**: tile select/paint + tile context menu. **Sprite layer**: select/drag instances, **H/V** or context **Mirror H/V** (per-instance: remaps part X/Y + toggles `FLIP_H`/`FLIP_V` for OAM), instance context menu (edit entity type / remove). Tile radios dim on sprite layer |
-| **Tile Sel / Paint** | Radios in **control sidebar** under layer radios (BG layer only). Paint stamps armed tile+palette. **F+click** flood-fills matching tile+attr |
+| **BG / Sprite layer** | Radios in **control sidebar** (right column). **BG layer**: click selects; **Shift+click** expands multi-tile selection; **Shift+drag** rubber-band rect (marching ants). **Ctrl+click/drag** paints with the selection stamp (multi-tile brush for metatile-style copy). Tile context menu. **Sprite layer**: select/drag instances, **H/V** or context **Mirror H/V**, instance context menu |
+| **Tile paint** | **Ctrl+click/drag** stamps the armed brush (1x1 or full selection rect). **Alt+click** picks stamp. **F+click** flood-fills with the brush's top-left tile+attr |
+| **App tabs** | **Graphics** / **Audio** / **Code** (Code screen TBD). Graphics and Audio keep equal half-sidebar widths; Code is sized to its label and sits to the right |
 | **Right-click tile** (BG layer) | Move to tile bank, add tile, edit tile, set palette/anim/solid. **Shift** turns **Edit tile** into **Edit tile (all)** |
 | **Right-click instance** (Sprite layer) | Mirror H / Mirror V / Edit entity type / Remove instance |
 | **Edit tile** modal | **288x160**, 4x4 palette picker, **128x128** pixel canvas. **F+click** flood-fills CHR color. **Ctrl+V** pastes clipboard PNG (transparent -> index 0, opaque matched by brightness to the selected palette). **(all)** save writes CHR and applies bank/pal/H/V to every world cell (BG1+BG0) that matched the original tile id + attrs |

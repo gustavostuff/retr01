@@ -16,19 +16,11 @@
 
 int ui_mode_panel_w(void) {
     int label_x = UI_MODE_RADIO + UI_MODE_GAP;
-    int w0 = label_x + label_width("Tile selection");
-    int w1 = label_x + label_width("Tile paint");
-    int w2 = label_x + label_width("BG layer");
-    int w3 = label_x + label_width("Sprite layer");
+    int w0 = label_x + label_width("BG layer");
+    int w1 = label_x + label_width("Sprite layer");
     int w = w0;
     if (w1 > w) {
         w = w1;
-    }
-    if (w2 > w) {
-        w = w2;
-    }
-    if (w3 > w) {
-        w = w3;
     }
     return w;
 }
@@ -81,29 +73,19 @@ int ui_mode_label_x(int mode_x) {
 }
 
 int screen_mode_row_hit(const UiState *ui, int lx, int ly, int row) {
-    int sx, sy, layer_x, mx, my0;
-    int y;
-    if (!ui || ui->play.active) {
-        return 0;
-    }
-    ui_editor_layout(ui, &sx, &sy, &layer_x, &mx, &my0);
-    /* Mode radios sit under layer radios (rows 2 and 3). */
-    y = my0 + (2 + row) * UI_MODE_ROW_H;
-    return point_in_rect(lx, ly, mx, y, ui_mode_panel_w(), UI_MODE_ROW_H);
+    (void)ui;
+    (void)lx;
+    (void)ly;
+    (void)row;
+    return 0;
 }
 
 int screen_mode_hit(const UiState *ui, int lx, int ly, int *out_row) {
-    if (screen_mode_row_hit(ui, lx, ly, 0)) {
-        if (out_row) {
-            *out_row = UI_SCREEN_MODE_SEL;
-        }
-        return 1;
-    }
-    if (screen_mode_row_hit(ui, lx, ly, 1)) {
-        if (out_row) {
-            *out_row = UI_SCREEN_MODE_PAINT;
-        }
-        return 1;
+    (void)ui;
+    (void)lx;
+    (void)ly;
+    if (out_row) {
+        *out_row = 0;
     }
     return 0;
 }
@@ -1018,15 +1000,23 @@ int sprites_add_hit(const UiState *ui, int lx, int ly) {
 }
 
 void app_mode_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
-    static const char *const labs[] = {"Graphics", "Audio"};
-    int tab_w;
+    static const char *const labs[] = {"Graphics", "Audio", "Code"};
+    int ga_w;
+    int code_w;
     (void)ui;
     if (!out) {
         return;
     }
-    /* Equal tabs fill the left sidebar so labels sit centered in the top-left chrome. */
-    tab_w = UI_SIDEBAR_W / 2;
-    ui_tabs_layout(labs, 2, 0, 0, tab_w, out);
+    /* Graphics|Audio keep the historic equal split of the left sidebar width. Code sits to the right. */
+    ga_w = UI_SIDEBAR_W / 2;
+    code_w = label_width("Code");
+    if (code_w < UI_UNIT * 4) {
+        code_w = UI_UNIT * 4;
+    }
+    ui_tabs_layout(labs, 3, 0, 0, ga_w, out);
+    out->tab_ws[0] = ga_w;
+    out->tab_ws[1] = ga_w;
+    out->tab_ws[2] = code_w;
     out->tab_h = UI_BTN_H;
 }
 

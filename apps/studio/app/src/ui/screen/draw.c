@@ -329,7 +329,7 @@ void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s) {
         draw_warp_markers(ui, r, w, s, ox, oy);
         SDL_RenderSetClipRect(r, NULL);
     }
-    if (screen_sel_valid(ui) && ui->screen_mode == UI_SCREEN_MODE_SEL && ui->sel_instance < 0) {
+    if (screen_sel_valid(ui) && ui->sel_instance < 0) {
         int min_x, min_y, max_x, max_y;
         int sx, sy, sw, sh;
         screen_sel_bounds(ui, &min_x, &min_y, &max_x, &max_y);
@@ -337,7 +337,7 @@ void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s) {
         sy = oy + min_y * 8 * ui_screen_scale(ui);
         sw = (max_x - min_x + 1) * 8 * ui_screen_scale(ui);
         sh = (max_y - min_y + 1) * 8 * ui_screen_scale(ui);
-        draw_rect(r, sx, sy, sw, sh, 255, 255, 255);
+        draw_marching_ants(r, sx, sy, sw, sh);
     }
 }
 

@@ -102,30 +102,36 @@ static void emu_start_host_bgm(R01eMachine *m, const char *cart_path) {
     /* Cart-protocol path: FD/FE/FA into soft $7F40 (speaker still softsynth). */
     (void)r01e_machine_apu_tracker_start(m, path_is_file(bin) ? bin : NULL);
 }
-/* Debug pane: VRAM atlas + world map + active BG/SPR palette rows + CPU budget. */
-#define DBG_GAP 8
-#define DBG_MAP_CELL 10
+/* Debug pane: VRAM + BG0 atlases, then mask / world map / pals, then CPU budget. */
+#define DBG_GAP 6
 #define DBG_MAP_MAX_CELLS 16
-#define DBG_MAP_W (DBG_MAP_CELL * DBG_MAP_MAX_CELLS)
-#define DBG_MAP_H (DBG_MAP_CELL * DBG_MAP_MAX_CELLS)
+#define DBG_MAP_OUTER_PAD 4
+#define DBG_MAP_SCREEN_GAP 1 /* always 1px between screen cells */
 #define DBG_PAL_SWATCH 8
 #define DBG_PAL_GAP 2
 #define DBG_PAL_GROUP_GAP 4
 #define DBG_PAL_LABEL_W 28
-#define DBG_PAL_H (DBG_PAL_SWATCH * 2 + DBG_PAL_GAP + 10)
+#define DBG_PAL_H (DBG_PAL_SWATCH * 2 + DBG_PAL_GAP)
+/* BG label + 4 palettes of 4 swatches with 1px borders and group gaps (matches draw_pal_strip). */
+#define DBG_PAL_STRIP_W                                                                                              \
+    (DBG_PAL_LABEL_W + R01E_PALS_PER_ROW * (R01E_PAL_COLORS * (DBG_PAL_SWATCH + 1)) +                                 \
+     (R01E_PALS_PER_ROW - 1) * (DBG_PAL_GROUP_GAP - 1))
 #define DBG_CHART_BARS 20
 #define DBG_CHART_HZ 2
-#define DBG_CHART_H 72
-#define DBG_CHART_PAD 6
-#define DBG_CHART_LABEL_H 12
+#define DBG_CHART_H 48
+#define DBG_CHART_PAD 4
+#define DBG_CHART_LABEL_H 10
 #define DBG_ATLAS_W R01E_VRAM_ATLAS_W
 #define DBG_ATLAS_H R01E_VRAM_ATLAS_H
 #define DBG_MASK_W R01E_SCREEN_PX_W
 #define DBG_MASK_H R01E_SCREEN_PX_H
-#define DBG_TOP_ROW_H DBG_ATLAS_H
-#define DBG_WIN_W (DBG_ATLAS_W + DBG_GAP + DBG_ATLAS_W + DBG_GAP + DBG_MAP_W)
-#define DBG_ROW2_Y (DBG_TOP_ROW_H + DBG_GAP)
-#define DBG_WIN_H (DBG_ROW2_Y + DBG_MASK_H + DBG_GAP + DBG_PAL_H + DBG_GAP + DBG_CHART_H + DBG_CHART_LABEL_H)
+/* Top: two 2x2 atlases. Bottom row: mask | scaled world map | pals. */
+#define DBG_WIN_W (DBG_ATLAS_W + DBG_GAP + DBG_ATLAS_W)
+#define DBG_ROW2_Y (DBG_ATLAS_H + DBG_GAP)
+#define DBG_ROW2_H DBG_MASK_H
+#define DBG_MAP_W (DBG_WIN_W - DBG_MASK_W - DBG_GAP - DBG_PAL_STRIP_W - DBG_GAP)
+#define DBG_MAP_H DBG_ROW2_H
+#define DBG_WIN_H (DBG_ROW2_Y + DBG_ROW2_H + DBG_GAP + DBG_CHART_H + DBG_CHART_LABEL_H)
 
 static void draw_world_map(SDL_Renderer *ren, R01eMachine *m, int ox, int oy) {
     R01eWorldView wv;
@@ -136,6 +142,11 @@ static void draw_world_map(SDL_Renderer *ren, R01eMachine *m, int ox, int oy) {
     int min_c, min_r, max_c, max_r;
     int cols, rows;
     int map_ox, map_oy;
+    int cell_fill;
+    int pitch;
+    int grid_w, grid_h;
+    int avail_w, avail_h;
+    int fit_w, fit_h;
 
     memset(present, 0, sizeof(present));
     min_c = min_r = DBG_MAP_MAX_CELLS;
@@ -180,17 +191,32 @@ static void draw_world_map(SDL_Renderer *ren, R01eMachine *m, int ox, int oy) {
         cur_r = m->video.cam_origin_row;
     }
 
-    /* Center the used bounding box in the map pane. */
-    map_ox = ox + (DBG_MAP_W - DBG_MAP_CELL * cols) / 2;
-    map_oy = oy + (DBG_ATLAS_H - DBG_MAP_CELL * rows) / 2;
+    /* Integer-scale screen cells to fill the map pane (outer pad + 1px gaps). */
+    avail_w = DBG_MAP_W - 2 * DBG_MAP_OUTER_PAD;
+    avail_h = DBG_MAP_H - 2 * DBG_MAP_OUTER_PAD;
+    if (avail_w < cols || avail_h < rows) {
+        cell_fill = 1;
+    } else {
+        fit_w = (avail_w - (cols - 1) * DBG_MAP_SCREEN_GAP) / cols;
+        fit_h = (avail_h - (rows - 1) * DBG_MAP_SCREEN_GAP) / rows;
+        cell_fill = fit_w < fit_h ? fit_w : fit_h;
+        if (cell_fill < 1) {
+            cell_fill = 1;
+        }
+    }
+    pitch = cell_fill + DBG_MAP_SCREEN_GAP;
+    grid_w = cols * cell_fill + (cols - 1) * DBG_MAP_SCREEN_GAP;
+    grid_h = rows * cell_fill + (rows - 1) * DBG_MAP_SCREEN_GAP;
+    map_ox = ox + (DBG_MAP_W - grid_w) / 2;
+    map_oy = oy + (DBG_MAP_H - grid_h) / 2;
 
     for (r = min_r; r <= max_r; r++) {
         for (c = min_c; c <= max_c; c++) {
             SDL_Rect cell;
-            cell.x = map_ox + (c - min_c) * DBG_MAP_CELL + 1;
-            cell.y = map_oy + (r - min_r) * DBG_MAP_CELL + 1;
-            cell.w = DBG_MAP_CELL - 2;
-            cell.h = DBG_MAP_CELL - 2;
+            cell.x = map_ox + (c - min_c) * pitch;
+            cell.y = map_oy + (r - min_r) * pitch;
+            cell.w = cell_fill;
+            cell.h = cell_fill;
             if (c == cur_c && r == cur_r && present[r][c]) {
                 SDL_SetRenderDrawColor(ren, 255, 200, 40, 255); /* current screen */
             } else if (present[r][c]) {
@@ -199,8 +225,6 @@ static void draw_world_map(SDL_Renderer *ren, R01eMachine *m, int ox, int oy) {
                 SDL_SetRenderDrawColor(ren, 28, 30, 36, 255); /* hole in bbox */
             }
             SDL_RenderFillRect(ren, &cell);
-            SDL_SetRenderDrawColor(ren, 18, 20, 24, 255);
-            SDL_RenderDrawRect(ren, &cell);
         }
     }
 }
@@ -419,7 +443,10 @@ static void present_debug_pane(SDL_Renderer *dbg_ren, SDL_Texture *vram_tex, SDL
     SDL_Rect vp;
     int chart_y;
     int bg0_x = DBG_ATLAS_W + DBG_GAP;
-    int map_x = DBG_ATLAS_W + DBG_GAP + DBG_ATLAS_W + DBG_GAP;
+    int mask_x = 0;
+    int map_x = DBG_MASK_W + DBG_GAP;
+    int pal_x = map_x + DBG_MAP_W + DBG_GAP;
+    int pal_y;
     int l0_sx;
     int l0_sy;
 
@@ -475,16 +502,23 @@ static void present_debug_pane(SDL_Renderer *dbg_ren, SDL_Texture *vram_tex, SDL
         SDL_RenderDrawRect(dbg_ren, &vp);
     }
 
-    draw_world_map(dbg_ren, m, map_x, 0);
-
-    dst.x = 0;
+    dst.x = mask_x;
     dst.y = DBG_ROW2_Y;
     dst.w = DBG_MASK_W;
     dst.h = DBG_MASK_H;
     SDL_RenderCopy(dbg_ren, mask_tex, NULL, &dst);
 
-    draw_active_palettes(dbg_ren, m, 4, DBG_ROW2_Y + DBG_MASK_H + DBG_GAP);
-    chart_y = DBG_ROW2_Y + DBG_MASK_H + DBG_GAP + DBG_PAL_H + DBG_GAP;
+    draw_world_map(dbg_ren, m, map_x, DBG_ROW2_Y + (DBG_ROW2_H - DBG_MAP_H) / 2);
+
+    pal_y = DBG_ROW2_Y + (DBG_ROW2_H - DBG_PAL_H) / 2;
+    if (pal_x + DBG_PAL_STRIP_W > DBG_WIN_W) {
+        /* Fallback: stack pals under the mask if the strip would clip. */
+        pal_x = mask_x + 4;
+        pal_y = DBG_ROW2_Y + DBG_MASK_H - DBG_PAL_H;
+    }
+    draw_active_palettes(dbg_ren, m, pal_x, pal_y);
+
+    chart_y = DBG_ROW2_Y + DBG_ROW2_H + DBG_GAP;
     draw_cpu_budget_chart(dbg_ren, chart, 0, chart_y);
     SDL_RenderPresent(dbg_ren);
 }

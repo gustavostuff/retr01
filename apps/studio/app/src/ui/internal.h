@@ -293,6 +293,7 @@ void handle_menu_pick(UiState *ui, int item, int is_sub);
 
 /* ui/screen/selection.c */
 void screen_sel_set(UiState *ui, int x0, int y0, int x1, int y1);
+void screen_sel_expand(UiState *ui, int tx, int ty);
 void screen_sel_clear(UiState *ui);
 int screen_sel_valid(const UiState *ui);
 void screen_sel_bounds(const UiState *ui, int *min_x, int *min_y, int *max_x, int *max_y);
@@ -302,6 +303,7 @@ int screen_sel_is_multi(const UiState *ui);
 /* ui/screen/paint.c */
 void ui_paint_stamp_set(UiState *ui, uint8_t tile, uint8_t attr);
 void ui_paint_stamp_from_cell(UiState *ui, int tx, int ty);
+void ui_paint_stamp_from_selection(UiState *ui);
 int ui_paint_stamp_from_sel(const UiState *ui, uint8_t *out_tile, uint8_t *out_attr);
 void ui_paint_tile(UiState *ui, int tx, int ty);
 void ui_flood_fill(UiState *ui, int tx, int ty);

@@ -46,7 +46,8 @@ int ui_multi_state_hit(int lx, int ly, int x, int y, int w, int count, int selec
 
 typedef struct UiTabsLayout {
     int x, y;
-    int tab_w;
+    int tab_w; /* default width when tab_ws[i] is 0 */
+    int tab_ws[UI_TABS_MAX]; /* optional per-tab widths (0 = use tab_w) */
     int tab_h;
     int count;
     const char *label[UI_TABS_MAX];

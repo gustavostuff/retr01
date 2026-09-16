@@ -3,7 +3,6 @@
 #include "font/font.h"
 
 void draw_screen_mode(UiState *ui, SDL_Renderer *r) {
-    static const char *const mode_labels[2] = {"Tile selection", "Tile paint"};
     static const char *const layer_labels[2] = {"BG layer", "Sprite layer"};
     int layer_x, mx, my0;
     int row;
@@ -20,19 +19,6 @@ void draw_screen_mode(UiState *ui, SDL_Renderer *r) {
                            layer_labels[row], dim_all ? 120 : 230, dim_all ? 120 : 230, dim_all ? 130 : 230);
         if (hover) {
             hover_overlay(r, layer_x, y, ui_layer_panel_w(), UI_MODE_ROW_H);
-        }
-    }
-
-    for (row = 0; row < 2; row++) {
-        int y = my0 + (2 + row) * UI_MODE_ROW_H;
-        int selected = ui->screen_mode == row;
-        int hover = !dim_all && screen_mode_row_hit(ui, ui->mouse_x, ui->mouse_y, row);
-        int dim = dim_all || ui->screen_layer != UI_SCREEN_LAYER_BG;
-        ui_radio_draw(r, mx, y + (UI_MODE_ROW_H - UI_MODE_RADIO) / 2, selected && !dim);
-        font_draw_centered(r, ui_mode_label_x(mx), y, label_width(mode_labels[row]), UI_MODE_ROW_H, mode_labels[row],
-                           dim ? 120 : 230, dim ? 120 : 230, dim ? 130 : 230);
-        if (hover && !dim) {
-            hover_overlay(r, mx, y, ui_mode_panel_w(), UI_MODE_ROW_H);
         }
     }
 }
@@ -114,6 +100,8 @@ void ui_update_cursor(const UiState *ui) {
                            sound_track_hit(ui, lx, ly, NULL) || sound_add_hit(ui, lx, ly) ||
                            sound_play_hit(ui, lx, ly) || sound_pause_hit(ui, lx, ly) || sound_stop_hit(ui, lx, ly) ||
                            sound_channel_hit(ui, lx, ly, NULL) || sound_timeline_hit(ui, lx, ly, NULL, NULL));
+    } else if (ui->app_mode == UI_APP_CODE) {
+        hand = app_mode_tab_hit(ui, lx, ly, NULL);
     } else {
         hand = app_mode_tab_hit(ui, lx, ly, NULL) || play_button_hit(ui, lx, ly) ||
                accordion_header_hit(ui, lx, ly, NULL) || world_btn_hit(ui, lx, ly, NULL) || world_sub_hit(ui, lx, ly) ||
@@ -123,7 +111,7 @@ void ui_update_cursor(const UiState *ui) {
                metatiles_list_hit(ui, lx, ly, NULL) || metasprites_add_hit(ui, lx, ly) ||
                metasprites_list_hit(ui, lx, ly, NULL) || entities_add_hit(ui, lx, ly) ||
                entities_list_hit(ui, lx, ly, NULL) ||
-               (!ui->play.active && (screen_mode_hit(ui, lx, ly, NULL) || screen_layer_hit(ui, lx, ly, NULL) ||
+               (!ui->play.active && (screen_layer_hit(ui, lx, ly, NULL) ||
                                      screen_hit(ui, lx, ly, NULL, NULL)));
     }
     if (sizewe && g_cursor_sizewe) {

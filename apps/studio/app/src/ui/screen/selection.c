@@ -45,6 +45,31 @@ void screen_sel_set(UiState *ui, int x0, int y0, int x1, int y1) {
     ui->sel_y1 = y1;
 }
 
+void screen_sel_expand(UiState *ui, int tx, int ty) {
+    int min_x, min_y, max_x, max_y;
+    if (!ui || tx < 0 || ty < 0 || tx >= R01_SCREEN_TILES_X || ty >= R01_SCREEN_TILES_Y) {
+        return;
+    }
+    if (!screen_sel_valid(ui)) {
+        screen_sel_set(ui, tx, ty, tx, ty);
+        return;
+    }
+    screen_sel_bounds(ui, &min_x, &min_y, &max_x, &max_y);
+    if (tx < min_x) {
+        min_x = tx;
+    }
+    if (ty < min_y) {
+        min_y = ty;
+    }
+    if (tx > max_x) {
+        max_x = tx;
+    }
+    if (ty > max_y) {
+        max_y = ty;
+    }
+    screen_sel_set(ui, min_x, min_y, max_x, max_y);
+}
+
 void screen_sel_clear(UiState *ui) {
     if (!ui) {
         return;
@@ -54,6 +79,7 @@ void screen_sel_clear(UiState *ui) {
     ui->sel_x1 = -1;
     ui->sel_y1 = -1;
     ui->sel_drag = 0;
+    ui->sel_drag_moved = 0;
 }
 
 int screen_sel_valid(const UiState *ui) {

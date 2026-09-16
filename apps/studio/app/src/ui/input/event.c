@@ -316,7 +316,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         if (e->key.keysym.sym == SDLK_ESCAPE) {
             return 3; /* quit app when no modal/menu */
         }
-        if (!ui->play.active && !ui->menu.open && ui->screen_mode == UI_SCREEN_MODE_SEL && screen_sel_valid(ui)) {
+        if (!ui->play.active && !ui->menu.open && screen_sel_valid(ui) && ui->screen_layer == UI_SCREEN_LAYER_BG) {
             R01Screen *s = r01_project_active_screen(ui->project);
             int min_x, min_y, max_x, max_y, ty, tx;
             if (s) {
@@ -518,6 +518,10 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             return 1;
         }
 
+        if (ui->app_mode == UI_APP_CODE) {
+            return 1;
+        }
+
         if (e->button.button == SDL_BUTTON_RIGHT && !ui->play.active) {
             int col, row;
             int spr_idx;
@@ -600,6 +604,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             int wi, col, row, tx, ty, acc_sec, mode_row;
             int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
             int alt = (SDL_GetModState() & KMOD_ALT) != 0;
+            int ctrl = (SDL_GetModState() & KMOD_CTRL) != 0;
             int flood = ui->keys[SDL_SCANCODE_F] != 0;
 
             ui->arm_kind = UI_ARM_NONE;
@@ -695,11 +700,6 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 ui->arm_a = mode_row;
                 return 1;
             }
-            if (!ui->play.active && screen_mode_hit(ui, lx, ly, &mode_row)) {
-                ui->arm_kind = UI_ARM_MODE;
-                ui->arm_a = mode_row;
-                return 1;
-            }
             if (!ui->play.active && screen_hit(ui, lx, ly, &tx, &ty)) {
                 int inst;
                 if (ui->screen_layer == UI_SCREEN_LAYER_SPR) {
@@ -722,16 +722,17 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 }
                 ui->sel_instance = -1;
                 ui->inst_drag = 0;
-                if (ui->screen_mode == UI_SCREEN_MODE_PAINT) {
-                    if (alt) {
-                        ui_paint_stamp_from_cell(ui, tx, ty);
-                        ui_toast(ui, "stamp picked", 0);
-                        return 1;
-                    }
-                    if (flood) {
-                        ui_flood_fill(ui, tx, ty);
-                        return 1;
-                    }
+                if (alt) {
+                    ui_paint_stamp_from_cell(ui, tx, ty);
+                    screen_sel_set(ui, tx, ty, tx, ty);
+                    ui_toast(ui, "stamp picked", 0);
+                    return 1;
+                }
+                if (flood) {
+                    ui_flood_fill(ui, tx, ty);
+                    return 1;
+                }
+                if (ctrl) {
                     ui->last_paint_tx = -1;
                     ui->last_paint_ty = -1;
                     (void)ui_undo_paint_begin(ui);
@@ -740,9 +741,12 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 }
                 if (shift) {
                     ui->sel_drag = 1;
+                    ui->sel_drag_moved = 0;
                     ui->sel_anchor_x = tx;
                     ui->sel_anchor_y = ty;
-                    screen_sel_set(ui, tx, ty, tx, ty);
+                    if (!screen_sel_valid(ui)) {
+                        screen_sel_set(ui, tx, ty, tx, ty);
+                    }
                     return 1;
                 }
                 screen_sel_set(ui, tx, ty, tx, ty);
@@ -759,10 +763,20 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
     }
 
     if (e->type == SDL_MOUSEBUTTONUP && e->button.button == SDL_BUTTON_LEFT) {
+        if (ui->sel_drag && ui->screen_layer == UI_SCREEN_LAYER_BG && !ui->play.active) {
+            int shift_up = (SDL_GetModState() & KMOD_SHIFT) != 0;
+            if (!ui->sel_drag_moved && shift_up) {
+                screen_sel_expand(ui, ui->sel_anchor_x, ui->sel_anchor_y);
+            }
+            if (screen_sel_valid(ui)) {
+                ui_paint_stamp_from_selection(ui);
+            }
+        }
         ui_undo_paint_end(ui);
         ui->last_paint_tx = -1;
         ui->last_paint_ty = -1;
         ui->sel_drag = 0;
+        ui->sel_drag_moved = 0;
         ui->inst_drag = 0;
         if (ui->sound.drag != UI_SOUND_DRAG_NONE) {
             int drag = ui->sound.drag;
@@ -793,7 +807,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             if (kind == UI_ARM_APP_TAB) {
                 int app_tab;
                 if (app_mode_tab_hit(ui, lx, ly, &app_tab) && app_tab == a) {
-                    if (a == UI_APP_SOUNDS && ui->play.active) {
+                    if ((a == UI_APP_SOUNDS || a == UI_APP_CODE) && ui->play.active) {
                         ui_play_stop(ui);
                     }
                     if (a != UI_APP_SOUNDS) {
@@ -959,20 +973,6 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     ui->inst_drag = 0;
                 } else {
                     screen_sel_clear(ui);
-                }
-                return 1;
-            }
-            if (kind == UI_ARM_MODE && !ui->play.active && screen_mode_hit(ui, lx, ly, &mode_row) &&
-                mode_row == a) {
-                if (ui->screen_layer != UI_SCREEN_LAYER_BG) {
-                    return 1;
-                }
-                ui->screen_mode = mode_row;
-                if (mode_row == UI_SCREEN_MODE_PAINT && !ui->paint_stamp_valid) {
-                    uint8_t tile, attr;
-                    if (ui_paint_stamp_from_sel(ui, &tile, &attr)) {
-                        ui_paint_stamp_set(ui, tile, attr);
-                    }
                 }
                 return 1;
             }
@@ -1168,12 +1168,17 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             return 1;
         }
-        if (ui->screen_layer == UI_SCREEN_LAYER_BG && ui->screen_mode == UI_SCREEN_MODE_SEL && ui->sel_drag &&
+        if (ui->screen_layer == UI_SCREEN_LAYER_BG && ui->sel_drag &&
             shift && (e->motion.state & SDL_BUTTON_LMASK) && screen_hit(ui, lx, ly, &tx, &ty)) {
-            screen_sel_set(ui, ui->sel_anchor_x, ui->sel_anchor_y, tx, ty);
+            if (tx != ui->sel_anchor_x || ty != ui->sel_anchor_y) {
+                ui->sel_drag_moved = 1;
+            }
+            if (ui->sel_drag_moved) {
+                screen_sel_set(ui, ui->sel_anchor_x, ui->sel_anchor_y, tx, ty);
+            }
             return 1;
         }
-        if (ui->screen_layer == UI_SCREEN_LAYER_BG && ui->screen_mode == UI_SCREEN_MODE_PAINT &&
+        if (ui->screen_layer == UI_SCREEN_LAYER_BG && (SDL_GetModState() & KMOD_CTRL) &&
             (e->motion.state & SDL_BUTTON_LMASK) &&
             !(SDL_GetModState() & KMOD_ALT) && ui->keys[SDL_SCANCODE_F] == 0) {
             if (screen_hit(ui, lx, ly, &tx, &ty)) {

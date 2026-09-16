@@ -38,6 +38,10 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
 
     if (ui->app_mode == UI_APP_SOUNDS) {
         draw_sound_editor(ui, r);
+    } else if (ui->app_mode == UI_APP_CODE) {
+        int cx = UI_SIDEBAR_W + UI_UNIT;
+        int cy = UI_APP_CHROME_H + UI_UNIT * 2;
+        font_draw(r, cx, cy, "Code editor TBD", 180, 180, 190);
     } else {
         draw_sidebar(ui, r);
         draw_ctrl_sidebar(ui, r);

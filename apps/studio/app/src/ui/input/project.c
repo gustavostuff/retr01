@@ -141,7 +141,6 @@ void ui_reset_after_project_load(UiState *ui) {
     ui->sel_instance = -1;
     ui->inst_drag = 0;
     ui->catalog_drag.active = 0;
-    ui->screen_mode = UI_SCREEN_MODE_SEL;
     ui->screen_layer = UI_SCREEN_LAYER_BG;
     screen_sel_clear(ui);
     ui->paint_stamp_valid = 0;

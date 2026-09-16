@@ -1,6 +1,6 @@
-<img src="logos/v_02.png" alt="Logo V2" />
+<img src="img/readme/v_01.png" alt="Logo V1" />
 
-The Retr01 is an MCU-assisted 8-bit system, ready for both arcade and console setups.
+The Retr01 prokect is an MCU-assisted 8-bit system, ready for both arcade and console setups + a software toolchain.
 
 ## Inspirations
 
@@ -17,6 +17,11 @@ The Retr01 is an MCU-assisted 8-bit system, ready for both arcade and console se
 - Entity system with clear caps: up to 16 types per world, each with up to 4 states x 4 frames x 4 sprites.
 - Flexible world layout: up to 8 worlds, each with up to 32 screens, all on a sparse 16x16 grid.
 - Passive cartridge: no mapper, hardware streaming of MAP/nametable data from cart into VRAM buffers.
+
+## Software pieces:
+
+Retr01 Emu
+Retr01 Studio (integrates emu)
 
 ## Doc map
 
