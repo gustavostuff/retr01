@@ -64,7 +64,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### 11. Entity and sprite budget coupling
 
-**Resolved:** Fail spawn/frame-change on OAM shortfall. Drop overflow sprites per scanline. Catalog cap **16** types per world.
+**Resolved:** Fail spawn/frame-change on OAM shortfall. Drop overflow sprites per scanline. Catalog cap **16** types per world. On-screen instance count is soft (fits in **64** OAM sprites). See `software-api.md`.
 
 ### 12. Platformer physics scope
 

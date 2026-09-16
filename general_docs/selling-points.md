@@ -34,7 +34,7 @@ One flat **32 KB PRG** window on the cart. No PRG banking. That is the same PRG 
 
 Authors think in **entities** (up to 4 states x 4 frames x 6 sprites), not raw sprites. Definitions are cart data. Behavior is C/ASM in PRG.
 
-Studio-friendly hard cap: **16** entity types **per world**. Each world blob carries its own catalog and SPR CHR. Packed defs use offset tables so PRG can seek state S / frame F (see `software-api.md`).
+Studio-friendly hard cap: **16** entity **types** **per world** (catalog). On-screen instances are not type-capped — show as many as you want while their sprites fit the **64** OAM budget (**16**/scanline). Each world blob carries its own catalog and SPR CHR. Packed defs use offset tables so PRG can seek state S / frame F (see `software-api.md`).
 
 ## Console programs its own carts
 

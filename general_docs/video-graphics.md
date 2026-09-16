@@ -11,6 +11,7 @@ Logical pipeline for tiles, sprites, palettes, and the two BG layers. Scroll and
 
 - Tile based. 8x8 tiles and 8x8 sprites only. No 8x16 sprites.
 - Up to 64 hardware sprites on screen. Up to 16 per scanline.
+- Entity **types** per world are capped at **16** (catalog). How many entities may appear on screen is limited by that **64**-sprite OAM budget, not by type count (see `software-api.md`).
 - Pixel format: 2bpp.
 - Up to 25 simultaneous colors on screen (NES-style).
 

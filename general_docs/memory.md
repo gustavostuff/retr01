@@ -196,13 +196,14 @@ Each world blob owns its own catalog (up to **16** types). Types are **not** sha
 
 | Topic | Value |
 | --- | --- |
-| Hard cap (per world) | **16** entity types |
+| Hard cap (per world) | **16** entity **types** (catalog). Not an on-screen instance cap |
+| On-screen instances | Soft — share **64** hardware sprites (OAM). As many entities as fit that sprite budget. See `software-api.md` |
 | Global / cart type pool | **None** (no shared catalog) |
 | Maxed def size (locked pack) | **484 B** |
 | Worst case 8 worlds x 16 maxed defs | **61952 B** (~60.5 KB) |
 | CHR zero-reuse unique-maxed / world | Soft art pressure ~**10** (1024 sprite tiles / 96 slots). Below the type cap when every type is fully unique-tiled |
 
-Studio: author up to **16** types per world, with art in that world's SPR banks.
+Studio: author up to **16** types per world, with art in that world's SPR banks. Live/on-screen count is OAM-budgeted, not type-capped.
 
 ### Other screens (global ROM)
 

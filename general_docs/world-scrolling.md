@@ -24,7 +24,7 @@ Each world has:
 
 Each bank is 256 patterns of 8x8 at 2bpp.
 
-Hard cap: **16** entity types **per world** (catalog inside that world blob). Sprite bank bits fetch from that world's SPR CHR. Soft art pressure without tile reuse still tops out around **16** fully maxed unique-tile entities per world (1024 / 64), which lines up with the type cap. See `memory.md` and `software-api.md`.
+Hard cap: **16** entity **types** **per world** (catalog inside that world blob). On-screen instance count is soft: limited by the **64** hardware sprites in OAM (and **16**/scanline), not by the type cap. Soft art pressure without tile reuse still tops out around **10** fully maxed unique-tile types per world (1024 / 96). See `memory.md` and `software-api.md`.
 
 ## Movement modes
 
