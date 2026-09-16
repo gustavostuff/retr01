@@ -1,20 +1,20 @@
-# Retr01 Tier G — Cart and MAP
+# Retr01 Tier G - Cart and MAP
 
-**Prerequisite:** Tier F working (6502 + soft `$7Fxx` + VRAM BG1 + sprites).  
+**Prerequisite:** Tier F working (6502 + soft `$7Fxx` + VRAM BG1 + sprites). 
 **Goal:** Passive cartridge as the software delivery vehicle: PRG fetch, MAP stream into VRAM, optional save IC.
 
 **SoT:** `general_docs/cartridge.md`, `general_docs/memory.md`, `general_docs/hardware.md` (cart edge / OE#), `general_docs/ic-comms-risks.md` (cart OE / saves), `ic_behavior/SST39SF040.md`, `ic_behavior/24C64.md`.
 
 ---
 
-## 1. What to add
+## 1. Parts added
 
 | Qty | Part | Role |
 | --- | --- | --- |
 | 1 | **SST39SF040** (or lab equivalent) | Cart flash on a cart-like footprint |
-| — | Mobo OE# gate | PRG `$8000–$FFFF` and intentional MAP/CHR windows only |
-| — | MAP port | `$7F90–$7F93` (seek + auto-inc data) via M/PLD as designed |
-| 0–1 | **24C64** or FRAM | Optional saves (chunked; short RDY; UI alive) |
+| - | Mobo OE# gate | PRG `$8000-$FFFF` and intentional MAP/CHR windows only |
+| - | MAP port | `$7F90-$7F93` (seek + auto-inc data) via M/PLD as designed |
+| 0-1 | **24C64** or FRAM | Optional saves (chunked; short RDY; UI alive) |
 
 **CE#** tied active on the cart. Motherboard gates **`OE#`**. **`WE#`** idle-high in play (board pull-up); used by the MCU-M flash bridge when the program DIP selects cart.
 
@@ -36,27 +36,27 @@ Adafruit UPDI Friend + 4-pos DIP (M / S1 / S2 / cart). Default all OFF. Scope: *
 
 ---
 
-## 3. Do / don’t
+## 3. Rules
 
-### Do
+### Required
 
-- Keep A0–A13 from CPU; A14–A18 from Compositor MAP.
-- Fail closed on OE decode mistakes (prefer no fetch over a fight).
+- A0-A13 come from the CPU. A14-A18 come from Compositor MAP.
+- OE decode mistakes fail closed (no fetch preferred over a fight).
 - Prefer FRAM if EEPROM program stalls hurt the save demo.
 
-### Don’t
+### Forbidden
 
-- Don’t invent mappers or PRG banking.
-- Don’t leave WE# floating low.
-- Don’t freeze the machine under one long RDY for a full save write.
-- Don’t combine pad bring-up into this tier.
+- Mappers or PRG banking.
+- WE# floating low.
+- One long RDY freeze for a full save write.
+- Pad bring-up combined into this tier.
 
 ---
 
-## 4. Exit criteria → Tier H
+## 4. Exit criteria -> Tier H
 
 - Cart boots a test `.retr01` (or equivalent) with MAP-fed BG and PRG-driven entities.
 - OE/WE play-vs-program story understood on the bench.
 - Temporary Tier F PRG substitute removed.
 
-**Next:** [tier-h-pads-audio.md](tier-h-pads-audio.md) — MCU-S2 pads + PWM audio.
+**Next:** [tier-h-pads-audio.md](tier-h-pads-audio.md) - MCU-S2 pads + PWM audio.

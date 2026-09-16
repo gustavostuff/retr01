@@ -1,22 +1,22 @@
-# Retr01 Tier H — Pads and audio
+# Retr01 Tier H - Pads and audio
 
-**Prerequisite:** Tier G working (cart PRG + MAP + video path).  
+**Prerequisite:** Tier G working (cart PRG + MAP + video path). 
 **Goal:** MCU-S2 brings controllers and PWM audio online so the counted motherboard set is exercised end-to-end.
 
 **SoT:** `general_docs/hardware.md` (pads, S2), `general_docs/sound.md`, `general_docs/memory.md` (`$7F60`/`$7F61`, APU window), `general_docs/ic-comms-risks.md`, `ic_behavior/AVR128DB28.md`, `ic_behavior/ATtiny85.md`.
 
 ---
 
-## 1. What to add
+## 1. Parts added
 
 | Qty | Part | Role |
 | --- | --- | --- |
 | 1 | **AVR128DB28** | **MCU-S2** @ 24 MHz HFOSC |
-| — | Pad path | TRS open-drain UART and/or arcade GPIO |
-| — | Audio | S2 PWM (TCA WO1 on **PF1**) toward board audio out |
-| — | SPI | S2 slave under M for pad mailbox / APU window (`/SS_S2`) |
+| - | Pad path | TRS open-drain UART and/or arcade GPIO |
+| - | Audio | S2 PWM (TCA WO1 on **PF1**) toward board audio out |
+| - | SPI | S2 slave under M for pad mailbox / APU window (`/SS_S2`) |
 
-Optional outside the 19: **ATtiny85** in the TRS pad (poll reply `< 200 µs`).
+Optional outside the 19: **ATtiny85** in the TRS pad (poll reply `< 200 us`).
 
 SPI rule remains: exactly one of `/SS_S1` or `/SS_S2` low at a time; idle both high.
 
@@ -37,19 +37,19 @@ Input and sound are orthogonal to video/CPU/cart bring-up. S2 is the remaining c
 
 ---
 
-## 4. Do / don’t
+## 4. Rules
 
-### Do
+### Required
 
-- Poll pads in VBlank (S2), not in a tight 6502 spin without discipline.
-- Keep OAM on `/SS_S1` and pad/APU on `/SS_S2` with distinct message IDs.
-- Bound SPI to S2; do not steal S1’s HBlank BG0 window.
+- Pads are polled in VBlank (S2), not in a tight 6502 spin without discipline.
+- OAM stays on `/SS_S1`. Pad/APU stays on `/SS_S2`, with distinct message IDs.
+- SPI to S2 stays bounded. S1's HBlank BG0 window is not stolen.
 
-### Don’t
+### Forbidden
 
-- Don’t block video windows with audio DMA fantasies on S1.
-- Don’t push-pull the TRS DATA line.
-- Don’t treat light gun / FRAM preference / 4-layer PCB spin as Tier H exit criteria — those are post-H polish.
+- Audio DMA fantasies on S1 that block video windows.
+- Push-pull drive on the TRS DATA line.
+- Light gun / FRAM preference / 4-layer PCB spin as Tier H exit criteria. Those are post-H polish.
 
 ---
 

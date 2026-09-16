@@ -1,18 +1,18 @@
-# Retr01 Tier D — MCU-M OAM SPI path
+# Retr01 Tier D - MCU-M OAM SPI path
 
-**Prerequisite:** Tier C working (S1 fills field SRAM in VBlank; at least one clear sprite on composite).  
-**Goal:** Separate “who decides sprites” (MCU-M) from “who paints the field” (MCU-S1), matching the final SPI mailbox architecture, still **without** a 6502 or cart.
+**Prerequisite:** Tier C working (S1 fills field SRAM in VBlank; at least one clear sprite on composite). 
+**Goal:** Separate "who decides sprites" (MCU-M) from "who paints the field" (MCU-S1), matching the final SPI mailbox architecture, still **without** a 6502 or cart.
 
-**SoT:** `general_docs/hardware.md` (SPI mailbox rules), `general_docs/ic-comms-risks.md` (§ OAM / VBlank), `ic_behavior/AVR128DB28.md`.
+**SoT:** `general_docs/hardware.md` (SPI mailbox rules), `general_docs/ic-comms-risks.md` (sec  OAM / VBlank), `ic_behavior/AVR128DB28.md`.
 
 ---
 
-## 1. What to add
+## 1. Parts added
 
 | Qty | Part | Role |
 | --- | --- | --- |
 | 1 | **AVR128DB28** | **MCU-M** @ 24 MHz HFOSC |
-| — | Wiring | SPI: MOSI/MISO/SCK, `/SS_S1`, `VBL` into M, optional `S1_RDY` |
+| - | Wiring | SPI: MOSI/MISO/SCK, `/SS_S1`, `VBL` into M, optional `S1_RDY` |
 
 Pin freeze (design intent):
 
@@ -29,7 +29,7 @@ Idle: `/SS_S1` **high**. Exactly one slave selected when traffic runs (S2 does n
 
 ## 2. Why this tier
 
-Tier C proved S1 can finish a field in VBlank. The product path does **not** keep OAM authorship on S1 forever — M (and later the 6502 via M) publishes an OAM block; S1 rasterizes.
+Tier C proved S1 can finish a field in VBlank. The product path does **not** keep OAM authorship on S1 forever - M (and later the 6502 via M) publishes an OAM block; S1 rasterizes.
 
 Doing that **before** PHI2 interleave and soft I/O avoids conflating three hard problems.
 
@@ -39,9 +39,9 @@ Doing that **before** PHI2 interleave and soft I/O avoids conflating three hard 
 
 | Work | Window |
 | --- | --- |
-| OAM SPI M→S1 | **Early VBlank**, or when **`S1_RDY`** says ready |
+| OAM SPI M->S1 | **Early VBlank**, or when **`S1_RDY`** says ready |
 | Sprite field rebuild | Rest of VBlank on S1 after OAM is accepted |
-| BG0 next line | **HBlank only** — **no** OAM SPI here |
+| BG0 next line | **HBlank only** - **no** OAM SPI here |
 
 - Do **not** blast OAM during HBlank (steals the BG0 line window).
 - Prefer **dirty / delta** OAM once a full table works; full-table every frame is a lab convenience, not the play-path ideal.
@@ -60,28 +60,28 @@ Doing that **before** PHI2 interleave and soft I/O avoids conflating three hard 
 
 ---
 
-## 5. Do / don’t
+## 5. Rules
 
-### Do
+### Required
 
-- Gate OAM on early VBlank / `S1_RDY`.
-- Keep payloads small and frame-bounded; separate message ID/length so a mis-select fails closed.
-- Keep S1 AD hi-Z rules from Tier C.
-- Measure: OAM end → field fill end → first active line.
+- OAM is gated on early VBlank / `S1_RDY`.
+- Payloads stay small and frame-bounded. Message ID/length differ so a mis-select fails closed.
+- S1 AD hi-Z rules from Tier C stay in force.
+- Scope order: OAM end -> field fill end -> first active line.
 
-### Don’t
+### Forbidden
 
-- Don’t drive CPU D from M yet (soft `$7Fxx` is Tier F).
-- Don’t add cart or I2C on this tier.
-- Don’t run SPI inside a future soft-read cycle without `CPU_RDY` (foreshadow only; no soft bus yet).
-- Don’t treat late-VBlank full OAM + full field rebuild as acceptable if the top of the frame glitches — move OAM earlier or shrink work.
+- CPU D driven from M on this tier (soft `$7Fxx` is Tier F).
+- Cart or I2C on this tier.
+- SPI inside a future soft-read cycle without `CPU_RDY` (foreshadow only, no soft bus yet).
+- Late-VBlank full OAM plus full field rebuild if the top of the frame glitches. Move OAM earlier or shrink work.
 
 ---
 
-## 6. Exit criteria → Tier E
+## 6. Exit criteria -> Tier E
 
 - Sprites update from M-published OAM over SPI.
 - No SPI in HBlank during the demo.
 - Field fill still completes before active display with visible margin on the scope.
 
-**Next:** [tier-e-vram.md](tier-e-vram.md) — PHI2 + interleaved VRAM + HC157s for real BG1 nametable fetch.
+**Next:** [tier-e-vram.md](tier-e-vram.md) - PHI2 + interleaved VRAM + HC157s for real BG1 nametable fetch.
