@@ -476,6 +476,8 @@ const uint8_t *r01e_cart_other_payload(const R01eCart *c, int id) {
 
 int r01e_cart_aabb_ok(const R01eCart *c, int world, int px, int py, int bw, int bh) {
     int x1, y1, c0, c1, r0, r1, col, row;
+    int tx0, ty0, tx1, ty1, tx, ty;
+    const int tile = 8;
     if (!c || px < 0 || py < 0 || bw < 1 || bh < 1) {
         return 0;
     }
@@ -492,9 +494,31 @@ int r01e_cart_aabb_ok(const R01eCart *c, int world, int px, int py, int bw, int 
             }
         }
     }
-    if (r01e_cart_solid_at(c, world, px, py) || r01e_cart_solid_at(c, world, x1, py) ||
-        r01e_cart_solid_at(c, world, px, y1) || r01e_cart_solid_at(c, world, x1, y1)) {
-        return 0;
+    /* All overlapping BG tiles (not just AABB corners). */
+    tx0 = px / tile;
+    ty0 = py / tile;
+    tx1 = x1 / tile;
+    ty1 = y1 / tile;
+    for (ty = ty0; ty <= ty1; ty++) {
+        for (tx = tx0; tx <= tx1; tx++) {
+            int wx = tx * tile;
+            int wy = ty * tile;
+            if (wx < px) {
+                wx = px;
+            }
+            if (wy < py) {
+                wy = py;
+            }
+            if (wx > x1) {
+                wx = x1;
+            }
+            if (wy > y1) {
+                wy = y1;
+            }
+            if (r01e_cart_solid_at(c, world, wx, wy)) {
+                return 0;
+            }
+        }
     }
     return 1;
 }

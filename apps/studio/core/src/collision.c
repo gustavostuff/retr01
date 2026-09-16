@@ -52,12 +52,10 @@ int r01_world_solid_at(const R01World *w, int wx, int wy) {
     return r01_attr_solid(attr);
 }
 
-static int solid_corner_blocked(const R01World *w, int wx, int wy) {
-    return r01_world_solid_at(w, wx, wy);
-}
-
 int r01_world_aabb_ok(const R01World *w, int px, int py, int bw, int bh) {
     int x1, y1, c0, c1, r0, r1, c, r;
+    int tx0, ty0, tx1, ty1, tx, ty;
+    const int tile = 8;
     if (!w || px < 0 || py < 0 || bw < 1 || bh < 1) {
         return 0;
     }
@@ -75,9 +73,35 @@ int r01_world_aabb_ok(const R01World *w, int px, int py, int bw, int bh) {
             }
         }
     }
-    if (solid_corner_blocked(w, px, py) || solid_corner_blocked(w, x1, py) || solid_corner_blocked(w, px, y1) ||
-        solid_corner_blocked(w, x1, y1)) {
-        return 0;
+    /*
+     * Probe every BG tile the AABB overlaps. Corner-only samples miss solids that
+     * hit the middle of an edge (e.g. a single-tile jut on a vertical wall when
+     * the hitbox is taller than one tile).
+     */
+    tx0 = px / tile;
+    ty0 = py / tile;
+    tx1 = x1 / tile;
+    ty1 = y1 / tile;
+    for (ty = ty0; ty <= ty1; ty++) {
+        for (tx = tx0; tx <= tx1; tx++) {
+            int wx = tx * tile;
+            int wy = ty * tile;
+            if (wx < px) {
+                wx = px;
+            }
+            if (wy < py) {
+                wy = py;
+            }
+            if (wx > x1) {
+                wx = x1;
+            }
+            if (wy > y1) {
+                wy = y1;
+            }
+            if (r01_world_solid_at(w, wx, wy)) {
+                return 0;
+            }
+        }
     }
     return 1;
 }

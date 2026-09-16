@@ -111,13 +111,12 @@ static void play_load_cart_camera(R01eMachine *m) {
     m->play.cam_deadzone_x = R01_PLAY_CAM_DEADZONE_X_DEFAULT;
     m->play.cam_deadzone_y = R01_PLAY_CAM_DEADZONE_Y_DEFAULT;
     if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) == 0) {
-        if (wv.cam_deadzone_x != 0 || wv.cam_deadzone_y != 0) {
-            int dx = (int)wv.cam_deadzone_x;
-            int dy = (int)wv.cam_deadzone_y;
-            if (dx <= R01E_SCREEN_PX_W && dy <= R01E_SCREEN_PX_H) {
-                m->play.cam_deadzone_x = dx;
-                m->play.cam_deadzone_y = dy;
-            }
+        int dx = (int)wv.cam_deadzone_x;
+        int dy = (int)wv.cam_deadzone_y;
+        /* 0,0 is valid (dead zone off / 1:1 track), not "missing". */
+        if (dx <= R01E_SCREEN_PX_W && dy <= R01E_SCREEN_PX_H) {
+            m->play.cam_deadzone_x = dx;
+            m->play.cam_deadzone_y = dy;
         }
     }
 }

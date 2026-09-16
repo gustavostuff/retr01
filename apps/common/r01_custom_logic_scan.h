@@ -3,7 +3,8 @@
 
 #include <stddef.h>
 
-/* Parse r01_camera_set_deadzone(ctx, dx, dy) from custom_logic.c. Returns 0 on match. */
+/* Parse r01_camera_set_deadzone(ctx, dx, dy) or r01_camera_disable_deadzone(ctx).
+ * Returns 0 on match (disable packs as 0,0). Skips // comments. */
 int r01_custom_logic_scan_deadzone(const char *path, int *out_dx, int *out_dy);
 
 /* Parse r01_bg0_set_wrap(ctx, wrap_x, wrap_y). Non-zero = wrap that axis. Returns 0 on match. */

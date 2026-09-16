@@ -4,12 +4,6 @@
 #include <math.h>
 #include <string.h>
 
-#define R01_CAM_DEADZONE_X_DEFAULT 32
-#define R01_CAM_DEADZONE_Y_DEFAULT 30
-#define R01_CAM_AXIS_BOTH 0
-#define R01_CAM_AXIS_H 1
-#define R01_CAM_AXIS_V 2
-
 static void deadzone_h_bounds(int screen_w, int dz_w, int *out_left, int *out_right) {
     int left;
     int right;
@@ -413,6 +407,10 @@ void r01_camera_set_deadzone(R01GameCtx *ctx, int dx, int dy) {
     }
     ctx->cam_deadzone_x = dx;
     ctx->cam_deadzone_y = dy;
+}
+
+void r01_camera_disable_deadzone(R01GameCtx *ctx) {
+    r01_camera_set_deadzone(ctx, R01_CAM_DEADZONE_OFF, R01_CAM_DEADZONE_OFF);
 }
 
 void r01_bg0_set_wrap(R01GameCtx *ctx, int wrap_x, int wrap_y) {

@@ -112,7 +112,7 @@ int r01e_cart_solid_at(const R01eCart *c, int world, int wx, int wy);
 /* Player AABB vs present screens and BG solid (Studio play.c SoT). */
 int r01e_cart_player_aabb_ok(const R01eCart *c, int world, int px, int py);
 
-/* General AABB (bw x bh) vs present screens and BG solid. */
+/* General AABB (bw x bh) vs present screens and all overlapping BG solid tiles. */
 int r01e_cart_aabb_ok(const R01eCart *c, int world, int px, int py, int bw, int bh);
 
 /* Absolute byte in cart image, or NULL if OOB. */

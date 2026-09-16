@@ -24,6 +24,7 @@
 #define R01_CAM_AXIS_H 1
 #define R01_CAM_AXIS_V 2
 
+#define R01_CAM_DEADZONE_OFF 0
 #define R01_CAM_DEADZONE_X_DEFAULT 32
 #define R01_CAM_DEADZONE_Y_DEFAULT 30
 
@@ -95,6 +96,7 @@ uint8_t r01_pad_just_pressed(R01GameCtx *ctx, uint8_t btn);
 void r01_player_warp(R01GameCtx *ctx, int col, int row);
 void r01_player_set_type(uint8_t type_id);
 void r01_camera_set_deadzone(R01GameCtx *ctx, int dx, int dy);
+void r01_camera_disable_deadzone(R01GameCtx *ctx);
 void r01_camera_set_axis_lock(R01GameCtx *ctx, int mode);
 void r01_bg0_set_wrap(R01GameCtx *ctx, int wrap_x, int wrap_y);
 void r01_bg0_set_clip_to_bg1(R01GameCtx *ctx, int enable);

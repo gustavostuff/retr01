@@ -19,7 +19,7 @@ int r01_world_attr_at(const R01World *w, int wx, int wy, uint8_t *out_attr);
 
 int r01_world_solid_at(const R01World *w, int wx, int wy);
 
-/* AABB vs present screens and BG solid tiles (corner samples). */
+/* AABB vs present screens and BG solid tiles (all overlapping 8x8 cells). */
 int r01_world_aabb_ok(const R01World *w, int px, int py, int bw, int bh);
 
 /* Player stub AABB (8x8) vs present screens and BG solid tiles. */

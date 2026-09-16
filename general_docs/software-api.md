@@ -88,7 +88,7 @@ Phase 1 Studio carts also embed a compact **instance table** in PRG (see `memory
 
 ### Camera helpers (locked intent)
 
-Default dead zone **32x30** pixels inside the 128x120 view when world header bytes 30-31 are non-zero. Axis lock may be **both**, **H only**, or **V only**. See `world-scrolling.md`. Studio may pack dead-zone size from `r01_camera_set_deadzone` in author `custom_logic.c` at export time.
+Default dead zone **32x30** pixels inside the 128x120 view when world header bytes 30-31 are non-zero. **0,0** (or `r01_camera_disable_deadzone`) turns the dead zone off for 1:1 camera track. Axis lock may be **both**, **H only**, or **V only**. See `world-scrolling.md`. Studio packs dead-zone size from `r01_camera_set_deadzone` / `r01_camera_disable_deadzone` in author `custom_logic.c` at export time.
 
 ### Starter API (locked signatures)
 
@@ -154,7 +154,7 @@ Hardware caps: **64** OAM entries, **16** sprites per scanline. Catalog cap: **1
 | --- | --- |
 | Movement | Axis-separated (resolve X then Y, or the reverse, consistently) |
 | Solids | BG tiles with attr **bit 6** set |
-| Colliders | Entity AABB hitboxes (per state) |
+| Colliders | Entity AABB hitboxes (per state). Vs BG solids: every overlapping 8x8 tile is tested (not corners only) |
 | Gravity / jump | Simple constant gravity + jump impulse (PRG tunes numbers) |
 | Slopes | **No** |
 | Moving platforms | **No** |
