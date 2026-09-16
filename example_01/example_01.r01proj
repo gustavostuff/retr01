@@ -3,53 +3,33 @@
   "name": "example_01",
   "default_world": 0,
   "active_world": 0,
-  "active_screen": 2,
+  "active_screen": 17,
   "default_screen": 2,
   "default_pal_row": 0,
-  "player_entity": 0,
+  "player_entity": -1,
   "grid_cols": 16,
   "grid_rows": 16,
   "global_pal_bg": [[0, 16, 32, 48], [0, 12, 44, 48], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51]],
   "global_pal_spr": [[0, 18, 34, 50], [0, 2, 34, 51], [0, 23, 39, 55], [0, 30, 46, 51], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34]],
-  "player_bank_tiles": 4,
-  "player_bank_b64": "AODw8PDgYPAAAADgQOCAIA0fEw8DAwMDBg0MAAEBAQD4/Cz44ODg8DDY2ABAQECgAAMHDw0PDgUAAAAAAwEBAg==",
+  "player_bank_tiles": 0,
+  "player_bank_b64": "",
   "bg_bank0_tiles": 11,
   "bg_bank0_b64": "AAAAAAAAAAD////////////DzY2FgYH/ADw+fn5+fgAAAAAAAAAAAAAAAAAAAAAA////3/////8AAAAgAAAAAP//79fv////AAAQOBAAAAD//////////wAAAAAAAAAAABAwEBAQOAAAEDAQEBA4AAAYJAgQPAAAABgkCBA8AAAAOAQYBAQ4AAA4BBgEBDgAACQkPAQEBAAAJCQ8BAQEAAAfODBwYGBgAAAHDw8fHx8=",
   "spr_banks": [
-    {"tiles": 5, "b64": "AAMHDw0PDgUAAAAAAwEBAgAAAAAAAAAAAAAAAAAAAAAA4PDw8OBg8AAAAOBA4IAgDR8TDwMDAwMGDQwAAQEBAPj8LPjg4ODwMNjYAEBAQKA="},
+    {"tiles": 5, "b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""}
   ],
   "sprites": [
-    {"bank": 0, "tile": 0, "pal": 1},
-    {"bank": 0, "tile": 2, "pal": 1},
-    {"bank": 0, "tile": 3, "pal": 1},
-    {"bank": 0, "tile": 4, "pal": 1}
   ],
   "metasprites": [
   ],
   "metatiles": [
   ],
   "entities": [
-    {
-      "name": "player",
-      "state_count": 1,
-      "states": [
-        {
-          "name": "Idle",
-          "origin_x": 15, "origin_y": 17,
-          "hitbox_x": 13, "hitbox_y": 15, "hitbox_w": 5, "hitbox_h": 10,
-          "frame_count": 1,
-          "frames": [
-            {"parts": [{"bank":4,"tile":0,"pal":1,"fh":0,"fv":0,"dx":15,"dy":9},{"bank":4,"tile":1,"pal":1,"fh":0,"fv":0,"dx":7,"dy":17},{"bank":4,"tile":2,"pal":1,"fh":0,"fv":0,"dx":15,"dy":17},{"bank":4,"tile":3,"pal":1,"fh":0,"fv":0,"dx":7,"dy":9}]}
-          ]
-        }
-      ]
-    }
   ],
   "instances": [
-    {"type": 0, "x": 339, "y": 68}
   ],
   "warp_entrances": [
   ],

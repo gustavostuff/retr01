@@ -1,5 +1,6 @@
 #include "ui/ui.h"
 #include "ui/internal.h"
+#include "ui/undo/undo_cmds.h"
 #include "font/font.h"
 
 #include "retr01_studio/cart.h"
@@ -62,6 +63,35 @@ void screen_set_sel_pal(UiState *ui, int pal) {
         }
     }
     screen_refresh_sel(ui);
+}
+
+void screen_remove_sel_tiles(UiState *ui) {
+    R01World *w = r01_project_active_world(ui->project);
+    R01Screen *s = ui_edit_map_screen(ui);
+    int min_x, min_y, max_x, max_y, ty, tx;
+    int touched = 0;
+    if (!w || !s || !screen_sel_valid(ui)) {
+        return;
+    }
+    screen_sel_bounds(ui, &min_x, &min_y, &max_x, &max_y);
+    (void)ui_undo_paint_begin(ui);
+    for (ty = min_y; ty <= max_y; ty++) {
+        for (tx = min_x; tx <= max_x; tx++) {
+            int cell = ty * R01_SCREEN_TILES_X + tx;
+            uint8_t old_tile = s->tiles[cell];
+            uint8_t old_attr = s->attrs[cell];
+            if (old_tile == 0) {
+                continue;
+            }
+            ui_undo_paint_record_cell(ui, tx, ty, old_tile, old_attr, 0, old_attr);
+            r01_screen_paint_tile(w, s, tx, ty, 0, old_attr);
+            touched = 1;
+        }
+    }
+    ui_undo_paint_end(ui);
+    if (touched) {
+        ui_toast(ui, "tile removed", 0);
+    }
 }
 
 void screen_toggle_sel_flag(UiState *ui, uint8_t flag) {

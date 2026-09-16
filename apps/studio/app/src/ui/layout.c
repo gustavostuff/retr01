@@ -638,6 +638,38 @@ int player_bank_cell_hit(const UiState *ui, int lx, int ly, int *out_tile_id) {
     return 1;
 }
 
+void bank_sel_clear(UiState *ui) {
+    if (!ui) {
+        return;
+    }
+    ui->bank_sel_tile = -1;
+    ui->bank_sel_bank = 0;
+    ui->bank_sel_plane = UI_BANKS_PLANE_SPR;
+}
+
+void bank_sel_set(UiState *ui, int plane, int bank, int tile_id) {
+    if (!ui || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
+        bank_sel_clear(ui);
+        return;
+    }
+    if (plane == UI_BANKS_PLANE_PLAYER) {
+        bank = 0;
+    } else if (bank < 0 || bank >= UI_BANKS_N) {
+        bank_sel_clear(ui);
+        return;
+    }
+    ui->bank_sel_plane = plane;
+    ui->bank_sel_bank = bank;
+    ui->bank_sel_tile = tile_id;
+    ui->sel_instance = -1;
+    ui->inst_drag = 0;
+    screen_sel_clear(ui);
+}
+
+int bank_sel_valid(const UiState *ui) {
+    return ui && ui->bank_sel_tile >= 0 && ui->bank_sel_tile < R01_TILES_PER_BANK;
+}
+
 int world_sub_hit(const UiState *ui, int lx, int ly) {
     UiTabsLayout tabs;
     int sel;

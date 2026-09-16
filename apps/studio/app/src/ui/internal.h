@@ -283,6 +283,9 @@ int banks_tab_hit(const UiState *ui, int lx, int ly, int *out_idx);
 int banks_sub_hit(const UiState *ui, int lx, int ly);
 void banks_tabs_prepare(const UiState *ui, UiTabsLayout *out);
 int player_bank_cell_hit(const UiState *ui, int lx, int ly, int *out_tile_id);
+void bank_sel_set(UiState *ui, int plane, int bank, int tile_id);
+void bank_sel_clear(UiState *ui);
+int bank_sel_valid(const UiState *ui);
 int metatiles_list_hit(const UiState *ui, int lx, int ly, int *out_idx);
 int metatiles_add_hit(const UiState *ui, int lx, int ly);
 int metasprites_list_hit(const UiState *ui, int lx, int ly, int *out_idx);
@@ -345,6 +348,8 @@ void ui_play_stop(UiState *ui);
 void ui_play_boot_finish(UiState *ui, SDL_Renderer *ren);
 int ui_play_screen_mark(const UiState *ui);
 void screen_set_sel_bank(UiState *ui, int bank);
+/* Clear selected screen cells to tile index 0 (keeps attrs; does not touch CHR). */
+void screen_remove_sel_tiles(UiState *ui);
 void screen_set_sel_pal(UiState *ui, int pal);
 void screen_toggle_sel_flag(UiState *ui, uint8_t flag);
 void screen_set_solid_by_hw(UiState *ui, int ref_tx, int ref_ty);

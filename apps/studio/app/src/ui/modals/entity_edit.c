@@ -32,15 +32,24 @@ int entity_edit_add_sprite_at(UiState *ui, int wx, int wy) {
     if (!w) {
         return -1;
     }
-    bank = r01_chr_find_spr_bank_space(w);
-    if (bank < 0) {
-        ui_toast(ui, "sprite banks full", 1);
-        return -1;
-    }
-    tile_id = r01_chr_alloc_spr_tile(w, bank);
-    if (tile_id < 0) {
-        ui_toast(ui, "sprite banks full", 1);
-        return -1;
+    if (r01_world_player_entity(w) == ui->entity_edit.type_idx && ui->entity_edit.type_idx >= 0) {
+        bank = R01_PLAYER_CHR_BANK;
+        tile_id = r01_player_bank_alloc_tile(ui->project);
+        if (tile_id < 0) {
+            ui_toast(ui, "player bank full", 1);
+            return -1;
+        }
+    } else {
+        bank = r01_chr_find_spr_bank_space(w);
+        if (bank < 0) {
+            ui_toast(ui, "sprite banks full", 1);
+            return -1;
+        }
+        tile_id = r01_chr_alloc_spr_tile(w, bank);
+        if (tile_id < 0) {
+            ui_toast(ui, "sprite banks full", 1);
+            return -1;
+        }
     }
     cat = r01_world_sprite_add(w, bank, tile_id, ui->entity_edit.paint_pal);
     memset(&part, 0, sizeof(part));

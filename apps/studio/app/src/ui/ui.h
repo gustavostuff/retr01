@@ -454,6 +454,9 @@ typedef struct UiState {
     int worlds_plane; /* UI_WORLDS_PLANE_BG1 or BG0 */
     int banks_idx;    /* 0..3 CHR bank tab */
     int banks_plane;  /* UI_BANKS_PLANE_BG or SPR */
+    int bank_sel_tile;  /* -1 none; selected pattern in Banks / Player bank */
+    int bank_sel_bank;
+    int bank_sel_plane; /* UI_BANKS_PLANE_* when bank_sel_tile >= 0 */
     int world_sel_col; /* grid selection (-1 none); empty slots allowed */
     int world_sel_row;
     int screen_clip_valid;

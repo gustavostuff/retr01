@@ -214,6 +214,11 @@ static void draw_banks_body(UiState *ui, SDL_Renderer *r, const AccordionLayout 
         hy = grid_y + (tid / 16) * 8;
         hover_overlay(r, hx, hy, 8, 8);
     }
+    if (bank_sel_valid(ui) && ui->bank_sel_plane == ui->banks_plane && ui->bank_sel_bank == bank) {
+        int sx = UI_WORLDS_X + (ui->bank_sel_tile % 16) * 8;
+        int sy = grid_y + (ui->bank_sel_tile / 16) * 8;
+        draw_marching_ants(r, sx, sy, 8, 8);
+    }
 }
 
 static void draw_player_bank_body(UiState *ui, SDL_Renderer *r, const AccordionLayout *lo) {
@@ -260,6 +265,11 @@ static void draw_player_bank_body(UiState *ui, SDL_Renderer *r, const AccordionL
         hx = UI_WORLDS_X + (tid % 16) * 8;
         hy = grid_y + (tid / 16) * 8;
         hover_overlay(r, hx, hy, 8, 8);
+    }
+    if (bank_sel_valid(ui) && ui->bank_sel_plane == UI_BANKS_PLANE_PLAYER) {
+        int sx = UI_WORLDS_X + (ui->bank_sel_tile % 16) * 8;
+        int sy = grid_y + (ui->bank_sel_tile / 16) * 8;
+        draw_marching_ants(r, sx, sy, 8, 8);
     }
 }
 

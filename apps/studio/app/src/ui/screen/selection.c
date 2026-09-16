@@ -17,6 +17,7 @@ void screen_sel_set(UiState *ui, int x0, int y0, int x1, int y1) {
     if (!ui) {
         return;
     }
+    bank_sel_clear(ui);
     if (x0 > x1) {
         int t = x0;
         x0 = x1;

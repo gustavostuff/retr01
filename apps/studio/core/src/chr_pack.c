@@ -330,6 +330,51 @@ int r01_player_bank_write_tile(R01Project *p, int tile_id, const uint8_t tile[R0
     return 0;
 }
 
+int r01_player_bank_alloc_tile(R01Project *p) {
+    int id;
+    uint8_t blank[R01_TILE_BYTES];
+    if (!p) {
+        return -1;
+    }
+    memset(blank, 0, sizeof(blank));
+    for (id = 0; id < p->player_bank.tile_count; id++) {
+        const uint8_t *t = p->player_bank.chr + (size_t)id * R01_TILE_BYTES;
+        int b, blank_slot = 1;
+        /* Cart Play still reserves SPR0 tile 1 as the solid player stub. */
+        if (id == R01_SPR_PLAYER_TILE_ID) {
+            continue;
+        }
+        for (b = 0; b < R01_TILE_BYTES; b++) {
+            if (t[b]) {
+                blank_slot = 0;
+                break;
+            }
+        }
+        if (blank_slot) {
+            return id;
+        }
+    }
+    if (p->player_bank.tile_count == R01_SPR_PLAYER_TILE_ID) {
+        if (r01_player_bank_write_tile(p, R01_SPR_PLAYER_TILE_ID, blank) != 0) {
+            return -1;
+        }
+    }
+    if (p->player_bank.tile_count >= R01_TILES_PER_BANK) {
+        return -1;
+    }
+    id = p->player_bank.tile_count;
+    if (id == R01_SPR_PLAYER_TILE_ID) {
+        if (r01_player_bank_write_tile(p, id, blank) != 0) {
+            return -1;
+        }
+        id = p->player_bank.tile_count;
+    }
+    if (r01_player_bank_write_tile(p, id, blank) != 0) {
+        return -1;
+    }
+    return id;
+}
+
 void r01_screen_paint_tile(R01World *w, R01Screen *s, int tile_x, int tile_y, uint8_t tile_id, uint8_t attr) {
     int cell;
     int sy, sx;

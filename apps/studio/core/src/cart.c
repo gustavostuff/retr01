@@ -222,7 +222,8 @@ static int build_other_blob(Buf *b, const R01Project *p) {
 }
 
 static uint8_t pack_oam_attr(int bank, int pal, int flip_h, int flip_v) {
-    uint8_t a = (uint8_t)((bank & 3) | ((pal & 3) << 2));
+    int b = r01_is_player_chr_bank(bank) ? 0 : bank;
+    uint8_t a = (uint8_t)((b & 3) | ((pal & 3) << 2));
     if (flip_h) {
         a |= R01_ATTR_FLIP_H;
     }
@@ -291,7 +292,8 @@ static int append_player_anim_blob(Buf *blob, const R01World *w, int player_type
                 const R01EntityPart *pt = &fr->parts[pi];
                 uint8_t part[4];
                 int tile = pt->tile_id;
-                if (remap_b0_tile1 >= 0 && pt->bank == 0 && pt->tile_id == R01_SPR_PLAYER_TILE_ID) {
+                if (remap_b0_tile1 >= 0 && pt->tile_id == R01_SPR_PLAYER_TILE_ID &&
+                    (pt->bank == 0 || r01_is_player_chr_bank(pt->bank))) {
                     tile = remap_b0_tile1;
                 }
                 part[0] = (uint8_t)tile;
@@ -418,7 +420,8 @@ static size_t pack_entity_def(uint8_t *out, size_t cap, const R01EntityType *ent
                 int tile = pt->tile_id;
                 int rx = pt->dx - ox;
                 int ry = pt->dy - oy;
-                if (remap_b0_tile1 >= 0 && pt->bank == 0 && pt->tile_id == R01_SPR_PLAYER_TILE_ID) {
+                if (remap_b0_tile1 >= 0 && pt->tile_id == R01_SPR_PLAYER_TILE_ID &&
+                    (pt->bank == 0 || r01_is_player_chr_bank(pt->bank))) {
                     tile = remap_b0_tile1;
                 }
                 if (rx < -128) {
@@ -720,7 +723,30 @@ static int resolve_custom_logic_path(const char *cart_or_stem_path, char *out, s
     return 0;
 }
 
-static int build_world_blob(Buf *blob, const R01World *w, const char *custom_logic_path) {
+static void merge_player_bank_into_spr0(uint8_t bank[R01_CHR_BANK_BYTES], const R01Project *p) {
+    int tid;
+    if (!bank || !p) {
+        return;
+    }
+    for (tid = 0; tid < p->player_bank.tile_count && tid < R01_TILES_PER_BANK; tid++) {
+        const uint8_t *src = p->player_bank.chr + (size_t)tid * R01_TILE_BYTES;
+        int b, nonzero = 0;
+        if (tid == R01_SPR_PLAYER_TILE_ID) {
+            continue;
+        }
+        for (b = 0; b < R01_TILE_BYTES; b++) {
+            if (src[b]) {
+                nonzero = 1;
+                break;
+            }
+        }
+        if (nonzero) {
+            memcpy(bank + (size_t)tid * R01_TILE_BYTES, src, R01_TILE_BYTES);
+        }
+    }
+}
+
+static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w, const char *custom_logic_path) {
     uint8_t hdr[WORLD_HDR_SIZE];
     uint8_t dir[R01_MAX_PRESENT_SCREENS * SCREEN_DIR_ENT];
     uint8_t bg0_dir[R01_BG0_SCREENS_MAX * SCREEN_DIR_ENT];
@@ -772,6 +798,7 @@ static int build_world_blob(Buf *blob, const R01World *w, const char *custom_log
             n = sizeof(spr0);
         }
         memcpy(spr0, w->spr_banks[0].chr, n);
+        merge_player_bank_into_spr0(spr0, p);
         remap_b0_tile1 = relocate_spr0_tile1(spr0, w);
     }
     if (build_entity_catalog(&catalog, w, type_n, remap_b0_tile1) != 0) {
@@ -898,6 +925,7 @@ static int build_world_blob(Buf *blob, const R01World *w, const char *custom_log
         }
         memcpy(bank, w->spr_banks[bi].chr, n);
         if (bi == 0) {
+            merge_player_bank_into_spr0(bank, p);
             /* Remap already computed for the entity catalog; apply the same bank edit. */
             (void)relocate_spr0_tile1(bank, w);
             fill_solid_tile(bank + (size_t)R01_SPR_PLAYER_TILE_ID * R01_TILE_BYTES, 1);
@@ -1079,7 +1107,7 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
     {
         char custom_logic_path[R01_PATH_MAX];
         resolve_custom_logic_path(cart_path, custom_logic_path, sizeof(custom_logic_path));
-        if (build_world_blob(&world_blob, &work->worlds[0], custom_logic_path) != 0) {
+        if (build_world_blob(&world_blob, work, &work->worlds[0], custom_logic_path) != 0) {
         free(work);
         free(world_blob.data);
         if (err_buf && err_cap > 0) {

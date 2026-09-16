@@ -165,6 +165,9 @@ int ui_init(UiState *ui) {
     ui->hide_spr_layer = 0;
     ui->banks_idx = 0;
     ui->banks_plane = UI_BANKS_PLANE_SPR;
+    ui->bank_sel_tile = -1;
+    ui->bank_sel_bank = 0;
+    ui->bank_sel_plane = UI_BANKS_PLANE_SPR;
     ui->accordion_open = UI_ACC_WORLDS;
     accordion_init_heights(ui);
     ui->logic_scale = 1;

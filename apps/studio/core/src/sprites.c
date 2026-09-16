@@ -81,7 +81,11 @@ int r01_world_sprite_add(R01World *w, int bank, int tile_id, int pal) {
     if (!w || w->sprite_count >= R01_MAX_SPRITES) {
         return -1;
     }
-    if (bank < 0 || bank >= R01_SPR_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
+    if (r01_is_player_chr_bank(bank)) {
+        if (tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
+            return -1;
+        }
+    } else if (bank < 0 || bank >= R01_SPR_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         return -1;
     }
     if (pal < 0) {

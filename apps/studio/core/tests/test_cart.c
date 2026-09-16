@@ -276,6 +276,72 @@ TEST_MAIN() {
         }
     }
 
+    /* Player bank patterns merge into exported SPR0; OAM bank 4 packs as 0. */
+    {
+        R01Project *p2 = (R01Project *)calloc(1, sizeof(R01Project));
+        R01World *w2;
+        R01EntityPart *pt;
+        uint8_t art[R01_TILE_BYTES];
+        EXPECT(p2 != NULL, "alloc p2");
+        if (p2) {
+            r01_project_init(p2, "pb");
+            w2 = &p2->worlds[0];
+            memset(art, 0, sizeof(art));
+            art[0] = 0x81;
+            art[8] = 0x18;
+            EXPECT(r01_player_bank_write_tile(p2, 0, art) == 0, "pb tile0");
+            EXPECT(r01_player_bank_write_tile(p2, 2, art) == 0, "pb tile2");
+            EXPECT(r01_world_entity_add(w2) == 0, "pb entity");
+            pt = &w2->entities[0].states[0].frames[0].parts[0];
+            memset(pt, 0, sizeof(*pt));
+            pt->bank = R01_PLAYER_CHR_BANK;
+            pt->tile_id = 2;
+            w2->entities[0].states[0].frames[0].part_count = 1;
+            r01_world_set_player_entity(w2, 0);
+            EXPECT(r01_cart_write(p2, "test_cart_pb.retr01", err, sizeof(err)) == 0, "cart pb write");
+            {
+                FILE *f = fopen("test_cart_pb.retr01", "rb");
+                EXPECT(f != NULL, "open pb cart");
+                if (f) {
+                    uint8_t ptrs[CART_PTR_SIZE];
+                    uint8_t slot[8];
+                    uint8_t hdr[WORLD_HDR_SIZE];
+                    uint8_t got[R01_TILE_BYTES];
+                    uint8_t defbuf[128];
+                    uint32_t off_wtable, world_base, off_chr, off_types, spr0;
+                    uint16_t d0;
+                    const uint8_t *st;
+                    const uint8_t *fr;
+                    EXPECT(fseek(f, CART_HDR_SIZE, SEEK_SET) == 0, "seek ptrs");
+                    EXPECT(fread(ptrs, 1, sizeof(ptrs), f) == sizeof(ptrs), "read ptrs");
+                    off_wtable = rd_u24(ptrs + 18);
+                    EXPECT(fseek(f, (long)off_wtable, SEEK_SET) == 0, "seek wtable");
+                    EXPECT(fread(slot, 1, 8, f) == 8, "read slot");
+                    world_base = rd_u24(slot + 2);
+                    EXPECT(fseek(f, (long)world_base, SEEK_SET) == 0, "seek world");
+                    EXPECT(fread(hdr, 1, sizeof(hdr), f) == sizeof(hdr), "read whdr");
+                    off_chr = rd_u24(hdr + 8);
+                    off_types = rd_u24(hdr + R01_CART_WHDR_OFF_TYPES);
+                    spr0 = world_base + off_chr + 4u * R01_CHR_BANK_BYTES;
+                    EXPECT(fseek(f, (long)(spr0 + 2u * R01_TILE_BYTES), SEEK_SET) == 0, "seek spr tile2");
+                    EXPECT(fread(got, 1, sizeof(got), f) == sizeof(got), "read spr tile2");
+                    EXPECT(got[0] == 0x81 && got[8] == 0x18, "player bank merged into spr0");
+                    EXPECT(fseek(f, (long)(world_base + off_types), SEEK_SET) == 0, "seek types");
+                    EXPECT(fread(defbuf, 1, 2, f) == 2, "dir0");
+                    d0 = rd_u16(defbuf);
+                    EXPECT(fseek(f, (long)(world_base + off_types + d0), SEEK_SET) == 0, "seek def0");
+                    EXPECT(fread(defbuf, 1, 32, f) == 32, "read def0");
+                    st = defbuf + rd_u16(defbuf + 4);
+                    fr = st + rd_u16(st + 6);
+                    EXPECT(fr[2] == 2, "packed tile id");
+                    EXPECT((fr[5] & 3) == 0, "player bank packs as spr bank 0");
+                    fclose(f);
+                }
+            }
+            free(p2);
+        }
+    }
+
     free(p);
     TEST_EXIT();
 }

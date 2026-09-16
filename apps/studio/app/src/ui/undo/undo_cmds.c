@@ -1025,6 +1025,436 @@ void ui_undo_push_player_chr_edit(UiState *ui, int tile_id, const uint8_t old_ch
     }
 }
 
+/* ---- bank tile / sprite remove (source CHR + remap refs to tile 0) ---- */
+
+typedef struct UiUndoBankTileRef {
+    uint8_t screen_plane; /* UI_WORLDS_PLANE_* */
+    uint8_t screen_idx;
+    uint16_t cell;
+    uint8_t old_tile;
+} UiUndoBankTileRef;
+
+typedef struct UiUndoBankPartRef {
+    uint8_t kind; /* 0=entity 1=metasprite 3=metatile */
+    int16_t a;    /* entity/meta/metatile idx */
+    int16_t b;    /* state or corner */
+    int16_t c;    /* frame */
+    int16_t d;    /* part */
+    uint8_t old_tile;
+} UiUndoBankPartRef;
+
+typedef struct UiUndoBankTileRemove {
+    int world_idx;
+    int bank_plane;
+    int bank;
+    int tile_id;
+    int old_tile_count;
+    uint8_t old_chr[R01_TILE_BYTES];
+    UiUndoBankTileRef *refs;
+    int ref_count;
+    UiUndoBankPartRef *parts;
+    int part_count;
+    R01SpriteDef *removed_cats;
+    int removed_cat_count;
+} UiUndoBankTileRemove;
+
+static void bank_tile_remove_destroy(void *data) {
+    UiUndoBankTileRemove *d = (UiUndoBankTileRemove *)data;
+    if (!d) {
+        return;
+    }
+    free(d->refs);
+    free(d->parts);
+    free(d->removed_cats);
+    free(d);
+}
+
+static int bank_tile_remove_write_chr(UiState *ui, UiUndoBankTileRemove *d, const uint8_t *chr) {
+    R01World *w;
+    if (!ui || !d || !chr || !ui->project) {
+        return -1;
+    }
+    w = &ui->project->worlds[d->world_idx];
+    if (d->bank_plane == UI_BANKS_PLANE_PLAYER) {
+        return r01_player_bank_write_tile(ui->project, d->tile_id, chr);
+    }
+    if (d->bank_plane == UI_BANKS_PLANE_SPR) {
+        return r01_chr_write_spr_tile(w, d->bank, d->tile_id, chr);
+    }
+    return r01_chr_write_tile(w, d->bank, d->tile_id, chr);
+}
+
+static void bank_tile_remove_apply_refs(UiState *ui, UiUndoBankTileRemove *d, int use_new) {
+    R01World *w;
+    int i;
+    if (!ui || !d || !ui->project) {
+        return;
+    }
+    w = &ui->project->worlds[d->world_idx];
+    for (i = 0; i < d->ref_count; i++) {
+        UiUndoBankTileRef *r = &d->refs[i];
+        R01Screen *s = undo_screen_ptr(ui, d->world_idx, r->screen_plane, r->screen_idx);
+        int tx, ty;
+        uint8_t tile;
+        if (!s || !s->present) {
+            continue;
+        }
+        tx = (int)(r->cell % R01_SCREEN_TILES_X);
+        ty = (int)(r->cell / R01_SCREEN_TILES_X);
+        tile = use_new ? 0 : r->old_tile;
+        r01_screen_paint_tile(w, s, tx, ty, tile, s->attrs[r->cell]);
+    }
+    for (i = 0; i < d->part_count; i++) {
+        UiUndoBankPartRef *p = &d->parts[i];
+        uint8_t tile = use_new ? 0 : p->old_tile;
+        if (p->kind == 0) {
+            if (p->a >= 0 && p->a < w->entity_count && p->b >= 0 && p->b < w->entities[p->a].state_count &&
+                p->c >= 0 && p->c < w->entities[p->a].states[p->b].frame_count && p->d >= 0 &&
+                p->d < w->entities[p->a].states[p->b].frames[p->c].part_count) {
+                w->entities[p->a].states[p->b].frames[p->c].parts[p->d].tile_id = tile;
+            }
+        } else if (p->kind == 1) {
+            if (p->a >= 0 && p->a < w->metasprite_count && p->d >= 0 &&
+                p->d < w->metasprites[p->a].frame.part_count) {
+                w->metasprites[p->a].frame.parts[p->d].tile_id = tile;
+            }
+        } else if (p->kind == 3) {
+            if (p->a >= 0 && p->a < w->metatile_count && p->b >= 0 && p->b < 4) {
+                w->metatiles[p->a].tile[p->b] = tile;
+            }
+        }
+    }
+    if (use_new) {
+        /* Drop catalog entries that pointed at this pattern. */
+        for (i = w->sprite_count - 1; i >= 0; i--) {
+            int match = 0;
+            if (d->bank_plane == UI_BANKS_PLANE_PLAYER) {
+                match = r01_is_player_chr_bank(w->sprites[i].bank) && w->sprites[i].tile_id == d->tile_id;
+            } else if (d->bank_plane == UI_BANKS_PLANE_SPR) {
+                match = w->sprites[i].bank == d->bank && w->sprites[i].tile_id == d->tile_id;
+            }
+            if (match) {
+                (void)r01_world_sprite_remove(w, i);
+            }
+        }
+    } else {
+        for (i = 0; i < d->removed_cat_count; i++) {
+            const R01SpriteDef *s = &d->removed_cats[i];
+            (void)r01_world_sprite_add(w, s->bank, s->tile_id, s->pal);
+        }
+    }
+}
+
+static int bank_tile_chr_is_blank(const uint8_t *tile) {
+    int b;
+    if (!tile) {
+        return 1;
+    }
+    for (b = 0; b < R01_TILE_BYTES; b++) {
+        if (tile[b]) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static void bank_tile_trim_count(UiState *ui, UiUndoBankTileRemove *d) {
+    R01World *w;
+    if (!ui || !d || !ui->project) {
+        return;
+    }
+    w = &ui->project->worlds[d->world_idx];
+    if (d->bank_plane == UI_BANKS_PLANE_PLAYER) {
+        while (ui->project->player_bank.tile_count > 0) {
+            int id = ui->project->player_bank.tile_count - 1;
+            const uint8_t *t = ui->project->player_bank.chr + (size_t)id * R01_TILE_BYTES;
+            if (!bank_tile_chr_is_blank(t)) {
+                break;
+            }
+            ui->project->player_bank.tile_count--;
+        }
+    } else if (d->bank_plane == UI_BANKS_PLANE_SPR && d->bank >= 0 && d->bank < R01_SPR_BANKS) {
+        R01ChrBank *b = &w->spr_banks[d->bank];
+        while (b->tile_count > 0) {
+            int id = b->tile_count - 1;
+            const uint8_t *t = b->chr + (size_t)id * R01_TILE_BYTES;
+            if (!bank_tile_chr_is_blank(t)) {
+                break;
+            }
+            b->tile_count--;
+        }
+    } else if (d->bank_plane == UI_BANKS_PLANE_BG && d->bank >= 0 && d->bank < R01_BG_BANKS) {
+        R01ChrBank *b = &w->bg_banks[d->bank];
+        while (b->tile_count > 0) {
+            int id = b->tile_count - 1;
+            const uint8_t *t = b->chr + (size_t)id * R01_TILE_BYTES;
+            if (!bank_tile_chr_is_blank(t)) {
+                break;
+            }
+            b->tile_count--;
+        }
+    }
+}
+
+static void bank_tile_remove_apply(UiState *ui, UiUndoBankTileRemove *d, int use_new) {
+    uint8_t blank[R01_TILE_BYTES];
+    R01World *w;
+    if (!d || !ui || !ui->project) {
+        return;
+    }
+    w = &ui->project->worlds[d->world_idx];
+    memset(blank, 0, sizeof(blank));
+    (void)bank_tile_remove_write_chr(ui, d, use_new ? blank : d->old_chr);
+    if (!use_new) {
+        if (d->bank_plane == UI_BANKS_PLANE_PLAYER) {
+            if (d->old_tile_count > ui->project->player_bank.tile_count) {
+                ui->project->player_bank.tile_count = d->old_tile_count;
+            }
+        } else if (d->bank_plane == UI_BANKS_PLANE_SPR && d->bank >= 0 && d->bank < R01_SPR_BANKS) {
+            if (d->old_tile_count > w->spr_banks[d->bank].tile_count) {
+                w->spr_banks[d->bank].tile_count = d->old_tile_count;
+            }
+        } else if (d->bank_plane == UI_BANKS_PLANE_BG && d->bank >= 0 && d->bank < R01_BG_BANKS) {
+            if (d->old_tile_count > w->bg_banks[d->bank].tile_count) {
+                w->bg_banks[d->bank].tile_count = d->old_tile_count;
+            }
+        }
+    }
+    bank_tile_remove_apply_refs(ui, d, use_new);
+    if (use_new) {
+        bank_tile_trim_count(ui, d);
+    }
+    if (d->bank_plane == UI_BANKS_PLANE_BG) {
+        undo_refresh_world_screens(w);
+    }
+}
+
+static void bank_tile_remove_undo(UiState *ui, void *data) {
+    bank_tile_remove_apply(ui, (UiUndoBankTileRemove *)data, 0);
+}
+
+static void bank_tile_remove_redo(UiState *ui, void *data) {
+    bank_tile_remove_apply(ui, (UiUndoBankTileRemove *)data, 1);
+}
+
+static const UiUndoVTable bank_tile_remove_vt = {bank_tile_remove_undo, bank_tile_remove_redo,
+                                                bank_tile_remove_destroy};
+
+static int bank_tile_remove_push_ref(UiUndoBankTileRemove *d, int screen_plane, int screen_idx, int cell,
+                                     uint8_t old_tile) {
+    UiUndoBankTileRef *n;
+    if (!d) {
+        return -1;
+    }
+    n = (UiUndoBankTileRef *)realloc(d->refs, (size_t)(d->ref_count + 1) * sizeof(*n));
+    if (!n) {
+        return -1;
+    }
+    d->refs = n;
+    d->refs[d->ref_count].screen_plane = (uint8_t)screen_plane;
+    d->refs[d->ref_count].screen_idx = (uint8_t)screen_idx;
+    d->refs[d->ref_count].cell = (uint16_t)cell;
+    d->refs[d->ref_count].old_tile = old_tile;
+    d->ref_count++;
+    return 0;
+}
+
+static int bank_tile_remove_push_part(UiUndoBankTileRemove *d, uint8_t kind, int a, int b, int c, int part,
+                                      uint8_t old_tile) {
+    UiUndoBankPartRef *n;
+    if (!d) {
+        return -1;
+    }
+    n = (UiUndoBankPartRef *)realloc(d->parts, (size_t)(d->part_count + 1) * sizeof(*n));
+    if (!n) {
+        return -1;
+    }
+    d->parts = n;
+    d->parts[d->part_count].kind = kind;
+    d->parts[d->part_count].a = (int16_t)a;
+    d->parts[d->part_count].b = (int16_t)b;
+    d->parts[d->part_count].c = (int16_t)c;
+    d->parts[d->part_count].d = (int16_t)part;
+    d->parts[d->part_count].old_tile = old_tile;
+    d->part_count++;
+    return 0;
+}
+
+static int bank_tile_matches_part(int bank_plane, int bank, int tile_id, int part_bank, int part_tile) {
+    if (part_tile != tile_id) {
+        return 0;
+    }
+    if (bank_plane == UI_BANKS_PLANE_PLAYER) {
+        return r01_is_player_chr_bank(part_bank);
+    }
+    if (bank_plane == UI_BANKS_PLANE_SPR) {
+        return part_bank == bank;
+    }
+    return 0;
+}
+
+void ui_undo_push_bank_tile_remove(UiState *ui, int bank_plane, int bank, int tile_id) {
+    UiUndoBankTileRemove *d;
+    R01World *w;
+    const uint8_t *src;
+    uint8_t blank[R01_TILE_BYTES];
+    int si, ei, mi, ci, corner;
+    int wi;
+
+    if (!ui || !ui->project || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
+        return;
+    }
+    if (bank_plane == UI_BANKS_PLANE_BG && tile_id == 0) {
+        ui_toast(ui, "cannot remove tile 0", 1);
+        return;
+    }
+    wi = ui->project->active_world;
+    if (wi < 0 || wi >= R01_MAX_WORLDS) {
+        return;
+    }
+    w = &ui->project->worlds[wi];
+    if (bank_plane == UI_BANKS_PLANE_PLAYER) {
+        src = r01_player_bank_tile(ui->project, tile_id);
+    } else if (bank_plane == UI_BANKS_PLANE_SPR) {
+        src = r01_chr_spr_tile(w, bank, tile_id);
+    } else {
+        if (bank < 0 || bank >= R01_BG_BANKS || tile_id >= w->bg_banks[bank].tile_count) {
+            return;
+        }
+        src = w->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+    }
+    if (!src) {
+        return;
+    }
+
+    d = (UiUndoBankTileRemove *)calloc(1, sizeof(*d));
+    if (!d) {
+        return;
+    }
+    d->world_idx = wi;
+    d->bank_plane = bank_plane;
+    d->bank = bank;
+    d->tile_id = tile_id;
+    memcpy(d->old_chr, src, R01_TILE_BYTES);
+    if (bank_plane == UI_BANKS_PLANE_PLAYER) {
+        d->old_tile_count = ui->project->player_bank.tile_count;
+    } else if (bank_plane == UI_BANKS_PLANE_SPR) {
+        d->old_tile_count = w->spr_banks[bank].tile_count;
+    } else {
+        d->old_tile_count = w->bg_banks[bank].tile_count;
+    }
+
+    if (bank_plane == UI_BANKS_PLANE_BG) {
+        for (si = 0; si < w->screen_count; si++) {
+            R01Screen *s = &w->screens[si];
+            int cell;
+            if (!s->present) {
+                continue;
+            }
+            for (cell = 0; cell < R01_TILES_PER_SCREEN; cell++) {
+                if (s->tiles[cell] == (uint8_t)tile_id && r01_attr_bank(s->attrs[cell]) == bank) {
+                    if (bank_tile_remove_push_ref(d, UI_WORLDS_PLANE_BG1, si, cell, s->tiles[cell]) != 0) {
+                        bank_tile_remove_destroy(d);
+                        return;
+                    }
+                }
+            }
+        }
+        for (si = 0; si < w->bg0_screen_count && si < R01_BG0_SCREENS_MAX; si++) {
+            R01Screen *s = &w->bg0_screens[si];
+            int cell;
+            if (!s->present) {
+                continue;
+            }
+            for (cell = 0; cell < R01_TILES_PER_SCREEN; cell++) {
+                if (s->tiles[cell] == (uint8_t)tile_id && r01_attr_bank(s->attrs[cell]) == bank) {
+                    if (bank_tile_remove_push_ref(d, UI_WORLDS_PLANE_BG0, si, cell, s->tiles[cell]) != 0) {
+                        bank_tile_remove_destroy(d);
+                        return;
+                    }
+                }
+            }
+        }
+        for (mi = 0; mi < w->metatile_count; mi++) {
+            for (corner = 0; corner < 4; corner++) {
+                if (w->metatiles[mi].tile[corner] == (uint8_t)tile_id &&
+                    r01_attr_bank(w->metatiles[mi].attr[corner]) == bank) {
+                    if (bank_tile_remove_push_part(d, 3, mi, corner, 0, 0, w->metatiles[mi].tile[corner]) != 0) {
+                        bank_tile_remove_destroy(d);
+                        return;
+                    }
+                }
+            }
+        }
+    } else {
+        for (ei = 0; ei < w->entity_count; ei++) {
+            R01EntityType *ent = &w->entities[ei];
+            int sti, fi, pi;
+            for (sti = 0; sti < ent->state_count && sti < R01_ENTITY_STATES_MAX; sti++) {
+                for (fi = 0; fi < ent->states[sti].frame_count && fi < R01_ENTITY_FRAMES_MAX; fi++) {
+                    R01EntityFrame *fr = &ent->states[sti].frames[fi];
+                    for (pi = 0; pi < fr->part_count && pi < R01_ENTITY_PARTS_MAX; pi++) {
+                        if (bank_tile_matches_part(bank_plane, bank, tile_id, fr->parts[pi].bank,
+                                                   fr->parts[pi].tile_id)) {
+                            if (bank_tile_remove_push_part(d, 0, ei, sti, fi, pi, (uint8_t)fr->parts[pi].tile_id) !=
+                                0) {
+                                bank_tile_remove_destroy(d);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (mi = 0; mi < w->metasprite_count; mi++) {
+            R01EntityFrame *fr = &w->metasprites[mi].frame;
+            int pi;
+            for (pi = 0; pi < fr->part_count && pi < R01_ENTITY_PARTS_MAX; pi++) {
+                if (bank_tile_matches_part(bank_plane, bank, tile_id, fr->parts[pi].bank, fr->parts[pi].tile_id)) {
+                    if (bank_tile_remove_push_part(d, 1, mi, 0, 0, pi, (uint8_t)fr->parts[pi].tile_id) != 0) {
+                        bank_tile_remove_destroy(d);
+                        return;
+                    }
+                }
+            }
+        }
+        for (ci = w->sprite_count - 1; ci >= 0; ci--) {
+            if (bank_tile_matches_part(bank_plane, bank, tile_id, w->sprites[ci].bank, w->sprites[ci].tile_id)) {
+                R01SpriteDef *n = (R01SpriteDef *)realloc(d->removed_cats,
+                                                          (size_t)(d->removed_cat_count + 1) * sizeof(*n));
+                if (!n) {
+                    bank_tile_remove_destroy(d);
+                    return;
+                }
+                d->removed_cats = n;
+                d->removed_cats[d->removed_cat_count++] = w->sprites[ci];
+                (void)r01_world_sprite_remove(w, ci);
+            }
+        }
+    }
+
+    memset(blank, 0, sizeof(blank));
+    if (bank_tile_remove_write_chr(ui, d, blank) != 0) {
+        bank_tile_remove_destroy(d);
+        ui_toast(ui, "cannot remove tile", 1);
+        return;
+    }
+    bank_tile_remove_apply_refs(ui, d, 1);
+    if (bank_plane == UI_BANKS_PLANE_BG) {
+        undo_refresh_world_screens(w);
+    }
+    if (ui_undo_push(&ui->undo, &bank_tile_remove_vt, d,
+                     bank_plane == UI_BANKS_PLANE_SPR ? "remove sprite" : "remove tile") != 0) {
+        bank_tile_remove_destroy(d);
+        return;
+    }
+    if (ui->bank_sel_tile == tile_id && ui->bank_sel_plane == bank_plane &&
+        (bank_plane == UI_BANKS_PLANE_PLAYER || ui->bank_sel_bank == bank)) {
+        bank_sel_clear(ui);
+    }
+    ui_toast(ui, bank_plane == UI_BANKS_PLANE_SPR ? "sprite removed" : "tile removed", 0);
+}
+
 /* ---- sprite CHR paint stroke (entity / compose) ---- */
 
 typedef struct UiUndoSprPaintTile {

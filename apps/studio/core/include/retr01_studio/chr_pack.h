@@ -39,6 +39,8 @@ void r01_screen_paint_tile(R01World *w, R01Screen *s, int tile_x, int tile_y, ui
 /* Global player bank (project-scoped, 256 tiles). NULL if out of range / empty slot. */
 const uint8_t *r01_player_bank_tile(const R01Project *p, int tile_id);
 int r01_player_bank_write_tile(R01Project *p, int tile_id, const uint8_t tile[R01_TILE_BYTES]);
+/* First free / next slot in the player bank, or -1 if full. */
+int r01_player_bank_alloc_tile(R01Project *p);
 
 /* 4-connected flood fill of 2bpp CHR colors (tile/sprite edit F+click). */
 void r01_tile_flood_fill(uint8_t tile[R01_TILE_BYTES], int sx, int sy, uint8_t color);

@@ -16,13 +16,13 @@
   "bg_bank0_tiles": 0,
   "bg_bank0_b64": "",
   "spr_banks": [
-    {"tiles": 3, "b64": "EQAAAAAAAAAiAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARAAAAAAAAACIAAAAAAAAA"},
+    {"tiles": 1, "b64": "AAAAAAAAAAAAAAAAAAAAAA=="},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""}
   ],
   "sprites": [
-    {"bank": 0, "tile": 0, "pal": 1}
+    {"bank": 4, "tile": 0, "pal": 1}
   ],
   "metasprites": [
     {"name": "Blob", "parts": [{"bank":0,"tile":0,"pal":1,"fh":1,"fv":0,"dx":1,"dy":0},{"bank":0,"tile":0,"pal":1,"fh":1,"fv":0,"dx":2,"dy":0}]}

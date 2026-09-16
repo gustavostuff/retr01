@@ -145,6 +145,7 @@ void ui_reset_after_project_load(UiState *ui) {
     ui->hide_bg_layer = 0;
     ui->hide_spr_layer = 0;
     screen_sel_clear(ui);
+    bank_sel_clear(ui);
     ui->paint_stamp_valid = 0;
     ui->tile_clip_valid = 0;
     ui->tile_clip_w = 0;

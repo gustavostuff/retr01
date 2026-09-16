@@ -182,6 +182,8 @@ void menu_open_tile(UiState *ui, int x, int y, int tx, int ty) {
     ui->menu.item_sub[ui->menu.item_count++] = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Warp");
     ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_WARP;
+    snprintf(ui->menu.items[ui->menu.item_count], 32, "Remove tile");
+    ui->menu.item_sub[ui->menu.item_count++] = 0;
     memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
     if (screen_sel_is_multi(ui)) {
         ui->menu.item_disabled[1] = 1;
@@ -318,6 +320,8 @@ void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int p
         if (!empty) {
             snprintf(ui->menu.items[ui->menu.item_count], 32, "Move to Bank");
             ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_MOVE_BANK;
+            snprintf(ui->menu.items[ui->menu.item_count], 32, "Remove sprite");
+            ui->menu.item_sub[ui->menu.item_count++] = 0;
         }
     } else {
         snprintf(ui->menu.items[ui->menu.item_count], 32, empty ? "Add tile" : "Edit tile");
@@ -326,8 +330,16 @@ void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int p
             snprintf(ui->menu.items[ui->menu.item_count], 32, "Move to Bank");
             ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_MOVE_BANK;
         }
+        if (!empty) {
+            snprintf(ui->menu.items[ui->menu.item_count], 32, "Remove tile");
+            ui->menu.item_sub[ui->menu.item_count++] = 0;
+        }
     }
     memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
+    /* BG tile 0 is the blank screen fallback — keep it. SPR/player stub is cart-only. */
+    if (!empty && plane == UI_BANKS_PLANE_BG && tile_id == 0) {
+        ui->menu.item_disabled[ui->menu.item_count - 1] = 1;
+    }
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
     ui->menu.root_x = x;
     ui->menu.root_y = y;
@@ -712,6 +724,9 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
             } else {
                 tile_edit_open_bank(ui, ui->menu.bank_idx, ui->menu.bank_tile_id, empty);
             }
+        } else if (item > 0 && item < ui->menu.item_count &&
+                   strncmp(ui->menu.items[item], "Remove", 6) == 0) {
+            ui_undo_push_bank_tile_remove(ui, ui->menu.bank_plane, ui->menu.bank_idx, ui->menu.bank_tile_id);
         }
         menu_close(ui);
         return;
@@ -825,6 +840,10 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
         break;
     case 5:
         screen_set_solid_by_hw(ui, ui->menu.screen_tx, ui->menu.screen_ty);
+        break;
+    case 7:
+        menu_ensure_tile_sel(ui);
+        screen_remove_sel_tiles(ui);
         break;
     default:
         break;

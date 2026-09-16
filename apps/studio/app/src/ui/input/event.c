@@ -232,6 +232,10 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 return 1;
             }
             if (ui->app_mode == UI_APP_GRAPHICS) {
+                if (bank_sel_valid(ui)) {
+                    ui_undo_push_bank_tile_remove(ui, ui->bank_sel_plane, ui->bank_sel_bank, ui->bank_sel_tile);
+                    return 1;
+                }
                 if (ui->sel_instance >= 0 && ui_work_allows_spr(ui)) {
                     R01World *w = r01_project_active_world(ui->project);
                     if (w && ui->sel_instance < w->instance_count) {
@@ -571,10 +575,12 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             {
                 int tile_id;
                 if (banks_cell_hit(ui, lx, ly, &tile_id)) {
+                    bank_sel_set(ui, ui->banks_plane, ui->banks_idx, tile_id);
                     menu_open_bank_cell(ui, lx, ly, ui->banks_idx, tile_id, ui->banks_plane);
                     return 1;
                 }
                 if (player_bank_cell_hit(ui, lx, ly, &tile_id)) {
+                    bank_sel_set(ui, UI_BANKS_PLANE_PLAYER, 0, tile_id);
                     menu_open_bank_cell(ui, lx, ly, 0, tile_id, UI_BANKS_PLANE_PLAYER);
                     return 1;
                 }
@@ -610,6 +616,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     ui->sel_instance = inst;
                     ui->inst_drag = 0;
                     screen_sel_clear(ui);
+                    bank_sel_clear(ui);
                     menu_open_instance(ui, lx, ly, inst);
                     return 1;
                 }
@@ -717,6 +724,17 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 ui->arm_a = wi;
                 return 1;
             }
+            {
+                int tile_id;
+                if (!ui->play.active && banks_cell_hit(ui, lx, ly, &tile_id)) {
+                    bank_sel_set(ui, ui->banks_plane, ui->banks_idx, tile_id);
+                    return 1;
+                }
+                if (!ui->play.active && player_bank_cell_hit(ui, lx, ly, &tile_id)) {
+                    bank_sel_set(ui, UI_BANKS_PLANE_PLAYER, 0, tile_id);
+                    return 1;
+                }
+            }
             if (world_btn_hit(ui, lx, ly, &wi)) {
                 ui->arm_kind = UI_ARM_WORLD_TAB;
                 ui->arm_a = wi;
@@ -752,6 +770,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     }
                     ui->sel_instance = inst;
                     screen_sel_clear(ui);
+                    bank_sel_clear(ui);
                     if (w && s && inst >= 0 && inst < w->instance_count) {
                         ui->inst_drag = 1;
                         ui->inst_drag_off_x = w->instances[inst].world_x - (s->col * R01_SCREEN_PX_W + px);
@@ -989,10 +1008,12 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             if (kind == UI_ARM_BANK_SUB && banks_sub_hit(ui, lx, ly)) {
                 ui->banks_plane =
                     (ui->banks_plane == UI_BANKS_PLANE_BG) ? UI_BANKS_PLANE_SPR : UI_BANKS_PLANE_BG;
+                bank_sel_clear(ui);
                 return 1;
             }
             if (kind == UI_ARM_BANK_TAB && banks_tab_hit(ui, lx, ly, &wi) && wi == a) {
                 ui->banks_idx = wi;
+                bank_sel_clear(ui);
                 return 1;
             }
             if (kind == UI_ARM_WORLD_TAB && world_btn_hit(ui, lx, ly, &wi) && wi == a) {

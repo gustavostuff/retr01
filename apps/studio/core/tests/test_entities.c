@@ -197,10 +197,33 @@ TEST_MAIN() {
         EXPECT(r01_project_set_player_entity(p, w, 0) == 0, "mark player moves chr");
         EXPECT(r01_world_player_entity(w) == 0, "player marked");
         EXPECT(r01_is_player_chr_bank(w->entities[0].states[0].frames[0].parts[0].bank), "part on player bank");
-        EXPECT(p->player_bank.tile_count >= 1, "player bank has tiles");
-        EXPECT(r01_chr_resolve_spr(p, w, R01_PLAYER_CHR_BANK,
-                                   w->entities[0].states[0].frames[0].parts[0].tile_id) != NULL,
-               "resolve player tile");
+        EXPECT(w->entities[0].states[0].frames[0].parts[0].tile_id == old_tile, "tile id preserved");
+        EXPECT(p->player_bank.tile_count > old_tile, "player bank covers tile");
+        EXPECT(r01_chr_resolve_spr(p, w, R01_PLAYER_CHR_BANK, old_tile) != NULL, "resolve player tile");
+        {
+            const uint8_t *left = r01_chr_spr_tile(w, old_bank, old_tile);
+            int blank = 1, b;
+            if (left) {
+                for (b = 0; b < R01_TILE_BYTES; b++) {
+                    if (left[b]) {
+                        blank = 0;
+                        break;
+                    }
+                }
+            }
+            EXPECT(blank, "world spr tile cleared after move");
+        }
+        {
+            int ci, found_cat = 0;
+            for (ci = 0; ci < w->sprite_count; ci++) {
+                if (w->sprites[ci].tile_id == old_tile && r01_is_player_chr_bank(w->sprites[ci].bank)) {
+                    found_cat = 1;
+                }
+                EXPECT(!(w->sprites[ci].bank == old_bank && w->sprites[ci].tile_id == old_tile),
+                       "catalog entry left world bank");
+            }
+            EXPECT(found_cat, "catalog moved to player bank");
+        }
         n2 = r01_play_build_oam(p, &pl, oam2, R01_OAM_MAX);
         EXPECT(n2 >= 1, "player entity oam");
         for (oi = 0; oi < n2; oi++) {
