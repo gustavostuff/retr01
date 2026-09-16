@@ -1,6 +1,6 @@
 <img src="img/v_01.png" alt="Logo V1" />
 
-Retr01 is an MCU-assisted 8-bit system for arcade and console shells, plus a host toolchain for editing and playtesting carts.
+Retr01 is an arcade and console ready, MCU-assisted 8-bit system, plus a host toolchain for editing and playtesting carts.
 
 ## Inspirations
 
