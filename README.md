@@ -1,6 +1,6 @@
-<img src="img/readme/v_01.png" alt="Logo V1" />
+<img src="img/v_01.png" alt="Logo V1" />
 
-The Retr01 prokect is an MCU-assisted 8-bit system, ready for both arcade and console setups + a software toolchain.
+Retr01 is an MCU-assisted 8-bit system for arcade and console shells, plus a host toolchain for editing and playtesting carts.
 
 ## Inspirations
 
@@ -18,10 +18,17 @@ The Retr01 prokect is an MCU-assisted 8-bit system, ready for both arcade and co
 - Flexible world layout: up to 8 worlds, each with up to 32 screens, all on a sparse 16x16 grid.
 - Passive cartridge: no mapper, hardware streaming of MAP/nametable data from cart into VRAM buffers.
 
-## Software pieces:
+## Software pieces
 
-Retr01 Emu
-Retr01 Studio (integrates emu)
+**Retr01 Emu** runs `.retr01` carts on the host (play view + a debug window for VRAM atlases, world map, pals, and CPU budget).
+
+<img src="img/readme/emu.png" alt="Retr01 Emu play window" />
+
+<img src="img/readme/emu-debug.png" alt="Retr01 Emu debug window" />
+
+**Retr01 Studio** is the authoring app. It embeds the emulator for in-editor Play, and covers worlds, tiles, entities, audio, and export.
+
+<img src="img/readme/studio.png" alt="Retr01 Studio" />
 
 ## Doc map
 
