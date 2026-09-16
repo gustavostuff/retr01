@@ -143,7 +143,8 @@ Hardware caps: **64** OAM entries, **16** sprites per scanline. Catalog cap: **1
 
 - **Player movement** and **camera movement** are separate. See `world-scrolling.md` (dead zone, axis lock, follow vs auto).
 - Camera: instant screen switch and/or smooth scrolling. Both allowed in one game or world.
-- **BG0** and **BG1** may each autoscroll and/or wrap on a repeating strip under PRG (independent of player motion). See `world-scrolling.md`. API TBD.
+- **BG0 layout wrap**: `r01_bg0_set_wrap(ctx, wrap_x, wrap_y)` in author `custom_logic.c`. Studio packs non-zero axes into world header flags byte **7** bits **1**/**2**. Parallax rate stays end-aligned; Host Play / emu only modulo-tiles samples on those axes so empty BG0 regions do not appear. See `world-scrolling.md`.
+- **BG1** (and manual strip) autoscroll / wrap helpers remain TBD. See `world-scrolling.md`.
 - Modes: **platformer** and **top-down**.
 
 ### Platformer physics (v1, locked)

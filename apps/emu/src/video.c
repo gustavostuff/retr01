@@ -263,6 +263,7 @@ static void bg0_apply_scroll(R01eMachine *m) {
      * Map BG1 camera travel onto BG0 travel so both plane ends stay aligned.
      * Rate is (bg0_screens-1)/(bg1_screens-1) in pixels (a 2x2 under a 4x4 is
      * 1/3, not cols/cols). When BG0 extent is equal or larger, leave L0 parked.
+     * Wrap flags only affect sample_l0 tiling, not this rate.
      */
     rel_x = vid->cam_x - vid->l1_origin_x;
     rel_y = vid->cam_y - vid->l1_origin_y;
@@ -323,6 +324,10 @@ void r01e_video_load_bg0(R01eMachine *m, const R01eWorldView *wv) {
     vid->bg0_count = 0;
     vid->bg0_cols = 0;
     vid->bg0_rows = 0;
+    vid->bg0_origin_col = 0;
+    vid->bg0_origin_row = 0;
+    vid->bg0_wrap_x = (wv->world_flags & R01E_CART_WHDR_FLAG_BG0_WRAP_X) != 0;
+    vid->bg0_wrap_y = (wv->world_flags & R01E_CART_WHDR_FLAG_BG0_WRAP_Y) != 0;
     vid->l0_cam_x = 0;
     vid->l0_cam_y = 0;
     if (wv->bg0_count == 0 || wv->off_bg0_dir == 0) {
@@ -370,6 +375,8 @@ void r01e_video_load_bg0(R01eMachine *m, const R01eWorldView *wv) {
          */
         vid->bg0_cols = max_c - min_c + 1;
         vid->bg0_rows = max_r - min_r + 1;
+        vid->bg0_origin_col = min_c;
+        vid->bg0_origin_row = min_r;
         if (vid->bg0_cols < 1) {
             vid->bg0_cols = 1;
         }
@@ -532,6 +539,18 @@ static const R01eBg0Screen *bg0_find(const R01eVideo *vid, int col, int row) {
     return NULL;
 }
 
+static int imod_pos(int a, int m) {
+    int r;
+    if (m <= 0) {
+        return 0;
+    }
+    r = a % m;
+    if (r < 0) {
+        r += m;
+    }
+    return r;
+}
+
 static void sample_l0(R01eMachine *m, int lx, int ly, uint8_t *r, uint8_t *g, uint8_t *b) {
     R01eVideo *vid = &m->video;
     int wx = vid->l0_cam_x + lx;
@@ -547,28 +566,57 @@ static void sample_l0(R01eMachine *m, int lx, int ly, uint8_t *r, uint8_t *g, ui
         backdrop_rgb(m, r, g, b);
         return;
     }
-    if (vid->bg0_count < 1 || wx < 0 || wy < 0) {
+    if (vid->bg0_count < 1) {
         backdrop_rgb(m, r, g, b);
         return;
     }
-    gc = wx / R01E_SCREEN_PX_W;
-    gr = wy / R01E_SCREEN_PX_H;
-    /* Clip to present BG0 bbox (not the virtual 16x16 chess). */
-    if (vid->bg0_cols > 0 && gc >= vid->bg0_cols) {
+    if (!vid->bg0_wrap_x && wx < 0) {
         backdrop_rgb(m, r, g, b);
         return;
     }
-    if (vid->bg0_rows > 0 && gr >= vid->bg0_rows) {
+    if (!vid->bg0_wrap_y && wy < 0) {
         backdrop_rgb(m, r, g, b);
         return;
+    }
+    if (vid->bg0_wrap_x && vid->bg0_cols > 0) {
+        int period = vid->bg0_cols * R01E_SCREEN_PX_W;
+        int local = imod_pos(wx, period);
+        gc = vid->bg0_origin_col + local / R01E_SCREEN_PX_W;
+        local_x = local % R01E_SCREEN_PX_W;
+    } else {
+        gc = wx / R01E_SCREEN_PX_W;
+        local_x = wx - gc * R01E_SCREEN_PX_W;
+        if (vid->bg0_cols > 0 && gc >= vid->bg0_origin_col + vid->bg0_cols) {
+            backdrop_rgb(m, r, g, b);
+            return;
+        }
+        if (gc < vid->bg0_origin_col) {
+            backdrop_rgb(m, r, g, b);
+            return;
+        }
+    }
+    if (vid->bg0_wrap_y && vid->bg0_rows > 0) {
+        int period = vid->bg0_rows * R01E_SCREEN_PX_H;
+        int local = imod_pos(wy, period);
+        gr = vid->bg0_origin_row + local / R01E_SCREEN_PX_H;
+        local_y = local % R01E_SCREEN_PX_H;
+    } else {
+        gr = wy / R01E_SCREEN_PX_H;
+        local_y = wy - gr * R01E_SCREEN_PX_H;
+        if (vid->bg0_rows > 0 && gr >= vid->bg0_origin_row + vid->bg0_rows) {
+            backdrop_rgb(m, r, g, b);
+            return;
+        }
+        if (gr < vid->bg0_origin_row) {
+            backdrop_rgb(m, r, g, b);
+            return;
+        }
     }
     s = bg0_find(vid, gc, gr);
     if (!s) {
         backdrop_rgb(m, r, g, b);
         return;
     }
-    local_x = wx - gc * R01E_SCREEN_PX_W;
-    local_y = wy - gr * R01E_SCREEN_PX_H;
     tx = local_x / 8;
     ty = local_y / 8;
     cell = ty * R01E_SCREEN_TILES_X + tx;
@@ -610,17 +658,16 @@ static void sample_bg(R01eMachine *m, int lx, int ly, uint8_t *r, uint8_t *g, ui
         return;
     }
     /*
-     * Outside the BG1 2x2 workbench or a missing present screen: backdrop.
-     * Hardware only streams world-bbox screens into VRAM; empty slots are not
-     * BG0 show-through (that is reserved for BG1 color index 0).
+     * Outside the BG1 2x2 workbench or a missing present screen: BG0 still draws
+     * (full-viewport bottom plane). Backdrop only if L0 is also empty/off.
      */
     if (slot_x < 0 || slot_x > 1 || slot_y < 0 || slot_y > 1) {
-        backdrop_rgb(m, r, g, b);
+        sample_l0(m, lx, ly, r, g, b);
         return;
     }
     slot = slot_y * 2 + slot_x;
     if (!vid->slot_present[slot]) {
-        backdrop_rgb(m, r, g, b);
+        sample_l0(m, lx, ly, r, g, b);
         return;
     }
     local_x = sx - slot_x * R01E_SCREEN_PX_W;

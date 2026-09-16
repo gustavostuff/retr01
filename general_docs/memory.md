@@ -111,7 +111,7 @@ Five `(offset, length)` pairs as little-endian **u24** (3+3 bytes each):
 
 | Piece | Size / note |
 | --- | --- |
-| World header | **32 B** (spawn cell as nibble-packed col/row, default banks/pal row, BG1/BG0 present counts, entity type count **0..16**, CHR/dir/entity-catalog offsets, player entity + hitbox, camera dead-zone **width/height** at bytes **30-31**) |
+| World header | **32 B** (spawn cell as nibble-packed col/row, default banks/pal row, BG1/BG0 present counts, flags at byte **7**, entity type count **0..16**, CHR/dir/entity-catalog offsets, player entity + hitbox, camera dead-zone **width/height** at bytes **30-31**) |
 | CHR | **4** BG banks + **4** SPR banks x **4096 B** = **32 KB** total |
 | BG1 screen directory | **12 B** per present playfield screen (grid cell + payload offset) |
 | BG1 screen payloads | **480 B** each (present only, sparse **16x16**, max **32**/world) |
@@ -124,7 +124,7 @@ Entity **spawn locations** are **not** on the cart. PRG owns who appears where (
 
 **Grid cell byte:** virtual map is **16x16** (col/row **0-15**). Pack both coords in **1 byte** as nibbles: `col | (row << 4)`. Same packing for BG1/BG0 directory entries and world-header spawn cell.
 
-**World header notes (BG0):** byte **3** packs present BG0 extent (`cols | rows<<4`). Byte **6** is BG0 present count. Bytes **14-16** are BG0 directory offset (u24), or **0** if none.
+**World header notes (BG0):** byte **3** packs present BG0 extent (`cols | rows<<4`). Byte **6** is BG0 present count. Bytes **14-16** are BG0 directory offset (u24), or **0** if none. Byte **7** flags: bit0 player-anim blob, bit1 BG0 wrap X, bit2 BG0 wrap Y (see `world-scrolling.md`).
 
 **Screen payload:** **480 B** = 240 tile bytes + 240 attr bytes (**16x15**, **128x120**). Same shape for BG1 and BG0.
 

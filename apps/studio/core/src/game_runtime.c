@@ -308,6 +308,14 @@ void r01_camera_set_deadzone(R01GameCtx *ctx, int dx, int dy) {
     ctx->cam_deadzone_y = dy;
 }
 
+void r01_bg0_set_wrap(R01GameCtx *ctx, int wrap_x, int wrap_y) {
+    if (!ctx) {
+        return;
+    }
+    ctx->bg0_wrap_x = wrap_x ? 1 : 0;
+    ctx->bg0_wrap_y = wrap_y ? 1 : 0;
+}
+
 void r01_camera_set_axis_lock(R01GameCtx *ctx, int mode) {
     if (!ctx) {
         return;

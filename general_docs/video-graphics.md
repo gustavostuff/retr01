@@ -93,7 +93,7 @@ Two BG layers:
 - **BG0** at the bottom.
 - **BG1** on top of BG0.
 
-BG0 shows through transparent pixels of BG1. BG1 transparency is color index 0.
+BG0 shows through transparent pixels of BG1. BG1 transparency is color index 0. BG0 also fills the viewport where no BG1 screen is present in the camera window (missing / outside streamed slots). Backdrop is only the final fallback under BG0.
 
 Software controls how much BG0 scrolls relative to BG1 to set depth. See `world-scrolling.md`.
 
@@ -101,7 +101,7 @@ Software controls how much BG0 scrolls relative to BG1 to set depth. See `world-
 
 1. VRAM holds BG1 nametable/attr data for the camera window.
 2. During **HBlank**, MCU-S1 renders the **upcoming** BG0 line into one half of a **ping-pong** line buffer (the other half is what the active beam is reading for show-through).
-3. During active display, the compositor draws BG1. Where BG1's color index is **0**, it substitutes the pixel from the current BG0 ping-pong line.
+3. During active display, the compositor draws BG1 where a present screen occupies the slot. Where BG1 is absent, or BG1's color index is **0**, it substitutes the pixel from the current BG0 ping-pong line.
 4. Sprite field (from VBlank) sits in the priority stack per compositor rules.
 
 ### BG0 ping-pong (HBlank only)

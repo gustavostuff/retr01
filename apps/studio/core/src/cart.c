@@ -647,6 +647,21 @@ static int relocate_spr0_tile1(uint8_t bank[R01_CHR_BANK_BYTES], const R01World 
     return dest;
 }
 
+static uint8_t cart_pack_bg0_wrap_flags(const char *custom_logic_path) {
+    int wx = 0;
+    int wy = 0;
+    uint8_t flags = 0;
+    if (custom_logic_path && r01_custom_logic_scan_bg0_wrap(custom_logic_path, &wx, &wy) == 0) {
+        if (wx) {
+            flags |= R01_CART_WHDR_FLAG_BG0_WRAP_X;
+        }
+        if (wy) {
+            flags |= R01_CART_WHDR_FLAG_BG0_WRAP_Y;
+        }
+    }
+    return flags;
+}
+
 static int cart_pack_cam_deadzone(uint8_t *out_x, uint8_t *out_y, const char *custom_logic_path) {
     int dx = R01_PLAY_CAM_DEADZONE_X_DEFAULT;
     int dy = R01_PLAY_CAM_DEADZONE_Y_DEFAULT;
@@ -851,6 +866,7 @@ static int build_world_blob(Buf *blob, const R01World *w, const char *custom_log
         put_u8(hdr + R01_CART_WHDR_CAM_DEADZONE_X, dz_x);
         put_u8(hdr + R01_CART_WHDR_CAM_DEADZONE_Y, dz_y);
     }
+    put_u8(hdr + R01_CART_WHDR_FLAGS, cart_pack_bg0_wrap_flags(custom_logic_path));
 
     if (buf_append(blob, hdr, WORLD_HDR_SIZE) != 0) {
         free(catalog.data);

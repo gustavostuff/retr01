@@ -7,6 +7,7 @@ static void on_warp_x(R01GameCtx *ctx) {
 
 void r01_custom_on_init(R01GameCtx *ctx) {
     r01_event_on_button(R01_BTN_X, on_warp_x);
+    r01_bg0_set_wrap(ctx, 1, 1);
     /* Examples:
      * r01_camera_set_deadzone(ctx, 32, 30); /* centered rect W x H */
      * r01_projectile_fire(ctx, 1, 0, 4);

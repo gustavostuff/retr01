@@ -314,6 +314,20 @@ int main(void) {
             r01e_machine_shutdown(&m);
             return fail("BG0 parked when equal extent");
         }
+        /* Wrap flags must not change parallax rate. */
+        vid->bg0_wrap_x = 1;
+        vid->bg0_wrap_y = 1;
+        vid->l1_cols = 4;
+        vid->l1_rows = 4;
+        vid->cam_x = R01E_SCREEN_PX_W;
+        vid->cam_y = R01E_SCREEN_PX_H;
+        r01e_video_update_bg0_scroll(&m);
+        if (vid->l0_cam_x != R01E_SCREEN_PX_W / 3 || vid->l0_cam_y != R01E_SCREEN_PX_H / 3) {
+            r01e_machine_shutdown(&m);
+            return fail("BG0 wrap keeps parallax rate");
+        }
+        vid->bg0_wrap_x = 0;
+        vid->bg0_wrap_y = 0;
     }
 
     printf("ok io scroll/vram/map/fe80/eeprom/oam/apu\n");

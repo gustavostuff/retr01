@@ -35,6 +35,38 @@ int r01_custom_logic_scan_deadzone(const char *path, int *out_dx, int *out_dy) {
     return -1;
 }
 
+int r01_custom_logic_scan_bg0_wrap(const char *path, int *out_wrap_x, int *out_wrap_y) {
+    FILE *f;
+    char line[512];
+    if (!path || !out_wrap_x || !out_wrap_y) {
+        return -1;
+    }
+    f = fopen(path, "r");
+    if (!f) {
+        return -1;
+    }
+    while (fgets(line, sizeof(line), f)) {
+        const char *p = strstr(line, "r01_bg0_set_wrap");
+        const char *args;
+        if (!p) {
+            continue;
+        }
+        args = strchr(p, '(');
+        if (args) {
+            int wx = 0;
+            int wy = 0;
+            if (sscanf(args, "(ctx, %d, %d)", &wx, &wy) == 2 || sscanf(args, "(ctx,%d,%d)", &wx, &wy) == 2) {
+                *out_wrap_x = wx;
+                *out_wrap_y = wy;
+                fclose(f);
+                return 0;
+            }
+        }
+    }
+    fclose(f);
+    return -1;
+}
+
 int r01_custom_logic_scan_bgm_play(const char *path, int *out_track) {
     FILE *f;
     char line[512];

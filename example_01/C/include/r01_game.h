@@ -14,6 +14,8 @@ typedef struct R01GameCtx {
     int cam_deadzone_x;
     int cam_deadzone_y;
     int cam_axis_lock;
+    int bg0_wrap_x;
+    int bg0_wrap_y;
     int fade_level;
     int fade_target;
     int fade_color;

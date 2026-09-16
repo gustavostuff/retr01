@@ -76,7 +76,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### 14. Scroll edge cases
 
-**Resolved (baseline):** Empty slots = backdrop color index 0. Default clamp at playfield edges. **BG0 and BG1** may each programmatically autoscroll and/or wrap repeating strips. See `world-scrolling.md`. API TBD.
+**Resolved (baseline):** Missing BG1 slots show **BG0** (then backdrop under BG0). Default clamp at playfield edges. **BG0 and BG1** may each programmatically autoscroll and/or wrap repeating strips. See `world-scrolling.md`.
 
 ### 15. Entity CHR home world
 
@@ -116,6 +116,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-14 | PCB layers | Initial: motherboard, cart, and pads all 2-layer. 4-layer mobo only later if bring-up / commercial SMD needs it. |
 | 2026-09-14 | Mobo size | 170 x 120 mm. |
 | 2026-09-14 | BG autoscroll | BG0 and BG1 may each autoscroll and/or wrap strips. Default is clamp. |
+| 2026-09-16 | Missing BG1 slots | Show BG0 (then backdrop under BG0), not forced backdrop. |
 | 2026-09-14 | Player vs camera | Separate systems. Dead zone (e.g. 32x30). Axis lock, follow, or auto camera. |
 | 2026-09-15 | IC comms | Idle-safe pulls, RDY OD, OAM SPI early VBlank, scroll in NMI/VBlank, cart OE/WE rules. See `ic-comms-risks.md`. |
 | 2026-09-15 | Cart save UX | Multi-frame OK. Chunk I2C, short RDY, keep spinner/UI alive. No full-save picture freeze. |

@@ -157,7 +157,9 @@ Rule of thumb: stay inside the four-screen buffer without cart traffic, then str
 
 ### Empty or missing screens (locked)
 
-If the camera window covers a sparse grid **slot with no present screen** (or a neighbor that does not exist), that area is drawn as empty fill using the **current backdrop color**: the shared BG color index **0** of the active palette row (`$7F08`). Default for a plane that is **not** in wrap mode: motion **clamps** at the edges of the present playfield (no wrap to the opposite side) unless PRG implements a portal / instant switch. Either plane may instead **autoscroll** and/or **wrap** under PRG control (see below).
+**BG1:** If the camera window covers a sparse grid **slot with no present BG1 screen**, that area does **not** force backdrop. The compositor keeps drawing **BG0** there (same as BG1 color index **0** show-through). Backdrop (shared BG color index **0** of the active palette row at `$7F08`) appears only where BG0 is also off, missing, or transparent.
+
+**Clamp / wrap:** Default for a plane that is **not** in wrap mode: motion **clamps** at the edges of the present playfield (no wrap to the opposite side) unless PRG implements a portal / instant switch. Either plane may instead **autoscroll** and/or **wrap** under PRG control (see below).
 
 Corner reloads that need three new screens may spill past one frame of DMA. That is allowed. Prefer finishing the stream before unlocking free camera motion again if tear would show.
 
@@ -174,7 +176,21 @@ PRG can drive **BG0 and/or BG1** scroll on their own, not only as a slave of pla
 
 Example: a space fly-through with a few star/planet screens that loop once the strip has scrolled past. Same idea for repeating cloud bands. That can be BG0, BG1, or both at different rates.
 
-Wrap means: when scroll on that plane reaches the end of its present strip of screens, PRG (or a helper) loads the **start** of the strip again into the next VRAM slot so the backdrop loops. Autoscroll without wrap stops at the last screen of the strip unless PRG turns wrap on. Exact ports / helper API for "autoscroll + wrap period per plane" stay TBD in `software-api.md`, but the behavior is in scope for v1 authors.
+#### BG0 layout wrap (cart flag)
+
+World header byte **7** (flags):
+
+- bit **0**: player anim blob present
+- bit **1** (`0x02`): **BG0 wrap X** - tile the present BG0 screen layout horizontally
+- bit **2** (`0x04`): **BG0 wrap Y** - tile the present BG0 screen layout vertically
+
+Author code sets this with `r01_bg0_set_wrap(ctx, wrap_x, wrap_y)` in `custom_logic.c`. Studio packs the call into those flag bits at cart export (same scan path as camera dead zone).
+
+Scroll rate is unchanged: end-aligned `(bg0_n - 1) / (bg1_n - 1)` on each axis (see Parallax scroll rate below). Wrap only changes sampling.
+
+When wrap is on for an axis, sampling maps pixels outside the present BG0 bounding box back into that box with a positive modulo, so the authored BG0 block repeats and empty BG0 regions do not appear. When wrap is off, that axis clips outside the bbox (backdrop).
+
+BG1 strip wrap / autoscroll helpers remain TBD in `software-api.md`. Update scroll registers in NMI / VBlank only (see below).
 
 ### When to write scroll registers (locked)
 
