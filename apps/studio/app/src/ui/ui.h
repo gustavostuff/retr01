@@ -418,6 +418,11 @@ typedef struct UiState {
     uint8_t paint_stamp_attrs[R01_TILES_PER_SCREEN];
     uint8_t paint_stamp_tile; /* first cell (flood / legacy) */
     uint8_t paint_stamp_attr;
+    int tile_clip_valid; /* Ctrl+C tile selection clipboard (independent of paint stamp) */
+    int tile_clip_w;
+    int tile_clip_h;
+    uint8_t tile_clip_tiles[R01_TILES_PER_SCREEN];
+    uint8_t tile_clip_attrs[R01_TILES_PER_SCREEN];
     int screen_layer; /* UI_SCREEN_LAYER_BG, SPR, or BOTH */
     int hide_bg_layer;  /* 1 = hide BG tiles; also blocks BG interaction */
     int hide_spr_layer; /* 1 = hide sprites; also blocks sprite interaction */

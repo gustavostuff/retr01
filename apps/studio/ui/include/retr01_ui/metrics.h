@@ -49,7 +49,7 @@
 #define UI_PANEL_TRACKS_MAX 32
 
 #ifndef UI_PANEL_DEBUG_GRID
-#define UI_PANEL_DEBUG_GRID 1
+#define UI_PANEL_DEBUG_GRID 0
 #endif
 
 #endif

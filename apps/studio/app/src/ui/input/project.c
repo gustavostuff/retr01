@@ -146,6 +146,9 @@ void ui_reset_after_project_load(UiState *ui) {
     ui->hide_spr_layer = 0;
     screen_sel_clear(ui);
     ui->paint_stamp_valid = 0;
+    ui->tile_clip_valid = 0;
+    ui->tile_clip_w = 0;
+    ui->tile_clip_h = 0;
     ui->last_paint_tx = -1;
     ui->last_paint_ty = -1;
     ui->world_sel_col = -1;

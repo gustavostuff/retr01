@@ -110,6 +110,7 @@ static int tile_clipboard_blocked(const UiState *ui) {
 }
 
 int ui_tile_selection_copy(UiState *ui) {
+    int n;
     if (tile_clipboard_blocked(ui) || !ui_work_allows_bg(ui) || ui->sel_instance >= 0) {
         return 0;
     }
@@ -120,17 +121,29 @@ int ui_tile_selection_copy(UiState *ui) {
     if (!ui_paint_stamp_ready(ui)) {
         return 0;
     }
+    /* Keep a dedicated clipboard so clicking a paste target does not overwrite it. */
+    ui->tile_clip_w = ui->paint_stamp_w;
+    ui->tile_clip_h = ui->paint_stamp_h;
+    n = ui->tile_clip_w * ui->tile_clip_h;
+    if (n < 1 || n > R01_TILES_PER_SCREEN) {
+        return 0;
+    }
+    memcpy(ui->tile_clip_tiles, ui->paint_stamp_tiles, (size_t)n);
+    memcpy(ui->tile_clip_attrs, ui->paint_stamp_attrs, (size_t)n);
+    ui->tile_clip_valid = 1;
     ui_toast(ui, "tiles copied", 0);
     return 1;
 }
 
 int ui_tile_selection_paste(UiState *ui) {
+    R01World *w;
+    R01Screen *s;
     int tx = -1, ty = -1;
-    int sw, sh;
+    int sw, sh, y, x;
     if (tile_clipboard_blocked(ui) || !ui_work_allows_bg(ui)) {
         return 0;
     }
-    if (!ui_paint_stamp_ready(ui)) {
+    if (!ui->tile_clip_valid || ui->tile_clip_w < 1 || ui->tile_clip_h < 1) {
         return 0;
     }
     if (screen_hit(ui, ui->mouse_x, ui->mouse_y, &tx, &ty)) {
@@ -141,18 +154,42 @@ int ui_tile_selection_paste(UiState *ui) {
         (void)max_x;
         (void)max_y;
     } else {
-        return 0;
+        ui_toast(ui, "click a tile to paste", 1);
+        return 1;
     }
-    if (!ui_edit_map_screen(ui)) {
+    w = r01_project_active_world(ui->project);
+    s = ui_edit_map_screen(ui);
+    if (!w || !s) {
         ui_toast(ui, "no screen", 1);
         return 1;
     }
-    sw = ui->paint_stamp_w;
-    sh = ui->paint_stamp_h;
-    ui->last_paint_tx = -1;
-    ui->last_paint_ty = -1;
+    sw = ui->tile_clip_w;
+    sh = ui->tile_clip_h;
     (void)ui_undo_paint_begin(ui);
-    ui_paint_tile(ui, tx, ty);
+    for (y = 0; y < sh; y++) {
+        for (x = 0; x < sw; x++) {
+            int dx = tx + x;
+            int dy = ty + y;
+            int cell;
+            int si;
+            uint8_t tile_id, attr;
+            uint8_t old_tile, old_attr;
+            if (dx < 0 || dy < 0 || dx >= R01_SCREEN_TILES_X || dy >= R01_SCREEN_TILES_Y) {
+                continue;
+            }
+            si = y * sw + x;
+            tile_id = ui->tile_clip_tiles[si];
+            attr = ui->tile_clip_attrs[si];
+            cell = dy * R01_SCREEN_TILES_X + dx;
+            old_tile = s->tiles[cell];
+            old_attr = s->attrs[cell];
+            if (old_tile == tile_id && old_attr == attr) {
+                continue;
+            }
+            ui_undo_paint_record_cell(ui, dx, dy, old_tile, old_attr, tile_id, attr);
+            r01_screen_paint_tile(w, s, dx, dy, tile_id, attr);
+        }
+    }
     ui_undo_paint_end(ui);
     screen_sel_set(ui, tx, ty, tx + sw - 1, ty + sh - 1);
     ui->sel_instance = -1;

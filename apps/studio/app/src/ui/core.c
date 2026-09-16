@@ -157,6 +157,9 @@ int ui_init(UiState *ui) {
     ui->inst_drag = 0;
     ui->last_paint_tx = -1;
     ui->last_paint_ty = -1;
+    ui->tile_clip_valid = 0;
+    ui->tile_clip_w = 0;
+    ui->tile_clip_h = 0;
     ui->screen_layer = UI_SCREEN_LAYER_BOTH;
     ui->hide_bg_layer = 0;
     ui->hide_spr_layer = 0;
