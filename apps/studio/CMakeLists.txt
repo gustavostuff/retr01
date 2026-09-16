@@ -99,6 +99,7 @@ add_library(retr01_studio_app
   app/src/ui/widgets/slider.c
   app/src/ui/widgets/multi_state.c
   app/src/ui/widgets/tabs.c
+  app/src/ui/widgets/panel.c
   app/src/ui/widgets/modal.c
   app/src/ui/widgets/textfield.c
   app/src/ui/widgets/compose.c

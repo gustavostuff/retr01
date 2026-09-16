@@ -75,6 +75,41 @@ int ui_tabs_hit(const UiTabsLayout *lo, int selected, int lx, int ly, int *out_i
 /* 1 if (lx,ly) hits the sub-button under selected tab (dual-view only). */
 int ui_tabs_sub_hit(const UiTabsLayout *lo, int selected, int lx, int ly);
 
+/* Grid layout (cols/rows + colspan/rowspan). Does not draw children. */
+#define UI_PANEL_CELL_MIN 16
+#define UI_PANEL_CELLS_MAX 64
+#define UI_PANEL_TRACKS_MAX 32
+
+typedef struct UiPanelCell {
+    int id;      /* caller enum, or -1 for spacer / unlabeled */
+    int col;     /* 0-based */
+    int row;
+    int colspan; /* >= 1 */
+    int rowspan; /* >= 1 */
+} UiPanelCell;
+
+typedef struct UiPanel {
+    int x, y;
+    int cols, rows;
+    int cell_w, cell_h; /* default track size, >= UI_PANEL_CELL_MIN */
+    int col_w[UI_PANEL_TRACKS_MAX]; /* 0 = use cell_w */
+    int row_h[UI_PANEL_TRACKS_MAX]; /* 0 = use cell_h */
+    const UiPanelCell *cells;
+    int cell_count;
+    int out_x[UI_PANEL_CELLS_MAX];
+    int out_y[UI_PANEL_CELLS_MAX];
+    int out_w[UI_PANEL_CELLS_MAX];
+    int out_h[UI_PANEL_CELLS_MAX];
+    int total_w, total_h;
+} UiPanel;
+
+void ui_panel_init(UiPanel *p, int cols, int rows, int cell_w, int cell_h);
+void ui_panel_set_cells(UiPanel *p, const UiPanelCell *cells, int count);
+void ui_panel_set_col_w(UiPanel *p, int col, int w);
+void ui_panel_set_row_h(UiPanel *p, int row, int h);
+void ui_panel_layout(UiPanel *p, int x, int y);
+int ui_panel_cell(const UiPanel *p, int id, int *x, int *y, int *w, int *h);
+
 void ui_modal_scrim(SDL_Renderer *r, const UiState *ui);
 void ui_modal_panel(SDL_Renderer *r, int mx, int my, int w, int h, const char *title);
 void ui_modal_save_cancel(SDL_Renderer *r, int x, int y, int save_w, int cancel_w, int mouse_x, int mouse_y);
