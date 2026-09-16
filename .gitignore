@@ -3,5 +3,6 @@ apps/studio/build/
 apps/emu/build/
 bin/
 output/
+temp/
 *.o
 *.a

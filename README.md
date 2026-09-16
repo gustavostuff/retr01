@@ -45,4 +45,5 @@ Retr01 is an MCU-assisted 8-bit system ready for arcade and console setups, plus
 | [sound.md](general_docs/sound.md) | APU soft window, MCU-S2 PWM |
 | [open-questions.md](general_docs/open-questions.md) | TBD items and how to resolve them |
 | [ic_behavior/](ic_behavior/README.md) | Per-chip behavior (all 19 BOM ICs + pad / optional) |
+| [bringup/](bringup/README.md) | Late-phase hardware bring-up tiers A–H (video lab → full console) |
 | [apps/README.md](apps/README.md) | Studio + Emu apps |
