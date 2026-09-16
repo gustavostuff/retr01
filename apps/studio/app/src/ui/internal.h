@@ -202,6 +202,7 @@ int ui_focus_get(const UiState *ui);
 void ui_focus_clear(UiState *ui);
 /* Animated 1px dashed selection border (phase from SDL_GetTicks). */
 void draw_marching_ants(SDL_Renderer *r, int x, int y, int w, int h);
+void draw_marching_ants_a(SDL_Renderer *r, int x, int y, int w, int h, Uint8 alpha);
 /* Draw text clipped to a rectangle (scissor). */
 void font_draw_clipped(SDL_Renderer *r, int x, int y, int clip_x, int clip_y, int clip_w, int clip_h,
                        const char *text, Uint8 R, Uint8 G, Uint8 B);
@@ -218,6 +219,10 @@ int screen_mode_hit(const UiState *ui, int lx, int ly, int *out_row);
 int screen_mode_row_hit(const UiState *ui, int lx, int ly, int row);
 int screen_layer_hit(const UiState *ui, int lx, int ly, int *out_layer);
 int screen_layer_row_hit(const UiState *ui, int lx, int ly, int row);
+int screen_hide_hit(const UiState *ui, int lx, int ly, int *out_hide_bg);
+int screen_hide_row_hit(const UiState *ui, int lx, int ly, int row);
+int ui_work_allows_bg(const UiState *ui);
+int ui_work_allows_spr(const UiState *ui);
 int ui_mode_label_x(int mode_x);
 int ui_mode_panel_w(void);
 int ui_layer_panel_w(void);
@@ -324,6 +329,8 @@ void ui_paint_stamp_set(UiState *ui, uint8_t tile, uint8_t attr);
 void ui_paint_stamp_from_cell(UiState *ui, int tx, int ty);
 void ui_paint_stamp_from_selection(UiState *ui);
 int ui_paint_stamp_from_sel(const UiState *ui, uint8_t *out_tile, uint8_t *out_attr);
+int ui_tile_selection_copy(UiState *ui);
+int ui_tile_selection_paste(UiState *ui);
 void ui_paint_tile(UiState *ui, int tx, int ty);
 void ui_flood_fill(UiState *ui, int tx, int ty);
 
@@ -347,7 +354,8 @@ int instance_hit_on_screen(const UiState *ui, int lx, int ly, int *out_inst);
 void tile_edit_open(UiState *ui, int tx, int ty);
 void tile_edit_open_all(UiState *ui, int tx, int ty);
 void tile_edit_open_new(UiState *ui, int tx, int ty);
-int tile_modal_handle(UiState *ui, int lx, int ly, int down);
+int tile_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button);
+
 void draw_tile_modal(UiState *ui, SDL_Renderer *r);
 
 /* ui/modals/sprite_edit.c */

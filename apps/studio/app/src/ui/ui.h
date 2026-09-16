@@ -46,6 +46,7 @@
 #define UI_ARM_WORLD_CELL 3
 #define UI_ARM_ACCORDION 4
 #define UI_ARM_LAYER 5
+#define UI_ARM_HIDE_LAYER 6
 #define UI_ARM_PAL_STRIP 7
 #define UI_ARM_PAL_ROW 8
 #define UI_ARM_PLAY 9
@@ -149,6 +150,7 @@
 
 #define UI_SCREEN_LAYER_BG 0
 #define UI_SCREEN_LAYER_SPR 1
+#define UI_SCREEN_LAYER_BOTH 2
 
 #define UI_MODAL_W 288
 #define UI_MODAL_H 184
@@ -416,7 +418,9 @@ typedef struct UiState {
     uint8_t paint_stamp_attrs[R01_TILES_PER_SCREEN];
     uint8_t paint_stamp_tile; /* first cell (flood / legacy) */
     uint8_t paint_stamp_attr;
-    int screen_layer; /* UI_SCREEN_LAYER_BG or UI_SCREEN_LAYER_SPR */
+    int screen_layer; /* UI_SCREEN_LAYER_BG, SPR, or BOTH */
+    int hide_bg_layer;  /* 1 = hide BG tiles; also blocks BG interaction */
+    int hide_spr_layer; /* 1 = hide sprites; also blocks sprite interaction */
     int sel_x0, sel_y0, sel_x1, sel_y1; /* inclusive tile rect; invalid when sel_x0 < 0 */
     int sel_anchor_x, sel_anchor_y;
     int sel_drag;

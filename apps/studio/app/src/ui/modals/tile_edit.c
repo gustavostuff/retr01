@@ -260,7 +260,7 @@ void draw_tile_modal(UiState *ui, SDL_Renderer *r) {
     ui_modal_save_cancel(r, lo.left_btn_x, lo.btn_y, lo.save_w, lo.cancel_w, ui->mouse_x, ui->mouse_y);
 }
 
-int tile_modal_handle(UiState *ui, int lx, int ly, int down) {
+int tile_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
     TileModalLayout lo;
     int pal, col;
     tile_modal_layout(ui, &lo);
@@ -281,6 +281,13 @@ int tile_modal_handle(UiState *ui, int lx, int ly, int down) {
         ly < lo.canvas_y + UI_TILE_CANVAS) {
         int sx = (lx - lo.canvas_x) / 16;
         int sy = (ly - lo.canvas_y) / 16;
+        if (button == SDL_BUTTON_RIGHT) {
+            ui->tile_edit.color = (int)(r01_tile_pixel_color(ui->tile_edit.chr, sx, sy) & 3u);
+            return 1;
+        }
+        if (button != SDL_BUTTON_LEFT) {
+            return 1;
+        }
         if (ui->keys[SDL_SCANCODE_F]) {
             r01_tile_flood_fill(ui->tile_edit.chr, sx, sy, (uint8_t)ui->tile_edit.color);
         } else {

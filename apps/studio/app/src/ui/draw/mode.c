@@ -3,20 +3,46 @@
 #include "font/font.h"
 
 void draw_screen_mode(UiState *ui, SDL_Renderer *r) {
-    static const char *const layer_labels[2] = {"BG layer", "Sprite layer"};
+    static const char *const work_labels[3] = {"BG layer", "Sprite layer", "Both"};
+    static const int work_layers[3] = {UI_SCREEN_LAYER_BG, UI_SCREEN_LAYER_SPR, UI_SCREEN_LAYER_BOTH};
+    static const char *const hide_labels[2] = {"BG layer", "Sprite layer"};
     int layer_x, mx, my0;
+    int work_radio_y0;
+    int hide_label_y;
+    int hide_check_y0;
     int row;
     int dim_all = ui->play.active;
 
     ui_editor_layout(ui, NULL, NULL, &layer_x, &mx, &my0);
+    work_radio_y0 = my0 + UI_MODE_ROW_H;
+    hide_label_y = work_radio_y0 + 3 * UI_MODE_ROW_H + UI_UNIT;
+    hide_check_y0 = hide_label_y + UI_MODE_ROW_H;
 
-    for (row = 0; row < 2; row++) {
-        int y = my0 + row * UI_MODE_ROW_H;
-        int selected = ui->screen_layer == row;
+    font_draw(r, layer_x, my0 + (UI_MODE_ROW_H - 8) / 2, "Work on:", dim_all ? 120 : 230, dim_all ? 120 : 230,
+              dim_all ? 130 : 230);
+
+    for (row = 0; row < 3; row++) {
+        int y = work_radio_y0 + row * UI_MODE_ROW_H;
+        int selected = ui->screen_layer == work_layers[row];
         int hover = !dim_all && screen_layer_row_hit(ui, ui->mouse_x, ui->mouse_y, row);
         ui_radio_draw(r, layer_x, y + (UI_MODE_ROW_H - UI_MODE_RADIO) / 2, selected && !dim_all);
-        font_draw_centered(r, ui_mode_label_x(layer_x), y, label_width(layer_labels[row]), UI_MODE_ROW_H,
-                           layer_labels[row], dim_all ? 120 : 230, dim_all ? 120 : 230, dim_all ? 130 : 230);
+        font_draw(r, ui_mode_label_x(layer_x), y + (UI_MODE_ROW_H - 8) / 2, work_labels[row],
+                  dim_all ? 120 : 230, dim_all ? 120 : 230, dim_all ? 130 : 230);
+        if (hover) {
+            hover_overlay(r, layer_x, y, ui_layer_panel_w(), UI_MODE_ROW_H);
+        }
+    }
+
+    font_draw(r, layer_x, hide_label_y + (UI_MODE_ROW_H - 8) / 2, "Hide:", dim_all ? 120 : 230,
+              dim_all ? 120 : 230, dim_all ? 130 : 230);
+
+    for (row = 0; row < 2; row++) {
+        int y = hide_check_y0 + row * UI_MODE_ROW_H;
+        int checked = row == 0 ? ui->hide_bg_layer : ui->hide_spr_layer;
+        int hover = !dim_all && screen_hide_row_hit(ui, ui->mouse_x, ui->mouse_y, row);
+        ui_checkbox_draw(r, layer_x, y + (UI_MODE_ROW_H - UI_CHECKBOX) / 2, checked && !dim_all);
+        font_draw(r, ui_mode_label_x(layer_x), y + (UI_MODE_ROW_H - 8) / 2, hide_labels[row],
+                  dim_all ? 120 : 230, dim_all ? 120 : 230, dim_all ? 130 : 230);
         if (hover) {
             hover_overlay(r, layer_x, y, ui_layer_panel_w(), UI_MODE_ROW_H);
         }
@@ -114,7 +140,7 @@ void ui_update_cursor(const UiState *ui) {
                metatiles_list_hit(ui, lx, ly, NULL) || metasprites_add_hit(ui, lx, ly) ||
                metasprites_list_hit(ui, lx, ly, NULL) || entities_add_hit(ui, lx, ly) ||
                entities_list_hit(ui, lx, ly, NULL) ||
-               (!ui->play.active && (screen_layer_hit(ui, lx, ly, NULL) ||
+               (!ui->play.active && (screen_layer_hit(ui, lx, ly, NULL) || screen_hide_hit(ui, lx, ly, NULL) ||
                                      screen_hit(ui, lx, ly, NULL, NULL)));
     }
     if (sizewe && g_cursor_sizewe) {

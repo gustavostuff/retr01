@@ -103,6 +103,63 @@ static int ui_paint_stamp_ready(const UiState *ui) {
     return 0;
 }
 
+static int tile_clipboard_blocked(const UiState *ui) {
+    return !ui || ui->play.active || ui->menu.open || ui->tile_edit.open || ui->sprite_edit.open ||
+           ui->metasprite_edit.open || ui->entity_edit.open || ui->pal_edit.open ||
+           ui->app_mode != UI_APP_GRAPHICS;
+}
+
+int ui_tile_selection_copy(UiState *ui) {
+    if (tile_clipboard_blocked(ui) || !ui_work_allows_bg(ui) || ui->sel_instance >= 0) {
+        return 0;
+    }
+    if (!screen_sel_valid(ui)) {
+        return 0;
+    }
+    ui_paint_stamp_from_selection(ui);
+    if (!ui_paint_stamp_ready(ui)) {
+        return 0;
+    }
+    ui_toast(ui, "tiles copied", 0);
+    return 1;
+}
+
+int ui_tile_selection_paste(UiState *ui) {
+    int tx = -1, ty = -1;
+    int sw, sh;
+    if (tile_clipboard_blocked(ui) || !ui_work_allows_bg(ui)) {
+        return 0;
+    }
+    if (!ui_paint_stamp_ready(ui)) {
+        return 0;
+    }
+    if (screen_hit(ui, ui->mouse_x, ui->mouse_y, &tx, &ty)) {
+        /* Paste with top-left at the tile under the cursor. */
+    } else if (screen_sel_valid(ui)) {
+        int max_x, max_y;
+        screen_sel_bounds(ui, &tx, &ty, &max_x, &max_y);
+        (void)max_x;
+        (void)max_y;
+    } else {
+        return 0;
+    }
+    if (!ui_edit_map_screen(ui)) {
+        ui_toast(ui, "no screen", 1);
+        return 1;
+    }
+    sw = ui->paint_stamp_w;
+    sh = ui->paint_stamp_h;
+    ui->last_paint_tx = -1;
+    ui->last_paint_ty = -1;
+    (void)ui_undo_paint_begin(ui);
+    ui_paint_tile(ui, tx, ty);
+    ui_undo_paint_end(ui);
+    screen_sel_set(ui, tx, ty, tx + sw - 1, ty + sh - 1);
+    ui->sel_instance = -1;
+    ui_toast(ui, "tiles pasted", 0);
+    return 1;
+}
+
 void ui_paint_tile(UiState *ui, int tx, int ty) {
     R01World *w;
     R01Screen *s;

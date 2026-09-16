@@ -16,11 +16,23 @@
 
 int ui_mode_panel_w(void) {
     int label_x = UI_MODE_RADIO + UI_MODE_GAP;
-    int w0 = label_x + label_width("BG layer");
-    int w1 = label_x + label_width("Sprite layer");
-    int w = w0;
-    if (w1 > w) {
-        w = w1;
+    int w = label_width("Work on:");
+    int cand;
+    cand = label_x + label_width("BG layer");
+    if (cand > w) {
+        w = cand;
+    }
+    cand = label_x + label_width("Sprite layer");
+    if (cand > w) {
+        w = cand;
+    }
+    cand = label_x + label_width("Both");
+    if (cand > w) {
+        w = cand;
+    }
+    cand = label_width("Hide:");
+    if (cand > w) {
+        w = cand;
     }
     return w;
 }
@@ -64,12 +76,41 @@ void ui_editor_layout(const UiState *ui, int *screen_x, int *screen_y, int *laye
         *mode_x = ctrl_inner;
     }
     if (mode_y0) {
+        /* First row is the "Work on:" label. */
         *mode_y0 = radios_y;
     }
 }
 
 int ui_mode_label_x(int mode_x) {
     return mode_x + UI_MODE_RADIO + UI_MODE_GAP;
+}
+
+int ui_work_allows_bg(const UiState *ui) {
+    return ui && !ui->hide_bg_layer &&
+           (ui->screen_layer == UI_SCREEN_LAYER_BG || ui->screen_layer == UI_SCREEN_LAYER_BOTH);
+}
+
+int ui_work_allows_spr(const UiState *ui) {
+    return ui && !ui->hide_spr_layer &&
+           (ui->screen_layer == UI_SCREEN_LAYER_SPR || ui->screen_layer == UI_SCREEN_LAYER_BOTH);
+}
+
+static void layer_chrome_ys(const UiState *ui, int *layer_x, int *work_label_y, int *work_radio_y0,
+                            int *hide_label_y, int *hide_check_y0) {
+    int sx, sy, mx, my0;
+    ui_editor_layout(ui, &sx, &sy, layer_x, &mx, &my0);
+    if (work_label_y) {
+        *work_label_y = my0;
+    }
+    if (work_radio_y0) {
+        *work_radio_y0 = my0 + UI_MODE_ROW_H;
+    }
+    if (hide_label_y) {
+        *hide_label_y = my0 + UI_MODE_ROW_H + 3 * UI_MODE_ROW_H + UI_UNIT;
+    }
+    if (hide_check_y0) {
+        *hide_check_y0 = my0 + UI_MODE_ROW_H + 3 * UI_MODE_ROW_H + UI_UNIT + UI_MODE_ROW_H;
+    }
 }
 
 int screen_mode_row_hit(const UiState *ui, int lx, int ly, int row) {
@@ -91,26 +132,51 @@ int screen_mode_hit(const UiState *ui, int lx, int ly, int *out_row) {
 }
 
 int screen_layer_row_hit(const UiState *ui, int lx, int ly, int row) {
-    int sx, sy, layer_x, mx, my0;
+    int layer_x, work_radio_y0;
     int y;
-    if (!ui || ui->play.active) {
+    if (!ui || ui->play.active || row < 0 || row > 2) {
         return 0;
     }
-    ui_editor_layout(ui, &sx, &sy, &layer_x, &mx, &my0);
-    y = my0 + row * UI_MODE_ROW_H;
+    layer_chrome_ys(ui, &layer_x, NULL, &work_radio_y0, NULL, NULL);
+    y = work_radio_y0 + row * UI_MODE_ROW_H;
     return point_in_rect(lx, ly, layer_x, y, ui_layer_panel_w(), UI_MODE_ROW_H);
 }
 
 int screen_layer_hit(const UiState *ui, int lx, int ly, int *out_layer) {
-    if (screen_layer_row_hit(ui, lx, ly, 0)) {
-        if (out_layer) {
-            *out_layer = UI_SCREEN_LAYER_BG;
+    static const int k_layers[3] = {UI_SCREEN_LAYER_BG, UI_SCREEN_LAYER_SPR, UI_SCREEN_LAYER_BOTH};
+    int row;
+    for (row = 0; row < 3; row++) {
+        if (screen_layer_row_hit(ui, lx, ly, row)) {
+            if (out_layer) {
+                *out_layer = k_layers[row];
+            }
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int screen_hide_row_hit(const UiState *ui, int lx, int ly, int row) {
+    int layer_x, hide_check_y0;
+    int y;
+    if (!ui || ui->play.active || row < 0 || row > 1) {
+        return 0;
+    }
+    layer_chrome_ys(ui, &layer_x, NULL, NULL, NULL, &hide_check_y0);
+    y = hide_check_y0 + row * UI_MODE_ROW_H;
+    return point_in_rect(lx, ly, layer_x, y, ui_layer_panel_w(), UI_MODE_ROW_H);
+}
+
+int screen_hide_hit(const UiState *ui, int lx, int ly, int *out_hide_bg) {
+    if (screen_hide_row_hit(ui, lx, ly, 0)) {
+        if (out_hide_bg) {
+            *out_hide_bg = 1;
         }
         return 1;
     }
-    if (screen_layer_row_hit(ui, lx, ly, 1)) {
-        if (out_layer) {
-            *out_layer = UI_SCREEN_LAYER_SPR;
+    if (screen_hide_row_hit(ui, lx, ly, 1)) {
+        if (out_hide_bg) {
+            *out_hide_bg = 0;
         }
         return 1;
     }

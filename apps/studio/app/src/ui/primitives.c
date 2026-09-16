@@ -270,36 +270,50 @@ void draw_tooltip(UiState *ui, SDL_Renderer *r) {
     }
 }
 
-#define UI_ANTS_DASH 4
+#define UI_ANTS_PERIOD 4
 #define UI_ANTS_MS 80
 
-void draw_marching_ants(SDL_Renderer *r, int x, int y, int w, int h) {
+void draw_marching_ants_a(SDL_Renderer *r, int x, int y, int w, int h, Uint8 alpha) {
     int phase;
     int i;
     int len;
     if (!r || w < 2 || h < 2) {
         return;
     }
-    phase = (int)((SDL_GetTicks() / UI_ANTS_MS) % (UI_ANTS_DASH * 2));
-    SDL_SetRenderDrawColor(r, 255, 255, 255, 255);
-    /* Top and bottom edges (left -> right). */
+    phase = (int)((SDL_GetTicks() / UI_ANTS_MS) % UI_ANTS_PERIOD);
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+    /* Pattern: black, transparent, white, transparent (1px each). */
     len = w;
     for (i = 0; i < len; i++) {
-        int on = ((i + phase) % (UI_ANTS_DASH * 2)) < UI_ANTS_DASH;
-        if (on) {
+        int step = (i + phase) % UI_ANTS_PERIOD;
+        if (step == 0) {
+            SDL_SetRenderDrawColor(r, 0, 0, 0, alpha);
+            SDL_RenderDrawPoint(r, x + i, y);
+            SDL_RenderDrawPoint(r, x + i, y + h - 1);
+        } else if (step == 2) {
+            SDL_SetRenderDrawColor(r, 255, 255, 255, alpha);
             SDL_RenderDrawPoint(r, x + i, y);
             SDL_RenderDrawPoint(r, x + i, y + h - 1);
         }
     }
-    /* Left and right edges (top -> bottom), skip corners already drawn. */
     len = h - 2;
     for (i = 0; i < len; i++) {
-        int on = ((i + 1 + phase) % (UI_ANTS_DASH * 2)) < UI_ANTS_DASH;
-        if (on) {
+        int step = (i + 1 + phase) % UI_ANTS_PERIOD;
+        if (step == 0) {
+            SDL_SetRenderDrawColor(r, 0, 0, 0, alpha);
+            SDL_RenderDrawPoint(r, x, y + 1 + i);
+            SDL_RenderDrawPoint(r, x + w - 1, y + 1 + i);
+        } else if (step == 2) {
+            SDL_SetRenderDrawColor(r, 255, 255, 255, alpha);
             SDL_RenderDrawPoint(r, x, y + 1 + i);
             SDL_RenderDrawPoint(r, x + w - 1, y + 1 + i);
         }
     }
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
+}
+
+void draw_marching_ants(SDL_Renderer *r, int x, int y, int w, int h) {
+    draw_marching_ants_a(r, x, y, w, h, 255);
 }
 
 void font_draw_clipped(SDL_Renderer *r, int x, int y, int clip_x, int clip_y, int clip_w, int clip_h,
