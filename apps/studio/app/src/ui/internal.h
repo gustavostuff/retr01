@@ -192,7 +192,7 @@ extern SDL_Cursor *g_cursor_sizewe;
 /* ui/primitives.c */
 int ui_load_png_rgba(const char *path, uint8_t **out_px, int *out_w, int *out_h);
 
-/* Paste clipboard PNG into an 8x8 CHR buffer (alpha->0, brightness match to pal). spr_plane=1 for SPR pals. */
+/* Paste clipboard PNG into an 8x8 CHR buffer (alpha->0, HSV Value match to pal). spr_plane=1 for SPR pals. */
 int ui_paste_clipboard_png_tile(UiState *ui, uint8_t chr[R01_TILE_BYTES], int pal, int spr_plane);
 void ui_toast(UiState *ui, const char *msg, int is_error);
 void ui_tooltip_set(UiState *ui, int x, int y, const char *line1, const char *line2);
@@ -395,6 +395,7 @@ void entity_modal_key(UiState *ui, SDL_Keycode sym);
 int entity_modal_wheel(UiState *ui, int lx, int ly, int wheel_y, int shift);
 /* Alloc blank SPR tile + place part at compose (wx, wy). Returns part idx or -1. */
 int entity_edit_add_sprite_at(UiState *ui, int wx, int wy);
+int entity_edit_paste_clipboard(UiState *ui);
 void draw_entity_modal(UiState *ui, SDL_Renderer *r);
 
 /* ui/draw/mode.c */

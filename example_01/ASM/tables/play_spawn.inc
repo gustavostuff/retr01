@@ -1,1 +1,1 @@
-play_spawn_cell: .byte $02 ; col|(row<<4)
+play_spawn_cell: .byte $11 ; col|(row<<4)

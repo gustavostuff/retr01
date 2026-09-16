@@ -177,6 +177,10 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 }
                 return 1;
             }
+            if ((e->key.keysym.mod & KMOD_CTRL) && ui->text.field_id < 1 && e->key.keysym.sym == SDLK_v) {
+                (void)entity_edit_paste_clipboard(ui);
+                return 1;
+            }
             entity_modal_key(ui, e->key.keysym.sym);
             return 1;
         }

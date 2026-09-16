@@ -368,7 +368,7 @@ int ui_paste_clipboard_png_tile(UiState *ui, uint8_t chr[R01_TILE_BYTES], int pa
         row = 0;
     }
     fill_target_rgb(ui->project, row, pal, spr_plane, targets);
-    r01_tile_from_rgba_brightness(chr, rgba, w, h, 0, 0, (const uint8_t (*)[3])targets);
+    r01_tile_from_rgba_brightness(chr, rgba, w, h, 0, 0, (const uint8_t (*)[3])targets, spr_plane);
     free(rgba);
     if (w > 8 || h > 8) {
         ui_toast(ui, "pasted top-left 8x8", 0);

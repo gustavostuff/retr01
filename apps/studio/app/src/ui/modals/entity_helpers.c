@@ -5,6 +5,8 @@
 #include "retr01_studio/project.h"
 #include "retr01_studio/sprites.h"
 
+#include <string.h>
+
 R01EntityState *entity_edit_state(UiState *ui) {
     return r01_entity_state(&ui->entity_edit.draft, ui->entity_edit.state);
 }
@@ -240,4 +242,45 @@ void entity_edit_paint_at(UiState *ui, R01World *w, R01EntityFrame *fr, int idx,
     ui_undo_spr_paint_touch_tile(ui, pt->bank, pt->tile_id);
     (void)ui_compose_paint_brush(ui->project, w, pt, cx, cy, ui->entity_edit.paint_color,
                                  ui->entity_edit.brush_size);
+}
+
+int entity_edit_paste_clipboard(UiState *ui) {
+    R01World *w;
+    R01EntityFrame *fr;
+    R01EntityPart *pt;
+    const uint8_t *src;
+    uint8_t chr[R01_TILE_BYTES];
+    int pal;
+
+    if (!ui || !ui->entity_edit.open || !ui->project) {
+        return -1;
+    }
+    w = r01_project_active_world(ui->project);
+    fr = entity_edit_frame(ui);
+    if (!w || !fr || ui->entity_edit.sel_part < 0 || ui->entity_edit.sel_part >= fr->part_count) {
+        ui_toast(ui, "select a sprite first", 1);
+        return -1;
+    }
+    pt = &fr->parts[ui->entity_edit.sel_part];
+    pal = pt->pal & 3;
+    src = r01_chr_resolve_spr(ui->project, w, pt->bank, pt->tile_id);
+    if (src) {
+        memcpy(chr, src, R01_TILE_BYTES);
+    } else {
+        memset(chr, 0, R01_TILE_BYTES);
+    }
+    (void)ui_undo_spr_paint_begin(ui);
+    ui_undo_spr_paint_touch_tile(ui, pt->bank, pt->tile_id);
+    if (ui_paste_clipboard_png_tile(ui, chr, pal, 1) != 0) {
+        ui_undo_spr_paint_end(ui);
+        return -1;
+    }
+    if (r01_chr_write_resolved_spr(ui->project, w, pt->bank, pt->tile_id, chr) != 0) {
+        ui_undo_spr_paint_end(ui);
+        ui_toast(ui, "cannot write sprite CHR", 1);
+        return -1;
+    }
+    ui->entity_edit.paint_pal = pal;
+    ui_undo_spr_paint_end(ui);
+    return 0;
 }

@@ -4,32 +4,54 @@
   "default_world": 0,
   "active_world": 0,
   "active_screen": 17,
-  "default_screen": 2,
+  "default_screen": 17,
   "default_pal_row": 0,
-  "player_entity": -1,
+  "player_entity": 0,
   "grid_cols": 16,
   "grid_rows": 16,
   "global_pal_bg": [[0, 16, 32, 48], [0, 12, 44, 48], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51]],
-  "global_pal_spr": [[0, 18, 34, 50], [0, 2, 34, 51], [0, 23, 39, 55], [0, 30, 46, 51], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34]],
-  "player_bank_tiles": 0,
-  "player_bank_b64": "",
+  "global_pal_spr": [[0, 18, 34, 50], [0, 2, 17, 51], [0, 23, 39, 55], [0, 30, 46, 51], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34]],
+  "player_bank_tiles": 11,
+  "player_bank_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOH9/b08PDwAABAgAAAUFADDg8PD4+PgAAAAAQOBAQB8HDh4fPT8cAQADBwwYGAPw4NBsHr78IOCA4PDsXMDABC9PXjAAAAADFz4gAAAAALD4eDwyBBgAYHAwEBwYAAA=",
   "bg_bank0_tiles": 11,
   "bg_bank0_b64": "AAAAAAAAAAD////////////DzY2FgYH/ADw+fn5+fgAAAAAAAAAAAAAAAAAAAAAA////3/////8AAAAgAAAAAP//79fv////AAAQOBAAAAD//////////wAAAAAAAAAAABAwEBAQOAAAEDAQEBA4AAAYJAgQPAAAABgkCBA8AAAAOAQYBAQ4AAA4BBgEBDgAACQkPAQEBAAAJCQ8BAQEAAAfODBwYGBgAAAHDw8fHx8=",
   "spr_banks": [
-    {"tiles": 5, "b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="},
+    {"tiles": 11, "b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""}
   ],
   "sprites": [
+    {"bank": 4, "tile": 5, "pal": 1},
+    {"bank": 4, "tile": 6, "pal": 1},
+    {"bank": 4, "tile": 7, "pal": 1},
+    {"bank": 4, "tile": 8, "pal": 1},
+    {"bank": 4, "tile": 9, "pal": 1},
+    {"bank": 4, "tile": 10, "pal": 1}
   ],
   "metasprites": [
   ],
   "metatiles": [
   ],
   "entities": [
+    {
+      "name": "Entity",
+      "state_count": 1,
+      "states": [
+        {
+          "name": "Idle",
+          "origin_x": 10, "origin_y": 15,
+          "hitbox_x": 7, "hitbox_y": 7, "hitbox_w": 6, "hitbox_h": 19,
+          "frame_count": 1,
+          "frames": [
+            {"parts": [{"bank":4,"tile":7,"pal":1,"fh":0,"fv":0,"dx":2,"dy":11},{"bank":4,"tile":5,"pal":1,"fh":0,"fv":0,"dx":2,"dy":3},{"bank":4,"tile":6,"pal":1,"fh":0,"fv":0,"dx":10,"dy":3},{"bank":4,"tile":8,"pal":1,"fh":0,"fv":0,"dx":10,"dy":11},{"bank":4,"tile":10,"pal":1,"fh":0,"fv":0,"dx":10,"dy":19},{"bank":4,"tile":9,"pal":1,"fh":0,"fv":0,"dx":2,"dy":19}]}
+          ]
+        }
+      ]
+    }
   ],
   "instances": [
+    {"type": 0, "x": 197, "y": 196}
   ],
   "warp_entrances": [
   ],

@@ -41,13 +41,13 @@ Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Pre
 | **App tabs** | **Graphics** / **Audio** / **Code** (Code screen TBD). Graphics and Audio keep equal half-sidebar widths; Code is sized to its label and sits to the right |
 | **Right-click tile** (BG / Both) | Move to tile bank, add tile, edit tile, set palette/anim/solid. **Shift** turns **Edit tile** into **Edit tile (all)** |
 | **Right-click instance** (Sprite / Both) | Mirror H / Mirror V / Edit entity type / Remove instance |
-| **Edit tile** modal | **288x160**, 4x4 palette picker, **128x128** pixel canvas. Left-click paints; **right-click** picks the pixel color. **F+click** flood-fills CHR color. **Ctrl+Z** / **Ctrl+Y** (or **Ctrl+Shift+Z**) undo/redo pixel strokes while the modal is open. **Ctrl+V** pastes clipboard PNG (transparent -> index 0, opaque matched by brightness to the selected palette). **(all)** save writes CHR and applies bank/pal/H/V to every world cell (BG1+BG0) that matched the original tile id + attrs |
+| **Edit tile** modal | **288x160**, 4x4 palette picker, **128x128** pixel canvas. Left-click paints; **right-click** picks the pixel color. **F+click** flood-fills CHR color. **Ctrl+Z** / **Ctrl+Y** (or **Ctrl+Shift+Z**) undo/redo pixel strokes while the modal is open. **Ctrl+V** pastes clipboard PNG (transparent -> index 0, opaque matched by HSV Value to the selected palette). **(all)** save writes CHR and applies bank/pal/H/V to every world cell (BG1+BG0) that matched the original tile id + attrs |
 | **Edit sprite** modal | Same canvas as tile (**F+click** flood-fill). **Ctrl+V** pastes clipboard PNG onto the SPR canvas (same rules, SPR palette) |
 | **Set Solid** | Toggles `R01_ATTR_SOLID` (`0x40`) on matching tiles in active world (bank+pal+flips, not tile ID) |
 | **Palette strip** | Click BG/SPR strip -> **Global palettes** modal. Row **0-7** sets `default_pal_row` for the active world |
 | **Banks** | BG/SPR CHR bank grids (tabs). Edit tiles from the bank sheet. Soft caps match [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md) |
 | **Player bank** | Global 256-tile pattern grid (no tabs). Right-click Add/Edit tile. See [`general_docs/memory.md`](../../general_docs/memory.md) |
-| **Entities** | Primary object authoring. Types with up to **4** states x **4** frames x **6** sprites. Modal: full-width **Name** / **State name**; left column (right-aligned) palette, **State**/**Frame** strips, **Add**/**Remove**, **Highlight**, **Brush**; right column frame id + compose canvas with zoom (**Ctrl+wheel**, 1x-4x) and pan (**wheel** / **Shift+wheel**, middle-drag or right-drag; right-click still opens **Add sprite**). **Select | Edit** tool control: Select moves/reorders parts; Edit paints the topmost sprite under the cursor. **Space** toggles light part outlines. **Origin/hitbox** checkbox shows guides (auto-computed from the state sprite bounding-box center). Sidebar hover: name + type id. Right-click list: **Edit** / **Mark as player** / **Remove**. Soft caps and **boss** assemblies (optional BG body + multi-entity attachments): [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md). Cart packs locked EntityDef catalog (general_docs/software-api.md) |
+| **Entities** | Primary object authoring. Types with up to **4** states x **4** frames x **6** sprites. Modal: full-width **Name** / **State name**; left column (right-aligned) palette, **State**/**Frame** strips, **Add**/**Remove**, **Highlight**, **Brush**; right column frame id + compose canvas with zoom (**Ctrl+wheel**, 1x-4x) and pan (**wheel** / **Shift+wheel**, middle-drag or right-drag; right-click still opens **Add sprite**). **Select | Edit** tool control: Select moves/reorders parts; Edit paints the topmost sprite under the cursor. **Ctrl+V** pastes clipboard PNG into the **selected** sprite CHR (top-left 8x8, same rules as Edit sprite). **Space** toggles light part outlines. **Origin/hitbox** checkbox shows guides (auto-computed from the state sprite bounding-box center). Sidebar hover: name + type id. Right-click list: **Edit** / **Mark as player** / **Remove**. Soft caps and **boss** assemblies (optional BG body + multi-entity attachments): [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md). Cart packs locked EntityDef catalog (general_docs/software-api.md) |
 | **Place on screen** | Drag an **Entities** row onto the screen preview (switches to **Sprite layer**) to place that type. Instance `world_x/y` is the **user origin** (compose cross). Parts/hitbox draw as `(coord - origin)` relative to that. Optional instance `fh`/`fv` mirrors parts around the origin (JSON `"fh"`/`"fv"`, cart instance flags bit0/bit1). Sprites **clip to 128x120** when partially off-screen. On Sprite/Both: click/drag instance to move (marching ants). **H/V** mirrors. **Delete** removes |
 
 PNG drop imports into the **active** world. Cart export packs **world 0** only (ignores `default_world`).
@@ -126,11 +126,14 @@ See generated `output/C/include/r01_*.h` for the full engine API (camera, player
 
 | Rule | Value |
 |------|--------|
-| Shortcut | **Ctrl+V** in **Edit tile** or **Create/Edit sprite** modal |
+| Shortcut | **Ctrl+V** in **Edit tile**, **Create/Edit sprite**, or **Add/Edit entity** (selected part) |
 | Source | Clipboard `image/png` (GIMP Copy works). Linux: X11 selection, or `xclip` / `wl-paste` if present |
 | Transparent | Alpha < 128 -> palette index **0** |
-| Opaque | Match nearest of the **4** colors in the modal's selected palette by brightness (`r+g+b`) |
-| Size | Top-left **8x8** of the image fills the canvas |
+| Opaque | Match nearest active palette color by HSV **Value** (`max(r,g,b)`). Hue and saturation are ignored |
+| SPR opaque | Indices **1..3** only (index **0** is transparent when drawn, so dark pixels are not forced there) |
+| BG opaque | Indices **0..3** |
+| Size | Top-left **8x8** of the image fills one tile / selected entity sprite |
+| Entity modal | Requires a selected part. Writes SPR (or player-bank) CHR for that part. Undoable as a paint stroke |
 
 ---
 

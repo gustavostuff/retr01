@@ -22,12 +22,14 @@ void r01_screen_fill_pixels_from_bank(const R01World *w, R01Screen *s);
 void r01_tile_set_pixel(uint8_t tile[R01_TILE_BYTES], int sx, int sy, uint8_t color);
 /*
  * Quantize an 8x8 window from RGBA into a NES-style 2bpp tile.
- * Transparent (alpha < 128) -> index 0. Opaque pixels match the nearest of
- * target_rgb[0..3] by brightness (r+g+b). src may be smaller than 8x8 (rest -> 0).
- * target_rgb is 4 entries of {r,g,b}.
+ * Transparent (alpha < 128) -> index 0. Opaque pixels match the nearest
+ * target by HSV Value (max of r,g,b); hue and saturation are ignored.
+ * spr_plane=0: match indices 0..3 (BG). spr_plane=1: match 1..3 only (SPR
+ * index 0 is transparent on draw, so opaque pixels must not land there).
+ * src may be smaller than 8x8 (rest -> 0). target_rgb is 4 entries of {r,g,b}.
  */
 void r01_tile_from_rgba_brightness(uint8_t out16[R01_TILE_BYTES], const uint8_t *rgba, int img_w, int img_h,
-                                   int src_x, int src_y, const uint8_t (*target_rgb)[3]);
+                                   int src_x, int src_y, const uint8_t (*target_rgb)[3], int spr_plane);
 
 /* Ensure BG bank 0 has at least one blank tile; returns tile index or -1. */
 int r01_chr_alloc_tile(R01World *w, int bank);

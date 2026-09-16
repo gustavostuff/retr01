@@ -76,7 +76,7 @@ TEST_MAIN() {
         rgba[1] = 255;
         rgba[2] = 255;
         rgba[3] = 0;
-        /* Mid brightness opaque -> index 2 */
+        /* Mid value opaque -> index 2 (BG may use 0..3) */
         rgba[4] = 150;
         rgba[5] = 150;
         rgba[6] = 150;
@@ -86,10 +86,21 @@ TEST_MAIN() {
             rgba[8 + i] = 250;
         }
         rgba[11] = 255;
-        r01_tile_from_rgba_brightness(tile, rgba, 8, 8, 0, 0, (const uint8_t (*)[3])targets);
+        /* Near-black opaque: BG maps to 0; SPR must stay visible (index 1) */
+        rgba[12] = 10;
+        rgba[13] = 10;
+        rgba[14] = 10;
+        rgba[15] = 255;
+        r01_tile_from_rgba_brightness(tile, rgba, 8, 8, 0, 0, (const uint8_t (*)[3])targets, 0);
         EXPECT(r01_tile_pixel_color(tile, 0, 0) == 0, "transparent -> 0");
-        EXPECT(r01_tile_pixel_color(tile, 1, 0) == 2, "mid brightness");
-        EXPECT(r01_tile_pixel_color(tile, 2, 0) == 3, "bright");
+        EXPECT(r01_tile_pixel_color(tile, 1, 0) == 2, "mid value BG");
+        EXPECT(r01_tile_pixel_color(tile, 2, 0) == 3, "bright BG");
+        EXPECT(r01_tile_pixel_color(tile, 3, 0) == 0, "dark opaque BG -> 0");
+        r01_tile_from_rgba_brightness(tile, rgba, 8, 8, 0, 0, (const uint8_t (*)[3])targets, 1);
+        EXPECT(r01_tile_pixel_color(tile, 0, 0) == 0, "SPR transparent -> 0");
+        EXPECT(r01_tile_pixel_color(tile, 1, 0) == 2, "mid value SPR");
+        EXPECT(r01_tile_pixel_color(tile, 2, 0) == 3, "bright SPR");
+        EXPECT(r01_tile_pixel_color(tile, 3, 0) == 1, "dark opaque SPR -> 1 not 0");
     }
 
     free(p);

@@ -234,14 +234,23 @@ void r01_tile_flood_fill(uint8_t tile[R01_TILE_BYTES], int sx, int sy, uint8_t c
     }
 }
 
-static int rgb_brightness(uint8_t r, uint8_t g, uint8_t b) {
-    return (int)r + (int)g + (int)b;
+/* HSV Value: max channel. Hue/saturation ignored for clipboard paste matching. */
+static int rgb_value(uint8_t r, uint8_t g, uint8_t b) {
+    int v = (int)r;
+    if ((int)g > v) {
+        v = (int)g;
+    }
+    if ((int)b > v) {
+        v = (int)b;
+    }
+    return v;
 }
 
 void r01_tile_from_rgba_brightness(uint8_t out16[R01_TILE_BYTES], const uint8_t *rgba, int img_w, int img_h,
-                                   int src_x, int src_y, const uint8_t (*target_rgb)[3]) {
+                                   int src_x, int src_y, const uint8_t (*target_rgb)[3], int spr_plane) {
     int sy, sx;
-    int tbright[4];
+    int tval[4];
+    int match_lo;
     if (!out16) {
         return;
     }
@@ -249,8 +258,9 @@ void r01_tile_from_rgba_brightness(uint8_t out16[R01_TILE_BYTES], const uint8_t 
     if (!rgba || !target_rgb || img_w < 1 || img_h < 1) {
         return;
     }
+    match_lo = spr_plane ? 1 : 0;
     for (sx = 0; sx < 4; sx++) {
-        tbright[sx] = rgb_brightness(target_rgb[sx][0], target_rgb[sx][1], target_rgb[sx][2]);
+        tval[sx] = rgb_value(target_rgb[sx][0], target_rgb[sx][1], target_rgb[sx][2]);
     }
     for (sy = 0; sy < 8; sy++) {
         for (sx = 0; sx < 8; sx++) {
@@ -258,7 +268,7 @@ void r01_tile_from_rgba_brightness(uint8_t out16[R01_TILE_BYTES], const uint8_t 
             int iy = src_y + sy;
             const uint8_t *p;
             uint8_t col;
-            int bright, best, best_d, i;
+            int val, best, best_d, i;
             if (ix < 0 || iy < 0 || ix >= img_w || iy >= img_h) {
                 continue;
             }
@@ -266,11 +276,11 @@ void r01_tile_from_rgba_brightness(uint8_t out16[R01_TILE_BYTES], const uint8_t 
             if (p[3] < 128u) {
                 col = 0;
             } else {
-                bright = rgb_brightness(p[0], p[1], p[2]);
-                best = 0;
-                best_d = abs(bright - tbright[0]);
-                for (i = 1; i < 4; i++) {
-                    int d = abs(bright - tbright[i]);
+                val = rgb_value(p[0], p[1], p[2]);
+                best = match_lo;
+                best_d = abs(val - tval[match_lo]);
+                for (i = match_lo + 1; i < 4; i++) {
+                    int d = abs(val - tval[i]);
                     if (d < best_d) {
                         best_d = d;
                         best = i;
