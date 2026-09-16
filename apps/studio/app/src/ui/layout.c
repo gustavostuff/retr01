@@ -725,44 +725,48 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
     int my;
     int pad = UI_UNIT;
     int body_y;
-    int state_lab;
-    int frame_lab;
     int left_x;
     int right_x;
     int left_w = UI_ENTITY_LEFT_W;
     int right_w = UI_ENTITY_COMPOSE;
-    int body_top;
-    int body_h;
-    int half;
+    int left_right;
+    int col_top;
+    int name_lab;
+    int dots_w;
     int spr_btn_w;
+    int right_bottom;
+    int left_bottom;
 
     (void)ui;
     body_y = UI_BTN_H + pad;
 
-    /* Top: Name + State name aligned to canvas column. State | Frame + frame id sit above
-     * the canvas; Add/Remove sprite sit in the left column below the palette. */
+    /* Top: Name + State name full width. Left column: palette, State, Frame, Add/Remove,
+     * Highlight, Brush (all right-aligned). Right: frame id, canvas, Origin/hitbox + tool. */
     lo->name_y = body_y;
     lo->state_name_y = lo->name_y + UI_BTN_H + pad;
-    lo->state_y = lo->state_name_y + UI_BTN_H + pad;
-    lo->frame_y = lo->state_y;
-    lo->frame_id_y = lo->state_y + UI_BTN_H + pad;
+    col_top = lo->state_name_y + UI_BTN_H + pad;
 
-    body_top = lo->frame_id_y + UI_BTN_H + pad;
-    body_h = UI_ENTITY_COMPOSE;
-    if (body_h < UI_PAL_GRID_SIZE) {
-        body_h = UI_PAL_GRID_SIZE;
-    }
-
-    lo->guides_y = body_top + body_h + pad;
+    lo->frame_id_y = col_top;
+    lo->right_grid_y = lo->frame_id_y + UI_BTN_H + pad;
+    lo->guides_y = lo->right_grid_y + UI_ENTITY_COMPOSE + pad;
     lo->mode_y = lo->guides_y;
     lo->btn_y = lo->guides_y + UI_BTN_H + pad;
-    mh = lo->btn_y + UI_BTN_H + pad;
+    right_bottom = lo->btn_y + UI_BTN_H + pad;
+
+    lo->pal_y = col_top;
+    lo->state_y = lo->pal_y + UI_PAL_GRID_SIZE + pad;
+    lo->frame_y = lo->state_y + UI_BTN_H + pad;
+    lo->add_spr_y = lo->frame_y + UI_BTN_H + pad;
+    lo->rem_spr_y = lo->add_spr_y + UI_BTN_H + pad;
+    lo->highlight_y = lo->rem_spr_y + UI_BTN_H + pad;
+    lo->brush_lab_y = lo->highlight_y + UI_BTN_H + pad;
+    lo->brush_y = lo->brush_lab_y + UI_BTN_H;
+    left_bottom = lo->brush_y + UI_BTN_H + pad;
+
+    mh = right_bottom > left_bottom ? right_bottom : left_bottom;
 
     mx = (ui_logic_w(ui) - mw) / 2;
     my = (ui_logic_h(ui) - mh) / 2;
-
-    state_lab = ((label_width("State") + pad + pad - 1) / pad) * pad;
-    frame_lab = ((label_width("Frame") + pad + pad - 1) / pad) * pad;
 
     lo->mx = mx;
     lo->my = my;
@@ -771,36 +775,45 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
 
     left_x = mx + pad;
     right_x = mx + pad + left_w + pad;
+    left_right = left_x + left_w;
     lo->left_x = left_x;
     lo->left_w = left_w;
     lo->right_x = right_x;
     lo->right_w = right_w;
 
+    name_lab = label_width("State name");
+    if (name_lab < label_width("Name")) {
+        name_lab = label_width("Name");
+    }
     lo->name_y += my;
-    lo->name_x = right_x;
-    lo->name_w = right_w;
+    lo->name_x = left_x + name_lab + pad;
+    lo->name_w = mx + mw - pad - lo->name_x;
+    if (lo->name_w < UI_UNIT * 8) {
+        lo->name_w = UI_UNIT * 8;
+    }
 
     lo->state_name_y += my;
-    lo->state_name_x = right_x;
-    lo->state_name_w = right_w;
-
-    lo->state_y += my;
-    lo->state_dots_x = right_x + state_lab;
-    lo->state_dots_y = lo->state_y + (UI_BTN_H - UI_DOT_SIZE) / 2;
-
-    half = (right_w / 2 / pad) * pad;
-    lo->frame_y += my;
-    lo->frame_dots_x = right_x + half + frame_lab;
-    lo->frame_dots_y = lo->frame_y + (UI_BTN_H - UI_DOT_SIZE) / 2;
+    lo->state_name_x = lo->name_x;
+    lo->state_name_w = lo->name_w;
 
     lo->frame_id_y += my;
     lo->frame_id_x = right_x;
     lo->frame_id_w = right_w;
 
-    lo->pal_x = left_x + (left_w - UI_PAL_GRID_SIZE) / 2;
     lo->right_grid_x = right_x;
-    lo->right_grid_y = body_top + my;
-    lo->pal_y = lo->right_grid_y;
+    lo->right_grid_y += my;
+
+    lo->pal_y += my;
+    lo->pal_x = left_right - UI_PAL_GRID_SIZE;
+
+    dots_w = UI_DOT_STRIP_N * UI_DOT_SIZE + (UI_DOT_STRIP_N > 0 ? (UI_DOT_STRIP_N - 1) * UI_DOT_GAP : 0);
+    lo->state_y += my;
+    lo->state_dots_x = left_right - dots_w;
+    lo->state_dots_y = lo->state_y + (UI_BTN_H - UI_DOT_SIZE) / 2;
+
+    lo->frame_y += my;
+    lo->frame_dots_x = left_right - dots_w;
+    lo->frame_dots_y = lo->frame_y + (UI_BTN_H - UI_DOT_SIZE) / 2;
 
     spr_btn_w = label_width("Remove");
     if (spr_btn_w < label_width("Add")) {
@@ -809,23 +822,25 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
     if (spr_btn_w > left_w) {
         spr_btn_w = left_w;
     }
-    lo->add_spr_x = left_x;
-    lo->add_spr_y = lo->pal_y + UI_PAL_GRID_SIZE + pad;
+    lo->add_spr_y += my;
     lo->add_spr_w = spr_btn_w;
-    lo->rem_spr_x = left_x;
-    lo->rem_spr_y = lo->add_spr_y + UI_BTN_H + pad;
+    lo->add_spr_x = left_right - spr_btn_w;
+    lo->rem_spr_y += my;
     lo->rem_spr_w = spr_btn_w;
-    lo->highlight_x = left_x;
-    lo->highlight_y = lo->rem_spr_y + UI_BTN_H + pad;
+    lo->rem_spr_x = left_right - spr_btn_w;
+
+    lo->highlight_y += my;
     lo->highlight_w = UI_CHECKBOX + UI_MODE_GAP + label_width("Highlight");
     if (lo->highlight_w > left_w) {
         lo->highlight_w = left_w;
     }
-    lo->brush_lab_x = left_x;
-    lo->brush_lab_y = lo->highlight_y + UI_BTN_H + pad;
-    lo->brush_x = left_x;
-    lo->brush_y = lo->brush_lab_y + UI_BTN_H;
+    lo->highlight_x = left_right - lo->highlight_w;
+
+    lo->brush_lab_y += my;
+    lo->brush_lab_x = left_right - label_width("Brush");
+    lo->brush_y += my;
     lo->brush_w = left_w;
+    lo->brush_x = left_right - lo->brush_w;
 
     lo->guides_y += my;
     lo->mode_y += my;
