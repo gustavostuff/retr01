@@ -28,4 +28,4 @@ MyGame/
 
 ## Architecture notes
 
-Soft I/O is `$7F00-$7FFF`. Cart `format_ver` **3**, ptr table **30 B**, BG1 cap **32**, other screens **16**, entity types **16**/world. See `docs/`.
+Soft I/O is `$7F00-$7FFF`. Cart `format_ver` **3**, ptr table **30 B**, BG1 cap **32**, other screens **16**, entity types **16**/world. See `general_docs/`.

@@ -15,7 +15,7 @@
 #define R01_BGM_FD_STEPS_PER_BEAT 1
 #define R01_BGM_FD_NMI_HZ 60
 
-/* ASCII tracker token -> cart note/control byte (docs/sound.md). */
+/* ASCII tracker token -> cart note/control byte (general_docs/sound.md). */
 int r01_bgm_fd_token_payload(int ch, const char *tok, uint8_t *out);
 
 /* NMI frames per Studio grid step (60 Hz tracker vs BPM x steps/beat). */

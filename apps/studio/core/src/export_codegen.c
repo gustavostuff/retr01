@@ -346,7 +346,7 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "#ifndef R01_ENTITY_H\n#define R01_ENTITY_H\n\n"
                    "#include <stdint.h>\n"
                    "typedef struct R01GameCtx R01GameCtx;\n\n"
-                   "/* Soft contract: docs/video-graphics.md (4x4x4 parts, 16 live). */\n"
+                   "/* Soft contract: general_docs/video-graphics.md (4x4x4 parts, 16 live). */\n"
                    "#define R01_ENTITY_ONSCREEN_MAX 16\n\n"
                    "int  r01_entity_spawn(uint8_t type, int wx, int wy);\n"
                    "void r01_entity_remove(int inst);\n"

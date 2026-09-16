@@ -34,15 +34,15 @@ Retr01 is an MCU-assisted 8-bit system ready for arcade and console setups, plus
 
 | Doc | Focus |
 | --- | --- |
-| [selling-points.md](docs/selling-points.md) | Bells and whistles (shared PCB, dual sync, entities, flasher, more) |
-| [hardware.md](docs/hardware.md) | Main board, 3x AVR, PLDs, BOM, I/O, PCB practices |
-| [ic-comms-risks.md](docs/ic-comms-risks.md) | Shared-bus / multi-clock risks, mitigations, play-path anti-patterns |
-| [video-graphics.md](docs/video-graphics.md) | Resolution, tiles, sprites, palettes, BG layers |
-| [world-scrolling.md](docs/world-scrolling.md) | Worlds, screens, VRAM buffers, scroll behavior |
-| [cartridge.md](docs/cartridge.md) | Cart hardware, saves, flashing |
-| [memory.md](docs/memory.md) | CPU map, soft `$7Fxx`, MAP port, `.retr01` image, entity flash capacity |
-| [software-api.md](docs/software-api.md) | What an entity is, def size, C/ASM API, game modes |
-| [sound.md](docs/sound.md) | APU soft window, MCU-S2 PWM |
-| [open-questions.md](docs/open-questions.md) | TBD items and how to resolve them |
-| [ic_behavior/](docs/ic_behavior/README.md) | Per-chip behavior (all 19 BOM ICs + pad / optional) |
+| [selling-points.md](general_docs/selling-points.md) | Bells and whistles (shared PCB, dual sync, entities, flasher, more) |
+| [hardware.md](general_docs/hardware.md) | Main board, 3x AVR, PLDs, BOM, I/O, PCB practices |
+| [ic-comms-risks.md](general_docs/ic-comms-risks.md) | Shared-bus / multi-clock risks, mitigations, play-path anti-patterns |
+| [video-graphics.md](general_docs/video-graphics.md) | Resolution, tiles, sprites, palettes, BG layers |
+| [world-scrolling.md](general_docs/world-scrolling.md) | Worlds, screens, VRAM buffers, scroll behavior |
+| [cartridge.md](general_docs/cartridge.md) | Cart hardware, saves, flashing |
+| [memory.md](general_docs/memory.md) | CPU map, soft `$7Fxx`, MAP port, `.retr01` image, entity flash capacity |
+| [software-api.md](general_docs/software-api.md) | What an entity is, def size, C/ASM API, game modes |
+| [sound.md](general_docs/sound.md) | APU soft window, MCU-S2 PWM |
+| [open-questions.md](general_docs/open-questions.md) | TBD items and how to resolve them |
+| [ic_behavior/](ic_behavior/README.md) | Per-chip behavior (all 19 BOM ICs + pad / optional) |
 | [apps/README.md](apps/README.md) | Studio + Emu apps |

@@ -14,14 +14,14 @@
 #define R01_GRID_MAX 16
 #define R01_DEFAULT_GRID 3
 #define R01_MAX_SCREENS (R01_GRID_MAX * R01_GRID_MAX)
-#define R01_MAX_PRESENT_SCREENS 32 /* cart cap: present BG1 screens per world (docs/memory.md) */
+#define R01_MAX_PRESENT_SCREENS 32 /* cart cap: present BG1 screens per world (general_docs/memory.md) */
 /* Virtual grid cell: col/row 0-15 packed as nibbles (cart dir + world spawn). */
 #define R01_CELL_PACK(col, row) ((uint8_t)(((unsigned)(col)&0x0fu) | (((unsigned)(row)&0x0fu) << 4)))
 #define R01_CELL_COL(b) ((int)((unsigned)(b)&0x0fu))
 #define R01_CELL_ROW(b) ((int)(((unsigned)(b) >> 4) & 0x0fu))
 #define R01_PARALLAX_MIN 0
 #define R01_PARALLAX_MAX 8 /* per world; live VRAM slots 4-5 only */
-#define R01_PARALLAX_SLICE_MAX 120 /* max bands; variable thickness (docs/graphics) */
+#define R01_PARALLAX_SLICE_MAX 120 /* max bands; variable thickness (general_docs/graphics) */
 #define R01_START_COL 2
 #define R01_START_ROW 0
 
@@ -75,11 +75,11 @@
 
 /* Per-world sprite catalog (CHR patterns in spr_banks + authoring metadata). */
 #define R01_MAX_SPRITES 256
-/* Authoring leftovers in project JSON (not cart / C API). See docs/video-graphics.md. */
+/* Authoring leftovers in project JSON (not cart / C API). See general_docs/video-graphics.md. */
 #define R01_MAX_METASPRITES 64
 #define R01_MAX_METATILES 64
 
-/* Entity types (docs/video-graphics.md). Soft on-screen live cap is 16. */
+/* Entity types (general_docs/video-graphics.md). Soft on-screen live cap is 16. */
 #define R01_MAX_ENTITY_TYPES 16
 #define R01_ENTITY_STATES_MAX 4
 #define R01_ENTITY_FRAMES_MAX 4
@@ -121,7 +121,7 @@ typedef struct R01BgmData {
     R01BgmRegion region[R01_BGM_TRACKS_MAX][R01_BGM_CH_COUNT][R01_BGM_REGIONS_MAX];
 } R01BgmData;
 
-/* BG attr (docs/graphics) */
+/* BG attr (general_docs/graphics) */
 #define R01_ATTR_BANK_MASK 0x03u
 #define R01_ATTR_PAL_MASK 0x0Cu
 #define R01_ATTR_PAL_SHIFT 2
@@ -236,7 +236,7 @@ typedef struct R01WarpExit {
     uint8_t flags; /* R01_WARP_FADE_* */
 } R01WarpExit;
 
-/* Global off-grid MAP payloads (title, interstitial, credits pages). See docs/graphics. */
+/* Global off-grid MAP payloads (title, interstitial, credits pages). See general_docs/graphics. */
 typedef struct R01OtherScreen {
     int present; /* 0 = omit from cart; title/inter always present after init */
     uint8_t tiles[R01_TILES_PER_SCREEN];
@@ -282,7 +282,7 @@ typedef struct R01Project {
     int default_world; /* Play entry world (begin_play); cart export always uses worlds[0] */
     int active_world;  /* 0..R01_MAX_WORLDS-1 */
     int active_screen; /* index into worlds[active_world].screens */
-    /* 8 rows x 4 pals each (docs/graphics). Index [row][pal]. */
+    /* 8 rows x 4 pals each (general_docs/graphics). Index [row][pal]. */
     R01PalRow global_pal_bg[R01_PAL_ROWS][R01_PALS_PER_ROW];
     R01PalRow global_pal_spr[R01_PAL_ROWS][R01_PALS_PER_ROW];
     R01OtherScreen other_screens[R01_CART_OTHER_MAX]; /* [0]=title [1]=inter [2+]=credits */

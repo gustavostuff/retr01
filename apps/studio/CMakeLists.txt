@@ -5,7 +5,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 add_compile_options(-Wall -Wextra -Wpedantic)
 
-# Package root is apps/; repo root holds docs/, hw/, output/, bin/.
+# Package root is apps/; repo root holds general_docs/, hw/, output/, bin/.
 set(R01_PKG_ROOT "${CMAKE_SOURCE_DIR}/..")
 set(R01_REPO_ROOT "${CMAKE_SOURCE_DIR}/../.." CACHE PATH "Retr01 repo root")
 set(R01_OUTPUT_DIR "${R01_REPO_ROOT}/output")

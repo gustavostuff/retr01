@@ -1,6 +1,6 @@
 # IC behavior
 
-How each Retr01 chip behaves for board bring-up and for a future **netlist / IC simulation**. Board wiring lives in `../hardware.md`. CPU map in `../memory.md`.
+How each Retr01 chip behaves for board bring-up and for a future **netlist / IC simulation**. Board wiring lives in `../general_docs/hardware.md`. CPU map in `../general_docs/memory.md`.
 
 Every part doc should answer three questions:
 

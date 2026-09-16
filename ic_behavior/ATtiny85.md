@@ -4,7 +4,7 @@ Microchip **ATtiny85**. Retr01 **TRS pad** MCU (inside the controller shell). **
 
 **Package:** 8-pin **DIP** (or SOIC-8). **VCC:** 5 V from the TRS tip. Programmed with **ISP** off the console (Arduino-as-ISP, USBasp, etc.). Adafruit's UPDI Friend does **not** program this part.
 
-**Board:** `../hardware.md` (controllers). Host on the motherboard is **MCU-S2** (`PAD_DATA` on PF0).
+**Board:** `../general_docs/hardware.md` (controllers). Host on the motherboard is **MCU-S2** (`PAD_DATA` on PF0).
 
 ---
 

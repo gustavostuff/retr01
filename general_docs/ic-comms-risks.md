@@ -2,7 +2,7 @@
 
 Retr01 is a multi-clock, multi-driver board. The 6502, three AVRs, three PLDs, SRAM, cart flash, glue, and the video path all share nets and must take turns talking. This note catalogs the main failure modes for that symphony, and how to mitigate them.
 
-**Related:** `hardware.md` (wiring, BOM, layout), `ic_behavior/` (per-chip Inputs / Process / Outputs), `video-graphics.md` (VBlank / HBlank jobs), `memory.md` (CPU map).
+**Related:** `hardware.md` (wiring, BOM, layout), `../ic_behavior/` (per-chip Inputs / Process / Outputs), `video-graphics.md` (VBlank / HBlank jobs), `memory.md` (CPU map).
 
 ## Clock domains at a glance
 
@@ -280,4 +280,4 @@ Author-facing timing locks also live in `software-api.md`. Hardware mailbox lock
 
 ## Related
 
-`hardware.md` | `ic_behavior/` | `video-graphics.md` | `memory.md` | `cartridge.md` | `software-api.md` | `open-questions.md`
+`hardware.md` | `../ic_behavior/` | `video-graphics.md` | `memory.md` | `cartridge.md` | `software-api.md` | `open-questions.md`

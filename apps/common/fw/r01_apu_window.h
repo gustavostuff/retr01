@@ -6,7 +6,7 @@
 
 /*
  * Bring-up packing of soft $7F40-$7F5F (32 B) as 8 voices x 4 bytes.
- * SoT channel roles: docs/sound.md. Full hex bytecode protocol still later.
+ * SoT channel roles: general_docs/sound.md. Full hex bytecode protocol still later.
  *
  * Per channel at offset ch*4:
  *   [0] bit0=enable, bits4-7=volume (0-15). Triangle ignores vol (full when on).

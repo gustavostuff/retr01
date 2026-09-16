@@ -2,7 +2,7 @@
 
 Software-visible C emulator for Retr01 **Phase 1** carts. Separate from the IC board
 simulator ([`app/sim/`](../sim/)). Contract:
-[`docs/video-graphics.md`](../../docs/video-graphics.md).
+[`general_docs/video-graphics.md`](../../general_docs/video-graphics.md).
 
 Run from repo root: `./emu path/to/cart.retr01` (after `./build-all`).
 

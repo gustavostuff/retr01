@@ -4,7 +4,7 @@
 #include <stdint.h>
 typedef struct R01GameCtx R01GameCtx;
 
-/* Soft contract: docs/video-graphics.md (4x4x4 parts, 16 live). */
+/* Soft contract: general_docs/video-graphics.md (4x4x4 parts, 16 live). */
 #define R01_ENTITY_ONSCREEN_MAX 16
 
 int  r01_entity_spawn(uint8_t type, int wx, int wy);
