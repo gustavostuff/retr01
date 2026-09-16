@@ -141,8 +141,8 @@ Entity **spawn locations** are **not** on the cart. PRG owns who appears where (
 
 Worst case: all fixed image pieces + maxed **player item bank** (**4096 B**) + **8** worlds at full CHR, max present screens (sparse dirs), and **16** fully maxed entity defs each + **16** other screens at raw **480 B** each. RLE and unused slots free more. Spawn locations cost **PRG**, not cart flash.
 
-One maxed world blob (no `PA`) is **58176 B** (~56.8 KB):
-**1 x 32** (header) + **1 x 32768** (CHR) + **32 x 12** (BG1 dir) + **32 x 480** (BG1 payloads) + **8 x 12** (BG0 dir) + **8 x 480** (BG0 payloads) + **16 x 356** (entity defs).
+One maxed world blob (no `PA`) is **60224 B** (~58.8 KB):
+**1 x 32** (header) + **1 x 32768** (CHR) + **32 x 12** (BG1 dir) + **32 x 480** (BG1 payloads) + **8 x 12** (BG0 dir) + **8 x 480** (BG0 payloads) + **16 x 484** (entity defs).
 
 | Item | Number of bytes | Kilobytes |
 | --- | ---: | ---: |
@@ -159,12 +159,12 @@ One maxed world blob (no `PA`) is **58176 B** (~56.8 KB):
 | BG1 payloads (8 worlds x 32 screens x 480 B) | **122880** | **120.0** |
 | BG0 directories (8 worlds x 8 screens x 12 B) | **768** | ~0.8 |
 | BG0 payloads (8 worlds x 8 screens x 480 B) | **30720** | **30.0** |
-| Entity defs (8 worlds x 16 defs x 356 B maxed) | **45568** | **~44.5** |
+| Entity defs (8 worlds x 16 defs x 484 B maxed) | **61952** | **~60.5** |
 | Other screens (16 screens x 480 B raw) | **7680** | **~7.5** |
-| **Used (sum of rows above)** | **510318** | **~498.4** |
-| Free (524288 flash - 510318 used) | **13970** | **~13.6** |
+| **Used (sum of rows above)** | **526702** | **~514.4** |
+| Over (526702 used - 524288 flash) | **2414** | **~2.4** |
 
-That free slice covers optional `PA`, packing slack, and anything else that does not fit the capped blobs above.
+That absolute max fill does **not** fit: ~**2.4 KB** over 512 KB flash. Real carts stay under because entity defs are variable-length (only live sprites), screens/CHR are rarely all filled, and RLE can shrink other screens. Optional `PA` and the per-world type directory (`u16` x type count, up to **+32 B**/world) are also outside the table above.
 
 ### Player item bank (global)
 
@@ -183,7 +183,7 @@ Live inventory state (counts, equipped slots, flags) stays in **system RAM** / s
 
 ### Entity catalog (per world, cart flash)
 
-**Definition:** an entity is a game being/object built from up to 4 states x 4 frames x 4 sprites. Full wording and **byte pack format** in `software-api.md`.
+**Definition:** an entity is a game being/object built from up to 4 states x 4 frames x 6 sprites. Full wording and **byte pack format** in `software-api.md`.
 
 Each world blob owns its own catalog (up to **16** types). Types are **not** shared across worlds. Reuse the same enemy look in world 2 by packing another def (and tiles) there. Sprite attr bank bits always mean this world's SPR banks. Wrong world CHR loaded = wrong pixels (the intentional glitch tell).
 
@@ -198,9 +198,9 @@ Each world blob owns its own catalog (up to **16** types). Types are **not** sha
 | --- | --- |
 | Hard cap (per world) | **16** entity types |
 | Global / cart type pool | **None** (no shared catalog) |
-| Maxed def size (locked pack) | **356 B** |
-| Worst case 8 worlds x 16 maxed defs | **45568 B** (~44.5 KB) |
-| CHR zero-reuse unique-maxed / world | Soft art pressure ~**16** (1024 sprite tiles / 64 slots). Matches the type cap when every type is fully unique-tiled |
+| Maxed def size (locked pack) | **484 B** |
+| Worst case 8 worlds x 16 maxed defs | **61952 B** (~60.5 KB) |
+| CHR zero-reuse unique-maxed / world | Soft art pressure ~**10** (1024 sprite tiles / 96 slots). Below the type cap when every type is fully unique-tiled |
 
 Studio: author up to **16** types per world, with art in that world's SPR banks.
 

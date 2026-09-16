@@ -15,7 +15,7 @@
 #define R01_CART_PLAYER_ANIM_MAGIC0 'P'
 #define R01_CART_PLAYER_ANIM_MAGIC1 'A'
 
-#define R01_CART_PLAYER_ANIM_PARTS_MAX 4
+#define R01_CART_PLAYER_ANIM_PARTS_MAX 6
 
 typedef struct R01CartPlayerAnim {
     const uint8_t *blob;

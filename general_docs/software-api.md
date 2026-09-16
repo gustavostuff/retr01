@@ -10,7 +10,7 @@ An entity is a being, object, or graphic in the game. It is composed of:
 
 - Up to **4 states** (idle, running, and so on).
 - Each state: up to **4 frames**.
-- Each frame: up to **4 sprites** (8x8), with positions relative to each other, frame delays, and related metadata (hitbox per state, flips, and so on).
+- Each frame: up to **6 sprites** (8x8), with positions relative to each other, frame delays, and related metadata (hitbox per state, flips, and so on).
 
 That range covers very simple games (**1** state, **1** frame, **1** sprite) and richer ones. Complex bosses can be several entities working together in software (for example left leg, head, right leg, eyes).
 
@@ -40,7 +40,7 @@ The **player item bank** is separate: one cart-global **256-tile** pattern bank.
 Little-endian. Offsets are **byte offsets from the start of the block that owns them** (`0` = unused slot).
 
 ```text
-EntityDef (variable length, max 356 B when fully populated)
+EntityDef (variable length, max 484 B when fully populated)
 +0   u8  flags
 +1   u8  state_count          (1..4)
 +2   u8  default_state        (0..state_count-1)
@@ -60,8 +60,8 @@ State (at EntityDef + state_off[s])
 
 Frame (at State + frame_off[f])
 +0   u8  delay                (display duration in frames, min 1)
-+1   u8  sprite_count         (1..4)
-+2   Sprite sprites[4]        // only first sprite_count are live
++1   u8  sprite_count         (1..6)
++2   Sprite sprites[6]        // only first sprite_count are live
      Sprite = { u8 tile, i8 rel_x, i8 rel_y, u8 attr }  // 4 B each
 ```
 
@@ -78,10 +78,10 @@ Frame (at State + frame_off[f])
 | --- | ---: |
 | EntityDef header | 12 |
 | One State header | 14 |
-| One Frame (4 sprites) | 18 |
-| **Fully maxed def** (4x4x4) | **356** |
-| 16 maxed defs (one world) | **5696** (~5.6 KB) |
-| 8 worlds x 16 maxed defs | **45568** (~44.5 KB) |
+| One Frame (6 sprites) | 26 |
+| **Fully maxed def** (4x4x6) | **484** |
+| 16 maxed defs (one world) | **7744** (~7.6 KB) |
+| 8 worlds x 16 maxed defs | **61952** (~60.5 KB) |
 
 **Entity spawn locations** live in **PRG** (data tables and/or code that calls `spawn_entity`), not in the world blob. Cart holds defs in the **per-world** catalog only. Optional `PA` (player anim) may still hang off a world blob as an opaque blob for now.
 

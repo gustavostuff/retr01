@@ -89,7 +89,7 @@ static inline int r01_is_player_chr_bank(int bank) {
 #define R01_MAX_ENTITY_TYPES 16
 #define R01_ENTITY_STATES_MAX 4
 #define R01_ENTITY_FRAMES_MAX 4
-#define R01_ENTITY_PARTS_MAX 4 /* hard: no frame may exceed 4 sprites */
+#define R01_ENTITY_PARTS_MAX 6 /* hard: no frame may exceed 6 sprites */
 #define R01_ENTITY_ONSCREEN_MAX 16 /* live instances (OAM headroom allows 32 at 4 parts) */
 #define R01_ENTITY_COMPOSE_PX 32 /* authoring canvas (px). Studio shows full grid at fixed scale */
 #define R01_ENTITY_NAME_MAX 32
