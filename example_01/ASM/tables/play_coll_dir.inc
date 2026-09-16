@@ -8,4 +8,7 @@
         .byte $00, $02, $A0, $93  ; screen (0,2)
         .byte $01, $02, $90, $94  ; screen (1,2)
         .byte $02, $02, $80, $95  ; screen (2,2)
-play_coll_count: .byte $09
+        .byte $03, $02, $70, $96  ; screen (3,2)
+        .byte $02, $03, $60, $97  ; screen (2,3)
+        .byte $03, $03, $50, $98  ; screen (3,3)
+play_coll_count: .byte $0C

@@ -271,6 +271,51 @@ int main(void) {
         }
     }
 
+    /* BG0 auto parallax: end-aligned (cols-1)/(cols-1), never overshoot. */
+    {
+        R01eVideo *vid = &m.video;
+        vid->bg0_scroll_manual = 0;
+        vid->bg0_cols = 2;
+        vid->bg0_rows = 2;
+        vid->l1_cols = 4;
+        vid->l1_rows = 4;
+        vid->l1_origin_x = 0;
+        vid->l1_origin_y = 0;
+        vid->cam_x = 0;
+        vid->cam_y = 0;
+        r01e_video_update_bg0_scroll(&m);
+        if (vid->l0_cam_x != 0 || vid->l0_cam_y != 0) {
+            r01e_machine_shutdown(&m);
+            return fail("BG0 scroll at origin");
+        }
+        /* Mid: cam at 1 screen of BG1 travel -> BG0 at 1/3 screen. */
+        vid->cam_x = R01E_SCREEN_PX_W;
+        vid->cam_y = R01E_SCREEN_PX_H;
+        r01e_video_update_bg0_scroll(&m);
+        if (vid->l0_cam_x != R01E_SCREEN_PX_W / 3 || vid->l0_cam_y != R01E_SCREEN_PX_H / 3) {
+            r01e_machine_shutdown(&m);
+            return fail("BG0 mid parallax ratio");
+        }
+        /* Far end of BG1 bbox: BG0 must land on last screen origin, not past it. */
+        vid->cam_x = 3 * R01E_SCREEN_PX_W;
+        vid->cam_y = 3 * R01E_SCREEN_PX_H;
+        r01e_video_update_bg0_scroll(&m);
+        if (vid->l0_cam_x != R01E_SCREEN_PX_W || vid->l0_cam_y != R01E_SCREEN_PX_H) {
+            r01e_machine_shutdown(&m);
+            return fail("BG0 end-aligned parallax");
+        }
+        /* Equal extents: BG0 parked. */
+        vid->l1_cols = 2;
+        vid->l1_rows = 2;
+        vid->cam_x = R01E_SCREEN_PX_W;
+        vid->cam_y = R01E_SCREEN_PX_H;
+        r01e_video_update_bg0_scroll(&m);
+        if (vid->l0_cam_x != 0 || vid->l0_cam_y != 0) {
+            r01e_machine_shutdown(&m);
+            return fail("BG0 parked when equal extent");
+        }
+    }
+
     printf("ok io scroll/vram/map/fe80/eeprom/oam/apu\n");
     r01e_machine_shutdown(&m);
     return 0;

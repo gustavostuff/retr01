@@ -8,7 +8,7 @@ typedef struct {
     int world_y;
 } R01InstRec;
 
-static const uint8_t play_present[32] = {7, 0, 7, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static const uint8_t play_present[32] = {7, 0, 7, 0, 15, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 static const uint8_t play_spawn_cell = 0x02u;
 static const uint8_t play_spawn_col = 2;
 static const uint8_t play_spawn_row = 0;

@@ -184,6 +184,6 @@ Raster compare `$7F04` may be written outside VBlank only for a **deliberate** s
 
 ## Parallax scroll rate
 
-Example: BG1 screens fill a solid 4x4 grid (16 screens). BG0 is a 2x2 grid. The enclosing box for BG1 is double BG0 on both axes, so BG0 scrolls at half the rate of BG1.
+Example: BG1 screens fill a solid 4x4 grid (16 screens). BG0 is a 2x2 grid. Camera travel on each axis is `(screens - 1)` screen widths, so BG0 moves at `(2 - 1) / (4 - 1) = 1/3` the BG1 camera rate. That keeps the start and end of both planes aligned; a naive `bg0_screens / bg1_screens` scale overshoots the BG0 plane and makes BG0 screens look like they slide off the 2x2 grid.
 
-Screen arrangements can be any shape. Compute the enclosing minimum grid for BG1 screens and for BG0 screens, then derive X and Y scroll relationships from those boxes. C/ASM PRG utilities should help authors with that math.
+Screen arrangements can be any shape. Compute the enclosing minimum grid for BG1 screens and for BG0 screens, then derive X and Y scroll relationships from those boxes (`(bg0_n - 1) / (bg1_n - 1)` when BG0 is strictly smaller on that axis; otherwise park BG0). C/ASM PRG utilities should help authors with that math.

@@ -247,6 +247,8 @@ static int load_screen_into_slot(R01eMachine *m, const R01eWorldView *wv, int co
 static void bg0_apply_scroll(R01eMachine *m) {
     R01eVideo *vid;
     int rel_x, rel_y;
+    int travel_l1;
+    int travel_l0;
 
     if (!m) {
         return;
@@ -257,8 +259,11 @@ static void bg0_apply_scroll(R01eMachine *m) {
         vid->l0_cam_y = m->io.bg0_scroll_y;
         return;
     }
-    /* Scroll relative to BG1 present bbox origin, scaled by grid W/H.
-     * No scroll on an axis when BG0 enclosing extent is equal or larger than BG1. */
+    /*
+     * Map BG1 camera travel onto BG0 travel so both plane ends stay aligned.
+     * Rate is (bg0_screens-1)/(bg1_screens-1) in pixels (a 2x2 under a 4x4 is
+     * 1/3, not cols/cols). When BG0 extent is equal or larger, leave L0 parked.
+     */
     rel_x = vid->cam_x - vid->l1_origin_x;
     rel_y = vid->cam_y - vid->l1_origin_y;
     if (rel_x < 0) {
@@ -267,15 +272,31 @@ static void bg0_apply_scroll(R01eMachine *m) {
     if (rel_y < 0) {
         rel_y = 0;
     }
-    if (vid->bg0_cols < 2 || vid->l1_cols < 1 || vid->bg0_cols >= vid->l1_cols) {
+    if (vid->bg0_cols < 2 || vid->l1_cols < 2 || vid->bg0_cols >= vid->l1_cols) {
         vid->l0_cam_x = 0;
     } else {
-        vid->l0_cam_x = (rel_x * vid->bg0_cols) / vid->l1_cols;
+        travel_l1 = (vid->l1_cols - 1) * R01E_SCREEN_PX_W;
+        travel_l0 = (vid->bg0_cols - 1) * R01E_SCREEN_PX_W;
+        if (rel_x > travel_l1) {
+            rel_x = travel_l1;
+        }
+        vid->l0_cam_x = (rel_x * travel_l0) / travel_l1;
+        if (vid->l0_cam_x > travel_l0) {
+            vid->l0_cam_x = travel_l0;
+        }
     }
-    if (vid->bg0_rows < 2 || vid->l1_rows < 1 || vid->bg0_rows >= vid->l1_rows) {
+    if (vid->bg0_rows < 2 || vid->l1_rows < 2 || vid->bg0_rows >= vid->l1_rows) {
         vid->l0_cam_y = 0;
     } else {
-        vid->l0_cam_y = (rel_y * vid->bg0_rows) / vid->l1_rows;
+        travel_l1 = (vid->l1_rows - 1) * R01E_SCREEN_PX_H;
+        travel_l0 = (vid->bg0_rows - 1) * R01E_SCREEN_PX_H;
+        if (rel_y > travel_l1) {
+            rel_y = travel_l1;
+        }
+        vid->l0_cam_y = (rel_y * travel_l0) / travel_l1;
+        if (vid->l0_cam_y > travel_l0) {
+            vid->l0_cam_y = travel_l0;
+        }
     }
 }
 
