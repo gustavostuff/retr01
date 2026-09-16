@@ -477,12 +477,104 @@ static void enter_selected_dir(UiState *ui) {
     set_dir(ui, next);
 }
 
+static void project_io_modal_layout(const UiState *ui, ProjectIoModalLayout *lo) {
+    enum { C_DIR = 1, C_NAME, C_LIST, C_FOOTER };
+    const int is_save = ui && ui->project_io.mode == UI_PROJ_IO_SAVE;
+    static const UiPanelCell cells_save[] = {
+        {C_DIR, 0, 0, 1, 1},
+        {C_NAME, 0, 2, 1, 1},
+        {C_LIST, 0, 4, 1, 1},
+        {C_FOOTER, 0, 6, 1, 1},
+    };
+    static const UiPanelCell cells_open[] = {
+        {C_DIR, 0, 0, 1, 1},
+        {C_LIST, 0, 2, 1, 1},
+        {C_FOOTER, 0, 4, 1, 1},
+    };
+    static const int row_hs_save[] = {UI_BTN_H, UI_UNIT, UI_BTN_H, UI_UNIT, 144, UI_UNIT, UI_BTN_H};
+    static const int row_hs_open[] = {UI_BTN_H, UI_UNIT, 176, UI_UNIT, UI_BTN_H};
+    UiPanel panel;
+    int pad = UI_UNIT;
+    int content_x, content_y;
+    int cx, cy, cw, ch;
+    int content_w = 420 - pad * 2;
+    int i;
+    int rows;
+    const UiPanelCell *cells;
+    int cell_n;
+    const int *row_hs;
+
+    if (is_save) {
+        cells = cells_save;
+        cell_n = (int)(sizeof(cells_save) / sizeof(cells_save[0]));
+        row_hs = row_hs_save;
+        rows = 7;
+    } else {
+        cells = cells_open;
+        cell_n = (int)(sizeof(cells_open) / sizeof(cells_open[0]));
+        row_hs = row_hs_open;
+        rows = 5;
+    }
+
+    ui_panel_init(&panel, 1, rows, UI_PANEL_CELL_MIN, UI_PANEL_CELL_MIN);
+    ui_panel_set_cells(&panel, cells, cell_n);
+    ui_panel_set_col_w(&panel, 0, content_w);
+    for (i = 0; i < rows; i++) {
+        ui_panel_set_row_h(&panel, i, row_hs[i]);
+    }
+    ui_panel_layout(&panel, 0, 0);
+
+    lo->mw = pad + panel.total_w + pad;
+    lo->mh = UI_BTN_H + pad + panel.total_h + pad;
+    lo->mx = (ui_logic_w(ui) - lo->mw) / 2;
+    lo->my = (ui_logic_h(ui) - lo->mh) / 2;
+    content_x = lo->mx + pad;
+    content_y = lo->my + UI_BTN_H + pad;
+    ui_panel_layout(&panel, content_x, content_y);
+
+    ui_panel_cell(&panel, C_DIR, &cx, &cy, &cw, &ch);
+    lo->dir_y = cy;
+    lo->dir_x = cx + 48;
+    lo->dir_w = cw - 48;
+    if (lo->dir_w < UI_UNIT * 8) {
+        lo->dir_w = UI_UNIT * 8;
+    }
+
+    if (is_save) {
+        ui_panel_cell(&panel, C_NAME, &cx, &cy, &cw, &ch);
+        lo->name_y = cy;
+        lo->name_x = cx + 48;
+        lo->name_w = cw - 48;
+        if (lo->name_w < UI_UNIT * 8) {
+            lo->name_w = UI_UNIT * 8;
+        }
+    } else {
+        lo->name_x = lo->dir_x;
+        lo->name_y = lo->dir_y;
+        lo->name_w = lo->dir_w;
+    }
+
+    ui_panel_cell(&panel, C_LIST, &cx, &cy, &cw, &ch);
+    lo->list_x = cx;
+    lo->list_y = cy;
+    lo->list_w = cw;
+    lo->list_h = ch;
+
+    ui_panel_cell(&panel, C_FOOTER, &cx, &cy, &cw, &ch);
+    lo->btn_y = cy;
+    lo->left_btn_x = content_x;
+    lo->save_w = label_width("Save");
+    lo->cancel_w = label_width("Cancel");
+    lo->open_w = label_width("Open");
+#if UI_PANEL_DEBUG_GRID
+    lo->dbg_panel = panel;
+#endif
+}
+
 void ui_project_io_draw(UiState *ui, SDL_Renderer *r) {
     UiProjectIo *pio;
-    int mx, my, mw, mh;
-    int list_y, list_h, row_h, visible;
-    int btn_y, save_w = 72, cancel_w = 72, open_w = 72;
-    int name_y, dir_y;
+    ProjectIoModalLayout lo;
+    int row_h, visible;
     int i;
     char openable[R01_PATH_MAX];
     int can_open;
@@ -491,31 +583,24 @@ void ui_project_io_draw(UiState *ui, SDL_Renderer *r) {
         return;
     }
     pio = &ui->project_io;
-    mw = 420;
-    mh = 280;
-    mx = (ui_logic_w(ui) - mw) / 2;
-    my = (ui_logic_h(ui) - mh) / 2;
+    project_io_modal_layout(ui, &lo);
 
     ui_modal_scrim(r, ui);
-    ui_modal_panel(r, mx, my, mw, mh, pio->mode == UI_PROJ_IO_SAVE ? "Save project" : "Open project");
+    ui_modal_panel(r, lo.mx, lo.my, lo.mw, lo.mh, pio->mode == UI_PROJ_IO_SAVE ? "Save project" : "Open project");
+#if UI_PANEL_DEBUG_GRID
+    ui_panel_debug_draw(r, &lo.dbg_panel);
+#endif
 
-    dir_y = my + UI_BTN_H + UI_UNIT;
-    font_draw(r, mx + UI_UNIT, dir_y, "Folder", 180, 180, 180);
-    ui_text_draw(ui, r, mx + UI_UNIT + 48, dir_y, mw - UI_UNIT * 2 - 48, pio->dir, UI_PROJ_IO_FIELD_DIR);
+    font_draw(r, lo.left_btn_x, lo.dir_y + 4, "Folder", 180, 180, 180);
+    ui_text_draw(ui, r, lo.dir_x, lo.dir_y, lo.dir_w, pio->dir, UI_PROJ_IO_FIELD_DIR);
 
-    name_y = dir_y + UI_BTN_H + UI_UNIT / 2;
     if (pio->mode == UI_PROJ_IO_SAVE) {
-        font_draw(r, mx + UI_UNIT, name_y, "Name", 180, 180, 180);
-        ui_text_draw(ui, r, mx + UI_UNIT + 48, name_y, mw - UI_UNIT * 2 - 48, pio->name, UI_PROJ_IO_FIELD_NAME);
-        list_y = name_y + UI_BTN_H + UI_UNIT / 2;
-    } else {
-        list_y = name_y;
+        font_draw(r, lo.left_btn_x, lo.name_y + 4, "Name", 180, 180, 180);
+        ui_text_draw(ui, r, lo.name_x, lo.name_y, lo.name_w, pio->name, UI_PROJ_IO_FIELD_NAME);
     }
 
-    btn_y = my + mh - UI_BTN_H - UI_UNIT;
-    list_h = btn_y - list_y - UI_UNIT;
     row_h = UI_BTN_H - 2;
-    visible = list_h / row_h;
+    visible = lo.list_h / row_h;
     if (visible < 1) {
         visible = 1;
     }
@@ -526,10 +611,10 @@ void ui_project_io_draw(UiState *ui, SDL_Renderer *r) {
         pio->scroll = 0;
     }
 
-    fill_rect(r, mx + UI_UNIT, list_y, mw - UI_UNIT * 2, list_h, 20, 24, 28);
+    fill_rect(r, lo.list_x, lo.list_y, lo.list_w, lo.list_h, 20, 24, 28);
     for (i = 0; i < visible; i++) {
         int idx = pio->scroll + i;
-        int y = list_y + i * row_h;
+        int y = lo.list_y + i * row_h;
         const char *label;
         int sel;
         if (idx >= pio->entry_count) {
@@ -537,52 +622,41 @@ void ui_project_io_draw(UiState *ui, SDL_Renderer *r) {
         }
         sel = (idx == pio->sel);
         if (sel) {
-            fill_rect(r, mx + UI_UNIT + 1, y + 1, mw - UI_UNIT * 2 - 2, row_h - 1, 40, 70, 100);
+            fill_rect(r, lo.list_x + 1, y + 1, lo.list_w - 2, row_h - 1, 40, 70, 100);
         }
         label = pio->entry_is_dir[idx] ? pio->entries[idx] + 1 : pio->entries[idx];
         if (pio->entry_is_dir[idx]) {
-            font_draw(r, mx + UI_UNIT * 2, y + 4, label[0] ? label : "..", 220, 200, 120);
+            font_draw(r, lo.list_x + UI_UNIT, y + 4, label[0] ? label : "..", 220, 200, 120);
         } else {
-            font_draw(r, mx + UI_UNIT * 2, y + 4, label, 220, 220, 220);
+            font_draw(r, lo.list_x + UI_UNIT, y + 4, label, 220, 220, 220);
         }
     }
 
     can_open = selection_is_openable(ui, openable, sizeof(openable));
     if (pio->mode == UI_PROJ_IO_SAVE) {
-        ui_modal_save_cancel(r, mx + UI_UNIT, btn_y, save_w, cancel_w, ui->mouse_x, ui->mouse_y);
+        ui_modal_save_cancel(r, lo.left_btn_x, lo.btn_y, lo.save_w, lo.cancel_w, ui->mouse_x, ui->mouse_y);
     } else {
-        int open_hover = point_in_rect(ui->mouse_x, ui->mouse_y, mx + UI_UNIT, btn_y, open_w, UI_BTN_H);
+        int open_hover = point_in_rect(ui->mouse_x, ui->mouse_y, lo.left_btn_x, lo.btn_y, lo.open_w, UI_BTN_H);
         int cancel_hover =
-            point_in_rect(ui->mouse_x, ui->mouse_y, mx + UI_UNIT + open_w + UI_UNIT, btn_y, cancel_w, UI_BTN_H);
-        ui_button_draw(r, mx + UI_UNIT, btn_y, open_w, "Open", can_open, open_hover && can_open);
-        ui_button_draw(r, mx + UI_UNIT + open_w + UI_UNIT, btn_y, cancel_w, "Cancel", 0, cancel_hover);
+            point_in_rect(ui->mouse_x, ui->mouse_y, lo.left_btn_x + lo.open_w + UI_UNIT, lo.btn_y, lo.cancel_w,
+                          UI_BTN_H);
+        ui_button_draw(r, lo.left_btn_x, lo.btn_y, lo.open_w, "Open", can_open, open_hover && can_open);
+        ui_button_draw(r, lo.left_btn_x + lo.open_w + UI_UNIT, lo.btn_y, lo.cancel_w, "Cancel", 0, cancel_hover);
     }
 }
 
 int ui_project_io_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
     UiProjectIo *pio;
-    int mx, my, mw, mh;
-    int list_y, list_h, row_h, visible;
-    int btn_y, save_w = 72, cancel_w = 72, open_w = 72;
-    int name_y, dir_y;
-    int dir_field_y;
+    ProjectIoModalLayout lo;
+    int row_h, visible;
 
     if (!ui || !e || !ui_project_io_is_open(ui)) {
         return 0;
     }
     pio = &ui->project_io;
-    mw = 420;
-    mh = 280;
-    mx = (ui_logic_w(ui) - mw) / 2;
-    my = (ui_logic_h(ui) - mh) / 2;
-    dir_y = my + UI_BTN_H + UI_UNIT;
-    dir_field_y = dir_y;
-    name_y = dir_y + UI_BTN_H + UI_UNIT / 2;
-    btn_y = my + mh - UI_BTN_H - UI_UNIT;
-    list_y = (pio->mode == UI_PROJ_IO_SAVE) ? (name_y + UI_BTN_H + UI_UNIT / 2) : name_y;
-    list_h = btn_y - list_y - UI_UNIT;
+    project_io_modal_layout(ui, &lo);
     row_h = UI_BTN_H - 2;
-    visible = list_h / row_h;
+    visible = lo.list_h / row_h;
     if (visible < 1) {
         visible = 1;
     }
@@ -668,22 +742,21 @@ int ui_project_io_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
     }
 
     if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT) {
-        int i;
-        if (ui_modal_overlay_hit(lx, ly, mx, my, mw, mh)) {
+        if (ui_modal_overlay_hit(lx, ly, lo.mx, lo.my, lo.mw, lo.mh)) {
             ui_project_io_close(ui);
             return 1;
         }
-        if (ui_text_mouse_down(ui, lx, ly, mx + UI_UNIT + 48, dir_field_y, mw - UI_UNIT * 2 - 48, pio->dir,
-                               (int)sizeof(pio->dir), UI_PROJ_IO_FIELD_DIR)) {
+        if (ui_text_mouse_down(ui, lx, ly, lo.dir_x, lo.dir_y, lo.dir_w, pio->dir, (int)sizeof(pio->dir),
+                               UI_PROJ_IO_FIELD_DIR)) {
             return 1;
         }
         if (pio->mode == UI_PROJ_IO_SAVE &&
-            ui_text_mouse_down(ui, lx, ly, mx + UI_UNIT + 48, name_y, mw - UI_UNIT * 2 - 48, pio->name,
-                               (int)sizeof(pio->name), UI_PROJ_IO_FIELD_NAME)) {
+            ui_text_mouse_down(ui, lx, ly, lo.name_x, lo.name_y, lo.name_w, pio->name, (int)sizeof(pio->name),
+                               UI_PROJ_IO_FIELD_NAME)) {
             return 1;
         }
-        if (point_in_rect(lx, ly, mx + UI_UNIT, list_y, mw - UI_UNIT * 2, list_h)) {
-            int row = (ly - list_y) / row_h;
+        if (point_in_rect(lx, ly, lo.list_x, lo.list_y, lo.list_w, lo.list_h)) {
+            int row = (ly - lo.list_y) / row_h;
             int idx = pio->scroll + row;
             if (idx >= 0 && idx < pio->entry_count) {
                 Uint32 now = SDL_GetTicks();
@@ -702,34 +775,33 @@ int ui_project_io_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             return 1;
         }
         if (pio->mode == UI_PROJ_IO_SAVE) {
-            if (ui_modal_save_hit(lx, ly, mx + UI_UNIT, btn_y, save_w)) {
+            if (ui_modal_save_hit(lx, ly, lo.left_btn_x, lo.btn_y, lo.save_w)) {
                 (void)commit_save(ui);
                 return 1;
             }
-            if (ui_modal_cancel_hit(lx, ly, mx + UI_UNIT, btn_y, save_w, cancel_w)) {
+            if (ui_modal_cancel_hit(lx, ly, lo.left_btn_x, lo.btn_y, lo.save_w, lo.cancel_w)) {
                 ui_project_io_close(ui);
                 return 1;
             }
         } else {
-            if (point_in_rect(lx, ly, mx + UI_UNIT, btn_y, open_w, UI_BTN_H)) {
+            if (point_in_rect(lx, ly, lo.left_btn_x, lo.btn_y, lo.open_w, UI_BTN_H)) {
                 (void)commit_open(ui);
                 return 1;
             }
-            if (point_in_rect(lx, ly, mx + UI_UNIT + open_w + UI_UNIT, btn_y, cancel_w, UI_BTN_H)) {
+            if (point_in_rect(lx, ly, lo.left_btn_x + lo.open_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H)) {
                 ui_project_io_close(ui);
                 return 1;
             }
         }
-        (void)i;
         ui_text_blur(ui);
         return 1;
     }
 
     if (e->type == SDL_MOUSEMOTION && ui->text.drag) {
         if (ui->text.field_id == UI_PROJ_IO_FIELD_DIR) {
-            ui_text_mouse_drag(ui, lx, mx + UI_UNIT + 48, mw - UI_UNIT * 2 - 48);
+            ui_text_mouse_drag(ui, lx, lo.dir_x, lo.dir_w);
         } else if (ui->text.field_id == UI_PROJ_IO_FIELD_NAME) {
-            ui_text_mouse_drag(ui, lx, mx + UI_UNIT + 48, mw - UI_UNIT * 2 - 48);
+            ui_text_mouse_drag(ui, lx, lo.name_x, lo.name_w);
         }
         return 1;
     }

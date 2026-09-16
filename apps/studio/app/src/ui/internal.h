@@ -70,25 +70,37 @@ static inline void ui_world_btn_pos(int wi, int btns_y, int *out_x, int *out_y) 
 }
 
 typedef struct TileModalLayout {
-    int mx, my;
+    int mx, my, mw, mh;
     int pal_x, pal_label_y, pal_y;
     int canvas_x, canvas_y;
     int btn_y, save_w, cancel_w;
+    int left_btn_x;
+#if UI_PANEL_DEBUG_GRID
+    UiPanel dbg_panel;
+#endif
 } TileModalLayout;
 
 typedef struct PalModalLayout {
-    int mx, my;
+    int mx, my, mw, mh;
     int master_x, master_y;
     int bg_label_y, bg_x, bg_y;
     int spr_label_y, spr_x, spr_y;
     int btn_y, save_w, cancel_w;
+    int left_btn_x;
+#if UI_PANEL_DEBUG_GRID
+    UiPanel dbg_panel;
+#endif
 } PalModalLayout;
 
 typedef struct SpriteModalLayout {
-    int mx, my;
+    int mx, my, mw, mh;
     int pal_x, pal_label_y, pal_y;
     int canvas_x, canvas_y;
     int btn_y, save_w, cancel_w;
+    int left_btn_x;
+#if UI_PANEL_DEBUG_GRID
+    UiPanel dbg_panel;
+#endif
 } SpriteModalLayout;
 
 typedef struct MetaspriteModalLayout {
@@ -97,11 +109,28 @@ typedef struct MetaspriteModalLayout {
     int left_dots_x, left_dots_y;
     int left_grid_x, left_grid_y;
     int right_name_x, right_name_y, right_name_w;
+    int right_id_y, right_id_w;
     int right_grid_x, right_grid_y;
     int pal_label_x, pal_label_y;
     int pal_x, pal_y;
     int btn_y, save_w, cancel_w;
+    int left_btn_x;
+#if UI_PANEL_DEBUG_GRID
+    UiPanel dbg_panel;
+#endif
 } MetaspriteModalLayout;
+
+typedef struct ProjectIoModalLayout {
+    int mx, my, mw, mh;
+    int dir_x, dir_y, dir_w;
+    int name_x, name_y, name_w;
+    int list_x, list_y, list_w, list_h;
+    int btn_y, save_w, cancel_w, open_w;
+    int left_btn_x;
+#if UI_PANEL_DEBUG_GRID
+    UiPanel dbg_panel;
+#endif
+} ProjectIoModalLayout;
 
 typedef struct EntityModalLayout {
     int mx, my, mw, mh;

@@ -239,15 +239,15 @@ int pal_modal_handle(UiState *ui, int lx, int ly, int down) {
         return 1;
     }
     pal_modal_layout(ui, &lo);
-    if (ui_modal_overlay_hit(lx, ly, lo.mx, lo.my, UI_PAL_MODAL_W, UI_PAL_MODAL_H)) {
+    if (ui_modal_overlay_hit(lx, ly, lo.mx, lo.my, lo.mw, lo.mh)) {
         pal_edit_cancel(ui);
         return 1;
     }
-    if (lx >= lo.master_x && lx < lo.master_x + lo.save_w && ly >= lo.btn_y && ly < lo.btn_y + UI_BTN_H) {
+    if (lx >= lo.left_btn_x && lx < lo.left_btn_x + lo.save_w && ly >= lo.btn_y && ly < lo.btn_y + UI_BTN_H) {
         pal_edit_save(ui);
         return 1;
     }
-    if (lx >= lo.master_x + lo.save_w + UI_UNIT && lx < lo.master_x + lo.save_w + UI_UNIT + lo.cancel_w &&
+    if (lx >= lo.left_btn_x + lo.save_w + UI_UNIT && lx < lo.left_btn_x + lo.save_w + UI_UNIT + lo.cancel_w &&
         ly >= lo.btn_y && ly < lo.btn_y + UI_BTN_H) {
         pal_edit_cancel(ui);
         return 1;
@@ -269,5 +269,74 @@ int pal_modal_handle(UiState *ui, int lx, int ly, int down) {
         return 1;
     }
     return 1;
+}
+
+void pal_modal_layout(const UiState *ui, PalModalLayout *lo) {
+    enum { C_MASTER_LAB = 1, C_MASTER, C_BG_LAB, C_BG, C_SPR_LAB, C_SPR, C_FOOTER };
+    static const UiPanelCell cells[] = {
+        {C_MASTER_LAB, 0, 0, 3, 1},
+        {C_MASTER, 0, 1, 3, 1},
+        {C_BG_LAB, 0, 3, 1, 1},
+        {C_BG, 0, 4, 1, 1},
+        {C_SPR_LAB, 2, 3, 1, 1},
+        {C_SPR, 2, 4, 1, 1},
+        {C_FOOTER, 0, 6, 3, 1},
+    };
+    static const int row_hs[] = {
+        UI_BTN_H,
+        UI_MASTER_ROWS * UI_MASTER_CELL,
+        UI_UNIT,
+        UI_BTN_H,
+        R01_PALS_PER_ROW * UI_PAL_EDIT_CELL,
+        UI_UNIT,
+        UI_BTN_H,
+    };
+    UiPanel panel;
+    int pad = UI_UNIT;
+    int content_x, content_y;
+    int cx, cy, cw, ch;
+    int plane = R01_PALS_PER_ROW * UI_PAL_EDIT_CELL;
+    int gap = UI_UNIT * 2;
+    int i;
+
+    ui_panel_init(&panel, 3, 7, UI_PANEL_CELL_MIN, UI_PANEL_CELL_MIN);
+    ui_panel_set_cells(&panel, cells, (int)(sizeof(cells) / sizeof(cells[0])));
+    ui_panel_set_col_w(&panel, 0, plane);
+    ui_panel_set_col_w(&panel, 1, gap);
+    ui_panel_set_col_w(&panel, 2, plane);
+    for (i = 0; i < (int)(sizeof(row_hs) / sizeof(row_hs[0])); i++) {
+        ui_panel_set_row_h(&panel, i, row_hs[i]);
+    }
+    ui_panel_layout(&panel, 0, 0);
+
+    lo->mw = pad + panel.total_w + pad;
+    lo->mh = UI_BTN_H + pad + panel.total_h + pad;
+    lo->mx = (ui_logic_w(ui) - lo->mw) / 2;
+    lo->my = (ui_logic_h(ui) - lo->mh) / 2;
+    content_x = lo->mx + pad;
+    content_y = lo->my + UI_BTN_H + pad;
+    ui_panel_layout(&panel, content_x, content_y);
+
+    ui_panel_cell(&panel, C_MASTER, &cx, &cy, &cw, &ch);
+    lo->master_x = cx;
+    lo->master_y = cy;
+    ui_panel_cell(&panel, C_BG_LAB, &cx, &cy, &cw, &ch);
+    lo->bg_label_y = cy;
+    ui_panel_cell(&panel, C_BG, &cx, &cy, &cw, &ch);
+    lo->bg_x = cx;
+    lo->bg_y = cy;
+    ui_panel_cell(&panel, C_SPR_LAB, &cx, &cy, &cw, &ch);
+    lo->spr_label_y = cy;
+    ui_panel_cell(&panel, C_SPR, &cx, &cy, &cw, &ch);
+    lo->spr_x = cx;
+    lo->spr_y = cy;
+    ui_panel_cell(&panel, C_FOOTER, &cx, &cy, &cw, &ch);
+    lo->btn_y = cy;
+    lo->left_btn_x = content_x;
+    lo->save_w = label_width("Save");
+    lo->cancel_w = label_width("Cancel");
+#if UI_PANEL_DEBUG_GRID
+    lo->dbg_panel = panel;
+#endif
 }
 

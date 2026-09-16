@@ -73,9 +73,12 @@ void draw_pal_modal(UiState *ui, SDL_Renderer *r) {
     pal_modal_layout(ui, &lo);
 
     ui_modal_scrim(r, ui);
-    ui_modal_panel(r, lo.mx, lo.my, UI_PAL_MODAL_W, UI_PAL_MODAL_H, "Global palettes");
+    ui_modal_panel(r, lo.mx, lo.my, lo.mw, lo.mh, "Global palettes");
+#if UI_PANEL_DEBUG_GRID
+    ui_panel_debug_draw(r, &lo.dbg_panel);
+#endif
 
-    draw_label(r, lo.master_x, lo.my + UI_MODAL_BODY_Y, "Master 16x4");
+    draw_label(r, lo.master_x, lo.my + UI_BTN_H + UI_UNIT, "Master 16x4");
     for (row = 0; row < UI_MASTER_ROWS; row++) {
         for (col = 0; col < UI_MASTER_COLS; col++) {
             uint8_t cr, cg, cb;
@@ -97,11 +100,11 @@ void draw_pal_modal(UiState *ui, SDL_Renderer *r) {
     draw_pal_plane_grid(r, ui->project, ui->pal_edit.row, 1, lo.spr_x, lo.spr_y, ui->pal_edit.plane,
                         ui->pal_edit.pal, ui->pal_edit.color);
 
-    save_hover = point_in_rect(ui->mouse_x, ui->mouse_y, lo.master_x, lo.btn_y, lo.save_w, UI_BTN_H);
+    save_hover = point_in_rect(ui->mouse_x, ui->mouse_y, lo.left_btn_x, lo.btn_y, lo.save_w, UI_BTN_H);
     cancel_hover =
-        point_in_rect(ui->mouse_x, ui->mouse_y, lo.master_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);
-    draw_button(r, lo.master_x, lo.btn_y, lo.save_w, "Save", 1, save_hover);
-    draw_button(r, lo.master_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, "Cancel", 0, cancel_hover);
+        point_in_rect(ui->mouse_x, ui->mouse_y, lo.left_btn_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);
+    draw_button(r, lo.left_btn_x, lo.btn_y, lo.save_w, "Save", 1, save_hover);
+    draw_button(r, lo.left_btn_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, "Cancel", 0, cancel_hover);
 
     {
         uint8_t *slot = pal_edit_slot_ptr(ui->project, &ui->pal_edit);

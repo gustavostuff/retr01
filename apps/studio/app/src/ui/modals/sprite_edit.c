@@ -193,7 +193,10 @@ void draw_sprite_modal(UiState *ui, SDL_Renderer *r) {
 
     sprite_modal_layout(ui, &lo);
     ui_modal_scrim(r, ui);
-    ui_modal_panel(r, lo.mx, lo.my, UI_MODAL_W, UI_MODAL_H, title);
+    ui_modal_panel(r, lo.mx, lo.my, lo.mw, lo.mh, title);
+#if UI_PANEL_DEBUG_GRID
+    ui_panel_debug_draw(r, &lo.dbg_panel);
+#endif
 
     draw_label(r, lo.pal_x, lo.pal_label_y, "Palette/color");
     ui_palette_grid_draw(r, ui->project, row, lo.pal_x, lo.pal_y, ui->sprite_edit.pal, ui->sprite_edit.color,
@@ -219,7 +222,7 @@ void draw_sprite_modal(UiState *ui, SDL_Renderer *r) {
                                  lo.canvas_x + hx * cell, lo.canvas_y + hy * cell, cell - 1);
     }
 
-    ui_modal_save_cancel(r, lo.pal_x, lo.btn_y, lo.save_w, lo.cancel_w, ui->mouse_x, ui->mouse_y);
+    ui_modal_save_cancel(r, lo.left_btn_x, lo.btn_y, lo.save_w, lo.cancel_w, ui->mouse_x, ui->mouse_y);
 }
 
 int sprite_modal_handle(UiState *ui, int lx, int ly, int down) {
@@ -230,7 +233,7 @@ int sprite_modal_handle(UiState *ui, int lx, int ly, int down) {
     if (!down) {
         return 1;
     }
-    if (ui_modal_overlay_hit(lx, ly, lo.mx, lo.my, UI_MODAL_W, UI_MODAL_H)) {
+    if (ui_modal_overlay_hit(lx, ly, lo.mx, lo.my, lo.mw, lo.mh)) {
         ui->sprite_edit.open = 0;
         return 1;
     }
@@ -250,13 +253,37 @@ int sprite_modal_handle(UiState *ui, int lx, int ly, int down) {
         }
         return 1;
     }
-    if (ui_modal_save_hit(lx, ly, lo.pal_x, lo.btn_y, lo.save_w)) {
+    if (ui_modal_save_hit(lx, ly, lo.left_btn_x, lo.btn_y, lo.save_w)) {
         sprite_edit_save(ui);
         return 1;
     }
-    if (ui_modal_cancel_hit(lx, ly, lo.pal_x, lo.btn_y, lo.save_w, lo.cancel_w)) {
+    if (ui_modal_cancel_hit(lx, ly, lo.left_btn_x, lo.btn_y, lo.save_w, lo.cancel_w)) {
         ui->sprite_edit.open = 0;
         return 1;
     }
     return 1;
+}
+
+void sprite_modal_layout(const UiState *ui, SpriteModalLayout *lo) {
+    TileModalLayout t;
+    if (!lo) {
+        return;
+    }
+    tile_modal_layout(ui, &t);
+    lo->mx = t.mx;
+    lo->my = t.my;
+    lo->mw = t.mw;
+    lo->mh = t.mh;
+    lo->pal_x = t.pal_x;
+    lo->pal_label_y = t.pal_label_y;
+    lo->pal_y = t.pal_y;
+    lo->canvas_x = t.canvas_x;
+    lo->canvas_y = t.canvas_y;
+    lo->btn_y = t.btn_y;
+    lo->save_w = t.save_w;
+    lo->cancel_w = t.cancel_w;
+    lo->left_btn_x = t.left_btn_x;
+#if UI_PANEL_DEBUG_GRID
+    lo->dbg_panel = t.dbg_panel;
+#endif
 }

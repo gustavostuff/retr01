@@ -227,8 +227,11 @@ void draw_tile_modal(UiState *ui, SDL_Renderer *r) {
 
     tile_modal_layout(ui, &lo);
     ui_modal_scrim(r, ui);
-    ui_modal_panel(r, lo.mx, lo.my, UI_MODAL_W, UI_MODAL_H,
+    ui_modal_panel(r, lo.mx, lo.my, lo.mw, lo.mh,
                    ui->tile_edit.edit_all ? "Edit tile (all)" : "Edit tile");
+#if UI_PANEL_DEBUG_GRID
+    ui_panel_debug_draw(r, &lo.dbg_panel);
+#endif
 
     draw_label(r, lo.pal_x, lo.pal_label_y, "Palette/color");
     ui_palette_grid_draw(r, ui->project, row, lo.pal_x, lo.pal_y, ui->tile_edit.pal, ui->tile_edit.color,
@@ -254,7 +257,7 @@ void draw_tile_modal(UiState *ui, SDL_Renderer *r) {
                                  lo.canvas_x + hx * cell, lo.canvas_y + hy * cell, cell - 1);
     }
 
-    ui_modal_save_cancel(r, lo.pal_x, lo.btn_y, lo.save_w, lo.cancel_w, ui->mouse_x, ui->mouse_y);
+    ui_modal_save_cancel(r, lo.left_btn_x, lo.btn_y, lo.save_w, lo.cancel_w, ui->mouse_x, ui->mouse_y);
 }
 
 int tile_modal_handle(UiState *ui, int lx, int ly, int down) {
@@ -265,7 +268,7 @@ int tile_modal_handle(UiState *ui, int lx, int ly, int down) {
     if (!down) {
         return 1;
     }
-    if (ui_modal_overlay_hit(lx, ly, lo.mx, lo.my, UI_MODAL_W, UI_MODAL_H)) {
+    if (ui_modal_overlay_hit(lx, ly, lo.mx, lo.my, lo.mw, lo.mh)) {
         ui->tile_edit.open = 0;
         return 1;
     }
@@ -285,13 +288,87 @@ int tile_modal_handle(UiState *ui, int lx, int ly, int down) {
         }
         return 1;
     }
-    if (ui_modal_save_hit(lx, ly, lo.pal_x, lo.btn_y, lo.save_w)) {
+    if (ui_modal_save_hit(lx, ly, lo.left_btn_x, lo.btn_y, lo.save_w)) {
         tile_edit_save(ui);
         return 1;
     }
-    if (ui_modal_cancel_hit(lx, ly, lo.pal_x, lo.btn_y, lo.save_w, lo.cancel_w)) {
+    if (ui_modal_cancel_hit(lx, ly, lo.left_btn_x, lo.btn_y, lo.save_w, lo.cancel_w)) {
         ui->tile_edit.open = 0;
         return 1;
     }
     return 1;
 }
+
+static void tile_or_sprite_modal_layout(const UiState *ui, int *mx, int *my, int *mw, int *mh, int *pal_x,
+                                        int *pal_label_y, int *pal_y, int *canvas_x, int *canvas_y, int *btn_y,
+                                        int *save_w, int *cancel_w, int *left_btn_x, UiPanel *dbg) {
+    enum { C_PAL_LAB = 1, C_PAL, C_CANVAS, C_FOOTER };
+    static const UiPanelCell cells[] = {
+        {C_PAL_LAB, 0, 0, 1, 1},
+        {C_PAL, 0, 1, 1, 1},
+        {C_CANVAS, 2, 0, 1, 3},
+        {C_FOOTER, 0, 4, 3, 1},
+    };
+    /* Match legacy UI_MODAL_W/H: 8+64+80+128+8 by 16+8+16+64+48+8+16+8. */
+    static const int row_hs[] = {UI_BTN_H, UI_PAL_GRID_SIZE, 48, UI_UNIT, UI_BTN_H};
+    UiPanel panel;
+    int pad = UI_UNIT;
+    int content_x, content_y;
+    int cx, cy, cw, ch;
+    int gap = UI_MODAL_W - pad * 2 - UI_PAL_GRID_SIZE - UI_TILE_CANVAS;
+    int i;
+
+    if (gap < pad) {
+        gap = pad;
+    }
+    ui_panel_init(&panel, 3, 5, UI_PANEL_CELL_MIN, UI_PANEL_CELL_MIN);
+    ui_panel_set_cells(&panel, cells, (int)(sizeof(cells) / sizeof(cells[0])));
+    ui_panel_set_col_w(&panel, 0, UI_PAL_GRID_SIZE);
+    ui_panel_set_col_w(&panel, 1, gap);
+    ui_panel_set_col_w(&panel, 2, UI_TILE_CANVAS);
+    for (i = 0; i < (int)(sizeof(row_hs) / sizeof(row_hs[0])); i++) {
+        ui_panel_set_row_h(&panel, i, row_hs[i]);
+    }
+    ui_panel_layout(&panel, 0, 0);
+
+    *mw = pad + panel.total_w + pad;
+    *mh = UI_BTN_H + pad + panel.total_h + pad;
+    *mx = (ui_logic_w(ui) - *mw) / 2;
+    *my = (ui_logic_h(ui) - *mh) / 2;
+    content_x = *mx + pad;
+    content_y = *my + UI_BTN_H + pad;
+    ui_panel_layout(&panel, content_x, content_y);
+
+    ui_panel_cell(&panel, C_PAL_LAB, &cx, &cy, &cw, &ch);
+    *pal_x = cx;
+    *pal_label_y = cy;
+    ui_panel_cell(&panel, C_PAL, &cx, &cy, &cw, &ch);
+    *pal_y = cy;
+    ui_panel_cell(&panel, C_CANVAS, &cx, &cy, &cw, &ch);
+    *canvas_x = cx;
+    *canvas_y = cy;
+    ui_panel_cell(&panel, C_FOOTER, &cx, &cy, &cw, &ch);
+    *btn_y = cy;
+    *left_btn_x = content_x;
+    *save_w = label_width("Save");
+    *cancel_w = label_width("Cancel");
+#if UI_PANEL_DEBUG_GRID
+    if (dbg) {
+        *dbg = panel;
+    }
+#else
+    (void)dbg;
+#endif
+}
+
+void tile_modal_layout(const UiState *ui, TileModalLayout *lo) {
+    tile_or_sprite_modal_layout(ui, &lo->mx, &lo->my, &lo->mw, &lo->mh, &lo->pal_x, &lo->pal_label_y, &lo->pal_y,
+                                &lo->canvas_x, &lo->canvas_y, &lo->btn_y, &lo->save_w, &lo->cancel_w, &lo->left_btn_x,
+#if UI_PANEL_DEBUG_GRID
+                                &lo->dbg_panel
+#else
+                                NULL
+#endif
+    );
+}
+
