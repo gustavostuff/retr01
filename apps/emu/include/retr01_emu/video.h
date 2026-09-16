@@ -39,6 +39,7 @@ typedef struct R01eVideo {
     int bg0_origin_row;
     int bg0_wrap_x; /* cart FLAG_BG0_WRAP_X: modulo-tile sample on X (rate unchanged) */
     int bg0_wrap_y; /* cart FLAG_BG0_WRAP_Y: modulo-tile sample on Y (rate unchanged) */
+    int bg0_clip_bg1; /* cart FLAG_BG0_CLIP_BG1: hide BG0 outside present BG1 slots */
     int l1_cols;  /* BG1 present bounding-box W (not virtual 16x16) */
     int l1_rows;
     int l1_origin_x; /* min present screen * px (for relative proportional scroll) */

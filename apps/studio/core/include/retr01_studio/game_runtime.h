@@ -46,6 +46,7 @@ struct R01GameCtx {
     int cam_axis_lock;
     int bg0_wrap_x;
     int bg0_wrap_y;
+    int bg0_clip_bg1;
     int fade_level;
     int fade_target;
     int fade_color;
@@ -87,6 +88,7 @@ void r01_player_set_type(uint8_t type_id);
 void r01_camera_set_deadzone(R01GameCtx *ctx, int dx, int dy);
 void r01_camera_set_axis_lock(R01GameCtx *ctx, int mode);
 void r01_bg0_set_wrap(R01GameCtx *ctx, int wrap_x, int wrap_y);
+void r01_bg0_set_clip_to_bg1(R01GameCtx *ctx, int enable);
 int r01_event_on_button(uint8_t btn, R01EventFn fn);
 void r01_runtime_dispatch_buttons(R01GameCtx *ctx);
 

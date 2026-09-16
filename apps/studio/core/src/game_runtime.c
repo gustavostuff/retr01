@@ -316,6 +316,13 @@ void r01_bg0_set_wrap(R01GameCtx *ctx, int wrap_x, int wrap_y) {
     ctx->bg0_wrap_y = wrap_y ? 1 : 0;
 }
 
+void r01_bg0_set_clip_to_bg1(R01GameCtx *ctx, int enable) {
+    if (!ctx) {
+        return;
+    }
+    ctx->bg0_clip_bg1 = enable ? 1 : 0;
+}
+
 void r01_camera_set_axis_lock(R01GameCtx *ctx, int mode) {
     if (!ctx) {
         return;

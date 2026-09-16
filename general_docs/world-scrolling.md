@@ -157,7 +157,9 @@ Rule of thumb: stay inside the four-screen buffer without cart traffic, then str
 
 ### Empty or missing screens (locked)
 
-**BG1:** If the camera window covers a sparse grid **slot with no present BG1 screen**, that area does **not** force backdrop. The compositor keeps drawing **BG0** there (same as BG1 color index **0** show-through). Backdrop (shared BG color index **0** of the active palette row at `$7F08`) appears only where BG0 is also off, missing, or transparent.
+**BG1:** If the camera window covers a sparse grid **slot with no present BG1 screen**, default behavior still draws **BG0** there (same as BG1 color index **0** show-through). Backdrop (shared BG color index **0** of the active palette row at `$7F08`) appears only where BG0 is also off, missing, or transparent.
+
+Optional **`r01_bg0_set_clip_to_bg1(ctx, 1)`** (cart flags byte **7** bit **3** / `0x08`): hide BG0 outside present BG1 slots and use backdrop there instead. Independent of BG0 layout wrap.
 
 **Clamp / wrap:** Default for a plane that is **not** in wrap mode: motion **clamps** at the edges of the present playfield (no wrap to the opposite side) unless PRG implements a portal / instant switch. Either plane may instead **autoscroll** and/or **wrap** under PRG control (see below).
 
@@ -183,8 +185,9 @@ World header byte **7** (flags):
 - bit **0**: player anim blob present
 - bit **1** (`0x02`): **BG0 wrap X** - tile the present BG0 screen layout horizontally
 - bit **2** (`0x04`): **BG0 wrap Y** - tile the present BG0 screen layout vertically
+- bit **3** (`0x08`): **BG0 clip to BG1** - hide BG0 outside present BG1 camera slots
 
-Author code sets this with `r01_bg0_set_wrap(ctx, wrap_x, wrap_y)` in `custom_logic.c`. Studio packs the call into those flag bits at cart export (same scan path as camera dead zone).
+Author code sets wrap with `r01_bg0_set_wrap(ctx, wrap_x, wrap_y)` and clip with `r01_bg0_set_clip_to_bg1(ctx, enable)` in `custom_logic.c`. Studio packs those calls into the flag bits at cart export (same scan path as camera dead zone).
 
 Scroll rate is unchanged: end-aligned `(bg0_n - 1) / (bg1_n - 1)` on each axis (see Parallax scroll rate below). Wrap only changes sampling.
 

@@ -9,6 +9,9 @@ int r01_custom_logic_scan_deadzone(const char *path, int *out_dx, int *out_dy);
 /* Parse r01_bg0_set_wrap(ctx, wrap_x, wrap_y). Non-zero = wrap that axis. Returns 0 on match. */
 int r01_custom_logic_scan_bg0_wrap(const char *path, int *out_wrap_x, int *out_wrap_y);
 
+/* Parse r01_bg0_set_clip_to_bg1(ctx, enable). Non-zero = clip BG0 to BG1 slots. Returns 0 on match. */
+int r01_custom_logic_scan_bg0_clip_bg1(const char *path, int *out_enable);
+
 /* Parse r01_bgm_play(ctx, track) - track is 1-based. Returns 0 on match. */
 int r01_custom_logic_scan_bgm_play(const char *path, int *out_track);
 

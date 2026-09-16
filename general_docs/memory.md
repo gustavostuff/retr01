@@ -124,7 +124,7 @@ Entity **spawn locations** are **not** on the cart. PRG owns who appears where (
 
 **Grid cell byte:** virtual map is **16x16** (col/row **0-15**). Pack both coords in **1 byte** as nibbles: `col | (row << 4)`. Same packing for BG1/BG0 directory entries and world-header spawn cell.
 
-**World header notes (BG0):** byte **3** packs present BG0 extent (`cols | rows<<4`). Byte **6** is BG0 present count. Bytes **14-16** are BG0 directory offset (u24), or **0** if none. Byte **7** flags: bit0 player-anim blob, bit1 BG0 wrap X, bit2 BG0 wrap Y (see `world-scrolling.md`).
+**World header notes (BG0):** byte **3** packs present BG0 extent (`cols | rows<<4`). Byte **6** is BG0 present count. Bytes **14-16** are BG0 directory offset (u24), or **0** if none. Byte **7** flags: bit0 player-anim blob, bit1 BG0 wrap X, bit2 BG0 wrap Y, bit3 BG0 clip to BG1 (see `world-scrolling.md`).
 
 **Screen payload:** **480 B** = 240 tile bytes + 240 attr bytes (**16x15**, **128x120**). Same shape for BG1 and BG0.
 

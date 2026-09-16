@@ -67,6 +67,36 @@ int r01_custom_logic_scan_bg0_wrap(const char *path, int *out_wrap_x, int *out_w
     return -1;
 }
 
+int r01_custom_logic_scan_bg0_clip_bg1(const char *path, int *out_enable) {
+    FILE *f;
+    char line[512];
+    if (!path || !out_enable) {
+        return -1;
+    }
+    f = fopen(path, "r");
+    if (!f) {
+        return -1;
+    }
+    while (fgets(line, sizeof(line), f)) {
+        const char *p = strstr(line, "r01_bg0_set_clip_to_bg1");
+        const char *args;
+        if (!p) {
+            continue;
+        }
+        args = strchr(p, '(');
+        if (args) {
+            int en = 0;
+            if (sscanf(args, "(ctx, %d)", &en) == 1 || sscanf(args, "(ctx,%d)", &en) == 1) {
+                *out_enable = en;
+                fclose(f);
+                return 0;
+            }
+        }
+    }
+    fclose(f);
+    return -1;
+}
+
 int r01_custom_logic_scan_bgm_play(const char *path, int *out_track) {
     FILE *f;
     char line[512];

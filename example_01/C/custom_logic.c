@@ -9,6 +9,7 @@ void r01_custom_on_init(R01GameCtx *ctx) {
     r01_event_on_button(R01_BTN_X, on_warp_x);
     r01_bg0_set_wrap(ctx, 1, 1);
     /* Examples:
+     * r01_bg0_set_clip_to_bg1(ctx, 1); /* hide BG0 outside BG1 slots */
      * r01_camera_set_deadzone(ctx, 32, 30); /* centered rect W x H */
      * r01_projectile_fire(ctx, 1, 0, 4);
      * r01_game_fade_start(ctx, R01_FADE_BLACK, R01_FADE_MAX);

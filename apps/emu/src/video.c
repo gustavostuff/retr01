@@ -328,6 +328,7 @@ void r01e_video_load_bg0(R01eMachine *m, const R01eWorldView *wv) {
     vid->bg0_origin_row = 0;
     vid->bg0_wrap_x = (wv->world_flags & R01E_CART_WHDR_FLAG_BG0_WRAP_X) != 0;
     vid->bg0_wrap_y = (wv->world_flags & R01E_CART_WHDR_FLAG_BG0_WRAP_Y) != 0;
+    vid->bg0_clip_bg1 = (wv->world_flags & R01E_CART_WHDR_FLAG_BG0_CLIP_BG1) != 0;
     vid->l0_cam_x = 0;
     vid->l0_cam_y = 0;
     if (wv->bg0_count == 0 || wv->off_bg0_dir == 0) {
@@ -658,16 +659,24 @@ static void sample_bg(R01eMachine *m, int lx, int ly, uint8_t *r, uint8_t *g, ui
         return;
     }
     /*
-     * Outside the BG1 2x2 workbench or a missing present screen: BG0 still draws
-     * (full-viewport bottom plane). Backdrop only if L0 is also empty/off.
+     * Outside the BG1 2x2 workbench or a missing present screen:
+     * default = keep drawing BG0; optional clip_to_bg1 = backdrop instead.
      */
     if (slot_x < 0 || slot_x > 1 || slot_y < 0 || slot_y > 1) {
-        sample_l0(m, lx, ly, r, g, b);
+        if (vid->bg0_clip_bg1) {
+            backdrop_rgb(m, r, g, b);
+        } else {
+            sample_l0(m, lx, ly, r, g, b);
+        }
         return;
     }
     slot = slot_y * 2 + slot_x;
     if (!vid->slot_present[slot]) {
-        sample_l0(m, lx, ly, r, g, b);
+        if (vid->bg0_clip_bg1) {
+            backdrop_rgb(m, r, g, b);
+        } else {
+            sample_l0(m, lx, ly, r, g, b);
+        }
         return;
     }
     local_x = sx - slot_x * R01E_SCREEN_PX_W;

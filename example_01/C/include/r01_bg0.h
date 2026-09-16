@@ -2,7 +2,11 @@
 #define R01_BG0_H
 
 typedef struct R01GameCtx R01GameCtx;
+
 /* Tile present BG0 layout on X/Y when sampling leaves the box. Rate unchanged. */
 void r01_bg0_set_wrap(R01GameCtx *ctx, int wrap_x, int wrap_y);
+
+/* When enable != 0, hide BG0 outside present BG1 camera slots (backdrop there). */
+void r01_bg0_set_clip_to_bg1(R01GameCtx *ctx, int enable);
 
 #endif

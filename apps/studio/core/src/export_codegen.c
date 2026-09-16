@@ -222,6 +222,7 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "    int cam_axis_lock;\n"
                    "    int bg0_wrap_x;\n"
                    "    int bg0_wrap_y;\n"
+                   "    int bg0_clip_bg1;\n"
                    "    int fade_level;\n"
                    "    int fade_target;\n"
                    "    int fade_color;\n"
@@ -398,7 +399,9 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "#ifndef R01_BG0_H\n#define R01_BG0_H\n\n"
                    "typedef struct R01GameCtx R01GameCtx;\n"
                    "/* Tile present BG0 layout on X/Y when sampling leaves the box. Rate unchanged. */\n"
-                   "void r01_bg0_set_wrap(R01GameCtx *ctx, int wrap_x, int wrap_y);\n\n"
+                   "void r01_bg0_set_wrap(R01GameCtx *ctx, int wrap_x, int wrap_y);\n"
+                   "/* Hide BG0 outside present BG1 camera slots when enable != 0. */\n"
+                   "void r01_bg0_set_clip_to_bg1(R01GameCtx *ctx, int enable);\n\n"
                    "#endif\n",
                    err_buf, err_cap) != 0) {
         return -1;
@@ -532,6 +535,7 @@ static int write_custom_logic(const char *c_dir, char *err_buf, size_t err_cap) 
                       "    r01_event_on_button(R01_BTN_X, on_warp_x);\n"
                       "    /* Examples:\n"
                       "     * r01_bg0_set_wrap(ctx, 1, 1); /* tile BG0 layout on X and Y */\n"
+                      "     * r01_bg0_set_clip_to_bg1(ctx, 1); /* hide BG0 outside BG1 slots */\n"
                       "     * r01_camera_set_deadzone(ctx, 32, 30); /* centered rect W x H */\n"
                       "     * r01_projectile_fire(ctx, 1, 0, 4);\n"
                       "     * r01_game_fade_start(ctx, R01_FADE_BLACK, R01_FADE_MAX);\n"

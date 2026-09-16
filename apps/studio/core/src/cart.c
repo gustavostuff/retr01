@@ -647,9 +647,10 @@ static int relocate_spr0_tile1(uint8_t bank[R01_CHR_BANK_BYTES], const R01World 
     return dest;
 }
 
-static uint8_t cart_pack_bg0_wrap_flags(const char *custom_logic_path) {
+static uint8_t cart_pack_bg0_flags(const char *custom_logic_path) {
     int wx = 0;
     int wy = 0;
+    int clip = 0;
     uint8_t flags = 0;
     if (custom_logic_path && r01_custom_logic_scan_bg0_wrap(custom_logic_path, &wx, &wy) == 0) {
         if (wx) {
@@ -658,6 +659,9 @@ static uint8_t cart_pack_bg0_wrap_flags(const char *custom_logic_path) {
         if (wy) {
             flags |= R01_CART_WHDR_FLAG_BG0_WRAP_Y;
         }
+    }
+    if (custom_logic_path && r01_custom_logic_scan_bg0_clip_bg1(custom_logic_path, &clip) == 0 && clip) {
+        flags |= R01_CART_WHDR_FLAG_BG0_CLIP_BG1;
     }
     return flags;
 }
@@ -866,7 +870,7 @@ static int build_world_blob(Buf *blob, const R01World *w, const char *custom_log
         put_u8(hdr + R01_CART_WHDR_CAM_DEADZONE_X, dz_x);
         put_u8(hdr + R01_CART_WHDR_CAM_DEADZONE_Y, dz_y);
     }
-    put_u8(hdr + R01_CART_WHDR_FLAGS, cart_pack_bg0_wrap_flags(custom_logic_path));
+    put_u8(hdr + R01_CART_WHDR_FLAGS, cart_pack_bg0_flags(custom_logic_path));
 
     if (buf_append(blob, hdr, WORLD_HDR_SIZE) != 0) {
         free(catalog.data);
