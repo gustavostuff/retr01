@@ -197,7 +197,7 @@ Each world blob owns its own catalog (up to **16** types). Types are **not** sha
 | Topic | Value |
 | --- | --- |
 | Hard cap (per world) | **16** entity **types** (catalog). Not an on-screen instance cap |
-| On-screen instances | Soft — share **64** hardware sprites (OAM). As many entities as fit that sprite budget. See `software-api.md` |
+| On-screen instances | Soft: share **64** hardware sprites (OAM). As many entities as fit that sprite budget. See `software-api.md` |
 | Global / cart type pool | **None** (no shared catalog) |
 | Maxed def size (locked pack) | **484 B** |
 | Worst case 8 worlds x 16 maxed defs | **61952 B** (~60.5 KB) |
@@ -222,7 +222,7 @@ Payload **480 B** raw or **RLE** (`flags` bit 0). RLE: `C < 0x80` copy `C+1` lit
 | `$7F90`-`$7F92` | 24-bit seek into cart flash (lo, mid, hi) |
 | `$7F93` | Read data, auto-inc |
 
-Typical boot: seek palette + start MAP via `$7F90`-`$7F93`, copy an active palette row into the palette ports, stream the start screen into VRAM.
+Typical boot: seek palette + start MAP via `$7F90`-`$7F93`, copy an active palette row into the palette ports, stream the start screen into VRAM (`$7F10`-`$7F12`).
 
 ## Soft `$7Fxx` map (summary)
 

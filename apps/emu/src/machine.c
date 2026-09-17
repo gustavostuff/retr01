@@ -9,9 +9,9 @@
 
 /*
  * Run Phase 1 PRG until the boot MAP stream has written a full screen into slot 0
- * (or give up). Do not treat "PC still in $8000-$80FF" as done: the stream itself
- * lives there, and stopping mid-copy leaves the CPU writing the start screen over
- * Host Play's 2x2 after play_start — collision (cart) and render (VRAM) diverge.
+ * (or give up). PC still in $8000-$80FF is not "done": the stream lives there.
+ * Stopping mid-copy lets the CPU keep writing the start screen over Host Play's
+ * 2x2 after play_start, so collision (cart) and render (VRAM) diverge.
  */
 static void catchup_prg_boot(R01eMachine *m) {
     int i;

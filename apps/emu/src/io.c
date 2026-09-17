@@ -315,7 +315,7 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
         io->vram_addr = (uint16_t)(io->vram_addr & (R01E_VRAM_BYTES - 1));
         break;
     case 0x7F12:
-        /* Host Play owns the 2x2 nametable window; ignore leftover boot/ASM streams. */
+        /* Play on: drop leftover boot/ASM MAP streams into the host 2x2. */
         if (!m->play.enabled) {
             m->video.vram[io->vram_addr & (R01E_VRAM_BYTES - 1)] = v;
         }

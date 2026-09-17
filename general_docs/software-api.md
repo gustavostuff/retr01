@@ -28,12 +28,12 @@ That range covers very simple games (**1** state, **1** frame, **1** sprite) and
 | Scope | Cap |
 | --- | --- |
 | Entity **types** per world (catalog) | **16** |
-| Entities **on screen** (live instances) | Soft — limited by **OAM sprite budget**, not by type count |
+| Entities **on screen** (live instances) | Soft: limited by **OAM sprite budget**, not by type count |
 | Hardware sprites (OAM) | **64** total; **16** per scanline |
 | Global shared entity catalog | **None** |
 | Player item patterns (global bank) | **256** tiles (player inventory icons only). Pack TBD. See `memory.md` |
 
-**Types vs on-screen:** The **16** cap is how many *kinds* of entity a world may define (cart catalog). It is **not** a limit on how many entities may be visible at once. Live instances may be as many as you want **as long as their current frames’ sprites fit in the 64 OAM slots**. Example: sixty-four 1-sprite pickups, or ten 6-sprite characters, both fine; the next spawn that would exceed free OAM fails. Scanline overflow (more than **16** sprites on one line) still drops later entries for that line.
+**Types vs on-screen:** The **16** cap is how many *kinds* of entity a world may define (cart catalog). It is **not** a limit on how many entities may be visible at once. Live instances may fill the view **as long as their current frames' sprites fit in the 64 OAM slots**. Example: sixty-four 1-sprite pickups, or ten 6-sprite characters, both fine. The next spawn that would exceed free OAM fails. Scanline overflow (more than **16** sprites on one line) still drops later entries for that line.
 
 Types belong to one world. Same look in another world means another def (and tiles) in that world's blob. Sprite attr bank bits index **this world's** SPR banks. If the wrong world CHR is active, entities look wrong on purpose. That glitch is the tell.
 

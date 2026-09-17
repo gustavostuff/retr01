@@ -124,3 +124,4 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-15 | Entity cart bytes | Studio packs locked EntityDef + u16 type directory. Retired 20 B snapshot. |
 | 2026-09-15 | Emu soft fences | Scroll/pal pending until VBlank. Host Play OAM/scroll at early VB. Pads latch at VB. Short EE RDY handoff (250 us). |
 | 2026-09-16 | Player item bank | One global **256-tile** pattern bank, **player only** (inventory icons). Not a shared entity catalog. Metadata pack TBD; flash after world table / before world blobs. See `memory.md`, `software-api.md`. |
+| 2026-09-17 | Host Play boot catchup | Phase 1 emu waits for a full start MAP stream (480 B) before Host Play takes the camera 2x2 from cart. See `apps/emu/README.md`. |

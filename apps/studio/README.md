@@ -7,7 +7,7 @@ Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. Stu
 
 Authoring state lives in `output/<stem>.r01proj` (JSON). **`custom_logic.c`** is created on first export and never overwritten. Hardware contract: [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md).
 
-There is **no** Studio-only host Play path. Preview always goes through export then shared emu core ([`app/emu/`](../emu/README.md)). **Sim is not involved.**
+There is **no** Studio-only host Play path. Preview always goes through export then shared emu core ([`apps/emu/`](../emu/README.md)). **Sim is not involved.**
 
 **Stack:** C11 + SDL2 + FreeType, `retr01_ui` (Proggy Tiny + widgets) + `libretr01_studio_core` + thin shell + shared `retr01_emu` core for Play.
 
@@ -31,7 +31,7 @@ Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Pre
 | **World map (BG0)** | **SNES-like parallax plane.** Sparse **16x16** chess like BG1. Up to **8** present screens (double-click to create). Paint BG1 color **0** as windows into BG0. Host Play composites both layers. Smaller BG0 bbox than BG1 -> slower scroll (true depth). Equal/larger on an axis -> that axis locked. Export packs present BG0 (coords bbox-origin relative). Missing BG1 / outside present bbox -> backdrop, not BG0 ([`general_docs/video-graphics.md`](../../general_docs/video-graphics.md), [`general_docs/software-api.md`](../../general_docs/software-api.md)) |
 | **Double-click** empty slot | Create screen (BG1 or BG0 plane) |
 | **Click** any slot | Select grid cell (empty or present, white outline). Present also becomes the edit target |
-| **Ctrl+C / Ctrl+V** | **Screen preview** (BG / Both): copy / paste the tile selection. Clipboard is separate from the paint brush, so you can click a new target then **Ctrl+V**. Paste top-left is the tile under the cursor, or the selection top-left if the cursor is off-preview. **World map:** copy / paste an entire selected screen (tiles+attrs) on BG0 or BG1. Paste creates the slot if empty |
+| **Ctrl+C / Ctrl+V** | **Screen preview** (BG / Both): copy / paste the tile selection. Clipboard is separate from the paint brush (select a new target, then **Ctrl+V**). Paste top-left is the tile under the cursor, or the selection top-left if the cursor is off-preview. **World map:** copy / paste an entire selected screen (tiles+attrs) on BG0 or BG1. Paste creates the slot if empty |
 | **Delete** | Remove selected present screen (BG0 or BG1). Prefer instance Delete when a sprite is selected |
 | **Ctrl+click** present | Remove screen |
 | **Right-click** map cell | **Set default screen** / **Make default world** (BG1) |
@@ -67,7 +67,7 @@ Shared emu core with standalone [`emu`](../emu/README.md). Standalone `./emu` re
 | Topic | Detail |
 |-------|--------|
 | **Entry world** | Cart boots **world 0**. Editor **`default_world`** / sidebar selection do not change Phase 1 cart boot until multi-world export lands |
-| **Camera** | **Dead-zone** profile (below). `r01_camera_set_deadzone(ctx, W, H)` in **`custom_logic.c`**. Export packs bytes **30-31** of the world header. Emu and Sim Host Play read them. Logic: `../common/r01_play_camera.c` |
+| **Camera** | **Dead-zone** profile (below). `r01_camera_set_deadzone(ctx, W, H)` in **`custom_logic.c`**. Export packs bytes **30-31** of the world header. Emu Host Play reads them. Logic: `../common/r01_play_camera.c` |
 | **Scroll** | Smooth pixel scroll. Spawn/warp **snap** centers the view on the player, then clamps origin inside the dead zone |
 | **Player** | World **`player_entity`** (Entities context **Mark as player**). A normal entity (**4** states x **4** frames x **6** sprites) that counts toward the **16** types/world catalog. On-screen instances share the **64** OAM sprite budget (not type-capped). **8-dir idle/walk** from cart **player anim blob** (`PA` magic). Host Play returns to **idle** when the stick is released (same as Studio authoring). Opt out of that snap with `r01_play_anim_set_release_to_idle(ctx, state, 0)` to hold a pose. Stub: **SPR bank 0 tile 1** |
 | **Other entities** | **State 0 / frame 0** only in Phase 1 Host Play |
@@ -75,7 +75,7 @@ Shared emu core with standalone [`emu`](../emu/README.md). Standalone `./emu` re
 | **Collision** | Current anim-state hitbox vs `R01_ATTR_SOLID` on cart MAP attrs (not PRG collision stub) |
 | **Warps** | **X** -> screen (0,0). **Y** -> screen (1,0). Test hooks only |
 
-Gameplay SoT for Phase 1: emu Host Play (`app/emu/src/play.c` + `app/common/`). Studio does not maintain a parallel `core/src/play.c` preview.
+Gameplay SoT for Phase 1: emu Host Play (`apps/emu/src/play.c` + `apps/common/`). Studio does not maintain a parallel `core/src/play.c` preview.
 
 ### `custom_logic.c` hooks (host export)
 
@@ -156,7 +156,7 @@ Kit **master indices** only ([`general_docs/video-graphics.md`](../../general_do
 | `<stem>_prom.bin` | 64-byte Color PROM image (motherboard, not in cart) |
 | `<stem>_flash.bin` | Cart padded to **512 KB** |
 
-PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are for future on-cart 6502 use. Editor chrome is not burned into the cart. See [`app/sim/README.md`](../sim/README.md#cart-rom-vs-runners-triage).
+PRG marker `R01P` at `$80F0`. Play table at `$8100`. Collision tables in PRG are for future on-cart 6502 use. Editor chrome is not burned into the cart. See [`apps/sim/README.md`](../sim/README.md#cart-rom-vs-runners-triage).
 
 ### Generated game tree
 
@@ -199,7 +199,7 @@ From the repo root:
 Developer rebuild of this tree only:
 
 ```bash
-cd app/studio
+cd apps/studio
 cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build
 ctest --test-dir build --output-on-failure
 ./build/retr01_studio
@@ -243,5 +243,5 @@ ctest --test-dir build --output-on-failure
 | [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md) | Video, entities, palettes |
 | [`general_docs/software-api.md`](../../general_docs/software-api.md) | Flashing, PRG vs HW, author checklist |
 | [`general_docs/memory.md`](../../general_docs/memory.md) | Cart image layout |
-| [`app/sim/README.md`](../sim/README.md) | Board sim + cart triage |
-| [`app/emu/README.md`](../emu/README.md) | Cart runtime emulator |
+| [`apps/sim/README.md`](../sim/README.md) | Board sim + cart triage |
+| [`apps/emu/README.md`](../emu/README.md) | Cart runtime emulator |
