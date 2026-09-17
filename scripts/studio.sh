@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Run the Release studio binary from bin/ (build with ./build-all first).
+# Run the Release studio binary from bin/ (build with ./scripts/build-all.sh first).
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BIN="$ROOT/bin/studio"
 ARG="${1:-}"
 
 die() { echo "error: $*" >&2; exit 1; }
-usage() { echo "usage: ./studio [project.r01proj|project_dir]" >&2; exit 2; }
+usage() { echo "usage: ./scripts/studio.sh [project.r01proj|project_dir]" >&2; exit 2; }
 
-[[ -x "$BIN" ]] || die "missing $BIN -- run ./build-all first"
+[[ -x "$BIN" ]] || die "missing $BIN -- run ./scripts/build-all.sh first"
 
 # No args: launch with a new empty project.
 if [[ -z "$ARG" ]]; then

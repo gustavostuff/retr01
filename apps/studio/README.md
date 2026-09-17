@@ -3,7 +3,7 @@
 Visual authoring for Retr01 worlds, screens, and `.retr01` cartridge images. Studio is two tools in one app:
 
 1. **Authoring (UI)**. Edit worlds, tiles, palettes, sprites, entities, and instances.
-2. **Export + Play**. **Ctrl+E** (or **Play**) writes a packed cart and generated game tree under `output/`. **Play** then opens the **emulator render screen** on that cart so Studio preview matches standalone `./emu` pixel-for-pixel.
+2. **Export + Play**. **Ctrl+E** (or **Play**) writes a packed cart and generated game tree under `output/`. **Play** then opens the **emulator render screen** on that cart so Studio preview matches standalone `./scripts/emu.sh` pixel-for-pixel.
 
 Authoring state lives in `output/<stem>.r01proj` (JSON). **`custom_logic.c`** is created on first export and never overwritten. Hardware contract: [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md).
 
@@ -61,9 +61,9 @@ PNG drop imports into the **active** world. Cart export packs **world 0** only (
 
 1. Always runs the same **export** path as **Ctrl+E** (pack `.retr01` + regenerate `output/C/`, `output/ASM/`, `output/data/` as needed), even if the project is unsaved.
 2. While export runs, shows a Studio-local **boot wait** UI (spinning `Booting console...` style text, same idea as the sim boot spinner, no sim code link).
-3. Embeds the **emulator** in Studio via shared emu core. **Play** shows the game framebuffer only (debug pane stays in standalone `./emu`).
+3. Embeds the **emulator** in Studio via shared emu core. **Play** shows the game framebuffer only (debug pane stays in standalone `./scripts/emu.sh`).
 
-Shared emu core with standalone [`emu`](../emu/README.md). Standalone `./emu` remains for triage (may keep its own debug window). Cart export is still **world 0** only. **Sim is out of scope.**
+Shared emu core with standalone [`emu`](../emu/README.md). Standalone `./scripts/emu.sh` remains for triage (may keep its own debug window). Cart export is still **world 0** only. **Sim is out of scope.**
 
 | Topic | Detail |
 |-------|--------|
@@ -192,9 +192,9 @@ Shared host runtime (not duplicated in export tree): `../common/r01_play_camera.
 From the repo root:
 
 ```bash
-./build-all
-./studio path/to/project.r01proj
-./unit-tests
+./scripts/build-all.sh
+./scripts/studio.sh path/to/project.r01proj
+./scripts/unit-tests.sh
 ```
 
 Developer rebuild of this tree only:

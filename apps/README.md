@@ -6,7 +6,7 @@
 | Emu | `apps/emu` | `cmake -S apps/emu -B apps/emu/build && cmake --build apps/emu/build -j` |
 | Shared | `apps/common` | Linked by Studio / Emu |
 
-Repo wrappers (after copying binaries to `bin/`): `./studio` and `./emu`.
+Repo wrappers (after copying binaries to `bin/`): `./scripts/studio.sh` and `./scripts/emu.sh`. Build with `./scripts/build-all.sh`.
 
 ## Studio projects
 

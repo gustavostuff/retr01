@@ -3,7 +3,7 @@
 # Does not require (or seed) ROM / Studio project fixtures.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 STUDIO="$ROOT/apps/studio"
 EMU="$ROOT/apps/emu"
 

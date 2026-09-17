@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # Build Studio and Emu (Release) into bin/.
-# Usage: ./build-all [--clean|-c]
+# Usage: ./scripts/build-all.sh [--clean|-c]
 #   --clean  Remove apps/*/build and bin/, then configure and compile from scratch.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BIN="$ROOT/bin"
 STUDIO="$ROOT/apps/studio"
 EMU="$ROOT/apps/emu"
 CLEAN=0
 
 usage() {
-  echo "usage: ./build-all [--clean|-c]" >&2
+  echo "usage: ./scripts/build-all.sh [--clean|-c]" >&2
   exit 2
 }
 

@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Run the Release emu binary from bin/ (build with ./build-all first).
+# Run the Release emu binary from bin/ (build with ./scripts/build-all.sh first).
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BIN="$ROOT/bin/emu"
 CART="${1:-}"
 
 die() { echo "error: $*" >&2; exit 1; }
-usage() { echo "usage: ./emu <cart.retr01>" >&2; exit 2; }
+usage() { echo "usage: ./scripts/emu.sh <cart.retr01>" >&2; exit 2; }
 
 [[ -n "$CART" ]] || usage
-[[ -x "$BIN" ]] || die "missing $BIN -- run ./build-all first"
+[[ -x "$BIN" ]] || die "missing $BIN -- run ./scripts/build-all.sh first"
 
 if [[ "$CART" != /* ]]; then
   if [[ -f "$ROOT/$CART" ]]; then

@@ -12,7 +12,7 @@ set(R01_OUTPUT_DIR "${R01_REPO_ROOT}/output")
 set(R01_ASSETS_PNG "${CMAKE_SOURCE_DIR}/assets/png")
 set(R01_ASSETS_OTHER "${CMAKE_SOURCE_DIR}/assets/other")
 
-# Shared emu core for Studio Play (standalone ./emu still built from apps/emu).
+# Shared emu core for Studio Play (standalone ./scripts/emu.sh still built from apps/emu).
 if(NOT TARGET retr01_emu_core)
   add_subdirectory(${R01_PKG_ROOT}/emu ${CMAKE_BINARY_DIR}/retr01_emu EXCLUDE_FROM_ALL)
 endif()

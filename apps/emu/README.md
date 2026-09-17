@@ -4,9 +4,9 @@ Software-visible C emulator for Retr01 **Phase 1** carts. Separate from the IC b
 simulator ([`apps/sim/`](../sim/)). Contract:
 [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md).
 
-From repo root: `./emu path/to/cart.retr01` (after `./build-all`).
+From repo root: `./scripts/emu.sh path/to/cart.retr01` (after `./scripts/build-all.sh`).
 
-Studio **Play** uses this same emu core after export (shared library + standalone `./emu`). See [`apps/studio/README.md`](../studio/README.md). Later emulator phases are **not** specified here.
+Studio **Play** uses this same emu core after export (shared library + standalone `./scripts/emu.sh`). See [`apps/studio/README.md`](../studio/README.md). Later emulator phases are **not** specified here.
 
 ## Phase 1 scope (active)
 
@@ -20,7 +20,7 @@ Studio **Play** uses this same emu core after export (shared library + standalon
 
 **Sync contract:** Emu Host Play (`src/play.c` + `apps/common/`) is the Phase 1 gameplay SoT. Studio has no parallel preview. Export packs present screens + play table (`$8100`) + `R01P`. Soft-boot (`R01E_SOFTBOOT=1`) keeps the old host memcpy boot path for triage. Default boot runs cart PRG stream catchup until the start MAP write reaches **480** bytes (`vram_addr`), then Host Play reloads the camera 2x2 from cart. Collision samples cart MAP attrs. Render samples that VRAM window.
 
-**Studio integration:** Studio **Play** / **Space** always exports, then embeds this render path. Export wait uses a Studio-local spinning boot message. Standalone `./emu` stays for triage. **Sim is not part of this path.**
+**Studio integration:** Studio **Play** / **Space** always exports, then embeds this render path. Export wait uses a Studio-local spinning boot message. Standalone `./scripts/emu.sh` stays for triage. **Sim is not part of this path.**
 
 **Collision:** Host Play reads **cart MAP attrs** (`R01_ATTR_SOLID`). Player hitbox follows the **current anim state** from the cart player anim blob when present. PRG collision stub at `$8500` is packed for future 6502 use. Host movement does not call it today.
 
@@ -33,9 +33,9 @@ Studio **Play** uses this same emu core after export (shared library + standalon
 From the repo root:
 
 ```bash
-./build-all
-./emu path/to/cart.retr01
-./unit-tests
+./scripts/build-all.sh
+./scripts/emu.sh path/to/cart.retr01
+./scripts/unit-tests.sh
 ```
 
 Developer rebuild of this tree only:
@@ -51,7 +51,7 @@ cmake --build build
 
 **Env:** `R01E_SOFTBOOT=1` forces host memcpy VRAM/pals at boot (debug). Default runs cart PRG MAP/pal stream catchup to a full start-screen payload.
 
-**Debug (standalone `./emu`):** separate OS window (~atlas width, shorter than the 2x play window): top row **BG1** VRAM 2x2 + **BG0** 2x2 (red/green viewports), second row **opacity mask** + world map + **BG**/**SPR** pals, bottom **CPU busy** chart (2 samples/s). Cyan = active display, orange = VBlank. Red line = soft max **50k** cycles/frame.
+**Debug (standalone `./scripts/emu.sh`):** separate OS window (~atlas width, shorter than the 2x play window): top row **BG1** VRAM 2x2 + **BG0** 2x2 (red/green viewports), second row **opacity mask** + world map + **BG**/**SPR** pals, bottom **CPU busy** chart (2 samples/s). Cyan = active display, orange = VBlank. Red line = soft max **50k** cycles/frame.
 
 ## Layout
 
