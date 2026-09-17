@@ -4,7 +4,7 @@ What lives where, how the CPU sees PRG and MAP, and the on-cart `.retr01` layout
 
 Cart image rules below are the baseline for this repo. Soft `$7Fxx` owners follow `hardware.md` (3x AVR128DB28).
 
-**Related:** `hardware.md`, `cartridge.md`, `video-graphics.md`, `world-scrolling.md`, `software-api.md`, `ic-comms-risks.md`.
+**Related:** `hardware.md`, `cartridge.md`, `video-graphics.md`, `palette/`, `world-scrolling.md`, `software-api.md`, `ic-comms-risks.md`.
 
 ## CPU address map
 
@@ -285,7 +285,7 @@ See `hardware.md` and `ic-comms-risks.md`.
 
 ## Color master table
 
-**AT27C256R** on the motherboard holds the **locked 64-color kit** (packed R3G3B2). Cart global palette planes are **indices only** into that kit. Preview RGB SoT: `apps/common/r01_kit_palette.c`. List and tool palettes: `palette/`. `$7F08`/`$7F09` fill rules and `_prom.bin` burn note: `video-graphics.md`.
+**AT27C256R** on the motherboard holds the **locked 64-color kit** (packed R3G3B2). Cart global palette planes are **indices only** into that kit. Preview RGB SoT: `apps/common/r01_kit_palette.c`. List, tool palettes, and regenerate script: [`palette/`](palette/README.md). `$7F08`/`$7F09` fill rules and `_prom.bin` burn note: `video-graphics.md`.
 
 ## Phase 1 PRG play tables (Studio / Emu)
 

@@ -32,7 +32,7 @@ If more than 16 sprites land on one scanline, **later OAM entries on that line a
 
 Do not mix these two ideas:
 
-1. **64 RGB values** live in the board **AT27C256R** color PROM (packed R3G3B2). These are the real colors. Video reads them by 6-bit index. No CPU runtime poke path.
+1. **64 RGB values** live in the board **AT27C256R** color PROM (packed R3G3B2). These are the real colors. Video reads them by 6-bit index. No CPU runtime poke path. Preview RGB, GIMP/Aseprite exports, and regenerate notes: [`palette/`](palette/README.md).
 2. **64 individual palettes** live in the cartridge. Each individual palette is four numbers. Each number is a color index in 0..63 pointing into the PROM.
 
 ### Rows and selection
@@ -69,7 +69,7 @@ Typical boot fill (matches Phase 1 PRG):
 
 ### Motherboard color kit (locked SoT)
 
-The AT27C256R holds the **64-color** kit. Preview RGB SoT is [`apps/common/r01_kit_palette.c`](../apps/common/r01_kit_palette.c) (shared by Studio and Emu). Human list and GIMP / Aseprite palettes: [`palette/`](palette/). Burn tools write packed **R3G3B2** (`{RRRGGGBB}`) into PROM address `N` for kit index `N`.
+The AT27C256R holds the **64-color** kit. Preview RGB SoT is [`apps/common/r01_kit_palette.c`](../apps/common/r01_kit_palette.c) (shared by Studio and Emu). Human list and GIMP / Aseprite palettes: [`palette/`](palette/README.md). Burn tools write packed **R3G3B2** (`{RRRGGGBB}`) into PROM address `N` for kit index `N`.
 
 Indices **0..15** are darkest, **16..31** mid-dark, **32..47** mid, **48..63** bright. Cart palette bytes are kit indices only.
 

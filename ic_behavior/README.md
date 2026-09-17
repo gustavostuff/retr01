@@ -34,7 +34,7 @@ Docs are per **part**, tagged by where they live:
 | [74HC157.md](74HC157.md) | 74HC157 | 3 | VRAM A[11:0] mux |
 | [74HC573.md](74HC573.md) | 74HC573 | 1 | Field A[7:0] ALE latch |
 | [74HC574.md](74HC574.md) | 74HC574 | 1 | BG1 scroll X `$7F02` |
-| [AT27C256R.md](AT27C256R.md) | AT27C256R | 1 | Color PROM (R3G3B2) |
+| [AT27C256R.md](AT27C256R.md) | AT27C256R | 1 | Color PROM (R3G3B2). Kit RGB: [`../general_docs/palette/`](../general_docs/palette/README.md) |
 | [AD724.md](AD724.md) | AD724 | 1 | RGB to NTSC/PAL composite |
 
 ### Counted cart (2)

@@ -17,7 +17,7 @@ DOT clock -> Beam PLDs (raster + sync) -> 6-bit color index
                                     RCA / TV
 ```
 
-**SoT:** `general_docs/hardware.md`, `general_docs/video-graphics.md`, `ic_behavior/AD724.md`, `ic_behavior/ATF22V10.md`, `ic_behavior/AT27C256R.md`.
+**SoT:** `general_docs/hardware.md`, `general_docs/video-graphics.md`, `general_docs/palette/`, `ic_behavior/AD724.md`, `ic_behavior/ATF22V10.md`, `ic_behavior/AT27C256R.md`.
 
 ---
 
@@ -211,21 +211,7 @@ Proves PROM/DAC/AD724 independently of beam equations.
 
 Burn **64 bytes** at addresses 0...63. Each byte is packed **R3G3B2** = `{R2 R1 R0 G2 G1 G0 B1 B0}`.
 
-Studio/Emu kit preview RGB (8-bit) for reference - **not** the PROM bytes themselves:
-
-```text
-# idx preview RGB hex
- 0 000000 1 290514 2 2A0507 3 230F06 4 1E1306 5 1A1605 6 141807 7 061A07
- 8 051A13 9 071918 10 08181C 11 071722 12 030B3D 13 16033A 14 20052D 15 260420
-16 363636 17 740A40 18 77091A 19 693512 20 5D3F0E 21 514617 22 424C19 23 13511A
-24 16503F 25 114E4D 26 164D58 27 164A66 28 163794 29 472990 30 5F167D 31 6C115F
-32 949494 33 C04A7A 34 C54A4D 35 B8601B 36 A27326 37 8F7E2F 38 77872D 39 209030
-40 2E8E72 41 318B89 42 1F889C 43 2483B5 44 4D77D7 45 7E6AD3 46 9D5DBF 47 B352A0
-48 FFFFFF 49 F1A2BB 50 F1A6A1 51 F1A983 52 EEAC44 53 D4BA33 54 B0C841 55 73D275
-56 22D0A6 57 3BCDC9 58 48C9E4 59 88C4ED 60 A4BDEF 61 BBB5F1 62 D5A9EF 63 F09BDD
-```
-
-Convert each preview RGB to R3G3B2 for the burner, or use Studio's `<stem>_prom.bin` (64 packed bytes) when a project export exists. Indices **0...15** darkest -> **48...63** brightest.
+Preview RGB (8-bit, not PROM bytes), GIMP/Aseprite palettes, and the C SoT live under [`../general_docs/palette/`](../general_docs/palette/README.md). Convert each preview RGB to R3G3B2 for the burner, or use Studio's `<stem>_prom.bin` (64 packed bytes) when a project export exists. Indices **0...15** darkest -> **48...63** brightest.
 
 **OTP note:** AT27C256R is one-time programmable in normal use. Verify the image on a burner that supports 27C256 VPP/VCC before committing, or use a UV-erasable equivalent only if the process allows it. Adafruit's UPDI Friend cannot program this part.
 

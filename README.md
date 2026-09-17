@@ -36,6 +36,7 @@ Retr01 is an MCU-assisted 8-bit system ready for arcade and console setups, plus
 | [hardware.md](general_docs/hardware.md) | Main board, 3x AVR, PLDs, BOM, I/O, PCB practices |
 | [ic-comms-risks.md](general_docs/ic-comms-risks.md) | Shared-bus / multi-clock risks, mitigations, play-path anti-patterns |
 | [video-graphics.md](general_docs/video-graphics.md) | Resolution, tiles, sprites, palettes, BG layers |
+| [palette/](general_docs/palette/README.md) | Locked 64-color kit RGB, GIMP/Aseprite exports |
 | [world-scrolling.md](general_docs/world-scrolling.md) | Worlds, screens, VRAM buffers, scroll behavior |
 | [cartridge.md](general_docs/cartridge.md) | Cart hardware, saves, flashing |
 | [memory.md](general_docs/memory.md) | CPU map, soft `$7Fxx`, MAP port, `.retr01` image, entity flash capacity |

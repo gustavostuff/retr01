@@ -140,7 +140,7 @@ See generated `output/C/include/r01_*.h` for the full engine API (camera, player
 
 ## Palettes
 
-Kit **master indices** only ([`general_docs/video-graphics.md`](../../general_docs/video-graphics.md)). No per-tile RGB editor. Strip shows active BG/SPR row for the **active world**. Modal edits all **8 BG + 8 SPR** rows project-wide. Preview and cart burn quantize through Color PROM (**R3G3B2**).
+Kit **master indices** only ([`general_docs/video-graphics.md`](../../general_docs/video-graphics.md)). Locked kit RGB and GIMP/Aseprite palettes: [`general_docs/palette/`](../../general_docs/palette/README.md). No per-tile RGB editor. Strip shows active BG/SPR row for the **active world**. Modal edits all **8 BG + 8 SPR** rows project-wide. Preview and cart burn quantize through Color PROM (**R3G3B2**).
 
 ---
 
@@ -242,6 +242,7 @@ ctest --test-dir build --output-on-failure
 | Doc | Topic |
 |-----|--------|
 | [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md) | Video, entities, palettes |
+| [`general_docs/palette/`](../../general_docs/palette/README.md) | Locked 64-color kit RGB / tool palettes |
 | [`general_docs/software-api.md`](../../general_docs/software-api.md) | Flashing, PRG vs HW, author checklist |
 | [`general_docs/memory.md`](../../general_docs/memory.md) | Cart image layout |
 | [`apps/sim/README.md`](../sim/README.md) | Board sim + cart triage |

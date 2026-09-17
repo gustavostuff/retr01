@@ -4,7 +4,7 @@ Breadboard path from a video-only lab to full counted-BOM console behavior (CPU,
 
 **Scope:** Late-phase hardware bring-up after Studio/Emu contracts and the design SoT are stable. Not day-one software work.
 
-**Design SoT:** `general_docs/hardware.md`, `general_docs/video-graphics.md`, `general_docs/memory.md`, `general_docs/ic-comms-risks.md`, `general_docs/software-api.md`, plus `ic_behavior/`.
+**Design SoT:** `general_docs/hardware.md`, `general_docs/video-graphics.md`, `general_docs/palette/`, `general_docs/memory.md`, `general_docs/ic-comms-risks.md`, `general_docs/software-api.md`, plus `ic_behavior/`.
 
 | Tier | Name | One-line goal | Detail |
 | --- | --- | --- | --- |

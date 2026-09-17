@@ -220,11 +220,11 @@ Macrocell pressure note: SY(8)+Q(8)+MAP(5) = **21** vs **30** MC on a 22V10. Sta
 | AS6C62256 #1 | System RAM behind `$0000-$7EFF` |
 | AS6C62256 #2 | Interleaved VRAM (CPU PHI2 high, beam PHI2 low) |
 | AS6C62256 #3 | Sprite field (filled in VBlank) + BG0 **ping-pong line buffers** (filled in HBlank) |
-| AT27C256R | **64** master colors, packed **R3G3B2** `{RRRGGGBB}`. Video reads by 6-bit index. No CPU runtime access |
+| AT27C256R | **64** master colors, packed **R3G3B2** `{RRRGGGBB}`. Video reads by 6-bit index. No CPU runtime access. Kit RGB and tool palettes: [`palette/`](palette/README.md) |
 
 **Color DAC** (1% metal film). LSB->MSB: R/G **4.00 / 2.00 / 1.00 kohm**. B **2.00 / 1.00 kohm**. **75.0 ohm** to GND each gun -> **~0.7 Vpp**. Unused PROM address pins to GND.
 
-Cart palettes are **indices only** into this PROM. See `memory.md` and `video-graphics.md`.
+Cart palettes are **indices only** into this PROM. See `memory.md`, `video-graphics.md`, and [`palette/`](palette/README.md).
 
 ## Cartridge
 
@@ -435,4 +435,4 @@ Black anti-spoof then white hitboxes on all targets, then `0x5A`. Two flash fram
 
 ## Related
 
-`memory.md` | `cartridge.md` | `video-graphics.md` | `world-scrolling.md` | `software-api.md` | `sound.md` | `open-questions.md` | `../ic_behavior/` | `ic-comms-risks.md`
+`memory.md` | `cartridge.md` | `video-graphics.md` | `palette/` | `world-scrolling.md` | `software-api.md` | `sound.md` | `open-questions.md` | `../ic_behavior/` | `ic-comms-risks.md`
