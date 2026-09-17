@@ -1,4 +1,4 @@
-ai-rules.txt
+doc-style-rules.txt
 apps/studio/build/
 apps/emu/build/
 bin/
@@ -6,3 +6,4 @@ output/
 temp/
 *.o
 *.a
+temp/

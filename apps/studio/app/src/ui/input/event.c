@@ -656,6 +656,10 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 ui->arm_kind = UI_ARM_PLAY;
                 return 1;
             }
+            if (preview_inspect_copy_hit(ui, lx, ly)) {
+                ui->arm_kind = UI_ARM_PREVIEW_COPY;
+                return 1;
+            }
             if (lx < UI_SIDEBAR_W && accordion_header_hit(ui, lx, ly, &acc_sec)) {
                 ui->arm_kind = UI_ARM_ACCORDION;
                 ui->arm_a = acc_sec;
@@ -952,6 +956,10 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             if (kind == UI_ARM_PLAY && ui->app_mode == UI_APP_GRAPHICS && play_button_hit(ui, lx, ly)) {
                 ui_toggle_play(ui);
+                return 1;
+            }
+            if (kind == UI_ARM_PREVIEW_COPY && preview_inspect_copy_hit(ui, lx, ly)) {
+                preview_inspect_copy(ui);
                 return 1;
             }
             if (kind == UI_ARM_ACCORDION && lx < UI_SIDEBAR_W && accordion_header_hit(ui, lx, ly, &acc_sec) &&

@@ -50,6 +50,7 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
             draw_play_view(ui, r);
         } else {
             draw_screen_editor(ui, r, ui_edit_map_screen(ui));
+            draw_preview_inspect(ui, r);
         }
     }
 

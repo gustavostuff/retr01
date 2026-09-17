@@ -358,6 +358,10 @@ void screen_set_solid_by_hw(UiState *ui, int ref_tx, int ref_ty);
 /* ui/screen/draw.c */
 void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s);
 void draw_play_view(UiState *ui, SDL_Renderer *r);
+void draw_preview_inspect(UiState *ui, SDL_Renderer *r);
+void ui_preview_inspect_refresh(UiState *ui);
+int preview_inspect_copy_hit(const UiState *ui, int lx, int ly);
+void preview_inspect_copy(UiState *ui);
 void draw_catalog_drag_ghost(UiState *ui, SDL_Renderer *r);
 int instance_hit_on_screen(const UiState *ui, int lx, int ly, int *out_inst);
 

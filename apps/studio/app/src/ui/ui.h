@@ -63,6 +63,7 @@
 #define UI_ARM_SOUND_PLAY 19
 #define UI_ARM_SOUND_PAUSE 20
 #define UI_ARM_SOUND_STOP 21
+#define UI_ARM_PREVIEW_COPY 22
 
 #define UI_APP_GRAPHICS 0
 #define UI_APP_SOUNDS 1 /* Audio tab (historical enum name) */
@@ -446,6 +447,7 @@ typedef struct UiState {
     int inst_drag_off_x;
     int inst_drag_off_y;
     int sel_instance; /* -1 or index into world.instances */
+    char preview_inspect[160]; /* status under screen preview (tile / entity) */
     int last_paint_tx;
     int last_paint_ty;
     Uint32 last_click_ms;

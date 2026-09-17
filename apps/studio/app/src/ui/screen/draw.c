@@ -424,6 +424,217 @@ static void draw_hover_and_sel_overlays(UiState *ui, SDL_Renderer *r, const R01W
     }
 }
 
+static void format_tile_inspect(char *buf, size_t cap, const R01Screen *s, int tx, int ty, int plane_bg0) {
+    int cell;
+    uint8_t tile;
+    uint8_t attr;
+    if (!buf || cap < 1 || !s || tx < 0 || ty < 0 || tx >= R01_SCREEN_TILES_X || ty >= R01_SCREEN_TILES_Y) {
+        return;
+    }
+    cell = ty * R01_SCREEN_TILES_X + tx;
+    tile = s->tiles[cell];
+    attr = s->attrs[cell];
+    snprintf(buf, cap, "%s tile (%d,%d) id=%u bank=%d pal=%d attr=$%02X%s%s%s", plane_bg0 ? "BG0" : "BG1", tx, ty,
+             (unsigned)tile, r01_attr_bank(attr), r01_attr_pal(attr), (unsigned)attr,
+             r01_attr_solid(attr) ? " solid" : "", r01_attr_flip_h(attr) ? " H" : "",
+             r01_attr_flip_v(attr) ? " V" : "");
+}
+
+static void format_tile_multisel(char *buf, size_t cap, int plane_bg0, int x0, int y0, int x1, int y1) {
+    if (!buf || cap < 1) {
+        return;
+    }
+    snprintf(buf, cap, "%s (%d,%d) to (%d,%d) multiselection", plane_bg0 ? "BG0" : "BG1", x0, y0, x1, y1);
+}
+
+static void format_entity_inspect(char *buf, size_t cap, const R01World *w, int inst_idx) {
+    const R01EntityInstance *inst;
+    const R01EntityType *ent;
+    const char *name;
+    if (!buf || cap < 1 || !w || inst_idx < 0 || inst_idx >= w->instance_count) {
+        return;
+    }
+    inst = &w->instances[inst_idx];
+    if (inst->type_id >= 0 && inst->type_id < w->entity_count) {
+        ent = &w->entities[inst->type_id];
+        name = ent->name[0] ? ent->name : "?";
+    } else {
+        name = "?";
+    }
+    snprintf(buf, cap, "entity #%d \"%s\" type=%d (%d,%d)%s%s", inst_idx, name, inst->type_id, inst->world_x,
+             inst->world_y, inst->flip_h ? " H" : "", inst->flip_v ? " V" : "");
+}
+
+static void preview_inspect_layout(const UiState *ui, int *out_x, int *out_y, int *out_text_w, int *out_btn_x,
+                                   int *out_btn_w) {
+    int ox, oy, y, sw, btn_w;
+    screen_origin(ui, &ox, &oy);
+    sw = ui_screen_w(ui);
+    btn_w = label_width("Copy");
+    if (btn_w < UI_UNIT * 4) {
+        btn_w = UI_UNIT * 4;
+    }
+    y = oy + ui_screen_h(ui) + UI_UNIT;
+    if (y + UI_BTN_H * 2 > ui_logic_h(ui) - UI_UNIT) {
+        y = ui_logic_h(ui) - UI_BTN_H * 2 - UI_UNIT;
+    }
+    if (out_x) {
+        *out_x = ox;
+    }
+    if (out_y) {
+        *out_y = y;
+    }
+    if (out_text_w) {
+        *out_text_w = sw;
+    }
+    if (out_btn_x) {
+        *out_btn_x = ox + sw + UI_UNIT;
+    }
+    if (out_btn_w) {
+        *out_btn_w = btn_w;
+    }
+}
+
+/* Split status into at most 2 lines that fit max_w (font pixels). Prefer a space break. */
+static void preview_inspect_split2(const char *text, int max_w, char *line1, size_t l1cap, char *line2,
+                                   size_t l2cap) {
+    int n;
+    int i;
+    int fit = 0;
+    int break_at = -1;
+    if (!text || !line1 || !line2 || l1cap < 2 || l2cap < 1) {
+        return;
+    }
+    line1[0] = '\0';
+    line2[0] = '\0';
+    n = (int)strlen(text);
+    if (n < 1) {
+        return;
+    }
+    if (font_text_width(text) <= max_w) {
+        snprintf(line1, l1cap, "%s", text);
+        return;
+    }
+    for (i = 1; i <= n; i++) {
+        if (font_text_width_n(text, i) > max_w) {
+            break;
+        }
+        fit = i;
+        if (i < n && text[i] == ' ') {
+            break_at = i;
+        }
+    }
+    if (fit < 1) {
+        fit = 1;
+    }
+    if (break_at > 0) {
+        fit = break_at;
+    }
+    if ((size_t)fit >= l1cap) {
+        fit = (int)l1cap - 1;
+    }
+    memcpy(line1, text, (size_t)fit);
+    line1[fit] = '\0';
+    while (fit < n && text[fit] == ' ') {
+        fit++;
+    }
+    snprintf(line2, l2cap, "%s", text + fit);
+}
+
+int preview_inspect_copy_hit(const UiState *ui, int lx, int ly) {
+    int x, y, tw, bx, bw;
+    if (!ui || ui->play.active || ui->app_mode != UI_APP_GRAPHICS || !ui->preview_inspect[0]) {
+        return 0;
+    }
+    preview_inspect_layout(ui, &x, &y, &tw, &bx, &bw);
+    (void)x;
+    (void)tw;
+    return point_in_rect(lx, ly, bx, y, bw, UI_BTN_H);
+}
+
+void preview_inspect_copy(UiState *ui) {
+    if (!ui || !ui->preview_inspect[0]) {
+        return;
+    }
+    if (SDL_SetClipboardText(ui->preview_inspect) != 0) {
+        ui_toast(ui, "copy failed", 1);
+        return;
+    }
+    ui_toast(ui, "copied", 0);
+}
+
+void ui_preview_inspect_refresh(UiState *ui) {
+    R01World *w;
+    R01Screen *s;
+    char live[sizeof(ui->preview_inspect)];
+    int tx, ty;
+    int inst;
+    int plane_bg0;
+
+    if (!ui || !ui->project || ui->play.active || ui->app_mode != UI_APP_GRAPHICS) {
+        return;
+    }
+    w = r01_project_active_world(ui->project);
+    s = ui_edit_map_screen(ui);
+    plane_bg0 = (ui->worlds_plane == UI_WORLDS_PLANE_BG0);
+    live[0] = '\0';
+
+    if (s && w && screen_hit(ui, ui->mouse_x, ui->mouse_y, &tx, &ty)) {
+        if (!plane_bg0 && ui_work_allows_spr(ui) && !ui->hide_spr_layer &&
+            instance_hit_on_screen(ui, ui->mouse_x, ui->mouse_y, &inst)) {
+            format_entity_inspect(live, sizeof(live), w, inst);
+        } else if (ui_work_allows_bg(ui) && !ui->hide_bg_layer) {
+            format_tile_inspect(live, sizeof(live), s, tx, ty, plane_bg0);
+        }
+    }
+
+    if (live[0]) {
+        memcpy(ui->preview_inspect, live, sizeof(ui->preview_inspect));
+        return;
+    }
+
+    /* Not hovering: keep showing the last click/selection. */
+    live[0] = '\0';
+    if (!plane_bg0 && ui->sel_instance >= 0 && w) {
+        format_entity_inspect(live, sizeof(live), w, ui->sel_instance);
+    } else if (s && screen_sel_valid(ui) && ui->sel_instance < 0) {
+        int min_x, min_y, max_x, max_y;
+        screen_sel_bounds(ui, &min_x, &min_y, &max_x, &max_y);
+        if (min_x != max_x || min_y != max_y) {
+            format_tile_multisel(live, sizeof(live), plane_bg0, min_x, min_y, max_x, max_y);
+        } else {
+            format_tile_inspect(live, sizeof(live), s, min_x, min_y, plane_bg0);
+        }
+    }
+    if (live[0]) {
+        memcpy(ui->preview_inspect, live, sizeof(ui->preview_inspect));
+    }
+}
+
+void draw_preview_inspect(UiState *ui, SDL_Renderer *r) {
+    int x, y, text_w, btn_x, btn_w;
+    char line1[160];
+    char line2[160];
+    int hover;
+    int lh;
+    if (!ui || !r || ui->play.active || ui->app_mode != UI_APP_GRAPHICS) {
+        return;
+    }
+    ui_preview_inspect_refresh(ui);
+    if (!ui->preview_inspect[0]) {
+        return;
+    }
+    preview_inspect_layout(ui, &x, &y, &text_w, &btn_x, &btn_w);
+    lh = font_line_h();
+    preview_inspect_split2(ui->preview_inspect, text_w, line1, sizeof(line1), line2, sizeof(line2));
+    font_draw(r, x, y + (UI_BTN_H - lh) / 2, line1, 170, 170, 180);
+    if (line2[0]) {
+        font_draw(r, x, y + UI_BTN_H + (UI_BTN_H - lh) / 2, line2, 170, 170, 180);
+    }
+    hover = point_in_rect(ui->mouse_x, ui->mouse_y, btn_x, y, btn_w, UI_BTN_H);
+    draw_button(r, btn_x, y, btn_w, "Copy", 1, hover);
+}
+
 void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s) {
     int ox, oy, y, x;
     R01World *w = r01_project_active_world(ui->project);

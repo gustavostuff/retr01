@@ -173,6 +173,7 @@ int ui_init(UiState *ui) {
     ui->logic_scale = 1;
     ui->menu.world_screen_idx = -1;
     ui->sel_instance = -1;
+    ui->preview_inspect[0] = '\0';
     ui->app_mode = UI_APP_GRAPHICS;
     ui_undo_init(&ui->undo);
     ui->undo_paint = NULL;
