@@ -81,13 +81,13 @@ TEST_MAIN() {
     tile[0] = 0xA5;
     tile[8] = 0x5A;
     EXPECT(r01_chr_write_spr_tile(w, bank, id, tile) == 0, "write spr0");
-    /* Tile 1 reserved for player stub -- alloc skips to 2. */
+    /* Authoring is contiguous: next slot is tile 1 (cart export relocates stub conflict). */
     id = r01_chr_alloc_spr_tile(w, bank);
-    EXPECT(id == 2, "spr tile 2 skips reserved 1");
+    EXPECT(id == 1, "spr tile 1 contiguous");
     memset(tile, 0, sizeof(tile));
     tile[0] = 0x3C;
     tile[8] = 0xC3;
-    EXPECT(r01_chr_write_spr_tile(w, bank, id, tile) == 0, "write spr2");
+    EXPECT(r01_chr_write_spr_tile(w, bank, id, tile) == 0, "write spr1");
     cat = r01_world_sprite_add(w, bank, id, 2);
     EXPECT(cat == 0, "catalog");
     type_id = r01_world_entity_from_sprite(w, cat);
@@ -108,21 +108,17 @@ TEST_MAIN() {
     p->other_screens[R01_CART_OTHER_CREDITS_FIRST].present = 1;
     p->other_screens[R01_CART_OTHER_CREDITS_FIRST].tiles[0] = 0x11;
 
-    /* Legacy: art sitting on reserved tile 1 must relocate on export. */
+    /* Second entity shares no stub conflict; uses tile 0. */
     {
         R01EntityPart *pt;
-        memset(tile, 0, sizeof(tile));
-        tile[0] = 0x11;
-        tile[8] = 0x22;
-        EXPECT(r01_chr_write_spr_tile(w, bank, R01_SPR_PLAYER_TILE_ID, tile) == 0, "legacy tile1 art");
         type_id = r01_world_entity_add(w);
-        EXPECT(type_id == 1, "legacy entity");
+        EXPECT(type_id == 1, "second entity");
         pt = &w->entities[type_id].states[0].frames[0].parts[0];
         memset(pt, 0, sizeof(*pt));
         pt->bank = 0;
-        pt->tile_id = R01_SPR_PLAYER_TILE_ID;
+        pt->tile_id = 0;
         w->entities[type_id].states[0].frames[0].part_count = 1;
-        EXPECT(r01_world_place_entity(w, type_id, 10, 10) >= 0, "legacy inst");
+        EXPECT(r01_world_place_entity(w, type_id, 10, 10) >= 0, "second inst");
     }
 
     EXPECT(r01_cart_write(p, "test_cart.retr01", err, sizeof(err)) == 0, "cart write");
@@ -160,7 +156,6 @@ TEST_MAIN() {
                 uint32_t off_prg, off_wtable, world_base, off_chr, off_types, off_insts;
                 uint8_t type_n, inst_n;
                 uint8_t irec[R01_CART_INSTANCE_SIZE];
-                uint8_t spr_tile2[R01_TILE_BYTES];
 
                 EXPECT(fseek(f, 0, SEEK_SET) == 0, "rewind");
                 EXPECT(fread(img, 1, (size_t)flen, f) == (size_t)flen, "read cart");
@@ -212,14 +207,12 @@ TEST_MAIN() {
                     uint32_t spr0 = world_base + off_chr + 4u * R01_CHR_BANK_BYTES;
                     uint8_t stub[R01_TILE_BYTES];
                     uint8_t relocated[R01_TILE_BYTES];
-                    memcpy(spr_tile2, img + spr0 + 2u * R01_TILE_BYTES, R01_TILE_BYTES);
-                    EXPECT(spr_tile2[0] == 0x3C && spr_tile2[8] == 0xC3, "real spr CHR tile 2");
+                    /* Authoring tile 1 (0x3C) relocated so stub can occupy tile 1. */
+                    memcpy(relocated, img + spr0 + 2u * R01_TILE_BYTES, R01_TILE_BYTES);
+                    EXPECT(relocated[0] == 0x3C && relocated[8] == 0xC3, "relocated spr tile1 art");
                     memcpy(stub, img + spr0 + (size_t)R01_SPR_PLAYER_TILE_ID * R01_TILE_BYTES,
                            R01_TILE_BYTES);
                     EXPECT(stub[0] == 0xFF && stub[8] == 0x00, "player stub color-1 at tile 1");
-                    /* Legacy tile-1 art relocated to next free slot (tile_count was 3 -> dest 3). */
-                    memcpy(relocated, img + spr0 + 3u * R01_TILE_BYTES, R01_TILE_BYTES);
-                    EXPECT(relocated[0] == 0x11 && relocated[8] == 0x22, "relocated tile1 art");
                 }
 
                 /* Locked EntityDef catalog: u16 dir + defs. */
@@ -239,14 +232,14 @@ TEST_MAIN() {
                     fr = st + rd_u16(st + 6);
                     EXPECT(fr[0] == R01_CART_ENTITY_FRAME_DELAY_DEFAULT, "def0 frame delay");
                     EXPECT(fr[1] == 1, "def0 sprite count");
-                    EXPECT(fr[2] == 2, "def0 sprite tile");
+                    EXPECT(fr[2] == 2, "def0 sprite remapped off stub");
                     EXPECT((int8_t)fr[3] == 2 && (int8_t)fr[4] == 2, "def0 sprite rel");
                     def1 = img + world_base + off_types + d1;
                     EXPECT(def1[1] == 1, "def1 state count");
                     st = def1 + rd_u16(def1 + 4);
                     fr = st + rd_u16(st + 6);
                     EXPECT(fr[1] == 1, "def1 sprite count");
-                    EXPECT(fr[2] == 3, "legacy tile remapped off player stub");
+                    EXPECT(fr[2] == 0, "def1 uses tile 0");
                     EXPECT(off_insts > off_types + 4, "catalog non-empty");
                     EXPECT(world_base + off_insts <= (uint32_t)flen, "off_insts in cart");
                 }

@@ -37,7 +37,7 @@ TEST_MAIN() {
     EXPECT(p->worlds[0].sprites[0].pal == 2, "default pal");
 
     id = r01_chr_alloc_spr_tile(&p->worlds[0], bank);
-    EXPECT(id == 2, "second alloc skips player tile 1");
+    EXPECT(id == 1, "second alloc is contiguous (tile 1 ok in authoring)");
 
     EXPECT(r01_world_sprite_set_pal(&p->worlds[0], 0, 3) == 0, "set pal");
     EXPECT(p->worlds[0].sprites[0].pal == 3, "pal updated");
@@ -53,7 +53,8 @@ TEST_MAIN() {
     EXPECT(p2->worlds[0].sprites[0].bank == 0, "catalog bank");
     EXPECT(p2->worlds[0].sprites[0].tile_id == 0, "catalog tile");
     EXPECT(p2->worlds[0].sprites[0].pal == 3, "catalog pal");
-    EXPECT(p2->worlds[0].spr_banks[0].tile_count == R01_TILES_PER_BANK, "spr bank0 tiles");
+    /* Load densifies blank holes: only the painted tile remains. */
+    EXPECT(p2->worlds[0].spr_banks[0].tile_count == 1, "spr bank0 densified");
     EXPECT(memcmp(p2->worlds[0].spr_banks[0].chr, tile, R01_TILE_BYTES) == 0, "spr chr bytes");
 
     EXPECT(r01_world_sprite_remove(&p2->worlds[0], 0) == 0, "remove");

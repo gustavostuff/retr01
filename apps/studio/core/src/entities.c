@@ -257,18 +257,10 @@ static int remap_dest_taken(const R01PlayerBankRemap *map, int assigned, int des
     return 0;
 }
 
-static int pick_player_dest_tile(const R01PlayerBankRemap *map, int assigned, int prefer) {
+static int pick_player_dest_tile(const R01PlayerBankRemap *map, int assigned) {
     int dest;
-    /* Prefer the original sheet index so part order stays stable. Never use tile 1:
-     * cart Play still reserves SPR0 tile 1 as the solid player stub. */
-    if (prefer >= 0 && prefer < R01_TILES_PER_BANK && prefer != R01_SPR_PLAYER_TILE_ID &&
-        !remap_dest_taken(map, assigned, prefer)) {
-        return prefer;
-    }
+    /* Contiguous sheet: first free index from 0 (no reserved holes in authoring). */
     for (dest = 0; dest < R01_TILES_PER_BANK; dest++) {
-        if (dest == R01_SPR_PLAYER_TILE_ID) {
-            continue;
-        }
         if (!remap_dest_taken(map, assigned, dest)) {
             return dest;
         }
@@ -408,11 +400,11 @@ static int entity_to_player_bank(R01Project *p, R01World *w, int type_idx) {
     if (n < 0) {
         return -1;
     }
-    /* Prefer keeping each sprite's tile index so frame/part order stays stable. */
+    /* Pack into contiguous player-bank slots 0..n-1 in sheet order. */
     for (i = 0; i < n; i++) {
         const uint8_t *src = r01_chr_spr_tile(w, map[i].old_bank, map[i].old_tile);
         uint8_t blank[R01_TILE_BYTES];
-        int dest = pick_player_dest_tile(map, i, map[i].old_tile);
+        int dest = pick_player_dest_tile(map, i);
         if (dest < 0) {
             return -1;
         }
@@ -434,9 +426,23 @@ static int entity_to_player_bank(R01Project *p, R01World *w, int type_idx) {
     }
     catalog_remap_tiles(w, map, n, 1);
     metasprite_remap_tiles(w, map, n, 1);
-    /* Exclusive move: clear world slots so Banks SPR no longer shows the art. */
+    /* Exclusive move: clear world slots, then densify so Banks stay continuous. */
     for (i = 0; i < n; i++) {
         clear_world_spr_tile(w, map[i].old_bank, map[i].old_tile);
+    }
+    {
+        int touched[R01_SPR_BANKS];
+        memset(touched, 0, sizeof(touched));
+        for (i = 0; i < n; i++) {
+            if (map[i].old_bank >= 0 && map[i].old_bank < R01_SPR_BANKS) {
+                touched[map[i].old_bank] = 1;
+            }
+        }
+        for (i = 0; i < R01_SPR_BANKS; i++) {
+            if (touched[i]) {
+                r01_chr_densify_spr_bank(w, i);
+            }
+        }
     }
     return 0;
 }
@@ -457,34 +463,16 @@ static int entity_from_player_bank(R01Project *p, R01World *w, int type_idx) {
     for (i = 0; i < n; i++) {
         const uint8_t *src = r01_player_bank_tile(p, map[i].old_tile);
         uint8_t blank[R01_TILE_BYTES];
-        int bank = 0;
-        int dest = map[i].old_tile;
-        const uint8_t *existing;
+        int bank;
+        int dest;
         memset(blank, 0, sizeof(blank));
-        /* Prefer bank 0 at the same tile index (preserves sheet order). */
-        existing = r01_chr_spr_tile(w, bank, dest);
-        if (existing) {
-            int blank_slot = 1;
-            int b;
-            for (b = 0; b < R01_TILE_BYTES; b++) {
-                if (existing[b]) {
-                    blank_slot = 0;
-                    break;
-                }
-            }
-            if (!blank_slot && world_tile_referenced(w, bank, dest, type_idx)) {
-                dest = -1;
-            }
+        bank = r01_chr_find_spr_bank_space(w);
+        if (bank < 0) {
+            return -1;
         }
+        dest = r01_chr_alloc_spr_tile(w, bank);
         if (dest < 0) {
-            bank = r01_chr_find_spr_bank_space(w);
-            if (bank < 0) {
-                return -1;
-            }
-            dest = r01_chr_alloc_spr_tile(w, bank);
-            if (dest < 0) {
-                return -1;
-            }
+            return -1;
         }
         if (r01_chr_write_spr_tile(w, bank, dest, src ? src : blank) != 0) {
             return -1;

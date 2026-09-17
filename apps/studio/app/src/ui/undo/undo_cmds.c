@@ -1223,6 +1223,13 @@ static void bank_tile_remove_apply(UiState *ui, UiUndoBankTileRemove *d, int use
     bank_tile_remove_apply_refs(ui, d, use_new);
     if (use_new) {
         bank_tile_trim_count(ui, d);
+        if (d->bank_plane == UI_BANKS_PLANE_PLAYER) {
+            r01_project_densify_player_bank(ui->project);
+        } else if (d->bank_plane == UI_BANKS_PLANE_SPR) {
+            r01_chr_densify_spr_bank(w, d->bank);
+        } else if (d->bank_plane == UI_BANKS_PLANE_BG) {
+            r01_chr_densify_bg_bank(w, d->bank);
+        }
     }
     if (d->bank_plane == UI_BANKS_PLANE_BG) {
         undo_refresh_world_screens(w);

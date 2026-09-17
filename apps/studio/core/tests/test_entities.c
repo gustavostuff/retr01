@@ -197,9 +197,9 @@ TEST_MAIN() {
         EXPECT(r01_project_set_player_entity(p, w, 0) == 0, "mark player moves chr");
         EXPECT(r01_world_player_entity(w) == 0, "player marked");
         EXPECT(r01_is_player_chr_bank(w->entities[0].states[0].frames[0].parts[0].bank), "part on player bank");
-        EXPECT(w->entities[0].states[0].frames[0].parts[0].tile_id == old_tile, "tile id preserved");
-        EXPECT(p->player_bank.tile_count > old_tile, "player bank covers tile");
-        EXPECT(r01_chr_resolve_spr(p, w, R01_PLAYER_CHR_BANK, old_tile) != NULL, "resolve player tile");
+        EXPECT(w->entities[0].states[0].frames[0].parts[0].tile_id == 0, "player bank packs from 0");
+        EXPECT(p->player_bank.tile_count >= 1, "player bank covers tile");
+        EXPECT(r01_chr_resolve_spr(p, w, R01_PLAYER_CHR_BANK, 0) != NULL, "resolve player tile");
         {
             const uint8_t *left = r01_chr_spr_tile(w, old_bank, old_tile);
             int blank = 1, b;
@@ -211,12 +211,13 @@ TEST_MAIN() {
                     }
                 }
             }
-            EXPECT(blank, "world spr tile cleared after move");
+            /* Cleared + densified: either blank at old index or slot trimmed away. */
+            EXPECT(blank || left == NULL, "world spr tile cleared after move");
         }
         {
             int ci, found_cat = 0;
             for (ci = 0; ci < w->sprite_count; ci++) {
-                if (w->sprites[ci].tile_id == old_tile && r01_is_player_chr_bank(w->sprites[ci].bank)) {
+                if (w->sprites[ci].tile_id == 0 && r01_is_player_chr_bank(w->sprites[ci].bank)) {
                     found_cat = 1;
                 }
                 EXPECT(!(w->sprites[ci].bank == old_bank && w->sprites[ci].tile_id == old_tile),

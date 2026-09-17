@@ -1823,5 +1823,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
         }
     }
     free(buf);
+    /* Collapse blank holes so Banks grids stay continuous 0..n-1. */
+    r01_project_densify_all_banks(p);
     return 0;
 }

@@ -6,8 +6,7 @@
 /* First SPR bank with free CHR slot, or -1 if all full. Prefers bank 0. */
 int r01_chr_find_spr_bank_space(const R01World *w);
 
-/* Allocate a blank tile in spr_banks[bank]. Returns tile_id or -1.
- * Bank 0 never returns R01_SPR_PLAYER_TILE_ID (skipped for the player stub). */
+/* Prefer first free / next slot. Bank sheets stay contiguous 0..n-1 (no holes). */
 int r01_chr_alloc_spr_tile(R01World *w, int bank);
 
 /* Write 16-byte pattern into spr_banks[bank][tile_id] (grows tile_count). */
@@ -20,6 +19,15 @@ const uint8_t *r01_chr_spr_tile(const R01World *w, int bank, int tile_id);
 const uint8_t *r01_chr_resolve_spr(const R01Project *p, const R01World *w, int bank, int tile_id);
 int r01_chr_write_resolved_spr(R01Project *p, R01World *w, int bank, int tile_id,
                                const uint8_t tile[R01_TILE_BYTES]);
+
+/* Pack non-blank SPR tiles to 0..n-1 and remap entity / metasprite / catalog refs. */
+void r01_chr_densify_spr_bank(R01World *w, int bank);
+/* Pack non-blank player-bank tiles to 0..n-1 and remap refs across all worlds. */
+void r01_project_densify_player_bank(R01Project *p);
+/* Pack BG bank tiles after index 0 (tile 0 stays). Remap screens + metatiles. */
+void r01_chr_densify_bg_bank(R01World *w, int bank);
+/* Densify every BG/SPR bank in every world plus the global player bank. */
+void r01_project_densify_all_banks(R01Project *p);
 
 /* Append catalog entry. Returns index or -1. */
 int r01_world_sprite_add(R01World *w, int bank, int tile_id, int pal);
