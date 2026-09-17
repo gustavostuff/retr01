@@ -51,11 +51,11 @@
       "states": [
         {
           "name": "Idle",
-          "origin_x": 10, "origin_y": 15,
-          "hitbox_x": 8, "hitbox_y": 10, "hitbox_w": 5, "hitbox_h": 16,
+          "origin_x": 16, "origin_y": 15,
+          "hitbox_x": 14, "hitbox_y": 10, "hitbox_w": 5, "hitbox_h": 16,
           "frame_count": 1,
           "frames": [
-            {"parts": [{"bank":4,"tile":2,"pal":1,"fh":0,"fv":0,"dx":2,"dy":11},{"bank":4,"tile":0,"pal":1,"fh":0,"fv":0,"dx":2,"dy":3},{"bank":4,"tile":3,"pal":1,"fh":0,"fv":0,"dx":10,"dy":11},{"bank":4,"tile":5,"pal":1,"fh":0,"fv":0,"dx":10,"dy":19},{"bank":4,"tile":4,"pal":1,"fh":0,"fv":0,"dx":2,"dy":19},{"bank":4,"tile":1,"pal":1,"fh":0,"fv":0,"dx":10,"dy":3}]}
+            {"parts": [{"bank":4,"tile":1,"pal":1,"fh":0,"fv":0,"dx":16,"dy":3},{"bank":4,"tile":3,"pal":1,"fh":0,"fv":0,"dx":16,"dy":11},{"bank":4,"tile":2,"pal":1,"fh":0,"fv":0,"dx":8,"dy":11},{"bank":4,"tile":0,"pal":1,"fh":0,"fv":0,"dx":8,"dy":3},{"bank":4,"tile":5,"pal":1,"fh":0,"fv":0,"dx":16,"dy":19},{"bank":4,"tile":4,"pal":1,"fh":0,"fv":0,"dx":8,"dy":19}]}
           ]
         }
       ]
