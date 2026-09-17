@@ -84,7 +84,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### 16. Entity caps (per world)
 
-**Resolved:** **16** entity types per world, catalog inside each world blob. No global shared catalog. `format_ver` **3** (pointer table 5 slots). Sprite banks = current world SPR CHR. See `memory.md`, `software-api.md`.
+**Resolved:** **16** entity types per world, catalog inside each world blob. No global shared catalog. `format_ver` **4** (pointer table 6 slots, including global other CHR). Sprite banks = current world SPR CHR. Other screens use global other CHR. See `memory.md`, `software-api.md`.
 
 ### 17. IC comms mitigations folded into design docs
 
@@ -105,12 +105,14 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-14 | AD724 mount | SOIC-16 on SOIC-to-DIP adapter. Main PCB 100% THT. |
 | 2026-09-14 | 74HC14 | Optional. Skip if canned PHI2/DOT + simple reset. Add if soft edges or reset chatter. |
 | 2026-09-14 | Other screens | Max 16 total shared pool (title/interstitial/credits). Dropped 46 credits cap. |
+| 2026-09-17 | Other screens | Cap **8** (ids 0..7). Nametable attrs index **world 0** CHR. See `memory.md`. |
+| 2026-09-17 | Cart layout | Cap **7** worlds. Other screens back to **16**. Global other CHR (**4** BG + **4** SPR, **32 KB**). `format_ver` **4**, ptr table 6 slots. Max-fill ~**28.5 KB** free. See `memory.md`. |
 | 2026-09-14 | Entity spawns | Spawn locations in PRG, not cart world blobs. |
 | 2026-09-13 | Sync out | One header, CSYNC or H/V mode. |
 | 2026-09-13 | Branding | One product: Retr01. |
 | 2026-09-14 | Flasher | Console + Adafruit's UPDI Friend. Shared header. 4-pos DIP: M/S1/S2/cart, default all OFF. Scope: AVRs + cart only. |
 | 2026-09-14 | Entity caps | 16 types per world (catalog in world blob). Dropped global 128 + `chr_world`. format_ver 3. |
-| 2026-09-16 | Entity pack | Max sprites/frame **6**; maxed def **484 B**. Absolute max-fill ~2.4 KB over flash (variable-length defs keep real carts under). |
+| 2026-09-16 | Entity pack | Max sprites/frame **6**; maxed def **484 B**. Max-fill later revised (see 2026-09-17 player patterns). |
 | 2026-09-14 | Anim tiles | base..base+3 wrap in bank, default delay 6. |
 | 2026-09-14 | Video timing | Sprites VBlank pass. BG0 HBlank ping-pong only. |
 | 2026-09-14 | PCB layers | Initial: motherboard, cart, and pads all 2-layer. 4-layer mobo only later if bring-up / commercial SMD needs it. |
@@ -123,5 +125,6 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-15 | Cart save IC | Prefer I2C FRAM when BOM allows (drops EEPROM page-program stalls). Transfer still chunked. See `ic-comms-risks.md` #13. |
 | 2026-09-15 | Entity cart bytes | Studio packs locked EntityDef + u16 type directory. Retired 20 B snapshot. |
 | 2026-09-15 | Emu soft fences | Scroll/pal pending until VBlank. Host Play OAM/scroll at early VB. Pads latch at VB. Short EE RDY handoff (250 us). |
-| 2026-09-16 | Player item bank | One global **256-tile** pattern bank, **player only** (inventory icons). Not a shared entity catalog. Metadata pack TBD; flash after world table / before world blobs. See `memory.md`, `software-api.md`. |
+| 2026-09-16 | Player item bank | *(superseded 2026-09-17)* Had planned a global 256-tile player-only bank. |
+| 2026-09-17 | Player patterns | No private player bank. Marked player + inventory art use **global other SPR** (one of 4 banks). See `memory.md`, `software-api.md`. |
 | 2026-09-17 | Host Play boot catchup | Phase 1 emu waits for a full start MAP stream (480 B) before Host Play takes the camera 2x2 from cart. See `apps/emu/README.md`. |

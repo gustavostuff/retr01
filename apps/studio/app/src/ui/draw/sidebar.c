@@ -227,16 +227,28 @@ static void draw_banks_body(UiState *ui, SDL_Renderer *r, const AccordionLayout 
     }
 }
 
-static void draw_player_bank_body(UiState *ui, SDL_Renderer *r, const AccordionLayout *lo) {
+static void draw_other_spr_body(UiState *ui, SDL_Renderer *r, const AccordionLayout *lo) {
     const R01World *w = r01_project_active_world_const(ui->project);
     int lx = ui->mouse_x;
     int ly = ui->mouse_y;
-    int grid_y = lo->player_bank_body_y;
+    UiTabsLayout tabs;
+    int bank = ui->other_spr_idx;
+    int grid_y = lo->other_spr_body_y + UI_WORLDS_TAB_STACK_H;
     int tx, ty;
     int row = w ? w->default_pal_row : 0;
 
-    fill_rect(r, 0, lo->player_bank_body_y, UI_SIDEBAR_W, UI_PLAYER_BANK_BODY_H, UI_COL_PANEL_R, UI_COL_PANEL_G,
+    fill_rect(r, 0, lo->other_spr_body_y, UI_SIDEBAR_W, UI_OTHER_SPR_BODY_H, UI_COL_PANEL_R, UI_COL_PANEL_G,
               UI_COL_PANEL_B);
+
+    if (bank < 0) {
+        bank = 0;
+    }
+    if (bank >= UI_BANKS_N) {
+        bank = UI_BANKS_N - 1;
+    }
+    other_spr_tabs_prepare(ui, &tabs);
+    ui_tabs_draw(r, &tabs, bank, lx, ly);
+
     fill_rect(r, UI_WORLDS_X, grid_y, UI_BANKS_GRID, UI_BANKS_GRID, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
     if (!ui->project) {
         return;
@@ -248,7 +260,7 @@ static void draw_player_bank_body(UiState *ui, SDL_Renderer *r, const AccordionL
             int dy = grid_y + ty * 8;
             int sx, sy;
             int blank = 1;
-            const uint8_t *tile = r01_player_bank_tile(ui->project, tile_id);
+            const uint8_t *tile = r01_other_spr_tile(ui->project, bank, tile_id);
             if (!tile) {
                 continue;
             }
@@ -269,15 +281,15 @@ static void draw_player_bank_body(UiState *ui, SDL_Renderer *r, const AccordionL
             }
         }
     }
-    if (player_bank_cell_hit(ui, lx, ly, NULL)) {
+    if (other_spr_cell_hit(ui, lx, ly, NULL)) {
         int tid;
         int hx, hy;
-        player_bank_cell_hit(ui, lx, ly, &tid);
+        other_spr_cell_hit(ui, lx, ly, &tid);
         hx = UI_WORLDS_X + (tid % 16) * 8;
         hy = grid_y + (tid / 16) * 8;
         hover_overlay(r, hx, hy, 8, 8);
     }
-    if (bank_sel_valid(ui) && ui->bank_sel_plane == UI_BANKS_PLANE_PLAYER) {
+    if (bank_sel_valid(ui) && ui->bank_sel_plane == UI_BANKS_PLANE_OTHER_SPR && ui->bank_sel_bank == bank) {
         int sx = UI_WORLDS_X + (ui->bank_sel_tile % 16) * 8;
         int sy = grid_y + (ui->bank_sel_tile / 16) * 8;
         draw_marching_ants(r, sx, sy, 8, 8);
@@ -496,9 +508,9 @@ void draw_sidebar(UiState *ui, SDL_Renderer *r) {
         draw_sprites_body(ui, r, &lo);
         accordion_body_clip_pop(r, &clip);
     }
-    if (lo.player_bank_body_h > 0) {
-        accordion_body_clip(r, lo.player_bank_body_y, lo.player_bank_body_h, &clip);
-        draw_player_bank_body(ui, r, &lo);
+    if (lo.other_spr_body_h > 0) {
+        accordion_body_clip(r, lo.other_spr_body_y, lo.other_spr_body_h, &clip);
+        draw_other_spr_body(ui, r, &lo);
         accordion_body_clip_pop(r, &clip);
     }
     if (lo.metatiles_body_h > 0) {
@@ -523,8 +535,8 @@ void draw_sidebar(UiState *ui, SDL_Renderer *r) {
                           point_in_rect(lx, ly, 0, lo.pals_hdr_y, UI_SIDEBAR_W, UI_BTN_H));
     draw_accordion_header(r, lo.sprites_hdr_y, "Banks", lo.sprites_open,
                           point_in_rect(lx, ly, 0, lo.sprites_hdr_y, UI_SIDEBAR_W, UI_BTN_H));
-    draw_accordion_header(r, lo.player_bank_hdr_y, "Player bank", lo.player_bank_open,
-                          point_in_rect(lx, ly, 0, lo.player_bank_hdr_y, UI_SIDEBAR_W, UI_BTN_H));
+    draw_accordion_header(r, lo.other_spr_hdr_y, "Other SPR", lo.other_spr_open,
+                          point_in_rect(lx, ly, 0, lo.other_spr_hdr_y, UI_SIDEBAR_W, UI_BTN_H));
     if (UI_SHOW_METATILES) {
         draw_accordion_header(r, lo.metatiles_hdr_y, "Metatiles", lo.metatiles_open,
                               point_in_rect(lx, ly, 0, lo.metatiles_hdr_y, UI_SIDEBAR_W, UI_BTN_H));

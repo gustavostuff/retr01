@@ -70,16 +70,16 @@ const uint8_t *r01_chr_spr_tile(const R01World *w, int bank, int tile_id) {
 }
 
 const uint8_t *r01_chr_resolve_spr(const R01Project *p, const R01World *w, int bank, int tile_id) {
-    if (r01_is_player_chr_bank(bank)) {
-        return r01_player_bank_tile(p, tile_id);
+    if (r01_is_global_spr_bank(bank)) {
+        return r01_other_spr_tile(p, r01_global_spr_index(bank), tile_id);
     }
     return r01_chr_spr_tile(w, bank, tile_id);
 }
 
 int r01_chr_write_resolved_spr(R01Project *p, R01World *w, int bank, int tile_id,
                                const uint8_t tile[R01_TILE_BYTES]) {
-    if (r01_is_player_chr_bank(bank)) {
-        return r01_player_bank_write_tile(p, tile_id, tile);
+    if (r01_is_global_spr_bank(bank)) {
+        return r01_other_spr_write_tile(p, r01_global_spr_index(bank), tile_id, tile);
     }
     return r01_chr_write_spr_tile(w, bank, tile_id, tile);
 }
@@ -176,27 +176,29 @@ void r01_chr_densify_spr_bank(R01World *w, int bank) {
     remap_world_spr_refs(w, bank, id_map, R01_TILES_PER_BANK);
 }
 
-static void remap_player_part(R01EntityPart *pt, const int *id_map, int map_n) {
+static void remap_global_spr_part(R01EntityPart *pt, int auth_bank, const int *id_map, int map_n) {
     int nid;
-    if (!pt || !id_map || !r01_is_player_chr_bank(pt->bank) || pt->tile_id < 0 || pt->tile_id >= map_n) {
+    if (!pt || !id_map || pt->bank != auth_bank || pt->tile_id < 0 || pt->tile_id >= map_n) {
         return;
     }
     nid = id_map[pt->tile_id];
     pt->tile_id = nid < 0 ? 0 : nid;
 }
 
-void r01_project_densify_player_bank(R01Project *p) {
+void r01_project_densify_other_spr_bank(R01Project *p, int bank) {
     R01ChrBank *b;
     int id_map[R01_TILES_PER_BANK];
     int old_n;
     int write = 0;
     int id, wi;
+    int auth_bank;
     uint8_t packed[R01_BANK_CHR_BYTES];
 
-    if (!p) {
+    if (!p || bank < 0 || bank >= R01_SPR_BANKS) {
         return;
     }
-    b = &p->player_bank;
+    auth_bank = R01_GLOBAL_SPR_BANK_BASE + bank;
+    b = &p->other_spr_banks[bank];
     old_n = b->tile_count;
     if (old_n < 1) {
         return;
@@ -244,7 +246,7 @@ void r01_project_densify_player_bank(R01Project *p) {
                 for (fi = 0; fi < ent->states[si].frame_count && fi < R01_ENTITY_FRAMES_MAX; fi++) {
                     R01EntityFrame *fr = &ent->states[si].frames[fi];
                     for (pi = 0; pi < fr->part_count && pi < R01_ENTITY_PARTS_MAX; pi++) {
-                        remap_player_part(&fr->parts[pi], id_map, R01_TILES_PER_BANK);
+                        remap_global_spr_part(&fr->parts[pi], auth_bank, id_map, R01_TILES_PER_BANK);
                     }
                 }
             }
@@ -252,11 +254,11 @@ void r01_project_densify_player_bank(R01Project *p) {
         for (mi = 0; mi < w->metasprite_count; mi++) {
             R01EntityFrame *fr = &w->metasprites[mi].frame;
             for (pi = 0; pi < fr->part_count && pi < R01_ENTITY_PARTS_MAX; pi++) {
-                remap_player_part(&fr->parts[pi], id_map, R01_TILES_PER_BANK);
+                remap_global_spr_part(&fr->parts[pi], auth_bank, id_map, R01_TILES_PER_BANK);
             }
         }
         for (ci = 0; ci < w->sprite_count; ci++) {
-            if (r01_is_player_chr_bank(w->sprites[ci].bank) && w->sprites[ci].tile_id >= 0 &&
+            if (w->sprites[ci].bank == auth_bank && w->sprites[ci].tile_id >= 0 &&
                 w->sprites[ci].tile_id < R01_TILES_PER_BANK) {
                 int nid = id_map[w->sprites[ci].tile_id];
                 w->sprites[ci].tile_id = nid < 0 ? 0 : nid;
@@ -377,7 +379,9 @@ void r01_project_densify_all_banks(R01Project *p) {
             r01_chr_densify_spr_bank(w, bi);
         }
     }
-    r01_project_densify_player_bank(p);
+    for (bi = 0; bi < R01_SPR_BANKS; bi++) {
+        r01_project_densify_other_spr_bank(p, bi);
+    }
 }
 
 int r01_world_sprite_add(R01World *w, int bank, int tile_id, int pal) {
@@ -385,7 +389,7 @@ int r01_world_sprite_add(R01World *w, int bank, int tile_id, int pal) {
     if (!w || w->sprite_count >= R01_MAX_SPRITES) {
         return -1;
     }
-    if (r01_is_player_chr_bank(bank)) {
+    if (r01_is_global_spr_bank(bank)) {
         if (tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
             return -1;
         }

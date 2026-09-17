@@ -33,10 +33,14 @@ int entity_edit_add_sprite_at(UiState *ui, int wx, int wy) {
         return -1;
     }
     if (r01_world_player_entity(w) == ui->entity_edit.type_idx && ui->entity_edit.type_idx >= 0) {
-        bank = R01_PLAYER_CHR_BANK;
-        tile_id = r01_player_bank_alloc_tile(ui->project);
+        int gbank = ui->other_spr_idx;
+        if (gbank < 0 || gbank >= R01_SPR_BANKS) {
+            gbank = 0;
+        }
+        bank = R01_GLOBAL_SPR_BANK_BASE + gbank;
+        tile_id = r01_other_spr_alloc_tile(ui->project, gbank);
         if (tile_id < 0) {
-            ui_toast(ui, "player bank full", 1);
+            ui_toast(ui, "other SPR bank full", 1);
             return -1;
         }
     } else {

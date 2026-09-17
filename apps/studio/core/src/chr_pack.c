@@ -323,19 +323,20 @@ int r01_chr_write_tile(R01World *w, int bank, int tile_id, const uint8_t tile[R0
     return 0;
 }
 
-const uint8_t *r01_player_bank_tile(const R01Project *p, int tile_id) {
-    if (!p || tile_id < 0 || tile_id >= R01_TILES_PER_BANK || tile_id >= p->player_bank.tile_count) {
+const uint8_t *r01_other_spr_tile(const R01Project *p, int bank, int tile_id) {
+    if (!p || bank < 0 || bank >= R01_SPR_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK ||
+        tile_id >= p->other_spr_banks[bank].tile_count) {
         return NULL;
     }
-    return p->player_bank.chr + (size_t)tile_id * R01_TILE_BYTES;
+    return p->other_spr_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
 }
 
-int r01_player_bank_write_tile(R01Project *p, int tile_id, const uint8_t tile[R01_TILE_BYTES]) {
+int r01_other_spr_write_tile(R01Project *p, int bank, int tile_id, const uint8_t tile[R01_TILE_BYTES]) {
     R01ChrBank *b;
-    if (!p || !tile || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
+    if (!p || !tile || bank < 0 || bank >= R01_SPR_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         return -1;
     }
-    b = &p->player_bank;
+    b = &p->other_spr_banks[bank];
     if (tile_id >= b->tile_count) {
         b->tile_count = tile_id + 1;
     }
@@ -343,18 +344,18 @@ int r01_player_bank_write_tile(R01Project *p, int tile_id, const uint8_t tile[R0
     return 0;
 }
 
-int r01_player_bank_alloc_tile(R01Project *p) {
+int r01_other_spr_alloc_tile(R01Project *p, int bank) {
     int id;
     uint8_t blank[R01_TILE_BYTES];
-    if (!p) {
+    if (!p || bank < 0 || bank >= R01_SPR_BANKS) {
         return -1;
     }
     memset(blank, 0, sizeof(blank));
-    if (p->player_bank.tile_count >= R01_TILES_PER_BANK) {
+    if (p->other_spr_banks[bank].tile_count >= R01_TILES_PER_BANK) {
         return -1;
     }
-    id = p->player_bank.tile_count;
-    if (r01_player_bank_write_tile(p, id, blank) != 0) {
+    id = p->other_spr_banks[bank].tile_count;
+    if (r01_other_spr_write_tile(p, bank, id, blank) != 0) {
         return -1;
     }
     return id;

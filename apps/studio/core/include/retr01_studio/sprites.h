@@ -15,18 +15,18 @@ int r01_chr_write_spr_tile(R01World *w, int bank, int tile_id, const uint8_t til
 /* Read pointer to SPR tile bytes, or NULL if out of range. */
 const uint8_t *r01_chr_spr_tile(const R01World *w, int bank, int tile_id);
 
-/* Resolve world SPR or project player bank (bank == R01_PLAYER_CHR_BANK). */
+/* Resolve world SPR or global other SPR (bank in BASE..BASE+3). */
 const uint8_t *r01_chr_resolve_spr(const R01Project *p, const R01World *w, int bank, int tile_id);
 int r01_chr_write_resolved_spr(R01Project *p, R01World *w, int bank, int tile_id,
                                const uint8_t tile[R01_TILE_BYTES]);
 
 /* Pack non-blank SPR tiles to 0..n-1 and remap entity / metasprite / catalog refs. */
 void r01_chr_densify_spr_bank(R01World *w, int bank);
-/* Pack non-blank player-bank tiles to 0..n-1 and remap refs across all worlds. */
-void r01_project_densify_player_bank(R01Project *p);
+/* Pack non-blank global other SPR bank tiles; remap refs across all worlds. */
+void r01_project_densify_other_spr_bank(R01Project *p, int bank);
 /* Pack BG bank tiles after index 0 (tile 0 stays). Remap screens + metatiles. */
 void r01_chr_densify_bg_bank(R01World *w, int bank);
-/* Densify every BG/SPR bank in every world plus the global player bank. */
+/* Densify every BG/SPR bank in every world plus all global other SPR banks. */
 void r01_project_densify_all_banks(R01Project *p);
 
 /* Append catalog entry. Returns index or -1. */

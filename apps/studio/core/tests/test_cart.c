@@ -138,7 +138,7 @@ TEST_MAIN() {
             {
                 uint8_t fmt = 0;
                 EXPECT(fread(&fmt, 1, 1, f) == 1, "read format_ver");
-                EXPECT(fmt == R01_CART_FORMAT_VER, "cart format_ver 3");
+                EXPECT(fmt == R01_CART_FORMAT_VER, "cart format_ver 4");
             }
             EXPECT(fseek(f, prg_off + (long)PRG_PLAY_SPAWN_CELL, SEEK_SET) == 0, "seek prg spawn");
             EXPECT(fread(prg_spawn, 1, 1, f) == 1, "read prg spawn");
@@ -164,7 +164,9 @@ TEST_MAIN() {
                 off_wtable = rd_u24(ptrs + 18);
                 EXPECT(off_prg == CART_PRG_OFF, "off_prg");
                 EXPECT(rd_u24(ptrs + 3) == R01_PRG_BYTES, "len_prg 32KB");
-                EXPECT(rd_u24(ptrs + 24) == CART_PRG_OFF + R01_PRG_BYTES, "off_other");
+                EXPECT(rd_u24(ptrs + 30) == CART_PRG_OFF + R01_PRG_BYTES, "off_other_chr");
+                EXPECT(rd_u24(ptrs + 33) == R01_CART_OTHER_CHR_BYTES, "len_other_chr");
+                EXPECT(rd_u24(ptrs + 24) == CART_PRG_OFF + R01_PRG_BYTES + R01_CART_OTHER_CHR_BYTES, "off_other");
                 EXPECT(rd_u24(ptrs + 27) > 0, "len_other");
                 EXPECT(img[rd_u24(ptrs + 24)] == 3, "other_count title+inter+credits");
                 EXPECT(img[rd_u24(ptrs + 24) + 4u] == 0, "other dir0 id title");
@@ -269,7 +271,7 @@ TEST_MAIN() {
         }
     }
 
-    /* Player bank patterns merge into exported SPR0; OAM bank 4 packs as 0.
+    /* Other SPR patterns merge into exported world SPR; OAM global banks pack as 0..3.
      * Tile 1 is relocated so the cart stub can occupy that slot. */
     {
         R01Project *p2 = (R01Project *)calloc(1, sizeof(R01Project));
@@ -287,19 +289,19 @@ TEST_MAIN() {
             memset(face, 0, sizeof(face));
             face[0] = 0x5A;
             face[8] = 0xA5;
-            EXPECT(r01_player_bank_write_tile(p2, 0, art) == 0, "pb tile0");
-            EXPECT(r01_player_bank_write_tile(p2, 1, face) == 0, "pb tile1 face");
-            EXPECT(r01_player_bank_write_tile(p2, 2, art) == 0, "pb tile2");
+            EXPECT(r01_other_spr_write_tile(p2, 0, 0, art) == 0, "os tile0");
+            EXPECT(r01_other_spr_write_tile(p2, 0, 1, face) == 0, "os tile1 face");
+            EXPECT(r01_other_spr_write_tile(p2, 0, 2, art) == 0, "os tile2");
             EXPECT(r01_world_entity_add(w2) == 0, "pb entity");
             pt = &w2->entities[0].states[0].frames[0].parts[0];
             memset(pt, 0, sizeof(*pt));
-            pt->bank = R01_PLAYER_CHR_BANK;
+            pt->bank = R01_GLOBAL_SPR_BANK_BASE;
             pt->tile_id = 1; /* face: must survive stub stamp */
             w2->entities[0].states[0].frames[0].part_count = 1;
             {
                 R01EntityPart *pt2 = &w2->entities[0].states[0].frames[0].parts[1];
                 memset(pt2, 0, sizeof(*pt2));
-                pt2->bank = R01_PLAYER_CHR_BANK;
+                pt2->bank = R01_GLOBAL_SPR_BANK_BASE;
                 pt2->tile_id = 2;
                 pt2->dx = 8;
                 w2->entities[0].states[0].frames[0].part_count = 2;

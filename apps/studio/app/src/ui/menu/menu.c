@@ -251,11 +251,11 @@ static int bank_cell_is_empty(const R01World *w, int bank, int tile_id, int plan
     return tile_id >= w->bg_banks[bank].tile_count;
 }
 
-static int player_bank_cell_is_empty(const R01Project *p, int tile_id) {
-    if (!p || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
+static int other_spr_cell_is_empty(const R01Project *p, int bank, int tile_id) {
+    if (!p || bank < 0 || bank >= R01_SPR_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         return 1;
     }
-    return tile_id >= p->player_bank.tile_count;
+    return tile_id >= p->other_spr_banks[bank].tile_count;
 }
 
 static int bank_cell_catalog_idx(const R01World *w, int bank, int tile_id) {
@@ -275,8 +275,8 @@ void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int p
     const R01World *w = r01_project_active_world_const(ui->project);
     int empty;
     int cat = -1;
-    if (plane == UI_BANKS_PLANE_PLAYER) {
-        empty = player_bank_cell_is_empty(ui->project, tile_id);
+    if (plane == UI_BANKS_PLANE_OTHER_SPR) {
+        empty = other_spr_cell_is_empty(ui->project, bank, tile_id);
     } else {
         empty = bank_cell_is_empty(w, bank, tile_id, plane);
         cat = (plane == UI_BANKS_PLANE_SPR) ? bank_cell_catalog_idx(w, bank, tile_id) : -1;
@@ -305,7 +305,7 @@ void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int p
     } else {
         snprintf(ui->menu.items[ui->menu.item_count], 32, empty ? "Add tile" : "Edit tile");
         ui->menu.item_sub[ui->menu.item_count++] = 0;
-        if (!empty && plane != UI_BANKS_PLANE_PLAYER) {
+        if (!empty && plane != UI_BANKS_PLANE_OTHER_SPR) {
             snprintf(ui->menu.items[ui->menu.item_count], 32, "Move to Bank");
             ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_MOVE_BANK;
         }
@@ -686,8 +686,8 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
     if (ui->menu.kind == UI_MENU_KIND_BANK_CELL) {
         int empty;
         const R01World *wc = r01_project_active_world_const(ui->project);
-        if (ui->menu.bank_plane == UI_BANKS_PLANE_PLAYER) {
-            empty = player_bank_cell_is_empty(ui->project, ui->menu.bank_tile_id);
+        if (ui->menu.bank_plane == UI_BANKS_PLANE_OTHER_SPR) {
+            empty = other_spr_cell_is_empty(ui->project, ui->menu.bank_idx, ui->menu.bank_tile_id);
         } else {
             empty = bank_cell_is_empty(wc, ui->menu.bank_idx, ui->menu.bank_tile_id, ui->menu.bank_plane);
         }
@@ -698,8 +698,8 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
                 } else {
                     sprite_edit_open_slot(ui, ui->menu.bank_idx, ui->menu.bank_tile_id);
                 }
-            } else if (ui->menu.bank_plane == UI_BANKS_PLANE_PLAYER) {
-                tile_edit_open_player_bank(ui, ui->menu.bank_tile_id, empty);
+            } else if (ui->menu.bank_plane == UI_BANKS_PLANE_OTHER_SPR) {
+                tile_edit_open_other_spr(ui, ui->menu.bank_idx, ui->menu.bank_tile_id, empty);
             } else {
                 tile_edit_open_bank(ui, ui->menu.bank_idx, ui->menu.bank_tile_id, empty);
             }

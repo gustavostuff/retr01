@@ -15,9 +15,10 @@ See `memory.md` for the full map. Short version:
 
 - Flat **32 KB PRG** (no banking). See `selling-points.md`.
 - Global palette index planes (256 B total).
-- Up to **8** world blobs (each with 32 KB CHR, up to **32** BG1 + **8** BG0 screens, up to **16** entity types).
+- Up to **7** world blobs (each with 32 KB CHR, up to **32** BG1 + **8** BG0 screens, up to **16** entity types).
 - Global **other screens**: max **16** total (title / interstitial / credits share the pool).
-- Global **player item bank**: hard cap **256** patterns (player inventory icons only). See `memory.md`.
+- Global **other CHR**: **4** BG + **4** SPR banks (**32 KB**) for other screens and the marked player. See `memory.md`.
+- Marked **player** patterns: global other **SPR** (one of the 4 banks). No private player bank.
 
 ## Programming workflow
 

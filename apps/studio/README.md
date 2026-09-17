@@ -26,7 +26,7 @@ Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Pre
 
 | Control | Behavior |
 |---------|----------|
-| **Worlds** | **8** world buttons (**1-8**, internal indices **0-7**). World 1 starts with **3x3** blank screens on a **16x16** slot map. Worlds 2-8 start empty until first click. Cart cap: **32 present BG1 screens**/world ([`general_docs/video-graphics.md`](../../general_docs/video-graphics.md), [`general_docs/memory.md`](../../general_docs/memory.md)). Selected world: active strip **11px** + **7px** **BG1**/**BG0** sub-button. Inactive dual-view world tabs fill **18px** (tab+sub stack) so the row height matches |
+| **Worlds** | **7** world buttons (**1-7**, internal indices **0-6**). World 1 starts with **3x3** blank screens on a **16x16** slot map. Worlds 2-7 start empty until first click. Cart cap: **32 present BG1 screens**/world ([`general_docs/video-graphics.md`](../../general_docs/video-graphics.md), [`general_docs/memory.md`](../../general_docs/memory.md)). Selected world: active strip **11px** + **7px** **BG1**/**BG0** sub-button. Inactive dual-view world tabs fill **18px** (tab+sub stack) so the row height matches |
 | **World map (BG1)** | Sparse **16x16** playfield map (col/row **0-15**, packed as nibbles in cart). Present = blue. White fill = default spawn. White outline = selected |
 | **World map (BG0)** | **SNES-like parallax plane.** Sparse **16x16** chess like BG1. Up to **8** present screens (double-click to create). Paint BG1 color **0** as windows into BG0. Host Play composites both layers. Smaller BG0 bbox than BG1 -> slower scroll (true depth). Equal/larger on an axis -> that axis locked. Export packs present BG0 (coords bbox-origin relative). Missing BG1 / outside present bbox -> backdrop, not BG0 ([`general_docs/video-graphics.md`](../../general_docs/video-graphics.md), [`general_docs/software-api.md`](../../general_docs/software-api.md)) |
 | **Double-click** empty slot | Create screen (BG1 or BG0 plane) |
@@ -45,8 +45,8 @@ Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Pre
 | **Edit sprite** modal | Same canvas as tile (**F+click** flood-fill). **Ctrl+V** pastes clipboard PNG onto the SPR canvas (same rules, SPR palette) |
 | **Set Solid** | Toggles `R01_ATTR_SOLID` (`0x40`) on matching tiles in active world (bank+pal+flips, not tile ID) |
 | **Palette strip** | Click BG/SPR strip -> **Global palettes** modal. Row **0-7** sets `default_pal_row` for the active world |
-| **Banks** | BG/SPR CHR bank grids (tabs). Edit tiles from the bank sheet. Soft caps match [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md) |
-| **Player bank** | Global 256-tile pattern grid (no tabs). Right-click Add/Edit tile. See [`general_docs/memory.md`](../../general_docs/memory.md) |
+| **Banks** | World CHR grids (**4** BG + **4** SPR, 256 tiles each). Edit tiles from the bank sheet. Soft caps match [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md) |
+| **Other SPR** | Cart **global other SPR** banks (**4**). Marked player + inventory art live here (one of the 4). Shared with other-screen SPR. Other-screen BG uses the matching global other BG banks ([`general_docs/memory.md`](../../general_docs/memory.md)) |
 | **Entities** | Primary object authoring. Types with up to **4** states x **4** frames x **6** sprites. Modal: full-width **Name** / **State name**; left column (right-aligned) palette, **State**/**Frame** strips, **Add**/**Remove**, **Highlight**, **Brush**; right column frame id + compose canvas with zoom (**Ctrl+wheel**, 1x-4x) and pan (**wheel** / **Shift+wheel**, middle-drag or right-drag; right-click still opens **Add sprite**). **Select | Edit** tool control: Select moves/reorders parts; Edit paints the topmost sprite under the cursor. **Ctrl+V** pastes clipboard PNG into the **selected** sprite CHR (top-left 8x8, same rules as Edit sprite). **Space** toggles light part outlines. **Origin/hitbox** checkbox shows guides (auto-computed from the state sprite bounding-box center). Sidebar hover: name + type id. Right-click list: **Edit** / **Mark as player** / **Remove**. Soft caps and **boss** assemblies (optional BG body + multi-entity attachments): [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md). Cart packs locked EntityDef catalog (general_docs/software-api.md) |
 | **Place on screen** | Drag an **Entities** row onto the screen preview (switches to **Sprite layer**) to place that type. Instance `world_x/y` is the **user origin** (compose cross). Parts/hitbox draw as `(coord - origin)` relative to that. Optional instance `fh`/`fv` mirrors parts around the origin (JSON `"fh"`/`"fv"`, cart instance flags bit0/bit1). Sprites **clip to 128x120** when partially off-screen. On Sprite/Both: click/drag instance to move (marching ants). **H/V** mirrors. **Delete** removes |
 
@@ -152,7 +152,7 @@ Kit **master indices** only ([`general_docs/video-graphics.md`](../../general_do
 | Path | Contents |
 |------|----------|
 | `<stem>.r01proj` | Authoring JSON (save/load) |
-| `<stem>.retr01` | Packed cart (**world 0**): BG+SPR CHR, MAP, palettes, PRG, entity tables, other screens (`format_ver` 3) |
+| `<stem>.retr01` | Packed cart (**world 0**): BG+SPR CHR, MAP, palettes, PRG, entity tables, other screens, global other CHR (`format_ver` 4) |
 | `<stem>_prom.bin` | 64-byte Color PROM image (motherboard, not in cart) |
 | `<stem>_flash.bin` | Cart padded to **512 KB** |
 
@@ -222,7 +222,7 @@ ctest --test-dir build --output-on-failure
 | Add / edit sprite | Sprites accordion -> **Add**, or right-click -> Edit |
 | Sprite context menu | Right-click sprite row (edit / remove / palette / bank) |
 | Add / edit entity | Entities accordion -> **Add**, or right-click -> Edit |
-| Mark / unmark player | Right-click entity row -> **Mark as player** / **Unmark as player**. Mark copies that entity's SPR patterns into the global **Player bank** and retargets parts; unmark restores them to world SPR banks |
+| Mark / unmark player | Right-click entity row -> **Mark as player** / **Unmark as player**. Patterns stay in that world's SPR banks. Cart SoT: keep the playable player on **world 0** (Studio **World 1**) |
 | Place catalog on screen | Drag Sprites / Entities row onto screen preview |
 | Play / pause | **Space** / **PLAY** (export cart, then open emu render) |
 | Move player | **WASD** / arrows |

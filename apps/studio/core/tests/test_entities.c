@@ -186,7 +186,7 @@ TEST_MAIN() {
     }
 
     /* Mark entity 0 as player: Play uses state0/frame0 at player pos; skips its instances.
-     * Patterns move into project->player_bank. */
+     * Patterns move into project->other_spr_banks. */
     {
         R01OamEntry oam2[R01_OAM_MAX];
         int n2, found_player = 0, found_inst = 0, oi;
@@ -196,10 +196,10 @@ TEST_MAIN() {
         int old_tile = w->entities[0].states[0].frames[0].parts[0].tile_id;
         EXPECT(r01_project_set_player_entity(p, w, 0) == 0, "mark player moves chr");
         EXPECT(r01_world_player_entity(w) == 0, "player marked");
-        EXPECT(r01_is_player_chr_bank(w->entities[0].states[0].frames[0].parts[0].bank), "part on player bank");
-        EXPECT(w->entities[0].states[0].frames[0].parts[0].tile_id == 0, "player bank packs from 0");
-        EXPECT(p->player_bank.tile_count >= 1, "player bank covers tile");
-        EXPECT(r01_chr_resolve_spr(p, w, R01_PLAYER_CHR_BANK, 0) != NULL, "resolve player tile");
+        EXPECT(r01_is_global_spr_bank(w->entities[0].states[0].frames[0].parts[0].bank), "part on global SPR");
+        EXPECT(w->entities[0].states[0].frames[0].parts[0].tile_id == 0, "other SPR packs from 0");
+        EXPECT(p->other_spr_banks[old_bank].tile_count >= 1, "other SPR covers tile");
+        EXPECT(r01_chr_resolve_spr(p, w, R01_GLOBAL_SPR_BANK_BASE + old_bank, 0) != NULL, "resolve player tile");
         {
             const uint8_t *left = r01_chr_spr_tile(w, old_bank, old_tile);
             int blank = 1, b;
@@ -217,13 +217,13 @@ TEST_MAIN() {
         {
             int ci, found_cat = 0;
             for (ci = 0; ci < w->sprite_count; ci++) {
-                if (w->sprites[ci].tile_id == 0 && r01_is_player_chr_bank(w->sprites[ci].bank)) {
+                if (w->sprites[ci].tile_id == 0 && r01_is_global_spr_bank(w->sprites[ci].bank)) {
                     found_cat = 1;
                 }
                 EXPECT(!(w->sprites[ci].bank == old_bank && w->sprites[ci].tile_id == old_tile),
                        "catalog entry left world bank");
             }
-            EXPECT(found_cat, "catalog moved to player bank");
+            EXPECT(found_cat, "catalog moved to other SPR");
         }
         n2 = r01_play_build_oam(p, &pl, oam2, R01_OAM_MAX);
         EXPECT(n2 >= 1, "player entity oam");
@@ -240,8 +240,10 @@ TEST_MAIN() {
         EXPECT(!found_inst, "player type instance skipped");
         EXPECT(r01_project_set_player_entity(p, w, -1) == 0, "unmark restores chr");
         EXPECT(r01_world_player_entity(w) < 0, "player unmarked");
-        EXPECT(!r01_is_player_chr_bank(w->entities[0].states[0].frames[0].parts[0].bank), "part back on world");
-        EXPECT(p->player_bank.tile_count == 0, "player bank cleared");
+        EXPECT(!r01_is_global_spr_bank(w->entities[0].states[0].frames[0].parts[0].bank), "part back on world");
+        EXPECT(p->other_spr_banks[0].tile_count == 0 && p->other_spr_banks[1].tile_count == 0 &&
+                   p->other_spr_banks[2].tile_count == 0 && p->other_spr_banks[3].tile_count == 0,
+               "other SPR player tiles cleared");
         (void)old_bank;
         (void)old_tile;
         EXPECT(r01_project_set_player_entity(p, w, 0) == 0, "re-mark player");
@@ -262,9 +264,11 @@ TEST_MAIN() {
     EXPECT(strcmp(p2->worlds[0].entities[0].states[0].name, "Walk") == 0, "name rt");
     EXPECT(p2->worlds[0].entities[0].states[0].origin_x == 3, "origin x");
     EXPECT(p2->worlds[0].entities[0].states[0].frames[0].parts[0].dx == 4, "part dx");
-    EXPECT(r01_is_player_chr_bank(p2->worlds[0].entities[0].states[0].frames[0].parts[0].bank),
-           "player bank rt");
-    EXPECT(p2->player_bank.tile_count >= 1, "player bank tiles rt");
+    EXPECT(r01_is_global_spr_bank(p2->worlds[0].entities[0].states[0].frames[0].parts[0].bank),
+           "global SPR bank rt");
+    EXPECT(p2->other_spr_banks[0].tile_count >= 1 || p2->other_spr_banks[1].tile_count >= 1 ||
+               p2->other_spr_banks[2].tile_count >= 1 || p2->other_spr_banks[3].tile_count >= 1,
+           "other SPR tiles rt");
 
     {
         char id[R01_ID_MAX];

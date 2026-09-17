@@ -222,7 +222,7 @@ static int build_other_blob(Buf *b, const R01Project *p) {
 }
 
 static uint8_t pack_oam_attr(int bank, int pal, int flip_h, int flip_v) {
-    int b = r01_is_player_chr_bank(bank) ? 0 : bank;
+    int b = r01_is_global_spr_bank(bank) ? r01_global_spr_index(bank) : bank;
     uint8_t a = (uint8_t)((b & 3) | ((pal & 3) << 2));
     if (flip_h) {
         a |= R01_ATTR_FLIP_H;
@@ -293,7 +293,7 @@ static int append_player_anim_blob(Buf *blob, const R01World *w, int player_type
                 uint8_t part[4];
                 int tile = pt->tile_id;
                 if (remap_b0_tile1 >= 0 && pt->tile_id == R01_SPR_PLAYER_TILE_ID &&
-                    (pt->bank == 0 || r01_is_player_chr_bank(pt->bank))) {
+                    (pt->bank == 0 || pt->bank == R01_GLOBAL_SPR_BANK_BASE)) {
                     tile = remap_b0_tile1;
                 }
                 part[0] = (uint8_t)tile;
@@ -421,7 +421,7 @@ static size_t pack_entity_def(uint8_t *out, size_t cap, const R01EntityType *ent
                 int rx = pt->dx - ox;
                 int ry = pt->dy - oy;
                 if (remap_b0_tile1 >= 0 && pt->tile_id == R01_SPR_PLAYER_TILE_ID &&
-                    (pt->bank == 0 || r01_is_player_chr_bank(pt->bank))) {
+                    (pt->bank == 0 || pt->bank == R01_GLOBAL_SPR_BANK_BASE)) {
                     tile = remap_b0_tile1;
                 }
                 if (rx < -128) {
@@ -619,7 +619,7 @@ static int spr0_tile_referenced(const R01World *w, int tile_id) {
                     if (pt->tile_id != tile_id) {
                         continue;
                     }
-                    if (pt->bank == 0 || r01_is_player_chr_bank(pt->bank)) {
+                    if (pt->bank == 0 || pt->bank == R01_GLOBAL_SPR_BANK_BASE) {
                         return 1;
                     }
                 }
@@ -649,13 +649,13 @@ static int relocate_spr0_tile1(uint8_t bank[R01_CHR_BANK_BYTES], const R01World 
     return dest;
 }
 
-static void merge_player_bank_into_spr0(uint8_t bank[R01_CHR_BANK_BYTES], const R01Project *p) {
+static void merge_other_spr_into_world_spr(uint8_t bank[R01_CHR_BANK_BYTES], const R01Project *p, int spr_bank) {
     int tid;
-    if (!bank || !p) {
+    if (!bank || !p || spr_bank < 0 || spr_bank >= R01_SPR_BANKS) {
         return;
     }
-    for (tid = 0; tid < p->player_bank.tile_count && tid < R01_TILES_PER_BANK; tid++) {
-        const uint8_t *src = p->player_bank.chr + (size_t)tid * R01_TILE_BYTES;
+    for (tid = 0; tid < p->other_spr_banks[spr_bank].tile_count && tid < R01_TILES_PER_BANK; tid++) {
+        const uint8_t *src = p->other_spr_banks[spr_bank].chr + (size_t)tid * R01_TILE_BYTES;
         int b, nonzero = 0;
         for (b = 0; b < R01_TILE_BYTES; b++) {
             if (src[b]) {
@@ -664,7 +664,7 @@ static void merge_player_bank_into_spr0(uint8_t bank[R01_CHR_BANK_BYTES], const 
             }
         }
         if (nonzero) {
-            /* Include tile 1: relocate + stub run after merge. */
+            /* Include tile 1: relocate + stub run after merge on SPR0. */
             memcpy(bank + (size_t)tid * R01_TILE_BYTES, src, R01_TILE_BYTES);
         }
     }
@@ -795,7 +795,7 @@ static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w, c
             n = sizeof(spr0);
         }
         memcpy(spr0, w->spr_banks[0].chr, n);
-        merge_player_bank_into_spr0(spr0, p);
+        merge_other_spr_into_world_spr(spr0, p, 0);
         remap_b0_tile1 = relocate_spr0_tile1(spr0, w);
     }
     if (build_entity_catalog(&catalog, w, type_n, remap_b0_tile1) != 0) {
@@ -921,8 +921,8 @@ static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w, c
             n = sizeof(bank);
         }
         memcpy(bank, w->spr_banks[bi].chr, n);
+        merge_other_spr_into_world_spr(bank, p, bi);
         if (bi == 0) {
-            merge_player_bank_into_spr0(bank, p);
             /* Remap already computed for the entity catalog; apply the same bank edit. */
             (void)relocate_spr0_tile1(bank, w);
             fill_solid_tile(bank + (size_t)R01_SPR_PLAYER_TILE_ID * R01_TILE_BYTES, 1);
@@ -1091,11 +1091,13 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
     uint8_t wtable[WORLD_TABLE_SIZE];
     uint8_t prg[R01_PRG_BYTES];
     size_t ptr_bytes = (size_t)PTR_TABLE_SIZE;
-    uint32_t off_prg, off_pal_bg, off_pal_spr, off_other, off_wtable, world_base;
+    uint32_t off_prg, off_pal_bg, off_pal_spr, off_other, off_other_chr, off_wtable, world_base;
     size_t other_len;
     R01PrgCartLayout prg_layout;
     Buf world_blob = {0};
     Buf other_blob = {0};
+    uint8_t other_chr[R01_CART_OTHER_CHR_BYTES];
+    int bi;
 
     if (!p || !out || !out_len) {
         set_err(err_buf, err_cap, "bad args");
@@ -1130,6 +1132,22 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
     }
     other_len = other_blob.len;
 
+    memset(other_chr, 0, sizeof(other_chr));
+    for (bi = 0; bi < R01_BG_BANKS; bi++) {
+        size_t n = (size_t)work->other_bg_banks[bi].tile_count * R01_TILE_BYTES;
+        if (n > R01_CHR_BANK_BYTES) {
+            n = R01_CHR_BANK_BYTES;
+        }
+        memcpy(other_chr + (size_t)bi * R01_CHR_BANK_BYTES, work->other_bg_banks[bi].chr, n);
+    }
+    for (bi = 0; bi < R01_SPR_BANKS; bi++) {
+        size_t n = (size_t)work->other_spr_banks[bi].tile_count * R01_TILE_BYTES;
+        if (n > R01_CHR_BANK_BYTES) {
+            n = R01_CHR_BANK_BYTES;
+        }
+        memcpy(other_chr + (4u + (size_t)bi) * R01_CHR_BANK_BYTES, work->other_spr_banks[bi].chr, n);
+    }
+
     memset(hdr, 0, sizeof(hdr));
     memcpy(hdr, "retr01", 6);
     hdr[6] = R01_CART_FORMAT_VER;
@@ -1138,7 +1156,8 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
     off_pal_bg = HDR_SIZE + (uint32_t)ptr_bytes;
     off_pal_spr = off_pal_bg + R01_PAL_PLANE_BYTES;
     off_prg = off_pal_spr + R01_PAL_PLANE_BYTES;
-    off_other = off_prg + R01_PRG_BYTES;
+    off_other_chr = off_prg + R01_PRG_BYTES;
+    off_other = off_other_chr + R01_CART_OTHER_CHR_BYTES;
     off_wtable = off_other + (uint32_t)other_len;
     world_base = off_wtable + WORLD_TABLE_SIZE;
 
@@ -1162,10 +1181,13 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
     put_u24(ptrs + 21, WORLD_TABLE_SIZE);
     put_u24(ptrs + 24, off_other);
     put_u24(ptrs + 27, (uint32_t)other_len);
+    put_u24(ptrs + 30, off_other_chr);
+    put_u24(ptrs + 33, R01_CART_OTHER_CHR_BYTES);
 
     if (buf_append(&cart, hdr, HDR_SIZE) != 0 || buf_append(&cart, ptrs, ptr_bytes) != 0 ||
         append_pal_plane(&cart, work->global_pal_bg) != 0 ||
         append_pal_plane(&cart, work->global_pal_spr) != 0 || buf_append(&cart, prg, R01_PRG_BYTES) != 0 ||
+        buf_append(&cart, other_chr, R01_CART_OTHER_CHR_BYTES) != 0 ||
         buf_append(&cart, other_blob.data, other_len) != 0) {
         goto oom;
     }

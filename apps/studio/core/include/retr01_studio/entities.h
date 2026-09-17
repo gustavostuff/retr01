@@ -28,7 +28,7 @@ int r01_world_entity_remove(R01World *w, int type_idx);
 void r01_world_set_player_entity(R01World *w, int type_idx);
 int r01_world_player_entity(const R01World *w);
 
-/* Set player mark and move that entity's SPR patterns into project->player_bank
+/* Set player mark and move that entity's SPR patterns into project->other_spr_banks
  * (or restore them to world SPR banks on unmark / switch). Returns 0 or -1. */
 int r01_project_set_player_entity(R01Project *p, R01World *w, int type_idx);
 

@@ -8,8 +8,8 @@
 
 /* Cart / world layout -- general_docs/video-graphics.md */
 #define R01E_CART_MAGIC "retr01"
-#define R01E_CART_FORMAT_VER 3
-#define R01E_CART_PTR_TABLE_BYTES 30u
+#define R01E_CART_FORMAT_VER 4
+#define R01E_CART_PTR_TABLE_BYTES 36u
 #define R01E_CART_OTHER_MAX 16
 #define R01E_CART_OTHER_CREDITS_FIRST 2
 #define R01E_CART_CREDITS_MIN 0
@@ -18,6 +18,7 @@
 #define R01E_CART_OTHER_HDR_BYTES 4u
 #define R01E_CART_OTHER_DIR_BYTES 8u
 #define R01E_CART_OTHER_FLAG_RLE 0x01u
+#define R01E_CART_OTHER_CHR_BYTES (8u * 4096u) /* 4 BG + 4 SPR */
 #define R01E_CART_FLASH_BYTES (512u * 1024u)
 #define R01E_PRG_BYTES 32768u /* fixed 32 KB window at $8000 (general_docs/graphics) */
 
@@ -31,7 +32,7 @@
 #define R01E_VRAM_SLOT_BYTES 512
 #define R01E_VRAM_BYTES 0x4000u
 
-#define R01E_MAX_WORLDS 8
+#define R01E_MAX_WORLDS 7
 #define R01E_GRID_MAX 16
 #define R01E_MAX_PRESENT_SCREENS 32 /* cart cap: present BG1 screens per world (general_docs/memory.md) */
 #define R01E_CELL_PACK(col, row) ((uint8_t)(((unsigned)(col)&0x0fu) | (((unsigned)(row)&0x0fu) << 4)))

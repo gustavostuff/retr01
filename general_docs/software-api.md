@@ -31,13 +31,14 @@ That range covers very simple games (**1** state, **1** frame, **1** sprite) and
 | Entities **on screen** (live instances) | Soft: limited by **OAM sprite budget**, not by type count |
 | Hardware sprites (OAM) | **64** total; **16** per scanline |
 | Global shared entity catalog | **None** |
-| Player item patterns (global bank) | **256** tiles (player inventory icons only). Pack TBD. See `memory.md` |
+| Player / inventory patterns | Global other **SPR** banks (4). See `memory.md` |
+| Other-screen patterns | Global other CHR (**4** BG + **4** SPR). See `memory.md` |
 
 **Types vs on-screen:** The **16** cap is how many *kinds* of entity a world may define (cart catalog). It is **not** a limit on how many entities may be visible at once. Live instances may fill the view **as long as their current frames' sprites fit in the 64 OAM slots**. Example: sixty-four 1-sprite pickups, or ten 6-sprite characters, both fine. The next spawn that would exceed free OAM fails. Scanline overflow (more than **16** sprites on one line) still drops later entries for that line.
 
-Types belong to one world. Same look in another world means another def (and tiles) in that world's blob. Sprite attr bank bits index **this world's** SPR banks. If the wrong world CHR is active, entities look wrong on purpose. That glitch is the tell.
+Types belong to one world. Same look in another world means another def (and tiles) in that world's blob. Sprite attr bank bits index **this world's** SPR banks for normal entities. If the wrong world CHR is active, those entities look wrong on purpose. That glitch is the tell.
 
-The **player item bank** is separate: one cart-global **256-tile** pattern bank. Studio moves the marked player entity's SPR patterns there (and restores them on unmark). It is not an entity-type pool and is not shared with world catalogs.
+The marked **player** entity is a normal world catalog type (SoT: world **0**). Its part bank bits **0..3** index the cart **global other SPR** banks, not world SPR. No private player bank. Other screens use the same global other CHR block (BG + SPR).
 
 ### Packed definition format (locked)
 
@@ -85,7 +86,7 @@ Frame (at State + frame_off[f])
 | One Frame (6 sprites) | 26 |
 | **Fully maxed def** (4x4x6) | **484** |
 | 16 maxed defs (one world) | **7744** (~7.6 KB) |
-| 8 worlds x 16 maxed defs | **61952** (~60.5 KB) |
+| 7 worlds x 16 maxed defs | **54208** (~52.9 KB) |
 
 **Entity spawn locations** live in **PRG** (data tables and/or code that calls `spawn_entity`), not in the world blob. Cart holds defs in the **per-world** catalog only. Optional `PA` (player anim) may still hang off a world blob as an opaque blob for now.
 

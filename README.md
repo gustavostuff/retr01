@@ -15,7 +15,7 @@ Retr01 is an MCU-assisted 8-bit system ready for arcade and console setups, plus
 - Multi-chip middle ground: not an FPGA soft system, not pure TTL. CPU + helper AVRs + PLDs + a little 74xx glue.
 - Flat 32 KB PRG with no banking. A faster CPU (8 MHz) and larger RAM (32 KB) make it stretch farther than NES NROM.
 - Entity system with clear caps: up to 16 types per world, each with up to 4 states x 4 frames x 6 sprites (state = idle, running, etc).
-- Flexible world layout: up to 8 worlds, each with up to 32 screens, all on a sparse 16x16 grid.
+- Flexible world layout: up to 7 worlds, each with up to 32 screens, all on a sparse 16x16 grid.
 - Passive cartridge: No mapper or bank switching required. Hardware streaming of nametable data directly from cart into VRAM buffers.
 
 ## Software pieces

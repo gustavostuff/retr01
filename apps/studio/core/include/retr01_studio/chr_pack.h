@@ -41,11 +41,11 @@ void r01_screen_paint_tile(R01World *w, R01Screen *s, int tile_x, int tile_y, ui
 /* Tile 0 is blank: drop leftover pal/solid/flip attrs so holes stay transparent. */
 void r01_screen_sanitize_empty_attrs(R01Screen *s);
 
-/* Global player bank (project-scoped, 256 tiles). NULL if out of range / empty slot. */
-const uint8_t *r01_player_bank_tile(const R01Project *p, int tile_id);
-int r01_player_bank_write_tile(R01Project *p, int tile_id, const uint8_t tile[R01_TILE_BYTES]);
-/* First free / next slot in the player bank, or -1 if full. */
-int r01_player_bank_alloc_tile(R01Project *p);
+/* Global other SPR banks (project-scoped, 4 x 256 tiles). NULL if out of range / empty. */
+const uint8_t *r01_other_spr_tile(const R01Project *p, int bank, int tile_id);
+int r01_other_spr_write_tile(R01Project *p, int bank, int tile_id, const uint8_t tile[R01_TILE_BYTES]);
+/* First free / next slot in other_spr_banks[bank], or -1 if full. */
+int r01_other_spr_alloc_tile(R01Project *p, int bank);
 
 /* 4-connected flood fill of 2bpp CHR colors (tile/sprite edit F+click). */
 void r01_tile_flood_fill(uint8_t tile[R01_TILE_BYTES], int sx, int sy, uint8_t color);

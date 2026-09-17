@@ -36,11 +36,11 @@
 
 #define UI_BANKS_PLANE_BG 0
 #define UI_BANKS_PLANE_SPR 1
-#define UI_BANKS_PLANE_PLAYER 2
+#define UI_BANKS_PLANE_OTHER_SPR 2 /* global other SPR (player / other-screen SPR) */
 #define UI_BANKS_N 4
 #define UI_BANKS_GRID 128 /* 16x16 tiles @ 8px */
 #define UI_BANKS_BODY_H (UI_WORLDS_TAB_STACK_H + UI_BANKS_GRID)
-#define UI_PLAYER_BANK_BODY_H UI_BANKS_GRID /* no plane/bank tabs */
+#define UI_OTHER_SPR_BODY_H UI_BANKS_BODY_H /* Other SPR: bank tabs + grid */
 
 #define UI_ARM_NONE 0
 #define UI_ARM_WORLD_TAB 1
@@ -55,6 +55,7 @@
 #define UI_ARM_CATALOG_ADD 10
 #define UI_ARM_BANK_TAB 12
 #define UI_ARM_BANK_SUB 13
+#define UI_ARM_OTHER_SPR_TAB 23
 #define UI_ARM_APP_TAB 14
 #define UI_ARM_SOUND_PLANE 15
 #define UI_ARM_SOUND_TRACK 16
@@ -100,8 +101,7 @@
 #define UI_ACC_WORLDS 0
 #define UI_ACC_PALS 1
 #define UI_ACC_BANKS 2
-#define UI_ACC_SPRITES UI_ACC_BANKS /* legacy alias */
-#define UI_ACC_PLAYER_BANK 3
+#define UI_ACC_OTHER_SPR 3
 #define UI_ACC_METATILES 4
 #define UI_ACC_METASPRITES 5
 #define UI_ACC_ENTITIES 6
@@ -225,7 +225,7 @@ typedef struct UiTileEdit {
     int color; /* 0..3 within pal */
     int tile_id;
     int bank;
-    int player_bank; /* 1 = edit project player_bank patterns (SPR pal) */
+    int other_spr; /* 1 = edit project other_spr_banks[bank] (SPR pal) */
     int flip_h;
     int flip_v;
     int is_new;
@@ -454,9 +454,10 @@ typedef struct UiState {
     int last_click_col;
     int last_click_row;
     int worlds_plane; /* UI_WORLDS_PLANE_BG1 or BG0 */
-    int banks_idx;    /* 0..3 CHR bank tab */
+    int banks_idx;    /* 0..3 world CHR bank tab */
     int banks_plane;  /* UI_BANKS_PLANE_BG or SPR */
-    int bank_sel_tile;  /* -1 none; selected pattern in Banks / Player bank */
+    int other_spr_idx; /* 0..3 global other SPR bank tab */
+    int bank_sel_tile;  /* -1 none; selected pattern in Banks / Other SPR */
     int bank_sel_bank;
     int bank_sel_plane; /* UI_BANKS_PLANE_* when bank_sel_tile >= 0 */
     int world_sel_col; /* grid selection (-1 none); empty slots allowed */

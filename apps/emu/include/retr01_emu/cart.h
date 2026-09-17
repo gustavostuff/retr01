@@ -22,6 +22,8 @@ typedef struct R01eCart {
     uint32_t len_world_table;
     uint32_t off_other;
     uint32_t len_other;
+    uint32_t off_other_chr;
+    uint32_t len_other_chr;
     uint32_t off_credits;
     uint32_t len_credits;
 } R01eCart;
