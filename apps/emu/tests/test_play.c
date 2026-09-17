@@ -70,40 +70,26 @@ int main(int argc, char **argv) {
     printf("ok play spawn=%d,%d cam=%d\n", spawn_x, spawn_y, m.play.cam_x);
 
     /*
-     * Sparse hole: example_01 has no screen at (3,1). A bbox cam_max would allow a
-     * viewport that covers it (BG0 show-through). Clamp must pull cam back onto present cells.
+     * L-map junction: (3,2) present, (3,1) missing. Follow cam may peek into the
+     * hole (BG0 show-through is fine). Player must stay on-screen for OAM.
      */
-    if (r01e_cart_has_screen(&m.cart, 0, 2, 1) && !r01e_cart_has_screen(&m.cart, 0, 3, 1)) {
-        int x0, y0, x1, y1, c, r, ok;
-        m.play.cam_x = 2 * R01E_SCREEN_PX_W + 64; /* peeks into col 3 */
-        m.play.cam_y = 1 * R01E_SCREEN_PX_H;
-        m.play.player_x = m.play.cam_x + 40;
-        m.play.player_y = m.play.cam_y + 40;
+    if (r01e_cart_has_screen(&m.cart, 0, 3, 2) && !r01e_cart_has_screen(&m.cart, 0, 3, 1)) {
+        int vx, vy;
+        m.play.player_x = 3 * R01E_SCREEN_PX_W + 20;
+        m.play.player_y = 2 * R01E_SCREEN_PX_H + 40;
+        m.play.cam_x = 2 * R01E_SCREEN_PX_W + 64;
+        m.play.cam_y = 1 * R01E_SCREEN_PX_H + 60;
         m.io.pad0 = 0;
         r01e_play_tick(&m);
-        x0 = m.play.cam_x;
-        y0 = m.play.cam_y;
-        x1 = x0 + R01E_SCREEN_PX_W - 1;
-        y1 = y0 + R01E_SCREEN_PX_H - 1;
-        ok = 1;
-        for (r = y0 / R01E_SCREEN_PX_H; r <= y1 / R01E_SCREEN_PX_H; r++) {
-            for (c = x0 / R01E_SCREEN_PX_W; c <= x1 / R01E_SCREEN_PX_W; c++) {
-                if (!r01e_cart_has_screen(&m.cart, 0, c, r)) {
-                    ok = 0;
-                }
-            }
-        }
-        if (!ok) {
-            fprintf(stderr, "FAIL cam viewport covers missing BG1 after clamp: cam=%d,%d\n", x0, y0);
+        vx = m.play.player_x - m.play.cam_x;
+        vy = m.play.player_y - m.play.cam_y;
+        if (r01e_oam_tile_off_screen(vx, vy)) {
+            fprintf(stderr, "FAIL L-map player off-screen: player=%d,%d cam=%d,%d oam=%d,%d\n",
+                    m.play.player_x, m.play.player_y, m.play.cam_x, m.play.cam_y, vx, vy);
             r01e_machine_shutdown(&m);
             return 1;
         }
-        if (x1 / R01E_SCREEN_PX_W >= 3) {
-            fprintf(stderr, "FAIL cam still peeks into missing col 3: cam=%d right=%d\n", x0, x1);
-            r01e_machine_shutdown(&m);
-            return 1;
-        }
-        printf("ok sparse-hole cam clamp cam=%d right_col=%d\n", x0, x1 / R01E_SCREEN_PX_W);
+        printf("ok L-map player on-screen cam=%d,%d oam=%d,%d\n", m.play.cam_x, m.play.cam_y, vx, vy);
     }
 
     r01e_machine_shutdown(&m);

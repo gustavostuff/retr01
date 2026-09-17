@@ -24,6 +24,8 @@ TEST_MAIN() {
     p->worlds[0].screens[9].present = 1;
     p->worlds[0].default_screen = 9;
     p->worlds[0].default_pal_row = 3;
+    /* Non-zero tile: empty cells force attr 0 on load (sanitize leftover pals). */
+    p->worlds[0].screens[2].tiles[0] = 1;
     p->worlds[0].screens[2].attrs[0] = r01_attr_pack(0, 2, 1, 0);
     p->global_pal_bg[1][2].idx[1] = 42;
 

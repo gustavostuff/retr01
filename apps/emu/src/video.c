@@ -160,6 +160,14 @@ int r01e_video_prepare_world(R01eMachine *m, int world) {
     m->io.pal_row = (uint8_t)(wv.default_pal_row & 7u);
     r01e_video_load_bg0(m, &wv);
     /* Pals come from PRG $7F08/$7F09 stream (or softboot). */
+    if (m->play.enabled) {
+        /* Host Play owns cam; refill 2x2 from play cam instead of leaving empty slots. */
+        m->video.cam_x = m->play.cam_x;
+        m->video.cam_y = m->play.cam_y;
+        m->video.cam_origin_col = m->play.cam_x / R01E_SCREEN_PX_W;
+        m->video.cam_origin_row = m->play.cam_y / R01E_SCREEN_PX_H;
+        (void)r01e_video_sync_camera(m);
+    }
     return 0;
 }
 
