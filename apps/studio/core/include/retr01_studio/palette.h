@@ -2,6 +2,7 @@
 #define retr01_STUDIO_PALETTE_H
 
 #include "retr01_studio/types.h"
+#include "r01_kit_palette.h"
 
 /* Phase 1 player fill: sprite row 0, pal 0, color index 1 (not a hardcoded master). */
 #define R01_PLAYER_SPR_ROW 0
@@ -13,7 +14,7 @@
 /* Kit bright red used when initializing phase 1 sprite palettes. */
 #define R01_KIT_RED_MASTER 34
 
-void r01_kit_rgb(int master_index, uint8_t *r, uint8_t *g, uint8_t *b);
+/* r01_kit_rgb: apps/common/r01_kit_palette.h (shared with Emu). */
 uint8_t r01_project_player_master(const R01Project *p);
 void r01_project_player_rgb(const R01Project *p, uint8_t *r, uint8_t *g, uint8_t *b);
 int r01_kit_nearest_master(uint8_t r, uint8_t g, uint8_t b);

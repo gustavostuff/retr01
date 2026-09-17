@@ -28,6 +28,7 @@ set(R01_ASSETS_DIR "${R01_PKG_ROOT}/assets")
 if(NOT TARGET r01_play_common)
   set(R01_FW_COMMON_DIR "${R01_PKG_ROOT}/common/fw")
   add_library(r01_play_common
+    ${R01_COMMON_DIR}/r01_kit_palette.c
     ${R01_COMMON_DIR}/r01_play_anim.c
     ${R01_COMMON_DIR}/r01_play_anim_cart.c
     ${R01_COMMON_DIR}/r01_play_camera.c

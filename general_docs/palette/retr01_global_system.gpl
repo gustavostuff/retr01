@@ -1,0 +1,68 @@
+GIMP Palette
+Name: Retr01 Global System
+Columns: 16
+# Generated from apps/common/r01_kit_palette.c by gen_kit_palette.py
+  0   0   0 Index 0
+ 41   5  20 Index 1
+ 42   5   7 Index 2
+ 35  15   6 Index 3
+ 30  19   6 Index 4
+ 26  22   5 Index 5
+ 20  24   7 Index 6
+  6  26   7 Index 7
+  5  26  19 Index 8
+  7  25  24 Index 9
+  8  24  28 Index 10
+  7  23  34 Index 11
+  3  11  61 Index 12
+ 22   3  58 Index 13
+ 32   5  45 Index 14
+ 38   4  32 Index 15
+ 54  54  54 Index 16
+116  10  64 Index 17
+119   9  26 Index 18
+105  53  18 Index 19
+ 93  63  14 Index 20
+ 81  70  23 Index 21
+ 66  76  25 Index 22
+ 19  81  26 Index 23
+ 22  80  63 Index 24
+ 17  78  77 Index 25
+ 22  77  88 Index 26
+ 22  74 102 Index 27
+ 22  55 148 Index 28
+ 71  41 144 Index 29
+ 95  22 125 Index 30
+108  17  95 Index 31
+148 148 148 Index 32
+192  74 122 Index 33
+197  74  77 Index 34
+184  96  27 Index 35
+162 115  38 Index 36
+143 126  47 Index 37
+119 135  45 Index 38
+ 32 144  48 Index 39
+ 46 142 114 Index 40
+ 49 139 137 Index 41
+ 31 136 156 Index 42
+ 36 131 181 Index 43
+ 77 119 215 Index 44
+126 106 211 Index 45
+157  93 191 Index 46
+179  82 160 Index 47
+255 255 255 Index 48
+241 162 187 Index 49
+241 166 161 Index 50
+241 169 131 Index 51
+238 172  68 Index 52
+212 186  51 Index 53
+176 200  65 Index 54
+115 210 117 Index 55
+ 34 208 166 Index 56
+ 59 205 201 Index 57
+ 72 201 228 Index 58
+136 196 237 Index 59
+164 189 239 Index 60
+187 181 241 Index 61
+213 169 239 Index 62
+240 155 221 Index 63
