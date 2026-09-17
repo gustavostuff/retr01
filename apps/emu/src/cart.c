@@ -272,7 +272,7 @@ int r01e_cart_entity_frame(const uint8_t *def, int state, int frame, const uint8
     if (frame < 0 || frame >= fc || frame >= 4) {
         return -1;
     }
-    foff = cart_u16(st + 6 + (size_t)frame * 2u);
+    foff = cart_u16(st + 2 + (size_t)frame * 2u);
     if (foff == 0) {
         return -1;
     }
@@ -285,7 +285,7 @@ int r01e_cart_entity_frame(const uint8_t *def, int state, int frame, const uint8
         scount = R01E_CART_ENTITY_PARTS_MAX;
     }
     if (out_sprites) {
-        *out_sprites = fr + 2;
+        *out_sprites = fr + 6;
     }
     if (out_count) {
         *out_count = scount;

@@ -92,10 +92,10 @@ TEST_MAIN() {
     EXPECT(cat == 0, "catalog");
     type_id = r01_world_entity_from_sprite(w, cat);
     EXPECT(type_id == 0, "entity type");
-    w->entities[0].states[0].origin_x = 2;
-    w->entities[0].states[0].origin_y = 3;
-    w->entities[0].states[0].hitbox_x = 1;
-    w->entities[0].states[0].hitbox_y = 2;
+    w->entities[0].states[0].frames[0].origin_x = 2;
+    w->entities[0].states[0].frames[0].origin_y = 3;
+    w->entities[0].states[0].frames[0].hitbox_x = 1;
+    w->entities[0].states[0].frames[0].hitbox_y = 2;
     w->entities[0].states[0].frames[0].parts[0].dx = 4;
     w->entities[0].states[0].frames[0].parts[0].dy = 5;
     r01_world_set_player_entity(w, 0);
@@ -231,17 +231,19 @@ TEST_MAIN() {
                     EXPECT(def0[1] == 1, "def0 state count");
                     st = def0 + rd_u16(def0 + 4);
                     EXPECT(st[0] == 1, "def0 frame count");
-                    fr = st + rd_u16(st + 6);
+                    fr = st + rd_u16(st + 2);
                     EXPECT(fr[0] == R01_CART_ENTITY_FRAME_DELAY_DEFAULT, "def0 frame delay");
                     EXPECT(fr[1] == 1, "def0 sprite count");
-                    EXPECT(fr[2] == 2, "def0 sprite remapped off stub");
-                    EXPECT((int8_t)fr[3] == 2 && (int8_t)fr[4] == 2, "def0 sprite rel");
+                    EXPECT(fr[2] == 0 && fr[3] == 0, "def0 frame hitbox xy");
+                    EXPECT(fr[4] == R01_ENTITY_HITBOX_W && fr[5] == R01_ENTITY_HITBOX_H, "def0 frame hitbox wh");
+                    EXPECT(fr[6] == 2, "def0 sprite remapped off stub");
+                    EXPECT((int8_t)fr[7] == 2 && (int8_t)fr[8] == 2, "def0 sprite rel");
                     def1 = img + world_base + off_types + d1;
                     EXPECT(def1[1] == 1, "def1 state count");
                     st = def1 + rd_u16(def1 + 4);
-                    fr = st + rd_u16(st + 6);
+                    fr = st + rd_u16(st + 2);
                     EXPECT(fr[1] == 1, "def1 sprite count");
-                    EXPECT(fr[2] == 0, "def1 uses tile 0");
+                    EXPECT(fr[6] == 0, "def1 uses tile 0");
                     EXPECT(off_insts > off_types + 4, "catalog non-empty");
                     EXPECT(world_base + off_insts <= (uint32_t)flen, "off_insts in cart");
                 }
@@ -353,11 +355,11 @@ TEST_MAIN() {
                         EXPECT(nread >= 32, "read def0");
                     }
                     st = defbuf + rd_u16(defbuf + 4);
-                    fr = st + rd_u16(st + 6);
+                    fr = st + rd_u16(st + 2);
                     EXPECT(fr[1] == 2, "two parts");
-                    EXPECT(fr[2] == 3, "face remapped off stub");
-                    EXPECT((fr[5] & 3) == 0, "player bank packs as spr bank 0");
-                    EXPECT(fr[6] == 2, "tile2 part unchanged");
+                    EXPECT(fr[6] == 3, "face remapped off stub");
+                    EXPECT((fr[9] & 3) == 0, "player bank packs as spr bank 0");
+                    EXPECT(fr[10] == 2, "tile2 part unchanged");
                     fclose(f);
                 }
             }

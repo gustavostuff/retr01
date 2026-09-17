@@ -15,14 +15,10 @@ void r01_entity_state_init(R01EntityState *st, const char *name) {
     } else {
         strncpy(st->name, "State", R01_ENTITY_NAME_MAX - 1);
     }
-    st->origin_x = 0;
-    st->origin_y = 0;
-    st->hitbox_x = 0;
-    st->hitbox_y = 0;
-    st->hitbox_w = R01_ENTITY_HITBOX_W;
-    st->hitbox_h = R01_ENTITY_HITBOX_H;
     st->frame_count = 1;
     st->frames[0].delay = 1;
+    st->frames[0].hitbox_w = R01_ENTITY_HITBOX_W;
+    st->frames[0].hitbox_h = R01_ENTITY_HITBOX_H;
 }
 
 void r01_entity_type_init(R01EntityType *e) {
@@ -530,8 +526,21 @@ R01EntityFrame *r01_entity_ensure_frame(R01EntityType *e, int state_idx, int fra
         return NULL;
     }
     while (st->frame_count <= frame_idx) {
-        memset(&st->frames[st->frame_count], 0, sizeof(st->frames[0]));
-        st->frames[st->frame_count].delay = 1;
+        R01EntityFrame *fr = &st->frames[st->frame_count];
+        memset(fr, 0, sizeof(*fr));
+        fr->delay = 1;
+        if (st->frame_count > 0) {
+            const R01EntityFrame *prev = &st->frames[st->frame_count - 1];
+            fr->origin_x = prev->origin_x;
+            fr->origin_y = prev->origin_y;
+            fr->hitbox_x = prev->hitbox_x;
+            fr->hitbox_y = prev->hitbox_y;
+            fr->hitbox_w = prev->hitbox_w;
+            fr->hitbox_h = prev->hitbox_h;
+        } else {
+            fr->hitbox_w = R01_ENTITY_HITBOX_W;
+            fr->hitbox_h = R01_ENTITY_HITBOX_H;
+        }
         st->frame_count++;
     }
     return &st->frames[frame_idx];
@@ -647,51 +656,48 @@ int r01_entity_frame_bring_part_front(R01EntityFrame *fr, int part_idx) {
     return fr->part_count - 1;
 }
 
-void r01_entity_state_recompute_guides(R01EntityState *st) {
-    int fi, pi;
+void r01_entity_frame_recompute_guides(R01EntityFrame *fr) {
+    int pi;
     int have = 0;
     int min_x = 0, min_y = 0, max_x = 0, max_y = 0;
     int ox, oy, hx, hy;
-    if (!st) {
+    if (!fr) {
         return;
     }
-    for (fi = 0; fi < st->frame_count; fi++) {
-        const R01EntityFrame *fr = &st->frames[fi];
-        for (pi = 0; pi < fr->part_count; pi++) {
-            const R01EntityPart *pt = &fr->parts[pi];
-            int x0 = pt->dx;
-            int y0 = pt->dy;
-            int x1 = pt->dx + 8;
-            int y1 = pt->dy + 8;
-            if (!have) {
+    for (pi = 0; pi < fr->part_count; pi++) {
+        const R01EntityPart *pt = &fr->parts[pi];
+        int x0 = pt->dx;
+        int y0 = pt->dy;
+        int x1 = pt->dx + 8;
+        int y1 = pt->dy + 8;
+        if (!have) {
+            min_x = x0;
+            min_y = y0;
+            max_x = x1;
+            max_y = y1;
+            have = 1;
+        } else {
+            if (x0 < min_x) {
                 min_x = x0;
+            }
+            if (y0 < min_y) {
                 min_y = y0;
+            }
+            if (x1 > max_x) {
                 max_x = x1;
+            }
+            if (y1 > max_y) {
                 max_y = y1;
-                have = 1;
-            } else {
-                if (x0 < min_x) {
-                    min_x = x0;
-                }
-                if (y0 < min_y) {
-                    min_y = y0;
-                }
-                if (x1 > max_x) {
-                    max_x = x1;
-                }
-                if (y1 > max_y) {
-                    max_y = y1;
-                }
             }
         }
     }
     if (!have) {
-        st->origin_x = 0;
-        st->origin_y = 0;
-        st->hitbox_x = 0;
-        st->hitbox_y = 0;
-        st->hitbox_w = R01_ENTITY_HITBOX_W;
-        st->hitbox_h = R01_ENTITY_HITBOX_H;
+        fr->origin_x = 0;
+        fr->origin_y = 0;
+        fr->hitbox_x = 0;
+        fr->hitbox_y = 0;
+        fr->hitbox_w = R01_ENTITY_HITBOX_W;
+        fr->hitbox_h = R01_ENTITY_HITBOX_H;
         return;
     }
     ox = (min_x + max_x) / 2;
@@ -708,14 +714,13 @@ void r01_entity_state_recompute_guides(R01EntityState *st) {
     if (oy > R01_ENTITY_COMPOSE_PX) {
         oy = R01_ENTITY_COMPOSE_PX;
     }
-    st->origin_x = ox;
-    st->origin_y = oy;
-    /* Keep authored hitbox position/size; only clamp into the compose grid. */
+    fr->origin_x = ox;
+    fr->origin_y = oy;
     {
-        int hw = st->hitbox_w > 0 ? st->hitbox_w : R01_ENTITY_HITBOX_W;
-        int hh = st->hitbox_h > 0 ? st->hitbox_h : R01_ENTITY_HITBOX_H;
-        hx = st->hitbox_x;
-        hy = st->hitbox_y;
+        int hw = fr->hitbox_w > 0 ? fr->hitbox_w : R01_ENTITY_HITBOX_W;
+        int hh = fr->hitbox_h > 0 ? fr->hitbox_h : R01_ENTITY_HITBOX_H;
+        hx = fr->hitbox_x;
+        hy = fr->hitbox_y;
         if (hw > R01_ENTITY_COMPOSE_PX) {
             hw = R01_ENTITY_COMPOSE_PX;
         }
@@ -734,10 +739,20 @@ void r01_entity_state_recompute_guides(R01EntityState *st) {
         if (hy > R01_ENTITY_COMPOSE_PX - hh) {
             hy = R01_ENTITY_COMPOSE_PX - hh;
         }
-        st->hitbox_w = hw;
-        st->hitbox_h = hh;
-        st->hitbox_x = hx;
-        st->hitbox_y = hy;
+        fr->hitbox_w = hw;
+        fr->hitbox_h = hh;
+        fr->hitbox_x = hx;
+        fr->hitbox_y = hy;
+    }
+}
+
+void r01_entity_state_recompute_guides(R01EntityState *st) {
+    int fi;
+    if (!st) {
+        return;
+    }
+    for (fi = 0; fi < st->frame_count; fi++) {
+        r01_entity_frame_recompute_guides(&st->frames[fi]);
     }
 }
 
@@ -769,8 +784,7 @@ int r01_world_entity_from_sprite(R01World *w, int sprite_catalog_idx) {
     if (r01_entity_frame_add_part(fr, &part) < 0) {
         return -1;
     }
-    e->states[0].hitbox_w = R01_ENTITY_HITBOX_W;
-    e->states[0].hitbox_h = R01_ENTITY_HITBOX_H;
+    r01_entity_frame_recompute_guides(fr);
     return idx;
 }
 
@@ -821,14 +835,14 @@ int r01_world_place_entity(R01World *w, int type_id, int world_x, int world_y) {
     return r01_world_instance_add(w, type_id, world_x, world_y);
 }
 
-void r01_entity_part_instance_pose(const R01EntityState *st, const R01EntityPart *pt, int inst_flip_h,
+void r01_entity_part_instance_pose(const R01EntityFrame *fr, const R01EntityPart *pt, int inst_flip_h,
                                    int inst_flip_v, int *out_dx, int *out_dy, int *out_flip_h, int *out_flip_v) {
     int dx = pt ? pt->dx : 0;
     int dy = pt ? pt->dy : 0;
     int fh = pt ? pt->flip_h : 0;
     int fv = pt ? pt->flip_v : 0;
-    int ox = st ? st->origin_x : 0;
-    int oy = st ? st->origin_y : 0;
+    int ox = fr ? fr->origin_x : 0;
+    int oy = fr ? fr->origin_y : 0;
     if (inst_flip_h) {
         dx = 2 * ox - dx - 8;
         fh = !fh;

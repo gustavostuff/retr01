@@ -77,7 +77,7 @@ static inline int r01_global_spr_index(int bank) {
 
 #define R01_NAME_MAX 64
 #define R01_PATH_MAX 512
-#define R01_JSON_VER 12
+#define R01_JSON_VER 13
 
 #define R01_ASEPRITE_ENTITIES_DIR "aseprite_entities"
 #define R01_ASEPRITE_LISTING_MAX 64
@@ -174,7 +174,7 @@ typedef struct R01SpriteDef {
     int pal;     /* 0..3 within the active sprite palette row */
 } R01SpriteDef;
 
-/* One OAM-like part in an entity frame (dx/dy relative to state origin). */
+/* One OAM-like part in an entity frame (dx/dy in compose-grid pixels). */
 typedef struct R01EntityPart {
     int bank; /* 0..R01_SPR_BANKS-1, or global other SPR (BASE..BASE+3) when marked player */
     int tile_id;
@@ -189,6 +189,12 @@ typedef struct R01EntityFrame {
     R01EntityPart parts[R01_ENTITY_PARTS_MAX];
     int part_count;
     int delay; /* display frames, min 1 (0 reads as 1) */
+    int origin_x;
+    int origin_y;
+    int hitbox_x;
+    int hitbox_y;
+    int hitbox_w;
+    int hitbox_h;
 } R01EntityFrame;
 
 /* Reusable multi-part sprite group (no origin/hitbox). */
@@ -206,12 +212,6 @@ typedef struct R01MetatileDef {
 
 typedef struct R01EntityState {
     char name[R01_ENTITY_NAME_MAX]; /* authoring label (idle, walk, ...) */
-    int origin_x;
-    int origin_y;
-    int hitbox_x;
-    int hitbox_y;
-    int hitbox_w;
-    int hitbox_h;
     R01EntityFrame frames[R01_ENTITY_FRAMES_MAX];
     int frame_count; /* 1..R01_ENTITY_FRAMES_MAX */
 } R01EntityState;
@@ -223,12 +223,12 @@ typedef struct R01EntityType {
     int state_count; /* 1..R01_ENTITY_STATES_MAX */
 } R01EntityType;
 
-/* Placed instance in world pixel space (world_x/y = user state origin). */
+/* Placed instance in world pixel space (world_x/y = user frame origin). */
 typedef struct R01EntityInstance {
     int type_id;
     int world_x;
     int world_y;
-    int flip_h; /* 1 = mirror parts around state origin at draw/OAM time */
+    int flip_h; /* 1 = mirror parts around frame origin at draw/OAM time */
     int flip_v;
 } R01EntityInstance;
 

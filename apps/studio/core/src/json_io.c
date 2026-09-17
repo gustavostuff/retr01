@@ -480,9 +480,6 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
                 int fi;
                 fprintf(f, "        {\n");
                 fprintf(f, "          \"name\": \"%s\",\n", st->name);
-                fprintf(f, "          \"origin_x\": %d, \"origin_y\": %d,\n", st->origin_x, st->origin_y);
-                fprintf(f, "          \"hitbox_x\": %d, \"hitbox_y\": %d, \"hitbox_w\": %d, \"hitbox_h\": %d,\n",
-                        st->hitbox_x, st->hitbox_y, st->hitbox_w, st->hitbox_h);
                 fprintf(f, "          \"frame_count\": %d,\n", st->frame_count);
                 fprintf(f, "          \"frames\": [\n");
                 for (fi = 0; fi < st->frame_count; fi++) {
@@ -492,7 +489,11 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
                     if (delay > 255) {
                         delay = 255;
                     }
-                    fprintf(f, "            {\"delay\": %d, \"parts\": [", delay);
+                    fprintf(f,
+                            "            {\"delay\": %d, \"origin_x\": %d, \"origin_y\": %d, "
+                            "\"hitbox_x\": %d, \"hitbox_y\": %d, \"hitbox_w\": %d, \"hitbox_h\": %d, \"parts\": [",
+                            delay, fr->origin_x, fr->origin_y, fr->hitbox_x, fr->hitbox_y, fr->hitbox_w,
+                            fr->hitbox_h);
                     for (pi = 0; pi < fr->part_count; pi++) {
                         const R01EntityPart *pt = &fr->parts[pi];
                         fprintf(f,
@@ -1557,12 +1558,6 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                             st_slice[st_olen] = '\0';
                             r01_entity_state_init(st, "Idle");
                             json_string_after(st_slice, "\"name\"", st->name, sizeof(st->name));
-                            json_int_after(st_slice, "\"origin_x\"", &st->origin_x);
-                            json_int_after(st_slice, "\"origin_y\"", &st->origin_y);
-                            json_int_after(st_slice, "\"hitbox_x\"", &st->hitbox_x);
-                            json_int_after(st_slice, "\"hitbox_y\"", &st->hitbox_y);
-                            json_int_after(st_slice, "\"hitbox_w\"", &st->hitbox_w);
-                            json_int_after(st_slice, "\"hitbox_h\"", &st->hitbox_h);
                             json_int_after(st_slice, "\"frame_count\"", &frame_count);
                             if (frame_count < 1) {
                                 frame_count = 1;
@@ -1571,12 +1566,6 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                                 frame_count = R01_ENTITY_FRAMES_MAX;
                             }
                             st->frame_count = frame_count;
-                            if (st->hitbox_w < 1) {
-                                st->hitbox_w = R01_ENTITY_HITBOX_W;
-                            }
-                            if (st->hitbox_h < 1) {
-                                st->hitbox_h = R01_ENTITY_HITBOX_H;
-                            }
                             frames_sec = json_find(st_slice, "\"frames\":");
                             frames_end = json_array_end(frames_sec);
                             fr_obj = frames_sec ? strchr(frames_sec, '{') : NULL;
@@ -1606,6 +1595,18 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                                 }
                                 if (fr->delay > 255) {
                                     fr->delay = 255;
+                                }
+                                json_int_after(fr_slice, "\"origin_x\"", &fr->origin_x);
+                                json_int_after(fr_slice, "\"origin_y\"", &fr->origin_y);
+                                json_int_after(fr_slice, "\"hitbox_x\"", &fr->hitbox_x);
+                                json_int_after(fr_slice, "\"hitbox_y\"", &fr->hitbox_y);
+                                json_int_after(fr_slice, "\"hitbox_w\"", &fr->hitbox_w);
+                                json_int_after(fr_slice, "\"hitbox_h\"", &fr->hitbox_h);
+                                if (fr->hitbox_w < 1) {
+                                    fr->hitbox_w = R01_ENTITY_HITBOX_W;
+                                }
+                                if (fr->hitbox_h < 1) {
+                                    fr->hitbox_h = R01_ENTITY_HITBOX_H;
                                 }
                                 parts_sec = json_find(fr_slice, "\"parts\":");
                                 parts_end = json_array_end(parts_sec);

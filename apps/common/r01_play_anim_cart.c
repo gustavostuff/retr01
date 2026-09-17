@@ -1,30 +1,48 @@
 #include "r01_play_anim_cart.h"
 
+#define FRAME_HDR 7
+
+static int frame_span(const uint8_t *p, const uint8_t *end) {
+    int pc;
+    if (!p || p + FRAME_HDR > end) {
+        return -1;
+    }
+    pc = (int)p[6];
+    if (pc < 0) {
+        return -1;
+    }
+    if (p + FRAME_HDR + pc * 4 > end) {
+        return -1;
+    }
+    return FRAME_HDR + pc * 4;
+}
+
 static const uint8_t *state_ptr_at(const R01CartPlayerAnim *anim, int state_idx) {
     const uint8_t *p;
+    const uint8_t *end;
     int si;
     if (!anim || !anim->blob || state_idx < 0 || state_idx >= anim->state_count) {
         return NULL;
     }
+    end = anim->blob + anim->len;
     p = anim->blob + 3;
     for (si = 0; si < anim->state_count; si++) {
         int dc;
         int fi;
-        if (p + 7 > anim->blob + anim->len) {
+        if (p + 1 > end) {
             return NULL;
         }
         if (si == state_idx) {
             return p;
         }
-        dc = (int)p[6];
-        p += 7;
+        dc = (int)p[0];
+        p += 1;
         for (fi = 0; fi < dc; fi++) {
-            int pc;
-            if (p >= anim->blob + anim->len) {
+            int n = frame_span(p, end);
+            if (n < 0) {
                 return NULL;
             }
-            pc = (int)p[0];
-            p += 1 + pc * 4;
+            p += n;
         }
     }
     return NULL;
@@ -34,18 +52,22 @@ static const uint8_t *state_end(const R01CartPlayerAnim *anim, const uint8_t *st
     int dc;
     int fi;
     const uint8_t *p;
-    if (!anim || !st || st + 7 > anim->blob + anim->len) {
+    const uint8_t *end;
+    if (!anim || !st) {
         return NULL;
     }
-    dc = (int)st[6];
-    p = st + 7;
+    end = anim->blob + anim->len;
+    if (st + 1 > end) {
+        return NULL;
+    }
+    dc = (int)st[0];
+    p = st + 1;
     for (fi = 0; fi < dc; fi++) {
-        int pc;
-        if (p >= anim->blob + anim->len) {
+        int n = frame_span(p, end);
+        if (n < 0) {
             return NULL;
         }
-        pc = (int)p[0];
-        p += 1 + pc * 4;
+        p += n;
     }
     return p;
 }
@@ -98,42 +120,51 @@ int r01_cart_player_anim_drawable_count(const R01CartPlayerAnim *anim, int state
     if (!st) {
         return 0;
     }
-    return (int)st[6];
+    return (int)st[0];
 }
 
-const uint8_t *r01_cart_player_anim_frame_parts(const R01CartPlayerAnim *anim, int state_idx, int frame_slot,
-                                                int *out_part_count) {
+const uint8_t *r01_cart_player_anim_frame_hdr(const R01CartPlayerAnim *anim, int state_idx, int frame_slot) {
     const uint8_t *st;
     const uint8_t *p;
+    const uint8_t *end;
     int dc;
     int fi;
-    if (out_part_count) {
-        *out_part_count = 0;
-    }
     st = state_ptr_at(anim, state_idx);
     if (!st || frame_slot < 0) {
         return NULL;
     }
-    dc = (int)st[6];
+    end = anim->blob + anim->len;
+    dc = (int)st[0];
     if (frame_slot >= dc) {
         return NULL;
     }
-    p = st + 7;
+    p = st + 1;
     for (fi = 0; fi < dc; fi++) {
-        int pc;
-        if (p >= anim->blob + anim->len) {
+        int n = frame_span(p, end);
+        if (n < 0) {
             return NULL;
         }
-        pc = (int)p[0];
         if (fi == frame_slot) {
-            if (out_part_count) {
-                *out_part_count = pc;
-            }
-            return p + 1;
+            return p;
         }
-        p += 1 + pc * 4;
+        p += n;
     }
     return NULL;
+}
+
+const uint8_t *r01_cart_player_anim_frame_parts(const R01CartPlayerAnim *anim, int state_idx, int frame_slot,
+                                                int *out_part_count) {
+    const uint8_t *fh = r01_cart_player_anim_frame_hdr(anim, state_idx, frame_slot);
+    if (out_part_count) {
+        *out_part_count = 0;
+    }
+    if (!fh) {
+        return NULL;
+    }
+    if (out_part_count) {
+        *out_part_count = (int)fh[6];
+    }
+    return fh + FRAME_HDR;
 }
 
 void r01_cart_part_pose(int origin_x, int origin_y, int part_dx, int part_dy, uint8_t attr, int inst_flip_h,
@@ -174,7 +205,7 @@ void r01_play_anim_tick_cart(R01PlayAnimCtx *ctx, const R01CartPlayerAnim *anim)
     if (!st) {
         return;
     }
-    frame_count = (int)st[6];
+    frame_count = (int)st[0];
     if (frame_count < 1) {
         return;
     }

@@ -51,7 +51,7 @@ TEST_MAIN() {
     EXPECT(e != NULL, "entity ptr");
     EXPECT(e->state_count == 1, "default 1 state");
     EXPECT(strcmp(e->states[0].name, "Idle") == 0, "Idle name");
-    EXPECT(e->states[0].hitbox_w == R01_ENTITY_HITBOX_W, "hitbox w");
+    EXPECT(e->states[0].frames[0].hitbox_w == R01_ENTITY_HITBOX_W, "hitbox w");
     EXPECT(e->states[0].frame_count == 1, "1 frame");
 
     fr = r01_entity_ensure_frame(e, 0, 1);
@@ -95,10 +95,20 @@ TEST_MAIN() {
 
     strncpy(e->name, "Hero", R01_ENTITY_NAME_MAX - 1);
     strncpy(e->states[0].name, "Walk", R01_ENTITY_NAME_MAX - 1);
-    e->states[0].origin_x = 3;
-    e->states[0].origin_y = 5;
-    e->states[0].hitbox_x = 1;
-    e->states[0].hitbox_y = 2;
+    e->states[0].frames[0].origin_x = 3;
+    e->states[0].frames[0].origin_y = 5;
+    e->states[0].frames[0].hitbox_x = 1;
+    e->states[0].frames[0].hitbox_y = 2;
+    {
+        R01EntityFrame *fr1 = r01_entity_ensure_frame(e, 0, 1);
+        EXPECT(fr1 != NULL, "second frame");
+        fr1->origin_x = 9;
+        fr1->origin_y = 8;
+        fr1->hitbox_x = 2;
+        fr1->hitbox_y = 3;
+        fr1->hitbox_w = 10;
+        fr1->hitbox_h = 12;
+    }
 
     idx2 = r01_world_entity_from_sprite(w, cat);
     EXPECT(idx2 == 1, "from sprite");
@@ -118,13 +128,13 @@ TEST_MAIN() {
     EXPECT(w->instances[0].flip_v == 0, "inst flip_v default");
     {
         int dx, dy, fh, fv;
-        r01_entity_part_instance_pose(&e->states[0], &part, 1, 0, &dx, &dy, &fh, &fv);
+        r01_entity_part_instance_pose(&e->states[0].frames[0], &part, 1, 0, &dx, &dy, &fh, &fv);
         /* origin 3, part dx 4 flip_h 1 -> mirrored dx = 2*3-4-8 = -6, flip cleared */
         EXPECT(dx == -6, "pose mirror dx");
         EXPECT(dy == 2, "pose mirror dy");
         EXPECT(fh == 0, "pose toggles part flip_h");
         EXPECT(fv == 0, "pose keeps flip_v");
-        r01_entity_part_instance_pose(&e->states[0], &part, 0, 1, &dx, &dy, &fh, &fv);
+        r01_entity_part_instance_pose(&e->states[0].frames[0], &part, 0, 1, &dx, &dy, &fh, &fv);
         /* origin_y 5, part dy 2 -> dy' = 2*5-2-8 = 0, flip_v set */
         EXPECT(dx == 4, "pose v keeps dx");
         EXPECT(dy == 0, "pose mirror dy");
@@ -265,7 +275,10 @@ TEST_MAIN() {
     EXPECT(p2->worlds[0].metasprite_count == 1, "metasprite rt");
     EXPECT(strcmp(p2->worlds[0].entities[0].name, "Hero") == 0, "entity name rt");
     EXPECT(strcmp(p2->worlds[0].entities[0].states[0].name, "Walk") == 0, "name rt");
-    EXPECT(p2->worlds[0].entities[0].states[0].origin_x == 3, "origin x");
+    EXPECT(p2->worlds[0].entities[0].states[0].frames[0].origin_x == 3, "origin x");
+    EXPECT(p2->worlds[0].entities[0].states[0].frame_count == 2, "two frames rt");
+    EXPECT(p2->worlds[0].entities[0].states[0].frames[1].origin_x == 9, "frame 1 origin x");
+    EXPECT(p2->worlds[0].entities[0].states[0].frames[1].hitbox_w == 10, "frame 1 hitbox w");
     EXPECT(p2->worlds[0].entities[0].states[0].frames[0].parts[0].dx == 4, "part dx");
     EXPECT(r01_is_global_spr_bank(p2->worlds[0].entities[0].states[0].frames[0].parts[0].bank),
            "global SPR bank rt");

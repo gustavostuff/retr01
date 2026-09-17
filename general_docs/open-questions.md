@@ -14,7 +14,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 **Partly sized:** Live instance records in system RAM and optional `PA` blobs still need a frozen byte layout. Spawn locations are **PRG-side** (not cart).
 
-**Entity cart pack (decision):** Studio writes the locked offset-table **EntityDef** from `software-api.md` (variable length, max **484 B**). World catalog = `u16` type directory + defs. The old fixed **20 B** snapshot is retired.
+**Entity cart pack (decision):** Studio writes the locked offset-table **EntityDef** from `software-api.md` (variable length, max **532 B**). Draw origin and hitbox live on each **frame**. World catalog = `u16` type directory + defs. The old fixed **20 B** snapshot is retired.
 
 **Touches:** `memory.md`, `software-api.md`
 
@@ -48,7 +48,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### 7. Screen + entity budgets
 
-**Resolved:** **32** BG1 / **0..8** BG0 per world. Entity types: **16 per world** (catalog in the world blob). Maxed def **484 B**. See `memory.md`, `software-api.md`.
+**Resolved:** **32** BG1 / **0..8** BG0 per world. Entity types: **16 per world** (catalog in the world blob). Maxed def **532 B**. See `memory.md`, `software-api.md`.
 
 ### 8. Cart flashing
 
@@ -106,13 +106,13 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-14 | 74HC14 | Optional. Skip if canned PHI2/DOT + simple reset. Add if soft edges or reset chatter. |
 | 2026-09-14 | Other screens | Max 16 total shared pool (title/interstitial/credits). Dropped 46 credits cap. |
 | 2026-09-17 | Other screens | Cap **8** (ids 0..7). Nametable attrs index **world 0** CHR. See `memory.md`. |
-| 2026-09-17 | Cart layout | Cap **7** worlds. Other screens back to **16**. Global other CHR (**4** BG + **4** SPR, **32 KB**). `format_ver` **4**, ptr table 6 slots. Max-fill ~**28.5 KB** free. See `memory.md`. |
+| 2026-09-17 | Cart layout | Cap **7** worlds. Other screens back to **16**. Global other CHR (**4** BG + **4** SPR, **32 KB**). `format_ver` **4**, ptr table 6 slots. Max-fill later revised (see entity pack 532 B). See `memory.md`. |
 | 2026-09-14 | Entity spawns | Spawn locations in PRG, not cart world blobs. |
 | 2026-09-13 | Sync out | One header, CSYNC or H/V mode. |
 | 2026-09-13 | Branding | One product: Retr01. |
 | 2026-09-14 | Flasher | Console + Adafruit's UPDI Friend. Shared header. 4-pos DIP: M/S1/S2/cart, default all OFF. Scope: AVRs + cart only. |
 | 2026-09-14 | Entity caps | 16 types per world (catalog in world blob). Dropped global 128 + `chr_world`. format_ver 3. |
-| 2026-09-16 | Entity pack | Max sprites/frame **6**; maxed def **484 B**. Max-fill later revised (see 2026-09-17 player patterns). |
+| 2026-09-17 | Entity pack | Max sprites/frame **6**; maxed def **532 B**. Draw origin and hitbox are per **frame**. See `software-api.md`. |
 | 2026-09-14 | Anim tiles | base..base+3 wrap in bank, default delay 6. |
 | 2026-09-14 | Video timing | Sprites VBlank pass. BG0 HBlank ping-pong only. |
 | 2026-09-14 | PCB layers | Initial: motherboard, cart, and pads all 2-layer. 4-layer mobo only later if bring-up / commercial SMD needs it. |
@@ -128,3 +128,4 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-16 | Player item bank | *(superseded 2026-09-17)* Had planned a global 256-tile player-only bank. |
 | 2026-09-17 | Player patterns | No private player bank. Marked player + inventory art use **global other SPR** (one of 4 banks). See `memory.md`, `software-api.md`. |
 | 2026-09-17 | Host Play boot catchup | Phase 1 emu waits for a full start MAP stream (480 B) before Host Play takes the camera 2x2 from cart. See `apps/emu/README.md`. |
+| 2026-09-17 | Entity origin/hitbox | Per **frame** (Studio compose, JSON, EntityDef hitbox, PA origin+hitbox). Maxed def **532 B**. See `software-api.md`. |

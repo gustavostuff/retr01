@@ -7,7 +7,6 @@
 void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
     EntityModalLayout lo;
     const R01World *w = r01_project_active_world_const(ui->project);
-    R01EntityState *st;
     R01EntityFrame *fr;
     int row = w ? w->default_pal_row : 0;
     int sc = entity_edit_compose_scale(ui);
@@ -83,20 +82,19 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
 
     fill_rect(r, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE, UI_COL_WELL_R,
               UI_COL_WELL_G, UI_COL_WELL_B);
-    st = entity_edit_state(ui);
     fr = entity_edit_frame(ui);
     ui_clip_push(r, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE, &clip);
     ui_compose_draw_grid(r, ox, oy, full, sc);
     ui_compose_draw_frame(r, ui->project, w, fr, ox, oy, sc, ui->entity_edit.sel_part,
                           ui->entity_edit.show_part_outlines, part_alpha);
-    if (st && guides_mode) {
+    if (fr && guides_mode) {
         SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
         SDL_SetRenderDrawColor(r, 220, 40, 40, 90);
         {
-            SDL_Rect hb = {ox + st->hitbox_x * sc, oy + st->hitbox_y * sc, st->hitbox_w * sc, st->hitbox_h * sc};
+            SDL_Rect hb = {ox + fr->hitbox_x * sc, oy + fr->hitbox_y * sc, fr->hitbox_w * sc, fr->hitbox_h * sc};
             SDL_RenderFillRect(r, &hb);
         }
-        draw_ui_cross(r, ox + st->origin_x * sc, oy + st->origin_y * sc);
+        draw_ui_cross(r, ox + fr->origin_x * sc, oy + fr->origin_y * sc);
     }
     if (ui->entity_edit.tool == UI_ENTITY_TOOL_PAINT && !ui->menu.open &&
         point_in_rect(ui->mouse_x, ui->mouse_y, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE,

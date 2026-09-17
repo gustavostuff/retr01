@@ -8,7 +8,7 @@
 #define R01_CART_WHDR_INST_COUNT 18 /* always 0; placements are PRG-side */
 #define R01_CART_WHDR_OFF_TYPES 19
 #define R01_CART_WHDR_OFF_INSTS 22 /* points at end of types (PA blob start) */
-/* Play player: type index, or 0xFF = CHR stub. Hitbox snapshot from that type's state 0. */
+/* Play player: type index, or 0xFF = CHR stub. Hitbox snapshot from that type's state 0 frame 0. */
 #define R01_CART_WHDR_FLAGS 7
 #define R01_CART_WHDR_FLAG_PLAYER_ANIM 0x01u
 #define R01_CART_WHDR_FLAG_BG0_WRAP_X 0x02u
@@ -27,7 +27,7 @@
 #define R01_CART_ENTITY_PARTS_MAX 6
 #define R01_CART_ENTITY_STATES_MAX 4
 #define R01_CART_ENTITY_FRAMES_MAX 4
-#define R01_CART_ENTITY_DEF_MAX 484 /* locked fully-populated size (general_docs/software-api.md) */
+#define R01_CART_ENTITY_DEF_MAX 532 /* locked fully-populated size (general_docs/software-api.md) */
 #define R01_CART_ENTITY_FRAME_DELAY_DEFAULT 1
 #define R01_CART_INSTANCE_SIZE 6 /* type_id, flags (bit0 flip_h, bit1 flip_v), world_x u16 LE, world_y u16 LE */
 

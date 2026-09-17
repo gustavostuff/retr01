@@ -85,6 +85,44 @@ static void put_u16(uint8_t *p, uint16_t v) {
     p[1] = (uint8_t)((v >> 8) & 0xFFu);
 }
 
+static void pack_hitbox_rel(int origin_x, int origin_y, int box_x, int box_y, int box_w, int box_h, uint8_t *hx,
+                            uint8_t *hy, uint8_t *hw, uint8_t *hh) {
+    int x = box_x - origin_x;
+    int y = box_y - origin_y;
+    int w = box_w > 0 ? box_w : R01_PLAY_PLAYER_W;
+    int h = box_h > 0 ? box_h : R01_PLAY_PLAYER_H;
+    if (x < 0) {
+        x = 0;
+    }
+    if (y < 0) {
+        y = 0;
+    }
+    if (x > 255) {
+        x = 255;
+    }
+    if (y > 255) {
+        y = 255;
+    }
+    if (w > 255) {
+        w = 255;
+    }
+    if (h > 255) {
+        h = 255;
+    }
+    if (hx) {
+        *hx = (uint8_t)x;
+    }
+    if (hy) {
+        *hy = (uint8_t)y;
+    }
+    if (hw) {
+        *hw = (uint8_t)w;
+    }
+    if (hh) {
+        *hh = (uint8_t)h;
+    }
+}
+
 /* Byte-RLE over a 480 B screen payload (general_docs/graphics). Returns compressed length, or 0 on fail. */
 static size_t rle_encode_480(const uint8_t in[R01_CART_SCREEN_PAYLOAD], uint8_t *out, size_t out_cap) {
     size_t ip = 0;
@@ -256,7 +294,7 @@ static int append_player_anim_blob(Buf *blob, const R01World *w, int player_type
     }
     for (si = 0; si < ent->state_count && si < R01_ENTITY_STATES_MAX; si++) {
         const R01EntityState *st = &ent->states[si];
-        uint8_t hdr[7];
+        uint8_t drawable_count;
         int fi;
         int drawable = 0;
         for (fi = 0; fi < st->frame_count; fi++) {
@@ -267,25 +305,27 @@ static int append_player_anim_blob(Buf *blob, const R01World *w, int player_type
         if (drawable > 255) {
             drawable = 255;
         }
-        hdr[0] = (uint8_t)st->origin_x;
-        hdr[1] = (uint8_t)st->origin_y;
-        hdr[2] = (uint8_t)st->hitbox_x;
-        hdr[3] = (uint8_t)st->hitbox_y;
-        hdr[4] = (uint8_t)(st->hitbox_w > 0 ? st->hitbox_w : R01_PLAY_PLAYER_W);
-        hdr[5] = (uint8_t)(st->hitbox_h > 0 ? st->hitbox_h : R01_PLAY_PLAYER_H);
-        hdr[6] = (uint8_t)drawable;
-        if (buf_append(blob, hdr, sizeof(hdr)) != 0) {
+        drawable_count = (uint8_t)drawable;
+        if (buf_append(blob, &drawable_count, 1) != 0) {
             return -1;
         }
         for (fi = 0; fi < st->frame_count; fi++) {
             const R01EntityFrame *fr = &st->frames[fi];
             int pi;
             uint8_t pc;
+            uint8_t fh[7];
             if (fr->part_count < 1) {
                 continue;
             }
             pc = (uint8_t)(fr->part_count > R01_CART_ENTITY_PARTS_MAX ? R01_CART_ENTITY_PARTS_MAX : fr->part_count);
-            if (buf_append(blob, &pc, 1) != 0) {
+            fh[0] = (uint8_t)fr->origin_x;
+            fh[1] = (uint8_t)fr->origin_y;
+            fh[2] = (uint8_t)fr->hitbox_x;
+            fh[3] = (uint8_t)fr->hitbox_y;
+            fh[4] = (uint8_t)(fr->hitbox_w > 0 ? fr->hitbox_w : R01_PLAY_PLAYER_W);
+            fh[5] = (uint8_t)(fr->hitbox_h > 0 ? fr->hitbox_h : R01_PLAY_PLAYER_H);
+            fh[6] = pc;
+            if (buf_append(blob, fh, sizeof(fh)) != 0) {
                 return -1;
             }
             for (pi = 0; pi < (int)pc; pi++) {
@@ -336,13 +376,10 @@ static size_t pack_entity_def(uint8_t *out, size_t cap, const R01EntityType *ent
 
     for (si = 0; si < sc; si++) {
         const R01EntityState *st = &ent->states[si];
-        int ox = st->origin_x;
-        int oy = st->origin_y;
         int fc;
         int fi;
         size_t state_base;
         uint8_t *sh;
-        int hx, hy, hw, hh;
 
         fc = st->frame_count;
         if (fc < 1) {
@@ -354,44 +391,20 @@ static size_t pack_entity_def(uint8_t *out, size_t cap, const R01EntityType *ent
         if (fc > R01_ENTITY_FRAMES_MAX) {
             fc = R01_ENTITY_FRAMES_MAX;
         }
-        if (cursor + 14u > sizeof(scratch)) {
+        if (cursor + 10u > sizeof(scratch)) {
             break;
         }
         state_base = cursor;
         put_u16(hdr + 4 + (size_t)si * 2u, (uint16_t)state_base);
         sh = scratch + state_base;
-        hx = st->hitbox_x - ox;
-        hy = st->hitbox_y - oy;
-        if (hx < 0) {
-            hx = 0;
-        }
-        if (hy < 0) {
-            hy = 0;
-        }
-        if (hx > 255) {
-            hx = 255;
-        }
-        if (hy > 255) {
-            hy = 255;
-        }
-        hw = st->hitbox_w > 0 ? st->hitbox_w : R01_PLAY_PLAYER_W;
-        hh = st->hitbox_h > 0 ? st->hitbox_h : R01_PLAY_PLAYER_H;
-        if (hw > 255) {
-            hw = 255;
-        }
-        if (hh > 255) {
-            hh = 255;
-        }
         sh[0] = (uint8_t)fc;
         sh[1] = 0; /* reserved1 */
-        sh[2] = (uint8_t)hx;
-        sh[3] = (uint8_t)hy;
-        sh[4] = (uint8_t)hw;
-        sh[5] = (uint8_t)hh;
-        cursor = state_base + 14u;
+        cursor = state_base + 10u;
 
         for (fi = 0; fi < fc; fi++) {
             const R01EntityFrame *fr = &st->frames[fi];
+            int ox = fr->origin_x;
+            int oy = fr->origin_y;
             int pc;
             int pi;
             size_t frame_base;
@@ -399,18 +412,18 @@ static size_t pack_entity_def(uint8_t *out, size_t cap, const R01EntityType *ent
 
             pc = fr->part_count;
             if (pc < 1) {
-                put_u16(sh + 6 + (size_t)fi * 2u, 0);
+                put_u16(sh + 2 + (size_t)fi * 2u, 0);
                 continue;
             }
             if (pc > R01_CART_ENTITY_PARTS_MAX) {
                 pc = R01_CART_ENTITY_PARTS_MAX;
             }
-            if (cursor + 2u + (size_t)pc * 4u > sizeof(scratch)) {
-                put_u16(sh + 6 + (size_t)fi * 2u, 0);
+            if (cursor + 6u + (size_t)pc * 4u > sizeof(scratch)) {
+                put_u16(sh + 2 + (size_t)fi * 2u, 0);
                 continue;
             }
             frame_base = cursor;
-            put_u16(sh + 6 + (size_t)fi * 2u, (uint16_t)(frame_base - state_base));
+            put_u16(sh + 2 + (size_t)fi * 2u, (uint16_t)(frame_base - state_base));
             fh = scratch + frame_base;
             {
                 int delay = fr->delay;
@@ -423,9 +436,11 @@ static size_t pack_entity_def(uint8_t *out, size_t cap, const R01EntityType *ent
                 fh[0] = (uint8_t)delay;
             }
             fh[1] = (uint8_t)pc;
+            pack_hitbox_rel(ox, oy, fr->hitbox_x, fr->hitbox_y, fr->hitbox_w, fr->hitbox_h, &fh[2], &fh[3],
+                            &fh[4], &fh[5]);
             for (pi = 0; pi < pc; pi++) {
                 const R01EntityPart *pt = &fr->parts[pi];
-                uint8_t *sp = fh + 2 + pi * 4;
+                uint8_t *sp = fh + 6 + pi * 4;
                 int tile = pt->tile_id;
                 int rx = pt->dx - ox;
                 int ry = pt->dy - oy;
@@ -450,7 +465,7 @@ static size_t pack_entity_def(uint8_t *out, size_t cap, const R01EntityType *ent
                 sp[2] = (uint8_t)(int8_t)ry;
                 sp[3] = pack_oam_attr(pt->bank, pt->pal, pt->flip_h, pt->flip_v);
             }
-            cursor = frame_base + 2u + (size_t)pc * 4u;
+            cursor = frame_base + 6u + (size_t)pc * 4u;
         }
     }
 
@@ -877,23 +892,17 @@ static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w, c
         put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_Y, 0);
         put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_W, (uint8_t)R01_PLAY_PLAYER_W);
         put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_H, (uint8_t)R01_PLAY_PLAYER_H);
-        if (pe >= 0 && pe < type_n && w->entities[pe].state_count > 0) {
-            const R01EntityState *st = &w->entities[pe].states[0];
-            int hx = st->hitbox_x - st->origin_x;
-            int hy = st->hitbox_y - st->origin_y;
-            if (hx < 0) {
-                hx = 0;
-            }
-            if (hy < 0) {
-                hy = 0;
-            }
+        if (pe >= 0 && pe < type_n && w->entities[pe].state_count > 0 &&
+            w->entities[pe].states[0].frame_count > 0) {
+            const R01EntityFrame *fr = &w->entities[pe].states[0].frames[0];
+            uint8_t hx, hy, hw, hh;
+            pack_hitbox_rel(fr->origin_x, fr->origin_y, fr->hitbox_x, fr->hitbox_y, fr->hitbox_w, fr->hitbox_h,
+                            &hx, &hy, &hw, &hh);
             put_u8(hdr + R01_CART_WHDR_PLAYER_ENTITY, (uint8_t)pe);
-            put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_X, (uint8_t)hx);
-            put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_Y, (uint8_t)hy);
-            put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_W,
-                   (uint8_t)(st->hitbox_w > 0 ? st->hitbox_w : R01_PLAY_PLAYER_W));
-            put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_H,
-                   (uint8_t)(st->hitbox_h > 0 ? st->hitbox_h : R01_PLAY_PLAYER_H));
+            put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_X, hx);
+            put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_Y, hy);
+            put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_W, hw);
+            put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_H, hh);
         }
     }
     {

@@ -11,10 +11,10 @@ int entity_edit_frame_unlock_count(UiState *ui);
 int entity_edit_compose_scale(const UiState *ui);
 void entity_edit_screen_to_world(const UiState *ui, const EntityModalLayout *lo, int lx, int ly, int *wx, int *wy);
 void entity_edit_world_to_screen(const UiState *ui, const EntityModalLayout *lo, int wx, int wy, int *sx, int *sy);
-int entity_edit_origin_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityState *st, int lx, int ly);
-int entity_edit_hitbox_corner_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityState *st, int lx,
+int entity_edit_origin_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityFrame *fr, int lx, int ly);
+int entity_edit_hitbox_corner_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityFrame *fr, int lx,
                                   int ly, int *out_corner);
-int entity_edit_hitbox_body_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityState *st, int lx,
+int entity_edit_hitbox_body_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityFrame *fr, int lx,
                                 int ly);
 void entity_edit_view_clamp(UiState *ui);
 void entity_edit_view_pan(UiState *ui, int dx, int dy);

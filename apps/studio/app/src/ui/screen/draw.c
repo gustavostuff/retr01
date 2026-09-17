@@ -70,9 +70,9 @@ static int entity_local_bounds(const R01EntityType *ent, int local_x, int local_
         const R01EntityPart *pt = &fr->parts[pi];
         int dx, dy;
         int px, py;
-        r01_entity_part_instance_pose(st, pt, flip_h, flip_v, &dx, &dy, NULL, NULL);
-        px = r01_entity_world_x(local_x, st->origin_x, dx);
-        py = r01_entity_world_y(local_y, st->origin_y, dy);
+        r01_entity_part_instance_pose(fr, pt, flip_h, flip_v, &dx, &dy, NULL, NULL);
+        px = r01_entity_world_x(local_x, fr->origin_x, dx);
+        py = r01_entity_world_y(local_y, fr->origin_y, dy);
         if (px < min_x) {
             min_x = px;
         }
@@ -146,9 +146,9 @@ static void draw_entity_at_screen(UiState *ui, SDL_Renderer *r, const R01World *
         R01EntityPart draw_pt;
         int dx, dy, fh, fv;
         int px, py;
-        r01_entity_part_instance_pose(st, pt, flip_h, flip_v, &dx, &dy, &fh, &fv);
-        px = r01_entity_world_x(local_x, st->origin_x, dx);
-        py = r01_entity_world_y(local_y, st->origin_y, dy);
+        r01_entity_part_instance_pose(fr, pt, flip_h, flip_v, &dx, &dy, &fh, &fv);
+        px = r01_entity_world_x(local_x, fr->origin_x, dx);
+        py = r01_entity_world_y(local_y, fr->origin_y, dy);
         draw_pt = *pt;
         draw_pt.flip_h = fh;
         draw_pt.flip_v = fv;
@@ -233,9 +233,9 @@ int instance_hit_on_screen(const UiState *ui, int lx, int ly, int *out_inst) {
             const R01EntityPart *pt = &fr->parts[pi];
             int dx, dy;
             int part_x, part_y;
-            r01_entity_part_instance_pose(st, pt, inst->flip_h, inst->flip_v, &dx, &dy, NULL, NULL);
-            part_x = r01_entity_world_x(local_x, st->origin_x, dx);
-            part_y = r01_entity_world_y(local_y, st->origin_y, dy);
+            r01_entity_part_instance_pose(fr, pt, inst->flip_h, inst->flip_v, &dx, &dy, NULL, NULL);
+            part_x = r01_entity_world_x(local_x, fr->origin_x, dx);
+            part_y = r01_entity_world_y(local_y, fr->origin_y, dy);
             if (px >= part_x && px < part_x + 8 && py >= part_y && py < part_y + 8) {
                 if (out_inst) {
                     *out_inst = i;

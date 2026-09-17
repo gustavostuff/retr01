@@ -60,11 +60,12 @@ int r01_entity_frame_remove_part(R01EntityFrame *fr, int part_idx);
 /* Move part to end of frame (top of draw/hit z-order). Returns new index or -1. */
 int r01_entity_frame_bring_part_front(R01EntityFrame *fr, int part_idx);
 /*
- * Recompute state origin from the union of all parts across frames in this
- * state. Empty: origin/hitbox at 0,0 with default size. Else origin = AABB
- * center; authored hitbox x/y/w/h are kept and only clamped into the compose
- * grid.
+ * Recompute one frame's origin from its parts. Empty: origin/hitbox at 0,0 with
+ * default size. Else origin = AABB center; authored hitbox x/y/w/h are kept
+ * and only clamped into the compose grid.
  */
+void r01_entity_frame_recompute_guides(R01EntityFrame *fr);
+/* Recompute every frame in the state. */
 void r01_entity_state_recompute_guides(R01EntityState *st);
 
 /* Simple 1-state / 1-frame / 1-part entity from a sprite catalog entry (for phase C). */
@@ -81,8 +82,8 @@ int r01_world_place_sprite(R01World *w, int sprite_catalog_idx, int world_x, int
 /* Drop an entity type: place instance. Returns instance idx or -1. */
 int r01_world_place_entity(R01World *w, int type_id, int world_x, int world_y);
 
-/* Resolve part draw pose for an instance (optional mirrors around state origin). */
-void r01_entity_part_instance_pose(const R01EntityState *st, const R01EntityPart *pt, int inst_flip_h,
+/* Resolve part draw pose for an instance (optional mirrors around frame origin). */
+void r01_entity_part_instance_pose(const R01EntityFrame *fr, const R01EntityPart *pt, int inst_flip_h,
                                    int inst_flip_v, int *out_dx, int *out_dy, int *out_flip_h, int *out_flip_v);
 
 /* Frames with at least one sprite part (empty Studio slots are skipped for animation). */
@@ -90,8 +91,8 @@ int r01_entity_state_drawable_frame_count(const R01EntityState *st);
 int r01_entity_state_drawable_frame_index(const R01EntityState *st, int slot);
 
 /*
- * Instance world_x/y is the user-defined state origin in world pixels.
- * Part / hitbox authoring coords are relative to the 16x16 compose grid;
+ * Instance world_x/y is the user-defined frame origin in world pixels.
+ * Part / hitbox authoring coords are relative to the 32x32 compose grid;
  * convert with (coord - origin) before adding to world.
  */
 static inline int r01_entity_world_x(int world_x, int origin_x, int ax) {

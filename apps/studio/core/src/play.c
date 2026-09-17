@@ -125,6 +125,7 @@ void r01_play_player_hit_rect(const R01World *w, const R01GameCtx *ctx, int orig
                               int *hy, int *hw, int *hh) {
     int pe;
     int state_idx = 0;
+    int frame_idx = 0;
     int box_w = R01_PLAY_PLAYER_W;
     int box_h = R01_PLAY_PLAYER_H;
     int box_x = origin_x;
@@ -132,20 +133,29 @@ void r01_play_player_hit_rect(const R01World *w, const R01GameCtx *ctx, int orig
     pe = r01_world_player_entity(w);
     if (ctx) {
         state_idx = r01_player_anim_entity_state(ctx);
+        frame_idx = r01_player_anim_frame(ctx);
     }
     if (pe >= 0 && w->entities[pe].state_count > 0) {
         const R01EntityState *st;
+        const R01EntityFrame *fr;
         if (state_idx < 0 || state_idx >= w->entities[pe].state_count) {
             state_idx = 0;
         }
         st = &w->entities[pe].states[state_idx];
-        box_x = r01_entity_world_x(origin_x, st->origin_x, st->hitbox_x);
-        box_y = r01_entity_world_y(origin_y, st->origin_y, st->hitbox_y);
-        if (st->hitbox_w > 0) {
-            box_w = st->hitbox_w;
-        }
-        if (st->hitbox_h > 0) {
-            box_h = st->hitbox_h;
+        if (st->frame_count > 0) {
+            frame_idx = r01_entity_state_drawable_frame_index(st, frame_idx);
+            if (frame_idx < 0 || frame_idx >= st->frame_count) {
+                frame_idx = 0;
+            }
+            fr = &st->frames[frame_idx];
+            box_x = r01_entity_world_x(origin_x, fr->origin_x, fr->hitbox_x);
+            box_y = r01_entity_world_y(origin_y, fr->origin_y, fr->hitbox_y);
+            if (fr->hitbox_w > 0) {
+                box_w = fr->hitbox_w;
+            }
+            if (fr->hitbox_h > 0) {
+                box_h = fr->hitbox_h;
+            }
         }
     }
     if (hx) {
@@ -304,9 +314,9 @@ int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry 
                 const R01EntityPart *pt = &fr->parts[pi];
                 int dx, dy, fh, fv;
                 int ox, oy;
-                r01_entity_part_instance_pose(st, pt, flip_h, 0, &dx, &dy, &fh, &fv);
-                ox = r01_entity_world_x(ctx->player_x, st->origin_x, dx) - ctx->cam_x;
-                oy = r01_entity_world_y(ctx->player_y, st->origin_y, dy) - ctx->cam_y;
+                r01_entity_part_instance_pose(fr, pt, flip_h, 0, &dx, &dy, &fh, &fv);
+                ox = r01_entity_world_x(ctx->player_x, fr->origin_x, dx) - ctx->cam_x;
+                oy = r01_entity_world_y(ctx->player_y, fr->origin_y, dy) - ctx->cam_y;
                 if (r01_oam_tile_off_screen(ox, oy)) {
                     continue;
                 }
@@ -375,9 +385,9 @@ int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry 
             const R01EntityPart *pt = &fr->parts[pi];
             int dx, dy, fh, fv;
             int ox, oy;
-            r01_entity_part_instance_pose(st, pt, inst->flip_h, inst->flip_v, &dx, &dy, &fh, &fv);
-            ox = r01_entity_world_x(inst->world_x, st->origin_x, dx) - ctx->cam_x;
-            oy = r01_entity_world_y(inst->world_y, st->origin_y, dy) - ctx->cam_y;
+            r01_entity_part_instance_pose(fr, pt, inst->flip_h, inst->flip_v, &dx, &dy, &fh, &fv);
+            ox = r01_entity_world_x(inst->world_x, fr->origin_x, dx) - ctx->cam_x;
+            oy = r01_entity_world_y(inst->world_y, fr->origin_y, dy) - ctx->cam_y;
             if (r01_oam_tile_off_screen(ox, oy)) {
                 continue;
             }

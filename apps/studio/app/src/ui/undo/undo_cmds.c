@@ -1723,14 +1723,14 @@ static R01EntityFrame *undo_entity_edit_frame(UiState *ui, int state, int frame)
     return r01_entity_ensure_frame(&ui->entity_edit.draft, state, frame);
 }
 
-static void undo_entity_edit_guides(UiState *ui, int state) {
-    R01EntityState *st;
+static void undo_entity_edit_guides(UiState *ui, int state, int frame) {
+    R01EntityFrame *fr;
     if (!ui || !ui->entity_edit.open) {
         return;
     }
-    st = r01_entity_state(&ui->entity_edit.draft, state);
-    if (st) {
-        r01_entity_state_recompute_guides(st);
+    fr = r01_entity_frame(&ui->entity_edit.draft, state, frame);
+    if (fr) {
+        r01_entity_frame_recompute_guides(fr);
     }
 }
 
@@ -1782,7 +1782,7 @@ static void entity_part_add_undo(UiState *ui, void *data) {
         } else if (ui->entity_edit.sel_part > d->part_idx) {
             ui->entity_edit.sel_part--;
         }
-        undo_entity_edit_guides(ui, d->state);
+        undo_entity_edit_guides(ui, d->state, d->frame);
     }
     if (d->owns_catalog) {
         w = &ui->project->worlds[d->world_idx];
@@ -1807,7 +1807,7 @@ static void entity_part_add_redo(UiState *ui, void *data) {
         if (idx >= 0) {
             d->part_idx = idx;
             ui->entity_edit.sel_part = idx;
-            undo_entity_edit_guides(ui, d->state);
+            undo_entity_edit_guides(ui, d->state, d->frame);
         }
     }
     if (d->owns_catalog) {
@@ -1867,7 +1867,7 @@ static void entity_part_remove_undo(UiState *ui, void *data) {
     if (idx >= 0) {
         d->part_idx = idx;
         ui->entity_edit.sel_part = idx;
-        undo_entity_edit_guides(ui, d->state);
+        undo_entity_edit_guides(ui, d->state, d->frame);
     }
 }
 
@@ -1887,7 +1887,7 @@ static void entity_part_remove_redo(UiState *ui, void *data) {
     } else if (ui->entity_edit.sel_part > d->part_idx) {
         ui->entity_edit.sel_part--;
     }
-    undo_entity_edit_guides(ui, d->state);
+    undo_entity_edit_guides(ui, d->state, d->frame);
 }
 
 static const UiUndoVTable entity_part_remove_vt = {entity_part_remove_undo, entity_part_remove_redo, free_ptr};

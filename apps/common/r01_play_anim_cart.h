@@ -27,10 +27,13 @@ int r01_cart_player_anim_parse(const uint8_t *blob, size_t len, R01CartPlayerAni
 
 int r01_cart_player_anim_state_count(const R01CartPlayerAnim *anim);
 
-/* Returns 0 on success; state header is 7 bytes at *out_state (origin, hitbox, drawable_count). */
+/* Returns 0 on success; state header is 1 byte at *out_state (drawable_count). */
 int r01_cart_player_anim_state_hdr(const R01CartPlayerAnim *anim, int state_idx, const uint8_t **out_state);
 
 int r01_cart_player_anim_drawable_count(const R01CartPlayerAnim *anim, int state_idx);
+
+/* Frame header is 7 bytes: origin_x/y, hitbox xywh, part_count. Returns NULL if slot missing. */
+const uint8_t *r01_cart_player_anim_frame_hdr(const R01CartPlayerAnim *anim, int state_idx, int frame_slot);
 
 /* Parts are tile, attr, dx, dy tuples; returns NULL if slot missing. */
 const uint8_t *r01_cart_player_anim_frame_parts(const R01CartPlayerAnim *anim, int state_idx, int frame_slot,

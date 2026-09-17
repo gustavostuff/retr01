@@ -74,30 +74,30 @@ void entity_edit_world_to_screen(const UiState *ui, const EntityModalLayout *lo,
 }
 
 /* 1 if (lx,ly) hits the origin cross glyph. */
-int entity_edit_origin_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityState *st, int lx,
+int entity_edit_origin_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityFrame *fr, int lx,
                              int ly) {
     int sx, sy;
-    if (!st) {
+    if (!fr) {
         return 0;
     }
-    entity_edit_world_to_screen(ui, lo, st->origin_x, st->origin_y, &sx, &sy);
+    entity_edit_world_to_screen(ui, lo, fr->origin_x, fr->origin_y, &sx, &sy);
     return point_in_rect(lx, ly, sx - UI_DOT_SIZE / 2, sy - UI_DOT_SIZE / 2, UI_DOT_SIZE, UI_DOT_SIZE);
 }
 
 /* 1 if near a hitbox corner; out_corner 0=NW 1=NE 2=SE 3=SW. */
-int entity_edit_hitbox_corner_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityState *st, int lx,
+int entity_edit_hitbox_corner_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityFrame *fr, int lx,
                                     int ly, int *out_corner) {
     int sc = entity_edit_compose_scale(ui);
     int grab = sc > UI_UNIT ? sc : UI_UNIT;
     int i;
     int cx[4], cy[4];
-    if (!st || st->hitbox_w < 1 || st->hitbox_h < 1) {
+    if (!fr || fr->hitbox_w < 1 || fr->hitbox_h < 1) {
         return 0;
     }
-    entity_edit_world_to_screen(ui, lo, st->hitbox_x, st->hitbox_y, &cx[0], &cy[0]);
-    entity_edit_world_to_screen(ui, lo, st->hitbox_x + st->hitbox_w, st->hitbox_y, &cx[1], &cy[1]);
-    entity_edit_world_to_screen(ui, lo, st->hitbox_x + st->hitbox_w, st->hitbox_y + st->hitbox_h, &cx[2], &cy[2]);
-    entity_edit_world_to_screen(ui, lo, st->hitbox_x, st->hitbox_y + st->hitbox_h, &cx[3], &cy[3]);
+    entity_edit_world_to_screen(ui, lo, fr->hitbox_x, fr->hitbox_y, &cx[0], &cy[0]);
+    entity_edit_world_to_screen(ui, lo, fr->hitbox_x + fr->hitbox_w, fr->hitbox_y, &cx[1], &cy[1]);
+    entity_edit_world_to_screen(ui, lo, fr->hitbox_x + fr->hitbox_w, fr->hitbox_y + fr->hitbox_h, &cx[2], &cy[2]);
+    entity_edit_world_to_screen(ui, lo, fr->hitbox_x, fr->hitbox_y + fr->hitbox_h, &cx[3], &cy[3]);
     for (i = 0; i < 4; i++) {
         if (point_in_rect(lx, ly, cx[i] - grab / 2, cy[i] - grab / 2, grab, grab)) {
             if (out_corner) {
@@ -109,14 +109,14 @@ int entity_edit_hitbox_corner_hit(const UiState *ui, const EntityModalLayout *lo
     return 0;
 }
 
-int entity_edit_hitbox_body_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityState *st, int lx,
+int entity_edit_hitbox_body_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityFrame *fr, int lx,
                                   int ly) {
     int x0, y0, x1, y1;
-    if (!st || st->hitbox_w < 1 || st->hitbox_h < 1) {
+    if (!fr || fr->hitbox_w < 1 || fr->hitbox_h < 1) {
         return 0;
     }
-    entity_edit_world_to_screen(ui, lo, st->hitbox_x, st->hitbox_y, &x0, &y0);
-    entity_edit_world_to_screen(ui, lo, st->hitbox_x + st->hitbox_w, st->hitbox_y + st->hitbox_h, &x1, &y1);
+    entity_edit_world_to_screen(ui, lo, fr->hitbox_x, fr->hitbox_y, &x0, &y0);
+    entity_edit_world_to_screen(ui, lo, fr->hitbox_x + fr->hitbox_w, fr->hitbox_y + fr->hitbox_h, &x1, &y1);
     return point_in_rect(lx, ly, x0, y0, x1 - x0, y1 - y0);
 }
 
@@ -193,9 +193,9 @@ void entity_edit_set_zoom(UiState *ui, const EntityModalLayout *lo, int new_zoom
 }
 
 void entity_edit_recompute_guides(UiState *ui) {
-    R01EntityState *st = entity_edit_state(ui);
-    if (st) {
-        r01_entity_state_recompute_guides(st);
+    R01EntityFrame *fr = entity_edit_frame(ui);
+    if (fr) {
+        r01_entity_frame_recompute_guides(fr);
     }
 }
 
