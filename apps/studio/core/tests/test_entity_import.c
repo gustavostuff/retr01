@@ -73,6 +73,14 @@ TEST_MAIN() {
     EXPECT(p->worlds[0].entities[0].states[0].frames[0].part_count == 1, "one part");
     EXPECT(p->worlds[0].entities[0].states[0].frames[0].delay == 6, "delay 6");
     EXPECT(p->worlds[0].entities[0].states[0].frames[0].parts[0].pal == 0, "pal 0");
+    EXPECT(p->worlds[0].entities[0].states[0].frames[0].parts[0].dx == 12, "8x8 compose x");
+    EXPECT(p->worlds[0].entities[0].states[0].frames[0].parts[0].dy == 12, "8x8 compose y");
+    EXPECT(p->worlds[0].entities[0].states[0].frames[0].origin_x == 16, "8x8 origin x");
+    EXPECT(p->worlds[0].entities[0].states[0].frames[0].origin_y == 16, "8x8 origin y");
+    EXPECT(p->worlds[0].entities[0].states[0].frames[0].hitbox_x == 12, "8x8 hitbox x");
+    EXPECT(p->worlds[0].entities[0].states[0].frames[0].hitbox_y == 12, "8x8 hitbox y");
+    EXPECT(p->worlds[0].entities[0].states[0].frames[0].hitbox_w == R01_ENTITY_HITBOX_W, "8x8 hitbox w");
+    EXPECT(p->worlds[0].entities[0].states[0].frames[0].hitbox_h == R01_ENTITY_HITBOX_H, "8x8 hitbox h");
 
     {
         uint8_t rgba3[8 * 8 * 4];
@@ -128,7 +136,17 @@ TEST_MAIN() {
         idx = r01_world_import_entity_frames(p, &p->worlds[0], &mixed, err, sizeof(err));
         EXPECT(idx == 3, "mixed 16x8 + 8x8 ok");
         EXPECT(p->worlds[0].entities[idx].states[0].frames[0].part_count == 2, "tall two parts");
+        EXPECT(p->worlds[0].entities[idx].states[0].frames[0].parts[0].dx == 8, "16x8 part0 x");
+        EXPECT(p->worlds[0].entities[idx].states[0].frames[0].parts[0].dy == 12, "16x8 part0 y");
+        EXPECT(p->worlds[0].entities[idx].states[0].frames[0].parts[1].dx == 16, "16x8 part1 x");
+        EXPECT(p->worlds[0].entities[idx].states[0].frames[0].parts[1].dy == 12, "16x8 part1 y");
+        EXPECT(p->worlds[0].entities[idx].states[0].frames[0].origin_x == 16, "16x8 origin x");
+        EXPECT(p->worlds[0].entities[idx].states[0].frames[0].origin_y == 16, "16x8 origin y");
+        EXPECT(p->worlds[0].entities[idx].states[0].frames[0].hitbox_x == 12, "16x8 hitbox x");
+        EXPECT(p->worlds[0].entities[idx].states[0].frames[0].hitbox_y == 12, "16x8 hitbox y");
         EXPECT(p->worlds[0].entities[idx].states[1].frames[0].part_count == 1, "small one part");
+        EXPECT(p->worlds[0].entities[idx].states[1].frames[0].parts[0].dx == 12, "8x8 crouch x");
+        EXPECT(p->worlds[0].entities[idx].states[1].frames[0].parts[0].dy == 12, "8x8 crouch y");
     }
 
     {

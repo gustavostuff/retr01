@@ -377,6 +377,97 @@ static int dedupe_chr(R01World *w, const uint8_t tile[R01_TILE_BYTES], int *bank
     return 0;
 }
 
+static int frame_parts_aabb(const R01EntityFrame *fr, int *min_x, int *min_y, int *max_x, int *max_y) {
+    int pi;
+    int have = 0;
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    if (!fr) {
+        return 0;
+    }
+    for (pi = 0; pi < fr->part_count; pi++) {
+        const R01EntityPart *pt = &fr->parts[pi];
+        int px0 = pt->dx;
+        int py0 = pt->dy;
+        int px1 = pt->dx + 8;
+        int py1 = pt->dy + 8;
+        if (!have) {
+            x0 = px0;
+            y0 = py0;
+            x1 = px1;
+            y1 = py1;
+            have = 1;
+        } else {
+            if (px0 < x0) {
+                x0 = px0;
+            }
+            if (py0 < y0) {
+                y0 = py0;
+            }
+            if (px1 > x1) {
+                x1 = px1;
+            }
+            if (py1 > y1) {
+                y1 = py1;
+            }
+        }
+    }
+    if (!have) {
+        return 0;
+    }
+    if (min_x) {
+        *min_x = x0;
+    }
+    if (min_y) {
+        *min_y = y0;
+    }
+    if (max_x) {
+        *max_x = x1;
+    }
+    if (max_y) {
+        *max_y = y1;
+    }
+    return 1;
+}
+
+static int clamp_int(int v, int lo, int hi) {
+    if (v < lo) {
+        return lo;
+    }
+    if (v > hi) {
+        return hi;
+    }
+    return v;
+}
+
+/* Place the sprite group in the middle of the 32x32 compose grid, then put origin
+ * and the default 8x8 hitbox on that group's AABB. Play uses origin-relative coords,
+ * so the compose translation does not change draw or collision. */
+static void frame_import_center_compose(R01EntityFrame *fr) {
+    int min_x, min_y, max_x, max_y;
+    int off_x, off_y;
+    int pi;
+    int hw = R01_ENTITY_HITBOX_W;
+    int hh = R01_ENTITY_HITBOX_H;
+    if (!frame_parts_aabb(fr, &min_x, &min_y, &max_x, &max_y)) {
+        return;
+    }
+    off_x = (R01_ENTITY_COMPOSE_PX - (max_x - min_x)) / 2 - min_x;
+    off_y = (R01_ENTITY_COMPOSE_PX - (max_y - min_y)) / 2 - min_y;
+    for (pi = 0; pi < fr->part_count; pi++) {
+        fr->parts[pi].dx = clamp_int(fr->parts[pi].dx + off_x, 0, R01_ENTITY_COMPOSE_PX - 8);
+        fr->parts[pi].dy = clamp_int(fr->parts[pi].dy + off_y, 0, R01_ENTITY_COMPOSE_PX - 8);
+    }
+    if (!frame_parts_aabb(fr, &min_x, &min_y, &max_x, &max_y)) {
+        return;
+    }
+    fr->origin_x = clamp_int((min_x + max_x) / 2, 0, R01_ENTITY_COMPOSE_PX);
+    fr->origin_y = clamp_int((min_y + max_y) / 2, 0, R01_ENTITY_COMPOSE_PX);
+    fr->hitbox_w = hw;
+    fr->hitbox_h = hh;
+    fr->hitbox_x = clamp_int((min_x + max_x - hw) / 2, 0, R01_ENTITY_COMPOSE_PX - hw);
+    fr->hitbox_y = clamp_int((min_y + max_y - hh) / 2, 0, R01_ENTITY_COMPOSE_PX - hh);
+}
+
 int r01_world_import_entity_frames(R01Project *p, R01World *w, const R01EntityImport *in, char *err_buf,
                                    size_t err_cap) {
     uint8_t pal_rgb[4][3];
@@ -522,8 +613,8 @@ int r01_world_import_entity_frames(R01Project *p, R01World *w, const R01EntityIm
                 set_err(err_buf, err_cap, msg);
                 return -1;
             }
+            frame_import_center_compose(dst);
         }
-        r01_entity_state_recompute_guides(st);
     }
     return idx;
 }

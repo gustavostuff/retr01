@@ -149,6 +149,7 @@ Manual only. Entities accordion **Import** (never on project open). Studio resol
 | Mapping | Exact kit RGB onto SPR pal **0** of the world's `default_pal_row`. SPR rows are not rewritten |
 | Quad | Each 8x8: up to **3** opaque colors (pal 0 indices **1-3**), with optional transparency (index **0**). A fourth opaque color, a non-kit RGB, or a kit color missing from pal 0 fails |
 | Canvas | Per frame. Multiple of 8 px, max **32x32**. States may differ (16x24 idle and 16x16 crouch is fine). Max **6** sprites per frame, **4** states, **4** frames. Blank quads are skipped |
+| Compose | Each frame's sprite group is placed in the middle of the **32x32** authoring canvas. Draw origin and the default **8x8** hitbox sit on that group's bounding-box center. Play pose and collision stay origin-relative |
 | Frame delay | Aseprite frame duration (ms) converted to display frames (`ms * 60 / 1000`, min **1**) |
 | CLI | `$ASEPRITE` if set and executable, else `aseprite` on PATH. Failed folders are omitted from the listing snapshot so a later **Import** retries them |
 | Helper | `./scripts/export-entity-ase.sh path/to/player [out_dir]` (same CLI flags, for inspection) |
