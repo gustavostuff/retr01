@@ -251,11 +251,18 @@ static int bank_cell_is_empty(const R01World *w, int bank, int tile_id, int plan
     return tile_id >= w->bg_banks[bank].tile_count;
 }
 
-static int other_spr_cell_is_empty(const R01Project *p, int bank, int tile_id) {
+static int global_spr_cell_is_empty(const R01Project *p, int bank, int tile_id) {
     if (!p || bank < 0 || bank >= R01_SPR_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         return 1;
     }
     return tile_id >= p->other_spr_banks[bank].tile_count;
+}
+
+static int global_bg_cell_is_empty(const R01Project *p, int bank, int tile_id) {
+    if (!p || bank < 0 || bank >= R01_BG_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
+        return 1;
+    }
+    return tile_id >= p->other_bg_banks[bank].tile_count;
 }
 
 static int bank_cell_catalog_idx(const R01World *w, int bank, int tile_id) {
@@ -275,8 +282,10 @@ void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int p
     const R01World *w = r01_project_active_world_const(ui->project);
     int empty;
     int cat = -1;
-    if (plane == UI_BANKS_PLANE_OTHER_SPR) {
-        empty = other_spr_cell_is_empty(ui->project, bank, tile_id);
+    if (plane == UI_BANKS_PLANE_GLOBAL_SPR) {
+        empty = global_spr_cell_is_empty(ui->project, bank, tile_id);
+    } else if (plane == UI_BANKS_PLANE_GLOBAL_BG) {
+        empty = global_bg_cell_is_empty(ui->project, bank, tile_id);
     } else {
         empty = bank_cell_is_empty(w, bank, tile_id, plane);
         cat = (plane == UI_BANKS_PLANE_SPR) ? bank_cell_catalog_idx(w, bank, tile_id) : -1;
@@ -305,7 +314,7 @@ void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int p
     } else {
         snprintf(ui->menu.items[ui->menu.item_count], 32, empty ? "Add tile" : "Edit tile");
         ui->menu.item_sub[ui->menu.item_count++] = 0;
-        if (!empty && plane != UI_BANKS_PLANE_OTHER_SPR) {
+        if (!empty && plane != UI_BANKS_PLANE_GLOBAL_SPR && plane != UI_BANKS_PLANE_GLOBAL_BG) {
             snprintf(ui->menu.items[ui->menu.item_count], 32, "Move to Bank");
             ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_MOVE_BANK;
         }
@@ -316,7 +325,7 @@ void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int p
     }
     memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
     /* BG tile 0 is the blank screen fallback — keep it. SPR/player stub is cart-only. */
-    if (!empty && plane == UI_BANKS_PLANE_BG && tile_id == 0) {
+    if (!empty && (plane == UI_BANKS_PLANE_BG || plane == UI_BANKS_PLANE_GLOBAL_BG) && tile_id == 0) {
         ui->menu.item_disabled[ui->menu.item_count - 1] = 1;
     }
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
@@ -686,8 +695,10 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
     if (ui->menu.kind == UI_MENU_KIND_BANK_CELL) {
         int empty;
         const R01World *wc = r01_project_active_world_const(ui->project);
-        if (ui->menu.bank_plane == UI_BANKS_PLANE_OTHER_SPR) {
-            empty = other_spr_cell_is_empty(ui->project, ui->menu.bank_idx, ui->menu.bank_tile_id);
+        if (ui->menu.bank_plane == UI_BANKS_PLANE_GLOBAL_SPR) {
+            empty = global_spr_cell_is_empty(ui->project, ui->menu.bank_idx, ui->menu.bank_tile_id);
+        } else if (ui->menu.bank_plane == UI_BANKS_PLANE_GLOBAL_BG) {
+            empty = global_bg_cell_is_empty(ui->project, ui->menu.bank_idx, ui->menu.bank_tile_id);
         } else {
             empty = bank_cell_is_empty(wc, ui->menu.bank_idx, ui->menu.bank_tile_id, ui->menu.bank_plane);
         }
@@ -698,8 +709,10 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
                 } else {
                     sprite_edit_open_slot(ui, ui->menu.bank_idx, ui->menu.bank_tile_id);
                 }
-            } else if (ui->menu.bank_plane == UI_BANKS_PLANE_OTHER_SPR) {
-                tile_edit_open_other_spr(ui, ui->menu.bank_idx, ui->menu.bank_tile_id, empty);
+            } else if (ui->menu.bank_plane == UI_BANKS_PLANE_GLOBAL_SPR) {
+                tile_edit_open_global_spr(ui, ui->menu.bank_idx, ui->menu.bank_tile_id, empty);
+            } else if (ui->menu.bank_plane == UI_BANKS_PLANE_GLOBAL_BG) {
+                tile_edit_open_global_bg(ui, ui->menu.bank_idx, ui->menu.bank_tile_id, empty);
             } else {
                 tile_edit_open_bank(ui, ui->menu.bank_idx, ui->menu.bank_tile_id, empty);
             }
@@ -755,8 +768,7 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
                 int was_player = (r01_world_player_entity(w) == tidx);
                 if (was_player) {
                     (void)r01_project_set_player_entity(ui->project, w, -1);
-                    /* Unmark restored CHR into world banks; snapshot for undo still has player-bank refs.
-                     * Re-read entity after unmark so undo restore can re-mark. */
+                    /* Unmark is flag-only; entity still refs global SPR if mark moved it. */
                     removed = w->entities[tidx];
                 }
                 r01_world_entity_remove(w, tidx);

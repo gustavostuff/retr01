@@ -225,7 +225,7 @@ void draw_sound_editor(UiState *ui, SDL_Renderer *r) {
         int hover_all = point_in_rect(lx, ly, lo.insp_x, all_y, UI_CTRL_SIDEBAR_W - UI_UNIT * 2, lo.ruler_h);
         ui_radio_draw(r, lo.insp_x, all_cy + (UI_MODE_ROW_H - UI_MODE_RADIO) / 2,
                       ui->sound.solo_ch == UI_SOUND_SOLO_ALL);
-        font_draw(r, lo.insp_x + UI_MODE_RADIO + UI_MODE_GAP, all_cy + (UI_MODE_ROW_H - 8) / 2, "All", 230, 230,
+        font_draw(r, lo.insp_x + UI_TOGGLE_W, all_cy + (UI_MODE_ROW_H - 8) / 2, "All", 230, 230,
                   230);
         if (hover_all) {
             hover_overlay(r, lo.insp_x, all_y, UI_CTRL_SIDEBAR_W - UI_UNIT * 2, lo.ruler_h);
@@ -236,7 +236,7 @@ void draw_sound_editor(UiState *ui, SDL_Renderer *r) {
             int sel = (i == ui->sound.solo_ch);
             int hover = point_in_rect(lx, ly, lo.insp_x, y, UI_CTRL_SIDEBAR_W - UI_UNIT * 2, lo.lane_h);
             ui_radio_draw(r, lo.insp_x, cy + (UI_MODE_ROW_H - UI_MODE_RADIO) / 2, sel);
-            font_draw(r, lo.insp_x + UI_MODE_RADIO + UI_MODE_GAP, cy + (UI_MODE_ROW_H - 8) / 2, k_ch_label[i], 230,
+            font_draw(r, lo.insp_x + UI_TOGGLE_W, cy + (UI_MODE_ROW_H - 8) / 2, k_ch_label[i], 230,
                       230, 230);
             if (hover) {
                 hover_overlay(r, lo.insp_x, y, UI_CTRL_SIDEBAR_W - UI_UNIT * 2, lo.lane_h);

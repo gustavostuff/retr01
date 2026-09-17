@@ -365,6 +365,75 @@ void r01_chr_densify_bg_bank(R01World *w, int bank) {
     }
 }
 
+void r01_project_densify_other_bg_bank(R01Project *p, int bank) {
+    R01ChrBank *b;
+    int id_map[R01_TILES_PER_BANK];
+    int old_n;
+    int write;
+    int id, oi, cell;
+    uint8_t packed[R01_BANK_CHR_BYTES];
+
+    if (!p || bank < 0 || bank >= R01_BG_BANKS) {
+        return;
+    }
+    b = &p->other_bg_banks[bank];
+    old_n = b->tile_count;
+    if (old_n < 2) {
+        return;
+    }
+    if (old_n > R01_TILES_PER_BANK) {
+        old_n = R01_TILES_PER_BANK;
+    }
+    memset(packed, 0, sizeof(packed));
+    memcpy(packed, b->chr, R01_TILE_BYTES);
+    id_map[0] = 0;
+    write = 1;
+    for (id = 1; id < old_n; id++) {
+        const uint8_t *src = b->chr + (size_t)id * R01_TILE_BYTES;
+        if (chr_tile_blank(src)) {
+            id_map[id] = 0;
+            continue;
+        }
+        memcpy(packed + (size_t)write * R01_TILE_BYTES, src, R01_TILE_BYTES);
+        id_map[id] = write;
+        write++;
+    }
+    for (id = old_n; id < R01_TILES_PER_BANK; id++) {
+        id_map[id] = 0;
+    }
+    if (write == old_n) {
+        int holes = 0;
+        for (id = 1; id < old_n; id++) {
+            if (id_map[id] != id) {
+                holes = 1;
+                break;
+            }
+        }
+        if (!holes) {
+            return;
+        }
+    }
+    memcpy(b->chr, packed, (size_t)write * R01_TILE_BYTES);
+    if (write < old_n) {
+        memset(b->chr + (size_t)write * R01_TILE_BYTES, 0, (size_t)(old_n - write) * R01_TILE_BYTES);
+    }
+    b->tile_count = write;
+    for (oi = 0; oi < R01_CART_OTHER_MAX; oi++) {
+        R01OtherScreen *s = &p->other_screens[oi];
+        if (!s->present) {
+            continue;
+        }
+        for (cell = 0; cell < R01_TILES_PER_SCREEN; cell++) {
+            if (r01_attr_bank(s->attrs[cell]) == bank) {
+                int tid = s->tiles[cell];
+                if (tid >= 0 && tid < R01_TILES_PER_BANK) {
+                    s->tiles[cell] = (uint8_t)id_map[tid];
+                }
+            }
+        }
+    }
+}
+
 void r01_project_densify_all_banks(R01Project *p) {
     int wi, bi;
     if (!p) {
@@ -378,6 +447,9 @@ void r01_project_densify_all_banks(R01Project *p) {
         for (bi = 0; bi < R01_SPR_BANKS; bi++) {
             r01_chr_densify_spr_bank(w, bi);
         }
+    }
+    for (bi = 0; bi < R01_BG_BANKS; bi++) {
+        r01_project_densify_other_bg_bank(p, bi);
     }
     for (bi = 0; bi < R01_SPR_BANKS; bi++) {
         r01_project_densify_other_spr_bank(p, bi);

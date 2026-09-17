@@ -201,7 +201,7 @@ void tile_edit_open_bank(UiState *ui, int bank, int tile_id, int is_new) {
     }
 }
 
-void tile_edit_open_other_spr(UiState *ui, int bank, int tile_id, int is_new) {
+void tile_edit_open_global_spr(UiState *ui, int bank, int tile_id, int is_new) {
     const uint8_t *raw;
     if (!ui || !ui->project) {
         return;
@@ -221,6 +221,35 @@ void tile_edit_open_other_spr(UiState *ui, int bank, int tile_id, int is_new) {
     ui->tile_edit.edit_all = 0;
     ui->tile_edit.is_new = is_new ? 1 : 0;
     raw = r01_other_spr_tile(ui->project, bank, tile_id);
+    if (raw) {
+        memcpy(ui->tile_edit.chr, raw, R01_TILE_BYTES);
+        ui->tile_edit.is_new = 0;
+    } else {
+        memset(ui->tile_edit.chr, 0, sizeof(ui->tile_edit.chr));
+        ui->tile_edit.is_new = 1;
+    }
+}
+
+void tile_edit_open_global_bg(UiState *ui, int bank, int tile_id, int is_new) {
+    const uint8_t *raw;
+    if (!ui || !ui->project) {
+        return;
+    }
+    if (bank < 0 || bank >= R01_BG_BANKS) {
+        bank = 0;
+    }
+    memset(&ui->tile_edit, 0, sizeof(ui->tile_edit));
+    ui->tile_edit.open = 1;
+    ui->tile_edit.paint_tx = -1;
+    ui->tile_edit.paint_ty = -1;
+    ui->tile_edit.bank = bank;
+    ui->tile_edit.other_bg = 1;
+    ui->tile_edit.tile_id = tile_id;
+    ui->tile_edit.pal = 0;
+    ui->tile_edit.color = 1;
+    ui->tile_edit.edit_all = 0;
+    ui->tile_edit.is_new = is_new ? 1 : 0;
+    raw = r01_other_bg_tile(ui->project, bank, tile_id);
     if (raw) {
         memcpy(ui->tile_edit.chr, raw, R01_TILE_BYTES);
         ui->tile_edit.is_new = 0;
@@ -296,10 +325,33 @@ static void tile_edit_save(UiState *ui) {
         }
         r01_tile_orient(ui->tile_edit.chr, ui->tile_edit.flip_h, ui->tile_edit.flip_v, canonical);
         if (r01_other_spr_write_tile(ui->project, ui->tile_edit.bank, id, canonical) != 0) {
-            ui_toast(ui, "other SPR write failed", 1);
+            ui_toast(ui, "global SPR write failed", 1);
             return;
         }
         ui_undo_push_player_chr_edit(ui, ui->tile_edit.bank, id, old_chr, canonical);
+        ui->tile_edit.is_new = 0;
+        ui->tile_edit.open = 0;
+        ui_toast(ui, "tile saved", 0);
+        return;
+    }
+    if (ui->tile_edit.other_bg) {
+        id = ui->tile_edit.tile_id;
+        if (!ui->project || id < 0 || id >= R01_TILES_PER_BANK) {
+            return;
+        }
+        memset(old_chr, 0, sizeof(old_chr));
+        {
+            const uint8_t *prev = r01_other_bg_tile(ui->project, ui->tile_edit.bank, id);
+            if (prev) {
+                memcpy(old_chr, prev, R01_TILE_BYTES);
+            }
+        }
+        r01_tile_orient(ui->tile_edit.chr, ui->tile_edit.flip_h, ui->tile_edit.flip_v, canonical);
+        if (r01_other_bg_write_tile(ui->project, ui->tile_edit.bank, id, canonical) != 0) {
+            ui_toast(ui, "global BG write failed", 1);
+            return;
+        }
+        ui_undo_push_other_bg_chr_edit(ui, ui->tile_edit.bank, id, old_chr, canonical);
         ui->tile_edit.is_new = 0;
         ui->tile_edit.open = 0;
         ui_toast(ui, "tile saved", 0);

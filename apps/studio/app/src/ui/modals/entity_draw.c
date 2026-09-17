@@ -54,7 +54,7 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
         ui_button_draw_ex(r, lo.add_spr_x, lo.add_spr_y, lo.add_spr_w, "Add", 1, add_hover, can_add);
         ui_button_draw_ex(r, lo.rem_spr_x, lo.rem_spr_y, lo.rem_spr_w, "Remove", 0, rem_hover, can_rem);
         ui_checkbox_draw(r, lo.highlight_x, lo.highlight_y + 4, ui->entity_edit.show_part_outlines);
-        font_draw(r, lo.highlight_x + UI_CHECKBOX + UI_MODE_GAP, lo.highlight_y + 4, "Highlight", 230, 230,
+        font_draw(r, lo.highlight_x + UI_TOGGLE_W, lo.highlight_y + 4, "Highlight", 230, 230,
                   230);
         font_draw(r, lo.brush_lab_x, lo.brush_lab_y + 4, "Brush", 230, 230, 230);
         ui_slider_discrete_draw(r, lo.brush_x, lo.brush_y, lo.brush_w, ui->entity_edit.brush_size - UI_BRUSH_SIZE_MIN,

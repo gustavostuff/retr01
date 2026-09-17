@@ -583,9 +583,9 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     menu_open_bank_cell(ui, lx, ly, ui->banks_idx, tile_id, ui->banks_plane);
                     return 1;
                 }
-                if (other_spr_cell_hit(ui, lx, ly, &tile_id)) {
-                    bank_sel_set(ui, UI_BANKS_PLANE_OTHER_SPR, ui->other_spr_idx, tile_id);
-                    menu_open_bank_cell(ui, lx, ly, ui->other_spr_idx, tile_id, UI_BANKS_PLANE_OTHER_SPR);
+                if (global_banks_cell_hit(ui, lx, ly, &tile_id)) {
+                    bank_sel_set(ui, ui->global_banks_plane, ui->global_banks_idx, tile_id);
+                    menu_open_bank_cell(ui, lx, ly, ui->global_banks_idx, tile_id, ui->global_banks_plane);
                     return 1;
                 }
             }
@@ -727,13 +727,17 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 ui->arm_kind = UI_ARM_BANK_SUB;
                 return 1;
             }
+            if (global_banks_sub_hit(ui, lx, ly)) {
+                ui->arm_kind = UI_ARM_GLOBAL_BANK_SUB;
+                return 1;
+            }
             if (banks_tab_hit(ui, lx, ly, &wi)) {
                 ui->arm_kind = UI_ARM_BANK_TAB;
                 ui->arm_a = wi;
                 return 1;
             }
-            if (other_spr_tab_hit(ui, lx, ly, &wi)) {
-                ui->arm_kind = UI_ARM_OTHER_SPR_TAB;
+            if (global_banks_tab_hit(ui, lx, ly, &wi)) {
+                ui->arm_kind = UI_ARM_GLOBAL_BANK_TAB;
                 ui->arm_a = wi;
                 return 1;
             }
@@ -743,8 +747,8 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     bank_sel_set(ui, ui->banks_plane, ui->banks_idx, tile_id);
                     return 1;
                 }
-                if (!ui->play.active && other_spr_cell_hit(ui, lx, ly, &tile_id)) {
-                    bank_sel_set(ui, UI_BANKS_PLANE_OTHER_SPR, ui->other_spr_idx, tile_id);
+                if (!ui->play.active && global_banks_cell_hit(ui, lx, ly, &tile_id)) {
+                    bank_sel_set(ui, ui->global_banks_plane, ui->global_banks_idx, tile_id);
                     return 1;
                 }
             }
@@ -1028,13 +1032,20 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 bank_sel_clear(ui);
                 return 1;
             }
+            if (kind == UI_ARM_GLOBAL_BANK_SUB && global_banks_sub_hit(ui, lx, ly)) {
+                ui->global_banks_plane = (ui->global_banks_plane == UI_BANKS_PLANE_GLOBAL_BG)
+                                            ? UI_BANKS_PLANE_GLOBAL_SPR
+                                            : UI_BANKS_PLANE_GLOBAL_BG;
+                bank_sel_clear(ui);
+                return 1;
+            }
             if (kind == UI_ARM_BANK_TAB && banks_tab_hit(ui, lx, ly, &wi) && wi == a) {
                 ui->banks_idx = wi;
                 bank_sel_clear(ui);
                 return 1;
             }
-            if (kind == UI_ARM_OTHER_SPR_TAB && other_spr_tab_hit(ui, lx, ly, &wi) && wi == a) {
-                ui->other_spr_idx = wi;
+            if (kind == UI_ARM_GLOBAL_BANK_TAB && global_banks_tab_hit(ui, lx, ly, &wi) && wi == a) {
+                ui->global_banks_idx = wi;
                 bank_sel_clear(ui);
                 return 1;
             }

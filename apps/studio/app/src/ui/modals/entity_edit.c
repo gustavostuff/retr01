@@ -33,8 +33,8 @@ int entity_edit_add_sprite_at(UiState *ui, int wx, int wy) {
         return -1;
     }
     if (r01_world_player_entity(w) == ui->entity_edit.type_idx && ui->entity_edit.type_idx >= 0) {
-        int gbank = ui->other_spr_idx;
-        if (gbank < 0 || gbank >= R01_SPR_BANKS) {
+        int gbank = ui->global_banks_idx;
+        if (ui->global_banks_plane != UI_BANKS_PLANE_GLOBAL_SPR || gbank < 0 || gbank >= R01_SPR_BANKS) {
             gbank = 0;
         }
         bank = R01_GLOBAL_SPR_BANK_BASE + gbank;

@@ -31,6 +31,17 @@
 #define UI_UNIT 8
 #define UI_BTN_H 16
 
+/* Radio / checkbox glyph is 8x8; 8px pad on each horizontal side (glyph at dx+8). */
+#define UI_TOGGLE_PAD_X 8
+#define UI_TOGGLE_GLYPH 8
+#define UI_TOGGLE_W (UI_TOGGLE_PAD_X + UI_TOGGLE_GLYPH + UI_TOGGLE_PAD_X)
+static inline int ui_toggle_glyph_x(int dx) {
+    return dx + UI_TOGGLE_PAD_X;
+}
+static inline int ui_toggle_label_x(int dx) {
+    return dx + UI_TOGGLE_W;
+}
+
 #define UI_DOT_SIZE 8
 #define UI_DOT_GAP 0
 #define UI_DOT_STRIP_N 4

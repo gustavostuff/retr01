@@ -44,8 +44,12 @@ void r01_screen_sanitize_empty_attrs(R01Screen *s);
 /* Global other SPR banks (project-scoped, 4 x 256 tiles). NULL if out of range / empty. */
 const uint8_t *r01_other_spr_tile(const R01Project *p, int bank, int tile_id);
 int r01_other_spr_write_tile(R01Project *p, int bank, int tile_id, const uint8_t tile[R01_TILE_BYTES]);
-/* First free / next slot in other_spr_banks[bank], or -1 if full. */
 int r01_other_spr_alloc_tile(R01Project *p, int bank);
+
+/* Global other BG banks (same shape as world BG). */
+const uint8_t *r01_other_bg_tile(const R01Project *p, int bank, int tile_id);
+int r01_other_bg_write_tile(R01Project *p, int bank, int tile_id, const uint8_t tile[R01_TILE_BYTES]);
+int r01_other_bg_alloc_tile(R01Project *p, int bank);
 
 /* 4-connected flood fill of 2bpp CHR colors (tile/sprite edit F+click). */
 void r01_tile_flood_fill(uint8_t tile[R01_TILE_BYTES], int sx, int sy, uint8_t color);

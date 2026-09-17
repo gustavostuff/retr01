@@ -361,6 +361,44 @@ int r01_other_spr_alloc_tile(R01Project *p, int bank) {
     return id;
 }
 
+const uint8_t *r01_other_bg_tile(const R01Project *p, int bank, int tile_id) {
+    if (!p || bank < 0 || bank >= R01_BG_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK ||
+        tile_id >= p->other_bg_banks[bank].tile_count) {
+        return NULL;
+    }
+    return p->other_bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+}
+
+int r01_other_bg_write_tile(R01Project *p, int bank, int tile_id, const uint8_t tile[R01_TILE_BYTES]) {
+    R01ChrBank *b;
+    if (!p || !tile || bank < 0 || bank >= R01_BG_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
+        return -1;
+    }
+    b = &p->other_bg_banks[bank];
+    if (tile_id >= b->tile_count) {
+        b->tile_count = tile_id + 1;
+    }
+    memcpy(b->chr + (size_t)tile_id * R01_TILE_BYTES, tile, R01_TILE_BYTES);
+    return 0;
+}
+
+int r01_other_bg_alloc_tile(R01Project *p, int bank) {
+    int id;
+    uint8_t blank[R01_TILE_BYTES];
+    if (!p || bank < 0 || bank >= R01_BG_BANKS) {
+        return -1;
+    }
+    memset(blank, 0, sizeof(blank));
+    if (p->other_bg_banks[bank].tile_count >= R01_TILES_PER_BANK) {
+        return -1;
+    }
+    id = p->other_bg_banks[bank].tile_count;
+    if (r01_other_bg_write_tile(p, bank, id, blank) != 0) {
+        return -1;
+    }
+    return id;
+}
+
 void r01_screen_sanitize_empty_attrs(R01Screen *s) {
     int cell;
     if (!s) {

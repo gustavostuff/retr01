@@ -195,8 +195,8 @@ typedef struct R01PlayerBankRemap {
     int new_tile;
 } R01PlayerBankRemap;
 
-static int entity_collect_unique_tiles(const R01EntityType *ent, int want_global_spr, R01PlayerBankRemap *out,
-                                       int cap) {
+/* Collect unique world-SPR tiles (skips parts already on a global SPR bank). */
+static int entity_collect_world_spr_tiles(const R01EntityType *ent, R01PlayerBankRemap *out, int cap) {
     int n = 0;
     int si, fi, pi, i;
     if (!ent || !out || cap < 1) {
@@ -208,8 +208,10 @@ static int entity_collect_unique_tiles(const R01EntityType *ent, int want_global
             const R01EntityFrame *fr = &st->frames[fi];
             for (pi = 0; pi < fr->part_count && pi < R01_ENTITY_PARTS_MAX; pi++) {
                 const R01EntityPart *pt = &fr->parts[pi];
-                int is_gs = r01_is_global_spr_bank(pt->bank);
-                if (want_global_spr ? !is_gs : is_gs) {
+                if (r01_is_global_spr_bank(pt->bank)) {
+                    continue;
+                }
+                if (pt->bank < 0 || pt->bank >= R01_SPR_BANKS) {
                     continue;
                 }
                 if (pt->tile_id < 0 || pt->tile_id >= R01_TILES_PER_BANK) {
@@ -346,20 +348,6 @@ static void clear_world_spr_tile(R01World *w, int bank, int tile_id) {
     memset(dst, 0, R01_TILE_BYTES);
 }
 
-static void clear_other_spr_tile(R01Project *p, int auth_bank, int tile_id) {
-    int spr_bank;
-    uint8_t *dst;
-    if (!p || !r01_is_global_spr_bank(auth_bank) || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
-        return;
-    }
-    spr_bank = r01_global_spr_index(auth_bank);
-    if (tile_id >= p->other_spr_banks[spr_bank].tile_count) {
-        return;
-    }
-    dst = p->other_spr_banks[spr_bank].chr + (size_t)tile_id * R01_TILE_BYTES;
-    memset(dst, 0, R01_TILE_BYTES);
-}
-
 static void metasprite_remap_tiles(R01World *w, const R01PlayerBankRemap *map, int n) {
     int mi, pi, i;
     if (!w || !map || n < 1) {
@@ -403,9 +391,13 @@ static int entity_to_other_spr(R01Project *p, R01World *w, int type_idx) {
         return -1;
     }
     ent = &w->entities[type_idx];
-    n = entity_collect_unique_tiles(ent, 0, map, (int)(sizeof(map) / sizeof(map[0])));
+    /* Only world-SPR tiles; already-global parts are left alone. */
+    n = entity_collect_world_spr_tiles(ent, map, (int)(sizeof(map) / sizeof(map[0])));
     if (n < 0) {
         return -1;
+    }
+    if (n == 0) {
+        return 0;
     }
     /* Preserve world bank index: world SPR B -> other_spr_banks[B], authoring bank BASE+B. */
     for (i = 0; i < n; i++) {
@@ -449,57 +441,6 @@ static int entity_to_other_spr(R01Project *p, R01World *w, int type_idx) {
     return 0;
 }
 
-static int entity_from_other_spr(R01Project *p, R01World *w, int type_idx) {
-    R01EntityType *ent;
-    R01PlayerBankRemap map[R01_ENTITY_STATES_MAX * R01_ENTITY_FRAMES_MAX * R01_ENTITY_PARTS_MAX];
-    int n;
-    int i;
-    int touched[R01_SPR_BANKS];
-    if (!p || !w || type_idx < 0 || type_idx >= w->entity_count) {
-        return -1;
-    }
-    ent = &w->entities[type_idx];
-    n = entity_collect_unique_tiles(ent, 1, map, (int)(sizeof(map) / sizeof(map[0])));
-    if (n < 0) {
-        return -1;
-    }
-    memset(touched, 0, sizeof(touched));
-    for (i = 0; i < n; i++) {
-        int gidx = r01_global_spr_index(map[i].old_bank);
-        const uint8_t *src = r01_other_spr_tile(p, gidx, map[i].old_tile);
-        uint8_t blank[R01_TILE_BYTES];
-        int bank;
-        int dest;
-        memset(blank, 0, sizeof(blank));
-        bank = r01_chr_find_spr_bank_space(w);
-        if (bank < 0) {
-            return -1;
-        }
-        dest = r01_chr_alloc_spr_tile(w, bank);
-        if (dest < 0) {
-            return -1;
-        }
-        if (r01_chr_write_spr_tile(w, bank, dest, src ? src : blank) != 0) {
-            return -1;
-        }
-        map[i].new_bank = bank;
-        map[i].new_tile = dest;
-        if (gidx >= 0 && gidx < R01_SPR_BANKS) {
-            touched[gidx] = 1;
-        }
-    }
-    apply_remap_all(w, ent, type_idx, map, n);
-    for (i = 0; i < n; i++) {
-        clear_other_spr_tile(p, map[i].old_bank, map[i].old_tile);
-    }
-    for (i = 0; i < R01_SPR_BANKS; i++) {
-        if (touched[i]) {
-            r01_project_densify_other_spr_bank(p, i);
-        }
-    }
-    return 0;
-}
-
 int r01_project_set_player_entity(R01Project *p, R01World *w, int type_idx) {
     int cur;
     if (!p || !w) {
@@ -507,11 +448,7 @@ int r01_project_set_player_entity(R01Project *p, R01World *w, int type_idx) {
     }
     cur = r01_world_player_entity(w);
     if (type_idx < 0 || type_idx >= w->entity_count) {
-        if (cur >= 0) {
-            if (entity_from_other_spr(p, w, cur) != 0) {
-                return -1;
-            }
-        }
+        /* Unmark is flag-only: leave patterns in whatever bank they already use. */
         r01_world_set_player_entity(w, -1);
         return 0;
     }
@@ -519,11 +456,9 @@ int r01_project_set_player_entity(R01Project *p, R01World *w, int type_idx) {
         return 0;
     }
     if (cur >= 0) {
-        if (entity_from_other_spr(p, w, cur) != 0) {
-            return -1;
-        }
         r01_world_set_player_entity(w, -1);
     }
+    /* Move only world-SPR tiles into global other SPR; already-global parts stay put. */
     if (entity_to_other_spr(p, w, type_idx) != 0) {
         return -1;
     }

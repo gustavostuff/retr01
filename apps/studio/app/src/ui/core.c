@@ -164,7 +164,8 @@ int ui_init(UiState *ui) {
     ui->hide_bg_layer = 0;
     ui->hide_spr_layer = 0;
     ui->banks_idx = 0;
-    ui->other_spr_idx = 0;
+    ui->global_banks_idx = 0;
+    ui->global_banks_plane = UI_BANKS_PLANE_GLOBAL_SPR;
     ui->banks_plane = UI_BANKS_PLANE_SPR;
     ui->bank_sel_tile = -1;
     ui->bank_sel_bank = 0;

@@ -24,6 +24,8 @@ int r01_chr_write_resolved_spr(R01Project *p, R01World *w, int bank, int tile_id
 void r01_chr_densify_spr_bank(R01World *w, int bank);
 /* Pack non-blank global other SPR bank tiles; remap refs across all worlds. */
 void r01_project_densify_other_spr_bank(R01Project *p, int bank);
+/* Pack global other BG bank (tile 0 locked). Remap other-screen maps. */
+void r01_project_densify_other_bg_bank(R01Project *p, int bank);
 /* Pack BG bank tiles after index 0 (tile 0 stays). Remap screens + metatiles. */
 void r01_chr_densify_bg_bank(R01World *w, int bank);
 /* Densify every BG/SPR bank in every world plus all global other SPR banks. */

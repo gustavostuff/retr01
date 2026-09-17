@@ -16,7 +16,7 @@
 #include <string.h>
 
 int ui_mode_panel_w(void) {
-    int label_x = UI_MODE_RADIO + UI_MODE_GAP;
+    int label_x = UI_TOGGLE_W;
     int w = label_width("Work on:");
     int cand;
     cand = label_x + label_width("BG layer");
@@ -83,7 +83,7 @@ void ui_editor_layout(const UiState *ui, int *screen_x, int *screen_y, int *laye
 }
 
 int ui_mode_label_x(int mode_x) {
-    return mode_x + UI_MODE_RADIO + UI_MODE_GAP;
+    return ui_toggle_label_x(mode_x);
 }
 
 int ui_work_allows_bg(const UiState *ui) {
@@ -261,7 +261,7 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
     int worlds_h;
     int pals_h;
     int sprites_h;
-    int other_spr_h;
+    int global_banks_h;
     int metatiles_h;
     int metasprites_h;
     int entities_h;
@@ -270,7 +270,7 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
         worlds_h = UI_WORLDS_BODY_H;
         pals_h = UI_PAL_BODY_H;
         sprites_h = UI_SPRITES_BODY_H;
-        other_spr_h = UI_OTHER_SPR_BODY_H;
+        global_banks_h = UI_GLOBAL_BANKS_BODY_H;
         metatiles_h = UI_SHOW_METATILES ? UI_METATILES_BODY_H : 0;
         metasprites_h = UI_SHOW_METASPRITES ? UI_METASPRITES_BODY_H : 0;
         entities_h = UI_ENTITIES_BODY_H;
@@ -278,7 +278,7 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
         worlds_h = ui->accordion_body_h[UI_ACC_WORLDS];
         pals_h = ui->accordion_body_h[UI_ACC_PALS];
         sprites_h = ui->accordion_body_h[UI_ACC_BANKS];
-        other_spr_h = ui->accordion_body_h[UI_ACC_OTHER_SPR];
+        global_banks_h = ui->accordion_body_h[UI_ACC_GLOBAL_BANKS];
         metatiles_h = UI_SHOW_METATILES ? ui->accordion_body_h[UI_ACC_METATILES] : 0;
         metasprites_h = UI_SHOW_METASPRITES ? ui->accordion_body_h[UI_ACC_METASPRITES] : 0;
         entities_h = ui->accordion_body_h[UI_ACC_ENTITIES];
@@ -286,7 +286,7 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
         worlds_h = 0;
         pals_h = 0;
         sprites_h = 0;
-        other_spr_h = 0;
+        global_banks_h = 0;
         metatiles_h = 0;
         metasprites_h = 0;
         entities_h = 0;
@@ -304,16 +304,7 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
         lo->worlds_btns_y = -1;
         lo->worlds_grid_y = -1;
     }
-    lo->pals_hdr_y = y;
-    y += UI_BTN_H;
-    lo->pals_open = always || (ui && ui->accordion_open == UI_ACC_PALS);
-    lo->pals_body_h = pals_h;
-    if (pals_h > 0) {
-        lo->pals_body_y = y;
-        y += pals_h;
-    } else {
-        lo->pals_body_y = -1;
-    }
+
     lo->sprites_hdr_y = y;
     y += UI_BTN_H;
     lo->sprites_open = always || (ui && ui->accordion_open == UI_ACC_BANKS);
@@ -324,16 +315,18 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
     } else {
         lo->sprites_body_y = -1;
     }
-    lo->other_spr_hdr_y = y;
+
+    lo->global_banks_hdr_y = y;
     y += UI_BTN_H;
-    lo->other_spr_open = always || (ui && ui->accordion_open == UI_ACC_OTHER_SPR);
-    lo->other_spr_body_h = other_spr_h;
-    if (other_spr_h > 0) {
-        lo->other_spr_body_y = y;
-        y += other_spr_h;
+    lo->global_banks_open = always || (ui && ui->accordion_open == UI_ACC_GLOBAL_BANKS);
+    lo->global_banks_body_h = global_banks_h;
+    if (global_banks_h > 0) {
+        lo->global_banks_body_y = y;
+        y += global_banks_h;
     } else {
-        lo->other_spr_body_y = -1;
+        lo->global_banks_body_y = -1;
     }
+
     if (UI_SHOW_METATILES) {
         lo->metatiles_hdr_y = y;
         y += UI_BTN_H;
@@ -370,6 +363,7 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
         lo->metasprites_body_y = -1;
         metasprites_h = 0;
     }
+
     lo->entities_hdr_y = y;
     y += UI_BTN_H;
     lo->entities_open = always || (ui && ui->accordion_open == UI_ACC_ENTITIES);
@@ -379,6 +373,17 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
         y += entities_h;
     } else {
         lo->entities_body_y = -1;
+    }
+
+    lo->pals_hdr_y = y;
+    y += UI_BTN_H;
+    lo->pals_open = always || (ui && ui->accordion_open == UI_ACC_PALS);
+    lo->pals_body_h = pals_h;
+    if (pals_h > 0) {
+        lo->pals_body_y = y;
+        y += pals_h;
+    } else {
+        lo->pals_body_y = -1;
     }
 }
 
@@ -390,8 +395,8 @@ static int accordion_section_full_h(int section) {
         return UI_PAL_BODY_H;
     case UI_ACC_BANKS:
         return UI_BANKS_BODY_H;
-    case UI_ACC_OTHER_SPR:
-        return UI_OTHER_SPR_BODY_H;
+    case UI_ACC_GLOBAL_BANKS:
+        return UI_GLOBAL_BANKS_BODY_H;
     case UI_ACC_METATILES:
         return UI_SHOW_METATILES ? UI_METATILES_BODY_H : 0;
     case UI_ACC_METASPRITES:
@@ -548,17 +553,18 @@ void banks_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
                      g_spr_bank_btn_w, g_spr_bank_btn_h);
 }
 
-void other_spr_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
+void global_banks_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
     AccordionLayout lo;
     static const char *const bank_labs[UI_BANKS_N] = {"", "", "", ""};
+    int view;
     if (!out) {
         return;
     }
     accordion_layout(ui, &lo);
-    ui_tabs_layout(bank_labs, UI_BANKS_N, UI_WORLDS_X, lo.other_spr_body_y, UI_WORLD_BTN, out);
+    ui_tabs_layout(bank_labs, UI_BANKS_N, UI_WORLDS_X, lo.global_banks_body_y, UI_WORLD_BTN, out);
     ui_tabs_set_dot(out, 1);
-    /* SPR plane only (no BG dual toggle). */
-    ui_tabs_set_dual(out, 1, 1, g_spr_bank_btn_rgba, g_spr_bank_btn_w, g_spr_bank_btn_h, g_spr_bank_btn_rgba,
+    view = (ui && ui->global_banks_plane == UI_BANKS_PLANE_GLOBAL_SPR) ? 1 : 0;
+    ui_tabs_set_dual(out, 1, view, g_bg_bank_btn_rgba, g_bg_bank_btn_w, g_bg_bank_btn_h, g_spr_bank_btn_rgba,
                      g_spr_bank_btn_w, g_spr_bank_btn_h);
 }
 
@@ -584,7 +590,7 @@ int banks_tab_hit(const UiState *ui, int lx, int ly, int *out_idx) {
     return ui_tabs_hit(&tabs, sel, lx, ly, out_idx);
 }
 
-int other_spr_tab_hit(const UiState *ui, int lx, int ly, int *out_idx) {
+int global_banks_tab_hit(const UiState *ui, int lx, int ly, int *out_idx) {
     UiTabsLayout tabs;
     AccordionLayout lo;
     int sel;
@@ -592,11 +598,11 @@ int other_spr_tab_hit(const UiState *ui, int lx, int ly, int *out_idx) {
         return 0;
     }
     accordion_layout(ui, &lo);
-    if (lo.other_spr_body_h < 1) {
+    if (lo.global_banks_body_h < 1) {
         return 0;
     }
-    other_spr_tabs_prepare(ui, &tabs);
-    sel = ui->other_spr_idx;
+    global_banks_tabs_prepare(ui, &tabs);
+    sel = ui->global_banks_idx;
     if (sel < 0) {
         sel = 0;
     }
@@ -614,6 +620,23 @@ int banks_sub_hit(const UiState *ui, int lx, int ly) {
     }
     banks_tabs_prepare(ui, &tabs);
     sel = ui->banks_idx;
+    if (sel < 0) {
+        sel = 0;
+    }
+    if (sel >= UI_BANKS_N) {
+        sel = UI_BANKS_N - 1;
+    }
+    return ui_tabs_sub_hit(&tabs, sel, lx, ly);
+}
+
+int global_banks_sub_hit(const UiState *ui, int lx, int ly) {
+    UiTabsLayout tabs;
+    int sel;
+    if (!ui) {
+        return 0;
+    }
+    global_banks_tabs_prepare(ui, &tabs);
+    sel = ui->global_banks_idx;
     if (sel < 0) {
         sel = 0;
     }
@@ -649,7 +672,7 @@ int banks_cell_hit(const UiState *ui, int lx, int ly, int *out_tile_id) {
     return 1;
 }
 
-int other_spr_cell_hit(const UiState *ui, int lx, int ly, int *out_tile_id) {
+int global_banks_cell_hit(const UiState *ui, int lx, int ly, int *out_tile_id) {
     AccordionLayout lo;
     int grid_y;
     int tx, ty;
@@ -657,10 +680,10 @@ int other_spr_cell_hit(const UiState *ui, int lx, int ly, int *out_tile_id) {
         return 0;
     }
     accordion_layout(ui, &lo);
-    if (lo.other_spr_body_h < UI_OTHER_SPR_BODY_H) {
+    if (lo.global_banks_body_h < UI_GLOBAL_BANKS_BODY_H) {
         return 0;
     }
-    grid_y = lo.other_spr_body_y + UI_WORLDS_TAB_STACK_H;
+    grid_y = lo.global_banks_body_y + UI_WORLDS_TAB_STACK_H;
     if (lx < UI_WORLDS_X || lx >= UI_WORLDS_X + UI_BANKS_GRID || ly < grid_y || ly >= grid_y + UI_BANKS_GRID) {
         return 0;
     }
@@ -696,9 +719,15 @@ void bank_sel_set(UiState *ui, int plane, int bank, int tile_id) {
     }
     /* Heal mid/trailing blank holes when interacting with Banks. */
     w = r01_project_active_world(ui->project);
-    if (plane == UI_BANKS_PLANE_OTHER_SPR) {
+    if (plane == UI_BANKS_PLANE_GLOBAL_SPR) {
         r01_project_densify_other_spr_bank(ui->project, bank);
         if (ui->project && tile_id >= ui->project->other_spr_banks[bank].tile_count) {
+            bank_sel_clear(ui);
+            return;
+        }
+    } else if (plane == UI_BANKS_PLANE_GLOBAL_BG) {
+        r01_project_densify_other_bg_bank(ui->project, bank);
+        if (ui->project && tile_id >= ui->project->other_bg_banks[bank].tile_count) {
             bank_sel_clear(ui);
             return;
         }
@@ -767,9 +796,9 @@ int accordion_header_hit(const UiState *ui, int lx, int ly, int *out_section) {
         }
         return 1;
     }
-    if (ly >= lo.other_spr_hdr_y && ly < lo.other_spr_hdr_y + UI_BTN_H) {
+    if (ly >= lo.global_banks_hdr_y && ly < lo.global_banks_hdr_y + UI_BTN_H) {
         if (out_section) {
-            *out_section = UI_ACC_OTHER_SPR;
+            *out_section = UI_ACC_GLOBAL_BANKS;
         }
         return 1;
     }

@@ -238,15 +238,18 @@ TEST_MAIN() {
         }
         EXPECT(found_player, "player uses entity art");
         EXPECT(!found_inst, "player type instance skipped");
-        EXPECT(r01_project_set_player_entity(p, w, -1) == 0, "unmark restores chr");
+        EXPECT(r01_project_set_player_entity(p, w, -1) == 0, "unmark flag only");
         EXPECT(r01_world_player_entity(w) < 0, "player unmarked");
-        EXPECT(!r01_is_global_spr_bank(w->entities[0].states[0].frames[0].parts[0].bank), "part back on world");
-        EXPECT(p->other_spr_banks[0].tile_count == 0 && p->other_spr_banks[1].tile_count == 0 &&
-                   p->other_spr_banks[2].tile_count == 0 && p->other_spr_banks[3].tile_count == 0,
-               "other SPR player tiles cleared");
+        EXPECT(r01_is_global_spr_bank(w->entities[0].states[0].frames[0].parts[0].bank),
+               "part stays on global after unmark");
+        EXPECT(p->other_spr_banks[0].tile_count >= 1 || p->other_spr_banks[1].tile_count >= 1 ||
+                   p->other_spr_banks[2].tile_count >= 1 || p->other_spr_banks[3].tile_count >= 1,
+               "other SPR keeps player tiles after unmark");
         (void)old_bank;
         (void)old_tile;
-        EXPECT(r01_project_set_player_entity(p, w, 0) == 0, "re-mark player");
+        EXPECT(r01_project_set_player_entity(p, w, 0) == 0, "re-mark player no chr move");
+        EXPECT(r01_is_global_spr_bank(w->entities[0].states[0].frames[0].parts[0].bank),
+               "re-mark leaves global refs");
     }
 
     EXPECT(r01_project_save_json(p, "test_entities.r01proj", err, sizeof(err)) == 0, "save");

@@ -156,7 +156,7 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
 
     ui_panel_cell(&panel, E_HIGHLIGHT, &cx, &cy, &cw, &ch);
     lo->highlight_y = cy;
-    lo->highlight_w = UI_CHECKBOX + UI_MODE_GAP + label_width("Highlight");
+    lo->highlight_w = UI_TOGGLE_W + label_width("Highlight");
     lo->highlight_w = ((lo->highlight_w + pad - 1) / pad) * pad;
     if (lo->highlight_w > lo->left_w) {
         lo->highlight_w = lo->left_w;

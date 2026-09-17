@@ -55,6 +55,8 @@ void ui_undo_push_bg_chr_edit(struct UiState *ui, int bank, int tile_id, const u
                               const uint8_t new_chr[R01_TILE_BYTES]);
 void ui_undo_push_player_chr_edit(struct UiState *ui, int bank, int tile_id, const uint8_t old_chr[R01_TILE_BYTES],
                                   const uint8_t new_chr[R01_TILE_BYTES]);
+void ui_undo_push_other_bg_chr_edit(struct UiState *ui, int bank, int tile_id, const uint8_t old_chr[R01_TILE_BYTES],
+                                    const uint8_t new_chr[R01_TILE_BYTES]);
 
 /* Remove a source bank pattern: clears CHR and remaps screen/entity refs that used it to tile 0. */
 void ui_undo_push_bank_tile_remove(struct UiState *ui, int bank_plane, int bank, int tile_id);

@@ -136,7 +136,8 @@ void ui_update_cursor(const UiState *ui) {
                accordion_header_hit(ui, lx, ly, NULL) || world_btn_hit(ui, lx, ly, NULL) || world_sub_hit(ui, lx, ly) ||
                world_cell_hit(ui, lx, ly, NULL, NULL) || palette_strip_hit(ui, lx, ly) ||
                palette_row_btn_hit(ui, lx, ly, NULL) || banks_tab_hit(ui, lx, ly, NULL) || banks_sub_hit(ui, lx, ly) ||
-               banks_cell_hit(ui, lx, ly, NULL) || other_spr_cell_hit(ui, lx, ly, NULL) ||
+               banks_cell_hit(ui, lx, ly, NULL) || global_banks_tab_hit(ui, lx, ly, NULL) ||
+               global_banks_sub_hit(ui, lx, ly) || global_banks_cell_hit(ui, lx, ly, NULL) ||
                metatiles_add_hit(ui, lx, ly) ||
                metatiles_list_hit(ui, lx, ly, NULL) || metasprites_add_hit(ui, lx, ly) ||
                metasprites_list_hit(ui, lx, ly, NULL) || entities_add_hit(ui, lx, ly) ||
