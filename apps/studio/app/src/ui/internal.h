@@ -295,6 +295,7 @@ int metasprites_list_hit(const UiState *ui, int lx, int ly, int *out_idx);
 int metasprites_add_hit(const UiState *ui, int lx, int ly);
 int entities_list_hit(const UiState *ui, int lx, int ly, int *out_type_idx);
 int entities_add_hit(const UiState *ui, int lx, int ly);
+int entities_import_hit(const UiState *ui, int lx, int ly);
 
 /* ui/modals/pal_edit.c */
 int palette_strip_hit(const UiState *ui, int lx, int ly);

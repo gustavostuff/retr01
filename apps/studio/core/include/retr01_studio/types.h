@@ -79,6 +79,10 @@ static inline int r01_global_spr_index(int bank) {
 #define R01_PATH_MAX 512
 #define R01_JSON_VER 12
 
+#define R01_ASEPRITE_ENTITIES_DIR "aseprite_entities"
+#define R01_ASEPRITE_LISTING_MAX 64
+#define R01_ASEPRITE_REL_MAX 96
+
 #define R01_OUTPUT_DIR "output"
 /* Empty: no default fixture paths. Export stem is project-relative when set. */
 #define R01_DEFAULT_PROJECT ""
@@ -184,6 +188,7 @@ typedef struct R01EntityPart {
 typedef struct R01EntityFrame {
     R01EntityPart parts[R01_ENTITY_PARTS_MAX];
     int part_count;
+    int delay; /* display frames, min 1 (0 reads as 1) */
 } R01EntityFrame;
 
 /* Reusable multi-part sprite group (no origin/hitbox). */
@@ -302,6 +307,9 @@ typedef struct R01Project {
     R01OtherScreen other_screens[R01_CART_OTHER_MAX]; /* [0]=title [1]=inter [2+]=credits */
     R01World worlds[R01_MAX_WORLDS];
     R01BgmData bgm;
+    /* Last scanned aseprite_entities/ relative paths (sibling of the .r01proj). */
+    char aseprite_entities_files[R01_ASEPRITE_LISTING_MAX][R01_ASEPRITE_REL_MAX];
+    int aseprite_entities_file_count;
 } R01Project;
 
 static inline int r01_attr_bank(uint8_t a) {

@@ -445,7 +445,10 @@ static void draw_entities_body(UiState *ui, SDL_Renderer *r, const AccordionLayo
     int ly = ui->mouse_y;
     int add_y = lo->entities_body_y + UI_ENTITIES_BODY_H - UI_BTN_H;
     int add_w = label_width("Add");
+    int imp_w = label_width("Import");
+    int imp_x = UI_WORLDS_X + UI_UNIT + add_w + UI_UNIT;
     int add_hover = point_in_rect(lx, ly, UI_WORLDS_X + UI_UNIT, add_y, add_w, UI_BTN_H);
+    int imp_hover = point_in_rect(lx, ly, imp_x, add_y, imp_w, UI_BTN_H);
     int vis = (UI_ENTITIES_BODY_H - UI_BTN_H) / UI_SPRITE_ROW_H;
     int i;
 
@@ -491,6 +494,10 @@ static void draw_entities_body(UiState *ui, SDL_Renderer *r, const AccordionLayo
     }
 
     draw_button(r, UI_WORLDS_X + UI_UNIT, add_y, add_w, "Add", 1, add_hover);
+    draw_button(r, imp_x, add_y, imp_w, "Import", 1, imp_hover);
+    if (imp_hover) {
+        ui_tooltip_hover(ui, lx, ly, "Import from aseprite_entities", NULL);
+    }
 }
 
 void draw_sidebar(UiState *ui, SDL_Renderer *r) {

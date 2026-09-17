@@ -48,7 +48,7 @@ Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Pre
 | **World banks** | World CHR grids (**4** BG + **4** SPR, 256 tiles each). Edit tiles from the bank sheet. Soft caps match [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md) |
 | **Global banks** | Cart **global other CHR** (**4** BG + **4** SPR). Other screens and marked player SPR art. Same sheet chrome as World banks ([`general_docs/memory.md`](../../general_docs/memory.md)) |
 | **Palettes** | Global BG / SPR palette rows (bottom of accordion) |
-| **Entities** | Primary object authoring. Types with up to **4** states x **4** frames x **6** sprites. Modal: full-width **Name** / **State name**; left column (right-aligned) palette, **State**/**Frame** strips, **Add**/**Remove**, **Highlight**, **Brush**; right column frame id + compose canvas with zoom (**Ctrl+wheel**, 1x-4x) and pan (**wheel** / **Shift+wheel**, middle-drag or right-drag; right-click still opens **Add sprite**). **Select | Edit** tool control: Select moves/reorders parts; Edit paints the topmost sprite under the cursor. **Ctrl+V** pastes clipboard PNG into the **selected** sprite CHR (top-left 8x8, same rules as Edit sprite). **Space** toggles light part outlines. **Origin/hitbox** checkbox shows guides (auto-computed from the state sprite bounding-box center). Sidebar hover: name + type id. Right-click list: **Edit** / **Mark as player** / **Remove**. Soft caps and **boss** assemblies (optional BG body + multi-entity attachments): [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md). Cart packs locked EntityDef catalog (general_docs/software-api.md) |
+| **Entities** | Primary object authoring. Types with up to **4** states x **4** frames x **6** sprites. Sidebar **Add** opens the compose modal. **Import** reads `aseprite_entities/` next to the saved `.r01proj` (manual, never on open). Modal: full-width **Name** / **State name**; left column (right-aligned) palette, **State**/**Frame** strips, **Add**/**Remove**, **Highlight**, **Brush**; right column frame id + compose canvas with zoom (**Ctrl+wheel**, 1x-4x) and pan (**wheel** / **Shift+wheel**, middle-drag or right-drag; right-click still opens **Add sprite**). **Select | Edit** tool control: Select moves/reorders parts; Edit paints the topmost sprite under the cursor. **Ctrl+V** pastes clipboard PNG into the **selected** sprite CHR (top-left 8x8, same rules as Edit sprite). **Space** toggles light part outlines. **Origin/hitbox** checkbox shows guides (auto-computed from the state sprite bounding-box center). Sidebar hover: name + type id. Right-click list: **Edit** / **Mark as player** / **Remove**. Soft caps and **boss** assemblies (optional BG body + multi-entity attachments): [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md). Cart packs locked EntityDef catalog (general_docs/software-api.md) |
 | **Place on screen** | Drag an **Entities** row onto the screen preview (switches to **Sprite layer**) to place that type. Instance `world_x/y` is the **user origin** (compose cross). Parts/hitbox draw as `(coord - origin)` relative to that. Optional instance `fh`/`fv` mirrors parts around the origin (JSON `"fh"`/`"fv"`, cart instance flags bit0/bit1). Sprites **clip to 128x120** when partially off-screen. On Sprite/Both: click/drag instance to move (marching ants). **H/V** mirrors. **Delete** removes |
 
 PNG drop imports into the **active** world. Cart export packs **world 0** only (ignores `default_world`).
@@ -108,6 +108,7 @@ See generated `output/C/include/r01_*.h` for the full engine API (camera, player
 | World data | **Active world only** on save: grid, screens, `bg_bank0`, `spr_banks`, sprite catalog, `entities`, `player_entity`, `instances`, `default_screen`, `default_pal_row` |
 | Load | Always applies saved world data to **world 0**. Restores `default_world` / `active_world` indices. Initializes empty `other_screens` if missing. Legacy `credits` string ignored |
 | Worlds 1-7 | Session-only until multi-world JSON lands (world **0** on disk) |
+| `aseprite_entities_files` | Snapshot of relative `.ase` paths from the last **Import**. Missing field loads as empty |
 | v6 / older projects | Load OK with missing fields empty. Re-save as v7. No cart-image migration: re-export |
 
 ---
@@ -135,6 +136,24 @@ See generated `output/C/include/r01_*.h` for the full engine API (camera, player
 | BG opaque | Indices **0..3** |
 | Size | Top-left **8x8** of the image fills one tile / selected entity sprite |
 | Entity modal | Requires a selected part. Writes SPR (or player-bank) CHR for that part. Undoable as a paint stroke |
+
+## Aseprite entity import
+
+Manual only. Entities accordion **Import** (never on project open). Studio resolves `aseprite_entities/` as a sibling of the saved `.r01proj`.
+
+| Rule | Value |
+|------|--------|
+| Layout | One subfolder per entity. Each `.ase` / `.aseprite` file is one state (`idle`/`stand` -> 0, `run`/`walk` -> 1, `hurt` -> 2, `crouch`/`jump` -> 3, leftovers fill remaining slots) |
+| Skip | Names already in the active world catalog. Unchanged `aseprite_entities_files` listing imports nothing |
+| Toast | First successful pass: `N entities generated from aseprite_entities/ folder` |
+| Mapping | Exact kit RGB onto SPR pal **0** of the world's `default_pal_row`. SPR rows are not rewritten |
+| Quad | Each 8x8: up to **3** opaque colors (pal 0 indices **1-3**), with optional transparency (index **0**). A fourth opaque color, a non-kit RGB, or a kit color missing from pal 0 fails |
+| Canvas | Per frame. Multiple of 8 px, max **32x32**. States may differ (16x24 idle and 16x16 crouch is fine). Max **6** sprites per frame, **4** states, **4** frames. Blank quads are skipped |
+| Frame delay | Aseprite frame duration (ms) converted to display frames (`ms * 60 / 1000`, min **1**) |
+| CLI | `$ASEPRITE` if set and executable, else `aseprite` on PATH. Failed folders are omitted from the listing snapshot so a later **Import** retries them |
+| Helper | `./scripts/export-entity-ase.sh path/to/player [out_dir]` (same CLI flags, for inspection) |
+
+Source `.ase` files use the official kit pal: [`retr01_global_system.pal`](../../general_docs/palette/retr01_global_system.pal).
 
 ---
 
@@ -206,7 +225,7 @@ ctest --test-dir build --output-on-failure
 ./build/retr01_studio
 ```
 
-**Needs:** CMake, C compiler, SDL2, libpng, FreeType 2. Optional: X11 (clipboard PNG), `xclip` / `wl-clipboard`.
+**Needs:** CMake, C compiler, SDL2, libpng, FreeType 2. Optional: X11 (clipboard PNG), `xclip` / `wl-clipboard`, Aseprite CLI (entity **Import**).
 
 ---
 
@@ -223,6 +242,7 @@ ctest --test-dir build --output-on-failure
 | Add / edit sprite | Sprites accordion -> **Add**, or right-click -> Edit |
 | Sprite context menu | Right-click sprite row (edit / remove / palette / bank) |
 | Add / edit entity | Entities accordion -> **Add**, or right-click -> Edit |
+| Import Aseprite entities | Entities accordion -> **Import** (`aseprite_entities/` beside the saved `.r01proj`) |
 | Mark / unmark player | Right-click entity row -> **Mark as player** / **Unmark as player**. Mark moves any **world** SPR patterns into a **Global banks** SPR bank (same index) and clears those world slots; patterns already on a global SPR bank stay put. Unmark clears the flag only (CHR stays where it is). Cart SoT: keep the playable player on **world 0** (Studio **World 1**) |
 | Place catalog on screen | Drag Sprites / Entities row onto screen preview |
 | Play / pause | **Space** / **PLAY** (export cart, then open emu render) |

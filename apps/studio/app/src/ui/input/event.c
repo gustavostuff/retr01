@@ -9,6 +9,7 @@
 #include "retr01_studio/cart.h"
 #include "retr01_studio/chr_pack.h"
 #include "retr01_studio/entities.h"
+#include "retr01_studio/entity_import.h"
 #include "retr01_studio/json_io.h"
 #include "retr01_studio/metasprites.h"
 #include "retr01_studio/metatiles.h"
@@ -685,6 +686,10 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 ui->arm_a = 2;
                 return 1;
             }
+            if (!ui->play.active && entities_import_hit(ui, lx, ly)) {
+                ui->arm_kind = UI_ARM_ASEPRITE_IMPORT;
+                return 1;
+            }
             {
                 int catalog_idx;
                 if (!ui->play.active && sprites_list_hit(ui, lx, ly, &catalog_idx)) {
@@ -1000,6 +1005,41 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     entity_edit_open_new(ui);
                     return 1;
                 }
+            }
+            if (kind == UI_ARM_ASEPRITE_IMPORT && !ui->play.active && entities_import_hit(ui, lx, ly)) {
+                R01AsepriteImportResult res;
+                char err[160];
+                char toast[96];
+                int before;
+                const R01World *w = r01_project_active_world_const(ui->project);
+                before = w ? w->entity_count : 0;
+                err[0] = '\0';
+                if (r01_project_import_aseprite_entities(ui->project, ui->project_path, &res, err, sizeof(err)) !=
+                    0) {
+                    ui_toast(ui, err[0] ? err : "aseprite import failed", 1);
+                    return 1;
+                }
+                if (res.unchanged || res.generated < 1) {
+                    ui_toast(ui, "no new entities in aseprite_entities/", 0);
+                    return 1;
+                }
+                {
+                    R01World *ww = r01_project_active_world(ui->project);
+                    int i;
+                    if (ww) {
+                        for (i = before; i < ww->entity_count; i++) {
+                            ui_undo_push_entity_add(ui, i);
+                        }
+                    }
+                }
+                if (res.generated == 1) {
+                    snprintf(toast, sizeof(toast), "1 entity generated from aseprite_entities/ folder");
+                } else {
+                    snprintf(toast, sizeof(toast), "%d entities generated from aseprite_entities/ folder",
+                             res.generated);
+                }
+                ui_toast(ui, toast, 0);
+                return 1;
             }
             if (kind == UI_ARM_PAL_ROW && !ui->play.active && palette_row_btn_hit(ui, lx, ly, &prow) &&
                 prow == a) {

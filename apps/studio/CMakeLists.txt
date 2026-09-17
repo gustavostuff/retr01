@@ -30,6 +30,7 @@ add_library(retr01_studio_core
   core/src/paths.c
   core/src/sprites.c
   core/src/entities.c
+  core/src/entity_import.c
   core/src/metasprites.c
   core/src/metatiles.c
   core/src/warps.c
@@ -74,6 +75,7 @@ r01_studio_add_test(cart)
 r01_studio_add_test(palette)
 r01_studio_add_test(sprites)
 r01_studio_add_test(entities)
+r01_studio_add_test(entity_import)
 r01_studio_add_test(metasprites)
 r01_studio_add_test(prg_phase1)
 r01_studio_add_test(export_codegen)

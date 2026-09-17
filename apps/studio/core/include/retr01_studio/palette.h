@@ -18,6 +18,8 @@
 uint8_t r01_project_player_master(const R01Project *p);
 void r01_project_player_rgb(const R01Project *p, uint8_t *r, uint8_t *g, uint8_t *b);
 int r01_kit_nearest_master(uint8_t r, uint8_t g, uint8_t b);
+/* Exact kit RGB match, or -1. */
+int r01_kit_exact_master(uint8_t r, uint8_t g, uint8_t b);
 uint8_t r01_quantize_r3g3b2(uint8_t r, uint8_t g, uint8_t b);
 
 void r01_project_init_phase1_pals(R01Project *p);

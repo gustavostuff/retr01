@@ -34,4 +34,6 @@ python3 gen_kit_palette.py
 
 After changing the C table, rebuild the apps and re-run the script so the markdown and tool palettes stay aligned.
 
+Studio **Aseprite entity import** maps PNG pixels by exact kit RGB onto sprite pal **0** (indices **1-3**). Aseprite **Palette -> Load Palette** with `retr01_global_system.pal` keeps source RGB identical to the kit. Nearest-color quantize is not used on that path.
+
 Hardware and cart index rules stay in [`../video-graphics.md`](../video-graphics.md) and [`../memory.md`](../memory.md).

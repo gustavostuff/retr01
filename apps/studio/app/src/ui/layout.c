@@ -991,6 +991,27 @@ int entities_add_hit(const UiState *ui, int lx, int ly) {
            ly < lo.entities_body_y + lo.entities_body_h;
 }
 
+int entities_import_hit(const UiState *ui, int lx, int ly) {
+    AccordionLayout lo;
+    int add_y;
+    int add_w;
+    int imp_x;
+    int imp_w;
+    if (!ui || ui->play.active) {
+        return 0;
+    }
+    accordion_layout(ui, &lo);
+    if (lo.entities_body_h < UI_BTN_H) {
+        return 0;
+    }
+    add_y = lo.entities_body_y + UI_ENTITIES_BODY_H - UI_BTN_H;
+    add_w = label_width("Add");
+    imp_w = label_width("Import");
+    imp_x = UI_WORLDS_X + UI_UNIT + add_w + UI_UNIT;
+    return point_in_rect(lx, ly, imp_x, add_y, imp_w, UI_BTN_H) &&
+           ly < lo.entities_body_y + lo.entities_body_h;
+}
+
 int sprites_list_hit(const UiState *ui, int lx, int ly, int *out_catalog_idx) {
     (void)ui;
     (void)lx;

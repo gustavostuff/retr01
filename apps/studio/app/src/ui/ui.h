@@ -67,6 +67,7 @@
 #define UI_ARM_SOUND_PAUSE 20
 #define UI_ARM_SOUND_STOP 21
 #define UI_ARM_PREVIEW_COPY 22
+#define UI_ARM_ASEPRITE_IMPORT 25
 
 #define UI_APP_GRAPHICS 0
 #define UI_APP_SOUNDS 1 /* Audio tab (historical enum name) */

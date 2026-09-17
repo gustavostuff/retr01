@@ -412,7 +412,16 @@ static size_t pack_entity_def(uint8_t *out, size_t cap, const R01EntityType *ent
             frame_base = cursor;
             put_u16(sh + 6 + (size_t)fi * 2u, (uint16_t)(frame_base - state_base));
             fh = scratch + frame_base;
-            fh[0] = R01_CART_ENTITY_FRAME_DELAY_DEFAULT;
+            {
+                int delay = fr->delay;
+                if (delay < 1) {
+                    delay = R01_CART_ENTITY_FRAME_DELAY_DEFAULT;
+                }
+                if (delay > 255) {
+                    delay = 255;
+                }
+                fh[0] = (uint8_t)delay;
+            }
             fh[1] = (uint8_t)pc;
             for (pi = 0; pi < pc; pi++) {
                 const R01EntityPart *pt = &fr->parts[pi];

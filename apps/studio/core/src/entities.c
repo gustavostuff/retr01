@@ -22,6 +22,7 @@ void r01_entity_state_init(R01EntityState *st, const char *name) {
     st->hitbox_w = R01_ENTITY_HITBOX_W;
     st->hitbox_h = R01_ENTITY_HITBOX_H;
     st->frame_count = 1;
+    st->frames[0].delay = 1;
 }
 
 void r01_entity_type_init(R01EntityType *e) {
@@ -530,6 +531,7 @@ R01EntityFrame *r01_entity_ensure_frame(R01EntityType *e, int state_idx, int fra
     }
     while (st->frame_count <= frame_idx) {
         memset(&st->frames[st->frame_count], 0, sizeof(st->frames[0]));
+        st->frames[st->frame_count].delay = 1;
         st->frame_count++;
     }
     return &st->frames[frame_idx];

@@ -11,6 +11,16 @@ uint8_t r01_quantize_r3g3b2(uint8_t r, uint8_t g, uint8_t b) {
     return (uint8_t)((rr << 5) | (gg << 2) | bb);
 }
 
+int r01_kit_exact_master(uint8_t r, uint8_t g, uint8_t b) {
+    int i;
+    for (i = 0; i < R01_KIT_COLORS; i++) {
+        if (R01_KIT_RGB[i][0] == r && R01_KIT_RGB[i][1] == g && R01_KIT_RGB[i][2] == b) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 int r01_kit_nearest_master(uint8_t r, uint8_t g, uint8_t b) {
     int best = 0;
     int best_d = 0x7fffffff;

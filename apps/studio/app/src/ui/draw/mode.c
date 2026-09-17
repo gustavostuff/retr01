@@ -141,6 +141,7 @@ void ui_update_cursor(const UiState *ui) {
                metatiles_add_hit(ui, lx, ly) ||
                metatiles_list_hit(ui, lx, ly, NULL) || metasprites_add_hit(ui, lx, ly) ||
                metasprites_list_hit(ui, lx, ly, NULL) || entities_add_hit(ui, lx, ly) ||
+               entities_import_hit(ui, lx, ly) ||
                entities_list_hit(ui, lx, ly, NULL) ||
                (!ui->play.active && (screen_layer_hit(ui, lx, ly, NULL) || screen_hide_hit(ui, lx, ly, NULL) ||
                                      screen_hit(ui, lx, ly, NULL, NULL)));

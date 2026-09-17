@@ -488,7 +488,11 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
                 for (fi = 0; fi < st->frame_count; fi++) {
                     const R01EntityFrame *fr = &st->frames[fi];
                     int pi;
-                    fprintf(f, "            {\"parts\": [");
+                    int delay = fr->delay < 1 ? 1 : fr->delay;
+                    if (delay > 255) {
+                        delay = 255;
+                    }
+                    fprintf(f, "            {\"delay\": %d, \"parts\": [", delay);
                     for (pi = 0; pi < fr->part_count; pi++) {
                         const R01EntityPart *pt = &fr->parts[pi];
                         fprintf(f,
@@ -695,7 +699,15 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
         }
     }
     fprintf(f, "\n    ]\n");
-    fprintf(f, "  }\n");
+    fprintf(f, "  },\n");
+    fprintf(f, "  \"aseprite_entities_files\": [");
+    {
+        int i;
+        for (i = 0; i < p->aseprite_entities_file_count && i < R01_ASEPRITE_LISTING_MAX; i++) {
+            fprintf(f, "%s\"%s\"", i ? ", " : "", p->aseprite_entities_files[i]);
+        }
+    }
+    fprintf(f, "]\n");
     fprintf(f, "}\n");
     fclose(f);
     return 0;
@@ -1587,6 +1599,14 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                                 memcpy(fr_slice, fr_obj, fr_olen);
                                 fr_slice[fr_olen] = '\0';
                                 memset(fr, 0, sizeof(*fr));
+                                fr->delay = 1;
+                                json_int_after(fr_slice, "\"delay\"", &fr->delay);
+                                if (fr->delay < 1) {
+                                    fr->delay = 1;
+                                }
+                                if (fr->delay > 255) {
+                                    fr->delay = 255;
+                                }
                                 parts_sec = json_find(fr_slice, "\"parts\":");
                                 parts_end = json_array_end(parts_sec);
                                 pt_obj = parts_sec ? strchr(parts_sec, '{') : NULL;
@@ -1926,6 +1946,35 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
             if (ti > 0 || p->bgm.track_count > 0) {
                 p->bgm.present = 1;
             }
+        }
+    }
+    {
+        const char *ase_sec = json_find(buf, "\"aseprite_entities_files\"");
+        const char *ase_end = json_array_end(ase_sec);
+        const char *q;
+        p->aseprite_entities_file_count = 0;
+        q = ase_sec ? strchr(ase_sec, '[') : NULL;
+        while (q && ase_end && q < ase_end && p->aseprite_entities_file_count < R01_ASEPRITE_LISTING_MAX) {
+            const char *start;
+            const char *end;
+            size_t n;
+            q = strchr(q, '\"');
+            if (!q || q >= ase_end) {
+                break;
+            }
+            start = q + 1;
+            end = strchr(start, '\"');
+            if (!end || end > ase_end) {
+                break;
+            }
+            n = (size_t)(end - start);
+            if (n >= R01_ASEPRITE_REL_MAX) {
+                n = R01_ASEPRITE_REL_MAX - 1u;
+            }
+            memcpy(p->aseprite_entities_files[p->aseprite_entities_file_count], start, n);
+            p->aseprite_entities_files[p->aseprite_entities_file_count][n] = '\0';
+            p->aseprite_entities_file_count++;
+            q = end + 1;
         }
     }
     free(buf);
