@@ -180,6 +180,7 @@ static void draw_banks_body(UiState *ui, SDL_Renderer *r, const AccordionLayout 
             int dx = UI_WORLDS_X + tx * 8;
             int dy = grid_y + ty * 8;
             int sx, sy;
+            int blank = 1;
             const uint8_t *tile = NULL;
             if (spr) {
                 tile = r01_chr_spr_tile(w, bank, tile_id);
@@ -196,6 +197,7 @@ static void draw_banks_body(UiState *ui, SDL_Renderer *r, const AccordionLayout 
                     if (col == 0) {
                         continue;
                     }
+                    blank = 0;
                     if (spr) {
                         r01_kit_rgb(ui->project->global_pal_spr[row][0].idx[col & 3u], &cr, &cg, &cb);
                     } else {
@@ -203,6 +205,10 @@ static void draw_banks_body(UiState *ui, SDL_Renderer *r, const AccordionLayout 
                     }
                     fill_rect(r, dx + sx, dy + sy, 1, 1, cr, cg, cb);
                 }
+            }
+            /* Allocated blank (BG tile 0 fallback): chess so it is not well-colored empty. */
+            if (blank) {
+                draw_chess_grid(r, dx, dy, 4, 4, 2);
             }
         }
     }
@@ -241,6 +247,7 @@ static void draw_player_bank_body(UiState *ui, SDL_Renderer *r, const AccordionL
             int dx = UI_WORLDS_X + tx * 8;
             int dy = grid_y + ty * 8;
             int sx, sy;
+            int blank = 1;
             const uint8_t *tile = r01_player_bank_tile(ui->project, tile_id);
             if (!tile) {
                 continue;
@@ -252,9 +259,13 @@ static void draw_player_bank_body(UiState *ui, SDL_Renderer *r, const AccordionL
                     if (col == 0) {
                         continue;
                     }
+                    blank = 0;
                     r01_kit_rgb(ui->project->global_pal_spr[row][0].idx[col & 3u], &cr, &cg, &cb);
                     fill_rect(r, dx + sx, dy + sy, 1, 1, cr, cg, cb);
                 }
+            }
+            if (blank) {
+                draw_chess_grid(r, dx, dy, 4, 4, 2);
             }
         }
     }

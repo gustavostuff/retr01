@@ -335,6 +335,7 @@ int screen_sel_is_multi(const UiState *ui);
 /* ui/screen/paint.c */
 void ui_paint_stamp_set(UiState *ui, uint8_t tile, uint8_t attr);
 void ui_paint_stamp_from_cell(UiState *ui, int tx, int ty);
+void ui_paint_stamp_from_bank(UiState *ui, int plane, int bank, int tile_id);
 void ui_paint_stamp_from_selection(UiState *ui);
 int ui_paint_stamp_from_sel(const UiState *ui, uint8_t *out_tile, uint8_t *out_attr);
 int ui_tile_selection_copy(UiState *ui);

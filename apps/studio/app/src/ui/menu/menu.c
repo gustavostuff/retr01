@@ -241,42 +241,21 @@ void menu_open_sprite(UiState *ui, int x, int y, int catalog_idx) {
 }
 
 static int bank_cell_is_empty(const R01World *w, int bank, int tile_id, int plane) {
-    const uint8_t *tile;
-    int i;
     if (!w || bank < 0 || bank >= UI_BANKS_N || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         return 1;
     }
+    /* Allocated slots count even when CHR is blank (BG tile 0 is the blank fallback). */
     if (plane == UI_BANKS_PLANE_SPR) {
-        tile = r01_chr_spr_tile(w, bank, tile_id);
-    } else if (tile_id < w->bg_banks[bank].tile_count) {
-        tile = w->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
-    } else {
-        return 1;
+        return r01_chr_spr_tile(w, bank, tile_id) == NULL;
     }
-    if (!tile) {
-        return 1;
-    }
-    for (i = 0; i < R01_TILE_BYTES; i++) {
-        if (tile[i]) {
-            return 0;
-        }
-    }
-    return 1;
+    return tile_id >= w->bg_banks[bank].tile_count;
 }
 
 static int player_bank_cell_is_empty(const R01Project *p, int tile_id) {
-    const uint8_t *tile;
-    int i;
-    tile = r01_player_bank_tile(p, tile_id);
-    if (!tile) {
+    if (!p || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         return 1;
     }
-    for (i = 0; i < R01_TILE_BYTES; i++) {
-        if (tile[i]) {
-            return 0;
-        }
-    }
-    return 1;
+    return tile_id >= p->player_bank.tile_count;
 }
 
 static int bank_cell_catalog_idx(const R01World *w, int bank, int tile_id) {

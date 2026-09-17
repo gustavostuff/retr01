@@ -8,6 +8,7 @@
 #include "retr01_studio/json_io.h"
 #include "retr01_studio/palette.h"
 #include "retr01_studio/project.h"
+#include "retr01_studio/sprites.h"
 
 #include <png.h>
 #include <stdio.h>
@@ -648,6 +649,7 @@ void bank_sel_clear(UiState *ui) {
 }
 
 void bank_sel_set(UiState *ui, int plane, int bank, int tile_id) {
+    R01World *w;
     if (!ui || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         bank_sel_clear(ui);
         return;
@@ -658,12 +660,35 @@ void bank_sel_set(UiState *ui, int plane, int bank, int tile_id) {
         bank_sel_clear(ui);
         return;
     }
+    /* Heal mid/trailing blank holes when interacting with Banks. */
+    w = r01_project_active_world(ui->project);
+    if (plane == UI_BANKS_PLANE_PLAYER) {
+        r01_project_densify_player_bank(ui->project);
+        if (ui->project && tile_id >= ui->project->player_bank.tile_count) {
+            bank_sel_clear(ui);
+            return;
+        }
+    } else if (w && plane == UI_BANKS_PLANE_SPR) {
+        r01_chr_densify_spr_bank(w, bank);
+        if (tile_id >= w->spr_banks[bank].tile_count) {
+            bank_sel_clear(ui);
+            return;
+        }
+    } else if (w && plane == UI_BANKS_PLANE_BG) {
+        r01_chr_densify_bg_bank(w, bank);
+        if (tile_id >= w->bg_banks[bank].tile_count) {
+            bank_sel_clear(ui);
+            return;
+        }
+    }
     ui->bank_sel_plane = plane;
     ui->bank_sel_bank = bank;
     ui->bank_sel_tile = tile_id;
     ui->sel_instance = -1;
     ui->inst_drag = 0;
     screen_sel_clear(ui);
+    /* BG bank pick becomes the Ctrl+click map brush. */
+    ui_paint_stamp_from_bank(ui, plane, bank, tile_id);
 }
 
 int bank_sel_valid(const UiState *ui) {
