@@ -604,50 +604,70 @@ static int tile_nonzero(const uint8_t tile[R01_TILE_BYTES]) {
 }
 
 static int spr0_tile_referenced(const R01World *w, int tile_id) {
-    int ti, pi;
+    int ti, si, fi, pi;
     if (!w) {
         return 0;
     }
     for (ti = 0; ti < w->entity_count; ti++) {
         const R01EntityType *ent = &w->entities[ti];
-        const R01EntityFrame *fr;
-        if (ent->state_count < 1 || ent->states[0].frame_count < 1) {
-            continue;
-        }
-        fr = &ent->states[0].frames[0];
-        for (pi = 0; pi < fr->part_count; pi++) {
-            if (fr->parts[pi].bank == 0 && fr->parts[pi].tile_id == tile_id) {
-                return 1;
+        for (si = 0; si < ent->state_count; si++) {
+            const R01EntityState *st = &ent->states[si];
+            for (fi = 0; fi < st->frame_count; fi++) {
+                const R01EntityFrame *fr = &st->frames[fi];
+                for (pi = 0; pi < fr->part_count; pi++) {
+                    const R01EntityPart *pt = &fr->parts[pi];
+                    if (pt->tile_id != tile_id) {
+                        continue;
+                    }
+                    if (pt->bank == 0 || r01_is_player_chr_bank(pt->bank)) {
+                        return 1;
+                    }
+                }
             }
         }
     }
     return 0;
 }
 
-/* Copy bank-0 tile 1 aside before the player stub overwrites it. Returns new id or -1. */
+/* Copy SPR0/player tile 1 aside before the player stub overwrites it. Returns new id or -1. */
 static int relocate_spr0_tile1(uint8_t bank[R01_CHR_BANK_BYTES], const R01World *w) {
     int dest;
     const uint8_t *src = bank + (size_t)R01_SPR_PLAYER_TILE_ID * R01_TILE_BYTES;
     if (!spr0_tile_referenced(w, R01_SPR_PLAYER_TILE_ID) && !tile_nonzero(src)) {
         return -1;
     }
-    dest = w->spr_banks[0].tile_count;
-    if (dest <= R01_SPR_PLAYER_TILE_ID) {
-        dest = R01_SPR_PLAYER_TILE_ID + 1;
+    /* Find a free slot after the stub id; do not clobber merged player-bank art. */
+    for (dest = R01_SPR_PLAYER_TILE_ID + 1; dest < R01_TILES_PER_BANK; dest++) {
+        if (!tile_nonzero(bank + (size_t)dest * R01_TILE_BYTES) && !spr0_tile_referenced(w, dest)) {
+            break;
+        }
     }
     if (dest >= R01_TILES_PER_BANK) {
-        for (dest = R01_SPR_PLAYER_TILE_ID + 1; dest < R01_TILES_PER_BANK; dest++) {
-            if (!spr0_tile_referenced(w, dest) &&
-                !tile_nonzero(bank + (size_t)dest * R01_TILE_BYTES)) {
-                break;
-            }
-        }
-        if (dest >= R01_TILES_PER_BANK) {
-            return -1;
-        }
+        return -1;
     }
     memcpy(bank + (size_t)dest * R01_TILE_BYTES, src, R01_TILE_BYTES);
     return dest;
+}
+
+static void merge_player_bank_into_spr0(uint8_t bank[R01_CHR_BANK_BYTES], const R01Project *p) {
+    int tid;
+    if (!bank || !p) {
+        return;
+    }
+    for (tid = 0; tid < p->player_bank.tile_count && tid < R01_TILES_PER_BANK; tid++) {
+        const uint8_t *src = p->player_bank.chr + (size_t)tid * R01_TILE_BYTES;
+        int b, nonzero = 0;
+        for (b = 0; b < R01_TILE_BYTES; b++) {
+            if (src[b]) {
+                nonzero = 1;
+                break;
+            }
+        }
+        if (nonzero) {
+            /* Include tile 1: relocate + stub run after merge. */
+            memcpy(bank + (size_t)tid * R01_TILE_BYTES, src, R01_TILE_BYTES);
+        }
+    }
 }
 
 static uint8_t cart_pack_bg0_flags(const char *custom_logic_path) {
@@ -721,29 +741,6 @@ static int resolve_custom_logic_path(const char *cart_or_stem_path, char *out, s
     memcpy(out, cart_or_stem_path, dir_len);
     snprintf(out + dir_len, out_cap - dir_len, "/C/custom_logic.c");
     return 0;
-}
-
-static void merge_player_bank_into_spr0(uint8_t bank[R01_CHR_BANK_BYTES], const R01Project *p) {
-    int tid;
-    if (!bank || !p) {
-        return;
-    }
-    for (tid = 0; tid < p->player_bank.tile_count && tid < R01_TILES_PER_BANK; tid++) {
-        const uint8_t *src = p->player_bank.chr + (size_t)tid * R01_TILE_BYTES;
-        int b, nonzero = 0;
-        if (tid == R01_SPR_PLAYER_TILE_ID) {
-            continue;
-        }
-        for (b = 0; b < R01_TILE_BYTES; b++) {
-            if (src[b]) {
-                nonzero = 1;
-                break;
-            }
-        }
-        if (nonzero) {
-            memcpy(bank + (size_t)tid * R01_TILE_BYTES, src, R01_TILE_BYTES);
-        }
-    }
 }
 
 static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w, const char *custom_logic_path) {
@@ -958,11 +955,19 @@ static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w, c
         }
         for (si = 0; si < w->screen_count; si++) {
             const R01Screen *s = &w->screens[si];
+            uint8_t attrs[R01_ATTRS_PER_SCREEN];
+            int cell;
             if (!s->present) {
                 continue;
             }
+            memcpy(attrs, s->attrs, sizeof(attrs));
+            for (cell = 0; cell < R01_TILES_PER_SCREEN; cell++) {
+                if (s->tiles[cell] == 0) {
+                    attrs[cell] = 0;
+                }
+            }
             if (buf_append(blob, s->tiles, R01_TILES_PER_SCREEN) != 0 ||
-                buf_append(blob, s->attrs, R01_ATTRS_PER_SCREEN) != 0) {
+                buf_append(blob, attrs, R01_ATTRS_PER_SCREEN) != 0) {
                 free(catalog.data);
                 return -1;
             }

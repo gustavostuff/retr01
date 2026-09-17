@@ -575,11 +575,19 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
         const R01Screen *s = &w->screens[i];
         char *tl;
         char *at;
+        uint8_t attrs[R01_ATTRS_PER_SCREEN];
+        int cell;
         if (!s->present) {
             continue;
         }
+        memcpy(attrs, s->attrs, sizeof(attrs));
+        for (cell = 0; cell < R01_TILES_PER_SCREEN; cell++) {
+            if (s->tiles[cell] == 0) {
+                attrs[cell] = 0;
+            }
+        }
         tl = encode_b64(s->tiles, sizeof(s->tiles));
-        at = encode_b64(s->attrs, sizeof(s->attrs));
+        at = encode_b64(attrs, sizeof(attrs));
         if (!tl || !at) {
             free(tl);
             free(at);
@@ -1027,6 +1035,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                     set_err(err_buf, err_cap, "screen decode failed");
                     return -1;
                 }
+                r01_screen_sanitize_empty_attrs(s);
                 if (json_find(slice, "\"tiles_b64\"")) {
                     tilemaps_loaded = 1;
                 }

@@ -332,6 +332,7 @@ void r01_chr_densify_bg_bank(R01World *w, int bank) {
                 }
             }
         }
+        r01_screen_sanitize_empty_attrs(s);
         r01_screen_fill_pixels_from_bank(w, s);
     }
     for (si = 0; si < w->bg0_screen_count && si < R01_BG0_SCREENS_MAX; si++) {
@@ -347,6 +348,7 @@ void r01_chr_densify_bg_bank(R01World *w, int bank) {
                 }
             }
         }
+        r01_screen_sanitize_empty_attrs(s);
         r01_screen_fill_pixels_from_bank(w, s);
     }
     for (mi = 0; mi < w->metatile_count; mi++) {

@@ -1,5 +1,5 @@
 player_entity_id: .byte $00
-player_hit_x: .byte $07
-player_hit_y: .byte $07
-player_hit_w: .byte $06
-player_hit_h: .byte $13
+player_hit_x: .byte $08
+player_hit_y: .byte $0A
+player_hit_w: .byte $05
+player_hit_h: .byte $10

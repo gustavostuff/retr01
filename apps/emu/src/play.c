@@ -103,6 +103,89 @@ static void snap_camera(R01ePlay *pl) {
                          pl->cam_deadzone_y, R01_PLAY_CAM_AXIS_BOTH);
 }
 
+/*
+ * Keep the 128x120 viewport on present BG1 screens only. Sparse holes inside the
+ * present bbox otherwise sample BG0 (often a solid blue field) until the next
+ * VRAM slot reload fills that cell — looks like platforms changing palette.
+ */
+static void clamp_cam_viewport_to_present(R01eMachine *m) {
+    R01ePlay *pl;
+    int world;
+    int guard;
+
+    if (!m || !m->play.enabled) {
+        return;
+    }
+    pl = &m->play;
+    world = (int)m->io.world;
+    for (guard = 0; guard < 64; guard++) {
+        int x0 = pl->cam_x;
+        int y0 = pl->cam_y;
+        int x1 = x0 + R01E_SCREEN_PX_W - 1;
+        int y1 = y0 + R01E_SCREEN_PX_H - 1;
+        int c0 = x0 / R01E_SCREEN_PX_W;
+        int c1 = x1 / R01E_SCREEN_PX_W;
+        int r0 = y0 / R01E_SCREEN_PX_H;
+        int r1 = y1 / R01E_SCREEN_PX_H;
+        int fixed = 0;
+        int c, r;
+
+        if (x0 < 0) {
+            pl->cam_x = 0;
+            fixed = 1;
+            continue;
+        }
+        if (y0 < 0) {
+            pl->cam_y = 0;
+            fixed = 1;
+            continue;
+        }
+        for (r = r0; r <= r1; r++) {
+            for (c = c0; c <= c1; c++) {
+                int nx, ny;
+                if (r01e_cart_has_screen(&m->cart, world, c, r)) {
+                    continue;
+                }
+                if (c == c1 && c1 > c0) {
+                    nx = c * R01E_SCREEN_PX_W - R01E_SCREEN_PX_W;
+                    if (nx < 0) {
+                        nx = 0;
+                    }
+                    if (nx < pl->cam_x) {
+                        pl->cam_x = nx;
+                        fixed = 1;
+                    }
+                } else if (c == c0) {
+                    nx = (c + 1) * R01E_SCREEN_PX_W;
+                    if (nx != pl->cam_x) {
+                        pl->cam_x = nx;
+                        fixed = 1;
+                    }
+                }
+                if (r == r1 && r1 > r0) {
+                    ny = r * R01E_SCREEN_PX_H - R01E_SCREEN_PX_H;
+                    if (ny < 0) {
+                        ny = 0;
+                    }
+                    if (ny < pl->cam_y) {
+                        pl->cam_y = ny;
+                        fixed = 1;
+                    }
+                } else if (r == r0) {
+                    ny = (r + 1) * R01E_SCREEN_PX_H;
+                    if (ny != pl->cam_y) {
+                        pl->cam_y = ny;
+                        fixed = 1;
+                    }
+                }
+            }
+        }
+        if (!fixed) {
+            break;
+        }
+    }
+}
+
 static void play_load_cart_camera(R01eMachine *m) {
     R01eWorldView wv;
     if (!m) {
@@ -479,6 +562,7 @@ int r01e_play_start(R01eMachine *m) {
         m->play.enabled = 1;
         r01_play_anim_init(&m->play.anim);
         place_player_xy(&m->play, sx, sy);
+        clamp_cam_viewport_to_present(m);
         r01e_play_sync_video(m);
         (void)r01e_video_sync_camera(m);
         write_oam(m);
@@ -490,6 +574,7 @@ int r01e_play_start(R01eMachine *m) {
     m->play.enabled = 1;
     r01_play_anim_init(&m->play.anim);
     place_player_on_screen(&m->play, col, row);
+    clamp_cam_viewport_to_present(m);
     r01e_play_sync_video(m);
     (void)r01e_video_sync_camera(m);
     write_oam(m);
@@ -504,6 +589,7 @@ static int warp_to(R01eMachine *m, int col, int row) {
         return 0;
     }
     place_player_on_screen(&m->play, col, row);
+    clamp_cam_viewport_to_present(m);
     r01e_play_sync_video(m);
     write_oam(m);
     return 1;
@@ -565,6 +651,7 @@ void r01e_play_tick(R01eMachine *m) {
     }
     /* No dead zone: camera tracks the player every tick. */
     update_camera(pl);
+    clamp_cam_viewport_to_present(m);
     {
         R01eWorldView wv;
         if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) == 0 && wv.has_player_anim) {

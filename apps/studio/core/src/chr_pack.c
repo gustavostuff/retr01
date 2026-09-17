@@ -167,7 +167,10 @@ static R01ChrPackStatus pack_screen(uint8_t unique[][R01_TILE_BYTES], int *uniqu
                 flips = 0;
             }
             s->tiles[cell] = (uint8_t)found;
-            {
+            if (found == 0) {
+                /* Blank cell: attrs must not carry a palette (would tint BG0 show-through). */
+                s->attrs[cell] = 0;
+            } else {
                 uint8_t old = s->attrs[cell];
                 s->attrs[cell] = r01_attr_merge(old, r01_attr_bank(old), r01_attr_pal(old),
                                                 (flips & R01_ATTR_FLIP_H) != 0, (flips & R01_ATTR_FLIP_V) != 0);
@@ -357,6 +360,18 @@ int r01_player_bank_alloc_tile(R01Project *p) {
     return id;
 }
 
+void r01_screen_sanitize_empty_attrs(R01Screen *s) {
+    int cell;
+    if (!s) {
+        return;
+    }
+    for (cell = 0; cell < R01_TILES_PER_SCREEN; cell++) {
+        if (s->tiles[cell] == 0) {
+            s->attrs[cell] = 0;
+        }
+    }
+}
+
 void r01_screen_paint_tile(R01World *w, R01Screen *s, int tile_x, int tile_y, uint8_t tile_id, uint8_t attr) {
     int cell;
     int sy, sx;
@@ -367,7 +382,8 @@ void r01_screen_paint_tile(R01World *w, R01Screen *s, int tile_x, int tile_y, ui
     }
     cell = tile_y * R01_SCREEN_TILES_X + tile_x;
     s->tiles[cell] = tile_id;
-    s->attrs[cell] = attr;
+    /* Erase / blank: never keep pal/solid from the previous occupant. */
+    s->attrs[cell] = (tile_id == 0) ? 0 : attr;
     bank = r01_attr_bank(attr);
     if (bank < 0 || bank >= R01_BG_BANKS || tile_id >= (uint8_t)w->bg_banks[bank].tile_count) {
         return;

@@ -269,12 +269,14 @@ TEST_MAIN() {
         }
     }
 
-    /* Player bank patterns merge into exported SPR0; OAM bank 4 packs as 0. */
+    /* Player bank patterns merge into exported SPR0; OAM bank 4 packs as 0.
+     * Tile 1 is relocated so the cart stub can occupy that slot. */
     {
         R01Project *p2 = (R01Project *)calloc(1, sizeof(R01Project));
         R01World *w2;
         R01EntityPart *pt;
         uint8_t art[R01_TILE_BYTES];
+        uint8_t face[R01_TILE_BYTES];
         EXPECT(p2 != NULL, "alloc p2");
         if (p2) {
             r01_project_init(p2, "pb");
@@ -282,14 +284,26 @@ TEST_MAIN() {
             memset(art, 0, sizeof(art));
             art[0] = 0x81;
             art[8] = 0x18;
+            memset(face, 0, sizeof(face));
+            face[0] = 0x5A;
+            face[8] = 0xA5;
             EXPECT(r01_player_bank_write_tile(p2, 0, art) == 0, "pb tile0");
+            EXPECT(r01_player_bank_write_tile(p2, 1, face) == 0, "pb tile1 face");
             EXPECT(r01_player_bank_write_tile(p2, 2, art) == 0, "pb tile2");
             EXPECT(r01_world_entity_add(w2) == 0, "pb entity");
             pt = &w2->entities[0].states[0].frames[0].parts[0];
             memset(pt, 0, sizeof(*pt));
             pt->bank = R01_PLAYER_CHR_BANK;
-            pt->tile_id = 2;
+            pt->tile_id = 1; /* face: must survive stub stamp */
             w2->entities[0].states[0].frames[0].part_count = 1;
+            {
+                R01EntityPart *pt2 = &w2->entities[0].states[0].frames[0].parts[1];
+                memset(pt2, 0, sizeof(*pt2));
+                pt2->bank = R01_PLAYER_CHR_BANK;
+                pt2->tile_id = 2;
+                pt2->dx = 8;
+                w2->entities[0].states[0].frames[0].part_count = 2;
+            }
             r01_world_set_player_entity(w2, 0);
             EXPECT(r01_cart_write(p2, "test_cart_pb.retr01", err, sizeof(err)) == 0, "cart pb write");
             {
@@ -300,6 +314,7 @@ TEST_MAIN() {
                     uint8_t slot[8];
                     uint8_t hdr[WORLD_HDR_SIZE];
                     uint8_t got[R01_TILE_BYTES];
+                    uint8_t stub[R01_TILE_BYTES];
                     uint8_t defbuf[128];
                     uint32_t off_wtable, world_base, off_chr, off_types, spr0;
                     uint16_t d0;
@@ -318,16 +333,29 @@ TEST_MAIN() {
                     spr0 = world_base + off_chr + 4u * R01_CHR_BANK_BYTES;
                     EXPECT(fseek(f, (long)(spr0 + 2u * R01_TILE_BYTES), SEEK_SET) == 0, "seek spr tile2");
                     EXPECT(fread(got, 1, sizeof(got), f) == sizeof(got), "read spr tile2");
-                    EXPECT(got[0] == 0x81 && got[8] == 0x18, "player bank merged into spr0");
+                    EXPECT(got[0] == 0x81 && got[8] == 0x18, "player bank tile2 merged");
+                    /* Face art relocated off stub slot (first free >= 3). */
+                    EXPECT(fseek(f, (long)(spr0 + 3u * R01_TILE_BYTES), SEEK_SET) == 0, "seek relocated face");
+                    EXPECT(fread(got, 1, sizeof(got), f) == sizeof(got), "read relocated face");
+                    EXPECT(got[0] == 0x5A && got[8] == 0xA5, "player bank tile1 relocated");
+                    EXPECT(fseek(f, (long)(spr0 + (size_t)R01_SPR_PLAYER_TILE_ID * R01_TILE_BYTES), SEEK_SET) == 0,
+                           "seek stub");
+                    EXPECT(fread(stub, 1, sizeof(stub), f) == sizeof(stub), "read stub");
+                    EXPECT(stub[0] == 0xFF && stub[8] == 0x00, "stub at tile 1");
                     EXPECT(fseek(f, (long)(world_base + off_types), SEEK_SET) == 0, "seek types");
                     EXPECT(fread(defbuf, 1, 2, f) == 2, "dir0");
                     d0 = rd_u16(defbuf);
                     EXPECT(fseek(f, (long)(world_base + off_types + d0), SEEK_SET) == 0, "seek def0");
-                    EXPECT(fread(defbuf, 1, 32, f) == 32, "read def0");
+                    {
+                        size_t nread = fread(defbuf, 1, sizeof(defbuf), f);
+                        EXPECT(nread >= 32, "read def0");
+                    }
                     st = defbuf + rd_u16(defbuf + 4);
                     fr = st + rd_u16(st + 6);
-                    EXPECT(fr[2] == 2, "packed tile id");
+                    EXPECT(fr[1] == 2, "two parts");
+                    EXPECT(fr[2] == 3, "face remapped off stub");
                     EXPECT((fr[5] & 3) == 0, "player bank packs as spr bank 0");
+                    EXPECT(fr[6] == 2, "tile2 part unchanged");
                     fclose(f);
                 }
             }

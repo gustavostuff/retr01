@@ -212,14 +212,19 @@ static void world_bounds(const R01eCart *cart, const R01eWorldView *wv, int *min
 static int load_screen_into_slot(R01eMachine *m, const R01eWorldView *wv, int col, int row, int slot) {
     const uint8_t *dir;
     int si;
-    uint8_t *dst = m->video.vram + (size_t)slot * R01E_VRAM_SLOT_BYTES;
+    uint8_t *dst;
+    uint8_t tmp[R01E_VRAM_SLOT_BYTES];
+    int found = 0;
 
-    memset(dst, 0, R01E_VRAM_SLOT_BYTES);
-    if (slot >= 0 && slot < 4) {
-        m->video.slot_present[slot] = 0;
+    if (slot < 0 || slot > 3) {
+        return 0;
     }
+    dst = m->video.vram + (size_t)slot * R01E_VRAM_SLOT_BYTES;
+    memset(tmp, 0, sizeof(tmp));
     dir = r01e_cart_ptr(&m->cart, wv->base + wv->off_screen_dir, (size_t)wv->screen_count * 12u);
     if (!dir) {
+        memcpy(dst, tmp, sizeof(tmp));
+        m->video.slot_present[slot] = 0;
         return 0;
     }
     for (si = 0; si < wv->screen_count; si++) {
@@ -233,15 +238,16 @@ static int load_screen_into_slot(R01eMachine *m, const R01eWorldView *wv, int co
         poff = get_u24(e + 4);
         pay = r01e_cart_ptr(&m->cart, wv->base + poff, R01E_SCREEN_PAYLOAD);
         if (!pay) {
-            return 0;
+            break;
         }
-        memcpy(dst, pay, R01E_SCREEN_PAYLOAD);
-        if (slot >= 0 && slot < 4) {
-            m->video.slot_present[slot] = 1;
-        }
-        return 1;
+        memcpy(tmp, pay, R01E_SCREEN_PAYLOAD);
+        found = 1;
+        break;
     }
-    return 0;
+    /* Publish tile+attr+present together so mid-reload never samples empty→BG0. */
+    memcpy(dst, tmp, sizeof(tmp));
+    m->video.slot_present[slot] = found ? 1 : 0;
+    return found;
 }
 
 static void bg0_apply_scroll(R01eMachine *m) {

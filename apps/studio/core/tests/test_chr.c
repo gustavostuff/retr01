@@ -55,6 +55,11 @@ TEST_MAIN() {
 
     id = r01_chr_alloc_tile(w, 0);
     EXPECT(id >= 0, "alloc tile");
+    /* Tile 0 is the locked blank; pattern paints must use a non-zero id. */
+    if (id == 0) {
+        id = r01_chr_alloc_tile(w, 0);
+        EXPECT(id > 0, "alloc non-blank tile");
+    }
     EXPECT(r01_chr_write_tile(w, 0, id, tile) == 0, "write tile");
 
     r01_screen_paint_tile(w, s, 1, 1, (uint8_t)id, r01_attr_pack(0, 1, 1, 0));
@@ -62,6 +67,14 @@ TEST_MAIN() {
     EXPECT(r01_attr_bank(s->attrs[1 * R01_SCREEN_TILES_X + 1]) == 0, "paint sets attr bank");
     EXPECT(r01_attr_pal(s->attrs[1 * R01_SCREEN_TILES_X + 1]) == 1, "paint sets attr pal");
     EXPECT(r01_attr_flip_h(s->attrs[1 * R01_SCREEN_TILES_X + 1]), "paint sets flip_h");
+
+    r01_screen_paint_tile(w, s, 1, 1, 0, r01_attr_pack(0, 2, 0, 0));
+    EXPECT(s->tiles[1 * R01_SCREEN_TILES_X + 1] == 0, "erase clears tile");
+    EXPECT(s->attrs[1 * R01_SCREEN_TILES_X + 1] == 0, "erase clears leftover attr");
+    s->attrs[2] = (uint8_t)(r01_attr_pack(0, 3, 0, 0) | R01_ATTR_SOLID);
+    s->tiles[2] = 0;
+    r01_screen_sanitize_empty_attrs(s);
+    EXPECT(s->attrs[2] == 0, "sanitize drops pal/solid on empty");
 
     r01_screen_fill_pixels_from_bank(w, s);
     EXPECT(s->pixels[0] <= 3, "fill pixels produces palette indices");
