@@ -2,10 +2,65 @@
 #include "retr01_emu/cart.h"
 #include "retr01_emu/play.h"
 #include "retr01_emu/types.h"
+#include "retr01_emu/video.h"
 #include "r01_play_camera.h"
 
 #include <stdio.h>
+#include <string.h>
 
+static const uint8_t *cart_screen_payload(const R01eCart *c, int col, int row) {
+    R01eWorldView wv;
+    const uint8_t *dir;
+    int si;
+
+    if (r01e_cart_world(c, 0, &wv) != 0) {
+        return NULL;
+    }
+    dir = r01e_cart_ptr(c, wv.base + wv.off_screen_dir, (size_t)wv.screen_count * 12u);
+    if (!dir) {
+        return NULL;
+    }
+    for (si = 0; si < wv.screen_count; si++) {
+        const uint8_t *e = dir + (size_t)si * 12u;
+        if (R01E_CELL_COL(e[0]) == col && R01E_CELL_ROW(e[0]) == row) {
+            uint32_t poff = (uint32_t)e[4] | ((uint32_t)e[5] << 8) | ((uint32_t)e[6] << 16);
+            return r01e_cart_ptr(c, wv.base + poff, R01E_SCREEN_PAYLOAD);
+        }
+    }
+    return NULL;
+}
+
+/* VRAM slots must match cart for the current cam origin (render vs collision sync). */
+static int vram_matches_cart(const R01eMachine *m) {
+    int dx, dy;
+
+    for (dy = 0; dy < 2; dy++) {
+        for (dx = 0; dx < 2; dx++) {
+            int col = m->video.cam_origin_col + dx;
+            int row = m->video.cam_origin_row + dy;
+            int slot = dy * 2 + dx;
+            const uint8_t *pay = cart_screen_payload(&m->cart, col, row);
+            const uint8_t *vram = m->video.vram + (size_t)slot * R01E_VRAM_SLOT_BYTES;
+            if (!pay) {
+                if (m->video.slot_present[slot]) {
+                    fprintf(stderr, "FAIL slot %d present but cart missing (%d,%d)\n", slot, col, row);
+                    return 0;
+                }
+                continue;
+            }
+            if (!m->video.slot_present[slot]) {
+                fprintf(stderr, "FAIL slot %d empty for cart screen (%d,%d)\n", slot, col, row);
+                return 0;
+            }
+            if (memcmp(vram, pay, R01E_SCREEN_PAYLOAD) != 0) {
+                fprintf(stderr, "FAIL slot %d VRAM!=cart screen (%d,%d) (boot stream clobber?)\n", slot, col,
+                        row);
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
 
 int main(int argc, char **argv) {
     const char *path;
@@ -22,6 +77,7 @@ int main(int argc, char **argv) {
     int expect_y;
     int expect_cam_x;
     int expect_cam_y;
+    int f;
 
     if (r01e_machine_init(&m, path, err, sizeof(err)) != 0) {
         fprintf(stderr, "FAIL init: %s\n", err);
@@ -29,6 +85,10 @@ int main(int argc, char **argv) {
     }
     if (r01e_play_start(&m) != 1) {
         fprintf(stderr, "FAIL play start\n");
+        r01e_machine_shutdown(&m);
+        return 1;
+    }
+    if (!vram_matches_cart(&m)) {
         r01e_machine_shutdown(&m);
         return 1;
     }
@@ -91,6 +151,26 @@ int main(int argc, char **argv) {
         }
         printf("ok L-map player on-screen cam=%d,%d oam=%d,%d\n", m.play.cam_x, m.play.cam_y, vx, vy);
     }
+
+    /*
+     * Regression: unfinished PRG boot MAP stream must not clobber Host Play VRAM
+     * after play_start (collision stays on cart; render would show start-screen
+     * tiles until the next origin reload).
+     */
+    for (f = 0; f < 45; f++) {
+        r01e_machine_set_pad(&m, 0, R01E_PAD_RIGHT);
+        if (r01e_machine_frame(&m) == 0) {
+            fprintf(stderr, "FAIL frame %d\n", f);
+            r01e_machine_shutdown(&m);
+            return 1;
+        }
+    }
+    if (!vram_matches_cart(&m)) {
+        r01e_machine_shutdown(&m);
+        return 1;
+    }
+    printf("ok VRAM stays synced to cart after %d frames origin=%d,%d\n", f, m.video.cam_origin_col,
+           m.video.cam_origin_row);
 
     r01e_machine_shutdown(&m);
     return 0;

@@ -7,12 +7,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Run Phase 1 PRG until pal+MAP stream has filled VRAM slot 0 (or give up). */
+/*
+ * Run Phase 1 PRG until the boot MAP stream has written a full screen into slot 0
+ * (or give up). Do not treat "PC still in $8000-$80FF" as done: the stream itself
+ * lives there, and stopping mid-copy leaves the CPU writing the start screen over
+ * Host Play's 2x2 after play_start — collision (cart) and render (VRAM) diverge.
+ */
 static void catchup_prg_boot(R01eMachine *m) {
     int i;
     int saw = 0;
 
-    for (i = 0; i < 300000; i++) {
+    for (i = 0; i < 500000; i++) {
         (void)r01e_machine_step_insn(m);
         if (!saw) {
             int t;
@@ -22,8 +27,8 @@ static void catchup_prg_boot(R01eMachine *m) {
                     break;
                 }
             }
-        } else if (m->cpu.pc >= 0x8000u && m->cpu.pc < 0x8100u && i > 1000) {
-            /* Stream done: back in low PRG (pad / VBlank hang). */
+        } else if (m->io.vram_addr >= (uint16_t)R01E_SCREEN_PAYLOAD) {
+            /* Tiles+attrs (480 B) streamed from $0000; pals finish before MAP. */
             break;
         }
     }

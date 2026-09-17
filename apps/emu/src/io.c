@@ -315,7 +315,10 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
         io->vram_addr = (uint16_t)(io->vram_addr & (R01E_VRAM_BYTES - 1));
         break;
     case 0x7F12:
-        m->video.vram[io->vram_addr & (R01E_VRAM_BYTES - 1)] = v;
+        /* Host Play owns the 2x2 nametable window; ignore leftover boot/ASM streams. */
+        if (!m->play.enabled) {
+            m->video.vram[io->vram_addr & (R01E_VRAM_BYTES - 1)] = v;
+        }
         io->vram_addr = (uint16_t)((io->vram_addr + 1) & (R01E_VRAM_BYTES - 1));
         break;
     case 0x7F20:
