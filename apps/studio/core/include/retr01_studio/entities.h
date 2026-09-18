@@ -30,7 +30,8 @@ int r01_world_player_entity(const R01World *w);
 
 /* Set player mark. World-SPR patterns used by the type move into project->other_spr_banks
  * (same bank index); parts already on a global SPR bank are left alone. Unmark / switch
- * is flag-only and does not move CHR back. Returns 0 or -1. */
+ * is flag-only and does not move CHR back. Re-marking the same type still moves any new
+ * world-SPR tiles. Returns 0 or -1. */
 int r01_project_set_player_entity(R01Project *p, R01World *w, int type_idx);
 
 R01EntityType *r01_world_entity(R01World *w, int type_idx);

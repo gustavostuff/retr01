@@ -53,8 +53,8 @@ int r01_world_import_entity_frames(R01Project *p, R01World *w, const R01EntityIm
                                    size_t err_cap);
 
 /* Overwrite type_idx in place. Keeps instances, the player mark, per-state
- * hitboxes, and per-frame origins (matched by state name). Identical SPR
- * patterns already in world or global other banks are reused. */
+ * hitboxes, per-frame origins, and compose sprite positions (matched by state
+ * name). Identical SPR patterns already in world or global other banks are reused. */
 int r01_world_import_entity_frames_replace(R01Project *p, R01World *w, int type_idx, const R01EntityImport *in,
                                            char *err_buf, size_t err_cap);
 

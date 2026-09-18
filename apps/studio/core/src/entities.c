@@ -450,7 +450,7 @@ int r01_project_set_player_entity(R01Project *p, R01World *w, int type_idx) {
         return 0;
     }
     if (cur == type_idx) {
-        return 0;
+        return entity_to_other_spr(p, w, type_idx);
     }
     if (cur >= 0) {
         r01_world_set_player_entity(w, -1);

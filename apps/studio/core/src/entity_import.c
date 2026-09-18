@@ -1054,7 +1054,50 @@ static const R01EntityState *saved_state_by_name(const R01EntityType *prev, cons
     return NULL;
 }
 
-/* Keep Studio origin/hitbox on states that still exist under the same name. */
+/* Keep Studio origin, hitbox, and compose sprite positions on states that
+ * still exist under the same name. Parts match by bank+tile first, then leftover
+ * old slots in order, so origin/hitbox stay aligned with the sprites. */
+static void restore_frame_part_pos(R01EntityFrame *fr, const R01EntityFrame *old) {
+    int used[R01_ENTITY_PARTS_MAX];
+    int taken[R01_ENTITY_PARTS_MAX];
+    int pi;
+    int pass;
+    if (!fr || !old) {
+        return;
+    }
+    memset(used, 0, sizeof(used));
+    memset(taken, 0, sizeof(taken));
+    for (pass = 0; pass < 2; pass++) {
+        for (pi = 0; pi < fr->part_count && pi < R01_ENTITY_PARTS_MAX; pi++) {
+            R01EntityPart *pt;
+            int oi;
+            int found = -1;
+            if (taken[pi]) {
+                continue;
+            }
+            pt = &fr->parts[pi];
+            for (oi = 0; oi < old->part_count && oi < R01_ENTITY_PARTS_MAX; oi++) {
+                const R01EntityPart *op = &old->parts[oi];
+                if (used[oi]) {
+                    continue;
+                }
+                if (pass == 0 && (op->bank != pt->bank || op->tile_id != pt->tile_id)) {
+                    continue;
+                }
+                found = oi;
+                break;
+            }
+            if (found < 0) {
+                continue;
+            }
+            used[found] = 1;
+            taken[pi] = 1;
+            pt->dx = clamp_int(old->parts[found].dx, 0, R01_ENTITY_COMPOSE_PX - 8);
+            pt->dy = clamp_int(old->parts[found].dy, 0, R01_ENTITY_COMPOSE_PX - 8);
+        }
+    }
+}
+
 static void restore_entity_guides(R01EntityType *e, const R01EntityType *prev) {
     int si;
     if (!e || !prev) {
@@ -1075,6 +1118,7 @@ static void restore_entity_guides(R01EntityType *e, const R01EntityType *prev) {
         for (fi = 0; fi < st->frame_count && fi < old->frame_count && fi < R01_ENTITY_FRAMES_MAX; fi++) {
             st->frames[fi].origin_x = clamp_int(old->frames[fi].origin_x, 0, R01_ENTITY_COMPOSE_PX);
             st->frames[fi].origin_y = clamp_int(old->frames[fi].origin_y, 0, R01_ENTITY_COMPOSE_PX);
+            restore_frame_part_pos(&st->frames[fi], &old->frames[fi]);
         }
     }
 }
@@ -1353,6 +1397,13 @@ int r01_world_import_entity_frames_replace(R01Project *p, R01World *w, int type_
         return -1;
     }
     restore_entity_guides(e, &saved);
+    if (r01_world_player_entity(w) == type_idx) {
+        if (r01_project_set_player_entity(p, w, type_idx) != 0) {
+            *e = saved;
+            set_err(err_buf, err_cap, "could not move player sprites");
+            return -1;
+        }
+    }
     return type_idx;
 }
 
