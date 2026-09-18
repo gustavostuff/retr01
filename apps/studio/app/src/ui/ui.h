@@ -311,6 +311,9 @@ typedef struct UiEntityEdit {
     int drag_corner; /* 0 NW, 1 NE, 2 SE, 3 SW when resizing hitbox */
     int pan_moved; /* set once viewport pan exceeds click slop */
     int pan_btn;   /* SDL button that started pan */
+    int preview_playing; /* compose loops the current state's frames */
+    int preview_ctr;     /* display-frame ticks on the current frame */
+    Uint32 preview_last_ms;
 } UiEntityEdit;
 
 typedef struct UiBrush {

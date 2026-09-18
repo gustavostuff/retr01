@@ -85,7 +85,13 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
     fr = entity_edit_frame(ui);
     ui_clip_push(r, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE, &clip);
     ui_compose_draw_grid(r, ox, oy, full, sc);
-    ui_compose_draw_frame(r, ui->project, w, fr, ox, oy, sc, ui->entity_edit.sel_part,
+    if (fr && ui->entity_edit.preview_playing) {
+        int pin = R01_ENTITY_COMPOSE_PX / 2;
+        ox += (pin - fr->origin_x) * sc;
+        oy += (pin - fr->origin_y) * sc;
+    }
+    ui_compose_draw_frame(r, ui->project, w, fr, ox, oy, sc,
+                          ui->entity_edit.preview_playing ? -1 : ui->entity_edit.sel_part,
                           ui->entity_edit.show_part_outlines, part_alpha);
     if (fr && guides_mode) {
         SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
@@ -96,7 +102,7 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
         }
         draw_ui_cross(r, ox + fr->origin_x * sc, oy + fr->origin_y * sc);
     }
-    if (ui->entity_edit.tool == UI_ENTITY_TOOL_PAINT && !ui->menu.open &&
+    if (ui->entity_edit.tool == UI_ENTITY_TOOL_PAINT && !ui->menu.open && !ui->entity_edit.preview_playing &&
         point_in_rect(ui->mouse_x, ui->mouse_y, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE,
                       UI_ENTITY_COMPOSE)) {
         int cx, cy, idx;
@@ -133,4 +139,10 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
                         ui->mouse_y);
 
     ui_modal_save_cancel(r, lo.left_btn_x, lo.btn_y, lo.save_w, lo.cancel_w, ui->mouse_x, ui->mouse_y);
+    {
+        int can_play = ui->entity_edit.preview_playing || entity_edit_preview_can_play(ui);
+        const char *play_lab = ui->entity_edit.preview_playing ? "Stop" : "Play";
+        int play_hover = can_play && point_in_rect(ui->mouse_x, ui->mouse_y, lo.play_x, lo.btn_y, lo.play_w, UI_BTN_H);
+        ui_button_draw_ex(r, lo.play_x, lo.btn_y, lo.play_w, play_lab, 1, play_hover, can_play);
+    }
 }

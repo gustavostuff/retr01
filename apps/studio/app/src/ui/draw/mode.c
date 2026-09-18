@@ -63,6 +63,7 @@ void draw_ctrl_sidebar(UiState *ui, SDL_Renderer *r) {
 void ui_update_cursor(const UiState *ui) {
     int hand = 0;
     int sizewe = 0;
+    int no = 0;
     int lx = ui->mouse_x;
     int ly = ui->mouse_y;
 
@@ -99,13 +100,20 @@ void ui_update_cursor(const UiState *ui) {
                point_in_rect(lx, ly, lo.left_btn_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);
     } else if (ui->entity_edit.open) {
         EntityModalLayout lo;
+        int dots_hit;
+        int play_ok;
+        int idx;
         entity_modal_layout(ui, &lo);
-        hand = point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE) ||
+        dots_hit = ui_dot_strip_hit(lx, ly, lo.state_dots_x, lo.state_dots_y, UI_DOT_STRIP_N, &idx) ||
+                   ui_dot_strip_hit(lx, ly, lo.frame_dots_x, lo.frame_dots_y, UI_DOT_STRIP_N, &idx);
+        play_ok = ui->entity_edit.preview_playing || entity_edit_preview_can_play(ui);
+        if (ui->entity_edit.preview_playing && dots_hit) {
+            no = 1;
+        }
+        hand = (!ui->entity_edit.preview_playing &&
+                point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) ||
                point_in_rect(lx, ly, lo.pal_x, lo.pal_y, UI_PAL_GRID_SIZE, UI_PAL_GRID_SIZE) ||
-               point_in_rect(lx, ly, lo.state_dots_x, lo.state_dots_y,
-                             UI_DOT_STRIP_N * UI_DOT_SIZE + (UI_DOT_STRIP_N - 1) * UI_DOT_GAP, UI_DOT_SIZE) ||
-               point_in_rect(lx, ly, lo.frame_dots_x, lo.frame_dots_y,
-                             UI_DOT_STRIP_N * UI_DOT_SIZE + (UI_DOT_STRIP_N - 1) * UI_DOT_GAP, UI_DOT_SIZE) ||
+               (!ui->entity_edit.preview_playing && dots_hit) ||
                point_in_rect(lx, ly, lo.guides_x, lo.guides_y, lo.mode_x + lo.mode_w - lo.guides_x, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.mode_x, lo.mode_y, lo.mode_w, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.add_spr_x, lo.add_spr_y, lo.add_spr_w, UI_BTN_H) ||
@@ -113,7 +121,8 @@ void ui_update_cursor(const UiState *ui) {
                point_in_rect(lx, ly, lo.highlight_x, lo.highlight_y, lo.highlight_w, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.brush_x, lo.brush_y, lo.brush_w, UI_BTN_H) ||
                point_in_rect(lx, ly, lo.left_btn_x, lo.btn_y, lo.save_w, UI_BTN_H) ||
-               point_in_rect(lx, ly, lo.left_btn_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H);
+               point_in_rect(lx, ly, lo.left_btn_x + lo.save_w + UI_UNIT, lo.btn_y, lo.cancel_w, UI_BTN_H) ||
+               (play_ok && point_in_rect(lx, ly, lo.play_x, lo.btn_y, lo.play_w, UI_BTN_H));
     } else if (ui->menu.open) {
         hand = menu_hit(ui, lx, ly, NULL, NULL);
     } else if (ui->app_mode == UI_APP_SOUNDS) {
@@ -148,6 +157,8 @@ void ui_update_cursor(const UiState *ui) {
     }
     if (sizewe && g_cursor_sizewe) {
         SDL_SetCursor(g_cursor_sizewe);
+    } else if (no && g_cursor_no) {
+        SDL_SetCursor(g_cursor_no);
     } else {
         SDL_SetCursor(hand && g_cursor_hand ? g_cursor_hand : g_cursor_arrow);
     }

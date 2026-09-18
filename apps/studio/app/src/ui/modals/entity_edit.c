@@ -122,6 +122,101 @@ void entity_edit_open(UiState *ui, int type_idx) {
     ui_text_blur(&ui->text);
 }
 
+static int entity_edit_next_preview_frame(const R01EntityState *st, int from) {
+    int n;
+    int i;
+    if (!st || st->frame_count < 1) {
+        return 0;
+    }
+    n = st->frame_count;
+    if (from < 0) {
+        from = 0;
+    }
+    for (i = 1; i <= n; i++) {
+        int idx = (from + i) % n;
+        if (st->frames[idx].part_count > 0) {
+            return idx;
+        }
+    }
+    return from % n;
+}
+
+void entity_edit_preview_set(UiState *ui, int playing) {
+    if (!ui) {
+        return;
+    }
+    if (playing && !entity_edit_preview_can_play(ui)) {
+        playing = 0;
+    }
+    ui->entity_edit.preview_playing = playing ? 1 : 0;
+    ui->entity_edit.preview_ctr = 0;
+    ui->entity_edit.preview_last_ms = playing ? SDL_GetTicks() : 0;
+}
+
+int entity_edit_preview_can_play(const UiState *ui) {
+    const R01EntityType *e;
+    int si;
+    if (!ui) {
+        return 0;
+    }
+    e = &ui->entity_edit.draft;
+    si = ui->entity_edit.state;
+    if (si < 0 || si >= e->state_count) {
+        return 0;
+    }
+    return r01_entity_state_drawable_frame_count(&e->states[si]) >= 2;
+}
+
+void entity_edit_preview_tick(UiState *ui) {
+    R01EntityState *st;
+    R01EntityFrame *fr;
+    Uint32 now;
+    int delay;
+    if (!ui || !ui->entity_edit.open || !ui->entity_edit.preview_playing) {
+        return;
+    }
+    if (!entity_edit_preview_can_play(ui)) {
+        entity_edit_preview_set(ui, 0);
+        return;
+    }
+    now = SDL_GetTicks();
+    if (ui->entity_edit.preview_last_ms == 0) {
+        ui->entity_edit.preview_last_ms = now;
+        return;
+    }
+    if (now - ui->entity_edit.preview_last_ms < 16u) {
+        return;
+    }
+    ui->entity_edit.preview_last_ms = now;
+    st = entity_edit_state(ui);
+    if (!st) {
+        return;
+    }
+    fr = entity_edit_frame(ui);
+    if (!fr || fr->part_count < 1) {
+        int nxt = entity_edit_next_preview_frame(st, ui->entity_edit.frame);
+        if (nxt != ui->entity_edit.frame) {
+            ui->entity_edit.frame = nxt;
+            ui->entity_edit.sel_part = -1;
+            ui->entity_edit.preview_ctr = 0;
+        }
+        return;
+    }
+    delay = fr->delay < 1 ? 1 : fr->delay;
+    ui->entity_edit.preview_ctr++;
+    if (ui->entity_edit.preview_ctr < delay) {
+        return;
+    }
+    ui->entity_edit.preview_ctr = 0;
+    {
+        int nxt = entity_edit_next_preview_frame(st, ui->entity_edit.frame);
+        if (nxt != ui->entity_edit.frame) {
+            ui->entity_edit.frame = nxt;
+            ui->entity_edit.sel_part = -1;
+        }
+    }
+}
+
 void entity_edit_save(UiState *ui) {
     R01World *w = r01_project_active_world(ui->project);
     int idx;

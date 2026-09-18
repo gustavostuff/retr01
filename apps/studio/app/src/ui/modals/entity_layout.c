@@ -188,6 +188,12 @@ void entity_modal_layout(const UiState *ui, EntityModalLayout *lo) {
     lo->left_btn_x = content_x;
     lo->save_w = ((label_width("Save") + pad - 1) / pad) * pad;
     lo->cancel_w = ((label_width("Cancel") + pad - 1) / pad) * pad;
+    lo->play_w = label_width("Play");
+    if (lo->play_w < label_width("Stop")) {
+        lo->play_w = label_width("Stop");
+    }
+    lo->play_w = ((lo->play_w + pad - 1) / pad) * pad;
+    lo->play_x = cx + cw - lo->play_w;
 
 #if UI_PANEL_DEBUG_GRID
     lo->dbg_panel = panel;

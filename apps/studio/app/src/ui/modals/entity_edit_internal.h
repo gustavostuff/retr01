@@ -24,6 +24,8 @@ void entity_edit_apply_pal_to_part(UiState *ui, R01EntityPart *pt, int pal);
 void entity_edit_select_part(UiState *ui, R01EntityFrame *fr, int idx);
 void entity_edit_paint_at(UiState *ui, R01World *w, R01EntityFrame *fr, int idx, int cx, int cy);
 int entity_edit_paste_clipboard(UiState *ui);
+void entity_edit_preview_set(UiState *ui, int playing);
+int entity_edit_preview_can_play(const UiState *ui);
 void entity_edit_save(UiState *ui);
 
 #endif

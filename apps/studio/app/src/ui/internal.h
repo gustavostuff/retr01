@@ -155,6 +155,7 @@ typedef struct EntityModalLayout {
     int mode_x, mode_y, mode_w; /* Sprite select | paint | Origin/hitbox */
     int btn_y, save_w, cancel_w;
     int left_btn_x;
+    int play_x, play_w;
 #if UI_PANEL_DEBUG_GRID
     UiPanel dbg_panel;
 #endif
@@ -188,6 +189,7 @@ extern int g_spr_bank_btn_h;
 extern SDL_Cursor *g_cursor_arrow;
 extern SDL_Cursor *g_cursor_hand;
 extern SDL_Cursor *g_cursor_sizewe;
+extern SDL_Cursor *g_cursor_no;
 
 /* ui/primitives.c */
 int ui_load_png_rgba(const char *path, uint8_t **out_px, int *out_w, int *out_h);
@@ -406,6 +408,8 @@ int entity_modal_wheel(UiState *ui, int lx, int ly, int wheel_y, int shift);
 /* Alloc blank SPR tile + place part at compose (wx, wy). Returns part idx or -1. */
 int entity_edit_add_sprite_at(UiState *ui, int wx, int wy);
 int entity_edit_paste_clipboard(UiState *ui);
+int entity_edit_preview_can_play(const UiState *ui);
+void entity_edit_preview_tick(UiState *ui);
 void draw_entity_modal(UiState *ui, SDL_Renderer *r);
 
 /* ui/draw/mode.c */

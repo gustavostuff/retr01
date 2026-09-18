@@ -156,6 +156,9 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
     ui_text_blur(&ui->text);
 
     if (ui_dot_strip_hit(lx, ly, lo.state_dots_x, lo.state_dots_y, UI_DOT_STRIP_N, &idx)) {
+        if (ui->entity_edit.preview_playing) {
+            return 1;
+        }
         int unlock = entity_edit_state_unlock_count(ui);
         if (idx < unlock) {
             if (!r01_entity_ensure_state(&ui->entity_edit.draft, idx)) {
@@ -164,19 +167,33 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
             ui->entity_edit.state = idx;
             ui->entity_edit.frame = 0;
             ui->entity_edit.sel_part = -1;
+            ui->entity_edit.preview_ctr = 0;
         }
         return 1;
     }
     if (ui_dot_strip_hit(lx, ly, lo.frame_dots_x, lo.frame_dots_y, UI_DOT_STRIP_N, &idx)) {
+        if (ui->entity_edit.preview_playing) {
+            return 1;
+        }
         int unlock = entity_edit_frame_unlock_count(ui);
         if (idx < unlock) {
             ui->entity_edit.frame = idx;
             (void)r01_entity_ensure_frame(&ui->entity_edit.draft, ui->entity_edit.state, idx);
             ui->entity_edit.sel_part = -1;
+            ui->entity_edit.preview_ctr = 0;
         }
         return 1;
     }
 
+    if (point_in_rect(lx, ly, lo.play_x, lo.btn_y, lo.play_w, UI_BTN_H)) {
+        ui_text_blur(&ui->text);
+        if (ui->entity_edit.preview_playing) {
+            entity_edit_preview_set(ui, 0);
+        } else if (entity_edit_preview_can_play(ui)) {
+            entity_edit_preview_set(ui, 1);
+        }
+        return 1;
+    }
     if (ui_modal_save_hit(lx, ly, lo.left_btn_x, lo.btn_y, lo.save_w)) {
         entity_edit_save(ui);
         return 1;
@@ -191,6 +208,9 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
 
     if (point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) {
         ui_focus_set(ui, UI_FOCUS_WORKBENCH);
+        if (ui->entity_edit.preview_playing) {
+            return 1;
+        }
         entity_edit_screen_to_world(ui, &lo, lx, ly, &cx, &cy);
         if (ui->entity_edit.tool == UI_ENTITY_TOOL_PAINT && right) {
             R01World *ww = r01_project_active_world(ui->project);

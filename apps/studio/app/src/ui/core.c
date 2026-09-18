@@ -19,6 +19,7 @@
 SDL_Cursor *g_cursor_arrow;
 SDL_Cursor *g_cursor_hand;
 SDL_Cursor *g_cursor_sizewe;
+SDL_Cursor *g_cursor_no;
 
 int ui_init(UiState *ui) {
     if (!ui) {
@@ -31,6 +32,7 @@ int ui_init(UiState *ui) {
     g_cursor_arrow = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
     g_cursor_hand = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
     g_cursor_sizewe = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEWE);
+    g_cursor_no = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NO);
     {
         static const char *const radio_paths[] = {
             R01_STUDIO_ASSETS_DIR "/radio_button.png",
@@ -244,6 +246,10 @@ void ui_shutdown(UiState *ui) {
         SDL_FreeCursor(g_cursor_sizewe);
         g_cursor_sizewe = NULL;
     }
+    if (g_cursor_no) {
+        SDL_FreeCursor(g_cursor_no);
+        g_cursor_no = NULL;
+    }
     font_shutdown();
 }
 
@@ -253,6 +259,7 @@ void ui_tick(UiState *ui) {
         return;
     }
     accordion_anim_tick(ui);
+    entity_edit_preview_tick(ui);
     if (!ui->play.active || ui->play.booting || !ui->play.machine) {
         if (ui->play.booting) {
             ui->play.spin++;
