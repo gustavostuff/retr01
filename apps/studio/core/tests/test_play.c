@@ -4,7 +4,9 @@
 #include "retr01_studio/entities.h"
 #include "retr01_studio/play.h"
 #include "retr01_studio/project.h"
+#include "r01_custom_logic_scan.h"
 #include "r01_play_camera.h"
+#include "r01_play_physics.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -24,6 +26,12 @@ static void expect_camera(R01GameCtx *ctx, int line) {
 }
 
 #define EXPECT_CAMERA(ctx) expect_camera((ctx), __LINE__)
+
+static int test_floor_ok(void *user, int x, int y) {
+    int floor = user ? *(const int *)user : 0;
+    (void)x;
+    return y >= 0 && y <= floor && x >= 0 && x < 200;
+}
 
 TEST_MAIN() {
     R01Project *p = (R01Project *)calloc(1, sizeof(R01Project));
@@ -66,13 +74,13 @@ TEST_MAIN() {
         EXPECT(pl.ctx.player_x == R01_PLAY_SPAWN_CENTER_X(2), "unmarked falls back to screen center");
     }
 
-    r01_play_tick(&pl, p, 0, 0);
+    r01_play_tick(&pl, p, 0, 0, 0);
     EXPECT_CAMERA(&pl.ctx);
 
     {
         int before = pl.ctx.player_x;
         int before_cam_x = pl.ctx.cam_x;
-        r01_play_tick(&pl, p, 1, 0);
+        r01_play_tick(&pl, p, 1, 0, 0);
         EXPECT(pl.ctx.player_x == before + 1, "move right");
         EXPECT_CAMERA(&pl.ctx);
         (void)before_cam_x;
@@ -86,19 +94,18 @@ TEST_MAIN() {
         int cell = (ly / 8) * R01_SCREEN_TILES_X + (lx / 8);
         int before_x = pl.ctx.player_x;
         s->attrs[cell] |= R01_ATTR_SOLID;
-        r01_play_tick(&pl, p, -1, 0);
+        r01_play_tick(&pl, p, -1, 0, 0);
         EXPECT(pl.ctx.player_x == before_x, "solid tile blocks movement");
-        r01_play_tick(&pl, p, 1, 0);
+        r01_play_tick(&pl, p, 1, 0, 0);
         EXPECT(pl.ctx.player_x == before_x, "solid tile blocks movement both axes");
         s->attrs[cell] &= (uint8_t)~R01_ATTR_SOLID;
     }
 
-    EXPECT(r01_play_button(&pl, p, R01_PLAY_BTN_X), "warp X");
-    EXPECT(pl.ctx.player_x == R01_PLAY_SPAWN_CENTER_X(0), "warp to col 0 center");
-    EXPECT(pl.ctx.player_y == R01_PLAY_SPAWN_CENTER_Y(0), "warp to row 0 center");
+    EXPECT(!r01_play_button(&pl, p, R01_PLAY_BTN_X), "X has no warp");
+    EXPECT(!r01_play_button(&pl, p, R01_PLAY_BTN_Y), "Y has no warp");
 
-    EXPECT(r01_play_screen_index(&pl, &p->worlds[0]) == r01_world_find_screen(&p->worlds[0], 0, 0),
-           "play_screen_index matches warp cell");
+    EXPECT(r01_play_screen_index(&pl, &p->worlds[0]) == p->worlds[0].default_screen,
+           "play_screen_index stays on spawn screen");
 
     {
         uint8_t r = 0, g = 0, b = 0;
@@ -135,7 +142,7 @@ TEST_MAIN() {
         edge_x = 3 * R01_SCREEN_PX_W - R01_PLAY_PLAYER_W;
         pl.ctx.player_x = edge_x;
         pl.ctx.player_y = R01_PLAY_SPAWN_CENTER_Y(0);
-        r01_play_tick(&pl, p, 1, 0);
+        r01_play_tick(&pl, p, 1, 0, 0);
         EXPECT(pl.ctx.player_x == edge_x, "solid seam blocks move into next screen");
     }
 
@@ -147,7 +154,7 @@ TEST_MAIN() {
         EXPECT(miss_idx >= 0, "grid slot for col 4");
         p->worlds[0].screens[miss_idx].present = 0;
         pl.ctx.player_x = edge4;
-        r01_play_tick(&pl, p, 1, 0);
+        r01_play_tick(&pl, p, 1, 0, 0);
         EXPECT(pl.ctx.player_x == edge4, "missing screen blocks move");
         pl.ctx.player_x = before;
     }
@@ -193,7 +200,7 @@ TEST_MAIN() {
         scr->attrs[cell] |= R01_ATTR_SOLID;
         {
             int before = pl.ctx.player_x;
-            r01_play_tick(&pl, p, -1, 0);
+            r01_play_tick(&pl, p, -1, 0, 0);
             EXPECT(pl.ctx.player_x == before, "offset hitbox blocks via solid under box");
         }
         scr->attrs[cell] &= (uint8_t)~R01_ATTR_SOLID;
@@ -233,6 +240,163 @@ TEST_MAIN() {
 
     r01_play_stop(&pl);
     EXPECT(!pl.active, "play stopped");
+
+    {
+        R01PlayPhysics ph;
+        int x = 10;
+        int y = 10;
+        int floor = 40;
+        int anim_dx = 0;
+        int anim_dy = 0;
+        int i;
+        int jump_y;
+        r01_play_physics_init(&ph);
+        r01_play_physics_set_mode(&ph, R01_GAME_MODE_PLATFORMER);
+        for (i = 0; i < 80; i++) {
+            r01_play_physics_tick(&ph, &x, &y, 0, 0, 0, test_floor_ok, &floor, &anim_dx, &anim_dy);
+        }
+        EXPECT(y == floor, "fall lands on floor");
+        EXPECT(ph.grounded, "grounded after land");
+        EXPECT(anim_dy == 0, "platformer anim ignores vertical");
+        r01_play_physics_tick(&ph, &x, &y, 0, -1, 1, test_floor_ok, &floor, &anim_dx, &anim_dy);
+        jump_y = y;
+        EXPECT(jump_y < floor, "jump leaves floor");
+        EXPECT(!ph.grounded, "airborne after jump");
+        r01_play_physics_tick(&ph, &x, &y, 0, -1, 1, test_floor_ok, &floor, &anim_dx, &anim_dy);
+        EXPECT(y <= jump_y, "held jump does not re-boost in air");
+    }
+
+    {
+        R01PlayPhysics hold;
+        R01PlayPhysics tap;
+        int hx = 10;
+        int hy = 10;
+        int tx = 10;
+        int ty = 10;
+        int floor = 80;
+        int anim_dx = 0;
+        int anim_dy = 0;
+        int i;
+        int hold_peak;
+        int tap_peak;
+        r01_play_physics_init(&hold);
+        r01_play_physics_set_mode(&hold, R01_GAME_MODE_PLATFORMER);
+        r01_play_physics_init(&tap);
+        r01_play_physics_set_mode(&tap, R01_GAME_MODE_PLATFORMER);
+        for (i = 0; i < 120; i++) {
+            r01_play_physics_tick(&hold, &hx, &hy, 0, 0, 0, test_floor_ok, &floor, &anim_dx, &anim_dy);
+            r01_play_physics_tick(&tap, &tx, &ty, 0, 0, 0, test_floor_ok, &floor, &anim_dx, &anim_dy);
+        }
+        r01_play_physics_tick(&hold, &hx, &hy, 0, 0, 1, test_floor_ok, &floor, &anim_dx, &anim_dy);
+        r01_play_physics_tick(&tap, &tx, &ty, 0, 0, 1, test_floor_ok, &floor, &anim_dx, &anim_dy);
+        hold_peak = hy;
+        tap_peak = ty;
+        for (i = 0; i < 20; i++) {
+            r01_play_physics_tick(&hold, &hx, &hy, 0, 0, 1, test_floor_ok, &floor, &anim_dx, &anim_dy);
+            if (hy < hold_peak) {
+                hold_peak = hy;
+            }
+            r01_play_physics_tick(&tap, &tx, &ty, 0, 0, 0, test_floor_ok, &floor, &anim_dx, &anim_dy);
+            if (ty < tap_peak) {
+                tap_peak = ty;
+            }
+        }
+        EXPECT(tap_peak > hold_peak, "release while rising peaks lower");
+    }
+
+    {
+        R01PlayPhysics big;
+        R01PlayPhysics small;
+        int bx = 10;
+        int by = 10;
+        int sx = 10;
+        int sy = 10;
+        int floor = 40;
+        int anim_dx = 0;
+        int anim_dy = 0;
+        int i;
+        r01_play_physics_init(&big);
+        r01_play_physics_set_mode(&big, R01_GAME_MODE_PLATFORMER);
+        r01_play_physics_set_meter(&big, 16);
+        r01_play_physics_init(&small);
+        r01_play_physics_set_mode(&small, R01_GAME_MODE_PLATFORMER);
+        r01_play_physics_set_meter(&small, 8);
+        for (i = 0; i < 80; i++) {
+            r01_play_physics_tick(&big, &bx, &by, 0, 0, 0, test_floor_ok, &floor, &anim_dx, &anim_dy);
+            r01_play_physics_tick(&small, &sx, &sy, 0, 0, 0, test_floor_ok, &floor, &anim_dx, &anim_dy);
+        }
+        r01_play_physics_tick(&big, &bx, &by, 0, 0, 1, test_floor_ok, &floor, &anim_dx, &anim_dy);
+        r01_play_physics_tick(&small, &sx, &sy, 0, 0, 1, test_floor_ok, &floor, &anim_dx, &anim_dy);
+        EXPECT((floor - by) > (floor - sy), "smaller meter jumps fewer pixels");
+    }
+
+    {
+        FILE *f = fopen("plat_logic.c", "w");
+        int mode = 0;
+        int grav = 0;
+        int jump = 0;
+        int meter = 0;
+        EXPECT(f != NULL, "write plat_logic");
+        if (f) {
+            fputs("void r01_custom_on_init(R01GameCtx *ctx) {\n"
+                  "    r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER);\n"
+                  "    r01_platformer_set_gravity(ctx, 2);\n"
+                  "    r01_platformer_set_jump(ctx, R01_PLAT_JUMP_DEFAULT);\n"
+                  "    r01_platformer_set_meter(ctx, R01_PLAT_METER_DEFAULT);\n"
+                  "}\n",
+                  f);
+            fclose(f);
+        }
+        EXPECT(r01_custom_logic_scan_game_mode("plat_logic.c", &mode) == 0 && mode == 1, "scan platformer");
+        EXPECT(r01_custom_logic_scan_plat_gravity("plat_logic.c", &grav) == 0 && grav == 2, "scan gravity");
+        EXPECT(r01_custom_logic_scan_plat_jump("plat_logic.c", &jump) == 0 && jump == 8, "scan jump default token");
+        EXPECT(r01_custom_logic_scan_plat_meter("plat_logic.c", &meter) == 0 && meter == 16, "scan meter default token");
+        remove("plat_logic.c");
+    }
+
+    /* Play tick: platformer falls onto a solid row. Y jumps. Up/Down do not walk. */
+    EXPECT(r01_play_start(&pl, p, NULL), "play start for platformer");
+    r01_game_set_mode(&pl.ctx, R01_GAME_MODE_PLATFORMER);
+    r01_platformer_set_gravity(&pl.ctx, 1);
+    r01_platformer_set_jump(&pl.ctx, 8);
+    r01_platformer_set_meter(&pl.ctx, 16);
+    {
+        int si = p->worlds[0].default_screen;
+        R01Screen *scr;
+        int tx;
+        int before_y;
+        int after_up;
+        EXPECT(si >= 0 && si < p->worlds[0].screen_count, "default screen");
+        scr = &p->worlds[0].screens[si];
+        pl.ctx.player_x = scr->col * R01_SCREEN_PX_W + 16;
+        pl.ctx.player_y = scr->row * R01_SCREEN_PX_H + 8;
+        pl.ctx.plat_vel_y = 0;
+        pl.ctx.plat_frac_x = 0;
+        pl.ctx.plat_frac_y = 0;
+        pl.ctx.plat_grounded = 0;
+        pl.ctx.plat_jump_held = 0;
+        for (tx = 0; tx < R01_SCREEN_TILES_X; tx++) {
+            scr->attrs[2 * R01_SCREEN_TILES_X + tx] |= R01_ATTR_SOLID;
+        }
+        {
+            int i;
+            for (i = 0; i < 40; i++) {
+                r01_play_tick(&pl, p, 0, 0, 0);
+            }
+        }
+        before_y = pl.ctx.player_y;
+        EXPECT(pl.ctx.plat_grounded, "play tick grounded on solid row");
+        r01_play_tick(&pl, p, 0, -1, 0);
+        EXPECT(pl.ctx.player_y == before_y, "Up does not jump in platformer");
+        r01_play_tick(&pl, p, 0, 0, 1);
+        after_up = pl.ctx.player_y;
+        EXPECT(after_up < before_y, "Y jumps in platformer");
+        r01_play_tick(&pl, p, 0, 1, 0);
+        EXPECT(pl.ctx.player_y <= after_up, "Down does not walk in platformer");
+    }
+
+    r01_play_stop(&pl);
+    EXPECT(!pl.active, "play stopped after platformer");
 
     free(p);
     TEST_EXIT();

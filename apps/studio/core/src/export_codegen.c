@@ -237,6 +237,15 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "    int player_idle_state;\n"
                    "    int player_walk_state[8];\n"
                    "    int player_state_delay[4];\n"
+                   "    int game_mode;\n"
+                   "    int plat_gravity;\n"
+                   "    int plat_jump;\n"
+                   "    int plat_meter;\n"
+                   "    int plat_vel_y;\n"
+                   "    int plat_frac_x;\n"
+                   "    int plat_frac_y;\n"
+                   "    int plat_grounded;\n"
+                   "    int plat_jump_held;\n"
                    "    int bgm_track;\n"
                    "    struct R01Projectile {\n"
                    "        int active;\n"
@@ -267,6 +276,7 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "#include \"r01_entity.h\"\n"
                    "#include \"r01_camera.h\"\n"
                    "#include \"r01_bg0.h\"\n"
+                   "#include \"r01_physics.h\"\n"
                    "#include \"r01_events.h\"\n"
                    "#include \"r01_fade.h\"\n"
                    "#include \"r01_warp.h\"\n"
@@ -414,6 +424,27 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    err_buf, err_cap) != 0) {
         return -1;
     }
+    if (join_path_err(path, sizeof(path), inc_dir, "r01_physics.h", err_buf, err_cap) != 0) {
+
+        return -1;
+
+    }
+    if (write_text(path,
+                   "#ifndef R01_PHYSICS_H\n#define R01_PHYSICS_H\n\n"
+                   "typedef struct R01GameCtx R01GameCtx;\n"
+                   "#define R01_GAME_MODE_TOPDOWN 0\n"
+                   "#define R01_GAME_MODE_PLATFORMER 1\n"
+                   "#define R01_PLAT_GRAVITY_DEFAULT 1\n"
+                   "#define R01_PLAT_JUMP_DEFAULT 8\n"
+                   "#define R01_PLAT_METER_DEFAULT 16\n"
+                   "void r01_game_set_mode(R01GameCtx *ctx, int mode);\n"
+                   "void r01_platformer_set_gravity(R01GameCtx *ctx, int units);\n"
+                   "void r01_platformer_set_jump(R01GameCtx *ctx, int impulse);\n"
+                   "void r01_platformer_set_meter(R01GameCtx *ctx, int px_per_meter);\n\n"
+                   "#endif\n",
+                   err_buf, err_cap) != 0) {
+        return -1;
+    }
     if (join_path_err(path, sizeof(path), inc_dir, "r01_events.h", err_buf, err_cap) != 0) {
 
         return -1;
@@ -544,13 +575,13 @@ static int write_custom_logic(const char *c_dir, char *err_buf, size_t err_cap) 
     return write_text(path,
                       "/* User game logic - created once by Studio export; never overwritten. */\n"
                       "#include \"include/r01_engine.h\"\n\n"
-                      "static void on_warp_x(R01GameCtx *ctx) {\n"
-                      "    r01_player_warp(ctx, 0, 0);\n"
-                      "}\n\n"
                       "void r01_custom_on_init(R01GameCtx *ctx) {\n"
-                      "    r01_event_on_button(R01_BTN_X, on_warp_x);\n"
                       "    r01_camera_set_deadzone(ctx, R01_CAM_DEADZONE_X_DEFAULT, R01_CAM_DEADZONE_Y_DEFAULT);\n"
                       "    /* Examples:\n"
+                      "     * r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER);\n"
+                      "     * r01_platformer_set_gravity(ctx, R01_PLAT_GRAVITY_DEFAULT);\n"
+                      "     * r01_platformer_set_jump(ctx, R01_PLAT_JUMP_DEFAULT);\n"
+                      "     * r01_platformer_set_meter(ctx, R01_PLAT_METER_DEFAULT);\n"
                       "     * r01_camera_disable_deadzone(ctx); /* 1:1 camera track */\n"
                       "     * r01_bg0_set_wrap(ctx, R01_BG0_WRAP_ON, R01_BG0_WRAP_ON);\n"
                       "     * r01_bg0_set_clip_to_bg1(ctx, R01_BG0_CLIP_ON);\n"
@@ -752,12 +783,6 @@ static int write_base_game(FILE *f, const R01Project *p) {
 
     fprintf(f, "void r01_game_tick(R01GameCtx *ctx) {\n");
     fprintf(f, "    if (!ctx) return;\n");
-    fprintf(f, "    if (r01_pad_just_pressed(ctx, R01_BTN_X)) {\n");
-    fprintf(f, "        r01_player_warp(ctx, 0, 0);\n");
-    fprintf(f, "    }\n");
-    fprintf(f, "    if (r01_pad_just_pressed(ctx, R01_BTN_Y)) {\n");
-    fprintf(f, "        r01_player_warp(ctx, 1, 0);\n");
-    fprintf(f, "    }\n");
     fprintf(f, "    r01_runtime_dispatch_buttons(ctx);\n");
     fprintf(f, "    ctx->pad_prev = ctx->pad;\n");
     fprintf(f, "    r01_custom_on_tick(ctx);\n");
@@ -1006,7 +1031,10 @@ static int write_asm_tree(const char *asm_dir, const R01World *w, char *err_buf,
                    "PLAY_COLL_DIR   = $8122\n"
                    "PLAY_INST_COUNT = $81C0\n"
                    "PLAY_INST_TABLE = $81C1\n"
-                   "R01P_MARKER     = $80F0\n",
+                   "R01P_MARKER     = $80F0\n"
+                   "PLAT_GRAVITY    = $80F7\n"
+                   "PLAT_JUMP       = $80F8\n"
+                   "PLAT_METER      = $80F9\n",
                    err_buf, err_cap) != 0) {
         return -1;
     }
@@ -1225,7 +1253,7 @@ static int write_asm_tree(const char *asm_dir, const R01World *w, char *err_buf,
         return -1;
 
     }
-    if (write_text(path, "; X/Y test warps\n", err_buf, err_cap) != 0) {
+    if (write_text(path, "; pad Y jump (platformer). No X/Y face-button warps.\n", err_buf, err_cap) != 0) {
         return -1;
     }
     if (join_path_err(path, sizeof(path), asm_dir, "player/camera.s", err_buf, err_cap) != 0) {

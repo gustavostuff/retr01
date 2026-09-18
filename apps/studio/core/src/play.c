@@ -7,6 +7,7 @@
 #include "retr01_studio/player_anim.h"
 #include "retr01_studio/paths.h"
 #include "r01_custom_logic_scan.h"
+#include "r01_play_physics.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -17,6 +18,10 @@ static void play_apply_custom_logic(R01GameCtx *ctx, const char *project_path) {
     char path[R01_PATH_MAX];
     int dx;
     int dy;
+    int mode;
+    int grav;
+    int jump;
+    int meter;
     if (!ctx) {
         return;
     }
@@ -30,6 +35,18 @@ static void play_apply_custom_logic(R01GameCtx *ctx, const char *project_path) {
     if (r01_custom_logic_scan_deadzone(path, &dx, &dy) == 0) {
         r01_camera_set_deadzone(ctx, dx, dy);
     }
+    if (r01_custom_logic_scan_game_mode(path, &mode) == 0) {
+        r01_game_set_mode(ctx, mode);
+    }
+    if (r01_custom_logic_scan_plat_gravity(path, &grav) == 0) {
+        r01_platformer_set_gravity(ctx, grav);
+    }
+    if (r01_custom_logic_scan_plat_jump(path, &jump) == 0) {
+        r01_platformer_set_jump(ctx, jump);
+    }
+    if (r01_custom_logic_scan_plat_meter(path, &meter) == 0) {
+        r01_platformer_set_meter(ctx, meter);
+    }
 }
 
 static void place_player_on_screen(R01PlayState *pl, int col, int row) {
@@ -39,6 +56,11 @@ static void place_player_on_screen(R01PlayState *pl, int col, int row) {
 static void place_player_xy(R01PlayState *pl, int wx, int wy) {
     pl->ctx.player_x = wx;
     pl->ctx.player_y = wy;
+    pl->ctx.plat_vel_y = 0;
+    pl->ctx.plat_frac_x = 0;
+    pl->ctx.plat_frac_y = 0;
+    pl->ctx.plat_grounded = 0;
+    pl->ctx.plat_jump_held = 0;
     r01_game_camera_snap(&pl->ctx);
 }
 
@@ -166,7 +188,22 @@ void r01_play_player_hit_rect(const R01World *w, const R01GameCtx *ctx, int orig
     }
 }
 
-void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
+typedef struct PlayMoveCtx {
+    const R01World *w;
+    const R01GameCtx *ctx;
+} PlayMoveCtx;
+
+static int play_move_ok(void *user, int ox, int oy) {
+    PlayMoveCtx *m = (PlayMoveCtx *)user;
+    int hx, hy, hw, hh;
+    if (!m || !m->w) {
+        return 0;
+    }
+    r01_play_player_hit_rect(m->w, m->ctx, ox, oy, &hx, &hy, &hw, &hh);
+    return r01_world_aabb_ok(m->w, hx, hy, hw, hh);
+}
+
+void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy, int jump_down) {
     const R01World *w;
     R01GameCtx *ctx;
     if (!pl || !pl->active || !p) {
@@ -185,23 +222,30 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
     }
     {
         int pe = r01_world_player_entity(w);
-        r01_player_anim_update(ctx, dx, dy);
-        if (dx != 0) {
-            int nx = ctx->player_x + dx;
-            int hx, hy, hw, hh;
-            r01_play_player_hit_rect(w, ctx, nx, ctx->player_y, &hx, &hy, &hw, &hh);
-            if (r01_world_aabb_ok(w, hx, hy, hw, hh)) {
-                ctx->player_x = nx;
-            }
-        }
-        if (dy != 0) {
-            int ny = ctx->player_y + dy;
-            int hx, hy, hw, hh;
-            r01_play_player_hit_rect(w, ctx, ctx->player_x, ny, &hx, &hy, &hw, &hh);
-            if (r01_world_aabb_ok(w, hx, hy, hw, hh)) {
-                ctx->player_y = ny;
-            }
-        }
+        int anim_dx = 0;
+        int anim_dy = 0;
+        PlayMoveCtx move;
+        R01PlayPhysics ph;
+        r01_play_physics_init(&ph);
+        r01_play_physics_set_mode(&ph, ctx->game_mode);
+        r01_play_physics_set_gravity(&ph, ctx->plat_gravity);
+        r01_play_physics_set_jump(&ph, ctx->plat_jump);
+        r01_play_physics_set_meter(&ph, ctx->plat_meter);
+        ph.vel_y = ctx->plat_vel_y;
+        ph.frac_x = ctx->plat_frac_x;
+        ph.frac_y = ctx->plat_frac_y;
+        ph.grounded = ctx->plat_grounded;
+        ph.jump_held = ctx->plat_jump_held;
+        move.w = w;
+        move.ctx = ctx;
+        r01_play_physics_tick(&ph, &ctx->player_x, &ctx->player_y, dx, dy, jump_down, play_move_ok, &move,
+                              &anim_dx, &anim_dy);
+        ctx->plat_vel_y = ph.vel_y;
+        ctx->plat_frac_x = ph.frac_x;
+        ctx->plat_frac_y = ph.frac_y;
+        ctx->plat_grounded = ph.grounded;
+        ctx->plat_jump_held = ph.jump_held;
+        r01_player_anim_update(ctx, anim_dx, anim_dy);
         r01_player_anim_tick(ctx, w, pe);
     }
     r01_game_camera_update(ctx);
@@ -213,15 +257,9 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy) {
 }
 
 int r01_play_button(R01PlayState *pl, const R01Project *p, int button) {
+    (void)pl;
     (void)p;
-    if (button == R01_PLAY_BTN_X) {
-        r01_player_warp(&pl->ctx, 0, 0);
-        return 1;
-    }
-    if (button == R01_PLAY_BTN_Y) {
-        r01_player_warp(&pl->ctx, 1, 0);
-        return 1;
-    }
+    (void)button;
     return 0;
 }
 

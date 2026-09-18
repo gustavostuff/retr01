@@ -41,14 +41,6 @@ static void cart_output_dir(const char *cart_path, char *out, size_t out_cap) {
     out[n] = '\0';
 }
 
-static void emu_sfx_x(void) {
-    r01_bgm_host_sfx_play(R01_SFX_X);
-}
-
-static void emu_sfx_y(void) {
-    r01_bgm_host_sfx_play(R01_SFX_Y);
-}
-
 static void emu_start_host_bgm(R01eMachine *m, const char *cart_path) {
     char out_dir[512];
     char logic[576];
@@ -564,8 +556,6 @@ int main(int argc, char **argv) {
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 
     emu_start_host_bgm(&machine, path);
-    r01e_play_set_sfx_on_x(emu_sfx_x);
-    r01e_play_set_sfx_on_y(emu_sfx_y);
 
     /* Hidden until first frame is presented -- avoids empty-window flash. */
     win = SDL_CreateWindow("Retr01 Emulator (Phase 1)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -638,7 +628,7 @@ int main(int argc, char **argv) {
     }
     printf("Pads (Sim map): P1 WASD + G/H X/Y, 1 coin, 2 start  |  "
            "P2 arrows + ,/. X/Y, Shift coin, Enter start\n");
-    printf("Space pause  |  R reset  |  Ctrl+1/2 scale  |  Esc quit\n");
+    printf("Platformer jump: face Y (P1 H, P2 .). Space pause  |  R reset  |  Ctrl+1/2 scale  |  Esc quit\n");
     if (dbg_win) {
         printf("Debug: BG1/BG0 2x2 + BG1 mask + world map + pals + CPU budget (2 Hz, 50k red line)\n");
     }

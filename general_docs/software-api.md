@@ -171,12 +171,34 @@ There is **no** separate "max entities on screen" hard cap. On-screen count is w
 | Movement | Axis-separated (resolve X then Y, or the reverse, consistently) |
 | Solids | BG tiles with attr **bit 6** set |
 | Colliders | Entity AABB hitboxes (per state). Vs BG solids: every overlapping 8x8 tile is tested (not corners only) |
-| Gravity / jump | Simple constant gravity + jump impulse (PRG tunes numbers) |
+| Gravity / jump | Simple constant gravity + jump impulse (PRG tunes numbers). Release while rising uses 3x gravity (short hop) |
+| Meter | Pixels per meter (default **16**). Gravity, jump, walk, and fall cap scale as `n * meter / 16` |
 | Slopes | **No** |
 | Moving platforms | **No** |
 | One-way platforms | **No** |
 
 Top-down mode skips gravity and uses the same solid / AABB rules.
+
+### Platformer (Host Play)
+
+Default mode is **top-down**. Platformer is opt-in from author `custom_logic.c`. Studio packs the choice into the cart. Host Play / emu reads it.
+
+```c
+r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER);
+r01_platformer_set_gravity(ctx, R01_PLAT_GRAVITY_DEFAULT); /* 1 at meter 16 = 1 px/frame^2, clamp 1..16 */
+r01_platformer_set_jump(ctx, R01_PLAT_JUMP_DEFAULT);       /* 8 at meter 16 = 8 px impulse, clamp 1..32 */
+r01_platformer_set_meter(ctx, R01_PLAT_METER_DEFAULT);     /* 16 px per meter, clamp 1..64 */
+```
+
+| Input | Platformer |
+| --- | --- |
+| Left / Right | Walk 1 px per frame at meter 16 (scaled), then resolve X |
+| Face **Y** | Jump while grounded (edge). Hold for full height. Release while rising cuts the hop (3x gravity). Keyboard P1 is **H** (G is face X) |
+| Up / Down | Unused in v1 |
+
+Vertical motion is `vel_y` plus gravity, capped at **4** px/frame down at meter 16. Y is applied 1 px at a time so a jump cannot skip through an 8x8 solid. Landing (Y+1 blocked) zeros `vel_y` and sets grounded. A ceiling hit zeros `vel_y`. Anim uses horizontal delta only.
+
+Packing: world header flags byte **7** bit **4** = platformer. Gravity, jump, and meter are u8 at PRG `$80F7` / `$80F8` / `$80F9` (0 = defaults). See `memory.md`.
 
 ## Ownership
 

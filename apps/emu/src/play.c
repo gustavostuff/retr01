@@ -5,26 +5,11 @@
 #include "retr01_emu/video.h"
 #include "r01_play_anim_cart.h"
 #include "r01_play_camera.h"
+#include "r01_play_physics.h"
 
 #include <string.h>
 
 /* Emu Host Play SoT (docs). Keep algorithms aligned with Studio play.c. */
-
-/* Phase-1 PRG play table (must match apps/studio/core/src/prg_phase1.c). */
-#define R01E_PRG_PLAY_SPAWN_CELL_OFF 0x0120u
-#define R01E_PRG_PLAY_INST_COUNT_OFF 0x01C0u
-#define R01E_PRG_PLAY_INST_TABLE_OFF 0x01C1u
-
-static R01ePlaySfxFn s_sfx_on_x;
-static R01ePlaySfxFn s_sfx_on_y;
-
-void r01e_play_set_sfx_on_x(R01ePlaySfxFn fn) {
-    s_sfx_on_x = fn;
-}
-
-void r01e_play_set_sfx_on_y(R01ePlaySfxFn fn) {
-    s_sfx_on_y = fn;
-}
 
 static int cart_is_phase1_play(const R01eCart *c) {
     const uint8_t *prg = r01e_cart_prg(c);
@@ -90,6 +75,10 @@ static int player_move_ok(R01eMachine *m, int ox, int oy) {
     return r01e_cart_aabb_ok(&m->cart, (int)m->io.world, hx, hy, hw, hh);
 }
 
+static int play_origin_ok(void *user, int ox, int oy) {
+    return player_move_ok((R01eMachine *)user, ox, oy);
+}
+
 static void update_camera(R01ePlay *pl) {
     r01_play_camera_update(&pl->cam_x, &pl->cam_y, pl->player_x, pl->player_y, R01E_PLAY_PLAYER_W,
                            R01E_PLAY_PLAYER_H, R01E_SCREEN_PX_W, R01E_SCREEN_PX_H, pl->cam_deadzone_x,
@@ -135,9 +124,11 @@ static void clamp_cam_to_world_bounds(R01eMachine *m) {
 
 static void play_load_cart_camera(R01eMachine *m) {
     R01eWorldView wv;
+    const uint8_t *prg;
     if (!m) {
         return;
     }
+    r01_play_physics_init(&m->play.phys);
     m->play.cam_deadzone_x = R01_PLAY_CAM_DEADZONE_X_DEFAULT;
     m->play.cam_deadzone_y = R01_PLAY_CAM_DEADZONE_Y_DEFAULT;
     if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) == 0) {
@@ -148,18 +139,38 @@ static void play_load_cart_camera(R01eMachine *m) {
             m->play.cam_deadzone_x = dx;
             m->play.cam_deadzone_y = dy;
         }
+        if (wv.world_flags & R01E_CART_WHDR_FLAG_PLATFORMER) {
+            r01_play_physics_set_mode(&m->play.phys, R01_GAME_MODE_PLATFORMER);
+        }
+    }
+    prg = r01e_cart_prg(&m->cart);
+    if (prg && m->cart.len_prg > R01E_PRG_PLAT_METER_OFF) {
+        uint8_t grav = prg[R01E_PRG_PLAT_GRAVITY_OFF];
+        uint8_t jump = prg[R01E_PRG_PLAT_JUMP_OFF];
+        uint8_t meter = prg[R01E_PRG_PLAT_METER_OFF];
+        if (grav) {
+            r01_play_physics_set_gravity(&m->play.phys, (int)grav);
+        }
+        if (jump) {
+            r01_play_physics_set_jump(&m->play.phys, (int)jump);
+        }
+        if (meter) {
+            r01_play_physics_set_meter(&m->play.phys, (int)meter);
+        }
     }
 }
 
 static void place_player_on_screen(R01ePlay *pl, int col, int row) {
     pl->player_x = R01E_PLAY_SPAWN_CENTER_X(col);
     pl->player_y = R01E_PLAY_SPAWN_CENTER_Y(row);
+    r01_play_physics_reset_air(&pl->phys);
     snap_camera(pl);
 }
 
 static void place_player_xy(R01ePlay *pl, int wx, int wy) {
     pl->player_x = wx;
     pl->player_y = wy;
+    r01_play_physics_reset_air(&pl->phys);
     snap_camera(pl);
 }
 
@@ -493,6 +504,7 @@ void r01e_play_reset(R01ePlay *play) {
     memset(play, 0, sizeof(*play));
     play->player_w = R01E_PLAY_PLAYER_W;
     play->player_h = R01E_PLAY_PLAYER_H;
+    r01_play_physics_init(&play->phys);
 }
 
 int r01e_play_start(R01eMachine *m) {
@@ -531,48 +543,21 @@ int r01e_play_start(R01eMachine *m) {
     return 1;
 }
 
-static int warp_to(R01eMachine *m, int col, int row) {
-    if (!m || !m->play.enabled) {
-        return 0;
-    }
-    if (!r01e_cart_has_screen(&m->cart, (int)m->io.world, col, row)) {
-        return 0;
-    }
-    place_player_on_screen(&m->play, col, row);
-    clamp_cam_to_world_bounds(m);
-    r01e_play_sync_video(m);
-    write_oam(m);
-    return 1;
-}
-
 void r01e_play_tick(R01eMachine *m) {
     R01ePlay *pl;
     uint8_t pad;
-    uint8_t edge;
     int dx = 0;
     int dy = 0;
+    int anim_dx = 0;
+    int anim_dy = 0;
+    int jump_down = 0;
 
     if (!m || !m->play.enabled) {
         return;
     }
     pl = &m->play;
     pad = m->io.pad0;
-    edge = (uint8_t)(pad & (uint8_t)~pl->pad_prev);
     pl->pad_prev = pad;
-
-    /* Studio: X -> (0,0) + SFX_X, Y -> (1,0) + SFX_Y (P1 only). */
-    if (edge & R01E_PAD_X) {
-        if (s_sfx_on_x) {
-            s_sfx_on_x();
-        }
-        (void)warp_to(m, 0, 0);
-    }
-    if (edge & R01E_PAD_Y) {
-        if (s_sfx_on_y) {
-            s_sfx_on_y();
-        }
-        (void)warp_to(m, 1, 0);
-    }
 
     if (pad & R01E_PAD_LEFT) {
         dx = -1;
@@ -581,24 +566,16 @@ void r01e_play_tick(R01eMachine *m) {
     }
     if (pad & R01E_PAD_UP) {
         dy = -1;
-    } else     if (pad & R01E_PAD_DOWN) {
+    } else if (pad & R01E_PAD_DOWN) {
         dy = 1;
     }
-
-    r01_play_anim_update(&pl->anim, dx, dy);
-
-    if (dx != 0) {
-        int nx = pl->player_x + dx;
-        if (player_move_ok(m, nx, pl->player_y)) {
-            pl->player_x = nx;
-        }
+    if (pad & R01E_PAD_Y) {
+        jump_down = 1;
     }
-    if (dy != 0) {
-        int ny = pl->player_y + dy;
-        if (player_move_ok(m, pl->player_x, ny)) {
-            pl->player_y = ny;
-        }
-    }
+
+    r01_play_physics_tick(&pl->phys, &pl->player_x, &pl->player_y, dx, dy, jump_down, play_origin_ok, m,
+                          &anim_dx, &anim_dy);
+    r01_play_anim_update(&pl->anim, anim_dx, anim_dy);
     /* No dead zone: camera tracks the player every tick. */
     update_camera(pl);
     clamp_cam_to_world_bounds(m);

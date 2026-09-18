@@ -63,12 +63,6 @@ void r01_game_init(R01GameCtx *ctx) {
 
 void r01_game_tick(R01GameCtx *ctx) {
     if (!ctx) return;
-    if (r01_pad_just_pressed(ctx, R01_BTN_X)) {
-        r01_player_warp(ctx, 0, 0);
-    }
-    if (r01_pad_just_pressed(ctx, R01_BTN_Y)) {
-        r01_player_warp(ctx, 1, 0);
-    }
     r01_runtime_dispatch_buttons(ctx);
     ctx->pad_prev = ctx->pad;
     r01_custom_on_tick(ctx);

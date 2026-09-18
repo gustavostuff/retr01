@@ -37,6 +37,7 @@ TEST_MAIN() {
     EXPECT(path_exists("codegen_out/C/base_game.c"), "base_game.c");
     EXPECT(path_exists("codegen_out/C/custom_logic.c"), "custom_logic.c");
     EXPECT(path_exists("codegen_out/C/include/r01_game.h"), "r01_game.h");
+    EXPECT(path_exists("codegen_out/C/include/r01_physics.h"), "r01_physics.h");
     EXPECT(path_exists("codegen_out/ASM/main.s"), "ASM main.s");
     EXPECT(path_exists("codegen_out/ASM/collision/play_collision.s"), "play_collision.s");
     EXPECT(path_exists("codegen_out/data/pal_bg.bin"), "pal_bg.bin");

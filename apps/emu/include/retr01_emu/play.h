@@ -3,11 +3,18 @@
 
 #include "retr01_emu/types.h"
 #include "r01_play_anim.h"
+#include "r01_play_physics.h"
 
 #include <stdint.h>
 
 struct R01eMachine;
 
+#define R01E_PRG_PLAY_SPAWN_CELL_OFF 0x0120u
+#define R01E_PRG_PLAY_INST_COUNT_OFF 0x01C0u
+#define R01E_PRG_PLAY_INST_TABLE_OFF 0x01C1u
+#define R01E_PRG_PLAT_GRAVITY_OFF 0x00F7u
+#define R01E_PRG_PLAT_JUMP_OFF 0x00F8u
+#define R01E_PRG_PLAT_METER_OFF 0x00F9u
 #define R01E_PLAY_PLAYER_W 8
 #define R01E_PLAY_PLAYER_H 8
 #define R01E_PLAY_PLAYER_SIZE R01E_PLAY_PLAYER_W /* legacy alias; square for now */
@@ -44,6 +51,7 @@ typedef struct R01ePlay {
     uint8_t pad_prev;
     int entity_count; /* phase 4+ */
     R01PlayAnimCtx anim;
+    R01PlayPhysics phys;
     int cam_deadzone_x;
     int cam_deadzone_y;
 } R01ePlay;
@@ -53,11 +61,6 @@ int r01e_play_start(struct R01eMachine *m);
 void r01e_play_tick(struct R01eMachine *m);
 void r01e_play_draw(struct R01eMachine *m);
 void r01e_play_player_rgb(const struct R01eMachine *m, uint8_t *r, uint8_t *g, uint8_t *b);
-
-/* Optional host hooks: short SFX on P1 X / Y (Studio/emu softsynth). */
-typedef void (*R01ePlaySfxFn)(void);
-void r01e_play_set_sfx_on_x(R01ePlaySfxFn fn);
-void r01e_play_set_sfx_on_y(R01ePlaySfxFn fn);
 
 /* Mirror play camera into video scroll / 2x2 workbench. */
 void r01e_play_sync_video(struct R01eMachine *m);

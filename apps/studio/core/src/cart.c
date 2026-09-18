@@ -9,6 +9,7 @@
 #include "retr01_studio/sprites.h"
 #include "r01_custom_logic_scan.h"
 #include "r01_play_camera.h"
+#include "r01_play_physics.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -699,10 +700,11 @@ static void merge_other_spr_into_world_spr(uint8_t bank[R01_CHR_BANK_BYTES], con
     }
 }
 
-static uint8_t cart_pack_bg0_flags(const char *custom_logic_path) {
+static uint8_t cart_pack_world_flags(const char *custom_logic_path) {
     int wx = 0;
     int wy = 0;
     int clip = 0;
+    int mode = 0;
     uint8_t flags = 0;
     if (custom_logic_path && r01_custom_logic_scan_bg0_wrap(custom_logic_path, &wx, &wy) == 0) {
         if (wx) {
@@ -715,7 +717,44 @@ static uint8_t cart_pack_bg0_flags(const char *custom_logic_path) {
     if (custom_logic_path && r01_custom_logic_scan_bg0_clip_bg1(custom_logic_path, &clip) == 0 && clip) {
         flags |= R01_CART_WHDR_FLAG_BG0_CLIP_BG1;
     }
+    if (custom_logic_path && r01_custom_logic_scan_game_mode(custom_logic_path, &mode) == 0 &&
+        mode == R01_GAME_MODE_PLATFORMER) {
+        flags |= R01_CART_WHDR_FLAG_PLATFORMER;
+    }
     return flags;
+}
+
+static void cart_pack_platformer_prg(uint8_t prg[R01_PRG_BYTES], const char *custom_logic_path) {
+    int grav = 0;
+    int jump = 0;
+    int meter = 0;
+    if (!prg) {
+        return;
+    }
+    prg[R01_PRG_PLAT_GRAVITY_OFF] = 0;
+    prg[R01_PRG_PLAT_JUMP_OFF] = 0;
+    prg[R01_PRG_PLAT_METER_OFF] = 0;
+    if (!custom_logic_path) {
+        return;
+    }
+    if (r01_custom_logic_scan_plat_gravity(custom_logic_path, &grav) == 0 && grav > 0) {
+        R01PlayPhysics ph;
+        r01_play_physics_init(&ph);
+        r01_play_physics_set_gravity(&ph, grav);
+        prg[R01_PRG_PLAT_GRAVITY_OFF] = (uint8_t)ph.gravity;
+    }
+    if (r01_custom_logic_scan_plat_jump(custom_logic_path, &jump) == 0 && jump > 0) {
+        R01PlayPhysics ph;
+        r01_play_physics_init(&ph);
+        r01_play_physics_set_jump(&ph, jump);
+        prg[R01_PRG_PLAT_JUMP_OFF] = (uint8_t)ph.jump;
+    }
+    if (r01_custom_logic_scan_plat_meter(custom_logic_path, &meter) == 0 && meter > 0) {
+        R01PlayPhysics ph;
+        r01_play_physics_init(&ph);
+        r01_play_physics_set_meter(&ph, meter);
+        prg[R01_PRG_PLAT_METER_OFF] = (uint8_t)ph.meter;
+    }
 }
 
 static int cart_pack_cam_deadzone(uint8_t *out_x, uint8_t *out_y, const char *custom_logic_path) {
@@ -921,7 +960,7 @@ static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w, c
         put_u8(hdr + R01_CART_WHDR_CAM_DEADZONE_X, dz_x);
         put_u8(hdr + R01_CART_WHDR_CAM_DEADZONE_Y, dz_y);
     }
-    put_u8(hdr + R01_CART_WHDR_FLAGS, cart_pack_bg0_flags(custom_logic_path));
+    put_u8(hdr + R01_CART_WHDR_FLAGS, cart_pack_world_flags(custom_logic_path));
 
     if (buf_append(blob, hdr, WORLD_HDR_SIZE) != 0) {
         free(catalog.data);
@@ -1196,6 +1235,11 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
     prg_layout.default_pal_row = (uint8_t)(work->worlds[0].default_pal_row & 7u);
     prg_layout.off_map_screen0 = cart_off_map_screen0(&work->worlds[0], world_base);
     r01_prg_fill_phase1(prg, &work->worlds[0], &prg_layout);
+    {
+        char custom_logic_path[R01_PATH_MAX];
+        resolve_custom_logic_path(cart_path, custom_logic_path, sizeof(custom_logic_path));
+        cart_pack_platformer_prg(prg, custom_logic_path);
+    }
 
     memset(ptrs, 0, sizeof(ptrs));
     put_u24(ptrs + 0, off_prg);

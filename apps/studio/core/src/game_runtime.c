@@ -24,6 +24,10 @@ void r01_game_ctx_init(R01GameCtx *ctx) {
     ctx->cam_deadzone_x = R01_CAM_DEADZONE_X_DEFAULT;
     ctx->cam_deadzone_y = R01_CAM_DEADZONE_Y_DEFAULT;
     ctx->cam_axis_lock = R01_CAM_AXIS_BOTH;
+    ctx->game_mode = R01_GAME_MODE_TOPDOWN;
+    ctx->plat_gravity = R01_PLAT_GRAVITY_DEFAULT;
+    ctx->plat_jump = R01_PLAT_JUMP_DEFAULT;
+    ctx->plat_meter = R01_PLAT_METER_DEFAULT;
     ctx->fade_color = R01_FADE_BLACK;
     ctx->fade_pending_entrance = -1;
     r01_player_anim_init(ctx);
@@ -286,6 +290,11 @@ void r01_player_warp(R01GameCtx *ctx, int col, int row) {
     }
     ctx->player_x = R01_PLAY_SPAWN_CENTER_X(col);
     ctx->player_y = R01_PLAY_SPAWN_CENTER_Y(row);
+    ctx->plat_vel_y = 0;
+    ctx->plat_frac_x = 0;
+    ctx->plat_frac_y = 0;
+    ctx->plat_grounded = 0;
+    ctx->plat_jump_held = 0;
     r01_game_camera_snap(ctx);
 }
 
@@ -334,6 +343,53 @@ void r01_camera_set_axis_lock(R01GameCtx *ctx, int mode) {
         mode = R01_CAM_AXIS_BOTH;
     }
     ctx->cam_axis_lock = mode;
+}
+
+void r01_game_set_mode(R01GameCtx *ctx, int mode) {
+    if (!ctx) {
+        return;
+    }
+    if (mode != R01_GAME_MODE_PLATFORMER) {
+        mode = R01_GAME_MODE_TOPDOWN;
+    }
+    ctx->game_mode = mode;
+    if (mode == R01_GAME_MODE_TOPDOWN) {
+        ctx->plat_vel_y = 0;
+        ctx->plat_frac_x = 0;
+        ctx->plat_frac_y = 0;
+        ctx->plat_grounded = 0;
+        ctx->plat_jump_held = 0;
+    }
+}
+
+void r01_platformer_set_gravity(R01GameCtx *ctx, int units) {
+    R01PlayPhysics ph;
+    if (!ctx) {
+        return;
+    }
+    r01_play_physics_init(&ph);
+    r01_play_physics_set_gravity(&ph, units);
+    ctx->plat_gravity = ph.gravity;
+}
+
+void r01_platformer_set_jump(R01GameCtx *ctx, int impulse) {
+    R01PlayPhysics ph;
+    if (!ctx) {
+        return;
+    }
+    r01_play_physics_init(&ph);
+    r01_play_physics_set_jump(&ph, impulse);
+    ctx->plat_jump = ph.jump;
+}
+
+void r01_platformer_set_meter(R01GameCtx *ctx, int px_per_meter) {
+    R01PlayPhysics ph;
+    if (!ctx) {
+        return;
+    }
+    r01_play_physics_init(&ph);
+    r01_play_physics_set_meter(&ph, px_per_meter);
+    ctx->plat_meter = ph.meter;
 }
 
 int r01_event_on_button(uint8_t btn, R01EventFn fn) {

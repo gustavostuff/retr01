@@ -31,6 +31,15 @@ typedef struct R01GameCtx {
     int player_idle_state;
     int player_walk_state[8];
     int player_state_delay[4];
+    int game_mode;
+    int plat_gravity;
+    int plat_jump;
+    int plat_meter;
+    int plat_vel_y;
+    int plat_frac_x;
+    int plat_frac_y;
+    int plat_grounded;
+    int plat_jump_held;
     int bgm_track;
     struct R01Projectile {
         int active;

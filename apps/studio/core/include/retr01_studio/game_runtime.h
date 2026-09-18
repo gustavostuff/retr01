@@ -2,6 +2,7 @@
 #define retr01_STUDIO_GAME_RUNTIME_H
 
 #include "retr01_studio/types.h"
+#include "r01_play_physics.h"
 
 #define R01_BTN_X 0
 #define R01_BTN_Y 1
@@ -71,6 +72,15 @@ struct R01GameCtx {
     int player_idle_state;
     int player_walk_state[8];
     int player_state_delay[R01_ENTITY_STATES_MAX];
+    int game_mode;
+    int plat_gravity;
+    int plat_jump;
+    int plat_meter;
+    int plat_vel_y;
+    int plat_frac_x;
+    int plat_frac_y;
+    int plat_grounded;
+    int plat_jump_held;
     R01Projectile projectiles[R01_MAX_PROJECTILES];
 };
 
@@ -100,6 +110,10 @@ void r01_camera_disable_deadzone(R01GameCtx *ctx);
 void r01_camera_set_axis_lock(R01GameCtx *ctx, int mode);
 void r01_bg0_set_wrap(R01GameCtx *ctx, int wrap_x, int wrap_y);
 void r01_bg0_set_clip_to_bg1(R01GameCtx *ctx, int enable);
+void r01_game_set_mode(R01GameCtx *ctx, int mode);
+void r01_platformer_set_gravity(R01GameCtx *ctx, int units);
+void r01_platformer_set_jump(R01GameCtx *ctx, int impulse);
+void r01_platformer_set_meter(R01GameCtx *ctx, int px_per_meter);
 int r01_event_on_button(uint8_t btn, R01EventFn fn);
 void r01_runtime_dispatch_buttons(R01GameCtx *ctx);
 

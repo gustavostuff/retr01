@@ -182,6 +182,10 @@ void r01_game_ctx_init(R01GameCtx *ctx) {
     ctx->cam_deadzone_x = R01_CAM_DEADZONE_X_DEFAULT;
     ctx->cam_deadzone_y = R01_CAM_DEADZONE_Y_DEFAULT;
     ctx->cam_axis_lock = R01_CAM_AXIS_BOTH;
+    ctx->game_mode = R01_GAME_MODE_TOPDOWN;
+    ctx->plat_gravity = R01_PLAT_GRAVITY_DEFAULT;
+    ctx->plat_jump = R01_PLAT_JUMP_DEFAULT;
+    ctx->plat_meter = R01_PLAT_METER_DEFAULT;
     ctx->fade_color = R01_FADE_BLACK;
     ctx->fade_pending_entrance = -1;
     r01_player_anim_init(ctx);
@@ -388,6 +392,11 @@ void r01_player_warp(R01GameCtx *ctx, int col, int row) {
     }
     ctx->player_x = col * R01_SCREEN_PX_W + (R01_SCREEN_PX_W - R01_PLAY_PLAYER_W) / 2;
     ctx->player_y = row * R01_SCREEN_PX_H + (R01_SCREEN_PX_H - R01_PLAY_PLAYER_H) / 2;
+    ctx->plat_vel_y = 0;
+    ctx->plat_frac_x = 0;
+    ctx->plat_frac_y = 0;
+    ctx->plat_grounded = 0;
+    ctx->plat_jump_held = 0;
     r01_game_camera_snap(ctx);
 }
 
@@ -448,8 +457,7 @@ void r01_bgm_stop(R01GameCtx *ctx) {
 void r01_sfx_play(R01GameCtx *ctx, int id) {
     (void)ctx;
     (void)id;
-    /* Host Play / emu: softsynth overlay is triggered from P1 X/Y pad edges.
-     * This stub records intent for exported C builds (R01_SFX_X / R01_SFX_Y). */
+    /* Host Play / emu: SFX overlay is author-triggered, not bound to pad X/Y. */
 }
 
 void r01_camera_set_axis_lock(R01GameCtx *ctx, int mode) {
@@ -460,6 +468,62 @@ void r01_camera_set_axis_lock(R01GameCtx *ctx, int mode) {
         mode = R01_CAM_AXIS_BOTH;
     }
     ctx->cam_axis_lock = mode;
+}
+
+void r01_game_set_mode(R01GameCtx *ctx, int mode) {
+    if (!ctx) {
+        return;
+    }
+    if (mode != R01_GAME_MODE_PLATFORMER) {
+        mode = R01_GAME_MODE_TOPDOWN;
+    }
+    ctx->game_mode = mode;
+    if (mode == R01_GAME_MODE_TOPDOWN) {
+        ctx->plat_vel_y = 0;
+        ctx->plat_frac_x = 0;
+        ctx->plat_frac_y = 0;
+        ctx->plat_grounded = 0;
+        ctx->plat_jump_held = 0;
+    }
+}
+
+void r01_platformer_set_gravity(R01GameCtx *ctx, int units) {
+    if (!ctx) {
+        return;
+    }
+    if (units < 1) {
+        units = R01_PLAT_GRAVITY_DEFAULT;
+    }
+    if (units > 16) {
+        units = 16;
+    }
+    ctx->plat_gravity = units;
+}
+
+void r01_platformer_set_jump(R01GameCtx *ctx, int impulse) {
+    if (!ctx) {
+        return;
+    }
+    if (impulse < 1) {
+        impulse = R01_PLAT_JUMP_DEFAULT;
+    }
+    if (impulse > 32) {
+        impulse = 32;
+    }
+    ctx->plat_jump = impulse;
+}
+
+void r01_platformer_set_meter(R01GameCtx *ctx, int px_per_meter) {
+    if (!ctx) {
+        return;
+    }
+    if (px_per_meter < 1) {
+        px_per_meter = R01_PLAT_METER_DEFAULT;
+    }
+    if (px_per_meter > 64) {
+        px_per_meter = 64;
+    }
+    ctx->plat_meter = px_per_meter;
 }
 
 int r01_entity_spawn(uint8_t type, int wx, int wy) {

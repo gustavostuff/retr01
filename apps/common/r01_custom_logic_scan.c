@@ -55,6 +55,26 @@ static int parse_int_or_known_token(const char *p, int *out) {
         *out = 0;
         return n + 19;
     }
+    if (strncmp(p, "R01_GAME_MODE_PLATFORMER", 24) == 0) {
+        *out = 1;
+        return n + 24;
+    }
+    if (strncmp(p, "R01_GAME_MODE_TOPDOWN", 21) == 0) {
+        *out = 0;
+        return n + 21;
+    }
+    if (strncmp(p, "R01_PLAT_GRAVITY_DEFAULT", 24) == 0) {
+        *out = 1;
+        return n + 24;
+    }
+    if (strncmp(p, "R01_PLAT_JUMP_DEFAULT", 21) == 0) {
+        *out = 8;
+        return n + 21;
+    }
+    if (strncmp(p, "R01_PLAT_METER_DEFAULT", 22) == 0) {
+        *out = 16;
+        return n + 22;
+    }
     return 0;
 }
 
@@ -319,6 +339,57 @@ int r01_custom_logic_scan_bg0_clip_bg1(const char *path, int *out_enable) {
     }
     *out_enable = en;
     return 0;
+}
+
+static int scan_ctx_one_named(const char *path, const char *call, int *out_v) {
+    FILE *f;
+    char line[512];
+    int found = 0;
+    int v = 0;
+    int in_block = 0;
+    if (!path || !call || !out_v) {
+        return -1;
+    }
+    f = fopen(path, "r");
+    if (!f) {
+        return -1;
+    }
+    while (fgets(line, sizeof(line), f)) {
+        const char *args;
+        int n = 0;
+        int line_in_block = in_block;
+        scan_update_block_comment(line, &in_block);
+        if (!line_call_is_active(line, call, line_in_block)) {
+            continue;
+        }
+        args = strchr(strstr(line, call), '(');
+        if (args && parse_ctx_one_int(args, &n) == 0) {
+            v = n;
+            found = 1;
+        }
+    }
+    fclose(f);
+    if (!found) {
+        return -1;
+    }
+    *out_v = v;
+    return 0;
+}
+
+int r01_custom_logic_scan_game_mode(const char *path, int *out_mode) {
+    return scan_ctx_one_named(path, "r01_game_set_mode", out_mode);
+}
+
+int r01_custom_logic_scan_plat_gravity(const char *path, int *out_gravity) {
+    return scan_ctx_one_named(path, "r01_platformer_set_gravity", out_gravity);
+}
+
+int r01_custom_logic_scan_plat_jump(const char *path, int *out_jump) {
+    return scan_ctx_one_named(path, "r01_platformer_set_jump", out_jump);
+}
+
+int r01_custom_logic_scan_plat_meter(const char *path, int *out_meter) {
+    return scan_ctx_one_named(path, "r01_platformer_set_meter", out_meter);
 }
 
 int r01_custom_logic_scan_bgm_play(const char *path, int *out_track) {
