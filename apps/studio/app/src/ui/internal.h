@@ -359,7 +359,7 @@ void ui_flood_fill(UiState *ui, int tx, int ty);
 void ui_toggle_play(UiState *ui);
 void ui_play_stop(UiState *ui);
 void ui_play_boot_finish(UiState *ui, SDL_Renderer *ren);
-int ui_play_screen_mark(const UiState *ui);
+int ui_play_screen_mark(UiState *ui);
 void screen_set_sel_bank(UiState *ui, int bank);
 /* Clear selected screen cells to tile index 0 (keeps attrs; does not touch CHR). */
 void screen_remove_sel_tiles(UiState *ui);

@@ -42,9 +42,14 @@ static void draw_worlds_body(UiState *ui, SDL_Renderer *r, const AccordionLayout
         return;
     }
     if (!plane_bg0) {
-        int mark_idx = ui->play.active ? ui_play_screen_mark(ui) : w->default_screen;
+        int mark_idx = w->default_screen;
+        if (ui->play.active) {
+            mark_idx = ui_play_screen_mark(ui);
+        }
         if (mark_idx < 0 || mark_idx >= w->screen_count || !w->screens[mark_idx].present) {
-            mark_idx = r01_world_default_screen(w);
+            if (!ui->play.active || ui->play.booting) {
+                mark_idx = r01_world_default_screen(w);
+            }
         }
         for (row = 0; row < R01_GRID_MAX; row++) {
             for (col = 0; col < R01_GRID_MAX; col++) {

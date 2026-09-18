@@ -284,13 +284,11 @@ int r01_play_button(R01PlayState *pl, const R01Project *p, int button) {
 }
 
 int r01_play_screen_index(const R01PlayState *pl, const R01World *w) {
-    int col, row;
     if (!pl || !w) {
         return -1;
     }
-    col = (pl->ctx.player_x + R01_PLAY_PLAYER_W / 2) / R01_SCREEN_PX_W;
-    row = (pl->ctx.player_y + R01_PLAY_PLAYER_H / 2) / R01_SCREEN_PX_H;
-    return r01_world_find_screen(w, col, row);
+    return r01_world_find_screen_overlapping(w, pl->ctx.player_x, pl->ctx.player_y, R01_PLAY_PLAYER_W,
+                                             R01_PLAY_PLAYER_H);
 }
 
 int r01_play_fade_level(const R01PlayState *pl) {

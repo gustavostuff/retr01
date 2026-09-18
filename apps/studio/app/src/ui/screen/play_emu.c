@@ -79,6 +79,7 @@ void ui_play_stop(UiState *ui) {
     ui->play.booting = 0;
     ui->play.spin = 0;
     ui->play.err[0] = '\0';
+    ui->play.screen_mark = -1;
 }
 
 void ui_toggle_play(UiState *ui) {
@@ -101,6 +102,7 @@ void ui_toggle_play(UiState *ui) {
     ui->play.spin = 0;
     ui->play.last_tick = SDL_GetTicks();
     ui->play.err[0] = '\0';
+    ui->play.screen_mark = -1;
 }
 
 /* After first boot frame is presented: export cart + init emu. */
@@ -169,22 +171,29 @@ void ui_play_boot_finish(UiState *ui, SDL_Renderer *ren) {
     ui_play_start_bgm(ui, m);
 }
 
-int ui_play_screen_mark(const UiState *ui) {
+int ui_play_screen_mark(UiState *ui) {
     const R01eMachine *m;
-    int col, row;
+    int idx;
+    int pw;
+    int ph;
     const R01World *w;
     if (!ui || !ui->play.active || ui->play.booting || !ui->play.machine) {
-        return -1;
+        return ui ? ui->play.screen_mark : -1;
     }
     m = ui->play.machine;
     if (!m->play.enabled) {
-        return -1;
+        return ui->play.screen_mark;
     }
     w = r01_project_active_world_const(ui->project);
     if (!w) {
-        return -1;
+        return ui->play.screen_mark;
     }
-    col = (m->play.player_x + R01E_PLAY_PLAYER_W / 2) / R01E_SCREEN_PX_W;
-    row = (m->play.player_y + R01E_PLAY_PLAYER_H / 2) / R01E_SCREEN_PX_H;
-    return r01_world_screen_index(w, col, row);
+    pw = m->play.player_w > 0 ? m->play.player_w : R01E_PLAY_PLAYER_W;
+    ph = m->play.player_h > 0 ? m->play.player_h : R01E_PLAY_PLAYER_H;
+    idx = r01_world_find_screen_overlapping(w, m->play.player_x, m->play.player_y, pw, ph);
+    if (idx >= 0) {
+        ui->play.screen_mark = idx;
+        return idx;
+    }
+    return ui->play.screen_mark;
 }

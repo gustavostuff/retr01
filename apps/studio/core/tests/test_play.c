@@ -108,6 +108,20 @@ TEST_MAIN() {
 
     EXPECT(r01_play_screen_index(&pl, &p->worlds[0]) == p->worlds[0].default_screen,
            "play_screen_index stays on spawn screen");
+    {
+        int spawn = p->worlds[0].default_screen;
+        int right = r01_world_screen_index(&p->worlds[0], 3, 0);
+        int saved_x = pl.ctx.player_x;
+        int saved_y = pl.ctx.player_y;
+        EXPECT(right >= 0, "right neighbor index");
+        p->worlds[0].screens[right].present = 0;
+        pl.ctx.player_x = 3 * R01_SCREEN_PX_W - R01_PLAY_PLAYER_W / 2;
+        pl.ctx.player_y = R01_PLAY_SPAWN_CENTER_Y(0);
+        EXPECT(r01_play_screen_index(&pl, &p->worlds[0]) == spawn, "sprite center past seam stays on origin screen");
+        pl.ctx.player_x = saved_x;
+        pl.ctx.player_y = saved_y;
+        p->worlds[0].screens[right].present = 1;
+    }
 
     {
         uint8_t r = 0, g = 0, b = 0;

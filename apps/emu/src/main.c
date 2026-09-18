@@ -176,8 +176,8 @@ static void draw_world_map(SDL_Renderer *ren, R01eMachine *m, int ox, int oy) {
     rows = max_r - min_r + 1;
 
     if (m->play.enabled) {
-        cur_c = (m->play.player_x + R01E_PLAY_PLAYER_W / 2) / R01E_SCREEN_PX_W;
-        cur_r = (m->play.player_y + R01E_PLAY_PLAYER_H / 2) / R01E_SCREEN_PX_H;
+        cur_c = m->play.player_x / R01E_SCREEN_PX_W;
+        cur_r = m->play.player_y / R01E_SCREEN_PX_H;
     } else {
         cur_c = m->video.cam_origin_col;
         cur_r = m->video.cam_origin_row;

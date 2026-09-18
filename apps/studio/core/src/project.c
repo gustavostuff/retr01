@@ -381,6 +381,42 @@ int r01_world_find_screen(const R01World *w, int col, int row) {
     return i;
 }
 
+int r01_world_find_screen_overlapping(const R01World *w, int x, int y, int box_w, int box_h) {
+    int idx;
+    int samples[4][2];
+    int i;
+    if (box_w < 1) {
+        box_w = 1;
+    }
+    if (box_h < 1) {
+        box_h = 1;
+    }
+    samples[0][0] = x;
+    samples[0][1] = y;
+    samples[1][0] = x + box_w - 1;
+    samples[1][1] = y;
+    samples[2][0] = x;
+    samples[2][1] = y + box_h - 1;
+    samples[3][0] = x + box_w - 1;
+    samples[3][1] = y + box_h - 1;
+    for (i = 0; i < 4; i++) {
+        int wx = samples[i][0];
+        int wy = samples[i][1];
+        int col;
+        int row;
+        if (wx < 0 || wy < 0) {
+            continue;
+        }
+        col = wx / R01_SCREEN_PX_W;
+        row = wy / R01_SCREEN_PX_H;
+        idx = r01_world_find_screen(w, col, row);
+        if (idx >= 0) {
+            return idx;
+        }
+    }
+    return -1;
+}
+
 R01Screen *r01_world_screen_at(R01World *w, int col, int row) {
     int i = r01_world_screen_index(w, col, row);
     if (i < 0 || i >= w->screen_count) {

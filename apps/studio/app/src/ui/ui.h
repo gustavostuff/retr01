@@ -395,6 +395,7 @@ typedef struct UiPlaySession {
     R01eMachine *machine;
     SDL_Texture *fb_tex;
     char err[256];
+    int screen_mark; /* last present screen under the player in Play; -1 none */
 } UiPlaySession;
 
 /* Save / Open project folder dialog. */
