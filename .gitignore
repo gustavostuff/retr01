@@ -7,3 +7,6 @@ temp/
 *.o
 *.a
 temp/
+/test_cart.retr01
+/test_cart_pb.retr01
+/test_prom.bin

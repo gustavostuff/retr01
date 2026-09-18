@@ -368,5 +368,8 @@ TEST_MAIN() {
     }
 
     free(p);
+    remove("test_cart.retr01");
+    remove("test_cart_pb.retr01");
+    remove("test_prom.bin");
     TEST_EXIT();
 }
