@@ -19,6 +19,8 @@ MyGame/
   ...
 ```
 
+**Ctrl+E** packs the cart and generated `C/` / `ASM/` / `data/` beside the project file (or under `output/` if unsaved).
+
 | Shortcut | Action |
 | --- | --- |
 | Ctrl+S | Save. First time (or unsaved) opens the Save project modal |

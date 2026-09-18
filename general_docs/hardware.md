@@ -45,7 +45,7 @@ The PLD decode asserts the right `/OE` (and related selects) for the current add
 | Field **`/WE`** | Pull-up (high = no write) |
 | **`CPU_RDY`** | Pull-up. MCU-M drives **open-drain only** (never push-pull) |
 
-MCU-M after reset: CPU D pins stay **inputs / hi-Z** until a proven soft-read window. Soft `$7Fxx` handling is a hard real-time path (edge / CCL / ISR). If the PHI2 window is too tight, assert **`CPU_RDY`** before PHI2 fall, finish the work, then release. Do not run SPI or I2C inside a soft-read cycle unless RDY is already low.
+MCU-M after reset: CPU D pins stay **inputs / hi-Z** until a proven soft-read window. Soft `$7Fxx` handling is a hard real-time path (edge / CCL / ISR). If the PHI2 window is too tight, assert **`CPU_RDY`** before PHI2 fall, finish the work, then release. SPI and I2C stay out of a soft-read cycle unless RDY is already low.
 
 If soft decode ever runs out of PLD room, preferred escapes in order: demux more SELs on MCU-M, add a fourth ATF22V10, move MAP onto M GPIO with `RDY` stalls, and only then add an HC245 on CPU D (that last step breaks the 17-mobo count).
 
@@ -207,9 +207,9 @@ Rising edge + latched `A[7:0]` via `CPU_A_SAMPLE` (PD4).
 | **Beam Y** | Line / V. Raster Y `$7F04` + cascaded EQ -> IRQB |
 | **Compositor** | Priority, Color PROM index, MAP A14-A18. `LE_7F02`/`03`/`04`, `SEL_VRAM`, `LE_MAP`, three `SEL_SOFT*`, residual `/OE` |
 
-Never route hard LE or beam through an MCU. VRAM: PHI2 high = CPU `$7F10`-`$7F12`, PHI2 low = BG fetch (3x HC157). Prefer **AS6C62256-55**. Keep VRAM mux / decode traces short. HC157 **G** must never float (G high forces Y low, not Hi-Z).
+Hard LE and beam stay out of MCU paths. VRAM: PHI2 high = CPU `$7F10`-`$7F12`, PHI2 low = BG fetch (3x HC157). Prefer **AS6C62256-55**. Keep VRAM mux / decode traces short. HC157 **G** must never float (G high forces Y low, not Hi-Z).
 
-**Cart `OE#` (locked):** assert only for PRG `$8000-$FFFF` reads and intentional MAP/CHR fetch windows. Never together with system RAM or soft `$7Fxx` selects.
+**Cart `OE#` (locked):** assert only for PRG `$8000-$FFFF` reads and intentional MAP/CHR fetch windows. Those windows never overlap system RAM or soft `$7Fxx` selects.
 
 Macrocell pressure note: SY(8)+Q(8)+MAP(5) = **21** vs **30** MC on a 22V10. Stay honest about that budget when adding features. Prefer a **1-dot** Color PROM index latch in the Compositor if fit allows.
 
@@ -276,9 +276,9 @@ Adafruit's UPDI Friend is a CH340E USB-serial with the usual 1K RX/TX loopback f
 
 **Default = all OFF.** Shipping and normal play leave every switch off so the Friend data pin is disconnected from all AVRs and from the cart bridge. That cuts accidental flash risk if someone plugs Adafruit's UPDI Friend in without meaning to program anything.
 
-**One ON at a time.** Never enable two UPDI targets together (would short UPDI pins). Cart mode (pos 4) should be alone as well. Silkscreen can say `M / S1 / S2 / CART` and `ALL OFF = SAFE`.
+**One ON at a time.** Two UPDI targets stay off together (would short UPDI pins). Cart mode (pos 4) is alone as well. Silkscreen can say `M / S1 / S2 / CART` and `ALL OFF = SAFE`.
 
-**Firmware (locked):** MCU-M refuses cart-bridge / `WE#` commands unless it reads cart mode from the DIP (or an equivalent strap). Do not leave cart mode ON while a game is running.
+**Firmware (locked):** MCU-M refuses cart-bridge / `WE#` commands unless it reads cart mode from the DIP (or an equivalent strap). Cart mode stays off while a game is running.
 
 Feasibility check (2026-09): AVR128DB28 is UPDI-only on pin 19. DxCore / avrdude **SerialUPDI** talk to it through this adapter. Cart ROM is **SST39SF040** parallel NOR, so cart writes still go through the MCU-M bridge when DIP pos 4 is ON.
 
@@ -319,7 +319,7 @@ Prefer programming PLDs and the color PROM **before** they go into the motherboa
 
 **Arcade:** J5/J6 **1x10** (pins 1-8 = bits 0-7, 9-10 GND). J7 **1x4** (`+5V`/`GND`/`RESET_N`/`GND`). Microswitch to GND. Series **47 ohm**. P1 -> PA0-7. P2 bits 0-3 -> PC0-3, 4-6 -> PD1-3, Start -> PF6.
 
-**TRS (home shell):** 2x Switchcraft **35RAPC2BVN4**. Tip=5 V, Ring=DATA, Sleeve=GND. **4.7 kohm** pull-up on DATA (PF0). OD half-duplex UART (pad and host both **open-drain**, never push-pull). Pad MCU = **ATtiny85** (in the controller, not on the 19). Pad PCB is **2-layer**. **115200** 8N1. **< 200 us**/exchange with a hard timeout. Poll `0x55`=P1, `0xAA`=P2 in **VBlank**. Reply = 1 byte bitfield. On timeout, keep last good or clear. Arcade headers and TRS pads are alternate input paths. Do not require pads when the cabinet uses microswitches.
+**TRS (home shell):** 2x Switchcraft **35RAPC2BVN4**. Tip=5 V, Ring=DATA, Sleeve=GND. **4.7 kohm** pull-up on DATA (PF0). OD half-duplex UART (pad and host both **open-drain**, never push-pull). Pad MCU = **ATtiny85** (in the controller, not on the 19). Pad PCB is **2-layer**. **115200** 8N1. **< 200 us**/exchange with a hard timeout. Poll `0x55`=P1, `0xAA`=P2 in **VBlank**. Reply = 1 byte bitfield. On timeout, keep last good or clear. Arcade headers and TRS pads are alternate input paths. Pads are optional when the cabinet uses microswitches.
 
 ## Video out / sync header
 
@@ -343,13 +343,13 @@ Mode select (solder jumper or 1x3 header next to J2):
 | **CSYNC** | Pin 4 = composite sync. Pin 5 tied to GND at the jumper | AD724 CSYNC input |
 | **H/V** | Pin 4 = HSYNC, pin 5 = VSYNC | AD724 H+V inputs |
 
-Same pins, same connector body. Cable or jumper chooses the story. Do not drive CSYNC and H/V meanings onto pin 4 at once.
+Same pins, same connector body. Cable or jumper chooses the story. CSYNC and H/V meanings never share pin 4 at once.
 
 **Composite:** AD724 -> J9 RCA. An S-video pair can hang off AD724 Y/C later if those pads are needed.
 
 ## PCB layout practices
 
-**Stackup (locked for initial design):** Motherboard is **2-layer**. Typical approach: top = signal + local 5 V pours, bottom = mostly unbroken **GND** pour (stitch often). Keep ground continuous under clocks and the CPU/dot buses. Do not swiss-cheese the ground with long bottom-side runs when a top detour works.
+**Stackup (locked for initial design):** Motherboard is **2-layer**. Typical approach: top = signal + local 5 V pours, bottom = mostly unbroken **GND** pour (stitch often). Ground stays continuous under clocks and the CPU/dot buses. Long bottom-side runs stay off the ground pour when a top detour works.
 
 **4-layer later (optional):** Only if hardware bring-up shows real need, or for a commercial **SMD** product spin aimed at lower EMI / RF noise and easier regulatory compliance. Not assumed for the first THT DIY board.
 
@@ -408,7 +408,7 @@ These track common practice for a careful **2-layer** digital + video board (sam
 - **Decoupling:** **100 nF** (or similar) at every IC VCC pin, pad as close as practical to the pin, short path into ground (via to the GND pour). Bulk **220 uF** at the 5 V entry. Smallest HF caps closest to the pin.
 - **Return paths:** High-frequency return wants a short loop back to ground under the signal. Protect the bottom GND pour. Prefer top-layer crossings. Stitch top ground fills to bottom with vias.
 - **Keep clocks short:** PHI2, DOT, AVR clocks, and FSC stays. Crystals and their load caps next to the part. Series **33 ohm** already noted on PHI2/DOT.
-- **Board edges:** Do not run high-speed or clock traces along the PCB perimeter. Edge copper couples into chassis and EMI. Prefer clocks toward the middle of the board. Connectors and video out may sit on the edge by nature. Keep their stub lengths short.
+- **Board edges:** High-speed and clock traces stay off the PCB perimeter. Edge copper couples into chassis and EMI. Clocks sit toward the middle of the board. Connectors and video out may sit on the edge by nature. Their stub lengths stay short.
 - **Spacing / corners:** Prefer 45-degree bends over sharp 90s on faster nets. Give PHI2 / DOT / RGB analog some clearance from noisy switching and from each other where layout allows.
 - **Analog video:** AD724 / DAC / RCA area quieter. Local decoupling. Short RGB and sync runs to J2/J9. Keep digital buses from cutting through that island.
 - **Power:** Fat 5 V pours on top (or a dedicated pour). Feed from the barrel without daisy-thin power through long skinny traces.

@@ -199,10 +199,10 @@ BG1 strip wrap / autoscroll helpers remain TBD in `software-api.md`. Update scro
 
 Update `$7F02` (scroll X / HC574) and `$7F03` (scroll Y / Beam X) in **NMI / VBlank** only, same as `$7F08`/`$7F09`. Mid-active-display writes can tear the picture or change MAP banks mid-line.
 
-Raster compare `$7F04` may be written outside VBlank only for a **deliberate** split-screen / IRQ effect with documented rules. Do not invent mid-frame scroll by accident.
+Raster compare `$7F04` may be written outside VBlank only for a **deliberate** split-screen / IRQ effect with documented rules. Mid-frame scroll is not an accidental side effect.
 
 ## Parallax scroll rate
 
-Example: BG1 screens fill a solid 4x4 grid (16 screens). BG0 is a 2x2 grid. Camera travel on each axis is `(screens - 1)` screen widths, so BG0 moves at `(2 - 1) / (4 - 1) = 1/3` the BG1 camera rate. That keeps the start and end of both planes aligned; a naive `bg0_screens / bg1_screens` scale overshoots the BG0 plane and makes BG0 screens look like they slide off the 2x2 grid.
+Example: BG1 screens fill a solid 4x4 grid (16 screens). BG0 is a 2x2 grid. Camera travel on each axis is `(screens - 1)` screen widths, so BG0 moves at `(2 - 1) / (4 - 1) = 1/3` the BG1 camera rate. That keeps the start and end of both planes aligned. A naive `bg0_screens / bg1_screens` scale overshoots the BG0 plane and makes BG0 screens look like they slide off the 2x2 grid.
 
-Screen arrangements can be any shape. Compute the enclosing minimum grid for BG1 screens and for BG0 screens, then derive X and Y scroll relationships from those boxes (`(bg0_n - 1) / (bg1_n - 1)` when BG0 is strictly smaller on that axis; otherwise park BG0). C/ASM PRG utilities should help authors with that math.
+Screen arrangements can be any shape. Compute the enclosing minimum grid for BG1 screens and for BG0 screens, then derive X and Y scroll relationships from those boxes (`(bg0_n - 1) / (bg1_n - 1)` when BG0 is strictly smaller on that axis, otherwise park BG0). C/ASM PRG utilities help authors with that math.

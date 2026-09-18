@@ -11,9 +11,9 @@ Breadboard path from a video-only lab to full counted-BOM console behavior (CPU,
 | **A** | Beam + composite | Sync + color bars / solid color on a TV | [tier-a-video-lab.md](tier-a-video-lab.md) |
 | **B** | Compositor | 6-bit kit index + layer priority via third PLD | [tier-b-video-lab.md](tier-b-video-lab.md) |
 | **C** | S1 field fill | VBlank sprite field (+ optional BG0 HBlank lines) from S1 | [tier-c-video-lab.md](tier-c-video-lab.md) |
-| **D** | M <-> S1 OAM path | MCU-M sends sprite table over SPI; S1 builds field from it | [tier-d-oam-spi.md](tier-d-oam-spi.md) |
+| **D** | M <-> S1 OAM path | MCU-M sends sprite table over SPI. S1 builds field from it | [tier-d-oam-spi.md](tier-d-oam-spi.md) |
 | **E** | PHI2 + VRAM | Interleaved BG1 nametable path (HC157s + VRAM SRAM) | [tier-e-vram.md](tier-e-vram.md) |
-| **F** | 6502 soft I/O | Game CPU runs test PRG; soft `$7Fxx` + scroll/OAM via M | [tier-f-cpu-soft-io.md](tier-f-cpu-soft-io.md) |
+| **F** | 6502 soft I/O | Game CPU runs test PRG. Soft `$7Fxx` + scroll/OAM via M | [tier-f-cpu-soft-io.md](tier-f-cpu-soft-io.md) |
 | **G** | Cart + MAP | Passive flash cart, PRG fetch, MAP stream, optional save IC | [tier-g-cart-map.md](tier-g-cart-map.md) |
 | **H** | Pads + audio | MCU-S2: controllers + PWM audio; full counted BOM behavior | [tier-h-pads-audio.md](tier-h-pads-audio.md) |
 
@@ -26,7 +26,7 @@ The ladder is **feasible** against the locked design:
 1. **Risk isolation matches SoT.** Clocks, soft `$7Fxx`, VRAM interleave, S1 field ALE/`/WE`, cart OE, and pads are separate failure domains in `ic-comms-risks.md`. One domain per tier is the right shape.
 2. **Video-first (A-C) is the right start.** Composite lock and Compositor priority do not need AVRs or a CPU. Field fill (C) is the first hard real-time AVR window and can be proven without M or the 6502.
 3. **D before E/F is deliberate.** Separating "who owns OAM" (M) from "who paints the field" (S1) matches final SPI mailbox rules before PHI2 interleave and soft I/O complexity land.
-4. **E before F is deliberate.** VRAM mux + PHI2-low beam fetch is a pure digital timing problem. A lab PHI2-high writer may stand in for `$7F10-$7F12` until the 6502 exists; the interleave itself must not wait on full soft I/O.
+4. **E before F is deliberate.** VRAM mux + PHI2-low beam fetch is a pure digital timing problem. A lab PHI2-high writer may stand in for `$7F10-$7F12` until the 6502 exists. The interleave itself must not wait on full soft I/O.
 5. **G before H is deliberate.** Cart OE/MAP fights are orthogonal to pads/audio. S2 is the remaining AVR and is safe last.
 6. **Hardest remaining risks (not blockers to the plan):** (a) MCU-M answering soft `$7Fxx` inside one PHI2 cycle without habitual `CPU_RDY`; (b) VRAM half-cycle margin through 3x HC157 + PLD vs 55 ns SRAM; (c) full sprite field + early-VBlank OAM SPI both fitting before active display. Those are measurement gates at F, E, and D/C - not reasons to reorder tiers.
 

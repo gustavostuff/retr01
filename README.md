@@ -24,7 +24,7 @@ Retr01 is an MCU-assisted 8-bit system ready for arcade and console setups, plus
 
 <img src="img/readme/emu.png" alt="Retr01 Emu play window" />
 
-**Retr01 Studio** is the authoring app, create worlds, screens and entities. It embeds the emulator in-editor, so you can test right away.
+**Retr01 Studio** is the authoring app for worlds, screens, and entities. It embeds the emulator in-editor for immediate playtest.
 
 <img src="img/readme/studio.png" alt="Retr01 Studio" />
 

@@ -58,7 +58,7 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 
 - Wire RDY as true open-drain / open-collector with a pull-up. Never push-pull from M.
 - Bound every RDY-held operation (I2C page write, flash poll, long SPI). Fail safe and release.
-- Do not use STP in normal play. Use WAI only with a clear wake source (NMI/IRQ).
+- STP stays unused in normal play. WAI is only with a clear wake source (NMI/IRQ).
 - Heartbeat LED on M should still blink on a timer even when RDY is pulsed (proves firmware alive).
 
 ### 4. VRAM PHI2 interleave margin (High)
@@ -95,7 +95,7 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 
 **Mitigate:**
 
-- Gate SPI OAM transfers to early VBlank (or when `S1_RDY` says ready). Do not blast OAM in HBlank.
+- Gate SPI OAM transfers to early VBlank (or when `S1_RDY` says ready). OAM stays out of HBlank.
 - Budget S1 cycles on paper at 24 MHz before writing firmware. Leave margin.
 - Expose `S1_RDY` (already pinned) and have M wait rather than overwrite.
 - If BG0 line fill cannot close, reduce BG0 complexity or move work earlier (design change, not a silent hope).
@@ -137,7 +137,7 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 - Tie unused PROM address lines to GND.
 - Prefer a 1-dot index latch in the compositor if fit allows.
 - Keep analog island quiet (see layout rules in `hardware.md`). Short RGB/sync to J2/J9.
-- Do not poke `$7F08`/`$7F09` outside VBlank.
+- `$7F08`/`$7F09` stay inside VBlank.
 
 ### 10. Async clocks: PHI2 vs DOT vs AVR (Med)
 
@@ -148,9 +148,9 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 **Mitigate:**
 
 - Synchronize async inputs into each AVR with two flops (or event system) before acting.
-- PLD registered paths for beam. Do not sample CPU D on DOT without a PHI2-qualified enable (`LE_7Fxx` already does this for scroll/raster).
+- PLD registered paths for beam. CPU D on DOT is sampled only with a PHI2-qualified enable (`LE_7Fxx` already does this for scroll/raster).
 - Canned oscillators for PHI2/DOT. Add 74HC14 only if edges are soft.
-- Never assume AVR cycle counts equal PHI2 cycles without measuring.
+- AVR cycle counts are not assumed equal to PHI2 cycles without measuring.
 
 ### 11. Reset and power-up bus chaos (High)
 
@@ -175,7 +175,7 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 
 - Pad DATA must be open-drain only. Host PF0 likewise.
 - Poll P1 `0x55` then P2 `0xAA` in VBlank with a hard timeout. On timeout, keep last good or clear.
-- Document which shell is populated. Do not require pads when arcade headers are the input path.
+- Document which shell is populated. Pads stay optional when arcade headers are the input path.
 
 ### 13. I2C save EEPROM stalls (Med)
 
@@ -188,8 +188,8 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 - Prefer **I2C FRAM** (64 Kbit class, 24C64-protocol-adjacent, often DIP-8 compatible) on the cart when BOM cost allows. FRAM has **no multi-ms internal page program**. Writes complete at bus speed. That removes the main EEPROM charge-pump stall in this item. Transfer time remains: dumping ~8 KB over I2C still costs real milliseconds at 400 kHz / 1 MHz, so a naive full-array write under one long `CPU_RDY` can still freeze PRG for many frames. FRAM turns the problem into bus occupancy, not program wait.
 - With 24C64 (or any EEPROM): ACK polling with timeout after each page. Expect ~5 ms program gaps.
 - Saves are **explicit** only (pause / fade / dedicated saving screen). Never in the physics hot path.
-- **Multi-frame saves are expected and OK.** Chunk I2C work across VBlanks. Use **short** `CPU_RDY` pulses for mailbox handoff or one chunk (EEPROM: one page program/poll; FRAM: a bounded byte burst), then **release RDY** so PRG can run.
-- **Keep the picture alive.** Beam / PLDs / S1 keep scanning. PRG updates a spinner (or other saving UI) each frame while the save state machine advances. Do **not** freeze the display for the whole save operation.
+- **Multi-frame saves are expected and OK.** Chunk I2C work across VBlanks. Use **short** `CPU_RDY` pulses for mailbox handoff or one chunk (EEPROM: one page program/poll. FRAM: a bounded byte burst), then **release RDY** so PRG can run.
+- **Keep the picture alive.** Beam / PLDs / S1 keep scanning. PRG updates a spinner (or other saving UI) each frame while the save state machine advances. The display stays live for the whole save operation.
 - Series 33 ohm on SDA/SCL already planned (layout / stub noise is unchanged by FRAM vs EEPROM).
 - Keep machine EEPROM (`$7F70-$7F72`) separate from cart saves so cabinet config cannot brick on a missing cart.
 
@@ -202,8 +202,8 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 **Mitigate:**
 
 - PRG convention: update scroll and palette row in NMI/VBlank only (already locked for `$7F08`/`$7F09`).
-- Do not clock HC574 from free-running PHI2. Only `LE_7F02`.
-- If a split-screen effect is desired later, define it deliberately (raster IRQ + documented rules). Do not invent it by accident.
+- HC574 clocks only from `LE_7F02`, never from free-running PHI2.
+- If a split-screen effect is desired later, define it deliberately (raster IRQ + documented rules). Mid-frame scroll is not an accidental side effect.
 
 ### 15. Program header vs live bus (Med)
 
@@ -235,7 +235,7 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 
 1. **One talker per net.** Everyone else sleeps in hi-Z or is deselected.
 2. **Hard video stays in PLDs + glue.** AVRs help only in VBlank/HBlank windows they own.
-3. **If firmware might miss a PHI2 window, use `RDY`.** Do not hope.
+3. **If firmware might miss a PHI2 window, use `RDY`.** Hope is not a timing budget.
 4. **Cross clock domains with sync flops or qualified enables.**
 5. **Idle-safe pull resistors on enables.** Power-up and crashed firmware should not drive buses.
 6. **Measure the budget.** 55 ns SRAM and 45 ns PROM only work if decode + mux + firmware leave margin.
@@ -272,7 +272,7 @@ They **do** hurt frame time or feel hitchy if `RDY` and VBlank become a dumping 
 ### Budget mindset
 
 1. **PHI2 soft I/O:** aim for zero RDY on the hot path. Measure. If RDY is common, that is a firmware bug.
-2. **VBlank:** OAM SPI + S1 sprite field must both fit. Leave margin. Do not treat VBlank as infinite DMA time.
+2. **VBlank:** OAM SPI + S1 sprite field must both fit. Leave margin. VBlank is not infinite DMA time.
 3. **HBlank:** BG0 next-line fill only. Nothing else from M or S1.
 4. **Saves:** rare, multi-frame OK. Prefer FRAM when practical. Chunk I2C, keep the saving UI alive. Not a substitute for streaming game state every frame.
 

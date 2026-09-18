@@ -12,8 +12,8 @@ Exact per-voice field meanings (volume, duty, period, noise mode, and so on) sta
 
 ## Timing
 
-- Prefer APU mailbox updates in **NMI / VBlank**, same discipline as OAM SPI.
-- Do not burn active-display PRG time on long APU streams.
+- APU mailbox updates belong in **NMI / VBlank**, same discipline as OAM SPI.
+- Long APU streams stay off active-display PRG time.
 
 ## Related
 

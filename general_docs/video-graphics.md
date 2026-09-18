@@ -30,7 +30,7 @@ If more than 16 sprites land on one scanline, **later OAM entries on that line a
 
 ## Palette model
 
-Do not mix these two ideas:
+These two ideas stay separate:
 
 1. **64 RGB values** live in the board **AT27C256R** color PROM (packed R3G3B2). These are the real colors. Video reads them by 6-bit index. No CPU runtime poke path. Preview RGB, GIMP/Aseprite exports, and regenerate notes: [`palette/`](palette/README.md).
 2. **64 individual palettes** live in the cartridge. Each individual palette is four numbers. Each number is a color index in 0..63 pointing into the PROM.

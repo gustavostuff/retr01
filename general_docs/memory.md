@@ -277,7 +277,7 @@ Small I2C EEPROM on the cart for per-game saves. **24C64**, mailbox **`$7F22`-`$
 - Saves are **explicit** PRG calls (not background during physics). Typical UI: pause, fade, or a dedicated saving screen.
 - **Multi-frame / multi-VBlank saves are OK.** A 24C64 page program is milliseconds. Full saves naturally take more than one frame.
 - MCU-M uses **short** `CPU_RDY` pulses for mailbox / page handoff (with fail-safe timeout), then **releases** so the 6502 can keep running.
-- **Do not freeze the picture** for the whole save. Beam keeps scanning. PRG may update a spinner or other saving UI every frame while the save state machine advances.
+- The picture stays live for the whole save. Beam keeps scanning. PRG may update a spinner or other saving UI every frame while the save state machine advances.
 - Machine / cabinet config stays on MCU-M internal EEPROM (`$7F70`-`$7F72`). It must not depend on a seated cart.
 - Series **33 ohm** on SDA/SCL (see `hardware.md`).
 

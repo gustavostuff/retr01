@@ -1,10 +1,10 @@
 # Software API and game modes
 
-C (and later ASM) facing tools for authors. Keep the first ship set small.
+C (and later ASM) facing tools for authors. The first ship set stays small.
 
 ## What is an entity?
 
-Hardware alone thinks in sprites. Authors should think in **entities**.
+Hardware alone thinks in sprites. Authors think in **entities**.
 
 An entity is a being, object, or graphic in the game. It is composed of:
 
@@ -29,7 +29,7 @@ That range covers very simple games (**1** state, **1** frame, **1** sprite) and
 | --- | --- |
 | Entity **types** per world (catalog) | **16** |
 | Entities **on screen** (live instances) | Soft: limited by **OAM sprite budget**, not by type count |
-| Hardware sprites (OAM) | **64** total; **16** per scanline |
+| Hardware sprites (OAM) | **64** total, **16** per scanline |
 | Global shared entity catalog | **None** |
 | Player / inventory patterns | Global other **SPR** banks (4). See `memory.md` |
 | Other-screen patterns | Global other CHR (**4** BG + **4** SPR). See `memory.md` |
@@ -143,11 +143,11 @@ Behavior:
 
 | Cap | Value | Meaning |
 | --- | ---: | --- |
-| Catalog | **16** types / world | How many defs may exist in that world’s blob |
+| Catalog | **16** types / world | How many defs may exist in that world's blob |
 | OAM | **64** sprites | How many 8x8 sprites may be drawn at once (all entities + any other OAM users share this) |
 | Per scanline | **16** sprites | Later OAM entries on that line are not drawn |
 
-There is **no** separate “max entities on screen” hard cap. On-screen count is whatever fits the **64** sprite budget for the frames currently claimed. Spawn / pose changes that need more OAM than free fail (no partial claim).
+There is **no** separate "max entities on screen" hard cap. On-screen count is whatever fits the **64** sprite budget for the frames currently claimed. Spawn / pose changes that need more OAM than free fail (no partial claim).
 
 | Situation | v1 behavior |
 | --- | --- |
@@ -159,7 +159,7 @@ There is **no** separate “max entities on screen” hard cap. On-screen count 
 
 - **Player movement** and **camera movement** are separate. See `world-scrolling.md` (dead zone, axis lock, follow vs auto).
 - Camera: instant screen switch and/or smooth scrolling. Both allowed in one game or world.
-- **BG0 layout wrap**: `r01_bg0_set_wrap(ctx, wrap_x, wrap_y)` in author `custom_logic.c`. Studio packs non-zero axes into world header flags byte **7** bits **1**/**2**. Parallax rate stays end-aligned; Host Play / emu only modulo-tiles samples on those axes so empty BG0 regions do not appear. See `world-scrolling.md`.
+- **BG0 layout wrap**: `r01_bg0_set_wrap(ctx, wrap_x, wrap_y)` in author `custom_logic.c`. Studio packs non-zero axes into world header flags byte **7** bits **1**/**2**. Parallax rate stays end-aligned. Host Play / emu only modulo-tiles samples on those axes so empty BG0 regions do not appear. See `world-scrolling.md`.
 - **BG0 clip to BG1**: `r01_bg0_set_clip_to_bg1(ctx, enable)` packs into flags byte **7** bit **3**. When enabled, BG0 is hidden outside present BG1 camera slots (backdrop there). Default off: BG0 fills the full viewport under missing/out-of-window BG1. Independent of wrap. See `world-scrolling.md`.
 - **BG1** (and manual strip) autoscroll / wrap helpers remain TBD. See `world-scrolling.md`.
 - Modes: **platformer** and **top-down**.
@@ -195,9 +195,9 @@ See `hardware.md` for the M / S1 / S2 split. Shared-bus timing: `ic-comms-risks.
 | --- | --- |
 | Scroll `$7F02` / `$7F03`, palette `$7F08` / `$7F09` | NMI / VBlank (or video off) |
 | OAM publish to S1 | Early VBlank or wait for `S1_RDY`. Never during HBlank |
-| Cart save `$7F22`-`$7F24` | Explicit save only. May span **many VBlanks**. Chunk I2C with **short** `CPU_RDY` pulses, then release so PRG can animate a spinner / saving UI. Do not hold RDY for the whole EEPROM write |
+| Cart save `$7F22`-`$7F24` | Explicit save only. May span **many VBlanks**. Chunk I2C with **short** `CPU_RDY` pulses, then release so PRG can animate a spinner / saving UI. RDY stays released across the full EEPROM write |
 | Machine EE `$7F70`-`$7F72` | Separate from cart saves. Same RDY rule if the cycle cannot close in one PHI2 |
 
-Do not use **STP** in normal play. **WAI** only with a clear NMI/IRQ wake.
+**STP** stays unused in normal play. **WAI** is only for a clear NMI/IRQ wake.
 
 **Performance anti-patterns** (RDY-as-default, full OAM every frame, saves in the hot path, and so on): see **Performance: what not to do** in `ic-comms-risks.md`.

@@ -14,7 +14,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 **Partly sized:** Live instance records in system RAM and optional `PA` blobs still need a frozen byte layout. Spawn locations are **PRG-side** (not cart).
 
-**Entity cart pack (decision):** Studio writes the locked offset-table **EntityDef** from `software-api.md` (variable length, max **532 B**). Draw origin lives on each **frame**. Hitbox lives on each **state** (packed origin-relative on each EntityDef frame). World catalog = `u16` type directory + defs. The old fixed **20 B** snapshot is retired.
+**Entity cart pack (decision):** Studio writes the locked offset-table **EntityDef** from `software-api.md` (variable length, max **532 B**). Draw origin lives on each **frame**. Hitbox lives on each **state** (packed origin-relative to that state's first drawable frame). World catalog = `u16` type directory + defs. The old fixed **20 B** snapshot is retired.
 
 **Touches:** `memory.md`, `software-api.md`
 
@@ -112,7 +112,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-13 | Branding | One product: Retr01. |
 | 2026-09-14 | Flasher | Console + Adafruit's UPDI Friend. Shared header. 4-pos DIP: M/S1/S2/cart, default all OFF. Scope: AVRs + cart only. |
 | 2026-09-14 | Entity caps | 16 types per world (catalog in world blob). Dropped global 128 + `chr_world`. format_ver 3. |
-| 2026-09-17 | Entity pack | Max sprites/frame **6**; maxed def **532 B**. Draw origin is per **frame**. Hitbox is per **state**. See `software-api.md`. |
+| 2026-09-17 | Entity pack | Max sprites/frame **6**. Maxed def **532 B**. Draw origin is per **frame**. Hitbox is per **state**. See `software-api.md`. |
 | 2026-09-14 | Anim tiles | base..base+3 wrap in bank, default delay 6. |
 | 2026-09-14 | Video timing | Sprites VBlank pass. BG0 HBlank ping-pong only. |
 | 2026-09-14 | PCB layers | Initial: motherboard, cart, and pads all 2-layer. 4-layer mobo only later if bring-up / commercial SMD needs it. |
