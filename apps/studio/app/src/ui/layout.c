@@ -823,6 +823,159 @@ int accordion_header_hit(const UiState *ui, int lx, int ly, int *out_section) {
     return 0;
 }
 
+static int region_section_hit(int lx, int ly, int hdr_y, int body_y, int body_h) {
+    if (lx < 0 || lx >= UI_SIDEBAR_W || hdr_y < 0) {
+        return 0;
+    }
+    if (ly >= hdr_y && ly < hdr_y + UI_BTN_H) {
+        return 1;
+    }
+    if (body_h > 0 && body_y >= 0 && ly >= body_y && ly < body_y + body_h) {
+        return 1;
+    }
+    return 0;
+}
+
+int ui_region_at(const UiState *ui, int lx, int ly) {
+    AccordionLayout lo;
+    if (!ui) {
+        return UI_REGION_NONE;
+    }
+    if (ly < UI_APP_CHROME_H) {
+        return UI_REGION_NONE;
+    }
+    if (ui->app_mode == UI_APP_SOUNDS) {
+        return UI_REGION_SOUNDS;
+    }
+    if (ui->app_mode != UI_APP_GRAPHICS) {
+        return UI_REGION_NONE;
+    }
+    if (lx >= ui_ctrl_x(ui)) {
+        return UI_REGION_CTRL;
+    }
+    if (lx >= UI_SIDEBAR_W) {
+        return UI_REGION_PREVIEW;
+    }
+    accordion_layout(ui, &lo);
+    if (region_section_hit(lx, ly, lo.worlds_hdr_y, lo.worlds_btns_y, lo.worlds_body_h)) {
+        return UI_REGION_WORLDS;
+    }
+    if (region_section_hit(lx, ly, lo.sprites_hdr_y, lo.sprites_body_y, lo.sprites_body_h)) {
+        return UI_REGION_BANKS;
+    }
+    if (region_section_hit(lx, ly, lo.global_banks_hdr_y, lo.global_banks_body_y, lo.global_banks_body_h)) {
+        return UI_REGION_GLOBAL_BANKS;
+    }
+    if (UI_SHOW_METATILES &&
+        region_section_hit(lx, ly, lo.metatiles_hdr_y, lo.metatiles_body_y, lo.metatiles_body_h)) {
+        return UI_REGION_METATILES;
+    }
+    if (UI_SHOW_METASPRITES &&
+        region_section_hit(lx, ly, lo.metasprites_hdr_y, lo.metasprites_body_y, lo.metasprites_body_h)) {
+        return UI_REGION_METASPRITES;
+    }
+    if (region_section_hit(lx, ly, lo.entities_hdr_y, lo.entities_body_y, lo.entities_body_h)) {
+        return UI_REGION_ENTITIES;
+    }
+    if (region_section_hit(lx, ly, lo.pals_hdr_y, lo.pals_body_y, lo.pals_body_h)) {
+        return UI_REGION_PALS;
+    }
+    return UI_REGION_NONE;
+}
+
+void ui_region_focus_at(UiState *ui, int lx, int ly) {
+    int region = ui_region_at(ui, lx, ly);
+    if (region != UI_REGION_NONE) {
+        ui_region_set(ui, region);
+    }
+}
+
+int ui_region_rect(const UiState *ui, int region, int *x, int *y, int *w, int *h) {
+    AccordionLayout lo;
+    int sx, sy;
+    if (!ui || !x || !y || !w || !h) {
+        return 0;
+    }
+    if (region == UI_REGION_PREVIEW) {
+        ui_editor_layout(ui, &sx, &sy, NULL, NULL, NULL);
+        *x = sx;
+        *y = sy;
+        *w = ui_screen_w(ui);
+        *h = ui_screen_h(ui);
+        return 1;
+    }
+    if (region == UI_REGION_CTRL) {
+        *x = ui_ctrl_x(ui);
+        *y = UI_APP_CHROME_H;
+        *w = UI_CTRL_SIDEBAR_W;
+        *h = ui_logic_h(ui) - UI_APP_CHROME_H;
+        return 1;
+    }
+    if (region == UI_REGION_SOUNDS) {
+        *x = 0;
+        *y = UI_APP_CHROME_H;
+        *w = ui_logic_w(ui);
+        *h = ui_logic_h(ui) - UI_APP_CHROME_H;
+        return 1;
+    }
+    accordion_layout(ui, &lo);
+    *x = 0;
+    *w = UI_SIDEBAR_W;
+    switch (region) {
+    case UI_REGION_WORLDS:
+        *y = lo.worlds_hdr_y;
+        *h = UI_BTN_H + (lo.worlds_body_h > 0 ? lo.worlds_body_h : 0);
+        return 1;
+    case UI_REGION_BANKS:
+        *y = lo.sprites_hdr_y;
+        *h = UI_BTN_H + (lo.sprites_body_h > 0 ? lo.sprites_body_h : 0);
+        return 1;
+    case UI_REGION_GLOBAL_BANKS:
+        *y = lo.global_banks_hdr_y;
+        *h = UI_BTN_H + (lo.global_banks_body_h > 0 ? lo.global_banks_body_h : 0);
+        return 1;
+    case UI_REGION_METATILES:
+        if (!UI_SHOW_METATILES) {
+            return 0;
+        }
+        *y = lo.metatiles_hdr_y;
+        *h = UI_BTN_H + (lo.metatiles_body_h > 0 ? lo.metatiles_body_h : 0);
+        return 1;
+    case UI_REGION_METASPRITES:
+        if (!UI_SHOW_METASPRITES) {
+            return 0;
+        }
+        *y = lo.metasprites_hdr_y;
+        *h = UI_BTN_H + (lo.metasprites_body_h > 0 ? lo.metasprites_body_h : 0);
+        return 1;
+    case UI_REGION_ENTITIES:
+        *y = lo.entities_hdr_y;
+        *h = UI_BTN_H + (lo.entities_body_h > 0 ? lo.entities_body_h : 0);
+        return 1;
+    case UI_REGION_PALS:
+        *y = lo.pals_hdr_y;
+        *h = UI_BTN_H + (lo.pals_body_h > 0 ? lo.pals_body_h : 0);
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+void draw_region_focus(UiState *ui, SDL_Renderer *r) {
+    int x, y, w, h;
+    if (!ui || !r || ui->play.active || ui->menu.open || ui->tile_edit.open || ui->sprite_edit.open ||
+        ui->metasprite_edit.open || ui->entity_edit.open || ui->pal_edit.open) {
+        return;
+    }
+    if (ui->app_mode != UI_APP_GRAPHICS) {
+        return;
+    }
+    if (!ui_region_rect(ui, ui->region_focus, &x, &y, &w, &h) || w < 1 || h < 1) {
+        return;
+    }
+    draw_rect(r, x, y, w, h, UI_COL_PRESENT_R, UI_COL_PRESENT_G, UI_COL_PRESENT_B);
+}
+
 void accordion_toggle(UiState *ui, int section) {
     if (UI_ACCORDION_ALWAYS_EXPANDED) {
         return;

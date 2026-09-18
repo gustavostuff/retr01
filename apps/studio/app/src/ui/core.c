@@ -173,6 +173,7 @@ int ui_init(UiState *ui) {
     ui->bank_sel_bank = 0;
     ui->bank_sel_plane = UI_BANKS_PLANE_SPR;
     ui->accordion_open = UI_ACC_WORLDS;
+    ui->region_focus = UI_REGION_WORLDS;
     accordion_init_heights(ui);
     ui->logic_scale = 1;
     ui->menu.world_screen_idx = -1;

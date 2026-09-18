@@ -208,6 +208,17 @@ void ui_focus_clear(UiState *ui) {
     ui_focus_set(ui, UI_FOCUS_NONE);
 }
 
+void ui_region_set(UiState *ui, int region) {
+    if (!ui) {
+        return;
+    }
+    ui->region_focus = region;
+}
+
+int ui_region_get(const UiState *ui) {
+    return ui ? ui->region_focus : UI_REGION_NONE;
+}
+
 void draw_tooltip(UiState *ui, SDL_Renderer *r) {
     int tw, th, x, y;
     int pad = UI_UNIT;

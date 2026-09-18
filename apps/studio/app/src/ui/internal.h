@@ -206,6 +206,12 @@ void draw_tooltip(UiState *ui, SDL_Renderer *r);
 void ui_focus_set(UiState *ui, int focus);
 int ui_focus_get(const UiState *ui);
 void ui_focus_clear(UiState *ui);
+void ui_region_set(UiState *ui, int region);
+int ui_region_get(const UiState *ui);
+int ui_region_at(const UiState *ui, int lx, int ly);
+void ui_region_focus_at(UiState *ui, int lx, int ly);
+int ui_region_rect(const UiState *ui, int region, int *x, int *y, int *w, int *h);
+void draw_region_focus(UiState *ui, SDL_Renderer *r);
 /* Animated 1px dashed selection border (phase from SDL_GetTicks). */
 void draw_marching_ants(SDL_Renderer *r, int x, int y, int w, int h);
 void draw_marching_ants_a(SDL_Renderer *r, int x, int y, int w, int h, Uint8 alpha);

@@ -259,31 +259,41 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 return 1;
             }
             if (ui->app_mode == UI_APP_GRAPHICS) {
-                if (bank_sel_valid(ui)) {
-                    ui_undo_push_bank_tile_remove(ui, ui->bank_sel_plane, ui->bank_sel_bank, ui->bank_sel_tile);
+                int region = ui_region_get(ui);
+                if (region == UI_REGION_BANKS || region == UI_REGION_GLOBAL_BANKS) {
+                    if (bank_sel_valid(ui)) {
+                        ui_undo_push_bank_tile_remove(ui, ui->bank_sel_plane, ui->bank_sel_bank, ui->bank_sel_tile);
+                    }
                     return 1;
                 }
-                if (ui->sel_instance >= 0 && ui_work_allows_spr(ui)) {
-                    R01World *w = r01_project_active_world(ui->project);
-                    if (w && ui->sel_instance < w->instance_count) {
-                        R01EntityInstance removed = w->instances[ui->sel_instance];
-                        int idx = ui->sel_instance;
-                        if (r01_world_instance_remove(w, idx) == 0) {
-                            ui_undo_push_instance_remove(ui, idx, &removed);
-                            ui->sel_instance = -1;
-                            ui->inst_drag = 0;
-                            ui_toast(ui, "instance removed", 0);
+                if (region == UI_REGION_PREVIEW) {
+                    if (ui->sel_instance >= 0 && ui_work_allows_spr(ui)) {
+                        R01World *w = r01_project_active_world(ui->project);
+                        if (w && ui->sel_instance < w->instance_count) {
+                            R01EntityInstance removed = w->instances[ui->sel_instance];
+                            int idx = ui->sel_instance;
+                            if (r01_world_instance_remove(w, idx) == 0) {
+                                ui_undo_push_instance_remove(ui, idx, &removed);
+                                ui->sel_instance = -1;
+                                ui->inst_drag = 0;
+                                ui_toast(ui, "instance removed", 0);
+                            }
                         }
                     }
                     return 1;
                 }
-                if (ui_world_screen_remove(ui)) {
+                if (region == UI_REGION_WORLDS) {
+                    if (ui_world_screen_remove(ui)) {
+                        return 1;
+                    }
                     return 1;
                 }
+                return 1;
             }
         }
         if (!ui->play.active && !ui->menu.open && ui_work_allows_spr(ui) &&
-            ui->sel_instance >= 0 && (e->key.keysym.sym == SDLK_h || e->key.keysym.sym == SDLK_v)) {
+            ui->sel_instance >= 0 && ui_region_get(ui) == UI_REGION_PREVIEW &&
+            (e->key.keysym.sym == SDLK_h || e->key.keysym.sym == SDLK_v)) {
             R01World *w = r01_project_active_world(ui->project);
             if (w && ui->sel_instance < w->instance_count) {
                 if (e->key.keysym.sym == SDLK_h) {
@@ -333,10 +343,22 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     }
                     return 1;
                 }
-                if (ui_tile_selection_copy(ui)) {
-                    return 1;
-                }
-                if (ui_world_screen_copy(ui)) {
+                if (ui->app_mode == UI_APP_GRAPHICS) {
+                    int region;
+                    if (ui->play.active) {
+                        return 1;
+                    }
+                    region = ui_region_get(ui);
+                    if (region == UI_REGION_WORLDS) {
+                        (void)ui_world_screen_copy(ui);
+                        return 1;
+                    }
+                    if (region == UI_REGION_PREVIEW) {
+                        if (!ui_tile_selection_copy(ui)) {
+                            ui_toast(ui, "select tiles to copy", 1);
+                        }
+                        return 1;
+                    }
                     return 1;
                 }
             }
@@ -345,10 +367,22 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     ui_bgm_paste_sel(ui);
                     return 1;
                 }
-                if (ui_tile_selection_paste(ui)) {
-                    return 1;
-                }
-                if (ui_world_screen_paste(ui)) {
+                if (ui->app_mode == UI_APP_GRAPHICS) {
+                    int region;
+                    if (ui->play.active) {
+                        return 1;
+                    }
+                    region = ui_region_get(ui);
+                    if (region == UI_REGION_WORLDS) {
+                        (void)ui_world_screen_paste(ui);
+                        return 1;
+                    }
+                    if (region == UI_REGION_PREVIEW) {
+                        if (!ui_tile_selection_paste(ui)) {
+                            ui_toast(ui, "no tiles on clipboard", 1);
+                        }
+                        return 1;
+                    }
                     return 1;
                 }
             }
@@ -376,7 +410,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             return 3; /* quit app when no modal/menu */
         }
         if (!ui->play.active && !ui->menu.open && screen_sel_valid(ui) && ui_work_allows_bg(ui) &&
-            ui->sel_instance < 0) {
+            ui->sel_instance < 0 && ui_region_get(ui) == UI_REGION_PREVIEW) {
             R01Screen *s = r01_project_active_screen(ui->project);
             int min_x, min_y, max_x, max_y, ty, tx;
             if (s) {
@@ -467,6 +501,8 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             tile_modal_handle(ui, lx, ly, 1, e->button.button);
             return 1;
         }
+
+        ui_region_focus_at(ui, lx, ly);
 
         if (e->button.button == SDL_BUTTON_LEFT) {
             int app_tab;
@@ -925,6 +961,13 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                         ui_sound_play_stop(ui);
                     }
                     ui->app_mode = a;
+                    if (a == UI_APP_SOUNDS) {
+                        ui_region_set(ui, UI_REGION_SOUNDS);
+                    } else if (a == UI_APP_GRAPHICS && ui_region_get(ui) == UI_REGION_SOUNDS) {
+                        ui_region_set(ui, UI_REGION_WORLDS);
+                    } else if (a == UI_APP_CODE) {
+                        ui_region_set(ui, UI_REGION_NONE);
+                    }
                     return 1;
                 }
             }

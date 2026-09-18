@@ -146,6 +146,19 @@
 #define UI_FOCUS_WORKBENCH 2
 #define UI_FOCUS_LIST 3
 
+/* Main-window region that owns copy/paste and Delete. Independent of modal UI_FOCUS_*. */
+#define UI_REGION_NONE 0
+#define UI_REGION_WORLDS 1
+#define UI_REGION_BANKS 2
+#define UI_REGION_GLOBAL_BANKS 3
+#define UI_REGION_METATILES 4
+#define UI_REGION_METASPRITES 5
+#define UI_REGION_ENTITIES 6
+#define UI_REGION_PALS 7
+#define UI_REGION_PREVIEW 8
+#define UI_REGION_CTRL 9
+#define UI_REGION_SOUNDS 10
+
 #define UI_CATALOG_DRAG_SPRITE 1
 #define UI_CATALOG_DRAG_METASPRITE 2
 #define UI_CATALOG_DRAG_ENTITY 3
@@ -482,7 +495,8 @@ typedef struct UiState {
     int metatiles_scroll;
     int metasprites_scroll;
     int entities_scroll;
-    int focus; /* UI_FOCUS_* - which control owns wheel / key routing */
+    int focus; /* UI_FOCUS_* - modal control (palette vs workbench) */
+    int region_focus; /* UI_REGION_* - which Graphics/Audio region owns copy/paste */
     UiUndoStack undo;
     void *undo_paint;     /* open UiUndoPaintStroke* during a map paint drag, else NULL */
     void *undo_spr_paint; /* open UiUndoSprPaintStroke* during compose sprite paint, else NULL */
