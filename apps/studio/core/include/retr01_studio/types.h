@@ -77,7 +77,7 @@ static inline int r01_global_spr_index(int bank) {
 
 #define R01_NAME_MAX 64
 #define R01_PATH_MAX 512
-#define R01_JSON_VER 13
+#define R01_JSON_VER 14
 
 #define R01_ASEPRITE_ENTITIES_DIR "aseprite_entities"
 #define R01_ASEPRITE_LISTING_MAX 64
@@ -191,10 +191,6 @@ typedef struct R01EntityFrame {
     int delay; /* display frames, min 1 (0 reads as 1) */
     int origin_x;
     int origin_y;
-    int hitbox_x;
-    int hitbox_y;
-    int hitbox_w;
-    int hitbox_h;
 } R01EntityFrame;
 
 /* Reusable multi-part sprite group (no origin/hitbox). */
@@ -214,6 +210,10 @@ typedef struct R01EntityState {
     char name[R01_ENTITY_NAME_MAX]; /* authoring label (idle, walk, ...) */
     R01EntityFrame frames[R01_ENTITY_FRAMES_MAX];
     int frame_count; /* 1..R01_ENTITY_FRAMES_MAX */
+    int hitbox_x;
+    int hitbox_y;
+    int hitbox_w;
+    int hitbox_h;
 } R01EntityState;
 
 typedef struct R01EntityType {

@@ -655,11 +655,11 @@ static int write_base_game(FILE *f, const R01Project *p) {
     }
     if (w && pe >= 0 && pe < w->entity_count && w->entities[pe].state_count > 0 &&
         w->entities[pe].states[0].frame_count > 0) {
-        const R01EntityFrame *fr = &w->entities[pe].states[0].frames[0];
-        fprintf(f, "static const int player_hit_x = %d;\n", fr->hitbox_x);
-        fprintf(f, "static const int player_hit_y = %d;\n", fr->hitbox_y);
-        fprintf(f, "static const int player_hit_w = %d;\n", fr->hitbox_w);
-        fprintf(f, "static const int player_hit_h = %d;\n", fr->hitbox_h);
+        const R01EntityState *st0 = &w->entities[pe].states[0];
+        fprintf(f, "static const int player_hit_x = %d;\n", st0->hitbox_x);
+        fprintf(f, "static const int player_hit_y = %d;\n", st0->hitbox_y);
+        fprintf(f, "static const int player_hit_w = %d;\n", st0->hitbox_w);
+        fprintf(f, "static const int player_hit_h = %d;\n", st0->hitbox_h);
     } else {
         fprintf(f, "static const int player_hit_x = 0, player_hit_y = 0;\n");
         fprintf(f, "static const int player_hit_w = %d, player_hit_h = %d;\n", R01_PLAY_PLAYER_W,
@@ -899,12 +899,12 @@ static int write_asm_tables(const char *asm_dir, const R01World *w, char *err_bu
         int pe = r01_world_player_entity(w);
         if (pe >= 0 && pe < w->entity_count && w->entities[pe].state_count > 0 &&
             w->entities[pe].states[0].frame_count > 0) {
-            const R01EntityFrame *fr = &w->entities[pe].states[0].frames[0];
+            const R01EntityState *st0 = &w->entities[pe].states[0];
             fprintf(f, "player_entity_id: .byte $%02X\n", pe & 0xFF);
-            fprintf(f, "player_hit_x: .byte $%02X\n", fr->hitbox_x & 0xFF);
-            fprintf(f, "player_hit_y: .byte $%02X\n", fr->hitbox_y & 0xFF);
-            fprintf(f, "player_hit_w: .byte $%02X\n", fr->hitbox_w & 0xFF);
-            fprintf(f, "player_hit_h: .byte $%02X\n", fr->hitbox_h & 0xFF);
+            fprintf(f, "player_hit_x: .byte $%02X\n", st0->hitbox_x & 0xFF);
+            fprintf(f, "player_hit_y: .byte $%02X\n", st0->hitbox_y & 0xFF);
+            fprintf(f, "player_hit_w: .byte $%02X\n", st0->hitbox_w & 0xFF);
+            fprintf(f, "player_hit_h: .byte $%02X\n", st0->hitbox_h & 0xFF);
         } else {
             fprintf(f, "player_entity_id: .byte $FF\n");
         }

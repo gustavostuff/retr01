@@ -94,8 +94,8 @@ TEST_MAIN() {
     EXPECT(type_id == 0, "entity type");
     w->entities[0].states[0].frames[0].origin_x = 2;
     w->entities[0].states[0].frames[0].origin_y = 3;
-    w->entities[0].states[0].frames[0].hitbox_x = 1;
-    w->entities[0].states[0].frames[0].hitbox_y = 2;
+    w->entities[0].states[0].hitbox_x = 1;
+    w->entities[0].states[0].hitbox_y = 2;
     w->entities[0].states[0].frames[0].parts[0].dx = 4;
     w->entities[0].states[0].frames[0].parts[0].dy = 5;
     r01_world_set_player_entity(w, 0);

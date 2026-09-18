@@ -440,14 +440,12 @@ static int clamp_int(int v, int lo, int hi) {
 }
 
 /* Place the sprite group in the middle of the 32x32 compose grid, then put origin
- * and the default 8x8 hitbox on that group's AABB. Play uses origin-relative coords,
- * so the compose translation does not change draw or collision. */
+ * on that group's AABB. Play uses origin-relative coords, so the compose
+ * translation does not change draw. */
 static void frame_import_center_compose(R01EntityFrame *fr) {
     int min_x, min_y, max_x, max_y;
     int off_x, off_y;
     int pi;
-    int hw = R01_ENTITY_HITBOX_W;
-    int hh = R01_ENTITY_HITBOX_H;
     if (!frame_parts_aabb(fr, &min_x, &min_y, &max_x, &max_y)) {
         return;
     }
@@ -462,10 +460,25 @@ static void frame_import_center_compose(R01EntityFrame *fr) {
     }
     fr->origin_x = clamp_int((min_x + max_x) / 2, 0, R01_ENTITY_COMPOSE_PX);
     fr->origin_y = clamp_int((min_y + max_y) / 2, 0, R01_ENTITY_COMPOSE_PX);
-    fr->hitbox_w = hw;
-    fr->hitbox_h = hh;
-    fr->hitbox_x = clamp_int((min_x + max_x - hw) / 2, 0, R01_ENTITY_COMPOSE_PX - hw);
-    fr->hitbox_y = clamp_int((min_y + max_y - hh) / 2, 0, R01_ENTITY_COMPOSE_PX - hh);
+}
+
+static void state_import_center_hitbox(R01EntityState *st) {
+    int min_x, min_y, max_x, max_y;
+    int hw = R01_ENTITY_HITBOX_W;
+    int hh = R01_ENTITY_HITBOX_H;
+    int fi;
+    if (!st) {
+        return;
+    }
+    for (fi = 0; fi < st->frame_count; fi++) {
+        if (frame_parts_aabb(&st->frames[fi], &min_x, &min_y, &max_x, &max_y)) {
+            st->hitbox_w = hw;
+            st->hitbox_h = hh;
+            st->hitbox_x = clamp_int((min_x + max_x - hw) / 2, 0, R01_ENTITY_COMPOSE_PX - hw);
+            st->hitbox_y = clamp_int((min_y + max_y - hh) / 2, 0, R01_ENTITY_COMPOSE_PX - hh);
+            return;
+        }
+    }
 }
 
 int r01_world_import_entity_frames(R01Project *p, R01World *w, const R01EntityImport *in, char *err_buf,
@@ -615,6 +628,7 @@ int r01_world_import_entity_frames(R01Project *p, R01World *w, const R01EntityIm
             }
             frame_import_center_compose(dst);
         }
+        state_import_center_hitbox(st);
     }
     return idx;
 }
@@ -1306,13 +1320,6 @@ int r01_project_import_aseprite_entities(R01Project *p, const char *project_path
     if (r01_aseprite_listing_scan(root, &disk, err_buf, err_cap) != 0) {
         return -1;
     }
-    if (r01_aseprite_listing_equal(&disk, p)) {
-        if (out) {
-            out->unchanged = 1;
-            out->generated = 0;
-        }
-        return 0;
-    }
     for (i = 0; i < disk.count; i++) {
         char folder[R01_ENTITY_NAME_MAX];
         const char *slash = strchr(disk.files[i], '/');
@@ -1337,6 +1344,24 @@ int r01_project_import_aseprite_entities(R01Project *p, const char *project_path
         if (!seen && folder_n < R01_MAX_ENTITY_TYPES) {
             snprintf(folders[folder_n], sizeof(folders[0]), "%s", folder);
             folder_n++;
+        }
+    }
+    if (r01_aseprite_listing_equal(&disk, p)) {
+        int missing = 0;
+        for (i = 0; i < folder_n; i++) {
+            char slug[R01_ENTITY_NAME_MAX];
+            r01_id_slugify(slug, sizeof(slug), folders[i]);
+            if (!catalog_has_slug(w, slug)) {
+                missing = 1;
+                break;
+            }
+        }
+        if (!missing) {
+            if (out) {
+                out->unchanged = 1;
+                out->generated = 0;
+            }
+            return 0;
         }
     }
     for (i = 0; i < folder_n; i++) {

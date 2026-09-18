@@ -77,10 +77,10 @@ TEST_MAIN() {
     EXPECT(p->worlds[0].entities[0].states[0].frames[0].parts[0].dy == 12, "8x8 compose y");
     EXPECT(p->worlds[0].entities[0].states[0].frames[0].origin_x == 16, "8x8 origin x");
     EXPECT(p->worlds[0].entities[0].states[0].frames[0].origin_y == 16, "8x8 origin y");
-    EXPECT(p->worlds[0].entities[0].states[0].frames[0].hitbox_x == 12, "8x8 hitbox x");
-    EXPECT(p->worlds[0].entities[0].states[0].frames[0].hitbox_y == 12, "8x8 hitbox y");
-    EXPECT(p->worlds[0].entities[0].states[0].frames[0].hitbox_w == R01_ENTITY_HITBOX_W, "8x8 hitbox w");
-    EXPECT(p->worlds[0].entities[0].states[0].frames[0].hitbox_h == R01_ENTITY_HITBOX_H, "8x8 hitbox h");
+    EXPECT(p->worlds[0].entities[0].states[0].hitbox_x == 12, "8x8 hitbox x");
+    EXPECT(p->worlds[0].entities[0].states[0].hitbox_y == 12, "8x8 hitbox y");
+    EXPECT(p->worlds[0].entities[0].states[0].hitbox_w == R01_ENTITY_HITBOX_W, "8x8 hitbox w");
+    EXPECT(p->worlds[0].entities[0].states[0].hitbox_h == R01_ENTITY_HITBOX_H, "8x8 hitbox h");
 
     {
         uint8_t rgba3[8 * 8 * 4];
@@ -142,8 +142,8 @@ TEST_MAIN() {
         EXPECT(p->worlds[0].entities[idx].states[0].frames[0].parts[1].dy == 12, "16x8 part1 y");
         EXPECT(p->worlds[0].entities[idx].states[0].frames[0].origin_x == 16, "16x8 origin x");
         EXPECT(p->worlds[0].entities[idx].states[0].frames[0].origin_y == 16, "16x8 origin y");
-        EXPECT(p->worlds[0].entities[idx].states[0].frames[0].hitbox_x == 12, "16x8 hitbox x");
-        EXPECT(p->worlds[0].entities[idx].states[0].frames[0].hitbox_y == 12, "16x8 hitbox y");
+        EXPECT(p->worlds[0].entities[idx].states[0].hitbox_x == 12, "16x8 hitbox x");
+        EXPECT(p->worlds[0].entities[idx].states[0].hitbox_y == 12, "16x8 hitbox y");
         EXPECT(p->worlds[0].entities[idx].states[1].frames[0].part_count == 1, "small one part");
         EXPECT(p->worlds[0].entities[idx].states[1].frames[0].parts[0].dx == 12, "8x8 crouch x");
         EXPECT(p->worlds[0].entities[idx].states[1].frames[0].parts[0].dy == 12, "8x8 crouch y");
@@ -219,14 +219,21 @@ TEST_MAIN() {
 
         res.generated = -1;
         res.unchanged = 0;
+        snprintf(p->worlds[0].entities[0].name, sizeof(p->worlds[0].entities[0].name), "player");
         snprintf(p->aseprite_entities_files[0], R01_ASEPRITE_REL_MAX, "player/idle.ase");
         p->aseprite_entities_file_count = 1;
         EXPECT(r01_project_import_aseprite_entities(p, proj_path, &res, err, sizeof(err)) == 0, "unchanged");
         EXPECT(res.unchanged == 1, "flag unchanged");
         EXPECT(res.generated == 0, "no generate");
 
+        p->worlds[0].entity_count = 0;
+        res.unchanged = 1;
+        res.generated = -1;
+        (void)r01_project_import_aseprite_entities(p, proj_path, &res, err, sizeof(err));
+        EXPECT(res.unchanged == 0, "empty catalog retries");
+        p->worlds[0].entity_count = 1;
+
         p->aseprite_entities_file_count = 0;
-        snprintf(p->worlds[0].entities[0].name, sizeof(p->worlds[0].entities[0].name), "player");
         res.unchanged = 1;
         EXPECT(r01_project_import_aseprite_entities(p, proj_path, &res, err, sizeof(err)) == 0, "skip existing");
         EXPECT(res.unchanged == 0, "listing differed");

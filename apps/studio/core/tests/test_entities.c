@@ -51,7 +51,7 @@ TEST_MAIN() {
     EXPECT(e != NULL, "entity ptr");
     EXPECT(e->state_count == 1, "default 1 state");
     EXPECT(strcmp(e->states[0].name, "Idle") == 0, "Idle name");
-    EXPECT(e->states[0].frames[0].hitbox_w == R01_ENTITY_HITBOX_W, "hitbox w");
+    EXPECT(e->states[0].hitbox_w == R01_ENTITY_HITBOX_W, "hitbox w");
     EXPECT(e->states[0].frame_count == 1, "1 frame");
 
     fr = r01_entity_ensure_frame(e, 0, 1);
@@ -97,17 +97,17 @@ TEST_MAIN() {
     strncpy(e->states[0].name, "Walk", R01_ENTITY_NAME_MAX - 1);
     e->states[0].frames[0].origin_x = 3;
     e->states[0].frames[0].origin_y = 5;
-    e->states[0].frames[0].hitbox_x = 1;
-    e->states[0].frames[0].hitbox_y = 2;
+    e->states[0].hitbox_x = 1;
+    e->states[0].hitbox_y = 2;
     {
         R01EntityFrame *fr1 = r01_entity_ensure_frame(e, 0, 1);
         EXPECT(fr1 != NULL, "second frame");
         fr1->origin_x = 9;
         fr1->origin_y = 8;
-        fr1->hitbox_x = 2;
-        fr1->hitbox_y = 3;
-        fr1->hitbox_w = 10;
-        fr1->hitbox_h = 12;
+        e->states[0].hitbox_x = 2;
+        e->states[0].hitbox_y = 3;
+        e->states[0].hitbox_w = 10;
+        e->states[0].hitbox_h = 12;
     }
 
     idx2 = r01_world_entity_from_sprite(w, cat);
@@ -278,7 +278,7 @@ TEST_MAIN() {
     EXPECT(p2->worlds[0].entities[0].states[0].frames[0].origin_x == 3, "origin x");
     EXPECT(p2->worlds[0].entities[0].states[0].frame_count == 2, "two frames rt");
     EXPECT(p2->worlds[0].entities[0].states[0].frames[1].origin_x == 9, "frame 1 origin x");
-    EXPECT(p2->worlds[0].entities[0].states[0].frames[1].hitbox_w == 10, "frame 1 hitbox w");
+    EXPECT(p2->worlds[0].entities[0].states[0].hitbox_w == 10, "state hitbox w");
     EXPECT(p2->worlds[0].entities[0].states[0].frames[0].parts[0].dx == 4, "part dx");
     EXPECT(r01_is_global_spr_bank(p2->worlds[0].entities[0].states[0].frames[0].parts[0].bank),
            "global SPR bank rt");

@@ -232,28 +232,28 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
             ui->entity_edit.drag_off_y = ly;
             return 1;
         }
-        if (ui->entity_edit.tool == UI_ENTITY_TOOL_GUIDES && fr) {
+        if (ui->entity_edit.tool == UI_ENTITY_TOOL_GUIDES) {
             int corner = 0;
-            if (entity_edit_origin_hit(ui, &lo, fr, lx, ly)) {
+            if (fr && entity_edit_origin_hit(ui, &lo, fr, lx, ly)) {
                 ui->entity_edit.dragging = 2;
                 ui->entity_edit.drag_off_x = cx - fr->origin_x;
                 ui->entity_edit.drag_off_y = cy - fr->origin_y;
                 return 1;
             }
-            if (entity_edit_hitbox_corner_hit(ui, &lo, fr, lx, ly, &corner)) {
+            if (st && entity_edit_hitbox_corner_hit(ui, &lo, st, lx, ly, &corner)) {
                 /* Anchor = opposite corner in world px. */
-                int ax = (corner == 1 || corner == 2) ? fr->hitbox_x : fr->hitbox_x + fr->hitbox_w;
-                int ay = (corner == 2 || corner == 3) ? fr->hitbox_y : fr->hitbox_y + fr->hitbox_h;
+                int ax = (corner == 1 || corner == 2) ? st->hitbox_x : st->hitbox_x + st->hitbox_w;
+                int ay = (corner == 2 || corner == 3) ? st->hitbox_y : st->hitbox_y + st->hitbox_h;
                 ui->entity_edit.dragging = 4;
                 ui->entity_edit.drag_corner = corner;
                 ui->entity_edit.drag_off_x = ax;
                 ui->entity_edit.drag_off_y = ay;
                 return 1;
             }
-            if (entity_edit_hitbox_body_hit(ui, &lo, fr, lx, ly)) {
+            if (st && entity_edit_hitbox_body_hit(ui, &lo, st, lx, ly)) {
                 ui->entity_edit.dragging = 3;
-                ui->entity_edit.drag_off_x = cx - fr->hitbox_x;
-                ui->entity_edit.drag_off_y = cy - fr->hitbox_y;
+                ui->entity_edit.drag_off_x = cx - st->hitbox_x;
+                ui->entity_edit.drag_off_y = cy - st->hitbox_y;
                 return 1;
             }
             return 1;
@@ -292,6 +292,7 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
 void entity_modal_drag(UiState *ui, int lx, int ly, Uint32 buttons) {
     EntityModalLayout lo;
     R01EntityFrame *fr;
+    R01EntityState *st;
     int cx, cy;
     if (!ui || !ui->entity_edit.open) {
         return;
@@ -309,6 +310,7 @@ void entity_modal_drag(UiState *ui, int lx, int ly, Uint32 buttons) {
         return;
     }
     fr = entity_edit_frame(ui);
+    st = entity_edit_state(ui);
     if (ui->entity_edit.dragging == 7) {
         if ((buttons & SDL_BUTTON_LMASK) == 0) {
             return;
@@ -377,21 +379,21 @@ void entity_modal_drag(UiState *ui, int lx, int ly, Uint32 buttons) {
             fr->origin_y = ui_compose_clamp_origin(cy - ui->entity_edit.drag_off_y);
         }
     } else if (ui->entity_edit.dragging == 3 && (buttons & SDL_BUTTON_LMASK)) {
-        if (fr) {
+        if (st) {
             int hx, hy, hw, hh;
             entity_edit_screen_to_world(ui, &lo, lx, ly, &cx, &cy);
             hx = cx - ui->entity_edit.drag_off_x;
             hy = cy - ui->entity_edit.drag_off_y;
-            hw = fr->hitbox_w;
-            hh = fr->hitbox_h;
+            hw = st->hitbox_w;
+            hh = st->hitbox_h;
             ui_compose_clamp_hitbox(&hx, &hy, &hw, &hh);
-            fr->hitbox_x = hx;
-            fr->hitbox_y = hy;
-            fr->hitbox_w = hw;
-            fr->hitbox_h = hh;
+            st->hitbox_x = hx;
+            st->hitbox_y = hy;
+            st->hitbox_w = hw;
+            st->hitbox_h = hh;
         }
     } else if (ui->entity_edit.dragging == 4 && (buttons & SDL_BUTTON_LMASK)) {
-        if (fr) {
+        if (st) {
             int ax = ui->entity_edit.drag_off_x;
             int ay = ui->entity_edit.drag_off_y;
             int x0, y0, x1, y1, hx, hy, hw, hh;
@@ -423,10 +425,10 @@ void entity_modal_drag(UiState *ui, int lx, int ly, Uint32 buttons) {
                 hh = 1;
             }
             ui_compose_clamp_hitbox(&hx, &hy, &hw, &hh);
-            fr->hitbox_x = hx;
-            fr->hitbox_y = hy;
-            fr->hitbox_w = hw;
-            fr->hitbox_h = hh;
+            st->hitbox_x = hx;
+            st->hitbox_y = hy;
+            st->hitbox_w = hw;
+            st->hitbox_h = hh;
         }
     } else if (ui->entity_edit.dragging == 1 && fr && ui->entity_edit.sel_part >= 0 &&
                ui->entity_edit.sel_part < fr->part_count &&

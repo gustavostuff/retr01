@@ -148,13 +148,13 @@ void r01_play_player_hit_rect(const R01World *w, const R01GameCtx *ctx, int orig
                 frame_idx = 0;
             }
             fr = &st->frames[frame_idx];
-            box_x = r01_entity_world_x(origin_x, fr->origin_x, fr->hitbox_x);
-            box_y = r01_entity_world_y(origin_y, fr->origin_y, fr->hitbox_y);
-            if (fr->hitbox_w > 0) {
-                box_w = fr->hitbox_w;
+            box_x = r01_entity_world_x(origin_x, fr->origin_x, st->hitbox_x);
+            box_y = r01_entity_world_y(origin_y, fr->origin_y, st->hitbox_y);
+            if (st->hitbox_w > 0) {
+                box_w = st->hitbox_w;
             }
-            if (fr->hitbox_h > 0) {
-                box_h = fr->hitbox_h;
+            if (st->hitbox_h > 0) {
+                box_h = st->hitbox_h;
             }
         }
     }

@@ -162,10 +162,10 @@ TEST_MAIN() {
         EXPECT(type_id >= 0, "hitbox entity");
         p->worlds[0].entities[type_id].states[0].frames[0].origin_x = 4;
         p->worlds[0].entities[type_id].states[0].frames[0].origin_y = 4;
-        p->worlds[0].entities[type_id].states[0].frames[0].hitbox_x = 0;
-        p->worlds[0].entities[type_id].states[0].frames[0].hitbox_y = 0;
-        p->worlds[0].entities[type_id].states[0].frames[0].hitbox_w = 8;
-        p->worlds[0].entities[type_id].states[0].frames[0].hitbox_h = 8;
+        p->worlds[0].entities[type_id].states[0].hitbox_x = 0;
+        p->worlds[0].entities[type_id].states[0].hitbox_y = 0;
+        p->worlds[0].entities[type_id].states[0].hitbox_w = 8;
+        p->worlds[0].entities[type_id].states[0].hitbox_h = 8;
         r01_world_set_player_entity(&p->worlds[0], type_id);
         pl.ctx.player_x = R01_PLAY_SPAWN_CENTER_X(0);
         pl.ctx.player_y = R01_PLAY_SPAWN_CENTER_Y(0);

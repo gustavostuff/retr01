@@ -9,8 +9,8 @@ Hardware alone thinks in sprites. Authors should think in **entities**.
 An entity is a being, object, or graphic in the game. It is composed of:
 
 - Up to **4 states** (idle, running, and so on).
-- Each state: up to **4 frames**.
-- Each frame: up to **6 sprites** (8x8), with positions relative to each other, a frame delay, a draw origin, a hitbox, flips, and so on.
+- Each state: up to **4 frames**, plus one hitbox (compose-space AABB) shared by those frames.
+- Each frame: up to **6 sprites** (8x8), with positions relative to each other, a frame delay, a draw origin, flips, and so on.
 
 That range covers very simple games (**1** state, **1** frame, **1** sprite) and richer ones. Complex bosses can be several entities working together in software (for example left leg, head, right leg, eyes).
 
@@ -62,7 +62,7 @@ State (at EntityDef + state_off[s])
 Frame (at State + frame_off[f])
 +0   u8  delay                (display duration in frames, min 1)
 +1   u8  sprite_count         (1..6)
-+2   u8  hitbox_x             // draw-origin relative
++2   u8  hitbox_x             // state AABB minus this frame's draw origin
 +3   u8  hitbox_y
 +4   u8  hitbox_w
 +5   u8  hitbox_h
@@ -76,7 +76,7 @@ Frame (at State + frame_off[f])
 2. `soff = u16(base + 4 + 2*S)`. If `soff == 0` or `S >= state_count`, invalid.
 3. `state = base + soff`.
 4. `foff = u16(state + 2 + 2*F)`. If `foff == 0` or `F >= frame_count`, invalid.
-5. `frame = state + foff`. Read `delay`, `sprite_count`, hitbox, then `sprites[0..sprite_count)`.
+5. `frame = state + foff`. Read `delay`, `sprite_count`, origin-relative hitbox, then `sprites[0..sprite_count)`.
 6. For each sprite, resolve CHR from the **current world's** SPR bank (attr bits 0-1) + tile.
 
 | Piece | Max bytes |
@@ -92,9 +92,9 @@ Frame (at State + frame_off[f])
 
 Phase 1 Studio carts also embed a compact **instance table** in PRG (see `memory.md`). That table feeds Host Play / emu until authors switch to full `spawn_entity` tables.
 
-**Catalog on cart:** at world `OFF_TYPES`, a **`u16` directory** (`type_count` entries, offset from catalog base, little-endian) then concatenated **EntityDef** blobs (this locked pack). `OFF_INSTS` points past the catalog (PA start when present). Studio packs each frame's hitbox and sprite `rel_*` in **that frame's draw-origin** space (authoring origin baked in at export).
+**Catalog on cart:** at world `OFF_TYPES`, a **`u16` directory** (`type_count` entries, offset from catalog base, little-endian) then concatenated **EntityDef** blobs (this locked pack). `OFF_INSTS` points past the catalog (PA start when present). Studio authors **hitbox on the state** and **draw origin on the frame**. Export writes each frame's hitbox and sprite `rel_*` in **that frame's draw-origin** space (authoring origin baked in). Packed frame hitbox is `state.hitbox - frame.origin` (clamped unsigned).
 
-Optional **`PA`** (player anim) hangs off the world blob after the catalog. Host Play reads it for the marked player. Each drawable frame stores authoring-space origin, hitbox, then parts (`tile`, `attr`, `dx`, `dy`). Collision and pose use the **current frame**, not the state.
+Optional **`PA`** (player anim) hangs off the world blob after the catalog. Host Play reads it for the marked player. Each drawable frame stores authoring-space origin, the **state** hitbox (compose space), then parts (`tile`, `attr`, `dx`, `dy`). Pose uses the current frame origin. Collision uses the current state's hitbox origin-relative to that frame.
 
 ### Camera helpers (locked intent)
 
@@ -121,7 +121,7 @@ int  rotate_entity(EntityId id, u8 turns_cw);         /* 90deg units only, 0..3 
 int  flip_entity(EntityId id, u8 h, u8 v);            /* whole entity as one graphic */
 
 int  set_entity_draw_origin(EntityId id, i16 ox, i16 oy);
-int  set_entity_hitbox(EntityId id, u8 state, u8 frame, u8 x, u8 y, u8 w, u8 h);
+int  set_entity_hitbox(EntityId id, u8 state, u8 x, u8 y, u8 w, u8 h);
 
 int  do_entities_collide(EntityId a, EntityId b);     /* 1 = overlap, 0 = no, <0 = err */
 ```
@@ -136,8 +136,8 @@ Behavior:
 | `set_entity_state` / `set_entity_frame` | Resolves pack offsets (see above) and rebuilds OAM for that frame. Fails if OAM short |
 | `advance_entity_anim` | Uses current `Frame.delay` as the tick period |
 | `rotate_entity` / `flip_entity` | Transforms the whole metasprite (90deg steps / mirror) |
-| `set_entity_hitbox` | Overrides or sets the AABB on that state's frame (compose space in authoring, draw-origin relative on cart) |
-| `do_entities_collide` | AABB test using each entity's **current frame** hitbox |
+| `set_entity_hitbox` | Overrides or sets the AABB on that state (compose space in authoring, packed origin-relative per frame on cart) |
+| `do_entities_collide` | AABB test using each entity's **current state** hitbox (origin-relative via the current frame) |
 
 ### Runtime sprite / entity pressure (locked)
 
@@ -170,7 +170,7 @@ There is **no** separate “max entities on screen” hard cap. On-screen count 
 | --- | --- |
 | Movement | Axis-separated (resolve X then Y, or the reverse, consistently) |
 | Solids | BG tiles with attr **bit 6** set |
-| Colliders | Entity AABB hitboxes (per frame). Vs BG solids: every overlapping 8x8 tile is tested (not corners only) |
+| Colliders | Entity AABB hitboxes (per state). Vs BG solids: every overlapping 8x8 tile is tested (not corners only) |
 | Gravity / jump | Simple constant gravity + jump impulse (PRG tunes numbers) |
 | Slopes | **No** |
 | Moving platforms | **No** |

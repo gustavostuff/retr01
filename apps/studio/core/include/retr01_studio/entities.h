@@ -60,12 +60,13 @@ int r01_entity_frame_remove_part(R01EntityFrame *fr, int part_idx);
 /* Move part to end of frame (top of draw/hit z-order). Returns new index or -1. */
 int r01_entity_frame_bring_part_front(R01EntityFrame *fr, int part_idx);
 /*
- * Recompute one frame's origin from its parts. Empty: origin/hitbox at 0,0 with
- * default size. Else origin = AABB center; authored hitbox x/y/w/h are kept
- * and only clamped into the compose grid.
+ * Recompute one frame's origin from its parts. Empty: origin at 0,0.
+ * Else origin = AABB center. Hitbox lives on the state.
  */
 void r01_entity_frame_recompute_guides(R01EntityFrame *fr);
-/* Recompute every frame in the state. */
+/* Clamp the state's compose-space hitbox into the 32x32 grid. */
+void r01_entity_state_clamp_hitbox(R01EntityState *st);
+/* Recompute every frame origin in the state, then clamp the state hitbox. */
 void r01_entity_state_recompute_guides(R01EntityState *st);
 
 /* Simple 1-state / 1-frame / 1-part entity from a sprite catalog entry (for phase C). */
@@ -92,8 +93,9 @@ int r01_entity_state_drawable_frame_index(const R01EntityState *st, int slot);
 
 /*
  * Instance world_x/y is the user-defined frame origin in world pixels.
- * Part / hitbox authoring coords are relative to the 32x32 compose grid;
- * convert with (coord - origin) before adding to world.
+ * Part authoring coords are relative to the 32x32 compose grid;
+ * convert with (coord - origin) before adding to world. Hitbox is the
+ * state's compose AABB, origin-relative via the current frame.
  */
 static inline int r01_entity_world_x(int world_x, int origin_x, int ax) {
     return world_x + ax - origin_x;

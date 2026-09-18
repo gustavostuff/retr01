@@ -22,7 +22,7 @@ Studio **Play** uses this same emu core after export (shared library + standalon
 
 **Studio integration:** Studio **Play** / **Space** always exports, then embeds this render path. Export wait uses a Studio-local spinning boot message. Standalone `./scripts/emu.sh` stays for triage. **Sim is not part of this path.**
 
-**Collision:** Host Play reads **cart MAP attrs** (`R01_ATTR_SOLID`). Player hitbox follows the **current anim frame** from the cart player anim blob when present. PRG collision stub at `$8500` is packed for future 6502 use. Host movement does not call it today.
+**Collision:** Host Play reads **cart MAP attrs** (`R01_ATTR_SOLID`). Player hitbox is the **current anim state's** AABB, origin-relative via the current frame in the cart player anim blob when present. PRG collision stub at `$8500` is packed for future 6502 use. Host movement does not call it today.
 
 **Camera:** Dead zone W x H from world header bytes 30-31 (packed from `r01_camera_set_deadzone` in `custom_logic.c` on export). Centered rectangle on the 128x120 viewport. Shared `../common/r01_play_camera.c`.
 

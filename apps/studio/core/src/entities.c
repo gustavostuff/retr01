@@ -17,8 +17,8 @@ void r01_entity_state_init(R01EntityState *st, const char *name) {
     }
     st->frame_count = 1;
     st->frames[0].delay = 1;
-    st->frames[0].hitbox_w = R01_ENTITY_HITBOX_W;
-    st->frames[0].hitbox_h = R01_ENTITY_HITBOX_H;
+    st->hitbox_w = R01_ENTITY_HITBOX_W;
+    st->hitbox_h = R01_ENTITY_HITBOX_H;
 }
 
 void r01_entity_type_init(R01EntityType *e) {
@@ -533,13 +533,6 @@ R01EntityFrame *r01_entity_ensure_frame(R01EntityType *e, int state_idx, int fra
             const R01EntityFrame *prev = &st->frames[st->frame_count - 1];
             fr->origin_x = prev->origin_x;
             fr->origin_y = prev->origin_y;
-            fr->hitbox_x = prev->hitbox_x;
-            fr->hitbox_y = prev->hitbox_y;
-            fr->hitbox_w = prev->hitbox_w;
-            fr->hitbox_h = prev->hitbox_h;
-        } else {
-            fr->hitbox_w = R01_ENTITY_HITBOX_W;
-            fr->hitbox_h = R01_ENTITY_HITBOX_H;
         }
         st->frame_count++;
     }
@@ -660,7 +653,7 @@ void r01_entity_frame_recompute_guides(R01EntityFrame *fr) {
     int pi;
     int have = 0;
     int min_x = 0, min_y = 0, max_x = 0, max_y = 0;
-    int ox, oy, hx, hy;
+    int ox, oy;
     if (!fr) {
         return;
     }
@@ -694,10 +687,6 @@ void r01_entity_frame_recompute_guides(R01EntityFrame *fr) {
     if (!have) {
         fr->origin_x = 0;
         fr->origin_y = 0;
-        fr->hitbox_x = 0;
-        fr->hitbox_y = 0;
-        fr->hitbox_w = R01_ENTITY_HITBOX_W;
-        fr->hitbox_h = R01_ENTITY_HITBOX_H;
         return;
     }
     ox = (min_x + max_x) / 2;
@@ -716,34 +705,39 @@ void r01_entity_frame_recompute_guides(R01EntityFrame *fr) {
     }
     fr->origin_x = ox;
     fr->origin_y = oy;
-    {
-        int hw = fr->hitbox_w > 0 ? fr->hitbox_w : R01_ENTITY_HITBOX_W;
-        int hh = fr->hitbox_h > 0 ? fr->hitbox_h : R01_ENTITY_HITBOX_H;
-        hx = fr->hitbox_x;
-        hy = fr->hitbox_y;
-        if (hw > R01_ENTITY_COMPOSE_PX) {
-            hw = R01_ENTITY_COMPOSE_PX;
-        }
-        if (hh > R01_ENTITY_COMPOSE_PX) {
-            hh = R01_ENTITY_COMPOSE_PX;
-        }
-        if (hx < 0) {
-            hx = 0;
-        }
-        if (hy < 0) {
-            hy = 0;
-        }
-        if (hx > R01_ENTITY_COMPOSE_PX - hw) {
-            hx = R01_ENTITY_COMPOSE_PX - hw;
-        }
-        if (hy > R01_ENTITY_COMPOSE_PX - hh) {
-            hy = R01_ENTITY_COMPOSE_PX - hh;
-        }
-        fr->hitbox_w = hw;
-        fr->hitbox_h = hh;
-        fr->hitbox_x = hx;
-        fr->hitbox_y = hy;
+}
+
+void r01_entity_state_clamp_hitbox(R01EntityState *st) {
+    int hx, hy, hw, hh;
+    if (!st) {
+        return;
     }
+    hw = st->hitbox_w > 0 ? st->hitbox_w : R01_ENTITY_HITBOX_W;
+    hh = st->hitbox_h > 0 ? st->hitbox_h : R01_ENTITY_HITBOX_H;
+    hx = st->hitbox_x;
+    hy = st->hitbox_y;
+    if (hw > R01_ENTITY_COMPOSE_PX) {
+        hw = R01_ENTITY_COMPOSE_PX;
+    }
+    if (hh > R01_ENTITY_COMPOSE_PX) {
+        hh = R01_ENTITY_COMPOSE_PX;
+    }
+    if (hx < 0) {
+        hx = 0;
+    }
+    if (hy < 0) {
+        hy = 0;
+    }
+    if (hx > R01_ENTITY_COMPOSE_PX - hw) {
+        hx = R01_ENTITY_COMPOSE_PX - hw;
+    }
+    if (hy > R01_ENTITY_COMPOSE_PX - hh) {
+        hy = R01_ENTITY_COMPOSE_PX - hh;
+    }
+    st->hitbox_w = hw;
+    st->hitbox_h = hh;
+    st->hitbox_x = hx;
+    st->hitbox_y = hy;
 }
 
 void r01_entity_state_recompute_guides(R01EntityState *st) {
@@ -754,6 +748,7 @@ void r01_entity_state_recompute_guides(R01EntityState *st) {
     for (fi = 0; fi < st->frame_count; fi++) {
         r01_entity_frame_recompute_guides(&st->frames[fi]);
     }
+    r01_entity_state_clamp_hitbox(st);
 }
 
 int r01_world_entity_from_sprite(R01World *w, int sprite_catalog_idx) {

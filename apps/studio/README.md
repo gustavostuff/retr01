@@ -48,8 +48,8 @@ Fixed **640x360** or **1280x720** logical canvas (**Ctrl+Shift+R** toggles). Pre
 | **World banks** | World CHR grids (**4** BG + **4** SPR, 256 tiles each). Edit tiles from the bank sheet. Soft caps match [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md) |
 | **Global banks** | Cart **global other CHR** (**4** BG + **4** SPR). Other screens and marked player SPR art. Same sheet chrome as World banks ([`general_docs/memory.md`](../../general_docs/memory.md)) |
 | **Palettes** | Global BG / SPR palette rows (bottom of accordion) |
-| **Entities** | Primary object authoring. Types with up to **4** states x **4** frames x **6** sprites. Sidebar **Add** opens the compose modal. **Import** reads `aseprite_entities/` next to the saved `.r01proj` (manual, never on open). Modal: full-width **Name** / **State name**; left column (right-aligned) palette, **State**/**Frame** strips, **Add**/**Remove**, **Highlight**, **Brush**; right column frame id + compose canvas with zoom (**Ctrl+wheel**, 1x-4x) and pan (**wheel** / **Shift+wheel**, middle-drag or right-drag; right-click still opens **Add sprite**). **Select | Edit** tool control: Select moves/reorders parts; Edit paints the topmost sprite under the cursor. **Ctrl+V** pastes clipboard PNG into the **selected** sprite CHR (top-left 8x8, same rules as Edit sprite). **Space** toggles light part outlines. Footer **Save** / **Cancel** on the left; **Play** on the right loops the current state's drawable frames (label becomes **Stop**). **Play** is disabled when that state has fewer than two drawable frames. While playing, compose pins the draw origin at canvas center so sprites move around it, and **State** / **Frame** dots stay drawn the same but ignore clicks (unavailable cursor). **Origin/hitbox** checkbox shows guides for the **current frame** (auto origin from that frame's sprite bounding-box center). Sidebar hover: name + type id. Right-click list: **Edit** / **Mark as player** / **Remove**. Soft caps and **boss** assemblies (optional BG body + multi-entity attachments): [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md). Cart packs locked EntityDef catalog (general_docs/software-api.md) |
-| **Place on screen** | Drag an **Entities** row onto the screen preview (switches to **Sprite layer**) to place that type. Instance `world_x/y` is the **user origin** (compose cross of the drawn frame). Parts/hitbox draw as `(coord - origin)` relative to that frame's origin. Optional instance `fh`/`fv` mirrors parts around the origin (JSON `"fh"`/`"fv"`, cart instance flags bit0/bit1). Sprites **clip to 128x120** when partially off-screen. On Sprite/Both: click/drag instance to move (marching ants). **H/V** mirrors. **Delete** removes |
+| **Entities** | Primary object authoring. Types with up to **4** states x **4** frames x **6** sprites. Sidebar **Add** opens the compose modal. **Import** reads `aseprite_entities/` next to the saved `.r01proj` (manual, never on open). Modal: full-width **Name** / **State name**; left column (right-aligned) palette, **State**/**Frame** strips, **Add**/**Remove**, **Highlight**, **Brush**; right column frame id + compose canvas with zoom (**Ctrl+wheel**, 1x-4x) and pan (**wheel** / **Shift+wheel**, middle-drag or right-drag; right-click still opens **Add sprite**). **Select | Edit** tool control: Select moves/reorders parts; Edit paints the topmost sprite under the cursor. **Ctrl+V** pastes clipboard PNG into the **selected** sprite CHR (top-left 8x8, same rules as Edit sprite). **Space** toggles light part outlines. Footer **Save** / **Cancel** on the left; **Play** on the right loops the current state's drawable frames (label becomes **Stop**). **Play** is disabled when that state has fewer than two drawable frames. While playing, compose pins the draw origin at canvas center so sprites move around it, and **State** / **Frame** dots stay drawn the same but ignore clicks (unavailable cursor). **Origin/hitbox** mode shows the current frame's draw origin and the current state's hitbox (auto origin from that frame's sprite bounding-box center). Sidebar hover: name + type id. Right-click list: **Edit** / **Mark as player** / **Remove**. Soft caps and **boss** assemblies (optional BG body + multi-entity attachments): [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md). Cart packs locked EntityDef catalog (general_docs/software-api.md) |
+| **Place on screen** | Drag an **Entities** row onto the screen preview (switches to **Sprite layer**) to place that type. Instance `world_x/y` is the **user origin** (compose cross of the drawn frame). Parts draw as `(coord - origin)` relative to that frame's origin. Hitbox is the current state's AABB, origin-relative to that frame. Optional instance `fh`/`fv` mirrors parts around the origin (JSON `"fh"`/`"fv"`, cart instance flags bit0/bit1). Sprites **clip to 128x120** when partially off-screen. On Sprite/Both: click/drag instance to move (marching ants). **H/V** mirrors. **Delete** removes |
 
 PNG drop imports into the **active** world. Cart export packs **world 0** only (ignores `default_world`).
 
@@ -73,7 +73,7 @@ Shared emu core with standalone [`emu`](../emu/README.md). Standalone `./scripts
 | **Player** | World **`player_entity`** (Entities context **Mark as player**). A normal entity (**4** states x **4** frames x **6** sprites) that counts toward the **16** types/world catalog. On-screen instances share the **64** OAM sprite budget (not type-capped). **8-dir idle/walk** from cart **player anim blob** (`PA` magic). Host Play returns to **idle** when the stick is released (same as Studio authoring). Opt out of that snap with `r01_play_anim_set_release_to_idle(ctx, state, 0)` to hold a pose. Stub: **SPR bank 0 tile 1** |
 | **Other entities** | **State 0 / frame 0** only in Phase 1 Host Play |
 | **Start** | **First placed instance** of the marked player type. If none / unmarked: center of **`default_screen`**. Fallback grid **(2,0)** or first present |
-| **Collision** | Current anim-frame hitbox vs `R01_ATTR_SOLID` on cart MAP attrs (not PRG collision stub) |
+| **Collision** | Current anim-state hitbox (origin-relative via the current frame) vs `R01_ATTR_SOLID` on cart MAP attrs (not PRG collision stub) |
 | **Warps** | **X** -> screen (0,0). **Y** -> screen (1,0). Test hooks only |
 
 Gameplay SoT for Phase 1: emu Host Play (`apps/emu/src/play.c` + `apps/common/`). Studio does not maintain a parallel `core/src/play.c` preview.
@@ -96,20 +96,20 @@ See generated `output/C/include/r01_*.h` for the full engine API (camera, player
 
 ---
 
-## Save / load (JSON v7)
+## Save / load (JSON v14)
 
 **Ctrl+S** / **Ctrl+O** save/reload the current project path (no default fixture). Quit does **not** auto-save.
 
 | Field | Behavior |
 |-------|----------|
-| `version` | **7** (`R01_JSON_VER`) |
+| `version` | **14** (`R01_JSON_VER`) |
 | Palettes | Project-wide: all **8 BG + 8 SPR** rows |
 | `other_screens` | Global title + interstitial + credits pages (480 B each. Cart may RLE) |
 | World data | **Active world only** on save: grid, screens, `bg_bank0`, `spr_banks`, sprite catalog, `entities`, `player_entity`, `instances`, `default_screen`, `default_pal_row` |
 | Load | Always applies saved world data to **world 0**. Restores `default_world` / `active_world` indices. Initializes empty `other_screens` if missing. Legacy `credits` string ignored |
 | Worlds 1-7 | Session-only until multi-world JSON lands (world **0** on disk) |
 | `aseprite_entities_files` | Snapshot of relative `.ase` paths from the last **Import**. Missing field loads as empty |
-| v6 / older projects | Load OK with missing fields empty. Re-save as v7. No cart-image migration: re-export |
+| v6 / older projects | Load OK with missing fields empty. Re-save as v14. No cart-image migration: re-export |
 
 ---
 
@@ -144,12 +144,12 @@ Manual only. Entities accordion **Import** (never on project open). Studio resol
 | Rule | Value |
 |------|--------|
 | Layout | One subfolder per entity. Each `.ase` / `.aseprite` file is one state (`idle`/`stand` -> 0, `run`/`walk` -> 1, `hurt` -> 2, `crouch`/`jump` -> 3, leftovers fill remaining slots) |
-| Skip | Names already in the active world catalog. Unchanged `aseprite_entities_files` listing imports nothing |
+| Skip | Names already in the active world catalog. Unchanged `aseprite_entities_files` listing imports nothing when those names are still in the catalog. A missing catalog name is imported again |
 | Toast | First successful pass: `N entities generated from aseprite_entities/ folder` |
 | Mapping | Exact kit RGB onto SPR pal **0** of the world's `default_pal_row`. SPR rows are not rewritten |
 | Quad | Each 8x8: up to **3** opaque colors (pal 0 indices **1-3**), with optional transparency (index **0**). A fourth opaque color, a non-kit RGB, or a kit color missing from pal 0 fails |
 | Canvas | Per frame. Multiple of 8 px, max **32x32**. States may differ (16x24 idle and 16x16 crouch is fine). Max **6** sprites per frame, **4** states, **4** frames. Blank quads are skipped |
-| Compose | Each frame's sprite group is placed in the middle of the **32x32** authoring canvas. Draw origin and the default **8x8** hitbox sit on that group's bounding-box center. Play pose and collision stay origin-relative |
+| Compose | Each frame's sprite group is placed in the middle of the **32x32** authoring canvas. Draw origin sits on that group's bounding-box center. The default **8x8** hitbox is centered on the first drawable frame's group and stored on the **state**. Play pose and collision stay origin-relative |
 | Frame delay | Aseprite frame duration (ms) converted to display frames (`ms * 60 / 1000`, min **1**) |
 | CLI | `$ASEPRITE` if set and executable, else `aseprite` on PATH. Failed folders are omitted from the listing snapshot so a later **Import** retries them |
 | Helper | `./scripts/export-entity-ase.sh path/to/player [out_dir]` (same CLI flags, for inspection) |

@@ -14,7 +14,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 **Partly sized:** Live instance records in system RAM and optional `PA` blobs still need a frozen byte layout. Spawn locations are **PRG-side** (not cart).
 
-**Entity cart pack (decision):** Studio writes the locked offset-table **EntityDef** from `software-api.md` (variable length, max **532 B**). Draw origin and hitbox live on each **frame**. World catalog = `u16` type directory + defs. The old fixed **20 B** snapshot is retired.
+**Entity cart pack (decision):** Studio writes the locked offset-table **EntityDef** from `software-api.md` (variable length, max **532 B**). Draw origin lives on each **frame**. Hitbox lives on each **state** (packed origin-relative on each EntityDef frame). World catalog = `u16` type directory + defs. The old fixed **20 B** snapshot is retired.
 
 **Touches:** `memory.md`, `software-api.md`
 
@@ -112,7 +112,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-13 | Branding | One product: Retr01. |
 | 2026-09-14 | Flasher | Console + Adafruit's UPDI Friend. Shared header. 4-pos DIP: M/S1/S2/cart, default all OFF. Scope: AVRs + cart only. |
 | 2026-09-14 | Entity caps | 16 types per world (catalog in world blob). Dropped global 128 + `chr_world`. format_ver 3. |
-| 2026-09-17 | Entity pack | Max sprites/frame **6**; maxed def **532 B**. Draw origin and hitbox are per **frame**. See `software-api.md`. |
+| 2026-09-17 | Entity pack | Max sprites/frame **6**; maxed def **532 B**. Draw origin is per **frame**. Hitbox is per **state**. See `software-api.md`. |
 | 2026-09-14 | Anim tiles | base..base+3 wrap in bank, default delay 6. |
 | 2026-09-14 | Video timing | Sprites VBlank pass. BG0 HBlank ping-pong only. |
 | 2026-09-14 | PCB layers | Initial: motherboard, cart, and pads all 2-layer. 4-layer mobo only later if bring-up / commercial SMD needs it. |
@@ -128,4 +128,4 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-16 | Player item bank | *(superseded 2026-09-17)* Had planned a global 256-tile player-only bank. |
 | 2026-09-17 | Player patterns | No private player bank. Marked player + inventory art use **global other SPR** (one of 4 banks). See `memory.md`, `software-api.md`. |
 | 2026-09-17 | Host Play boot catchup | Phase 1 emu waits for a full start MAP stream (480 B) before Host Play takes the camera 2x2 from cart. See `apps/emu/README.md`. |
-| 2026-09-17 | Entity origin/hitbox | Per **frame** (Studio compose, JSON, EntityDef hitbox, PA origin+hitbox). Maxed def **532 B**. See `software-api.md`. |
+| 2026-09-17 | Entity origin/hitbox | Origin per **frame**. Hitbox per **state** (Studio compose, JSON). EntityDef still stores origin-relative hitbox on each packed frame. PA copies the state hitbox onto each drawable frame. Maxed def **532 B**. See `software-api.md`. |

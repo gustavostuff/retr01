@@ -320,10 +320,10 @@ static int append_player_anim_blob(Buf *blob, const R01World *w, int player_type
             pc = (uint8_t)(fr->part_count > R01_CART_ENTITY_PARTS_MAX ? R01_CART_ENTITY_PARTS_MAX : fr->part_count);
             fh[0] = (uint8_t)fr->origin_x;
             fh[1] = (uint8_t)fr->origin_y;
-            fh[2] = (uint8_t)fr->hitbox_x;
-            fh[3] = (uint8_t)fr->hitbox_y;
-            fh[4] = (uint8_t)(fr->hitbox_w > 0 ? fr->hitbox_w : R01_PLAY_PLAYER_W);
-            fh[5] = (uint8_t)(fr->hitbox_h > 0 ? fr->hitbox_h : R01_PLAY_PLAYER_H);
+            fh[2] = (uint8_t)st->hitbox_x;
+            fh[3] = (uint8_t)st->hitbox_y;
+            fh[4] = (uint8_t)(st->hitbox_w > 0 ? st->hitbox_w : R01_PLAY_PLAYER_W);
+            fh[5] = (uint8_t)(st->hitbox_h > 0 ? st->hitbox_h : R01_PLAY_PLAYER_H);
             fh[6] = pc;
             if (buf_append(blob, fh, sizeof(fh)) != 0) {
                 return -1;
@@ -436,7 +436,7 @@ static size_t pack_entity_def(uint8_t *out, size_t cap, const R01EntityType *ent
                 fh[0] = (uint8_t)delay;
             }
             fh[1] = (uint8_t)pc;
-            pack_hitbox_rel(ox, oy, fr->hitbox_x, fr->hitbox_y, fr->hitbox_w, fr->hitbox_h, &fh[2], &fh[3],
+            pack_hitbox_rel(ox, oy, st->hitbox_x, st->hitbox_y, st->hitbox_w, st->hitbox_h, &fh[2], &fh[3],
                             &fh[4], &fh[5]);
             for (pi = 0; pi < pc; pi++) {
                 const R01EntityPart *pt = &fr->parts[pi];
@@ -894,9 +894,10 @@ static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w, c
         put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_H, (uint8_t)R01_PLAY_PLAYER_H);
         if (pe >= 0 && pe < type_n && w->entities[pe].state_count > 0 &&
             w->entities[pe].states[0].frame_count > 0) {
-            const R01EntityFrame *fr = &w->entities[pe].states[0].frames[0];
+            const R01EntityState *st = &w->entities[pe].states[0];
+            const R01EntityFrame *fr = &st->frames[0];
             uint8_t hx, hy, hw, hh;
-            pack_hitbox_rel(fr->origin_x, fr->origin_y, fr->hitbox_x, fr->hitbox_y, fr->hitbox_w, fr->hitbox_h,
+            pack_hitbox_rel(fr->origin_x, fr->origin_y, st->hitbox_x, st->hitbox_y, st->hitbox_w, st->hitbox_h,
                             &hx, &hy, &hw, &hh);
             put_u8(hdr + R01_CART_WHDR_PLAYER_ENTITY, (uint8_t)pe);
             put_u8(hdr + R01_CART_WHDR_PLAYER_HIT_X, hx);
