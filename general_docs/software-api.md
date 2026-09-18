@@ -197,7 +197,7 @@ r01_platformer_set_meter(ctx, R01_PLAT_METER_DEFAULT);     /* 16 px per meter, c
 | Down | Crouch if the player has a `crouch`/`crouching` state (or `r01_player_anim_set_crouch_state`). Grounded only. No walk while crouched |
 | Up | Unused in v1 |
 
-Vertical motion is `vel_y` plus gravity, capped at **4** px/frame down at meter 16. Y is applied 1 px at a time so a jump cannot skip through an 8x8 solid. Landing (Y+1 blocked) zeros `vel_y` and sets grounded. A ceiling hit zeros `vel_y`. Anim uses horizontal delta only.
+Vertical motion is `vel_y` plus gravity, capped at **4** px/frame down at meter 16. Y is applied 1 px at a time so a jump cannot skip through an 8x8 solid. Landing (Y+1 blocked) zeros `vel_y` and sets grounded. A ceiling hit zeros `vel_y`. Walk anim uses horizontal delta only. Down selects crouch while grounded.
 
 Packing: world header flags byte **7** bit **4** = platformer. Gravity, jump, and meter are u8 at PRG `$80F7` / `$80F8` / `$80F9`. **0** (and `R01_PLAT_*_DEFAULT` in `custom_logic.c`) means Host Play uses `apps/common/r01_play_physics.h`. Crouch state index is `$80FA` (**$FF** = none). A numeric argument is packed as-is. See `memory.md`.
 

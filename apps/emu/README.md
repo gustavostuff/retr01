@@ -46,7 +46,7 @@ cmake --build build
 ./build/retr01_emu path/to/cart.retr01
 ```
 
-**Controls:** WASD or arrows = move. Face **Y** (P1 **H**, P2 **.**) = jump in platformer. Space = pause. R = reset. **Ctrl+1** / **Ctrl+2** = present scale. Esc = quit.
+**Controls:** WASD or arrows = move. Face **Y** (P1 **H**, P2 **.**) = jump in platformer. Down = crouch in platformer (grounded, no walk). Space = pause. R = reset. **Ctrl+1** / **Ctrl+2** = present scale. Esc = quit.
 
 **Env:** `R01E_SOFTBOOT=1` forces host memcpy VRAM/pals at boot (debug). Default runs cart PRG MAP/pal stream catchup to a full start-screen payload.
 

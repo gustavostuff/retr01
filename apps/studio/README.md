@@ -51,7 +51,7 @@ Logical canvas **640x360** or **1280x720** (**Ctrl+Shift+R**). Window scale **Ct
 
 ## Play
 
-**Space** / Play always exports, shows a boot wait, then embeds emu. Cart boots world 0. Spawn is the first instance of the marked player type, else the default screen center. Gameplay SoT is emu Host Play, not `core/src/play.c`. Default is top-down. `r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER)` in `custom_logic.c` enables gravity and face-Y jump (hold for full height). `r01_platformer_set_meter` sets pixels per meter (default 16).
+**Space** / Play always exports, shows a boot wait, then embeds emu. Cart boots world 0. Spawn is the first instance of the marked player type, else the default screen center. Gameplay SoT is emu Host Play, not `core/src/play.c`. Default is top-down. `r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER)` in `custom_logic.c` enables gravity, face-Y jump (hold for full height), and Down crouch when a `crouch`/`crouching` state exists. `r01_platformer_set_meter` sets pixels per meter (default 16).
 
 `custom_logic.c` is created on first export and never overwritten:
 
