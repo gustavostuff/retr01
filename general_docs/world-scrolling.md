@@ -20,7 +20,7 @@ Worlds may also have **BG0 screens** for depth: **0..8** present screens per wor
 Each world has:
 
 - 4 independent BG banks.
-- 4 sprite banks.
+- 4 independent Sprite banks.
 
 Each bank is 256 patterns of 8x8 at 2bpp.
 
