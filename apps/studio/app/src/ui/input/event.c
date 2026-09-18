@@ -23,6 +23,28 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Catalog drops belong on the BG1 playfield Sprite layer (README Place on screen). */
+static void catalog_drop_arm_spr_preview(UiState *ui) {
+    R01World *w;
+    if (!ui) {
+        return;
+    }
+    w = r01_project_active_world(ui->project);
+    if (ui->worlds_plane == UI_WORLDS_PLANE_BG0) {
+        R01Screen *bg0 = r01_project_active_bg0_screen(ui->project);
+        ui->worlds_plane = UI_WORLDS_PLANE_BG1;
+        if (w && bg0) {
+            int idx = r01_world_find_screen(w, bg0->col, bg0->row);
+            if (idx >= 0) {
+                ui->project->active_screen = idx;
+            }
+        }
+    }
+    ui->hide_spr_layer = 0;
+    ui->screen_layer = UI_SCREEN_LAYER_SPR;
+    screen_sel_clear(ui);
+}
+
 int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
     if (!ui) {
         return 0;
@@ -1063,6 +1085,9 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     ui->sel_instance = -1;
                     ui->inst_drag = 0;
                     screen_sel_clear(ui);
+                } else if (ui->screen_layer == UI_SCREEN_LAYER_BG) {
+                    /* BG0 forces BG work; restore Both so entity drops work on BG1. */
+                    ui->screen_layer = UI_SCREEN_LAYER_BOTH;
                 }
                 return 1;
             }
@@ -1150,12 +1175,21 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         }
         if (ui->catalog_drag.active) {
             int px, py;
-            R01World *w = r01_project_active_world(ui->project);
-            R01Screen *s = r01_project_active_screen(ui->project);
-            if (w && s && !ui->play.active && ui_work_allows_spr(ui) && screen_pixel_hit(ui, lx, ly, &px, &py)) {
-                int wx = s->col * R01_SCREEN_PX_W + px;
-                int wy = s->row * R01_SCREEN_PX_H + py;
+            if (!ui->play.active && screen_pixel_hit(ui, lx, ly, &px, &py)) {
+                R01World *w;
+                R01Screen *s;
+                int wx, wy;
                 int idx = -1;
+                catalog_drop_arm_spr_preview(ui);
+                w = r01_project_active_world(ui->project);
+                s = r01_project_active_screen(ui->project);
+                if (!w || !s) {
+                    ui_toast(ui, "no screen", 1);
+                    ui->catalog_drag.active = 0;
+                    return 1;
+                }
+                wx = s->col * R01_SCREEN_PX_W + px;
+                wy = s->row * R01_SCREEN_PX_H + py;
                 if (ui->catalog_drag.active == UI_CATALOG_DRAG_SPRITE) {
                     idx = r01_world_place_sprite(w, ui->catalog_drag.index, wx, wy);
                     if (idx >= 0) {
@@ -1181,11 +1215,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 if (idx >= 0) {
                     ui_undo_push_instance_add(ui, idx);
                     ui->sel_instance = idx;
-                    ui->screen_layer = UI_SCREEN_LAYER_SPR;
-                    screen_sel_clear(ui);
                 }
-            } else if (ui->catalog_drag.active && ui->hide_spr_layer) {
-                ui_toast(ui, "sprite layer hidden", 1);
             }
             ui->catalog_drag.active = 0;
             return 1;

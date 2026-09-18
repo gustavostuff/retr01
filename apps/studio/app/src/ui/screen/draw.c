@@ -759,17 +759,32 @@ void draw_catalog_drag_ghost(UiState *ui, SDL_Renderer *r) {
         }
     } else if (ui->catalog_drag.active == UI_CATALOG_DRAG_ENTITY) {
         const R01EntityType *ent;
+        const R01EntityFrame *fr = NULL;
+        int si, fi, pi;
+        int gx, gy;
         if (ui->catalog_drag.index < 0 || ui->catalog_drag.index >= w->entity_count) {
             return;
         }
         ent = &w->entities[ui->catalog_drag.index];
-        if (ent->state_count < 1 || ent->states[0].frame_count < 1 ||
-            ent->states[0].frames[0].part_count < 1) {
+        for (si = 0; si < ent->state_count && !fr; si++) {
+            const R01EntityState *st = &ent->states[si];
+            for (fi = 0; fi < st->frame_count; fi++) {
+                if (st->frames[fi].part_count > 0) {
+                    fr = &st->frames[fi];
+                    break;
+                }
+            }
+        }
+        if (!fr) {
             return;
         }
-        pt = ent->states[0].frames[0].parts[0];
-        draw_spr_tile_px(ui, r, w, &pt, ui->mouse_x - ui->catalog_drag.off_x, ui->mouse_y - ui->catalog_drag.off_y,
-                         0, 0, 1, 0);
+        gx = ui->mouse_x - ui->catalog_drag.off_x;
+        gy = ui->mouse_y - ui->catalog_drag.off_y;
+        for (pi = 0; pi < fr->part_count; pi++) {
+            const R01EntityPart *part = &fr->parts[pi];
+            draw_spr_tile_px(ui, r, w, part, gx + part->dx - fr->origin_x, gy + part->dy - fr->origin_y, 0, 0, 1,
+                             0);
+        }
     } else {
         return;
     }
