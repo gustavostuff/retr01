@@ -436,8 +436,13 @@ static size_t pack_entity_def(uint8_t *out, size_t cap, const R01EntityType *ent
                 fh[0] = (uint8_t)delay;
             }
             fh[1] = (uint8_t)pc;
-            pack_hitbox_rel(ox, oy, st->hitbox_x, st->hitbox_y, st->hitbox_w, st->hitbox_h, &fh[2], &fh[3],
-                            &fh[4], &fh[5]);
+            {
+                const R01EntityFrame *href = r01_entity_state_hitbox_origin_frame(st);
+                int hox = href ? href->origin_x : ox;
+                int hoy = href ? href->origin_y : oy;
+                pack_hitbox_rel(hox, hoy, st->hitbox_x, st->hitbox_y, st->hitbox_w, st->hitbox_h, &fh[2],
+                                &fh[3], &fh[4], &fh[5]);
+            }
             for (pi = 0; pi < pc; pi++) {
                 const R01EntityPart *pt = &fr->parts[pi];
                 uint8_t *sp = fh + 6 + pi * 4;
@@ -895,8 +900,11 @@ static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w, c
         if (pe >= 0 && pe < type_n && w->entities[pe].state_count > 0 &&
             w->entities[pe].states[0].frame_count > 0) {
             const R01EntityState *st = &w->entities[pe].states[0];
-            const R01EntityFrame *fr = &st->frames[0];
+            const R01EntityFrame *fr = r01_entity_state_hitbox_origin_frame(st);
             uint8_t hx, hy, hw, hh;
+            if (!fr) {
+                fr = &st->frames[0];
+            }
             pack_hitbox_rel(fr->origin_x, fr->origin_y, st->hitbox_x, st->hitbox_y, st->hitbox_w, st->hitbox_h,
                             &hx, &hy, &hw, &hh);
             put_u8(hdr + R01_CART_WHDR_PLAYER_ENTITY, (uint8_t)pe);

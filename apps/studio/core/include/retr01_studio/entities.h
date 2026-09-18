@@ -95,8 +95,21 @@ int r01_entity_state_drawable_frame_index(const R01EntityState *st, int slot);
  * Instance world_x/y is the user-defined frame origin in world pixels.
  * Part authoring coords are relative to the 32x32 compose grid;
  * convert with (coord - origin) before adding to world. Hitbox is the
- * state's compose AABB, origin-relative via the current frame.
+ * state's compose AABB, origin-relative via the state's first drawable frame.
  */
+static inline const R01EntityFrame *r01_entity_state_hitbox_origin_frame(const R01EntityState *st) {
+    int fi;
+    if (!st || st->frame_count < 1) {
+        return NULL;
+    }
+    for (fi = 0; fi < st->frame_count; fi++) {
+        if (st->frames[fi].part_count > 0) {
+            return &st->frames[fi];
+        }
+    }
+    return &st->frames[0];
+}
+
 static inline int r01_entity_world_x(int world_x, int origin_x, int ax) {
     return world_x + ax - origin_x;
 }

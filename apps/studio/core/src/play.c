@@ -125,7 +125,6 @@ void r01_play_player_hit_rect(const R01World *w, const R01GameCtx *ctx, int orig
                               int *hy, int *hw, int *hh) {
     int pe;
     int state_idx = 0;
-    int frame_idx = 0;
     int box_w = R01_PLAY_PLAYER_W;
     int box_h = R01_PLAY_PLAYER_H;
     int box_x = origin_x;
@@ -133,7 +132,6 @@ void r01_play_player_hit_rect(const R01World *w, const R01GameCtx *ctx, int orig
     pe = r01_world_player_entity(w);
     if (ctx) {
         state_idx = r01_player_anim_entity_state(ctx);
-        frame_idx = r01_player_anim_frame(ctx);
     }
     if (pe >= 0 && w->entities[pe].state_count > 0) {
         const R01EntityState *st;
@@ -142,12 +140,8 @@ void r01_play_player_hit_rect(const R01World *w, const R01GameCtx *ctx, int orig
             state_idx = 0;
         }
         st = &w->entities[pe].states[state_idx];
-        if (st->frame_count > 0) {
-            frame_idx = r01_entity_state_drawable_frame_index(st, frame_idx);
-            if (frame_idx < 0 || frame_idx >= st->frame_count) {
-                frame_idx = 0;
-            }
-            fr = &st->frames[frame_idx];
+        fr = r01_entity_state_hitbox_origin_frame(st);
+        if (fr) {
             box_x = r01_entity_world_x(origin_x, fr->origin_x, st->hitbox_x);
             box_y = r01_entity_world_y(origin_y, fr->origin_y, st->hitbox_y);
             if (st->hitbox_w > 0) {

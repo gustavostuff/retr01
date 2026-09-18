@@ -34,8 +34,8 @@ static int cart_is_phase1_play(const R01eCart *c) {
     return prg[0x00F0] == 'R' && prg[0x00F1] == '0' && prg[0x00F2] == '1' && prg[0x00F3] == 'P';
 }
 
-static void player_hit_rect(R01eMachine *m, int origin_x, int origin_y, int state_idx, int frame_idx, int *hx,
-                            int *hy, int *hw, int *hh) {
+static void player_hit_rect(R01eMachine *m, int origin_x, int origin_y, int state_idx, int *hx, int *hy, int *hw,
+                            int *hh) {
     R01eWorldView wv;
     int box_x = origin_x;
     int box_y = origin_y;
@@ -48,26 +48,21 @@ static void player_hit_rect(R01eMachine *m, int origin_x, int origin_y, int stat
             const uint8_t *blob =
                 r01e_cart_ptr(&m->cart, wv.base + wv.off_player_anim, wv.len > wv.off_player_anim ? wv.len - wv.off_player_anim : 0);
             R01CartPlayerAnim anim;
-            const uint8_t *fh;
+            const uint8_t *fh0;
             if (blob && r01_cart_player_anim_parse(blob, wv.len - wv.off_player_anim, &anim) == 0) {
                 if (state_idx < 0 || state_idx >= anim.state_count) {
                     state_idx = 0;
                 }
-                fh = r01_cart_player_anim_frame_hdr(&anim, state_idx, frame_idx);
-                if (!fh && frame_idx != 0) {
-                    fh = r01_cart_player_anim_frame_hdr(&anim, state_idx, 0);
-                }
-                if (fh) {
-                    int origin_ax = (int)fh[0];
-                    int origin_ay = (int)fh[1];
-                    box_x = origin_x + (int)fh[2] - origin_ax;
-                    box_y = origin_y + (int)fh[3] - origin_ay;
-                    box_w = (int)fh[4];
-                    box_h = (int)fh[5];
+                fh0 = r01_cart_player_anim_frame_hdr(&anim, state_idx, 0);
+                if (fh0) {
+                    box_x = origin_x + (int)fh0[2] - (int)fh0[0];
+                    box_y = origin_y + (int)fh0[3] - (int)fh0[1];
+                    box_w = (int)fh0[4];
+                    box_h = (int)fh0[5];
                 }
             }
         } else {
-            /* Hitbox in WHDR is draw-origin relative (Studio bakes authoring origin). */
+            /* Hitbox in WHDR is first-drawable-frame origin relative. */
             box_x = origin_x + (int)wv.player_hit_x;
             box_y = origin_y + (int)wv.player_hit_y;
             box_w = (int)wv.player_hit_w;
@@ -91,8 +86,7 @@ static void player_hit_rect(R01eMachine *m, int origin_x, int origin_y, int stat
 static int player_move_ok(R01eMachine *m, int ox, int oy) {
     int hx, hy, hw, hh;
     int state_idx = r01_play_anim_entity_state(&m->play.anim);
-    int frame_idx = r01_play_anim_frame(&m->play.anim);
-    player_hit_rect(m, ox, oy, state_idx, frame_idx, &hx, &hy, &hw, &hh);
+    player_hit_rect(m, ox, oy, state_idx, &hx, &hy, &hw, &hh);
     return r01e_cart_aabb_ok(&m->cart, (int)m->io.world, hx, hy, hw, hh);
 }
 

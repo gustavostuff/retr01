@@ -22,7 +22,7 @@ static const int player_inst_y = 195;
 static const int player_hit_x = 12;
 static const int player_hit_y = 12;
 static const int player_hit_w = 8;
-static const int player_hit_h = 8;
+static const int player_hit_h = 15;
 const int player_state_frames[4] = {2, 4, 1, 1};
 
 typedef struct { const char *id; int sc, sr, tc, tr; } R01WarpEntRec;

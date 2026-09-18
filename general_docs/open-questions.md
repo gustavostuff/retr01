@@ -128,4 +128,4 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-16 | Player item bank | *(superseded 2026-09-17)* Had planned a global 256-tile player-only bank. |
 | 2026-09-17 | Player patterns | No private player bank. Marked player + inventory art use **global other SPR** (one of 4 banks). See `memory.md`, `software-api.md`. |
 | 2026-09-17 | Host Play boot catchup | Phase 1 emu waits for a full start MAP stream (480 B) before Host Play takes the camera 2x2 from cart. See `apps/emu/README.md`. |
-| 2026-09-17 | Entity origin/hitbox | Origin per **frame**. Hitbox per **state** (Studio compose, JSON). EntityDef still stores origin-relative hitbox on each packed frame. PA copies the state hitbox onto each drawable frame. Maxed def **532 B**. See `software-api.md`. |
+| 2026-09-17 | Entity origin/hitbox | Origin per **frame**. Hitbox per **state** (Studio compose, JSON). Packed hitbox is origin-relative to the state's **first drawable frame** (stable across the state's anim). PA copies the state hitbox onto each drawable frame. Pose uses the current frame origin. Maxed def **532 B**. See `software-api.md`. |

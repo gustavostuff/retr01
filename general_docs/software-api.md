@@ -62,7 +62,7 @@ State (at EntityDef + state_off[s])
 Frame (at State + frame_off[f])
 +0   u8  delay                (display duration in frames, min 1)
 +1   u8  sprite_count         (1..6)
-+2   u8  hitbox_x             // state AABB minus this frame's draw origin
++2   u8  hitbox_x             // state AABB minus the state's first drawable-frame origin
 +3   u8  hitbox_y
 +4   u8  hitbox_w
 +5   u8  hitbox_h
@@ -76,7 +76,7 @@ Frame (at State + frame_off[f])
 2. `soff = u16(base + 4 + 2*S)`. If `soff == 0` or `S >= state_count`, invalid.
 3. `state = base + soff`.
 4. `foff = u16(state + 2 + 2*F)`. If `foff == 0` or `F >= frame_count`, invalid.
-5. `frame = state + foff`. Read `delay`, `sprite_count`, origin-relative hitbox, then `sprites[0..sprite_count)`.
+5. `frame = state + foff`. Read `delay`, `sprite_count`, state hitbox (packed vs first drawable-frame origin), then `sprites[0..sprite_count)`.
 6. For each sprite, resolve CHR from the **current world's** SPR bank (attr bits 0-1) + tile.
 
 | Piece | Max bytes |
@@ -92,9 +92,9 @@ Frame (at State + frame_off[f])
 
 Phase 1 Studio carts also embed a compact **instance table** in PRG (see `memory.md`). That table feeds Host Play / emu until authors switch to full `spawn_entity` tables.
 
-**Catalog on cart:** at world `OFF_TYPES`, a **`u16` directory** (`type_count` entries, offset from catalog base, little-endian) then concatenated **EntityDef** blobs (this locked pack). `OFF_INSTS` points past the catalog (PA start when present). Studio authors **hitbox on the state** and **draw origin on the frame**. Export writes each frame's hitbox and sprite `rel_*` in **that frame's draw-origin** space (authoring origin baked in). Packed frame hitbox is `state.hitbox - frame.origin` (clamped unsigned).
+**Catalog on cart:** at world `OFF_TYPES`, a **`u16` directory** (`type_count` entries, offset from catalog base, little-endian) then concatenated **EntityDef** blobs (this locked pack). `OFF_INSTS` points past the catalog (PA start when present). Studio authors **hitbox on the state** and **draw origin on the frame**. Export writes sprite `rel_*` in **that frame's draw-origin** space (authoring origin baked in). Packed frame hitbox is `state.hitbox - first_drawable_frame.origin` (same bytes on every frame of the state, clamped unsigned). Moving a later frame's draw origin does not change collision.
 
-Optional **`PA`** (player anim) hangs off the world blob after the catalog. Host Play reads it for the marked player. Each drawable frame stores authoring-space origin, the **state** hitbox (compose space), then parts (`tile`, `attr`, `dx`, `dy`). Pose uses the current frame origin. Collision uses the current state's hitbox origin-relative to that frame.
+Optional **`PA`** (player anim) hangs off the world blob after the catalog. Host Play reads it for the marked player. Each drawable frame stores authoring-space origin, the **state** hitbox (compose space), then parts (`tile`, `attr`, `dx`, `dy`). Pose uses the current frame origin. Collision uses the current state's hitbox origin-relative to that state's **first drawable frame**, not the current anim frame.
 
 ### Camera helpers (locked intent)
 
@@ -136,8 +136,8 @@ Behavior:
 | `set_entity_state` / `set_entity_frame` | Resolves pack offsets (see above) and rebuilds OAM for that frame. Fails if OAM short |
 | `advance_entity_anim` | Uses current `Frame.delay` as the tick period |
 | `rotate_entity` / `flip_entity` | Transforms the whole metasprite (90deg steps / mirror) |
-| `set_entity_hitbox` | Overrides or sets the AABB on that state (compose space in authoring, packed origin-relative per frame on cart) |
-| `do_entities_collide` | AABB test using each entity's **current state** hitbox (origin-relative via the current frame) |
+| `set_entity_hitbox` | Overrides or sets the AABB on that state (compose space in authoring, packed origin-relative to the state's first drawable frame) |
+| `do_entities_collide` | AABB test using each entity's **current state** hitbox (origin-relative via that state's first drawable frame) |
 
 ### Runtime sprite / entity pressure (locked)
 

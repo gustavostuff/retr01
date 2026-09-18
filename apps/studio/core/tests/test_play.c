@@ -172,6 +172,22 @@ TEST_MAIN() {
         r01_play_player_hit_rect(&p->worlds[0], &pl.ctx, pl.ctx.player_x, pl.ctx.player_y, &hx, &hy, &hw, &hh);
         EXPECT(hx == pl.ctx.player_x - 4 && hy == pl.ctx.player_y - 4, "hitbox offset from origin");
         EXPECT(hw == 8 && hh == 8, "hitbox size");
+        {
+            R01EntityType *ent = &p->worlds[0].entities[type_id];
+            R01EntityFrame *fr1;
+            ent->states[0].frames[0].part_count = 1;
+            fr1 = r01_entity_ensure_frame(ent, 0, 1);
+            EXPECT(fr1 != NULL, "walk frame");
+            fr1->part_count = 1;
+            fr1->origin_x = 20;
+            fr1->origin_y = 20;
+            pl.ctx.player_anim_frame = 1;
+            r01_play_player_hit_rect(&p->worlds[0], &pl.ctx, pl.ctx.player_x, pl.ctx.player_y, &hx, &hy, &hw,
+                                     &hh);
+            EXPECT(hx == pl.ctx.player_x - 4 && hy == pl.ctx.player_y - 4,
+                   "later frame origin does not move hitbox");
+            pl.ctx.player_anim_frame = 0;
+        }
         scr = &p->worlds[0].screens[r01_world_find_screen(&p->worlds[0], 0, 0)];
         cell = ((hy % R01_SCREEN_PX_H) / 8) * R01_SCREEN_TILES_X + ((hx % R01_SCREEN_PX_W) / 8);
         scr->attrs[cell] |= R01_ATTR_SOLID;

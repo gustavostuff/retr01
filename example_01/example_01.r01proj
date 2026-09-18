@@ -46,7 +46,7 @@
         {
           "name": "idle",
           "frame_count": 2,
-          "hitbox_x": 12, "hitbox_y": 12, "hitbox_w": 8, "hitbox_h": 8,
+          "hitbox_x": 12, "hitbox_y": 12, "hitbox_w": 8, "hitbox_h": 15,
           "frames": [
             {"delay": 12, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":0,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":1,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":3,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":5,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]},
             {"delay": 12, "origin_x": 16, "origin_y": 17, "parts": [{"bank":4,"tile":0,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":1,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":3,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":6,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":7,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]}

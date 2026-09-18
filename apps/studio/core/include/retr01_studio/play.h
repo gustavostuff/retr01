@@ -36,8 +36,8 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy);
 int r01_play_button(R01PlayState *pl, const R01Project *p, int button);
 int r01_play_screen_index(const R01PlayState *pl, const R01World *w);
 
-/* Player collision AABB in world pixels. origin_x/y is the current-frame draw origin (Play position).
- * Hitbox comes from the current state. */
+/* Player collision AABB in world pixels. origin_x/y is the Play position (current-frame draw origin).
+ * Hitbox comes from the current state, origin-relative to that state's first drawable frame. */
 void r01_play_player_hit_rect(const R01World *w, const R01GameCtx *ctx, int origin_x, int origin_y, int *hx,
                               int *hy, int *hw, int *hh);
 
