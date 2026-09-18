@@ -1,6 +1,8 @@
 <img src="img/v_01.png" alt="Logo V1" />
 
-Retr01 is an MCU-assisted 8-bit system ready for arcade and console setups, plus Studio (cart editor) and Emu (standalone emulator) for editing and playtesting carts.
+The Retr01 project is an MCU-assisted 8-bit system ready for arcade and console setups. It is also an Emulator and a Studio.
+
+⚠️ NOTE: hardware is still in design phase.
 
 ## Inspirations
 
