@@ -1766,6 +1766,39 @@ static int undo_find_sprite_catalog(const R01World *w, int bank, int tile_id) {
     return -1;
 }
 
+static void undo_entity_sel_set(UiState *ui, int idx) {
+    ui->entity_edit.sel_part = idx;
+    if (idx >= 0 && idx < R01_ENTITY_PARTS_MAX) {
+        ui->entity_edit.sel_mask = 1u << idx;
+    } else {
+        ui->entity_edit.sel_mask = 0;
+    }
+}
+
+static void undo_entity_sel_after_remove(UiState *ui, int part_idx) {
+    unsigned m = ui->entity_edit.sel_mask;
+    unsigned low;
+    unsigned high;
+    int i;
+    if (part_idx < 0 || part_idx >= R01_ENTITY_PARTS_MAX) {
+        return;
+    }
+    low = m & ((1u << part_idx) - 1u);
+    high = m >> (part_idx + 1);
+    ui->entity_edit.sel_mask = low | (high << part_idx);
+    if (ui->entity_edit.sel_part == part_idx) {
+        ui->entity_edit.sel_part = -1;
+        for (i = R01_ENTITY_PARTS_MAX - 1; i >= 0; i--) {
+            if (ui->entity_edit.sel_mask & (1u << i)) {
+                ui->entity_edit.sel_part = i;
+                break;
+            }
+        }
+    } else if (ui->entity_edit.sel_part > part_idx) {
+        ui->entity_edit.sel_part--;
+    }
+}
+
 static void entity_part_add_undo(UiState *ui, void *data) {
     UiUndoEntityPart *d = (UiUndoEntityPart *)data;
     R01EntityFrame *fr;
@@ -1777,11 +1810,7 @@ static void entity_part_add_undo(UiState *ui, void *data) {
     fr = undo_entity_edit_frame(ui, d->state, d->frame);
     if (fr) {
         (void)r01_entity_frame_remove_part(fr, d->part_idx);
-        if (ui->entity_edit.sel_part == d->part_idx) {
-            ui->entity_edit.sel_part = -1;
-        } else if (ui->entity_edit.sel_part > d->part_idx) {
-            ui->entity_edit.sel_part--;
-        }
+        undo_entity_sel_after_remove(ui, d->part_idx);
         undo_entity_edit_guides(ui, d->state, d->frame);
     }
     if (d->owns_catalog) {
@@ -1806,7 +1835,7 @@ static void entity_part_add_redo(UiState *ui, void *data) {
         idx = undo_frame_insert_part(fr, d->part_idx, &d->part);
         if (idx >= 0) {
             d->part_idx = idx;
-            ui->entity_edit.sel_part = idx;
+            undo_entity_sel_set(ui, idx);
             undo_entity_edit_guides(ui, d->state, d->frame);
         }
     }
@@ -1866,7 +1895,7 @@ static void entity_part_remove_undo(UiState *ui, void *data) {
     idx = undo_frame_insert_part(fr, d->part_idx, &d->part);
     if (idx >= 0) {
         d->part_idx = idx;
-        ui->entity_edit.sel_part = idx;
+        undo_entity_sel_set(ui, idx);
         undo_entity_edit_guides(ui, d->state, d->frame);
     }
 }
@@ -1882,11 +1911,7 @@ static void entity_part_remove_redo(UiState *ui, void *data) {
         return;
     }
     (void)r01_entity_frame_remove_part(fr, d->part_idx);
-    if (ui->entity_edit.sel_part == d->part_idx) {
-        ui->entity_edit.sel_part = -1;
-    } else if (ui->entity_edit.sel_part > d->part_idx) {
-        ui->entity_edit.sel_part--;
-    }
+    undo_entity_sel_after_remove(ui, d->part_idx);
     undo_entity_edit_guides(ui, d->state, d->frame);
 }
 

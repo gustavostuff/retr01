@@ -122,19 +122,21 @@ void ui_compose_draw_part(SDL_Renderer *r, const R01Project *p, const R01World *
 }
 
 void ui_compose_draw_frame(SDL_Renderer *r, const R01Project *p, const R01World *w, const R01EntityFrame *fr, int ox,
-                           int oy, int scale, int sel_part, int show_outlines, Uint8 alpha) {
+                           int oy, int scale, unsigned sel_mask, int show_outlines, Uint8 alpha) {
     int i;
     if (!fr) {
         return;
     }
     for (i = 0; i < fr->part_count; i++) {
-        if (i == sel_part) {
+        if (sel_mask & (1u << i)) {
             continue;
         }
         ui_compose_draw_part(r, p, w, &fr->parts[i], ox, oy, scale, 0, show_outlines, alpha);
     }
-    if (sel_part >= 0 && sel_part < fr->part_count) {
-        ui_compose_draw_part(r, p, w, &fr->parts[sel_part], ox, oy, scale, 1, 0, alpha);
+    for (i = 0; i < fr->part_count; i++) {
+        if (sel_mask & (1u << i)) {
+            ui_compose_draw_part(r, p, w, &fr->parts[i], ox, oy, scale, 1, 0, alpha);
+        }
     }
 }
 

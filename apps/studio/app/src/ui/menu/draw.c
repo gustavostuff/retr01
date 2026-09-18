@@ -4,6 +4,7 @@
 
 #include "retr01_studio/cart.h"
 #include "retr01_studio/chr_pack.h"
+#include "retr01_studio/entities.h"
 #include "retr01_studio/json_io.h"
 #include "retr01_studio/palette.h"
 #include "retr01_studio/project.h"
@@ -50,16 +51,38 @@ void draw_menu(UiState *ui, SDL_Renderer *r) {
     if (ui->menu.submenu != UI_MENU_SUB_NONE) {
         int i;
         int sh = ui->menu.sub_count * UI_BTN_H;
+        int mx = ui->mouse_x;
+        int my = ui->mouse_y;
         fill_rect(r, ui->menu.sub_x, ui->menu.sub_y, ui->menu.sub_w, sh, UI_COL_WELL_R, UI_COL_WELL_G,
                   UI_COL_WELL_B);
         for (i = 0; i < ui->menu.sub_count; i++) {
             int x = ui->menu.sub_x;
             int y = ui->menu.sub_y + i * UI_BTN_H;
-            int hover = point_in_rect(ui->mouse_x, ui->mouse_y, x, y, ui->menu.sub_w, UI_BTN_H);
+            int hover = point_in_rect(mx, my, x, y, ui->menu.sub_w, UI_BTN_H);
             if (hover) {
                 fill_rect(r, x, y, ui->menu.sub_w, UI_BTN_H, UI_COL_PANEL_R, UI_COL_PANEL_G, UI_COL_PANEL_B);
             }
-            font_draw_centered(r, x, y, ui->menu.sub_w, UI_BTN_H, ui->menu.sub_items[i], 230, 230, 230);
+            if (ui->menu.submenu == UI_MENU_SUB_EXISTING_SPR) {
+                const R01World *w = r01_project_active_world_const(ui->project);
+                int icon_x = x + UI_UNIT / 2;
+                int icon_y = y + (UI_BTN_H - 8) / 2;
+                int text_y_off = (UI_BTN_H - font_line_h()) / 2;
+                fill_rect(r, icon_x, icon_y, 8, 8, UI_COL_CHESS_A_R, UI_COL_CHESS_A_G, UI_COL_CHESS_A_B);
+                if (w && i >= 0 && i < w->sprite_count) {
+                    R01EntityPart pt;
+                    memset(&pt, 0, sizeof(pt));
+                    pt.bank = w->sprites[i].bank;
+                    pt.tile_id = w->sprites[i].tile_id;
+                    pt.pal = w->sprites[i].pal & 3;
+                    ui_compose_draw_part(r, ui->project, w, &pt, icon_x, icon_y, 1, 0, 0, 255);
+                }
+                if (text_y_off < 0) {
+                    text_y_off = 0;
+                }
+                font_draw(r, icon_x + 8 + UI_UNIT / 2, y + text_y_off, ui->menu.sub_items[i], 230, 230, 230);
+            } else {
+                font_draw_centered(r, x, y, ui->menu.sub_w, UI_BTN_H, ui->menu.sub_items[i], 230, 230, 230);
+            }
         }
     }
 }

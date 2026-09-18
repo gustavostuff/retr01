@@ -112,7 +112,7 @@ static void menu_build_sub(UiState *ui, int sub_kind) {
                 if (!we->present) {
                     continue;
                 }
-                if (ui->menu.sub_count >= UI_MENU_MAX) {
+                if (ui->menu.sub_count >= UI_MENU_SUB_MAX) {
                     break;
                 }
                 snprintf(ui->menu.sub_items[ui->menu.sub_count++], 24, "Exit from %s", we->id);
@@ -121,10 +121,20 @@ static void menu_build_sub(UiState *ui, int sub_kind) {
         if (ui->menu.sub_count < 2) {
             snprintf(ui->menu.sub_items[ui->menu.sub_count++], 24, "(no entrances)");
         }
+    } else if (sub_kind == UI_MENU_SUB_EXISTING_SPR) {
+        R01World *w = ui ? r01_project_active_world(ui->project) : NULL;
+        if (w) {
+            for (i = 0; i < w->sprite_count && ui->menu.sub_count < UI_MENU_SUB_MAX; i++) {
+                snprintf(ui->menu.sub_items[ui->menu.sub_count++], 24, "Sprite %d", i + 1);
+            }
+        }
     }
     ui->menu.sub_w = UI_UNIT * 4;
     for (i = 0; i < ui->menu.sub_count; i++) {
         int tw = label_width(ui->menu.sub_items[i]);
+        if (sub_kind == UI_MENU_SUB_EXISTING_SPR) {
+            tw += 8 + UI_UNIT;
+        }
         if (tw > ui->menu.sub_w) {
             ui->menu.sub_w = tw;
         }
@@ -437,10 +447,14 @@ void menu_open_entity_compose(UiState *ui, int x, int y, int compose_wx, int com
     ui->menu.compose_wx = compose_wx;
     ui->menu.compose_wy = compose_wy;
     ui->menu.item_count = 0;
-    snprintf(ui->menu.items[ui->menu.item_count], 32, "Add sprite");
+    snprintf(ui->menu.items[ui->menu.item_count], 32, "Add new sprite");
     ui->menu.item_sub[ui->menu.item_count++] = 0;
+    snprintf(ui->menu.items[ui->menu.item_count], 32, "Add existing");
+    ui->menu.item_sub[ui->menu.item_count++] =
+        (w && w->sprite_count > 0) ? (uint8_t)UI_MENU_SUB_EXISTING_SPR : 0;
     memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
     ui->menu.item_disabled[0] = (full || banks_full) ? 1 : 0;
+    ui->menu.item_disabled[1] = (full || !w || w->sprite_count < 1) ? 1 : 0;
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
     ui->menu.root_x = x;
     ui->menu.root_y = y;
@@ -615,6 +629,13 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
                 }
             } else {
                 ui_toast(ui, "BG bank move not supported yet", 1);
+            }
+        } else if (ui->menu.submenu == UI_MENU_SUB_EXISTING_SPR) {
+            if (ui->menu.kind == UI_MENU_KIND_ENTITY_COMPOSE) {
+                if (entity_edit_add_existing_sprite_at(ui, ui->menu.compose_wx, ui->menu.compose_wy, item) >=
+                    0) {
+                    ui_toast(ui, "sprite added", 0);
+                }
             }
         } else if (ui->menu.submenu == UI_MENU_SUB_WARP) {
             R01World *w = r01_project_active_world(ui->project);

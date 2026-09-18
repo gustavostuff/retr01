@@ -48,7 +48,7 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
     {
         R01EntityFrame *fr0 = entity_edit_frame(ui);
         int can_add = fr0 && fr0->part_count < R01_ENTITY_PARTS_MAX;
-        int can_rem = fr0 && ui->entity_edit.sel_part >= 0 && ui->entity_edit.sel_part < fr0->part_count;
+        int can_rem = fr0 && fr0->part_count > 0 && ui->entity_edit.sel_mask != 0;
         int add_hover = can_add && point_in_rect(ui->mouse_x, ui->mouse_y, lo.add_spr_x, lo.add_spr_y, lo.add_spr_w,
                                                  UI_BTN_H);
         int rem_hover = can_rem && point_in_rect(ui->mouse_x, ui->mouse_y, lo.rem_spr_x, lo.rem_spr_y, lo.rem_spr_w,
@@ -101,8 +101,37 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
         oy += (pin - fr->origin_y) * sc;
     }
     ui_compose_draw_frame(r, ui->project, w, fr, ox, oy, sc,
-                          ui->entity_edit.preview_playing ? -1 : ui->entity_edit.sel_part,
+                          ui->entity_edit.preview_playing ? 0u : ui->entity_edit.sel_mask,
                           ui->entity_edit.show_part_outlines, part_alpha);
+    if (ui->entity_edit.dragging == 8 && !ui->entity_edit.preview_playing) {
+        int cx, cy, x0, y0, x1, y1, rw, rh;
+        entity_edit_screen_to_world(ui, &lo, ui->mouse_x, ui->mouse_y, &cx, &cy);
+        if (cx < 0) {
+            cx = 0;
+        }
+        if (cy < 0) {
+            cy = 0;
+        }
+        if (cx > R01_ENTITY_COMPOSE_PX) {
+            cx = R01_ENTITY_COMPOSE_PX;
+        }
+        if (cy > R01_ENTITY_COMPOSE_PX) {
+            cy = R01_ENTITY_COMPOSE_PX;
+        }
+        x0 = ui->entity_edit.drag_off_x < cx ? ui->entity_edit.drag_off_x : cx;
+        y0 = ui->entity_edit.drag_off_y < cy ? ui->entity_edit.drag_off_y : cy;
+        x1 = ui->entity_edit.drag_off_x > cx ? ui->entity_edit.drag_off_x : cx;
+        y1 = ui->entity_edit.drag_off_y > cy ? ui->entity_edit.drag_off_y : cy;
+        rw = (x1 - x0) * sc;
+        rh = (y1 - y0) * sc;
+        if (rw < 1) {
+            rw = 1;
+        }
+        if (rh < 1) {
+            rh = 1;
+        }
+        draw_marching_ants(r, ox + x0 * sc, oy + y0 * sc, rw, rh);
+    }
     if (guides_mode) {
         SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
         SDL_SetRenderDrawColor(r, 220, 40, 40, 90);

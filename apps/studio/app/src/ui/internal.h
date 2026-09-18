@@ -413,6 +413,9 @@ void entity_modal_key(UiState *ui, SDL_Keycode sym);
 int entity_modal_wheel(UiState *ui, int lx, int ly, int wheel_y, int shift);
 /* Alloc blank SPR tile + place part at compose (wx, wy). Returns part idx or -1. */
 int entity_edit_add_sprite_at(UiState *ui, int wx, int wy);
+int entity_edit_add_existing_sprite_at(UiState *ui, int wx, int wy, int catalog_idx);
+void entity_edit_select_all_parts(UiState *ui);
+void entity_edit_copy_parts(UiState *ui);
 int entity_edit_paste_clipboard(UiState *ui);
 int entity_edit_preview_can_play(const UiState *ui);
 void entity_edit_preview_tick(UiState *ui);

@@ -226,13 +226,195 @@ void entity_edit_apply_pal_to_part(UiState *ui, R01EntityPart *pt, int pal) {
     entity_sync_catalog_pal(w, pt);
 }
 
+void entity_edit_clear_sel(UiState *ui) {
+    if (!ui) {
+        return;
+    }
+    ui->entity_edit.sel_part = -1;
+    ui->entity_edit.sel_mask = 0;
+}
+
+static void entity_edit_sel_refresh_primary(UiState *ui, const R01EntityFrame *fr) {
+    int i;
+    ui->entity_edit.sel_part = -1;
+    if (!fr) {
+        return;
+    }
+    for (i = fr->part_count - 1; i >= 0; i--) {
+        if (ui->entity_edit.sel_mask & (1u << i)) {
+            ui->entity_edit.sel_part = i;
+            ui->entity_edit.paint_pal = fr->parts[i].pal & 3;
+            break;
+        }
+    }
+}
+
 void entity_edit_select_part(UiState *ui, R01EntityFrame *fr, int idx) {
-    if (!ui || !fr || idx < 0 || idx >= fr->part_count) {
-        ui->entity_edit.sel_part = -1;
+    if (!ui) {
+        return;
+    }
+    if (!fr || idx < 0 || idx >= fr->part_count) {
+        entity_edit_clear_sel(ui);
         return;
     }
     ui->entity_edit.sel_part = idx;
+    ui->entity_edit.sel_mask = 1u << idx;
     ui->entity_edit.paint_pal = fr->parts[idx].pal & 3;
+}
+
+void entity_edit_toggle_part(UiState *ui, R01EntityFrame *fr, int idx) {
+    unsigned bit;
+    if (!ui || !fr || idx < 0 || idx >= fr->part_count) {
+        return;
+    }
+    bit = 1u << idx;
+    if (ui->entity_edit.sel_mask & bit) {
+        ui->entity_edit.sel_mask &= ~bit;
+        if (ui->entity_edit.sel_part == idx) {
+            entity_edit_sel_refresh_primary(ui, fr);
+        }
+    } else {
+        ui->entity_edit.sel_mask |= bit;
+        ui->entity_edit.sel_part = idx;
+        ui->entity_edit.paint_pal = fr->parts[idx].pal & 3;
+    }
+}
+
+void entity_edit_select_all_parts(UiState *ui) {
+    R01EntityFrame *fr;
+    int i;
+    if (!ui || !ui->entity_edit.open) {
+        return;
+    }
+    fr = entity_edit_frame(ui);
+    ui->entity_edit.sel_mask = 0;
+    ui->entity_edit.sel_part = -1;
+    if (!fr) {
+        return;
+    }
+    for (i = 0; i < fr->part_count; i++) {
+        ui->entity_edit.sel_mask |= 1u << i;
+    }
+    entity_edit_sel_refresh_primary(ui, fr);
+}
+
+void entity_edit_select_rect(UiState *ui, R01EntityFrame *fr, int x0, int y0, int x1, int y1, int add) {
+    int i;
+    unsigned mask;
+    if (!ui) {
+        return;
+    }
+    if (x0 > x1) {
+        int t = x0;
+        x0 = x1;
+        x1 = t;
+    }
+    if (y0 > y1) {
+        int t = y0;
+        y0 = y1;
+        y1 = t;
+    }
+    mask = add ? ui->entity_edit.sel_mask : 0u;
+    if (fr) {
+        for (i = 0; i < fr->part_count; i++) {
+            int xa = fr->parts[i].dx;
+            int ya = fr->parts[i].dy;
+            int xb = xa + 8;
+            int yb = ya + 8;
+            if (xa < x1 && xb > x0 && ya < y1 && yb > y0) {
+                mask |= 1u << i;
+            }
+        }
+    }
+    ui->entity_edit.sel_mask = mask;
+    entity_edit_sel_refresh_primary(ui, fr);
+}
+
+void entity_edit_remove_selected(UiState *ui) {
+    R01EntityFrame *fr;
+    int i;
+    if (!ui || !ui->entity_edit.open) {
+        return;
+    }
+    fr = entity_edit_frame(ui);
+    if (!fr || ui->entity_edit.sel_mask == 0) {
+        return;
+    }
+    for (i = fr->part_count - 1; i >= 0; i--) {
+        R01EntityPart removed;
+        if ((ui->entity_edit.sel_mask & (1u << i)) == 0) {
+            continue;
+        }
+        removed = fr->parts[i];
+        r01_entity_frame_remove_part(fr, i);
+        ui_undo_push_entity_part_remove(ui, ui->entity_edit.state, ui->entity_edit.frame, i, &removed);
+    }
+    entity_edit_clear_sel(ui);
+    entity_edit_recompute_guides(ui);
+}
+
+void entity_edit_copy_parts(UiState *ui) {
+    R01EntityFrame *fr;
+    int i;
+    int n;
+    if (!ui || !ui->entity_edit.open) {
+        return;
+    }
+    fr = entity_edit_frame(ui);
+    n = 0;
+    if (fr) {
+        for (i = 0; i < fr->part_count && n < R01_ENTITY_PARTS_MAX; i++) {
+            if (ui->entity_edit.sel_mask & (1u << i)) {
+                ui->entity_edit.clip[n++] = fr->parts[i];
+            }
+        }
+    }
+    if (n < 1) {
+        ui_toast(ui, "select a sprite first", 1);
+        return;
+    }
+    ui->entity_edit.clip_count = n;
+    ui_toast(ui, "sprites copied", 0);
+}
+
+static int entity_edit_paste_parts(UiState *ui) {
+    R01EntityFrame *fr;
+    unsigned mask;
+    int i;
+    int n;
+    int added;
+    if (!ui || ui->entity_edit.clip_count < 1) {
+        return -1;
+    }
+    fr = entity_edit_frame(ui);
+    if (!fr) {
+        return -1;
+    }
+    n = ui->entity_edit.clip_count;
+    if (n > R01_ENTITY_PARTS_MAX - fr->part_count) {
+        n = R01_ENTITY_PARTS_MAX - fr->part_count;
+    }
+    if (n < 1) {
+        return 0;
+    }
+    mask = 0;
+    added = 0;
+    for (i = 0; i < n; i++) {
+        int idx = r01_entity_frame_add_part(fr, &ui->entity_edit.clip[i]);
+        if (idx < 0) {
+            break;
+        }
+        mask |= 1u << idx;
+        added++;
+        ui_undo_push_entity_part_add(ui, ui->entity_edit.state, ui->entity_edit.frame, idx,
+                                     &ui->entity_edit.clip[i], -1);
+    }
+    if (added > 0) {
+        ui->entity_edit.sel_mask = mask;
+        entity_edit_sel_refresh_primary(ui, fr);
+        entity_edit_recompute_guides(ui);
+    }
+    return 0;
 }
 
 void entity_edit_paint_at(UiState *ui, R01World *w, R01EntityFrame *fr, int idx, int cx, int cy) {
@@ -242,7 +424,7 @@ void entity_edit_paint_at(UiState *ui, R01World *w, R01EntityFrame *fr, int idx,
     }
     pt = &fr->parts[idx];
     entity_edit_apply_pal_to_part(ui, pt, ui->entity_edit.paint_pal);
-    ui->entity_edit.sel_part = idx;
+    entity_edit_select_part(ui, fr, idx);
     ui_undo_spr_paint_touch_tile(ui, pt->bank, pt->tile_id);
     (void)ui_compose_paint_brush(ui->project, w, pt, cx, cy, ui->entity_edit.paint_color,
                                  ui->entity_edit.brush_size);
@@ -258,6 +440,9 @@ int entity_edit_paste_clipboard(UiState *ui) {
 
     if (!ui || !ui->entity_edit.open || !ui->project) {
         return -1;
+    }
+    if (ui->entity_edit.clip_count > 0) {
+        return entity_edit_paste_parts(ui);
     }
     w = r01_project_active_world(ui->project);
     fr = entity_edit_frame(ui);

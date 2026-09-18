@@ -188,6 +188,7 @@
 #define UI_TOOLTIP_DELAY_MS 400
 
 #define UI_MENU_MAX 16
+#define UI_MENU_SUB_MAX R01_MAX_SPRITES
 #define UI_MENU_KIND_TILE 1
 #define UI_MENU_KIND_WORLD 2
 #define UI_MENU_KIND_SPRITE 3
@@ -204,6 +205,7 @@
 #define UI_MENU_SUB_SPR_PAL 4
 #define UI_MENU_SUB_WARP 5
 #define UI_MENU_SUB_MOVE_BANK 6
+#define UI_MENU_SUB_EXISTING_SPR 7
 
 typedef struct UiMenu {
     int open;
@@ -219,7 +221,7 @@ typedef struct UiMenu {
     int sub_x, sub_y;
     int sub_w;
     int sub_count;
-    char sub_items[UI_MENU_MAX][24];
+    char sub_items[UI_MENU_SUB_MAX][24];
 
     int screen_tx, screen_ty;
     int world_screen_idx;
@@ -308,7 +310,8 @@ typedef struct UiEntityEdit {
     R01EntityType draft;
     int state;      /* 0..R01_ENTITY_STATES_MAX-1 */
     int frame;      /* 0..R01_ENTITY_FRAMES_MAX-1 */
-    int sel_part;   /* -1 or index in current frame */
+    int sel_part;           /* -1 or primary index in current frame */
+    unsigned sel_mask;      /* bit i: part i selected (R01_ENTITY_PARTS_MAX bits) */
     int paint_color;
     int paint_pal;
     int brush_size;         /* UI_BRUSH_SIZE_MIN..MAX pixel stamp */
@@ -317,11 +320,17 @@ typedef struct UiEntityEdit {
     int zoom;               /* UI_ENTITY_ZOOM_MIN..MAX display scale multiplier */
     int view_x;             /* viewport scroll in zoomed display px */
     int view_y;
-    /* 0 none, 1 part, 2 origin, 3 hitbox move, 4 hitbox resize, 5 paint, 6 pan, 7 brush */
+    /* 0 none, 1 part, 2 origin, 3 hitbox move, 4 hitbox resize, 5 paint, 6 pan, 7 brush, 8 marquee */
     int dragging;
     int drag_off_x;
     int drag_off_y;
     int drag_corner; /* 0 NW, 1 NE, 2 SE, 3 SW when resizing hitbox */
+    int drag_primary; /* part index that started a group drag */
+    int drag_start_dx[R01_ENTITY_PARTS_MAX];
+    int drag_start_dy[R01_ENTITY_PARTS_MAX];
+    int sel_drag_moved; /* 1 once Shift-drag marquee moved */
+    int clip_count;
+    R01EntityPart clip[R01_ENTITY_PARTS_MAX];
     int pan_moved; /* set once viewport pan exceeds click slop */
     int pan_btn;   /* SDL button that started pan */
     int preview_playing; /* compose loops the current state's frames */

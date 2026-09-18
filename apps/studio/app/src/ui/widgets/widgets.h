@@ -26,7 +26,7 @@ void ui_compose_draw_grid(SDL_Renderer *r, int ox, int oy, int size_px, int cell
 void ui_compose_draw_part(SDL_Renderer *r, const R01Project *p, const struct R01World *w, const R01EntityPart *pt,
                           int ox, int oy, int scale, int selected, int outline, Uint8 alpha);
 void ui_compose_draw_frame(SDL_Renderer *r, const R01Project *p, const struct R01World *w, const R01EntityFrame *fr,
-                           int ox, int oy, int scale, int sel_part, int show_outlines, Uint8 alpha);
+                           int ox, int oy, int scale, unsigned sel_mask, int show_outlines, Uint8 alpha);
 void ui_compose_clamp_hitbox(int *x, int *y, int *w, int *h);
 void ui_compose_draw_frame_icon(SDL_Renderer *r, const R01Project *p, const struct R01World *w,
                                 const R01EntityFrame *fr, int dx, int dy, int icon_size);

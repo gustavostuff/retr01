@@ -67,9 +67,49 @@ int entity_edit_add_sprite_at(UiState *ui, int wx, int wy) {
         ui_toast(ui, "frame part limit (4)", 1);
         return -1;
     }
-    ui->entity_edit.sel_part = idx;
+    entity_edit_select_part(ui, fr, idx);
     entity_edit_recompute_guides(ui);
     ui_undo_push_entity_part_add(ui, ui->entity_edit.state, ui->entity_edit.frame, idx, &part, cat);
+    return idx;
+}
+
+int entity_edit_add_existing_sprite_at(UiState *ui, int wx, int wy, int catalog_idx) {
+    R01World *w;
+    R01EntityFrame *fr;
+    R01EntityPart part;
+    const R01SpriteDef *sp;
+    int idx;
+
+    if (!ui || !ui->entity_edit.open) {
+        return -1;
+    }
+    fr = entity_edit_frame(ui);
+    if (!fr) {
+        return -1;
+    }
+    if (fr->part_count >= R01_ENTITY_PARTS_MAX) {
+        ui_toast(ui, "frame part limit (4)", 1);
+        return -1;
+    }
+    w = r01_project_active_world(ui->project);
+    if (!w || catalog_idx < 0 || catalog_idx >= w->sprite_count) {
+        return -1;
+    }
+    sp = &w->sprites[catalog_idx];
+    memset(&part, 0, sizeof(part));
+    part.bank = sp->bank;
+    part.tile_id = sp->tile_id;
+    part.pal = sp->pal & 3;
+    part.dx = ui_compose_clamp_part(wx - 4);
+    part.dy = ui_compose_clamp_part(wy - 4);
+    idx = r01_entity_frame_add_part(fr, &part);
+    if (idx < 0) {
+        ui_toast(ui, "frame part limit (4)", 1);
+        return -1;
+    }
+    entity_edit_select_part(ui, fr, idx);
+    entity_edit_recompute_guides(ui);
+    ui_undo_push_entity_part_add(ui, ui->entity_edit.state, ui->entity_edit.frame, idx, &part, -1);
     return idx;
 }
 
@@ -197,7 +237,7 @@ void entity_edit_preview_tick(UiState *ui) {
         int nxt = entity_edit_next_preview_frame(st, ui->entity_edit.frame);
         if (nxt != ui->entity_edit.frame) {
             ui->entity_edit.frame = nxt;
-            ui->entity_edit.sel_part = -1;
+            entity_edit_clear_sel(ui);
             ui->entity_edit.preview_ctr = 0;
         }
         return;
@@ -212,7 +252,7 @@ void entity_edit_preview_tick(UiState *ui) {
         int nxt = entity_edit_next_preview_frame(st, ui->entity_edit.frame);
         if (nxt != ui->entity_edit.frame) {
             ui->entity_edit.frame = nxt;
-            ui->entity_edit.sel_part = -1;
+            entity_edit_clear_sel(ui);
         }
     }
 }

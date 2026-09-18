@@ -74,9 +74,9 @@
         {
           "name": "jumping",
           "frame_count": 1,
-          "hitbox_x": 0, "hitbox_y": 0, "hitbox_w": 8, "hitbox_h": 8,
+          "hitbox_x": 12, "hitbox_y": 12, "hitbox_w": 8, "hitbox_h": 16,
           "frames": [
-            {"delay": 1, "origin_x": 0, "origin_y": 0, "parts": []}
+            {"delay": 1, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":26,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":27,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":32,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":33,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":34,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":35,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]}
           ]
         }
       ]
