@@ -45,6 +45,9 @@ const char *r01_entity_default_state_name(int state_idx);
 /* Ensure state exists (extends state_count). Returns pointer or NULL. */
 R01EntityState *r01_entity_ensure_state(R01EntityType *e, int state_idx);
 
+/* First state named crouch/crouching, or -1. */
+int r01_entity_crouch_state_index(const R01EntityType *e);
+
 /* Ensure frame exists (extends frame_count). Returns pointer or NULL. */
 R01EntityFrame *r01_entity_ensure_frame(R01EntityType *e, int state_idx, int frame_idx);
 

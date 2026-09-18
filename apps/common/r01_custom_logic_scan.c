@@ -64,15 +64,15 @@ static int parse_int_or_known_token(const char *p, int *out) {
         return n + 21;
     }
     if (strncmp(p, "R01_PLAT_GRAVITY_DEFAULT", 24) == 0) {
-        *out = 1;
+        *out = 0; /* 0 = engine default from r01_play_physics.h */
         return n + 24;
     }
     if (strncmp(p, "R01_PLAT_JUMP_DEFAULT", 21) == 0) {
-        *out = 8;
+        *out = 0;
         return n + 21;
     }
     if (strncmp(p, "R01_PLAT_METER_DEFAULT", 22) == 0) {
-        *out = 16;
+        *out = 0;
         return n + 22;
     }
     return 0;
@@ -390,6 +390,10 @@ int r01_custom_logic_scan_plat_jump(const char *path, int *out_jump) {
 
 int r01_custom_logic_scan_plat_meter(const char *path, int *out_meter) {
     return scan_ctx_one_named(path, "r01_platformer_set_meter", out_meter);
+}
+
+int r01_custom_logic_scan_plat_crouch(const char *path, int *out_state) {
+    return scan_ctx_one_named(path, "r01_player_anim_set_crouch_state", out_state);
 }
 
 int r01_custom_logic_scan_bgm_play(const char *path, int *out_track) {

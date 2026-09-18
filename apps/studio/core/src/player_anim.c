@@ -71,6 +71,8 @@ void r01_player_anim_init(R01GameCtx *ctx) {
     ctx->player_anim_moving = 0;
     ctx->player_default_face = R01_PLAYER_FACE_RIGHT;
     ctx->player_idle_state = 0;
+    ctx->player_crouch_state = -1;
+    ctx->player_crouching = 0;
     for (i = 0; i < 8; i++) {
         ctx->player_walk_state[i] = 1;
     }
@@ -115,6 +117,17 @@ void r01_player_anim_set_walk_all(R01GameCtx *ctx, int entity_state_idx) {
     }
 }
 
+void r01_player_anim_set_crouch_state(R01GameCtx *ctx, int entity_state_idx) {
+    if (!ctx) {
+        return;
+    }
+    if (entity_state_idx < 0 || entity_state_idx >= R01_ENTITY_STATES_MAX) {
+        ctx->player_crouch_state = -1;
+        return;
+    }
+    ctx->player_crouch_state = entity_state_idx;
+}
+
 void r01_player_default_face_set(R01GameCtx *ctx, int face) {
     if (!ctx) {
         return;
@@ -143,6 +156,32 @@ void r01_player_anim_update(R01GameCtx *ctx, int dx, int dy) {
     int prev_state;
     if (!ctx) {
         return;
+    }
+    if (ctx->player_crouching && ctx->player_crouch_state >= 0) {
+        if (dx != 0) {
+            new_dir = dir_from_delta(dx, 0);
+            if (new_dir >= 0) {
+                ctx->player_anim_dir = new_dir;
+                ctx->player_anim_flip_h = dir_flip_h(ctx->player_anim_dir);
+            }
+        }
+        ctx->player_anim_moving = 0;
+        prev_state = ctx->player_anim_state;
+        ctx->player_anim_state = ctx->player_crouch_state;
+        if (ctx->player_anim_state != prev_state) {
+            ctx->player_anim_frame = 0;
+            ctx->player_anim_ctr = 0;
+        }
+        return;
+    }
+    if (ctx->player_crouch_state >= 0 && ctx->player_anim_state == ctx->player_crouch_state) {
+        if (dx == 0 && dy == 0) {
+            ctx->player_anim_moving = 0;
+            ctx->player_anim_state = ctx->player_idle_state;
+            ctx->player_anim_frame = 0;
+            ctx->player_anim_ctr = 0;
+            return;
+        }
     }
     if (dx != 0 || dy != 0) {
         new_dir = dir_from_delta(dx, dy);

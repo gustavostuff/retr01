@@ -3,8 +3,10 @@
 #include "retr01_studio/collision.h"
 #include "retr01_studio/entities.h"
 #include "retr01_studio/play.h"
+#include "retr01_studio/player_anim.h"
 #include "retr01_studio/project.h"
 #include "r01_custom_logic_scan.h"
+#include "r01_play_anim.h"
 #include "r01_play_camera.h"
 #include "r01_play_physics.h"
 
@@ -252,6 +254,9 @@ TEST_MAIN() {
         int jump_y;
         r01_play_physics_init(&ph);
         r01_play_physics_set_mode(&ph, R01_GAME_MODE_PLATFORMER);
+        r01_play_physics_set_gravity(&ph, 1);
+        r01_play_physics_set_jump(&ph, 8);
+        r01_play_physics_set_meter(&ph, 16);
         for (i = 0; i < 80; i++) {
             r01_play_physics_tick(&ph, &x, &y, 0, 0, 0, test_floor_ok, &floor, &anim_dx, &anim_dy);
         }
@@ -264,6 +269,18 @@ TEST_MAIN() {
         EXPECT(!ph.grounded, "airborne after jump");
         r01_play_physics_tick(&ph, &x, &y, 0, -1, 1, test_floor_ok, &floor, &anim_dx, &anim_dy);
         EXPECT(y <= jump_y, "held jump does not re-boost in air");
+    }
+
+    {
+        R01PlayAnimCtx anim;
+        r01_play_anim_init(&anim);
+        r01_play_anim_set_crouch_state(&anim, 2);
+        r01_play_anim_set_crouching(&anim, 1);
+        r01_play_anim_update(&anim, 0, 0);
+        EXPECT(r01_play_anim_entity_state(&anim) == 2, "crouch pose");
+        r01_play_anim_set_crouching(&anim, 0);
+        r01_play_anim_update(&anim, 0, 0);
+        EXPECT(r01_play_anim_entity_state(&anim) == 0, "release crouch to idle");
     }
 
     {
@@ -281,8 +298,14 @@ TEST_MAIN() {
         int tap_peak;
         r01_play_physics_init(&hold);
         r01_play_physics_set_mode(&hold, R01_GAME_MODE_PLATFORMER);
+        r01_play_physics_set_gravity(&hold, 1);
+        r01_play_physics_set_jump(&hold, 8);
+        r01_play_physics_set_meter(&hold, 16);
         r01_play_physics_init(&tap);
         r01_play_physics_set_mode(&tap, R01_GAME_MODE_PLATFORMER);
+        r01_play_physics_set_gravity(&tap, 1);
+        r01_play_physics_set_jump(&tap, 8);
+        r01_play_physics_set_meter(&tap, 16);
         for (i = 0; i < 120; i++) {
             r01_play_physics_tick(&hold, &hx, &hy, 0, 0, 0, test_floor_ok, &floor, &anim_dx, &anim_dy);
             r01_play_physics_tick(&tap, &tx, &ty, 0, 0, 0, test_floor_ok, &floor, &anim_dx, &anim_dy);
@@ -317,9 +340,13 @@ TEST_MAIN() {
         int i;
         r01_play_physics_init(&big);
         r01_play_physics_set_mode(&big, R01_GAME_MODE_PLATFORMER);
+        r01_play_physics_set_gravity(&big, 1);
+        r01_play_physics_set_jump(&big, 8);
         r01_play_physics_set_meter(&big, 16);
         r01_play_physics_init(&small);
         r01_play_physics_set_mode(&small, R01_GAME_MODE_PLATFORMER);
+        r01_play_physics_set_gravity(&small, 1);
+        r01_play_physics_set_jump(&small, 8);
         r01_play_physics_set_meter(&small, 8);
         for (i = 0; i < 80; i++) {
             r01_play_physics_tick(&big, &bx, &by, 0, 0, 0, test_floor_ok, &floor, &anim_dx, &anim_dy);
@@ -343,14 +370,21 @@ TEST_MAIN() {
                   "    r01_platformer_set_gravity(ctx, 2);\n"
                   "    r01_platformer_set_jump(ctx, R01_PLAT_JUMP_DEFAULT);\n"
                   "    r01_platformer_set_meter(ctx, R01_PLAT_METER_DEFAULT);\n"
+                  "    r01_player_anim_set_crouch_state(ctx, 2);\n"
                   "}\n",
                   f);
             fclose(f);
         }
         EXPECT(r01_custom_logic_scan_game_mode("plat_logic.c", &mode) == 0 && mode == 1, "scan platformer");
         EXPECT(r01_custom_logic_scan_plat_gravity("plat_logic.c", &grav) == 0 && grav == 2, "scan gravity");
-        EXPECT(r01_custom_logic_scan_plat_jump("plat_logic.c", &jump) == 0 && jump == 8, "scan jump default token");
-        EXPECT(r01_custom_logic_scan_plat_meter("plat_logic.c", &meter) == 0 && meter == 16, "scan meter default token");
+        EXPECT(r01_custom_logic_scan_plat_jump("plat_logic.c", &jump) == 0 && jump == 0,
+               "scan jump default token is engine default");
+        EXPECT(r01_custom_logic_scan_plat_meter("plat_logic.c", &meter) == 0 && meter == 0,
+               "scan meter default token is engine default");
+        {
+            int crouch = -1;
+            EXPECT(r01_custom_logic_scan_plat_crouch("plat_logic.c", &crouch) == 0 && crouch == 2, "scan crouch state");
+        }
         remove("plat_logic.c");
     }
 
@@ -360,6 +394,16 @@ TEST_MAIN() {
     r01_platformer_set_gravity(&pl.ctx, 1);
     r01_platformer_set_jump(&pl.ctx, 8);
     r01_platformer_set_meter(&pl.ctx, 16);
+    {
+        int pe = r01_world_entity_add(&p->worlds[0]);
+        R01EntityType *ent;
+        EXPECT(pe >= 0, "crouch player type");
+        r01_world_set_player_entity(&p->worlds[0], pe);
+        ent = &p->worlds[0].entities[pe];
+        r01_entity_ensure_state(ent, 2);
+        snprintf(ent->states[2].name, sizeof(ent->states[2].name), "crouching");
+        r01_player_anim_set_crouch_state(&pl.ctx, 2);
+    }
     {
         int si = p->worlds[0].default_screen;
         R01Screen *scr;
@@ -388,6 +432,13 @@ TEST_MAIN() {
         EXPECT(pl.ctx.plat_grounded, "play tick grounded on solid row");
         r01_play_tick(&pl, p, 0, -1, 0);
         EXPECT(pl.ctx.player_y == before_y, "Up does not jump in platformer");
+        r01_play_tick(&pl, p, 0, 1, 0);
+        EXPECT(pl.ctx.player_y == before_y, "Down crouch stays grounded");
+        EXPECT(r01_player_anim_entity_state(&pl.ctx) == 2, "Down crouches in platformer");
+        r01_play_tick(&pl, p, -1, 1, 0);
+        EXPECT(pl.ctx.player_x == scr->col * R01_SCREEN_PX_W + 16, "crouch does not walk");
+        r01_play_tick(&pl, p, 0, 0, 0);
+        EXPECT(r01_player_anim_entity_state(&pl.ctx) == 0, "release Down returns idle");
         r01_play_tick(&pl, p, 0, 0, 1);
         after_up = pl.ctx.player_y;
         EXPECT(after_up < before_y, "Y jumps in platformer");

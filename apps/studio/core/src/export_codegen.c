@@ -237,6 +237,8 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "    int player_idle_state;\n"
                    "    int player_walk_state[8];\n"
                    "    int player_state_delay[4];\n"
+                   "    int player_crouch_state;\n"
+                   "    int player_crouching;\n"
                    "    int game_mode;\n"
                    "    int plat_gravity;\n"
                    "    int plat_jump;\n"
@@ -546,6 +548,7 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "void r01_player_anim_set_idle_state(R01GameCtx *ctx, int entity_state_idx);\n"
                    "void r01_player_anim_set_walk_state(R01GameCtx *ctx, int dir8, int entity_state_idx);\n"
                    "void r01_player_anim_set_walk_all(R01GameCtx *ctx, int entity_state_idx);\n"
+                   "void r01_player_anim_set_crouch_state(R01GameCtx *ctx, int entity_state_idx);\n"
                    "void r01_player_default_face_set(R01GameCtx *ctx, int face);\n"
                    "void r01_entity_state_frame_delay_set(R01GameCtx *ctx, int entity_state_idx, int ticks);\n"
                    "void r01_player_anim_update(R01GameCtx *ctx, int dx, int dy);\n"
@@ -582,6 +585,7 @@ static int write_custom_logic(const char *c_dir, char *err_buf, size_t err_cap) 
                       "     * r01_platformer_set_gravity(ctx, R01_PLAT_GRAVITY_DEFAULT);\n"
                       "     * r01_platformer_set_jump(ctx, R01_PLAT_JUMP_DEFAULT);\n"
                       "     * r01_platformer_set_meter(ctx, R01_PLAT_METER_DEFAULT);\n"
+                      "     * r01_player_anim_set_crouch_state(ctx, 2);\n"
                       "     * r01_camera_disable_deadzone(ctx); /* 1:1 camera track */\n"
                       "     * r01_bg0_set_wrap(ctx, R01_BG0_WRAP_ON, R01_BG0_WRAP_ON);\n"
                       "     * r01_bg0_set_clip_to_bg1(ctx, R01_BG0_CLIP_ON);\n"
@@ -1034,7 +1038,8 @@ static int write_asm_tree(const char *asm_dir, const R01World *w, char *err_buf,
                    "R01P_MARKER     = $80F0\n"
                    "PLAT_GRAVITY    = $80F7\n"
                    "PLAT_JUMP       = $80F8\n"
-                   "PLAT_METER      = $80F9\n",
+                   "PLAT_METER      = $80F9\n"
+                   "PLAT_CROUCH     = $80FA\n",
                    err_buf, err_cap) != 0) {
         return -1;
     }

@@ -15,6 +15,7 @@ struct R01eMachine;
 #define R01E_PRG_PLAT_GRAVITY_OFF 0x00F7u
 #define R01E_PRG_PLAT_JUMP_OFF 0x00F8u
 #define R01E_PRG_PLAT_METER_OFF 0x00F9u
+#define R01E_PRG_PLAT_CROUCH_OFF 0x00FAu
 #define R01E_PLAY_PLAYER_W 8
 #define R01E_PLAY_PLAYER_H 8
 #define R01E_PLAY_PLAYER_SIZE R01E_PLAY_PLAYER_W /* legacy alias; square for now */

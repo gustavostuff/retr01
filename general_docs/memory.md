@@ -300,9 +300,10 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 | `+$01C0` | `$81C0` | Instance count (u8) |
 | `+$01C1` | `$81C1` | Instance table (`count` x 6 B: type, flip flags, world_x/y LE) |
 | `+$00F0` | `$80F0` | `R01P` marker + version byte |
-| `+$00F7` | `$80F7` | Platformer gravity (u8, 0 = default **1**) |
-| `+$00F8` | `$80F8` | Platformer jump impulse (u8, 0 = default **8**) |
-| `+$00F9` | `$80F9` | Platformer meter px (u8, 0 = default **16**) |
+| `+$00F7` | `$80F7` | Platformer gravity (u8, **0** = `R01_PLAT_GRAVITY_DEFAULT`) |
+| `+$00F8` | `$80F8` | Platformer jump impulse (u8, **0** = `R01_PLAT_JUMP_DEFAULT`) |
+| `+$00F9` | `$80F9` | Platformer meter px (u8, **0** = `R01_PLAT_METER_DEFAULT`) |
+| `+$00FA` | `$80FA` | Crouch state index (u8, **$FF** = none) |
 
 Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs at `OFF_TYPES`).
 

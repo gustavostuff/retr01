@@ -31,6 +31,8 @@ typedef struct R01PlayAnimCtx {
     int player_idle_state;
     int player_walk_state[8];
     int player_state_delay[R01_PLAY_ANIM_STATES_MAX];
+    int player_crouch_state; /* -1 = none */
+    int player_crouching;
     /* If set (default), release (stop moving) snaps that state back to idle.
      * Clear with r01_play_anim_set_release_to_idle(ctx, state, 0) to hold pose. */
     int player_release_to_idle[R01_PLAY_ANIM_STATES_MAX];
@@ -40,6 +42,8 @@ void r01_play_anim_init(R01PlayAnimCtx *ctx);
 void r01_play_anim_set_idle_state(R01PlayAnimCtx *ctx, int entity_state_idx);
 void r01_play_anim_set_walk_state(R01PlayAnimCtx *ctx, int dir8, int entity_state_idx);
 void r01_play_anim_set_walk_all(R01PlayAnimCtx *ctx, int entity_state_idx);
+void r01_play_anim_set_crouch_state(R01PlayAnimCtx *ctx, int entity_state_idx);
+void r01_play_anim_set_crouching(R01PlayAnimCtx *ctx, int on);
 void r01_play_anim_set_release_to_idle(R01PlayAnimCtx *ctx, int entity_state_idx, int enable);
 void r01_play_default_face_set(R01PlayAnimCtx *ctx, int face);
 void r01_play_state_frame_delay_set(R01PlayAnimCtx *ctx, int entity_state_idx, int ticks);

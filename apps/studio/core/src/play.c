@@ -22,6 +22,7 @@ static void play_apply_custom_logic(R01GameCtx *ctx, const char *project_path) {
     int grav;
     int jump;
     int meter;
+    int crouch;
     if (!ctx) {
         return;
     }
@@ -38,14 +39,17 @@ static void play_apply_custom_logic(R01GameCtx *ctx, const char *project_path) {
     if (r01_custom_logic_scan_game_mode(path, &mode) == 0) {
         r01_game_set_mode(ctx, mode);
     }
-    if (r01_custom_logic_scan_plat_gravity(path, &grav) == 0) {
+    if (r01_custom_logic_scan_plat_gravity(path, &grav) == 0 && grav > 0) {
         r01_platformer_set_gravity(ctx, grav);
     }
-    if (r01_custom_logic_scan_plat_jump(path, &jump) == 0) {
+    if (r01_custom_logic_scan_plat_jump(path, &jump) == 0 && jump > 0) {
         r01_platformer_set_jump(ctx, jump);
     }
-    if (r01_custom_logic_scan_plat_meter(path, &meter) == 0) {
+    if (r01_custom_logic_scan_plat_meter(path, &meter) == 0 && meter > 0) {
         r01_platformer_set_meter(ctx, meter);
+    }
+    if (r01_custom_logic_scan_plat_crouch(path, &crouch) == 0) {
+        r01_player_anim_set_crouch_state(ctx, crouch);
     }
 }
 
@@ -123,6 +127,12 @@ int r01_play_start(R01PlayState *pl, const R01Project *p, const char *project_pa
     w = r01_project_active_world_const(p);
     if (!w) {
         return 0;
+    }
+    if (pl->ctx.player_crouch_state < 0) {
+        int pe = r01_world_player_entity(w);
+        if (pe >= 0 && pe < w->entity_count) {
+            r01_player_anim_set_crouch_state(&pl->ctx, r01_entity_crouch_state_index(&w->entities[pe]));
+        }
     }
     pl->active = 1;
     if (play_player_instance_spawn(w, &sx, &sy)) {
@@ -238,8 +248,18 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy, int ju
         ph.jump_held = ctx->plat_jump_held;
         move.w = w;
         move.ctx = ctx;
-        r01_play_physics_tick(&ph, &ctx->player_x, &ctx->player_y, dx, dy, jump_down, play_move_ok, &move,
-                              &anim_dx, &anim_dy);
+        {
+            int crouch = 0;
+            int phys_dx = dx;
+            if (ctx->game_mode == R01_GAME_MODE_PLATFORMER && ctx->plat_grounded && dy > 0 &&
+                ctx->player_crouch_state >= 0) {
+                crouch = 1;
+                phys_dx = 0;
+            }
+            r01_play_physics_tick(&ph, &ctx->player_x, &ctx->player_y, phys_dx, dy, jump_down, play_move_ok,
+                                  &move, &anim_dx, &anim_dy);
+            ctx->player_crouching = crouch;
+        }
         ctx->plat_vel_y = ph.vel_y;
         ctx->plat_frac_x = ph.frac_x;
         ctx->plat_frac_y = ph.frac_y;

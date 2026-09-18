@@ -56,6 +56,16 @@ TEST_MAIN() {
     EXPECT(r01_player_anim_dir(&ctx) == R01_PLAYER_DIR_UP_LEFT, "idle keeps last facing");
     EXPECT(r01_player_anim_flip_h(&ctx) == 1, "idle keeps left flip after walk");
 
+    r01_player_anim_set_crouch_state(&ctx, 2);
+    r01_entity_ensure_state(&w->entities[r01_world_player_entity(w)], 2);
+    ctx.player_crouching = 1;
+    r01_player_anim_update(&ctx, 0, 0);
+    EXPECT(r01_player_anim_entity_state(&ctx) == 2, "crouch state");
+    EXPECT(!r01_player_anim_moving(&ctx), "crouch is not walk");
+    ctx.player_crouching = 0;
+    r01_player_anim_update(&ctx, 0, 0);
+    EXPECT(r01_player_anim_entity_state(&ctx) == 0, "uncrouch to idle");
+
     r01_player_default_face_set(&ctx, R01_PLAYER_FACE_LEFT);
     EXPECT(r01_player_anim_flip_h(&ctx) == 1, "idle faces left with flip");
 

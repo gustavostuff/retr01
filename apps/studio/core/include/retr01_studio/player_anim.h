@@ -25,6 +25,7 @@ void r01_player_anim_init(R01GameCtx *ctx);
 void r01_player_anim_set_idle_state(R01GameCtx *ctx, int entity_state_idx);
 void r01_player_anim_set_walk_state(R01GameCtx *ctx, int dir8, int entity_state_idx);
 void r01_player_anim_set_walk_all(R01GameCtx *ctx, int entity_state_idx);
+void r01_player_anim_set_crouch_state(R01GameCtx *ctx, int entity_state_idx);
 void r01_player_default_face_set(R01GameCtx *ctx, int face);
 void r01_entity_state_frame_delay_set(R01GameCtx *ctx, int entity_state_idx, int ticks);
 void r01_player_anim_update(R01GameCtx *ctx, int dx, int dy);

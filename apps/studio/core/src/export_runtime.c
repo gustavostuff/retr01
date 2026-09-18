@@ -698,6 +698,8 @@ void r01_player_anim_init(R01GameCtx *ctx) {
     ctx->player_anim_moving = 0;
     ctx->player_default_face = R01_PLAYER_FACE_RIGHT;
     ctx->player_idle_state = 0;
+    ctx->player_crouch_state = -1;
+    ctx->player_crouching = 0;
     for (i = 0; i < 8; i++) {
         ctx->player_walk_state[i] = 1;
     }
@@ -740,6 +742,17 @@ void r01_player_anim_set_walk_all(R01GameCtx *ctx, int entity_state_idx) {
     if (ctx->player_anim_moving) {
         ctx->player_anim_state = entity_state_idx;
     }
+}
+
+void r01_player_anim_set_crouch_state(R01GameCtx *ctx, int entity_state_idx) {
+    if (!ctx) {
+        return;
+    }
+    if (entity_state_idx < 0 || entity_state_idx >= 4) {
+        ctx->player_crouch_state = -1;
+        return;
+    }
+    ctx->player_crouch_state = entity_state_idx;
 }
 
 void r01_player_default_face_set(R01GameCtx *ctx, int face) {

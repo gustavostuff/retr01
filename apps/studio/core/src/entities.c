@@ -500,6 +500,21 @@ const char *r01_entity_default_state_name(int state_idx) {
     return names[state_idx];
 }
 
+int r01_entity_crouch_state_index(const R01EntityType *e) {
+    int i;
+    char slug[R01_ENTITY_NAME_MAX];
+    if (!e) {
+        return -1;
+    }
+    for (i = 0; i < e->state_count && i < R01_ENTITY_STATES_MAX; i++) {
+        r01_id_slugify(slug, sizeof(slug), e->states[i].name);
+        if (strcmp(slug, "crouch") == 0 || strcmp(slug, "crouching") == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 R01EntityState *r01_entity_ensure_state(R01EntityType *e, int state_idx) {
     if (!e || state_idx < 0 || state_idx >= R01_ENTITY_STATES_MAX) {
         return NULL;

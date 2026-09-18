@@ -31,6 +31,8 @@ typedef struct R01GameCtx {
     int player_idle_state;
     int player_walk_state[8];
     int player_state_delay[4];
+    int player_crouch_state;
+    int player_crouching;
     int game_mode;
     int plat_gravity;
     int plat_jump;

@@ -724,36 +724,50 @@ static uint8_t cart_pack_world_flags(const char *custom_logic_path) {
     return flags;
 }
 
-static void cart_pack_platformer_prg(uint8_t prg[R01_PRG_BYTES], const char *custom_logic_path) {
+static void cart_pack_platformer_prg(uint8_t prg[R01_PRG_BYTES], const char *custom_logic_path, const R01World *w) {
     int grav = 0;
     int jump = 0;
     int meter = 0;
+    int crouch = -1;
+    int pe;
     if (!prg) {
         return;
     }
     prg[R01_PRG_PLAT_GRAVITY_OFF] = 0;
     prg[R01_PRG_PLAT_JUMP_OFF] = 0;
     prg[R01_PRG_PLAT_METER_OFF] = 0;
-    if (!custom_logic_path) {
-        return;
+    prg[R01_PRG_PLAT_CROUCH_OFF] = 0xFFu;
+    if (custom_logic_path) {
+        if (r01_custom_logic_scan_plat_gravity(custom_logic_path, &grav) == 0 && grav > 0) {
+            R01PlayPhysics ph;
+            r01_play_physics_init(&ph);
+            r01_play_physics_set_gravity(&ph, grav);
+            prg[R01_PRG_PLAT_GRAVITY_OFF] = (uint8_t)ph.gravity;
+        }
+        if (r01_custom_logic_scan_plat_jump(custom_logic_path, &jump) == 0 && jump > 0) {
+            R01PlayPhysics ph;
+            r01_play_physics_init(&ph);
+            r01_play_physics_set_jump(&ph, jump);
+            prg[R01_PRG_PLAT_JUMP_OFF] = (uint8_t)ph.jump;
+        }
+        if (r01_custom_logic_scan_plat_meter(custom_logic_path, &meter) == 0 && meter > 0) {
+            R01PlayPhysics ph;
+            r01_play_physics_init(&ph);
+            r01_play_physics_set_meter(&ph, meter);
+            prg[R01_PRG_PLAT_METER_OFF] = (uint8_t)ph.meter;
+        }
+        if (r01_custom_logic_scan_plat_crouch(custom_logic_path, &crouch) != 0) {
+            crouch = -1;
+        }
     }
-    if (r01_custom_logic_scan_plat_gravity(custom_logic_path, &grav) == 0 && grav > 0) {
-        R01PlayPhysics ph;
-        r01_play_physics_init(&ph);
-        r01_play_physics_set_gravity(&ph, grav);
-        prg[R01_PRG_PLAT_GRAVITY_OFF] = (uint8_t)ph.gravity;
+    if (crouch < 0 && w) {
+        pe = r01_world_player_entity(w);
+        if (pe >= 0 && pe < w->entity_count) {
+            crouch = r01_entity_crouch_state_index(&w->entities[pe]);
+        }
     }
-    if (r01_custom_logic_scan_plat_jump(custom_logic_path, &jump) == 0 && jump > 0) {
-        R01PlayPhysics ph;
-        r01_play_physics_init(&ph);
-        r01_play_physics_set_jump(&ph, jump);
-        prg[R01_PRG_PLAT_JUMP_OFF] = (uint8_t)ph.jump;
-    }
-    if (r01_custom_logic_scan_plat_meter(custom_logic_path, &meter) == 0 && meter > 0) {
-        R01PlayPhysics ph;
-        r01_play_physics_init(&ph);
-        r01_play_physics_set_meter(&ph, meter);
-        prg[R01_PRG_PLAT_METER_OFF] = (uint8_t)ph.meter;
+    if (crouch >= 0 && crouch < R01_ENTITY_STATES_MAX) {
+        prg[R01_PRG_PLAT_CROUCH_OFF] = (uint8_t)crouch;
     }
 }
 
@@ -1238,7 +1252,7 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
     {
         char custom_logic_path[R01_PATH_MAX];
         resolve_custom_logic_path(cart_path, custom_logic_path, sizeof(custom_logic_path));
-        cart_pack_platformer_prg(prg, custom_logic_path);
+        cart_pack_platformer_prg(prg, custom_logic_path, &work->worlds[0]);
     }
 
     memset(ptrs, 0, sizeof(ptrs));
