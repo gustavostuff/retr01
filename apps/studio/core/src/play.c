@@ -22,6 +22,9 @@ static void play_apply_custom_logic(R01GameCtx *ctx, const char *project_path) {
     int grav;
     int jump;
     int meter;
+    int idle = -1;
+    int walk = -1;
+    int jump_state = -1;
     int crouch;
     if (!ctx) {
         return;
@@ -48,8 +51,17 @@ static void play_apply_custom_logic(R01GameCtx *ctx, const char *project_path) {
     if (r01_custom_logic_scan_plat_meter(path, &meter) == 0 && meter > 0) {
         r01_platformer_set_meter(ctx, meter);
     }
+    if (r01_custom_logic_scan_player_idle(path, &idle) == 0) {
+        r01_player_anim_set_idle_state(ctx, idle);
+    }
+    if (r01_custom_logic_scan_player_walk(path, &walk) == 0) {
+        r01_player_anim_set_walk_all(ctx, walk);
+    }
     if (r01_custom_logic_scan_plat_crouch(path, &crouch) == 0) {
         r01_player_anim_set_crouch_state(ctx, crouch);
+    }
+    if (r01_custom_logic_scan_player_jump(path, &jump_state) == 0) {
+        r01_player_anim_set_jump_state(ctx, jump_state);
     }
 }
 
@@ -127,12 +139,6 @@ int r01_play_start(R01PlayState *pl, const R01Project *p, const char *project_pa
     w = r01_project_active_world_const(p);
     if (!w) {
         return 0;
-    }
-    if (pl->ctx.player_crouch_state < 0) {
-        int pe = r01_world_player_entity(w);
-        if (pe >= 0 && pe < w->entity_count) {
-            r01_player_anim_set_crouch_state(&pl->ctx, r01_entity_crouch_state_index(&w->entities[pe]));
-        }
     }
     pl->active = 1;
     if (play_player_instance_spawn(w, &sx, &sy)) {
@@ -265,6 +271,10 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy, int ju
         ctx->plat_frac_y = ph.frac_y;
         ctx->plat_grounded = ph.grounded;
         ctx->plat_jump_held = ph.jump_held;
+        ctx->player_airborne = (ctx->game_mode == R01_GAME_MODE_PLATFORMER && !ph.grounded) ? 1 : 0;
+        if (ctx->player_airborne) {
+            ctx->player_crouching = 0;
+        }
         r01_player_anim_update(ctx, anim_dx, anim_dy);
         r01_player_anim_tick(ctx, w, pe);
     }

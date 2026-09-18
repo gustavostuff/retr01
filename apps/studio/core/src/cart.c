@@ -739,7 +739,10 @@ static void cart_pack_platformer_prg(uint8_t prg[R01_PRG_BYTES], const char *cus
     int jump = 0;
     int meter = 0;
     int crouch = -1;
-    int pe;
+    int idle = -1;
+    int walk = -1;
+    int jump_state = -1;
+    (void)w;
     if (!prg) {
         return;
     }
@@ -747,6 +750,9 @@ static void cart_pack_platformer_prg(uint8_t prg[R01_PRG_BYTES], const char *cus
     prg[R01_PRG_PLAT_JUMP_OFF] = 0;
     prg[R01_PRG_PLAT_METER_OFF] = 0;
     prg[R01_PRG_PLAT_CROUCH_OFF] = 0xFFu;
+    prg[R01_PRG_PLAYER_ANIM_IDLE_OFF] = 0xFFu;
+    prg[R01_PRG_PLAYER_ANIM_WALK_OFF] = 0xFFu;
+    prg[R01_PRG_PLAYER_ANIM_JUMP_OFF] = 0xFFu;
     if (custom_logic_path) {
         if (r01_custom_logic_scan_plat_gravity(custom_logic_path, &grav) == 0 && grav > 0) {
             R01PlayPhysics ph;
@@ -766,18 +772,22 @@ static void cart_pack_platformer_prg(uint8_t prg[R01_PRG_BYTES], const char *cus
             r01_play_physics_set_meter(&ph, meter);
             prg[R01_PRG_PLAT_METER_OFF] = (uint8_t)ph.meter;
         }
-        if (r01_custom_logic_scan_plat_crouch(custom_logic_path, &crouch) != 0) {
-            crouch = -1;
+        if (r01_custom_logic_scan_plat_crouch(custom_logic_path, &crouch) == 0 && crouch >= 0 &&
+            crouch < R01_ENTITY_STATES_MAX) {
+            prg[R01_PRG_PLAT_CROUCH_OFF] = (uint8_t)crouch;
         }
-    }
-    if (crouch < 0 && w) {
-        pe = r01_world_player_entity(w);
-        if (pe >= 0 && pe < w->entity_count) {
-            crouch = r01_entity_crouch_state_index(&w->entities[pe]);
+        if (r01_custom_logic_scan_player_idle(custom_logic_path, &idle) == 0 && idle >= 0 &&
+            idle < R01_ENTITY_STATES_MAX) {
+            prg[R01_PRG_PLAYER_ANIM_IDLE_OFF] = (uint8_t)idle;
         }
-    }
-    if (crouch >= 0 && crouch < R01_ENTITY_STATES_MAX) {
-        prg[R01_PRG_PLAT_CROUCH_OFF] = (uint8_t)crouch;
+        if (r01_custom_logic_scan_player_walk(custom_logic_path, &walk) == 0 && walk >= 0 &&
+            walk < R01_ENTITY_STATES_MAX) {
+            prg[R01_PRG_PLAYER_ANIM_WALK_OFF] = (uint8_t)walk;
+        }
+        if (r01_custom_logic_scan_player_jump(custom_logic_path, &jump_state) == 0 && jump_state >= 0 &&
+            jump_state < R01_ENTITY_STATES_MAX) {
+            prg[R01_PRG_PLAYER_ANIM_JUMP_OFF] = (uint8_t)jump_state;
+        }
     }
 }
 

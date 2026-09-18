@@ -14,15 +14,15 @@ static const uint8_t play_spawn_col = 0;
 static const uint8_t play_spawn_row = 7;
 static const int player_entity = 0;
 static const R01InstRec entity_insts[1] = {
-    {0, 15, 894}
+    {0, 22, 890}
 };
 static const int entity_inst_count = 1;
-static const int player_inst_x = 15;
-static const int player_inst_y = 894;
+static const int player_inst_x = 22;
+static const int player_inst_y = 890;
 static const int player_hit_x = 12;
-static const int player_hit_y = 12;
+static const int player_hit_y = 9;
 static const int player_hit_w = 8;
-static const int player_hit_h = 16;
+static const int player_hit_h = 19;
 const int player_state_frames[4] = {2, 4, 1, 1};
 
 typedef struct { const char *id; int sc, sr, tc, tr; } R01WarpEntRec;

@@ -29,6 +29,9 @@ typedef struct R01PrgCartLayout {
 #define R01_PRG_PLAT_JUMP_OFF 0x00F8u
 #define R01_PRG_PLAT_METER_OFF 0x00F9u
 #define R01_PRG_PLAT_CROUCH_OFF 0x00FAu
+#define R01_PRG_PLAYER_ANIM_IDLE_OFF 0x00FBu
+#define R01_PRG_PLAYER_ANIM_WALK_OFF 0x00FCu
+#define R01_PRG_PLAYER_ANIM_JUMP_OFF 0x00FDu
 
 /*
  * Phase 1 PRG: reset init, palette + start-screen MAP stream ($7F93->$7F12),

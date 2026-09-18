@@ -31,6 +31,15 @@ int r01_custom_logic_scan_plat_meter(const char *path, int *out_meter);
 /* Parse r01_player_anim_set_crouch_state(ctx, n). Returns 0 on match. */
 int r01_custom_logic_scan_plat_crouch(const char *path, int *out_state);
 
+/* Parse r01_player_anim_set_idle_state(ctx, n). Returns 0 on match. */
+int r01_custom_logic_scan_player_idle(const char *path, int *out_state);
+
+/* Parse r01_player_anim_set_walk_all(ctx, n). Returns 0 on match. */
+int r01_custom_logic_scan_player_walk(const char *path, int *out_state);
+
+/* Parse r01_player_anim_set_jump_state(ctx, n). Returns 0 on match. */
+int r01_custom_logic_scan_player_jump(const char *path, int *out_state);
+
 /* foo.r01proj -> sibling C/custom_logic.c */
 int r01_custom_logic_path_for_project(const char *proj_path, char *out, size_t out_cap);
 

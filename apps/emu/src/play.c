@@ -160,16 +160,37 @@ static void play_load_cart_camera(R01eMachine *m) {
     }
 }
 
-static void play_load_crouch_state(R01eMachine *m) {
+static void play_load_anim_maps(R01eMachine *m) {
     const uint8_t *prg;
     if (!m) {
         return;
     }
     prg = r01e_cart_prg(&m->cart);
-    if (prg && m->cart.len_prg > R01E_PRG_PLAT_CROUCH_OFF) {
+    if (!prg || m->cart.len_prg <= R01E_PRG_PLAYER_ANIM_JUMP_OFF) {
+        return;
+    }
+    {
         uint8_t crouch = prg[R01E_PRG_PLAT_CROUCH_OFF];
         if (crouch < R01_PLAY_ANIM_STATES_MAX) {
             r01_play_anim_set_crouch_state(&m->play.anim, (int)crouch);
+        }
+    }
+    {
+        uint8_t idle = prg[R01E_PRG_PLAYER_ANIM_IDLE_OFF];
+        if (idle < R01_PLAY_ANIM_STATES_MAX) {
+            r01_play_anim_set_idle_state(&m->play.anim, (int)idle);
+        }
+    }
+    {
+        uint8_t walk = prg[R01E_PRG_PLAYER_ANIM_WALK_OFF];
+        if (walk < R01_PLAY_ANIM_STATES_MAX) {
+            r01_play_anim_set_walk_all(&m->play.anim, (int)walk);
+        }
+    }
+    {
+        uint8_t jump_st = prg[R01E_PRG_PLAYER_ANIM_JUMP_OFF];
+        if (jump_st < R01_PLAY_ANIM_STATES_MAX) {
+            r01_play_anim_set_jump_state(&m->play.anim, (int)jump_st);
         }
     }
 }
@@ -537,7 +558,7 @@ int r01e_play_start(R01eMachine *m) {
     if (player_instance_spawn(m, &sx, &sy)) {
         m->play.enabled = 1;
         r01_play_anim_init(&m->play.anim);
-        play_load_crouch_state(m);
+        play_load_anim_maps(m);
         place_player_xy(&m->play, sx, sy);
         clamp_cam_to_world_bounds(m);
         r01e_play_sync_video(m);
@@ -550,7 +571,7 @@ int r01e_play_start(R01eMachine *m) {
     }
     m->play.enabled = 1;
     r01_play_anim_init(&m->play.anim);
-    play_load_crouch_state(m);
+    play_load_anim_maps(m);
     place_player_on_screen(&m->play, col, row);
     clamp_cam_to_world_bounds(m);
     r01e_play_sync_video(m);
@@ -598,7 +619,11 @@ void r01e_play_tick(R01eMachine *m) {
         }
         r01_play_physics_tick(&pl->phys, &pl->player_x, &pl->player_y, phys_dx, dy, jump_down, play_origin_ok, m,
                               &anim_dx, &anim_dy);
+        if (pl->phys.mode == R01_GAME_MODE_PLATFORMER && !pl->phys.grounded) {
+            crouch = 0;
+        }
         r01_play_anim_set_crouching(&pl->anim, crouch);
+        r01_play_anim_set_airborne(&pl->anim, pl->phys.mode == R01_GAME_MODE_PLATFORMER && !pl->phys.grounded);
         r01_play_anim_update(&pl->anim, anim_dx, anim_dy);
     }
     /* No dead zone: camera tracks the player every tick. */

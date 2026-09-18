@@ -697,11 +697,13 @@ void r01_player_anim_init(R01GameCtx *ctx) {
     ctx->player_anim_dir = R01_PLAYER_DIR_RIGHT;
     ctx->player_anim_moving = 0;
     ctx->player_default_face = R01_PLAYER_FACE_RIGHT;
-    ctx->player_idle_state = 0;
+    ctx->player_idle_state = -1;
     ctx->player_crouch_state = -1;
     ctx->player_crouching = 0;
+    ctx->player_jump_state = -1;
+    ctx->player_airborne = 0;
     for (i = 0; i < 8; i++) {
-        ctx->player_walk_state[i] = 1;
+        ctx->player_walk_state[i] = -1;
     }
     for (i = 0; i < 4; i++) {
         ctx->player_state_delay[i] = 6;
@@ -755,6 +757,17 @@ void r01_player_anim_set_crouch_state(R01GameCtx *ctx, int entity_state_idx) {
     ctx->player_crouch_state = entity_state_idx;
 }
 
+void r01_player_anim_set_jump_state(R01GameCtx *ctx, int entity_state_idx) {
+    if (!ctx) {
+        return;
+    }
+    if (entity_state_idx < 0 || entity_state_idx >= 4) {
+        ctx->player_jump_state = -1;
+        return;
+    }
+    ctx->player_jump_state = entity_state_idx;
+}
+
 void r01_player_default_face_set(R01GameCtx *ctx, int face) {
     if (!ctx) {
         return;
@@ -778,9 +791,26 @@ void r01_entity_state_frame_delay_set(R01GameCtx *ctx, int entity_state_idx, int
     ctx->player_state_delay[entity_state_idx] = ticks;
 }
 
+static void pa_show_mapped(R01GameCtx *ctx, int mapped) {
+    if (!ctx) {
+        return;
+    }
+    if (mapped < 0) {
+        ctx->player_anim_state = 0;
+        ctx->player_anim_frame = 0;
+        ctx->player_anim_ctr = 0;
+        return;
+    }
+    if (ctx->player_anim_state != mapped) {
+        ctx->player_anim_state = mapped;
+        ctx->player_anim_frame = 0;
+        ctx->player_anim_ctr = 0;
+    }
+}
+
 void r01_player_anim_update(R01GameCtx *ctx, int dx, int dy) {
     int new_dir;
-    int prev_state;
+    int pose;
     if (!ctx) {
         return;
     }
@@ -788,22 +818,37 @@ void r01_player_anim_update(R01GameCtx *ctx, int dx, int dy) {
         new_dir = pa_dir_from_delta(dx, dy);
         if (new_dir >= 0) {
             ctx->player_anim_dir = new_dir;
+            ctx->player_anim_flip_h = pa_dir_flip_h(ctx->player_anim_dir);
         }
+    }
+    if (ctx->player_airborne && ctx->player_jump_state >= 0) {
+        ctx->player_anim_moving = (dx != 0 || dy != 0);
+        pa_show_mapped(ctx, ctx->player_jump_state);
+        return;
+    }
+    if (ctx->player_crouching && ctx->player_crouch_state >= 0) {
+        ctx->player_anim_moving = 0;
+        pa_show_mapped(ctx, ctx->player_crouch_state);
+        return;
+    }
+    if (dx != 0 || dy != 0) {
         ctx->player_anim_moving = 1;
-        ctx->player_anim_flip_h = pa_dir_flip_h(ctx->player_anim_dir);
-        prev_state = ctx->player_anim_state;
-        ctx->player_anim_state = ctx->player_walk_state[ctx->player_anim_dir];
-        if (ctx->player_anim_state != prev_state) {
-            ctx->player_anim_frame = 0;
-            ctx->player_anim_ctr = 0;
+        pose = ctx->player_walk_state[ctx->player_anim_dir];
+        if (pose < 0) {
+            pose = ctx->player_idle_state;
         }
+        pa_show_mapped(ctx, pose);
         return;
     }
     if (ctx->player_anim_moving) {
         ctx->player_anim_moving = 0;
-        ctx->player_anim_state = ctx->player_idle_state;
-        ctx->player_anim_frame = 0;
-        ctx->player_anim_ctr = 0;
+        pa_show_mapped(ctx, ctx->player_idle_state);
+    } else if (ctx->player_idle_state < 0) {
+        pa_show_mapped(ctx, -1);
+    } else if (ctx->player_crouch_state >= 0 && ctx->player_anim_state == ctx->player_crouch_state) {
+        pa_show_mapped(ctx, ctx->player_idle_state);
+    } else if (ctx->player_jump_state >= 0 && ctx->player_anim_state == ctx->player_jump_state) {
+        pa_show_mapped(ctx, ctx->player_idle_state);
     }
 }
 
@@ -811,6 +856,10 @@ void r01_player_anim_tick(R01GameCtx *ctx) {
     int delay;
     int frame_count;
     if (!ctx) {
+        return;
+    }
+    if (ctx->player_idle_state < 0 && ctx->player_anim_state == 0) {
+        ctx->player_anim_frame = 0;
         return;
     }
     if (ctx->player_anim_state < 0 || ctx->player_anim_state >= 4) {

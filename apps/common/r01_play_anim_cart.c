@@ -198,6 +198,10 @@ void r01_play_anim_tick_cart(R01PlayAnimCtx *ctx, const R01CartPlayerAnim *anim)
     if (!ctx || !anim) {
         return;
     }
+    if (ctx->player_idle_state < 0 && ctx->player_anim_state == 0) {
+        ctx->player_anim_frame = 0;
+        return;
+    }
     if (ctx->player_anim_state < 0 || ctx->player_anim_state >= anim->state_count) {
         return;
     }

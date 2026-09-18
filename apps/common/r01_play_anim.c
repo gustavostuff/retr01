@@ -68,11 +68,13 @@ void r01_play_anim_init(R01PlayAnimCtx *ctx) {
     ctx->player_anim_dir = R01_PLAYER_DIR_RIGHT;
     ctx->player_anim_moving = 0;
     ctx->player_default_face = R01_PLAYER_FACE_RIGHT;
-    ctx->player_idle_state = 0;
+    ctx->player_idle_state = -1;
     ctx->player_crouch_state = -1;
     ctx->player_crouching = 0;
+    ctx->player_jump_state = -1;
+    ctx->player_airborne = 0;
     for (i = 0; i < 8; i++) {
-        ctx->player_walk_state[i] = 1;
+        ctx->player_walk_state[i] = -1;
     }
     for (i = 0; i < R01_PLAY_ANIM_STATES_MAX; i++) {
         ctx->player_state_delay[i] = R01_PLAY_ANIM_DELAY_DEFAULT;
@@ -129,11 +131,48 @@ void r01_play_anim_set_crouch_state(R01PlayAnimCtx *ctx, int entity_state_idx) {
     ctx->player_crouch_state = entity_state_idx;
 }
 
+void r01_play_anim_set_jump_state(R01PlayAnimCtx *ctx, int entity_state_idx) {
+    if (!ctx) {
+        return;
+    }
+    if (entity_state_idx < 0 || entity_state_idx >= R01_PLAY_ANIM_STATES_MAX) {
+        ctx->player_jump_state = -1;
+        return;
+    }
+    ctx->player_jump_state = entity_state_idx;
+}
+
 void r01_play_anim_set_crouching(R01PlayAnimCtx *ctx, int on) {
     if (!ctx) {
         return;
     }
     ctx->player_crouching = on ? 1 : 0;
+}
+
+void r01_play_anim_set_airborne(R01PlayAnimCtx *ctx, int on) {
+    if (!ctx) {
+        return;
+    }
+    ctx->player_airborne = on ? 1 : 0;
+}
+
+static void pa_show_mapped(R01PlayAnimCtx *ctx, int mapped) {
+    int next;
+    if (!ctx) {
+        return;
+    }
+    if (mapped < 0) {
+        ctx->player_anim_state = 0;
+        ctx->player_anim_frame = 0;
+        ctx->player_anim_ctr = 0;
+        return;
+    }
+    next = mapped;
+    if (ctx->player_anim_state != next) {
+        ctx->player_anim_state = next;
+        ctx->player_anim_frame = 0;
+        ctx->player_anim_ctr = 0;
+    }
 }
 
 void r01_play_anim_set_release_to_idle(R01PlayAnimCtx *ctx, int entity_state_idx, int enable) {
@@ -168,60 +207,50 @@ void r01_play_state_frame_delay_set(R01PlayAnimCtx *ctx, int entity_state_idx, i
 
 void r01_play_anim_update(R01PlayAnimCtx *ctx, int dx, int dy) {
     int new_dir;
-    int prev_state;
+    int pose;
     if (!ctx) {
         return;
-    }
-    if (ctx->player_crouching && ctx->player_crouch_state >= 0) {
-        if (dx != 0) {
-            new_dir = dir_from_delta(dx, 0);
-            if (new_dir >= 0) {
-                ctx->player_anim_dir = new_dir;
-                ctx->player_anim_flip_h = dir_flip_h(ctx->player_anim_dir);
-            }
-        }
-        ctx->player_anim_moving = 0;
-        prev_state = ctx->player_anim_state;
-        ctx->player_anim_state = ctx->player_crouch_state;
-        if (ctx->player_anim_state != prev_state) {
-            ctx->player_anim_frame = 0;
-            ctx->player_anim_ctr = 0;
-        }
-        return;
-    }
-    if (ctx->player_crouch_state >= 0 && ctx->player_anim_state == ctx->player_crouch_state) {
-        if (dx == 0 && dy == 0) {
-            ctx->player_anim_moving = 0;
-            ctx->player_anim_state = ctx->player_idle_state;
-            ctx->player_anim_frame = 0;
-            ctx->player_anim_ctr = 0;
-            return;
-        }
     }
     if (dx != 0 || dy != 0) {
         new_dir = dir_from_delta(dx, dy);
         if (new_dir >= 0) {
             ctx->player_anim_dir = new_dir;
+            ctx->player_anim_flip_h = dir_flip_h(ctx->player_anim_dir);
         }
+    }
+    if (ctx->player_airborne && ctx->player_jump_state >= 0) {
+        ctx->player_anim_moving = (dx != 0 || dy != 0);
+        pa_show_mapped(ctx, ctx->player_jump_state);
+        return;
+    }
+    if (ctx->player_crouching && ctx->player_crouch_state >= 0) {
+        ctx->player_anim_moving = 0;
+        pa_show_mapped(ctx, ctx->player_crouch_state);
+        return;
+    }
+    if (dx != 0 || dy != 0) {
         ctx->player_anim_moving = 1;
-        ctx->player_anim_flip_h = dir_flip_h(ctx->player_anim_dir);
-        prev_state = ctx->player_anim_state;
-        ctx->player_anim_state = ctx->player_walk_state[ctx->player_anim_dir];
-        if (ctx->player_anim_state != prev_state) {
-            ctx->player_anim_frame = 0;
-            ctx->player_anim_ctr = 0;
+        pose = ctx->player_walk_state[ctx->player_anim_dir];
+        if (pose < 0) {
+            pose = ctx->player_idle_state;
         }
+        pa_show_mapped(ctx, pose);
         return;
     }
     if (ctx->player_anim_moving) {
         ctx->player_anim_moving = 0;
-        if (ctx->player_anim_state >= 0 && ctx->player_anim_state < R01_PLAY_ANIM_STATES_MAX &&
-            ctx->player_release_to_idle[ctx->player_anim_state]) {
-            ctx->player_anim_state = ctx->player_idle_state;
-            ctx->player_anim_frame = 0;
-            ctx->player_anim_ctr = 0;
+        if (ctx->player_idle_state < 0 ||
+            (ctx->player_anim_state >= 0 && ctx->player_anim_state < R01_PLAY_ANIM_STATES_MAX &&
+             ctx->player_release_to_idle[ctx->player_anim_state])) {
+            pa_show_mapped(ctx, ctx->player_idle_state);
         }
         /* release_to_idle cleared: keep last movement state/tile/flip (e.g. slide hold). */
+    } else if (ctx->player_idle_state < 0) {
+        pa_show_mapped(ctx, -1);
+    } else if (ctx->player_crouch_state >= 0 && ctx->player_anim_state == ctx->player_crouch_state) {
+        pa_show_mapped(ctx, ctx->player_idle_state);
+    } else if (ctx->player_jump_state >= 0 && ctx->player_anim_state == ctx->player_jump_state) {
+        pa_show_mapped(ctx, ctx->player_idle_state);
     }
 }
 

@@ -417,7 +417,10 @@ TEST_MAIN() {
                   "    r01_platformer_set_gravity(ctx, 2);\n"
                   "    r01_platformer_set_jump(ctx, R01_PLAT_JUMP_DEFAULT);\n"
                   "    r01_platformer_set_meter(ctx, R01_PLAT_METER_DEFAULT);\n"
+                  "    r01_player_anim_set_idle_state(ctx, 0);\n"
+                  "    r01_player_anim_set_walk_all(ctx, 1);\n"
                   "    r01_player_anim_set_crouch_state(ctx, 2);\n"
+                  "    r01_player_anim_set_jump_state(ctx, 3);\n"
                   "}\n",
                   f);
             fclose(f);
@@ -431,6 +434,15 @@ TEST_MAIN() {
         {
             int crouch = -1;
             EXPECT(r01_custom_logic_scan_plat_crouch("plat_logic.c", &crouch) == 0 && crouch == 2, "scan crouch state");
+            {
+                int idle = -1;
+                int walk = -1;
+                int jump_st = -1;
+                EXPECT(r01_custom_logic_scan_player_idle("plat_logic.c", &idle) == 0 && idle == 0, "scan idle state");
+                EXPECT(r01_custom_logic_scan_player_walk("plat_logic.c", &walk) == 0 && walk == 1, "scan walk state");
+                EXPECT(r01_custom_logic_scan_player_jump("plat_logic.c", &jump_st) == 0 && jump_st == 3,
+                       "scan jump state");
+            }
         }
         remove("plat_logic.c");
     }

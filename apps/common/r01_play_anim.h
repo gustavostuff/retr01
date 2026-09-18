@@ -28,11 +28,13 @@ typedef struct R01PlayAnimCtx {
     int player_anim_dir;
     int player_anim_moving;
     int player_default_face;
-    int player_idle_state;
-    int player_walk_state[8];
+    int player_idle_state; /* -1 = unmapped: freeze state 0 frame 0 */
+    int player_walk_state[8]; /* -1 = unmapped */
     int player_state_delay[R01_PLAY_ANIM_STATES_MAX];
     int player_crouch_state; /* -1 = none */
     int player_crouching;
+    int player_jump_state; /* -1 = none */
+    int player_airborne;
     /* If set (default), release (stop moving) snaps that state back to idle.
      * Clear with r01_play_anim_set_release_to_idle(ctx, state, 0) to hold pose. */
     int player_release_to_idle[R01_PLAY_ANIM_STATES_MAX];
@@ -43,7 +45,9 @@ void r01_play_anim_set_idle_state(R01PlayAnimCtx *ctx, int entity_state_idx);
 void r01_play_anim_set_walk_state(R01PlayAnimCtx *ctx, int dir8, int entity_state_idx);
 void r01_play_anim_set_walk_all(R01PlayAnimCtx *ctx, int entity_state_idx);
 void r01_play_anim_set_crouch_state(R01PlayAnimCtx *ctx, int entity_state_idx);
+void r01_play_anim_set_jump_state(R01PlayAnimCtx *ctx, int entity_state_idx);
 void r01_play_anim_set_crouching(R01PlayAnimCtx *ctx, int on);
+void r01_play_anim_set_airborne(R01PlayAnimCtx *ctx, int on);
 void r01_play_anim_set_release_to_idle(R01PlayAnimCtx *ctx, int entity_state_idx, int enable);
 void r01_play_default_face_set(R01PlayAnimCtx *ctx, int face);
 void r01_play_state_frame_delay_set(R01PlayAnimCtx *ctx, int entity_state_idx, int ticks);

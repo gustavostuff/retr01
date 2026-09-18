@@ -303,7 +303,10 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 | `+$00F7` | `$80F7` | Platformer gravity (u8, 1/16 px per frame^2, **0** = `R01_PLAT_GRAVITY_DEFAULT`) |
 | `+$00F8` | `$80F8` | Platformer jump impulse (u8, **0** = `R01_PLAT_JUMP_DEFAULT`) |
 | `+$00F9` | `$80F9` | Platformer meter px (u8, **0** = `R01_PLAT_METER_DEFAULT`) |
-| `+$00FA` | `$80FA` | Crouch state index (u8, **$FF** = none) |
+| `+$00FA` | `$80FA` | Crouch state index (u8, **$FF** = unmapped) |
+| `+$00FB` | `$80FB` | Idle state index (u8, **$FF** = unmapped; freeze state 0 frame 0) |
+| `+$00FC` | `$80FC` | Walk state index (u8, **$FF** = unmapped) |
+| `+$00FD` | `$80FD` | Jump state index (u8, **$FF** = unmapped) |
 
 Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs at `OFF_TYPES`).
 

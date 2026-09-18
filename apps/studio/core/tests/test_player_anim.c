@@ -37,6 +37,10 @@ TEST_MAIN() {
         }
     }
     r01_game_ctx_init(&ctx);
+    r01_player_anim_update(&ctx, -1, 0);
+    EXPECT(r01_player_anim_entity_state(&ctx) == 0, "unmapped walk stays state 0");
+    EXPECT(r01_player_anim_frame(&ctx) == 0, "unmapped walk freezes frame 0");
+    EXPECT(r01_player_anim_flip_h(&ctx) == 1, "unmapped still flips for facing");
     r01_player_anim_set_idle_state(&ctx, 0);
     r01_player_anim_set_walk_all(&ctx, 1);
     r01_entity_state_frame_delay_set(&ctx, 1, 2);
@@ -86,6 +90,21 @@ TEST_MAIN() {
         r01_player_anim_tick(&ctx, w, pe);
         r01_player_anim_tick(&ctx, w, pe);
         EXPECT(r01_player_anim_frame(&ctx) == 1, "walk frames advance");
+    }
+
+    {
+        int pe = r01_world_player_entity(w);
+        r01_entity_ensure_state(&w->entities[pe], 3);
+        r01_player_anim_set_jump_state(&ctx, 3);
+        ctx.player_airborne = 1;
+        r01_player_anim_update(&ctx, 0, 0);
+        EXPECT(r01_player_anim_entity_state(&ctx) == 3, "airborne uses jump state");
+        r01_player_anim_update(&ctx, -1, 0);
+        EXPECT(r01_player_anim_entity_state(&ctx) == 3, "airborne jump keeps pose while moving");
+        EXPECT(r01_player_anim_flip_h(&ctx) == 1, "airborne still flips");
+        ctx.player_airborne = 0;
+        r01_player_anim_update(&ctx, 0, 0);
+        EXPECT(r01_player_anim_entity_state(&ctx) == 0, "land returns to idle");
     }
 
     free(p);

@@ -396,6 +396,18 @@ int r01_custom_logic_scan_plat_crouch(const char *path, int *out_state) {
     return scan_ctx_one_named(path, "r01_player_anim_set_crouch_state", out_state);
 }
 
+int r01_custom_logic_scan_player_idle(const char *path, int *out_state) {
+    return scan_ctx_one_named(path, "r01_player_anim_set_idle_state", out_state);
+}
+
+int r01_custom_logic_scan_player_walk(const char *path, int *out_state) {
+    return scan_ctx_one_named(path, "r01_player_anim_set_walk_all", out_state);
+}
+
+int r01_custom_logic_scan_player_jump(const char *path, int *out_state) {
+    return scan_ctx_one_named(path, "r01_player_anim_set_jump_state", out_state);
+}
+
 int r01_custom_logic_scan_bgm_play(const char *path, int *out_track) {
     FILE *f;
     char line[512];
