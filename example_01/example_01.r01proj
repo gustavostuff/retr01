@@ -6,13 +6,13 @@
   "active_screen": 112,
   "default_screen": 112,
   "default_pal_row": 0,
-  "player_entity": 0,
+  "player_entity": -1,
   "grid_cols": 16,
   "grid_rows": 16,
   "global_pal_bg": [[0, 16, 32, 48], [0, 12, 44, 48], [0, 24, 39, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51]],
   "global_pal_spr": [[0, 2, 17, 51], [0, 18, 33, 51], [0, 23, 39, 55], [0, 30, 46, 51], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34]],
   "other_spr_banks": [
-    {"tiles": 23, "b64": "ADh/f29Pjw8AAAQIAAAFBQAw4PDw+Pj4AAAAAEDgQEAfBwYODw8PBwEAAwcEBAcD8ODQaAgw+LjggODw8MBQUAMBAQEBAwUFAAAAAAAAAgIw8PDw4OAgEMDgYGDAgMDgOH9/b0+PDx8ABAgAAAUFATDg8PD4+PjwAAAAQOBAQOAHBg4PDw8HBwADBwQEBgMD4NBoCDD4uLCA4PDwwNBQQPDw8PDg4CAQ4GBgYMCAwOAHBg4fPT4cBAADBwwYGQMD4NBsDj78YCCA4PD0zMCAwAY/T05QMAAAAQY8MCAAAABw+Hg+MiQYAOBwMBAcGAAABwYHAwMECAgAAwMBAAMHB+DQaPj4+HCQgODwgPAwgGAPf56coGAAAAYOeGBAAAAA8Hh4PjIkGABgMDAQHBgAAAcPDw0JEQEBAAABAAAAAAAG/P7+/////gCAAAgcqKg8AAEHCQkdJ0cAAAAGBwMYP/za7fH+///+EHx+LrDW2pg="},
+    {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""}
@@ -38,51 +38,8 @@
   "metatiles": [
   ],
   "entities": [
-    {
-      "name": "player",
-      "state_count": 4,
-      "states": [
-        {
-          "name": "idle",
-          "frame_count": 2,
-          "hitbox_x": 12, "hitbox_y": 12, "hitbox_w": 8, "hitbox_h": 16,
-          "frames": [
-            {"delay": 24, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":0,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":1,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":3,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":5,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]},
-            {"delay": 24, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":6,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":7,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":8,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":9,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":10,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]}
-          ]
-        },
-        {
-          "name": "running",
-          "frame_count": 4,
-          "hitbox_x": 12, "hitbox_y": 12, "hitbox_w": 8, "hitbox_h": 16,
-          "frames": [
-            {"delay": 9, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":0,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":1,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":3,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":5,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]},
-            {"delay": 9, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":6,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":7,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":11,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":12,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":13,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":14,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]},
-            {"delay": 9, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":0,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":1,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":3,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":5,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]},
-            {"delay": 9, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":6,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":7,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":15,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":16,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":17,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":18,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]}
-          ]
-        },
-        {
-          "name": "jumping",
-          "frame_count": 1,
-          "hitbox_x": 12, "hitbox_y": 12, "hitbox_w": 8, "hitbox_h": 16,
-          "frames": [
-            {"delay": 6, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":6,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":7,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":11,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":12,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":13,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":14,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]}
-          ]
-        },
-        {
-          "name": "crouching",
-          "frame_count": 1,
-          "hitbox_x": 14, "hitbox_y": 17, "hitbox_w": 8, "hitbox_h": 11,
-          "frames": [
-            {"delay": 6, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":19,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":20,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":21,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":22,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]}
-          ]
-        }
-      ]
-    }
   ],
   "instances": [
-    {"type": 0, "x": 31, "y": 881}
   ],
   "warp_entrances": [
   ],
