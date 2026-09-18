@@ -231,7 +231,7 @@ static int load_screen_into_slot(R01eMachine *m, const R01eWorldView *wv, int co
         found = 1;
         break;
     }
-    /* Publish tile+attr+present together so mid-reload never samples empty→BG0. */
+    /* Publish tile+attr+present together so mid-reload never samples empty->BG0. */
     memcpy(dst, tmp, sizeof(tmp));
     m->video.slot_present[slot] = found ? 1 : 0;
     return found;

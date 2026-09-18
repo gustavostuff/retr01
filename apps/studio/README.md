@@ -51,17 +51,17 @@ Logical canvas **640x360** or **1280x720** (**Ctrl+Shift+R**). Window scale **Ct
 
 ## Play
 
-**Space** / Play always exports, shows a boot wait, then embeds emu. Cart boots world 0. Spawn is the first instance of the marked player type, else the default screen center. Gameplay SoT is emu Host Play, not `core/src/play.c`. Default is top-down. `r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER)` in `custom_logic.c` enables gravity, face-Y jump (hold for full height), and Down crouch when a crouch state is mapped. `r01_platformer_set_meter` sets pixels per meter (default 16). Player states (idle / walk / crouch / jump) are mapped in `custom_logic.c`; with no mapping, Play draws state 0 frame 0 and only X-flips for facing.
+**Space** / Play always exports, shows a boot wait, then embeds emu. Cart boots world 0. Spawn is the first instance of the marked player type, else the default screen center. Gameplay SoT is emu Host Play, not `core/src/play.c`. Default is top-down. `r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER)` in `custom_logic.c` enables gravity, face-Y jump (hold for full height), and Down crouch when a crouch state is mapped. `r01_platformer_set_meter` sets pixels per meter (default 16). Player states (idle, walk, crouch, jump) are mapped in `custom_logic.c`. With no mapping, Play draws state 0 frame 0 and only X-flips for facing.
 
-`custom_logic.c` is created on first export and never overwritten:
+`custom_logic.c` is created on first export and never overwritten. The generated file sets the camera dead zone. Player anim maps stay commented until an author fills them in:
 
 ```c
 void r01_custom_on_init(R01GameCtx *ctx) {
-    r01_player_anim_set_idle_state(ctx, 0);
-    r01_player_anim_set_walk_all(ctx, 1);
-    r01_player_anim_set_crouch_state(ctx, 2);
-    r01_player_anim_set_jump_state(ctx, 3);
-    r01_camera_set_deadzone(ctx, 32, 30);
+    r01_camera_set_deadzone(ctx, R01_CAM_DEADZONE_X_DEFAULT, R01_CAM_DEADZONE_Y_DEFAULT);
+    /* r01_player_anim_set_idle_state(ctx, 0); */
+    /* r01_player_anim_set_walk_all(ctx, 1); */
+    /* r01_player_anim_set_crouch_state(ctx, 2); */
+    /* r01_player_anim_set_jump_state(ctx, 3); */
 }
 ```
 

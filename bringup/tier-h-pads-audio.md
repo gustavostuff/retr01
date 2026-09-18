@@ -18,7 +18,7 @@
 
 Optional outside the 19: **ATtiny85** in the TRS pad (poll reply `< 200 us`).
 
-SPI rule remains: exactly one of `/SS_S1` or `/SS_S2` low at a time; idle both high.
+SPI rule remains: exactly one of `/SS_S1` or `/SS_S2` low at a time. Idle both high.
 
 ---
 
@@ -30,8 +30,8 @@ Input and sound are orthogonal to video/CPU/cart bring-up. S2 is the remaining c
 
 ## 3. Prove
 
-1. **Pads:** P1/P2 bits affect PRG. Poll pattern `0x55` / `0xAA` in VBlank with a hard timeout; on timeout keep last good or clear.
-2. **Idle-safe DATA:** open-drain only on pad DATA; no push-pull fights.
+1. **Pads:** P1/P2 bits affect PRG. Poll pattern `0x55` / `0xAA` in VBlank with a hard timeout. On timeout keep last good or clear.
+2. **Idle-safe DATA:** open-drain only on pad DATA. No push-pull fights.
 3. **Audio:** at least a beep / pulse line through the real `$7F40`-class / S2 PWM path (full tracker depth can wait).
 4. Boring demo: playable test cart with real pad + sound + composite out.
 

@@ -22,7 +22,7 @@ Tier C: S1 firmware fills field SRAM (sprites) + optional BG0 line buffers
 | 1 | **AVR128DB28** | **MCU-S1 only** @ internal 24 MHz HFOSC |
 | 1 | **AS6C62256-55** | **Field** SRAM (#3 role): sprite field **and** BG0 ping-pong line regions |
 | 1 | **74HC573** | Field A[7:0] latch (S1 multiplexed **AD[7:0]** + **ALE**) - matches locked design |
-| 0-1 | **74HC574** | Scroll X; optional - hardwire scroll = 0 |
+| 0-1 | **74HC574** | Scroll X. Optional - hardwire scroll = 0 |
 
 **Programmer:** UPDI (e.g. Adafruit UPDI Friend) for the AVR only.
 
@@ -49,7 +49,7 @@ A second SRAM for BG0 is **not** the product path. If a temporary second chip is
 
 - Sprites are **not** rebuilt per scanline in HBlank.
 - HBlank budget is small: **next BG0 line only**.
-- No MCU-M yet -> **no OAM SPI**; S1 synthesizes its own OAM-like tables or writes the field directly from firmware.
+- No MCU-M yet -> **no OAM SPI**. S1 synthesizes its own OAM-like tables or writes the field directly from firmware.
 - Design caps (orientation, not hard lab limits): up to **64** sprites, **16 per scanline**, **8x8**, **2bpp** on the full system. Lab art can be simpler (direct field pixels / few metasprites).
 
 ### S1 bus discipline
@@ -57,7 +57,7 @@ A second SRAM for BG0 is **not** the product path. If a temporary second chip is
 - **AD[7:0]** hi-Z whenever S1 is not in an owned write window.
 - Sequence: present address -> **ALE** -> present data -> **`/WE`**, with dead time so beam **`/OE`** never overlaps **`/WE`**.
 - Idle-safe: **ALE** low, **`/WE`** high when not writing.
-- Optional **`S1_RDY`**: useful later for M; for Tier C, still good as a "field fill done" debug flag.
+- Optional **`S1_RDY`**: useful later for M. For Tier C, still good as a "field fill done" debug flag.
 
 ---
 
@@ -101,7 +101,7 @@ main:
 ```
 
 - **build_sprite_field:** clear transparent, then draw 1-2 sprites (and maybe a static prop).
-- Finish **before** active display; glitches at the top of the frame mean the fill is too late - reduce work or double-buffer field regions if the hardware map allows.
+- Finish **before** active display. Glitches at the top of the frame mean the fill is too late - reduce work or double-buffer field regions if the hardware map allows.
 - Scope `/WE` bursts: they should cluster in VBlank (and short HBlank for BG0), not during the whole frame.
 
 ---
@@ -111,7 +111,7 @@ main:
 - **Sprite layer** input = field SRAM data path wired for the beam.
 - **BG1** = keep Tier B bar/band generator until Tier E.
 - **BG0** = ping-pong line the beam reads when BG1 index is 0.
-- Priority stays the Tier B model: opaque sprite pixel wins; else BG1 if non-zero; else BG0/backdrop.
+- Priority stays the Tier B model: opaque sprite pixel wins. Else BG1 if non-zero. Else BG0/backdrop.
 
 If field wiring is not finished, blitter code can still be developed with a logic analyzer on AD/ALE/`/WE`, then hang the SRAM.
 
@@ -138,7 +138,7 @@ If field wiring is not finished, blitter code can still be developed with a logi
 
 ## 7. Bring-up order
 
-1. S1 alone: blink LED / GPIO; UPDI reliable.
+1. S1 alone: blink LED / GPIO. UPDI reliable.
 2. ALE + `/WE` state machine with AD hi-Z defaults - scope before SRAM.
 3. Write/read **field SRAM** with beam OE disabled - data integrity.
 4. Enable beam read of field + Compositor sprite path - static solid sprite block.

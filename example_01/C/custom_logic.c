@@ -1,4 +1,4 @@
-/* User game logic - created once by Studio export; never overwritten. */
+/* User game logic. Created once by Studio export. Never overwritten. */
 #include "include/r01_engine.h"
 
 static void init_camera_and_bg0(R01GameCtx *ctx) {

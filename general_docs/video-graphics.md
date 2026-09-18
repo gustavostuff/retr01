@@ -39,7 +39,7 @@ These two ideas stay separate:
 
 - 8 palette rows for BG and 8 for sprites.
 - Each palette row holds 4 individual palettes.
-- That gives 32 BG palettes and 32 sprite palettes on the cart (user defined).
+- That gives 32 BG palettes and 32 sprite palettes on the cart (author defined).
 
 Each pair of BG and sprite palette selection shares the same background color index. If BG palette row index N is selected, sprite palette row N is selected too, and that sprite row uses the same BG color index.
 

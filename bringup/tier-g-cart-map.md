@@ -14,9 +14,9 @@
 | 1 | **SST39SF040** (or lab equivalent) | Cart flash on a cart-like footprint |
 | - | Mobo OE# gate | PRG `$8000-$FFFF` and intentional MAP/CHR windows only |
 | - | MAP port | `$7F90-$7F93` (seek + auto-inc data) via M/PLD as designed |
-| 0-1 | **24C64** or FRAM | Optional saves (chunked; short RDY; UI alive) |
+| 0-1 | **24C64** or FRAM | Optional saves (chunked, short RDY, UI alive) |
 
-**CE#** tied active on the cart. Motherboard gates **`OE#`**. **`WE#`** idle-high in play (board pull-up); used by the MCU-M flash bridge when the program DIP selects cart.
+**CE#** tied active on the cart. Motherboard gates **`OE#`**. **`WE#`** idle-high in play (board pull-up). Used by the MCU-M flash bridge when the program DIP selects cart.
 
 **Still omit:** MCU-S2 / pads / audio (Tier H). No mapper ICs.
 
@@ -29,9 +29,9 @@ Adafruit UPDI Friend + 4-pos DIP (M / S1 / S2 / cart). Default all OFF. Scope: *
 ## 2. Prove
 
 1. Boot from cart PRG (replace Tier F temporary PRG source).
-2. MAP streams a screen into VRAM; no OE fight with RAM/soft.
-3. Scope: cart OE asserted only for intended windows; WE# never floating low in play.
-4. Optional save path: chunked across VBlanks; short `CPU_RDY` only; spinner/UI can still update (see `ic-comms-risks.md`).
+2. MAP streams a screen into VRAM. No OE fight with RAM/soft.
+3. Scope: cart OE asserted only for intended windows. WE# never floating low in play.
+4. Optional save path: chunked across VBlanks. Short `CPU_RDY` only. Spinner/UI can still update (see `ic-comms-risks.md`).
 5. Boring demo: `.retr01`-style image boots and shows authored BG + entities driven by PRG.
 
 ---

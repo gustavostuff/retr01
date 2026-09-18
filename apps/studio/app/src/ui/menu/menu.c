@@ -334,7 +334,7 @@ void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int p
         }
     }
     memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
-    /* BG tile 0 is the blank screen fallback — keep it. SPR/player stub is cart-only. */
+    /* BG tile 0 is the blank screen fallback. Keep it. SPR/player stub is cart-only. */
     if (!empty && (plane == UI_BANKS_PLANE_BG || plane == UI_BANKS_PLANE_GLOBAL_BG) && tile_id == 0) {
         ui->menu.item_disabled[ui->menu.item_count - 1] = 1;
     }

@@ -1,6 +1,6 @@
 # Retr01 Tier D - MCU-M OAM SPI path
 
-**Prerequisite:** Tier C working (S1 fills field SRAM in VBlank; at least one clear sprite on composite). 
+**Prerequisite:** Tier C working (S1 fills field SRAM in VBlank, at least one clear sprite on composite). 
 **Goal:** Separate "who decides sprites" (MCU-M) from "who paints the field" (MCU-S1), matching the final SPI mailbox architecture, still **without** a 6502 or cart.
 
 **SoT:** `general_docs/hardware.md` (SPI mailbox rules), `general_docs/ic-comms-risks.md` (sec  OAM / VBlank), `ic_behavior/AVR128DB28.md`.
@@ -29,7 +29,7 @@ Idle: `/SS_S1` **high**. Exactly one slave selected when traffic runs (S2 does n
 
 ## 2. Why this tier
 
-Tier C proved S1 can finish a field in VBlank. The product path does **not** keep OAM authorship on S1 forever - M (and later the 6502 via M) publishes an OAM block; S1 rasterizes.
+Tier C proved S1 can finish a field in VBlank. The product path does **not** keep OAM authorship on S1 forever - M (and later the 6502 via M) publishes an OAM block. S1 rasterizes.
 
 Doing that **before** PHI2 interleave and soft I/O avoids conflating three hard problems.
 
@@ -44,8 +44,8 @@ Doing that **before** PHI2 interleave and soft I/O avoids conflating three hard 
 | BG0 next line | **HBlank only** - **no** OAM SPI here |
 
 - Do **not** blast OAM during HBlank (steals the BG0 line window).
-- Prefer **dirty / delta** OAM once a full table works; full-table every frame is a lab convenience, not the play-path ideal.
-- Bound every transfer; leave margin so S1 still finishes the field before active display.
+- Prefer **dirty / delta** OAM once a full table works. Full-table every frame is a lab convenience, not the play-path ideal.
+- Bound every transfer. Leave margin so S1 still finishes the field before active display.
 
 ---
 
@@ -53,10 +53,10 @@ Doing that **before** PHI2 interleave and soft I/O avoids conflating three hard 
 
 1. On VBlank (or `S1_RDY`): M transmits a small OAM-like table (positions, tile ids, attrs).
 2. S1 builds the field **from that table only** (firmware-local tables optional for boot/fallback only).
-3. Scope: SPI activity clustered in early VBlank; `/WE` bursts still finish before active display.
+3. Scope: SPI activity clustered in early VBlank. `/WE` bursts still finish before active display.
 4. Changing OAM data on M (or a host UART bridge into M) visibly moves/changes sprites **without** reflashing S1 blitter logic.
 
-**Content:** Same simple sprites as Tier C; M walks a frame/position table.
+**Content:** Same simple sprites as Tier C. M walks a frame/position table.
 
 ---
 

@@ -581,7 +581,7 @@ static int write_custom_logic(const char *c_dir, char *err_buf, size_t err_cap) 
         return 0;
     }
     return write_text(path,
-                      "/* User game logic - created once by Studio export; never overwritten. */\n"
+                      "/* User game logic. Created once by Studio export. Never overwritten. */\n"
                       "#include \"include/r01_engine.h\"\n\n"
                       "void r01_custom_on_init(R01GameCtx *ctx) {\n"
                       "    r01_camera_set_deadzone(ctx, R01_CAM_DEADZONE_X_DEFAULT, R01_CAM_DEADZONE_Y_DEFAULT);\n"

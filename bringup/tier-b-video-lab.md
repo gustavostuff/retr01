@@ -39,13 +39,13 @@ Still **not** required: W65C02, AVRs, SRAMs, HC157/573/574, cart parts, PHI2 osc
 
 Hard LE and beam paths **never** go through an MCU.
 
-Macrocell pressure (full design): scroll-Y + other registered work can approach **~21 of 30** macrocells across the three 22V10s - stay honest; prefer a **1-dot registered** color index if fit allows. See `ic_behavior/ATF22V10.md`.
+Macrocell pressure (full design): scroll-Y + other registered work can approach **~21 of 30** macrocells across the three 22V10s - stay honest. Prefer a **1-dot registered** color index if fit allows. See `ic_behavior/ATF22V10.md`.
 
 ### Tier B lab (subset)
 
 Required:
 
-1. **Inputs:** Beam X/Y counts or blanking flags; one or two **test layer** pixel/index sources.
+1. **Inputs:** Beam X/Y counts or blanking flags. One or two **test layer** pixel/index sources.
 2. **Output:** `INDEX[5:0]` -> PROM `A[5:0]` (replace DIP / Beam-X bar equations).
 3. **Stubs:** CPU A/D, RWB, PHI2, soft SELs, MAP, `/OE` - **tied to safe constants**, not left floating.
 
@@ -84,7 +84,7 @@ Keep generating **test pixels** the same way as Tier A, but feed them **into** t
 
 ### Priority (lab model of the real stack)
 
-Real order (conceptual): sprites over BG1; BG1 color **0** shows BG0; shared backdrop.
+Real order (conceptual): sprites over BG1. BG1 color **0** shows BG0. Shared backdrop.
 
 Minimal lab priority (combinational in Compositor):
 
@@ -136,14 +136,14 @@ If macrocells allow, register `INDEX` on **DOT** so PROM address is stable for a
 1. **Bypass mode (optional jumper):** DIP -> PROM still works -> analog path intact.
 2. **Compositor solid:** equations force `INDEX = 48` (or any bright kit entry) -> full screen that color.
 3. **Bars via Compositor:** BG1_TEST from X, priority = BG1 only -> same bars as Tier A, but path is PLD3 -> PROM.
-4. **Priority:** opaque test sprite rectangle over bars; outside rectangle, bars; BG1 index 0 regions show BG0/DIP.
+4. **Priority:** opaque test sprite rectangle over bars. Outside rectangle, bars. BG1 index 0 regions show BG0/DIP.
 5. **Blanking:** if implemented, index 0 (or hold) during H/V blank - composite should stay stable.
 
 ### Failure hints
 
 | Symptom | Likely cause |
 | --- | --- |
-| Tier A worked, Tier B black | INDEX not reaching PROM; OE/CE; wrong PLD outputs |
+| Tier A worked, Tier B black | INDEX not reaching PROM. OE/CE. Wrong PLD outputs |
 | Wrong layer always wins | Priority equations inverted or SPR_OPAQUE stuck |
 | Sparkle on edges | Combinational index glitch - try 1-dot latch or simplify terms |
 | Sync lost after adding PLD | DOT loading, shared reset, power dip - not compositor logic |
@@ -174,6 +174,6 @@ Tier B is done when:
 - Sync still locks (no regression from Tier A).
 - PROM index is **only** from the Compositor (or documented debug mux).
 - At least one **priority** demo is visible and matches the equation intent.
-- No floating decode inputs; JEDEC stubs are documented.
+- No floating decode inputs. JEDEC stubs are documented.
 
 **Next:** [tier-c-video-lab.md](tier-c-video-lab.md) - MCU-S1 + field SRAM + HC573, VBlank pattern fill, optional BG0 line regions on the **same** field chip.

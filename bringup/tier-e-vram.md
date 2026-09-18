@@ -1,6 +1,6 @@
 # Retr01 Tier E - PHI2 and interleaved VRAM
 
-**Prerequisite:** Tier D working (M->S1 OAM SPI; sprites stable). 
+**Prerequisite:** Tier D working (M->S1 OAM SPI, sprites stable). 
 **Goal:** Real BG1 from nametable memory under the locked PHI2 interleave, still before a full game CPU soft-I/O stack.
 
 **SoT:** `general_docs/hardware.md`, `general_docs/memory.md` (`$7F10-$7F12`), `general_docs/ic-comms-risks.md` (VRAM PHI2 interleave), `ic_behavior/AS6C62256.md`, `ic_behavior/74HC157.md`.
@@ -44,9 +44,9 @@ Budget: roughly half of **125 ns** minus decode + mux delay, against **55 ns** S
 
 ## 3. Island tests (required order)
 
-1. **CPU-only / writer-only fill** - beam OE disabled; write known pattern; read back offline or via writer.
-2. **Beam-only fetch** - VRAM preloaded; PHI2-low beam path alone; Compositor shows nametable art; no writer activity.
-3. **Both** - live interleave under composite; sprites from S1 still on top.
+1. **CPU-only / writer-only fill** - beam OE disabled. Write known pattern. Read back offline or via writer.
+2. **Beam-only fetch** - VRAM preloaded. PHI2-low beam path alone. Compositor shows nametable art. No writer activity.
+3. **Both** - live interleave under composite. Sprites from S1 still on top.
 
 Island (3) is last. (1) and (2) come first.
 
@@ -56,7 +56,7 @@ Island (3) is last. (1) and (2) come first.
 
 - Stable BG1 from VRAM under live beam.
 - S1 sprites still composite correctly (no regression from D).
-- Scope: A/B select tracks PHI2 cleanly; no `/OE` fights; HC157 G defined.
+- Scope: A/B select tracks PHI2 cleanly. No `/OE` fights. HC157 G defined.
 - Sparkle or wrong tiles -> mux/PLD delay or floating G before blaming the PROM.
 
 ---
@@ -83,4 +83,4 @@ Island (3) is last. (1) and (2) come first.
 - Boring demo: BG1 tile map from VRAM + sprites from field.
 - Island tests 1-3 all pass with notes on measured margins.
 
-**Next:** [tier-f-cpu-soft-io.md](tier-f-cpu-soft-io.md) - W65C02 + soft `$7Fxx` via M; retire the VRAM lab writer.
+**Next:** [tier-f-cpu-soft-io.md](tier-f-cpu-soft-io.md) - W65C02 + soft `$7Fxx` via M. Retire the VRAM lab writer.

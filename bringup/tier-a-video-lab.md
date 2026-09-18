@@ -38,7 +38,7 @@ Optional third ATF22V10 (Compositor) is **not** required for Tier A if the 6-bit
 | Net | Frequency | Notes |
 | --- | --- | --- |
 | **DOT** | **5.369318 MHz** | Prefer a **canned CMOS oscillator**, not a raw crystal amp |
-| **FSC** | **3.579545 MHz** (NTSC) or **4.433618 MHz** (PAL) | Into AD724 `FIN`; `SELECT` pin low = FSC mode |
+| **FSC** | **3.579545 MHz** (NTSC) or **4.433618 MHz** (PAL) | Into AD724 `FIN`. `SELECT` pin low = FSC mode |
 
 ### Passives / connectors (minimum)
 
@@ -47,10 +47,10 @@ Optional third ATF22V10 (Compositor) is **not** required for Tier A if the 6-bit
   - B: **2.00 k ohm / 1.00 k ohm**
   - Each gun: **75.0 ohm** to GND -> ~**0.7 Vpp** into AD724
 - Series **~33 ohm** on DOT (and on FSC if the source is aggressive)
-- Decoupling: **100 nF** at every IC VCC pin; bulk **~220 uF** at 5 V entry
+- Decoupling: **100 nF** at every IC VCC pin. Bulk **~220 uF** at 5 V entry
 - RCA jack (composite from AD724 `COMP`)
 - Optional: header for raw RGB + sync (J2-style) before AD724 is trusted
-- 5 V supply capable of a few hundred mA; clean ground
+- 5 V supply capable of a few hundred mA. Clean ground.
 
 ### Optional
 
@@ -142,7 +142,7 @@ Clock Beam X from **DOT**. Clock Beam Y from a line tick (e.g. end-of-line pulse
 
 ## 5. Feeding the 6-bit color index
 
-The PROM is addressed by a **6-bit kit index** (0...63). Video never pokes RGB at runtime; it only selects which of the 64 burned colors is shown.
+The PROM is addressed by a **6-bit kit index** (0...63). Video never pokes RGB at runtime. It only selects which of the 64 burned colors is shown.
 
 ```text
 Index[5:0] -> PROM A[5:0]
@@ -180,8 +180,8 @@ Derive index from horizontal position so one line shows a bar pattern:
 Implementation options:
 
 1. **Inside Beam X PLD:** combinatorial equations from the X counter MSBs -> 6 index bits (macrocell budget permitting).
-2. **External 74HC logic:** e.g. take X[7:5] through a small PROM/GAL or hardwired map into 6 bits (lab-only; not part of the final BOM).
-3. **External tiny MCU (not Retr01 S1):** temporary pattern generator driving A[5:0] only; remove before calling the lab PLD-pure. Prefer A or B.1 for faithfulness.
+2. **External 74HC logic:** e.g. take X[7:5] through a small PROM/GAL or hardwired map into 6 bits (lab-only, not part of the final BOM).
+3. **External tiny MCU (not Retr01 S1):** temporary pattern generator driving A[5:0] only. Remove before calling the lab PLD-pure. Prefer A or B.1 for faithfulness.
 
 During blanking, force index **0** (or hold last) so the DAC is quiet in sync regions if cleaner composite is desired.
 
@@ -235,19 +235,19 @@ Preview RGB (8-bit, not PROM bytes), GIMP/Aseprite palettes, and the C SoT live 
 | 12 | SELECT | **Low** for FSC mode |
 | 13 | DGND | Digital ground |
 | 14 | DPOS | +5 V digital |
-| 15 | VSYNC | H/V mode: from Beam Y; CSYNC mode: held inactive per datasheet |
-| 16 | HSYNC | H/V mode: HSYNC; CSYNC mode: composite sync from Beam X |
+| 15 | VSYNC | H/V mode: from Beam Y. CSYNC mode: held inactive per datasheet |
+| 16 | HSYNC | H/V mode: HSYNC. CSYNC mode: composite sync from Beam X |
 
-**CSYNC mode (often easiest on one wire):** Beam X outputs CSYNC -> AD724 pin 16; pin 15 held high enough to select CSYNC recipe.
+**CSYNC mode (often easiest on one wire):** Beam X outputs CSYNC -> AD724 pin 16. Pin 15 held high enough to select CSYNC recipe.
 
 ---
 
 ## 8. Suggested bring-up order
 
-1. **Power + DOT only** - scope oscillator; no other ICs if needed.
-2. **Beam X alone** - program minimal H counter + HSYNC; scope line rate.
-3. **Add Beam Y** - V counter + VSYNC; scope ~60 Hz; confirm TV syncs to black (PROM still optional).
-4. **PROM + DAC + fixed index (DIP)** - solid color on RGB pins; measure ~0.7 Vpp.
+1. **Power + DOT only** - scope oscillator. No other ICs if needed.
+2. **Beam X alone** - program minimal H counter + HSYNC. Scope line rate.
+3. **Add Beam Y** - V counter + VSYNC. Scope ~60 Hz. Confirm TV syncs to black (PROM still optional).
+4. **PROM + DAC + fixed index (DIP)** - solid color on RGB pins. Measure ~0.7 Vpp.
 5. **AD724** - composite solid color on TV.
 6. **Index from beam (bars)** - full Tier A demo.
 7. **Only then** plan Tier B (Compositor), not before.

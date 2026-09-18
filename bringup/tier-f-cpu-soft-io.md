@@ -13,7 +13,7 @@
 | --- | --- | --- |
 | 1 | **W65C02S** | Game CPU @ PHI2 8.000 MHz |
 | 1 | **AS6C62256-55** | **System RAM** (#1): `$0000-$7EFF` |
-| - | MCU-M | Soft `$7Fxx` device: Hi-Z on D unless selected; **`CPU_RDY`** open-drain only when needed |
+| - | MCU-M | Soft `$7Fxx` device: Hi-Z on D unless selected. **`CPU_RDY`** open-drain only when needed |
 | - | Compositor/PLD | Live `SEL_SOFT*`, `LE_7F02` / `03` / `04`, etc. (stubs from Tier B become real) |
 | 0-1 | **74HC574** | Scroll X `$7F02` if not hardwired to 0 |
 
@@ -34,7 +34,7 @@ Retire temporary decode when Tier G's SST39SF040 owns `$8000-$FFFF`.
 
 ## 2. Soft I/O rules (locked)
 
-- M drives CPU D **only** when soft-selected for a read; otherwise **Hi-Z**.
+- M drives CPU D **only** when soft-selected for a read. Otherwise **Hi-Z**.
 - Aim for **zero `CPU_RDY`** on the hot path (scroll, OAM mailbox, palette row, common soft regs). RDY is the escape hatch, not the default.
 - If the PHI2 window is too tight: assert **`CPU_RDY`** before PHI2 fall, finish, release. Bound every hold.
 - Do **not** run SPI or I2C inside a soft-read cycle unless RDY is already low.
@@ -48,7 +48,7 @@ Retire temporary decode when Tier G's SST39SF040 owns `$8000-$FFFF`.
 1. Reset vectors, NMI from VBlank, tight loop writes scroll / OAM mailbox / palette row in VBlank only.
 2. Common soft I/O **without** RDY on the hot path (measure with GPIO toggles on SEL and D-drive enable vs PHI2).
 3. Scope: only one driver on D for `$0000`, `$7Fxx`, `$8000` (PRG source).
-4. 6502-authored motion of Tier C/D sprites and camera/scroll; M/S1 remain video assist.
+4. 6502-authored motion of Tier C/D sprites and camera/scroll. M/S1 remain video assist.
 5. Retire Tier E's VRAM lab writer - CPU owns `$7F10-$7F12`.
 
 ---
