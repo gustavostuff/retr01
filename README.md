@@ -30,6 +30,13 @@ NOTE: hardware is still in design phase, software is being built on that design.
 
 <img src="img/readme/studio.png" alt="Retr01 Studio" />
 
+Maria is a player entity used to test Emu and Studio, this might become a full game later:
+
+<img src="img/readme/maria/idle.gif" alt="Maria idle" />
+<img src="img/readme/maria/running.gif" alt="Maria running" />
+<img src="img/readme/maria/crouching.png" alt="Maria crouching" />
+<img src="img/readme/maria/jumping.png" alt="Maria jumping" />
+
 ## Doc map
 
 | Doc | Focus |
