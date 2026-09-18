@@ -9,6 +9,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <png.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,6 +58,162 @@ static int is_ase_name(const char *name) {
     return ends_with_ci(name, ".ase") || ends_with_ci(name, ".aseprite");
 }
 
+typedef struct Sha1Ctx {
+    uint32_t h[5];
+    uint64_t nbits;
+    uint8_t buf[64];
+    size_t buf_n;
+} Sha1Ctx;
+
+static uint32_t sha1_rol(uint32_t v, int n) {
+    return (v << n) | (v >> (32 - n));
+}
+
+static void sha1_block(Sha1Ctx *ctx, const uint8_t *p) {
+    uint32_t w[80];
+    uint32_t a, b, c, d, e;
+    int i;
+    for (i = 0; i < 16; i++) {
+        w[i] = ((uint32_t)p[i * 4] << 24) | ((uint32_t)p[i * 4 + 1] << 16) | ((uint32_t)p[i * 4 + 2] << 8) |
+               (uint32_t)p[i * 4 + 3];
+    }
+    for (i = 16; i < 80; i++) {
+        w[i] = sha1_rol(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1);
+    }
+    a = ctx->h[0];
+    b = ctx->h[1];
+    c = ctx->h[2];
+    d = ctx->h[3];
+    e = ctx->h[4];
+    for (i = 0; i < 80; i++) {
+        uint32_t f, k, t;
+        if (i < 20) {
+            f = (b & c) | ((~b) & d);
+            k = 0x5A827999u;
+        } else if (i < 40) {
+            f = b ^ c ^ d;
+            k = 0x6ED9EBA1u;
+        } else if (i < 60) {
+            f = (b & c) | (b & d) | (c & d);
+            k = 0x8F1BBCDCu;
+        } else {
+            f = b ^ c ^ d;
+            k = 0xCA62C1D6u;
+        }
+        t = sha1_rol(a, 5) + f + e + k + w[i];
+        e = d;
+        d = c;
+        c = sha1_rol(b, 30);
+        b = a;
+        a = t;
+    }
+    ctx->h[0] += a;
+    ctx->h[1] += b;
+    ctx->h[2] += c;
+    ctx->h[3] += d;
+    ctx->h[4] += e;
+}
+
+static void sha1_init(Sha1Ctx *ctx) {
+    ctx->h[0] = 0x67452301u;
+    ctx->h[1] = 0xEFCDAB89u;
+    ctx->h[2] = 0x98BADCFEu;
+    ctx->h[3] = 0x10325476u;
+    ctx->h[4] = 0xC3D2E1F0u;
+    ctx->nbits = 0;
+    ctx->buf_n = 0;
+}
+
+static void sha1_update(Sha1Ctx *ctx, const uint8_t *data, size_t n) {
+    while (n > 0) {
+        size_t take = 64u - ctx->buf_n;
+        if (take > n) {
+            take = n;
+        }
+        memcpy(ctx->buf + ctx->buf_n, data, take);
+        ctx->buf_n += take;
+        data += take;
+        n -= take;
+        if (ctx->buf_n == 64u) {
+            sha1_block(ctx, ctx->buf);
+            ctx->nbits += 512u;
+            ctx->buf_n = 0;
+        }
+    }
+}
+
+static void sha1_final(Sha1Ctx *ctx, uint8_t out[20]) {
+    int i;
+    ctx->nbits += (uint64_t)ctx->buf_n * 8u;
+    ctx->buf[ctx->buf_n++] = 0x80u;
+    if (ctx->buf_n > 56u) {
+        while (ctx->buf_n < 64u) {
+            ctx->buf[ctx->buf_n++] = 0;
+        }
+        sha1_block(ctx, ctx->buf);
+        ctx->buf_n = 0;
+    }
+    while (ctx->buf_n < 56u) {
+        ctx->buf[ctx->buf_n++] = 0;
+    }
+    ctx->buf[56] = (uint8_t)(ctx->nbits >> 56);
+    ctx->buf[57] = (uint8_t)(ctx->nbits >> 48);
+    ctx->buf[58] = (uint8_t)(ctx->nbits >> 40);
+    ctx->buf[59] = (uint8_t)(ctx->nbits >> 32);
+    ctx->buf[60] = (uint8_t)(ctx->nbits >> 24);
+    ctx->buf[61] = (uint8_t)(ctx->nbits >> 16);
+    ctx->buf[62] = (uint8_t)(ctx->nbits >> 8);
+    ctx->buf[63] = (uint8_t)ctx->nbits;
+    sha1_block(ctx, ctx->buf);
+    for (i = 0; i < 5; i++) {
+        out[i * 4] = (uint8_t)(ctx->h[i] >> 24);
+        out[i * 4 + 1] = (uint8_t)(ctx->h[i] >> 16);
+        out[i * 4 + 2] = (uint8_t)(ctx->h[i] >> 8);
+        out[i * 4 + 3] = (uint8_t)ctx->h[i];
+    }
+}
+
+static void sha1_hex(const uint8_t digest[20], char out[R01_SHA1_HEX_LEN + 1]) {
+    static const char *hex = "0123456789abcdef";
+    int i;
+    for (i = 0; i < 20; i++) {
+        out[i * 2] = hex[(digest[i] >> 4) & 0x0f];
+        out[i * 2 + 1] = hex[digest[i] & 0x0f];
+    }
+    out[R01_SHA1_HEX_LEN] = '\0';
+}
+
+int r01_sha1_file(const char *path, char out_hex[R01_SHA1_HEX_LEN + 1], char *err_buf, size_t err_cap) {
+    FILE *f;
+    Sha1Ctx ctx;
+    uint8_t buf[4096];
+    uint8_t digest[20];
+    size_t n;
+    if (!path || !out_hex) {
+        set_err(err_buf, err_cap, "bad args");
+        return -1;
+    }
+    out_hex[0] = '\0';
+    f = fopen(path, "rb");
+    if (!f) {
+        set_err(err_buf, err_cap, "cannot read file for sha1");
+        return -1;
+    }
+    sha1_init(&ctx);
+    while ((n = fread(buf, 1, sizeof(buf), f)) > 0) {
+        sha1_update(&ctx, buf, n);
+    }
+    if (ferror(f)) {
+        fclose(f);
+        set_err(err_buf, err_cap, "sha1 read failed");
+        return -1;
+    }
+    fclose(f);
+    sha1_final(&ctx, digest);
+    sha1_hex(digest, out_hex);
+    return 0;
+}
+
 static int path_is_dir(const char *path) {
     struct stat st;
     return path && path[0] && stat(path, &st) == 0 && S_ISDIR(st.st_mode);
@@ -101,19 +258,19 @@ static int state_slot_hint(const char *slug) {
     return -1;
 }
 
-static int catalog_has_slug(const R01World *w, const char *slug) {
+static int catalog_index_for_slug(const R01World *w, const char *slug) {
     int i;
     char have[R01_ENTITY_NAME_MAX];
     if (!w || !slug) {
-        return 0;
+        return -1;
     }
     for (i = 0; i < w->entity_count; i++) {
         r01_id_slugify(have, sizeof(have), r01_entity_display_name(&w->entities[i]));
         if (strcmp(have, slug) == 0) {
-            return 1;
+            return i;
         }
     }
-    return 0;
+    return -1;
 }
 
 static int listing_cmp(const void *a, const void *b) {
@@ -200,6 +357,260 @@ int r01_aseprite_listing_scan(const char *dir, R01AsepriteListing *out, char *er
         qsort(out->files, (size_t)out->count, R01_ASEPRITE_REL_MAX, listing_cmp);
     }
     return 0;
+}
+
+static int meta_file_cmp(const void *a, const void *b) {
+    return strcmp(((const R01AsepriteFileHash *)a)->name, ((const R01AsepriteFileHash *)b)->name);
+}
+
+static void meta_sort(R01AsepriteFolderMeta *m) {
+    if (m && m->count > 1) {
+        qsort(m->files, (size_t)m->count, sizeof(m->files[0]), meta_file_cmp);
+    }
+}
+
+static int sha1_hex_ok(const char *s) {
+    int i;
+    if (!s || strlen(s) != (size_t)R01_SHA1_HEX_LEN) {
+        return 0;
+    }
+    for (i = 0; i < R01_SHA1_HEX_LEN; i++) {
+        char c = s[i];
+        if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+            continue;
+        }
+        return 0;
+    }
+    return 1;
+}
+
+static void sha1_hex_lower(char *s) {
+    if (!s) {
+        return;
+    }
+    while (*s) {
+        if (*s >= 'A' && *s <= 'F') {
+            *s = (char)(*s - 'A' + 'a');
+        }
+        s++;
+    }
+}
+
+int r01_aseprite_folder_meta_equal(const R01AsepriteFolderMeta *a, const R01AsepriteFolderMeta *b) {
+    int i;
+    if (!a || !b || a->count != b->count) {
+        return 0;
+    }
+    for (i = 0; i < a->count; i++) {
+        if (strcmp(a->files[i].name, b->files[i].name) != 0) {
+            return 0;
+        }
+        if (strcmp(a->files[i].sha1, b->files[i].sha1) != 0) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int r01_aseprite_folder_meta_scan(const char *folder_dir, R01AsepriteFolderMeta *out, char *err_buf,
+                                  size_t err_cap) {
+    DIR *d;
+    struct dirent *ent;
+    if (!folder_dir || !out) {
+        set_err(err_buf, err_cap, "bad args");
+        return -1;
+    }
+    memset(out, 0, sizeof(*out));
+    if (!path_is_dir(folder_dir)) {
+        set_err(err_buf, err_cap, "entity folder not found");
+        return -1;
+    }
+    d = opendir(folder_dir);
+    if (!d) {
+        set_err(err_buf, err_cap, "cannot read entity folder");
+        return -1;
+    }
+    while ((ent = readdir(d)) != NULL) {
+        char path[R01_PATH_MAX];
+        if (ent->d_name[0] == '.') {
+            continue;
+        }
+        if (!is_ase_name(ent->d_name)) {
+            continue;
+        }
+        if (out->count >= R01_ASEPRITE_FOLDER_FILES_MAX) {
+            closedir(d);
+            set_err(err_buf, err_cap, "too many aseprite files");
+            return -1;
+        }
+        if (snprintf(path, sizeof(path), "%s/%s", folder_dir, ent->d_name) >= (int)sizeof(path)) {
+            closedir(d);
+            set_err(err_buf, err_cap, "aseprite path too long");
+            return -1;
+        }
+        snprintf(out->files[out->count].name, R01_ASEPRITE_REL_MAX, "%s", ent->d_name);
+        if (r01_sha1_file(path, out->files[out->count].sha1, err_buf, err_cap) != 0) {
+            closedir(d);
+            return -1;
+        }
+        out->count++;
+    }
+    closedir(d);
+    meta_sort(out);
+    return 0;
+}
+
+int r01_aseprite_folder_meta_save(const char *json_path, const R01AsepriteFolderMeta *meta, char *err_buf,
+                                  size_t err_cap) {
+    FILE *f;
+    int i;
+    if (!json_path || !meta) {
+        set_err(err_buf, err_cap, "bad args");
+        return -1;
+    }
+    f = fopen(json_path, "wb");
+    if (!f) {
+        set_err(err_buf, err_cap, "cannot write meta.json");
+        return -1;
+    }
+    fprintf(f, "{\n");
+    for (i = 0; i < meta->count; i++) {
+        fprintf(f, "  \"%s\": \"%s\"%s\n", meta->files[i].name, meta->files[i].sha1,
+                (i + 1 < meta->count) ? "," : "");
+    }
+    fprintf(f, "}\n");
+    if (fclose(f) != 0) {
+        set_err(err_buf, err_cap, "cannot write meta.json");
+        return -1;
+    }
+    return 0;
+}
+
+int r01_aseprite_folder_meta_load(const char *json_path, R01AsepriteFolderMeta *out, char *err_buf,
+                                  size_t err_cap) {
+    FILE *f;
+    long sz;
+    char *buf;
+    const char *p;
+    if (!json_path || !out) {
+        set_err(err_buf, err_cap, "bad args");
+        return -1;
+    }
+    memset(out, 0, sizeof(*out));
+    f = fopen(json_path, "rb");
+    if (!f) {
+        return -1;
+    }
+    if (fseek(f, 0, SEEK_END) != 0 || (sz = ftell(f)) < 0 || fseek(f, 0, SEEK_SET) != 0) {
+        fclose(f);
+        return -1;
+    }
+    buf = (char *)malloc((size_t)sz + 1u);
+    if (!buf || fread(buf, 1, (size_t)sz, f) != (size_t)sz) {
+        free(buf);
+        fclose(f);
+        return -1;
+    }
+    fclose(f);
+    buf[sz] = '\0';
+    p = buf;
+    while (*p && *p != '{') {
+        p++;
+    }
+    if (*p != '{') {
+        free(buf);
+        return -1;
+    }
+    p++;
+    while (*p) {
+        char name[R01_ASEPRITE_REL_MAX];
+        char sha1[R01_SHA1_HEX_LEN + 1];
+        size_t n;
+        const char *end;
+        while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r' || *p == ',') {
+            p++;
+        }
+        if (*p == '}') {
+            break;
+        }
+        if (*p != '\"') {
+            free(buf);
+            return -1;
+        }
+        p++;
+        end = strchr(p, '\"');
+        if (!end) {
+            free(buf);
+            return -1;
+        }
+        n = (size_t)(end - p);
+        if (n < 1 || n >= sizeof(name)) {
+            free(buf);
+            return -1;
+        }
+        memcpy(name, p, n);
+        name[n] = '\0';
+        p = end + 1;
+        while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') {
+            p++;
+        }
+        if (*p != ':') {
+            free(buf);
+            return -1;
+        }
+        p++;
+        while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') {
+            p++;
+        }
+        if (*p != '\"') {
+            free(buf);
+            return -1;
+        }
+        p++;
+        end = strchr(p, '\"');
+        if (!end) {
+            free(buf);
+            return -1;
+        }
+        n = (size_t)(end - p);
+        if (n != (size_t)R01_SHA1_HEX_LEN) {
+            free(buf);
+            return -1;
+        }
+        memcpy(sha1, p, n);
+        sha1[n] = '\0';
+        if (!sha1_hex_ok(sha1)) {
+            free(buf);
+            return -1;
+        }
+        sha1_hex_lower(sha1);
+        p = end + 1;
+        if (out->count >= R01_ASEPRITE_FOLDER_FILES_MAX) {
+            free(buf);
+            set_err(err_buf, err_cap, "too many aseprite files");
+            return -1;
+        }
+        snprintf(out->files[out->count].name, R01_ASEPRITE_REL_MAX, "%s", name);
+        snprintf(out->files[out->count].sha1, sizeof(out->files[0].sha1), "%s", sha1);
+        out->count++;
+    }
+    free(buf);
+    meta_sort(out);
+    return 0;
+}
+
+static int folder_meta_path(const char *root, const char *folder, char *out, size_t cap) {
+    if (!root || !folder || !out) {
+        return -1;
+    }
+    return snprintf(out, cap, "%s/%s/%s", root, folder, R01_ASEPRITE_META_JSON) >= (int)cap ? -1 : 0;
+}
+
+static int folder_dir_path(const char *root, const char *folder, char *out, size_t cap) {
+    if (!root || !folder || !out) {
+        return -1;
+    }
+    return snprintf(out, cap, "%s/%s", root, folder) >= (int)cap ? -1 : 0;
 }
 
 static int store_listing_without_folders(R01Project *p, const R01AsepriteListing *disk, const char *const *skip,
@@ -481,18 +892,9 @@ static void state_import_center_hitbox(R01EntityState *st) {
     }
 }
 
-int r01_world_import_entity_frames(R01Project *p, R01World *w, const R01EntityImport *in, char *err_buf,
-                                   size_t err_cap) {
-    uint8_t pal_rgb[4][3];
-    uint8_t seen[R01_ENTITY_STATES_MAX * R01_ENTITY_FRAMES_MAX * R01_ENTITY_PARTS_MAX][R01_TILE_BYTES];
-    int seen_bank[R01_ENTITY_STATES_MAX * R01_ENTITY_FRAMES_MAX * R01_ENTITY_PARTS_MAX];
-    int seen_tile[R01_ENTITY_STATES_MAX * R01_ENTITY_FRAMES_MAX * R01_ENTITY_PARTS_MAX];
-    int seen_n = 0;
-    int idx;
-    R01EntityType *e;
+static int validate_entity_import(R01Project *p, R01World *w, const R01EntityImport *in, uint8_t pal_rgb[4][3],
+                                  char *err_buf, size_t err_cap) {
     int si;
-    char qerr[128];
-
     if (!p || !w || !in || in->state_count < 1 || in->state_count > R01_ENTITY_STATES_MAX) {
         set_err(err_buf, err_cap, "bad entity import");
         return -1;
@@ -531,12 +933,18 @@ int r01_world_import_entity_frames(R01Project *p, R01World *w, const R01EntityIm
             }
         }
     }
-    idx = r01_world_entity_add(w);
-    if (idx < 0) {
-        set_err(err_buf, err_cap, "entity catalog full");
-        return -1;
-    }
-    e = r01_world_entity(w, idx);
+    return 0;
+}
+
+static int fill_entity_from_import(R01World *w, R01EntityType *e, const R01EntityImport *in, uint8_t pal_rgb[4][3],
+                                   char *err_buf, size_t err_cap) {
+    uint8_t seen[R01_ENTITY_STATES_MAX * R01_ENTITY_FRAMES_MAX * R01_ENTITY_PARTS_MAX][R01_TILE_BYTES];
+    int seen_bank[R01_ENTITY_STATES_MAX * R01_ENTITY_FRAMES_MAX * R01_ENTITY_PARTS_MAX];
+    int seen_tile[R01_ENTITY_STATES_MAX * R01_ENTITY_FRAMES_MAX * R01_ENTITY_PARTS_MAX];
+    int seen_n = 0;
+    int si;
+    char qerr[128];
+
     r01_entity_type_init(e);
     snprintf(e->name, sizeof(e->name), "%s", in->name[0] ? in->name : "Entity");
     e->state_count = 0;
@@ -547,7 +955,6 @@ int r01_world_import_entity_frames(R01Project *p, R01World *w, const R01EntityIm
         r01_entity_ensure_state(e, si);
         st = r01_entity_state(e, si);
         if (!st) {
-            r01_world_entity_remove(w, idx);
             set_err(err_buf, err_cap, "bad state");
             return -1;
         }
@@ -566,7 +973,6 @@ int r01_world_import_entity_frames(R01Project *p, R01World *w, const R01EntityIm
             r01_entity_ensure_frame(e, si, fi);
             dst = r01_entity_frame(e, si, fi);
             if (!dst) {
-                r01_world_entity_remove(w, idx);
                 set_err(err_buf, err_cap, "bad frame");
                 return -1;
             }
@@ -587,7 +993,6 @@ int r01_world_import_entity_frames(R01Project *p, R01World *w, const R01EntityIm
                         char msg[160];
                         snprintf(msg, sizeof(msg), "%s %s f%d tile %d,%d: %s", e->name, st->name, fi, col, row,
                                  qerr[0] ? qerr : "quad error");
-                        r01_world_entity_remove(w, idx);
                         set_err(err_buf, err_cap, msg);
                         return -1;
                     }
@@ -597,12 +1002,10 @@ int r01_world_import_entity_frames(R01Project *p, R01World *w, const R01EntityIm
                     if (dst->part_count >= R01_ENTITY_PARTS_MAX) {
                         char msg[128];
                         snprintf(msg, sizeof(msg), "%s %s f%d has more than 6 sprites", e->name, st->name, fi);
-                        r01_world_entity_remove(w, idx);
                         set_err(err_buf, err_cap, msg);
                         return -1;
                     }
                     if (dedupe_chr(w, tile, &bank, &tile_id, seen, seen_bank, seen_tile, &seen_n) != 0) {
-                        r01_world_entity_remove(w, idx);
                         set_err(err_buf, err_cap, "sprite CHR full");
                         return -1;
                     }
@@ -613,7 +1016,6 @@ int r01_world_import_entity_frames(R01Project *p, R01World *w, const R01EntityIm
                     part.dx = col * 8;
                     part.dy = row * 8;
                     if (r01_entity_frame_add_part(dst, &part) < 0) {
-                        r01_world_entity_remove(w, idx);
                         set_err(err_buf, err_cap, "could not add sprite");
                         return -1;
                     }
@@ -622,7 +1024,6 @@ int r01_world_import_entity_frames(R01Project *p, R01World *w, const R01EntityIm
             if (dst->part_count < 1) {
                 char msg[128];
                 snprintf(msg, sizeof(msg), "%s %s f%d is empty", e->name, st->name, fi);
-                r01_world_entity_remove(w, idx);
                 set_err(err_buf, err_cap, msg);
                 return -1;
             }
@@ -630,7 +1031,51 @@ int r01_world_import_entity_frames(R01Project *p, R01World *w, const R01EntityIm
         }
         state_import_center_hitbox(st);
     }
+    return 0;
+}
+
+int r01_world_import_entity_frames(R01Project *p, R01World *w, const R01EntityImport *in, char *err_buf,
+                                   size_t err_cap) {
+    uint8_t pal_rgb[4][3];
+    int idx;
+    R01EntityType *e;
+
+    if (validate_entity_import(p, w, in, pal_rgb, err_buf, err_cap) != 0) {
+        return -1;
+    }
+    idx = r01_world_entity_add(w);
+    if (idx < 0) {
+        set_err(err_buf, err_cap, "entity catalog full");
+        return -1;
+    }
+    e = r01_world_entity(w, idx);
+    if (fill_entity_from_import(w, e, in, pal_rgb, err_buf, err_cap) != 0) {
+        r01_world_entity_remove(w, idx);
+        return -1;
+    }
     return idx;
+}
+
+int r01_world_import_entity_frames_replace(R01Project *p, R01World *w, int type_idx, const R01EntityImport *in,
+                                           char *err_buf, size_t err_cap) {
+    uint8_t pal_rgb[4][3];
+    R01EntityType *e;
+    R01EntityType saved;
+
+    if (!w || type_idx < 0 || type_idx >= w->entity_count) {
+        set_err(err_buf, err_cap, "bad entity replace");
+        return -1;
+    }
+    if (validate_entity_import(p, w, in, pal_rgb, err_buf, err_cap) != 0) {
+        return -1;
+    }
+    e = r01_world_entity(w, type_idx);
+    saved = *e;
+    if (fill_entity_from_import(w, e, in, pal_rgb, err_buf, err_cap) != 0) {
+        *e = saved;
+        return -1;
+    }
+    return type_idx;
 }
 
 static int load_png_rgba(const char *path, uint8_t **out_px, int *out_w, int *out_h) {
@@ -1187,7 +1632,8 @@ static int assign_states(char names[][R01_ASEPRITE_REL_MAX], int n, int *order) 
 }
 
 static int import_one_folder(R01Project *p, R01World *w, const char *root, const char *folder,
-                             const R01AsepriteListing *disk, const char *aseprite, char *err_buf, size_t err_cap) {
+                             const R01AsepriteListing *disk, const char *aseprite, int replace_idx,
+                             char *err_buf, size_t err_cap) {
     char files[R01_ENTITY_STATES_MAX + 4][R01_ASEPRITE_REL_MAX];
     int order[R01_ENTITY_STATES_MAX];
     int n;
@@ -1196,7 +1642,6 @@ static int import_one_folder(R01Project *p, R01World *w, const char *root, const
     char work[R01_PATH_MAX];
     R01EntityImport in;
     int rc;
-    char slug[R01_ENTITY_NAME_MAX];
 
     n = collect_folder_files(disk, folder, files, R01_ENTITY_STATES_MAX + 4);
     if (n < 0 || n > R01_ENTITY_STATES_MAX) {
@@ -1248,13 +1693,11 @@ static int import_one_folder(R01Project *p, R01World *w, const char *root, const
         }
         in.state_count++;
     }
-    r01_id_slugify(slug, sizeof(slug), folder);
-    if (catalog_has_slug(w, slug)) {
-        free_import_rgba(&in);
-        rm_tree(work);
-        return 0;
+    if (replace_idx >= 0) {
+        rc = r01_world_import_entity_frames_replace(p, w, replace_idx, &in, err_buf, err_cap);
+    } else {
+        rc = r01_world_import_entity_frames(p, w, &in, err_buf, err_cap);
     }
-    rc = r01_world_import_entity_frames(p, w, &in, err_buf, err_cap);
     free_import_rgba(&in);
     rm_tree(work);
     return rc < 0 ? -1 : 1;
@@ -1346,29 +1789,33 @@ int r01_project_import_aseprite_entities(R01Project *p, const char *project_path
             folder_n++;
         }
     }
-    if (r01_aseprite_listing_equal(&disk, p)) {
-        int missing = 0;
-        for (i = 0; i < folder_n; i++) {
-            char slug[R01_ENTITY_NAME_MAX];
-            r01_id_slugify(slug, sizeof(slug), folders[i]);
-            if (!catalog_has_slug(w, slug)) {
-                missing = 1;
-                break;
-            }
-        }
-        if (!missing) {
-            if (out) {
-                out->unchanged = 1;
-                out->generated = 0;
-            }
-            return 0;
-        }
-    }
     for (i = 0; i < folder_n; i++) {
         char slug[R01_ENTITY_NAME_MAX];
+        char folder_path[R01_PATH_MAX];
+        char meta_path[R01_PATH_MAX];
+        R01AsepriteFolderMeta disk_meta;
+        R01AsepriteFolderMeta saved_meta;
+        int existing;
+        int have_meta;
+        int match;
         int rc;
         r01_id_slugify(slug, sizeof(slug), folders[i]);
-        if (catalog_has_slug(w, slug)) {
+        existing = catalog_index_for_slug(w, slug);
+        if (folder_dir_path(root, folders[i], folder_path, sizeof(folder_path)) != 0 ||
+            folder_meta_path(root, folders[i], meta_path, sizeof(meta_path)) != 0) {
+            set_err(err_buf, err_cap, "path too long");
+            return -1;
+        }
+        if (r01_aseprite_folder_meta_scan(folder_path, &disk_meta, err_buf, err_cap) != 0) {
+            return -1;
+        }
+        have_meta = r01_aseprite_folder_meta_load(meta_path, &saved_meta, NULL, 0) == 0;
+        match = have_meta && r01_aseprite_folder_meta_equal(&disk_meta, &saved_meta);
+        if (existing >= 0 && match) {
+            continue;
+        }
+        if (existing >= 0 && access(meta_path, F_OK) != 0) {
+            (void)r01_aseprite_folder_meta_save(meta_path, &disk_meta, err_buf, err_cap);
             continue;
         }
         if (!have_ase) {
@@ -1378,7 +1825,7 @@ int r01_project_import_aseprite_entities(R01Project *p, const char *project_path
             }
             have_ase = 1;
         }
-        rc = import_one_folder(p, w, root, folders[i], &disk, aseprite, err_buf, err_cap);
+        rc = import_one_folder(p, w, root, folders[i], &disk, aseprite, existing, err_buf, err_cap);
         if (rc < 0) {
             if (failed_n < R01_MAX_ENTITY_TYPES) {
                 snprintf(failed[failed_n], sizeof(failed[0]), "%s", folders[i]);
@@ -1388,8 +1835,16 @@ int r01_project_import_aseprite_entities(R01Project *p, const char *project_path
             continue;
         }
         if (rc > 0) {
+            (void)r01_aseprite_folder_meta_save(meta_path, &disk_meta, err_buf, err_cap);
             generated++;
         }
+    }
+    if (generated < 1 && failed_n < 1 && r01_aseprite_listing_equal(&disk, p)) {
+        if (out) {
+            out->unchanged = 1;
+            out->generated = 0;
+        }
+        return 0;
     }
     for (i = 0; i < failed_n; i++) {
         skip_ptrs[i] = failed[i];

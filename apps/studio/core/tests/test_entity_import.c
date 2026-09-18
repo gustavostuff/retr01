@@ -82,6 +82,16 @@ TEST_MAIN() {
     EXPECT(p->worlds[0].entities[0].states[0].hitbox_w == R01_ENTITY_HITBOX_W, "8x8 hitbox w");
     EXPECT(p->worlds[0].entities[0].states[0].hitbox_h == R01_ENTITY_HITBOX_H, "8x8 hitbox h");
 
+    r01_world_set_player_entity(&p->worlds[0], 0);
+    in.states[0].frames[0].delay = 12;
+    idx = r01_world_import_entity_frames_replace(p, &p->worlds[0], 0, &in, err, sizeof(err));
+    EXPECT(idx == 0, "replace idx");
+    EXPECT(p->worlds[0].entity_count == 1, "replace keeps count");
+    EXPECT(p->worlds[0].entities[0].states[0].frames[0].delay == 12, "replaced delay");
+    EXPECT(r01_world_player_entity(&p->worlds[0]) == 0, "player mark kept");
+    in.states[0].frames[0].delay = 6;
+    p->worlds[0].entities[0].states[0].frames[0].delay = 6;
+
     {
         uint8_t rgba3[8 * 8 * 4];
         memset(rgba3, 0, sizeof(rgba3));
@@ -158,8 +168,13 @@ TEST_MAIN() {
         kit_px(rgba4, 8, 3, 0, 32, 255);
         snprintf(in.name, sizeof(in.name), "too_many");
         in.states[0].frames[0].rgba = rgba4;
+        in.states[0].frames[0].delay = 6;
         idx = r01_world_import_entity_frames(p, &p->worlds[0], &in, err, sizeof(err));
         EXPECT(idx < 0, "4 opaque fail");
+        idx = r01_world_import_entity_frames_replace(p, &p->worlds[0], 0, &in, err, sizeof(err));
+        EXPECT(idx < 0, "replace 4 opaque fail");
+        EXPECT(p->worlds[0].entities[0].states[0].frames[0].delay == 6, "replace restored");
+        EXPECT(p->worlds[0].entity_count == 4, "replace fail keeps count");
     }
 
     {
@@ -211,8 +226,63 @@ TEST_MAIN() {
     }
 
     {
+        char hex[R01_SHA1_HEX_LEN + 1];
+        char abc_path[sizeof(tmpdir) + 16];
+        char run_file[sizeof(tmpdir) + 56];
+        char meta_path[sizeof(tmpdir) + 56];
+        R01AsepriteFolderMeta disk, loaded, changed;
+        const char *empty_sha1 = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
+
+        EXPECT(r01_sha1_file(ase_file, hex, err, sizeof(err)) == 0, "sha1 empty");
+        EXPECT(strcmp(hex, empty_sha1) == 0, "sha1 empty hex");
+
+        snprintf(abc_path, sizeof(abc_path), "%s/abc.bin", tmpdir);
+        f = fopen(abc_path, "wb");
+        EXPECT(f != NULL, "abc file");
+        if (f) {
+            fwrite("abc", 1, 3, f);
+            fclose(f);
+        }
+        EXPECT(r01_sha1_file(abc_path, hex, err, sizeof(err)) == 0, "sha1 abc");
+        EXPECT(strcmp(hex, "a9993e364706816aba3e25717850c26c9cd0d89d") == 0, "sha1 abc hex");
+        unlink(abc_path);
+
+        snprintf(run_file, sizeof(run_file), "%s/running.ase", player_dir);
+        f = fopen(run_file, "wb");
+        EXPECT(f != NULL, "running ase");
+        if (f) {
+            fwrite("run", 1, 3, f);
+            fclose(f);
+        }
+        EXPECT(r01_aseprite_folder_meta_scan(player_dir, &disk, err, sizeof(err)) == 0, "meta scan");
+        EXPECT(disk.count == 2, "scan two files");
+        EXPECT(strcmp(disk.files[0].name, "idle.ase") == 0, "scan idle first");
+        EXPECT(strcmp(disk.files[1].name, "running.ase") == 0, "scan running second");
+        EXPECT(strcmp(disk.files[0].sha1, empty_sha1) == 0, "scan idle sha1");
+
+        snprintf(meta_path, sizeof(meta_path), "%s/%s", player_dir, R01_ASEPRITE_META_JSON);
+        EXPECT(r01_aseprite_folder_meta_save(meta_path, &disk, err, sizeof(err)) == 0, "meta save");
+        EXPECT(r01_aseprite_folder_meta_load(meta_path, &loaded, err, sizeof(err)) == 0, "meta load");
+        EXPECT(r01_aseprite_folder_meta_equal(&disk, &loaded) == 1, "meta equal");
+
+        f = fopen(run_file, "wb");
+        if (f) {
+            fwrite("changed", 1, 7, f);
+            fclose(f);
+        }
+        EXPECT(r01_aseprite_folder_meta_scan(player_dir, &changed, err, sizeof(err)) == 0, "rescan");
+        EXPECT(r01_aseprite_folder_meta_equal(&disk, &changed) == 0, "changed not equal");
+        unlink(run_file);
+        unlink(meta_path);
+    }
+
+    {
         R01AsepriteListing listing;
         R01AsepriteImportResult res;
+        char meta_path[sizeof(tmpdir) + 56];
+        R01AsepriteFolderMeta meta;
+        const char *empty_sha1 = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
+        snprintf(meta_path, sizeof(meta_path), "%s/%s", player_dir, R01_ASEPRITE_META_JSON);
         EXPECT(r01_aseprite_listing_scan(ase_dir, &listing, err, sizeof(err)) == 0, "scan");
         EXPECT(listing.count == 1, "one file");
         EXPECT(strcmp(listing.files[0], "player/idle.ase") == 0, "rel path");
@@ -225,6 +295,16 @@ TEST_MAIN() {
         EXPECT(r01_project_import_aseprite_entities(p, proj_path, &res, err, sizeof(err)) == 0, "unchanged");
         EXPECT(res.unchanged == 1, "flag unchanged");
         EXPECT(res.generated == 0, "no generate");
+        EXPECT(r01_aseprite_folder_meta_load(meta_path, &meta, err, sizeof(err)) == 0, "wrote meta");
+        EXPECT(meta.count == 1, "meta one file");
+        EXPECT(strcmp(meta.files[0].name, "idle.ase") == 0, "meta idle name");
+        EXPECT(strcmp(meta.files[0].sha1, empty_sha1) == 0, "meta idle sha1");
+        EXPECT(r01_aseprite_listing_scan(ase_dir, &listing, err, sizeof(err)) == 0, "scan ignores meta");
+        EXPECT(listing.count == 1, "listing still one ase");
+
+        EXPECT(r01_project_import_aseprite_entities(p, proj_path, &res, err, sizeof(err)) == 0, "meta match");
+        EXPECT(res.unchanged == 1, "checksums match skip");
+        EXPECT(res.generated == 0, "no generate on match");
 
         p->worlds[0].entity_count = 0;
         res.unchanged = 1;
@@ -239,6 +319,17 @@ TEST_MAIN() {
         EXPECT(res.unchanged == 0, "listing differed");
         EXPECT(res.generated == 0, "skipped name");
         EXPECT(p->aseprite_entities_file_count == 1, "listing stored");
+
+        f = fopen(ase_file, "wb");
+        EXPECT(f != NULL, "mutate ase");
+        if (f) {
+            fwrite("x", 1, 1, f);
+            fclose(f);
+        }
+        res.unchanged = 1;
+        res.generated = -1;
+        (void)r01_project_import_aseprite_entities(p, proj_path, &res, err, sizeof(err));
+        EXPECT(res.unchanged == 0, "changed ase reimport");
     }
 
     {
@@ -252,6 +343,11 @@ TEST_MAIN() {
         rmdir(empty_dir);
     }
 
+    {
+        char meta_path[sizeof(tmpdir) + 56];
+        snprintf(meta_path, sizeof(meta_path), "%s/%s", player_dir, R01_ASEPRITE_META_JSON);
+        unlink(meta_path);
+    }
     unlink(ase_file);
     rmdir(player_dir);
     rmdir(ase_dir);
