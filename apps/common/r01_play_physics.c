@@ -4,8 +4,8 @@ static int clamp_gravity(int v) {
     if (v < 1) {
         return R01_PLAT_GRAVITY_DEFAULT;
     }
-    if (v > 16) {
-        return 16;
+    if (v > R01_PLAT_GRAVITY_MAX) {
+        return R01_PLAT_GRAVITY_MAX;
     }
     return v;
 }
@@ -33,6 +33,10 @@ static int clamp_meter(int v) {
 /* Author units are pixels at meter=16. Result is 8.8. */
 static int units_to_fp(int units, int meter) {
     return (units * meter * R01_PHYS_ONE) / R01_PLAT_METER_DEFAULT;
+}
+
+static int gravity_to_fp(int units, int meter) {
+    return units_to_fp(units, meter) / R01_PLAT_GRAVITY_SCALE;
 }
 
 static int fp_to_px(int fp) {
@@ -196,7 +200,7 @@ void r01_play_physics_tick(R01PlayPhysics *ph, int *px, int *py, int in_dx, int 
         anim_dy = in_dy;
     } else {
         int g;
-        gravity_fp = units_to_fp(ph->gravity, ph->meter);
+        gravity_fp = gravity_to_fp(ph->gravity, ph->meter);
         jump_fp = units_to_fp(ph->jump, ph->meter);
         fall_max_fp = units_to_fp(ph->fall_max, ph->meter);
         if (jump_pressed && ph->grounded) {

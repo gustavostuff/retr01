@@ -68,7 +68,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### 12. Platformer physics scope
 
-**Resolved (v1):** Axis-separated, bit-6 solids, AABB, gravity/jump, 16 px meter, short hop on jump release, Down crouch. No slopes/movers/one-ways.
+**Resolved (v1):** Axis-separated, bit-6 solids, AABB, gravity/jump (gravity in 1/16 px), 16 px meter, short hop on jump release, Down crouch. No slopes/movers/one-ways.
 
 ### 13. IC budget + composite IC
 

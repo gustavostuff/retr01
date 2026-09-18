@@ -2,13 +2,16 @@
 #define R01_PLAY_PHYSICS_H
 
 /* Host Play movement. Top-down is axis-separated. Platformer adds gravity + jump.
- * Tune values are pixels at meter=16. Smaller meter slows pixel motion. */
+ * Tune values are pixels at meter=16, except gravity which is 1/16 px per frame^2.
+ * Walk is 1 px/frame at meter 16 and does not use gravity. Smaller meter slows all of it. */
 
 #define R01_GAME_MODE_TOPDOWN 0
 #define R01_GAME_MODE_PLATFORMER 1
 
-#define R01_PLAT_GRAVITY_DEFAULT 1
-#define R01_PLAT_JUMP_DEFAULT 8
+#define R01_PLAT_GRAVITY_SCALE 16
+#define R01_PLAT_GRAVITY_DEFAULT 4 /* 4/16 = 0.25 px/frame^2 at meter 16 */
+#define R01_PLAT_GRAVITY_MAX 255
+#define R01_PLAT_JUMP_DEFAULT 4 /* takeoff px/frame at meter 16. Peak ~34 px in ~16 frames */
 #define R01_PLAT_FALL_MAX_DEFAULT 4
 #define R01_PLAT_METER_DEFAULT 16
 #define R01_PLAT_JUMP_RELEASE_MUL 3
@@ -17,7 +20,7 @@
 
 typedef struct R01PlayPhysics {
     int mode;
-    int gravity; /* author units (px at meter 16) */
+    int gravity; /* author units: 1/16 px per frame^2 at meter 16 */
     int jump;
     int fall_max;
     int meter; /* px per meter, default 16 */

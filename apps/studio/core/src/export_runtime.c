@@ -494,8 +494,8 @@ void r01_platformer_set_gravity(R01GameCtx *ctx, int units) {
     if (units < 1) {
         units = R01_PLAT_GRAVITY_DEFAULT;
     }
-    if (units > 16) {
-        units = 16;
+    if (units > R01_PLAT_GRAVITY_MAX) {
+        units = R01_PLAT_GRAVITY_MAX;
     }
     ctx->plat_gravity = units;
 }

@@ -254,7 +254,7 @@ TEST_MAIN() {
         int jump_y;
         r01_play_physics_init(&ph);
         r01_play_physics_set_mode(&ph, R01_GAME_MODE_PLATFORMER);
-        r01_play_physics_set_gravity(&ph, 1);
+        r01_play_physics_set_gravity(&ph, 16);
         r01_play_physics_set_jump(&ph, 8);
         r01_play_physics_set_meter(&ph, 16);
         for (i = 0; i < 80; i++) {
@@ -298,12 +298,12 @@ TEST_MAIN() {
         int tap_peak;
         r01_play_physics_init(&hold);
         r01_play_physics_set_mode(&hold, R01_GAME_MODE_PLATFORMER);
-        r01_play_physics_set_gravity(&hold, 1);
+        r01_play_physics_set_gravity(&hold, 16);
         r01_play_physics_set_jump(&hold, 8);
         r01_play_physics_set_meter(&hold, 16);
         r01_play_physics_init(&tap);
         r01_play_physics_set_mode(&tap, R01_GAME_MODE_PLATFORMER);
-        r01_play_physics_set_gravity(&tap, 1);
+        r01_play_physics_set_gravity(&tap, 16);
         r01_play_physics_set_jump(&tap, 8);
         r01_play_physics_set_meter(&tap, 16);
         for (i = 0; i < 120; i++) {
@@ -340,12 +340,12 @@ TEST_MAIN() {
         int i;
         r01_play_physics_init(&big);
         r01_play_physics_set_mode(&big, R01_GAME_MODE_PLATFORMER);
-        r01_play_physics_set_gravity(&big, 1);
+        r01_play_physics_set_gravity(&big, 16);
         r01_play_physics_set_jump(&big, 8);
         r01_play_physics_set_meter(&big, 16);
         r01_play_physics_init(&small);
         r01_play_physics_set_mode(&small, R01_GAME_MODE_PLATFORMER);
-        r01_play_physics_set_gravity(&small, 1);
+        r01_play_physics_set_gravity(&small, 16);
         r01_play_physics_set_jump(&small, 8);
         r01_play_physics_set_meter(&small, 8);
         for (i = 0; i < 80; i++) {
@@ -355,6 +355,39 @@ TEST_MAIN() {
         r01_play_physics_tick(&big, &bx, &by, 0, 0, 1, test_floor_ok, &floor, &anim_dx, &anim_dy);
         r01_play_physics_tick(&small, &sx, &sy, 0, 0, 1, test_floor_ok, &floor, &anim_dx, &anim_dy);
         EXPECT((floor - by) > (floor - sy), "smaller meter jumps fewer pixels");
+    }
+
+    {
+        R01PlayPhysics ph;
+        int x = 10;
+        int y = 10;
+        int floor = 80;
+        int anim_dx = 0;
+        int anim_dy = 0;
+        int i;
+        int prev;
+        int rise_frames = 0;
+        int peak;
+        r01_play_physics_init(&ph);
+        r01_play_physics_set_mode(&ph, R01_GAME_MODE_PLATFORMER);
+        for (i = 0; i < 120; i++) {
+            r01_play_physics_tick(&ph, &x, &y, 0, 0, 0, test_floor_ok, &floor, &anim_dx, &anim_dy);
+        }
+        r01_play_physics_tick(&ph, &x, &y, 0, 0, 1, test_floor_ok, &floor, &anim_dx, &anim_dy);
+        peak = y;
+        prev = y;
+        for (i = 0; i < 40; i++) {
+            r01_play_physics_tick(&ph, &x, &y, 0, 0, 1, test_floor_ok, &floor, &anim_dx, &anim_dy);
+            if (y < prev) {
+                rise_frames++;
+            }
+            if (y < peak) {
+                peak = y;
+            }
+            prev = y;
+        }
+        EXPECT(rise_frames >= 14, "default jump hang is slower than 1 px/frame^2");
+        EXPECT((floor - peak) >= 28 && (floor - peak) <= 42, "default jump height near old 36 px");
     }
 
     {
@@ -391,7 +424,7 @@ TEST_MAIN() {
     /* Play tick: platformer falls onto a solid row. Y jumps. Up/Down do not walk. */
     EXPECT(r01_play_start(&pl, p, NULL), "play start for platformer");
     r01_game_set_mode(&pl.ctx, R01_GAME_MODE_PLATFORMER);
-    r01_platformer_set_gravity(&pl.ctx, 1);
+    r01_platformer_set_gravity(&pl.ctx, 16);
     r01_platformer_set_jump(&pl.ctx, 8);
     r01_platformer_set_meter(&pl.ctx, 16);
     {
