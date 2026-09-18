@@ -33,6 +33,7 @@ TEST_MAIN() {
         ent->states[1].frame_count = 3;
         for (fi = 0; fi < 3; fi++) {
             r01_entity_frame_add_part(&ent->states[1].frames[fi], &part);
+            ent->states[1].frames[fi].delay = 2;
         }
     }
     r01_game_ctx_init(&ctx);

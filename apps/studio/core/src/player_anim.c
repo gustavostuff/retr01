@@ -228,7 +228,13 @@ void r01_player_anim_tick(R01GameCtx *ctx, const R01World *w, int player_type) {
         ctx->player_anim_frame = 0;
         return;
     }
-    delay = ctx->player_state_delay[ctx->player_anim_state];
+    {
+        int fi = r01_entity_state_drawable_frame_index(st, ctx->player_anim_frame);
+        delay = ctx->player_state_delay[ctx->player_anim_state];
+        if (fi >= 0 && fi < st->frame_count && st->frames[fi].delay > 0) {
+            delay = st->frames[fi].delay;
+        }
+    }
     if (delay < 1) {
         delay = 1;
     }

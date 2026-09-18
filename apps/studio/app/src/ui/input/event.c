@@ -1084,10 +1084,6 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     ui_toast(ui, err[0] ? err : "aseprite import failed", 1);
                     return 1;
                 }
-                if (res.unchanged || res.generated < 1) {
-                    ui_toast(ui, "no new entities in aseprite_entities/", 0);
-                    return 1;
-                }
                 {
                     R01World *ww = r01_project_active_world(ui->project);
                     int i;
@@ -1096,6 +1092,14 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                             ui_undo_push_entity_add(ui, i);
                         }
                     }
+                    if (ui->entity_edit.open && !ui->entity_edit.is_new && ww && ui->entity_edit.type_idx >= 0 &&
+                        ui->entity_edit.type_idx < ww->entity_count) {
+                        ui->entity_edit.draft = ww->entities[ui->entity_edit.type_idx];
+                    }
+                }
+                if (res.unchanged || res.generated < 1) {
+                    ui_toast(ui, "no new entities in aseprite_entities/", 0);
+                    return 1;
                 }
                 if (res.generated == 1) {
                     snprintf(toast, sizeof(toast), "1 entity generated from aseprite_entities/ folder");

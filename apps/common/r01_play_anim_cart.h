@@ -33,7 +33,7 @@ int r01_cart_player_anim_state_hdr(const R01CartPlayerAnim *anim, int state_idx,
 
 int r01_cart_player_anim_drawable_count(const R01CartPlayerAnim *anim, int state_idx);
 
-/* Frame header is 7 bytes: origin_x/y, state's compose hitbox xywh, part_count. Returns NULL if slot missing. */
+/* Frame header is 8 bytes: origin_x/y, state's compose hitbox xywh, part_count, delay. Returns NULL if slot missing. */
 const uint8_t *r01_cart_player_anim_frame_hdr(const R01CartPlayerAnim *anim, int state_idx, int frame_slot);
 
 /* Parts are tile, attr, dx, dy tuples; returns NULL if slot missing. */

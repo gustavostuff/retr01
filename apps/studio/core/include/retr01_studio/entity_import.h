@@ -39,7 +39,7 @@ typedef struct R01AsepriteListing {
 } R01AsepriteListing;
 
 typedef struct R01AsepriteFileHash {
-    char name[R01_ASEPRITE_REL_MAX];
+    char name[R01_ASEPRITE_REL_MAX]; /* filename (idle.ase) or state key (idle) */
     char sha1[R01_SHA1_HEX_LEN + 1];
 } R01AsepriteFileHash;
 
@@ -71,8 +71,9 @@ int r01_aseprite_folder_meta_equal(const R01AsepriteFolderMeta *a, const R01Asep
 /*
  * Manual import from dirname(project_path)/aseprite_entities/.
  * Does not run on project load. Returns 0 or -1.
- * Writes meta.json (sha1 of each .ase/.aseprite) after a successful import.
+ * Writes meta.json after a successful import: per-state sha1.
  * Re-imports a folder when any Aseprite file's checksum differs.
+ * Frame delay comes from each Aseprite file's duration (milliseconds).
  */
 int r01_project_import_aseprite_entities(R01Project *p, const char *project_path, R01AsepriteImportResult *out,
                                          char *err_buf, size_t err_cap);

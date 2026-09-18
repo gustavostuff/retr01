@@ -1,5 +1,5 @@
 {
-	"idle": {
-		"delays": [400, 400]
-	}
+  "crouching": "9e2b0d568839cceb575361a2e3febe45ea2138ce",
+  "idle": "48affc7380b241c90a94826cfcdec2aba9596bae",
+  "running": "0256dcf753727dd9e0ab6df0f53d7bcf3a65cac1"
 }

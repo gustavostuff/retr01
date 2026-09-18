@@ -4,6 +4,8 @@
 #include "retr01_studio/entities.h"
 #include "retr01_studio/project.h"
 
+#include <stdio.h>
+
 void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
     EntityModalLayout lo;
     const R01World *w = r01_project_active_world_const(ui->project);
@@ -65,7 +67,13 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
     ui_dot_strip_draw(r, lo.state_dots_x, lo.state_dots_y, UI_DOT_STRIP_N, ui->entity_edit.state,
                       entity_edit_state_unlock_count(ui));
 
-    font_draw(r, lo.frame_dots_x - label_width("Frame"), lo.frame_y + 4, "Frame", 230, 230, 230);
+    {
+        R01EntityFrame *frd = entity_edit_frame(ui);
+        int d = (frd && frd->delay > 0) ? frd->delay : 1;
+        char lab[24];
+        snprintf(lab, sizeof(lab), "Frame %df", d);
+        font_draw(r, lo.frame_dots_x - label_width(lab), lo.frame_y + 4, lab, 230, 230, 230);
+    }
     ui_dot_strip_draw(r, lo.frame_dots_x, lo.frame_dots_y, UI_DOT_STRIP_N, ui->entity_edit.frame,
                       entity_edit_frame_unlock_count(ui));
 

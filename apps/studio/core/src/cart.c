@@ -314,7 +314,7 @@ static int append_player_anim_blob(Buf *blob, const R01World *w, int player_type
             const R01EntityFrame *fr = &st->frames[fi];
             int pi;
             uint8_t pc;
-            uint8_t fh[7];
+            uint8_t fh[8];
             if (fr->part_count < 1) {
                 continue;
             }
@@ -326,6 +326,16 @@ static int append_player_anim_blob(Buf *blob, const R01World *w, int player_type
             fh[4] = (uint8_t)(st->hitbox_w > 0 ? st->hitbox_w : R01_PLAY_PLAYER_W);
             fh[5] = (uint8_t)(st->hitbox_h > 0 ? st->hitbox_h : R01_PLAY_PLAYER_H);
             fh[6] = pc;
+            {
+                int delay = fr->delay;
+                if (delay < 1) {
+                    delay = 1;
+                }
+                if (delay > 255) {
+                    delay = 255;
+                }
+                fh[7] = (uint8_t)delay;
+            }
             if (buf_append(blob, fh, sizeof(fh)) != 0) {
                 return -1;
             }

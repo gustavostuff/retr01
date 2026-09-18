@@ -396,16 +396,92 @@ static void sha1_hex_lower(char *s) {
     }
 }
 
+static const char *skip_ws(const char *p) {
+    while (p && (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r')) {
+        p++;
+    }
+    return p;
+}
+
+static int ms_to_delay(int ms) {
+    int d;
+    if (ms < 1) {
+        return 1;
+    }
+    d = (ms * 60) / 1000;
+    if (d < 1) {
+        d = 1;
+    }
+    if (d > 255) {
+        d = 255;
+    }
+    return d;
+}
+
+static void meta_stem(const char *name, char *out, size_t cap) {
+    stem_from_filename(name, out, cap);
+    if (out && !out[0] && name) {
+        snprintf(out, cap, "%s", name);
+    }
+}
+
+static int meta_entry_match(const R01AsepriteFileHash *a, const R01AsepriteFileHash *b) {
+    char sa[R01_ENTITY_NAME_MAX];
+    char sb[R01_ENTITY_NAME_MAX];
+    if (!a || !b) {
+        return 0;
+    }
+    if (strcmp(a->name, b->name) == 0) {
+        return 1;
+    }
+    meta_stem(a->name, sa, sizeof(sa));
+    meta_stem(b->name, sb, sizeof(sb));
+    return sa[0] && strcmp(sa, sb) == 0;
+}
+
+static int meta_hashed_count(const R01AsepriteFolderMeta *m) {
+    int i;
+    int n = 0;
+    if (!m) {
+        return 0;
+    }
+    for (i = 0; i < m->count; i++) {
+        if (m->files[i].sha1[0]) {
+            n++;
+        }
+    }
+    return n;
+}
+
 int r01_aseprite_folder_meta_equal(const R01AsepriteFolderMeta *a, const R01AsepriteFolderMeta *b) {
     int i;
-    if (!a || !b || a->count != b->count) {
+    int hashed;
+    if (!a || !b) {
+        return 0;
+    }
+    hashed = meta_hashed_count(a);
+    if (hashed < 1 || hashed != meta_hashed_count(b)) {
         return 0;
     }
     for (i = 0; i < a->count; i++) {
-        if (strcmp(a->files[i].name, b->files[i].name) != 0) {
-            return 0;
+        int j;
+        int found = 0;
+        if (!a->files[i].sha1[0]) {
+            continue;
         }
-        if (strcmp(a->files[i].sha1, b->files[i].sha1) != 0) {
+        for (j = 0; j < b->count; j++) {
+            if (!b->files[j].sha1[0]) {
+                continue;
+            }
+            if (meta_entry_match(&a->files[i], &b->files[j])) {
+                if (strcmp(a->files[i].sha1, b->files[j].sha1) != 0) {
+                    return 0;
+                }
+                found = 1;
+                break;
+            }
+        }
+        if (!found) {
             return 0;
         }
     }
@@ -464,6 +540,7 @@ int r01_aseprite_folder_meta_save(const char *json_path, const R01AsepriteFolder
                                   size_t err_cap) {
     FILE *f;
     int i;
+    int wrote = 0;
     if (!json_path || !meta) {
         set_err(err_buf, err_cap, "bad args");
         return -1;
@@ -475,13 +552,150 @@ int r01_aseprite_folder_meta_save(const char *json_path, const R01AsepriteFolder
     }
     fprintf(f, "{\n");
     for (i = 0; i < meta->count; i++) {
-        fprintf(f, "  \"%s\": \"%s\"%s\n", meta->files[i].name, meta->files[i].sha1,
-                (i + 1 < meta->count) ? "," : "");
+        char key[R01_ENTITY_NAME_MAX];
+        if (!meta->files[i].sha1[0]) {
+            continue;
+        }
+        meta_stem(meta->files[i].name, key, sizeof(key));
+        if (!key[0]) {
+            continue;
+        }
+        fprintf(f, "%s  \"%s\": \"%s\"", wrote ? ",\n" : "", key, meta->files[i].sha1);
+        wrote = 1;
     }
-    fprintf(f, "}\n");
+    fprintf(f, "%s}\n", wrote ? "\n" : "");
     if (fclose(f) != 0) {
         set_err(err_buf, err_cap, "cannot write meta.json");
         return -1;
+    }
+    return 0;
+}
+
+static int parse_state_object(const char *p, R01AsepriteFileHash *out, const char **end_out) {
+    int depth = 0;
+    int in_str = 0;
+    const char *end;
+    const char *q;
+    if (!p || *p != '{' || !out) {
+        return -1;
+    }
+    for (end = p; *end; end++) {
+        if (in_str) {
+            if (*end == '\\' && end[1]) {
+                end++;
+                continue;
+            }
+            if (*end == '\"') {
+                in_str = 0;
+            }
+            continue;
+        }
+        if (*end == '\"') {
+            in_str = 1;
+            continue;
+        }
+        if (*end == '{') {
+            depth++;
+        } else if (*end == '}') {
+            depth--;
+            if (depth == 0) {
+                break;
+            }
+        }
+    }
+    if (*end != '}') {
+        return -1;
+    }
+    q = p + 1;
+    while (q < end) {
+        const char *k_end;
+        size_t kn;
+        q = skip_ws(q);
+        if (q >= end || *q == '}') {
+            break;
+        }
+        if (*q != '\"') {
+            return -1;
+        }
+        q++;
+        k_end = q;
+        while (k_end < end && *k_end != '\"') {
+            k_end++;
+        }
+        if (k_end >= end) {
+            return -1;
+        }
+        kn = (size_t)(k_end - q);
+        q = skip_ws(k_end + 1);
+        if (*q != ':') {
+            return -1;
+        }
+        q = skip_ws(q + 1);
+        if (kn == 4 && strncmp(k_end - 4, "sha1", 4) == 0 && *q == '\"') {
+            const char *s_end;
+            size_t sn;
+            q++;
+            s_end = q;
+            while (s_end < end && *s_end != '\"') {
+                s_end++;
+            }
+            sn = (size_t)(s_end - q);
+            if (sn != (size_t)R01_SHA1_HEX_LEN || s_end >= end) {
+                return -1;
+            }
+            memcpy(out->sha1, q, sn);
+            out->sha1[sn] = '\0';
+            if (!sha1_hex_ok(out->sha1)) {
+                return -1;
+            }
+            sha1_hex_lower(out->sha1);
+            q = s_end + 1;
+        } else {
+            /* Skip unknown values. */
+            if (*q == '\"') {
+                q++;
+                while (q < end && *q != '\"') {
+                    if (*q == '\\' && q[1]) {
+                        q++;
+                    }
+                    q++;
+                }
+                if (q < end) {
+                    q++;
+                }
+            } else if (*q == '{') {
+                int d = 0;
+                do {
+                    if (*q == '{') {
+                        d++;
+                    } else if (*q == '}') {
+                        d--;
+                    }
+                    q++;
+                } while (q <= end && d > 0);
+            } else if (*q == '[') {
+                int d = 0;
+                do {
+                    if (*q == '[') {
+                        d++;
+                    } else if (*q == ']') {
+                        d--;
+                    }
+                    q++;
+                } while (q <= end && d > 0);
+            } else {
+                while (q < end && *q != ',' && *q != '}') {
+                    q++;
+                }
+            }
+        }
+        q = skip_ws(q);
+        if (*q == ',') {
+            q++;
+        }
+    }
+    if (end_out) {
+        *end_out = end + 1;
     }
     return 0;
 }
@@ -524,11 +738,12 @@ int r01_aseprite_folder_meta_load(const char *json_path, R01AsepriteFolderMeta *
     p++;
     while (*p) {
         char name[R01_ASEPRITE_REL_MAX];
-        char sha1[R01_SHA1_HEX_LEN + 1];
         size_t n;
         const char *end;
-        while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r' || *p == ',') {
+        p = skip_ws(p);
+        if (*p == ',') {
             p++;
+            p = skip_ws(p);
         }
         if (*p == '}') {
             break;
@@ -550,48 +765,55 @@ int r01_aseprite_folder_meta_load(const char *json_path, R01AsepriteFolderMeta *
         }
         memcpy(name, p, n);
         name[n] = '\0';
-        p = end + 1;
-        while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') {
-            p++;
-        }
+        p = skip_ws(end + 1);
         if (*p != ':') {
             free(buf);
             return -1;
         }
-        p++;
-        while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') {
-            p++;
-        }
-        if (*p != '\"') {
-            free(buf);
-            return -1;
-        }
-        p++;
-        end = strchr(p, '\"');
-        if (!end) {
-            free(buf);
-            return -1;
-        }
-        n = (size_t)(end - p);
-        if (n != (size_t)R01_SHA1_HEX_LEN) {
-            free(buf);
-            return -1;
-        }
-        memcpy(sha1, p, n);
-        sha1[n] = '\0';
-        if (!sha1_hex_ok(sha1)) {
-            free(buf);
-            return -1;
-        }
-        sha1_hex_lower(sha1);
-        p = end + 1;
+        p = skip_ws(p + 1);
         if (out->count >= R01_ASEPRITE_FOLDER_FILES_MAX) {
             free(buf);
             set_err(err_buf, err_cap, "too many aseprite files");
             return -1;
         }
+        memset(&out->files[out->count], 0, sizeof(out->files[0]));
         snprintf(out->files[out->count].name, R01_ASEPRITE_REL_MAX, "%s", name);
-        snprintf(out->files[out->count].sha1, sizeof(out->files[0].sha1), "%s", sha1);
+        if (*p == '\"') {
+            char sha1[R01_SHA1_HEX_LEN + 1];
+            p++;
+            end = strchr(p, '\"');
+            if (!end) {
+                free(buf);
+                return -1;
+            }
+            n = (size_t)(end - p);
+            if (n != (size_t)R01_SHA1_HEX_LEN) {
+                free(buf);
+                return -1;
+            }
+            memcpy(sha1, p, n);
+            sha1[n] = '\0';
+            if (!sha1_hex_ok(sha1)) {
+                free(buf);
+                return -1;
+            }
+            sha1_hex_lower(sha1);
+            snprintf(out->files[out->count].sha1, sizeof(out->files[0].sha1), "%s", sha1);
+            p = end + 1;
+        } else if (*p == '{') {
+            const char *obj_end = NULL;
+            if (parse_state_object(p, &out->files[out->count], &obj_end) != 0) {
+                free(buf);
+                return -1;
+            }
+            p = obj_end;
+        } else {
+            free(buf);
+            return -1;
+        }
+        if (!out->files[out->count].sha1[0]) {
+            continue;
+        }
         out->count++;
     }
     free(buf);
@@ -1378,21 +1600,6 @@ static int parse_ase_frames(const char *json, AseFrameMeta *out, int cap, int *n
     }
     *n = count;
     return count > 0 ? 0 : -1;
-}
-
-static int ms_to_delay(int ms) {
-    int d;
-    if (ms < 1) {
-        return 1;
-    }
-    d = (ms * 60) / 1000;
-    if (d < 1) {
-        d = 1;
-    }
-    if (d > 255) {
-        d = 255;
-    }
-    return d;
 }
 
 static void blit_rgba(uint8_t *dst, int dw, int dh, const uint8_t *src, int sw, int sh, int sx, int sy) {

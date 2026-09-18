@@ -1,6 +1,6 @@
 #include "r01_play_anim_cart.h"
 
-#define FRAME_HDR 7
+#define FRAME_HDR 8
 
 static int frame_span(const uint8_t *p, const uint8_t *end) {
     int pc;
@@ -213,7 +213,13 @@ void r01_play_anim_tick_cart(R01PlayAnimCtx *ctx, const R01CartPlayerAnim *anim)
         ctx->player_anim_frame = 0;
         return;
     }
-    delay = ctx->player_state_delay[ctx->player_anim_state];
+    {
+        const uint8_t *fh = r01_cart_player_anim_frame_hdr(anim, ctx->player_anim_state, ctx->player_anim_frame);
+        delay = ctx->player_state_delay[ctx->player_anim_state];
+        if (fh && fh[7] > 0) {
+            delay = (int)fh[7];
+        }
+    }
     if (delay < 1) {
         delay = 1;
     }

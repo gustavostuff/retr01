@@ -297,7 +297,7 @@ TEST_MAIN() {
         EXPECT(res.generated == 0, "no generate");
         EXPECT(r01_aseprite_folder_meta_load(meta_path, &meta, err, sizeof(err)) == 0, "wrote meta");
         EXPECT(meta.count == 1, "meta one file");
-        EXPECT(strcmp(meta.files[0].name, "idle.ase") == 0, "meta idle name");
+        EXPECT(strcmp(meta.files[0].name, "idle") == 0, "meta idle name");
         EXPECT(strcmp(meta.files[0].sha1, empty_sha1) == 0, "meta idle sha1");
         EXPECT(r01_aseprite_listing_scan(ase_dir, &listing, err, sizeof(err)) == 0, "scan ignores meta");
         EXPECT(listing.count == 1, "listing still one ase");
