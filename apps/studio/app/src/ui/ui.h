@@ -42,6 +42,7 @@
 #define UI_BANKS_GRID 128 /* 16x16 tiles @ 8px */
 #define UI_BANKS_BODY_H (UI_WORLDS_TAB_STACK_H + UI_BANKS_GRID)
 #define UI_GLOBAL_BANKS_BODY_H UI_BANKS_BODY_H
+#define UI_BANK_SEL_WORDS ((R01_TILES_PER_BANK + 31) / 32)
 
 #define UI_ARM_NONE 0
 #define UI_ARM_WORLD_TAB 1
@@ -488,9 +489,16 @@ typedef struct UiState {
     int banks_plane;  /* UI_BANKS_PLANE_BG or SPR */
     int global_banks_idx; /* 0..3 global bank tab */
     int global_banks_plane; /* UI_BANKS_PLANE_GLOBAL_BG or GLOBAL_SPR */
-    int bank_sel_tile;  /* -1 none; selected pattern in World / Global banks */
+    int bank_sel_tile;  /* -1 none; primary pattern in World / Global banks */
     int bank_sel_bank;
     int bank_sel_plane; /* UI_BANKS_PLANE_* when bank_sel_tile >= 0 */
+    uint32_t bank_sel_mask[UI_BANK_SEL_WORDS]; /* bit tile_id: selected in this bank */
+    uint32_t bank_sel_mask_before[UI_BANK_SEL_WORDS]; /* Shift-drag Ctrl-add snapshot */
+    int bank_sel_drag;       /* 1 while Shift-drag marquee */
+    int bank_sel_drag_moved; /* 1 once the marquee left the start cell */
+    int bank_sel_anchor;     /* tile_id at Shift-drag start */
+    int bank_sel_drag_tile;  /* tile_id under cursor while marquee */
+    int bank_sel_add;        /* 1 = Ctrl held at marquee start */
     int world_sel_col; /* grid selection (-1 none); empty slots allowed */
     int world_sel_row;
     int screen_clip_valid;

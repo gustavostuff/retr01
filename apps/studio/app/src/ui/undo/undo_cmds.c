@@ -1534,12 +1534,35 @@ void ui_undo_push_bank_tile_remove(UiState *ui, int bank_plane, int bank, int ti
         bank_tile_remove_destroy(d);
         return;
     }
-    if (ui->bank_sel_tile == tile_id && ui->bank_sel_plane == bank_plane &&
-        (bank_plane == UI_BANKS_PLANE_GLOBAL_SPR || bank_plane == UI_BANKS_PLANE_GLOBAL_BG ||
-         ui->bank_sel_bank == bank)) {
-        bank_sel_clear(ui);
-    }
+    bank_sel_drop_tile(ui, bank_plane, bank, tile_id);
     ui_toast(ui, bank_plane == UI_BANKS_PLANE_SPR ? "sprite removed" : "tile removed", 0);
+}
+
+void bank_sel_remove_selected(UiState *ui) {
+    int i;
+    int plane, bank;
+    int removed = 0;
+    uint32_t bits[UI_BANK_SEL_WORDS];
+    if (!ui || !bank_sel_valid(ui)) {
+        return;
+    }
+    plane = ui->bank_sel_plane;
+    bank = ui->bank_sel_bank;
+    memcpy(bits, ui->bank_sel_mask, sizeof(bits));
+    for (i = R01_TILES_PER_BANK - 1; i >= 0; i--) {
+        if (((bits[i >> 5] >> (i & 31)) & 1u) == 0) {
+            continue;
+        }
+        if ((plane == UI_BANKS_PLANE_BG || plane == UI_BANKS_PLANE_GLOBAL_BG) && i == 0) {
+            continue;
+        }
+        ui_undo_push_bank_tile_remove(ui, plane, bank, i);
+        removed = 1;
+    }
+    if (!removed && ((bits[0] & 1u) != 0) &&
+        (plane == UI_BANKS_PLANE_BG || plane == UI_BANKS_PLANE_GLOBAL_BG)) {
+        ui_undo_push_bank_tile_remove(ui, plane, bank, 0);
+    }
 }
 
 /* ---- sprite CHR paint stroke (entity / compose) ---- */

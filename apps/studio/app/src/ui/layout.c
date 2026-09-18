@@ -698,6 +698,94 @@ int global_banks_cell_hit(const UiState *ui, int lx, int ly, int *out_tile_id) {
     return 1;
 }
 
+static void bank_sel_bit_set(uint32_t *mask, int tile_id) {
+    if (!mask || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
+        return;
+    }
+    mask[tile_id >> 5] |= 1u << (tile_id & 31);
+}
+
+static void bank_sel_bit_clear(uint32_t *mask, int tile_id) {
+    if (!mask || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
+        return;
+    }
+    mask[tile_id >> 5] &= ~(1u << (tile_id & 31));
+}
+
+static int bank_sel_bit_get(const uint32_t *mask, int tile_id) {
+    if (!mask || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
+        return 0;
+    }
+    return (int)((mask[tile_id >> 5] >> (tile_id & 31)) & 1u);
+}
+
+static int bank_sel_tile_count(const UiState *ui, int plane, int bank) {
+    const R01World *w;
+    if (!ui || !ui->project || bank < 0 || bank >= UI_BANKS_N) {
+        return 0;
+    }
+    w = r01_project_active_world_const(ui->project);
+    if (plane == UI_BANKS_PLANE_GLOBAL_SPR) {
+        return ui->project->other_spr_banks[bank].tile_count;
+    }
+    if (plane == UI_BANKS_PLANE_GLOBAL_BG) {
+        return ui->project->other_bg_banks[bank].tile_count;
+    }
+    if (!w) {
+        return 0;
+    }
+    if (plane == UI_BANKS_PLANE_SPR) {
+        return w->spr_banks[bank].tile_count;
+    }
+    if (plane == UI_BANKS_PLANE_BG) {
+        return w->bg_banks[bank].tile_count;
+    }
+    return 0;
+}
+
+static void bank_sel_densify(UiState *ui, int plane, int bank) {
+    R01World *w;
+    if (!ui || !ui->project || bank < 0 || bank >= UI_BANKS_N) {
+        return;
+    }
+    w = r01_project_active_world(ui->project);
+    if (plane == UI_BANKS_PLANE_GLOBAL_SPR) {
+        r01_project_densify_other_spr_bank(ui->project, bank);
+    } else if (plane == UI_BANKS_PLANE_GLOBAL_BG) {
+        r01_project_densify_other_bg_bank(ui->project, bank);
+    } else if (w && plane == UI_BANKS_PLANE_SPR) {
+        r01_chr_densify_spr_bank(w, bank);
+    } else if (w && plane == UI_BANKS_PLANE_BG) {
+        r01_chr_densify_bg_bank(w, bank);
+    }
+}
+
+static void bank_sel_refresh_primary(UiState *ui) {
+    int i;
+    if (!ui) {
+        return;
+    }
+    ui->bank_sel_tile = -1;
+    for (i = R01_TILES_PER_BANK - 1; i >= 0; i--) {
+        if (bank_sel_bit_get(ui->bank_sel_mask, i)) {
+            ui->bank_sel_tile = i;
+            ui_paint_stamp_from_bank(ui, ui->bank_sel_plane, ui->bank_sel_bank, i);
+            return;
+        }
+    }
+}
+
+static void bank_sel_begin_plane(UiState *ui, int plane, int bank) {
+    if (!ui) {
+        return;
+    }
+    ui->bank_sel_plane = plane;
+    ui->bank_sel_bank = bank;
+    ui->sel_instance = -1;
+    ui->inst_drag = 0;
+    screen_sel_clear(ui);
+}
+
 void bank_sel_clear(UiState *ui) {
     if (!ui) {
         return;
@@ -705,10 +793,17 @@ void bank_sel_clear(UiState *ui) {
     ui->bank_sel_tile = -1;
     ui->bank_sel_bank = 0;
     ui->bank_sel_plane = UI_BANKS_PLANE_SPR;
+    memset(ui->bank_sel_mask, 0, sizeof(ui->bank_sel_mask));
+    memset(ui->bank_sel_mask_before, 0, sizeof(ui->bank_sel_mask_before));
+    ui->bank_sel_drag = 0;
+    ui->bank_sel_drag_moved = 0;
+    ui->bank_sel_anchor = 0;
+    ui->bank_sel_drag_tile = 0;
+    ui->bank_sel_add = 0;
 }
 
 void bank_sel_set(UiState *ui, int plane, int bank, int tile_id) {
-    R01World *w;
+    int count;
     if (!ui || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         bank_sel_clear(ui);
         return;
@@ -718,44 +813,217 @@ void bank_sel_set(UiState *ui, int plane, int bank, int tile_id) {
         return;
     }
     /* Heal mid/trailing blank holes when interacting with Banks. */
-    w = r01_project_active_world(ui->project);
-    if (plane == UI_BANKS_PLANE_GLOBAL_SPR) {
-        r01_project_densify_other_spr_bank(ui->project, bank);
-        if (ui->project && tile_id >= ui->project->other_spr_banks[bank].tile_count) {
-            bank_sel_clear(ui);
-            return;
-        }
-    } else if (plane == UI_BANKS_PLANE_GLOBAL_BG) {
-        r01_project_densify_other_bg_bank(ui->project, bank);
-        if (ui->project && tile_id >= ui->project->other_bg_banks[bank].tile_count) {
-            bank_sel_clear(ui);
-            return;
-        }
-    } else if (w && plane == UI_BANKS_PLANE_SPR) {
-        r01_chr_densify_spr_bank(w, bank);
-        if (tile_id >= w->spr_banks[bank].tile_count) {
-            bank_sel_clear(ui);
-            return;
-        }
-    } else if (w && plane == UI_BANKS_PLANE_BG) {
-        r01_chr_densify_bg_bank(w, bank);
-        if (tile_id >= w->bg_banks[bank].tile_count) {
-            bank_sel_clear(ui);
-            return;
-        }
+    bank_sel_densify(ui, plane, bank);
+    count = bank_sel_tile_count(ui, plane, bank);
+    if (tile_id >= count) {
+        bank_sel_clear(ui);
+        return;
     }
-    ui->bank_sel_plane = plane;
-    ui->bank_sel_bank = bank;
+    memset(ui->bank_sel_mask, 0, sizeof(ui->bank_sel_mask));
+    bank_sel_bit_set(ui->bank_sel_mask, tile_id);
+    bank_sel_begin_plane(ui, plane, bank);
     ui->bank_sel_tile = tile_id;
-    ui->sel_instance = -1;
-    ui->inst_drag = 0;
-    screen_sel_clear(ui);
     /* BG bank pick becomes the Ctrl+click map brush. */
     ui_paint_stamp_from_bank(ui, plane, bank, tile_id);
 }
 
+void bank_sel_toggle(UiState *ui, int plane, int bank, int tile_id) {
+    int count;
+    if (!ui || tile_id < 0 || tile_id >= R01_TILES_PER_BANK || bank < 0 || bank >= UI_BANKS_N) {
+        return;
+    }
+    bank_sel_densify(ui, plane, bank);
+    count = bank_sel_tile_count(ui, plane, bank);
+    if (tile_id >= count) {
+        return;
+    }
+    if (!bank_sel_valid(ui) || ui->bank_sel_plane != plane || ui->bank_sel_bank != bank) {
+        bank_sel_set(ui, plane, bank, tile_id);
+        return;
+    }
+    if (bank_sel_bit_get(ui->bank_sel_mask, tile_id)) {
+        bank_sel_bit_clear(ui->bank_sel_mask, tile_id);
+        if (ui->bank_sel_tile == tile_id) {
+            bank_sel_refresh_primary(ui);
+        }
+        if (!bank_sel_valid(ui)) {
+            bank_sel_clear(ui);
+        }
+        return;
+    }
+    bank_sel_bit_set(ui->bank_sel_mask, tile_id);
+    ui->bank_sel_tile = tile_id;
+    ui_paint_stamp_from_bank(ui, plane, bank, tile_id);
+}
+
+void bank_sel_select_all(UiState *ui) {
+    int plane, bank, count, i;
+    int region;
+    if (!ui || ui->play.active) {
+        return;
+    }
+    region = ui_region_get(ui);
+    if (region == UI_REGION_GLOBAL_BANKS) {
+        plane = ui->global_banks_plane;
+        bank = ui->global_banks_idx;
+    } else if (region == UI_REGION_BANKS) {
+        plane = ui->banks_plane;
+        bank = ui->banks_idx;
+    } else {
+        return;
+    }
+    if (bank < 0 || bank >= UI_BANKS_N) {
+        return;
+    }
+    bank_sel_densify(ui, plane, bank);
+    count = bank_sel_tile_count(ui, plane, bank);
+    memset(ui->bank_sel_mask, 0, sizeof(ui->bank_sel_mask));
+    if (count < 1) {
+        bank_sel_clear(ui);
+        return;
+    }
+    for (i = 0; i < count; i++) {
+        bank_sel_bit_set(ui->bank_sel_mask, i);
+    }
+    bank_sel_begin_plane(ui, plane, bank);
+    bank_sel_refresh_primary(ui);
+}
+
+void bank_sel_select_rect(UiState *ui, int tile_a, int tile_b, int add) {
+    int x0, y0, x1, y1, x, y, count;
+    int plane, bank;
+    if (!ui) {
+        return;
+    }
+    plane = ui->bank_sel_plane;
+    bank = ui->bank_sel_bank;
+    if (bank < 0 || bank >= UI_BANKS_N) {
+        return;
+    }
+    if (tile_a < 0) {
+        tile_a = 0;
+    }
+    if (tile_b < 0) {
+        tile_b = 0;
+    }
+    if (tile_a >= R01_TILES_PER_BANK) {
+        tile_a = R01_TILES_PER_BANK - 1;
+    }
+    if (tile_b >= R01_TILES_PER_BANK) {
+        tile_b = R01_TILES_PER_BANK - 1;
+    }
+    x0 = tile_a % 16;
+    y0 = tile_a / 16;
+    x1 = tile_b % 16;
+    y1 = tile_b / 16;
+    if (x0 > x1) {
+        int t = x0;
+        x0 = x1;
+        x1 = t;
+    }
+    if (y0 > y1) {
+        int t = y0;
+        y0 = y1;
+        y1 = t;
+    }
+    bank_sel_densify(ui, plane, bank);
+    count = bank_sel_tile_count(ui, plane, bank);
+    if (add) {
+        memcpy(ui->bank_sel_mask, ui->bank_sel_mask_before, sizeof(ui->bank_sel_mask));
+    } else {
+        memset(ui->bank_sel_mask, 0, sizeof(ui->bank_sel_mask));
+    }
+    for (y = y0; y <= y1; y++) {
+        for (x = x0; x <= x1; x++) {
+            int id = y * 16 + x;
+            if (id < count) {
+                bank_sel_bit_set(ui->bank_sel_mask, id);
+            }
+        }
+    }
+    bank_sel_begin_plane(ui, plane, bank);
+    bank_sel_refresh_primary(ui);
+    if (!bank_sel_valid(ui)) {
+        ui->bank_sel_plane = plane;
+        ui->bank_sel_bank = bank;
+    }
+}
+
+void bank_sel_drop_tile(UiState *ui, int plane, int bank, int tile_id) {
+    if (!ui || !bank_sel_valid(ui)) {
+        return;
+    }
+    if (ui->bank_sel_plane != plane || ui->bank_sel_bank != bank) {
+        return;
+    }
+    bank_sel_bit_clear(ui->bank_sel_mask, tile_id);
+    if (ui->bank_sel_tile == tile_id) {
+        bank_sel_refresh_primary(ui);
+    }
+    if (!bank_sel_valid(ui)) {
+        bank_sel_clear(ui);
+    }
+}
+
 int bank_sel_valid(const UiState *ui) {
-    return ui && ui->bank_sel_tile >= 0 && ui->bank_sel_tile < R01_TILES_PER_BANK;
+    int i;
+    if (!ui) {
+        return 0;
+    }
+    for (i = 0; i < UI_BANK_SEL_WORDS; i++) {
+        if (ui->bank_sel_mask[i]) {
+            return 1;
+        }
+    }
+    return ui->bank_sel_tile >= 0 && ui->bank_sel_tile < R01_TILES_PER_BANK;
+}
+
+int bank_sel_has(const UiState *ui, int tile_id) {
+    return ui && bank_sel_bit_get(ui->bank_sel_mask, tile_id);
+}
+
+int bank_sel_count(const UiState *ui) {
+    int i, n = 0;
+    if (!ui) {
+        return 0;
+    }
+    for (i = 0; i < R01_TILES_PER_BANK; i++) {
+        if (bank_sel_bit_get(ui->bank_sel_mask, i)) {
+            n++;
+        }
+    }
+    return n;
+}
+
+int bank_sel_is_multi(const UiState *ui) {
+    return bank_sel_count(ui) > 1;
+}
+
+int bank_sel_cell_clamped(const UiState *ui, int lx, int ly) {
+    AccordionLayout lo;
+    int grid_y, tx, ty;
+    int global;
+    if (!ui) {
+        return 0;
+    }
+    accordion_layout(ui, &lo);
+    global = (ui->bank_sel_plane == UI_BANKS_PLANE_GLOBAL_BG || ui->bank_sel_plane == UI_BANKS_PLANE_GLOBAL_SPR);
+    grid_y = (global ? lo.global_banks_body_y : lo.sprites_body_y) + UI_WORLDS_TAB_STACK_H;
+    tx = (lx - UI_WORLDS_X) / 8;
+    ty = (ly - grid_y) / 8;
+    if (tx < 0) {
+        tx = 0;
+    }
+    if (tx > 15) {
+        tx = 15;
+    }
+    if (ty < 0) {
+        ty = 0;
+    }
+    if (ty > 15) {
+        ty = 15;
+    }
+    return ty * 16 + tx;
 }
 
 int world_sub_hit(const UiState *ui, int lx, int ly) {

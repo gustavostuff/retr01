@@ -292,6 +292,7 @@ void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int p
     const R01World *w = r01_project_active_world_const(ui->project);
     int empty;
     int cat = -1;
+    int multi;
     if (plane == UI_BANKS_PLANE_GLOBAL_SPR) {
         empty = global_spr_cell_is_empty(ui->project, bank, tile_id);
     } else if (plane == UI_BANKS_PLANE_GLOBAL_BG) {
@@ -300,6 +301,7 @@ void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int p
         empty = bank_cell_is_empty(w, bank, tile_id, plane);
         cat = (plane == UI_BANKS_PLANE_SPR) ? bank_cell_catalog_idx(w, bank, tile_id) : -1;
     }
+    multi = !empty && bank_sel_is_multi(ui) && ui->bank_sel_plane == plane && ui->bank_sel_bank == bank;
     ui->menu.open = 1;
     ui->menu.kind = UI_MENU_KIND_BANK_CELL;
     ui->menu.submenu = UI_MENU_SUB_NONE;
@@ -318,7 +320,7 @@ void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int p
         if (!empty) {
             snprintf(ui->menu.items[ui->menu.item_count], 32, "Move to Bank");
             ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_MOVE_BANK;
-            snprintf(ui->menu.items[ui->menu.item_count], 32, "Remove sprite");
+            snprintf(ui->menu.items[ui->menu.item_count], 32, multi ? "Remove selected" : "Remove sprite");
             ui->menu.item_sub[ui->menu.item_count++] = 0;
         }
     } else {
@@ -329,13 +331,13 @@ void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int p
             ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_MOVE_BANK;
         }
         if (!empty) {
-            snprintf(ui->menu.items[ui->menu.item_count], 32, "Remove tile");
+            snprintf(ui->menu.items[ui->menu.item_count], 32, multi ? "Remove selected" : "Remove tile");
             ui->menu.item_sub[ui->menu.item_count++] = 0;
         }
     }
     memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
     /* BG tile 0 is the blank screen fallback. Keep it. SPR/player stub is cart-only. */
-    if (!empty && (plane == UI_BANKS_PLANE_BG || plane == UI_BANKS_PLANE_GLOBAL_BG) && tile_id == 0) {
+    if (!empty && (plane == UI_BANKS_PLANE_BG || plane == UI_BANKS_PLANE_GLOBAL_BG) && tile_id == 0 && !multi) {
         ui->menu.item_disabled[ui->menu.item_count - 1] = 1;
     }
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
@@ -739,7 +741,7 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
             }
         } else if (item > 0 && item < ui->menu.item_count &&
                    strncmp(ui->menu.items[item], "Remove", 6) == 0) {
-            ui_undo_push_bank_tile_remove(ui, ui->menu.bank_plane, ui->menu.bank_idx, ui->menu.bank_tile_id);
+            bank_sel_remove_selected(ui);
         }
         menu_close(ui);
         return;

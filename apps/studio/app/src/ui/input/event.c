@@ -23,6 +23,43 @@
 #include <stdlib.h>
 #include <string.h>
 
+static void bank_sel_begin_marquee(UiState *ui, int plane, int bank, int tile_id, int ctrl) {
+    if (!ui) {
+        return;
+    }
+    if (ui->bank_sel_plane != plane || ui->bank_sel_bank != bank) {
+        memset(ui->bank_sel_mask, 0, sizeof(ui->bank_sel_mask));
+        ui->bank_sel_tile = -1;
+    }
+    ui->bank_sel_plane = plane;
+    ui->bank_sel_bank = bank;
+    ui->sel_instance = -1;
+    ui->inst_drag = 0;
+    screen_sel_clear(ui);
+    memcpy(ui->bank_sel_mask_before, ui->bank_sel_mask, sizeof(ui->bank_sel_mask_before));
+    ui->bank_sel_add = ctrl && bank_sel_valid(ui);
+    ui->bank_sel_drag = 1;
+    ui->bank_sel_drag_moved = 0;
+    ui->bank_sel_anchor = tile_id;
+    ui->bank_sel_drag_tile = tile_id;
+}
+
+static void bank_sel_finish_marquee(UiState *ui, int lx, int ly) {
+    int tid;
+    if (!ui || !ui->bank_sel_drag) {
+        return;
+    }
+    tid = bank_sel_cell_clamped(ui, lx, ly);
+    ui->bank_sel_drag_tile = tid;
+    if (ui->bank_sel_drag_moved) {
+        bank_sel_select_rect(ui, ui->bank_sel_anchor, tid, ui->bank_sel_add);
+    } else {
+        bank_sel_select_rect(ui, ui->bank_sel_anchor, ui->bank_sel_anchor, ui->bank_sel_add);
+    }
+    ui->bank_sel_drag = 0;
+    ui->bank_sel_drag_moved = 0;
+}
+
 /* Catalog drops belong on the BG1 playfield Sprite layer (README Place on screen). */
 static void catalog_drop_arm_spr_preview(UiState *ui) {
     R01World *w;
@@ -272,7 +309,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 int region = ui_region_get(ui);
                 if (region == UI_REGION_BANKS || region == UI_REGION_GLOBAL_BANKS) {
                     if (bank_sel_valid(ui)) {
-                        ui_undo_push_bank_tile_remove(ui, ui->bank_sel_plane, ui->bank_sel_bank, ui->bank_sel_tile);
+                        bank_sel_remove_selected(ui);
                     }
                     return 1;
                 }
@@ -344,6 +381,14 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             if (e->key.keysym.sym == SDLK_s) {
                 ui_project_io_request_save(ui, (e->key.keysym.mod & KMOD_SHIFT) != 0);
                 return 1;
+            }
+            if (e->key.keysym.sym == SDLK_a && ui->text.field_id < 1 && ui->app_mode == UI_APP_GRAPHICS &&
+                !ui->play.active) {
+                int region = ui_region_get(ui);
+                if (region == UI_REGION_BANKS || region == UI_REGION_GLOBAL_BANKS) {
+                    bank_sel_select_all(ui);
+                    return 1;
+                }
             }
             if (e->key.keysym.sym == SDLK_c) {
                 if (ui->app_mode == UI_APP_SOUNDS && ui->sound.plane == UI_SOUND_PLANE_BGM) {
@@ -648,12 +693,20 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             {
                 int tile_id;
                 if (banks_cell_hit(ui, lx, ly, &tile_id)) {
-                    bank_sel_set(ui, ui->banks_plane, ui->banks_idx, tile_id);
+                    int in_sel = bank_sel_valid(ui) && ui->bank_sel_plane == ui->banks_plane &&
+                                 ui->bank_sel_bank == ui->banks_idx && bank_sel_has(ui, tile_id);
+                    if (!in_sel) {
+                        bank_sel_set(ui, ui->banks_plane, ui->banks_idx, tile_id);
+                    }
                     menu_open_bank_cell(ui, lx, ly, ui->banks_idx, tile_id, ui->banks_plane);
                     return 1;
                 }
                 if (global_banks_cell_hit(ui, lx, ly, &tile_id)) {
-                    bank_sel_set(ui, ui->global_banks_plane, ui->global_banks_idx, tile_id);
+                    int in_sel = bank_sel_valid(ui) && ui->bank_sel_plane == ui->global_banks_plane &&
+                                 ui->bank_sel_bank == ui->global_banks_idx && bank_sel_has(ui, tile_id);
+                    if (!in_sel) {
+                        bank_sel_set(ui, ui->global_banks_plane, ui->global_banks_idx, tile_id);
+                    }
                     menu_open_bank_cell(ui, lx, ly, ui->global_banks_idx, tile_id, ui->global_banks_plane);
                     return 1;
                 }
@@ -817,10 +870,26 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             {
                 int tile_id;
                 if (!ui->play.active && banks_cell_hit(ui, lx, ly, &tile_id)) {
+                    if (shift) {
+                        bank_sel_begin_marquee(ui, ui->banks_plane, ui->banks_idx, tile_id, ctrl);
+                        return 1;
+                    }
+                    if (ctrl) {
+                        bank_sel_toggle(ui, ui->banks_plane, ui->banks_idx, tile_id);
+                        return 1;
+                    }
                     bank_sel_set(ui, ui->banks_plane, ui->banks_idx, tile_id);
                     return 1;
                 }
                 if (!ui->play.active && global_banks_cell_hit(ui, lx, ly, &tile_id)) {
+                    if (shift) {
+                        bank_sel_begin_marquee(ui, ui->global_banks_plane, ui->global_banks_idx, tile_id, ctrl);
+                        return 1;
+                    }
+                    if (ctrl) {
+                        bank_sel_toggle(ui, ui->global_banks_plane, ui->global_banks_idx, tile_id);
+                        return 1;
+                    }
                     bank_sel_set(ui, ui->global_banks_plane, ui->global_banks_idx, tile_id);
                     return 1;
                 }
@@ -919,6 +988,9 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         if (ui->tile_edit.open) {
             tile_modal_stroke_end(ui);
             return 1;
+        }
+        if (ui->bank_sel_drag) {
+            bank_sel_finish_marquee(ui, lx, ly);
         }
         if (ui->sel_drag && ui_work_allows_bg(ui) && !ui->play.active) {
             int shift_up = (SDL_GetModState() & KMOD_SHIFT) != 0;
@@ -1408,6 +1480,17 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         !ui->metasprite_edit.open && !ui->entity_edit.open && !ui->menu.open && !ui->catalog_drag.active) {
         int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
         int tx, ty;
+        if (ui->bank_sel_drag && shift && (e->motion.state & SDL_BUTTON_LMASK)) {
+            int tid = bank_sel_cell_clamped(ui, lx, ly);
+            if (tid != ui->bank_sel_anchor) {
+                ui->bank_sel_drag_moved = 1;
+            }
+            ui->bank_sel_drag_tile = tid;
+            if (ui->bank_sel_drag_moved) {
+                bank_sel_select_rect(ui, ui->bank_sel_anchor, tid, ui->bank_sel_add);
+            }
+            return 1;
+        }
         if (ui_work_allows_spr(ui) && ui->inst_drag && ui->sel_instance >= 0 &&
             (e->motion.state & SDL_BUTTON_LMASK)) {
             int px, py;

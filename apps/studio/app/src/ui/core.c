@@ -172,6 +172,13 @@ int ui_init(UiState *ui) {
     ui->bank_sel_tile = -1;
     ui->bank_sel_bank = 0;
     ui->bank_sel_plane = UI_BANKS_PLANE_SPR;
+    memset(ui->bank_sel_mask, 0, sizeof(ui->bank_sel_mask));
+    memset(ui->bank_sel_mask_before, 0, sizeof(ui->bank_sel_mask_before));
+    ui->bank_sel_drag = 0;
+    ui->bank_sel_drag_moved = 0;
+    ui->bank_sel_anchor = 0;
+    ui->bank_sel_drag_tile = 0;
+    ui->bank_sel_add = 0;
     ui->accordion_open = UI_ACC_WORLDS;
     ui->region_focus = UI_REGION_WORLDS;
     accordion_init_heights(ui);
