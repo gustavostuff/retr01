@@ -979,17 +979,44 @@ static int quad_to_tile(uint8_t out16[R01_TILE_BYTES], const uint8_t *rgba, int 
     return 0;
 }
 
-static int dedupe_chr(R01World *w, const uint8_t tile[R01_TILE_BYTES], int *bank, int *tile_id,
-                      uint8_t seen[][R01_TILE_BYTES], int seen_bank[], int seen_tile[], int *seen_n) {
-    int i;
+static int find_existing_spr_pattern(const R01Project *p, const R01World *w, const uint8_t tile[R01_TILE_BYTES],
+                                     int *bank, int *tile_id) {
     int b;
     int id;
-    for (i = 0; i < *seen_n; i++) {
-        if (memcmp(seen[i], tile, R01_TILE_BYTES) == 0) {
-            *bank = seen_bank[i];
-            *tile_id = seen_tile[i];
-            return 0;
+    if (!w || !tile || !bank || !tile_id) {
+        return 0;
+    }
+    for (b = 0; b < R01_SPR_BANKS; b++) {
+        for (id = 0; id < w->spr_banks[b].tile_count; id++) {
+            const uint8_t *have = r01_chr_spr_tile(w, b, id);
+            if (have && memcmp(have, tile, R01_TILE_BYTES) == 0) {
+                *bank = b;
+                *tile_id = id;
+                return 1;
+            }
         }
+    }
+    if (!p) {
+        return 0;
+    }
+    for (b = 0; b < R01_SPR_BANKS; b++) {
+        for (id = 0; id < p->other_spr_banks[b].tile_count; id++) {
+            const uint8_t *have = r01_other_spr_tile(p, b, id);
+            if (have && memcmp(have, tile, R01_TILE_BYTES) == 0) {
+                *bank = R01_GLOBAL_SPR_BANK_BASE + b;
+                *tile_id = id;
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+static int dedupe_chr(R01Project *p, R01World *w, const uint8_t tile[R01_TILE_BYTES], int *bank, int *tile_id) {
+    int b;
+    int id;
+    if (find_existing_spr_pattern(p, w, tile, bank, tile_id)) {
+        return 0;
     }
     b = r01_chr_find_spr_bank_space(w);
     if (b < 0) {
@@ -999,15 +1026,57 @@ static int dedupe_chr(R01World *w, const uint8_t tile[R01_TILE_BYTES], int *bank
     if (id < 0 || r01_chr_write_spr_tile(w, b, id, tile) != 0) {
         return -1;
     }
-    if (*seen_n < R01_ENTITY_STATES_MAX * R01_ENTITY_FRAMES_MAX * R01_ENTITY_PARTS_MAX) {
-        memcpy(seen[*seen_n], tile, R01_TILE_BYTES);
-        seen_bank[*seen_n] = b;
-        seen_tile[*seen_n] = id;
-        (*seen_n)++;
-    }
     *bank = b;
     *tile_id = id;
     return 0;
+}
+
+static int clamp_int(int v, int lo, int hi) {
+    if (v < lo) {
+        return lo;
+    }
+    if (v > hi) {
+        return hi;
+    }
+    return v;
+}
+
+static const R01EntityState *saved_state_by_name(const R01EntityType *prev, const char *name) {
+    int si;
+    if (!prev || !name || !name[0]) {
+        return NULL;
+    }
+    for (si = 0; si < prev->state_count && si < R01_ENTITY_STATES_MAX; si++) {
+        if (strcmp(prev->states[si].name, name) == 0) {
+            return &prev->states[si];
+        }
+    }
+    return NULL;
+}
+
+/* Keep Studio origin/hitbox on states that still exist under the same name. */
+static void restore_entity_guides(R01EntityType *e, const R01EntityType *prev) {
+    int si;
+    if (!e || !prev) {
+        return;
+    }
+    for (si = 0; si < e->state_count && si < R01_ENTITY_STATES_MAX; si++) {
+        R01EntityState *st = &e->states[si];
+        const R01EntityState *old = saved_state_by_name(prev, st->name);
+        int fi;
+        if (!old) {
+            continue;
+        }
+        st->hitbox_x = old->hitbox_x;
+        st->hitbox_y = old->hitbox_y;
+        st->hitbox_w = old->hitbox_w;
+        st->hitbox_h = old->hitbox_h;
+        r01_entity_state_clamp_hitbox(st);
+        for (fi = 0; fi < st->frame_count && fi < old->frame_count && fi < R01_ENTITY_FRAMES_MAX; fi++) {
+            st->frames[fi].origin_x = clamp_int(old->frames[fi].origin_x, 0, R01_ENTITY_COMPOSE_PX);
+            st->frames[fi].origin_y = clamp_int(old->frames[fi].origin_y, 0, R01_ENTITY_COMPOSE_PX);
+        }
+    }
 }
 
 static int frame_parts_aabb(const R01EntityFrame *fr, int *min_x, int *min_y, int *max_x, int *max_y) {
@@ -1060,16 +1129,6 @@ static int frame_parts_aabb(const R01EntityFrame *fr, int *min_x, int *min_y, in
         *max_y = y1;
     }
     return 1;
-}
-
-static int clamp_int(int v, int lo, int hi) {
-    if (v < lo) {
-        return lo;
-    }
-    if (v > hi) {
-        return hi;
-    }
-    return v;
 }
 
 /* Place the sprite group in the middle of the 32x32 compose grid, then put origin
@@ -1158,12 +1217,8 @@ static int validate_entity_import(R01Project *p, R01World *w, const R01EntityImp
     return 0;
 }
 
-static int fill_entity_from_import(R01World *w, R01EntityType *e, const R01EntityImport *in, uint8_t pal_rgb[4][3],
-                                   char *err_buf, size_t err_cap) {
-    uint8_t seen[R01_ENTITY_STATES_MAX * R01_ENTITY_FRAMES_MAX * R01_ENTITY_PARTS_MAX][R01_TILE_BYTES];
-    int seen_bank[R01_ENTITY_STATES_MAX * R01_ENTITY_FRAMES_MAX * R01_ENTITY_PARTS_MAX];
-    int seen_tile[R01_ENTITY_STATES_MAX * R01_ENTITY_FRAMES_MAX * R01_ENTITY_PARTS_MAX];
-    int seen_n = 0;
+static int fill_entity_from_import(R01Project *p, R01World *w, R01EntityType *e, const R01EntityImport *in,
+                                   uint8_t pal_rgb[4][3], char *err_buf, size_t err_cap) {
     int si;
     char qerr[128];
 
@@ -1227,7 +1282,7 @@ static int fill_entity_from_import(R01World *w, R01EntityType *e, const R01Entit
                         set_err(err_buf, err_cap, msg);
                         return -1;
                     }
-                    if (dedupe_chr(w, tile, &bank, &tile_id, seen, seen_bank, seen_tile, &seen_n) != 0) {
+                    if (dedupe_chr(p, w, tile, &bank, &tile_id) != 0) {
                         set_err(err_buf, err_cap, "sprite CHR full");
                         return -1;
                     }
@@ -1271,7 +1326,7 @@ int r01_world_import_entity_frames(R01Project *p, R01World *w, const R01EntityIm
         return -1;
     }
     e = r01_world_entity(w, idx);
-    if (fill_entity_from_import(w, e, in, pal_rgb, err_buf, err_cap) != 0) {
+    if (fill_entity_from_import(p, w, e, in, pal_rgb, err_buf, err_cap) != 0) {
         r01_world_entity_remove(w, idx);
         return -1;
     }
@@ -1293,10 +1348,11 @@ int r01_world_import_entity_frames_replace(R01Project *p, R01World *w, int type_
     }
     e = r01_world_entity(w, type_idx);
     saved = *e;
-    if (fill_entity_from_import(w, e, in, pal_rgb, err_buf, err_cap) != 0) {
+    if (fill_entity_from_import(p, w, e, in, pal_rgb, err_buf, err_cap) != 0) {
         *e = saved;
         return -1;
     }
+    restore_entity_guides(e, &saved);
     return type_idx;
 }
 

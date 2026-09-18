@@ -135,6 +135,22 @@
 #define UI_ENTITY_TOOL_SELECT 0
 #define UI_ENTITY_TOOL_PAINT 1
 #define UI_ENTITY_TOOL_GUIDES 2
+#define UI_ENTITY_HB_NW 0
+#define UI_ENTITY_HB_NE 1
+#define UI_ENTITY_HB_SE 2
+#define UI_ENTITY_HB_SW 3
+#define UI_ENTITY_HB_N 4
+#define UI_ENTITY_HB_E 5
+#define UI_ENTITY_HB_S 6
+#define UI_ENTITY_HB_W 7
+#define UI_ENTITY_HB_CUR_NONE 0
+#define UI_ENTITY_HB_CUR_NWSE 1
+#define UI_ENTITY_HB_CUR_NESW 2
+#define UI_ENTITY_HB_CUR_WE 3
+#define UI_ENTITY_HB_CUR_NS 4
+#define UI_ENTITY_HB_CUR_MOVE 5
+#define UI_ENTITY_HB_CUR_SE 6
+#define UI_ENTITY_HB_CUR_SW 7
 #define UI_ENTITY_LEFT_W (UI_PAL_GRID_SIZE + UI_UNIT * 2) /* palette + side pad */
 #define UI_ENTITY_MODAL_W (UI_UNIT + UI_ENTITY_LEFT_W + UI_UNIT + UI_ENTITY_COMPOSE + UI_UNIT)
 #define UI_METASPRITE_MODAL_H 304
@@ -325,7 +341,7 @@ typedef struct UiEntityEdit {
     int dragging;
     int drag_off_x;
     int drag_off_y;
-    int drag_corner; /* 0 NW, 1 NE, 2 SE, 3 SW when resizing hitbox */
+    int drag_corner; /* UI_ENTITY_HB_* when resizing hitbox */
     int drag_primary; /* part index that started a group drag */
     int drag_start_dx[R01_ENTITY_PARTS_MAX];
     int drag_start_dy[R01_ENTITY_PARTS_MAX];

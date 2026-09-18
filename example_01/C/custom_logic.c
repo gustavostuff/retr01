@@ -18,8 +18,8 @@ static void init_platformer(R01GameCtx *ctx) {
 static void init_player_anim(R01GameCtx *ctx) {
     r01_player_anim_set_idle_state(ctx, 0);
     r01_player_anim_set_walk_all(ctx, 1);
-    r01_player_anim_set_crouch_state(ctx, 2);
-    r01_player_anim_set_jump_state(ctx, 3);
+    r01_player_anim_set_crouch_state(ctx, 3);
+    r01_player_anim_set_jump_state(ctx, 2);
 }
 
 void r01_custom_on_init(R01GameCtx *ctx) {

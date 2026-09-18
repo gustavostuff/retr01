@@ -143,6 +143,11 @@ if(X11_FOUND)
   target_compile_definitions(retr01_studio_app PRIVATE R01_HAS_X11=1)
   target_include_directories(retr01_studio_app PRIVATE ${X11_INCLUDE_DIR})
   target_link_libraries(retr01_studio_app PUBLIC ${X11_LIBRARIES})
+  if(X11_Xcursor_FOUND)
+    target_compile_definitions(retr01_studio_app PRIVATE R01_HAS_XCURSOR=1)
+    target_include_directories(retr01_studio_app PRIVATE ${X11_Xcursor_INCLUDE_PATH})
+    target_link_libraries(retr01_studio_app PUBLIC ${X11_Xcursor_LIB})
+  endif()
 endif()
 # PNG chrome lives in assets/png (injected into retr01_ui).
 target_compile_definitions(retr01_studio_app PRIVATE

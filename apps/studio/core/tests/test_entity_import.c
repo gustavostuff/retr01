@@ -82,13 +82,61 @@ TEST_MAIN() {
     EXPECT(p->worlds[0].entities[0].states[0].hitbox_w == R01_ENTITY_HITBOX_W, "8x8 hitbox w");
     EXPECT(p->worlds[0].entities[0].states[0].hitbox_h == R01_ENTITY_HITBOX_H, "8x8 hitbox h");
 
-    r01_world_set_player_entity(&p->worlds[0], 0);
-    in.states[0].frames[0].delay = 12;
-    idx = r01_world_import_entity_frames_replace(p, &p->worlds[0], 0, &in, err, sizeof(err));
-    EXPECT(idx == 0, "replace idx");
-    EXPECT(p->worlds[0].entity_count == 1, "replace keeps count");
-    EXPECT(p->worlds[0].entities[0].states[0].frames[0].delay == 12, "replaced delay");
-    EXPECT(r01_world_player_entity(&p->worlds[0]) == 0, "player mark kept");
+    {
+        int bank0 = p->worlds[0].entities[0].states[0].frames[0].parts[0].bank;
+        int tile0 = p->worlds[0].entities[0].states[0].frames[0].parts[0].tile_id;
+        int spr_n = p->worlds[0].spr_banks[0].tile_count;
+        int clone;
+
+        snprintf(in.name, sizeof(in.name), "clone");
+        clone = r01_world_import_entity_frames(p, &p->worlds[0], &in, err, sizeof(err));
+        EXPECT(clone == 1, "clone entity");
+        EXPECT(p->worlds[0].entities[1].states[0].frames[0].parts[0].bank == bank0, "clone bank");
+        EXPECT(p->worlds[0].entities[1].states[0].frames[0].parts[0].tile_id == tile0, "clone tile");
+        EXPECT(p->worlds[0].spr_banks[0].tile_count == spr_n, "clone reuses chr");
+        EXPECT(r01_world_entity_remove(&p->worlds[0], 1) == 0, "drop clone");
+
+        snprintf(in.name, sizeof(in.name), "hero");
+        p->worlds[0].entities[0].states[0].frames[0].origin_x = 4;
+        p->worlds[0].entities[0].states[0].frames[0].origin_y = 7;
+        p->worlds[0].entities[0].states[0].hitbox_x = 2;
+        p->worlds[0].entities[0].states[0].hitbox_y = 3;
+        p->worlds[0].entities[0].states[0].hitbox_w = 10;
+        p->worlds[0].entities[0].states[0].hitbox_h = 12;
+        r01_world_set_player_entity(&p->worlds[0], 0);
+        in.states[0].frames[0].delay = 12;
+        idx = r01_world_import_entity_frames_replace(p, &p->worlds[0], 0, &in, err, sizeof(err));
+        EXPECT(idx == 0, "replace idx");
+        EXPECT(p->worlds[0].entity_count == 1, "replace keeps count");
+        EXPECT(p->worlds[0].entities[0].states[0].frames[0].delay == 12, "replaced delay");
+        EXPECT(p->worlds[0].entities[0].states[0].frames[0].origin_x == 4, "replace keeps origin x");
+        EXPECT(p->worlds[0].entities[0].states[0].frames[0].origin_y == 7, "replace keeps origin y");
+        EXPECT(p->worlds[0].entities[0].states[0].hitbox_x == 2, "replace keeps hitbox x");
+        EXPECT(p->worlds[0].entities[0].states[0].hitbox_y == 3, "replace keeps hitbox y");
+        EXPECT(p->worlds[0].entities[0].states[0].hitbox_w == 10, "replace keeps hitbox w");
+        EXPECT(p->worlds[0].entities[0].states[0].hitbox_h == 12, "replace keeps hitbox h");
+        EXPECT(p->worlds[0].entities[0].states[0].frames[0].parts[0].bank == bank0, "replace bank");
+        EXPECT(p->worlds[0].entities[0].states[0].frames[0].parts[0].tile_id == tile0, "replace tile");
+        EXPECT(p->worlds[0].spr_banks[0].tile_count == spr_n, "replace reuses chr");
+        EXPECT(r01_world_player_entity(&p->worlds[0]) == 0, "player mark kept");
+
+        r01_world_set_player_entity(&p->worlds[0], -1);
+        EXPECT(r01_project_set_player_entity(p, &p->worlds[0], 0) == 0, "move player chr");
+        bank0 = p->worlds[0].entities[0].states[0].frames[0].parts[0].bank;
+        tile0 = p->worlds[0].entities[0].states[0].frames[0].parts[0].tile_id;
+        EXPECT(r01_is_global_spr_bank(bank0), "player on global spr");
+        spr_n = p->worlds[0].spr_banks[0].tile_count;
+        {
+            int other_n = p->other_spr_banks[r01_global_spr_index(bank0)].tile_count;
+            idx = r01_world_import_entity_frames_replace(p, &p->worlds[0], 0, &in, err, sizeof(err));
+            EXPECT(idx == 0, "replace after player move");
+            EXPECT(p->worlds[0].entities[0].states[0].frames[0].parts[0].bank == bank0, "reuse global bank");
+            EXPECT(p->worlds[0].entities[0].states[0].frames[0].parts[0].tile_id == tile0, "reuse global tile");
+            EXPECT(p->worlds[0].spr_banks[0].tile_count == spr_n, "no world spr added");
+            EXPECT(p->other_spr_banks[r01_global_spr_index(bank0)].tile_count == other_n, "no other spr added");
+            EXPECT(p->worlds[0].entities[0].states[0].frames[0].origin_x == 4, "guides after global reuse");
+        }
+    }
     in.states[0].frames[0].delay = 6;
     p->worlds[0].entities[0].states[0].frames[0].delay = 6;
 

@@ -12,7 +12,7 @@
   "global_pal_bg": [[0, 16, 32, 48], [0, 12, 44, 48], [0, 24, 39, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51]],
   "global_pal_spr": [[0, 2, 17, 51], [0, 18, 33, 51], [0, 23, 39, 55], [0, 30, 46, 51], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34]],
   "other_spr_banks": [
-    {"tiles": 24, "b64": "ADh/f29PDw8AAAQIAAAFBQAw4PDw+Pj4AAAAAEDgQEAfBwYODw8PBwEAAwcEBAcD8ODQaAiw+DjggODw8EBQ0AMBAQEBAwUFAAAAAAAAAgIw8PDw4OAgEMDAYGDAgMDgOH9/b08PDx8ABAgAAAUFATDg8PD4+PjwAAAAQOBAQOAHBg4PDw8HBwADBwQEBgMD4NBoCLD4ODCA4PDwQFDQwPDw8PDg4CAQwGBgYMCAwOACAQEBAQMFBQEAAAAAAAICBw4eHz0+HAQAAwcMGBkDA+DQbA6+/GAggODw9EzAgMAGP09OUDAAAAEGPDAgAAAAcPh4PjIkGADgcDAQHBgAAAcGBwMDBAgIAAMDAQADBwfg0Gj4+PhwsIDg8IDwMIBgD3+enKBgAAAGDnhgQAAAAPB4eD4yJBgAYDAwEBwYAAAHDw8NCQEBAQAAAQAAAAAABvz+/v////4AgAAIHKioPAEBBwkJHSdHAAABBgcDGD/Q7Pz+/////jh4aCi01t6Y"},
+    {"tiles": 26, "b64": "ADh/f29PDw8AAAQIAAAFBQAw4PDw+Pj4AAAAAEDgQEAfBwYODw8PBwEAAwcEBAcD8ODQaAiw+DjggODw8EBQ0AMBAQEBAwUFAAAAAAAAAgIw8PDw4OAgEMDAYGDAgMDgOH9/b08PDx8ABAgAAAUFATDg8PD4+PjwAAAAQOBAQOAHBg4PDw8HBwADBwQEBgMD4NBoCLD4ODCA4PDwQNDQwPDw8PDg4CAQwGBgYMCAwOAHDh4fPT4cBAADBwwYGQMD4NBsDr78YCCA4PD0TMCAwAY/T05QMAAAAQY8MCAAAABw+Hg+MiQYAOBwMBAcGAAABwYHAwMECAgAAwMBAAMHB+DQaPj4+HCwgODwgPAwgGAPf56coGAAAAYOeGBAAAAA8Hh4PjIkGABgMDAQHBgAAAA/f39vLw8fAAQIAAAFBQEw4Pb////+/AAAAOZGROz4+NBoCLDgYCCQ4PDwQMCAwAcPDw0JAQEBAAABAAAAAAAG/P7+/////gCAAAgcqKg8AQEHCQkdJ0cAAAEGBwMYP/za7fH+///+EHx+LrDW2pg="},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""}
@@ -26,13 +26,12 @@
   "bg_bank0_tiles": 13,
   "bg_bank0_b64": "AAAAAAAAAAAAAAAAAAAAAP/DzY2FgYH/ADw+fn5+fgD////f/////wAAACAAAAAA///v1+////8AABA4EAAAAAAAAAAAAAAA//////////8BAwcfP39/f///////////wPj8/v///////////////wAAAADA8Pj8//////////8AAA9//wAAAP//////////AAAAwP8AAAD///////////+P4R/DkP//AHAe4DxvAAD/392ZmQMHBwAgImZm/Pj4//fzOZHI4PAACAzGbjcfDw==",
   "spr_banks": [
-    {"tiles": 1, "b64": "AAAAFBQAAAAAHD4+P3/+kg=="},
+    {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""}
   ],
   "sprites": [
-    {"bank": 0, "tile": 0, "pal": 2}
   ],
   "metasprites": [
   ],
@@ -46,7 +45,7 @@
         {
           "name": "idle",
           "frame_count": 2,
-          "hitbox_x": 12, "hitbox_y": 8, "hitbox_w": 8, "hitbox_h": 20,
+          "hitbox_x": 12, "hitbox_y": 12, "hitbox_w": 8, "hitbox_h": 16,
           "frames": [
             {"delay": 24, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":0,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":1,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":3,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":5,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]},
             {"delay": 24, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":6,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":7,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":8,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":9,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":10,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]}
@@ -55,35 +54,34 @@
         {
           "name": "running",
           "frame_count": 4,
-          "hitbox_x": 12, "hitbox_y": 8, "hitbox_w": 8, "hitbox_h": 20,
+          "hitbox_x": 12, "hitbox_y": 12, "hitbox_w": 8, "hitbox_h": 16,
           "frames": [
-            {"delay": 9, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":0,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":1,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":3,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":11,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":5,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]},
-            {"delay": 9, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":6,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":7,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":12,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":13,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":14,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":15,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]},
-            {"delay": 9, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":0,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":1,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":3,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":11,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":5,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]},
-            {"delay": 9, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":6,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":7,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":16,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":17,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":18,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":19,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]}
+            {"delay": 9, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":0,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":1,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":3,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":5,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]},
+            {"delay": 9, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":6,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":7,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":11,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":12,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":13,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":14,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]},
+            {"delay": 9, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":0,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":1,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":2,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":3,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":4,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":5,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]},
+            {"delay": 9, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":6,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":7,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":15,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":16,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":17,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":18,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]}
+          ]
+        },
+        {
+          "name": "jumping",
+          "frame_count": 1,
+          "hitbox_x": 12, "hitbox_y": 12, "hitbox_w": 8, "hitbox_h": 16,
+          "frames": [
+            {"delay": 6, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":6,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":7,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":11,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":12,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":13,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":14,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]}
           ]
         },
         {
           "name": "crouching",
           "frame_count": 1,
-          "hitbox_x": 13, "hitbox_y": 18, "hitbox_w": 8, "hitbox_h": 10,
+          "hitbox_x": 14, "hitbox_y": 16, "hitbox_w": 11, "hitbox_h": 12,
           "frames": [
-            {"delay": 6, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":20,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":21,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":22,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":23,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]}
-          ]
-        },
-        {
-          "name": "Jump",
-          "frame_count": 1,
-          "hitbox_x": 12, "hitbox_y": 8, "hitbox_w": 8, "hitbox_h": 20,
-          "frames": [
-            {"delay": 1, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":6,"pal":0,"fh":0,"fv":0,"dx":8,"dy":4},{"bank":4,"tile":7,"pal":0,"fh":0,"fv":0,"dx":16,"dy":4},{"bank":4,"tile":12,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":13,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":14,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":15,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]}
+            {"delay": 6, "origin_x": 16, "origin_y": 16, "parts": [{"bank":4,"tile":22,"pal":0,"fh":0,"fv":0,"dx":8,"dy":12},{"bank":4,"tile":23,"pal":0,"fh":0,"fv":0,"dx":16,"dy":12},{"bank":4,"tile":24,"pal":0,"fh":0,"fv":0,"dx":8,"dy":20},{"bank":4,"tile":25,"pal":0,"fh":0,"fv":0,"dx":16,"dy":20}]}
           ]
         }
       ]
     }
   ],
   "instances": [
-    {"type": 0, "x": 28, "y": 886}
   ],
   "warp_entrances": [
   ],
@@ -217,5 +215,5 @@
       ]}
     ]
   },
-  "aseprite_entities_files": ["player/crouching.ase", "player/idle.ase", "player/running.ase"]
+  "aseprite_entities_files": ["player/crouching.ase", "player/idle.ase", "player/jumping.ase", "player/running.ase"]
 }

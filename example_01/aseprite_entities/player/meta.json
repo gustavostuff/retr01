@@ -1,5 +1,6 @@
 {
-  "crouching": "474246b35f2f6a1c3bcfcb44a93c0f7d9b4108ae",
-  "idle": "45b1db078ac1051a836e26f6b052f12fd506b311",
-  "running": "072c6a716dd24fa3357f9bcc61b6b238531beff9"
+  "crouching": "26d4da44880508373a44c264ccab42b13953ed93",
+  "idle": "54ae4c58e0fa9103ecc250d899698040ab1f6bbd",
+  "jumping": "8f41927c59a328c92dee9a9901b5caf8135e6a56",
+  "running": "73c1d9fa7c1d94304b9b135199a4ffc04de9989d"
 }

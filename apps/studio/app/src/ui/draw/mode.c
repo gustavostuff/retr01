@@ -63,6 +63,12 @@ void draw_ctrl_sidebar(UiState *ui, SDL_Renderer *r) {
 void ui_update_cursor(const UiState *ui) {
     int hand = 0;
     int sizewe = 0;
+    int sizens = 0;
+    int sizenwse = 0;
+    int sizenesw = 0;
+    int sizese = 0;
+    int sizesw = 0;
+    int sizeall = 0;
     int no = 0;
     int lx = ui->mouse_x;
     int ly = ui->mouse_y;
@@ -110,6 +116,24 @@ void ui_update_cursor(const UiState *ui) {
         if (ui->entity_edit.preview_playing && dots_hit) {
             no = 1;
         }
+        {
+            int hb = entity_edit_guides_cursor(ui, lx, ly);
+            if (hb == UI_ENTITY_HB_CUR_NWSE) {
+                sizenwse = 1;
+            } else if (hb == UI_ENTITY_HB_CUR_NESW) {
+                sizenesw = 1;
+            } else if (hb == UI_ENTITY_HB_CUR_SE) {
+                sizese = 1;
+            } else if (hb == UI_ENTITY_HB_CUR_SW) {
+                sizesw = 1;
+            } else if (hb == UI_ENTITY_HB_CUR_WE) {
+                sizewe = 1;
+            } else if (hb == UI_ENTITY_HB_CUR_NS) {
+                sizens = 1;
+            } else if (hb == UI_ENTITY_HB_CUR_MOVE) {
+                sizeall = 1;
+            }
+        }
         hand = (!ui->entity_edit.preview_playing &&
                 point_in_rect(lx, ly, lo.right_grid_x, lo.right_grid_y, UI_ENTITY_COMPOSE, UI_ENTITY_COMPOSE)) ||
                point_in_rect(lx, ly, lo.pal_x, lo.pal_y, UI_PAL_GRID_SIZE, UI_PAL_GRID_SIZE) ||
@@ -155,8 +179,20 @@ void ui_update_cursor(const UiState *ui) {
                (!ui->play.active && (screen_layer_hit(ui, lx, ly, NULL) || screen_hide_hit(ui, lx, ly, NULL) ||
                                      screen_hit(ui, lx, ly, NULL, NULL)));
     }
-    if (sizewe && g_cursor_sizewe) {
+    if (sizenwse && g_cursor_sizenwse) {
+        SDL_SetCursor(g_cursor_sizenwse);
+    } else if (sizenesw && g_cursor_sizenesw) {
+        SDL_SetCursor(g_cursor_sizenesw);
+    } else if (sizese && g_cursor_sizese) {
+        SDL_SetCursor(g_cursor_sizese);
+    } else if (sizesw && g_cursor_sizesw) {
+        SDL_SetCursor(g_cursor_sizesw);
+    } else if (sizens && g_cursor_sizens) {
+        SDL_SetCursor(g_cursor_sizens);
+    } else if (sizewe && g_cursor_sizewe) {
         SDL_SetCursor(g_cursor_sizewe);
+    } else if (sizeall && g_cursor_sizeall) {
+        SDL_SetCursor(g_cursor_sizeall);
     } else if (no && g_cursor_no) {
         SDL_SetCursor(g_cursor_no);
     } else {

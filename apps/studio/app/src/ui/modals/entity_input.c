@@ -296,10 +296,21 @@ int entity_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button) {
                 ui->entity_edit.drag_off_y = cy - fr->origin_y;
                 return 1;
             }
-            if (st && entity_edit_hitbox_corner_hit(ui, &lo, st, lx, ly, &corner)) {
-                /* Anchor = opposite corner in world px. */
-                int ax = (corner == 1 || corner == 2) ? st->hitbox_x : st->hitbox_x + st->hitbox_w;
-                int ay = (corner == 2 || corner == 3) ? st->hitbox_y : st->hitbox_y + st->hitbox_h;
+            if (st && entity_edit_hitbox_handle_hit(ui, &lo, st, lx, ly, &corner)) {
+                int ax = st->hitbox_x;
+                int ay = st->hitbox_y;
+                if (corner == UI_ENTITY_HB_NW || corner == UI_ENTITY_HB_SW || corner == UI_ENTITY_HB_W) {
+                    ax = st->hitbox_x + st->hitbox_w;
+                }
+                if (corner == UI_ENTITY_HB_NW || corner == UI_ENTITY_HB_NE || corner == UI_ENTITY_HB_N) {
+                    ay = st->hitbox_y + st->hitbox_h;
+                }
+                if (corner == UI_ENTITY_HB_E) {
+                    ax = st->hitbox_x;
+                }
+                if (corner == UI_ENTITY_HB_S) {
+                    ay = st->hitbox_y;
+                }
                 ui->entity_edit.dragging = 4;
                 ui->entity_edit.drag_corner = corner;
                 ui->entity_edit.drag_off_x = ax;
@@ -469,6 +480,7 @@ void entity_modal_drag(UiState *ui, int lx, int ly, Uint32 buttons) {
         }
     } else if (ui->entity_edit.dragging == 4 && (buttons & SDL_BUTTON_LMASK)) {
         if (st) {
+            int handle = ui->entity_edit.drag_corner;
             int ax = ui->entity_edit.drag_off_x;
             int ay = ui->entity_edit.drag_off_y;
             int x0, y0, x1, y1, hx, hy, hw, hh;
@@ -485,10 +497,22 @@ void entity_modal_drag(UiState *ui, int lx, int ly, Uint32 buttons) {
             if (cy > R01_ENTITY_COMPOSE_PX) {
                 cy = R01_ENTITY_COMPOSE_PX;
             }
-            x0 = ax < cx ? ax : cx;
-            y0 = ay < cy ? ay : cy;
-            x1 = ax > cx ? ax : cx;
-            y1 = ay > cy ? ay : cy;
+            if (handle == UI_ENTITY_HB_N || handle == UI_ENTITY_HB_S) {
+                x0 = st->hitbox_x;
+                x1 = st->hitbox_x + st->hitbox_w;
+                y0 = ay < cy ? ay : cy;
+                y1 = ay > cy ? ay : cy;
+            } else if (handle == UI_ENTITY_HB_E || handle == UI_ENTITY_HB_W) {
+                x0 = ax < cx ? ax : cx;
+                x1 = ax > cx ? ax : cx;
+                y0 = st->hitbox_y;
+                y1 = st->hitbox_y + st->hitbox_h;
+            } else {
+                x0 = ax < cx ? ax : cx;
+                y0 = ay < cy ? ay : cy;
+                x1 = ax > cx ? ax : cx;
+                y1 = ay > cy ? ay : cy;
+            }
             hx = x0;
             hy = y0;
             hw = x1 - x0;

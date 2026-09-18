@@ -16,10 +16,104 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(R01_HAS_XCURSOR)
+#include <X11/Xcursor/Xcursor.h>
+#endif
+
 SDL_Cursor *g_cursor_arrow;
 SDL_Cursor *g_cursor_hand;
 SDL_Cursor *g_cursor_sizewe;
+SDL_Cursor *g_cursor_sizens;
+SDL_Cursor *g_cursor_sizenwse;
+SDL_Cursor *g_cursor_sizenesw;
+SDL_Cursor *g_cursor_sizese;
+SDL_Cursor *g_cursor_sizesw;
+SDL_Cursor *g_cursor_sizeall;
 SDL_Cursor *g_cursor_no;
+
+#if defined(R01_HAS_XCURSOR)
+static int cursor_theme_size(void) {
+    const char *e = getenv("XCURSOR_SIZE");
+    int v;
+    if (!e || !e[0]) {
+        return 24;
+    }
+    v = atoi(e);
+    if (v < 16) {
+        return 16;
+    }
+    if (v > 64) {
+        return 64;
+    }
+    return v;
+}
+
+/* Load a named theme cursor (se-resize, bottom_right_corner, ...). */
+static SDL_Cursor *cursor_from_theme(const char *const *names) {
+    int size = cursor_theme_size();
+    int i;
+    for (i = 0; names && names[i]; i++) {
+        XcursorImage *img = XcursorLibraryLoadImage(names[i], NULL, size);
+        SDL_Surface *surf;
+        SDL_Cursor *cur;
+        int hot_x;
+        int hot_y;
+        int y;
+        if (!img || !img->pixels || img->width < 1 || img->height < 1) {
+            if (img) {
+                XcursorImageDestroy(img);
+            }
+            continue;
+        }
+        surf = SDL_CreateRGBSurfaceWithFormat(0, (int)img->width, (int)img->height, 32, SDL_PIXELFORMAT_ARGB8888);
+        if (!surf || !surf->pixels) {
+            if (surf) {
+                SDL_FreeSurface(surf);
+            }
+            XcursorImageDestroy(img);
+            continue;
+        }
+        for (y = 0; y < (int)img->height; y++) {
+            memcpy((uint8_t *)surf->pixels + y * surf->pitch, (const uint8_t *)img->pixels + y * (int)img->width * 4,
+                   (size_t)img->width * 4u);
+        }
+        hot_x = (int)img->xhot;
+        hot_y = (int)img->yhot;
+        if (hot_x < 0) {
+            hot_x = 0;
+        }
+        if (hot_y < 0) {
+            hot_y = 0;
+        }
+        if (hot_x >= (int)img->width) {
+            hot_x = (int)img->width - 1;
+        }
+        if (hot_y >= (int)img->height) {
+            hot_y = (int)img->height - 1;
+        }
+        cur = SDL_CreateColorCursor(surf, hot_x, hot_y);
+        SDL_FreeSurface(surf);
+        XcursorImageDestroy(img);
+        if (cur) {
+            return cur;
+        }
+    }
+    return NULL;
+}
+#endif
+
+static SDL_Cursor *cursor_corner(const char *const *names, SDL_SystemCursor fallback) {
+    SDL_Cursor *cur = NULL;
+#if defined(R01_HAS_XCURSOR)
+    cur = cursor_from_theme(names);
+#else
+    (void)names;
+#endif
+    if (cur) {
+        return cur;
+    }
+    return SDL_CreateSystemCursor(fallback);
+}
 
 int ui_init(UiState *ui) {
     if (!ui) {
@@ -32,6 +126,18 @@ int ui_init(UiState *ui) {
     g_cursor_arrow = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
     g_cursor_hand = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
     g_cursor_sizewe = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEWE);
+    g_cursor_sizens = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENS);
+    {
+        static const char *const nw_names[] = {"nw-resize", "top_left_corner", NULL};
+        static const char *const ne_names[] = {"ne-resize", "top_right_corner", NULL};
+        static const char *const se_names[] = {"se-resize", "bottom_right_corner", NULL};
+        static const char *const sw_names[] = {"sw-resize", "bottom_left_corner", NULL};
+        g_cursor_sizenwse = cursor_corner(nw_names, SDL_SYSTEM_CURSOR_SIZENWSE);
+        g_cursor_sizenesw = cursor_corner(ne_names, SDL_SYSTEM_CURSOR_SIZENESW);
+        g_cursor_sizese = cursor_corner(se_names, SDL_SYSTEM_CURSOR_SIZENWSE);
+        g_cursor_sizesw = cursor_corner(sw_names, SDL_SYSTEM_CURSOR_SIZENESW);
+    }
+    g_cursor_sizeall = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEALL);
     g_cursor_no = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NO);
     {
         static const char *const radio_paths[] = {
@@ -253,6 +359,30 @@ void ui_shutdown(UiState *ui) {
     if (g_cursor_sizewe) {
         SDL_FreeCursor(g_cursor_sizewe);
         g_cursor_sizewe = NULL;
+    }
+    if (g_cursor_sizens) {
+        SDL_FreeCursor(g_cursor_sizens);
+        g_cursor_sizens = NULL;
+    }
+    if (g_cursor_sizenwse) {
+        SDL_FreeCursor(g_cursor_sizenwse);
+        g_cursor_sizenwse = NULL;
+    }
+    if (g_cursor_sizenesw) {
+        SDL_FreeCursor(g_cursor_sizenesw);
+        g_cursor_sizenesw = NULL;
+    }
+    if (g_cursor_sizese) {
+        SDL_FreeCursor(g_cursor_sizese);
+        g_cursor_sizese = NULL;
+    }
+    if (g_cursor_sizesw) {
+        SDL_FreeCursor(g_cursor_sizesw);
+        g_cursor_sizesw = NULL;
+    }
+    if (g_cursor_sizeall) {
+        SDL_FreeCursor(g_cursor_sizeall);
+        g_cursor_sizeall = NULL;
     }
     if (g_cursor_no) {
         SDL_FreeCursor(g_cursor_no);

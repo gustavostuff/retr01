@@ -189,6 +189,12 @@ extern int g_spr_bank_btn_h;
 extern SDL_Cursor *g_cursor_arrow;
 extern SDL_Cursor *g_cursor_hand;
 extern SDL_Cursor *g_cursor_sizewe;
+extern SDL_Cursor *g_cursor_sizens;
+extern SDL_Cursor *g_cursor_sizenwse;
+extern SDL_Cursor *g_cursor_sizenesw;
+extern SDL_Cursor *g_cursor_sizese;
+extern SDL_Cursor *g_cursor_sizesw;
+extern SDL_Cursor *g_cursor_sizeall;
 extern SDL_Cursor *g_cursor_no;
 
 /* ui/primitives.c */
@@ -427,6 +433,7 @@ void entity_edit_select_all_parts(UiState *ui);
 void entity_edit_copy_parts(UiState *ui);
 int entity_edit_paste_clipboard(UiState *ui);
 int entity_edit_preview_can_play(const UiState *ui);
+int entity_edit_guides_cursor(const UiState *ui, int lx, int ly);
 void entity_edit_preview_tick(UiState *ui);
 void draw_entity_modal(UiState *ui, SDL_Renderer *r);
 

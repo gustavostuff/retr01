@@ -14,8 +14,11 @@ void entity_edit_world_to_screen(const UiState *ui, const EntityModalLayout *lo,
 int entity_edit_origin_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityFrame *fr, int lx, int ly);
 int entity_edit_hitbox_corner_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityState *st, int lx,
                                   int ly, int *out_corner);
+int entity_edit_hitbox_handle_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityState *st, int lx,
+                                  int ly, int *out_handle);
 int entity_edit_hitbox_body_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityState *st, int lx,
                                 int ly);
+int entity_edit_guides_cursor(const UiState *ui, int lx, int ly);
 void entity_edit_view_clamp(UiState *ui);
 void entity_edit_view_pan(UiState *ui, int dx, int dy);
 void entity_edit_set_zoom(UiState *ui, const EntityModalLayout *lo, int new_zoom, int focus_lx, int focus_ly);

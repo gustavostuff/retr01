@@ -87,10 +87,24 @@ int entity_edit_origin_hit(const UiState *ui, const EntityModalLayout *lo, const
 /* 1 if near a hitbox corner; out_corner 0=NW 1=NE 2=SE 3=SW. */
 int entity_edit_hitbox_corner_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityState *st, int lx,
                                     int ly, int *out_corner) {
+    int handle = 0;
+    if (!entity_edit_hitbox_handle_hit(ui, lo, st, lx, ly, &handle) || handle > UI_ENTITY_HB_SW) {
+        return 0;
+    }
+    if (out_corner) {
+        *out_corner = handle;
+    }
+    return 1;
+}
+
+int entity_edit_hitbox_handle_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityState *st, int lx,
+                                  int ly, int *out_handle) {
     int sc = entity_edit_compose_scale(ui);
     int grab = sc > UI_UNIT ? sc : UI_UNIT;
     int i;
     int cx[4], cy[4];
+    int inset;
+    int x0, y0, x1, y1, ew, eh;
     if (!st || st->hitbox_w < 1 || st->hitbox_h < 1) {
         return 0;
     }
@@ -100,13 +114,113 @@ int entity_edit_hitbox_corner_hit(const UiState *ui, const EntityModalLayout *lo
     entity_edit_world_to_screen(ui, lo, st->hitbox_x, st->hitbox_y + st->hitbox_h, &cx[3], &cy[3]);
     for (i = 0; i < 4; i++) {
         if (point_in_rect(lx, ly, cx[i] - grab / 2, cy[i] - grab / 2, grab, grab)) {
-            if (out_corner) {
-                *out_corner = i;
+            if (out_handle) {
+                *out_handle = i;
             }
             return 1;
         }
     }
+    x0 = cx[0];
+    y0 = cy[0];
+    x1 = cx[2];
+    y1 = cy[2];
+    if (x1 < x0) {
+        int t = x0;
+        x0 = x1;
+        x1 = t;
+    }
+    if (y1 < y0) {
+        int t = y0;
+        y0 = y1;
+        y1 = t;
+    }
+    inset = grab / 2;
+    ew = x1 - x0 - grab;
+    eh = y1 - y0 - grab;
+    if (ew > 0 && point_in_rect(lx, ly, x0 + inset, y0 - grab / 2, ew, grab)) {
+        if (out_handle) {
+            *out_handle = UI_ENTITY_HB_N;
+        }
+        return 1;
+    }
+    if (ew > 0 && point_in_rect(lx, ly, x0 + inset, y1 - grab / 2, ew, grab)) {
+        if (out_handle) {
+            *out_handle = UI_ENTITY_HB_S;
+        }
+        return 1;
+    }
+    if (eh > 0 && point_in_rect(lx, ly, x1 - grab / 2, y0 + inset, grab, eh)) {
+        if (out_handle) {
+            *out_handle = UI_ENTITY_HB_E;
+        }
+        return 1;
+    }
+    if (eh > 0 && point_in_rect(lx, ly, x0 - grab / 2, y0 + inset, grab, eh)) {
+        if (out_handle) {
+            *out_handle = UI_ENTITY_HB_W;
+        }
+        return 1;
+    }
     return 0;
+}
+
+static int entity_hb_handle_cursor(int handle) {
+    if (handle == UI_ENTITY_HB_NW) {
+        return UI_ENTITY_HB_CUR_NWSE;
+    }
+    if (handle == UI_ENTITY_HB_NE) {
+        return UI_ENTITY_HB_CUR_NESW;
+    }
+    if (handle == UI_ENTITY_HB_SE) {
+        return UI_ENTITY_HB_CUR_SE;
+    }
+    if (handle == UI_ENTITY_HB_SW) {
+        return UI_ENTITY_HB_CUR_SW;
+    }
+    if (handle == UI_ENTITY_HB_E || handle == UI_ENTITY_HB_W) {
+        return UI_ENTITY_HB_CUR_WE;
+    }
+    if (handle == UI_ENTITY_HB_N || handle == UI_ENTITY_HB_S) {
+        return UI_ENTITY_HB_CUR_NS;
+    }
+    return UI_ENTITY_HB_CUR_NONE;
+}
+
+int entity_edit_guides_cursor(const UiState *ui, int lx, int ly) {
+    EntityModalLayout lo;
+    const R01EntityState *st;
+    const R01EntityFrame *fr = NULL;
+    int handle = 0;
+    if (!ui || !ui->entity_edit.open || ui->entity_edit.preview_playing ||
+        ui->entity_edit.tool != UI_ENTITY_TOOL_GUIDES) {
+        return UI_ENTITY_HB_CUR_NONE;
+    }
+    if (ui->entity_edit.dragging == 4) {
+        return entity_hb_handle_cursor(ui->entity_edit.drag_corner);
+    }
+    if (ui->entity_edit.dragging == 3) {
+        return UI_ENTITY_HB_CUR_MOVE;
+    }
+    entity_modal_layout(ui, &lo);
+    if (ui->entity_edit.state < 0 || ui->entity_edit.state >= ui->entity_edit.draft.state_count ||
+        ui->entity_edit.state >= R01_ENTITY_STATES_MAX) {
+        return UI_ENTITY_HB_CUR_NONE;
+    }
+    st = &ui->entity_edit.draft.states[ui->entity_edit.state];
+    if (ui->entity_edit.frame >= 0 && ui->entity_edit.frame < st->frame_count &&
+        ui->entity_edit.frame < R01_ENTITY_FRAMES_MAX) {
+        fr = &st->frames[ui->entity_edit.frame];
+    }
+    if (fr && entity_edit_origin_hit(ui, &lo, fr, lx, ly)) {
+        return UI_ENTITY_HB_CUR_NONE;
+    }
+    if (entity_edit_hitbox_handle_hit(ui, &lo, st, lx, ly, &handle)) {
+        return entity_hb_handle_cursor(handle);
+    }
+    if (entity_edit_hitbox_body_hit(ui, &lo, st, lx, ly)) {
+        return UI_ENTITY_HB_CUR_MOVE;
+    }
+    return UI_ENTITY_HB_CUR_NONE;
 }
 
 int entity_edit_hitbox_body_hit(const UiState *ui, const EntityModalLayout *lo, const R01EntityState *st, int lx,
