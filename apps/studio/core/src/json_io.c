@@ -663,6 +663,9 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
     fprintf(f, "\n  ],\n");
     fprintf(f, "  \"bgm\": {\n");
     fprintf(f, "    \"track_count\": %d,\n", p->bgm.present ? p->bgm.track_count : 0);
+    fprintf(f, "    \"key_pc\": %d,\n", p->bgm.key_pc);
+    fprintf(f, "    \"key_minor\": %d,\n", p->bgm.key_minor ? 1 : 0);
+    fprintf(f, "    \"note_solfa\": %d,\n", p->bgm.note_solfa ? 1 : 0);
     fprintf(f, "    \"tracks\": [\n");
     {
         int ti, first_t = 1;
@@ -1823,6 +1826,16 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
             const char *tobj;
             int ti = 0;
             json_int_after(bgm_sec, "\"track_count\"", &p->bgm.track_count);
+            json_int_after(bgm_sec, "\"key_pc\"", &p->bgm.key_pc);
+            json_int_after(bgm_sec, "\"key_minor\"", &p->bgm.key_minor);
+            p->bgm.note_solfa = 1;
+            json_int_after(bgm_sec, "\"note_solfa\"", &p->bgm.note_solfa);
+            p->bgm.key_pc %= 12;
+            if (p->bgm.key_pc < 0) {
+                p->bgm.key_pc += 12;
+            }
+            p->bgm.key_minor = p->bgm.key_minor ? 1 : 0;
+            p->bgm.note_solfa = p->bgm.note_solfa ? 1 : 0;
             tobj = tracks ? strchr(tracks, '{') : NULL;
             while (tobj && tracks_end && tobj < tracks_end && ti < R01_BGM_TRACKS_MAX) {
                 const char *tend = json_object_end(tobj);

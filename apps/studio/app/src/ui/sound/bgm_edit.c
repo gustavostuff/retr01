@@ -194,8 +194,74 @@ void ui_bgm_default_tok(int ch, char tok[5], int *out_midi) {
     }
 }
 
-void ui_bgm_nudge_region(UiBgmRegion *rg, int ch, int dir, int half_step) {
-    int step;
+void ui_bgm_key_name(int pc, int solfa, char buf[8]) {
+    static const char *const letter[] = {"C", "C#", "D", "D#", "E", "F",
+                                         "F#", "G", "G#", "A", "A#", "B"};
+    static const char *const solfege[] = {"Do", "Do#", "Re", "Re#", "Mi", "Fa",
+                                          "Fa#", "Sol", "Sol#", "La", "La#", "Si"};
+    if (!buf) {
+        return;
+    }
+    pc %= 12;
+    if (pc < 0) {
+        pc += 12;
+    }
+    snprintf(buf, 8, "%s", solfa ? solfege[pc] : letter[pc]);
+}
+
+void ui_bgm_note_label(int midi, int ch, const char *tok, int solfa, char buf[12]) {
+    char name[8];
+    int oct;
+    if (!buf) {
+        return;
+    }
+    if (ch == 3 || ch == 4) {
+        snprintf(buf, 12, "%s", tok && tok[0] ? tok : "?");
+        return;
+    }
+    midi = clampi(midi, 12, 119);
+    ui_bgm_key_name(midi % 12, solfa, name);
+    oct = midi / 12 - 1;
+    if (oct < 0) {
+        oct = 0;
+    }
+    if (oct > 9) {
+        oct = 9;
+    }
+    snprintf(buf, 12, "%s%d", name, oct);
+}
+
+static int scale_has(int rel, int minor) {
+    /* Intervals from the tonic. Mayor: W W H W W W H. Menor: W H W W H W W. */
+    static const int k_maj[12] = {1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1};
+    static const int k_min[12] = {1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0};
+    rel %= 12;
+    if (rel < 0) {
+        rel += 12;
+    }
+    return minor ? k_min[rel] : k_maj[rel];
+}
+
+static int midi_scale_step(int midi, int dir, int key_pc, int minor) {
+    int n = 0;
+    midi = clampi(midi, 12, 119);
+    if (dir > 0) {
+        dir = 1;
+    } else {
+        dir = -1;
+    }
+    do {
+        int next = midi + dir;
+        if (next < 12 || next > 119) {
+            return midi;
+        }
+        midi = next;
+        n++;
+    } while (n < 12 && !scale_has((midi % 12 - key_pc + 12) % 12, minor));
+    return midi;
+}
+
+void ui_bgm_nudge_region(UiBgmRegion *rg, int ch, int dir, int half_step, int key_pc, int key_minor) {
     if (!rg || dir == 0) {
         return;
     }
@@ -222,8 +288,11 @@ void ui_bgm_nudge_region(UiBgmRegion *rg, int ch, int dir, int half_step) {
         (void)dir;
         return;
     }
-    step = half_step ? 1 : 2;
-    rg->midi = clampi(rg->midi + dir * step, 12, 119);
+    if (half_step) {
+        rg->midi = clampi(rg->midi + dir, 12, 119);
+    } else {
+        rg->midi = midi_scale_step(rg->midi, dir, key_pc, key_minor);
+    }
     ui_bgm_midi_to_tok(rg->midi, rg->tok);
 }
 
@@ -588,7 +657,8 @@ void ui_bgm_nudge_sel(UiState *ui, int dir, int half_step) {
         int count = ui->sound.region_count[track][ch];
         for (i = 0; i < count; i++) {
             if (ui->sound.region[track][ch][i].selected) {
-                ui_bgm_nudge_region(&ui->sound.region[track][ch][i], ch, dir, half_step);
+                ui_bgm_nudge_region(&ui->sound.region[track][ch][i], ch, dir, half_step,
+                                    ui->sound.key_pc, ui->sound.key_minor);
             }
         }
     }
@@ -897,6 +967,12 @@ void ui_bgm_sync_to_project(UiState *ui) {
     memset(bgm, 0, sizeof(*bgm));
     bgm->present = 1;
     bgm->track_count = ui->sound.track_count;
+    bgm->key_pc = ui->sound.key_pc % 12;
+    if (bgm->key_pc < 0) {
+        bgm->key_pc += 12;
+    }
+    bgm->key_minor = ui->sound.key_minor ? 1 : 0;
+    bgm->note_solfa = ui->sound.note_solfa ? 1 : 0;
     if (bgm->track_count < 1) {
         bgm->track_count = 1;
     }
@@ -946,6 +1022,12 @@ void ui_bgm_apply_from_project(UiState *ui) {
     ui->sound.solo_ch = UI_SOUND_SOLO_ALL;
     ui->sound.scroll_x = 0;
     ui->sound.zoom_h = UI_SOUND_ZOOM_MIN;
+    ui->sound.key_pc = bgm->key_pc % 12;
+    if (ui->sound.key_pc < 0) {
+        ui->sound.key_pc += 12;
+    }
+    ui->sound.key_minor = bgm->key_minor ? 1 : 0;
+    ui->sound.note_solfa = bgm->note_solfa ? 1 : 0;
     ui->sound.sel_kind = UI_SOUND_SEL_NONE;
     ui->sound.playing = 0;
     ui->sound.paused = 0;

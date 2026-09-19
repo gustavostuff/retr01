@@ -1529,6 +1529,13 @@ void sound_editor_layout(const UiState *ui, SoundEditorLayout *lo) {
         }
         lo->zoom_y = lo->track_list_y + n * lo->track_row_h + UI_UNIT;
     }
+    lo->key_x = UI_UNIT;
+    lo->key_w = UI_SIDEBAR_W - UI_UNIT * 2;
+    lo->note_x = lo->zoom_out_x;
+    lo->note_w = lo->zoom_s + UI_UNIT + lo->zoom_s;
+    lo->note_y = lo->zoom_y + lo->zoom_s + UI_UNIT;
+    lo->key_y = lo->note_y + UI_BTN_H + UI_UNIT;
+    lo->mode_y = lo->key_y + UI_BTN_H;
 
     lo->lane_label_w = ((label_width("Pulse1") + UI_UNIT + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
     lo->lane_label_x = UI_SIDEBAR_W + UI_UNIT;
@@ -1648,6 +1655,33 @@ int sound_zoom_in_hit(const UiState *ui, int lx, int ly) {
     }
     sound_editor_layout(ui, &lo);
     return point_in_rect(lx, ly, lo.zoom_in_x, lo.zoom_y, lo.zoom_s, lo.zoom_s);
+}
+
+int sound_note_hit(const UiState *ui, int lx, int ly) {
+    SoundEditorLayout lo;
+    if (!ui) {
+        return 0;
+    }
+    sound_editor_layout(ui, &lo);
+    return point_in_rect(lx, ly, lo.note_x, lo.note_y, lo.note_w, UI_BTN_H);
+}
+
+int sound_key_hit(const UiState *ui, int lx, int ly) {
+    SoundEditorLayout lo;
+    if (!ui) {
+        return 0;
+    }
+    sound_editor_layout(ui, &lo);
+    return point_in_rect(lx, ly, lo.key_x, lo.key_y, lo.key_w, UI_BTN_H);
+}
+
+int sound_mode_hit(const UiState *ui, int lx, int ly) {
+    SoundEditorLayout lo;
+    if (!ui) {
+        return 0;
+    }
+    sound_editor_layout(ui, &lo);
+    return point_in_rect(lx, ly, lo.key_x, lo.mode_y, lo.key_w, UI_BTN_H);
 }
 
 int sound_timeline_hit(const UiState *ui, int lx, int ly, int *out_ch, int *out_tick) {
@@ -1811,6 +1845,7 @@ void ui_sound_init(UiState *ui) {
     s->solo_ch = UI_SOUND_SOLO_ALL;
     s->scroll_x = 0;
     s->zoom_h = UI_SOUND_ZOOM_MIN;
+    s->note_solfa = 1;
     s->sel_kind = UI_SOUND_SEL_NONE;
     s->playing = 0;
     s->paused = 0;

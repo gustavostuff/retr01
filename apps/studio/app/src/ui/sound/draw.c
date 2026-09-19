@@ -106,6 +106,25 @@ void draw_sound_editor(UiState *ui, SDL_Renderer *r) {
                       ui->sound.zoom_h > UI_SOUND_ZOOM_MIN);
     ui_button_draw_ex(r, lo.zoom_in_x, lo.zoom_y, lo.zoom_s, "+", 1, sound_zoom_in_hit(ui, lx, ly),
                       ui->sound.zoom_h < UI_SOUND_ZOOM_MAX);
+    ui_button_draw_ex(r, lo.note_x, lo.note_y, lo.note_w, ui->sound.note_solfa ? "Do" : "C", 1,
+                      sound_note_hit(ui, lx, ly), 1);
+    {
+        char key_name[8];
+        int key_hover = sound_key_hit(ui, lx, ly);
+        int mode_hover = sound_mode_hit(ui, lx, ly);
+        int solfa = ui->sound.note_solfa;
+        ui_bgm_key_name(ui->sound.key_pc, solfa, key_name);
+        if (key_hover) {
+            fill_rect(r, lo.key_x, lo.key_y, lo.key_w, UI_BTN_H, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
+        }
+        font_draw(r, lo.key_x, lo.key_y + (UI_BTN_H - 8) / 2, key_name, 230, 230, 230);
+        if (mode_hover) {
+            fill_rect(r, lo.key_x, lo.mode_y, lo.key_w, UI_BTN_H, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
+        }
+        font_draw(r, lo.key_x, lo.mode_y + (UI_BTN_H - 8) / 2,
+                  solfa ? (ui->sound.key_minor ? "menor" : "mayor") : (ui->sound.key_minor ? "minor" : "major"), 230,
+                  230, 230);
+    }
 
     tid = ui->sound.track_idx;
     if (tid < 0 || tid >= ui->sound.track_count) {
@@ -191,12 +210,16 @@ void draw_sound_editor(UiState *ui, SDL_Renderer *r) {
                 draw_strip_outline(r, x0, y, w, lo.lane_h);
             }
             {
-                const char *lab = rg->tok[0] ? rg->tok : "?";
+                char lab[12];
                 int pad = 2;
-                int inner = w - pad * 2;
-                int tw = font_text_width(lab);
-                int overflow = tw - inner;
+                int inner;
+                int tw;
+                int overflow;
                 int tx;
+                ui_bgm_note_label(rg->midi, ch, rg->tok, ui->sound.note_solfa, lab);
+                inner = w - pad * 2;
+                tw = font_text_width(lab);
+                overflow = tw - inner;
                 if (overflow < 0) {
                     overflow = 0;
                 }

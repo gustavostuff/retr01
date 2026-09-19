@@ -142,7 +142,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 } else {
                     ui_bgm_sel_only(ui, ch, region);
                     ui_bgm_nudge_region(&ui->sound.region[track][ch][region], ch,
-                                        e->wheel.y > 0 ? 1 : -1, shift);
+                                        e->wheel.y > 0 ? 1 : -1, shift, ui->sound.key_pc, ui->sound.key_minor);
                 }
             }
             return 1;
@@ -623,6 +623,18 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     }
                     if (sound_zoom_in_hit(ui, lx, ly)) {
                         ui->arm_kind = UI_ARM_SOUND_ZOOM_IN;
+                        return 1;
+                    }
+                    if (sound_note_hit(ui, lx, ly)) {
+                        ui->arm_kind = UI_ARM_SOUND_NOTE;
+                        return 1;
+                    }
+                    if (sound_key_hit(ui, lx, ly)) {
+                        ui->arm_kind = UI_ARM_SOUND_KEY;
+                        return 1;
+                    }
+                    if (sound_mode_hit(ui, lx, ly)) {
+                        ui->arm_kind = UI_ARM_SOUND_MODE;
                         return 1;
                     }
                     if (sound_track_hit(ui, lx, ly, &idx)) {
@@ -1172,6 +1184,18 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             if (kind == UI_ARM_SOUND_ZOOM_IN && sound_zoom_in_hit(ui, lx, ly)) {
                 ui_bgm_zoom(ui, 1);
+                return 1;
+            }
+            if (kind == UI_ARM_SOUND_NOTE && sound_note_hit(ui, lx, ly)) {
+                ui->sound.note_solfa = ui->sound.note_solfa ? 0 : 1;
+                return 1;
+            }
+            if (kind == UI_ARM_SOUND_KEY && sound_key_hit(ui, lx, ly)) {
+                ui->sound.key_pc = (ui->sound.key_pc + 1) % 12;
+                return 1;
+            }
+            if (kind == UI_ARM_SOUND_MODE && sound_mode_hit(ui, lx, ly)) {
+                ui->sound.key_minor = ui->sound.key_minor ? 0 : 1;
                 return 1;
             }
             if (kind == UI_ARM_SOUND_CH) {

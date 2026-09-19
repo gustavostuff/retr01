@@ -47,6 +47,8 @@ typedef struct SoundEditorLayout {
     int track_list_y, track_row_h;
     int add_x, add_y, add_w;
     int zoom_out_x, zoom_in_x, zoom_y, zoom_s;
+    int note_x, note_y, note_w;
+    int key_x, key_y, key_w, mode_y;
     int hdr_y;
     int lane_label_x, lane_label_w;
     int timeline_x, timeline_y, timeline_w, timeline_h;
@@ -268,6 +270,9 @@ int sound_track_hit(const UiState *ui, int lx, int ly, int *out_idx);
 int sound_add_hit(const UiState *ui, int lx, int ly);
 int sound_zoom_out_hit(const UiState *ui, int lx, int ly);
 int sound_zoom_in_hit(const UiState *ui, int lx, int ly);
+int sound_note_hit(const UiState *ui, int lx, int ly);
+int sound_key_hit(const UiState *ui, int lx, int ly);
+int sound_mode_hit(const UiState *ui, int lx, int ly);
 int sound_timeline_hit(const UiState *ui, int lx, int ly, int *out_ch, int *out_tick);
 /* hit: 0 miss, 1 body, 2 left handle, 3 right handle; out_region set on hit */
 int sound_region_hit(const UiState *ui, int lx, int ly, int *out_ch, int *out_region, int *out_handle);

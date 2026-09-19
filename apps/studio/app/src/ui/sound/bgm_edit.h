@@ -12,9 +12,11 @@ void ui_bgm_midi_to_tok(int midi, char tok[5]);
 int ui_bgm_tok_to_midi(const char *tok);
 void ui_bgm_default_tok(int ch, char tok[5], int *out_midi);
 
-/* Nudge region pitch: dir +1/-1; shift=1 -> half-step, else whole step.
- * Noise cycles period; DPCM cycles FD/FE. */
-void ui_bgm_nudge_region(UiBgmRegion *rg, int ch, int dir, int half_step);
+/* Nudge region pitch: dir +1/-1. Shift (half_step) is chromatic.
+ * Else steps the current key (mayor/menor). Noise cycles period; DPCM cycles FD/FE. */
+void ui_bgm_nudge_region(UiBgmRegion *rg, int ch, int dir, int half_step, int key_pc, int key_minor);
+void ui_bgm_key_name(int pc, int solfa, char buf[8]);
+void ui_bgm_note_label(int midi, int ch, const char *tok, int solfa, char buf[12]);
 
 /* Find region covering tick on channel; -1 if none. */
 int ui_bgm_find_at(const UiState *ui, int track, int ch, int tick);
