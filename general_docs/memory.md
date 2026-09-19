@@ -4,7 +4,7 @@ What lives where, how the CPU sees PRG and MAP, and the on-cart `.retr01` layout
 
 Cart image rules below are the baseline for this repo. Soft `$7Fxx` owners follow `hardware.md` (3x AVR128DB28).
 
-**Related:** `hardware.md`, `cartridge.md`, `video-graphics.md`, `palette/`, `world-scrolling.md`, `software-api.md`, `ic-comms-risks.md`.
+**Related:** `hardware.md`, `cartridge.md`, `video-graphics.md`, `palette/`, `world-scrolling.md`, `software-api.md`, `sound.md`, `ic-comms-risks.md`.
 
 ## CPU address map
 
@@ -252,7 +252,7 @@ Owners and timing live in `hardware.md` / `ic-comms-risks.md`. Port roles:
 | `$7F20` / `$7F21` | OAM addr / data (**64** sprites x 4 B) |
 | `$7F22`-`$7F24` | Cart save EEPROM mailbox |
 | `$7F30` | WORLD select (0-6), soft helper |
-| `$7F40`-`$7F5F` | APU mailbox (8 voices x 4 regs, MCU-S2) |
+| `$7F40`-`$7F5F` | APU mailbox (8 voices x 4 regs, MCU-S2). See `sound.md` |
 | `$7F60` / `$7F61` | Pad P1 / P2 bitfields |
 | `$7F70`-`$7F72` | Machine EEPROM mailbox |
 | `$7F90`-`$7F93` | MAP seek + auto-inc data |

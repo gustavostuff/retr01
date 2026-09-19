@@ -162,7 +162,7 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 
 - Hold **RESB** until clocks are up and a supervisor / RC delay says so.
 - External pull-ups/downs on critical enables (`OE#`, `WE#`, `/SS_*`, ALE low, `/WE` high) so undriven means safe.
-- Firmware: hi-Z everything shared, then handshake (VBL seen, S1_RDY, etc.) before enabling bus drivers.
+- Firmware: hi-Z everything shared, then handshake (VBL seen, then S1_RDY) before enabling bus drivers.
 - Program PLDs and color PROM before first power-on with CPU populated when possible.
 
 ### 12. Pad OD UART and arcade GPIO mix (Low / Med)

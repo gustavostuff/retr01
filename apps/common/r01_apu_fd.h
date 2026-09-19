@@ -6,8 +6,8 @@
 #include "r01_spi_mailbox.h"
 
 /*
- * Thin cart hex FD bridge toward the 8x4 $7F40 window (general_docs/sound.md).
- * Encode/apply only - not the full 6502 NMI dual-stream tracker.
+ * Cart hex FD expand into the 8x4 $7F40 window (general_docs/sound.md).
+ * Encode/apply only. 6502 NMI dual-stream is r01_apu_tracker.
  *
  * Frame: FD, mask (bit0=ch1..bit7=ch8), then one payload byte per set bit.
  * Payload:

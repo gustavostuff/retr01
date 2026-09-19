@@ -12,7 +12,7 @@ One RGB header supports **CSYNC** or **H/V sync** (jumper/cable mode) into a fro
 
 True dual BG planes (BG1 over BG0 show-through), hardware scroll, cart MAP/nametable streaming, sprites filled in **VBlank**, BG0 line prep in **HBlank** ping-pong. PRG stays on game logic.
 
-Multi-chip board. That's CPU + AVRs + PLDs + 74xx glue (~17 ICs on main PCB), not an FPGA soft console and not pure TTL discrete logic. See the programmable-vs-fixed table in `hardware.md`.
+Multi-chip board. That is CPU + AVRs + PLDs + 74xx glue (~17 ICs on main PCB), not an FPGA soft console and not pure TTL discrete logic. See the programmable-vs-fixed table in `hardware.md`.
 
 ## NES-sharp pixels, SNES-true parallax
 
@@ -46,7 +46,7 @@ Test points for bring-up, full-size THT status LEDs, initial **2-layer** PCBs (m
 
 ## Three helper AVRs
 
-MCU-M (soft I/O, saves, SPI), MCU-S1 (sprites + BG0 HBlank), MCU-S2 (pads + audio). Clear ownership, room to grow firmware without starving PRG.
+MCU-M (soft I/O, saves, SPI), MCU-S1 (sprites + BG0 HBlank), MCU-S2 (pads + 8-channel software APU to PWM). Clear ownership, room to grow firmware without starving PRG.
 
 ## Light-gun ready hit detect (later)
 

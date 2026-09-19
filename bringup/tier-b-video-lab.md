@@ -39,7 +39,7 @@ Still **not** required: W65C02, AVRs, SRAMs, HC157/573/574, cart parts, PHI2 osc
 
 Hard LE and beam paths **never** go through an MCU.
 
-Macrocell pressure (full design): scroll-Y + other registered work can approach **~21 of 30** macrocells across the three 22V10s - stay honest. Prefer a **1-dot registered** color index if fit allows. See `ic_behavior/ATF22V10.md`.
+Macrocell pressure (full design): scroll-Y + other registered work can approach **~21 of 30** macrocells across the three 22V10s. That budget is a hard limit. A **1-dot registered** color index is preferred if fit allows. See `ic_behavior/ATF22V10.md`.
 
 ### Tier B lab (subset)
 

@@ -1,7 +1,7 @@
 #ifndef R01_BGM_HOST_H
 #define R01_BGM_HOST_H
 
-/* Host-side BGM preview (Studio Play / standalone emu). Not cart APU protocol. */
+/* Studio grid mixer (WAVE tokens). Parallel to the cart $7F40 tracker. Not S2 PWM. */
 
 /* Note denominator: 4=quarter, 8=eighth, 16=sixteenth. One host step = one such note. */
 #define R01_BGM_NOTE_DIV 4

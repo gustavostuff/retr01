@@ -5,16 +5,16 @@
 #include "r01_spi_mailbox.h"
 
 /*
- * Bring-up packing of soft $7F40-$7F5F (32 B) as 8 voices x 4 bytes.
- * SoT channel roles: general_docs/sound.md. Full hex bytecode protocol still later.
+ * SoT: general_docs/sound.md. 8 voices x 4 bytes at $7F40-$7F5F.
+ * S2 mixes this file. Tracker bytecode stays on the 6502.
  *
  * Per channel at offset ch*4:
  *   [0] bit0=enable, bits4-7=volume (0-15). Triangle ignores vol (full when on).
- *   [1] period low
+ *   [1] period low, or DPCM sample ID when wave is DPCM
  *   [2] bits0-2=period high (11-bit period), bits4-5=pulse duty (0-3)
- *   [3] wave: 0=pulse 1=triangle 2=noise 3=dpcm-stub
+ *   [3] wave: 0=pulse 1=triangle 2=noise 3=dpcm
  *
- * Legacy smoke (ch0 / voice0): $7F40-$7F42 match [0]/[1]/[2]; [3] may be 0 (pulse).
+ * Legacy smoke (ch0 / voice0): $7F40-$7F42 match [0]/[1]/[2]. [3] may be 0 (pulse).
  */
 
 #define R01_APU_CH_N 8u

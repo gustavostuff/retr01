@@ -14,7 +14,7 @@
 | 1 | **W65C02S** | Game CPU @ PHI2 8.000 MHz |
 | 1 | **AS6C62256-55** | **System RAM** (#1): `$0000-$7EFF` |
 | - | MCU-M | Soft `$7Fxx` device: Hi-Z on D unless selected. **`CPU_RDY`** open-drain only when needed |
-| - | Compositor/PLD | Live `SEL_SOFT*`, `LE_7F02` / `03` / `04`, etc. (stubs from Tier B become real) |
+| - | Compositor/PLD | Live `SEL_SOFT*`, `LE_7F02` / `03` / `04` (stubs from Tier B become real) |
 | 0-1 | **74HC574** | Scroll X `$7F02` if not hardwired to 0 |
 
 **Still omit:** Cart flash as the sole PRG source (Tier G), MCU-S2, pads, audio.

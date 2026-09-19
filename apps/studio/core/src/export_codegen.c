@@ -300,7 +300,7 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
     if (write_text(path,
                    "#ifndef R01_BGM_H\n#define R01_BGM_H\n\n"
                    "typedef struct R01GameCtx R01GameCtx;\n"
-                   "/* Start looping BGM track (1-based). Host Play / emu softsynth today. */\n"
+                   "/* Start looping BGM track (1-based). Host Play runs the NMI tracker into $7F40. */\n"
                    "void r01_bgm_play(R01GameCtx *ctx, int track);\n"
                    "void r01_bgm_stop(R01GameCtx *ctx);\n\n"
                    "#endif\n",
@@ -317,7 +317,7 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "typedef struct R01GameCtx R01GameCtx;\n"
                    "#define R01_SFX_X 1 /* pulse blip (P1 X / fire) */\n"
                    "#define R01_SFX_Y 2 /* noise tick (P1 Y / face) */\n"
-                   "/* Short SFX. Host Play/emu softsynth uses fixed voices for X/Y. */\n"
+                   "/* Short SFX. Host Play fires voices 6-8 (P1 X/Y). */\n"
                    "void r01_sfx_play(R01GameCtx *ctx, int id);\n\n"
                    "#endif\n",
                    err_buf, err_cap) != 0) {

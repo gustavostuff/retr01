@@ -15,7 +15,7 @@ Studio **Play** uses this same emu core after export (shared library + standalon
 | **Play** | **Emu Host Play SoT**. Move / **dead-zone camera** / player anim / collision from cart bytes |
 | **CPU** | Boots world 0. Default: PRG streams pals + start MAP (`$7F93` -> `$7F12`). Gameplay stays on Host Play |
 | **Video** | Main FB = **VRAM + scroll** + **OAM** + **BG0** show-through under BG1 color 0 (SCALE 2x). Host Play fills BG1 2x2 via `sync_camera` |
-| **Host** | SDL. Pad map: P1 WASD+G/H, P2 arrows+,/. Platformer jump is face **Y** (P1 **H**). Host softsynth BGM (mix / 4). Not cart `$7F40` audio |
+| **Host** | SDL. Pad map: P1 WASD+G/H, P2 arrows+,/. Platformer jump is face **Y** (P1 **H**). NMI tracker fills `$7F40`. PC speaker is the Studio grid mixer, not a mix of that window and not MCU-S2 PWM |
 
 **Sync contract:** Emu Host Play (`src/play.c` + `apps/common/`) is the Phase 1 gameplay SoT. Studio has no parallel preview. Export packs present screens + play table (`$8100`) + `R01P`. Soft-boot (`R01E_SOFTBOOT=1`) keeps the old host memcpy boot path for triage. Default boot runs cart PRG stream catchup until the start MAP write reaches **480** bytes (`vram_addr`), then Host Play reloads the camera 2x2 from cart. Collision samples cart MAP attrs. Render samples that VRAM window.
 

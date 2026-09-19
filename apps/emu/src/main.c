@@ -91,7 +91,7 @@ static void emu_start_host_bgm(R01eMachine *m, const char *cart_path) {
             fprintf(stderr, "retr01_emu: BGM host start failed (%s)\n", SDL_GetError());
         }
     }
-    /* Cart-protocol path: FD/FE/FA into soft $7F40 (speaker still softsynth). */
+    /* Cart-protocol path: NMI tracker into $7F40. Speaker is still the grid mixer. */
     (void)r01e_machine_apu_tracker_start(m, path_is_file(bin) ? bin : NULL);
 }
 /* Debug pane: VRAM + BG0 atlases, then mask / world map / pals, then CPU budget. */

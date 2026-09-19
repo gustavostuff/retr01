@@ -3,9 +3,8 @@
 
 #include <stdint.h>
 
-/* Compact NES 2A03-style softsynth (pulse x2, triangle, noise, DPCM stub).
- * Public-domain style first-party code aligned with Retr01 sim APU voices.
- * Not a full cycle-accurate APU. */
+/* Host grid mixer (pulse x2, triangle, noise, DPCM stub).
+ * Studio Audio tab and current PC speaker. Not a mix of $7F40. Not S2 PWM. */
 
 #define R01_NES_CH_N 5
 

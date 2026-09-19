@@ -59,11 +59,11 @@ Full failure modes and bring-up order: `ic-comms-risks.md`.
 | 3 | AVR128DB28-I/SP | MCU-M / MCU-S1 / MCU-S2 @ 24 MHz | SPDIP-28 | Yes (SOIC-28, SSOP-28, plus larger pin-count QFN/TQFP siblings) |
 | 3 | AS6C62256 | Sys RAM, interleaved VRAM, sprite field + BG0 ping-pong. Prefer **-55** (55 ns) | PDIP-28 | Yes (SOP-28, sTSOP-28) |
 | 1 | SST39SF040 | 512 KB cart flash | PDIP-32 | Yes (PLCC-32, TSOP-32) |
-| 1 | 24C64 | Cart save EEPROM (8 KB I2C) | DIP-8 | Yes (SOIC/SOP/TSSOP/etc.) |
+| 1 | 24C64 | Cart save EEPROM (8 KB I2C) | DIP-8 | Yes (SOIC/SOP/TSSOP) |
 | 3 | ATF22V10 | Beam X, Beam Y, Compositor + decode | PDIP-24 | Yes (SOIC-24, PLCC-28) |
-| 3 | 74HC157 | VRAM A[11:0] mux (CPU vs beam) | DIP-16 | Yes (SOIC-16, TSSOP, etc.) |
-| 1 | 74HC573 | Field A[7:0] latch (ALE from S1) | DIP-20 | Yes (SOIC/TSSOP/etc.) |
-| 1 | 74HC574 | BG1 scroll X `$7F02` | DIP-20 | Yes (SOIC/TSSOP/etc.) |
+| 3 | 74HC157 | VRAM A[11:0] mux (CPU vs beam) | DIP-16 | Yes (SOIC-16, TSSOP) |
+| 1 | 74HC573 | Field A[7:0] latch (ALE from S1) | DIP-20 | Yes (SOIC/TSSOP) |
+| 1 | 74HC574 | BG1 scroll X `$7F02` | DIP-20 | Yes (SOIC/TSSOP) |
 | 1 | AT27C256R | Color PROM (45 ns OTP, packed R3G3B2) | PDIP-28 | Yes (SOIC-28, PLCC-32, TSOP-28) |
 | 1 | AD724 | RGB to NTSC/PAL composite encoder | DIP-16 via **SOIC-16 to DIP adapter** | Native SOIC-16 (direct later) |
 
@@ -129,7 +129,7 @@ RGB analog always comes from the color PROM DAC. Composite is AD724 -> J9 RCA.
 | --- | --- |
 | **MCU-M** | Soft `$7Fxx`, OAM/APU mailboxes, machine EEPROM **512 B**, cart **24C64** I2C, `RDY`, SPI master to S1/S2, **cart-flash bridge** when Adafruit's UPDI Friend is clipped onto the program header |
 | **MCU-S1** | OAM apply, **full sprite field in VBlank**, **BG0 next-line fill in HBlank only** (ping-pong), field SRAM via AD mux + HC573 |
-| **MCU-S2** | `$7F60`/`$7F61` pads, `$7F40`-`$7F5F` APU mailbox, **PWM** audio on PF1 |
+| **MCU-S2** | `$7F60`/`$7F61` pads, `$7F40`-`$7F5F` APU mailbox, DPCM samples in S2 flash, **PWM** audio on PF1 |
 
 OAM `$7F20`/`$7F21` latches on M then SPI to S1. APU forwards M to S2. Cart I2C `$7F22`-`$7F24` on M. Machine EE `$7F70`-`$7F72` on M.
 
@@ -211,7 +211,7 @@ Hard LE and beam stay out of MCU paths. VRAM: PHI2 high = CPU `$7F10`-`$7F12`, P
 
 **Cart `OE#` (locked):** assert only for PRG `$8000-$FFFF` reads and intentional MAP/CHR fetch windows. Those windows never overlap system RAM or soft `$7Fxx` selects.
 
-Macrocell pressure note: SY(8)+Q(8)+MAP(5) = **21** vs **30** MC on a 22V10. Stay honest about that budget when adding features. Prefer a **1-dot** Color PROM index latch in the Compositor if fit allows.
+Macrocell pressure note: SY(8)+Q(8)+MAP(5) = **21** vs **30** MC on a 22V10. That budget is a hard limit when adding features. A **1-dot** Color PROM index latch in the Compositor is preferred if fit allows.
 
 ## On-board memory (chips)
 
