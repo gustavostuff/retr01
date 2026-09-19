@@ -1516,6 +1516,19 @@ void sound_editor_layout(const UiState *ui, SoundEditorLayout *lo) {
     if (lo->add_y < lo->track_list_y + UI_BTN_H) {
         lo->add_y = lo->track_list_y + UI_BTN_H;
     }
+    lo->zoom_s = UI_BTN_H;
+    lo->zoom_out_x = UI_UNIT;
+    lo->zoom_in_x = lo->zoom_out_x + lo->zoom_s + UI_UNIT;
+    {
+        int n = ui->sound.track_count;
+        if (n < 0) {
+            n = 0;
+        }
+        if (n > UI_SOUND_TRACKS_MAX) {
+            n = UI_SOUND_TRACKS_MAX;
+        }
+        lo->zoom_y = lo->track_list_y + n * lo->track_row_h + UI_UNIT;
+    }
 
     lo->lane_label_w = ((label_width("Pulse1") + UI_UNIT + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
     lo->lane_label_x = UI_SIDEBAR_W + UI_UNIT;
@@ -1525,7 +1538,16 @@ void sound_editor_layout(const UiState *ui, SoundEditorLayout *lo) {
     lo->timeline_y = lo->hdr_y + UI_BTN_H + lo->ruler_h;
     lo->lane_h = UI_SOUND_LANE_H;
     lo->lane_gap = UI_SOUND_LANE_GAP;
-    lo->px_per_tick = UI_SOUND_PX_PER_TICK;
+    {
+        int z = ui->sound.zoom_h;
+        if (z < UI_SOUND_ZOOM_MIN) {
+            z = UI_SOUND_ZOOM_MIN;
+        }
+        if (z > UI_SOUND_ZOOM_MAX) {
+            z = UI_SOUND_ZOOM_MAX;
+        }
+        lo->px_per_tick = UI_SOUND_PX_PER_TICK * z;
+    }
     lo->timeline_h = UI_SOUND_BGM_CH * (lo->lane_h + lo->lane_gap) - lo->lane_gap;
     lo->minimap_h = UI_SOUND_MINIMAP_H;
     lo->minimap_y = lo->timeline_y + lo->timeline_h + UI_UNIT;
@@ -1608,6 +1630,24 @@ int sound_add_hit(const UiState *ui, int lx, int ly) {
     }
     sound_editor_layout(ui, &lo);
     return point_in_rect(lx, ly, lo.add_x, lo.add_y, lo.add_w, UI_BTN_H);
+}
+
+int sound_zoom_out_hit(const UiState *ui, int lx, int ly) {
+    SoundEditorLayout lo;
+    if (!ui) {
+        return 0;
+    }
+    sound_editor_layout(ui, &lo);
+    return point_in_rect(lx, ly, lo.zoom_out_x, lo.zoom_y, lo.zoom_s, lo.zoom_s);
+}
+
+int sound_zoom_in_hit(const UiState *ui, int lx, int ly) {
+    SoundEditorLayout lo;
+    if (!ui) {
+        return 0;
+    }
+    sound_editor_layout(ui, &lo);
+    return point_in_rect(lx, ly, lo.zoom_in_x, lo.zoom_y, lo.zoom_s, lo.zoom_s);
 }
 
 int sound_timeline_hit(const UiState *ui, int lx, int ly, int *out_ch, int *out_tick) {
@@ -1770,10 +1810,12 @@ void ui_sound_init(UiState *ui) {
     s->track_idx = 0;
     s->solo_ch = UI_SOUND_SOLO_ALL;
     s->scroll_x = 0;
+    s->zoom_h = UI_SOUND_ZOOM_MIN;
     s->sel_kind = UI_SOUND_SEL_NONE;
     s->playing = 0;
     s->paused = 0;
     s->play_pos = -1.f;
+    s->play_step_tick = -1;
     snprintf(s->track_name[0], sizeof(s->track_name[0]), "Track 1");
     snprintf(s->track_name[1], sizeof(s->track_name[1]), "Track 2");
 }

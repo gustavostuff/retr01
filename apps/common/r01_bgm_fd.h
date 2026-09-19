@@ -8,11 +8,11 @@
 /* Studio Host Play grid: steps x 5 channels x 5-char tokens. */
 #define R01_BGM_FD_CH 5
 #define R01_BGM_FD_TOKEN 5
-#define R01_BGM_FD_STEPS_MAX 256
+#define R01_BGM_FD_STEPS_MAX 512
 
-/* Match Studio WAVE grid tempo (quarter-note steps @ 140 BPM). */
+/* Match Studio WAVE grid tempo (eighth-note steps @ 140 BPM). */
 #define R01_BGM_FD_TEMPO_BPM 140
-#define R01_BGM_FD_STEPS_PER_BEAT 1
+#define R01_BGM_FD_STEPS_PER_BEAT 2
 #define R01_BGM_FD_NMI_HZ 60
 
 /* ASCII tracker token -> cart note/control byte (general_docs/sound.md). */

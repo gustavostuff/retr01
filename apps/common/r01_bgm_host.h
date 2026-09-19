@@ -9,13 +9,13 @@
  * window and starts the packed PRG stream. Not MCU-S2 PWM.
  */
 
-#define R01_BGM_NOTE_DIV 4
+#define R01_BGM_NOTE_DIV 8
 #define R01_BGM_STEPS_PER_BEAT (R01_BGM_NOTE_DIV / 4)
 #if R01_BGM_STEPS_PER_BEAT < 1
 #error R01_BGM_NOTE_DIV must be >= 4
 #endif
 
-#define R01_BGM_STEPS 256
+#define R01_BGM_STEPS 512
 #define R01_BGM_CH 5
 #define R01_BGM_TOKEN 5
 

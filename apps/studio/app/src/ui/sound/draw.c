@@ -11,14 +11,51 @@ static const char *const k_ch_role[UI_SOUND_BGM_CH] = {
     "Pulse lead", "Pulse harmony", "Triangle bass", "Noise", "DPCM",
 };
 
-/* Distinct strip colors per channel (R,G,B). */
+/* Dark strip fills so white note text and white outlines stay readable. */
 static const Uint8 k_ch_col[UI_SOUND_BGM_CH][3] = {
-    {70, 140, 220},  /* Pulse1 - blue */
-    {90, 190, 120},  /* Pulse2 - green */
-    {220, 160, 70},  /* Tri - amber */
-    {180, 100, 200}, /* Noise - purple */
-    {200, 90, 90},   /* DPCM - red */
+    {48, 92, 168},   /* Pulse1 - blue */
+    {40, 108, 72},   /* Pulse2 - green */
+    {148, 96, 40},   /* Tri - amber */
+    {108, 56, 140},  /* Noise - purple */
+    {140, 48, 52},   /* DPCM - red */
 };
+
+static void draw_strip_outline(SDL_Renderer *r, int x, int y, int w, int h) {
+    fill_rect(r, x, y, w, 1, 255, 255, 255);
+    fill_rect(r, x, y + h - 1, w, 1, 255, 255, 255);
+    fill_rect(r, x, y, 1, h, 255, 255, 255);
+}
+
+/* Ping-pong offset (px) so overflow text crawls, then rests before reversing. */
+static int strip_label_scroll(int overflow) {
+    const int hold_ms = 800;
+    const int px_per_sec = 18;
+    int travel_ms;
+    int cycle;
+    int t;
+    if (overflow < 1) {
+        return 0;
+    }
+    travel_ms = (overflow * 1000) / px_per_sec;
+    if (travel_ms < 1) {
+        travel_ms = 1;
+    }
+    cycle = hold_ms + travel_ms + hold_ms + travel_ms;
+    t = (int)(SDL_GetTicks() % (Uint32)cycle);
+    if (t < hold_ms) {
+        return 0;
+    }
+    t -= hold_ms;
+    if (t < travel_ms) {
+        return (t * overflow) / travel_ms;
+    }
+    t -= travel_ms;
+    if (t < hold_ms) {
+        return overflow;
+    }
+    t -= hold_ms;
+    return overflow - (t * overflow) / travel_ms;
+}
 
 void draw_sound_editor(UiState *ui, SDL_Renderer *r) {
     SoundEditorLayout lo;
@@ -65,6 +102,10 @@ void draw_sound_editor(UiState *ui, SDL_Renderer *r) {
         font_draw(r, UI_UNIT, y + (lo.track_row_h - 8) / 2, ui->sound.track_name[i], 230, 230, 230);
     }
     draw_button(r, lo.add_x, lo.add_y, lo.add_w, "Add", 1, sound_add_hit(ui, lx, ly));
+    ui_button_draw_ex(r, lo.zoom_out_x, lo.zoom_y, lo.zoom_s, "-", 1, sound_zoom_out_hit(ui, lx, ly),
+                      ui->sound.zoom_h > UI_SOUND_ZOOM_MIN);
+    ui_button_draw_ex(r, lo.zoom_in_x, lo.zoom_y, lo.zoom_s, "+", 1, sound_zoom_in_hit(ui, lx, ly),
+                      ui->sound.zoom_h < UI_SOUND_ZOOM_MAX);
 
     tid = ui->sound.track_idx;
     if (tid < 0 || tid >= ui->sound.track_count) {
@@ -84,11 +125,13 @@ void draw_sound_editor(UiState *ui, SDL_Renderer *r) {
         if (x < lo.timeline_x || x >= lo.timeline_x + lo.timeline_w) {
             continue;
         }
-        if ((i % 4) == 0) {
+        if ((i % UI_SOUND_BAR_TICKS) == 0) {
             char lab[16];
-            snprintf(lab, sizeof(lab), "%d", i);
+            snprintf(lab, sizeof(lab), "%d", i / UI_SOUND_BEAT_TICKS);
             font_draw(r, x + 2, lo.timeline_y - lo.ruler_h + (lo.ruler_h - 8) / 2, lab, 160, 160, 170);
             fill_rect(r, x, lo.timeline_y - 4, 1, 4, 120, 120, 130);
+        } else if ((i % UI_SOUND_BEAT_TICKS) == 0) {
+            fill_rect(r, x, lo.timeline_y - 3, 1, 3, 110, 110, 120);
         } else {
             fill_rect(r, x, lo.timeline_y - 2, 1, 2, 90, 90, 100);
         }
@@ -105,8 +148,10 @@ void draw_sound_editor(UiState *ui, SDL_Renderer *r) {
             if (x < lo.timeline_x || x >= lo.timeline_x + lo.timeline_w) {
                 continue;
             }
-            if ((i % 4) == 0) {
+            if ((i % UI_SOUND_BAR_TICKS) == 0) {
                 fill_rect(r, x, y, 1, lo.lane_h, 50, 50, 58);
+            } else if ((i % UI_SOUND_BEAT_TICKS) == 0) {
+                fill_rect(r, x, y, 1, lo.lane_h, 44, 44, 52);
             }
         }
     }
@@ -139,18 +184,70 @@ void draw_sound_editor(UiState *ui, SDL_Renderer *r) {
                 w = 1;
             }
             fill_rect(r, x0, y, w, lo.lane_h, k_ch_col[ch][0], k_ch_col[ch][1], k_ch_col[ch][2]);
-            sel = (ui->sound.sel_kind == UI_SOUND_SEL_REGION && ui->sound.sel_ch == ch && ui->sound.sel_region == i);
+            sel = rg->selected;
             if (sel) {
-                draw_rect(r, x0, y, w, lo.lane_h, 245, 245, 245);
+                draw_marching_ants(r, x0, y, w, lo.lane_h);
+            } else {
+                draw_strip_outline(r, x0, y, w, lo.lane_h);
             }
-            font_draw_clipped(r, x0 + 2, y + (lo.lane_h - 8) / 2, x0, y, w, lo.lane_h, rg->tok[0] ? rg->tok : "?",
-                              20, 20, 24);
+            {
+                const char *lab = rg->tok[0] ? rg->tok : "?";
+                int pad = 2;
+                int inner = w - pad * 2;
+                int tw = font_text_width(lab);
+                int overflow = tw - inner;
+                int tx;
+                if (overflow < 0) {
+                    overflow = 0;
+                }
+                tx = x0 + pad - strip_label_scroll(overflow);
+                font_draw_clipped(r, tx, y + (lo.lane_h - 8) / 2, x0 + 1, y, w > 1 ? w - 1 : w, lo.lane_h, lab,
+                                  255, 255, 255);
+            }
+            if (ui->sound.play_sel && (ui->sound.playing || ui->sound.paused) && !sel) {
+                fill_rect_alpha(r, x0, y, w, lo.lane_h, 0, 0, 0, 140);
+                SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
+            }
         }
+    }
+    if (ui->sound.drag == UI_SOUND_DRAG_MARQUEE) {
+        int t0 = ui->sound.drag_start0;
+        int t1 = ui->sound.drag_origin;
+        int c0 = ui->sound.drag_ch;
+        int c1 = ui->sound.drag_ch1;
+        int x, y0, w, h;
+        if (t0 > t1) {
+            int tmp = t0;
+            t0 = t1;
+            t1 = tmp;
+        }
+        if (c0 > c1) {
+            int tmp = c0;
+            c0 = c1;
+            c1 = tmp;
+        }
+        if (c0 < 0) {
+            c0 = 0;
+        }
+        if (c1 >= UI_SOUND_BGM_CH) {
+            c1 = UI_SOUND_BGM_CH - 1;
+        }
+        x = lo.timeline_x + (t0 - vis0) * lo.px_per_tick;
+        w = (t1 - t0 + 1) * lo.px_per_tick;
+        if (w < 1) {
+            w = 1;
+        }
+        y0 = lo.timeline_y + c0 * (lo.lane_h + lo.lane_gap);
+        h = (c1 - c0 + 1) * (lo.lane_h + lo.lane_gap) - lo.lane_gap;
+        if (h < 1) {
+            h = lo.lane_h;
+        }
+        draw_marching_ants(r, x, y0, w, h);
     }
     ui_clip_pop(r, &clip);
 
     /* Playhead */
-    if ((ui->sound.playing || ui->sound.paused) && ui->sound.play_pos >= 0.f) {
+    if (ui->sound.play_pos >= 0.f) {
         float pos = ui->sound.play_pos;
         int tick_i = (int)pos;
         float frac = pos - (float)tick_i;

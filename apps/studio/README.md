@@ -39,7 +39,7 @@ ctest --test-dir build --output-on-failure
 +-----------------------------------------------------------+
 ```
 
-Logical canvas **640x360** or **1280x720** (**Ctrl+Shift+R**). Window scale **Ctrl+1** / **Ctrl+2**. **8px** grid. Graphics sidebar is an accordion (Worlds, banks, entities, palettes). Audio is a BGM timeline plus an SFX stub. Timeline Play/Stop encodes the grid into tracker bytecode and mixes `$7F40`. Embedded Play attaches the emu window. Neither path is MCU-S2 PWM. Code is TBD.
+Logical canvas **640x360** or **1280x720** (**Ctrl+Shift+R**). Window scale **Ctrl+1** / **Ctrl+2**. **8px** grid. Graphics sidebar is an accordion (Worlds, banks, entities, palettes). Audio is a BGM timeline plus an SFX stub. Timeline Play/Stop encodes the grid into tracker bytecode and mixes `$7F40`. Strips snap to eighth notes (off-beat mids sit between quarter-note beats). Sidebar **-** / **+** zoom the timeline horizontally. **Ctrl+A** selects all strips. **Ctrl+click** toggles. Shift-drag draws a marquee. **Ctrl+C** / **Ctrl+V** copy and paste the selection. **P** plays the selected strips once. Space plays the whole track. Embedded Play attaches the emu window. Neither path is MCU-S2 PWM. Code is TBD.
 
 ## Authoring
 
@@ -70,7 +70,7 @@ Generated API headers live in `C/include/r01_*.h` beside the project.
 
 ## Save and export
 
-**Ctrl+S** / **Ctrl+O** the current path. First save (or unsaved) opens the Save project modal. Default parent is `apps/studio/projects/`. Quit does not auto-save. JSON version **14**. Save writes the active world. Worlds 1-7 are session-only until multi-world JSON. Load applies that world data to world 0.
+**Ctrl+S** / **Ctrl+O** the current path. First save (or unsaved) opens the Save project modal. Default parent is `apps/studio/projects/`. Quit does not auto-save. JSON version **15**. Save writes the active world. Worlds 1-7 are session-only until multi-world JSON. Load applies that world data to world 0.
 
 **Ctrl+E** packs `<stem>.retr01` and regenerates `C/`, `ASM/`, and `data/` beside the project (or under `output/` if unsaved). Audio-tab tracks go into PRG at `$B000`. `r01_bgm_play(ctx, N)` in `custom_logic.c` selects the boot track at `$80FE`.
 

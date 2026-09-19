@@ -13,7 +13,7 @@
 #define R01_BGM_AUDIO_RATE 44100
 #define R01_BGM_AUDIO_SAMPLES 256
 #define R01_HOST_MIX_GAIN 0.5f
-#define R01_BGM_BYTECODE_MAX 4096u
+#define R01_BGM_BYTECODE_MAX 8192u
 #define R01_BGM_SFX_MAX 16u
 
 typedef struct R01BgmHost {

@@ -8,6 +8,8 @@
 #include "retr01_studio/metatiles.h"
 #include "retr01_studio/warps.h"
 
+#include "r01_bgm_fd.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -942,6 +944,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
     int player_entity = -1;
     int grid_cols = R01_DEFAULT_GRID;
     int grid_rows = R01_DEFAULT_GRID;
+    int file_ver = 0;
 
     if (!p || !path) {
         set_err(err_buf, err_cap, "bad args");
@@ -976,6 +979,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
         }
         free(name_str);
     }
+    json_int_after(buf, "\"version\"", &file_ver);
     json_int_after(buf, "\"default_world\"", &default_world);
     json_int_after(buf, "\"active_world\"", &active_world);
     json_int_after(buf, "\"active_screen\"", &active);
@@ -1946,6 +1950,36 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
             }
             if (ti > 0 || p->bgm.track_count > 0) {
                 p->bgm.present = 1;
+            }
+        }
+        /* v15: eighth-note ticks. Older files stored quarter-note ticks. */
+        if (p->bgm.present && file_ver < 15) {
+            int ti, ch, ri;
+            int tc = p->bgm.track_count;
+            if (tc > R01_BGM_TRACKS_MAX) {
+                tc = R01_BGM_TRACKS_MAX;
+            }
+            for (ti = 0; ti < tc; ti++) {
+                for (ch = 0; ch < R01_BGM_CH_COUNT; ch++) {
+                    int n = p->bgm.region_count[ti][ch];
+                    if (n > R01_BGM_REGIONS_MAX) {
+                        n = R01_BGM_REGIONS_MAX;
+                    }
+                    for (ri = 0; ri < n; ri++) {
+                        R01BgmRegion *rg = &p->bgm.region[ti][ch][ri];
+                        rg->start *= 2;
+                        rg->len *= 2;
+                        if (rg->len < 1) {
+                            rg->len = 1;
+                        }
+                        if (rg->start >= (int)R01_BGM_FD_STEPS_MAX) {
+                            rg->start = (int)R01_BGM_FD_STEPS_MAX - 1;
+                            rg->len = 1;
+                        } else if (rg->start + rg->len > (int)R01_BGM_FD_STEPS_MAX) {
+                            rg->len = (int)R01_BGM_FD_STEPS_MAX - rg->start;
+                        }
+                    }
+                }
             }
         }
     }

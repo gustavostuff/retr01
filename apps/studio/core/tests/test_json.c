@@ -4,6 +4,7 @@
 #include "retr01_studio/project.h"
 #include "retr01_studio/sprites.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -50,6 +51,33 @@ TEST_MAIN() {
         EXPECT(r01_project_load_json(p2, "test_roundtrip.r01proj", err, sizeof(err)) == 0, "load v5");
         EXPECT(p2->worlds[0].sprite_count == 1, "sprite count v5");
         EXPECT(p2->worlds[0].sprites[0].pal == 1, "sprite pal v5");
+    }
+
+    /* v14 BGM ticks were quarter notes. v15 doubles them to eighths. */
+    {
+        FILE *f = fopen("test_bgm_v14.r01proj", "w");
+        EXPECT(f != NULL, "write v14 bgm");
+        if (f) {
+            fputs("{\n"
+                  "  \"version\": 14,\n"
+                  "  \"name\": \"v14bgm\",\n"
+                  "  \"bgm\": {\n"
+                  "    \"track_count\": 1,\n"
+                  "    \"tracks\": [\n"
+                  "      {\"name\": \"T\", \"channels\": [\n"
+                  "        [{\"s\":1,\"l\":2,\"m\":60,\"t\":\"C4\"}],[],[],[],[]\n"
+                  "      ]}\n"
+                  "    ]\n"
+                  "  }\n"
+                  "}\n",
+                  f);
+            fclose(f);
+        }
+        EXPECT(r01_project_load_json(p2, "test_bgm_v14.r01proj", err, sizeof(err)) == 0, "load v14 bgm");
+        EXPECT(p2->bgm.present == 1, "v14 bgm present");
+        EXPECT(p2->bgm.region[0][0][0].start == 2, "v14 start scaled");
+        EXPECT(p2->bgm.region[0][0][0].len == 4, "v14 len scaled");
+        remove("test_bgm_v14.r01proj");
     }
 
     free(p);

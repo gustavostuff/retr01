@@ -46,6 +46,7 @@ typedef struct SoundEditorLayout {
     int plane_tabs_x, plane_tabs_y, plane_tab_w;
     int track_list_y, track_row_h;
     int add_x, add_y, add_w;
+    int zoom_out_x, zoom_in_x, zoom_y, zoom_s;
     int hdr_y;
     int lane_label_x, lane_label_w;
     int timeline_x, timeline_y, timeline_w, timeline_h;
@@ -265,6 +266,8 @@ void sound_plane_tabs_prepare(const UiState *ui, UiTabsLayout *out);
 int sound_plane_tab_hit(const UiState *ui, int lx, int ly, int *out_idx);
 int sound_track_hit(const UiState *ui, int lx, int ly, int *out_idx);
 int sound_add_hit(const UiState *ui, int lx, int ly);
+int sound_zoom_out_hit(const UiState *ui, int lx, int ly);
+int sound_zoom_in_hit(const UiState *ui, int lx, int ly);
 int sound_timeline_hit(const UiState *ui, int lx, int ly, int *out_ch, int *out_tick);
 /* hit: 0 miss, 1 body, 2 left handle, 3 right handle; out_region set on hit */
 int sound_region_hit(const UiState *ui, int lx, int ly, int *out_ch, int *out_region, int *out_handle);
@@ -276,6 +279,8 @@ void ui_sound_init(UiState *ui);
 int ui_sound_audio_init(void);
 void ui_sound_audio_shutdown(void);
 void ui_sound_play_start(UiState *ui);
+void ui_sound_play_start_sel(UiState *ui);
+void ui_sound_play_section(UiState *ui, int dir);
 void ui_sound_play_stop(UiState *ui);
 void ui_sound_play_pause(UiState *ui);
 void ui_sound_play_toggle(UiState *ui);

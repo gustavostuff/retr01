@@ -26,6 +26,18 @@ int ui_bgm_resize_region(UiState *ui, int track, int ch, int idx, int new_start,
 
 void ui_bgm_copy_sel(UiState *ui);
 void ui_bgm_paste_sel(UiState *ui);
+void ui_bgm_sel_clear(UiState *ui);
+void ui_bgm_sel_only(UiState *ui, int ch, int idx);
+void ui_bgm_sel_toggle(UiState *ui, int ch, int idx);
+void ui_bgm_sel_all(UiState *ui);
+void ui_bgm_sel_rect(UiState *ui, int ch0, int t0, int ch1, int t1, int add);
+void ui_bgm_sel_sync(UiState *ui);
+int ui_bgm_sel_count(const UiState *ui);
+int ui_bgm_is_sel(const UiState *ui, int ch, int idx);
+void ui_bgm_remove_sel(UiState *ui);
+void ui_bgm_nudge_sel(UiState *ui, int dir, int half_step);
+void ui_bgm_move_sel_grab(UiState *ui);
+void ui_bgm_move_sel_apply(UiState *ui, int dt);
 
 /* Sync Studio Audio editor <-> project.bgm for save/load. */
 void ui_bgm_sync_to_project(UiState *ui);
@@ -35,10 +47,14 @@ void ui_bgm_apply_from_project(UiState *ui);
  * honor_solo: when non-zero, skip channels other than ui->sound.solo_ch. */
 int ui_bgm_flatten(const UiState *ui, int track,
                    char cells[R01_BGM_STEPS][R01_BGM_CH][R01_BGM_TOKEN], int honor_solo);
+/* Flatten the selected note strip onto tick 0 of its channel. Returns steps, or 0. */
+int ui_bgm_flatten_sel(const UiState *ui, char cells[R01_BGM_STEPS][R01_BGM_CH][R01_BGM_TOKEN],
+                       int *out_origin);
 
 /* Write output/data/bgm_trackN.bin for each Studio track (debug dump). */
 void ui_bgm_write_export_bins(const UiState *ui);
 
 void ui_bgm_clamp_scroll(UiState *ui, int visible_ticks);
+void ui_bgm_zoom(UiState *ui, int dir);
 
 #endif

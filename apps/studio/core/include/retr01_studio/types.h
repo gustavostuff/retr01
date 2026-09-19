@@ -77,7 +77,7 @@ static inline int r01_global_spr_index(int bank) {
 
 #define R01_NAME_MAX 64
 #define R01_PATH_MAX 512
-#define R01_JSON_VER 14
+#define R01_JSON_VER 15
 
 #define R01_ASEPRITE_ENTITIES_DIR "aseprite_entities"
 #define R01_ASEPRITE_LISTING_MAX 64
