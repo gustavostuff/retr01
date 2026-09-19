@@ -12,13 +12,13 @@ NOTE: hardware is still in design phase, software is being built on that design.
 
 ## Design goals
 
-- Hardware does most video work so PRG can stay on game logic.
-- Relatively low IC count of ~17 on main PCB.
-- Multi-chip middle ground: not an FPGA soft system, not pure TTL. CPU + helper AVRs + PLDs + a little 74xx glue.
-- Flat 32 KB PRG with no banking. A faster CPU (8 MHz) and larger RAM (32 KB) make it stretch farther than NES NROM.
-- Entity system with clear caps: up to 16 types per world, each with up to 4 states x 4 frames x 6 sprites (state = idle, running, etc).
-- Flexible world layout: up to 7 worlds, each with up to 32 screens, all on a sparse 16x16 grid.
-- Passive cartridge: No mapper or bank switching required. Hardware streaming of nametable data directly from cart into VRAM buffers.
+- Put most of the video work in hardware so the CPU can focus on gameplay, inputs, physics, and state updates instead of doing low-level tile and sprite work by hand.
+- Keep the main PCB compact: roughly 17 ICs total, using a hybrid design instead of a pure FPGA or a pure discrete-logic console.
+- Use a middle ground between custom logic and MCU helpers: a main CPU, a few AVR support chips, PLDs, and a small amount of 74xx glue logic.
+- Give the CPU a flat 32 KB program space with no banking. At 8 MHz and with 32 KB RAM, the system can do more than a classic NES-style NROM cartridge while staying simple to author.
+- Support a predictable entity model with clear caps: up to 16 entity types per world, each with up to 4 states, 4 animation frames, and 6 sprite slots per state.
+- Keep world layouts flexible: up to 7 worlds, each with up to 32 screens, arranged on a sparse 16x16 grid so large maps do not need dense, wasteful allocation.
+- Keep the cartridge passive: no mapper or bank switching. Nametable and map data can stream directly from cart memory into VRAM buffers, which keeps the bus simpler and leaves program space free for actual game logic.
 
 ## Software pieces
 
