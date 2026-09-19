@@ -71,8 +71,6 @@
 #define UI_ARM_ASEPRITE_IMPORT 25
 #define UI_ARM_SOUND_ZOOM_OUT 26
 #define UI_ARM_SOUND_ZOOM_IN 27
-#define UI_ARM_SOUND_KEY 28
-#define UI_ARM_SOUND_MODE 29
 #define UI_ARM_SOUND_NOTE 30
 
 #define UI_APP_GRAPHICS 0
@@ -390,6 +388,8 @@ typedef struct UiBgmRegion {
     int len;       /* ticks, >= 1 */
     int midi;      /* melodic MIDI; noise period 0..15; DPCM kind stub */
     char tok[5];   /* host token */
+    int sharp;     /* 1 = sostenido / # */
+    int minor;     /* 1 = menor / minor (label, does not change pitch) */
     int selected;  /* UI-only, not persisted */
 } UiBgmRegion;
 
@@ -407,8 +407,6 @@ typedef struct UiSoundEdit {
     int solo_ch; /* UI_SOUND_SOLO_ALL, or 0..UI_SOUND_BGM_CH-1 to isolate */
     int scroll_x; /* first visible tick */
     int zoom_h;   /* horizontal zoom, UI_SOUND_ZOOM_MIN..MAX */
-    int key_pc;    /* 0=C/Do .. 11=B/Si */
-    int key_minor; /* 0 mayor/major, 1 menor/minor */
     int note_solfa; /* 0 letter C D E, 1 solfege Do Re Mi */
     int sel_kind; /* UI_SOUND_SEL_* */
     int sel_ch;

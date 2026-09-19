@@ -126,14 +126,14 @@ typedef struct R01BgmRegion {
     int len;   /* ticks, >= 1 */
     int midi;
     char tok[R01_BGM_TOK_MAX];
+    int sharp; /* 1 = sostenido */
+    int minor; /* 1 = menor */
 } R01BgmRegion;
 
 typedef struct R01BgmData {
     int present; /* 1 = authoring data saved/loaded (else empty tracks) */
     int track_count;
     char track_name[R01_BGM_TRACKS_MAX][R01_BGM_NAME_MAX];
-    int key_pc;     /* 0=C/Do .. 11=B/Si */
-    int key_minor;  /* 0 major/mayor, 1 minor/menor */
     int note_solfa; /* 0 letter, 1 solfege (UI labels) */
     int region_count[R01_BGM_TRACKS_MAX][R01_BGM_CH_COUNT];
     R01BgmRegion region[R01_BGM_TRACKS_MAX][R01_BGM_CH_COUNT][R01_BGM_REGIONS_MAX];

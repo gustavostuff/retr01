@@ -2,6 +2,7 @@
 #include "r01_apu_mix.h"
 #include "r01_apu_tracker.h"
 #include "r01_apu_window.h"
+#include "r01_bgm_fd.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -67,6 +68,27 @@ int main(void) {
     }
     if (!r01_apu_ch_enabled(regs, 5)) {
         return fail("sfx ch6 enable");
+    }
+
+    {
+        uint8_t b_c = 0;
+        uint8_t b_cs = 0;
+        uint16_t p_c;
+        uint16_t p_cs;
+        if (!r01_bgm_fd_token_payload(0, "C4", &b_c) || !r01_bgm_fd_token_payload(0, "C#4", &b_cs)) {
+            return fail("token C4 / C#4");
+        }
+        if (b_c == b_cs) {
+            return fail("C# must not encode as C");
+        }
+        p_c = r01_apu_fd_note_period(b_c);
+        p_cs = r01_apu_fd_note_period(b_cs);
+        if (p_cs >= p_c) {
+            return fail("C# period should be shorter than C");
+        }
+        if (b_cs != 0xDCu) {
+            return fail("C#4 encodes as D-flat 4");
+        }
     }
     return 0;
 }

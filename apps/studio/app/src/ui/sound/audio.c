@@ -116,6 +116,17 @@ void ui_sound_play_start_sel(UiState *ui) {
     ui->sound.play_span_last = 0.f;
 }
 
+void ui_sound_play_refresh(UiState *ui) {
+    if (!ui || !ui->sound.playing || ui->sound.paused) {
+        return;
+    }
+    if (ui->sound.play_sel) {
+        ui_sound_play_start_sel(ui);
+        return;
+    }
+    ui_sound_play_start(ui);
+}
+
 void ui_sound_play_section(UiState *ui, int dir) {
     char full[R01_BGM_STEPS][R01_BGM_CH][R01_BGM_TOKEN];
     char cells[R01_BGM_STEPS][R01_BGM_CH][R01_BGM_TOKEN];

@@ -108,6 +108,8 @@ is_flat = (byte & 0x08) >> 3
 octave  = byte & 0x07
 ```
 
+ASCII tracker tokens with `#` encode as the enharmonic flat (C# is D-flat). A trailing `m` on Pulse/Tri tokens is a minor triad arpeggio (root, minor 3rd, 5th) inside the step hold.
+
 ### Example letter C (`C0`-`CF`)
 
 | Hex (natural) | Pitch | Octave | Hex (flat) | Pitch | Octave |

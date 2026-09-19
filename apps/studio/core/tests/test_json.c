@@ -77,8 +77,6 @@ TEST_MAIN() {
         EXPECT(p2->bgm.present == 1, "v14 bgm present");
         EXPECT(p2->bgm.region[0][0][0].start == 2, "v14 start scaled");
         EXPECT(p2->bgm.region[0][0][0].len == 4, "v14 len scaled");
-        EXPECT(p2->bgm.key_pc == 0, "v14 key default Do");
-        EXPECT(p2->bgm.key_minor == 0, "v14 key mayor");
         EXPECT(p2->bgm.note_solfa == 1, "v14 note solfa default");
         remove("test_bgm_v14.r01proj");
     }

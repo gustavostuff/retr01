@@ -162,7 +162,6 @@ void ui_update_cursor(const UiState *ui) {
                            sound_track_hit(ui, lx, ly, NULL) || sound_add_hit(ui, lx, ly) ||
                            sound_zoom_out_hit(ui, lx, ly) || sound_zoom_in_hit(ui, lx, ly) ||
                            sound_note_hit(ui, lx, ly) ||
-                           sound_key_hit(ui, lx, ly) || sound_mode_hit(ui, lx, ly) ||
                            sound_play_hit(ui, lx, ly) || sound_pause_hit(ui, lx, ly) || sound_stop_hit(ui, lx, ly) ||
                            sound_channel_hit(ui, lx, ly, NULL) || sound_timeline_hit(ui, lx, ly, NULL, NULL));
     } else if (ui->app_mode == UI_APP_CODE) {

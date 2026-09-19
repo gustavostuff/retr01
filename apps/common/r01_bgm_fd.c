@@ -18,14 +18,98 @@ int r01_bgm_fd_frames_per_step(void) {
     return fps;
 }
 
+/* Cart note bytes only store natural or flat. C# encodes as D-flat, F# as G-flat. */
+static uint8_t midi_to_note_byte(int midi) {
+    static const uint8_t let[12] = {0xCu, 0xDu, 0xDu, 0xEu, 0xEu, 0xFu,
+                                    0x00u, 0x00u, 0xAu, 0xAu, 0xBu, 0xBu};
+    static const uint8_t flat[12] = {0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0};
+    int pc;
+    int oct;
+    if (midi < 12) {
+        midi = 12;
+    }
+    if (midi > 107) {
+        midi = 107;
+    }
+    pc = midi % 12;
+    if (pc < 0) {
+        pc += 12;
+    }
+    oct = midi / 12 - 1;
+    if (oct < 0) {
+        oct = 0;
+    }
+    if (oct > 7) {
+        oct = 7;
+    }
+    return (uint8_t)((let[pc] << 4) | (flat[pc] ? 0x08u : 0u) | (uint8_t)(oct & 7));
+}
+
+static int parse_melodic_tok(const char *tok, int *out_midi, int *out_minor) {
+    char L;
+    int i;
+    int pc = -1;
+    int oct = 4;
+    int acc = 0;
+    int minor = 0;
+    if (!tok || !tok[0] || (tok[0] == '-' && tok[1] == '-')) {
+        return 0;
+    }
+    L = (char)toupper((unsigned char)tok[0]);
+    switch (L) {
+    case 'C':
+        pc = 0;
+        break;
+    case 'D':
+        pc = 2;
+        break;
+    case 'E':
+        pc = 4;
+        break;
+    case 'F':
+        pc = 5;
+        break;
+    case 'G':
+        pc = 7;
+        break;
+    case 'A':
+        pc = 9;
+        break;
+    case 'B':
+        pc = 11;
+        break;
+    default:
+        return 0;
+    }
+    i = 1;
+    if (tok[i] == '#' || tok[i] == 's' || tok[i] == 'S') {
+        acc = 1;
+        i++;
+    } else if (tok[i] == 'b') {
+        acc = -1;
+        i++;
+    }
+    if (tok[i] < '0' || tok[i] > '7') {
+        return 0;
+    }
+    oct = tok[i] - '0';
+    i++;
+    if (tok[i] == 'm' || tok[i] == 'M') {
+        minor = 1;
+    }
+    if (out_midi) {
+        *out_midi = (oct + 1) * 12 + pc + acc;
+    }
+    if (out_minor) {
+        *out_minor = minor;
+    }
+    return 1;
+}
+
 int r01_bgm_fd_token_payload(int ch, const char *tok, uint8_t *out) {
     float hz = 0.f;
     int hex = 0;
-    char L;
-    int i;
-    int oct = 4;
-    int flat = 0;
-    uint8_t letter_nibble;
+    int midi = 0;
     if (!out || !tok || !tok[0] || (tok[0] == '-' && tok[1] == '-')) {
         return 0;
     }
@@ -50,44 +134,10 @@ int r01_bgm_fd_token_payload(int ch, const char *tok, uint8_t *out) {
         *out = (uint8_t)hex;
         return 1;
     }
-    L = (char)toupper((unsigned char)tok[0]);
-    switch (L) {
-    case 'G':
-        letter_nibble = 0x00u;
-        break;
-    case 'A':
-        letter_nibble = 0x0Au;
-        break;
-    case 'B':
-        letter_nibble = 0x0Bu;
-        break;
-    case 'C':
-        letter_nibble = 0x0Cu;
-        break;
-    case 'D':
-        letter_nibble = 0x0Du;
-        break;
-    case 'E':
-        letter_nibble = 0x0Eu;
-        break;
-    case 'F':
-        letter_nibble = 0x0Fu;
-        break;
-    default:
+    if (!parse_melodic_tok(tok, &midi, NULL)) {
         return 0;
     }
-    i = 1;
-    if (tok[i] == '#' || tok[i] == 's' || tok[i] == 'S') {
-        i++;
-    } else if (tok[i] == 'b') {
-        flat = 1;
-        i++;
-    }
-    if (tok[i] >= '0' && tok[i] <= '7') {
-        oct = tok[i] - '0';
-    }
-    *out = (uint8_t)((letter_nibble << 4) | (flat ? 0x08u : 0u) | (oct & 7));
-    (void)hz;
+    *out = midi_to_note_byte(midi);
     return 1;
 }
 
@@ -117,6 +167,73 @@ static int rows_equal(const char cells[][R01_BGM_FD_CH][R01_BGM_FD_TOKEN], int a
         }
     }
     return 1;
+}
+
+static int row_needs_arp(const char cells[][R01_BGM_FD_CH][R01_BGM_FD_TOKEN], int step) {
+    int ch;
+    for (ch = 0; ch < 3; ch++) {
+        int midi = 0;
+        int minor = 0;
+        if (parse_melodic_tok(cells[step][ch], &midi, &minor) && minor) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int row_payload_arp(const char cells[][R01_BGM_FD_CH][R01_BGM_FD_TOKEN], int step, int phase,
+                           uint8_t *mask, uint8_t *payload, unsigned *n_payload) {
+    int ch;
+    *mask = 0;
+    *n_payload = 0;
+    for (ch = 0; ch < R01_BGM_FD_CH; ch++) {
+        uint8_t byte = 0;
+        int midi = 0;
+        int minor = 0;
+        if (ch < 3 && parse_melodic_tok(cells[step][ch], &midi, &minor) && minor) {
+            int add = 0;
+            if (phase == 1) {
+                add = 3;
+            } else if (phase == 2) {
+                add = 7;
+            }
+            byte = midi_to_note_byte(midi + add);
+            *mask = (uint8_t)(*mask | (uint8_t)(1u << ch));
+            payload[(*n_payload)++] = byte;
+        } else if (r01_bgm_fd_token_payload(ch, cells[step][ch], &byte)) {
+            *mask = (uint8_t)(*mask | (uint8_t)(1u << ch));
+            payload[(*n_payload)++] = byte;
+        } else if (ch != 4) {
+            *mask = (uint8_t)(*mask | (uint8_t)(1u << ch));
+            payload[(*n_payload)++] = 0x80u;
+        }
+    }
+    return (*n_payload > 0u) ? 1 : 0;
+}
+
+static int emit_fd_hold(uint8_t *out, unsigned *o, unsigned out_cap, uint8_t mask, const uint8_t *payload,
+                        unsigned n_payload, int hold_frames) {
+    uint8_t frame[R01_APU_FD_FRAME_MAX];
+    int flen;
+    int left;
+    flen = r01_apu_fd_encode(mask, payload, n_payload, frame, sizeof(frame));
+    if (flen < 0 || *o + (unsigned)flen + 3u > out_cap) {
+        return -1;
+    }
+    memcpy(out + *o, frame, (size_t)flen);
+    *o += (unsigned)flen;
+    left = hold_frames - 1;
+    while (left > 0) {
+        int chunk = left > 256 ? 256 : left;
+        int fe_delay = chunk - 1;
+        if (*o + 2u > out_cap) {
+            return -1;
+        }
+        out[(*o)++] = R01_APU_CTRL_FE;
+        out[(*o)++] = (uint8_t)fe_delay;
+        left -= chunk;
+    }
+    return 0;
 }
 
 int r01_bgm_fd_apply_step(const char cells[][R01_BGM_FD_CH][R01_BGM_FD_TOKEN], int step, int steps,
@@ -163,11 +280,8 @@ int r01_bgm_fd_encode_cells(const char cells[][R01_BGM_FD_CH][R01_BGM_FD_TOKEN],
         uint8_t mask = 0;
         uint8_t payload[R01_APU_FD_MAX_PAYLOAD];
         unsigned n_payload = 0;
-        uint8_t frame[R01_APU_FD_FRAME_MAX];
-        int flen;
         int run = 1;
         int hold_frames;
-        int fe_delay;
         memset(payload, 0, sizeof(payload));
         if (!row_payload(cells, step, &mask, payload, &n_payload)) {
             step++;
@@ -176,27 +290,28 @@ int r01_bgm_fd_encode_cells(const char cells[][R01_BGM_FD_CH][R01_BGM_FD_TOKEN],
         while (step + run < steps && rows_equal(cells, step, step + run)) {
             run++;
         }
-        flen = r01_apu_fd_encode(mask, payload, n_payload, frame, sizeof(frame));
-        if (flen < 0 || o + (unsigned)flen + 3u > out_cap) {
-            return -1;
-        }
-        memcpy(out + o, frame, (size_t)flen);
-        o += (unsigned)flen;
-
-        /* After FD: wait (hold_frames-1) NMIs via FE so the row lasts hold_frames total. */
         hold_frames = run * frames;
-        {
-            int left = hold_frames - 1;
-            while (left > 0) {
-                int chunk = left > 256 ? 256 : left;
-                fe_delay = chunk - 1; /* FE n => this NMI + n countdowns = chunk waits */
-                if (o + 2u > out_cap) {
+        if (row_needs_arp(cells, step)) {
+            int t = 0;
+            while (t < hold_frames) {
+                int phase = (t / 4) % 3;
+                int chunk = 4;
+                if (chunk > hold_frames - t) {
+                    chunk = hold_frames - t;
+                }
+                memset(payload, 0, sizeof(payload));
+                mask = 0;
+                n_payload = 0;
+                if (!row_payload_arp(cells, step, phase, &mask, payload, &n_payload)) {
+                    break;
+                }
+                if (emit_fd_hold(out, &o, out_cap, mask, payload, n_payload, chunk) < 0) {
                     return -1;
                 }
-                out[o++] = R01_APU_CTRL_FE;
-                out[o++] = (uint8_t)fe_delay;
-                left -= chunk;
+                t += chunk;
             }
+        } else if (emit_fd_hold(out, &o, out_cap, mask, payload, n_payload, hold_frames) < 0) {
+            return -1;
         }
         step += run;
     }

@@ -108,23 +108,6 @@ void draw_sound_editor(UiState *ui, SDL_Renderer *r) {
                       ui->sound.zoom_h < UI_SOUND_ZOOM_MAX);
     ui_button_draw_ex(r, lo.note_x, lo.note_y, lo.note_w, ui->sound.note_solfa ? "Do" : "C", 1,
                       sound_note_hit(ui, lx, ly), 1);
-    {
-        char key_name[8];
-        int key_hover = sound_key_hit(ui, lx, ly);
-        int mode_hover = sound_mode_hit(ui, lx, ly);
-        int solfa = ui->sound.note_solfa;
-        ui_bgm_key_name(ui->sound.key_pc, solfa, key_name);
-        if (key_hover) {
-            fill_rect(r, lo.key_x, lo.key_y, lo.key_w, UI_BTN_H, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
-        }
-        font_draw(r, lo.key_x, lo.key_y + (UI_BTN_H - 8) / 2, key_name, 230, 230, 230);
-        if (mode_hover) {
-            fill_rect(r, lo.key_x, lo.mode_y, lo.key_w, UI_BTN_H, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
-        }
-        font_draw(r, lo.key_x, lo.mode_y + (UI_BTN_H - 8) / 2,
-                  solfa ? (ui->sound.key_minor ? "menor" : "mayor") : (ui->sound.key_minor ? "minor" : "major"), 230,
-                  230, 230);
-    }
 
     tid = ui->sound.track_idx;
     if (tid < 0 || tid >= ui->sound.track_count) {
@@ -210,13 +193,13 @@ void draw_sound_editor(UiState *ui, SDL_Renderer *r) {
                 draw_strip_outline(r, x0, y, w, lo.lane_h);
             }
             {
-                char lab[12];
+                char lab[32];
                 int pad = 2;
                 int inner;
                 int tw;
                 int overflow;
                 int tx;
-                ui_bgm_note_label(rg->midi, ch, rg->tok, ui->sound.note_solfa, lab);
+                ui_bgm_note_label(rg, ch, ui->sound.note_solfa, lab);
                 inner = w - pad * 2;
                 tw = font_text_width(lab);
                 overflow = tw - inner;

@@ -663,8 +663,6 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
     fprintf(f, "\n  ],\n");
     fprintf(f, "  \"bgm\": {\n");
     fprintf(f, "    \"track_count\": %d,\n", p->bgm.present ? p->bgm.track_count : 0);
-    fprintf(f, "    \"key_pc\": %d,\n", p->bgm.key_pc);
-    fprintf(f, "    \"key_minor\": %d,\n", p->bgm.key_minor ? 1 : 0);
     fprintf(f, "    \"note_solfa\": %d,\n", p->bgm.note_solfa ? 1 : 0);
     fprintf(f, "    \"tracks\": [\n");
     {
@@ -695,8 +693,9 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
                 first_ch = 0;
                 for (ri = 0; ri < n; ri++) {
                     const R01BgmRegion *rg = &p->bgm.region[ti][ch][ri];
-                    fprintf(f, "%s{\"s\":%d,\"l\":%d,\"m\":%d,\"t\":\"%s\"}", first_r ? "" : ",", rg->start,
-                            rg->len, rg->midi, rg->tok[0] ? rg->tok : "--");
+                    fprintf(f, "%s{\"s\":%d,\"l\":%d,\"m\":%d,\"t\":\"%s\",\"sh\":%d,\"mi\":%d}", first_r ? "" : ",",
+                            rg->start, rg->len, rg->midi, rg->tok[0] ? rg->tok : "--", rg->sharp ? 1 : 0,
+                            rg->minor ? 1 : 0);
                     first_r = 0;
                 }
                 fprintf(f, "]");
@@ -1826,15 +1825,8 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
             const char *tobj;
             int ti = 0;
             json_int_after(bgm_sec, "\"track_count\"", &p->bgm.track_count);
-            json_int_after(bgm_sec, "\"key_pc\"", &p->bgm.key_pc);
-            json_int_after(bgm_sec, "\"key_minor\"", &p->bgm.key_minor);
             p->bgm.note_solfa = 1;
             json_int_after(bgm_sec, "\"note_solfa\"", &p->bgm.note_solfa);
-            p->bgm.key_pc %= 12;
-            if (p->bgm.key_pc < 0) {
-                p->bgm.key_pc += 12;
-            }
-            p->bgm.key_minor = p->bgm.key_minor ? 1 : 0;
             p->bgm.note_solfa = p->bgm.note_solfa ? 1 : 0;
             tobj = tracks ? strchr(tracks, '{') : NULL;
             while (tobj && tracks_end && tobj < tracks_end && ti < R01_BGM_TRACKS_MAX) {
@@ -1916,7 +1908,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         char *rslice;
                         size_t rlen;
                         char *tok;
-                        int s = 0, l = 1, m = 0;
+                        int s = 0, l = 1, m = 0, sh = 0, mi = 0, got_sh = 0;
                         if (!ro_end || ro_end > rb) {
                             break;
                         }
@@ -1930,6 +1922,8 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         json_int_after(rslice, "\"s\"", &s);
                         json_int_after(rslice, "\"l\"", &l);
                         json_int_after(rslice, "\"m\"", &m);
+                        got_sh = json_int_after(rslice, "\"sh\"", &sh);
+                        json_int_after(rslice, "\"mi\"", &mi);
                         tok = json_string_field_dup(rslice, "\"t\"");
                         free(rslice);
                         if (l < 1) {
@@ -1938,6 +1932,15 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         p->bgm.region[ti][ch][n].start = s;
                         p->bgm.region[ti][ch][n].len = l;
                         p->bgm.region[ti][ch][n].midi = m;
+                        if (!got_sh) {
+                            int pc = m % 12;
+                            if (pc < 0) {
+                                pc += 12;
+                            }
+                            sh = (pc == 1 || pc == 3 || pc == 6 || pc == 8 || pc == 10);
+                        }
+                        p->bgm.region[ti][ch][n].sharp = sh ? 1 : 0;
+                        p->bgm.region[ti][ch][n].minor = mi ? 1 : 0;
                         if (tok) {
                             snprintf(p->bgm.region[ti][ch][n].tok, sizeof(p->bgm.region[ti][ch][n].tok), "%s",
                                      tok);

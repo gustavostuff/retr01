@@ -115,7 +115,6 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
     if (e->type == SDL_MOUSEWHEEL && ui->app_mode == UI_APP_SOUNDS &&
         ui->sound.plane == UI_SOUND_PLANE_BGM) {
         SoundEditorLayout lo;
-        int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
         int mx = lx;
         int my = ly;
         int ch = 0;
@@ -138,11 +137,13 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             if (ch >= 0 && ch < UI_SOUND_BGM_CH && region >= 0 &&
                 region < ui->sound.region_count[track][ch]) {
                 if (ui_bgm_is_sel(ui, ch, region)) {
-                    ui_bgm_nudge_sel(ui, e->wheel.y > 0 ? 1 : -1, shift);
+                    ui_bgm_nudge_sel(ui, e->wheel.y > 0 ? 1 : -1);
+                    ui_sound_play_refresh(ui);
                 } else {
                     ui_bgm_sel_only(ui, ch, region);
                     ui_bgm_nudge_region(&ui->sound.region[track][ch][region], ch,
-                                        e->wheel.y > 0 ? 1 : -1, shift, ui->sound.key_pc, ui->sound.key_minor);
+                                        e->wheel.y > 0 ? 1 : -1);
+                    ui_sound_play_refresh(ui);
                 }
             }
             return 1;
@@ -528,6 +529,20 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             return 1;
         }
+        if (ui->text.field_id < 1 && !ui->play.active && !ui->menu.open &&
+            ui->app_mode == UI_APP_SOUNDS && ui->sound.plane == UI_SOUND_PLANE_BGM &&
+            !(e->key.keysym.mod & (KMOD_CTRL | KMOD_ALT | KMOD_SHIFT)) && ui_bgm_sel_count(ui) > 0) {
+            if (e->key.keysym.sym == SDLK_s) {
+                ui_bgm_toggle_sel_sharp(ui);
+                ui_sound_play_refresh(ui);
+                return 1;
+            }
+            if (e->key.keysym.sym == SDLK_m) {
+                ui_bgm_toggle_sel_minor(ui);
+                ui_sound_play_refresh(ui);
+                return 1;
+            }
+        }
         /* Face buttons: Sim map (P1 G/H) is sampled each frame in ui_tick. */
     }
     if (e->type == SDL_KEYUP) {
@@ -627,14 +642,6 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     }
                     if (sound_note_hit(ui, lx, ly)) {
                         ui->arm_kind = UI_ARM_SOUND_NOTE;
-                        return 1;
-                    }
-                    if (sound_key_hit(ui, lx, ly)) {
-                        ui->arm_kind = UI_ARM_SOUND_KEY;
-                        return 1;
-                    }
-                    if (sound_mode_hit(ui, lx, ly)) {
-                        ui->arm_kind = UI_ARM_SOUND_MODE;
                         return 1;
                     }
                     if (sound_track_hit(ui, lx, ly, &idx)) {
@@ -1188,14 +1195,6 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             if (kind == UI_ARM_SOUND_NOTE && sound_note_hit(ui, lx, ly)) {
                 ui->sound.note_solfa = ui->sound.note_solfa ? 0 : 1;
-                return 1;
-            }
-            if (kind == UI_ARM_SOUND_KEY && sound_key_hit(ui, lx, ly)) {
-                ui->sound.key_pc = (ui->sound.key_pc + 1) % 12;
-                return 1;
-            }
-            if (kind == UI_ARM_SOUND_MODE && sound_mode_hit(ui, lx, ly)) {
-                ui->sound.key_minor = ui->sound.key_minor ? 0 : 1;
                 return 1;
             }
             if (kind == UI_ARM_SOUND_CH) {
