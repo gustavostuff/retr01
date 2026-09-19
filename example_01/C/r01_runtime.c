@@ -457,7 +457,7 @@ void r01_bgm_stop(R01GameCtx *ctx) {
 void r01_sfx_play(R01GameCtx *ctx, int id) {
     (void)ctx;
     (void)id;
-    /* Host Play / emu: SFX overlay is author-triggered, not bound to pad X/Y. */
+    /* Host Play / emu: tracker SFX on voices 6-8. P1 X/Y (G/H) fire the preview one-shots. */
 }
 
 void r01_camera_set_axis_lock(R01GameCtx *ctx, int mode) {

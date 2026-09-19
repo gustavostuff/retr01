@@ -1,48 +1,44 @@
 #include "r01_bgm_host.h"
-#include "r01_nes_synth.h"
+
+#include "r01_apu_mix.h"
+#include "r01_apu_tracker.h"
+#include "r01_apu_window.h"
+#include "r01_bgm_fd.h"
+#include "r01_spi_mailbox.h"
 
 #include <SDL.h>
 #include <stdio.h>
 #include <string.h>
 
 #define R01_BGM_AUDIO_RATE 44100
-/* Keep in sync with R01_BGM_FD_TEMPO_BPM (r01_bgm_fd.h) - softsynth grid tempo. */
-#define R01_BGM_TEMPO_BPM 140
-/* Small callback buffer: 256 @ 44.1kHz ~= 5.8ms (1024 was ~23ms and felt laggy). */
 #define R01_BGM_AUDIO_SAMPLES 256
-/* Master host level (full softsynth / 4). */
-#define R01_HOST_MIX_GAIN 1.0f
-/* Per-track relative volume vs master. Hardcoded for all tracks until UI exists. */
-#define R01_BGM_TRACK_VOL_DEFAULT 0.5f
-/* Peak matches ~pulse voice in r01_nes_synth so SFX ~= BGM before master gain. */
-#define R01_SFX_AMP 2000
-
-typedef struct R01SfxVoice {
-    int active;
-    int samples_left;
-    int kind; /* R01_SFX_X or R01_SFX_Y */
-    double phase;
-    float freq_hz;
-    uint16_t noise_lfsr;
-} R01SfxVoice;
+#define R01_HOST_MIX_GAIN 0.5f
+#define R01_BGM_BYTECODE_MAX 4096u
+#define R01_BGM_SFX_MAX 16u
 
 typedef struct R01BgmHost {
     SDL_AudioDeviceID dev;
     int sample_rate;
-    R01NesSynth synth;
+    R01ApuMix mix;
+    R01ApuTracker tracker;
+    uint8_t regs[R01_APU_REGS];
+    uint8_t bytecode[R01_BGM_BYTECODE_MAX];
+    uint16_t bytecode_len;
+    uint8_t sfx_rom[R01_BGM_SFX_MAX];
+    uint16_t sfx_len;
+    const uint8_t *live_regs;
     int playing;
     int paused;
-    int step;
-    int samples_left;
-    int samples_per_step;
     int track_steps;
+    int frames_per_step;
+    int samples_per_nmi;
+    int nmi_samples_left;
+    int nmi_count;
     char cell[R01_BGM_STEPS][R01_BGM_CH][R01_BGM_TOKEN];
-    R01SfxVoice sfx;
 } R01BgmHost;
 
 static R01BgmHost g_bgm;
 
-/* Built-in demo matching Studio Audio Track 1 placeholders (quarter-note ticks). */
 static void load_builtin_track1(R01BgmHost *a) {
     static const char *demo[][R01_BGM_CH] = {
         {"C4", "E4", "G3", "--", "--"}, {"--", "--", "--", "8F", "--"}, {"D4", "F4", "A3", "--", "FD"},
@@ -62,95 +58,44 @@ static void load_builtin_track1(R01BgmHost *a) {
         }
     }
     a->track_steps = (int)(sizeof(demo) / sizeof(demo[0]));
-    if (a->track_steps < 1) {
-        a->track_steps = 1;
-    }
 }
 
-static void apply_step(R01BgmHost *a, int step) {
-    int ch;
-    if (step < 0 || step >= a->track_steps) {
-        return;
+static int encode_cells(R01BgmHost *a) {
+    int n;
+    memset(a->regs, 0, sizeof(a->regs));
+    r01_apu_tracker_init(&a->tracker);
+    n = r01_bgm_fd_encode_cells((const char(*)[R01_BGM_FD_CH][R01_BGM_FD_TOKEN])a->cell, a->track_steps,
+                                a->bytecode, R01_BGM_BYTECODE_MAX);
+    if (n < 0) {
+        a->bytecode_len = 0;
+        return -1;
     }
-    for (ch = 0; ch < R01_BGM_CH; ch++) {
-        const char *tok = a->cell[step][ch];
-        float hz = 0.f;
-        int hex = 0;
-        if (!tok || !tok[0] || (tok[0] == '-' && tok[1] == '-')) {
-            if (ch != 4) {
-                r01_nes_synth_off(&a->synth, ch);
-            }
-            continue;
-        }
-        if (ch == 0 || ch == 1) {
-            if (r01_nes_parse_note_hz(tok, &hz)) {
-                r01_nes_synth_set_pulse(&a->synth, ch, hz, 12, ch == 0 ? 2 : 1);
-            } else {
-                r01_nes_synth_off(&a->synth, ch);
-            }
-        } else if (ch == 2) {
-            if (r01_nes_parse_note_hz(tok, &hz)) {
-                r01_nes_synth_set_triangle(&a->synth, hz);
-            } else {
-                r01_nes_synth_off(&a->synth, ch);
-            }
-        } else if (ch == 3) {
-            if (r01_nes_parse_hex_u8(tok, &hex)) {
-                r01_nes_synth_set_noise(&a->synth, hex & 0x0f, 10);
-            } else if (r01_nes_parse_note_hz(tok, &hz)) {
-                r01_nes_synth_set_noise(&a->synth, 8, 10);
-            } else {
-                r01_nes_synth_off(&a->synth, ch);
-            }
-        } else if (ch == 4) {
-            if (r01_nes_parse_hex_u8(tok, &hex) || r01_nes_parse_note_hz(tok, &hz)) {
-                r01_nes_synth_trigger_dpcm(&a->synth, (hex == 0xFD || hz > 0.f) ? 0 : 1);
-            }
-        }
+    a->bytecode_len = (uint16_t)n;
+    r01_apu_tracker_set_bgm(&a->tracker, a->bytecode, a->bytecode_len);
+    (void)r01_apu_tracker_nmi(&a->tracker, a->regs);
+    r01_apu_mix_set_regs(&a->mix, a->regs);
+    a->nmi_count = 0;
+    a->nmi_samples_left = a->samples_per_nmi;
+    a->frames_per_step = r01_bgm_fd_frames_per_step();
+    if (a->frames_per_step < 1) {
+        a->frames_per_step = 1;
     }
+    return 0;
 }
 
-static int16_t sfx_sample(R01BgmHost *a) {
-    R01SfxVoice *s = &a->sfx;
-    int16_t amp = 0;
-    float t;
-    if (!s->active || s->samples_left <= 0) {
-        s->active = 0;
-        return 0;
-    }
-    s->samples_left--;
-    if (s->kind == R01_SFX_Y) {
-        /* Y: short noise tick */
-        s->phase += 1.0;
-        if (s->phase >= 1.0) {
-            uint16_t l = s->noise_lfsr ? s->noise_lfsr : 1u;
-            uint16_t bit = (uint16_t)(((l >> 0) ^ (l >> 1)) & 1u);
-            s->noise_lfsr = (uint16_t)((l >> 1) | (bit << 14));
-            s->phase = 0.0;
+static void mix_chunk(R01BgmHost *a, int16_t *out, int frames) {
+    int i;
+    r01_apu_mix_render(&a->mix, out, frames);
+    for (i = 0; i < frames; i++) {
+        int32_t s = (int32_t)((float)out[i] * R01_HOST_MIX_GAIN);
+        if (s > 32767) {
+            s = 32767;
         }
-        amp = (s->noise_lfsr & 1u) ? (int16_t)R01_SFX_AMP : (int16_t)(-R01_SFX_AMP);
-    } else {
-        /* X: fixed pulse blip */
-        double step = (double)s->freq_hz / (double)a->sample_rate;
-        s->phase += step;
-        if (s->phase >= 1.0) {
-            s->phase -= 1.0;
+        if (s < -32768) {
+            s = -32768;
         }
-        t = (s->phase < 0.5) ? 1.f : -1.f;
-        amp = (int16_t)(t * (float)R01_SFX_AMP);
+        out[i] = (int16_t)s;
     }
-    /* Fade out */
-    {
-        float fade = (float)s->samples_left / (float)(a->sample_rate / 10 + 1);
-        if (fade > 1.f) {
-            fade = 1.f;
-        }
-        amp = (int16_t)((float)amp * fade);
-    }
-    if (s->samples_left <= 0) {
-        s->active = 0;
-    }
-    return amp;
 }
 
 static void SDLCALL bgm_audio_cb(void *userdata, Uint8 *stream, int len) {
@@ -158,41 +103,38 @@ static void SDLCALL bgm_audio_cb(void *userdata, Uint8 *stream, int len) {
     int16_t *out = (int16_t *)stream;
     int frames = len / (int)sizeof(int16_t);
     int i = 0;
+    uint8_t snap[R01_APU_REGS];
     if (!a) {
         memset(stream, 0, (size_t)len);
         return;
     }
     memset(stream, 0, (size_t)len);
-    if (a->playing && !a->paused) {
-        while (i < frames) {
-            int n;
-            if (a->samples_left <= 0) {
-                a->step++;
-                if (a->step >= a->track_steps) {
-                    a->step = 0;
-                }
-                apply_step(a, a->step);
-                a->samples_left = a->samples_per_step;
-            }
-            n = a->samples_left;
-            if (n > frames - i) {
-                n = frames - i;
-            }
-            r01_nes_synth_render(&a->synth, out + i, n);
-            a->samples_left -= n;
-            i += n;
-        }
+    if (a->live_regs) {
+        memcpy(snap, a->live_regs, R01_APU_REGS);
+        r01_apu_mix_set_regs(&a->mix, snap);
+        mix_chunk(a, out, frames);
+        return;
     }
-    for (i = 0; i < frames; i++) {
-        float bgm = (float)out[i] * R01_BGM_TRACK_VOL_DEFAULT;
-        int32_t mix = (int32_t)((bgm + (float)sfx_sample(a)) * R01_HOST_MIX_GAIN);
-        if (mix > 32767) {
-            mix = 32767;
+    if (!(a->playing && !a->paused) && !a->tracker.sfx.active) {
+        return;
+    }
+    while (i < frames) {
+        int n;
+        if (a->nmi_samples_left <= 0) {
+            (void)r01_apu_tracker_nmi(&a->tracker, a->regs);
+            r01_apu_mix_set_regs(&a->mix, a->regs);
+            a->nmi_samples_left = a->samples_per_nmi;
+            if (a->playing && !a->paused) {
+                a->nmi_count++;
+            }
         }
-        if (mix < -32768) {
-            mix = -32768;
+        n = a->nmi_samples_left;
+        if (n > frames - i) {
+            n = frames - i;
         }
-        out[i] = (int16_t)mix;
+        mix_chunk(a, out + i, n);
+        a->nmi_samples_left -= n;
+        i += n;
     }
 }
 
@@ -214,7 +156,6 @@ int r01_bgm_host_init(void) {
     want.samples = R01_BGM_AUDIO_SAMPLES;
     want.callback = bgm_audio_cb;
     want.userdata = &g_bgm;
-    /* Keep requested buffer size - ALLOW_SAMPLES_CHANGE often inflates latency. */
     g_bgm.dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
     if (!g_bgm.dev) {
         fprintf(stderr, "SDL_OpenAudioDevice: %s\n", SDL_GetError());
@@ -223,22 +164,37 @@ int r01_bgm_host_init(void) {
     g_bgm.sample_rate = have.freq > 0 ? have.freq : R01_BGM_AUDIO_RATE;
     fprintf(stderr, "r01_bgm_host: audio %d Hz, %u samples (%.1f ms)\n", g_bgm.sample_rate,
             (unsigned)have.samples, (1000.0 * (double)have.samples) / (double)g_bgm.sample_rate);
-    r01_nes_synth_init(&g_bgm.synth, g_bgm.sample_rate);
-    g_bgm.samples_per_step = (g_bgm.sample_rate * 60) / (R01_BGM_TEMPO_BPM * R01_BGM_STEPS_PER_BEAT);
-    if (g_bgm.samples_per_step < 256) {
-        g_bgm.samples_per_step = 256;
+    r01_apu_mix_init(&g_bgm.mix, g_bgm.sample_rate);
+    g_bgm.samples_per_nmi = g_bgm.sample_rate / R01_BGM_FD_NMI_HZ;
+    if (g_bgm.samples_per_nmi < 1) {
+        g_bgm.samples_per_nmi = 1;
     }
-    g_bgm.sfx.noise_lfsr = 1;
-    SDL_PauseAudioDevice(g_bgm.dev, 0); /* keep running for SFX even without BGM */
+    g_bgm.frames_per_step = r01_bgm_fd_frames_per_step();
+    SDL_PauseAudioDevice(g_bgm.dev, 0);
     return 0;
 }
 
 void r01_bgm_host_shutdown(void) {
+    r01_bgm_host_attach_window(NULL);
     r01_bgm_host_stop();
     if (g_bgm.dev) {
         SDL_CloseAudioDevice(g_bgm.dev);
         g_bgm.dev = 0;
     }
+}
+
+void r01_bgm_host_attach_window(const uint8_t *regs) {
+    if (r01_bgm_host_init() != 0) {
+        return;
+    }
+    SDL_LockAudioDevice(g_bgm.dev);
+    g_bgm.live_regs = regs;
+    if (regs) {
+        g_bgm.playing = 0;
+        g_bgm.paused = 0;
+    }
+    SDL_UnlockAudioDevice(g_bgm.dev);
+    SDL_PauseAudioDevice(g_bgm.dev, 0);
 }
 
 static int load_track_file(R01BgmHost *a, const char *path) {
@@ -289,6 +245,16 @@ static int load_track_file(R01BgmHost *a, const char *path) {
     return 0;
 }
 
+static int begin_internal_play(R01BgmHost *a) {
+    a->live_regs = NULL;
+    if (encode_cells(a) != 0) {
+        return -1;
+    }
+    a->paused = 0;
+    a->playing = 1;
+    return 0;
+}
+
 int r01_bgm_host_play(int track, const char *path) {
     if (track < 1) {
         return -1;
@@ -298,18 +264,17 @@ int r01_bgm_host_play(int track, const char *path) {
     }
     SDL_LockAudioDevice(g_bgm.dev);
     if (path && path[0] && load_track_file(&g_bgm, path) == 0) {
-        /* ok */
+        /* loaded */
     } else if (track == 1) {
         load_builtin_track1(&g_bgm);
     } else {
         SDL_UnlockAudioDevice(g_bgm.dev);
         return -1;
     }
-    g_bgm.step = -1;
-    g_bgm.samples_left = 0;
-    g_bgm.paused = 0;
-    r01_nes_synth_silence(&g_bgm.synth);
-    g_bgm.playing = 1;
+    if (begin_internal_play(&g_bgm) != 0) {
+        SDL_UnlockAudioDevice(g_bgm.dev);
+        return -1;
+    }
     SDL_UnlockAudioDevice(g_bgm.dev);
     SDL_PauseAudioDevice(g_bgm.dev, 0);
     return 0;
@@ -328,11 +293,7 @@ void r01_bgm_host_play_cells(char cells[R01_BGM_STEPS][R01_BGM_CH][R01_BGM_TOKEN
     SDL_LockAudioDevice(g_bgm.dev);
     memcpy(g_bgm.cell, cells, sizeof(g_bgm.cell));
     g_bgm.track_steps = steps;
-    g_bgm.step = -1;
-    g_bgm.samples_left = 0;
-    g_bgm.paused = 0;
-    r01_nes_synth_silence(&g_bgm.synth);
-    g_bgm.playing = 1;
+    (void)begin_internal_play(&g_bgm);
     SDL_UnlockAudioDevice(g_bgm.dev);
     SDL_PauseAudioDevice(g_bgm.dev, 0);
 }
@@ -341,18 +302,18 @@ void r01_bgm_host_stop(void) {
     if (!g_bgm.dev) {
         g_bgm.playing = 0;
         g_bgm.paused = 0;
-        g_bgm.step = -1;
-        g_bgm.samples_left = 0;
+        g_bgm.nmi_count = 0;
         return;
     }
     SDL_LockAudioDevice(g_bgm.dev);
     g_bgm.playing = 0;
     g_bgm.paused = 0;
-    g_bgm.step = -1;
-    g_bgm.samples_left = 0;
-    r01_nes_synth_silence(&g_bgm.synth);
+    g_bgm.nmi_count = 0;
+    g_bgm.nmi_samples_left = 0;
+    r01_apu_tracker_init(&g_bgm.tracker);
+    memset(g_bgm.regs, 0, sizeof(g_bgm.regs));
+    r01_apu_mix_set_regs(&g_bgm.mix, g_bgm.regs);
     SDL_UnlockAudioDevice(g_bgm.dev);
-    /* Keep device running so SFX still works. */
 }
 
 void r01_bgm_host_pause(void) {
@@ -362,7 +323,6 @@ void r01_bgm_host_pause(void) {
     SDL_LockAudioDevice(g_bgm.dev);
     if (g_bgm.playing) {
         g_bgm.paused = 1;
-        r01_nes_synth_silence(&g_bgm.synth);
     }
     SDL_UnlockAudioDevice(g_bgm.dev);
 }
@@ -374,16 +334,13 @@ void r01_bgm_host_resume(void) {
     SDL_LockAudioDevice(g_bgm.dev);
     if (g_bgm.playing && g_bgm.paused) {
         g_bgm.paused = 0;
-        /* Re-apply current step so voices resume from paused position. */
-        if (g_bgm.step >= 0) {
-            apply_step(&g_bgm, g_bgm.step);
-        }
     }
     SDL_UnlockAudioDevice(g_bgm.dev);
     SDL_PauseAudioDevice(g_bgm.dev, 0);
 }
 
 void r01_bgm_host_sfx_play(int id) {
+    int n;
     if (id != R01_SFX_X && id != R01_SFX_Y) {
         return;
     }
@@ -391,18 +348,14 @@ void r01_bgm_host_sfx_play(int id) {
         return;
     }
     SDL_LockAudioDevice(g_bgm.dev);
-    g_bgm.sfx.active = 1;
-    g_bgm.sfx.kind = id;
-    g_bgm.sfx.phase = 0.0;
-    g_bgm.sfx.noise_lfsr = 1u;
-    if (id == R01_SFX_X) {
-        /* Fixed pulse blip (~C6). */
-        g_bgm.sfx.freq_hz = 1046.5f;
-        g_bgm.sfx.samples_left = g_bgm.sample_rate / 14; /* ~70ms */
-    } else {
-        /* Fixed noise tick. */
-        g_bgm.sfx.freq_hz = 0.f;
-        g_bgm.sfx.samples_left = g_bgm.sample_rate / 18; /* ~55ms */
+    if (g_bgm.live_regs) {
+        SDL_UnlockAudioDevice(g_bgm.dev);
+        return;
+    }
+    n = r01_apu_sfx_encode((uint8_t)id, g_bgm.sfx_rom, R01_BGM_SFX_MAX);
+    if (n > 0) {
+        g_bgm.sfx_len = (uint16_t)n;
+        r01_apu_tracker_trigger_sfx(&g_bgm.tracker, g_bgm.sfx_rom, g_bgm.sfx_len);
     }
     SDL_UnlockAudioDevice(g_bgm.dev);
     SDL_PauseAudioDevice(g_bgm.dev, 0);
@@ -417,40 +370,46 @@ int r01_bgm_host_paused(void) {
 }
 
 int r01_bgm_host_step(void) {
-    int step;
-    if (!g_bgm.dev || !g_bgm.playing) {
+    float pos = r01_bgm_host_position();
+    if (pos < 0.f) {
         return -1;
     }
-    SDL_LockAudioDevice(g_bgm.dev);
-    step = g_bgm.step;
-    SDL_UnlockAudioDevice(g_bgm.dev);
-    return step;
+    return (int)pos;
 }
 
 float r01_bgm_host_position(void) {
-    float pos;
-    int step;
+    int nmi;
     int left;
     int per;
+    int fps;
+    int steps;
+    float raw;
     if (!g_bgm.dev || !g_bgm.playing) {
         return -1.f;
     }
     SDL_LockAudioDevice(g_bgm.dev);
-    step = g_bgm.step;
-    left = g_bgm.samples_left;
-    per = g_bgm.samples_per_step;
+    nmi = g_bgm.nmi_count;
+    left = g_bgm.nmi_samples_left;
+    per = g_bgm.samples_per_nmi;
+    fps = g_bgm.frames_per_step;
+    steps = g_bgm.track_steps;
     SDL_UnlockAudioDevice(g_bgm.dev);
-    if (step < 0) {
-        return 0.f;
+    if (fps < 1) {
+        fps = 1;
     }
-    if (per <= 0) {
-        return (float)step;
+    if (per < 1) {
+        per = 1;
     }
-    pos = (float)step + (1.f - (float)left / (float)per);
-    if (pos < (float)step) {
-        pos = (float)step;
+    raw = ((float)nmi + (1.f - (float)left / (float)per)) / (float)fps;
+    if (raw < 0.f) {
+        raw = 0.f;
     }
-    return pos;
+    if (steps > 0) {
+        while (raw >= (float)steps) {
+            raw -= (float)steps;
+        }
+    }
+    return raw;
 }
 
 int r01_bgm_host_track_steps(void) {

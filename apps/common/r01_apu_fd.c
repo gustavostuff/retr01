@@ -17,8 +17,13 @@ void r01_apu_fd_pack_voice(uint8_t *regs, uint8_t ch, uint8_t enable, uint8_t vo
     }
     b = r01_apu_ch_base(ch);
     regs[b] = (uint8_t)((enable ? R01_APU_CTRL_ENABLE : 0u) | ((vol & 0x0Fu) << R01_APU_CTRL_VOL_SHIFT));
-    regs[b + 1u] = (uint8_t)(period & 0xFFu);
-    regs[b + 2u] = (uint8_t)(((period >> 8) & 0x07u) | ((duty & 0x03u) << 4));
+    if ((wave & 0x03u) == R01_APU_WAVE_DPCM) {
+        regs[b + 1u] = (uint8_t)(period & 0xFFu);
+        regs[b + 2u] = (uint8_t)((duty & 0x03u) << 4);
+    } else {
+        regs[b + 1u] = (uint8_t)(period & 0xFFu);
+        regs[b + 2u] = (uint8_t)(((period >> 8) & 0x07u) | ((duty & 0x03u) << 4));
+    }
     regs[b + 3u] = (uint8_t)(wave & 0x03u);
 }
 
@@ -66,7 +71,7 @@ uint16_t r01_apu_fd_note_period(uint8_t note) {
     if (hz < 20.f) {
         return 0;
     }
-    p = (int)(22050.f / hz + 0.5f);
+    p = (int)((float)R01_APU_PERIOD_CLOCK / hz + 0.5f);
     if (p < 2) {
         p = 2;
     }
@@ -123,7 +128,7 @@ static void apply_payload(uint8_t *regs, uint8_t ch, uint8_t byte) {
         }
     } else if (hi == 0x90u) {
         duty = (uint8_t)(lo & 0x03u);
-        if (ch == 3u) {
+        if (ch == 3u || R01_APU_FD_DEF_WAVE[ch] == R01_APU_WAVE_NOISE) {
             wave = R01_APU_WAVE_NOISE;
             per = (uint16_t)(8u + (unsigned)lo * 4u);
             en = 1u;
@@ -136,7 +141,7 @@ static void apply_payload(uint8_t *regs, uint8_t ch, uint8_t byte) {
             wave = R01_APU_WAVE_DPCM;
             en = 1u;
             vol = 12u;
-            per = (lo != 0u) ? 40u : 24u;
+            per = lo;
         }
     } else {
         per = r01_apu_fd_note_period(byte);

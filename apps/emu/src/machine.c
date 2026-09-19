@@ -1,7 +1,6 @@
 #include "retr01_emu/machine.h"
 
 #include "r01_bgm_fd.h"
-#include "r01_bgm_host.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -98,6 +97,8 @@ void r01e_machine_reset(R01eMachine *m) {
     m->prof_last_idle = 0;
     m->apu_tracker_on = 0;
     m->apu_bytecode_len = 0;
+    m->apu_sfx_len = 0;
+    m->apu_sfx_prev_pad = 0;
     r01_apu_tracker_init(&m->apu_tracker);
     r01e_cpu_reset(&m->cpu, m);
     if (r01e_video_softboot_enabled()) {
@@ -223,6 +224,15 @@ void r01e_machine_set_pad(R01eMachine *m, int player, uint8_t bits) {
     /* Host stages; CPU / Host Play see latched pads after VBlank enter. */
     if (player == 0) {
         m->io.pad0_host = bits;
+        if (m->apu_tracker_on) {
+            if ((bits & R01E_PAD_X) && !(m->apu_sfx_prev_pad & R01E_PAD_X)) {
+                (void)r01e_machine_apu_sfx(m, R01_APU_SFX_X);
+            }
+            if ((bits & R01E_PAD_Y) && !(m->apu_sfx_prev_pad & R01E_PAD_Y)) {
+                (void)r01e_machine_apu_sfx(m, R01_APU_SFX_Y);
+            }
+            m->apu_sfx_prev_pad = bits;
+        }
     } else {
         m->io.pad1_host = bits;
     }
@@ -234,7 +244,23 @@ void r01e_machine_apu_tracker_stop(R01eMachine *m) {
     }
     m->apu_tracker_on = 0;
     m->apu_bytecode_len = 0;
+    m->apu_sfx_len = 0;
+    m->apu_sfx_prev_pad = 0;
     r01_apu_tracker_init(&m->apu_tracker);
+}
+
+int r01e_machine_apu_sfx(R01eMachine *m, uint8_t id) {
+    int n;
+    if (!m || !m->apu_tracker_on) {
+        return -1;
+    }
+    n = r01_apu_sfx_encode(id, m->apu_sfx, (unsigned)sizeof(m->apu_sfx));
+    if (n < 0) {
+        return -1;
+    }
+    m->apu_sfx_len = (uint16_t)n;
+    r01_apu_tracker_trigger_sfx(&m->apu_tracker, m->apu_sfx, m->apu_sfx_len);
+    return 0;
 }
 
 static int load_bgm_cells(const char *path, char cells[R01_BGM_FD_STEPS_MAX][R01_BGM_FD_CH][R01_BGM_FD_TOKEN],

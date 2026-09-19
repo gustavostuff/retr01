@@ -19,6 +19,9 @@
 #define R01_APU_BGM_MASK 0x1Fu
 #define R01_APU_SFX_MASK 0xE0u
 
+#define R01_APU_SFX_X 1u
+#define R01_APU_SFX_Y 2u
+
 typedef struct R01ApuStreamSm {
     const uint8_t *rom;
     uint16_t len;
@@ -36,6 +39,9 @@ typedef struct R01ApuTracker {
 void r01_apu_tracker_init(R01ApuTracker *t);
 void r01_apu_tracker_set_bgm(R01ApuTracker *t, const uint8_t *rom, uint16_t len);
 void r01_apu_tracker_trigger_sfx(R01ApuTracker *t, const uint8_t *rom, uint16_t len);
+
+/* Short SFX bytecode for voices 6-8. Returns length or -1. */
+int r01_apu_sfx_encode(uint8_t id, uint8_t *out, unsigned out_cap);
 
 /* One NMI / frame. Applies FD into regs. Returns 1 if any stream advanced. */
 int r01_apu_tracker_nmi(R01ApuTracker *t, uint8_t *regs);

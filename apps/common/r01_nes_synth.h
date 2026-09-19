@@ -3,8 +3,7 @@
 
 #include <stdint.h>
 
-/* Host grid mixer (pulse x2, triangle, noise, DPCM stub).
- * Studio Audio tab and current PC speaker. Not a mix of $7F40. Not S2 PWM. */
+/* Studio tracker token parse (note / hex). Host mix of $7F40 is r01_apu_mix. */
 
 #define R01_NES_CH_N 5
 

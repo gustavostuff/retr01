@@ -86,13 +86,8 @@ static void emu_start_host_bgm(R01eMachine *m, const char *cart_path) {
             }
         }
     }
-    if (r01_bgm_host_play(track, path_is_file(bin) ? bin : NULL) != 0) {
-        if (r01_bgm_host_play(track, NULL) != 0) {
-            fprintf(stderr, "retr01_emu: BGM host start failed (%s)\n", SDL_GetError());
-        }
-    }
-    /* Cart-protocol path: NMI tracker into $7F40. Speaker is still the grid mixer. */
     (void)r01e_machine_apu_tracker_start(m, path_is_file(bin) ? bin : NULL);
+    r01_bgm_host_attach_window(m->io.apu);
 }
 /* Debug pane: VRAM + BG0 atlases, then mask / world map / pals, then CPU budget. */
 #define DBG_GAP 6
@@ -733,6 +728,7 @@ int main(int argc, char **argv) {
     SDL_DestroyRenderer(ren);
     SDL_DestroyWindow(win);
     SDL_Quit();
+    r01_bgm_host_attach_window(NULL);
     r01_bgm_host_shutdown();
     r01e_machine_shutdown(&machine);
     return 0;

@@ -58,11 +58,9 @@ static void ui_play_start_bgm(UiState *ui, R01eMachine *m) {
     if (r01_bgm_track_bin_path(root, track, bin, sizeof(bin)) != 0) {
         bin[0] = '\0';
     }
-    if (r01_bgm_host_play(track, bin[0] ? bin : NULL) != 0) {
-        (void)r01_bgm_host_play(track, NULL);
-    }
     if (m) {
         (void)r01e_machine_apu_tracker_start(m, bin[0] ? bin : NULL);
+        r01_bgm_host_attach_window(m->io.apu);
     }
 }
 
@@ -70,6 +68,7 @@ void ui_play_stop(UiState *ui) {
     if (!ui) {
         return;
     }
+    r01_bgm_host_attach_window(NULL);
     r01_bgm_host_stop();
     if (ui->play.machine) {
         r01e_machine_apu_tracker_stop((R01eMachine *)ui->play.machine);

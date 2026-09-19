@@ -185,7 +185,7 @@ Two independent state machines. Main game logic runs between NMIs. Audio work st
         RTI
 ```
 
-Host Play ticks this same tracker in C (`apps/common/r01_apu_tracker.c`) and applies FD frames into the 8x4 window (`r01_apu_fd.c`). That is the cart protocol. The PC speaker is still the Studio **grid mixer** (`r01_bgm_host`). It does not mix `$7F40`, and it is not MCU-S2 PWM.
+Host Play ticks this same tracker in C (`apps/common/r01_apu_tracker.c`) and applies FD frames into the 8x4 window (`r01_apu_fd.c`). That is the cart protocol. The PC speaker mixes that window (`r01_apu_mix.c`). It is not MCU-S2 PWM.
 
 ## Status
 
@@ -194,10 +194,10 @@ Host Play ticks this same tracker in C (`apps/common/r01_apu_tracker.c`) and app
 | Design (this doc) | Locked |
 | HW BOM | MCU-S2 + `$7F40`-`$7F5F` + MCU-M SPI + PWM PF1 |
 | MCU-S2 FW | 8x4 mix to PWM. DPCM PROGMEM decode still filling in |
-| Host FD apply | 7X still maps to a short click period. Cart SoT stores the sample ID in voice 4 `[1]` |
+| Host mix | PC speaker mixes the `$7F40` window (`r01_apu_mix`). DPCM IDs use short host stand-in streams |
 | 6502 PRG tracker | NMI dual-stream. Host C MVP exists. Cart ASM still filling in |
-| Studio Audio tab | BGM grid editor in `.r01proj`. Timeline Play/Stop is `r01_bgm_host`. Export writes `bgm_trackN.bin` |
-| Host Play | Scans `custom_logic.c` for `r01_bgm_play(ctx, N)`. Tracker fills `$7F40`. PC speaker still uses the grid mixer (`bgm_trackN.bin`). P1 **G** / **H** fire short SFX on voices 6-8 |
+| Studio Audio tab | BGM grid editor in `.r01proj`. Timeline Play/Stop encodes FD/FE/FA and mixes the window |
+| Host Play | Scans `custom_logic.c` for `r01_bgm_play(ctx, N)`. Tracker fills `$7F40`. P1 **G** / **H** fire short SFX on voices 6-8 |
 
 Bring-up Tier **H** only needs a real `$7F40` beep through S2 PWM. Full tracker depth can wait on hardware.
 
@@ -210,3 +210,4 @@ Bring-up Tier **H** only needs a real `$7F40` beep through S2 PWM. Full tracker 
 - Bring-up: `../bringup/tier-h-pads-audio.md`
 - Window packing: `../apps/common/fw/r01_apu_window.h`
 - FD expand / NMI tracker (host): `../apps/common/r01_apu_fd.h`, `../apps/common/r01_apu_tracker.h`
+- Host mix of the window: `../apps/common/r01_apu_mix.h`

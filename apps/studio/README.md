@@ -39,7 +39,7 @@ ctest --test-dir build --output-on-failure
 +-----------------------------------------------------------+
 ```
 
-Logical canvas **640x360** or **1280x720** (**Ctrl+Shift+R**). Window scale **Ctrl+1** / **Ctrl+2**. **8px** grid. Graphics sidebar is an accordion (Worlds, banks, entities, palettes). Audio is a BGM timeline plus an SFX stub. Timeline Play/Stop is the host grid mixer. Embedded Play also starts the cart NMI tracker into `$7F40`. Neither path is MCU-S2 PWM. Code is TBD.
+Logical canvas **640x360** or **1280x720** (**Ctrl+Shift+R**). Window scale **Ctrl+1** / **Ctrl+2**. **8px** grid. Graphics sidebar is an accordion (Worlds, banks, entities, palettes). Audio is a BGM timeline plus an SFX stub. Timeline Play/Stop encodes the grid into tracker bytecode and mixes `$7F40`. Embedded Play attaches the emu window. Neither path is MCU-S2 PWM. Code is TBD.
 
 ## Authoring
 

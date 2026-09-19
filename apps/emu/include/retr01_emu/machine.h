@@ -42,6 +42,9 @@ typedef struct R01eMachine {
     R01ApuTracker apu_tracker;
     uint8_t apu_bytecode[R01E_APU_BYTECODE_MAX];
     uint16_t apu_bytecode_len;
+    uint8_t apu_sfx[32];
+    uint16_t apu_sfx_len;
+    uint8_t apu_sfx_prev_pad;
     int apu_tracker_on;
 } R01eMachine;
 
@@ -50,9 +53,10 @@ int r01e_machine_init_mem(R01eMachine *m, const uint8_t *img, size_t len, char *
 void r01e_machine_shutdown(R01eMachine *m);
 void r01e_machine_reset(R01eMachine *m);
 
-/* Load Studio bgm_track bin into NMI tracker (FD/FE/FA). Softsynth separate. */
+/* Load Studio bgm_track bin into NMI tracker (FD/FE/FA). Speaker mixes $7F40. */
 int r01e_machine_apu_tracker_start(R01eMachine *m, const char *bgm_bin_path);
 void r01e_machine_apu_tracker_stop(R01eMachine *m);
+int r01e_machine_apu_sfx(R01eMachine *m, uint8_t id);
 
 uint8_t r01e_mem_read(R01eMachine *m, uint16_t addr);
 void r01e_mem_write(R01eMachine *m, uint16_t addr, uint8_t v);

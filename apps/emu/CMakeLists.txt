@@ -37,6 +37,7 @@ if(NOT TARGET r01_play_common)
     ${R01_COMMON_DIR}/r01_nes_synth.c
     ${R01_COMMON_DIR}/r01_apu_fd.c
     ${R01_COMMON_DIR}/r01_apu_tracker.c
+    ${R01_COMMON_DIR}/r01_apu_mix.c
     ${R01_COMMON_DIR}/r01_bgm_fd.c
   )
   target_include_directories(r01_play_common PUBLIC ${R01_COMMON_DIR} ${R01_FW_COMMON_DIR})
@@ -62,7 +63,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   enable_testing()
 
   # Self-contained unit tests (in-memory stub cart; no ROM / project fixture).
-  foreach(_t test_cart test_cpu test_io)
+  foreach(_t test_cart test_cpu test_io test_apu)
     add_executable(${_t} tests/${_t}.c)
     target_include_directories(${_t} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests)
     target_link_libraries(${_t} PRIVATE retr01_emu_core)

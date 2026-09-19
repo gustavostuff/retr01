@@ -11,8 +11,8 @@ struct R01eMachine;
  * Logical $7F00-$7FFF register file (general_docs/memory.md, general_docs/video-graphics.md).
  * Soft contract for Emu / Studio Play: no DIP / Soft SEL / SPI mailbox.
  * Hard (SoT PLD/HC574): $7F02-$7F04. Soft0/1/2 families: see r01_soft_sel_demux.h.
- * $7F40-$7F5F = 8x4 voice window (r01_apu_window.h). Host Play also fills via
- * NMI dual-stream tracker (r01_apu_tracker). PC speaker is still the grid mixer, not this window.
+ * $7F40-$7F5F = 8x4 voice window (r01_apu_window.h). Host Play fills via
+ * NMI dual-stream tracker (r01_apu_tracker). PC speaker mixes that window.
  * $7F24 / $7F72 assert short CPU_RDY (R01_RDY_*_HOLDS). Raster IRQ still later.
  *
  * Soft fences (ic-comms-risks): scroll/palette apply in VBlank (or video off).

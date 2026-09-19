@@ -128,3 +128,29 @@ int r01_apu_tracker_nmi(R01ApuTracker *t, uint8_t *regs) {
     advanced |= stream_tick(&t->sfx, regs, R01_APU_SFX_MASK);
     return advanced;
 }
+
+int r01_apu_sfx_encode(uint8_t id, uint8_t *out, unsigned out_cap) {
+    uint8_t mask;
+    uint8_t payload;
+    int n;
+    if (!out) {
+        return -1;
+    }
+    if (id == R01_APU_SFX_X) {
+        mask = 0x20u;
+        payload = 0xC6u;
+    } else if (id == R01_APU_SFX_Y) {
+        mask = 0x80u;
+        payload = 0x92u;
+    } else {
+        return -1;
+    }
+    n = r01_apu_fd_encode(mask, &payload, 1u, out, out_cap);
+    if (n < 0 || (unsigned)n + 3u > out_cap) {
+        return -1;
+    }
+    out[n++] = R01_APU_CTRL_FE;
+    out[n++] = 4u;
+    out[n++] = R01_APU_CTRL_FB;
+    return n;
+}

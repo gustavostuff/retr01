@@ -19,6 +19,7 @@
 
 #define R01_APU_CH_N 8u
 #define R01_APU_CH_STRIDE 4u
+#define R01_APU_PERIOD_CLOCK 22050u
 
 #define R01_APU_WAVE_PULSE 0u
 #define R01_APU_WAVE_TRIANGLE 1u
@@ -51,6 +52,10 @@ static inline uint8_t r01_apu_ch_duty(const uint8_t *regs, uint8_t ch) {
 
 static inline uint8_t r01_apu_ch_wave(const uint8_t *regs, uint8_t ch) {
     return (uint8_t)(regs[r01_apu_ch_base(ch) + 3u] & 0x03u);
+}
+
+static inline uint8_t r01_apu_ch_dpcm_id(const uint8_t *regs, uint8_t ch) {
+    return regs[r01_apu_ch_base(ch) + 1u];
 }
 
 #endif
