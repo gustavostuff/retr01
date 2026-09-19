@@ -409,35 +409,7 @@ int r01_custom_logic_scan_player_jump(const char *path, int *out_state) {
 }
 
 int r01_custom_logic_scan_bgm_play(const char *path, int *out_track) {
-    FILE *f;
-    char line[512];
-    if (!path || !out_track) {
-        return -1;
-    }
-    f = fopen(path, "r");
-    if (!f) {
-        return -1;
-    }
-    while (fgets(line, sizeof(line), f)) {
-        const char *p = strstr(line, "r01_bgm_play");
-        const char *args;
-        if (!p) {
-            continue;
-        }
-        args = strchr(p, '(');
-        if (args) {
-            int track = 0;
-            if (sscanf(args, "(ctx, %d)", &track) == 1 || sscanf(args, "(ctx,%d)", &track) == 1) {
-                if (track >= 1) {
-                    *out_track = track;
-                    fclose(f);
-                    return 0;
-                }
-            }
-        }
-    }
-    fclose(f);
-    return -1;
+    return scan_ctx_one_named(path, "r01_bgm_play", out_track);
 }
 
 int r01_custom_logic_path_for_project(const char *proj_path, char *out, size_t out_cap) {

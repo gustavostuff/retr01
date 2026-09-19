@@ -186,11 +186,12 @@ void ui_export(UiState *ui) {
         ui_toast(ui, "export path failed", 1);
         return;
     }
+    ui_bgm_sync_to_project(ui);
     if (r01_export_bundle(ui->project, stem, err, sizeof(err)) != 0) {
         ui_toast(ui, err, 1);
         return;
     }
-    /* Host BGM sidecars for emu / Studio Play / Sim WAVE (bgm_trackN.bin). */
+    /* Debug dump: flattened grid bins (Play reads packed PRG, not these). */
     ui_bgm_write_export_bins(ui);
     snprintf(toast, sizeof(toast), "%s.retr01 exported", stem);
     ui_toast(ui, toast, 0);

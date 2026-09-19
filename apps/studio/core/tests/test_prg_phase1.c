@@ -1,8 +1,13 @@
 #include "test_harness.h"
 
+#include "retr01_studio/bgm_pack.h"
 #include "retr01_studio/prg_phase1.h"
 #include "retr01_studio/project.h"
 
+#include "r01_apu_cart.h"
+#include "r01_apu_fd.h"
+
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -38,6 +43,7 @@ TEST_MAIN() {
     EXPECT(prg[0x00F0] == 'R' && prg[0x00F1] == '0' && prg[0x00F2] == '1' && prg[0x00F3] == 'P',
            "R01P marker");
     EXPECT(prg[0x00F4] == 3, "R01P instance-table ver");
+    EXPECT(prg[R01_PRG_BGM_BOOT_OFF] == 0, "boot track empty after fill");
 
     /* Play table lives at PRG+$0100 (CPU $8100). */
     EXPECT(prg[0x0100] != 0xEA || prg[0x0108] != 0xEA, "play table region written");
@@ -45,6 +51,40 @@ TEST_MAIN() {
     /* Reset vector at CPU $FFFC => PRG+$7FFC. */
     reset = (uint16_t)prg[0x7FFC] | ((uint16_t)prg[0x7FFD] << 8);
     EXPECT(reset == 0x8000u, "reset vector $8000");
+
+    {
+        FILE *f = fopen("test_bgm_logic.c", "w");
+        R01BgmData bgm;
+        uint16_t off;
+        uint16_t len;
+        memset(&bgm, 0, sizeof(bgm));
+        bgm.present = 1;
+        bgm.track_count = 1;
+        bgm.region_count[0][0] = 1;
+        bgm.region[0][0][0].start = 0;
+        bgm.region[0][0][0].len = 2;
+        snprintf(bgm.region[0][0][0].tok, sizeof(bgm.region[0][0][0].tok), "C-4");
+        EXPECT(f != NULL, "write custom_logic");
+        if (f) {
+            fputs("void r01_custom_on_init(R01GameCtx *ctx) {\n    r01_bgm_play(ctx, 1);\n}\n", f);
+            fclose(f);
+        }
+        r01_bgm_pack_prg(prg, &bgm, "test_bgm_logic.c");
+        EXPECT(prg[R01_PRG_BGM_BOOT_OFF] == 1, "boot track 1 from r01_bgm_play");
+        EXPECT(prg[R01_PRG_BGM_OFF] == R01_PRG_BGM_MAGIC0 && prg[R01_PRG_BGM_OFF + 1] == R01_PRG_BGM_MAGIC1,
+               "BG magic");
+        EXPECT(prg[R01_PRG_BGM_OFF + 2] == 1, "packed track count");
+        off = (uint16_t)prg[R01_PRG_BGM_OFF + 4] | ((uint16_t)prg[R01_PRG_BGM_OFF + 5] << 8);
+        len = (uint16_t)prg[R01_PRG_BGM_OFF + 20] | ((uint16_t)prg[R01_PRG_BGM_OFF + 21] << 8);
+        EXPECT(off == R01_PRG_BGM_HDR, "payload starts after header");
+        EXPECT(len > 0, "payload length");
+        EXPECT(prg[R01_PRG_BGM_OFF + off] == R01_APU_FD_OP, "FD stream");
+        r01_bgm_pack_prg(prg, &bgm, NULL);
+        EXPECT(prg[R01_PRG_BGM_BOOT_OFF] == 0, "no custom_logic means no autoplay");
+        reset = (uint16_t)prg[0x7FFC] | ((uint16_t)prg[0x7FFD] << 8);
+        EXPECT(reset == 0x8000u, "vectors survive BGM pack");
+        remove("test_bgm_logic.c");
+    }
 
     free(prg);
     free(p);

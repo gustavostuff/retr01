@@ -1,4 +1,5 @@
 #include "retr01_studio/cart.h"
+#include "retr01_studio/bgm_pack.h"
 #include "retr01_studio/chr_pack.h"
 #include "retr01_studio/entities.h"
 #include "retr01_studio/palette.h"
@@ -1273,6 +1274,7 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
         char custom_logic_path[R01_PATH_MAX];
         resolve_custom_logic_path(cart_path, custom_logic_path, sizeof(custom_logic_path));
         cart_pack_platformer_prg(prg, custom_logic_path, &work->worlds[0]);
+        r01_bgm_pack_prg(prg, &work->bgm, custom_logic_path);
     }
 
     memset(ptrs, 0, sizeof(ptrs));

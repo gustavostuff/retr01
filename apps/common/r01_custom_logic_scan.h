@@ -13,7 +13,7 @@ int r01_custom_logic_scan_bg0_wrap(const char *path, int *out_wrap_x, int *out_w
 /* Parse r01_bg0_set_clip_to_bg1(ctx, enable). Non-zero = clip BG0 to BG1 slots. Returns 0 on match. */
 int r01_custom_logic_scan_bg0_clip_bg1(const char *path, int *out_enable);
 
-/* Parse r01_bgm_play(ctx, track) - track is 1-based. Returns 0 on match. */
+/* Parse r01_bgm_play(ctx, track). Track is 1-based. Returns 0 on match. Skips comments. */
 int r01_custom_logic_scan_bgm_play(const char *path, int *out_track);
 
 /* Parse r01_game_set_mode(ctx, mode). Returns 0 on match. */

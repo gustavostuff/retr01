@@ -300,7 +300,7 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
     if (write_text(path,
                    "#ifndef R01_BGM_H\n#define R01_BGM_H\n\n"
                    "typedef struct R01GameCtx R01GameCtx;\n"
-                   "/* Start looping BGM track (1-based). Host Play runs the NMI tracker into $7F40. */\n"
+                   "/* Start looping BGM track (1-based). Host Play reads packed PRG at $B000. */\n"
                    "void r01_bgm_play(R01GameCtx *ctx, int track);\n"
                    "void r01_bgm_stop(R01GameCtx *ctx);\n\n"
                    "#endif\n",
@@ -594,6 +594,7 @@ static int write_custom_logic(const char *c_dir, char *err_buf, size_t err_cap) 
                       "     * r01_player_anim_set_walk_all(ctx, 1);\n"
                       "     * r01_player_anim_set_crouch_state(ctx, 2);\n"
                       "     * r01_player_anim_set_jump_state(ctx, 3);\n"
+                      "     * r01_bgm_play(ctx, 1);\n"
                       "     * r01_camera_disable_deadzone(ctx); /* 1:1 camera track */\n"
                       "     * r01_bg0_set_wrap(ctx, R01_BG0_WRAP_ON, R01_BG0_WRAP_ON);\n"
                       "     * r01_bg0_set_clip_to_bg1(ctx, R01_BG0_CLIP_ON);\n"
@@ -1050,7 +1051,9 @@ static int write_asm_tree(const char *asm_dir, const R01World *w, char *err_buf,
                    "PLAT_CROUCH     = $80FA\n"
                    "PLAYER_ANIM_IDLE = $80FB\n"
                    "PLAYER_ANIM_WALK = $80FC\n"
-                   "PLAYER_ANIM_JUMP = $80FD\n",
+                   "PLAYER_ANIM_JUMP = $80FD\n"
+                   "BGM_BOOT         = $80FE\n"
+                   "BGM_BASE         = $B000\n",
                    err_buf, err_cap) != 0) {
         return -1;
     }

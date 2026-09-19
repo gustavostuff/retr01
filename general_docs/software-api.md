@@ -210,6 +210,8 @@ r01_player_anim_set_jump_state(ctx, 3);
 
 Packing: world header flags byte **7** bit **4** = platformer. Gravity, jump, and meter are u8 at PRG `$80F7` / `$80F8` / `$80F9`. **0** (and `R01_PLAT_*_DEFAULT` in `custom_logic.c`) means Host Play uses `apps/common/r01_play_physics.h`. Crouch / idle / walk / jump state indices are `$80FA` / `$80FB` / `$80FC` / `$80FD` (**$FF** = unmapped). A numeric argument is packed as-is. See `memory.md`.
 
+BGM tracks live in the Studio Audio tab and pack into PRG at `$B000`. `r01_bgm_play(ctx, N)` in author `custom_logic.c` sets `$80FE` to that 1-based track. **0** means no autoplay. Host Play starts the packed stream. See `sound.md`.
+
 ## Ownership
 
 | Piece | Owner |

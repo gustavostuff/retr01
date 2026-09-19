@@ -11,7 +11,7 @@
 
 #include <stdint.h>
 
-#define R01E_APU_BYTECODE_MAX 4096u
+#define R01E_APU_BYTECODE_MAX 8192u
 
 typedef struct R01eMachine {
     R01eCart cart;
@@ -53,7 +53,9 @@ int r01e_machine_init_mem(R01eMachine *m, const uint8_t *img, size_t len, char *
 void r01e_machine_shutdown(R01eMachine *m);
 void r01e_machine_reset(R01eMachine *m);
 
-/* Load Studio bgm_track bin into NMI tracker (FD/FE/FA). Speaker mixes $7F40. */
+/* Start NMI tracker from packed PRG BGM blob ($B000) and boot byte ($80FE). */
+int r01e_machine_apu_tracker_start_cart(R01eMachine *m);
+/* Load a Studio bgm_track bin (tests / Audio tab dump). Speaker mixes $7F40. */
 int r01e_machine_apu_tracker_start(R01eMachine *m, const char *bgm_bin_path);
 void r01e_machine_apu_tracker_stop(R01eMachine *m);
 int r01e_machine_apu_sfx(R01eMachine *m, uint8_t id);

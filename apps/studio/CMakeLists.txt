@@ -36,6 +36,7 @@ add_library(retr01_studio_core
   core/src/warps.c
   core/src/game_runtime.c
   core/src/player_anim.c
+  core/src/bgm_pack.c
 )
 target_include_directories(retr01_studio_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include

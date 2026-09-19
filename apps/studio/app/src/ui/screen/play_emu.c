@@ -9,7 +9,6 @@
 #include "retr01_emu/machine.h"
 #include "retr01_emu/play.h"
 #include "r01_bgm_host.h"
-#include "r01_custom_logic_scan.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,28 +39,12 @@ static void play_shutdown_machine(UiPlaySession *pl) {
 }
 
 static void ui_play_start_bgm(UiState *ui, R01eMachine *m) {
-    char logic[R01_PATH_MAX];
-    char root[R01_PATH_MAX];
-    char bin[R01_PATH_MAX];
-    int track = 0;
-    (void)ui;
     ui_sound_play_stop(ui);
-    if (r01_path_resolve(R01_OUTPUT_DIR "/C/custom_logic.c", logic, sizeof(logic)) != 0) {
-        snprintf(logic, sizeof(logic), "%s", R01_OUTPUT_DIR "/C/custom_logic.c");
-    }
-    if (r01_custom_logic_scan_bgm_play(logic, &track) != 0) {
+    if (!m) {
         return;
     }
-    if (r01_path_resolve(R01_OUTPUT_DIR, root, sizeof(root)) != 0) {
-        snprintf(root, sizeof(root), "%s", R01_OUTPUT_DIR);
-    }
-    if (r01_bgm_track_bin_path(root, track, bin, sizeof(bin)) != 0) {
-        bin[0] = '\0';
-    }
-    if (m) {
-        (void)r01e_machine_apu_tracker_start(m, bin[0] ? bin : NULL);
-        r01_bgm_host_attach_window(m->io.apu);
-    }
+    (void)r01e_machine_apu_tracker_start_cart(m);
+    r01_bgm_host_attach_window(m->io.apu);
 }
 
 void ui_play_stop(UiState *ui) {
@@ -122,6 +105,7 @@ void ui_play_boot_finish(UiState *ui, SDL_Renderer *ren) {
         ui_play_stop(ui);
         return;
     }
+    ui_bgm_sync_to_project(ui);
     if (r01_export_bundle(ui->project, stem, err, sizeof(err)) != 0) {
         snprintf(ui->play.err, sizeof(ui->play.err), "%s", err);
         ui_toast(ui, ui->play.err, 1);

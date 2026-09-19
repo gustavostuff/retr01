@@ -36,7 +36,7 @@ void ui_bgm_apply_from_project(UiState *ui);
 int ui_bgm_flatten(const UiState *ui, int track,
                    char cells[R01_BGM_STEPS][R01_BGM_CH][R01_BGM_TOKEN], int honor_solo);
 
-/* Write output/data/bgm_trackN.bin for each Studio track (Host Play / emu / Sim WAVE). */
+/* Write output/data/bgm_trackN.bin for each Studio track (debug dump). */
 void ui_bgm_write_export_bins(const UiState *ui);
 
 void ui_bgm_clamp_scroll(UiState *ui, int visible_ticks);

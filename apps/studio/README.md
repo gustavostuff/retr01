@@ -62,6 +62,7 @@ void r01_custom_on_init(R01GameCtx *ctx) {
     /* r01_player_anim_set_walk_all(ctx, 1); */
     /* r01_player_anim_set_crouch_state(ctx, 2); */
     /* r01_player_anim_set_jump_state(ctx, 3); */
+    /* r01_bgm_play(ctx, 1); */
 }
 ```
 
@@ -71,7 +72,7 @@ Generated API headers live in `C/include/r01_*.h` beside the project.
 
 **Ctrl+S** / **Ctrl+O** the current path. First save (or unsaved) opens the Save project modal. Default parent is `apps/studio/projects/`. Quit does not auto-save. JSON version **14**. Save writes the active world. Worlds 1-7 are session-only until multi-world JSON. Load applies that world data to world 0.
 
-**Ctrl+E** packs `<stem>.retr01` and regenerates `C/`, `ASM/`, and `data/` beside the project (or under `output/` if unsaved).
+**Ctrl+E** packs `<stem>.retr01` and regenerates `C/`, `ASM/`, and `data/` beside the project (or under `output/` if unsaved). Audio-tab tracks go into PRG at `$B000`. `r01_bgm_play(ctx, N)` in `custom_logic.c` selects the boot track at `$80FE`.
 
 | Path | Role |
 |------|------|

@@ -26,6 +26,7 @@ void r01_custom_on_init(R01GameCtx *ctx) {
     init_camera_and_bg0(ctx);
     init_platformer(ctx);
     init_player_anim(ctx);
+    // r01_bgm_play(ctx, 1);
 }
 
 void r01_custom_on_tick(R01GameCtx *ctx) {

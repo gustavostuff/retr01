@@ -307,6 +307,8 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 | `+$00FB` | `$80FB` | Idle state index (u8, **$FF** = unmapped, freeze state 0 frame 0) |
 | `+$00FC` | `$80FC` | Walk state index (u8, **$FF** = unmapped) |
 | `+$00FD` | `$80FD` | Jump state index (u8, **$FF** = unmapped) |
+| `+$00FE` | `$80FE` | BGM boot track (u8, **0** = none, **1..8** = track) |
+| `+$3000` | `$B000` | BGM blob (`BG` + 8-slot off/len + FD/FE/FA bytecode). Ends before vectors at `$FFFA` |
 
 Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs at `OFF_TYPES`).
 

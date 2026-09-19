@@ -1,5 +1,6 @@
 #include "retr01_emu/machine.h"
 
+#include "r01_apu_cart.h"
 #include "r01_bgm_fd.h"
 
 #include <stdio.h>
@@ -324,6 +325,53 @@ static int load_bgm_cells(const char *path, char cells[R01_BGM_FD_STEPS_MAX][R01
     }
     free(buf);
     *out_steps = steps;
+    return 0;
+}
+
+static uint16_t rd_u16_le(const uint8_t *p) {
+    return (uint16_t)p[0] | ((uint16_t)p[1] << 8);
+}
+
+int r01e_machine_apu_tracker_start_cart(R01eMachine *m) {
+    const uint8_t *prg;
+    const uint8_t *blob;
+    uint8_t boot;
+    uint16_t off;
+    uint16_t len;
+    uint32_t prg_len;
+    if (!m) {
+        return -1;
+    }
+    r01e_machine_apu_tracker_stop(m);
+    m->apu_tracker_on = 1;
+    prg = r01e_cart_prg(&m->cart);
+    prg_len = m->cart.len_prg;
+    if (!prg || prg_len < R01E_PRG_BYTES) {
+        return 0;
+    }
+    blob = prg + R01_PRG_BGM_OFF;
+    if (blob[0] != R01_PRG_BGM_MAGIC0 || blob[1] != R01_PRG_BGM_MAGIC1) {
+        return 0;
+    }
+    boot = prg[R01_PRG_BGM_BOOT_OFF];
+    if (boot < 1u || boot > R01_PRG_BGM_TRACKS) {
+        return 0;
+    }
+    off = rd_u16_le(blob + 4u + (unsigned)(boot - 1u) * 2u);
+    len = rd_u16_le(blob + 20u + (unsigned)(boot - 1u) * 2u);
+    if (off < R01_PRG_BGM_HDR || len < 1u) {
+        return 0;
+    }
+    if ((unsigned)off + (unsigned)len > (unsigned)(R01_PRG_BGM_END - R01_PRG_BGM_OFF)) {
+        return 0;
+    }
+    if (len > R01E_APU_BYTECODE_MAX) {
+        len = (uint16_t)R01E_APU_BYTECODE_MAX;
+    }
+    memcpy(m->apu_bytecode, blob + off, (size_t)len);
+    m->apu_bytecode_len = len;
+    r01_apu_tracker_set_bgm(&m->apu_tracker, m->apu_bytecode, m->apu_bytecode_len);
+    (void)r01_apu_tracker_nmi(&m->apu_tracker, m->io.apu);
     return 0;
 }
 

@@ -2,7 +2,6 @@
 #include "retr01_emu/play.h"
 #include "retr01_emu/video.h"
 #include "r01_bgm_host.h"
-#include "r01_custom_logic_scan.h"
 #include "r01_pad_keys.h"
 
 #include <SDL.h>
@@ -10,83 +9,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 
-static int path_is_file(const char *path) {
-    struct stat st;
-    return path && path[0] && stat(path, &st) == 0 && S_ISREG(st.st_mode);
-}
-
-/* cart.retr01 -> parent directory */
-static void cart_output_dir(const char *cart_path, char *out, size_t out_cap) {
-    const char *slash;
-    size_t n;
-    if (!out || out_cap < 2) {
+static void emu_start_host_bgm(R01eMachine *m) {
+    if (!m) {
         return;
     }
-    out[0] = '\0';
-    if (!cart_path || !cart_path[0]) {
-        return;
-    }
-    slash = strrchr(cart_path, '/');
-    if (!slash) {
-        snprintf(out, out_cap, ".");
-        return;
-    }
-    n = (size_t)(slash - cart_path);
-    if (n + 1 > out_cap) {
-        n = out_cap - 1;
-    }
-    memcpy(out, cart_path, n);
-    out[n] = '\0';
-}
-
-static void emu_start_host_bgm(R01eMachine *m, const char *cart_path) {
-    char out_dir[512];
-    char logic[576];
-    char bin[576];
-    int track = 0;
-    int i;
-    static const char *const logic_fallbacks[] = {
-        "output/C/custom_logic.c",
-        "../output/C/custom_logic.c",
-        "../../output/C/custom_logic.c",
-        NULL,
-    };
-
-    cart_output_dir(cart_path, out_dir, sizeof(out_dir));
-    if (r01_custom_logic_path_for_output(out_dir, logic, sizeof(logic)) != 0) {
-        snprintf(logic, sizeof(logic), "%s/C/custom_logic.c", out_dir);
-    }
-
-    if (!path_is_file(logic)) {
-        for (i = 0; logic_fallbacks[i]; i++) {
-            if (path_is_file(logic_fallbacks[i])) {
-                snprintf(logic, sizeof(logic), "%s", logic_fallbacks[i]);
-                break;
-            }
-        }
-    }
-
-    if (r01_custom_logic_scan_bgm_play(logic, &track) != 0) {
-        return;
-    }
-    if (r01_bgm_track_bin_path(out_dir, track, bin, sizeof(bin)) != 0) {
-        bin[0] = '\0';
-    }
-    if (!path_is_file(bin)) {
-        /* Fall back to known relative output trees (cwd may not be repo root). */
-        static const char *const root_fallbacks[] = {"output", "../output", "../../output", NULL};
-        for (i = 0; root_fallbacks[i]; i++) {
-            char try_bin[576];
-            if (r01_bgm_track_bin_path(root_fallbacks[i], track, try_bin, sizeof(try_bin)) == 0 &&
-                path_is_file(try_bin)) {
-                snprintf(bin, sizeof(bin), "%s", try_bin);
-                break;
-            }
-        }
-    }
-    (void)r01e_machine_apu_tracker_start(m, path_is_file(bin) ? bin : NULL);
+    (void)r01e_machine_apu_tracker_start_cart(m);
     r01_bgm_host_attach_window(m->io.apu);
 }
 /* Debug pane: VRAM + BG0 atlases, then mask / world map / pals, then CPU budget. */
@@ -550,7 +478,7 @@ int main(int argc, char **argv) {
     /* Before any renderer/texture: nearest-neighbor upscale. */
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 
-    emu_start_host_bgm(&machine, path);
+    emu_start_host_bgm(&machine);
 
     /* Hidden until first frame is presented -- avoids empty-window flash. */
     win = SDL_CreateWindow("Retr01 Emulator (Phase 1)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,

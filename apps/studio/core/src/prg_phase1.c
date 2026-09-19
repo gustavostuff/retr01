@@ -2,6 +2,7 @@
 #include "retr01_studio/play.h"
 #include "retr01_studio/prg_phase1.h"
 
+#include "r01_apu_cart.h"
 #include "r01_hw_regs.h"
 #include "retr01_studio/cart.h"
 #include "retr01_studio/project.h"
@@ -333,6 +334,7 @@ void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01World *w, const R0
     prg[R01P_OFF + 3] = 'P';
     prg[R01P_OFF + 4] = R01P_VER_COLLISION;
     put_u16_le(prg + R01P_OFF + 5, (uint16_t)(CODE_BASE + R01_PLAY_COLLISION_OFF));
+    prg[R01_PRG_BGM_BOOT_OFF] = 0;
 
     put_u16_le(prg + 0x7FFA, main_pc);
     put_u16_le(prg + 0x7FFC, CODE_BASE);
