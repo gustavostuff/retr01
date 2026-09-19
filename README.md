@@ -18,7 +18,7 @@ NOTE: hardware is still in design phase, software is being built on that design.
 - Give the CPU a flat 32 KB program space with no banking. At 8 MHz and with 32 KB RAM, the system can do more than a classic NES-style NROM cartridge while staying simple to author.
 - Support a predictable entity model with clear caps: up to 16 entity types per world, each with up to 4 states, 4 animation frames, and 6 sprite slots per state.
 - Keep world layouts flexible: up to 7 worlds, each with up to 32 screens, arranged on a sparse 16x16 grid so large maps do not need dense, wasteful allocation.
-- Keep the cartridge passive: no mapper or bank switching. Nametable and map data can stream directly from cart memory into VRAM buffers, which keeps the bus simpler and leaves program space free for actual game logic.
+- Keep the cartridge passive: no mapper or bank switching. Nametable and map data can stream directly from cart memory into VRAM buffers, which keeps the bus simpler and leaves program space free for [...]
 
 ## Software pieces
 
@@ -39,19 +39,17 @@ Maria is a player entity used to test Emu and Studio, this might become a full g
 
 ## Doc map
 
-| Doc | Focus |
-| --- | --- |
-| [selling-points.md](general_docs/selling-points.md) | Bells and whistles (shared PCB, dual sync, entities, flasher, more) |
-| [hardware.md](general_docs/hardware.md) | Main board, 3x AVR, PLDs, BOM, I/O, PCB practices |
-| [ic-comms-risks.md](general_docs/ic-comms-risks.md) | Shared-bus / multi-clock risks, mitigations, play-path anti-patterns |
-| [video-graphics.md](general_docs/video-graphics.md) | Resolution, tiles, sprites, palettes, BG layers |
-| [palette/](general_docs/palette/README.md) | Locked 64-color kit RGB, GIMP/Aseprite exports |
-| [world-scrolling.md](general_docs/world-scrolling.md) | Worlds, screens, VRAM buffers, scroll behavior |
-| [cartridge.md](general_docs/cartridge.md) | Cart hardware, saves, flashing |
-| [memory.md](general_docs/memory.md) | CPU map, soft `$7Fxx`, MAP port, `.retr01` image, entity flash capacity |
-| [software-api.md](general_docs/software-api.md) | What an entity is, def size, C/ASM API, game modes |
-| [sound.md](general_docs/sound.md) | APU soft window, MCU-S2 PWM |
-| [open-questions.md](general_docs/open-questions.md) | TBD items and how to resolve them |
-| [ic_behavior/](ic_behavior/README.md) | Per-chip behavior (all 19 BOM ICs + pad / optional) |
-| [bringup/](bringup/README.md) | Late-phase hardware bring-up tiers A-H (video lab -> full console) |
-| [apps/README.md](apps/README.md) | Studio + Emu apps |
+- [selling-points.md](general_docs/selling-points.md) — The broader product and design vision: explains the shared-PCB approach, dual-sync output, entity model, flash support, and the extra features that make the platform feel like a full console instead of a bare tech demo.
+- [hardware.md](general_docs/hardware.md) — The main hardware reference: covers the board layout, the three AVR support chips, PLD logic, BOM choices, I/O plumbing, and PCB design decisions that keep the system compact and practical.
+- [ic-comms-risks.md](general_docs/ic-comms-risks.md) — A design-safety note on shared-bus and multi-clock communication risks, showing where failures are likely and which mitigations or anti-patterns to avoid in the actual implementation.
+- [video-graphics.md](general_docs/video-graphics.md) — The graphics system guide: resolution, tile layout, sprites, palettes, background layers, and how much of the rendering work is pushed into hardware rather than the CPU.
+- [palette/](general_docs/palette/README.md) — The fixed 64-color palette kit, plus export guidance for GIMP and Aseprite so art stays consistent with the console's color and indexing constraints.
+- [world-scrolling.md](general_docs/world-scrolling.md) — Explains world and screen structure, VRAM buffering, sparse map organization, and scroll behavior over large map areas without wasteful dense allocation.
+- [cartridge.md](general_docs/cartridge.md) — Describes the cartridge hardware story: passive memory model, save support, flash workflows, and how a simple cart layout keeps the bus uncomplicated.
+- [memory.md](general_docs/memory.md) — The memory map reference: CPU address layout, soft `$7Fxx` windows, MAP port behavior, `.retr01` image format, and entity flash capacity limits.
+- [software-api.md](general_docs/software-api.md) — Defines the runtime model for entities, the data structure sizes, the C/ASM API, and the game modes the software is expected to support.
+- [sound.md](general_docs/sound.md) — Covers the audio architecture: the APU soft window and the MCU-S2 PWM path used to generate the final sound output.
+- [open-questions.md](general_docs/open-questions.md) — Tracks the unknowns and open design decisions, with notes on what still needs validation and how to resolve each remaining question.
+- [ic_behavior/](ic_behavior/README.md) — A per-chip description for each part in the BOM, including behavior, role, optional variants, and key caveats for every IC in the design.
+- [bringup/](bringup/README.md) — The late hardware bring-up roadmap, ordered by tiers A-H from video lab validation through to a full console-style demo with controllers and audio.
+- [apps/README.md](apps/README.md) — Documents the app layer of the project, especially the Studio authoring workflow and the Emu runtime used to test content in practice.
