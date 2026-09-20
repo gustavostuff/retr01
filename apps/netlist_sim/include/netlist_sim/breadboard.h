@@ -7,7 +7,7 @@
 
 /*
  * Solderless breadboard visual (nano protoboard layout).
- * Drag / rotate / hover rail highlight only. No electrical link to ICs yet.
+ * Drag / rotate / hover rail highlight. Strip IDs feed Manual-mode routing.
  *
  * 63 terminal columns x 10 + 4 power rails (830-point class).
  *
@@ -24,6 +24,7 @@
 #define NS_PB_RAIL_SEG 25
 #define NS_PB_RAIL_GAP_END (NS_PB_COLS - NS_PB_RAIL_SEG)
 #define NS_PB_RAIL_GROUP 4
+#define NS_PB_STRIPS (NS_PB_COLS * 2 + 8)
 
 enum {
     NS_PB_LANE_TOP_POS = 0,

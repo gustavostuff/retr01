@@ -3,7 +3,7 @@
 
 #include "netlist_sim/entity.h"
 
-#define NS_ISLAND_MAX_ENTITIES 20
+#define NS_ISLAND_MAX_ENTITIES 64
 
 typedef struct NsIsland NsIsland;
 

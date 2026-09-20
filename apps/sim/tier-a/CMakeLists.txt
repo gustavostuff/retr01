@@ -24,6 +24,7 @@ add_library(retr01_sim_tier_a_core
   chips/at27c256r.c
   chips/ad724.c
   src/board.c
+  src/layout.c
   ${R01_COMMON_DIR}/r01_kit_palette.c
 )
 target_include_directories(retr01_sim_tier_a_core PUBLIC
@@ -44,6 +45,7 @@ target_include_directories(retr01_sim_tier_a_app PRIVATE
 )
 target_compile_definitions(retr01_sim_tier_a_app PRIVATE
   "R01A_ASSETS_OTHER=\"${CMAKE_CURRENT_SOURCE_DIR}/assets/other\""
+  "R01A_LAYOUT_FILE=\"${CMAKE_CURRENT_SOURCE_DIR}/ui_layout.json\""
 )
 target_link_libraries(retr01_sim_tier_a_app PUBLIC retr01_sim_tier_a_core PkgConfig::SDL2 PkgConfig::FREETYPE)
 
@@ -73,3 +75,6 @@ r01a_unit_test(test_beam_y)
 r01a_unit_test(test_at27c256r)
 r01a_unit_test(test_ad724)
 r01a_unit_test(test_tier_a_bars)
+r01a_unit_test(test_manual_bb)
+r01a_unit_test(test_layout)
+r01a_unit_test(test_passives)

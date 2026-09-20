@@ -2,10 +2,6 @@
 
 #include <string.h>
 
-/* Strips: 0..COLS-1 = A-E per col, COLS..2*COLS-1 = F-J,
- * then 8 rail halves (4 lanes x left/right of mid-break). */
-#define NS_PB_STRIPS (NS_PB_COLS * 2 + 8)
-
 static int lane_hole_y(int lane) {
     int y = NS_PB_MARGIN + lane * NS_PB_PITCH;
     if (lane > NS_PB_LANE_TOP_NEG) {

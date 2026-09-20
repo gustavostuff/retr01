@@ -1,6 +1,8 @@
 #include "r01a_board.h"
 
 #include "netlist_sim/bus.h"
+#include "netlist_sim/entity.h"
+#include "netlist_sim/passive.h"
 #include "r01_kit_palette.h"
 #include "r01a_raster.h"
 
@@ -21,6 +23,221 @@ static void drive_vdd(NsEntity *e, const char *name, NsLevel vdd) {
     if (ns_entity_pin_named(e, name)) {
         ns_entity_drive(e, name, vdd);
     }
+}
+
+static void board_pwr_module(R01aBoard *b) {
+    NsEntity *pwr = r01a_pwr5v_entity(&b->pwr);
+    ns_entity_drive(pwr, "VIN", NS_LVL_H);
+    ns_entity_drive(pwr, "EN", NS_LVL_H);
+    ns_entity_drive(pwr, "GND", NS_LVL_L);
+    ns_entity_eval(pwr);
+}
+
+static int strip_parent[NS_PB_STRIPS];
+
+static int strip_find(int s) {
+    while (s >= 0 && s < NS_PB_STRIPS && strip_parent[s] != s) {
+        strip_parent[s] = strip_parent[strip_parent[s]];
+        s = strip_parent[s];
+    }
+    return s;
+}
+
+static void strip_union(int a, int b) {
+    int ra = strip_find(a);
+    int rb = strip_find(b);
+    if (ra >= 0 && rb >= 0 && ra != rb) {
+        strip_parent[rb] = ra;
+    }
+}
+
+static int pin_name_is_gnd(const char *n) {
+    return n && (strcmp(n, "GND") == 0 || strcmp(n, "AGND") == 0 || strcmp(n, "DGND") == 0);
+}
+
+static int pin_skip_route(const NsEntity *e, const NsPin *p) {
+    if (!e || !p || !p->name) {
+        return 0;
+    }
+    if (e->visual == NS_ENTITY_VIS_PWR && (strcmp(p->name, "VIN") == 0 || strcmp(p->name, "EN") == 0)) {
+        return 1;
+    }
+    return 0;
+}
+
+static int pin_is_driver(const NsPin *p) {
+    if (!p) {
+        return 0;
+    }
+    if (p->dir == NS_PIN_OUT || p->dir == NS_PIN_IO) {
+        return 1;
+    }
+    return p->dir == NS_PIN_PWR && pin_name_is_gnd(p->name);
+}
+
+static NsLevel pin_drive_level(const NsPin *p) {
+    if (pin_name_is_gnd(p->name)) {
+        return NS_LVL_L;
+    }
+    return p->level;
+}
+
+static int entity_tip_board(const NsEntity *e, int pin_num, int *tx, int *ty) {
+    if (!e) {
+        return 0;
+    }
+    if (e->visual == NS_ENTITY_VIS_PASSIVE) {
+        return ns_passive_tip_board((const NsPassive *)e, pin_num, tx, ty);
+    }
+    return ns_entity_pin_tip_board(e, pin_num, tx, ty);
+}
+
+static int entity_is_route_skip(const NsEntity *e) {
+    return !e || e->visual == NS_ENTITY_VIS_BREADBOARD || e->visual == NS_ENTITY_VIS_DISPLAY;
+}
+
+static void board_bb_route(R01aBoard *b) {
+    NsIsland *island;
+    int i;
+    int s;
+    NsLevel net_lvl[NS_PB_STRIPS];
+    uint8_t net_used[NS_PB_STRIPS];
+    int prev_fatal;
+
+    if (!b) {
+        return;
+    }
+    island = ns_island_group_at_mut(r01a_board_group(b), 0);
+    if (!island) {
+        return;
+    }
+    for (s = 0; s < NS_PB_STRIPS; s++) {
+        strip_parent[s] = s;
+        net_lvl[s] = NS_LVL_Z;
+        net_used[s] = 0;
+    }
+    for (i = 0; i < b->jumper_count; i++) {
+        strip_union(ns_breadboard_strip_id(b->jumpers[i].a), ns_breadboard_strip_id(b->jumpers[i].b));
+    }
+    for (i = 0; i < b->passives.count; i++) {
+        NsPassive *p = &b->passives.parts[i];
+        int t1x;
+        int t1y;
+        int t2x;
+        int t2y;
+        int s1;
+        int s2;
+        if (p->kind != NS_PASSIVE_R) {
+            continue;
+        }
+        if (!ns_passive_tip_board(p, 1, &t1x, &t1y) || !ns_passive_tip_board(p, 2, &t2x, &t2y)) {
+            continue;
+        }
+        if (!ns_breadboard_tip_strip(&b->breadboard, t1x, t1y, &s1) ||
+            !ns_breadboard_tip_strip(&b->breadboard, t2x, t2y, &s2)) {
+            continue;
+        }
+        strip_union(s1, s2);
+    }
+
+    prev_fatal = ns_bus_fatal_conflicts();
+    ns_bus_set_fatal_conflicts(0);
+    for (i = 0; i < island->entity_count; i++) {
+        NsEntity *e = island->entities[i];
+        int pi;
+        if (entity_is_route_skip(e)) {
+            continue;
+        }
+        for (pi = 0; pi < e->pin_count; pi++) {
+            int tx;
+            int ty;
+            int strip;
+            int root;
+            if (pin_skip_route(e, &e->pins[pi])) {
+                continue;
+            }
+            if (!entity_tip_board(e, e->pins[pi].number, &tx, &ty)) {
+                continue;
+            }
+            if (!ns_breadboard_tip_strip(&b->breadboard, tx, ty, &strip)) {
+                continue;
+            }
+            root = strip_find(strip);
+            if (root < 0 || root >= NS_PB_STRIPS) {
+                continue;
+            }
+            net_used[root] = 1;
+            if (e->visual != NS_ENTITY_VIS_PASSIVE && pin_is_driver(&e->pins[pi])) {
+                net_lvl[root] = ns_level_merge(net_lvl[root], pin_drive_level(&e->pins[pi]));
+            }
+        }
+    }
+    for (i = 0; i < island->entity_count; i++) {
+        NsEntity *e = island->entities[i];
+        int pi;
+        if (entity_is_route_skip(e)) {
+            continue;
+        }
+        for (pi = 0; pi < e->pin_count; pi++) {
+            int tx;
+            int ty;
+            int strip;
+            int root;
+            if (pin_skip_route(e, &e->pins[pi])) {
+                continue;
+            }
+            if (!entity_tip_board(e, e->pins[pi].number, &tx, &ty)) {
+                continue;
+            }
+            if (!ns_breadboard_tip_strip(&b->breadboard, tx, ty, &strip)) {
+                continue;
+            }
+            root = strip_find(strip);
+            if (root < 0 || root >= NS_PB_STRIPS || !net_used[root]) {
+                continue;
+            }
+            e->pins[pi].level = net_lvl[root];
+        }
+    }
+    ns_bus_set_fatal_conflicts(prev_fatal);
+}
+
+static void board_float_external(R01aBoard *b) {
+    NsIsland *island;
+    int i;
+    if (!b) {
+        return;
+    }
+    island = ns_island_group_at_mut(r01a_board_group(b), 0);
+    if (!island) {
+        return;
+    }
+    for (i = 0; i < island->entity_count; i++) {
+        NsEntity *e = island->entities[i];
+        int pi;
+        if (entity_is_route_skip(e)) {
+            continue;
+        }
+        for (pi = 0; pi < e->pin_count; pi++) {
+            if (pin_skip_route(e, &e->pins[pi])) {
+                continue;
+            }
+            if (e->pins[pi].dir == NS_PIN_OUT || e->pins[pi].dir == NS_PIN_IO) {
+                continue;
+            }
+            e->pins[pi].level = NS_LVL_Z;
+        }
+    }
+}
+
+static void board_eval_chips(R01aBoard *b) {
+    ns_entity_eval(r01a_pwr5v_entity(&b->pwr));
+    ns_entity_eval(r01a_osc_dot_entity(&b->osc_dot));
+    ns_entity_eval(r01a_osc_fsc_entity(&b->osc_fsc));
+    ns_entity_eval(r01a_atf22v10_entity(&b->beam_x));
+    ns_entity_eval(r01a_atf22v10_entity(&b->beam_y));
+    ns_entity_eval(r01a_at27c256r_entity(&b->prom));
+    ns_entity_eval(r01a_ad724_entity(&b->ad724));
 }
 
 static void board_bind_rails(R01aBoard *b) {
@@ -101,24 +318,41 @@ static void board_plot(R01aBoard *b) {
 
 static void board_settle(R01aBoard *b) {
     int p;
+    if (b->wire_mode == R01A_WIRE_MANUAL) {
+        board_pwr_module(b);
+        board_float_external(b);
+        for (p = 0; p < R01A_SETTLE_PASSES; p++) {
+            board_bb_route(b);
+            board_eval_chips(b);
+        }
+        return;
+    }
     board_bind_rails(b);
     board_tie_prom_unused_a(b);
     board_wire_index(b);
     drive_copy(r01a_ad724_entity(&b->ad724), "FIN", r01a_osc_fsc_entity(&b->osc_fsc), "FSC");
     drive_copy(r01a_ad724_entity(&b->ad724), "HSYNC", r01a_atf22v10_entity(&b->beam_x), "CSYNC");
     for (p = 0; p < R01A_SETTLE_PASSES; p++) {
-        ns_entity_eval(r01a_pwr5v_entity(&b->pwr));
-        ns_entity_eval(r01a_osc_dot_entity(&b->osc_dot));
-        ns_entity_eval(r01a_osc_fsc_entity(&b->osc_fsc));
-        ns_entity_eval(r01a_atf22v10_entity(&b->beam_x));
-        ns_entity_eval(r01a_atf22v10_entity(&b->beam_y));
-        ns_entity_eval(r01a_at27c256r_entity(&b->prom));
-        ns_entity_eval(r01a_ad724_entity(&b->ad724));
+        board_eval_chips(b);
     }
 }
 
 void r01a_board_step(R01aBoard *board) {
     if (!board) {
+        return;
+    }
+    if (board->wire_mode == R01A_WIRE_MANUAL) {
+        board_pwr_module(board);
+        board_float_external(board);
+        board_bb_route(board);
+        ns_entity_tick(r01a_osc_dot_entity(&board->osc_dot));
+        ns_entity_tick(r01a_osc_fsc_entity(&board->osc_fsc));
+        board_bb_route(board);
+        ns_entity_tick(r01a_atf22v10_entity(&board->beam_x));
+        board_bb_route(board);
+        ns_entity_tick(r01a_atf22v10_entity(&board->beam_y));
+        board_settle(board);
+        board_plot(board);
         return;
     }
     board_bind_rails(board);
@@ -140,8 +374,11 @@ void r01a_board_step_dots(R01aBoard *board, uint32_t dots) {
     }
 }
 
+static void spawn_tier_a_passives(R01aBoard *b);
+
 static void island_video_init(NsIsland *island) {
     R01aBoard *b = (R01aBoard *)island->impl;
+    int i;
     r01a_pwr5v_init(&b->pwr, "PS1");
     r01a_osc_dot_init(&b->osc_dot, "Y2");
     r01a_osc_fsc_init(&b->osc_fsc, "Y3");
@@ -149,9 +386,11 @@ static void island_video_init(NsIsland *island) {
     r01a_atf22v10_init(&b->beam_y, "UPLDY", R01A_PLD_BEAM_Y);
     r01a_at27c256r_init(&b->prom, "U24");
     r01a_ad724_init(&b->ad724, "UENC");
+    ns_breadboard_init(&b->breadboard, "BB1");
     ns_video_sink_init(&b->sink, "SCR1");
     ns_video_sink_set_palette(&b->sink, kit_palette);
     ns_video_sink_set_scale_2x(&b->sink, 1);
+    ns_island_add_entity(island, ns_breadboard_entity(&b->breadboard));
     ns_island_add_entity(island, r01a_pwr5v_entity(&b->pwr));
     ns_island_add_entity(island, r01a_osc_dot_entity(&b->osc_dot));
     ns_island_add_entity(island, r01a_osc_fsc_entity(&b->osc_fsc));
@@ -160,6 +399,10 @@ static void island_video_init(NsIsland *island) {
     ns_island_add_entity(island, r01a_at27c256r_entity(&b->prom));
     ns_island_add_entity(island, r01a_ad724_entity(&b->ad724));
     ns_island_add_entity(island, ns_video_sink_entity(&b->sink));
+    spawn_tier_a_passives(b);
+    for (i = 0; i < b->passives.count; i++) {
+        ns_island_add_entity(island, &b->passives.parts[i].base);
+    }
 }
 
 static const NsIslandVTable ISLAND_VIDEO_VT = {island_video_init, NULL, NULL, NULL, NULL};
@@ -198,6 +441,36 @@ static void group_status(NsIslandGroup *group, char *buf, size_t buf_len) {
 
 static const NsIslandGroupVTable BOARD_GROUP_VT = {
     NULL, group_reset, NULL, group_step, group_eval_idle, group_status, NULL, NULL};
+
+static void add_passives(NsPassiveBank *bank, NsPassiveKind kind, const char *prefix, int *seq,
+                         const char *value, int n) {
+    int i;
+    for (i = 0; i < n; i++) {
+        char ref[NS_PASSIVE_REF_LEN];
+        snprintf(ref, sizeof(ref), "%s%d", prefix, (*seq)++);
+        ns_passive_bank_add(bank, kind, ref, value);
+    }
+}
+
+static void spawn_tier_a_passives(R01aBoard *b) {
+    int c_seq = 1;
+    int e_seq = 1;
+    int r_seq = 1;
+    ns_passive_bank_clear(&b->passives);
+    add_passives(&b->passives, NS_PASSIVE_CCAP, "C", &c_seq, "100nF", 7);
+    add_passives(&b->passives, NS_PASSIVE_ECAP, "E", &e_seq, "220uF", 1);
+    /* DAC R then G then B, then 75 ohm loads, then DOT/FSC series. */
+    add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "4.00k", 1);
+    add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "2.00k", 1);
+    add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "1.00k", 1);
+    add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "4.00k", 1);
+    add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "2.00k", 1);
+    add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "1.00k", 1);
+    add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "2.00k", 1);
+    add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "1.00k", 1);
+    add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "75.0", 3);
+    add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "33", 2);
+}
 
 static int place_along(NsEntity *e, int *x, int y, int gap) {
     int bottom;
@@ -247,6 +520,11 @@ static void board_place_free(R01aBoard *board) {
     row1_right = x - gap;
     cluster_right = row0_right > row1_right ? row0_right : row1_right;
     ns_entity_place(ns_video_sink_entity(&board->sink), cluster_right + 28, origin_y);
+    ns_entity_place(ns_breadboard_entity(&board->breadboard), origin_x, y + 72);
+    {
+        NsEntity *bb = ns_breadboard_entity(&board->breadboard);
+        ns_passive_bank_layout_grid(&board->passives, origin_x, bb->board_y + bb->body_h + 16, 6, 6);
+    }
 }
 
 void r01a_board_init(R01aBoard *board) {
@@ -262,6 +540,7 @@ void r01a_board_init(R01aBoard *board) {
     if (ns_island_builder_add(b, &ISLAND_VIDEO_VT, "ISLAND A  VIDEO LAB", 0, 0, 1, 1, board) < 0) {
         return;
     }
+    ns_island_builder_mount(b, ns_breadboard_entity(&board->breadboard), R01A_ISLAND_VIDEO, 0, 0);
     ns_island_builder_mount(b, r01a_pwr5v_entity(&board->pwr), R01A_ISLAND_VIDEO, 0, 0);
     ns_island_builder_mount(b, r01a_osc_dot_entity(&board->osc_dot), R01A_ISLAND_VIDEO, 0, 0);
     ns_island_builder_mount(b, r01a_osc_fsc_entity(&board->osc_fsc), R01A_ISLAND_VIDEO, 0, 0);
@@ -270,6 +549,12 @@ void r01a_board_init(R01aBoard *board) {
     ns_island_builder_mount(b, r01a_at27c256r_entity(&board->prom), R01A_ISLAND_VIDEO, 0, 0);
     ns_island_builder_mount(b, r01a_ad724_entity(&board->ad724), R01A_ISLAND_VIDEO, 0, 0);
     ns_island_builder_mount(b, ns_video_sink_entity(&board->sink), R01A_ISLAND_VIDEO, 0, 0);
+    {
+        int i;
+        for (i = 0; i < board->passives.count; i++) {
+            ns_island_builder_mount(b, &board->passives.parts[i].base, R01A_ISLAND_VIDEO, 0, 0);
+        }
+    }
     ns_island_builder_finish(b);
     board_place_free(board);
 }
@@ -290,4 +575,74 @@ void r01a_board_reset(R01aBoard *board) {
 
 NsIslandGroup *r01a_board_group(R01aBoard *board) {
     return board ? ns_island_builder_group(&board->builder) : NULL;
+}
+
+void r01a_board_set_wire_mode(R01aBoard *board, int mode) {
+    int next;
+    if (!board) {
+        return;
+    }
+    next = (mode == R01A_WIRE_MANUAL) ? R01A_WIRE_MANUAL : R01A_WIRE_AUTO;
+    if (board->wire_mode == next) {
+        return;
+    }
+    board->wire_mode = next;
+    if (next == R01A_WIRE_MANUAL) {
+        ns_video_sink_clear(&board->sink);
+    }
+    board_settle(board);
+}
+
+int r01a_board_wire_mode(const R01aBoard *board) {
+    return board ? board->wire_mode : R01A_WIRE_AUTO;
+}
+
+static int hole_same(NsPbHole a, NsPbHole b) {
+    return a.col == b.col && a.lane == b.lane;
+}
+
+int r01a_board_jumper_add(R01aBoard *board, NsPbHole a, NsPbHole b) {
+    int i;
+    if (!board || !ns_breadboard_hole_exists(a) || !ns_breadboard_hole_exists(b) || hole_same(a, b)) {
+        return 0;
+    }
+    for (i = 0; i < board->jumper_count; i++) {
+        if ((hole_same(board->jumpers[i].a, a) && hole_same(board->jumpers[i].b, b)) ||
+            (hole_same(board->jumpers[i].a, b) && hole_same(board->jumpers[i].b, a))) {
+            return 1;
+        }
+    }
+    if (board->jumper_count >= R01A_JUMPER_MAX) {
+        return 0;
+    }
+    board->jumpers[board->jumper_count].a = a;
+    board->jumpers[board->jumper_count].b = b;
+    board->jumper_count++;
+    return 1;
+}
+
+void r01a_board_jumper_clear(R01aBoard *board) {
+    if (!board) {
+        return;
+    }
+    board->jumper_count = 0;
+}
+
+NsEntity *r01a_board_entity_by_refdes(R01aBoard *board, const char *refdes) {
+    NsIsland *island;
+    int i;
+    if (!board || !refdes || !refdes[0]) {
+        return NULL;
+    }
+    island = ns_island_group_at_mut(r01a_board_group(board), 0);
+    if (!island) {
+        return NULL;
+    }
+    for (i = 0; i < island->entity_count; i++) {
+        NsEntity *e = island->entities[i];
+        if (e && e->refdes && strcmp(e->refdes, refdes) == 0) {
+            return e;
+        }
+    }
+    return NULL;
 }

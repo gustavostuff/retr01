@@ -310,3 +310,124 @@ NsPin *ns_entity_pin_named(NsEntity *e, const char *name) {
 const NsPin *ns_entity_pin_named_const(const NsEntity *e, const char *name) {
     return ns_entity_pin_named((NsEntity *)e, name);
 }
+
+static int pin_tip_reach(void) {
+    return 2; /* pin.png: H=3, OY=0, tip is 2 px out from the body edge */
+}
+
+static void dip_pin_pos(const NsEntity *e, int pin_num, int *along, int *side_pin1) {
+    int dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
+    int half = dip / 2;
+    int idx;
+    int span;
+    int pitch = NS_DIP_PIN_PITCH_PX;
+    int row_span;
+    int margin;
+    int reverse;
+
+    if (dip <= 0 || pin_num <= 0 || pin_num > dip) {
+        *side_pin1 = 1;
+        *along = ns_orient_is_horiz(e->orient) ? (e->body_w / 2) : (e->body_h / 2);
+        return;
+    }
+    *side_pin1 = pin_num <= half;
+    idx = *side_pin1 ? (pin_num - 1) : (dip - pin_num);
+    span = ns_orient_is_horiz(e->orient) ? e->body_w : e->body_h;
+    row_span = (half > 1) ? (half - 1) * pitch : 0;
+    margin = (span - row_span) / 2;
+    if (margin < 1) {
+        margin = 1;
+    }
+    reverse = (e->orient == NS_ORIENT_180 || e->orient == NS_ORIENT_270);
+    if (reverse) {
+        *along = margin + (half > 0 ? (half - 1 - idx) : 0) * pitch;
+    } else {
+        *along = margin + idx * pitch;
+    }
+}
+
+static int glyph_pin_bottom(const NsPin *p) {
+    if (!p) {
+        return 1;
+    }
+    if (p->dir == NS_PIN_OUT) {
+        return 0;
+    }
+    if (p->dir == NS_PIN_PWR && p->name && (strcmp(p->name, "VDD") == 0 || strcmp(p->name, "VCC") == 0)) {
+        return 0;
+    }
+    return 1;
+}
+
+static int glyph_pin_tip_board(const NsEntity *e, int pin_num, int *tbx, int *tby) {
+    int i;
+    int bi = 0;
+    int ti = 0;
+    int reach = pin_tip_reach();
+
+    for (i = 0; i < e->pin_count; i++) {
+        int bottom;
+        int idx;
+        int along;
+        if (e->pins[i].dir == NS_PIN_NC) {
+            continue;
+        }
+        bottom = glyph_pin_bottom(&e->pins[i]);
+        if (bottom) {
+            idx = bi++;
+        } else {
+            idx = ti++;
+        }
+        if (e->pins[i].number != pin_num) {
+            continue;
+        }
+        along = 5 + idx * NS_DIP_PIN_PITCH_PX;
+        if (along > e->body_w - 3) {
+            along = e->body_w - 3;
+        }
+        *tbx = e->board_x + along;
+        *tby = bottom ? (e->board_y + e->body_h + reach) : (e->board_y - 1 - reach);
+        return 1;
+    }
+    return 0;
+}
+
+int ns_entity_pin_tip_board(const NsEntity *e, int pin_num, int *tbx, int *tby) {
+    int along;
+    int side_pin1;
+    int reach;
+    int dip;
+
+    if (!e || !tbx || !tby) {
+        return 0;
+    }
+    if (e->visual == NS_ENTITY_VIS_PWR || e->visual == NS_ENTITY_VIS_OSC) {
+        return glyph_pin_tip_board(e, pin_num, tbx, tby);
+    }
+    dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
+    if (pin_num < 1 || pin_num > dip) {
+        return 0;
+    }
+    reach = pin_tip_reach();
+    dip_pin_pos(e, pin_num, &along, &side_pin1);
+    switch (e->orient) {
+    case NS_ORIENT_90:
+        *tby = e->board_y + along;
+        *tbx = side_pin1 ? (e->board_x - 1 - reach) : (e->board_x + e->body_w + reach);
+        break;
+    case NS_ORIENT_180:
+        *tbx = e->board_x + along;
+        *tby = side_pin1 ? (e->board_y - 1 - reach) : (e->board_y + e->body_h + reach);
+        break;
+    case NS_ORIENT_270:
+        *tby = e->board_y + along;
+        *tbx = side_pin1 ? (e->board_x + e->body_w + reach) : (e->board_x - 1 - reach);
+        break;
+    case NS_ORIENT_0:
+    default:
+        *tbx = e->board_x + along;
+        *tby = side_pin1 ? (e->board_y + e->body_h + reach) : (e->board_y - 1 - reach);
+        break;
+    }
+    return 1;
+}

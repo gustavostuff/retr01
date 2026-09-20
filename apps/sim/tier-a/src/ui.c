@@ -2,12 +2,15 @@
 #include "ui_font.h"
 
 #include "r01a_board.h"
+#include "r01a_layout.h"
 
 #include "netlist_sim/board_layout.h"
+#include "netlist_sim/breadboard.h"
 #include "netlist_sim/entity.h"
 #include "netlist_sim/island.h"
 #include "netlist_sim/island_group.h"
 #include "netlist_sim/outline.h"
+#include "netlist_sim/passive.h"
 #include "netlist_sim/types.h"
 #include "netlist_sim/ui_assets.h"
 #include "netlist_sim/video_sink.h"
@@ -16,16 +19,22 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifndef R01A_LAYOUT_FILE
+#define R01A_LAYOUT_FILE "ui_layout.json"
+#endif
+
 #define R01A_UI_SCALE 2
 #define R01A_SIM_BUDGET_MS 8
 #define R01A_SIM_MAX_STEPS_PER_FRAME 24
 #define R01A_DOTS_PER_STEP 32
-#define R01A_BOARD_MAX_CHIPS 16
+#define R01A_BOARD_MAX_CHIPS 64
 #define R01A_PAN_OVERSCROLL (NS_LOGIC_W / 2)
 #define R01A_UI_TOOLTIP_DELAY_MS 400
 #define R01A_SEL_YELLOW_R 255
 #define R01A_SEL_YELLOW_G 220
 #define R01A_SEL_YELLOW_B 80
+#define R01A_PIN_HIT_PX 5
+#define R01A_PIN_NET_SLOTS 512
 
 typedef struct R01aUi {
     SDL_Window *win;
@@ -54,6 +63,10 @@ typedef struct R01aUi {
     int box_bx0, box_by0, box_bx1, box_by1;
     int mouse_lx;
     int mouse_ly;
+    int jumper_arm;
+    NsPbHole jumper_from;
+    int hover_chip;
+    int hover_pin;
     int tip_stable_mx;
     int tip_stable_my;
     Uint32 tip_show_at;
@@ -121,6 +134,18 @@ static void clamp_pan(R01aUi *ui) {
     }
 }
 
+static void move_entity(NsEntity *e, int bx, int by) {
+    if (!e) {
+        return;
+    }
+    if (e->visual == NS_ENTITY_VIS_PASSIVE) {
+        NsPassive *p = (NsPassive *)e;
+        ns_passive_set_pivot(p, p->pivot_x + (bx - e->board_x), p->pivot_y + (by - e->board_y));
+        return;
+    }
+    ns_entity_place(e, bx, by);
+}
+
 static void clamp_chip(NsEntity *e) {
     int over = NS_BOARD_W / 2;
     int min_x = -over;
@@ -155,7 +180,7 @@ static void clamp_chip(NsEntity *e) {
     if (by > max_y) {
         by = max_y;
     }
-    ns_entity_place(e, bx, by);
+    move_entity(e, bx, by);
 }
 
 static int chip_hidden(const NsEntity *e) {
@@ -188,6 +213,9 @@ static void chip_z_raise(R01aUi *ui, int chip_i) {
     int r;
     int dst = 0;
     if (chip_i < 0 || chip_i >= ui->chip_count) {
+        return;
+    }
+    if (ui->chips[chip_i] && ui->chips[chip_i]->visual == NS_ENTITY_VIS_BREADBOARD) {
         return;
     }
     for (r = 0; r < ui->chip_count; r++) {
@@ -301,7 +329,7 @@ static void move_chip_drag(R01aUi *ui, int chip_i, int board_mx, int board_my) {
     if (!e) {
         return;
     }
-    ns_entity_place(e, board_mx - ui->drag_grab_bx, board_my - ui->drag_grab_by);
+    move_entity(e, board_mx - ui->drag_grab_bx, board_my - ui->drag_grab_by);
     clamp_chip(e);
 }
 
@@ -313,15 +341,164 @@ static void move_selection_drag(R01aUi *ui, int board_mx, int board_my) {
         if (!ui->chip_sel[i] || !ui->chips[i]) {
             continue;
         }
-        ns_entity_place(ui->chips[i], ui->sel_start_x[i] + dx, ui->sel_start_y[i] + dy);
+        move_entity(ui->chips[i], ui->sel_start_x[i] + dx, ui->sel_start_y[i] + dy);
         clamp_chip(ui->chips[i]);
+    }
+}
+
+static int entity_tip_board(const NsEntity *e, int pin_num, int *tx, int *ty) {
+    if (!e) {
+        return 0;
+    }
+    if (e->visual == NS_ENTITY_VIS_PASSIVE) {
+        return ns_passive_tip_board((const NsPassive *)e, pin_num, tx, ty);
+    }
+    return ns_entity_pin_tip_board(e, pin_num, tx, ty);
+}
+
+static int entity_pin_hi(const NsEntity *e) {
+    int i;
+    int hi = 0;
+    if (!e) {
+        return 0;
+    }
+    if (e->visual == NS_ENTITY_VIS_IC) {
+        return e->dip_pins > 0 ? e->dip_pins : e->pin_count;
+    }
+    if (e->visual == NS_ENTITY_VIS_PASSIVE) {
+        return 2;
+    }
+    if (e->visual != NS_ENTITY_VIS_PWR && e->visual != NS_ENTITY_VIS_OSC) {
+        return 0;
+    }
+    for (i = 0; i < e->pin_count; i++) {
+        if (e->pins[i].number > hi) {
+            hi = e->pins[i].number;
+        }
+    }
+    return hi;
+}
+
+static NsBreadboard *ui_breadboard(const R01aUi *ui) {
+    int i;
+    for (i = 0; i < ui->chip_count; i++) {
+        if (ui->chips[i] && ui->chips[i]->visual == NS_ENTITY_VIS_BREADBOARD) {
+            return (NsBreadboard *)ui->chips[i];
+        }
+    }
+    return NULL;
+}
+
+static int count_pins_on_holes(const R01aUi *ui, const NsEntity *e, int dx, int dy) {
+    int n;
+    int count = 0;
+    int pin_hi = entity_pin_hi(e);
+    int bi;
+
+    for (n = 1; n <= pin_hi; n++) {
+        int tx;
+        int ty;
+        if (!entity_tip_board(e, n, &tx, &ty)) {
+            continue;
+        }
+        tx += dx;
+        ty += dy;
+        for (bi = 0; bi < ui->chip_count; bi++) {
+            const NsEntity *be = ui->chips[bi];
+            NsPbHole h;
+            int hx;
+            int hy;
+            if (!be || be->visual != NS_ENTITY_VIS_BREADBOARD || be == e) {
+                continue;
+            }
+            if (!ns_breadboard_hit_hole((const NsBreadboard *)(const void *)be, tx, ty, &h)) {
+                continue;
+            }
+            ns_breadboard_hole_world((const NsBreadboard *)(const void *)be, h, &hx, &hy);
+            if (hx == tx && hy == ty) {
+                count++;
+                break;
+            }
+        }
+    }
+    return count;
+}
+
+static int snap_chip_to_breadboard(R01aUi *ui, int chip_i) {
+    NsEntity *e;
+    int n;
+    int bi;
+    int best_count = 0;
+    int best_dx = 0;
+    int best_dy = 0;
+    int pin_hi;
+
+    if (!ui || chip_i < 0 || chip_i >= ui->chip_count) {
+        return 0;
+    }
+    e = ui->chips[chip_i];
+    pin_hi = entity_pin_hi(e);
+    if (!e || pin_hi < 1) {
+        return 0;
+    }
+    for (n = 1; n <= pin_hi; n++) {
+        int tx;
+        int ty;
+        if (!entity_tip_board(e, n, &tx, &ty)) {
+            continue;
+        }
+        for (bi = 0; bi < ui->chip_count; bi++) {
+            NsEntity *be = ui->chips[bi];
+            NsPbHole h;
+            int hx;
+            int hy;
+            int dx;
+            int dy;
+            int count;
+            if (!be || be->visual != NS_ENTITY_VIS_BREADBOARD) {
+                continue;
+            }
+            if (!ns_breadboard_hit_hole((const NsBreadboard *)(const void *)be, tx, ty, &h)) {
+                continue;
+            }
+            ns_breadboard_hole_world((const NsBreadboard *)(const void *)be, h, &hx, &hy);
+            dx = hx - tx;
+            dy = hy - ty;
+            count = count_pins_on_holes(ui, e, dx, dy);
+            if (count > best_count) {
+                best_count = count;
+                best_dx = dx;
+                best_dy = dy;
+            }
+        }
+    }
+    if (best_count < 1) {
+        return 0;
+    }
+    move_entity(e, e->board_x + best_dx, e->board_y + best_dy);
+    clamp_chip(e);
+    return best_count;
+}
+
+static void snap_selection_to_breadboard(R01aUi *ui) {
+    int i;
+    if (sel_count(ui) > 0) {
+        for (i = 0; i < ui->chip_count; i++) {
+            if (ui->chip_sel[i]) {
+                snap_chip_to_breadboard(ui, i);
+            }
+        }
+        return;
+    }
+    if (ui->drag_chip >= 0) {
+        snap_chip_to_breadboard(ui, ui->drag_chip);
     }
 }
 
 static int hit_chip_body(const R01aUi *ui, const NsEntity *e, int lx, int ly) {
     int x = board_sx(ui, e->board_x);
     int y = board_sy(ui, e->board_y);
-    int pad = NS_CHIP_PIN_OUT;
+    int pad = (e->visual == NS_ENTITY_VIS_BREADBOARD) ? 0 : NS_CHIP_PIN_OUT;
     return lx >= x - pad && lx < x + e->body_w + pad && ly >= y - pad && ly < y + e->body_h + pad;
 }
 
@@ -348,12 +525,29 @@ static int rotate_selected(R01aUi *ui) {
             continue;
         }
         e = ui->chips[i];
-        if (!e || e->visual != NS_ENTITY_VIS_IC) {
+        if (!e) {
             continue;
         }
-        ns_entity_set_orient(e, ns_orient_next_cw(e->orient));
-        clamp_chip(e);
-        n++;
+        if (e->visual == NS_ENTITY_VIS_IC) {
+            ns_entity_set_orient(e, ns_orient_next_cw(e->orient));
+            clamp_chip(e);
+            snap_chip_to_breadboard(ui, i);
+            n++;
+            continue;
+        }
+        if (e->visual == NS_ENTITY_VIS_BREADBOARD) {
+            ns_entity_set_orient(e, ns_orient_next_cw(e->orient));
+            ns_breadboard_sync_body((NsBreadboard *)e);
+            clamp_chip(e);
+            n++;
+            continue;
+        }
+        if (e->visual == NS_ENTITY_VIS_PASSIVE) {
+            ns_passive_set_orient((NsPassive *)e, ns_orient_next_cw(e->orient));
+            clamp_chip(e);
+            snap_chip_to_breadboard(ui, i);
+            n++;
+        }
     }
     return n;
 }
@@ -527,6 +721,33 @@ static void blit_rgba(SDL_Renderer *r, int dx, int dy, const uint8_t *rgba, int 
     }
 }
 
+static void draw_glyph_pins(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e) {
+    int i;
+    if (!e) {
+        return;
+    }
+    for (i = 0; i < e->pin_count; i++) {
+        int tbx;
+        int tby;
+        Uint8 tint[3];
+        int rot;
+        if (!entity_tip_board(e, e->pins[i].number, &tbx, &tby)) {
+            continue;
+        }
+        pin_level_rgb(e->pins[i].level, e->pins[i].dir, &tint[0], &tint[1], &tint[2]);
+        if (tby < e->board_y) {
+            rot = 0;
+        } else if (tby > e->board_y + e->body_h) {
+            rot = 2;
+        } else if (tbx < e->board_x) {
+            rot = 3;
+        } else {
+            rot = 1;
+        }
+        blit_pin_rot(r, board_sx(ui, tbx), board_sy(ui, tby), rot, tint);
+    }
+}
+
 static unsigned label_seed(const NsEntity *e) {
     unsigned seed = 0;
     const char *s = e->refdes ? e->refdes : (e->part ? e->part : "");
@@ -629,6 +850,7 @@ static void draw_pwr(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e, int s
     int y = board_sy(ui, e->board_y);
     int ix = x + (e->body_w - NS_UI_BATTERY_W) / 2;
     int iy = y + 2;
+    draw_glyph_pins(r, ui, e);
     fill_rect(r, x, y, e->body_w, e->body_h, 0, 0, 0);
     blit_rgba(r, ix, iy, NS_UI_BATTERY_RGBA, NS_UI_BATTERY_W, NS_UI_BATTERY_H);
     draw_selection(r, x, y, e->body_w, e->body_h, selected);
@@ -639,6 +861,7 @@ static void draw_osc(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e, int s
     int y = board_sy(ui, e->board_y);
     int ix = x + (e->body_w - NS_UI_OSC_W) / 2;
     int iy = y + (e->body_h - NS_UI_OSC_H) / 2;
+    draw_glyph_pins(r, ui, e);
     fill_rect(r, x, y, e->body_w, e->body_h, 0, 0, 0);
     blit_rgba(r, ix, iy, NS_UI_OSC_RGBA, NS_UI_OSC_W, NS_UI_OSC_H);
     draw_selection(r, x, y, e->body_w, e->body_h, selected);
@@ -676,11 +899,280 @@ static void draw_lcd(SDL_Renderer *r, R01aUi *ui, NsVideoSink *sink, int selecte
     draw_selection(r, x, y, sink->base.body_w, sink->base.body_h, selected);
 }
 
+typedef struct R01aPinNetSlot {
+    NsEntity *entity;
+    int pin_index;
+} R01aPinNetSlot;
+
+static R01aPinNetSlot g_pin_slots[R01A_PIN_NET_SLOTS];
+static int g_pin_parent[R01A_PIN_NET_SLOTS];
+static int g_pin_slot_count;
+
+static int pin_net_find(NsEntity *e, int pin_index) {
+    int i;
+    for (i = 0; i < g_pin_slot_count; i++) {
+        if (g_pin_slots[i].entity == e && g_pin_slots[i].pin_index == pin_index) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static int pin_net_add(NsEntity *e, int pin_index) {
+    int i = pin_net_find(e, pin_index);
+    if (i >= 0) {
+        return i;
+    }
+    if (!e || pin_index < 0 || g_pin_slot_count >= R01A_PIN_NET_SLOTS) {
+        return -1;
+    }
+    i = g_pin_slot_count++;
+    g_pin_slots[i].entity = e;
+    g_pin_slots[i].pin_index = pin_index;
+    g_pin_parent[i] = i;
+    return i;
+}
+
+static int pin_net_add_name(NsEntity *e, const char *name) {
+    const NsPin *pin;
+    int idx;
+    if (!e || !name) {
+        return -1;
+    }
+    pin = ns_entity_pin_named_const(e, name);
+    if (!pin) {
+        return -1;
+    }
+    idx = (int)(pin - e->pins);
+    if (idx < 0 || idx >= e->pin_count) {
+        return -1;
+    }
+    return pin_net_add(e, idx);
+}
+
+static int pin_net_root(int s) {
+    while (s >= 0 && s < g_pin_slot_count && g_pin_parent[s] != s) {
+        g_pin_parent[s] = g_pin_parent[g_pin_parent[s]];
+        s = g_pin_parent[s];
+    }
+    return s;
+}
+
+static void pin_net_union(int a, int b) {
+    int ra = pin_net_root(a);
+    int rb = pin_net_root(b);
+    if (ra >= 0 && rb >= 0 && ra != rb) {
+        g_pin_parent[rb] = ra;
+    }
+}
+
+static void pin_net_link(NsEntity *a, const char *an, NsEntity *b, const char *bn) {
+    int sa = pin_net_add_name(a, an);
+    int sb = pin_net_add_name(b, bn);
+    if (sa >= 0 && sb >= 0) {
+        pin_net_union(sa, sb);
+    }
+}
+
+static NsEntity *ui_ent(const R01aUi *ui, const char *ref) {
+    int i;
+    for (i = 0; i < ui->chip_count; i++) {
+        if (ui->chips[i] && ui->chips[i]->refdes && strcmp(ui->chips[i]->refdes, ref) == 0) {
+            return ui->chips[i];
+        }
+    }
+    return NULL;
+}
+
+static void pin_net_build(R01aUi *ui) {
+    NsEntity *ps1 = ui_ent(ui, "PS1");
+    NsEntity *y2 = ui_ent(ui, "Y2");
+    NsEntity *y3 = ui_ent(ui, "Y3");
+    NsEntity *bx = ui_ent(ui, "UPLDX");
+    NsEntity *by = ui_ent(ui, "UPLDY");
+    NsEntity *u24 = ui_ent(ui, "U24");
+    NsEntity *enc = ui_ent(ui, "UENC");
+    int i;
+    char iname[8];
+    char aname[4];
+
+    g_pin_slot_count = 0;
+    pin_net_link(ps1, "VDD", y2, "VDD");
+    pin_net_link(ps1, "VDD", y2, "OE#");
+    pin_net_link(ps1, "VDD", y3, "VDD");
+    pin_net_link(ps1, "VDD", y3, "OE#");
+    pin_net_link(ps1, "VDD", bx, "VCC");
+    pin_net_link(ps1, "VDD", by, "VCC");
+    pin_net_link(ps1, "VDD", u24, "VCC");
+    pin_net_link(ps1, "VDD", u24, "VPP");
+    pin_net_link(ps1, "VDD", enc, "APOS");
+    pin_net_link(ps1, "VDD", enc, "DPOS");
+    pin_net_link(ps1, "VDD", bx, "RES#");
+    pin_net_link(ps1, "VDD", by, "RES#");
+    pin_net_link(ps1, "VDD", u24, "PGM#");
+    pin_net_link(ps1, "VDD", enc, "ENCD");
+    pin_net_link(ps1, "VDD", enc, "STND");
+    pin_net_link(ps1, "VDD", enc, "VSYNC");
+    pin_net_link(ps1, "GND", y2, "GND");
+    pin_net_link(ps1, "GND", y3, "GND");
+    pin_net_link(ps1, "GND", bx, "GND");
+    pin_net_link(ps1, "GND", by, "GND");
+    pin_net_link(ps1, "GND", u24, "GND");
+    pin_net_link(ps1, "GND", enc, "AGND");
+    pin_net_link(ps1, "GND", enc, "DGND");
+    pin_net_link(ps1, "GND", enc, "SELECT");
+    pin_net_link(ps1, "GND", u24, "CE#");
+    pin_net_link(ps1, "GND", u24, "OE#");
+    pin_net_link(y2, "DOT", ui_ent(ui, "R12"), "1");
+    pin_net_link(ui_ent(ui, "R12"), "2", bx, "CLK");
+    pin_net_link(y3, "FSC", ui_ent(ui, "R13"), "1");
+    pin_net_link(ui_ent(ui, "R13"), "2", enc, "FIN");
+    pin_net_link(bx, "HWRAP", by, "CLK");
+    pin_net_link(bx, "CSYNC", enc, "HSYNC");
+    for (i = 0; i < 6; i++) {
+        snprintf(iname, sizeof(iname), "INDEX%d", i);
+        snprintf(aname, sizeof(aname), "A%d", i);
+        pin_net_link(bx, iname, u24, aname);
+    }
+    for (i = 6; i <= 13; i++) {
+        snprintf(aname, sizeof(aname), "A%d", i);
+        pin_net_link(ps1, "GND", u24, aname);
+    }
+    pin_net_link(u24, "O7", ui_ent(ui, "R1"), "1");
+    pin_net_link(ui_ent(ui, "R1"), "2", enc, "RIN");
+    pin_net_link(u24, "O6", ui_ent(ui, "R2"), "1");
+    pin_net_link(ui_ent(ui, "R2"), "2", enc, "RIN");
+    pin_net_link(u24, "O5", ui_ent(ui, "R3"), "1");
+    pin_net_link(ui_ent(ui, "R3"), "2", enc, "RIN");
+    pin_net_link(u24, "O4", ui_ent(ui, "R4"), "1");
+    pin_net_link(ui_ent(ui, "R4"), "2", enc, "GIN");
+    pin_net_link(u24, "O3", ui_ent(ui, "R5"), "1");
+    pin_net_link(ui_ent(ui, "R5"), "2", enc, "GIN");
+    pin_net_link(u24, "O2", ui_ent(ui, "R6"), "1");
+    pin_net_link(ui_ent(ui, "R6"), "2", enc, "GIN");
+    pin_net_link(u24, "O1", ui_ent(ui, "R7"), "1");
+    pin_net_link(ui_ent(ui, "R7"), "2", enc, "BIN");
+    pin_net_link(u24, "O0", ui_ent(ui, "R8"), "1");
+    pin_net_link(ui_ent(ui, "R8"), "2", enc, "BIN");
+    pin_net_link(enc, "RIN", ui_ent(ui, "R9"), "1");
+    pin_net_link(ui_ent(ui, "R9"), "2", ps1, "GND");
+    pin_net_link(enc, "GIN", ui_ent(ui, "R10"), "1");
+    pin_net_link(ui_ent(ui, "R10"), "2", ps1, "GND");
+    pin_net_link(enc, "BIN", ui_ent(ui, "R11"), "1");
+    pin_net_link(ui_ent(ui, "R11"), "2", ps1, "GND");
+}
+
+static int hit_pin_at(const R01aUi *ui, int board_mx, int board_my, int *chip_out, int *pin_out) {
+    int rank;
+    int best_d = R01A_PIN_HIT_PX * R01A_PIN_HIT_PX + 1;
+    int best_c = -1;
+    int best_p = -1;
+    for (rank = ui->chip_count - 1; rank >= 0; rank--) {
+        int ci = ui->chip_z[rank];
+        NsEntity *e;
+        int i;
+        if (ci < 0 || ci >= ui->chip_count) {
+            continue;
+        }
+        e = ui->chips[ci];
+        if (!e || e->visual == NS_ENTITY_VIS_BREADBOARD || e->visual == NS_ENTITY_VIS_DISPLAY) {
+            continue;
+        }
+        for (i = 0; i < e->pin_count; i++) {
+            int tx;
+            int ty;
+            int dx;
+            int dy;
+            int d;
+            if (!entity_tip_board(e, e->pins[i].number, &tx, &ty)) {
+                continue;
+            }
+            dx = board_mx - tx;
+            dy = board_my - ty;
+            d = dx * dx + dy * dy;
+            if (d < best_d) {
+                best_d = d;
+                best_c = ci;
+                best_p = i;
+            }
+        }
+        if (best_c == ci) {
+            break;
+        }
+    }
+    if (best_c < 0) {
+        return 0;
+    }
+    if (chip_out) {
+        *chip_out = best_c;
+    }
+    if (pin_out) {
+        *pin_out = best_p;
+    }
+    return 1;
+}
+
+static int pin_on_hover_net(const R01aUi *ui, const NsEntity *e, int pin_index) {
+    int src;
+    int slot;
+    int root;
+    if (ui->hover_chip < 0 || ui->hover_pin < 0 || !e) {
+        return 0;
+    }
+    src = pin_net_find(ui->chips[ui->hover_chip], ui->hover_pin);
+    slot = pin_net_find((NsEntity *)e, pin_index);
+    if (src < 0 || slot < 0) {
+        return src < 0 ? 0 : (e == ui->chips[ui->hover_chip] && pin_index == ui->hover_pin);
+    }
+    root = pin_net_root(src);
+    return pin_net_root(slot) == root;
+}
+
+static void draw_pulse_tip(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e, int pin_index) {
+    int tx;
+    int ty;
+    int phase;
+    int glow;
+    if (!entity_tip_board(e, e->pins[pin_index].number, &tx, &ty)) {
+        return;
+    }
+    phase = (int)((SDL_GetTicks() / 6u) % 160u);
+    if (phase > 80) {
+        phase = 160 - phase;
+    }
+    glow = 4 + phase / 20;
+    fill_rect_a(r, board_sx(ui, tx) - glow, board_sy(ui, ty) - glow, glow * 2 + 1, glow * 2 + 1, 255, 230,
+                80, (Uint8)(90 + phase));
+}
+
+static void draw_pin_pulses(SDL_Renderer *r, const R01aUi *ui) {
+    int i;
+    int pi;
+    if (ui->hover_chip < 0 || ui->hover_pin < 0) {
+        return;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        NsEntity *e = ui->chips[i];
+        if (!e) {
+            continue;
+        }
+        for (pi = 0; pi < e->pin_count; pi++) {
+            if (pin_on_hover_net(ui, e, pi)) {
+                draw_pulse_tip(r, ui, e, pi);
+            }
+        }
+    }
+}
+
 static void draw_entity(SDL_Renderer *r, R01aUi *ui, NsEntity *e, int selected) {
     if (!e || chip_hidden(e)) {
         return;
     }
     switch (e->visual) {
+    case NS_ENTITY_VIS_BREADBOARD:
+        ns_breadboard_draw(r, (const NsBreadboard *)e, board_sx(ui, e->board_x), board_sy(ui, e->board_y),
+                           selected);
+        break;
     case NS_ENTITY_VIS_PWR:
         draw_pwr(r, ui, e, selected);
         break;
@@ -690,6 +1182,11 @@ static void draw_entity(SDL_Renderer *r, R01aUi *ui, NsEntity *e, int selected) 
     case NS_ENTITY_VIS_DISPLAY:
         draw_lcd(r, ui, (NsVideoSink *)e, selected);
         break;
+    case NS_ENTITY_VIS_PASSIVE: {
+        const NsPassive *p = (const NsPassive *)e;
+        ns_passive_draw(r, p, board_sx(ui, p->pivot_x), board_sy(ui, p->pivot_y), selected);
+        break;
+    }
     case NS_ENTITY_VIS_IC:
     default:
         draw_ic(r, ui, e, selected);
@@ -744,7 +1241,58 @@ static void fill_tooltip(const R01aUi *ui, char *out, size_t out_len) {
     if (!e) {
         return;
     }
+    if (ui->hover_pin >= 0 && ui->hover_chip == chip_i && ui->hover_pin < e->pin_count &&
+        e->pins[ui->hover_pin].name) {
+        snprintf(out, out_len, "%s %s", e->refdes ? e->refdes : "?", e->pins[ui->hover_pin].name);
+        return;
+    }
+    if (e->visual == NS_ENTITY_VIS_PASSIVE) {
+        const NsPassive *p = (const NsPassive *)e;
+        snprintf(out, out_len, "%s %s", e->refdes ? e->refdes : "?", p->value[0] ? p->value : e->part);
+        return;
+    }
     snprintf(out, out_len, "%s (%s)", e->refdes ? e->refdes : "?", e->part ? e->part : "?");
+}
+
+static const char *wire_mode_label(int mode) {
+    return (mode == R01A_WIRE_MANUAL) ? "Manual" : "Auto";
+}
+
+static void wire_mode_btn_rect(int mode, SDL_Rect *rc) {
+    int tw = r01a_font_text_width(wire_mode_label(mode));
+    rc->x = 4;
+    rc->y = 2;
+    rc->w = tw + 12;
+    rc->h = r01a_font_line_h() + 4;
+}
+
+static int point_in_rect(int x, int y, const SDL_Rect *rc) {
+    return x >= rc->x && y >= rc->y && x < rc->x + rc->w && y < rc->y + rc->h;
+}
+
+static void draw_jumpers(SDL_Renderer *r, const R01aUi *ui, const R01aBoard *board) {
+    int i;
+    const NsBreadboard *bb = ui_breadboard(ui);
+    if (!bb) {
+        return;
+    }
+    SDL_SetRenderDrawColor(r, 220, 160, 40, 255);
+    for (i = 0; i < board->jumper_count; i++) {
+        int x0;
+        int y0;
+        int x1;
+        int y1;
+        ns_breadboard_hole_world(bb, board->jumpers[i].a, &x0, &y0);
+        ns_breadboard_hole_world(bb, board->jumpers[i].b, &x1, &y1);
+        SDL_RenderDrawLine(r, board_sx(ui, x0), board_sy(ui, y0), board_sx(ui, x1), board_sy(ui, y1));
+    }
+    if (ui->jumper_arm) {
+        int x0;
+        int y0;
+        ns_breadboard_hole_world(bb, ui->jumper_from, &x0, &y0);
+        SDL_SetRenderDrawColor(r, 255, 210, 80, 255);
+        SDL_RenderDrawLine(r, board_sx(ui, x0), board_sy(ui, y0), ui->mouse_lx, ui->mouse_ly);
+    }
 }
 
 static void present_frame(R01aUi *ui);
@@ -753,6 +1301,8 @@ static void draw_frame(R01aUi *ui, R01aBoard *board) {
     char status[128];
     char tip[96];
     int rank;
+    SDL_Rect btn;
+    int hud_x;
 
     SDL_SetRenderTarget(ui->rend, ui->target);
     SDL_SetRenderDrawColor(ui->rend, NS_BOARD_BG_R, NS_BOARD_BG_G, NS_BOARD_BG_B, 255);
@@ -767,6 +1317,8 @@ static void draw_frame(R01aUi *ui, R01aBoard *board) {
         selected = ui->chip_sel[ci] || ci == ui->selected;
         draw_entity(ui->rend, ui, ui->chips[ci], selected);
     }
+    draw_pin_pulses(ui->rend, ui);
+    draw_jumpers(ui->rend, ui, board);
 
     if (ui->box_sel) {
         int x0 = board_sx(ui, ui->box_bx0 < ui->box_bx1 ? ui->box_bx0 : ui->box_bx1);
@@ -785,9 +1337,19 @@ static void draw_frame(R01aUi *ui, R01aBoard *board) {
         draw_rect(ui->rend, x0, y0, bw, bh, 80, 180, 120);
     }
 
+    wire_mode_btn_rect(r01a_board_wire_mode(board), &btn);
+    fill_rect(ui->rend, btn.x, btn.y, btn.w, btn.h, 18, 28, 22);
+    draw_rect(ui->rend, btn.x, btn.y, btn.w, btn.h,
+              (r01a_board_wire_mode(board) == R01A_WIRE_MANUAL) ? 220 : 180,
+              (r01a_board_wire_mode(board) == R01A_WIRE_MANUAL) ? 180 : 180, 80);
+    r01a_font_draw(ui->rend, btn.x + 6, btn.y + 2, wire_mode_label(r01a_board_wire_mode(board)), 230, 230,
+                   200);
+
     ns_island_group_fill_status(r01a_board_group(board), status, sizeof(status));
-    r01a_font_draw_a(ui->rend, 4, 2, board->running ? "RUN" : "PAUSE", 180, 180, 120, 180);
-    r01a_font_draw_a(ui->rend, 4 + r01a_font_text_width("PAUSE") + 10, 2, status, 200, 210, 200, 160);
+    hud_x = btn.x + btn.w + 10;
+    r01a_font_draw_a(ui->rend, hud_x, 2, board->running ? "RUN" : "PAUSE", 180, 180, 120, 180);
+    hud_x += r01a_font_text_width("PAUSE") + 10;
+    r01a_font_draw_a(ui->rend, hud_x, 2, status, 200, 210, 200, 160);
 
     if (SDL_GetTicks() >= ui->tip_show_at && !ui->drag_pan && ui->drag_chip < 0 && !ui->box_sel) {
         fill_tooltip(ui, tip, sizeof(tip));
@@ -881,9 +1443,22 @@ static int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx
     ui->mouse_lx = lx;
     ui->mouse_ly = ly;
     logic_to_board(ui, lx, ly, &board_mx, &board_my);
+    if (!hit_pin_at(ui, board_mx, board_my, &ui->hover_chip, &ui->hover_pin)) {
+        ui->hover_chip = -1;
+        ui->hover_pin = -1;
+    }
 
     if (e->type == SDL_MOUSEMOTION && (lx != ui->tip_stable_mx || ly != ui->tip_stable_my)) {
         tip_reset(ui, lx, ly);
+    }
+    {
+        NsBreadboard *bb = ui_breadboard(ui);
+        NsPbHole hole;
+        if (bb && ns_breadboard_hit_hole(bb, board_mx, board_my, &hole)) {
+            ns_breadboard_set_hover(bb, 1, hole);
+        } else if (bb) {
+            ns_breadboard_clear_hover(bb);
+        }
     }
     if (e->type == SDL_MOUSEWHEEL) {
         ui->pan_x -= e->wheel.x * 32;
@@ -924,8 +1499,10 @@ static int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx
     if (e->type == SDL_MOUSEMOTION && ui->drag_chip >= 0) {
         if (sel_count(ui) > 1) {
             move_selection_drag(ui, board_mx, board_my);
+            snap_selection_to_breadboard(ui);
         } else {
             move_chip_drag(ui, ui->drag_chip, board_mx, board_my);
+            snap_chip_to_breadboard(ui, ui->drag_chip);
         }
         return 1;
     }
@@ -948,12 +1525,26 @@ static int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx
             }
             return 1;
         }
+        if (ui->drag_chip >= 0) {
+            snap_selection_to_breadboard(ui);
+        }
         ui->drag_chip = -1;
         return 1;
     }
     if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT) {
         int chip_i;
         int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
+        SDL_Rect btn;
+        NsBreadboard *bb;
+        NsPbHole hole;
+
+        wire_mode_btn_rect(r01a_board_wire_mode(board), &btn);
+        if (point_in_rect(lx, ly, &btn)) {
+            int next = (r01a_board_wire_mode(board) == R01A_WIRE_MANUAL) ? R01A_WIRE_AUTO : R01A_WIRE_MANUAL;
+            r01a_board_set_wire_mode(board, next);
+            ui->jumper_arm = 0;
+            return 1;
+        }
 
         if (e->button.clicks == 2) {
             chip_i = hit_top_chip(ui, lx, ly);
@@ -966,6 +1557,26 @@ static int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx
 
         ui->drag_chip = -1;
         chip_i = hit_top_chip(ui, lx, ly);
+        bb = ui_breadboard(ui);
+        if (r01a_board_wire_mode(board) == R01A_WIRE_MANUAL && bb &&
+            (chip_i < 0 || ui->chips[chip_i]->visual == NS_ENTITY_VIS_BREADBOARD) &&
+            ns_breadboard_hit_hole(bb, board_mx, board_my, &hole)) {
+            if (ui->jumper_arm) {
+                if (ui->jumper_from.col == hole.col && ui->jumper_from.lane == hole.lane) {
+                    ui->jumper_arm = 0;
+                } else {
+                    r01a_board_jumper_add(board, ui->jumper_from, hole);
+                    ui->jumper_arm = 0;
+                }
+            } else {
+                ui->jumper_arm = 1;
+                ui->jumper_from = hole;
+            }
+            return 1;
+        }
+        if (ui->jumper_arm) {
+            ui->jumper_arm = 0;
+        }
         if (chip_i >= 0) {
             chip_z_raise(ui, chip_i);
             if (shift) {
@@ -1011,6 +1622,17 @@ static int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx
             r01a_board_step(board);
             return 1;
         }
+        if (e->key.keysym.sym == SDLK_a) {
+            int next = (r01a_board_wire_mode(board) == R01A_WIRE_MANUAL) ? R01A_WIRE_AUTO : R01A_WIRE_MANUAL;
+            r01a_board_set_wire_mode(board, next);
+            ui->jumper_arm = 0;
+            return 1;
+        }
+        if (e->key.keysym.sym == SDLK_x) {
+            r01a_board_jumper_clear(board);
+            ui->jumper_arm = 0;
+            return 1;
+        }
         if (e->key.keysym.sym == SDLK_r && (e->key.keysym.mod & KMOD_CTRL)) {
             r01a_board_reset(board);
             return 1;
@@ -1052,7 +1674,11 @@ int r01a_ui_run(R01aBoard *board) {
     memset(&ui, 0, sizeof(ui));
     ui.selected = -1;
     ui.drag_chip = -1;
+    ui.jumper_arm = 0;
+    ui.hover_chip = -1;
+    ui.hover_pin = -1;
     bind_chips(&ui, board);
+    pin_net_build(&ui);
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
         return 1;
@@ -1091,6 +1717,8 @@ int r01a_ui_run(R01aBoard *board) {
     SDL_SetTextureScaleMode(ui.target, SDL_ScaleModeNearest);
     ui.scale = R01A_UI_SCALE;
     tip_reset(&ui, 0, 0);
+    (void)r01a_layout_load(R01A_LAYOUT_FILE, board, &ui.pan_x, &ui.pan_y);
+    clamp_pan(&ui);
 
     while (!quit) {
         SDL_Event ev;
@@ -1123,6 +1751,8 @@ int r01a_ui_run(R01aBoard *board) {
         }
         draw_frame(&ui, board);
     }
+
+    (void)r01a_layout_save(R01A_LAYOUT_FILE, board, ui.pan_x, ui.pan_y);
 
     if (ui.lcd_tex) {
         SDL_DestroyTexture(ui.lcd_tex);

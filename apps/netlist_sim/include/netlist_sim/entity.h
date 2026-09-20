@@ -149,4 +149,7 @@ void ns_entity_pin_hash_build(NsEntity *e);
 NsPin *ns_entity_pin_named(NsEntity *e, const char *name);
 const NsPin *ns_entity_pin_named_const(const NsEntity *e, const char *name);
 
+/* Pin.png tip (col 1, row 0) in board canvas coords. DIP packages and PWR/OSC glyphs. */
+int ns_entity_pin_tip_board(const NsEntity *e, int pin_num, int *tbx, int *tby);
+
 #endif

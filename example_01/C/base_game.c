@@ -9,16 +9,16 @@ typedef struct {
 } R01InstRec;
 
 static const uint8_t play_present[32] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 127, 158, 192, 243, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-static const uint8_t play_spawn_cell = 0x70u;
-static const uint8_t play_spawn_col = 0;
-static const uint8_t play_spawn_row = 7;
+static const uint8_t play_spawn_cell = 0x8Cu;
+static const uint8_t play_spawn_col = 12;
+static const uint8_t play_spawn_row = 8;
 static const int player_entity = 0;
 static const R01InstRec entity_insts[1] = {
-    {0, 21, 865}
+    {0, 1635, 1004}
 };
 static const int entity_inst_count = 1;
-static const int player_inst_x = 21;
-static const int player_inst_y = 865;
+static const int player_inst_x = 1635;
+static const int player_inst_y = 1004;
 static const int player_hit_x = 12;
 static const int player_hit_y = 12;
 static const int player_hit_w = 8;
