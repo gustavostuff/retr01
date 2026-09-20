@@ -17,11 +17,11 @@ No CPU, cart, AVRs, VRAM, or Compositor.
 | Mode | Wiring |
 | --- | --- |
 | Auto | Soft netlist (virtual wires). Color bars without placing jumpers. |
-| Manual | No virtual wires. A pin conducts only when its tip sits on a breadboard strip, including strips joined by jumpers or by resistors. Caps occupy holes and do not pass DC. Reproduce the Auto netlist on the protoboard for the lab to run. |
+| Manual | No virtual wires. A pin conducts only when its tip sits on a breadboard strip, including strips joined by jumpers or by resistors. Caps occupy holes and do not pass DC. The lab runs once the Auto netlist is on the protoboard. |
 
-The 5 V module still drives VIN/EN internally so VDD appears on its pin. In Manual, VDD, GND, clocks, and the rest still need breadboard connections. OSC OE# may float (not low). PROM CE#/OE# must be tied low. The LCD is blank until that protoboard netlist encodes.
+The 5 V module drives VIN/EN internally so VDD appears on its pin. In Manual, VDD, GND, clocks, and the rest need breadboard connections. OSC OE# may float (not low). PROM CE#/OE# must be tied low. The LCD is blank until that protoboard netlist encodes.
 
-Hover a pin to pulse it and every other pin on the same Auto net (the intended breadboard partners).
+Pin hover pulses that pin and every other pin on the same Auto net (breadboard partners for that net).
 
 Part positions, breadboard jumpers, pan, and Auto/Manual are written to `ui_layout.json` on quit and restored on the next launch.
 
