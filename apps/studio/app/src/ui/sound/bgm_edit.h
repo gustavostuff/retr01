@@ -12,13 +12,13 @@ void ui_bgm_midi_to_tok(int midi, char tok[5]);
 int ui_bgm_tok_to_midi(const char *tok);
 void ui_bgm_default_tok(int ch, char tok[5], int *out_midi);
 
-/* Nudge region pitch: dir +1/-1 through C D E F G A B (naturals). Sharp stays.
+/* Nudge region pitch: dir +1/-1 through C D E F G A B (naturals). Accidental stays.
  * Noise cycles period; DPCM cycles FD/FE. */
 void ui_bgm_nudge_region(UiBgmRegion *rg, int ch, int dir);
 void ui_bgm_key_name(int pc, int solfa, char buf[8]);
 void ui_bgm_note_label(const UiBgmRegion *rg, int ch, int solfa, char buf[32]);
 void ui_bgm_toggle_sharp(UiBgmRegion *rg, int ch);
-void ui_bgm_toggle_minor(UiBgmRegion *rg, int ch);
+void ui_bgm_toggle_flat(UiBgmRegion *rg, int ch);
 
 /* Find region covering tick on channel; -1 if none. */
 int ui_bgm_find_at(const UiState *ui, int track, int ch, int tick);
@@ -41,7 +41,7 @@ int ui_bgm_is_sel(const UiState *ui, int ch, int idx);
 void ui_bgm_remove_sel(UiState *ui);
 void ui_bgm_nudge_sel(UiState *ui, int dir);
 void ui_bgm_toggle_sel_sharp(UiState *ui);
-void ui_bgm_toggle_sel_minor(UiState *ui);
+void ui_bgm_toggle_sel_flat(UiState *ui);
 void ui_bgm_move_sel_grab(UiState *ui);
 void ui_bgm_move_sel_apply(UiState *ui, int dt);
 

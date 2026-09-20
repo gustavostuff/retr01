@@ -389,7 +389,7 @@ typedef struct UiBgmRegion {
     int midi;      /* melodic MIDI; noise period 0..15; DPCM kind stub */
     char tok[5];   /* host token */
     int sharp;     /* 1 = sostenido / # */
-    int minor;     /* 1 = menor / minor (label, does not change pitch) */
+    int flat;      /* 1 = bemol / b (exclusive with sharp) */
     int selected;  /* UI-only, not persisted */
 } UiBgmRegion;
 

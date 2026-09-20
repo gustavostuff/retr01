@@ -169,48 +169,6 @@ static int rows_equal(const char cells[][R01_BGM_FD_CH][R01_BGM_FD_TOKEN], int a
     return 1;
 }
 
-static int row_needs_arp(const char cells[][R01_BGM_FD_CH][R01_BGM_FD_TOKEN], int step) {
-    int ch;
-    for (ch = 0; ch < 3; ch++) {
-        int midi = 0;
-        int minor = 0;
-        if (parse_melodic_tok(cells[step][ch], &midi, &minor) && minor) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-static int row_payload_arp(const char cells[][R01_BGM_FD_CH][R01_BGM_FD_TOKEN], int step, int phase,
-                           uint8_t *mask, uint8_t *payload, unsigned *n_payload) {
-    int ch;
-    *mask = 0;
-    *n_payload = 0;
-    for (ch = 0; ch < R01_BGM_FD_CH; ch++) {
-        uint8_t byte = 0;
-        int midi = 0;
-        int minor = 0;
-        if (ch < 3 && parse_melodic_tok(cells[step][ch], &midi, &minor) && minor) {
-            int add = 0;
-            if (phase == 1) {
-                add = 3;
-            } else if (phase == 2) {
-                add = 7;
-            }
-            byte = midi_to_note_byte(midi + add);
-            *mask = (uint8_t)(*mask | (uint8_t)(1u << ch));
-            payload[(*n_payload)++] = byte;
-        } else if (r01_bgm_fd_token_payload(ch, cells[step][ch], &byte)) {
-            *mask = (uint8_t)(*mask | (uint8_t)(1u << ch));
-            payload[(*n_payload)++] = byte;
-        } else if (ch != 4) {
-            *mask = (uint8_t)(*mask | (uint8_t)(1u << ch));
-            payload[(*n_payload)++] = 0x80u;
-        }
-    }
-    return (*n_payload > 0u) ? 1 : 0;
-}
-
 static int emit_fd_hold(uint8_t *out, unsigned *o, unsigned out_cap, uint8_t mask, const uint8_t *payload,
                         unsigned n_payload, int hold_frames) {
     uint8_t frame[R01_APU_FD_FRAME_MAX];
@@ -291,26 +249,7 @@ int r01_bgm_fd_encode_cells(const char cells[][R01_BGM_FD_CH][R01_BGM_FD_TOKEN],
             run++;
         }
         hold_frames = run * frames;
-        if (row_needs_arp(cells, step)) {
-            int t = 0;
-            while (t < hold_frames) {
-                int phase = (t / 4) % 3;
-                int chunk = 4;
-                if (chunk > hold_frames - t) {
-                    chunk = hold_frames - t;
-                }
-                memset(payload, 0, sizeof(payload));
-                mask = 0;
-                n_payload = 0;
-                if (!row_payload_arp(cells, step, phase, &mask, payload, &n_payload)) {
-                    break;
-                }
-                if (emit_fd_hold(out, &o, out_cap, mask, payload, n_payload, chunk) < 0) {
-                    return -1;
-                }
-                t += chunk;
-            }
-        } else if (emit_fd_hold(out, &o, out_cap, mask, payload, n_payload, hold_frames) < 0) {
+        if (emit_fd_hold(out, &o, out_cap, mask, payload, n_payload, hold_frames) < 0) {
             return -1;
         }
         step += run;

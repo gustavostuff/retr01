@@ -127,7 +127,7 @@ typedef struct R01BgmRegion {
     int midi;
     char tok[R01_BGM_TOK_MAX];
     int sharp; /* 1 = sostenido */
-    int minor; /* 1 = menor */
+    int flat;  /* 1 = bemol */
 } R01BgmRegion;
 
 typedef struct R01BgmData {

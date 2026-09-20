@@ -537,8 +537,13 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 ui_sound_play_refresh(ui);
                 return 1;
             }
-            if (e->key.keysym.sym == SDLK_m) {
-                ui_bgm_toggle_sel_minor(ui);
+            if (e->key.keysym.sym == SDLK_b) {
+                ui_bgm_toggle_sel_flat(ui);
+                ui_sound_play_refresh(ui);
+                return 1;
+            }
+            if (e->key.keysym.sym == SDLK_UP || e->key.keysym.sym == SDLK_DOWN) {
+                ui_bgm_nudge_sel(ui, e->key.keysym.sym == SDLK_UP ? 1 : -1);
                 ui_sound_play_refresh(ui);
                 return 1;
             }

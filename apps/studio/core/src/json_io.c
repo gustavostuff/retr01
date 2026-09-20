@@ -693,9 +693,9 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
                 first_ch = 0;
                 for (ri = 0; ri < n; ri++) {
                     const R01BgmRegion *rg = &p->bgm.region[ti][ch][ri];
-                    fprintf(f, "%s{\"s\":%d,\"l\":%d,\"m\":%d,\"t\":\"%s\",\"sh\":%d,\"mi\":%d}", first_r ? "" : ",",
+                    fprintf(f, "%s{\"s\":%d,\"l\":%d,\"m\":%d,\"t\":\"%s\",\"sh\":%d,\"fl\":%d}", first_r ? "" : ",",
                             rg->start, rg->len, rg->midi, rg->tok[0] ? rg->tok : "--", rg->sharp ? 1 : 0,
-                            rg->minor ? 1 : 0);
+                            rg->flat ? 1 : 0);
                     first_r = 0;
                 }
                 fprintf(f, "]");
@@ -1908,7 +1908,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         char *rslice;
                         size_t rlen;
                         char *tok;
-                        int s = 0, l = 1, m = 0, sh = 0, mi = 0, got_sh = 0;
+                        int s = 0, l = 1, m = 0, sh = 0, fl = 0, got_sh = 0, got_fl = 0;
                         if (!ro_end || ro_end > rb) {
                             break;
                         }
@@ -1923,7 +1923,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         json_int_after(rslice, "\"l\"", &l);
                         json_int_after(rslice, "\"m\"", &m);
                         got_sh = json_int_after(rslice, "\"sh\"", &sh);
-                        json_int_after(rslice, "\"mi\"", &mi);
+                        got_fl = json_int_after(rslice, "\"fl\"", &fl);
                         tok = json_string_field_dup(rslice, "\"t\"");
                         free(rslice);
                         if (l < 1) {
@@ -1932,15 +1932,25 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         p->bgm.region[ti][ch][n].start = s;
                         p->bgm.region[ti][ch][n].len = l;
                         p->bgm.region[ti][ch][n].midi = m;
-                        if (!got_sh) {
+                        p->bgm.region[ti][ch][n].sharp = 0;
+                        p->bgm.region[ti][ch][n].flat = 0;
+                        if (got_fl && fl) {
+                            p->bgm.region[ti][ch][n].flat = 1;
+                        } else if (got_sh && sh) {
+                            p->bgm.region[ti][ch][n].sharp = 1;
+                        } else if (tok && tok[1] == 'b' && tok[2] >= '0' && tok[2] <= '9') {
+                            p->bgm.region[ti][ch][n].flat = 1;
+                        } else if (tok && (tok[1] == '#' || tok[1] == 's' || tok[1] == 'S')) {
+                            p->bgm.region[ti][ch][n].sharp = 1;
+                        } else {
                             int pc = m % 12;
                             if (pc < 0) {
                                 pc += 12;
                             }
-                            sh = (pc == 1 || pc == 3 || pc == 6 || pc == 8 || pc == 10);
+                            if (pc == 1 || pc == 3 || pc == 6 || pc == 8 || pc == 10) {
+                                p->bgm.region[ti][ch][n].sharp = 1;
+                            }
                         }
-                        p->bgm.region[ti][ch][n].sharp = sh ? 1 : 0;
-                        p->bgm.region[ti][ch][n].minor = mi ? 1 : 0;
                         if (tok) {
                             snprintf(p->bgm.region[ti][ch][n].tok, sizeof(p->bgm.region[ti][ch][n].tok), "%s",
                                      tok);
