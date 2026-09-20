@@ -133,7 +133,7 @@ int app_shell_init(AppShell *app, int headless) {
         SDL_ShowWindow(app->win);
     }
 #if R01_README_SHOT
-    fprintf(stderr, "F12 writes %s/img/readme/studio.png\n", R01_REPO_ROOT);
+    fprintf(stderr, "F12 writes %s/img/readme/studio.png (Audio: studio-audio.png)\n", R01_REPO_ROOT);
 #endif
     return 0;
 }
@@ -189,6 +189,7 @@ void app_shell_frame(AppShell *app) {
         int lh = ui_logic_h(&app->ui);
         int stride = lw * 3;
         uint8_t *px = (uint8_t *)malloc((size_t)stride * (size_t)lh);
+        const char *shot_name = (app->ui.app_mode == UI_APP_SOUNDS) ? "studio-audio.png" : "studio.png";
         app->readme_shot = 0;
         if (!px) {
             ui_toast(&app->ui, "readme shot failed", 1);
@@ -197,10 +198,12 @@ void app_shell_frame(AppShell *app) {
             if (SDL_RenderReadPixels(app->ren, NULL, SDL_PIXELFORMAT_RGB24, px, stride) != 0) {
                 fprintf(stderr, "readme shot: ReadPixels (%s)\n", SDL_GetError());
                 ui_toast(&app->ui, "readme shot failed", 1);
-            } else if (r01_readme_shot_save_rgb(px, lw, lh, stride, scale, "studio.png") != 0) {
+            } else if (r01_readme_shot_save_rgb(px, lw, lh, stride, scale, shot_name) != 0) {
                 ui_toast(&app->ui, "readme shot failed", 1);
             } else {
-                ui_toast(&app->ui, "readme studio.png", 0);
+                char toast[48];
+                snprintf(toast, sizeof(toast), "readme %s", shot_name);
+                ui_toast(&app->ui, toast, 0);
             }
             SDL_SetRenderTarget(app->ren, NULL);
             free(px);
@@ -218,7 +221,8 @@ int app_shell_handle_event(AppShell *app, const SDL_Event *e) {
 #if R01_README_SHOT
     if (e->type == SDL_KEYDOWN && !e->key.repeat && e->key.keysym.sym == SDLK_F12) {
         app->readme_shot = 1;
-        fprintf(stderr, "F12: capture studio.png next frame\n");
+        fprintf(stderr, "F12: capture %s next frame\n",
+                app->ui.app_mode == UI_APP_SOUNDS ? "studio-audio.png" : "studio.png");
         return 1;
     }
 #endif

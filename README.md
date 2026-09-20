@@ -33,6 +33,8 @@ NOTE: hardware is still in design phase, software is being built on that design.
 
 <img src="img/readme/studio.png" alt="Retr01 Studio" />
 
+<img src="img/readme/studio-audio.png" alt="Retr01 Studio Audio" />
+
 Maria is a player entity used to test Emu and Studio. It may become a full game later. Idle, running, crouching, and jumping are entity states (up to 4 states x 8 frames x 6 sprites):
 
 <img src="img/readme/maria/idle.gif" alt="Maria idle" />
