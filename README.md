@@ -35,6 +35,8 @@ NOTE: hardware is still in design phase, software is being built on that design.
 
 <img src="img/readme/studio-audio.png" alt="Retr01 Studio Audio" />
 
+**Retr01 Sim** is a discrete-IC board simulator. Tier A is the video-only lab (beam PLDs, color PROM, virtual screen). See [apps/sim/](apps/sim/README.md).
+
 Maria is a player entity used to test Emu and Studio. It may become a full game later. Idle, running, crouching, and jumping are entity states (up to 4 states x 8 frames x 6 sprites):
 
 <img src="img/readme/maria/idle.gif" alt="Maria idle" />
@@ -57,4 +59,4 @@ Maria is a player entity used to test Emu and Studio. It may become a full game 
 - [open-questions.md](docs/general/open-questions.md): Unknowns and open design decisions, with notes on what still needs validation and how each remaining question gets resolved.
 - [ic_behavior/](docs/ic_behavior/README.md): A per-chip description for each part in the BOM: behavior, role, optional variants, and key caveats.
 - [bringup/](docs/bringup/README.md): The late hardware bring-up roadmap, ordered by tiers A-H from video lab validation through a full console-style demo with controllers and audio.
-- [apps/README.md](apps/README.md): The app layer: Studio authoring workflow and the Emu runtime used to test content.
+- [apps/README.md](apps/README.md): The app layer: Studio authoring, Emu runtime, and the discrete-IC board sim.

@@ -1,6 +1,8 @@
 doc-style-rules.txt
 apps/studio/build/
 apps/emu/build/
+apps/sim/tier-a/build/
+apps/netlist_sim/build/
 bin/
 output/
 temp/

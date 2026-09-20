@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build Studio and Emu (Release) into bin/.
+# Build Studio, Emu, and Tier A sim (Release) into bin/.
 # Usage: ./scripts/build-all.sh [--clean|-c]
 #   --clean  Remove apps/*/build and bin/, then configure and compile from scratch.
 set -euo pipefail
@@ -8,6 +8,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BIN="$ROOT/bin"
 STUDIO="$ROOT/apps/studio"
 EMU="$ROOT/apps/emu"
+SIM_A="$ROOT/apps/sim/tier-a"
 CLEAN=0
 
 usage() {
@@ -43,7 +44,7 @@ build_one() {
 
 if [ "$CLEAN" -eq 1 ]; then
   echo "cleaning build trees and bin/"
-  rm -rf "$STUDIO/build" "$EMU/build" "$BIN"
+  rm -rf "$STUDIO/build" "$EMU/build" "$SIM_A/build" "$BIN"
 fi
 
 mkdir -p "$BIN"
@@ -54,5 +55,8 @@ build_one "$STUDIO" retr01_studio studio
 echo "== emu =="
 build_one "$EMU" retr01_emu emu
 
+echo "== sim tier-a =="
+build_one "$SIM_A" retr01_sim_tier_a sim-tier-a
+
 echo "binaries:"
-ls -lh "$BIN"/studio "$BIN"/emu
+ls -lh "$BIN"/studio "$BIN"/emu "$BIN"/sim-tier-a

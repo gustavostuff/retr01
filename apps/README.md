@@ -4,9 +4,11 @@
 | --- | --- | --- |
 | Studio | `apps/studio` | `cmake -S apps/studio -B apps/studio/build && cmake --build apps/studio/build -j` |
 | Emu | `apps/emu` | `cmake -S apps/emu -B apps/emu/build && cmake --build apps/emu/build -j` |
-| Shared | `apps/common` | Linked by Studio / Emu |
+| Sim (Tier A) | `apps/sim/tier-a` | `cmake -S apps/sim/tier-a -B apps/sim/tier-a/build && cmake --build apps/sim/tier-a/build -j` |
+| Shared | `apps/common` | Linked by Studio / Emu / Sim |
+| Netlist engine | `apps/netlist_sim` | Linked by Sim |
 
-Repo wrappers (after copying binaries to `bin/`): `./scripts/studio.sh` and `./scripts/emu.sh`. Build with `./scripts/build-all.sh`.
+Repo wrappers (after copying binaries to `bin/`): `./scripts/studio.sh`, `./scripts/emu.sh`, and `./scripts/sim-tier-a.sh`. Build with `./scripts/build-all.sh`.
 
 ## Studio projects
 
