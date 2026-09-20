@@ -26,15 +26,23 @@ One flat **32 KB PRG** window on the cart. No PRG banking. That is the same PRG 
 
 **More RAM.** System RAM is about **32 KB** (`$0000-$7EFF`), not the NES **2 KB**. Live entity state, buffers, and helpers can sit in RAM instead of burning PRG on clever packing and constant reloads.
 
-**NES games burned VBlank on the picture.** A large share of many NES titles (often **40-50%** of VBlank time) went into making the picture appear and move: OAM updates, scroll writes, nametable streaming, RLE decompression, etc. That work ate the same CPU and PRG that also had to run the game.
+**NES games burned VBlank on the picture.** A large share of many NES titles (often **40-50%** of VBlank time) went into making the picture appear and move: OAM updates, scroll writes, nametable streaming, and RLE decompression. That work ate the same CPU and PRG that also had to run the game.
 
 **Retr01 pushes video off PRG.** Work the NES piled onto the 6502 is handled here by PLDs, glue, and the helper AVRs: hardware scroll, cart MAP/nametable streaming, and sprites filled in **VBlank** by MCU-S1. On top of that, Retr01 adds dual BG planes with BG0 show-through and **HBlank** BG0 line prep, which the NES never had. Authors spend the same 32 KB mostly on play and behavior, not on fighting the display.
 
+## Sixteen plus sixteen CHR banks, no mapper
+
+NES-style CHR banking latches **one** bank for the picture. The mapper decides which patterns may appear. Mixing a second tileset means a bank switch (often mid-frame), extra silicon on the cart, and a window the whole screen has to live in.
+
+Retr01 puts **16 BG banks and 16 SPR banks** on the cartridge at once (**128 KB**, cart-wide) with a **passive cart** (flash + save EEPROM, no mapper IC). There is no bank switching. BG and SPR pools are independent. Title screens, playfields, and the player share that pool.
+
+Authority sits on the **tile or sprite**, not on a latched "current bank." Each nametable cell and each OAM entry carries a **4-bit bank index** (attr bits 0-3) and may call **any** of the 16 banks in its plane. A brick from bank 0 and a HUD glyph from bank 11 can sit on the same screen without a mapper write. See `video-graphics.md` and `memory.md`.
+
 ## Entity system with clear budgets
 
-Authors think in **entities** (up to 4 states x 4 frames x 6 sprites), not raw sprites. Definitions are cart data. Behavior is C/ASM in PRG.
+Authors think in **entities** (up to 4 states x 8 frames x 6 sprites), not raw sprites. Definitions are cart data. Behavior is C/ASM in PRG.
 
-Studio-friendly hard cap: **16** entity **types** **per world** (catalog). On-screen instances are not type-capped: as many as fit the **64** OAM sprite budget (**16**/scanline). Each world blob carries its own catalog and SPR CHR. Packed defs use offset tables so PRG can seek state S / frame F (see `software-api.md`).
+Studio-friendly hard cap: **32** entity **types** **cart-wide** (one global catalog). The same type may spawn in any world. On-screen instances are not type-capped: as many as fit the **64** OAM sprite budget (**16**/scanline). Packed defs use offset tables so PRG can seek state S / frame F (see `software-api.md`).
 
 ## Console programs its own carts
 

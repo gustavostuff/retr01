@@ -6,25 +6,25 @@ How games are laid out in worlds and screens, how VRAM holds a sliding window of
 
 Binary cart map is in `memory.md` (`.retr01` world blobs). Conceptually:
 
-- Up to **7 worlds** per game.
-- Up to **32 BG1 screens** per world.
+- Up to **8 worlds** per game.
+- Up to **64 BG1 screens** per world.
 - Each screen is **16x15 tiles** (240 tile-index bytes + 240 attribute bytes).
 - Screens sit on a sparse virtual grid of up to **16x16 screen slots**.
 
-That supports linear levels up to 16 screens tall or wide, labyrinth worlds, open NxM grids, and other shapes (32 present screens is the cart cap, not a full 16x16 fill).
+That supports linear levels up to 16 screens tall or wide, labyrinth worlds, open NxM grids, and other shapes (64 present screens is the cart cap, not a full 16x16 fill).
 
-Worlds may also have **BG0 screens** for depth: **0..8** present screens per world (sparse on the same 16x16 idea).
+Worlds may also have **BG0 screens** for depth: **0..16** present screens per world (sparse on the same 16x16 idea).
 
-### Pattern banks per world
+### Pattern banks (cart-wide)
 
-Each world has:
+CHR is cart-global:
 
-- 4 independent BG banks.
-- 4 independent Sprite banks.
+- 16 independent BG banks.
+- 16 independent Sprite banks.
 
-Each bank is 256 patterns of 8x8 at 2bpp.
+Each bank is 256 patterns of 8x8 at 2bpp. Nametable and sprite attrs name **bank 0-15** per cell / sprite. See `video-graphics.md`.
 
-Hard cap: **16** entity **types** **per world** (catalog inside that world blob). On-screen instance count is soft: limited by the **64** hardware sprites in OAM (and **16**/scanline), not by the type cap. Soft art pressure without tile reuse still tops out around **10** fully maxed unique-tile types per world (1024 / 96). See `memory.md` and `software-api.md`.
+Hard cap: **32** entity **types** **cart-wide** (one global catalog). On-screen instance count is soft: limited by the **64** hardware sprites in OAM (and **16**/scanline), not by the type cap. Soft art pressure without tile reuse still tops out around **21** fully maxed unique-tile types (4096 / 192). See `memory.md` and `software-api.md`.
 
 ## Movement modes
 

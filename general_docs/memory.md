@@ -6,6 +6,8 @@ Cart image rules below are the baseline for this repo. Soft `$7Fxx` owners follo
 
 **Related:** `hardware.md`, `cartridge.md`, `video-graphics.md`, `palette/`, `world-scrolling.md`, `software-api.md`, `sound.md`, `ic-comms-risks.md`.
 
+Logical regions and caps here are SoT. Pointer-table packing lives with Studio / Emu.
+
 ## CPU address map
 
 | Range | Backing | Access |
@@ -29,191 +31,147 @@ I/O lives in `$7F00-$7FFF` (the 256-byte page immediately before PRG at `$8000`)
 
 ## Cart image (`.retr01`)
 
-Magic **`retr01`**, **`format_ver` = 4**. Bump only when the layout breaks old tools.
+Magic **`retr01`**. Pointer table names the regions. No mapper. CHR is one global pool.
 
 ```text
 +======================================================================+
 |                         .retr01 CART IMAGE                           |
 +======================================================================+
-| +----------------------+  +----------------------------------------+ |
-| | HEADER          16 B |  | POINTER TABLE                     36 B | |
-| | magic, format_ver,   |  | slots: PRG, BG pals, SPR pals,         | |
-| | flags, ...           |  |        worlds, other screens,          | |
-| |                      |  |        global other CHR                | |
-| +----------------------+  +----------------------------------------+ |
+| HEADER  |  POINTER TABLE (PRG, pals, CHR, entities, other, worlds)   |
 +----------------------------------------------------------------------+
-| +------------------------------------------------------------------+ |
-| | GLOBAL PALETTES                                           256 B  | |
-| |  +---------------------------+  +------------------------------+ | |
-| |  | BG plane            128 B |  | Sprite plane           128 B | | |
-| |  | 8 rows x 4 pals x 4 idx   |  | 8 rows x 4 pals x 4 idx      | | |
-| |  +---------------------------+  +------------------------------+ | |
-| +------------------------------------------------------------------+ |
+| GLOBAL PALETTES  256 B (128 B BG + 128 B SPR)                        |
+|  8 rows x 4 pals x 4 kit indices per plane                           |
 +----------------------------------------------------------------------+
-| +------------------------------------------------------------------+ |
-| | PRG                                                        32 KB | |
-| | flat code + vectors at top ($8000-$FFFF window)                  | |
-| | entity *behavior* lives here (C/ASM)                             | |
-| +------------------------------------------------------------------+ |
+| PRG  32 KB                                                           |
+|  flat code + vectors at top ($8000-$FFFF window)                     |
+|  entity behavior, spawn tables, collision solids                     |
 +----------------------------------------------------------------------+
-| +------------------------------------------------------------------+ |
-| | GLOBAL OTHER CHR                                           32 KB | |
-| |  4 BG banks + 4 SPR banks (256 tiles x 16 B each bank)           | |
-| |  Used by other screens (title / interstitial / credits / UI)     | |
-| +------------------------------------------------------------------+ |
+| GLOBAL CHR  128 KB                                                   |
+|  16 BG banks  |  16 SPR banks                                        |
+|  256 tiles x 16 B each bank. Title, playfield, and player share this |
 +----------------------------------------------------------------------+
-| +------------------------------------------------------------------+ |
-| | OTHER SCREENS (global, max 16 total)                             | |
-| |  title / interstitial / credits share one pool (ids 0..15)       | |
-| |  each payload 480 B raw or RLE                                   | |
-| |  nametable attrs index global other CHR (not world CHR)          | |
-| +------------------------------------------------------------------+ |
+| ENTITY CATALOG  (up to 32 defs, pack in software-api.md)             |
 +----------------------------------------------------------------------+
-| +------------------------------------------------------------------+ |
-| | WORLD TABLE                                              7 x 8 B | |
-| | one directory row per world slot (present flag + blob offset)    | |
-| +------------------------------------------------------------------+ |
+| OTHER SCREENS  (max 16 x 480 B raw or RLE)                           |
+|  title / interstitial / credits. Attrs index global CHR              |
 +----------------------------------------------------------------------+
-| +--------------------------- WORLD BLOB (per present world) -------+ |
-| | +--------------------+                                           | |
-| | | World header  32 B |  spawn, banks, counts, offsets, camera    | |
-| | +--------------------+                                           | |
-| | +--------------------------------------------------------------+ | |
-| | | CHR                                                   32 KB  | | |
-| | | 4 BG banks + 4 SPR banks (256 tiles x 16 B each bank)        | | |
-| | +--------------------------------------------------------------+ | |
-| | +------------------+  +----------------------------------------+ | |
-| | | BG1 directory    |  | BG1 screen payloads (480 B each)       | | |
-| | | 12 B x present   |  | up to 32 present screens               | | |
-| | +------------------+  +----------------------------------------+ | |
-| | +------------------+  +----------------------------------------+ | |
-| | | BG0 directory    |  | BG0 screen payloads (480 B each)       | | |
-| | | 12 B x present   |  | up to 8 present screens                | | |
-| | +------------------+  +----------------------------------------+ | |
-| | +--------------------------------------------------------------+ | |
-| | | ENTITY CATALOG                              up to 16 types   | | |
-| | | defs only (states/frames/sprites). This world's SPR CHR      | | |
-| | | pack format in software-api.md                               | | |
-| | +--------------------------------------------------------------+ | |
-| | +--------------------------------------------------------------+ | |
-| | | optional PA blob (player anim), if used                      | | |
-| | +--------------------------------------------------------------+ | |
-| +------------------------------------------------------------------+ |
-| ... up to 7 world blobs ...                                          |
+| WORLD TABLE  8 x 8 B                                                 |
++----------------------------------------------------------------------+
+| WORLD BLOB (x8, present worlds only)                                 |
+|   header 32 B                                                        |
+|   BG1 dir 12 B x present (max 64)  |  BG1 payloads 480 B each        |
+|   BG0 dir 12 B x present (max 16)  |  BG0 payloads 480 B each        |
 +======================================================================+
 ```
 
-### Pointer table (36 B)
+### Pointer table
 
-Six `(offset, length)` pairs as little-endian **u24** (3+3 bytes each):
+`(offset, length)` pairs as little-endian **u24**. Regions:
 
-| Slot | Points at |
+| Region | Size / note |
 | --- | --- |
-| 0 | PRG (**32 KB**) |
-| 1 | Global BG palette plane (**128 B**) |
-| 2 | Global sprite palette plane (**128 B**) |
-| 3 | World table (**56 B**) |
-| 4 | Other-screens blob |
-| 5 | Global other CHR (**32 KB**: 4 BG + 4 SPR banks) |
+| PRG | **32 KB** |
+| Global BG palette plane | **128 B** |
+| Global sprite palette plane | **128 B** |
+| Global CHR | **128 KB** (16 BG then 16 SPR banks) |
+| Entity catalog | Up to **32** defs (see `software-api.md`) |
+| Other-screens blob | Max **16** screens |
+| World table | **8 x 8 B** |
 
 ### World blob (per present world)
 
 | Piece | Size / note |
 | --- | --- |
-| World header | **32 B** (spawn cell as nibble-packed col/row, default banks/pal row, BG1/BG0 present counts, flags at byte **7**, entity type count **0..16**, CHR/dir/entity-catalog offsets, player entity + hitbox, camera dead-zone **width/height** at bytes **30-31**) |
-| CHR | **4** BG banks + **4** SPR banks x **4096 B** = **32 KB** total |
+| World header | **32 B** (spawn cell as nibble-packed col/row, BG1/BG0 present counts, flags at byte **7**, camera dead-zone **width/height** at bytes **30-31**) |
 | BG1 screen directory | **12 B** per present playfield screen (grid cell + payload offset) |
-| BG1 screen payloads | **480 B** each (present only, sparse **16x16**, max **32**/world) |
+| BG1 screen payloads | **480 B** each (present only, sparse **16x16**, max **64**/world) |
 | BG0 directory | **12 B** per present BG0 screen (same shape as BG1 dir). Offset **0** if none |
-| BG0 payloads | **480 B** each (up to **8** present screens, sparse on **16x16**) |
-| Entity catalog | Up to **16** defs for this world only (pack in `software-api.md`). Offset **0** if none |
-| Player anim | Optional `PA` blob when a player entity is marked |
+| BG0 payloads | **480 B** each (up to **16** present screens, sparse on **16x16**) |
 
-Entity **spawn locations** are **not** on the cart. PRG owns who appears where (tables or code calling `spawn_entity`). Defs live in the **per-world** catalog inside the world blob.
+World blobs hold maps. CHR and the entity catalog are cart-global. Optional `PA` (player anim) may hang off the global catalog or a world header when a player entity is marked.
+
+Entity **spawn locations** live in **PRG** (tables or code calling `spawn_entity`). Defs live in the **global** catalog.
 
 **Grid cell byte:** virtual map is **16x16** (col/row **0-15**). Pack both coords in **1 byte** as nibbles: `col | (row << 4)`. Same packing for BG1/BG0 directory entries and world-header spawn cell.
 
 **World header notes (BG0):** byte **3** packs present BG0 extent (`cols | rows<<4`). Byte **6** is BG0 present count. Bytes **14-16** are BG0 directory offset (u24), or **0** if none. Byte **7** flags: bit0 player-anim blob, bit1 BG0 wrap X, bit2 BG0 wrap Y, bit3 BG0 clip to BG1 (see `world-scrolling.md`), bit4 platformer mode (see `software-api.md`).
 
-**Screen payload:** **480 B** = 240 tile bytes + 240 attr bytes (**16x15**, **128x120**). Same shape for BG1 and BG0.
+**Screen payload:** **480 B** = 240 tile bytes + 240 attr bytes (**16x15**, **128x120**). Same shape for BG1 and BG0. Attr pack in `video-graphics.md`. Bank bits **0-3** index global CHR.
 
-**World caps:** **7** worlds, **32 present BG1 screens**/world, **0..8** BG0 screens/world, **4** BG + **4** sprite CHR banks/world, **16** entity types/world.
+**Caps:** **8** worlds, **64** present BG1 screens/world, **0..16** BG0 screens/world, **16** BG + **16** SPR banks cart-wide, **32** entity types cart-wide.
 
 ### Flash budget at max fill
 
-Worst case: all fixed image pieces + **global other CHR** (**32 KB**) + **7** worlds at full CHR, max present screens (sparse dirs), and **16** fully maxed entity defs each + **16** other screens at raw **480 B** each. RLE and unused slots free more. Spawn locations cost **PRG**, not cart flash. There is **no** dedicated player CHR bank: the marked player uses the **global other SPR** banks.
+Worst case: all 8 worlds present, every world at 64 BG1 + 16 BG0, all 16+16 CHR packed, 32 maxed entity defs, 16 other screens at raw **480 B**. RLE and unused slots free more. Spawn locations cost **PRG**, not cart flash. Optional `PA` and the type directory are outside the table.
 
-One maxed world blob (no `PA`) is **60992 B** (~59.6 KB):
-**1 x 32** (header) + **1 x 32768** (CHR) + **32 x 12** (BG1 dir) + **32 x 480** (BG1 payloads) + **8 x 12** (BG0 dir) + **8 x 480** (BG0 payloads) + **16 x 532** (entity defs).
+One maxed world blob (maps only) is **39392 B** (~38.5 KB):
+**1 x 32** (header) + **64 x 12** (BG1 dir) + **64 x 480** (BG1 payloads) + **16 x 12** (BG0 dir) + **16 x 480** (BG0 payloads).
 
 | Item | Number of bytes | Kilobytes |
 | --- | ---: | ---: |
-| Header (1 x 16 B) | **16** | ~0.0 |
-| Pointer table (6 slots x 6 B) | **36** | ~0.0 |
-| Global BG palettes (1 plane x 128 B) | **128** | ~0.1 |
-| Global sprite palettes (1 plane x 128 B) | **128** | ~0.1 |
+| Header + pointer table + palettes | **308** | ~0.3 |
 | PRG (1 x 32768 B) | **32768** | **32.0** |
-| Global other CHR (4 BG + 4 SPR banks) | **32768** | **32.0** |
-| World table (7 worlds x 8 B) | **56** | ~0.1 |
-| World headers (7 worlds x 32 B) | **224** | ~0.2 |
-| World CHR (7 worlds x 32768 B) | **229376** | **224.0** |
-| BG1 directories (7 worlds x 32 screens x 12 B) | **2688** | **~2.6** |
-| BG1 payloads (7 worlds x 32 screens x 480 B) | **107520** | **105.0** |
-| BG0 directories (7 worlds x 8 screens x 12 B) | **672** | ~0.7 |
-| BG0 payloads (7 worlds x 8 screens x 480 B) | **26880** | **~26.3** |
-| Entity defs (7 worlds x 16 defs x 532 B maxed) | **59584** | **~58.2** |
+| World table (8 worlds x 8 B) | **64** | ~0.1 |
+| World headers (8 worlds x 32 B) | **256** | ~0.3 |
+| Global CHR (16 BG + 16 SPR banks) | **131072** | **128.0** |
+| BG1 directories (8 worlds x 64 screens x 12 B) | **6144** | **~6.0** |
+| BG1 payloads (8 worlds x 64 screens x 480 B) | **245760** | **240.0** |
+| BG0 directories (8 worlds x 16 screens x 12 B) | **1536** | **~1.5** |
+| BG0 payloads (8 worlds x 16 screens x 480 B) | **61440** | **60.0** |
+| Entity defs (32 x 1044 B maxed) | **33408** | **~32.6** |
 | Other screens (16 screens x 480 B raw) | **7680** | **~7.5** |
-| **Used (sum of rows above)** | **500524** | **~488.8** |
-| Free (524288 flash - 500524 used) | **23764** | **~23.2** |
+| **Used (sum of rows above)** | **520436** | **~508.2** |
+| Free (524288 flash - 520436 used) | **3852** | **~3.8** |
 
-Absolute max fill **fits** with ~**23.2 KB** free. Real carts stay further under because entity defs are variable-length (only live sprites), screens/CHR are rarely all filled, and RLE can shrink other screens. Optional `PA` and the per-world type directory (`u16` x type count, up to **+32 B**/world) are also outside the table above.
+Absolute max fill **fits** with ~**4 KB** free. Real carts stay further under because entity defs are variable-length (only live sprites), screens/CHR are rarely all filled, and RLE can shrink other screens.
 
-### Global other CHR
+### Global CHR
 
-Cart-global pattern banks for **other screens** (title, interstitial, credits, menus) and for the **marked player** (and inventory icons). Separate from per-world CHR.
-
-| Topic | Value |
-| --- | --- |
-| Banks | **4** BG + **4** SPR (same shape as one world CHR block) |
-| Size | **32 KB** |
-| Consumers | Other-screen nametable / attr bank bits. Marked **player** entity parts use the **SPR** banks (author picks among the 4). Not world playfield BG |
-| Flash layout | Pointer-table slot **5**. Counted in the max-fill table |
-
-### Player patterns (global SPR)
-
-The marked **player** entity is a normal catalog type in **world 0** (Studio **World 1**). Pixel patterns live in the cart **global other SPR** banks (one or more of the **4**), not in a private fifth bank and not in world CHR.
+One cart-wide pattern pool. Playfields, other screens, and the marked player use it.
 
 | Topic | Value |
 | --- | --- |
-| Pattern home | Global other CHR **SPR** banks (4 x 256 tiles) |
-| Catalog | World **0** entity catalog (`player_entity` index) |
-| Bank bits | Part bank **0..3** select which global SPR bank (same encoding as world SPR, different CHR base at play/title time) |
-| Inventory icons | Same global SPR tiles (or a reserved range). No separate flash region |
-| Other worlds | May mark a local player for playtests. Cart SoT player art is global SPR |
+| Banks | **16** BG + **16** SPR, independent pools |
+| Size | **128 KB** (32 x 4096 B) |
+| Consumers | Playfield nametables, other screens, marked player, inventory icons |
+| Addressing | Each cell or sprite names bank **0-15** in its attr byte. See `video-graphics.md` |
 
-### Entity catalog (per world, cart flash)
+The tile or sprite has authority: its attr bank field may call any bank in that plane.
 
-**Definition:** an entity is a game being/object built from up to 4 states x 4 frames x 6 sprites. Full wording and **byte pack format** in `software-api.md`.
+### Player patterns
 
-Each world blob owns its own catalog (up to **16** types). Types are **not** shared across worlds. Reuse the same enemy look in world 2 by packing another def (and tiles) there. For normal entities, sprite attr bank bits mean this world's SPR banks. Wrong world CHR loaded = wrong pixels (the intentional glitch tell). The marked **player** uses the same 0..3 field against **global other SPR**.
+The marked **player** entity is a normal catalog type. Pixel patterns live in the **global SPR** banks (any of the **16**), same as every other entity.
+
+| Topic | Value |
+| --- | --- |
+| Pattern home | Global SPR banks (16 x 256 tiles) |
+| Catalog | Global entity catalog (`player_entity` index) |
+| Bank bits | Part attr bits **0-3** select SPR bank **0-15** |
+| Inventory icons | Same global SPR tiles |
+
+### Entity catalog (global, cart flash)
+
+**Definition:** an entity is a game being/object built from up to 4 states x 8 frames x 6 sprites. Full wording and **byte pack format** in `software-api.md`.
+
+One catalog for the cart (up to **32** types). The same type may spawn in any world. Sprite attr bank bits index **global SPR**. A wrong bank index shows the wrong tiles.
 
 | Piece | Lives in |
 | --- | --- |
-| Entity **definitions** (looks / anim metadata) | Per-world entity catalog (inside that world blob) |
+| Entity **definitions** (looks / anim metadata) | Global entity catalog |
 | Entity **behavior** (what it does) | **PRG**, authored in **C/ASM** |
-| Entity **spawn locations** (who appears where) | **PRG** (tables and/or `spawn_entity` calls). Not packed in the world blob |
-| Entity **pixel patterns** | This world's SPR CHR |
+| Entity **spawn locations** (who appears where) | **PRG** (tables and/or `spawn_entity` calls) |
+| Entity **pixel patterns** | Global SPR CHR |
+| Collision solids | **PRG** |
 
 | Topic | Value |
 | --- | --- |
-| Hard cap (per world) | **16** entity **types** (catalog). Not an on-screen instance cap |
+| Hard cap | **32** entity **types** (catalog). Not an on-screen instance cap |
 | On-screen instances | Soft: share **64** hardware sprites (OAM). As many entities as fit that sprite budget. See `software-api.md` |
-| Global / cart type pool | **None** (no shared catalog) |
-| Maxed def size (locked pack) | **532 B** |
-| Worst case 7 worlds x 16 maxed defs | **59584 B** (~58.2 KB) |
-| CHR zero-reuse unique-maxed / world | Soft art pressure ~**10** (1024 sprite tiles / 96 slots). Below the type cap when every type is fully unique-tiled |
+| Maxed def size (locked pack) | **1044 B** (4 x 8 x 6) |
+| Worst case 32 maxed defs | **33408 B** (~32.6 KB) |
+| Unique-maxed art pressure | Up to **192** SPR tiles per type if nothing is reused (4 x 8 x 6). Global SPR is **4096** tiles |
 
-Studio: author up to **16** types per world, with art in that world's SPR banks. Live/on-screen count is OAM-budgeted, not type-capped.
+Live/on-screen count is OAM-budgeted, not type-capped.
 
 ### Other screens (global ROM)
 
@@ -225,7 +183,7 @@ Roles are labels on indexes inside the pool (Studio / PRG convention). Example: 
 
 Payload **480 B** raw or **RLE** (`flags` bit 0). RLE: `C < 0x80` copy `C+1` literals, `C >= 0x80` repeat next byte `C-0x7F` times.
 
-**CHR:** other-screen nametable / attr bank bits index the **global other CHR** banks (4 BG + 4 SPR). Showing an other screen selects that CHR set, not a world blob's CHR.
+**CHR:** other-screen nametable / attr bank bits index the **same global CHR** as playfields (16 BG + 16 SPR).
 
 ### MAP port
 
@@ -251,7 +209,7 @@ Owners and timing live in `hardware.md` / `ic-comms-risks.md`. Port roles:
 | `$7F10`-`$7F12` | VRAM addr lo/hi + data (PHI2 high) |
 | `$7F20` / `$7F21` | OAM addr / data (**64** sprites x 4 B) |
 | `$7F22`-`$7F24` | Cart save EEPROM mailbox |
-| `$7F30` | WORLD select (0-6), soft helper |
+| `$7F30` | WORLD select (0-7), soft helper |
 | `$7F40`-`$7F5F` | APU mailbox (8 voices x 4 regs, MCU-S2). See `sound.md` |
 | `$7F60` / `$7F61` | Pad P1 / P2 bitfields |
 | `$7F70`-`$7F72` | Machine EEPROM mailbox |
@@ -263,7 +221,7 @@ Owners and timing live in `hardware.md` / `ic-comms-risks.md`. Port roles:
 
 | Topic | Detail |
 | --- | --- |
-| System RAM `$0000-$7EFF` | 32 KB minus the I/O page (**32512 B**). CPU only. Game state, stacks, helpers, anim-tile delay setting |
+| System RAM `$0000-$7EFF` | 32 KB minus the I/O page (**32512 B**). CPU only. Game state, stacks, helpers |
 | VRAM 32 KB interleaved | CPU and video take turns by PHI2 phase. Camera window holds BG1 slots and BG0 slots (see `world-scrolling.md`). CPU data port `$7F10`-`$7F12` |
 
 Soft port owners are in `hardware.md`.
@@ -289,11 +247,11 @@ See `hardware.md` and `ic-comms-risks.md`.
 
 ## Phase 1 PRG play tables (Studio / Emu)
 
-Authoring spawns live in the project JSON. Packed carts put **placements in PRG**, not the world blob (see entity catalog above). Phase 1 PRG layout (CPU `$8000` = PRG+$0000):
+Authoring spawns live in the project JSON. Packed carts put **placements in PRG**, not the world blob (see entity catalog above). Phase 1 PRG layout (CPU `$8000` = PRG+$0000) as shipped by current tools:
 
 | PRG off | CPU | Role |
 | --- | --- | --- |
-| `+$0100` | `$8100` | Present-screen bitmasks (32 B) |
+| `+$0100` | `$8100` | Present-screen bitmasks (32 B, 16x16 grid) |
 | `+$0120` | `$8120` | Spawn cell (`col | row<<4`) |
 | `+$0121` | `$8121` | Collision dir count |
 | `+$0122` | `$8122` | Collision dir entries |
@@ -310,13 +268,14 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 | `+$00FE` | `$80FE` | BGM boot track (u8, **0** = none, **1..8** = track) |
 | `+$3000` | `$B000` | BGM blob (`BG` + 8-slot off/len + FD/FE/FA bytecode). Ends before vectors at `$FFFA` |
 
-Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs at `OFF_TYPES`).
+Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs). Collision solids are PRG data (collision dir above).
 
 ## Notes
 
 - Flat contiguous 32 KB PRG at `$8000-$FFFF` (no I/O hole)
 - I/O page `$7F00-$7FFF`
-- World caps: **7** worlds / 32 BG1 / 0..8 BG0 / **16** entity types per world
-- Other screens: max **16** (shared pool), CHR from **global other** banks
-- Global other CHR: **4** BG + **4** SPR (**32 KB**). Other screens + marked player SPR
-- Marked player: global other **SPR** banks (not a private bank, not world CHR)
+- World caps: **8** worlds / 64 BG1 / 0..16 BG0
+- CHR: **16** BG + **16** SPR banks, cart-global, **128 KB**
+- Other screens: max **16** (shared pool), same global CHR
+- Entity types: **32** global (4 states x 8 frames x 6 sprites)
+- Marked player: global SPR banks

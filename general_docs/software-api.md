@@ -9,7 +9,7 @@ Hardware alone thinks in sprites. Authors think in **entities**.
 An entity is a being, object, or graphic in the game. It is composed of:
 
 - Up to **4 states** (idle, running, and so on).
-- Each state: up to **4 frames**, plus one hitbox (compose-space AABB) shared by those frames.
+- Each state: up to **8 frames**, plus one hitbox (compose-space AABB) shared by those frames.
 - Each frame: up to **6 sprites** (8x8), with positions relative to each other, a frame delay, a draw origin, flips, and so on.
 
 That range covers very simple games (**1** state, **1** frame, **1** sprite) and richer ones. Complex bosses can be several entities working together in software (for example left leg, head, right leg, eyes).
@@ -18,7 +18,7 @@ That range covers very simple games (**1** state, **1** frame, **1** sprite) and
 
 | Piece | Where it lives | Who writes it |
 | --- | --- | --- |
-| **Entity definition** (states, frames, sprites, relative positions, delays, hitboxes) | Cart **per-world entity catalog** | Studio packs into that world blob |
+| **Entity definition** (states, frames, sprites, relative positions, delays, hitboxes) | Cart **global entity catalog** | Studio packs into the cart catalog |
 | **Entity behavior** (AI, input, physics, state changes, spawn rules) | **PRG** | Author in **C and/or ASM** |
 | **Entity spawn locations** (placements) | **PRG** | Author tables / code (`spawn_entity`) |
 | **Live instance state** (position, velocity, current state/frame, flags) | System RAM | PRG via the entity API |
@@ -27,25 +27,25 @@ That range covers very simple games (**1** state, **1** frame, **1** sprite) and
 
 | Scope | Cap |
 | --- | --- |
-| Entity **types** per world (catalog) | **16** |
+| Entity **types** (global catalog) | **32** |
 | Entities **on screen** (live instances) | Soft: limited by **OAM sprite budget**, not by type count |
 | Hardware sprites (OAM) | **64** total, **16** per scanline |
-| Global shared entity catalog | **None** |
-| Player / inventory patterns | Global other **SPR** banks (4). See `memory.md` |
-| Other-screen patterns | Global other CHR (**4** BG + **4** SPR). See `memory.md` |
+| Global shared entity catalog | **Yes** (one pool for the cart) |
+| Player / inventory patterns | Global **SPR** banks (16). See `memory.md` |
+| Other-screen patterns | Global CHR (**16** BG + **16** SPR). See `memory.md` |
 
-**Types vs on-screen:** The **16** cap is how many *kinds* of entity a world may define (cart catalog). It is **not** a limit on how many entities may be visible at once. Live instances may fill the view **as long as their current frames' sprites fit in the 64 OAM slots**. Example: sixty-four 1-sprite pickups, or ten 6-sprite characters, both fine. The next spawn that would exceed free OAM fails. Scanline overflow (more than **16** sprites on one line) still drops later entries for that line.
+**Types vs on-screen:** The **32** cap is how many *kinds* of entity the cart may define. It is **not** a limit on how many entities may be visible at once. Live instances may fill the view **as long as their current frames' sprites fit in the 64 OAM slots**. Example: sixty-four 1-sprite pickups, or ten 6-sprite characters, both fine. The next spawn that would exceed free OAM fails. Scanline overflow (more than **16** sprites on one line) still drops later entries for that line.
 
-Types belong to one world. Same look in another world means another def (and tiles) in that world's blob. Sprite attr bank bits index **this world's** SPR banks for normal entities. If the wrong world CHR is active, those entities look wrong on purpose. That glitch is the tell.
+Types are cart-global. The same look in another world is the same def. Sprite attr bank bits **0-3** index **global SPR** banks **0-15**. A wrong bank index shows the wrong tiles.
 
-The marked **player** entity is a normal world catalog type (SoT: world **0**). Its part bank bits **0..3** index the cart **global other SPR** banks, not world SPR. No private player bank. Other screens use the same global other CHR block (BG + SPR).
+The marked **player** entity is a normal catalog type. Its part bank bits **0-3** index the same global SPR banks as every other entity. Other screens use the same global CHR block (BG + SPR).
 
 ### Packed definition format (locked)
 
 Little-endian. Offsets are **byte offsets from the start of the block that owns them** (`0` = unused slot).
 
 ```text
-EntityDef (variable length, max 532 B when fully populated)
+EntityDef (variable length, max 1044 B when fully populated)
 +0   u8  flags
 +1   u8  state_count          (1..4)
 +2   u8  default_state        (0..state_count-1)
@@ -54,9 +54,9 @@ EntityDef (variable length, max 532 B when fully populated)
      ... State blocks ...
 
 State (at EntityDef + state_off[s])
-+0   u8  frame_count          (1..4)
++0   u8  frame_count          (1..8)
 +1   u8  reserved1
-+2   u16 frame_off[4]         // offset from this State base, 0 = absent
++2   u16 frame_off[8]         // offset from this State base, 0 = absent
      ... Frame blocks ...
 
 Frame (at State + frame_off[f])
@@ -77,24 +77,23 @@ Frame (at State + frame_off[f])
 3. `state = base + soff`.
 4. `foff = u16(state + 2 + 2*F)`. If `foff == 0` or `F >= frame_count`, invalid.
 5. `frame = state + foff`. Read `delay`, `sprite_count`, state hitbox (packed vs first drawable-frame origin), then `sprites[0..sprite_count)`.
-6. For each sprite, resolve CHR from the **current world's** SPR bank (attr bits 0-1) + tile.
+6. For each sprite, resolve CHR from the **global** SPR bank (attr bits 0-3) + tile.
 
 | Piece | Max bytes |
 | --- | ---: |
 | EntityDef header | 12 |
-| One State header | 10 |
+| One State header (`frame_off[8]`) | 18 |
 | One Frame (6 sprites) | 30 |
-| **Fully maxed def** (4x4x6) | **532** |
-| 16 maxed defs (one world) | **8512** (~8.3 KB) |
-| 7 worlds x 16 maxed defs | **59584** (~58.2 KB) |
+| **Fully maxed def** (4x8x6) | **1044** |
+| 32 maxed defs (cart catalog) | **33408** (~32.6 KB) |
 
-**Entity spawn locations** live in **PRG** (data tables and/or code that calls `spawn_entity`), not in the world blob. Cart holds defs in the **per-world** catalog only.
+**Entity spawn locations** live in **PRG** (data tables and/or code that calls `spawn_entity`). Cart holds defs in the **global** catalog.
 
-Phase 1 Studio carts also embed a compact **instance table** in PRG (see `memory.md`). That table feeds Host Play / emu until authors switch to full `spawn_entity` tables.
+Phase 1 Studio carts also embed a compact **instance table** in PRG (see `memory.md`). That table feeds Host Play / emu.
 
-**Catalog on cart:** at world `OFF_TYPES`, a **`u16` directory** (`type_count` entries, offset from catalog base, little-endian) then concatenated **EntityDef** blobs (this locked pack). `OFF_INSTS` points past the catalog (PA start when present). Studio authors **hitbox on the state** and **draw origin on the frame**. Export writes sprite `rel_*` in **that frame's draw-origin** space (authoring origin baked in). Packed frame hitbox is `state.hitbox - first_drawable_frame.origin` (same bytes on every frame of the state, clamped unsigned). Moving a later frame's draw origin does not change collision.
+**Catalog on cart:** a **`u16` directory** (`type_count` entries, offset from catalog base, little-endian) then concatenated **EntityDef** blobs (this locked pack). Studio authors **hitbox on the state** and **draw origin on the frame**. Export writes sprite `rel_*` in **that frame's draw-origin** space (authoring origin baked in). Packed frame hitbox is `state.hitbox - first_drawable_frame.origin` (same bytes on every frame of the state, clamped unsigned). Moving a later frame's draw origin does not change collision.
 
-Optional **`PA`** (player anim) hangs off the world blob after the catalog. Host Play reads it for the marked player. Each drawable frame stores authoring-space origin, the **state** hitbox (compose space), then parts (`tile`, `attr`, `dx`, `dy`). Pose uses the current frame origin. Collision uses the current state's hitbox origin-relative to that state's **first drawable frame**, not the current anim frame.
+Optional **`PA`** (player anim) may hang off the catalog when a player entity is marked. Host Play reads it for the marked player. Each drawable frame stores authoring-space origin, the **state** hitbox (compose space), then parts (`tile`, `attr`, `dx`, `dy`). Pose uses the current frame origin. Collision uses the current state's hitbox origin-relative to that state's **first drawable frame**, not the current anim frame.
 
 ### Camera helpers (locked intent)
 
@@ -105,7 +104,7 @@ Default dead zone **32x30** pixels inside the 128x120 view when world header byt
 Types are illustrative C. `EntityId` is a small handle into the live instance table. Returns `0` on success, non-zero on error (OAM full, bad id, and so on).
 
 ```c
-/* type_id: 0..15 index into the *current world's* entity catalog */
+/* type_id: 0..31 index into the global entity catalog */
 int  spawn_entity(u8 type_id, u8 screen_cell, i16 x, i16 y, EntityId *out_id);
 
 int  despawn_entity(EntityId id);
@@ -114,7 +113,7 @@ int  move_entity(EntityId id, i16 x, i16 y);           /* absolute draw origin *
 int  change_entity_velocity(EntityId id, i16 vx, i16 vy);
 
 int  set_entity_state(EntityId id, u8 state);         /* 0..3, must exist in def */
-int  set_entity_frame(EntityId id, u8 frame);         /* 0..3 within current state */
+int  set_entity_frame(EntityId id, u8 frame);         /* 0..7 within current state */
 int  advance_entity_anim(EntityId id);                /* step frame using Frame.delay */
 
 int  rotate_entity(EntityId id, u8 turns_cw);         /* 90deg units only, 0..3 */
@@ -130,7 +129,7 @@ Behavior:
 
 | Call | Does |
 | --- | --- |
-| `spawn_entity` | Allocates a live instance from the current world's catalog, sets pose, claims OAM for current frame. Fails if OAM cannot fit or `type_id` is absent |
+| `spawn_entity` | Allocates a live instance from the global catalog, sets pose, claims OAM for current frame. Fails if OAM cannot fit or `type_id` is absent |
 | `despawn_entity` | Frees instance and OAM slots |
 | `move_entity` / `change_entity_velocity` | Updates RAM. Drawing uses origin + sprite rel offsets |
 | `set_entity_state` / `set_entity_frame` | Resolves pack offsets (see above) and rebuilds OAM for that frame. Fails if OAM short |
@@ -143,7 +142,7 @@ Behavior:
 
 | Cap | Value | Meaning |
 | --- | ---: | --- |
-| Catalog | **16** types / world | How many defs may exist in that world's blob |
+| Catalog | **32** types (global) | How many defs may exist on the cart |
 | OAM | **64** sprites | How many 8x8 sprites may be drawn at once (all entities + any other OAM users share this) |
 | Per scanline | **16** sprites | Later OAM entries on that line are not drawn |
 
@@ -169,7 +168,7 @@ There is **no** separate "max entities on screen" hard cap. On-screen count is w
 | Feature | v1 |
 | --- | --- |
 | Movement | Axis-separated (resolve X then Y, or the reverse, consistently) |
-| Solids | BG tiles with attr **bit 6** set |
+| Solids | BG tiles marked solid in **PRG** collision data. See `memory.md` play tables |
 | Colliders | Entity AABB hitboxes (per state). Vs BG solids: every overlapping 8x8 tile is tested (not corners only) |
 | Gravity / jump | Simple constant gravity + jump impulse (PRG tunes numbers). Gravity units are **1/16** px per frame^2. Release while rising uses 3x gravity (short hop) |
 | Meter | Pixels per meter (default **16**). Gravity, jump, walk, and fall cap scale as `n * meter / 16` |
@@ -216,7 +215,7 @@ BGM tracks live in the Studio Audio tab and pack into PRG at `$B000`. `r01_bgm_p
 
 | Piece | Owner |
 | --- | --- |
-| Entity **definitions** | Cart pack per world (MAP-readable) |
+| Entity **definitions** | Cart pack, global catalog (MAP-readable) |
 | Entity **behavior** | PRG on the 6502 (C/ASM) |
 | Live instance state | System RAM |
 | Drawing | OAM `$7F20`/`$7F21` on MCU-M, SPI to MCU-S1 (**early VBlank** / `S1_RDY`, then S1 field fill) |

@@ -11,7 +11,7 @@ Logical pipeline for tiles, sprites, palettes, and the two BG layers. Scroll and
 
 - Tile based. 8x8 tiles and 8x8 sprites only. No 8x16 sprites.
 - Up to 64 hardware sprites on screen. Up to 16 per scanline.
-- Entity **types** per world are capped at **16** (catalog). How many entities may appear on screen is limited by that **64**-sprite OAM budget, not by type count (see `software-api.md`).
+- Entity **types** are capped at **32** cart-wide (one global catalog). How many entities may appear on screen is limited by that **64**-sprite OAM budget, not by type count (see `software-api.md`).
 - Pixel format: 2bpp.
 - Up to 25 simultaneous colors on screen (NES-style).
 
@@ -105,38 +105,27 @@ Software controls how much BG0 scrolls relative to BG1 to set depth. See `world-
 
 No other MCU-S1 video jobs run in HBlank.
 
+## Pattern banks (cart-wide)
+
+CHR is one global pool: **16 BG banks** and **16 SPR banks**, 256 tiles each, 8x8 2bpp. Playfields, other screens, and the marked player all use this pool. See `memory.md`.
+
+The **tile or sprite** has authority: each BG cell and each sprite names **bank 0-15** in its attr byte and may mix with any other bank on the same screen.
+
+During a CHR fetch, bank bits **0-1** sit on cart **A12-A13** (inside a 16 KB page). Bits **2-3** sit on **A14-A15**. The plane base lives in MAP **A16-A18**. Same cart edge as `hardware.md`.
+
 ## Attribute bytes
 
-### BG attribute byte
+Same pack for BG nametable attrs and sprite / OAM attrs. The whole byte is used.
+
+### BG attr and sprite attr
 
 | Bits | Meaning |
 | --- | --- |
-| 0-1 | Bank index (**0-3**) |
-| 2-3 | Palette index (**0-3**) |
-| 4 | H flip |
-| 5 | V flip |
-| 6 | Solid tile flag (software / physics) |
-| 7 | **Animated tile** (locked below) |
+| 0-3 | Bank index (**0-15**) into global BG or SPR CHR |
+| 4-5 | Palette index (**0-3**) |
+| 6 | H flip |
+| 7 | V flip |
 
-### Animated tiles (bit 7 locked)
+Collision solids and tile animation live in **PRG**. PRG may rewrite nametable/OAM, or keep a side table (see `software-api.md`).
 
-If bit **7** is **1**, that cell's pattern index is animated in hardware (or a dedicated helper path) as a 4-beat cycle:
-
-| Step | Pattern index used |
-| --- | --- |
-| 0 | `base` |
-| 1 | `base + 1` |
-| 2 | `base + 2` |
-| 3 | `base + 3` |
-| next | wrap to `base` |
-
-- `base` is the tile index stored in the nametable byte (0..255 within the selected bank).
-- Addition wraps **inside the bank** at hardware level: `(base + k) & 0xFF`. Authors must place the four frames in consecutive indices (with wrap from 255 -> 0 if they cross the end).
-- Default period is **6** display frames per step. PRG or system RAM holds a configurable delay (one global setting for v1 is enough).
-- Bit 7 = 0 means a static tile (`base` only).
-
-### Sprite attribute byte
-
-Same layout as BG for bits 0-5. Bits 6 and 7 are reserved (leave **0** until a real need appears).
-
-For entities, bank bits **0-1** index SPR banks of the **current world** (the world whose catalog owns the def). BG nametable attrs use that world's BG banks the same way. The marked **player** uses the cart **global other SPR** banks (same 0..3 bank field, different CHR base). **Other screens** use the full **global other CHR** (BG + SPR). See `memory.md`.
+The marked **player** uses the same SPR bank field as every other entity (**0-15**, global SPR). Other screens use the same BG/SPR pools. See `memory.md`.

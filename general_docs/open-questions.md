@@ -4,19 +4,25 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ## Still open
 
-### 5. Sprite attr bits 6 and 7
-
-**Open:** Reserved. Leave **0** in tools until a real need appears.
-
-**Touches:** `video-graphics.md`
-
 ### Instance + PA byte schemas
 
 **Partly sized:** Live instance records in system RAM and optional `PA` blobs still need a frozen byte layout. Spawn locations are **PRG-side** (not cart).
 
-**Entity cart pack (decision):** Studio writes the locked offset-table **EntityDef** from `software-api.md` (variable length, max **532 B**). Draw origin lives on each **frame**. Hitbox lives on each **state** (packed origin-relative to that state's first drawable frame). World catalog = `u16` type directory + defs. The old fixed **20 B** snapshot is retired.
+**Entity cart pack (decision):** Studio writes the locked offset-table **EntityDef** from `software-api.md` (variable length, max **1044 B**). Draw origin lives on each **frame**. Hitbox lives on each **state** (packed origin-relative to that state's first drawable frame). Global catalog = `u16` type directory + defs.
 
 **Touches:** `memory.md`, `software-api.md`
+
+### Collision solids packing
+
+**Open:** Platformer / top-down solids are **PRG** data. Phase 1 has a collision directory in PRG (`memory.md`). Exact authoring table vs that directory is still open.
+
+**Touches:** `software-api.md`, `memory.md`
+
+### CHR A14/A15 mix (Compositor)
+
+**Open:** 16-bank CHR puts attr bits **2-3** on cart **A14-A15** during a fetch. MCU-S1 can do that in firmware (sprites / BG0). BG1 during active display: if the Compositor builds the CHR address, it must fold those two bits. Product-term fit on the existing 22V10 is unproven. If BG1 CHR is the MAP helper (MCU-M 24-bit seek), the PLD never sees them.
+
+**Touches:** `hardware.md`, `video-graphics.md`
 
 ### Console program header / flash protocol
 
@@ -40,15 +46,19 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### 4. Animated tiles (BG attr bit 7)
 
-**Resolved:** Bit 7 = animate through `base`, `base+1`, `base+2`, `base+3` with wrap in-bank (`& 0xFF`). Default step delay **6** frames, configurable in PRG/sys RAM. See `video-graphics.md`.
+**Superseded 2026-09-20:** Hardware 4-beat anim dropped. Tile animation is PRG. Attr bit 7 is V flip. See item 18.
+
+### 5. Sprite attr bits 6 and 7
+
+**Resolved 2026-09-20:** H flip and V flip (same pack as BG). See `video-graphics.md`.
 
 ### 6. Attribute index ranges
 
-**Resolved:** Bank and palette fields **0-3**.
+**Superseded 2026-09-20:** Bank field is **0-15** (4 bits). Palette stays **0-3**. See item 18.
 
 ### 7. Screen + entity budgets
 
-**Resolved:** **32** BG1 / **0..8** BG0 per world. Entity types: **16 per world** (catalog in the world blob). Maxed def **532 B**. See `memory.md`, `software-api.md`.
+**Superseded 2026-09-20:** See item 18.
 
 ### 8. Cart flashing
 
@@ -64,11 +74,11 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### 11. Entity and sprite budget coupling
 
-**Resolved:** Fail spawn/frame-change on OAM shortfall. Drop overflow sprites per scanline. Catalog cap **16** types per world. On-screen instance count is soft (fits in **64** OAM sprites). See `software-api.md`.
+**Resolved:** Fail spawn/frame-change on OAM shortfall. Drop overflow sprites per scanline. Catalog cap **32** types cart-wide. On-screen instance count is soft (fits in **64** OAM sprites). See `software-api.md`.
 
 ### 12. Platformer physics scope
 
-**Resolved (v1):** Axis-separated, bit-6 solids, AABB, gravity/jump (gravity in 1/16 px), 16 px meter, short hop on jump release, Down crouch. No slopes/movers/one-ways.
+**Resolved (v1):** Axis-separated, AABB, gravity/jump (gravity in 1/16 px), 16 px meter, short hop on jump release, Down crouch. No slopes/movers/one-ways. Solids are **PRG** collision data. See `software-api.md`.
 
 ### 13. IC budget + composite IC
 
@@ -80,15 +90,19 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### 15. Entity CHR home world
 
-**Superseded:** Dropped global catalog + `chr_world`. Entities are **16**/world. Sprite banks use the current world's SPR CHR. See item 16.
+**Superseded:** Dropped global catalog + `chr_world` in favor of 16 types per world (item 16). Item **18** restores a global catalog (32 types) and global SPR banks.
 
 ### 16. Entity caps (per world)
 
-**Resolved:** **16** entity types per world, catalog inside each world blob. No global shared catalog. `format_ver` **4** (pointer table 6 slots, including global other CHR). Sprite banks = current world SPR CHR. Other screens use global other CHR. See `memory.md`, `software-api.md`.
+**Superseded 2026-09-20:** See item 18.
 
 ### 17. IC comms mitigations folded into design docs
 
 **Resolved:** Idle-safe enable pulls, soft-port / `RDY` rules, OAM SPI in early VBlank only, scroll writes in NMI/VBlank, cart `OE#`/`WE#` play-vs-program, save RDY+timeout. Catalog in `ic-comms-risks.md`. Normative copies in `hardware.md`, `video-graphics.md`, `world-scrolling.md`, `software-api.md`, `memory.md`, `cartridge.md`.
+
+### 18. Global CHR + catalogs (2026-09-20)
+
+**Resolved:** **8** worlds. **64** BG1 / **16** BG0 present screens per world. CHR is **16 BG + 16 SPR** banks cart-wide (**128 KB**). One global entity catalog, **32** types, **4 x 8 x 6**, maxed def **1044 B**. Attr bits 0-3 = bank 0-15, 4-5 = pal, 6-7 = H/V flip. Solids and tile anim are PRG. Passive cart, no mapper. See `memory.md`, `video-graphics.md`, `software-api.md`, `selling-points.md`.
 
 ## Decision log
 
@@ -129,3 +143,4 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-17 | Player patterns | No private player bank. Marked player + inventory art use **global other SPR** (one of 4 banks). See `memory.md`, `software-api.md`. |
 | 2026-09-17 | Host Play boot catchup | Phase 1 emu waits for a full start MAP stream (480 B) before Host Play takes the camera 2x2 from cart. See `apps/emu/README.md`. |
 | 2026-09-19 | APU | 8-ch S2 software mix. `$7F40` is 8x4 regs (S2 never parses bytecode). BGM 1-5 / SFX 6-8. DPCM in S2 flash. NMI tracker on 6502. See `sound.md`. |
+| 2026-09-20 | CHR / maps / entities | 16+16 global banks, 8 worlds, 64 BG1 / 16 BG0, 32 types (4x8x6). Attr 4-bit bank. No mapper. See `memory.md`. |
