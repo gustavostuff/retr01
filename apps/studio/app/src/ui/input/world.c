@@ -41,6 +41,7 @@ int ui_screen_nav(UiState *ui, int dcol, int drow) {
         return 0;
     }
     w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     cur = r01_project_active_screen(ui->project);
     if (!w || !cur) {
         return 0;
@@ -59,6 +60,7 @@ int ui_screen_nav(UiState *ui, int dcol, int drow) {
 
 void handle_world_click(UiState *ui, int col, int row, int ctrl, int dbl) {
     R01World *w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     int idx;
     if (!w) {
         return;
@@ -151,6 +153,7 @@ int ui_world_screen_copy(UiState *ui) {
         return 0;
     }
     w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     src = world_sel_src(ui, w);
     if (!src) {
         ui_toast(ui, "select a present screen to copy", 1);
@@ -178,6 +181,7 @@ int ui_world_screen_paste(UiState *ui) {
         return 1;
     }
     w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     if (!w || ui->world_sel_col < 0 || ui->world_sel_row < 0) {
         ui_toast(ui, "select a grid slot to paste", 1);
         return 1;
@@ -227,7 +231,7 @@ int ui_world_screen_paste(UiState *ui) {
     dst->col = col;
     dst->row = row;
     dst->present = 1;
-    r01_screen_fill_pixels_from_bank(w, dst);
+    r01_screen_fill_pixels_from_bank(p, dst);
     ui_undo_push_screen_paste(ui, plane, idx, had_before ? &before : NULL);
     ui_toast(ui, "screen pasted", 0);
     return 1;
@@ -240,6 +244,7 @@ int ui_world_screen_remove(UiState *ui) {
         return 0;
     }
     w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     if (!w || ui->world_sel_col < 0 || ui->world_sel_row < 0) {
         ui_toast(ui, "select a present screen to remove", 1);
         return 1;

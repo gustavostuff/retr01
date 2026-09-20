@@ -19,23 +19,19 @@ void r01_entity_frame_id(char *dst, size_t cap, int world_idx, const R01EntityTy
 const char *r01_entity_display_name(const R01EntityType *e);
 
 /* Append a new entity type (1 state / 1 empty frame). Returns index or -1. */
-int r01_world_entity_add(R01World *w);
+int r01_world_entity_add(R01Project *p);
 
-int r01_world_entity_remove(R01World *w, int type_idx);
+int r01_world_entity_remove(R01Project *p, int type_idx);
 
-/* Mark which entity type is the Play player (-1 = CHR stub). One per world.
- * Flag only; prefer r01_project_set_player_entity to also move CHR. */
-void r01_world_set_player_entity(R01World *w, int type_idx);
-int r01_world_player_entity(const R01World *w);
+/* Mark which entity type is the Play player (-1 = CHR stub). Flag only. */
+void r01_world_set_player_entity(R01Project *p, int type_idx);
+int r01_world_player_entity(const R01Project *p);
 
-/* Set player mark. World-SPR patterns used by the type move into project->other_spr_banks
- * (same bank index); parts already on a global SPR bank are left alone. Unmark / switch
- * is flag-only and does not move CHR back. Re-marking the same type still moves any new
- * world-SPR tiles. Returns 0 or -1. */
+/* Set player mark. Flag only. w is unused. */
 int r01_project_set_player_entity(R01Project *p, R01World *w, int type_idx);
 
-R01EntityType *r01_world_entity(R01World *w, int type_idx);
-const R01EntityType *r01_world_entity_const(const R01World *w, int type_idx);
+R01EntityType *r01_world_entity(R01Project *p, int type_idx);
+const R01EntityType *r01_world_entity_const(const R01Project *p, int type_idx);
 
 R01EntityState *r01_entity_state(R01EntityType *e, int state_idx);
 R01EntityFrame *r01_entity_frame(R01EntityType *e, int state_idx, int frame_idx);
@@ -74,7 +70,7 @@ void r01_entity_state_clamp_hitbox(R01EntityState *st);
 void r01_entity_state_recompute_guides(R01EntityState *st);
 
 /* Simple 1-state / 1-frame / 1-part entity from a sprite catalog entry (for phase C). */
-int r01_world_entity_from_sprite(R01World *w, int sprite_catalog_idx);
+int r01_world_entity_from_sprite(R01Project *p, int sprite_catalog_idx);
 
 /* Placed instances (world pixels). */
 int r01_world_instance_add(R01World *w, int type_id, int world_x, int world_y);
@@ -82,7 +78,7 @@ int r01_world_instance_remove(R01World *w, int inst_idx);
 R01EntityInstance *r01_world_instance(R01World *w, int inst_idx);
 
 /* Drop a catalog sprite: create entity type + place instance. Returns instance idx or -1. */
-int r01_world_place_sprite(R01World *w, int sprite_catalog_idx, int world_x, int world_y);
+int r01_world_place_sprite(R01Project *p, R01World *w, int sprite_catalog_idx, int world_x, int world_y);
 
 /* Drop an entity type: place instance. Returns instance idx or -1. */
 int r01_world_place_entity(R01World *w, int type_id, int world_x, int world_y);

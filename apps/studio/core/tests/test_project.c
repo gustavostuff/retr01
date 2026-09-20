@@ -67,12 +67,10 @@ TEST_MAIN() {
     }
 
     {
-        uint8_t merged = r01_attr_merge(r01_attr_pack(0, 0, 0, 0) | R01_ATTR_SOLID | R01_ATTR_ANIM, 2, 3, 1, 1);
+        uint8_t merged = r01_attr_merge(r01_attr_pack(0, 0, 0, 0), 2, 3, 1, 1);
         EXPECT(r01_attr_bank(merged) == 2, "attr_merge bank");
         EXPECT(r01_attr_pal(merged) == 3, "attr_merge pal");
         EXPECT(r01_attr_flip_h(merged), "attr_merge flip_h");
-        EXPECT(r01_attr_solid(merged), "attr_merge keeps solid");
-        EXPECT(r01_attr_anim(merged), "attr_merge keeps anim");
     }
 
     free(p);

@@ -117,6 +117,7 @@ int palette_row_btn_hit(const UiState *ui, int lx, int ly, int *out_row) {
 
 static void pal_edit_snapshot(UiState *ui) {
     R01World *w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     if (!ui || !ui->project) {
         return;
     }
@@ -134,6 +135,7 @@ static void pal_edit_restore(UiState *ui) {
     memcpy(ui->project->global_pal_bg, ui->pal_edit.snap_bg, sizeof(ui->pal_edit.snap_bg));
     memcpy(ui->project->global_pal_spr, ui->pal_edit.snap_spr, sizeof(ui->pal_edit.snap_spr));
     w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     if (w) {
         w->default_pal_row = ui->pal_edit.snap_default_row;
     }
@@ -157,6 +159,7 @@ void pal_edit_save(UiState *ui) {
 
 void pal_edit_open(UiState *ui) {
     R01World *w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     int row = w ? w->default_pal_row : 0;
     if (row < 0) {
         row = 0;
@@ -226,6 +229,7 @@ void pal_edit_set_row(UiState *ui, int row, int commit_default) {
     ui->pal_edit.row = row;
     if (commit_default) {
         w = r01_project_active_world(ui->project);
+        R01Project *p = ui->project;
         if (w) {
             w->default_pal_row = row;
         }

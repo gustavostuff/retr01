@@ -25,9 +25,9 @@ TEST_MAIN() {
     r01_project_init(p, "meta");
     w = &p->worlds[0];
 
-    meta = r01_world_metasprite_add(w);
+    meta = r01_world_metasprite_add(p);
     EXPECT(meta == 0, "add metasprite");
-    ms = r01_world_metasprite(w, meta);
+    ms = r01_world_metasprite(p, meta);
     EXPECT(ms != NULL, "metasprite ptr");
     strncpy(ms->name, "Blob", sizeof(ms->name) - 1);
 
@@ -60,28 +60,28 @@ TEST_MAIN() {
         EXPECT(fr.parts[0].dx == 16 && fr.parts[1].dx == 24, "clamped to fit");
     }
 
-    type_id = r01_world_entity_from_metasprite(w, meta);
+    type_id = r01_world_entity_from_metasprite(p, meta);
     EXPECT(type_id >= 0, "entity from metasprite");
-    EXPECT(w->entities[type_id].states[0].frames[0].part_count == 2, "entity got parts");
+    EXPECT(p->entities[type_id].states[0].frames[0].part_count == 2, "entity got parts");
 
-    inst = r01_world_place_metasprite(w, meta, 64, 48);
+    inst = r01_world_place_metasprite(p, w, meta, 64, 48);
     EXPECT(inst >= 0, "place metasprite instance");
     EXPECT(w->instances[inst].world_x == 64 && w->instances[inst].world_y == 48, "instance pos");
 
     EXPECT(r01_project_save_json(p, "test_metasprites.r01proj", err, sizeof(err)) == 0, "save");
     EXPECT(r01_project_load_json(p2, "test_metasprites.r01proj", err, sizeof(err)) == 0, "load");
-    EXPECT(p2->worlds[0].metasprite_count == 1, "roundtrip count");
-    EXPECT(strcmp(p2->worlds[0].metasprites[0].name, "Blob") == 0, "roundtrip name");
-    EXPECT(p2->worlds[0].metasprites[0].frame.part_count == 2, "roundtrip parts");
+    EXPECT(p2->metasprite_count == 1, "roundtrip count");
+    EXPECT(strcmp(p2->metasprites[0].name, "Blob") == 0, "roundtrip name");
+    EXPECT(p2->metasprites[0].frame.part_count == 2, "roundtrip parts");
     {
         char id[R01_ID_MAX];
-        r01_metasprite_id(id, sizeof(id), 0, &p2->worlds[0].metasprites[0]);
+        r01_metasprite_id(id, sizeof(id), 0, &p2->metasprites[0]);
         EXPECT(strcmp(id, "w_01_blob") == 0, "meta id");
-        EXPECT(strcmp(w->entities[type_id].name, "Blob") == 0, "entity inherits meta name");
+        EXPECT(strcmp(p->entities[type_id].name, "Blob") == 0, "entity inherits meta name");
     }
 
-    EXPECT(r01_world_metasprite_remove(w, 0) == 0, "remove");
-    EXPECT(w->metasprite_count == 0, "empty after remove");
+    EXPECT(r01_world_metasprite_remove(p, 0) == 0, "remove");
+    EXPECT(p->metasprite_count == 0, "empty after remove");
 
     free(p);
     free(p2);

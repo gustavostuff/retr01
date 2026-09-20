@@ -27,6 +27,7 @@ static void accordion_body_clip_pop(SDL_Renderer *r, const UiClipStack *stack) {
 
 static void draw_worlds_body(UiState *ui, SDL_Renderer *r, const AccordionLayout *lo) {
     R01World *w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     int col, row;
     int lx = ui->mouse_x;
     int ly = ui->mouse_y;
@@ -112,6 +113,7 @@ static void draw_worlds_body(UiState *ui, SDL_Renderer *r, const AccordionLayout
 
 static void draw_palettes(UiState *ui, SDL_Renderer *r, const AccordionLayout *lo) {
     const R01World *w = r01_project_active_world_const(ui->project);
+    const R01Project *p = ui->project;
     int row = ui->pal_edit.open ? ui->pal_edit.row : (w ? w->default_pal_row : 0);
     int pal, c, i;
     int bg_strip_y = lo->pals_body_y;
@@ -196,6 +198,7 @@ static void draw_bank_sel_overlay(UiState *ui, SDL_Renderer *r, int plane, int b
 
 static void draw_banks_body(UiState *ui, SDL_Renderer *r, const AccordionLayout *lo) {
     const R01World *w = r01_project_active_world_const(ui->project);
+    const R01Project *p = ui->project;
     int lx = ui->mouse_x;
     int ly = ui->mouse_y;
     UiTabsLayout tabs;
@@ -230,9 +233,9 @@ static void draw_banks_body(UiState *ui, SDL_Renderer *r, const AccordionLayout 
             int blank = 1;
             const uint8_t *tile = NULL;
             if (spr) {
-                tile = r01_chr_spr_tile(w, bank, tile_id);
-            } else if (tile_id < w->bg_banks[bank].tile_count) {
-                tile = w->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+                tile = r01_chr_spr_tile(p, bank, tile_id);
+            } else if (tile_id < p->bg_banks[bank].tile_count) {
+                tile = p->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
             }
             if (!tile) {
                 continue;
@@ -272,6 +275,7 @@ static void draw_banks_body(UiState *ui, SDL_Renderer *r, const AccordionLayout 
 
 static void draw_global_banks_body(UiState *ui, SDL_Renderer *r, const AccordionLayout *lo) {
     const R01World *w = r01_project_active_world_const(ui->project);
+    const R01Project *p = ui->project;
     int lx = ui->mouse_x;
     int ly = ui->mouse_y;
     UiTabsLayout tabs;
@@ -372,6 +376,7 @@ static void draw_metasprite_icon(UiState *ui, SDL_Renderer *r, const R01World *w
 
 static void draw_metatiles_body(UiState *ui, SDL_Renderer *r, const AccordionLayout *lo) {
     const R01World *w = r01_project_active_world_const(ui->project);
+    const R01Project *p = ui->project;
     int lx = ui->mouse_x;
     int ly = ui->mouse_y;
     int add_y = lo->metatiles_body_y + UI_METATILES_BODY_H - UI_BTN_H;
@@ -383,10 +388,10 @@ static void draw_metatiles_body(UiState *ui, SDL_Renderer *r, const AccordionLay
     fill_rect(r, 0, lo->metatiles_body_y, UI_SIDEBAR_W, UI_METATILES_BODY_H, UI_COL_PANEL_R, UI_COL_PANEL_G,
               UI_COL_PANEL_B);
 
-    if (!w || w->metatile_count < 1) {
+    if (!w || p->metatile_count < 1) {
         font_draw_centered(r, 0, lo->metatiles_body_y, UI_SIDEBAR_W, UI_BTN_H * 2, "empty", 160, 160, 170);
     } else {
-        int max_scroll = w->metatile_count - vis;
+        int max_scroll = p->metatile_count - vis;
         if (max_scroll < 0) {
             max_scroll = 0;
         }
@@ -401,7 +406,7 @@ static void draw_metatiles_body(UiState *ui, SDL_Renderer *r, const AccordionLay
             int y = lo->metatiles_body_y + i * UI_SPRITE_ROW_H;
             const char *label;
             int hover;
-            if (idx >= w->metatile_count) {
+            if (idx >= p->metatile_count) {
                 break;
             }
             hover = point_in_rect(lx, ly, 0, y, UI_SIDEBAR_W, UI_SPRITE_ROW_H);
@@ -409,13 +414,13 @@ static void draw_metatiles_body(UiState *ui, SDL_Renderer *r, const AccordionLay
                 fill_rect(r, 0, y, UI_SIDEBAR_W, UI_SPRITE_ROW_H, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
             }
             fill_rect(r, 0, y, UI_PREVIEW_ICON, UI_PREVIEW_ICON, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
-            label = r01_metatile_display_name(&w->metatiles[idx]);
+            label = r01_metatile_display_name(&p->metatiles[idx]);
             font_draw_clipped(r, UI_PREVIEW_ICON + 2, y + 4, UI_PREVIEW_ICON + 2, y,
                               UI_SIDEBAR_W - (UI_PREVIEW_ICON + 2), UI_SPRITE_ROW_H, label, 230, 230, 230);
             if (hover) {
                 char id[R01_ID_MAX];
                 int wi = ui->project ? ui->project->active_world : 0;
-                r01_metatile_id(id, sizeof(id), wi, &w->metatiles[idx]);
+                r01_metatile_id(id, sizeof(id), wi, &p->metatiles[idx]);
                 ui_tooltip_hover(ui, lx, ly, label, id);
             }
         }
@@ -426,6 +431,7 @@ static void draw_metatiles_body(UiState *ui, SDL_Renderer *r, const AccordionLay
 
 static void draw_metasprites_body(UiState *ui, SDL_Renderer *r, const AccordionLayout *lo) {
     const R01World *w = r01_project_active_world_const(ui->project);
+    const R01Project *p = ui->project;
     int lx = ui->mouse_x;
     int ly = ui->mouse_y;
     int add_y = lo->metasprites_body_y + UI_METASPRITES_BODY_H - UI_BTN_H;
@@ -437,10 +443,10 @@ static void draw_metasprites_body(UiState *ui, SDL_Renderer *r, const AccordionL
     fill_rect(r, 0, lo->metasprites_body_y, UI_SIDEBAR_W, UI_METASPRITES_BODY_H, UI_COL_PANEL_R, UI_COL_PANEL_G,
               UI_COL_PANEL_B);
 
-    if (!w || w->metasprite_count < 1) {
+    if (!w || p->metasprite_count < 1) {
         font_draw_centered(r, 0, lo->metasprites_body_y, UI_SIDEBAR_W, UI_BTN_H * 2, "empty", 160, 160, 170);
     } else {
-        int max_scroll = w->metasprite_count - vis;
+        int max_scroll = p->metasprite_count - vis;
         if (max_scroll < 0) {
             max_scroll = 0;
         }
@@ -455,21 +461,21 @@ static void draw_metasprites_body(UiState *ui, SDL_Renderer *r, const AccordionL
             int y = lo->metasprites_body_y + i * UI_SPRITE_ROW_H;
             const char *label;
             int hover;
-            if (idx >= w->metasprite_count) {
+            if (idx >= p->metasprite_count) {
                 break;
             }
             hover = point_in_rect(lx, ly, 0, y, UI_SIDEBAR_W, UI_SPRITE_ROW_H);
             if (hover) {
                 fill_rect(r, 0, y, UI_SIDEBAR_W, UI_SPRITE_ROW_H, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
             }
-            draw_metasprite_icon(ui, r, w, &w->metasprites[idx], 0, y);
-            label = r01_metasprite_display_name(&w->metasprites[idx]);
+            draw_metasprite_icon(ui, r, w, &p->metasprites[idx], 0, y);
+            label = r01_metasprite_display_name(&p->metasprites[idx]);
             font_draw_clipped(r, UI_PREVIEW_ICON + 2, y + 4, UI_PREVIEW_ICON + 2, y,
                               UI_SIDEBAR_W - (UI_PREVIEW_ICON + 2), UI_SPRITE_ROW_H, label, 230, 230, 230);
             if (hover) {
                 char id[R01_ID_MAX];
                 int wi = ui->project ? ui->project->active_world : 0;
-                r01_metasprite_id(id, sizeof(id), wi, &w->metasprites[idx]);
+                r01_metasprite_id(id, sizeof(id), wi, &p->metasprites[idx]);
                 ui_tooltip_hover(ui, lx, ly, label, id);
             }
         }
@@ -480,6 +486,7 @@ static void draw_metasprites_body(UiState *ui, SDL_Renderer *r, const AccordionL
 
 static void draw_entities_body(UiState *ui, SDL_Renderer *r, const AccordionLayout *lo) {
     const R01World *w = r01_project_active_world_const(ui->project);
+    const R01Project *p = ui->project;
     int lx = ui->mouse_x;
     int ly = ui->mouse_y;
     int add_y = lo->entities_body_y + UI_ENTITIES_BODY_H - UI_BTN_H;
@@ -494,10 +501,10 @@ static void draw_entities_body(UiState *ui, SDL_Renderer *r, const AccordionLayo
     fill_rect(r, 0, lo->entities_body_y, UI_SIDEBAR_W, UI_ENTITIES_BODY_H, UI_COL_PANEL_R, UI_COL_PANEL_G,
               UI_COL_PANEL_B);
 
-    if (!w || w->entity_count < 1) {
+    if (!w || p->entity_count < 1) {
         font_draw_centered(r, 0, lo->entities_body_y, UI_SIDEBAR_W, UI_BTN_H * 2, "empty", 160, 160, 170);
     } else {
-        int max_scroll = w->entity_count - vis;
+        int max_scroll = p->entity_count - vis;
         if (max_scroll < 0) {
             max_scroll = 0;
         }
@@ -512,21 +519,21 @@ static void draw_entities_body(UiState *ui, SDL_Renderer *r, const AccordionLayo
             int y = lo->entities_body_y + i * UI_SPRITE_ROW_H;
             const char *label;
             int hover;
-            if (idx >= w->entity_count) {
+            if (idx >= p->entity_count) {
                 break;
             }
             hover = point_in_rect(lx, ly, 0, y, UI_SIDEBAR_W, UI_SPRITE_ROW_H);
             if (hover) {
                 fill_rect(r, 0, y, UI_SIDEBAR_W, UI_SPRITE_ROW_H, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
             }
-            draw_entity_icon(ui, r, w, &w->entities[idx], 0, y);
-            label = r01_entity_display_name(&w->entities[idx]);
+            draw_entity_icon(ui, r, w, &p->entities[idx], 0, y);
+            label = r01_entity_display_name(&p->entities[idx]);
             font_draw_clipped(r, UI_PREVIEW_ICON + 2, y + 4, UI_PREVIEW_ICON + 2, y,
                               UI_SIDEBAR_W - (UI_PREVIEW_ICON + 2), UI_SPRITE_ROW_H, label, 230, 230, 230);
             if (hover) {
                 char id[R01_ID_MAX];
                 int wi = ui->project ? ui->project->active_world : 0;
-                r01_entity_type_id(id, sizeof(id), wi, &w->entities[idx]);
+                r01_entity_type_id(id, sizeof(id), wi, &p->entities[idx]);
                 ui_tooltip_hover(ui, lx, ly, label, id);
             }
         }
@@ -588,10 +595,12 @@ void draw_sidebar(UiState *ui, SDL_Renderer *r) {
 
     draw_accordion_header(r, lo.worlds_hdr_y, "Worlds", lo.worlds_open,
                           point_in_rect(lx, ly, 0, lo.worlds_hdr_y, UI_SIDEBAR_W, UI_BTN_H));
-    draw_accordion_header(r, lo.sprites_hdr_y, "World banks", lo.sprites_open,
+    draw_accordion_header(r, lo.sprites_hdr_y, "Banks", lo.sprites_open,
                           point_in_rect(lx, ly, 0, lo.sprites_hdr_y, UI_SIDEBAR_W, UI_BTN_H));
-    draw_accordion_header(r, lo.global_banks_hdr_y, "Global banks", lo.global_banks_open,
-                          point_in_rect(lx, ly, 0, lo.global_banks_hdr_y, UI_SIDEBAR_W, UI_BTN_H));
+    if (lo.global_banks_hdr_y >= 0) {
+        draw_accordion_header(r, lo.global_banks_hdr_y, "Global banks", lo.global_banks_open,
+                              point_in_rect(lx, ly, 0, lo.global_banks_hdr_y, UI_SIDEBAR_W, UI_BTN_H));
+    }
     if (UI_SHOW_METATILES) {
         draw_accordion_header(r, lo.metatiles_hdr_y, "Metatiles", lo.metatiles_open,
                               point_in_rect(lx, ly, 0, lo.metatiles_hdr_y, UI_SIDEBAR_W, UI_BTN_H));

@@ -15,6 +15,7 @@ int entity_modal_wheel(UiState *ui, int lx, int ly, int wheel_y, int shift) {
     }
     entity_modal_layout(ui, &lo);
     w = r01_project_active_world_const(ui->project);
+    const R01Project *p = ui->project;
     row = w ? w->default_pal_row : 0;
 
     if (point_in_rect(lx, ly, lo.pal_x, lo.pal_y, UI_PAL_GRID_SIZE, UI_PAL_GRID_SIZE)) {

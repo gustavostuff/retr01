@@ -174,11 +174,11 @@ void r01_cart_part_pose(int origin_x, int origin_y, int part_dx, int part_dy, ui
     uint8_t a = attr;
     if (inst_flip_h) {
         dx = 2 * origin_x - dx - 8;
-        a = (uint8_t)(a ^ 0x10u);
+        a = (uint8_t)(a ^ R01_CART_OAM_FLIP_H);
     }
     if (inst_flip_v) {
         dy = 2 * origin_y - dy - 8;
-        a = (uint8_t)(a ^ 0x20u);
+        a = (uint8_t)(a ^ R01_CART_OAM_FLIP_V);
     }
     if (out_dx) {
         *out_dx = dx;

@@ -98,13 +98,13 @@ static int play_spawn_screen(const R01World *w, int *out_col, int *out_row) {
     return 1;
 }
 
-static int play_player_instance_spawn(const R01World *w, int *out_x, int *out_y) {
+static int play_player_instance_spawn(const R01Project *p, const R01World *w, int *out_x, int *out_y) {
     int pe;
     int i;
-    if (!w) {
+    if (!p || !w) {
         return 0;
     }
-    pe = r01_world_player_entity(w);
+    pe = r01_world_player_entity(p);
     if (pe < 0) {
         return 0;
     }
@@ -141,7 +141,7 @@ int r01_play_start(R01PlayState *pl, const R01Project *p, const char *project_pa
         return 0;
     }
     pl->active = 1;
-    if (play_player_instance_spawn(w, &sx, &sy)) {
+    if (play_player_instance_spawn(p, w, &sx, &sy)) {
         place_player_xy(pl, sx, sy);
         return 1;
     }
@@ -159,7 +159,7 @@ void r01_play_stop(R01PlayState *pl) {
     }
 }
 
-void r01_play_player_hit_rect(const R01World *w, const R01GameCtx *ctx, int origin_x, int origin_y, int *hx,
+void r01_play_player_hit_rect(const R01Project *p, const R01GameCtx *ctx, int origin_x, int origin_y, int *hx,
                               int *hy, int *hw, int *hh) {
     int pe;
     int state_idx = 0;
@@ -167,17 +167,17 @@ void r01_play_player_hit_rect(const R01World *w, const R01GameCtx *ctx, int orig
     int box_h = R01_PLAY_PLAYER_H;
     int box_x = origin_x;
     int box_y = origin_y;
-    pe = r01_world_player_entity(w);
+    pe = r01_world_player_entity(p);
     if (ctx) {
         state_idx = r01_player_anim_entity_state(ctx);
     }
-    if (pe >= 0 && w->entities[pe].state_count > 0) {
+    if (p && pe >= 0 && p->entities[pe].state_count > 0) {
         const R01EntityState *st;
         const R01EntityFrame *fr;
-        if (state_idx < 0 || state_idx >= w->entities[pe].state_count) {
+        if (state_idx < 0 || state_idx >= p->entities[pe].state_count) {
             state_idx = 0;
         }
-        st = &w->entities[pe].states[state_idx];
+        st = &p->entities[pe].states[state_idx];
         fr = r01_entity_state_hitbox_origin_frame(st);
         if (fr) {
             box_x = r01_entity_world_x(origin_x, fr->origin_x, st->hitbox_x);
@@ -205,6 +205,7 @@ void r01_play_player_hit_rect(const R01World *w, const R01GameCtx *ctx, int orig
 }
 
 typedef struct PlayMoveCtx {
+    const R01Project *p;
     const R01World *w;
     const R01GameCtx *ctx;
 } PlayMoveCtx;
@@ -215,7 +216,7 @@ static int play_move_ok(void *user, int ox, int oy) {
     if (!m || !m->w) {
         return 0;
     }
-    r01_play_player_hit_rect(m->w, m->ctx, ox, oy, &hx, &hy, &hw, &hh);
+    r01_play_player_hit_rect(m->p, m->ctx, ox, oy, &hx, &hy, &hw, &hh);
     return r01_world_aabb_ok(m->w, hx, hy, hw, hh);
 }
 
@@ -237,7 +238,7 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy, int ju
         return;
     }
     {
-        int pe = r01_world_player_entity(w);
+        int pe = r01_world_player_entity(p);
         int anim_dx = 0;
         int anim_dy = 0;
         PlayMoveCtx move;
@@ -252,6 +253,7 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy, int ju
         ph.frac_y = ctx->plat_frac_y;
         ph.grounded = ctx->plat_grounded;
         ph.jump_held = ctx->plat_jump_held;
+        move.p = p;
         move.w = w;
         move.ctx = ctx;
         {
@@ -276,7 +278,7 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy, int ju
             ctx->player_crouching = 0;
         }
         r01_player_anim_update(ctx, anim_dx, anim_dy);
-        r01_player_anim_tick(ctx, w, pe);
+        r01_player_anim_tick(ctx, p, pe);
     }
     r01_game_camera_update(ctx);
     r01_projectile_tick(ctx, w);
@@ -354,9 +356,9 @@ int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry 
         return 0;
     }
 
-    player_type = r01_world_player_entity(w);
+    player_type = r01_world_player_entity(p);
     if (player_type >= 0) {
-        const R01EntityType *ent = &w->entities[player_type];
+        const R01EntityType *ent = &p->entities[player_type];
         const R01EntityState *st;
         const R01EntityFrame *fr;
         int state_idx = r01_player_anim_entity_state(ctx);
@@ -429,13 +431,13 @@ int r01_play_build_oam(const R01Project *p, const R01PlayState *pl, R01OamEntry 
         const R01EntityState *st;
         const R01EntityFrame *fr;
         int pi;
-        if (inst->type_id < 0 || inst->type_id >= w->entity_count) {
+        if (inst->type_id < 0 || inst->type_id >= p->entity_count) {
             continue;
         }
         if (player_type >= 0 && inst->type_id == player_type) {
             continue;
         }
-        ent = &w->entities[inst->type_id];
+        ent = &p->entities[inst->type_id];
         if (ent->state_count < 1 || ent->states[0].frame_count < 1) {
             continue;
         }

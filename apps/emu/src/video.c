@@ -92,11 +92,11 @@ static int prepare_world_common(R01eMachine *m, int world, R01eWorldView *wv) {
     }
     m->io.world = (uint8_t)world;
 
-    chr = r01e_cart_ptr(&m->cart, wv->base + wv->off_chr, 8u * R01E_CHR_BANK_BYTES);
+    chr = r01e_cart_ptr(&m->cart, m->cart.off_chr, (size_t)R01E_CART_GLOBAL_CHR_BANKS * R01E_CHR_BANK_BYTES);
     if (!chr) {
         return -1;
     }
-    for (si = 0; si < 8; si++) {
+    for (si = 0; si < R01E_CART_GLOBAL_CHR_BANKS; si++) {
         memcpy(vid->chr[si], chr + (size_t)si * R01E_CHR_BANK_BYTES, R01E_CHR_BANK_BYTES);
     }
     vid->chr_loaded = 1;
@@ -618,7 +618,7 @@ static void sample_l0(R01eMachine *m, int lx, int ly, uint8_t *r, uint8_t *g, ui
     attr = s->map[0xF0 + cell];
     bank = (uint8_t)(attr & R01E_ATTR_BANK_MASK);
     pal = (uint8_t)((attr & R01E_ATTR_PAL_MASK) >> R01E_ATTR_PAL_SHIFT);
-    chr = vid->chr[bank & 3u];
+    chr = vid->chr[bank & 15u];
     memcpy(tile16, chr + (size_t)tile * R01E_TILE_BYTES, R01E_TILE_BYTES);
     decode_tile16(tile16, attr);
     px = local_x & 7;
@@ -682,7 +682,7 @@ static void sample_bg(R01eMachine *m, int lx, int ly, uint8_t *r, uint8_t *g, ui
     attr = base[0xF0 + cell];
     bank = (uint8_t)(attr & R01E_ATTR_BANK_MASK);
     pal = (uint8_t)((attr & R01E_ATTR_PAL_MASK) >> R01E_ATTR_PAL_SHIFT);
-    chr = vid->chr[bank & 3u];
+    chr = vid->chr[bank & 15u];
     memcpy(tile16, chr + (size_t)tile * R01E_TILE_BYTES, R01E_TILE_BYTES);
     decode_tile16(tile16, attr);
     px = local_x & 7;
@@ -721,7 +721,7 @@ static void sample_vram_slot_px(R01eMachine *m, int slot, int local_x, int local
     attr = base[0xF0 + cell];
     bank = (uint8_t)(attr & R01E_ATTR_BANK_MASK);
     pal = (uint8_t)((attr & R01E_ATTR_PAL_MASK) >> R01E_ATTR_PAL_SHIFT);
-    chr = vid->chr[bank & 3u];
+    chr = vid->chr[bank & 15u];
     memcpy(tile16, chr + (size_t)tile * R01E_TILE_BYTES, R01E_TILE_BYTES);
     if (attr & R01E_ATTR_FLIP_H) {
         for (i = 0; i < 8; i++) {
@@ -813,7 +813,7 @@ static void sample_bg0_screen_px(R01eMachine *m, int col, int row, int local_x, 
     attr = s->map[0xF0 + cell];
     bank = (uint8_t)(attr & R01E_ATTR_BANK_MASK);
     pal = (uint8_t)((attr & R01E_ATTR_PAL_MASK) >> R01E_ATTR_PAL_SHIFT);
-    chr = m->video.chr[bank & 3u];
+    chr = m->video.chr[bank & 15u];
     memcpy(tile16, chr + (size_t)tile * R01E_TILE_BYTES, R01E_TILE_BYTES);
     decode_tile16(tile16, attr);
     px = local_x & 7;
@@ -888,7 +888,7 @@ static int sample_l1_chr_color(R01eMachine *m, int lx, int ly) {
     tile = base[cell];
     attr = base[0xF0 + cell];
     bank = (uint8_t)(attr & R01E_ATTR_BANK_MASK);
-    chr = vid->chr[bank & 3u];
+    chr = vid->chr[bank & 15u];
     memcpy(tile16, chr + (size_t)tile * R01E_TILE_BYTES, R01E_TILE_BYTES);
     decode_tile16(tile16, attr);
     px = local_x & 7;
@@ -985,7 +985,7 @@ static void blit_spr_tile(R01eMachine *m, int sx, int sy, uint8_t tile, uint8_t 
                           uint8_t line_count[R01E_SCREEN_PX_H]) {
     uint8_t bank = (uint8_t)(attr & R01E_ATTR_BANK_MASK);
     uint8_t pal = (uint8_t)((attr & R01E_ATTR_PAL_MASK) >> R01E_ATTR_PAL_SHIFT);
-    const uint8_t *chr = m->video.chr[4 + (bank & 3u)];
+    const uint8_t *chr = m->video.chr[R01E_BG_BANKS + (bank & 15u)];
     uint8_t tile16[16];
     int px, py;
 
@@ -1023,7 +1023,7 @@ static void blit_spr_tile_atlas(R01eMachine *m, int ax, int ay, uint8_t tile, ui
                                 uint8_t line_count[R01E_VRAM_ATLAS_H]) {
     uint8_t bank = (uint8_t)(attr & R01E_ATTR_BANK_MASK);
     uint8_t pal = (uint8_t)((attr & R01E_ATTR_PAL_MASK) >> R01E_ATTR_PAL_SHIFT);
-    const uint8_t *chr = m->video.chr[4 + (bank & 3u)];
+    const uint8_t *chr = m->video.chr[R01E_BG_BANKS + (bank & 15u)];
     uint8_t tile16[16];
     int px, py;
 

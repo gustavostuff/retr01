@@ -64,16 +64,17 @@ void draw_menu(UiState *ui, SDL_Renderer *r) {
             }
             if (ui->menu.submenu == UI_MENU_SUB_EXISTING_SPR) {
                 const R01World *w = r01_project_active_world_const(ui->project);
+                const R01Project *p = ui->project;
                 int icon_x = x + UI_UNIT / 2;
                 int icon_y = y + (UI_BTN_H - 8) / 2;
                 int text_y_off = (UI_BTN_H - font_line_h()) / 2;
                 fill_rect(r, icon_x, icon_y, 8, 8, UI_COL_CHESS_A_R, UI_COL_CHESS_A_G, UI_COL_CHESS_A_B);
-                if (w && i >= 0 && i < w->sprite_count) {
+                if (w && i >= 0 && i < p->sprite_count) {
                     R01EntityPart pt;
                     memset(&pt, 0, sizeof(pt));
-                    pt.bank = w->sprites[i].bank;
-                    pt.tile_id = w->sprites[i].tile_id;
-                    pt.pal = w->sprites[i].pal & 3;
+                    pt.bank = p->sprites[i].bank;
+                    pt.tile_id = p->sprites[i].tile_id;
+                    pt.pal = p->sprites[i].pal & 3;
                     ui_compose_draw_part(r, ui->project, w, &pt, icon_x, icon_y, 1, 0, 0, 255);
                 }
                 if (text_y_off < 0) {

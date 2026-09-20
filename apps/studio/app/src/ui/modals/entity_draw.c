@@ -7,6 +7,7 @@
 void draw_entity_modal(UiState *ui, SDL_Renderer *r) {
     EntityModalLayout lo;
     const R01World *w = r01_project_active_world_const(ui->project);
+    const R01Project *p = ui->project;
     R01EntityFrame *fr;
     R01EntityState *st;
     int row = w ? w->default_pal_row : 0;

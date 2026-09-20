@@ -27,8 +27,8 @@
 #define R01_CART_PLAYER_ENTITY_NONE 0xFFu
 #define R01_CART_ENTITY_PARTS_MAX 6
 #define R01_CART_ENTITY_STATES_MAX 4
-#define R01_CART_ENTITY_FRAMES_MAX 4
-#define R01_CART_ENTITY_DEF_MAX 532 /* locked fully-populated size (general_docs/software-api.md) */
+#define R01_CART_ENTITY_FRAMES_MAX 8
+#define R01_CART_ENTITY_DEF_MAX 1044 /* locked fully-populated size (general_docs/software-api.md) */
 #define R01_CART_ENTITY_FRAME_DELAY_DEFAULT 1
 #define R01_CART_INSTANCE_SIZE 6 /* type_id, flags (bit0 flip_h, bit1 flip_v), world_x u16 LE, world_y u16 LE */
 

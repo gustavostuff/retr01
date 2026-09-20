@@ -62,15 +62,15 @@ TEST_MAIN() {
     /* Marked player with a placed instance starts at that instance origin. */
     {
         int type_id, inst;
-        type_id = r01_world_entity_add(&p->worlds[0]);
+        type_id = r01_world_entity_add(p);
         EXPECT(type_id >= 0, "spawn entity type");
-        r01_world_set_player_entity(&p->worlds[0], type_id);
+        r01_world_set_player_entity(p, type_id);
         inst = r01_world_place_entity(&p->worlds[0], type_id, 90, 70);
         EXPECT(inst >= 0, "spawn instance");
         r01_play_stop(&pl);
         EXPECT(r01_play_start(&pl, p, NULL), "play start at instance");
         EXPECT(pl.ctx.player_x == 90 && pl.ctx.player_y == 70, "spawn at placed instance");
-        r01_world_set_player_entity(&p->worlds[0], -1);
+        r01_world_set_player_entity(p, -1);
         r01_play_stop(&pl);
         EXPECT(r01_play_start(&pl, p, NULL), "play start fallback");
         EXPECT(pl.ctx.player_x == R01_PLAY_SPAWN_CENTER_X(2), "unmarked falls back to screen center");
@@ -95,12 +95,12 @@ TEST_MAIN() {
         int ly = pl.ctx.player_y % R01_SCREEN_PX_H;
         int cell = (ly / 8) * R01_SCREEN_TILES_X + (lx / 8);
         int before_x = pl.ctx.player_x;
-        s->attrs[cell] |= R01_ATTR_SOLID;
+        s->solids[cell] = 1;
         r01_play_tick(&pl, p, -1, 0, 0);
         EXPECT(pl.ctx.player_x == before_x, "solid tile blocks movement");
         r01_play_tick(&pl, p, 1, 0, 0);
         EXPECT(pl.ctx.player_x == before_x, "solid tile blocks movement both axes");
-        s->attrs[cell] &= (uint8_t)~R01_ATTR_SOLID;
+        s->solids[cell] = 0;
     }
 
     EXPECT(!r01_play_button(&pl, p, R01_PLAY_BTN_X), "X has no warp");
@@ -137,8 +137,8 @@ TEST_MAIN() {
         s->attrs[2] = r01_attr_pack(0, 0, 0, 0);
         touched = r01_world_apply_solid_hw(&p->worlds[0], hw, 1);
         EXPECT(touched >= 2, "solid by hw touches matching tiles");
-        EXPECT(r01_attr_solid(s->attrs[0]) && r01_attr_solid(s->attrs[1]), "matching attrs solid");
-        EXPECT(!r01_attr_solid(s->attrs[2]), "non-matching attrs unchanged");
+        EXPECT(s->solids[0] && s->solids[1], "matching attrs solid");
+        EXPECT(!s->solids[2], "non-matching attrs unchanged");
     }
 
     /* Seam: solid on neighboring screen blocks crossing the edge. */
@@ -153,7 +153,7 @@ TEST_MAIN() {
         right = &p->worlds[0].screens[right_idx];
         memset(right->attrs, 0, sizeof(right->attrs));
         for (ti = 0; ti < R01_SCREEN_TILES_Y; ti++) {
-            right->attrs[ti * R01_SCREEN_TILES_X] |= R01_ATTR_SOLID;
+            right->solids[ti * R01_SCREEN_TILES_X] = 1;
         }
         edge_x = 3 * R01_SCREEN_PX_W - R01_PLAY_PLAYER_W;
         pl.ctx.player_x = edge_x;
@@ -181,22 +181,22 @@ TEST_MAIN() {
         int hx, hy, hw, hh;
         int cell;
         R01Screen *scr;
-        type_id = r01_world_entity_add(&p->worlds[0]);
+        type_id = r01_world_entity_add(p);
         EXPECT(type_id >= 0, "hitbox entity");
-        p->worlds[0].entities[type_id].states[0].frames[0].origin_x = 4;
-        p->worlds[0].entities[type_id].states[0].frames[0].origin_y = 4;
-        p->worlds[0].entities[type_id].states[0].hitbox_x = 0;
-        p->worlds[0].entities[type_id].states[0].hitbox_y = 0;
-        p->worlds[0].entities[type_id].states[0].hitbox_w = 8;
-        p->worlds[0].entities[type_id].states[0].hitbox_h = 8;
-        r01_world_set_player_entity(&p->worlds[0], type_id);
+        p->entities[type_id].states[0].frames[0].origin_x = 4;
+        p->entities[type_id].states[0].frames[0].origin_y = 4;
+        p->entities[type_id].states[0].hitbox_x = 0;
+        p->entities[type_id].states[0].hitbox_y = 0;
+        p->entities[type_id].states[0].hitbox_w = 8;
+        p->entities[type_id].states[0].hitbox_h = 8;
+        r01_world_set_player_entity(p, type_id);
         pl.ctx.player_x = R01_PLAY_SPAWN_CENTER_X(0);
         pl.ctx.player_y = R01_PLAY_SPAWN_CENTER_Y(0);
-        r01_play_player_hit_rect(&p->worlds[0], &pl.ctx, pl.ctx.player_x, pl.ctx.player_y, &hx, &hy, &hw, &hh);
+        r01_play_player_hit_rect(p, &pl.ctx, pl.ctx.player_x, pl.ctx.player_y, &hx, &hy, &hw, &hh);
         EXPECT(hx == pl.ctx.player_x - 4 && hy == pl.ctx.player_y - 4, "hitbox offset from origin");
         EXPECT(hw == 8 && hh == 8, "hitbox size");
         {
-            R01EntityType *ent = &p->worlds[0].entities[type_id];
+            R01EntityType *ent = &p->entities[type_id];
             R01EntityFrame *fr1;
             ent->states[0].frames[0].part_count = 1;
             fr1 = r01_entity_ensure_frame(ent, 0, 1);
@@ -205,7 +205,7 @@ TEST_MAIN() {
             fr1->origin_x = 20;
             fr1->origin_y = 20;
             pl.ctx.player_anim_frame = 1;
-            r01_play_player_hit_rect(&p->worlds[0], &pl.ctx, pl.ctx.player_x, pl.ctx.player_y, &hx, &hy, &hw,
+            r01_play_player_hit_rect(p, &pl.ctx, pl.ctx.player_x, pl.ctx.player_y, &hx, &hy, &hw,
                                      &hh);
             EXPECT(hx == pl.ctx.player_x - 4 && hy == pl.ctx.player_y - 4,
                    "later frame origin does not move hitbox");
@@ -213,14 +213,14 @@ TEST_MAIN() {
         }
         scr = &p->worlds[0].screens[r01_world_find_screen(&p->worlds[0], 0, 0)];
         cell = ((hy % R01_SCREEN_PX_H) / 8) * R01_SCREEN_TILES_X + ((hx % R01_SCREEN_PX_W) / 8);
-        scr->attrs[cell] |= R01_ATTR_SOLID;
+        scr->solids[cell] = 1;
         {
             int before = pl.ctx.player_x;
             r01_play_tick(&pl, p, -1, 0, 0);
             EXPECT(pl.ctx.player_x == before, "offset hitbox blocks via solid under box");
         }
-        scr->attrs[cell] &= (uint8_t)~R01_ATTR_SOLID;
-        r01_world_set_player_entity(&p->worlds[0], -1);
+        scr->solids[cell] = 0;
+        r01_world_set_player_entity(p, -1);
     }
 
     EXPECT(r01_oam_tile_off_screen(-8, 0), "oam fully left off");
@@ -234,10 +234,10 @@ TEST_MAIN() {
         R01OamEntry oam[R01_OAM_MAX];
         int n;
         int type_id, inst;
-        type_id = r01_world_entity_add(&p->worlds[0]);
+        type_id = r01_world_entity_add(p);
         EXPECT(type_id >= 0, "oam entity type");
-        p->worlds[0].entities[type_id].states[0].frames[0].part_count = 1;
-        p->worlds[0].entities[type_id].states[0].frames[0].parts[0].tile_id = 2;
+        p->entities[type_id].states[0].frames[0].part_count = 1;
+        p->entities[type_id].states[0].frames[0].parts[0].tile_id = 2;
         inst = r01_world_place_entity(&p->worlds[0], type_id, pl.ctx.cam_x - 64, pl.ctx.cam_y);
         EXPECT(inst >= 0, "oam far instance");
         n = r01_play_build_oam(p, &pl, oam, R01_OAM_MAX);
@@ -454,11 +454,11 @@ TEST_MAIN() {
     r01_platformer_set_jump(&pl.ctx, 8);
     r01_platformer_set_meter(&pl.ctx, 16);
     {
-        int pe = r01_world_entity_add(&p->worlds[0]);
+        int pe = r01_world_entity_add(p);
         R01EntityType *ent;
         EXPECT(pe >= 0, "crouch player type");
-        r01_world_set_player_entity(&p->worlds[0], pe);
-        ent = &p->worlds[0].entities[pe];
+        r01_world_set_player_entity(p, pe);
+        ent = &p->entities[pe];
         r01_entity_ensure_state(ent, 2);
         snprintf(ent->states[2].name, sizeof(ent->states[2].name), "crouching");
         r01_player_anim_set_crouch_state(&pl.ctx, 2);
@@ -479,7 +479,7 @@ TEST_MAIN() {
         pl.ctx.plat_grounded = 0;
         pl.ctx.plat_jump_held = 0;
         for (tx = 0; tx < R01_SCREEN_TILES_X; tx++) {
-            scr->attrs[2 * R01_SCREEN_TILES_X + tx] |= R01_ATTR_SOLID;
+            scr->solids[2 * R01_SCREEN_TILES_X + tx] = 1;
         }
         {
             int i;

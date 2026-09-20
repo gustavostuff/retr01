@@ -258,14 +258,14 @@ static int state_slot_hint(const char *slug) {
     return -1;
 }
 
-static int catalog_index_for_slug(const R01World *w, const char *slug) {
+static int catalog_index_for_slug(const R01Project *p, const char *slug) {
     int i;
     char have[R01_ENTITY_NAME_MAX];
-    if (!w || !slug) {
+    if (!p || !slug) {
         return -1;
     }
-    for (i = 0; i < w->entity_count; i++) {
-        r01_id_slugify(have, sizeof(have), r01_entity_display_name(&w->entities[i]));
+    for (i = 0; i < p->entity_count; i++) {
+        r01_id_slugify(have, sizeof(have), r01_entity_display_name(&p->entities[i]));
         if (strcmp(have, slug) == 0) {
             return i;
         }
@@ -983,27 +983,15 @@ static int find_existing_spr_pattern(const R01Project *p, const R01World *w, con
                                      int *bank, int *tile_id) {
     int b;
     int id;
-    if (!w || !tile || !bank || !tile_id) {
+    (void)w;
+    if (!p || !tile || !bank || !tile_id) {
         return 0;
     }
     for (b = 0; b < R01_SPR_BANKS; b++) {
-        for (id = 0; id < w->spr_banks[b].tile_count; id++) {
-            const uint8_t *have = r01_chr_spr_tile(w, b, id);
+        for (id = 0; id < p->spr_banks[b].tile_count; id++) {
+            const uint8_t *have = r01_chr_spr_tile(p, b, id);
             if (have && memcmp(have, tile, R01_TILE_BYTES) == 0) {
                 *bank = b;
-                *tile_id = id;
-                return 1;
-            }
-        }
-    }
-    if (!p) {
-        return 0;
-    }
-    for (b = 0; b < R01_SPR_BANKS; b++) {
-        for (id = 0; id < p->other_spr_banks[b].tile_count; id++) {
-            const uint8_t *have = r01_other_spr_tile(p, b, id);
-            if (have && memcmp(have, tile, R01_TILE_BYTES) == 0) {
-                *bank = R01_GLOBAL_SPR_BANK_BASE + b;
                 *tile_id = id;
                 return 1;
             }
@@ -1018,12 +1006,12 @@ static int dedupe_chr(R01Project *p, R01World *w, const uint8_t tile[R01_TILE_BY
     if (find_existing_spr_pattern(p, w, tile, bank, tile_id)) {
         return 0;
     }
-    b = r01_chr_find_spr_bank_space(w);
+    b = r01_chr_find_spr_bank_space(p);
     if (b < 0) {
         return -1;
     }
-    id = r01_chr_alloc_spr_tile(w, b);
-    if (id < 0 || r01_chr_write_spr_tile(w, b, id, tile) != 0) {
+    id = r01_chr_alloc_spr_tile(p, b);
+    if (id < 0 || r01_chr_write_spr_tile(p, b, id, tile) != 0) {
         return -1;
     }
     *bank = b;
@@ -1364,14 +1352,14 @@ int r01_world_import_entity_frames(R01Project *p, R01World *w, const R01EntityIm
     if (validate_entity_import(p, w, in, pal_rgb, err_buf, err_cap) != 0) {
         return -1;
     }
-    idx = r01_world_entity_add(w);
+    idx = r01_world_entity_add(p);
     if (idx < 0) {
         set_err(err_buf, err_cap, "entity catalog full");
         return -1;
     }
-    e = r01_world_entity(w, idx);
+    e = r01_world_entity(p, idx);
     if (fill_entity_from_import(p, w, e, in, pal_rgb, err_buf, err_cap) != 0) {
-        r01_world_entity_remove(w, idx);
+        r01_world_entity_remove(p, idx);
         return -1;
     }
     return idx;
@@ -1383,21 +1371,21 @@ int r01_world_import_entity_frames_replace(R01Project *p, R01World *w, int type_
     R01EntityType *e;
     R01EntityType saved;
 
-    if (!w || type_idx < 0 || type_idx >= w->entity_count) {
+    if (!w || type_idx < 0 || type_idx >= p->entity_count) {
         set_err(err_buf, err_cap, "bad entity replace");
         return -1;
     }
     if (validate_entity_import(p, w, in, pal_rgb, err_buf, err_cap) != 0) {
         return -1;
     }
-    e = r01_world_entity(w, type_idx);
+    e = r01_world_entity(p, type_idx);
     saved = *e;
     if (fill_entity_from_import(p, w, e, in, pal_rgb, err_buf, err_cap) != 0) {
         *e = saved;
         return -1;
     }
     restore_entity_guides(e, &saved);
-    if (r01_world_player_entity(w) == type_idx) {
+    if (r01_world_player_entity(p) == type_idx) {
         if (r01_project_set_player_entity(p, w, type_idx) != 0) {
             *e = saved;
             set_err(err_buf, err_cap, "could not move player sprites");
@@ -2114,7 +2102,7 @@ int r01_project_import_aseprite_entities(R01Project *p, const char *project_path
         int match;
         int rc;
         r01_id_slugify(slug, sizeof(slug), folders[i]);
-        existing = catalog_index_for_slug(w, slug);
+        existing = catalog_index_for_slug(p, slug);
         if (folder_dir_path(root, folders[i], folder_path, sizeof(folder_path)) != 0 ||
             folder_meta_path(root, folders[i], meta_path, sizeof(meta_path)) != 0) {
             set_err(err_buf, err_cap, "path too long");

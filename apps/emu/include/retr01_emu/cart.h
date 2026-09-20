@@ -18,12 +18,14 @@ typedef struct R01eCart {
     uint32_t len_pal_bg;
     uint32_t off_pal_spr;
     uint32_t len_pal_spr;
-    uint32_t off_world_table;
-    uint32_t len_world_table;
+    uint32_t off_chr;
+    uint32_t len_chr;
+    uint32_t off_entities;
+    uint32_t len_entities;
     uint32_t off_other;
     uint32_t len_other;
-    uint32_t off_other_chr;
-    uint32_t len_other_chr;
+    uint32_t off_world_table;
+    uint32_t len_world_table;
     uint32_t off_credits;
     uint32_t len_credits;
 } R01eCart;
@@ -81,7 +83,7 @@ typedef struct R01eWorldView {
 #define R01E_CART_WHDR_FLAG_PLATFORMER 0x10u
 #define R01E_CART_PLAYER_ENTITY_NONE 0xFFu
 #define R01E_CART_ENTITY_PARTS_MAX 6
-#define R01E_CART_ENTITY_DEF_MAX 532
+#define R01E_CART_ENTITY_DEF_MAX 1044
 #define R01E_CART_INSTANCE_SIZE 6
 
 #define R01E_CART_OTHER_TITLE 0

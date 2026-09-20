@@ -14,13 +14,14 @@
 
 static void draw_bank_tile(UiState *ui, SDL_Renderer *r, int bank, int tile_id, int dx, int dy, int scale) {
     const R01World *w = r01_project_active_world_const(ui->project);
+    const R01Project *p = ui->project;
     const uint8_t *tile;
     int row = w ? w->default_pal_row : 0;
     int sy, sx;
     if (!w) {
         return;
     }
-    tile = r01_chr_spr_tile(w, bank, tile_id);
+    tile = r01_chr_spr_tile(p, bank, tile_id);
     if (!tile) {
         return;
     }
@@ -59,14 +60,15 @@ void metasprite_edit_open(UiState *ui, int meta_idx) {
         return;
     }
     w = r01_project_active_world(ui->project);
-    if (!w || meta_idx < 0 || meta_idx >= w->metasprite_count) {
+    R01Project *p = ui->project;
+    if (!w || meta_idx < 0 || meta_idx >= p->metasprite_count) {
         return;
     }
     memset(&ui->metasprite_edit, 0, sizeof(ui->metasprite_edit));
     ui->metasprite_edit.open = 1;
     ui->metasprite_edit.is_new = 0;
     ui->metasprite_edit.meta_idx = meta_idx;
-    ui->metasprite_edit.draft = w->metasprites[meta_idx];
+    ui->metasprite_edit.draft = p->metasprites[meta_idx];
     ui->metasprite_edit.bank = 0;
     ui->metasprite_edit.sel_part = -1;
     ui->metasprite_edit.paint_color = 1;
@@ -76,27 +78,28 @@ void metasprite_edit_open(UiState *ui, int meta_idx) {
 
 static void metasprite_edit_save(UiState *ui) {
     R01World *w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     int idx;
     if (!w) {
         return;
     }
     if (ui->metasprite_edit.is_new || ui->metasprite_edit.meta_idx < 0) {
-        idx = r01_world_metasprite_add(w);
+        idx = r01_world_metasprite_add(p);
         if (idx < 0) {
             ui_toast(ui, "metasprite catalog full", 1);
             return;
         }
-        w->metasprites[idx] = ui->metasprite_edit.draft;
+        p->metasprites[idx] = ui->metasprite_edit.draft;
         ui->metasprite_edit.meta_idx = idx;
         ui->metasprite_edit.is_new = 0;
         ui_undo_push_metasprite_add(ui, idx);
         ui_toast(ui, "metasprite created", 0);
     } else {
-        if (ui->metasprite_edit.meta_idx >= w->metasprite_count) {
+        if (ui->metasprite_edit.meta_idx >= p->metasprite_count) {
             ui_toast(ui, "bad metasprite index", 1);
             return;
         }
-        w->metasprites[ui->metasprite_edit.meta_idx] = ui->metasprite_edit.draft;
+        p->metasprites[ui->metasprite_edit.meta_idx] = ui->metasprite_edit.draft;
         ui_toast(ui, "metasprite saved", 0);
     }
     ui->metasprite_edit.open = 0;
@@ -106,6 +109,7 @@ static void metasprite_edit_save(UiState *ui) {
 void draw_metasprite_modal(UiState *ui, SDL_Renderer *r) {
     MetaspriteModalLayout lo;
     const R01World *w = r01_project_active_world_const(ui->project);
+    const R01Project *p = ui->project;
     R01EntityFrame *fr = &ui->metasprite_edit.draft.frame;
     int tx, ty;
     int row = w ? w->default_pal_row : 0;
@@ -196,11 +200,12 @@ int metasprite_modal_handle(UiState *ui, int lx, int ly, int down, Uint8 button)
             part.pal = ui->metasprite_edit.paint_pal;
             {
                 const R01World *w = r01_project_active_world_const(ui->project);
+                const R01Project *p = ui->project;
                 int si;
                 if (w) {
-                    for (si = 0; si < w->sprite_count; si++) {
-                        if (w->sprites[si].bank == part.bank && w->sprites[si].tile_id == part.tile_id) {
-                            part.pal = w->sprites[si].pal;
+                    for (si = 0; si < p->sprite_count; si++) {
+                        if (p->sprites[si].bank == part.bank && p->sprites[si].tile_id == part.tile_id) {
+                            part.pal = p->sprites[si].pal;
                             break;
                         }
                     }

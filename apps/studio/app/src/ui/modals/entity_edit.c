@@ -29,10 +29,11 @@ int entity_edit_add_sprite_at(UiState *ui, int wx, int wy) {
         return -1;
     }
     w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     if (!w) {
         return -1;
     }
-    if (r01_world_player_entity(w) == ui->entity_edit.type_idx && ui->entity_edit.type_idx >= 0) {
+    if (r01_world_player_entity(p) == ui->entity_edit.type_idx && ui->entity_edit.type_idx >= 0) {
         int gbank = ui->global_banks_idx;
         if (ui->global_banks_plane != UI_BANKS_PLANE_GLOBAL_SPR || gbank < 0 || gbank >= R01_SPR_BANKS) {
             gbank = 0;
@@ -44,18 +45,18 @@ int entity_edit_add_sprite_at(UiState *ui, int wx, int wy) {
             return -1;
         }
     } else {
-        bank = r01_chr_find_spr_bank_space(w);
+        bank = r01_chr_find_spr_bank_space(p);
         if (bank < 0) {
             ui_toast(ui, "sprite banks full", 1);
             return -1;
         }
-        tile_id = r01_chr_alloc_spr_tile(w, bank);
+        tile_id = r01_chr_alloc_spr_tile(p, bank);
         if (tile_id < 0) {
             ui_toast(ui, "sprite banks full", 1);
             return -1;
         }
     }
-    cat = r01_world_sprite_add(w, bank, tile_id, ui->entity_edit.paint_pal);
+    cat = r01_world_sprite_add(p, bank, tile_id, ui->entity_edit.paint_pal);
     memset(&part, 0, sizeof(part));
     part.bank = bank;
     part.tile_id = tile_id;
@@ -92,10 +93,11 @@ int entity_edit_add_existing_sprite_at(UiState *ui, int wx, int wy, int catalog_
         return -1;
     }
     w = r01_project_active_world(ui->project);
-    if (!w || catalog_idx < 0 || catalog_idx >= w->sprite_count) {
+    R01Project *p = ui->project;
+    if (!w || catalog_idx < 0 || catalog_idx >= p->sprite_count) {
         return -1;
     }
-    sp = &w->sprites[catalog_idx];
+    sp = &p->sprites[catalog_idx];
     memset(&part, 0, sizeof(part));
     part.bank = sp->bank;
     part.tile_id = sp->tile_id;
@@ -141,14 +143,15 @@ void entity_edit_open(UiState *ui, int type_idx) {
         return;
     }
     w = r01_project_active_world(ui->project);
-    if (!w || type_idx < 0 || type_idx >= w->entity_count) {
+    R01Project *p = ui->project;
+    if (!w || type_idx < 0 || type_idx >= p->entity_count) {
         return;
     }
     memset(&ui->entity_edit, 0, sizeof(ui->entity_edit));
     ui->entity_edit.open = 1;
     ui->entity_edit.is_new = 0;
     ui->entity_edit.type_idx = type_idx;
-    ui->entity_edit.draft = w->entities[type_idx];
+    ui->entity_edit.draft = p->entities[type_idx];
     ui->entity_edit.state = 0;
     ui->entity_edit.frame = 0;
     ui->entity_edit.sel_part = -1;
@@ -259,6 +262,7 @@ void entity_edit_preview_tick(UiState *ui) {
 
 void entity_edit_save(UiState *ui) {
     R01World *w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     int idx;
     if (!w) {
         return;
@@ -267,22 +271,22 @@ void entity_edit_save(UiState *ui) {
         ui->entity_edit.draft.state_count = 1;
     }
     if (ui->entity_edit.is_new || ui->entity_edit.type_idx < 0) {
-        idx = r01_world_entity_add(w);
+        idx = r01_world_entity_add(p);
         if (idx < 0) {
             ui_toast(ui, "entity catalog full", 1);
             return;
         }
-        w->entities[idx] = ui->entity_edit.draft;
+        p->entities[idx] = ui->entity_edit.draft;
         ui->entity_edit.type_idx = idx;
         ui->entity_edit.is_new = 0;
         ui_undo_push_entity_add(ui, idx);
         ui_toast(ui, "entity created", 0);
     } else {
-        if (ui->entity_edit.type_idx >= w->entity_count) {
+        if (ui->entity_edit.type_idx >= p->entity_count) {
             ui_toast(ui, "bad entity index", 1);
             return;
         }
-        w->entities[ui->entity_edit.type_idx] = ui->entity_edit.draft;
+        p->entities[ui->entity_edit.type_idx] = ui->entity_edit.draft;
         ui_toast(ui, "entity saved", 0);
     }
     ui_undo_spr_paint_end(ui);

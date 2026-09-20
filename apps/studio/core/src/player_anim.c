@@ -226,19 +226,19 @@ void r01_player_anim_update(R01GameCtx *ctx, int dx, int dy) {
     }
 }
 
-void r01_player_anim_tick(R01GameCtx *ctx, const R01World *w, int player_type) {
+void r01_player_anim_tick(R01GameCtx *ctx, const R01Project *p, int player_type) {
     const R01EntityType *ent;
     const R01EntityState *st;
     int delay;
     int frame_count;
-    if (!ctx || !w || player_type < 0 || player_type >= w->entity_count) {
+    if (!ctx || !p || player_type < 0 || player_type >= p->entity_count) {
         return;
     }
     if (ctx->player_idle_state < 0 && ctx->player_anim_state == 0) {
         ctx->player_anim_frame = 0;
         return;
     }
-    ent = &w->entities[player_type];
+    ent = &p->entities[player_type];
     if (ctx->player_anim_state < 0 || ctx->player_anim_state >= ent->state_count) {
         return;
     }

@@ -1,6 +1,4 @@
 #include "retr01_studio/entities.h"
-#include "retr01_studio/chr_pack.h"
-#include "retr01_studio/sprites.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -127,354 +125,87 @@ void r01_entity_frame_id(char *dst, size_t cap, int world_idx, const R01EntityTy
     snprintf(dst, cap, "%s_frame_%02d", base, frame_idx);
 }
 
-int r01_world_entity_add(R01World *w) {
+int r01_world_entity_add(R01Project *p) {
     R01EntityType *e;
-    if (!w || w->entity_count >= R01_MAX_ENTITY_TYPES) {
+    if (!p || p->entity_count >= R01_MAX_ENTITY_TYPES) {
         return -1;
     }
-    e = &w->entities[w->entity_count];
+    e = &p->entities[p->entity_count];
     r01_entity_type_init(e);
-    w->entity_count++;
-    return w->entity_count - 1;
+    p->entity_count++;
+    return p->entity_count - 1;
 }
 
-int r01_world_entity_remove(R01World *w, int type_idx) {
-    int i, j;
-    if (!w || type_idx < 0 || type_idx >= w->entity_count) {
+int r01_world_entity_remove(R01Project *p, int type_idx) {
+    int i, j, wi;
+    if (!p || type_idx < 0 || type_idx >= p->entity_count) {
         return -1;
     }
-    /* Drop instances of this type; remap higher type_ids. */
-    for (i = 0; i < w->instance_count;) {
-        if (w->instances[i].type_id == type_idx) {
-            r01_world_instance_remove(w, i);
-            continue;
+    for (wi = 0; wi < R01_MAX_WORLDS; wi++) {
+        R01World *w = &p->worlds[wi];
+        for (i = 0; i < w->instance_count;) {
+            if (w->instances[i].type_id == type_idx) {
+                r01_world_instance_remove(w, i);
+                continue;
+            }
+            if (w->instances[i].type_id > type_idx) {
+                w->instances[i].type_id--;
+            }
+            i++;
         }
-        if (w->instances[i].type_id > type_idx) {
-            w->instances[i].type_id--;
-        }
-        i++;
     }
-    if (w->player_entity == type_idx) {
-        w->player_entity = -1;
-    } else if (w->player_entity > type_idx) {
-        w->player_entity--;
+    if (p->player_entity == type_idx) {
+        p->player_entity = -1;
+    } else if (p->player_entity > type_idx) {
+        p->player_entity--;
     }
-    for (j = type_idx; j < w->entity_count - 1; j++) {
-        w->entities[j] = w->entities[j + 1];
+    for (j = type_idx; j < p->entity_count - 1; j++) {
+        p->entities[j] = p->entities[j + 1];
     }
-    w->entity_count--;
-    memset(&w->entities[w->entity_count], 0, sizeof(w->entities[0]));
+    p->entity_count--;
+    memset(&p->entities[p->entity_count], 0, sizeof(p->entities[0]));
     return 0;
 }
 
-void r01_world_set_player_entity(R01World *w, int type_idx) {
-    if (!w) {
+void r01_world_set_player_entity(R01Project *p, int type_idx) {
+    if (!p) {
         return;
     }
-    if (type_idx < 0 || type_idx >= w->entity_count) {
-        w->player_entity = -1;
+    if (type_idx < 0 || type_idx >= p->entity_count) {
+        p->player_entity = -1;
         return;
     }
-    w->player_entity = type_idx;
+    p->player_entity = type_idx;
 }
 
-int r01_world_player_entity(const R01World *w) {
-    if (!w || w->player_entity < 0 || w->player_entity >= w->entity_count) {
+int r01_world_player_entity(const R01Project *p) {
+    if (!p || p->player_entity < 0 || p->player_entity >= p->entity_count) {
         return -1;
     }
-    return w->player_entity;
-}
-
-typedef struct R01PlayerBankRemap {
-    int old_bank;
-    int old_tile;
-    int new_bank;
-    int new_tile;
-} R01PlayerBankRemap;
-
-/* Collect unique world-SPR tiles (skips parts already on a global SPR bank). */
-static int entity_collect_world_spr_tiles(const R01EntityType *ent, R01PlayerBankRemap *out, int cap) {
-    int n = 0;
-    int si, fi, pi, i;
-    if (!ent || !out || cap < 1) {
-        return 0;
-    }
-    for (si = 0; si < ent->state_count && si < R01_ENTITY_STATES_MAX; si++) {
-        const R01EntityState *st = &ent->states[si];
-        for (fi = 0; fi < st->frame_count && fi < R01_ENTITY_FRAMES_MAX; fi++) {
-            const R01EntityFrame *fr = &st->frames[fi];
-            for (pi = 0; pi < fr->part_count && pi < R01_ENTITY_PARTS_MAX; pi++) {
-                const R01EntityPart *pt = &fr->parts[pi];
-                if (r01_is_global_spr_bank(pt->bank)) {
-                    continue;
-                }
-                if (pt->bank < 0 || pt->bank >= R01_SPR_BANKS) {
-                    continue;
-                }
-                if (pt->tile_id < 0 || pt->tile_id >= R01_TILES_PER_BANK) {
-                    continue;
-                }
-                for (i = 0; i < n; i++) {
-                    if (out[i].old_bank == pt->bank && out[i].old_tile == pt->tile_id) {
-                        break;
-                    }
-                }
-                if (i < n) {
-                    continue;
-                }
-                if (n >= cap) {
-                    return -1;
-                }
-                out[n].old_bank = pt->bank;
-                out[n].old_tile = pt->tile_id;
-                out[n].new_bank = -1;
-                out[n].new_tile = -1;
-                n++;
-            }
-        }
-    }
-    /* Stable sheet order: low bank, then low tile id. */
-    for (i = 0; i < n; i++) {
-        int j;
-        for (j = i + 1; j < n; j++) {
-            if (out[j].old_bank < out[i].old_bank ||
-                (out[j].old_bank == out[i].old_bank && out[j].old_tile < out[i].old_tile)) {
-                R01PlayerBankRemap tmp = out[i];
-                out[i] = out[j];
-                out[j] = tmp;
-            }
-        }
-    }
-    return n;
-}
-
-static int remap_dest_taken(const R01PlayerBankRemap *map, int assigned, int dest_bank, int dest) {
-    int i;
-    for (i = 0; i < assigned; i++) {
-        if (map[i].new_bank == dest_bank && map[i].new_tile == dest) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-static int pick_other_spr_dest_tile(const R01Project *p, int spr_bank, const R01PlayerBankRemap *map,
-                                    int assigned) {
-    int dest;
-    int start = 0;
-    if (!p || spr_bank < 0 || spr_bank >= R01_SPR_BANKS) {
-        return -1;
-    }
-    start = p->other_spr_banks[spr_bank].tile_count;
-    for (dest = 0; dest < start; dest++) {
-        if (!remap_dest_taken(map, assigned, R01_GLOBAL_SPR_BANK_BASE + spr_bank, dest)) {
-            const uint8_t *t = r01_other_spr_tile(p, spr_bank, dest);
-            int blank = 1;
-            int b;
-            if (t) {
-                for (b = 0; b < R01_TILE_BYTES; b++) {
-                    if (t[b]) {
-                        blank = 0;
-                        break;
-                    }
-                }
-            }
-            if (blank) {
-                return dest;
-            }
-        }
-    }
-    for (dest = start; dest < R01_TILES_PER_BANK; dest++) {
-        if (!remap_dest_taken(map, assigned, R01_GLOBAL_SPR_BANK_BASE + spr_bank, dest)) {
-            return dest;
-        }
-    }
-    return -1;
-}
-
-static void entity_remap_parts(R01EntityType *ent, const R01PlayerBankRemap *map, int n) {
-    int si, fi, pi, i;
-    if (!ent || !map || n < 1) {
-        return;
-    }
-    for (si = 0; si < ent->state_count && si < R01_ENTITY_STATES_MAX; si++) {
-        R01EntityState *st = &ent->states[si];
-        for (fi = 0; fi < st->frame_count && fi < R01_ENTITY_FRAMES_MAX; fi++) {
-            R01EntityFrame *fr = &st->frames[fi];
-            for (pi = 0; pi < fr->part_count && pi < R01_ENTITY_PARTS_MAX; pi++) {
-                R01EntityPart *pt = &fr->parts[pi];
-                for (i = 0; i < n; i++) {
-                    if (pt->bank == map[i].old_bank && pt->tile_id == map[i].old_tile) {
-                        pt->bank = map[i].new_bank;
-                        pt->tile_id = map[i].new_tile;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-}
-
-static void catalog_remap_tiles(R01World *w, const R01PlayerBankRemap *map, int n) {
-    int ci, i;
-    if (!w || !map || n < 1) {
-        return;
-    }
-    for (ci = 0; ci < w->sprite_count; ci++) {
-        R01SpriteDef *s = &w->sprites[ci];
-        for (i = 0; i < n; i++) {
-            if (s->bank == map[i].old_bank && s->tile_id == map[i].old_tile) {
-                s->bank = map[i].new_bank;
-                s->tile_id = map[i].new_tile;
-                break;
-            }
-        }
-    }
-}
-
-/* Clear one world SPR tile slot (after exclusive move to global other SPR). */
-static void clear_world_spr_tile(R01World *w, int bank, int tile_id) {
-    uint8_t *dst;
-    if (!w || bank < 0 || bank >= R01_SPR_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
-        return;
-    }
-    if (tile_id >= w->spr_banks[bank].tile_count) {
-        return;
-    }
-    dst = w->spr_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
-    memset(dst, 0, R01_TILE_BYTES);
-}
-
-static void metasprite_remap_tiles(R01World *w, const R01PlayerBankRemap *map, int n) {
-    int mi, pi, i;
-    if (!w || !map || n < 1) {
-        return;
-    }
-    for (mi = 0; mi < w->metasprite_count; mi++) {
-        R01EntityFrame *fr = &w->metasprites[mi].frame;
-        for (pi = 0; pi < fr->part_count && pi < R01_ENTITY_PARTS_MAX; pi++) {
-            R01EntityPart *pt = &fr->parts[pi];
-            for (i = 0; i < n; i++) {
-                if (pt->bank == map[i].old_bank && pt->tile_id == map[i].old_tile) {
-                    pt->bank = map[i].new_bank;
-                    pt->tile_id = map[i].new_tile;
-                    break;
-                }
-            }
-        }
-    }
-}
-
-static void apply_remap_all(R01World *w, R01EntityType *ent, int type_idx, const R01PlayerBankRemap *map,
-                            int n) {
-    int ei;
-    entity_remap_parts(ent, map, n);
-    for (ei = 0; ei < w->entity_count; ei++) {
-        if (ei == type_idx) {
-            continue;
-        }
-        entity_remap_parts(&w->entities[ei], map, n);
-    }
-    catalog_remap_tiles(w, map, n);
-    metasprite_remap_tiles(w, map, n);
-}
-
-static int entity_to_other_spr(R01Project *p, R01World *w, int type_idx) {
-    R01EntityType *ent;
-    R01PlayerBankRemap map[R01_ENTITY_STATES_MAX * R01_ENTITY_FRAMES_MAX * R01_ENTITY_PARTS_MAX];
-    int n;
-    int i;
-    if (!p || !w || type_idx < 0 || type_idx >= w->entity_count) {
-        return -1;
-    }
-    ent = &w->entities[type_idx];
-    /* Only world-SPR tiles; already-global parts are left alone. */
-    n = entity_collect_world_spr_tiles(ent, map, (int)(sizeof(map) / sizeof(map[0])));
-    if (n < 0) {
-        return -1;
-    }
-    if (n == 0) {
-        return 0;
-    }
-    /* Preserve world bank index: world SPR B -> other_spr_banks[B], authoring bank BASE+B. */
-    for (i = 0; i < n; i++) {
-        const uint8_t *src = r01_chr_spr_tile(w, map[i].old_bank, map[i].old_tile);
-        uint8_t blank[R01_TILE_BYTES];
-        int spr_bank = map[i].old_bank;
-        int dest;
-        if (spr_bank < 0 || spr_bank >= R01_SPR_BANKS) {
-            return -1;
-        }
-        dest = pick_other_spr_dest_tile(p, spr_bank, map, i);
-        if (dest < 0) {
-            return -1;
-        }
-        memset(blank, 0, sizeof(blank));
-        if (r01_other_spr_write_tile(p, spr_bank, dest, src ? src : blank) != 0) {
-            return -1;
-        }
-        map[i].new_bank = R01_GLOBAL_SPR_BANK_BASE + spr_bank;
-        map[i].new_tile = dest;
-    }
-    apply_remap_all(w, ent, type_idx, map, n);
-    /* Exclusive move: clear world slots, then densify so Banks stay continuous. */
-    for (i = 0; i < n; i++) {
-        clear_world_spr_tile(w, map[i].old_bank, map[i].old_tile);
-    }
-    {
-        int touched[R01_SPR_BANKS];
-        memset(touched, 0, sizeof(touched));
-        for (i = 0; i < n; i++) {
-            if (map[i].old_bank >= 0 && map[i].old_bank < R01_SPR_BANKS) {
-                touched[map[i].old_bank] = 1;
-            }
-        }
-        for (i = 0; i < R01_SPR_BANKS; i++) {
-            if (touched[i]) {
-                r01_chr_densify_spr_bank(w, i);
-            }
-        }
-    }
-    return 0;
+    return p->player_entity;
 }
 
 int r01_project_set_player_entity(R01Project *p, R01World *w, int type_idx) {
-    int cur;
-    if (!p || !w) {
+    (void)w;
+    if (!p) {
         return -1;
     }
-    cur = r01_world_player_entity(w);
-    if (type_idx < 0 || type_idx >= w->entity_count) {
-        /* Unmark is flag-only: leave patterns in whatever bank they already use. */
-        r01_world_set_player_entity(w, -1);
-        return 0;
-    }
-    if (cur == type_idx) {
-        return entity_to_other_spr(p, w, type_idx);
-    }
-    if (cur >= 0) {
-        r01_world_set_player_entity(w, -1);
-    }
-    /* Move only world-SPR tiles into global other SPR; already-global parts stay put. */
-    if (entity_to_other_spr(p, w, type_idx) != 0) {
-        return -1;
-    }
-    r01_world_set_player_entity(w, type_idx);
+    r01_world_set_player_entity(p, type_idx);
     return 0;
 }
 
-R01EntityType *r01_world_entity(R01World *w, int type_idx) {
-    if (!w || type_idx < 0 || type_idx >= w->entity_count) {
+R01EntityType *r01_world_entity(R01Project *p, int type_idx) {
+    if (!p || type_idx < 0 || type_idx >= p->entity_count) {
         return NULL;
     }
-    return &w->entities[type_idx];
+    return &p->entities[type_idx];
 }
 
-const R01EntityType *r01_world_entity_const(const R01World *w, int type_idx) {
-    if (!w || type_idx < 0 || type_idx >= w->entity_count) {
+const R01EntityType *r01_world_entity_const(const R01Project *p, int type_idx) {
+    if (!p || type_idx < 0 || type_idx >= p->entity_count) {
         return NULL;
     }
-    return &w->entities[type_idx];
+    return &p->entities[type_idx];
 }
 
 R01EntityState *r01_entity_state(R01EntityType *e, int state_idx) {
@@ -766,21 +497,21 @@ void r01_entity_state_recompute_guides(R01EntityState *st) {
     r01_entity_state_clamp_hitbox(st);
 }
 
-int r01_world_entity_from_sprite(R01World *w, int sprite_catalog_idx) {
+int r01_world_entity_from_sprite(R01Project *p, int sprite_catalog_idx) {
     R01EntityType *e;
     R01EntityFrame *fr;
     R01EntityPart part;
     const R01SpriteDef *sp;
     int idx;
-    if (!w || sprite_catalog_idx < 0 || sprite_catalog_idx >= w->sprite_count) {
+    if (!p || sprite_catalog_idx < 0 || sprite_catalog_idx >= p->sprite_count) {
         return -1;
     }
-    sp = &w->sprites[sprite_catalog_idx];
-    idx = r01_world_entity_add(w);
+    sp = &p->sprites[sprite_catalog_idx];
+    idx = r01_world_entity_add(p);
     if (idx < 0) {
         return -1;
     }
-    e = &w->entities[idx];
+    e = &p->entities[idx];
     fr = r01_entity_frame(e, 0, 0);
     if (!fr) {
         return -1;
@@ -800,7 +531,7 @@ int r01_world_entity_from_sprite(R01World *w, int sprite_catalog_idx) {
 
 int r01_world_instance_add(R01World *w, int type_id, int world_x, int world_y) {
     R01EntityInstance *inst;
-    if (!w || type_id < 0 || type_id >= w->entity_count || w->instance_count >= R01_MAX_ENTITY_INSTANCES) {
+    if (!w || type_id < 0 || type_id >= R01_MAX_ENTITY_TYPES || w->instance_count >= R01_MAX_ENTITY_INSTANCES) {
         return -1;
     }
     inst = &w->instances[w->instance_count];
@@ -833,8 +564,8 @@ R01EntityInstance *r01_world_instance(R01World *w, int inst_idx) {
     return &w->instances[inst_idx];
 }
 
-int r01_world_place_sprite(R01World *w, int sprite_catalog_idx, int world_x, int world_y) {
-    int type_id = r01_world_entity_from_sprite(w, sprite_catalog_idx);
+int r01_world_place_sprite(R01Project *p, R01World *w, int sprite_catalog_idx, int world_x, int world_y) {
+    int type_id = r01_world_entity_from_sprite(p, sprite_catalog_idx);
     if (type_id < 0) {
         return -1;
     }

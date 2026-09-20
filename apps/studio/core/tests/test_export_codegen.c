@@ -27,9 +27,9 @@ TEST_MAIN() {
     }
 
     r01_project_init(p, "codegen");
-    type_id = r01_world_entity_add(&p->worlds[0]);
+    type_id = r01_world_entity_add(p);
     EXPECT(type_id >= 0, "entity type");
-    r01_world_set_player_entity(&p->worlds[0], type_id);
+    r01_world_set_player_entity(p, type_id);
     inst = r01_world_place_entity(&p->worlds[0], type_id, 42, 84);
     EXPECT(inst >= 0, "place instance");
 

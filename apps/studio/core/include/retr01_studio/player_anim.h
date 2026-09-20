@@ -30,7 +30,7 @@ void r01_player_anim_set_jump_state(R01GameCtx *ctx, int entity_state_idx);
 void r01_player_default_face_set(R01GameCtx *ctx, int face);
 void r01_entity_state_frame_delay_set(R01GameCtx *ctx, int entity_state_idx, int ticks);
 void r01_player_anim_update(R01GameCtx *ctx, int dx, int dy);
-void r01_player_anim_tick(R01GameCtx *ctx, const R01World *w, int player_type);
+void r01_player_anim_tick(R01GameCtx *ctx, const R01Project *p, int player_type);
 
 int r01_player_anim_entity_state(const R01GameCtx *ctx);
 int r01_player_anim_frame(const R01GameCtx *ctx);

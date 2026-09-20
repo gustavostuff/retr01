@@ -114,7 +114,7 @@ void r01_game_warp_check(R01GameCtx *ctx, const R01World *w) {
     if (!ctx || !w || r01_game_fade_active(ctx)) {
         return;
     }
-    r01_play_player_hit_rect(w, ctx, ctx->player_x, ctx->player_y, &hx, &hy, &hw, &hh);
+    r01_play_player_hit_rect(NULL, ctx, ctx->player_x, ctx->player_y, &hx, &hy, &hw, &hh);
     hit = r01_world_warp_entrance_hit(w, hx, hy, hw, hh);
     if (hit < 0) {
         return;
@@ -228,7 +228,7 @@ static int proj_solid_at(const R01World *w, int wx, int wy) {
         }
         cell = (ly / 8) * R01_SCREEN_TILES_X + (lx / 8);
         if (cell >= 0 && cell < R01_TILES_PER_SCREEN) {
-            return (s->attrs[cell] & R01_ATTR_SOLID) != 0;
+            return s->solids[cell] != 0;
         }
         return 0;
     }

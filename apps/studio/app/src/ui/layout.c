@@ -261,7 +261,6 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
     int worlds_h;
     int pals_h;
     int sprites_h;
-    int global_banks_h;
     int metatiles_h;
     int metasprites_h;
     int entities_h;
@@ -270,7 +269,6 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
         worlds_h = UI_WORLDS_BODY_H;
         pals_h = UI_PAL_BODY_H;
         sprites_h = UI_SPRITES_BODY_H;
-        global_banks_h = UI_GLOBAL_BANKS_BODY_H;
         metatiles_h = UI_SHOW_METATILES ? UI_METATILES_BODY_H : 0;
         metasprites_h = UI_SHOW_METASPRITES ? UI_METASPRITES_BODY_H : 0;
         entities_h = UI_ENTITIES_BODY_H;
@@ -278,7 +276,6 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
         worlds_h = ui->accordion_body_h[UI_ACC_WORLDS];
         pals_h = ui->accordion_body_h[UI_ACC_PALS];
         sprites_h = ui->accordion_body_h[UI_ACC_BANKS];
-        global_banks_h = ui->accordion_body_h[UI_ACC_GLOBAL_BANKS];
         metatiles_h = UI_SHOW_METATILES ? ui->accordion_body_h[UI_ACC_METATILES] : 0;
         metasprites_h = UI_SHOW_METASPRITES ? ui->accordion_body_h[UI_ACC_METASPRITES] : 0;
         entities_h = ui->accordion_body_h[UI_ACC_ENTITIES];
@@ -286,7 +283,6 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
         worlds_h = 0;
         pals_h = 0;
         sprites_h = 0;
-        global_banks_h = 0;
         metatiles_h = 0;
         metasprites_h = 0;
         entities_h = 0;
@@ -316,16 +312,10 @@ void accordion_layout(const UiState *ui, AccordionLayout *lo) {
         lo->sprites_body_y = -1;
     }
 
-    lo->global_banks_hdr_y = y;
-    y += UI_BTN_H;
-    lo->global_banks_open = always || (ui && ui->accordion_open == UI_ACC_GLOBAL_BANKS);
-    lo->global_banks_body_h = global_banks_h;
-    if (global_banks_h > 0) {
-        lo->global_banks_body_y = y;
-        y += global_banks_h;
-    } else {
-        lo->global_banks_body_y = -1;
-    }
+    lo->global_banks_hdr_y = -1;
+    lo->global_banks_open = 0;
+    lo->global_banks_body_h = 0;
+    lo->global_banks_body_y = -1;
 
     if (UI_SHOW_METATILES) {
         lo->metatiles_hdr_y = y;
@@ -396,7 +386,7 @@ static int accordion_section_full_h(int section) {
     case UI_ACC_BANKS:
         return UI_BANKS_BODY_H;
     case UI_ACC_GLOBAL_BANKS:
-        return UI_GLOBAL_BANKS_BODY_H;
+        return 0;
     case UI_ACC_METATILES:
         return UI_SHOW_METATILES ? UI_METATILES_BODY_H : 0;
     case UI_ACC_METASPRITES:
@@ -524,7 +514,7 @@ int world_btn_hit(const UiState *ui, int lx, int ly, int *out_wi) {
 
 void worlds_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
     AccordionLayout lo;
-    static const char *const world_labs[R01_MAX_WORLDS] = {"", "", "", "", "", "", ""};
+    static const char *const world_labs[R01_MAX_WORLDS] = {"", "", "", "", "", "", "", ""};
     int view;
     if (!out) {
         return;
@@ -540,13 +530,14 @@ void worlds_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
 
 void banks_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
     AccordionLayout lo;
-    static const char *const bank_labs[UI_BANKS_N] = {"", "", "", ""};
+    static const char *const bank_labs[UI_BANKS_N] = {
+        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""};
     int view;
     if (!out) {
         return;
     }
     accordion_layout(ui, &lo);
-    ui_tabs_layout(bank_labs, UI_BANKS_N, UI_WORLDS_X, lo.sprites_body_y, UI_WORLD_BTN, out);
+    ui_tabs_layout(bank_labs, UI_BANKS_N, UI_WORLDS_X, lo.sprites_body_y, UI_BANKS_TAB_W, out);
     ui_tabs_set_dot(out, 1);
     view = (ui && ui->banks_plane == UI_BANKS_PLANE_SPR) ? 1 : 0;
     ui_tabs_set_dual(out, 1, view, g_bg_bank_btn_rgba, g_bg_bank_btn_w, g_bg_bank_btn_h, g_spr_bank_btn_rgba,
@@ -555,7 +546,8 @@ void banks_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
 
 void global_banks_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
     AccordionLayout lo;
-    static const char *const bank_labs[UI_BANKS_N] = {"", "", "", ""};
+    static const char *const bank_labs[UI_BANKS_N] = {
+        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""};
     int view;
     if (!out) {
         return;
@@ -725,20 +717,21 @@ static int bank_sel_tile_count(const UiState *ui, int plane, int bank) {
         return 0;
     }
     w = r01_project_active_world_const(ui->project);
+    const R01Project *p = ui->project;
     if (plane == UI_BANKS_PLANE_GLOBAL_SPR) {
-        return ui->project->other_spr_banks[bank].tile_count;
+        return ui->project->spr_banks[bank].tile_count;
     }
     if (plane == UI_BANKS_PLANE_GLOBAL_BG) {
-        return ui->project->other_bg_banks[bank].tile_count;
+        return ui->project->bg_banks[bank].tile_count;
     }
     if (!w) {
         return 0;
     }
     if (plane == UI_BANKS_PLANE_SPR) {
-        return w->spr_banks[bank].tile_count;
+        return p->spr_banks[bank].tile_count;
     }
     if (plane == UI_BANKS_PLANE_BG) {
-        return w->bg_banks[bank].tile_count;
+        return p->bg_banks[bank].tile_count;
     }
     return 0;
 }
@@ -749,14 +742,15 @@ static void bank_sel_densify(UiState *ui, int plane, int bank) {
         return;
     }
     w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     if (plane == UI_BANKS_PLANE_GLOBAL_SPR) {
         r01_project_densify_other_spr_bank(ui->project, bank);
     } else if (plane == UI_BANKS_PLANE_GLOBAL_BG) {
         r01_project_densify_other_bg_bank(ui->project, bank);
     } else if (w && plane == UI_BANKS_PLANE_SPR) {
-        r01_chr_densify_spr_bank(w, bank);
+        r01_chr_densify_spr_bank(p, bank);
     } else if (w && plane == UI_BANKS_PLANE_BG) {
-        r01_chr_densify_bg_bank(w, bank);
+        r01_chr_densify_bg_bank(p, bank);
     }
 }
 
@@ -1283,7 +1277,8 @@ int metasprites_list_hit(const UiState *ui, int lx, int ly, int *out_idx) {
         return 0;
     }
     w = r01_project_active_world_const(ui->project);
-    if (!w || w->metasprite_count < 1) {
+    const R01Project *p = ui->project;
+    if (!w || p->metasprite_count < 1) {
         return 0;
     }
     if (lx < UI_WORLDS_X || lx >= UI_SIDEBAR_W || ly < lo.metasprites_body_y ||
@@ -1292,7 +1287,7 @@ int metasprites_list_hit(const UiState *ui, int lx, int ly, int *out_idx) {
     }
     row = (ly - lo.metasprites_body_y) / UI_SPRITE_ROW_H;
     idx = ui->metasprites_scroll + row;
-    if (idx < 0 || idx >= w->metasprite_count) {
+    if (idx < 0 || idx >= p->metasprite_count) {
         return 0;
     }
     if (out_idx) {
@@ -1313,7 +1308,8 @@ int metatiles_list_hit(const UiState *ui, int lx, int ly, int *out_idx) {
         return 0;
     }
     w = r01_project_active_world_const(ui->project);
-    if (!w || w->metatile_count < 1) {
+    const R01Project *p = ui->project;
+    if (!w || p->metatile_count < 1) {
         return 0;
     }
     if (lx < UI_WORLDS_X || lx >= UI_SIDEBAR_W || ly < lo.metatiles_body_y ||
@@ -1322,7 +1318,7 @@ int metatiles_list_hit(const UiState *ui, int lx, int ly, int *out_idx) {
     }
     row = (ly - lo.metatiles_body_y) / UI_SPRITE_ROW_H;
     idx = ui->metatiles_scroll + row;
-    if (idx < 0 || idx >= w->metatile_count) {
+    if (idx < 0 || idx >= p->metatile_count) {
         return 0;
     }
     if (out_idx) {
@@ -1377,7 +1373,8 @@ int entities_list_hit(const UiState *ui, int lx, int ly, int *out_type_idx) {
         return 0;
     }
     w = r01_project_active_world_const(ui->project);
-    if (!w || w->entity_count < 1) {
+    const R01Project *p = ui->project;
+    if (!w || p->entity_count < 1) {
         return 0;
     }
     if (lx < UI_WORLDS_X || lx >= UI_SIDEBAR_W || ly < lo.entities_body_y ||
@@ -1386,7 +1383,7 @@ int entities_list_hit(const UiState *ui, int lx, int ly, int *out_type_idx) {
     }
     row = (ly - lo.entities_body_y) / UI_SPRITE_ROW_H;
     idx = ui->entities_scroll + row;
-    if (idx < 0 || idx >= w->entity_count) {
+    if (idx < 0 || idx >= p->entity_count) {
         return 0;
     }
     if (out_type_idx) {

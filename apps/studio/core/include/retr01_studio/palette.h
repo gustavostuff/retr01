@@ -27,7 +27,7 @@ void r01_project_set_bg_pals_from_png(R01Project *p, const uint8_t master_for_in
 /* Shared backdrop = BG palette color 0 for the world's default_pal_row. */
 void r01_project_backdrop_rgb(const R01Project *p, const R01World *w, uint8_t *r, uint8_t *g, uint8_t *b);
 /* 2bpp CHR color index at screen pixel (0 = transparent / show-through). */
-uint8_t r01_screen_pixel_color(const R01World *w, const R01Screen *s, int px, int py);
+uint8_t r01_screen_pixel_color(const R01Project *p, const R01Screen *s, int px, int py);
 void r01_screen_pixel_rgb(const R01Project *p, const R01World *w, const R01Screen *s, int px, int py, uint8_t *r,
                           uint8_t *g, uint8_t *b);
 /* BG1 over BG0 with color-0 show-through (emu / hardware compositor). */

@@ -8,8 +8,8 @@
 
 /* Cart / world layout -- general_docs/video-graphics.md */
 #define R01E_CART_MAGIC "retr01"
-#define R01E_CART_FORMAT_VER 4
-#define R01E_CART_PTR_TABLE_BYTES 36u
+#define R01E_CART_FORMAT_VER 5
+#define R01E_CART_PTR_TABLE_BYTES 42u
 #define R01E_CART_OTHER_MAX 16
 #define R01E_CART_OTHER_CREDITS_FIRST 2
 #define R01E_CART_CREDITS_MIN 0
@@ -18,7 +18,8 @@
 #define R01E_CART_OTHER_HDR_BYTES 4u
 #define R01E_CART_OTHER_DIR_BYTES 8u
 #define R01E_CART_OTHER_FLAG_RLE 0x01u
-#define R01E_CART_OTHER_CHR_BYTES (8u * 4096u) /* 4 BG + 4 SPR */
+#define R01E_CART_GLOBAL_CHR_BANKS 32
+#define R01E_CART_GLOBAL_CHR_BYTES (R01E_CART_GLOBAL_CHR_BANKS * 4096u)
 #define R01E_CART_FLASH_BYTES (512u * 1024u)
 #define R01E_PRG_BYTES 32768u /* fixed 32 KB window at $8000 (general_docs/graphics) */
 
@@ -32,18 +33,18 @@
 #define R01E_VRAM_SLOT_BYTES 512
 #define R01E_VRAM_BYTES 0x4000u
 
-#define R01E_MAX_WORLDS 7
+#define R01E_MAX_WORLDS 8
 #define R01E_GRID_MAX 16
-#define R01E_MAX_PRESENT_SCREENS 32 /* cart cap: present BG1 screens per world (general_docs/memory.md) */
+#define R01E_MAX_PRESENT_SCREENS 64 /* cart cap: present BG1 screens per world (general_docs/memory.md) */
 #define R01E_CELL_PACK(col, row) ((uint8_t)(((unsigned)(col)&0x0fu) | (((unsigned)(row)&0x0fu) << 4)))
 #define R01E_CELL_COL(b) ((int)((unsigned)(b)&0x0fu))
 #define R01E_CELL_ROW(b) ((int)(((unsigned)(b) >> 4) & 0x0fu))
 #define R01E_PARALLAX_MIN 0
-#define R01E_PARALLAX_MAX 8 /* BG0 screens max (legacy name kept for ABI) */
+#define R01E_PARALLAX_MAX 16 /* BG0 screens max */
 #define R01E_PARALLAX_SLICE_MAX 120 /* max bands; variable thickness (general_docs/graphics) */
 #define R01E_PHASE1_WORLDS 1 /* Studio Phase 1: world 0 only */
-#define R01E_BG_BANKS 4
-#define R01E_SPR_BANKS 4
+#define R01E_BG_BANKS 16
+#define R01E_SPR_BANKS 16
 #define R01E_TILE_BYTES 16
 #define R01E_CHR_BANK_BYTES 4096u
 #define R01E_MASTER_COLORS 64
@@ -72,13 +73,12 @@
 /* Soft max for game logic (general_docs/software-api.md): bars scale to this; red line = 100%. */
 #define R01E_CPU_BUDGET_CYCLES 50000ull
 
-#define R01E_ATTR_BANK_MASK 0x03u
-#define R01E_ATTR_PAL_MASK 0x0Cu
-#define R01E_ATTR_PAL_SHIFT 2
-#define R01E_ATTR_FLIP_H 0x10u
-#define R01E_ATTR_FLIP_V 0x20u
-#define R01E_ATTR_SOLID 0x40u
-#define R01E_OAM_PRIORITY 0x40u /* reserved bit6 leave 0 (general_docs/video-graphics.md) */
+#define R01E_ATTR_BANK_MASK 0x0Fu
+#define R01E_ATTR_PAL_MASK 0x30u
+#define R01E_ATTR_PAL_SHIFT 4
+#define R01E_ATTR_FLIP_H 0x40u
+#define R01E_ATTR_FLIP_V 0x80u
+#define R01E_OAM_PRIORITY 0x40u /* unused; H flip lives here on OAM attr */
 #define R01E_SPRITES_PER_LINE 16
 
 /* Pads $7F60/$7F61 -- general_docs/hardware.md */

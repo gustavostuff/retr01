@@ -34,42 +34,42 @@ void r01_metasprite_id(char *dst, size_t cap, int world_idx, const R01Metasprite
     snprintf(dst, cap, "w_%02d_%s", world_idx + 1, slug);
 }
 
-int r01_world_metasprite_add(R01World *w) {
+int r01_world_metasprite_add(R01Project *p) {
     R01MetaspriteDef *ms;
-    if (!w || w->metasprite_count >= R01_MAX_METASPRITES) {
+    if (!p || p->metasprite_count >= R01_MAX_METASPRITES) {
         return -1;
     }
-    ms = &w->metasprites[w->metasprite_count];
+    ms = &p->metasprites[p->metasprite_count];
     r01_metasprite_init(ms, "Meta");
-    w->metasprite_count++;
-    return w->metasprite_count - 1;
+    p->metasprite_count++;
+    return p->metasprite_count - 1;
 }
 
-int r01_world_metasprite_remove(R01World *w, int idx) {
+int r01_world_metasprite_remove(R01Project *p, int idx) {
     int i;
-    if (!w || idx < 0 || idx >= w->metasprite_count) {
+    if (!p || idx < 0 || idx >= p->metasprite_count) {
         return -1;
     }
-    for (i = idx; i < w->metasprite_count - 1; i++) {
-        w->metasprites[i] = w->metasprites[i + 1];
+    for (i = idx; i < p->metasprite_count - 1; i++) {
+        p->metasprites[i] = p->metasprites[i + 1];
     }
-    w->metasprite_count--;
-    memset(&w->metasprites[w->metasprite_count], 0, sizeof(w->metasprites[0]));
+    p->metasprite_count--;
+    memset(&p->metasprites[p->metasprite_count], 0, sizeof(p->metasprites[0]));
     return 0;
 }
 
-R01MetaspriteDef *r01_world_metasprite(R01World *w, int idx) {
-    if (!w || idx < 0 || idx >= w->metasprite_count) {
+R01MetaspriteDef *r01_world_metasprite(R01Project *p, int idx) {
+    if (!p || idx < 0 || idx >= p->metasprite_count) {
         return NULL;
     }
-    return &w->metasprites[idx];
+    return &p->metasprites[idx];
 }
 
-const R01MetaspriteDef *r01_world_metasprite_const(const R01World *w, int idx) {
-    if (!w || idx < 0 || idx >= w->metasprite_count) {
+const R01MetaspriteDef *r01_world_metasprite_const(const R01Project *p, int idx) {
+    if (!p || idx < 0 || idx >= p->metasprite_count) {
         return NULL;
     }
-    return &w->metasprites[idx];
+    return &p->metasprites[idx];
 }
 
 int r01_metasprite_add_part(R01MetaspriteDef *ms, const R01EntityPart *part) {
@@ -148,23 +148,23 @@ int r01_entity_frame_add_metasprite(R01EntityFrame *fr, const R01MetaspriteDef *
     return 0;
 }
 
-int r01_world_entity_from_metasprite(R01World *w, int meta_idx) {
+int r01_world_entity_from_metasprite(R01Project *p, int meta_idx) {
     R01EntityType *e;
     R01EntityFrame *fr;
     const R01MetaspriteDef *ms;
     int idx, i;
-    if (!w || meta_idx < 0 || meta_idx >= w->metasprite_count) {
+    if (!p || meta_idx < 0 || meta_idx >= p->metasprite_count) {
         return -1;
     }
-    ms = &w->metasprites[meta_idx];
+    ms = &p->metasprites[meta_idx];
     if (ms->frame.part_count < 1) {
         return -1;
     }
-    idx = r01_world_entity_add(w);
+    idx = r01_world_entity_add(p);
     if (idx < 0) {
         return -1;
     }
-    e = &w->entities[idx];
+    e = &p->entities[idx];
     if (ms->name[0]) {
         strncpy(e->name, ms->name, R01_ENTITY_NAME_MAX - 1);
         strncpy(e->states[0].name, "Idle", R01_ENTITY_NAME_MAX - 1);
@@ -181,8 +181,8 @@ int r01_world_entity_from_metasprite(R01World *w, int meta_idx) {
     return idx;
 }
 
-int r01_world_place_metasprite(R01World *w, int meta_idx, int world_x, int world_y) {
-    int type_id = r01_world_entity_from_metasprite(w, meta_idx);
+int r01_world_place_metasprite(R01Project *p, R01World *w, int meta_idx, int world_x, int world_y) {
+    int type_id = r01_world_entity_from_metasprite(p, meta_idx);
     if (type_id < 0) {
         return -1;
     }

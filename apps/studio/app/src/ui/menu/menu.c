@@ -94,13 +94,16 @@ static void menu_place_root(UiState *ui) {
 static void menu_build_sub(UiState *ui, int sub_kind) {
     int i;
     ui->menu.sub_count = 0;
-    if (sub_kind == UI_MENU_SUB_BANK || sub_kind == UI_MENU_SUB_PAL || sub_kind == UI_MENU_SUB_SPR_BANK ||
-        sub_kind == UI_MENU_SUB_SPR_PAL) {
+    if (sub_kind == UI_MENU_SUB_PAL || sub_kind == UI_MENU_SUB_SPR_PAL) {
         for (i = 0; i < 4; i++) {
             snprintf(ui->menu.sub_items[ui->menu.sub_count++], 24, "%d", i + 1);
         }
+    } else if (sub_kind == UI_MENU_SUB_BANK || sub_kind == UI_MENU_SUB_SPR_BANK) {
+        for (i = 0; i < UI_BANKS_N; i++) {
+            snprintf(ui->menu.sub_items[ui->menu.sub_count++], 24, "%d", i + 1);
+        }
     } else if (sub_kind == UI_MENU_SUB_MOVE_BANK) {
-        for (i = 0; i < 4; i++) {
+        for (i = 0; i < UI_BANKS_N; i++) {
             snprintf(ui->menu.sub_items[ui->menu.sub_count++], 24, "%d", i);
         }
     } else if (sub_kind == UI_MENU_SUB_WARP) {
@@ -123,8 +126,9 @@ static void menu_build_sub(UiState *ui, int sub_kind) {
         }
     } else if (sub_kind == UI_MENU_SUB_EXISTING_SPR) {
         R01World *w = ui ? r01_project_active_world(ui->project) : NULL;
-        if (w) {
-            for (i = 0; i < w->sprite_count && ui->menu.sub_count < UI_MENU_SUB_MAX; i++) {
+        const R01Project *p = ui ? ui->project : NULL;
+        if (w && p) {
+            for (i = 0; i < p->sprite_count && ui->menu.sub_count < UI_MENU_SUB_MAX; i++) {
                 snprintf(ui->menu.sub_items[ui->menu.sub_count++], 24, "Sprite %d", i + 1);
             }
         }
@@ -186,8 +190,6 @@ void menu_open_tile(UiState *ui, int x, int y, int tx, int ty) {
     ui->menu.item_sub[ui->menu.item_count++] = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Set tile palette");
     ui->menu.item_sub[ui->menu.item_count++] = UI_MENU_SUB_PAL;
-    snprintf(ui->menu.items[ui->menu.item_count], 32, "Set Anim mode");
-    ui->menu.item_sub[ui->menu.item_count++] = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Set Solid");
     ui->menu.item_sub[ui->menu.item_count++] = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Warp");
@@ -198,7 +200,7 @@ void menu_open_tile(UiState *ui, int x, int y, int tx, int ty) {
     if (screen_sel_is_multi(ui)) {
         ui->menu.item_disabled[1] = 1;
         ui->menu.item_disabled[2] = 1;
-        ui->menu.item_disabled[6] = 1;
+        ui->menu.item_disabled[5] = 1;
     }
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
     ui->menu.root_x = x;
@@ -250,38 +252,38 @@ void menu_open_sprite(UiState *ui, int x, int y, int catalog_idx) {
     menu_place_root(ui);
 }
 
-static int bank_cell_is_empty(const R01World *w, int bank, int tile_id, int plane) {
-    if (!w || bank < 0 || bank >= UI_BANKS_N || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
+static int bank_cell_is_empty(const R01Project *p, int bank, int tile_id, int plane) {
+    if (!p || bank < 0 || bank >= UI_BANKS_N || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         return 1;
     }
     /* Allocated slots count even when CHR is blank (BG tile 0 is the blank fallback). */
     if (plane == UI_BANKS_PLANE_SPR) {
-        return r01_chr_spr_tile(w, bank, tile_id) == NULL;
+        return r01_chr_spr_tile(p, bank, tile_id) == NULL;
     }
-    return tile_id >= w->bg_banks[bank].tile_count;
+    return tile_id >= p->bg_banks[bank].tile_count;
 }
 
 static int global_spr_cell_is_empty(const R01Project *p, int bank, int tile_id) {
     if (!p || bank < 0 || bank >= R01_SPR_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         return 1;
     }
-    return tile_id >= p->other_spr_banks[bank].tile_count;
+    return tile_id >= p->spr_banks[bank].tile_count;
 }
 
 static int global_bg_cell_is_empty(const R01Project *p, int bank, int tile_id) {
     if (!p || bank < 0 || bank >= R01_BG_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         return 1;
     }
-    return tile_id >= p->other_bg_banks[bank].tile_count;
+    return tile_id >= p->bg_banks[bank].tile_count;
 }
 
-static int bank_cell_catalog_idx(const R01World *w, int bank, int tile_id) {
+static int bank_cell_catalog_idx(const R01Project *p, int bank, int tile_id) {
     int i;
-    if (!w) {
+    if (!p) {
         return -1;
     }
-    for (i = 0; i < w->sprite_count; i++) {
-        if (w->sprites[i].bank == bank && w->sprites[i].tile_id == tile_id) {
+    for (i = 0; i < p->sprite_count; i++) {
+        if (p->sprites[i].bank == bank && p->sprites[i].tile_id == tile_id) {
             return i;
         }
     }
@@ -289,7 +291,7 @@ static int bank_cell_catalog_idx(const R01World *w, int bank, int tile_id) {
 }
 
 void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int plane) {
-    const R01World *w = r01_project_active_world_const(ui->project);
+    const R01Project *p = ui->project;
     int empty;
     int cat = -1;
     int multi;
@@ -298,8 +300,8 @@ void menu_open_bank_cell(UiState *ui, int x, int y, int bank, int tile_id, int p
     } else if (plane == UI_BANKS_PLANE_GLOBAL_BG) {
         empty = global_bg_cell_is_empty(ui->project, bank, tile_id);
     } else {
-        empty = bank_cell_is_empty(w, bank, tile_id, plane);
-        cat = (plane == UI_BANKS_PLANE_SPR) ? bank_cell_catalog_idx(w, bank, tile_id) : -1;
+        empty = bank_cell_is_empty(p, bank, tile_id, plane);
+        cat = (plane == UI_BANKS_PLANE_SPR) ? bank_cell_catalog_idx(p, bank, tile_id) : -1;
     }
     multi = !empty && bank_sel_is_multi(ui) && ui->bank_sel_plane == plane && ui->bank_sel_bank == bank;
     ui->menu.open = 1;
@@ -392,6 +394,7 @@ void menu_open_metatile(UiState *ui, int x, int y, int metatile_idx) {
 
 void menu_open_entity(UiState *ui, int x, int y, int type_idx) {
     R01World *w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     int is_player = 0;
     ui->menu.open = 1;
     ui->menu.kind = UI_MENU_KIND_ENTITY;
@@ -407,7 +410,7 @@ void menu_open_entity(UiState *ui, int x, int y, int type_idx) {
     ui->menu.item_count = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Edit entity");
     ui->menu.item_sub[ui->menu.item_count++] = 0;
-    if (w && r01_world_player_entity(w) == type_idx) {
+    if (w && r01_world_player_entity(p) == type_idx) {
         is_player = 1;
     }
     snprintf(ui->menu.items[ui->menu.item_count], 32, is_player ? "Unmark as player" : "Mark as player");
@@ -434,7 +437,8 @@ void menu_open_entity_compose(UiState *ui, int x, int y, int compose_wx, int com
         full = 1;
     }
     w = r01_project_active_world(ui->project);
-    if (!w || r01_chr_find_spr_bank_space(w) < 0) {
+    R01Project *p = ui->project;
+    if (!w || r01_chr_find_spr_bank_space(p) < 0) {
         banks_full = 1;
     }
     ui->menu.open = 1;
@@ -453,10 +457,10 @@ void menu_open_entity_compose(UiState *ui, int x, int y, int compose_wx, int com
     ui->menu.item_sub[ui->menu.item_count++] = 0;
     snprintf(ui->menu.items[ui->menu.item_count], 32, "Add existing");
     ui->menu.item_sub[ui->menu.item_count++] =
-        (w && w->sprite_count > 0) ? (uint8_t)UI_MENU_SUB_EXISTING_SPR : 0;
+        (w && p->sprite_count > 0) ? (uint8_t)UI_MENU_SUB_EXISTING_SPR : 0;
     memset(ui->menu.item_disabled, 0, sizeof(ui->menu.item_disabled));
     ui->menu.item_disabled[0] = (full || banks_full) ? 1 : 0;
-    ui->menu.item_disabled[1] = (full || !w || w->sprite_count < 1) ? 1 : 0;
+    ui->menu.item_disabled[1] = (full || !w || p->sprite_count < 1) ? 1 : 0;
     ui->menu.root_w = menu_panel_w(ui->menu.items, ui->menu.item_count, ui->menu.item_sub);
     ui->menu.root_x = x;
     ui->menu.root_y = y;
@@ -607,24 +611,27 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
             screen_set_sel_pal(ui, item);
         } else if (ui->menu.submenu == UI_MENU_SUB_SPR_PAL) {
             R01World *w = r01_project_active_world(ui->project);
-            if (w && r01_world_sprite_set_pal(w, ui->menu.sprite_catalog_idx, item) == 0) {
+            R01Project *p = ui->project;
+            if (w && r01_world_sprite_set_pal(p, ui->menu.sprite_catalog_idx, item) == 0) {
                 ui_toast(ui, "sprite palette set", 0);
             }
         } else if (ui->menu.submenu == UI_MENU_SUB_SPR_BANK) {
             R01World *w = r01_project_active_world(ui->project);
-            if (w && r01_world_sprite_move_bank(w, ui->menu.sprite_catalog_idx, item) == 0) {
+            R01Project *p = ui->project;
+            if (w && r01_world_sprite_move_bank(p, ui->menu.sprite_catalog_idx, item) == 0) {
                 ui_toast(ui, "sprite bank changed", 0);
             } else {
                 ui_toast(ui, "cannot move sprite bank", 1);
             }
         } else if (ui->menu.submenu == UI_MENU_SUB_MOVE_BANK) {
             R01World *w = r01_project_active_world(ui->project);
+            R01Project *p = ui->project;
             if (ui->menu.kind == UI_MENU_KIND_BANK_CELL && ui->menu.bank_plane == UI_BANKS_PLANE_SPR) {
                 int cat = ui->menu.sprite_catalog_idx;
                 if (cat < 0 && w) {
-                    cat = r01_world_sprite_add(w, ui->menu.bank_idx, ui->menu.bank_tile_id, 0);
+                    cat = r01_world_sprite_add(p, ui->menu.bank_idx, ui->menu.bank_tile_id, 0);
                 }
-                if (w && cat >= 0 && r01_world_sprite_move_bank(w, cat, item) == 0) {
+                if (w && cat >= 0 && r01_world_sprite_move_bank(p, cat, item) == 0) {
                     ui_toast(ui, "moved to bank", 0);
                 } else {
                     ui_toast(ui, "cannot move to bank", 1);
@@ -706,10 +713,11 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
     }
     if (ui->menu.kind == UI_MENU_KIND_SPRITE) {
         R01World *w = r01_project_active_world(ui->project);
+        R01Project *p = ui->project;
         if (item == 0) {
             sprite_edit_open(ui, ui->menu.sprite_catalog_idx);
         } else if (item == 1 && w) {
-            r01_world_sprite_remove(w, ui->menu.sprite_catalog_idx);
+            r01_world_sprite_remove(p, ui->menu.sprite_catalog_idx);
             ui_toast(ui, "sprite removed", 0);
         }
         menu_close(ui);
@@ -717,13 +725,12 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
     }
     if (ui->menu.kind == UI_MENU_KIND_BANK_CELL) {
         int empty;
-        const R01World *wc = r01_project_active_world_const(ui->project);
         if (ui->menu.bank_plane == UI_BANKS_PLANE_GLOBAL_SPR) {
             empty = global_spr_cell_is_empty(ui->project, ui->menu.bank_idx, ui->menu.bank_tile_id);
         } else if (ui->menu.bank_plane == UI_BANKS_PLANE_GLOBAL_BG) {
             empty = global_bg_cell_is_empty(ui->project, ui->menu.bank_idx, ui->menu.bank_tile_id);
         } else {
-            empty = bank_cell_is_empty(wc, ui->menu.bank_idx, ui->menu.bank_tile_id, ui->menu.bank_plane);
+            empty = bank_cell_is_empty(ui->project, ui->menu.bank_idx, ui->menu.bank_tile_id, ui->menu.bank_plane);
         }
         if (item == 0) {
             if (ui->menu.bank_plane == UI_BANKS_PLANE_SPR) {
@@ -748,10 +755,11 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
     }
     if (ui->menu.kind == UI_MENU_KIND_METASPRITE) {
         R01World *w = r01_project_active_world(ui->project);
+        R01Project *p = ui->project;
         if (item == 0) {
             metasprite_edit_open(ui, ui->menu.metasprite_idx);
         } else if (item == 1 && w) {
-            r01_world_metasprite_remove(w, ui->menu.metasprite_idx);
+            r01_world_metasprite_remove(p, ui->menu.metasprite_idx);
             ui_toast(ui, "metasprite removed", 0);
         }
         menu_close(ui);
@@ -759,8 +767,9 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
     }
     if (ui->menu.kind == UI_MENU_KIND_METATILE) {
         R01World *w = r01_project_active_world(ui->project);
+        R01Project *p = ui->project;
         if (item == 0 && w) {
-            r01_world_metatile_remove(w, ui->menu.metatile_idx);
+            r01_world_metatile_remove(p, ui->menu.metatile_idx);
             ui_toast(ui, "metatile removed", 0);
         }
         menu_close(ui);
@@ -768,10 +777,11 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
     }
     if (ui->menu.kind == UI_MENU_KIND_ENTITY) {
         R01World *w = r01_project_active_world(ui->project);
+        R01Project *p = ui->project;
         if (item == 0) {
             entity_edit_open(ui, ui->menu.entity_type_idx);
         } else if (item == 1 && w) {
-            if (r01_world_player_entity(w) == ui->menu.entity_type_idx) {
+            if (r01_world_player_entity(p) == ui->menu.entity_type_idx) {
                 if (r01_project_set_player_entity(ui->project, w, -1) != 0) {
                     ui_toast(ui, "cannot unmark player", 1);
                 } else {
@@ -786,15 +796,15 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
             }
         } else if (item == 2 && w) {
             int tidx = ui->menu.entity_type_idx;
-            if (tidx >= 0 && tidx < w->entity_count) {
-                R01EntityType removed = w->entities[tidx];
-                int was_player = (r01_world_player_entity(w) == tidx);
+            if (tidx >= 0 && tidx < p->entity_count) {
+                R01EntityType removed = p->entities[tidx];
+                int was_player = (r01_world_player_entity(p) == tidx);
                 if (was_player) {
                     (void)r01_project_set_player_entity(ui->project, w, -1);
                     /* Unmark is flag-only; entity still refs global SPR if mark moved it. */
-                    removed = w->entities[tidx];
+                    removed = p->entities[tidx];
                 }
-                r01_world_entity_remove(w, tidx);
+                r01_world_entity_remove(p, tidx);
                 ui_undo_push_entity_remove(ui, tidx, &removed, was_player);
                 ui_toast(ui, "entity removed", 0);
             }
@@ -849,13 +859,9 @@ void handle_menu_pick(UiState *ui, int item, int is_sub) {
         }
         break;
     case 4:
-        menu_ensure_tile_sel(ui);
-        screen_toggle_sel_flag(ui, R01_ATTR_ANIM);
-        break;
-    case 5:
         screen_set_solid_by_hw(ui, ui->menu.screen_tx, ui->menu.screen_ty);
         break;
-    case 7:
+    case 6:
         menu_ensure_tile_sel(ui);
         screen_remove_sel_tiles(ui);
         break;

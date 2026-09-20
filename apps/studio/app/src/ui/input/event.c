@@ -67,6 +67,7 @@ static void catalog_drop_arm_spr_preview(UiState *ui) {
         return;
     }
     w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     if (ui->worlds_plane == UI_WORLDS_PLANE_BG0) {
         R01Screen *bg0 = r01_project_active_bg0_screen(ui->project);
         ui->worlds_plane = UI_WORLDS_PLANE_BG1;
@@ -161,6 +162,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
         int row;
         const R01World *w = r01_project_active_world_const(ui->project);
+        const R01Project *p = ui->project;
         row = w ? w->default_pal_row : 0;
         if (ui->tile_edit.open) {
             int plane = ui->tile_edit.other_spr ? UI_PAL_PLANE_SPR : UI_PAL_PLANE_BG;
@@ -322,6 +324,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 if (region == UI_REGION_PREVIEW) {
                     if (ui->sel_instance >= 0 && ui_work_allows_spr(ui)) {
                         R01World *w = r01_project_active_world(ui->project);
+                        R01Project *p = ui->project;
                         if (w && ui->sel_instance < w->instance_count) {
                             R01EntityInstance removed = w->instances[ui->sel_instance];
                             int idx = ui->sel_instance;
@@ -348,6 +351,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             ui->sel_instance >= 0 && ui_region_get(ui) == UI_REGION_PREVIEW &&
             (e->key.keysym.sym == SDLK_h || e->key.keysym.sym == SDLK_v)) {
             R01World *w = r01_project_active_world(ui->project);
+            R01Project *p = ui->project;
             if (w && ui->sel_instance < w->instance_count) {
                 if (e->key.keysym.sym == SDLK_h) {
                     w->instances[ui->sel_instance].flip_h = !w->instances[ui->sel_instance].flip_h;
@@ -828,6 +832,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             if (world_cell_hit(ui, lx, ly, &col, &row)) {
                 R01World *w = r01_project_active_world(ui->project);
+                R01Project *p = ui->project;
                 int idx = w ? r01_world_screen_index(w, col, row) : -1;
                 if (idx >= 0 && w->screens[idx].present) {
                     ui->project->active_screen = idx;
@@ -1023,6 +1028,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 if (ui_work_allows_spr(ui) && instance_hit_on_screen(ui, lx, ly, &inst)) {
                     int px, py;
                     R01World *w = r01_project_active_world(ui->project);
+                    R01Project *p = ui->project;
                     R01Screen *s = r01_project_active_screen(ui->project);
                     if (!screen_pixel_hit(ui, lx, ly, &px, &py)) {
                         return 1;
@@ -1285,8 +1291,9 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 }
                 if (a == 3 && metatiles_add_hit(ui, lx, ly)) {
                     R01World *w = r01_project_active_world(ui->project);
+                    R01Project *p = ui->project;
                     int idx;
-                    if (w && (idx = r01_world_metatile_add(w)) >= 0) {
+                    if (w && (idx = r01_world_metatile_add(p)) >= 0) {
                         ui_undo_push_metatile_add(ui, idx);
                         ui_toast(ui, "metatile created", 0);
                     } else {
@@ -1305,7 +1312,8 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 char toast[96];
                 int before;
                 const R01World *w = r01_project_active_world_const(ui->project);
-                before = w ? w->entity_count : 0;
+                const R01Project *p = ui->project;
+                before = w ? p->entity_count : 0;
                 err[0] = '\0';
                 if (r01_project_import_aseprite_entities(ui->project, ui->project_path, &res, err, sizeof(err)) !=
                     0) {
@@ -1316,13 +1324,13 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     R01World *ww = r01_project_active_world(ui->project);
                     int i;
                     if (ww) {
-                        for (i = before; i < ww->entity_count; i++) {
+                        for (i = before; i < p->entity_count; i++) {
                             ui_undo_push_entity_add(ui, i);
                         }
                     }
                     if (ui->entity_edit.open && !ui->entity_edit.is_new && ww && ui->entity_edit.type_idx >= 0 &&
-                        ui->entity_edit.type_idx < ww->entity_count) {
-                        ui->entity_edit.draft = ww->entities[ui->entity_edit.type_idx];
+                        ui->entity_edit.type_idx < p->entity_count) {
+                        ui->entity_edit.draft = p->entities[ui->entity_edit.type_idx];
                     }
                 }
                 if (res.unchanged || res.generated < 1) {
@@ -1457,6 +1465,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 int idx = -1;
                 catalog_drop_arm_spr_preview(ui);
                 w = r01_project_active_world(ui->project);
+                R01Project *p = ui->project;
                 s = r01_project_active_screen(ui->project);
                 if (!w || !s) {
                     ui_toast(ui, "no screen", 1);
@@ -1466,14 +1475,14 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 wx = s->col * R01_SCREEN_PX_W + px;
                 wy = s->row * R01_SCREEN_PX_H + py;
                 if (ui->catalog_drag.active == UI_CATALOG_DRAG_SPRITE) {
-                    idx = r01_world_place_sprite(w, ui->catalog_drag.index, wx, wy);
+                    idx = r01_world_place_sprite(p, w, ui->catalog_drag.index, wx, wy);
                     if (idx >= 0) {
                         ui_toast(ui, "sprite placed", 0);
                     } else {
                         ui_toast(ui, "cannot place sprite", 1);
                     }
                 } else if (ui->catalog_drag.active == UI_CATALOG_DRAG_METASPRITE) {
-                    idx = r01_world_place_metasprite(w, ui->catalog_drag.index, wx, wy);
+                    idx = r01_world_place_metasprite(p, w, ui->catalog_drag.index, wx, wy);
                     if (idx >= 0) {
                         ui_toast(ui, "metasprite placed", 0);
                     } else {
@@ -1675,6 +1684,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             (e->motion.state & SDL_BUTTON_LMASK)) {
             int px, py;
             R01World *w = r01_project_active_world(ui->project);
+            R01Project *p = ui->project;
             R01Screen *s = r01_project_active_screen(ui->project);
             if (w && s && ui->sel_instance < w->instance_count && screen_pixel_hit(ui, lx, ly, &px, &py)) {
                 w->instances[ui->sel_instance].world_x = s->col * R01_SCREEN_PX_W + px + ui->inst_drag_off_x;
@@ -1734,10 +1744,11 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         accordion_layout(ui, &lo);
         if (lo.sprites_body_h > UI_BTN_H && lx < UI_SIDEBAR_W) {
             const R01World *w = r01_project_active_world_const(ui->project);
+            const R01Project *p = ui->project;
             int vis = (UI_SPRITES_BODY_H - UI_BTN_H) / UI_SPRITE_ROW_H;
             int max_scroll = 0;
-            if (w && w->sprite_count > vis) {
-                max_scroll = w->sprite_count - vis;
+            if (w && p->sprite_count > vis) {
+                max_scroll = p->sprite_count - vis;
             }
             ui->sprites_scroll -= e->wheel.y;
             if (ui->sprites_scroll < 0) {
@@ -1750,10 +1761,11 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         }
         if (lo.metasprites_body_h > UI_BTN_H && lx < UI_SIDEBAR_W) {
             const R01World *w = r01_project_active_world_const(ui->project);
+            const R01Project *p = ui->project;
             int vis = (UI_METASPRITES_BODY_H - UI_BTN_H) / UI_SPRITE_ROW_H;
             int max_scroll = 0;
-            if (w && w->metasprite_count > vis) {
-                max_scroll = w->metasprite_count - vis;
+            if (w && p->metasprite_count > vis) {
+                max_scroll = p->metasprite_count - vis;
             }
             ui->metasprites_scroll -= e->wheel.y;
             if (ui->metasprites_scroll < 0) {
@@ -1766,10 +1778,11 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         }
         if (lo.metatiles_body_h > UI_BTN_H && lx < UI_SIDEBAR_W) {
             const R01World *w = r01_project_active_world_const(ui->project);
+            const R01Project *p = ui->project;
             int vis = (UI_METATILES_BODY_H - UI_BTN_H) / UI_SPRITE_ROW_H;
             int max_scroll = 0;
-            if (w && w->metatile_count > vis) {
-                max_scroll = w->metatile_count - vis;
+            if (w && p->metatile_count > vis) {
+                max_scroll = p->metatile_count - vis;
             }
             ui->metatiles_scroll -= e->wheel.y;
             if (ui->metatiles_scroll < 0) {
@@ -1782,10 +1795,11 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         }
         if (lo.entities_body_h > UI_BTN_H && lx < UI_SIDEBAR_W) {
             const R01World *w = r01_project_active_world_const(ui->project);
+            const R01Project *p = ui->project;
             int vis = (UI_ENTITIES_BODY_H - UI_BTN_H) / UI_SPRITE_ROW_H;
             int max_scroll = 0;
-            if (w && w->entity_count > vis) {
-                max_scroll = w->entity_count - vis;
+            if (w && p->entity_count > vis) {
+                max_scroll = p->entity_count - vis;
             }
             ui->entities_scroll -= e->wheel.y;
             if (ui->entities_scroll < 0) {

@@ -17,10 +17,11 @@ void sprite_edit_open_new(UiState *ui) {
         return;
     }
     w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     if (!w) {
         return;
     }
-    bank = r01_chr_find_spr_bank_space(w);
+    bank = r01_chr_find_spr_bank_space(p);
     if (bank < 0) {
         ui_toast(ui, "all sprite banks full", 1);
         return;
@@ -46,10 +47,11 @@ void sprite_edit_open(UiState *ui, int catalog_idx) {
         return;
     }
     w = r01_project_active_world(ui->project);
-    if (!w || catalog_idx < 0 || catalog_idx >= w->sprite_count) {
+    R01Project *p = ui->project;
+    if (!w || catalog_idx < 0 || catalog_idx >= p->sprite_count) {
         return;
     }
-    sp = &w->sprites[catalog_idx];
+    sp = &p->sprites[catalog_idx];
     memset(&ui->sprite_edit, 0, sizeof(ui->sprite_edit));
     ui->sprite_edit.open = 1;
     ui->sprite_edit.is_new = 0;
@@ -60,7 +62,7 @@ void sprite_edit_open(UiState *ui, int catalog_idx) {
     ui->sprite_edit.color = 1;
     ui->sprite_edit.flip_h = 0;
     ui->sprite_edit.flip_v = 0;
-    raw = r01_chr_spr_tile(w, sp->bank, sp->tile_id);
+    raw = r01_chr_spr_tile(p, sp->bank, sp->tile_id);
     if (raw) {
         memcpy(ui->sprite_edit.chr, raw, R01_TILE_BYTES);
     } else {
@@ -78,12 +80,13 @@ void sprite_edit_open_slot(UiState *ui, int bank, int tile_id) {
         return;
     }
     w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     if (!w || bank < 0 || bank >= R01_SPR_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         return;
     }
     cat = -1;
-    for (i = 0; i < w->sprite_count; i++) {
-        if (w->sprites[i].bank == bank && w->sprites[i].tile_id == tile_id) {
+    for (i = 0; i < p->sprite_count; i++) {
+        if (p->sprites[i].bank == bank && p->sprites[i].tile_id == tile_id) {
             cat = i;
             break;
         }
@@ -99,7 +102,7 @@ void sprite_edit_open_slot(UiState *ui, int bank, int tile_id) {
     ui->sprite_edit.tile_id = tile_id;
     ui->sprite_edit.pal = 0;
     ui->sprite_edit.color = 1;
-    raw = r01_chr_spr_tile(w, bank, tile_id);
+    raw = r01_chr_spr_tile(p, bank, tile_id);
     if (raw) {
         memcpy(ui->sprite_edit.chr, raw, R01_TILE_BYTES);
         for (i = 0; i < R01_TILE_BYTES; i++) {
@@ -116,6 +119,7 @@ void sprite_edit_open_slot(UiState *ui, int bank, int tile_id) {
 
 static void sprite_edit_save(UiState *ui) {
     R01World *w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     uint8_t canonical[R01_TILE_BYTES];
     int id;
     int cat;
@@ -125,11 +129,11 @@ static void sprite_edit_save(UiState *ui) {
     r01_tile_orient(ui->sprite_edit.chr, ui->sprite_edit.flip_h, ui->sprite_edit.flip_v, canonical);
     if (ui->sprite_edit.is_new && ui->sprite_edit.tile_id >= 0) {
         id = ui->sprite_edit.tile_id;
-        if (r01_chr_write_spr_tile(w, ui->sprite_edit.bank, id, canonical) != 0) {
+        if (r01_chr_write_spr_tile(p, ui->sprite_edit.bank, id, canonical) != 0) {
             ui_toast(ui, "sprite write failed", 1);
             return;
         }
-        cat = r01_world_sprite_add(w, ui->sprite_edit.bank, id, ui->sprite_edit.pal);
+        cat = r01_world_sprite_add(p, ui->sprite_edit.bank, id, ui->sprite_edit.pal);
         if (cat < 0) {
             ui_toast(ui, "sprite catalog full", 1);
             return;
@@ -139,27 +143,27 @@ static void sprite_edit_save(UiState *ui) {
         ui_undo_push_sprite_add(ui, cat);
         ui_toast(ui, "sprite created", 0);
     } else if (ui->sprite_edit.is_new || ui->sprite_edit.tile_id < 0) {
-        id = r01_chr_alloc_spr_tile(w, ui->sprite_edit.bank);
+        id = r01_chr_alloc_spr_tile(p, ui->sprite_edit.bank);
         if (id < 0) {
             /* Prefer next bank if current filled while modal was open. */
-            int bank = r01_chr_find_spr_bank_space(w);
+            int bank = r01_chr_find_spr_bank_space(p);
             if (bank < 0) {
                 ui_toast(ui, "sprite banks full", 1);
                 return;
             }
             ui->sprite_edit.bank = bank;
-            id = r01_chr_alloc_spr_tile(w, bank);
+            id = r01_chr_alloc_spr_tile(p, bank);
             if (id < 0) {
                 ui_toast(ui, "sprite banks full", 1);
                 return;
             }
         }
         ui->sprite_edit.tile_id = id;
-        if (r01_chr_write_spr_tile(w, ui->sprite_edit.bank, id, canonical) != 0) {
+        if (r01_chr_write_spr_tile(p, ui->sprite_edit.bank, id, canonical) != 0) {
             ui_toast(ui, "sprite write failed", 1);
             return;
         }
-        cat = r01_world_sprite_add(w, ui->sprite_edit.bank, id, ui->sprite_edit.pal);
+        cat = r01_world_sprite_add(p, ui->sprite_edit.bank, id, ui->sprite_edit.pal);
         if (cat < 0) {
             ui_toast(ui, "sprite catalog full", 1);
             return;
@@ -170,14 +174,14 @@ static void sprite_edit_save(UiState *ui) {
         ui_toast(ui, "sprite created", 0);
     } else {
         id = ui->sprite_edit.tile_id;
-        if (r01_chr_write_spr_tile(w, ui->sprite_edit.bank, id, canonical) != 0) {
+        if (r01_chr_write_spr_tile(p, ui->sprite_edit.bank, id, canonical) != 0) {
             ui_toast(ui, "sprite write failed", 1);
             return;
         }
-        if (ui->sprite_edit.catalog_idx >= 0 && ui->sprite_edit.catalog_idx < w->sprite_count) {
-            w->sprites[ui->sprite_edit.catalog_idx].pal = ui->sprite_edit.pal;
-            w->sprites[ui->sprite_edit.catalog_idx].bank = ui->sprite_edit.bank;
-            w->sprites[ui->sprite_edit.catalog_idx].tile_id = id;
+        if (ui->sprite_edit.catalog_idx >= 0 && ui->sprite_edit.catalog_idx < p->sprite_count) {
+            p->sprites[ui->sprite_edit.catalog_idx].pal = ui->sprite_edit.pal;
+            p->sprites[ui->sprite_edit.catalog_idx].bank = ui->sprite_edit.bank;
+            p->sprites[ui->sprite_edit.catalog_idx].tile_id = id;
         }
         ui_toast(ui, "sprite saved", 0);
     }
@@ -187,6 +191,7 @@ static void sprite_edit_save(UiState *ui) {
 void draw_sprite_modal(UiState *ui, SDL_Renderer *r) {
     SpriteModalLayout lo;
     const R01World *w = r01_project_active_world_const(ui->project);
+    const R01Project *p = ui->project;
     int row = w ? w->default_pal_row : 0;
     int sy, sx;
     const char *title = ui->sprite_edit.is_new ? "Create sprite" : "Edit sprite";

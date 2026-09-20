@@ -116,7 +116,7 @@ void r01_project_backdrop_rgb(const R01Project *p, const R01World *w, uint8_t *r
     r01_kit_rgb(master, r, g, b);
 }
 
-uint8_t r01_screen_pixel_color(const R01World *w, const R01Screen *s, int px, int py) {
+uint8_t r01_screen_pixel_color(const R01Project *p, const R01Screen *s, int px, int py) {
     int tx, ty, sx, sy, cell, bank;
     uint8_t attr, tile_id;
     const uint8_t *tile;
@@ -137,8 +137,8 @@ uint8_t r01_screen_pixel_color(const R01World *w, const R01Screen *s, int px, in
     if (r01_attr_flip_v(attr)) {
         sy = 7 - sy;
     }
-    if (w && bank >= 0 && bank < R01_BG_BANKS && tile_id < (uint8_t)w->bg_banks[bank].tile_count) {
-        tile = w->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+    if (p && bank >= 0 && bank < R01_BG_BANKS && tile_id < (uint8_t)p->bg_banks[bank].tile_count) {
+        tile = p->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
         return r01_tile_pixel_color(tile, sx, sy) & 3u;
     }
     return s->pixels[(ty * 8 + sy) * R01_SCREEN_PX_W + (tx * 8 + sx)] & 3u;
@@ -164,7 +164,7 @@ void r01_screen_pixel_rgb(const R01Project *p, const R01World *w, const R01Scree
     ty = py / 8;
     cell = ty * R01_SCREEN_TILES_X + tx;
     attr = s->attrs[cell];
-    color = r01_screen_pixel_color(w, s, px, py);
+    color = r01_screen_pixel_color(p, s, px, py);
     prow = clamp_pal_row(w ? w->default_pal_row : 0);
     master = p->global_pal_bg[prow][r01_attr_pal(attr)].idx[color];
     r01_kit_rgb(master, r, g, b);
@@ -188,7 +188,7 @@ void r01_compose_screen_pixel_rgb(const R01Project *p, const R01World *w, const 
     if (!bg1) {
         if (bg0) {
             r01_screen_pixel_rgb(p, w, bg0, px, py, r, g, b);
-            if (r01_screen_pixel_color(w, bg0, px, py) == 0) {
+            if (r01_screen_pixel_color(p, bg0, px, py) == 0) {
                 r01_project_backdrop_rgb(p, w, r, g, b);
             }
         } else {
@@ -196,14 +196,14 @@ void r01_compose_screen_pixel_rgb(const R01Project *p, const R01World *w, const 
         }
         return;
     }
-    col1 = r01_screen_pixel_color(w, bg1, px, py);
+    col1 = r01_screen_pixel_color(p, bg1, px, py);
     if (col1 != 0) {
         r01_screen_pixel_rgb(p, w, bg1, px, py, r, g, b);
         return;
     }
     /* BG1 color 0 show-through: BG0 pixel, else shared backdrop. */
     if (bg0) {
-        if (r01_screen_pixel_color(w, bg0, px, py) != 0) {
+        if (r01_screen_pixel_color(p, bg0, px, py) != 0) {
             r01_screen_pixel_rgb(p, w, bg0, px, py, r, g, b);
             return;
         }

@@ -317,27 +317,25 @@ void entity_edit_recompute_guides(UiState *ui) {
     }
 }
 
-static void entity_sync_catalog_pal(R01World *w, const R01EntityPart *pt) {
+static void entity_sync_catalog_pal(R01Project *p, const R01EntityPart *pt) {
     int i;
-    if (!w || !pt) {
+    if (!p || !pt) {
         return;
     }
-    for (i = 0; i < w->sprite_count; i++) {
-        if (w->sprites[i].bank == pt->bank && w->sprites[i].tile_id == pt->tile_id) {
-            (void)r01_world_sprite_set_pal(w, i, pt->pal & 3);
+    for (i = 0; i < p->sprite_count; i++) {
+        if (p->sprites[i].bank == pt->bank && p->sprites[i].tile_id == pt->tile_id) {
+            (void)r01_world_sprite_set_pal(p, i, pt->pal & 3);
             return;
         }
     }
 }
 
 void entity_edit_apply_pal_to_part(UiState *ui, R01EntityPart *pt, int pal) {
-    R01World *w;
     if (!ui || !pt) {
         return;
     }
     pt->pal = pal & 3;
-    w = r01_project_active_world(ui->project);
-    entity_sync_catalog_pal(w, pt);
+    entity_sync_catalog_pal(ui->project, pt);
 }
 
 void entity_edit_clear_sel(UiState *ui) {

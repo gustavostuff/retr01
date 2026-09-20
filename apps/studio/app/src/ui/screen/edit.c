@@ -15,20 +15,22 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void screen_refresh_tile(R01World *w, R01Screen *s) {
-    if (w && s && s->present) {
-        r01_screen_fill_pixels_from_bank(w, s);
+static void screen_refresh_tile(const R01Project *p, R01Screen *s) {
+    if (p && s && s->present) {
+        r01_screen_fill_pixels_from_bank(p, s);
     }
 }
 
 void screen_refresh_sel(UiState *ui) {
     R01World *w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     R01Screen *s = ui_edit_map_screen(ui);
-    screen_refresh_tile(w, s);
+    screen_refresh_tile(p, s);
 }
 
 void screen_set_sel_bank(UiState *ui, int bank) {
     R01World *w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     R01Screen *s = ui_edit_map_screen(ui);
     int min_x, min_y, max_x, max_y, ty, tx;
     if (!w || !s || !screen_sel_valid(ui)) {
@@ -48,6 +50,7 @@ void screen_set_sel_bank(UiState *ui, int bank) {
 
 void screen_set_sel_pal(UiState *ui, int pal) {
     R01World *w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     R01Screen *s = ui_edit_map_screen(ui);
     int min_x, min_y, max_x, max_y, ty, tx;
     if (!w || !s || !screen_sel_valid(ui)) {
@@ -67,6 +70,7 @@ void screen_set_sel_pal(UiState *ui, int pal) {
 
 void screen_remove_sel_tiles(UiState *ui) {
     R01World *w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     R01Screen *s = ui_edit_map_screen(ui);
     int min_x, min_y, max_x, max_y, ty, tx;
     int touched = 0;
@@ -84,7 +88,7 @@ void screen_remove_sel_tiles(UiState *ui) {
                 continue;
             }
             ui_undo_paint_record_cell(ui, tx, ty, old_tile, old_attr, 0, old_attr);
-            r01_screen_paint_tile(w, s, tx, ty, 0, old_attr);
+            r01_screen_paint_tile(p, s, tx, ty, 0, old_attr);
             touched = 1;
         }
     }
@@ -111,6 +115,7 @@ void screen_toggle_sel_flag(UiState *ui, uint8_t flag) {
 
 void screen_set_solid_by_hw(UiState *ui, int ref_tx, int ref_ty) {
     R01World *w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     R01Screen *s = ui_edit_map_screen(ui);
     int cell;
     uint8_t ref_attr;
@@ -124,7 +129,7 @@ void screen_set_solid_by_hw(UiState *ui, int ref_tx, int ref_ty) {
     cell = ref_ty * R01_SCREEN_TILES_X + ref_tx;
     ref_attr = s->attrs[cell];
     hw_key = r01_attr_hw(ref_attr);
-    set_solid = !r01_attr_solid(ref_attr);
+    set_solid = !s->solids[cell];
     touched = r01_world_apply_solid_hw(w, hw_key, set_solid);
     screen_refresh_sel(ui);
     if (touched > 0) {

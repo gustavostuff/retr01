@@ -18,6 +18,7 @@ static void init_screen(R01Screen *s, int col, int row) {
     s->present = 0;
     memset(s->pixels, 0, sizeof(s->pixels));
     memset(s->tiles, 0, sizeof(s->tiles));
+    memset(s->solids, 0, sizeof(s->solids));
     for (c = 0; c < R01_TILES_PER_SCREEN; c++) {
         s->attrs[c] = r01_attr_pack(0, 0, 0, 0);
     }
@@ -282,7 +283,6 @@ void r01_world_init_phase1(R01World *w) {
     w->present = 1;
     w->default_bg_bank = 0;
     w->default_pal_row = 0;
-    w->player_entity = -1;
     w->bg0_active_screen = -1;
     r01_world_warps_init(w);
     /* Full 16x16 map slots; default authored region is 3x3 present blank screens. */
@@ -307,7 +307,6 @@ void r01_world_init_empty(R01World *w) {
     w->present = 1;
     w->default_bg_bank = 0;
     w->default_pal_row = 0;
-    w->player_entity = -1;
     w->bg0_active_screen = -1;
     r01_world_warps_init(w);
     r01_world_set_grid(w, R01_GRID_MAX, R01_GRID_MAX);
@@ -325,6 +324,7 @@ void r01_project_init(R01Project *p, const char *name) {
     p->default_world = 0;
     p->active_world = 0;
     p->active_screen = 0;
+    p->player_entity = -1;
     r01_project_init_phase1_pals(p);
     r01_project_init_other_screens(p);
     r01_world_init_phase1(&p->worlds[0]);
@@ -829,7 +829,7 @@ int r01_project_import_png(R01Project *p, const char *path, char *err_buf, size_
         }
     }
 
-    if (r01_chr_pack_world_bank0(w) == R01_CHR_TOO_MANY_TILES) {
+    if (r01_chr_pack_world_bank0(p, w) == R01_CHR_TOO_MANY_TILES) {
         set_err(err_buf, err_cap, "too many unique tiles (>256)");
         goto fail;
     }

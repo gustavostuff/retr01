@@ -170,6 +170,7 @@ int ui_tile_selection_paste(UiState *ui) {
         return 1;
     }
     w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     s = ui_edit_map_screen(ui);
     if (!w || !s) {
         ui_toast(ui, "no screen", 1);
@@ -199,7 +200,7 @@ int ui_tile_selection_paste(UiState *ui) {
                 continue;
             }
             ui_undo_paint_record_cell(ui, dx, dy, old_tile, old_attr, tile_id, attr);
-            r01_screen_paint_tile(w, s, dx, dy, tile_id, attr);
+            r01_screen_paint_tile(p, s, dx, dy, tile_id, attr);
         }
     }
     ui_undo_paint_end(ui);
@@ -231,6 +232,7 @@ void ui_paint_tile(UiState *ui, int tx, int ty) {
         return;
     }
     w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     s = ui_edit_map_screen(ui);
     if (!w || !s) {
         return;
@@ -258,7 +260,7 @@ void ui_paint_tile(UiState *ui, int tx, int ty) {
                 continue;
             }
             ui_undo_paint_record_cell(ui, dx, dy, old_tile, old_attr, tile_id, attr);
-            r01_screen_paint_tile(w, s, dx, dy, tile_id, attr);
+            r01_screen_paint_tile(p, s, dx, dy, tile_id, attr);
         }
     }
     ui->last_paint_tx = tx;
@@ -291,6 +293,7 @@ void ui_flood_fill(UiState *ui, int tx, int ty) {
     stamp_tile = ui->paint_stamp_tiles[0];
     stamp_attr = ui->paint_stamp_attrs[0];
     w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     s = ui_edit_map_screen(ui);
     if (!w || !s) {
         return;
@@ -315,7 +318,7 @@ void ui_flood_fill(UiState *ui, int tx, int ty) {
         const int nx[4] = {cx - 1, cx + 1, cx, cx};
         const int ny[4] = {cy, cy, cy - 1, cy + 1};
         ui_undo_paint_record_cell(ui, cx, cy, s->tiles[cell], s->attrs[cell], stamp_tile, stamp_attr);
-        r01_screen_paint_tile(w, s, cx, cy, stamp_tile, stamp_attr);
+        r01_screen_paint_tile(p, s, cx, cy, stamp_tile, stamp_attr);
         for (n = 0; n < 4; n++) {
             int ncell;
             if (nx[n] < 0 || ny[n] < 0 || nx[n] >= R01_SCREEN_TILES_X || ny[n] >= R01_SCREEN_TILES_Y) {

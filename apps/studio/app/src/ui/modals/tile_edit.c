@@ -121,6 +121,7 @@ static void tile_edit_flood(UiState *ui, int sx, int sy) {
 
 void tile_edit_open(UiState *ui, int tx, int ty) {
     R01World *w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     R01Screen *s = ui_edit_map_screen(ui);
     int cell;
     uint8_t attr;
@@ -142,9 +143,9 @@ void tile_edit_open(UiState *ui, int tx, int ty) {
         ui->tile_edit.bank = r01_attr_bank(attr);
         ui->tile_edit.flip_h = r01_attr_flip_h(attr);
         ui->tile_edit.flip_v = r01_attr_flip_v(attr);
-        if (ui->tile_edit.tile_id < w->bg_banks[ui->tile_edit.bank].tile_count) {
+        if (ui->tile_edit.tile_id < p->bg_banks[ui->tile_edit.bank].tile_count) {
             const uint8_t *raw =
-                w->bg_banks[ui->tile_edit.bank].chr + (size_t)ui->tile_edit.tile_id * R01_TILE_BYTES;
+                p->bg_banks[ui->tile_edit.bank].chr + (size_t)ui->tile_edit.tile_id * R01_TILE_BYTES;
             r01_tile_orient(raw, ui->tile_edit.flip_h, ui->tile_edit.flip_v, ui->tile_edit.chr);
             ui->tile_edit.is_new = 0;
         } else {
@@ -181,6 +182,7 @@ void tile_edit_open_bank(UiState *ui, int bank, int tile_id, int is_new) {
         return;
     }
     w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     memset(&ui->tile_edit, 0, sizeof(ui->tile_edit));
     ui->tile_edit.open = 1;
     ui->tile_edit.paint_tx = -1;
@@ -191,8 +193,8 @@ void tile_edit_open_bank(UiState *ui, int bank, int tile_id, int is_new) {
     ui->tile_edit.color = 1;
     ui->tile_edit.edit_all = 0;
     ui->tile_edit.is_new = is_new ? 1 : 0;
-    if (w && bank >= 0 && bank < R01_BG_BANKS && tile_id >= 0 && tile_id < w->bg_banks[bank].tile_count) {
-        const uint8_t *raw = w->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+    if (w && bank >= 0 && bank < R01_BG_BANKS && tile_id >= 0 && tile_id < p->bg_banks[bank].tile_count) {
+        const uint8_t *raw = p->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
         memcpy(ui->tile_edit.chr, raw, R01_TILE_BYTES);
         ui->tile_edit.is_new = 0;
     } else {
@@ -280,25 +282,26 @@ static int tile_edit_apply_matching(R01World *w, R01Screen *s, int id, int bank,
     return touched;
 }
 
-static void tile_edit_refresh_screens(R01World *w) {
+static void tile_edit_refresh_screens(const R01Project *p, R01World *w) {
     int si;
     if (!w) {
         return;
     }
     for (si = 0; si < w->screen_count; si++) {
         if (w->screens[si].present) {
-            r01_screen_fill_pixels_from_bank(w, &w->screens[si]);
+            r01_screen_fill_pixels_from_bank(p, &w->screens[si]);
         }
     }
     for (si = 0; si < w->bg0_screen_count && si < R01_BG0_SCREENS_MAX; si++) {
         if (w->bg0_screens[si].present) {
-            r01_screen_fill_pixels_from_bank(w, &w->bg0_screens[si]);
+            r01_screen_fill_pixels_from_bank(p, &w->bg0_screens[si]);
         }
     }
 }
 
 static void tile_edit_save(UiState *ui) {
     R01World *w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     R01Screen *s;
     int id;
     int si;
@@ -365,8 +368,8 @@ static void tile_edit_save(UiState *ui) {
     was_new = ui->tile_edit.is_new || ui->tile_edit.tile_id < 0;
     memset(old_chr, 0, sizeof(old_chr));
     if (was_new) {
-        old_tile_count = w->bg_banks[ui->tile_edit.bank].tile_count;
-        id = r01_chr_alloc_tile(w, ui->tile_edit.bank);
+        old_tile_count = p->bg_banks[ui->tile_edit.bank].tile_count;
+        id = r01_chr_alloc_tile(p, ui->tile_edit.bank);
         if (id < 0) {
             ui_toast(ui, "CHR bank full", 1);
             return;
@@ -375,12 +378,12 @@ static void tile_edit_save(UiState *ui) {
         ui->tile_edit.is_new = 0;
     } else {
         id = ui->tile_edit.tile_id;
-        if (id >= 0 && id < w->bg_banks[ui->tile_edit.bank].tile_count) {
-            memcpy(old_chr, w->bg_banks[ui->tile_edit.bank].chr + (size_t)id * R01_TILE_BYTES, R01_TILE_BYTES);
+        if (id >= 0 && id < p->bg_banks[ui->tile_edit.bank].tile_count) {
+            memcpy(old_chr, p->bg_banks[ui->tile_edit.bank].chr + (size_t)id * R01_TILE_BYTES, R01_TILE_BYTES);
         }
     }
     r01_tile_orient(ui->tile_edit.chr, ui->tile_edit.flip_h, ui->tile_edit.flip_v, canonical);
-    r01_chr_write_tile(w, ui->tile_edit.bank, id, canonical);
+    r01_chr_write_tile(p, ui->tile_edit.bank, id, canonical);
 
     if (edit_all) {
         for (si = 0; si < w->screen_count; si++) {
@@ -393,9 +396,9 @@ static void tile_edit_save(UiState *ui) {
                                                 ui->tile_edit.flip_h, ui->tile_edit.flip_v,
                                                 ui->tile_edit.match_tile_id, ui->tile_edit.match_attr_hw);
         }
-        tile_edit_refresh_screens(w);
+        tile_edit_refresh_screens(p, w);
     } else {
-        tile_edit_refresh_screens(w);
+        tile_edit_refresh_screens(p, w);
         s = ui_edit_map_screen(ui);
         if (s && ui->tile_edit.paint_tx >= 0 && ui->tile_edit.paint_ty >= 0) {
             int cell = ui->tile_edit.paint_ty * R01_SCREEN_TILES_X + ui->tile_edit.paint_tx;
@@ -403,7 +406,7 @@ static void tile_edit_save(UiState *ui) {
             old_attr = s->attrs[cell];
             new_attr = r01_attr_pack(ui->tile_edit.bank, ui->tile_edit.pal, ui->tile_edit.flip_h,
                                      ui->tile_edit.flip_v);
-            r01_screen_paint_tile(w, s, ui->tile_edit.paint_tx, ui->tile_edit.paint_ty, (uint8_t)id, new_attr);
+            r01_screen_paint_tile(p, s, ui->tile_edit.paint_tx, ui->tile_edit.paint_ty, (uint8_t)id, new_attr);
             painted = 1;
             touched = 1;
         }
@@ -439,6 +442,7 @@ static void tile_edit_save(UiState *ui) {
 void draw_tile_modal(UiState *ui, SDL_Renderer *r) {
     TileModalLayout lo;
     const R01World *w = r01_project_active_world_const(ui->project);
+    const R01Project *p = ui->project;
     int row = w ? w->default_pal_row : 0;
     int pal_plane = ui->tile_edit.other_spr ? UI_PAL_PLANE_SPR : UI_PAL_PLANE_BG;
     int sy, sx;

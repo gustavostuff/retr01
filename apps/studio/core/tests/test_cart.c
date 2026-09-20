@@ -75,30 +75,30 @@ TEST_MAIN() {
     w->default_screen = 2;
 
     bank = 0;
-    id = r01_chr_alloc_spr_tile(w, bank);
+    id = r01_chr_alloc_spr_tile(p, bank);
     EXPECT(id == 0, "spr tile 0");
     memset(tile, 0, sizeof(tile));
     tile[0] = 0xA5;
     tile[8] = 0x5A;
-    EXPECT(r01_chr_write_spr_tile(w, bank, id, tile) == 0, "write spr0");
+    EXPECT(r01_chr_write_spr_tile(p, bank, id, tile) == 0, "write spr0");
     /* Authoring is contiguous: next slot is tile 1 (cart export relocates stub conflict). */
-    id = r01_chr_alloc_spr_tile(w, bank);
+    id = r01_chr_alloc_spr_tile(p, bank);
     EXPECT(id == 1, "spr tile 1 contiguous");
     memset(tile, 0, sizeof(tile));
     tile[0] = 0x3C;
     tile[8] = 0xC3;
-    EXPECT(r01_chr_write_spr_tile(w, bank, id, tile) == 0, "write spr1");
-    cat = r01_world_sprite_add(w, bank, id, 2);
+    EXPECT(r01_chr_write_spr_tile(p, bank, id, tile) == 0, "write spr1");
+    cat = r01_world_sprite_add(p, bank, id, 2);
     EXPECT(cat == 0, "catalog");
-    type_id = r01_world_entity_from_sprite(w, cat);
+    type_id = r01_world_entity_from_sprite(p, cat);
     EXPECT(type_id == 0, "entity type");
-    w->entities[0].states[0].frames[0].origin_x = 2;
-    w->entities[0].states[0].frames[0].origin_y = 3;
-    w->entities[0].states[0].hitbox_x = 1;
-    w->entities[0].states[0].hitbox_y = 2;
-    w->entities[0].states[0].frames[0].parts[0].dx = 4;
-    w->entities[0].states[0].frames[0].parts[0].dy = 5;
-    r01_world_set_player_entity(w, 0);
+    p->entities[0].states[0].frames[0].origin_x = 2;
+    p->entities[0].states[0].frames[0].origin_y = 3;
+    p->entities[0].states[0].hitbox_x = 1;
+    p->entities[0].states[0].hitbox_y = 2;
+    p->entities[0].states[0].frames[0].parts[0].dx = 4;
+    p->entities[0].states[0].frames[0].parts[0].dy = 5;
+    r01_world_set_player_entity(p, 0);
     inst = r01_world_place_entity(w, type_id, 40, 50);
     EXPECT(inst == 0, "instance");
     w->instances[0].flip_h = 1;
@@ -111,13 +111,13 @@ TEST_MAIN() {
     /* Second entity shares no stub conflict; uses tile 0. */
     {
         R01EntityPart *pt;
-        type_id = r01_world_entity_add(w);
+        type_id = r01_world_entity_add(p);
         EXPECT(type_id == 1, "second entity");
-        pt = &w->entities[type_id].states[0].frames[0].parts[0];
+        pt = &p->entities[type_id].states[0].frames[0].parts[0];
         memset(pt, 0, sizeof(*pt));
         pt->bank = 0;
         pt->tile_id = 0;
-        w->entities[type_id].states[0].frames[0].part_count = 1;
+        p->entities[type_id].states[0].frames[0].part_count = 1;
         EXPECT(r01_world_place_entity(w, type_id, 10, 10) >= 0, "second inst");
     }
 
@@ -161,17 +161,17 @@ TEST_MAIN() {
                 EXPECT(fread(img, 1, (size_t)flen, f) == (size_t)flen, "read cart");
                 memcpy(ptrs, img + CART_HDR_SIZE, CART_PTR_SIZE);
                 off_prg = rd_u24(ptrs + 0);
-                off_wtable = rd_u24(ptrs + 18);
+                off_wtable = rd_u24(ptrs + 36);
                 EXPECT(off_prg == CART_PRG_OFF, "off_prg");
                 EXPECT(rd_u24(ptrs + 3) == R01_PRG_BYTES, "len_prg 32KB");
-                EXPECT(rd_u24(ptrs + 30) == CART_PRG_OFF + R01_PRG_BYTES, "off_other_chr");
-                EXPECT(rd_u24(ptrs + 33) == R01_CART_OTHER_CHR_BYTES, "len_other_chr");
-                EXPECT(rd_u24(ptrs + 24) == CART_PRG_OFF + R01_PRG_BYTES + R01_CART_OTHER_CHR_BYTES, "off_other");
-                EXPECT(rd_u24(ptrs + 27) > 0, "len_other");
-                EXPECT(img[rd_u24(ptrs + 24)] == 3, "other_count title+inter+credits");
-                EXPECT(img[rd_u24(ptrs + 24) + 4u] == 0, "other dir0 id title");
+                EXPECT(rd_u24(ptrs + 18) == CART_PRG_OFF + R01_PRG_BYTES, "off_chr");
+                EXPECT(rd_u24(ptrs + 21) == R01_CART_GLOBAL_CHR_BYTES, "len_chr");
+                EXPECT(rd_u24(ptrs + 27) > 0, "len_entities");
+                EXPECT(rd_u24(ptrs + 33) > 0, "len_other");
+                EXPECT(img[rd_u24(ptrs + 30)] == 3, "other_count title+inter+credits");
+                EXPECT(img[rd_u24(ptrs + 30) + 4u] == 0, "other dir0 id title");
                 {
-                    uint32_t off_other = rd_u24(ptrs + 24);
+                    uint32_t off_other = rd_u24(ptrs + 30);
                     const uint8_t *e0 = img + off_other + 4u;
                     uint16_t plen = rd_u16(e0 + 2);
                     uint32_t title_rel = rd_u24(e0 + 4);
@@ -204,30 +204,19 @@ TEST_MAIN() {
                        "player hitbox wh");
 
                 off_chr = rd_u24(hdr + 8);
-                /* SPR bank 0 starts after 4 BG banks. */
+                EXPECT(off_chr == 0, "world blob has no CHR");
+                /* Entity catalog is cart-global. */
                 {
-                    uint32_t spr0 = world_base + off_chr + 4u * R01_CHR_BANK_BYTES;
-                    uint8_t stub[R01_TILE_BYTES];
-                    uint8_t relocated[R01_TILE_BYTES];
-                    /* Authoring tile 1 (0x3C) relocated so stub can occupy tile 1. */
-                    memcpy(relocated, img + spr0 + 2u * R01_TILE_BYTES, R01_TILE_BYTES);
-                    EXPECT(relocated[0] == 0x3C && relocated[8] == 0xC3, "relocated spr tile1 art");
-                    memcpy(stub, img + spr0 + (size_t)R01_SPR_PLAYER_TILE_ID * R01_TILE_BYTES,
-                           R01_TILE_BYTES);
-                    EXPECT(stub[0] == 0xFF && stub[8] == 0x00, "player stub color-1 at tile 1");
-                }
-
-                /* Locked EntityDef catalog: u16 dir + defs. */
-                {
-                    uint16_t d0 = rd_u16(img + world_base + off_types);
-                    uint16_t d1 = rd_u16(img + world_base + off_types + 2);
+                    uint32_t off_ents = rd_u24(ptrs + 24);
+                    uint16_t d0 = rd_u16(img + off_ents);
+                    uint16_t d1 = rd_u16(img + off_ents + 2);
                     const uint8_t *def0;
                     const uint8_t *def1;
                     const uint8_t *st;
                     const uint8_t *fr;
                     EXPECT(d0 == 4, "dir0 after 2-entry directory");
                     EXPECT(d1 > d0, "dir1 after def0");
-                    def0 = img + world_base + off_types + d0;
+                    def0 = img + off_ents + d0;
                     EXPECT(def0[1] == 1, "def0 state count");
                     st = def0 + rd_u16(def0 + 4);
                     EXPECT(st[0] == 1, "def0 frame count");
@@ -236,15 +225,11 @@ TEST_MAIN() {
                     EXPECT(fr[1] == 1, "def0 sprite count");
                     EXPECT(fr[2] == 0 && fr[3] == 0, "def0 frame hitbox xy");
                     EXPECT(fr[4] == R01_ENTITY_HITBOX_W && fr[5] == R01_ENTITY_HITBOX_H, "def0 frame hitbox wh");
-                    EXPECT(fr[6] == 2, "def0 sprite remapped off stub");
-                    EXPECT((int8_t)fr[7] == 2 && (int8_t)fr[8] == 2, "def0 sprite rel");
-                    def1 = img + world_base + off_types + d1;
+                    def1 = img + off_ents + d1;
                     EXPECT(def1[1] == 1, "def1 state count");
                     st = def1 + rd_u16(def1 + 4);
                     fr = st + rd_u16(st + 2);
                     EXPECT(fr[1] == 1, "def1 sprite count");
-                    EXPECT(fr[6] == 0, "def1 uses tile 0");
-                    EXPECT(off_insts > off_types + 4, "catalog non-empty");
                     EXPECT(world_base + off_insts <= (uint32_t)flen, "off_insts in cart");
                 }
                 {
@@ -294,21 +279,21 @@ TEST_MAIN() {
             EXPECT(r01_other_spr_write_tile(p2, 0, 0, art) == 0, "os tile0");
             EXPECT(r01_other_spr_write_tile(p2, 0, 1, face) == 0, "os tile1 face");
             EXPECT(r01_other_spr_write_tile(p2, 0, 2, art) == 0, "os tile2");
-            EXPECT(r01_world_entity_add(w2) == 0, "pb entity");
-            pt = &w2->entities[0].states[0].frames[0].parts[0];
+            EXPECT(r01_world_entity_add(p2) == 0, "pb entity");
+            pt = &p2->entities[0].states[0].frames[0].parts[0];
             memset(pt, 0, sizeof(*pt));
             pt->bank = R01_GLOBAL_SPR_BANK_BASE;
             pt->tile_id = 1; /* face: must survive stub stamp */
-            w2->entities[0].states[0].frames[0].part_count = 1;
+            p2->entities[0].states[0].frames[0].part_count = 1;
             {
-                R01EntityPart *pt2 = &w2->entities[0].states[0].frames[0].parts[1];
+                R01EntityPart *pt2 = &p2->entities[0].states[0].frames[0].parts[1];
                 memset(pt2, 0, sizeof(*pt2));
                 pt2->bank = R01_GLOBAL_SPR_BANK_BASE;
                 pt2->tile_id = 2;
                 pt2->dx = 8;
-                w2->entities[0].states[0].frames[0].part_count = 2;
+                p2->entities[0].states[0].frames[0].part_count = 2;
             }
-            r01_world_set_player_entity(w2, 0);
+            r01_world_set_player_entity(p2, 0);
             EXPECT(r01_cart_write(p2, "test_cart_pb.retr01", err, sizeof(err)) == 0, "cart pb write");
             {
                 FILE *f = fopen("test_cart_pb.retr01", "rb");
@@ -318,48 +303,48 @@ TEST_MAIN() {
                     uint8_t slot[8];
                     uint8_t hdr[WORLD_HDR_SIZE];
                     uint8_t got[R01_TILE_BYTES];
-                    uint8_t stub[R01_TILE_BYTES];
                     uint8_t defbuf[128];
-                    uint32_t off_wtable, world_base, off_chr, off_types, spr0;
+                    uint32_t off_wtable, world_base;
                     uint16_t d0;
                     const uint8_t *st;
                     const uint8_t *fr;
                     EXPECT(fseek(f, CART_HDR_SIZE, SEEK_SET) == 0, "seek ptrs");
                     EXPECT(fread(ptrs, 1, sizeof(ptrs), f) == sizeof(ptrs), "read ptrs");
-                    off_wtable = rd_u24(ptrs + 18);
+                    off_wtable = rd_u24(ptrs + 36);
                     EXPECT(fseek(f, (long)off_wtable, SEEK_SET) == 0, "seek wtable");
                     EXPECT(fread(slot, 1, 8, f) == 8, "read slot");
                     world_base = rd_u24(slot + 2);
                     EXPECT(fseek(f, (long)world_base, SEEK_SET) == 0, "seek world");
                     EXPECT(fread(hdr, 1, sizeof(hdr), f) == sizeof(hdr), "read whdr");
-                    off_chr = rd_u24(hdr + 8);
-                    off_types = rd_u24(hdr + R01_CART_WHDR_OFF_TYPES);
-                    spr0 = world_base + off_chr + 4u * R01_CHR_BANK_BYTES;
-                    EXPECT(fseek(f, (long)(spr0 + 2u * R01_TILE_BYTES), SEEK_SET) == 0, "seek spr tile2");
-                    EXPECT(fread(got, 1, sizeof(got), f) == sizeof(got), "read spr tile2");
-                    EXPECT(got[0] == 0x81 && got[8] == 0x18, "player bank tile2 merged");
-                    /* Face art relocated off stub slot (first free >= 3). */
-                    EXPECT(fseek(f, (long)(spr0 + 3u * R01_TILE_BYTES), SEEK_SET) == 0, "seek relocated face");
-                    EXPECT(fread(got, 1, sizeof(got), f) == sizeof(got), "read relocated face");
-                    EXPECT(got[0] == 0x5A && got[8] == 0xA5, "player bank tile1 relocated");
-                    EXPECT(fseek(f, (long)(spr0 + (size_t)R01_SPR_PLAYER_TILE_ID * R01_TILE_BYTES), SEEK_SET) == 0,
-                           "seek stub");
-                    EXPECT(fread(stub, 1, sizeof(stub), f) == sizeof(stub), "read stub");
-                    EXPECT(stub[0] == 0xFF && stub[8] == 0x00, "stub at tile 1");
-                    EXPECT(fseek(f, (long)(world_base + off_types), SEEK_SET) == 0, "seek types");
-                    EXPECT(fread(defbuf, 1, 2, f) == 2, "dir0");
-                    d0 = rd_u16(defbuf);
-                    EXPECT(fseek(f, (long)(world_base + off_types + d0), SEEK_SET) == 0, "seek def0");
                     {
-                        size_t nread = fread(defbuf, 1, sizeof(defbuf), f);
-                        EXPECT(nread >= 32, "read def0");
+                        uint32_t off_chr_blob = rd_u24(hdr + 8);
+                        uint32_t off_chr = rd_u24(ptrs + 18);
+                        uint32_t spr0 = off_chr + (uint32_t)R01_BG_BANKS * R01_CHR_BANK_BYTES;
+                        EXPECT(off_chr_blob == 0, "world CHR omitted");
+                        EXPECT(fseek(f, (long)(spr0 + 1u * R01_TILE_BYTES), SEEK_SET) == 0, "seek spr tile1");
+                        EXPECT(fread(got, 1, sizeof(got), f) == sizeof(got), "read spr tile1");
+                        EXPECT(got[0] == 0x5A && got[8] == 0xA5, "player bank tile1 kept");
+                        EXPECT(fseek(f, (long)(spr0 + 2u * R01_TILE_BYTES), SEEK_SET) == 0, "seek spr tile2");
+                        EXPECT(fread(got, 1, sizeof(got), f) == sizeof(got), "read spr tile2");
+                        EXPECT(got[0] == 0x81 && got[8] == 0x18, "player bank tile2 kept");
                     }
-                    st = defbuf + rd_u16(defbuf + 4);
-                    fr = st + rd_u16(st + 2);
-                    EXPECT(fr[1] == 2, "two parts");
-                    EXPECT(fr[6] == 3, "face remapped off stub");
-                    EXPECT((fr[9] & 3) == 0, "player bank packs as spr bank 0");
-                    EXPECT(fr[10] == 2, "tile2 part unchanged");
+                    {
+                        uint32_t off_ents = rd_u24(ptrs + 24);
+                        EXPECT(fseek(f, (long)off_ents, SEEK_SET) == 0, "seek types");
+                        EXPECT(fread(defbuf, 1, 2, f) == 2, "dir0");
+                        d0 = rd_u16(defbuf);
+                        EXPECT(fseek(f, (long)(off_ents + d0), SEEK_SET) == 0, "seek def0");
+                        {
+                            size_t nread = fread(defbuf, 1, sizeof(defbuf), f);
+                            EXPECT(nread >= 32, "read def0");
+                        }
+                        st = defbuf + rd_u16(defbuf + 4);
+                        fr = st + rd_u16(st + 2);
+                        EXPECT(fr[1] == 2, "two parts");
+                        EXPECT(fr[6] == 1, "face stays tile 1");
+                        EXPECT((fr[9] & 15) == 0, "player bank packs as spr bank 0");
+                        EXPECT(fr[10] == 2, "tile2 part unchanged");
+                    }
                     fclose(f);
                 }
             }

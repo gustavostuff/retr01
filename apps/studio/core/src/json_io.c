@@ -331,7 +331,7 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
     fprintf(f, "  \"active_screen\": %d,\n", p->active_screen);
     fprintf(f, "  \"default_screen\": %d,\n", w->default_screen);
     fprintf(f, "  \"default_pal_row\": %d,\n", w->default_pal_row);
-    fprintf(f, "  \"player_entity\": %d,\n", w->player_entity);
+    fprintf(f, "  \"player_entity\": %d,\n", p->player_entity);
     fprintf(f, "  \"grid_cols\": %d,\n", w->grid_cols);
     fprintf(f, "  \"grid_rows\": %d,\n", w->grid_rows);
     fprintf(f, "  \"global_pal_bg\": [");
@@ -364,64 +364,35 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
         }
     }
     fprintf(f, "],\n");
-    fprintf(f, "  \"other_spr_banks\": [\n");
-    {
-        int bi;
-        for (bi = 0; bi < R01_SPR_BANKS; bi++) {
-            size_t chr_bytes = (size_t)p->other_spr_banks[bi].tile_count * R01_TILE_BYTES;
-            char *bank_b64 = encode_b64(p->other_spr_banks[bi].chr, chr_bytes);
-            if (!bank_b64) {
-                fclose(f);
-                set_err(err_buf, err_cap, "oom");
-                return -1;
-            }
-            fprintf(f, "    {\"tiles\": %d, \"b64\": \"%s\"}%s\n", p->other_spr_banks[bi].tile_count, bank_b64,
-                    bi + 1 < R01_SPR_BANKS ? "," : "");
-            free(bank_b64);
-        }
-    }
-    fprintf(f, "  ],\n");
-    fprintf(f, "  \"other_bg_banks\": [\n");
+    fprintf(f, "  \"bg_banks\": [\n");
     {
         int bi;
         for (bi = 0; bi < R01_BG_BANKS; bi++) {
-            size_t chr_bytes = (size_t)p->other_bg_banks[bi].tile_count * R01_TILE_BYTES;
-            char *bank_b64 = encode_b64(p->other_bg_banks[bi].chr, chr_bytes);
+            size_t chr_bytes = (size_t)p->bg_banks[bi].tile_count * R01_TILE_BYTES;
+            char *bank_b64 = encode_b64(p->bg_banks[bi].chr, chr_bytes);
             if (!bank_b64) {
                 fclose(f);
                 set_err(err_buf, err_cap, "oom");
                 return -1;
             }
-            fprintf(f, "    {\"tiles\": %d, \"b64\": \"%s\"}%s\n", p->other_bg_banks[bi].tile_count, bank_b64,
+            fprintf(f, "    {\"tiles\": %d, \"b64\": \"%s\"}%s\n", p->bg_banks[bi].tile_count, bank_b64,
                     bi + 1 < R01_BG_BANKS ? "," : "");
             free(bank_b64);
         }
     }
     fprintf(f, "  ],\n");
-    {
-        size_t chr_bytes = (size_t)w->bg_banks[0].tile_count * R01_TILE_BYTES;
-        char *bank_b64 = encode_b64(w->bg_banks[0].chr, chr_bytes);
-        if (!bank_b64) {
-            fclose(f);
-            set_err(err_buf, err_cap, "oom");
-            return -1;
-        }
-        fprintf(f, "  \"bg_bank0_tiles\": %d,\n", w->bg_banks[0].tile_count);
-        fprintf(f, "  \"bg_bank0_b64\": \"%s\",\n", bank_b64);
-        free(bank_b64);
-    }
     fprintf(f, "  \"spr_banks\": [\n");
     {
         int bi;
         for (bi = 0; bi < R01_SPR_BANKS; bi++) {
-            size_t chr_bytes = (size_t)w->spr_banks[bi].tile_count * R01_TILE_BYTES;
-            char *bank_b64 = encode_b64(w->spr_banks[bi].chr, chr_bytes);
+            size_t chr_bytes = (size_t)p->spr_banks[bi].tile_count * R01_TILE_BYTES;
+            char *bank_b64 = encode_b64(p->spr_banks[bi].chr, chr_bytes);
             if (!bank_b64) {
                 fclose(f);
                 set_err(err_buf, err_cap, "oom");
                 return -1;
             }
-            fprintf(f, "    {\"tiles\": %d, \"b64\": \"%s\"}%s\n", w->spr_banks[bi].tile_count, bank_b64,
+            fprintf(f, "    {\"tiles\": %d, \"b64\": \"%s\"}%s\n", p->spr_banks[bi].tile_count, bank_b64,
                     bi + 1 < R01_SPR_BANKS ? "," : "");
             free(bank_b64);
         }
@@ -430,18 +401,18 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
     fprintf(f, "  \"sprites\": [\n");
     {
         int si;
-        for (si = 0; si < w->sprite_count; si++) {
-            const R01SpriteDef *sp = &w->sprites[si];
+        for (si = 0; si < p->sprite_count; si++) {
+            const R01SpriteDef *sp = &p->sprites[si];
             fprintf(f, "    {\"bank\": %d, \"tile\": %d, \"pal\": %d}%s\n", sp->bank, sp->tile_id, sp->pal,
-                    si + 1 < w->sprite_count ? "," : "");
+                    si + 1 < p->sprite_count ? "," : "");
         }
     }
     fprintf(f, "  ],\n");
     fprintf(f, "  \"metasprites\": [\n");
     {
         int mi;
-        for (mi = 0; mi < w->metasprite_count; mi++) {
-            const R01MetaspriteDef *ms = &w->metasprites[mi];
+        for (mi = 0; mi < p->metasprite_count; mi++) {
+            const R01MetaspriteDef *ms = &p->metasprites[mi];
             const R01EntityFrame *fr = &ms->frame;
             int pi;
             fprintf(f, "    {\"name\": \"%s\", \"parts\": [", ms->name);
@@ -450,28 +421,28 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
                 fprintf(f, "%s{\"bank\":%d,\"tile\":%d,\"pal\":%d,\"fh\":%d,\"fv\":%d,\"dx\":%d,\"dy\":%d}",
                         pi ? "," : "", pt->bank, pt->tile_id, pt->pal, pt->flip_h, pt->flip_v, pt->dx, pt->dy);
             }
-            fprintf(f, "]}%s\n", mi + 1 < w->metasprite_count ? "," : "");
+            fprintf(f, "]}%s\n", mi + 1 < p->metasprite_count ? "," : "");
         }
     }
     fprintf(f, "  ],\n");
     fprintf(f, "  \"metatiles\": [\n");
     {
         int ti;
-        for (ti = 0; ti < w->metatile_count; ti++) {
-            const R01MetatileDef *mt = &w->metatiles[ti];
+        for (ti = 0; ti < p->metatile_count; ti++) {
+            const R01MetatileDef *mt = &p->metatiles[ti];
             fprintf(f,
                     "    {\"name\": \"%s\", \"tiles\": [%u,%u,%u,%u], \"attrs\": [%u,%u,%u,%u]}%s\n",
                     mt->name[0] ? mt->name : "Metatile", (unsigned)mt->tile[0], (unsigned)mt->tile[1],
                     (unsigned)mt->tile[2], (unsigned)mt->tile[3], (unsigned)mt->attr[0], (unsigned)mt->attr[1],
-                    (unsigned)mt->attr[2], (unsigned)mt->attr[3], ti + 1 < w->metatile_count ? "," : "");
+                    (unsigned)mt->attr[2], (unsigned)mt->attr[3], ti + 1 < p->metatile_count ? "," : "");
         }
     }
     fprintf(f, "  ],\n");
     fprintf(f, "  \"entities\": [\n");
     {
         int ei;
-        for (ei = 0; ei < w->entity_count; ei++) {
-            const R01EntityType *ent = &w->entities[ei];
+        for (ei = 0; ei < p->entity_count; ei++) {
+            const R01EntityType *ent = &p->entities[ei];
             int si;
             fprintf(f, "    {\n");
             fprintf(f, "      \"name\": \"%s\",\n", ent->name[0] ? ent->name : "Entity");
@@ -509,7 +480,7 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
                 fprintf(f, "        }%s\n", si + 1 < ent->state_count ? "," : "");
             }
             fprintf(f, "      ]\n");
-            fprintf(f, "    }%s\n", ei + 1 < w->entity_count ? "," : "");
+            fprintf(f, "    }%s\n", ei + 1 < p->entity_count ? "," : "");
         }
     }
     fprintf(f, "  ],\n");
@@ -617,19 +588,25 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
         }
         tl = encode_b64(s->tiles, sizeof(s->tiles));
         at = encode_b64(attrs, sizeof(attrs));
-        if (!tl || !at) {
+        {
+            char *sol = encode_b64(s->solids, sizeof(s->solids));
+            if (!tl || !at || !sol) {
+                free(tl);
+                free(at);
+                free(sol);
+                fclose(f);
+                set_err(err_buf, err_cap, "oom");
+                return -1;
+            }
+            fprintf(f, "%s    {\"col\": %d, \"row\": %d,\n", wrote ? ",\n" : "", s->col, s->row);
+            fprintf(f, "     \"tiles_b64\": \"%s\",\n", tl);
+            fprintf(f, "     \"attrs_b64\": \"%s\",\n", at);
+            fprintf(f, "     \"solids_b64\": \"%s\"}", sol);
+            wrote = 1;
             free(tl);
             free(at);
-            fclose(f);
-            set_err(err_buf, err_cap, "oom");
-            return -1;
+            free(sol);
         }
-        fprintf(f, "%s    {\"col\": %d, \"row\": %d,\n", wrote ? ",\n" : "", s->col, s->row);
-        fprintf(f, "     \"tiles_b64\": \"%s\",\n", tl);
-        fprintf(f, "     \"attrs_b64\": \"%s\"}", at);
-        wrote = 1;
-        free(tl);
-        free(at);
     }
     fprintf(f, "\n  ],\n");
     fprintf(f, "  \"bg0_cols\": %d,\n", w->bg0_cols);
@@ -990,6 +967,16 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
     json_int_after(buf, "\"player_entity\"", &player_entity);
     json_int_after(buf, "\"grid_cols\"", &grid_cols);
     json_int_after(buf, "\"grid_rows\"", &grid_rows);
+    {
+        const char *worlds = json_find(buf, "\"worlds\"");
+        if (worlds) {
+            json_int_after(worlds, "\"default_screen\"", &default_screen);
+            json_int_after(worlds, "\"active_screen\"", &active);
+            json_int_after(worlds, "\"default_pal_row\"", &default_pal_row);
+            json_int_after(worlds, "\"grid_cols\"", &grid_cols);
+            json_int_after(worlds, "\"grid_rows\"", &grid_rows);
+        }
+    }
     if (grid_cols >= 1 && grid_cols <= R01_GRID_MAX && grid_rows >= 1 && grid_rows <= R01_GRID_MAX) {
         r01_world_set_grid(r01_project_world0(p), grid_cols, grid_rows);
     }
@@ -1076,6 +1063,8 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                     set_err(err_buf, err_cap, "screen decode failed");
                     return -1;
                 }
+                (void)load_screen_field(slice, "\"solids_b64\"", "\"solids_rle_hex\"", "\"solids_hex\"", s->solids,
+                                        sizeof(s->solids));
                 r01_screen_sanitize_empty_attrs(s);
                 if (json_find(slice, "\"tiles_b64\"")) {
                     tilemaps_loaded = 1;
@@ -1155,16 +1144,16 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
         {
             int bi;
             for (bi = 0; bi < R01_SPR_BANKS; bi++) {
-                memset(p->other_spr_banks[bi].chr, 0, R01_BANK_CHR_BYTES);
-                p->other_spr_banks[bi].tile_count = 0;
+                memset(p->spr_banks[bi].chr, 0, R01_BANK_CHR_BYTES);
+                p->spr_banks[bi].tile_count = 0;
             }
             for (bi = 0; bi < R01_BG_BANKS; bi++) {
-                memset(p->other_bg_banks[bi].chr, 0, R01_BANK_CHR_BYTES);
-                p->other_bg_banks[bi].tile_count = 0;
+                memset(p->bg_banks[bi].chr, 0, R01_BANK_CHR_BYTES);
+                p->bg_banks[bi].tile_count = 0;
             }
         }
         {
-            const char *os_section = json_find(buf, "\"other_spr_banks\":");
+            const char *os_section = json_find(buf, "\"spr_banks\":");
             const char *os_end = json_array_end(os_section);
             int bi = 0;
             if (os_section && os_end) {
@@ -1192,8 +1181,8 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         size_t expect = (size_t)tiles * R01_TILE_BYTES;
                         uint8_t *bin = decode_b64(b64, &bin_len);
                         if (bin && bin_len == expect) {
-                            memcpy(p->other_spr_banks[bi].chr, bin, expect);
-                            p->other_spr_banks[bi].tile_count = tiles;
+                            memcpy(p->spr_banks[bi].chr, bin, expect);
+                            p->spr_banks[bi].tile_count = tiles;
                         }
                         free(bin);
                     }
@@ -1205,7 +1194,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
             }
         }
         {
-            const char *ob_section = json_find(buf, "\"other_bg_banks\":");
+            const char *ob_section = json_find(buf, "\"bg_banks\":");
             const char *ob_end = json_array_end(ob_section);
             int bi = 0;
             if (ob_section && ob_end) {
@@ -1233,8 +1222,8 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         size_t expect = (size_t)tiles * R01_TILE_BYTES;
                         uint8_t *bin = decode_b64(b64, &bin_len);
                         if (bin && bin_len == expect) {
-                            memcpy(p->other_bg_banks[bi].chr, bin, expect);
-                            p->other_bg_banks[bi].tile_count = tiles;
+                            memcpy(p->bg_banks[bi].chr, bin, expect);
+                            p->bg_banks[bi].tile_count = tiles;
                         }
                         free(bin);
                     }
@@ -1257,9 +1246,9 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                 size_t expect = (size_t)bank_tiles * R01_TILE_BYTES;
                 uint8_t *bin = decode_b64(bank_b64, &bin_len);
                 if (bin && bin_len == expect) {
-                    memset(w->bg_banks[0].chr, 0, R01_BANK_CHR_BYTES);
-                    memcpy(w->bg_banks[0].chr, bin, expect);
-                    w->bg_banks[0].tile_count = bank_tiles;
+                    memset(p->bg_banks[0].chr, 0, R01_BANK_CHR_BYTES);
+                    memcpy(p->bg_banks[0].chr, bin, expect);
+                    p->bg_banks[0].tile_count = bank_tiles;
                     bank_loaded = 1;
                 }
                 free(bin);
@@ -1270,11 +1259,11 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                 for (si = 0; si < w->screen_count; si++) {
                     R01Screen *s = &w->screens[si];
                     if (s->present) {
-                        r01_screen_fill_pixels_from_bank(w, s);
+                        r01_screen_fill_pixels_from_bank(p, s);
                     }
                 }
             } else if (!tilemaps_loaded) {
-                r01_chr_pack_world_bank0(w);
+                r01_chr_pack_world_bank0(p, w);
             }
         }
 
@@ -1284,11 +1273,11 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
             const char *spr_section = json_find(buf, "\"spr_banks\":");
             const char *spr_end = json_array_end(spr_section);
             int bi = 0;
-            w->sprite_count = 0;
-            w->metasprite_count = 0;
+            p->sprite_count = 0;
+            p->metasprite_count = 0;
             for (bi = 0; bi < R01_SPR_BANKS; bi++) {
-                memset(w->spr_banks[bi].chr, 0, R01_BANK_CHR_BYTES);
-                w->spr_banks[bi].tile_count = 0;
+                memset(p->spr_banks[bi].chr, 0, R01_BANK_CHR_BYTES);
+                p->spr_banks[bi].tile_count = 0;
             }
             if (spr_section && spr_end) {
                 const char *obj2 = strchr(spr_section, '{');
@@ -1316,8 +1305,8 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         size_t expect = (size_t)tiles * R01_TILE_BYTES;
                         uint8_t *bin = decode_b64(b64, &bin_len);
                         if (bin && bin_len == expect) {
-                            memcpy(w->spr_banks[bi].chr, bin, expect);
-                            w->spr_banks[bi].tile_count = tiles;
+                            memcpy(p->spr_banks[bi].chr, bin, expect);
+                            p->spr_banks[bi].tile_count = tiles;
                         }
                         free(bin);
                     }
@@ -1332,7 +1321,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                 const char *cat_end = json_array_end(cat);
                 if (cat && cat_end) {
                     const char *obj2 = strchr(cat, '{');
-                    while (obj2 && obj2 < cat_end && w->sprite_count < R01_MAX_SPRITES) {
+                    while (obj2 && obj2 < cat_end && p->sprite_count < R01_MAX_SPRITES) {
                         const char *end = strchr(obj2, '}');
                         size_t olen;
                         char *slice;
@@ -1351,7 +1340,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         json_int_after(slice, "\"tile\"", &tile);
                         json_int_after(slice, "\"pal\"", &pal);
                         free(slice);
-                        if (r01_world_sprite_add(w, bank, tile, pal) < 0) {
+                        if (r01_world_sprite_add(p, bank, tile, pal) < 0) {
                             break;
                         }
                         obj2 = strchr(end + 1, '{');
@@ -1363,7 +1352,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                 const char *meta_end = json_array_end(meta_sec);
                 if (meta_sec && meta_end) {
                     const char *obj2 = strchr(meta_sec, '{');
-                    while (obj2 && obj2 < meta_end && w->metasprite_count < R01_MAX_METASPRITES) {
+                    while (obj2 && obj2 < meta_end && p->metasprite_count < R01_MAX_METASPRITES) {
                         const char *end = json_object_end(obj2);
                         size_t olen;
                         char *slice;
@@ -1383,12 +1372,12 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         }
                         memcpy(slice, obj2, olen);
                         slice[olen] = '\0';
-                        midx = r01_world_metasprite_add(w);
+                        midx = r01_world_metasprite_add(p);
                         if (midx < 0) {
                             free(slice);
                             break;
                         }
-                        ms = &w->metasprites[midx];
+                        ms = &p->metasprites[midx];
                         name_str = json_string_field_dup(slice, "\"name\"");
                         if (name_str && name_str[0]) {
                             strncpy(ms->name, name_str, R01_ENTITY_NAME_MAX - 1);
@@ -1435,11 +1424,11 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
             {
                 const char *mt_sec = json_find(buf, "\"metatiles\":");
                 const char *mt_end = json_array_end(mt_sec);
-                w->metatile_count = 0;
-                memset(w->metatiles, 0, sizeof(w->metatiles));
+                p->metatile_count = 0;
+                memset(p->metatiles, 0, sizeof(p->metatiles));
                 if (mt_sec && mt_end) {
                     const char *obj2 = strchr(mt_sec, '{');
-                    while (obj2 && obj2 < mt_end && w->metatile_count < R01_MAX_METATILES) {
+                    while (obj2 && obj2 < mt_end && p->metatile_count < R01_MAX_METATILES) {
                         const char *end = json_object_end(obj2);
                         size_t olen;
                         char *slice;
@@ -1458,12 +1447,12 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         }
                         memcpy(slice, obj2, olen);
                         slice[olen] = '\0';
-                        midx = r01_world_metatile_add(w);
+                        midx = r01_world_metatile_add(p);
                         if (midx < 0) {
                             free(slice);
                             break;
                         }
-                        mt = &w->metatiles[midx];
+                        mt = &p->metatiles[midx];
                         name_str = json_string_field_dup(slice, "\"name\"");
                         if (name_str && name_str[0]) {
                             strncpy(mt->name, name_str, R01_ENTITY_NAME_MAX - 1);
@@ -1495,12 +1484,12 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
             {
                 const char *ent_sec = json_find(buf, "\"entities\":");
                 const char *ent_end = json_array_end(ent_sec);
-                w->entity_count = 0;
-                w->player_entity = -1;
-                memset(w->entities, 0, sizeof(w->entities));
+                p->entity_count = 0;
+                p->player_entity = -1;
+                memset(p->entities, 0, sizeof(p->entities));
                 if (ent_sec && ent_end) {
                     const char *obj2 = strchr(ent_sec, '{');
-                    while (obj2 && obj2 < ent_end && w->entity_count < R01_MAX_ENTITY_TYPES) {
+                    while (obj2 && obj2 < ent_end && p->entity_count < R01_MAX_ENTITY_TYPES) {
                         const char *end = json_object_end(obj2);
                         size_t olen;
                         char *slice;
@@ -1521,12 +1510,12 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         }
                         memcpy(slice, obj2, olen);
                         slice[olen] = '\0';
-                        idx = r01_world_entity_add(w);
+                        idx = r01_world_entity_add(p);
                         if (idx < 0) {
                             free(slice);
                             break;
                         }
-                        ent = &w->entities[idx];
+                        ent = &p->entities[idx];
                         json_string_after(slice, "\"name\"", ent->name, sizeof(ent->name));
                         if (!ent->name[0]) {
                             strncpy(ent->name, "Entity", R01_ENTITY_NAME_MAX - 1);
@@ -1756,7 +1745,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                         json_int_after(slice, "\"fh\"", &fh);
                         json_int_after(slice, "\"fv\"", &fv);
                         free(slice);
-                        if (type_id >= 0 && type_id < w->entity_count) {
+                        if (type_id >= 0 && type_id < p->entity_count) {
                             idx = r01_world_instance_add(w, type_id, wx, wy);
                             if (idx >= 0) {
                                 if (fh) {
@@ -1784,10 +1773,10 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
         if (default_pal_row >= 0 && default_pal_row < R01_PAL_ROWS) {
             w0->default_pal_row = default_pal_row;
         }
-        if (player_entity >= 0 && player_entity < w0->entity_count) {
-            w0->player_entity = player_entity;
+        if (player_entity >= 0 && player_entity < p->entity_count) {
+            p->player_entity = player_entity;
         } else {
-            w0->player_entity = -1;
+            p->player_entity = -1;
         }
     }
 

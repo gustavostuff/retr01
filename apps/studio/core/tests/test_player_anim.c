@@ -7,6 +7,7 @@
 #include "retr01_studio/game_runtime.h"
 #include "retr01_studio/player_anim.h"
 #include "retr01_studio/project.h"
+#include "r01_play_anim_cart.h"
 
 TEST_MAIN() {
     R01Project *p = (R01Project *)calloc(1, sizeof(R01Project));
@@ -20,13 +21,13 @@ TEST_MAIN() {
     r01_project_init(p, "anim_test");
     w = r01_project_active_world(p);
     {
-        int pe = r01_world_entity_add(w);
-        R01EntityType *ent = &w->entities[pe];
+        int pe = r01_world_entity_add(p);
+        R01EntityType *ent = &p->entities[pe];
         R01EntityPart part;
         int fi;
         memset(&part, 0, sizeof(part));
         part.tile_id = 1;
-        r01_world_set_player_entity(w, pe);
+        r01_world_set_player_entity(p, pe);
         r01_entity_frame_add_part(&ent->states[0].frames[0], &part);
         ent->states[0].frame_count = 4;
         r01_entity_ensure_state(ent, 1);
@@ -62,7 +63,7 @@ TEST_MAIN() {
     EXPECT(r01_player_anim_flip_h(&ctx) == 1, "idle keeps left flip after walk");
 
     r01_player_anim_set_crouch_state(&ctx, 2);
-    r01_entity_ensure_state(&w->entities[r01_world_player_entity(w)], 2);
+    r01_entity_ensure_state(&p->entities[r01_world_player_entity(p)], 2);
     ctx.player_crouching = 1;
     r01_player_anim_update(&ctx, 0, 0);
     EXPECT(r01_player_anim_entity_state(&ctx) == 2, "crouch state");
@@ -75,26 +76,26 @@ TEST_MAIN() {
     EXPECT(r01_player_anim_flip_h(&ctx) == 1, "idle faces left with flip");
 
     {
-        int pe = r01_world_player_entity(w);
+        int pe = r01_world_player_entity(p);
         int i;
         for (i = 0; i < 12; i++) {
             r01_player_anim_update(&ctx, 0, 0);
-            r01_player_anim_tick(&ctx, w, pe);
+            r01_player_anim_tick(&ctx, p, pe);
         }
         EXPECT(r01_player_anim_frame(&ctx) == 0, "idle skips empty frame slots");
     }
 
     {
-        int pe = r01_world_player_entity(w);
+        int pe = r01_world_player_entity(p);
         r01_player_anim_update(&ctx, 1, 0);
-        r01_player_anim_tick(&ctx, w, pe);
-        r01_player_anim_tick(&ctx, w, pe);
+        r01_player_anim_tick(&ctx, p, pe);
+        r01_player_anim_tick(&ctx, p, pe);
         EXPECT(r01_player_anim_frame(&ctx) == 1, "walk frames advance");
     }
 
     {
-        int pe = r01_world_player_entity(w);
-        r01_entity_ensure_state(&w->entities[pe], 3);
+        int pe = r01_world_player_entity(p);
+        r01_entity_ensure_state(&p->entities[pe], 3);
         r01_player_anim_set_jump_state(&ctx, 3);
         ctx.player_airborne = 1;
         r01_player_anim_update(&ctx, 0, 0);
@@ -105,6 +106,15 @@ TEST_MAIN() {
         ctx.player_airborne = 0;
         r01_player_anim_update(&ctx, 0, 0);
         EXPECT(r01_player_anim_entity_state(&ctx) == 0, "land returns to idle");
+    }
+
+    {
+        int dx, dy;
+        uint8_t attr = 0;
+        r01_cart_part_pose(8, 8, 4, 2, attr, 1, 0, &dx, &dy, &attr);
+        EXPECT((attr & R01_CART_OAM_FLIP_H) != 0, "left facing sets H flip bit 6");
+        EXPECT((attr & 0x0Fu) == 0, "left facing keeps bank");
+        EXPECT(((attr >> 4) & 3) == 0, "left facing keeps pal");
     }
 
     free(p);

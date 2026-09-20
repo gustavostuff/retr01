@@ -173,8 +173,9 @@ static void draw_entity_at_screen(UiState *ui, SDL_Renderer *r, const R01World *
 
 static void draw_instances_on_screen(UiState *ui, SDL_Renderer *r, const R01World *w, const R01Screen *s, int ox,
                                      int oy) {
+    const R01Project *p = ui ? ui->project : NULL;
     int i;
-    if (!w || !s) {
+    if (!w || !s || !p) {
         return;
     }
     for (i = 0; i < w->instance_count; i++) {
@@ -183,10 +184,10 @@ static void draw_instances_on_screen(UiState *ui, SDL_Renderer *r, const R01Worl
         int local_x = inst->world_x - s->col * R01_SCREEN_PX_W;
         int local_y = inst->world_y - s->row * R01_SCREEN_PX_H;
         int min_x, min_y, max_x, max_y;
-        if (inst->type_id < 0 || inst->type_id >= w->entity_count) {
+        if (inst->type_id < 0 || inst->type_id >= p->entity_count) {
             continue;
         }
-        ent = &w->entities[inst->type_id];
+        ent = &p->entities[inst->type_id];
         if (!entity_local_bounds(ent, local_x, local_y, inst->flip_h, inst->flip_v, &min_x, &min_y, &max_x,
                                  &max_y)) {
             continue;
@@ -208,6 +209,7 @@ int instance_hit_on_screen(const UiState *ui, int lx, int ly, int *out_inst) {
         return 0;
     }
     w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     s = r01_project_active_screen(ui->project);
     if (!w || !s || !screen_pixel_hit(ui, lx, ly, &px, &py)) {
         return 0;
@@ -218,10 +220,10 @@ int instance_hit_on_screen(const UiState *ui, int lx, int ly, int *out_inst) {
         const R01EntityState *st;
         const R01EntityFrame *fr;
         int local_x, local_y, pi;
-        if (inst->type_id < 0 || inst->type_id >= w->entity_count) {
+        if (inst->type_id < 0 || inst->type_id >= p->entity_count) {
             continue;
         }
-        ent = &w->entities[inst->type_id];
+        ent = &p->entities[inst->type_id];
         if (ent->state_count < 1 || ent->states[0].frame_count < 1) {
             continue;
         }
@@ -291,6 +293,7 @@ static void draw_warp_markers(UiState *ui, SDL_Renderer *r, const R01World *w, c
 
 static void draw_bg_tile_ghost(UiState *ui, SDL_Renderer *r, const R01World *w, uint8_t tile_id, uint8_t attr,
                                int tile_x, int tile_y, int ox, int oy) {
+    const R01Project *p = ui ? ui->project : NULL;
     const uint8_t *raw;
     uint8_t oriented[R01_TILE_BYTES];
     int bank = r01_attr_bank(attr);
@@ -298,16 +301,16 @@ static void draw_bg_tile_ghost(UiState *ui, SDL_Renderer *r, const R01World *w, 
     int row = w ? w->default_pal_row : 0;
     int sc = ui_screen_scale(ui);
     int sy, sx;
-    if (!w || tile_x < 0 || tile_y < 0 || tile_x >= R01_SCREEN_TILES_X || tile_y >= R01_SCREEN_TILES_Y) {
+    if (!w || !p || tile_x < 0 || tile_y < 0 || tile_x >= R01_SCREEN_TILES_X || tile_y >= R01_SCREEN_TILES_Y) {
         return;
     }
     if (row < 0 || row >= R01_PAL_ROWS) {
         row = 0;
     }
-    if (bank < 0 || bank >= R01_BG_BANKS || tile_id >= (uint8_t)w->bg_banks[bank].tile_count) {
+    if (bank < 0 || bank >= R01_BG_BANKS || tile_id >= (uint8_t)p->bg_banks[bank].tile_count) {
         return;
     }
-    raw = w->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+    raw = p->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
     r01_tile_orient(raw, r01_attr_flip_h(attr), r01_attr_flip_v(attr), oriented);
     SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
     for (sy = 0; sy < 8; sy++) {
@@ -360,6 +363,7 @@ static void draw_paint_ghost(UiState *ui, SDL_Renderer *r, const R01World *w, in
 
 static void draw_hover_and_sel_overlays(UiState *ui, SDL_Renderer *r, const R01World *w, const R01Screen *s, int ox,
                                         int oy, int plane_bg0) {
+    const R01Project *p = ui ? ui->project : NULL;
     int tx, ty;
     int hover_inst = -1;
     int over_screen;
@@ -392,8 +396,8 @@ static void draw_hover_and_sel_overlays(UiState *ui, SDL_Renderer *r, const R01W
             const R01EntityInstance *inst = &w->instances[hover_inst];
             const R01EntityType *ent;
             int local_x, local_y, min_x, min_y, max_x, max_y;
-            if (inst->type_id >= 0 && inst->type_id < w->entity_count) {
-                ent = &w->entities[inst->type_id];
+            if (inst->type_id >= 0 && inst->type_id < p->entity_count) {
+                ent = &p->entities[inst->type_id];
                 local_x = inst->world_x - s->col * R01_SCREEN_PX_W;
                 local_y = inst->world_y - s->row * R01_SCREEN_PX_H;
                 if (entity_local_bounds(ent, local_x, local_y, inst->flip_h, inst->flip_v, &min_x, &min_y, &max_x,
@@ -436,7 +440,7 @@ static void format_tile_inspect(char *buf, size_t cap, const R01Screen *s, int t
     attr = s->attrs[cell];
     snprintf(buf, cap, "%s tile (%d,%d) id=%u bank=%d pal=%d attr=$%02X%s%s%s", plane_bg0 ? "BG0" : "BG1", tx, ty,
              (unsigned)tile, r01_attr_bank(attr), r01_attr_pal(attr), (unsigned)attr,
-             r01_attr_solid(attr) ? " solid" : "", r01_attr_flip_h(attr) ? " H" : "",
+             s->solids[cell] ? " solid" : "", r01_attr_flip_h(attr) ? " H" : "",
              r01_attr_flip_v(attr) ? " V" : "");
 }
 
@@ -447,7 +451,7 @@ static void format_tile_multisel(char *buf, size_t cap, int plane_bg0, int x0, i
     snprintf(buf, cap, "%s (%d,%d) to (%d,%d) multiselection", plane_bg0 ? "BG0" : "BG1", x0, y0, x1, y1);
 }
 
-static void format_entity_inspect(char *buf, size_t cap, const R01World *w, int inst_idx) {
+static void format_entity_inspect(char *buf, size_t cap, const R01Project *p, const R01World *w, int inst_idx) {
     const R01EntityInstance *inst;
     const R01EntityType *ent;
     const char *name;
@@ -455,8 +459,8 @@ static void format_entity_inspect(char *buf, size_t cap, const R01World *w, int 
         return;
     }
     inst = &w->instances[inst_idx];
-    if (inst->type_id >= 0 && inst->type_id < w->entity_count) {
-        ent = &w->entities[inst->type_id];
+    if (inst->type_id >= 0 && inst->type_id < p->entity_count) {
+        ent = &p->entities[inst->type_id];
         name = ent->name[0] ? ent->name : "?";
     } else {
         name = "?";
@@ -564,6 +568,7 @@ void preview_inspect_copy(UiState *ui) {
 }
 
 void ui_preview_inspect_refresh(UiState *ui) {
+    R01Project *p;
     R01World *w;
     R01Screen *s;
     char live[sizeof(ui->preview_inspect)];
@@ -574,6 +579,7 @@ void ui_preview_inspect_refresh(UiState *ui) {
     if (!ui || !ui->project || ui->play.active || ui->app_mode != UI_APP_GRAPHICS) {
         return;
     }
+    p = ui->project;
     w = r01_project_active_world(ui->project);
     s = ui_edit_map_screen(ui);
     plane_bg0 = (ui->worlds_plane == UI_WORLDS_PLANE_BG0);
@@ -582,7 +588,7 @@ void ui_preview_inspect_refresh(UiState *ui) {
     if (s && w && screen_hit(ui, ui->mouse_x, ui->mouse_y, &tx, &ty)) {
         if (!plane_bg0 && ui_work_allows_spr(ui) && !ui->hide_spr_layer &&
             instance_hit_on_screen(ui, ui->mouse_x, ui->mouse_y, &inst)) {
-            format_entity_inspect(live, sizeof(live), w, inst);
+            format_entity_inspect(live, sizeof(live), p, w, inst);
         } else if (ui_work_allows_bg(ui) && !ui->hide_bg_layer) {
             format_tile_inspect(live, sizeof(live), s, tx, ty, plane_bg0);
         }
@@ -596,7 +602,7 @@ void ui_preview_inspect_refresh(UiState *ui) {
     /* Not hovering: keep showing the last click/selection. */
     live[0] = '\0';
     if (!plane_bg0 && ui->sel_instance >= 0 && w) {
-        format_entity_inspect(live, sizeof(live), w, ui->sel_instance);
+        format_entity_inspect(live, sizeof(live), p, w, ui->sel_instance);
     } else if (s && screen_sel_valid(ui) && ui->sel_instance < 0) {
         int min_x, min_y, max_x, max_y;
         screen_sel_bounds(ui, &min_x, &min_y, &max_x, &max_y);
@@ -638,6 +644,7 @@ void draw_preview_inspect(UiState *ui, SDL_Renderer *r) {
 void draw_screen_editor(UiState *ui, SDL_Renderer *r, const R01Screen *s) {
     int ox, oy, y, x;
     R01World *w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     int plane_bg0 = (ui->worlds_plane == UI_WORLDS_PLANE_BG0);
     const R01Screen *bg1 = NULL;
     const R01Screen *bg0 = NULL;
@@ -729,16 +736,17 @@ void draw_catalog_drag_ghost(UiState *ui, SDL_Renderer *r) {
         return;
     }
     w = r01_project_active_world_const(ui->project);
+    const R01Project *p = ui->project;
     if (!w) {
         return;
     }
     memset(&pt, 0, sizeof(pt));
     if (ui->catalog_drag.active == UI_CATALOG_DRAG_SPRITE) {
         const R01SpriteDef *sp;
-        if (ui->catalog_drag.index < 0 || ui->catalog_drag.index >= w->sprite_count) {
+        if (ui->catalog_drag.index < 0 || ui->catalog_drag.index >= p->sprite_count) {
             return;
         }
-        sp = &w->sprites[ui->catalog_drag.index];
+        sp = &p->sprites[ui->catalog_drag.index];
         pt.bank = sp->bank;
         pt.tile_id = sp->tile_id;
         pt.pal = sp->pal;
@@ -747,10 +755,10 @@ void draw_catalog_drag_ghost(UiState *ui, SDL_Renderer *r) {
     } else if (ui->catalog_drag.active == UI_CATALOG_DRAG_METASPRITE) {
         const R01MetaspriteDef *ms;
         int i, gx, gy;
-        if (ui->catalog_drag.index < 0 || ui->catalog_drag.index >= w->metasprite_count) {
+        if (ui->catalog_drag.index < 0 || ui->catalog_drag.index >= p->metasprite_count) {
             return;
         }
-        ms = &w->metasprites[ui->catalog_drag.index];
+        ms = &p->metasprites[ui->catalog_drag.index];
         gx = ui->mouse_x - ui->catalog_drag.off_x;
         gy = ui->mouse_y - ui->catalog_drag.off_y;
         for (i = 0; i < ms->frame.part_count; i++) {
@@ -762,10 +770,10 @@ void draw_catalog_drag_ghost(UiState *ui, SDL_Renderer *r) {
         const R01EntityFrame *fr = NULL;
         int si, fi, pi;
         int gx, gy;
-        if (ui->catalog_drag.index < 0 || ui->catalog_drag.index >= w->entity_count) {
+        if (ui->catalog_drag.index < 0 || ui->catalog_drag.index >= p->entity_count) {
             return;
         }
-        ent = &w->entities[ui->catalog_drag.index];
+        ent = &p->entities[ui->catalog_drag.index];
         for (si = 0; si < ent->state_count && !fr; si++) {
             const R01EntityState *st = &ent->states[si];
             for (fi = 0; fi < st->frame_count; fi++) {

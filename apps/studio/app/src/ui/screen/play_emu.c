@@ -75,6 +75,7 @@ void ui_toggle_play(UiState *ui) {
     }
     r01_project_begin_play(ui->project);
     w = r01_project_active_world(ui->project);
+    R01Project *p = ui->project;
     if (!w || w->screen_count < 1) {
         ui_toast(ui, "no screens - create one first", 1);
         return;
@@ -168,6 +169,7 @@ int ui_play_screen_mark(UiState *ui) {
         return ui->play.screen_mark;
     }
     w = r01_project_active_world_const(ui->project);
+    const R01Project *p = ui->project;
     if (!w) {
         return ui->play.screen_mark;
     }

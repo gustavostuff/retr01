@@ -17,7 +17,7 @@ uint8_t r01_tile_pixel_color(const uint8_t tile[R01_TILE_BYTES], int sx, int sy)
 void r01_tile_orient(const uint8_t src[R01_TILE_BYTES], int flip_h, int flip_v, uint8_t dst[R01_TILE_BYTES]);
 
 /* Rebuild per-pixel color indices from tile map + BG bank (inverse of pack). */
-void r01_screen_fill_pixels_from_bank(const R01World *w, R01Screen *s);
+void r01_screen_fill_pixels_from_bank(const R01Project *p, R01Screen *s);
 
 void r01_tile_set_pixel(uint8_t tile[R01_TILE_BYTES], int sx, int sy, uint8_t color);
 /*
@@ -32,21 +32,20 @@ void r01_tile_from_rgba_brightness(uint8_t out16[R01_TILE_BYTES], const uint8_t 
                                    int src_x, int src_y, const uint8_t (*target_rgb)[3], int spr_plane);
 
 /* Ensure BG bank 0 has at least one blank tile; returns tile index or -1. */
-int r01_chr_alloc_tile(R01World *w, int bank);
+int r01_chr_alloc_tile(R01Project *p, int bank);
 /* Write 16-byte pattern into bank[tile_id] (grows tile_count if needed). */
-int r01_chr_write_tile(R01World *w, int bank, int tile_id, const uint8_t tile[R01_TILE_BYTES]);
+int r01_chr_write_tile(R01Project *p, int bank, int tile_id, const uint8_t tile[R01_TILE_BYTES]);
 /* Stamp tile+attr into screen map and refresh that cell's pixels. */
-void r01_screen_paint_tile(R01World *w, R01Screen *s, int tile_x, int tile_y, uint8_t tile_id, uint8_t attr);
+void r01_screen_paint_tile(R01Project *p, R01Screen *s, int tile_x, int tile_y, uint8_t tile_id, uint8_t attr);
 
 /* Tile 0 is blank: drop leftover pal/solid/flip attrs so holes stay transparent. */
 void r01_screen_sanitize_empty_attrs(R01Screen *s);
 
-/* Global other SPR banks (project-scoped, 4 x 256 tiles). NULL if out of range / empty. */
+/* SPR / BG banks live on the project. */
 const uint8_t *r01_other_spr_tile(const R01Project *p, int bank, int tile_id);
 int r01_other_spr_write_tile(R01Project *p, int bank, int tile_id, const uint8_t tile[R01_TILE_BYTES]);
 int r01_other_spr_alloc_tile(R01Project *p, int bank);
 
-/* Global other BG banks (same shape as world BG). */
 const uint8_t *r01_other_bg_tile(const R01Project *p, int bank, int tile_id);
 int r01_other_bg_write_tile(R01Project *p, int bank, int tile_id, const uint8_t tile[R01_TILE_BYTES]);
 int r01_other_bg_alloc_tile(R01Project *p, int bank);
@@ -55,6 +54,6 @@ int r01_other_bg_alloc_tile(R01Project *p, int bank);
 void r01_tile_flood_fill(uint8_t tile[R01_TILE_BYTES], int sx, int sy, uint8_t color);
 
 /* Pack all present screens into BG bank 0 (max 256 unique tiles). */
-R01ChrPackStatus r01_chr_pack_world_bank0(R01World *w);
+R01ChrPackStatus r01_chr_pack_world_bank0(R01Project *p, R01World *w);
 
 #endif

@@ -653,7 +653,7 @@ static int write_base_game(FILE *f, const R01Project *p) {
 
     fill_present_mask(mask, w);
     pick_spawn_screen(w, &spawn_c, &spawn_r);
-    pe = w ? r01_world_player_entity(w) : -1;
+    pe = w ? r01_world_player_entity(p) : -1;
     if (w && pe >= 0) {
         for (i = 0; i < w->instance_count; i++) {
             if (w->instances[i].type_id == pe) {
@@ -697,9 +697,9 @@ static int write_base_game(FILE *f, const R01Project *p) {
         fprintf(f, "static const int player_inst_x = %d;\n", inst_spawn_x);
         fprintf(f, "static const int player_inst_y = %d;\n", inst_spawn_y);
     }
-    if (w && pe >= 0 && pe < w->entity_count && w->entities[pe].state_count > 0 &&
-        w->entities[pe].states[0].frame_count > 0) {
-        const R01EntityState *st0 = &w->entities[pe].states[0];
+    if (w && pe >= 0 && pe < p->entity_count && p->entities[pe].state_count > 0 &&
+        p->entities[pe].states[0].frame_count > 0) {
+        const R01EntityState *st0 = &p->entities[pe].states[0];
         fprintf(f, "static const int player_hit_x = %d;\n", st0->hitbox_x);
         fprintf(f, "static const int player_hit_y = %d;\n", st0->hitbox_y);
         fprintf(f, "static const int player_hit_w = %d;\n", st0->hitbox_w);
@@ -714,8 +714,8 @@ static int write_base_game(FILE *f, const R01Project *p) {
         fprintf(f, "const int player_state_frames[4] = {");
         for (si = 0; si < 4; si++) {
             int fc = 1;
-            if (w && pe >= 0 && pe < w->entity_count && si < w->entities[pe].state_count) {
-                fc = r01_entity_state_drawable_frame_count(&w->entities[pe].states[si]);
+            if (w && pe >= 0 && pe < p->entity_count && si < p->entities[pe].state_count) {
+                fc = r01_entity_state_drawable_frame_count(&p->entities[pe].states[si]);
                 if (fc < 1) {
                     fc = 1;
                 }
@@ -808,7 +808,7 @@ static int write_base_game(FILE *f, const R01Project *p) {
     return 0;
 }
 
-static int write_asm_tables(const char *asm_dir, const R01World *w, char *err_buf, size_t err_cap) {
+static int write_asm_tables(const char *asm_dir, const R01Project *p, const R01World *w, char *err_buf, size_t err_cap) {
     char path[R01_PATH_MAX];
     char tables_dir[R01_PATH_MAX];
     FILE *f;
@@ -915,7 +915,7 @@ static int write_asm_tables(const char *asm_dir, const R01World *w, char *err_bu
             }
             fprintf(f, "; screen (%d,%d)\n", s->col, s->row);
             for (cell = 0; cell < R01_TILES_PER_SCREEN; cell++) {
-                fprintf(f, "        .byte $%02X\n", (s->attrs[cell] & R01_ATTR_SOLID) ? 1 : 0);
+                fprintf(f, "        .byte $%02X\n", s->solids[cell] ? 1 : 0);
             }
         }
     }
@@ -934,10 +934,10 @@ static int write_asm_tables(const char *asm_dir, const R01World *w, char *err_bu
         return -1;
     }
     if (w) {
-        int pe = r01_world_player_entity(w);
-        if (pe >= 0 && pe < w->entity_count && w->entities[pe].state_count > 0 &&
-            w->entities[pe].states[0].frame_count > 0) {
-            const R01EntityState *st0 = &w->entities[pe].states[0];
+        int pe = r01_world_player_entity(p);
+        if (pe >= 0 && pe < p->entity_count && p->entities[pe].state_count > 0 &&
+            p->entities[pe].states[0].frame_count > 0) {
+            const R01EntityState *st0 = &p->entities[pe].states[0];
             fprintf(f, "player_entity_id: .byte $%02X\n", pe & 0xFF);
             fprintf(f, "player_hit_x: .byte $%02X\n", st0->hitbox_x & 0xFF);
             fprintf(f, "player_hit_y: .byte $%02X\n", st0->hitbox_y & 0xFF);
@@ -963,8 +963,8 @@ static int write_asm_tables(const char *asm_dir, const R01World *w, char *err_bu
     }
     fprintf(f, "; packed entity type records (cart export mirrors cart.c)\n");
     if (w) {
-        for (si = 0; si < w->entity_count; si++) {
-            fprintf(f, "; type %d: %s\n", si, w->entities[si].name);
+        for (si = 0; si < p->entity_count; si++) {
+            fprintf(f, "; type %d: %s\n", si, p->entities[si].name);
         }
     }
     fclose(f);
@@ -993,11 +993,11 @@ static int write_asm_tables(const char *asm_dir, const R01World *w, char *err_bu
     return 0;
 }
 
-static int write_asm_tree(const char *asm_dir, const R01World *w, char *err_buf, size_t err_cap) {
+static int write_asm_tree(const char *asm_dir, const R01Project *p, const R01World *w, char *err_buf, size_t err_cap) {
     char path[R01_PATH_MAX];
     const char *src_collision;
 
-    if (write_asm_tables(asm_dir, w, err_buf, err_cap) != 0) {
+    if (write_asm_tables(asm_dir, p, w, err_buf, err_cap) != 0) {
         return -1;
     }
 
@@ -1396,7 +1396,7 @@ static int write_data_bins(const char *data_dir, const R01Project *p, char *err_
 
 
     }
-    if (write_bytes(path, w->bg_banks[0].chr, R01_BANK_CHR_BYTES, err_buf, err_cap) != 0) {
+    if (write_bytes(path, p->bg_banks[0].chr, R01_BANK_CHR_BYTES, err_buf, err_cap) != 0) {
         return -1;
     }
     if (join_path_err(path, sizeof(path), data_dir, "chr_spr0.bin", err_buf, err_cap) != 0) {
@@ -1404,7 +1404,7 @@ static int write_data_bins(const char *data_dir, const R01Project *p, char *err_
         return -1;
 
     }
-    if (write_bytes(path, w->spr_banks[0].chr, R01_BANK_CHR_BYTES, err_buf, err_cap) != 0) {
+    if (write_bytes(path, p->spr_banks[0].chr, R01_BANK_CHR_BYTES, err_buf, err_cap) != 0) {
         return -1;
     }
 
@@ -1530,7 +1530,7 @@ int r01_export_codegen(const R01Project *p, const char *path_stem, char *err_buf
 
 
     }
-    if (write_asm_tree(path, w, err_buf, err_cap) != 0) {
+    if (write_asm_tree(path, p, w, err_buf, err_cap) != 0) {
         return -1;
     }
 

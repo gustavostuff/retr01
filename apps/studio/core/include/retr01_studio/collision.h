@@ -4,7 +4,7 @@
 #include "retr01_studio/types.h"
 
 /* Hardware attr fields used for solid grouping (bank, pal, flips). */
-#define R01_ATTR_HW_MASK 0x3Fu
+#define R01_ATTR_HW_MASK 0xFFu
 
 static inline uint8_t r01_attr_hw(uint8_t a) {
     return (uint8_t)(a & R01_ATTR_HW_MASK);
@@ -26,7 +26,7 @@ int r01_world_aabb_ok(const R01World *w, int px, int py, int bw, int bh);
 int r01_world_player_aabb_ok(const R01World *w, int px, int py);
 
 /*
- * Set or clear R01_ATTR_SOLID on every tile in w whose hardware attrs match hw_key.
+ * Set or clear solids[] on every tile in w whose hardware attrs match hw_key.
  * Returns number of cells touched.
  */
 int r01_world_apply_solid_hw(R01World *w, uint8_t hw_key, int set_solid);

@@ -91,12 +91,14 @@ int r01e_cart_load_mem(R01eCart *out, const uint8_t *img, size_t len, char *err,
     out->len_pal_bg = get_u24(ptrs + 9);
     out->off_pal_spr = get_u24(ptrs + 12);
     out->len_pal_spr = get_u24(ptrs + 15);
-    out->off_world_table = get_u24(ptrs + 18);
-    out->len_world_table = get_u24(ptrs + 21);
-    out->off_other = get_u24(ptrs + 24);
-    out->len_other = get_u24(ptrs + 27);
-    out->off_other_chr = get_u24(ptrs + 30);
-    out->len_other_chr = get_u24(ptrs + 33);
+    out->off_chr = get_u24(ptrs + 18);
+    out->len_chr = get_u24(ptrs + 21);
+    out->off_entities = get_u24(ptrs + 24);
+    out->len_entities = get_u24(ptrs + 27);
+    out->off_other = get_u24(ptrs + 30);
+    out->len_other = get_u24(ptrs + 33);
+    out->off_world_table = get_u24(ptrs + 36);
+    out->len_world_table = get_u24(ptrs + 39);
     out->off_credits = 0;
     out->len_credits = 0;
     if (out->len_prg == 0 || !r01e_cart_ptr(out, out->off_prg, out->len_prg > R01E_PRG_BYTES ? R01E_PRG_BYTES : out->len_prg)) {
@@ -168,7 +170,7 @@ int r01e_cart_world(const R01eCart *c, int index, R01eWorldView *out) {
     out->len = wlen;
     out->start_col = (uint8_t)R01E_CELL_COL(hdr[0]);
     out->start_row = (uint8_t)R01E_CELL_ROW(hdr[0]);
-    out->default_bg_bank = hdr[2] & 3u;
+    out->default_bg_bank = hdr[2] & 15u;
     out->default_pal_row = hdr[4] & 7u;
     out->screen_count = hdr[5];
     if (out->screen_count > R01E_MAX_PRESENT_SCREENS) {
@@ -224,7 +226,13 @@ const uint8_t *r01e_cart_entity_def(const R01eCart *c, const R01eWorldView *wv, 
         return NULL;
     }
     dir_bytes = (size_t)wv->entity_type_count * 2u;
-    cat_abs = wv->base + wv->off_entity_types;
+    if (wv->off_entity_types != 0) {
+        cat_abs = wv->base + wv->off_entity_types;
+        cat_end = wv->base + wv->off_entity_insts;
+    } else {
+        cat_abs = c->off_entities;
+        cat_end = c->off_entities + c->len_entities;
+    }
     cat_end = wv->base + wv->off_entity_insts;
     if (cat_end < cat_abs + dir_bytes) {
         return NULL;
@@ -269,7 +277,7 @@ int r01e_cart_entity_frame(const uint8_t *def, int state, int frame, const uint8
     }
     st = def + soff;
     fc = (int)st[0];
-    if (frame < 0 || frame >= fc || frame >= 4) {
+    if (frame < 0 || frame >= fc || frame >= 8) {
         return -1;
     }
     foff = cart_u16(st + 2 + (size_t)frame * 2u);
@@ -367,11 +375,51 @@ int r01e_cart_attr_at(const R01eCart *c, int world, int wx, int wy, uint8_t *out
 }
 
 int r01e_cart_solid_at(const R01eCart *c, int world, int wx, int wy) {
-    uint8_t attr;
-    if (r01e_cart_attr_at(c, world, wx, wy, &attr) != 0) {
+    const uint8_t *prg;
+    int col, row, lx, ly, tx, ty, cell;
+    uint8_t n;
+    uint8_t i;
+
+    (void)world;
+    if (!c || wx < 0 || wy < 0) {
         return 0;
     }
-    return (attr & R01E_ATTR_SOLID) != 0;
+    prg = r01e_cart_prg(c);
+    if (!prg || c->len_prg < 0x122u) {
+        return 0;
+    }
+    col = wx / R01E_SCREEN_PX_W;
+    row = wy / R01E_SCREEN_PX_H;
+    lx = wx % R01E_SCREEN_PX_W;
+    ly = wy % R01E_SCREEN_PX_H;
+    tx = lx / 8;
+    ty = ly / 8;
+    cell = ty * R01E_SCREEN_TILES_X + tx;
+    if (cell < 0 || cell >= R01E_TILES_PER_SCREEN) {
+        return 0;
+    }
+    n = prg[0x121];
+    for (i = 0; i < n; i++) {
+        const uint8_t *ent = prg + 0x122u + (size_t)i * 4u;
+        uint16_t cpu;
+        uint32_t off;
+        if (ent + 4 > prg + c->len_prg) {
+            break;
+        }
+        if ((int)ent[0] != col || (int)ent[1] != row) {
+            continue;
+        }
+        cpu = (uint16_t)ent[2] | ((uint16_t)ent[3] << 8);
+        if (cpu < 0x8000u) {
+            return 0;
+        }
+        off = (uint32_t)cpu - 0x8000u;
+        if (off + (uint32_t)cell >= c->len_prg) {
+            return 0;
+        }
+        return prg[off + (uint32_t)cell] != 0;
+    }
+    return 0;
 }
 
 const uint8_t *r01e_cart_other_raw(const R01eCart *c, int id, size_t *out_len, int *out_flags) {

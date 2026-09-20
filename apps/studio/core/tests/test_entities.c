@@ -35,19 +35,19 @@ TEST_MAIN() {
     w = &p->worlds[0];
 
     bank = 0;
-    id = r01_chr_alloc_spr_tile(w, bank);
+    id = r01_chr_alloc_spr_tile(p, bank);
     EXPECT(id == 0, "spr tile");
     memset(tile, 0, sizeof(tile));
     tile[0] = 0x11;
     tile[8] = 0x22;
-    EXPECT(r01_chr_write_spr_tile(w, bank, id, tile) == 0, "write spr");
-    cat = r01_world_sprite_add(w, bank, id, 1);
+    EXPECT(r01_chr_write_spr_tile(p, bank, id, tile) == 0, "write spr");
+    cat = r01_world_sprite_add(p, bank, id, 1);
     EXPECT(cat == 0, "sprite catalog");
 
-    idx = r01_world_entity_add(w);
+    idx = r01_world_entity_add(p);
     EXPECT(idx == 0, "entity add");
-    EXPECT(w->entity_count == 1, "entity count");
-    e = r01_world_entity(w, idx);
+    EXPECT(p->entity_count == 1, "entity count");
+    e = r01_world_entity(p, idx);
     EXPECT(e != NULL, "entity ptr");
     EXPECT(e->state_count == 1, "default 1 state");
     EXPECT(strcmp(e->states[0].name, "Idle") == 0, "Idle name");
@@ -110,11 +110,11 @@ TEST_MAIN() {
         e->states[0].hitbox_h = 12;
     }
 
-    idx2 = r01_world_entity_from_sprite(w, cat);
+    idx2 = r01_world_entity_from_sprite(p, cat);
     EXPECT(idx2 == 1, "from sprite");
-    EXPECT(w->entities[idx2].states[0].frames[0].part_count == 1, "auto part");
-    EXPECT(w->entities[idx2].states[0].frames[0].parts[0].tile_id == id, "auto tile");
-    EXPECT(w->entities[idx2].states[0].frames[0].parts[0].pal == 1, "auto pal");
+    EXPECT(p->entities[idx2].states[0].frames[0].part_count == 1, "auto part");
+    EXPECT(p->entities[idx2].states[0].frames[0].parts[0].tile_id == id, "auto tile");
+    EXPECT(p->entities[idx2].states[0].frames[0].parts[0].pal == 1, "auto pal");
 
     EXPECT(r01_entity_frame_remove_part(&e->states[0].frames[0], 0) == 0, "remove part");
     EXPECT(e->states[0].frames[0].part_count == 0, "empty parts");
@@ -143,17 +143,17 @@ TEST_MAIN() {
     }
     w->instances[0].flip_h = 1;
 
-    inst = r01_world_place_sprite(w, cat, 10, 20);
+    inst = r01_world_place_sprite(p, w, cat, 10, 20);
     EXPECT(inst == 1, "place sprite");
-    EXPECT(w->entity_count == 3, "auto entity from place");
+    EXPECT(p->entity_count == 3, "auto entity from place");
     EXPECT(w->instance_count == 2, "2 instances");
     EXPECT(w->instances[1].type_id == 2, "new type id");
 
     {
         R01MetaspriteDef *ms;
-        int meta = r01_world_metasprite_add(w);
+        int meta = r01_world_metasprite_add(p);
         EXPECT(meta == 0, "metasprite add");
-        ms = r01_world_metasprite(w, meta);
+        ms = r01_world_metasprite(p, meta);
         strncpy(ms->name, "Blob", R01_ENTITY_NAME_MAX - 1);
         part.dx = 1;
         part.dy = 0;
@@ -161,10 +161,10 @@ TEST_MAIN() {
         part.dx = 2;
         part.dy = 0;
         EXPECT(r01_metasprite_add_part(ms, &part) == 1, "meta part 1");
-        inst = r01_world_place_metasprite(w, meta, 64, 72);
+        inst = r01_world_place_metasprite(p, w, meta, 64, 72);
         EXPECT(inst == 2, "place metasprite");
-        EXPECT(w->entity_count == 4, "auto entity from meta");
-        EXPECT(w->entities[3].states[0].frames[0].part_count == 2, "meta parts copied");
+        EXPECT(p->entity_count == 4, "auto entity from meta");
+        EXPECT(p->entities[3].states[0].frames[0].part_count == 2, "meta parts copied");
         EXPECT(w->instances[2].world_x == 64 && w->instances[2].world_y == 72, "meta inst xy");
     }
 
@@ -196,49 +196,24 @@ TEST_MAIN() {
     }
 
     /* Mark entity 0 as player: Play uses state0/frame0 at player pos; skips its instances.
-     * Patterns move into project->other_spr_banks. */
+     * Flag only: tiles stay on project spr_banks. */
     {
         R01OamEntry oam2[R01_OAM_MAX];
         int n2, found_player = 0, found_inst = 0, oi;
         int expect_px = r01_entity_world_x(pl.ctx.player_x, 3, 4) - pl.ctx.cam_x;
         int expect_py = r01_entity_world_y(pl.ctx.player_y, 5, 2) - pl.ctx.cam_y;
-        int old_bank = w->entities[0].states[0].frames[0].parts[0].bank;
-        int old_tile = w->entities[0].states[0].frames[0].parts[0].tile_id;
-        EXPECT(r01_project_set_player_entity(p, w, 0) == 0, "mark player moves chr");
-        EXPECT(r01_world_player_entity(w) == 0, "player marked");
-        EXPECT(r01_is_global_spr_bank(w->entities[0].states[0].frames[0].parts[0].bank), "part on global SPR");
-        EXPECT(w->entities[0].states[0].frames[0].parts[0].tile_id == 0, "other SPR packs from 0");
-        EXPECT(p->other_spr_banks[old_bank].tile_count >= 1, "other SPR covers tile");
-        EXPECT(r01_chr_resolve_spr(p, w, R01_GLOBAL_SPR_BANK_BASE + old_bank, 0) != NULL, "resolve player tile");
-        {
-            const uint8_t *left = r01_chr_spr_tile(w, old_bank, old_tile);
-            int blank = 1, b;
-            if (left) {
-                for (b = 0; b < R01_TILE_BYTES; b++) {
-                    if (left[b]) {
-                        blank = 0;
-                        break;
-                    }
-                }
-            }
-            /* Cleared + densified: either blank at old index or slot trimmed away. */
-            EXPECT(blank || left == NULL, "world spr tile cleared after move");
-        }
-        {
-            int ci, found_cat = 0;
-            for (ci = 0; ci < w->sprite_count; ci++) {
-                if (w->sprites[ci].tile_id == 0 && r01_is_global_spr_bank(w->sprites[ci].bank)) {
-                    found_cat = 1;
-                }
-                EXPECT(!(w->sprites[ci].bank == old_bank && w->sprites[ci].tile_id == old_tile),
-                       "catalog entry left world bank");
-            }
-            EXPECT(found_cat, "catalog moved to other SPR");
-        }
+        int old_bank = p->entities[0].states[0].frames[0].parts[0].bank;
+        int old_tile = p->entities[0].states[0].frames[0].parts[0].tile_id;
+        EXPECT(r01_project_set_player_entity(p, w, 0) == 0, "mark player");
+        EXPECT(r01_world_player_entity(p) == 0, "player marked");
+        EXPECT(p->entities[0].states[0].frames[0].parts[0].bank == old_bank, "mark keeps bank");
+        EXPECT(p->entities[0].states[0].frames[0].parts[0].tile_id == old_tile, "mark keeps tile");
+        EXPECT(p->spr_banks[old_bank].tile_count >= 1, "spr covers tile");
+        EXPECT(r01_chr_resolve_spr(p, w, old_bank, old_tile) != NULL, "resolve player tile");
         n2 = r01_play_build_oam(p, &pl, oam2, R01_OAM_MAX);
         EXPECT(n2 >= 1, "player entity oam");
         for (oi = 0; oi < n2; oi++) {
-            if (oam2[oi].tile_id == w->entities[0].states[0].frames[0].parts[0].tile_id &&
+            if (oam2[oi].tile_id == p->entities[0].states[0].frames[0].parts[0].tile_id &&
                 oam2[oi].x == expect_px && oam2[oi].y == expect_py) {
                 found_player = 1;
             }
@@ -248,43 +223,35 @@ TEST_MAIN() {
         }
         EXPECT(found_player, "player uses entity art");
         EXPECT(!found_inst, "player type instance skipped");
-        EXPECT(r01_project_set_player_entity(p, w, -1) == 0, "unmark flag only");
-        EXPECT(r01_world_player_entity(w) < 0, "player unmarked");
-        EXPECT(r01_is_global_spr_bank(w->entities[0].states[0].frames[0].parts[0].bank),
-               "part stays on global after unmark");
-        EXPECT(p->other_spr_banks[0].tile_count >= 1 || p->other_spr_banks[1].tile_count >= 1 ||
-                   p->other_spr_banks[2].tile_count >= 1 || p->other_spr_banks[3].tile_count >= 1,
-               "other SPR keeps player tiles after unmark");
-        (void)old_bank;
-        (void)old_tile;
-        EXPECT(r01_project_set_player_entity(p, w, 0) == 0, "re-mark player no chr move");
-        EXPECT(r01_is_global_spr_bank(w->entities[0].states[0].frames[0].parts[0].bank),
-               "re-mark leaves global refs");
+        EXPECT(r01_project_set_player_entity(p, w, -1) == 0, "unmark");
+        EXPECT(r01_world_player_entity(p) < 0, "player unmarked");
+        EXPECT(p->entities[0].states[0].frames[0].parts[0].bank == old_bank, "unmark keeps bank");
+        EXPECT(p->spr_banks[old_bank].tile_count >= 1, "spr keeps player tiles after unmark");
+        EXPECT(r01_project_set_player_entity(p, w, 0) == 0, "re-mark");
+        EXPECT(r01_world_player_entity(p) == 0, "player re-marked");
+        EXPECT(p->entities[0].states[0].frames[0].parts[0].bank == old_bank, "re-mark keeps bank");
     }
 
     EXPECT(r01_project_save_json(p, "test_entities.r01proj", err, sizeof(err)) == 0, "save");
     EXPECT(r01_project_load_json(p2, "test_entities.r01proj", err, sizeof(err)) == 0, "load");
-    EXPECT(p2->worlds[0].entity_count == 4, "roundtrip entity count");
-    EXPECT(p2->worlds[0].player_entity == 0, "player entity rt");
+    EXPECT(p2->entity_count == 4, "roundtrip entity count");
+    EXPECT(p2->player_entity == 0, "player entity rt");
     EXPECT(p2->worlds[0].instance_count == 3, "roundtrip instances");
     EXPECT(p2->worlds[0].instances[0].world_x == 40, "inst0 x");
     EXPECT(p2->worlds[0].instances[0].world_y == 50, "inst0 y");
     EXPECT(p2->worlds[0].instances[0].flip_h == 1, "inst0 fh rt");
     EXPECT(p2->worlds[0].instances[1].world_x == 10, "inst1 x");
     EXPECT(p2->worlds[0].instances[2].world_x == 64, "meta inst x");
-    EXPECT(p2->worlds[0].metasprite_count == 1, "metasprite rt");
-    EXPECT(strcmp(p2->worlds[0].entities[0].name, "Hero") == 0, "entity name rt");
-    EXPECT(strcmp(p2->worlds[0].entities[0].states[0].name, "Walk") == 0, "name rt");
-    EXPECT(p2->worlds[0].entities[0].states[0].frames[0].origin_x == 3, "origin x");
-    EXPECT(p2->worlds[0].entities[0].states[0].frame_count == 2, "two frames rt");
-    EXPECT(p2->worlds[0].entities[0].states[0].frames[1].origin_x == 9, "frame 1 origin x");
-    EXPECT(p2->worlds[0].entities[0].states[0].hitbox_w == 10, "state hitbox w");
-    EXPECT(p2->worlds[0].entities[0].states[0].frames[0].parts[0].dx == 4, "part dx");
-    EXPECT(r01_is_global_spr_bank(p2->worlds[0].entities[0].states[0].frames[0].parts[0].bank),
-           "global SPR bank rt");
-    EXPECT(p2->other_spr_banks[0].tile_count >= 1 || p2->other_spr_banks[1].tile_count >= 1 ||
-               p2->other_spr_banks[2].tile_count >= 1 || p2->other_spr_banks[3].tile_count >= 1,
-           "other SPR tiles rt");
+    EXPECT(p2->metasprite_count == 1, "metasprite rt");
+    EXPECT(strcmp(p2->entities[0].name, "Hero") == 0, "entity name rt");
+    EXPECT(strcmp(p2->entities[0].states[0].name, "Walk") == 0, "name rt");
+    EXPECT(p2->entities[0].states[0].frames[0].origin_x == 3, "origin x");
+    EXPECT(p2->entities[0].states[0].frame_count == 2, "two frames rt");
+    EXPECT(p2->entities[0].states[0].frames[1].origin_x == 9, "frame 1 origin x");
+    EXPECT(p2->entities[0].states[0].hitbox_w == 10, "state hitbox w");
+    EXPECT(p2->entities[0].states[0].frames[0].parts[0].dx == 4, "part dx");
+    EXPECT(p2->entities[0].states[0].frames[0].parts[0].bank == 0, "spr bank rt");
+    EXPECT(p2->spr_banks[0].tile_count >= 1, "spr tiles rt");
 
     {
         char id[R01_ID_MAX];
@@ -300,9 +267,9 @@ TEST_MAIN() {
     }
 
     EXPECT(r01_project_set_player_entity(p2, &p2->worlds[0], -1) == 0, "unmark before remove");
-    EXPECT(r01_world_entity_remove(&p2->worlds[0], 0) == 0, "remove type");
-    EXPECT(p2->worlds[0].entity_count == 3, "count after remove");
-    EXPECT(p2->worlds[0].player_entity == -1, "player cleared on remove");
+    EXPECT(r01_world_entity_remove(p2, 0) == 0, "remove type");
+    EXPECT(p2->entity_count == 3, "count after remove");
+    EXPECT(p2->player_entity == -1, "player cleared on remove");
     /* Instance of type 0 removed; remaining type ids remapped. */
     EXPECT(p2->worlds[0].instance_count == 2, "inst of removed type gone");
     EXPECT(p2->worlds[0].instances[0].type_id == 1, "remapped type");
