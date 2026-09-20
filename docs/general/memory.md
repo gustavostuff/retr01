@@ -61,6 +61,7 @@ Magic **`retr01`**. Byte 6 is `format_ver` **5**. Pointer table names the region
 |   header 32 B                                                        |
 |   BG1 dir 12 B x present (max 64)  |  BG1 payloads 480 B each        |
 |   BG0 dir 12 B x present (max 16)  |  BG0 payloads 480 B each        |
+|   optional PA after world 0 maps only (one per cart, max 1031 B)     |
 +======================================================================+
 ```
 
@@ -88,7 +89,7 @@ Magic **`retr01`**. Byte 6 is `format_ver` **5**. Pointer table names the region
 | BG0 directory | **12 B** per present BG0 screen (same shape as BG1 dir). Offset **0** if none |
 | BG0 payloads | **480 B** each (up to **16** present screens, sparse on **16x16**) |
 
-World blobs hold maps. CHR and the entity catalog are cart-global. Optional `PA` (player anim) may hang off the global catalog or a world header when a player entity is marked.
+World blobs hold maps. CHR and the entity catalog are cart-global. One optional `PA` (player anim) blob sits after **world 0** maps when a player entity is marked. Other worlds do not copy it. Pack: `software-api.md`.
 
 Entity **spawn locations** live in **PRG** (tables or code calling `spawn_entity`). Defs live in the **global** catalog.
 
@@ -102,7 +103,7 @@ Entity **spawn locations** live in **PRG** (tables or code calling `spawn_entity
 
 ### Flash budget at max fill
 
-Worst case: all 8 worlds present, every world at 64 BG1 + 16 BG0, all 16+16 CHR packed, 32 maxed entity defs, 16 other screens at raw **480 B**. RLE and unused slots free more. Spawn locations cost **PRG**, not cart flash. Optional `PA` and the type directory are outside the table.
+Worst case: all 8 worlds present, every world at 64 BG1 + 16 BG0, all 16+16 CHR packed, 32 maxed entity defs, 16 other screens at raw **480 B**, one maxed `PA` blob, full type directory. RLE and unused slots free more. Spawn locations cost **PRG**, not cart flash.
 
 One maxed world blob (maps only) is **39392 B** (~38.5 KB):
 **1 x 32** (header) + **64 x 12** (BG1 dir) + **64 x 480** (BG1 payloads) + **16 x 12** (BG0 dir) + **16 x 480** (BG0 payloads).
@@ -119,11 +120,13 @@ One maxed world blob (maps only) is **39392 B** (~38.5 KB):
 | BG0 directories (8 worlds x 16 screens x 12 B) | **1536** | **~1.5** |
 | BG0 payloads (8 worlds x 16 screens x 480 B) | **61440** | **60.0** |
 | Entity defs (32 x 1044 B maxed) | **33408** | **~32.6** |
+| Entity type directory (32 x u16) | **64** | **~0.1** |
+| Player anim `PA` (one cart-wide, 4x8x6 maxed) | **1031** | **~1.0** |
 | Other screens (16 screens x 480 B raw) | **7680** | **~7.5** |
-| **Used (sum of rows above)** | **520436** | **~508.2** |
-| Free (524288 flash - 520436 used) | **3852** | **~3.8** |
+| **Used (sum of rows above)** | **521531** | **~509.3** |
+| Free (524288 flash - 521531 used) | **2757** | **~2.7** |
 
-Absolute max fill **fits** with ~**4 KB** free. Real carts stay further under because entity defs are variable-length (only live sprites), screens/CHR are rarely all filled, and RLE can shrink other screens.
+Absolute max fill **fits** with ~**2.7 KB** free. Real carts stay further under because entity defs are variable-length (only live sprites), screens/CHR are rarely all filled, and RLE can shrink other screens.
 
 ### Global CHR
 
@@ -162,6 +165,7 @@ One catalog for the cart (up to **32** types). The same type may spawn in any wo
 | Entity **spawn locations** (who appears where) | **PRG** (tables and/or `spawn_entity` calls) |
 | Entity **pixel patterns** | Global SPR CHR |
 | Collision solids | **PRG** |
+| Player anim (`PA`) | One cart blob after world-0 maps. Host Play player frames. See `software-api.md` |
 
 | Topic | Value |
 | --- | --- |
@@ -255,8 +259,8 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 | `+$0120` | `$8120` | Spawn cell (`col | row<<4`) |
 | `+$0121` | `$8121` | Collision dir count |
 | `+$0122` | `$8122` | Collision dir entries |
-| `+$01C0` | `$81C0` | Instance count (u8) |
-| `+$01C1` | `$81C1` | Instance table (`count` x 6 B: type, flip flags, world_x/y LE) |
+| `+$01C0` | `$81C0` | Instance count (u8, max **64**) |
+| `+$01C1` | `$81C1` | Instance table (`count` x **6 B**, pack below) |
 | `+$00F0` | `$80F0` | `R01P` marker + version byte |
 | `+$00F7` | `$80F7` | Platformer gravity (u8, 1/16 px per frame^2, **0** = `R01_PLAT_GRAVITY_DEFAULT`) |
 | `+$00F8` | `$80F8` | Platformer jump impulse (u8, **0** = `R01_PLAT_JUMP_DEFAULT`) |
@@ -267,6 +271,17 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 | `+$00FD` | `$80FD` | Jump state index (u8, **$FF** = unmapped) |
 | `+$00FE` | `$80FE` | BGM boot track (u8, **0** = none, **1..8** = track) |
 | `+$3000` | `$B000` | BGM blob (`BG` + 8-slot off/len + FD/FE/FA bytecode). Ends before vectors at `$FFFA` |
+
+**Spawn instance (6 B, little-endian):** a placed copy of a catalog type (who, facing, world XY). Live pose and the player-anim (`PA`) blob: `software-api.md`.
+
+| Off | Size | Field |
+| --- | ---: | --- |
+| 0 | 1 | `type_id` (global catalog index) |
+| 1 | 1 | flags: bit **0** flip H, bit **1** flip V |
+| 2 | 2 | `world_x` |
+| 4 | 2 | `world_y` |
+
+Table grows toward collision code at `$8500`. **64** records need **384 B** and fit.
 
 Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs). Collision solids are PRG data (collision dir above).
 

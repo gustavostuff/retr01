@@ -4,14 +4,6 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 ## Still open
 
-### Instance + PA byte schemas
-
-**Partly sized:** Live instance records in system RAM and optional `PA` blobs still need a frozen byte layout. Spawn locations are **PRG-side** (not cart).
-
-**Entity cart pack (decision):** Studio writes the locked offset-table **EntityDef** from `software-api.md` (variable length, max **1044 B**). Draw origin lives on each **frame**. Hitbox lives on each **state** (packed origin-relative to that state's first drawable frame). Global catalog = `u16` type directory + defs.
-
-**Touches:** `memory.md`, `software-api.md`
-
 ### CHR A14/A15 mix (Compositor)
 
 **Open:** 16-bank CHR puts attr bits **2-3** on cart **A14-A15** during a fetch. MCU-S1 can do that in firmware (sprites / BG0). BG1 during active display: if the Compositor builds the CHR address, it must fold those two bits. Product-term fit on the existing 22V10 is unproven. If BG1 CHR is the MAP helper (MCU-M 24-bit seek), the PLD never sees them.
@@ -102,6 +94,10 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 **Resolved:** Solids are a per-screen plane (240 bytes, one flag per 8x8 cell). Studio stores them as `solids_b64`. Packed carts put a collision directory at PRG `$8121` plus one 240-byte table per present screen. Host Play samples that table. See `memory.md`.
 
+### 20. Instance + PA byte schemas
+
+**Resolved:** An **instance** is a placed copy of a catalog type (spawn row in PRG, live record in RAM). **`PA`** is a Host Play dump of the marked player's drawable frames. Spawn records are **6 B** in PRG (`$81C0` count, `$81C1` table). Live RAM instances are **12 B**. One cart-wide **`PA`** blob (max **1031 B**) after world-0 maps. Type directory is **64 B**. See `software-api.md`, `memory.md`.
+
 ## Decision log
 
 | Date | Item | Decision |
@@ -143,3 +139,4 @@ Open items and close criteria. A landed decision folds into the matching doc.
 | 2026-09-19 | APU | 8-ch S2 software mix. `$7F40` is 8x4 regs (S2 never parses bytecode). BGM 1-5 / SFX 6-8. DPCM in S2 flash. NMI tracker on 6502. See `sound.md`. |
 | 2026-09-20 | CHR / maps / entities | 16+16 global banks, 8 worlds, 64 BG1 / 16 BG0, 32 types (4x8x6). Attr 4-bit bank. No mapper. See `memory.md`. |
 | 2026-09-20 | Collision solids | Per-screen 240 B tables. Directory at PRG `$8121`. See `memory.md`. |
+| 2026-09-20 | Instance + PA | PRG spawn 6 B. RAM live 12 B. One `PA` blob cart-wide (max 1031 B). See `software-api.md`. |

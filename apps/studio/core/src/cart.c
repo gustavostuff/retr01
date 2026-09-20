@@ -981,7 +981,7 @@ static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w, c
             }
         }
     }
-    /* Instance table omitted from cart; see r01_prg_fill_phase1 PLAY_INST_*. */
+    /* One PA blob per cart, after this world's maps. See software-api.md. */
     {
         int pe = r01_world_player_entity(p);
         if (pe >= 0 && pe < type_n && append_player_anim_blob(blob, p, pe, remap_b0_tile1) == 0) {
