@@ -26,6 +26,8 @@ NOTE: hardware is still in design phase, software is being built on that design.
 
 <img src="img/readme/emu.png" alt="Retr01 Emu play window" />
 
+<img src="img/readme/emu-debug.png" alt="Retr01 Emu debug window" />
+
 **Retr01 Studio** is the authoring app for worlds, screens, and entities. It embeds the emulator in-editor for immediate playtest.
 
 <img src="img/readme/studio.png" alt="Retr01 Studio" />

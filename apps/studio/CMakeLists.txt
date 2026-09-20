@@ -108,6 +108,7 @@ add_library(retr01_studio_app
   app/src/ui/sound/bgm_edit.c
   ${R01_PKG_ROOT}/common/r01_bgm_host.c
   ${R01_PKG_ROOT}/common/r01_pad_keys.c
+  ${R01_PKG_ROOT}/common/r01_readme_shot.c
   app/src/ui/screen/selection.c
   app/src/ui/screen/paint.c
   app/src/ui/screen/edit.c
@@ -152,6 +153,7 @@ if(X11_FOUND)
 endif()
 # PNG chrome lives in assets/png (injected into retr01_ui).
 target_compile_definitions(retr01_studio_app PRIVATE
+  "R01_REPO_ROOT=\"${R01_REPO_ROOT}\""
   "R01_STUDIO_ASSETS_DIR=\"${R01_ASSETS_PNG}\""
   "R01_STUDIO_PROJECTS_DIR=\"${CMAKE_SOURCE_DIR}/projects\"")
 

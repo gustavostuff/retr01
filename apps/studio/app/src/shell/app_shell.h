@@ -10,6 +10,7 @@ typedef struct AppShell {
     SDL_Texture *target;
     int scale;        /* present integer scale (from window or hotkey) */
     int render_scale; /* preferred 1 or 2 via Ctrl+1 / Ctrl+2 */
+    int readme_shot;  /* F12: capture next present into img/readme */
 } AppShell;
 
 int app_shell_init(AppShell *app, int headless);

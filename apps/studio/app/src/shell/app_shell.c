@@ -1,7 +1,9 @@
 #include "shell/app_shell.h"
 #include "ui/internal.h"
+#include "r01_readme_shot.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static void logic_from_window(const AppShell *app, int win_x, int win_y, int *lx, int *ly) {
@@ -111,7 +113,8 @@ int app_shell_init(AppShell *app, int headless) {
     }
     SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
 
-    app->ren = SDL_CreateRenderer(app->win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    app->ren = SDL_CreateRenderer(app->win, -1,
+                                  SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_TARGETTEXTURE);
     if (!app->ren) {
         app->ren = SDL_CreateRenderer(app->win, -1, SDL_RENDERER_SOFTWARE);
     }
@@ -129,6 +132,9 @@ int app_shell_init(AppShell *app, int headless) {
     if (!headless) {
         SDL_ShowWindow(app->win);
     }
+#if R01_README_SHOT
+    fprintf(stderr, "F12 writes %s/img/readme/studio.png\n", R01_REPO_ROOT);
+#endif
     return 0;
 }
 
@@ -177,6 +183,30 @@ void app_shell_frame(AppShell *app) {
     SDL_SetRenderDrawColor(app->ren, 0, 0, 0, 255);
     SDL_RenderClear(app->ren);
     SDL_RenderCopy(app->ren, app->target, NULL, &dst);
+#if R01_README_SHOT
+    if (app->readme_shot) {
+        int lw = ui_logic_w(&app->ui);
+        int lh = ui_logic_h(&app->ui);
+        int stride = lw * 3;
+        uint8_t *px = (uint8_t *)malloc((size_t)stride * (size_t)lh);
+        app->readme_shot = 0;
+        if (!px) {
+            ui_toast(&app->ui, "readme shot failed", 1);
+        } else {
+            SDL_SetRenderTarget(app->ren, app->target);
+            if (SDL_RenderReadPixels(app->ren, NULL, SDL_PIXELFORMAT_RGB24, px, stride) != 0) {
+                fprintf(stderr, "readme shot: ReadPixels (%s)\n", SDL_GetError());
+                ui_toast(&app->ui, "readme shot failed", 1);
+            } else if (r01_readme_shot_save_rgb(px, lw, lh, stride, scale, "studio.png") != 0) {
+                ui_toast(&app->ui, "readme shot failed", 1);
+            } else {
+                ui_toast(&app->ui, "readme studio.png", 0);
+            }
+            SDL_SetRenderTarget(app->ren, NULL);
+            free(px);
+        }
+    }
+#endif
     SDL_RenderPresent(app->ren);
     if (app->ui.play.booting) {
         ui_play_boot_finish(&app->ui, app->ren);
@@ -185,6 +215,13 @@ void app_shell_frame(AppShell *app) {
 
 int app_shell_handle_event(AppShell *app, const SDL_Event *e) {
     int wx = 0, wy = 0, lx = 0, ly = 0, rc;
+#if R01_README_SHOT
+    if (e->type == SDL_KEYDOWN && !e->key.repeat && e->key.keysym.sym == SDLK_F12) {
+        app->readme_shot = 1;
+        fprintf(stderr, "F12: capture studio.png next frame\n");
+        return 1;
+    }
+#endif
     if (e->type == SDL_KEYDOWN && (e->key.keysym.mod & KMOD_CTRL) && !(e->key.keysym.mod & KMOD_SHIFT) &&
         !(e->key.keysym.mod & KMOD_ALT)) {
         if (e->key.keysym.sym == SDLK_1) {
