@@ -44,17 +44,17 @@ Maria is a player entity used to test Emu and Studio. It may become a full game 
 
 ## Doc map
 
-- [selling-points.md](general_docs/selling-points.md): The broader product and design vision: the shared-PCB approach, dual-sync output, entity model, flash support, and extra features that make the platform feel like a full console instead of a bare tech demo.
-- [hardware.md](general_docs/hardware.md): The main hardware reference: board layout, the three AVR support chips, PLD logic, BOM choices, I/O plumbing, and PCB decisions that keep the system compact and practical.
-- [ic-comms-risks.md](general_docs/ic-comms-risks.md): Shared-bus and multi-clock communication risks: where failures are likely, and which mitigations or anti-patterns to avoid.
-- [video-graphics.md](general_docs/video-graphics.md): The graphics system: resolution, tile layout, sprites, palettes, background layers, and how much rendering work sits in hardware rather than on the CPU.
-- [palette/](general_docs/palette/README.md): The fixed 64-color palette kit, plus export guidance for GIMP and Aseprite so art stays consistent with the console color and indexing constraints.
-- [world-scrolling.md](general_docs/world-scrolling.md): World and screen structure, VRAM buffering, sparse map organization, and scroll behavior over large map areas without wasteful dense allocation.
-- [cartridge.md](general_docs/cartridge.md): The cartridge hardware story: passive memory model, save support, flash workflows, and a simple cart layout that keeps the bus uncomplicated.
-- [memory.md](general_docs/memory.md): The memory map: CPU address layout, soft `$7Fxx` windows, MAP port behavior, `.retr01` image format, and entity flash capacity limits.
-- [software-api.md](general_docs/software-api.md): The runtime model for entities, data structure sizes, the C/ASM API, and the game modes the software is expected to support.
-- [sound.md](general_docs/sound.md): The audio architecture: 8-channel software mix on MCU-S2, the `$7F40` register window, 6502 NMI tracker bytecode, and PWM out.
-- [open-questions.md](general_docs/open-questions.md): Unknowns and open design decisions, with notes on what still needs validation and how each remaining question gets resolved.
-- [ic_behavior/](ic_behavior/README.md): A per-chip description for each part in the BOM: behavior, role, optional variants, and key caveats.
-- [bringup/](bringup/README.md): The late hardware bring-up roadmap, ordered by tiers A-H from video lab validation through a full console-style demo with controllers and audio.
+- [selling-points.md](docs/general/selling-points.md): The broader product and design vision: the shared-PCB approach, dual-sync output, entity model, flash support, and extra features that make the platform feel like a full console instead of a bare tech demo.
+- [hardware.md](docs/general/hardware.md): The main hardware reference: board layout, the three AVR support chips, PLD logic, BOM choices, I/O plumbing, and PCB decisions that keep the system compact and practical.
+- [ic-comms-risks.md](docs/general/ic-comms-risks.md): Shared-bus and multi-clock communication risks: where failures are likely, and which mitigations or anti-patterns to avoid.
+- [video-graphics.md](docs/general/video-graphics.md): The graphics system: resolution, tile layout, sprites, palettes, background layers, and how much rendering work sits in hardware rather than on the CPU.
+- [palette/](docs/general/palette/README.md): The fixed 64-color palette kit, plus export guidance for GIMP and Aseprite so art stays consistent with the console color and indexing constraints.
+- [world-scrolling.md](docs/general/world-scrolling.md): World and screen structure, VRAM buffering, sparse map organization, and scroll behavior over large map areas without wasteful dense allocation.
+- [cartridge.md](docs/general/cartridge.md): The cartridge hardware story: passive memory model, save support, flash workflows, and a simple cart layout that keeps the bus uncomplicated.
+- [memory.md](docs/general/memory.md): The memory map: CPU address layout, soft `$7Fxx` windows, MAP port behavior, `.retr01` image format, and entity flash capacity limits.
+- [software-api.md](docs/general/software-api.md): The runtime model for entities, data structure sizes, the C/ASM API, and the game modes the software is expected to support.
+- [sound.md](docs/general/sound.md): The audio architecture: 8-channel software mix on MCU-S2, the `$7F40` register window, 6502 NMI tracker bytecode, and PWM out.
+- [open-questions.md](docs/general/open-questions.md): Unknowns and open design decisions, with notes on what still needs validation and how each remaining question gets resolved.
+- [ic_behavior/](docs/ic_behavior/README.md): A per-chip description for each part in the BOM: behavior, role, optional variants, and key caveats.
+- [bringup/](docs/bringup/README.md): The late hardware bring-up roadmap, ordered by tiers A-H from video lab validation through a full console-style demo with controllers and audio.
 - [apps/README.md](apps/README.md): The app layer: Studio authoring workflow and the Emu runtime used to test content.

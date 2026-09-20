@@ -19,7 +19,7 @@ set(R01E_CORE_SRCS
 
 # Package root is apps/ (sibling: common, studio, assets).
 set(R01_PKG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
-# Repo root holds general_docs/, hw/, output/, bin/.
+# Repo root holds docs/, hw/, output/, bin/.
 set(R01_REPO_ROOT "${R01_PKG_ROOT}/.." CACHE PATH "Retr01 repo root")
 set(R01_COMMON_DIR "${R01_PKG_ROOT}/common")
 set(R01_ASSETS_DIR "${R01_PKG_ROOT}/assets")

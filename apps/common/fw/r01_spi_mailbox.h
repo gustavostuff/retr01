@@ -5,7 +5,7 @@
 
 /*
  * Inter-MCU SPI mailbox (MCU-M master -> S1 / S2 slaves).
- * Shared MOSI/MISO/SCK. Per-slave /SS. See general_docs/hardware.md.
+ * Shared MOSI/MISO/SCK. Per-slave /SS. See docs/general/hardware.md.
  *
  * Frame: [op][len][payload...]  len = payload bytes (0..R01_MB_PAYLOAD_MAX).
  * MISO status byte while /SS low: bit0 = busy (slave not ready for next frame).

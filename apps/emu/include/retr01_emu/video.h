@@ -22,7 +22,7 @@ typedef struct R01eVideo {
     /* 1 if VRAM camera slot 0-3 holds a present screen (else backdrop). */
     uint8_t slot_present[4];
 
-    /* 2x2 camera workbench origin in world grid (general_docs/graphics). */
+    /* 2x2 camera workbench origin in world grid (docs/general/graphics). */
     int cam_origin_col;
     int cam_origin_row;
     int cam_x;
@@ -55,7 +55,7 @@ typedef struct R01eVideo {
     uint8_t bg0_atlas[R01E_VRAM_ATLAS_W * R01E_VRAM_ATLAS_H * 3];
     /* Debug: BG1 opacity mask for the live viewport (128x120, black=transparent). */
     uint8_t l1_mask[R01E_SCREEN_PX_W * R01E_SCREEN_PX_H * 3];
-    /* Expanded H-band slice table: additive dx per logical row (general_docs/graphics). Unused = 0. */
+    /* Expanded H-band slice table: additive dx per logical row (docs/general/graphics). Unused = 0. */
     int8_t plane_h_slice[R01E_PARALLAX_SLICE_MAX];
 } R01eVideo;
 

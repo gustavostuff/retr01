@@ -8,7 +8,7 @@
 struct R01eMachine;
 
 /*
- * Logical $7F00-$7FFF register file (general_docs/memory.md, general_docs/video-graphics.md).
+ * Logical $7F00-$7FFF register file (docs/general/memory.md, docs/general/video-graphics.md).
  * Soft contract for Emu / Studio Play: no DIP / Soft SEL / SPI mailbox.
  * Hard (SoT PLD/HC574): $7F02-$7F04. Soft0/1/2 families: see r01_soft_sel_demux.h.
  * $7F40-$7F5F = 8x4 voice window (r01_apu_window.h). Host Play fills via
@@ -56,7 +56,7 @@ typedef struct R01eIo {
     uint8_t pad0_host;    /* host staging; copied to pad0 at VBlank enter */
     uint8_t pad1_host;
 
-    /* Cart save mailbox $7F22-$7F24 Soft2 (general_docs/memory.md). */
+    /* Cart save mailbox $7F22-$7F24 Soft2 (docs/general/memory.md). */
     uint8_t cartee_hi;
     uint8_t cartee_lo;
     uint8_t cartee_fe22_last;

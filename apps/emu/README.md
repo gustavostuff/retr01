@@ -1,6 +1,6 @@
 # Retr01 Emulator
 
-Software-visible C emulator for Retr01 **Phase 1** carts. Contract: [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md).
+Software-visible C emulator for Retr01 **Phase 1** carts. Contract: [`docs/general/video-graphics.md`](../../docs/general/video-graphics.md).
 
 From repo root: `./scripts/emu.sh path/to/cart.retr01` (after `./scripts/build-all.sh`).
 

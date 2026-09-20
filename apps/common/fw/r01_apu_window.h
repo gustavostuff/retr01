@@ -5,7 +5,7 @@
 #include "r01_spi_mailbox.h"
 
 /*
- * SoT: general_docs/sound.md. 8 voices x 4 bytes at $7F40-$7F5F.
+ * SoT: docs/general/sound.md. 8 voices x 4 bytes at $7F40-$7F5F.
  * S2 mixes this file. Tracker bytecode stays on the 6502.
  *
  * Per channel at offset ch*4:

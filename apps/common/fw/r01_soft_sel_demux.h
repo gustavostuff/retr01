@@ -5,7 +5,7 @@
 
 /*
  * Soft $7Fxx port families for MCU-M SEL_SOFT* demux.
- * SoT: general_docs/hardware.md (Compositor packs families; FW demux with A[7:0]).
+ * SoT: docs/general/hardware.md (Compositor packs families; FW demux with A[7:0]).
  * Port = CPU A[7:0] of the $7Fxx access (low byte of $7Fxx).
  */
 

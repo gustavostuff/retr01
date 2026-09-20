@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 /*
- * Phase 1 BGM in PRG (general_docs/memory.md, general_docs/sound.md).
+ * Phase 1 BGM in PRG (docs/general/memory.md, docs/general/sound.md).
  * CPU $8000 = PRG+0. Solid collision tables can fill through ~$A500, so the
  * stream blob starts at $B000. Vectors stay at $FFFA.
  *

@@ -30,4 +30,4 @@ MyGame/
 
 ## Architecture notes
 
-Soft I/O is `$7F00-$7FFF`. Design caps (worlds, CHR, entities) live in `general_docs/memory.md`.
+Soft I/O is `$7F00-$7FFF`. Design caps (worlds, CHR, entities) live in `docs/general/memory.md`.

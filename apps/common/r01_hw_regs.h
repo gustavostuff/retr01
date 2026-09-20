@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-/* CPU soft I/O map ($7F00-$7FFF). See general_docs/memory.md and general_docs/hardware.md.
+/* CPU soft I/O map ($7F00-$7FFF). See docs/general/memory.md and docs/general/hardware.md.
  * Shared by emu, Studio PRG export, and game asm. */
 
 #define R01_PORT_PPUCTRL 0x7F00u
@@ -35,7 +35,7 @@
 #define R01_PORT_MAP_HI 0x7F92u
 #define R01_PORT_MAP_DATA 0x7F93u
 
-/* PPUCTRL ($7F00) -- general_docs/video-graphics.md */
+/* PPUCTRL ($7F00) -- docs/general/video-graphics.md */
 #define R01_PPUCTRL_L1_EN 0x01u
 #define R01_PPUCTRL_L0_EN 0x02u
 #define R01_PPUCTRL_SPR_EN 0x04u
@@ -57,7 +57,7 @@
 /* Machine EEPROM (MCU-M internal, 512 B). 9-bit address via $7F70/$7F71. */
 #define R01_MEEPROM_BYTES 512u
 
-/* W65C02S PHI2 (general_docs/hardware.md). RDY hold stubs are CPU wait-states. */
+/* W65C02S PHI2 (docs/general/hardware.md). RDY hold stubs are CPU wait-states. */
 #define R01_CPU_HZ 8000000u
 #define R01_MS_TO_CPU_CYCLES(ms) ((uint32_t)(ms) * (R01_CPU_HZ / 1000u))
 #define R01_US_TO_CPU_CYCLES(us) ((uint32_t)(us) * (R01_CPU_HZ / 1000000u))

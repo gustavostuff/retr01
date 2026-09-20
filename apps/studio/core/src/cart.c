@@ -125,7 +125,7 @@ static void pack_hitbox_rel(int origin_x, int origin_y, int box_x, int box_y, in
     }
 }
 
-/* Byte-RLE over a 480 B screen payload (general_docs/graphics). Returns compressed length, or 0 on fail. */
+/* Byte-RLE over a 480 B screen payload (docs/general/graphics). Returns compressed length, or 0 on fail. */
 static size_t rle_encode_480(const uint8_t in[R01_CART_SCREEN_PAYLOAD], uint8_t *out, size_t out_cap) {
     size_t ip = 0;
     size_t op = 0;

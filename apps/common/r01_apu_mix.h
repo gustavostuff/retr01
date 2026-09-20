@@ -7,7 +7,7 @@
 #include "r01_spi_mailbox.h"
 
 /*
- * Host mix of the 8x4 $7F40 window (general_docs/sound.md).
+ * Host mix of the 8x4 $7F40 window (docs/general/sound.md).
  * Same voices S2 PWM would mix. Not S2 PWM.
  */
 

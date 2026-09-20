@@ -6,7 +6,7 @@
 #include "r01_spi_mailbox.h"
 
 /*
- * Cart hex FD expand into the 8x4 $7F40 window (general_docs/sound.md).
+ * Cart hex FD expand into the 8x4 $7F40 window (docs/general/sound.md).
  * Encode/apply only. 6502 NMI dual-stream is r01_apu_tracker.
  *
  * Frame: FD, mask (bit0=ch1..bit7=ch8), then one payload byte per set bit.
@@ -14,7 +14,7 @@
  *   8X = volume X (0-15)
  *   9X = duty/noise-type X (0-3 used)
  *   7X = DPCM sample id X (channel 5 / index 4 only)
- *   else = note letter byte (general_docs/sound.md) -> period
+ *   else = note letter byte (docs/general/sound.md) -> period
  */
 
 #define R01_APU_FD_OP 0xFDu
