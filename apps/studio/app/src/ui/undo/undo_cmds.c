@@ -1,6 +1,7 @@
 #include "ui/undo/undo_cmds.h"
 #include "ui/undo/undo.h"
 #include "ui/internal.h"
+#include "ui/sound/bgm_edit.h"
 
 #include "retr01_studio/chr_pack.h"
 #include "retr01_studio/entities.h"
@@ -190,6 +191,181 @@ void ui_undo_paint_record_cell(UiState *ui, int tx, int ty, uint8_t old_tile, ui
     } else {
         st->cells[idx].new_tile = new_tile;
         st->cells[idx].new_attr = new_attr;
+    }
+}
+
+/* ---- BGM track snapshot ---- */
+
+typedef struct UiUndoBgmSnap {
+    int track;
+    int sel_kind;
+    int sel_ch;
+    int sel_region;
+    int sel_tick;
+    int region_count[UI_SOUND_BGM_CH];
+    UiBgmRegion region[UI_SOUND_BGM_CH][UI_SOUND_REGIONS_MAX];
+} UiUndoBgmSnap;
+
+typedef struct UiUndoBgmEdit {
+    UiUndoBgmSnap before;
+    UiUndoBgmSnap after;
+} UiUndoBgmEdit;
+
+static int bgm_undo_track(const UiState *ui) {
+    int t;
+    if (!ui) {
+        return 0;
+    }
+    t = ui->sound.track_idx;
+    if (t < 0 || t >= ui->sound.track_count) {
+        t = 0;
+    }
+    if (t < 0 || t >= UI_SOUND_TRACKS_MAX) {
+        t = 0;
+    }
+    return t;
+}
+
+static void bgm_undo_capture(const UiState *ui, UiUndoBgmSnap *sn) {
+    int ch;
+    int t;
+    if (!ui || !sn) {
+        return;
+    }
+    memset(sn, 0, sizeof(*sn));
+    t = bgm_undo_track(ui);
+    sn->track = t;
+    sn->sel_kind = ui->sound.sel_kind;
+    sn->sel_ch = ui->sound.sel_ch;
+    sn->sel_region = ui->sound.sel_region;
+    sn->sel_tick = ui->sound.sel_tick;
+    for (ch = 0; ch < UI_SOUND_BGM_CH; ch++) {
+        int n = ui->sound.region_count[t][ch];
+        if (n < 0) {
+            n = 0;
+        }
+        if (n > UI_SOUND_REGIONS_MAX) {
+            n = UI_SOUND_REGIONS_MAX;
+        }
+        sn->region_count[ch] = n;
+        if (n > 0) {
+            memcpy(sn->region[ch], ui->sound.region[t][ch], (size_t)n * sizeof(UiBgmRegion));
+        }
+    }
+}
+
+static int bgm_note_same(const UiBgmRegion *a, const UiBgmRegion *b) {
+    if (!a || !b) {
+        return 0;
+    }
+    return a->start == b->start && a->len == b->len && a->midi == b->midi && a->sharp == b->sharp &&
+           a->flat == b->flat && strncmp(a->tok, b->tok, sizeof(a->tok)) == 0;
+}
+
+static int bgm_undo_notes_equal(const UiUndoBgmSnap *a, const UiUndoBgmSnap *b) {
+    int ch;
+    if (!a || !b || a->track != b->track) {
+        return 0;
+    }
+    for (ch = 0; ch < UI_SOUND_BGM_CH; ch++) {
+        int i;
+        if (a->region_count[ch] != b->region_count[ch]) {
+            return 0;
+        }
+        for (i = 0; i < a->region_count[ch]; i++) {
+            if (!bgm_note_same(&a->region[ch][i], &b->region[ch][i])) {
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
+
+static void bgm_undo_restore(UiState *ui, const UiUndoBgmSnap *sn) {
+    int ch;
+    int t;
+    if (!ui || !sn) {
+        return;
+    }
+    t = sn->track;
+    if (t < 0 || t >= UI_SOUND_TRACKS_MAX) {
+        return;
+    }
+    ui->sound.track_idx = t;
+    ui->sound.sel_kind = sn->sel_kind;
+    ui->sound.sel_ch = sn->sel_ch;
+    ui->sound.sel_region = sn->sel_region;
+    ui->sound.sel_tick = sn->sel_tick;
+    for (ch = 0; ch < UI_SOUND_BGM_CH; ch++) {
+        int n = sn->region_count[ch];
+        if (n < 0) {
+            n = 0;
+        }
+        if (n > UI_SOUND_REGIONS_MAX) {
+            n = UI_SOUND_REGIONS_MAX;
+        }
+        ui->sound.region_count[t][ch] = n;
+        if (n > 0) {
+            memcpy(ui->sound.region[t][ch], sn->region[ch], (size_t)n * sizeof(UiBgmRegion));
+        }
+    }
+    ui_bgm_sel_sync(ui);
+    ui_sound_play_refresh(ui);
+}
+
+static void bgm_edit_undo(UiState *ui, void *data) {
+    UiUndoBgmEdit *d = (UiUndoBgmEdit *)data;
+    if (d) {
+        bgm_undo_restore(ui, &d->before);
+    }
+}
+
+static void bgm_edit_redo(UiState *ui, void *data) {
+    UiUndoBgmEdit *d = (UiUndoBgmEdit *)data;
+    if (d) {
+        bgm_undo_restore(ui, &d->after);
+    }
+}
+
+static const UiUndoVTable bgm_edit_vt = {bgm_edit_undo, bgm_edit_redo, free_ptr};
+
+int ui_undo_bgm_begin(UiState *ui) {
+    UiUndoBgmEdit *d;
+    if (!ui) {
+        return -1;
+    }
+    ui_undo_bgm_end(ui, "edit notes");
+    d = (UiUndoBgmEdit *)calloc(1, sizeof(*d));
+    if (!d) {
+        return -1;
+    }
+    bgm_undo_capture(ui, &d->before);
+    ui->undo_bgm = d;
+    return 0;
+}
+
+void ui_undo_bgm_discard(UiState *ui) {
+    if (!ui || !ui->undo_bgm) {
+        return;
+    }
+    free(ui->undo_bgm);
+    ui->undo_bgm = NULL;
+}
+
+void ui_undo_bgm_end(UiState *ui, const char *label) {
+    UiUndoBgmEdit *d;
+    if (!ui || !ui->undo_bgm) {
+        return;
+    }
+    d = (UiUndoBgmEdit *)ui->undo_bgm;
+    ui->undo_bgm = NULL;
+    bgm_undo_capture(ui, &d->after);
+    if (bgm_undo_notes_equal(&d->before, &d->after)) {
+        free(d);
+        return;
+    }
+    if (ui_undo_push(&ui->undo, &bgm_edit_vt, d, label && label[0] ? label : "edit notes") != 0) {
+        free(d);
     }
 }
 

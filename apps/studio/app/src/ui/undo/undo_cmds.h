@@ -29,6 +29,11 @@ void ui_undo_paint_end(struct UiState *ui);
 void ui_undo_paint_record_cell(struct UiState *ui, int tx, int ty, uint8_t old_tile, uint8_t old_attr,
                                uint8_t new_tile, uint8_t new_attr);
 
+/* BGM timeline: snapshot the current track around paint/delete/move/resize/paste/pitch. */
+int ui_undo_bgm_begin(struct UiState *ui);
+void ui_undo_bgm_end(struct UiState *ui, const char *label);
+void ui_undo_bgm_discard(struct UiState *ui);
+
 /* Compose / entity modal: undo a drag of SPR CHR pixel paints (tile snapshots). */
 int ui_undo_spr_paint_begin(struct UiState *ui);
 void ui_undo_spr_paint_end(struct UiState *ui);

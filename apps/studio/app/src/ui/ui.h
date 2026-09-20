@@ -562,6 +562,7 @@ typedef struct UiState {
     UiUndoStack undo;
     void *undo_paint;     /* open UiUndoPaintStroke* during a map paint drag, else NULL */
     void *undo_spr_paint; /* open UiUndoSprPaintStroke* during compose sprite paint, else NULL */
+    void *undo_bgm;       /* open UiUndoBgmEdit* during a BGM gesture, else NULL */
 } UiState;
 
 static inline int ui_logic_scale(const UiState *ui) {

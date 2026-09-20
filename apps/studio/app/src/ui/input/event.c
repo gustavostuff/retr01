@@ -136,15 +136,16 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             if (ch >= 0 && ch < UI_SOUND_BGM_CH && region >= 0 &&
                 region < ui->sound.region_count[track][ch]) {
+                (void)ui_undo_bgm_begin(ui);
                 if (ui_bgm_is_sel(ui, ch, region)) {
                     ui_bgm_nudge_sel(ui, e->wheel.y > 0 ? 1 : -1);
-                    ui_sound_play_refresh(ui);
                 } else {
                     ui_bgm_sel_only(ui, ch, region);
                     ui_bgm_nudge_region(&ui->sound.region[track][ch][region], ch,
                                         e->wheel.y > 0 ? 1 : -1);
-                    ui_sound_play_refresh(ui);
                 }
+                ui_undo_bgm_end(ui, "nudge pitch");
+                ui_sound_play_refresh(ui);
             }
             return 1;
         }
@@ -301,7 +302,9 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             /* Audio BGM must run before world-screen Delete (that path always consumes). */
             if (ui->app_mode == UI_APP_SOUNDS && ui->sound.plane == UI_SOUND_PLANE_BGM &&
                 ui_bgm_sel_count(ui) > 0) {
+                (void)ui_undo_bgm_begin(ui);
                 ui_bgm_remove_sel(ui);
+                ui_undo_bgm_end(ui, "delete notes");
                 if (ui->sound.play_sel) {
                     ui_sound_play_stop(ui);
                 }
@@ -426,7 +429,9 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             if (e->key.keysym.sym == SDLK_v) {
                 if (ui->app_mode == UI_APP_SOUNDS && ui->sound.plane == UI_SOUND_PLANE_BGM) {
+                    (void)ui_undo_bgm_begin(ui);
                     ui_bgm_paste_sel(ui);
+                    ui_undo_bgm_end(ui, "paste notes");
                     return 1;
                 }
                 if (ui->app_mode == UI_APP_GRAPHICS) {
@@ -533,17 +538,23 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             ui->app_mode == UI_APP_SOUNDS && ui->sound.plane == UI_SOUND_PLANE_BGM &&
             !(e->key.keysym.mod & (KMOD_CTRL | KMOD_ALT | KMOD_SHIFT)) && ui_bgm_sel_count(ui) > 0) {
             if (e->key.keysym.sym == SDLK_s) {
+                (void)ui_undo_bgm_begin(ui);
                 ui_bgm_toggle_sel_sharp(ui);
+                ui_undo_bgm_end(ui, "sostenido");
                 ui_sound_play_refresh(ui);
                 return 1;
             }
             if (e->key.keysym.sym == SDLK_b) {
+                (void)ui_undo_bgm_begin(ui);
                 ui_bgm_toggle_sel_flat(ui);
+                ui_undo_bgm_end(ui, "bemol");
                 ui_sound_play_refresh(ui);
                 return 1;
             }
             if (e->key.keysym.sym == SDLK_UP || e->key.keysym.sym == SDLK_DOWN) {
+                (void)ui_undo_bgm_begin(ui);
                 ui_bgm_nudge_sel(ui, e->key.keysym.sym == SDLK_UP ? 1 : -1);
+                ui_undo_bgm_end(ui, "nudge pitch");
                 ui_sound_play_refresh(ui);
                 return 1;
             }
@@ -690,6 +701,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                         ui->sound.drag_len0 = rg->len;
                         ui->sound.drag_mx0 = lx;
                         ui->sound.drag_group = 0;
+                        (void)ui_undo_bgm_begin(ui);
                         if (!ui_bgm_is_sel(ui, ch, region)) {
                             ui_bgm_sel_only(ui, ch, region);
                         } else {
@@ -721,6 +733,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                         ui->sound.drag_len0 = rg->len;
                         ui->sound.drag_mx0 = lx;
                         ui->sound.drag_group = ui_bgm_sel_count(ui) > 1;
+                        (void)ui_undo_bgm_begin(ui);
                         if (ui->sound.drag_group) {
                             ui_bgm_move_sel_grab(ui);
                         }
@@ -741,6 +754,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                         ui->sound.drag_len0 = 0;
                         ui->sound.drag_mx0 = lx;
                         ui->sound.drag_group = 0;
+                        (void)ui_undo_bgm_begin(ui);
                         ui_bgm_sel_clear(ui);
                         ui->sound.sel_kind = UI_SOUND_SEL_EMPTY;
                         ui->sound.sel_ch = ch;
@@ -1120,14 +1134,24 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 ui->sound.sel_kind = UI_SOUND_SEL_EMPTY;
                 ui->sound.sel_ch = ui->sound.drag_ch;
                 ui->sound.sel_tick = ui->sound.drag_origin;
+                ui_undo_bgm_discard(ui);
             } else if (drag == UI_SOUND_DRAG_PAINT && ui->sound.drag_region >= 0) {
                 ui_bgm_sel_only(ui, ui->sound.drag_ch, ui->sound.drag_region);
-            } else if (drag == UI_SOUND_DRAG_RESIZE_L || drag == UI_SOUND_DRAG_RESIZE_R ||
-                       drag == UI_SOUND_DRAG_MOVE) {
+                ui_undo_bgm_end(ui, "paint note");
+            } else if (drag == UI_SOUND_DRAG_RESIZE_L || drag == UI_SOUND_DRAG_RESIZE_R) {
                 ui->sound.sel_kind = UI_SOUND_SEL_REGION;
                 ui->sound.sel_ch = ui->sound.drag_ch;
                 ui->sound.sel_region = ui->sound.drag_region;
                 ui_bgm_sel_sync(ui);
+                ui_undo_bgm_end(ui, "resize note");
+            } else if (drag == UI_SOUND_DRAG_MOVE) {
+                ui->sound.sel_kind = UI_SOUND_SEL_REGION;
+                ui->sound.sel_ch = ui->sound.drag_ch;
+                ui->sound.sel_region = ui->sound.drag_region;
+                ui_bgm_sel_sync(ui);
+                ui_undo_bgm_end(ui, "move notes");
+            } else {
+                ui_undo_bgm_discard(ui);
             }
             ui->sound.drag_moved = 0;
             ui->sound.drag_group = 0;
