@@ -31,11 +31,13 @@ static void draw_worlds_body(UiState *ui, SDL_Renderer *r, const AccordionLayout
     int col, row;
     int lx = ui->mouse_x;
     int ly = ui->mouse_y;
-    UiTabsLayout tabs;
+    UiTabPager pg;
     int plane_bg0 = (ui->worlds_plane == UI_WORLDS_PLANE_BG0);
+    static const char *const plane_labs[2] = {"BG1", "BG0"};
 
-    worlds_tabs_prepare(ui, &tabs);
-    ui_tabs_draw(r, &tabs, ui->project->active_world, lx, ly);
+    worlds_pager_prepare(ui, &pg);
+    ui_tab_pager_draw(r, &pg, lx, ly);
+    ui_multi_state_draw(r, pg.plane_x, pg.y, pg.plane_w, plane_labs, 2, ui->worlds_plane, lx, ly);
 
     draw_chess_grid(r, UI_WORLDS_X, lo->worlds_grid_y, R01_GRID_MAX, R01_GRID_MAX, UI_WORLD_CELL);
 
@@ -201,12 +203,13 @@ static void draw_banks_body(UiState *ui, SDL_Renderer *r, const AccordionLayout 
     const R01Project *p = ui->project;
     int lx = ui->mouse_x;
     int ly = ui->mouse_y;
-    UiTabsLayout tabs;
+    UiTabPager pg;
     int bank = ui->banks_idx;
     int spr = (ui->banks_plane == UI_BANKS_PLANE_SPR);
     int grid_y = lo->sprites_body_y + UI_WORLDS_TAB_STACK_H;
     int tx, ty;
     int row = w ? w->default_pal_row : 0;
+    static const char *const plane_labs[2] = {"BG", "Sprites"};
 
     fill_rect(r, 0, lo->sprites_body_y, UI_SIDEBAR_W, UI_BANKS_BODY_H, UI_COL_PANEL_R, UI_COL_PANEL_G,
               UI_COL_PANEL_B);
@@ -217,8 +220,9 @@ static void draw_banks_body(UiState *ui, SDL_Renderer *r, const AccordionLayout 
     if (bank >= UI_BANKS_N) {
         bank = UI_BANKS_N - 1;
     }
-    banks_tabs_prepare(ui, &tabs);
-    ui_tabs_draw(r, &tabs, bank, lx, ly);
+    banks_pager_prepare(ui, &pg);
+    ui_tab_pager_draw(r, &pg, lx, ly);
+    ui_multi_state_draw(r, pg.plane_x, pg.y, pg.plane_w, plane_labs, 2, ui->banks_plane, lx, ly);
 
     fill_rect(r, UI_WORLDS_X, grid_y, UI_BANKS_GRID, UI_BANKS_GRID, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
     if (!w) {

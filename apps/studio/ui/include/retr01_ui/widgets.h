@@ -54,6 +54,24 @@ void ui_tabs_draw(SDL_Renderer *r, const UiTabsLayout *lo, int selected, int mou
 int ui_tabs_hit(const UiTabsLayout *lo, int selected, int lx, int ly, int *out_idx);
 int ui_tabs_sub_hit(const UiTabsLayout *lo, int selected, int lx, int ly);
 
+/* Pager tabs: prev 16, N/M 32, next 16. Optional plane slot is 64px, right-aligned.
+ * Tab content starts at ui_tab_pager_content_y. Existing ui_tabs_* stay. */
+typedef struct UiTabPager {
+    int x, y, w, h;
+    int count;
+    int selected;
+    int prev_x, prev_w;
+    int next_x, next_w;
+    int label_x, label_w;
+    int plane_x, plane_w;
+} UiTabPager;
+
+void ui_tab_pager_layout(int x, int y, int w, int count, int selected, int plane_w, UiTabPager *out);
+int ui_tab_pager_content_y(const UiTabPager *lo);
+void ui_tab_pager_draw(SDL_Renderer *r, const UiTabPager *lo, int mouse_x, int mouse_y);
+int ui_tab_pager_hit(const UiTabPager *lo, int lx, int ly);
+int ui_tab_pager_step(const UiTabPager *lo, int hit);
+
 typedef struct UiPanelCell {
     int id;
     int col;

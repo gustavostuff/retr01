@@ -53,6 +53,14 @@ static inline int ui_toggle_label_x(int dx) {
 #define UI_TABS_SUB_H 8
 #define UI_TABS_DEFAULT_W 16 /* default tab width when caller passes 0 */
 
+#define UI_TAB_PAGER_H UI_BTN_H
+#define UI_TAB_PAGER_BTN_W (UI_UNIT * 2)
+#define UI_TAB_PAGER_LABEL_W (UI_UNIT * 4)
+#define UI_TAB_PAGER_PLANE_W (UI_UNIT * 8)
+#define UI_TAB_PAGER_HIT_NONE 0
+#define UI_TAB_PAGER_HIT_PREV 1
+#define UI_TAB_PAGER_HIT_NEXT 2
+
 #define UI_MULTI_STATE_MAX 8
 
 #define UI_PANEL_CELL_MIN 16

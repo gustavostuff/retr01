@@ -501,47 +501,46 @@ int world_cell_hit(const UiState *ui, int lx, int ly, int *out_col, int *out_row
 
 int world_btn_hit(const UiState *ui, int lx, int ly, int *out_wi) {
     AccordionLayout lo;
-    UiTabsLayout tabs;
-    int sel;
+    UiTabPager pg;
+    int hit;
+    if (!ui || !ui->project) {
+        return 0;
+    }
     accordion_layout(ui, &lo);
     if (lo.worlds_body_h < 1 || lo.worlds_btns_y < 0) {
         return 0;
     }
-    worlds_tabs_prepare(ui, &tabs);
+    worlds_pager_prepare(ui, &pg);
+    hit = ui_tab_pager_hit(&pg, lx, ly);
+    if (hit == UI_TAB_PAGER_HIT_NONE) {
+        return 0;
+    }
+    if (out_wi) {
+        *out_wi = ui_tab_pager_step(&pg, hit);
+    }
+    return 1;
+}
+
+void worlds_pager_prepare(const UiState *ui, UiTabPager *out) {
+    AccordionLayout lo;
+    int sel;
+    if (!out) {
+        return;
+    }
+    accordion_layout(ui, &lo);
     sel = (ui && ui->project) ? ui->project->active_world : 0;
-    return ui_tabs_hit(&tabs, sel, lx, ly, out_wi);
+    ui_tab_pager_layout(UI_WORLDS_X, lo.worlds_btns_y, UI_SIDEBAR_W, R01_MAX_WORLDS, sel, UI_TAB_PAGER_PLANE_W, out);
 }
 
-void worlds_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
+void banks_pager_prepare(const UiState *ui, UiTabPager *out) {
     AccordionLayout lo;
-    static const char *const world_labs[R01_MAX_WORLDS] = {"", "", "", "", "", "", "", ""};
-    int view;
+    int sel;
     if (!out) {
         return;
     }
     accordion_layout(ui, &lo);
-    ui_tabs_layout(world_labs, R01_MAX_WORLDS, UI_WORLDS_X, lo.worlds_btns_y, UI_WORLD_BTN, out);
-    ui_tabs_set_dot(out, 1);
-    view = (ui && ui->worlds_plane == UI_WORLDS_PLANE_BG0) ? 0 : 1;
-    /* view 0 shows BG0 asset (far plane selected), view 1 shows BG1 asset */
-    ui_tabs_set_dual(out, 1, view, g_bg0_btn_rgba, g_bg0_btn_w, g_bg0_btn_h, g_bg1_btn_rgba, g_bg1_btn_w,
-                     g_bg1_btn_h);
-}
-
-void banks_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
-    AccordionLayout lo;
-    static const char *const bank_labs[UI_BANKS_N] = {
-        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""};
-    int view;
-    if (!out) {
-        return;
-    }
-    accordion_layout(ui, &lo);
-    ui_tabs_layout(bank_labs, UI_BANKS_N, UI_WORLDS_X, lo.sprites_body_y, UI_BANKS_TAB_W, out);
-    ui_tabs_set_dot(out, 1);
-    view = (ui && ui->banks_plane == UI_BANKS_PLANE_SPR) ? 1 : 0;
-    ui_tabs_set_dual(out, 1, view, g_bg_bank_btn_rgba, g_bg_bank_btn_w, g_bg_bank_btn_h, g_spr_bank_btn_rgba,
-                     g_spr_bank_btn_w, g_spr_bank_btn_h);
+    sel = ui ? ui->banks_idx : 0;
+    ui_tab_pager_layout(UI_WORLDS_X, lo.sprites_body_y, UI_SIDEBAR_W, UI_BANKS_N, sel, UI_TAB_PAGER_PLANE_W, out);
 }
 
 void global_banks_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
@@ -561,9 +560,9 @@ void global_banks_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
 }
 
 int banks_tab_hit(const UiState *ui, int lx, int ly, int *out_idx) {
-    UiTabsLayout tabs;
+    UiTabPager pg;
     AccordionLayout lo;
-    int sel;
+    int hit;
     if (!ui) {
         return 0;
     }
@@ -571,15 +570,15 @@ int banks_tab_hit(const UiState *ui, int lx, int ly, int *out_idx) {
     if (lo.sprites_body_h < 1) {
         return 0;
     }
-    banks_tabs_prepare(ui, &tabs);
-    sel = ui->banks_idx;
-    if (sel < 0) {
-        sel = 0;
+    banks_pager_prepare(ui, &pg);
+    hit = ui_tab_pager_hit(&pg, lx, ly);
+    if (hit == UI_TAB_PAGER_HIT_NONE) {
+        return 0;
     }
-    if (sel >= UI_BANKS_N) {
-        sel = UI_BANKS_N - 1;
+    if (out_idx) {
+        *out_idx = ui_tab_pager_step(&pg, hit);
     }
-    return ui_tabs_hit(&tabs, sel, lx, ly, out_idx);
+    return 1;
 }
 
 int global_banks_tab_hit(const UiState *ui, int lx, int ly, int *out_idx) {
@@ -605,20 +604,15 @@ int global_banks_tab_hit(const UiState *ui, int lx, int ly, int *out_idx) {
 }
 
 int banks_sub_hit(const UiState *ui, int lx, int ly) {
-    UiTabsLayout tabs;
-    int sel;
+    UiTabPager pg;
     if (!ui) {
         return 0;
     }
-    banks_tabs_prepare(ui, &tabs);
-    sel = ui->banks_idx;
-    if (sel < 0) {
-        sel = 0;
+    banks_pager_prepare(ui, &pg);
+    if (pg.plane_w < 1) {
+        return 0;
     }
-    if (sel >= UI_BANKS_N) {
-        sel = UI_BANKS_N - 1;
-    }
-    return ui_tabs_sub_hit(&tabs, sel, lx, ly);
+    return ui_multi_state_hit(lx, ly, pg.plane_x, pg.y, pg.plane_w, 2, ui->banks_plane, NULL);
 }
 
 int global_banks_sub_hit(const UiState *ui, int lx, int ly) {
@@ -1021,14 +1015,20 @@ int bank_sel_cell_clamped(const UiState *ui, int lx, int ly) {
 }
 
 int world_sub_hit(const UiState *ui, int lx, int ly) {
-    UiTabsLayout tabs;
-    int sel;
+    AccordionLayout lo;
+    UiTabPager pg;
     if (!ui || !ui->project) {
         return 0;
     }
-    worlds_tabs_prepare(ui, &tabs);
-    sel = ui->project->active_world;
-    return ui_tabs_sub_hit(&tabs, sel, lx, ly);
+    accordion_layout(ui, &lo);
+    if (lo.worlds_body_h < 1 || lo.worlds_btns_y < 0) {
+        return 0;
+    }
+    worlds_pager_prepare(ui, &pg);
+    if (pg.plane_w < 1) {
+        return 0;
+    }
+    return ui_multi_state_hit(lx, ly, pg.plane_x, pg.y, pg.plane_w, 2, ui->worlds_plane, NULL);
 }
 
 int accordion_header_hit(const UiState *ui, int lx, int ly, int *out_section) {

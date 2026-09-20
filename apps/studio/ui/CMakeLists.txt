@@ -21,6 +21,7 @@ add_library(retr01_ui
   src/widgets/radio.c
   src/widgets/slider.c
   src/widgets/tabs.c
+  src/widgets/tab_pager.c
   src/widgets/textfield.c
 )
 
