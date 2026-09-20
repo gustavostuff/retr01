@@ -1,4 +1,4 @@
-<img src="img/v_01.png" alt="Logo V1" />
+<img src="img/v_03.png" alt="Logo V2" />
 
 The Retr01 project is an MCU-assisted 8-bit system ready for arcade and console setups. It is also an Emulator and a Studio.
 
