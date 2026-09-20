@@ -64,22 +64,6 @@ int r01_bgm_flatten_track(const R01BgmData *bgm, int track,
             for (k = s0 + 1; k < e0 && k < R01_BGM_FD_STEPS_MAX; k++) {
                 snprintf(cells[k][ch], R01_BGM_FD_TOKEN, "%s", rg->tok[0] ? rg->tok : "--");
             }
-            if (e0 < R01_BGM_FD_STEPS_MAX && e0 > s0) {
-                int covered = 0;
-                int j;
-                for (j = 0; j < n; j++) {
-                    if (bgm->region[track][ch][j].start == e0) {
-                        covered = 1;
-                        break;
-                    }
-                }
-                if (!covered) {
-                    snprintf(cells[e0][ch], R01_BGM_FD_TOKEN, "--");
-                    if (e0 + 1 > steps && e0 + 1 <= R01_BGM_FD_STEPS_MAX) {
-                        steps = e0 + 1;
-                    }
-                }
-            }
         }
     }
     if (steps < 1) {

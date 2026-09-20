@@ -136,13 +136,14 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             if (ch >= 0 && ch < UI_SOUND_BGM_CH && region >= 0 &&
                 region < ui->sound.region_count[track][ch]) {
+                int chromatic = (SDL_GetModState() & KMOD_SHIFT) != 0;
+                int dir = e->wheel.y > 0 ? 1 : -1;
                 (void)ui_undo_bgm_begin(ui);
                 if (ui_bgm_is_sel(ui, ch, region)) {
-                    ui_bgm_nudge_sel(ui, e->wheel.y > 0 ? 1 : -1);
+                    ui_bgm_nudge_sel(ui, dir, chromatic);
                 } else {
                     ui_bgm_sel_only(ui, ch, region);
-                    ui_bgm_nudge_region(&ui->sound.region[track][ch][region], ch,
-                                        e->wheel.y > 0 ? 1 : -1);
+                    ui_bgm_nudge_region(&ui->sound.region[track][ch][region], ch, dir, chromatic);
                 }
                 ui_undo_bgm_end(ui, "nudge pitch");
                 ui_sound_play_refresh(ui);
@@ -356,7 +357,8 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             return 1;
         }
-        if ((e->key.keysym.mod & KMOD_SHIFT) && !(e->key.keysym.mod & KMOD_CTRL)) {
+        if ((e->key.keysym.mod & KMOD_SHIFT) && !(e->key.keysym.mod & KMOD_CTRL) &&
+            ui->app_mode == UI_APP_GRAPHICS) {
             if (e->key.keysym.sym == SDLK_LEFT && ui_screen_nav(ui, -1, 0)) {
                 return 1;
             }
@@ -536,15 +538,16 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         }
         if (ui->text.field_id < 1 && !ui->play.active && !ui->menu.open &&
             ui->app_mode == UI_APP_SOUNDS && ui->sound.plane == UI_SOUND_PLANE_BGM &&
-            !(e->key.keysym.mod & (KMOD_CTRL | KMOD_ALT | KMOD_SHIFT)) && ui_bgm_sel_count(ui) > 0) {
-            if (e->key.keysym.sym == SDLK_s) {
+            !(e->key.keysym.mod & (KMOD_CTRL | KMOD_ALT)) && ui_bgm_sel_count(ui) > 0) {
+            int shift = (e->key.keysym.mod & KMOD_SHIFT) != 0;
+            if (!shift && e->key.keysym.sym == SDLK_s) {
                 (void)ui_undo_bgm_begin(ui);
                 ui_bgm_toggle_sel_sharp(ui);
                 ui_undo_bgm_end(ui, "sostenido");
                 ui_sound_play_refresh(ui);
                 return 1;
             }
-            if (e->key.keysym.sym == SDLK_b) {
+            if (!shift && e->key.keysym.sym == SDLK_b) {
                 (void)ui_undo_bgm_begin(ui);
                 ui_bgm_toggle_sel_flat(ui);
                 ui_undo_bgm_end(ui, "bemol");
@@ -553,7 +556,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             }
             if (e->key.keysym.sym == SDLK_UP || e->key.keysym.sym == SDLK_DOWN) {
                 (void)ui_undo_bgm_begin(ui);
-                ui_bgm_nudge_sel(ui, e->key.keysym.sym == SDLK_UP ? 1 : -1);
+                ui_bgm_nudge_sel(ui, e->key.keysym.sym == SDLK_UP ? 1 : -1, shift);
                 ui_undo_bgm_end(ui, "nudge pitch");
                 ui_sound_play_refresh(ui);
                 return 1;

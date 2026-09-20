@@ -368,7 +368,25 @@ void ui_bgm_note_label(const UiBgmRegion *rg, int ch, int solfa, char buf[32]) {
     }
 }
 
-void ui_bgm_nudge_region(UiBgmRegion *rg, int ch, int dir) {
+static void spell_chromatic(UiBgmRegion *rg, int dir) {
+    static const int black[12] = {0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0};
+    int pc;
+    if (!rg) {
+        return;
+    }
+    pc = pc_wrap(rg->midi);
+    rg->sharp = 0;
+    rg->flat = 0;
+    if (black[pc]) {
+        if (dir > 0) {
+            rg->sharp = 1;
+        } else {
+            rg->flat = 1;
+        }
+    }
+}
+
+void ui_bgm_nudge_region(UiBgmRegion *rg, int ch, int dir, int chromatic) {
     if (!rg || dir == 0) {
         return;
     }
@@ -394,7 +412,12 @@ void ui_bgm_nudge_region(UiBgmRegion *rg, int ch, int dir) {
         }
         return;
     }
-    rg->midi = midi_natural_step(rg->midi, region_acc(rg), dir);
+    if (chromatic) {
+        rg->midi = clampi(rg->midi + dir, 12, 119);
+        spell_chromatic(rg, dir);
+    } else {
+        rg->midi = midi_natural_step(rg->midi, region_acc(rg), dir);
+    }
     write_region_tok(rg, ch);
 }
 
@@ -789,7 +812,7 @@ void ui_bgm_remove_sel(UiState *ui) {
     ui->sound.sel_region = -1;
 }
 
-void ui_bgm_nudge_sel(UiState *ui, int dir) {
+void ui_bgm_nudge_sel(UiState *ui, int dir, int chromatic) {
     int track, ch, i;
     if (!ui || dir == 0) {
         return;
@@ -799,7 +822,7 @@ void ui_bgm_nudge_sel(UiState *ui, int dir) {
         int count = ui->sound.region_count[track][ch];
         for (i = 0; i < count; i++) {
             if (ui->sound.region[track][ch][i].selected) {
-                ui_bgm_nudge_region(&ui->sound.region[track][ch][i], ch, dir);
+                ui_bgm_nudge_region(&ui->sound.region[track][ch][i], ch, dir, chromatic);
             }
         }
     }
@@ -1003,22 +1026,6 @@ int ui_bgm_flatten(const UiState *ui, int track,
                 continue;
             }
             snprintf(cells[s0][ch], R01_BGM_TOKEN, "%s", rg->tok[0] ? rg->tok : "--");
-            if (e0 < R01_BGM_STEPS && e0 > s0) {
-                int covered = 0;
-                int j;
-                for (j = 0; j < n; j++) {
-                    if (ui->sound.region[track][ch][j].start == e0) {
-                        covered = 1;
-                        break;
-                    }
-                }
-                if (!covered) {
-                    snprintf(cells[e0][ch], R01_BGM_TOKEN, "--");
-                    if (e0 + 1 > steps && e0 + 1 <= R01_BGM_STEPS) {
-                        steps = e0 + 1;
-                    }
-                }
-            }
             {
                 int k;
                 for (k = s0 + 1; k < e0 && k < R01_BGM_STEPS; k++) {

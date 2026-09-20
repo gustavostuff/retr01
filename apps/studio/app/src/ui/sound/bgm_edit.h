@@ -12,9 +12,9 @@ void ui_bgm_midi_to_tok(int midi, char tok[5]);
 int ui_bgm_tok_to_midi(const char *tok);
 void ui_bgm_default_tok(int ch, char tok[5], int *out_midi);
 
-/* Nudge region pitch: dir +1/-1 through C D E F G A B (naturals). Accidental stays.
- * Noise cycles period; DPCM cycles FD/FE. */
-void ui_bgm_nudge_region(UiBgmRegion *rg, int ch, int dir);
+/* Nudge region pitch: dir +1/-1. chromatic 0 = naturals (accidental stays),
+ * 1 = one semitone (black keys # up, b down). Noise cycles period; DPCM cycles FD/FE. */
+void ui_bgm_nudge_region(UiBgmRegion *rg, int ch, int dir, int chromatic);
 void ui_bgm_key_name(int pc, int solfa, char buf[8]);
 void ui_bgm_note_label(const UiBgmRegion *rg, int ch, int solfa, char buf[32]);
 void ui_bgm_toggle_sharp(UiBgmRegion *rg, int ch);
@@ -39,7 +39,7 @@ void ui_bgm_sel_sync(UiState *ui);
 int ui_bgm_sel_count(const UiState *ui);
 int ui_bgm_is_sel(const UiState *ui, int ch, int idx);
 void ui_bgm_remove_sel(UiState *ui);
-void ui_bgm_nudge_sel(UiState *ui, int dir);
+void ui_bgm_nudge_sel(UiState *ui, int dir, int chromatic);
 void ui_bgm_toggle_sel_sharp(UiState *ui);
 void ui_bgm_toggle_sel_flat(UiState *ui);
 void ui_bgm_move_sel_grab(UiState *ui);
