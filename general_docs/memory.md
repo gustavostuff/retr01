@@ -31,7 +31,7 @@ I/O lives in `$7F00-$7FFF` (the 256-byte page immediately before PRG at `$8000`)
 
 ## Cart image (`.retr01`)
 
-Magic **`retr01`**. Pointer table names the regions. No mapper. CHR is one global pool.
+Magic **`retr01`**. Byte 6 is `format_ver` **5**. Pointer table names the regions. No mapper. CHR is one global pool.
 
 ```text
 +======================================================================+
@@ -247,7 +247,7 @@ See `hardware.md` and `ic-comms-risks.md`.
 
 ## Phase 1 PRG play tables (Studio / Emu)
 
-Authoring spawns live in the project JSON. Packed carts put **placements in PRG**, not the world blob (see entity catalog above). Phase 1 PRG layout (CPU `$8000` = PRG+$0000) as shipped by current tools:
+Authoring spawns live in the project JSON. Packed carts put **placements in PRG**, not the world blob (see entity catalog above). Phase 1 PRG layout (CPU `$8000` = PRG+$0000):
 
 | PRG off | CPU | Role |
 | --- | --- | --- |

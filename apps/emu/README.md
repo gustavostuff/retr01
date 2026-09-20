@@ -1,7 +1,6 @@
 # Retr01 Emulator
 
-Software-visible C emulator for Retr01 **Phase 1** carts. Contract:
-[`general_docs/video-graphics.md`](../../general_docs/video-graphics.md).
+Software-visible C emulator for Retr01 **Phase 1** carts. Contract: [`general_docs/video-graphics.md`](../../general_docs/video-graphics.md).
 
 From repo root: `./scripts/emu.sh path/to/cart.retr01` (after `./scripts/build-all.sh`).
 
@@ -9,7 +8,7 @@ Studio **Play** uses this same emu core after export (shared library + standalon
 
 ## Phase 1 scope (active)
 
-| Layer | What runs today |
+| Layer | Role |
 |-------|-----------------|
 | **Cart** | Load `.retr01` (Studio packs present screens only). CHR, pals, Phase 1 PRG (`R01P`) |
 | **Play** | **Emu Host Play SoT**. Move / **dead-zone camera** / player anim / collision from cart bytes |
@@ -17,9 +16,9 @@ Studio **Play** uses this same emu core after export (shared library + standalon
 | **Video** | Main FB = **VRAM + scroll** + **OAM** + **BG0** show-through under BG1 color 0 (SCALE 2x). Host Play fills BG1 2x2 via `sync_camera` |
 | **Host** | SDL. Pad map: P1 WASD+G/H, P2 arrows+,/. Platformer jump is face **Y** (P1 **H**). NMI tracker fills `$7F40` from packed PRG BGM (`$80FE` / `$B000`). PC speaker mixes that window. Not MCU-S2 PWM |
 
-**Sync contract:** Emu Host Play (`src/play.c` + `apps/common/`) is the Phase 1 gameplay SoT. Studio has no parallel preview. Export packs present screens + play table (`$8100`) + `R01P`. Soft-boot (`R01E_SOFTBOOT=1`) keeps the old host memcpy boot path for triage. Default boot runs cart PRG stream catchup until the start MAP write reaches **480** bytes (`vram_addr`), then Host Play reloads the camera 2x2 from cart. Collision samples PRG solids. Render samples that VRAM window.
+**Sync contract:** Emu Host Play (`src/play.c` + `apps/common/`) is the Phase 1 gameplay SoT. Export packs present screens + play table (`$8100`) + `R01P`. Soft-boot (`R01E_SOFTBOOT=1`) uses host memcpy of VRAM and pals at boot (triage). Default boot runs cart PRG stream catchup until the start MAP write reaches **480** bytes (`vram_addr`), then Host Play reloads the camera 2x2 from cart. Collision samples PRG solids. Render samples that VRAM window.
 
-**Studio integration:** Studio **Play** / **Space** always exports, then embeds this render path. Export wait uses a Studio-local spinning boot message. Standalone `./scripts/emu.sh` stays for triage. **Sim is not part of this path.**
+**Studio integration:** Studio **Play** / **Space** always exports, then embeds this render path. Export wait uses a Studio-local spinning boot message. Standalone `./scripts/emu.sh` stays for triage.
 
 **Collision:** Host Play reads **PRG collision tables** (`$8121` directory, 240 bytes per present screen). Player hitbox is the **current anim state's** AABB, origin-relative via that state's first drawable frame in the cart player anim blob when present. Host movement uses that table. Default motion is top-down (axis-separated). World header flags bit **4** selects platformer (gravity + face **Y** jump, short hop on release, Down crouch). Tune bytes at PRG `$80F7`/`$80F8`/`$80F9`/`$80FA`/`$80FB`/`$80FC`/`$80FD` (gravity, jump, meter, crouch / idle / walk / jump states). Unmapped player anim bytes are `$FF` (draw state 0 frame 0 + facing flip only).
 

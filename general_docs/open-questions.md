@@ -1,6 +1,6 @@
 # Open questions and TBDs
 
-Items still open, plus how to close them. Update this file when a decision lands, then fold the answer into the matching doc.
+Open items and close criteria. A landed decision folds into the matching doc.
 
 ## Still open
 
@@ -11,12 +11,6 @@ Items still open, plus how to close them. Update this file when a decision lands
 **Entity cart pack (decision):** Studio writes the locked offset-table **EntityDef** from `software-api.md` (variable length, max **1044 B**). Draw origin lives on each **frame**. Hitbox lives on each **state** (packed origin-relative to that state's first drawable frame). Global catalog = `u16` type directory + defs.
 
 **Touches:** `memory.md`, `software-api.md`
-
-### Collision solids packing
-
-**Open:** Platformer / top-down solids are **PRG** data. Phase 1 has a collision directory in PRG (`memory.md`). Exact authoring table vs that directory is still open.
-
-**Touches:** `software-api.md`, `memory.md`
 
 ### CHR A14/A15 mix (Compositor)
 
@@ -30,7 +24,7 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 **Touches:** `hardware.md`, `cartridge.md`
 
-## Resolved (kept for history)
+## Resolved
 
 ### 1. AVR duty split
 
@@ -46,19 +40,19 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 ### 4. Animated tiles (BG attr bit 7)
 
-**Superseded 2026-09-20:** Hardware 4-beat anim dropped. Tile animation is PRG. Attr bit 7 is V flip. See item 18.
+**Resolved:** Tile animation is PRG. Attr bit 7 is V flip. See `video-graphics.md`.
 
 ### 5. Sprite attr bits 6 and 7
 
-**Resolved 2026-09-20:** H flip and V flip (same pack as BG). See `video-graphics.md`.
+**Resolved:** H flip and V flip (same pack as BG). See `video-graphics.md`.
 
 ### 6. Attribute index ranges
 
-**Superseded 2026-09-20:** Bank field is **0-15** (4 bits). Palette stays **0-3**. See item 18.
+**Resolved:** Bank field is **0-15** (4 bits). Palette is **0-3**. See `video-graphics.md`.
 
 ### 7. Screen + entity budgets
 
-**Superseded 2026-09-20:** See item 18.
+**Resolved:** See item 18.
 
 ### 8. Cart flashing
 
@@ -88,13 +82,13 @@ Items still open, plus how to close them. Update this file when a decision lands
 
 **Resolved (baseline):** Missing BG1 slots show **BG0** by default (then backdrop under BG0). Optional **BG0 clip to BG1** flag forces backdrop outside present BG1 slots. Default clamp at playfield edges. **BG0 and BG1** may each programmatically autoscroll and/or wrap repeating strips. See `world-scrolling.md`.
 
-### 15. Entity CHR home world
+### 15. Entity CHR catalog
 
-**Superseded:** Dropped global catalog + `chr_world` in favor of 16 types per world (item 16). Item **18** restores a global catalog (32 types) and global SPR banks.
+**Resolved:** One global entity catalog (**32** types). Player and other entities use global SPR banks. See item 18.
 
-### 16. Entity caps (per world)
+### 16. Entity caps
 
-**Superseded 2026-09-20:** See item 18.
+**Resolved:** See item 18.
 
 ### 17. IC comms mitigations folded into design docs
 
@@ -103,6 +97,10 @@ Items still open, plus how to close them. Update this file when a decision lands
 ### 18. Global CHR + catalogs (2026-09-20)
 
 **Resolved:** **8** worlds. **64** BG1 / **16** BG0 present screens per world. CHR is **16 BG + 16 SPR** banks cart-wide (**128 KB**). One global entity catalog, **32** types, **4 x 8 x 6**, maxed def **1044 B**. Attr bits 0-3 = bank 0-15, 4-5 = pal, 6-7 = H/V flip. Solids and tile anim are PRG. Passive cart, no mapper. See `memory.md`, `video-graphics.md`, `software-api.md`, `selling-points.md`.
+
+### 19. Collision solids packing
+
+**Resolved:** Solids are a per-screen plane (240 bytes, one flag per 8x8 cell). Studio stores them as `solids_b64`. Packed carts put a collision directory at PRG `$8121` plus one 240-byte table per present screen. Host Play samples that table. See `memory.md`.
 
 ## Decision log
 
@@ -118,15 +116,15 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-14 | IC budget | AD724 counted on motherboard. 17 mobo + 2 cart = 19. |
 | 2026-09-14 | AD724 mount | SOIC-16 on SOIC-to-DIP adapter. Main PCB 100% THT. |
 | 2026-09-14 | 74HC14 | Optional. Skip if canned PHI2/DOT + simple reset. Add if soft edges or reset chatter. |
-| 2026-09-14 | Other screens | Max 16 total shared pool (title/interstitial/credits). Dropped 46 credits cap. |
-| 2026-09-17 | Other screens | Cap **8** (ids 0..7). Nametable attrs index **world 0** CHR. See `memory.md`. |
-| 2026-09-17 | Cart layout | Cap **7** worlds. Other screens back to **16**. Global other CHR (**4** BG + **4** SPR, **32 KB**). `format_ver` **4**, ptr table 6 slots. Max-fill later revised (see entity pack 532 B). See `memory.md`. |
+| 2026-09-14 | Other screens | Max 16 total shared pool (title/interstitial/credits). |
+| 2026-09-17 | Other screens | Cap **8** (ids 0..7). |
+| 2026-09-17 | Cart layout | **7** worlds. **16** other screens. **4** BG + **4** SPR other CHR. `format_ver` **4**. |
 | 2026-09-14 | Entity spawns | Spawn locations in PRG, not cart world blobs. |
 | 2026-09-13 | Sync out | One header, CSYNC or H/V mode. |
 | 2026-09-13 | Branding | One product: Retr01. |
 | 2026-09-14 | Flasher | Console + Adafruit's UPDI Friend. Shared header. 4-pos DIP: M/S1/S2/cart, default all OFF. Scope: AVRs + cart only. |
-| 2026-09-14 | Entity caps | 16 types per world (catalog in world blob). Dropped global 128 + `chr_world`. format_ver 3. |
-| 2026-09-17 | Entity pack | Max sprites/frame **6**. Maxed def **532 B**. Draw origin is per **frame**. Hitbox is per **state**. See `software-api.md`. |
+| 2026-09-14 | Entity caps | 16 types per world. format_ver 3. |
+| 2026-09-17 | Entity pack | Max sprites/frame **6**. Maxed def **532 B**. Draw origin is per **frame**. Hitbox is per **state**. |
 | 2026-09-14 | Anim tiles | base..base+3 wrap in bank, default delay 6. |
 | 2026-09-14 | Video timing | Sprites VBlank pass. BG0 HBlank ping-pong only. |
 | 2026-09-14 | PCB layers | Initial: motherboard, cart, and pads all 2-layer. 4-layer mobo only later if bring-up / commercial SMD needs it. |
@@ -137,10 +135,11 @@ Items still open, plus how to close them. Update this file when a decision lands
 | 2026-09-15 | IC comms | Idle-safe pulls, RDY OD, OAM SPI early VBlank, scroll in NMI/VBlank, cart OE/WE rules. See `ic-comms-risks.md`. |
 | 2026-09-15 | Cart save UX | Multi-frame OK. Chunk I2C, short RDY, keep spinner/UI alive. No full-save picture freeze. |
 | 2026-09-15 | Cart save IC | Prefer I2C FRAM when BOM allows (drops EEPROM page-program stalls). Transfer still chunked. See `ic-comms-risks.md` #13. |
-| 2026-09-15 | Entity cart bytes | Studio packs locked EntityDef + u16 type directory. Retired 20 B snapshot. |
+| 2026-09-15 | Entity cart bytes | Studio packs locked EntityDef + u16 type directory. |
 | 2026-09-15 | Emu soft fences | Scroll/pal pending until VBlank. Host Play OAM/scroll at early VB. Pads latch at VB. Short EE RDY handoff (250 us). |
-| 2026-09-16 | Player item bank | *(superseded 2026-09-17)* Had planned a global 256-tile player-only bank. |
-| 2026-09-17 | Player patterns | No private player bank. Marked player + inventory art use **global other SPR** (one of 4 banks). See `memory.md`, `software-api.md`. |
+| 2026-09-16 | Player item bank | Player art uses global SPR banks. |
+| 2026-09-17 | Player patterns | Marked player uses global SPR banks. See `memory.md`. |
 | 2026-09-17 | Host Play boot catchup | Phase 1 emu waits for a full start MAP stream (480 B) before Host Play takes the camera 2x2 from cart. See `apps/emu/README.md`. |
 | 2026-09-19 | APU | 8-ch S2 software mix. `$7F40` is 8x4 regs (S2 never parses bytecode). BGM 1-5 / SFX 6-8. DPCM in S2 flash. NMI tracker on 6502. See `sound.md`. |
 | 2026-09-20 | CHR / maps / entities | 16+16 global banks, 8 worlds, 64 BG1 / 16 BG0, 32 types (4x8x6). Attr 4-bit bank. No mapper. See `memory.md`. |
+| 2026-09-20 | Collision solids | Per-screen 240 B tables. Directory at PRG `$8121`. See `memory.md`. |

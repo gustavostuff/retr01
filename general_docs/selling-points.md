@@ -62,4 +62,4 @@ The beam path is sketched so a light gun can land later without redesigning the 
 
 ## Closing note
 
-The NES already had memorable games on plain NROM. Retr01 is not trying to erase that bar. The goal is better plumbing for developers (less time fighting the picture, more time on play) while keeping an NES + SNES feel: crisp color-reduced pixels and true dual-plane parallax. Plus other QoL features here and there.
+The NES already had memorable games on plain NROM. Retr01 keeps that bar and spends the 32 KB PRG budget on play and behavior, with NES + SNES feel: crisp color-reduced pixels and true dual-plane parallax. Plus other QoL features here and there.
