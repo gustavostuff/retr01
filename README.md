@@ -16,7 +16,7 @@ NOTE: hardware is still in design phase, software is being built on that design.
 - The main PCB stays compact: roughly 17 ICs total. The design is hybrid, not a pure FPGA and not a pure discrete-logic console.
 - The split is a middle ground between custom logic and MCU helpers: a main CPU, a few AVR support chips, PLDs, and a small amount of 74xx glue.
 - The CPU has a flat 32 KB program space with no banking. At 8 MHz and with 32 KB RAM, the system can do more than a classic NES-style NROM cartridge while staying simple to author.
-- The entity model has clear caps: up to 16 entity types per world, each with up to 4 states, 4 animation frames, and 6 sprites per frame.
+- The entity model (entities are sprite compositions) has clear caps: up to 16 entity types per world, each with up to 4 states, 4 animation frames, and 6 sprites per frame.
 - World layouts stay flexible: up to 7 worlds, each with up to 32 screens, arranged on a sparse 16x16 grid so large maps do not need dense, wasteful allocation.
 - The cartridge is passive: no mapper or bank switching. Nametable and map data can stream directly from cart memory into VRAM buffers. That keeps the bus simpler and leaves program space free for game code.
 
