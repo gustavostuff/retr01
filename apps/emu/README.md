@@ -42,7 +42,7 @@ Pi CRT pack (emu + `example_01.retr01` only):
 ./scripts/pack-pi-emu.sh
 ```
 
-Writes `raspberry_pi_test/`. On the Pi, `./build.sh` installs the binary and cart to `/media/usb1/roms/ports/Retr01_test/` and the launcher to `/media/usb1/roms/ports/retr01.sh` (1x integer 256x240, centered in desktop-fullscreen).
+Writes `raspberry_pi_test/`. On the Pi, `./build.sh` installs the binary and cart to `/media/usb1/roms/ports/Retr01_test/` and the launcher to `/media/usb1/roms/ports/retr01.sh` (1x integer 128x120, centered in desktop-fullscreen).
 
 Developer rebuild of this tree only:
 
@@ -55,7 +55,7 @@ cmake --build build
 
 **Controls:** WASD or arrows = move. Face **Y** (P1 **H**, P2 **.**, gamepad **A**/**Y**) = jump in platformer. Down = crouch in platformer (grounded, no walk). Space = pause. R = reset. **Ctrl+1** / **Ctrl+2** = present scale. Esc = quit. Gamepad Guide / Home = Reset / Quit / **1x**/**2x**. First two SDL Game Controllers are P1 / P2 (community `gamecontrollerdb.txt` plus SDL built-in mappings).
 
-**Env:** `R01E_SOFTBOOT=1` forces host memcpy VRAM/pals at boot (debug). Default runs cart PRG MAP/pal stream catchup to a full start-screen payload. `R01E_SCALE=1` presents 256x240 integer (centered in fullscreen). `R01E_SCALE=2` presents 512x480. `R01E_FULLSCREEN=1` uses desktop-fullscreen and skips the debug window. `R01E_NO_DEBUG=1` skips the debug window only. `R01E_AUDIO_SAMPLES` (256..4096) and `R01E_AUDIO_RATE` (22050..48000) size the PC speaker mix. Pi `retr01.sh` uses 2048 samples at 48 kHz. Home / Guide mutes the speaker while the overlay is open.
+**Env:** `R01E_SOFTBOOT=1` forces host memcpy VRAM/pals at boot (debug). Default runs cart PRG MAP/pal stream catchup to a full start-screen payload. `R01E_SCALE=1` presents 128x120. `R01E_SCALE=2` presents 256x240 (hardware 2x, console default). `R01E_FULLSCREEN=1` uses desktop-fullscreen and skips the debug window. `R01E_NO_DEBUG=1` skips the debug window only. `R01E_AUDIO_SAMPLES` (256..4096) and `R01E_AUDIO_RATE` (22050..48000) size the PC speaker mix. Pi `retr01.sh` uses 2048 samples at 48 kHz. Home / Guide mutes the speaker while the overlay is open.
 
 **Debug (standalone `./scripts/emu.sh`):** separate OS window (~atlas width, shorter than the 2x play window): top row **BG1** VRAM 2x2 + **BG0** 2x2 (red/green viewports), second row **opacity mask** + world map + **BG**/**SPR** pals, bottom **CPU busy** chart (2 samples/s). Cyan = active display, orange = VBlank. Red line = soft max **50k** cycles/frame.
 

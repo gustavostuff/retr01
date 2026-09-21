@@ -30,19 +30,34 @@ static void emu_reset(R01eMachine *m) {
     emu_start_host_bgm(m);
 }
 
+static void emu_present_px(int scale, int *w, int *h) {
+    if (scale < 1) {
+        scale = 1;
+    }
+    if (scale > 2) {
+        scale = 2;
+    }
+    if (w) {
+        *w = R01E_SCREEN_PX_W * scale;
+    }
+    if (h) {
+        *h = R01E_SCREEN_PX_H * scale;
+    }
+}
+
 static int emu_window_is_fullscreen(SDL_Window *win) {
     Uint32 flags = win ? SDL_GetWindowFlags(win) : 0;
     return (flags & (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP)) != 0;
 }
 
 static void emu_apply_present_scale(SDL_Window *win, int scale) {
+    int pw;
+    int ph;
     if (!win || emu_window_is_fullscreen(win)) {
         return;
     }
-    if (scale < 1) {
-        scale = 1;
-    }
-    SDL_SetWindowSize(win, R01E_VISIBLE_W * scale, R01E_VISIBLE_H * scale);
+    emu_present_px(scale, &pw, &ph);
+    SDL_SetWindowSize(win, pw, ph);
 }
 
 static void emu_apply_pad_menu(int act, R01eMachine *m, int *running, int *scale, SDL_Window *win) {
@@ -61,15 +76,15 @@ static void emu_apply_pad_menu(int act, R01eMachine *m, int *running, int *scale
 static void emu_present_dst(SDL_Renderer *ren, int scale, SDL_Rect *dst) {
     int ww = 0;
     int wh = 0;
+    int pw;
+    int ph;
     if (!ren || !dst) {
         return;
     }
-    if (scale < 1) {
-        scale = 1;
-    }
+    emu_present_px(scale, &pw, &ph);
     SDL_GetRendererOutputSize(ren, &ww, &wh);
-    dst->w = R01E_VISIBLE_W * scale;
-    dst->h = R01E_VISIBLE_H * scale;
+    dst->w = pw;
+    dst->h = ph;
     dst->x = (ww - dst->w) / 2;
     dst->y = (wh - dst->h) / 2;
 }
@@ -659,8 +674,13 @@ int main(int argc, char **argv) {
     (void)r01_pad_host_init();
 
     /* Hidden until first frame is presented -- avoids empty-window flash. */
-    win = SDL_CreateWindow("Retr01 Emulator (Phase 1)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                           R01E_VISIBLE_W * scale, R01E_VISIBLE_H * scale, win_flags);
+    {
+        int pw;
+        int ph;
+        emu_present_px(scale, &pw, &ph);
+        win = SDL_CreateWindow("Retr01 Emulator (Phase 1)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, pw, ph,
+                               win_flags);
+    }
     ren = SDL_CreateRenderer(win, -1,
                              SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_TARGETTEXTURE);
     if (!ren && win) {
