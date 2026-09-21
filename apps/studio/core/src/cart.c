@@ -577,7 +577,8 @@ int r01_prg_write_asm(const R01Project *p, const char *path, char *err_buf, size
     fprintf(f, "; retr01 Phase 1 -- boot streams palette + start MAP, then VBlank pad poll.\n");
     fprintf(f, "; Gameplay: Studio play.c / emu cart runtime (marker R01P @ $80F0).\n");
     fprintf(f, "; Play table @ $8100: present[32], spawn_cell @ $8120, coll_dir @ $8122.\n");
-    fprintf(f, "; play_pos_ok @ $8500 (PRG+$0500): solid shadow probe via ($20),Y.\n");
+    fprintf(f, "; Solid patterns @ $8700 (count + bank,tile). Boot copies to RAM $0200.\n");
+    fprintf(f, "; play_pos_ok @ $8500 (PRG+$0500): probe via ($20),Y against expanded tables.\n");
     fprintf(f, ".setcpu \"65C02\"\n");
     fprintf(f, "WORLD     = $7F30\n");
     fprintf(f, "SCROLL_X  = $7F02\n");
@@ -590,6 +591,11 @@ int r01_prg_write_asm(const R01Project *p, const char *path, char *err_buf, size
     fprintf(f, "reset:\n        sei\n        cld\n        ldx #$ff\n        txs\n");
     fprintf(f, "        lda #0\n        sta WORLD\n        sta SCROLL_X\n        sta SCROLL_Y\n");
     fprintf(f, "        lda #PPUCTRL_BOOT\n        sta PPUCTRL\n");
+    fprintf(f, "        lda $8700\n        sta $0200\n        beq copy_solids_done\n");
+    fprintf(f, "        asl\n        tax\n        ldy #0\n");
+    fprintf(f, "copy_solids_loop:\n        lda $8701,y\n        sta $0201,y\n");
+    fprintf(f, "        iny\n        dex\n        bne copy_solids_loop\n");
+    fprintf(f, "copy_solids_done:\n");
     fprintf(f, "; palette + MAP stream patched at export -- see prg_phase1.c\n");
     fprintf(f, "main:\n        lda PPUSTATUS\n        and #$80\n        beq main\n");
     fprintf(f, "        lda PAD0\n        sta $00FE\n        jmp main\n");
@@ -1137,7 +1143,7 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
     prg_layout.len_pal_spr = R01_PAL_PLANE_BYTES;
     prg_layout.default_pal_row = (uint8_t)(work->worlds[0].default_pal_row & 7u);
     prg_layout.off_map_screen0 = cart_off_map_screen0(&work->worlds[0], world_base);
-    r01_prg_fill_phase1(prg, &work->worlds[0], &prg_layout);
+    r01_prg_fill_phase1(prg, work, &prg_layout);
     {
         char custom_logic_path[R01_PATH_MAX];
         resolve_custom_logic_path(cart_path, custom_logic_path, sizeof(custom_logic_path));

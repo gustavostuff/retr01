@@ -51,6 +51,9 @@ void r01_game_init(R01GameCtx *ctx) {
     (void)player_hit_w; (void)player_hit_h;
     if (!ctx) return;
     r01_game_ctx_init(ctx);
+    ctx->solid_pat_count = 1;
+    ctx->solid_pat_bank[0] = 0;
+    ctx->solid_pat_tile[0] = 1;
     if (!player_instance_spawn(&sx, &sy)) {
         sx = play_spawn_col * 128 + (128 - 8) / 2;
         sy = play_spawn_row * 120 + (120 - 8) / 2;

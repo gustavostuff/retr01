@@ -47,7 +47,7 @@ Logical canvas **640x360** or **1280x720** (**Ctrl+Shift+R**). Window scale **Ct
 
 **Worlds.** Eight slots. A pager steps the active world (**N/8**). A **BG1** / **BG0** control picks the map plane. World 1 starts as a 3x3 on a 16x16 map. Cart export packs **world 0** only (Studio World 1). BG1 is the playfield, BG0 is the parallax plane. Double-click an empty cell to create a screen. Right-click a BG1 cell for default screen / default world. PNG drop imports an atlas into the active world, BG bank 0.
 
-**Paint.** Right-column **Work on** / **Hide** radios (BG, Sprite, Both). **Ctrl+click** stamps tiles. Solid paint writes the screen solids plane (PRG tables on export). Drag an Entities row onto the preview to place an instance (switches to Sprite layer). CHR is **16 BG + 16 SPR** cart-wide. A pager steps the bank (**N/16**). A **BG** / **Sprites** control picks the plane. Caps: [`memory.md`](../../docs/general/memory.md).
+**Paint.** Right-column **Work on** / **Hide** radios (BG, Sprite, Both). **Ctrl+click** stamps tiles. Set Solid marks a BG pattern (bank + tile) as collidable. Palette and H/V flip do not matter. The list packs to PRG and copies into system RAM at boot. Drag an Entities row onto the preview to place an instance (switches to Sprite layer). CHR is **16 BG + 16 SPR** cart-wide. A pager steps the bank (**N/16**). A **BG** / **Sprites** control picks the plane. Caps: [`memory.md`](../../docs/general/memory.md).
 
 **Entities.** Up to **4** states x **8** frames x **6** sprites. **Add** opens compose. **Import** reads `aseprite_entities/` next to the saved `.r01proj` (manual, never on open). Right-click **Mark as player**. The playable player belongs on world 0. Hitbox is per state. Draw origin is per frame. Caps and pack: [`software-api.md`](../../docs/general/software-api.md). Kit palettes: [`docs/general/palette/`](../../docs/general/palette/README.md).
 
@@ -72,7 +72,7 @@ Generated API headers live in `C/include/r01_*.h` beside the project.
 
 ## Save and export
 
-**Ctrl+S** / **Ctrl+O** the current path. First save (or unsaved) opens the Save project modal. Default parent is `apps/studio/projects/`. Quit does not auto-save. JSON version **16**. Save writes world 0. Worlds 2-8 are session-only until multi-world JSON. Load applies that world data to world 0.
+**Ctrl+S** / **Ctrl+O** the current path. First save (or unsaved) opens the Save project modal. Default parent is `apps/studio/projects/`. Quit does not auto-save. JSON version **18**. Save writes world 0. Worlds 2-8 are session-only until multi-world JSON. Load applies that world data to world 0.
 
 **Ctrl+E** packs `<stem>.retr01` and regenerates `C/`, `ASM/`, and `data/` beside the project (or under `output/` if unsaved). Audio-tab tracks go into PRG at `$B000`. `r01_bgm_play(ctx, N)` in `custom_logic.c` selects the boot track at `$80FE`.
 

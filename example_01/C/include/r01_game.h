@@ -45,6 +45,9 @@ typedef struct R01GameCtx {
     int plat_grounded;
     int plat_jump_held;
     int player_run_on_x;
+    uint8_t solid_pat_count;
+    uint8_t solid_pat_bank[64];
+    uint8_t solid_pat_tile[64];
     int bgm_track;
     struct R01Projectile {
         int active;

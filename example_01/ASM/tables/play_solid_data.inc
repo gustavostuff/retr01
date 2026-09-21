@@ -1,4 +1,7 @@
-; solid shadow bytes @ PRG+$0700 (CPU $8700)
+; solid pattern list @ CPU $8700 (count + bank,tile pairs), then probe bytes
+; boot copies the list to system RAM $0200
+        .byte $01
+        .byte $00, $01
 ; screen (0,7)
         .byte $00
         .byte $00
@@ -153,23 +156,6 @@
         .byte $00
         .byte $00
         .byte $00
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
         .byte $00
         .byte $00
         .byte $00
@@ -185,7 +171,24 @@
         .byte $00
         .byte $00
         .byte $00
-        .byte $01
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
         .byte $00
         .byte $00
         .byte $00

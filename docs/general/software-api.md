@@ -227,7 +227,7 @@ There is **no** separate "max entities on screen" hard cap. On-screen count is w
 | Feature | v1 |
 | --- | --- |
 | Movement | Axis-separated (resolve X then Y, or the reverse, consistently) |
-| Solids | BG1 nametable occupancy (tile 0 is show-through and passable). PRG stores a 240-byte table per present screen derived from that map. See `memory.md` |
+| Solids | BG1 cells whose bank index and tile index match a marked pattern. Palette and H/V flip are ignored. The pattern list lives in system RAM (`$0200`), copied from PRG `$8700` at boot. See `memory.md` |
 | Colliders | Entity AABB hitboxes (per state). Vs BG solids: every overlapping 8x8 tile is tested (not corners only) |
 | Gravity / jump | Simple constant gravity + jump impulse (PRG tunes numbers). Gravity units are **1/16** px per frame^2. Release while rising uses 3x gravity (short hop) |
 | Meter | Pixels per meter (default **16**). Gravity, jump, walk, and fall cap scale as `n * meter / 16` |

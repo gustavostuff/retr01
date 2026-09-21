@@ -210,7 +210,7 @@ int r01_projectile_fire(R01GameCtx *ctx, int dx, int dy, int speed) {
     return slot;
 }
 
-static int proj_solid_at(const R01World *w, int wx, int wy) {
+static int proj_solid_at(const R01GameCtx *ctx, const R01World *w, int wx, int wy) {
     int sc = wx / R01_SCREEN_PX_W;
     int sr = wy / R01_SCREEN_PX_H;
     int lx = wx - sc * R01_SCREEN_PX_W;
@@ -218,7 +218,7 @@ static int proj_solid_at(const R01World *w, int wx, int wy) {
     int cell;
     const R01Screen *s;
     int si;
-    if (!w) {
+    if (!ctx || !w) {
         return 0;
     }
     for (si = 0; si < w->screen_count; si++) {
@@ -228,7 +228,8 @@ static int proj_solid_at(const R01World *w, int wx, int wy) {
         }
         cell = (ly / 8) * R01_SCREEN_TILES_X + (lx / 8);
         if (cell >= 0 && cell < R01_TILES_PER_SCREEN) {
-            return r01_screen_cell_is_solid(s, cell);
+            return r01_ctx_pattern_solid(ctx->solid_pat_bank, ctx->solid_pat_tile, (int)ctx->solid_pat_count,
+                                         r01_attr_solid_bank(s->attrs[cell]), (int)s->tiles[cell]);
         }
         return 0;
     }
@@ -251,7 +252,7 @@ void r01_projectile_tick(R01GameCtx *ctx, const R01World *w) {
         p->ttl--;
         wx = p->x >> R01_PROJ_FIXED_SHIFT;
         wy = p->y >> R01_PROJ_FIXED_SHIFT;
-        if (p->ttl <= 0 || wx < 0 || wy < 0 || proj_solid_at(w, wx, wy)) {
+        if (p->ttl <= 0 || wx < 0 || wy < 0 || proj_solid_at(ctx, w, wx, wy)) {
             p->active = 0;
         }
     }

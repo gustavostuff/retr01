@@ -24,7 +24,7 @@
 #define PLAY_INST_TABLE 0xC1u /* PRG+$01C1: count * 6 B records */
 
 #define R01P_OFF 0x00F0u
-#define R01P_VER_COLLISION 3u /* ver 3: PRG instance table at $81C0 */
+#define R01P_VER_COLLISION 4u /* ver 4: solid patterns at $8700, RAM copy $0200 */
 #define R01_PLAY_COLLISION_OFF 0x0500u /* CPU $8500 */
 #define R01_PLAY_SOLID_DATA_OFF 0x0700u /* CPU $8700 -- solid shadow tables */
 
@@ -230,10 +230,29 @@ static void fill_instance_table(uint8_t prg[R01_PRG_BYTES], const R01World *w) {
     prg[PLAY_OFF + PLAY_INST_COUNT] = (uint8_t)n;
 }
 
-static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01World *w) {
+static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const R01World *w) {
     size_t data_off = R01_PLAY_SOLID_DATA_OFF;
     int di = 0;
     int si;
+    int n;
+    int i;
+
+    n = p ? p->solid_pat_count : 0;
+    if (n < 0) {
+        n = 0;
+    }
+    if (n > R01_SOLID_PAT_MAX) {
+        n = R01_SOLID_PAT_MAX;
+    }
+    if (data_off + 1u + (size_t)n * 2u >= R01_PRG_BYTES) {
+        prg[PLAY_OFF + PLAY_COLL_COUNT] = 0;
+        return;
+    }
+    prg[data_off++] = (uint8_t)n;
+    for (i = 0; i < n; i++) {
+        prg[data_off++] = p->solid_pat_bank[i];
+        prg[data_off++] = p->solid_pat_tile[i];
+    }
 
     if (!w) {
         prg[PLAY_OFF + PLAY_COLL_COUNT] = 0;
@@ -252,7 +271,9 @@ static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01World *w)
         }
         tab_addr = (uint16_t)(CODE_BASE + data_off);
         for (cell = 0; cell < R01_TILES_PER_SCREEN; cell++) {
-            prg[data_off++] = s->tiles[cell] ? 1u : 0u;
+            int bank = r01_attr_solid_bank(s->attrs[cell]);
+            int tile = (int)s->tiles[cell];
+            prg[data_off++] = r01_project_pattern_solid(p, bank, tile) ? 1u : 0u;
         }
         if (PLAY_OFF + PLAY_COLL_DIR + (size_t)(di + 1) * 4u > PLAY_OFF + PLAY_INST_COUNT) {
             break;
@@ -274,11 +295,12 @@ static void install_collision_code(uint8_t prg[R01_PRG_BYTES]) {
     memcpy(prg + R01_PLAY_COLLISION_OFF, play_collision_bin, play_collision_bin_len);
 }
 
-void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01World *w, const R01PrgCartLayout *layout) {
+void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const R01PrgCartLayout *layout) {
     uint8_t mask[PLAY_PRESENT_BYTES];
     int spawn_c = R01_START_COL, spawn_r = R01_START_ROW;
     size_t n = 0;
     uint16_t main_pc;
+    const R01World *w = p ? &p->worlds[0] : NULL;
     static const uint8_t init[] = {
         0x78,             /* SEI */
         0xD8,             /* CLD */
@@ -312,6 +334,24 @@ void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01World *w, const R0
     prg[n + R01_PRG_INIT_SCROLL_X] = scroll_x;
     prg[n + R01_PRG_INIT_SCROLL_Y] = scroll_y;
     n += sizeof(init);
+    {
+        /* Copy solid pattern list $8700 (count + pairs) into system RAM $0200. */
+        static const uint8_t copy_solids[] = {
+            0xAD, 0x00, 0x87, /* LDA $8700 */
+            0x8D, 0x00, 0x02, /* STA $0200 */
+            0xF0, 0x0E,       /* BEQ skip */
+            0x0A,             /* ASL A */
+            0xAA,             /* TAX */
+            0xA0, 0x00,       /* LDY #0 */
+            0xB9, 0x01, 0x87, /* loop: LDA $8701,Y */
+            0x99, 0x01, 0x02, /* STA $0201,Y */
+            0xC8,             /* INY */
+            0xCA,             /* DEX */
+            0xD0, 0xF6,       /* BNE loop */
+        };
+        memcpy(prg + n, copy_solids, sizeof(copy_solids));
+        n += sizeof(copy_solids);
+    }
     n += append_boot_stream(prg + n, layout);
     main_pc = (uint16_t)(CODE_BASE + n);
     memcpy(prg + n, main_loop, sizeof(main_loop));
@@ -325,7 +365,7 @@ void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01World *w, const R0
     prg[PLAY_OFF + PLAY_SPAWN_CELL] = R01_CELL_PACK(spawn_c, spawn_r);
 
     install_collision_code(prg);
-    fill_collision_tables(prg, w);
+    fill_collision_tables(prg, p, w);
     fill_instance_table(prg, w);
 
     prg[R01P_OFF] = 'R';

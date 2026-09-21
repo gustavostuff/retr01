@@ -144,6 +144,7 @@ int r01_play_start(R01PlayState *pl, const R01Project *p, const char *project_pa
         return 0;
     }
     pl->active = 1;
+    r01_project_copy_solid_pats(p, &pl->ctx.solid_pat_count, pl->ctx.solid_pat_bank, pl->ctx.solid_pat_tile);
     if (play_player_instance_spawn(p, w, &sx, &sy)) {
         place_player_xy(pl, sx, sy);
         return 1;
@@ -219,8 +220,8 @@ static int play_move_ok(void *user, int ox, int oy) {
     if (!m || !m->w) {
         return 0;
     }
-    r01_play_player_hit_rect(m->p, m->ctx, ox, oy, &hx, &hy, &hw, &hh);
-    return r01_world_aabb_ok(m->w, hx, hy, hw, hh);
+        r01_play_player_hit_rect(m->p, m->ctx, ox, oy, &hx, &hy, &hw, &hh);
+        return r01_world_aabb_ok(m->p, m->w, hx, hy, hw, hh);
 }
 
 void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy, int jump_down) {

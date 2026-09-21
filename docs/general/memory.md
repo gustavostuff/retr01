@@ -164,7 +164,7 @@ One catalog for the cart (up to **32** types). The same type may spawn in any wo
 | Entity **behavior** (what it does) | **PRG**, authored in **C/ASM** |
 | Entity **spawn locations** (who appears where) | **PRG** (tables and/or `spawn_entity` calls) |
 | Entity **pixel patterns** | Global SPR CHR |
-| Collision solids | **PRG** (occupancy from BG1 tiles) |
+| Collision solids | **RAM** (bank + tile pattern list, copied from PRG at boot) |
 | Player anim (`PA`) | One cart blob after world-0 maps. Host Play player frames. See `software-api.md` |
 
 | Topic | Value |
@@ -257,8 +257,9 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 | --- | --- | --- |
 | `+$0100` | `$8100` | Present-screen bitmasks (32 B, 16x16 grid) |
 | `+$0120` | `$8120` | Spawn cell (`col | row<<4`) |
-| `+$0121` | `$8121` | Collision dir count |
+| `+$0121` | `$8121` | Collision dir count (per-screen probe tables) |
 | `+$0122` | `$8122` | Collision dir entries |
+| `+$0700` | `$8700` | Solid pattern list: u8 count, then `count` x (bank, tile). Boot copies to RAM `$0200`. Probe tables follow |
 | `+$01C0` | `$81C0` | Instance count (u8, max **64**) |
 | `+$01C1` | `$81C1` | Instance table (`count` x **6 B**, pack below) |
 | `+$00F0` | `$80F0` | `R01P` marker + version byte |
@@ -283,7 +284,7 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 
 Table grows toward collision code at `$8500`. **64** records need **384 B** and fit.
 
-Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs). Collision solids are PRG data (collision dir above).
+Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs). Collision solids are a bank+tile list in system RAM (copied from PRG `$8700` at boot).
 
 ## Notes
 

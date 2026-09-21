@@ -1,6 +1,7 @@
 #include "test_harness.h"
 
 #include "retr01_studio/json_io.h"
+#include "retr01_studio/collision.h"
 #include "retr01_studio/project.h"
 #include "retr01_studio/sprites.h"
 
@@ -36,6 +37,14 @@ TEST_MAIN() {
     EXPECT(p2->worlds[0].default_pal_row == 3, "default_pal_row roundtrip");
     EXPECT(p2->global_pal_bg[1][2].idx[1] == 42, "palette roundtrip");
     EXPECT(p2->worlds[0].screens[2].attrs[0] == r01_attr_pack(0, 2, 1, 0), "tile attr roundtrip");
+    {
+        EXPECT(r01_project_set_pattern_solid(p, 0, 1, 1), "mark solid pattern");
+        EXPECT(r01_project_save_json(p, "test_roundtrip.r01proj", err, sizeof(err)) == 0, "save solids");
+        EXPECT(r01_project_load_json(p2, "test_roundtrip.r01proj", err, sizeof(err)) == 0, "load solids");
+        EXPECT(p2->solid_pat_count == 1, "solid pattern count");
+        EXPECT(p2->solid_pat_bank[0] == 0 && p2->solid_pat_tile[0] == 1, "solid pattern bank+tile");
+        EXPECT(p2->worlds[0].screens[2].solids[0], "derived solid cache");
+    }
     EXPECT(p2->worlds[0].screen_count == R01_GRID_MAX * R01_GRID_MAX, "screen slot count roundtrip");
     EXPECT(p2->sprite_count == 0, "legacy empty sprites");
 

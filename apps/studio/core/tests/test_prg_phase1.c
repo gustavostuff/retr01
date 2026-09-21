@@ -37,12 +37,12 @@ TEST_MAIN() {
     layout.off_map_screen0 = 0x1000;
     layout.default_pal_row = 0;
 
-    r01_prg_fill_phase1(prg, &p->worlds[0], &layout);
+    r01_prg_fill_phase1(prg, p, &layout);
 
     EXPECT(prg[0] == 0x78, "SEI at reset");
     EXPECT(prg[0x00F0] == 'R' && prg[0x00F1] == '0' && prg[0x00F2] == '1' && prg[0x00F3] == 'P',
            "R01P marker");
-    EXPECT(prg[0x00F4] == 3, "R01P instance-table ver");
+    EXPECT(prg[0x00F4] == 4, "R01P solid-pattern ver");
     EXPECT(prg[R01_PRG_BGM_BOOT_OFF] == 0, "boot track empty after fill");
 
     /* Play table lives at PRG+$0100 (CPU $8100). */

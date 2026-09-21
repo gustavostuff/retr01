@@ -1,4 +1,5 @@
 #include "retr01_studio/export_codegen.h"
+#include "retr01_studio/collision.h"
 #include "retr01_studio/entities.h"
 #include "retr01_studio/play.h"
 #include "retr01_studio/project.h"
@@ -251,6 +252,9 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "    int plat_grounded;\n"
                    "    int plat_jump_held;\n"
                    "    int player_run_on_x;\n"
+                   "    uint8_t solid_pat_count;\n"
+                   "    uint8_t solid_pat_bank[64];\n"
+                   "    uint8_t solid_pat_tile[64];\n"
                    "    int bgm_track;\n"
                    "    struct R01Projectile {\n"
                    "        int active;\n"
@@ -788,6 +792,21 @@ static int write_base_game(FILE *f, const R01Project *p) {
     fprintf(f, "    (void)player_hit_w; (void)player_hit_h;\n");
     fprintf(f, "    if (!ctx) return;\n");
     fprintf(f, "    r01_game_ctx_init(ctx);\n");
+    {
+        int pn = p->solid_pat_count;
+        int pi;
+        if (pn < 0) {
+            pn = 0;
+        }
+        if (pn > R01_SOLID_PAT_MAX) {
+            pn = R01_SOLID_PAT_MAX;
+        }
+        fprintf(f, "    ctx->solid_pat_count = %d;\n", pn);
+        for (pi = 0; pi < pn; pi++) {
+            fprintf(f, "    ctx->solid_pat_bank[%d] = %u;\n", pi, (unsigned)p->solid_pat_bank[pi]);
+            fprintf(f, "    ctx->solid_pat_tile[%d] = %u;\n", pi, (unsigned)p->solid_pat_tile[pi]);
+        }
+    }
     fprintf(f, "    if (!player_instance_spawn(&sx, &sy)) {\n");
     fprintf(f, "        sx = play_spawn_col * %d + (%d - %d) / 2;\n", R01_SCREEN_PX_W, R01_SCREEN_PX_W,
             R01_PLAY_PLAYER_W);
@@ -880,19 +899,29 @@ static int write_asm_tables(const char *asm_dir, const R01Project *p, const R01W
         return -1;
     }
     fprintf(f, "; collision directory: col, row, tab_lo, tab_hi per present screen\n");
-    if (w) {
-        size_t data_off = 0x0700u;
-        for (si = 0; si < w->screen_count; si++) {
-            const R01Screen *s = &w->screens[si];
-            uint16_t tab_addr;
-            if (!s->present || s->col < 0 || s->col >= R01_GRID_MAX || s->row < 0 || s->row >= R01_GRID_MAX) {
-                continue;
+    {
+        int pat_n = p ? p->solid_pat_count : 0;
+        size_t data_off;
+        if (pat_n < 0) {
+            pat_n = 0;
+        }
+        if (pat_n > R01_SOLID_PAT_MAX) {
+            pat_n = R01_SOLID_PAT_MAX;
+        }
+        data_off = 1u + (size_t)pat_n * 2u;
+        if (w) {
+            for (si = 0; si < w->screen_count; si++) {
+                const R01Screen *s = &w->screens[si];
+                uint16_t tab_addr;
+                if (!s->present || s->col < 0 || s->col >= R01_GRID_MAX || s->row < 0 || s->row >= R01_GRID_MAX) {
+                    continue;
+                }
+                tab_addr = (uint16_t)(0x8700u + data_off);
+                fprintf(f, "        .byte $%02X, $%02X, $%02X, $%02X  ; screen (%d,%d)\n", s->col & 0xFF,
+                        s->row & 0xFF, tab_addr & 0xFF, (tab_addr >> 8) & 0xFF, s->col, s->row);
+                data_off += R01_TILES_PER_SCREEN;
+                di++;
             }
-            tab_addr = (uint16_t)(0x8700u + data_off);
-            fprintf(f, "        .byte $%02X, $%02X, $%02X, $%02X  ; screen (%d,%d)\n", s->col & 0xFF,
-                    s->row & 0xFF, tab_addr & 0xFF, (tab_addr >> 8) & 0xFF, s->col, s->row);
-            data_off += R01_TILES_PER_SCREEN;
-            di++;
         }
     }
     fprintf(f, "play_coll_count: .byte $%02X\n", di & 0xFF);
@@ -910,7 +939,22 @@ static int write_asm_tables(const char *asm_dir, const R01Project *p, const R01W
         set_err(err_buf, err_cap, "cannot write tables");
         return -1;
     }
-    fprintf(f, "; solid shadow bytes @ PRG+$0700 (CPU $8700)\n");
+    fprintf(f, "; solid pattern list @ CPU $8700 (count + bank,tile pairs), then probe bytes\n");
+    fprintf(f, "; boot copies the list to system RAM $0200\n");
+    {
+        int pat_n = p ? p->solid_pat_count : 0;
+        int pi;
+        if (pat_n < 0) {
+            pat_n = 0;
+        }
+        if (pat_n > R01_SOLID_PAT_MAX) {
+            pat_n = R01_SOLID_PAT_MAX;
+        }
+        fprintf(f, "        .byte $%02X\n", pat_n & 0xFF);
+        for (pi = 0; pi < pat_n; pi++) {
+            fprintf(f, "        .byte $%02X, $%02X\n", p->solid_pat_bank[pi], p->solid_pat_tile[pi]);
+        }
+    }
     if (w) {
         for (si = 0; si < w->screen_count; si++) {
             const R01Screen *s = &w->screens[si];
@@ -920,7 +964,8 @@ static int write_asm_tables(const char *asm_dir, const R01Project *p, const R01W
             }
             fprintf(f, "; screen (%d,%d)\n", s->col, s->row);
             for (cell = 0; cell < R01_TILES_PER_SCREEN; cell++) {
-                fprintf(f, "        .byte $%02X\n", s->tiles[cell] ? 1 : 0);
+                int on = r01_project_pattern_solid(p, r01_attr_solid_bank(s->attrs[cell]), (int)s->tiles[cell]);
+                fprintf(f, "        .byte $%02X\n", on ? 1 : 0);
             }
         }
     }
@@ -1049,6 +1094,8 @@ static int write_asm_tree(const char *asm_dir, const R01Project *p, const R01Wor
                    "PLAY_COLL_DIR   = $8122\n"
                    "PLAY_INST_COUNT = $81C0\n"
                    "PLAY_INST_TABLE = $81C1\n"
+                   "PLAY_SOLID_RAM  = $0200\n"
+                   "PLAY_SOLID_LIST = $8700\n"
                    "R01P_MARKER     = $80F0\n"
                    "PLAT_GRAVITY    = $80F7\n"
                    "PLAT_JUMP       = $80F8\n"

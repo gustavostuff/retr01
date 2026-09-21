@@ -64,7 +64,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 ### 12. Platformer physics scope
 
-**Resolved (v1):** Axis-separated, AABB, gravity/jump (gravity in 1/16 px), 16 px meter, short hop on jump release, Down crouch. No slopes/movers/one-ways. Solids are **PRG** collision data. See `software-api.md`.
+**Resolved (v1):** Axis-separated, AABB, gravity/jump (gravity in 1/16 px), 16 px meter, short hop on jump release, Down crouch. No slopes/movers/one-ways. Solids are a bank+tile list in system RAM. See `software-api.md`.
 
 ### 13. IC budget + composite IC
 
@@ -88,11 +88,11 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 ### 18. Global CHR + catalogs (2026-09-20)
 
-**Resolved:** **8** worlds. **64** BG1 / **16** BG0 present screens per world. CHR is **16 BG + 16 SPR** banks cart-wide (**128 KB**). One global entity catalog, **32** types, **4 x 8 x 6**, maxed def **1044 B**. Attr bits 0-3 = bank 0-15, 4-5 = pal, 6-7 = H/V flip. Solids and tile anim are PRG. Passive cart, no mapper. See `memory.md`, `video-graphics.md`, `software-api.md`, `selling-points.md`.
+**Resolved:** **8** worlds. **64** BG1 / **16** BG0 present screens per world. CHR is **16 BG + 16 SPR** banks cart-wide (**128 KB**). One global entity catalog, **32** types, **4 x 8 x 6**, maxed def **1044 B**. Attr bits 0-3 = bank 0-15, 4-5 = pal, 6-7 = H/V flip. Collision solids are a bank+tile list in RAM. Tile anim is PRG. Passive cart, no mapper. See `memory.md`, `video-graphics.md`, `software-api.md`, `selling-points.md`.
 
 ### 19. Collision solids packing
 
-**Resolved:** Collision follows BG1 nametable occupancy. Tile **0** is show-through (BG0) and is not solid. Non-zero BG1 tiles are solid. Studio stores that occupancy as `solids_b64` (240 bytes per screen). Packed carts put a collision directory at PRG `$8121` plus one 240-byte table per present screen, derived from the nametable. Host Play samples the BG1 tile map. See `memory.md`.
+**Resolved:** Collision marks BG1 patterns by bank index and tile index. Palette and H/V flip do not affect solidity. Studio stores `solid_patterns` as `[bank, tile]` pairs. Packed carts put the list at PRG `$8700` and copy it into system RAM `$0200` at boot. Host Play tests the BG1 nametable against that list. See `memory.md`.
 
 ### 20. Instance + PA byte schemas
 
@@ -138,5 +138,5 @@ Open items and close criteria. A landed decision folds into the matching doc.
 | 2026-09-17 | Host Play boot catchup | Phase 1 emu waits for a full start MAP stream (480 B) before Host Play takes the camera 2x2 from cart. See `apps/emu/README.md`. |
 | 2026-09-19 | APU | 8-ch S2 software mix. `$7F40` is 8x4 regs (S2 never parses bytecode). BGM 1-5 / SFX 6-8. DPCM in S2 flash. NMI tracker on 6502. See `sound.md`. |
 | 2026-09-20 | CHR / maps / entities | 16+16 global banks, 8 worlds, 64 BG1 / 16 BG0, 32 types (4x8x6). Attr 4-bit bank. No mapper. See `memory.md`. |
-| 2026-09-20 | Collision solids | Per-screen 240 B tables. Directory at PRG `$8121`. See `memory.md`. |
+| 2026-09-21 | Collision solids | Bank+tile pattern list in RAM `$0200` (PRG `$8700`). Pal/flip ignored. See `memory.md`. |
 | 2026-09-20 | Instance + PA | PRG spawn 6 B. RAM live 12 B. One `PA` blob cart-wide (max 1031 B). See `software-api.md`. |

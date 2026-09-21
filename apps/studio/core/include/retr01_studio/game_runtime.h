@@ -87,6 +87,9 @@ struct R01GameCtx {
     int plat_jump_held;
     int player_run_on_x;
     int player_run_fast;
+    uint8_t solid_pat_count;
+    uint8_t solid_pat_bank[R01_SOLID_PAT_MAX];
+    uint8_t solid_pat_tile[R01_SOLID_PAT_MAX];
     R01Projectile projectiles[R01_MAX_PROJECTILES];
 };
 

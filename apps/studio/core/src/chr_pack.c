@@ -1,4 +1,5 @@
 #include "retr01_studio/chr_pack.h"
+#include "retr01_studio/collision.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -408,8 +409,6 @@ void r01_screen_sanitize_empty_attrs(R01Screen *s) {
         if (s->tiles[cell] == 0) {
             s->attrs[cell] = 0;
             s->solids[cell] = 0;
-        } else {
-            s->solids[cell] = 1u;
         }
     }
 }
@@ -424,9 +423,10 @@ void r01_screen_paint_tile(R01Project *p, R01Screen *s, int tile_x, int tile_y, 
     }
     cell = tile_y * R01_SCREEN_TILES_X + tile_x;
     s->tiles[cell] = tile_id;
-    /* Erase / blank: never keep pal/solid from the previous occupant. */
+    /* Erase / blank: never keep pal from the previous occupant. */
     s->attrs[cell] = (tile_id == 0) ? 0 : attr;
-    s->solids[cell] = (tile_id == 0) ? 0 : 1u;
+    s->solids[cell] =
+        r01_project_pattern_solid(p, r01_attr_solid_bank(s->attrs[cell]), (int)tile_id) ? 1u : 0u;
     bank = r01_attr_bank(attr);
     if (bank < 0 || bank >= R01_BG_BANKS || tile_id >= (uint8_t)p->bg_banks[bank].tile_count) {
         return;

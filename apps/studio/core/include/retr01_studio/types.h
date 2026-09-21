@@ -68,7 +68,8 @@
 
 #define R01_NAME_MAX 64
 #define R01_PATH_MAX 512
-#define R01_JSON_VER 17
+#define R01_JSON_VER 18
+#define R01_SOLID_PAT_MAX 64 /* cart-wide solid BG patterns (bank + tile) */
 
 #define R01_ASEPRITE_ENTITIES_DIR "aseprite_entities"
 #define R01_ASEPRITE_LISTING_MAX 64
@@ -164,7 +165,7 @@ typedef struct R01Screen {
     uint8_t pixels[R01_SCREEN_PX_W * R01_SCREEN_PX_H];
     uint8_t tiles[R01_TILES_PER_SCREEN];
     uint8_t attrs[R01_ATTRS_PER_SCREEN];
-    uint8_t solids[R01_TILES_PER_SCREEN]; /* 0/1 per cell */
+    uint8_t solids[R01_TILES_PER_SCREEN]; /* derived: cell matches a solid pattern */
 } R01Screen;
 
 typedef struct R01ChrBank {
@@ -309,6 +310,9 @@ typedef struct R01Project {
     R01EntityType entities[R01_MAX_ENTITY_TYPES];
     int entity_count;
     int player_entity; /* type index marked as Play player; -1 = stub tile */
+    int solid_pat_count;
+    uint8_t solid_pat_bank[R01_SOLID_PAT_MAX];
+    uint8_t solid_pat_tile[R01_SOLID_PAT_MAX];
     R01OtherScreen other_screens[R01_CART_OTHER_MAX]; /* [0]=title [1]=inter [2+]=credits */
     R01World worlds[R01_MAX_WORLDS];
     R01BgmData bgm;

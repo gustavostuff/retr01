@@ -378,6 +378,11 @@ int r01e_cart_solid_at(const R01eCart *c, int world, int wx, int wy) {
     int col, row, lx, ly, tx, ty, cell;
     uint32_t pay_off;
     const uint8_t *pay;
+    const uint8_t *prg;
+    int bank;
+    int tile;
+    int n;
+    int i;
 
     if (!c || wx < 0 || wy < 0) {
         return 0;
@@ -399,8 +404,29 @@ int r01e_cart_solid_at(const R01eCart *c, int world, int wx, int wy) {
     if (!pay) {
         return 0;
     }
-    /* BG1 tile 0 is show-through (BG0). Occupancy matches the picture. */
-    return pay[cell] != 0;
+    tile = (int)pay[cell];
+    bank = (int)(pay[R01E_TILES_PER_SCREEN + cell] & 0x0Fu);
+    prg = r01e_cart_prg(c);
+    if (!prg || c->len_prg < 0x0701u) {
+        return 0;
+    }
+    n = (int)prg[0x0700];
+    if (n < 0) {
+        n = 0;
+    }
+    if (n > 64) {
+        n = 64;
+    }
+    if (c->len_prg < 0x0701u + (uint32_t)n * 2u) {
+        return 0;
+    }
+    for (i = 0; i < n; i++) {
+        if ((int)prg[0x0701u + (uint32_t)i * 2u] == bank &&
+            (int)prg[0x0702u + (uint32_t)i * 2u] == tile) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 const uint8_t *r01e_cart_other_raw(const R01eCart *c, int id, size_t *out_len, int *out_flags) {

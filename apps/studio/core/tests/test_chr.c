@@ -67,7 +67,7 @@ TEST_MAIN() {
     EXPECT(r01_attr_bank(s->attrs[1 * R01_SCREEN_TILES_X + 1]) == 0, "paint sets attr bank");
     EXPECT(r01_attr_pal(s->attrs[1 * R01_SCREEN_TILES_X + 1]) == 1, "paint sets attr pal");
     EXPECT(r01_attr_flip_h(s->attrs[1 * R01_SCREEN_TILES_X + 1]), "paint sets flip_h");
-    EXPECT(s->solids[1 * R01_SCREEN_TILES_X + 1] != 0, "paint marks BG1 occupancy solid");
+    EXPECT(s->solids[1 * R01_SCREEN_TILES_X + 1] == 0, "paint does not mark an unmarked pattern solid");
 
     r01_screen_paint_tile(p, s, 1, 1, 0, r01_attr_pack(0, 2, 0, 0));
     EXPECT(s->tiles[1 * R01_SCREEN_TILES_X + 1] == 0, "erase clears tile");

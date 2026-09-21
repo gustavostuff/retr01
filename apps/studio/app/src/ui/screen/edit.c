@@ -114,25 +114,23 @@ void screen_toggle_sel_flag(UiState *ui, uint8_t flag) {
 }
 
 void screen_set_solid_by_hw(UiState *ui, int ref_tx, int ref_ty) {
-    R01World *w = r01_project_active_world(ui->project);
     R01Project *p = ui->project;
     R01Screen *s = ui_edit_map_screen(ui);
     int cell;
-    uint8_t ref_attr;
-    uint8_t hw_key;
-    int set_solid;
-    int touched;
+    int bank;
+    int tile;
+    int now_on;
+    char msg[64];
 
-    if (!w || !s || ref_tx < 0 || ref_tx >= R01_SCREEN_TILES_X || ref_ty < 0 || ref_ty >= R01_SCREEN_TILES_Y) {
+    if (!p || !s || ref_tx < 0 || ref_tx >= R01_SCREEN_TILES_X || ref_ty < 0 || ref_ty >= R01_SCREEN_TILES_Y) {
         return;
     }
     cell = ref_ty * R01_SCREEN_TILES_X + ref_tx;
-    ref_attr = s->attrs[cell];
-    hw_key = r01_attr_hw(ref_attr);
-    set_solid = !s->solids[cell];
-    touched = r01_world_apply_solid_hw(w, hw_key, set_solid);
+    bank = r01_attr_solid_bank(s->attrs[cell]);
+    tile = (int)s->tiles[cell];
+    now_on = r01_project_toggle_pattern_solid(p, bank, tile);
     screen_refresh_sel(ui);
-    if (touched > 0) {
-        ui_toast(ui, set_solid ? "solid set (matching attrs)" : "solid cleared (matching attrs)", 0);
-    }
+    snprintf(msg, sizeof(msg), now_on ? "solid pattern bank %d tile %d" : "cleared solid bank %d tile %d", bank,
+             tile);
+    ui_toast(ui, msg, 0);
 }

@@ -1,5 +1,6 @@
 #include "retr01_studio/json_io.h"
 #include "retr01_studio/chr_pack.h"
+#include "retr01_studio/collision.h"
 #include "retr01_studio/project.h"
 #include "retr01_studio/palette.h"
 #include "retr01_studio/sprites.h"
@@ -332,6 +333,14 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
     fprintf(f, "  \"default_screen\": %d,\n", w->default_screen);
     fprintf(f, "  \"default_pal_row\": %d,\n", w->default_pal_row);
     fprintf(f, "  \"player_entity\": %d,\n", p->player_entity);
+    fprintf(f, "  \"solid_patterns\": [");
+    {
+        int i;
+        for (i = 0; i < p->solid_pat_count && i < R01_SOLID_PAT_MAX; i++) {
+            fprintf(f, "%s[%d, %d]", i ? ", " : "", (int)p->solid_pat_bank[i], (int)p->solid_pat_tile[i]);
+        }
+    }
+    fprintf(f, "],\n");
     fprintf(f, "  \"grid_cols\": %d,\n", w->grid_cols);
     fprintf(f, "  \"grid_rows\": %d,\n", w->grid_rows);
     fprintf(f, "  \"global_pal_bg\": [");
@@ -588,25 +597,19 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
         }
         tl = encode_b64(s->tiles, sizeof(s->tiles));
         at = encode_b64(attrs, sizeof(attrs));
-        {
-            char *sol = encode_b64(s->solids, sizeof(s->solids));
-            if (!tl || !at || !sol) {
-                free(tl);
-                free(at);
-                free(sol);
-                fclose(f);
-                set_err(err_buf, err_cap, "oom");
-                return -1;
-            }
-            fprintf(f, "%s    {\"col\": %d, \"row\": %d,\n", wrote ? ",\n" : "", s->col, s->row);
-            fprintf(f, "     \"tiles_b64\": \"%s\",\n", tl);
-            fprintf(f, "     \"attrs_b64\": \"%s\",\n", at);
-            fprintf(f, "     \"solids_b64\": \"%s\"}", sol);
-            wrote = 1;
+        if (!tl || !at) {
             free(tl);
             free(at);
-            free(sol);
+            fclose(f);
+            set_err(err_buf, err_cap, "oom");
+            return -1;
         }
+        fprintf(f, "%s    {\"col\": %d, \"row\": %d,\n", wrote ? ",\n" : "", s->col, s->row);
+        fprintf(f, "     \"tiles_b64\": \"%s\",\n", tl);
+        fprintf(f, "     \"attrs_b64\": \"%s\"}", at);
+        wrote = 1;
+        free(tl);
+        free(at);
     }
     fprintf(f, "\n  ],\n");
     fprintf(f, "  \"bg0_cols\": %d,\n", w->bg0_cols);
@@ -754,6 +757,64 @@ static int json_int_list(const char *p, const char *key, int *out, int max) {
         k = end;
     }
     return n;
+}
+
+static void json_load_solid_patterns(const char *buf, R01Project *p) {
+    const char *k;
+    int n = 0;
+    if (!buf || !p) {
+        return;
+    }
+    p->solid_pat_count = 0;
+    k = json_find(buf, "\"solid_patterns\"");
+    if (!k) {
+        return;
+    }
+    k = strchr(k, '[');
+    if (!k) {
+        return;
+    }
+    k++;
+    while (n < R01_SOLID_PAT_MAX && *k) {
+        char *end;
+        long bank;
+        long tile;
+        while (*k == ' ' || *k == '\n' || *k == '\t' || *k == '\r' || *k == ',') {
+            k++;
+        }
+        if (*k == ']') {
+            break;
+        }
+        if (*k != '[') {
+            break;
+        }
+        k++;
+        bank = strtol(k, &end, 10);
+        if (end == k) {
+            break;
+        }
+        k = end;
+        while (*k == ' ' || *k == '\t' || *k == ',') {
+            k++;
+        }
+        tile = strtol(k, &end, 10);
+        if (end == k) {
+            break;
+        }
+        k = end;
+        while (*k && *k != ']') {
+            k++;
+        }
+        if (*k == ']') {
+            k++;
+        }
+        if (bank >= 0 && bank < R01_BG_BANKS && tile >= 0 && tile < R01_TILES_PER_BANK) {
+            p->solid_pat_bank[n] = (uint8_t)bank;
+            p->solid_pat_tile[n] = (uint8_t)tile;
+            n++;
+        }
+    }
+    p->solid_pat_count = n;
 }
 
 static char *json_string_field_dup(const char *obj, const char *key) {
@@ -1003,6 +1064,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
     json_int_after(buf, "\"default_screen\"", &default_screen);
     json_int_after(buf, "\"default_pal_row\"", &default_pal_row);
     json_int_after(buf, "\"player_entity\"", &player_entity);
+    json_load_solid_patterns(buf, p);
     json_int_after(buf, "\"grid_cols\"", &grid_cols);
     json_int_after(buf, "\"grid_rows\"", &grid_rows);
     {
@@ -1816,6 +1878,7 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
         } else {
             p->player_entity = -1;
         }
+        r01_project_sync_solids(p);
     }
 
     if (active >= 0 && active < r01_project_world0(p)->screen_count &&

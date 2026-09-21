@@ -17,8 +17,10 @@ typedef struct R01PrgCartLayout {
 #define R01_PRG_INIT_SCROLL_X 11u /* LDA #imm before STA $7F02 */
 #define R01_PRG_INIT_SCROLL_Y 16u /* LDA #imm before STA $7F03 */
 
-/* play_pos_ok @ CPU $8500 (PRG+$0500). Solid shadow dir @ $8122. */
+/* play_pos_ok @ CPU $8500 (PRG+$0500). Solid pattern list @ $8700, RAM copy $0200. */
 #define R01_PLAY_COLLISION_CPU 0x8500u
+#define R01_PLAY_SOLID_RAM 0x0200u
+#define R01_PLAY_SOLID_LIST_CPU 0x8700u
 
 /* Entity placements in PRG (not cart world blob). CPU $81C0 / PRG+$01C0. */
 #define R01_PRG_PLAY_INST_COUNT_OFF 0x01C0u
@@ -38,6 +40,6 @@ typedef struct R01PrgCartLayout {
  * then VBlank pad poll. Play table at $8100. Main loop PC stored at PRG+$7FFA.
  * Init scroll is patched from spawn-screen camera (same margin math as Play).
  */
-void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01World *w, const R01PrgCartLayout *layout);
+void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const R01PrgCartLayout *layout);
 
 #endif

@@ -76,6 +76,7 @@ TEST_MAIN() {
     }
 
     r01_project_init(p, "test");
+    EXPECT(r01_project_set_pattern_solid(p, 0, 1, 1), "mark bank 0 tile 1 solid");
     for (i = 0; i < p->worlds[0].screen_count; i++) {
         p->worlds[0].screens[i].present = 1;
     }
@@ -141,12 +142,15 @@ TEST_MAIN() {
         int wx = pl.ctx.player_x;
         int wy = pl.ctx.player_y;
         s->tiles[cell] = 0;
+        s->attrs[cell] = 0;
         s->solids[cell] = 1;
-        EXPECT(!r01_world_solid_at(&p->worlds[0], wx, wy), "empty BG1 is not solid");
+        EXPECT(!r01_world_solid_at(p, &p->worlds[0], wx, wy), "unmarked pattern is not solid");
         s->solids[cell] = 0;
         s->tiles[cell] = 1;
-        EXPECT(r01_world_solid_at(&p->worlds[0], wx, wy), "BG1 tile occupancy is solid");
+        s->attrs[cell] = r01_attr_pack(0, 2, 1, 1);
+        EXPECT(r01_world_solid_at(p, &p->worlds[0], wx, wy), "bank+tile mark is solid");
         s->tiles[cell] = 0;
+        s->attrs[cell] = 0;
     }
 
     EXPECT(!r01_play_button(&pl, p, R01_PLAY_BTN_X), "X has no warp");
@@ -176,18 +180,23 @@ TEST_MAIN() {
 
     {
         uint8_t hw = r01_attr_hw(r01_attr_pack(1, 2, 0, 1));
-        int touched;
+        int on;
+        (void)hw;
         s = &p->worlds[0].screens[p->worlds[0].default_screen];
         s->attrs[0] = r01_attr_pack(1, 2, 0, 1);
-        s->attrs[1] = r01_attr_pack(1, 2, 0, 1);
+        s->attrs[1] = r01_attr_pack(1, 0, 1, 0);
         s->attrs[2] = r01_attr_pack(0, 0, 0, 0);
-        s->tiles[0] = 1;
-        s->tiles[1] = 1;
-        s->tiles[2] = 0;
-        touched = r01_world_apply_solid_hw(&p->worlds[0], hw, 1);
-        EXPECT(touched >= 2, "solid by hw touches matching tiles");
-        EXPECT(s->solids[0] && s->solids[1], "matching attrs solid");
-        EXPECT(!s->solids[2], "non-matching attrs unchanged");
+        s->attrs[3] = r01_attr_pack(1, 2, 0, 1);
+        s->tiles[0] = 5;
+        s->tiles[1] = 5;
+        s->tiles[2] = 5;
+        s->tiles[3] = 7;
+        on = r01_project_set_pattern_solid(p, 1, 5, 1);
+        EXPECT(on, "solid by bank+tile");
+        EXPECT(s->solids[0] && s->solids[1], "same pattern solid across pal/flip");
+        EXPECT(!s->solids[2], "other bank unchanged");
+        EXPECT(!s->solids[3], "other tile unchanged");
+        (void)r01_project_set_pattern_solid(p, 1, 5, 0);
     }
 
     /* Seam: solid on neighboring screen blocks crossing the edge. */
