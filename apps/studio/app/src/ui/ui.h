@@ -18,6 +18,7 @@
 /* Shared chrome colors / UI_UNIT / UI_BTN_H: retr01_ui/metrics.h */
 #define UI_SIDEBAR_W 128
 #define UI_CTRL_SIDEBAR_W 128
+#define UI_PLAY_BTN_W (UI_UNIT * 8) /* Host Play/Stop, 8px grid */
 #define UI_WORLD_BTN 16
 #define UI_WORLD_CELL 8 /* 16x16 map fits 128px sidebar */
 #define UI_WORLD_VIEW 128

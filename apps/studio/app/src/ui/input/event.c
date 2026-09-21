@@ -87,6 +87,11 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
     if (!ui) {
         return 0;
     }
+    if (e->type == SDL_KEYDOWN) {
+        ui->keys[e->key.keysym.scancode] = 1;
+    } else if (e->type == SDL_KEYUP) {
+        ui->keys[e->key.keysym.scancode] = 0;
+    }
     if (e->type == SDL_MOUSEMOTION || e->type == SDL_MOUSEBUTTONDOWN || e->type == SDL_MOUSEBUTTONUP) {
         ui->mouse_x = lx;
         ui->mouse_y = ly;
@@ -96,6 +101,26 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
     }
     if (ui_project_io_is_open(ui)) {
         return ui_project_io_event(ui, e, lx, ly);
+    }
+    if (ui->play.active) {
+        if (e->type == SDL_MOUSEMOTION) {
+            ui_update_cursor(ui);
+            return 1;
+        }
+        if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT) {
+            ui->arm_kind = play_button_hit(ui, lx, ly) ? UI_ARM_PLAY : UI_ARM_NONE;
+            return 1;
+        }
+        if (e->type == SDL_MOUSEBUTTONUP && e->button.button == SDL_BUTTON_LEFT) {
+            if (ui->arm_kind == UI_ARM_PLAY && play_button_hit(ui, lx, ly)) {
+                ui->arm_kind = UI_ARM_NONE;
+                ui_toggle_play(ui);
+                return 1;
+            }
+            ui->arm_kind = UI_ARM_NONE;
+            return 1;
+        }
+        return 1;
     }
     if (ui->menu.open && (e->type == SDL_MOUSEMOTION || e->type == SDL_MOUSEWHEEL ||
                           e->type == SDL_MOUSEBUTTONUP)) {

@@ -26,7 +26,7 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
     SDL_RenderClear(r);
 
     /* Context menus own the pointer: hide hover/hit feedback on chrome underneath. */
-    menu_blocks = ui->menu.open;
+    menu_blocks = ui->menu.open || ui->play.active;
     if (menu_blocks) {
         saved_mx = ui->mouse_x;
         saved_my = ui->mouse_y;
@@ -53,6 +53,14 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
             draw_preview_inspect(ui, r);
             draw_region_focus(ui, r);
         }
+        if (ui->play.active && !ui->menu.open) {
+            ui->mouse_x = saved_mx;
+            ui->mouse_y = saved_my;
+        }
+        if (ui->play.active) {
+            draw_play_lock_overlay(ui, r);
+        }
+        draw_play_button(ui, r);
     }
 
     if (ui->toast_until > SDL_GetTicks() && ui->toast[0]) {
@@ -63,7 +71,7 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
         font_draw_centered(r, UI_UNIT, ty, tw, UI_BTN_H, ui->toast, 240, 240, 240);
     }
 
-    if (ui->app_mode == UI_APP_GRAPHICS) {
+    if (ui->app_mode == UI_APP_GRAPHICS && !ui->play.active) {
         if (ui->pal_edit.open) {
             draw_pal_modal(ui, r);
         } else if (ui->sprite_edit.open) {

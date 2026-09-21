@@ -57,12 +57,13 @@ void ui_editor_layout(const UiState *ui, int *screen_x, int *screen_y, int *laye
     int chrome = UI_APP_CHROME_H;
     int content_h;
     int ctrl_inner = ui_ctrl_x(ui) + UI_UNIT;
-    int radios_y = chrome + UI_BTN_H + UI_UNIT;
+    int radios_y = chrome + UI_UNIT;
+    int min_sy = chrome + UI_UNIT + UI_BTN_H + UI_UNIT;
 
     content_h = ui_logic_h(ui) - chrome;
     sy = chrome + (content_h - ui_screen_h(ui)) / 2;
-    if (sy < chrome + UI_UNIT) {
-        sy = chrome + UI_UNIT;
+    if (sy < min_sy) {
+        sy = min_sy;
     }
     if (screen_x) {
         *screen_x = sx;
@@ -185,18 +186,21 @@ int screen_hide_hit(const UiState *ui, int lx, int ly, int *out_hide_bg) {
 }
 
 int play_btn_w(const UiState *ui) {
-    return label_width(ui->play.active ? "Stop" : "Play");
+    (void)ui;
+    return UI_PLAY_BTN_W;
 }
 
 int play_btn_x(const UiState *ui) {
+    int sx, sy;
     int w = play_btn_w(ui);
-    (void)ui;
-    return ui_ctrl_x(ui) + (UI_CTRL_SIDEBAR_W - w) / 2;
+    ui_editor_layout(ui, &sx, &sy, NULL, NULL, NULL);
+    return snap8(sx + (ui_screen_w(ui) - w) / 2);
 }
 
 int play_btn_y(const UiState *ui) {
-    (void)ui;
-    return UI_APP_CHROME_H;
+    int sx, sy;
+    ui_editor_layout(ui, &sx, &sy, NULL, NULL, NULL);
+    return sy - UI_UNIT - UI_BTN_H;
 }
 
 int play_button_hit(const UiState *ui, int lx, int ly) {
@@ -1033,7 +1037,7 @@ int world_sub_hit(const UiState *ui, int lx, int ly) {
 
 int accordion_header_hit(const UiState *ui, int lx, int ly, int *out_section) {
     AccordionLayout lo;
-    if (UI_ACCORDION_ALWAYS_EXPANDED) {
+    if (!ui || ui->play.active || UI_ACCORDION_ALWAYS_EXPANDED) {
         return 0;
     }
     if (lx < 0 || lx >= UI_SIDEBAR_W) {
@@ -1469,8 +1473,11 @@ void app_mode_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
 
 int app_mode_tab_hit(const UiState *ui, int lx, int ly, int *out_idx) {
     UiTabsLayout tabs;
+    if (!ui || ui->play.active) {
+        return 0;
+    }
     app_mode_tabs_prepare(ui, &tabs);
-    return ui_tabs_hit(&tabs, ui ? ui->app_mode : 0, lx, ly, out_idx);
+    return ui_tabs_hit(&tabs, ui->app_mode, lx, ly, out_idx);
 }
 
 void draw_app_mode_tabs(UiState *ui, SDL_Renderer *r) {

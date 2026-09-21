@@ -12,37 +12,36 @@ void draw_screen_mode(UiState *ui, SDL_Renderer *r) {
     int hide_check_y0;
     int row;
     int dim_all = ui->play.active;
+    Uint8 tr = dim_all ? UI_COL_TEXT_DIM_R : UI_COL_TEXT_R;
+    Uint8 tg = dim_all ? UI_COL_TEXT_DIM_G : UI_COL_TEXT_G;
+    Uint8 tb = dim_all ? UI_COL_TEXT_DIM_B : UI_COL_TEXT_B;
 
     ui_editor_layout(ui, NULL, NULL, &layer_x, &mx, &my0);
     work_radio_y0 = my0 + UI_MODE_ROW_H;
     hide_label_y = work_radio_y0 + 3 * UI_MODE_ROW_H + UI_UNIT;
     hide_check_y0 = hide_label_y + UI_MODE_ROW_H;
 
-    font_draw(r, layer_x, my0 + (UI_MODE_ROW_H - 8) / 2, "Work on:", dim_all ? 120 : 230, dim_all ? 120 : 230,
-              dim_all ? 130 : 230);
+    font_draw(r, layer_x, my0 + (UI_MODE_ROW_H - 8) / 2, "Work on:", tr, tg, tb);
 
     for (row = 0; row < 3; row++) {
         int y = work_radio_y0 + row * UI_MODE_ROW_H;
         int selected = ui->screen_layer == work_layers[row];
         int hover = !dim_all && screen_layer_row_hit(ui, ui->mouse_x, ui->mouse_y, row);
         ui_radio_draw(r, layer_x, y + (UI_MODE_ROW_H - UI_MODE_RADIO) / 2, selected && !dim_all);
-        font_draw(r, ui_mode_label_x(layer_x), y + (UI_MODE_ROW_H - 8) / 2, work_labels[row],
-                  dim_all ? 120 : 230, dim_all ? 120 : 230, dim_all ? 130 : 230);
+        font_draw(r, ui_mode_label_x(layer_x), y + (UI_MODE_ROW_H - 8) / 2, work_labels[row], tr, tg, tb);
         if (hover) {
             hover_overlay(r, layer_x, y, ui_layer_panel_w(), UI_MODE_ROW_H);
         }
     }
 
-    font_draw(r, layer_x, hide_label_y + (UI_MODE_ROW_H - 8) / 2, "Hide:", dim_all ? 120 : 230,
-              dim_all ? 120 : 230, dim_all ? 130 : 230);
+    font_draw(r, layer_x, hide_label_y + (UI_MODE_ROW_H - 8) / 2, "Hide:", tr, tg, tb);
 
     for (row = 0; row < 2; row++) {
         int y = hide_check_y0 + row * UI_MODE_ROW_H;
         int checked = row == 0 ? ui->hide_bg_layer : ui->hide_spr_layer;
         int hover = !dim_all && screen_hide_row_hit(ui, ui->mouse_x, ui->mouse_y, row);
         ui_checkbox_draw(r, layer_x, y + (UI_MODE_ROW_H - UI_CHECKBOX) / 2, checked && !dim_all);
-        font_draw(r, ui_mode_label_x(layer_x), y + (UI_MODE_ROW_H - 8) / 2, hide_labels[row],
-                  dim_all ? 120 : 230, dim_all ? 120 : 230, dim_all ? 130 : 230);
+        font_draw(r, ui_mode_label_x(layer_x), y + (UI_MODE_ROW_H - 8) / 2, hide_labels[row], tr, tg, tb);
         if (hover) {
             hover_overlay(r, layer_x, y, ui_layer_panel_w(), UI_MODE_ROW_H);
         }
@@ -55,9 +54,56 @@ void draw_ctrl_sidebar(UiState *ui, SDL_Renderer *r) {
     }
     fill_rect(r, ui_ctrl_x(ui), UI_APP_CHROME_H, UI_CTRL_SIDEBAR_W, ui_logic_h(ui) - UI_APP_CHROME_H, UI_COL_PANEL_R,
               UI_COL_PANEL_G, UI_COL_PANEL_B);
-    draw_button(r, play_btn_x(ui), play_btn_y(ui), play_btn_w(ui), ui->play.active ? "Stop" : "Play", 1,
-                play_button_hit(ui, ui->mouse_x, ui->mouse_y));
     draw_screen_mode(ui, r);
+}
+
+static void fill_lock(SDL_Renderer *r, int x, int y, int w, int h) {
+    if (w < 1 || h < 1) {
+        return;
+    }
+    fill_rect_alpha(r, x, y, w, h, 0, 0, 0, 120);
+}
+
+void draw_play_lock_overlay(UiState *ui, SDL_Renderer *r) {
+    int cx, cw, sx, sy, sw, sh, bx, by, bw, h, chrome;
+    if (!ui || !r || !ui->play.active) {
+        return;
+    }
+    h = ui_logic_h(ui);
+    chrome = UI_APP_CHROME_H;
+    cx = UI_SIDEBAR_W;
+    cw = ui_ctrl_x(ui) - UI_SIDEBAR_W;
+    ui_editor_layout(ui, &sx, &sy, NULL, NULL, NULL);
+    sw = ui_screen_w(ui);
+    sh = ui_screen_h(ui);
+    bx = play_btn_x(ui);
+    by = play_btn_y(ui);
+    bw = play_btn_w(ui);
+
+    fill_lock(r, 0, 0, ui_logic_w(ui), chrome);
+    fill_lock(r, 0, chrome, UI_SIDEBAR_W, h - chrome);
+    fill_lock(r, ui_ctrl_x(ui), chrome, UI_CTRL_SIDEBAR_W, h - chrome);
+    fill_lock(r, cx, chrome, cw, by - chrome);
+    fill_lock(r, cx, by, bx - cx, UI_BTN_H);
+    fill_lock(r, bx + bw, by, cx + cw - (bx + bw), UI_BTN_H);
+    fill_lock(r, cx, by + UI_BTN_H, cw, sy - (by + UI_BTN_H));
+    fill_lock(r, cx, sy, sx - cx, sh);
+    fill_lock(r, sx + sw, sy, cx + cw - (sx + sw), sh);
+    fill_lock(r, cx, sy + sh, cw, h - (sy + sh));
+}
+
+void draw_play_button(UiState *ui, SDL_Renderer *r) {
+    int hover;
+    if (!ui || !r) {
+        return;
+    }
+    hover = play_button_hit(ui, ui->mouse_x, ui->mouse_y);
+    if (ui->play.active) {
+        ui_button_draw_fill(r, play_btn_x(ui), play_btn_y(ui), play_btn_w(ui), "Stop", UI_COL_DANGER_R, UI_COL_DANGER_G,
+                            UI_COL_DANGER_B, hover, 1);
+    } else {
+        ui_button_draw(r, play_btn_x(ui), play_btn_y(ui), play_btn_w(ui), "Play", 1, hover);
+    }
 }
 
 void ui_update_cursor(const UiState *ui) {
@@ -149,6 +195,8 @@ void ui_update_cursor(const UiState *ui) {
                (play_ok && point_in_rect(lx, ly, lo.play_x, lo.btn_y, lo.play_w, UI_BTN_H));
     } else if (ui->menu.open) {
         hand = menu_hit(ui, lx, ly, NULL, NULL);
+    } else if (ui->play.active) {
+        hand = play_button_hit(ui, lx, ly);
     } else if (ui->app_mode == UI_APP_SOUNDS) {
         int handle = 0;
         if (ui->sound.plane == UI_SOUND_PLANE_BGM) {

@@ -17,6 +17,8 @@ void ui_checkbox_draw(SDL_Renderer *r, int dx, int dy, int checked);
 
 void ui_button_draw(SDL_Renderer *r, int x, int y, int w, const char *text, int active, int hover);
 void ui_button_draw_ex(SDL_Renderer *r, int x, int y, int w, const char *text, int active, int hover, int enabled);
+void ui_button_draw_fill(SDL_Renderer *r, int x, int y, int w, const char *text, Uint8 fr, Uint8 fg, Uint8 fb,
+                         int hover, int enabled);
 
 void ui_slider_discrete_draw(SDL_Renderer *r, int x, int y, int w, int value, int count);
 int ui_slider_discrete_hit(int lx, int ly, int x, int y, int w, int count, int *out_value);

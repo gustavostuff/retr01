@@ -77,11 +77,17 @@ void ui_toggle_play(UiState *ui) {
     }
     r01_project_begin_play(ui->project);
     w = r01_project_active_world(ui->project);
-    R01Project *p = ui->project;
     if (!w || w->screen_count < 1) {
         ui_toast(ui, "no screens - create one first", 1);
         return;
     }
+    menu_close(ui);
+    ui->pal_edit.open = 0;
+    ui->tile_edit.open = 0;
+    ui->sprite_edit.open = 0;
+    ui->metasprite_edit.open = 0;
+    ui->entity_edit.open = 0;
+    ui_text_blur(&ui->text);
     ui->play.active = 1;
     ui->play.booting = 1;
     ui->play.spin = 0;

@@ -1,7 +1,29 @@
 #ifndef RETR01_UI_METRICS_H
 #define RETR01_UI_METRICS_H
 
-/* Shared chrome metrics for Retr01 UI widgets (8px grid). */
+/* Shared chrome metrics for Retr01 UI widgets (8px grid).
+ *
+ * Studio UI palette — surfaces, type, then accents. Keep new chrome on these.
+ *
+ * Surfaces (three dark grays):
+ *   PANEL   26,26,30  sidebars / top chrome
+ *   BG      34,34,38  window, modal panels, main pane
+ *   WELL    63,63,74  inactive buttons, wells, open accordion headers
+ *
+ * Type:
+ *   TEXT      240,240,240  labels and button glyphs
+ *   TEXT_DIM  120,120,130  disabled / play-locked chrome
+ *
+ * Accents:
+ *   ACTIVE    45,125,70    green — primary buttons, selected tabs
+ *   DANGER    168,48,52    red — Stop / destructive
+ *   PRESENT   55,130,220   blue — present-screen marks (world map)
+ *   MARK      245,245,245  white — play-screen mark
+ *
+ * Checker (tile transparency):
+ *   CHESS_A   58,58,66
+ *   CHESS_B   50,50,58
+ */
 
 #define UI_COL_BG_R 34
 #define UI_COL_BG_G 34
@@ -12,9 +34,18 @@
 #define UI_COL_WELL_R 63
 #define UI_COL_WELL_G 63
 #define UI_COL_WELL_B 74
+#define UI_COL_TEXT_R 240
+#define UI_COL_TEXT_G 240
+#define UI_COL_TEXT_B 240
+#define UI_COL_TEXT_DIM_R 120
+#define UI_COL_TEXT_DIM_G 120
+#define UI_COL_TEXT_DIM_B 130
 #define UI_COL_ACTIVE_R 45
 #define UI_COL_ACTIVE_G 125
 #define UI_COL_ACTIVE_B 70
+#define UI_COL_DANGER_R 168
+#define UI_COL_DANGER_G 48
+#define UI_COL_DANGER_B 52
 #define UI_COL_PRESENT_R 55
 #define UI_COL_PRESENT_G 130
 #define UI_COL_PRESENT_B 220

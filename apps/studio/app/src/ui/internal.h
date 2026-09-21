@@ -450,6 +450,8 @@ void draw_entity_modal(UiState *ui, SDL_Renderer *r);
 void ui_update_cursor(const UiState *ui);
 void draw_screen_mode(UiState *ui, SDL_Renderer *r);
 void draw_ctrl_sidebar(UiState *ui, SDL_Renderer *r);
+void draw_play_button(UiState *ui, SDL_Renderer *r);
+void draw_play_lock_overlay(UiState *ui, SDL_Renderer *r);
 
 /* ui/sound/draw.c */
 void draw_sound_editor(UiState *ui, SDL_Renderer *r);

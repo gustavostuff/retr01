@@ -281,13 +281,19 @@ int app_shell_handle_event(AppShell *app, const SDL_Event *e) {
             int sox = 0;
             int soy = 0;
             logic_from_window(app, e->button.x, e->button.y, &lx, &ly);
-            screen_origin(&app->ui, &sox, &soy);
-            play_apply_pad_menu(app, r01_pad_host_menu_click(lx, ly, sox, soy, ui_screen_w(&app->ui),
-                                                             ui_screen_h(&app->ui)));
-            return 1;
+            if (!play_button_hit(&app->ui, lx, ly)) {
+                screen_origin(&app->ui, &sox, &soy);
+                play_apply_pad_menu(app, r01_pad_host_menu_click(lx, ly, sox, soy, ui_screen_w(&app->ui),
+                                                                 ui_screen_h(&app->ui)));
+                return 1;
+            }
         }
     }
     if (e->type == SDL_DROPFILE) {
+        if (app->ui.play.active) {
+            SDL_free(e->drop.file);
+            return 1;
+        }
         rc = ui_handle_drop_file(&app->ui, e->drop.file, 0, 0);
         SDL_free(e->drop.file);
         return rc;
