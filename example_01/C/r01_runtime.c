@@ -508,6 +508,27 @@ void r01_game_set_mode(R01GameCtx *ctx, int mode) {
     }
 }
 
+void r01_solid_pattern_add(R01GameCtx *ctx, int bank, int tile) {
+    int i;
+    if (!ctx) {
+        return;
+    }
+    if (bank < 0 || bank > 15 || tile < 0 || tile > 255) {
+        return;
+    }
+    for (i = 0; i < (int)ctx->solid_pat_count && i < 64; i++) {
+        if ((int)ctx->solid_pat_bank[i] == bank && (int)ctx->solid_pat_tile[i] == tile) {
+            return;
+        }
+    }
+    if (ctx->solid_pat_count >= 64) {
+        return;
+    }
+    ctx->solid_pat_bank[ctx->solid_pat_count] = (uint8_t)bank;
+    ctx->solid_pat_tile[ctx->solid_pat_count] = (uint8_t)tile;
+    ctx->solid_pat_count++;
+}
+
 void r01_platformer_set_gravity(R01GameCtx *ctx, int units) {
     if (!ctx) {
         return;

@@ -92,7 +92,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 ### 19. Collision solids packing
 
-**Resolved:** Collision marks BG1 patterns by bank index and tile index. Palette and H/V flip do not affect solidity. Studio stores `solid_patterns` as `[bank, tile]` pairs. Packed carts put the list at PRG `$8700` and copy it into system RAM `$0200` at boot. Host Play tests the BG1 nametable against that list. See `memory.md`.
+**Resolved:** Collision marks BG1 patterns by bank index and tile index. Palette and H/V flip do not affect solidity. Author `custom_logic.c` calls `r01_solid_pattern_add(ctx, bank, tile)`. Studio also stores `solid_patterns` as `[bank, tile]` pairs. Packed carts put the list at PRG `$8700` and copy it into system RAM `$0200` at boot. Host Play tests the BG1 nametable against that list. See `memory.md`.
 
 ### 20. Instance + PA byte schemas
 
@@ -138,5 +138,5 @@ Open items and close criteria. A landed decision folds into the matching doc.
 | 2026-09-17 | Host Play boot catchup | Phase 1 emu waits for a full start MAP stream (480 B) before Host Play takes the camera 2x2 from cart. See `apps/emu/README.md`. |
 | 2026-09-19 | APU | 8-ch S2 software mix. `$7F40` is 8x4 regs (S2 never parses bytecode). BGM 1-5 / SFX 6-8. DPCM in S2 flash. NMI tracker on 6502. See `sound.md`. |
 | 2026-09-20 | CHR / maps / entities | 16+16 global banks, 8 worlds, 64 BG1 / 16 BG0, 32 types (4x8x6). Attr 4-bit bank. No mapper. See `memory.md`. |
-| 2026-09-21 | Collision solids | Bank+tile pattern list in RAM `$0200` (PRG `$8700`). Pal/flip ignored. See `memory.md`. |
+| 2026-09-21 | Collision solids | Bank+tile pattern list in RAM `$0200` (PRG `$8700`). Pal/flip ignored. Author `r01_solid_pattern_add` in `custom_logic.c`. See `memory.md`. |
 | 2026-09-20 | Instance + PA | PRG spawn 6 B. RAM live 12 B. One `PA` blob cart-wide (max 1031 B). See `software-api.md`. |

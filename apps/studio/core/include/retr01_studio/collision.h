@@ -29,6 +29,7 @@ int r01_project_set_pattern_solid(R01Project *p, int bank, int tile, int on);
 int r01_project_toggle_pattern_solid(R01Project *p, int bank, int tile);
 void r01_project_sync_solids(R01Project *p);
 void r01_project_copy_solid_pats(const R01Project *p, uint8_t *count, uint8_t *banks, uint8_t *tiles);
+void r01_project_add_custom_logic_solids(R01Project *p, const char *custom_logic_path);
 
 /* Derived overlay: solids[] cache. Collision uses bank+tile vs the pattern list. */
 static inline int r01_screen_cell_is_solid(const R01Screen *s, int cell) {
@@ -39,9 +40,13 @@ static inline int r01_screen_cell_is_solid(const R01Screen *s, int cell) {
 }
 
 int r01_world_solid_at(const R01Project *p, const R01World *w, int wx, int wy);
+int r01_world_solid_at_list(const R01World *w, int wx, int wy, const uint8_t *banks, const uint8_t *tiles,
+                            int count);
 
 /* AABB vs present screens and BG solid tiles (all overlapping 8x8 cells). */
 int r01_world_aabb_ok(const R01Project *p, const R01World *w, int px, int py, int bw, int bh);
+int r01_world_aabb_ok_list(const R01World *w, int px, int py, int bw, int bh, const uint8_t *banks,
+                           const uint8_t *tiles, int count);
 
 /* Player stub AABB (8x8) vs present screens and BG solid tiles. */
 int r01_world_player_aabb_ok(const R01Project *p, const R01World *w, int px, int py);

@@ -408,6 +408,59 @@ int r01_custom_logic_scan_player_jump(const char *path, int *out_state) {
     return scan_ctx_one_named(path, "r01_player_anim_set_jump_state", out_state);
 }
 
+int r01_custom_logic_scan_solid_patterns(const char *path, uint8_t *out_banks, uint8_t *out_tiles,
+                                         int max_count, int *out_count) {
+    FILE *f;
+    char line[512];
+    int n = 0;
+    int in_block = 0;
+    if (!path || !out_banks || !out_tiles || !out_count || max_count < 1) {
+        return -1;
+    }
+    if (max_count > R01_CUSTOM_SOLID_PAT_MAX) {
+        max_count = R01_CUSTOM_SOLID_PAT_MAX;
+    }
+    f = fopen(path, "r");
+    if (!f) {
+        return -1;
+    }
+    while (fgets(line, sizeof(line), f)) {
+        const char *args;
+        int bank = 0;
+        int tile = 0;
+        int i;
+        int line_in_block = in_block;
+        scan_update_block_comment(line, &in_block);
+        if (!line_call_is_active(line, "r01_solid_pattern_add", line_in_block)) {
+            continue;
+        }
+        args = strchr(strstr(line, "r01_solid_pattern_add"), '(');
+        if (!args || parse_ctx_two_ints(args, &bank, &tile) != 0) {
+            continue;
+        }
+        if (bank < 0 || bank > 15 || tile < 0 || tile > 255) {
+            continue;
+        }
+        for (i = 0; i < n; i++) {
+            if ((int)out_banks[i] == bank && (int)out_tiles[i] == tile) {
+                break;
+            }
+        }
+        if (i < n) {
+            continue;
+        }
+        if (n >= max_count) {
+            continue;
+        }
+        out_banks[n] = (uint8_t)bank;
+        out_tiles[n] = (uint8_t)tile;
+        n++;
+    }
+    fclose(f);
+    *out_count = n;
+    return n > 0 ? 0 : -1;
+}
+
 int r01_custom_logic_scan_run_on_x(const char *path) {
     FILE *f;
     char line[512];

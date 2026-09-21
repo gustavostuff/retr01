@@ -510,6 +510,31 @@ TEST_MAIN() {
         remove("plat_logic.c");
     }
 
+    {
+        FILE *f = fopen("solid_logic.c", "w");
+        uint8_t banks[8];
+        uint8_t tiles[8];
+        int n = 0;
+        EXPECT(f != NULL, "write solid_logic");
+        if (f) {
+            fputs("void r01_custom_on_init(R01GameCtx *ctx) {\n"
+                  "    r01_solid_pattern_add(ctx, 0, 1);\n"
+                  "    r01_solid_pattern_add(ctx, 1, 5);\n"
+                  "    r01_solid_pattern_add(ctx, 0, 1);\n"
+                  "}\n",
+                  f);
+            fclose(f);
+        }
+        EXPECT(r01_custom_logic_scan_solid_patterns("solid_logic.c", banks, tiles, 8, &n) == 0 && n == 2,
+               "scan two solid patterns");
+        EXPECT(banks[0] == 0 && tiles[0] == 1, "first solid bank 0 tile 1");
+        EXPECT(banks[1] == 1 && tiles[1] == 5, "second solid bank 1 tile 5");
+        r01_project_add_custom_logic_solids(p, "solid_logic.c");
+        EXPECT(r01_project_pattern_solid(p, 0, 1), "custom_logic bank 0 tile 1 on project");
+        EXPECT(r01_project_pattern_solid(p, 1, 5), "custom_logic bank 1 tile 5 on project");
+        remove("solid_logic.c");
+    }
+
     /* Play tick: platformer falls onto a solid row. Y jumps. Up/Down do not walk. */
     EXPECT(r01_play_start(&pl, p, NULL), "play start for platformer");
     r01_game_set_mode(&pl.ctx, R01_GAME_MODE_PLATFORMER);

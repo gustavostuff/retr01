@@ -2,6 +2,9 @@
 #define R01_CUSTOM_LOGIC_SCAN_H
 
 #include <stddef.h>
+#include <stdint.h>
+
+#define R01_CUSTOM_SOLID_PAT_MAX 64
 
 /* Parse r01_camera_set_deadzone(ctx, dx, dy) or r01_camera_disable_deadzone(ctx).
  * Returns 0 on match (disable packs as 0,0). Skips // comments. */
@@ -42,6 +45,10 @@ int r01_custom_logic_scan_player_jump(const char *path, int *out_state);
 
 /* Parse r01_player_set_run_on_x(ctx). Returns 0 on match. */
 int r01_custom_logic_scan_run_on_x(const char *path);
+
+/* Parse every r01_solid_pattern_add(ctx, bank, tile). Returns 0 if at least one call matches. */
+int r01_custom_logic_scan_solid_patterns(const char *path, uint8_t *out_banks, uint8_t *out_tiles,
+                                         int max_count, int *out_count);
 
 /* foo.r01proj -> sibling C/custom_logic.c */
 int r01_custom_logic_path_for_project(const char *proj_path, char *out, size_t out_cap);

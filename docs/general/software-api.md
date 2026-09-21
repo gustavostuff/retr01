@@ -227,7 +227,7 @@ There is **no** separate "max entities on screen" hard cap. On-screen count is w
 | Feature | v1 |
 | --- | --- |
 | Movement | Axis-separated (resolve X then Y, or the reverse, consistently) |
-| Solids | BG1 cells whose bank index and tile index match a marked pattern. Palette and H/V flip are ignored. The pattern list lives in system RAM (`$0200`), copied from PRG `$8700` at boot. See `memory.md` |
+| Solids | BG1 cells whose bank index and tile index match a marked pattern. Palette and H/V flip are ignored. Author code marks patterns with `r01_solid_pattern_add(ctx, bank, tile)` in `custom_logic.c`. Studio packs those calls, plus any `solid_patterns` in the project JSON, into PRG `$8700`. Boot copies the list into system RAM (`$0200`). See `memory.md` |
 | Colliders | Entity AABB hitboxes (per state). Vs BG solids: every overlapping 8x8 tile is tested (not corners only) |
 | Gravity / jump | Simple constant gravity + jump impulse (PRG tunes numbers). Gravity units are **1/16** px per frame^2. Release while rising uses 3x gravity (short hop) |
 | Meter | Pixels per meter (default **16**). Gravity, jump, walk, and fall cap scale as `n * meter / 16` |
@@ -246,6 +246,7 @@ r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER);
 r01_platformer_set_gravity(ctx, R01_PLAT_GRAVITY_DEFAULT); /* 4 = 4/16 px/frame^2 at meter 16, clamp 1..255 */
 r01_platformer_set_jump(ctx, R01_PLAT_JUMP_DEFAULT);       /* 4 px impulse at meter 16, clamp 1..32 */
 r01_platformer_set_meter(ctx, R01_PLAT_METER_DEFAULT);     /* 16 px per meter, clamp 1..64 */
+r01_solid_pattern_add(ctx, 0, 1);                          /* bank 0 tile 1 is solid, pal/flip ignored */
 ```
 
 | Input | Platformer |
@@ -268,6 +269,8 @@ r01_player_anim_set_jump_state(ctx, 3);
 ```
 
 Packing: world header flags byte **7** bit **4** = platformer. Bit **5** (`0x20`) = hold face X for 2x walk (`r01_player_set_run_on_x`). Gravity, jump, and meter are u8 at PRG `$80F7` / `$80F8` / `$80F9`. **0** (and `R01_PLAT_*_DEFAULT` in `custom_logic.c`) means Host Play uses `apps/common/r01_play_physics.h`. Crouch / idle / walk / jump state indices are `$80FA` / `$80FB` / `$80FC` / `$80FD` (**$FF** = unmapped). A numeric argument is packed as-is. See `memory.md`.
+
+`r01_solid_pattern_add(ctx, bank, tile)` in author `custom_logic.c` packs into the solid-pattern list at PRG `$8700`. Palette and H/V flip are ignored. Host Play / emu tests BG1 nametable bank+tile against that list.
 
 BGM tracks live in the Studio Audio tab and pack into PRG at `$B000`. `r01_bgm_play(ctx, N)` in author `custom_logic.c` sets `$80FE` to that 1-based track. **0** means no autoplay. Host Play starts the packed stream. See `sound.md`.
 

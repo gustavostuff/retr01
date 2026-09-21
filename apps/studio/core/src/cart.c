@@ -1,6 +1,7 @@
 #include "retr01_studio/cart.h"
 #include "retr01_studio/bgm_pack.h"
 #include "retr01_studio/chr_pack.h"
+#include "retr01_studio/collision.h"
 #include "retr01_studio/entities.h"
 #include "retr01_studio/palette.h"
 #include "retr01_studio/play.h"
@@ -1075,6 +1076,7 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
     {
         char custom_logic_path[R01_PATH_MAX];
         resolve_custom_logic_path(cart_path, custom_logic_path, sizeof(custom_logic_path));
+        r01_project_add_custom_logic_solids(work, custom_logic_path);
         if (build_world_blob(&world_blob, work, &work->worlds[0], custom_logic_path) != 0) {
         free(work);
         free(world_blob.data);

@@ -66,6 +66,17 @@ static void play_apply_custom_logic(R01GameCtx *ctx, const char *project_path) {
     if (r01_custom_logic_scan_run_on_x(path) == 0) {
         r01_player_set_run_on_x(ctx);
     }
+    {
+        uint8_t banks[R01_SOLID_PAT_MAX];
+        uint8_t tiles[R01_SOLID_PAT_MAX];
+        int n = 0;
+        int i;
+        if (r01_custom_logic_scan_solid_patterns(path, banks, tiles, R01_SOLID_PAT_MAX, &n) == 0) {
+            for (i = 0; i < n; i++) {
+                r01_solid_pattern_add(ctx, (int)banks[i], (int)tiles[i]);
+            }
+        }
+    }
 }
 
 static void place_player_on_screen(R01PlayState *pl, int col, int row) {
@@ -135,6 +146,9 @@ int r01_play_start(R01PlayState *pl, const R01Project *p, const char *project_pa
     }
     memset(pl, 0, sizeof(*pl));
     r01_game_ctx_init(&pl->ctx);
+    if (p) {
+        r01_project_copy_solid_pats(p, &pl->ctx.solid_pat_count, pl->ctx.solid_pat_bank, pl->ctx.solid_pat_tile);
+    }
     play_apply_custom_logic(&pl->ctx, project_path);
     if (!p) {
         return 0;
@@ -144,7 +158,6 @@ int r01_play_start(R01PlayState *pl, const R01Project *p, const char *project_pa
         return 0;
     }
     pl->active = 1;
-    r01_project_copy_solid_pats(p, &pl->ctx.solid_pat_count, pl->ctx.solid_pat_bank, pl->ctx.solid_pat_tile);
     if (play_player_instance_spawn(p, w, &sx, &sy)) {
         place_player_xy(pl, sx, sy);
         return 1;
@@ -220,8 +233,12 @@ static int play_move_ok(void *user, int ox, int oy) {
     if (!m || !m->w) {
         return 0;
     }
-        r01_play_player_hit_rect(m->p, m->ctx, ox, oy, &hx, &hy, &hw, &hh);
-        return r01_world_aabb_ok(m->p, m->w, hx, hy, hw, hh);
+    r01_play_player_hit_rect(m->p, m->ctx, ox, oy, &hx, &hy, &hw, &hh);
+    if (m->ctx) {
+        return r01_world_aabb_ok_list(m->w, hx, hy, hw, hh, m->ctx->solid_pat_bank, m->ctx->solid_pat_tile,
+                                      (int)m->ctx->solid_pat_count);
+    }
+    return r01_world_aabb_ok(m->p, m->w, hx, hy, hw, hh);
 }
 
 void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy, int jump_down) {

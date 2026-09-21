@@ -126,6 +126,17 @@ TEST_MAIN() {
         EXPECT(ctx.player_x == R01_SCREEN_PX_W + 32, "warp moved player to exit tile");
     }
 
+    {
+        r01_solid_pattern_add(&ctx, 0, 1);
+        EXPECT(ctx.solid_pat_count == 1, "one solid pattern");
+        EXPECT(ctx.solid_pat_bank[0] == 0 && ctx.solid_pat_tile[0] == 1, "bank 0 tile 1");
+        r01_solid_pattern_add(&ctx, 0, 1);
+        EXPECT(ctx.solid_pat_count == 1, "duplicate solid pattern is ignored");
+        r01_solid_pattern_add(&ctx, 1, 5);
+        EXPECT(ctx.solid_pat_count == 2, "second solid pattern");
+        EXPECT(ctx.solid_pat_bank[1] == 1 && ctx.solid_pat_tile[1] == 5, "bank 1 tile 5");
+    }
+
     free(p);
     TEST_EXIT();
 }

@@ -122,6 +122,7 @@ void r01_camera_set_axis_lock(R01GameCtx *ctx, int mode);
 void r01_bg0_set_wrap(R01GameCtx *ctx, int wrap_x, int wrap_y);
 void r01_bg0_set_clip_to_bg1(R01GameCtx *ctx, int enable);
 void r01_game_set_mode(R01GameCtx *ctx, int mode);
+void r01_solid_pattern_add(R01GameCtx *ctx, int bank, int tile);
 void r01_platformer_set_gravity(R01GameCtx *ctx, int units);
 void r01_platformer_set_jump(R01GameCtx *ctx, int impulse);
 void r01_platformer_set_meter(R01GameCtx *ctx, int px_per_meter);

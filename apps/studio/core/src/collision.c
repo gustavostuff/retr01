@@ -1,6 +1,7 @@
 #include "retr01_studio/collision.h"
 #include "retr01_studio/play.h"
 #include "retr01_studio/project.h"
+#include "r01_custom_logic_scan.h"
 
 #include <string.h>
 
@@ -152,7 +153,24 @@ int r01_project_toggle_pattern_solid(R01Project *p, int bank, int tile) {
     return r01_project_set_pattern_solid(p, bank, tile, on);
 }
 
-int r01_world_solid_at(const R01Project *p, const R01World *w, int wx, int wy) {
+void r01_project_add_custom_logic_solids(R01Project *p, const char *custom_logic_path) {
+    uint8_t banks[R01_SOLID_PAT_MAX];
+    uint8_t tiles[R01_SOLID_PAT_MAX];
+    int n = 0;
+    int i;
+    if (!p || !custom_logic_path || !custom_logic_path[0]) {
+        return;
+    }
+    if (r01_custom_logic_scan_solid_patterns(custom_logic_path, banks, tiles, R01_SOLID_PAT_MAX, &n) != 0) {
+        return;
+    }
+    for (i = 0; i < n; i++) {
+        r01_project_set_pattern_solid(p, (int)banks[i], (int)tiles[i], 1);
+    }
+}
+
+int r01_world_solid_at_list(const R01World *w, int wx, int wy, const uint8_t *banks, const uint8_t *tiles,
+                            int count) {
     const R01Screen *s;
     int lx, ly, tx, ty, cell;
     if (!world_screen_at_pixel(w, wx, wy, &s, &lx, &ly)) {
@@ -161,10 +179,18 @@ int r01_world_solid_at(const R01Project *p, const R01World *w, int wx, int wy) {
     tx = lx / 8;
     ty = ly / 8;
     cell = ty * R01_SCREEN_TILES_X + tx;
-    return r01_project_pattern_solid(p, r01_attr_solid_bank(s->attrs[cell]), (int)s->tiles[cell]);
+    return r01_ctx_pattern_solid(banks, tiles, count, r01_attr_solid_bank(s->attrs[cell]), (int)s->tiles[cell]);
 }
 
-int r01_world_aabb_ok(const R01Project *p, const R01World *w, int px, int py, int bw, int bh) {
+int r01_world_solid_at(const R01Project *p, const R01World *w, int wx, int wy) {
+    if (!p) {
+        return 0;
+    }
+    return r01_world_solid_at_list(w, wx, wy, p->solid_pat_bank, p->solid_pat_tile, p->solid_pat_count);
+}
+
+int r01_world_aabb_ok_list(const R01World *w, int px, int py, int bw, int bh, const uint8_t *banks,
+                           const uint8_t *tiles, int count) {
     int x1, y1, c0, c1, r0, r1, c, r;
     int tx0, ty0, tx1, ty1, tx, ty;
     const int tile = 8;
@@ -210,12 +236,19 @@ int r01_world_aabb_ok(const R01Project *p, const R01World *w, int px, int py, in
             if (wy > y1) {
                 wy = y1;
             }
-            if (r01_world_solid_at(p, w, wx, wy)) {
+            if (r01_world_solid_at_list(w, wx, wy, banks, tiles, count)) {
                 return 0;
             }
         }
     }
     return 1;
+}
+
+int r01_world_aabb_ok(const R01Project *p, const R01World *w, int px, int py, int bw, int bh) {
+    if (!p) {
+        return 0;
+    }
+    return r01_world_aabb_ok_list(w, px, py, bw, bh, p->solid_pat_bank, p->solid_pat_tile, p->solid_pat_count);
 }
 
 int r01_world_player_aabb_ok(const R01Project *p, const R01World *w, int px, int py) {
