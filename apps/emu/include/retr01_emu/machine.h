@@ -46,6 +46,9 @@ typedef struct R01eMachine {
     uint16_t apu_sfx_len;
     uint8_t apu_sfx_prev_pad;
     int apu_tracker_on;
+    char cart_path[1024];
+    void *custom_so;
+    void (*custom_tick)(uint8_t pad, int *move_mul, int *frame_delay);
 } R01eMachine;
 
 int r01e_machine_init(R01eMachine *m, const char *cart_path, char *err, size_t err_cap);

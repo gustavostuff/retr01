@@ -13,7 +13,6 @@ static void init_platformer(R01GameCtx *ctx) {
     r01_platformer_set_gravity(ctx, R01_PLAT_GRAVITY_DEFAULT);
     r01_platformer_set_jump(ctx, R01_PLAT_JUMP_DEFAULT);
     r01_platformer_set_meter(ctx, R01_PLAT_METER_DEFAULT);
-    r01_player_set_run_on_x(ctx);
 }
 
 static void init_player_anim(R01GameCtx *ctx) {
@@ -36,7 +35,10 @@ void r01_custom_on_init(R01GameCtx *ctx) {
 }
 
 void r01_custom_on_tick(R01GameCtx *ctx) {
-    (void)ctx;
+    if (r01_pad_down(ctx, R01_PAD_X) && r01_player_moving_x(ctx)) {
+        r01_player_set_move_mul(ctx, 2);
+        r01_player_anim_set_frame_delay(ctx, 3);
+    }
 }
 
 void r01_custom_on_vblank(R01GameCtx *ctx) {

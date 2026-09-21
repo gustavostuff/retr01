@@ -139,4 +139,5 @@ Open items and close criteria. A landed decision folds into the matching doc.
 | 2026-09-19 | APU | 8-ch S2 software mix. `$7F40` is 8x4 regs (S2 never parses bytecode). BGM 1-5 / SFX 6-8. DPCM in S2 flash. NMI tracker on 6502. See `sound.md`. |
 | 2026-09-20 | CHR / maps / entities | 16+16 global banks, 8 worlds, 64 BG1 / 16 BG0, 32 types (4x8x6). Attr 4-bit bank. No mapper. See `memory.md`. |
 | 2026-09-21 | Collision solids | Bank+tile pattern list in RAM `$0200` (PRG `$8700`). Pal/flip ignored. Author `r01_solid_pattern_add` in `custom_logic.c`. See `memory.md`. |
+| 2026-09-21 | Author tick SDK | `r01_pad_down` / `r01_player_moving_x` / `r01_player_set_move_mul` / `r01_player_anim_set_frame_delay` from `r01_custom_on_tick`. Host Play loads `C/r01_custom.so`. See `software-api.md`. |
 | 2026-09-20 | Instance + PA | PRG spawn 6 B. RAM live 12 B. One `PA` blob cart-wide (max 1031 B). See `software-api.md`. |

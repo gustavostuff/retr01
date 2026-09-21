@@ -11,6 +11,7 @@ output/
 temp/
 *.o
 *.a
+**/r01_custom.so
 temp/
 apps/sim/tier-a/ui_layout.json
 /test_cart.retr01

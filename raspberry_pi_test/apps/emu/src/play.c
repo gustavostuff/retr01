@@ -142,9 +142,6 @@ static void play_load_cart_camera(R01eMachine *m) {
         if (wv.world_flags & R01E_CART_WHDR_FLAG_PLATFORMER) {
             r01_play_physics_set_mode(&m->play.phys, R01_GAME_MODE_PLATFORMER);
         }
-        if (wv.world_flags & R01E_CART_WHDR_FLAG_RUN_ON_X) {
-            m->play.run_on_x = 1;
-        }
     }
     prg = r01e_cart_prg(&m->cart);
     if (prg && m->cart.len_prg > R01E_PRG_PLAT_METER_OFF) {
@@ -621,9 +618,16 @@ void r01e_play_tick(R01eMachine *m) {
             phys_dx = 0;
         }
         {
-            int run = (pl->run_on_x && (pad & R01E_PAD_X)) ? 2 : 1;
-            r01_play_physics_set_run_mul(&pl->phys, run);
-            r01_play_anim_set_run_fast(&pl->anim, run == 2);
+            int move_mul = 1;
+            int delay_ov = 0;
+            if (m->custom_tick) {
+                m->custom_tick(pad, &move_mul, &delay_ov);
+            }
+            if (move_mul < 1) {
+                move_mul = 1;
+            }
+            r01_play_physics_set_run_mul(&pl->phys, move_mul);
+            r01_play_anim_set_frame_delay(&pl->anim, delay_ov);
         }
         r01_play_physics_tick(&pl->phys, &pl->player_x, &pl->player_y, phys_dx, dy, jump_down, play_origin_ok, m,
                               &anim_dx, &anim_dy);

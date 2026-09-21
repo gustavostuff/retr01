@@ -75,6 +75,7 @@ void r01_player_anim_init(R01GameCtx *ctx) {
     ctx->player_crouching = 0;
     ctx->player_jump_state = -1;
     ctx->player_airborne = 0;
+    ctx->player_anim_delay_override = 0;
     for (i = 0; i < 8; i++) {
         ctx->player_walk_state[i] = -1;
     }
@@ -139,6 +140,23 @@ void r01_player_anim_set_jump_state(R01GameCtx *ctx, int entity_state_idx) {
         return;
     }
     ctx->player_jump_state = entity_state_idx;
+}
+
+void r01_player_anim_set_frame_delay(R01GameCtx *ctx, int ticks) {
+    if (!ctx) {
+        return;
+    }
+    if (ticks < 0) {
+        ticks = 0;
+    }
+    if (ticks > 255) {
+        ticks = 255;
+    }
+    ctx->player_anim_delay_override = ticks;
+}
+
+int r01_player_anim_frame_delay(const R01GameCtx *ctx) {
+    return ctx ? ctx->player_anim_delay_override : 0;
 }
 
 void r01_player_default_face_set(R01GameCtx *ctx, int face) {
@@ -261,14 +279,8 @@ void r01_player_anim_tick(R01GameCtx *ctx, const R01Project *p, int player_type)
     if (delay < 1) {
         delay = 1;
     }
-    if (ctx->player_run_fast) {
-        int i;
-        for (i = 0; i < 8; i++) {
-            if (ctx->player_walk_state[i] == ctx->player_anim_state) {
-                delay /= 2;
-                break;
-            }
-        }
+    if (ctx->player_anim_delay_override > 0) {
+        delay = ctx->player_anim_delay_override;
         if (delay < 1) {
             delay = 1;
         }

@@ -53,7 +53,7 @@ Logical canvas **640x360** or **1280x720** (**Ctrl+Shift+R**). Window scale **Ct
 
 ## Play
 
-Host Play/Stop sits 8px above the centered screen preview. Play uses ACTIVE green. Stop uses DANGER red. Chrome colors are in [`retr01_ui/metrics.h`](ui/include/retr01_ui/metrics.h). Space on the Graphics tab starts Play (export, boot wait, then emu). While Play is active, Studio chrome is locked. Only that button stays clickable. Space then is a pad button. Cart boots world 0. Spawn is the first instance of the marked player type, else the default screen center. Gameplay SoT is emu Host Play. Keyboard and SDL Game Controllers share the same pad bits (community `gamecontrollerdb.txt` plus SDL built-in mappings). First two pads are P1 / P2. Guide / Home opens Reset, Quit (Stop), **1x**/**2x**, and Mute On/Off. Default is top-down. `r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER)` in `custom_logic.c` enables gravity, face-Y jump (hold for full height), and Down crouch when a crouch state is mapped. `r01_platformer_set_meter` sets pixels per meter (default 16). Player states (idle, walk, crouch, jump) are mapped in `custom_logic.c`. With no mapping, Play draws state 0 frame 0 and only X-flips for facing.
+Host Play/Stop sits 8px above the centered screen preview. Play uses ACTIVE green. Stop uses DANGER red. Chrome colors are in [`retr01_ui/metrics.h`](ui/include/retr01_ui/metrics.h). Space on the Graphics tab starts Play (export, boot wait, then emu). While Play is active, Studio chrome is locked. Only that button stays clickable. Space then is a pad button. Cart boots world 0. Spawn is the first instance of the marked player type, else the default screen center. Gameplay SoT is emu Host Play. Keyboard and SDL Game Controllers share the same pad bits (community `gamecontrollerdb.txt` plus SDL built-in mappings). First two pads are P1 / P2. Guide / Home opens Reset, Quit (Stop), **1x**/**2x**, and Mute On/Off. Default is top-down. `r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER)` in `custom_logic.c` enables gravity, face-Y jump (hold for full height), and Down crouch when a crouch state is mapped. `r01_platformer_set_meter` sets pixels per meter (default 16). `r01_custom_on_tick` may raise walk speed with `r01_player_set_move_mul` and override anim frame delay with `r01_player_anim_set_frame_delay` (example_01 holds face X while moving left/right). Player states (idle, walk, crouch, jump) are mapped in `custom_logic.c`. With no mapping, Play draws state 0 frame 0 and only X-flips for facing.
 
 `custom_logic.c` is created on first export and never overwritten. The generated file sets the camera dead zone (packed size, live follow may snap 1 px inward, see `docs/general/world-scrolling.md`). Player anim maps stay commented until an author fills them in:
 
@@ -67,6 +67,13 @@ void r01_custom_on_init(R01GameCtx *ctx) {
     /* r01_bgm_play(ctx, 1); */
     /* r01_solid_pattern_add(ctx, 0, 1); */
 }
+
+void r01_custom_on_tick(R01GameCtx *ctx) {
+    if (r01_pad_down(ctx, R01_PAD_X) && r01_player_moving_x(ctx)) {
+        r01_player_set_move_mul(ctx, 2);
+        r01_player_anim_set_frame_delay(ctx, 3);
+    }
+}
 ```
 
 Generated API headers live in `C/include/r01_*.h` beside the project.
@@ -75,13 +82,14 @@ Generated API headers live in `C/include/r01_*.h` beside the project.
 
 **Ctrl+S** / **Ctrl+O** the current path. First save (or unsaved) opens the Save project modal. Default parent is `apps/studio/projects/`. Quit does not auto-save. JSON version **18**. Save writes world 0. Worlds 2-8 are session-only until multi-world JSON. Load applies that world data to world 0.
 
-**Ctrl+E** packs `<stem>.retr01` and regenerates `C/`, `ASM/`, and `data/` beside the project (or under `output/` if unsaved). Audio-tab tracks go into PRG at `$B000`. `r01_bgm_play(ctx, N)` in `custom_logic.c` selects the boot track at `$80FE`. `r01_solid_pattern_add(ctx, bank, tile)` packs the solid-pattern list at `$8700`.
+**Ctrl+E** packs `<stem>.retr01` and regenerates `C/`, `ASM/`, and `data/` beside the project (or under `output/` if unsaved). Audio-tab tracks go into PRG at `$B000`. `r01_bgm_play(ctx, N)` in `custom_logic.c` selects the boot track at `$80FE`. `r01_solid_pattern_add(ctx, bank, tile)` packs the solid-pattern list at `$8700`. Export also compiles `C/r01_custom.so` from `custom_logic.c` when a host C compiler is present. Host Play loads that plugin and runs `r01_custom_on_tick` each frame.
 
 | Path | Role |
 |------|------|
 | `<stem>.r01proj` | Authoring JSON |
 | `<stem>.retr01` | Packed cart (world 0) |
 | `C/custom_logic.c` | Author file, kept |
+| `C/r01_custom.so` | Host Play author tick plugin |
 | `C/`, `ASM/`, `data/` | Regenerated stubs and tables |
 
 PROM and 512 KB flash images sit beside the cart. Layout: [`memory.md`](../../docs/general/memory.md).

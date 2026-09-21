@@ -7,6 +7,15 @@
 #define R01_BTN_X 0
 #define R01_BTN_Y 1
 
+#define R01_PAD_RIGHT 0x01u
+#define R01_PAD_LEFT 0x02u
+#define R01_PAD_DOWN 0x04u
+#define R01_PAD_UP 0x08u
+#define R01_PAD_X 0x10u
+#define R01_PAD_Y 0x20u
+#define R01_PAD_COIN 0x40u
+#define R01_PAD_START 0x80u
+
 #define R01_MAX_PROJECTILES 8
 #define R01_PROJECTILE_TTL 180
 #define R01_FADE_SPEED 8
@@ -85,8 +94,8 @@ struct R01GameCtx {
     int plat_frac_y;
     int plat_grounded;
     int plat_jump_held;
-    int player_run_on_x;
-    int player_run_fast;
+    int player_move_mul;
+    int player_anim_delay_override;
     uint8_t solid_pat_count;
     uint8_t solid_pat_bank[R01_SOLID_PAT_MAX];
     uint8_t solid_pat_tile[R01_SOLID_PAT_MAX];
@@ -112,9 +121,13 @@ int r01_projectile_count_active(const R01GameCtx *ctx);
 
 uint8_t r01_pad_pressed(const R01GameCtx *ctx, uint8_t btn);
 uint8_t r01_pad_just_pressed(R01GameCtx *ctx, uint8_t btn);
+int r01_pad_down(const R01GameCtx *ctx, uint8_t mask);
 void r01_player_warp(R01GameCtx *ctx, int col, int row);
 void r01_player_set_type(uint8_t type_id);
-void r01_player_set_run_on_x(R01GameCtx *ctx);
+int r01_player_moving_x(const R01GameCtx *ctx);
+void r01_player_set_move_mul(R01GameCtx *ctx, int mul);
+int r01_player_move_mul(const R01GameCtx *ctx);
+void r01_custom_on_tick(R01GameCtx *ctx);
 /* Packs width/height. Follow may snap edges 1 px inward (world-scrolling.md). */
 void r01_camera_set_deadzone(R01GameCtx *ctx, int dx, int dy);
 void r01_camera_disable_deadzone(R01GameCtx *ctx);

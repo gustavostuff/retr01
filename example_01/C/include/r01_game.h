@@ -44,7 +44,8 @@ typedef struct R01GameCtx {
     int plat_frac_y;
     int plat_grounded;
     int plat_jump_held;
-    int player_run_on_x;
+    int player_move_mul;
+    int player_anim_delay_override;
     uint8_t solid_pat_count;
     uint8_t solid_pat_bank[64];
     uint8_t solid_pat_tile[64];

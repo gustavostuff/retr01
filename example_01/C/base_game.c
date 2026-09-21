@@ -68,6 +68,8 @@ void r01_game_tick(R01GameCtx *ctx) {
     if (!ctx) return;
     r01_runtime_dispatch_buttons(ctx);
     ctx->pad_prev = ctx->pad;
+    r01_player_set_move_mul(ctx, 1);
+    r01_player_anim_set_frame_delay(ctx, 0);
     r01_custom_on_tick(ctx);
 }
 

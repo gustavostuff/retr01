@@ -251,7 +251,8 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "    int plat_frac_y;\n"
                    "    int plat_grounded;\n"
                    "    int plat_jump_held;\n"
-                   "    int player_run_on_x;\n"
+                   "    int player_move_mul;\n"
+                   "    int player_anim_delay_override;\n"
                    "    uint8_t solid_pat_count;\n"
                    "    uint8_t solid_pat_bank[64];\n"
                    "    uint8_t solid_pat_tile[64];\n"
@@ -339,7 +340,16 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "typedef struct R01GameCtx R01GameCtx;\n"
                    "uint8_t r01_pad_pressed(const R01GameCtx *ctx, uint8_t btn);\n"
                    "uint8_t r01_pad_just_pressed(R01GameCtx *ctx, uint8_t btn);\n"
-                   "#define R01_BTN_X 0\n#define R01_BTN_Y 1\n\n"
+                   "int r01_pad_down(const R01GameCtx *ctx, uint8_t mask);\n"
+                   "#define R01_BTN_X 0\n#define R01_BTN_Y 1\n"
+                   "#define R01_PAD_RIGHT 0x01u\n"
+                   "#define R01_PAD_LEFT 0x02u\n"
+                   "#define R01_PAD_DOWN 0x04u\n"
+                   "#define R01_PAD_UP 0x08u\n"
+                   "#define R01_PAD_X 0x10u\n"
+                   "#define R01_PAD_Y 0x20u\n"
+                   "#define R01_PAD_COIN 0x40u\n"
+                   "#define R01_PAD_START 0x80u\n\n"
                    "#endif\n",
                    err_buf, err_cap) != 0) {
         return -1;
@@ -355,8 +365,9 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "typedef struct R01GameCtx R01GameCtx;\n"
                    "void r01_player_warp(R01GameCtx *ctx, int col, int row);\n"
                    "void r01_player_set_type(uint8_t type_id);\n"
-                   "/* Hold face X for 2x walk. Host Play packs this into world flags bit 5. */\n"
-                   "void r01_player_set_run_on_x(R01GameCtx *ctx);\n\n"
+                   "int r01_player_moving_x(const R01GameCtx *ctx);\n"
+                   "void r01_player_set_move_mul(R01GameCtx *ctx, int mul);\n"
+                   "int r01_player_move_mul(const R01GameCtx *ctx);\n\n"
                    "#include \"r01_player_anim.h\"\n\n"
                    "#endif\n",
                    err_buf, err_cap) != 0) {
@@ -563,6 +574,8 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "void r01_player_anim_set_walk_all(R01GameCtx *ctx, int entity_state_idx);\n"
                    "void r01_player_anim_set_crouch_state(R01GameCtx *ctx, int entity_state_idx);\n"
                    "void r01_player_anim_set_jump_state(R01GameCtx *ctx, int entity_state_idx);\n"
+                   "void r01_player_anim_set_frame_delay(R01GameCtx *ctx, int ticks);\n"
+                   "int r01_player_anim_frame_delay(const R01GameCtx *ctx);\n"
                    "void r01_player_default_face_set(R01GameCtx *ctx, int face);\n"
                    "void r01_entity_state_frame_delay_set(R01GameCtx *ctx, int entity_state_idx, int ticks);\n"
                    "void r01_player_anim_update(R01GameCtx *ctx, int dx, int dy);\n"
@@ -604,7 +617,6 @@ static int write_custom_logic(const char *c_dir, char *err_buf, size_t err_cap) 
                       "     * r01_player_anim_set_crouch_state(ctx, 2);\n"
                       "     * r01_player_anim_set_jump_state(ctx, 3);\n"
                       "     * r01_bgm_play(ctx, 1);\n"
-                      "     * r01_player_set_run_on_x(ctx);\n"
                       "     * r01_solid_pattern_add(ctx, 0, 1);\n"
                       "     * r01_camera_disable_deadzone(ctx); /* 1:1 camera track */\n"
                       "     * r01_bg0_set_wrap(ctx, R01_BG0_WRAP_ON, R01_BG0_WRAP_ON);\n"
@@ -615,7 +627,10 @@ static int write_custom_logic(const char *c_dir, char *err_buf, size_t err_cap) 
                       "     */\n"
                       "}\n\n"
                       "void r01_custom_on_tick(R01GameCtx *ctx) {\n"
-                      "    (void)ctx;\n"
+                      "    if (r01_pad_down(ctx, R01_PAD_X) && r01_player_moving_x(ctx)) {\n"
+                      "        r01_player_set_move_mul(ctx, 2);\n"
+                      "        r01_player_anim_set_frame_delay(ctx, 3);\n"
+                      "    }\n"
                       "}\n\n"
                       "void r01_custom_on_vblank(R01GameCtx *ctx) {\n"
                       "    (void)ctx;\n"
@@ -824,6 +839,8 @@ static int write_base_game(FILE *f, const R01Project *p) {
     fprintf(f, "    if (!ctx) return;\n");
     fprintf(f, "    r01_runtime_dispatch_buttons(ctx);\n");
     fprintf(f, "    ctx->pad_prev = ctx->pad;\n");
+    fprintf(f, "    r01_player_set_move_mul(ctx, 1);\n");
+    fprintf(f, "    r01_player_anim_set_frame_delay(ctx, 0);\n");
     fprintf(f, "    r01_custom_on_tick(ctx);\n");
     fprintf(f, "}\n\n");
 
@@ -1510,6 +1527,62 @@ static int write_runtime_c(const char *c_dir, char *err_buf, size_t err_cap) {
     return 0;
 }
 
+static int write_tick_host(const char *c_dir, char *err_buf, size_t err_cap) {
+    char path[R01_PATH_MAX];
+    if (join_path_err(path, sizeof(path), c_dir, "r01_tick_host.c", err_buf, err_cap) != 0) {
+        return -1;
+    }
+    return write_text(path,
+                      "/* Host Play author tick plugin. Regenerated on export. */\n"
+                      "#include \"include/r01_engine.h\"\n"
+                      "#include <string.h>\n\n"
+                      "typedef struct {\n"
+                      "    const char *id;\n"
+                      "    int sc, sr, tc, tr;\n"
+                      "} R01WarpEntRec;\n"
+                      "typedef struct {\n"
+                      "    int ent;\n"
+                      "    int dsc, dsr, dtc, dtr;\n"
+                      "    uint8_t flags;\n"
+                      "} R01WarpExitRec;\n\n"
+                      "const R01WarpEntRec warp_ents[1] = {{0}};\n"
+                      "const R01WarpExitRec warp_exits[1] = {{0}};\n"
+                      "const int warp_ent_count = 0;\n"
+                      "const int warp_exit_count = 0;\n"
+                      "const int player_state_frames[4] = {1, 1, 1, 1};\n\n"
+                      "void r01_host_custom_tick(uint8_t pad, int *move_mul, int *frame_delay) {\n"
+                      "    R01GameCtx ctx;\n"
+                      "    memset(&ctx, 0, sizeof(ctx));\n"
+                      "    ctx.pad = pad;\n"
+                      "    r01_player_set_move_mul(&ctx, 1);\n"
+                      "    r01_player_anim_set_frame_delay(&ctx, 0);\n"
+                      "    r01_custom_on_tick(&ctx);\n"
+                      "    if (move_mul) {\n"
+                      "        *move_mul = r01_player_move_mul(&ctx);\n"
+                      "    }\n"
+                      "    if (frame_delay) {\n"
+                      "        *frame_delay = r01_player_anim_frame_delay(&ctx);\n"
+                      "    }\n"
+                      "}\n",
+                      err_buf, err_cap);
+}
+
+static void compile_custom_plugin(const char *c_dir) {
+    char cmd[R01_PATH_MAX * 6];
+    int n;
+    if (!c_dir) {
+        return;
+    }
+    n = snprintf(cmd, sizeof(cmd),
+                 "cc -shared -fPIC -O2 -Wl,-z,defs -I\"%s\" \"%s/custom_logic.c\" \"%s/r01_runtime.c\" "
+                 "\"%s/r01_tick_host.c\" -lm -o \"%s/r01_custom.so\"",
+                 c_dir, c_dir, c_dir, c_dir, c_dir);
+    if (n < 0 || n >= (int)sizeof(cmd)) {
+        return;
+    }
+    (void)system(cmd);
+}
+
 int r01_export_codegen(const R01Project *p, const char *path_stem, char *err_buf, size_t err_cap) {
     char out_dir[R01_PATH_MAX];
     char base_name[64];
@@ -1555,6 +1628,10 @@ int r01_export_codegen(const R01Project *p, const char *path_stem, char *err_buf
     if (write_runtime_c(path, err_buf, err_cap) != 0) {
         return -1;
     }
+    if (write_tick_host(path, err_buf, err_cap) != 0) {
+        return -1;
+    }
+    compile_custom_plugin(path);
 
     if (join_path_err(path, sizeof(path), out_dir, "C/base_game.c", err_buf, err_cap) != 0) {
 

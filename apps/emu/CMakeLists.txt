@@ -49,7 +49,7 @@ if(NOT TARGET retr01_emu_core)
   target_include_directories(retr01_emu_core PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
   )
-  target_link_libraries(retr01_emu_core PUBLIC r01_play_common)
+  target_link_libraries(retr01_emu_core PUBLIC r01_play_common ${CMAKE_DL_LIBS})
 endif()
 
 set(R01_OUTPUT_DIR "${R01_REPO_ROOT}/output")

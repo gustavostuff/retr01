@@ -43,9 +43,6 @@ int r01_custom_logic_scan_player_walk(const char *path, int *out_state);
 /* Parse r01_player_anim_set_jump_state(ctx, n). Returns 0 on match. */
 int r01_custom_logic_scan_player_jump(const char *path, int *out_state);
 
-/* Parse r01_player_set_run_on_x(ctx). Returns 0 on match. */
-int r01_custom_logic_scan_run_on_x(const char *path);
-
 /* Parse every r01_solid_pattern_add(ctx, bank, tile). Returns 0 if at least one call matches. */
 int r01_custom_logic_scan_solid_patterns(const char *path, uint8_t *out_banks, uint8_t *out_tiles,
                                          int max_count, int *out_count);

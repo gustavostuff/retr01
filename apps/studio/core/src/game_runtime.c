@@ -30,6 +30,7 @@ void r01_game_ctx_init(R01GameCtx *ctx) {
     ctx->plat_meter = R01_PLAT_METER_DEFAULT;
     ctx->fade_color = R01_FADE_BLACK;
     ctx->fade_pending_entrance = -1;
+    ctx->player_move_mul = 1;
     r01_player_anim_init(ctx);
 }
 
@@ -285,6 +286,13 @@ uint8_t r01_pad_just_pressed(R01GameCtx *ctx, uint8_t btn) {
     return (uint8_t)(((ctx->pad ^ ctx->pad_prev) & ctx->pad) >> btn) & 1u;
 }
 
+int r01_pad_down(const R01GameCtx *ctx, uint8_t mask) {
+    if (!ctx || mask == 0) {
+        return 0;
+    }
+    return (ctx->pad & mask) != 0;
+}
+
 void r01_player_warp(R01GameCtx *ctx, int col, int row) {
     if (!ctx) {
         return;
@@ -303,11 +311,40 @@ void r01_player_set_type(uint8_t type_id) {
     (void)type_id;
 }
 
-void r01_player_set_run_on_x(R01GameCtx *ctx) {
+int r01_player_moving_x(const R01GameCtx *ctx) {
+    return r01_pad_down(ctx, (uint8_t)(R01_PAD_LEFT | R01_PAD_RIGHT));
+}
+
+void r01_player_set_move_mul(R01GameCtx *ctx, int mul) {
     if (!ctx) {
         return;
     }
-    ctx->player_run_on_x = 1;
+    if (mul < 1) {
+        mul = 1;
+    }
+    if (mul > 8) {
+        mul = 8;
+    }
+    ctx->player_move_mul = mul;
+}
+
+int r01_player_move_mul(const R01GameCtx *ctx) {
+    int mul;
+    if (!ctx) {
+        return 1;
+    }
+    mul = ctx->player_move_mul;
+    if (mul < 1) {
+        return 1;
+    }
+    if (mul > 8) {
+        return 8;
+    }
+    return mul;
+}
+
+void r01_custom_on_tick(R01GameCtx *ctx) {
+    (void)ctx;
 }
 
 void r01_camera_set_deadzone(R01GameCtx *ctx, int dx, int dy) {

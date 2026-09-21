@@ -67,12 +67,25 @@ TEST_MAIN() {
         r01_play_anim_set_walk_all(&anim, 1);
         r01_play_anim_update(&anim, 1, 0);
         EXPECT(r01_play_anim_frame_delay(&anim, 6) == 6, "walk delay at walk speed");
-        r01_play_anim_set_run_fast(&anim, 1);
-        EXPECT(r01_play_anim_frame_delay(&anim, 6) == 3, "walk delay halved while running");
-        EXPECT(r01_play_anim_frame_delay(&anim, 1) == 1, "run delay min 1");
+        r01_play_anim_set_frame_delay(&anim, 3);
+        EXPECT(r01_play_anim_frame_delay(&anim, 6) == 3, "live frame delay override");
+        EXPECT(r01_play_anim_frame_delay(&anim, 1) == 3, "override ignores authored delay");
+        r01_play_anim_set_frame_delay(&anim, 0);
         r01_play_anim_set_idle_state(&anim, 0);
         r01_play_anim_update(&anim, 0, 0);
-        EXPECT(r01_play_anim_frame_delay(&anim, 6) == 6, "idle delay not halved");
+        EXPECT(r01_play_anim_frame_delay(&anim, 6) == 6, "idle delay after override clear");
+    }
+
+    {
+        R01GameCtx ctx;
+        r01_game_ctx_init(&ctx);
+        ctx.pad = (uint8_t)(R01_PAD_X | R01_PAD_RIGHT);
+        EXPECT(r01_pad_down(&ctx, R01_PAD_X), "pad X down");
+        EXPECT(r01_player_moving_x(&ctx), "moving X from left/right");
+        r01_player_set_move_mul(&ctx, 2);
+        EXPECT(r01_player_move_mul(&ctx) == 2, "move mul 2");
+        r01_player_anim_set_frame_delay(&ctx, 3);
+        EXPECT(r01_player_anim_frame_delay(&ctx) == 3, "anim delay override 3");
     }
 
     r01_project_init(p, "test");
@@ -478,7 +491,6 @@ TEST_MAIN() {
                   "    r01_platformer_set_gravity(ctx, 2);\n"
                   "    r01_platformer_set_jump(ctx, R01_PLAT_JUMP_DEFAULT);\n"
                   "    r01_platformer_set_meter(ctx, R01_PLAT_METER_DEFAULT);\n"
-                  "    r01_player_set_run_on_x(ctx);\n"
                   "    r01_player_anim_set_idle_state(ctx, 0);\n"
                   "    r01_player_anim_set_walk_all(ctx, 1);\n"
                   "    r01_player_anim_set_crouch_state(ctx, 2);\n"
@@ -504,7 +516,6 @@ TEST_MAIN() {
                 EXPECT(r01_custom_logic_scan_player_walk("plat_logic.c", &walk) == 0 && walk == 1, "scan walk state");
                 EXPECT(r01_custom_logic_scan_player_jump("plat_logic.c", &jump_st) == 0 && jump_st == 3,
                        "scan jump state");
-                EXPECT(r01_custom_logic_scan_run_on_x("plat_logic.c") == 0, "scan run on x");
             }
         }
         remove("plat_logic.c");
