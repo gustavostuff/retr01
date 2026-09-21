@@ -1,5 +1,6 @@
 #include "ui/ui.h"
 #include "ui/internal.h"
+#include "r01_pad_host.h"
 #include "font/font.h"
 
 #include "retr01_studio/cart.h"
@@ -716,6 +717,7 @@ static void draw_play_game(UiState *ui, SDL_Renderer *r, int ox, int oy) {
     dst.w = ui_screen_w(ui);
     dst.h = ui_screen_h(ui);
     SDL_RenderCopy(r, ui->play.fb_tex, NULL, &dst);
+    r01_pad_host_draw_menu(r, ox, oy, ui_screen_w(ui), ui_screen_h(ui), ui->scale >= 2 ? 2 : 1);
 }
 
 void draw_play_view(UiState *ui, SDL_Renderer *r) {

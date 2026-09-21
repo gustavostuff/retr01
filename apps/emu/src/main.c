@@ -2,6 +2,7 @@
 #include "retr01_emu/play.h"
 #include "retr01_emu/video.h"
 #include "r01_bgm_host.h"
+#include "r01_pad_host.h"
 #include "r01_pad_keys.h"
 #include "r01_readme_shot.h"
 
@@ -17,6 +18,24 @@ static void emu_start_host_bgm(R01eMachine *m) {
     }
     (void)r01e_machine_apu_tracker_start_cart(m);
     r01_bgm_host_attach_window(m->io.apu);
+}
+
+static void emu_reset(R01eMachine *m) {
+    r01e_machine_reset(m);
+    emu_start_host_bgm(m);
+}
+
+static void emu_apply_pad_menu(int act, R01eMachine *m, int *running, int *scale, SDL_Window *win) {
+    if (act == R01_PAD_MENU_RESET) {
+        emu_reset(m);
+    } else if (act == R01_PAD_MENU_QUIT) {
+        if (running) {
+            *running = 0;
+        }
+    } else if (act == R01_PAD_MENU_SCALE && scale && win) {
+        *scale = (*scale == 2) ? 1 : 2;
+        SDL_SetWindowSize(win, R01E_VISIBLE_W * *scale, R01E_VISIBLE_H * *scale);
+    }
 }
 /* Debug pane: VRAM + BG0 atlases, then mask / world map / pals, then CPU budget. */
 #define DBG_GAP 6
@@ -493,7 +512,8 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS) != 0) {
+    r01_pad_host_preinit();
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS | SDL_INIT_GAMECONTROLLER) != 0) {
         fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
         r01e_machine_shutdown(&machine);
         return 1;
@@ -502,6 +522,7 @@ int main(int argc, char **argv) {
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
     /* Open the speaker now (silence). Attach BGM after the windows exist. */
     (void)r01_bgm_host_init();
+    (void)r01_pad_host_init();
 
     /* Hidden until first frame is presented -- avoids empty-window flash. */
     win = SDL_CreateWindow("Retr01 Emulator (Phase 1)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -510,6 +531,7 @@ int main(int argc, char **argv) {
     ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!win || !ren) {
         fprintf(stderr, "SDL: %s\n", SDL_GetError());
+        r01_pad_host_shutdown();
         r01_bgm_host_shutdown();
         r01e_machine_shutdown(&machine);
         SDL_Quit();
@@ -520,6 +542,7 @@ int main(int argc, char **argv) {
                             R01E_VISIBLE_H);
     if (!tex) {
         fprintf(stderr, "SDL texture: %s\n", SDL_GetError());
+        r01_pad_host_shutdown();
         r01_bgm_host_shutdown();
         r01e_machine_shutdown(&machine);
         SDL_Quit();
@@ -584,7 +607,9 @@ int main(int argc, char **argv) {
     }
     printf("Pads (Sim map): P1 WASD + G/H X/Y, 1 coin, 2 start  |  "
            "P2 arrows + ,/. X/Y, Shift coin, Enter start\n");
-    printf("Platformer jump: face Y (P1 H, P2 .). Space pause  |  R reset  |  Ctrl+1/2 scale  |  Esc quit\n");
+    printf("Gamepad: SDL DB auto-map. D-pad/stick move, A/Y face Y, B/X face X, Back/L coin, Start/R start.\n");
+    printf("Home / Guide: Reset, Quit, 1x/2x.  Platformer jump: face Y (P1 H, P2 .).\n");
+    printf("Space pause  |  R reset  |  Ctrl+1/2 scale  |  Esc quit\n");
     if (dbg_win) {
         printf("Debug: BG1/BG0 2x2 + BG1 mask + world map + pals + CPU budget (2 Hz, 50k red line)\n");
     }
@@ -611,6 +636,8 @@ int main(int argc, char **argv) {
         const Uint8 *keys;
 
         while (SDL_PollEvent(&ev)) {
+            int menu_act;
+            r01_pad_host_event(&ev);
             if (ev.type == SDL_QUIT) {
                 running = 0;
             } else if (ev.type == SDL_WINDOWEVENT && ev.window.event == SDL_WINDOWEVENT_CLOSE) {
@@ -632,13 +659,34 @@ int main(int argc, char **argv) {
                 } else {
                     running = 0;
                 }
+            } else if (ev.type == SDL_MOUSEBUTTONDOWN && ev.button.button == SDL_BUTTON_LEFT &&
+                       r01_pad_host_menu_open()) {
+                int lx = 0;
+                int ly = 0;
+#if SDL_VERSION_ATLEAST(2, 0, 18)
+                {
+                    float fx = 0.f;
+                    float fy = 0.f;
+                    SDL_RenderWindowToLogical(ren, ev.button.x, ev.button.y, &fx, &fy);
+                    lx = (int)fx;
+                    ly = (int)fy;
+                }
+#else
+                lx = ev.button.x;
+                ly = ev.button.y;
+#endif
+                menu_act = r01_pad_host_menu_click(lx, ly, 0, 0, R01E_VISIBLE_W, R01E_VISIBLE_H);
+                emu_apply_pad_menu(menu_act, &machine, &running, &scale, win);
             } else if (ev.type == SDL_KEYDOWN) {
-                if (ev.key.keysym.sym == SDLK_ESCAPE) {
+                menu_act = r01_pad_host_menu_keydown((int)ev.key.keysym.sym, ev.key.repeat);
+                if (menu_act >= 0) {
+                    emu_apply_pad_menu(menu_act, &machine, &running, &scale, win);
+                } else if (ev.key.keysym.sym == SDLK_ESCAPE) {
                     running = 0;
                 } else if (ev.key.keysym.sym == SDLK_SPACE) {
                     paused = !paused;
                 } else if (ev.key.keysym.sym == SDLK_r) {
-                    r01e_machine_reset(&machine);
+                    emu_reset(&machine);
                 } else if ((ev.key.keysym.mod & KMOD_CTRL) && ev.key.keysym.sym == SDLK_1) {
                     scale = 1;
                     SDL_SetWindowSize(win, R01E_VISIBLE_W * scale, R01E_VISIBLE_H * scale);
@@ -654,14 +702,22 @@ int main(int argc, char **argv) {
             }
         }
 
+        emu_apply_pad_menu(r01_pad_host_tick(), &machine, &running, &scale, win);
+
         keys = SDL_GetKeyboardState(NULL);
-        r01e_machine_set_pad(&machine, 0, r01_pad_bits_p1(keys));
-        r01e_machine_set_pad(&machine, 1, r01_pad_bits_p2(keys));
+        if (r01_pad_host_menu_open()) {
+            r01e_machine_set_pad(&machine, 0, 0);
+            r01e_machine_set_pad(&machine, 1, 0);
+        } else {
+            r01e_machine_set_pad(&machine, 0, (uint8_t)(r01_pad_bits_p1(keys) | r01_pad_host_bits(0)));
+            r01e_machine_set_pad(&machine, 1, (uint8_t)(r01_pad_bits_p2(keys) | r01_pad_host_bits(1)));
+        }
 
         {
             Uint32 now = SDL_GetTicks();
             unsigned catchup = 0;
-            if (!paused) {
+            int menu = r01_pad_host_menu_open();
+            if (!paused && !menu) {
                 while ((int)(now - last_ticks) >= (int)FRAME_MS && catchup < FRAME_CATCHUP_MAX) {
                     (void)r01e_machine_frame(&machine);
                     dbg_chart_note_frame(&cpu_chart, &machine);
@@ -673,6 +729,9 @@ int main(int argc, char **argv) {
                 }
                 dbg_chart_maybe_sample(&cpu_chart, now);
             } else {
+                if (menu) {
+                    last_ticks = now;
+                }
                 r01e_video_render_frame(&machine);
             }
 
@@ -680,6 +739,7 @@ int main(int argc, char **argv) {
             SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
             SDL_RenderClear(ren);
             SDL_RenderCopy(ren, tex, NULL, NULL);
+            r01_pad_host_draw_menu(ren, 0, 0, R01E_VISIBLE_W, R01E_VISIBLE_H, scale);
             SDL_RenderPresent(ren);
 
             if (dbg_win && dbg_ren && vram_tex && bg0_tex && mask_tex) {
@@ -723,6 +783,7 @@ int main(int argc, char **argv) {
     SDL_DestroyWindow(win);
     r01_bgm_host_attach_window(NULL);
     r01_bgm_host_shutdown();
+    r01_pad_host_shutdown();
     SDL_Quit();
     r01e_machine_shutdown(&machine);
     return 0;

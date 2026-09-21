@@ -14,7 +14,7 @@ Studio **Play** uses this same emu core after export (shared library + standalon
 | **Play** | **Emu Host Play SoT**. Move / **dead-zone camera** / player anim / collision from cart bytes |
 | **CPU** | Boots world 0. Default: PRG streams pals + start MAP (`$7F93` -> `$7F12`). Gameplay stays on Host Play |
 | **Video** | Main FB = **VRAM + scroll** + **OAM** + **BG0** show-through under BG1 color 0 (SCALE 2x). Host Play fills BG1 2x2 via `sync_camera` |
-| **Host** | SDL. Pad map: P1 WASD+G/H, P2 arrows+,/. Platformer jump is face **Y** (P1 **H**). NMI tracker fills `$7F40` from packed PRG BGM (`$80FE` / `$B000`). PC speaker mixes that window. Not MCU-S2 PWM |
+| **Host** | SDL. Keyboard or SDL Game Controller (community DB + SDL built-in mappings). First two pads are P1 / P2. Guide / Home opens Reset, Quit, and 1x/2x present scale. Pad map: P1 WASD+G/H, P2 arrows+,/. Platformer jump is face **Y** (P1 **H**, gamepad south). NMI tracker fills `$7F40` from packed PRG BGM (`$80FE` / `$B000`). PC speaker mixes that window. Not MCU-S2 PWM |
 
 **Sync contract:** Emu Host Play (`src/play.c` + `apps/common/`) is the Phase 1 gameplay SoT. Export packs present screens + play table (`$8100`) + `R01P`. Soft-boot (`R01E_SOFTBOOT=1`) uses host memcpy of VRAM and pals at boot (triage). Default boot runs cart PRG stream catchup until the start MAP write reaches **480** bytes (`vram_addr`), then Host Play reloads the camera 2x2 from cart. Collision samples PRG solids. Render samples that VRAM window.
 
@@ -45,7 +45,7 @@ cmake --build build
 ./build/retr01_emu path/to/cart.retr01
 ```
 
-**Controls:** WASD or arrows = move. Face **Y** (P1 **H**, P2 **.**) = jump in platformer. Down = crouch in platformer (grounded, no walk). Space = pause. R = reset. **Ctrl+1** / **Ctrl+2** = present scale. Esc = quit.
+**Controls:** WASD or arrows = move. Face **Y** (P1 **H**, P2 **.**, gamepad **A**/**Y**) = jump in platformer. Down = crouch in platformer (grounded, no walk). Space = pause. R = reset. **Ctrl+1** / **Ctrl+2** = present scale. Esc = quit. Gamepad Guide / Home = Reset / Quit / **1x**/**2x**. First two SDL Game Controllers are P1 / P2 (community `gamecontrollerdb.txt` plus SDL built-in mappings).
 
 **Env:** `R01E_SOFTBOOT=1` forces host memcpy VRAM/pals at boot (debug). Default runs cart PRG MAP/pal stream catchup to a full start-screen payload.
 

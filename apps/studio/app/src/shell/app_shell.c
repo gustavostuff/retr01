@@ -1,5 +1,6 @@
 #include "shell/app_shell.h"
 #include "ui/internal.h"
+#include "r01_pad_host.h"
 #include "r01_readme_shot.h"
 
 #include <stdio.h>
@@ -61,6 +62,22 @@ static void app_shell_set_render_scale_toast(AppShell *app, int scale) {
     ui_toast(&app->ui, scale == 2 ? "scale 2x" : "scale 1x", 0);
 }
 
+static void play_apply_pad_menu(AppShell *app, int act) {
+    if (!app || act == R01_PAD_MENU_NONE) {
+        return;
+    }
+    if (!app->ui.play.active || app->ui.play.booting) {
+        return;
+    }
+    if (act == R01_PAD_MENU_RESET) {
+        ui_play_reset(&app->ui);
+    } else if (act == R01_PAD_MENU_QUIT) {
+        ui_play_stop(&app->ui);
+    } else if (act == R01_PAD_MENU_SCALE) {
+        app_shell_set_render_scale_toast(app, app->render_scale == 2 ? 1 : 2);
+    }
+}
+
 void app_shell_apply_logic_scale(AppShell *app) {
     if (!app || !app->win || !app->ren) {
         return;
@@ -87,8 +104,9 @@ int app_shell_init(AppShell *app, int headless) {
         SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
     }
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0"); /* nearest when stretching logic canvas */
+    r01_pad_host_preinit();
 
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS | SDL_INIT_GAMECONTROLLER) != 0) {
         fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
         return -1;
     }
@@ -96,6 +114,7 @@ int app_shell_init(AppShell *app, int headless) {
         SDL_Quit();
         return -1;
     }
+    (void)r01_pad_host_init();
     app->render_scale = 2;
     app->scale = 2;
     app->ui.scale = 2;
@@ -152,6 +171,7 @@ void app_shell_shutdown(AppShell *app) {
         SDL_DestroyWindow(app->win);
     }
     ui_shutdown(&app->ui);
+    r01_pad_host_shutdown();
     SDL_Quit();
 }
 
@@ -178,6 +198,9 @@ void app_shell_frame(AppShell *app) {
     dst.x = (ww - dst.w) / 2;
     dst.y = (wh - dst.h) / 2;
 
+    if (app->ui.play.active && !app->ui.play.booting) {
+        play_apply_pad_menu(app, r01_pad_host_tick());
+    }
     ui_tick(&app->ui);
     app_shell_draw(app);
     SDL_SetRenderDrawColor(app->ren, 0, 0, 0, 255);
@@ -218,6 +241,7 @@ void app_shell_frame(AppShell *app) {
 
 int app_shell_handle_event(AppShell *app, const SDL_Event *e) {
     int wx = 0, wy = 0, lx = 0, ly = 0, rc;
+    r01_pad_host_event(e);
 #if R01_README_SHOT
     if (e->type == SDL_KEYDOWN && !e->key.repeat && e->key.keysym.sym == SDLK_F12) {
         app->readme_shot = 1;
@@ -234,6 +258,24 @@ int app_shell_handle_event(AppShell *app, const SDL_Event *e) {
         }
         if (e->key.keysym.sym == SDLK_2) {
             app_shell_set_render_scale_toast(app, 2);
+            return 1;
+        }
+    }
+    if (app->ui.play.active && !app->ui.play.booting) {
+        if (e->type == SDL_KEYDOWN) {
+            int act = r01_pad_host_menu_keydown((int)e->key.keysym.sym, e->key.repeat);
+            if (act >= 0) {
+                play_apply_pad_menu(app, act);
+                return 1;
+            }
+        }
+        if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT && r01_pad_host_menu_open()) {
+            int sox = 0;
+            int soy = 0;
+            logic_from_window(app, e->button.x, e->button.y, &lx, &ly);
+            screen_origin(&app->ui, &sox, &soy);
+            play_apply_pad_menu(app, r01_pad_host_menu_click(lx, ly, sox, soy, ui_screen_w(&app->ui),
+                                                             ui_screen_h(&app->ui)));
             return 1;
         }
     }

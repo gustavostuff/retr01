@@ -9,6 +9,7 @@
 #include "retr01_emu/machine.h"
 #include "retr01_emu/play.h"
 #include "r01_bgm_host.h"
+#include "r01_pad_host.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,6 +52,7 @@ void ui_play_stop(UiState *ui) {
     if (!ui) {
         return;
     }
+    r01_pad_host_menu_set_open(0);
     r01_bgm_host_attach_window(NULL);
     r01_bgm_host_stop();
     if (ui->play.machine) {
@@ -153,6 +155,15 @@ void ui_play_boot_finish(UiState *ui, SDL_Renderer *ren) {
     ui->play.booting = 0;
     ui->play.last_tick = SDL_GetTicks();
     ui_play_start_bgm(ui, m);
+}
+
+void ui_play_reset(UiState *ui) {
+    if (!ui || !ui->play.machine) {
+        return;
+    }
+    r01e_machine_reset(ui->play.machine);
+    ui_play_start_bgm(ui, ui->play.machine);
+    ui->play.last_tick = SDL_GetTicks();
 }
 
 int ui_play_screen_mark(UiState *ui) {

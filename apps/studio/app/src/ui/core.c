@@ -10,6 +10,7 @@
 
 #include "retr01_emu/machine.h"
 #include "retr01_emu/play.h"
+#include "r01_pad_host.h"
 #include "r01_pad_keys.h"
 
 #include <stdio.h>
@@ -413,9 +414,14 @@ void ui_tick(UiState *ui) {
         }
         ui->play.last_tick = now;
     }
+    if (r01_pad_host_menu_open()) {
+        r01e_machine_set_pad(ui->play.machine, 0, 0);
+        r01e_machine_set_pad(ui->play.machine, 1, 0);
+        return;
+    }
     keys = SDL_GetKeyboardState(NULL);
-    r01e_machine_set_pad(ui->play.machine, 0, r01_pad_bits_p1(keys));
-    r01e_machine_set_pad(ui->play.machine, 1, r01_pad_bits_p2(keys));
+    r01e_machine_set_pad(ui->play.machine, 0, (uint8_t)(r01_pad_bits_p1(keys) | r01_pad_host_bits(0)));
+    r01e_machine_set_pad(ui->play.machine, 1, (uint8_t)(r01_pad_bits_p2(keys) | r01_pad_host_bits(1)));
     (void)r01e_machine_frame(ui->play.machine);
 }
 

@@ -381,6 +381,7 @@ void ui_flood_fill(UiState *ui, int tx, int ty);
 /* ui/screen/edit.c */
 void ui_toggle_play(UiState *ui);
 void ui_play_stop(UiState *ui);
+void ui_play_reset(UiState *ui);
 void ui_play_boot_finish(UiState *ui, SDL_Renderer *ren);
 int ui_play_screen_mark(UiState *ui);
 void screen_set_sel_bank(UiState *ui, int bank);

@@ -251,7 +251,7 @@ r01_platformer_set_meter(ctx, R01_PLAT_METER_DEFAULT);     /* 16 px per meter, c
 | Input | Platformer |
 | --- | --- |
 | Left / Right | Walk 1 px per frame at meter 16 (scaled), then resolve X |
-| Face **Y** | Jump while grounded (edge). Hold for full height. Release while rising cuts the hop (3x gravity). Keyboard P1 is **H** (G is face X) |
+| Face **Y** | Jump while grounded (edge). Hold for full height. Release while rising cuts the hop (3x gravity). Keyboard P1 is **H** (G is face X). Gamepad south / north is Y, east / west is X |
 | Down | Crouch if `r01_player_anim_set_crouch_state` maps a state in `custom_logic.c`. Grounded only. No walk while crouched |
 | Up | Unused in v1 |
 
