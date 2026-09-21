@@ -228,23 +228,14 @@ static int confirm_sel(void) {
     return act;
 }
 
-static int menu_px(int vh) {
-    return (vh >= 180) ? 2 : 1;
-}
-
 static void menu_geom(int ox, int oy, int vw, int vh, SDL_Rect *bounds, SDL_Rect btn[R01_PAD_MENU_BTN_N]) {
-    int px = menu_px(vh);
-    int bw = 58 * px;
-    int bh = 13 * px;
-    int gap = 2 * px;
+    const int bw = 58;
+    const int bh = 13;
+    const int gap = 2;
     int i;
     int total_h = R01_PAD_MENU_BTN_N * bh + (R01_PAD_MENU_BTN_N - 1) * gap;
     int x = ox + (vw - bw) / 2;
     int y = oy + (vh - total_h) / 2;
-    if (px > 1) {
-        x &= ~1;
-        y &= ~1;
-    }
     for (i = 0; i < R01_PAD_MENU_BTN_N; i++) {
         btn[i].x = x;
         btn[i].y = y + i * (bh + gap);
@@ -314,27 +305,15 @@ static void blit_glyph(SDL_Renderer *ren, int x, int y, const uint8_t rows[7], i
     }
 }
 
-static void draw_label(SDL_Renderer *ren, const SDL_Rect *box, const char *text, int px, Uint8 r, Uint8 g, Uint8 b) {
-    int gw;
-    int gh;
-    int n;
-    int w;
-    int x;
-    int y;
+static void draw_label(SDL_Renderer *ren, const SDL_Rect *box, const char *text, Uint8 r, Uint8 g, Uint8 b) {
+    const int px = 1;
+    int gw = 6 * px;
+    int gh = 7 * px;
+    int n = (int)strlen(text);
+    int w = n > 0 ? (n * gw - px) : 0;
+    int x = box->x + (box->w - w) / 2;
+    int y = box->y + (box->h - gh) / 2;
     int i;
-    if (px < 1) {
-        px = 1;
-    }
-    gw = 6 * px;
-    gh = 7 * px;
-    n = (int)strlen(text);
-    w = n > 0 ? (n * gw - px) : 0;
-    x = box->x + (box->w - w) / 2;
-    y = box->y + (box->h - gh) / 2;
-    if (px > 1) {
-        x &= ~1;
-        y &= ~1;
-    }
     SDL_SetRenderDrawColor(ren, r, g, b, 255);
     for (i = 0; i < n; i++) {
         const uint8_t *gl = glyph_for(text[i]);
@@ -518,7 +497,7 @@ void r01_pad_host_draw_menu(SDL_Renderer *ren, int ox, int oy, int vw, int vh, i
             SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
             SDL_RenderDrawRect(ren, &btn[i]);
         }
-        draw_label(ren, &btn[i], labels[i], menu_px(vh), 255, 255, 255);
+        draw_label(ren, &btn[i], labels[i], 255, 255, 255);
     }
     SDL_SetRenderDrawBlendMode(ren, old);
 }
