@@ -1,5 +1,22 @@
 #include "r01_play_camera.h"
 
+/*
+ * Snap both edges to the same parity as the viewport center (screen/2).
+ * A 2 px step from a centered spawn then lands on an edge, so the first
+ * follow is +2 / -2 instead of a 1 px overflow hitch (run-on-X).
+ */
+static void align_deadzone_parity(int center, int *lo, int *hi) {
+    if (!lo || !hi) {
+        return;
+    }
+    if (((*lo) & 1) != (center & 1) && *lo < *hi) {
+        (*lo)++;
+    }
+    if (((*hi) & 1) != (center & 1) && *hi > *lo) {
+        (*hi)--;
+    }
+}
+
 static void deadzone_h_bounds(int screen_w, int dz_w, int *out_left, int *out_right) {
     int left;
     int right;
@@ -9,6 +26,7 @@ static void deadzone_h_bounds(int screen_w, int dz_w, int *out_left, int *out_ri
     } else {
         left = (screen_w - dz_w) / 2;
         right = left + dz_w - 1;
+        align_deadzone_parity(screen_w / 2, &left, &right);
     }
     if (out_left) {
         *out_left = left;
@@ -27,6 +45,7 @@ static void deadzone_v_bounds(int screen_h, int dz_h, int *out_top, int *out_bot
     } else {
         top = (screen_h - dz_h) / 2;
         bottom = top + dz_h - 1;
+        align_deadzone_parity(screen_h / 2, &top, &bottom);
     }
     if (out_top) {
         *out_top = top;

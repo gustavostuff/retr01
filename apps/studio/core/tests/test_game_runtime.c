@@ -60,7 +60,7 @@ TEST_MAIN() {
         int cam_y = 100;
         r01_play_camera_update(&cam_x, &cam_y, 200, 180, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H, R01_SCREEN_PX_W,
                                R01_SCREEN_PX_H, 32, 30, R01_PLAY_CAM_AXIS_BOTH);
-        EXPECT(cam_x == 200 - 79, "32px centered deadzone scrolls at right edge");
+        EXPECT(cam_x == 200 - 78, "32px deadzone right edge shares viewport-center parity");
         EXPECT(cam_y == 180 - 74, "30px centered deadzone scrolls at bottom edge");
     }
 
@@ -71,6 +71,37 @@ TEST_MAIN() {
                                R01_SCREEN_PX_H, 32, 30, R01_PLAY_CAM_AXIS_BOTH);
         EXPECT(cam_x == 100, "origin inside centered deadzone leaves camera x");
         EXPECT(cam_y == 100, "origin inside centered deadzone leaves camera y");
+    }
+
+    {
+        int cam_x = 0;
+        int cam_y = 0;
+        int px = R01_SCREEN_PX_W / 2;
+        int py = R01_SCREEN_PX_H / 2;
+        int prev;
+        int i;
+        int moved = 0;
+        r01_play_camera_snap(&cam_x, &cam_y, px, py, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H, R01_SCREEN_PX_W,
+                             R01_SCREEN_PX_H, 32, 70, R01_PLAY_CAM_AXIS_BOTH);
+        prev = cam_x;
+        for (i = 0; i < 24; i++) {
+            int d;
+            px += 2;
+            r01_play_camera_update(&cam_x, &cam_y, px, py, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H, R01_SCREEN_PX_W,
+                                   R01_SCREEN_PX_H, 32, 70, R01_PLAY_CAM_AXIS_BOTH);
+            d = cam_x - prev;
+            if (d != 0 && d != 2) {
+                EXPECT(0, "2 px run from center does not hitch 1 px at deadzone");
+            }
+            if (moved && d != 2) {
+                EXPECT(0, "2 px run stays +2 cam after deadzone engage");
+            }
+            if (d == 2) {
+                moved = 1;
+            }
+            prev = cam_x;
+        }
+        EXPECT(moved, "2 px run from center engages deadzone");
     }
 
     {

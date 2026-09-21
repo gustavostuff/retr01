@@ -156,7 +156,7 @@ Max fill: **3** + **4** x (**1** + **8** x (**8** + **24**)) = **1031 B**. Pose 
 
 ### Camera helpers (locked intent)
 
-Default dead zone **32x30** pixels inside the 128x120 view when world header bytes 30-31 are non-zero. **0,0** (or `r01_camera_disable_deadzone`) turns the dead zone off for 1:1 camera track. Axis lock may be **both**, **H only**, or **V only**. See `world-scrolling.md`. Studio packs dead-zone size from `r01_camera_set_deadzone` / `r01_camera_disable_deadzone` in author `custom_logic.c` at export time.
+Default dead zone **32x30** pixels inside the 128x120 view when world header bytes 30-31 are non-zero. `r01_camera_set_deadzone` packs that width and height as given. Host Play follow snaps live box edges to the same parity as the viewport center so a 2 px hold-X run from a centered snap does not take a 1 px camera hitch. Live size may be 1 px smaller than packed and not pixel-centered. Details and the 31x69 exact-match example are in `world-scrolling.md`. **0,0** (or `r01_camera_disable_deadzone`) turns the dead zone off for 1:1 camera track. Axis lock may be **both**, **H only**, or **V only**. Studio packs dead-zone size from `r01_camera_set_deadzone` / `r01_camera_disable_deadzone` in author `custom_logic.c` at export time.
 
 ### Starter API (locked signatures)
 

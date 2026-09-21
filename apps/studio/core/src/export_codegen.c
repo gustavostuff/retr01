@@ -404,6 +404,7 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "#define R01_CAM_DEADZONE_Y_DEFAULT 30\n"
                    "void r01_game_camera_update(R01GameCtx *ctx);\n"
                    "void r01_game_camera_snap(R01GameCtx *ctx);\n"
+                   "/* Packs width/height. Follow may snap edges 1 px inward (world-scrolling.md). */\n"
                    "void r01_camera_set_deadzone(R01GameCtx *ctx, int dx, int dy);\n"
                    "void r01_camera_disable_deadzone(R01GameCtx *ctx);\n"
                    "void r01_camera_set_axis_lock(R01GameCtx *ctx, int mode);\n\n"

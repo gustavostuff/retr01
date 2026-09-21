@@ -112,6 +112,7 @@ uint8_t r01_pad_just_pressed(R01GameCtx *ctx, uint8_t btn);
 void r01_player_warp(R01GameCtx *ctx, int col, int row);
 void r01_player_set_type(uint8_t type_id);
 void r01_player_set_run_on_x(R01GameCtx *ctx);
+/* Packs width/height. Follow may snap edges 1 px inward (world-scrolling.md). */
 void r01_camera_set_deadzone(R01GameCtx *ctx, int dx, int dy);
 void r01_camera_disable_deadzone(R01GameCtx *ctx);
 void r01_camera_set_axis_lock(R01GameCtx *ctx, int mode);
