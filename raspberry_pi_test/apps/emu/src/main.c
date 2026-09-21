@@ -89,19 +89,19 @@ static void emu_present_dst(SDL_Renderer *ren, int scale, SDL_Rect *dst) {
     dst->y = (wh - dst->h) / 2;
 }
 
-static void emu_window_to_logic(SDL_Window *win, SDL_Renderer *ren, int scale, int wx, int wy, int *lx, int *ly) {
-    SDL_Rect dst;
+static void emu_window_to_output(SDL_Window *win, SDL_Renderer *ren, int wx, int wy, int *ox, int *oy) {
     int ww = 1;
     int wh = 1;
     int ow = 1;
     int oh = 1;
-    int ox;
-    int oy;
-    if (!lx || !ly) {
+    if (!ox || !oy) {
         return;
     }
     if (win) {
         SDL_GetWindowSize(win, &ww, &wh);
+    }
+    if (ren) {
+        SDL_GetRendererOutputSize(ren, &ow, &oh);
     }
     if (ww < 1) {
         ww = 1;
@@ -109,44 +109,23 @@ static void emu_window_to_logic(SDL_Window *win, SDL_Renderer *ren, int scale, i
     if (wh < 1) {
         wh = 1;
     }
-    emu_present_dst(ren, scale, &dst);
-    if (ren) {
-        SDL_GetRendererOutputSize(ren, &ow, &oh);
-    }
     if (ow < 1) {
         ow = 1;
     }
     if (oh < 1) {
         oh = 1;
     }
-    ox = wx * ow / ww;
-    oy = wy * oh / wh;
-    if (dst.w < 1 || dst.h < 1) {
-        *lx = 0;
-        *ly = 0;
-        return;
-    }
-    *lx = (ox - dst.x) * R01E_VISIBLE_W / dst.w;
-    *ly = (oy - dst.y) * R01E_VISIBLE_H / dst.h;
+    *ox = wx * ow / ww;
+    *oy = wy * oh / wh;
 }
 
-static void emu_present_play(SDL_Renderer *ren, SDL_Texture *fb, SDL_Texture *compose, int scale) {
+static void emu_present_play(SDL_Renderer *ren, SDL_Texture *fb, int scale) {
     SDL_Rect dst;
     emu_present_dst(ren, scale, &dst);
-    if (compose) {
-        SDL_SetRenderTarget(ren, compose);
-        SDL_RenderCopy(ren, fb, NULL, NULL);
-        r01_pad_host_draw_menu(ren, 0, 0, R01E_VISIBLE_W, R01E_VISIBLE_H, scale);
-        SDL_SetRenderTarget(ren, NULL);
-        SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
-        SDL_RenderClear(ren);
-        SDL_RenderCopy(ren, compose, NULL, &dst);
-    } else {
-        SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
-        SDL_RenderClear(ren);
-        SDL_RenderCopy(ren, fb, NULL, &dst);
-        r01_pad_host_draw_menu(ren, dst.x, dst.y, dst.w, dst.h, scale);
-    }
+    SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+    SDL_RenderClear(ren);
+    SDL_RenderCopy(ren, fb, NULL, &dst);
+    r01_pad_host_draw_menu(ren, dst.x, dst.y, dst.w, dst.h, scale);
     SDL_RenderPresent(ren);
 }
 
@@ -611,7 +590,6 @@ int main(int argc, char **argv) {
     SDL_Renderer *ren = NULL;
     SDL_Renderer *dbg_ren = NULL;
     SDL_Texture *tex = NULL;
-    SDL_Texture *compose = NULL;
     SDL_Texture *vram_tex = NULL;
     SDL_Texture *bg0_tex = NULL;
     SDL_Texture *mask_tex = NULL;
@@ -707,13 +685,8 @@ int main(int argc, char **argv) {
         SDL_Quit();
         return 1;
     }
-    compose = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, R01E_VISIBLE_W,
-                                R01E_VISIBLE_H);
 #if SDL_VERSION_ATLEAST(2, 0, 12)
-    if (compose) {
-        SDL_SetTextureScaleMode(compose, SDL_ScaleModeNearest);
-        SDL_SetTextureScaleMode(tex, SDL_ScaleModeNearest);
-    }
+    SDL_SetTextureScaleMode(tex, SDL_ScaleModeNearest);
 #endif
 
     /* One debug window: VRAM 2x2 + world map + pals + CPU budget chart. */
@@ -792,7 +765,7 @@ int main(int argc, char **argv) {
 
     /* Present boot frame while still hidden, then show. */
     SDL_UpdateTexture(tex, NULL, machine.video.fb, R01E_VISIBLE_W * 3);
-    emu_present_play(ren, tex, compose, scale);
+    emu_present_play(ren, tex, scale);
     if (dbg_win && dbg_ren && vram_tex && bg0_tex && mask_tex) {
         flush_debug_pane(dbg_ren, dbg_target, vram_tex, bg0_tex, mask_tex, &machine, &cpu_chart);
         SDL_ShowWindow(dbg_win);
@@ -835,10 +808,12 @@ int main(int argc, char **argv) {
                 }
             } else if (ev.type == SDL_MOUSEBUTTONDOWN && ev.button.button == SDL_BUTTON_LEFT &&
                        r01_pad_host_menu_open()) {
-                int lx = 0;
-                int ly = 0;
-                emu_window_to_logic(win, ren, scale, ev.button.x, ev.button.y, &lx, &ly);
-                menu_act = r01_pad_host_menu_click(lx, ly, 0, 0, R01E_VISIBLE_W, R01E_VISIBLE_H);
+                SDL_Rect dst;
+                int mx = 0;
+                int my = 0;
+                emu_present_dst(ren, scale, &dst);
+                emu_window_to_output(win, ren, ev.button.x, ev.button.y, &mx, &my);
+                menu_act = r01_pad_host_menu_click(mx, my, dst.x, dst.y, dst.w, dst.h);
                 emu_apply_pad_menu(menu_act, &machine, &running, &scale, win);
             } else if (ev.type == SDL_KEYDOWN) {
                 menu_act = r01_pad_host_menu_keydown((int)ev.key.keysym.sym, ev.key.repeat);
@@ -898,7 +873,7 @@ int main(int argc, char **argv) {
             }
 
             SDL_UpdateTexture(tex, NULL, machine.video.fb, R01E_VISIBLE_W * 3);
-            emu_present_play(ren, tex, compose, scale);
+            emu_present_play(ren, tex, scale);
 
             if (dbg_win && dbg_ren && vram_tex && bg0_tex && mask_tex) {
                 flush_debug_pane(dbg_ren, dbg_target, vram_tex, bg0_tex, mask_tex, &machine, &cpu_chart);
@@ -935,9 +910,6 @@ int main(int argc, char **argv) {
     }
     if (dbg_win) {
         SDL_DestroyWindow(dbg_win);
-    }
-    if (compose) {
-        SDL_DestroyTexture(compose);
     }
     SDL_DestroyTexture(tex);
     SDL_DestroyRenderer(ren);

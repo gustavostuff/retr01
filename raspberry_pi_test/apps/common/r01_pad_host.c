@@ -228,21 +228,34 @@ static int confirm_sel(void) {
     return act;
 }
 
-static void menu_geom(int ox, int oy, int vw, int vh, SDL_Rect *panel, SDL_Rect btn[R01_PAD_MENU_BTN_N]) {
-    const int bw = 112;
-    const int bh = 22;
-    const int gap = 4;
-    const int pad = 8;
+static int menu_px(int vh) {
+    return (vh >= 180) ? 2 : 1;
+}
+
+static void menu_geom(int ox, int oy, int vw, int vh, SDL_Rect *bounds, SDL_Rect btn[R01_PAD_MENU_BTN_N]) {
+    int px = menu_px(vh);
+    int bw = 58 * px;
+    int bh = 13 * px;
+    int gap = 2 * px;
     int i;
-    panel->w = bw + pad * 2;
-    panel->h = R01_PAD_MENU_BTN_N * bh + (R01_PAD_MENU_BTN_N - 1) * gap + pad * 2;
-    panel->x = ox + (vw - panel->w) / 2;
-    panel->y = oy + (vh - panel->h) / 2;
+    int total_h = R01_PAD_MENU_BTN_N * bh + (R01_PAD_MENU_BTN_N - 1) * gap;
+    int x = ox + (vw - bw) / 2;
+    int y = oy + (vh - total_h) / 2;
+    if (px > 1) {
+        x &= ~1;
+        y &= ~1;
+    }
     for (i = 0; i < R01_PAD_MENU_BTN_N; i++) {
-        btn[i].x = panel->x + pad;
-        btn[i].y = panel->y + pad + i * (bh + gap);
+        btn[i].x = x;
+        btn[i].y = y + i * (bh + gap);
         btn[i].w = bw;
         btn[i].h = bh;
+    }
+    if (bounds) {
+        bounds->x = x;
+        bounds->y = y;
+        bounds->w = bw;
+        bounds->h = total_h;
     }
 }
 
@@ -301,15 +314,27 @@ static void blit_glyph(SDL_Renderer *ren, int x, int y, const uint8_t rows[7], i
     }
 }
 
-static void draw_label(SDL_Renderer *ren, const SDL_Rect *box, const char *text, Uint8 r, Uint8 g, Uint8 b) {
-    int px = 2;
-    int gw = 6 * px;
-    int gh = 7 * px;
-    int n = (int)strlen(text);
-    int w = n > 0 ? (n * gw - px) : 0;
-    int x = box->x + (box->w - w) / 2;
-    int y = box->y + (box->h - gh) / 2;
+static void draw_label(SDL_Renderer *ren, const SDL_Rect *box, const char *text, int px, Uint8 r, Uint8 g, Uint8 b) {
+    int gw;
+    int gh;
+    int n;
+    int w;
+    int x;
+    int y;
     int i;
+    if (px < 1) {
+        px = 1;
+    }
+    gw = 6 * px;
+    gh = 7 * px;
+    n = (int)strlen(text);
+    w = n > 0 ? (n * gw - px) : 0;
+    x = box->x + (box->w - w) / 2;
+    y = box->y + (box->h - gh) / 2;
+    if (px > 1) {
+        x &= ~1;
+        y &= ~1;
+    }
     SDL_SetRenderDrawColor(ren, r, g, b, 255);
     for (i = 0; i < n; i++) {
         const uint8_t *gl = glyph_for(text[i]);
@@ -449,29 +474,26 @@ int r01_pad_host_menu_keydown(int key, int repeat) {
 }
 
 int r01_pad_host_menu_click(int x, int y, int ox, int oy, int vw, int vh) {
-    SDL_Rect panel;
+    SDL_Rect bounds;
     SDL_Rect btn[R01_PAD_MENU_BTN_N];
     int i;
     if (!g_pad.menu_open) {
         return -1;
     }
-    menu_geom(ox, oy, vw, vh, &panel, btn);
+    menu_geom(ox, oy, vw, vh, &bounds, btn);
     for (i = 0; i < R01_PAD_MENU_BTN_N; i++) {
         if (x >= btn[i].x && x < btn[i].x + btn[i].w && y >= btn[i].y && y < btn[i].y + btn[i].h) {
             g_pad.menu_sel = i;
             return confirm_sel();
         }
     }
-    if (x < panel.x || y < panel.y || x >= panel.x + panel.w || y >= panel.y + panel.h) {
-        g_pad.menu_open = 0;
-    }
+    g_pad.menu_open = 0;
     return R01_PAD_MENU_NONE;
 }
 
 void r01_pad_host_draw_menu(SDL_Renderer *ren, int ox, int oy, int vw, int vh, int scale_x) {
-    SDL_Rect panel;
+    SDL_Rect bounds;
     SDL_Rect btn[R01_PAD_MENU_BTN_N];
-    SDL_Rect dim;
     SDL_BlendMode old = SDL_BLENDMODE_NONE;
     int i;
     const char *labels[R01_PAD_MENU_BTN_N];
@@ -484,33 +506,19 @@ void r01_pad_host_draw_menu(SDL_Renderer *ren, int ox, int oy, int vw, int vh, i
     labels[0] = "RESET";
     labels[1] = "QUIT";
     labels[2] = (scale_x >= 2) ? "2X" : "1X";
-    menu_geom(ox, oy, vw, vh, &panel, btn);
+    menu_geom(ox, oy, vw, vh, &bounds, btn);
 
-    dim.x = ox;
-    dim.y = oy;
-    dim.w = vw;
-    dim.h = vh;
     SDL_GetRenderDrawBlendMode(ren, &old);
     SDL_SetRenderDrawBlendMode(ren, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(ren, 0, 0, 0, 150);
-    SDL_RenderFillRect(ren, &dim);
-
-    SDL_SetRenderDrawColor(ren, 18, 20, 28, 230);
-    SDL_RenderFillRect(ren, &panel);
-    SDL_SetRenderDrawColor(ren, 200, 200, 210, 255);
-    SDL_RenderDrawRect(ren, &panel);
-
     for (i = 0; i < R01_PAD_MENU_BTN_N; i++) {
         int sel = (i == g_pad.menu_sel);
-        if (sel) {
-            SDL_SetRenderDrawColor(ren, 70, 110, 170, 255);
-        } else {
-            SDL_SetRenderDrawColor(ren, 36, 40, 52, 255);
-        }
+        SDL_SetRenderDrawColor(ren, 0, 0, 0, 128);
         SDL_RenderFillRect(ren, &btn[i]);
-        SDL_SetRenderDrawColor(ren, sel ? 230 : 90, sel ? 230 : 95, sel ? 240 : 110, 255);
-        SDL_RenderDrawRect(ren, &btn[i]);
-        draw_label(ren, &btn[i], labels[i], sel ? 255 : 180, sel ? 255 : 185, sel ? 255 : 195);
+        if (sel) {
+            SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
+            SDL_RenderDrawRect(ren, &btn[i]);
+        }
+        draw_label(ren, &btn[i], labels[i], menu_px(vh), 255, 255, 255);
     }
     SDL_SetRenderDrawBlendMode(ren, old);
 }
