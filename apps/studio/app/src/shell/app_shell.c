@@ -204,7 +204,7 @@ void app_shell_frame(AppShell *app) {
     }
     ui_tick(&app->ui);
     if (app->ui.play.active && !app->ui.play.booting) {
-        if (r01_pad_host_menu_open()) {
+        if (r01_pad_host_menu_open() || r01_pad_host_muted()) {
             r01_bgm_host_pause();
         } else {
             r01_bgm_host_resume();

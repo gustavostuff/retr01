@@ -35,6 +35,7 @@ typedef struct R01PlayAnimCtx {
     int player_crouching;
     int player_jump_state; /* -1 = none */
     int player_airborne;
+    int player_run_fast; /* 1 while hold-X 2x walk is active */
     /* If set (default), release (stop moving) snaps that state back to idle.
      * Clear with r01_play_anim_set_release_to_idle(ctx, state, 0) to hold pose. */
     int player_release_to_idle[R01_PLAY_ANIM_STATES_MAX];
@@ -48,10 +49,13 @@ void r01_play_anim_set_crouch_state(R01PlayAnimCtx *ctx, int entity_state_idx);
 void r01_play_anim_set_jump_state(R01PlayAnimCtx *ctx, int entity_state_idx);
 void r01_play_anim_set_crouching(R01PlayAnimCtx *ctx, int on);
 void r01_play_anim_set_airborne(R01PlayAnimCtx *ctx, int on);
+void r01_play_anim_set_run_fast(R01PlayAnimCtx *ctx, int on);
 void r01_play_anim_set_release_to_idle(R01PlayAnimCtx *ctx, int entity_state_idx, int enable);
 void r01_play_default_face_set(R01PlayAnimCtx *ctx, int face);
 void r01_play_state_frame_delay_set(R01PlayAnimCtx *ctx, int entity_state_idx, int ticks);
 void r01_play_anim_update(R01PlayAnimCtx *ctx, int dx, int dy);
+/* Cart / Host Play frame delay. Walk delay is halved when player_run_fast. Min 1. */
+int r01_play_anim_frame_delay(const R01PlayAnimCtx *ctx, int delay);
 
 int r01_play_anim_entity_state(const R01PlayAnimCtx *ctx);
 int r01_play_anim_frame(const R01PlayAnimCtx *ctx);

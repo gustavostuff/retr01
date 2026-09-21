@@ -5,13 +5,14 @@
 
 #define R01_PAD_SLOTS 2
 #define R01_PAD_AXIS_DEAD 8000
-#define R01_PAD_MENU_BTN_N 3
+#define R01_PAD_MENU_BTN_N 4
 
 typedef struct R01PadHost {
     SDL_GameController *pad[R01_PAD_SLOTS];
     int ready;
     int menu_open;
     int menu_sel;
+    int muted;
     uint8_t prev_guide;
     uint8_t prev_up;
     uint8_t prev_down;
@@ -222,7 +223,10 @@ static uint8_t any_back(void) {
 
 static int confirm_sel(void) {
     int act = g_pad.menu_sel + 1;
-    if (act != R01_PAD_MENU_SCALE) {
+    if (act == R01_PAD_MENU_MUTE) {
+        g_pad.muted = !g_pad.muted;
+    }
+    if (act != R01_PAD_MENU_SCALE && act != R01_PAD_MENU_MUTE) {
         g_pad.menu_open = 0;
     }
     return act;
@@ -253,8 +257,13 @@ static void menu_geom(int ox, int oy, int vw, int vh, SDL_Rect *bounds, SDL_Rect
 /* 5x7 uppercase / digits used by the overlay (MSB = left). */
 static const uint8_t GLYPH_1[7] = {0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E};
 static const uint8_t GLYPH_2[7] = {0x0E, 0x11, 0x01, 0x02, 0x04, 0x08, 0x1F};
+static const uint8_t GLYPH_COLON[7] = {0x00, 0x04, 0x04, 0x00, 0x04, 0x04, 0x00};
 static const uint8_t GLYPH_E[7] = {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x1F};
+static const uint8_t GLYPH_F[7] = {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x10};
 static const uint8_t GLYPH_I[7] = {0x0E, 0x04, 0x04, 0x04, 0x04, 0x04, 0x0E};
+static const uint8_t GLYPH_M[7] = {0x11, 0x1B, 0x15, 0x11, 0x11, 0x11, 0x11};
+static const uint8_t GLYPH_N[7] = {0x11, 0x19, 0x15, 0x13, 0x11, 0x11, 0x11};
+static const uint8_t GLYPH_O[7] = {0x0E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E};
 static const uint8_t GLYPH_Q[7] = {0x0E, 0x11, 0x11, 0x11, 0x15, 0x12, 0x0D};
 static const uint8_t GLYPH_R[7] = {0x1E, 0x11, 0x11, 0x1E, 0x14, 0x12, 0x11};
 static const uint8_t GLYPH_S[7] = {0x0E, 0x11, 0x10, 0x0E, 0x01, 0x11, 0x0E};
@@ -268,10 +277,20 @@ static const uint8_t *glyph_for(char ch) {
         return GLYPH_1;
     case '2':
         return GLYPH_2;
+    case ':':
+        return GLYPH_COLON;
     case 'E':
         return GLYPH_E;
+    case 'F':
+        return GLYPH_F;
     case 'I':
         return GLYPH_I;
+    case 'M':
+        return GLYPH_M;
+    case 'N':
+        return GLYPH_N;
+    case 'O':
+        return GLYPH_O;
     case 'Q':
         return GLYPH_Q;
     case 'R':
@@ -385,6 +404,10 @@ int r01_pad_host_menu_open(void) {
     return g_pad.menu_open;
 }
 
+int r01_pad_host_muted(void) {
+    return g_pad.muted;
+}
+
 void r01_pad_host_menu_set_open(int open) {
     g_pad.menu_open = open ? 1 : 0;
     if (open) {
@@ -485,6 +508,7 @@ void r01_pad_host_draw_menu(SDL_Renderer *ren, int ox, int oy, int vw, int vh, i
     labels[0] = "RESET";
     labels[1] = "QUIT";
     labels[2] = (scale_x >= 2) ? "2X" : "1X";
+    labels[3] = g_pad.muted ? "MUTE: ON" : "MUTE: OFF";
     menu_geom(ox, oy, vw, vh, &bounds, btn);
 
     SDL_GetRenderDrawBlendMode(ren, &old);

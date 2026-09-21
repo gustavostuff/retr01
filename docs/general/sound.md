@@ -199,7 +199,7 @@ Host Play ticks this same tracker in C (`apps/common/r01_apu_tracker.c`) and app
 | Host mix | PC speaker mixes the `$7F40` window (`r01_apu_mix`). DPCM IDs use short host stand-in streams |
 | 6502 PRG tracker | NMI dual-stream. Host C MVP exists. Cart ASM still filling in |
 | Studio Audio tab | BGM grid editor in `.r01proj`. Export packs bytecode at `$B000`. Timeline Play/Stop encodes FD/FE/FA and mixes the window |
-| Host Play | Boot track from PRG `$80FE`. Bytecode at `$B000`. Tracker fills `$7F40`. P1 **G** / **H** fire short SFX on voices 6-8 |
+| Host Play | Boot track from PRG `$80FE`. Bytecode at `$B000`. Tracker fills `$7F40`. `r01_sfx_play` queues voices 6-8 |
 
 Bring-up Tier **H** only needs a real `$7F40` beep through S2 PWM. Full tracker depth can wait on hardware.
 

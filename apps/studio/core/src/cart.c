@@ -644,6 +644,9 @@ static uint8_t cart_pack_world_flags(const char *custom_logic_path) {
         mode == R01_GAME_MODE_PLATFORMER) {
         flags |= R01_CART_WHDR_FLAG_PLATFORMER;
     }
+    if (custom_logic_path && r01_custom_logic_scan_run_on_x(custom_logic_path) == 0) {
+        flags |= R01_CART_WHDR_FLAG_RUN_ON_X;
+    }
     return flags;
 }
 

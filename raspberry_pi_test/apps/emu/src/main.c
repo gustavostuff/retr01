@@ -129,18 +129,20 @@ static void emu_present_play(SDL_Renderer *ren, SDL_Texture *fb, int scale) {
     SDL_RenderPresent(ren);
 }
 
-static void emu_sync_menu_audio(int menu, int *menu_muted) {
-    if (!menu_muted) {
+static void emu_sync_menu_audio(int menu, int *audio_paused) {
+    int want_pause;
+    if (!audio_paused) {
         return;
     }
-    if (menu) {
-        if (!*menu_muted) {
+    want_pause = menu || r01_pad_host_muted();
+    if (want_pause) {
+        if (!*audio_paused) {
             r01_bgm_host_pause();
-            *menu_muted = 1;
+            *audio_paused = 1;
         }
-    } else if (*menu_muted) {
+    } else if (*audio_paused) {
         r01_bgm_host_resume();
-        *menu_muted = 0;
+        *audio_paused = 0;
     }
 }
 /* Debug pane: VRAM + BG0 atlases, then mask / world map / pals, then CPU budget. */
@@ -752,7 +754,7 @@ int main(int argc, char **argv) {
     printf("Pads (Sim map): P1 WASD + G/H X/Y, 1 coin, 2 start  |  "
            "P2 arrows + ,/. X/Y, Shift coin, Enter start\n");
     printf("Gamepad: SDL DB auto-map. D-pad/stick move, A/Y face Y, B/X face X, Back/L coin, Start/R start.\n");
-    printf("Home / Guide: Reset, Quit, 1x/2x.  Platformer jump: face Y (P1 H, P2 .).\n");
+    printf("Home / Guide: Reset, Quit, 1x/2x, Mute On/Off.  Platformer jump: face Y (P1 H, P2 .).\n");
     printf("Space pause  |  R reset  |  Ctrl+1/2 scale  |  Esc quit\n");
     if (dbg_win) {
         printf("Debug: BG1/BG0 2x2 + BG1 mask + world map + pals + CPU budget (2 Hz, 50k red line)\n");

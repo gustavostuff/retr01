@@ -186,8 +186,10 @@ World header byte **7** (flags):
 - bit **1** (`0x02`): **BG0 wrap X** - tile the present BG0 screen layout horizontally
 - bit **2** (`0x04`): **BG0 wrap Y** - tile the present BG0 screen layout vertically
 - bit **3** (`0x08`): **BG0 clip to BG1** - hide BG0 outside present BG1 camera slots
+- bit **4** (`0x10`): **platformer** - gravity + face Y jump
+- bit **5** (`0x20`): **run on X** - hold face X for 2x walk
 
-Author code sets wrap with `r01_bg0_set_wrap(ctx, wrap_x, wrap_y)` and clip with `r01_bg0_set_clip_to_bg1(ctx, enable)` in `custom_logic.c`. Studio packs those calls into the flag bits at cart export (same scan path as camera dead zone).
+Author code sets wrap with `r01_bg0_set_wrap(ctx, wrap_x, wrap_y)` and clip with `r01_bg0_set_clip_to_bg1(ctx, enable)` in `custom_logic.c`. Studio packs those calls into the flag bits at cart export (same scan path as camera dead zone). `r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER)` packs bit **4**. `r01_player_set_run_on_x(ctx)` packs bit **5**.
 
 Scroll rate is unchanged: end-aligned `(bg0_n - 1) / (bg1_n - 1)` on each axis (see Parallax scroll rate below). Wrap only changes sampling.
 

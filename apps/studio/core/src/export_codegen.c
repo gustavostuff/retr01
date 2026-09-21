@@ -250,6 +250,7 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "    int plat_frac_y;\n"
                    "    int plat_grounded;\n"
                    "    int plat_jump_held;\n"
+                   "    int player_run_on_x;\n"
                    "    int bgm_track;\n"
                    "    struct R01Projectile {\n"
                    "        int active;\n"
@@ -315,9 +316,9 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
     if (write_text(path,
                    "#ifndef R01_SFX_H\n#define R01_SFX_H\n\n"
                    "typedef struct R01GameCtx R01GameCtx;\n"
-                   "#define R01_SFX_X 1 /* pulse blip (P1 X / fire) */\n"
-                   "#define R01_SFX_Y 2 /* noise tick (P1 Y / face) */\n"
-                   "/* Short SFX. Host Play fires voices 6-8 (P1 X/Y). */\n"
+                   "#define R01_SFX_X 1 /* pulse blip */\n"
+                   "#define R01_SFX_Y 2 /* noise tick */\n"
+                   "/* Short SFX on voices 6-8. */\n"
                    "void r01_sfx_play(R01GameCtx *ctx, int id);\n\n"
                    "#endif\n",
                    err_buf, err_cap) != 0) {
@@ -349,7 +350,9 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "#include <stdint.h>\n"
                    "typedef struct R01GameCtx R01GameCtx;\n"
                    "void r01_player_warp(R01GameCtx *ctx, int col, int row);\n"
-                   "void r01_player_set_type(uint8_t type_id);\n\n"
+                   "void r01_player_set_type(uint8_t type_id);\n"
+                   "/* Hold face X for 2x walk. Host Play packs this into world flags bit 5. */\n"
+                   "void r01_player_set_run_on_x(R01GameCtx *ctx);\n\n"
                    "#include \"r01_player_anim.h\"\n\n"
                    "#endif\n",
                    err_buf, err_cap) != 0) {
@@ -595,6 +598,7 @@ static int write_custom_logic(const char *c_dir, char *err_buf, size_t err_cap) 
                       "     * r01_player_anim_set_crouch_state(ctx, 2);\n"
                       "     * r01_player_anim_set_jump_state(ctx, 3);\n"
                       "     * r01_bgm_play(ctx, 1);\n"
+                      "     * r01_player_set_run_on_x(ctx);\n"
                       "     * r01_camera_disable_deadzone(ctx); /* 1:1 camera track */\n"
                       "     * r01_bg0_set_wrap(ctx, R01_BG0_WRAP_ON, R01_BG0_WRAP_ON);\n"
                       "     * r01_bg0_set_clip_to_bg1(ctx, R01_BG0_CLIP_ON);\n"

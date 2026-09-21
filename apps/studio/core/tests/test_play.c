@@ -46,6 +46,35 @@ TEST_MAIN() {
         return 1;
     }
 
+    {
+        R01PlayPhysics ph;
+        int x = 10;
+        int y = 10;
+        int floor = 100;
+        int adx = 0;
+        int ady = 0;
+        r01_play_physics_init(&ph);
+        r01_play_physics_tick(&ph, &x, &y, 1, 0, 0, test_floor_ok, &floor, &adx, &ady);
+        EXPECT(x == 11, "walk 1 px");
+        r01_play_physics_set_run_mul(&ph, 2);
+        r01_play_physics_tick(&ph, &x, &y, 1, 0, 0, test_floor_ok, &floor, &adx, &ady);
+        EXPECT(x == 13, "run 2 px");
+    }
+
+    {
+        R01PlayAnimCtx anim;
+        r01_play_anim_init(&anim);
+        r01_play_anim_set_walk_all(&anim, 1);
+        r01_play_anim_update(&anim, 1, 0);
+        EXPECT(r01_play_anim_frame_delay(&anim, 6) == 6, "walk delay at walk speed");
+        r01_play_anim_set_run_fast(&anim, 1);
+        EXPECT(r01_play_anim_frame_delay(&anim, 6) == 3, "walk delay halved while running");
+        EXPECT(r01_play_anim_frame_delay(&anim, 1) == 1, "run delay min 1");
+        r01_play_anim_set_idle_state(&anim, 0);
+        r01_play_anim_update(&anim, 0, 0);
+        EXPECT(r01_play_anim_frame_delay(&anim, 6) == 6, "idle delay not halved");
+    }
+
     r01_project_init(p, "test");
     for (i = 0; i < p->worlds[0].screen_count; i++) {
         p->worlds[0].screens[i].present = 1;
@@ -440,6 +469,7 @@ TEST_MAIN() {
                   "    r01_platformer_set_gravity(ctx, 2);\n"
                   "    r01_platformer_set_jump(ctx, R01_PLAT_JUMP_DEFAULT);\n"
                   "    r01_platformer_set_meter(ctx, R01_PLAT_METER_DEFAULT);\n"
+                  "    r01_player_set_run_on_x(ctx);\n"
                   "    r01_player_anim_set_idle_state(ctx, 0);\n"
                   "    r01_player_anim_set_walk_all(ctx, 1);\n"
                   "    r01_player_anim_set_crouch_state(ctx, 2);\n"
@@ -465,6 +495,7 @@ TEST_MAIN() {
                 EXPECT(r01_custom_logic_scan_player_walk("plat_logic.c", &walk) == 0 && walk == 1, "scan walk state");
                 EXPECT(r01_custom_logic_scan_player_jump("plat_logic.c", &jump_st) == 0 && jump_st == 3,
                        "scan jump state");
+                EXPECT(r01_custom_logic_scan_run_on_x("plat_logic.c") == 0, "scan run on x");
             }
         }
         remove("plat_logic.c");

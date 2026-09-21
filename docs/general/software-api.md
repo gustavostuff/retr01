@@ -251,11 +251,12 @@ r01_platformer_set_meter(ctx, R01_PLAT_METER_DEFAULT);     /* 16 px per meter, c
 | Input | Platformer |
 | --- | --- |
 | Left / Right | Walk 1 px per frame at meter 16 (scaled), then resolve X |
+| Face **X** | Hold for 2x walk when `r01_player_set_run_on_x(ctx)` is in `custom_logic.c`. Keyboard P1 is **G**. Gamepad east / west is X |
 | Face **Y** | Jump while grounded (edge). Hold for full height. Release while rising cuts the hop (3x gravity). Keyboard P1 is **H** (G is face X). Gamepad south / north is Y, east / west is X |
 | Down | Crouch if `r01_player_anim_set_crouch_state` maps a state in `custom_logic.c`. Grounded only. No walk while crouched |
 | Up | Unused in v1 |
 
-Vertical motion is `vel_y` plus gravity, capped at **4** px/frame down at meter 16. Gravity author units are **1/16** px per frame^2 so hang time can be slower than 1 px/frame^2. Default gravity **4** and jump **4** peak in about **16** frames at about **34** px. Walk stays **1** px per frame at meter 16. Y is applied 1 px at a time so a jump cannot skip through an 8x8 solid. Landing (Y+1 blocked) zeros `vel_y` and sets grounded. A ceiling hit zeros `vel_y`. Walk anim uses horizontal delta only. Down selects crouch while grounded. Airborne uses the jump state when mapped.
+Vertical motion is `vel_y` plus gravity, capped at **4** px/frame down at meter 16. Gravity author units are **1/16** px per frame^2 so hang time can be slower than 1 px/frame^2. Default gravity **4** and jump **4** peak in about **16** frames at about **34** px. Walk is **1** px per frame at meter 16, or **2** px per frame while face X is held if `r01_player_set_run_on_x(ctx)` is packed. Walk anim frame delay is halved during that run. Y is applied 1 px at a time so a jump cannot skip through an 8x8 solid. Landing (Y+1 blocked) zeros `vel_y` and sets grounded. A ceiling hit zeros `vel_y`. Walk anim uses horizontal delta only. Down selects crouch while grounded. Airborne uses the jump state when mapped.
 
 Player entity states are mapped in author `custom_logic.c`. With no mapping, Host Play draws **state 0 frame 0** and only X-flips for left/right facing.
 
@@ -266,7 +267,7 @@ r01_player_anim_set_crouch_state(ctx, 2);
 r01_player_anim_set_jump_state(ctx, 3);
 ```
 
-Packing: world header flags byte **7** bit **4** = platformer. Gravity, jump, and meter are u8 at PRG `$80F7` / `$80F8` / `$80F9`. **0** (and `R01_PLAT_*_DEFAULT` in `custom_logic.c`) means Host Play uses `apps/common/r01_play_physics.h`. Crouch / idle / walk / jump state indices are `$80FA` / `$80FB` / `$80FC` / `$80FD` (**$FF** = unmapped). A numeric argument is packed as-is. See `memory.md`.
+Packing: world header flags byte **7** bit **4** = platformer. Bit **5** (`0x20`) = hold face X for 2x walk (`r01_player_set_run_on_x`). Gravity, jump, and meter are u8 at PRG `$80F7` / `$80F8` / `$80F9`. **0** (and `R01_PLAT_*_DEFAULT` in `custom_logic.c`) means Host Play uses `apps/common/r01_play_physics.h`. Crouch / idle / walk / jump state indices are `$80FA` / `$80FB` / `$80FC` / `$80FD` (**$FF** = unmapped). A numeric argument is packed as-is. See `memory.md`.
 
 BGM tracks live in the Studio Audio tab and pack into PRG at `$B000`. `r01_bgm_play(ctx, N)` in author `custom_logic.c` sets `$80FE` to that 1-based track. **0** means no autoplay. Host Play starts the packed stream. See `sound.md`.
 

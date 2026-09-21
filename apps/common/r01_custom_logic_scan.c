@@ -408,6 +408,34 @@ int r01_custom_logic_scan_player_jump(const char *path, int *out_state) {
     return scan_ctx_one_named(path, "r01_player_anim_set_jump_state", out_state);
 }
 
+int r01_custom_logic_scan_run_on_x(const char *path) {
+    FILE *f;
+    char line[512];
+    int found = 0;
+    int in_block = 0;
+    if (!path) {
+        return -1;
+    }
+    f = fopen(path, "r");
+    if (!f) {
+        return -1;
+    }
+    while (fgets(line, sizeof(line), f)) {
+        const char *args;
+        int line_in_block = in_block;
+        scan_update_block_comment(line, &in_block);
+        if (!line_call_is_active(line, "r01_player_set_run_on_x", line_in_block)) {
+            continue;
+        }
+        args = strchr(strstr(line, "r01_player_set_run_on_x"), '(');
+        if (args && parse_ctx_only(args) == 0) {
+            found = 1;
+        }
+    }
+    fclose(f);
+    return found ? 0 : -1;
+}
+
 int r01_custom_logic_scan_bgm_play(const char *path, int *out_track) {
     return scan_ctx_one_named(path, "r01_bgm_play", out_track);
 }

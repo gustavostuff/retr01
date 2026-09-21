@@ -58,6 +58,7 @@ typedef struct R01ePlay {
     R01PlayPhysics phys;
     int cam_deadzone_x;
     int cam_deadzone_y;
+    int run_on_x;
 } R01ePlay;
 
 void r01e_play_reset(R01ePlay *play);

@@ -224,9 +224,7 @@ void r01_play_anim_tick_cart(R01PlayAnimCtx *ctx, const R01CartPlayerAnim *anim)
             delay = (int)fh[7];
         }
     }
-    if (delay < 1) {
-        delay = 1;
-    }
+    delay = r01_play_anim_frame_delay(ctx, delay);
     ctx->player_anim_ctr++;
     if (ctx->player_anim_ctr < delay) {
         return;

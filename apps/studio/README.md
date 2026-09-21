@@ -51,7 +51,7 @@ Logical canvas **640x360** or **1280x720** (**Ctrl+Shift+R**). Window scale **Ct
 
 ## Play
 
-**Space** / Play always exports, shows a boot wait, then embeds emu. Cart boots world 0. Spawn is the first instance of the marked player type, else the default screen center. Gameplay SoT is emu Host Play. Keyboard and SDL Game Controllers share the same pad bits (community `gamecontrollerdb.txt` plus SDL built-in mappings). First two pads are P1 / P2. Guide / Home opens Reset, Quit (Stop), and **1x**/**2x**. Default is top-down. `r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER)` in `custom_logic.c` enables gravity, face-Y jump (hold for full height), and Down crouch when a crouch state is mapped. `r01_platformer_set_meter` sets pixels per meter (default 16). Player states (idle, walk, crouch, jump) are mapped in `custom_logic.c`. With no mapping, Play draws state 0 frame 0 and only X-flips for facing.
+**Space** / Play always exports, shows a boot wait, then embeds emu. Cart boots world 0. Spawn is the first instance of the marked player type, else the default screen center. Gameplay SoT is emu Host Play. Keyboard and SDL Game Controllers share the same pad bits (community `gamecontrollerdb.txt` plus SDL built-in mappings). First two pads are P1 / P2. Guide / Home opens Reset, Quit (Stop), **1x**/**2x**, and Mute On/Off. Default is top-down. `r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER)` in `custom_logic.c` enables gravity, face-Y jump (hold for full height), and Down crouch when a crouch state is mapped. `r01_platformer_set_meter` sets pixels per meter (default 16). Player states (idle, walk, crouch, jump) are mapped in `custom_logic.c`. With no mapping, Play draws state 0 frame 0 and only X-flips for facing.
 
 `custom_logic.c` is created on first export and never overwritten. The generated file sets the camera dead zone. Player anim maps stay commented until an author fills them in:
 
@@ -92,7 +92,7 @@ PROM and 512 KB flash images sit beside the cart. Layout: [`memory.md`](../../do
 | Space | Play (export, then emu) |
 | Ctrl+Z / Ctrl+Y | Undo / redo |
 | Ctrl+1 / Ctrl+2 | Window 1x / 2x |
-| Gamepad Guide / Home | Play overlay: Reset / Quit / 1x-2x |
+| Gamepad Guide / Home | Play overlay: Reset / Quit / 1x-2x / Mute On/Off |
 | Ctrl+F | Fullscreen |
 | Ctrl+Shift+R | 640x360 / 1280x720 |
 

@@ -73,6 +73,7 @@ void r01_play_anim_init(R01PlayAnimCtx *ctx) {
     ctx->player_crouching = 0;
     ctx->player_jump_state = -1;
     ctx->player_airborne = 0;
+    ctx->player_run_fast = 0;
     for (i = 0; i < 8; i++) {
         ctx->player_walk_state[i] = -1;
     }
@@ -154,6 +155,33 @@ void r01_play_anim_set_airborne(R01PlayAnimCtx *ctx, int on) {
         return;
     }
     ctx->player_airborne = on ? 1 : 0;
+}
+
+void r01_play_anim_set_run_fast(R01PlayAnimCtx *ctx, int on) {
+    if (!ctx) {
+        return;
+    }
+    ctx->player_run_fast = on ? 1 : 0;
+}
+
+int r01_play_anim_frame_delay(const R01PlayAnimCtx *ctx, int delay) {
+    int i;
+    if (delay < 1) {
+        delay = 1;
+    }
+    if (!ctx || !ctx->player_run_fast) {
+        return delay;
+    }
+    for (i = 0; i < 8; i++) {
+        if (ctx->player_walk_state[i] == ctx->player_anim_state) {
+            delay /= 2;
+            if (delay < 1) {
+                delay = 1;
+            }
+            return delay;
+        }
+    }
+    return delay;
 }
 
 static void pa_show_mapped(R01PlayAnimCtx *ctx, int mapped) {

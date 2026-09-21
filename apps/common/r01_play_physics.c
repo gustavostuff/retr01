@@ -111,6 +111,7 @@ void r01_play_physics_init(R01PlayPhysics *ph) {
     ph->frac_y = 0;
     ph->grounded = 0;
     ph->jump_held = 0;
+    ph->run_mul = 1;
 }
 
 void r01_play_physics_set_mode(R01PlayPhysics *ph, int mode) {
@@ -145,6 +146,19 @@ void r01_play_physics_set_meter(R01PlayPhysics *ph, int px_per_meter) {
         return;
     }
     ph->meter = clamp_meter(px_per_meter);
+}
+
+void r01_play_physics_set_run_mul(R01PlayPhysics *ph, int mul) {
+    if (!ph) {
+        return;
+    }
+    if (mul < 1) {
+        mul = 1;
+    }
+    if (mul > 2) {
+        mul = 2;
+    }
+    ph->run_mul = mul;
 }
 
 void r01_play_physics_reset_air(R01PlayPhysics *ph) {
@@ -191,7 +205,16 @@ void r01_play_physics_tick(R01PlayPhysics *ph, int *px, int *py, int in_dx, int 
     jump_down = jump_down ? 1 : 0;
     jump_pressed = jump_down && !ph->jump_held;
     ph->jump_held = jump_down;
-    walk_fp = units_to_fp(1, ph->meter);
+    {
+        int mul = ph->run_mul;
+        if (mul < 1) {
+            mul = 1;
+        }
+        if (mul > 2) {
+            mul = 2;
+        }
+        walk_fp = units_to_fp(1, ph->meter) * mul;
+    }
 
     if (ph->mode != R01_GAME_MODE_PLATFORMER) {
         (void)integrate_axis(&x, &ph->frac_x, walk_fp * in_dx, y, 1, move_ok, ctx);

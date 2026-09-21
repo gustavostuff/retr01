@@ -261,6 +261,18 @@ void r01_player_anim_tick(R01GameCtx *ctx, const R01Project *p, int player_type)
     if (delay < 1) {
         delay = 1;
     }
+    if (ctx->player_run_fast) {
+        int i;
+        for (i = 0; i < 8; i++) {
+            if (ctx->player_walk_state[i] == ctx->player_anim_state) {
+                delay /= 2;
+                break;
+            }
+        }
+        if (delay < 1) {
+            delay = 1;
+        }
+    }
     ctx->player_anim_ctr++;
     if (ctx->player_anim_ctr < delay) {
         return;

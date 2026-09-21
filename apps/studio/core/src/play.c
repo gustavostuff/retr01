@@ -63,6 +63,9 @@ static void play_apply_custom_logic(R01GameCtx *ctx, const char *project_path) {
     if (r01_custom_logic_scan_player_jump(path, &jump_state) == 0) {
         r01_player_anim_set_jump_state(ctx, jump_state);
     }
+    if (r01_custom_logic_scan_run_on_x(path) == 0) {
+        r01_player_set_run_on_x(ctx);
+    }
 }
 
 static void place_player_on_screen(R01PlayState *pl, int col, int row) {
@@ -248,6 +251,11 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy, int ju
         r01_play_physics_set_gravity(&ph, ctx->plat_gravity);
         r01_play_physics_set_jump(&ph, ctx->plat_jump);
         r01_play_physics_set_meter(&ph, ctx->plat_meter);
+        {
+            int run = (ctx->player_run_on_x && r01_pad_pressed(ctx, R01_BTN_X)) ? 2 : 1;
+            r01_play_physics_set_run_mul(&ph, run);
+            ctx->player_run_fast = (run == 2);
+        }
         ph.vel_y = ctx->plat_vel_y;
         ph.frac_x = ctx->plat_frac_x;
         ph.frac_y = ctx->plat_frac_y;

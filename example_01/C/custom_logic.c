@@ -13,6 +13,7 @@ static void init_platformer(R01GameCtx *ctx) {
     r01_platformer_set_gravity(ctx, R01_PLAT_GRAVITY_DEFAULT);
     r01_platformer_set_jump(ctx, R01_PLAT_JUMP_DEFAULT);
     r01_platformer_set_meter(ctx, R01_PLAT_METER_DEFAULT);
+    r01_player_set_run_on_x(ctx);
 }
 
 static void init_player_anim(R01GameCtx *ctx) {

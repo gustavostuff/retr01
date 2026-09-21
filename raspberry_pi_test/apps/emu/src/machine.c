@@ -225,15 +225,6 @@ void r01e_machine_set_pad(R01eMachine *m, int player, uint8_t bits) {
     /* Host stages; CPU / Host Play see latched pads after VBlank enter. */
     if (player == 0) {
         m->io.pad0_host = bits;
-        if (m->apu_tracker_on) {
-            if ((bits & R01E_PAD_X) && !(m->apu_sfx_prev_pad & R01E_PAD_X)) {
-                (void)r01e_machine_apu_sfx(m, R01_APU_SFX_X);
-            }
-            if ((bits & R01E_PAD_Y) && !(m->apu_sfx_prev_pad & R01E_PAD_Y)) {
-                (void)r01e_machine_apu_sfx(m, R01_APU_SFX_Y);
-            }
-            m->apu_sfx_prev_pad = bits;
-        }
     } else {
         m->io.pad1_host = bits;
     }

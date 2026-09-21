@@ -83,7 +83,7 @@ Magic **`retr01`**. Byte 6 is `format_ver` **5**. Pointer table names the region
 
 | Piece | Size / note |
 | --- | --- |
-| World header | **32 B** (spawn cell as nibble-packed col/row, BG1/BG0 present counts, flags at byte **7**, camera dead-zone **width/height** at bytes **30-31**) |
+| World header | **32 B** (spawn cell as nibble-packed col/row, BG1/BG0 present counts, flags at byte **7** (bit 0 player anim, bits 1-2 BG0 wrap, bit 3 BG0 clip, bit 4 platformer, bit 5 hold-X 2x walk), camera dead-zone **width/height** at bytes **30-31**) |
 | BG1 screen directory | **12 B** per present playfield screen (grid cell + payload offset) |
 | BG1 screen payloads | **480 B** each (present only, sparse **16x16**, max **64**/world) |
 | BG0 directory | **12 B** per present BG0 screen (same shape as BG1 dir). Offset **0** if none |

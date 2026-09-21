@@ -40,6 +40,9 @@ int r01_custom_logic_scan_player_walk(const char *path, int *out_state);
 /* Parse r01_player_anim_set_jump_state(ctx, n). Returns 0 on match. */
 int r01_custom_logic_scan_player_jump(const char *path, int *out_state);
 
+/* Parse r01_player_set_run_on_x(ctx). Returns 0 on match. */
+int r01_custom_logic_scan_run_on_x(const char *path);
+
 /* foo.r01proj -> sibling C/custom_logic.c */
 int r01_custom_logic_path_for_project(const char *proj_path, char *out, size_t out_cap);
 

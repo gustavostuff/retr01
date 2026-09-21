@@ -404,6 +404,13 @@ void r01_player_set_type(uint8_t type_id) {
     (void)type_id;
 }
 
+void r01_player_set_run_on_x(R01GameCtx *ctx) {
+    if (!ctx) {
+        return;
+    }
+    ctx->player_run_on_x = 1;
+}
+
 void r01_camera_set_deadzone(R01GameCtx *ctx, int dx, int dy) {
     if (!ctx) {
         return;
@@ -457,7 +464,7 @@ void r01_bgm_stop(R01GameCtx *ctx) {
 void r01_sfx_play(R01GameCtx *ctx, int id) {
     (void)ctx;
     (void)id;
-    /* Host Play / emu: tracker SFX on voices 6-8. P1 X/Y (G/H) fire the preview one-shots. */
+    /* Host Play / emu: tracker SFX on voices 6-8. */
 }
 
 void r01_camera_set_axis_lock(R01GameCtx *ctx, int mode) {

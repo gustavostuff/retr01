@@ -142,6 +142,9 @@ static void play_load_cart_camera(R01eMachine *m) {
         if (wv.world_flags & R01E_CART_WHDR_FLAG_PLATFORMER) {
             r01_play_physics_set_mode(&m->play.phys, R01_GAME_MODE_PLATFORMER);
         }
+        if (wv.world_flags & R01E_CART_WHDR_FLAG_RUN_ON_X) {
+            m->play.run_on_x = 1;
+        }
     }
     prg = r01e_cart_prg(&m->cart);
     if (prg && m->cart.len_prg > R01E_PRG_PLAT_METER_OFF) {
@@ -616,6 +619,11 @@ void r01e_play_tick(R01eMachine *m) {
             pl->anim.player_crouch_state >= 0) {
             crouch = 1;
             phys_dx = 0;
+        }
+        {
+            int run = (pl->run_on_x && (pad & R01E_PAD_X)) ? 2 : 1;
+            r01_play_physics_set_run_mul(&pl->phys, run);
+            r01_play_anim_set_run_fast(&pl->anim, run == 2);
         }
         r01_play_physics_tick(&pl->phys, &pl->player_x, &pl->player_y, phys_dx, dy, jump_down, play_origin_ok, m,
                               &anim_dx, &anim_dy);

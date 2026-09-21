@@ -302,6 +302,13 @@ void r01_player_set_type(uint8_t type_id) {
     (void)type_id;
 }
 
+void r01_player_set_run_on_x(R01GameCtx *ctx) {
+    if (!ctx) {
+        return;
+    }
+    ctx->player_run_on_x = 1;
+}
+
 void r01_camera_set_deadzone(R01GameCtx *ctx, int dx, int dy) {
     if (!ctx) {
         return;
