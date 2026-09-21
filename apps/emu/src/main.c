@@ -60,6 +60,22 @@ static void emu_apply_present_scale(SDL_Window *win, int scale) {
     SDL_SetWindowSize(win, pw, ph);
 }
 
+static void emu_toggle_fill_fullscreen(SDL_Window *win, int scale, int *fill_fs) {
+    if (!win || !fill_fs) {
+        return;
+    }
+    if (*fill_fs) {
+        *fill_fs = 0;
+        SDL_SetWindowFullscreen(win, 0);
+        emu_apply_present_scale(win, scale);
+        return;
+    }
+    *fill_fs = 1;
+    if (!emu_window_is_fullscreen(win)) {
+        SDL_SetWindowFullscreen(win, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    }
+}
+
 static void emu_apply_pad_menu(int act, R01eMachine *m, int *running, int *scale, SDL_Window *win) {
     if (act == R01_PAD_MENU_RESET) {
         emu_reset(m);
@@ -73,18 +89,32 @@ static void emu_apply_pad_menu(int act, R01eMachine *m, int *running, int *scale
     }
 }
 
-static void emu_present_dst(SDL_Renderer *ren, int scale, SDL_Rect *dst) {
+static void emu_present_dst(SDL_Renderer *ren, int scale, int fill_fs, SDL_Rect *dst) {
     int ww = 0;
     int wh = 0;
     int pw;
     int ph;
+    int n;
+    int nx;
+    int ny;
     if (!ren || !dst) {
         return;
     }
     emu_present_px(scale, &pw, &ph);
     SDL_GetRendererOutputSize(ren, &ww, &wh);
-    dst->w = pw;
-    dst->h = ph;
+    if (fill_fs) {
+        nx = (pw > 0) ? (ww / pw) : 1;
+        ny = (ph > 0) ? (wh / ph) : 1;
+        n = nx < ny ? nx : ny;
+        if (n < 1) {
+            n = 1;
+        }
+        dst->w = pw * n;
+        dst->h = ph * n;
+    } else {
+        dst->w = pw;
+        dst->h = ph;
+    }
     dst->x = (ww - dst->w) / 2;
     dst->y = (wh - dst->h) / 2;
 }
@@ -119,9 +149,9 @@ static void emu_window_to_output(SDL_Window *win, SDL_Renderer *ren, int wx, int
     *oy = wy * oh / wh;
 }
 
-static void emu_present_play(SDL_Renderer *ren, SDL_Texture *fb, int scale) {
+static void emu_present_play(SDL_Renderer *ren, SDL_Texture *fb, int scale, int fill_fs) {
     SDL_Rect dst;
-    emu_present_dst(ren, scale, &dst);
+    emu_present_dst(ren, scale, fill_fs, &dst);
     SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
     SDL_RenderClear(ren);
     SDL_RenderCopy(ren, fb, NULL, &dst);
@@ -597,6 +627,7 @@ int main(int argc, char **argv) {
     SDL_Texture *mask_tex = NULL;
     SDL_Texture *dbg_target = NULL;
     int scale = 2;
+    int fill_fs = 0;
     int running = 1;
     int paused = 0;
     int menu_muted = 0;
@@ -755,7 +786,7 @@ int main(int argc, char **argv) {
            "P2 arrows + ,/. X/Y, Shift coin, Enter start\n");
     printf("Gamepad: SDL DB auto-map. D-pad/stick move, A/Y face Y, B/X face X, Back/L coin, Start/R start.\n");
     printf("Home / Guide: Reset, Quit, 1x/2x, Mute On/Off.  Platformer jump: face Y (P1 H, P2 .).\n");
-    printf("Space pause  |  R reset  |  Ctrl+1/2 scale  |  Esc quit\n");
+    printf("Space pause  |  R reset  |  Ctrl+1/2 scale  |  Ctrl+F fullscreen  |  Esc quit\n");
     if (dbg_win) {
         printf("Debug: BG1/BG0 2x2 + BG1 mask + world map + pals + CPU budget (2 Hz, 50k red line)\n");
     }
@@ -767,7 +798,7 @@ int main(int argc, char **argv) {
 
     /* Present boot frame while still hidden, then show. */
     SDL_UpdateTexture(tex, NULL, machine.video.fb, R01E_VISIBLE_W * 3);
-    emu_present_play(ren, tex, scale);
+    emu_present_play(ren, tex, scale, fill_fs);
     if (dbg_win && dbg_ren && vram_tex && bg0_tex && mask_tex) {
         flush_debug_pane(dbg_ren, dbg_target, vram_tex, bg0_tex, mask_tex, &machine, &cpu_chart);
         SDL_ShowWindow(dbg_win);
@@ -813,7 +844,7 @@ int main(int argc, char **argv) {
                 SDL_Rect dst;
                 int mx = 0;
                 int my = 0;
-                emu_present_dst(ren, scale, &dst);
+                emu_present_dst(ren, scale, fill_fs, &dst);
                 emu_window_to_output(win, ren, ev.button.x, ev.button.y, &mx, &my);
                 menu_act = r01_pad_host_menu_click(mx, my, dst.x, dst.y, dst.w, dst.h);
                 emu_apply_pad_menu(menu_act, &machine, &running, &scale, win);
@@ -827,12 +858,17 @@ int main(int argc, char **argv) {
                     paused = !paused;
                 } else if (ev.key.keysym.sym == SDLK_r) {
                     emu_reset(&machine);
-                } else if ((ev.key.keysym.mod & KMOD_CTRL) && ev.key.keysym.sym == SDLK_1) {
+                } else if ((ev.key.keysym.mod & KMOD_CTRL) && !(ev.key.keysym.mod & (KMOD_SHIFT | KMOD_ALT)) &&
+                           ev.key.keysym.sym == SDLK_1) {
                     scale = 1;
                     emu_apply_present_scale(win, scale);
-                } else if ((ev.key.keysym.mod & KMOD_CTRL) && ev.key.keysym.sym == SDLK_2) {
+                } else if ((ev.key.keysym.mod & KMOD_CTRL) && !(ev.key.keysym.mod & (KMOD_SHIFT | KMOD_ALT)) &&
+                           ev.key.keysym.sym == SDLK_2) {
                     scale = 2;
                     emu_apply_present_scale(win, scale);
+                } else if (!ev.key.repeat && (ev.key.keysym.mod & KMOD_CTRL) &&
+                           !(ev.key.keysym.mod & (KMOD_SHIFT | KMOD_ALT)) && ev.key.keysym.sym == SDLK_f) {
+                    emu_toggle_fill_fullscreen(win, scale, &fill_fs);
 #if R01_README_SHOT
                 } else if (!ev.key.repeat && ev.key.keysym.sym == SDLK_F12) {
                     readme_shot = 1;
@@ -875,7 +911,7 @@ int main(int argc, char **argv) {
             }
 
             SDL_UpdateTexture(tex, NULL, machine.video.fb, R01E_VISIBLE_W * 3);
-            emu_present_play(ren, tex, scale);
+            emu_present_play(ren, tex, scale, fill_fs);
 
             if (dbg_win && dbg_ren && vram_tex && bg0_tex && mask_tex) {
                 flush_debug_pane(dbg_ren, dbg_target, vram_tex, bg0_tex, mask_tex, &machine, &cpu_chart);

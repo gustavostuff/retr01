@@ -288,13 +288,17 @@ int main(void) {
             r01e_machine_shutdown(&m);
             return fail("BG0 scroll at origin");
         }
-        /* Mid: cam at 1 screen of BG1 travel -> BG0 at 1/3 screen. */
+        /* Mid: cam at 1 screen of BG1 travel -> BG0 nearest pixel of 1/3 screen. */
         vid->cam_x = R01E_SCREEN_PX_W;
         vid->cam_y = R01E_SCREEN_PX_H;
         r01e_video_update_bg0_scroll(&m);
-        if (vid->l0_cam_x != R01E_SCREEN_PX_W / 3 || vid->l0_cam_y != R01E_SCREEN_PX_H / 3) {
-            r01e_machine_shutdown(&m);
-            return fail("BG0 mid parallax ratio");
+        {
+            int mid_x = (R01E_SCREEN_PX_W * R01E_SCREEN_PX_W + (3 * R01E_SCREEN_PX_W) / 2) / (3 * R01E_SCREEN_PX_W);
+            int mid_y = (R01E_SCREEN_PX_H * R01E_SCREEN_PX_H + (3 * R01E_SCREEN_PX_H) / 2) / (3 * R01E_SCREEN_PX_H);
+            if (vid->l0_cam_x != mid_x || vid->l0_cam_y != mid_y) {
+                r01e_machine_shutdown(&m);
+                return fail("BG0 mid parallax ratio");
+            }
         }
         /* Far end of BG1 bbox: BG0 must land on last screen origin, not past it. */
         vid->cam_x = 3 * R01E_SCREEN_PX_W;
@@ -322,12 +326,46 @@ int main(void) {
         vid->cam_x = R01E_SCREEN_PX_W;
         vid->cam_y = R01E_SCREEN_PX_H;
         r01e_video_update_bg0_scroll(&m);
-        if (vid->l0_cam_x != R01E_SCREEN_PX_W / 3 || vid->l0_cam_y != R01E_SCREEN_PX_H / 3) {
-            r01e_machine_shutdown(&m);
-            return fail("BG0 wrap keeps parallax rate");
+        {
+            int mid_x = (R01E_SCREEN_PX_W * R01E_SCREEN_PX_W + (3 * R01E_SCREEN_PX_W) / 2) / (3 * R01E_SCREEN_PX_W);
+            int mid_y = (R01E_SCREEN_PX_H * R01E_SCREEN_PX_H + (3 * R01E_SCREEN_PX_H) / 2) / (3 * R01E_SCREEN_PX_H);
+            if (vid->l0_cam_x != mid_x || vid->l0_cam_y != mid_y) {
+                r01e_machine_shutdown(&m);
+                return fail("BG0 wrap keeps parallax rate");
+            }
         }
         vid->bg0_wrap_x = 0;
         vid->bg0_wrap_y = 0;
+        /* 8 vs 16 cols (7/15): nearest snap is 1 BG0 px per 2 BG1 px. */
+        vid->bg0_cols = 8;
+        vid->bg0_rows = 1;
+        vid->l1_cols = 16;
+        vid->l1_rows = 2;
+        vid->cam_y = 0;
+        vid->cam_x = 0;
+        r01e_video_update_bg0_scroll(&m);
+        if (vid->l0_cam_x != 0) {
+            r01e_machine_shutdown(&m);
+            return fail("BG0 8/16 at origin");
+        }
+        vid->cam_x = 1;
+        r01e_video_update_bg0_scroll(&m);
+        if (vid->l0_cam_x != 0) {
+            r01e_machine_shutdown(&m);
+            return fail("BG0 walk holds 1 frame");
+        }
+        vid->cam_x = 2;
+        r01e_video_update_bg0_scroll(&m);
+        if (vid->l0_cam_x != 1) {
+            r01e_machine_shutdown(&m);
+            return fail("BG0 walk 1 px / 2 frames");
+        }
+        vid->cam_x = 4;
+        r01e_video_update_bg0_scroll(&m);
+        if (vid->l0_cam_x != 2) {
+            r01e_machine_shutdown(&m);
+            return fail("BG0 run 1 px / frame");
+        }
     }
 
     printf("ok io scroll/vram/map/fe80/eeprom/oam/apu\n");

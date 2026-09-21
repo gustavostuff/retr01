@@ -211,12 +211,12 @@ Env overrides:
 |-----|--------|--------|
 | `R01E_SCALE` | `1` | 128x120 integer, centered (default in `retr01.sh`) |
 | `R01E_SCALE` | unset / `2` | 256x240 integer, centered (hardware 2x / console default) |
-| `R01E_FULLSCREEN` | `1` | Desktop-fullscreen, no debug window |
+| `R01E_FULLSCREEN` | `1` | Desktop-fullscreen, no debug window. Dest is the 1x/2x size, centered |
 | `R01E_NO_DEBUG` | `1` | No debug window (compiled out of the Pi binary) |
 | `R01E_AUDIO_SAMPLES` | `2048` | Mix buffer (default in `retr01.sh`, desktop default 256) |
 | `R01E_AUDIO_RATE` | `48000` | Mix rate (default in `retr01.sh`, desktop default 44100) |
 
-Gamepad Home / Guide opens Reset / Quit / 1x-2x / Mute On/Off.
+Gamepad Home / Guide opens Reset / Quit / 1x-2x / Mute On/Off. **Ctrl+F** toggles integer-fill desktop-fullscreen (largest multiple of the 1x/2x dest that fits, centered). `R01E_FULLSCREEN=1` keeps the dest size as-is, centered.
 
 ## Layout
 
