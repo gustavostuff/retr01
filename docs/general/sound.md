@@ -38,7 +38,7 @@ Same packing as `apps/common/fw/r01_apu_window.h`.
 
 | Offset | Field |
 | --- | --- |
-| `[0]` | Bit 0 = enable. Bits 4-7 = volume 0-15. Triangle ignores volume (full when enabled) |
+| `[0]` | Bit 0 = enable. Bits 4-7 = volume 0-15. Host mix honors volume on BGM 1-3 (guitar table) |
 | `[1]` | Period low, or **DPCM sample ID** when wave is DPCM |
 | `[2]` | Bits 0-2 = period high (11-bit period with `[1]`). Bits 4-5 = pulse duty 0-3 |
 | `[3]` | Wave: 0 pulse, 1 triangle, 2 noise, 3 DPCM |
@@ -53,13 +53,15 @@ Mixing on S2 keeps **8** concurrent voices. SFX never steal BGM notes.
 
 ### BGM, channels 1-5 (indices 0-4)
 
-| Ch | Index | Wave | Role |
+| Ch | Index | Mix | Role |
 | --- | --- | --- | --- |
-| 1 | 0 | Pulse | Lead melody (duty adjustable) |
-| 2 | 1 | Pulse | Harmony / arpeggio / counter-melody |
-| 3 | 2 | Triangle | Bass. Linear steps, **no volume control** (avoids clicks) |
+| 1 | 0 | Guitar wavetable | Lead melody |
+| 2 | 1 | Guitar wavetable | Harmony / arpeggio / counter-melody |
+| 3 | 2 | Guitar wavetable | Bass. Same cycle, slower pluck decay |
 | 4 | 3 | Noise | Hats, cymbals, synth snares |
 | 5 | 4 | DPCM | 1-bit delta PCM (kicks, voice, hits) |
+
+BGM 1-3 share one acoustic-guitar single-cycle (Adventure Kid **AKWF_aguitar_0001**, 64 points, CC0). Note-on retriggers the cycle and a decaying pluck envelope. Mailbox byte `[3]` for those voices stays pulse / pulse / triangle so the 2-bit wave field is unchanged. Host mix maps voices 0-2 onto the guitar table and honors volume.
 
 ### SFX, channels 6-8 (indices 5-7)
 
@@ -132,7 +134,7 @@ Same pattern for letters `0` (G) and `A`-`F`.
 | Code | Meaning |
 | --- | --- |
 | Note `0x` / `Ax`-`Fx` | Pitch for that channel (including `F0`-`FF` as F natural / F flat) |
-| `8X` | Volume `X` (0-15). Triangle still ignores volume |
+| `8X` | Volume `X` (0-15). Host mix applies this on BGM 1-3 |
 | `9X` | Pulse duty or noise type (`X` 0-3 used) |
 | `7X` | DPCM sample ID `X` (**channel 5 / index 4 only**) |
 | `1X`-`6X` | Reserved |
@@ -196,7 +198,7 @@ Host Play ticks this same tracker in C (`apps/common/r01_apu_tracker.c`) and app
 | Design (this doc) | Locked |
 | HW BOM | MCU-S2 + `$7F40`-`$7F5F` + MCU-M SPI + PWM PF1 |
 | MCU-S2 FW | 8x4 mix to PWM. DPCM PROGMEM decode still filling in |
-| Host mix | PC speaker mixes the `$7F40` window (`r01_apu_mix`). DPCM IDs use short host stand-in streams |
+| Host mix | PC speaker mixes the `$7F40` window (`r01_apu_mix`). BGM 1-3 use the guitar wavetable plus pluck decay. DPCM IDs use short host stand-in streams |
 | 6502 PRG tracker | NMI dual-stream. Host C MVP exists. Cart ASM still filling in |
 | Studio Audio tab | BGM grid editor in `.r01proj`. Export packs bytecode at `$B000`. Timeline Play/Stop encodes FD/FE/FA and mixes the window |
 | Host Play | Boot track from PRG `$80FE`. Bytecode at `$B000`. Tracker fills `$7F40`. `r01_sfx_play` queues voices 6-8 |
@@ -214,3 +216,4 @@ Bring-up Tier **H** only needs a real `$7F40` beep through S2 PWM. Full tracker 
 - PRG BGM blob: `../../apps/common/r01_apu_cart.h`
 - FD expand / NMI tracker (host): `../../apps/common/r01_apu_fd.h`, `../../apps/common/r01_apu_tracker.h`
 - Host mix of the window: `../../apps/common/r01_apu_mix.h`
+- Guitar cycle: Adventure Kid AKWF_aguitar_0001 (CC0)

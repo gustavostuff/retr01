@@ -9,7 +9,7 @@
  * S2 mixes this file. Tracker bytecode stays on the 6502.
  *
  * Per channel at offset ch*4:
- *   [0] bit0=enable, bits4-7=volume (0-15). Triangle ignores vol (full when on).
+ *   [0] bit0=enable, bits4-7=volume (0-15). Host mix uses volume on BGM 1-3.
  *   [1] period low, or DPCM sample ID when wave is DPCM
  *   [2] bits0-2=period high (11-bit period), bits4-5=pulse duty (0-3)
  *   [3] wave: 0=pulse 1=triangle 2=noise 3=dpcm

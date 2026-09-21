@@ -52,6 +52,28 @@ int main(void) {
     if (!energy) {
         return fail("mix pulse energy");
     }
+    {
+        int distinct = 0;
+        int16_t seen[8];
+        int si;
+        int nseen = 0;
+        for (i = 0; i < 256 && nseen < 8; i++) {
+            int found = 0;
+            for (si = 0; si < nseen; si++) {
+                if (pcm[i] == seen[si]) {
+                    found = 1;
+                    break;
+                }
+            }
+            if (!found) {
+                seen[nseen++] = pcm[i];
+            }
+        }
+        distinct = nseen;
+        if (distinct < 4) {
+            return fail("mix guitar wavetable shape");
+        }
+    }
 
     n = r01_apu_sfx_encode(R01_APU_SFX_X, sfx, sizeof(sfx));
     if (n < 4 || sfx[0] != R01_APU_FD_OP || sfx[1] != 0x20u) {

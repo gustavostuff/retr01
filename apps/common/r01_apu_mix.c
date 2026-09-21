@@ -1,6 +1,26 @@
 #include "r01_apu_mix.h"
 
+#include <math.h>
 #include <string.h>
+
+#define R01_APU_WT_N 64
+#define R01_APU_GUITAR_CH 3u
+
+/*
+ * Acoustic guitar single-cycle, 64 points. Average of every 4 samples from
+ * Adventure Kid AKWF_aguitar_0001 (256-point Teensy dump). CC0 1.0.
+ * https://www.adventurekid.se/akrt/waveforms/adventure-kid-waveforms/
+ */
+static const int16_t k_guitar_wt[R01_APU_WT_N] = {
+    5720,  17806,  27142,  31393,  32316,  32086,  30701,  27302,
+    21232,  12426,   1750,  -8394, -15452, -19668, -22911, -25673,
+   -27944, -29810, -30392, -29363, -28084, -26864, -24389, -20217,
+   -14998,  -9046,  -3319,   2083,   8503,  15134,  19938,  23888,
+    27606,  28693,  27144,  24982,  20416,  12522,   6843,   5102,
+      543,  -7811, -13152, -14032, -14202, -12940,  -8595,  -4314,
+    -2300,   -590,   1044,   1347,   2106,   4927,   6600,   2890,
+    -4951, -11162, -12332, -10146,  -8322,  -8362,  -8112,  -3887,
+};
 
 static float duty_frac(int duty) {
     switch (duty & 3) {
@@ -51,11 +71,15 @@ static void dpcm_trigger(R01ApuMix *m, uint8_t ch, uint8_t id) {
 
 void r01_apu_mix_init(R01ApuMix *m, int sample_rate) {
     uint8_t ch;
+    double sr;
     if (!m) {
         return;
     }
     memset(m, 0, sizeof(*m));
     m->sample_rate = sample_rate > 0 ? sample_rate : 44100;
+    sr = (double)m->sample_rate;
+    m->env_mul_mel = exp(-1.0 / (sr * 0.38));
+    m->env_mul_bass = exp(-1.0 / (sr * 0.72));
     for (ch = 0; ch < R01_APU_CH_N; ch++) {
         m->v[ch].lfsr = 1u;
         m->v[ch].dpcm_acc = 64;
@@ -71,6 +95,7 @@ void r01_apu_mix_set_regs(R01ApuMix *m, const uint8_t *regs) {
     for (ch = 0; ch < R01_APU_CH_N; ch++) {
         uint8_t en = r01_apu_ch_enabled(m->regs, ch) ? 1u : 0u;
         uint8_t wave = r01_apu_ch_wave(m->regs, ch);
+        uint16_t per = r01_apu_ch_period(m->regs, ch);
         if (wave == R01_APU_WAVE_DPCM) {
             uint8_t id = r01_apu_ch_dpcm_id(m->regs, ch);
             if (en && (!m->v[ch].last_en || id != m->v[ch].last_dpcm_id)) {
@@ -79,6 +104,15 @@ void r01_apu_mix_set_regs(R01ApuMix *m, const uint8_t *regs) {
             if (!en) {
                 m->v[ch].dpcm_bits_left = 0;
             }
+        } else if (ch < R01_APU_GUITAR_CH) {
+            if (en && (!m->v[ch].last_en || per != m->v[ch].last_per)) {
+                m->v[ch].env = 1.0;
+                m->v[ch].phase = 0.0;
+            }
+            if (!en) {
+                m->v[ch].env = 0.0;
+            }
+            m->v[ch].last_per = per;
         }
         m->v[ch].last_en = en;
     }
@@ -149,6 +183,28 @@ static int16_t voice_sample(R01ApuMix *m, uint8_t ch) {
             uint16_t bit = (uint16_t)(((l >> 0) ^ (l >> 1)) & 1u);
             v->lfsr = (uint16_t)((l >> 1) | (bit << 14));
         }
+    }
+    if (ch < R01_APU_GUITAR_CH) {
+        double x = v->phase * (double)R01_APU_WT_N;
+        int i0 = (int)x;
+        double frac = x - (double)i0;
+        int i1;
+        double s;
+        i0 &= (R01_APU_WT_N - 1);
+        i1 = (i0 + 1) & (R01_APU_WT_N - 1);
+        s = (double)k_guitar_wt[i0] + ((double)k_guitar_wt[i1] - (double)k_guitar_wt[i0]) * frac;
+        s *= v->env * ((double)vol / 15.0) / 16.0;
+        v->env *= (ch == 2u) ? m->env_mul_bass : m->env_mul_mel;
+        if (v->env < 1.0e-4) {
+            v->env = 0.0;
+        }
+        if (s > 32767.0) {
+            s = 32767.0;
+        }
+        if (s < -32768.0) {
+            s = -32768.0;
+        }
+        return (int16_t)s;
     }
     switch (wave) {
     case R01_APU_WAVE_PULSE: {

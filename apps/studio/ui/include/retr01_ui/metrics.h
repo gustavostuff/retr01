@@ -3,7 +3,7 @@
 
 /* Shared chrome metrics for Retr01 UI widgets (8px grid).
  *
- * Studio UI palette — surfaces, type, then accents. Keep new chrome on these.
+ * Studio UI palette. Surfaces, type, then accents. New chrome uses these slots.
  *
  * Surfaces (three dark grays):
  *   PANEL   26,26,30  sidebars / top chrome
@@ -15,10 +15,10 @@
  *   TEXT_DIM  120,120,130  disabled / play-locked chrome
  *
  * Accents:
- *   ACTIVE    45,125,70    green — primary buttons, selected tabs
- *   DANGER    168,48,52    red — Stop / destructive
- *   PRESENT   55,130,220   blue — present-screen marks (world map)
- *   MARK      245,245,245  white — play-screen mark
+ *   ACTIVE    45,125,70    green. Primary buttons, selected tabs
+ *   DANGER    168,48,52    red. Stop / destructive
+ *   PRESENT   55,130,220   blue. Present-screen marks (world map)
+ *   MARK      245,245,245  white. Play-screen mark
  *
  * Checker (tile transparency):
  *   CHESS_A   58,58,66
@@ -62,7 +62,7 @@
 #define UI_UNIT 8
 #define UI_BTN_H 16
 
-/* Radio / checkbox glyph is 8x8; 8px pad on each horizontal side (glyph at dx+8). */
+/* Radio / checkbox glyph is 8x8. 8px pad on each horizontal side (glyph at dx+8). */
 #define UI_TOGGLE_PAD_X 8
 #define UI_TOGGLE_GLYPH 8
 #define UI_TOGGLE_W (UI_TOGGLE_PAD_X + UI_TOGGLE_GLYPH + UI_TOGGLE_PAD_X)

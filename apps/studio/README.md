@@ -33,13 +33,13 @@ ctest --test-dir build --output-on-failure
 ## Layout
 
 ```text
-+---------------- Graphics | Audio | Code ------------------+
-| SIDEBAR (128) | PREVIEW (centered) | CTRL (128)           |
-| Tracks        | BGM timeline       | Play / Pause / Stop  |
-+-----------------------------------------------------------+
++---------------- Graphics | Audio | Code ----------------------+
+| SIDEBAR (128) | Play/Stop 8px above PREVIEW | CTRL (128)      |
+| Tracks        | BGM timeline                | Play/Pause/Stop |
++---------------------------------------------------------------+
 ```
 
-Logical canvas **640x360** or **1280x720** (**Ctrl+Shift+R**). Window scale **Ctrl+1** / **Ctrl+2**. **8px** grid. Graphics sidebar is an accordion (Worlds, banks, entities, palettes). Audio is a BGM timeline plus an SFX stub. Timeline Play/Stop encodes the grid into tracker bytecode and mixes `$7F40`. Strips snap to eighth notes (off-beat mids sit between quarter-note beats). Sidebar **-** / **+** zoom the timeline horizontally. A **C** / **Do** button under zoom switches letter names and solfege on strip labels. Tracker tokens stay C / C# / Cb. Wheel on a strip steps the seven naturals (Do Re Mi Fa Sol La Si). Up / Down arrows do the same to the current selection. Shift+wheel and Shift+Up / Shift+Down step one semitone (black keys spell as sostenido going up, bemol going down). **S** toggles sostenido (sharp). **B** toggles bemol (flat). Sharp and flat are exclusive. A menor sound is two (or more) tones on separate channels, not a flag on one strip. **Ctrl+Z** / **Ctrl+Y** undo and redo paint, delete, move, resize, paste, pitch, S, and B. **Ctrl+A** selects all strips. **Ctrl+click** toggles. Shift-drag draws a marquee. **Ctrl+C** / **Ctrl+V** copy and paste the selection. **P** plays the selected strips once. Space plays the whole track and loops at the last strip. Embedded Play attaches the emu window. Neither path is MCU-S2 PWM. Code is TBD.
+Logical canvas **640x360** or **1280x720** (**Ctrl+Shift+R**). Window scale **Ctrl+1** / **Ctrl+2**. **8px** grid. Graphics sidebar is an accordion (Worlds, banks, entities, palettes). Host Play/Stop sits on the Graphics preview (64px wide). Audio is a BGM timeline plus an SFX stub. Timeline Play/Stop encodes the grid into tracker bytecode and mixes `$7F40`. Strips snap to eighth notes (off-beat mids sit between quarter-note beats). Sidebar **-** / **+** zoom the timeline horizontally. A **C** / **Do** button under zoom switches letter names and solfege on strip labels. Tracker tokens stay C / C# / Cb. Wheel on a strip steps the seven naturals (Do Re Mi Fa Sol La Si). Up / Down arrows do the same to the current selection. Shift+wheel and Shift+Up / Shift+Down step one semitone (black keys spell as sostenido going up, bemol going down). **S** toggles sostenido (sharp). **B** toggles bemol (flat). Sharp and flat are exclusive. A menor sound is two (or more) tones on separate channels, not a flag on one strip. **Ctrl+Z** / **Ctrl+Y** undo and redo paint, delete, move, resize, paste, pitch, S, and B. **Ctrl+A** selects all strips. **Ctrl+click** toggles. Shift-drag draws a marquee. **Ctrl+C** / **Ctrl+V** copy and paste the selection. **P** plays the selected strips once. Space plays the whole track and loops at the last strip. Embedded Play attaches the emu window. Neither path is MCU-S2 PWM. Code is TBD.
 
 ## Authoring
 
@@ -51,7 +51,7 @@ Logical canvas **640x360** or **1280x720** (**Ctrl+Shift+R**). Window scale **Ct
 
 ## Play
 
-**Space** / Play always exports, shows a boot wait, then embeds emu. Cart boots world 0. Spawn is the first instance of the marked player type, else the default screen center. Gameplay SoT is emu Host Play. Keyboard and SDL Game Controllers share the same pad bits (community `gamecontrollerdb.txt` plus SDL built-in mappings). First two pads are P1 / P2. Guide / Home opens Reset, Quit (Stop), **1x**/**2x**, and Mute On/Off. Default is top-down. `r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER)` in `custom_logic.c` enables gravity, face-Y jump (hold for full height), and Down crouch when a crouch state is mapped. `r01_platformer_set_meter` sets pixels per meter (default 16). Player states (idle, walk, crouch, jump) are mapped in `custom_logic.c`. With no mapping, Play draws state 0 frame 0 and only X-flips for facing.
+Host Play/Stop sits 8px above the centered screen preview. Play uses ACTIVE green. Stop uses DANGER red. Chrome colors are in [`retr01_ui/metrics.h`](ui/include/retr01_ui/metrics.h). Space on the Graphics tab starts Play (export, boot wait, then emu). While Play is active, Studio chrome is locked. Only that button stays clickable. Space then is a pad button. Cart boots world 0. Spawn is the first instance of the marked player type, else the default screen center. Gameplay SoT is emu Host Play. Keyboard and SDL Game Controllers share the same pad bits (community `gamecontrollerdb.txt` plus SDL built-in mappings). First two pads are P1 / P2. Guide / Home opens Reset, Quit (Stop), **1x**/**2x**, and Mute On/Off. Default is top-down. `r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER)` in `custom_logic.c` enables gravity, face-Y jump (hold for full height), and Down crouch when a crouch state is mapped. `r01_platformer_set_meter` sets pixels per meter (default 16). Player states (idle, walk, crouch, jump) are mapped in `custom_logic.c`. With no mapping, Play draws state 0 frame 0 and only X-flips for facing.
 
 `custom_logic.c` is created on first export and never overwritten. The generated file sets the camera dead zone (packed size, live follow may snap 1 px inward, see `docs/general/world-scrolling.md`). Player anim maps stay commented until an author fills them in:
 
@@ -89,7 +89,7 @@ PROM and 512 KB flash images sit beside the cart. Layout: [`memory.md`](../../do
 |-----|--------|
 | Ctrl+S / Ctrl+O | Save / open |
 | Ctrl+E | Export cart |
-| Space | Play (export, then emu) |
+| Space | Graphics: start Play. While Play is active: pad |
 | Ctrl+Z / Ctrl+Y | Undo / redo |
 | Ctrl+1 / Ctrl+2 | Window 1x / 2x |
 | Gamepad Guide / Home | Play overlay: Reset / Quit / 1x-2x / Mute On/Off |

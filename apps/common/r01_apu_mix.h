@@ -15,7 +15,9 @@
 
 typedef struct R01ApuMixVoice {
     double phase;
+    double env;
     uint16_t lfsr;
+    uint16_t last_per;
     int dpcm_frac;
     int dpcm_bits_left;
     unsigned dpcm_bit_i;
@@ -26,6 +28,8 @@ typedef struct R01ApuMixVoice {
 
 typedef struct R01ApuMix {
     int sample_rate;
+    double env_mul_mel;
+    double env_mul_bass;
     R01ApuMixVoice v[R01_APU_CH_N];
     uint8_t regs[R01_APU_REGS];
 } R01ApuMix;
