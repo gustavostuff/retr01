@@ -37,6 +37,8 @@ static void emu_start_host_bgm(R01eMachine *m) {
 #define DBG_CHART_H 48
 #define DBG_CHART_PAD 4
 #define DBG_CHART_LABEL_H 10
+#define FRAME_MS 16u
+#define FRAME_CATCHUP_MAX 4u
 #define DBG_ATLAS_W R01E_VRAM_ATLAS_W
 #define DBG_ATLAS_H R01E_VRAM_ATLAS_H
 #define DBG_MASK_W R01E_SCREEN_PX_W
@@ -438,6 +440,23 @@ static void present_debug_pane(SDL_Renderer *dbg_ren, SDL_Texture *vram_tex, SDL
     draw_cpu_budget_chart(dbg_ren, chart, 0, chart_y);
 }
 
+static void flush_debug_pane(SDL_Renderer *dbg_ren, SDL_Texture *dbg_target, SDL_Texture *vram_tex,
+                             SDL_Texture *bg0_tex, SDL_Texture *mask_tex, R01eMachine *m,
+                             const DbgCpuChart *chart) {
+    if (!dbg_ren || !vram_tex || !bg0_tex || !mask_tex || !m) {
+        return;
+    }
+    if (dbg_target) {
+        SDL_SetRenderTarget(dbg_ren, dbg_target);
+    }
+    present_debug_pane(dbg_ren, vram_tex, bg0_tex, mask_tex, m, chart);
+    if (dbg_target) {
+        SDL_SetRenderTarget(dbg_ren, NULL);
+        SDL_RenderCopy(dbg_ren, dbg_target, NULL, NULL);
+    }
+    SDL_RenderPresent(dbg_ren);
+}
+
 int main(int argc, char **argv) {
     const char *path;
     char err[256];
@@ -481,8 +500,8 @@ int main(int argc, char **argv) {
     }
     /* Before any renderer/texture: nearest-neighbor upscale. */
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
-
-    emu_start_host_bgm(&machine);
+    /* Open the speaker now (silence). Attach BGM after the windows exist. */
+    (void)r01_bgm_host_init();
 
     /* Hidden until first frame is presented -- avoids empty-window flash. */
     win = SDL_CreateWindow("Retr01 Emulator (Phase 1)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -491,6 +510,7 @@ int main(int argc, char **argv) {
     ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!win || !ren) {
         fprintf(stderr, "SDL: %s\n", SDL_GetError());
+        r01_bgm_host_shutdown();
         r01e_machine_shutdown(&machine);
         SDL_Quit();
         return 1;
@@ -500,6 +520,7 @@ int main(int argc, char **argv) {
                             R01E_VISIBLE_H);
     if (!tex) {
         fprintf(stderr, "SDL texture: %s\n", SDL_GetError());
+        r01_bgm_host_shutdown();
         r01e_machine_shutdown(&machine);
         SDL_Quit();
         return 1;
@@ -512,6 +533,9 @@ int main(int argc, char **argv) {
                                SDL_WINDOW_HIDDEN);
     dbg_ren = dbg_win ? SDL_CreateRenderer(dbg_win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE) : NULL;
     if (dbg_ren) {
+#if SDL_VERSION_ATLEAST(2, 0, 18)
+        SDL_RenderSetVSync(dbg_ren, 0);
+#endif
         SDL_RenderSetLogicalSize(dbg_ren, DBG_WIN_W, DBG_WIN_H);
         vram_tex = SDL_CreateTexture(dbg_ren, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, DBG_ATLAS_W,
                                      DBG_ATLAS_H);
@@ -575,18 +599,11 @@ int main(int argc, char **argv) {
     SDL_RenderCopy(ren, tex, NULL, NULL);
     SDL_RenderPresent(ren);
     if (dbg_win && dbg_ren && vram_tex && bg0_tex && mask_tex) {
-        if (dbg_target) {
-            SDL_SetRenderTarget(dbg_ren, dbg_target);
-        }
-        present_debug_pane(dbg_ren, vram_tex, bg0_tex, mask_tex, &machine, &cpu_chart);
-        if (dbg_target) {
-            SDL_SetRenderTarget(dbg_ren, NULL);
-            SDL_RenderCopy(dbg_ren, dbg_target, NULL, NULL);
-        }
-        SDL_RenderPresent(dbg_ren);
+        flush_debug_pane(dbg_ren, dbg_target, vram_tex, bg0_tex, mask_tex, &machine, &cpu_chart);
         SDL_ShowWindow(dbg_win);
     }
     SDL_ShowWindow(win);
+    emu_start_host_bgm(&machine);
 
     last_ticks = SDL_GetTicks();
     while (running) {
@@ -643,47 +660,44 @@ int main(int argc, char **argv) {
 
         {
             Uint32 now = SDL_GetTicks();
+            unsigned catchup = 0;
             if (!paused) {
-                if ((int)(now - last_ticks) >= 16) {
+                while ((int)(now - last_ticks) >= (int)FRAME_MS && catchup < FRAME_CATCHUP_MAX) {
                     (void)r01e_machine_frame(&machine);
                     dbg_chart_note_frame(&cpu_chart, &machine);
+                    last_ticks += FRAME_MS;
+                    catchup++;
+                }
+                if ((int)(now - last_ticks) > (int)(FRAME_MS * FRAME_CATCHUP_MAX)) {
                     last_ticks = now;
                 }
                 dbg_chart_maybe_sample(&cpu_chart, now);
             } else {
                 r01e_video_render_frame(&machine);
             }
-        }
 
-        SDL_UpdateTexture(tex, NULL, machine.video.fb, R01E_VISIBLE_W * 3);
-        SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
-        SDL_RenderClear(ren);
-        SDL_RenderCopy(ren, tex, NULL, NULL);
-        SDL_RenderPresent(ren);
+            SDL_UpdateTexture(tex, NULL, machine.video.fb, R01E_VISIBLE_W * 3);
+            SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+            SDL_RenderClear(ren);
+            SDL_RenderCopy(ren, tex, NULL, NULL);
+            SDL_RenderPresent(ren);
 
-        if (dbg_win && dbg_ren && vram_tex && bg0_tex && mask_tex) {
-            if (dbg_target) {
-                SDL_SetRenderTarget(dbg_ren, dbg_target);
+            if (dbg_win && dbg_ren && vram_tex && bg0_tex && mask_tex) {
+                flush_debug_pane(dbg_ren, dbg_target, vram_tex, bg0_tex, mask_tex, &machine, &cpu_chart);
+#if R01_README_SHOT
+                if (readme_shot) {
+                    (void)r01_readme_shot_save_renderer(dbg_ren, dbg_win, "emu-debug.png");
+                }
+#endif
             }
-            present_debug_pane(dbg_ren, vram_tex, bg0_tex, mask_tex, &machine, &cpu_chart);
 #if R01_README_SHOT
             if (readme_shot) {
-                (void)r01_readme_shot_save_renderer(dbg_ren, dbg_win, "emu-debug.png");
+                (void)r01_readme_shot_save_rgb(machine.video.fb, R01E_VISIBLE_W, R01E_VISIBLE_H, R01E_VISIBLE_W * 3,
+                                               scale, "emu.png");
             }
+            readme_shot = 0;
 #endif
-            if (dbg_target) {
-                SDL_SetRenderTarget(dbg_ren, NULL);
-                SDL_RenderCopy(dbg_ren, dbg_target, NULL, NULL);
-            }
-            SDL_RenderPresent(dbg_ren);
         }
-#if R01_README_SHOT
-        if (readme_shot) {
-            (void)r01_readme_shot_save_rgb(machine.video.fb, R01E_VISIBLE_W, R01E_VISIBLE_H, R01E_VISIBLE_W * 3,
-                                           scale, "emu.png");
-        }
-        readme_shot = 0;
-#endif
     }
 
     if (dbg_target) {
@@ -707,9 +721,9 @@ int main(int argc, char **argv) {
     SDL_DestroyTexture(tex);
     SDL_DestroyRenderer(ren);
     SDL_DestroyWindow(win);
-    SDL_Quit();
     r01_bgm_host_attach_window(NULL);
     r01_bgm_host_shutdown();
+    SDL_Quit();
     r01e_machine_shutdown(&machine);
     return 0;
 }
