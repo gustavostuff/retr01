@@ -61,8 +61,7 @@ static void emu_apply_pad_menu(int act, R01eMachine *m, int *running, int *scale
 #define DBG_CHART_H 48
 #define DBG_CHART_PAD 4
 #define DBG_CHART_LABEL_H 10
-#define FRAME_MS 16u
-#define FRAME_CATCHUP_MAX 4u
+#define FRAME_HZ 60u
 #define DBG_ATLAS_W R01E_VRAM_ATLAS_W
 #define DBG_ATLAS_H R01E_VRAM_ATLAS_H
 #define DBG_MASK_W R01E_SCREEN_PX_W
@@ -506,7 +505,8 @@ int main(int argc, char **argv) {
 #if R01_README_SHOT
     int readme_shot = 0;
 #endif
-    Uint32 last_ticks;
+    Uint64 last_frame;
+    Uint64 frame_dt;
     int main_x = 0, main_y = 0, main_w = 0, main_h = 0;
     DbgCpuChart cpu_chart;
 
@@ -663,7 +663,11 @@ int main(int argc, char **argv) {
     SDL_ShowWindow(win);
     emu_start_host_bgm(&machine);
 
-    last_ticks = SDL_GetTicks();
+    frame_dt = SDL_GetPerformanceFrequency() / FRAME_HZ;
+    if (frame_dt < 1) {
+        frame_dt = 1;
+    }
+    last_frame = SDL_GetPerformanceCounter();
     while (running) {
         SDL_Event ev;
         const Uint8 *keys;
@@ -747,24 +751,22 @@ int main(int argc, char **argv) {
         }
 
         {
-            Uint32 now = SDL_GetTicks();
-            unsigned catchup = 0;
+            Uint32 now_ms = SDL_GetTicks();
+            Uint64 now = SDL_GetPerformanceCounter();
             int menu = r01_pad_host_menu_open();
             if (!paused && !menu) {
-                while ((int)(now - last_ticks) >= (int)FRAME_MS && catchup < FRAME_CATCHUP_MAX) {
+                /* One Host Play tick per present so 60 Hz vsync never skips scroll pixels. */
+                if (now - last_frame >= frame_dt) {
                     (void)r01e_machine_frame(&machine);
                     dbg_chart_note_frame(&cpu_chart, &machine);
-                    last_ticks += FRAME_MS;
-                    catchup++;
+                    last_frame += frame_dt;
+                    if (now - last_frame > frame_dt) {
+                        last_frame = now;
+                    }
                 }
-                if ((int)(now - last_ticks) > (int)(FRAME_MS * FRAME_CATCHUP_MAX)) {
-                    last_ticks = now;
-                }
-                dbg_chart_maybe_sample(&cpu_chart, now);
+                dbg_chart_maybe_sample(&cpu_chart, now_ms);
             } else {
-                if (menu) {
-                    last_ticks = now;
-                }
+                last_frame = now;
                 r01e_video_render_frame(&machine);
             }
 

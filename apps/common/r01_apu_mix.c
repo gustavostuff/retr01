@@ -185,7 +185,6 @@ void r01_apu_mix_render(R01ApuMix *m, int16_t *out, int frames) {
         for (ch = 0; ch < R01_APU_CH_N; ch++) {
             mix += voice_sample(m, ch);
         }
-        mix /= 4;
         if (mix > 32767) {
             mix = 32767;
         }
