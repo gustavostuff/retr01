@@ -497,7 +497,11 @@ int main(int argc, char **argv) {
     int scale = 2;
     int running = 1;
     int paused = 0;
+#if defined(R01E_NO_DEBUG) && R01E_NO_DEBUG
+    int want_dbg = 0;
+#else
     int want_dbg = 1;
+#endif
     Uint32 win_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
 #if R01_README_SHOT
     int readme_shot = 0;
@@ -641,7 +645,9 @@ int main(int argc, char **argv) {
         printf("Debug: BG1/BG0 2x2 + BG1 mask + world map + pals + CPU budget (2 Hz, 50k red line)\n");
     }
 #if R01_README_SHOT
-    fprintf(stderr, "F12 writes %s/img/readme/emu.png and emu-debug.png\n", R01_REPO_ROOT);
+    if (want_dbg) {
+        fprintf(stderr, "F12 writes %s/img/readme/emu.png and emu-debug.png\n", R01_REPO_ROOT);
+    }
 #endif
 
     /* Present boot frame while still hidden, then show. */

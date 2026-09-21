@@ -8,6 +8,7 @@
 
 #include <SDL.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define R01_BGM_AUDIO_RATE 44100
@@ -138,8 +139,34 @@ static void SDLCALL bgm_audio_cb(void *userdata, Uint8 *stream, int len) {
     }
 }
 
+static int env_int(const char *name, int fallback, int lo, int hi) {
+    const char *e;
+    int v;
+    char *end = NULL;
+    if (!name) {
+        return fallback;
+    }
+    e = getenv(name);
+    if (!e || !e[0]) {
+        return fallback;
+    }
+    v = (int)strtol(e, &end, 10);
+    if (end == e) {
+        return fallback;
+    }
+    if (v < lo) {
+        return lo;
+    }
+    if (v > hi) {
+        return hi;
+    }
+    return v;
+}
+
 int r01_bgm_host_init(void) {
     SDL_AudioSpec want, have;
+    int rate;
+    int samples;
     if (g_bgm.dev) {
         return 0;
     }
@@ -149,19 +176,22 @@ int r01_bgm_host_init(void) {
             return -1;
         }
     }
+    rate = env_int("R01E_AUDIO_RATE", R01_BGM_AUDIO_RATE, 22050, 48000);
+    samples = env_int("R01E_AUDIO_SAMPLES", R01_BGM_AUDIO_SAMPLES, 256, 4096);
     memset(&want, 0, sizeof(want));
-    want.freq = R01_BGM_AUDIO_RATE;
+    want.freq = rate;
     want.format = AUDIO_S16SYS;
     want.channels = 1;
-    want.samples = R01_BGM_AUDIO_SAMPLES;
+    want.samples = (Uint16)samples;
     want.callback = bgm_audio_cb;
     want.userdata = &g_bgm;
-    g_bgm.dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
+    g_bgm.dev = SDL_OpenAudioDevice(NULL, 0, &want, &have,
+                                    SDL_AUDIO_ALLOW_FREQUENCY_CHANGE | SDL_AUDIO_ALLOW_SAMPLES_CHANGE);
     if (!g_bgm.dev) {
         fprintf(stderr, "SDL_OpenAudioDevice: %s\n", SDL_GetError());
         return -1;
     }
-    g_bgm.sample_rate = have.freq > 0 ? have.freq : R01_BGM_AUDIO_RATE;
+    g_bgm.sample_rate = have.freq > 0 ? have.freq : rate;
     fprintf(stderr, "r01_bgm_host: audio %d Hz, %u samples (%.1f ms)\n", g_bgm.sample_rate,
             (unsigned)have.samples, (1000.0 * (double)have.samples) / (double)g_bgm.sample_rate);
     r01_apu_mix_init(&g_bgm.mix, g_bgm.sample_rate);

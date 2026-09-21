@@ -48,4 +48,8 @@ add_executable(retr01_emu
   ${R01_COMMON_DIR}/r01_readme_shot.c
 )
 target_link_libraries(retr01_emu PRIVATE retr01_emu_core PkgConfig::SDL2)
-target_compile_definitions(retr01_emu PRIVATE "R01_REPO_ROOT=\"${R01_REPO_ROOT}\"")
+target_compile_definitions(retr01_emu PRIVATE
+  "R01_REPO_ROOT=\"${R01_REPO_ROOT}\""
+  R01E_NO_DEBUG=1
+  R01_README_SHOT=0
+)

@@ -130,7 +130,11 @@ add_executable(retr01_emu
   ${R01_COMMON_DIR}/r01_readme_shot.c
 )
 target_link_libraries(retr01_emu PRIVATE retr01_emu_core PkgConfig::SDL2)
-target_compile_definitions(retr01_emu PRIVATE "R01_REPO_ROOT=\"${R01_REPO_ROOT}\"")
+target_compile_definitions(retr01_emu PRIVATE
+  "R01_REPO_ROOT=\"${R01_REPO_ROOT}\""
+  R01E_NO_DEBUG=1
+  R01_README_SHOT=0
+)
 EOF
 
 cat > "$DEST/build.sh" << 'EOF'
@@ -160,6 +164,8 @@ CART="$HERE/example_01.retr01"
 export R01E_SCALE="${R01E_SCALE:-1}"
 export R01E_FULLSCREEN="${R01E_FULLSCREEN:-1}"
 export R01E_NO_DEBUG="${R01E_NO_DEBUG:-1}"
+export R01E_AUDIO_SAMPLES="${R01E_AUDIO_SAMPLES:-2048}"
+export R01E_AUDIO_RATE="${R01E_AUDIO_RATE:-48000}"
 cd "$HERE"
 exec "$BIN" "$CART"
 EOF
@@ -171,7 +177,7 @@ cat > "$DEST/README.md" << 'EOF'
 
 Standalone **Phase 1** emulator plus `example_01.retr01`. No Studio, no tests, no sim.
 
-Logical framebuffer is **256x240**. `retr01.sh` starts at **1x** and fullscreen (CRT / RGB-Pi OS4 Ports). Home / Guide on a pad opens Reset, Quit, and 1x/2x.
+Logical framebuffer is **256x240**. The Pi binary has **no debug window**. `retr01.sh` starts at **1x** fullscreen (CRT / RGB-Pi OS4 Ports). Home / Guide on a pad opens Reset, Quit, and 1x/2x.
 
 ## Build
 
@@ -195,7 +201,7 @@ After `./build.sh`, the runnable Ports payload is:
 | `example_01.retr01` | Cart |
 | `gamecontrollerdb.txt` | SDL gamepad DB (next to the binary) |
 
-RGB-Pi OS4 Ports lists `.sh` files from the ports roms dir or USB `ports/`. `retr01.sh` sets `R01E_SCALE=1`, `R01E_FULLSCREEN=1`, and skips the debug window.
+RGB-Pi OS4 Ports lists `.sh` files from the ports roms dir or USB `ports/`. `retr01.sh` sets `R01E_SCALE=1`, `R01E_FULLSCREEN=1`, 48 kHz / 2048-sample audio. The Pi CMake build defines `R01E_NO_DEBUG` so the debug window is never created.
 
 Env overrides:
 
@@ -204,7 +210,9 @@ Env overrides:
 | `R01E_SCALE` | `1` | Present 256x240 (default in `retr01.sh`) |
 | `R01E_SCALE` | unset / `2` | Present 512x480 |
 | `R01E_FULLSCREEN` | `1` | Desktop-fullscreen, no debug window |
-| `R01E_NO_DEBUG` | `1` | No debug window |
+| `R01E_NO_DEBUG` | `1` | No debug window (already compiled out of the Pi binary) |
+| `R01E_AUDIO_SAMPLES` | `2048` | Mix buffer (default in `retr01.sh`; desktop default is 256) |
+| `R01E_AUDIO_RATE` | `48000` | Mix rate (default in `retr01.sh`; desktop default is 44100) |
 
 Gamepad Home / Guide still opens Reset / Quit / 1x-2x.
 
