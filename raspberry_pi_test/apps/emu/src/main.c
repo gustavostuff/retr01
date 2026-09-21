@@ -30,6 +30,21 @@ static void emu_reset(R01eMachine *m) {
     emu_start_host_bgm(m);
 }
 
+static int emu_window_is_fullscreen(SDL_Window *win) {
+    Uint32 flags = win ? SDL_GetWindowFlags(win) : 0;
+    return (flags & (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP)) != 0;
+}
+
+static void emu_apply_present_scale(SDL_Window *win, int scale) {
+    if (!win || emu_window_is_fullscreen(win)) {
+        return;
+    }
+    if (scale < 1) {
+        scale = 1;
+    }
+    SDL_SetWindowSize(win, R01E_VISIBLE_W * scale, R01E_VISIBLE_H * scale);
+}
+
 static void emu_apply_pad_menu(int act, R01eMachine *m, int *running, int *scale, SDL_Window *win) {
     if (act == R01_PAD_MENU_RESET) {
         emu_reset(m);
@@ -37,9 +52,101 @@ static void emu_apply_pad_menu(int act, R01eMachine *m, int *running, int *scale
         if (running) {
             *running = 0;
         }
-    } else if (act == R01_PAD_MENU_SCALE && scale && win) {
+    } else if (act == R01_PAD_MENU_SCALE && scale) {
         *scale = (*scale == 2) ? 1 : 2;
-        SDL_SetWindowSize(win, R01E_VISIBLE_W * *scale, R01E_VISIBLE_H * *scale);
+        emu_apply_present_scale(win, *scale);
+    }
+}
+
+static void emu_present_dst(SDL_Renderer *ren, int scale, SDL_Rect *dst) {
+    int ww = 0;
+    int wh = 0;
+    if (!ren || !dst) {
+        return;
+    }
+    if (scale < 1) {
+        scale = 1;
+    }
+    SDL_GetRendererOutputSize(ren, &ww, &wh);
+    dst->w = R01E_VISIBLE_W * scale;
+    dst->h = R01E_VISIBLE_H * scale;
+    dst->x = (ww - dst->w) / 2;
+    dst->y = (wh - dst->h) / 2;
+}
+
+static void emu_window_to_logic(SDL_Window *win, SDL_Renderer *ren, int scale, int wx, int wy, int *lx, int *ly) {
+    SDL_Rect dst;
+    int ww = 1;
+    int wh = 1;
+    int ow = 1;
+    int oh = 1;
+    int ox;
+    int oy;
+    if (!lx || !ly) {
+        return;
+    }
+    if (win) {
+        SDL_GetWindowSize(win, &ww, &wh);
+    }
+    if (ww < 1) {
+        ww = 1;
+    }
+    if (wh < 1) {
+        wh = 1;
+    }
+    emu_present_dst(ren, scale, &dst);
+    if (ren) {
+        SDL_GetRendererOutputSize(ren, &ow, &oh);
+    }
+    if (ow < 1) {
+        ow = 1;
+    }
+    if (oh < 1) {
+        oh = 1;
+    }
+    ox = wx * ow / ww;
+    oy = wy * oh / wh;
+    if (dst.w < 1 || dst.h < 1) {
+        *lx = 0;
+        *ly = 0;
+        return;
+    }
+    *lx = (ox - dst.x) * R01E_VISIBLE_W / dst.w;
+    *ly = (oy - dst.y) * R01E_VISIBLE_H / dst.h;
+}
+
+static void emu_present_play(SDL_Renderer *ren, SDL_Texture *fb, SDL_Texture *compose, int scale) {
+    SDL_Rect dst;
+    emu_present_dst(ren, scale, &dst);
+    if (compose) {
+        SDL_SetRenderTarget(ren, compose);
+        SDL_RenderCopy(ren, fb, NULL, NULL);
+        r01_pad_host_draw_menu(ren, 0, 0, R01E_VISIBLE_W, R01E_VISIBLE_H, scale);
+        SDL_SetRenderTarget(ren, NULL);
+        SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+        SDL_RenderClear(ren);
+        SDL_RenderCopy(ren, compose, NULL, &dst);
+    } else {
+        SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+        SDL_RenderClear(ren);
+        SDL_RenderCopy(ren, fb, NULL, &dst);
+        r01_pad_host_draw_menu(ren, dst.x, dst.y, dst.w, dst.h, scale);
+    }
+    SDL_RenderPresent(ren);
+}
+
+static void emu_sync_menu_audio(int menu, int *menu_muted) {
+    if (!menu_muted) {
+        return;
+    }
+    if (menu) {
+        if (!*menu_muted) {
+            r01_bgm_host_pause();
+            *menu_muted = 1;
+        }
+    } else if (*menu_muted) {
+        r01_bgm_host_resume();
+        *menu_muted = 0;
     }
 }
 /* Debug pane: VRAM + BG0 atlases, then mask / world map / pals, then CPU budget. */
@@ -489,6 +596,7 @@ int main(int argc, char **argv) {
     SDL_Renderer *ren = NULL;
     SDL_Renderer *dbg_ren = NULL;
     SDL_Texture *tex = NULL;
+    SDL_Texture *compose = NULL;
     SDL_Texture *vram_tex = NULL;
     SDL_Texture *bg0_tex = NULL;
     SDL_Texture *mask_tex = NULL;
@@ -496,6 +604,7 @@ int main(int argc, char **argv) {
     int scale = 2;
     int running = 1;
     int paused = 0;
+    int menu_muted = 0;
 #if defined(R01E_NO_DEBUG) && R01E_NO_DEBUG
     int want_dbg = 0;
 #else
@@ -552,7 +661,11 @@ int main(int argc, char **argv) {
     /* Hidden until first frame is presented -- avoids empty-window flash. */
     win = SDL_CreateWindow("Retr01 Emulator (Phase 1)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                            R01E_VISIBLE_W * scale, R01E_VISIBLE_H * scale, win_flags);
-    ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    ren = SDL_CreateRenderer(win, -1,
+                             SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_TARGETTEXTURE);
+    if (!ren && win) {
+        ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    }
     if (!ren && win) {
         ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE);
     }
@@ -564,7 +677,6 @@ int main(int argc, char **argv) {
         SDL_Quit();
         return 1;
     }
-    SDL_RenderSetLogicalSize(ren, R01E_VISIBLE_W, R01E_VISIBLE_H);
     tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, R01E_VISIBLE_W,
                             R01E_VISIBLE_H);
     if (!tex) {
@@ -575,6 +687,14 @@ int main(int argc, char **argv) {
         SDL_Quit();
         return 1;
     }
+    compose = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, R01E_VISIBLE_W,
+                                R01E_VISIBLE_H);
+#if SDL_VERSION_ATLEAST(2, 0, 12)
+    if (compose) {
+        SDL_SetTextureScaleMode(compose, SDL_ScaleModeNearest);
+        SDL_SetTextureScaleMode(tex, SDL_ScaleModeNearest);
+    }
+#endif
 
     /* One debug window: VRAM 2x2 + world map + pals + CPU budget chart. */
     if (want_dbg) {
@@ -652,10 +772,7 @@ int main(int argc, char **argv) {
 
     /* Present boot frame while still hidden, then show. */
     SDL_UpdateTexture(tex, NULL, machine.video.fb, R01E_VISIBLE_W * 3);
-    SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
-    SDL_RenderClear(ren);
-    SDL_RenderCopy(ren, tex, NULL, NULL);
-    SDL_RenderPresent(ren);
+    emu_present_play(ren, tex, compose, scale);
     if (dbg_win && dbg_ren && vram_tex && bg0_tex && mask_tex) {
         flush_debug_pane(dbg_ren, dbg_target, vram_tex, bg0_tex, mask_tex, &machine, &cpu_chart);
         SDL_ShowWindow(dbg_win);
@@ -700,18 +817,7 @@ int main(int argc, char **argv) {
                        r01_pad_host_menu_open()) {
                 int lx = 0;
                 int ly = 0;
-#if SDL_VERSION_ATLEAST(2, 0, 18)
-                {
-                    float fx = 0.f;
-                    float fy = 0.f;
-                    SDL_RenderWindowToLogical(ren, ev.button.x, ev.button.y, &fx, &fy);
-                    lx = (int)fx;
-                    ly = (int)fy;
-                }
-#else
-                lx = ev.button.x;
-                ly = ev.button.y;
-#endif
+                emu_window_to_logic(win, ren, scale, ev.button.x, ev.button.y, &lx, &ly);
                 menu_act = r01_pad_host_menu_click(lx, ly, 0, 0, R01E_VISIBLE_W, R01E_VISIBLE_H);
                 emu_apply_pad_menu(menu_act, &machine, &running, &scale, win);
             } else if (ev.type == SDL_KEYDOWN) {
@@ -726,10 +832,10 @@ int main(int argc, char **argv) {
                     emu_reset(&machine);
                 } else if ((ev.key.keysym.mod & KMOD_CTRL) && ev.key.keysym.sym == SDLK_1) {
                     scale = 1;
-                    SDL_SetWindowSize(win, R01E_VISIBLE_W * scale, R01E_VISIBLE_H * scale);
+                    emu_apply_present_scale(win, scale);
                 } else if ((ev.key.keysym.mod & KMOD_CTRL) && ev.key.keysym.sym == SDLK_2) {
                     scale = 2;
-                    SDL_SetWindowSize(win, R01E_VISIBLE_W * scale, R01E_VISIBLE_H * scale);
+                    emu_apply_present_scale(win, scale);
 #if R01_README_SHOT
                 } else if (!ev.key.repeat && ev.key.keysym.sym == SDLK_F12) {
                     readme_shot = 1;
@@ -754,6 +860,7 @@ int main(int argc, char **argv) {
             Uint32 now_ms = SDL_GetTicks();
             Uint64 now = SDL_GetPerformanceCounter();
             int menu = r01_pad_host_menu_open();
+            emu_sync_menu_audio(menu, &menu_muted);
             if (!paused && !menu) {
                 /* One Host Play tick per present so 60 Hz vsync never skips scroll pixels. */
                 if (now - last_frame >= frame_dt) {
@@ -771,11 +878,7 @@ int main(int argc, char **argv) {
             }
 
             SDL_UpdateTexture(tex, NULL, machine.video.fb, R01E_VISIBLE_W * 3);
-            SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
-            SDL_RenderClear(ren);
-            SDL_RenderCopy(ren, tex, NULL, NULL);
-            r01_pad_host_draw_menu(ren, 0, 0, R01E_VISIBLE_W, R01E_VISIBLE_H, scale);
-            SDL_RenderPresent(ren);
+            emu_present_play(ren, tex, compose, scale);
 
             if (dbg_win && dbg_ren && vram_tex && bg0_tex && mask_tex) {
                 flush_debug_pane(dbg_ren, dbg_target, vram_tex, bg0_tex, mask_tex, &machine, &cpu_chart);
@@ -812,6 +915,9 @@ int main(int argc, char **argv) {
     }
     if (dbg_win) {
         SDL_DestroyWindow(dbg_win);
+    }
+    if (compose) {
+        SDL_DestroyTexture(compose);
     }
     SDL_DestroyTexture(tex);
     SDL_DestroyRenderer(ren);

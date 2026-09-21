@@ -25,14 +25,14 @@ After `./build.sh`, the runnable Ports payload is:
 | `/media/usb1/roms/ports/Retr01_test/example_01.retr01` | Cart |
 | `/media/usb1/roms/ports/Retr01_test/gamecontrollerdb.txt` | SDL gamepad DB (next to the binary) |
 
-RGB-Pi OS4 Ports lists `.sh` files from USB `ports/`. `retr01.sh` launches that binary and cart at 1x fullscreen, 48 kHz / 2048-sample audio. The Pi CMake build defines `R01E_NO_DEBUG` so the debug window is never created.
+RGB-Pi OS4 Ports lists `.sh` files from USB `ports/`. `retr01.sh` launches that binary and cart at 1x integer (256x240 centered), 48 kHz / 2048-sample audio. Home / Guide mutes the speaker while Reset / Quit / 1x-2x is open. The Pi CMake build defines `R01E_NO_DEBUG` so the debug window is never created.
 
 Env overrides:
 
 | Var | Value | Effect |
 |-----|--------|--------|
-| `R01E_SCALE` | `1` | Present 256x240 (default in `retr01.sh`) |
-| `R01E_SCALE` | unset / `2` | Present 512x480 |
+| `R01E_SCALE` | `1` | 256x240 integer, centered (default in `retr01.sh`) |
+| `R01E_SCALE` | unset / `2` | 512x480 integer, centered |
 | `R01E_FULLSCREEN` | `1` | Desktop-fullscreen, no debug window |
 | `R01E_NO_DEBUG` | `1` | No debug window (already compiled out of the Pi binary) |
 | `R01E_AUDIO_SAMPLES` | `2048` | Mix buffer (default in `retr01.sh`; desktop default is 256) |

@@ -110,13 +110,16 @@ static void SDLCALL bgm_audio_cb(void *userdata, Uint8 *stream, int len) {
         return;
     }
     memset(stream, 0, (size_t)len);
+    if (a->paused) {
+        return;
+    }
     if (a->live_regs) {
         memcpy(snap, a->live_regs, R01_APU_REGS);
         r01_apu_mix_set_regs(&a->mix, snap);
         mix_chunk(a, out, frames);
         return;
     }
-    if (!(a->playing && !a->paused) && !a->tracker.sfx.active) {
+    if (!a->playing && !a->tracker.sfx.active) {
         return;
     }
     while (i < frames) {
@@ -348,23 +351,21 @@ void r01_bgm_host_stop(void) {
 
 void r01_bgm_host_pause(void) {
     if (!g_bgm.dev) {
+        g_bgm.paused = 1;
         return;
     }
     SDL_LockAudioDevice(g_bgm.dev);
-    if (g_bgm.playing) {
-        g_bgm.paused = 1;
-    }
+    g_bgm.paused = 1;
     SDL_UnlockAudioDevice(g_bgm.dev);
 }
 
 void r01_bgm_host_resume(void) {
     if (!g_bgm.dev) {
+        g_bgm.paused = 0;
         return;
     }
     SDL_LockAudioDevice(g_bgm.dev);
-    if (g_bgm.playing && g_bgm.paused) {
-        g_bgm.paused = 0;
-    }
+    g_bgm.paused = 0;
     SDL_UnlockAudioDevice(g_bgm.dev);
     SDL_PauseAudioDevice(g_bgm.dev, 0);
 }

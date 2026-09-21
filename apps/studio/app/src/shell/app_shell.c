@@ -1,5 +1,6 @@
 #include "shell/app_shell.h"
 #include "ui/internal.h"
+#include "r01_bgm_host.h"
 #include "r01_pad_host.h"
 #include "r01_readme_shot.h"
 
@@ -202,6 +203,13 @@ void app_shell_frame(AppShell *app) {
         play_apply_pad_menu(app, r01_pad_host_tick());
     }
     ui_tick(&app->ui);
+    if (app->ui.play.active && !app->ui.play.booting) {
+        if (r01_pad_host_menu_open()) {
+            r01_bgm_host_pause();
+        } else {
+            r01_bgm_host_resume();
+        }
+    }
     app_shell_draw(app);
     SDL_SetRenderDrawColor(app->ren, 0, 0, 0, 255);
     SDL_RenderClear(app->ren);
