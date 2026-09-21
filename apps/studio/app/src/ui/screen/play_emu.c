@@ -45,6 +45,7 @@ static void ui_play_start_bgm(UiState *ui, R01eMachine *m) {
         return;
     }
     (void)r01e_machine_apu_tracker_start_cart(m);
+    ui_sound_host_ins(ui);
     r01_bgm_host_attach_window(m->io.apu);
 }
 

@@ -653,8 +653,16 @@ int r01_project_save_json(const R01Project *p, const char *path, char *err_buf, 
         }
         for (ti = 0; ti < tc; ti++) {
             int ch, first_ch;
-            fprintf(f, "%s      {\"name\": \"%s\", \"channels\": [\n", first_t ? "" : ",\n",
-                    p->bgm.track_name[ti][0] ? p->bgm.track_name[ti] : "Track");
+            int ins[R01_BGM_CH_COUNT];
+            for (ch = 0; ch < R01_BGM_CH_COUNT; ch++) {
+                ins[ch] = p->bgm.ch_ins[ti][ch];
+                if (ins[ch] < 0 || ins[ch] >= R01_BGM_INS_COUNT) {
+                    ins[ch] = 0;
+                }
+            }
+            fprintf(f, "%s      {\"name\": \"%s\", \"instruments\": [%d,%d,%d,%d,%d], \"channels\": [\n",
+                    first_t ? "" : ",\n", p->bgm.track_name[ti][0] ? p->bgm.track_name[ti] : "Track", ins[0],
+                    ins[1], ins[2], ins[3], ins[4]);
             first_t = 0;
             first_ch = 1;
             for (ch = 0; ch < R01_BGM_CH_COUNT; ch++) {
@@ -716,6 +724,36 @@ static int json_int_after(const char *p, const char *key, int *out) {
     }
     *out = (int)v;
     return 1;
+}
+
+static int json_int_list(const char *p, const char *key, int *out, int max) {
+    const char *k = json_find(p, key);
+    int n = 0;
+    if (!k || !out || max < 1) {
+        return 0;
+    }
+    k = strchr(k, '[');
+    if (!k) {
+        return 0;
+    }
+    k++;
+    while (n < max && *k) {
+        char *end;
+        long v;
+        while (*k == ' ' || *k == '\n' || *k == '\t' || *k == '\r' || *k == ',') {
+            k++;
+        }
+        if (*k == ']') {
+            break;
+        }
+        v = strtol(k, &end, 10);
+        if (end == k) {
+            break;
+        }
+        out[n++] = (int)v;
+        k = end;
+    }
+    return n;
 }
 
 static char *json_string_field_dup(const char *obj, const char *key) {
@@ -1843,6 +1881,20 @@ int r01_project_load_json(R01Project *p, const char *path, char *err_buf, size_t
                     free(name);
                 } else {
                     snprintf(p->bgm.track_name[ti], sizeof(p->bgm.track_name[ti]), "Track %d", ti + 1);
+                }
+                {
+                    int ins[R01_BGM_CH_COUNT];
+                    int ci;
+                    for (ci = 0; ci < R01_BGM_CH_COUNT; ci++) {
+                        ins[ci] = 0;
+                    }
+                    (void)json_int_list(slice, "\"instruments\"", ins, R01_BGM_CH_COUNT);
+                    for (ci = 0; ci < R01_BGM_CH_COUNT; ci++) {
+                        if (ins[ci] < 0 || ins[ci] >= R01_BGM_INS_COUNT) {
+                            ins[ci] = 0;
+                        }
+                        p->bgm.ch_ins[ti][ci] = ins[ci];
+                    }
                 }
                 ch_sec = json_find(slice, "\"channels\"");
                 ch_end = json_array_end(ch_sec);

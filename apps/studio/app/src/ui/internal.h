@@ -61,7 +61,11 @@ typedef struct SoundEditorLayout {
     int pause_x, pause_y, pause_w;
     int stop_x, stop_y, stop_w;
     int ch_radio_y0;
+    int ins_x, ins_w;
 } SoundEditorLayout;
+
+int ui_bgm_tick_x(const SoundEditorLayout *lo, float scroll, float tick);
+int ui_bgm_x_to_tick(const SoundEditorLayout *lo, float scroll, int lx);
 
 static inline void ui_world_btn_pos(int wi, int btns_y, int *out_x, int *out_y) {
     if (out_x) {
@@ -274,10 +278,13 @@ int sound_timeline_hit(const UiState *ui, int lx, int ly, int *out_ch, int *out_
 /* hit: 0 miss, 1 body, 2 left handle, 3 right handle; out_region set on hit */
 int sound_region_hit(const UiState *ui, int lx, int ly, int *out_ch, int *out_region, int *out_handle);
 int sound_channel_hit(const UiState *ui, int lx, int ly, int *out_ch);
+int sound_ins_hit(const UiState *ui, int lx, int ly, int *out_row);
+int sound_ins_menu_hit(const UiState *ui, int lx, int ly, int *out_idx);
 int sound_play_hit(const UiState *ui, int lx, int ly);
 int sound_pause_hit(const UiState *ui, int lx, int ly);
 int sound_stop_hit(const UiState *ui, int lx, int ly);
 void ui_sound_init(UiState *ui);
+void ui_sound_host_ins(const UiState *ui);
 int ui_sound_audio_init(void);
 void ui_sound_audio_shutdown(void);
 void ui_sound_play_start(UiState *ui);

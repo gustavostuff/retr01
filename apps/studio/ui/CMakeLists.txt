@@ -15,6 +15,7 @@ add_library(retr01_ui
   src/widgets/button.c
   src/widgets/checkbox.c
   src/widgets/dot_strip.c
+  src/widgets/dropdown.c
   src/widgets/modal.c
   src/widgets/multi_state.c
   src/widgets/panel.c

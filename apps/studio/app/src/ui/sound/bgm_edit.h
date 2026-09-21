@@ -5,7 +5,7 @@
 
 /* Content end tick for a track (max region end); 0 if empty. */
 int ui_bgm_content_end(const UiState *ui, int track);
-/* Max scroll_x: content_end + pad - visible ticks (clamped >= 0). */
+/* Max scroll_x in ticks (clamped >= 0). Viewport pan is fractional. */
 int ui_bgm_scroll_max(const UiState *ui, int visible_ticks);
 
 void ui_bgm_midi_to_tok(int midi, char tok[5]);
@@ -61,6 +61,10 @@ int ui_bgm_flatten_sel(const UiState *ui, char cells[R01_BGM_STEPS][R01_BGM_CH][
 void ui_bgm_write_export_bins(const UiState *ui);
 
 void ui_bgm_clamp_scroll(UiState *ui, int visible_ticks);
+
+/* Shift-drag marquee: scroll at the visible timeline edge. The marquee end
+ * follows the pointer tick. */
+void ui_bgm_marquee_autoscroll(UiState *ui);
 void ui_bgm_zoom(UiState *ui, int dir);
 
 #endif

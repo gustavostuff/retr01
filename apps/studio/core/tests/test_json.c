@@ -78,7 +78,15 @@ TEST_MAIN() {
         EXPECT(p2->bgm.region[0][0][0].start == 2, "v14 start scaled");
         EXPECT(p2->bgm.region[0][0][0].len == 4, "v14 len scaled");
         EXPECT(p2->bgm.note_solfa == 1, "v14 note solfa default");
+        EXPECT(p2->bgm.ch_ins[0][0] == 0, "v14 ins default guitar");
+        p2->bgm.ch_ins[0][0] = R01_BGM_INS_FLUTE;
+        p2->bgm.ch_ins[0][1] = R01_BGM_INS_PIANO;
+        EXPECT(r01_project_save_json(p2, "test_bgm_ins.r01proj", err, sizeof(err)) == 0, "save ins");
+        EXPECT(r01_project_load_json(p, "test_bgm_ins.r01proj", err, sizeof(err)) == 0, "load ins");
+        EXPECT(p->bgm.ch_ins[0][0] == R01_BGM_INS_FLUTE, "flute roundtrip");
+        EXPECT(p->bgm.ch_ins[0][1] == R01_BGM_INS_PIANO, "piano roundtrip");
         remove("test_bgm_v14.r01proj");
+        remove("test_bgm_ins.r01proj");
     }
 
     free(p);

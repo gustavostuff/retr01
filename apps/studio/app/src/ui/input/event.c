@@ -23,6 +23,21 @@
 #include <stdlib.h>
 #include <string.h>
 
+static void sound_apply_ins(UiState *ui, int row, int ins) {
+    int t;
+    if (!ui || ins < 0 || ins >= R01_BGM_INS_COUNT) {
+        return;
+    }
+    t = ui->sound.track_idx;
+    if (t < 0 || t >= ui->sound.track_count) {
+        t = 0;
+    }
+    if (row >= 0 && row < UI_SOUND_BGM_CH) {
+        ui->sound.ch_ins[t][row] = ins;
+        ui_sound_host_ins(ui);
+    }
+}
+
 static void bank_sel_begin_marquee(UiState *ui, int plane, int bank, int tile_id, int ctrl) {
     if (!ui) {
         return;
@@ -178,7 +193,18 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         }
         ui_bgm_sel_clear(ui);
         ui->sound.sel_kind = UI_SOUND_SEL_NONE;
-        ui->sound.scroll_x -= e->wheel.y; /* down (y<0) -> scroll right */
+        {
+            float dy = e->wheel.preciseY;
+            float ppt = (float)lo.px_per_tick;
+            if (dy == 0.f) {
+                dy = (float)e->wheel.y;
+            }
+            if (ppt < 1.f) {
+                ppt = 1.f;
+            }
+            /* down (y<0) -> scroll right. Distance is pixels, not ticks. */
+            ui->sound.scroll_x -= dy * ((float)UI_SOUND_WHEEL_PX / ppt);
+        }
         ui_bgm_clamp_scroll(ui, lo.visible_ticks);
         return 1;
     }
@@ -496,6 +522,10 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 return 4;
             }
         }
+        if (e->key.keysym.sym == SDLK_ESCAPE && ui->sound.ins_drop != UI_SOUND_INS_DROP_NONE) {
+            ui->sound.ins_drop = UI_SOUND_INS_DROP_NONE;
+            return 1;
+        }
         if (e->key.keysym.sym == SDLK_ESCAPE && ui->menu.open) {
             if (ui->menu.submenu != UI_MENU_SUB_NONE) {
                 ui->menu.submenu = UI_MENU_SUB_NONE;
@@ -661,9 +691,36 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 if (sound_plane_tab_hit(ui, lx, ly, &idx)) {
                     ui->arm_kind = UI_ARM_SOUND_PLANE;
                     ui->arm_a = idx;
+                    ui->sound.ins_drop = UI_SOUND_INS_DROP_NONE;
                     return 1;
                 }
                 if (ui->sound.plane == UI_SOUND_PLANE_BGM) {
+                    int ins_item = 0;
+                    int ins_row = 0;
+                    if (ui->sound.ins_drop == UI_SOUND_SOLO_ALL) {
+                        ui->sound.ins_drop = UI_SOUND_INS_DROP_NONE;
+                    }
+                    if (ui->sound.ins_drop != UI_SOUND_INS_DROP_NONE) {
+                        if (sound_ins_menu_hit(ui, lx, ly, &ins_item)) {
+                            sound_apply_ins(ui, ui->sound.ins_drop, ins_item);
+                            ui->sound.ins_drop = UI_SOUND_INS_DROP_NONE;
+                            return 1;
+                        }
+                        if (sound_ins_hit(ui, lx, ly, &ins_row)) {
+                            if (ins_row == ui->sound.ins_drop) {
+                                ui->sound.ins_drop = UI_SOUND_INS_DROP_NONE;
+                            } else {
+                                ui->sound.ins_drop = ins_row;
+                            }
+                            return 1;
+                        }
+                        ui->sound.ins_drop = UI_SOUND_INS_DROP_NONE;
+                        return 1;
+                    }
+                    if (sound_ins_hit(ui, lx, ly, &ins_row)) {
+                        ui->sound.ins_drop = ins_row;
+                        return 1;
+                    }
                     if (sound_play_hit(ui, lx, ly)) {
                         ui->arm_kind = UI_ARM_SOUND_PLAY;
                         return 1;
@@ -1221,6 +1278,7 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 int idx;
                 if (sound_plane_tab_hit(ui, lx, ly, &idx) && idx == a) {
                     ui->sound.plane = a;
+                    ui->sound.ins_drop = UI_SOUND_INS_DROP_NONE;
                     if (a == UI_SOUND_PLANE_SFX) {
                         ui_sound_play_stop(ui);
                         ui_toast(ui, "SFX editor coming soon", 0);
@@ -1232,7 +1290,9 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                 int idx;
                 if (sound_track_hit(ui, lx, ly, &idx) && idx == a) {
                     ui->sound.track_idx = a;
+                    ui->sound.ins_drop = UI_SOUND_INS_DROP_NONE;
                     ui_bgm_sel_sync(ui);
+                    ui_sound_host_ins(ui);
                     return 1;
                 }
             }
@@ -1242,6 +1302,8 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
                     snprintf(ui->sound.track_name[n], sizeof(ui->sound.track_name[n]), "Track %d", n + 1);
                     ui->sound.track_count++;
                     ui->sound.track_idx = n;
+                    ui->sound.ins_drop = UI_SOUND_INS_DROP_NONE;
+                    ui_sound_host_ins(ui);
                     ui_toast(ui, "track added (UI stub)", 0);
                 } else {
                     ui_toast(ui, "track limit", 1);
@@ -1546,11 +1608,15 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         if (track < 0 || track >= ui->sound.track_count) {
             track = 0;
         }
+        if (ui->sound.drag == UI_SOUND_DRAG_MARQUEE) {
+            ui_bgm_marquee_autoscroll(ui);
+            return 1;
+        }
         if (!sound_timeline_hit(ui, lx, ly, &ch, &tick)) {
             SoundEditorLayout lo;
             sound_editor_layout(ui, &lo);
             if (point_in_rect(lx, ly, lo.timeline_x - 64, lo.timeline_y, lo.timeline_w + 128, lo.timeline_h)) {
-                tick = ui->sound.scroll_x + (lx - lo.timeline_x) / lo.px_per_tick;
+                tick = ui_bgm_x_to_tick(&lo, ui->sound.scroll_x, lx);
                 if (tick < 0) {
                     tick = 0;
                 }
@@ -1561,34 +1627,6 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             } else {
                 return 1;
             }
-        }
-        if (ui->sound.drag == UI_SOUND_DRAG_MARQUEE) {
-            SoundEditorLayout lo;
-            int lane;
-            sound_editor_layout(ui, &lo);
-            lane = lo.lane_h + lo.lane_gap;
-            if (lane < 1) {
-                lane = 1;
-            }
-            ch = (ly - lo.timeline_y) / lane;
-            if (ch < 0) {
-                ch = 0;
-            }
-            if (ch >= UI_SOUND_BGM_CH) {
-                ch = UI_SOUND_BGM_CH - 1;
-            }
-            if (tick < 0) {
-                tick = 0;
-            }
-            if (tick >= UI_SOUND_STEPS_MAX) {
-                tick = UI_SOUND_STEPS_MAX - 1;
-            }
-            ui->sound.drag_ch1 = ch;
-            ui->sound.drag_origin = tick;
-            if (ch != ui->sound.drag_ch || tick != ui->sound.drag_start0) {
-                ui->sound.drag_moved = 1;
-            }
-            return 1;
         }
         if (ui->sound.drag == UI_SOUND_DRAG_PAINT) {
             int start = ui->sound.drag_origin;

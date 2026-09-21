@@ -16,6 +16,68 @@ void fill_rect_alpha(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8
     SDL_RenderFillRect(r, &rc);
 }
 
+static int round_row_inset(int row_from_edge, int rad) {
+    int y2, r2, x;
+    if (row_from_edge < 0 || row_from_edge >= rad) {
+        return 0;
+    }
+    y2 = 2 * rad - 1 - 2 * row_from_edge;
+    r2 = 4 * rad * rad;
+    for (x = 0; x < rad; x++) {
+        int x2 = 2 * x + 1 - 2 * rad;
+        if (x2 * x2 + y2 * y2 <= r2) {
+            return x;
+        }
+    }
+    return rad;
+}
+
+static void fill_round_rect_raw(SDL_Renderer *r, int x, int y, int w, int h, int rad) {
+    int row;
+    int max_r;
+    if (!r || w < 1 || h < 1) {
+        return;
+    }
+    max_r = w < h ? w / 2 : h / 2;
+    if (rad > max_r) {
+        rad = max_r;
+    }
+    if (rad < 1) {
+        SDL_Rect rc = {x, y, w, h};
+        SDL_RenderFillRect(r, &rc);
+        return;
+    }
+    for (row = 0; row < h; row++) {
+        int inset = 0;
+        SDL_Rect rc;
+        if (row < rad) {
+            inset = round_row_inset(row, rad);
+        } else if (row >= h - rad) {
+            inset = round_row_inset(h - 1 - row, rad);
+        }
+        if (w - 2 * inset < 1) {
+            continue;
+        }
+        rc.x = x + inset;
+        rc.y = y + row;
+        rc.w = w - 2 * inset;
+        rc.h = 1;
+        SDL_RenderFillRect(r, &rc);
+    }
+}
+
+void fill_round_rect(SDL_Renderer *r, int x, int y, int w, int h, int rad, Uint8 R, Uint8 G, Uint8 B) {
+    SDL_SetRenderDrawColor(r, R, G, B, 255);
+    fill_round_rect_raw(r, x, y, w, h, rad);
+}
+
+void fill_round_rect_alpha(SDL_Renderer *r, int x, int y, int w, int h, int rad, Uint8 R, Uint8 G, Uint8 B,
+                           Uint8 A) {
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(r, R, G, B, A);
+    fill_round_rect_raw(r, x, y, w, h, rad);
+}
+
 void draw_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B) {
     SDL_Rect rc = {x, y, w, h};
     SDL_SetRenderDrawColor(r, R, G, B, 255);
@@ -23,10 +85,11 @@ void draw_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Ui
 }
 
 void hover_overlay(SDL_Renderer *r, int x, int y, int w, int h) {
-    SDL_Rect rc = {x, y, w, h};
-    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(r, 255, 255, 255, 77);
-    SDL_RenderFillRect(r, &rc);
+    hover_overlay_round(r, x, y, w, h, 0);
+}
+
+void hover_overlay_round(SDL_Renderer *r, int x, int y, int w, int h, int rad) {
+    fill_round_rect_alpha(r, x, y, w, h, rad, 255, 255, 255, 77);
 }
 
 static SDL_Rect ui_clip_intersect(const SDL_Rect *a, const SDL_Rect *b) {

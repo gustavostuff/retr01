@@ -93,6 +93,7 @@ static inline int ui_toggle_label_x(int dx) {
 #define UI_TAB_PAGER_HIT_NEXT 2
 
 #define UI_MULTI_STATE_MAX 8
+#define UI_DROPDOWN_MAX 8
 
 #define UI_PANEL_CELL_MIN 16
 #define UI_PANEL_CELLS_MAX 64

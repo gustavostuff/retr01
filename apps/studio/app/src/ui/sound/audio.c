@@ -3,9 +3,30 @@
 #include "ui/sound/bgm_edit.h"
 
 #include "r01_bgm_host.h"
+#include "r01_apu_mix.h"
 
 #include <stdio.h>
 #include <string.h>
+
+void ui_sound_host_ins(const UiState *ui) {
+    uint8_t ins[R01_APU_CH_N];
+    int t, ch;
+    memset(ins, 0, sizeof(ins));
+    if (ui) {
+        t = ui->sound.track_idx;
+        if (t < 0 || t >= ui->sound.track_count) {
+            t = 0;
+        }
+        for (ch = 0; ch < UI_SOUND_BGM_CH && ch < (int)R01_APU_CH_N; ch++) {
+            int v = ui->sound.ch_ins[t][ch];
+            if (v < 0 || v >= R01_BGM_INS_COUNT) {
+                v = 0;
+            }
+            ins[ch] = (uint8_t)v;
+        }
+    }
+    r01_bgm_host_set_ins(ins);
+}
 
 int ui_sound_audio_init(void) {
     return r01_bgm_host_init();
@@ -26,7 +47,7 @@ void ui_sound_play_stop(UiState *ui) {
         ui->sound.play_pos = 0.f;
         ui->sound.play_step_tick = -1;
         ui->sound.play_span_last = 0.f;
-        ui->sound.scroll_x = 0;
+        ui->sound.scroll_x = 0.f;
     }
 }
 
@@ -77,6 +98,7 @@ void ui_sound_play_start(UiState *ui) {
         ui_toast(ui, "audio device unavailable", 1);
         return;
     }
+    ui_sound_host_ins(ui);
     r01_bgm_host_play_cells(cells, steps);
     ui->sound.playing = 1;
     ui->sound.paused = 0;
@@ -106,6 +128,7 @@ void ui_sound_play_start_sel(UiState *ui) {
         ui_toast(ui, "audio device unavailable", 1);
         return;
     }
+    ui_sound_host_ins(ui);
     r01_bgm_host_play_cells(cells, steps);
     ui->sound.playing = 1;
     ui->sound.paused = 0;
@@ -193,6 +216,7 @@ void ui_sound_play_section(UiState *ui, int dir) {
         ui_toast(ui, "audio device unavailable", 1);
         return;
     }
+    ui_sound_host_ins(ui);
     r01_bgm_host_play_cells(cells, len);
     ui->sound.playing = 1;
     ui->sound.paused = 0;
@@ -203,7 +227,7 @@ void ui_sound_play_section(UiState *ui, int dir) {
     ui->sound.play_pos = (float)start;
     ui->sound.play_span_last = 0.f;
     sound_editor_layout(ui, &lo);
-    ui->sound.scroll_x = start;
+    ui->sound.scroll_x = (float)start;
     ui_bgm_clamp_scroll(ui, lo.visible_ticks);
 }
 
@@ -305,15 +329,15 @@ void ui_sound_play_poll(UiState *ui) {
         margin = 2;
     }
     /* Auto-scroll before playhead reaches right edge. */
-    if (pos >= (float)(ui->sound.scroll_x + vis - margin)) {
-        ui->sound.scroll_x = (int)pos - (vis - margin);
+    if (pos >= ui->sound.scroll_x + (float)(vis - margin)) {
+        ui->sound.scroll_x = pos - (float)(vis - margin);
         ui_bgm_clamp_scroll(ui, vis);
     }
-    if (pos < (float)ui->sound.scroll_x) {
+    if (pos < ui->sound.scroll_x) {
         /* Loop wrapped */
-        ui->sound.scroll_x = (int)pos;
-        if (ui->sound.scroll_x < 0) {
-            ui->sound.scroll_x = 0;
+        ui->sound.scroll_x = pos;
+        if (ui->sound.scroll_x < 0.f) {
+            ui->sound.scroll_x = 0.f;
         }
     }
 }

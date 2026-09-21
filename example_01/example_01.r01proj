@@ -1,5 +1,5 @@
 {
-  "version": 16,
+  "version": 17,
   "name": "example_01",
   "default_world": 0,
   "active_world": 0,
@@ -12,7 +12,7 @@
   "global_pal_bg": [[0, 16, 32, 48], [0, 12, 44, 48], [0, 24, 39, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51], [0, 16, 32, 48], [0, 17, 33, 49], [0, 18, 34, 50], [0, 19, 35, 51]],
   "global_pal_spr": [[0, 18, 33, 51], [0, 2, 17, 51], [0, 23, 39, 55], [0, 30, 46, 51], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34], [0, 34, 34, 34]],
   "bg_banks": [
-    {"tiles": 13, "b64": "AAAAAAAAAAAAAAAAAAAAAP/DzY2FgYH/ADw+fn5+fgD////f/////wAAACAAAAAA///v1+////8AABA4EAAAAAAAAAAAAAAA//////////8BAwcfP39/f///////////wPj8/v///////////////wAAAADA8Pj8//////////8AAA9//wAAAP//////////AAAAwP8AAAD///////////+P4R/DkP//AHAe4DxvAAD/392ZmQMHBwAgImZm/Pj4//fzOZHI4PAACAzGbjcfDw=="},
+    {"tiles": 17, "b64": "AAAAAAAAAAAAAAAAAAAAAP/DzY2FgYH/ADw+fn5+fgD////f/////wAAACAAAAAA///v1+////8AABA4EAAAAAAAAAAAAAAA//////////8BAwcfP39/f///////////wPj8/v///////////////wAAAADA8Pj8//////////8AAA9//wAAAP//////////AAAAwP8AAAD///////////+P4R/DkP//AHAe4DxvAAD/392ZmQMHBwAgImZm/Pj4//fzOZHI4PAACAzGbjcfDwAAAAAAAAAAPDw8PDw+Pn4AAAAAAAAAABgYGBj4+BwcAAAAAAAAAAAAAIbsOBgQEAAAAAAAAAAAAACAYD4DAAA="},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""},
@@ -98,6 +98,7 @@
     }
   ],
   "instances": [
+    {"type": 0, "x": 16, "y": 911}
   ],
   "warp_entrances": [
   ],
@@ -123,9 +124,9 @@
   ],
   "screens": [
     {"col": 0, "row": 7,
-     "tiles_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
-     "attrs_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-     "solids_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB"},
+     "tiles_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAEA4AAAAAAAAAAAAAAAAAAAANAAAAAAAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+     "attrs_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAAAAAMDAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+     "solids_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAQEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB"},
     {"col": 1, "row": 7,
      "tiles_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
      "attrs_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
@@ -236,14 +237,14 @@
     "track_count": 2,
     "note_solfa": 0,
     "tracks": [
-      {"name": "Track 1", "channels": [
+      {"name": "Track 1", "instruments": [2,0,3,0,0], "channels": [
         [{"s":0,"l":4,"m":60,"t":"C4","sh":0,"fl":0},{"s":4,"l":1,"m":67,"t":"G4","sh":0,"fl":0},{"s":5,"l":2,"m":65,"t":"F4","sh":0,"fl":0},{"s":7,"l":2,"m":64,"t":"E4","sh":0,"fl":0},{"s":9,"l":1,"m":60,"t":"C4","sh":0,"fl":0},{"s":10,"l":2,"m":67,"t":"G4","sh":0,"fl":0},{"s":12,"l":1,"m":65,"t":"F4","sh":0,"fl":0},{"s":13,"l":2,"m":64,"t":"E4","sh":0,"fl":0},{"s":15,"l":1,"m":62,"t":"D4","sh":0,"fl":0},{"s":16,"l":3,"m":64,"t":"E4","sh":0,"fl":0},{"s":19,"l":1,"m":60,"t":"C4","sh":0,"fl":0},{"s":20,"l":1,"m":67,"t":"G4","sh":0,"fl":0},{"s":21,"l":2,"m":65,"t":"F4","sh":0,"fl":0},{"s":23,"l":2,"m":64,"t":"E4","sh":0,"fl":0},{"s":25,"l":1,"m":60,"t":"C4","sh":0,"fl":0},{"s":26,"l":2,"m":67,"t":"G4","sh":0,"fl":0},{"s":28,"l":1,"m":65,"t":"F4","sh":0,"fl":0},{"s":29,"l":2,"m":64,"t":"E4","sh":0,"fl":0},{"s":31,"l":1,"m":62,"t":"D4","sh":0,"fl":0},{"s":32,"l":3,"m":60,"t":"C4","sh":0,"fl":0},{"s":35,"l":1,"m":55,"t":"G3","sh":0,"fl":0},{"s":36,"l":1,"m":60,"t":"C4","sh":0,"fl":0},{"s":37,"l":2,"m":62,"t":"D4","sh":0,"fl":0},{"s":39,"l":2,"m":64,"t":"E4","sh":0,"fl":0},{"s":41,"l":1,"m":55,"t":"G3","sh":0,"fl":0},{"s":42,"l":2,"m":60,"t":"C4","sh":0,"fl":0},{"s":44,"l":1,"m":55,"t":"G3","sh":0,"fl":0},{"s":45,"l":2,"m":60,"t":"C4","sh":0,"fl":0},{"s":47,"l":1,"m":62,"t":"D4","sh":0,"fl":0},{"s":48,"l":3,"m":64,"t":"E4","sh":0,"fl":0},{"s":51,"l":1,"m":55,"t":"G3","sh":0,"fl":0},{"s":52,"l":1,"m":60,"t":"C4","sh":0,"fl":0},{"s":53,"l":2,"m":62,"t":"D4","sh":0,"fl":0},{"s":55,"l":2,"m":64,"t":"E4","sh":0,"fl":0},{"s":57,"l":1,"m":55,"t":"G3","sh":0,"fl":0},{"s":58,"l":2,"m":60,"t":"C4","sh":0,"fl":0},{"s":60,"l":1,"m":55,"t":"G3","sh":0,"fl":0},{"s":61,"l":2,"m":60,"t":"C4","sh":0,"fl":0},{"s":63,"l":1,"m":62,"t":"D4","sh":0,"fl":0}],
         [{"s":0,"l":5,"m":57,"t":"A3","sh":0,"fl":0},{"s":6,"l":5,"m":57,"t":"A3","sh":0,"fl":0},{"s":12,"l":3,"m":57,"t":"A3","sh":0,"fl":0},{"s":16,"l":5,"m":57,"t":"A3","sh":0,"fl":0},{"s":22,"l":5,"m":57,"t":"A3","sh":0,"fl":0},{"s":28,"l":3,"m":57,"t":"A3","sh":0,"fl":0},{"s":32,"l":5,"m":55,"t":"G3","sh":0,"fl":0},{"s":38,"l":5,"m":55,"t":"G3","sh":0,"fl":0},{"s":44,"l":3,"m":55,"t":"G3","sh":0,"fl":0},{"s":48,"l":5,"m":55,"t":"G3","sh":0,"fl":0},{"s":54,"l":5,"m":55,"t":"G3","sh":0,"fl":0},{"s":60,"l":3,"m":55,"t":"G3","sh":0,"fl":0}],
         [{"s":0,"l":5,"m":64,"t":"E4","sh":0,"fl":0},{"s":6,"l":5,"m":64,"t":"E4","sh":0,"fl":0},{"s":12,"l":3,"m":64,"t":"E4","sh":0,"fl":0},{"s":16,"l":5,"m":65,"t":"F4","sh":0,"fl":0},{"s":22,"l":5,"m":65,"t":"F4","sh":0,"fl":0},{"s":28,"l":3,"m":65,"t":"F4","sh":0,"fl":0},{"s":32,"l":5,"m":64,"t":"E4","sh":0,"fl":0},{"s":38,"l":5,"m":64,"t":"E4","sh":0,"fl":0},{"s":44,"l":3,"m":64,"t":"E4","sh":0,"fl":0},{"s":48,"l":5,"m":62,"t":"D4","sh":0,"fl":0},{"s":54,"l":5,"m":62,"t":"D4","sh":0,"fl":0},{"s":60,"l":3,"m":62,"t":"D4","sh":0,"fl":0}],
         [],
         []
       ]},
-      {"name": "Track 2", "channels": [
+      {"name": "Track 2", "instruments": [0,0,0,0,0], "channels": [
         [],
         [],
         [],

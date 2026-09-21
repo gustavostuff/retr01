@@ -74,6 +74,7 @@
 #define UI_ARM_SOUND_ZOOM_OUT 26
 #define UI_ARM_SOUND_ZOOM_IN 27
 #define UI_ARM_SOUND_NOTE 30
+#define UI_ARM_SOUND_INS 28
 
 #define UI_APP_GRAPHICS 0
 #define UI_APP_SOUNDS 1 /* Audio tab (historical enum name) */
@@ -85,6 +86,7 @@
 #define UI_SOUND_BGM_CH 5 /* Pulse1 Pulse2 Tri Noise DPCM */
 #define UI_SOUND_CH_MASK_ALL ((1u << UI_SOUND_BGM_CH) - 1u)
 #define UI_SOUND_SOLO_ALL (-1) /* All checkbox in the isolate column */
+#define UI_SOUND_INS_DROP_NONE (-2)
 #define UI_SOUND_SNAP_DIV R01_BGM_NOTE_DIV
 #define UI_SOUND_BEAT_TICKS (UI_SOUND_SNAP_DIV / 4) /* quarter note */
 #define UI_SOUND_BAR_TICKS UI_SOUND_SNAP_DIV       /* 4/4 bar */
@@ -99,9 +101,12 @@
 #define UI_SOUND_ZOOM_MAX 8
 #define UI_SOUND_LANE_H 16      /* channel strip height (2 grid cells) */
 #define UI_SOUND_LANE_GAP 0
+#define UI_SOUND_STRIP_RADIUS 2 /* note strip corner radius */
+#define UI_SOUND_STRIP_MARGIN 1 /* top/bottom inset inside the lane */
 #define UI_SOUND_HANDLE_W 8
 #define UI_SOUND_MINIMAP_H 8
 #define UI_SOUND_SCROLL_PAD 4 /* unused for max; kept for content padding hints */
+#define UI_SOUND_WHEEL_PX 20 /* empty-timeline wheel pan, logical px per notch */
 
 #define UI_SOUND_SEL_NONE 0
 #define UI_SOUND_SEL_REGION 1
@@ -408,7 +413,9 @@ typedef struct UiSoundEdit {
     int track_count;
     char track_name[UI_SOUND_TRACKS_MAX][24];
     int ch_mask; /* bit i audible. UI_SOUND_CH_MASK_ALL = all channels */
-    int scroll_x; /* first visible tick */
+    int ch_ins[UI_SOUND_TRACKS_MAX][UI_SOUND_BGM_CH]; /* R01_BGM_INS_* */
+    int ins_drop; /* UI_SOUND_INS_DROP_NONE, UI_SOUND_SOLO_ALL, or channel 0..4 */
+    float scroll_x; /* first visible tick (fractional, pixel pan) */
     int zoom_h;   /* horizontal zoom, UI_SOUND_ZOOM_MIN..MAX */
     int note_solfa; /* 0 letter C D E, 1 solfege Do Re Mi */
     int sel_kind; /* UI_SOUND_SEL_* */

@@ -12,8 +12,12 @@ typedef struct UiClipStack {
 
 void fill_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B);
 void fill_rect_alpha(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B, Uint8 A);
+void fill_round_rect(SDL_Renderer *r, int x, int y, int w, int h, int rad, Uint8 R, Uint8 G, Uint8 B);
+void fill_round_rect_alpha(SDL_Renderer *r, int x, int y, int w, int h, int rad, Uint8 R, Uint8 G, Uint8 B,
+                           Uint8 A);
 void draw_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B);
 void hover_overlay(SDL_Renderer *r, int x, int y, int w, int h);
+void hover_overlay_round(SDL_Renderer *r, int x, int y, int w, int h, int rad);
 
 void ui_clip_push(SDL_Renderer *r, int x, int y, int w, int h, UiClipStack *stack);
 void ui_clip_pop(SDL_Renderer *r, const UiClipStack *stack);

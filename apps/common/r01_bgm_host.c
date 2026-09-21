@@ -331,6 +331,15 @@ void r01_bgm_host_play_cells(char cells[R01_BGM_STEPS][R01_BGM_CH][R01_BGM_TOKEN
     SDL_PauseAudioDevice(g_bgm.dev, 0);
 }
 
+void r01_bgm_host_set_ins(const uint8_t *ins) {
+    if (r01_bgm_host_init() != 0) {
+        return;
+    }
+    SDL_LockAudioDevice(g_bgm.dev);
+    r01_apu_mix_set_ins(&g_bgm.mix, ins);
+    SDL_UnlockAudioDevice(g_bgm.dev);
+}
+
 void r01_bgm_host_stop(void) {
     if (!g_bgm.dev) {
         g_bgm.playing = 0;

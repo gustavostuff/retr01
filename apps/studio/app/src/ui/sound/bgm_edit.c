@@ -53,31 +53,135 @@ int ui_bgm_scroll_max(const UiState *ui, int visible_ticks) {
     return max_scroll;
 }
 
+int ui_bgm_tick_x(const SoundEditorLayout *lo, float scroll, float tick) {
+    int ppt;
+    if (!lo) {
+        return 0;
+    }
+    ppt = lo->px_per_tick;
+    if (ppt < 1) {
+        ppt = 1;
+    }
+    return lo->timeline_x + (int)((tick - scroll) * (float)ppt);
+}
+
+int ui_bgm_x_to_tick(const SoundEditorLayout *lo, float scroll, int lx) {
+    int ppt;
+    int tick;
+    float t;
+    if (!lo) {
+        return 0;
+    }
+    ppt = lo->px_per_tick;
+    if (ppt < 1) {
+        ppt = 1;
+    }
+    t = scroll + (float)(lx - lo->timeline_x) / (float)ppt;
+    if (t < 0.f) {
+        t = 0.f;
+    }
+    tick = (int)t;
+    if (tick >= UI_SOUND_STEPS_MAX) {
+        tick = UI_SOUND_STEPS_MAX - 1;
+    }
+    return tick;
+}
+
 void ui_bgm_clamp_scroll(UiState *ui, int visible_ticks) {
-    int max_scroll;
+    float max_scroll;
     if (!ui) {
         return;
     }
-    max_scroll = ui_bgm_scroll_max(ui, visible_ticks);
-    if (ui->sound.scroll_x < 0) {
-        ui->sound.scroll_x = 0;
+    max_scroll = (float)ui_bgm_scroll_max(ui, visible_ticks);
+    if (ui->sound.scroll_x < 0.f) {
+        ui->sound.scroll_x = 0.f;
     }
     if (ui->sound.scroll_x > max_scroll) {
         ui->sound.scroll_x = max_scroll;
     }
 }
 
+void ui_bgm_marquee_autoscroll(UiState *ui) {
+    SoundEditorLayout lo;
+    int lx, ly, ch, tick, edge, dist, vis, lane;
+    int left, right;
+    float ppt;
+    float dt;
+    float dir;
+    float px;
+    Uint32 now;
+    static Uint32 last_ms;
+    if (!ui || ui->sound.drag != UI_SOUND_DRAG_MARQUEE) {
+        last_ms = 0;
+        return;
+    }
+    sound_editor_layout(ui, &lo);
+    if (lo.px_per_tick < 1) {
+        return;
+    }
+    ppt = (float)lo.px_per_tick;
+    lx = ui->mouse_x;
+    ly = ui->mouse_y;
+    vis = lo.visible_ticks;
+    edge = lo.px_per_tick;
+    if (edge < UI_UNIT) {
+        edge = UI_UNIT;
+    }
+    left = lo.timeline_x;
+    right = lo.timeline_x + lo.timeline_w;
+    now = SDL_GetTicks();
+    if (last_ms == 0 || now < last_ms) {
+        dt = 1.f / 60.f;
+    } else {
+        dt = (float)(now - last_ms) / 1000.f;
+        if (dt > 0.05f) {
+            dt = 0.05f;
+        }
+    }
+    last_ms = now;
+    dir = 0.f;
+    dist = 0;
+    if (lx >= right - edge) {
+        dist = lx - (right - edge);
+        dir = 1.f;
+    } else if (lx < left + edge) {
+        dist = (left + edge) - lx;
+        dir = -1.f;
+    }
+    if (dir != 0.f) {
+        px = 80.f + (float)dist * 8.f;
+        if (px > 640.f) {
+            px = 640.f;
+        }
+        ui->sound.scroll_x += dir * (px * dt) / ppt;
+        ui_bgm_clamp_scroll(ui, vis);
+    }
+    tick = ui_bgm_x_to_tick(&lo, ui->sound.scroll_x, lx);
+    tick = clampi(tick, 0, UI_SOUND_STEPS_MAX - 1);
+    lane = lo.lane_h + lo.lane_gap;
+    if (lane < 1) {
+        lane = 1;
+    }
+    ch = (ly - lo.timeline_y) / lane;
+    ch = clampi(ch, 0, UI_SOUND_BGM_CH - 1);
+    ui->sound.drag_ch1 = ch;
+    ui->sound.drag_origin = tick;
+    if (ch != ui->sound.drag_ch || tick != ui->sound.drag_start0) {
+        ui->sound.drag_moved = 1;
+    }
+}
+
 void ui_bgm_zoom(UiState *ui, int dir) {
     SoundEditorLayout lo;
     int old_vis;
-    int center;
+    float center;
     int z;
     if (!ui || dir == 0) {
         return;
     }
     sound_editor_layout(ui, &lo);
     old_vis = lo.visible_ticks;
-    center = ui->sound.scroll_x + old_vis / 2;
+    center = ui->sound.scroll_x + (float)old_vis / 2.f;
     z = ui->sound.zoom_h;
     if (z < UI_SOUND_ZOOM_MIN) {
         z = UI_SOUND_ZOOM_MIN;
@@ -97,7 +201,7 @@ void ui_bgm_zoom(UiState *ui, int dir) {
     }
     ui->sound.zoom_h = z;
     sound_editor_layout(ui, &lo);
-    ui->sound.scroll_x = center - lo.visible_ticks / 2;
+    ui->sound.scroll_x = center - (float)lo.visible_ticks / 2.f;
     ui_bgm_clamp_scroll(ui, lo.visible_ticks);
 }
 
@@ -1163,6 +1267,10 @@ void ui_bgm_sync_to_project(UiState *ui) {
                 n = R01_BGM_REGIONS_MAX;
             }
             bgm->region_count[t][ch] = n;
+            bgm->ch_ins[t][ch] = ui->sound.ch_ins[t][ch];
+            if (bgm->ch_ins[t][ch] < 0 || bgm->ch_ins[t][ch] >= R01_BGM_INS_COUNT) {
+                bgm->ch_ins[t][ch] = 0;
+            }
             for (i = 0; i < n; i++) {
                 const UiBgmRegion *src = &ui->sound.region[t][ch][i];
                 R01BgmRegion *dst = &bgm->region[t][ch][i];
@@ -1197,7 +1305,8 @@ void ui_bgm_apply_from_project(UiState *ui) {
     }
     ui->sound.track_idx = 0;
     ui->sound.ch_mask = (int)UI_SOUND_CH_MASK_ALL;
-    ui->sound.scroll_x = 0;
+    ui->sound.ins_drop = UI_SOUND_INS_DROP_NONE;
+    ui->sound.scroll_x = 0.f;
     ui->sound.zoom_h = UI_SOUND_ZOOM_MIN;
     ui->sound.note_solfa = bgm->note_solfa ? 1 : 0;
     ui->sound.sel_kind = UI_SOUND_SEL_NONE;
@@ -1214,6 +1323,10 @@ void ui_bgm_apply_from_project(UiState *ui) {
                 n = UI_SOUND_REGIONS_MAX;
             }
             ui->sound.region_count[t][ch] = n;
+            ui->sound.ch_ins[t][ch] = bgm->ch_ins[t][ch];
+            if (ui->sound.ch_ins[t][ch] < 0 || ui->sound.ch_ins[t][ch] >= R01_BGM_INS_COUNT) {
+                ui->sound.ch_ins[t][ch] = 0;
+            }
             for (i = 0; i < n; i++) {
                 const R01BgmRegion *src = &bgm->region[t][ch][i];
                 UiBgmRegion *dst = &ui->sound.region[t][ch][i];

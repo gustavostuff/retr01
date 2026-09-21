@@ -28,6 +28,11 @@ void ui_multi_state_draw(SDL_Renderer *r, int x, int y, int w, const char *const
                          int mouse_x, int mouse_y);
 int ui_multi_state_hit(int lx, int ly, int x, int y, int w, int count, int selected, int *out_idx);
 
+void ui_dropdown_draw(SDL_Renderer *r, int x, int y, int w, const char *const *labels, int count, int selected,
+                      int open, int open_up, int mouse_x, int mouse_y);
+/* 0 miss, 1 closed box, 2 menu item (*out_idx set). */
+int ui_dropdown_hit(int lx, int ly, int x, int y, int w, int count, int open, int open_up, int *out_idx);
+
 typedef struct UiTabsLayout {
     int x, y;
     int tab_w; /* default width when tab_ws[i] is 0 */

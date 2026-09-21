@@ -68,7 +68,7 @@
 
 #define R01_NAME_MAX 64
 #define R01_PATH_MAX 512
-#define R01_JSON_VER 16
+#define R01_JSON_VER 17
 
 #define R01_ASEPRITE_ENTITIES_DIR "aseprite_entities"
 #define R01_ASEPRITE_LISTING_MAX 64
@@ -109,6 +109,11 @@
 #define R01_BGM_TRACKS_MAX 8
 #define R01_BGM_REGIONS_MAX 128
 #define R01_BGM_CH_COUNT 5
+#define R01_BGM_INS_GUITAR 0
+#define R01_BGM_INS_EGUITAR 1
+#define R01_BGM_INS_PIANO 2
+#define R01_BGM_INS_FLUTE 3
+#define R01_BGM_INS_COUNT 4
 #define R01_BGM_TOK_MAX 5
 #define R01_BGM_NAME_MAX 24
 
@@ -126,6 +131,7 @@ typedef struct R01BgmData {
     int track_count;
     char track_name[R01_BGM_TRACKS_MAX][R01_BGM_NAME_MAX];
     int note_solfa; /* 0 letter, 1 solfege (UI labels) */
+    int ch_ins[R01_BGM_TRACKS_MAX][R01_BGM_CH_COUNT]; /* R01_BGM_INS_* per channel */
     int region_count[R01_BGM_TRACKS_MAX][R01_BGM_CH_COUNT];
     R01BgmRegion region[R01_BGM_TRACKS_MAX][R01_BGM_CH_COUNT][R01_BGM_REGIONS_MAX];
 } R01BgmData;

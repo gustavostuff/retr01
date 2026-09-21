@@ -4,23 +4,61 @@
 #include <string.h>
 
 #define R01_APU_WT_N 64
-#define R01_APU_GUITAR_CH 3u
+#define R01_APU_WT_CH 3u
 
 /*
- * Acoustic guitar single-cycle, 64 points. Average of every 4 samples from
- * Adventure Kid AKWF_aguitar_0001 (256-point Teensy dump). CC0 1.0.
+ * Single-cycle tables, 64 points. Average of every 4 samples from Adventure Kid
+ * Teensy 256-point dumps. CC0 1.0.
  * https://www.adventurekid.se/akrt/waveforms/adventure-kid-waveforms/
  */
-static const int16_t k_guitar_wt[R01_APU_WT_N] = {
-    5720,  17806,  27142,  31393,  32316,  32086,  30701,  27302,
-    21232,  12426,   1750,  -8394, -15452, -19668, -22911, -25673,
-   -27944, -29810, -30392, -29363, -28084, -26864, -24389, -20217,
-   -14998,  -9046,  -3319,   2083,   8503,  15134,  19938,  23888,
-    27606,  28693,  27144,  24982,  20416,  12522,   6843,   5102,
-      543,  -7811, -13152, -14032, -14202, -12940,  -8595,  -4314,
-    -2300,   -590,   1044,   1347,   2106,   4927,   6600,   2890,
-    -4951, -11162, -12332, -10146,  -8322,  -8362,  -8112,  -3887,
+static const int16_t k_wt[R01_APU_INS_COUNT][R01_APU_WT_N] = {
+    /* Guitar: AKWF_aguitar_0001 */
+    {
+        5720,  17806,  27142,  31393,  32316,  32086,  30701,  27302,
+        21232,  12426,   1750,  -8394, -15452, -19668, -22911, -25673,
+       -27944, -29810, -30392, -29363, -28084, -26864, -24389, -20217,
+       -14998,  -9046,  -3319,   2083,   8503,  15134,  19938,  23888,
+        27606,  28693,  27144,  24982,  20416,  12522,   6843,   5102,
+          543,  -7811, -13152, -14032, -14202, -12940,  -8595,  -4314,
+        -2300,   -590,   1044,   1347,   2106,   4927,   6600,   2890,
+        -4951, -11162, -12332, -10146,  -8322,  -8362,  -8112,  -3887,
+    },
+    /* EGuitar: AKWF_eguitar_0001 */
+    {
+        24534,  26922,  26882,  25861,  -1547,  -8899,   9727,  26035,
+       -10403, -29616, -29480, -28950,   4018,  26894,  26727,  26616,
+        26317,  18885,   1550,  12965,  21034, -30505, -30163, -29997,
+       -20965,   6576,   -100, -22897, -25219,  26262,  26734,  26582,
+        26313,   9080,   2715,  19004,  26066,  25890,  25624,  25464,
+        25322,  25122,  24916,  24676,  24331,  22988,  20908,  15146,
+       -17616, -32158, -32207, -32027, -31838, -21151, -25534, -31389,
+       -31189, -30936, -30678, -30408, -30042, -29816, -29528, -28735,
+    },
+    /* Piano: AKWF_piano_0001 */
+    {
+         3725,   8084,   9131,  11982,   9058,  14331,  29549,  24410,
+        12258,   1998,   3803,  18736,  16770,   3763,  -8968, -20728,
+       -22059, -17704, -10899,   5627,  13352,   9848,  12029,  19653,
+        24186,  13109,   6613,  10452,  11156,   4983,   -559,  -2755,
+        -1516,  -6394, -18827, -17755, -14594, -15188, -14065,    659,
+         5649,  -3294, -11447,  -1610,  14890,  17544,  12113,  14502,
+        20208,  15821,   3604,  -5912, -10310, -20708, -28727, -30880,
+       -16098,  -8234, -19990, -25056, -22567, -15964,  -5375,  -2822,
+    },
+    /* Flute: AKWF_flute_0001 */
+    {
+         1516,   3842,   5255,   5840,   6270,   7125,   8982,  10650,
+        11699,  12261,  12853,  13684,  15179,  16885,  19344,  21774,
+        23908,  25879,  28258,  30244,  31888,  32277,  31160,  29199,
+        28032,  26922,  25288,  21950,  16729,  11232,   6082,    789,
+        -3285,  -5428,  -5985,  -6613,  -7676,  -9638, -12051, -13341,
+       -13822, -14688, -15750, -17003, -18090, -19252, -20965, -23388,
+       -25807, -28385, -29455, -29503, -30150, -31162, -31426, -30416,
+       -27650, -24500, -21758, -19593, -16756, -12486,  -7245,  -1969,
+    },
 };
+
+static const double k_ins_decay_s[R01_APU_INS_COUNT] = {0.38, 0.34, 0.62, 1.55};
 
 static float duty_frac(int duty) {
     switch (duty & 3) {
@@ -78,11 +116,13 @@ void r01_apu_mix_init(R01ApuMix *m, int sample_rate) {
     memset(m, 0, sizeof(*m));
     m->sample_rate = sample_rate > 0 ? sample_rate : 44100;
     sr = (double)m->sample_rate;
-    m->env_mul_mel = exp(-1.0 / (sr * 0.38));
-    m->env_mul_bass = exp(-1.0 / (sr * 0.72));
+    for (ch = 0; ch < R01_APU_INS_COUNT; ch++) {
+        m->env_mul[ch] = exp(-1.0 / (sr * k_ins_decay_s[ch]));
+    }
     for (ch = 0; ch < R01_APU_CH_N; ch++) {
         m->v[ch].lfsr = 1u;
         m->v[ch].dpcm_acc = 64;
+        m->ins[ch] = 0;
     }
 }
 
@@ -104,7 +144,7 @@ void r01_apu_mix_set_regs(R01ApuMix *m, const uint8_t *regs) {
             if (!en) {
                 m->v[ch].dpcm_bits_left = 0;
             }
-        } else if (ch < R01_APU_GUITAR_CH) {
+        } else if (ch < R01_APU_WT_CH) {
             if (en && (!m->v[ch].last_en || per != m->v[ch].last_per)) {
                 m->v[ch].env = 1.0;
                 m->v[ch].phase = 0.0;
@@ -115,6 +155,20 @@ void r01_apu_mix_set_regs(R01ApuMix *m, const uint8_t *regs) {
             m->v[ch].last_per = per;
         }
         m->v[ch].last_en = en;
+    }
+}
+
+void r01_apu_mix_set_ins(R01ApuMix *m, const uint8_t ins[R01_APU_CH_N]) {
+    uint8_t ch;
+    if (!m) {
+        return;
+    }
+    for (ch = 0; ch < R01_APU_CH_N; ch++) {
+        uint8_t v = ins ? ins[ch] : 0u;
+        if (v >= R01_APU_INS_COUNT) {
+            v = 0u;
+        }
+        m->ins[ch] = v;
     }
 }
 
@@ -184,17 +238,21 @@ static int16_t voice_sample(R01ApuMix *m, uint8_t ch) {
             v->lfsr = (uint16_t)((l >> 1) | (bit << 14));
         }
     }
-    if (ch < R01_APU_GUITAR_CH) {
+    if (ch < R01_APU_WT_CH) {
         double x = v->phase * (double)R01_APU_WT_N;
         int i0 = (int)x;
         double frac = x - (double)i0;
         int i1;
         double s;
+        int ins = (int)m->ins[ch];
+        if (ins < 0 || ins >= R01_APU_INS_COUNT) {
+            ins = 0;
+        }
         i0 &= (R01_APU_WT_N - 1);
         i1 = (i0 + 1) & (R01_APU_WT_N - 1);
-        s = (double)k_guitar_wt[i0] + ((double)k_guitar_wt[i1] - (double)k_guitar_wt[i0]) * frac;
+        s = (double)k_wt[ins][i0] + ((double)k_wt[ins][i1] - (double)k_wt[ins][i0]) * frac;
         s *= v->env * ((double)vol / 15.0) / 16.0;
-        v->env *= (ch == 2u) ? m->env_mul_bass : m->env_mul_mel;
+        v->env *= m->env_mul[ins];
         if (v->env < 1.0e-4) {
             v->env = 0.0;
         }
