@@ -92,7 +92,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 ### 19. Collision solids packing
 
-**Resolved:** Solids are a per-screen plane (240 bytes, one flag per 8x8 cell). Studio stores them as `solids_b64`. Packed carts put a collision directory at PRG `$8121` plus one 240-byte table per present screen. Host Play samples that table. See `memory.md`.
+**Resolved:** Collision follows BG1 nametable occupancy. Tile **0** is show-through (BG0) and is not solid. Non-zero BG1 tiles are solid. Studio stores that occupancy as `solids_b64` (240 bytes per screen). Packed carts put a collision directory at PRG `$8121` plus one 240-byte table per present screen, derived from the nametable. Host Play samples the BG1 tile map. See `memory.md`.
 
 ### 20. Instance + PA byte schemas
 

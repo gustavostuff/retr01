@@ -67,14 +67,18 @@ TEST_MAIN() {
     EXPECT(r01_attr_bank(s->attrs[1 * R01_SCREEN_TILES_X + 1]) == 0, "paint sets attr bank");
     EXPECT(r01_attr_pal(s->attrs[1 * R01_SCREEN_TILES_X + 1]) == 1, "paint sets attr pal");
     EXPECT(r01_attr_flip_h(s->attrs[1 * R01_SCREEN_TILES_X + 1]), "paint sets flip_h");
+    EXPECT(s->solids[1 * R01_SCREEN_TILES_X + 1] != 0, "paint marks BG1 occupancy solid");
 
     r01_screen_paint_tile(p, s, 1, 1, 0, r01_attr_pack(0, 2, 0, 0));
     EXPECT(s->tiles[1 * R01_SCREEN_TILES_X + 1] == 0, "erase clears tile");
     EXPECT(s->attrs[1 * R01_SCREEN_TILES_X + 1] == 0, "erase clears leftover attr");
+    EXPECT(s->solids[1 * R01_SCREEN_TILES_X + 1] == 0, "erase clears leftover solid");
     s->attrs[2] = (uint8_t)(r01_attr_pack(0, 3, 0, 0));
     s->tiles[2] = 0;
+    s->solids[2] = 1;
     r01_screen_sanitize_empty_attrs(s);
     EXPECT(s->attrs[2] == 0, "sanitize drops pal/solid on empty");
+    EXPECT(s->solids[2] == 0, "sanitize drops leftover solid on empty");
 
     r01_screen_fill_pixels_from_bank(p, s);
     EXPECT(s->pixels[0] <= 3, "fill pixels produces palette indices");

@@ -353,52 +353,12 @@
         .byte $00
         .byte $00
         .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
         .byte $01
         .byte $01
         .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
         .byte $01
         .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
+        .byte $01
         .byte $00
         .byte $00
         .byte $00
@@ -425,6 +385,15 @@
         .byte $00
         .byte $00
         .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
         .byte $00
         .byte $00
         .byte $00
@@ -432,55 +401,86 @@
         .byte $00
         .byte $00
         .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
 ; screen (2,7)
         .byte $00
         .byte $00
@@ -658,70 +658,70 @@
         .byte $01
         .byte $01
         .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
 ; screen (3,7)
         .byte $00
         .byte $00
@@ -846,36 +846,12 @@
         .byte $00
         .byte $01
         .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
         .byte $01
         .byte $01
         .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
         .byte $00
         .byte $00
         .byte $00
@@ -898,71 +874,95 @@
         .byte $00
         .byte $00
         .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
 ; screen (4,7)
         .byte $00
         .byte $00
@@ -1092,30 +1092,6 @@
         .byte $00
         .byte $00
         .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
         .byte $01
         .byte $01
         .byte $01
@@ -1140,70 +1116,94 @@
         .byte $01
         .byte $01
         .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
 ; screen (5,7)
         .byte $00
         .byte $00
@@ -1381,34 +1381,11 @@
         .byte $00
         .byte $00
         .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
         .byte $01
         .byte $01
         .byte $01
         .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
+        .byte $01
         .byte $00
         .byte $00
         .byte $00
@@ -1428,23 +1405,46 @@
         .byte $01
         .byte $01
         .byte $01
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
         .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
 ; screen (6,7)
         .byte $00
         .byte $00
@@ -1654,26 +1654,26 @@
         .byte $00
         .byte $00
         .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
         .byte $00
         .byte $00
         .byte $01
         .byte $01
         .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
+        .byte $01
         .byte $01
         .byte $00
         .byte $00
@@ -2805,6 +2805,51 @@
         .byte $00
         .byte $00
         .byte $00
+        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
         .byte $01
         .byte $01
         .byte $01
@@ -2840,248 +2885,13 @@
         .byte $00
         .byte $00
         .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
         .byte $01
         .byte $01
         .byte $01
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
         .byte $00
         .byte $00
         .byte $00
 ; screen (6,8)
-        .byte $00
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $01
         .byte $01
         .byte $01
         .byte $00
@@ -3114,6 +2924,8 @@
         .byte $00
         .byte $00
         .byte $00
+        .byte $01
+        .byte $01
         .byte $00
         .byte $00
         .byte $00
@@ -3128,10 +2940,198 @@
         .byte $00
         .byte $00
         .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
         .byte $00
         .byte $00
         .byte $00
         .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
 ; screen (7,8)
         .byte $00
         .byte $00
@@ -3325,10 +3325,6 @@
         .byte $01
         .byte $01
         .byte $01
-        .byte $00
-        .byte $01
-        .byte $01
-        .byte $00
         .byte $01
         .byte $01
         .byte $01
@@ -3338,41 +3334,45 @@
         .byte $01
         .byte $01
         .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
 ; screen (8,8)
         .byte $00
         .byte $00
@@ -3534,34 +3534,6 @@
         .byte $00
         .byte $00
         .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $01
         .byte $01
         .byte $01
         .byte $01
@@ -3578,42 +3550,70 @@
         .byte $00
         .byte $00
         .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
 ; screen (9,8)
         .byte $00
         .byte $00
@@ -3807,7 +3807,6 @@
         .byte $01
         .byte $01
         .byte $01
-        .byte $00
         .byte $01
         .byte $01
         .byte $01
@@ -3823,38 +3822,39 @@
         .byte $01
         .byte $01
         .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
 ; screen (12,8)
         .byte $00
         .byte $00
@@ -4022,33 +4022,27 @@
         .byte $00
         .byte $00
         .byte $00
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
         .byte $00
         .byte $00
         .byte $00
         .byte $00
         .byte $01
-        .byte $00
-        .byte $00
         .byte $01
         .byte $01
+        .byte $00
+        .byte $00
         .byte $00
         .byte $01
         .byte $01
         .byte $00
         .byte $00
         .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $01
+        .byte $01
         .byte $01
         .byte $01
         .byte $01
@@ -4064,8 +4058,14 @@
         .byte $01
         .byte $01
         .byte $01
-        .byte $00
-        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
         .byte $01
         .byte $01
         .byte $00
@@ -4073,29 +4073,29 @@
         .byte $00
         .byte $01
         .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
         .byte $00
         .byte $00
         .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
 ; screen (13,8)
         .byte $00
         .byte $00
@@ -4237,46 +4237,6 @@
         .byte $01
         .byte $01
         .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
-        .byte $00
-        .byte $00
         .byte $01
         .byte $01
         .byte $01
@@ -4295,48 +4255,88 @@
         .byte $01
         .byte $01
         .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
         .byte $00
         .byte $00
         .byte $00
         .byte $00
         .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
         .byte $00
         .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
 ; screen (14,8)
         .byte $00
         .byte $00
@@ -4410,19 +4410,94 @@
         .byte $00
         .byte $00
         .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $01
+        .byte $01
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
         .byte $01
         .byte $01
         .byte $01
         .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
         .byte $01
         .byte $01
         .byte $01
@@ -4432,152 +4507,77 @@
         .byte $01
         .byte $01
         .byte $01
-        .byte $00
-        .byte $00
         .byte $01
         .byte $01
         .byte $01
         .byte $01
         .byte $01
         .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
         .byte $01
         .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
 ; screen (15,8)
         .byte $00
         .byte $00
@@ -4618,23 +4618,6 @@
         .byte $00
         .byte $00
         .byte $00
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
         .byte $00
         .byte $00
         .byte $00
@@ -4644,27 +4627,6 @@
         .byte $00
         .byte $00
         .byte $01
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $01
         .byte $00
         .byte $00
         .byte $00
@@ -4680,12 +4642,20 @@
         .byte $00
         .byte $00
         .byte $00
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $01
-        .byte $01
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
+        .byte $00
         .byte $01
         .byte $00
         .byte $00
@@ -4715,6 +4685,7 @@
         .byte $00
         .byte $00
         .byte $00
+        .byte $01
         .byte $00
         .byte $00
         .byte $00
@@ -4743,6 +4714,7 @@
         .byte $00
         .byte $00
         .byte $00
+        .byte $01
         .byte $00
         .byte $00
         .byte $00
@@ -4766,56 +4738,84 @@
         .byte $00
         .byte $00
         .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
         .byte $00
         .byte $00
         .byte $00
         .byte $00
         .byte $00
         .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
-        .byte $00
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01
+        .byte $01

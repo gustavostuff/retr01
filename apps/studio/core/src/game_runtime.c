@@ -228,7 +228,7 @@ static int proj_solid_at(const R01World *w, int wx, int wy) {
         }
         cell = (ly / 8) * R01_SCREEN_TILES_X + (lx / 8);
         if (cell >= 0 && cell < R01_TILES_PER_SCREEN) {
-            return s->solids[cell] != 0;
+            return r01_screen_cell_is_solid(s, cell);
         }
         return 0;
     }

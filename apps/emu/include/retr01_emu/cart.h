@@ -112,6 +112,7 @@ int r01e_cart_has_screen(const R01eCart *c, int world, int col, int row);
 /* BG attr at world pixel; -1 if no screen. */
 int r01e_cart_attr_at(const R01eCart *c, int world, int wx, int wy, uint8_t *out_attr);
 
+/* BG1 nametable occupancy at world pixel (tile 0 is not solid). */
 int r01e_cart_solid_at(const R01eCart *c, int world, int wx, int wy);
 
 /* Player AABB vs present screens and BG solid (Studio play.c SoT). */

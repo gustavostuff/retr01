@@ -96,11 +96,28 @@ TEST_MAIN() {
         int cell = (ly / 8) * R01_SCREEN_TILES_X + (lx / 8);
         int before_x = pl.ctx.player_x;
         s->solids[cell] = 1;
+        s->tiles[cell] = 1;
         r01_play_tick(&pl, p, -1, 0, 0);
         EXPECT(pl.ctx.player_x == before_x, "solid tile blocks movement");
         r01_play_tick(&pl, p, 1, 0, 0);
         EXPECT(pl.ctx.player_x == before_x, "solid tile blocks movement both axes");
         s->solids[cell] = 0;
+        s->tiles[cell] = 0;
+    }
+
+    {
+        int lx = pl.ctx.player_x % R01_SCREEN_PX_W;
+        int ly = pl.ctx.player_y % R01_SCREEN_PX_H;
+        int cell = (ly / 8) * R01_SCREEN_TILES_X + (lx / 8);
+        int wx = pl.ctx.player_x;
+        int wy = pl.ctx.player_y;
+        s->tiles[cell] = 0;
+        s->solids[cell] = 1;
+        EXPECT(!r01_world_solid_at(&p->worlds[0], wx, wy), "empty BG1 is not solid");
+        s->solids[cell] = 0;
+        s->tiles[cell] = 1;
+        EXPECT(r01_world_solid_at(&p->worlds[0], wx, wy), "BG1 tile occupancy is solid");
+        s->tiles[cell] = 0;
     }
 
     EXPECT(!r01_play_button(&pl, p, R01_PLAY_BTN_X), "X has no warp");
@@ -135,6 +152,9 @@ TEST_MAIN() {
         s->attrs[0] = r01_attr_pack(1, 2, 0, 1);
         s->attrs[1] = r01_attr_pack(1, 2, 0, 1);
         s->attrs[2] = r01_attr_pack(0, 0, 0, 0);
+        s->tiles[0] = 1;
+        s->tiles[1] = 1;
+        s->tiles[2] = 0;
         touched = r01_world_apply_solid_hw(&p->worlds[0], hw, 1);
         EXPECT(touched >= 2, "solid by hw touches matching tiles");
         EXPECT(s->solids[0] && s->solids[1], "matching attrs solid");
@@ -154,6 +174,7 @@ TEST_MAIN() {
         memset(right->attrs, 0, sizeof(right->attrs));
         for (ti = 0; ti < R01_SCREEN_TILES_Y; ti++) {
             right->solids[ti * R01_SCREEN_TILES_X] = 1;
+            right->tiles[ti * R01_SCREEN_TILES_X] = 1;
         }
         edge_x = 3 * R01_SCREEN_PX_W - R01_PLAY_PLAYER_W;
         pl.ctx.player_x = edge_x;
@@ -214,12 +235,14 @@ TEST_MAIN() {
         scr = &p->worlds[0].screens[r01_world_find_screen(&p->worlds[0], 0, 0)];
         cell = ((hy % R01_SCREEN_PX_H) / 8) * R01_SCREEN_TILES_X + ((hx % R01_SCREEN_PX_W) / 8);
         scr->solids[cell] = 1;
+        scr->tiles[cell] = 1;
         {
             int before = pl.ctx.player_x;
             r01_play_tick(&pl, p, -1, 0, 0);
             EXPECT(pl.ctx.player_x == before, "offset hitbox blocks via solid under box");
         }
         scr->solids[cell] = 0;
+        scr->tiles[cell] = 0;
         r01_world_set_player_entity(p, -1);
     }
 
@@ -480,6 +503,7 @@ TEST_MAIN() {
         pl.ctx.plat_jump_held = 0;
         for (tx = 0; tx < R01_SCREEN_TILES_X; tx++) {
             scr->solids[2 * R01_SCREEN_TILES_X + tx] = 1;
+            scr->tiles[2 * R01_SCREEN_TILES_X + tx] = 1;
         }
         {
             int i;

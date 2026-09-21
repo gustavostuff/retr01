@@ -164,7 +164,7 @@ One catalog for the cart (up to **32** types). The same type may spawn in any wo
 | Entity **behavior** (what it does) | **PRG**, authored in **C/ASM** |
 | Entity **spawn locations** (who appears where) | **PRG** (tables and/or `spawn_entity` calls) |
 | Entity **pixel patterns** | Global SPR CHR |
-| Collision solids | **PRG** |
+| Collision solids | **PRG** (occupancy from BG1 tiles) |
 | Player anim (`PA`) | One cart blob after world-0 maps. Host Play player frames. See `software-api.md` |
 
 | Topic | Value |

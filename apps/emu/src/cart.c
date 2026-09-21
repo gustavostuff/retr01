@@ -375,17 +375,11 @@ int r01e_cart_attr_at(const R01eCart *c, int world, int wx, int wy, uint8_t *out
 }
 
 int r01e_cart_solid_at(const R01eCart *c, int world, int wx, int wy) {
-    const uint8_t *prg;
     int col, row, lx, ly, tx, ty, cell;
-    uint8_t n;
-    uint8_t i;
+    uint32_t pay_off;
+    const uint8_t *pay;
 
-    (void)world;
     if (!c || wx < 0 || wy < 0) {
-        return 0;
-    }
-    prg = r01e_cart_prg(c);
-    if (!prg || c->len_prg < 0x122u) {
         return 0;
     }
     col = wx / R01E_SCREEN_PX_W;
@@ -398,28 +392,15 @@ int r01e_cart_solid_at(const R01eCart *c, int world, int wx, int wy) {
     if (cell < 0 || cell >= R01E_TILES_PER_SCREEN) {
         return 0;
     }
-    n = prg[0x121];
-    for (i = 0; i < n; i++) {
-        const uint8_t *ent = prg + 0x122u + (size_t)i * 4u;
-        uint16_t cpu;
-        uint32_t off;
-        if (ent + 4 > prg + c->len_prg) {
-            break;
-        }
-        if ((int)ent[0] != col || (int)ent[1] != row) {
-            continue;
-        }
-        cpu = (uint16_t)ent[2] | ((uint16_t)ent[3] << 8);
-        if (cpu < 0x8000u) {
-            return 0;
-        }
-        off = (uint32_t)cpu - 0x8000u;
-        if (off + (uint32_t)cell >= c->len_prg) {
-            return 0;
-        }
-        return prg[off + (uint32_t)cell] != 0;
+    if (!cart_screen_payload(c, world, col, row, &pay_off)) {
+        return 0;
     }
-    return 0;
+    pay = r01e_cart_ptr(c, pay_off, R01E_SCREEN_PAYLOAD);
+    if (!pay) {
+        return 0;
+    }
+    /* BG1 tile 0 is show-through (BG0). Occupancy matches the picture. */
+    return pay[cell] != 0;
 }
 
 const uint8_t *r01e_cart_other_raw(const R01eCart *c, int id, size_t *out_len, int *out_flags) {

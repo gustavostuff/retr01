@@ -17,6 +17,14 @@ static inline int r01_attr_hw_match(uint8_t a, uint8_t b) {
 /* Attr byte at world pixel, or -1 if no screen / OOB. */
 int r01_world_attr_at(const R01World *w, int wx, int wy, uint8_t *out_attr);
 
+/* BG1 nametable occupancy: tile 0 is show-through (not solid). */
+static inline int r01_screen_cell_is_solid(const R01Screen *s, int cell) {
+    if (!s || cell < 0 || cell >= R01_TILES_PER_SCREEN) {
+        return 0;
+    }
+    return s->tiles[cell] != 0;
+}
+
 int r01_world_solid_at(const R01World *w, int wx, int wy);
 
 /* AABB vs present screens and BG solid tiles (all overlapping 8x8 cells). */
@@ -26,8 +34,8 @@ int r01_world_aabb_ok(const R01World *w, int px, int py, int bw, int bh);
 int r01_world_player_aabb_ok(const R01World *w, int px, int py);
 
 /*
- * Set or clear solids[] on every tile in w whose hardware attrs match hw_key.
- * Returns number of cells touched.
+ * Set or clear solids[] on every non-empty tile in w whose hardware attrs match hw_key.
+ * Empty BG1 cells (tile 0) stay passable. Returns number of cells touched.
  */
 int r01_world_apply_solid_hw(R01World *w, uint8_t hw_key, int set_solid);
 

@@ -126,6 +126,6 @@ Same pack for BG nametable attrs and sprite / OAM attrs. The whole byte is used.
 | 6 | H flip |
 | 7 | V flip |
 
-Collision solids and tile animation live in **PRG**. PRG may rewrite nametable/OAM, or keep a side table (see `software-api.md`).
+Collision follows BG1 nametable occupancy (tile 0 is show-through). PRG stores that table for on-console play. See `software-api.md`.
 
 The marked **player** uses the same SPR bank field as every other entity (**0-15**, global SPR). Other screens use the same BG/SPR pools. See `memory.md`.

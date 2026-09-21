@@ -53,7 +53,7 @@ int r01_world_solid_at(const R01World *w, int wx, int wy) {
     tx = lx / 8;
     ty = ly / 8;
     cell = ty * R01_SCREEN_TILES_X + tx;
-    return s->solids[cell] != 0;
+    return r01_screen_cell_is_solid(s, cell);
 }
 
 int r01_world_aabb_ok(const R01World *w, int px, int py, int bw, int bh) {
@@ -126,6 +126,13 @@ int r01_world_apply_solid_hw(R01World *w, uint8_t hw_key, int set_solid) {
             continue;
         }
         for (cell = 0; cell < R01_TILES_PER_SCREEN; cell++) {
+            if (s->tiles[cell] == 0) {
+                if (!set_solid && s->solids[cell]) {
+                    s->solids[cell] = 0;
+                    touched++;
+                }
+                continue;
+            }
             if (r01_attr_hw(s->attrs[cell]) != hw_key) {
                 continue;
             }

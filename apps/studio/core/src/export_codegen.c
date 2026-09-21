@@ -915,7 +915,7 @@ static int write_asm_tables(const char *asm_dir, const R01Project *p, const R01W
             }
             fprintf(f, "; screen (%d,%d)\n", s->col, s->row);
             for (cell = 0; cell < R01_TILES_PER_SCREEN; cell++) {
-                fprintf(f, "        .byte $%02X\n", s->solids[cell] ? 1 : 0);
+                fprintf(f, "        .byte $%02X\n", s->tiles[cell] ? 1 : 0);
             }
         }
     }

@@ -252,7 +252,7 @@ static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01World *w)
         }
         tab_addr = (uint16_t)(CODE_BASE + data_off);
         for (cell = 0; cell < R01_TILES_PER_SCREEN; cell++) {
-            prg[data_off++] = s->solids[cell] ? 1u : 0u;
+            prg[data_off++] = s->tiles[cell] ? 1u : 0u;
         }
         if (PLAY_OFF + PLAY_COLL_DIR + (size_t)(di + 1) * 4u > PLAY_OFF + PLAY_INST_COUNT) {
             break;
