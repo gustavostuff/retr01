@@ -205,7 +205,7 @@ World header byte **7** (flags):
 
 Author code sets wrap with `r01_bg0_set_wrap(ctx, wrap_x, wrap_y)` and clip with `r01_bg0_set_clip_to_bg1(ctx, enable)` in `custom_logic.c`. Studio packs those calls into the flag bits at cart export (same scan path as camera dead zone). `r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER)` packs bit **4**. `r01_player_set_run_on_x(ctx)` packs bit **5**.
 
-Scroll rate is unchanged: end-aligned `(bg0_n - 1) / (bg1_n - 1)` on each axis (see Parallax scroll rate below). Wrap only changes sampling.
+Scroll rate without wrap is end-aligned `(bg0_n - 1) / (bg1_n - 1)` on each axis (see Parallax scroll rate below). With wrap on an axis, the rate is the period ratio `bg0_n / bg1_n` so a repeating strip stays even (8 BG0 screens under 16 BG1 screens is exact 1/2: 1 logic px every 2 frames at walk, 1 px per frame at 2x run). Wrap sampling still modulo-tiles the present BG0 box.
 
 When wrap is on for an axis, sampling maps pixels outside the present BG0 bounding box back into that box with a positive modulo, so the authored BG0 block repeats and empty BG0 regions do not appear. When wrap is off, that axis clips outside the bbox (backdrop).
 
@@ -221,4 +221,4 @@ Raster compare `$7F04` may be written outside VBlank only for a **deliberate** s
 
 Example: BG1 screens fill a solid 4x4 grid (16 screens). BG0 is a 2x2 grid. Camera travel on each axis is `(screens - 1)` screen widths, so BG0 moves at `(2 - 1) / (4 - 1) = 1/3` the BG1 camera rate. That keeps the start and end of both planes aligned. A naive `bg0_screens / bg1_screens` scale overshoots the BG0 plane and makes BG0 screens look like they slide off the 2x2 grid.
 
-Screen arrangements can be any shape. Compute the enclosing minimum grid for BG1 screens and for BG0 screens, then derive X and Y scroll relationships from those boxes (`(bg0_n - 1) / (bg1_n - 1)` when BG0 is strictly smaller on that axis, otherwise park BG0). Pixel snap is nearest, so a 1 px BG1 step (walk) and a 2 px step (run) stay even when that rate is 1/2: BG0 moves 1 logic pixel every 2 frames at walk, and 1 logic pixel per frame at 2x run. C/ASM PRG utilities help authors with that math.
+Screen arrangements can be any shape. Compute the enclosing minimum grid for BG1 screens and for BG0 screens, then derive X and Y scroll relationships from those boxes. Without wrap: `(bg0_n - 1) / (bg1_n - 1)` when BG0 is strictly smaller on that axis, otherwise park BG0. Pixel snap is nearest. With wrap: `bg0_n / bg1_n` (period vs period, floor). An 8-col wrapping BG0 under a 16-col BG1 bbox is exact 1/2, so walk is 1 BG0 logic pixel every 2 frames and hold-X run is 1 px per frame. C/ASM PRG utilities help authors with that math.

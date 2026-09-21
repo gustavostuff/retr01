@@ -237,8 +237,8 @@ static int load_screen_into_slot(R01eMachine *m, const R01eWorldView *wv, int co
     return found;
 }
 
-/* End-aligned (bg0_n-1)/(bg1_n-1), nearest pixel. Nearest keeps 1 px walk
- * -> 1 BG0 px / 2 frames and 2 px run -> 1 BG0 px / frame when the rate is 1/2. */
+/* End-aligned (bg0_n-1)/(bg1_n-1), nearest pixel. Wrap uses period n/n
+ * so 8 vs 16 is exact 1/2 (1 BG0 px / 2 frames walk, 1 px / frame run). */
 static int parallax_map(int rel, int travel_l0, int travel_l1) {
     if (travel_l1 < 1) {
         return 0;
@@ -252,11 +252,29 @@ static int parallax_map(int rel, int travel_l0, int travel_l1) {
     return (rel * travel_l0 + travel_l1 / 2) / travel_l1;
 }
 
+static int bg0_axis_cam(int rel, int n0, int n1, int screen_px, int wrap) {
+    int travel_l0;
+    int travel_l1;
+
+    if (n0 < 2 || n1 < 2 || n0 >= n1 || screen_px < 1) {
+        return 0;
+    }
+    if (rel < 0) {
+        rel = 0;
+    }
+    if (wrap) {
+        travel_l1 = n1 * screen_px;
+        travel_l0 = n0 * screen_px;
+        return (rel * travel_l0) / travel_l1;
+    }
+    travel_l1 = (n1 - 1) * screen_px;
+    travel_l0 = (n0 - 1) * screen_px;
+    return parallax_map(rel, travel_l0, travel_l1);
+}
+
 static void bg0_apply_scroll(R01eMachine *m) {
     R01eVideo *vid;
     int rel_x, rel_y;
-    int travel_l1;
-    int travel_l0;
 
     if (!m) {
         return;
@@ -268,39 +286,14 @@ static void bg0_apply_scroll(R01eMachine *m) {
         return;
     }
     /*
-     * Map BG1 camera travel onto BG0 travel so both plane ends stay aligned.
-     * Rate is (bg0_screens-1)/(bg1_screens-1) in pixels (a 2x2 under a 4x4 is
-     * 1/3, not cols/cols). When BG0 extent is equal or larger, leave L0 parked.
-     * Wrap flags only affect sample_l0 tiling, not this rate.
+     * No wrap: end-aligned (bg0_n-1)/(bg1_n-1), nearest pixel.
+     * Wrap: period n0/n1 so a repeating 8-col strip under 16 BG1 cols is 1/2.
+     * Park when BG0 extent is equal or larger. Wrap sampling is separate.
      */
     rel_x = vid->cam_x - vid->l1_origin_x;
     rel_y = vid->cam_y - vid->l1_origin_y;
-    if (rel_x < 0) {
-        rel_x = 0;
-    }
-    if (rel_y < 0) {
-        rel_y = 0;
-    }
-    if (vid->bg0_cols < 2 || vid->l1_cols < 2 || vid->bg0_cols >= vid->l1_cols) {
-        vid->l0_cam_x = 0;
-    } else {
-        travel_l1 = (vid->l1_cols - 1) * R01E_SCREEN_PX_W;
-        travel_l0 = (vid->bg0_cols - 1) * R01E_SCREEN_PX_W;
-        vid->l0_cam_x = parallax_map(rel_x, travel_l0, travel_l1);
-        if (vid->l0_cam_x > travel_l0) {
-            vid->l0_cam_x = travel_l0;
-        }
-    }
-    if (vid->bg0_rows < 2 || vid->l1_rows < 2 || vid->bg0_rows >= vid->l1_rows) {
-        vid->l0_cam_y = 0;
-    } else {
-        travel_l1 = (vid->l1_rows - 1) * R01E_SCREEN_PX_H;
-        travel_l0 = (vid->bg0_rows - 1) * R01E_SCREEN_PX_H;
-        vid->l0_cam_y = parallax_map(rel_y, travel_l0, travel_l1);
-        if (vid->l0_cam_y > travel_l0) {
-            vid->l0_cam_y = travel_l0;
-        }
-    }
+    vid->l0_cam_x = bg0_axis_cam(rel_x, vid->bg0_cols, vid->l1_cols, R01E_SCREEN_PX_W, vid->bg0_wrap_x);
+    vid->l0_cam_y = bg0_axis_cam(rel_y, vid->bg0_rows, vid->l1_rows, R01E_SCREEN_PX_H, vid->bg0_wrap_y);
 }
 
 void r01e_video_update_bg0_scroll(R01eMachine *m) {

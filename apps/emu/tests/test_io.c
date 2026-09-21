@@ -318,7 +318,7 @@ int main(void) {
             r01e_machine_shutdown(&m);
             return fail("BG0 parked when equal extent");
         }
-        /* Wrap flags must not change parallax rate. */
+        /* Wrap on: 2x2 under 4x4 is period 1/2, not end-aligned 1/3. */
         vid->bg0_wrap_x = 1;
         vid->bg0_wrap_y = 1;
         vid->l1_cols = 4;
@@ -326,17 +326,13 @@ int main(void) {
         vid->cam_x = R01E_SCREEN_PX_W;
         vid->cam_y = R01E_SCREEN_PX_H;
         r01e_video_update_bg0_scroll(&m);
-        {
-            int mid_x = (R01E_SCREEN_PX_W * R01E_SCREEN_PX_W + (3 * R01E_SCREEN_PX_W) / 2) / (3 * R01E_SCREEN_PX_W);
-            int mid_y = (R01E_SCREEN_PX_H * R01E_SCREEN_PX_H + (3 * R01E_SCREEN_PX_H) / 2) / (3 * R01E_SCREEN_PX_H);
-            if (vid->l0_cam_x != mid_x || vid->l0_cam_y != mid_y) {
-                r01e_machine_shutdown(&m);
-                return fail("BG0 wrap keeps parallax rate");
-            }
+        if (vid->l0_cam_x != R01E_SCREEN_PX_W / 2 || vid->l0_cam_y != R01E_SCREEN_PX_H / 2) {
+            r01e_machine_shutdown(&m);
+            return fail("BG0 wrap uses period n/n");
         }
         vid->bg0_wrap_x = 0;
         vid->bg0_wrap_y = 0;
-        /* 8 vs 16 cols (7/15): nearest snap is 1 BG0 px per 2 BG1 px. */
+        /* 8 vs 16 cols, wrap off: 7/15 nearest. */
         vid->bg0_cols = 8;
         vid->bg0_rows = 1;
         vid->l1_cols = 16;
@@ -366,6 +362,26 @@ int main(void) {
             r01e_machine_shutdown(&m);
             return fail("BG0 run 1 px / frame");
         }
+        /* Wrap on: 8/16 is exact 1/2, including the old 7/15 hold at cam 16. */
+        vid->bg0_wrap_x = 1;
+        {
+            int step;
+            for (step = 0; step <= 16; step++) {
+                vid->cam_x = step * 2;
+                r01e_video_update_bg0_scroll(&m);
+                if (vid->l0_cam_x != step) {
+                    r01e_machine_shutdown(&m);
+                    return fail("BG0 wrap 8/16 run 1 px / frame");
+                }
+            }
+        }
+        vid->cam_x = 1;
+        r01e_video_update_bg0_scroll(&m);
+        if (vid->l0_cam_x != 0) {
+            r01e_machine_shutdown(&m);
+            return fail("BG0 wrap 8/16 walk holds 1 frame");
+        }
+        vid->bg0_wrap_x = 0;
     }
 
     printf("ok io scroll/vram/map/fe80/eeprom/oam/apu\n");

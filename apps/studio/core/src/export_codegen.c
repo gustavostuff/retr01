@@ -424,7 +424,7 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
                    "#define R01_BG0_WRAP_ON 1\n"
                    "#define R01_BG0_CLIP_OFF 0\n"
                    "#define R01_BG0_CLIP_ON 1\n"
-                   "/* Tile present BG0 layout on X/Y when sampling leaves the box. Rate unchanged. */\n"
+                   "/* Tile present BG0 layout on X/Y when sampling leaves the box. Wrap axes use period n/n rate. */\n"
                    "void r01_bg0_set_wrap(R01GameCtx *ctx, int wrap_x, int wrap_y);\n"
                    "/* Hide BG0 outside present BG1 camera slots when enable != 0. */\n"
                    "void r01_bg0_set_clip_to_bg1(R01GameCtx *ctx, int enable);\n\n"

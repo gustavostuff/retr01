@@ -8,7 +8,8 @@
 #define R01_PLAY_CAM_AXIS_H 1
 #define R01_PLAY_CAM_AXIS_V 2
 
-/* deadzone_x/y: width/height of the centered viewport rectangle (docs/general/world-scrolling.md). */
+/* Packed dead-zone width/height. Follow snaps edges to viewport-center
+ * parity (docs/general/world-scrolling.md). Live box may be 1 px smaller. */
 void r01_play_camera_update(int *cam_x, int *cam_y, int anchor_x, int anchor_y, int player_w, int player_h,
                             int screen_w, int screen_h, int deadzone_x, int deadzone_y, int axis_lock);
 
