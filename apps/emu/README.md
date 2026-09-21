@@ -42,7 +42,7 @@ Pi CRT pack (emu + `example_01.retr01` only):
 ./scripts/pack-pi-emu.sh
 ```
 
-Writes `raspberry_pi_test/`. On the Pi: `./build.sh` then `./retr01.sh` (RGB-Pi OS4 Ports launcher, 256x240 fullscreen).
+Writes `raspberry_pi_test/`. On the Pi, `./build.sh` installs the binary and cart to `/media/usb1/roms/ports/Retr01_test/` and the launcher to `/media/usb1/roms/ports/retr01.sh` (256x240 fullscreen).
 
 Developer rebuild of this tree only:
 

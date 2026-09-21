@@ -139,26 +139,31 @@ EOF
 
 cat > "$DEST/build.sh" << 'EOF'
 #!/usr/bin/env bash
-# Compile retr01_emu in this pack (Pi or host). Needs cmake, a C compiler, libsdl2-dev.
+# Compile retr01_emu and install the Ports payload on USB.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
+PORTS="/media/usb1/roms/ports"
+DEST="$PORTS/Retr01_test"
 cd "$HERE"
 JOBS="$(nproc 2>/dev/null || echo 2)"
 cmake -S apps/emu -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --target retr01_emu -j"$JOBS"
-install -m755 build/retr01_emu "$HERE/retr01_emu"
-install -m644 apps/common/gamecontrollerdb.txt "$HERE/gamecontrollerdb.txt"
-echo "built $HERE/retr01_emu"
-echo "run: ./retr01.sh"
+mkdir -p "$DEST"
+install -m755 build/retr01_emu "$DEST/retr01_emu"
+install -m644 "$HERE/example_01.retr01" "$DEST/example_01.retr01"
+install -m644 apps/common/gamecontrollerdb.txt "$DEST/gamecontrollerdb.txt"
+install -m755 "$HERE/retr01.sh" "$PORTS/retr01.sh"
+echo "built $DEST/retr01_emu"
+echo "launcher $PORTS/retr01.sh"
 EOF
 
 cat > "$DEST/retr01.sh" << 'EOF'
 #!/usr/bin/env bash
-# RGB-Pi OS4 Ports entry. Keep this file next to retr01_emu, example_01.retr01, and gamecontrollerdb.txt.
+# RGB-Pi OS4 Ports entry. Binary and cart live under /media/usb1/roms/ports/Retr01_test/.
 set -euo pipefail
-HERE="$(cd "$(dirname "$0")" && pwd)"
-BIN="$HERE/retr01_emu"
-CART="$HERE/example_01.retr01"
+DEST="/media/usb1/roms/ports/Retr01_test"
+BIN="$DEST/retr01_emu"
+CART="$DEST/example_01.retr01"
 [[ -x "$BIN" ]] || { echo "error: missing $BIN -- run ./build.sh first" >&2; exit 1; }
 [[ -f "$CART" ]] || { echo "error: missing $CART" >&2; exit 1; }
 export R01E_SCALE="${R01E_SCALE:-1}"
@@ -166,7 +171,7 @@ export R01E_FULLSCREEN="${R01E_FULLSCREEN:-1}"
 export R01E_NO_DEBUG="${R01E_NO_DEBUG:-1}"
 export R01E_AUDIO_SAMPLES="${R01E_AUDIO_SAMPLES:-2048}"
 export R01E_AUDIO_RATE="${R01E_AUDIO_RATE:-48000}"
-cd "$HERE"
+cd "$DEST"
 exec "$BIN" "$CART"
 EOF
 
@@ -185,10 +190,9 @@ On the Pi, inside this folder:
 
 ```bash
 ./build.sh
-./retr01.sh
 ```
 
-Needs CMake, a C compiler, pkg-config, and SDL2 development files (`libsdl2-dev` on Debian). `./build.sh` on the Pi produces the ARM binary.
+Needs CMake, a C compiler, pkg-config, and SDL2 development files (`libsdl2-dev` on Debian). `./build.sh` compiles the ARM binary and installs it with the cart and gamepad DB to `/media/usb1/roms/ports/Retr01_test/`, plus the Ports launcher at `/media/usb1/roms/ports/retr01.sh`.
 
 ## RGB-Pi OS4 Ports
 
@@ -196,12 +200,12 @@ After `./build.sh`, the runnable Ports payload is:
 
 | File | Role |
 |------|------|
-| `retr01.sh` | Ports launcher (menu name follows this file) |
-| `retr01_emu` | Binary |
-| `example_01.retr01` | Cart |
-| `gamecontrollerdb.txt` | SDL gamepad DB (next to the binary) |
+| `/media/usb1/roms/ports/retr01.sh` | Ports launcher |
+| `/media/usb1/roms/ports/Retr01_test/retr01_emu` | Binary |
+| `/media/usb1/roms/ports/Retr01_test/example_01.retr01` | Cart |
+| `/media/usb1/roms/ports/Retr01_test/gamecontrollerdb.txt` | SDL gamepad DB (next to the binary) |
 
-RGB-Pi OS4 Ports lists `.sh` files from the ports roms dir or USB `ports/`. `retr01.sh` sets `R01E_SCALE=1`, `R01E_FULLSCREEN=1`, 48 kHz / 2048-sample audio. The Pi CMake build defines `R01E_NO_DEBUG` so the debug window is never created.
+RGB-Pi OS4 Ports lists `.sh` files from USB `ports/`. `retr01.sh` launches that binary and cart at 1x fullscreen, 48 kHz / 2048-sample audio. The Pi CMake build defines `R01E_NO_DEBUG` so the debug window is never created.
 
 Env overrides:
 
@@ -228,4 +232,4 @@ Gamepad Home / Guide still opens Reset / Quit / 1x-2x.
 EOF
 
 echo "done: $DEST"
-echo "copy that folder to the Pi, then: cd raspberry_pi_test && ./build.sh && ./retr01.sh"
+echo "on the Pi: cd raspberry_pi_test && ./build.sh"

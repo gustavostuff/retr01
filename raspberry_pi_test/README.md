@@ -10,10 +10,9 @@ On the Pi, inside this folder:
 
 ```bash
 ./build.sh
-./retr01.sh
 ```
 
-Needs CMake, a C compiler, pkg-config, and SDL2 development files (`libsdl2-dev` on Debian). `./build.sh` on the Pi produces the ARM binary.
+Needs CMake, a C compiler, pkg-config, and SDL2 development files (`libsdl2-dev` on Debian). `./build.sh` compiles the ARM binary and installs it with the cart and gamepad DB to `/media/usb1/roms/ports/Retr01_test/`, plus the Ports launcher at `/media/usb1/roms/ports/retr01.sh`.
 
 ## RGB-Pi OS4 Ports
 
@@ -21,12 +20,12 @@ After `./build.sh`, the runnable Ports payload is:
 
 | File | Role |
 |------|------|
-| `retr01.sh` | Ports launcher (menu name follows this file) |
-| `retr01_emu` | Binary |
-| `example_01.retr01` | Cart |
-| `gamecontrollerdb.txt` | SDL gamepad DB (next to the binary) |
+| `/media/usb1/roms/ports/retr01.sh` | Ports launcher |
+| `/media/usb1/roms/ports/Retr01_test/retr01_emu` | Binary |
+| `/media/usb1/roms/ports/Retr01_test/example_01.retr01` | Cart |
+| `/media/usb1/roms/ports/Retr01_test/gamecontrollerdb.txt` | SDL gamepad DB (next to the binary) |
 
-RGB-Pi OS4 Ports lists `.sh` files from the ports roms dir or USB `ports/`. `retr01.sh` sets `R01E_SCALE=1`, `R01E_FULLSCREEN=1`, 48 kHz / 2048-sample audio. The Pi CMake build defines `R01E_NO_DEBUG` so the debug window is never created.
+RGB-Pi OS4 Ports lists `.sh` files from USB `ports/`. `retr01.sh` launches that binary and cart at 1x fullscreen, 48 kHz / 2048-sample audio. The Pi CMake build defines `R01E_NO_DEBUG` so the debug window is never created.
 
 Env overrides:
 
