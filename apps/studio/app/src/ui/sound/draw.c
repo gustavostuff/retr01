@@ -321,34 +321,37 @@ void draw_sound_editor(UiState *ui, SDL_Renderer *r) {
     draw_button(r, lo.play_x, lo.play_y, lo.play_w, "Play", 1, sound_play_hit(ui, lx, ly));
     draw_button(r, lo.pause_x, lo.pause_y, lo.pause_w, "Pause", 1, sound_pause_hit(ui, lx, ly));
     draw_button(r, lo.stop_x, lo.stop_y, lo.stop_w, "Stop", 1, sound_stop_hit(ui, lx, ly));
-    /* Isolate radios: All on ruler row; channel radios centered on each lane. */
+    /* Isolate checkboxes: All on ruler row. Channel boxes centered on each lane. */
     {
         int all_y = lo.timeline_y - lo.ruler_h;
         int all_cy = all_y + (lo.ruler_h - UI_MODE_ROW_H) / 2;
         int hover_all = point_in_rect(lx, ly, lo.insp_x, all_y, UI_CTRL_SIDEBAR_W - UI_UNIT * 2, lo.ruler_h);
-        ui_radio_draw(r, lo.insp_x, all_cy + (UI_MODE_ROW_H - UI_MODE_RADIO) / 2,
-                      ui->sound.solo_ch == UI_SOUND_SOLO_ALL);
-        font_draw(r, lo.insp_x + UI_TOGGLE_W, all_cy + (UI_MODE_ROW_H - 8) / 2, "All", 230, 230,
-                  230);
+        int all_on = (ui->sound.ch_mask & (int)UI_SOUND_CH_MASK_ALL) == (int)UI_SOUND_CH_MASK_ALL;
+        int n_on = 0;
+        int only = -1;
+        ui_checkbox_draw(r, lo.insp_x, all_cy + (UI_MODE_ROW_H - UI_CHECKBOX) / 2, all_on);
+        font_draw(r, lo.insp_x + UI_TOGGLE_W, all_cy + (UI_MODE_ROW_H - 8) / 2, "All", 230, 230, 230);
         if (hover_all) {
             hover_overlay(r, lo.insp_x, all_y, UI_CTRL_SIDEBAR_W - UI_UNIT * 2, lo.ruler_h);
         }
         for (i = 0; i < UI_SOUND_BGM_CH; i++) {
             int y = lo.timeline_y + i * (lo.lane_h + lo.lane_gap);
             int cy = y + (lo.lane_h - UI_MODE_ROW_H) / 2;
-            int sel = (i == ui->sound.solo_ch);
+            int on = (ui->sound.ch_mask & (1 << i)) != 0;
             int hover = point_in_rect(lx, ly, lo.insp_x, y, UI_CTRL_SIDEBAR_W - UI_UNIT * 2, lo.lane_h);
-            ui_radio_draw(r, lo.insp_x, cy + (UI_MODE_ROW_H - UI_MODE_RADIO) / 2, sel);
-            font_draw(r, lo.insp_x + UI_TOGGLE_W, cy + (UI_MODE_ROW_H - 8) / 2, k_ch_label[i], 230,
-                      230, 230);
+            ui_checkbox_draw(r, lo.insp_x, cy + (UI_MODE_ROW_H - UI_CHECKBOX) / 2, on);
+            font_draw(r, lo.insp_x + UI_TOGGLE_W, cy + (UI_MODE_ROW_H - 8) / 2, k_ch_label[i], 230, 230, 230);
             if (hover) {
                 hover_overlay(r, lo.insp_x, y, UI_CTRL_SIDEBAR_W - UI_UNIT * 2, lo.lane_h);
             }
+            if (on) {
+                n_on++;
+                only = i;
+            }
         }
-        if (ui->sound.solo_ch >= 0 && ui->sound.solo_ch < UI_SOUND_BGM_CH) {
-            int c = ui->sound.solo_ch;
+        if (n_on == 1 && only >= 0) {
             int y = lo.minimap_y + lo.minimap_h + UI_UNIT;
-            font_draw(r, lo.insp_x, y, k_ch_role[c], 160, 160, 170);
+            font_draw(r, lo.insp_x, y, k_ch_role[only], 160, 160, 170);
         }
     }
 }

@@ -1014,8 +1014,8 @@ int ui_bgm_flatten(const UiState *ui, int track,
     }
     for (ch = 0; ch < UI_SOUND_BGM_CH && ch < R01_BGM_CH; ch++) {
         int n;
-        if (honor_solo && ui->sound.solo_ch >= 0 && ch != ui->sound.solo_ch) {
-            continue; /* channel isolation (preview only) */
+        if (honor_solo && (ui->sound.ch_mask & (1 << ch)) == 0) {
+            continue; /* channel isolate (preview only) */
         }
         n = ui->sound.region_count[track][ch];
         for (i = 0; i < n; i++) {
@@ -1196,7 +1196,7 @@ void ui_bgm_apply_from_project(UiState *ui) {
         ui->sound.track_count = UI_SOUND_TRACKS_MAX;
     }
     ui->sound.track_idx = 0;
-    ui->sound.solo_ch = UI_SOUND_SOLO_ALL;
+    ui->sound.ch_mask = (int)UI_SOUND_CH_MASK_ALL;
     ui->sound.scroll_x = 0;
     ui->sound.zoom_h = UI_SOUND_ZOOM_MIN;
     ui->sound.note_solfa = bgm->note_solfa ? 1 : 0;

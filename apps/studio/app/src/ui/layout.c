@@ -1557,7 +1557,6 @@ void sound_editor_layout(const UiState *ui, SoundEditorLayout *lo) {
     }
     lo->timeline_h = UI_SOUND_BGM_CH * (lo->lane_h + lo->lane_gap) - lo->lane_gap;
     lo->minimap_h = UI_SOUND_MINIMAP_H;
-    lo->minimap_y = lo->timeline_y + lo->timeline_h + UI_UNIT;
     {
         int max_w = ui_ctrl_x(ui) - UI_UNIT - lo->timeline_x;
         max_w = (max_w / UI_UNIT) * UI_UNIT;
@@ -1576,13 +1575,14 @@ void sound_editor_layout(const UiState *ui, SoundEditorLayout *lo) {
     lo->play_w = ((label_width("Play") + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
     lo->pause_w = ((label_width("Pause") + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
     lo->stop_w = ((label_width("Stop") + UI_UNIT - 1) / UI_UNIT) * UI_UNIT;
-    lo->play_x = lo->insp_x;
-    lo->play_y = lo->insp_y;
+    lo->minimap_y = lo->timeline_y + lo->timeline_h + UI_UNIT;
+    lo->play_x = lo->lane_label_x;
+    lo->play_y = lo->minimap_y + lo->minimap_h + UI_UNIT;
     lo->pause_x = lo->play_x + lo->play_w + btn_gap;
     lo->pause_y = lo->play_y;
     lo->stop_x = lo->pause_x + lo->pause_w + btn_gap;
     lo->stop_y = lo->play_y;
-    /* Isolate radios: All on ruler row, channels centered on each lane. */
+    /* Isolate checkboxes: All on ruler row, channels centered on each lane. */
     lo->ch_radio_y0 = lo->timeline_y - lo->ruler_h;
 }
 
@@ -1762,7 +1762,7 @@ int sound_channel_hit(const UiState *ui, int lx, int ly, int *out_ch) {
         return 0;
     }
     sound_editor_layout(ui, &lo);
-    /* All: ruler band; channels: each lane. */
+    /* All: ruler band. Channels: each lane. */
     for (i = 0; i < UI_SOUND_BGM_CH + 1; i++) {
         int solo = i - 1;
         int y;
@@ -1824,7 +1824,7 @@ void ui_sound_init(UiState *ui) {
     s->plane = UI_SOUND_PLANE_BGM;
     s->track_count = 2;
     s->track_idx = 0;
-    s->solo_ch = UI_SOUND_SOLO_ALL;
+    s->ch_mask = (int)UI_SOUND_CH_MASK_ALL;
     s->scroll_x = 0;
     s->zoom_h = UI_SOUND_ZOOM_MIN;
     s->note_solfa = 1;

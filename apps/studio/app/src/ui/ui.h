@@ -83,7 +83,8 @@
 #define UI_SOUND_PLANE_BGM 0
 #define UI_SOUND_PLANE_SFX 1
 #define UI_SOUND_BGM_CH 5 /* Pulse1 Pulse2 Tri Noise DPCM */
-#define UI_SOUND_SOLO_ALL (-1) /* isolate radios: hear all channels */
+#define UI_SOUND_CH_MASK_ALL ((1u << UI_SOUND_BGM_CH) - 1u)
+#define UI_SOUND_SOLO_ALL (-1) /* All checkbox in the isolate column */
 #define UI_SOUND_SNAP_DIV R01_BGM_NOTE_DIV
 #define UI_SOUND_BEAT_TICKS (UI_SOUND_SNAP_DIV / 4) /* quarter note */
 #define UI_SOUND_BAR_TICKS UI_SOUND_SNAP_DIV       /* 4/4 bar */
@@ -406,7 +407,7 @@ typedef struct UiSoundEdit {
     int track_idx;
     int track_count;
     char track_name[UI_SOUND_TRACKS_MAX][24];
-    int solo_ch; /* UI_SOUND_SOLO_ALL, or 0..UI_SOUND_BGM_CH-1 to isolate */
+    int ch_mask; /* bit i audible. UI_SOUND_CH_MASK_ALL = all channels */
     int scroll_x; /* first visible tick */
     int zoom_h;   /* horizontal zoom, UI_SOUND_ZOOM_MIN..MAX */
     int note_solfa; /* 0 letter C D E, 1 solfege Do Re Mi */

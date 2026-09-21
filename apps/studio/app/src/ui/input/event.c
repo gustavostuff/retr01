@@ -1263,7 +1263,15 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
             if (kind == UI_ARM_SOUND_CH) {
                 int ch;
                 if (sound_channel_hit(ui, lx, ly, &ch) && ch == a) {
-                    ui->sound.solo_ch = a;
+                    if (a == UI_SOUND_SOLO_ALL) {
+                        if ((ui->sound.ch_mask & (int)UI_SOUND_CH_MASK_ALL) == (int)UI_SOUND_CH_MASK_ALL) {
+                            ui->sound.ch_mask = 0;
+                        } else {
+                            ui->sound.ch_mask = (int)UI_SOUND_CH_MASK_ALL;
+                        }
+                    } else if (a >= 0 && a < UI_SOUND_BGM_CH) {
+                        ui->sound.ch_mask ^= (1 << a);
+                    }
                     /* Re-apply isolation if preview is running. */
                     if (ui->sound.playing || ui->sound.paused) {
                         int was_paused = ui->sound.paused;

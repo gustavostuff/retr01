@@ -50,7 +50,7 @@ void ui_bgm_sync_to_project(UiState *ui);
 void ui_bgm_apply_from_project(UiState *ui);
 
 /* Flatten track into host cells; returns loop length (>= 1).
- * honor_solo: when non-zero, skip channels other than ui->sound.solo_ch. */
+ * honor_solo: when non-zero, skip channels whose ch_mask bit is clear. */
 int ui_bgm_flatten(const UiState *ui, int track,
                    char cells[R01_BGM_STEPS][R01_BGM_CH][R01_BGM_TOKEN], int honor_solo);
 /* Flatten the selected note strip onto tick 0 of its channel. Returns steps, or 0. */
