@@ -43,6 +43,7 @@ static void load_community_db(void) {
     if (env && env[0]) {
         (void)load_db_file(env);
     }
+    (void)load_db_file("gamecontrollerdb.txt");
     {
         char *base = SDL_GetBasePath();
         if (base) {

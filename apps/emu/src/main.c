@@ -12,6 +12,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+static int env_is_one(const char *name) {
+    const char *e = getenv(name);
+    return e && e[0] == '1' && e[1] == '\0';
+}
+
 static void emu_start_host_bgm(R01eMachine *m) {
     if (!m) {
         return;
@@ -492,6 +497,8 @@ int main(int argc, char **argv) {
     int scale = 2;
     int running = 1;
     int paused = 0;
+    int want_dbg = 1;
+    Uint32 win_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
 #if R01_README_SHOT
     int readme_shot = 0;
 #endif
@@ -504,6 +511,20 @@ int main(int argc, char **argv) {
         return 2;
     }
     path = argv[1];
+
+    {
+        const char *es = getenv("R01E_SCALE");
+        if (es && es[0] == '1') {
+            scale = 1;
+        }
+    }
+    if (env_is_one("R01E_FULLSCREEN")) {
+        win_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+        want_dbg = 0;
+    }
+    if (env_is_one("R01E_NO_DEBUG")) {
+        want_dbg = 0;
+    }
 
     memset(&cpu_chart, 0, sizeof(cpu_chart));
 
@@ -526,9 +547,11 @@ int main(int argc, char **argv) {
 
     /* Hidden until first frame is presented -- avoids empty-window flash. */
     win = SDL_CreateWindow("Retr01 Emulator (Phase 1)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                           R01E_VISIBLE_W * scale, R01E_VISIBLE_H * scale,
-                           SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN);
+                           R01E_VISIBLE_W * scale, R01E_VISIBLE_H * scale, win_flags);
     ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    if (!ren && win) {
+        ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE);
+    }
     if (!win || !ren) {
         fprintf(stderr, "SDL: %s\n", SDL_GetError());
         r01_pad_host_shutdown();
@@ -550,50 +573,54 @@ int main(int argc, char **argv) {
     }
 
     /* One debug window: VRAM 2x2 + world map + pals + CPU budget chart. */
-    SDL_GetWindowPosition(win, &main_x, &main_y);
-    SDL_GetWindowSize(win, &main_w, &main_h);
-    dbg_win = SDL_CreateWindow("Debug", main_x + main_w + 16, main_y, DBG_WIN_W, DBG_WIN_H,
-                               SDL_WINDOW_HIDDEN);
-    dbg_ren = dbg_win ? SDL_CreateRenderer(dbg_win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE) : NULL;
-    if (dbg_ren) {
-#if SDL_VERSION_ATLEAST(2, 0, 18)
-        SDL_RenderSetVSync(dbg_ren, 0);
-#endif
-        SDL_RenderSetLogicalSize(dbg_ren, DBG_WIN_W, DBG_WIN_H);
-        vram_tex = SDL_CreateTexture(dbg_ren, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, DBG_ATLAS_W,
-                                     DBG_ATLAS_H);
-        bg0_tex = SDL_CreateTexture(dbg_ren, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, DBG_ATLAS_W,
-                                    DBG_ATLAS_H);
-        mask_tex = SDL_CreateTexture(dbg_ren, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, DBG_MASK_W,
-                                     DBG_MASK_H);
-        dbg_target = SDL_CreateTexture(dbg_ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, DBG_WIN_W, DBG_WIN_H);
-    }
-    if (!dbg_win || !dbg_ren || !vram_tex || !bg0_tex || !mask_tex) {
-        fprintf(stderr, "retr01_emu: debug window unavailable (%s) -- continuing without it\n",
-                SDL_GetError());
-        if (mask_tex) {
-            SDL_DestroyTexture(mask_tex);
-            mask_tex = NULL;
-        }
-        if (bg0_tex) {
-            SDL_DestroyTexture(bg0_tex);
-            bg0_tex = NULL;
-        }
-        if (vram_tex) {
-            SDL_DestroyTexture(vram_tex);
-            vram_tex = NULL;
-        }
-        if (dbg_target) {
-            SDL_DestroyTexture(dbg_target);
-            dbg_target = NULL;
-        }
+    if (want_dbg) {
+        SDL_GetWindowPosition(win, &main_x, &main_y);
+        SDL_GetWindowSize(win, &main_w, &main_h);
+        dbg_win = SDL_CreateWindow("Debug", main_x + main_w + 16, main_y, DBG_WIN_W, DBG_WIN_H,
+                                   SDL_WINDOW_HIDDEN);
+        dbg_ren = dbg_win ? SDL_CreateRenderer(dbg_win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE)
+                          : NULL;
         if (dbg_ren) {
-            SDL_DestroyRenderer(dbg_ren);
-            dbg_ren = NULL;
+#if SDL_VERSION_ATLEAST(2, 0, 18)
+            SDL_RenderSetVSync(dbg_ren, 0);
+#endif
+            SDL_RenderSetLogicalSize(dbg_ren, DBG_WIN_W, DBG_WIN_H);
+            vram_tex = SDL_CreateTexture(dbg_ren, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, DBG_ATLAS_W,
+                                         DBG_ATLAS_H);
+            bg0_tex = SDL_CreateTexture(dbg_ren, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, DBG_ATLAS_W,
+                                        DBG_ATLAS_H);
+            mask_tex = SDL_CreateTexture(dbg_ren, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, DBG_MASK_W,
+                                         DBG_MASK_H);
+            dbg_target =
+                SDL_CreateTexture(dbg_ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, DBG_WIN_W, DBG_WIN_H);
         }
-        if (dbg_win) {
-            SDL_DestroyWindow(dbg_win);
-            dbg_win = NULL;
+        if (!dbg_win || !dbg_ren || !vram_tex || !bg0_tex || !mask_tex) {
+            fprintf(stderr, "retr01_emu: debug window unavailable (%s) -- continuing without it\n",
+                    SDL_GetError());
+            if (mask_tex) {
+                SDL_DestroyTexture(mask_tex);
+                mask_tex = NULL;
+            }
+            if (bg0_tex) {
+                SDL_DestroyTexture(bg0_tex);
+                bg0_tex = NULL;
+            }
+            if (vram_tex) {
+                SDL_DestroyTexture(vram_tex);
+                vram_tex = NULL;
+            }
+            if (dbg_target) {
+                SDL_DestroyTexture(dbg_target);
+                dbg_target = NULL;
+            }
+            if (dbg_ren) {
+                SDL_DestroyRenderer(dbg_ren);
+                dbg_ren = NULL;
+            }
+            if (dbg_win) {
+                SDL_DestroyWindow(dbg_win);
+                dbg_win = NULL;
+            }
         }
     }
 
