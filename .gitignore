@@ -3,9 +3,6 @@ apps/studio/build/
 apps/emu/build/
 apps/sim/tier-a/build/
 apps/netlist_sim/build/
-raspberry_pi_test/build/
-raspberry_pi_test/retr01_emu
-raspberry_pi_test/gamecontrollerdb.txt
 bin/
 output/
 temp/

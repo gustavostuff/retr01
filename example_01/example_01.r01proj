@@ -3,7 +3,7 @@
   "name": "example_01",
   "default_world": 0,
   "active_world": 0,
-  "active_screen": 115,
+  "active_screen": 112,
   "default_screen": 112,
   "default_pal_row": 0,
   "player_entity": 0,
@@ -143,11 +143,7 @@
     {"type": 1, "x": 63, "y": 932},
     {"type": 1, "x": 87, "y": 926},
     {"type": 1, "x": 108, "y": 929},
-    {"type": 1, "x": 122, "y": 916},
-    {"type": 1, "x": 407, "y": 900},
-    {"type": 1, "x": 446, "y": 882},
-    {"type": 1, "x": 425, "y": 878},
-    {"type": 1, "x": 473, "y": 867}
+    {"type": 1, "x": 122, "y": 916}
   ],
   "warp_entrances": [
   ],
