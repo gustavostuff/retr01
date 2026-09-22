@@ -4,12 +4,10 @@
 #include <stdint.h>
 
 /*
- * Phase 1 BGM in PRG (docs/general/memory.md, docs/general/sound.md).
- * CPU $8000 = PRG+0. Solid collision tables can fill through ~$A500, so the
- * stream blob starts at $B000. Vectors stay at $FFFA.
+ * Compressed BGM lives in the cart image (MAP), not in the 32 KB PRG window.
+ * Blob layout: memory.md. Boot track index is a PRG byte at $80FE.
  *
- * $80FE: boot track, 1-based. 0 = no autoplay.
- * $B000 blob:
+ * Blob:
  *   +0  'B' 'G'
  *   +2  u8 track_count (0..8)
  *   +3  u8 1 = ins table at +36 (0 = payloads start at +36)
@@ -20,16 +18,26 @@
  */
 
 #define R01_PRG_BGM_BOOT_OFF 0x00FEu
-#define R01_PRG_BGM_OFF 0x3000u
-#define R01_PRG_BGM_END 0x7FFAu
-#define R01_PRG_BGM_TRACKS 8u
-#define R01_PRG_BGM_MAGIC0 ((uint8_t)'B')
-#define R01_PRG_BGM_MAGIC1 ((uint8_t)'G')
-#define R01_PRG_BGM_HDR 36u
-#define R01_PRG_BGM_INS_VER 1u
-#define R01_PRG_BGM_INS_CH 5u
-#define R01_PRG_BGM_INS_MAX 3u /* 0 guitar .. 3 flute */
-#define R01_PRG_BGM_INS_BYTES (R01_PRG_BGM_TRACKS * R01_PRG_BGM_INS_CH)
-#define R01_PRG_BGM_HDR_V1 (R01_PRG_BGM_HDR + R01_PRG_BGM_INS_BYTES)
+#define R01_BGM_TRACKS 8u
+#define R01_BGM_MAGIC0 ((uint8_t)'B')
+#define R01_BGM_MAGIC1 ((uint8_t)'G')
+#define R01_BGM_HDR 36u
+#define R01_BGM_INS_VER 1u
+#define R01_BGM_INS_CH 5u
+#define R01_BGM_INS_MAX 3u /* 0 guitar .. 3 flute */
+#define R01_BGM_INS_BYTES (R01_BGM_TRACKS * R01_BGM_INS_CH)
+#define R01_BGM_HDR_V1 (R01_BGM_HDR + R01_BGM_INS_BYTES)
+#define R01_CART_BGM_BLOB_MAX (48u * 1024u)
+
+/* Names used by pack / emu (same values). */
+#define R01_PRG_BGM_TRACKS R01_BGM_TRACKS
+#define R01_PRG_BGM_MAGIC0 R01_BGM_MAGIC0
+#define R01_PRG_BGM_MAGIC1 R01_BGM_MAGIC1
+#define R01_PRG_BGM_HDR R01_BGM_HDR
+#define R01_PRG_BGM_INS_VER R01_BGM_INS_VER
+#define R01_PRG_BGM_INS_CH R01_BGM_INS_CH
+#define R01_PRG_BGM_INS_MAX R01_BGM_INS_MAX
+#define R01_PRG_BGM_INS_BYTES R01_BGM_INS_BYTES
+#define R01_PRG_BGM_HDR_V1 R01_BGM_HDR_V1
 
 #endif

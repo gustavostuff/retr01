@@ -31,13 +31,14 @@ I/O lives in `$7F00-$7FFF` (the 256-byte page immediately before PRG at `$8000`)
 
 ## Cart image (`.retr01`)
 
-Magic **`retr01`**. Byte 6 is `format_ver` **5**. Pointer table names the regions. No mapper. CHR is one global pool.
+Magic **`retr01`**. Byte 6 is `format_ver` **6**. Pointer table names the regions. No mapper. CHR is one global pool.
 
 ```text
 +======================================================================+
 |                         .retr01 CART IMAGE                           |
 +======================================================================+
-| HEADER  |  POINTER TABLE (PRG, pals, CHR, entities, other, worlds)   |
+| HEADER  |  POINTER TABLE (PRG, pals, CHR, entities, other, worlds,   |
+|         |  BGM)                                                      |
 +----------------------------------------------------------------------+
 | GLOBAL PALETTES  256 B (128 B BG + 128 B SPR)                        |
 |  8 rows x 4 pals x 4 kit indices per plane                           |
@@ -45,6 +46,7 @@ Magic **`retr01`**. Byte 6 is `format_ver` **5**. Pointer table names the region
 | PRG  32 KB                                                           |
 |  flat code + vectors at top ($8000-$FFFF window)                     |
 |  entity behavior, spawn tables, collision solids                     |
+|  BGM boot track index at $80FE (stream itself is not in PRG)         |
 +----------------------------------------------------------------------+
 | GLOBAL CHR  128 KB                                                   |
 |  16 BG banks  |  16 SPR banks                                        |
@@ -55,13 +57,16 @@ Magic **`retr01`**. Byte 6 is `format_ver` **5**. Pointer table names the region
 | OTHER SCREENS  (max 16 x 480 B raw or RLE)                           |
 |  title / interstitial / credits. Attrs index global CHR              |
 +----------------------------------------------------------------------+
-| WORLD TABLE  8 x 8 B                                                 |
+| WORLD TABLE  7 x 8 B                                                 |
 +----------------------------------------------------------------------+
-| WORLD BLOB (x8, present worlds only)                                 |
+| WORLD BLOB (x7, present worlds only)                                 |
 |   header 32 B                                                        |
 |   BG1 dir 12 B x present (max 64)  |  BG1 payloads 480 B each        |
 |   BG0 dir 12 B x present (max 16)  |  BG0 payloads 480 B each        |
 |   optional PA after world 0 maps only (one per cart, max 1031 B)     |
++----------------------------------------------------------------------+
+| BGM  compressed FD/FE/FA bytecode + wavetable ids                    |
+|  MAP region. AKWF / DPCM samples stay in MCU-S2 flash, not here      |
 +======================================================================+
 ```
 
@@ -77,7 +82,8 @@ Magic **`retr01`**. Byte 6 is `format_ver` **5**. Pointer table names the region
 | Global CHR | **128 KB** (16 BG then 16 SPR banks) |
 | Entity catalog | Up to **32** defs (see `software-api.md`) |
 | Other-screens blob | Max **16** screens |
-| World table | **8 x 8 B** |
+| World table | **7 x 8 B** |
+| BGM blob | Compressed tracker streams (see `sound.md`) |
 
 ### World blob (per present world)
 
@@ -99,34 +105,48 @@ Entity **spawn locations** live in **PRG** (tables or code calling `spawn_entity
 
 **Screen payload:** **480 B** = 240 tile bytes + 240 attr bytes (**16x15**, **128x120**). Same shape for BG1 and BG0. Attr pack in `video-graphics.md`. Bank bits **0-3** index global CHR.
 
-**Caps:** **8** worlds, **64** present BG1 screens/world, **0..16** BG0 screens/world, **16** BG + **16** SPR banks cart-wide, **32** entity types cart-wide.
+### BGM blob (cart flash)
+
+Compressed tracker bytecode. Not in the 32 KB PRG window. `$80FE` is the 1-based boot track (0 = none). At play, PRG copies that track into system RAM (Host Play / emu do the same from the cart pointer). AKWF cycles and DPCM samples stay in MCU-S2 flash. Opcode details: `sound.md`. Rough play time vs leftover flash is in the budget section below.
+
+| Off | Field |
+| --- | --- |
+| +0 | `'B' 'G'` |
+| +2 | u8 track count (0..8) |
+| +3 | u8 **1** = instrument table at +36 |
+| +4 | u16 off[8] from blob base |
+| +20 | u16 len[8] |
+| +36 | ins[8][5] wavetable ids when byte 3 is 1 |
+| +76 | FD/FE/FA payloads |
+
+**Caps:** **7** worlds, **64** present BG1 screens/world, **0..16** BG0 screens/world, **16** BG + **16** SPR banks cart-wide, **32** entity types cart-wide.
 
 ### Flash budget at max fill
 
-Worst case: all 8 worlds present, every world at 64 BG1 + 16 BG0, all 16+16 CHR packed, 32 maxed entity defs, 16 other screens at raw **480 B**, one maxed `PA` blob, full type directory. RLE and unused slots free more. Spawn locations cost **PRG**, not cart flash.
+Worst case: all 7 worlds present, every world at 64 BG1 + 16 BG0, all 16+16 CHR packed, 32 maxed entity defs, 16 other screens at raw **480 B**, one maxed `PA` blob, full type directory. RLE and unused slots free more. Spawn locations cost **PRG**, not cart flash. Compressed BGM/SFX bytecode uses the leftover flash (outside PRG).
 
 One maxed world blob (maps only) is **39392 B** (~38.5 KB):
 **1 x 32** (header) + **64 x 12** (BG1 dir) + **64 x 480** (BG1 payloads) + **16 x 12** (BG0 dir) + **16 x 480** (BG0 payloads).
 
 | Item | Number of bytes | Kilobytes |
 | --- | ---: | ---: |
-| Header + pointer table + palettes | **308** | ~0.3 |
+| Header + pointer table + palettes | **320** | ~0.3 |
 | PRG (1 x 32768 B) | **32768** | **32.0** |
-| World table (8 worlds x 8 B) | **64** | ~0.1 |
-| World headers (8 worlds x 32 B) | **256** | ~0.3 |
+| World table (7 worlds x 8 B) | **56** | ~0.1 |
+| World headers (7 worlds x 32 B) | **224** | ~0.2 |
 | Global CHR (16 BG + 16 SPR banks) | **131072** | **128.0** |
-| BG1 directories (8 worlds x 64 screens x 12 B) | **6144** | **~6.0** |
-| BG1 payloads (8 worlds x 64 screens x 480 B) | **245760** | **240.0** |
-| BG0 directories (8 worlds x 16 screens x 12 B) | **1536** | **~1.5** |
-| BG0 payloads (8 worlds x 16 screens x 480 B) | **61440** | **60.0** |
+| BG1 directories (7 worlds x 64 screens x 12 B) | **5376** | **~5.3** |
+| BG1 payloads (7 worlds x 64 screens x 480 B) | **215040** | **210.0** |
+| BG0 directories (7 worlds x 16 screens x 12 B) | **1344** | **~1.3** |
+| BG0 payloads (7 worlds x 16 screens x 480 B) | **53760** | **52.5** |
 | Entity defs (32 x 1044 B maxed) | **33408** | **~32.6** |
 | Entity type directory (32 x u16) | **64** | **~0.1** |
 | Player anim `PA` (one cart-wide, 4x8x6 maxed) | **1031** | **~1.0** |
 | Other screens (16 screens x 480 B raw) | **7680** | **~7.5** |
-| **Used (sum of rows above)** | **521531** | **~509.3** |
-| Free (524288 flash - 521531 used) | **2757** | **~2.7** |
+| **Used (sum of rows above)** | **482143** | **~470.8** |
+| Free (524288 flash - 482143 used) | **42145** | **~41.2** |
 
-Absolute max fill **fits** with ~**2.7 KB** free. Real carts stay further under because entity defs are variable-length (only live sprites), screens/CHR are rarely all filled, and RLE can shrink other screens.
+Absolute max fill **fits** with ~**41.2 KB** free. That leftover is cart room for compressed BGM (and SFX bytecode). Rough play time at typical tracker tempo: about **15 minutes** of busy 5-channel BGM, about **25 minutes** at a sparser 3-channel density, closer to **8 minutes** if every sixteenth is a unique row. Sparse loops and unused world or CHR slots go further. AKWF wavetables and DPCM samples stay in MCU-S2 flash. Real carts stay further under because entity defs are variable-length (only live sprites), screens/CHR are rarely all filled, and RLE can shrink other screens.
 
 ### Global CHR
 
@@ -270,8 +290,7 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 | `+$00FB` | `$80FB` | Idle state index (u8, **$FF** = unmapped, freeze state 0 frame 0) |
 | `+$00FC` | `$80FC` | Walk state index (u8, **$FF** = unmapped) |
 | `+$00FD` | `$80FD` | Jump state index (u8, **$FF** = unmapped) |
-| `+$00FE` | `$80FE` | BGM boot track (u8, **0** = none, **1..8** = track) |
-| `+$3000` | `$B000` | BGM blob (`BG` + track count + ins flag + 8-slot off/len + ins[8][5] + FD/FE/FA bytecode). Ends before vectors at `$FFFA` |
+| `+$00FE` | `$80FE` | BGM boot track (u8, **0** = none, **1..8** = track). Stream bytes live in the cart BGM region, not in PRG |
 
 **Spawn instance (6 B, little-endian):** a placed copy of a catalog type (who, facing, world XY). Live pose and the player-anim (`PA`) blob: `software-api.md`.
 
@@ -290,7 +309,7 @@ Full entity defs use the locked pack in `software-api.md` (type directory + Enti
 
 - Flat contiguous 32 KB PRG at `$8000-$FFFF` (no I/O hole)
 - I/O page `$7F00-$7FFF`
-- World caps: **8** worlds / 64 BG1 / 0..16 BG0
+- World caps: **7** worlds / 64 BG1 / 0..16 BG0
 - CHR: **16** BG + **16** SPR banks, cart-global, **128 KB**
 - Other screens: max **16** (shared pool), same global CHR
 - Entity types: **32** global (4 states x 8 frames x 6 sprites)

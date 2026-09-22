@@ -4,7 +4,7 @@ Physical cart and how it ties to the board. **Byte layout of the game image** li
 
 ## Hardware on the cart
 
-- 512 KB flash ROM (whole `.retr01` image: PRG, palettes, worlds, other screens, entities).
+- 512 KB flash ROM (whole `.retr01` image: PRG, palettes, worlds, other screens, entities, compressed BGM).
 - A small EEPROM IC for saves (I2C, **MCU-M** as master).
 - EDAC **395-036-520-201** 2x18 (or RA **395-036-559-212**). Full pinout in `hardware.md`.
 - Cart PCB: **2-layer** (locked). Motherboard initial design is **2-layer** too (see `hardware.md`).
@@ -16,7 +16,8 @@ See `memory.md` for the full map. Short version:
 - Flat **32 KB PRG** (no banking). See `selling-points.md`.
 - Global palette index planes (256 B total).
 - Global CHR: **16** BG + **16** SPR banks (**128 KB**). Playfields, other screens, and the marked player share this pool. Each nametable cell and sprite names its bank. See `memory.md`.
-- Up to **8** world blobs (maps only: up to **64** BG1 + **16** BG0 screens each).
+- Up to **7** world blobs (maps only: up to **64** BG1 + **16** BG0 screens each).
+- Compressed **BGM** bytecode (MAP region, outside the 32 KB PRG window). At max fill that leftover is ~**41 KB**, on the order of **15 minutes** of busy 5-channel tracker BGM. See `memory.md`. AKWF / DPCM samples stay in MCU-S2 flash.
 - Global entity catalog: up to **32** types.
 - Global **other screens**: max **16** total (title / interstitial / credits share the pool).
 - Marked **player** patterns: global **SPR** (any of the 16 banks).

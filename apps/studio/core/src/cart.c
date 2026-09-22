@@ -12,6 +12,7 @@
 #include "r01_custom_logic_scan.h"
 #include "r01_play_camera.h"
 #include "r01_play_physics.h"
+#include "r01_apu_cart.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1049,7 +1050,7 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
     uint8_t wtable[WORLD_TABLE_SIZE];
     uint8_t prg[R01_PRG_BYTES];
     size_t ptr_bytes = (size_t)PTR_TABLE_SIZE;
-    uint32_t off_prg, off_pal_bg, off_pal_spr, off_other, off_chr, off_ents, off_wtable, world_base;
+    uint32_t off_prg, off_pal_bg, off_pal_spr, off_other, off_chr, off_ents, off_wtable, off_bgm, world_base;
     size_t other_len;
     R01PrgCartLayout prg_layout;
     Buf world_blob = {0};
@@ -1145,51 +1146,64 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
     r01_prg_fill_phase1(prg, work, &prg_layout);
     {
         char custom_logic_path[R01_PATH_MAX];
+        uint8_t bgm_buf[R01_CART_BGM_BLOB_MAX];
+        int bgm_n;
         resolve_custom_logic_path(cart_path, custom_logic_path, sizeof(custom_logic_path));
         cart_pack_platformer_prg(prg, custom_logic_path, &work->worlds[0]);
-        r01_bgm_pack_prg(prg, &work->bgm, custom_logic_path);
+        bgm_n = r01_bgm_pack_blob(bgm_buf, (unsigned)sizeof(bgm_buf), &work->bgm);
+        if (bgm_n < 0) {
+            bgm_n = 0;
+        }
+        r01_bgm_pack_boot(prg, bgm_buf, bgm_n, custom_logic_path);
+        off_bgm = world_base + (uint32_t)world_blob.len;
+
+        memset(ptrs, 0, sizeof(ptrs));
+        put_u24(ptrs + 0, off_prg);
+        put_u24(ptrs + 3, R01_PRG_BYTES);
+        put_u24(ptrs + 6, off_pal_bg);
+        put_u24(ptrs + 9, R01_PAL_PLANE_BYTES);
+        put_u24(ptrs + 12, off_pal_spr);
+        put_u24(ptrs + 15, R01_PAL_PLANE_BYTES);
+        put_u24(ptrs + 18, off_chr);
+        put_u24(ptrs + 21, R01_CART_GLOBAL_CHR_BYTES);
+        put_u24(ptrs + 24, off_ents);
+        put_u24(ptrs + 27, (uint32_t)entity_blob.len);
+        put_u24(ptrs + 30, off_other);
+        put_u24(ptrs + 33, (uint32_t)other_len);
+        put_u24(ptrs + 36, off_wtable);
+        put_u24(ptrs + 39, WORLD_TABLE_SIZE);
+        put_u24(ptrs + 42, off_bgm);
+        put_u24(ptrs + 45, (uint32_t)bgm_n);
+
+        if (buf_append(&cart, hdr, HDR_SIZE) != 0 || buf_append(&cart, ptrs, ptr_bytes) != 0 ||
+            append_pal_plane(&cart, work->global_pal_bg) != 0 ||
+            append_pal_plane(&cart, work->global_pal_spr) != 0 || buf_append(&cart, prg, R01_PRG_BYTES) != 0 ||
+            buf_append(&cart, global_chr, R01_CART_GLOBAL_CHR_BYTES) != 0 ||
+            buf_append(&cart, entity_blob.data ? entity_blob.data : (const uint8_t *)"", entity_blob.len) != 0 ||
+            buf_append(&cart, other_blob.data, other_len) != 0) {
+            goto oom;
+        }
+
+        memset(wtable, 0, sizeof(wtable));
+        put_u8(wtable + 0, 1);
+        put_u24(wtable + 2, off_wtable + WORLD_TABLE_SIZE);
+        put_u24(wtable + 5, (uint32_t)world_blob.len);
+
+        if (buf_append(&cart, wtable, WORLD_TABLE_SIZE) != 0 ||
+            buf_append(&cart, world_blob.data, world_blob.len) != 0) {
+            goto oom;
+        }
+        if (bgm_n > 0 && buf_append(&cart, bgm_buf, (size_t)bgm_n) != 0) {
+            goto oom;
+        }
+        free(world_blob.data);
+        free(other_blob.data);
+        free(entity_blob.data);
+        free(work);
+        *out = cart.data;
+        *out_len = cart.len;
+        return 0;
     }
-
-    memset(ptrs, 0, sizeof(ptrs));
-    put_u24(ptrs + 0, off_prg);
-    put_u24(ptrs + 3, R01_PRG_BYTES);
-    put_u24(ptrs + 6, off_pal_bg);
-    put_u24(ptrs + 9, R01_PAL_PLANE_BYTES);
-    put_u24(ptrs + 12, off_pal_spr);
-    put_u24(ptrs + 15, R01_PAL_PLANE_BYTES);
-    put_u24(ptrs + 18, off_chr);
-    put_u24(ptrs + 21, R01_CART_GLOBAL_CHR_BYTES);
-    put_u24(ptrs + 24, off_ents);
-    put_u24(ptrs + 27, (uint32_t)entity_blob.len);
-    put_u24(ptrs + 30, off_other);
-    put_u24(ptrs + 33, (uint32_t)other_len);
-    put_u24(ptrs + 36, off_wtable);
-    put_u24(ptrs + 39, WORLD_TABLE_SIZE);
-
-    if (buf_append(&cart, hdr, HDR_SIZE) != 0 || buf_append(&cart, ptrs, ptr_bytes) != 0 ||
-        append_pal_plane(&cart, work->global_pal_bg) != 0 ||
-        append_pal_plane(&cart, work->global_pal_spr) != 0 || buf_append(&cart, prg, R01_PRG_BYTES) != 0 ||
-        buf_append(&cart, global_chr, R01_CART_GLOBAL_CHR_BYTES) != 0 ||
-        buf_append(&cart, entity_blob.data ? entity_blob.data : (const uint8_t *)"", entity_blob.len) != 0 ||
-        buf_append(&cart, other_blob.data, other_len) != 0) {
-        goto oom;
-    }
-
-    memset(wtable, 0, sizeof(wtable));
-    put_u8(wtable + 0, 1);
-    put_u24(wtable + 2, off_wtable + WORLD_TABLE_SIZE);
-    put_u24(wtable + 5, (uint32_t)world_blob.len);
-
-    if (buf_append(&cart, wtable, WORLD_TABLE_SIZE) != 0 || buf_append(&cart, world_blob.data, world_blob.len) != 0) {
-        goto oom;
-    }
-    free(world_blob.data);
-    free(other_blob.data);
-    free(entity_blob.data);
-    free(work);
-    *out = cart.data;
-    *out_len = cart.len;
-    return 0;
 
 oom:
     free(work);

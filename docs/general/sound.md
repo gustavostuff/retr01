@@ -13,7 +13,7 @@ Silicon and pins: `hardware.md`. Soft map: `memory.md`. SPI / VBlank: `ic-comms-
 | Analog out | MCU-S2 **TCA0 WO1** on **PF1** (`AUDIO_PWM`) into RC / amp / RCA **J8**. On-chip DAC on PD6 is unused (SPI1 ALT1 SCK owns PD6) |
 
 ```text
-  Cart PRG (BGM / SFX bytecode)
+  Cart BGM region (FD/FE/FA bytecode)
         |
         v
   W65C02S  NMI ~60 Hz
@@ -61,7 +61,7 @@ Mixing on S2 keeps **8** concurrent voices. SFX never steal BGM notes.
 | 4 | 3 | Noise | Hats, cymbals, synth snares. Percussion catalog later |
 | 5 | 4 | DPCM | 1-bit delta PCM (kicks, voice, hits). Percussion catalog later |
 
-BGM 1-3 mix a per-channel single-cycle from Adventure Kid AKWF (64 points, CC0): acoustic guitar, electric guitar, piano, flute. Note-on retriggers the cycle and a decaying envelope (flute holds longer). Mailbox byte `[3]` for those voices stays pulse / pulse / triangle so the 2-bit wave field is unchanged. Host mix maps voices 0-2 onto the wavetable ids packed with the track at `$B000` and honors volume.
+BGM 1-3 mix a per-channel single-cycle from Adventure Kid AKWF (64 points, CC0): acoustic guitar, electric guitar, piano, flute. Note-on retriggers the cycle and a decaying envelope (flute holds longer). Mailbox byte `[3]` for those voices stays pulse / pulse / triangle so the 2-bit wave field is unchanged. Host mix maps voices 0-2 onto the wavetable ids packed with the track in the cart BGM region and honors volume.
 
 ### SFX, channels 6-8 (indices 5-7)
 
@@ -94,9 +94,11 @@ The 6502 is too slow to stream sample bytes at the decode rate without stalling 
 
 Sample IDs are **0..15** (low nibble of `7X`). Examples: `01` kick, `02` snare, `03` a short voice clip.
 
-## Tracker bytecode (PRG)
+## Tracker bytecode
 
-Cart ROM holds compressed **hex** streams. **One note byte = one pitch.** The 6502 expands a stream into the 8x4 window. This layer never runs on S2.
+Cart flash holds compressed **hex** streams in the **BGM** region (outside the 32 KB PRG window). **One note byte = one pitch.** At play, PRG copies the selected track into system RAM (or reads it through MAP). The 6502 expands that stream into the 8x4 window. This layer never runs on S2. AKWF cycles and DPCM sample payloads stay in MCU-S2 flash.
+
+A max-fill cart leaves ~**41 KB** for this blob (`memory.md`). That is roughly **15 minutes** of busy 5-channel BGM, or about **25 minutes** at a sparser 3-channel density. Unique sixteenth-note rows land closer to **8 minutes**.
 
 ### Note byte
 
@@ -200,8 +202,8 @@ Host Play ticks this same tracker in C (`apps/common/r01_apu_tracker.c`) and app
 | MCU-S2 FW | 8x4 mix to PWM. DPCM PROGMEM decode still filling in |
 | Host mix | PC speaker mixes the `$7F40` window (`r01_apu_mix`). BGM 1-3 use a per-channel AKWF table plus decay. DPCM IDs use short host stand-in streams |
 | 6502 PRG tracker | NMI dual-stream. Host C MVP exists. Cart ASM still filling in |
-| Studio Audio tab | BGM grid editor in `.r01proj`. Export packs bytecode and per-channel wavetable ids at `$B000`. Timeline Play/Stop encodes FD/FE/FA and mixes the window |
-| Host Play / emu | Boot track from PRG `$80FE`. Bytecode and wavetable ids at `$B000`. Tracker fills `$7F40`. `r01_sfx_play` queues voices 6-8 |
+| Studio Audio tab | BGM grid editor in `.r01proj`. Export packs bytecode and per-channel wavetable ids into the cart BGM region. Timeline Play/Stop encodes FD/FE/FA and mixes the window |
+| Host Play / emu | Boot track from PRG `$80FE`. Bytecode and wavetable ids in the cart BGM region. Tracker fills `$7F40`. `r01_sfx_play` queues voices 6-8 |
 
 Bring-up Tier **H** only needs a real `$7F40` beep through S2 PWM. Full tracker depth can wait on hardware.
 
@@ -213,7 +215,7 @@ Bring-up Tier **H** only needs a real `$7F40` beep through S2 PWM. Full tracker 
 - S2 process / PWM pin: `../ic_behavior/AVR128DB28.md`
 - Bring-up: `../bringup/tier-h-pads-audio.md`
 - Window packing: `../../apps/common/fw/r01_apu_window.h`
-- PRG BGM blob: `../../apps/common/r01_apu_cart.h`
+- Cart BGM blob: `../../apps/common/r01_apu_cart.h`
 - FD expand / NMI tracker (host): `../../apps/common/r01_apu_fd.h`, `../../apps/common/r01_apu_tracker.h`
 - Host mix of the window: `../../apps/common/r01_apu_mix.h`
 - Guitar / EGuitar / Piano / Flute cycles: Adventure Kid AKWF_aguitar_0001, AKWF_eguitar_0001, AKWF_piano_0001, AKWF_flute_0001 (CC0)

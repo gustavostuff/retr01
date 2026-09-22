@@ -306,7 +306,7 @@ static int write_headers(const char *inc_dir, char *err_buf, size_t err_cap) {
     if (write_text(path,
                    "#ifndef R01_BGM_H\n#define R01_BGM_H\n\n"
                    "typedef struct R01GameCtx R01GameCtx;\n"
-                   "/* Start looping BGM track (1-based). Host Play reads packed PRG at $B000. */\n"
+                   "/* Start looping BGM track (1-based). Host Play reads the cart BGM region. */\n"
                    "void r01_bgm_play(R01GameCtx *ctx, int track);\n"
                    "void r01_bgm_stop(R01GameCtx *ctx);\n\n"
                    "#endif\n",
@@ -1123,8 +1123,7 @@ static int write_asm_tree(const char *asm_dir, const R01Project *p, const R01Wor
                    "PLAYER_ANIM_IDLE = $80FB\n"
                    "PLAYER_ANIM_WALK = $80FC\n"
                    "PLAYER_ANIM_JUMP = $80FD\n"
-                   "BGM_BOOT         = $80FE\n"
-                   "BGM_BASE         = $B000\n",
+                   "BGM_BOOT         = $80FE\n",
                    err_buf, err_cap) != 0) {
         return -1;
     }

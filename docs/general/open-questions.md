@@ -94,7 +94,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 ### 18. Global CHR + catalogs (2026-09-20)
 
-**Resolved:** **8** worlds. **64** BG1 / **16** BG0 present screens per world. CHR is **16 BG + 16 SPR** banks cart-wide (**128 KB**). One global entity catalog, **32** types, **4 x 8 x 6**, maxed def **1044 B**. Attr bits 0-3 = bank 0-15, 4-5 = pal, 6-7 = H/V flip. Collision solids are a bank+tile list in RAM. Tile anim is PRG. Passive cart, no mapper. See `memory.md`, `video-graphics.md`, `software-api.md`, `selling-points.md`.
+**Resolved:** **7** worlds. **64** BG1 / **16** BG0 present screens per world. CHR is **16 BG + 16 SPR** banks cart-wide (**128 KB**). One global entity catalog, **32** types, **4 x 8 x 6**, maxed def **1044 B**. Attr bits 0-3 = bank 0-15, 4-5 = pal, 6-7 = H/V flip. Collision solids are a bank+tile list in RAM. Tile anim is PRG. Passive cart, no mapper. Compressed BGM lives in cart flash outside PRG. See `memory.md`, `video-graphics.md`, `software-api.md`, `sound.md`, `selling-points.md`.
 
 ### 19. Collision solids packing
 
@@ -103,6 +103,10 @@ Open items and close criteria. A landed decision folds into the matching doc.
 ### 20. Instance + PA byte schemas
 
 **Resolved:** An **instance** is a placed copy of a catalog type (spawn row in PRG, live record in RAM). **`PA`** is a Host Play dump of the marked player's drawable frames. Spawn records are **6 B** in PRG (`$81C0` count, `$81C1` table). Live RAM instances are **12 B**. One cart-wide **`PA`** blob (max **1031 B**) after world-0 maps. Type directory is **64 B**. See `software-api.md`, `memory.md`.
+
+### 21. Cart BGM region
+
+**Resolved:** Compressed BGM (FD/FE/FA plus wavetable ids) lives in the cart image as its own MAP region. PRG `$80FE` is the boot track index only. AKWF cycles and DPCM samples stay in MCU-S2 flash. World cap is **7**. Max-fill leftover ~**41 KB** is about **15 minutes** of busy 5-channel BGM. See `memory.md`, `sound.md`.
 
 ## Decision log
 
@@ -147,3 +151,4 @@ Open items and close criteria. A landed decision folds into the matching doc.
 | 2026-09-21 | Collision solids | Bank+tile pattern list in RAM `$0200` (PRG `$8700`). Pal/flip ignored. Author `r01_solid_pattern_add` in `custom_logic.c`. See `memory.md`. |
 | 2026-09-21 | Author tick SDK | `r01_pad_down` / `r01_player_moving_x` / `r01_player_set_move_mul` / `r01_player_anim_set_frame_delay` from `r01_custom_on_tick`. Host Play loads `C/r01_custom.so`. See `software-api.md`. |
 | 2026-09-20 | Instance + PA | PRG spawn 6 B. RAM live 12 B. One `PA` blob cart-wide (max 1031 B). See `software-api.md`. |
+| 2026-09-22 | Worlds / BGM | **7** worlds. Compressed BGM in cart flash (MAP), outside PRG. `$80FE` boot index only. See `memory.md`, `sound.md`. |

@@ -100,6 +100,8 @@ int r01e_cart_load_mem(R01eCart *out, const uint8_t *img, size_t len, char *err,
     out->len_other = get_u24(ptrs + 33);
     out->off_world_table = get_u24(ptrs + 36);
     out->len_world_table = get_u24(ptrs + 39);
+    out->off_bgm = get_u24(ptrs + 42);
+    out->len_bgm = get_u24(ptrs + 45);
     out->off_credits = 0;
     out->len_credits = 0;
     if (out->len_prg == 0 || !r01e_cart_ptr(out, out->off_prg, out->len_prg > R01E_PRG_BYTES ? R01E_PRG_BYTES : out->len_prg)) {

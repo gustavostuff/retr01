@@ -53,6 +53,8 @@ TEST_MAIN() {
     EXPECT(reset == 0x8000u, "reset vector $8000");
 
     {
+        uint8_t blob[R01_CART_BGM_BLOB_MAX];
+        int nblob;
         FILE *f = fopen("test_bgm_logic.c", "w");
         R01BgmData bgm;
         uint16_t off;
@@ -71,20 +73,21 @@ TEST_MAIN() {
             fputs("void r01_custom_on_init(R01GameCtx *ctx) {\n    r01_bgm_play(ctx, 1);\n}\n", f);
             fclose(f);
         }
-        r01_bgm_pack_prg(prg, &bgm, "test_bgm_logic.c");
+        nblob = r01_bgm_pack_blob(blob, (unsigned)sizeof(blob), &bgm);
+        EXPECT(nblob >= (int)R01_PRG_BGM_HDR_V1, "blob length");
+        r01_bgm_pack_boot(prg, blob, nblob, "test_bgm_logic.c");
         EXPECT(prg[R01_PRG_BGM_BOOT_OFF] == 1, "boot track 1 from r01_bgm_play");
-        EXPECT(prg[R01_PRG_BGM_OFF] == R01_PRG_BGM_MAGIC0 && prg[R01_PRG_BGM_OFF + 1] == R01_PRG_BGM_MAGIC1,
-               "BG magic");
-        EXPECT(prg[R01_PRG_BGM_OFF + 2] == 1, "packed track count");
-        EXPECT(prg[R01_PRG_BGM_OFF + 3] == R01_PRG_BGM_INS_VER, "ins table present");
-        EXPECT(prg[R01_PRG_BGM_OFF + R01_PRG_BGM_HDR] == R01_BGM_INS_PIANO, "track 1 ch1 piano");
-        EXPECT(prg[R01_PRG_BGM_OFF + R01_PRG_BGM_HDR + 2] == R01_BGM_INS_FLUTE, "track 1 ch3 flute");
-        off = (uint16_t)prg[R01_PRG_BGM_OFF + 4] | ((uint16_t)prg[R01_PRG_BGM_OFF + 5] << 8);
-        len = (uint16_t)prg[R01_PRG_BGM_OFF + 20] | ((uint16_t)prg[R01_PRG_BGM_OFF + 21] << 8);
+        EXPECT(blob[0] == R01_PRG_BGM_MAGIC0 && blob[1] == R01_PRG_BGM_MAGIC1, "BG magic");
+        EXPECT(blob[2] == 1, "packed track count");
+        EXPECT(blob[3] == R01_PRG_BGM_INS_VER, "ins table present");
+        EXPECT(blob[R01_PRG_BGM_HDR] == R01_BGM_INS_PIANO, "track 1 ch1 piano");
+        EXPECT(blob[R01_PRG_BGM_HDR + 2] == R01_BGM_INS_FLUTE, "track 1 ch3 flute");
+        off = (uint16_t)blob[4] | ((uint16_t)blob[5] << 8);
+        len = (uint16_t)blob[20] | ((uint16_t)blob[21] << 8);
         EXPECT(off == R01_PRG_BGM_HDR_V1, "payload starts after ins table");
         EXPECT(len > 0, "payload length");
-        EXPECT(prg[R01_PRG_BGM_OFF + off] == R01_APU_FD_OP, "FD stream");
-        r01_bgm_pack_prg(prg, &bgm, NULL);
+        EXPECT(blob[off] == R01_APU_FD_OP, "FD stream");
+        r01_bgm_pack_boot(prg, blob, nblob, NULL);
         EXPECT(prg[R01_PRG_BGM_BOOT_OFF] == 0, "no custom_logic means no autoplay");
         reset = (uint16_t)prg[0x7FFC] | ((uint16_t)prg[0x7FFD] << 8);
         EXPECT(reset == 0x8000u, "vectors survive BGM pack");

@@ -138,7 +138,7 @@ TEST_MAIN() {
             {
                 uint8_t fmt = 0;
                 EXPECT(fread(&fmt, 1, 1, f) == 1, "read format_ver");
-                EXPECT(fmt == R01_CART_FORMAT_VER, "cart format_ver 5");
+                EXPECT(fmt == R01_CART_FORMAT_VER, "cart format_ver 6");
             }
             EXPECT(fseek(f, prg_off + (long)PRG_PLAY_SPAWN_CELL, SEEK_SET) == 0, "seek prg spawn");
             EXPECT(fread(prg_spawn, 1, 1, f) == 1, "read prg spawn");

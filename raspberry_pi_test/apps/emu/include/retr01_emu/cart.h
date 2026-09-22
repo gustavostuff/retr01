@@ -28,6 +28,8 @@ typedef struct R01eCart {
     uint32_t len_world_table;
     uint32_t off_credits;
     uint32_t len_credits;
+    uint32_t off_bgm;
+    uint32_t len_bgm;
 } R01eCart;
 
 typedef struct R01eWorldView {

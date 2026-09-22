@@ -407,7 +407,10 @@ int r01e_machine_apu_tracker_start_cart(R01eMachine *m) {
     if (!prg || prg_len < R01E_PRG_BYTES) {
         return 0;
     }
-    blob = prg + R01_PRG_BGM_OFF;
+    blob = r01e_cart_ptr(&m->cart, m->cart.off_bgm, m->cart.len_bgm);
+    if (!blob || m->cart.len_bgm < R01_PRG_BGM_HDR) {
+        return 0;
+    }
     if (blob[0] != R01_PRG_BGM_MAGIC0 || blob[1] != R01_PRG_BGM_MAGIC1) {
         return 0;
     }
@@ -434,7 +437,7 @@ int r01e_machine_apu_tracker_start_cart(R01eMachine *m) {
     if (off < payload_min || len < 1u) {
         return 0;
     }
-    if ((unsigned)off + (unsigned)len > (unsigned)(R01_PRG_BGM_END - R01_PRG_BGM_OFF)) {
+    if ((unsigned)off + (unsigned)len > m->cart.len_bgm) {
         return 0;
     }
     if (len > R01E_APU_BYTECODE_MAX) {

@@ -72,20 +72,16 @@ int r01_bgm_flatten_track(const R01BgmData *bgm, int track,
     return steps;
 }
 
-void r01_bgm_pack_prg(uint8_t prg[R01_PRG_BYTES], const R01BgmData *bgm, const char *custom_logic_path) {
-    uint8_t *blob;
+int r01_bgm_pack_blob(uint8_t *blob, unsigned cap, const R01BgmData *bgm) {
     unsigned o;
     int t;
     int tc;
-    int boot = 0;
     uint16_t off[R01_PRG_BGM_TRACKS];
     uint16_t len[R01_PRG_BGM_TRACKS];
-    if (!prg) {
-        return;
+    if (!blob || cap < R01_PRG_BGM_HDR_V1) {
+        return -1;
     }
-    prg[R01_PRG_BGM_BOOT_OFF] = 0;
-    blob = prg + R01_PRG_BGM_OFF;
-    memset(blob, 0, (size_t)(R01_PRG_BGM_END - R01_PRG_BGM_OFF));
+    memset(blob, 0, cap);
     blob[0] = R01_PRG_BGM_MAGIC0;
     blob[1] = R01_PRG_BGM_MAGIC1;
     blob[3] = R01_PRG_BGM_INS_VER;
@@ -117,9 +113,7 @@ void r01_bgm_pack_prg(uint8_t prg[R01_PRG_BYTES], const R01BgmData *bgm, const c
         char cells[R01_BGM_FD_STEPS_MAX][R01_BGM_FD_CH][R01_BGM_FD_TOKEN];
         int steps;
         int n;
-        unsigned cap;
         steps = r01_bgm_flatten_track(bgm, t, cells);
-        cap = (unsigned)(R01_PRG_BGM_END - R01_PRG_BGM_OFF);
         if (o >= cap) {
             break;
         }
@@ -137,8 +131,33 @@ void r01_bgm_pack_prg(uint8_t prg[R01_PRG_BYTES], const R01BgmData *bgm, const c
         put_u16_le(blob + 4 + (unsigned)t * 2u, off[t]);
         put_u16_le(blob + 20 + (unsigned)t * 2u, len[t]);
     }
+    return (int)o;
+}
+
+void r01_bgm_pack_boot(uint8_t prg[R01_PRG_BYTES], const uint8_t *blob, int blob_len,
+                       const char *custom_logic_path) {
+    int boot = 0;
+    int tc;
+    uint16_t tlen;
+    if (!prg) {
+        return;
+    }
+    prg[R01_PRG_BGM_BOOT_OFF] = 0;
+    if (!blob || blob_len < (int)R01_PRG_BGM_HDR_V1) {
+        return;
+    }
+    tc = (int)blob[2];
+    if (tc < 0) {
+        tc = 0;
+    }
+    if (tc > (int)R01_PRG_BGM_TRACKS) {
+        tc = (int)R01_PRG_BGM_TRACKS;
+    }
     if (custom_logic_path && r01_custom_logic_scan_bgm_play(custom_logic_path, &boot) == 0 && boot >= 1 &&
-        boot <= tc && len[boot - 1] > 0u) {
-        prg[R01_PRG_BGM_BOOT_OFF] = (uint8_t)boot;
+        boot <= tc) {
+        tlen = (uint16_t)blob[20 + (boot - 1) * 2] | ((uint16_t)blob[21 + (boot - 1) * 2] << 8);
+        if (tlen > 0u) {
+            prg[R01_PRG_BGM_BOOT_OFF] = (uint8_t)boot;
+        }
     }
 }

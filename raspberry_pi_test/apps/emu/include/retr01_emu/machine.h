@@ -57,7 +57,7 @@ int r01e_machine_init_mem(R01eMachine *m, const uint8_t *img, size_t len, char *
 void r01e_machine_shutdown(R01eMachine *m);
 void r01e_machine_reset(R01eMachine *m);
 
-/* Start NMI tracker from packed PRG BGM blob ($B000) and boot byte ($80FE). */
+/* Start NMI tracker from the cart BGM region and boot byte ($80FE). */
 int r01e_machine_apu_tracker_start_cart(R01eMachine *m);
 /* Load a Studio bgm_track bin (tests / Audio tab dump). Speaker mixes $7F40. */
 int r01e_machine_apu_tracker_start(R01eMachine *m, const char *bgm_bin_path);

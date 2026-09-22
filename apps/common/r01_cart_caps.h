@@ -7,9 +7,9 @@
  * SoT: docs/general/memory.md, video-graphics.md. */
 
 #define R01_CART_MAGIC "retr01"
-#define R01_CART_FORMAT_VER 5
+#define R01_CART_FORMAT_VER 6
 #define R01_CART_HDR_BYTES 16u
-#define R01_CART_PTR_TABLE_BYTES 42u /* 7 x (u24 off, u24 len) */
+#define R01_CART_PTR_TABLE_BYTES 48u /* 8 x (u24 off, u24 len) */
 #define R01_CART_FLASH_BYTES (512u * 1024u)
 #define R01_PRG_BYTES 32768u
 
@@ -22,7 +22,7 @@
 #define R01_SCREEN_PAYLOAD 480
 #define R01_CART_SCREEN_PAYLOAD ((uint32_t)R01_SCREEN_PAYLOAD)
 
-#define R01_MAX_WORLDS 8
+#define R01_MAX_WORLDS 7
 #define R01_PHASE1_WORLDS 1 /* emu Host Play: world 0 only */
 #define R01_GRID_MAX 16
 #define R01_MAX_PRESENT_SCREENS 64
