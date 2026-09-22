@@ -1,6 +1,6 @@
 <img src="img/v_01.png" alt="Logo V1" />
 
-Retr01 is an MCU-assisted 8-bit game system built for arcade and console setups. It is also an emulator and a studio for making games and content.
+Retr01 is an MCU-assisted 8-bit game system for arcade and console setups, plus an emulator and a studio for making games and content.
 
 Hardware is still in development, and the software is being built around that design.
 
@@ -14,19 +14,19 @@ Hardware is still in development, and the software is being built around that de
 
 The playfield is 128x120 with chunky pixels, NES-style color limits, and two real background layers. The result is a sharp image with a simple hardware pipeline.
 
-Architecturali speaking, the graphics are based in worlds and screens: up to 7 worlds, 64 screens each (512 _TV screens_ of real state). That, plus the dual BG layer feature, can render visually rich and immersive experiences.
+Architecturally speaking, the graphics are based on worlds and screens: up to 7 worlds, 64 screens each (448 _TV screens_ of real state). Together with dual background layers, that can make for visually rich, immersive experiences.
 
-Characters and objects are entities made from states, frames and sprites (a _state_ being things like idle, running, crouching, etc). Also, hardware draws the background layers and sprites so PRG can focus mostly on game logic. More details in [video-graphics.md](docs/general/video-graphics.md).
+Characters and objects are entities made from states, frames, and sprites (a _state_ being something like idle, running, or crouching). Hardware draws the background layers and sprites so PRG can focus mostly on game logic. More details in [video-graphics.md](docs/general/video-graphics.md).
 
 ## Audio
 
-Retr01 uses 8 channels shared between music and effects. Five are reserved for the soundtrack and three for effects so a jump or shot does not mute the song. This was intentionaly designed to be work differently, compared to the NES.
+Retr01 uses 8 channels shared between music and effects. Five are reserved for the soundtrack and three for effects so a jump or shot does not mute the song. This was designed to work differently from the NES.
 
-The game program writes notes and a helper chip (and AVR128DB28) mixes them to analog output. See [sound.md](docs/general/sound.md).
+The game program writes notes and a helper chip (an AVR128DB28) mixes them to analog output. See [sound.md](docs/general/sound.md).
 
 ## Hardware
 
-The design uses one compact through-hole board for both home-console and arcade cabinet builds. The same PCB can be populated to be a console (by using 3.5mm connectors for game pads) or an arcade board (using male pin headers for microswitch-based sticks and buttons).
+The design uses one compact through-hole board for both home-console and arcade cabinet builds. The same PCB can be populated as a console (using 3.5mm connectors for gamepads) or as an arcade board (using male pin headers for microswitch-based sticks and buttons).
 
 A 6502 runs the game logic, while a few helper chips and small glue logic handle video, inputs, saves, and audio mixing. Output is dual sync RGB (RGBS and RGBHV) and composite. The cartridge is a simple memory pack containing program data, tiles, and save data.
 
