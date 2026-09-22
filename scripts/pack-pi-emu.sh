@@ -154,7 +154,12 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PORTS="/media/usb1/roms/ports"
 DEST="$PORTS/Retr01_test"
+REPO_CART="$HERE/../example_01/example_01.retr01"
 cd "$HERE"
+if [[ -f "$REPO_CART" ]]; then
+  install -m644 "$REPO_CART" "$HERE/example_01.retr01"
+fi
+[[ -f "$HERE/example_01.retr01" ]] || { echo "error: missing $HERE/example_01.retr01" >&2; exit 1; }
 JOBS="$(nproc 2>/dev/null || echo 2)"
 cmake -S apps/emu -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --target retr01_emu -j"$JOBS"
@@ -200,7 +205,7 @@ Logical playfield is **128x120**. Host FB is hardware **2x** (**256x240**). The 
 ./build.sh
 ```
 
-Build depends on CMake, a C compiler, pkg-config, and SDL2 development files (`libsdl2-dev` on Debian). `./build.sh` compiles the ARM binary and installs it with the cart and gamepad DB to `/media/usb1/roms/ports/Retr01_test/`, plus the Ports launcher at `/media/usb1/roms/ports/retr01.sh`.
+Build depends on CMake, a C compiler, pkg-config, and SDL2 development files (`libsdl2-dev` on Debian). `./build.sh` compiles the ARM binary and installs it with the cart and gamepad DB to `/media/usb1/roms/ports/Retr01_test/`, plus the Ports launcher at `/media/usb1/roms/ports/retr01.sh`. When this tree sits next to `example_01/` in a full repo checkout, `./build.sh` copies `example_01.retr01` into this folder first.
 
 ## RGB-Pi OS4 Ports
 

@@ -10,7 +10,7 @@ Logical playfield is **128x120**. Host FB is hardware **2x** (**256x240**). The 
 ./build.sh
 ```
 
-Build depends on CMake, a C compiler, pkg-config, and SDL2 development files (`libsdl2-dev` on Debian). `./build.sh` compiles the ARM binary and installs it with the cart and gamepad DB to `/media/usb1/roms/ports/Retr01_test/`, plus the Ports launcher at `/media/usb1/roms/ports/retr01.sh`.
+Build depends on CMake, a C compiler, pkg-config, and SDL2 development files (`libsdl2-dev` on Debian). `./build.sh` compiles the ARM binary and installs it with the cart and gamepad DB to `/media/usb1/roms/ports/Retr01_test/`, plus the Ports launcher at `/media/usb1/roms/ports/retr01.sh`. When this tree sits next to `example_01/` in a full repo checkout, `./build.sh` copies `example_01.retr01` into this folder first.
 
 ## RGB-Pi OS4 Ports
 

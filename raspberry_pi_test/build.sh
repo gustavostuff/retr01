@@ -4,7 +4,12 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PORTS="/media/usb1/roms/ports"
 DEST="$PORTS/Retr01_test"
+REPO_CART="$HERE/../example_01/example_01.retr01"
 cd "$HERE"
+if [[ -f "$REPO_CART" ]]; then
+  install -m644 "$REPO_CART" "$HERE/example_01.retr01"
+fi
+[[ -f "$HERE/example_01.retr01" ]] || { echo "error: missing $HERE/example_01.retr01" >&2; exit 1; }
 JOBS="$(nproc 2>/dev/null || echo 2)"
 cmake -S apps/emu -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --target retr01_emu -j"$JOBS"
