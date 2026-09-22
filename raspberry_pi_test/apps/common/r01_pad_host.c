@@ -40,10 +40,6 @@ static void load_community_db(void) {
 #ifdef R01_REPO_ROOT
     (void)load_db_file(R01_REPO_ROOT "/apps/common/gamecontrollerdb.txt");
 #endif
-    env = SDL_getenv("SDL_GAMECONTROLLERCONFIG_FILE");
-    if (env && env[0]) {
-        (void)load_db_file(env);
-    }
     (void)load_db_file("gamecontrollerdb.txt");
     {
         char *base = SDL_GetBasePath();
@@ -52,6 +48,22 @@ static void load_community_db(void) {
             snprintf(path, sizeof(path), "%sgamecontrollerdb.txt", base);
             (void)load_db_file(path);
             SDL_free(base);
+        }
+    }
+    env = SDL_getenv("SDL_GAMECONTROLLERCONFIG_FILE");
+    if (env && env[0]) {
+        (void)load_db_file(env);
+    }
+    env = SDL_getenv("SDL_GAMECONTROLLERCONFIG");
+    if (env && env[0]) {
+        char *copy = SDL_strdup(env);
+        if (copy) {
+            char *line = strtok(copy, "\n");
+            while (line) {
+                SDL_GameControllerAddMapping(line);
+                line = strtok(NULL, "\n");
+            }
+            SDL_free(copy);
         }
     }
 }
