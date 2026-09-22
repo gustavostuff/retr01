@@ -93,17 +93,17 @@ static void pack_hitbox_rel(int origin_x, int origin_y, int box_x, int box_y, in
     int y = box_y - origin_y;
     int w = box_w > 0 ? box_w : R01_PLAY_PLAYER_W;
     int h = box_h > 0 ? box_h : R01_PLAY_PLAYER_H;
-    if (x < 0) {
-        x = 0;
+    if (x < -128) {
+        x = -128;
     }
-    if (y < 0) {
-        y = 0;
+    if (x > 127) {
+        x = 127;
     }
-    if (x > 255) {
-        x = 255;
+    if (y < -128) {
+        y = -128;
     }
-    if (y > 255) {
-        y = 255;
+    if (y > 127) {
+        y = 127;
     }
     if (w > 255) {
         w = 255;
@@ -112,10 +112,10 @@ static void pack_hitbox_rel(int origin_x, int origin_y, int box_x, int box_y, in
         h = 255;
     }
     if (hx) {
-        *hx = (uint8_t)x;
+        *hx = (uint8_t)(int8_t)x;
     }
     if (hy) {
-        *hy = (uint8_t)y;
+        *hy = (uint8_t)(int8_t)y;
     }
     if (hw) {
         *hw = (uint8_t)w;

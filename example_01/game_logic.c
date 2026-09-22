@@ -2,10 +2,9 @@
 #include <r01_engine.h>
 
 #define SLIME_TYPE 1
-#define SLIME_JUMP_MIN 120
-#define SLIME_JUMP_MAX 240
+#define SLIME_JUMP_MIN 30
+#define SLIME_JUMP_MAX 60
 #define SLIME_JUMP_PX 16
-#define SLIME_BOX 8
 
 static uint8_t s_ready;
 static uint16_t s_wait[16];
@@ -40,18 +39,22 @@ static uint16_t rnd16(void) {
     return s_rng;
 }
 
-/* 120..240 frames. No libc division. */
+/* Inclusive SLIME_JUMP_MIN..MAX. Rejection, no libc division. */
 static uint16_t slime_jump_gap(void) {
     uint16_t span = (uint16_t)(SLIME_JUMP_MAX - SLIME_JUMP_MIN);
-    uint16_t r = rnd16() & 127u;
-    if (r > span) {
-        r = (uint16_t)(r - (span + 1u));
+    uint16_t mask = 1u;
+    uint16_t r;
+    while (mask < span) {
+        mask = (uint16_t)((mask << 1) | 1u);
     }
+    do {
+        r = rnd16() & mask;
+    } while (r > span);
     return (uint16_t)(SLIME_JUMP_MIN + r);
 }
 
-static int slime_open(int x, int y) {
-    return r01_world_aabb_ok(x, y, 1, 1);
+static int slime_fits(int x, int y, int hx, int hy, uint8_t hw, uint8_t hh) {
+    return r01_world_aabb_ok(x + hx, y + hy, hw, hh);
 }
 
 static void slime_ai_tick(R01GameCtx *ctx) {
@@ -84,28 +87,35 @@ static void slime_ai_tick(R01GameCtx *ctx) {
             continue;
         }
         r01_entity_get_pos(i, &x, &y);
-        if (s_wait[i] > 0u) {
-            s_wait[i]--;
-        }
-        if (slime_open((int)x + (int)SLIME_BOX, (int)y + 4)) {
-            x++;
-        }
-        grounded = (uint8_t)!slime_open((int)x + 4, (int)y + (int)SLIME_BOX);
-        if (s_wait[i] == 0u && grounded) {
-            s_up[i] = (uint8_t)SLIME_JUMP_PX;
-            s_wait[i] = slime_jump_gap();
-            grounded = 0;
-        }
-        if (s_up[i] > 0u) {
-            if (y > 0u && slime_open((int)x + 4, (int)y - 1)) {
-                y--;
-                s_up[i]--;
-            } else {
-                s_up[i] = 0;
+        {
+            uint8_t t = r01_entity_type(i);
+            int hx = (int)r01_ent_hx[t];
+            int hy = (int)r01_ent_hy[t];
+            uint8_t hw = r01_ent_hw[t];
+            uint8_t hh = r01_ent_hh[t];
+            if (s_wait[i] > 0u) {
+                s_wait[i]--;
             }
-            grounded = 0;
-        } else if (!grounded) {
-            y++;
+            if (slime_fits((int)x + 1, (int)y, hx, hy, hw, hh)) {
+                x++;
+            }
+            grounded = (uint8_t)!slime_fits((int)x, (int)y + 1, hx, hy, hw, hh);
+            if (s_wait[i] == 0u && grounded) {
+                s_up[i] = (uint8_t)SLIME_JUMP_PX;
+                s_wait[i] = slime_jump_gap();
+                grounded = 0;
+            }
+            if (s_up[i] > 0u) {
+                if (y > 0u && slime_fits((int)x, (int)y - 1, hx, hy, hw, hh)) {
+                    y--;
+                    s_up[i]--;
+                } else {
+                    s_up[i] = 0;
+                }
+                grounded = 0;
+            } else if (!grounded) {
+                y++;
+            }
         }
         r01_entity_set_pos(i, x, y);
         r01_entity_set_state(i, grounded ? 0u : 1u);

@@ -70,8 +70,8 @@
 #define R01E_DOT_HZ 5369318u
 /* Nominal CPU cycles per CRT frame (8 MHz / ~60.098 Hz). Use 64-bit mul -- 8e6*1000 overflows u32. */
 #define R01E_CYCLES_PER_FRAME ((uint64_t)R01E_CPU_HZ * 1000ull / 60098ull)
-/* Soft max for game logic (docs/general/software-api.md): bars scale to this; red line = 100%. */
-#define R01E_CPU_BUDGET_CYCLES 50000ull
+/* Chart 100% and test cap: one CRT frame. Idle wait on $7F01 is excluded. */
+#define R01E_CPU_BUDGET_CYCLES R01E_CYCLES_PER_FRAME
 
 #define R01E_ATTR_BANK_MASK R01_ATTR_BANK_MASK
 #define R01E_ATTR_PAL_MASK R01_ATTR_PAL_MASK

@@ -73,8 +73,8 @@ State (at EntityDef + state_off[s])
 Frame (at State + frame_off[f])
 +0   u8  delay                (display duration in frames, min 1)
 +1   u8  sprite_count         (1..6)
-+2   u8  hitbox_x             // state AABB minus the state's first drawable-frame origin
-+3   u8  hitbox_y
++2   i8  hitbox_x             // state AABB minus the state's first drawable-frame origin
++3   i8  hitbox_y
 +4   u8  hitbox_w
 +5   u8  hitbox_h
 +6   Sprite sprites[6]        // only first sprite_count are live
@@ -102,7 +102,7 @@ Frame (at State + frame_off[f])
 
 Phase 1 Studio carts embed a compact **instance table** in PRG (see `memory.md`). That table feeds Host Play / emu.
 
-**Catalog on cart:** a **`u16` directory** (`type_count` entries, offset from catalog base, little-endian) then concatenated **EntityDef** blobs (this locked pack). Directory at 32 types is **64 B**. Studio authors **hitbox on the state** and **draw origin on the frame**. Export writes sprite `rel_*` in **that frame's draw-origin** space (authoring origin baked in). Packed frame hitbox is `state.hitbox - first_drawable_frame.origin` (same bytes on every frame of the state, clamped unsigned). Moving a later frame's draw origin does not change collision.
+**Catalog on cart:** a **`u16` directory** (`type_count` entries, offset from catalog base, little-endian) then concatenated **EntityDef** blobs (this locked pack). Directory at 32 types is **64 B**. Studio authors **hitbox on the state** and **draw origin on the frame**. Export writes sprite `rel_*` in **that frame's draw-origin** space (authoring origin baked in). Packed frame hitbox is `state.hitbox - first_drawable_frame.origin` as **i8** (same bytes on every frame of the state). A centered 8x8 box on origin 4,4 packs as **-4,-4**. Moving a later frame's draw origin does not change collision.
 
 ### Spawn instance (PRG, locked)
 
@@ -126,7 +126,7 @@ LiveInstance (12 B)
 
 **64** slots = **768 B**. Fits in system RAM. Not cart flash.
 
-Packed spawn instances (not the marked player) copy into a 16-slot RAM table at boot. Author `game_logic.c` uses `r01_entity_count`, `r01_entity_type`, `r01_entity_get_pos`, `r01_entity_set_pos`, `r01_entity_state`, and `r01_entity_set_state`. `r01_world_aabb_ok(x, y, w, h)` tests that box against BG1 solids. `w` and `h` of **1** is a one-cell probe. Draw uses catalog state 0 frame 0; a non-zero live state uses that sprite's tile plus one.
+Packed spawn instances (not the marked player) copy into a 16-slot RAM table at boot. Author `game_logic.c` uses `r01_entity_count`, `r01_entity_type`, `r01_entity_get_pos`, `r01_entity_set_pos`, `r01_entity_state`, and `r01_entity_set_state`. Catalog hitbox for type `t` is `r01_ent_hx/hy/hw/hh[t]` (origin-relative). `r01_world_aabb_ok(x, y, w, h)` tests that box against BG1 solids. Draw uses catalog state 0 frame 0; a non-zero live state uses that sprite's tile plus one.
 
 ### Player anim blob (`PA`, locked)
 

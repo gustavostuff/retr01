@@ -211,8 +211,9 @@ TEST_MAIN() {
                 EXPECT(type_n == 2, "type count");
                 EXPECT(inst_n == 0, "inst count zero in cart (placements in PRG)");
                 EXPECT(hdr[R01_CART_WHDR_PLAYER_ENTITY] == 0, "player entity packed");
-                /* Hitbox baked to draw-origin space (author origin 2,3 hit 1,2 -> 0,0). */
-                EXPECT(hdr[R01_CART_WHDR_PLAYER_HIT_X] == 0 && hdr[R01_CART_WHDR_PLAYER_HIT_Y] == 0,
+                /* Hitbox is i8 origin-relative (origin 4,3 hit 1,2 -> -3,-1). */
+                EXPECT(hdr[R01_CART_WHDR_PLAYER_HIT_X] == (uint8_t)(int8_t)-3 &&
+                           hdr[R01_CART_WHDR_PLAYER_HIT_Y] == (uint8_t)(int8_t)-1,
                        "player hitbox xy draw-origin");
                 EXPECT(hdr[R01_CART_WHDR_PLAYER_HIT_W] == R01_ENTITY_HITBOX_W &&
                            hdr[R01_CART_WHDR_PLAYER_HIT_H] == R01_ENTITY_HITBOX_H,
@@ -238,7 +239,8 @@ TEST_MAIN() {
                     fr = st + rd_u16(st + 2);
                     EXPECT(fr[0] == 24, "def0 frame delay from entity");
                     EXPECT(fr[1] == 1, "def0 sprite count");
-                    EXPECT(fr[2] == 0 && fr[3] == 0, "def0 frame hitbox xy");
+                    EXPECT(fr[2] == (uint8_t)(int8_t)-3 && fr[3] == (uint8_t)(int8_t)-1,
+                           "def0 frame hitbox xy");
                     EXPECT(fr[4] == R01_ENTITY_HITBOX_W && fr[5] == R01_ENTITY_HITBOX_H, "def0 frame hitbox wh");
                     def1 = img + off_ents + d1;
                     EXPECT(def1[1] == 1, "def1 state count");

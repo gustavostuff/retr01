@@ -58,8 +58,8 @@ static void player_hit_rect(R01eMachine *m, int origin_x, int origin_y, int stat
             }
         } else {
             /* Hitbox in WHDR is first-drawable-frame origin relative. */
-            box_x = origin_x + (int)wv.player_hit_x;
-            box_y = origin_y + (int)wv.player_hit_y;
+            box_x = origin_x + (int)(int8_t)wv.player_hit_x;
+            box_y = origin_y + (int)(int8_t)wv.player_hit_y;
             box_w = (int)wv.player_hit_w;
             box_h = (int)wv.player_hit_h;
         }

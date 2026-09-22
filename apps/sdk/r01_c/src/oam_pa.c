@@ -28,6 +28,10 @@ static uint8_t s_player_type = 0xFFu;
 static uint8_t s_ent_n[32];
 static uint8_t s_ent_spr[32][R01_CART_ENTITY_PARTS_MAX][4];
 static uint8_t s_ent_types;
+int8_t r01_ent_hx[32];
+int8_t r01_ent_hy[32];
+uint8_t r01_ent_hw[32];
+uint8_t r01_ent_hh[32];
 uint8_t r01_live_n;
 uint8_t r01_live_type[16];
 uint8_t r01_live_flags[16];
@@ -97,10 +101,16 @@ static void cache_one_type(uint32_t cat, uint8_t t) {
     if (n > (uint8_t)R01_CART_ENTITY_PARTS_MAX) {
         n = (uint8_t)R01_CART_ENTITY_PARTS_MAX;
     }
-    (void)r01_map_read();
-    (void)r01_map_read();
-    (void)r01_map_read();
-    (void)r01_map_read();
+    r01_ent_hx[t] = (int8_t)r01_map_read();
+    r01_ent_hy[t] = (int8_t)r01_map_read();
+    r01_ent_hw[t] = r01_map_read();
+    r01_ent_hh[t] = r01_map_read();
+    if (r01_ent_hw[t] < 1u) {
+        r01_ent_hw[t] = 8;
+    }
+    if (r01_ent_hh[t] < 1u) {
+        r01_ent_hh[t] = 8;
+    }
     for (i = 0; i < n; i++) {
         s_ent_spr[t][i][0] = r01_map_read();
         s_ent_spr[t][i][1] = r01_map_read();
@@ -117,6 +127,10 @@ static void cache_spawn_types(uint32_t world) {
     s_player_type = 0xFFu;
     for (t = 0; t < 32u; t++) {
         s_ent_n[t] = 0;
+        r01_ent_hx[t] = 0;
+        r01_ent_hy[t] = 0;
+        r01_ent_hw[t] = 8;
+        r01_ent_hh[t] = 8;
     }
     r01_map_seek(world + R01_CART_WHDR_TYPE_COUNT);
     s_ent_types = r01_map_read();
@@ -184,8 +198,8 @@ void r01_pa_boot(void) {
         return;
     }
     r01_map_seek(world + R01_CART_WHDR_PLAYER_HIT_X);
-    s_hit_dx = (int)r01_map_read();
-    s_hit_dy = (int)r01_map_read();
+    s_hit_dx = (int)(int8_t)r01_map_read();
+    s_hit_dy = (int)(int8_t)r01_map_read();
     s_hit_w = r01_map_read();
     s_hit_h = r01_map_read();
     if (s_hit_w < 1u) {
@@ -461,4 +475,8 @@ uint8_t r01_live_flags[16];
 uint8_t r01_live_state[16];
 uint16_t r01_live_x[16];
 uint16_t r01_live_y[16];
+int8_t r01_ent_hx[32];
+int8_t r01_ent_hy[32];
+uint8_t r01_ent_hw[32];
+uint8_t r01_ent_hh[32];
 #endif

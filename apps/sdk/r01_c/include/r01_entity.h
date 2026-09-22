@@ -8,6 +8,10 @@ extern uint8_t r01_live_type[16];
 extern uint8_t r01_live_state[16];
 extern uint16_t r01_live_x[16];
 extern uint16_t r01_live_y[16];
+extern int8_t r01_ent_hx[32];
+extern int8_t r01_ent_hy[32];
+extern uint8_t r01_ent_hw[32];
+extern uint8_t r01_ent_hh[32];
 
 #define r01_entity_count() (r01_live_n)
 #define r01_entity_type(id) (r01_live_type[(id)])

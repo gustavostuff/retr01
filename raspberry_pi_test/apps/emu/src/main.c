@@ -389,7 +389,7 @@ static void draw_cpu_budget_chart(SDL_Renderer *ren, const DbgCpuChart *ch, int 
     int slot_w;
     int budget_y;
     int n, slot;
-    uint64_t budget = R01E_CPU_BUDGET_CYCLES;
+    uint64_t budget = R01E_CYCLES_PER_FRAME;
 
     frame.x = ox;
     frame.y = oy;
@@ -415,7 +415,7 @@ static void draw_cpu_budget_chart(SDL_Renderer *ren, const DbgCpuChart *ch, int 
     if (slot_w < 2) {
         slot_w = 2;
     }
-    /* 100% budget line at top of plot (full frame CPU allotment). */
+    /* 100% = one CRT frame at 8 MHz (~133k). */
     budget_y = oy + DBG_CHART_LABEL_H;
     SDL_SetRenderDrawColor(ren, 120, 55, 55, 255);
     SDL_RenderDrawLine(ren, ox + DBG_CHART_PAD, budget_y, ox + DBG_CHART_PAD + plot_w - 1, budget_y);
@@ -763,7 +763,7 @@ int main(int argc, char **argv) {
     printf("Home / Guide: Reset, Quit, 1x/2x, Mute On/Off.  Platformer jump: face Y (P1 H, P2 .).\n");
     printf("Space pause  |  R reset  |  Ctrl+1/2 scale  |  Ctrl+F fullscreen  |  Esc quit\n");
     if (dbg_win) {
-        printf("Debug: BG1/BG0 2x2 + BG1 mask + world map + pals + CPU budget (last 20 frames, 50k red line)\n");
+        printf("Debug: BG1/BG0 2x2 + BG1 mask + world map + pals + CPU (last 20 frames, 100%% = one 8 MHz frame)\n");
     }
 #if R01_README_SHOT
     if (want_dbg) {

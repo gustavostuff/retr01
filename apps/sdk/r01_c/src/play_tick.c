@@ -159,23 +159,8 @@ int r01_world_aabb_ok(int x, int y, uint8_t w, uint8_t h) {
     (void)h;
     return 1;
 #else
-    int ly;
-    uint8_t row;
     if (x < 0 || y < 0) {
         return 0;
-    }
-    if (w <= 1u && h <= 1u) {
-        ly = y >> 3;
-        row = 0;
-        while (ly >= R01_SCREEN_TILES_Y) {
-            ly -= R01_SCREEN_TILES_Y;
-            row++;
-            if (row > 15u) {
-                return 0;
-            }
-        }
-        return !play_solid_cell((uint8_t)((unsigned)(x >> 3) >> 4), row,
-                                (uint8_t)(ly * R01_SCREEN_TILES_X + ((x >> 3) & 15)));
     }
     if (w < 1u) {
         w = (uint8_t)R01_PLAY_PLAYER_W;
