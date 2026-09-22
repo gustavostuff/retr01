@@ -57,7 +57,7 @@ cmake --build build
 
 **Env:** `R01E_SOFTBOOT=1` forces host memcpy VRAM/pals at boot (debug). Default runs cart PRG MAP/pal stream catchup to a full start-screen payload. `R01E_SCALE=1` presents 128x120. `R01E_SCALE=2` presents 256x240 (hardware 2x, console default). `R01E_FULLSCREEN=1` uses desktop-fullscreen at that dest size, centered, and skips the debug window. **Ctrl+F** uses the largest integer multiple of that dest that fits, centered. `R01E_NO_DEBUG=1` skips the debug window only. `R01E_AUDIO_SAMPLES` (256..4096) and `R01E_AUDIO_RATE` (22050..48000) size the PC speaker mix. Pi `retr01.sh` uses 2048 samples at 48 kHz. Home / Guide mutes the speaker while the overlay is open. Mute On keeps the speaker off after the overlay closes.
 
-**Debug (standalone `./scripts/emu.sh`):** separate OS window (~atlas width, shorter than the 2x play window): top row **BG1** VRAM 2x2 + **BG0** 2x2 (red/green viewports), second row **opacity mask** + world map + **BG**/**SPR** pals, bottom **CPU busy** chart (2 samples/s). Cyan = active display, orange = VBlank. Red line = soft max **50k** cycles/frame.
+**Debug (standalone `./scripts/emu.sh`):** separate OS window (~atlas width, shorter than the 2x play window): top row **BG1** VRAM 2x2 + **BG0** 2x2 (red/green viewports), second row **opacity mask** + world map + **BG**/**SPR** pals, bottom **CPU busy** chart (last **20** frames). Cyan = active display, orange = leftover VBlank work. Red line = soft max **50k** cycles/frame.
 
 ## Layout
 

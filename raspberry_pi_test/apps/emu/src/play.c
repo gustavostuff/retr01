@@ -19,10 +19,6 @@ static int cart_is_phase1_play(const R01eCart *c) {
     return prg[0x00F0] == 'R' && prg[0x00F1] == '0' && prg[0x00F2] == '1' && prg[0x00F3] == 'P';
 }
 
-static int cart_is_c_prg(const R01eCart *c) {
-    return r01e_cart_is_c_prg(c);
-}
-
 static void play_follow_c_sys(R01eMachine *m) {
     if (!m || !m->ram[0x02E8]) {
         return;
@@ -103,37 +99,6 @@ static void snap_camera(R01ePlay *pl) {
     r01_play_camera_snap(&pl->cam_x, &pl->cam_y, pl->player_x, pl->player_y, R01E_PLAY_PLAYER_W,
                          R01E_PLAY_PLAYER_H, R01E_SCREEN_PX_W, R01E_SCREEN_PX_H, pl->cam_deadzone_x,
                          pl->cam_deadzone_y, R01_PLAY_CAM_AXIS_BOTH);
-}
-
-/*
- * Clamp play cam to the present-screen bounding box (same as video.cam_max_*).
- * Do not shove the camera away from sparse holes inside that box: on L-shaped
- * maps that fight kills follow scroll and can push the player fully off-screen
- * (OAM cull). Missing BG1 slots sample BG0 by design.
- */
-static void clamp_cam_to_world_bounds(R01eMachine *m) {
-    R01ePlay *pl;
-    int max_x;
-    int max_y;
-
-    if (!m || !m->play.enabled) {
-        return;
-    }
-    pl = &m->play;
-    max_x = m->video.cam_max_x;
-    max_y = m->video.cam_max_y;
-    if (pl->cam_x < 0) {
-        pl->cam_x = 0;
-    }
-    if (pl->cam_y < 0) {
-        pl->cam_y = 0;
-    }
-    if (max_x >= 0 && pl->cam_x > max_x) {
-        pl->cam_x = max_x;
-    }
-    if (max_y >= 0 && pl->cam_y > max_y) {
-        pl->cam_y = max_y;
-    }
 }
 
 static void play_load_cart_camera(R01eMachine *m) {
@@ -336,6 +301,14 @@ void r01e_play_sync_video(R01eMachine *m) {
     vid->cam_y = pl->cam_y;
     vid->cam_origin_col = ox;
     vid->cam_origin_row = oy;
+    if (r01e_cart_is_c_prg(&m->cart)) {
+        /* C PRG owns $7F02/$7F03; host only refreshes the 2x2 window. */
+        if (origin_changed) {
+            (void)r01e_video_fill_origin_slots(m);
+        }
+        r01e_video_update_bg0_scroll(m);
+        return;
+    }
     m->io.scroll_x = (uint8_t)(pl->cam_x - ox * R01E_SCREEN_PX_W);
     m->io.scroll_y = (uint8_t)(pl->cam_y - oy * R01E_SCREEN_PX_H);
     if (m->io.scroll_x > 127) {
@@ -347,7 +320,6 @@ void r01e_play_sync_video(R01eMachine *m) {
     if (origin_changed) {
         (void)r01e_video_sync_camera(m);
     } else {
-        /* L0 must track every pixel of BG1 cam, not only screen crosses. */
         r01e_video_update_bg0_scroll(m);
     }
 }
@@ -565,11 +537,10 @@ int r01e_play_start(R01eMachine *m) {
     }
     r01e_play_reset(&m->play);
     play_load_cart_camera(m);
-    if (cart_is_c_prg(&m->cart)) {
+    if (r01e_cart_is_c_prg(&m->cart)) {
         m->play.enabled = 1;
         if (m->ram[0x02E8]) {
             play_follow_c_sys(m);
-            clamp_cam_to_world_bounds(m);
             r01e_play_sync_video(m);
             (void)r01e_video_sync_camera(m);
         }
@@ -584,7 +555,6 @@ int r01e_play_start(R01eMachine *m) {
         r01_play_anim_init(&m->play.anim);
         play_load_anim_maps(m);
         place_player_xy(&m->play, sx, sy);
-        clamp_cam_to_world_bounds(m);
         r01e_play_sync_video(m);
         (void)r01e_video_sync_camera(m);
         write_oam(m);
@@ -597,7 +567,6 @@ int r01e_play_start(R01eMachine *m) {
     r01_play_anim_init(&m->play.anim);
     play_load_anim_maps(m);
     place_player_on_screen(&m->play, col, row);
-    clamp_cam_to_world_bounds(m);
     r01e_play_sync_video(m);
     (void)r01e_video_sync_camera(m);
     write_oam(m);
@@ -616,10 +585,9 @@ void r01e_play_tick(R01eMachine *m) {
     if (!m || !m->play.enabled) {
         return;
     }
-    if (cart_is_c_prg(&m->cart)) {
+    if (r01e_cart_is_c_prg(&m->cart)) {
         if (m->ram[0x02E8]) {
             play_follow_c_sys(m);
-            clamp_cam_to_world_bounds(m);
             r01e_play_sync_video(m);
         }
         return;
@@ -669,7 +637,6 @@ void r01e_play_tick(R01eMachine *m) {
     }
     /* No dead zone: camera tracks the player every tick. */
     update_camera(pl);
-    clamp_cam_to_world_bounds(m);
     {
         R01eWorldView wv;
         if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) == 0 && wv.has_player_anim) {

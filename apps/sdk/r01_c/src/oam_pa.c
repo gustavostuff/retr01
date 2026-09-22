@@ -9,6 +9,9 @@
 #ifndef R01_HOST_TEST
 
 #define R01_PA_MAX 1032u
+#define R01_CPU8(addr) (*(volatile uint8_t *)(uint16_t)(addr))
+#define R01_PLAY_INST_COUNT 0x81C0u
+#define R01_PLAY_INST_TABLE 0x81C1u
 
 static uint8_t s_pa[R01_PA_MAX];
 static uint16_t s_pa_len;
@@ -21,6 +24,10 @@ static int s_hit_dy;
 static uint8_t s_hit_w = 8;
 static uint8_t s_hit_h = 8;
 static uint8_t s_state_delay[R01_PLAY_ANIM_STATES_MAX];
+static uint8_t s_player_type = 0xFFu;
+static uint8_t s_ent_n[32];
+static uint8_t s_ent_spr[32][R01_CART_ENTITY_PARTS_MAX][4];
+static uint8_t s_ent_types;
 
 void r01_player_hit_get(int *dx, int *dy, uint8_t *w, uint8_t *h) {
     if (dx) {
@@ -34,6 +41,90 @@ void r01_player_hit_get(int *dx, int *dy, uint8_t *w, uint8_t *h) {
     }
     if (h) {
         *h = s_hit_h;
+    }
+}
+
+static uint16_t map_u16(void) {
+    uint16_t v = r01_map_read();
+    v |= (uint16_t)r01_map_read() << 8;
+    return v;
+}
+
+static void cache_one_type(uint32_t cat, uint8_t t) {
+    uint16_t off;
+    uint16_t soff;
+    uint16_t foff;
+    uint8_t n;
+    uint8_t i;
+    s_ent_n[t] = 0;
+    r01_map_seek(cat + (uint32_t)t * 2u);
+    off = map_u16();
+    if (off == 0u) {
+        return;
+    }
+    r01_map_seek(cat + off);
+    (void)r01_map_read();
+    if (r01_map_read() < 1u) {
+        return;
+    }
+    (void)r01_map_read();
+    (void)r01_map_read();
+    soff = map_u16();
+    if (soff == 0u) {
+        return;
+    }
+    r01_map_seek(cat + off + soff);
+    if (r01_map_read() < 1u) {
+        return;
+    }
+    (void)r01_map_read();
+    foff = map_u16();
+    if (foff == 0u) {
+        return;
+    }
+    r01_map_seek(cat + off + soff + foff);
+    (void)r01_map_read();
+    n = r01_map_read();
+    if (n > (uint8_t)R01_CART_ENTITY_PARTS_MAX) {
+        n = (uint8_t)R01_CART_ENTITY_PARTS_MAX;
+    }
+    (void)r01_map_read();
+    (void)r01_map_read();
+    (void)r01_map_read();
+    (void)r01_map_read();
+    for (i = 0; i < n; i++) {
+        s_ent_spr[t][i][0] = r01_map_read();
+        s_ent_spr[t][i][1] = r01_map_read();
+        s_ent_spr[t][i][2] = r01_map_read();
+        s_ent_spr[t][i][3] = r01_map_read();
+    }
+    s_ent_n[t] = n;
+}
+
+static void cache_spawn_types(uint32_t world) {
+    uint32_t cat;
+    uint8_t t;
+    s_ent_types = 0;
+    s_player_type = 0xFFu;
+    for (t = 0; t < 32u; t++) {
+        s_ent_n[t] = 0;
+    }
+    r01_map_seek(world + R01_CART_WHDR_TYPE_COUNT);
+    s_ent_types = r01_map_read();
+    r01_map_seek(world + R01_CART_WHDR_PLAYER_ENTITY);
+    s_player_type = r01_map_read();
+    /* Cart pointer table slot 4 (entities): hdr 16 B + 24. Catalog is cart-global. */
+    r01_map_seek((uint32_t)R01_CART_HDR_BYTES + 24u);
+    cat = r01_map_read_u24();
+    if (cat == 0u) {
+        s_ent_types = 0;
+        return;
+    }
+    if (s_ent_types > 32u) {
+        s_ent_types = 32u;
+    }
+    for (t = 0; t < s_ent_types; t++) {
+        cache_one_type(cat, t);
     }
 }
 
@@ -66,6 +157,7 @@ void r01_pa_boot(void) {
     if (s_hit_h < 1u) {
         s_hit_h = 8;
     }
+    cache_spawn_types(world);
     r01_map_seek(world + R01_CART_WHDR_FLAGS);
     flags = r01_map_read();
     if ((flags & R01_CART_WHDR_FLAG_PLAYER_ANIM) == 0u) {
@@ -148,6 +240,62 @@ void r01_game_anim_tick(const R01GameCtx *ctx, int airborne, int crouching, int 
 
 #ifndef R01_HOST_TEST
 static uint8_t s_oam_written;
+
+static uint8_t draw_spawn_instances(const R01GameCtx *ctx, uint8_t written) {
+    uint8_t n;
+    uint8_t i;
+    uint16_t base;
+    if (!ctx) {
+        return written;
+    }
+    n = R01_CPU8(R01_PLAY_INST_COUNT);
+    if (n > 64u) {
+        n = 64u;
+    }
+    base = (uint16_t)R01_PLAY_INST_TABLE;
+    for (i = 0; i < n && written < (uint8_t)R01_OAM_MAX; i++) {
+        uint8_t type = R01_CPU8(base);
+        uint8_t flags = R01_CPU8(base + 1u);
+        uint16_t wx = (uint16_t)R01_CPU8(base + 2u) | ((uint16_t)R01_CPU8(base + 3u) << 8);
+        uint16_t wy = (uint16_t)R01_CPU8(base + 4u) | ((uint16_t)R01_CPU8(base + 5u) << 8);
+        uint8_t pc;
+        uint8_t pi;
+        base += (uint16_t)R01_CART_INSTANCE_SIZE;
+        if (type == s_player_type || type >= s_ent_types) {
+            continue;
+        }
+        pc = s_ent_n[type];
+        for (pi = 0; pi < pc && written < (uint8_t)R01_OAM_MAX; pi++) {
+            int rx = (int)(int8_t)s_ent_spr[type][pi][1];
+            int ry = (int)(int8_t)s_ent_spr[type][pi][2];
+            uint8_t attr = s_ent_spr[type][pi][3];
+            int sx;
+            int sy;
+            if (flags & 1u) {
+                rx = -rx - 8;
+                attr = (uint8_t)(attr ^ R01_ATTR_FLIP_H);
+            }
+            if (flags & 2u) {
+                ry = -ry - 8;
+                attr = (uint8_t)(attr ^ R01_ATTR_FLIP_V);
+            }
+            sx = (int)wx + rx - (int)ctx->cam_x;
+            sy = (int)wy + ry - (int)ctx->cam_y;
+            if (sx + 8 <= 0 || sy + 8 <= 0 || sx >= R01_SCREEN_PX_W || sy >= R01_SCREEN_PX_H) {
+                continue;
+            }
+            {
+                uint8_t *o = r01_oam_scratch + (uint16_t)written * 4u;
+                o[0] = (uint8_t)sy;
+                o[1] = s_ent_spr[type][pi][0];
+                o[2] = attr;
+                o[3] = (uint8_t)sx;
+            }
+            written++;
+        }
+    }
+    return written;
+}
 #endif
 
 void r01_game_draw_sprites(const R01GameCtx *ctx, int airborne, int crouching, int adx, int ady) {
@@ -215,6 +363,7 @@ void r01_game_draw_sprites(const R01GameCtx *ctx, int airborne, int crouching, i
         r01_oam_scratch[3] = (uint8_t)sx;
         written = 1;
     }
+    written = draw_spawn_instances(ctx, written);
     s_oam_written = written;
 }
 

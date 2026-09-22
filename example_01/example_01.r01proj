@@ -31,7 +31,7 @@
     {"tiles": 0, "b64": ""}
   ],
   "spr_banks": [
-    {"tiles": 28, "b64": "ADh/f29Pjw8AAAQIAAAFBQAw4PDw+Pj4AAAAAEDgQEAfBwYODw8PBwEAAwcEBAYD8MDgEBA4+BDggMDg4NDQ4AcDAwMHBwQEAwABAQMCAwMQUPDw4OCQSOCgoKBAQGCwOH9/b0+PDx8ABAgAAAUFATDg8PD4+PjwAAAAQOBAQOAHBg4PDw8HBwADBwQEBgMDwOAQEDj4EBCAwODg0NDg4AMDAwcHBwQEAAEBAwMCAwNQ8PDg4OCQSKCgoEBAQGCwHwcGDg8PDwcBAAMHBAQHA/DA4BAQOPiw4IDA4ODQUEACAwMHDxcSCgEAAAIFCQ0FIODg4MDAQCDAwMDAgACAwAcGDh89PhwEAAMHDBgZAwPA4BQePuxgIIDA4OTMwIDABj9PTlAwAAABBjwwIAAAAHD4eD4yJBgA4HAwEBwYAAAHBgcDAwQICAADAwEAAwcHwOAQ+Pj4cJCAwOCA8DCAYA9/npygYAAABg54YEAAAADweHg+MiQYAGAwMBAcGAAABw8PDQkRAQEAAAEAAAAAAAb8/v7////+AIAACByoqDwAAQcJCR0nRwAAAAYHAxg/+Nzi8vz///4QeHwssNbamA=="},
+    {"tiles": 30, "b64": "ADh/f29Pjw8AAAQIAAAFBQAw4PDw+Pj4AAAAAEDgQEAfBwYODw8PBwEAAwcEBAYD8MDgEBA4+BDggMDg4NDQ4AcDAwMHBwQEAwABAQMCAwMQUPDw4OCQSOCgoKBAQGCwOH9/b0+PDx8ABAgAAAUFATDg8PD4+PjwAAAAQOBAQOAHBg4PDw8HBwADBwQEBgMDwOAQEDj4EBCAwODg0NDg4AMDAwcHBwQEAAEBAwMCAwNQ8PDg4OCQSKCgoEBAQGCwHwcGDg8PDwcBAAMHBAQHA/DA4BAQOPiw4IDA4ODQUEACAwMHDxcSCgEAAAIFCQ0FIODg4MDAQCDAwMDAgACAwAcGDh89PhwEAAMHDBgZAwPA4BQePuxgIIDA4OTMwIDABj9PTlAwAAABBjwwIAAAAHD4eD4yJBgA4HAwEBwYAAAHBgcDAwQICAADAwEAAwcHwOAQ+Pj4cJCAwOCA8DCAYA9/npygYAAABg54YEAAAADweHg+MiQYAGAwMBAcGAAABw8PDQkRAQEAAAEAAAAAAAb8/v7////+AIAACByoqDwAAQcJCR0nRwAAAAYHAxg/+Nzi8vz///4QeHwssNbamAAAAAAUFAAAAAAcPn9///8ACgoAAAAAAA4fPz9/fvzw"},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""},
     {"tiles": 0, "b64": ""},
@@ -49,6 +49,8 @@
     {"tiles": 0, "b64": ""}
   ],
   "sprites": [
+    {"bank": 0, "tile": 28, "pal": 2},
+    {"bank": 0, "tile": 29, "pal": 2}
   ],
   "metasprites": [
   ],
@@ -96,10 +98,55 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Slime",
+      "state_count": 4,
+      "states": [
+        {
+          "name": "Idle",
+          "frame_count": 1,
+          "hitbox_x": 0, "hitbox_y": 0, "hitbox_w": 8, "hitbox_h": 8,
+          "frames": [
+            {"delay": 1, "origin_x": 4, "origin_y": 4, "parts": [{"bank":0,"tile":28,"pal":2,"fh":0,"fv":0,"dx":0,"dy":0}]}
+          ]
+        },
+        {
+          "name": "Jumping",
+          "frame_count": 1,
+          "hitbox_x": 0, "hitbox_y": 0, "hitbox_w": 8, "hitbox_h": 8,
+          "frames": [
+            {"delay": 1, "origin_x": 4, "origin_y": 4, "parts": [{"bank":0,"tile":29,"pal":2,"fh":0,"fv":0,"dx":0,"dy":0}]}
+          ]
+        },
+        {
+          "name": "Hurt",
+          "frame_count": 1,
+          "hitbox_x": 0, "hitbox_y": 0, "hitbox_w": 8, "hitbox_h": 8,
+          "frames": [
+            {"delay": 1, "origin_x": 0, "origin_y": 0, "parts": []}
+          ]
+        },
+        {
+          "name": "test_state",
+          "frame_count": 1,
+          "hitbox_x": 0, "hitbox_y": 0, "hitbox_w": 8, "hitbox_h": 8,
+          "frames": [
+            {"delay": 1, "origin_x": 0, "origin_y": 0, "parts": []}
+          ]
+        }
+      ]
     }
   ],
   "instances": [
-    {"type": 0, "x": 28, "y": 894}
+    {"type": 0, "x": 28, "y": 894},
+    {"type": 1, "x": 63, "y": 932},
+    {"type": 1, "x": 87, "y": 926},
+    {"type": 1, "x": 108, "y": 929},
+    {"type": 1, "x": 122, "y": 916},
+    {"type": 1, "x": 149, "y": 914},
+    {"type": 1, "x": 180, "y": 915},
+    {"type": 1, "x": 206, "y": 915}
   ],
   "warp_entrances": [
   ],

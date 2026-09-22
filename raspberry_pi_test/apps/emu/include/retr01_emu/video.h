@@ -83,6 +83,9 @@ int r01e_video_boot_world(struct R01eMachine *m, int world);
 /* Reload VRAM slots 0-3 at cam_origin; mirror scroll regs from camera. */
 int r01e_video_sync_camera(struct R01eMachine *m);
 
+/* C PRG path: fill 2x2 VRAM from cart without touching $7F02/$7F03. */
+int r01e_video_fill_origin_slots(struct R01eMachine *m);
+
 /* Recompute BG0 cam from BG1 cam using present BG1 bbox vs BG0 grid (call every camera move). */
 void r01e_video_update_bg0_scroll(struct R01eMachine *m);
 

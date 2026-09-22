@@ -214,10 +214,31 @@ int main(int argc, char **argv) {
      * after play_start (collision stays on cart; render would show start-screen
      * tiles until the next origin reload).
      */
-    for (f = 0; f < 45; f++) {
-        r01e_machine_set_pad(&m, 0, R01E_PAD_RIGHT);
-        if (r01e_machine_frame(&m) == 0) {
-            fprintf(stderr, "FAIL frame %d\n", f);
+    {
+        uint64_t max_used = 0;
+        uint64_t max_active = 0;
+        uint64_t max_vblank = 0;
+        for (f = 0; f < 45; f++) {
+            uint64_t frame_used;
+            r01e_machine_set_pad(&m, 0, R01E_PAD_RIGHT);
+            if (r01e_machine_frame(&m) == 0) {
+                fprintf(stderr, "FAIL frame %d\n", f);
+                r01e_machine_shutdown(&m);
+                return 1;
+            }
+            frame_used = m.prof_last_active + m.prof_last_vblank;
+            if (frame_used > max_used) {
+                max_used = frame_used;
+                max_active = m.prof_last_active;
+                max_vblank = m.prof_last_vblank;
+            }
+        }
+        printf("ok walk max cpu active=%llu vblank=%llu used=%llu/%llu\n",
+               (unsigned long long)max_active, (unsigned long long)max_vblank, (unsigned long long)max_used,
+               (unsigned long long)R01E_CPU_BUDGET_CYCLES);
+        if (r01e_cart_is_c_prg(&m.cart) && max_used > 28000ull) {
+            fprintf(stderr, "FAIL C PRG walk-window CPU spike %llu (boot work leaking into play frames?)\n",
+                    (unsigned long long)max_used);
             r01e_machine_shutdown(&m);
             return 1;
         }
@@ -238,6 +259,28 @@ int main(int argc, char **argv) {
                spawn_y, m.play.player_x, m.play.player_y, (unsigned long long)m.prof_last_active,
                (unsigned long long)m.prof_last_vblank, (unsigned long long)used,
                (unsigned long long)R01E_CPU_BUDGET_CYCLES);
+        {
+            const uint8_t *prg = r01e_cart_prg(&m.cart);
+            int slime_oam = 0;
+            int si;
+            uint8_t inst_n = prg ? prg[R01E_PRG_PLAY_INST_COUNT_OFF] : 0;
+            if (inst_n < 8u) {
+                fprintf(stderr, "FAIL C PRG instance count %u (need slimes in $81C0)\n", inst_n);
+                r01e_machine_shutdown(&m);
+                return 1;
+            }
+            for (si = 0; si < R01E_OAM_ENTRIES; si++) {
+                if (m.io.oam[(size_t)si * 4u + 1u] == 28u) {
+                    slime_oam++;
+                }
+            }
+            if (slime_oam < 1) {
+                fprintf(stderr, "FAIL C PRG no slime sprites in OAM (tile 28)\n");
+                r01e_machine_shutdown(&m);
+                return 1;
+            }
+            printf("ok C PRG slime OAM=%d inst_n=%u\n", slime_oam, inst_n);
+        }
         if (used > 22000ull) {
             fprintf(stderr, "FAIL C PRG CPU %llu cycles (budget %llu) after walk\n", (unsigned long long)used,
                     (unsigned long long)R01E_CPU_BUDGET_CYCLES);
