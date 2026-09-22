@@ -92,7 +92,7 @@ TEST_MAIN() {
     EXPECT(cat == 0, "catalog");
     type_id = r01_world_entity_from_sprite(p, cat);
     EXPECT(type_id == 0, "entity type");
-    p->entities[0].states[0].frames[0].origin_x = 2;
+    p->entities[0].states[0].frames[0].delay = 24;
     p->entities[0].states[0].frames[0].origin_y = 3;
     p->entities[0].states[0].hitbox_x = 1;
     p->entities[0].states[0].hitbox_y = 2;
@@ -235,7 +235,7 @@ TEST_MAIN() {
                     st = def0 + rd_u16(def0 + 4);
                     EXPECT(st[0] == 1, "def0 frame count");
                     fr = st + rd_u16(st + 2);
-                    EXPECT(fr[0] == R01_CART_ENTITY_FRAME_DELAY_DEFAULT, "def0 frame delay");
+                    EXPECT(fr[0] == 24, "def0 frame delay from entity");
                     EXPECT(fr[1] == 1, "def0 sprite count");
                     EXPECT(fr[2] == 0 && fr[3] == 0, "def0 frame hitbox xy");
                     EXPECT(fr[4] == R01_ENTITY_HITBOX_W && fr[5] == R01_ENTITY_HITBOX_H, "def0 frame hitbox wh");
@@ -245,6 +245,12 @@ TEST_MAIN() {
                     fr = st + rd_u16(st + 2);
                     EXPECT(fr[1] == 1, "def1 sprite count");
                     EXPECT(world_base + off_insts <= (uint32_t)flen, "off_insts in cart");
+                    EXPECT((hdr[R01_CART_WHDR_FLAGS] & R01_CART_WHDR_FLAG_PLAYER_ANIM) != 0, "PA flag");
+                    {
+                        const uint8_t *pa = img + world_base + off_insts;
+                        EXPECT(pa[0] == 'P' && pa[1] == 'A', "PA magic");
+                        EXPECT(pa[11] == 24, "PA frame0 delay");
+                    }
                 }
                 {
                     uint8_t prg_inst_n = img[off_prg + PRG_PLAY_INST_COUNT];

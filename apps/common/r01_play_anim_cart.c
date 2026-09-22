@@ -97,6 +97,43 @@ int r01_cart_player_anim_parse(const uint8_t *blob, size_t len, R01CartPlayerAni
             return -1;
         }
     }
+    {
+        int si;
+        for (si = 0; si < R01_PLAY_ANIM_STATES_MAX; si++) {
+            int fi;
+            out->frame_count[si] = 0;
+            for (fi = 0; fi < R01_CART_ENTITY_FRAMES_MAX; fi++) {
+                out->frame_hdr[si][fi] = NULL;
+            }
+        }
+        for (si = 0; si < out->state_count; si++) {
+            const uint8_t *st = state_ptr_at(out, si);
+            const uint8_t *end = out->blob + out->len;
+            const uint8_t *p;
+            int dc;
+            int fi;
+            if (!st) {
+                return -1;
+            }
+            dc = (int)st[0];
+            if (dc < 0) {
+                dc = 0;
+            }
+            if (dc > R01_CART_ENTITY_FRAMES_MAX) {
+                dc = R01_CART_ENTITY_FRAMES_MAX;
+            }
+            out->frame_count[si] = (uint8_t)dc;
+            p = st + 1;
+            for (fi = 0; fi < dc; fi++) {
+                int n = frame_span(p, end);
+                if (n < 0) {
+                    return -1;
+                }
+                out->frame_hdr[si][fi] = p;
+                p += n;
+            }
+        }
+    }
     return 0;
 }
 
@@ -116,40 +153,20 @@ int r01_cart_player_anim_state_hdr(const R01CartPlayerAnim *anim, int state_idx,
 }
 
 int r01_cart_player_anim_drawable_count(const R01CartPlayerAnim *anim, int state_idx) {
-    const uint8_t *st = state_ptr_at(anim, state_idx);
-    if (!st) {
+    if (!anim || state_idx < 0 || state_idx >= anim->state_count) {
         return 0;
     }
-    return (int)st[0];
+    return (int)anim->frame_count[state_idx];
 }
 
 const uint8_t *r01_cart_player_anim_frame_hdr(const R01CartPlayerAnim *anim, int state_idx, int frame_slot) {
-    const uint8_t *st;
-    const uint8_t *p;
-    const uint8_t *end;
-    int dc;
-    int fi;
-    st = state_ptr_at(anim, state_idx);
-    if (!st || frame_slot < 0) {
+    if (!anim || state_idx < 0 || state_idx >= anim->state_count || frame_slot < 0) {
         return NULL;
     }
-    end = anim->blob + anim->len;
-    dc = (int)st[0];
-    if (frame_slot >= dc) {
+    if (frame_slot >= (int)anim->frame_count[state_idx]) {
         return NULL;
     }
-    p = st + 1;
-    for (fi = 0; fi < dc; fi++) {
-        int n = frame_span(p, end);
-        if (n < 0) {
-            return NULL;
-        }
-        if (fi == frame_slot) {
-            return p;
-        }
-        p += n;
-    }
-    return NULL;
+    return anim->frame_hdr[state_idx][frame_slot];
 }
 
 const uint8_t *r01_cart_player_anim_frame_parts(const R01CartPlayerAnim *anim, int state_idx, int frame_slot,
@@ -194,7 +211,6 @@ void r01_cart_part_pose(int origin_x, int origin_y, int part_dx, int part_dy, ui
 void r01_play_anim_tick_cart(R01PlayAnimCtx *ctx, const R01CartPlayerAnim *anim) {
     int delay;
     int frame_count;
-    const uint8_t *st;
     if (!ctx || !anim) {
         return;
     }
@@ -205,11 +221,7 @@ void r01_play_anim_tick_cart(R01PlayAnimCtx *ctx, const R01CartPlayerAnim *anim)
     if (ctx->player_anim_state < 0 || ctx->player_anim_state >= anim->state_count) {
         return;
     }
-    st = state_ptr_at(anim, ctx->player_anim_state);
-    if (!st) {
-        return;
-    }
-    frame_count = (int)st[0];
+    frame_count = (int)anim->frame_count[ctx->player_anim_state];
     if (frame_count < 1) {
         return;
     }
@@ -219,9 +231,11 @@ void r01_play_anim_tick_cart(R01PlayAnimCtx *ctx, const R01CartPlayerAnim *anim)
     }
     {
         const uint8_t *fh = r01_cart_player_anim_frame_hdr(anim, ctx->player_anim_state, ctx->player_anim_frame);
-        delay = ctx->player_state_delay[ctx->player_anim_state];
-        if (fh && fh[7] > 0) {
+        delay = 0;
+        if (fh && fh[7] > 0u) {
             delay = (int)fh[7];
+        } else if (ctx->player_anim_state >= 0 && ctx->player_anim_state < R01_PLAY_ANIM_STATES_MAX) {
+            delay = ctx->player_state_delay[ctx->player_anim_state];
         }
     }
     delay = r01_play_anim_frame_delay(ctx, delay);

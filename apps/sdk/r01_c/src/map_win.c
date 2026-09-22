@@ -21,6 +21,10 @@ static uint8_t s_n1x = 1;
 static uint8_t s_n1y = 1;
 static uint8_t s_minc;
 static uint8_t s_minr;
+static uint16_t s_bg0_cx = 0xFFFFu;
+static uint16_t s_bg0_cy = 0xFFFFu;
+static uint8_t s_bg0_wx = 0xFFu;
+static uint8_t s_bg0_wy = 0xFFu;
 
 static void vram_seek(uint16_t addr) {
     *R01_VRAM_ADDR_LO = (uint8_t)(addr & 0xFFu);
@@ -28,20 +32,14 @@ static void vram_seek(uint16_t addr) {
 }
 
 static void copy_payload(uint32_t off, uint16_t vram_addr) {
-    uint16_t i;
     r01_map_seek(off);
     vram_seek(vram_addr);
-    for (i = 0; i < (uint16_t)R01_SCREEN_PAYLOAD; i++) {
-        *R01_VRAM_DATA = r01_map_read();
-    }
+    r01_vram_copy_map();
 }
 
 static void fill_zero(uint16_t vram_addr) {
-    uint16_t i;
     vram_seek(vram_addr);
-    for (i = 0; i < (uint16_t)R01_SCREEN_PAYLOAD; i++) {
-        *R01_VRAM_DATA = 0;
-    }
+    r01_vram_fill_zero();
 }
 
 static uint8_t y_to_row(uint16_t y, uint8_t *ly) {
@@ -126,6 +124,10 @@ void r01_world_cache_boot(void) {
     }
     s_n0x = 0;
     s_n0y = 0;
+    s_bg0_cx = 0xFFFFu;
+    s_bg0_cy = 0xFFFFu;
+    s_bg0_wx = 0xFFu;
+    s_bg0_wy = 0xFFu;
     cache_l1_extents();
 
     world = r01_boot_u24(12);
@@ -223,6 +225,14 @@ void r01_bg0_publish(const R01GameCtx *ctx) {
     if (!ctx) {
         return;
     }
+    if (ctx->cam_x == s_bg0_cx && ctx->cam_y == s_bg0_cy && ctx->bg0_wrap_x == s_bg0_wx &&
+        ctx->bg0_wrap_y == s_bg0_wy) {
+        return;
+    }
+    s_bg0_cx = ctx->cam_x;
+    s_bg0_cy = ctx->cam_y;
+    s_bg0_wx = ctx->bg0_wrap_x;
+    s_bg0_wy = ctx->bg0_wrap_y;
     minx = (uint16_t)s_minc << 7;
     miny = (uint16_t)s_minr * (uint16_t)R01_SCREEN_PX_H;
     relx = 0;

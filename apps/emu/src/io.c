@@ -253,7 +253,9 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
         }
         if (apply_now) {
             io->bg0_scroll_x = v;
-            m->video.l0_cam_x = v;
+            if (!r01e_cart_is_c_prg(&m->cart)) {
+                m->video.l0_cam_x = v;
+            }
         } else {
             io->scroll_pal_pending = 1;
         }
@@ -270,7 +272,9 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
         }
         if (apply_now) {
             io->bg0_scroll_y = v;
-            m->video.l0_cam_y = v;
+            if (!r01e_cart_is_c_prg(&m->cart)) {
+                m->video.l0_cam_y = v;
+            }
         } else {
             io->scroll_pal_pending = 1;
         }

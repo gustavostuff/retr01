@@ -3,8 +3,9 @@
 
 #include "r01_cart_caps.h"
 
-/* Shared AABB vs present-screen + solid-tile probe.
- * has_screen / solid_at are world-space callbacks (Studio project or packed cart). */
+/* Shared AABB vs world-grid bounds + solid-tile probe.
+ * has_screen is a present BG1 slot (col/row 0..15). A missing BG1 screen blocks
+ * motion (ledge / world edge). solid_at is world-space (Studio project or packed cart). */
 
 typedef int (*R01PlayHasScreenFn)(void *ctx, int col, int row);
 typedef int (*R01PlaySolidAtFn)(void *ctx, int wx, int wy);

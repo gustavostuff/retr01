@@ -19,6 +19,7 @@ static uint16_t s_pc;
 static uint8_t s_delay;
 static uint8_t s_active;
 static uint8_t s_loop;
+static uint8_t s_dirty;
 
 static void pack_voice(uint8_t ch, uint8_t en, uint8_t vol, uint8_t duty, uint8_t wave, uint16_t per) {
     uint8_t b = (uint8_t)(ch * 4u);
@@ -31,6 +32,7 @@ static void pack_voice(uint8_t ch, uint8_t en, uint8_t vol, uint8_t duty, uint8_
         s_regs[b + 2u] = (uint8_t)(((per >> 8) & 0x07u) | ((duty & 0x03u) << 4));
     }
     s_regs[b + 3u] = (uint8_t)(wave & 0x03u);
+    s_dirty = 1;
 }
 
 static uint16_t note_period(uint8_t note) {
@@ -156,6 +158,7 @@ static void publish_regs(void) {
     for (i = 0; i < 32u; i++) {
         R01_APU[i] = s_regs[i];
     }
+    s_dirty = 0;
 }
 
 static uint8_t stream_at(uint16_t pc) {
@@ -242,6 +245,7 @@ void r01_tracker_boot(void) {
     s_pc = 0;
     s_delay = 0;
     s_loop = 1;
+    s_dirty = 0;
     if (bgm == 0u) {
         return;
     }
@@ -284,7 +288,9 @@ void r01_tracker_boot(void) {
 void r01_tracker_nmi(void) {
     if (s_active) {
         stream_tick();
-        publish_regs();
+        if (s_dirty) {
+            publish_regs();
+        }
     }
 }
 

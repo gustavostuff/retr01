@@ -408,7 +408,7 @@ int8_t r01e_video_plane_slice_get(const R01eVideo *vid, int row) {
     return vid->plane_h_slice[row];
 }
 
-int r01e_video_sync_camera(R01eMachine *m) {
+int r01e_video_fill_origin_slots(R01eMachine *m) {
     R01eWorldView wv;
     R01eVideo *vid;
     int dx, dy;
@@ -426,6 +426,16 @@ int r01e_video_sync_camera(R01eMachine *m) {
                                         dy * 2 + dx);
         }
     }
+    return 0;
+}
+
+int r01e_video_sync_camera(R01eMachine *m) {
+    R01eVideo *vid;
+
+    if (r01e_video_fill_origin_slots(m) != 0) {
+        return -1;
+    }
+    vid = &m->video;
     m->io.scroll_x = (uint8_t)(vid->cam_x - vid->cam_origin_col * R01E_SCREEN_PX_W);
     m->io.scroll_y = (uint8_t)(vid->cam_y - vid->cam_origin_row * R01E_SCREEN_PX_H);
     if (m->io.scroll_x > 127) {
@@ -1076,7 +1086,7 @@ static void composite_sprites(R01eMachine *m) {
         int sy = r01e_oam_coord_from_u8(sy_u);
         int sx = r01e_oam_coord_from_u8(sx_u);
 
-        if (tile == 0xFFu) {
+        if (tile == 0xFFu || sy_u >= 0xF0u || r01e_oam_tile_off_screen(sx, sy)) {
             continue;
         }
         blit_spr_tile(m, sx, sy, tile, attr, line_count);
@@ -1105,7 +1115,7 @@ static void composite_sprites_atlas(R01eMachine *m) {
         int ax = vid->cam_x + sx - origin_px;
         int ay = vid->cam_y + sy - origin_py;
 
-        if (tile == 0xFFu) {
+        if (tile == 0xFFu || sy_u >= 0xF0u || r01e_oam_tile_off_screen(sx, sy)) {
             continue;
         }
         blit_spr_tile_atlas(m, ax, ay, tile, attr, line_count);

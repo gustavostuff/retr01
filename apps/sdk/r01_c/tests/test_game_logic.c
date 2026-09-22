@@ -65,6 +65,13 @@ int main(void) {
 
     ctx.player_move_mul = 1;
     ctx.player_anim_delay_override = 0;
+    ctx.pad = R01_PAD_RIGHT;
+    r01_game_on_tick(&ctx);
+    expect(ctx.player_move_mul == 1, "move without X is not turbo");
+    expect(ctx.player_anim_delay_override == 0, "authored delay when not turbo");
+
+    ctx.player_move_mul = 1;
+    ctx.player_anim_delay_override = 0;
     ctx.pad = R01_PAD_X;
     r01_game_on_tick(&ctx);
     expect(ctx.player_move_mul == 1, "X without move is not turbo");

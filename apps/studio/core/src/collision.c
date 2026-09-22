@@ -15,11 +15,14 @@ typedef struct {
 static int world_aabb_has_screen(void *v, int col, int row) {
     const R01WorldAabbCtx *c = (const R01WorldAabbCtx *)v;
     int idx;
-    if (!c || !c->w) {
+    if (!c || !c->w || col < 0 || col >= R01_GRID_MAX || row < 0 || row >= R01_GRID_MAX) {
         return 0;
     }
     idx = r01_world_find_screen(c->w, col, row);
-    return idx >= 0 && idx < c->w->screen_count && c->w->screens[idx].present;
+    if (idx < 0 || idx >= c->w->screen_count) {
+        return 0;
+    }
+    return c->w->screens[idx].present;
 }
 
 static int world_aabb_solid_at(void *v, int wx, int wy) {

@@ -227,14 +227,62 @@ int main(int argc, char **argv) {
         return 1;
     }
     if (r01e_cart_is_c_prg(&m.cart)) {
+        uint64_t used;
         if (m.play.player_x == spawn_x && m.play.player_y == spawn_y) {
             fprintf(stderr, "FAIL C PRG pad did not move player from %d,%d\n", spawn_x, spawn_y);
             r01e_machine_shutdown(&m);
             return 1;
         }
-        printf("ok C PRG moved player %d,%d -> %d,%d\n", spawn_x, spawn_y, m.play.player_x, m.play.player_y);
+        used = m.prof_last_active + m.prof_last_vblank;
+        printf("ok C PRG moved player %d,%d -> %d,%d cpu active=%llu vblank=%llu used=%llu/%llu\n", spawn_x,
+               spawn_y, m.play.player_x, m.play.player_y, (unsigned long long)m.prof_last_active,
+               (unsigned long long)m.prof_last_vblank, (unsigned long long)used,
+               (unsigned long long)R01E_CPU_BUDGET_CYCLES);
+        if (used > 22000ull) {
+            fprintf(stderr, "FAIL C PRG CPU %llu cycles (budget %llu) after walk\n", (unsigned long long)used,
+                    (unsigned long long)R01E_CPU_BUDGET_CYCLES);
+            r01e_machine_shutdown(&m);
+            return 1;
+        }
+        {
+            int origin0 = m.video.cam_origin_col;
+            int crossed = 0;
+            for (f = 0; f < 200; f++) {
+                r01e_machine_set_pad(&m, 0, R01E_PAD_RIGHT);
+                if (r01e_machine_frame(&m) == 0) {
+                    fprintf(stderr, "FAIL seam frame %d\n", f);
+                    r01e_machine_shutdown(&m);
+                    return 1;
+                }
+                if (m.video.cam_origin_col != origin0) {
+                    used = m.prof_last_active + m.prof_last_vblank;
+                    printf("ok C PRG seam origin %d->%d cpu active=%llu vblank=%llu used=%llu/%llu\n",
+                           origin0, m.video.cam_origin_col, (unsigned long long)m.prof_last_active,
+                           (unsigned long long)m.prof_last_vblank, (unsigned long long)used,
+                           (unsigned long long)R01E_CPU_BUDGET_CYCLES);
+                    if (used > 28000ull) {
+                        fprintf(stderr, "FAIL C PRG seam CPU %llu (MAP copy too expensive)\n",
+                                (unsigned long long)used);
+                        r01e_machine_shutdown(&m);
+                        return 1;
+                    }
+                    crossed = 1;
+                    break;
+                }
+            }
+            if (!crossed) {
+                fprintf(stderr, "FAIL C PRG camera did not cross screen origin (player=%d,%d cam=%d,%d)\n",
+                        m.play.player_x, m.play.player_y, m.play.cam_x, m.play.cam_y);
+                r01e_machine_shutdown(&m);
+                return 1;
+            }
+        }
     }
-    printf("ok VRAM stays synced to cart after %d frames origin=%d,%d\n", f, m.video.cam_origin_col,
+    if (!vram_matches_cart(&m)) {
+        r01e_machine_shutdown(&m);
+        return 1;
+    }
+    printf("ok VRAM stays synced to cart after walk origin=%d,%d\n", m.video.cam_origin_col,
            m.video.cam_origin_row);
 
     r01e_machine_shutdown(&m);

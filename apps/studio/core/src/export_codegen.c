@@ -305,6 +305,9 @@ int r01_export_compile_prg(const char *path_stem, char *err_buf, size_t err_cap)
     if (join_path_err(out_prg, sizeof(out_prg), out_dir, "retr01.prg", err_buf, err_cap) != 0) {
         return -1;
     }
+    if (!r01_prg_needs_rebuild(out_prg, logic)) {
+        return 0;
+    }
     return r01_prg_compile_sdk(logic, prg, out_prg, err_buf, err_cap);
 }
 

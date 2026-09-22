@@ -233,17 +233,15 @@ TEST_MAIN() {
         EXPECT(pl.ctx.player_x == edge_x, "solid seam blocks move into next screen");
     }
 
-    /* Missing screen also blocks AABB. */
+    /* Missing BG1 blocks motion (not a walkable void). */
     {
-        int before = pl.ctx.player_x;
         int miss_idx = r01_world_find_screen(&p->worlds[0], 4, 0);
         int edge4 = 4 * R01_SCREEN_PX_W - R01_PLAY_PLAYER_W;
         EXPECT(miss_idx >= 0, "grid slot for col 4");
         p->worlds[0].screens[miss_idx].present = 0;
         pl.ctx.player_x = edge4;
         r01_play_tick(&pl, p, 1, 0, 0);
-        EXPECT(pl.ctx.player_x == edge4, "missing screen blocks move");
-        pl.ctx.player_x = before;
+        EXPECT(pl.ctx.player_x == edge4, "missing screen blocks motion");
     }
 
     /* Marked player hitbox is offset from the Play origin. */

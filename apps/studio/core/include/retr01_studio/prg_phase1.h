@@ -39,6 +39,8 @@ typedef struct R01PrgCartLayout {
 /* Overlay present/spawn/instance/solid tables and boot MAP offsets. Does not wipe C code. */
 void r01_prg_overlay_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const R01PrgCartLayout *layout);
 
+int r01_prg_needs_rebuild(const char *prg_path, const char *logic_c);
+
 /* Overlay onto a zeroed 32 KB buffer (tests). */
 void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const R01PrgCartLayout *layout);
 

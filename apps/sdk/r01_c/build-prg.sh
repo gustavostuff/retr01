@@ -33,6 +33,7 @@ mkdir -p "$OUTDIR"
   -o "$OUT" \
   "$SDK/asm/boot.s" \
   "$SDK/asm/nmi.s" \
+  "$SDK/asm/map_copy.s" \
   "$SDK/src/hw.c" \
   "$SDK/src/boot.c" \
   "$SDK/src/game.c" \

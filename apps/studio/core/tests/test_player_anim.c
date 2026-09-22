@@ -117,6 +117,33 @@ TEST_MAIN() {
         EXPECT(((attr >> 4) & 3) == 0, "left facing keeps pal");
     }
 
+    {
+        uint8_t blob[] = {
+            'P', 'A', 1, 2, 0, 0, 0, 0, 8, 8, 1, 24, 1, 0, 0, 0, 0, 0, 0, 0, 8, 8, 1, 24, 2, 0, 0, 0,
+        };
+        R01CartPlayerAnim anim;
+        R01PlayAnimCtx ac;
+        int i;
+        EXPECT(r01_cart_player_anim_parse(blob, sizeof(blob), &anim) == 0, "mini PA parse");
+        r01_play_anim_init(&ac);
+        r01_play_anim_set_idle_state(&ac, 0);
+        for (i = 0; i < 23; i++) {
+            r01_play_anim_tick_cart(&ac, &anim);
+        }
+        EXPECT(r01_play_anim_frame(&ac) == 0, "authored delay 24 holds 23 ticks");
+        r01_play_anim_tick_cart(&ac, &anim);
+        EXPECT(r01_play_anim_frame(&ac) == 1, "authored delay 24 advances on 24th");
+        r01_play_anim_init(&ac);
+        r01_play_anim_set_idle_state(&ac, 0);
+        r01_play_anim_set_frame_delay(&ac, 5);
+        for (i = 0; i < 4; i++) {
+            r01_play_anim_tick_cart(&ac, &anim);
+        }
+        EXPECT(r01_play_anim_frame(&ac) == 0, "override 5 holds 4");
+        r01_play_anim_tick_cart(&ac, &anim);
+        EXPECT(r01_play_anim_frame(&ac) == 1, "override 5 advances on 5th");
+    }
+
     free(p);
     TEST_EXIT();
 }

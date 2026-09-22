@@ -245,6 +245,54 @@ void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const 
     r01_prg_overlay_tables(prg, p, layout);
 }
 
+int r01_prg_needs_rebuild(const char *prg_path, const char *logic_c) {
+    struct stat st;
+    time_t mt;
+    static const char *const deps[] = {
+        "/apps/sdk/r01_c/build-prg.sh",
+        "/apps/sdk/r01_c/ld/retr01.ld",
+        "/apps/sdk/r01_c/asm/boot.s",
+        "/apps/sdk/r01_c/asm/nmi.s",
+        "/apps/sdk/r01_c/asm/map_copy.s",
+        "/apps/sdk/r01_c/src/hw.c",
+        "/apps/sdk/r01_c/src/boot.c",
+        "/apps/sdk/r01_c/src/game.c",
+        "/apps/sdk/r01_c/src/play_tick.c",
+        "/apps/sdk/r01_c/src/tracker.c",
+        "/apps/sdk/r01_c/src/map_win.c",
+        "/apps/sdk/r01_c/src/oam_pa.c",
+        "/apps/sdk/r01_c/src/main.c",
+        "/apps/sdk/r01_c/include/r01_hw.h",
+        "/apps/sdk/r01_c/include/r01_engine.h",
+        "/apps/common/r01_play_camera.c",
+        "/apps/common/r01_play_physics.c",
+        "/apps/common/r01_play_collision.c",
+        "/apps/common/r01_play_anim.c",
+        "/apps/common/r01_play_anim_cart.c",
+        "/apps/common/r01_play_anim_cart.h",
+        NULL
+    };
+    unsigned i;
+
+    if (!prg_path || stat(prg_path, &st) != 0 || !S_ISREG(st.st_mode) || (size_t)st.st_size != R01_PRG_BYTES) {
+        return 1;
+    }
+    mt = st.st_mtime;
+    if (logic_c && stat(logic_c, &st) == 0 && st.st_mtime > mt) {
+        return 1;
+    }
+    for (i = 0; deps[i]; i++) {
+        char path[1024];
+        if (snprintf(path, sizeof(path), "%s%s", R01_REPO_ROOT, deps[i]) >= (int)sizeof(path)) {
+            return 1;
+        }
+        if (stat(path, &st) == 0 && st.st_mtime > mt) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static int file_size(const char *path, size_t *out) {
     struct stat st;
     if (!path || stat(path, &st) != 0 || !S_ISREG(st.st_mode)) {
@@ -353,7 +401,6 @@ int r01_prg_load_or_compile(const char *cart_path, uint8_t prg[R01_PRG_BYTES], c
     char dir[R01_PATH_MAX];
     char logic[R01_PATH_MAX];
     char built[R01_PATH_MAX];
-    size_t sz = 0;
     struct stat st;
 
     split_dir(cart_path, dir, sizeof(dir));
@@ -372,7 +419,7 @@ int r01_prg_load_or_compile(const char *cart_path, uint8_t prg[R01_PRG_BYTES], c
         }
         return -1;
     }
-    if (file_size(built, &sz) == 0 && sz == R01_PRG_BYTES) {
+    if (!r01_prg_needs_rebuild(built, logic)) {
         if (read_prg_file(built, prg) == 0) {
             return 0;
         }

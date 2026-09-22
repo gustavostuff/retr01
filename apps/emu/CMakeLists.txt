@@ -90,6 +90,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
         "${R01_REPO_ROOT}/apps/sdk/r01_c/ld/retr01.ld"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/asm/boot.s"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/asm/nmi.s"
+        "${R01_REPO_ROOT}/apps/sdk/r01_c/asm/map_copy.s"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/src/hw.c"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/src/boot.c"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/src/game.c"

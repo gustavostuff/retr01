@@ -46,9 +46,7 @@ void r01_boot_map_stream(void) {
     r01_map_seek(r01_boot_u24(6));
     *R01_VRAM_ADDR_LO = 0;
     *R01_VRAM_ADDR_HI = 0;
-    for (i = 0; i < 480u; i++) {
-        *R01_VRAM_DATA = r01_map_read();
-    }
+    r01_vram_copy_map();
 }
 #else
 void r01_boot_copy_solids(void) {

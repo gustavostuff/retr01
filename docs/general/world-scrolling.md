@@ -173,9 +173,11 @@ Rule of thumb: stay inside the four-screen buffer without cart traffic, then str
 
 **BG1:** If the camera window covers a sparse grid **slot with no present BG1 screen**, default behavior still draws **BG0** there (same as BG1 color index **0** show-through). Backdrop (shared BG color index **0** of the active palette row at `$7F08`) appears only where BG0 is also off, missing, or transparent.
 
+That hole has **no BG1 tiles**. Player collision stays on **present BG1** screens: a missing slot blocks motion (ledge / world edge). BG0 show-through is decoration, not a walkable floor. Motion also cannot leave the **16x16** world grid.
+
 Optional **`r01_bg0_set_clip_to_bg1(ctx, 1)`** (cart flags byte **7** bit **3** / `0x08`): hide BG0 outside present BG1 slots and use backdrop there instead. Independent of BG0 layout wrap.
 
-**Clamp / wrap:** Default for a plane that is **not** in wrap mode: motion **clamps** at the edges of the present playfield (no wrap to the opposite side) unless PRG implements a portal / instant switch. Either plane may instead **autoscroll** and/or **wrap** under PRG control (see below).
+**Clamp / wrap:** Default for a plane that is **not** in wrap mode: camera / plane motion **clamps** at the edges of the present playfield bounding box (no wrap to the opposite side) unless PRG implements a portal / instant switch. Either plane may instead **autoscroll** and/or **wrap** under PRG control (see below).
 
 Corner reloads that need three new screens may spill past one frame of DMA. That is allowed. Prefer finishing the stream before unlocking free camera motion again if tear would show.
 

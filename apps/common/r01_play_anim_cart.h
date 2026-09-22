@@ -15,6 +15,8 @@ typedef struct R01CartPlayerAnim {
     const uint8_t *blob;
     size_t len;
     int state_count;
+    uint8_t frame_count[R01_PLAY_ANIM_STATES_MAX];
+    const uint8_t *frame_hdr[R01_PLAY_ANIM_STATES_MAX][R01_CART_ENTITY_FRAMES_MAX];
 } R01CartPlayerAnim;
 
 int r01_cart_player_anim_parse(const uint8_t *blob, size_t len, R01CartPlayerAnim *out);

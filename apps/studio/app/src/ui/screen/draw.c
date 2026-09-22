@@ -702,7 +702,7 @@ static void draw_play_boot(UiState *ui, SDL_Renderer *r, int ox, int oy) {
     char spin;
     fill_rect(r, ox, oy, ui_screen_w(ui), ui_screen_h(ui), 0, 0, 0);
     spin = spin_chars[ui->play.spin & 3];
-    snprintf(line, sizeof(line), "Booting console... %c", spin);
+    snprintf(line, sizeof(line), "Packing ROM... %c", spin);
     font_draw_centered(r, ox, oy + ui_screen_h(ui) / 2 - UI_BTN_H / 2, ui_screen_w(ui), UI_BTN_H, line, 200, 200, 200);
 }
 

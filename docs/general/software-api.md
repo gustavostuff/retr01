@@ -229,7 +229,7 @@ There is **no** separate "max entities on screen" hard cap. On-screen count is w
 | Feature | v1 |
 | --- | --- |
 | Movement | Axis-separated (resolve X then Y, or the reverse, consistently) |
-| Solids | BG1 cells whose bank index and tile index match a marked pattern. Palette and H/V flip are ignored. Author code marks patterns with `r01_solid_pattern_add(ctx, bank, tile)` in `game_logic.c`. Studio Set Solid stores the same list as `solid_patterns` in the project JSON. Export packs that JSON list at PRG `$8700`. Boot copies the list into system RAM (`$0200`). See `memory.md` |
+| Solids | BG1 cells whose bank index and tile index match a marked pattern. Palette and H/V flip are ignored. A grid slot with no present BG1 screen has no tiles and blocks motion (ledge / world edge). BG0 show-through is decoration. Author code marks patterns with `r01_solid_pattern_add(ctx, bank, tile)` in `game_logic.c`. Studio Set Solid stores the same list as `solid_patterns` in the project JSON. Export packs that JSON list at PRG `$8700`. Boot copies the list into system RAM (`$0200`). See `memory.md` |
 | Colliders | Entity AABB hitboxes (per state). Vs BG solids: every overlapping 8x8 tile is tested (not corners only) |
 | Gravity / jump | Simple constant gravity + jump impulse (PRG tunes numbers). Gravity units are **1/16** px per frame^2. Release while rising uses 3x gravity (short hop) |
 | Meter | Pixels per meter (default **16**). Gravity, jump, walk, and fall cap scale as `n * meter / 16` |

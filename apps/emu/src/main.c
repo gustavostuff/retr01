@@ -191,7 +191,6 @@ static void emu_sync_menu_audio(int menu, int *audio_paused) {
     (DBG_PAL_LABEL_W + R01E_PALS_PER_ROW * (R01E_PAL_COLORS * (DBG_PAL_SWATCH + 1)) +                                 \
      (R01E_PALS_PER_ROW - 1) * (DBG_PAL_GROUP_GAP - 1))
 #define DBG_CHART_BARS 20
-#define DBG_CHART_HZ 2
 #define DBG_CHART_H 48
 #define DBG_CHART_PAD 4
 #define DBG_CHART_LABEL_H 10
@@ -366,45 +365,20 @@ typedef struct DbgCpuChart {
     uint64_t vblank[DBG_CHART_BARS];
     int count;
     int head; /* next write index */
-    uint64_t peak_active;
-    uint64_t peak_vblank;
-    Uint32 last_sample_ms;
 } DbgCpuChart;
 
 static void dbg_chart_note_frame(DbgCpuChart *ch, const R01eMachine *m) {
+    int i;
     if (!ch || !m) {
         return;
     }
-    if (m->prof_last_active > ch->peak_active) {
-        ch->peak_active = m->prof_last_active;
-    }
-    if (m->prof_last_vblank > ch->peak_vblank) {
-        ch->peak_vblank = m->prof_last_vblank;
-    }
-}
-
-static void dbg_chart_maybe_sample(DbgCpuChart *ch, Uint32 now_ms) {
-    int i;
-    if (!ch) {
-        return;
-    }
-    if (ch->last_sample_ms == 0) {
-        ch->last_sample_ms = now_ms;
-        return;
-    }
-    if ((int)(now_ms - ch->last_sample_ms) < (1000 / DBG_CHART_HZ)) {
-        return;
-    }
     i = ch->head;
-    ch->active[i] = ch->peak_active;
-    ch->vblank[i] = ch->peak_vblank;
+    ch->active[i] = m->prof_last_active;
+    ch->vblank[i] = m->prof_last_vblank;
     ch->head = (ch->head + 1) % DBG_CHART_BARS;
     if (ch->count < DBG_CHART_BARS) {
         ch->count++;
     }
-    ch->peak_active = 0;
-    ch->peak_vblank = 0;
-    ch->last_sample_ms = now_ms;
 }
 
 static void draw_cpu_budget_chart(SDL_Renderer *ren, const DbgCpuChart *ch, int ox, int oy) {
@@ -789,7 +763,7 @@ int main(int argc, char **argv) {
     printf("Home / Guide: Reset, Quit, 1x/2x, Mute On/Off.  Platformer jump: face Y (P1 H, P2 .).\n");
     printf("Space pause  |  R reset  |  Ctrl+1/2 scale  |  Ctrl+F fullscreen  |  Esc quit\n");
     if (dbg_win) {
-        printf("Debug: BG1/BG0 2x2 + BG1 mask + world map + pals + CPU budget (2 Hz, 50k red line)\n");
+        printf("Debug: BG1/BG0 2x2 + BG1 mask + world map + pals + CPU budget (last 20 frames, 50k red line)\n");
     }
 #if R01_README_SHOT
     if (want_dbg) {
@@ -891,7 +865,6 @@ int main(int argc, char **argv) {
         }
 
         {
-            Uint32 now_ms = SDL_GetTicks();
             Uint64 now = SDL_GetPerformanceCounter();
             int menu = r01_pad_host_menu_open();
             emu_sync_menu_audio(menu, &menu_muted);
@@ -905,7 +878,6 @@ int main(int argc, char **argv) {
                         last_frame = now;
                     }
                 }
-                dbg_chart_maybe_sample(&cpu_chart, now_ms);
             } else {
                 last_frame = now;
                 r01e_video_render_frame(&machine);

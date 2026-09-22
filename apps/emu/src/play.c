@@ -19,10 +19,6 @@ static int cart_is_phase1_play(const R01eCart *c) {
     return prg[0x00F0] == 'R' && prg[0x00F1] == '0' && prg[0x00F2] == '1' && prg[0x00F3] == 'P';
 }
 
-static int cart_is_c_prg(const R01eCart *c) {
-    return r01e_cart_is_c_prg(c);
-}
-
 static void play_follow_c_sys(R01eMachine *m) {
     if (!m || !m->ram[0x02E8]) {
         return;
@@ -336,6 +332,14 @@ void r01e_play_sync_video(R01eMachine *m) {
     vid->cam_y = pl->cam_y;
     vid->cam_origin_col = ox;
     vid->cam_origin_row = oy;
+    if (r01e_cart_is_c_prg(&m->cart)) {
+        /* C PRG owns $7F02/$7F03; host only refreshes the 2x2 window. */
+        if (origin_changed) {
+            (void)r01e_video_fill_origin_slots(m);
+        }
+        r01e_video_update_bg0_scroll(m);
+        return;
+    }
     m->io.scroll_x = (uint8_t)(pl->cam_x - ox * R01E_SCREEN_PX_W);
     m->io.scroll_y = (uint8_t)(pl->cam_y - oy * R01E_SCREEN_PX_H);
     if (m->io.scroll_x > 127) {
@@ -347,7 +351,6 @@ void r01e_play_sync_video(R01eMachine *m) {
     if (origin_changed) {
         (void)r01e_video_sync_camera(m);
     } else {
-        /* L0 must track every pixel of BG1 cam, not only screen crosses. */
         r01e_video_update_bg0_scroll(m);
     }
 }
@@ -565,11 +568,10 @@ int r01e_play_start(R01eMachine *m) {
     }
     r01e_play_reset(&m->play);
     play_load_cart_camera(m);
-    if (cart_is_c_prg(&m->cart)) {
+    if (r01e_cart_is_c_prg(&m->cart)) {
         m->play.enabled = 1;
         if (m->ram[0x02E8]) {
             play_follow_c_sys(m);
-            clamp_cam_to_world_bounds(m);
             r01e_play_sync_video(m);
             (void)r01e_video_sync_camera(m);
         }
@@ -616,10 +618,9 @@ void r01e_play_tick(R01eMachine *m) {
     if (!m || !m->play.enabled) {
         return;
     }
-    if (cart_is_c_prg(&m->cart)) {
+    if (r01e_cart_is_c_prg(&m->cart)) {
         if (m->ram[0x02E8]) {
             play_follow_c_sys(m);
-            clamp_cam_to_world_bounds(m);
             r01e_play_sync_video(m);
         }
         return;
