@@ -73,6 +73,39 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     add_test(NAME ${_t} COMMAND ${_t})
   endforeach()
 
+  # Optional llvm-mos PRG boot test (tools/llvm-mos or $LLVM_MOS).
+  set(R01_LLVM_MOS "$ENV{LLVM_MOS}")
+  if(NOT R01_LLVM_MOS)
+    set(R01_LLVM_MOS "${R01_REPO_ROOT}/tools/llvm-mos")
+  endif()
+  set(R01_SDK_PRG "${R01_REPO_ROOT}/apps/sdk/r01_c/build/retr01.prg")
+  add_executable(test_sdk_prg tests/test_sdk_prg.c)
+  target_include_directories(test_sdk_prg PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+  target_link_libraries(test_sdk_prg PRIVATE retr01_emu_core)
+  if(EXISTS "${R01_LLVM_MOS}/bin/mos-common-clang")
+    add_custom_command(
+      OUTPUT "${R01_SDK_PRG}"
+      COMMAND "${R01_REPO_ROOT}/apps/sdk/r01_c/build-prg.sh"
+      DEPENDS
+        "${R01_REPO_ROOT}/apps/sdk/r01_c/build-prg.sh"
+        "${R01_REPO_ROOT}/apps/sdk/r01_c/ld/retr01.ld"
+        "${R01_REPO_ROOT}/apps/sdk/r01_c/asm/boot.s"
+        "${R01_REPO_ROOT}/apps/sdk/r01_c/asm/nmi.s"
+        "${R01_REPO_ROOT}/apps/sdk/r01_c/src/hw.c"
+        "${R01_REPO_ROOT}/apps/sdk/r01_c/src/game.c"
+        "${R01_REPO_ROOT}/apps/sdk/r01_c/src/play_tick.c"
+        "${R01_REPO_ROOT}/apps/sdk/r01_c/src/main.c"
+        "${R01_REPO_ROOT}/apps/common/r01_play_camera.c"
+        "${R01_REPO_ROOT}/apps/common/r01_play_physics.c"
+        "${R01_REPO_ROOT}/apps/sdk/r01_c/game_logic.c"
+      COMMENT "llvm-mos Retr01 PRG"
+      VERBATIM
+    )
+    add_custom_target(r01_sdk_prg DEPENDS "${R01_SDK_PRG}")
+    add_dependencies(test_sdk_prg r01_sdk_prg)
+    add_test(NAME test_sdk_prg COMMAND test_sdk_prg "${R01_SDK_PRG}")
+  endif()
+
   # Optional integration binaries (need a real .retr01 on argv). Registered when the sample cart exists.
   set(R01E_EXAMPLE_CART "${R01_REPO_ROOT}/example_01/example_01.retr01")
   foreach(_t test_boot test_play)

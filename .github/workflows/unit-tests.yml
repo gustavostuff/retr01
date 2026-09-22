@@ -13,5 +13,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake gcc pkg-config libsdl2-dev libpng-dev libfreetype6-dev
+      - name: Install llvm-mos
+        run: ./scripts/fetch-llvm-mos.sh
       - name: Run unit tests
         run: ./scripts/unit-tests.sh

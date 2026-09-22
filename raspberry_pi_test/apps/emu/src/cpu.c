@@ -121,6 +121,99 @@ int r01e_cpu_step(R01eCpu *cpu, R01eMachine *m) {
         cyc = 3;
         break;
     }
+    case 0x5A: /* PHY -- 65C02 */
+        push(cpu, m, cpu->y);
+        cyc = 3;
+        break;
+    case 0x7A: /* PLY -- 65C02 */
+        cpu->y = pull(cpu, m);
+        set_zn(cpu, cpu->y);
+        cyc = 4;
+        break;
+    case 0xDA: /* PHX -- 65C02 */
+        push(cpu, m, cpu->x);
+        cyc = 3;
+        break;
+    case 0xFA: /* PLX -- 65C02 */
+        cpu->x = pull(cpu, m);
+        set_zn(cpu, cpu->x);
+        cyc = 4;
+        break;
+    case 0x1A: /* INC A -- 65C02 */
+        cpu->a++;
+        set_zn(cpu, cpu->a);
+        cyc = 2;
+        break;
+    case 0x3A: /* DEC A -- 65C02 */
+        cpu->a--;
+        set_zn(cpu, cpu->a);
+        cyc = 2;
+        break;
+    case 0x64: /* STZ zp -- 65C02 */
+        addr = rd(m, cpu->pc++);
+        wr(m, addr, 0);
+        cyc = 3;
+        break;
+    case 0x74: /* STZ zp,X -- 65C02 */
+        addr = (uint8_t)(rd(m, cpu->pc++) + cpu->x);
+        wr(m, addr, 0);
+        cyc = 4;
+        break;
+    case 0x9C: /* STZ abs -- 65C02 */
+        addr = rd16(m, cpu->pc);
+        cpu->pc = (uint16_t)(cpu->pc + 2);
+        wr(m, addr, 0);
+        cyc = 4;
+        break;
+    case 0x9E: /* STZ abs,X -- 65C02 */
+        addr = (uint16_t)(rd16(m, cpu->pc) + cpu->x);
+        cpu->pc = (uint16_t)(cpu->pc + 2);
+        wr(m, addr, 0);
+        cyc = 5;
+        break;
+    case 0x92: /* STA (zp) -- 65C02 */
+        addr = rd(m, cpu->pc++);
+        wr(m, rd16(m, addr), cpu->a);
+        cyc = 5;
+        break;
+    case 0xB2: /* LDA (zp) -- 65C02 */
+        addr = rd(m, cpu->pc++);
+        cpu->a = rd(m, rd16(m, addr));
+        set_zn(cpu, cpu->a);
+        cyc = 5;
+        break;
+    case 0x12: /* ORA (zp) -- 65C02 */
+        addr = rd(m, cpu->pc++);
+        cpu->a |= rd(m, rd16(m, addr));
+        set_zn(cpu, cpu->a);
+        cyc = 5;
+        break;
+    case 0x32: /* AND (zp) -- 65C02 */
+        addr = rd(m, cpu->pc++);
+        cpu->a &= rd(m, rd16(m, addr));
+        set_zn(cpu, cpu->a);
+        cyc = 5;
+        break;
+    case 0x52: /* EOR (zp) -- 65C02 */
+        addr = rd(m, cpu->pc++);
+        cpu->a ^= rd(m, rd16(m, addr));
+        set_zn(cpu, cpu->a);
+        cyc = 5;
+        break;
+    case 0xD2: /* CMP (zp) -- 65C02 */
+        addr = rd(m, cpu->pc++);
+        v = rd(m, rd16(m, addr));
+        {
+            uint16_t d = (uint16_t)cpu->a - v;
+            if (cpu->a >= v) {
+                cpu->p |= C_C;
+            } else {
+                cpu->p = (uint8_t)(cpu->p & (uint8_t)~C_C);
+            }
+            set_zn(cpu, (uint8_t)d);
+        }
+        cyc = 5;
+        break;
     case 0xEA: /* NOP */
         cyc = 2;
         break;

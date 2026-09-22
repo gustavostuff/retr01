@@ -6,15 +6,19 @@
  * Walk is 1 px/frame at meter 16 (2 px/frame when run_mul is 2) and does not use gravity.
  * Smaller meter slows all of it. */
 
+#ifndef R01_GAME_MODE_TOPDOWN
 #define R01_GAME_MODE_TOPDOWN 0
 #define R01_GAME_MODE_PLATFORMER 1
+#endif
 
+#ifndef R01_PLAT_GRAVITY_SCALE
 #define R01_PLAT_GRAVITY_SCALE 16
 #define R01_PLAT_GRAVITY_DEFAULT 4 /* 4/16 = 0.25 px/frame^2 at meter 16 */
 #define R01_PLAT_GRAVITY_MAX 255
 #define R01_PLAT_JUMP_DEFAULT 4 /* takeoff px/frame at meter 16. Peak ~34 px in ~16 frames */
 #define R01_PLAT_FALL_MAX_DEFAULT 4
 #define R01_PLAT_METER_DEFAULT 16
+#endif
 #define R01_PLAT_JUMP_RELEASE_MUL 3
 #define R01_PHYS_SHIFT 8
 #define R01_PHYS_ONE (1 << R01_PHYS_SHIFT)

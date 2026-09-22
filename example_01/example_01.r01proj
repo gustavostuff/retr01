@@ -99,6 +99,7 @@
     }
   ],
   "instances": [
+    {"type": 0, "x": 28, "y": 894}
   ],
   "warp_entrances": [
   ],

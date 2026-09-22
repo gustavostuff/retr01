@@ -67,6 +67,53 @@ int main(void) {
         return 1;
     }
 
+    m.ram[0x40] = 0xFF;
+    m.ram[0x0100] = 0x64; /* STZ $40 */
+    m.ram[0x0101] = 0x40;
+    m.cpu.pc = 0x0100;
+    (void)r01e_cpu_step(&m.cpu, &m);
+    if (m.ram[0x40] != 0) {
+        r01e_machine_shutdown(&m);
+        return fail("STZ zp");
+    }
+
+    m.ram[0x20] = 0x30;
+    m.ram[0x21] = 0x00;
+    m.ram[0x30] = 0;
+    m.ram[0x0102] = 0xA9; /* LDA #$99 */
+    m.ram[0x0103] = 0x99;
+    m.ram[0x0104] = 0x92; /* STA ($20) */
+    m.ram[0x0105] = 0x20;
+    m.cpu.pc = 0x0102;
+    (void)r01e_cpu_step(&m.cpu, &m);
+    (void)r01e_cpu_step(&m.cpu, &m);
+    if (m.ram[0x30] != 0x99) {
+        r01e_machine_shutdown(&m);
+        return fail("STA (zp)");
+    }
+
+    m.cpu.x = 0xAB;
+    m.cpu.s = 0xFD;
+    m.ram[0x0106] = 0xDA; /* PHX */
+    m.cpu.pc = 0x0106;
+    (void)r01e_cpu_step(&m.cpu, &m);
+    if (m.ram[0x01FD] != 0xAB) {
+        r01e_machine_shutdown(&m);
+        return fail("PHX");
+    }
+
+    m.ram[0x0107] = 0x80; /* BRA +2 */
+    m.ram[0x0108] = 0x02;
+    m.ram[0x0109] = 0xEA;
+    m.ram[0x010A] = 0xEA;
+    m.cpu.pc = 0x0107;
+    (void)r01e_cpu_step(&m.cpu, &m);
+    if (m.cpu.pc != 0x010B) {
+        fprintf(stderr, "FAIL BRA pc=$%04x\n", m.cpu.pc);
+        r01e_machine_shutdown(&m);
+        return 1;
+    }
+
     /* Reset vector path: machine reset should land in PRG. */
     r01e_machine_reset(&m);
     if (m.cpu.pc < 0x8000u) {
