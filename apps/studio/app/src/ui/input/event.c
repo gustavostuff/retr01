@@ -111,6 +111,9 @@ int ui_handle_event(UiState *ui, const SDL_Event *e, int lx, int ly) {
         ui->mouse_x = lx;
         ui->mouse_y = ly;
     }
+    if (ui->rom_export_step) {
+        return 1;
+    }
     if (e->type == SDL_KEYDOWN && (e->key.keysym.mod & KMOD_CTRL) && e->key.keysym.sym == SDLK_f) {
         return 2; /* toggle fullscreen */
     }

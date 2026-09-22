@@ -484,6 +484,9 @@ typedef struct UiState {
     char toast[96];
     Uint32 toast_until;
     int toast_error;
+    int rom_export_step; /* 0 idle; else sequential Ctrl+E steps */
+    int rom_export_spin;
+    char rom_export_stem[R01_PATH_MAX];
     char tooltip[160];
     int tooltip_x;
     int tooltip_y;

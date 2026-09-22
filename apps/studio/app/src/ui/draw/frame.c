@@ -98,5 +98,12 @@ void ui_draw(UiState *ui, SDL_Renderer *r) {
     if (ui_project_io_is_open(ui)) {
         ui_project_io_draw(ui, r);
     }
+    if (ui->rom_export_step) {
+        static const char spin_chars[] = {'\\', '|', '/', '-'};
+        char line[32];
+        fill_rect_alpha(r, 0, 0, ui_logic_w(ui), ui_logic_h(ui), 0, 0, 0, 140);
+        snprintf(line, sizeof(line), "Exporting ROM... %c", spin_chars[ui->rom_export_spin & 3]);
+        font_draw_centered(r, 0, ui_logic_h(ui) / 2 - UI_BTN_H / 2, ui_logic_w(ui), UI_BTN_H, line, 220, 220, 220);
+    }
     draw_tooltip(ui, r);
 }

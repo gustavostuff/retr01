@@ -1271,6 +1271,9 @@ int r01_export_bundle(const R01Project *p, const char *path_stem, char *err_buf,
     if (r01_export_codegen(p, path_stem, err_buf, err_cap) != 0) {
         return -1;
     }
+    if (r01_export_compile_plugin(path_stem, err_buf, err_cap) != 0) {
+        return -1;
+    }
     snprintf(path, sizeof(path), "%s.retr01", path_stem);
     if (r01_path_ensure_parent(path, err_buf, err_cap) != 0) {
         return -1;

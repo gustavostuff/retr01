@@ -1584,6 +1584,23 @@ static void compile_custom_plugin(const char *c_dir) {
     (void)system(cmd);
 }
 
+int r01_export_compile_plugin(const char *path_stem, char *err_buf, size_t err_cap) {
+    char out_dir[R01_PATH_MAX];
+    char base_name[64];
+    char c_dir[R01_PATH_MAX];
+    if (!path_stem) {
+        set_err(err_buf, err_cap, "bad args");
+        return -1;
+    }
+    split_stem(path_stem, out_dir, sizeof(out_dir), base_name, sizeof(base_name));
+    (void)base_name;
+    if (join_path_err(c_dir, sizeof(c_dir), out_dir, "C", err_buf, err_cap) != 0) {
+        return -1;
+    }
+    compile_custom_plugin(c_dir);
+    return 0;
+}
+
 int r01_export_codegen(const R01Project *p, const char *path_stem, char *err_buf, size_t err_cap) {
     char out_dir[R01_PATH_MAX];
     char base_name[64];
@@ -1632,7 +1649,6 @@ int r01_export_codegen(const R01Project *p, const char *path_stem, char *err_buf
     if (write_tick_host(path, err_buf, err_cap) != 0) {
         return -1;
     }
-    compile_custom_plugin(path);
 
     if (join_path_err(path, sizeof(path), out_dir, "C/base_game.c", err_buf, err_cap) != 0) {
 

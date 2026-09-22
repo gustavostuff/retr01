@@ -401,6 +401,9 @@ void ui_tick(UiState *ui) {
     }
     accordion_anim_tick(ui);
     entity_edit_preview_tick(ui);
+    if (ui->rom_export_step) {
+        return;
+    }
     if (!ui->play.active || ui->play.booting || !ui->play.machine) {
         if (ui->play.booting) {
             ui->play.spin++;

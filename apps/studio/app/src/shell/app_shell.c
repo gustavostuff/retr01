@@ -244,6 +244,8 @@ void app_shell_frame(AppShell *app) {
     SDL_RenderPresent(app->ren);
     if (app->ui.play.booting) {
         ui_play_boot_finish(&app->ui, app->ren);
+    } else if (app->ui.rom_export_step) {
+        ui_export_step(&app->ui);
     }
 }
 

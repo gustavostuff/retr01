@@ -473,6 +473,7 @@ void draw_menu(UiState *ui, SDL_Renderer *r);
 void ui_reset_after_project_load(UiState *ui);
 void ui_save(UiState *ui);
 void ui_export(UiState *ui);
+void ui_export_step(UiState *ui);
 
 /* ui/input/world.c */
 int ui_screen_nav(UiState *ui, int dcol, int drow);

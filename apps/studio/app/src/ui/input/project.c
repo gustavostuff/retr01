@@ -6,6 +6,7 @@
 #include "font/font.h"
 
 #include "retr01_studio/cart.h"
+#include "retr01_studio/export_codegen.h"
 #include "retr01_studio/paths.h"
 #include "retr01_studio/chr_pack.h"
 #include "retr01_studio/json_io.h"
@@ -177,25 +178,106 @@ void ui_save(UiState *ui) {
     ui_toast(ui, "project saved", 0);
 }
 
+enum {
+    UI_ROM_EXPORT_IDLE = 0,
+    UI_ROM_EXPORT_CODEGEN,
+    UI_ROM_EXPORT_COMPILE,
+    UI_ROM_EXPORT_CART,
+    UI_ROM_EXPORT_PROM,
+    UI_ROM_EXPORT_FLASH,
+    UI_ROM_EXPORT_BINS
+};
+
 void ui_export(UiState *ui) {
     char stem[R01_PATH_MAX];
-    char toast[R01_PATH_MAX + 32];
-    char err[128];
-    const char *name = (ui->project && ui->project->name[0]) ? ui->project->name : "project";
-
+    const char *name;
+    if (!ui || !ui->project) {
+        return;
+    }
+    if (ui->rom_export_step || ui->play.booting) {
+        return;
+    }
+    name = ui->project->name[0] ? ui->project->name : "project";
     if (r01_export_stem(ui->project_path, name, stem, sizeof(stem)) != 0) {
         ui_toast(ui, "export path failed", 1);
         return;
     }
     ui_bgm_sync_to_project(ui);
-    if (r01_export_bundle(ui->project, stem, err, sizeof(err)) != 0) {
-        ui_toast(ui, err, 1);
+    snprintf(ui->rom_export_stem, sizeof(ui->rom_export_stem), "%s", stem);
+    ui->rom_export_spin = 0;
+    ui->rom_export_step = UI_ROM_EXPORT_CODEGEN;
+}
+
+void ui_export_step(UiState *ui) {
+    char path[R01_PATH_MAX];
+    char err[128];
+    char toast[R01_PATH_MAX + 32];
+    const char *stem;
+    if (!ui || ui->rom_export_step == UI_ROM_EXPORT_IDLE) {
         return;
     }
-    /* Debug dump: flattened grid bins (Play reads packed PRG, not these). */
-    ui_bgm_write_export_bins(ui);
-    snprintf(toast, sizeof(toast), "%s.retr01 exported", stem);
-    ui_toast(ui, toast, 0);
+    stem = ui->rom_export_stem;
+    err[0] = '\0';
+    switch (ui->rom_export_step) {
+    case UI_ROM_EXPORT_CODEGEN:
+        if (r01_export_codegen(ui->project, stem, err, sizeof(err)) != 0) {
+            ui->rom_export_step = UI_ROM_EXPORT_IDLE;
+            ui_toast(ui, err[0] ? err : "export failed", 1);
+            return;
+        }
+        ui->rom_export_spin++;
+        ui->rom_export_step = UI_ROM_EXPORT_COMPILE;
+        return;
+    case UI_ROM_EXPORT_COMPILE:
+        if (r01_export_compile_plugin(stem, err, sizeof(err)) != 0) {
+            ui->rom_export_step = UI_ROM_EXPORT_IDLE;
+            ui_toast(ui, err[0] ? err : "plugin compile failed", 1);
+            return;
+        }
+        ui->rom_export_spin++;
+        ui->rom_export_step = UI_ROM_EXPORT_CART;
+        return;
+    case UI_ROM_EXPORT_CART:
+        snprintf(path, sizeof(path), "%s.retr01", stem);
+        if (r01_path_ensure_parent(path, err, sizeof(err)) != 0 ||
+            r01_cart_write(ui->project, path, err, sizeof(err)) != 0) {
+            ui->rom_export_step = UI_ROM_EXPORT_IDLE;
+            ui_toast(ui, err[0] ? err : "cart write failed", 1);
+            return;
+        }
+        ui->rom_export_spin++;
+        ui->rom_export_step = UI_ROM_EXPORT_PROM;
+        return;
+    case UI_ROM_EXPORT_PROM:
+        snprintf(path, sizeof(path), "%s_prom.bin", stem);
+        if (r01_prom_write(path, err, sizeof(err)) != 0) {
+            ui->rom_export_step = UI_ROM_EXPORT_IDLE;
+            ui_toast(ui, err[0] ? err : "prom write failed", 1);
+            return;
+        }
+        ui->rom_export_spin++;
+        ui->rom_export_step = UI_ROM_EXPORT_FLASH;
+        return;
+    case UI_ROM_EXPORT_FLASH:
+        snprintf(path, sizeof(path), "%s_flash.bin", stem);
+        if (r01_cart_write_flash(ui->project, path, err, sizeof(err)) != 0) {
+            ui->rom_export_step = UI_ROM_EXPORT_IDLE;
+            ui_toast(ui, err[0] ? err : "flash write failed", 1);
+            return;
+        }
+        ui->rom_export_spin++;
+        ui->rom_export_step = UI_ROM_EXPORT_BINS;
+        return;
+    case UI_ROM_EXPORT_BINS:
+        ui_bgm_write_export_bins(ui);
+        snprintf(toast, sizeof(toast), "%s.retr01 exported", stem);
+        ui->rom_export_step = UI_ROM_EXPORT_IDLE;
+        ui_toast(ui, toast, 0);
+        return;
+    default:
+        ui->rom_export_step = UI_ROM_EXPORT_IDLE;
+        return;
+    }
 }
 
 int ui_handle_drop_file(UiState *ui, const char *path, int lx, int ly) {
