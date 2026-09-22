@@ -248,7 +248,9 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
             seed_scroll_pal_next(io);
         }
         io->bg0_scroll_x_next = v;
-        m->video.bg0_scroll_manual = 1;
+        if (!r01e_cart_is_c_prg(&m->cart)) {
+            m->video.bg0_scroll_manual = 1;
+        }
         if (apply_now) {
             io->bg0_scroll_x = v;
             m->video.l0_cam_x = v;
@@ -263,7 +265,9 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
             seed_scroll_pal_next(io);
         }
         io->bg0_scroll_y_next = v;
-        m->video.bg0_scroll_manual = 1;
+        if (!r01e_cart_is_c_prg(&m->cart)) {
+            m->video.bg0_scroll_manual = 1;
+        }
         if (apply_now) {
             io->bg0_scroll_y = v;
             m->video.l0_cam_y = v;
@@ -315,8 +319,8 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
         io->vram_addr = (uint16_t)(io->vram_addr & (R01E_VRAM_BYTES - 1));
         break;
     case 0x7F12:
-        /* Play on: drop leftover boot/ASM MAP streams into the host 2x2. */
-        if (!m->play.enabled) {
+        /* Host Play 2x2 owns VRAM unless C PRG is streaming MAP itself. */
+        if (!m->play.enabled || r01e_cart_is_c_prg(&m->cart)) {
             m->video.vram[io->vram_addr & (R01E_VRAM_BYTES - 1)] = v;
         }
         io->vram_addr = (uint16_t)((io->vram_addr + 1) & (R01E_VRAM_BYTES - 1));
@@ -411,8 +415,8 @@ void r01e_io_dot(R01eMachine *m) {
         if (io->ctrl & R01E_PPUCTRL_NMI_EN) {
             m->nmi_pending = 1;
         }
-        /* Host Play cart APU: one tracker tick per VBlank NMI. */
-        if (m->apu_tracker_on) {
+        /* Host Play cart APU: one tracker tick per VBlank NMI. C PRG owns $7F40. */
+        if (m->apu_tracker_on && !r01e_cart_is_c_prg(&m->cart)) {
             (void)r01_apu_tracker_nmi(&m->apu_tracker, m->io.apu);
         }
     }

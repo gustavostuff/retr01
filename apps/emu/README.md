@@ -12,9 +12,9 @@ Studio **Play** uses this same emu core after export (shared library + standalon
 |-------|-----------------|
 | **Cart** | Load `.retr01` (Studio packs present screens only). CHR, pals, llvm-mos PRG (`R01P`) |
 | **Play** | Camera / collision follow the C PRG (`$02E0` sys block). Same image as Studio Play |
-| **CPU** | Boots world 0. PRG streams pals + start MAP (`$7F93` -> `$7F12`), then the C play loop |
+| **CPU** | Boots world 0. PRG streams pals + live 2x2 MAP (`$7F93` -> `$7F12`), then the C play loop |
 | **Video** | Main FB = **VRAM + scroll** + **OAM** + **BG0** show-through under BG1 color 0 (SCALE 2x) |
-| **Host** | SDL. Keyboard or SDL Game Controller (community DB + SDL built-in mappings). First two pads are P1 / P2. Guide / Home opens Reset, Quit, 1x/2x present scale, and Mute On/Off. Pad map: P1 WASD+G/H, P2 arrows+,/. Platformer jump is face **Y** (P1 **H**, gamepad south). `r01_game_on_tick` may raise walk speed and anim frame delay from live pad bits (`R01_PAD_X` is P1 **G**). NMI tracker fills `$7F40` from the cart BGM region (`$80FE` boot index). PC speaker mixes that window. Not MCU-S2 PWM |
+| **Host** | SDL. Keyboard or SDL Game Controller (community DB + SDL built-in mappings). First two pads are P1 / P2. Guide / Home opens Reset, Quit, 1x/2x present scale, and Mute On/Off. Pad map: P1 WASD+G/H, P2 arrows+,/. Platformer jump is face **Y** (P1 **H**, gamepad south). `r01_game_on_tick` may raise walk speed and anim frame delay from live pad bits (`R01_PAD_X` is P1 **G**). C NMI tracker fills `$7F40` from the cart BGM region (`$80FE` boot index). PC speaker mixes that window. Not MCU-S2 PWM |
 
 **Sync contract:** The packed C PRG is gameplay. Export packs present screens + play table (`$8100`) + `R01P` over llvm-mos code at `$C800`. Soft-boot (`R01E_SOFTBOOT=1`) uses host memcpy of VRAM and pals at boot (triage). Default boot runs cart PRG stream catchup until the start MAP write reaches **480** bytes (`vram_addr`). Collision samples the packed solid-pattern tables. Render samples that VRAM window.
 

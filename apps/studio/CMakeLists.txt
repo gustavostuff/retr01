@@ -84,6 +84,9 @@ r01_studio_add_test(warps)
 r01_studio_add_test(game_runtime)
 r01_studio_add_test(player_anim)
 
+add_executable(r01_pack_cart tools/pack_cart.c)
+target_link_libraries(r01_pack_cart PRIVATE retr01_studio_core)
+
 # Optional golden-file integration binary (not registered with ctest).
 # Run manually: ./test_fixture path/to/test.r01proj path/to/test.retr01
 add_executable(test_fixture core/tests/test_fixture.c ${STUDIO_TEST_HARNESS})

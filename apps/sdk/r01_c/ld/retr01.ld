@@ -21,6 +21,7 @@ REGION_ALIAS("c_writeable", ram)
 SECTIONS {
   .boot 0x8000 : { KEEP(*(.boot)) } > rom_boot
   .r01_bootmap 0x80E0 : { KEEP(*(.r01_bootmap)) } > rom_tab
+  .text.nmi : { KEEP(*(.text.nmi)) } > rom
   INCLUDE c.ld
 }
 

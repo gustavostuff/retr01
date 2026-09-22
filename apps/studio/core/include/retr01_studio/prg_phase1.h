@@ -10,11 +10,15 @@ typedef struct R01PrgCartLayout {
     uint32_t off_pal_spr;
     uint32_t len_pal_spr;
     uint32_t off_map_screen0;
+    uint32_t off_bgm;
+    uint32_t off_world0;
     uint8_t default_pal_row;
 } R01PrgCartLayout;
 
 #define R01_PRG_BOOTMAP_OFF 0x00E0u
+#define R01_PRG_BOOTMAP_BYTES 16u
 #define R01_PRG_C_OFF 0x4800u /* CPU $C800 */
+#define R01_PRG_COLL_GRID_OFF 0x0500u /* CPU $8500, 16x16 u16 probe addrs */
 
 #define R01_PLAY_SOLID_RAM 0x0200u
 #define R01_PLAY_SOLID_LIST_CPU 0x8700u

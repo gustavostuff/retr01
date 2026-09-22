@@ -251,6 +251,34 @@ static int write_data_bins(const char *data_dir, const R01Project *p, char *err_
             return -1;
         }
     }
+    {
+        uint8_t buf[1 + R01_MAX_ENTITY_INSTANCES * R01_CART_INSTANCE_SIZE];
+        int n = w->instance_count;
+        int i;
+        if (n < 0) {
+            n = 0;
+        }
+        if (n > R01_MAX_ENTITY_INSTANCES) {
+            n = R01_MAX_ENTITY_INSTANCES;
+        }
+        buf[0] = (uint8_t)n;
+        for (i = 0; i < n; i++) {
+            uint8_t *rec = buf + 1 + i * R01_CART_INSTANCE_SIZE;
+            const R01EntityInstance *inst = &w->instances[i];
+            rec[0] = (uint8_t)inst->type_id;
+            rec[1] = (uint8_t)((inst->flip_h ? 1u : 0u) | (inst->flip_v ? 2u : 0u));
+            rec[2] = (uint8_t)(inst->world_x & 0xFFu);
+            rec[3] = (uint8_t)((inst->world_x >> 8) & 0xFFu);
+            rec[4] = (uint8_t)(inst->world_y & 0xFFu);
+            rec[5] = (uint8_t)((inst->world_y >> 8) & 0xFFu);
+        }
+        if (join_path_err(path, sizeof(path), data_dir, "spawns.bin", err_buf, err_cap) != 0) {
+            return -1;
+        }
+        if (write_bytes(path, buf, 1u + (size_t)n * R01_CART_INSTANCE_SIZE, err_buf, err_cap) != 0) {
+            return -1;
+        }
+    }
     return 0;
 }
 

@@ -12,6 +12,6 @@ __do_reset:
         sta $7F30               ; WORLD
         sta $7F02               ; SCROLL_X
         sta $7F03               ; SCROLL_Y
-        lda #$07                ; L1 | L0 | SPR
+        lda #$07                ; L1 | L0 | SPR (NMI armed from C after init)
         sta $7F00               ; PPUCTRL
         jmp _start

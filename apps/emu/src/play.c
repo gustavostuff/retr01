@@ -20,11 +20,7 @@ static int cart_is_phase1_play(const R01eCart *c) {
 }
 
 static int cart_is_c_prg(const R01eCart *c) {
-    const uint8_t *prg = r01e_cart_prg(c);
-    if (!prg || c->len_prg < 0x00F5u) {
-        return 0;
-    }
-    return cart_is_phase1_play(c) && prg[0x00F4] >= 5u;
+    return r01e_cart_is_c_prg(c);
 }
 
 static void play_follow_c_sys(R01eMachine *m) {

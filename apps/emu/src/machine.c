@@ -19,6 +19,9 @@ static void catchup_prg_boot(R01eMachine *m) {
 
     for (i = 0; i < 500000; i++) {
         (void)r01e_machine_step_insn(m);
+        if (m->ram[0x02E8]) {
+            break;
+        }
         if (!saw) {
             int t;
             for (t = 0; t < 32; t++) {

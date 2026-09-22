@@ -1,0 +1,212 @@
+#include "r01_engine.h"
+
+#include "r01_cart_caps.h"
+#include "r01_play_anim.h"
+#include "r01_play_anim_cart.h"
+
+#include <stddef.h>
+
+#ifndef R01_HOST_TEST
+
+#define R01_PA_MAX 1032u
+
+static uint8_t s_pa[R01_PA_MAX];
+static uint16_t s_pa_len;
+static uint8_t s_pa_ok;
+static R01CartPlayerAnim s_anim_blob;
+static R01PlayAnimCtx s_anim;
+static uint8_t s_anim_ready;
+static int s_hit_dx;
+static int s_hit_dy;
+static uint8_t s_hit_w = 8;
+static uint8_t s_hit_h = 8;
+
+void r01_player_hit_get(int *dx, int *dy, uint8_t *w, uint8_t *h) {
+    if (dx) {
+        *dx = s_hit_dx;
+    }
+    if (dy) {
+        *dy = s_hit_dy;
+    }
+    if (w) {
+        *w = s_hit_w;
+    }
+    if (h) {
+        *h = s_hit_h;
+    }
+}
+
+void r01_pa_boot(void) {
+    uint32_t world = r01_boot_u24(12);
+    uint8_t flags;
+    uint32_t off_insts;
+    uint16_t i;
+    s_pa_ok = 0;
+    s_pa_len = 0;
+    s_anim_ready = 0;
+    s_hit_dx = 0;
+    s_hit_dy = 0;
+    s_hit_w = 8;
+    s_hit_h = 8;
+    if (world == 0u) {
+        return;
+    }
+    r01_map_seek(world + R01_CART_WHDR_PLAYER_HIT_X);
+    s_hit_dx = (int)r01_map_read();
+    s_hit_dy = (int)r01_map_read();
+    s_hit_w = r01_map_read();
+    s_hit_h = r01_map_read();
+    if (s_hit_w < 1u) {
+        s_hit_w = 8;
+    }
+    if (s_hit_h < 1u) {
+        s_hit_h = 8;
+    }
+    r01_map_seek(world + R01_CART_WHDR_FLAGS);
+    flags = r01_map_read();
+    if ((flags & R01_CART_WHDR_FLAG_PLAYER_ANIM) == 0u) {
+        return;
+    }
+    r01_map_seek(world + R01_CART_WHDR_OFF_INSTS);
+    off_insts = r01_map_read_u24();
+    r01_map_seek(world + off_insts);
+    for (i = 0; i < R01_PA_MAX; i++) {
+        s_pa[i] = r01_map_read();
+    }
+    s_pa_len = R01_PA_MAX;
+    if (r01_cart_player_anim_parse(s_pa, s_pa_len, &s_anim_blob) == 0) {
+        const uint8_t *fh;
+        s_pa_ok = 1;
+        fh = r01_cart_player_anim_frame_hdr(&s_anim_blob, 0, 0);
+        if (fh) {
+            s_hit_dx = (int)fh[2] - (int)fh[0];
+            s_hit_dy = (int)fh[3] - (int)fh[1];
+            s_hit_w = fh[4] ? fh[4] : 8u;
+            s_hit_h = fh[5] ? fh[5] : 8u;
+        }
+    }
+}
+
+static int map_state(uint8_t v) {
+    return (v == 0xFFu) ? -1 : (int)v;
+}
+
+static void anim_from_ctx(R01PlayAnimCtx *dst, const R01GameCtx *ctx) {
+    uint8_t i;
+    r01_play_anim_init(dst);
+    dst->player_idle_state = map_state(ctx->player_idle_state);
+    for (i = 0; i < 8u; i++) {
+        dst->player_walk_state[i] = map_state(ctx->player_walk_state[i]);
+    }
+    dst->player_crouch_state = map_state(ctx->player_crouch_state);
+    dst->player_jump_state = map_state(ctx->player_jump_state);
+    dst->player_anim_delay_override = (int)ctx->player_anim_delay_override;
+    dst->player_anim_moving = (int)ctx->player_anim_moving;
+}
+
+void r01_game_draw_sprites(const R01GameCtx *ctx, int airborne, int crouching, int adx, int ady) {
+    int sx;
+    int sy;
+    uint8_t written = 0;
+    if (!ctx) {
+        return;
+    }
+    if (!s_anim_ready) {
+        anim_from_ctx(&s_anim, ctx);
+        s_anim_ready = 1;
+    }
+    s_anim.player_idle_state = map_state(ctx->player_idle_state);
+    {
+        uint8_t d;
+        for (d = 0; d < 8u; d++) {
+            s_anim.player_walk_state[d] = map_state(ctx->player_walk_state[d]);
+        }
+    }
+    s_anim.player_crouch_state = map_state(ctx->player_crouch_state);
+    s_anim.player_jump_state = map_state(ctx->player_jump_state);
+    s_anim.player_anim_delay_override = (int)ctx->player_anim_delay_override;
+    r01_play_anim_set_airborne(&s_anim, airborne);
+    r01_play_anim_set_crouching(&s_anim, crouching);
+    r01_play_anim_update(&s_anim, adx, ady);
+    if (s_pa_ok) {
+        r01_play_anim_tick_cart(&s_anim, &s_anim_blob);
+    }
+
+    r01_map_lock();
+    r01_oam_reset();
+    sx = (int)ctx->player_x - (int)ctx->cam_x;
+    sy = (int)ctx->player_y - (int)ctx->cam_y;
+    if (s_pa_ok) {
+        int state = r01_play_anim_entity_state(&s_anim);
+        int frame = r01_play_anim_frame(&s_anim);
+        int pc = 0;
+        const uint8_t *fh = r01_cart_player_anim_frame_hdr(&s_anim_blob, state, frame);
+        const uint8_t *parts = r01_cart_player_anim_frame_parts(&s_anim_blob, state, frame, &pc);
+        int origin_x = fh ? (int)fh[0] : 0;
+        int origin_y = fh ? (int)fh[1] : 0;
+        int flip = r01_play_anim_flip_h(&s_anim);
+        int pi;
+        for (pi = 0; pi < pc && pi < R01_CART_PLAYER_ANIM_PARTS_MAX; pi++) {
+            const uint8_t *pt = parts + (size_t)pi * 4u;
+            int dx;
+            int dy;
+            uint8_t attr;
+            int px;
+            int py;
+            r01_cart_part_pose(origin_x, origin_y, (int)(int8_t)pt[2], (int)(int8_t)pt[3], pt[1], flip, 0, &dx,
+                               &dy, &attr);
+            px = sx + dx - origin_x;
+            py = sy + dy - origin_y;
+            if (px + 8 <= 0 || py + 8 <= 0 || px >= R01_SCREEN_PX_W || py >= R01_SCREEN_PX_H) {
+                continue;
+            }
+            r01_oam_write((uint8_t)py, pt[0], attr, (uint8_t)px);
+            written++;
+        }
+    } else if (sx + R01_PLAY_PLAYER_W > 0 && sy + R01_PLAY_PLAYER_H > 0 && sx < R01_SCREEN_PX_W &&
+               sy < R01_SCREEN_PX_H) {
+        r01_oam_write((uint8_t)sy, 0, 0, (uint8_t)sx);
+        written = 1;
+    }
+    r01_oam_hide_rest(written);
+    r01_map_unlock();
+}
+
+#else
+void r01_pa_boot(void) {
+}
+
+void r01_player_hit_get(int *dx, int *dy, uint8_t *w, uint8_t *h) {
+    if (dx) {
+        *dx = 0;
+    }
+    if (dy) {
+        *dy = 0;
+    }
+    if (w) {
+        *w = 8;
+    }
+    if (h) {
+        *h = 8;
+    }
+}
+
+void r01_game_draw_sprites(const R01GameCtx *ctx, int airborne, int crouching, int adx, int ady) {
+    int sx;
+    int sy;
+    (void)airborne;
+    (void)crouching;
+    (void)adx;
+    (void)ady;
+    if (!ctx) {
+        return;
+    }
+    sx = (int)ctx->player_x - (int)ctx->cam_x;
+    sy = (int)ctx->player_y - (int)ctx->cam_y;
+    r01_oam_reset();
+    if (sx + R01_PLAY_PLAYER_W > 0 && sy + R01_PLAY_PLAYER_H > 0 && sx < R01_SCREEN_PX_W &&
+        sy < R01_SCREEN_PX_H) {
+        r01_oam_write((uint8_t)sy, 0, 0, (uint8_t)sx);
+    }
+}
+#endif

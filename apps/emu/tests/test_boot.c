@@ -24,7 +24,12 @@ int main(int argc, char **argv) {
     for (i = 0; i < 64; i++) {
         (void)r01e_machine_step_insn(&m);
     }
-    if (m.cpu.pc < 0x8000u || m.cpu.pc >= 0x8100u) {
+    if (m.cpu.pc < 0x8000u) {
+        fprintf(stderr, "FAIL pc=$%04x (expected PRG)\n", m.cpu.pc);
+        r01e_machine_shutdown(&m);
+        return 1;
+    }
+    if (!r01e_cart_is_c_prg(&m.cart) && (m.cpu.pc < 0x8000u || m.cpu.pc >= 0x8100u)) {
         fprintf(stderr, "FAIL pc=$%04x (expected stub loop in $8000-$80FF)\n", m.cpu.pc);
         r01e_machine_shutdown(&m);
         return 1;

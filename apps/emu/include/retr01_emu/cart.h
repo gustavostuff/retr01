@@ -101,6 +101,7 @@ int r01e_cart_load_mem(R01eCart *out, const uint8_t *img, size_t len, char *err,
 void r01e_cart_free(R01eCart *c);
 
 const uint8_t *r01e_cart_prg(const R01eCart *c);
+int r01e_cart_is_c_prg(const R01eCart *c);
 int r01e_cart_world(const R01eCart *c, int index, R01eWorldView *out);
 
 /* EntityDef catalog (docs/general/software-api.md). */

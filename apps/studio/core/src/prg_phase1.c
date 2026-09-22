@@ -80,10 +80,18 @@ static void pick_spawn(const R01World *w, int *col, int *row) {
     }
 }
 
+static void put_boot_u24(uint8_t prg[R01_PRG_BYTES], unsigned off, uint32_t v) {
+    prg[R01_PRG_BOOTMAP_OFF + off] = (uint8_t)(v & 0xFFu);
+    prg[R01_PRG_BOOTMAP_OFF + off + 1u] = (uint8_t)((v >> 8) & 0xFFu);
+    prg[R01_PRG_BOOTMAP_OFF + off + 2u] = (uint8_t)((v >> 16) & 0xFFu);
+}
+
 static void patch_boot_map(uint8_t prg[R01_PRG_BYTES], const R01PrgCartLayout *layout) {
     uint32_t off_bg = 0;
     uint32_t off_spr = 0;
     uint32_t off_map = 0;
+    uint32_t off_bgm = 0;
+    uint32_t off_world = 0;
     if (!prg) {
         return;
     }
@@ -93,16 +101,15 @@ static void patch_boot_map(uint8_t prg[R01_PRG_BYTES], const R01PrgCartLayout *l
                       ? pal_row_off(layout->off_pal_spr, layout->len_pal_spr, layout->default_pal_row)
                       : off_bg + 16u;
         off_map = layout->off_map_screen0;
+        off_bgm = layout->off_bgm;
+        off_world = layout->off_world0;
     }
-    prg[R01_PRG_BOOTMAP_OFF + 0] = (uint8_t)(off_bg & 0xFFu);
-    prg[R01_PRG_BOOTMAP_OFF + 1] = (uint8_t)((off_bg >> 8) & 0xFFu);
-    prg[R01_PRG_BOOTMAP_OFF + 2] = (uint8_t)((off_bg >> 16) & 0xFFu);
-    prg[R01_PRG_BOOTMAP_OFF + 3] = (uint8_t)(off_spr & 0xFFu);
-    prg[R01_PRG_BOOTMAP_OFF + 4] = (uint8_t)((off_spr >> 8) & 0xFFu);
-    prg[R01_PRG_BOOTMAP_OFF + 5] = (uint8_t)((off_spr >> 16) & 0xFFu);
-    prg[R01_PRG_BOOTMAP_OFF + 6] = (uint8_t)(off_map & 0xFFu);
-    prg[R01_PRG_BOOTMAP_OFF + 7] = (uint8_t)((off_map >> 8) & 0xFFu);
-    prg[R01_PRG_BOOTMAP_OFF + 8] = (uint8_t)((off_map >> 16) & 0xFFu);
+    put_boot_u24(prg, 0, off_bg);
+    put_boot_u24(prg, 3, off_spr);
+    put_boot_u24(prg, 6, off_map);
+    put_boot_u24(prg, 9, off_bgm);
+    put_boot_u24(prg, 12, off_world);
+    prg[R01_PRG_BOOTMAP_OFF + 15u] = 0;
 }
 
 static void fill_instance_table(uint8_t prg[R01_PRG_BYTES], const R01World *w) {
@@ -138,11 +145,13 @@ static void fill_instance_table(uint8_t prg[R01_PRG_BYTES], const R01World *w) {
 
 static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const R01World *w) {
     size_t data_off = R01_PLAY_SOLID_DATA_OFF;
+    size_t grid_off = R01_PRG_COLL_GRID_OFF;
     int di = 0;
     int si;
     int n;
     int i;
 
+    memset(prg + grid_off, 0, 16u * 16u * 2u);
     n = p ? p->solid_pat_count : 0;
     if (n < 0) {
         n = 0;
@@ -168,7 +177,7 @@ static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *
         const R01Screen *s = &w->screens[si];
         int cell;
         uint16_t tab_addr;
-        uint8_t *ent;
+        size_t slot;
         if (!s->present || s->col < 0 || s->col >= R01_GRID_MAX || s->row < 0 || s->row >= R01_GRID_MAX) {
             continue;
         }
@@ -181,15 +190,17 @@ static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *
             int tile = (int)s->tiles[cell];
             prg[data_off++] = r01_project_pattern_solid(p, bank, tile) ? 1u : 0u;
         }
-        if (PLAY_OFF + PLAY_COLL_DIR + (size_t)(di + 1) * 4u > PLAY_OFF + PLAY_INST_COUNT) {
-            break;
+        slot = grid_off + ((size_t)s->row * 16u + (size_t)s->col) * 2u;
+        prg[slot] = (uint8_t)(tab_addr & 0xFFu);
+        prg[slot + 1u] = (uint8_t)(tab_addr >> 8);
+        if (PLAY_OFF + PLAY_COLL_DIR + (size_t)(di + 1) * 4u <= PLAY_OFF + PLAY_INST_COUNT) {
+            uint8_t *ent = prg + PLAY_OFF + PLAY_COLL_DIR + (size_t)di * 4u;
+            ent[0] = (uint8_t)s->col;
+            ent[1] = (uint8_t)s->row;
+            ent[2] = (uint8_t)(tab_addr & 0xFFu);
+            ent[3] = (uint8_t)(tab_addr >> 8);
+            di++;
         }
-        ent = prg + PLAY_OFF + PLAY_COLL_DIR + (size_t)di * 4u;
-        ent[0] = (uint8_t)s->col;
-        ent[1] = (uint8_t)s->row;
-        ent[2] = (uint8_t)(tab_addr & 0xFFu);
-        ent[3] = (uint8_t)(tab_addr >> 8);
-        di++;
     }
     prg[PLAY_OFF + PLAY_COLL_COUNT] = (uint8_t)di;
 }

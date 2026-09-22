@@ -49,6 +49,15 @@ const uint8_t *r01e_cart_prg(const R01eCart *c) {
     return r01e_cart_ptr(c, c->off_prg, c->len_prg);
 }
 
+int r01e_cart_is_c_prg(const R01eCart *c) {
+    const uint8_t *prg = r01e_cart_prg(c);
+    if (!prg || !c || c->len_prg < 0x00F5u) {
+        return 0;
+    }
+    return prg[0x00F0] == 'R' && prg[0x00F1] == '0' && prg[0x00F2] == '1' && prg[0x00F3] == 'P' &&
+           prg[0x00F4] >= 5u;
+}
+
 int r01e_cart_load_mem(R01eCart *out, const uint8_t *img, size_t len, char *err, size_t err_cap) {
     const uint8_t *ptrs;
     uint8_t *copy;

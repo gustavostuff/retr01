@@ -37,6 +37,7 @@ TEST_MAIN() {
     EXPECT(r01_export_codegen(p, "codegen_out/test", err, sizeof(err)) == 0, "export codegen");
     EXPECT(path_exists("codegen_out/game_logic.c"), "game_logic.c");
     EXPECT(path_exists("codegen_out/data/pal_bg.bin"), "pal_bg.bin");
+    EXPECT(path_exists("codegen_out/data/spawns.bin"), "spawns.bin");
     EXPECT(!path_exists("codegen_out/C/base_game.c"), "no base_game.c");
     EXPECT(!path_exists("codegen_out/C/custom_logic.c"), "no custom_logic.c");
     EXPECT(!path_exists("codegen_out/ASM/main.s"), "no ASM tree");

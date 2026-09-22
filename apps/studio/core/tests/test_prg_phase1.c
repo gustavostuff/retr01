@@ -46,10 +46,16 @@ TEST_MAIN() {
 
     /* Play table lives at PRG+$0100 (CPU $8100). */
     EXPECT(prg[0x0120] == R01_CELL_PACK(R01_START_COL, R01_START_ROW) || prg[0x0100] != 0, "play table written");
+    {
+        uint16_t g00 = (uint16_t)prg[R01_PRG_COLL_GRID_OFF] | ((uint16_t)prg[R01_PRG_COLL_GRID_OFF + 1u] << 8);
+        EXPECT(g00 == 0x8701u, "coll grid (0,0) probe");
+    }
 
     EXPECT(prg[R01_PRG_BOOTMAP_OFF] == 0x34, "boot MAP pal_bg lo");
     EXPECT(prg[R01_PRG_BOOTMAP_OFF + 6] == 0x00 && prg[R01_PRG_BOOTMAP_OFF + 7] == 0x10,
            "boot MAP screen0");
+    EXPECT(prg[R01_PRG_BOOTMAP_OFF + 9] == 0 && prg[R01_PRG_BOOTMAP_OFF + 12] == 0,
+           "boot MAP bgm/world unset");
 
     {
         uint8_t blob[R01_CART_BGM_BLOB_MAX];

@@ -159,22 +159,28 @@ int main(int argc, char **argv) {
     }
 
     /* Leaving the dead zone scrolls the camera. */
-    m.play.player_x = spawn_x + 8;
-    m.play.player_y = spawn_y;
-    m.io.pad0 = 0;
-    r01e_play_tick(&m);
-    {
-        expect_cam_x = m.play.cam_x;
-        expect_cam_y = m.play.cam_y;
-        r01_play_camera_update(&expect_cam_x, &expect_cam_y, m.play.player_x, m.play.player_y, m.play.player_w,
-                               m.play.player_h, R01E_SCREEN_PX_W, R01E_SCREEN_PX_H, m.play.cam_deadzone_x,
-                               m.play.cam_deadzone_y, R01_PLAY_CAM_AXIS_BOTH);
-        if (m.play.cam_x != expect_cam_x || m.play.cam_y != expect_cam_y) {
-            fprintf(stderr, "FAIL camera follow after deadzone exit: got %d,%d expected %d,%d\n", m.play.cam_x,
-                    m.play.cam_y, expect_cam_x, expect_cam_y);
-            r01e_machine_shutdown(&m);
-            return 1;
+    if (!r01e_cart_is_c_prg(&m.cart)) {
+        m.play.player_x = spawn_x + 8;
+        m.play.player_y = spawn_y;
+        m.io.pad0 = 0;
+        r01e_play_tick(&m);
+        {
+            expect_cam_x = m.play.cam_x;
+            expect_cam_y = m.play.cam_y;
+            r01_play_camera_update(&expect_cam_x, &expect_cam_y, m.play.player_x, m.play.player_y, m.play.player_w,
+                                   m.play.player_h, R01E_SCREEN_PX_W, R01E_SCREEN_PX_H, m.play.cam_deadzone_x,
+                                   m.play.cam_deadzone_y, R01_PLAY_CAM_AXIS_BOTH);
+            if (m.play.cam_x != expect_cam_x || m.play.cam_y != expect_cam_y) {
+                fprintf(stderr, "FAIL camera follow after deadzone exit: got %d,%d expected %d,%d\n", m.play.cam_x,
+                        m.play.cam_y, expect_cam_x, expect_cam_y);
+                r01e_machine_shutdown(&m);
+                return 1;
+            }
         }
+    } else if (!m.ram[0x02E8]) {
+        fprintf(stderr, "FAIL C PRG sys ready\n");
+        r01e_machine_shutdown(&m);
+        return 1;
     }
 
     printf("ok play spawn=%d,%d cam=%d\n", spawn_x, spawn_y, m.play.cam_x);
@@ -183,7 +189,8 @@ int main(int argc, char **argv) {
      * L-map junction: (3,2) present, (3,1) missing. Follow cam may peek into the
      * hole (BG0 show-through is fine). Player must stay on-screen for OAM.
      */
-    if (r01e_cart_has_screen(&m.cart, 0, 3, 2) && !r01e_cart_has_screen(&m.cart, 0, 3, 1)) {
+    if (!r01e_cart_is_c_prg(&m.cart) && r01e_cart_has_screen(&m.cart, 0, 3, 2) &&
+        !r01e_cart_has_screen(&m.cart, 0, 3, 1)) {
         int vx, vy;
         m.play.player_x = 3 * R01E_SCREEN_PX_W + 20;
         m.play.player_y = 2 * R01E_SCREEN_PX_H + 40;
@@ -218,6 +225,14 @@ int main(int argc, char **argv) {
     if (!vram_matches_cart(&m)) {
         r01e_machine_shutdown(&m);
         return 1;
+    }
+    if (r01e_cart_is_c_prg(&m.cart)) {
+        if (m.play.player_x == spawn_x && m.play.player_y == spawn_y) {
+            fprintf(stderr, "FAIL C PRG pad did not move player from %d,%d\n", spawn_x, spawn_y);
+            r01e_machine_shutdown(&m);
+            return 1;
+        }
+        printf("ok C PRG moved player %d,%d -> %d,%d\n", spawn_x, spawn_y, m.play.player_x, m.play.player_y);
     }
     printf("ok VRAM stays synced to cart after %d frames origin=%d,%d\n", f, m.video.cam_origin_col,
            m.video.cam_origin_row);

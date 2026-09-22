@@ -275,10 +275,12 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 
 | PRG off | CPU | Role |
 | --- | --- | --- |
+| `+$00E0` | `$80E0` | Boot MAP (16 B): pal_bg u24, pal_spr u24, start screen u24, BGM u24, world0 u24, reserved |
 | `+$0100` | `$8100` | Present-screen bitmasks (32 B, 16x16 grid) |
 | `+$0120` | `$8120` | Spawn cell (`col | row<<4`) |
-| `+$0121` | `$8121` | Collision dir count (per-screen probe tables) |
-| `+$0122` | `$8122` | Collision dir entries |
+| `+$0121` | `$8121` | Collision dir count (legacy linear dir, first present screens) |
+| `+$0122` | `$8122` | Collision dir entries (stops before `$81C0`) |
+| `+$0500` | `$8500` | Collision grid: 16×16 little-endian u16 probe-table addresses (0 = no screen). Play uses this, not the linear dir |
 | `+$0700` | `$8700` | Solid pattern list: u8 count, then `count` x (bank, tile). Packed from project JSON `solid_patterns` (Studio Set Solid). Boot copies to RAM `$0200`. Probe tables follow |
 | `+$01C0` | `$81C0` | Instance count (u8, max **64**) |
 | `+$01C1` | `$81C1` | Instance table (`count` x **6 B**, pack below) |
@@ -301,7 +303,7 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 | 2 | 2 | `world_x` |
 | 4 | 2 | `world_y` |
 
-Table grows toward collision code at `$8500`. **64** records need **384 B** and fit.
+Table grows toward the collision grid at `$8500`. **64** records need **384 B** and fit. The grid is **512 B** (`$8500`–`$86FF`); probe tables start at `$8700`.
 
 Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs). Collision solids are a bank+tile list in system RAM (copied from PRG `$8700` at boot). Studio Set Solid stores `solid_patterns` in the project JSON. `r01_solid_pattern_add` in `game_logic.c` is the author API.
 

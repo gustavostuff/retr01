@@ -962,6 +962,8 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
     prg_layout.len_pal_spr = R01_PAL_PLANE_BYTES;
     prg_layout.default_pal_row = (uint8_t)(work->worlds[0].default_pal_row & 7u);
     prg_layout.off_map_screen0 = cart_off_map_screen0(&work->worlds[0], world_base);
+    prg_layout.off_world0 = world_base;
+    prg_layout.off_bgm = world_base + (uint32_t)world_blob.len;
     if (r01_prg_load_or_compile(cart_path, prg, err_buf, err_cap) != 0) {
         free(work);
         free(world_blob.data);

@@ -85,6 +85,7 @@ void r01_game_on_vblank(R01GameCtx *ctx) {
 | `<stem>.retr01` | Packed cart (world 0) |
 | `game_logic.c` | Author file, kept |
 | `retr01.prg` / `listing.txt` | llvm-mos PRG and mixed C/ASM listing |
+| `data/spawns.bin` | Instance table bytes packed at `$81C0` |
 | `data/` | Studio binaries (CHR, maps, pals) |
 
 PROM and 512 KB flash images sit beside the cart. Layout: [`memory.md`](../../docs/general/memory.md).
