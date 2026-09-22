@@ -126,6 +126,8 @@ LiveInstance (12 B)
 
 **64** slots = **768 B**. Fits in system RAM. Not cart flash.
 
+Packed spawn instances (not the marked player) copy into a 16-slot RAM table at boot. Author `game_logic.c` uses `r01_entity_count`, `r01_entity_type`, `r01_entity_get_pos`, `r01_entity_set_pos`, `r01_entity_state`, and `r01_entity_set_state`. `r01_world_aabb_ok(x, y, w, h)` tests that box against BG1 solids. `w` and `h` of **1** is a one-cell probe. Draw uses catalog state 0 frame 0; a non-zero live state uses that sprite's tile plus one.
+
 ### Player anim blob (`PA`, locked)
 
 Host Play's packed player frames. One blob **per cart** (after world-0 maps). World header flags bit **0** marks it present. Host Play reads it for the marked player.

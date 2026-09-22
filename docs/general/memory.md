@@ -305,6 +305,8 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 
 Table grows toward the collision grid at `$8500`. **64** records need **384 B** and fit. The grid is **512 B** (`$8500`–`$86FF`); probe tables start at `$8700`.
 
+Probe tables are **240 B** per present screen (max **64**). With a full solid-pattern list they end by `$C381`. llvm-mos C occupies `$C400`–`$FFF9`.
+
 Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs). Collision solids are a bank+tile list in system RAM (copied from PRG `$8700` at boot). Studio Set Solid stores `solid_patterns` in the project JSON. `r01_solid_pattern_add` in `game_logic.c` is the author API.
 
 ## Notes

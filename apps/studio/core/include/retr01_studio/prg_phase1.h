@@ -17,7 +17,7 @@ typedef struct R01PrgCartLayout {
 
 #define R01_PRG_BOOTMAP_OFF 0x00E0u
 #define R01_PRG_BOOTMAP_BYTES 16u
-#define R01_PRG_C_OFF 0x4800u /* CPU $C800 */
+#define R01_PRG_C_OFF 0x4400u /* CPU $C400 */
 #define R01_PRG_COLL_GRID_OFF 0x0500u /* CPU $8500, 16x16 u16 probe addrs */
 
 #define R01_PLAY_SOLID_RAM 0x0200u

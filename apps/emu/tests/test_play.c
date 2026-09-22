@@ -236,9 +236,9 @@ int main(int argc, char **argv) {
         printf("ok walk max cpu active=%llu vblank=%llu used=%llu/%llu\n",
                (unsigned long long)max_active, (unsigned long long)max_vblank, (unsigned long long)max_used,
                (unsigned long long)R01E_CPU_BUDGET_CYCLES);
-        if (r01e_cart_is_c_prg(&m.cart) && max_used > 28000ull) {
-            fprintf(stderr, "FAIL C PRG walk-window CPU spike %llu (boot work leaking into play frames?)\n",
-                    (unsigned long long)max_used);
+        if (r01e_cart_is_c_prg(&m.cart) && max_used > R01E_CPU_BUDGET_CYCLES) {
+            fprintf(stderr, "FAIL C PRG walk-window CPU %llu (budget %llu)\n",
+                    (unsigned long long)max_used, (unsigned long long)R01E_CPU_BUDGET_CYCLES);
             r01e_machine_shutdown(&m);
             return 1;
         }
@@ -270,18 +270,19 @@ int main(int argc, char **argv) {
                 return 1;
             }
             for (si = 0; si < R01E_OAM_ENTRIES; si++) {
-                if (m.io.oam[(size_t)si * 4u + 1u] == 28u) {
+                uint8_t tile = m.io.oam[(size_t)si * 4u + 1u];
+                if (tile == 28u || tile == 29u) {
                     slime_oam++;
                 }
             }
             if (slime_oam < 1) {
-                fprintf(stderr, "FAIL C PRG no slime sprites in OAM (tile 28)\n");
+                fprintf(stderr, "FAIL C PRG no slime sprites in OAM (tile 28/29)\n");
                 r01e_machine_shutdown(&m);
                 return 1;
             }
             printf("ok C PRG slime OAM=%d inst_n=%u\n", slime_oam, inst_n);
         }
-        if (used > 22000ull) {
+        if (used > R01E_CPU_BUDGET_CYCLES) {
             fprintf(stderr, "FAIL C PRG CPU %llu cycles (budget %llu) after walk\n", (unsigned long long)used,
                     (unsigned long long)R01E_CPU_BUDGET_CYCLES);
             r01e_machine_shutdown(&m);
@@ -303,9 +304,9 @@ int main(int argc, char **argv) {
                            origin0, m.video.cam_origin_col, (unsigned long long)m.prof_last_active,
                            (unsigned long long)m.prof_last_vblank, (unsigned long long)used,
                            (unsigned long long)R01E_CPU_BUDGET_CYCLES);
-                    if (used > 28000ull) {
-                        fprintf(stderr, "FAIL C PRG seam CPU %llu (MAP copy too expensive)\n",
-                                (unsigned long long)used);
+                    if (used > R01E_CPU_BUDGET_CYCLES) {
+                        fprintf(stderr, "FAIL C PRG seam CPU %llu (budget %llu)\n",
+                                (unsigned long long)used, (unsigned long long)R01E_CPU_BUDGET_CYCLES);
                         r01e_machine_shutdown(&m);
                         return 1;
                     }

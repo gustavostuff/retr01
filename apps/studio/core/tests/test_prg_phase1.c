@@ -102,7 +102,7 @@ TEST_MAIN() {
             EXPECT(prg[0] == 0x78, "compiled SEI");
             EXPECT(prg[0x7FFC] == 0x00 && prg[0x7FFD] == 0x80, "compiled RESET");
             r01_prg_overlay_tables(prg, p, &layout);
-            EXPECT(prg[R01_PRG_C_OFF] == keep, "overlay keeps C at $C800");
+            EXPECT(prg[R01_PRG_C_OFF] == keep, "overlay keeps C at $C400");
             EXPECT(prg[0] == 0x78, "overlay keeps boot");
             EXPECT(prg[0x7FFC] == 0x00 && prg[0x7FFD] == 0x80, "overlay keeps RESET");
             EXPECT(prg[R01_PRG_BOOTMAP_OFF] == 0x34, "overlay bootmap pal");

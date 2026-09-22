@@ -15,5 +15,6 @@ void r01_solid_pattern_add(R01GameCtx *ctx, uint8_t bank, uint8_t tile);
 void r01_platformer_set_gravity(R01GameCtx *ctx, uint8_t units);
 void r01_platformer_set_jump(R01GameCtx *ctx, uint8_t impulse);
 void r01_platformer_set_meter(R01GameCtx *ctx, uint8_t px_per_meter);
+int r01_world_aabb_ok(int x, int y, uint8_t w, uint8_t h);
 
 #endif

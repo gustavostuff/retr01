@@ -264,6 +264,7 @@ int r01_prg_needs_rebuild(const char *prg_path, const char *logic_c) {
         "/apps/sdk/r01_c/src/main.c",
         "/apps/sdk/r01_c/include/r01_hw.h",
         "/apps/sdk/r01_c/include/r01_engine.h",
+        "/apps/sdk/r01_c/include/r01_entity.h",
         "/apps/common/r01_play_camera.c",
         "/apps/common/r01_play_physics.c",
         "/apps/common/r01_play_collision.c",

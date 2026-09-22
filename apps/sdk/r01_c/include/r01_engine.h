@@ -9,6 +9,7 @@
 #include "r01_camera.h"
 #include "r01_bg0.h"
 #include "r01_physics.h"
+#include "r01_entity.h"
 #include "r01_bgm.h"
 
 #endif

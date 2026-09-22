@@ -1,5 +1,5 @@
 
-example_01/retr01.prg.elf:	file format elf32-mos
+sdk_overlay.prg.elf:	file format elf32-mos
 
 Disassembly of section .boot:
 
@@ -8461,10 +8461,10 @@ Disassembly of section .text:
 ;     uint16_t r = rnd16() & 127u;
     fc64: 29 7f        	and	#$7f
     fc66: aa           	tax
-;     if (r > span) {
+;     if (r > 120u) {
     fc67: c9 79        	cmp	#$79
     fc69: 90 0c        	bcc	$fc77 <slime_jump_gap+0x2e>
-;         r = (uint16_t)(r - (span + 1u));
+;         r = (uint16_t)(r - 121u);
     fc6b: 18           	clc
     fc6c: 69 87        	adc	#$87
     fc6e: aa           	tax

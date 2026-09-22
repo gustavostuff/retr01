@@ -28,6 +28,12 @@ static uint8_t s_player_type = 0xFFu;
 static uint8_t s_ent_n[32];
 static uint8_t s_ent_spr[32][R01_CART_ENTITY_PARTS_MAX][4];
 static uint8_t s_ent_types;
+uint8_t r01_live_n;
+uint8_t r01_live_type[16];
+uint8_t r01_live_flags[16];
+uint8_t r01_live_state[16];
+uint16_t r01_live_x[16];
+uint16_t r01_live_y[16];
 
 void r01_player_hit_get(int *dx, int *dy, uint8_t *w, uint8_t *h) {
     if (dx) {
@@ -70,6 +76,9 @@ static void cache_one_type(uint32_t cat, uint8_t t) {
     (void)r01_map_read();
     (void)r01_map_read();
     soff = map_u16();
+    (void)map_u16();
+    (void)map_u16();
+    (void)map_u16();
     if (soff == 0u) {
         return;
     }
@@ -128,6 +137,34 @@ static void cache_spawn_types(uint32_t world) {
     }
 }
 
+static void boot_live_instances(void) {
+    uint8_t n;
+    uint8_t i;
+    uint16_t base;
+    r01_live_n = 0;
+    n = R01_CPU8(R01_PLAY_INST_COUNT);
+    if (n > 16u) {
+        n = 16u;
+    }
+    base = (uint16_t)R01_PLAY_INST_TABLE;
+    for (i = 0; i < n && r01_live_n < 16u; i++) {
+        uint8_t type = R01_CPU8(base);
+        uint8_t flags = R01_CPU8(base + 1u);
+        uint16_t wx = (uint16_t)R01_CPU8(base + 2u) | ((uint16_t)R01_CPU8(base + 3u) << 8);
+        uint16_t wy = (uint16_t)R01_CPU8(base + 4u) | ((uint16_t)R01_CPU8(base + 5u) << 8);
+        base += (uint16_t)R01_CART_INSTANCE_SIZE;
+        if (type == s_player_type) {
+            continue;
+        }
+        r01_live_type[r01_live_n] = type;
+        r01_live_flags[r01_live_n] = flags;
+        r01_live_state[r01_live_n] = 0;
+        r01_live_x[r01_live_n] = wx;
+        r01_live_y[r01_live_n] = wy;
+        r01_live_n++;
+    }
+}
+
 void r01_pa_boot(void) {
     uint32_t world = r01_boot_u24(12);
     uint8_t flags;
@@ -158,6 +195,7 @@ void r01_pa_boot(void) {
         s_hit_h = 8;
     }
     cache_spawn_types(world);
+    boot_live_instances();
     r01_map_seek(world + R01_CART_WHDR_FLAGS);
     flags = r01_map_read();
     if ((flags & R01_CART_WHDR_FLAG_PLAYER_ANIM) == 0u) {
@@ -242,35 +280,28 @@ void r01_game_anim_tick(const R01GameCtx *ctx, int airborne, int crouching, int 
 static uint8_t s_oam_written;
 
 static uint8_t draw_spawn_instances(const R01GameCtx *ctx, uint8_t written) {
-    uint8_t n;
     uint8_t i;
-    uint16_t base;
     if (!ctx) {
         return written;
     }
-    n = R01_CPU8(R01_PLAY_INST_COUNT);
-    if (n > 64u) {
-        n = 64u;
-    }
-    base = (uint16_t)R01_PLAY_INST_TABLE;
-    for (i = 0; i < n && written < (uint8_t)R01_OAM_MAX; i++) {
-        uint8_t type = R01_CPU8(base);
-        uint8_t flags = R01_CPU8(base + 1u);
-        uint16_t wx = (uint16_t)R01_CPU8(base + 2u) | ((uint16_t)R01_CPU8(base + 3u) << 8);
-        uint16_t wy = (uint16_t)R01_CPU8(base + 4u) | ((uint16_t)R01_CPU8(base + 5u) << 8);
-        uint8_t pc;
+    for (i = 0; i < r01_live_n && written < (uint8_t)R01_OAM_MAX; i++) {
+        uint8_t type = r01_live_type[i];
+        uint8_t flags = r01_live_flags[i];
+        uint8_t st = r01_live_state[i];
+        uint16_t wx = r01_live_x[i];
+        uint16_t wy = r01_live_y[i];
+        uint8_t pc = (type < s_ent_types) ? s_ent_n[type] : 0;
         uint8_t pi;
-        base += (uint16_t)R01_CART_INSTANCE_SIZE;
-        if (type == s_player_type || type >= s_ent_types) {
-            continue;
-        }
-        pc = s_ent_n[type];
         for (pi = 0; pi < pc && written < (uint8_t)R01_OAM_MAX; pi++) {
             int rx = (int)(int8_t)s_ent_spr[type][pi][1];
             int ry = (int)(int8_t)s_ent_spr[type][pi][2];
             uint8_t attr = s_ent_spr[type][pi][3];
+            uint8_t tile = s_ent_spr[type][pi][0];
             int sx;
             int sy;
+            if (st != 0u) {
+                tile++;
+            }
             if (flags & 1u) {
                 rx = -rx - 8;
                 attr = (uint8_t)(attr ^ R01_ATTR_FLIP_H);
@@ -287,7 +318,7 @@ static uint8_t draw_spawn_instances(const R01GameCtx *ctx, uint8_t written) {
             {
                 uint8_t *o = r01_oam_scratch + (uint16_t)written * 4u;
                 o[0] = (uint8_t)sy;
-                o[1] = s_ent_spr[type][pi][0];
+                o[1] = tile;
                 o[2] = attr;
                 o[3] = (uint8_t)sx;
             }
@@ -423,4 +454,11 @@ void r01_game_draw_sprites(const R01GameCtx *ctx, int airborne, int crouching, i
 void r01_game_draw_player(const R01GameCtx *ctx) {
     r01_game_draw_sprites(ctx, 0, 0, 0, 0);
 }
+
+uint8_t r01_live_n;
+uint8_t r01_live_type[16];
+uint8_t r01_live_flags[16];
+uint8_t r01_live_state[16];
+uint16_t r01_live_x[16];
+uint16_t r01_live_y[16];
 #endif

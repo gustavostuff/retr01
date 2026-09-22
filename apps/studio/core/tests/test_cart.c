@@ -3,6 +3,7 @@
 #include "retr01_studio/cart.h"
 #include "retr01_studio/chr_pack.h"
 #include "retr01_studio/entities.h"
+#include "retr01_studio/prg_phase1.h"
 #include "retr01_studio/project.h"
 #include "retr01_studio/sprites.h"
 
@@ -153,9 +154,9 @@ TEST_MAIN() {
                 EXPECT(fseek(f, prg_off + (long)PRG_PLAY_INST_COUNT, SEEK_SET) == 0, "seek inst count");
                 EXPECT(fread(&inst_n, 1, 1, f) == 1, "read inst count");
                 EXPECT(inst_n >= 1, "spawn table at $81C0");
-                EXPECT(fseek(f, prg_off + 0x4800L, SEEK_SET) == 0, "seek C");
+                EXPECT(fseek(f, prg_off + (long)R01_PRG_C_OFF, SEEK_SET) == 0, "seek C");
                 EXPECT(fread(&cbyte, 1, 1, f) == 1, "read C");
-                EXPECT(cbyte != 0, "C code at $C800");
+                EXPECT(cbyte != 0, "C code at $C400");
             }
 
             EXPECT(fseek(f, 0, SEEK_END) == 0, "seek end");

@@ -22,7 +22,7 @@ COMMON="$ROOT/apps/common"
 
 mkdir -p "$OUTDIR"
 
-"$CC" -Os -g -mcpu=mosw65c02 -mlto-zp=218 \
+"$CC" -Oz -g -mcpu=mosw65c02 -mlto-zp=218 \
   -ffunction-sections -fdata-sections \
   -I "$SDK/include" \
   -I "$COMMON" \
