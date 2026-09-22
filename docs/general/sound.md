@@ -61,7 +61,7 @@ Mixing on S2 keeps **8** concurrent voices. SFX never steal BGM notes.
 | 4 | 3 | Noise | Hats, cymbals, synth snares. Percussion catalog later |
 | 5 | 4 | DPCM | 1-bit delta PCM (kicks, voice, hits). Percussion catalog later |
 
-BGM 1-3 mix a per-channel single-cycle from Adventure Kid AKWF (64 points, CC0): acoustic guitar, electric guitar, piano, flute. Note-on retriggers the cycle and a decaying envelope (flute holds longer). Mailbox byte `[3]` for those voices stays pulse / pulse / triangle so the 2-bit wave field is unchanged. Host mix maps voices 0-2 onto the selected table and honors volume.
+BGM 1-3 mix a per-channel single-cycle from Adventure Kid AKWF (64 points, CC0): acoustic guitar, electric guitar, piano, flute. Note-on retriggers the cycle and a decaying envelope (flute holds longer). Mailbox byte `[3]` for those voices stays pulse / pulse / triangle so the 2-bit wave field is unchanged. Host mix maps voices 0-2 onto the wavetable ids packed with the track at `$B000` and honors volume.
 
 ### SFX, channels 6-8 (indices 5-7)
 
@@ -200,8 +200,8 @@ Host Play ticks this same tracker in C (`apps/common/r01_apu_tracker.c`) and app
 | MCU-S2 FW | 8x4 mix to PWM. DPCM PROGMEM decode still filling in |
 | Host mix | PC speaker mixes the `$7F40` window (`r01_apu_mix`). BGM 1-3 use a per-channel AKWF table plus decay. DPCM IDs use short host stand-in streams |
 | 6502 PRG tracker | NMI dual-stream. Host C MVP exists. Cart ASM still filling in |
-| Studio Audio tab | BGM grid editor in `.r01proj`. Export packs bytecode at `$B000`. Timeline Play/Stop encodes FD/FE/FA and mixes the window |
-| Host Play | Boot track from PRG `$80FE`. Bytecode at `$B000`. Tracker fills `$7F40`. `r01_sfx_play` queues voices 6-8 |
+| Studio Audio tab | BGM grid editor in `.r01proj`. Export packs bytecode and per-channel wavetable ids at `$B000`. Timeline Play/Stop encodes FD/FE/FA and mixes the window |
+| Host Play / emu | Boot track from PRG `$80FE`. Bytecode and wavetable ids at `$B000`. Tracker fills `$7F40`. `r01_sfx_play` queues voices 6-8 |
 
 Bring-up Tier **H** only needs a real `$7F40` beep through S2 PWM. Full tracker depth can wait on hardware.
 

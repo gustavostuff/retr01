@@ -22,6 +22,7 @@ static void emu_start_host_bgm(R01eMachine *m) {
         return;
     }
     (void)r01e_machine_apu_tracker_start_cart(m);
+    r01_bgm_host_set_ins(m->apu_ins);
     r01_bgm_host_attach_window(m->io.apu);
 }
 

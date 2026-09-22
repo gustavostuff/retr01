@@ -45,6 +45,7 @@ typedef struct R01eMachine {
     uint8_t apu_sfx[32];
     uint16_t apu_sfx_len;
     uint8_t apu_sfx_prev_pad;
+    uint8_t apu_ins[8]; /* BGM 1-5 wavetable ids from packed blob */
     int apu_tracker_on;
     char cart_path[1024];
     void *custom_so;

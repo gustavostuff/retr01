@@ -13,16 +13,12 @@ static const uint8_t play_spawn_cell = 0x70u;
 static const uint8_t play_spawn_col = 0;
 static const uint8_t play_spawn_row = 7;
 static const int player_entity = 0;
-static const R01InstRec entity_insts[1] = {
-    {0, 16, 911}
-};
-static const int entity_inst_count = 1;
-static const int player_inst_x = 16;
-static const int player_inst_y = 911;
+static const R01InstRec *entity_insts = 0;
+static const int entity_inst_count = 0;
 static const int player_hit_x = 12;
 static const int player_hit_y = 12;
 static const int player_hit_w = 8;
-static const int player_hit_h = 16;
+static const int player_hit_h = 8;
 const int player_state_frames[4] = {2, 4, 1, 1};
 
 typedef struct { const char *id; int sc, sr, tc, tr; } R01WarpEntRec;

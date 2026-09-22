@@ -88,6 +88,7 @@ void r01_bgm_pack_prg(uint8_t prg[R01_PRG_BYTES], const R01BgmData *bgm, const c
     memset(blob, 0, (size_t)(R01_PRG_BGM_END - R01_PRG_BGM_OFF));
     blob[0] = R01_PRG_BGM_MAGIC0;
     blob[1] = R01_PRG_BGM_MAGIC1;
+    blob[3] = R01_PRG_BGM_INS_VER;
     memset(off, 0, sizeof(off));
     memset(len, 0, sizeof(len));
     tc = (bgm && bgm->present) ? bgm->track_count : 0;
@@ -97,7 +98,21 @@ void r01_bgm_pack_prg(uint8_t prg[R01_PRG_BYTES], const R01BgmData *bgm, const c
     if (tc > (int)R01_PRG_BGM_TRACKS) {
         tc = (int)R01_PRG_BGM_TRACKS;
     }
-    o = R01_PRG_BGM_HDR;
+    for (t = 0; t < (int)R01_PRG_BGM_TRACKS; t++) {
+        int ch;
+        uint8_t *ip = blob + R01_PRG_BGM_HDR + (unsigned)t * R01_PRG_BGM_INS_CH;
+        for (ch = 0; ch < (int)R01_PRG_BGM_INS_CH; ch++) {
+            int v = 0;
+            if (bgm && t < tc && ch < R01_BGM_CH_COUNT) {
+                v = bgm->ch_ins[t][ch];
+            }
+            if (v < 0 || v > (int)R01_PRG_BGM_INS_MAX) {
+                v = 0;
+            }
+            ip[ch] = (uint8_t)v;
+        }
+    }
+    o = R01_PRG_BGM_HDR_V1;
     for (t = 0; t < tc; t++) {
         char cells[R01_BGM_FD_STEPS_MAX][R01_BGM_FD_CH][R01_BGM_FD_TOKEN];
         int steps;
@@ -118,7 +133,6 @@ void r01_bgm_pack_prg(uint8_t prg[R01_PRG_BYTES], const R01BgmData *bgm, const c
         o += (unsigned)n;
     }
     blob[2] = (uint8_t)tc;
-    blob[3] = 0;
     for (t = 0; t < (int)R01_PRG_BGM_TRACKS; t++) {
         put_u16_le(blob + 4 + (unsigned)t * 2u, off[t]);
         put_u16_le(blob + 20 + (unsigned)t * 2u, len[t]);

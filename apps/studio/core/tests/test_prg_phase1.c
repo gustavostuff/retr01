@@ -63,7 +63,9 @@ TEST_MAIN() {
         bgm.region_count[0][0] = 1;
         bgm.region[0][0][0].start = 0;
         bgm.region[0][0][0].len = 2;
-        snprintf(bgm.region[0][0][0].tok, sizeof(bgm.region[0][0][0].tok), "C-4");
+        snprintf(bgm.region[0][0][0].tok, sizeof(bgm.region[0][0][0].tok), "C4");
+        bgm.ch_ins[0][0] = R01_BGM_INS_PIANO;
+        bgm.ch_ins[0][2] = R01_BGM_INS_FLUTE;
         EXPECT(f != NULL, "write custom_logic");
         if (f) {
             fputs("void r01_custom_on_init(R01GameCtx *ctx) {\n    r01_bgm_play(ctx, 1);\n}\n", f);
@@ -74,9 +76,12 @@ TEST_MAIN() {
         EXPECT(prg[R01_PRG_BGM_OFF] == R01_PRG_BGM_MAGIC0 && prg[R01_PRG_BGM_OFF + 1] == R01_PRG_BGM_MAGIC1,
                "BG magic");
         EXPECT(prg[R01_PRG_BGM_OFF + 2] == 1, "packed track count");
+        EXPECT(prg[R01_PRG_BGM_OFF + 3] == R01_PRG_BGM_INS_VER, "ins table present");
+        EXPECT(prg[R01_PRG_BGM_OFF + R01_PRG_BGM_HDR] == R01_BGM_INS_PIANO, "track 1 ch1 piano");
+        EXPECT(prg[R01_PRG_BGM_OFF + R01_PRG_BGM_HDR + 2] == R01_BGM_INS_FLUTE, "track 1 ch3 flute");
         off = (uint16_t)prg[R01_PRG_BGM_OFF + 4] | ((uint16_t)prg[R01_PRG_BGM_OFF + 5] << 8);
         len = (uint16_t)prg[R01_PRG_BGM_OFF + 20] | ((uint16_t)prg[R01_PRG_BGM_OFF + 21] << 8);
-        EXPECT(off == R01_PRG_BGM_HDR, "payload starts after header");
+        EXPECT(off == R01_PRG_BGM_HDR_V1, "payload starts after ins table");
         EXPECT(len > 0, "payload length");
         EXPECT(prg[R01_PRG_BGM_OFF + off] == R01_APU_FD_OP, "FD stream");
         r01_bgm_pack_prg(prg, &bgm, NULL);

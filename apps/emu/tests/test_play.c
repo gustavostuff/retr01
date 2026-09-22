@@ -83,6 +83,17 @@ int main(int argc, char **argv) {
         fprintf(stderr, "FAIL init: %s\n", err);
         return 1;
     }
+    if (r01e_machine_apu_tracker_start_cart(&m) != 0 || m.apu_bytecode_len < 1) {
+        fprintf(stderr, "FAIL cart BGM stream empty\n");
+        r01e_machine_shutdown(&m);
+        return 1;
+    }
+    if (m.apu_ins[0] != 2 || m.apu_ins[1] != 0 || m.apu_ins[2] != 3) {
+        fprintf(stderr, "FAIL cart BGM ins %u,%u,%u (expected piano, guitar, flute)\n", m.apu_ins[0],
+                m.apu_ins[1], m.apu_ins[2]);
+        r01e_machine_shutdown(&m);
+        return 1;
+    }
     if (r01e_play_start(&m) != 1) {
         fprintf(stderr, "FAIL play start\n");
         r01e_machine_shutdown(&m);

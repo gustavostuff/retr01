@@ -285,7 +285,7 @@ Packing: world header flags byte **7** bit **4** = platformer. Gravity, jump, an
 
 `r01_solid_pattern_add(ctx, bank, tile)` in author `custom_logic.c` packs into the solid-pattern list at PRG `$8700`. Palette and H/V flip are ignored. Host Play / emu tests BG1 nametable bank+tile against that list.
 
-BGM tracks live in the Studio Audio tab and pack into PRG at `$B000`. `r01_bgm_play(ctx, N)` in author `custom_logic.c` sets `$80FE` to that 1-based track. **0** means no autoplay. Host Play starts the packed stream. See `sound.md`.
+BGM tracks live in the Studio Audio tab and pack into PRG at `$B000` (bytecode plus Guitar / EGuitar / Piano / Flute ids per channel). `r01_bgm_play(ctx, N)` in author `custom_logic.c` sets `$80FE` to that 1-based track. **0** means no autoplay. Host Play and the standalone emu both start that packed stream, including the wavetable ids. See `sound.md`.
 
 ## Ownership
 

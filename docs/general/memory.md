@@ -271,7 +271,7 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 | `+$00FC` | `$80FC` | Walk state index (u8, **$FF** = unmapped) |
 | `+$00FD` | `$80FD` | Jump state index (u8, **$FF** = unmapped) |
 | `+$00FE` | `$80FE` | BGM boot track (u8, **0** = none, **1..8** = track) |
-| `+$3000` | `$B000` | BGM blob (`BG` + 8-slot off/len + FD/FE/FA bytecode). Ends before vectors at `$FFFA` |
+| `+$3000` | `$B000` | BGM blob (`BG` + track count + ins flag + 8-slot off/len + ins[8][5] + FD/FE/FA bytecode). Ends before vectors at `$FFFA` |
 
 **Spawn instance (6 B, little-endian):** a placed copy of a catalog type (who, facing, world XY). Live pose and the player-anim (`PA`) blob: `software-api.md`.
 

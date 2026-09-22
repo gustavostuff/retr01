@@ -164,6 +164,7 @@ void r01e_machine_reset(R01eMachine *m) {
     m->apu_bytecode_len = 0;
     m->apu_sfx_len = 0;
     m->apu_sfx_prev_pad = 0;
+    memset(m->apu_ins, 0, sizeof(m->apu_ins));
     r01_apu_tracker_init(&m->apu_tracker);
     r01e_cpu_reset(&m->cpu, m);
     if (r01e_video_softboot_enabled()) {
@@ -302,6 +303,7 @@ void r01e_machine_apu_tracker_stop(R01eMachine *m) {
     m->apu_bytecode_len = 0;
     m->apu_sfx_len = 0;
     m->apu_sfx_prev_pad = 0;
+    memset(m->apu_ins, 0, sizeof(m->apu_ins));
     r01_apu_tracker_init(&m->apu_tracker);
 }
 
@@ -394,6 +396,7 @@ int r01e_machine_apu_tracker_start_cart(R01eMachine *m) {
     uint16_t off;
     uint16_t len;
     uint32_t prg_len;
+    uint16_t payload_min = R01_PRG_BGM_HDR;
     if (!m) {
         return -1;
     }
@@ -408,13 +411,27 @@ int r01e_machine_apu_tracker_start_cart(R01eMachine *m) {
     if (blob[0] != R01_PRG_BGM_MAGIC0 || blob[1] != R01_PRG_BGM_MAGIC1) {
         return 0;
     }
+    if (blob[3] == R01_PRG_BGM_INS_VER) {
+        payload_min = (uint16_t)R01_PRG_BGM_HDR_V1;
+    }
     boot = prg[R01_PRG_BGM_BOOT_OFF];
     if (boot < 1u || boot > R01_PRG_BGM_TRACKS) {
         return 0;
     }
+    if (blob[3] == R01_PRG_BGM_INS_VER) {
+        const uint8_t *ip = blob + R01_PRG_BGM_HDR + (unsigned)(boot - 1u) * R01_PRG_BGM_INS_CH;
+        unsigned ch;
+        for (ch = 0; ch < R01_PRG_BGM_INS_CH && ch < (unsigned)sizeof(m->apu_ins); ch++) {
+            uint8_t v = ip[ch];
+            if (v > R01_PRG_BGM_INS_MAX) {
+                v = 0;
+            }
+            m->apu_ins[ch] = v;
+        }
+    }
     off = rd_u16_le(blob + 4u + (unsigned)(boot - 1u) * 2u);
     len = rd_u16_le(blob + 20u + (unsigned)(boot - 1u) * 2u);
-    if (off < R01_PRG_BGM_HDR || len < 1u) {
+    if (off < payload_min || len < 1u) {
         return 0;
     }
     if ((unsigned)off + (unsigned)len > (unsigned)(R01_PRG_BGM_END - R01_PRG_BGM_OFF)) {
