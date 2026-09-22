@@ -63,4 +63,55 @@ int r01_play_anim_flip_h(const R01PlayAnimCtx *ctx);
 int r01_play_anim_dir(const R01PlayAnimCtx *ctx);
 int r01_play_anim_moving(const R01PlayAnimCtx *ctx);
 
+/* Copy shared anim fields to/from R01GameCtx (same member names).
+ * PULL inits dst first so player_release_to_idle defaults to 1. */
+#define R01_PLAY_ANIM_PULL(dst, src)                                                               \
+    do {                                                                                           \
+        int _i;                                                                                    \
+        r01_play_anim_init(dst);                                                                   \
+        (dst)->player_anim_state = (src)->player_anim_state;                                       \
+        (dst)->player_anim_frame = (src)->player_anim_frame;                                       \
+        (dst)->player_anim_ctr = (src)->player_anim_ctr;                                           \
+        (dst)->player_anim_flip_h = (src)->player_anim_flip_h;                                     \
+        (dst)->player_anim_dir = (src)->player_anim_dir;                                           \
+        (dst)->player_anim_moving = (src)->player_anim_moving;                                     \
+        (dst)->player_default_face = (src)->player_default_face;                                   \
+        (dst)->player_idle_state = (src)->player_idle_state;                                       \
+        for (_i = 0; _i < 8; _i++) {                                                               \
+            (dst)->player_walk_state[_i] = (src)->player_walk_state[_i];                           \
+        }                                                                                          \
+        for (_i = 0; _i < R01_PLAY_ANIM_STATES_MAX; _i++) {                                        \
+            (dst)->player_state_delay[_i] = (src)->player_state_delay[_i];                         \
+        }                                                                                          \
+        (dst)->player_crouch_state = (src)->player_crouch_state;                                   \
+        (dst)->player_crouching = (src)->player_crouching;                                         \
+        (dst)->player_jump_state = (src)->player_jump_state;                                       \
+        (dst)->player_airborne = (src)->player_airborne;                                           \
+        (dst)->player_anim_delay_override = (src)->player_anim_delay_override;                     \
+    } while (0)
+
+#define R01_PLAY_ANIM_PUSH(src, dst)                                                               \
+    do {                                                                                           \
+        int _i;                                                                                    \
+        (dst)->player_anim_state = (src)->player_anim_state;                                       \
+        (dst)->player_anim_frame = (src)->player_anim_frame;                                       \
+        (dst)->player_anim_ctr = (src)->player_anim_ctr;                                           \
+        (dst)->player_anim_flip_h = (src)->player_anim_flip_h;                                     \
+        (dst)->player_anim_dir = (src)->player_anim_dir;                                           \
+        (dst)->player_anim_moving = (src)->player_anim_moving;                                     \
+        (dst)->player_default_face = (src)->player_default_face;                                   \
+        (dst)->player_idle_state = (src)->player_idle_state;                                       \
+        for (_i = 0; _i < 8; _i++) {                                                               \
+            (dst)->player_walk_state[_i] = (src)->player_walk_state[_i];                           \
+        }                                                                                          \
+        for (_i = 0; _i < R01_PLAY_ANIM_STATES_MAX; _i++) {                                        \
+            (dst)->player_state_delay[_i] = (src)->player_state_delay[_i];                         \
+        }                                                                                          \
+        (dst)->player_crouch_state = (src)->player_crouch_state;                                   \
+        (dst)->player_crouching = (src)->player_crouching;                                         \
+        (dst)->player_jump_state = (src)->player_jump_state;                                       \
+        (dst)->player_airborne = (src)->player_airborne;                                           \
+        (dst)->player_anim_delay_override = (src)->player_anim_delay_override;                     \
+    } while (0)
+
 #endif

@@ -1574,9 +1574,10 @@ static void compile_custom_plugin(const char *c_dir) {
         return;
     }
     n = snprintf(cmd, sizeof(cmd),
-                 "cc -shared -fPIC -O2 -Wl,-z,defs -I\"%s\" \"%s/custom_logic.c\" \"%s/r01_runtime.c\" "
-                 "\"%s/r01_tick_host.c\" -lm -o \"%s/r01_custom.so\"",
-                 c_dir, c_dir, c_dir, c_dir, c_dir);
+                 "cc -shared -fPIC -O2 -Wl,-z,defs -I\"%s\" -I\"%s/common\" "
+                 "\"%s/custom_logic.c\" \"%s/r01_runtime.c\" \"%s/r01_tick_host.c\" "
+                 "\"%s/common/r01_play_camera.c\" \"%s/common/r01_play_anim.c\" -lm -o \"%s/r01_custom.so\"",
+                 c_dir, R01_PKG_ROOT, c_dir, c_dir, c_dir, R01_PKG_ROOT, R01_PKG_ROOT, c_dir);
     if (n < 0 || n >= (int)sizeof(cmd)) {
         return;
     }

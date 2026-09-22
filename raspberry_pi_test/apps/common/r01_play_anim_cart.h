@@ -1,20 +1,11 @@
 #ifndef R01_PLAY_ANIM_CART_H
 #define R01_PLAY_ANIM_CART_H
 
+#include "r01_cart_caps.h"
 #include "r01_play_anim.h"
 
 #include <stddef.h>
 #include <stdint.h>
-
-#define R01_CART_WHDR_FLAGS 7
-#define R01_CART_WHDR_FLAG_PLAYER_ANIM 0x01u
-#define R01_CART_WHDR_FLAG_BG0_WRAP_X 0x02u
-#define R01_CART_WHDR_FLAG_BG0_WRAP_Y 0x04u
-#define R01_CART_WHDR_FLAG_BG0_CLIP_BG1 0x08u
-#define R01_CART_WHDR_FLAG_PLATFORMER 0x10u
-
-#define R01_CART_PLAYER_ANIM_MAGIC0 'P'
-#define R01_CART_PLAYER_ANIM_MAGIC1 'A'
 
 #define R01_CART_PLAYER_ANIM_PARTS_MAX 6
 #define R01_CART_OAM_FLIP_H 0x40u

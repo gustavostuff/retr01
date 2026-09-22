@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Configure, build, and run unit tests for studio, emu, and tier-a sim.
-# Does not require (or seed) ROM / Studio project fixtures.
+# Tier-a ctest also runs nested netlist_sim tests. Emu registers test_boot/test_play
+# against example_01/example_01.retr01 when that cart is present.
+# Does not require (or seed) extra ROM / Studio project fixtures.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

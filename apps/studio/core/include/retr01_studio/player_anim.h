@@ -2,22 +2,7 @@
 #define retr01_STUDIO_PLAYER_ANIM_H
 
 #include "retr01_studio/types.h"
-
-#define R01_PLAYER_DIR_RIGHT 0
-#define R01_PLAYER_DIR_DOWN_RIGHT 1
-#define R01_PLAYER_DIR_DOWN 2
-#define R01_PLAYER_DIR_DOWN_LEFT 3
-#define R01_PLAYER_DIR_LEFT 4
-#define R01_PLAYER_DIR_UP_LEFT 5
-#define R01_PLAYER_DIR_UP 6
-#define R01_PLAYER_DIR_UP_RIGHT 7
-
-#define R01_PLAYER_FACE_RIGHT 0
-#define R01_PLAYER_FACE_DOWN 1
-#define R01_PLAYER_FACE_LEFT 2
-#define R01_PLAYER_FACE_UP 3
-
-#define R01_PLAYER_ANIM_DELAY_DEFAULT 6
+#include "r01_play_anim.h"
 
 typedef struct R01GameCtx R01GameCtx;
 

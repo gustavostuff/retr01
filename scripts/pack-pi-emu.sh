@@ -40,6 +40,7 @@ COMMON_C=(
   r01_play_anim_cart.c
   r01_play_camera.c
   r01_play_physics.c
+  r01_play_collision.c
   r01_custom_logic_scan.c
   r01_nes_synth.c
   r01_apu_fd.c
@@ -57,6 +58,8 @@ COMMON_H=(
   r01_play_anim_cart.h
   r01_play_camera.h
   r01_play_physics.h
+  r01_play_collision.h
+  r01_cart_caps.h
   r01_custom_logic_scan.h
   r01_nes_synth.h
   r01_apu_fd.h
@@ -75,6 +78,12 @@ for f in "${COMMON_C[@]}" "${COMMON_H[@]}"; do
 done
 copy_file "$COMMON/fw/r01_spi_mailbox.h" "$DEST/apps/common/fw/r01_spi_mailbox.h"
 copy_file "$COMMON/fw/r01_apu_window.h" "$DEST/apps/common/fw/r01_apu_window.h"
+if [[ -f "$COMMON/fw/avr_shim.h" ]]; then
+  copy_file "$COMMON/fw/avr_shim.h" "$DEST/apps/common/fw/avr_shim.h"
+fi
+if [[ -f "$COMMON/fw/r01_soft_sel_demux.h" ]]; then
+  copy_file "$COMMON/fw/r01_soft_sel_demux.h" "$DEST/apps/common/fw/r01_soft_sel_demux.h"
+fi
 [[ -f "$COMMON/gamecontrollerdb.txt" ]] || die "missing $COMMON/gamecontrollerdb.txt"
 copy_file "$COMMON/gamecontrollerdb.txt" "$DEST/apps/common/gamecontrollerdb.txt"
 copy_file "$CART" "$DEST/example_01.retr01"
@@ -101,6 +110,7 @@ add_library(r01_play_common
   ${R01_COMMON_DIR}/r01_play_anim_cart.c
   ${R01_COMMON_DIR}/r01_play_camera.c
   ${R01_COMMON_DIR}/r01_play_physics.c
+  ${R01_COMMON_DIR}/r01_play_collision.c
   ${R01_COMMON_DIR}/r01_custom_logic_scan.c
   ${R01_COMMON_DIR}/r01_nes_synth.c
   ${R01_COMMON_DIR}/r01_apu_fd.c

@@ -1,70 +1,17 @@
 #ifndef retr01_STUDIO_TYPES_H
 #define retr01_STUDIO_TYPES_H
 
+#include "r01_cart_caps.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
-#define R01_SCREEN_TILES_X 16
-#define R01_SCREEN_TILES_Y 15
-#define R01_SCREEN_PX_W 128
-#define R01_SCREEN_PX_H 120
-#define R01_TILES_PER_SCREEN 240
-#define R01_ATTRS_PER_SCREEN 240
-
-#define R01_GRID_MAX 16
 #define R01_DEFAULT_GRID 3
 #define R01_MAX_SCREENS (R01_GRID_MAX * R01_GRID_MAX)
-#define R01_MAX_PRESENT_SCREENS 64 /* cart cap: present BG1 screens per world (docs/general/memory.md) */
-/* Virtual grid cell: col/row 0-15 packed as nibbles (cart dir + world spawn). */
-#define R01_CELL_PACK(col, row) ((uint8_t)(((unsigned)(col)&0x0fu) | (((unsigned)(row)&0x0fu) << 4)))
-#define R01_CELL_COL(b) ((int)((unsigned)(b)&0x0fu))
-#define R01_CELL_ROW(b) ((int)(((unsigned)(b) >> 4) & 0x0fu))
-#define R01_PARALLAX_MIN 0
-#define R01_PARALLAX_MAX 16 /* BG0 present screens per world */
-#define R01_PARALLAX_SLICE_MAX 120 /* max bands; variable thickness (docs/general/graphics) */
-#define R01_START_COL 2
-#define R01_START_ROW 0
 
-#define R01_MAX_WORLDS 8
-#define R01_BG_BANKS 16
-#define R01_SPR_BANKS 16
-#define R01_TILES_PER_BANK 256
-#define R01_TILE_BYTES 16
-#define R01_BANK_CHR_BYTES (R01_TILES_PER_BANK * R01_TILE_BYTES)
-/* SPR bank 0 tile reserved for cart/Play player stub (solid color-1). */
 #define R01_SPR_PLAYER_TILE_ID 1
 
-#define R01_BG0_SCREENS_MAX 16
-
-#define R01_MASTER_COLORS 64
-#define R01_PAL_COLORS 4
-#define R01_PALS_PER_ROW 4
-#define R01_PAL_ROWS 8
-#define R01_PAL_COUNT (R01_PAL_ROWS * R01_PALS_PER_ROW)
-#define R01_PAL_PLANE_BYTES (R01_PAL_COUNT * R01_PAL_COLORS)
-
-#define R01_CART_FLASH_BYTES (512u * 1024u)
-#define R01_PRG_BYTES 32768u
-#ifndef R01_CHR_BANK_BYTES
-#define R01_CHR_BANK_BYTES 4096u
-#endif
-#define R01_CART_FORMAT_VER 5
-#define R01_CART_HDR_BYTES 16u
-#define R01_CART_PTR_TABLE_BYTES 42u /* 7 x (u24 off, u24 len) */
-#define R01_CART_SCREEN_PAYLOAD 480u
-#define R01_CART_OTHER_MAX 16
-#define R01_CART_OTHER_TITLE 0
-#define R01_CART_OTHER_INTER 1
-#define R01_CART_OTHER_CREDITS_FIRST 2
-#define R01_CART_CREDITS_MIN 0
-/* Other pool is shared 16 (title+inter+credits); credits start at index 2. */
-#define R01_CART_CREDITS_MAX (R01_CART_OTHER_MAX - R01_CART_OTHER_CREDITS_FIRST) /* 14 */
-#define R01_CART_OTHER_HDR_BYTES 4u
-#define R01_CART_OTHER_DIR_BYTES 8u
-#define R01_CART_OTHER_FLAG_RLE 0x01u
 #define R01_CART_OTHER_BYTES_MAX (64u * 1024u) /* soft export budget */
-#define R01_CART_GLOBAL_CHR_BANKS (R01_BG_BANKS + R01_SPR_BANKS)
-#define R01_CART_GLOBAL_CHR_BYTES ((uint32_t)R01_CART_GLOBAL_CHR_BANKS * R01_CHR_BANK_BYTES)
 
 #define R01_NAME_MAX 64
 #define R01_PATH_MAX 512
@@ -88,9 +35,9 @@
 
 /* Entity types (docs/general/video-graphics.md). Soft on-screen live cap is 16. */
 #define R01_MAX_ENTITY_TYPES 32
-#define R01_ENTITY_STATES_MAX 4
-#define R01_ENTITY_FRAMES_MAX 8
-#define R01_ENTITY_PARTS_MAX 6 /* hard: no frame may exceed 6 sprites */
+#define R01_ENTITY_STATES_MAX R01_CART_ENTITY_STATES_MAX
+#define R01_ENTITY_FRAMES_MAX R01_CART_ENTITY_FRAMES_MAX
+#define R01_ENTITY_PARTS_MAX R01_CART_ENTITY_PARTS_MAX /* hard: no frame may exceed 6 sprites */
 #define R01_ENTITY_ONSCREEN_MAX 16 /* live instances (OAM headroom allows 32 at 4 parts) */
 #define R01_ENTITY_COMPOSE_PX 32 /* authoring canvas (px). Studio shows full grid at fixed scale */
 #define R01_ENTITY_NAME_MAX 32
@@ -98,7 +45,6 @@
 #define R01_ENTITY_HITBOX_W 8
 #define R01_ENTITY_HITBOX_H 8
 #define R01_MAX_ENTITY_INSTANCES 64 /* world placement table (may exceed live 16) */
-#define R01_OAM_MAX 64
 
 #define R01_MAX_WARP_ENTRANCES 32
 #define R01_MAX_WARP_EXITS 32
@@ -137,12 +83,6 @@ typedef struct R01BgmData {
     R01BgmRegion region[R01_BGM_TRACKS_MAX][R01_BGM_CH_COUNT][R01_BGM_REGIONS_MAX];
 } R01BgmData;
 
-/* BG / sprite attr (docs/general/video-graphics.md) */
-#define R01_ATTR_BANK_MASK 0x0Fu
-#define R01_ATTR_PAL_MASK 0x30u
-#define R01_ATTR_PAL_SHIFT 4
-#define R01_ATTR_FLIP_H 0x40u
-#define R01_ATTR_FLIP_V 0x80u
 #define R01_GLOBAL_SPR_BANK_BASE 0
 
 static inline int r01_is_global_spr_bank(int bank) {

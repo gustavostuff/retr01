@@ -8,7 +8,7 @@
 | Shared | `apps/common` | Linked by Studio / Emu / Sim |
 | Netlist engine | `apps/netlist_sim` | Linked by Sim |
 
-Repo wrappers (after copying binaries to `bin/`): `./scripts/studio.sh`, `./scripts/emu.sh`, and `./scripts/sim-tier-a.sh`. Build with `./scripts/build-all.sh`.
+Repo wrappers (after copying binaries to `bin/`): `./scripts/studio.sh`, `./scripts/emu.sh`, and `./scripts/sim-tier-a.sh`. Build with `./scripts/build-all.sh` (also refreshes `raspberry_pi_test/`). Tests: `./scripts/unit-tests.sh`.
 
 ## Studio projects
 

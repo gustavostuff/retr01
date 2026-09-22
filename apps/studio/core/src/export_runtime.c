@@ -1,168 +1,18 @@
-/* Host export runtime for custom_logic (copied to output/C/r01_runtime.c). */
+/* Host export runtime for custom_logic (copied to output/C/r01_runtime.c).
+ * Links apps/common r01_play_camera.c / r01_play_anim.c (Studio compile_custom_plugin). */
 #include "include/r01_engine.h"
+#include "r01_play_anim.h"
+#include "r01_play_camera.h"
+#include "r01_cart_caps.h"
 
 #include <math.h>
 #include <string.h>
-
-static void align_deadzone_parity(int center, int *lo, int *hi) {
-    if (!lo || !hi) {
-        return;
-    }
-    if (((*lo) & 1) != (center & 1) && *lo < *hi) {
-        (*lo)++;
-    }
-    if (((*hi) & 1) != (center & 1) && *hi > *lo) {
-        (*hi)--;
-    }
-}
-
-static void deadzone_h_bounds(int screen_w, int dz_w, int *out_left, int *out_right) {
-    int left;
-    int right;
-    if (dz_w <= 0 || dz_w >= screen_w) {
-        left = 0;
-        right = screen_w - 1;
-    } else {
-        left = (screen_w - dz_w) / 2;
-        right = left + dz_w - 1;
-        align_deadzone_parity(screen_w / 2, &left, &right);
-    }
-    if (out_left) {
-        *out_left = left;
-    }
-    if (out_right) {
-        *out_right = right;
-    }
-}
-
-static void deadzone_v_bounds(int screen_h, int dz_h, int *out_top, int *out_bottom) {
-    int top;
-    int bottom;
-    if (dz_h <= 0 || dz_h >= screen_h) {
-        top = 0;
-        bottom = screen_h - 1;
-    } else {
-        top = (screen_h - dz_h) / 2;
-        bottom = top + dz_h - 1;
-        align_deadzone_parity(screen_h / 2, &top, &bottom);
-    }
-    if (out_top) {
-        *out_top = top;
-    }
-    if (out_bottom) {
-        *out_bottom = bottom;
-    }
-}
-
-static void play_camera_update(int *cam_x, int *cam_y, int anchor_x, int anchor_y, int player_w, int player_h,
-                               int screen_w, int screen_h, int deadzone_x, int deadzone_y, int axis_lock) {
-    int ax;
-    int ay;
-    int target_x;
-    int target_y;
-    if (!cam_x || !cam_y) {
-        return;
-    }
-    if (deadzone_x > 0) {
-        ax = anchor_x;
-    } else {
-        ax = anchor_x + player_w / 2;
-    }
-    if (deadzone_y > 0) {
-        ay = anchor_y;
-    } else {
-        ay = anchor_y + player_h / 2;
-    }
-    target_x = ax - screen_w / 2;
-    target_y = ay - screen_h / 2;
-    if (axis_lock != R01_CAM_AXIS_V) {
-        if (deadzone_x > 0) {
-            if (deadzone_x < screen_w) {
-                int left;
-                int right;
-                int sx = ax - *cam_x;
-                deadzone_h_bounds(screen_w, deadzone_x, &left, &right);
-                if (sx < left) {
-                    *cam_x = ax - left;
-                } else if (sx > right) {
-                    *cam_x = ax - right;
-                }
-            }
-        } else {
-            *cam_x = target_x;
-        }
-    }
-    if (axis_lock != R01_CAM_AXIS_H) {
-        if (deadzone_y > 0) {
-            if (deadzone_y < screen_h) {
-                int top;
-                int bottom;
-                int sy = ay - *cam_y;
-                deadzone_v_bounds(screen_h, deadzone_y, &top, &bottom);
-                if (sy < top) {
-                    *cam_y = ay - top;
-                } else if (sy > bottom) {
-                    *cam_y = ay - bottom;
-                }
-            }
-        } else {
-            *cam_y = target_y;
-        }
-    }
-    if (*cam_x < 0) {
-        *cam_x = 0;
-    }
-    if (*cam_y < 0) {
-        *cam_y = 0;
-    }
-}
-
-static void play_camera_snap(int *cam_x, int *cam_y, int anchor_x, int anchor_y, int player_w, int player_h,
-                             int screen_w, int screen_h, int deadzone_x, int deadzone_y, int axis_lock) {
-    int ax;
-    int ay;
-    int target_x;
-    int target_y;
-    if (!cam_x || !cam_y) {
-        return;
-    }
-    if (deadzone_x > 0) {
-        ax = anchor_x;
-    } else {
-        ax = anchor_x + player_w / 2;
-    }
-    if (deadzone_y > 0) {
-        ay = anchor_y;
-    } else {
-        ay = anchor_y + player_h / 2;
-    }
-    target_x = ax - screen_w / 2;
-    target_y = ay - screen_h / 2;
-    if (axis_lock != R01_CAM_AXIS_V) {
-        *cam_x = target_x;
-    }
-    if (axis_lock != R01_CAM_AXIS_H) {
-        *cam_y = target_y;
-    }
-    if (*cam_x < 0) {
-        *cam_x = 0;
-    }
-    if (*cam_y < 0) {
-        *cam_y = 0;
-    }
-    play_camera_update(cam_x, cam_y, anchor_x, anchor_y, player_w, player_h, screen_w, screen_h, deadzone_x,
-                       deadzone_y, axis_lock);
-}
 
 #define R01_EVENT_SLOTS 4
 #define R01_MAX_PROJECTILES 8
 #define R01_PROJECTILE_TTL 180
 #define R01_FADE_SPEED 8
 #define R01_PROJ_FIXED_SHIFT 8
-#define R01_PLAY_PLAYER_W 8
-#define R01_PLAY_PLAYER_H 8
-#define R01_SCREEN_PX_W 128
-#define R01_SCREEN_PX_H 120
 #define R01_WARP_FADE_OUT 0x01u
 #define R01_WARP_FADE_IN 0x02u
 #define R01_WARP_FADE_WHITE 0x04u
@@ -220,18 +70,18 @@ void r01_game_camera_update(R01GameCtx *ctx) {
     if (!ctx) {
         return;
     }
-    play_camera_update(&ctx->cam_x, &ctx->cam_y, ctx->player_x, ctx->player_y, R01_PLAY_PLAYER_W,
-                       R01_PLAY_PLAYER_H, R01_SCREEN_PX_W, R01_SCREEN_PX_H, ctx->cam_deadzone_x,
-                       ctx->cam_deadzone_y, ctx->cam_axis_lock);
+    r01_play_camera_update(&ctx->cam_x, &ctx->cam_y, ctx->player_x, ctx->player_y, R01_PLAY_PLAYER_W,
+                           R01_PLAY_PLAYER_H, R01_SCREEN_PX_W, R01_SCREEN_PX_H, ctx->cam_deadzone_x,
+                           ctx->cam_deadzone_y, ctx->cam_axis_lock);
 }
 
 void r01_game_camera_snap(R01GameCtx *ctx) {
     if (!ctx) {
         return;
     }
-    play_camera_snap(&ctx->cam_x, &ctx->cam_y, ctx->player_x, ctx->player_y, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H,
-                     R01_SCREEN_PX_W, R01_SCREEN_PX_H, ctx->cam_deadzone_x, ctx->cam_deadzone_y,
-                     ctx->cam_axis_lock);
+    r01_play_camera_snap(&ctx->cam_x, &ctx->cam_y, ctx->player_x, ctx->player_y, R01_PLAY_PLAYER_W,
+                         R01_PLAY_PLAYER_H, R01_SCREEN_PX_W, R01_SCREEN_PX_H, ctx->cam_deadzone_x,
+                         ctx->cam_deadzone_y, ctx->cam_axis_lock);
 }
 
 void r01_game_fade_start(R01GameCtx *ctx, int to_black_or_white, int target_level) {
@@ -710,151 +560,48 @@ void r01_runtime_dispatch_buttons(R01GameCtx *ctx) {
     }
 }
 
-static int pa_dir_from_delta(int dx, int dy) {
-    if (dx > 0 && dy == 0) {
-        return R01_PLAYER_DIR_RIGHT;
-    }
-    if (dx > 0 && dy > 0) {
-        return R01_PLAYER_DIR_DOWN_RIGHT;
-    }
-    if (dx == 0 && dy > 0) {
-        return R01_PLAYER_DIR_DOWN;
-    }
-    if (dx < 0 && dy > 0) {
-        return R01_PLAYER_DIR_DOWN_LEFT;
-    }
-    if (dx < 0 && dy == 0) {
-        return R01_PLAYER_DIR_LEFT;
-    }
-    if (dx < 0 && dy < 0) {
-        return R01_PLAYER_DIR_UP_LEFT;
-    }
-    if (dx == 0 && dy < 0) {
-        return R01_PLAYER_DIR_UP;
-    }
-    if (dx > 0 && dy < 0) {
-        return R01_PLAYER_DIR_UP_RIGHT;
-    }
-    return -1;
-}
-
-static int pa_face_to_dir(int face) {
-    switch (face) {
-    case R01_PLAYER_FACE_DOWN:
-        return R01_PLAYER_DIR_DOWN;
-    case R01_PLAYER_FACE_LEFT:
-        return R01_PLAYER_DIR_LEFT;
-    case R01_PLAYER_FACE_UP:
-        return R01_PLAYER_DIR_UP;
-    default:
-        return R01_PLAYER_DIR_RIGHT;
-    }
-}
-
-static int pa_dir_flip_h(int dir) {
-    return dir == R01_PLAYER_DIR_LEFT || dir == R01_PLAYER_DIR_UP_LEFT || dir == R01_PLAYER_DIR_DOWN_LEFT;
-}
-
-static void pa_apply_idle_facing(R01GameCtx *ctx) {
-    ctx->player_anim_dir = pa_face_to_dir(ctx->player_default_face);
-    ctx->player_anim_flip_h = pa_dir_flip_h(ctx->player_anim_dir);
-}
+#define R01_PLAYER_ANIM_WRAP(call)                                                                 \
+    do {                                                                                           \
+        R01PlayAnimCtx _a;                                                                         \
+        if (!ctx) {                                                                                \
+            return;                                                                                \
+        }                                                                                          \
+        R01_PLAY_ANIM_PULL(&_a, ctx);                                                              \
+        call;                                                                                      \
+        R01_PLAY_ANIM_PUSH(&_a, ctx);                                                              \
+    } while (0)
 
 void r01_player_anim_init(R01GameCtx *ctx) {
-    int i;
+    R01PlayAnimCtx a;
     if (!ctx) {
         return;
     }
-    ctx->player_anim_state = 0;
-    ctx->player_anim_frame = 0;
-    ctx->player_anim_ctr = 0;
-    ctx->player_anim_flip_h = 0;
-    ctx->player_anim_dir = R01_PLAYER_DIR_RIGHT;
-    ctx->player_anim_moving = 0;
-    ctx->player_default_face = R01_PLAYER_FACE_RIGHT;
-    ctx->player_idle_state = -1;
-    ctx->player_crouch_state = -1;
-    ctx->player_crouching = 0;
-    ctx->player_jump_state = -1;
-    ctx->player_airborne = 0;
-    ctx->player_anim_delay_override = 0;
-    for (i = 0; i < 8; i++) {
-        ctx->player_walk_state[i] = -1;
-    }
-    for (i = 0; i < 4; i++) {
-        ctx->player_state_delay[i] = 6;
-    }
-    pa_apply_idle_facing(ctx);
+    r01_play_anim_init(&a);
+    R01_PLAY_ANIM_PUSH(&a, ctx);
 }
 
 void r01_player_anim_set_idle_state(R01GameCtx *ctx, int entity_state_idx) {
-    if (!ctx || entity_state_idx < 0 || entity_state_idx >= 4) {
-        return;
-    }
-    ctx->player_idle_state = entity_state_idx;
-    if (!ctx->player_anim_moving) {
-        ctx->player_anim_state = entity_state_idx;
-        ctx->player_anim_frame = 0;
-        ctx->player_anim_ctr = 0;
-    }
+    R01_PLAYER_ANIM_WRAP(r01_play_anim_set_idle_state(&_a, entity_state_idx));
 }
 
 void r01_player_anim_set_walk_state(R01GameCtx *ctx, int dir8, int entity_state_idx) {
-    if (!ctx || dir8 < 0 || dir8 > 7 || entity_state_idx < 0 || entity_state_idx >= 4) {
-        return;
-    }
-    ctx->player_walk_state[dir8] = entity_state_idx;
-    if (ctx->player_anim_moving && ctx->player_anim_dir == dir8) {
-        ctx->player_anim_state = entity_state_idx;
-    }
+    R01_PLAYER_ANIM_WRAP(r01_play_anim_set_walk_state(&_a, dir8, entity_state_idx));
 }
 
 void r01_player_anim_set_walk_all(R01GameCtx *ctx, int entity_state_idx) {
-    int i;
-    if (!ctx || entity_state_idx < 0 || entity_state_idx >= 4) {
-        return;
-    }
-    for (i = 0; i < 8; i++) {
-        ctx->player_walk_state[i] = entity_state_idx;
-    }
-    if (ctx->player_anim_moving) {
-        ctx->player_anim_state = entity_state_idx;
-    }
+    R01_PLAYER_ANIM_WRAP(r01_play_anim_set_walk_all(&_a, entity_state_idx));
 }
 
 void r01_player_anim_set_crouch_state(R01GameCtx *ctx, int entity_state_idx) {
-    if (!ctx) {
-        return;
-    }
-    if (entity_state_idx < 0 || entity_state_idx >= 4) {
-        ctx->player_crouch_state = -1;
-        return;
-    }
-    ctx->player_crouch_state = entity_state_idx;
+    R01_PLAYER_ANIM_WRAP(r01_play_anim_set_crouch_state(&_a, entity_state_idx));
 }
 
 void r01_player_anim_set_jump_state(R01GameCtx *ctx, int entity_state_idx) {
-    if (!ctx) {
-        return;
-    }
-    if (entity_state_idx < 0 || entity_state_idx >= 4) {
-        ctx->player_jump_state = -1;
-        return;
-    }
-    ctx->player_jump_state = entity_state_idx;
+    R01_PLAYER_ANIM_WRAP(r01_play_anim_set_jump_state(&_a, entity_state_idx));
 }
 
 void r01_player_anim_set_frame_delay(R01GameCtx *ctx, int ticks) {
-    if (!ctx) {
-        return;
-    }
-    if (ticks < 0) {
-        ticks = 0;
-    }
-    if (ticks > 255) {
-        ticks = 255;
-    }
-    ctx->player_anim_delay_override = ticks;
+    R01_PLAYER_ANIM_WRAP(r01_play_anim_set_frame_delay(&_a, ticks));
 }
 
 int r01_player_anim_frame_delay(const R01GameCtx *ctx) {
@@ -862,87 +609,15 @@ int r01_player_anim_frame_delay(const R01GameCtx *ctx) {
 }
 
 void r01_player_default_face_set(R01GameCtx *ctx, int face) {
-    if (!ctx) {
-        return;
-    }
-    if (face < R01_PLAYER_FACE_RIGHT || face > R01_PLAYER_FACE_UP) {
-        face = R01_PLAYER_FACE_RIGHT;
-    }
-    ctx->player_default_face = face;
-    if (!ctx->player_anim_moving) {
-        pa_apply_idle_facing(ctx);
-    }
+    R01_PLAYER_ANIM_WRAP(r01_play_default_face_set(&_a, face));
 }
 
 void r01_entity_state_frame_delay_set(R01GameCtx *ctx, int entity_state_idx, int ticks) {
-    if (!ctx || entity_state_idx < 0 || entity_state_idx >= 4) {
-        return;
-    }
-    if (ticks < 1) {
-        ticks = 1;
-    }
-    ctx->player_state_delay[entity_state_idx] = ticks;
-}
-
-static void pa_show_mapped(R01GameCtx *ctx, int mapped) {
-    if (!ctx) {
-        return;
-    }
-    if (mapped < 0) {
-        ctx->player_anim_state = 0;
-        ctx->player_anim_frame = 0;
-        ctx->player_anim_ctr = 0;
-        return;
-    }
-    if (ctx->player_anim_state != mapped) {
-        ctx->player_anim_state = mapped;
-        ctx->player_anim_frame = 0;
-        ctx->player_anim_ctr = 0;
-    }
+    R01_PLAYER_ANIM_WRAP(r01_play_state_frame_delay_set(&_a, entity_state_idx, ticks));
 }
 
 void r01_player_anim_update(R01GameCtx *ctx, int dx, int dy) {
-    int new_dir;
-    int pose;
-    if (!ctx) {
-        return;
-    }
-    if (dx != 0 || dy != 0) {
-        new_dir = pa_dir_from_delta(dx, dy);
-        if (new_dir >= 0) {
-            ctx->player_anim_dir = new_dir;
-            ctx->player_anim_flip_h = pa_dir_flip_h(ctx->player_anim_dir);
-        }
-    }
-    if (ctx->player_airborne && ctx->player_jump_state >= 0) {
-        ctx->player_anim_moving = (dx != 0 || dy != 0);
-        pa_show_mapped(ctx, ctx->player_jump_state);
-        return;
-    }
-    if (ctx->player_crouching && ctx->player_crouch_state >= 0) {
-        ctx->player_anim_moving = 0;
-        pa_show_mapped(ctx, ctx->player_crouch_state);
-        return;
-    }
-    if (dx != 0 || dy != 0) {
-        ctx->player_anim_moving = 1;
-        pose = ctx->player_walk_state[ctx->player_anim_dir];
-        if (pose < 0) {
-            pose = ctx->player_idle_state;
-        }
-        pa_show_mapped(ctx, pose);
-        return;
-    }
-    if (ctx->player_anim_moving) {
-        ctx->player_anim_moving = 0;
-        pa_show_mapped(ctx, ctx->player_idle_state);
-    } else if (ctx->player_idle_state < 0) {
-        pa_show_mapped(ctx, -1);
-    } else if (ctx->player_crouch_state >= 0 && ctx->player_anim_state == ctx->player_crouch_state) {
-        pa_show_mapped(ctx, ctx->player_idle_state);
-    } else if (ctx->player_jump_state >= 0 && ctx->player_anim_state == ctx->player_jump_state) {
-        pa_show_mapped(ctx, ctx->player_idle_state);
-    }
+    R01_PLAYER_ANIM_WRAP(r01_play_anim_update(&_a, dx, dy));
 }
 
 void r01_player_anim_tick(R01GameCtx *ctx) {

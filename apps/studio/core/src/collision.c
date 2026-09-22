@@ -2,8 +2,31 @@
 #include "retr01_studio/play.h"
 #include "retr01_studio/project.h"
 #include "r01_custom_logic_scan.h"
+#include "r01_play_collision.h"
 
 #include <string.h>
+
+typedef struct {
+    const R01World *w;
+    const uint8_t *banks;
+    const uint8_t *tiles;
+    int count;
+} R01WorldAabbCtx;
+
+static int world_aabb_has_screen(void *v, int col, int row) {
+    const R01WorldAabbCtx *c = (const R01WorldAabbCtx *)v;
+    int idx;
+    if (!c || !c->w) {
+        return 0;
+    }
+    idx = r01_world_find_screen(c->w, col, row);
+    return idx >= 0 && idx < c->w->screen_count && c->w->screens[idx].present;
+}
+
+static int world_aabb_solid_at(void *v, int wx, int wy) {
+    const R01WorldAabbCtx *c = (const R01WorldAabbCtx *)v;
+    return r01_world_solid_at_list(c->w, wx, wy, c->banks, c->tiles, c->count);
+}
 
 static int world_screen_at_pixel(const R01World *w, int wx, int wy, const R01Screen **out_screen, int *out_lx,
                                  int *out_ly) {
@@ -191,57 +214,16 @@ int r01_world_solid_at(const R01Project *p, const R01World *w, int wx, int wy) {
 
 int r01_world_aabb_ok_list(const R01World *w, int px, int py, int bw, int bh, const uint8_t *banks,
                            const uint8_t *tiles, int count) {
-    int x1, y1, c0, c1, r0, r1, c, r;
-    int tx0, ty0, tx1, ty1, tx, ty;
-    const int tile = 8;
-    if (!w || px < 0 || py < 0 || bw < 1 || bh < 1) {
+    R01WorldAabbCtx ctx;
+    if (!w) {
         return 0;
     }
-    x1 = px + bw - 1;
-    y1 = py + bh - 1;
-    c0 = px / R01_SCREEN_PX_W;
-    c1 = x1 / R01_SCREEN_PX_W;
-    r0 = py / R01_SCREEN_PX_H;
-    r1 = y1 / R01_SCREEN_PX_H;
-    for (c = c0; c <= c1; c++) {
-        for (r = r0; r <= r1; r++) {
-            int idx = r01_world_find_screen(w, c, r);
-            if (idx < 0 || !w->screens[idx].present) {
-                return 0;
-            }
-        }
-    }
-    /*
-     * Probe every BG tile the AABB overlaps. Corner-only samples miss solids that
-     * hit the middle of an edge (e.g. a single-tile jut on a vertical wall when
-     * the hitbox is taller than one tile).
-     */
-    tx0 = px / tile;
-    ty0 = py / tile;
-    tx1 = x1 / tile;
-    ty1 = y1 / tile;
-    for (ty = ty0; ty <= ty1; ty++) {
-        for (tx = tx0; tx <= tx1; tx++) {
-            int wx = tx * tile;
-            int wy = ty * tile;
-            if (wx < px) {
-                wx = px;
-            }
-            if (wy < py) {
-                wy = py;
-            }
-            if (wx > x1) {
-                wx = x1;
-            }
-            if (wy > y1) {
-                wy = y1;
-            }
-            if (r01_world_solid_at_list(w, wx, wy, banks, tiles, count)) {
-                return 0;
-            }
-        }
-    }
-    return 1;
+    ctx.w = w;
+    ctx.banks = banks;
+    ctx.tiles = tiles;
+    ctx.count = count;
+    return r01_play_aabb_ok(px, py, bw, bh, R01_SCREEN_PX_W, R01_SCREEN_PX_H, world_aabb_has_screen,
+                            world_aabb_solid_at, &ctx);
 }
 
 int r01_world_aabb_ok(const R01Project *p, const R01World *w, int px, int py, int bw, int bh) {

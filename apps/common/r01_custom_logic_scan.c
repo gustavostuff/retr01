@@ -2,6 +2,7 @@
 
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* Parse 0/1, R01_BG0_*_ON/OFF, or R01_CAM_DEADZONE_*_DEFAULT after optional whitespace.
@@ -78,6 +79,181 @@ static int parse_int_or_known_token(const char *p, int *out) {
     return 0;
 }
 
+static int ident_char(int c) {
+    return isalnum((unsigned char)c) || c == '_';
+}
+
+static int skip_ident(const char **pp) {
+    const char *p = *pp;
+    if (!p || !(isalpha((unsigned char)*p) || *p == '_')) {
+        return 0;
+    }
+    p++;
+    while (ident_char(*p)) {
+        p++;
+    }
+    *pp = p;
+    return 1;
+}
+
+static const char *skip_ws(const char *p) {
+    while (p && *p && isspace((unsigned char)*p)) {
+        p++;
+    }
+    return p;
+}
+
+/* Strip line comments, block comments, and string/char literals so calls can span lines. */
+static char *load_stripped(const char *path) {
+    FILE *f;
+    long sz;
+    char *raw;
+    char *out;
+    size_t n;
+    size_t i;
+    size_t o;
+    int in_line = 0;
+    int in_block = 0;
+    int in_str = 0;
+    int in_chr = 0;
+    if (!path) {
+        return NULL;
+    }
+    f = fopen(path, "rb");
+    if (!f) {
+        return NULL;
+    }
+    if (fseek(f, 0, SEEK_END) != 0) {
+        fclose(f);
+        return NULL;
+    }
+    sz = ftell(f);
+    if (sz < 0 || sz > 4 * 1024 * 1024) {
+        fclose(f);
+        return NULL;
+    }
+    if (fseek(f, 0, SEEK_SET) != 0) {
+        fclose(f);
+        return NULL;
+    }
+    n = (size_t)sz;
+    raw = (char *)malloc(n + 1u);
+    out = (char *)malloc(n + 1u);
+    if (!raw || !out) {
+        free(raw);
+        free(out);
+        fclose(f);
+        return NULL;
+    }
+    if (fread(raw, 1, n, f) != n) {
+        free(raw);
+        free(out);
+        fclose(f);
+        return NULL;
+    }
+    fclose(f);
+    raw[n] = '\0';
+    o = 0;
+    for (i = 0; i < n; i++) {
+        char c = raw[i];
+        if (in_line) {
+            if (c == '\n') {
+                in_line = 0;
+                out[o++] = ' ';
+            }
+            continue;
+        }
+        if (in_block) {
+            if (c == '*' && i + 1 < n && raw[i + 1] == '/') {
+                in_block = 0;
+                i++;
+                out[o++] = ' ';
+            }
+            continue;
+        }
+        if (in_str) {
+            if (c == '\\' && i + 1 < n) {
+                i++;
+            } else if (c == '"') {
+                in_str = 0;
+            }
+            out[o++] = ' ';
+            continue;
+        }
+        if (in_chr) {
+            if (c == '\\' && i + 1 < n) {
+                i++;
+            } else if (c == '\'') {
+                in_chr = 0;
+            }
+            out[o++] = ' ';
+            continue;
+        }
+        if (c == '/' && i + 1 < n && raw[i + 1] == '/') {
+            in_line = 1;
+            i++;
+            continue;
+        }
+        if (c == '/' && i + 1 < n && raw[i + 1] == '*') {
+            in_block = 1;
+            i++;
+            continue;
+        }
+        if (c == '"') {
+            in_str = 1;
+            out[o++] = ' ';
+            continue;
+        }
+        if (c == '\'') {
+            in_chr = 1;
+            out[o++] = ' ';
+            continue;
+        }
+        out[o++] = c;
+    }
+    out[o] = '\0';
+    free(raw);
+    return out;
+}
+
+static const char *find_ident(const char *buf, const char *from, const char *name) {
+    size_t n;
+    const char *p;
+    if (!buf || !from || !name) {
+        return NULL;
+    }
+    n = strlen(name);
+    p = from;
+    while ((p = strstr(p, name)) != NULL) {
+        if ((p == buf || !ident_char((unsigned char)p[-1])) && !ident_char((unsigned char)p[n])) {
+            return p;
+        }
+        p += n;
+    }
+    return NULL;
+}
+
+static const char *call_args(const char *ident_at, const char *name) {
+    const char *p;
+    if (!ident_at || !name) {
+        return NULL;
+    }
+    p = skip_ws(ident_at + strlen(name));
+    if (*p != '(') {
+        return NULL;
+    }
+    return p;
+}
+
+static int parse_first_ident(const char **pp) {
+    const char *p = skip_ws(*pp);
+    if (!skip_ident(&p)) {
+        return 0;
+    }
+    *pp = p;
+    return 1;
+}
+
 static int parse_ctx_two_ints(const char *args, int *out_a, int *out_b) {
     const char *p = args;
     int n0, n1;
@@ -85,16 +261,10 @@ static int parse_ctx_two_ints(const char *args, int *out_a, int *out_b) {
         return -1;
     }
     p++;
-    while (*p && isspace((unsigned char)*p)) {
-        p++;
-    }
-    if (strncmp(p, "ctx", 3) != 0) {
+    if (!parse_first_ident(&p)) {
         return -1;
     }
-    p += 3;
-    while (*p && isspace((unsigned char)*p)) {
-        p++;
-    }
+    p = skip_ws(p);
     if (*p != ',') {
         return -1;
     }
@@ -104,9 +274,7 @@ static int parse_ctx_two_ints(const char *args, int *out_a, int *out_b) {
         return -1;
     }
     p += n0;
-    while (*p && isspace((unsigned char)*p)) {
-        p++;
-    }
+    p = skip_ws(p);
     if (*p != ',') {
         return -1;
     }
@@ -125,16 +293,10 @@ static int parse_ctx_one_int(const char *args, int *out_v) {
         return -1;
     }
     p++;
-    while (*p && isspace((unsigned char)*p)) {
-        p++;
-    }
-    if (strncmp(p, "ctx", 3) != 0) {
+    if (!parse_first_ident(&p)) {
         return -1;
     }
-    p += 3;
-    while (*p && isspace((unsigned char)*p)) {
-        p++;
-    }
+    p = skip_ws(p);
     if (*p != ',') {
         return -1;
     }
@@ -146,74 +308,16 @@ static int parse_ctx_one_int(const char *args, int *out_v) {
     return 0;
 }
 
-static int line_call_is_active(const char *line, const char *call, int in_block_comment) {
-    const char *p;
-    const char *slash;
-    const char *block;
-    const char *trim;
-    if (!line || !call || in_block_comment) {
-        return 0;
-    }
-    trim = line;
-    while (*trim && isspace((unsigned char)*trim)) {
-        trim++;
-    }
-    /* Block-comment body lines: " * ..." */
-    if (trim[0] == '*' && trim[1] != '/') {
-        return 0;
-    }
-    p = strstr(line, call);
-    if (!p) {
-        return 0;
-    }
-    slash = strstr(line, "//");
-    if (slash && slash < p) {
-        return 0;
-    }
-    block = strstr(line, "/*");
-    if (block && block < p) {
-        return 0;
-    }
-    return 1;
-}
-
-/* Advance in-block flag across a line (non-nested block comments). */
-static void scan_update_block_comment(const char *line, int *in_block) {
-    const char *p = line;
-    if (!line || !in_block) {
-        return;
-    }
-    while (*p) {
-        if (!*in_block && p[0] == '/' && p[1] == '*') {
-            *in_block = 1;
-            p += 2;
-            continue;
-        }
-        if (*in_block && p[0] == '*' && p[1] == '/') {
-            *in_block = 0;
-            p += 2;
-            continue;
-        }
-        p++;
-    }
-}
-
 static int parse_ctx_only(const char *args) {
     const char *p = args;
     if (!p || p[0] != '(') {
         return -1;
     }
     p++;
-    while (*p && isspace((unsigned char)*p)) {
-        p++;
-    }
-    if (strncmp(p, "ctx", 3) != 0) {
+    if (!parse_first_ident(&p)) {
         return -1;
     }
-    p += 3;
-    while (*p && isspace((unsigned char)*p)) {
-        p++;
-    }
+    p = skip_ws(p);
     if (*p != ')') {
         return -1;
     }
@@ -221,44 +325,55 @@ static int parse_ctx_only(const char *args) {
 }
 
 int r01_custom_logic_scan_deadzone(const char *path, int *out_dx, int *out_dy) {
-    FILE *f;
-    char line[512];
+    char *buf;
+    const char *p;
     int found = 0;
     int dx = 0;
     int dy = 0;
-    int in_block = 0;
     if (!path || !out_dx || !out_dy) {
         return -1;
     }
-    f = fopen(path, "r");
-    if (!f) {
+    buf = load_stripped(path);
+    if (!buf) {
         return -1;
     }
-    while (fgets(line, sizeof(line), f)) {
-        const char *args;
-        int line_in_block = in_block;
-        scan_update_block_comment(line, &in_block);
-        if (line_call_is_active(line, "r01_camera_disable_deadzone", line_in_block)) {
-            args = strchr(strstr(line, "r01_camera_disable_deadzone"), '(');
-            if (args && parse_ctx_only(args) == 0) {
-                dx = 0;
-                dy = 0;
-                found = 1;
-            }
-            continue;
+    p = buf;
+    while (*p) {
+        const char *dis = find_ident(buf, p, "r01_camera_disable_deadzone");
+        const char *set = find_ident(buf, p, "r01_camera_set_deadzone");
+        const char *next;
+        int is_disable;
+        if (!dis && !set) {
+            break;
         }
-        if (line_call_is_active(line, "r01_camera_set_deadzone", line_in_block)) {
-            int sx = 0;
-            int sy = 0;
-            args = strchr(strstr(line, "r01_camera_set_deadzone"), '(');
-            if (args && parse_ctx_two_ints(args, &sx, &sy) == 0) {
-                dx = sx;
-                dy = sy;
-                found = 1;
+        if (dis && (!set || dis < set)) {
+            next = dis;
+            is_disable = 1;
+        } else {
+            next = set;
+            is_disable = 0;
+        }
+        {
+            const char *args = call_args(next, is_disable ? "r01_camera_disable_deadzone" : "r01_camera_set_deadzone");
+            if (is_disable) {
+                if (args && parse_ctx_only(args) == 0) {
+                    dx = 0;
+                    dy = 0;
+                    found = 1;
+                }
+            } else {
+                int sx = 0;
+                int sy = 0;
+                if (args && parse_ctx_two_ints(args, &sx, &sy) == 0) {
+                    dx = sx;
+                    dy = sy;
+                    found = 1;
+                }
             }
         }
+        p = next + 1;
     }
-    fclose(f);
+    free(buf);
     if (!found) {
         return -1;
     }
@@ -267,113 +382,76 @@ int r01_custom_logic_scan_deadzone(const char *path, int *out_dx, int *out_dy) {
     return 0;
 }
 
-int r01_custom_logic_scan_bg0_wrap(const char *path, int *out_wrap_x, int *out_wrap_y) {
-    FILE *f;
-    char line[512];
+static int scan_last_two_ints(const char *path, const char *call, int *out_a, int *out_b) {
+    char *buf;
+    const char *p;
     int found = 0;
-    int wx = 0;
-    int wy = 0;
-    int in_block = 0;
-    if (!path || !out_wrap_x || !out_wrap_y) {
+    int a = 0;
+    int b = 0;
+    if (!path || !call || !out_a || !out_b) {
         return -1;
     }
-    f = fopen(path, "r");
-    if (!f) {
+    buf = load_stripped(path);
+    if (!buf) {
         return -1;
     }
-    while (fgets(line, sizeof(line), f)) {
-        const char *args;
-        int sx = 0;
-        int sy = 0;
-        int line_in_block = in_block;
-        scan_update_block_comment(line, &in_block);
-        if (!line_call_is_active(line, "r01_bg0_set_wrap", line_in_block)) {
-            continue;
-        }
-        args = strchr(strstr(line, "r01_bg0_set_wrap"), '(');
-        if (args && parse_ctx_two_ints(args, &sx, &sy) == 0) {
-            wx = sx;
-            wy = sy;
+    p = buf;
+    while ((p = find_ident(buf, p, call)) != NULL) {
+        const char *args = call_args(p, call);
+        int sa = 0;
+        int sb = 0;
+        if (args && parse_ctx_two_ints(args, &sa, &sb) == 0) {
+            a = sa;
+            b = sb;
             found = 1;
         }
+        p += strlen(call);
     }
-    fclose(f);
+    free(buf);
     if (!found) {
         return -1;
     }
-    *out_wrap_x = wx;
-    *out_wrap_y = wy;
-    return 0;
-}
-
-int r01_custom_logic_scan_bg0_clip_bg1(const char *path, int *out_enable) {
-    FILE *f;
-    char line[512];
-    int found = 0;
-    int en = 0;
-    int in_block = 0;
-    if (!path || !out_enable) {
-        return -1;
-    }
-    f = fopen(path, "r");
-    if (!f) {
-        return -1;
-    }
-    while (fgets(line, sizeof(line), f)) {
-        const char *args;
-        int v = 0;
-        int line_in_block = in_block;
-        scan_update_block_comment(line, &in_block);
-        if (!line_call_is_active(line, "r01_bg0_set_clip_to_bg1", line_in_block)) {
-            continue;
-        }
-        args = strchr(strstr(line, "r01_bg0_set_clip_to_bg1"), '(');
-        if (args && parse_ctx_one_int(args, &v) == 0) {
-            en = v;
-            found = 1;
-        }
-    }
-    fclose(f);
-    if (!found) {
-        return -1;
-    }
-    *out_enable = en;
+    *out_a = a;
+    *out_b = b;
     return 0;
 }
 
 static int scan_ctx_one_named(const char *path, const char *call, int *out_v) {
-    FILE *f;
-    char line[512];
+    char *buf;
+    const char *p;
     int found = 0;
     int v = 0;
-    int in_block = 0;
     if (!path || !call || !out_v) {
         return -1;
     }
-    f = fopen(path, "r");
-    if (!f) {
+    buf = load_stripped(path);
+    if (!buf) {
         return -1;
     }
-    while (fgets(line, sizeof(line), f)) {
-        const char *args;
+    p = buf;
+    while ((p = find_ident(buf, p, call)) != NULL) {
+        const char *args = call_args(p, call);
         int n = 0;
-        int line_in_block = in_block;
-        scan_update_block_comment(line, &in_block);
-        if (!line_call_is_active(line, call, line_in_block)) {
-            continue;
-        }
-        args = strchr(strstr(line, call), '(');
         if (args && parse_ctx_one_int(args, &n) == 0) {
             v = n;
             found = 1;
         }
+        p += strlen(call);
     }
-    fclose(f);
+    free(buf);
     if (!found) {
         return -1;
     }
     *out_v = v;
     return 0;
+}
+
+int r01_custom_logic_scan_bg0_wrap(const char *path, int *out_wrap_x, int *out_wrap_y) {
+    return scan_last_two_ints(path, "r01_bg0_set_wrap", out_wrap_x, out_wrap_y);
+}
+
+int r01_custom_logic_scan_bg0_clip_bg1(const char *path, int *out_enable) {
+    return scan_ctx_one_named(path, "r01_bg0_set_clip_to_bg1", out_enable);
 }
 
 int r01_custom_logic_scan_game_mode(const char *path, int *out_mode) {
@@ -410,31 +488,26 @@ int r01_custom_logic_scan_player_jump(const char *path, int *out_state) {
 
 int r01_custom_logic_scan_solid_patterns(const char *path, uint8_t *out_banks, uint8_t *out_tiles,
                                          int max_count, int *out_count) {
-    FILE *f;
-    char line[512];
+    char *buf;
+    const char *p;
     int n = 0;
-    int in_block = 0;
     if (!path || !out_banks || !out_tiles || !out_count || max_count < 1) {
         return -1;
     }
     if (max_count > R01_CUSTOM_SOLID_PAT_MAX) {
         max_count = R01_CUSTOM_SOLID_PAT_MAX;
     }
-    f = fopen(path, "r");
-    if (!f) {
+    buf = load_stripped(path);
+    if (!buf) {
         return -1;
     }
-    while (fgets(line, sizeof(line), f)) {
-        const char *args;
+    p = buf;
+    while ((p = find_ident(buf, p, "r01_solid_pattern_add")) != NULL) {
+        const char *args = call_args(p, "r01_solid_pattern_add");
         int bank = 0;
         int tile = 0;
         int i;
-        int line_in_block = in_block;
-        scan_update_block_comment(line, &in_block);
-        if (!line_call_is_active(line, "r01_solid_pattern_add", line_in_block)) {
-            continue;
-        }
-        args = strchr(strstr(line, "r01_solid_pattern_add"), '(');
+        p += strlen("r01_solid_pattern_add");
         if (!args || parse_ctx_two_ints(args, &bank, &tile) != 0) {
             continue;
         }
@@ -456,7 +529,7 @@ int r01_custom_logic_scan_solid_patterns(const char *path, uint8_t *out_banks, u
         out_tiles[n] = (uint8_t)tile;
         n++;
     }
-    fclose(f);
+    free(buf);
     *out_count = n;
     return n > 0 ? 0 : -1;
 }

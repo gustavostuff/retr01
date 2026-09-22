@@ -540,6 +540,31 @@ TEST_MAIN() {
                "scan two solid patterns");
         EXPECT(banks[0] == 0 && tiles[0] == 1, "first solid bank 0 tile 1");
         EXPECT(banks[1] == 1 && tiles[1] == 5, "second solid bank 1 tile 5");
+        {
+            FILE *mf = fopen("multi_logic.c", "w");
+            int mode = 0;
+            int dx = -1;
+            int dy = -1;
+            EXPECT(mf != NULL, "write multi_logic");
+            if (mf) {
+                fputs("void r01_custom_on_init(R01GameCtx *game) {\n"
+                      "    // r01_game_set_mode(game, R01_GAME_MODE_TOPDOWN);\n"
+                      "    /* r01_camera_set_deadzone(game, 1, 2); */\n"
+                      "    r01_game_set_mode(\n"
+                      "        game,\n"
+                      "        R01_GAME_MODE_PLATFORMER);\n"
+                      "    r01_camera_set_deadzone(\n"
+                      "        game, 32, 70);\n"
+                      "}\n",
+                      mf);
+                fclose(mf);
+            }
+            EXPECT(r01_custom_logic_scan_game_mode("multi_logic.c", &mode) == 0 && mode == 1,
+                   "scan multiline + ignore comments");
+            EXPECT(r01_custom_logic_scan_deadzone("multi_logic.c", &dx, &dy) == 0 && dx == 32 && dy == 70,
+                   "scan multiline deadzone with non-ctx name");
+            remove("multi_logic.c");
+        }
         r01_project_add_custom_logic_solids(p, "solid_logic.c");
         EXPECT(r01_project_pattern_solid(p, 0, 1), "custom_logic bank 0 tile 1 on project");
         EXPECT(r01_project_pattern_solid(p, 1, 5), "custom_logic bank 1 tile 5 on project");

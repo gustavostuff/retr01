@@ -36,8 +36,8 @@ void r01_custom_on_init(R01GameCtx *ctx) {
 
 void r01_custom_on_tick(R01GameCtx *ctx) {
     if (r01_pad_down(ctx, R01_PAD_X) && r01_player_moving_x(ctx)) {
-        r01_player_set_move_mul(ctx, 2);
-        r01_player_anim_set_frame_delay(ctx, 3);
+        r01_player_set_move_mul(ctx, 2); // double the speed
+        r01_player_anim_set_frame_delay(ctx, 5); // from 6 to 5 frames per frame, faster animation
     }
 }
 

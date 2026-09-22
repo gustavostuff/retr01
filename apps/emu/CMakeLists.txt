@@ -33,6 +33,7 @@ if(NOT TARGET r01_play_common)
     ${R01_COMMON_DIR}/r01_play_anim_cart.c
     ${R01_COMMON_DIR}/r01_play_camera.c
     ${R01_COMMON_DIR}/r01_play_physics.c
+    ${R01_COMMON_DIR}/r01_play_collision.c
     ${R01_COMMON_DIR}/r01_custom_logic_scan.c
     ${R01_COMMON_DIR}/r01_nes_synth.c
     ${R01_COMMON_DIR}/r01_apu_fd.c
@@ -72,9 +73,13 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     add_test(NAME ${_t} COMMAND ${_t})
   endforeach()
 
-  # Optional integration binaries (need a real .retr01 on argv). Not part of ctest.
+  # Optional integration binaries (need a real .retr01 on argv). Registered when the sample cart exists.
+  set(R01E_EXAMPLE_CART "${R01_REPO_ROOT}/example_01/example_01.retr01")
   foreach(_t test_boot test_play)
     add_executable(${_t} tests/${_t}.c)
     target_link_libraries(${_t} PRIVATE retr01_emu_core)
+    if(EXISTS "${R01E_EXAMPLE_CART}")
+      add_test(NAME ${_t} COMMAND ${_t} "${R01E_EXAMPLE_CART}")
+    endif()
   endforeach()
 endif()

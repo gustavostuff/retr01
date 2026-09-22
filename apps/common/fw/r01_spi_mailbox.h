@@ -22,10 +22,18 @@
 
 #define R01_MB_STATUS_BUSY 0x01u
 
+#ifndef R01_OAM_ENTRIES
 #define R01_OAM_ENTRIES 64u
+#endif
+#ifndef R01_OAM_BYTES
 #define R01_OAM_BYTES (R01_OAM_ENTRIES * 4u)
-#define R01_APU_REGS 0x20u /* $7F40-$7F5F */
+#endif
+#ifndef R01_TILE_BYTES
 #define R01_CHR_TILE_BYTES 16u
+#else
+#define R01_CHR_TILE_BYTES R01_TILE_BYTES
+#endif
+#define R01_APU_REGS 0x20u /* $7F40-$7F5F */
 #ifndef R01_CHR_BANK_BYTES
 #define R01_CHR_BANK_BYTES 0x1000u
 #endif

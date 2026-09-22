@@ -1,4 +1,5 @@
 #include "retr01_emu/cart.h"
+#include "r01_play_collision.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -531,55 +532,32 @@ const uint8_t *r01e_cart_other_payload(const R01eCart *c, int id) {
     return raw;
 }
 
+typedef struct {
+    const R01eCart *c;
+    int world;
+} R01eAabbCtx;
+
+static int cart_aabb_has_screen(void *v, int col, int row) {
+    const R01eAabbCtx *a = (const R01eAabbCtx *)v;
+    return a && r01e_cart_has_screen(a->c, a->world, col, row);
+}
+
+static int cart_aabb_solid_at(void *v, int wx, int wy) {
+    const R01eAabbCtx *a = (const R01eAabbCtx *)v;
+    return a && r01e_cart_solid_at(a->c, a->world, wx, wy);
+}
+
 int r01e_cart_aabb_ok(const R01eCart *c, int world, int px, int py, int bw, int bh) {
-    int x1, y1, c0, c1, r0, r1, col, row;
-    int tx0, ty0, tx1, ty1, tx, ty;
-    const int tile = 8;
-    if (!c || px < 0 || py < 0 || bw < 1 || bh < 1) {
+    R01eAabbCtx ctx;
+    if (!c) {
         return 0;
     }
-    x1 = px + bw - 1;
-    y1 = py + bh - 1;
-    c0 = px / R01E_SCREEN_PX_W;
-    c1 = x1 / R01E_SCREEN_PX_W;
-    r0 = py / R01E_SCREEN_PX_H;
-    r1 = y1 / R01E_SCREEN_PX_H;
-    for (col = c0; col <= c1; col++) {
-        for (row = r0; row <= r1; row++) {
-            if (!r01e_cart_has_screen(c, world, col, row)) {
-                return 0;
-            }
-        }
-    }
-    /* All overlapping BG tiles (not just AABB corners). */
-    tx0 = px / tile;
-    ty0 = py / tile;
-    tx1 = x1 / tile;
-    ty1 = y1 / tile;
-    for (ty = ty0; ty <= ty1; ty++) {
-        for (tx = tx0; tx <= tx1; tx++) {
-            int wx = tx * tile;
-            int wy = ty * tile;
-            if (wx < px) {
-                wx = px;
-            }
-            if (wy < py) {
-                wy = py;
-            }
-            if (wx > x1) {
-                wx = x1;
-            }
-            if (wy > y1) {
-                wy = y1;
-            }
-            if (r01e_cart_solid_at(c, world, wx, wy)) {
-                return 0;
-            }
-        }
-    }
-    return 1;
+    ctx.c = c;
+    ctx.world = world;
+    return r01_play_aabb_ok(px, py, bw, bh, R01E_SCREEN_PX_W, R01E_SCREEN_PX_H, cart_aabb_has_screen,
+                            cart_aabb_solid_at, &ctx);
 }
 
 int r01e_cart_player_aabb_ok(const R01eCart *c, int world, int px, int py) {
-    return r01e_cart_aabb_ok(c, world, px, py, 8, 8);
+    return r01e_cart_aabb_ok(c, world, px, py, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H);
 }

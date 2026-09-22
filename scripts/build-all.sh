@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build Studio, Emu, and Tier A sim (Release) into bin/.
+# Build Studio, Emu, and Tier A sim (Release) into bin/, then refresh raspberry_pi_test/.
 # Usage: ./scripts/build-all.sh [--clean|-c]
 #   --clean  Remove apps/*/build and bin/, then configure and compile from scratch.
 set -euo pipefail
@@ -57,6 +57,9 @@ build_one "$EMU" retr01_emu emu
 
 echo "== sim tier-a =="
 build_one "$SIM_A" retr01_sim_tier_a sim-tier-a
+
+echo "== pack pi emu =="
+"$ROOT/scripts/pack-pi-emu.sh"
 
 echo "binaries:"
 ls -lh "$BIN"/studio "$BIN"/emu "$BIN"/sim-tier-a

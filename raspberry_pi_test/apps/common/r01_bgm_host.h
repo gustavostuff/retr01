@@ -30,6 +30,7 @@ void r01_bgm_host_attach_window(const uint8_t *regs);
 int r01_bgm_host_play(int track, const char *path);
 /* cells[step][ch][tok]; steps is loop length (1..R01_BGM_STEPS). */
 void r01_bgm_host_play_cells(char cells[R01_BGM_STEPS][R01_BGM_CH][R01_BGM_TOKEN], int steps);
+void r01_bgm_host_set_ins(const uint8_t *ins);
 void r01_bgm_host_stop(void);
 void r01_bgm_host_pause(void);
 void r01_bgm_host_resume(void);

@@ -6,9 +6,13 @@ NOTE: hardware is still in design phase, software is being built on that design.
 
 ## Inspirations
 
-1. NES (tile and sprite feel, 2bpp, NES-style color limits).
-2. SNES (true parallax via two BG planes).
-3. [GameTank](https://gametank.zone/) (similar screen resolution target).
+1. NES: Colors are limited to a 64 global source palette and 25 (max) on screen at a time.
+2. SNES: True parallax via two BG planes. BG0 behind, and BG1 on top, with pixel level transparency.
+3. [GameTank](https://gametank.zone/): Adopting a very similar resolution.
+
+## Graphics
+
+## Hardware
 
 ## Design goals
 
@@ -36,13 +40,6 @@ NOTE: hardware is still in design phase, software is being built on that design.
 <img src="img/readme/studio-audio.png" alt="Retr01 Studio Audio" />
 
 **Retr01 Sim** is a discrete-IC board simulator. Tier A is the video-only lab (beam PLDs, color PROM, virtual screen). See [apps/sim/](apps/sim/README.md).
-
-Maria is a player entity used to test Emu and Studio. It may become a full game later. Idle, running, crouching, and jumping are entity states (up to 4 states x 8 frames x 6 sprites):
-
-<img src="img/readme/maria/idle.gif" alt="Maria idle" />
-<img src="img/readme/maria/running.gif" alt="Maria running" />
-<img src="img/readme/maria/crouching.png" alt="Maria crouching" />
-<img src="img/readme/maria/jumping.png" alt="Maria jumping" />
 
 ## Doc map
 
