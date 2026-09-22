@@ -158,7 +158,7 @@ Max fill: **3** + **4** x (**1** + **8** x (**8** + **24**)) = **1031 B**. Pose 
 
 ### Camera helpers (locked intent)
 
-Default dead zone **32x30** pixels inside the 128x120 view. `r01_camera_set_deadzone` in `game_logic.c` sets the live box on the 6502. Play follow snaps live box edges to the same parity as the viewport center so a 2 px hold-X run from a centered snap does not take a 1 px camera hitch. Live size may be 1 px smaller than packed and not pixel-centered. Details and the 31x69 exact-match example are in `world-scrolling.md`. **0,0** (or `r01_camera_disable_deadzone`) turns the dead zone off for 1:1 camera track. Axis lock may be **both**, **H only**, or **V only**.
+Default dead zone **32x30** pixels inside the 128x120 view. `r01_camera_set_deadzone` in `game_logic.c` sets the live box on the 6502. Play follow snaps live box edges to the same parity as the viewport center so a 2 px hold-X run from a centered snap does not take a 1 px camera hitch. Live size may be 1 px smaller than packed and not pixel-centered. Follow uses the player and dead zone only. Empty BG1 slots and the present-screen bounding box do not stop the camera. Details and the 31x69 exact-match example are in `world-scrolling.md`. **0,0** (or `r01_camera_disable_deadzone`) turns the dead zone off for 1:1 camera track. Axis lock may be **both**, **H only**, or **V only**.
 
 ### Starter API (locked signatures)
 

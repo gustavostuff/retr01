@@ -78,7 +78,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 ### 14. Scroll edge cases
 
-**Resolved (baseline):** Missing BG1 slots show **BG0** by default (then backdrop under BG0). Optional **BG0 clip to BG1** flag forces backdrop outside present BG1 slots. Default clamp at playfield edges. **BG0 and BG1** may each programmatically autoscroll and/or wrap repeating strips. See `world-scrolling.md`.
+**Resolved (baseline):** Missing BG1 slots show **BG0** by default (then backdrop under BG0). Optional **BG0 clip to BG1** flag forces backdrop outside present BG1 slots. Camera follow uses the player and dead zone only. Empty slots and the present-screen bbox do not stop the camera. **BG0 and BG1** may each programmatically autoscroll and/or wrap repeating strips. See `world-scrolling.md`.
 
 ### 15. Entity CHR catalog
 
@@ -98,7 +98,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 ### 19. Collision solids packing
 
-**Resolved:** Collision marks BG1 patterns by bank index and tile index. Palette and H/V flip do not affect solidity. Author `custom_logic.c` calls `r01_solid_pattern_add(ctx, bank, tile)`. Studio also stores `solid_patterns` as `[bank, tile]` pairs. Packed carts put the list at PRG `$8700` and copy it into system RAM `$0200` at boot. Host Play tests the BG1 nametable against that list. See `memory.md`.
+**Resolved:** Collision marks BG1 patterns by bank index and tile index. Palette and H/V flip do not affect solidity. Author `game_logic.c` calls `r01_solid_pattern_add(ctx, bank, tile)`. Studio also stores `solid_patterns` as `[bank, tile]` pairs. Packed carts put the list at PRG `$8700` and copy it into system RAM `$0200` at boot. PRG probes the BG1 nametable against that list. See `memory.md`.
 
 ### 20. Instance + PA byte schemas
 
@@ -148,8 +148,9 @@ Open items and close criteria. A landed decision folds into the matching doc.
 | 2026-09-17 | Host Play boot catchup | Phase 1 emu waits for a full start MAP stream (480 B) before Host Play takes the camera 2x2 from cart. See `apps/emu/README.md`. |
 | 2026-09-19 | APU | 8-ch S2 software mix. `$7F40` is 8x4 regs (S2 never parses bytecode). BGM 1-5 / SFX 6-8. DPCM in S2 flash. NMI tracker on 6502. See `sound.md`. |
 | 2026-09-20 | CHR / maps / entities | 16+16 global banks, 8 worlds, 64 BG1 / 16 BG0, 32 types (4x8x6). Attr 4-bit bank. No mapper. See `memory.md`. |
-| 2026-09-21 | Collision solids | Bank+tile pattern list in RAM `$0200` (PRG `$8700`). Pal/flip ignored. Author `r01_solid_pattern_add` in `custom_logic.c`. See `memory.md`. |
-| 2026-09-21 | Author tick SDK | `r01_pad_down` / `r01_player_moving_x` / `r01_player_set_move_mul` / `r01_player_anim_set_frame_delay` from `r01_custom_on_tick`. Host Play loads `C/r01_custom.so`. See `software-api.md`. |
+| 2026-09-21 | Collision solids | Bank+tile pattern list in RAM `$0200` (PRG `$8700`). Pal/flip ignored. Author `r01_solid_pattern_add` in `game_logic.c`. See `memory.md`. |
+| 2026-09-21 | Author tick SDK | `r01_pad_down` / `r01_player_moving_x` / `r01_player_set_move_mul` / `r01_player_anim_set_frame_delay` from `r01_game_on_tick` in `game_logic.c`. Play is the packed PRG. See `software-api.md`. |
 | 2026-09-20 | Instance + PA | PRG spawn 6 B. RAM live 12 B. One `PA` blob cart-wide (max 1031 B). See `software-api.md`. |
 | 2026-09-22 | Worlds / BGM | **7** worlds. Compressed BGM in cart flash (MAP), outside PRG. `$80FE` boot index only. See `memory.md`, `sound.md`. |
 | 2026-09-22 | Export tree | llvm-mos PRG from `game_logic.c`. Ctrl+E packs `.retr01`. Play is emu of that ROM. See `software-api.md`. |
+| 2026-09-22 | Camera follow | Player and dead zone only. Empty BG1 slots and present-screen bbox do not stop the camera. See `world-scrolling.md`. |

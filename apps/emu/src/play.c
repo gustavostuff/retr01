@@ -101,37 +101,6 @@ static void snap_camera(R01ePlay *pl) {
                          pl->cam_deadzone_y, R01_PLAY_CAM_AXIS_BOTH);
 }
 
-/*
- * Clamp play cam to the present-screen bounding box (same as video.cam_max_*).
- * Do not shove the camera away from sparse holes inside that box: on L-shaped
- * maps that fight kills follow scroll and can push the player fully off-screen
- * (OAM cull). Missing BG1 slots sample BG0 by design.
- */
-static void clamp_cam_to_world_bounds(R01eMachine *m) {
-    R01ePlay *pl;
-    int max_x;
-    int max_y;
-
-    if (!m || !m->play.enabled) {
-        return;
-    }
-    pl = &m->play;
-    max_x = m->video.cam_max_x;
-    max_y = m->video.cam_max_y;
-    if (pl->cam_x < 0) {
-        pl->cam_x = 0;
-    }
-    if (pl->cam_y < 0) {
-        pl->cam_y = 0;
-    }
-    if (max_x >= 0 && pl->cam_x > max_x) {
-        pl->cam_x = max_x;
-    }
-    if (max_y >= 0 && pl->cam_y > max_y) {
-        pl->cam_y = max_y;
-    }
-}
-
 static void play_load_cart_camera(R01eMachine *m) {
     R01eWorldView wv;
     const uint8_t *prg;
@@ -586,7 +555,6 @@ int r01e_play_start(R01eMachine *m) {
         r01_play_anim_init(&m->play.anim);
         play_load_anim_maps(m);
         place_player_xy(&m->play, sx, sy);
-        clamp_cam_to_world_bounds(m);
         r01e_play_sync_video(m);
         (void)r01e_video_sync_camera(m);
         write_oam(m);
@@ -599,7 +567,6 @@ int r01e_play_start(R01eMachine *m) {
     r01_play_anim_init(&m->play.anim);
     play_load_anim_maps(m);
     place_player_on_screen(&m->play, col, row);
-    clamp_cam_to_world_bounds(m);
     r01e_play_sync_video(m);
     (void)r01e_video_sync_camera(m);
     write_oam(m);
@@ -670,7 +637,6 @@ void r01e_play_tick(R01eMachine *m) {
     }
     /* No dead zone: camera tracks the player every tick. */
     update_camera(pl);
-    clamp_cam_to_world_bounds(m);
     {
         R01eWorldView wv;
         if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) == 0 && wv.has_player_anim) {

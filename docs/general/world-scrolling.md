@@ -50,10 +50,10 @@ PRG owns both. The camera may follow the player, ignore the player, or move on a
 
 World header bytes **30-31** hold the camera dead-zone size (**width**, **height**) in pixels inside the logical **128x120** view.
 
-- **No dead zone** (0x0, or disabled): the camera tracks the player one-for-one. When the player moves, the camera moves with them (within clamp rules).
+- **No dead zone** (0x0, or disabled): the camera tracks the player one-for-one. When the player moves, the camera moves with them.
 - **Dead zone set** (default **32x30** when enabled): the camera stays put while the player walks inside a box of that size. As soon as the player entity leaves that box, the camera starts moving so the player stays at the edge of the zone (classic follow-with-slack).
 
-`r01_camera_set_deadzone(ctx, w, h)` packs **w** and **h** into those header bytes as given. Host Play follow does not always use that rectangle pixel-for-pixel.
+`r01_camera_set_deadzone(ctx, w, h)` packs **w** and **h** into those header bytes as given. Play follow does not always use that rectangle pixel-for-pixel.
 
 #### 2 px edge parity
 
@@ -61,7 +61,7 @@ Spawn and `r01_play_camera_snap` place the player on the viewport center (**64**
 
 If an edge has the opposite parity from the center, a 2 px step from snap never lands on the edge (example: center **64**, right **79**, run hits **78** then **80**). Overflow is 1 px. BG0 and BG1 follow the camera, so that frame is a 1 px hitch in both layers.
 
-Host Play snaps each live edge inward so left/right share parity with **64** and top/bottom share parity with **60**. Packed size is unchanged. Live size is packed, or one pixel smaller on that axis. The box may sit one pixel off center. Live edges only move inward.
+Play follow snaps each live edge inward so left/right share parity with **64** and top/bottom share parity with **60**. Packed size is unchanged. Live size is packed, or one pixel smaller on that axis. The box may sit one pixel off center. Live edges only move inward.
 
 Example: packed **32x70** follows as **48..78** on X (31 px) and **26..94** on Y (69 px).
 
@@ -175,9 +175,11 @@ Rule of thumb: stay inside the four-screen buffer without cart traffic, then str
 
 That hole has **no BG1 tiles**. Player collision stays on **present BG1** screens: a missing slot blocks motion (ledge / world edge). BG0 show-through is decoration, not a walkable floor. Motion also cannot leave the **16x16** world grid.
 
+Camera follow is separate. Default follow uses the player and dead zone only. Empty BG1 slots and the present-screen bounding box do not stop the camera. The viewport may look into missing slots or past the authored bbox.
+
 Optional **`r01_bg0_set_clip_to_bg1(ctx, 1)`** (cart flags byte **7** bit **3** / `0x08`): hide BG0 outside present BG1 slots and use backdrop there instead. Independent of BG0 layout wrap.
 
-**Clamp / wrap:** Default for a plane that is **not** in wrap mode: camera / plane motion **clamps** at the edges of the present playfield bounding box (no wrap to the opposite side) unless PRG implements a portal / instant switch. Either plane may instead **autoscroll** and/or **wrap** under PRG control (see below).
+**Plane wrap:** Default for a plane that is **not** in wrap mode: that plane does not wrap to the opposite side. Either plane may **autoscroll** and/or **wrap** under PRG control (see below).
 
 Corner reloads that need three new screens may spill past one frame of DMA. That is allowed. Prefer finishing the stream before unlocking free camera motion again if tear would show.
 
