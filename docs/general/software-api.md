@@ -2,6 +2,8 @@
 
 C (and later ASM) facing tools for authors. The first ship set stays small.
 
+:warning: **Ctrl+E** writes a packed `.retr01`, a host `C/` tree (`r01_custom.so` for Host Play), and an `ASM/` ca65 tree as **parallel** outputs. Generated C does not assemble into PRG. The `ASM/` tree is not the cart build input. Phase 1 PRG bytes come from `prg_phase1.c`. Gameplay SoT is Host Play / emu.
+
 ## What is an entity?
 
 Hardware alone thinks in sprites. Authors think in **entities**.

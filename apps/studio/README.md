@@ -92,6 +92,8 @@ Generated API headers live in `C/include/r01_*.h` beside the project.
 | `C/r01_custom.so` | Host Play author tick plugin |
 | `C/`, `ASM/`, `data/` | Regenerated stubs and tables |
 
+:warning: Those trees are parallel. Generated C does not assemble into PRG. The `ASM/` tree is not the cart build input. Phase 1 PRG bytes come from `prg_phase1.c`. Gameplay SoT is Host Play / emu. See [`software-api.md`](../../docs/general/software-api.md).
+
 PROM and 512 KB flash images sit beside the cart. Layout: [`memory.md`](../../docs/general/memory.md).
 
 ## Keys

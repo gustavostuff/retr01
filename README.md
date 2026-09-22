@@ -12,18 +12,21 @@ NOTE: hardware is still in design phase, software is being built on that design.
 
 ## Graphics
 
+The picture is small and sharp: a **128x120** playfield with chunky pixels, NES-style color limits (**64** colors in the kit, about **25** on screen), and two real background layers so far things can scroll slower than near things. Sprites sit on top. Games mix many tilesets on the same screen without a mapper.
+
+Characters and objects are **entities** (a few poses, each made of small sprites) rather than a pile of loose tiles. Hardware draws the layers and sprites so game code can stay on play. Details: [video-graphics.md](docs/general/video-graphics.md).
+
+## Audio
+
+Music and sound effects share **8** voices. Five stay on the soundtrack (melody, harmony, bass, noise, sampled hits). Three stay on effects, so a jump or shot does not mute the song.
+
+The game program writes notes. A helper chip mixes them to analog out. Details: [sound.md](docs/general/sound.md).
+
 ## Hardware
 
-## Design goals
+The plan is one compact through-hole board to cover a home console and an arcade cabinet. Same PCB. Populate pad jacks for console pads, arcade buttons, or both.
 
-- Most video work sits in hardware so the CPU can spend cycles on gameplay, inputs, physics, and state updates instead of low-level tile and sprite work.
-- The main PCB stays compact: roughly 17 ICs total. The design is hybrid, not a pure FPGA and not a pure discrete-logic console.
-- The split is a middle ground between custom logic and MCU helpers: a main CPU, a few AVR support chips, PLDs, and a small amount of 74xx glue.
-- The CPU has a flat 32 KB program space with no banking. At 8 MHz and with 32 KB RAM, the system can do more than a classic NES-style NROM cartridge while staying simple to author.
-- The entity model (entities are sprite compositions) has clear caps: up to 32 entity types cart-wide, each with up to 4 states, 8 frames per state, and 6 sprites per frame.
-- World layouts stay flexible: up to 8 worlds, each with up to 64 screens, arranged on a sparse 16x16 grid so large maps do not need dense, wasteful allocation.
-- Pattern banks are cart-wide (16 BG + 16 SPR). Each tile and sprite names its bank. There is no mapper and no latched "current bank" for the picture.
-- The cartridge is passive: no mapper or bank switching. Nametable and map data can stream directly from cart memory into VRAM buffers. That keeps the bus simpler and leaves program space free for game code.
+A **6502** runs the game. A few helper chips and small glue logic own video, pads, saves, and mix. Output is RGB plus composite. The cartridge is a simple memory pack (program, tiles, and save), not a mapper board. Details: [hardware.md](docs/general/hardware.md).
 
 ## Software pieces
 
@@ -38,8 +41,6 @@ NOTE: hardware is still in design phase, software is being built on that design.
 <img src="img/readme/studio.png" alt="Retr01 Studio" />
 
 <img src="img/readme/studio-audio.png" alt="Retr01 Studio Audio" />
-
-**Retr01 Sim** is a discrete-IC board simulator. Tier A is the video-only lab (beam PLDs, color PROM, virtual screen). See [apps/sim/](apps/sim/README.md).
 
 ## Doc map
 

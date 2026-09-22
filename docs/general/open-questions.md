@@ -16,6 +16,12 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 **Touches:** `hardware.md`, `cartridge.md`
 
+### Export tree (C vs ASM vs cart)
+
+:warning: Studio export writes `.retr01`, host `C/` (`r01_custom.so`), and `ASM/` as parallel trees. Generated C does not become ASM. ASM is not assembled into the cart. Phase 1 PRG is packed bytes (`prg_phase1.c`). Close when one author path feeds Host Play and cart PRG without a text scan of `custom_logic.c`.
+
+**Touches:** `software-api.md`, `apps/studio/README.md`
+
 ## Resolved
 
 ### 1. AVR duty split
