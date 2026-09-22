@@ -3,9 +3,9 @@
 
 #include "retr01_studio/types.h"
 
-/* Write output/C, output/ASM, output/data under the directory containing path_stem. */
+/* Write data/ bins and game_logic.c (created once) under the directory containing path_stem. */
 int r01_export_codegen(const R01Project *p, const char *path_stem, char *err_buf, size_t err_cap);
-/* Compile C/r01_custom.so after codegen. Host Play / ROM export both call this. */
-int r01_export_compile_plugin(const char *path_stem, char *err_buf, size_t err_cap);
+/* Compile game_logic.c with llvm-mos to retr01.prg beside path_stem. */
+int r01_export_compile_prg(const char *path_stem, char *err_buf, size_t err_cap);
 
 #endif

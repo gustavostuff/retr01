@@ -32,11 +32,13 @@ mkdir -p "$OUTDIR"
   "$SDK/asm/boot.s" \
   "$SDK/asm/nmi.s" \
   "$SDK/src/hw.c" \
+  "$SDK/src/boot.c" \
   "$SDK/src/game.c" \
   "$SDK/src/play_tick.c" \
   "$SDK/src/main.c" \
   "$COMMON/r01_play_camera.c" \
   "$COMMON/r01_play_physics.c" \
+  "$COMMON/r01_play_collision.c" \
   "$LOGIC"
 
 SZ=$(wc -c < "$OUT")

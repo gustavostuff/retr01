@@ -2,7 +2,6 @@
 
 #include "ui/internal.h"
 #include "retr01_studio/paths.h"
-#include "r01_custom_logic_scan.h"
 
 #include <stdio.h>
 #include <string.h>

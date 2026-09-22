@@ -1,8 +1,8 @@
-; Retr01 reset. Concatenated into llvm-mos .init (falls through, no RTS).
-; Hardware stack $01FF. C stack is __do_init_stack later in .init.
+; Retr01 reset at $8000. Hardware stack $01FF, then JMP C _start ($C800).
 
-.section .init.50,"ax",@progbits
+.section .boot,"ax",@progbits
 .global __do_reset
+.global _start
 __do_reset:
         sei
         cld
@@ -14,3 +14,4 @@ __do_reset:
         sta $7F03               ; SCROLL_Y
         lda #$07                ; L1 | L0 | SPR
         sta $7F00               ; PPUCTRL
+        jmp _start

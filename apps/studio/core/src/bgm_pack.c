@@ -1,7 +1,6 @@
 #include "retr01_studio/bgm_pack.h"
 
 #include "r01_apu_cart.h"
-#include "r01_custom_logic_scan.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -134,11 +133,9 @@ int r01_bgm_pack_blob(uint8_t *blob, unsigned cap, const R01BgmData *bgm) {
     return (int)o;
 }
 
-void r01_bgm_pack_boot(uint8_t prg[R01_PRG_BYTES], const uint8_t *blob, int blob_len,
-                       const char *custom_logic_path) {
-    int boot = 0;
+void r01_bgm_pack_boot(uint8_t prg[R01_PRG_BYTES], const uint8_t *blob, int blob_len) {
     int tc;
-    uint16_t tlen;
+    int t;
     if (!prg) {
         return;
     }
@@ -153,11 +150,11 @@ void r01_bgm_pack_boot(uint8_t prg[R01_PRG_BYTES], const uint8_t *blob, int blob
     if (tc > (int)R01_PRG_BGM_TRACKS) {
         tc = (int)R01_PRG_BGM_TRACKS;
     }
-    if (custom_logic_path && r01_custom_logic_scan_bgm_play(custom_logic_path, &boot) == 0 && boot >= 1 &&
-        boot <= tc) {
-        tlen = (uint16_t)blob[20 + (boot - 1) * 2] | ((uint16_t)blob[21 + (boot - 1) * 2] << 8);
+    for (t = 0; t < tc; t++) {
+        uint16_t tlen = (uint16_t)blob[20 + t * 2] | ((uint16_t)blob[21 + t * 2] << 8);
         if (tlen > 0u) {
-            prg[R01_PRG_BGM_BOOT_OFF] = (uint8_t)boot;
+            prg[R01_PRG_BGM_BOOT_OFF] = (uint8_t)(t + 1);
+            return;
         }
     }
 }

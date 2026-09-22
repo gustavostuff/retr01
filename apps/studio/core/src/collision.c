@@ -1,7 +1,6 @@
 #include "retr01_studio/collision.h"
 #include "retr01_studio/play.h"
 #include "retr01_studio/project.h"
-#include "r01_custom_logic_scan.h"
 #include "r01_play_collision.h"
 
 #include <string.h>
@@ -174,22 +173,6 @@ int r01_project_set_pattern_solid(R01Project *p, int bank, int tile, int on) {
 int r01_project_toggle_pattern_solid(R01Project *p, int bank, int tile) {
     int on = !r01_project_pattern_solid(p, bank, tile);
     return r01_project_set_pattern_solid(p, bank, tile, on);
-}
-
-void r01_project_add_custom_logic_solids(R01Project *p, const char *custom_logic_path) {
-    uint8_t banks[R01_SOLID_PAT_MAX];
-    uint8_t tiles[R01_SOLID_PAT_MAX];
-    int n = 0;
-    int i;
-    if (!p || !custom_logic_path || !custom_logic_path[0]) {
-        return;
-    }
-    if (r01_custom_logic_scan_solid_patterns(custom_logic_path, banks, tiles, R01_SOLID_PAT_MAX, &n) != 0) {
-        return;
-    }
-    for (i = 0; i < n; i++) {
-        r01_project_set_pattern_solid(p, (int)banks[i], (int)tiles[i], 1);
-    }
 }
 
 int r01_world_solid_at_list(const R01World *w, int wx, int wy, const uint8_t *banks, const uint8_t *tiles,

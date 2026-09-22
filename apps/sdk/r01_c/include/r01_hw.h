@@ -58,6 +58,8 @@ void r01_map_seek(uint32_t off);
 uint8_t r01_map_read(void);
 void r01_oam_reset(void);
 void r01_oam_write(uint8_t y, uint8_t tile, uint8_t attr, uint8_t x);
+void r01_boot_copy_solids(void);
+void r01_boot_map_stream(void);
 
 /* NMI trampoline in asm/nmi.s calls this. */
 void r01_nmi(void);

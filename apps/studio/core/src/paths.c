@@ -94,3 +94,13 @@ int r01_export_stem(const char *project_path, const char *fallback_name, char *o
         return r01_path_resolve(rel, out, out_cap);
     }
 }
+
+int r01_bgm_track_bin_path(const char *output_root, int track_1based, char *out, size_t out_cap) {
+    if (!output_root || !out || out_cap < 32 || track_1based < 1) {
+        return -1;
+    }
+    if (snprintf(out, out_cap, "%s/data/bgm_track%d.bin", output_root, track_1based) >= (int)out_cap) {
+        return -1;
+    }
+    return 0;
+}

@@ -143,6 +143,20 @@ TEST_MAIN() {
             EXPECT(fseek(f, prg_off + (long)PRG_PLAY_SPAWN_CELL, SEEK_SET) == 0, "seek prg spawn");
             EXPECT(fread(prg_spawn, 1, 1, f) == 1, "read prg spawn");
             EXPECT(prg_spawn[0] == R01_CELL_PACK(2, 0), "prg spawn cell matches default screen");
+            {
+                uint8_t sei = 0;
+                uint8_t inst_n = 0;
+                uint8_t cbyte = 0;
+                EXPECT(fseek(f, prg_off, SEEK_SET) == 0, "seek PRG");
+                EXPECT(fread(&sei, 1, 1, f) == 1, "read SEI");
+                EXPECT(sei == 0x78, "llvm-mos PRG reset SEI");
+                EXPECT(fseek(f, prg_off + (long)PRG_PLAY_INST_COUNT, SEEK_SET) == 0, "seek inst count");
+                EXPECT(fread(&inst_n, 1, 1, f) == 1, "read inst count");
+                EXPECT(inst_n >= 1, "spawn table at $81C0");
+                EXPECT(fseek(f, prg_off + 0x4800L, SEEK_SET) == 0, "seek C");
+                EXPECT(fread(&cbyte, 1, 1, f) == 1, "read C");
+                EXPECT(cbyte != 0, "C code at $C800");
+            }
 
             EXPECT(fseek(f, 0, SEEK_END) == 0, "seek end");
             flen = ftell(f);

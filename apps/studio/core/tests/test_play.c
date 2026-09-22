@@ -5,7 +5,6 @@
 #include "retr01_studio/play.h"
 #include "retr01_studio/player_anim.h"
 #include "retr01_studio/project.h"
-#include "r01_custom_logic_scan.h"
 #include "r01_play_anim.h"
 #include "r01_play_camera.h"
 #include "r01_play_physics.h"
@@ -478,98 +477,10 @@ TEST_MAIN() {
         EXPECT((floor - peak) >= 28 && (floor - peak) <= 42, "default jump height near old 36 px");
     }
 
-    {
-        FILE *f = fopen("plat_logic.c", "w");
-        int mode = 0;
-        int grav = 0;
-        int jump = 0;
-        int meter = 0;
-        EXPECT(f != NULL, "write plat_logic");
-        if (f) {
-            fputs("void r01_custom_on_init(R01GameCtx *ctx) {\n"
-                  "    r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER);\n"
-                  "    r01_platformer_set_gravity(ctx, 2);\n"
-                  "    r01_platformer_set_jump(ctx, R01_PLAT_JUMP_DEFAULT);\n"
-                  "    r01_platformer_set_meter(ctx, R01_PLAT_METER_DEFAULT);\n"
-                  "    r01_player_anim_set_idle_state(ctx, 0);\n"
-                  "    r01_player_anim_set_walk_all(ctx, 1);\n"
-                  "    r01_player_anim_set_crouch_state(ctx, 2);\n"
-                  "    r01_player_anim_set_jump_state(ctx, 3);\n"
-                  "}\n",
-                  f);
-            fclose(f);
-        }
-        EXPECT(r01_custom_logic_scan_game_mode("plat_logic.c", &mode) == 0 && mode == 1, "scan platformer");
-        EXPECT(r01_custom_logic_scan_plat_gravity("plat_logic.c", &grav) == 0 && grav == 2, "scan gravity");
-        EXPECT(r01_custom_logic_scan_plat_jump("plat_logic.c", &jump) == 0 && jump == 0,
-               "scan jump default token is engine default");
-        EXPECT(r01_custom_logic_scan_plat_meter("plat_logic.c", &meter) == 0 && meter == 0,
-               "scan meter default token is engine default");
-        {
-            int crouch = -1;
-            EXPECT(r01_custom_logic_scan_plat_crouch("plat_logic.c", &crouch) == 0 && crouch == 2, "scan crouch state");
-            {
-                int idle = -1;
-                int walk = -1;
-                int jump_st = -1;
-                EXPECT(r01_custom_logic_scan_player_idle("plat_logic.c", &idle) == 0 && idle == 0, "scan idle state");
-                EXPECT(r01_custom_logic_scan_player_walk("plat_logic.c", &walk) == 0 && walk == 1, "scan walk state");
-                EXPECT(r01_custom_logic_scan_player_jump("plat_logic.c", &jump_st) == 0 && jump_st == 3,
-                       "scan jump state");
-            }
-        }
-        remove("plat_logic.c");
-    }
-
-    {
-        FILE *f = fopen("solid_logic.c", "w");
-        uint8_t banks[8];
-        uint8_t tiles[8];
-        int n = 0;
-        EXPECT(f != NULL, "write solid_logic");
-        if (f) {
-            fputs("void r01_custom_on_init(R01GameCtx *ctx) {\n"
-                  "    r01_solid_pattern_add(ctx, 0, 1);\n"
-                  "    r01_solid_pattern_add(ctx, 1, 5);\n"
-                  "    r01_solid_pattern_add(ctx, 0, 1);\n"
-                  "}\n",
-                  f);
-            fclose(f);
-        }
-        EXPECT(r01_custom_logic_scan_solid_patterns("solid_logic.c", banks, tiles, 8, &n) == 0 && n == 2,
-               "scan two solid patterns");
-        EXPECT(banks[0] == 0 && tiles[0] == 1, "first solid bank 0 tile 1");
-        EXPECT(banks[1] == 1 && tiles[1] == 5, "second solid bank 1 tile 5");
-        {
-            FILE *mf = fopen("multi_logic.c", "w");
-            int mode = 0;
-            int dx = -1;
-            int dy = -1;
-            EXPECT(mf != NULL, "write multi_logic");
-            if (mf) {
-                fputs("void r01_custom_on_init(R01GameCtx *game) {\n"
-                      "    // r01_game_set_mode(game, R01_GAME_MODE_TOPDOWN);\n"
-                      "    /* r01_camera_set_deadzone(game, 1, 2); */\n"
-                      "    r01_game_set_mode(\n"
-                      "        game,\n"
-                      "        R01_GAME_MODE_PLATFORMER);\n"
-                      "    r01_camera_set_deadzone(\n"
-                      "        game, 32, 70);\n"
-                      "}\n",
-                      mf);
-                fclose(mf);
-            }
-            EXPECT(r01_custom_logic_scan_game_mode("multi_logic.c", &mode) == 0 && mode == 1,
-                   "scan multiline + ignore comments");
-            EXPECT(r01_custom_logic_scan_deadzone("multi_logic.c", &dx, &dy) == 0 && dx == 32 && dy == 70,
-                   "scan multiline deadzone with non-ctx name");
-            remove("multi_logic.c");
-        }
-        r01_project_add_custom_logic_solids(p, "solid_logic.c");
-        EXPECT(r01_project_pattern_solid(p, 0, 1), "custom_logic bank 0 tile 1 on project");
-        EXPECT(r01_project_pattern_solid(p, 1, 5), "custom_logic bank 1 tile 5 on project");
-        remove("solid_logic.c");
-    }
+    EXPECT(r01_project_set_pattern_solid(p, 0, 1, 1), "solid 0,1");
+    EXPECT(r01_project_set_pattern_solid(p, 1, 5, 1), "solid 1,5");
+    EXPECT(r01_project_pattern_solid(p, 0, 1), "bank 0 tile 1 on project");
+    EXPECT(r01_project_pattern_solid(p, 1, 5), "bank 1 tile 5 on project");
 
     /* Play tick: platformer falls onto a solid row. Y jumps. Up/Down do not walk. */
     EXPECT(r01_play_start(&pl, p, NULL), "play start for platformer");

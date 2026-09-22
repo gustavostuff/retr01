@@ -1,2 +1,0 @@
-vblank_frame:
-        rts

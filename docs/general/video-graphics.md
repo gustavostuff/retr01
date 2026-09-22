@@ -126,6 +126,6 @@ Same pack for BG nametable attrs and sprite / OAM attrs. The whole byte is used.
 | 6 | H flip |
 | 7 | V flip |
 
-Collision marks BG1 patterns by bank index and tile index. Palette and H/V flip do not affect solidity. Author code registers those patterns with `r01_solid_pattern_add` in `custom_logic.c`. The packed list lives in system RAM (`$0200`, copied from PRG `$8700` at boot). A BG1 cell is solid when its bank and tile match a marked pattern. See `software-api.md`.
+Collision marks BG1 patterns by bank index and tile index. Palette and H/V flip do not affect solidity. Studio Set Solid stores those patterns in the project JSON. Author code may also call `r01_solid_pattern_add` in `game_logic.c`. The packed list lives in system RAM (`$0200`, copied from PRG `$8700` at boot). A BG1 cell is solid when its bank and tile match a marked pattern. See `software-api.md`.
 
 The marked **player** uses the same SPR bank field as every other entity (**0-15**, global SPR). Other screens use the same BG/SPR pools. See `memory.md`.

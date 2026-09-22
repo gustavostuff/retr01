@@ -13,20 +13,17 @@ typedef struct R01PrgCartLayout {
     uint8_t default_pal_row;
 } R01PrgCartLayout;
 
-/* Byte offsets within PRG init (CPU $8000+) -- must match prg_phase1.c init[]. */
-#define R01_PRG_INIT_SCROLL_X 11u /* LDA #imm before STA $7F02 */
-#define R01_PRG_INIT_SCROLL_Y 16u /* LDA #imm before STA $7F03 */
+#define R01_PRG_BOOTMAP_OFF 0x00E0u
+#define R01_PRG_C_OFF 0x4800u /* CPU $C800 */
 
-/* play_pos_ok @ CPU $8500 (PRG+$0500). Solid pattern list @ $8700, RAM copy $0200. */
-#define R01_PLAY_COLLISION_CPU 0x8500u
 #define R01_PLAY_SOLID_RAM 0x0200u
 #define R01_PLAY_SOLID_LIST_CPU 0x8700u
 
-/* Entity placements in PRG (not cart world blob). CPU $81C0 / PRG+$01C0. */
 #define R01_PRG_PLAY_INST_COUNT_OFF 0x01C0u
 #define R01_PRG_PLAY_INST_TABLE_OFF 0x01C1u
 #define R01_PRG_PLAY_SPAWN_CELL_OFF 0x0120u
 #define R01_PRG_R01P_OFF 0x00F0u
+#define R01_PRG_R01P_VER 5u /* C runtime tables; gameplay is llvm-mos PRG */
 #define R01_PRG_PLAT_GRAVITY_OFF 0x00F7u
 #define R01_PRG_PLAT_JUMP_OFF 0x00F8u
 #define R01_PRG_PLAT_METER_OFF 0x00F9u
@@ -35,11 +32,15 @@ typedef struct R01PrgCartLayout {
 #define R01_PRG_PLAYER_ANIM_WALK_OFF 0x00FCu
 #define R01_PRG_PLAYER_ANIM_JUMP_OFF 0x00FDu
 
-/*
- * Phase 1 PRG: reset init, palette + start-screen MAP stream ($7F93->$7F12),
- * then VBlank pad poll. Play table at $8100. Main loop PC stored at PRG+$7FFA.
- * Init scroll is patched from spawn-screen camera (same margin math as Play).
- */
+/* Overlay present/spawn/instance/solid tables and boot MAP offsets. Does not wipe C code. */
+void r01_prg_overlay_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const R01PrgCartLayout *layout);
+
+/* Overlay onto a zeroed 32 KB buffer (tests). */
 void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const R01PrgCartLayout *layout);
+
+/* llvm-mos compile of game_logic.c into 32 KB PRG. */
+int r01_prg_compile_sdk(const char *logic_c, uint8_t prg[R01_PRG_BYTES], const char *out_prg_path, char *err_buf,
+                        size_t err_cap);
+int r01_prg_load_or_compile(const char *cart_path, uint8_t prg[R01_PRG_BYTES], char *err_buf, size_t err_cap);
 
 #endif

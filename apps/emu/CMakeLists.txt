@@ -34,7 +34,6 @@ if(NOT TARGET r01_play_common)
     ${R01_COMMON_DIR}/r01_play_camera.c
     ${R01_COMMON_DIR}/r01_play_physics.c
     ${R01_COMMON_DIR}/r01_play_collision.c
-    ${R01_COMMON_DIR}/r01_custom_logic_scan.c
     ${R01_COMMON_DIR}/r01_nes_synth.c
     ${R01_COMMON_DIR}/r01_apu_fd.c
     ${R01_COMMON_DIR}/r01_apu_tracker.c
@@ -92,11 +91,13 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
         "${R01_REPO_ROOT}/apps/sdk/r01_c/asm/boot.s"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/asm/nmi.s"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/src/hw.c"
+        "${R01_REPO_ROOT}/apps/sdk/r01_c/src/boot.c"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/src/game.c"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/src/play_tick.c"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/src/main.c"
         "${R01_REPO_ROOT}/apps/common/r01_play_camera.c"
         "${R01_REPO_ROOT}/apps/common/r01_play_physics.c"
+        "${R01_REPO_ROOT}/apps/common/r01_play_collision.c"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/game_logic.c"
       COMMENT "llvm-mos Retr01 PRG"
       VERBATIM

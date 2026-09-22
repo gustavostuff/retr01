@@ -3,7 +3,7 @@
 Visual authoring for Retr01 worlds, screens, and `.retr01` carts. Two jobs in one app:
 
 1. **Authoring.** Edit worlds, tiles, palettes, sprites, entities, and instances.
-2. **Export + Play.** **Ctrl+E** or **Play** packs a cart and a generated game tree. **Play** then embeds the shared emu so preview matches `./scripts/emu.sh`.
+2. **Export + Play.** **Ctrl+E** or **Play** packs a cart (llvm-mos PRG from `game_logic.c`). **Play** then embeds the shared emu so preview matches `./scripts/emu.sh`.
 
 Play always uses the shared emu after export. Hardware: [`docs/general/video-graphics.md`](../../docs/general/video-graphics.md). Runtime: [`apps/emu/`](../emu/README.md).
 
@@ -47,52 +47,45 @@ Logical canvas **640x360** or **1280x720** (**Ctrl+Shift+R**). Window scale **Ct
 
 **Worlds.** Seven slots. A pager steps the active world (**N/7**). A **BG1** / **BG0** control picks the map plane. World 1 starts as a 3x3 on a 16x16 map. Cart export packs **world 0** only (Studio World 1). BG1 is the playfield, BG0 is the parallax plane. Double-click an empty cell to create a screen. Right-click a BG1 cell for default screen / default world. PNG drop imports an atlas into the active world, BG bank 0.
 
-**Paint.** Right-column **Work on** / **Hide** radios (BG, Sprite, Both). **Ctrl+click** stamps tiles. Set Solid marks a BG pattern (bank + tile) as collidable. `r01_solid_pattern_add` in `custom_logic.c` marks the same list. Palette and H/V flip do not matter. The list packs to PRG and copies into system RAM at boot. Drag an Entities row onto the preview to place an instance (switches to Sprite layer). CHR is **16 BG + 16 SPR** cart-wide. A pager steps the bank (**N/16**). A **BG** / **Sprites** control picks the plane. Caps: [`memory.md`](../../docs/general/memory.md).
+**Paint.** Right-column **Work on** / **Hide** radios (BG, Sprite, Both). **Ctrl+click** stamps tiles. Set Solid marks a BG pattern (bank + tile) as collidable. `r01_solid_pattern_add` in `game_logic.c` is the author API for the same list. Palette and H/V flip do not matter. The JSON list packs to PRG and copies into system RAM at boot. Drag an Entities row onto the preview to place an instance (switches to Sprite layer). CHR is **16 BG + 16 SPR** cart-wide. A pager steps the bank (**N/16**). A **BG** / **Sprites** control picks the plane. Caps: [`memory.md`](../../docs/general/memory.md).
 
 **Entities.** Up to **4** states x **8** frames x **6** sprites. **Add** opens compose. **Import** reads `aseprite_entities/` next to the saved `.r01proj` (manual, never on open). Right-click **Mark as player**. The playable player belongs on world 0. Hitbox is per state. Draw origin is per frame. Caps and pack: [`software-api.md`](../../docs/general/software-api.md). Kit palettes: [`docs/general/palette/`](../../docs/general/palette/README.md).
 
 ## Play
 
-Host Play/Stop sits 8px above the centered screen preview. Play uses ACTIVE green. Stop uses DANGER red. Chrome colors are in [`retr01_ui/metrics.h`](ui/include/retr01_ui/metrics.h). Space on the Graphics tab starts Play (export, boot wait, then emu). While Play is active, Studio chrome is locked. Only that button stays clickable. Space then is a pad button. Cart boots world 0. Spawn is the first instance of the marked player type, else the default screen center. Gameplay SoT is emu Host Play. Keyboard and SDL Game Controllers share the same pad bits (community `gamecontrollerdb.txt` plus SDL built-in mappings). First two pads are P1 / P2. Guide / Home opens Reset, Quit (Stop), **1x**/**2x**, and Mute On/Off. Default is top-down. `r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER)` in `custom_logic.c` enables gravity, face-Y jump (hold for full height), and Down crouch when a crouch state is mapped. `r01_platformer_set_meter` sets pixels per meter (default 16). `r01_custom_on_tick` may raise walk speed with `r01_player_set_move_mul` and override anim frame delay with `r01_player_anim_set_frame_delay` (example_01 holds face X while moving left/right). Player states (idle, walk, crouch, jump) are mapped in `custom_logic.c`. With no mapping, Play draws state 0 frame 0 and only X-flips for facing.
+Host Play/Stop sits 8px above the centered screen preview. Play uses ACTIVE green. Stop uses DANGER red. Chrome colors are in [`retr01_ui/metrics.h`](ui/include/retr01_ui/metrics.h). Space on the Graphics tab starts Play (export, boot wait, then emu). While Play is active, Studio chrome is locked. Only that button stays clickable. Space then is a pad button. Cart boots world 0. Spawn is the first instance of the marked player type, else the default screen center. Gameplay is the packed PRG in the shared emu. Keyboard and SDL Game Controllers share the same pad bits (community `gamecontrollerdb.txt` plus SDL built-in mappings). First two pads are P1 / P2. Guide / Home opens Reset, Quit (Stop), **1x**/**2x**, and Mute On/Off. Default is top-down. `r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER)` in `game_logic.c` enables gravity, face-Y jump (hold for full height), and Down crouch when a crouch state is mapped. `r01_platformer_set_meter` sets pixels per meter (default 16). `r01_game_on_tick` may raise walk speed with `r01_player_set_move_mul` and override anim frame delay with `r01_player_anim_set_frame_delay`. Player states (idle, walk, crouch, jump) are mapped in `game_logic.c`. With no mapping, Play draws state 0 frame 0 and only X-flips for facing.
 
-`custom_logic.c` is created on first export and never overwritten. The generated file sets the camera dead zone (packed size, live follow may snap 1 px inward, see `docs/general/world-scrolling.md`). Player anim maps stay commented until an author fills them in:
+`game_logic.c` is created on first export and never overwritten. Headers come from the SDK include path at compile time.
 
 ```c
-void r01_custom_on_init(R01GameCtx *ctx) {
+#include <r01_engine.h>
+
+void r01_game_on_init(R01GameCtx *ctx) {
     r01_camera_set_deadzone(ctx, R01_CAM_DEADZONE_X_DEFAULT, R01_CAM_DEADZONE_Y_DEFAULT);
-    /* r01_player_anim_set_idle_state(ctx, 0); */
-    /* r01_player_anim_set_walk_all(ctx, 1); */
-    /* r01_player_anim_set_crouch_state(ctx, 2); */
-    /* r01_player_anim_set_jump_state(ctx, 3); */
-    /* r01_bgm_play(ctx, 1); */
-    /* r01_solid_pattern_add(ctx, 0, 1); */
 }
 
-void r01_custom_on_tick(R01GameCtx *ctx) {
-    if (r01_pad_down(ctx, R01_PAD_X) && r01_player_moving_x(ctx)) {
-        r01_player_set_move_mul(ctx, 2);
-        r01_player_anim_set_frame_delay(ctx, 3);
-    }
+void r01_game_on_tick(R01GameCtx *ctx) {
+    (void)ctx;
+}
+
+void r01_game_on_vblank(R01GameCtx *ctx) {
+    (void)ctx;
 }
 ```
-
-Generated API headers live in `C/include/r01_*.h` beside the project.
 
 ## Save and export
 
 **Ctrl+S** / **Ctrl+O** the current path. First save (or unsaved) opens the Save project modal. Default parent is `apps/studio/projects/`. Quit does not auto-save. JSON version **18**. Save writes world 0. Worlds 2-7 are session-only until multi-world JSON. Load applies that world data to world 0.
 
-**Ctrl+E** packs `<stem>.retr01` and regenerates `C/`, `ASM/`, and `data/` beside the project (or under `output/` if unsaved). Audio-tab tracks go into the cart BGM region. `r01_bgm_play(ctx, N)` in `custom_logic.c` selects the boot track at `$80FE`. `r01_solid_pattern_add(ctx, bank, tile)` packs the solid-pattern list at `$8700`. Export also compiles `C/r01_custom.so` from `custom_logic.c` when a host C compiler is present. Host Play loads that plugin and runs `r01_custom_on_tick` each frame.
+**Ctrl+E** packs `<stem>.retr01` and writes `data/` plus `game_logic.c` (created once) beside the project (or under `output/` if unsaved). llvm-mos compiles that file with the SDK into 32 KB PRG (`retr01.prg` and `listing.txt`). Audio-tab tracks go into the cart BGM region. `r01_bgm_play(ctx, N)` in `game_logic.c` selects the boot track at `$80FE`. Studio Set Solid stores `solid_patterns` in JSON; export packs that list at `$8700`.
 
 | Path | Role |
 |------|------|
 | `<stem>.r01proj` | Authoring JSON |
 | `<stem>.retr01` | Packed cart (world 0) |
-| `C/custom_logic.c` | Author file, kept |
-| `C/r01_custom.so` | Host Play author tick plugin |
-| `C/`, `ASM/`, `data/` | Regenerated stubs and tables |
-
-:warning: Those trees are parallel. Generated C does not assemble into PRG. The `ASM/` tree is not the cart build input. Phase 1 PRG bytes come from `prg_phase1.c`. Gameplay SoT is Host Play / emu. See [`software-api.md`](../../docs/general/software-api.md).
+| `game_logic.c` | Author file, kept |
+| `retr01.prg` / `listing.txt` | llvm-mos PRG and mixed C/ASM listing |
+| `data/` | Studio binaries (CHR, maps, pals) |
 
 PROM and 512 KB flash images sit beside the cart. Layout: [`memory.md`](../../docs/general/memory.md).
 

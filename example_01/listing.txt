@@ -1,0 +1,3468 @@
+
+/home/g/Repos/retr01/example_01/retr01.prg.elf:	file format elf32-mos
+
+Disassembly of section .boot:
+
+00008000 <__do_reset>:
+;         sei
+    8000: 78           	sei
+;         cld
+    8001: d8           	cld
+;         ldx #$ff
+    8002: a2 ff        	ldx	#$ff
+;         txs
+    8004: 9a           	txs
+;         lda #0
+    8005: a9 00        	lda	#$0
+;         sta $7F30               ; WORLD
+    8007: 8d 30 7f     	sta	$7f30                   ; 0x7f30 <__heap_start+0x7b8c>
+;         sta $7F02               ; SCROLL_X
+    800a: 8d 02 7f     	sta	$7f02                   ; 0x7f02 <__heap_start+0x7b5e>
+;         sta $7F03               ; SCROLL_Y
+    800d: 8d 03 7f     	sta	$7f03                   ; 0x7f03 <__heap_start+0x7b5f>
+;         lda #$07                ; L1 | L0 | SPR
+    8010: a9 07        	lda	#$7
+;         sta $7F00               ; PPUCTRL
+    8012: 8d 00 7f     	sta	$7f00                   ; 0x7f00 <__heap_start+0x7b5c>
+;         jmp _start
+    8015: 4c 00 c8     	jmp	$c800 <_start>
+
+Disassembly of section .text:
+
+0000c800 <_start>:
+    c800: a9 00        	lda	#$0
+    c802: 85 e0        	sta	$e0                     ; 0xe0 <__rc0>
+    c804: a9 7f        	lda	#$7f
+    c806: 85 e1        	sta	$e1                     ; 0xe1 <__rc1>
+
+0000c808 <__do_zero_bss>:
+    c808: 20 23 c8     	jsr	$c823 <__zero_bss>
+
+0000c80b <__do_zero_zp_bss>:
+    c80b: 20 36 c8     	jsr	$c836 <__zero_zp_bss>
+    c80e: 20 72 cf     	jsr	$cf72 <main>
+
+0000c811 <__after_main>:
+    c811: 4c 20 dd     	jmp	$dd20 <exit>
+
+0000c814 <_fini>:
+    c814: 60           	rts
+
+0000c815 <nmi>:
+;         pha
+    c815: 48           	pha
+;         phx
+    c816: da           	phx
+;         phy
+    c817: 5a           	phy
+;         jsr r01_nmi
+    c818: 20 71 cf     	jsr	$cf71 <r01_nmi>
+;         ply
+    c81b: 7a           	ply
+;         plx
+    c81c: fa           	plx
+;         pla
+    c81d: 68           	pla
+;         rti
+    c81e: 40           	rti
+
+0000c81f <irq>:
+;         rti
+    c81f: 40           	rti
+
+0000c820 <__call_indir>:
+    c820: 6c f2 00     	jmp	($f2)                   ; 0xf2 <__rc18>
+
+0000c823 <__zero_bss>:
+    c823: a2 a4        	ldx	#$a4
+    c825: a0 00        	ldy	#$0
+    c827: a9 00        	lda	#$0
+    c829: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    c82b: a9 03        	lda	#$3
+    c82d: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    c82f: a9 00        	lda	#$0
+    c831: 84 e4        	sty	$e4                     ; 0xe4 <__rc4>
+    c833: 4c 96 de     	jmp	$de96 <__memset>
+
+0000c836 <__zero_zp_bss>:
+    c836: a2 17        	ldx	#$17
+    c838: a0 00        	ldy	#$0
+    c83a: a9 00        	lda	#$0
+    c83c: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    c83e: a9 00        	lda	#$0
+    c840: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    c842: a9 00        	lda	#$0
+    c844: 84 e4        	sty	$e4                     ; 0xe4 <__rc4>
+    c846: 4c 96 de     	jmp	$de96 <__memset>
+
+0000c849 <r01_ppu_wait_vblank>:
+;     while ((*R01_PPUSTATUS & R01_PPUSTATUS_VBLANK) == 0u) {
+    c849: ae 01 7f     	ldx	$7f01                   ; 0x7f01 <__heap_start+0x7b5d>
+    c84c: 10 fb        	bpl	$c849 <r01_ppu_wait_vblank>
+; }
+    c84e: 60           	rts
+
+0000c84f <r01_sys_publish>:
+;     if (!ctx) {
+    c84f: a2 00        	ldx	#$0
+    c851: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    c853: a2 00        	ldx	#$0
+    c855: 86 e5        	stx	$e5                     ; 0xe5 <__rc5>
+    c857: a6 e3        	ldx	$e3                     ; 0xe3 <__rc3>
+    c859: e4 e5        	cpx	$e5                     ; 0xe5 <__rc5>
+    c85b: d0 09        	bne	$c866 <r01_sys_publish+0x17>
+    c85d: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+    c85f: e4 e4        	cpx	$e4                     ; 0xe4 <__rc4>
+    c861: d0 03        	bne	$c866 <r01_sys_publish+0x17>
+    c863: 4c 16 c9     	jmp	$c916 <r01_sys_publish+0xc7>
+    c866: a0 04        	ldy	#$4
+;     sx = (uint8_t)(ctx->cam_x % (uint16_t)R01_SCREEN_PX_W);
+    c868: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+    c86a: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    c86c: 85 1d        	sta	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    c86e: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    c870: 86 1e        	stx	$1e                     ; 0x1e <__zp_bss_size+0x7>
+    c872: 18           	clc
+    c873: 69 04        	adc	#$4
+    c875: 85 17        	sta	$17                     ; 0x17 <__zp_bss_size>
+    c877: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    c879: 69 00        	adc	#$0
+    c87b: 85 18        	sta	$18                     ; 0x18 <__zp_bss_size+0x1>
+;     sy = (uint8_t)(ctx->cam_y % (uint16_t)R01_SCREEN_PX_H);
+    c87d: 8a           	txa
+    c87e: 18           	clc
+    c87f: 69 06        	adc	#$6
+    c881: 85 19        	sta	$19                     ; 0x19 <__zp_bss_size+0x2>
+    c883: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    c885: 69 00        	adc	#$0
+    c887: 85 1a        	sta	$1a                     ; 0x1a <__zp_bss_size+0x3>
+;     sx = (uint8_t)(ctx->cam_x % (uint16_t)R01_SCREEN_PX_W);
+    c889: a9 7f        	lda	#$7f
+    c88b: 31 e2        	and	($e2),y                 ; 0xe2 <__rc2>
+    c88d: 85 21        	sta	$21                     ; 0x21 <__zp_bss_size+0xa>
+    c88f: a2 04        	ldx	#$4
+    c891: 86 20        	stx	$20                     ; 0x20 <__zp_bss_size+0x9>
+    c893: a0 06        	ldy	#$6
+;     sy = (uint8_t)(ctx->cam_y % (uint16_t)R01_SCREEN_PX_H);
+    c895: b1 e2        	lda	($e2),y                 ; 0xe2 <__rc2>
+    c897: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    c899: a2 06        	ldx	#$6
+    c89b: 86 1f        	stx	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    c89d: a0 01        	ldy	#$1
+    c89f: b1 19        	lda	($19),y                 ; 0x19 <__zp_bss_size+0x2>
+    c8a1: a2 78        	ldx	#$78
+    c8a3: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
+    c8a5: 84 1b        	sty	$1b                     ; 0x1b <__zp_bss_size+0x4>
+    c8a7: a4 e3        	ldy	$e3                     ; 0xe3 <__rc3>
+    c8a9: 84 1c        	sty	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    c8ab: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    c8ad: 64 e3        	stz	$e3                     ; 0xe3 <__rc3>
+    c8af: aa           	tax
+    c8b0: a5 e4        	lda	$e4                     ; 0xe4 <__rc4>
+    c8b2: 20 f1 dd     	jsr	$ddf1 <__umodhi3>
+    c8b5: aa           	tax
+    c8b6: a5 1e        	lda	$1e                     ; 0x1e <__zp_bss_size+0x7>
+    c8b8: 18           	clc
+;     put_u16_ram(R01_SYS_PLAYER_Y, ctx->player_y);
+    c8b9: 69 02        	adc	#$2
+    c8bb: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    c8bd: a5 1d        	lda	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    c8bf: 69 00        	adc	#$0
+    c8c1: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    c8c3: a4 21        	ldy	$21                     ; 0x21 <__zp_bss_size+0xa>
+;     *R01_SCROLL_X = sx;
+    c8c5: 8c 02 7f     	sty	$7f02                   ; 0x7f02 <__heap_start+0x7b5e>
+;     *R01_SCROLL_Y = sy;
+    c8c8: 8e 03 7f     	stx	$7f03                   ; 0x7f03 <__heap_start+0x7b5f>
+;     put_u16_ram(R01_SYS_PLAYER_X, ctx->player_x);
+    c8cb: b2 1b        	lda	($1b)                   ; 0x1b <__zp_bss_size+0x4>
+    c8cd: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    c8cf: a0 01        	ldy	#$1
+    c8d1: b1 1b        	lda	($1b),y                 ; 0x1b <__zp_bss_size+0x4>
+    c8d3: a6 e5        	ldx	$e5                     ; 0xe5 <__rc5>
+;     R01_CPU8(addr) = (uint8_t)(v & 0xFFu);
+    c8d5: 8e e0 02     	stx	$2e0                    ; 0x2e0 <__rc31+0x1e1>
+;     R01_CPU8(addr + 1u) = (uint8_t)(v >> 8);
+    c8d8: 8d e1 02     	sta	$2e1                    ; 0x2e1 <__rc31+0x1e2>
+    c8db: c8           	iny
+;     put_u16_ram(R01_SYS_PLAYER_Y, ctx->player_y);
+    c8dc: b1 1b        	lda	($1b),y                 ; 0x1b <__zp_bss_size+0x4>
+    c8de: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    c8e0: 88           	dey
+    c8e1: b1 e2        	lda	($e2),y                 ; 0xe2 <__rc2>
+    c8e3: 84 e2        	sty	$e2                     ; 0xe2 <__rc2>
+    c8e5: a6 e4        	ldx	$e4                     ; 0xe4 <__rc4>
+;     R01_CPU8(addr) = (uint8_t)(v & 0xFFu);
+    c8e7: 8e e2 02     	stx	$2e2                    ; 0x2e2 <__rc31+0x1e3>
+;     R01_CPU8(addr + 1u) = (uint8_t)(v >> 8);
+    c8ea: 8d e3 02     	sta	$2e3                    ; 0x2e3 <__rc31+0x1e4>
+    c8ed: a4 20        	ldy	$20                     ; 0x20 <__zp_bss_size+0x9>
+;     put_u16_ram(R01_SYS_CAM_X, ctx->cam_x);
+    c8ef: b1 1b        	lda	($1b),y                 ; 0x1b <__zp_bss_size+0x4>
+    c8f1: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    c8f3: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
+    c8f5: b1 17        	lda	($17),y                 ; 0x17 <__zp_bss_size>
+    c8f7: a6 e4        	ldx	$e4                     ; 0xe4 <__rc4>
+;     R01_CPU8(addr) = (uint8_t)(v & 0xFFu);
+    c8f9: 8e e4 02     	stx	$2e4                    ; 0x2e4 <__rc31+0x1e5>
+;     R01_CPU8(addr + 1u) = (uint8_t)(v >> 8);
+    c8fc: 8d e5 02     	sta	$2e5                    ; 0x2e5 <__rc31+0x1e6>
+    c8ff: a4 1f        	ldy	$1f                     ; 0x1f <__zp_bss_size+0x8>
+;     put_u16_ram(R01_SYS_CAM_Y, ctx->cam_y);
+    c901: b1 1b        	lda	($1b),y                 ; 0x1b <__zp_bss_size+0x4>
+    c903: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    c905: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
+    c907: b1 19        	lda	($19),y                 ; 0x19 <__zp_bss_size+0x2>
+    c909: a2 01        	ldx	#$1
+    c90b: a4 e3        	ldy	$e3                     ; 0xe3 <__rc3>
+;     R01_CPU8(addr) = (uint8_t)(v & 0xFFu);
+    c90d: 8c e6 02     	sty	$2e6                    ; 0x2e6 <__rc31+0x1e7>
+;     R01_CPU8(addr + 1u) = (uint8_t)(v >> 8);
+    c910: 8d e7 02     	sta	$2e7                    ; 0x2e7 <__rc31+0x1e8>
+;     R01_CPU8(R01_SYS_READY) = 1;
+    c913: 8e e8 02     	stx	$2e8                    ; 0x2e8 <__rc31+0x1e9>
+; }
+    c916: 60           	rts
+
+0000c917 <r01_game_draw_player>:
+;     if (!ctx) {
+    c917: a2 00        	ldx	#$0
+    c919: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    c91b: a2 00        	ldx	#$0
+    c91d: 86 e5        	stx	$e5                     ; 0xe5 <__rc5>
+    c91f: a6 e3        	ldx	$e3                     ; 0xe3 <__rc3>
+    c921: e4 e5        	cpx	$e5                     ; 0xe5 <__rc5>
+    c923: d0 09        	bne	$c92e <r01_game_draw_player+0x17>
+    c925: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+    c927: e4 e4        	cpx	$e4                     ; 0xe4 <__rc4>
+    c929: d0 03        	bne	$c92e <r01_game_draw_player+0x17>
+    c92b: 4c d8 ca     	jmp	$cad8 <r01_game_draw_player+0x1c1>
+;     sx = (int)ctx->player_x - (int)ctx->cam_x;
+    c92e: b2 e2        	lda	($e2)                   ; 0xe2 <__rc2>
+    c930: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    c932: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+    c934: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    c936: 86 e8        	stx	$e8                     ; 0xe8 <__rc8>
+    c938: 18           	clc
+    c939: 69 04        	adc	#$4
+    c93b: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    c93d: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    c93f: 69 00        	adc	#$0
+    c941: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    c943: 38           	sec
+    c944: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    c946: a0 04        	ldy	#$4
+    c948: f1 e2        	sbc	($e2),y                 ; 0xe2 <__rc2>
+    c94a: aa           	tax
+    c94b: a0 01        	ldy	#$1
+    c94d: b1 e2        	lda	($e2),y                 ; 0xe2 <__rc2>
+    c94f: f1 e4        	sbc	($e4),y                 ; 0xe4 <__rc4>
+    c951: 85 e9        	sta	$e9                     ; 0xe9 <__rc9>
+    c953: 84 ea        	sty	$ea                     ; 0xea <__rc10>
+;     sy = (int)ctx->player_y - (int)ctx->cam_y;
+    c955: a5 e8        	lda	$e8                     ; 0xe8 <__rc8>
+    c957: 18           	clc
+    c958: 69 02        	adc	#$2
+    c95a: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    c95c: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    c95e: 69 00        	adc	#$0
+    c960: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    c962: 18           	clc
+    c963: a5 e8        	lda	$e8                     ; 0xe8 <__rc8>
+    c965: 69 06        	adc	#$6
+    c967: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    c969: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    c96b: 69 00        	adc	#$0
+    c96d: 85 e7        	sta	$e7                     ; 0xe7 <__rc7>
+    c96f: 38           	sec
+    c970: c8           	iny
+    c971: b1 e2        	lda	($e2),y                 ; 0xe2 <__rc2>
+    c973: a0 06        	ldy	#$6
+    c975: f1 e2        	sbc	($e2),y                 ; 0xe2 <__rc2>
+    c977: 85 e8        	sta	$e8                     ; 0xe8 <__rc8>
+    c979: a4 ea        	ldy	$ea                     ; 0xea <__rc10>
+    c97b: b1 e4        	lda	($e4),y                 ; 0xe4 <__rc4>
+    c97d: f1 e6        	sbc	($e6),y                 ; 0xe6 <__rc6>
+    c97f: a8           	tay
+;     *R01_OAM_ADDR = 0;
+    c980: 9c 20 7f     	stz	$7f20                   ; 0x7f20 <__heap_start+0x7b7c>
+    c983: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+;     if (sx + R01_PLAY_PLAYER_W > 0 && sy + R01_PLAY_PLAYER_H > 0 && sx < R01_SCREEN_PX_W &&
+    c985: e0 f9        	cpx	#$f9
+    c987: a5 e9        	lda	$e9                     ; 0xe9 <__rc9>
+    c989: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    c98b: e9 ff        	sbc	#$ff
+    c98d: 50 02        	bvc	$c991 <r01_game_draw_player+0x7a>
+    c98f: 49 80        	eor	#$80
+    c991: aa           	tax
+    c992: 30 3b        	bmi	$c9cf <r01_game_draw_player+0xb8>
+    c994: a6 e8        	ldx	$e8                     ; 0xe8 <__rc8>
+;     if (sx + R01_PLAY_PLAYER_W > 0 && sy + R01_PLAY_PLAYER_H > 0 && sx < R01_SCREEN_PX_W &&
+    c996: e0 f9        	cpx	#$f9
+    c998: 98           	tya
+    c999: e9 ff        	sbc	#$ff
+    c99b: 50 02        	bvc	$c99f <r01_game_draw_player+0x88>
+    c99d: 49 80        	eor	#$80
+    c99f: aa           	tax
+    c9a0: 30 2d        	bmi	$c9cf <r01_game_draw_player+0xb8>
+    c9a2: a6 e4        	ldx	$e4                     ; 0xe4 <__rc4>
+;     if (sx + R01_PLAY_PLAYER_W > 0 && sy + R01_PLAY_PLAYER_H > 0 && sx < R01_SCREEN_PX_W &&
+    c9a4: e0 80        	cpx	#$80
+    c9a6: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
+    c9a8: e9 00        	sbc	#$0
+    c9aa: 50 02        	bvc	$c9ae <r01_game_draw_player+0x97>
+    c9ac: 49 80        	eor	#$80
+    c9ae: aa           	tax
+    c9af: 10 1e        	bpl	$c9cf <r01_game_draw_player+0xb8>
+    c9b1: a6 e8        	ldx	$e8                     ; 0xe8 <__rc8>
+;         sy < R01_SCREEN_PX_H) {
+    c9b3: e0 78        	cpx	#$78
+    c9b5: 98           	tya
+    c9b6: e9 00        	sbc	#$0
+    c9b8: 50 02        	bvc	$c9bc <r01_game_draw_player+0xa5>
+    c9ba: 49 80        	eor	#$80
+    c9bc: aa           	tax
+    c9bd: 10 10        	bpl	$c9cf <r01_game_draw_player+0xb8>
+    c9bf: a6 e8        	ldx	$e8                     ; 0xe8 <__rc8>
+;     *R01_OAM_DATA = y;
+    c9c1: 8e 21 7f     	stx	$7f21                   ; 0x7f21 <__heap_start+0x7b7d>
+;     *R01_OAM_DATA = tile;
+    c9c4: 9c 21 7f     	stz	$7f21                   ; 0x7f21 <__heap_start+0x7b7d>
+;     *R01_OAM_DATA = attr;
+    c9c7: 9c 21 7f     	stz	$7f21                   ; 0x7f21 <__heap_start+0x7b7d>
+    c9ca: a6 e4        	ldx	$e4                     ; 0xe4 <__rc4>
+;     *R01_OAM_DATA = x;
+    c9cc: 8e 21 7f     	stx	$7f21                   ; 0x7f21 <__heap_start+0x7b7d>
+;     n = R01_CPU8(R01_PLAY_INST_COUNT);
+    c9cf: ae c0 81     	ldx	$81c0                   ; 0x81c0 <r01_boot_map+0xe0>
+;     for (i = 1u; i < n && i < 63u; i++) {
+    c9d2: e0 02        	cpx	#$2
+    c9d4: b0 03        	bcs	$c9d9 <r01_game_draw_player+0xc2>
+    c9d6: 4c d8 ca     	jmp	$cad8 <r01_game_draw_player+0x1c1>
+;     for (i = 1u; i < n && i < 63u; i++) {
+    c9d9: e0 3f        	cpx	#$3f
+    c9db: 90 02        	bcc	$c9df <r01_game_draw_player+0xc8>
+    c9dd: a2 3f        	ldx	#$3f
+;     for (i = 1u; i < n && i < 63u; i++) {
+    c9df: ca           	dex
+    c9e0: a9 81        	lda	#$81
+    c9e2: a0 c9        	ldy	#$c9
+    c9e4: 48           	pha
+    c9e5: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    c9e7: 85 e9        	sta	$e9                     ; 0xe9 <__rc9>
+    c9e9: 68           	pla
+    c9ea: 80 27        	bra	$ca13 <r01_game_draw_player+0xfc>
+;         if (sx + 8 <= 0 || sy + 8 <= 0 || sx >= R01_SCREEN_PX_W || sy >= R01_SCREEN_PX_H) {
+    c9ec: 49 80        	eor	#$80
+    c9ee: a8           	tay
+    c9ef: 10 10        	bpl	$ca01 <r01_game_draw_player+0xea>
+    c9f1: a4 e4        	ldy	$e4                     ; 0xe4 <__rc4>
+;     *R01_OAM_DATA = y;
+    c9f3: 8c 21 7f     	sty	$7f21                   ; 0x7f21 <__heap_start+0x7b7d>
+;     *R01_OAM_DATA = tile;
+    c9f6: 9c 21 7f     	stz	$7f21                   ; 0x7f21 <__heap_start+0x7b7d>
+;     *R01_OAM_DATA = attr;
+    c9f9: 9c 21 7f     	stz	$7f21                   ; 0x7f21 <__heap_start+0x7b7d>
+    c9fc: a4 e6        	ldy	$e6                     ; 0xe6 <__rc6>
+;     *R01_OAM_DATA = x;
+    c9fe: 8c 21 7f     	sty	$7f21                   ; 0x7f21 <__heap_start+0x7b7d>
+;     for (i = 1u; i < n && i < 63u; i++) {
+    ca01: ca           	dex
+    ca02: 18           	clc
+    ca03: a5 e8        	lda	$e8                     ; 0xe8 <__rc8>
+    ca05: 69 06        	adc	#$6
+    ca07: a8           	tay
+    ca08: a5 e7        	lda	$e7                     ; 0xe7 <__rc7>
+    ca0a: 69 00        	adc	#$0
+    ca0c: e0 00        	cpx	#$0
+    ca0e: d0 03        	bne	$ca13 <r01_game_draw_player+0xfc>
+    ca10: 4c d8 ca     	jmp	$cad8 <r01_game_draw_player+0x1c1>
+    ca13: 84 e4        	sty	$e4                     ; 0xe4 <__rc4>
+    ca15: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    ca17: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+;         uint16_t wx = (uint16_t)R01_CPU8(rec + 2u) | ((uint16_t)R01_CPU8(rec + 3u) << 8);
+    ca19: b2 e4        	lda	($e4)                   ; 0xe4 <__rc4>
+    ca1b: 85 eb        	sta	$eb                     ; 0xeb <__rc11>
+    ca1d: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    ca1f: e6 e4        	inc	$e4                     ; 0xe4 <__rc4>
+    ca21: d0 01        	bne	$ca24 <r01_game_draw_player+0x10d>
+    ca23: 1a           	inc
+    ca24: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    ca26: b2 e4        	lda	($e4)                   ; 0xe4 <__rc4>
+    ca28: 85 ed        	sta	$ed                     ; 0xed <__rc13>
+;         uint16_t wy = (uint16_t)R01_CPU8(rec + 4u) | ((uint16_t)R01_CPU8(rec + 5u) << 8);
+    ca2a: 98           	tya
+    ca2b: 18           	clc
+    ca2c: 69 02        	adc	#$2
+    ca2e: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    ca30: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    ca32: 69 00        	adc	#$0
+    ca34: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    ca36: b2 e4        	lda	($e4)                   ; 0xe4 <__rc4>
+    ca38: 85 ea        	sta	$ea                     ; 0xea <__rc10>
+    ca3a: 84 e8        	sty	$e8                     ; 0xe8 <__rc8>
+    ca3c: 98           	tya
+    ca3d: 18           	clc
+    ca3e: 69 03        	adc	#$3
+    ca40: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    ca42: a4 e6        	ldy	$e6                     ; 0xe6 <__rc6>
+    ca44: 84 e7        	sty	$e7                     ; 0xe7 <__rc7>
+    ca46: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    ca48: 69 00        	adc	#$0
+    ca4a: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+;         sx = (int)wx - (int)ctx->cam_x;
+    ca4c: 18           	clc
+    ca4d: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    ca4f: 69 04        	adc	#$4
+    ca51: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    ca53: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    ca55: 69 00        	adc	#$0
+    ca57: a8           	tay
+;         uint16_t wy = (uint16_t)R01_CPU8(rec + 4u) | ((uint16_t)R01_CPU8(rec + 5u) << 8);
+    ca58: b2 e4        	lda	($e4)                   ; 0xe4 <__rc4>
+    ca5a: 85 ec        	sta	$ec                     ; 0xec <__rc12>
+;         sx = (int)wx - (int)ctx->cam_x;
+    ca5c: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    ca5e: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    ca60: 84 e5        	sty	$e5                     ; 0xe5 <__rc5>
+    ca62: 38           	sec
+    ca63: a0 04        	ldy	#$4
+    ca65: a5 eb        	lda	$eb                     ; 0xeb <__rc11>
+    ca67: f1 e2        	sbc	($e2),y                 ; 0xe2 <__rc2>
+    ca69: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    ca6b: a0 01        	ldy	#$1
+    ca6d: a5 ed        	lda	$ed                     ; 0xed <__rc13>
+    ca6f: f1 e4        	sbc	($e4),y                 ; 0xe4 <__rc4>
+    ca71: a8           	tay
+    ca72: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+;         if (sx + 8 <= 0 || sy + 8 <= 0 || sx >= R01_SCREEN_PX_W || sy >= R01_SCREEN_PX_H) {
+    ca74: c9 f9        	cmp	#$f9
+    ca76: 98           	tya
+    ca77: 84 eb        	sty	$eb                     ; 0xeb <__rc11>
+    ca79: e9 ff        	sbc	#$ff
+    ca7b: 50 02        	bvc	$ca7f <r01_game_draw_player+0x168>
+    ca7d: 49 80        	eor	#$80
+    ca7f: a8           	tay
+    ca80: 10 03        	bpl	$ca85 <r01_game_draw_player+0x16e>
+    ca82: 4c 01 ca     	jmp	$ca01 <r01_game_draw_player+0xea>
+    ca85: 86 ed        	stx	$ed                     ; 0xed <__rc13>
+    ca87: 18           	clc
+    ca88: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    ca8a: 69 06        	adc	#$6
+    ca8c: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    ca8e: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    ca90: 69 00        	adc	#$0
+    ca92: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    ca94: 38           	sec
+    ca95: a0 06        	ldy	#$6
+    ca97: a5 ea        	lda	$ea                     ; 0xea <__rc10>
+    ca99: f1 e2        	sbc	($e2),y                 ; 0xe2 <__rc2>
+    ca9b: aa           	tax
+    ca9c: a0 01        	ldy	#$1
+    ca9e: a5 ec        	lda	$ec                     ; 0xec <__rc12>
+    caa0: f1 e4        	sbc	($e4),y                 ; 0xe4 <__rc4>
+    caa2: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+;         if (sx + 8 <= 0 || sy + 8 <= 0 || sx >= R01_SCREEN_PX_W || sy >= R01_SCREEN_PX_H) {
+    caa4: e0 f9        	cpx	#$f9
+    caa6: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    caa8: e9 ff        	sbc	#$ff
+    caaa: 50 02        	bvc	$caae <r01_game_draw_player+0x197>
+    caac: 49 80        	eor	#$80
+    caae: a6 ed        	ldx	$ed                     ; 0xed <__rc13>
+    cab0: a8           	tay
+    cab1: 10 03        	bpl	$cab6 <r01_game_draw_player+0x19f>
+    cab3: 4c 01 ca     	jmp	$ca01 <r01_game_draw_player+0xea>
+    cab6: a4 e6        	ldy	$e6                     ; 0xe6 <__rc6>
+;         if (sx + 8 <= 0 || sy + 8 <= 0 || sx >= R01_SCREEN_PX_W || sy >= R01_SCREEN_PX_H) {
+    cab8: c0 80        	cpy	#$80
+    caba: a5 eb        	lda	$eb                     ; 0xeb <__rc11>
+    cabc: e9 00        	sbc	#$0
+    cabe: 50 02        	bvc	$cac2 <r01_game_draw_player+0x1ab>
+    cac0: 49 80        	eor	#$80
+    cac2: a8           	tay
+    cac3: 30 03        	bmi	$cac8 <r01_game_draw_player+0x1b1>
+    cac5: 4c 01 ca     	jmp	$ca01 <r01_game_draw_player+0xea>
+    cac8: a4 e4        	ldy	$e4                     ; 0xe4 <__rc4>
+;         if (sx + 8 <= 0 || sy + 8 <= 0 || sx >= R01_SCREEN_PX_W || sy >= R01_SCREEN_PX_H) {
+    caca: c0 78        	cpy	#$78
+    cacc: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
+    cace: e9 00        	sbc	#$0
+    cad0: 50 03        	bvc	$cad5 <r01_game_draw_player+0x1be>
+    cad2: 4c ec c9     	jmp	$c9ec <r01_game_draw_player+0xd5>
+    cad5: 4c ee c9     	jmp	$c9ee <r01_game_draw_player+0xd7>
+; }
+    cad8: 60           	rts
+
+0000cad9 <move_ok_cart>:
+; static int move_ok_cart(void *user, int ox, int oy) {
+    cad9: 85 1f        	sta	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cadb: 86 21        	stx	$21                     ; 0x21 <__zp_bss_size+0xa>
+;     if (!has_screen || !solid_at || px < 0 || py < 0 || bw < 1 || bh < 1 || screen_px_w < 1 ||
+    cadd: a2 00        	ldx	#$0
+    cadf: 8a           	txa
+    cae0: a4 21        	ldy	$21                     ; 0x21 <__zp_bss_size+0xa>
+    cae2: 10 03        	bpl	$cae7 <move_ok_cart+0xe>
+    cae4: 4c 70 cf     	jmp	$cf70 <move_ok_cart+0x497>
+    cae7: a4 e5        	ldy	$e5                     ; 0xe5 <__rc5>
+    cae9: 84 1b        	sty	$1b                     ; 0x1b <__zp_bss_size+0x4>
+    caeb: 10 03        	bpl	$caf0 <move_ok_cart+0x17>
+    caed: 4c 70 cf     	jmp	$cf70 <move_ok_cart+0x497>
+    caf0: a6 e4        	ldx	$e4                     ; 0xe4 <__rc4>
+    caf2: 86 17        	stx	$17                     ; 0x17 <__zp_bss_size>
+;     x1 = px + bw - 1;
+    caf4: a5 1f        	lda	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    caf6: 18           	clc
+    caf7: 69 07        	adc	#$7
+    caf9: 85 1d        	sta	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    cafb: a5 21        	lda	$21                     ; 0x21 <__zp_bss_size+0xa>
+    cafd: 69 00        	adc	#$0
+    caff: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+;     y1 = py + bh - 1;
+    cb01: a5 e4        	lda	$e4                     ; 0xe4 <__rc4>
+    cb03: 18           	clc
+    cb04: 69 07        	adc	#$7
+    cb06: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    cb08: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
+    cb0a: 69 00        	adc	#$0
+    cb0c: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+;     c0 = px / screen_px_w;
+    cb0e: a5 21        	lda	$21                     ; 0x21 <__zp_bss_size+0xa>
+    cb10: 4a           	lsr
+    cb11: a6 1f        	ldx	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cb13: 86 29        	stx	$29                     ; 0x29 <__zp_bss_size+0x12>
+    cb15: 66 1f        	ror	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cb17: 4a           	lsr
+    cb18: 66 1f        	ror	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cb1a: 4a           	lsr
+    cb1b: 85 22        	sta	$22                     ; 0x22 <__zp_bss_size+0xb>
+    cb1d: 66 1f        	ror	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cb1f: 85 1c        	sta	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cb21: 46 1c        	lsr	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cb23: a6 1f        	ldx	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cb25: 86 19        	stx	$19                     ; 0x19 <__zp_bss_size+0x2>
+    cb27: 66 19        	ror	$19                     ; 0x19 <__zp_bss_size+0x2>
+    cb29: 46 1c        	lsr	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cb2b: 66 19        	ror	$19                     ; 0x19 <__zp_bss_size+0x2>
+    cb2d: 46 1c        	lsr	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cb2f: 66 19        	ror	$19                     ; 0x19 <__zp_bss_size+0x2>
+    cb31: 46 1c        	lsr	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cb33: 66 19        	ror	$19                     ; 0x19 <__zp_bss_size+0x2>
+    cb35: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+    cb37: 86 30        	stx	$30                     ; 0x30 <__zp_bss_size+0x19>
+;     c1 = x1 / screen_px_w;
+    cb39: 46 e2        	lsr	$e2                     ; 0xe2 <__rc2>
+    cb3b: a6 1d        	ldx	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    cb3d: 86 2f        	stx	$2f                     ; 0x2f <__zp_bss_size+0x18>
+    cb3f: 66 1d        	ror	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    cb41: 46 e2        	lsr	$e2                     ; 0xe2 <__rc2>
+    cb43: 66 1d        	ror	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    cb45: 46 e2        	lsr	$e2                     ; 0xe2 <__rc2>
+    cb47: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+    cb49: 66 1d        	ror	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    cb4b: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
+    cb4d: 84 28        	sty	$28                     ; 0x28 <__zp_bss_size+0x11>
+    cb4f: 86 1a        	stx	$1a                     ; 0x1a <__zp_bss_size+0x3>
+    cb51: 46 1a        	lsr	$1a                     ; 0x1a <__zp_bss_size+0x3>
+    cb53: a6 1d        	ldx	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    cb55: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    cb57: 66 e2        	ror	$e2                     ; 0xe2 <__rc2>
+    cb59: 46 1a        	lsr	$1a                     ; 0x1a <__zp_bss_size+0x3>
+    cb5b: 66 e2        	ror	$e2                     ; 0xe2 <__rc2>
+    cb5d: 46 1a        	lsr	$1a                     ; 0x1a <__zp_bss_size+0x3>
+    cb5f: 66 e2        	ror	$e2                     ; 0xe2 <__rc2>
+    cb61: 46 1a        	lsr	$1a                     ; 0x1a <__zp_bss_size+0x3>
+    cb63: 66 e2        	ror	$e2                     ; 0xe2 <__rc2>
+    cb65: 64 e3        	stz	$e3                     ; 0xe3 <__rc3>
+    cb67: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+    cb69: 86 18        	stx	$18                     ; 0x18 <__zp_bss_size+0x1>
+;     r1 = y1 / screen_px_h;
+    cb6b: a2 78        	ldx	#$78
+    cb6d: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    cb6f: a6 e5        	ldx	$e5                     ; 0xe5 <__rc5>
+    cb71: 86 27        	stx	$27                     ; 0x27 <__zp_bss_size+0x10>
+    cb73: a5 e4        	lda	$e4                     ; 0xe4 <__rc4>
+    cb75: a4 e4        	ldy	$e4                     ; 0xe4 <__rc4>
+    cb77: 84 26        	sty	$26                     ; 0x26 <__zp_bss_size+0xf>
+    cb79: 20 38 dd     	jsr	$dd38 <__udivhi3>
+    cb7c: 85 24        	sta	$24                     ; 0x24 <__zp_bss_size+0xd>
+    cb7e: 86 23        	stx	$23                     ; 0x23 <__zp_bss_size+0xc>
+;     for (col = c0; col <= c1; col++) {
+    cb80: a6 1a        	ldx	$1a                     ; 0x1a <__zp_bss_size+0x3>
+    cb82: e4 1c        	cpx	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cb84: d0 09        	bne	$cb8f <move_ok_cart+0xb6>
+    cb86: a6 18        	ldx	$18                     ; 0x18 <__zp_bss_size+0x1>
+    cb88: e4 19        	cpx	$19                     ; 0x19 <__zp_bss_size+0x2>
+    cb8a: b0 0c        	bcs	$cb98 <move_ok_cart+0xbf>
+    cb8c: 4c eb cc     	jmp	$cceb <move_ok_cart+0x212>
+;     for (col = c0; col <= c1; col++) {
+    cb8f: a6 1a        	ldx	$1a                     ; 0x1a <__zp_bss_size+0x3>
+    cb91: e4 1c        	cpx	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cb93: b0 03        	bcs	$cb98 <move_ok_cart+0xbf>
+    cb95: 4c eb cc     	jmp	$cceb <move_ok_cart+0x212>
+    cb98: a6 1d        	ldx	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    cb9a: 86 31        	stx	$31                     ; 0x31 <__zp_bss_size+0x1a>
+    cb9c: a6 1f        	ldx	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cb9e: 86 32        	stx	$32                     ; 0x32 <__zp_bss_size+0x1b>
+    cba0: a6 22        	ldx	$22                     ; 0x22 <__zp_bss_size+0xb>
+    cba2: 86 33        	stx	$33                     ; 0x33 <__zp_bss_size+0x1c>
+    cba4: a6 18        	ldx	$18                     ; 0x18 <__zp_bss_size+0x1>
+    cba6: 86 2e        	stx	$2e                     ; 0x2e <__zp_bss_size+0x17>
+;     r0 = py / screen_px_h;
+    cba8: a2 78        	ldx	#$78
+    cbaa: 64 e3        	stz	$e3                     ; 0xe3 <__rc3>
+    cbac: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    cbae: a2 00        	ldx	#$0
+    cbb0: 86 25        	stx	$25                     ; 0x25 <__zp_bss_size+0xe>
+    cbb2: a6 1b        	ldx	$1b                     ; 0x1b <__zp_bss_size+0x4>
+    cbb4: a5 17        	lda	$17                     ; 0x17 <__zp_bss_size>
+    cbb6: 20 38 dd     	jsr	$dd38 <__udivhi3>
+    cbb9: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    cbbb: 86 20        	stx	$20                     ; 0x20 <__zp_bss_size+0x9>
+    cbbd: a6 24        	ldx	$24                     ; 0x24 <__zp_bss_size+0xd>
+    cbbf: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+;     for (col = c0; col <= c1; col++) {
+    cbc1: a4 e3        	ldy	$e3                     ; 0xe3 <__rc3>
+    cbc3: a6 23        	ldx	$23                     ; 0x23 <__zp_bss_size+0xc>
+    cbc5: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    cbc7: c8           	iny
+    cbc8: d0 02        	bne	$cbcc <move_ok_cart+0xf3>
+    cbca: e6 e3        	inc	$e3                     ; 0xe3 <__rc3>
+    cbcc: a9 10        	lda	#$10
+    cbce: 38           	sec
+    cbcf: e5 e2        	sbc	$e2                     ; 0xe2 <__rc2>
+    cbd1: aa           	tax
+    cbd2: a9 00        	lda	#$0
+    cbd4: e5 20        	sbc	$20                     ; 0x20 <__zp_bss_size+0x9>
+    cbd6: 64 e7        	stz	$e7                     ; 0xe7 <__rc7>
+    cbd8: 90 04        	bcc	$cbde <move_ok_cart+0x105>
+    cbda: 85 25        	sta	$25                     ; 0x25 <__zp_bss_size+0xe>
+    cbdc: 86 e7        	stx	$e7                     ; 0xe7 <__rc7>
+    cbde: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+    cbe0: 86 1d        	stx	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    cbe2: 06 1d        	asl	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    cbe4: a6 20        	ldx	$20                     ; 0x20 <__zp_bss_size+0x9>
+    cbe6: 86 1e        	stx	$1e                     ; 0x1e <__zp_bss_size+0x7>
+    cbe8: 26 1e        	rol	$1e                     ; 0x1e <__zp_bss_size+0x7>
+    cbea: 98           	tya
+    cbeb: 38           	sec
+    cbec: e5 e2        	sbc	$e2                     ; 0xe2 <__rc2>
+    cbee: 85 2a        	sta	$2a                     ; 0x2a <__zp_bss_size+0x13>
+    cbf0: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    cbf2: e5 20        	sbc	$20                     ; 0x20 <__zp_bss_size+0x9>
+    cbf4: 85 2b        	sta	$2b                     ; 0x2b <__zp_bss_size+0x14>
+    cbf6: a6 23        	ldx	$23                     ; 0x23 <__zp_bss_size+0xc>
+    cbf8: e4 20        	cpx	$20                     ; 0x20 <__zp_bss_size+0x9>
+    cbfa: a2 01        	ldx	#$1
+    cbfc: b0 02        	bcs	$cc00 <move_ok_cart+0x127>
+    cbfe: a2 00        	ldx	#$0
+    cc00: 86 2c        	stx	$2c                     ; 0x2c <__zp_bss_size+0x15>
+    cc02: a6 24        	ldx	$24                     ; 0x24 <__zp_bss_size+0xd>
+    cc04: e4 e2        	cpx	$e2                     ; 0xe2 <__rc2>
+    cc06: a2 01        	ldx	#$1
+    cc08: b0 02        	bcs	$cc0c <move_ok_cart+0x133>
+    cc0a: a2 00        	ldx	#$0
+    cc0c: 86 2d        	stx	$2d                     ; 0x2d <__zp_bss_size+0x16>
+    cc0e: a4 19        	ldy	$19                     ; 0x19 <__zp_bss_size+0x2>
+    cc10: a6 23        	ldx	$23                     ; 0x23 <__zp_bss_size+0xc>
+    cc12: e4 20        	cpx	$20                     ; 0x20 <__zp_bss_size+0x9>
+    cc14: d0 1d        	bne	$cc33 <move_ok_cart+0x15a>
+    cc16: a6 2d        	ldx	$2d                     ; 0x2d <__zp_bss_size+0x16>
+    cc18: d0 1d        	bne	$cc37 <move_ok_cart+0x15e>
+;     for (col = c0; col <= c1; col++) {
+    cc1a: 84 19        	sty	$19                     ; 0x19 <__zp_bss_size+0x2>
+    cc1c: a6 1c        	ldx	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cc1e: e6 19        	inc	$19                     ; 0x19 <__zp_bss_size+0x2>
+    cc20: d0 02        	bne	$cc24 <move_ok_cart+0x14b>
+    cc22: e6 1c        	inc	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cc24: e4 1a        	cpx	$1a                     ; 0x1a <__zp_bss_size+0x3>
+    cc26: d0 e6        	bne	$cc0e <move_ok_cart+0x135>
+    cc28: a6 2e        	ldx	$2e                     ; 0x2e <__zp_bss_size+0x17>
+    cc2a: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    cc2c: c4 e2        	cpy	$e2                     ; 0xe2 <__rc2>
+    cc2e: d0 de        	bne	$cc0e <move_ok_cart+0x135>
+    cc30: 4c df cc     	jmp	$ccdf <move_ok_cart+0x206>
+    cc33: a6 2c        	ldx	$2c                     ; 0x2c <__zp_bss_size+0x15>
+    cc35: f0 e3        	beq	$cc1a <move_ok_cart+0x141>
+    cc37: a6 e7        	ldx	$e7                     ; 0xe7 <__rc7>
+    cc39: 86 19        	stx	$19                     ; 0x19 <__zp_bss_size+0x2>
+;         for (row = r0; row <= r1; row++) {
+    cc3b: a5 1c        	lda	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cc3d: 4a           	lsr
+    cc3e: aa           	tax
+    cc3f: 98           	tya
+    cc40: 6a           	ror
+    cc41: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    cc43: 46 e2        	lsr	$e2                     ; 0xe2 <__rc2>
+    cc45: 6a           	ror
+    cc46: 46 e2        	lsr	$e2                     ; 0xe2 <__rc2>
+    cc48: 6a           	ror
+    cc49: 18           	clc
+    cc4a: 65 1d        	adc	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    cc4c: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    cc4e: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    cc50: 65 1e        	adc	$1e                     ; 0x1e <__zp_bss_size+0x7>
+    cc52: aa           	tax
+    cc53: 18           	clc
+    cc54: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    cc56: 69 00        	adc	#$0
+    cc58: 85 22        	sta	$22                     ; 0x22 <__zp_bss_size+0xb>
+    cc5a: 8a           	txa
+    cc5b: 69 81        	adc	#$81
+    cc5d: 85 1f        	sta	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cc5f: 84 18        	sty	$18                     ; 0x18 <__zp_bss_size+0x1>
+    cc61: 98           	tya
+    cc62: 29 07        	and	#$7
+    cc64: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    cc66: a2 00        	ldx	#$0
+    cc68: a9 01        	lda	#$1
+    cc6a: 20 25 dd     	jsr	$dd25 <__ashlhi3>
+    cc6d: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    cc6f: a6 19        	ldx	$19                     ; 0x19 <__zp_bss_size+0x2>
+    cc71: 86 e7        	stx	$e7                     ; 0xe7 <__rc7>
+    cc73: a6 19        	ldx	$19                     ; 0x19 <__zp_bss_size+0x2>
+    cc75: 86 e8        	stx	$e8                     ; 0xe8 <__rc8>
+    cc77: a6 25        	ldx	$25                     ; 0x25 <__zp_bss_size+0xe>
+    cc79: 86 e9        	stx	$e9                     ; 0xe9 <__rc9>
+    cc7b: a5 2a        	lda	$2a                     ; 0x2a <__zp_bss_size+0x13>
+    cc7d: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    cc7f: a5 2b        	lda	$2b                     ; 0x2b <__zp_bss_size+0x14>
+    cc81: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    cc83: a4 18        	ldy	$18                     ; 0x18 <__zp_bss_size+0x1>
+    cc85: a5 1c        	lda	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cc87: d0 07        	bne	$cc90 <move_ok_cart+0x1b7>
+    cc89: c0 10        	cpy	#$10
+    cc8b: 90 0c        	bcc	$cc99 <move_ok_cart+0x1c0>
+    cc8d: 4c 6d cf     	jmp	$cf6d <move_ok_cart+0x494>
+    cc90: a6 1c        	ldx	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cc92: e0 00        	cpx	#$0
+    cc94: 90 03        	bcc	$cc99 <move_ok_cart+0x1c0>
+    cc96: 4c 6d cf     	jmp	$cf6d <move_ok_cart+0x494>
+    cc99: a5 e9        	lda	$e9                     ; 0xe9 <__rc9>
+    cc9b: d0 03        	bne	$cca0 <move_ok_cart+0x1c7>
+    cc9d: 4c 66 cf     	jmp	$cf66 <move_ok_cart+0x48d>
+    cca0: a6 22        	ldx	$22                     ; 0x22 <__zp_bss_size+0xb>
+    cca2: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    cca4: a6 1f        	ldx	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cca6: 86 e5        	stx	$e5                     ; 0xe5 <__rc5>
+;     return (int)((R01_CPU8(R01_PLAY_PRESENT + (uint16_t)row * 2u + (uint16_t)col / 8u) >>
+    cca8: b2 e4        	lda	($e4)                   ; 0xe4 <__rc4>
+;             if (!has_screen(ctx, col, row)) {
+    ccaa: 25 e2        	and	$e2                     ; 0xe2 <__rc2>
+    ccac: d0 03        	bne	$ccb1 <move_ok_cart+0x1d8>
+    ccae: 4c 6d cf     	jmp	$cf6d <move_ok_cart+0x494>
+;         for (row = r0; row <= r1; row++) {
+    ccb1: 18           	clc
+    ccb2: a5 22        	lda	$22                     ; 0x22 <__zp_bss_size+0xb>
+    ccb4: 69 02        	adc	#$2
+    ccb6: 85 22        	sta	$22                     ; 0x22 <__zp_bss_size+0xb>
+    ccb8: a5 1f        	lda	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    ccba: 69 00        	adc	#$0
+    ccbc: 85 1f        	sta	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    ccbe: a9 ff        	lda	#$ff
+    ccc0: c6 e6        	dec	$e6                     ; 0xe6 <__rc6>
+    ccc2: c5 e6        	cmp	$e6                     ; 0xe6 <__rc6>
+    ccc4: d0 02        	bne	$ccc8 <move_ok_cart+0x1ef>
+    ccc6: c6 e3        	dec	$e3                     ; 0xe3 <__rc3>
+    ccc8: a9 ff        	lda	#$ff
+    ccca: c6 e8        	dec	$e8                     ; 0xe8 <__rc8>
+    cccc: c5 e8        	cmp	$e8                     ; 0xe8 <__rc8>
+    ccce: d0 02        	bne	$ccd2 <move_ok_cart+0x1f9>
+    ccd0: c6 e9        	dec	$e9                     ; 0xe9 <__rc9>
+    ccd2: a4 18        	ldy	$18                     ; 0x18 <__zp_bss_size+0x1>
+    ccd4: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    ccd6: d0 ad        	bne	$cc85 <move_ok_cart+0x1ac>
+    ccd8: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    ccda: d0 a9        	bne	$cc85 <move_ok_cart+0x1ac>
+    ccdc: 4c 1a cc     	jmp	$cc1a <move_ok_cart+0x141>
+    ccdf: a6 33        	ldx	$33                     ; 0x33 <__zp_bss_size+0x1c>
+    cce1: 86 22        	stx	$22                     ; 0x22 <__zp_bss_size+0xb>
+    cce3: a6 32        	ldx	$32                     ; 0x32 <__zp_bss_size+0x1b>
+    cce5: 86 1f        	stx	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cce7: a6 31        	ldx	$31                     ; 0x31 <__zp_bss_size+0x1a>
+    cce9: 86 1d        	stx	$1d                     ; 0x1d <__zp_bss_size+0x6>
+;     ty0 = py / tile;
+    cceb: a5 1b        	lda	$1b                     ; 0x1b <__zp_bss_size+0x4>
+    cced: 4a           	lsr
+    ccee: a6 17        	ldx	$17                     ; 0x17 <__zp_bss_size>
+    ccf0: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    ccf2: 66 e3        	ror	$e3                     ; 0xe3 <__rc3>
+    ccf4: 4a           	lsr
+    ccf5: 66 e3        	ror	$e3                     ; 0xe3 <__rc3>
+    ccf7: 4a           	lsr
+    ccf8: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    ccfa: 66 e3        	ror	$e3                     ; 0xe3 <__rc3>
+    ccfc: a5 27        	lda	$27                     ; 0x27 <__zp_bss_size+0x10>
+;     ty1 = y1 / tile;
+    ccfe: 4a           	lsr
+    ccff: a6 26        	ldx	$26                     ; 0x26 <__zp_bss_size+0xf>
+    cd01: 86 e5        	stx	$e5                     ; 0xe5 <__rc5>
+    cd03: 66 e5        	ror	$e5                     ; 0xe5 <__rc5>
+    cd05: 4a           	lsr
+    cd06: 66 e5        	ror	$e5                     ; 0xe5 <__rc5>
+    cd08: 4a           	lsr
+    cd09: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    cd0b: 66 e5        	ror	$e5                     ; 0xe5 <__rc5>
+    cd0d: c5 e2        	cmp	$e2                     ; 0xe2 <__rc2>
+    cd0f: d0 06        	bne	$cd17 <move_ok_cart+0x23e>
+;     for (ty = ty0; ty <= ty1; ty++) {
+    cd11: a6 e5        	ldx	$e5                     ; 0xe5 <__rc5>
+    cd13: e4 e3        	cpx	$e3                     ; 0xe3 <__rc3>
+    cd15: 80 03        	bra	$cd1a <move_ok_cart+0x241>
+    cd17: aa           	tax
+    cd18: e4 e2        	cpx	$e2                     ; 0xe2 <__rc2>
+    cd1a: a6 29        	ldx	$29                     ; 0x29 <__zp_bss_size+0x12>
+    cd1c: 86 e6        	stx	$e6                     ; 0xe6 <__rc6>
+    cd1e: b0 03        	bcs	$cd23 <move_ok_cart+0x24a>
+    cd20: 4c 61 cf     	jmp	$cf61 <move_ok_cart+0x488>
+    cd23: 8a           	txa
+    cd24: 18           	clc
+    cd25: 69 08        	adc	#$8
+    cd27: 85 2a        	sta	$2a                     ; 0x2a <__zp_bss_size+0x13>
+    cd29: a5 21        	lda	$21                     ; 0x21 <__zp_bss_size+0xa>
+    cd2b: 69 00        	adc	#$0
+    cd2d: 85 2b        	sta	$2b                     ; 0x2b <__zp_bss_size+0x14>
+    cd2f: a5 17        	lda	$17                     ; 0x17 <__zp_bss_size>
+    cd31: 18           	clc
+    cd32: 69 08        	adc	#$8
+    cd34: 85 2c        	sta	$2c                     ; 0x2c <__zp_bss_size+0x15>
+    cd36: a5 1b        	lda	$1b                     ; 0x1b <__zp_bss_size+0x4>
+    cd38: 69 00        	adc	#$0
+    cd3a: 85 2d        	sta	$2d                     ; 0x2d <__zp_bss_size+0x16>
+    cd3c: a5 28        	lda	$28                     ; 0x28 <__zp_bss_size+0x11>
+    cd3e: c5 22        	cmp	$22                     ; 0x22 <__zp_bss_size+0xb>
+    cd40: d0 09        	bne	$cd4b <move_ok_cart+0x272>
+    cd42: a6 1d        	ldx	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    cd44: e4 1f        	cpx	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cd46: b0 0a        	bcs	$cd52 <move_ok_cart+0x279>
+    cd48: 4c 61 cf     	jmp	$cf61 <move_ok_cart+0x488>
+    cd4b: c5 22        	cmp	$22                     ; 0x22 <__zp_bss_size+0xb>
+    cd4d: b0 03        	bcs	$cd52 <move_ok_cart+0x279>
+    cd4f: 4c 61 cf     	jmp	$cf61 <move_ok_cart+0x488>
+    cd52: a6 e5        	ldx	$e5                     ; 0xe5 <__rc5>
+    cd54: 86 37        	stx	$37                     ; 0x37 <__zp_bss_size+0x20>
+    cd56: a6 e4        	ldx	$e4                     ; 0xe4 <__rc4>
+    cd58: 86 36        	stx	$36                     ; 0x36 <__zp_bss_size+0x1f>
+    cd5a: a6 1d        	ldx	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    cd5c: 86 31        	stx	$31                     ; 0x31 <__zp_bss_size+0x1a>
+    cd5e: a6 1f        	ldx	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cd60: 86 32        	stx	$32                     ; 0x32 <__zp_bss_size+0x1b>
+    cd62: a6 22        	ldx	$22                     ; 0x22 <__zp_bss_size+0xb>
+    cd64: 86 33        	stx	$33                     ; 0x33 <__zp_bss_size+0x1c>
+    cd66: a2 78        	ldx	#$78
+    cd68: 86 1e        	stx	$1e                     ; 0x1e <__zp_bss_size+0x7>
+    cd6a: 64 1d        	stz	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    cd6c: a6 e3        	ldx	$e3                     ; 0xe3 <__rc3>
+    cd6e: 86 1f        	stx	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cd70: a6 28        	ldx	$28                     ; 0x28 <__zp_bss_size+0x11>
+    cd72: 86 28        	stx	$28                     ; 0x28 <__zp_bss_size+0x11>
+    cd74: a6 1b        	ldx	$1b                     ; 0x1b <__zp_bss_size+0x4>
+    cd76: 86 2e        	stx	$2e                     ; 0x2e <__zp_bss_size+0x17>
+    cd78: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    cd7a: a6 1f        	ldx	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cd7c: 86 34        	stx	$34                     ; 0x34 <__zp_bss_size+0x1d>
+    cd7e: 06 1f        	asl	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cd80: 85 35        	sta	$35                     ; 0x35 <__zp_bss_size+0x1e>
+    cd82: 85 22        	sta	$22                     ; 0x22 <__zp_bss_size+0xb>
+    cd84: 26 22        	rol	$22                     ; 0x22 <__zp_bss_size+0xb>
+    cd86: 06 1f        	asl	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cd88: 26 22        	rol	$22                     ; 0x22 <__zp_bss_size+0xb>
+    cd8a: 06 1f        	asl	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cd8c: 26 22        	rol	$22                     ; 0x22 <__zp_bss_size+0xb>
+    cd8e: a6 32        	ldx	$32                     ; 0x32 <__zp_bss_size+0x1b>
+    cd90: 8a           	txa
+    cd91: a6 33        	ldx	$33                     ; 0x33 <__zp_bss_size+0x1c>
+    cd93: 86 18        	stx	$18                     ; 0x18 <__zp_bss_size+0x1>
+    cd95: 80 09        	bra	$cda0 <move_ok_cart+0x2c7>
+    cd97: a4 29        	ldy	$29                     ; 0x29 <__zp_bss_size+0x12>
+    cd99: 84 e6        	sty	$e6                     ; 0xe6 <__rc6>
+    cd9b: a4 2e        	ldy	$2e                     ; 0x2e <__zp_bss_size+0x17>
+    cd9d: 84 1b        	sty	$1b                     ; 0x1b <__zp_bss_size+0x4>
+    cd9f: 8a           	txa
+    cda0: 85 25        	sta	$25                     ; 0x25 <__zp_bss_size+0xe>
+;             int wx = tx * tile;
+    cda2: 0a           	asl
+    cda3: a6 18        	ldx	$18                     ; 0x18 <__zp_bss_size+0x1>
+    cda5: 86 1c        	stx	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cda7: 26 1c        	rol	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cda9: 0a           	asl
+    cdaa: 26 1c        	rol	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cdac: 0a           	asl
+    cdad: 26 1c        	rol	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cdaf: 85 20        	sta	$20                     ; 0x20 <__zp_bss_size+0x9>
+;             if (wx < px) {
+    cdb1: c5 e6        	cmp	$e6                     ; 0xe6 <__rc6>
+    cdb3: a5 1c        	lda	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cdb5: e5 21        	sbc	$21                     ; 0x21 <__zp_bss_size+0xa>
+    cdb7: 50 02        	bvc	$cdbb <move_ok_cart+0x2e2>
+    cdb9: 49 80        	eor	#$80
+    cdbb: aa           	tax
+    cdbc: 10 08        	bpl	$cdc6 <move_ok_cart+0x2ed>
+    cdbe: a6 e6        	ldx	$e6                     ; 0xe6 <__rc6>
+    cdc0: 86 20        	stx	$20                     ; 0x20 <__zp_bss_size+0x9>
+    cdc2: a6 21        	ldx	$21                     ; 0x21 <__zp_bss_size+0xa>
+    cdc4: 86 1c        	stx	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cdc6: a6 1f        	ldx	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cdc8: e4 17        	cpx	$17                     ; 0x17 <__zp_bss_size>
+    cdca: a5 22        	lda	$22                     ; 0x22 <__zp_bss_size+0xb>
+    cdcc: e5 1b        	sbc	$1b                     ; 0x1b <__zp_bss_size+0x4>
+    cdce: 50 02        	bvc	$cdd2 <move_ok_cart+0x2f9>
+    cdd0: 49 80        	eor	#$80
+    cdd2: a6 1f        	ldx	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cdd4: 86 19        	stx	$19                     ; 0x19 <__zp_bss_size+0x2>
+    cdd6: a4 22        	ldy	$22                     ; 0x22 <__zp_bss_size+0xb>
+    cdd8: aa           	tax
+    cdd9: 10 06        	bpl	$cde1 <move_ok_cart+0x308>
+    cddb: a6 17        	ldx	$17                     ; 0x17 <__zp_bss_size>
+    cddd: 86 19        	stx	$19                     ; 0x19 <__zp_bss_size+0x2>
+    cddf: a4 1b        	ldy	$1b                     ; 0x1b <__zp_bss_size+0x4>
+    cde1: a6 2a        	ldx	$2a                     ; 0x2a <__zp_bss_size+0x13>
+    cde3: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    cde5: a6 20        	ldx	$20                     ; 0x20 <__zp_bss_size+0x9>
+;             if (wx > x1) {
+    cde7: e4 e2        	cpx	$e2                     ; 0xe2 <__rc2>
+    cde9: a5 1c        	lda	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    cdeb: a6 2b        	ldx	$2b                     ; 0x2b <__zp_bss_size+0x14>
+    cded: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    cdef: e5 e2        	sbc	$e2                     ; 0xe2 <__rc2>
+    cdf1: 50 02        	bvc	$cdf5 <move_ok_cart+0x31c>
+    cdf3: 49 80        	eor	#$80
+    cdf5: aa           	tax
+    cdf6: 30 08        	bmi	$ce00 <move_ok_cart+0x327>
+    cdf8: a6 2f        	ldx	$2f                     ; 0x2f <__zp_bss_size+0x18>
+    cdfa: 86 20        	stx	$20                     ; 0x20 <__zp_bss_size+0x9>
+    cdfc: a6 30        	ldx	$30                     ; 0x30 <__zp_bss_size+0x19>
+    cdfe: 86 1c        	stx	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    ce00: a6 2c        	ldx	$2c                     ; 0x2c <__zp_bss_size+0x15>
+    ce02: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    ce04: a6 19        	ldx	$19                     ; 0x19 <__zp_bss_size+0x2>
+;             if (wy > y1) {
+    ce06: e4 e2        	cpx	$e2                     ; 0xe2 <__rc2>
+    ce08: 98           	tya
+    ce09: a6 2d        	ldx	$2d                     ; 0x2d <__zp_bss_size+0x16>
+    ce0b: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    ce0d: e5 e2        	sbc	$e2                     ; 0xe2 <__rc2>
+    ce0f: 50 02        	bvc	$ce13 <move_ok_cart+0x33a>
+    ce11: 49 80        	eor	#$80
+    ce13: a6 24        	ldx	$24                     ; 0x24 <__zp_bss_size+0xd>
+    ce15: 86 1b        	stx	$1b                     ; 0x1b <__zp_bss_size+0x4>
+    ce17: a6 23        	ldx	$23                     ; 0x23 <__zp_bss_size+0xc>
+    ce19: 86 1a        	stx	$1a                     ; 0x1a <__zp_bss_size+0x3>
+    ce1b: a6 26        	ldx	$26                     ; 0x26 <__zp_bss_size+0xf>
+    ce1d: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    ce1f: a6 27        	ldx	$27                     ; 0x27 <__zp_bss_size+0x10>
+    ce21: c9 00        	cmp	#$0
+    ce23: 10 23        	bpl	$ce48 <move_ok_cart+0x36f>
+    ce25: a6 1e        	ldx	$1e                     ; 0x1e <__zp_bss_size+0x7>
+    ce27: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    ce29: 64 e3        	stz	$e3                     ; 0xe3 <__rc3>
+    ce2b: a6 17        	ldx	$17                     ; 0x17 <__zp_bss_size>
+    ce2d: 86 1d        	stx	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    ce2f: 84 17        	sty	$17                     ; 0x17 <__zp_bss_size>
+;     row = wy / R01_SCREEN_PX_H;
+    ce31: a6 17        	ldx	$17                     ; 0x17 <__zp_bss_size>
+    ce33: a5 19        	lda	$19                     ; 0x19 <__zp_bss_size+0x2>
+    ce35: 20 38 dd     	jsr	$dd38 <__udivhi3>
+    ce38: 85 1b        	sta	$1b                     ; 0x1b <__zp_bss_size+0x4>
+    ce3a: 86 1a        	stx	$1a                     ; 0x1a <__zp_bss_size+0x3>
+    ce3c: a6 19        	ldx	$19                     ; 0x19 <__zp_bss_size+0x2>
+    ce3e: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    ce40: a6 17        	ldx	$17                     ; 0x17 <__zp_bss_size>
+    ce42: a4 1d        	ldy	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    ce44: 84 17        	sty	$17                     ; 0x17 <__zp_bss_size>
+    ce46: 64 1d        	stz	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    ce48: a4 1e        	ldy	$1e                     ; 0x1e <__zp_bss_size+0x7>
+    ce4a: 84 e2        	sty	$e2                     ; 0xe2 <__rc2>
+    ce4c: 64 e3        	stz	$e3                     ; 0xe3 <__rc3>
+;     cell = (wy % R01_SCREEN_PX_H) / 8 * R01_SCREEN_TILES_X + (wx % R01_SCREEN_PX_W) / 8;
+    ce4e: a5 e4        	lda	$e4                     ; 0xe4 <__rc4>
+    ce50: 20 f1 dd     	jsr	$ddf1 <__umodhi3>
+;     n = R01_CPU8(R01_PLAY_COLL_COUNT);
+    ce53: ae 21 81     	ldx	$8121                   ; 0x8121 <r01_boot_map+0x41>
+    ce56: d0 03        	bne	$ce5b <move_ok_cart+0x382>
+    ce58: 4c 12 cf     	jmp	$cf12 <move_ok_cart+0x439>
+    ce5b: a8           	tay
+    ce5c: 46 1c        	lsr	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    ce5e: 66 20        	ror	$20                     ; 0x20 <__zp_bss_size+0x9>
+    ce60: 46 1c        	lsr	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    ce62: 66 20        	ror	$20                     ; 0x20 <__zp_bss_size+0x9>
+    ce64: 46 1c        	lsr	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    ce66: 66 20        	ror	$20                     ; 0x20 <__zp_bss_size+0x9>
+    ce68: 46 1c        	lsr	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    ce6a: a5 20        	lda	$20                     ; 0x20 <__zp_bss_size+0x9>
+    ce6c: 6a           	ror
+    ce6d: 46 1c        	lsr	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    ce6f: 6a           	ror
+    ce70: 46 1c        	lsr	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    ce72: 6a           	ror
+    ce73: 46 1c        	lsr	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    ce75: 6a           	ror
+    ce76: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    ce78: 98           	tya
+    ce79: 0a           	asl
+    ce7a: 29 f0        	and	#$f0
+    ce7c: a8           	tay
+    ce7d: a5 20        	lda	$20                     ; 0x20 <__zp_bss_size+0x9>
+    ce7f: 29 0f        	and	#$f
+    ce81: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    ce83: 98           	tya
+    ce84: 05 e2        	ora	$e2                     ; 0xe2 <__rc2>
+    ce86: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    ce88: a0 00        	ldy	#$0
+    ce8a: 98           	tya
+    ce8b: 80 12        	bra	$ce9f <move_ok_cart+0x3c6>
+;     for (i = 0; i < n; i++) {
+    ce8d: ca           	dex
+    ce8e: 18           	clc
+    ce8f: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
+    ce91: 69 04        	adc	#$4
+    ce93: a8           	tay
+    ce94: a5 e7        	lda	$e7                     ; 0xe7 <__rc7>
+    ce96: 69 00        	adc	#$0
+    ce98: e0 00        	cpx	#$0
+    ce9a: d0 03        	bne	$ce9f <move_ok_cart+0x3c6>
+    ce9c: 4c 12 cf     	jmp	$cf12 <move_ok_cart+0x439>
+    ce9f: 84 e5        	sty	$e5                     ; 0xe5 <__rc5>
+;         if ((int)R01_CPU8(e) != col || (int)R01_CPU8(e + 1u) != row) {
+    cea1: 18           	clc
+    cea2: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    cea4: 98           	tya
+    cea5: 69 22        	adc	#$22
+    cea7: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    cea9: a4 e3        	ldy	$e3                     ; 0xe3 <__rc3>
+    ceab: 84 e7        	sty	$e7                     ; 0xe7 <__rc7>
+    cead: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    ceaf: 69 81        	adc	#$81
+    ceb1: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    ceb3: b2 e2        	lda	($e2)                   ; 0xe2 <__rc2>
+    ceb5: a4 1c        	ldy	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    ceb7: d0 d4        	bne	$ce8d <move_ok_cart+0x3b4>
+    ceb9: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    cebb: a4 e4        	ldy	$e4                     ; 0xe4 <__rc4>
+    cebd: c4 e2        	cpy	$e2                     ; 0xe2 <__rc2>
+    cebf: d0 cc        	bne	$ce8d <move_ok_cart+0x3b4>
+;         if ((int)R01_CPU8(e) != col || (int)R01_CPU8(e + 1u) != row) {
+    cec1: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
+    cec3: 18           	clc
+    cec4: 69 23        	adc	#$23
+    cec6: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    cec8: a5 e7        	lda	$e7                     ; 0xe7 <__rc7>
+    ceca: 69 81        	adc	#$81
+    cecc: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    cece: b2 e2        	lda	($e2)                   ; 0xe2 <__rc2>
+    ced0: a4 1a        	ldy	$1a                     ; 0x1a <__zp_bss_size+0x3>
+    ced2: d0 b9        	bne	$ce8d <move_ok_cart+0x3b4>
+    ced4: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    ced6: a4 1b        	ldy	$1b                     ; 0x1b <__zp_bss_size+0x4>
+    ced8: c4 e2        	cpy	$e2                     ; 0xe2 <__rc2>
+    ceda: d0 b1        	bne	$ce8d <move_ok_cart+0x3b4>
+;         tab = (uint16_t)R01_CPU8(e + 2u) | ((uint16_t)R01_CPU8(e + 3u) << 8);
+    cedc: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
+    cede: 18           	clc
+    cedf: 69 24        	adc	#$24
+    cee1: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    cee3: a5 e7        	lda	$e7                     ; 0xe7 <__rc7>
+    cee5: 69 81        	adc	#$81
+    cee7: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    cee9: b2 e2        	lda	($e2)                   ; 0xe2 <__rc2>
+    ceeb: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    ceed: 18           	clc
+    ceee: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
+    cef0: 69 25        	adc	#$25
+    cef2: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    cef4: a5 e7        	lda	$e7                     ; 0xe7 <__rc7>
+    cef6: 69 81        	adc	#$81
+    cef8: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    cefa: b2 e4        	lda	($e4)                   ; 0xe4 <__rc4>
+    cefc: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    cefe: 18           	clc
+    ceff: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+;         return R01_CPU8(tab + (uint16_t)cell) != 0u;
+    cf01: 65 e2        	adc	$e2                     ; 0xe2 <__rc2>
+    cf03: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    cf05: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    cf07: 65 1d        	adc	$1d                     ; 0x1d <__zp_bss_size+0x6>
+    cf09: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    cf0b: b2 e2        	lda	($e2)                   ; 0xe2 <__rc2>
+    cf0d: f0 03        	beq	$cf12 <move_ok_cart+0x439>
+    cf0f: 4c 6d cf     	jmp	$cf6d <move_ok_cart+0x494>
+    cf12: a6 25        	ldx	$25                     ; 0x25 <__zp_bss_size+0xe>
+    cf14: 86 19        	stx	$19                     ; 0x19 <__zp_bss_size+0x2>
+    cf16: a4 18        	ldy	$18                     ; 0x18 <__zp_bss_size+0x1>
+;         for (tx = tx0; tx <= tx1; tx++) {
+    cf18: e8           	inx
+    cf19: d0 02        	bne	$cf1d <move_ok_cart+0x444>
+    cf1b: e6 18        	inc	$18                     ; 0x18 <__zp_bss_size+0x1>
+    cf1d: a5 28        	lda	$28                     ; 0x28 <__zp_bss_size+0x11>
+    cf1f: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    cf21: c4 e2        	cpy	$e2                     ; 0xe2 <__rc2>
+    cf23: f0 03        	beq	$cf28 <move_ok_cart+0x44f>
+    cf25: 4c 97 cd     	jmp	$cd97 <move_ok_cart+0x2be>
+    cf28: a5 31        	lda	$31                     ; 0x31 <__zp_bss_size+0x1a>
+    cf2a: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    cf2c: a4 29        	ldy	$29                     ; 0x29 <__zp_bss_size+0x12>
+    cf2e: 84 e6        	sty	$e6                     ; 0xe6 <__rc6>
+    cf30: a4 2e        	ldy	$2e                     ; 0x2e <__zp_bss_size+0x17>
+    cf32: 84 1b        	sty	$1b                     ; 0x1b <__zp_bss_size+0x4>
+    cf34: a4 19        	ldy	$19                     ; 0x19 <__zp_bss_size+0x2>
+    cf36: c4 e2        	cpy	$e2                     ; 0xe2 <__rc2>
+    cf38: f0 03        	beq	$cf3d <move_ok_cart+0x464>
+    cf3a: 4c 9f cd     	jmp	$cd9f <move_ok_cart+0x2c6>
+    cf3d: a4 34        	ldy	$34                     ; 0x34 <__zp_bss_size+0x1d>
+;     for (ty = ty0; ty <= ty1; ty++) {
+    cf3f: 84 1f        	sty	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cf41: a5 35        	lda	$35                     ; 0x35 <__zp_bss_size+0x1e>
+    cf43: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    cf45: e6 1f        	inc	$1f                     ; 0x1f <__zp_bss_size+0x8>
+    cf47: d0 02        	bne	$cf4b <move_ok_cart+0x472>
+    cf49: e6 e2        	inc	$e2                     ; 0xe2 <__rc2>
+    cf4b: a6 36        	ldx	$36                     ; 0x36 <__zp_bss_size+0x1f>
+    cf4d: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    cf4f: c5 e4        	cmp	$e4                     ; 0xe4 <__rc4>
+    cf51: f0 03        	beq	$cf56 <move_ok_cart+0x47d>
+    cf53: 4c 78 cd     	jmp	$cd78 <move_ok_cart+0x29f>
+    cf56: a6 37        	ldx	$37                     ; 0x37 <__zp_bss_size+0x20>
+    cf58: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    cf5a: c4 e4        	cpy	$e4                     ; 0xe4 <__rc4>
+    cf5c: f0 03        	beq	$cf61 <move_ok_cart+0x488>
+    cf5e: 4c 78 cd     	jmp	$cd78 <move_ok_cart+0x29f>
+;     if (!has_screen || !solid_at || px < 0 || py < 0 || bw < 1 || bh < 1 || screen_px_w < 1 ||
+    cf61: a2 00        	ldx	#$0
+    cf63: a9 01        	lda	#$1
+;     return r01_play_aabb_ok(ox, oy, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H, R01_SCREEN_PX_W, R01_SCREEN_PX_H,
+    cf65: 60           	rts
+    cf66: a5 e8        	lda	$e8                     ; 0xe8 <__rc8>
+    cf68: f0 03        	beq	$cf6d <move_ok_cart+0x494>
+    cf6a: 4c a0 cc     	jmp	$cca0 <move_ok_cart+0x1c7>
+    cf6d: a9 00        	lda	#$0
+;     if (!has_screen || !solid_at || px < 0 || py < 0 || bw < 1 || bh < 1 || screen_px_w < 1 ||
+    cf6f: aa           	tax
+;     return r01_play_aabb_ok(ox, oy, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H, R01_SCREEN_PX_W, R01_SCREEN_PX_H,
+    cf70: 60           	rts
+
+0000cf71 <r01_nmi>:
+; }
+    cf71: 60           	rts
+
+0000cf72 <main>:
+; int main(void) {
+    cf72: 18           	clc
+    cf73: a5 e0        	lda	$e0                     ; 0xe0 <__rc0>
+    cf75: 69 eb        	adc	#$eb
+    cf77: 85 e0        	sta	$e0                     ; 0xe0 <__rc0>
+    cf79: a5 e1        	lda	$e1                     ; 0xe1 <__rc1>
+    cf7b: 69 ff        	adc	#$ff
+    cf7d: 85 e1        	sta	$e1                     ; 0xe1 <__rc1>
+;     uint8_t n = R01_CPU8(0x8700u);
+    cf7f: ad 00 87     	lda	$8700                   ; 0x8700 <r01_boot_map+0x620>
+;     R01_CPU8(0x0200u) = n;
+    cf82: 8d 00 02     	sta	$200                    ; 0x200 <__rc31+0x101>
+    cf85: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+;     for (i = 0; i < lim; i++) {
+    cf87: 29 7f        	and	#$7f
+    cf89: f0 25        	beq	$cfb0 <main+0x3e>
+    cf8b: a2 02        	ldx	#$2
+    cf8d: a0 01        	ldy	#$1
+    cf8f: 06 e2        	asl	$e2                     ; 0xe2 <__rc2>
+    cf91: 84 e4        	sty	$e4                     ; 0xe4 <__rc4>
+    cf93: 86 e5        	stx	$e5                     ; 0xe5 <__rc5>
+;         R01_CPU8(0x0201u + i) = R01_CPU8(0x8701u + i);
+    cf95: 18           	clc
+    cf96: 98           	tya
+    cf97: 69 00        	adc	#$0
+    cf99: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    cf9b: 8a           	txa
+    cf9c: 69 85        	adc	#$85
+    cf9e: 85 e7        	sta	$e7                     ; 0xe7 <__rc7>
+    cfa0: b2 e6        	lda	($e6)                   ; 0xe6 <__rc6>
+    cfa2: 92 e4        	sta	($e4)                   ; 0xe4 <__rc4>
+;     for (i = 0; i < lim; i++) {
+    cfa4: c8           	iny
+    cfa5: d0 01        	bne	$cfa8 <main+0x36>
+    cfa7: e8           	inx
+    cfa8: 98           	tya
+    cfa9: 38           	sec
+    cfaa: e5 e2        	sbc	$e2                     ; 0xe2 <__rc2>
+    cfac: c9 01        	cmp	#$1
+    cfae: d0 e1        	bne	$cf91 <main+0x1f>
+;         p[n] = 0;
+    cfb0: a2 00        	ldx	#$0
+    cfb2: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    cfb4: a2 03        	ldx	#$3
+    cfb6: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    cfb8: a2 a4        	ldx	#$a4
+    cfba: 64 e4        	stz	$e4                     ; 0xe4 <__rc4>
+    cfbc: a9 00        	lda	#$0
+    cfbe: 20 96 de     	jsr	$de96 <__memset>
+;     ctx->cam_deadzone_x = R01_CAM_DEADZONE_X_DEFAULT;
+    cfc1: a2 20        	ldx	#$20
+    cfc3: 8e 0a 03     	stx	$30a                    ; 0x30a <g_ctx+0xa>
+;     ctx->cam_deadzone_y = R01_CAM_DEADZONE_Y_DEFAULT;
+    cfc6: a2 1e        	ldx	#$1e
+    cfc8: 8e 0b 03     	stx	$30b                    ; 0x30b <g_ctx+0xb>
+    cfcb: a2 04        	ldx	#$4
+;     ctx->plat_gravity = R01_PLAT_GRAVITY_DEFAULT;
+    cfcd: 8e 11 03     	stx	$311                    ; 0x311 <g_ctx+0x11>
+;     ctx->plat_jump = R01_PLAT_JUMP_DEFAULT;
+    cfd0: 8e 12 03     	stx	$312                    ; 0x312 <g_ctx+0x12>
+;     ctx->plat_meter = R01_PLAT_METER_DEFAULT;
+    cfd3: a2 10        	ldx	#$10
+    cfd5: 8e 13 03     	stx	$313                    ; 0x313 <g_ctx+0x13>
+;     ctx->player_move_mul = 1;
+    cfd8: a2 01        	ldx	#$1
+    cfda: 8e 14 03     	stx	$314                    ; 0x314 <g_ctx+0x14>
+    cfdd: a2 0b        	ldx	#$b
+    cfdf: 64 f4        	stz	$f4                     ; 0xf4 <__rc20>
+;     ctx->player_crouch_state = 0xFFu;
+    cfe1: a0 16        	ldy	#$16
+    cfe3: 84 e2        	sty	$e2                     ; 0xe2 <__rc2>
+    cfe5: a0 03        	ldy	#$3
+    cfe7: 84 e3        	sty	$e3                     ; 0xe3 <__rc3>
+    cfe9: a9 ff        	lda	#$ff
+    cfeb: 64 e4        	stz	$e4                     ; 0xe4 <__rc4>
+    cfed: 20 96 de     	jsr	$de96 <__memset>
+;     n = R01_CPU8(R01_PLAY_INST_COUNT);
+    cff0: ae c0 81     	ldx	$81c0                   ; 0x81c0 <r01_boot_map+0xe0>
+    cff3: f0 17        	beq	$d00c <main+0x9a>
+;         ctx->player_x = (uint16_t)R01_CPU8(R01_PLAY_INST_TABLE + 2u) |
+    cff5: ae c3 81     	ldx	$81c3                   ; 0x81c3 <r01_boot_map+0xe3>
+;                         ((uint16_t)R01_CPU8(R01_PLAY_INST_TABLE + 3u) << 8);
+    cff8: ac c4 81     	ldy	$81c4                   ; 0x81c4 <r01_boot_map+0xe4>
+;         ctx->player_x = (uint16_t)R01_CPU8(R01_PLAY_INST_TABLE + 2u) |
+    cffb: 8e 00 03     	stx	$300                    ; 0x300 <g_ctx>
+    cffe: 8c 01 03     	sty	$301                    ; 0x301 <g_ctx+0x1>
+;         ctx->player_y = (uint16_t)R01_CPU8(R01_PLAY_INST_TABLE + 4u) |
+    d001: ae c5 81     	ldx	$81c5                   ; 0x81c5 <r01_boot_map+0xe5>
+    d004: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+;                         ((uint16_t)R01_CPU8(R01_PLAY_INST_TABLE + 5u) << 8);
+    d006: ad c6 81     	lda	$81c6                   ; 0x81c6 <r01_boot_map+0xe6>
+    d009: 4c 6f d0     	jmp	$d06f <main+0xfd>
+;         uint8_t cell = R01_CPU8(R01_PLAY_SPAWN_CELL);
+    d00c: ad 20 81     	lda	$8120                   ; 0x8120 <r01_boot_map+0x40>
+;         int row = (int)((cell >> 4) & 0x0Fu);
+    d00f: 4a           	lsr
+    d010: a2 01        	ldx	#$1
+    d012: b0 02        	bcs	$d016 <main+0xa4>
+    d014: a2 00        	ldx	#$0
+    d016: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+;         int row = (int)((cell >> 4) & 0x0Fu);
+    d018: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    d01a: aa           	tax
+    d01b: 46 e2        	lsr	$e2                     ; 0xe2 <__rc2>
+    d01d: 46 e2        	lsr	$e2                     ; 0xe2 <__rc2>
+    d01f: 46 e2        	lsr	$e2                     ; 0xe2 <__rc2>
+;         ctx->player_x = (uint16_t)(col * R01_SCREEN_PX_W + (R01_SCREEN_PX_W - R01_PLAY_PLAYER_W) / 2);
+    d021: a9 00        	lda	#$0
+    d023: a4 e3        	ldy	$e3                     ; 0xe3 <__rc3>
+    d025: c0 01        	cpy	#$1
+    d027: 6a           	ror
+    d028: 29 80        	and	#$80
+    d02a: a8           	tay
+    d02b: 8a           	txa
+    d02c: 29 07        	and	#$7
+    d02e: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    d030: 98           	tya
+    d031: 09 3c        	ora	#$3c
+    d033: 8d 00 03     	sta	$300                    ; 0x300 <g_ctx>
+    d036: a6 e3        	ldx	$e3                     ; 0xe3 <__rc3>
+    d038: 8e 01 03     	stx	$301                    ; 0x301 <g_ctx+0x1>
+;         ctx->player_y = (uint16_t)(row * R01_SCREEN_PX_H + (R01_SCREEN_PX_H - R01_PLAY_PLAYER_H) / 2);
+    d03b: 06 e2        	asl	$e2                     ; 0xe2 <__rc2>
+    d03d: 26 f4        	rol	$f4                     ; 0xf4 <__rc20>
+    d03f: 06 e2        	asl	$e2                     ; 0xe2 <__rc2>
+    d041: 26 f4        	rol	$f4                     ; 0xf4 <__rc20>
+    d043: 06 e2        	asl	$e2                     ; 0xe2 <__rc2>
+    d045: 26 f4        	rol	$f4                     ; 0xf4 <__rc20>
+    d047: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    d049: 0a           	asl
+    d04a: aa           	tax
+    d04b: a5 f4        	lda	$f4                     ; 0xf4 <__rc20>
+    d04d: 2a           	rol
+    d04e: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    d050: 06 e3        	asl	$e3                     ; 0xe3 <__rc3>
+    d052: 2a           	rol
+    d053: 06 e3        	asl	$e3                     ; 0xe3 <__rc3>
+    d055: 2a           	rol
+    d056: 06 e3        	asl	$e3                     ; 0xe3 <__rc3>
+    d058: 2a           	rol
+    d059: aa           	tax
+    d05a: 38           	sec
+    d05b: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    d05d: e5 e2        	sbc	$e2                     ; 0xe2 <__rc2>
+    d05f: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    d061: 8a           	txa
+    d062: e5 f4        	sbc	$f4                     ; 0xf4 <__rc20>
+    d064: aa           	tax
+    d065: 18           	clc
+    d066: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    d068: 69 38        	adc	#$38
+    d06a: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    d06c: 8a           	txa
+    d06d: 69 00        	adc	#$0
+    d06f: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+    d071: 8e 02 03     	stx	$302                    ; 0x302 <g_ctx+0x2>
+    d074: 8d 03 03     	sta	$303                    ; 0x303 <g_ctx+0x3>
+;     r01_game_on_init(&g_ctx);
+    d077: 20 ad dc     	jsr	$dcad <r01_game_on_init>
+;     cx = (int)ctx->cam_x;
+    d07a: ad 04 03     	lda	$304                    ; 0x304 <g_ctx+0x4>
+    d07d: ae 05 03     	ldx	$305                    ; 0x305 <g_ctx+0x5>
+    d080: 18           	clc
+    d081: 48           	pha
+    d082: a5 e0        	lda	$e0                     ; 0xe0 <__rc0>
+    d084: 69 0b        	adc	#$b
+    d086: 85 f4        	sta	$f4                     ; 0xf4 <__rc20>
+    d088: a5 e1        	lda	$e1                     ; 0xe1 <__rc1>
+    d08a: 69 00        	adc	#$0
+    d08c: 85 f5        	sta	$f5                     ; 0xf5 <__rc21>
+    d08e: 68           	pla
+;     cx = (int)ctx->cam_x;
+    d08f: 92 f4        	sta	($f4)                   ; 0xf4 <__rc20>
+    d091: a0 01        	ldy	#$1
+    d093: 8a           	txa
+    d094: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    d096: 91 f4        	sta	($f4),y                 ; 0xf4 <__rc20>
+;     cy = (int)ctx->cam_y;
+    d098: ad 06 03     	lda	$306                    ; 0x306 <g_ctx+0x6>
+    d09b: ae 07 03     	ldx	$307                    ; 0x307 <g_ctx+0x7>
+    d09e: 18           	clc
+    d09f: 48           	pha
+    d0a0: a5 e0        	lda	$e0                     ; 0xe0 <__rc0>
+    d0a2: 69 09        	adc	#$9
+    d0a4: 85 f6        	sta	$f6                     ; 0xf6 <__rc22>
+    d0a6: a5 e1        	lda	$e1                     ; 0xe1 <__rc1>
+    d0a8: 69 00        	adc	#$0
+    d0aa: 85 f7        	sta	$f7                     ; 0xf7 <__rc23>
+    d0ac: 68           	pla
+;     cy = (int)ctx->cam_y;
+    d0ad: 92 f6        	sta	($f6)                   ; 0xf6 <__rc22>
+    d0af: 8a           	txa
+    d0b0: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    d0b2: 91 f6        	sta	($f6),y                 ; 0xf6 <__rc22>
+;     r01_play_camera_snap(&cx, &cy, (int)ctx->player_x, (int)ctx->player_y, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H,
+    d0b4: ac 00 03     	ldy	$300                    ; 0x300 <g_ctx>
+    d0b7: ae 01 03     	ldx	$301                    ; 0x301 <g_ctx+0x1>
+;                          R01_SCREEN_PX_W, R01_SCREEN_PX_H, (int)ctx->cam_deadzone_x, (int)ctx->cam_deadzone_y,
+    d0ba: ad 0a 03     	lda	$30a                    ; 0x30a <g_ctx+0xa>
+    d0bd: 85 e8        	sta	$e8                     ; 0xe8 <__rc8>
+    d0bf: ad 0b 03     	lda	$30b                    ; 0x30b <g_ctx+0xb>
+    d0c2: 85 e9        	sta	$e9                     ; 0xe9 <__rc9>
+    d0c4: 84 e5        	sty	$e5                     ; 0xe5 <__rc5>
+    d0c6: 86 ee        	stx	$ee                     ; 0xee <__rc14>
+    d0c8: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    d0ca: a5 e8        	lda	$e8                     ; 0xe8 <__rc8>
+    d0cc: d0 0b        	bne	$d0d9 <main+0x167>
+    d0ce: 18           	clc
+;         ax = anchor_x + player_w / 2;
+    d0cf: 98           	tya
+    d0d0: 69 04        	adc	#$4
+    d0d2: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    d0d4: 8a           	txa
+    d0d5: 69 00        	adc	#$0
+    d0d7: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    d0d9: 84 ef        	sty	$ef                     ; 0xef <__rc15>
+    d0db: ac 02 03     	ldy	$302                    ; 0x302 <g_ctx+0x2>
+    d0de: ae 03 03     	ldx	$303                    ; 0x303 <g_ctx+0x3>
+    d0e1: ad 0c 03     	lda	$30c                    ; 0x30c <g_ctx+0xc>
+    d0e4: 85 ec        	sta	$ec                     ; 0xec <__rc12>
+    d0e6: 84 e6        	sty	$e6                     ; 0xe6 <__rc6>
+    d0e8: 86 e7        	stx	$e7                     ; 0xe7 <__rc7>
+    d0ea: 86 eb        	stx	$eb                     ; 0xeb <__rc11>
+    d0ec: a6 e9        	ldx	$e9                     ; 0xe9 <__rc9>
+    d0ee: 86 ea        	stx	$ea                     ; 0xea <__rc10>
+    d0f0: d0 0b        	bne	$d0fd <main+0x18b>
+    d0f2: 18           	clc
+;         ay = anchor_y + player_h / 2;
+    d0f3: 98           	tya
+    d0f4: 69 04        	adc	#$4
+    d0f6: a8           	tay
+    d0f7: a5 e7        	lda	$e7                     ; 0xe7 <__rc7>
+    d0f9: 69 00        	adc	#$0
+    d0fb: 85 eb        	sta	$eb                     ; 0xeb <__rc11>
+    d0fd: 84 e9        	sty	$e9                     ; 0xe9 <__rc9>
+    d0ff: a6 ec        	ldx	$ec                     ; 0xec <__rc12>
+    d101: e0 02        	cpx	#$2
+    d103: f0 1b        	beq	$d120 <main+0x1ae>
+;     target_x = ax - screen_w / 2;
+    d105: 18           	clc
+    d106: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
+    d108: 69 c0        	adc	#$c0
+    d10a: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    d10c: a5 e4        	lda	$e4                     ; 0xe4 <__rc4>
+    d10e: 69 ff        	adc	#$ff
+    d110: a8           	tay
+    d111: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+;         *cam_x = target_x;
+    d113: 92 f4        	sta	($f4)                   ; 0xf4 <__rc20>
+    d115: 98           	tya
+    d116: a0 01        	ldy	#$1
+    d118: 91 f4        	sta	($f4),y                 ; 0xf4 <__rc20>
+    d11a: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    d11c: e0 01        	cpx	#$1
+    d11e: f0 17        	beq	$d137 <main+0x1c5>
+    d120: a5 e9        	lda	$e9                     ; 0xe9 <__rc9>
+    d122: 18           	clc
+    d123: 69 c4        	adc	#$c4
+    d125: a8           	tay
+    d126: a5 eb        	lda	$eb                     ; 0xeb <__rc11>
+    d128: 69 ff        	adc	#$ff
+    d12a: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    d12c: 98           	tya
+;         *cam_y = target_y;
+    d12d: 92 f6        	sta	($f6)                   ; 0xf6 <__rc22>
+    d12f: a0 01        	ldy	#$1
+    d131: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    d133: 91 f6        	sta	($f6),y                 ; 0xf6 <__rc22>
+    d135: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    d137: aa           	tax
+    d138: 10 06        	bpl	$d140 <main+0x1ce>
+    d13a: a9 00        	lda	#$0
+;         *cam_x = 0;
+    d13c: 92 f4        	sta	($f4)                   ; 0xf4 <__rc20>
+    d13e: 91 f4        	sta	($f4),y                 ; 0xf4 <__rc20>
+    d140: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    d142: 10 06        	bpl	$d14a <main+0x1d8>
+    d144: a9 00        	lda	#$0
+;         *cam_y = 0;
+    d146: 92 f6        	sta	($f6)                   ; 0xf6 <__rc22>
+    d148: 91 f6        	sta	($f6),y                 ; 0xf6 <__rc22>
+;     r01_play_camera_update(cam_x, cam_y, anchor_x, anchor_y, player_w, player_h, screen_w, screen_h, deadzone_x,
+    d14a: a6 f4        	ldx	$f4                     ; 0xf4 <__rc20>
+    d14c: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    d14e: a6 f5        	ldx	$f5                     ; 0xf5 <__rc21>
+    d150: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    d152: a6 f6        	ldx	$f6                     ; 0xf6 <__rc22>
+    d154: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    d156: a6 f7        	ldx	$f7                     ; 0xf7 <__rc23>
+    d158: 86 e5        	stx	$e5                     ; 0xe5 <__rc5>
+    d15a: 64 e9        	stz	$e9                     ; 0xe9 <__rc9>
+    d15c: 64 eb        	stz	$eb                     ; 0xeb <__rc11>
+    d15e: 64 ed        	stz	$ed                     ; 0xed <__rc13>
+    d160: a6 ee        	ldx	$ee                     ; 0xee <__rc14>
+    d162: a5 ef        	lda	$ef                     ; 0xef <__rc15>
+    d164: 20 09 d8     	jsr	$d809 <r01_play_camera_update>
+;     ctx->cam_x = (uint16_t)cx;
+    d167: b2 f4        	lda	($f4)                   ; 0xf4 <__rc20>
+    d169: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    d16b: a0 01        	ldy	#$1
+    d16d: b1 f4        	lda	($f4),y                 ; 0xf4 <__rc20>
+    d16f: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+;     ctx->cam_x = (uint16_t)cx;
+    d171: 8e 04 03     	stx	$304                    ; 0x304 <g_ctx+0x4>
+    d174: 8d 05 03     	sta	$305                    ; 0x305 <g_ctx+0x5>
+;     ctx->cam_y = (uint16_t)cy;
+    d177: b2 f6        	lda	($f6)                   ; 0xf6 <__rc22>
+    d179: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    d17b: b1 f6        	lda	($f6),y                 ; 0xf6 <__rc22>
+    d17d: a6 e3        	ldx	$e3                     ; 0xe3 <__rc3>
+;     ctx->cam_y = (uint16_t)cy;
+    d17f: 8e 06 03     	stx	$306                    ; 0x306 <g_ctx+0x6>
+    d182: 8d 07 03     	sta	$307                    ; 0x307 <g_ctx+0x7>
+;     return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16);
+    d185: ad e0 80     	lda	$80e0                   ; 0x80e0 <r01_boot_map>
+    d188: ac e1 80     	ldy	$80e1                   ; 0x80e1 <r01_boot_map+0x1>
+    d18b: ae e2 80     	ldx	$80e2                   ; 0x80e2 <r01_boot_map+0x2>
+    d18e: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    d190: d0 1e        	bne	$d1b0 <main+0x23e>
+    d192: c0 00        	cpy	#$0
+    d194: d0 1a        	bne	$d1b0 <main+0x23e>
+    d196: c9 00        	cmp	#$0
+    d198: d0 16        	bne	$d1b0 <main+0x23e>
+;     return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16);
+    d19a: ad e4 80     	lda	$80e4                   ; 0x80e4 <r01_boot_map+0x4>
+;     if (off == 0u && u24(r01_boot_map + 3) == 0u && u24(r01_boot_map + 6) == 0u) {
+    d19d: 0d e3 80     	ora	$80e3                   ; 0x80e3 <r01_boot_map+0x3>
+    d1a0: 0d e5 80     	ora	$80e5                   ; 0x80e5 <r01_boot_map+0x5>
+    d1a3: d0 0b        	bne	$d1b0 <main+0x23e>
+;     return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16);
+    d1a5: ad e7 80     	lda	$80e7                   ; 0x80e7 <r01_boot_map+0x7>
+;     if (off == 0u && u24(r01_boot_map + 3) == 0u && u24(r01_boot_map + 6) == 0u) {
+    d1a8: 0d e6 80     	ora	$80e6                   ; 0x80e6 <r01_boot_map+0x6>
+    d1ab: 0d e8 80     	ora	$80e8                   ; 0x80e8 <r01_boot_map+0x8>
+    d1ae: f0 64        	beq	$d214 <main+0x2a2>
+    d1b0: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+;     *R01_MAP_LO = (uint8_t)(off & 0xFFu);
+    d1b2: 8d 90 7f     	sta	$7f90                   ; 0x7f90 <__heap_start+0x7bec>
+;     *R01_MAP_MID = (uint8_t)((off >> 8) & 0xFFu);
+    d1b5: 8c 91 7f     	sty	$7f91                   ; 0x7f91 <__heap_start+0x7bed>
+;     *R01_MAP_HI = (uint8_t)((off >> 16) & 0xFFu);
+    d1b8: 8e 92 7f     	stx	$7f92                   ; 0x7f92 <__heap_start+0x7bee>
+;     *R01_PAL_ROW = 0;
+    d1bb: 9c 08 7f     	stz	$7f08                   ; 0x7f08 <__heap_start+0x7b64>
+    d1be: a2 10        	ldx	#$10
+;     return *R01_MAP_DATA;
+    d1c0: ac 93 7f     	ldy	$7f93                   ; 0x7f93 <__heap_start+0x7bef>
+;         *R01_PAL_DATA = r01_map_read();
+    d1c3: 8c 09 7f     	sty	$7f09                   ; 0x7f09 <__heap_start+0x7b65>
+;     for (i = 0; i < 16u; i++) {
+    d1c6: ca           	dex
+    d1c7: d0 f7        	bne	$d1c0 <main+0x24e>
+;     return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16);
+    d1c9: ae e3 80     	ldx	$80e3                   ; 0x80e3 <r01_boot_map+0x3>
+    d1cc: ac e4 80     	ldy	$80e4                   ; 0x80e4 <r01_boot_map+0x4>
+    d1cf: ad e5 80     	lda	$80e5                   ; 0x80e5 <r01_boot_map+0x5>
+;     *R01_MAP_LO = (uint8_t)(off & 0xFFu);
+    d1d2: 8e 90 7f     	stx	$7f90                   ; 0x7f90 <__heap_start+0x7bec>
+;     *R01_MAP_MID = (uint8_t)((off >> 8) & 0xFFu);
+    d1d5: 8c 91 7f     	sty	$7f91                   ; 0x7f91 <__heap_start+0x7bed>
+;     *R01_MAP_HI = (uint8_t)((off >> 16) & 0xFFu);
+    d1d8: 8d 92 7f     	sta	$7f92                   ; 0x7f92 <__heap_start+0x7bee>
+    d1db: a2 10        	ldx	#$10
+;     return *R01_MAP_DATA;
+    d1dd: ac 93 7f     	ldy	$7f93                   ; 0x7f93 <__heap_start+0x7bef>
+;         *R01_PAL_DATA = r01_map_read();
+    d1e0: 8c 09 7f     	sty	$7f09                   ; 0x7f09 <__heap_start+0x7b65>
+;     for (i = 0; i < 16u; i++) {
+    d1e3: ca           	dex
+    d1e4: d0 f7        	bne	$d1dd <main+0x26b>
+;     return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16);
+    d1e6: ae e6 80     	ldx	$80e6                   ; 0x80e6 <r01_boot_map+0x6>
+    d1e9: ac e7 80     	ldy	$80e7                   ; 0x80e7 <r01_boot_map+0x7>
+    d1ec: ad e8 80     	lda	$80e8                   ; 0x80e8 <r01_boot_map+0x8>
+;     *R01_MAP_LO = (uint8_t)(off & 0xFFu);
+    d1ef: 8e 90 7f     	stx	$7f90                   ; 0x7f90 <__heap_start+0x7bec>
+;     *R01_MAP_MID = (uint8_t)((off >> 8) & 0xFFu);
+    d1f2: 8c 91 7f     	sty	$7f91                   ; 0x7f91 <__heap_start+0x7bed>
+;     *R01_MAP_HI = (uint8_t)((off >> 16) & 0xFFu);
+    d1f5: 8d 92 7f     	sta	$7f92                   ; 0x7f92 <__heap_start+0x7bee>
+;     *R01_VRAM_ADDR_LO = 0;
+    d1f8: 9c 10 7f     	stz	$7f10                   ; 0x7f10 <__heap_start+0x7b6c>
+;     *R01_VRAM_ADDR_HI = 0;
+    d1fb: 9c 11 7f     	stz	$7f11                   ; 0x7f11 <__heap_start+0x7b6d>
+    d1fe: a2 e0        	ldx	#$e0
+    d200: a0 01        	ldy	#$1
+;     return *R01_MAP_DATA;
+    d202: ad 93 7f     	lda	$7f93                   ; 0x7f93 <__heap_start+0x7bef>
+;         *R01_VRAM_DATA = r01_map_read();
+    d205: 8d 12 7f     	sta	$7f12                   ; 0x7f12 <__heap_start+0x7b6e>
+;     for (i = 0; i < 480u; i++) {
+    d208: ca           	dex
+    d209: e0 ff        	cpx	#$ff
+    d20b: d0 01        	bne	$d20e <main+0x29c>
+    d20d: 88           	dey
+    d20e: 98           	tya
+    d20f: d0 f1        	bne	$d202 <main+0x290>
+    d211: 8a           	txa
+    d212: d0 ee        	bne	$d202 <main+0x290>
+    d214: a2 00        	ldx	#$0
+    d216: 86 f4        	stx	$f4                     ; 0xf4 <__rc20>
+    d218: a2 03        	ldx	#$3
+    d21a: 86 f5        	stx	$f5                     ; 0xf5 <__rc21>
+    d21c: a2 00        	ldx	#$0
+    d21e: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    d220: a2 03        	ldx	#$3
+    d222: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+;     r01_sys_publish(&g_ctx);
+    d224: 20 4f c8     	jsr	$c84f <r01_sys_publish>
+    d227: a2 00        	ldx	#$0
+    d229: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    d22b: a2 03        	ldx	#$3
+    d22d: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+;     r01_game_draw_player(&g_ctx);
+    d22f: 20 17 c9     	jsr	$c917 <r01_game_draw_player>
+    d232: a2 01        	ldx	#$1
+    d234: 86 f9        	stx	$f9                     ; 0xf9 <__rc25>
+    d236: 64 f8        	stz	$f8                     ; 0xf8 <__rc24>
+;         r01_ppu_wait_vblank();
+    d238: 20 49 c8     	jsr	$c849 <r01_ppu_wait_vblank>
+;     ctx->pad_prev = ctx->pad;
+    d23b: ae 08 03     	ldx	$308                    ; 0x308 <g_ctx+0x8>
+    d23e: 8e 09 03     	stx	$309                    ; 0x309 <g_ctx+0x9>
+;     ctx->pad = *R01_PAD0;
+    d241: ae 60 7f     	ldx	$7f60                   ; 0x7f60 <__heap_start+0x7bbc>
+    d244: 8e 08 03     	stx	$308                    ; 0x308 <g_ctx+0x8>
+    d247: a6 f9        	ldx	$f9                     ; 0xf9 <__rc25>
+;         g_ctx.player_move_mul = 1;
+    d249: 8e 14 03     	stx	$314                    ; 0x314 <g_ctx+0x14>
+;         r01_game_on_tick(&g_ctx);
+    d24c: 20 07 dd     	jsr	$dd07 <r01_game_on_tick>
+;     if (!s_phys_ready) {
+    d24f: a5 00        	lda	$0                      ; 0x0 <s_phys_ready>
+    d251: 29 01        	and	#$1
+    d253: d0 33        	bne	$d288 <main+0x316>
+;     ph->mode = R01_GAME_MODE_TOPDOWN;
+    d255: 64 01        	stz	$1                      ; 0x1 <s_phys>
+    d257: 64 02        	stz	$2                      ; 0x2 <s_phys+0x1>
+    d259: a2 04        	ldx	#$4
+;     ph->gravity = R01_PLAT_GRAVITY_DEFAULT;
+    d25b: 86 03        	stx	$3                      ; 0x3 <s_phys+0x2>
+    d25d: 64 04        	stz	$4                      ; 0x4 <s_phys+0x3>
+;     ph->jump = R01_PLAT_JUMP_DEFAULT;
+    d25f: 86 05        	stx	$5                      ; 0x5 <s_phys+0x4>
+    d261: 64 06        	stz	$6                      ; 0x6 <s_phys+0x5>
+;     ph->fall_max = R01_PLAT_FALL_MAX_DEFAULT;
+    d263: 86 07        	stx	$7                      ; 0x7 <s_phys+0x6>
+    d265: 64 08        	stz	$8                      ; 0x8 <s_phys+0x7>
+    d267: a2 10        	ldx	#$10
+;     ph->meter = R01_PLAT_METER_DEFAULT;
+    d269: 86 09        	stx	$9                      ; 0x9 <s_phys+0x8>
+    d26b: 64 0a        	stz	$a                      ; 0xa <s_phys+0x9>
+;     ph->frac_x = 0;
+    d26d: a2 0b        	ldx	#$b
+    d26f: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    d271: a2 00        	ldx	#$0
+    d273: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    d275: 64 e4        	stz	$e4                     ; 0xe4 <__rc4>
+    d277: a2 0a        	ldx	#$a
+    d279: 64 f8        	stz	$f8                     ; 0xf8 <__rc24>
+    d27b: a9 00        	lda	#$0
+    d27d: 20 96 de     	jsr	$de96 <__memset>
+    d280: a2 01        	ldx	#$1
+;     ph->run_mul = 1;
+    d282: 86 15        	stx	$15                     ; 0x15 <s_phys+0x14>
+    d284: 64 16        	stz	$16                     ; 0x16 <s_phys+0x15>
+;         s_phys_ready = 1;
+    d286: 86 00        	stx	$0                      ; 0x0 <s_phys_ready>
+;     r01_play_physics_set_mode(&s_phys, (int)ctx->game_mode);
+    d288: ac 10 03     	ldy	$310                    ; 0x310 <g_ctx+0x10>
+;     if (mode != R01_GAME_MODE_PLATFORMER) {
+    d28b: a9 01        	lda	#$1
+    d28d: 64 e2        	stz	$e2                     ; 0xe2 <__rc2>
+    d28f: 48           	pha
+    d290: 3a           	dec
+    d291: 5a           	phy
+    d292: a0 06        	ldy	#$6
+    d294: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    d296: 7a           	ply
+    d297: aa           	tax
+    d298: 98           	tya
+    d299: 5a           	phy
+    d29a: a0 02        	ldy	#$2
+    d29c: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    d29e: 7a           	ply
+    d29f: 68           	pla
+    d2a0: c0 01        	cpy	#$1
+    d2a2: f0 14        	beq	$d2b8 <main+0x346>
+;     ph->frac_x = 0;
+    d2a4: a2 0b        	ldx	#$b
+    d2a6: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    d2a8: a2 00        	ldx	#$0
+    d2aa: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    d2ac: a9 00        	lda	#$0
+    d2ae: 64 e4        	stz	$e4                     ; 0xe4 <__rc4>
+    d2b0: a2 0a        	ldx	#$a
+    d2b2: 20 96 de     	jsr	$de96 <__memset>
+    d2b5: a9 00        	lda	#$0
+    d2b7: aa           	tax
+;     ph->mode = mode;
+    d2b8: 85 01        	sta	$1                      ; 0x1 <s_phys>
+    d2ba: 86 02        	stx	$2                      ; 0x2 <s_phys+0x1>
+;     r01_play_physics_set_gravity(&s_phys, (int)ctx->plat_gravity);
+    d2bc: ae 11 03     	ldx	$311                    ; 0x311 <g_ctx+0x11>
+    d2bf: a9 04        	lda	#$4
+    d2c1: e0 00        	cpx	#$0
+    d2c3: d0 02        	bne	$d2c7 <main+0x355>
+    d2c5: a2 04        	ldx	#$4
+    d2c7: 48           	pha
+    d2c8: 8a           	txa
+    d2c9: a0 01        	ldy	#$1
+    d2cb: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+;     ph->gravity = clamp_gravity(units);
+    d2cd: 86 03        	stx	$3                      ; 0x3 <s_phys+0x2>
+    d2cf: a0 06        	ldy	#$6
+    d2d1: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d2d3: aa           	tax
+    d2d4: 68           	pla
+    d2d5: 86 04        	stx	$4                      ; 0x4 <s_phys+0x3>
+;     r01_play_physics_set_jump(&s_phys, (int)ctx->plat_jump);
+    d2d7: ae 12 03     	ldx	$312                    ; 0x312 <g_ctx+0x12>
+;     if (v < 1) {
+    d2da: a0 00        	ldy	#$0
+    d2dc: e0 00        	cpx	#$0
+    d2de: f0 07        	beq	$d2e7 <main+0x375>
+    d2e0: e0 20        	cpx	#$20
+    d2e2: 90 02        	bcc	$d2e6 <main+0x374>
+    d2e4: a2 20        	ldx	#$20
+    d2e6: 8a           	txa
+;     ph->jump = clamp_jump(impulse);
+    d2e7: 85 05        	sta	$5                      ; 0x5 <s_phys+0x4>
+    d2e9: 84 06        	sty	$6                      ; 0x6 <s_phys+0x5>
+;     r01_play_physics_set_meter(&s_phys, (int)ctx->plat_meter);
+    d2eb: ae 13 03     	ldx	$313                    ; 0x313 <g_ctx+0x13>
+    d2ee: f0 08        	beq	$d2f8 <main+0x386>
+    d2f0: e0 40        	cpx	#$40
+    d2f2: 90 06        	bcc	$d2fa <main+0x388>
+    d2f4: a2 40        	ldx	#$40
+    d2f6: 80 02        	bra	$d2fa <main+0x388>
+    d2f8: a2 10        	ldx	#$10
+;     ph->meter = clamp_meter(px_per_meter);
+    d2fa: 86 09        	stx	$9                      ; 0x9 <s_phys+0x8>
+;     if (v < 1) {
+    d2fc: 64 fc        	stz	$fc                     ; 0xfc <__rc28>
+;     ph->meter = clamp_meter(px_per_meter);
+    d2fe: 84 0a        	sty	$a                      ; 0xa <s_phys+0x9>
+;     r01_play_physics_set_run_mul(&s_phys, (int)ctx->player_move_mul);
+    d300: ac 14 03     	ldy	$314                    ; 0x314 <g_ctx+0x14>
+    d303: 64 e4        	stz	$e4                     ; 0xe4 <__rc4>
+    d305: f0 0e        	beq	$d315 <main+0x3a3>
+    d307: 5a           	phy
+    d308: a0 00        	ldy	#$0
+    d30a: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    d30c: 7a           	ply
+;     if (mul > 2) {
+    d30d: c0 03        	cpy	#$3
+    d30f: 90 09        	bcc	$d31a <main+0x3a8>
+    d311: a0 02        	ldy	#$2
+    d313: 80 05        	bra	$d31a <main+0x3a8>
+    d315: a0 00        	ldy	#$0
+    d317: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    d319: c8           	iny
+    d31a: 84 e7        	sty	$e7                     ; 0xe7 <__rc7>
+;     ph->run_mul = mul;
+    d31c: 84 15        	sty	$15                     ; 0x15 <s_phys+0x14>
+    d31e: a0 00        	ldy	#$0
+    d320: 84 16        	sty	$16                     ; 0x16 <s_phys+0x15>
+;     if (ctx->pad & R01_PAD_RIGHT) {
+    d322: ad 08 03     	lda	$308                    ; 0x308 <g_ctx+0x8>
+    d325: 85 e8        	sta	$e8                     ; 0xe8 <__rc8>
+    d327: 29 01        	and	#$1
+    d329: d0 09        	bne	$d334 <main+0x3c2>
+    d32b: 98           	tya
+    d32c: 5a           	phy
+    d32d: a0 07        	ldy	#$7
+    d32f: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    d331: 7a           	ply
+    d332: 80 0d        	bra	$d341 <main+0x3cf>
+    d334: 8a           	txa
+    d335: a2 01        	ldx	#$1
+    d337: 48           	pha
+    d338: 8a           	txa
+    d339: 5a           	phy
+    d33a: a0 07        	ldy	#$7
+    d33c: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    d33e: 7a           	ply
+    d33f: 68           	pla
+    d340: aa           	tax
+    d341: a5 e8        	lda	$e8                     ; 0xe8 <__rc8>
+;     if (ctx->pad & R01_PAD_LEFT) {
+    d343: 29 02        	and	#$2
+    d345: 84 e6        	sty	$e6                     ; 0xe6 <__rc6>
+    d347: 48           	pha
+    d348: 98           	tya
+    d349: a0 08        	ldy	#$8
+    d34b: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    d34d: 68           	pla
+    d34e: f0 0e        	beq	$d35e <main+0x3ec>
+    d350: 8a           	txa
+    d351: a2 ff        	ldx	#$ff
+    d353: 48           	pha
+    d354: 8a           	txa
+    d355: a0 07        	ldy	#$7
+    d357: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    d359: c8           	iny
+    d35a: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    d35c: 68           	pla
+    d35d: aa           	tax
+    d35e: a5 e8        	lda	$e8                     ; 0xe8 <__rc8>
+;     if (ctx->pad & R01_PAD_DOWN) {
+    d360: 29 04        	and	#$4
+    d362: 64 e2        	stz	$e2                     ; 0xe2 <__rc2>
+    d364: 48           	pha
+    d365: a9 00        	lda	#$0
+    d367: a0 03        	ldy	#$3
+    d369: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    d36b: 68           	pla
+    d36c: d0 04        	bne	$d372 <main+0x400>
+    d36e: 64 ff        	stz	$ff                     ; 0xff <__rc31>
+    d370: 80 04        	bra	$d376 <main+0x404>
+    d372: a9 01        	lda	#$1
+    d374: 85 ff        	sta	$ff                     ; 0xff <__rc31>
+    d376: 86 fe        	stx	$fe                     ; 0xfe <__rc30>
+    d378: a5 e8        	lda	$e8                     ; 0xe8 <__rc8>
+;     if (ctx->pad & R01_PAD_UP) {
+    d37a: 29 08        	and	#$8
+    d37c: f0 09        	beq	$d387 <main+0x415>
+    d37e: a0 ff        	ldy	#$ff
+    d380: 84 ff        	sty	$ff                     ; 0xff <__rc31>
+    d382: 98           	tya
+    d383: a0 03        	ldy	#$3
+    d385: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    d387: a5 e8        	lda	$e8                     ; 0xe8 <__rc8>
+;     jump = (ctx->pad & R01_PAD_Y) != 0;
+    d389: 4a           	lsr
+    d38a: 4a           	lsr
+    d38b: 4a           	lsr
+    d38c: 4a           	lsr
+    d38d: 4a           	lsr
+    d38e: 85 fb        	sta	$fb                     ; 0xfb <__rc27>
+    d390: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    d392: 29 01        	and	#$1
+    d394: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+;     px = (int)ctx->player_x;
+    d396: ad 00 03     	lda	$300                    ; 0x300 <g_ctx>
+    d399: ae 01 03     	ldx	$301                    ; 0x301 <g_ctx+0x1>
+    d39c: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+;     py = (int)ctx->player_y;
+    d39e: ae 02 03     	ldx	$302                    ; 0x302 <g_ctx+0x2>
+    d3a1: 86 e8        	stx	$e8                     ; 0xe8 <__rc8>
+    d3a3: 18           	clc
+    d3a4: 48           	pha
+    d3a5: a5 e0        	lda	$e0                     ; 0xe0 <__rc0>
+    d3a7: 69 13        	adc	#$13
+    d3a9: 85 f6        	sta	$f6                     ; 0xf6 <__rc22>
+    d3ab: a5 e1        	lda	$e1                     ; 0xe1 <__rc1>
+    d3ad: 69 00        	adc	#$0
+    d3af: 85 f7        	sta	$f7                     ; 0xf7 <__rc23>
+    d3b1: 68           	pla
+    d3b2: ae 03 03     	ldx	$303                    ; 0x303 <g_ctx+0x3>
+;     x = *px;
+    d3b5: 92 f6        	sta	($f6)                   ; 0xf6 <__rc22>
+    d3b7: a0 01        	ldy	#$1
+    d3b9: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    d3bb: 91 f6        	sta	($f6),y                 ; 0xf6 <__rc22>
+    d3bd: 18           	clc
+    d3be: 5a           	phy
+    d3bf: a5 e0        	lda	$e0                     ; 0xe0 <__rc0>
+    d3c1: 69 11        	adc	#$11
+    d3c3: 85 f4        	sta	$f4                     ; 0xf4 <__rc20>
+    d3c5: a5 e1        	lda	$e1                     ; 0xe1 <__rc1>
+    d3c7: 69 00        	adc	#$0
+    d3c9: 85 f5        	sta	$f5                     ; 0xf5 <__rc21>
+    d3cb: a5 e8        	lda	$e8                     ; 0xe8 <__rc8>
+    d3cd: a0 05        	ldy	#$5
+    d3cf: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+;     y = *py;
+    d3d1: 92 f4        	sta	($f4)                   ; 0xf4 <__rc20>
+    d3d3: 8a           	txa
+    d3d4: 88           	dey
+    d3d5: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    d3d7: 7a           	ply
+    d3d8: 91 f4        	sta	($f4),y                 ; 0xf4 <__rc20>
+    d3da: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
+;     jump_down = jump_down ? 1 : 0;
+    d3dc: 29 01        	and	#$1
+    d3de: a0 00        	ldy	#$0
+    d3e0: a6 e7        	ldx	$e7                     ; 0xe7 <__rc7>
+    d3e2: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    d3e4: aa           	tax
+    d3e5: f0 0d        	beq	$d3f4 <main+0x482>
+;     jump_pressed = jump_down && !ph->jump_held;
+    d3e7: a5 14        	lda	$14                     ; 0x14 <s_phys+0x13>
+    d3e9: d0 09        	bne	$d3f4 <main+0x482>
+    d3eb: a5 13        	lda	$13                     ; 0x13 <s_phys+0x12>
+    d3ed: a0 01        	ldy	#$1
+    d3ef: aa           	tax
+    d3f0: f0 02        	beq	$d3f4 <main+0x482>
+    d3f2: a0 00        	ldy	#$0
+    d3f4: 84 f8        	sty	$f8                     ; 0xf8 <__rc24>
+    d3f6: a4 e4        	ldy	$e4                     ; 0xe4 <__rc4>
+;     ph->jump_held = jump_down;
+    d3f8: 84 13        	sty	$13                     ; 0x13 <s_phys+0x12>
+    d3fa: 64 14        	stz	$14                     ; 0x14 <s_phys+0x13>
+;     return (units * meter * R01_PHYS_ONE) / R01_PLAT_METER_DEFAULT;
+    d3fc: a5 fe        	lda	$fe                     ; 0xfe <__rc30>
+    d3fe: 0a           	asl
+;     if (v < 1) {
+    d3ff: 64 e4        	stz	$e4                     ; 0xe4 <__rc4>
+;     return (units * meter * R01_PHYS_ONE) / R01_PLAT_METER_DEFAULT;
+    d401: 26 e4        	rol	$e4                     ; 0xe4 <__rc4>
+    d403: 0a           	asl
+    d404: 26 e4        	rol	$e4                     ; 0xe4 <__rc4>
+    d406: 0a           	asl
+    d407: 26 e4        	rol	$e4                     ; 0xe4 <__rc4>
+    d409: 0a           	asl
+    d40a: 26 e4        	rol	$e4                     ; 0xe4 <__rc4>
+;         walk_fp = units_to_fp(1, ph->meter) * mul;
+    d40c: a6 e6        	ldx	$e6                     ; 0xe6 <__rc6>
+    d40e: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    d410: a6 e4        	ldx	$e4                     ; 0xe4 <__rc4>
+    d412: 86 fa        	stx	$fa                     ; 0xfa <__rc26>
+    d414: a6 e4        	ldx	$e4                     ; 0xe4 <__rc4>
+    d416: 85 fd        	sta	$fd                     ; 0xfd <__rc29>
+    d418: 20 b6 de     	jsr	$deb6 <__mulhi3>
+    d41b: 86 f9        	stx	$f9                     ; 0xf9 <__rc25>
+    d41d: 48           	pha
+    d41e: a0 02        	ldy	#$2
+    d420: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d422: aa           	tax
+    d423: 68           	pla
+    d424: e0 01        	cpx	#$1
+    d426: f0 03        	beq	$d42b <main+0x4b9>
+    d428: 4c c1 d4     	jmp	$d4c1 <main+0x54f>
+    d42b: 48           	pha
+    d42c: a5 fb        	lda	$fb                     ; 0xfb <__rc27>
+    d42e: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    d430: 68           	pla
+    d431: a0 03        	ldy	#$3
+    d433: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    d435: a0 01        	ldy	#$1
+    d437: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d439: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    d43b: a0 06        	ldy	#$6
+    d43d: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d43f: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+;     return (units * meter * R01_PHYS_ONE) / R01_PLAT_METER_DEFAULT;
+    d441: a6 fa        	ldx	$fa                     ; 0xfa <__rc26>
+    d443: a4 fa        	ldy	$fa                     ; 0xfa <__rc26>
+    d445: 84 fb        	sty	$fb                     ; 0xfb <__rc27>
+    d447: a5 fd        	lda	$fd                     ; 0xfd <__rc29>
+    d449: 20 b6 de     	jsr	$deb6 <__mulhi3>
+    d44c: 85 fa        	sta	$fa                     ; 0xfa <__rc26>
+    d44e: 86 ff        	stx	$ff                     ; 0xff <__rc31>
+    d450: a5 fd        	lda	$fd                     ; 0xfd <__rc29>
+    d452: 0a           	asl
+    d453: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    d455: a5 fb        	lda	$fb                     ; 0xfb <__rc27>
+    d457: 2a           	rol
+    d458: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    d45a: 38           	sec
+    d45b: a5 fd        	lda	$fd                     ; 0xfd <__rc29>
+    d45d: e5 e2        	sbc	$e2                     ; 0xe2 <__rc2>
+    d45f: a8           	tay
+    d460: a5 fb        	lda	$fb                     ; 0xfb <__rc27>
+    d462: e5 e3        	sbc	$e3                     ; 0xe3 <__rc3>
+    d464: 48           	pha
+    d465: 5a           	phy
+    d466: a0 00        	ldy	#$0
+    d468: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d46a: 7a           	ply
+    d46b: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    d46d: 68           	pla
+;     if (v < 1) {
+    d46e: 64 e3        	stz	$e3                     ; 0xe3 <__rc3>
+;     return (units * meter * R01_PHYS_ONE) / R01_PLAT_METER_DEFAULT;
+    d470: aa           	tax
+    d471: 98           	tya
+    d472: 20 b6 de     	jsr	$deb6 <__mulhi3>
+    d475: 85 fd        	sta	$fd                     ; 0xfd <__rc29>
+    d477: 86 fb        	stx	$fb                     ; 0xfb <__rc27>
+;         fall_max_fp = units_to_fp(ph->fall_max, ph->meter);
+    d479: a6 07        	ldx	$7                      ; 0x7 <s_phys+0x6>
+    d47b: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    d47d: a5 08        	lda	$8                      ; 0x8 <s_phys+0x7>
+;     return (units * meter * R01_PHYS_ONE) / R01_PLAT_METER_DEFAULT;
+    d47f: 06 e2        	asl	$e2                     ; 0xe2 <__rc2>
+    d481: 2a           	rol
+    d482: 06 e2        	asl	$e2                     ; 0xe2 <__rc2>
+    d484: 2a           	rol
+    d485: 06 e2        	asl	$e2                     ; 0xe2 <__rc2>
+    d487: 2a           	rol
+    d488: 06 e2        	asl	$e2                     ; 0xe2 <__rc2>
+    d48a: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
+    d48c: 2a           	rol
+    d48d: a6 fe        	ldx	$fe                     ; 0xfe <__rc30>
+    d48f: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+;     if (v < 1) {
+    d491: 64 e3        	stz	$e3                     ; 0xe3 <__rc3>
+;     return (units * meter * R01_PHYS_ONE) / R01_PLAT_METER_DEFAULT;
+    d493: aa           	tax
+    d494: 98           	tya
+    d495: 20 b6 de     	jsr	$deb6 <__mulhi3>
+    d498: a8           	tay
+    d499: 86 e5        	stx	$e5                     ; 0xe5 <__rc5>
+    d49b: a5 f8        	lda	$f8                     ; 0xf8 <__rc24>
+    d49d: d0 03        	bne	$d4a2 <main+0x530>
+    d49f: 4c 7f d5     	jmp	$d57f <main+0x60d>
+;         if (jump_pressed && ph->grounded) {
+    d4a2: a6 11        	ldx	$11                     ; 0x11 <s_phys+0x10>
+    d4a4: a5 12        	lda	$12                     ; 0x12 <s_phys+0x11>
+    d4a6: d0 06        	bne	$d4ae <main+0x53c>
+    d4a8: 8a           	txa
+    d4a9: d0 03        	bne	$d4ae <main+0x53c>
+    d4ab: 4c 7f d5     	jmp	$d57f <main+0x60d>
+    d4ae: a6 fd        	ldx	$fd                     ; 0xfd <__rc29>
+;             ph->vel_y = -jump_fp;
+    d4b0: 86 0b        	stx	$b                      ; 0xb <s_phys+0xa>
+    d4b2: a6 fb        	ldx	$fb                     ; 0xfb <__rc27>
+    d4b4: 86 0c        	stx	$c                      ; 0xc <s_phys+0xb>
+;             ph->grounded = 0;
+    d4b6: 64 11        	stz	$11                     ; 0x11 <s_phys+0x10>
+    d4b8: 64 12        	stz	$12                     ; 0x12 <s_phys+0x11>
+;             ph->frac_y = 0;
+    d4ba: 64 0f        	stz	$f                      ; 0xf <s_phys+0xe>
+    d4bc: 64 10        	stz	$10                     ; 0x10 <s_phys+0xf>
+    d4be: 4c 14 d6     	jmp	$d614 <main+0x6a2>
+    d4c1: 48           	pha
+    d4c2: a0 07        	ldy	#$7
+    d4c4: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d4c6: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    d4c8: c8           	iny
+    d4c9: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d4cb: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    d4cd: 68           	pla
+;         (void)integrate_axis(&x, &ph->frac_x, walk_fp * in_dx, y, 1, move_ok, ctx);
+    d4ce: a6 f9        	ldx	$f9                     ; 0xf9 <__rc25>
+    d4d0: a4 f9        	ldy	$f9                     ; 0xf9 <__rc25>
+    d4d2: 84 f8        	sty	$f8                     ; 0xf8 <__rc24>
+    d4d4: 85 f9        	sta	$f9                     ; 0xf9 <__rc25>
+;         (void)integrate_axis(&x, &ph->frac_x, walk_fp * in_dx, y, 1, move_ok, ctx);
+    d4d6: 20 b6 de     	jsr	$deb6 <__mulhi3>
+    d4d9: a4 f6        	ldy	$f6                     ; 0xf6 <__rc22>
+    d4db: 84 e2        	sty	$e2                     ; 0xe2 <__rc2>
+    d4dd: a4 f7        	ldy	$f7                     ; 0xf7 <__rc23>
+    d4df: 84 e3        	sty	$e3                     ; 0xe3 <__rc3>
+    d4e1: a0 0d        	ldy	#$d
+    d4e3: 84 e4        	sty	$e4                     ; 0xe4 <__rc4>
+    d4e5: a0 00        	ldy	#$0
+    d4e7: 84 e5        	sty	$e5                     ; 0xe5 <__rc5>
+    d4e9: a0 d9        	ldy	#$d9
+    d4eb: 84 fa        	sty	$fa                     ; 0xfa <__rc26>
+    d4ed: a0 ca        	ldy	#$ca
+    d4ef: 84 fb        	sty	$fb                     ; 0xfb <__rc27>
+    d4f1: a0 d9        	ldy	#$d9
+    d4f3: 84 ea        	sty	$ea                     ; 0xea <__rc10>
+    d4f5: a0 ca        	ldy	#$ca
+    d4f7: 84 eb        	sty	$eb                     ; 0xeb <__rc11>
+    d4f9: a0 00        	ldy	#$0
+    d4fb: 84 fc        	sty	$fc                     ; 0xfc <__rc28>
+    d4fd: a0 03        	ldy	#$3
+    d4ff: 84 fd        	sty	$fd                     ; 0xfd <__rc29>
+    d501: a0 00        	ldy	#$0
+    d503: 84 ec        	sty	$ec                     ; 0xec <__rc12>
+    d505: a0 03        	ldy	#$3
+    d507: 84 ed        	sty	$ed                     ; 0xed <__rc13>
+    d509: 48           	pha
+    d50a: a0 05        	ldy	#$5
+    d50c: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d50e: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    d510: 88           	dey
+    d511: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d513: 85 e7        	sta	$e7                     ; 0xe7 <__rc7>
+    d515: 68           	pla
+    d516: a0 01        	ldy	#$1
+    d518: 84 e8        	sty	$e8                     ; 0xe8 <__rc8>
+    d51a: 64 e9        	stz	$e9                     ; 0xe9 <__rc9>
+    d51c: 20 9b da     	jsr	$da9b <integrate_axis>
+    d51f: a6 ff        	ldx	$ff                     ; 0xff <__rc31>
+    d521: 86 fe        	stx	$fe                     ; 0xfe <__rc30>
+;         (void)integrate_axis(&y, &ph->frac_y, walk_fp * in_dy, x, 0, move_ok, ctx);
+    d523: a6 ff        	ldx	$ff                     ; 0xff <__rc31>
+    d525: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    d527: a0 03        	ldy	#$3
+    d529: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d52b: 85 ff        	sta	$ff                     ; 0xff <__rc31>
+    d52d: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    d52f: a6 f8        	ldx	$f8                     ; 0xf8 <__rc24>
+    d531: a5 f9        	lda	$f9                     ; 0xf9 <__rc25>
+    d533: 20 b6 de     	jsr	$deb6 <__mulhi3>
+    d536: 85 ee        	sta	$ee                     ; 0xee <__rc14>
+    d538: b2 f6        	lda	($f6)                   ; 0xf6 <__rc22>
+    d53a: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    d53c: a0 01        	ldy	#$1
+    d53e: b1 f6        	lda	($f6),y                 ; 0xf6 <__rc22>
+    d540: a4 f4        	ldy	$f4                     ; 0xf4 <__rc20>
+    d542: 84 e2        	sty	$e2                     ; 0xe2 <__rc2>
+    d544: a4 f5        	ldy	$f5                     ; 0xf5 <__rc21>
+    d546: 84 e3        	sty	$e3                     ; 0xe3 <__rc3>
+    d548: a0 0f        	ldy	#$f
+    d54a: 84 e4        	sty	$e4                     ; 0xe4 <__rc4>
+    d54c: a0 00        	ldy	#$0
+    d54e: 84 e5        	sty	$e5                     ; 0xe5 <__rc5>
+    d550: a0 d9        	ldy	#$d9
+    d552: 84 ea        	sty	$ea                     ; 0xea <__rc10>
+    d554: a0 ca        	ldy	#$ca
+    d556: 84 eb        	sty	$eb                     ; 0xeb <__rc11>
+    d558: a0 00        	ldy	#$0
+    d55a: 84 ec        	sty	$ec                     ; 0xec <__rc12>
+    d55c: a0 03        	ldy	#$3
+    d55e: 84 ed        	sty	$ed                     ; 0xed <__rc13>
+    d560: a4 e6        	ldy	$e6                     ; 0xe6 <__rc6>
+    d562: 84 f6        	sty	$f6                     ; 0xf6 <__rc22>
+    d564: 85 f7        	sta	$f7                     ; 0xf7 <__rc23>
+    d566: 85 e7        	sta	$e7                     ; 0xe7 <__rc7>
+    d568: 64 e8        	stz	$e8                     ; 0xe8 <__rc8>
+    d56a: 64 f9        	stz	$f9                     ; 0xf9 <__rc25>
+    d56c: 64 e9        	stz	$e9                     ; 0xe9 <__rc9>
+    d56e: a5 ee        	lda	$ee                     ; 0xee <__rc14>
+    d570: 20 9b da     	jsr	$da9b <integrate_axis>
+    d573: a5 ff        	lda	$ff                     ; 0xff <__rc31>
+    d575: d0 45        	bne	$d5bc <main+0x64a>
+    d577: a0 01        	ldy	#$1
+    d579: a5 fe        	lda	$fe                     ; 0xfe <__rc30>
+    d57b: d0 41        	bne	$d5be <main+0x64c>
+    d57d: 80 43        	bra	$d5c2 <main+0x650>
+;             if (ph->vel_y < 0 && !jump_down) {
+    d57f: a6 0c        	ldx	$c                      ; 0xc <s_phys+0xb>
+    d581: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    d583: a2 00        	ldx	#$0
+    d585: 5a           	phy
+    d586: a0 02        	ldy	#$2
+    d588: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d58a: 7a           	ply
+    d58b: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    d58d: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    d58f: 30 02        	bmi	$d593 <main+0x621>
+    d591: a2 01        	ldx	#$1
+    d593: 86 e7        	stx	$e7                     ; 0xe7 <__rc7>
+    d595: a5 ff        	lda	$ff                     ; 0xff <__rc31>
+    d597: c9 80        	cmp	#$80
+    d599: 6a           	ror
+    d59a: 66 fa        	ror	$fa                     ; 0xfa <__rc26>
+    d59c: c9 80        	cmp	#$80
+    d59e: 6a           	ror
+    d59f: 66 fa        	ror	$fa                     ; 0xfa <__rc26>
+    d5a1: c9 80        	cmp	#$80
+    d5a3: 6a           	ror
+    d5a4: 66 fa        	ror	$fa                     ; 0xfa <__rc26>
+    d5a6: c9 80        	cmp	#$80
+    d5a8: 6a           	ror
+    d5a9: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    d5ab: 66 fa        	ror	$fa                     ; 0xfa <__rc26>
+;             if (ph->vel_y < 0 && !jump_down) {
+    d5ad: a6 0b        	ldx	$b                      ; 0xb <s_phys+0xa>
+    d5af: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    d5b1: a5 e7        	lda	$e7                     ; 0xe7 <__rc7>
+    d5b3: 05 e6        	ora	$e6                     ; 0xe6 <__rc6>
+    d5b5: 29 01        	and	#$1
+    d5b7: f0 16        	beq	$d5cf <main+0x65d>
+    d5b9: 18           	clc
+    d5ba: 80 34        	bra	$d5f0 <main+0x67e>
+    d5bc: a0 01        	ldy	#$1
+    d5be: a2 01        	ldx	#$1
+    d5c0: 86 f9        	stx	$f9                     ; 0xf9 <__rc25>
+    d5c2: b2 f4        	lda	($f4)                   ; 0xf4 <__rc20>
+    d5c4: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    d5c6: b1 f4        	lda	($f4),y                 ; 0xf4 <__rc20>
+    d5c8: 85 f8        	sta	$f8                     ; 0xf8 <__rc24>
+    d5ca: a5 f6        	lda	$f6                     ; 0xf6 <__rc22>
+    d5cc: 4c 0a d7     	jmp	$d70a <main+0x798>
+;                 g = gravity_fp * R01_PLAT_JUMP_RELEASE_MUL;
+    d5cf: a5 fa        	lda	$fa                     ; 0xfa <__rc26>
+    d5d1: 0a           	asl
+    d5d2: aa           	tax
+    d5d3: a5 e4        	lda	$e4                     ; 0xe4 <__rc4>
+    d5d5: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    d5d7: 26 e6        	rol	$e6                     ; 0xe6 <__rc6>
+    d5d9: a9 00        	lda	#$0
+    d5db: 85 e7        	sta	$e7                     ; 0xe7 <__rc7>
+    d5dd: 8a           	txa
+    d5de: a6 e7        	ldx	$e7                     ; 0xe7 <__rc7>
+    d5e0: e0 01        	cpx	#$1
+    d5e2: 65 fa        	adc	$fa                     ; 0xfa <__rc26>
+    d5e4: 85 fa        	sta	$fa                     ; 0xfa <__rc26>
+    d5e6: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    d5e8: 65 e4        	adc	$e4                     ; 0xe4 <__rc4>
+    d5ea: a6 e7        	ldx	$e7                     ; 0xe7 <__rc7>
+    d5ec: e0 01        	cpx	#$1
+    d5ee: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    d5f0: a5 fa        	lda	$fa                     ; 0xfa <__rc26>
+;             ph->vel_y += g;
+    d5f2: 65 e3        	adc	$e3                     ; 0xe3 <__rc3>
+    d5f4: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    d5f6: aa           	tax
+    d5f7: a5 e4        	lda	$e4                     ; 0xe4 <__rc4>
+    d5f9: 65 e2        	adc	$e2                     ; 0xe2 <__rc2>
+    d5fb: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    d5fd: 86 0b        	stx	$b                      ; 0xb <s_phys+0xa>
+    d5ff: 85 0c        	sta	$c                      ; 0xc <s_phys+0xb>
+;             if (ph->vel_y > fall_max_fp) {
+    d601: c4 e3        	cpy	$e3                     ; 0xe3 <__rc3>
+    d603: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
+    d605: e5 e2        	sbc	$e2                     ; 0xe2 <__rc2>
+    d607: 50 02        	bvc	$d60b <main+0x699>
+    d609: 49 80        	eor	#$80
+    d60b: aa           	tax
+    d60c: 10 06        	bpl	$d614 <main+0x6a2>
+;                 ph->vel_y = fall_max_fp;
+    d60e: 84 0b        	sty	$b                      ; 0xb <s_phys+0xa>
+    d610: a6 e5        	ldx	$e5                     ; 0xe5 <__rc5>
+    d612: 86 0c        	stx	$c                      ; 0xc <s_phys+0xb>
+    d614: a0 07        	ldy	#$7
+    d616: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d618: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    d61a: c8           	iny
+    d61b: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d61d: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+;         (void)integrate_axis(&x, &ph->frac_x, walk_fp * in_dx, y, 1, move_ok, ctx);
+    d61f: a6 f9        	ldx	$f9                     ; 0xf9 <__rc25>
+    d621: a0 03        	ldy	#$3
+    d623: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d625: 20 b6 de     	jsr	$deb6 <__mulhi3>
+    d628: a4 f6        	ldy	$f6                     ; 0xf6 <__rc22>
+    d62a: 84 e2        	sty	$e2                     ; 0xe2 <__rc2>
+    d62c: a4 f7        	ldy	$f7                     ; 0xf7 <__rc23>
+    d62e: 84 e3        	sty	$e3                     ; 0xe3 <__rc3>
+    d630: a0 0d        	ldy	#$d
+    d632: 84 e4        	sty	$e4                     ; 0xe4 <__rc4>
+    d634: a0 00        	ldy	#$0
+    d636: 84 e5        	sty	$e5                     ; 0xe5 <__rc5>
+    d638: a0 d9        	ldy	#$d9
+    d63a: 84 f8        	sty	$f8                     ; 0xf8 <__rc24>
+    d63c: a0 ca        	ldy	#$ca
+    d63e: 84 f9        	sty	$f9                     ; 0xf9 <__rc25>
+    d640: a0 d9        	ldy	#$d9
+    d642: 84 ea        	sty	$ea                     ; 0xea <__rc10>
+    d644: a0 ca        	ldy	#$ca
+    d646: 84 eb        	sty	$eb                     ; 0xeb <__rc11>
+    d648: a0 00        	ldy	#$0
+    d64a: 84 fa        	sty	$fa                     ; 0xfa <__rc26>
+    d64c: a0 03        	ldy	#$3
+    d64e: 84 fb        	sty	$fb                     ; 0xfb <__rc27>
+    d650: a0 00        	ldy	#$0
+    d652: 84 ec        	sty	$ec                     ; 0xec <__rc12>
+    d654: a0 03        	ldy	#$3
+    d656: 84 ed        	sty	$ed                     ; 0xed <__rc13>
+    d658: 48           	pha
+    d659: a0 05        	ldy	#$5
+    d65b: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d65d: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    d65f: 88           	dey
+    d660: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d662: 85 e7        	sta	$e7                     ; 0xe7 <__rc7>
+    d664: 68           	pla
+    d665: a0 01        	ldy	#$1
+    d667: 84 fc        	sty	$fc                     ; 0xfc <__rc28>
+;         (void)integrate_axis(&x, &ph->frac_x, walk_fp * in_dx, y, 1, move_ok, ctx);
+    d669: 84 e8        	sty	$e8                     ; 0xe8 <__rc8>
+    d66b: 64 e9        	stz	$e9                     ; 0xe9 <__rc9>
+    d66d: 20 9b da     	jsr	$da9b <integrate_axis>
+;         if (!integrate_axis(&y, &ph->frac_y, ph->vel_y, x, 0, move_ok, ctx)) {
+    d670: a6 0b        	ldx	$b                      ; 0xb <s_phys+0xa>
+    d672: 86 ee        	stx	$ee                     ; 0xee <__rc14>
+    d674: a6 0c        	ldx	$c                      ; 0xc <s_phys+0xb>
+    d676: b2 f6        	lda	($f6)                   ; 0xf6 <__rc22>
+    d678: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    d67a: a4 fc        	ldy	$fc                     ; 0xfc <__rc28>
+    d67c: b1 f6        	lda	($f6),y                 ; 0xf6 <__rc22>
+    d67e: a4 f4        	ldy	$f4                     ; 0xf4 <__rc20>
+    d680: 84 e2        	sty	$e2                     ; 0xe2 <__rc2>
+    d682: a4 f5        	ldy	$f5                     ; 0xf5 <__rc21>
+    d684: 84 e3        	sty	$e3                     ; 0xe3 <__rc3>
+    d686: a0 0f        	ldy	#$f
+    d688: 84 e4        	sty	$e4                     ; 0xe4 <__rc4>
+    d68a: a0 00        	ldy	#$0
+    d68c: 84 e5        	sty	$e5                     ; 0xe5 <__rc5>
+    d68e: a0 d9        	ldy	#$d9
+    d690: 84 ea        	sty	$ea                     ; 0xea <__rc10>
+    d692: a0 ca        	ldy	#$ca
+    d694: 84 eb        	sty	$eb                     ; 0xeb <__rc11>
+    d696: a0 00        	ldy	#$0
+    d698: 84 ec        	sty	$ec                     ; 0xec <__rc12>
+    d69a: a0 03        	ldy	#$3
+    d69c: 84 ed        	sty	$ed                     ; 0xed <__rc13>
+    d69e: a4 e6        	ldy	$e6                     ; 0xe6 <__rc6>
+    d6a0: 84 f9        	sty	$f9                     ; 0xf9 <__rc25>
+    d6a2: 85 f7        	sta	$f7                     ; 0xf7 <__rc23>
+    d6a4: 85 e7        	sta	$e7                     ; 0xe7 <__rc7>
+    d6a6: 64 e8        	stz	$e8                     ; 0xe8 <__rc8>
+    d6a8: 64 e9        	stz	$e9                     ; 0xe9 <__rc9>
+    d6aa: a5 ee        	lda	$ee                     ; 0xee <__rc14>
+    d6ac: 20 9b da     	jsr	$da9b <integrate_axis>
+    d6af: e0 00        	cpx	#$0
+    d6b1: d0 07        	bne	$d6ba <main+0x748>
+    d6b3: aa           	tax
+    d6b4: d0 04        	bne	$d6ba <main+0x748>
+;             ph->vel_y = 0;
+    d6b6: 64 0b        	stz	$b                      ; 0xb <s_phys+0xa>
+    d6b8: 64 0c        	stz	$c                      ; 0xc <s_phys+0xb>
+;         ph->grounded = !move_ok(ctx, x, y + 1);
+    d6ba: b2 f4        	lda	($f4)                   ; 0xf4 <__rc20>
+    d6bc: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    d6be: a2 01        	ldx	#$1
+    d6c0: 86 f6        	stx	$f6                     ; 0xf6 <__rc22>
+    d6c2: a4 fc        	ldy	$fc                     ; 0xfc <__rc28>
+    d6c4: b1 f4        	lda	($f4),y                 ; 0xf4 <__rc20>
+    d6c6: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
+    d6c8: 84 f5        	sty	$f5                     ; 0xf5 <__rc21>
+;         ph->grounded = !move_ok(ctx, x, y + 1);
+    d6ca: 84 e4        	sty	$e4                     ; 0xe4 <__rc4>
+    d6cc: 85 f8        	sta	$f8                     ; 0xf8 <__rc24>
+    d6ce: e6 e4        	inc	$e4                     ; 0xe4 <__rc4>
+    d6d0: d0 01        	bne	$d6d3 <main+0x761>
+    d6d2: 1a           	inc
+    d6d3: a2 00        	ldx	#$0
+    d6d5: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    d6d7: a2 03        	ldx	#$3
+    d6d9: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    d6db: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    d6dd: a6 f7        	ldx	$f7                     ; 0xf7 <__rc23>
+    d6df: a5 f9        	lda	$f9                     ; 0xf9 <__rc25>
+    d6e1: 85 f4        	sta	$f4                     ; 0xf4 <__rc20>
+    d6e3: 20 d9 ca     	jsr	$cad9 <move_ok_cart>
+    d6e6: a0 06        	ldy	#$6
+    d6e8: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    d6ea: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+;         ph->grounded = !move_ok(ctx, x, y + 1);
+    d6ec: 49 01        	eor	#$1
+    d6ee: 85 11        	sta	$11                     ; 0x11 <s_phys+0x10>
+    d6f0: 86 12        	stx	$12                     ; 0x12 <s_phys+0x11>
+    d6f2: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d6f4: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    d6f6: 8a           	txa
+    d6f7: d0 07        	bne	$d700 <main+0x78e>
+    d6f9: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    d6fb: d0 03        	bne	$d700 <main+0x78e>
+    d6fd: 4c eb d7     	jmp	$d7eb <main+0x879>
+    d700: 64 f9        	stz	$f9                     ; 0xf9 <__rc25>
+    d702: a4 f6        	ldy	$f6                     ; 0xf6 <__rc22>
+    d704: a5 f4        	lda	$f4                     ; 0xf4 <__rc20>
+    d706: a6 f5        	ldx	$f5                     ; 0xf5 <__rc21>
+    d708: 86 e6        	stx	$e6                     ; 0xe6 <__rc6>
+;     ctx->player_x = (uint16_t)px;
+    d70a: 8d 00 03     	sta	$300                    ; 0x300 <g_ctx>
+    d70d: a6 f7        	ldx	$f7                     ; 0xf7 <__rc23>
+    d70f: 86 ee        	stx	$ee                     ; 0xee <__rc14>
+    d711: 8e 01 03     	stx	$301                    ; 0x301 <g_ctx+0x1>
+    d714: a6 e6        	ldx	$e6                     ; 0xe6 <__rc6>
+;     ctx->player_y = (uint16_t)py;
+    d716: 8e 02 03     	stx	$302                    ; 0x302 <g_ctx+0x2>
+    d719: a6 f8        	ldx	$f8                     ; 0xf8 <__rc24>
+    d71b: 8e 03 03     	stx	$303                    ; 0x303 <g_ctx+0x3>
+    d71e: a2 01        	ldx	#$1
+    d720: 48           	pha
+    d721: 5a           	phy
+    d722: a0 08        	ldy	#$8
+    d724: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d726: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    d728: 88           	dey
+    d729: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    d72b: 7a           	ply
+    d72c: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    d72e: 68           	pla
+    d72f: 85 ef        	sta	$ef                     ; 0xef <__rc15>
+    d731: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    d733: d0 06        	bne	$d73b <main+0x7c9>
+    d735: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    d737: d0 02        	bne	$d73b <main+0x7c9>
+    d739: a6 f9        	ldx	$f9                     ; 0xf9 <__rc25>
+;     ctx->player_anim_moving = (uint8_t)((adx != 0) || (ady != 0));
+    d73b: 8e 21 03     	stx	$321                    ; 0x321 <g_ctx+0x21>
+;     cx = (int)ctx->cam_x;
+    d73e: ad 04 03     	lda	$304                    ; 0x304 <g_ctx+0x4>
+    d741: ae 05 03     	ldx	$305                    ; 0x305 <g_ctx+0x5>
+    d744: 18           	clc
+    d745: 48           	pha
+    d746: a5 e0        	lda	$e0                     ; 0xe0 <__rc0>
+    d748: 69 0f        	adc	#$f
+    d74a: 85 f4        	sta	$f4                     ; 0xf4 <__rc20>
+    d74c: a5 e1        	lda	$e1                     ; 0xe1 <__rc1>
+    d74e: 69 00        	adc	#$0
+    d750: 85 f5        	sta	$f5                     ; 0xf5 <__rc21>
+    d752: 68           	pla
+;     cx = (int)ctx->cam_x;
+    d753: 92 f4        	sta	($f4)                   ; 0xf4 <__rc20>
+    d755: 8a           	txa
+    d756: 91 f4        	sta	($f4),y                 ; 0xf4 <__rc20>
+;     cy = (int)ctx->cam_y;
+    d758: ad 06 03     	lda	$306                    ; 0x306 <g_ctx+0x6>
+    d75b: ae 07 03     	ldx	$307                    ; 0x307 <g_ctx+0x7>
+    d75e: 18           	clc
+    d75f: 48           	pha
+    d760: a5 e0        	lda	$e0                     ; 0xe0 <__rc0>
+    d762: 69 0d        	adc	#$d
+    d764: 85 f6        	sta	$f6                     ; 0xf6 <__rc22>
+    d766: a5 e1        	lda	$e1                     ; 0xe1 <__rc1>
+    d768: 69 00        	adc	#$0
+    d76a: 85 f7        	sta	$f7                     ; 0xf7 <__rc23>
+    d76c: 68           	pla
+;     cy = (int)ctx->cam_y;
+    d76d: 92 f6        	sta	($f6)                   ; 0xf6 <__rc22>
+    d76f: 8a           	txa
+    d770: 91 f6        	sta	($f6),y                 ; 0xf6 <__rc22>
+;                            (int)ctx->cam_deadzone_x, (int)ctx->cam_deadzone_y, (int)ctx->cam_axis_lock);
+    d772: ae 0a 03     	ldx	$30a                    ; 0x30a <g_ctx+0xa>
+    d775: 84 f9        	sty	$f9                     ; 0xf9 <__rc25>
+    d777: ad 0b 03     	lda	$30b                    ; 0x30b <g_ctx+0xb>
+    d77a: ac 0c 03     	ldy	$30c                    ; 0x30c <g_ctx+0xc>
+    d77d: 48           	pha
+;     r01_play_camera_update(&cx, &cy, px, py, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H, R01_SCREEN_PX_W, R01_SCREEN_PX_H,
+    d77e: a5 f4        	lda	$f4                     ; 0xf4 <__rc20>
+    d780: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    d782: a5 f5        	lda	$f5                     ; 0xf5 <__rc21>
+    d784: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    d786: a5 f6        	lda	$f6                     ; 0xf6 <__rc22>
+    d788: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    d78a: a5 f7        	lda	$f7                     ; 0xf7 <__rc23>
+    d78c: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    d78e: a5 f8        	lda	$f8                     ; 0xf8 <__rc24>
+    d790: 85 e7        	sta	$e7                     ; 0xe7 <__rc7>
+    d792: 68           	pla
+    d793: 86 e8        	stx	$e8                     ; 0xe8 <__rc8>
+    d795: 85 ea        	sta	$ea                     ; 0xea <__rc10>
+    d797: 84 ec        	sty	$ec                     ; 0xec <__rc12>
+    d799: 64 e9        	stz	$e9                     ; 0xe9 <__rc9>
+    d79b: 64 eb        	stz	$eb                     ; 0xeb <__rc11>
+    d79d: 64 f8        	stz	$f8                     ; 0xf8 <__rc24>
+    d79f: 64 ed        	stz	$ed                     ; 0xed <__rc13>
+    d7a1: a6 ee        	ldx	$ee                     ; 0xee <__rc14>
+    d7a3: a5 ef        	lda	$ef                     ; 0xef <__rc15>
+    d7a5: 20 09 d8     	jsr	$d809 <r01_play_camera_update>
+;     ctx->cam_x = (uint16_t)cx;
+    d7a8: b2 f4        	lda	($f4)                   ; 0xf4 <__rc20>
+    d7aa: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    d7ac: a4 f9        	ldy	$f9                     ; 0xf9 <__rc25>
+    d7ae: b1 f4        	lda	($f4),y                 ; 0xf4 <__rc20>
+    d7b0: a6 e3        	ldx	$e3                     ; 0xe3 <__rc3>
+;     ctx->cam_x = (uint16_t)cx;
+    d7b2: 8e 04 03     	stx	$304                    ; 0x304 <g_ctx+0x4>
+    d7b5: 8d 05 03     	sta	$305                    ; 0x305 <g_ctx+0x5>
+;     ctx->cam_y = (uint16_t)cy;
+    d7b8: b2 f6        	lda	($f6)                   ; 0xf6 <__rc22>
+    d7ba: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    d7bc: a2 01        	ldx	#$1
+    d7be: 86 f9        	stx	$f9                     ; 0xf9 <__rc25>
+    d7c0: b1 f6        	lda	($f6),y                 ; 0xf6 <__rc22>
+    d7c2: a6 e3        	ldx	$e3                     ; 0xe3 <__rc3>
+;     ctx->cam_y = (uint16_t)cy;
+    d7c4: 8e 06 03     	stx	$306                    ; 0x306 <g_ctx+0x6>
+    d7c7: 8d 07 03     	sta	$307                    ; 0x307 <g_ctx+0x7>
+    d7ca: a2 00        	ldx	#$0
+    d7cc: 86 f4        	stx	$f4                     ; 0xf4 <__rc20>
+    d7ce: a2 03        	ldx	#$3
+    d7d0: 86 f5        	stx	$f5                     ; 0xf5 <__rc21>
+    d7d2: a2 00        	ldx	#$0
+    d7d4: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    d7d6: a2 03        	ldx	#$3
+    d7d8: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+;     r01_sys_publish(ctx);
+    d7da: 20 4f c8     	jsr	$c84f <r01_sys_publish>
+    d7dd: a2 00        	ldx	#$0
+    d7df: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    d7e1: a2 03        	ldx	#$3
+    d7e3: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+;     r01_game_draw_player(ctx);
+    d7e5: 20 17 c9     	jsr	$c917 <r01_game_draw_player>
+    d7e8: 4c 38 d2     	jmp	$d238 <main+0x2c6>
+;         if (ph->grounded && ph->vel_y > 0) {
+    d7eb: a6 0b        	ldx	$b                      ; 0xb <s_phys+0xa>
+    d7ed: a5 0c        	lda	$c                      ; 0xc <s_phys+0xb>
+    d7ef: e0 01        	cpx	#$1
+    d7f1: e9 00        	sbc	#$0
+    d7f3: 50 02        	bvc	$d7f7 <main+0x885>
+    d7f5: 49 80        	eor	#$80
+    d7f7: a4 f6        	ldy	$f6                     ; 0xf6 <__rc22>
+    d7f9: aa           	tax
+    d7fa: 30 08        	bmi	$d804 <main+0x892>
+;             ph->vel_y = 0;
+    d7fc: 64 0b        	stz	$b                      ; 0xb <s_phys+0xa>
+    d7fe: 64 0c        	stz	$c                      ; 0xc <s_phys+0xb>
+;             ph->frac_y = 0;
+    d800: 64 0f        	stz	$f                      ; 0xf <s_phys+0xe>
+    d802: 64 10        	stz	$10                     ; 0x10 <s_phys+0xf>
+    d804: 64 f9        	stz	$f9                     ; 0xf9 <__rc25>
+    d806: 4c 04 d7     	jmp	$d704 <main+0x792>
+
+0000d809 <r01_play_camera_update>:
+;                             int screen_w, int screen_h, int deadzone_x, int deadzone_y, int axis_lock) {
+    d809: 86 f2        	stx	$f2                     ; 0xf2 <__rc18>
+    d80b: a6 e6        	ldx	$e6                     ; 0xe6 <__rc6>
+    d80d: 86 18        	stx	$18                     ; 0x18 <__zp_bss_size+0x1>
+    d80f: a6 e7        	ldx	$e7                     ; 0xe7 <__rc7>
+    d811: 86 17        	stx	$17                     ; 0x17 <__zp_bss_size>
+    d813: a6 ed        	ldx	$ed                     ; 0xed <__rc13>
+    d815: a4 e9        	ldy	$e9                     ; 0xe9 <__rc9>
+    d817: d0 07        	bne	$d820 <r01_play_camera_update+0x17>
+    d819: a4 e8        	ldy	$e8                     ; 0xe8 <__rc8>
+    d81b: d0 03        	bne	$d820 <r01_play_camera_update+0x17>
+    d81d: 4c d0 d8     	jmp	$d8d0 <r01_play_camera_update+0xc7>
+    d820: 85 f3        	sta	$f3                     ; 0xf3 <__rc19>
+    d822: a5 eb        	lda	$eb                     ; 0xeb <__rc11>
+    d824: d0 11        	bne	$d837 <r01_play_camera_update+0x2e>
+    d826: a5 ea        	lda	$ea                     ; 0xea <__rc10>
+    d828: d0 0d        	bne	$d837 <r01_play_camera_update+0x2e>
+    d82a: 18           	clc
+    d82b: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+;         ay = anchor_y + player_h / 2;
+    d82d: 69 04        	adc	#$4
+    d82f: 85 18        	sta	$18                     ; 0x18 <__zp_bss_size+0x1>
+    d831: a5 e7        	lda	$e7                     ; 0xe7 <__rc7>
+    d833: 69 00        	adc	#$0
+    d835: 85 17        	sta	$17                     ; 0x17 <__zp_bss_size>
+    d837: a5 f3        	lda	$f3                     ; 0xf3 <__rc19>
+    d839: e0 00        	cpx	#$0
+    d83b: d0 09        	bne	$d846 <r01_play_camera_update+0x3d>
+    d83d: a4 ec        	ldy	$ec                     ; 0xec <__rc12>
+    d83f: c0 02        	cpy	#$2
+    d841: d0 03        	bne	$d846 <r01_play_camera_update+0x3d>
+    d843: 4c 7b d9     	jmp	$d97b <r01_play_camera_update+0x172>
+    d846: a4 e9        	ldy	$e9                     ; 0xe9 <__rc9>
+    d848: d0 07        	bne	$d851 <r01_play_camera_update+0x48>
+    d84a: a4 e8        	ldy	$e8                     ; 0xe8 <__rc8>
+    d84c: d0 03        	bne	$d851 <r01_play_camera_update+0x48>
+    d84e: 4c de d8     	jmp	$d8de <r01_play_camera_update+0xd5>
+    d851: a4 e9        	ldy	$e9                     ; 0xe9 <__rc9>
+    d853: d0 09        	bne	$d85e <r01_play_camera_update+0x55>
+;             if (deadzone_x < screen_w) {
+    d855: a4 e8        	ldy	$e8                     ; 0xe8 <__rc8>
+    d857: c0 80        	cpy	#$80
+    d859: 90 0c        	bcc	$d867 <r01_play_camera_update+0x5e>
+    d85b: 4c 6f d9     	jmp	$d96f <r01_play_camera_update+0x166>
+;             if (deadzone_x < screen_w) {
+    d85e: a4 e9        	ldy	$e9                     ; 0xe9 <__rc9>
+    d860: c0 00        	cpy	#$0
+    d862: 90 03        	bcc	$d867 <r01_play_camera_update+0x5e>
+    d864: 4c 6f d9     	jmp	$d96f <r01_play_camera_update+0x166>
+    d867: a4 17        	ldy	$17                     ; 0x17 <__zp_bss_size>
+    d869: 84 1a        	sty	$1a                     ; 0x1a <__zp_bss_size+0x3>
+    d86b: a0 01        	ldy	#$1
+;                 int sx = ax - *cam_x;
+    d86d: 38           	sec
+    d86e: f2 e2        	sbc	($e2)                   ; 0xe2 <__rc2>
+    d870: 85 ef        	sta	$ef                     ; 0xef <__rc15>
+    d872: a5 f2        	lda	$f2                     ; 0xf2 <__rc18>
+    d874: f1 e2        	sbc	($e2),y                 ; 0xe2 <__rc2>
+    d876: 85 19        	sta	$19                     ; 0x19 <__zp_bss_size+0x2>
+;         left = (screen_w - dz_w) / 2;
+    d878: a9 80        	lda	#$80
+    d87a: 38           	sec
+    d87b: e5 e8        	sbc	$e8                     ; 0xe8 <__rc8>
+    d87d: 85 17        	sta	$17                     ; 0x17 <__zp_bss_size>
+    d87f: a9 00        	lda	#$0
+    d881: e5 e9        	sbc	$e9                     ; 0xe9 <__rc9>
+    d883: 4a           	lsr
+    d884: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    d886: a4 17        	ldy	$17                     ; 0x17 <__zp_bss_size>
+    d888: 84 ed        	sty	$ed                     ; 0xed <__rc13>
+    d88a: 66 ed        	ror	$ed                     ; 0xed <__rc13>
+    d88c: 18           	clc
+;         right = left + dz_w - 1;
+    d88d: a5 ed        	lda	$ed                     ; 0xed <__rc13>
+    d88f: 65 e8        	adc	$e8                     ; 0xe8 <__rc8>
+    d891: 85 e7        	sta	$e7                     ; 0xe7 <__rc7>
+    d893: a4 e6        	ldy	$e6                     ; 0xe6 <__rc6>
+    d895: 84 ee        	sty	$ee                     ; 0xee <__rc14>
+    d897: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    d899: 65 e9        	adc	$e9                     ; 0xe9 <__rc9>
+    d89b: a4 e7        	ldy	$e7                     ; 0xe7 <__rc7>
+    d89d: 84 1b        	sty	$1b                     ; 0x1b <__zp_bss_size+0x4>
+    d89f: 85 1c        	sta	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    d8a1: a0 ff        	ldy	#$ff
+    d8a3: c6 e7        	dec	$e7                     ; 0xe7 <__rc7>
+    d8a5: c4 e7        	cpy	$e7                     ; 0xe7 <__rc7>
+    d8a7: d0 01        	bne	$d8aa <r01_play_camera_update+0xa1>
+    d8a9: 3a           	dec
+    d8aa: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    d8ac: a5 17        	lda	$17                     ; 0x17 <__zp_bss_size>
+;     if (((*lo) & 1) != (center & 1) && *lo < *hi) {
+    d8ae: 29 02        	and	#$2
+    d8b0: d0 0e        	bne	$d8c0 <r01_play_camera_update+0xb7>
+    d8b2: a4 ed        	ldy	$ed                     ; 0xed <__rc13>
+    d8b4: 84 e8        	sty	$e8                     ; 0xe8 <__rc8>
+    d8b6: a4 ee        	ldy	$ee                     ; 0xee <__rc14>
+    d8b8: 84 e9        	sty	$e9                     ; 0xe9 <__rc9>
+    d8ba: a4 19        	ldy	$19                     ; 0x19 <__zp_bss_size+0x2>
+    d8bc: 84 ed        	sty	$ed                     ; 0xed <__rc13>
+    d8be: 80 38        	bra	$d8f8 <r01_play_camera_update+0xef>
+    d8c0: a4 ed        	ldy	$ed                     ; 0xed <__rc13>
+    d8c2: 84 e8        	sty	$e8                     ; 0xe8 <__rc8>
+    d8c4: a5 ee        	lda	$ee                     ; 0xee <__rc14>
+    d8c6: c5 e6        	cmp	$e6                     ; 0xe6 <__rc6>
+    d8c8: d0 1f        	bne	$d8e9 <r01_play_camera_update+0xe0>
+    d8ca: a4 ed        	ldy	$ed                     ; 0xed <__rc13>
+;     if (((*lo) & 1) != (center & 1) && *lo < *hi) {
+    d8cc: c4 e7        	cpy	$e7                     ; 0xe7 <__rc7>
+    d8ce: 80 1b        	bra	$d8eb <r01_play_camera_update+0xe2>
+    d8d0: 18           	clc
+;         ax = anchor_x + player_w / 2;
+    d8d1: 69 04        	adc	#$4
+    d8d3: 85 f3        	sta	$f3                     ; 0xf3 <__rc19>
+    d8d5: a5 f2        	lda	$f2                     ; 0xf2 <__rc18>
+    d8d7: 69 00        	adc	#$0
+    d8d9: 85 f2        	sta	$f2                     ; 0xf2 <__rc18>
+    d8db: 4c 22 d8     	jmp	$d822 <r01_play_camera_update+0x19>
+    d8de: 18           	clc
+    d8df: 69 c0        	adc	#$c0
+    d8e1: a8           	tay
+    d8e2: a5 f2        	lda	$f2                     ; 0xf2 <__rc18>
+    d8e4: 69 ff        	adc	#$ff
+    d8e6: 4c 64 d9     	jmp	$d964 <r01_play_camera_update+0x15b>
+;     if (((*lo) & 1) != (center & 1) && *lo < *hi) {
+    d8e9: c5 e6        	cmp	$e6                     ; 0xe6 <__rc6>
+    d8eb: a4 19        	ldy	$19                     ; 0x19 <__zp_bss_size+0x2>
+    d8ed: 84 ed        	sty	$ed                     ; 0xed <__rc13>
+    d8ef: b0 05        	bcs	$d8f6 <r01_play_camera_update+0xed>
+;         (*lo)++;
+    d8f1: e6 e8        	inc	$e8                     ; 0xe8 <__rc8>
+    d8f3: d0 01        	bne	$d8f6 <r01_play_camera_update+0xed>
+    d8f5: 1a           	inc
+    d8f6: 85 e9        	sta	$e9                     ; 0xe9 <__rc9>
+    d8f8: a4 ef        	ldy	$ef                     ; 0xef <__rc15>
+    d8fa: 84 ee        	sty	$ee                     ; 0xee <__rc14>
+;     if (((*hi) & 1) != (center & 1) && *hi > *lo) {
+    d8fc: a5 e7        	lda	$e7                     ; 0xe7 <__rc7>
+    d8fe: 29 01        	and	#$1
+    d900: d0 06        	bne	$d908 <r01_play_camera_update+0xff>
+    d902: a4 1a        	ldy	$1a                     ; 0x1a <__zp_bss_size+0x3>
+    d904: 84 17        	sty	$17                     ; 0x17 <__zp_bss_size>
+    d906: 80 23        	bra	$d92b <r01_play_camera_update+0x122>
+;     if (((*hi) & 1) != (center & 1) && *hi > *lo) {
+    d908: a4 e9        	ldy	$e9                     ; 0xe9 <__rc9>
+    d90a: c4 e6        	cpy	$e6                     ; 0xe6 <__rc6>
+    d90c: d0 06        	bne	$d914 <r01_play_camera_update+0x10b>
+    d90e: a4 e8        	ldy	$e8                     ; 0xe8 <__rc8>
+    d910: c4 e7        	cpy	$e7                     ; 0xe7 <__rc7>
+    d912: 80 04        	bra	$d918 <r01_play_camera_update+0x10f>
+    d914: a4 e9        	ldy	$e9                     ; 0xe9 <__rc9>
+    d916: c4 e6        	cpy	$e6                     ; 0xe6 <__rc6>
+    d918: a4 1a        	ldy	$1a                     ; 0x1a <__zp_bss_size+0x3>
+    d91a: 84 17        	sty	$17                     ; 0x17 <__zp_bss_size>
+    d91c: b0 0d        	bcs	$d92b <r01_play_camera_update+0x122>
+    d91e: 18           	clc
+    d91f: a5 1b        	lda	$1b                     ; 0x1b <__zp_bss_size+0x4>
+;         (*hi)--;
+    d921: 69 fe        	adc	#$fe
+    d923: 85 e7        	sta	$e7                     ; 0xe7 <__rc7>
+    d925: a5 1c        	lda	$1c                     ; 0x1c <__zp_bss_size+0x5>
+    d927: 69 ff        	adc	#$ff
+    d929: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    d92b: a4 ef        	ldy	$ef                     ; 0xef <__rc15>
+;                 if (sx < left) {
+    d92d: c4 e8        	cpy	$e8                     ; 0xe8 <__rc8>
+    d92f: a5 19        	lda	$19                     ; 0x19 <__zp_bss_size+0x2>
+    d931: e5 e9        	sbc	$e9                     ; 0xe9 <__rc9>
+    d933: 50 02        	bvc	$d937 <r01_play_camera_update+0x12e>
+    d935: 49 80        	eor	#$80
+    d937: a8           	tay
+    d938: 10 0c        	bpl	$d946 <r01_play_camera_update+0x13d>
+    d93a: 38           	sec
+    d93b: a5 f3        	lda	$f3                     ; 0xf3 <__rc19>
+;                     *cam_x = ax - left;
+    d93d: e5 e8        	sbc	$e8                     ; 0xe8 <__rc8>
+    d93f: a8           	tay
+    d940: a5 f2        	lda	$f2                     ; 0xf2 <__rc18>
+    d942: e5 e9        	sbc	$e9                     ; 0xe9 <__rc9>
+    d944: 80 1e        	bra	$d964 <r01_play_camera_update+0x15b>
+;                 } else if (sx > right) {
+    d946: a4 e6        	ldy	$e6                     ; 0xe6 <__rc6>
+    d948: c4 ed        	cpy	$ed                     ; 0xed <__rc13>
+    d94a: d0 08        	bne	$d954 <r01_play_camera_update+0x14b>
+    d94c: a4 e7        	ldy	$e7                     ; 0xe7 <__rc7>
+    d94e: c4 ee        	cpy	$ee                     ; 0xee <__rc14>
+    d950: 90 08        	bcc	$d95a <r01_play_camera_update+0x151>
+    d952: 80 1b        	bra	$d96f <r01_play_camera_update+0x166>
+    d954: a4 e6        	ldy	$e6                     ; 0xe6 <__rc6>
+    d956: c4 ed        	cpy	$ed                     ; 0xed <__rc13>
+    d958: b0 15        	bcs	$d96f <r01_play_camera_update+0x166>
+    d95a: 38           	sec
+    d95b: a5 f3        	lda	$f3                     ; 0xf3 <__rc19>
+;                     *cam_x = ax - right;
+    d95d: e5 e7        	sbc	$e7                     ; 0xe7 <__rc7>
+    d95f: a8           	tay
+    d960: a5 f2        	lda	$f2                     ; 0xf2 <__rc18>
+    d962: e5 e6        	sbc	$e6                     ; 0xe6 <__rc6>
+    d964: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    d966: 98           	tya
+    d967: 92 e2        	sta	($e2)                   ; 0xe2 <__rc2>
+    d969: a0 01        	ldy	#$1
+    d96b: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    d96d: 91 e2        	sta	($e2),y                 ; 0xe2 <__rc2>
+    d96f: 8a           	txa
+    d970: d0 09        	bne	$d97b <r01_play_camera_update+0x172>
+    d972: a6 ec        	ldx	$ec                     ; 0xec <__rc12>
+    d974: e0 01        	cpx	#$1
+    d976: d0 03        	bne	$d97b <r01_play_camera_update+0x172>
+    d978: 4c 83 da     	jmp	$da83 <r01_play_camera_update+0x27a>
+    d97b: a5 eb        	lda	$eb                     ; 0xeb <__rc11>
+    d97d: d0 07        	bne	$d986 <r01_play_camera_update+0x17d>
+    d97f: a5 ea        	lda	$ea                     ; 0xea <__rc10>
+    d981: d0 03        	bne	$d986 <r01_play_camera_update+0x17d>
+    d983: 4c f7 d9     	jmp	$d9f7 <r01_play_camera_update+0x1ee>
+    d986: a5 eb        	lda	$eb                     ; 0xeb <__rc11>
+    d988: d0 09        	bne	$d993 <r01_play_camera_update+0x18a>
+;             if (deadzone_y < screen_h) {
+    d98a: a6 ea        	ldx	$ea                     ; 0xea <__rc10>
+    d98c: e0 78        	cpx	#$78
+    d98e: 90 0c        	bcc	$d99c <r01_play_camera_update+0x193>
+    d990: 4c 83 da     	jmp	$da83 <r01_play_camera_update+0x27a>
+;             if (deadzone_y < screen_h) {
+    d993: a6 eb        	ldx	$eb                     ; 0xeb <__rc11>
+    d995: e0 00        	cpx	#$0
+    d997: 90 03        	bcc	$d99c <r01_play_camera_update+0x193>
+    d999: 4c 83 da     	jmp	$da83 <r01_play_camera_update+0x27a>
+    d99c: a0 01        	ldy	#$1
+;                 int sy = ay - *cam_y;
+    d99e: 38           	sec
+    d99f: a5 18        	lda	$18                     ; 0x18 <__zp_bss_size+0x1>
+    d9a1: f2 e4        	sbc	($e4)                   ; 0xe4 <__rc4>
+    d9a3: 85 ed        	sta	$ed                     ; 0xed <__rc13>
+    d9a5: a6 17        	ldx	$17                     ; 0x17 <__zp_bss_size>
+    d9a7: 86 ec        	stx	$ec                     ; 0xec <__rc12>
+    d9a9: a5 17        	lda	$17                     ; 0x17 <__zp_bss_size>
+    d9ab: f1 e4        	sbc	($e4),y                 ; 0xe4 <__rc4>
+    d9ad: a8           	tay
+;         top = (screen_h - dz_h) / 2;
+    d9ae: a9 78        	lda	#$78
+    d9b0: 38           	sec
+    d9b1: e5 ea        	sbc	$ea                     ; 0xea <__rc10>
+    d9b3: 85 f2        	sta	$f2                     ; 0xf2 <__rc18>
+    d9b5: a9 00        	lda	#$0
+    d9b7: e5 eb        	sbc	$eb                     ; 0xeb <__rc11>
+    d9b9: 4a           	lsr
+    d9ba: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    d9bc: a6 f2        	ldx	$f2                     ; 0xf2 <__rc18>
+    d9be: 86 e8        	stx	$e8                     ; 0xe8 <__rc8>
+    d9c0: 66 e8        	ror	$e8                     ; 0xe8 <__rc8>
+    d9c2: 18           	clc
+;         bottom = top + dz_h - 1;
+    d9c3: a5 e8        	lda	$e8                     ; 0xe8 <__rc8>
+    d9c5: 65 ea        	adc	$ea                     ; 0xea <__rc10>
+    d9c7: aa           	tax
+    d9c8: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    d9ca: 85 e9        	sta	$e9                     ; 0xe9 <__rc9>
+    d9cc: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    d9ce: 65 eb        	adc	$eb                     ; 0xeb <__rc11>
+    d9d0: 85 ef        	sta	$ef                     ; 0xef <__rc15>
+    d9d2: 86 ee        	stx	$ee                     ; 0xee <__rc14>
+    d9d4: 86 e7        	stx	$e7                     ; 0xe7 <__rc7>
+    d9d6: a2 ff        	ldx	#$ff
+    d9d8: c6 e7        	dec	$e7                     ; 0xe7 <__rc7>
+    d9da: e4 e7        	cpx	$e7                     ; 0xe7 <__rc7>
+    d9dc: d0 01        	bne	$d9df <r01_play_camera_update+0x1d6>
+    d9de: 3a           	dec
+    d9df: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    d9e1: a5 f2        	lda	$f2                     ; 0xf2 <__rc18>
+;     if (((*lo) & 1) != (center & 1) && *lo < *hi) {
+    d9e3: 29 02        	and	#$2
+    d9e5: d0 04        	bne	$d9eb <r01_play_camera_update+0x1e2>
+    d9e7: 84 eb        	sty	$eb                     ; 0xeb <__rc11>
+    d9e9: 80 27        	bra	$da12 <r01_play_camera_update+0x209>
+    d9eb: a5 e8        	lda	$e8                     ; 0xe8 <__rc8>
+    d9ed: a6 e9        	ldx	$e9                     ; 0xe9 <__rc9>
+    d9ef: e4 e6        	cpx	$e6                     ; 0xe6 <__rc6>
+    d9f1: d0 11        	bne	$da04 <r01_play_camera_update+0x1fb>
+;     if (((*lo) & 1) != (center & 1) && *lo < *hi) {
+    d9f3: c5 e7        	cmp	$e7                     ; 0xe7 <__rc7>
+    d9f5: 80 0f        	bra	$da06 <r01_play_camera_update+0x1fd>
+    d9f7: 18           	clc
+    d9f8: a5 18        	lda	$18                     ; 0x18 <__zp_bss_size+0x1>
+    d9fa: 69 c4        	adc	#$c4
+    d9fc: aa           	tax
+    d9fd: a5 17        	lda	$17                     ; 0x17 <__zp_bss_size>
+    d9ff: 69 ff        	adc	#$ff
+    da01: 4c 78 da     	jmp	$da78 <r01_play_camera_update+0x26f>
+;     if (((*lo) & 1) != (center & 1) && *lo < *hi) {
+    da04: e4 e6        	cpx	$e6                     ; 0xe6 <__rc6>
+    da06: 84 eb        	sty	$eb                     ; 0xeb <__rc11>
+    da08: b0 04        	bcs	$da0e <r01_play_camera_update+0x205>
+;         (*lo)++;
+    da0a: 1a           	inc
+    da0b: d0 01        	bne	$da0e <r01_play_camera_update+0x205>
+    da0d: e8           	inx
+    da0e: 85 e8        	sta	$e8                     ; 0xe8 <__rc8>
+    da10: 86 e9        	stx	$e9                     ; 0xe9 <__rc9>
+    da12: a6 ed        	ldx	$ed                     ; 0xed <__rc13>
+    da14: 86 ea        	stx	$ea                     ; 0xea <__rc10>
+;     if (((*hi) & 1) != (center & 1) && *hi > *lo) {
+    da16: a5 e7        	lda	$e7                     ; 0xe7 <__rc7>
+    da18: 29 01        	and	#$1
+    da1a: d0 03        	bne	$da1f <r01_play_camera_update+0x216>
+    da1c: 98           	tya
+    da1d: 80 22        	bra	$da41 <r01_play_camera_update+0x238>
+;     if (((*hi) & 1) != (center & 1) && *hi > *lo) {
+    da1f: a6 e9        	ldx	$e9                     ; 0xe9 <__rc9>
+    da21: e4 e6        	cpx	$e6                     ; 0xe6 <__rc6>
+    da23: d0 06        	bne	$da2b <r01_play_camera_update+0x222>
+    da25: a6 e8        	ldx	$e8                     ; 0xe8 <__rc8>
+    da27: e4 e7        	cpx	$e7                     ; 0xe7 <__rc7>
+    da29: 80 04        	bra	$da2f <r01_play_camera_update+0x226>
+    da2b: a6 e9        	ldx	$e9                     ; 0xe9 <__rc9>
+    da2d: e4 e6        	cpx	$e6                     ; 0xe6 <__rc6>
+    da2f: 98           	tya
+    da30: b0 0f        	bcs	$da41 <r01_play_camera_update+0x238>
+    da32: aa           	tax
+    da33: 18           	clc
+    da34: a5 ee        	lda	$ee                     ; 0xee <__rc14>
+;         (*hi)--;
+    da36: 69 fe        	adc	#$fe
+    da38: 85 e7        	sta	$e7                     ; 0xe7 <__rc7>
+    da3a: a5 ef        	lda	$ef                     ; 0xef <__rc15>
+    da3c: 69 ff        	adc	#$ff
+    da3e: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    da40: 8a           	txa
+    da41: a6 ed        	ldx	$ed                     ; 0xed <__rc13>
+;                 if (sy < top) {
+    da43: e4 e8        	cpx	$e8                     ; 0xe8 <__rc8>
+    da45: e5 e9        	sbc	$e9                     ; 0xe9 <__rc9>
+    da47: 50 02        	bvc	$da4b <r01_play_camera_update+0x242>
+    da49: 49 80        	eor	#$80
+    da4b: aa           	tax
+    da4c: 10 0c        	bpl	$da5a <r01_play_camera_update+0x251>
+    da4e: 38           	sec
+    da4f: a5 18        	lda	$18                     ; 0x18 <__zp_bss_size+0x1>
+;                     *cam_y = ay - top;
+    da51: e5 e8        	sbc	$e8                     ; 0xe8 <__rc8>
+    da53: aa           	tax
+    da54: a5 ec        	lda	$ec                     ; 0xec <__rc12>
+    da56: e5 e9        	sbc	$e9                     ; 0xe9 <__rc9>
+    da58: 80 1e        	bra	$da78 <r01_play_camera_update+0x26f>
+;                 } else if (sy > bottom) {
+    da5a: a6 e6        	ldx	$e6                     ; 0xe6 <__rc6>
+    da5c: e4 eb        	cpx	$eb                     ; 0xeb <__rc11>
+    da5e: d0 08        	bne	$da68 <r01_play_camera_update+0x25f>
+    da60: a6 e7        	ldx	$e7                     ; 0xe7 <__rc7>
+    da62: e4 ea        	cpx	$ea                     ; 0xea <__rc10>
+    da64: 90 08        	bcc	$da6e <r01_play_camera_update+0x265>
+    da66: 80 1b        	bra	$da83 <r01_play_camera_update+0x27a>
+    da68: a6 e6        	ldx	$e6                     ; 0xe6 <__rc6>
+    da6a: e4 eb        	cpx	$eb                     ; 0xeb <__rc11>
+    da6c: b0 15        	bcs	$da83 <r01_play_camera_update+0x27a>
+    da6e: 38           	sec
+    da6f: a5 18        	lda	$18                     ; 0x18 <__zp_bss_size+0x1>
+;                     *cam_y = ay - bottom;
+    da71: e5 e7        	sbc	$e7                     ; 0xe7 <__rc7>
+    da73: aa           	tax
+    da74: a5 ec        	lda	$ec                     ; 0xec <__rc12>
+    da76: e5 e6        	sbc	$e6                     ; 0xe6 <__rc6>
+    da78: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    da7a: 8a           	txa
+    da7b: 92 e4        	sta	($e4)                   ; 0xe4 <__rc4>
+    da7d: a0 01        	ldy	#$1
+    da7f: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    da81: 91 e4        	sta	($e4),y                 ; 0xe4 <__rc4>
+    da83: a0 01        	ldy	#$1
+;     if (*cam_x < 0) {
+    da85: b1 e2        	lda	($e2),y                 ; 0xe2 <__rc2>
+    da87: 10 06        	bpl	$da8f <r01_play_camera_update+0x286>
+    da89: a9 00        	lda	#$0
+;         *cam_x = 0;
+    da8b: 92 e2        	sta	($e2)                   ; 0xe2 <__rc2>
+    da8d: 91 e2        	sta	($e2),y                 ; 0xe2 <__rc2>
+;     if (*cam_y < 0) {
+    da8f: b1 e4        	lda	($e4),y                 ; 0xe4 <__rc4>
+    da91: 30 01        	bmi	$da94 <r01_play_camera_update+0x28b>
+; }
+    da93: 60           	rts
+    da94: a9 00        	lda	#$0
+;         *cam_y = 0;
+    da96: 92 e4        	sta	($e4)                   ; 0xe4 <__rc4>
+    da98: 91 e4        	sta	($e4),y                 ; 0xe4 <__rc4>
+; }
+    da9a: 60           	rts
+
+0000da9b <integrate_axis>:
+;                           int (*move_ok)(void *ctx, int x, int y), void *ctx) {
+    da9b: 48           	pha
+    da9c: 18           	clc
+    da9d: a5 e0        	lda	$e0                     ; 0xe0 <__rc0>
+    da9f: 69 f1        	adc	#$f1
+    daa1: 85 e0        	sta	$e0                     ; 0xe0 <__rc0>
+    daa3: a5 e1        	lda	$e1                     ; 0xe1 <__rc1>
+    daa5: 69 ff        	adc	#$ff
+    daa7: 85 e1        	sta	$e1                     ; 0xe1 <__rc1>
+    daa9: 68           	pla
+    daaa: a4 f4        	ldy	$f4                     ; 0xf4 <__rc20>
+    daac: 5a           	phy
+    daad: a4 f5        	ldy	$f5                     ; 0xf5 <__rc21>
+    daaf: 5a           	phy
+    dab0: a4 f6        	ldy	$f6                     ; 0xf6 <__rc22>
+    dab2: 5a           	phy
+    dab3: a4 f7        	ldy	$f7                     ; 0xf7 <__rc23>
+    dab5: 5a           	phy
+    dab6: 48           	pha
+    dab7: a5 f8        	lda	$f8                     ; 0xf8 <__rc24>
+    dab9: a0 07        	ldy	#$7
+    dabb: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    dabd: a5 f9        	lda	$f9                     ; 0xf9 <__rc25>
+    dabf: 88           	dey
+    dac0: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    dac2: a5 fa        	lda	$fa                     ; 0xfa <__rc26>
+    dac4: 88           	dey
+    dac5: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    dac7: a5 fb        	lda	$fb                     ; 0xfb <__rc27>
+    dac9: 88           	dey
+    daca: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    dacc: a5 fc        	lda	$fc                     ; 0xfc <__rc28>
+    dace: 88           	dey
+    dacf: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    dad1: a5 fd        	lda	$fd                     ; 0xfd <__rc29>
+    dad3: 88           	dey
+    dad4: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    dad6: a5 fe        	lda	$fe                     ; 0xfe <__rc30>
+    dad8: 88           	dey
+    dad9: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    dadb: a5 ff        	lda	$ff                     ; 0xff <__rc31>
+    dadd: 88           	dey
+    dade: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    dae0: 86 f2        	stx	$f2                     ; 0xf2 <__rc18>
+    dae2: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    dae4: a0 0e        	ldy	#$e
+    dae6: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    dae8: a5 e7        	lda	$e7                     ; 0xe7 <__rc7>
+    daea: 88           	dey
+    daeb: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    daed: a5 e8        	lda	$e8                     ; 0xe8 <__rc8>
+    daef: 88           	dey
+    daf0: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    daf2: a5 e9        	lda	$e9                     ; 0xe9 <__rc9>
+    daf4: 88           	dey
+    daf5: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    daf7: 68           	pla
+    daf8: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+    dafa: 86 fa        	stx	$fa                     ; 0xfa <__rc26>
+    dafc: a6 e3        	ldx	$e3                     ; 0xe3 <__rc3>
+    dafe: 86 fb        	stx	$fb                     ; 0xfb <__rc27>
+    db00: a6 ea        	ldx	$ea                     ; 0xea <__rc10>
+    db02: 86 fc        	stx	$fc                     ; 0xfc <__rc28>
+    db04: a6 eb        	ldx	$eb                     ; 0xeb <__rc11>
+    db06: 86 fd        	stx	$fd                     ; 0xfd <__rc29>
+    db08: a6 ec        	ldx	$ec                     ; 0xec <__rc12>
+    db0a: 86 fe        	stx	$fe                     ; 0xfe <__rc30>
+    db0c: a6 ed        	ldx	$ed                     ; 0xed <__rc13>
+    db0e: 86 ff        	stx	$ff                     ; 0xff <__rc31>
+;     *frac += delta_fp;
+    db10: a0 01        	ldy	#$1
+    db12: 18           	clc
+    db13: 72 e4        	adc	($e4)                   ; 0xe4 <__rc4>
+    db15: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    db17: a2 01        	ldx	#$1
+    db19: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    db1b: a5 f2        	lda	$f2                     ; 0xf2 <__rc18>
+    db1d: 71 e4        	adc	($e4),y                 ; 0xe4 <__rc4>
+    db1f: 85 f4        	sta	$f4                     ; 0xf4 <__rc20>
+;     if (fp >= 0) {
+    db21: ca           	dex
+    db22: c9 00        	cmp	#$0
+    db24: 10 03        	bpl	$db29 <integrate_axis+0x8e>
+    db26: 4c 1d dc     	jmp	$dc1d <integrate_axis+0x182>
+    db29: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+;     *frac -= steps << R01_PHYS_SHIFT;
+    db2b: 92 e4        	sta	($e4)                   ; 0xe4 <__rc4>
+    db2d: a9 00        	lda	#$0
+    db2f: 48           	pha
+    db30: 5a           	phy
+    db31: a5 e4        	lda	$e4                     ; 0xe4 <__rc4>
+    db33: a0 09        	ldy	#$9
+    db35: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    db37: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
+    db39: c8           	iny
+    db3a: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    db3c: 7a           	ply
+    db3d: 68           	pla
+    db3e: 91 e4        	sta	($e4),y                 ; 0xe4 <__rc4>
+    db40: 84 f6        	sty	$f6                     ; 0xf6 <__rc22>
+    db42: 85 f7        	sta	$f7                     ; 0xf7 <__rc23>
+    db44: a5 f4        	lda	$f4                     ; 0xf4 <__rc20>
+    db46: d0 03        	bne	$db4b <integrate_axis+0xb0>
+    db48: 4c 59 dc     	jmp	$dc59 <integrate_axis+0x1be>
+    db4b: a0 01        	ldy	#$1
+;     for (i = 0; i < steps; i++) {
+    db4d: a5 f6        	lda	$f6                     ; 0xf6 <__rc22>
+    db4f: 18           	clc
+    db50: 72 fa        	adc	($fa)                   ; 0xfa <__rc26>
+    db52: 85 e8        	sta	$e8                     ; 0xe8 <__rc8>
+    db54: a5 f7        	lda	$f7                     ; 0xf7 <__rc23>
+    db56: 71 fa        	adc	($fa),y                 ; 0xfa <__rc26>
+    db58: 48           	pha
+    db59: 8a           	txa
+    db5a: a0 08        	ldy	#$8
+    db5c: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    db5e: 68           	pla
+;     if (fp >= 0) {
+    db5f: 64 f5        	stz	$f5                     ; 0xf5 <__rc21>
+    db61: 48           	pha
+    db62: a0 0c        	ldy	#$c
+    db64: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    db66: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    db68: 88           	dey
+    db69: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    db6b: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    db6d: 68           	pla
+    db6e: a6 e3        	ldx	$e3                     ; 0xe3 <__rc3>
+    db70: d0 07        	bne	$db79 <integrate_axis+0xde>
+    db72: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+    db74: d0 03        	bne	$db79 <integrate_axis+0xde>
+    db76: 4c d9 db     	jmp	$dbd9 <integrate_axis+0x13e>
+;         if (!move_ok(ctx, nx, ny)) {
+    db79: a6 fc        	ldx	$fc                     ; 0xfc <__rc28>
+    db7b: 86 f2        	stx	$f2                     ; 0xf2 <__rc18>
+    db7d: a6 fd        	ldx	$fd                     ; 0xfd <__rc29>
+    db7f: 86 f3        	stx	$f3                     ; 0xf3 <__rc19>
+    db81: a6 fe        	ldx	$fe                     ; 0xfe <__rc30>
+    db83: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    db85: a6 ff        	ldx	$ff                     ; 0xff <__rc31>
+    db87: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    db89: 48           	pha
+    db8a: a0 0e        	ldy	#$e
+    db8c: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    db8e: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    db90: 88           	dey
+    db91: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    db93: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    db95: 68           	pla
+    db96: 85 f9        	sta	$f9                     ; 0xf9 <__rc25>
+    db98: aa           	tax
+    db99: a4 e8        	ldy	$e8                     ; 0xe8 <__rc8>
+    db9b: 84 f8        	sty	$f8                     ; 0xf8 <__rc24>
+    db9d: a5 e8        	lda	$e8                     ; 0xe8 <__rc8>
+    db9f: 20 20 c8     	jsr	$c820 <__call_indir>
+    dba2: e0 00        	cpx	#$0
+    dba4: d0 03        	bne	$dba9 <integrate_axis+0x10e>
+    dba6: 4c 00 dc     	jmp	$dc00 <integrate_axis+0x165>
+    dba9: a5 f8        	lda	$f8                     ; 0xf8 <__rc24>
+    dbab: 92 fa        	sta	($fa)                   ; 0xfa <__rc26>
+    dbad: a0 01        	ldy	#$1
+    dbaf: a5 f9        	lda	$f9                     ; 0xf9 <__rc25>
+    dbb1: 91 fa        	sta	($fa),y                 ; 0xfa <__rc26>
+    dbb3: 18           	clc
+    dbb4: a5 f8        	lda	$f8                     ; 0xf8 <__rc24>
+;     for (i = 0; i < steps; i++) {
+    dbb6: 65 f6        	adc	$f6                     ; 0xf6 <__rc22>
+    dbb8: 85 e8        	sta	$e8                     ; 0xe8 <__rc8>
+    dbba: a5 f9        	lda	$f9                     ; 0xf9 <__rc25>
+    dbbc: 65 f7        	adc	$f7                     ; 0xf7 <__rc23>
+    dbbe: a2 ff        	ldx	#$ff
+    dbc0: c6 f4        	dec	$f4                     ; 0xf4 <__rc20>
+    dbc2: e4 f4        	cpx	$f4                     ; 0xf4 <__rc20>
+    dbc4: d0 02        	bne	$dbc8 <integrate_axis+0x12d>
+    dbc6: c6 f5        	dec	$f5                     ; 0xf5 <__rc21>
+    dbc8: a6 f5        	ldx	$f5                     ; 0xf5 <__rc21>
+    dbca: f0 03        	beq	$dbcf <integrate_axis+0x134>
+    dbcc: 4c 61 db     	jmp	$db61 <integrate_axis+0xc6>
+    dbcf: a6 f4        	ldx	$f4                     ; 0xf4 <__rc20>
+    dbd1: f0 03        	beq	$dbd6 <integrate_axis+0x13b>
+    dbd3: 4c 61 db     	jmp	$db61 <integrate_axis+0xc6>
+    dbd6: 4c 5d dc     	jmp	$dc5d <integrate_axis+0x1c2>
+;     if (!move_ok(ctx, nx, ny)) {
+    dbd9: a6 fc        	ldx	$fc                     ; 0xfc <__rc28>
+    dbdb: 86 f2        	stx	$f2                     ; 0xf2 <__rc18>
+    dbdd: a6 fd        	ldx	$fd                     ; 0xfd <__rc29>
+    dbdf: 86 f3        	stx	$f3                     ; 0xf3 <__rc19>
+    dbe1: a6 fe        	ldx	$fe                     ; 0xfe <__rc30>
+    dbe3: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    dbe5: a6 ff        	ldx	$ff                     ; 0xff <__rc31>
+    dbe7: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    dbe9: a6 e8        	ldx	$e8                     ; 0xe8 <__rc8>
+    dbeb: 86 f8        	stx	$f8                     ; 0xf8 <__rc24>
+    dbed: a6 e8        	ldx	$e8                     ; 0xe8 <__rc8>
+    dbef: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    dbf1: 85 f9        	sta	$f9                     ; 0xf9 <__rc25>
+    dbf3: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    dbf5: a0 0d        	ldy	#$d
+    dbf7: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    dbf9: aa           	tax
+    dbfa: c8           	iny
+    dbfb: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    dbfd: 4c 9f db     	jmp	$db9f <integrate_axis+0x104>
+    dc00: aa           	tax
+    dc01: f0 03        	beq	$dc06 <integrate_axis+0x16b>
+    dc03: 4c a9 db     	jmp	$dba9 <integrate_axis+0x10e>
+    dc06: a9 00        	lda	#$0
+    dc08: 48           	pha
+    dc09: a0 09        	ldy	#$9
+    dc0b: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    dc0d: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    dc0f: c8           	iny
+    dc10: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    dc12: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    dc14: 68           	pla
+;             *frac = 0;
+    dc15: 92 e4        	sta	($e4)                   ; 0xe4 <__rc4>
+    dc17: a0 01        	ldy	#$1
+    dc19: 91 e4        	sta	($e4),y                 ; 0xe4 <__rc4>
+    dc1b: 80 42        	bra	$dc5f <integrate_axis+0x1c4>
+;     return -((-fp) >> R01_PHYS_SHIFT);
+    dc1d: e4 e2        	cpx	$e2                     ; 0xe2 <__rc2>
+    dc1f: a9 00        	lda	#$0
+    dc21: e5 f4        	sbc	$f4                     ; 0xf4 <__rc20>
+    dc23: 85 e8        	sta	$e8                     ; 0xe8 <__rc8>
+;     *frac -= steps << R01_PHYS_SHIFT;
+    dc25: 29 7f        	and	#$7f
+    dc27: aa           	tax
+;     *frac += delta_fp;
+    dc28: 18           	clc
+;     *frac -= steps << R01_PHYS_SHIFT;
+    dc29: a9 00        	lda	#$0
+    dc2b: 65 e2        	adc	$e2                     ; 0xe2 <__rc2>
+    dc2d: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    dc2f: 8a           	txa
+    dc30: 65 f4        	adc	$f4                     ; 0xf4 <__rc20>
+    dc32: 85 e9        	sta	$e9                     ; 0xe9 <__rc9>
+    dc34: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    dc36: 92 e4        	sta	($e4)                   ; 0xe4 <__rc4>
+    dc38: 5a           	phy
+    dc39: a5 e4        	lda	$e4                     ; 0xe4 <__rc4>
+    dc3b: a0 09        	ldy	#$9
+    dc3d: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    dc3f: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
+    dc41: c8           	iny
+    dc42: 91 e0        	sta	($e0),y                 ; 0xe0 <__rc0>
+    dc44: 7a           	ply
+    dc45: a5 e9        	lda	$e9                     ; 0xe9 <__rc9>
+    dc47: 91 e4        	sta	($e4),y                 ; 0xe4 <__rc4>
+    dc49: a2 ff        	ldx	#$ff
+    dc4b: 86 f6        	stx	$f6                     ; 0xf6 <__rc22>
+    dc4d: 86 f7        	stx	$f7                     ; 0xf7 <__rc23>
+;     if (fp >= 0) {
+    dc4f: e8           	inx
+    dc50: a4 e8        	ldy	$e8                     ; 0xe8 <__rc8>
+    dc52: 84 f4        	sty	$f4                     ; 0xf4 <__rc20>
+    dc54: f0 03        	beq	$dc59 <integrate_axis+0x1be>
+    dc56: 4c 4b db     	jmp	$db4b <integrate_axis+0xb0>
+    dc59: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    dc5b: 80 09        	bra	$dc66 <integrate_axis+0x1cb>
+;     *frac += delta_fp;
+    dc5d: a9 01        	lda	#$1
+    dc5f: 48           	pha
+    dc60: a0 08        	ldy	#$8
+    dc62: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    dc64: aa           	tax
+    dc65: 68           	pla
+    dc66: 85 f0        	sta	$f0                     ; 0xf0 <__rc16>
+    dc68: a0 00        	ldy	#$0
+    dc6a: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    dc6c: 85 ff        	sta	$ff                     ; 0xff <__rc31>
+    dc6e: c8           	iny
+    dc6f: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    dc71: 85 fe        	sta	$fe                     ; 0xfe <__rc30>
+    dc73: c8           	iny
+    dc74: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    dc76: 85 fd        	sta	$fd                     ; 0xfd <__rc29>
+    dc78: c8           	iny
+    dc79: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    dc7b: 85 fc        	sta	$fc                     ; 0xfc <__rc28>
+    dc7d: c8           	iny
+    dc7e: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    dc80: 85 fb        	sta	$fb                     ; 0xfb <__rc27>
+    dc82: c8           	iny
+    dc83: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    dc85: 85 fa        	sta	$fa                     ; 0xfa <__rc26>
+    dc87: c8           	iny
+    dc88: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    dc8a: 85 f9        	sta	$f9                     ; 0xf9 <__rc25>
+    dc8c: c8           	iny
+    dc8d: b1 e0        	lda	($e0),y                 ; 0xe0 <__rc0>
+    dc8f: 85 f8        	sta	$f8                     ; 0xf8 <__rc24>
+    dc91: 7a           	ply
+    dc92: 84 f7        	sty	$f7                     ; 0xf7 <__rc23>
+    dc94: 7a           	ply
+    dc95: 84 f6        	sty	$f6                     ; 0xf6 <__rc22>
+    dc97: 7a           	ply
+    dc98: 84 f5        	sty	$f5                     ; 0xf5 <__rc21>
+    dc9a: 7a           	ply
+    dc9b: 84 f4        	sty	$f4                     ; 0xf4 <__rc20>
+    dc9d: 18           	clc
+    dc9e: a5 e0        	lda	$e0                     ; 0xe0 <__rc0>
+    dca0: 69 0f        	adc	#$f
+    dca2: 85 e0        	sta	$e0                     ; 0xe0 <__rc0>
+    dca4: a5 e1        	lda	$e1                     ; 0xe1 <__rc1>
+    dca6: 69 00        	adc	#$0
+    dca8: 85 e1        	sta	$e1                     ; 0xe1 <__rc1>
+    dcaa: a5 f0        	lda	$f0                     ; 0xf0 <__rc16>
+; }
+    dcac: 60           	rts
+
+0000dcad <r01_game_on_init>:
+; void r01_game_on_init(R01GameCtx *ctx) {
+    dcad: a0 01        	ldy	#$1
+;     ctx->bg0_wrap_x = wrap_x;
+    dcaf: 8c 0d 03     	sty	$30d                    ; 0x30d <g_ctx+0xd>
+;     ctx->bg0_wrap_y = wrap_y;
+    dcb2: 8c 0e 03     	sty	$30e                    ; 0x30e <g_ctx+0xe>
+;     ctx->cam_deadzone_x = dx;
+    dcb5: a2 20        	ldx	#$20
+    dcb7: 8e 0a 03     	stx	$30a                    ; 0x30a <g_ctx+0xa>
+;     ctx->cam_deadzone_y = dy;
+    dcba: a2 46        	ldx	#$46
+    dcbc: 8e 0b 03     	stx	$30b                    ; 0x30b <g_ctx+0xb>
+;     ctx->game_mode = mode;
+    dcbf: 8c 10 03     	sty	$310                    ; 0x310 <g_ctx+0x10>
+    dcc2: a2 01        	ldx	#$1
+    dcc4: 86 17        	stx	$17                     ; 0x17 <__zp_bss_size>
+    dcc6: a2 04        	ldx	#$4
+;         ctx->plat_gravity = units;
+    dcc8: 8e 11 03     	stx	$311                    ; 0x311 <g_ctx+0x11>
+;         ctx->plat_jump = impulse;
+    dccb: 8e 12 03     	stx	$312                    ; 0x312 <g_ctx+0x12>
+;         ctx->plat_meter = px_per_meter;
+    dcce: a2 10        	ldx	#$10
+    dcd0: 8e 13 03     	stx	$313                    ; 0x313 <g_ctx+0x13>
+    dcd3: 64 e4        	stz	$e4                     ; 0xe4 <__rc4>
+;         ctx->player_idle_state = entity_state_idx;
+    dcd5: 9c 16 03     	stz	$316                    ; 0x316 <g_ctx+0x16>
+;         ctx->player_walk_state[i] = entity_state_idx;
+    dcd8: a2 17        	ldx	#$17
+    dcda: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    dcdc: a2 03        	ldx	#$3
+    dcde: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    dce0: a2 08        	ldx	#$8
+    dce2: a5 17        	lda	$17                     ; 0x17 <__zp_bss_size>
+    dce4: 20 96 de     	jsr	$de96 <__memset>
+    dce7: a5 17        	lda	$17                     ; 0x17 <__zp_bss_size>
+;         ctx->player_crouch_state = entity_state_idx;
+    dce9: a2 03        	ldx	#$3
+    dceb: 8e 1f 03     	stx	$31f                    ; 0x31f <g_ctx+0x1f>
+;         ctx->player_jump_state = entity_state_idx;
+    dcee: ca           	dex
+    dcef: 8e 20 03     	stx	$320                    ; 0x320 <g_ctx+0x20>
+;     n = ctx->solid_pat_count;
+    dcf2: ae 23 03     	ldx	$323                    ; 0x323 <g_ctx+0x23>
+;     if (n >= 64u) {
+    dcf5: e0 40        	cpx	#$40
+    dcf7: b0 0a        	bcs	$dd03 <r01_game_on_init+0x56>
+;     ctx->solid_pat_bank[n] = bank;
+    dcf9: 9e 24 03     	stz	$324,x                  ; 0x324 <g_ctx+0x24>
+;     ctx->solid_pat_tile[n] = tile;
+    dcfc: 9d 64 03     	sta	$364,x                  ; 0x364 <g_ctx+0x64>
+;     ctx->solid_pat_count = (uint8_t)(n + 1u);
+    dcff: e8           	inx
+    dd00: 8e 23 03     	stx	$323                    ; 0x323 <g_ctx+0x23>
+;         ctx->bgm_track = track;
+    dd03: 8d 22 03     	sta	$322                    ; 0x322 <g_ctx+0x22>
+; }
+    dd06: 60           	rts
+
+0000dd07 <r01_game_on_tick>:
+;     if (r01_pad_down(ctx, R01_PAD_X) && r01_player_moving_x(ctx)) {
+    dd07: a9 10        	lda	#$10
+    dd09: 2d 08 03     	and	$308                    ; 0x308 <g_ctx+0x8>
+    dd0c: f0 11        	beq	$dd1f <r01_game_on_tick+0x18>
+    dd0e: ad 08 03     	lda	$308                    ; 0x308 <g_ctx+0x8>
+;     return (uint8_t)((ctx->pad & (R01_PAD_LEFT | R01_PAD_RIGHT)) != 0u);
+    dd11: 29 03        	and	#$3
+    dd13: f0 0a        	beq	$dd1f <r01_game_on_tick+0x18>
+;     ctx->player_move_mul = mul ? mul : 1u;
+    dd15: a2 02        	ldx	#$2
+    dd17: 8e 14 03     	stx	$314                    ; 0x314 <g_ctx+0x14>
+;         ctx->player_anim_delay_override = ticks;
+    dd1a: a2 05        	ldx	#$5
+    dd1c: 8e 15 03     	stx	$315                    ; 0x315 <g_ctx+0x15>
+; }
+    dd1f: 60           	rts
+
+0000dd20 <exit>:
+    dd20: 20 14 c8     	jsr	$c814 <_fini>
+    dd23: 80 fe        	bra	$dd23 <exit+0x3>
+
+0000dd25 <__ashlhi3>:
+    dd25: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    dd27: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+    dd29: f0 0a        	beq	$dd35 <__ashlhi3+0x10>
+    dd2b: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+    dd2d: ca           	dex
+    dd2e: 0a           	asl
+    dd2f: 26 e3        	rol	$e3                     ; 0xe3 <__rc3>
+    dd31: e0 00        	cpx	#$0
+    dd33: d0 f8        	bne	$dd2d <__ashlhi3+0x8>
+    dd35: a6 e3        	ldx	$e3                     ; 0xe3 <__rc3>
+    dd37: 60           	rts
+
+0000dd38 <__udivhi3>:
+    dd38: 64 e4        	stz	$e4                     ; 0xe4 <__rc4>
+    dd3a: a4 e3        	ldy	$e3                     ; 0xe3 <__rc3>
+    dd3c: d0 04        	bne	$dd42 <__udivhi3+0xa>
+    dd3e: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
+    dd40: f0 0c        	beq	$dd4e <__udivhi3+0x16>
+    dd42: 85 e7        	sta	$e7                     ; 0xe7 <__rc7>
+    dd44: da           	phx
+    dd45: 7a           	ply
+    dd46: e4 e3        	cpx	$e3                     ; 0xe3 <__rc3>
+    dd48: d0 09        	bne	$dd53 <__udivhi3+0x1b>
+    dd4a: c5 e2        	cmp	$e2                     ; 0xe2 <__rc2>
+    dd4c: b0 09        	bcs	$dd57 <__udivhi3+0x1f>
+    dd4e: 64 e9        	stz	$e9                     ; 0xe9 <__rc9>
+    dd50: 4c ec dd     	jmp	$ddec <__udivhi3+0xb4>
+    dd53: c4 e3        	cpy	$e3                     ; 0xe3 <__rc3>
+    dd55: 90 f7        	bcc	$dd4e <__udivhi3+0x16>
+    dd57: a9 01        	lda	#$1
+    dd59: 85 e9        	sta	$e9                     ; 0xe9 <__rc9>
+    dd5b: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    dd5d: 10 03        	bpl	$dd62 <__udivhi3+0x2a>
+    dd5f: 4c ec dd     	jmp	$ddec <__udivhi3+0xb4>
+    dd62: a2 00        	ldx	#$0
+    dd64: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    dd66: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    dd68: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    dd6a: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    dd6c: 06 e5        	asl	$e5                     ; 0xe5 <__rc5>
+    dd6e: 26 e6        	rol	$e6                     ; 0xe6 <__rc6>
+    dd70: c4 e6        	cpy	$e6                     ; 0xe6 <__rc6>
+    dd72: d0 0c        	bne	$dd80 <__udivhi3+0x48>
+    dd74: 84 e8        	sty	$e8                     ; 0xe8 <__rc8>
+    dd76: a4 e7        	ldy	$e7                     ; 0xe7 <__rc7>
+    dd78: c4 e5        	cpy	$e5                     ; 0xe5 <__rc5>
+    dd7a: a4 e8        	ldy	$e8                     ; 0xe8 <__rc8>
+    dd7c: 90 13        	bcc	$dd91 <__udivhi3+0x59>
+    dd7e: 80 04        	bra	$dd84 <__udivhi3+0x4c>
+    dd80: c4 e6        	cpy	$e6                     ; 0xe6 <__rc6>
+    dd82: 90 0d        	bcc	$dd91 <__udivhi3+0x59>
+    dd84: e8           	inx
+    dd85: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
+    dd87: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    dd89: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    dd8b: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    dd8d: 10 dd        	bpl	$dd6c <__udivhi3+0x34>
+    dd8f: 80 08        	bra	$dd99 <__udivhi3+0x61>
+    dd91: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    dd93: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    dd95: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    dd97: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    dd99: 8a           	txa
+    dd9a: f0 50        	beq	$ddec <__udivhi3+0xb4>
+    dd9c: 38           	sec
+    dd9d: a5 e7        	lda	$e7                     ; 0xe7 <__rc7>
+    dd9f: e5 e5        	sbc	$e5                     ; 0xe5 <__rc5>
+    dda1: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    dda3: 98           	tya
+    dda4: e5 e6        	sbc	$e6                     ; 0xe6 <__rc6>
+    dda6: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    dda8: a9 01        	lda	#$1
+    ddaa: 85 e9        	sta	$e9                     ; 0xe9 <__rc9>
+    ddac: 64 e4        	stz	$e4                     ; 0xe4 <__rc4>
+    ddae: 46 e6        	lsr	$e6                     ; 0xe6 <__rc6>
+    ddb0: 66 e5        	ror	$e5                     ; 0xe5 <__rc5>
+    ddb2: 06 e9        	asl	$e9                     ; 0xe9 <__rc9>
+    ddb4: a0 01        	ldy	#$1
+    ddb6: b0 02        	bcs	$ddba <__udivhi3+0x82>
+    ddb8: a0 00        	ldy	#$0
+    ddba: 84 e7        	sty	$e7                     ; 0xe7 <__rc7>
+    ddbc: a4 e3        	ldy	$e3                     ; 0xe3 <__rc3>
+    ddbe: c4 e6        	cpy	$e6                     ; 0xe6 <__rc6>
+    ddc0: d0 24        	bne	$dde6 <__udivhi3+0xae>
+    ddc2: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
+    ddc4: c4 e5        	cpy	$e5                     ; 0xe5 <__rc5>
+    ddc6: 90 13        	bcc	$dddb <__udivhi3+0xa3>
+    ddc8: a5 e9        	lda	$e9                     ; 0xe9 <__rc9>
+    ddca: 09 01        	ora	#$1
+    ddcc: 85 e9        	sta	$e9                     ; 0xe9 <__rc9>
+    ddce: 38           	sec
+    ddcf: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    ddd1: e5 e5        	sbc	$e5                     ; 0xe5 <__rc5>
+    ddd3: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    ddd5: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    ddd7: e5 e6        	sbc	$e6                     ; 0xe6 <__rc6>
+    ddd9: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    dddb: a4 e7        	ldy	$e7                     ; 0xe7 <__rc7>
+    dddd: c0 01        	cpy	#$1
+    dddf: 26 e4        	rol	$e4                     ; 0xe4 <__rc4>
+    dde1: ca           	dex
+    dde2: d0 ca        	bne	$ddae <__udivhi3+0x76>
+    dde4: 80 06        	bra	$ddec <__udivhi3+0xb4>
+    dde6: c4 e6        	cpy	$e6                     ; 0xe6 <__rc6>
+    dde8: b0 de        	bcs	$ddc8 <__udivhi3+0x90>
+    ddea: 80 ef        	bra	$dddb <__udivhi3+0xa3>
+    ddec: a6 e4        	ldx	$e4                     ; 0xe4 <__rc4>
+    ddee: a5 e9        	lda	$e9                     ; 0xe9 <__rc9>
+    ddf0: 60           	rts
+
+0000ddf1 <__umodhi3>:
+    ddf1: a8           	tay
+    ddf2: 8a           	txa
+    ddf3: e6 e3        	inc	$e3                     ; 0xe3 <__rc3>
+    ddf5: c6 e3        	dec	$e3                     ; 0xe3 <__rc3>
+    ddf7: d0 09        	bne	$de02 <__umodhi3+0x11>
+    ddf9: e6 e2        	inc	$e2                     ; 0xe2 <__rc2>
+    ddfb: c6 e2        	dec	$e2                     ; 0xe2 <__rc2>
+    ddfd: d0 03        	bne	$de02 <__umodhi3+0x11>
+    ddff: 4c 93 de     	jmp	$de93 <__umodhi3+0xa2>
+    de02: c5 e3        	cmp	$e3                     ; 0xe3 <__rc3>
+    de04: d0 07        	bne	$de0d <__umodhi3+0x1c>
+    de06: c4 e2        	cpy	$e2                     ; 0xe2 <__rc2>
+    de08: b0 0a        	bcs	$de14 <__umodhi3+0x23>
+    de0a: 4c 93 de     	jmp	$de93 <__umodhi3+0xa2>
+    de0d: c5 e3        	cmp	$e3                     ; 0xe3 <__rc3>
+    de0f: b0 03        	bcs	$de14 <__umodhi3+0x23>
+    de11: 4c 93 de     	jmp	$de93 <__umodhi3+0xa2>
+    de14: 86 e6        	stx	$e6                     ; 0xe6 <__rc6>
+    de16: e6 e3        	inc	$e3                     ; 0xe3 <__rc3>
+    de18: c6 e3        	dec	$e3                     ; 0xe3 <__rc3>
+    de1a: 10 03        	bpl	$de1f <__umodhi3+0x2e>
+    de1c: 4c 8b de     	jmp	$de8b <__umodhi3+0x9a>
+    de1f: a2 00        	ldx	#$0
+    de21: 5a           	phy
+    de22: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
+    de24: 84 e4        	sty	$e4                     ; 0xe4 <__rc4>
+    de26: a4 e3        	ldy	$e3                     ; 0xe3 <__rc3>
+    de28: 84 e5        	sty	$e5                     ; 0xe5 <__rc5>
+    de2a: 7a           	ply
+    de2b: 06 e4        	asl	$e4                     ; 0xe4 <__rc4>
+    de2d: 26 e5        	rol	$e5                     ; 0xe5 <__rc5>
+    de2f: c5 e5        	cmp	$e5                     ; 0xe5 <__rc5>
+    de31: d0 08        	bne	$de3b <__umodhi3+0x4a>
+    de33: c4 e4        	cpy	$e4                     ; 0xe4 <__rc4>
+    de35: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    de37: 90 19        	bcc	$de52 <__umodhi3+0x61>
+    de39: 80 04        	bra	$de3f <__umodhi3+0x4e>
+    de3b: c5 e5        	cmp	$e5                     ; 0xe5 <__rc5>
+    de3d: 90 13        	bcc	$de52 <__umodhi3+0x61>
+    de3f: e8           	inx
+    de40: 5a           	phy
+    de41: a4 e4        	ldy	$e4                     ; 0xe4 <__rc4>
+    de43: 84 e2        	sty	$e2                     ; 0xe2 <__rc2>
+    de45: a4 e5        	ldy	$e5                     ; 0xe5 <__rc5>
+    de47: 84 e3        	sty	$e3                     ; 0xe3 <__rc3>
+    de49: 7a           	ply
+    de4a: e6 e5        	inc	$e5                     ; 0xe5 <__rc5>
+    de4c: c6 e5        	dec	$e5                     ; 0xe5 <__rc5>
+    de4e: 10 db        	bpl	$de2b <__umodhi3+0x3a>
+    de50: 80 08        	bra	$de5a <__umodhi3+0x69>
+    de52: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    de54: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    de56: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    de58: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    de5a: 38           	sec
+    de5b: 98           	tya
+    de5c: e5 e4        	sbc	$e4                     ; 0xe4 <__rc4>
+    de5e: a8           	tay
+    de5f: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    de61: e5 e5        	sbc	$e5                     ; 0xe5 <__rc5>
+    de63: e0 00        	cpx	#$0
+    de65: d0 08        	bne	$de6f <__umodhi3+0x7e>
+    de67: 80 2a        	bra	$de93 <__umodhi3+0xa2>
+    de69: c5 e5        	cmp	$e5                     ; 0xe5 <__rc5>
+    de6b: b0 0e        	bcs	$de7b <__umodhi3+0x8a>
+    de6d: 80 17        	bra	$de86 <__umodhi3+0x95>
+    de6f: 46 e5        	lsr	$e5                     ; 0xe5 <__rc5>
+    de71: 66 e4        	ror	$e4                     ; 0xe4 <__rc4>
+    de73: c5 e5        	cmp	$e5                     ; 0xe5 <__rc5>
+    de75: d0 f2        	bne	$de69 <__umodhi3+0x78>
+    de77: c4 e4        	cpy	$e4                     ; 0xe4 <__rc4>
+    de79: 90 0b        	bcc	$de86 <__umodhi3+0x95>
+    de7b: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    de7d: 38           	sec
+    de7e: 98           	tya
+    de7f: e5 e4        	sbc	$e4                     ; 0xe4 <__rc4>
+    de81: a8           	tay
+    de82: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    de84: e5 e5        	sbc	$e5                     ; 0xe5 <__rc5>
+    de86: ca           	dex
+    de87: d0 e6        	bne	$de6f <__umodhi3+0x7e>
+    de89: 80 08        	bra	$de93 <__umodhi3+0xa2>
+    de8b: 38           	sec
+    de8c: 98           	tya
+    de8d: e5 e2        	sbc	$e2                     ; 0xe2 <__rc2>
+    de8f: a8           	tay
+    de90: 8a           	txa
+    de91: e5 e3        	sbc	$e3                     ; 0xe3 <__rc3>
+    de93: aa           	tax
+    de94: 98           	tya
+    de95: 60           	rts
+
+0000de96 <__memset>:
+    de96: a4 e4        	ldy	$e4                     ; 0xe4 <__rc4>
+    de98: d0 04        	bne	$de9e <__memset+0x8>
+    de9a: e0 00        	cpx	#$0
+    de9c: f0 17        	beq	$deb5 <__memset+0x1f>
+    de9e: 92 e2        	sta	($e2)                   ; 0xe2 <__rc2>
+    dea0: e6 e2        	inc	$e2                     ; 0xe2 <__rc2>
+    dea2: d0 02        	bne	$dea6 <__memset+0x10>
+    dea4: e6 e3        	inc	$e3                     ; 0xe3 <__rc3>
+    dea6: ca           	dex
+    dea7: e0 ff        	cpx	#$ff
+    dea9: d0 02        	bne	$dead <__memset+0x17>
+    deab: c6 e4        	dec	$e4                     ; 0xe4 <__rc4>
+    dead: a4 e4        	ldy	$e4                     ; 0xe4 <__rc4>
+    deaf: d0 ed        	bne	$de9e <__memset+0x8>
+    deb1: e0 00        	cpx	#$0
+    deb3: d0 e9        	bne	$de9e <__memset+0x8>
+    deb5: 60           	rts
+
+0000deb6 <__mulhi3>:
+    deb6: a4 e3        	ldy	$e3                     ; 0xe3 <__rc3>
+    deb8: d0 04        	bne	$debe <__mulhi3+0x8>
+    deba: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
+    debc: f0 25        	beq	$dee3 <__mulhi3+0x2d>
+    debe: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    dec0: 86 e5        	stx	$e5                     ; 0xe5 <__rc5>
+    dec2: a0 00        	ldy	#$0
+    dec4: 98           	tya
+    dec5: 46 e3        	lsr	$e3                     ; 0xe3 <__rc3>
+    dec7: 66 e2        	ror	$e2                     ; 0xe2 <__rc2>
+    dec9: 90 09        	bcc	$ded4 <__mulhi3+0x1e>
+    decb: aa           	tax
+    decc: 98           	tya
+    decd: 18           	clc
+    dece: 65 e4        	adc	$e4                     ; 0xe4 <__rc4>
+    ded0: a8           	tay
+    ded1: 8a           	txa
+    ded2: 65 e5        	adc	$e5                     ; 0xe5 <__rc5>
+    ded4: 06 e4        	asl	$e4                     ; 0xe4 <__rc4>
+    ded6: 26 e5        	rol	$e5                     ; 0xe5 <__rc5>
+    ded8: a6 e3        	ldx	$e3                     ; 0xe3 <__rc3>
+    deda: d0 e9        	bne	$dec5 <__mulhi3+0xf>
+    dedc: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+    dede: d0 e5        	bne	$dec5 <__mulhi3+0xf>
+    dee0: aa           	tax
+    dee1: 98           	tya
+    dee2: 60           	rts
+    dee3: a0 00        	ldy	#$0
+    dee5: 98           	tya
+    dee6: 80 f8        	bra	$dee0 <__mulhi3+0x2a>

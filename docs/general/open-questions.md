@@ -18,7 +18,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 ### Export tree (C vs ASM vs cart)
 
-:warning: Studio export writes `.retr01`, host `C/` (`r01_custom.so`), and `ASM/` as parallel trees. Generated C does not become ASM. ASM is not assembled into the cart. Phase 1 PRG is packed bytes (`prg_phase1.c`). Close when one author path feeds Host Play and cart PRG without a text scan of `custom_logic.c`.
+**Resolved:** **Ctrl+E** writes `data/` blobs, compiles `game_logic.c` with llvm-mos into 32 KB PRG, and packs `.retr01`. Studio Play and `./scripts/emu.sh` boot that image. `game_logic.c` is created once. See `software-api.md`.
 
 **Touches:** `software-api.md`, `apps/studio/README.md`
 
@@ -152,3 +152,4 @@ Open items and close criteria. A landed decision folds into the matching doc.
 | 2026-09-21 | Author tick SDK | `r01_pad_down` / `r01_player_moving_x` / `r01_player_set_move_mul` / `r01_player_anim_set_frame_delay` from `r01_custom_on_tick`. Host Play loads `C/r01_custom.so`. See `software-api.md`. |
 | 2026-09-20 | Instance + PA | PRG spawn 6 B. RAM live 12 B. One `PA` blob cart-wide (max 1031 B). See `software-api.md`. |
 | 2026-09-22 | Worlds / BGM | **7** worlds. Compressed BGM in cart flash (MAP), outside PRG. `$80FE` boot index only. See `memory.md`, `sound.md`. |
+| 2026-09-22 | Export tree | llvm-mos PRG from `game_logic.c`. Ctrl+E packs `.retr01`. Play is emu of that ROM. See `software-api.md`. |

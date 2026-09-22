@@ -127,6 +127,11 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    if (!m.ram[0x02E8]) {
+        r01e_machine_shutdown(&m);
+        return fail("C PRG did not publish sys");
+    }
+
     for (i = 0; i < 20000; i++) {
         (void)r01e_machine_step_insn(&m);
         if (m.cpu.pc < 0x8000u) {

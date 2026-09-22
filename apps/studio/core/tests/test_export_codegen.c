@@ -20,6 +20,7 @@ TEST_MAIN() {
     char err[128];
     int type_id;
     int inst;
+    char marker[] = "r01_game_on_init unique-export-marker";
 
     EXPECT(p != NULL, "alloc project");
     if (!p) {
@@ -34,26 +35,33 @@ TEST_MAIN() {
     EXPECT(inst >= 0, "place instance");
 
     EXPECT(r01_export_codegen(p, "codegen_out/test", err, sizeof(err)) == 0, "export codegen");
-    EXPECT(path_exists("codegen_out/C/base_game.c"), "base_game.c");
-    EXPECT(path_exists("codegen_out/C/custom_logic.c"), "custom_logic.c");
-    EXPECT(path_exists("codegen_out/C/include/r01_game.h"), "r01_game.h");
-    EXPECT(path_exists("codegen_out/C/include/r01_physics.h"), "r01_physics.h");
-    EXPECT(path_exists("codegen_out/ASM/main.s"), "ASM main.s");
-    EXPECT(path_exists("codegen_out/ASM/collision/play_collision.s"), "play_collision.s");
+    EXPECT(path_exists("codegen_out/game_logic.c"), "game_logic.c");
     EXPECT(path_exists("codegen_out/data/pal_bg.bin"), "pal_bg.bin");
+    EXPECT(!path_exists("codegen_out/C/base_game.c"), "no base_game.c");
+    EXPECT(!path_exists("codegen_out/C/custom_logic.c"), "no custom_logic.c");
+    EXPECT(!path_exists("codegen_out/ASM/main.s"), "no ASM tree");
+
+    {
+        FILE *f = fopen("codegen_out/game_logic.c", "a");
+        EXPECT(f != NULL, "append marker");
+        if (f) {
+            fprintf(f, "\n/* %s */\n", marker);
+            fclose(f);
+        }
+    }
 
     EXPECT(r01_export_codegen(p, "codegen_out/test", err, sizeof(err)) == 0, "re-export codegen");
     {
-        FILE *f = fopen("codegen_out/C/base_game.c", "r");
-        char buf[4096];
+        FILE *f = fopen("codegen_out/game_logic.c", "r");
+        char buf[8192];
         size_t n;
-        EXPECT(f != NULL, "read base_game");
+        EXPECT(f != NULL, "read game_logic");
         if (f) {
             n = fread(buf, 1, sizeof(buf) - 1u, f);
             buf[n] = '\0';
             fclose(f);
-            EXPECT(strstr(buf, "42, 84") != NULL, "instance coords in base_game");
-            EXPECT(strstr(buf, "player_instance_spawn") != NULL, "spawn helper in base_game");
+            EXPECT(strstr(buf, marker) != NULL, "second export keeps game_logic.c");
+            EXPECT(strstr(buf, "r01_game_on_tick") != NULL, "author hook name");
         }
     }
 

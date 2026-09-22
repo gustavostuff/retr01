@@ -9,9 +9,7 @@
 #include "retr01_studio/export_codegen.h"
 #include "retr01_studio/project.h"
 #include "retr01_studio/sprites.h"
-#include "r01_custom_logic_scan.h"
 #include "r01_play_camera.h"
-#include "r01_play_physics.h"
 #include "r01_apu_cart.h"
 
 #include <stdio.h>
@@ -563,61 +561,6 @@ int r01_prom_write(const char *path, char *err_buf, size_t err_cap) {
     return 0;
 }
 
-int r01_prg_write_asm(const R01Project *p, const char *path, char *err_buf, size_t err_cap) {
-    FILE *f;
-    const R01World *w;
-    if (!path) {
-        set_err(err_buf, err_cap, "bad args");
-        return -1;
-    }
-    f = fopen(path, "wb");
-    if (!f) {
-        set_err(err_buf, err_cap, "cannot write asm");
-        return -1;
-    }
-    w = p ? &p->worlds[0] : NULL;
-    fprintf(f, "; retr01 Phase 1 -- boot streams palette + start MAP, then VBlank pad poll.\n");
-    fprintf(f, "; Gameplay: Studio play.c / emu cart runtime (marker R01P @ $80F0).\n");
-    fprintf(f, "; Play table @ $8100: present[32], spawn_cell @ $8120, coll_dir @ $8122.\n");
-    fprintf(f, "; Solid patterns @ $8700 (count + bank,tile). Boot copies to RAM $0200.\n");
-    fprintf(f, "; play_pos_ok @ $8500 (PRG+$0500): probe via ($20),Y against expanded tables.\n");
-    fprintf(f, ".setcpu \"65C02\"\n");
-    fprintf(f, "WORLD     = $7F30\n");
-    fprintf(f, "SCROLL_X  = $7F02\n");
-    fprintf(f, "SCROLL_Y  = $7F03\n");
-    fprintf(f, "PPUCTRL   = $7F00\n");
-    fprintf(f, "PPUSTATUS = $7F01\n");
-    fprintf(f, "PPUCTRL_BOOT = $07\n");
-    fprintf(f, "PAD0      = $7F60\n");
-    fprintf(f, ".segment \"CODE\"\n.org $8000\n");
-    fprintf(f, "reset:\n        sei\n        cld\n        ldx #$ff\n        txs\n");
-    fprintf(f, "        lda #0\n        sta WORLD\n        sta SCROLL_X\n        sta SCROLL_Y\n");
-    fprintf(f, "        lda #PPUCTRL_BOOT\n        sta PPUCTRL\n");
-    fprintf(f, "        lda $8700\n        sta $0200\n        beq copy_solids_done\n");
-    fprintf(f, "        asl\n        tax\n        ldy #0\n");
-    fprintf(f, "copy_solids_loop:\n        lda $8701,y\n        sta $0201,y\n");
-    fprintf(f, "        iny\n        dex\n        bne copy_solids_loop\n");
-    fprintf(f, "copy_solids_done:\n");
-    fprintf(f, "; palette + MAP stream patched at export -- see prg_phase1.c\n");
-    fprintf(f, "main:\n        lda PPUSTATUS\n        and #$80\n        beq main\n");
-    fprintf(f, "        lda PAD0\n        sta $00FE\n        jmp main\n");
-    fprintf(f, ".segment \"PLAY\"\n.org $8100\n");
-    fprintf(f, "; present mask + spawn filled by exporter\n");
-    if (w) {
-        int i, n = 0;
-        for (i = 0; i < w->screen_count; i++) {
-            if (w->screens[i].present) {
-                n++;
-            }
-        }
-        fprintf(f, "; %d present screens in cart MAP\n", n);
-    }
-    fprintf(f, ".segment \"VECTORS\"\n.org $FFFA\n");
-    fprintf(f, "        .word main\n        .word reset\n        .word main\n");
-    fclose(f);
-    return 0;
-}
-
 static int append_pal_plane(Buf *b, R01PalRow plane[R01_PAL_ROWS][R01_PALS_PER_ROW]) {
     int row, pal, c, o = 0;
     uint8_t tmp[R01_PAL_PLANE_BYTES];
@@ -631,142 +574,21 @@ static int append_pal_plane(Buf *b, R01PalRow plane[R01_PAL_ROWS][R01_PALS_PER_R
     return buf_append(b, tmp, sizeof(tmp));
 }
 
-static uint8_t cart_pack_world_flags(const char *custom_logic_path) {
-    int wx = 0;
-    int wy = 0;
-    int clip = 0;
-    int mode = 0;
-    uint8_t flags = 0;
-    if (custom_logic_path && r01_custom_logic_scan_bg0_wrap(custom_logic_path, &wx, &wy) == 0) {
-        if (wx) {
-            flags |= R01_CART_WHDR_FLAG_BG0_WRAP_X;
-        }
-        if (wy) {
-            flags |= R01_CART_WHDR_FLAG_BG0_WRAP_Y;
-        }
-    }
-    if (custom_logic_path && r01_custom_logic_scan_bg0_clip_bg1(custom_logic_path, &clip) == 0 && clip) {
-        flags |= R01_CART_WHDR_FLAG_BG0_CLIP_BG1;
-    }
-    if (custom_logic_path && r01_custom_logic_scan_game_mode(custom_logic_path, &mode) == 0 &&
-        mode == R01_GAME_MODE_PLATFORMER) {
-        flags |= R01_CART_WHDR_FLAG_PLATFORMER;
-    }
-    return flags;
+static uint8_t cart_pack_world_flags(void) {
+    return (uint8_t)(R01_CART_WHDR_FLAG_BG0_WRAP_X | R01_CART_WHDR_FLAG_BG0_WRAP_Y);
 }
 
-static void cart_pack_platformer_prg(uint8_t prg[R01_PRG_BYTES], const char *custom_logic_path, const R01World *w) {
-    int grav = 0;
-    int jump = 0;
-    int meter = 0;
-    int crouch = -1;
-    int idle = -1;
-    int walk = -1;
-    int jump_state = -1;
-    (void)w;
-    if (!prg) {
-        return;
-    }
-    prg[R01_PRG_PLAT_GRAVITY_OFF] = 0;
-    prg[R01_PRG_PLAT_JUMP_OFF] = 0;
-    prg[R01_PRG_PLAT_METER_OFF] = 0;
-    prg[R01_PRG_PLAT_CROUCH_OFF] = 0xFFu;
-    prg[R01_PRG_PLAYER_ANIM_IDLE_OFF] = 0xFFu;
-    prg[R01_PRG_PLAYER_ANIM_WALK_OFF] = 0xFFu;
-    prg[R01_PRG_PLAYER_ANIM_JUMP_OFF] = 0xFFu;
-    if (custom_logic_path) {
-        if (r01_custom_logic_scan_plat_gravity(custom_logic_path, &grav) == 0 && grav > 0) {
-            R01PlayPhysics ph;
-            r01_play_physics_init(&ph);
-            r01_play_physics_set_gravity(&ph, grav);
-            prg[R01_PRG_PLAT_GRAVITY_OFF] = (uint8_t)ph.gravity;
-        }
-        if (r01_custom_logic_scan_plat_jump(custom_logic_path, &jump) == 0 && jump > 0) {
-            R01PlayPhysics ph;
-            r01_play_physics_init(&ph);
-            r01_play_physics_set_jump(&ph, jump);
-            prg[R01_PRG_PLAT_JUMP_OFF] = (uint8_t)ph.jump;
-        }
-        if (r01_custom_logic_scan_plat_meter(custom_logic_path, &meter) == 0 && meter > 0) {
-            R01PlayPhysics ph;
-            r01_play_physics_init(&ph);
-            r01_play_physics_set_meter(&ph, meter);
-            prg[R01_PRG_PLAT_METER_OFF] = (uint8_t)ph.meter;
-        }
-        if (r01_custom_logic_scan_plat_crouch(custom_logic_path, &crouch) == 0 && crouch >= 0 &&
-            crouch < R01_ENTITY_STATES_MAX) {
-            prg[R01_PRG_PLAT_CROUCH_OFF] = (uint8_t)crouch;
-        }
-        if (r01_custom_logic_scan_player_idle(custom_logic_path, &idle) == 0 && idle >= 0 &&
-            idle < R01_ENTITY_STATES_MAX) {
-            prg[R01_PRG_PLAYER_ANIM_IDLE_OFF] = (uint8_t)idle;
-        }
-        if (r01_custom_logic_scan_player_walk(custom_logic_path, &walk) == 0 && walk >= 0 &&
-            walk < R01_ENTITY_STATES_MAX) {
-            prg[R01_PRG_PLAYER_ANIM_WALK_OFF] = (uint8_t)walk;
-        }
-        if (r01_custom_logic_scan_player_jump(custom_logic_path, &jump_state) == 0 && jump_state >= 0 &&
-            jump_state < R01_ENTITY_STATES_MAX) {
-            prg[R01_PRG_PLAYER_ANIM_JUMP_OFF] = (uint8_t)jump_state;
-        }
-    }
-}
-
-static int cart_pack_cam_deadzone(uint8_t *out_x, uint8_t *out_y, const char *custom_logic_path) {
-    int dx = R01_PLAY_CAM_DEADZONE_X_DEFAULT;
-    int dy = R01_PLAY_CAM_DEADZONE_Y_DEFAULT;
-    if (custom_logic_path && r01_custom_logic_scan_deadzone(custom_logic_path, &dx, &dy) == 0) {
-        /* scanned */
-    }
-    if (dx < 0) {
-        dx = 0;
-    }
-    if (dy < 0) {
-        dy = 0;
-    }
-    if (dx > 255) {
-        dx = 255;
-    }
-    if (dy > 255) {
-        dy = 255;
-    }
+static int cart_pack_cam_deadzone(uint8_t *out_x, uint8_t *out_y) {
     if (out_x) {
-        *out_x = (uint8_t)dx;
+        *out_x = (uint8_t)R01_PLAY_CAM_DEADZONE_X_DEFAULT;
     }
     if (out_y) {
-        *out_y = (uint8_t)dy;
+        *out_y = (uint8_t)R01_PLAY_CAM_DEADZONE_Y_DEFAULT;
     }
     return 0;
 }
 
-static int resolve_custom_logic_path(const char *cart_or_stem_path, char *out, size_t out_cap) {
-    const char *slash;
-    size_t dir_len;
-    if (!out || out_cap < 20) {
-        return -1;
-    }
-    if (!cart_or_stem_path || !cart_or_stem_path[0]) {
-        snprintf(out, out_cap, "output/C/custom_logic.c");
-        return 0;
-    }
-    slash = strrchr(cart_or_stem_path, '/');
-    if (!slash) {
-        slash = strrchr(cart_or_stem_path, '\\');
-    }
-    if (!slash) {
-        snprintf(out, out_cap, "C/custom_logic.c");
-        return 0;
-    }
-    dir_len = (size_t)(slash - cart_or_stem_path);
-    if (dir_len + strlen("/C/custom_logic.c") + 1 > out_cap) {
-        return -1;
-    }
-    memcpy(out, cart_or_stem_path, dir_len);
-    snprintf(out + dir_len, out_cap - dir_len, "/C/custom_logic.c");
-    return 0;
-}
-
-static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w, const char *custom_logic_path) {
+static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w) {
     uint8_t hdr[WORLD_HDR_SIZE];
     uint8_t dir[R01_MAX_PRESENT_SCREENS * SCREEN_DIR_ENT];
     uint8_t bg0_dir[R01_BG0_SCREENS_MAX * SCREEN_DIR_ENT];
@@ -897,11 +719,11 @@ static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w, c
     {
         uint8_t dz_x;
         uint8_t dz_y;
-        cart_pack_cam_deadzone(&dz_x, &dz_y, custom_logic_path);
+        cart_pack_cam_deadzone(&dz_x, &dz_y);
         put_u8(hdr + R01_CART_WHDR_CAM_DEADZONE_X, dz_x);
         put_u8(hdr + R01_CART_WHDR_CAM_DEADZONE_Y, dz_y);
     }
-    put_u8(hdr + R01_CART_WHDR_FLAGS, cart_pack_world_flags(custom_logic_path));
+    put_u8(hdr + R01_CART_WHDR_FLAGS, cart_pack_world_flags());
 
     if (buf_append(blob, hdr, WORLD_HDR_SIZE) != 0) {
         return -1;
@@ -1072,10 +894,7 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
     }
     memcpy(work, p, sizeof(*work));
     {
-        char custom_logic_path[R01_PATH_MAX];
-        resolve_custom_logic_path(cart_path, custom_logic_path, sizeof(custom_logic_path));
-        r01_project_add_custom_logic_solids(work, custom_logic_path);
-        if (build_world_blob(&world_blob, work, &work->worlds[0], custom_logic_path) != 0) {
+        if (build_world_blob(&world_blob, work, &work->worlds[0]) != 0) {
         free(work);
         free(world_blob.data);
         if (err_buf && err_cap > 0) {
@@ -1143,18 +962,22 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
     prg_layout.len_pal_spr = R01_PAL_PLANE_BYTES;
     prg_layout.default_pal_row = (uint8_t)(work->worlds[0].default_pal_row & 7u);
     prg_layout.off_map_screen0 = cart_off_map_screen0(&work->worlds[0], world_base);
-    r01_prg_fill_phase1(prg, work, &prg_layout);
+    if (r01_prg_load_or_compile(cart_path, prg, err_buf, err_cap) != 0) {
+        free(work);
+        free(world_blob.data);
+        free(other_blob.data);
+        free(entity_blob.data);
+        return -1;
+    }
+    r01_prg_overlay_tables(prg, work, &prg_layout);
     {
-        char custom_logic_path[R01_PATH_MAX];
         uint8_t bgm_buf[R01_CART_BGM_BLOB_MAX];
         int bgm_n;
-        resolve_custom_logic_path(cart_path, custom_logic_path, sizeof(custom_logic_path));
-        cart_pack_platformer_prg(prg, custom_logic_path, &work->worlds[0]);
         bgm_n = r01_bgm_pack_blob(bgm_buf, (unsigned)sizeof(bgm_buf), &work->bgm);
         if (bgm_n < 0) {
             bgm_n = 0;
         }
-        r01_bgm_pack_boot(prg, bgm_buf, bgm_n, custom_logic_path);
+        r01_bgm_pack_boot(prg, bgm_buf, bgm_n);
         off_bgm = world_base + (uint32_t)world_blob.len;
 
         memset(ptrs, 0, sizeof(ptrs));
@@ -1285,7 +1108,7 @@ int r01_export_bundle(const R01Project *p, const char *path_stem, char *err_buf,
     if (r01_export_codegen(p, path_stem, err_buf, err_cap) != 0) {
         return -1;
     }
-    if (r01_export_compile_plugin(path_stem, err_buf, err_cap) != 0) {
+    if (r01_export_compile_prg(path_stem, err_buf, err_cap) != 0) {
         return -1;
     }
     snprintf(path, sizeof(path), "%s.retr01", path_stem);

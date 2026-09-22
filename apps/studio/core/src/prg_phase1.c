@@ -2,43 +2,35 @@
 #include "retr01_studio/play.h"
 #include "retr01_studio/prg_phase1.h"
 
-#include "r01_apu_cart.h"
 #include "r01_hw_regs.h"
 #include "retr01_studio/cart.h"
 #include "retr01_studio/project.h"
 
-#include "play_collision_bin.h"
-
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #define CODE_BASE 0x8000u
 #define PLAY_OFF 0x0100u /* PRG+$0100 -> CPU $8100 */
 
 #define PLAY_PRESENT 0
-#define PLAY_PRESENT_BYTES 32 /* 16 rows x u16 LE bitmasks */
-#define PLAY_SPAWN_CELL 32    /* col|(row<<4) */
+#define PLAY_PRESENT_BYTES 32
+#define PLAY_SPAWN_CELL 32
 #define PLAY_COLL_COUNT 33
-#define PLAY_COLL_DIR 34 /* 4 bytes/screen: col, row, tab_lo, tab_hi (CPU addr) */
-/* Placements live in PRG (docs: not in cart world blob). Fits before collision code @ $8500. */
-#define PLAY_INST_COUNT 0xC0u /* PRG+$01C0: u8 count */
-#define PLAY_INST_TABLE 0xC1u /* PRG+$01C1: count * 6 B records */
+#define PLAY_COLL_DIR 34
+#define PLAY_INST_COUNT 0xC0u
+#define PLAY_INST_TABLE 0xC1u
 
 #define R01P_OFF 0x00F0u
-#define R01P_VER_COLLISION 4u /* ver 4: solid patterns at $8700, RAM copy $0200 */
-#define R01_PLAY_COLLISION_OFF 0x0500u /* CPU $8500 */
-#define R01_PLAY_SOLID_DATA_OFF 0x0700u /* CPU $8700 -- solid shadow tables */
+#define R01_PLAY_SOLID_DATA_OFF 0x0700u
+#define R01_PLAY_INST_LIMIT 0x0500u /* before CPU $8500 */
 
-enum {
-    PRG_OFF_BG_LO = 1,
-    PRG_OFF_BG_MID = 6,
-    PRG_OFF_BG_HI = 11,
-    PRG_OFF_SPR_LO = 32,
-    PRG_OFF_SPR_MID = 37,
-    PRG_OFF_SPR_HI = 42,
-    PRG_OFF_MAP_LO = 58,
-    PRG_OFF_MAP_MID = 63,
-    PRG_OFF_MAP_HI = 68,
-};
+#ifndef R01_REPO_ROOT
+#define R01_REPO_ROOT "."
+#endif
 
 static void put_u16_le(uint8_t *p, uint16_t v) {
     p[0] = (uint8_t)(v & 0xFF);
@@ -71,45 +63,6 @@ static void fill_present_mask(uint8_t mask[32], const R01World *w) {
     }
 }
 
-static void pick_spawn_scroll(const R01World *w, int col, int row, uint8_t *out_sx, uint8_t *out_sy) {
-    int px;
-    int py;
-    int ax;
-    int ay;
-    int cam_x;
-    int cam_y;
-    int ox;
-    int oy;
-    uint8_t sx;
-    uint8_t sy;
-
-    (void)w;
-    px = R01_PLAY_SPAWN_CENTER_X(col);
-    py = R01_PLAY_SPAWN_CENTER_Y(row);
-    ax = px + R01_PLAY_PLAYER_W / 2;
-    ay = py + R01_PLAY_PLAYER_H / 2;
-    cam_x = ax - R01_SCREEN_PX_W / 2;
-    cam_y = ay - R01_SCREEN_PX_H / 2;
-    if (cam_x < 0) {
-        cam_x = 0;
-    }
-    if (cam_y < 0) {
-        cam_y = 0;
-    }
-    ox = cam_x / R01_SCREEN_PX_W;
-    oy = cam_y / R01_SCREEN_PX_H;
-    sx = (uint8_t)(cam_x - ox * R01_SCREEN_PX_W);
-    sy = (uint8_t)(cam_y - oy * R01_SCREEN_PX_H);
-    if (sx > 127u) {
-        sx = 127u;
-    }
-    if (sy > 119u) {
-        sy = 119u;
-    }
-    *out_sx = sx;
-    *out_sy = sy;
-}
-
 static void pick_spawn(const R01World *w, int *col, int *row) {
     int idx;
     if (!col || !row) {
@@ -127,83 +80,36 @@ static void pick_spawn(const R01World *w, int *col, int *row) {
     }
 }
 
-static size_t append_boot_stream(uint8_t *out, const R01PrgCartLayout *layout) {
-    static const uint8_t stream[] = {
-        /* BG palette row (16 master indices) */
-        0xA9, 0x00,       /* LDA #bg_lo */
-        0x8D, 0x90, 0x7F, /* STA $7F90 */
-        0xA9, 0x00,       /* LDA #bg_mid */
-        0x8D, 0x91, 0x7F, /* STA $7F91 */
-        0xA9, 0x00,       /* LDA #bg_hi */
-        0x8D, 0x92, 0x7F, /* STA $7F92 */
-        0xA9, 0x00,       /* LDA #$00 */
-        0x8D, 0x08, 0x7F, /* STA $7F08 */
-        0xA2, 0x10,       /* LDX #16 */
-        0xAD, 0x93, 0x7F, /* LDA $7F93 */
-        0x8D, 0x09, 0x7F, /* STA $7F09 */
-        0xCA,             /* DEX */
-        0xD0, 0xF7,       /* BNE *-9 */
-        /* SPR palette row */
-        0xA9, 0x00,       /* LDA #spr_lo */
-        0x8D, 0x90, 0x7F, /* STA $7F90 */
-        0xA9, 0x00,       /* LDA #spr_mid */
-        0x8D, 0x91, 0x7F, /* STA $7F91 */
-        0xA9, 0x00,       /* LDA #spr_hi */
-        0x8D, 0x92, 0x7F, /* STA $7F92 */
-        0xA2, 0x10,       /* LDX #16 */
-        0xAD, 0x93, 0x7F, /* LDA $7F93 */
-        0x8D, 0x09, 0x7F, /* STA $7F09 */
-        0xCA,             /* DEX */
-        0xD0, 0xF7,       /* BNE *-9 */
-        /* Start-screen MAP -> VRAM */
-        0xA9, 0x00,       /* LDA #map_lo */
-        0x8D, 0x90, 0x7F, /* STA $7F90 */
-        0xA9, 0x00,       /* LDA #map_mid */
-        0x8D, 0x91, 0x7F, /* STA $7F91 */
-        0xA9, 0x00,       /* LDA #map_hi */
-        0x8D, 0x92, 0x7F, /* STA $7F92 */
-        0xA9, 0x00,       /* LDA #$00 */
-        0x8D, 0x10, 0x7F, /* STA $7F10 */
-        0x8D, 0x11, 0x7F, /* STA $7F11 */
-        0xA2, 0xF0,       /* LDX #240 */
-        0xAD, 0x93, 0x7F, /* LDA $7F93 */
-        0x8D, 0x12, 0x7F, /* STA $7F12 */
-        0xCA,             /* DEX */
-        0xD0, 0xF7,       /* BNE *-9 */
-        0xA2, 0xF0,       /* LDX #240 */
-        0xAD, 0x93, 0x7F, /* LDA $7F93 */
-        0x8D, 0x12, 0x7F, /* STA $7F12 */
-        0xCA,             /* DEX */
-        0xD0, 0xF7,       /* BNE *-9 */
-    };
-    uint32_t off_bg;
-    uint32_t off_spr;
-
-    memcpy(out, stream, sizeof(stream));
-    if (!layout || layout->off_map_screen0 == 0 || layout->off_pal_bg == 0) {
-        return sizeof(stream);
+static void patch_boot_map(uint8_t prg[R01_PRG_BYTES], const R01PrgCartLayout *layout) {
+    uint32_t off_bg = 0;
+    uint32_t off_spr = 0;
+    uint32_t off_map = 0;
+    if (!prg) {
+        return;
     }
-    off_bg = pal_row_off(layout->off_pal_bg, layout->len_pal_bg, layout->default_pal_row);
-    off_spr = layout->off_pal_spr
-                  ? pal_row_off(layout->off_pal_spr, layout->len_pal_spr, layout->default_pal_row)
-                  : off_bg + 16u;
-    out[PRG_OFF_BG_LO] = (uint8_t)(off_bg & 0xFFu);
-    out[PRG_OFF_BG_MID] = (uint8_t)((off_bg >> 8) & 0xFFu);
-    out[PRG_OFF_BG_HI] = (uint8_t)((off_bg >> 16) & 0xFFu);
-    out[PRG_OFF_SPR_LO] = (uint8_t)(off_spr & 0xFFu);
-    out[PRG_OFF_SPR_MID] = (uint8_t)((off_spr >> 8) & 0xFFu);
-    out[PRG_OFF_SPR_HI] = (uint8_t)((off_spr >> 16) & 0xFFu);
-    out[PRG_OFF_MAP_LO] = (uint8_t)(layout->off_map_screen0 & 0xFFu);
-    out[PRG_OFF_MAP_MID] = (uint8_t)((layout->off_map_screen0 >> 8) & 0xFFu);
-    out[PRG_OFF_MAP_HI] = (uint8_t)((layout->off_map_screen0 >> 16) & 0xFFu);
-    return sizeof(stream);
+    if (layout && layout->off_pal_bg) {
+        off_bg = pal_row_off(layout->off_pal_bg, layout->len_pal_bg, layout->default_pal_row);
+        off_spr = layout->off_pal_spr
+                      ? pal_row_off(layout->off_pal_spr, layout->len_pal_spr, layout->default_pal_row)
+                      : off_bg + 16u;
+        off_map = layout->off_map_screen0;
+    }
+    prg[R01_PRG_BOOTMAP_OFF + 0] = (uint8_t)(off_bg & 0xFFu);
+    prg[R01_PRG_BOOTMAP_OFF + 1] = (uint8_t)((off_bg >> 8) & 0xFFu);
+    prg[R01_PRG_BOOTMAP_OFF + 2] = (uint8_t)((off_bg >> 16) & 0xFFu);
+    prg[R01_PRG_BOOTMAP_OFF + 3] = (uint8_t)(off_spr & 0xFFu);
+    prg[R01_PRG_BOOTMAP_OFF + 4] = (uint8_t)((off_spr >> 8) & 0xFFu);
+    prg[R01_PRG_BOOTMAP_OFF + 5] = (uint8_t)((off_spr >> 16) & 0xFFu);
+    prg[R01_PRG_BOOTMAP_OFF + 6] = (uint8_t)(off_map & 0xFFu);
+    prg[R01_PRG_BOOTMAP_OFF + 7] = (uint8_t)((off_map >> 8) & 0xFFu);
+    prg[R01_PRG_BOOTMAP_OFF + 8] = (uint8_t)((off_map >> 16) & 0xFFu);
 }
 
 static void fill_instance_table(uint8_t prg[R01_PRG_BYTES], const R01World *w) {
     int n = 0;
     int i;
     size_t base = PLAY_OFF + PLAY_INST_TABLE;
-    size_t limit = R01_PLAY_COLLISION_OFF;
+    size_t limit = R01_PLAY_INST_LIMIT;
 
     prg[PLAY_OFF + PLAY_INST_COUNT] = 0;
     if (!w) {
@@ -244,7 +150,7 @@ static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *
     if (n > R01_SOLID_PAT_MAX) {
         n = R01_SOLID_PAT_MAX;
     }
-    if (data_off + 1u + (size_t)n * 2u >= R01_PRG_BYTES) {
+    if (data_off + 1u + (size_t)n * 2u >= R01_PRG_C_OFF) {
         prg[PLAY_OFF + PLAY_COLL_COUNT] = 0;
         return;
     }
@@ -266,7 +172,7 @@ static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *
         if (!s->present || s->col < 0 || s->col >= R01_GRID_MAX || s->row < 0 || s->row >= R01_GRID_MAX) {
             continue;
         }
-        if (data_off + R01_TILES_PER_SCREEN > R01_PRG_BYTES) {
+        if (data_off + R01_TILES_PER_SCREEN > R01_PRG_C_OFF) {
             break;
         }
         tab_addr = (uint16_t)(CODE_BASE + data_off);
@@ -288,83 +194,18 @@ static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *
     prg[PLAY_OFF + PLAY_COLL_COUNT] = (uint8_t)di;
 }
 
-static void install_collision_code(uint8_t prg[R01_PRG_BYTES]) {
-    if (R01_PLAY_COLLISION_OFF + play_collision_bin_len > R01_PLAY_SOLID_DATA_OFF) {
-        return;
-    }
-    memcpy(prg + R01_PLAY_COLLISION_OFF, play_collision_bin, play_collision_bin_len);
-}
-
-void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const R01PrgCartLayout *layout) {
+void r01_prg_overlay_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const R01PrgCartLayout *layout) {
     uint8_t mask[PLAY_PRESENT_BYTES];
     int spawn_c = R01_START_COL, spawn_r = R01_START_ROW;
-    size_t n = 0;
-    uint16_t main_pc;
     const R01World *w = p ? &p->worlds[0] : NULL;
-    static const uint8_t init[] = {
-        0x78,             /* SEI */
-        0xD8,             /* CLD */
-        0xA2, 0xFF,       /* LDX #$FF */
-        0x9A,             /* TXS */
-        0xA9, 0x00,       /* LDA #0 */
-        0x8D, 0x30, 0x7F, /* STA $7F30 WORLD */
-        0xA9, 0x00,       /* LDA #scroll_x (R01_PRG_INIT_SCROLL_X) */
-        0x8D, 0x02, 0x7F, /* STA $7F02 SCROLL_X */
-        0xA9, 0x00,       /* LDA #scroll_y (R01_PRG_INIT_SCROLL_Y) */
-        0x8D, 0x03, 0x7F, /* STA $7F03 SCROLL_Y */
-        0xA9, R01_PPUCTRL_BOOT,
-        0x8D, 0x00, 0x7F, /* STA $7F00 PPUCTRL */
-    };
-    uint8_t scroll_x = 0;
-    uint8_t scroll_y = 0;
-    static const uint8_t main_loop[] = {
-        /* main: wait VBlank */
-        0xAD, 0x01, 0x7F, /* LDA $7F01 */
-        0x29, 0x80,       /* AND #$80 */
-        0xF0, 0xF9,       /* BEQ main */
-        0xAD, 0x60, 0x7F, /* LDA $7F60 */
-        0x8D, 0xFE, 0x00, /* STA $00FE (pad snapshot) */
-        0x4C, 0x00, 0x80, /* JMP main (patched) */
-    };
 
-    memset(prg, 0xEA, R01_PRG_BYTES);
-    pick_spawn(w, &spawn_c, &spawn_r);
-    pick_spawn_scroll(w, spawn_c, spawn_r, &scroll_x, &scroll_y);
-    memcpy(prg + n, init, sizeof(init));
-    prg[n + R01_PRG_INIT_SCROLL_X] = scroll_x;
-    prg[n + R01_PRG_INIT_SCROLL_Y] = scroll_y;
-    n += sizeof(init);
-    {
-        /* Copy solid pattern list $8700 (count + pairs) into system RAM $0200. */
-        static const uint8_t copy_solids[] = {
-            0xAD, 0x00, 0x87, /* LDA $8700 */
-            0x8D, 0x00, 0x02, /* STA $0200 */
-            0xF0, 0x0E,       /* BEQ skip */
-            0x0A,             /* ASL A */
-            0xAA,             /* TAX */
-            0xA0, 0x00,       /* LDY #0 */
-            0xB9, 0x01, 0x87, /* loop: LDA $8701,Y */
-            0x99, 0x01, 0x02, /* STA $0201,Y */
-            0xC8,             /* INY */
-            0xCA,             /* DEX */
-            0xD0, 0xF6,       /* BNE loop */
-        };
-        memcpy(prg + n, copy_solids, sizeof(copy_solids));
-        n += sizeof(copy_solids);
+    if (!prg) {
+        return;
     }
-    n += append_boot_stream(prg + n, layout);
-    main_pc = (uint16_t)(CODE_BASE + n);
-    memcpy(prg + n, main_loop, sizeof(main_loop));
-    /* Patch JMP abs operand (last 2 bytes), not the LDA $7F60 in the middle. */
-    prg[n + sizeof(main_loop) - 2] = (uint8_t)(main_pc & 0xFFu);
-    prg[n + sizeof(main_loop) - 1] = (uint8_t)(main_pc >> 8);
-    n += sizeof(main_loop);
-
+    pick_spawn(w, &spawn_c, &spawn_r);
     fill_present_mask(mask, w);
     memcpy(prg + PLAY_OFF + PLAY_PRESENT, mask, PLAY_PRESENT_BYTES);
     prg[PLAY_OFF + PLAY_SPAWN_CELL] = R01_CELL_PACK(spawn_c, spawn_r);
-
-    install_collision_code(prg);
     fill_collision_tables(prg, p, w);
     fill_instance_table(prg, w);
 
@@ -372,11 +213,158 @@ void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const 
     prg[R01P_OFF + 1] = '0';
     prg[R01P_OFF + 2] = '1';
     prg[R01P_OFF + 3] = 'P';
-    prg[R01P_OFF + 4] = R01P_VER_COLLISION;
-    put_u16_le(prg + R01P_OFF + 5, (uint16_t)(CODE_BASE + R01_PLAY_COLLISION_OFF));
-    prg[R01_PRG_BGM_BOOT_OFF] = 0;
+    prg[R01P_OFF + 4] = R01_PRG_R01P_VER;
+    put_u16_le(prg + R01P_OFF + 5, (uint16_t)(CODE_BASE + R01_PLAY_SOLID_DATA_OFF));
+    prg[R01_PRG_PLAT_GRAVITY_OFF] = 0;
+    prg[R01_PRG_PLAT_JUMP_OFF] = 0;
+    prg[R01_PRG_PLAT_METER_OFF] = 0;
+    prg[R01_PRG_PLAT_CROUCH_OFF] = 0xFFu;
+    prg[R01_PRG_PLAYER_ANIM_IDLE_OFF] = 0xFFu;
+    prg[R01_PRG_PLAYER_ANIM_WALK_OFF] = 0xFFu;
+    prg[R01_PRG_PLAYER_ANIM_JUMP_OFF] = 0xFFu;
 
-    put_u16_le(prg + 0x7FFA, main_pc);
-    put_u16_le(prg + 0x7FFC, CODE_BASE);
-    put_u16_le(prg + 0x7FFE, main_pc);
+    patch_boot_map(prg, layout);
+}
+
+void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const R01PrgCartLayout *layout) {
+    if (!prg) {
+        return;
+    }
+    memset(prg, 0, R01_PRG_BYTES);
+    r01_prg_overlay_tables(prg, p, layout);
+}
+
+static int file_size(const char *path, size_t *out) {
+    struct stat st;
+    if (!path || stat(path, &st) != 0 || !S_ISREG(st.st_mode)) {
+        return -1;
+    }
+    if (out) {
+        *out = (size_t)st.st_size;
+    }
+    return 0;
+}
+
+static int read_prg_file(const char *path, uint8_t prg[R01_PRG_BYTES]) {
+    FILE *f;
+    size_t n;
+    if (!path || !prg) {
+        return -1;
+    }
+    f = fopen(path, "rb");
+    if (!f) {
+        return -1;
+    }
+    n = fread(prg, 1, R01_PRG_BYTES, f);
+    fclose(f);
+    return n == R01_PRG_BYTES ? 0 : -1;
+}
+
+static void split_dir(const char *path, char *out, size_t cap) {
+    const char *slash;
+    if (!out || cap < 2) {
+        return;
+    }
+    if (!path || !path[0]) {
+        out[0] = '.';
+        out[1] = '\0';
+        return;
+    }
+    slash = strrchr(path, '/');
+    if (!slash) {
+        out[0] = '.';
+        out[1] = '\0';
+        return;
+    }
+    if (slash == path) {
+        out[0] = '/';
+        out[1] = '\0';
+        return;
+    }
+    {
+        size_t n = (size_t)(slash - path);
+        if (n >= cap) {
+            n = cap - 1;
+        }
+        memcpy(out, path, n);
+        out[n] = '\0';
+    }
+}
+
+int r01_prg_compile_sdk(const char *logic_c, uint8_t prg[R01_PRG_BYTES], const char *out_prg_path, char *err_buf,
+                        size_t err_cap) {
+    char cmd[2048];
+    char tmp[1024];
+    const char *outp = out_prg_path;
+    int st;
+    size_t sz = 0;
+
+    if (!prg) {
+        if (err_buf && err_cap) {
+            snprintf(err_buf, err_cap, "bad args");
+        }
+        return -1;
+    }
+    if (!logic_c || !logic_c[0]) {
+        logic_c = R01_REPO_ROOT "/apps/sdk/r01_c/game_logic.c";
+    }
+    if (!outp || !outp[0]) {
+        snprintf(tmp, sizeof(tmp), "/tmp/retr01_sdk_%d.prg", (int)getpid());
+        outp = tmp;
+    }
+    if (r01_path_ensure_parent(outp, err_buf, err_cap) != 0) {
+        return -1;
+    }
+    if (snprintf(cmd, sizeof(cmd), "\"%s/apps/sdk/r01_c/build-prg.sh\" \"%s\" \"%s\"", R01_REPO_ROOT, logic_c,
+                 outp) >= (int)sizeof(cmd)) {
+        if (err_buf && err_cap) {
+            snprintf(err_buf, err_cap, "compile command too long");
+        }
+        return -1;
+    }
+    st = system(cmd);
+    if (st == -1 || !WIFEXITED(st) || WEXITSTATUS(st) != 0) {
+        if (err_buf && err_cap) {
+            snprintf(err_buf, err_cap, "llvm-mos missing or PRG build failed. Run ./scripts/fetch-llvm-mos.sh");
+        }
+        return -1;
+    }
+    if (file_size(outp, &sz) != 0 || sz != R01_PRG_BYTES) {
+        if (err_buf && err_cap) {
+            snprintf(err_buf, err_cap, "PRG size %zu (want %u)", sz, (unsigned)R01_PRG_BYTES);
+        }
+        return -1;
+    }
+    return read_prg_file(outp, prg);
+}
+
+int r01_prg_load_or_compile(const char *cart_path, uint8_t prg[R01_PRG_BYTES], char *err_buf, size_t err_cap) {
+    char dir[R01_PATH_MAX];
+    char logic[R01_PATH_MAX];
+    char built[R01_PATH_MAX];
+    size_t sz = 0;
+    struct stat st;
+
+    split_dir(cart_path, dir, sizeof(dir));
+    if (snprintf(logic, sizeof(logic), "%s/game_logic.c", dir) >= (int)sizeof(logic)) {
+        if (err_buf && err_cap) {
+            snprintf(err_buf, err_cap, "path too long");
+        }
+        return -1;
+    }
+    if (stat(logic, &st) != 0) {
+        snprintf(logic, sizeof(logic), "%s/apps/sdk/r01_c/game_logic.c", R01_REPO_ROOT);
+    }
+    if (snprintf(built, sizeof(built), "%s/retr01.prg", dir) >= (int)sizeof(built)) {
+        if (err_buf && err_cap) {
+            snprintf(err_buf, err_cap, "path too long");
+        }
+        return -1;
+    }
+    if (file_size(built, &sz) == 0 && sz == R01_PRG_BYTES) {
+        if (read_prg_file(built, prg) == 0) {
+            return 0;
+        }
+    }
+    return r01_prg_compile_sdk(logic, prg, built, err_buf, err_cap);
 }

@@ -43,5 +43,9 @@ void R01_NOINLINE r01_game_on_tick(R01GameCtx *ctx);
 void R01_NOINLINE r01_game_on_vblank(R01GameCtx *ctx);
 void r01_game_play_tick(R01GameCtx *ctx);
 void r01_game_play_reset(void);
+void r01_game_spawn(R01GameCtx *ctx);
+void r01_game_camera_snap(R01GameCtx *ctx);
+void r01_sys_publish(const R01GameCtx *ctx);
+void r01_game_draw_player(const R01GameCtx *ctx);
 
 #endif

@@ -102,13 +102,26 @@ int main(void) {
         return fail("PHX");
     }
 
-    m.ram[0x0107] = 0x80; /* BRA +2 */
-    m.ram[0x0108] = 0x02;
-    m.ram[0x0109] = 0xEA;
-    m.ram[0x010A] = 0xEA;
-    m.cpu.pc = 0x0107;
+    m.nmi_pending = 0;
+    m.cpu.stalled = 0;
+    m.ram[0x50] = 0x01;
+    m.ram[0x60] = 0x46; /* LSR $50 */
+    m.ram[0x61] = 0x50;
+    m.cpu.pc = 0x0060;
+    m.cpu.p = 0;
     (void)r01e_cpu_step(&m.cpu, &m);
-    if (m.cpu.pc != 0x010B) {
+    if (m.ram[0x50] != 0x00 || (m.cpu.p & 0x03) != 0x03) {
+        r01e_machine_shutdown(&m);
+        return fail("LSR zp");
+    }
+
+    m.ram[0x0110] = 0x80; /* BRA +2 */
+    m.ram[0x0111] = 0x02;
+    m.ram[0x0112] = 0xEA;
+    m.ram[0x0113] = 0xEA;
+    m.cpu.pc = 0x0110;
+    (void)r01e_cpu_step(&m.cpu, &m);
+    if (m.cpu.pc != 0x0114) {
         fprintf(stderr, "FAIL BRA pc=$%04x\n", m.cpu.pc);
         r01e_machine_shutdown(&m);
         return 1;

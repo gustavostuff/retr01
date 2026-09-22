@@ -19,6 +19,24 @@ static int cart_is_phase1_play(const R01eCart *c) {
     return prg[0x00F0] == 'R' && prg[0x00F1] == '0' && prg[0x00F2] == '1' && prg[0x00F3] == 'P';
 }
 
+static int cart_is_c_prg(const R01eCart *c) {
+    const uint8_t *prg = r01e_cart_prg(c);
+    if (!prg || c->len_prg < 0x00F5u) {
+        return 0;
+    }
+    return cart_is_phase1_play(c) && prg[0x00F4] >= 5u;
+}
+
+static void play_follow_c_sys(R01eMachine *m) {
+    if (!m || !m->ram[0x02E8]) {
+        return;
+    }
+    m->play.player_x = (int)m->ram[0x02E0] | ((int)m->ram[0x02E1] << 8);
+    m->play.player_y = (int)m->ram[0x02E2] | ((int)m->ram[0x02E3] << 8);
+    m->play.cam_x = (int)m->ram[0x02E4] | ((int)m->ram[0x02E5] << 8);
+    m->play.cam_y = (int)m->ram[0x02E6] | ((int)m->ram[0x02E7] << 8);
+}
+
 static void player_hit_rect(R01eMachine *m, int origin_x, int origin_y, int state_idx, int *hx, int *hy, int *hw,
                             int *hh) {
     R01eWorldView wv;
@@ -551,6 +569,16 @@ int r01e_play_start(R01eMachine *m) {
     }
     r01e_play_reset(&m->play);
     play_load_cart_camera(m);
+    if (cart_is_c_prg(&m->cart)) {
+        m->play.enabled = 1;
+        if (m->ram[0x02E8]) {
+            play_follow_c_sys(m);
+            clamp_cam_to_world_bounds(m);
+            r01e_play_sync_video(m);
+            (void)r01e_video_sync_camera(m);
+        }
+        return 1;
+    }
     /* Phase 1 carts (R01P) always run Studio-Play-equivalent runtime from cart MAP. */
     if (!cart_is_phase1_play(&m->cart) && !r01e_cart_has_screen(&m->cart, 0, R01E_START_COL, R01E_START_ROW)) {
         /* Still try if any screens exist. */
@@ -592,6 +620,14 @@ void r01e_play_tick(R01eMachine *m) {
     if (!m || !m->play.enabled) {
         return;
     }
+    if (cart_is_c_prg(&m->cart)) {
+        if (m->ram[0x02E8]) {
+            play_follow_c_sys(m);
+            clamp_cam_to_world_bounds(m);
+            r01e_play_sync_video(m);
+        }
+        return;
+    }
     pl = &m->play;
     pad = m->io.pad0;
     pl->pad_prev = pad;
@@ -620,9 +656,6 @@ void r01e_play_tick(R01eMachine *m) {
         {
             int move_mul = 1;
             int delay_ov = 0;
-            if (m->custom_tick) {
-                m->custom_tick(pad, &move_mul, &delay_ov);
-            }
             if (move_mul < 1) {
                 move_mul = 1;
             }

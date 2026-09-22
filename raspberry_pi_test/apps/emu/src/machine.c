@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dlfcn.h>
 
 /*
  * Run Phase 1 PRG until the boot MAP stream has written a full screen into slot 0
@@ -38,59 +37,6 @@ static void catchup_prg_boot(R01eMachine *m) {
     }
 }
 
-static void r01e_machine_unload_custom(R01eMachine *m) {
-    if (!m) {
-        return;
-    }
-    if (m->custom_so) {
-        dlclose(m->custom_so);
-    }
-    m->custom_so = NULL;
-    m->custom_tick = NULL;
-}
-
-static void r01e_machine_try_load_custom(R01eMachine *m) {
-    char so[1024];
-    char *slash;
-    size_t n;
-    size_t leaf_len;
-
-    r01e_machine_unload_custom(m);
-    if (!m || !m->cart_path[0]) {
-        return;
-    }
-    n = strlen(m->cart_path);
-    if (n >= sizeof(so)) {
-        return;
-    }
-    memcpy(so, m->cart_path, n + 1u);
-    slash = strrchr(so, '/');
-    if (slash) {
-        *slash = '\0';
-    } else {
-        so[0] = '.';
-        so[1] = '\0';
-    }
-    n = strlen(so);
-    leaf_len = strlen("/C/r01_custom.so");
-    if (n + leaf_len + 1u > sizeof(so)) {
-        return;
-    }
-    memcpy(so + n, "/C/r01_custom.so", leaf_len + 1u);
-    m->custom_so = dlopen(so, RTLD_NOW);
-    if (!m->custom_so) {
-        return;
-    }
-    {
-        void *sym = dlsym(m->custom_so, "r01_host_custom_tick");
-        if (!sym) {
-            r01e_machine_unload_custom(m);
-            return;
-        }
-        memcpy(&m->custom_tick, &sym, sizeof(m->custom_tick));
-    }
-}
-
 int r01e_machine_init(R01eMachine *m, const char *cart_path, char *err, size_t err_cap) {
     if (!m || !cart_path) {
         if (err && err_cap) {
@@ -110,7 +56,6 @@ int r01e_machine_init(R01eMachine *m, const char *cart_path, char *err, size_t e
         memcpy(m->cart_path, cart_path, n);
         m->cart_path[n] = '\0';
     }
-    r01e_machine_try_load_custom(m);
     m->dot_num = R01E_DOT_HZ;
     m->dot_den = R01E_CPU_HZ;
     r01e_machine_reset(m);
@@ -138,7 +83,6 @@ void r01e_machine_shutdown(R01eMachine *m) {
     if (!m) {
         return;
     }
-    r01e_machine_unload_custom(m);
     r01e_cart_free(&m->cart);
     memset(m, 0, sizeof(*m));
 }

@@ -29,7 +29,6 @@ int r01_project_set_pattern_solid(R01Project *p, int bank, int tile, int on);
 int r01_project_toggle_pattern_solid(R01Project *p, int bank, int tile);
 void r01_project_sync_solids(R01Project *p);
 void r01_project_copy_solid_pats(const R01Project *p, uint8_t *count, uint8_t *banks, uint8_t *tiles);
-void r01_project_add_custom_logic_solids(R01Project *p, const char *custom_logic_path);
 
 /* Derived overlay: solids[] cache. Collision uses bank+tile vs the pattern list. */
 static inline int r01_screen_cell_is_solid(const R01Screen *s, int cell) {

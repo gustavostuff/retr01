@@ -279,7 +279,7 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 | `+$0120` | `$8120` | Spawn cell (`col | row<<4`) |
 | `+$0121` | `$8121` | Collision dir count (per-screen probe tables) |
 | `+$0122` | `$8122` | Collision dir entries |
-| `+$0700` | `$8700` | Solid pattern list: u8 count, then `count` x (bank, tile). Packed from `r01_solid_pattern_add` in `custom_logic.c` (and project JSON). Boot copies to RAM `$0200`. Probe tables follow |
+| `+$0700` | `$8700` | Solid pattern list: u8 count, then `count` x (bank, tile). Packed from project JSON `solid_patterns` (Studio Set Solid). Boot copies to RAM `$0200`. Probe tables follow |
 | `+$01C0` | `$81C0` | Instance count (u8, max **64**) |
 | `+$01C1` | `$81C1` | Instance table (`count` x **6 B**, pack below) |
 | `+$00F0` | `$80F0` | `R01P` marker + version byte |
@@ -303,7 +303,7 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 
 Table grows toward collision code at `$8500`. **64** records need **384 B** and fit.
 
-Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs). Collision solids are a bank+tile list in system RAM (copied from PRG `$8700` at boot). Author `custom_logic.c` marks the list with `r01_solid_pattern_add`.
+Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs). Collision solids are a bank+tile list in system RAM (copied from PRG `$8700` at boot). Studio Set Solid stores `solid_patterns` in the project JSON. `r01_solid_pattern_add` in `game_logic.c` is the author API.
 
 ## Notes
 

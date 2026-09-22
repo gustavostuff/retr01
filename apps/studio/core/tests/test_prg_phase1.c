@@ -10,12 +10,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 TEST_MAIN() {
     R01Project *p = (R01Project *)calloc(1, sizeof(R01Project));
     uint8_t *prg;
     R01PrgCartLayout layout;
-    uint16_t reset;
 
     EXPECT(p != NULL, "alloc");
     if (!p) {
@@ -39,23 +39,21 @@ TEST_MAIN() {
 
     r01_prg_fill_phase1(prg, p, &layout);
 
-    EXPECT(prg[0] == 0x78, "SEI at reset");
     EXPECT(prg[0x00F0] == 'R' && prg[0x00F1] == '0' && prg[0x00F2] == '1' && prg[0x00F3] == 'P',
            "R01P marker");
-    EXPECT(prg[0x00F4] == 4, "R01P solid-pattern ver");
+    EXPECT(prg[0x00F4] == R01_PRG_R01P_VER, "R01P C-runtime ver");
     EXPECT(prg[R01_PRG_BGM_BOOT_OFF] == 0, "boot track empty after fill");
 
     /* Play table lives at PRG+$0100 (CPU $8100). */
-    EXPECT(prg[0x0100] != 0xEA || prg[0x0108] != 0xEA, "play table region written");
+    EXPECT(prg[0x0120] == R01_CELL_PACK(R01_START_COL, R01_START_ROW) || prg[0x0100] != 0, "play table written");
 
-    /* Reset vector at CPU $FFFC => PRG+$7FFC. */
-    reset = (uint16_t)prg[0x7FFC] | ((uint16_t)prg[0x7FFD] << 8);
-    EXPECT(reset == 0x8000u, "reset vector $8000");
+    EXPECT(prg[R01_PRG_BOOTMAP_OFF] == 0x34, "boot MAP pal_bg lo");
+    EXPECT(prg[R01_PRG_BOOTMAP_OFF + 6] == 0x00 && prg[R01_PRG_BOOTMAP_OFF + 7] == 0x10,
+           "boot MAP screen0");
 
     {
         uint8_t blob[R01_CART_BGM_BLOB_MAX];
         int nblob;
-        FILE *f = fopen("test_bgm_logic.c", "w");
         R01BgmData bgm;
         uint16_t off;
         uint16_t len;
@@ -68,15 +66,10 @@ TEST_MAIN() {
         snprintf(bgm.region[0][0][0].tok, sizeof(bgm.region[0][0][0].tok), "C4");
         bgm.ch_ins[0][0] = R01_BGM_INS_PIANO;
         bgm.ch_ins[0][2] = R01_BGM_INS_FLUTE;
-        EXPECT(f != NULL, "write custom_logic");
-        if (f) {
-            fputs("void r01_custom_on_init(R01GameCtx *ctx) {\n    r01_bgm_play(ctx, 1);\n}\n", f);
-            fclose(f);
-        }
         nblob = r01_bgm_pack_blob(blob, (unsigned)sizeof(blob), &bgm);
         EXPECT(nblob >= (int)R01_PRG_BGM_HDR_V1, "blob length");
-        r01_bgm_pack_boot(prg, blob, nblob, "test_bgm_logic.c");
-        EXPECT(prg[R01_PRG_BGM_BOOT_OFF] == 1, "boot track 1 from r01_bgm_play");
+        r01_bgm_pack_boot(prg, blob, nblob);
+        EXPECT(prg[R01_PRG_BGM_BOOT_OFF] == 1, "boot track 1 from packed blob");
         EXPECT(blob[0] == R01_PRG_BGM_MAGIC0 && blob[1] == R01_PRG_BGM_MAGIC1, "BG magic");
         EXPECT(blob[2] == 1, "packed track count");
         EXPECT(blob[3] == R01_PRG_BGM_INS_VER, "ins table present");
@@ -87,11 +80,27 @@ TEST_MAIN() {
         EXPECT(off == R01_PRG_BGM_HDR_V1, "payload starts after ins table");
         EXPECT(len > 0, "payload length");
         EXPECT(blob[off] == R01_APU_FD_OP, "FD stream");
-        r01_bgm_pack_boot(prg, blob, nblob, NULL);
-        EXPECT(prg[R01_PRG_BGM_BOOT_OFF] == 0, "no custom_logic means no autoplay");
-        reset = (uint16_t)prg[0x7FFC] | ((uint16_t)prg[0x7FFD] << 8);
-        EXPECT(reset == 0x8000u, "vectors survive BGM pack");
-        remove("test_bgm_logic.c");
+        EXPECT(prg[0x00F0] == 'R', "R01P survives BGM pack");
+    }
+
+    EXPECT(prg[R01_PRG_PLAY_INST_COUNT_OFF] == 0, "empty instance count");
+
+    {
+        const char *cc = R01_REPO_ROOT "/tools/llvm-mos/bin/mos-common-clang";
+        struct stat stcc;
+        if (stat(cc, &stcc) == 0) {
+            char err[256];
+            uint8_t keep;
+            EXPECT(r01_prg_compile_sdk(NULL, prg, "sdk_overlay.prg", err, sizeof(err)) == 0, "compile sdk prg");
+            keep = prg[R01_PRG_C_OFF];
+            EXPECT(prg[0] == 0x78, "compiled SEI");
+            EXPECT(prg[0x7FFC] == 0x00 && prg[0x7FFD] == 0x80, "compiled RESET");
+            r01_prg_overlay_tables(prg, p, &layout);
+            EXPECT(prg[R01_PRG_C_OFF] == keep, "overlay keeps C at $C800");
+            EXPECT(prg[0] == 0x78, "overlay keeps boot");
+            EXPECT(prg[0x7FFC] == 0x00 && prg[0x7FFD] == 0x80, "overlay keeps RESET");
+            EXPECT(prg[R01_PRG_BOOTMAP_OFF] == 0x34, "overlay bootmap pal");
+        }
     }
 
     free(prg);

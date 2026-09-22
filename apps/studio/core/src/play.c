@@ -6,75 +6,12 @@
 #include "retr01_studio/project.h"
 #include "retr01_studio/player_anim.h"
 #include "retr01_studio/paths.h"
-#include "r01_custom_logic_scan.h"
 #include "r01_play_physics.h"
 
 #include <stdio.h>
 #include <string.h>
 
 #define R01_PROJ_FIXED_SHIFT 8
-
-static void play_apply_custom_logic(R01GameCtx *ctx, const char *project_path) {
-    char path[R01_PATH_MAX];
-    int dx;
-    int dy;
-    int mode;
-    int grav;
-    int jump;
-    int meter;
-    int idle = -1;
-    int walk = -1;
-    int jump_state = -1;
-    int crouch;
-    if (!ctx) {
-        return;
-    }
-    if (project_path && project_path[0]) {
-        if (r01_custom_logic_path_for_project(project_path, path, sizeof(path)) != 0) {
-            return;
-        }
-    } else if (r01_path_resolve("output/C/custom_logic.c", path, sizeof(path)) != 0) {
-        snprintf(path, sizeof(path), "output/C/custom_logic.c");
-    }
-    if (r01_custom_logic_scan_deadzone(path, &dx, &dy) == 0) {
-        r01_camera_set_deadzone(ctx, dx, dy);
-    }
-    if (r01_custom_logic_scan_game_mode(path, &mode) == 0) {
-        r01_game_set_mode(ctx, mode);
-    }
-    if (r01_custom_logic_scan_plat_gravity(path, &grav) == 0 && grav > 0) {
-        r01_platformer_set_gravity(ctx, grav);
-    }
-    if (r01_custom_logic_scan_plat_jump(path, &jump) == 0 && jump > 0) {
-        r01_platformer_set_jump(ctx, jump);
-    }
-    if (r01_custom_logic_scan_plat_meter(path, &meter) == 0 && meter > 0) {
-        r01_platformer_set_meter(ctx, meter);
-    }
-    if (r01_custom_logic_scan_player_idle(path, &idle) == 0) {
-        r01_player_anim_set_idle_state(ctx, idle);
-    }
-    if (r01_custom_logic_scan_player_walk(path, &walk) == 0) {
-        r01_player_anim_set_walk_all(ctx, walk);
-    }
-    if (r01_custom_logic_scan_plat_crouch(path, &crouch) == 0) {
-        r01_player_anim_set_crouch_state(ctx, crouch);
-    }
-    if (r01_custom_logic_scan_player_jump(path, &jump_state) == 0) {
-        r01_player_anim_set_jump_state(ctx, jump_state);
-    }
-    {
-        uint8_t banks[R01_SOLID_PAT_MAX];
-        uint8_t tiles[R01_SOLID_PAT_MAX];
-        int n = 0;
-        int i;
-        if (r01_custom_logic_scan_solid_patterns(path, banks, tiles, R01_SOLID_PAT_MAX, &n) == 0) {
-            for (i = 0; i < n; i++) {
-                r01_solid_pattern_add(ctx, (int)banks[i], (int)tiles[i]);
-            }
-        }
-    }
-}
 
 static void place_player_on_screen(R01PlayState *pl, int col, int row) {
     r01_player_warp(&pl->ctx, col, row);
@@ -146,7 +83,7 @@ int r01_play_start(R01PlayState *pl, const R01Project *p, const char *project_pa
     if (p) {
         r01_project_copy_solid_pats(p, &pl->ctx.solid_pat_count, pl->ctx.solid_pat_bank, pl->ctx.solid_pat_tile);
     }
-    play_apply_custom_logic(&pl->ctx, project_path);
+    (void)project_path;
     if (!p) {
         return 0;
     }

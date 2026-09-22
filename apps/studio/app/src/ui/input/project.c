@@ -229,9 +229,9 @@ void ui_export_step(UiState *ui) {
         ui->rom_export_step = UI_ROM_EXPORT_COMPILE;
         return;
     case UI_ROM_EXPORT_COMPILE:
-        if (r01_export_compile_plugin(stem, err, sizeof(err)) != 0) {
+        if (r01_export_compile_prg(stem, err, sizeof(err)) != 0) {
             ui->rom_export_step = UI_ROM_EXPORT_IDLE;
-            ui_toast(ui, err[0] ? err : "plugin compile failed", 1);
+            ui_toast(ui, err[0] ? err : "PRG compile failed", 1);
             return;
         }
         ui->rom_export_spin++;

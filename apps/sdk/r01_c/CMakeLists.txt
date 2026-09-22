@@ -14,10 +14,12 @@ add_executable(test_game_logic
   tests/test_game_logic.c
   src/game.c
   src/hw.c
+  src/boot.c
   src/play_tick.c
   game_logic.c
   ${R01_COMMON}/r01_play_camera.c
   ${R01_COMMON}/r01_play_physics.c
+  ${R01_COMMON}/r01_play_collision.c
 )
 target_include_directories(test_game_logic PRIVATE ${R01_SDK_C}/include ${R01_COMMON})
 target_compile_definitions(test_game_logic PRIVATE R01_HOST_TEST)
