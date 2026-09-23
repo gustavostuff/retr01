@@ -122,6 +122,64 @@ int main(void) {
         expect_true(ns_entity_sense(osc, "VDD") == NS_LVL_H, "inter-bb jumper carries VDD");
     }
 
+    {
+        R01aBoard gndb;
+        NsBreadboard *bb2;
+        NsEntity *osc;
+        NsEntity *prom;
+        NsPbHole rail = {2, NS_PB_LANE_TOP_NEG};
+        NsPbHole dest = {10, NS_PB_LANE_A};
+        NsPbHole gndh = {10, NS_PB_LANE_E};
+        NsPbHole gndh2 = {10, NS_PB_LANE_F};
+        int hx;
+        int hy;
+        int tx;
+        int ty;
+        r01a_board_init(&gndb);
+        r01a_board_set_wire_mode(&gndb, R01A_WIRE_MANUAL);
+        osc = r01a_osc_dot_entity(&gndb.osc_dot);
+        prom = r01a_at27c256r_entity(&gndb.prom);
+        bb2 = r01a_board_add_breadboard(&gndb, 400, 40);
+        expect_true(bb2 != NULL, "BB2 gnd");
+        expect_true(r01a_board_jumper_add_across(&gndb, &gndb.breadboard, rail, bb2, dest, 40, 40, 40),
+                    "inter-bb gnd jumper");
+        ns_breadboard_hole_world(bb2, gndh, &hx, &hy);
+        ns_entity_place(osc, 0, 0);
+        expect_true(ns_entity_pin_tip_board(osc, 7, &tx, &ty), "OSC GND tip");
+        ns_entity_place(osc, hx - tx, hy - ty);
+        ns_breadboard_hole_world(bb2, gndh2, &hx, &hy);
+        ns_entity_place(prom, 0, 0);
+        expect_true(ns_entity_pin_tip_board(prom, 14, &tx, &ty), "PROM GND tip");
+        ns_entity_place(prom, hx - tx, hy - ty);
+        expect_true(r01a_board_jumper_add_on(&gndb, bb2, gndh, gndh2, 40, 40, 40), "tie GND strips");
+        r01a_board_step(&gndb);
+        expect_true(ns_entity_sense(osc, "GND") == NS_LVL_L, "inter-bb jumper carries GND");
+        expect_true(ns_entity_sense(prom, "GND") == NS_LVL_L, "second GND pin on bridged net");
+        expect_true(ns_entity_sense(osc, "GND") != NS_LVL_X, "tied GND pins are not a bus fight");
+        r01a_board_shutdown(&gndb);
+    }
+
+    {
+        NsPassive a;
+        NsPassive b;
+        memset(&a, 0, sizeof(a));
+        memset(&b, 0, sizeof(b));
+        a.kind = NS_PASSIVE_R;
+        b.kind = NS_PASSIVE_R;
+        ns_passive_set_orient(&a, NS_ORIENT_0);
+        ns_passive_set_orient(&b, NS_ORIENT_0);
+        ns_passive_set_pivot(&a, 10, 10);
+        ns_passive_set_pivot(&b, 10, 15);
+        expect_true(ns_passive_hit(&a, 10, 10), "R A pivot hit");
+        expect_true(!ns_passive_hit(&b, 10, 10), "R B misses A pivot");
+        expect_true(ns_passive_hit(&b, 10, 15), "R B pivot hit");
+        expect_true(!ns_passive_hit(&a, 10, 15), "R A misses B pivot");
+        ns_passive_set_orient(&a, NS_ORIENT_90);
+        ns_passive_set_pivot(&a, 40, 40);
+        expect_true(ns_passive_hit(&a, 40, 40), "R rotated pivot hit");
+        expect_true(!ns_passive_hit(&a, 40 - 5, 40), "R rotated misses neighbor pitch");
+    }
+
     r01a_board_shutdown(&board);
     return test_done("test_passives");
 }

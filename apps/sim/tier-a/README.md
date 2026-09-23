@@ -21,9 +21,9 @@ No CPU, cart, AVRs, VRAM, or Compositor.
 
 BB1 north rails supply 5 V (top positive) and GND (top negative). Extra protoboards have none. Auto binds VDD/GND on chip pins without breadboard work. In Manual, VDD, GND, clocks, and the rest need breadboard connections, including those north rails. OSC OE# may float (not low). PROM CE#/OE# must be tied low. The LCD is blank until that protoboard netlist encodes.
 
-Pin hover draws a 2-elbow line from that pin to Auto-net partners on other parts. The line pulses from fully transparent to a net color: red power, green data, cyan clock, black ground. Pins on the ground net (GND/AGND/DGND, PROM CE#/OE# and unused A[13:6], AD724 SELECT, 75 ohm DAC loads) route to a nearby north negative-rail hole on BB1 (left or right edge). Hovering a north GND rail hole on BB1 draws the same lines out to those pins. Hovering a north positive rail hole on BB1 draws lines to the 5 V net (VDD/VCC/APOS/DPOS, oscillator OE#, PLD RES#, PROM VPP/PGM#, AD724 ENCD/STND/VSYNC). Extra protoboard rails are isolated and do not show those lines. In Manual, a line is omitted once that link already exists on a breadboard strip or jumper.
+Pin hover draws a line from that pin to Auto-net partners on other parts. Space toggles those lines between hover only and always on. The line pulses from fully transparent to a net color: red power, green data, cyan clock, black ground. Pins on the ground net (GND/AGND/DGND, PROM CE#/OE# and unused A[13:6], AD724 SELECT, 75 ohm DAC loads) route to a nearby north negative-rail hole on BB1 (left or right edge). Hovering a north GND rail hole on BB1 draws the same lines out to those pins. Hovering a north positive rail hole on BB1 draws lines to the 5 V net (VDD/VCC/APOS/DPOS, oscillator OE#, PLD RES#, PROM VPP/PGM#, AD724 ENCD/STND/VSYNC). Extra protoboard rails are isolated and do not show those lines. In Manual, a line is omitted once that link already exists on a breadboard strip or jumper.
 
-Part positions, breadboard jumpers, pan, and Auto/Manual are written to `ui_layout.json` on quit and restored on the next launch.
+Part positions, breadboard jumpers, pan, zoom, air-wire visibility, and Auto/Manual are written to `ui_layout.json` on quit and restored on the next launch.
 
 ## Build
 
@@ -43,22 +43,25 @@ While running, each UI frame advances a short DOT burst under a wall-clock budge
 | --- | --- |
 | Auto/Manual (top-left) | Toggle soft netlist vs breadboard routing |
 | A | Same as the Auto/Manual button |
-| J | Toggle jumper placement. Click hole A, then hole B, on the same protoboard or two different ones. Wheel cycles color after A, or on a selected jumper. |
+| J | Toggle jumper placement. Click hole A, then hole B, on the same protoboard or two different ones. Wheel cycles color after A, or on a selected jumper. While hole A is armed, a marching-ants 2-elbow line runs from the cursor to the remaining Auto-net destination. |
 | Click a jumper | Select. Drag an end to another hole. Drag an elbow to reroute. Delete/Backspace removes selected jumpers. |
 | Click a breadboard | Select. Delete/Backspace removes selected protoboards and their jumpers. |
 | X | Clear jumpers |
-| Hover a pin | 2-elbow line to Auto-net partners, or to BB1 GND rail. Pulses transparent to red (power), green (data), cyan (clock), or black (ground). Manual omits links already on a strip or jumper |
-| Hover a GND rail hole | On BB1 north negative rail: pulsing black 2-elbow lines to ground-net IC and passive pins still missing a strip or jumper |
-| Hover a VDD rail hole | On BB1 north positive rail: pulsing red 2-elbow lines to 5 V-net IC and passive pins still missing a strip or jumper |
+| Hover a pin | Line to Auto-net partners, or to BB1 GND rail. Pulses transparent to red (power), green (data), cyan (clock), or black (ground). Manual omits links already on a strip or jumper |
+| Hover a GND rail hole | On BB1 north negative rail: pulsing black lines to ground-net IC and passive pins still missing a strip or jumper |
+| Hover a VDD rail hole | On BB1 north positive rail: pulsing red lines to 5 V-net IC and passive pins still missing a strip or jumper |
 | Right-click empty board | Add resistor, cap, oscillator, diode, or breadboard |
 | Left-drag | Move a part (Shift-click adds to the selection). ICs and passives snap to holes. |
 | Drag empty board | Marquee select |
 | Middle-drag / right-drag / wheel | Pan |
+| Ctrl+wheel | Integer zoom of the board canvas (1x to 8x). Wheel up zooms in. The board point under the cursor stays put. |
 | Shift+arrows | Pan |
 | R | Rotate selected DIP or breadboard 90 deg CW |
 | Double-click screen | Toggle LCD 1x (centered playfield, black overscan) / 2x (fill) |
-| Space | Pause / resume |
+| Space | Toggle air wires always on vs hover only |
+| Enter / Return | Pause / resume. Same in Manual and Auto |
 | . | Single DOT half-step while paused |
 | Ctrl+R | Reset |
+| Ctrl+Z / Ctrl+Y | Undo / redo board or part moves, jumper create, and deletes |
 | Ctrl+F | Toggle fullscreen |
 | Esc | Cancel jumper arm/mode, then quit |

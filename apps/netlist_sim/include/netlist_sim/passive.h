@@ -51,6 +51,9 @@ void ns_passive_sync_aabb(NsPassive *p);
 void ns_passive_set_pivot(NsPassive *p, int pivot_x, int pivot_y);
 void ns_passive_set_orient(NsPassive *p, NsPkgOrient orient);
 
+/* Opaque PNG pixel at board (bx,by), after rotation about the filename pivot. */
+int ns_passive_hit(const NsPassive *p, int bx, int by);
+
 /* Tip of pin_num in board canvas coords. OSC4LEGS uses DIP-14 can numbers. */
 int ns_passive_tip_board(const NsPassive *p, int pin_num, int *wx, int *wy);
 
@@ -64,6 +67,7 @@ void ns_passive_draw_kind(SDL_Renderer *r, NsPassiveKind kind, NsPkgOrient orien
 int ns_osc4legs_chip_tip(const NsEntity *e, int pin_num, int *wx, int *wy);
 void ns_osc4legs_sync_aabb(NsEntity *e);
 void ns_osc4legs_set_orient(NsEntity *e, NsPkgOrient orient);
+int ns_osc4legs_hit(const NsEntity *e, int bx, int by);
 
 /* Spawn full console passive BOM . Ordered by kind then value. */
 int ns_passive_bank_spawn_bom(NsPassiveBank *bank);

@@ -13,6 +13,8 @@ int main(void) {
     char path[] = "test_layout.json";
     int pan_x = 0;
     int pan_y = 0;
+    int zoom = 1;
+    int air_always = 0;
     NsEntity *osc;
     NsPbHole a = {4, NS_PB_LANE_A};
     NsPbHole b = {12, NS_PB_LANE_A};
@@ -37,11 +39,13 @@ int main(void) {
     }
     expect_true(r01a_board_add_passive(&board, NS_PASSIVE_R, "33", 300, 110) != NULL, "add extra R");
 
-    expect_true(r01a_layout_save(path, &board, 17, 23) == 0, "layout save");
+    expect_true(r01a_layout_save(path, &board, 17, 23, 3, 1) == 0, "layout save");
 
     r01a_board_init(&loaded);
-    expect_true(r01a_layout_load(path, &loaded, &pan_x, &pan_y) == 0, "layout load");
+    expect_true(r01a_layout_load(path, &loaded, &pan_x, &pan_y, &zoom, &air_always) == 0, "layout load");
     expect_true(pan_x == 17 && pan_y == 23, "pan restored");
+    expect_true(zoom == 3, "zoom restored");
+    expect_true(air_always == 1, "air always restored");
     expect_true(r01a_board_wire_mode(&loaded) == R01A_WIRE_MANUAL, "wire mode restored");
     expect_true(r01a_osc_dot_entity(&loaded.osc_dot)->board_x == 120, "OSC x restored");
     expect_true(r01a_osc_dot_entity(&loaded.osc_dot)->board_y == 80, "OSC y restored");

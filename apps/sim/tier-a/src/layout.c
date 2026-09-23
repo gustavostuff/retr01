@@ -196,7 +196,7 @@ static void apply_part(R01aBoard *board, const char *id, int x, int y, NsPkgOrie
     ns_entity_place(e, x, y);
 }
 
-int r01a_layout_save(const char *path, const R01aBoard *board, int pan_x, int pan_y) {
+int r01a_layout_save(const char *path, const R01aBoard *board, int pan_x, int pan_y, int zoom, int air_always) {
     FILE *f;
     const NsIsland *island;
     int i;
@@ -204,6 +204,12 @@ int r01a_layout_save(const char *path, const R01aBoard *board, int pan_x, int pa
 
     if (!path || !board) {
         return -1;
+    }
+    if (zoom < 1) {
+        zoom = 1;
+    }
+    if (zoom > 8) {
+        zoom = 8;
     }
     island = ns_island_group_at(r01a_board_group((R01aBoard *)board), 0);
     f = fopen(path, "w");
@@ -214,6 +220,8 @@ int r01a_layout_save(const char *path, const R01aBoard *board, int pan_x, int pa
     fprintf(f, "  \"version\": 1,\n");
     fprintf(f, "  \"pan_x\": %d,\n", pan_x);
     fprintf(f, "  \"pan_y\": %d,\n", pan_y);
+    fprintf(f, "  \"zoom\": %d,\n", zoom);
+    fprintf(f, "  \"air_always\": %d,\n", air_always ? 1 : 0);
     fprintf(f, "  \"wire_mode\": \"%s\",\n", board->wire_mode == R01A_WIRE_MANUAL ? "manual" : "auto");
     fprintf(f, "  \"parts\": [\n");
     first = 1;
@@ -269,7 +277,7 @@ int r01a_layout_save(const char *path, const R01aBoard *board, int pan_x, int pa
     return 0;
 }
 
-int r01a_layout_load(const char *path, R01aBoard *board, int *pan_x, int *pan_y) {
+int r01a_layout_load(const char *path, R01aBoard *board, int *pan_x, int *pan_y, int *zoom, int *air_always) {
     char *buf;
     const char *p;
     int n;
@@ -289,6 +297,18 @@ int r01a_layout_load(const char *path, R01aBoard *board, int *pan_x, int *pan_y)
     }
     if (json_int(buf, "pan_y", &n) && pan_y) {
         *pan_y = n;
+    }
+    if (json_int(buf, "zoom", &n) && zoom) {
+        if (n < 1) {
+            n = 1;
+        }
+        if (n > 8) {
+            n = 8;
+        }
+        *zoom = n;
+    }
+    if (json_int(buf, "air_always", &n) && air_always) {
+        *air_always = n ? 1 : 0;
     }
     if (json_str(buf, "wire_mode", mode, sizeof(mode))) {
         r01a_board_set_wire_mode(board, strcmp(mode, "manual") == 0 ? R01A_WIRE_MANUAL : R01A_WIRE_AUTO);

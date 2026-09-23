@@ -16,6 +16,8 @@ typedef struct PassiveSprite {
     int span_y;
 } PassiveSprite;
 
+static const PassiveSprite *sprite_for(NsPassiveKind kind);
+
 static const PassiveSprite k_sprites[NS_PASSIVE_KIND_COUNT] = {
     {NS_UI_PASSIVE_R_RGBA, NS_UI_PASSIVE_R_W, NS_UI_PASSIVE_R_H, NS_UI_PASSIVE_R_PIV_X,
      NS_UI_PASSIVE_R_PIV_Y, NS_UI_PASSIVE_R_SPAN_PX, NS_UI_PASSIVE_R_SPAN_Y},
@@ -48,6 +50,36 @@ static void rot_cw_delta(int dx, int dy, int steps, int *ox, int *oy) {
     }
     *ox = x;
     *oy = y;
+}
+
+static int sprite_hit_at(const PassiveSprite *sp, NsPkgOrient orient, int piv_x, int piv_y, int bx, int by) {
+    int dx;
+    int dy;
+    int rx;
+    int ry;
+    int sx;
+    int sy;
+    const uint8_t *px;
+    if (!sp || !sp->rgba) {
+        return 0;
+    }
+    dx = bx - piv_x;
+    dy = by - piv_y;
+    rot_cw_delta(dx, dy, (4 - ((int)orient & 3)) & 3, &rx, &ry);
+    sx = rx + sp->piv_x;
+    sy = ry + sp->piv_y;
+    if (sx < 0 || sy < 0 || sx >= sp->w || sy >= sp->h) {
+        return 0;
+    }
+    px = sp->rgba + ((size_t)sy * (size_t)sp->w + (size_t)sx) * 4u;
+    return px[3] != 0;
+}
+
+int ns_passive_hit(const NsPassive *p, int bx, int by) {
+    if (!p) {
+        return 0;
+    }
+    return sprite_hit_at(sprite_for(p->kind), p->base.orient, p->pivot_x, p->pivot_y, bx, by);
 }
 
 #define R_BAND_GOLD 10
@@ -485,6 +517,22 @@ void ns_osc4legs_set_orient(NsEntity *e, NsPkgOrient orient) {
     e->board_x = p1x + min_x;
     e->board_y = p1y + min_y;
     ns_osc4legs_sync_aabb(e);
+}
+
+int ns_osc4legs_hit(const NsEntity *e, int bx, int by) {
+    int min_x;
+    int min_y;
+    int max_x;
+    int max_y;
+    int p1x;
+    int p1y;
+    if (!e) {
+        return 0;
+    }
+    osc4_aabb(e->orient, &min_x, &min_y, &max_x, &max_y);
+    p1x = e->board_x - min_x;
+    p1y = e->board_y - min_y;
+    return sprite_hit_at(sprite_for(NS_PASSIVE_OSC4LEGS), e->orient, p1x, p1y, bx, by);
 }
 
 static void add_n(NsPassiveBank *bank, NsPassiveKind kind, const char *prefix, int *seq,
