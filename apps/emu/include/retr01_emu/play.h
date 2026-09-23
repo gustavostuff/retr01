@@ -2,8 +2,6 @@
 #define retr01_EMU_PLAY_H
 
 #include "retr01_emu/types.h"
-#include "r01_play_anim.h"
-#include "r01_play_physics.h"
 
 #include <stdint.h>
 
@@ -44,6 +42,7 @@ typedef struct R01eEvent {
     int arg1;
 } R01eEvent;
 
+/* Mirror of PRG sys block $02E0 (player / camera). Packed PRG is gameplay. */
 typedef struct R01ePlay {
     int enabled;
     int player_x;
@@ -52,10 +51,6 @@ typedef struct R01ePlay {
     int cam_y;
     int player_w;
     int player_h;
-    uint8_t pad_prev;
-    int entity_count; /* phase 4+ */
-    R01PlayAnimCtx anim;
-    R01PlayPhysics phys;
     int cam_deadzone_x;
     int cam_deadzone_y;
 } R01ePlay;
@@ -66,7 +61,7 @@ void r01e_play_tick(struct R01eMachine *m);
 void r01e_play_draw(struct R01eMachine *m);
 void r01e_play_player_rgb(const struct R01eMachine *m, uint8_t *r, uint8_t *g, uint8_t *b);
 
-/* Mirror play camera into video scroll / 2x2 workbench. */
+/* Mirror play camera into the video 2x2 workbench. C PRG owns $7F02/$7F03. */
 void r01e_play_sync_video(struct R01eMachine *m);
 void r01e_play_post_event(R01ePlay *play, R01eEvent evt);
 

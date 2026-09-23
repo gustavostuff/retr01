@@ -28,7 +28,7 @@ void r01_apu_fd_pack_voice(uint8_t *regs, uint8_t ch, uint8_t enable, uint8_t vo
 }
 
 uint16_t r01_apu_fd_note_period(uint8_t note) {
-    /* High nibble letter (0=G,A-F), low nibble octave (+8 = flat). Rough Host Play table. */
+    /* High nibble letter (0=G,A-F), low nibble octave (+8 = flat). Rough Play table. */
     static const int semitone[16] = {
         /* 0=G */ 7, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         /* A */ 9, /* B */ 11, /* C */ 0, /* D */ 2, /* E */ 4, /* F */ 5};

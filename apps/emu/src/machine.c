@@ -10,7 +10,7 @@
 /*
  * Run Phase 1 PRG until the boot MAP stream has written a full screen into slot 0
  * (or give up). PC still in $8000-$80FF is not "done": the stream lives there.
- * Stopping mid-copy lets the CPU keep writing the start screen over Host Play's
+ * Stopping mid-copy lets the CPU keep writing the start screen over Play's
  * 2x2 after play_start, so collision (cart) and render (VRAM) diverge.
  */
 static void catchup_prg_boot(R01eMachine *m) {
@@ -218,7 +218,7 @@ int r01e_machine_frame(R01eMachine *m) {
     m->prof_acc_active = 0;
     m->prof_acc_vblank = 0;
     m->prof_acc_idle = 0;
-    /* Host Play physics / OAM / scroll publish: early VBlank in r01e_io_dot. */
+    /* Packed PRG publishes OAM / scroll. Play follow copies $02E0 in r01e_io_dot. */
     if (!m->video.chr_loaded) {
         if (r01e_video_softboot_enabled()) {
             (void)r01e_video_boot_world(m, (int)m->io.world);
@@ -234,7 +234,7 @@ void r01e_machine_set_pad(R01eMachine *m, int player, uint8_t bits) {
     if (!m) {
         return;
     }
-    /* Host stages; CPU / Host Play see latched pads after VBlank enter. */
+    /* Host stages; CPU sees latched pads after VBlank enter. */
     if (player == 0) {
         m->io.pad0_host = bits;
     } else {

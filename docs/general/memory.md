@@ -107,7 +107,7 @@ Entity **spawn locations** live in **PRG** (tables or code calling `spawn_entity
 
 ### BGM blob (cart flash)
 
-Compressed tracker bytecode. Not in the 32 KB PRG window. `$80FE` is the 1-based boot track (0 = none). At play, PRG copies that track into system RAM (Host Play / emu do the same from the cart pointer). AKWF cycles and DPCM samples stay in MCU-S2 flash. Opcode details: `sound.md`. Rough play time vs leftover flash is in the budget section below.
+Compressed tracker bytecode. Not in the 32 KB PRG window. `$80FE` is the 1-based boot track (0 = none). At play, PRG copies that track into system RAM (emu follows the same cart pointer). AKWF cycles and DPCM samples stay in MCU-S2 flash. Opcode details: `sound.md`. Rough play time vs leftover flash is in the budget section below.
 
 | Off | Field |
 | --- | --- |
@@ -185,7 +185,7 @@ One catalog for the cart (up to **32** types). The same type may spawn in any wo
 | Entity **spawn locations** (who appears where) | **PRG** (tables and/or `spawn_entity` calls) |
 | Entity **pixel patterns** | Global SPR CHR |
 | Collision solids | **RAM** (bank + tile pattern list, copied from PRG at boot) |
-| Player anim (`PA`) | One cart blob after world-0 maps. Host Play player frames. See `software-api.md` |
+| Player anim (`PA`) | One cart blob after world-0 maps. Play player frames. See `software-api.md` |
 
 | Topic | Value |
 | --- | --- |

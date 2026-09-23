@@ -223,7 +223,6 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy, int ju
             }
             r01_player_set_move_mul(ctx, 1);
             r01_player_anim_set_frame_delay(ctx, 0);
-            r01_custom_on_tick(ctx);
             r01_play_physics_set_run_mul(&ph, r01_player_move_mul(ctx));
         }
         ph.vel_y = ctx->plat_vel_y;

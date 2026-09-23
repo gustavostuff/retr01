@@ -5,7 +5,7 @@
 
 #include "r01_apu_fd.h"
 
-/* Studio Host Play grid: steps x 5 channels x 5-char tokens. */
+/* Studio timeline grid: steps x 5 channels x 5-char tokens. */
 #define R01_BGM_FD_CH 5
 #define R01_BGM_FD_TOKEN 5
 #define R01_BGM_FD_STEPS_MAX 512

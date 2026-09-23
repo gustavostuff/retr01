@@ -54,7 +54,7 @@ void r01_play_anim_set_release_to_idle(R01PlayAnimCtx *ctx, int entity_state_idx
 void r01_play_default_face_set(R01PlayAnimCtx *ctx, int face);
 void r01_play_state_frame_delay_set(R01PlayAnimCtx *ctx, int entity_state_idx, int ticks);
 void r01_play_anim_update(R01PlayAnimCtx *ctx, int dx, int dy);
-/* Cart / Host Play frame delay. Live override from r01_play_anim_set_frame_delay wins. Min 1. */
+/* Cart / Play frame delay. Live override from r01_play_anim_set_frame_delay wins. Min 1. */
 int r01_play_anim_frame_delay(const R01PlayAnimCtx *ctx, int delay);
 
 int r01_play_anim_entity_state(const R01PlayAnimCtx *ctx);

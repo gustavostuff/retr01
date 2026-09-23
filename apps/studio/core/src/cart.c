@@ -770,7 +770,7 @@ static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w) {
     if (bg0_n > 0) {
         int di = 0;
         int min_c = 99, min_r = 99;
-        /* Cart BG0 coords are origin-relative to the present bbox (Host Play samples from 0). */
+        /* Cart BG0 coords are origin-relative to the present bbox (Play samples from 0). */
         for (si = 0; si < w->bg0_screen_count && si < R01_BG0_SCREENS_MAX; si++) {
             if (!w->bg0_screens[si].present) {
                 continue;

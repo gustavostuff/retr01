@@ -5,7 +5,7 @@
 
 /*
  * Host speaker for the cart APU: NMI tracker into an 8x4 window, then mix.
- * Studio Audio tab runs the tracker locally. Host Play attaches the emu $7F40
+ * Studio Audio tab runs the tracker locally. Play attaches the emu $7F40
  * window and starts the packed PRG stream. Not MCU-S2 PWM.
  */
 
@@ -22,7 +22,7 @@
 int r01_bgm_host_init(void);
 void r01_bgm_host_shutdown(void);
 
-/* Mix a live $7F40 window (emu Host Play). NULL detaches. */
+/* Mix a live $7F40 window (emu Play). NULL detaches. */
 void r01_bgm_host_attach_window(const uint8_t *regs);
 
 /* Play track 1..N. path may be NULL to use built-in demo for track 1.

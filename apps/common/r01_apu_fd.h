@@ -24,7 +24,7 @@
 void r01_apu_fd_pack_voice(uint8_t *regs, uint8_t ch, uint8_t enable, uint8_t vol, uint8_t duty,
                            uint8_t wave, uint16_t period);
 
-/* Approximate period from note byte (Host Play / bring-up). */
+/* Approximate period from note byte (Play / bring-up). */
 uint16_t r01_apu_fd_note_period(uint8_t note);
 
 /* Encode FD frame. n_payload must equal popcount(mask). Returns length or -1. */

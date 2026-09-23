@@ -21,7 +21,7 @@ MyGame/
   ...
 ```
 
-**Ctrl+E** packs the cart and generated `C/` / `ASM/` / `data/` beside the project file (or under `output/` if unsaved).
+**Ctrl+E** packs the cart, `data/` bins, and llvm-mos PRG beside the project file (or under `output/` if unsaved).
 
 | Shortcut | Action |
 | --- | --- |

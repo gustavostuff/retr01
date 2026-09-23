@@ -323,7 +323,7 @@ void r01e_io_write(R01eMachine *m, uint16_t addr, uint8_t v) {
         io->vram_addr = (uint16_t)(io->vram_addr & (R01E_VRAM_BYTES - 1));
         break;
     case 0x7F12:
-        /* Host Play 2x2 owns VRAM unless C PRG is streaming MAP itself. */
+        /* Packed PRG streams MAP. Host 2x2 follow does not block $7F12 writes. */
         if (!m->play.enabled || r01e_cart_is_c_prg(&m->cart)) {
             m->video.vram[io->vram_addr & (R01E_VRAM_BYTES - 1)] = v;
         }
@@ -410,7 +410,7 @@ void r01e_io_dot(R01eMachine *m) {
     }
 
     if (entered_vblank) {
-        /* Early VBlank: pending scroll/pal, pad latch, Host Play OAM/scroll. */
+        /* Early VBlank: pending scroll/pal, pad latch, Play follow of $02E0. */
         flush_scroll_pal(m);
         latch_pads(io);
         r01e_play_tick(m);
@@ -419,7 +419,7 @@ void r01e_io_dot(R01eMachine *m) {
         if (io->ctrl & R01E_PPUCTRL_NMI_EN) {
             m->nmi_pending = 1;
         }
-        /* Host Play cart APU: one tracker tick per VBlank NMI. C PRG owns $7F40. */
+        /* Packed PRG NMI tracker owns $7F40. Host tracker only for non-C carts. */
         if (m->apu_tracker_on && !r01e_cart_is_c_prg(&m->cart)) {
             (void)r01_apu_tracker_nmi(&m->apu_tracker, m->io.apu);
         }

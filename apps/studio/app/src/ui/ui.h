@@ -18,7 +18,7 @@
 /* Shared chrome colors / UI_UNIT / UI_BTN_H: retr01_ui/metrics.h */
 #define UI_SIDEBAR_W 128
 #define UI_CTRL_SIDEBAR_W 128
-#define UI_PLAY_BTN_W (UI_UNIT * 8) /* Host Play/Stop, 8px grid */
+#define UI_PLAY_BTN_W (UI_UNIT * 8) /* Play/Stop, 8px grid */
 #define UI_WORLD_BTN 16
 #define UI_WORLD_CELL 8 /* 16x16 map fits 128px sidebar */
 #define UI_WORLD_VIEW 128
@@ -450,7 +450,7 @@ typedef struct UiSoundEdit {
 
 /* UiTextEdit: retr01_ui/text.h */
 
-/* Embedded emu Play session (export then cart-backed Host Play). */
+/* Embedded emu Play session (export then packed PRG). */
 typedef struct UiPlaySession {
     int active;  /* playing or booting (blocks editor) */
     int booting; /* export + machine init pending after first boot frame */

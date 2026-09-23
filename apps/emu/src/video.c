@@ -140,7 +140,7 @@ int r01e_video_prepare_world(R01eMachine *m, int world) {
     r01e_video_load_bg0(m, &wv);
     /* Pals come from PRG $7F08/$7F09 stream (or softboot). */
     if (m->play.enabled) {
-        /* Host Play owns cam; refill 2x2 from play cam instead of leaving empty slots. */
+        /* Play follow owns cam; refill 2x2 from $02E0 instead of leaving empty slots. */
         m->video.cam_x = m->play.cam_x;
         m->video.cam_y = m->play.cam_y;
         m->video.cam_origin_col = m->play.cam_x / R01E_SCREEN_PX_W;

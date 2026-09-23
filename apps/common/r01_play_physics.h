@@ -1,7 +1,7 @@
 #ifndef R01_PLAY_PHYSICS_H
 #define R01_PLAY_PHYSICS_H
 
-/* Host Play movement. Top-down is axis-separated. Platformer adds gravity + jump.
+/* Play movement. Top-down is axis-separated. Platformer adds gravity + jump.
  * Tune values are pixels at meter=16, except gravity which is 1/16 px per frame^2.
  * Walk is 1 px/frame at meter 16 (2 px/frame when run_mul is 2) and does not use gravity.
  * Smaller meter slows all of it. */

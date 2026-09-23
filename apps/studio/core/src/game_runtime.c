@@ -343,10 +343,6 @@ int r01_player_move_mul(const R01GameCtx *ctx) {
     return mul;
 }
 
-void r01_custom_on_tick(R01GameCtx *ctx) {
-    (void)ctx;
-}
-
 void r01_camera_set_deadzone(R01GameCtx *ctx, int dx, int dy) {
     if (!ctx) {
         return;

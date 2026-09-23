@@ -11,12 +11,12 @@ struct R01eMachine;
  * Logical $7F00-$7FFF register file (docs/general/memory.md, docs/general/video-graphics.md).
  * Soft contract for Emu / Studio Play: no DIP / Soft SEL / SPI mailbox.
  * Hard (SoT PLD/HC574): $7F02-$7F04. Soft0/1/2 families: see r01_soft_sel_demux.h.
- * $7F40-$7F5F = 8x4 voice window (r01_apu_window.h). Host Play fills via
+ * $7F40-$7F5F = 8x4 voice window (r01_apu_window.h). Packed PRG fills via
  * NMI dual-stream tracker (r01_apu_tracker). PC speaker mixes that window.
  * $7F24 / $7F72 assert short CPU_RDY (R01_RDY_*_HOLDS). Raster IRQ still later.
  *
  * Soft fences (ic-comms-risks): scroll/palette apply in VBlank (or video off).
- * Pads latch once at VBlank enter. Host Play OAM/scroll publish in early VBlank.
+ * Pads latch once at VBlank enter. Play follow copies $02E0 in early VBlank.
  */
 typedef struct R01eIo {
     uint8_t ctrl;        /* $7F00 Soft0 */
@@ -51,7 +51,7 @@ typedef struct R01eIo {
     uint8_t bank_helper[8]; /* $7F30-$7F37 helpers */
 
     uint8_t apu[0x20];    /* $7F40-$7F5F Soft2 8x4 window (R01_APU_REGS) */
-    uint8_t pad0;         /* $7F60 -- latched (CPU / Host Play) */
+    uint8_t pad0;         /* $7F60 -- latched (CPU) */
     uint8_t pad1;         /* $7F61 -- latched */
     uint8_t pad0_host;    /* host staging; copied to pad0 at VBlank enter */
     uint8_t pad1_host;

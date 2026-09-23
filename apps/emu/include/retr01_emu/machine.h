@@ -38,7 +38,7 @@ typedef struct R01eMachine {
     uint8_t cart_save[R01E_CARTEE_BYTES];
     uint8_t machine_eeprom[R01E_MEEPROM_BYTES];
 
-    /* Host Play cart-protocol APU: NMI dual-stream -> $7F40 window. */
+    /* Packed PRG NMI tracker -> $7F40 window. */
     R01ApuTracker apu_tracker;
     uint8_t apu_bytecode[R01E_APU_BYTECODE_MAX];
     uint16_t apu_bytecode_len;

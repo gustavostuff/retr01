@@ -9,7 +9,7 @@
 /*
  * 6502-side NMI dual-stream tracker (docs/general/sound.md), host C MVP.
  * BGM (ch1-5) + SFX (ch6-8). Expands FD into the 8x4 $7F40 window.
- * S2 never parses this stream. Shared by emu / Host Play.
+ * S2 never parses this stream. Shared by emu Play.
  */
 
 #define R01_APU_CTRL_FE 0xFEu

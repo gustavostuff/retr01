@@ -24,7 +24,7 @@ That range covers very simple games (**1** state, **1** frame, **1** sprite) and
 | **Entity behavior** (AI, input, physics, state changes, spawn rules) | **PRG** | Author in **C and/or ASM** |
 | **Entity spawn locations** (placements) | **PRG** | Author tables / code (`spawn_entity`) |
 | **Live instance state** (position, velocity, current state/frame, flags) | System RAM | PRG via the entity API |
-| **Player anim (`PA`)** (marked-player draw/collision dump for Host Play) | Cart, one blob after world-0 maps | Studio packs from the marked player type |
+| **Player anim (`PA`)** (marked-player draw/collision dump for Play) | Cart, one blob after world-0 maps | Studio packs from the marked player type |
 
 ### Hard caps (Studio-friendly)
 
@@ -47,7 +47,7 @@ The marked **player** entity is a normal catalog type. Its part bank bits **0-3*
 
 An **instance** is one placed copy of a catalog type. The catalog says what a slime looks like. An instance is the slime sitting at world (80, 40) facing left. Studio placements export as spawn rows in PRG. While the game runs, each live copy also has a RAM record (position, velocity, current state and frame). Pixel patterns and frame lists stay in the catalog. The instance only names a type and a pose.
 
-**`PA`** (player anim) is a Host Play helper blob, magic `'P' 'A'`. It is a flat dump of the **marked player** type's drawable frames (origin, hitbox, sprite parts) so play can animate and collide without walking the full `EntityDef` pack every frame. One blob per cart. Other entities do not get a `PA`.
+**`PA`** (player anim) is a Play helper blob, magic `'P' 'A'`. It is a flat dump of the **marked player** type's drawable frames (origin, hitbox, sprite parts) so play can animate and collide without walking the full `EntityDef` pack every frame. One blob per cart. Other entities do not get a `PA`.
 
 Byte packs: spawn / live / `PA` sections below. Addresses: `memory.md`.
 
@@ -100,7 +100,7 @@ Frame (at State + frame_off[f])
 
 **Entity spawn locations** live in **PRG** (data tables and/or code that calls `spawn_entity`). Cart holds defs in the **global** catalog.
 
-Phase 1 Studio carts embed a compact **instance table** in PRG (see `memory.md`). That table feeds Host Play / emu.
+Phase 1 Studio carts embed a compact **instance table** in PRG (see `memory.md`). That table feeds the packed PRG spawn list.
 
 **Catalog on cart:** a **`u16` directory** (`type_count` entries, offset from catalog base, little-endian) then concatenated **EntityDef** blobs (this locked pack). Directory at 32 types is **64 B**. Studio authors **hitbox on the state** and **draw origin on the frame**. Export writes sprite `rel_*` in **that frame's draw-origin** space (authoring origin baked in). Packed frame hitbox is `state.hitbox - first_drawable_frame.origin` as **i8** (same bytes on every frame of the state). A centered 8x8 box on origin 4,4 packs as **-4,-4**. Moving a later frame's draw origin does not change collision.
 
@@ -130,7 +130,7 @@ Packed spawn instances (not the marked player) copy into a 16-slot RAM table at 
 
 ### Player anim blob (`PA`, locked)
 
-Host Play's packed player frames. One blob **per cart** (after world-0 maps). World header flags bit **0** marks it present. Host Play reads it for the marked player.
+Packed player frames. One blob **per cart** (after world-0 maps). World header flags bit **0** marks it present. Play reads it for the marked player.
 
 ```text
 PA (variable length, max 1031 B at 4 states x 8 frames x 6 parts)
@@ -221,7 +221,7 @@ There is **no** separate "max entities on screen" hard cap. On-screen count is w
 
 - **Player movement** and **camera movement** are separate. See `world-scrolling.md` (dead zone, axis lock, follow vs auto).
 - Camera: instant screen switch and/or smooth scrolling. Both allowed in one game or world.
-- **BG0 layout wrap**: `r01_bg0_set_wrap(ctx, wrap_x, wrap_y)` in author `game_logic.c`. Studio packs non-zero axes into world header flags byte **7** bits **1**/**2**. Host Play / emu modulo-tiles samples on those axes and uses period rate `bg0_n / bg1_n` (not end-aligned `(n-1)/(n-1)`). See `world-scrolling.md`.
+- **BG0 layout wrap**: `r01_bg0_set_wrap(ctx, wrap_x, wrap_y)` in author `game_logic.c`. Studio packs non-zero axes into world header flags byte **7** bits **1**/**2**. Play modulo-tiles samples on those axes and uses period rate `bg0_n / bg1_n` (not end-aligned `(n-1)/(n-1)`). See `world-scrolling.md`.
 - **BG0 clip to BG1**: `r01_bg0_set_clip_to_bg1(ctx, enable)` packs into flags byte **7** bit **3**. When enabled, BG0 is hidden outside present BG1 camera slots (backdrop there). Default off: BG0 fills the full viewport under missing/out-of-window BG1. Independent of wrap. See `world-scrolling.md`.
 - **BG1** (and manual strip) autoscroll / wrap helpers remain TBD. See `world-scrolling.md`.
 - Modes: **platformer** and **top-down**.
@@ -285,7 +285,7 @@ r01_player_anim_set_crouch_state(ctx, 2);
 r01_player_anim_set_jump_state(ctx, 3);
 ```
 
-Packing: world header flags byte **7** bit **4** = platformer. Gravity, jump, and meter are u8 at PRG `$80F7` / `$80F8` / `$80F9`. **0** (and `R01_PLAT_*_DEFAULT` in `game_logic.c`) means Host Play uses `apps/common/r01_play_physics.h`. Crouch / idle / walk / jump state indices are `$80FA` / `$80FB` / `$80FC` / `$80FD` (**$FF** = unmapped). A numeric argument is packed as-is. See `memory.md`.
+Packing: world header flags byte **7** bit **4** = platformer. Gravity, jump, and meter are u8 at PRG `$80F7` / `$80F8` / `$80F9`. **0** (and `R01_PLAT_*_DEFAULT` in `game_logic.c`) means Play uses `apps/common/r01_play_physics.h`. Crouch / idle / walk / jump state indices are `$80FA` / `$80FB` / `$80FC` / `$80FD` (**$FF** = unmapped). A numeric argument is packed as-is. See `memory.md`.
 
 `r01_solid_pattern_add(ctx, bank, tile)` in author `game_logic.c` is the author API for solid patterns. Studio Set Solid stores `solid_patterns` in the project JSON. Export packs that list at PRG `$8700`. Palette and H/V flip are ignored. The PRG probes BG1 nametable bank+tile against the packed tables.
 

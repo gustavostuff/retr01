@@ -102,7 +102,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 ### 20. Instance + PA byte schemas
 
-**Resolved:** An **instance** is a placed copy of a catalog type (spawn row in PRG, live record in RAM). **`PA`** is a Host Play dump of the marked player's drawable frames. Spawn records are **6 B** in PRG (`$81C0` count, `$81C1` table). Live RAM instances are **12 B**. One cart-wide **`PA`** blob (max **1031 B**) after world-0 maps. Type directory is **64 B**. See `software-api.md`, `memory.md`.
+**Resolved:** An **instance** is a placed copy of a catalog type (spawn row in PRG, live record in RAM). **`PA`** is a Play dump of the marked player's drawable frames. Spawn records are **6 B** in PRG (`$81C0` count, `$81C1` table). Live RAM instances are **12 B**. One cart-wide **`PA`** blob (max **1031 B**) after world-0 maps. Type directory is **64 B**. See `software-api.md`, `memory.md`.
 
 ### 21. Cart BGM region
 

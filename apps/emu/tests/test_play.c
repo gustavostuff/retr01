@@ -158,26 +158,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    /* Leaving the dead zone scrolls the camera. */
-    if (!r01e_cart_is_c_prg(&m.cart)) {
-        m.play.player_x = spawn_x + 8;
-        m.play.player_y = spawn_y;
-        m.io.pad0 = 0;
-        r01e_play_tick(&m);
-        {
-            expect_cam_x = m.play.cam_x;
-            expect_cam_y = m.play.cam_y;
-            r01_play_camera_update(&expect_cam_x, &expect_cam_y, m.play.player_x, m.play.player_y, m.play.player_w,
-                                   m.play.player_h, R01E_SCREEN_PX_W, R01E_SCREEN_PX_H, m.play.cam_deadzone_x,
-                                   m.play.cam_deadzone_y, R01_PLAY_CAM_AXIS_BOTH);
-            if (m.play.cam_x != expect_cam_x || m.play.cam_y != expect_cam_y) {
-                fprintf(stderr, "FAIL camera follow after deadzone exit: got %d,%d expected %d,%d\n", m.play.cam_x,
-                        m.play.cam_y, expect_cam_x, expect_cam_y);
-                r01e_machine_shutdown(&m);
-                return 1;
-            }
-        }
-    } else if (!m.ram[0x02E8]) {
+    if (!r01e_cart_is_c_prg(&m.cart) || !m.ram[0x02E8]) {
         fprintf(stderr, "FAIL C PRG sys ready\n");
         r01e_machine_shutdown(&m);
         return 1;
@@ -186,31 +167,7 @@ int main(int argc, char **argv) {
     printf("ok play spawn=%d,%d cam=%d\n", spawn_x, spawn_y, m.play.cam_x);
 
     /*
-     * L-map junction: (3,2) present, (3,1) missing. Follow cam may peek into the
-     * hole (BG0 show-through is fine). Player must stay on-screen for OAM.
-     */
-    if (!r01e_cart_is_c_prg(&m.cart) && r01e_cart_has_screen(&m.cart, 0, 3, 2) &&
-        !r01e_cart_has_screen(&m.cart, 0, 3, 1)) {
-        int vx, vy;
-        m.play.player_x = 3 * R01E_SCREEN_PX_W + 20;
-        m.play.player_y = 2 * R01E_SCREEN_PX_H + 40;
-        m.play.cam_x = 2 * R01E_SCREEN_PX_W + 64;
-        m.play.cam_y = 1 * R01E_SCREEN_PX_H + 60;
-        m.io.pad0 = 0;
-        r01e_play_tick(&m);
-        vx = m.play.player_x - m.play.cam_x;
-        vy = m.play.player_y - m.play.cam_y;
-        if (r01e_oam_tile_off_screen(vx, vy)) {
-            fprintf(stderr, "FAIL L-map player off-screen: player=%d,%d cam=%d,%d oam=%d,%d\n",
-                    m.play.player_x, m.play.player_y, m.play.cam_x, m.play.cam_y, vx, vy);
-            r01e_machine_shutdown(&m);
-            return 1;
-        }
-        printf("ok L-map player on-screen cam=%d,%d oam=%d,%d\n", m.play.cam_x, m.play.cam_y, vx, vy);
-    }
-
-    /*
-     * Regression: unfinished PRG boot MAP stream must not clobber Host Play VRAM
+     * Regression: unfinished PRG boot MAP stream must not clobber Play VRAM
      * after play_start (collision stays on cart; render would show start-screen
      * tiles until the next origin reload).
      */

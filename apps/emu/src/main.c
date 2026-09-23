@@ -869,7 +869,7 @@ int main(int argc, char **argv) {
             int menu = r01_pad_host_menu_open();
             emu_sync_menu_audio(menu, &menu_muted);
             if (!paused && !menu) {
-                /* One Host Play tick per present so 60 Hz vsync never skips scroll pixels. */
+                /* One machine frame per present so 60 Hz vsync never skips scroll pixels. */
                 if (now - last_frame >= frame_dt) {
                     (void)r01e_machine_frame(&machine);
                     dbg_chart_note_frame(&cpu_chart, &machine);

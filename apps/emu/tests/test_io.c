@@ -35,7 +35,7 @@ int main(void) {
         return 1;
     }
     free(stub);
-    /* Isolate I/O checks from Host Play; park beam in VBlank for scroll/pal. */
+    /* Isolate I/O checks from Play follow; park beam in VBlank for scroll/pal. */
     m.play.enabled = 0;
     while (m.io.dot_y < R01E_VISIBLE_H) {
         r01e_io_dot(&m);
@@ -221,7 +221,7 @@ int main(void) {
         return fail("APU soft R/W");
     }
 
-    /* Host Play NMI tracker -> $7F40 (builtin demo when bin missing). */
+    /* NMI tracker -> $7F40 (builtin demo when bin missing). */
     if (r01e_machine_apu_tracker_start(&m, NULL) != 0) {
         r01e_machine_shutdown(&m);
         return fail("apu tracker start");
@@ -242,7 +242,7 @@ int main(void) {
 
     /* Mid-active scroll holds until VBlank; pads latch at VBlank enter. */
     {
-        m.play.enabled = 0; /* isolate I/O fences from Host Play publish */
+        m.play.enabled = 0; /* isolate I/O fences from Play follow */
         m.io.frame = 1;
         m.io.dot_y = 10;
         m.io.dot_x = 0;

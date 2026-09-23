@@ -60,7 +60,7 @@ cmake --build build
 | `include/retr01_emu/cpu.h` | 65C02 core |
 | `include/retr01_emu/io.h` | `$7Fxx` register file |
 | `include/retr01_emu/video.h` | CHR / VRAM / render / softboot opt-in / OAM composite |
-| `include/retr01_emu/play.h` | Host Play runtime (Phase 1 SoT) |
+| `include/retr01_emu/play.h` | Follow packed PRG sys block `$02E0` |
 | `include/retr01_emu/machine.h` | Bus + frame loop |
 | `src/main.c` | Standalone SDL host |
 | `tests/` | Cart + boot + play smoke tests |

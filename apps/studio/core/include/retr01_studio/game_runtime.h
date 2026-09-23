@@ -111,7 +111,6 @@ void r01_player_set_type(uint8_t type_id);
 int r01_player_moving_x(const R01GameCtx *ctx);
 void r01_player_set_move_mul(R01GameCtx *ctx, int mul);
 int r01_player_move_mul(const R01GameCtx *ctx);
-void r01_custom_on_tick(R01GameCtx *ctx);
 /* Packs width/height. Follow may snap edges 1 px inward (world-scrolling.md). */
 void r01_camera_set_deadzone(R01GameCtx *ctx, int dx, int dy);
 void r01_camera_disable_deadzone(R01GameCtx *ctx);

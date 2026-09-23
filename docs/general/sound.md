@@ -191,7 +191,7 @@ Two independent state machines. Main game logic runs between NMIs. Audio work st
         RTI
 ```
 
-Host Play ticks this same tracker in C (`apps/common/r01_apu_tracker.c`) and applies FD frames into the 8x4 window (`r01_apu_fd.c`). That is the cart protocol. The PC speaker mixes that window (`r01_apu_mix.c`). It is not MCU-S2 PWM.
+Packed PRG NMI ticks this tracker (`apps/sdk/r01_c/src/tracker.c`) and applies FD frames into the 8x4 window. That is the cart protocol. The PC speaker mixes that window (`r01_apu_mix.c`). It is not MCU-S2 PWM.
 
 ## Status
 
@@ -201,9 +201,9 @@ Host Play ticks this same tracker in C (`apps/common/r01_apu_tracker.c`) and app
 | HW BOM | MCU-S2 + `$7F40`-`$7F5F` + MCU-M SPI + PWM PF1 |
 | MCU-S2 FW | 8x4 mix to PWM. DPCM PROGMEM decode still filling in |
 | Host mix | PC speaker mixes the `$7F40` window (`r01_apu_mix`). BGM 1-3 use a per-channel AKWF table plus decay. DPCM IDs use short host stand-in streams |
-| 6502 PRG tracker | NMI dual-stream. Host C MVP exists. Cart ASM still filling in |
+| 6502 PRG tracker | NMI dual-stream in packed PRG |
 | Studio Audio tab | BGM grid editor in `.r01proj`. Export packs bytecode and per-channel wavetable ids into the cart BGM region. Timeline Play/Stop encodes FD/FE/FA and mixes the window |
-| Host Play / emu | Boot track from PRG `$80FE`. Bytecode and wavetable ids in the cart BGM region. Tracker fills `$7F40`. `r01_sfx_play` queues voices 6-8 |
+| Play / emu | Boot track from PRG `$80FE`. Bytecode and wavetable ids in the cart BGM region. Tracker fills `$7F40`. `r01_sfx_play` queues voices 6-8 |
 
 Bring-up Tier **H** only needs a real `$7F40` beep through S2 PWM. Full tracker depth can wait on hardware.
 
