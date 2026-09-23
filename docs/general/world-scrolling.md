@@ -6,7 +6,7 @@ How games are laid out in worlds and screens, how VRAM holds a sliding window of
 
 Binary cart map is in `memory.md` (`.retr01` world blobs). Conceptually:
 
-- Up to **7 worlds** per game.
+- Up to **8 worlds** per game.
 - Up to **64 BG1 screens** per world.
 - Each screen is **16x15 tiles** (240 tile-index bytes + 240 attribute bytes).
 - Screens sit on a sparse virtual grid of up to **16x16 screen slots**.

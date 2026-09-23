@@ -14,7 +14,7 @@ Hardware is still in development, and the software is being built around that de
 
 The playfield is 128x120 with chunky pixels, NES-style color limits, and two real background layers. The result is a sharp image with a simple hardware pipeline.
 
-Architecturally speaking, the graphics are based on worlds and screens: up to 7 worlds, 64 screens each (448 _TV screens_ of real state). Together with dual background layers, that can make for visually rich, immersive experiences. All within a 512KB cartridge.
+Architecturally speaking, the graphics are based on worlds and screens: up to 8 worlds, 64 screens each (512 _TV screens_ of real state). Together with dual background layers, that can make for visually rich, immersive experiences. All within a 512KB cartridge.
 
 Characters and objects are entities made from states, frames, and sprites (a _state_ being something like idle, running, or crouching). Hardware draws the background layers and sprites so PRG can focus mostly on game logic. More details in [video-graphics.md](docs/general/video-graphics.md).
 

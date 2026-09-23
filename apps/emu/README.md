@@ -24,7 +24,7 @@ Studio **Play** uses this same emu core after export (shared library + standalon
 
 **Camera:** Dead zone W x H from `r01_camera_set_deadzone` in `game_logic.c` (runs on the 6502). Shared `../common/r01_play_camera.c`.
 
-**Runtime:** Packed worlds 1-6 play from the same MAP + `$8700` rules as world 0 (`r01_world_enter`).
+**Runtime:** Packed worlds 1-7 play from the same MAP + `$8700` rules as world 0 (`r01_world_enter`).
 
 ## Build / run
 

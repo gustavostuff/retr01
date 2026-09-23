@@ -16,8 +16,8 @@ See `memory.md` for the full map. Short version:
 - Flat **32 KB PRG** (no banking). See `selling-points.md`.
 - Global palette index planes (256 B total).
 - Global CHR: **16** banks (**64 KB**). Playfields, other screens, sprites, and the marked player share this pool. Nametable attrs and OAM attrs use the same 4-bit bank field. See `memory.md`.
-- Up to **7** world blobs (maps only: up to **64** BG1 + **16** BG0 screens each).
-- Compressed **BGM** bytecode (MAP region, outside the 32 KB PRG window). At max fill that leftover is ~**105 KB**, on the order of **38 minutes** of busy 5-channel tracker BGM. See `memory.md`. AKWF / DPCM samples stay in MCU-S2 flash.
+- Up to **8** world blobs (maps only: up to **64** BG1 + **16** BG0 screens each).
+- Compressed **BGM** bytecode (MAP region, outside the 32 KB PRG window). At max fill that leftover is ~**66.7 KB**, on the order of **24 minutes** of busy 5-channel tracker BGM. See `memory.md`. AKWF / DPCM samples stay in MCU-S2 flash.
 - Global entity catalog: up to **32** types.
 - Global **other screens**: max **16** total (title / interstitial / credits share the pool).
 - Marked **player** patterns: global CHR (any of the 16 banks).

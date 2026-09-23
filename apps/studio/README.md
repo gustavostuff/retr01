@@ -45,7 +45,7 @@ Logical canvas **640x360** or **1280x720** (**Ctrl+Shift+R**). Window scale **Ct
 
 ## Authoring
 
-**Worlds.** Seven slots. A pager steps the active world (**N/7**). A **BG1** / **BG0** control picks the map plane. World 1 starts as a 3x3 on a 16x16 map. Cart export packs **world 0** only (Studio World 1). BG1 is the playfield, BG0 is the parallax plane. Double-click an empty cell to create a screen. Right-click a BG1 cell for default screen / default world. PNG drop imports an atlas into the active world, BG bank 0.
+**Worlds.** Eight slots. A pager steps the active world (**N/8**). A **BG1** / **BG0** control picks the map plane. World 1 starts as a 3x3 on a 16x16 map. Cart export packs **world 0** only (Studio World 1). BG1 is the playfield, BG0 is the parallax plane. Double-click an empty cell to create a screen. Right-click a BG1 cell for default screen / default world. PNG drop imports an atlas into the active world, BG bank 0.
 
 **Paint.** Right-column **Work on** / **Hide** radios (BG, Sprite, Both). **Ctrl+click** stamps tiles. Set Solid marks a BG pattern (bank + tile) as collidable. That JSON list packs to PRG `$8700` and copies into system RAM at boot. `r01_solid_pattern_add` in `game_logic.c` is optional RAM extras. Palette and H/V flip do not matter. Drag an Entities row onto the preview to place an instance (switches to Sprite layer). CHR is **16** banks cart-wide. A pager steps the bank (**N/16**). Caps: [`memory.md`](../../docs/general/memory.md).
 
@@ -91,9 +91,9 @@ void r01_game_on_vblank(R01GameCtx *ctx) {
 | `retr01.prg` / `listing.txt` | llvm-mos PRG and mixed C/ASM listing |
 | `data/spawns.bin` | Instance table bytes at `$81C0` (author copy) |
 | `data/play8100.bin` | Present, spawn, instances (`$8100-$84FF`) |
-| `data/worlddir.bin` | 7 x u16 play bases (`$8500`) |
+| `data/worlddir.bin` | 8 x u16 play bases (`$8500`) |
 | `data/solids.bin` | Solid pattern list (`$8700`) |
-| `data/wplay.bin` | Extra world play blocks (`$8800`) when worlds 1-6 are present |
+| `data/wplay.bin` | Extra world play blocks (`$8800`) when worlds 1-7 are present |
 | `data/r01p.bin` | `R01P` marker (`$80F0`) |
 | `data/` | Studio binaries (CHR, maps, pals, PRG tables) |
 
