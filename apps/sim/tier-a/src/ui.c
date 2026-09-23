@@ -39,6 +39,8 @@
 #define R01A_JUMPER_HIT_PX 5
 #define R01A_JUMPER_END_PX 6
 #define R01A_JUMPER_COLORS 10
+#define R01A_PULSE_OK_MS 420
+#define R01A_PULSE_SHORT_MS 140
 
 static const Uint8 k_jumper_rgb[R01A_JUMPER_COLORS][3] = {
     {220, 50, 50},   {230, 140, 40},  {230, 200, 50}, {50, 180, 70},  {50, 120, 220},
@@ -1690,7 +1692,85 @@ static void draw_hover_wires(SDL_Renderer *r, const R01aUi *ui, const R01aBoard 
     }
 }
 
-static void draw_entity(SDL_Renderer *r, R01aUi *ui, NsEntity *e, int selected) {
+static void pulse_pixel(SDL_Renderer *r, int sx, int sy, Uint8 cr, Uint8 cg, Uint8 cb, int on) {
+    if (on) {
+        SDL_SetRenderDrawColor(r, cr, cg, cb, 255);
+    } else {
+        SDL_SetRenderDrawColor(r, 0, 0, 0, 255);
+    }
+    SDL_RenderDrawPoint(r, sx, sy);
+}
+
+static void draw_manual_pin_pulses(SDL_Renderer *r, const R01aUi *ui, const R01aBoard *board, const NsEntity *e) {
+    const NsBreadboard *bb[NS_MAX_PINS];
+    int strip[NS_MAX_PINS];
+    uint8_t on_hole[NS_MAX_PINS];
+    uint8_t shorted[NS_MAX_PINS];
+    int parent[NS_PB_STRIPS];
+    int i;
+    int j;
+    int seated;
+    int open;
+    Uint32 now;
+    int ok_on;
+    int short_on;
+    if (!ui || !ui->pin_gray || !e || e->pin_count <= 0) {
+        return;
+    }
+    if (e->visual == NS_ENTITY_VIS_BREADBOARD || e->visual == NS_ENTITY_VIS_DISPLAY) {
+        return;
+    }
+    seated = 0;
+    memset(on_hole, 0, sizeof(on_hole));
+    memset(shorted, 0, sizeof(shorted));
+    for (i = 0; i < e->pin_count; i++) {
+        bb[i] = NULL;
+        strip[i] = -1;
+        if (pin_bb_strip(ui, e, i, &bb[i], &strip[i])) {
+            on_hole[i] = 1;
+            seated++;
+        }
+    }
+    if (seated == 0) {
+        return;
+    }
+    for (i = 0; i < e->pin_count; i++) {
+        if (!on_hole[i] || !bb[i]) {
+            continue;
+        }
+        phys_nets_on_bb(parent, board, bb[i]);
+        for (j = i + 1; j < e->pin_count; j++) {
+            if (!on_hole[j] || bb[j] != bb[i]) {
+                continue;
+            }
+            if (phys_strip_find(parent, strip[i]) != phys_strip_find(parent, strip[j])) {
+                continue;
+            }
+            shorted[i] = 1;
+            shorted[j] = 1;
+        }
+    }
+    open = seated < e->pin_count;
+    now = SDL_GetTicks();
+    ok_on = ((now / R01A_PULSE_OK_MS) & 1u) == 0;
+    short_on = ((now / R01A_PULSE_SHORT_MS) & 1u) == 0;
+    for (i = 0; i < e->pin_count; i++) {
+        int tx;
+        int ty;
+        if (!entity_tip_board(e, e->pins[i].number, &tx, &ty)) {
+            continue;
+        }
+        if (shorted[i]) {
+            pulse_pixel(r, board_sx(ui, tx), board_sy(ui, ty), 220, 40, 40, short_on);
+        } else if (on_hole[i]) {
+            pulse_pixel(r, board_sx(ui, tx), board_sy(ui, ty), 50, 210, 80, ok_on);
+        } else if (open) {
+            pulse_pixel(r, board_sx(ui, tx), board_sy(ui, ty), 240, 140, 30, ok_on);
+        }
+    }
+}
+
+static void draw_entity(SDL_Renderer *r, R01aUi *ui, R01aBoard *board, NsEntity *e, int selected) {
     if (!e || chip_hidden(e)) {
         return;
     }
@@ -1715,6 +1795,7 @@ static void draw_entity(SDL_Renderer *r, R01aUi *ui, NsEntity *e, int selected) 
         draw_ic(r, ui, e, selected);
         break;
     }
+    draw_manual_pin_pulses(r, ui, board, e);
 }
 
 static void draw_tooltip(SDL_Renderer *r, int lx, int ly, const char *text) {
@@ -2317,7 +2398,7 @@ static void draw_frame(R01aUi *ui, R01aBoard *board) {
             continue;
         }
         selected = ui->chip_sel[ci] || ci == ui->selected;
-        draw_entity(ui->rend, ui, ui->chips[ci], selected);
+        draw_entity(ui->rend, ui, board, ui->chips[ci], selected);
     }
     draw_hover_wires(ui->rend, ui, board);
     draw_jumpers(ui->rend, ui, board);

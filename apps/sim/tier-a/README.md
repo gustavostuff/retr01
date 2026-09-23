@@ -17,7 +17,7 @@ No CPU, cart, AVRs, VRAM, or Compositor.
 | Mode | Wiring |
 | --- | --- |
 | Auto | Soft netlist (virtual wires). Color bars without placing jumpers. |
-| Manual | No virtual wires. A pin conducts only when its tip sits on a breadboard strip, including strips joined by jumpers or by resistors. Caps occupy holes and do not pass DC. DIP pads draw gray. The lab runs once the Auto netlist is on the protoboard. |
+| Manual | No virtual wires. A pin conducts only when its tip sits on a breadboard strip, including strips joined by jumpers or by resistors. Caps occupy holes and do not pass DC. DIP pads draw gray. A 1 px pulse on each tip: black/green if that pin is on a hole, orange if the part is only partly seated, black/red (faster) if two pins of the same part share a strip or jumper. The lab runs once the Auto netlist is on the protoboard. |
 
 BB1 north rails supply 5 V (top positive) and GND (top negative). Extra protoboards have none. Auto binds VDD/GND on chip pins without breadboard work. In Manual, VDD, GND, clocks, and the rest need breadboard connections, including those north rails. OSC OE# may float (not low). PROM CE#/OE# must be tied low. The LCD is blank until that protoboard netlist encodes.
 

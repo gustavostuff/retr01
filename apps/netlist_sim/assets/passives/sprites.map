@@ -1,7 +1,7 @@
 # Passive sprites (nano scaled_down, breadboard pitch 5).
 # kind  file                 pivot_col  pivot_row  pin_span_px  [pin_span_y]
-# Pivot is pin-1 tip. Filename KIND_x_y.png matches pivot. Not a marker pixel.
-# pin_span_y set: 4-pin can (pins 1, 8, 4, 5). Else 2-pin (pin 2 at +span_px).
+# Filename KIND_x_y.png is the canvas pivot. Not a marker pixel.
+# 2-pin: pin 1 = pivot, pin 2 at +span_px. OSC4LEGS: pivot = pin 14, then 8 / 1 / 7.
 R        R_0_2.png           0  2   20
 CCAP     CCAP_2_12.png       2  12  5
 ECAP     ECAP_2_19.png       2  19  5
