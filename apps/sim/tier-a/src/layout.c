@@ -255,12 +255,14 @@ int r01a_layout_save(const char *path, const R01aBoard *board, int pan_x, int pa
         }
         first = 0;
         fprintf(f,
-                "    {\"ac\": %d, \"al\": %d, \"bc\": %d, \"bl\": %d, \"bb\": \"%s\", \"cr\": %u, \"cg\": %u, "
-                "\"cb\": %u}",
+                "    {\"ac\": %d, \"al\": %d, \"bc\": %d, \"bl\": %d, \"ba\": \"%s\", \"bb\": \"%s\", "
+                "\"cr\": %u, \"cg\": %u, \"cb\": %u, \"rt\": %u, \"hf\": %u, \"md\": %d}",
                 board->jumpers[i].a.col, board->jumpers[i].a.lane, board->jumpers[i].b.col,
-                board->jumpers[i].b.lane, board->jumpers[i].bb_ref[0] ? board->jumpers[i].bb_ref : "BB1",
-                (unsigned)board->jumpers[i].r, (unsigned)board->jumpers[i].g,
-                (unsigned)board->jumpers[i].bcol);
+                board->jumpers[i].b.lane, r01a_jumper_a_ref(&board->jumpers[i]),
+                r01a_jumper_b_ref(&board->jumpers[i]), (unsigned)board->jumpers[i].r,
+                (unsigned)board->jumpers[i].g, (unsigned)board->jumpers[i].bcol,
+                (unsigned)board->jumpers[i].route, (unsigned)board->jumpers[i].h_first,
+                (int)board->jumpers[i].mid);
     }
     fprintf(f, "\n  ]\n}\n");
     fclose(f);
@@ -353,12 +355,19 @@ int r01a_layout_load(const char *path, R01aBoard *board, int *pan_x, int *pan_y)
     while (p && *p && *p != ']') {
         NsPbHole a;
         NsPbHole b;
+        char ba[R01A_BB_REF_LEN];
         char bbref[R01A_BB_REF_LEN];
+        char objbuf[384];
         const char *end;
-        NsBreadboard *bb;
+        NsBreadboard *bba;
+        NsBreadboard *bbb;
+        size_t nobj;
         int cr = 220;
         int cg = 160;
         int cb = 40;
+        int rt = 0;
+        int hf = 0;
+        int md = 0;
         p = strchr(p, '{');
         if (!p) {
             break;
@@ -367,16 +376,27 @@ int r01a_layout_load(const char *path, R01aBoard *board, int *pan_x, int *pan_y)
         if (!end) {
             break;
         }
+        nobj = (size_t)(end - p + 1);
+        if (nobj >= sizeof(objbuf)) {
+            nobj = sizeof(objbuf) - 1;
+        }
+        memcpy(objbuf, p, nobj);
+        objbuf[nobj] = '\0';
         a.col = a.lane = b.col = b.lane = 0;
+        ba[0] = '\0';
         bbref[0] = '\0';
-        json_int(p, "ac", &a.col);
-        json_int(p, "al", &a.lane);
-        json_int(p, "bc", &b.col);
-        json_int(p, "bl", &b.lane);
-        json_str(p, "bb", bbref, sizeof(bbref));
-        json_int(p, "cr", &cr);
-        json_int(p, "cg", &cg);
-        json_int(p, "cb", &cb);
+        json_int(objbuf, "ac", &a.col);
+        json_int(objbuf, "al", &a.lane);
+        json_int(objbuf, "bc", &b.col);
+        json_int(objbuf, "bl", &b.lane);
+        json_str(objbuf, "ba", ba, sizeof(ba));
+        json_str(objbuf, "bb", bbref, sizeof(bbref));
+        json_int(objbuf, "cr", &cr);
+        json_int(objbuf, "cg", &cg);
+        json_int(objbuf, "cb", &cb);
+        json_int(objbuf, "rt", &rt);
+        json_int(objbuf, "hf", &hf);
+        json_int(objbuf, "md", &md);
         if (cr < 0) {
             cr = 0;
         }
@@ -395,11 +415,24 @@ int r01a_layout_load(const char *path, R01aBoard *board, int *pan_x, int *pan_y)
         if (cb > 255) {
             cb = 255;
         }
-        bb = (NsBreadboard *)r01a_board_entity_by_refdes(board, bbref[0] ? bbref : "BB1");
-        if (bb && bb->base.visual == NS_ENTITY_VIS_BREADBOARD) {
-            r01a_board_jumper_add_on(board, bb, a, b, (uint8_t)cr, (uint8_t)cg, (uint8_t)cb);
+        if (!ba[0]) {
+            snprintf(ba, sizeof(ba), "%s", bbref[0] ? bbref : "BB1");
+        }
+        if (!bbref[0]) {
+            snprintf(bbref, sizeof(bbref), "%s", ba);
+        }
+        bba = (NsBreadboard *)r01a_board_entity_by_refdes(board, ba);
+        bbb = (NsBreadboard *)r01a_board_entity_by_refdes(board, bbref);
+        if (bba && bba->base.visual == NS_ENTITY_VIS_BREADBOARD && bbb &&
+            bbb->base.visual == NS_ENTITY_VIS_BREADBOARD) {
+            r01a_board_jumper_add_across(board, bba, a, bbb, b, (uint8_t)cr, (uint8_t)cg, (uint8_t)cb);
+        } else if (bba && bba->base.visual == NS_ENTITY_VIS_BREADBOARD) {
+            r01a_board_jumper_add_on(board, bba, a, b, (uint8_t)cr, (uint8_t)cg, (uint8_t)cb);
         } else {
             r01a_board_jumper_add(board, a, b);
+        }
+        if (rt && board->jumper_count > 0) {
+            r01a_board_jumper_set_route(board, board->jumper_count - 1, hf, md);
         }
         p = end + 1;
     }

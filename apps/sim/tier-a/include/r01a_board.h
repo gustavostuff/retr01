@@ -28,10 +28,14 @@ enum {
 typedef struct R01aJumper {
     NsPbHole a;
     NsPbHole b;
-    char bb_ref[R01A_BB_REF_LEN];
+    char bb_ref[R01A_BB_REF_LEN]; /* board for hole a */
+    char b_ref[R01A_BB_REF_LEN];  /* board for hole b; empty means same as bb_ref */
     uint8_t r;
     uint8_t g;
     uint8_t bcol;
+    uint8_t route;   /* 0 auto 2-elbow, 1 custom mid */
+    uint8_t h_first; /* 1 = H-V-H, 0 = V-H-V (when route) */
+    int16_t mid;
 } R01aJumper;
 
 typedef struct R01aBoard {
@@ -68,9 +72,25 @@ int r01a_board_wire_mode(const R01aBoard *board);
 int r01a_board_jumper_add(R01aBoard *board, NsPbHole a, NsPbHole b);
 int r01a_board_jumper_add_on(R01aBoard *board, NsBreadboard *bb, NsPbHole a, NsPbHole b, uint8_t cr,
                             uint8_t cg, uint8_t cb);
+int r01a_board_jumper_add_across(R01aBoard *board, NsBreadboard *bb_a, NsPbHole a, NsBreadboard *bb_b,
+                                NsPbHole b, uint8_t cr, uint8_t cg, uint8_t cb);
 void r01a_board_jumper_remove(R01aBoard *board, int index);
 int r01a_board_jumper_set_end(R01aBoard *board, int index, int end_b, NsPbHole hole);
+int r01a_board_jumper_set_end_on(R01aBoard *board, int index, int end_b, NsBreadboard *bb, NsPbHole hole);
+int r01a_board_jumper_set_route(R01aBoard *board, int index, int h_first, int mid);
 void r01a_board_jumper_clear(R01aBoard *board);
+
+static inline const char *r01a_jumper_a_ref(const R01aJumper *j) {
+    return (j && j->bb_ref[0]) ? j->bb_ref : "BB1";
+}
+
+static inline const char *r01a_jumper_b_ref(const R01aJumper *j) {
+    if (j && j->b_ref[0]) {
+        return j->b_ref;
+    }
+    return r01a_jumper_a_ref(j);
+}
+
 NsEntity *r01a_board_entity_by_refdes(R01aBoard *board, const char *refdes);
 NsPassive *r01a_board_add_passive(R01aBoard *board, NsPassiveKind kind, const char *value, int x, int y);
 NsBreadboard *r01a_board_add_breadboard(R01aBoard *board, int x, int y);

@@ -5,6 +5,8 @@
 #include "netlist_sim/passive.h"
 #include "test_common.h"
 
+#include <string.h>
+
 int main(void) {
     R01aBoard board;
     R01aBoard loaded;
@@ -23,7 +25,16 @@ int main(void) {
     ns_passive_set_pivot(&board.passives.parts[0], 200, 90);
     r01a_board_set_wire_mode(&board, R01A_WIRE_MANUAL);
     expect_true(r01a_board_jumper_add(&board, a, b), "save jumper");
+    expect_true(r01a_board_jumper_set_route(&board, 0, 1, 96), "custom elbows");
     expect_true(r01a_board_add_breadboard(&board, 40, 50) != NULL, "add extra bb");
+    {
+        NsBreadboard *bb2 = (NsBreadboard *)r01a_board_entity_by_refdes(&board, "BB2");
+        NsPbHole xa = {0, NS_PB_LANE_TOP_POS};
+        NsPbHole xb = {2, NS_PB_LANE_A};
+        expect_true(bb2 != NULL, "BB2 before save");
+        expect_true(r01a_board_jumper_add_across(&board, &board.breadboard, xa, bb2, xb, 10, 20, 30),
+                    "save cross jumper");
+    }
     expect_true(r01a_board_add_passive(&board, NS_PASSIVE_R, "33", 300, 110) != NULL, "add extra R");
 
     expect_true(r01a_layout_save(path, &board, 17, 23) == 0, "layout save");
@@ -36,8 +47,15 @@ int main(void) {
     expect_true(r01a_osc_dot_entity(&loaded.osc_dot)->board_y == 80, "OSC y restored");
     expect_true(loaded.passives.parts[0].pivot_x == 200, "passive pivot x");
     expect_true(loaded.passives.parts[0].pivot_y == 90, "passive pivot y");
-    expect_true(loaded.jumper_count == 1, "jumper count");
+    expect_true(loaded.jumper_count == 2, "jumper count");
     expect_true(loaded.jumpers[0].a.col == 4 && loaded.jumpers[0].b.col == 12, "jumper holes");
+    expect_true(loaded.jumpers[0].route == 1 && loaded.jumpers[0].h_first == 1 && loaded.jumpers[0].mid == 96,
+                "jumper elbows restored");
+    expect_true(strcmp(r01a_jumper_a_ref(&loaded.jumpers[1]), "BB1") == 0, "cross A board");
+    expect_true(strcmp(r01a_jumper_b_ref(&loaded.jumpers[1]), "BB2") == 0, "cross B board");
+    expect_true(loaded.jumpers[1].a.col == 0 && loaded.jumpers[1].b.col == 2, "cross holes");
+    r01a_board_jumper_remove(&loaded, 1);
+    expect_true(loaded.jumper_count == 1, "cross jumper dropped after check");
     expect_true(loaded.extra_bb_count == 1, "extra bb count");
     expect_true(r01a_board_entity_by_refdes(&loaded, "BB2") != NULL, "BB2 restored");
     expect_true(r01a_board_entity_by_refdes(&loaded, "BB2")->board_x == 40, "BB2 x");

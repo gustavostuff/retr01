@@ -69,6 +69,9 @@ static int route_pin_n;
 static int route_pwr_bb_i;
 static int route_vdd_root[2];
 static int route_gnd_root[2];
+static NsBreadboard *route_bbs[R01A_ROUTE_BB_MAX];
+static int route_strip_root[R01A_ROUTE_BB_MAX][NS_PB_STRIPS];
+static int gnet_parent[R01A_ROUTE_BB_MAX * NS_PB_STRIPS];
 
 static uint64_t route_mix(uint64_t h, uint64_t v) {
     return h ^ (v + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2));
@@ -85,13 +88,17 @@ static uint64_t route_geom_hash(const R01aBoard *b, const NsIsland *island) {
     h = route_mix(h, (uint64_t)b->extra_bb_count);
     h = route_mix(h, (uint64_t)b->passives.count);
     for (i = 0; i < b->jumper_count; i++) {
-        const char *s = b->jumpers[i].bb_ref;
+        const char *s = r01a_jumper_a_ref(&b->jumpers[i]);
+        const char *t = r01a_jumper_b_ref(&b->jumpers[i]);
         h = route_mix(h, (uint64_t)b->jumpers[i].a.col);
         h = route_mix(h, (uint64_t)b->jumpers[i].a.lane);
         h = route_mix(h, (uint64_t)b->jumpers[i].b.col);
         h = route_mix(h, (uint64_t)b->jumpers[i].b.lane);
         for (; s && *s; s++) {
             h = route_mix(h, (unsigned char)*s);
+        }
+        for (; t && *t; t++) {
+            h = route_mix(h, (unsigned char)*t);
         }
     }
     for (i = 0; i < island->entity_count; i++) {
@@ -159,12 +166,83 @@ static int entity_is_route_skip(const NsEntity *e) {
 }
 
 static int jumper_on_bb(const R01aJumper *j, const NsBreadboard *bb) {
-    const char *ref;
     if (!j || !bb || !bb->base.refdes) {
         return 0;
     }
-    ref = j->bb_ref[0] ? j->bb_ref : "BB1";
-    return strcmp(ref, bb->base.refdes) == 0;
+    return strcmp(r01a_jumper_a_ref(j), bb->base.refdes) == 0 ||
+           strcmp(r01a_jumper_b_ref(j), bb->base.refdes) == 0;
+}
+
+static int jumper_intra_on_bb(const R01aJumper *j, const NsBreadboard *bb) {
+    if (!j || !bb || !bb->base.refdes) {
+        return 0;
+    }
+    return strcmp(r01a_jumper_a_ref(j), bb->base.refdes) == 0 &&
+           strcmp(r01a_jumper_b_ref(j), bb->base.refdes) == 0;
+}
+
+static int gnet_id(int bi, int root) {
+    return bi * NS_PB_STRIPS + root;
+}
+
+static int gnet_find(int s) {
+    int max = route_bb_n * NS_PB_STRIPS;
+    if (s < 0 || s >= max) {
+        return s;
+    }
+    while (gnet_parent[s] != s) {
+        gnet_parent[s] = gnet_parent[gnet_parent[s]];
+        s = gnet_parent[s];
+    }
+    return s;
+}
+
+static void gnet_union(int a, int b) {
+    int ra = gnet_find(a);
+    int rb = gnet_find(b);
+    int max = route_bb_n * NS_PB_STRIPS;
+    if (ra >= 0 && rb >= 0 && ra < max && rb < max && ra != rb) {
+        gnet_parent[rb] = ra;
+    }
+}
+
+static int route_bb_index_ref(const char *ref) {
+    int i;
+    if (!ref || !ref[0]) {
+        ref = "BB1";
+    }
+    for (i = 0; i < route_bb_n; i++) {
+        if (route_bbs[i] && route_bbs[i]->base.refdes && strcmp(route_bbs[i]->base.refdes, ref) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static void board_gnet_rebuild(const R01aBoard *b) {
+    int i;
+    int n = route_bb_n * NS_PB_STRIPS;
+    for (i = 0; i < n; i++) {
+        gnet_parent[i] = i;
+    }
+    if (!b) {
+        return;
+    }
+    for (i = 0; i < b->jumper_count; i++) {
+        int ia = route_bb_index_ref(r01a_jumper_a_ref(&b->jumpers[i]));
+        int ib = route_bb_index_ref(r01a_jumper_b_ref(&b->jumpers[i]));
+        int sa;
+        int sb;
+        if (ia < 0 || ib < 0) {
+            continue;
+        }
+        sa = ns_breadboard_strip_id(b->jumpers[i].a);
+        sb = ns_breadboard_strip_id(b->jumpers[i].b);
+        if (sa < 0 || sa >= NS_PB_STRIPS || sb < 0 || sb >= NS_PB_STRIPS) {
+            continue;
+        }
+        gnet_union(gnet_id(ia, route_strip_root[ia][sa]), gnet_id(ib, route_strip_root[ib][sb]));
+    }
 }
 
 static void board_bb_rebuild(R01aBoard *b, NsIsland *island) {
@@ -188,12 +266,13 @@ static void board_bb_rebuild(R01aBoard *b, NsIsland *island) {
         }
         bb = (NsBreadboard *)be;
         bb_i = route_bb_n;
+        route_bbs[bb_i] = bb;
         route_bb_n++;
         for (s = 0; s < NS_PB_STRIPS; s++) {
             strip_parent[s] = s;
         }
         for (s = 0; s < b->jumper_count; s++) {
-            if (!jumper_on_bb(&b->jumpers[s], bb)) {
+            if (!jumper_intra_on_bb(&b->jumpers[s], bb)) {
                 continue;
             }
             strip_union(ns_breadboard_strip_id(b->jumpers[s].a), ns_breadboard_strip_id(b->jumpers[s].b));
@@ -261,20 +340,31 @@ static void board_bb_rebuild(R01aBoard *b, NsIsland *island) {
                 route_pin_n++;
             }
         }
+        for (s = 0; s < NS_PB_STRIPS; s++) {
+            route_strip_root[bb_i][s] = strip_find(s);
+        }
     }
+    board_gnet_rebuild(b);
 }
 
 static void board_bb_propagate(void) {
     NsLevel net_lvl[R01A_ROUTE_BB_MAX][NS_PB_STRIPS];
     uint8_t net_used[R01A_ROUTE_BB_MAX][NS_PB_STRIPS];
+    NsLevel glvl[R01A_ROUTE_BB_MAX * NS_PB_STRIPS];
+    uint8_t gused[R01A_ROUTE_BB_MAX * NS_PB_STRIPS];
     int i;
+    int bi;
+    int root;
+    int n = route_bb_n * NS_PB_STRIPS;
     memset(net_lvl, 0, sizeof(net_lvl));
     memset(net_used, 0, sizeof(net_used));
+    memset(glvl, 0, sizeof(glvl));
+    memset(gused, 0, sizeof(gused));
     for (i = 0; i < route_pin_n; i++) {
         R01aRoutePin *rp = &route_pins[i];
         const NsPin *p = &rp->e->pins[rp->pi];
-        int bi = rp->bb_i;
-        int root = rp->root;
+        bi = rp->bb_i;
+        root = rp->root;
         if (bi < 0 || bi >= route_bb_n || root < 0 || root >= NS_PB_STRIPS) {
             continue;
         }
@@ -284,7 +374,7 @@ static void board_bb_propagate(void) {
         }
     }
     if (route_pwr_bb_i >= 0 && route_pwr_bb_i < route_bb_n) {
-        int bi = route_pwr_bb_i;
+        bi = route_pwr_bb_i;
         int k;
         for (k = 0; k < 2; k++) {
             int r = route_vdd_root[k];
@@ -299,14 +389,33 @@ static void board_bb_propagate(void) {
             }
         }
     }
+    for (bi = 0; bi < route_bb_n; bi++) {
+        for (root = 0; root < NS_PB_STRIPS; root++) {
+            int g;
+            if (!net_used[bi][root]) {
+                continue;
+            }
+            g = gnet_find(gnet_id(bi, root));
+            if (g < 0 || g >= n) {
+                continue;
+            }
+            gused[g] = 1;
+            glvl[g] = ns_level_merge(glvl[g], net_lvl[bi][root]);
+        }
+    }
     for (i = 0; i < route_pin_n; i++) {
         R01aRoutePin *rp = &route_pins[i];
-        int bi = rp->bb_i;
-        int root = rp->root;
-        if (bi < 0 || bi >= route_bb_n || root < 0 || root >= NS_PB_STRIPS || !net_used[bi][root]) {
+        int g;
+        bi = rp->bb_i;
+        root = rp->root;
+        if (bi < 0 || bi >= route_bb_n || root < 0 || root >= NS_PB_STRIPS) {
             continue;
         }
-        rp->e->pins[rp->pi].level = net_lvl[bi][root];
+        g = gnet_find(gnet_id(bi, root));
+        if (g < 0 || g >= n || !gused[g]) {
+            continue;
+        }
+        rp->e->pins[rp->pi].level = glvl[g];
     }
 }
 
@@ -719,20 +828,28 @@ static int hole_same(NsPbHole a, NsPbHole b) {
     return a.col == b.col && a.lane == b.lane;
 }
 
-int r01a_board_jumper_add_on(R01aBoard *board, NsBreadboard *bb, NsPbHole a, NsPbHole b, uint8_t cr,
-                            uint8_t cg, uint8_t cb) {
+static int jumper_end_eq(const R01aJumper *j, int end_b, const char *ref, NsPbHole hole) {
+    const char *jr = end_b ? r01a_jumper_b_ref(j) : r01a_jumper_a_ref(j);
+    NsPbHole jh = end_b ? j->b : j->a;
+    return strcmp(jr, ref) == 0 && hole_same(jh, hole);
+}
+
+int r01a_board_jumper_add_across(R01aBoard *board, NsBreadboard *bb_a, NsPbHole a, NsBreadboard *bb_b,
+                                NsPbHole b, uint8_t cr, uint8_t cg, uint8_t cb) {
     int i;
-    const char *ref;
-    if (!board || !bb || !ns_breadboard_hole_exists(a) || !ns_breadboard_hole_exists(b) || hole_same(a, b)) {
+    const char *ra;
+    const char *rb;
+    if (!board || !bb_a || !bb_b || !ns_breadboard_hole_exists(a) || !ns_breadboard_hole_exists(b)) {
         return 0;
     }
-    ref = bb->base.refdes ? bb->base.refdes : "BB1";
+    ra = bb_a->base.refdes ? bb_a->base.refdes : "BB1";
+    rb = bb_b->base.refdes ? bb_b->base.refdes : "BB1";
+    if (strcmp(ra, rb) == 0 && hole_same(a, b)) {
+        return 0;
+    }
     for (i = 0; i < board->jumper_count; i++) {
-        if (!jumper_on_bb(&board->jumpers[i], bb)) {
-            continue;
-        }
-        if ((hole_same(board->jumpers[i].a, a) && hole_same(board->jumpers[i].b, b)) ||
-            (hole_same(board->jumpers[i].a, b) && hole_same(board->jumpers[i].b, a))) {
+        if ((jumper_end_eq(&board->jumpers[i], 0, ra, a) && jumper_end_eq(&board->jumpers[i], 1, rb, b)) ||
+            (jumper_end_eq(&board->jumpers[i], 0, rb, b) && jumper_end_eq(&board->jumpers[i], 1, ra, a))) {
             return 1;
         }
     }
@@ -742,12 +859,22 @@ int r01a_board_jumper_add_on(R01aBoard *board, NsBreadboard *bb, NsPbHole a, NsP
     board->jumpers[board->jumper_count].a = a;
     board->jumpers[board->jumper_count].b = b;
     snprintf(board->jumpers[board->jumper_count].bb_ref, sizeof(board->jumpers[board->jumper_count].bb_ref),
-             "%s", ref);
+             "%s", ra);
+    snprintf(board->jumpers[board->jumper_count].b_ref, sizeof(board->jumpers[board->jumper_count].b_ref),
+             "%s", rb);
     board->jumpers[board->jumper_count].r = cr;
     board->jumpers[board->jumper_count].g = cg;
     board->jumpers[board->jumper_count].bcol = cb;
+    board->jumpers[board->jumper_count].route = 0;
+    board->jumpers[board->jumper_count].h_first = 0;
+    board->jumpers[board->jumper_count].mid = 0;
     board->jumper_count++;
     return 1;
+}
+
+int r01a_board_jumper_add_on(R01aBoard *board, NsBreadboard *bb, NsPbHole a, NsPbHole b, uint8_t cr,
+                            uint8_t cg, uint8_t cb) {
+    return r01a_board_jumper_add_across(board, bb, a, bb, b, cr, cg, cb);
 }
 
 int r01a_board_jumper_add(R01aBoard *board, NsPbHole a, NsPbHole b) {
@@ -768,20 +895,56 @@ void r01a_board_jumper_remove(R01aBoard *board, int index) {
     board->jumper_count--;
 }
 
-int r01a_board_jumper_set_end(R01aBoard *board, int index, int end_b, NsPbHole hole) {
+int r01a_board_jumper_set_end_on(R01aBoard *board, int index, int end_b, NsBreadboard *bb, NsPbHole hole) {
+    const char *new_ref;
+    const char *other_ref;
     NsPbHole other;
-    if (!board || index < 0 || index >= board->jumper_count || !ns_breadboard_hole_exists(hole)) {
+    if (!board || !bb || index < 0 || index >= board->jumper_count || !ns_breadboard_hole_exists(hole)) {
         return 0;
     }
+    new_ref = bb->base.refdes ? bb->base.refdes : "BB1";
     other = end_b ? board->jumpers[index].a : board->jumpers[index].b;
-    if (hole_same(other, hole)) {
+    other_ref = end_b ? r01a_jumper_a_ref(&board->jumpers[index]) : r01a_jumper_b_ref(&board->jumpers[index]);
+    if (strcmp(new_ref, other_ref) == 0 && hole_same(other, hole)) {
         return 0;
     }
     if (end_b) {
         board->jumpers[index].b = hole;
+        snprintf(board->jumpers[index].b_ref, sizeof(board->jumpers[index].b_ref), "%s", new_ref);
     } else {
         board->jumpers[index].a = hole;
+        snprintf(board->jumpers[index].bb_ref, sizeof(board->jumpers[index].bb_ref), "%s", new_ref);
     }
+    return 1;
+}
+
+int r01a_board_jumper_set_end(R01aBoard *board, int index, int end_b, NsPbHole hole) {
+    const char *ref;
+    NsBreadboard *bb;
+    if (!board || index < 0 || index >= board->jumper_count) {
+        return 0;
+    }
+    ref = end_b ? r01a_jumper_b_ref(&board->jumpers[index]) : r01a_jumper_a_ref(&board->jumpers[index]);
+    bb = (NsBreadboard *)r01a_board_entity_by_refdes(board, ref);
+    if (!bb || bb->base.visual != NS_ENTITY_VIS_BREADBOARD) {
+        return 0;
+    }
+    return r01a_board_jumper_set_end_on(board, index, end_b, bb, hole);
+}
+
+int r01a_board_jumper_set_route(R01aBoard *board, int index, int h_first, int mid) {
+    if (!board || index < 0 || index >= board->jumper_count) {
+        return 0;
+    }
+    if (mid < -32768) {
+        mid = -32768;
+    }
+    if (mid > 32767) {
+        mid = 32767;
+    }
+    board->jumpers[index].route = 1;
+    board->jumpers[index].h_first = h_first ? 1 : 0;
+    board->jumpers[index].mid = (int16_t)mid;
     return 1;
 }
 

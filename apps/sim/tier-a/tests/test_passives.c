@@ -100,6 +100,28 @@ int main(void) {
         expect_true(ns_entity_sense(osc, "VDD") != NS_LVL_H, "cap does not pass DC");
     }
 
+    {
+        NsBreadboard *bb2;
+        NsEntity *osc = r01a_osc_dot_entity(&board.osc_dot);
+        NsPbHole rail = {2, NS_PB_LANE_TOP_POS};
+        NsPbHole dest = {10, NS_PB_LANE_A};
+        NsPbHole vddh = {10, NS_PB_LANE_E};
+        int hx;
+        int hy;
+        int tx;
+        int ty;
+        bb2 = r01a_board_add_breadboard(&board, 400, 40);
+        expect_true(bb2 != NULL, "BB2");
+        expect_true(r01a_board_jumper_add_across(&board, &board.breadboard, rail, bb2, dest, 200, 40, 40),
+                    "inter-bb jumper");
+        ns_breadboard_hole_world(bb2, vddh, &hx, &hy);
+        ns_entity_place(osc, 0, 0);
+        expect_true(ns_entity_pin_tip_board(osc, 14, &tx, &ty), "OSC VDD tip 3");
+        ns_entity_place(osc, hx - tx, hy - ty);
+        r01a_board_step(&board);
+        expect_true(ns_entity_sense(osc, "VDD") == NS_LVL_H, "inter-bb jumper carries VDD");
+    }
+
     r01a_board_shutdown(&board);
     return test_done("test_passives");
 }
