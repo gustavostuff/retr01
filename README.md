@@ -28,7 +28,7 @@ The game program writes notes and a helper chip (an AVR128DB28) mixes them to an
 
 The design uses one compact through-hole board for both home-console and arcade cabinet builds. The same PCB can be populated as a console (using 3.5mm connectors for gamepads) or as an arcade board (using male pin headers for microswitch-based sticks and buttons).
 
-A 6502 runs the game logic, while a few helper chips and small glue logic handle video, inputs, saves, and audio mixing. Output is dual sync RGB (RGBS and RGBHV) and composite. The cartridge is a simple memory pack containing program data, tiles, and save data.
+A W65C02S runs the game logic, while a few helper chips and small glue logic handle video, inputs, saves, and audio mixing. Output is dual sync RGB (RGBS and RGBHV) and composite. The cartridge is a simple memory pack containing program data, tiles, and save data.
 
 ## Software pieces
 

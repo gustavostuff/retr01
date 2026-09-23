@@ -80,7 +80,7 @@ void r01_tracker_boot(void);
 void r01_tracker_nmi(void);
 void r01_pa_boot(void);
 
-/* NMI trampoline in asm/nmi.s calls this. */
+/* NMI trampoline in asm/nmi.s calls this after saving A/X/Y and $E0-$FF. */
 void r01_nmi(void);
 
 #endif

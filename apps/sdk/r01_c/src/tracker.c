@@ -286,6 +286,7 @@ void r01_tracker_boot(void) {
 }
 
 void r01_tracker_nmi(void) {
+    /* One stream opcode per NMI (FA may recurse once). Then publish $7F40. */
     if (s_active) {
         stream_tick();
         if (s_dirty) {

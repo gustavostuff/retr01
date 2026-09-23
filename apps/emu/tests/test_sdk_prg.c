@@ -59,6 +59,27 @@ int main(int argc, char **argv) {
         fprintf(stderr, "FAIL vectors nmi=$%04x irq=$%04x\n", nmi, irq);
         return 1;
     }
+    {
+        /* nmi.s: lda __rc0,x / sta __rc0,x around jsr r01_nmi (zp,x $E0). */
+        unsigned off = (unsigned)nmi - 0x8000u;
+        int i;
+        int saw_lda = 0;
+        int saw_sta = 0;
+        if (off + 81u > R01E_PRG_BYTES) {
+            return fail("NMI vector out of PRG");
+        }
+        for (i = 0; i < 80; i++) {
+            if (prg[off + (unsigned)i] == 0xB5u && prg[off + (unsigned)i + 1u] == 0xE0u) {
+                saw_lda = 1;
+            }
+            if (prg[off + (unsigned)i] == 0x95u && prg[off + (unsigned)i + 1u] == 0xE0u) {
+                saw_sta = 1;
+            }
+        }
+        if (!saw_lda || !saw_sta) {
+            return fail("NMI handler missing lda/sta $E0,x RC save");
+        }
+    }
 
     {
         const char *slash = strrchr(prg_path, '/');
@@ -87,6 +108,8 @@ int main(int argc, char **argv) {
         int saw_init = 0;
         int saw_tick = 0;
         int saw_wait = 0;
+        int saw_rc0 = 0;
+        int saw_nmi_c = 0;
         while (fgets(line, (int)sizeof(line), listing)) {
             if (strstr(line, "r01_game_on_init")) {
                 saw_init = 1;
@@ -97,10 +120,19 @@ int main(int argc, char **argv) {
             if (strstr(line, "r01_ppu_wait_vblank")) {
                 saw_wait = 1;
             }
+            if (strstr(line, "__rc0")) {
+                saw_rc0 = 1;
+            }
+            if (strstr(line, "r01_nmi")) {
+                saw_nmi_c = 1;
+            }
         }
         fclose(listing);
         if (!saw_init || !saw_tick || !saw_wait) {
             return fail("listing missing hook symbols");
+        }
+        if (!saw_rc0 || !saw_nmi_c) {
+            return fail("listing missing NMI RC save");
         }
     }
 

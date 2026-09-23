@@ -3,6 +3,7 @@
 R01GameCtx g_ctx;
 
 void r01_nmi(void) {
+    /* nmi.s saved A/X/Y and __rc0..__rc31. One tracker opcode, then author vblank. */
     r01_tracker_nmi();
     r01_game_on_vblank(&g_ctx);
 }

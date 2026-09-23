@@ -22,6 +22,7 @@ COMMON="$ROOT/apps/common"
 
 mkdir -p "$OUTDIR"
 
+# W65C02S only. NMOS 6502 (-mcpu=mos6502) is not a PRG target.
 "$CC" -Oz -g -mcpu=mosw65c02 -mlto-zp=218 \
   -ffunction-sections -fdata-sections \
   -I "$SDK/include" \

@@ -1,6 +1,7 @@
 /* Retr01 32 KB PRG. Boot $8000. Tables $80E0-$C3FF. C $C400-$FFF9. Vectors $FFFA. */
 /* Probe tables at $8700 (64 x 240 B + 64 solid patterns) end by $C381. */
 
+/* Imaginary regs $E0-$FF. nmi.s stacks this block around C NMI. */
 __rc0 = 0xe0;
 INCLUDE imag-regs.ld
 ASSERT(__rc31 == 0xff, "Inconsistent zero page map.")

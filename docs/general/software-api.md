@@ -313,4 +313,6 @@ See `hardware.md` for the M / S1 / S2 split. Shared-bus timing: `ic-comms-risks.
 
 **STP** stays unused in normal play. **WAI** is only for a clear NMI/IRQ wake.
 
+PRG builds with llvm-mos `-mcpu=mosw65c02`. NMI in `nmi.s` saves A, X, Y, and the imaginary register block `$E0-$FF` (`__rc0`..`__rc31`) before `r01_nmi`. The tracker consumes one stream opcode per NMI. `r01_game_on_vblank` stays short.
+
 **Performance anti-patterns** (RDY-as-default, full OAM every frame, saves in the hot path, and so on): see **Performance: what not to do** in `ic-comms-risks.md`.

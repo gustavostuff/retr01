@@ -40,6 +40,7 @@ typedef struct R01GameCtx {
 void r01_game_ctx_init(R01GameCtx *ctx);
 void R01_NOINLINE r01_game_on_init(R01GameCtx *ctx);
 void R01_NOINLINE r01_game_on_tick(R01GameCtx *ctx);
+/* NMI after the tracker tick. Keep the body short. */
 void R01_NOINLINE r01_game_on_vblank(R01GameCtx *ctx);
 void r01_game_play_tick(R01GameCtx *ctx);
 void r01_game_play_reset(void);
