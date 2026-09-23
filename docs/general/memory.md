@@ -316,7 +316,7 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 
 Table grows toward `$8500` inside the 1024 B world-0 play block. **64** records need **384 B** and fit.
 
-The `$8700` list is the Set Solid pattern pairs only. Collision samples BG1 nametable bank+tile against that list (plus optional `r01_solid_pattern_add` extras in RAM). The live camera 2x2 is RAM. llvm-mos C occupies `$C400`–`$FFF9`. Table growth into `$C400` fails the link.
+The `$8700` list is the Set Solid pattern pairs only. Collision samples BG1 nametable bank+tile against that list (plus optional `r01_solid_pattern_add` extras in RAM). Play reads the live 2x2 from RAM. Off-window cells read MAP (tile + attr only). llvm-mos C occupies `$C400-$FFF9`. Table growth into `$C400` fails the link.
 
 Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs). Collision solids are a bank+tile list in system RAM (copied from PRG `$8700` at boot). Studio Set Solid stores `solid_patterns` in the project JSON. `r01_solid_pattern_add` is optional RAM extras. `r01_world_enter(id)` selects a packed world (MAP + that world's play pointer).
 

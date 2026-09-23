@@ -98,7 +98,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 ### 19. Collision solids packing
 
-**Resolved:** Collision marks BG1 patterns by bank index and tile index. Palette and H/V flip do not affect solidity. Author `game_logic.c` calls `r01_solid_pattern_add(ctx, bank, tile)`. Studio also stores `solid_patterns` as `[bank, tile]` pairs. Packed carts put the list at PRG `$8700` and copy it into system RAM `$0200` at boot. Play samples MAP nametables against that list. See `memory.md`.
+**Resolved:** Collision marks BG1 patterns by bank index and tile index. Palette and H/V flip do not affect solidity. Author `game_logic.c` calls `r01_solid_pattern_add(ctx, bank, tile)`. Studio also stores `solid_patterns` as `[bank, tile]` pairs. Packed carts put the list at PRG `$8700` and copy it into system RAM `$0200` at boot. Play samples the live 2x2 nametable RAM against that list. Off-window cells read MAP. See `memory.md`.
 
 ### 20. Instance + PA byte schemas
 
