@@ -101,7 +101,7 @@ int main(void) {
     int x0;
 
     r01a_board_init(&board);
-    r01a_board_step_dots(&board, 64);
+    r01a_board_step_dots(&board, (uint32_t)(NS_SCALE_1X_OY + 1) * (uint32_t)NS_RASTER_DOTS_X);
     expect_true(r01a_ad724_encode_ok(&board.ad724), "Auto encode after burst");
     expect_true(sink_lit(&board), "Auto burst lights the LCD");
 

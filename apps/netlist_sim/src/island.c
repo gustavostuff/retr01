@@ -25,6 +25,25 @@ int ns_island_add_entity(NsIsland *island, NsEntity *entity) {
     return 0;
 }
 
+int ns_island_remove_entity(NsIsland *island, NsEntity *entity) {
+    int i;
+    if (!island || !entity) {
+        return -1;
+    }
+    for (i = 0; i < island->entity_count; i++) {
+        if (island->entities[i] != entity) {
+            continue;
+        }
+        for (; i < island->entity_count - 1; i++) {
+            island->entities[i] = island->entities[i + 1];
+        }
+        island->entity_count--;
+        island->entities[island->entity_count] = NULL;
+        return 0;
+    }
+    return -1;
+}
+
 void ns_island_init(NsIsland *island) {
     int i;
     if (!island) {

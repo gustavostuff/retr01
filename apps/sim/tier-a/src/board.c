@@ -2,11 +2,13 @@
 
 #include "netlist_sim/bus.h"
 #include "netlist_sim/entity.h"
+#include "netlist_sim/island.h"
 #include "netlist_sim/passive.h"
 #include "r01_kit_palette.h"
 #include "r01a_raster.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define R01A_SETTLE_PASSES 2
@@ -96,27 +98,30 @@ static int entity_is_route_skip(const NsEntity *e) {
     return !e || e->visual == NS_ENTITY_VIS_BREADBOARD || e->visual == NS_ENTITY_VIS_DISPLAY;
 }
 
-static void board_bb_route(R01aBoard *b) {
-    NsIsland *island;
+static int jumper_on_bb(const R01aJumper *j, const NsBreadboard *bb) {
+    const char *ref;
+    if (!j || !bb || !bb->base.refdes) {
+        return 0;
+    }
+    ref = j->bb_ref[0] ? j->bb_ref : "BB1";
+    return strcmp(ref, bb->base.refdes) == 0;
+}
+
+static void board_bb_route_one(R01aBoard *b, NsIsland *island, NsBreadboard *bb) {
     int i;
     int s;
     NsLevel net_lvl[NS_PB_STRIPS];
     uint8_t net_used[NS_PB_STRIPS];
-    int prev_fatal;
 
-    if (!b) {
-        return;
-    }
-    island = ns_island_group_at_mut(r01a_board_group(b), 0);
-    if (!island) {
-        return;
-    }
     for (s = 0; s < NS_PB_STRIPS; s++) {
         strip_parent[s] = s;
         net_lvl[s] = NS_LVL_Z;
         net_used[s] = 0;
     }
     for (i = 0; i < b->jumper_count; i++) {
+        if (!jumper_on_bb(&b->jumpers[i], bb)) {
+            continue;
+        }
         strip_union(ns_breadboard_strip_id(b->jumpers[i].a), ns_breadboard_strip_id(b->jumpers[i].b));
     }
     for (i = 0; i < b->passives.count; i++) {
@@ -133,15 +138,12 @@ static void board_bb_route(R01aBoard *b) {
         if (!ns_passive_tip_board(p, 1, &t1x, &t1y) || !ns_passive_tip_board(p, 2, &t2x, &t2y)) {
             continue;
         }
-        if (!ns_breadboard_tip_strip(&b->breadboard, t1x, t1y, &s1) ||
-            !ns_breadboard_tip_strip(&b->breadboard, t2x, t2y, &s2)) {
+        if (!ns_breadboard_tip_strip(bb, t1x, t1y, &s1) || !ns_breadboard_tip_strip(bb, t2x, t2y, &s2)) {
             continue;
         }
         strip_union(s1, s2);
     }
 
-    prev_fatal = ns_bus_fatal_conflicts();
-    ns_bus_set_fatal_conflicts(0);
     for (i = 0; i < island->entity_count; i++) {
         NsEntity *e = island->entities[i];
         int pi;
@@ -159,7 +161,7 @@ static void board_bb_route(R01aBoard *b) {
             if (!entity_tip_board(e, e->pins[pi].number, &tx, &ty)) {
                 continue;
             }
-            if (!ns_breadboard_tip_strip(&b->breadboard, tx, ty, &strip)) {
+            if (!ns_breadboard_tip_strip(bb, tx, ty, &strip)) {
                 continue;
             }
             root = strip_find(strip);
@@ -189,7 +191,7 @@ static void board_bb_route(R01aBoard *b) {
             if (!entity_tip_board(e, e->pins[pi].number, &tx, &ty)) {
                 continue;
             }
-            if (!ns_breadboard_tip_strip(&b->breadboard, tx, ty, &strip)) {
+            if (!ns_breadboard_tip_strip(bb, tx, ty, &strip)) {
                 continue;
             }
             root = strip_find(strip);
@@ -197,6 +199,28 @@ static void board_bb_route(R01aBoard *b) {
                 continue;
             }
             e->pins[pi].level = net_lvl[root];
+        }
+    }
+}
+
+static void board_bb_route(R01aBoard *b) {
+    NsIsland *island;
+    int i;
+    int prev_fatal;
+
+    if (!b) {
+        return;
+    }
+    island = ns_island_group_at_mut(r01a_board_group(b), 0);
+    if (!island) {
+        return;
+    }
+    prev_fatal = ns_bus_fatal_conflicts();
+    ns_bus_set_fatal_conflicts(0);
+    for (i = 0; i < island->entity_count; i++) {
+        NsEntity *e = island->entities[i];
+        if (e && e->visual == NS_ENTITY_VIS_BREADBOARD) {
+            board_bb_route_one(b, island, (NsBreadboard *)e);
         }
     }
     ns_bus_set_fatal_conflicts(prev_fatal);
@@ -306,6 +330,9 @@ static void board_plot(R01aBoard *b) {
     if (!vis) {
         return;
     }
+    if (!ns_rgbs_beam_to_logical(ns_video_sink_scale_2x(&b->sink), x, y, NULL, NULL)) {
+        return;
+    }
     if (!r01a_ad724_encode_ok(&b->ad724)) {
         return;
     }
@@ -389,7 +416,6 @@ static void island_video_init(NsIsland *island) {
     ns_breadboard_init(&b->breadboard, "BB1");
     ns_video_sink_init(&b->sink, "SCR1");
     ns_video_sink_set_palette(&b->sink, kit_palette);
-    ns_video_sink_set_scale_2x(&b->sink, 1);
     ns_island_add_entity(island, ns_breadboard_entity(&b->breadboard));
     ns_island_add_entity(island, r01a_pwr5v_entity(&b->pwr));
     ns_island_add_entity(island, r01a_osc_dot_entity(&b->osc_dot));
@@ -417,7 +443,6 @@ static void group_reset(NsIslandGroup *group) {
     ns_entity_reset(r01a_at27c256r_entity(&b->prom));
     ns_entity_reset(r01a_ad724_entity(&b->ad724));
     ns_entity_reset(ns_video_sink_entity(&b->sink));
-    ns_video_sink_set_scale_2x(&b->sink, 1);
     ns_video_sink_clear(&b->sink);
     b->prev_y = 0;
     board_settle(b);
@@ -601,12 +626,18 @@ static int hole_same(NsPbHole a, NsPbHole b) {
     return a.col == b.col && a.lane == b.lane;
 }
 
-int r01a_board_jumper_add(R01aBoard *board, NsPbHole a, NsPbHole b) {
+int r01a_board_jumper_add_on(R01aBoard *board, NsBreadboard *bb, NsPbHole a, NsPbHole b, uint8_t cr,
+                            uint8_t cg, uint8_t cb) {
     int i;
-    if (!board || !ns_breadboard_hole_exists(a) || !ns_breadboard_hole_exists(b) || hole_same(a, b)) {
+    const char *ref;
+    if (!board || !bb || !ns_breadboard_hole_exists(a) || !ns_breadboard_hole_exists(b) || hole_same(a, b)) {
         return 0;
     }
+    ref = bb->base.refdes ? bb->base.refdes : "BB1";
     for (i = 0; i < board->jumper_count; i++) {
+        if (!jumper_on_bb(&board->jumpers[i], bb)) {
+            continue;
+        }
         if ((hole_same(board->jumpers[i].a, a) && hole_same(board->jumpers[i].b, b)) ||
             (hole_same(board->jumpers[i].a, b) && hole_same(board->jumpers[i].b, a))) {
             return 1;
@@ -617,7 +648,47 @@ int r01a_board_jumper_add(R01aBoard *board, NsPbHole a, NsPbHole b) {
     }
     board->jumpers[board->jumper_count].a = a;
     board->jumpers[board->jumper_count].b = b;
+    snprintf(board->jumpers[board->jumper_count].bb_ref, sizeof(board->jumpers[board->jumper_count].bb_ref),
+             "%s", ref);
+    board->jumpers[board->jumper_count].r = cr;
+    board->jumpers[board->jumper_count].g = cg;
+    board->jumpers[board->jumper_count].bcol = cb;
     board->jumper_count++;
+    return 1;
+}
+
+int r01a_board_jumper_add(R01aBoard *board, NsPbHole a, NsPbHole b) {
+    if (!board) {
+        return 0;
+    }
+    return r01a_board_jumper_add_on(board, &board->breadboard, a, b, 220, 160, 40);
+}
+
+void r01a_board_jumper_remove(R01aBoard *board, int index) {
+    int i;
+    if (!board || index < 0 || index >= board->jumper_count) {
+        return;
+    }
+    for (i = index; i < board->jumper_count - 1; i++) {
+        board->jumpers[i] = board->jumpers[i + 1];
+    }
+    board->jumper_count--;
+}
+
+int r01a_board_jumper_set_end(R01aBoard *board, int index, int end_b, NsPbHole hole) {
+    NsPbHole other;
+    if (!board || index < 0 || index >= board->jumper_count || !ns_breadboard_hole_exists(hole)) {
+        return 0;
+    }
+    other = end_b ? board->jumpers[index].a : board->jumpers[index].b;
+    if (hole_same(other, hole)) {
+        return 0;
+    }
+    if (end_b) {
+        board->jumpers[index].b = hole;
+    } else {
+        board->jumpers[index].a = hole;
+    }
     return 1;
 }
 
@@ -645,4 +716,190 @@ NsEntity *r01a_board_entity_by_refdes(R01aBoard *board, const char *refdes) {
         }
     }
     return NULL;
+}
+
+static const char *passive_ref_prefix(NsPassiveKind kind) {
+    switch (kind) {
+    case NS_PASSIVE_R:
+        return "R";
+    case NS_PASSIVE_CCAP:
+        return "C";
+    case NS_PASSIVE_ECAP:
+        return "E";
+    case NS_PASSIVE_OSC:
+        return "Y";
+    case NS_PASSIVE_D:
+        return "D";
+    default:
+        return "P";
+    }
+}
+
+static int next_ref_seq(R01aBoard *board, const char *prefix) {
+    NsIsland *island;
+    int i;
+    int maxn = 0;
+    size_t plen;
+    if (!board || !prefix || !prefix[0]) {
+        return 1;
+    }
+    plen = strlen(prefix);
+    island = ns_island_group_at_mut(r01a_board_group(board), 0);
+    if (!island) {
+        return 1;
+    }
+    for (i = 0; i < island->entity_count; i++) {
+        const char *ref;
+        char *end;
+        long n;
+        if (!island->entities[i] || !island->entities[i]->refdes) {
+            continue;
+        }
+        ref = island->entities[i]->refdes;
+        if (strncmp(ref, prefix, plen) != 0) {
+            continue;
+        }
+        n = strtol(ref + plen, &end, 10);
+        if (end != ref + plen && *end == '\0' && n > maxn) {
+            maxn = (int)n;
+        }
+    }
+    return maxn + 1;
+}
+
+NsPassive *r01a_board_add_passive(R01aBoard *board, NsPassiveKind kind, const char *value, int x, int y) {
+    NsIsland *island;
+    NsPassive *p;
+    char ref[NS_PASSIVE_REF_LEN];
+    int seq;
+    if (!board || kind < 0 || kind >= NS_PASSIVE_KIND_COUNT) {
+        return NULL;
+    }
+    island = ns_island_group_at_mut(r01a_board_group(board), 0);
+    if (!island) {
+        return NULL;
+    }
+    seq = next_ref_seq(board, passive_ref_prefix(kind));
+    if (seq < 1) {
+        seq = 1;
+    }
+    if (seq > 999) {
+        seq = 999;
+    }
+    snprintf(ref, sizeof(ref), "%s%d", passive_ref_prefix(kind), seq);
+    p = ns_passive_bank_add(&board->passives, kind, ref, value);
+    if (!p) {
+        return NULL;
+    }
+    ns_passive_set_orient(p, NS_ORIENT_0);
+    ns_passive_set_pivot(p, x, y);
+    if (ns_island_add_entity(island, &p->base) != 0) {
+        board->passives.count--;
+        return NULL;
+    }
+    return p;
+}
+
+static int entity_on_island(const NsIsland *island, const NsEntity *e) {
+    int i;
+    if (!island || !e) {
+        return 0;
+    }
+    for (i = 0; i < island->entity_count; i++) {
+        if (island->entities[i] == e) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+NsBreadboard *r01a_board_add_breadboard(R01aBoard *board, int x, int y) {
+    NsIsland *island;
+    NsBreadboard *bb;
+    char ref[R01A_BB_REF_LEN];
+    int seq;
+    if (!board) {
+        return NULL;
+    }
+    island = ns_island_group_at_mut(r01a_board_group(board), 0);
+    if (!island) {
+        return NULL;
+    }
+    if (!entity_on_island(island, ns_breadboard_entity(&board->breadboard))) {
+        ns_entity_place(&board->breadboard.base, x, y);
+        if (ns_island_add_entity(island, ns_breadboard_entity(&board->breadboard)) != 0) {
+            return NULL;
+        }
+        return &board->breadboard;
+    }
+    if (board->extra_bb_count >= R01A_BB_EXTRA_MAX) {
+        return NULL;
+    }
+    seq = next_ref_seq(board, "BB");
+    if (seq < 2) {
+        seq = 2;
+    }
+    if (seq > 99) {
+        seq = 99;
+    }
+    snprintf(ref, sizeof(ref), "BB%d", seq);
+    bb = &board->extra_bb[board->extra_bb_count];
+    ns_breadboard_init(bb, ref);
+    ns_entity_place(&bb->base, x, y);
+    if (ns_island_add_entity(island, ns_breadboard_entity(bb)) != 0) {
+        return NULL;
+    }
+    board->extra_bb_count++;
+    return bb;
+}
+
+static void extra_bb_fix_aliases(NsBreadboard *bb) {
+    if (!bb) {
+        return;
+    }
+    bb->base.refdes = bb->refdes_buf;
+    bb->base.impl = bb;
+}
+
+int r01a_board_remove_breadboard(R01aBoard *board, NsBreadboard *bb) {
+    NsIsland *island;
+    int extra_i = -1;
+    int i;
+    if (!board || !bb) {
+        return 0;
+    }
+    island = ns_island_group_at_mut(r01a_board_group(board), 0);
+    if (!island) {
+        return 0;
+    }
+    for (i = 0; i < board->extra_bb_count; i++) {
+        if (&board->extra_bb[i] == bb) {
+            extra_i = i;
+            break;
+        }
+    }
+    if (extra_i < 0 && bb != &board->breadboard) {
+        return 0;
+    }
+    for (i = board->jumper_count - 1; i >= 0; i--) {
+        if (jumper_on_bb(&board->jumpers[i], bb)) {
+            r01a_board_jumper_remove(board, i);
+        }
+    }
+    ns_island_remove_entity(island, ns_breadboard_entity(bb));
+    if (extra_i < 0) {
+        return 1;
+    }
+    for (i = extra_i + 1; i < board->extra_bb_count; i++) {
+        ns_island_remove_entity(island, ns_breadboard_entity(&board->extra_bb[i]));
+    }
+    for (i = extra_i; i < board->extra_bb_count - 1; i++) {
+        board->extra_bb[i] = board->extra_bb[i + 1];
+        extra_bb_fix_aliases(&board->extra_bb[i]);
+    }
+    board->extra_bb_count--;
+    for (i = extra_i; i < board->extra_bb_count; i++) {
+        ns_island_add_entity(island, ns_breadboard_entity(&board->extra_bb[i]));
+    }
+    return 1;
 }

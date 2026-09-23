@@ -23,6 +23,8 @@ int main(void) {
     ns_passive_set_pivot(&board.passives.parts[0], 200, 90);
     r01a_board_set_wire_mode(&board, R01A_WIRE_MANUAL);
     expect_true(r01a_board_jumper_add(&board, a, b), "save jumper");
+    expect_true(r01a_board_add_breadboard(&board, 40, 50) != NULL, "add extra bb");
+    expect_true(r01a_board_add_passive(&board, NS_PASSIVE_R, "33", 300, 110) != NULL, "add extra R");
 
     expect_true(r01a_layout_save(path, &board, 17, 23) == 0, "layout save");
 
@@ -36,6 +38,39 @@ int main(void) {
     expect_true(loaded.passives.parts[0].pivot_y == 90, "passive pivot y");
     expect_true(loaded.jumper_count == 1, "jumper count");
     expect_true(loaded.jumpers[0].a.col == 4 && loaded.jumpers[0].b.col == 12, "jumper holes");
+    expect_true(loaded.extra_bb_count == 1, "extra bb count");
+    expect_true(r01a_board_entity_by_refdes(&loaded, "BB2") != NULL, "BB2 restored");
+    expect_true(r01a_board_entity_by_refdes(&loaded, "BB2")->board_x == 40, "BB2 x");
+    expect_true(loaded.passives.count == 22, "extra passive count");
+    expect_true(loaded.jumpers[0].r == 220 && loaded.jumpers[0].g == 160 && loaded.jumpers[0].bcol == 40,
+                "jumper color restored");
+    {
+        NsPbHole c = {20, NS_PB_LANE_A};
+        expect_true(r01a_board_jumper_set_end(&loaded, 0, 1, c), "move jumper B");
+        expect_true(loaded.jumpers[0].b.col == 20, "jumper B col");
+        r01a_board_jumper_remove(&loaded, 0);
+        expect_true(loaded.jumper_count == 0, "jumper removed");
+        expect_true(r01a_board_jumper_add_on(&loaded, &loaded.breadboard, a, b, 50, 120, 220), "colored jumper");
+        expect_true(loaded.jumpers[0].r == 50 && loaded.jumpers[0].bcol == 220, "jumper rgb");
+    }
+    {
+        NsBreadboard *bb2 = (NsBreadboard *)r01a_board_entity_by_refdes(&loaded, "BB2");
+        NsPbHole ja = {2, NS_PB_LANE_A};
+        NsPbHole jb = {8, NS_PB_LANE_A};
+        int kept = loaded.jumper_count;
+        expect_true(bb2 != NULL, "BB2 ptr");
+        expect_true(r01a_board_jumper_add_on(&loaded, bb2, ja, jb, 50, 50, 50), "jumper on BB2");
+        expect_true(r01a_board_add_breadboard(&loaded, 80, 50) != NULL, "add BB3");
+        expect_true(r01a_board_remove_breadboard(&loaded, bb2), "remove BB2");
+        expect_true(loaded.extra_bb_count == 1, "extra compact");
+        expect_true(r01a_board_entity_by_refdes(&loaded, "BB2") == NULL, "BB2 gone");
+        expect_true(r01a_board_entity_by_refdes(&loaded, "BB3") != NULL, "BB3 kept");
+        expect_true(loaded.jumper_count == kept, "BB2 jumpers stripped");
+        expect_true(r01a_board_remove_breadboard(&loaded, &loaded.breadboard), "remove BB1");
+        expect_true(r01a_board_entity_by_refdes(&loaded, "BB1") == NULL, "BB1 gone");
+        expect_true(r01a_board_add_breadboard(&loaded, 10, 10) == &loaded.breadboard, "restore BB1");
+        expect_true(r01a_board_entity_by_refdes(&loaded, "BB1") != NULL, "BB1 back");
+    }
 
     r01a_board_shutdown(&board);
     r01a_board_shutdown(&loaded);

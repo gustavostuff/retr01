@@ -1,5 +1,6 @@
 #include "netlist_sim/breadboard.h"
 
+#include <stdio.h>
 #include <string.h>
 
 static int lane_hole_y(int lane) {
@@ -88,7 +89,8 @@ void ns_breadboard_init(NsBreadboard *bb, const char *refdes) {
         return;
     }
     memset(bb, 0, sizeof(*bb));
-    ns_entity_init(&bb->base, &BB_VT, "BREADBOARD", refdes ? refdes : "BB1");
+    snprintf(bb->refdes_buf, sizeof(bb->refdes_buf), "%s", refdes ? refdes : "BB1");
+    ns_entity_init(&bb->base, &BB_VT, "BREADBOARD", bb->refdes_buf);
     bb->base.impl = bb;
     ns_breadboard_body_size(NS_ORIENT_H, &w, &h);
     ns_entity_set_glyph(&bb->base, NS_ENTITY_VIS_BREADBOARD, w, h);

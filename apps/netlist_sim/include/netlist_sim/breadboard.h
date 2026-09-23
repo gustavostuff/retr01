@@ -47,6 +47,7 @@ typedef struct NsBreadboard {
     NsEntity base;
     int hover_valid;
     NsPbHole hover;
+    char refdes_buf[12];
 } NsBreadboard;
 
 void ns_breadboard_init(NsBreadboard *bb, const char *refdes);

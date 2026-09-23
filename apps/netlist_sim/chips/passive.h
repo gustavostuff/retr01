@@ -6,7 +6,7 @@
 #include <SDL.h>
 
 /*
- * Two-lead passives (R / CCAP / ECAP / OSC / D). UI sprites only.
+ * Passives (R / CCAP / ECAP / OSC / D). UI sprites only.
  * No netlist wiring yet. Pivot = pin 1 tip from KIND_x_y.png filename.
  * Polarized parts (ECAP, later D) carry a flag for a future polarity check.
  */

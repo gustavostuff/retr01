@@ -164,6 +164,9 @@ int ns_passive_tip_board(const NsPassive *p, int pin_num, int *wx, int *wy) {
         return 1;
     }
     sp = sprite_for(p->kind);
+    if (sp->span_px == 0) {
+        return 0;
+    }
     rot_cw_delta(sp->span_px, 0, (int)p->base.orient, &rx, &ry);
     *wx = p->pivot_x + rx;
     *wy = p->pivot_y + ry;
@@ -252,7 +255,7 @@ int ns_passive_bank_spawn_bom(NsPassiveBank *bank) {
     }
     ns_passive_bank_clear(bank);
 
-    /* Ordered: OSC, CCAP, ECAP, R . No diodes on this BOM. */
+    /* Ordered: OSC, CCAP, ECAP, R. No diodes on this BOM. */
     add_n(bank, NS_PASSIVE_OSC, "Y", &y_seq, "8.000MHz", 1);
     add_n(bank, NS_PASSIVE_OSC, "Y", &y_seq, "5.369318MHz", 1);
     add_n(bank, NS_PASSIVE_OSC, "Y", &y_seq, "14.31818MHz", 1);

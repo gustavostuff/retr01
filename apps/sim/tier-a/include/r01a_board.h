@@ -23,10 +23,16 @@ enum {
 #define R01A_WIRE_AUTO 0
 #define R01A_WIRE_MANUAL 1
 #define R01A_JUMPER_MAX 64
+#define R01A_BB_EXTRA_MAX 7
+#define R01A_BB_REF_LEN 12
 
 typedef struct R01aJumper {
     NsPbHole a;
     NsPbHole b;
+    char bb_ref[R01A_BB_REF_LEN];
+    uint8_t r;
+    uint8_t g;
+    uint8_t bcol;
 } R01aJumper;
 
 typedef struct R01aBoard {
@@ -39,6 +45,8 @@ typedef struct R01aBoard {
     R01aAd724 ad724;
     NsVideoSink sink;
     NsBreadboard breadboard;
+    NsBreadboard extra_bb[R01A_BB_EXTRA_MAX];
+    int extra_bb_count;
     NsPassiveBank passives;
     NsIslandBuilder builder;
     R01aJumper jumpers[R01A_JUMPER_MAX];
@@ -60,7 +68,14 @@ NsIslandGroup *r01a_board_group(R01aBoard *board);
 void r01a_board_set_wire_mode(R01aBoard *board, int mode);
 int r01a_board_wire_mode(const R01aBoard *board);
 int r01a_board_jumper_add(R01aBoard *board, NsPbHole a, NsPbHole b);
+int r01a_board_jumper_add_on(R01aBoard *board, NsBreadboard *bb, NsPbHole a, NsPbHole b, uint8_t cr,
+                            uint8_t cg, uint8_t cb);
+void r01a_board_jumper_remove(R01aBoard *board, int index);
+int r01a_board_jumper_set_end(R01aBoard *board, int index, int end_b, NsPbHole hole);
 void r01a_board_jumper_clear(R01aBoard *board);
 NsEntity *r01a_board_entity_by_refdes(R01aBoard *board, const char *refdes);
+NsPassive *r01a_board_add_passive(R01aBoard *board, NsPassiveKind kind, const char *value, int x, int y);
+NsBreadboard *r01a_board_add_breadboard(R01aBoard *board, int x, int y);
+int r01a_board_remove_breadboard(R01aBoard *board, NsBreadboard *bb);
 
 #endif

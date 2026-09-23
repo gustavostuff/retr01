@@ -35,6 +35,15 @@
 #define R01A_SEL_YELLOW_B 80
 #define R01A_PIN_HIT_PX 5
 #define R01A_PIN_NET_SLOTS 512
+#define R01A_HOVER_JOG 8
+#define R01A_JUMPER_HIT_PX 5
+#define R01A_JUMPER_END_PX 6
+#define R01A_JUMPER_COLORS 10
+
+static const Uint8 k_jumper_rgb[R01A_JUMPER_COLORS][3] = {
+    {220, 50, 50},   {230, 140, 40},  {230, 200, 50}, {50, 180, 70},  {50, 120, 220},
+    {160, 70, 200},  {50, 50, 50},    {230, 230, 230}, {150, 95, 55}, {150, 150, 155},
+};
 
 typedef struct R01aUi {
     SDL_Window *win;
@@ -65,12 +74,34 @@ typedef struct R01aUi {
     int mouse_ly;
     int jumper_arm;
     NsPbHole jumper_from;
+    NsBreadboard *jumper_bb;
+    int jumper_mode;
+    int jumper_color_i;
+    uint8_t jumper_sel[R01A_JUMPER_MAX];
+    int hover_jumper;
+    int drag_jumper;
+    int drag_jumper_end;
+    int drag_jumper_preview_ok;
+    NsPbHole drag_jumper_preview;
     int hover_chip;
     int hover_pin;
     int tip_stable_mx;
     int tip_stable_my;
     Uint32 tip_show_at;
+    int right_armed;
+    int right_pan;
+    int right_lx;
+    int right_ly;
+    int ctx_open;
+    int ctx_lx;
+    int ctx_ly;
+    int ctx_bx;
+    int ctx_by;
 } R01aUi;
+
+static NsBreadboard *ui_bb_named(const R01aUi *ui, const char *ref);
+static NsBreadboard *hit_breadboard(const R01aUi *ui, int mx, int my, NsPbHole *hole);
+static NsBreadboard *ui_breadboard(const R01aUi *ui);
 
 static void fill_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B) {
     SDL_Rect rc = {x, y, w, h};
@@ -207,6 +238,24 @@ static void bind_chips(R01aUi *ui, R01aBoard *board) {
         ui->chip_z[zi] = (uint8_t)zi;
         ui->chip_count++;
     }
+    {
+        uint8_t ordered[R01A_BOARD_MAX_CHIPS];
+        int n = 0;
+        int k;
+        for (k = 0; k < ui->chip_count; k++) {
+            if (ui->chips[k] && ui->chips[k]->visual == NS_ENTITY_VIS_BREADBOARD) {
+                ordered[n++] = (uint8_t)k;
+            }
+        }
+        for (k = 0; k < ui->chip_count; k++) {
+            if (!ui->chips[k] || ui->chips[k]->visual != NS_ENTITY_VIS_BREADBOARD) {
+                ordered[n++] = (uint8_t)k;
+            }
+        }
+        for (k = 0; k < n; k++) {
+            ui->chip_z[k] = ordered[k];
+        }
+    }
 }
 
 static void chip_z_raise(R01aUi *ui, int chip_i) {
@@ -239,6 +288,7 @@ static int sel_count(const R01aUi *ui) {
 
 static void sel_clear(R01aUi *ui) {
     memset(ui->chip_sel, 0, sizeof(ui->chip_sel));
+    memset(ui->jumper_sel, 0, sizeof(ui->jumper_sel));
     ui->selected = -1;
 }
 
@@ -290,11 +340,26 @@ static int chip_in_box(const NsEntity *e, int x0, int y0, int x1, int y1) {
     return e->board_x < x1 && e->board_x + e->body_w > x0 && e->board_y < y1 && e->board_y + e->body_h > y0;
 }
 
-static void sel_from_box(R01aUi *ui, int additive) {
+static void sel_from_box(R01aUi *ui, R01aBoard *board, int additive) {
     int i;
     int first = -1;
+    int x0 = ui->box_bx0;
+    int y0 = ui->box_by0;
+    int x1 = ui->box_bx1;
+    int y1 = ui->box_by1;
+    int tmp;
     if (!additive) {
         sel_clear(ui);
+    }
+    if (x0 > x1) {
+        tmp = x0;
+        x0 = x1;
+        x1 = tmp;
+    }
+    if (y0 > y1) {
+        tmp = y0;
+        y0 = y1;
+        y1 = tmp;
     }
     for (i = 0; i < ui->chip_count; i++) {
         if (chip_hidden(ui->chips[i]) || !chip_in_box(ui->chips[i], ui->box_bx0, ui->box_by0, ui->box_bx1, ui->box_by1)) {
@@ -303,6 +368,23 @@ static void sel_from_box(R01aUi *ui, int additive) {
         ui->chip_sel[i] = 1;
         if (first < 0) {
             first = i;
+        }
+    }
+    if (board) {
+        for (i = 0; i < board->jumper_count; i++) {
+            const NsBreadboard *bb = ui_bb_named(ui, board->jumpers[i].bb_ref);
+            int ax;
+            int ay;
+            int bx;
+            int by;
+            if (!bb) {
+                continue;
+            }
+            ns_breadboard_hole_world(bb, board->jumpers[i].a, &ax, &ay);
+            ns_breadboard_hole_world(bb, board->jumpers[i].b, &bx, &by);
+            if ((ax >= x0 && ax <= x1 && ay >= y0 && ay <= y1) || (bx >= x0 && bx <= x1 && by >= y0 && by <= y1)) {
+                ui->jumper_sel[i] = 1;
+            }
         }
     }
     if (first >= 0) {
@@ -366,7 +448,7 @@ static int entity_pin_hi(const NsEntity *e) {
         return e->dip_pins > 0 ? e->dip_pins : e->pin_count;
     }
     if (e->visual == NS_ENTITY_VIS_PASSIVE) {
-        return 2;
+        return e->pin_count;
     }
     if (e->visual != NS_ENTITY_VIS_PWR && e->visual != NS_ENTITY_VIS_OSC) {
         return 0;
@@ -1128,39 +1210,379 @@ static int pin_on_hover_net(const R01aUi *ui, const NsEntity *e, int pin_index) 
     return pin_net_root(slot) == root;
 }
 
-static void draw_pulse_tip(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e, int pin_index) {
+static int pin_name_is_gnd(const char *name) {
+    return name && (strcmp(name, "GND") == 0 || strcmp(name, "AGND") == 0 || strcmp(name, "DGND") == 0);
+}
+
+static int pin_name_is_vdd(const char *name) {
+    return name && (strcmp(name, "VDD") == 0 || strcmp(name, "VCC") == 0 || strcmp(name, "APOS") == 0 ||
+                    strcmp(name, "DPOS") == 0);
+}
+
+static int pin_on_ps1_net(const R01aUi *ui, const NsEntity *e, int pin_index, const char *rail) {
+    NsEntity *ps1;
+    const NsPin *rp;
+    int rslot;
+    int slot;
+    if (!e || pin_index < 0 || pin_index >= e->pin_count || !rail) {
+        return 0;
+    }
+    ps1 = ui_ent(ui, "PS1");
+    if (!ps1) {
+        return 0;
+    }
+    rp = ns_entity_pin_named_const(ps1, rail);
+    if (!rp) {
+        return 0;
+    }
+    rslot = pin_net_find(ps1, (int)(rp - ps1->pins));
+    slot = pin_net_find((NsEntity *)e, pin_index);
+    if (rslot < 0 || slot < 0) {
+        return 0;
+    }
+    return pin_net_root(rslot) == pin_net_root(slot);
+}
+
+static int pin_on_gnd_net(const R01aUi *ui, const NsEntity *e, int pin_index) {
+    if (!e || pin_index < 0 || pin_index >= e->pin_count) {
+        return 0;
+    }
+    if (pin_name_is_gnd(e->pins[pin_index].name)) {
+        return 1;
+    }
+    return pin_on_ps1_net(ui, e, pin_index, "GND");
+}
+
+static int pin_on_vdd_net(const R01aUi *ui, const NsEntity *e, int pin_index) {
+    if (!e || pin_index < 0 || pin_index >= e->pin_count) {
+        return 0;
+    }
+    if (pin_name_is_vdd(e->pins[pin_index].name)) {
+        return 1;
+    }
+    return pin_on_ps1_net(ui, e, pin_index, "VDD");
+}
+
+static int hole_is_neg_rail(NsPbHole h) {
+    return h.lane == NS_PB_LANE_TOP_NEG || h.lane == NS_PB_LANE_BOT_NEG;
+}
+
+static int hole_is_pos_rail(NsPbHole h) {
+    return h.lane == NS_PB_LANE_TOP_POS || h.lane == NS_PB_LANE_BOT_POS;
+}
+
+static int ui_hover_rail_xy(const R01aUi *ui, int pos, int *wx, int *wy) {
+    int i;
+    for (i = 0; i < ui->chip_count; i++) {
+        const NsBreadboard *bb;
+        NsEntity *e = ui->chips[i];
+        if (!e || e->visual != NS_ENTITY_VIS_BREADBOARD) {
+            continue;
+        }
+        bb = (const NsBreadboard *)e;
+        if (!bb->hover_valid) {
+            continue;
+        }
+        if (pos) {
+            if (!hole_is_pos_rail(bb->hover)) {
+                continue;
+            }
+        } else if (!hole_is_neg_rail(bb->hover)) {
+            continue;
+        }
+        if (wx && wy) {
+            ns_breadboard_hole_world(bb, bb->hover, wx, wy);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+static int rail_right_col(int lane) {
+    int col;
+    for (col = NS_PB_COLS - 1; col >= 0; col--) {
+        NsPbHole h = {col, lane};
+        if (ns_breadboard_hole_exists(h)) {
+            return col;
+        }
+    }
+    return 0;
+}
+
+static int ui_ground_rail_tip(const R01aUi *ui, int ax, int ay, int *gx, int *gy) {
+    int i;
+    int best_d = -1;
+    int found = 0;
+    int lanes[2];
+    lanes[0] = NS_PB_LANE_TOP_NEG;
+    lanes[1] = NS_PB_LANE_BOT_NEG;
+    for (i = 0; i < ui->chip_count; i++) {
+        NsEntity *e = ui->chips[i];
+        const NsBreadboard *bb;
+        int li;
+        if (!e || e->visual != NS_ENTITY_VIS_BREADBOARD) {
+            continue;
+        }
+        bb = (const NsBreadboard *)e;
+        for (li = 0; li < 2; li++) {
+            int edge;
+            for (edge = 0; edge < 2; edge++) {
+                NsPbHole h;
+                int hx;
+                int hy;
+                int dx;
+                int dy;
+                int d;
+                h.lane = lanes[li];
+                h.col = edge ? rail_right_col(h.lane) : 0;
+                if (!ns_breadboard_hole_exists(h)) {
+                    continue;
+                }
+                ns_breadboard_hole_world(bb, h, &hx, &hy);
+                dx = hx - ax;
+                dy = hy - ay;
+                d = dx * dx + dy * dy;
+                if (!found || d < best_d) {
+                    best_d = d;
+                    found = 1;
+                    if (gx) {
+                        *gx = hx;
+                    }
+                    if (gy) {
+                        *gy = hy;
+                    }
+                }
+            }
+        }
+    }
+    return found;
+}
+
+static void pin_outward(const NsEntity *e, int pin_index, int *ox, int *oy) {
     int tx;
     int ty;
-    int phase;
-    int glow;
+    *ox = 0;
+    *oy = 1;
+    if (!e || pin_index < 0 || pin_index >= e->pin_count) {
+        return;
+    }
     if (!entity_tip_board(e, e->pins[pin_index].number, &tx, &ty)) {
         return;
     }
-    phase = (int)((SDL_GetTicks() / 6u) % 160u);
-    if (phase > 80) {
-        phase = 160 - phase;
+    if (ty < e->board_y) {
+        *ox = 0;
+        *oy = -1;
+        return;
     }
-    glow = 4 + phase / 20;
-    fill_rect_a(r, board_sx(ui, tx) - glow, board_sy(ui, ty) - glow, glow * 2 + 1, glow * 2 + 1, 255, 230,
-                80, (Uint8)(90 + phase));
+    if (ty > e->board_y + e->body_h) {
+        *ox = 0;
+        *oy = 1;
+        return;
+    }
+    if (tx < e->board_x) {
+        *ox = -1;
+        *oy = 0;
+        return;
+    }
+    if (tx > e->board_x + e->body_w) {
+        *ox = 1;
+        *oy = 0;
+    }
 }
 
-static void draw_pin_pulses(SDL_Renderer *r, const R01aUi *ui) {
+static void elbow_pts(int ax, int ay, int bx, int by, int h_first, int jog, int *x, int *y) {
+    int x1;
+    int y1;
+    int x2;
+    int y2;
+    x[0] = ax;
+    y[0] = ay;
+    x[3] = bx;
+    y[3] = by;
+    if (ax == bx && ay == by) {
+        x[1] = ax;
+        y[1] = ay;
+        x[2] = bx;
+        y[2] = by;
+        return;
+    }
+    if (jog == 0) {
+        jog = R01A_HOVER_JOG;
+    }
+    if (h_first && ay != by) {
+        x1 = (ax + bx) / 2;
+        if (x1 == ax || x1 == bx) {
+            x1 = ax + (bx >= ax ? jog : -jog);
+        }
+        y1 = ay;
+        x2 = x1;
+        y2 = by;
+    } else if (!h_first && ax != bx) {
+        x1 = ax;
+        y1 = (ay + by) / 2;
+        if (y1 == ay || y1 == by) {
+            y1 = ay + (by >= ay ? jog : -jog);
+        }
+        x2 = bx;
+        y2 = y1;
+    } else if (ay == by) {
+        x1 = ax;
+        y1 = ay + jog;
+        x2 = bx;
+        y2 = y1;
+    } else {
+        x1 = ax + jog;
+        y1 = ay;
+        x2 = x1;
+        y2 = by;
+    }
+    x[1] = x1;
+    y[1] = y1;
+    x[2] = x2;
+    y[2] = y2;
+}
+
+static int manhattan_h_first(int ax, int ay, int bx, int by) {
+    int dx = bx - ax;
+    int dy = by - ay;
+    if (dx < 0) {
+        dx = -dx;
+    }
+    if (dy < 0) {
+        dy = -dy;
+    }
+    return dx >= dy;
+}
+
+static void draw_2elbow(SDL_Renderer *r, int ax, int ay, int bx, int by, int h_first, int jog) {
+    int x[4];
+    int y[4];
+    int i;
+    elbow_pts(ax, ay, bx, by, h_first, jog, x, y);
+    for (i = 0; i < 3; i++) {
+        if (x[i] != x[i + 1] || y[i] != y[i + 1]) {
+            SDL_RenderDrawLine(r, x[i], y[i], x[i + 1], y[i + 1]);
+        }
+    }
+}
+
+static void draw_rail_net_from(SDL_Renderer *r, const R01aUi *ui, int ax, int ay, int h_first, int vdd) {
     int i;
     int pi;
+    int jog_i = 0;
+    SDL_SetRenderDrawColor(r, 255, 230, 80, 255);
+    for (i = 0; i < ui->chip_count; i++) {
+        NsEntity *e = ui->chips[i];
+        if (!e || e->visual == NS_ENTITY_VIS_BREADBOARD || e->visual == NS_ENTITY_VIS_DISPLAY) {
+            continue;
+        }
+        for (pi = 0; pi < e->pin_count; pi++) {
+            int bx;
+            int by;
+            int jog;
+            if (vdd) {
+                if (!pin_on_vdd_net(ui, e, pi)) {
+                    continue;
+                }
+            } else if (!pin_on_gnd_net(ui, e, pi)) {
+                continue;
+            }
+            if (!entity_tip_board(e, e->pins[pi].number, &bx, &by)) {
+                continue;
+            }
+            jog = R01A_HOVER_JOG + (jog_i % 3) * 2;
+            if ((jog_i / 3) & 1) {
+                jog = -jog;
+            }
+            draw_2elbow(r, board_sx(ui, ax), board_sy(ui, ay), board_sx(ui, bx), board_sy(ui, by), h_first,
+                        jog);
+            jog_i++;
+        }
+    }
+}
+
+static void draw_hover_ground(SDL_Renderer *r, const R01aUi *ui, int ax, int ay, int h_first) {
+    int gx = 0;
+    int gy = 0;
+    if (!ui_ground_rail_tip(ui, ax, ay, &gx, &gy)) {
+        return;
+    }
+    if (gx == ax && gy == ay) {
+        return;
+    }
+    SDL_SetRenderDrawColor(r, 255, 230, 80, 255);
+    draw_2elbow(r, board_sx(ui, ax), board_sy(ui, ay), board_sx(ui, gx), board_sy(ui, gy), h_first,
+                R01A_HOVER_JOG);
+}
+
+static void draw_hover_wires(SDL_Renderer *r, const R01aUi *ui) {
+    const NsEntity *src_e;
+    int ax;
+    int ay;
+    int ox;
+    int oy;
+    int h_first;
+    int i;
+    int pi;
+    int saw_gnd = 0;
+    int src_gnd;
+    int jog_i = 0;
+
     if (ui->hover_chip < 0 || ui->hover_pin < 0) {
+        int rax;
+        int ray;
+        if (ui_hover_rail_xy(ui, 0, &rax, &ray)) {
+            draw_rail_net_from(r, ui, rax, ray, 0, 0);
+        } else if (ui_hover_rail_xy(ui, 1, &rax, &ray)) {
+            draw_rail_net_from(r, ui, rax, ray, 0, 1);
+        }
+        return;
+    }
+    src_e = ui->chips[ui->hover_chip];
+    if (!src_e || ui->hover_pin >= src_e->pin_count) {
+        return;
+    }
+    if (!entity_tip_board(src_e, src_e->pins[ui->hover_pin].number, &ax, &ay)) {
+        return;
+    }
+    pin_outward(src_e, ui->hover_pin, &ox, &oy);
+    h_first = (ox != 0);
+    src_gnd = pin_on_gnd_net(ui, src_e, ui->hover_pin);
+    SDL_SetRenderDrawColor(r, 255, 230, 80, 255);
+    if (src_gnd) {
+        draw_hover_ground(r, ui, ax, ay, h_first);
         return;
     }
     for (i = 0; i < ui->chip_count; i++) {
         NsEntity *e = ui->chips[i];
-        if (!e) {
+        if (!e || e == src_e) {
             continue;
         }
         for (pi = 0; pi < e->pin_count; pi++) {
-            if (pin_on_hover_net(ui, e, pi)) {
-                draw_pulse_tip(r, ui, e, pi);
+            int bx;
+            int by;
+            int jog;
+            if (!pin_on_hover_net(ui, e, pi)) {
+                continue;
             }
+            if (pin_name_is_gnd(e->pins[pi].name) || pin_on_gnd_net(ui, e, pi)) {
+                saw_gnd = 1;
+                continue;
+            }
+            if (!entity_tip_board(e, e->pins[pi].number, &bx, &by)) {
+                continue;
+            }
+            jog = R01A_HOVER_JOG + (jog_i % 3) * 2;
+            if ((jog_i / 3) & 1) {
+                jog = -jog;
+            }
+            draw_2elbow(r, board_sx(ui, ax), board_sy(ui, ay), board_sx(ui, bx), board_sy(ui, by), h_first,
+                        jog);
+            jog_i++;
         }
+    }
+    if (saw_gnd) {
+        draw_hover_ground(r, ui, ax, ay, h_first);
     }
 }
 
@@ -1233,6 +1655,18 @@ static void fill_tooltip(const R01aUi *ui, char *out, size_t out_len) {
         return;
     }
     out[0] = '\0';
+    if (ui->hover_jumper >= 0) {
+        snprintf(out, out_len, "jumper");
+        return;
+    }
+    if (ui_hover_rail_xy(ui, 0, NULL, NULL)) {
+        snprintf(out, out_len, "GND rail");
+        return;
+    }
+    if (ui_hover_rail_xy(ui, 1, NULL, NULL)) {
+        snprintf(out, out_len, "VDD rail");
+        return;
+    }
     chip_i = hit_top_chip(ui, ui->mouse_lx, ui->mouse_ly);
     if (chip_i < 0) {
         return;
@@ -1270,28 +1704,493 @@ static int point_in_rect(int x, int y, const SDL_Rect *rc) {
     return x >= rc->x && y >= rc->y && x < rc->x + rc->w && y < rc->y + rc->h;
 }
 
-static void draw_jumpers(SDL_Renderer *r, const R01aUi *ui, const R01aBoard *board) {
+enum {
+    R01A_CTX_R = 0,
+    R01A_CTX_CCAP,
+    R01A_CTX_ECAP,
+    R01A_CTX_OSC,
+    R01A_CTX_D,
+    R01A_CTX_BB,
+    R01A_CTX_COUNT
+};
+
+static const char *k_ctx_label[R01A_CTX_COUNT] = {
+    "Add resistor", "Add ceramic cap", "Add electrolytic", "Add oscillator", "Add diode", "Add breadboard"};
+
+static const char *k_ctx_value[R01A_CTX_COUNT] = {"33", "100nF", "220uF", "8.000MHz", "", ""};
+
+static int ctx_item_h(void) {
+    return r01a_font_line_h() + 4;
+}
+
+static int ctx_menu_w(void) {
     int i;
-    const NsBreadboard *bb = ui_breadboard(ui);
-    if (!bb) {
+    int w = 0;
+    for (i = 0; i < R01A_CTX_COUNT; i++) {
+        int tw = r01a_font_text_width(k_ctx_label[i]);
+        if (tw > w) {
+            w = tw;
+        }
+    }
+    return w + 16;
+}
+
+static void ctx_menu_geom(const R01aUi *ui, int *x, int *y, int *w, int *h) {
+    int mw = ctx_menu_w();
+    int mh = ctx_item_h() * R01A_CTX_COUNT;
+    int mx = ui->ctx_lx;
+    int my = ui->ctx_ly;
+    if (mx + mw > NS_LOGIC_W - 4) {
+        mx = NS_LOGIC_W - 4 - mw;
+    }
+    if (my + mh > NS_LOGIC_H - 4) {
+        my = NS_LOGIC_H - 4 - mh;
+    }
+    if (mx < 4) {
+        mx = 4;
+    }
+    if (my < 4) {
+        my = 4;
+    }
+    if (x) {
+        *x = mx;
+    }
+    if (y) {
+        *y = my;
+    }
+    if (w) {
+        *w = mw;
+    }
+    if (h) {
+        *h = mh;
+    }
+}
+
+static int ctx_hit_item(const R01aUi *ui, int lx, int ly) {
+    int x;
+    int y;
+    int w;
+    int h;
+    int item;
+    if (!ui->ctx_open) {
+        return -1;
+    }
+    ctx_menu_geom(ui, &x, &y, &w, &h);
+    if (lx < x || ly < y || lx >= x + w || ly >= y + h) {
+        return -1;
+    }
+    item = (ly - y) / ctx_item_h();
+    if (item < 0 || item >= R01A_CTX_COUNT) {
+        return -1;
+    }
+    return item;
+}
+
+static void draw_ctx_menu(SDL_Renderer *r, const R01aUi *ui) {
+    int x;
+    int y;
+    int w;
+    int h;
+    int i;
+    int ih;
+    if (!ui->ctx_open) {
         return;
     }
-    SDL_SetRenderDrawColor(r, 220, 160, 40, 255);
+    ctx_menu_geom(ui, &x, &y, &w, &h);
+    ih = ctx_item_h();
+    fill_rect(r, x, y, w, h, 28, 32, 28);
+    draw_rect(r, x, y, w, h, 180, 180, 120);
+    for (i = 0; i < R01A_CTX_COUNT; i++) {
+        int iy = y + i * ih;
+        if (ui->mouse_lx >= x && ui->mouse_lx < x + w && ui->mouse_ly >= iy && ui->mouse_ly < iy + ih) {
+            fill_rect(r, x + 1, iy, w - 2, ih, 50, 70, 50);
+        }
+        r01a_font_draw(r, x + 8, iy + 2, k_ctx_label[i], 230, 230, 200);
+    }
+}
+
+static NsBreadboard *ui_bb_named(const R01aUi *ui, const char *ref) {
+    int i;
+    if (!ref || !ref[0]) {
+        ref = "BB1";
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        NsEntity *e = ui->chips[i];
+        if (e && e->visual == NS_ENTITY_VIS_BREADBOARD && e->refdes && strcmp(e->refdes, ref) == 0) {
+            return (NsBreadboard *)e;
+        }
+    }
+    return ui_breadboard(ui);
+}
+
+static NsBreadboard *hit_breadboard(const R01aUi *ui, int mx, int my, NsPbHole *hole) {
+    int rank;
+    for (rank = ui->chip_count - 1; rank >= 0; rank--) {
+        int ci = ui->chip_z[rank];
+        NsEntity *e;
+        NsPbHole h;
+        if (ci < 0 || ci >= ui->chip_count) {
+            continue;
+        }
+        e = ui->chips[ci];
+        if (!e || e->visual != NS_ENTITY_VIS_BREADBOARD) {
+            continue;
+        }
+        if (ns_breadboard_hit_hole((const NsBreadboard *)e, mx, my, &h)) {
+            if (hole) {
+                *hole = h;
+            }
+            return (NsBreadboard *)e;
+        }
+    }
+    return NULL;
+}
+
+static void ctx_apply(R01aUi *ui, R01aBoard *board, int item) {
+    sel_clear(ui);
+    if (item == R01A_CTX_BB) {
+        if (r01a_board_add_breadboard(board, ui->ctx_bx, ui->ctx_by)) {
+            bind_chips(ui, board);
+        }
+        return;
+    }
+    {
+        NsPassiveKind kind = NS_PASSIVE_R;
+        if (item == R01A_CTX_CCAP) {
+            kind = NS_PASSIVE_CCAP;
+        } else if (item == R01A_CTX_ECAP) {
+            kind = NS_PASSIVE_ECAP;
+        } else if (item == R01A_CTX_OSC) {
+            kind = NS_PASSIVE_OSC;
+        } else if (item == R01A_CTX_D) {
+            kind = NS_PASSIVE_D;
+        }
+        if (r01a_board_add_passive(board, kind, k_ctx_value[item], ui->ctx_bx, ui->ctx_by)) {
+            bind_chips(ui, board);
+        }
+    }
+}
+
+static int dist2(int x0, int y0, int x1, int y1) {
+    int dx = x1 - x0;
+    int dy = y1 - y0;
+    return dx * dx + dy * dy;
+}
+
+static int dist2_seg(int px, int py, int x0, int y0, int x1, int y1) {
+    int vx = x1 - x0;
+    int vy = y1 - y0;
+    int wx = px - x0;
+    int wy = py - y0;
+    int c1 = vx * wx + vy * wy;
+    int c2 = vx * vx + vy * vy;
+    if (c2 <= 0) {
+        return wx * wx + wy * wy;
+    }
+    if (c1 <= 0) {
+        return wx * wx + wy * wy;
+    }
+    if (c1 >= c2) {
+        return dist2(px, py, x1, y1);
+    }
+    {
+        int t_num = c1;
+        int cx = x0 + (int)(((long)vx * t_num) / c2);
+        int cy = y0 + (int)(((long)vy * t_num) / c2);
+        return dist2(px, py, cx, cy);
+    }
+}
+
+static int jumper_world_ends(const R01aUi *ui, const R01aJumper *j, int *x0, int *y0, int *x1, int *y1) {
+    const NsBreadboard *bb;
+    if (!j) {
+        return 0;
+    }
+    bb = ui_bb_named(ui, j->bb_ref);
+    if (!bb) {
+        return 0;
+    }
+    ns_breadboard_hole_world(bb, j->a, x0, y0);
+    ns_breadboard_hole_world(bb, j->b, x1, y1);
+    return 1;
+}
+
+static void jumper_rgb_draw(const R01aJumper *j, int bright, Uint8 *r, Uint8 *g, Uint8 *b) {
+    Uint8 cr = j ? j->r : 220;
+    Uint8 cg = j ? j->g : 160;
+    Uint8 cb = j ? j->bcol : 40;
+    if (bright) {
+        cr = (Uint8)(cr + (255 - cr) / 2);
+        cg = (Uint8)(cg + (255 - cg) / 2);
+        cb = (Uint8)(cb + (255 - cb) / 2);
+    }
+    if (r) {
+        *r = cr;
+    }
+    if (g) {
+        *g = cg;
+    }
+    if (b) {
+        *b = cb;
+    }
+}
+
+static int dist2_jumper_path(int px, int py, int ax, int ay, int bx, int by) {
+    int x[4];
+    int y[4];
+    int i;
+    int best;
+    elbow_pts(ax, ay, bx, by, manhattan_h_first(ax, ay, bx, by), R01A_HOVER_JOG, x, y);
+    best = dist2_seg(px, py, x[0], y[0], x[1], y[1]);
+    for (i = 1; i < 3; i++) {
+        int d = dist2_seg(px, py, x[i], y[i], x[i + 1], y[i + 1]);
+        if (d < best) {
+            best = d;
+        }
+    }
+    return best;
+}
+
+static void draw_end_handle(SDL_Renderer *r, int x, int y, Uint8 R, Uint8 G, Uint8 B) {
+    fill_rect(r, x - 2, y - 2, 5, 5, R, G, B);
+}
+
+static int hit_jumper_end(const R01aUi *ui, const R01aBoard *board, int bx, int by, int *j_out, int *end_out) {
+    int i;
+    int best = R01A_JUMPER_END_PX * R01A_JUMPER_END_PX;
+    int found = 0;
     for (i = 0; i < board->jumper_count; i++) {
         int x0;
         int y0;
         int x1;
         int y1;
-        ns_breadboard_hole_world(bb, board->jumpers[i].a, &x0, &y0);
-        ns_breadboard_hole_world(bb, board->jumpers[i].b, &x1, &y1);
-        SDL_RenderDrawLine(r, board_sx(ui, x0), board_sy(ui, y0), board_sx(ui, x1), board_sy(ui, y1));
+        int d;
+        if (!jumper_world_ends(ui, &board->jumpers[i], &x0, &y0, &x1, &y1)) {
+            continue;
+        }
+        d = dist2(bx, by, x0, y0);
+        if (d <= best) {
+            best = d;
+            found = 1;
+            if (j_out) {
+                *j_out = i;
+            }
+            if (end_out) {
+                *end_out = 0;
+            }
+        }
+        d = dist2(bx, by, x1, y1);
+        if (d <= best) {
+            best = d;
+            found = 1;
+            if (j_out) {
+                *j_out = i;
+            }
+            if (end_out) {
+                *end_out = 1;
+            }
+        }
     }
-    if (ui->jumper_arm) {
+    return found;
+}
+
+static int hit_jumper_body(const R01aUi *ui, const R01aBoard *board, int bx, int by) {
+    int i;
+    int best = R01A_JUMPER_HIT_PX * R01A_JUMPER_HIT_PX;
+    int found = -1;
+    for (i = 0; i < board->jumper_count; i++) {
         int x0;
         int y0;
-        ns_breadboard_hole_world(bb, ui->jumper_from, &x0, &y0);
-        SDL_SetRenderDrawColor(r, 255, 210, 80, 255);
-        SDL_RenderDrawLine(r, board_sx(ui, x0), board_sy(ui, y0), ui->mouse_lx, ui->mouse_ly);
+        int x1;
+        int y1;
+        int d;
+        if (!jumper_world_ends(ui, &board->jumpers[i], &x0, &y0, &x1, &y1)) {
+            continue;
+        }
+        d = dist2_jumper_path(bx, by, x0, y0, x1, y1);
+        if (d <= best) {
+            best = d;
+            found = i;
+        }
+    }
+    return found;
+}
+
+static void jumper_sel_set_one(R01aUi *ui, int ji) {
+    sel_clear(ui);
+    if (ji < 0 || ji >= R01A_JUMPER_MAX) {
+        return;
+    }
+    ui->jumper_sel[ji] = 1;
+}
+
+static int jumper_sel_any(const R01aUi *ui) {
+    int i;
+    for (i = 0; i < R01A_JUMPER_MAX; i++) {
+        if (ui->jumper_sel[i]) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int jumper_palette_i(const R01aJumper *j) {
+    int i;
+    if (!j) {
+        return 0;
+    }
+    for (i = 0; i < R01A_JUMPER_COLORS; i++) {
+        if (j->r == k_jumper_rgb[i][0] && j->g == k_jumper_rgb[i][1] && j->bcol == k_jumper_rgb[i][2]) {
+            return i;
+        }
+    }
+    return 0;
+}
+
+static void jumper_cycle_selected(R01aUi *ui, R01aBoard *board, int dir) {
+    int i;
+    int last = ui->jumper_color_i;
+    if (!dir) {
+        return;
+    }
+    for (i = 0; i < board->jumper_count; i++) {
+        int ci;
+        const Uint8 *rgb;
+        if (!ui->jumper_sel[i]) {
+            continue;
+        }
+        ci = jumper_palette_i(&board->jumpers[i]);
+        if (dir > 0) {
+            ci = (ci + 1) % R01A_JUMPER_COLORS;
+        } else {
+            ci = (ci + R01A_JUMPER_COLORS - 1) % R01A_JUMPER_COLORS;
+        }
+        rgb = k_jumper_rgb[ci];
+        board->jumpers[i].r = rgb[0];
+        board->jumpers[i].g = rgb[1];
+        board->jumpers[i].bcol = rgb[2];
+        last = ci;
+    }
+    ui->jumper_color_i = last;
+}
+
+static void jumper_delete_selected(R01aUi *ui, R01aBoard *board) {
+    int i;
+    for (i = board->jumper_count - 1; i >= 0; i--) {
+        if (!ui->jumper_sel[i]) {
+            continue;
+        }
+        r01a_board_jumper_remove(board, i);
+        {
+            int k;
+            for (k = i; k < board->jumper_count; k++) {
+                ui->jumper_sel[k] = ui->jumper_sel[k + 1];
+            }
+            ui->jumper_sel[board->jumper_count] = 0;
+        }
+    }
+    ui->hover_jumper = -1;
+    ui->drag_jumper = -1;
+    ui->drag_jumper_preview_ok = 0;
+}
+
+static void breadboard_delete_selected(R01aUi *ui, R01aBoard *board) {
+    char refs[R01A_BB_EXTRA_MAX + 1][R01A_BB_REF_LEN];
+    int nref = 0;
+    int i;
+    int removed = 0;
+    for (i = 0; i < ui->chip_count; i++) {
+        const NsEntity *e;
+        if (!ui->chip_sel[i]) {
+            continue;
+        }
+        e = ui->chips[i];
+        if (!e || e->visual != NS_ENTITY_VIS_BREADBOARD || !e->refdes) {
+            continue;
+        }
+        if (nref >= R01A_BB_EXTRA_MAX + 1) {
+            break;
+        }
+        snprintf(refs[nref], sizeof(refs[nref]), "%s", e->refdes);
+        nref++;
+    }
+    for (i = 0; i < nref; i++) {
+        NsEntity *e = r01a_board_entity_by_refdes(board, refs[i]);
+        if (!e || e->visual != NS_ENTITY_VIS_BREADBOARD) {
+            continue;
+        }
+        if (ui->jumper_bb == (NsBreadboard *)e) {
+            ui->jumper_arm = 0;
+            ui->jumper_bb = NULL;
+        }
+        if (r01a_board_remove_breadboard(board, (NsBreadboard *)e)) {
+            removed = 1;
+        }
+    }
+    if (removed) {
+        sel_clear(ui);
+        bind_chips(ui, board);
+        pin_net_build(ui);
+    }
+}
+
+static void draw_jumpers(SDL_Renderer *r, const R01aUi *ui, const R01aBoard *board) {
+    int i;
+    for (i = 0; i < board->jumper_count; i++) {
+        int x0;
+        int y0;
+        int x1;
+        int y1;
+        int sx0;
+        int sy0;
+        int sx1;
+        int sy1;
+        Uint8 cr;
+        Uint8 cg;
+        Uint8 cb;
+        int sel = ui->jumper_sel[i];
+        int hover = (ui->hover_jumper == i);
+        int bright = sel || hover;
+        if (!jumper_world_ends(ui, &board->jumpers[i], &x0, &y0, &x1, &y1)) {
+            continue;
+        }
+        if (ui->drag_jumper == i && ui->drag_jumper_preview_ok) {
+            int hx;
+            int hy;
+            const NsBreadboard *bb = ui_bb_named(ui, board->jumpers[i].bb_ref);
+            if (bb) {
+                ns_breadboard_hole_world(bb, ui->drag_jumper_preview, &hx, &hy);
+                if (ui->drag_jumper_end) {
+                    x1 = hx;
+                    y1 = hy;
+                } else {
+                    x0 = hx;
+                    y0 = hy;
+                }
+            }
+        }
+        jumper_rgb_draw(&board->jumpers[i], bright, &cr, &cg, &cb);
+        sx0 = board_sx(ui, x0);
+        sy0 = board_sy(ui, y0);
+        sx1 = board_sx(ui, x1);
+        sy1 = board_sy(ui, y1);
+        SDL_SetRenderDrawColor(r, cr, cg, cb, 255);
+        draw_2elbow(r, sx0, sy0, sx1, sy1, manhattan_h_first(x0, y0, x1, y1), R01A_HOVER_JOG);
+        if (sel || hover) {
+            draw_end_handle(r, sx0, sy0, sel ? 255 : cr, sel ? 230 : cg, sel ? 80 : cb);
+            draw_end_handle(r, sx1, sy1, sel ? 255 : cr, sel ? 230 : cg, sel ? 80 : cb);
+        }
+    }
+    if (ui->jumper_arm && ui->jumper_bb) {
+        int x0;
+        int y0;
+        const Uint8 *rgb = k_jumper_rgb[ui->jumper_color_i % R01A_JUMPER_COLORS];
+        ns_breadboard_hole_world(ui->jumper_bb, ui->jumper_from, &x0, &y0);
+        SDL_SetRenderDrawColor(r, rgb[0], rgb[1], rgb[2], 255);
+        draw_2elbow(r, board_sx(ui, x0), board_sy(ui, y0), ui->mouse_lx, ui->mouse_ly,
+                    manhattan_h_first(board_sx(ui, x0), board_sy(ui, y0), ui->mouse_lx, ui->mouse_ly),
+                    R01A_HOVER_JOG);
+        draw_end_handle(r, board_sx(ui, x0), board_sy(ui, y0), rgb[0], rgb[1], rgb[2]);
     }
 }
 
@@ -1317,7 +2216,7 @@ static void draw_frame(R01aUi *ui, R01aBoard *board) {
         selected = ui->chip_sel[ci] || ci == ui->selected;
         draw_entity(ui->rend, ui, ui->chips[ci], selected);
     }
-    draw_pin_pulses(ui->rend, ui);
+    draw_hover_wires(ui->rend, ui);
     draw_jumpers(ui->rend, ui, board);
 
     if (ui->box_sel) {
@@ -1347,11 +2246,35 @@ static void draw_frame(R01aUi *ui, R01aBoard *board) {
 
     ns_island_group_fill_status(r01a_board_group(board), status, sizeof(status));
     hud_x = btn.x + btn.w + 10;
+    if (ui->jumper_mode) {
+        r01a_font_draw(ui->rend, hud_x, 2, "JUMPER", 255, 210, 80);
+        hud_x += r01a_font_text_width("JUMPER") + 8;
+    }
+    if (ui->jumper_arm || jumper_sel_any(ui)) {
+        const Uint8 *rgb = k_jumper_rgb[ui->jumper_color_i % R01A_JUMPER_COLORS];
+        if (!ui->jumper_arm) {
+            int i;
+            for (i = 0; i < board->jumper_count; i++) {
+                if (ui->jumper_sel[i]) {
+                    rgb = k_jumper_rgb[jumper_palette_i(&board->jumpers[i])];
+                    break;
+                }
+            }
+        }
+        fill_rect(ui->rend, hud_x, 3, 10, 8, rgb[0], rgb[1], rgb[2]);
+        hud_x += 16;
+    }
+    if (ui->jumper_mode || ui->jumper_arm || jumper_sel_any(ui)) {
+        hud_x += 4;
+    }
     r01a_font_draw_a(ui->rend, hud_x, 2, board->running ? "RUN" : "PAUSE", 180, 180, 120, 180);
     hud_x += r01a_font_text_width("PAUSE") + 10;
     r01a_font_draw_a(ui->rend, hud_x, 2, status, 200, 210, 200, 160);
 
-    if (SDL_GetTicks() >= ui->tip_show_at && !ui->drag_pan && ui->drag_chip < 0 && !ui->box_sel) {
+    if (ui->ctx_open) {
+        draw_ctx_menu(ui->rend, ui);
+    } else if (SDL_GetTicks() >= ui->tip_show_at && !ui->drag_pan && ui->drag_chip < 0 && ui->drag_jumper < 0 &&
+               !ui->box_sel && !ui->jumper_arm) {
         fill_tooltip(ui, tip, sizeof(tip));
         if (tip[0]) {
             draw_tooltip(ui->rend, ui->mouse_lx, ui->mouse_ly, tip);
@@ -1452,15 +2375,49 @@ static int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx
         tip_reset(ui, lx, ly);
     }
     {
-        NsBreadboard *bb = ui_breadboard(ui);
+        int i;
+        NsBreadboard *bb;
         NsPbHole hole;
-        if (bb && ns_breadboard_hit_hole(bb, board_mx, board_my, &hole)) {
+        for (i = 0; i < ui->chip_count; i++) {
+            if (ui->chips[i] && ui->chips[i]->visual == NS_ENTITY_VIS_BREADBOARD) {
+                ns_breadboard_clear_hover((NsBreadboard *)ui->chips[i]);
+            }
+        }
+        bb = hit_breadboard(ui, board_mx, board_my, &hole);
+        if (bb) {
             ns_breadboard_set_hover(bb, 1, hole);
-        } else if (bb) {
-            ns_breadboard_clear_hover(bb);
+        }
+    }
+    if (ui->drag_jumper >= 0) {
+        ui->hover_jumper = ui->drag_jumper;
+    } else if (ui->jumper_arm) {
+        ui->hover_jumper = -1;
+    } else {
+        int je;
+        int end_dummy;
+        if (hit_jumper_end(ui, board, board_mx, board_my, &je, &end_dummy)) {
+            ui->hover_jumper = je;
+        } else {
+            ui->hover_jumper = hit_jumper_body(ui, board, board_mx, board_my);
         }
     }
     if (e->type == SDL_MOUSEWHEEL) {
+        if (ui->jumper_arm) {
+            if (e->wheel.y > 0) {
+                ui->jumper_color_i = (ui->jumper_color_i + 1) % R01A_JUMPER_COLORS;
+            } else if (e->wheel.y < 0) {
+                ui->jumper_color_i = (ui->jumper_color_i + R01A_JUMPER_COLORS - 1) % R01A_JUMPER_COLORS;
+            }
+            return 1;
+        }
+        if (jumper_sel_any(ui)) {
+            if (e->wheel.y > 0) {
+                jumper_cycle_selected(ui, board, 1);
+            } else if (e->wheel.y < 0) {
+                jumper_cycle_selected(ui, board, -1);
+            }
+            return 1;
+        }
         ui->pan_x -= e->wheel.x * 32;
         ui->pan_y -= e->wheel.y * 32;
         clamp_pan(ui);
@@ -1473,15 +2430,52 @@ static int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx
         return 1;
     }
     if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_RIGHT) {
-        ui->drag_pan = 1;
+        ui->right_armed = 1;
+        ui->right_pan = 0;
+        ui->right_lx = lx;
+        ui->right_ly = ly;
         ui->drag_last_x = lx;
         ui->drag_last_y = ly;
         return 1;
     }
-    if (e->type == SDL_MOUSEBUTTONUP &&
-        (e->button.button == SDL_BUTTON_MIDDLE || e->button.button == SDL_BUTTON_RIGHT)) {
+    if (e->type == SDL_MOUSEBUTTONUP && e->button.button == SDL_BUTTON_MIDDLE) {
         ui->drag_pan = 0;
         return 1;
+    }
+    if (e->type == SDL_MOUSEBUTTONUP && e->button.button == SDL_BUTTON_RIGHT) {
+        int chip_i;
+        ui->right_armed = 0;
+        if (ui->right_pan || ui->drag_pan) {
+            ui->right_pan = 0;
+            ui->drag_pan = 0;
+            return 1;
+        }
+        chip_i = hit_top_chip(ui, lx, ly);
+        if (chip_i < 0) {
+            ui->ctx_open = 1;
+            ui->ctx_lx = lx;
+            ui->ctx_ly = ly;
+            ui->ctx_bx = board_mx;
+            ui->ctx_by = board_my;
+        } else {
+            ui->ctx_open = 0;
+        }
+        return 1;
+    }
+    if (e->type == SDL_MOUSEMOTION && ui->right_armed && !ui->right_pan) {
+        int dx = lx - ui->right_lx;
+        int dy = ly - ui->right_ly;
+        if (dx < 0) {
+            dx = -dx;
+        }
+        if (dy < 0) {
+            dy = -dy;
+        }
+        if (dx > 5 || dy > 5) {
+            ui->right_pan = 1;
+            ui->drag_pan = 1;
+            ui->ctx_open = 0;
+        }
     }
     if (e->type == SDL_MOUSEMOTION && ui->drag_pan) {
         ui->pan_x -= (lx - ui->drag_last_x);
@@ -1494,6 +2488,16 @@ static int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx
     if (e->type == SDL_MOUSEMOTION && ui->box_sel) {
         ui->box_bx1 = board_mx;
         ui->box_by1 = board_my;
+        return 1;
+    }
+    if (e->type == SDL_MOUSEMOTION && ui->drag_jumper >= 0) {
+        const NsBreadboard *bb = ui_bb_named(ui, board->jumpers[ui->drag_jumper].bb_ref);
+        NsPbHole hole;
+        ui->drag_jumper_preview_ok = 0;
+        if (bb && ns_breadboard_hit_hole(bb, board_mx, board_my, &hole)) {
+            ui->drag_jumper_preview = hole;
+            ui->drag_jumper_preview_ok = 1;
+        }
         return 1;
     }
     if (e->type == SDL_MOUSEMOTION && ui->drag_chip >= 0) {
@@ -1519,10 +2523,19 @@ static int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx
             }
             ui->box_sel = 0;
             if (w >= 4 || h >= 4) {
-                sel_from_box(ui, shift);
+                sel_from_box(ui, board, shift);
             } else if (!shift) {
                 sel_clear(ui);
             }
+            return 1;
+        }
+        if (ui->drag_jumper >= 0) {
+            if (ui->drag_jumper_preview_ok) {
+                (void)r01a_board_jumper_set_end(board, ui->drag_jumper, ui->drag_jumper_end,
+                                                ui->drag_jumper_preview);
+            }
+            ui->drag_jumper = -1;
+            ui->drag_jumper_preview_ok = 0;
             return 1;
         }
         if (ui->drag_chip >= 0) {
@@ -1537,6 +2550,15 @@ static int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx
         SDL_Rect btn;
         NsBreadboard *bb;
         NsPbHole hole;
+
+        if (ui->ctx_open) {
+            int item = ctx_hit_item(ui, lx, ly);
+            ui->ctx_open = 0;
+            if (item >= 0) {
+                ctx_apply(ui, board, item);
+            }
+            return 1;
+        }
 
         wire_mode_btn_rect(r01a_board_wire_mode(board), &btn);
         if (point_in_rect(lx, ly, &btn)) {
@@ -1556,26 +2578,63 @@ static int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx
         }
 
         ui->drag_chip = -1;
+        ui->drag_jumper = -1;
         chip_i = hit_top_chip(ui, lx, ly);
-        bb = ui_breadboard(ui);
-        if (r01a_board_wire_mode(board) == R01A_WIRE_MANUAL && bb &&
-            (chip_i < 0 || ui->chips[chip_i]->visual == NS_ENTITY_VIS_BREADBOARD) &&
-            ns_breadboard_hit_hole(bb, board_mx, board_my, &hole)) {
-            if (ui->jumper_arm) {
-                if (ui->jumper_from.col == hole.col && ui->jumper_from.lane == hole.lane) {
-                    ui->jumper_arm = 0;
-                } else {
-                    r01a_board_jumper_add(board, ui->jumper_from, hole);
-                    ui->jumper_arm = 0;
-                }
+        bb = hit_breadboard(ui, board_mx, board_my, &hole);
+        if (ui->jumper_mode && ui->jumper_arm && bb) {
+            if (ui->jumper_bb == bb && ui->jumper_from.col == hole.col &&
+                ui->jumper_from.lane == hole.lane) {
+                ui->jumper_arm = 0;
+                ui->jumper_bb = NULL;
+            } else if (ui->jumper_bb == bb) {
+                const Uint8 *rgb = k_jumper_rgb[ui->jumper_color_i % R01A_JUMPER_COLORS];
+                r01a_board_jumper_add_on(board, bb, ui->jumper_from, hole, rgb[0], rgb[1], rgb[2]);
+                ui->jumper_arm = 0;
+                ui->jumper_bb = NULL;
             } else {
                 ui->jumper_arm = 1;
                 ui->jumper_from = hole;
+                ui->jumper_bb = bb;
             }
+            return 1;
+        }
+        {
+            int ji;
+            int end_i;
+            if (hit_jumper_end(ui, board, board_mx, board_my, &ji, &end_i)) {
+                ui->jumper_arm = 0;
+                ui->jumper_bb = NULL;
+                if (shift) {
+                    ui->jumper_sel[ji] = ui->jumper_sel[ji] ? 0 : 1;
+                } else {
+                    jumper_sel_set_one(ui, ji);
+                }
+                ui->drag_jumper = ji;
+                ui->drag_jumper_end = end_i;
+                ui->drag_jumper_preview_ok = 0;
+                return 1;
+            }
+            ji = hit_jumper_body(ui, board, board_mx, board_my);
+            if (ji >= 0) {
+                ui->jumper_arm = 0;
+                ui->jumper_bb = NULL;
+                if (shift) {
+                    ui->jumper_sel[ji] = ui->jumper_sel[ji] ? 0 : 1;
+                } else {
+                    jumper_sel_set_one(ui, ji);
+                }
+                return 1;
+            }
+        }
+        if (ui->jumper_mode && bb) {
+            ui->jumper_arm = 1;
+            ui->jumper_from = hole;
+            ui->jumper_bb = bb;
             return 1;
         }
         if (ui->jumper_arm) {
             ui->jumper_arm = 0;
+            ui->jumper_bb = NULL;
         }
         if (chip_i >= 0) {
             chip_z_raise(ui, chip_i);
@@ -1609,7 +2668,33 @@ static int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx
     if (e->type == SDL_KEYDOWN) {
         int step = 48;
         if (e->key.keysym.sym == SDLK_ESCAPE) {
+            if (ui->ctx_open) {
+                ui->ctx_open = 0;
+                return 1;
+            }
+            if (ui->jumper_arm) {
+                ui->jumper_arm = 0;
+                ui->jumper_bb = NULL;
+                return 1;
+            }
+            if (ui->jumper_mode) {
+                ui->jumper_mode = 0;
+                return 1;
+            }
             return 2;
+        }
+        if (e->key.keysym.sym == SDLK_j) {
+            ui->jumper_mode = !ui->jumper_mode;
+            if (!ui->jumper_mode) {
+                ui->jumper_arm = 0;
+                ui->jumper_bb = NULL;
+            }
+            return 1;
+        }
+        if (e->key.keysym.sym == SDLK_DELETE || e->key.keysym.sym == SDLK_BACKSPACE) {
+            jumper_delete_selected(ui, board);
+            breadboard_delete_selected(ui, board);
+            return 1;
         }
         if (e->key.keysym.sym == SDLK_SPACE) {
             board->running = !board->running;
@@ -1631,6 +2716,10 @@ static int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx
         if (e->key.keysym.sym == SDLK_x) {
             r01a_board_jumper_clear(board);
             ui->jumper_arm = 0;
+            ui->jumper_bb = NULL;
+            memset(ui->jumper_sel, 0, sizeof(ui->jumper_sel));
+            ui->hover_jumper = -1;
+            ui->drag_jumper = -1;
             return 1;
         }
         if (e->key.keysym.sym == SDLK_r && (e->key.keysym.mod & KMOD_CTRL)) {
@@ -1675,10 +2764,12 @@ int r01a_ui_run(R01aBoard *board) {
     ui.selected = -1;
     ui.drag_chip = -1;
     ui.jumper_arm = 0;
+    ui.jumper_mode = 0;
+    ui.jumper_color_i = 0;
+    ui.hover_jumper = -1;
+    ui.drag_jumper = -1;
     ui.hover_chip = -1;
     ui.hover_pin = -1;
-    bind_chips(&ui, board);
-    pin_net_build(&ui);
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
         return 1;
@@ -1718,6 +2809,8 @@ int r01a_ui_run(R01aBoard *board) {
     ui.scale = R01A_UI_SCALE;
     tip_reset(&ui, 0, 0);
     (void)r01a_layout_load(R01A_LAYOUT_FILE, board, &ui.pan_x, &ui.pan_y);
+    bind_chips(&ui, board);
+    pin_net_build(&ui);
     clamp_pan(&ui);
 
     while (!quit) {

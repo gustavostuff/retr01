@@ -125,6 +125,51 @@ static int json_str(const char *obj, const char *key, char *out, size_t out_len)
     return 1;
 }
 
+static NsPassiveKind kind_parse(const char *s) {
+    if (!s) {
+        return (NsPassiveKind)-1;
+    }
+    if (strcmp(s, "R") == 0) {
+        return NS_PASSIVE_R;
+    }
+    if (strcmp(s, "CCAP") == 0) {
+        return NS_PASSIVE_CCAP;
+    }
+    if (strcmp(s, "ECAP") == 0) {
+        return NS_PASSIVE_ECAP;
+    }
+    if (strcmp(s, "OSC") == 0) {
+        return NS_PASSIVE_OSC;
+    }
+    if (strcmp(s, "D") == 0) {
+        return NS_PASSIVE_D;
+    }
+    return (NsPassiveKind)-1;
+}
+
+static void ensure_part(R01aBoard *board, const char *id, const char *kind, const char *value, int x, int y) {
+    NsPassiveKind pk;
+    if (!board || !id || r01a_board_entity_by_refdes(board, id)) {
+        return;
+    }
+    if (kind && strcmp(kind, "BB") == 0) {
+        NsBreadboard *bb = r01a_board_add_breadboard(board, x, y);
+        if (bb) {
+            snprintf(bb->refdes_buf, sizeof(bb->refdes_buf), "%s", id);
+            bb->base.refdes = bb->refdes_buf;
+        }
+        return;
+    }
+    pk = kind_parse(kind);
+    if (pk >= 0) {
+        NsPassive *p = r01a_board_add_passive(board, pk, value, x, y);
+        if (p) {
+            snprintf(p->refdes_buf, sizeof(p->refdes_buf), "%s", id);
+            p->base.refdes = p->refdes_buf;
+        }
+    }
+}
+
 static void apply_part(R01aBoard *board, const char *id, int x, int y, NsPkgOrient orient, int px, int py,
                       int have_pivot) {
     NsEntity *e = r01a_board_entity_by_refdes(board, id);
@@ -174,6 +219,8 @@ int r01a_layout_save(const char *path, const R01aBoard *board, int pan_x, int pa
             const NsEntity *e = island->entities[i];
             int px = 0;
             int py = 0;
+            const char *kind = "";
+            const char *value = "";
             if (!e || !e->refdes) {
                 continue;
             }
@@ -181,14 +228,19 @@ int r01a_layout_save(const char *path, const R01aBoard *board, int pan_x, int pa
                 const NsPassive *p = (const NsPassive *)e;
                 px = p->pivot_x;
                 py = p->pivot_y;
+                kind = ns_passive_kind_name(p->kind);
+                value = p->value;
+            } else if (e->visual == NS_ENTITY_VIS_BREADBOARD) {
+                kind = "BB";
             }
             if (!first) {
                 fprintf(f, ",\n");
             }
             first = 0;
             fprintf(f,
-                    "    {\"id\": \"%s\", \"x\": %d, \"y\": %d, \"orient\": \"%s\", \"px\": %d, \"py\": %d}",
-                    e->refdes, e->board_x, e->board_y, orient_str(e->orient), px, py);
+                    "    {\"id\": \"%s\", \"kind\": \"%s\", \"value\": \"%s\", \"x\": %d, \"y\": %d, "
+                    "\"orient\": \"%s\", \"px\": %d, \"py\": %d}",
+                    e->refdes, kind, value, e->board_x, e->board_y, orient_str(e->orient), px, py);
         }
     }
     fprintf(f, "\n  ],\n");
@@ -199,8 +251,13 @@ int r01a_layout_save(const char *path, const R01aBoard *board, int pan_x, int pa
             fprintf(f, ",\n");
         }
         first = 0;
-        fprintf(f, "    {\"ac\": %d, \"al\": %d, \"bc\": %d, \"bl\": %d}", board->jumpers[i].a.col,
-                board->jumpers[i].a.lane, board->jumpers[i].b.col, board->jumpers[i].b.lane);
+        fprintf(f,
+                "    {\"ac\": %d, \"al\": %d, \"bc\": %d, \"bl\": %d, \"bb\": \"%s\", \"cr\": %u, \"cg\": %u, "
+                "\"cb\": %u}",
+                board->jumpers[i].a.col, board->jumpers[i].a.lane, board->jumpers[i].b.col,
+                board->jumpers[i].b.lane, board->jumpers[i].bb_ref[0] ? board->jumpers[i].bb_ref : "BB1",
+                (unsigned)board->jumpers[i].r, (unsigned)board->jumpers[i].g,
+                (unsigned)board->jumpers[i].bcol);
     }
     fprintf(f, "\n  ]\n}\n");
     fclose(f);
@@ -211,6 +268,8 @@ int r01a_layout_load(const char *path, R01aBoard *board, int *pan_x, int *pan_y)
     char *buf;
     const char *p;
     int n;
+    int have_parts = 0;
+    int saw_bb1 = 0;
     char mode[16];
 
     if (!path || !board) {
@@ -231,11 +290,14 @@ int r01a_layout_load(const char *path, R01aBoard *board, int *pan_x, int *pan_y)
     }
     p = strstr(buf, "\"parts\"");
     if (p) {
+        have_parts = 1;
         p = strchr(p, '[');
     }
     while (p && *p && *p != ']') {
         char id[24];
         char os[8];
+        char kind[16];
+        char value[32];
         char objbuf[384];
         int x = 0;
         int y = 0;
@@ -263,12 +325,20 @@ int r01a_layout_load(const char *path, R01aBoard *board, int *pan_x, int *pan_y)
             p = end + 1;
             continue;
         }
+        if (strcmp(id, "BB1") == 0) {
+            saw_bb1 = 1;
+        }
         json_int(objbuf, "x", &x);
         json_int(objbuf, "y", &y);
         os[0] = '\0';
+        kind[0] = '\0';
+        value[0] = '\0';
         json_str(objbuf, "orient", os, sizeof(os));
+        json_str(objbuf, "kind", kind, sizeof(kind));
+        json_str(objbuf, "value", value, sizeof(value));
         have_px = json_int(objbuf, "px", &px);
         have_py = json_int(objbuf, "py", &py);
+        ensure_part(board, id, kind, value, x, y);
         apply_part(board, id, x, y, orient_parse(os), px, py, have_px && have_py);
         p = end + 1;
     }
@@ -280,7 +350,12 @@ int r01a_layout_load(const char *path, R01aBoard *board, int *pan_x, int *pan_y)
     while (p && *p && *p != ']') {
         NsPbHole a;
         NsPbHole b;
+        char bbref[R01A_BB_REF_LEN];
         const char *end;
+        NsBreadboard *bb;
+        int cr = 220;
+        int cg = 160;
+        int cb = 40;
         p = strchr(p, '{');
         if (!p) {
             break;
@@ -290,12 +365,43 @@ int r01a_layout_load(const char *path, R01aBoard *board, int *pan_x, int *pan_y)
             break;
         }
         a.col = a.lane = b.col = b.lane = 0;
+        bbref[0] = '\0';
         json_int(p, "ac", &a.col);
         json_int(p, "al", &a.lane);
         json_int(p, "bc", &b.col);
         json_int(p, "bl", &b.lane);
-        r01a_board_jumper_add(board, a, b);
+        json_str(p, "bb", bbref, sizeof(bbref));
+        json_int(p, "cr", &cr);
+        json_int(p, "cg", &cg);
+        json_int(p, "cb", &cb);
+        if (cr < 0) {
+            cr = 0;
+        }
+        if (cr > 255) {
+            cr = 255;
+        }
+        if (cg < 0) {
+            cg = 0;
+        }
+        if (cg > 255) {
+            cg = 255;
+        }
+        if (cb < 0) {
+            cb = 0;
+        }
+        if (cb > 255) {
+            cb = 255;
+        }
+        bb = (NsBreadboard *)r01a_board_entity_by_refdes(board, bbref[0] ? bbref : "BB1");
+        if (bb && bb->base.visual == NS_ENTITY_VIS_BREADBOARD) {
+            r01a_board_jumper_add_on(board, bb, a, b, (uint8_t)cr, (uint8_t)cg, (uint8_t)cb);
+        } else {
+            r01a_board_jumper_add(board, a, b);
+        }
         p = end + 1;
+    }
+    if (have_parts && !saw_bb1) {
+        r01a_board_remove_breadboard(board, &board->breadboard);
     }
     free(buf);
     return 0;

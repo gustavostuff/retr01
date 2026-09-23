@@ -32,6 +32,9 @@ void ns_island_setup(NsIsland *island, const NsIslandVTable *vt, const char *tit
 
 int ns_island_add_entity(NsIsland *island, NsEntity *entity);
 
+/* Unlink entity from the island. Does not destroy it. Returns 0 if removed. */
+int ns_island_remove_entity(NsIsland *island, NsEntity *entity);
+
 void ns_island_init(NsIsland *island);
 void ns_island_shutdown(NsIsland *island);
 void ns_island_reset(NsIsland *island);

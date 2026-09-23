@@ -123,20 +123,13 @@ int ns_rgbs_beam_to_logical(int scale_2x, int bx, int by, int *lx, int *ly) {
 }
 
 void ns_video_sink_lcd_size(const NsVideoSink *chip, int *w, int *h) {
-    if (chip && chip->scale_2x) {
-        if (w) {
-            *w = NS_VIDEO_W;
-        }
-        if (h) {
-            *h = NS_VIDEO_H;
-        }
-    } else {
-        if (w) {
-            *w = NS_LOGICAL_W;
-        }
-        if (h) {
-            *h = NS_LOGICAL_H;
-        }
+    (void)chip;
+    /* LCD glyph is the CRT visible field. 1x centers the playfield inside it. */
+    if (w) {
+        *w = NS_VIDEO_W;
+    }
+    if (h) {
+        *h = NS_VIDEO_H;
     }
 }
 
@@ -184,6 +177,7 @@ void ns_video_sink_set_scale_2x(NsVideoSink *chip, int scale_2x) {
     }
     chip->scale_2x = scale_2x ? 1 : 0;
     ns_video_sink_refresh_glyph(chip);
+    ns_video_sink_clear(chip);
 }
 
 int ns_video_sink_scale_2x(const NsVideoSink *chip) {
