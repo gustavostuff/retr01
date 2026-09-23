@@ -35,21 +35,33 @@ void r01_game_ctx_init(R01GameCtx *ctx) {
 }
 
 void r01_game_camera_update(R01GameCtx *ctx) {
+    uint16_t cx;
+    uint16_t cy;
     if (!ctx) {
         return;
     }
-    r01_play_camera_update(&ctx->cam_x, &ctx->cam_y, ctx->player_x, ctx->player_y, R01_PLAY_PLAYER_W,
-                           R01_PLAY_PLAYER_H, R01_SCREEN_PX_W, R01_SCREEN_PX_H, ctx->cam_deadzone_x,
-                           ctx->cam_deadzone_y, ctx->cam_axis_lock);
+    cx = (uint16_t)ctx->cam_x;
+    cy = (uint16_t)ctx->cam_y;
+    r01_play_camera_update(&cx, &cy, (uint16_t)ctx->player_x, (uint16_t)ctx->player_y, (uint8_t)R01_PLAY_PLAYER_W,
+                           (uint8_t)R01_PLAY_PLAYER_H, (uint8_t)R01_SCREEN_PX_W, (uint8_t)R01_SCREEN_PX_H,
+                           (uint8_t)ctx->cam_deadzone_x, (uint8_t)ctx->cam_deadzone_y, (uint8_t)ctx->cam_axis_lock);
+    ctx->cam_x = (int)cx;
+    ctx->cam_y = (int)cy;
 }
 
 void r01_game_camera_snap(R01GameCtx *ctx) {
+    uint16_t cx;
+    uint16_t cy;
     if (!ctx) {
         return;
     }
-    r01_play_camera_snap(&ctx->cam_x, &ctx->cam_y, ctx->player_x, ctx->player_y, R01_PLAY_PLAYER_W,
-                         R01_PLAY_PLAYER_H, R01_SCREEN_PX_W, R01_SCREEN_PX_H, ctx->cam_deadzone_x,
-                         ctx->cam_deadzone_y, ctx->cam_axis_lock);
+    cx = (uint16_t)ctx->cam_x;
+    cy = (uint16_t)ctx->cam_y;
+    r01_play_camera_snap(&cx, &cy, (uint16_t)ctx->player_x, (uint16_t)ctx->player_y, (uint8_t)R01_PLAY_PLAYER_W,
+                         (uint8_t)R01_PLAY_PLAYER_H, (uint8_t)R01_SCREEN_PX_W, (uint8_t)R01_SCREEN_PX_H,
+                         (uint8_t)ctx->cam_deadzone_x, (uint8_t)ctx->cam_deadzone_y, (uint8_t)ctx->cam_axis_lock);
+    ctx->cam_x = (int)cx;
+    ctx->cam_y = (int)cy;
 }
 
 void r01_game_fade_start(R01GameCtx *ctx, int to_black_or_white, int target_level) {

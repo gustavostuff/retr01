@@ -200,7 +200,7 @@ Example: a space fly-through with a few star/planet screens that loop once the s
 
 World header byte **7** (flags):
 
-- bit **0**: player anim blob present
+- bit **0**: unused
 - bit **1** (`0x02`): **BG0 wrap X** - video-plane tile wrap of the present BG0 layout horizontally
 - bit **2** (`0x04`): **BG0 wrap Y** - video-plane tile wrap of the present BG0 layout vertically
 - bit **3** (`0x08`): **BG0 clip to BG1** - hide BG0 outside present BG1 camera slots

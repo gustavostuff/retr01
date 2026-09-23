@@ -14,24 +14,24 @@
 #include <string.h>
 
 static void expect_camera(R01GameCtx *ctx, int line) {
-    int expect_x = ctx->cam_x;
-    int expect_y = ctx->cam_y;
-    r01_play_camera_update(&expect_x, &expect_y, ctx->player_x, ctx->player_y, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H,
-                           R01_SCREEN_PX_W, R01_SCREEN_PX_H, ctx->cam_deadzone_x, ctx->cam_deadzone_y,
-                           ctx->cam_axis_lock);
-    if (ctx->cam_x != expect_x || ctx->cam_y != expect_y) {
-        fprintf(stderr, "FAIL line %d: camera got %d,%d expected %d,%d\n", line, ctx->cam_x, ctx->cam_y, expect_x,
-                expect_y);
+    uint16_t expect_x = (uint16_t)ctx->cam_x;
+    uint16_t expect_y = (uint16_t)ctx->cam_y;
+    r01_play_camera_update(&expect_x, &expect_y, (uint16_t)ctx->player_x, (uint16_t)ctx->player_y,
+                           (uint8_t)R01_PLAY_PLAYER_W, (uint8_t)R01_PLAY_PLAYER_H, (uint8_t)R01_SCREEN_PX_W,
+                           (uint8_t)R01_SCREEN_PX_H, (uint8_t)ctx->cam_deadzone_x, (uint8_t)ctx->cam_deadzone_y,
+                           (uint8_t)ctx->cam_axis_lock);
+    if (ctx->cam_x != (int)expect_x || ctx->cam_y != (int)expect_y) {
+        fprintf(stderr, "FAIL line %d: camera got %d,%d expected %d,%d\n", line, ctx->cam_x, ctx->cam_y,
+                (int)expect_x, (int)expect_y);
         exit(1);
     }
 }
 
 #define EXPECT_CAMERA(ctx) expect_camera((ctx), __LINE__)
 
-static int test_floor_ok(void *user, int x, int y) {
+static int test_floor_ok(void *user, uint16_t x, uint16_t y) {
     int floor = user ? *(const int *)user : 0;
-    (void)x;
-    return y >= 0 && y <= floor && x >= 0 && x < 200;
+    return (int)y <= floor && (int)x < 200;
 }
 
 TEST_MAIN() {
@@ -47,11 +47,11 @@ TEST_MAIN() {
 
     {
         R01PlayPhysics ph;
-        int x = 10;
-        int y = 10;
+        uint16_t x = 10;
+        uint16_t y = 10;
         int floor = 100;
-        int adx = 0;
-        int ady = 0;
+        int8_t adx = 0;
+        int8_t ady = 0;
         r01_play_physics_init(&ph);
         r01_play_physics_tick(&ph, &x, &y, 1, 0, 0, test_floor_ok, &floor, &adx, &ady);
         EXPECT(x == 11, "walk 1 px");
@@ -330,11 +330,11 @@ TEST_MAIN() {
 
     {
         R01PlayPhysics ph;
-        int x = 10;
-        int y = 10;
+        uint16_t x = 10;
+        uint16_t y = 10;
         int floor = 40;
-        int anim_dx = 0;
-        int anim_dy = 0;
+        int8_t anim_dx = 0;
+        int8_t anim_dy = 0;
         int i;
         int jump_y;
         r01_play_physics_init(&ph);
@@ -371,13 +371,13 @@ TEST_MAIN() {
     {
         R01PlayPhysics hold;
         R01PlayPhysics tap;
-        int hx = 10;
-        int hy = 10;
-        int tx = 10;
-        int ty = 10;
+        uint16_t hx = 10;
+        uint16_t hy = 10;
+        uint16_t tx = 10;
+        uint16_t ty = 10;
         int floor = 80;
-        int anim_dx = 0;
-        int anim_dy = 0;
+        int8_t anim_dx = 0;
+        int8_t anim_dy = 0;
         int i;
         int hold_peak;
         int tap_peak;
@@ -415,13 +415,13 @@ TEST_MAIN() {
     {
         R01PlayPhysics big;
         R01PlayPhysics small;
-        int bx = 10;
-        int by = 10;
-        int sx = 10;
-        int sy = 10;
+        uint16_t bx = 10;
+        uint16_t by = 10;
+        uint16_t sx = 10;
+        uint16_t sy = 10;
         int floor = 40;
-        int anim_dx = 0;
-        int anim_dy = 0;
+        int8_t anim_dx = 0;
+        int8_t anim_dy = 0;
         int i;
         r01_play_physics_init(&big);
         r01_play_physics_set_mode(&big, R01_GAME_MODE_PLATFORMER);
@@ -444,11 +444,11 @@ TEST_MAIN() {
 
     {
         R01PlayPhysics ph;
-        int x = 10;
-        int y = 10;
+        uint16_t x = 10;
+        uint16_t y = 10;
         int floor = 80;
-        int anim_dx = 0;
-        int anim_dy = 0;
+        int8_t anim_dx = 0;
+        int8_t anim_dy = 0;
         int i;
         int prev;
         int rise_frames = 0;

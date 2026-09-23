@@ -1,55 +1,66 @@
 #include "r01_play_collision.h"
 
-static int div_nonneg(int v, int d) {
-    int q;
-    if (d <= 0) {
+static uint16_t div_nonneg(uint16_t v, uint8_t d) {
+    uint16_t q;
+    if (d == 0u) {
         return 0;
     }
-    if (d == 128) {
-        return v >> 7;
+    if (d == 128u) {
+        return (uint16_t)(v >> 7);
     }
-    if (d == 8) {
-        return v >> 3;
+    if (d == 8u) {
+        return (uint16_t)(v >> 3);
     }
     q = 0;
-    while (v >= d) {
-        v -= d;
+    while (v >= (uint16_t)d) {
+        v = (uint16_t)(v - (uint16_t)d);
         q++;
     }
     return q;
 }
 
-int r01_play_aabb_ok(int px, int py, int bw, int bh, int screen_px_w, int screen_px_h,
+int r01_play_aabb_ok(uint16_t px, uint16_t py, uint8_t bw, uint8_t bh, uint8_t screen_px_w, uint8_t screen_px_h,
                      R01PlayHasScreenFn has_screen, R01PlaySolidAtFn solid_at, void *ctx) {
-    int x1, y1, c0, c1, r0, r1, col, row;
-    int tx0, ty0, tx1, ty1, tx, ty;
-    const int tile = 8;
-    if (!has_screen || !solid_at || px < 0 || py < 0 || bw < 1 || bh < 1 || screen_px_w < 1 ||
-        screen_px_h < 1) {
+    uint16_t x1;
+    uint16_t y1;
+    uint16_t c0;
+    uint16_t c1;
+    uint16_t r0;
+    uint16_t r1;
+    uint16_t col;
+    uint16_t row;
+    uint16_t tx0;
+    uint16_t ty0;
+    uint16_t tx1;
+    uint16_t ty1;
+    uint16_t tx;
+    uint16_t ty;
+    const uint8_t tile = 8;
+    if (!has_screen || !solid_at || bw < 1u || bh < 1u || screen_px_w < 1u || screen_px_h < 1u) {
         return 0;
     }
-    x1 = px + bw - 1;
-    y1 = py + bh - 1;
+    x1 = (uint16_t)(px + (uint16_t)bw - 1u);
+    y1 = (uint16_t)(py + (uint16_t)bh - 1u);
     c0 = div_nonneg(px, screen_px_w);
     c1 = div_nonneg(x1, screen_px_w);
     r0 = div_nonneg(py, screen_px_h);
     r1 = div_nonneg(y1, screen_px_h);
     for (col = c0; col <= c1; col++) {
         for (row = r0; row <= r1; row++) {
-            if (!has_screen(ctx, col, row)) {
+            if (col > 15u || row > 15u || !has_screen(ctx, (uint8_t)col, (uint8_t)row)) {
                 return 0;
             }
         }
     }
     /* All overlapping BG tiles (not just AABB corners). */
-    tx0 = px >> 3;
-    ty0 = py >> 3;
-    tx1 = x1 >> 3;
-    ty1 = y1 >> 3;
+    tx0 = (uint16_t)(px >> 3);
+    ty0 = (uint16_t)(py >> 3);
+    tx1 = (uint16_t)(x1 >> 3);
+    ty1 = (uint16_t)(y1 >> 3);
     for (ty = ty0; ty <= ty1; ty++) {
         for (tx = tx0; tx <= tx1; tx++) {
-            int wx = tx * tile;
-            int wy = ty * tile;
+            uint16_t wx = (uint16_t)(tx * (uint16_t)tile);
+            uint16_t wy = (uint16_t)(ty * (uint16_t)tile);
             if (wx < px) {
                 wx = px;
             }

@@ -548,25 +548,25 @@ typedef struct {
     int world;
 } R01eAabbCtx;
 
-static int cart_aabb_has_screen(void *v, int col, int row) {
+static int cart_aabb_has_screen(void *v, uint8_t col, uint8_t row) {
     const R01eAabbCtx *a = (const R01eAabbCtx *)v;
-    return a && r01e_cart_has_screen(a->c, a->world, col, row);
+    return a && r01e_cart_has_screen(a->c, a->world, (int)col, (int)row);
 }
 
-static int cart_aabb_solid_at(void *v, int wx, int wy) {
+static int cart_aabb_solid_at(void *v, uint16_t wx, uint16_t wy) {
     const R01eAabbCtx *a = (const R01eAabbCtx *)v;
-    return a && r01e_cart_solid_at(a->c, a->world, wx, wy);
+    return a && r01e_cart_solid_at(a->c, a->world, (int)wx, (int)wy);
 }
 
 int r01e_cart_aabb_ok(const R01eCart *c, int world, int px, int py, int bw, int bh) {
     R01eAabbCtx ctx;
-    if (!c) {
+    if (!c || px < 0 || py < 0 || bw < 1 || bh < 1) {
         return 0;
     }
     ctx.c = c;
     ctx.world = world;
-    return r01_play_aabb_ok(px, py, bw, bh, R01E_SCREEN_PX_W, R01E_SCREEN_PX_H, cart_aabb_has_screen,
-                            cart_aabb_solid_at, &ctx);
+    return r01_play_aabb_ok((uint16_t)px, (uint16_t)py, (uint8_t)bw, (uint8_t)bh, (uint8_t)R01E_SCREEN_PX_W,
+                            (uint8_t)R01E_SCREEN_PX_H, cart_aabb_has_screen, cart_aabb_solid_at, &ctx);
 }
 
 int r01e_cart_player_aabb_ok(const R01eCart *c, int world, int px, int py) {

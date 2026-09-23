@@ -7,7 +7,9 @@
 
 #ifdef R01_HOST_TEST
 extern uint8_t r01_host_io[256];
+extern uint8_t r01_host_ram[0x8000];
 #define R01_IO(off) ((volatile uint8_t *)&r01_host_io[(off)])
+#define R01_CPU8(addr) (r01_host_ram[(uint16_t)(addr) & 0x7FFFu])
 #define R01_PPUCTRL R01_IO(0x00)
 #define R01_PPUSTATUS R01_IO(0x01)
 #define R01_SCROLL_X R01_IO(0x02)
@@ -30,6 +32,7 @@ extern uint8_t r01_host_io[256];
 #define R01_MAP_DATA R01_IO(0x93)
 #define R01_APU R01_IO(0x40)
 #else
+#define R01_CPU8(addr) (*(volatile uint8_t *)(uint16_t)(addr))
 #define R01_PPUCTRL ((volatile uint8_t *)0x7F00u)
 #define R01_PPUSTATUS ((volatile uint8_t *)0x7F01u)
 #define R01_SCROLL_X ((volatile uint8_t *)0x7F02u)
@@ -64,7 +67,7 @@ void r01_oam_reset(void);
 void r01_oam_write(uint8_t y, uint8_t tile, uint8_t attr, uint8_t x);
 void r01_oam_boot_hide(void);
 void r01_oam_hide_rest(uint8_t written);
-void r01_player_hit_get(int *dx, int *dy, uint8_t *w, uint8_t *h);
+void r01_player_hit_get(int8_t *dx, int8_t *dy, uint8_t *w, uint8_t *h);
 void r01_world_cache_boot(void);
 void r01_world_enter(uint8_t world_id);
 uint16_t r01_play_base(void);

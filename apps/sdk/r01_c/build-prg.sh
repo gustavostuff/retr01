@@ -102,7 +102,6 @@ TAB_S="$OUTDIR/r01_tables.s"
   "$COMMON/r01_play_physics.c" \
   "$COMMON/r01_play_collision.c" \
   "$COMMON/r01_play_anim.c" \
-  "$COMMON/r01_play_anim_cart.c" \
   "$TAB_S" \
   "$LOGIC"
 

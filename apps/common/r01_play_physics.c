@@ -1,60 +1,66 @@
 #include "r01_play_physics.h"
 
-static int clamp_gravity(int v) {
-    if (v < 1) {
-        return R01_PLAT_GRAVITY_DEFAULT;
-    }
-    if (v > R01_PLAT_GRAVITY_MAX) {
-        return R01_PLAT_GRAVITY_MAX;
+static uint8_t clamp_gravity(uint8_t v) {
+    if (v < 1u) {
+        return (uint8_t)R01_PLAT_GRAVITY_DEFAULT;
     }
     return v;
 }
 
-static int clamp_jump(int v) {
-    if (v < 1) {
-        return R01_PLAT_JUMP_DEFAULT;
+static uint8_t clamp_jump(uint8_t v) {
+    if (v < 1u) {
+        return (uint8_t)R01_PLAT_JUMP_DEFAULT;
     }
-    if (v > 32) {
-        return 32;
+    if (v > 32u) {
+        return 32u;
     }
     return v;
 }
 
-static int clamp_meter(int v) {
-    if (v < 1) {
-        return R01_PLAT_METER_DEFAULT;
+static uint8_t clamp_meter(uint8_t v) {
+    if (v < 1u) {
+        return (uint8_t)R01_PLAT_METER_DEFAULT;
     }
-    if (v > 64) {
-        return 64;
+    if (v > 64u) {
+        return 64u;
     }
     return v;
 }
 
 /* Author units are pixels at meter=16. Result is 8.8. */
-static int units_to_fp(int units, int meter) {
-    return (units * meter * R01_PHYS_ONE) / R01_PLAT_METER_DEFAULT;
-}
-
-static int gravity_to_fp(int units, int meter) {
-    return units_to_fp(units, meter) / R01_PLAT_GRAVITY_SCALE;
-}
-
-static int fp_to_px(int fp) {
-    if (fp >= 0) {
-        return fp >> R01_PHYS_SHIFT;
+static int16_t units_to_fp(uint8_t units, uint8_t meter) {
+    int v = ((int)units * (int)meter * R01_PHYS_ONE) / R01_PLAT_METER_DEFAULT;
+    if (v > 32767) {
+        v = 32767;
     }
-    return -((-fp) >> R01_PHYS_SHIFT);
+    return (int16_t)v;
 }
 
-static int step_axis(int *pos, int delta, int other, int horiz, int (*move_ok)(void *ctx, int x, int y),
-                     void *ctx) {
-    int nx;
-    int ny;
+static int16_t gravity_to_fp(uint8_t units, uint8_t meter) {
+    return (int16_t)(units_to_fp(units, meter) / R01_PLAT_GRAVITY_SCALE);
+}
+
+static int16_t fp_to_px(int16_t fp) {
+    if (fp >= 0) {
+        return (int16_t)(fp >> R01_PHYS_SHIFT);
+    }
+    return (int16_t)(-((-fp) >> R01_PHYS_SHIFT));
+}
+
+static uint8_t step_axis(uint16_t *pos, int8_t delta, uint16_t other, uint8_t horiz,
+                         int (*move_ok)(void *ctx, uint16_t x, uint16_t y), void *ctx) {
+    int16_t n;
+    uint16_t nx;
+    uint16_t ny;
     if (!pos || !move_ok || delta == 0) {
         return 0;
     }
+    n = (int16_t)((int16_t)*pos + (int16_t)delta);
+    if (n < 0) {
+        return 0;
+    }
     if (horiz) {
-        nx = *pos + delta;
+        nx = (uint16_t)n;
         ny = other;
         if (!move_ok(ctx, nx, ny)) {
             return 0;
@@ -63,7 +69,7 @@ static int step_axis(int *pos, int delta, int other, int horiz, int (*move_ok)(v
         return 1;
     }
     nx = other;
-    ny = *pos + delta;
+    ny = (uint16_t)n;
     if (!move_ok(ctx, nx, ny)) {
         return 0;
     }
@@ -72,21 +78,21 @@ static int step_axis(int *pos, int delta, int other, int horiz, int (*move_ok)(v
 }
 
 /* Add delta_fp into *frac, step 1 px at a time. Returns 0 if a step hit a solid. */
-static int integrate_axis(int *pos, int *frac, int delta_fp, int other, int horiz,
-                          int (*move_ok)(void *ctx, int x, int y), void *ctx) {
-    int steps;
-    int dir;
-    int i;
+static uint8_t integrate_axis(uint16_t *pos, int16_t *frac, int16_t delta_fp, uint16_t other, uint8_t horiz,
+                              int (*move_ok)(void *ctx, uint16_t x, uint16_t y), void *ctx) {
+    int16_t steps;
+    int8_t dir;
+    int16_t i;
     if (!pos || !frac || !move_ok) {
         return 0;
     }
-    *frac += delta_fp;
+    *frac = (int16_t)(*frac + delta_fp);
     steps = fp_to_px(*frac);
-    *frac -= steps << R01_PHYS_SHIFT;
+    *frac = (int16_t)(*frac - (int16_t)(steps << R01_PHYS_SHIFT));
     dir = 1;
     if (steps < 0) {
         dir = -1;
-        steps = -steps;
+        steps = (int16_t)(-steps);
     }
     for (i = 0; i < steps; i++) {
         if (!step_axis(pos, dir, other, horiz, move_ok, ctx)) {
@@ -101,11 +107,11 @@ void r01_play_physics_init(R01PlayPhysics *ph) {
     if (!ph) {
         return;
     }
-    ph->mode = R01_GAME_MODE_TOPDOWN;
-    ph->gravity = R01_PLAT_GRAVITY_DEFAULT;
-    ph->jump = R01_PLAT_JUMP_DEFAULT;
-    ph->fall_max = R01_PLAT_FALL_MAX_DEFAULT;
-    ph->meter = R01_PLAT_METER_DEFAULT;
+    ph->mode = (uint8_t)R01_GAME_MODE_TOPDOWN;
+    ph->gravity = (uint8_t)R01_PLAT_GRAVITY_DEFAULT;
+    ph->jump = (uint8_t)R01_PLAT_JUMP_DEFAULT;
+    ph->fall_max = (uint8_t)R01_PLAT_FALL_MAX_DEFAULT;
+    ph->meter = (uint8_t)R01_PLAT_METER_DEFAULT;
     ph->vel_y = 0;
     ph->frac_x = 0;
     ph->frac_y = 0;
@@ -114,49 +120,49 @@ void r01_play_physics_init(R01PlayPhysics *ph) {
     ph->run_mul = 1;
 }
 
-void r01_play_physics_set_mode(R01PlayPhysics *ph, int mode) {
+void r01_play_physics_set_mode(R01PlayPhysics *ph, uint8_t mode) {
     if (!ph) {
         return;
     }
-    if (mode != R01_GAME_MODE_PLATFORMER) {
-        mode = R01_GAME_MODE_TOPDOWN;
+    if (mode != (uint8_t)R01_GAME_MODE_PLATFORMER) {
+        mode = (uint8_t)R01_GAME_MODE_TOPDOWN;
     }
     ph->mode = mode;
-    if (mode == R01_GAME_MODE_TOPDOWN) {
+    if (mode == (uint8_t)R01_GAME_MODE_TOPDOWN) {
         r01_play_physics_reset_air(ph);
     }
 }
 
-void r01_play_physics_set_gravity(R01PlayPhysics *ph, int units) {
+void r01_play_physics_set_gravity(R01PlayPhysics *ph, uint8_t units) {
     if (!ph) {
         return;
     }
     ph->gravity = clamp_gravity(units);
 }
 
-void r01_play_physics_set_jump(R01PlayPhysics *ph, int impulse) {
+void r01_play_physics_set_jump(R01PlayPhysics *ph, uint8_t impulse) {
     if (!ph) {
         return;
     }
     ph->jump = clamp_jump(impulse);
 }
 
-void r01_play_physics_set_meter(R01PlayPhysics *ph, int px_per_meter) {
+void r01_play_physics_set_meter(R01PlayPhysics *ph, uint8_t px_per_meter) {
     if (!ph) {
         return;
     }
     ph->meter = clamp_meter(px_per_meter);
 }
 
-void r01_play_physics_set_run_mul(R01PlayPhysics *ph, int mul) {
+void r01_play_physics_set_run_mul(R01PlayPhysics *ph, uint8_t mul) {
     if (!ph) {
         return;
     }
-    if (mul < 1) {
-        mul = 1;
+    if (mul < 1u) {
+        mul = 1u;
     }
-    if (mul > 2) {
-        mul = 2;
+    if (mul > 2u) {
+        mul = 2u;
     }
     ph->run_mul = mul;
 }
@@ -172,18 +178,18 @@ void r01_play_physics_reset_air(R01PlayPhysics *ph) {
     ph->jump_held = 0;
 }
 
-void r01_play_physics_tick(R01PlayPhysics *ph, int *px, int *py, int in_dx, int in_dy, int jump_down,
-                           int (*move_ok)(void *ctx, int x, int y), void *ctx, int *out_anim_dx,
-                           int *out_anim_dy) {
-    int x;
-    int y;
-    int anim_dx = 0;
-    int anim_dy = 0;
-    int jump_pressed;
-    int walk_fp;
-    int gravity_fp;
-    int jump_fp;
-    int fall_max_fp;
+void r01_play_physics_tick(R01PlayPhysics *ph, uint16_t *px, uint16_t *py, int8_t in_dx, int8_t in_dy,
+                           uint8_t jump_down, int (*move_ok)(void *ctx, uint16_t x, uint16_t y), void *ctx,
+                           int8_t *out_anim_dx, int8_t *out_anim_dy) {
+    uint16_t x;
+    uint16_t y;
+    int8_t anim_dx = 0;
+    int8_t anim_dy = 0;
+    uint8_t jump_pressed;
+    int16_t walk_fp;
+    int16_t gravity_fp;
+    int16_t jump_fp;
+    int16_t fall_max_fp;
 
     if (!ph || !px || !py || !move_ok) {
         return;
@@ -202,49 +208,49 @@ void r01_play_physics_tick(R01PlayPhysics *ph, int *px, int *py, int in_dx, int 
     if (in_dy > 1) {
         in_dy = 1;
     }
-    jump_down = jump_down ? 1 : 0;
-    jump_pressed = jump_down && !ph->jump_held;
+    jump_down = jump_down ? 1u : 0u;
+    jump_pressed = (uint8_t)(jump_down && !ph->jump_held);
     ph->jump_held = jump_down;
     {
-        int mul = ph->run_mul;
-        if (mul < 1) {
-            mul = 1;
+        uint8_t mul = ph->run_mul;
+        if (mul < 1u) {
+            mul = 1u;
         }
-        if (mul > 2) {
-            mul = 2;
+        if (mul > 2u) {
+            mul = 2u;
         }
-        walk_fp = units_to_fp(1, ph->meter) * mul;
+        walk_fp = (int16_t)(units_to_fp(1u, ph->meter) * (int16_t)mul);
     }
 
-    if (ph->mode != R01_GAME_MODE_PLATFORMER) {
-        (void)integrate_axis(&x, &ph->frac_x, walk_fp * in_dx, y, 1, move_ok, ctx);
-        (void)integrate_axis(&y, &ph->frac_y, walk_fp * in_dy, x, 0, move_ok, ctx);
+    if (ph->mode != (uint8_t)R01_GAME_MODE_PLATFORMER) {
+        (void)integrate_axis(&x, &ph->frac_x, (int16_t)(walk_fp * (int16_t)in_dx), y, 1u, move_ok, ctx);
+        (void)integrate_axis(&y, &ph->frac_y, (int16_t)(walk_fp * (int16_t)in_dy), x, 0u, move_ok, ctx);
         anim_dx = in_dx;
         anim_dy = in_dy;
     } else {
-        int g;
+        int16_t g;
         gravity_fp = gravity_to_fp(ph->gravity, ph->meter);
         jump_fp = units_to_fp(ph->jump, ph->meter);
         fall_max_fp = units_to_fp(ph->fall_max, ph->meter);
         if (jump_pressed && ph->grounded) {
-            ph->vel_y = -jump_fp;
+            ph->vel_y = (int16_t)(-jump_fp);
             ph->grounded = 0;
             ph->frac_y = 0;
         } else {
             g = gravity_fp;
             if (ph->vel_y < 0 && !jump_down) {
-                g = gravity_fp * R01_PLAT_JUMP_RELEASE_MUL;
+                g = (int16_t)(gravity_fp * R01_PLAT_JUMP_RELEASE_MUL);
             }
-            ph->vel_y += g;
+            ph->vel_y = (int16_t)(ph->vel_y + g);
             if (ph->vel_y > fall_max_fp) {
                 ph->vel_y = fall_max_fp;
             }
         }
-        (void)integrate_axis(&x, &ph->frac_x, walk_fp * in_dx, y, 1, move_ok, ctx);
-        if (!integrate_axis(&y, &ph->frac_y, ph->vel_y, x, 0, move_ok, ctx)) {
+        (void)integrate_axis(&x, &ph->frac_x, (int16_t)(walk_fp * (int16_t)in_dx), y, 1u, move_ok, ctx);
+        if (!integrate_axis(&y, &ph->frac_y, ph->vel_y, x, 0u, move_ok, ctx)) {
             ph->vel_y = 0;
         }
-        ph->grounded = !move_ok(ctx, x, y + 1);
+        ph->grounded = (uint8_t)!move_ok(ctx, x, (uint16_t)(y + 1u));
         if (ph->grounded && ph->vel_y > 0) {
             ph->vel_y = 0;
             ph->frac_y = 0;

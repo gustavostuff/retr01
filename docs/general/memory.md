@@ -89,19 +89,19 @@ Magic **`retr01`**. Byte 6 is `format_ver` **6**. Pointer table names the region
 
 | Piece | Size / note |
 | --- | --- |
-| World header | **32 B** (spawn cell as nibble-packed col/row, BG1/BG0 present counts, flags at byte **7** (bit 0 player anim, bits 1-2 BG0 wrap, bit 3 BG0 clip, bit 4 platformer), camera dead-zone **width/height** at bytes **30-31**) |
+| World header | **32 B** (spawn cell as nibble-packed col/row, BG1/BG0 present counts, flags at byte **7** (bit 0 unused, bits 1-2 BG0 wrap, bit 3 BG0 clip, bit 4 unused), camera dead-zone **width/height** at bytes **30-31**) |
 | BG1 screen directory | **12 B** per present playfield screen (grid cell + payload offset) |
 | BG1 screen payloads | **480 B** each (present only, sparse **16x16**, max **64**/world) |
 | BG0 directory | **12 B** per present BG0 screen (same shape as BG1 dir). Offset **0** if none |
 | BG0 payloads | **480 B** each (up to **16** present screens, sparse on **16x16**) |
 
-World blobs hold maps. CHR and the entity catalog are cart-global. One optional `PA` (player anim) blob sits after **world 0** maps when a player entity is marked. Other worlds do not copy it. Pack: `software-api.md`.
+World blobs hold maps. CHR and the entity catalog are cart-global. The marked player is a catalog type. Play caches that def at boot. Pack: `software-api.md`.
 
 Entity **spawn locations** live in **PRG** (tables or code calling `spawn_entity`). Defs live in the **global** catalog.
 
 **Grid cell byte:** virtual map is **16x16** (col/row **0-15**). Pack both coords in **1 byte** as nibbles: `col | (row << 4)`. Same packing for BG1/BG0 directory entries and world-header spawn cell.
 
-**World header notes (BG0):** byte **3** packs present BG0 extent (`cols | rows<<4`). Byte **6** is BG0 present count. Bytes **14-16** are BG0 directory offset (u24), or **0** if none. Byte **7** flags: bit0 player-anim blob, bit1 BG0 wrap X, bit2 BG0 wrap Y, bit3 BG0 clip to BG1 (video plane, see `world-scrolling.md`). Bit4 platformer and cam dead-zone bytes are unused. Live mode and dead zone are author C.
+**World header notes (BG0):** byte **3** packs present BG0 extent (`cols | rows<<4`). Byte **6** is BG0 present count. Bytes **14-16** are BG0 directory offset (u24), or **0** if none. Byte **7** flags: bit0 unused, bit1 BG0 wrap X, bit2 BG0 wrap Y, bit3 BG0 clip to BG1 (video plane, see `world-scrolling.md`). Bit4 and cam dead-zone bytes are unused. Live mode and dead zone are author C.
 
 **Screen payload:** **480 B** = 240 tile bytes + 240 attr bytes (**16x15**, **128x120**). Same shape for BG1 and BG0. Attr pack in `video-graphics.md`. Bank bits **0-3** index global CHR.
 

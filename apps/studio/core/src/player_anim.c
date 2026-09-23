@@ -60,7 +60,7 @@ void r01_entity_state_frame_delay_set(R01GameCtx *ctx, int entity_state_idx, int
 }
 
 void r01_player_anim_update(R01GameCtx *ctx, int dx, int dy) {
-    R01_PLAYER_ANIM_WRAP(r01_play_anim_update(&_a, dx, dy));
+    R01_PLAYER_ANIM_WRAP(r01_play_anim_update(&_a, (int8_t)dx, (int8_t)dy));
 }
 
 void r01_player_anim_tick(R01GameCtx *ctx, const R01Project *p, int player_type) {
@@ -71,12 +71,12 @@ void r01_player_anim_tick(R01GameCtx *ctx, const R01Project *p, int player_type)
     if (!ctx || !p || player_type < 0 || player_type >= p->entity_count) {
         return;
     }
-    if (ctx->player_idle_state < 0 && ctx->player_anim_state == 0) {
+    if (ctx->player_idle_state == (uint8_t)R01_PLAY_ANIM_UNMAPPED && ctx->player_anim_state == 0) {
         ctx->player_anim_frame = 0;
         return;
     }
     ent = &p->entities[player_type];
-    if (ctx->player_anim_state < 0 || ctx->player_anim_state >= ent->state_count) {
+    if (ctx->player_anim_state >= (uint8_t)ent->state_count) {
         return;
     }
     st = &ent->states[ctx->player_anim_state];

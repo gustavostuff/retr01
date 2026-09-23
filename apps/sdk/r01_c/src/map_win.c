@@ -343,7 +343,7 @@ int r01_map_tile_at(uint8_t col, uint8_t row, uint8_t cell, uint8_t *tile, uint8
     if (attr) {
         *attr = 0;
     }
-    return -1;
+    return 0;
 }
 
 void r01_map_load_window(uint16_t cam_x, uint16_t cam_y) {

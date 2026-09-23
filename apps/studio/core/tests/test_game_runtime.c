@@ -56,8 +56,8 @@ TEST_MAIN() {
     }
 
     {
-        int cam_x = 100;
-        int cam_y = 100;
+        uint16_t cam_x = 100;
+        uint16_t cam_y = 100;
         r01_play_camera_update(&cam_x, &cam_y, 200, 180, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H, R01_SCREEN_PX_W,
                                R01_SCREEN_PX_H, 32, 30, R01_PLAY_CAM_AXIS_BOTH);
         EXPECT(cam_x == 200 - 78, "32px deadzone right edge shares viewport-center parity");
@@ -65,8 +65,8 @@ TEST_MAIN() {
     }
 
     {
-        int cam_x = 100;
-        int cam_y = 100;
+        uint16_t cam_x = 100;
+        uint16_t cam_y = 100;
         r01_play_camera_update(&cam_x, &cam_y, 160, 150, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H, R01_SCREEN_PX_W,
                                R01_SCREEN_PX_H, 32, 30, R01_PLAY_CAM_AXIS_BOTH);
         EXPECT(cam_x == 100, "origin inside centered deadzone leaves camera x");
@@ -74,22 +74,22 @@ TEST_MAIN() {
     }
 
     {
-        int cam_x = 0;
-        int cam_y = 0;
+        uint16_t cam_x = 0;
+        uint16_t cam_y = 0;
         int px = R01_SCREEN_PX_W / 2;
         int py = R01_SCREEN_PX_H / 2;
         int prev;
         int i;
         int moved = 0;
-        r01_play_camera_snap(&cam_x, &cam_y, px, py, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H, R01_SCREEN_PX_W,
-                             R01_SCREEN_PX_H, 32, 70, R01_PLAY_CAM_AXIS_BOTH);
-        prev = cam_x;
+        r01_play_camera_snap(&cam_x, &cam_y, (uint16_t)px, (uint16_t)py, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H,
+                             R01_SCREEN_PX_W, R01_SCREEN_PX_H, 32, 70, R01_PLAY_CAM_AXIS_BOTH);
+        prev = (int)cam_x;
         for (i = 0; i < 24; i++) {
             int d;
             px += 2;
-            r01_play_camera_update(&cam_x, &cam_y, px, py, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H, R01_SCREEN_PX_W,
-                                   R01_SCREEN_PX_H, 32, 70, R01_PLAY_CAM_AXIS_BOTH);
-            d = cam_x - prev;
+            r01_play_camera_update(&cam_x, &cam_y, (uint16_t)px, (uint16_t)py, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H,
+                                   R01_SCREEN_PX_W, R01_SCREEN_PX_H, 32, 70, R01_PLAY_CAM_AXIS_BOTH);
+            d = (int)cam_x - prev;
             if (d != 0 && d != 2) {
                 EXPECT(0, "2 px run from center does not hitch 1 px at deadzone");
             }
@@ -99,7 +99,7 @@ TEST_MAIN() {
             if (d == 2) {
                 moved = 1;
             }
-            prev = cam_x;
+            prev = (int)cam_x;
         }
         EXPECT(moved, "2 px run from center engages deadzone");
     }

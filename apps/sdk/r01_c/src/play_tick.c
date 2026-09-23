@@ -16,33 +16,19 @@
 
 static R01PlayPhysics s_phys;
 static uint8_t s_phys_ready;
-static int s_draw_air;
-static int s_draw_crouch;
-static int s_draw_adx;
-static int s_draw_ady;
-#ifndef R01_HOST_TEST
-static int s_hit_dx;
-static int s_hit_dy;
+static uint8_t s_draw_air;
+static uint8_t s_draw_crouch;
+static int8_t s_draw_adx;
+static int8_t s_draw_ady;
+static int8_t s_hit_dx;
+static int8_t s_hit_dy;
 static uint8_t s_hit_w = 8;
 static uint8_t s_hit_h = 8;
 static const R01GameCtx *s_coll_ctx;
-#endif
 
 void r01_game_play_reset(void) {
     s_phys_ready = 0;
 }
-
-#ifdef R01_HOST_TEST
-static int move_ok_open(void *user, int x, int y) {
-    (void)user;
-    (void)x;
-    (void)y;
-    return 1;
-}
-#endif
-
-#ifndef R01_HOST_TEST
-#define R01_CPU8(addr) (*(volatile uint8_t *)(uint16_t)(addr))
 
 static void put_u16_ram(uint16_t addr, uint16_t v) {
     R01_CPU8(addr) = (uint8_t)(v & 0xFFu);
@@ -81,41 +67,41 @@ static int play_solid_cell(uint8_t col, uint8_t row, uint8_t cell) {
     return pattern_solid((uint8_t)(attr & 0x0Fu), tile);
 }
 
-static int cart_aabb_ok(int px, int py, int bw, int bh) {
-    int x1;
-    int y1;
-    int tx;
-    int ty;
-    int tx0;
-    int ty0;
-    int tx1;
-    int ty1;
-    static int s_tx0 = -1;
-    static int s_ty0;
-    static int s_tx1;
-    static int s_ty1;
-    static int s_ok;
-    if (px < 0 || py < 0 || bw < 1 || bh < 1) {
+static int cart_aabb_ok(uint16_t px, uint16_t py, uint8_t bw, uint8_t bh) {
+    uint16_t x1;
+    uint16_t y1;
+    uint16_t tx;
+    uint16_t ty;
+    uint16_t tx0;
+    uint16_t ty0;
+    uint16_t tx1;
+    uint16_t ty1;
+    static uint16_t s_tx0 = 0xFFFFu;
+    static uint16_t s_ty0;
+    static uint16_t s_tx1;
+    static uint16_t s_ty1;
+    static uint8_t s_ok;
+    if (bw < 1u || bh < 1u) {
         return 0;
     }
-    x1 = px + bw - 1;
-    y1 = py + bh - 1;
-    if (x1 >= R01_GRID_MAX * R01_SCREEN_PX_W || y1 >= R01_GRID_MAX * R01_SCREEN_PX_H) {
+    x1 = (uint16_t)(px + (uint16_t)bw - 1u);
+    y1 = (uint16_t)(py + (uint16_t)bh - 1u);
+    if (x1 >= (uint16_t)(R01_GRID_MAX * R01_SCREEN_PX_W) || y1 >= (uint16_t)(R01_GRID_MAX * R01_SCREEN_PX_H)) {
         return 0;
     }
-    tx0 = px >> 3;
-    ty0 = py >> 3;
-    tx1 = x1 >> 3;
-    ty1 = y1 >> 3;
+    tx0 = (uint16_t)(px >> 3);
+    ty0 = (uint16_t)(py >> 3);
+    tx1 = (uint16_t)(x1 >> 3);
+    ty1 = (uint16_t)(y1 >> 3);
     if (tx0 == s_tx0 && ty0 == s_ty0 && tx1 == s_tx1 && ty1 == s_ty1) {
         return s_ok;
     }
     s_ok = 0;
     for (ty = ty0; ty <= ty1; ty++) {
         uint8_t row = 0;
-        int ly = ty;
-        while (ly >= R01_SCREEN_TILES_Y) {
-            ly -= R01_SCREEN_TILES_Y;
+        uint16_t ly = ty;
+        while (ly >= (uint16_t)R01_SCREEN_TILES_Y) {
+            ly = (uint16_t)(ly - (uint16_t)R01_SCREEN_TILES_Y);
             row++;
             if (row > 15u) {
                 s_tx0 = tx0;
@@ -126,8 +112,8 @@ static int cart_aabb_ok(int px, int py, int bw, int bh) {
             }
         }
         for (tx = tx0; tx <= tx1; tx++) {
-            uint8_t col = (uint8_t)((unsigned)tx >> 4);
-            uint8_t cell = (uint8_t)(ly * R01_SCREEN_TILES_X + (tx & 15));
+            uint8_t col = (uint8_t)(tx >> 4);
+            uint8_t cell = (uint8_t)(ly * (uint16_t)R01_SCREEN_TILES_X + (tx & 15u));
             if (play_solid_cell(col, row, cell)) {
                 s_tx0 = tx0;
                 s_ty0 = ty0;
@@ -145,25 +131,19 @@ static int cart_aabb_ok(int px, int py, int bw, int bh) {
     return 1;
 }
 
-static int move_ok_cart(void *user, int ox, int oy) {
+static int move_ok_cart(void *user, uint16_t ox, uint16_t oy) {
+    int16_t hx;
+    int16_t hy;
     (void)user;
-    ox += s_hit_dx;
-    oy += s_hit_dy;
-    if (ox < 0 || oy < 0) {
+    hx = (int16_t)((int16_t)ox + (int16_t)s_hit_dx);
+    hy = (int16_t)((int16_t)oy + (int16_t)s_hit_dy);
+    if (hx < 0 || hy < 0) {
         return 0;
     }
-    return cart_aabb_ok(ox, oy, (int)s_hit_w, (int)s_hit_h);
+    return cart_aabb_ok((uint16_t)hx, (uint16_t)hy, s_hit_w, s_hit_h);
 }
-#endif
 
 int r01_world_aabb_ok(int x, int y, uint8_t w, uint8_t h) {
-#ifdef R01_HOST_TEST
-    (void)x;
-    (void)y;
-    (void)w;
-    (void)h;
-    return 1;
-#else
     if (x < 0 || y < 0) {
         return 0;
     }
@@ -173,8 +153,7 @@ int r01_world_aabb_ok(int x, int y, uint8_t w, uint8_t h) {
     if (h < 1u) {
         h = (uint8_t)R01_PLAY_PLAYER_H;
     }
-    return cart_aabb_ok(x, y, (int)w, (int)h);
-#endif
+    return cart_aabb_ok((uint16_t)x, (uint16_t)y, w, h);
 }
 
 void r01_game_spawn(R01GameCtx *ctx) {
@@ -182,11 +161,6 @@ void r01_game_spawn(R01GameCtx *ctx) {
     if (!ctx) {
         return;
     }
-#ifdef R01_HOST_TEST
-    (void)n;
-    ctx->player_x = 40;
-    ctx->player_y = 40;
-#else
     n = R01_CPU8((uint16_t)(r01_play_base() + R01_PLAY_INST_COUNT));
     if (n > 0u) {
         uint16_t rec = (uint16_t)(r01_play_base() + R01_PLAY_INST_TABLE);
@@ -194,27 +168,22 @@ void r01_game_spawn(R01GameCtx *ctx) {
         ctx->player_y = (uint16_t)R01_CPU8(rec + 4u) | ((uint16_t)R01_CPU8(rec + 5u) << 8);
     } else {
         uint8_t cell = R01_CPU8((uint16_t)(r01_play_base() + R01_PLAY_SPAWN_CELL));
-        int col = (int)(cell & 0x0Fu);
-        int row = (int)((cell >> 4) & 0x0Fu);
-        ctx->player_x = (uint16_t)(col * R01_SCREEN_PX_W + (R01_SCREEN_PX_W - R01_PLAY_PLAYER_W) / 2);
-        ctx->player_y = (uint16_t)(row * R01_SCREEN_PX_H + (R01_SCREEN_PX_H - R01_PLAY_PLAYER_H) / 2);
+        uint8_t col = (uint8_t)(cell & 0x0Fu);
+        uint8_t row = (uint8_t)((cell >> 4) & 0x0Fu);
+        ctx->player_x = (uint16_t)((uint16_t)col * (uint16_t)R01_SCREEN_PX_W +
+                                   (uint16_t)((R01_SCREEN_PX_W - R01_PLAY_PLAYER_W) / 2));
+        ctx->player_y = (uint16_t)((uint16_t)row * (uint16_t)R01_SCREEN_PX_H +
+                                   (uint16_t)((R01_SCREEN_PX_H - R01_PLAY_PLAYER_H) / 2));
     }
-#endif
 }
 
 void r01_game_camera_snap(R01GameCtx *ctx) {
-    int cx;
-    int cy;
     if (!ctx) {
         return;
     }
-    cx = (int)ctx->cam_x;
-    cy = (int)ctx->cam_y;
-    r01_play_camera_snap(&cx, &cy, (int)ctx->player_x, (int)ctx->player_y, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H,
-                         R01_SCREEN_PX_W, R01_SCREEN_PX_H, (int)ctx->cam_deadzone_x, (int)ctx->cam_deadzone_y,
-                         (int)ctx->cam_axis_lock);
-    ctx->cam_x = (uint16_t)cx;
-    ctx->cam_y = (uint16_t)cy;
+    r01_play_camera_snap(&ctx->cam_x, &ctx->cam_y, ctx->player_x, ctx->player_y, (uint8_t)R01_PLAY_PLAYER_W,
+                         (uint8_t)R01_PLAY_PLAYER_H, (uint8_t)R01_SCREEN_PX_W, (uint8_t)R01_SCREEN_PX_H,
+                         ctx->cam_deadzone_x, ctx->cam_deadzone_y, ctx->cam_axis_lock);
 }
 
 void r01_scroll_publish(const R01GameCtx *ctx) {
@@ -239,40 +208,33 @@ void r01_sys_publish(const R01GameCtx *ctx) {
     if (!ctx) {
         return;
     }
-#ifndef R01_HOST_TEST
     put_u16_ram(R01_SYS_PLAYER_X, ctx->player_x);
     put_u16_ram(R01_SYS_PLAYER_Y, ctx->player_y);
     put_u16_ram(R01_SYS_CAM_X, ctx->cam_x);
     put_u16_ram(R01_SYS_CAM_Y, ctx->cam_y);
     R01_CPU8(R01_SYS_READY) = 1;
-#else
     r01_scroll_publish(ctx);
-#endif
 }
 
 void r01_game_play_tick(R01GameCtx *ctx) {
-    int px;
-    int py;
-    int dx = 0;
-    int dy = 0;
-    int adx = 0;
-    int ady = 0;
-    int cx;
-    int cy;
-    int jump;
-    int (*ok)(void *, int, int);
+    uint16_t px;
+    uint16_t py;
+    int8_t dx = 0;
+    int8_t dy = 0;
+    int8_t adx = 0;
+    int8_t ady = 0;
+    uint8_t jump;
 
     if (!ctx) {
         return;
     }
     if (!s_phys_ready) {
         r01_play_physics_init(&s_phys);
-        r01_play_physics_set_mode(&s_phys, (int)ctx->game_mode);
-        r01_play_physics_set_gravity(&s_phys, (int)ctx->plat_gravity);
-        r01_play_physics_set_jump(&s_phys, (int)ctx->plat_jump);
-        r01_play_physics_set_meter(&s_phys, (int)ctx->plat_meter);
+        r01_play_physics_set_mode(&s_phys, ctx->game_mode);
+        r01_play_physics_set_gravity(&s_phys, ctx->plat_gravity);
+        r01_play_physics_set_jump(&s_phys, ctx->plat_jump);
+        r01_play_physics_set_meter(&s_phys, ctx->plat_meter);
         s_phys_ready = 1;
-#ifndef R01_HOST_TEST
         r01_player_hit_get(&s_hit_dx, &s_hit_dy, &s_hit_w, &s_hit_h);
         if (s_hit_w < 1u) {
             s_hit_w = (uint8_t)R01_PLAY_PLAYER_W;
@@ -280,9 +242,8 @@ void r01_game_play_tick(R01GameCtx *ctx) {
         if (s_hit_h < 1u) {
             s_hit_h = (uint8_t)R01_PLAY_PLAYER_H;
         }
-#endif
     }
-    r01_play_physics_set_run_mul(&s_phys, (int)ctx->player_move_mul);
+    r01_play_physics_set_run_mul(&s_phys, ctx->player_move_mul);
 
     if (ctx->pad & R01_PAD_RIGHT) {
         dx = 1;
@@ -296,36 +257,20 @@ void r01_game_play_tick(R01GameCtx *ctx) {
     if (ctx->pad & R01_PAD_UP) {
         dy = -1;
     }
-    jump = (ctx->pad & R01_PAD_Y) != 0;
+    jump = (uint8_t)((ctx->pad & R01_PAD_Y) != 0);
 
-    px = (int)ctx->player_x;
-    py = (int)ctx->player_y;
-#ifdef R01_HOST_TEST
-    ok = move_ok_open;
-#else
+    px = ctx->player_x;
+    py = ctx->player_y;
     s_coll_ctx = ctx;
-    ok = move_ok_cart;
-#endif
-    r01_play_physics_tick(&s_phys, &px, &py, dx, dy, jump, ok, ctx, &adx, &ady);
-    if (px < 0) {
-        px = 0;
-    }
-    if (py < 0) {
-        py = 0;
-    }
-    ctx->player_x = (uint16_t)px;
-    ctx->player_y = (uint16_t)py;
+    r01_play_physics_tick(&s_phys, &px, &py, dx, dy, jump, move_ok_cart, ctx, &adx, &ady);
+    ctx->player_x = px;
+    ctx->player_y = py;
     ctx->player_anim_moving = (uint8_t)((adx != 0) || (ady != 0));
 
-    cx = (int)ctx->cam_x;
-    cy = (int)ctx->cam_y;
-    r01_play_camera_update(&cx, &cy, px, py, R01_PLAY_PLAYER_W, R01_PLAY_PLAYER_H, R01_SCREEN_PX_W, R01_SCREEN_PX_H,
-                           (int)ctx->cam_deadzone_x, (int)ctx->cam_deadzone_y, (int)ctx->cam_axis_lock);
-    ctx->cam_x = (uint16_t)cx;
-    ctx->cam_y = (uint16_t)cy;
-#ifdef R01_HOST_TEST
+    r01_play_camera_update(&ctx->cam_x, &ctx->cam_y, px, py, (uint8_t)R01_PLAY_PLAYER_W, (uint8_t)R01_PLAY_PLAYER_H,
+                           (uint8_t)R01_SCREEN_PX_W, (uint8_t)R01_SCREEN_PX_H, ctx->cam_deadzone_x,
+                           ctx->cam_deadzone_y, ctx->cam_axis_lock);
     r01_sys_publish(ctx);
-#endif
     s_draw_air = 0;
     s_draw_crouch = 0;
     s_draw_adx = adx;
@@ -336,8 +281,6 @@ void r01_game_play_tick(R01GameCtx *ctx) {
     if (ctx->game_mode == R01_GAME_MODE_PLATFORMER && s_phys.grounded && (ctx->pad & R01_PAD_DOWN)) {
         s_draw_crouch = 1;
     }
-    r01_game_anim_tick(ctx, s_draw_air, s_draw_crouch, s_draw_adx, s_draw_ady);
-#ifndef R01_HOST_TEST
-    r01_game_draw_sprites(ctx, s_draw_air, s_draw_crouch, s_draw_adx, s_draw_ady);
-#endif
+    r01_game_anim_tick(ctx, (int)s_draw_air, (int)s_draw_crouch, (int)s_draw_adx, (int)s_draw_ady);
+    r01_game_draw_sprites(ctx, (int)s_draw_air, (int)s_draw_crouch, (int)s_draw_adx, (int)s_draw_ady);
 }

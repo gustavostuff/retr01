@@ -24,7 +24,7 @@ That range covers very simple games (**1** state, **1** frame, **1** sprite) and
 | **Entity behavior** (AI, input, physics, state changes, spawn rules) | **PRG** | Author in **C and/or ASM** |
 | **Entity spawn locations** (placements) | **PRG** | Author tables / code (`spawn_entity`) |
 | **Live instance state** (position, velocity, current state/frame, flags) | System RAM | PRG via the entity API |
-| **Player anim (`PA`)** (marked-player draw/collision dump for Play) | Cart, one blob after world-0 maps | Studio packs from the marked player type |
+| **Player** (marked catalog type) | Cart **global entity catalog** | Studio packs the marked player as a normal type. Play draws and collides from that def |
 
 ### Hard caps (Studio-friendly)
 
@@ -43,13 +43,13 @@ Types are cart-global. The same look in another world is the same def. Sprite at
 
 The marked **player** entity is a normal catalog type. Its part bank bits **0-3** index the same global SPR banks as every other entity. Other screens use the same global CHR block (BG + SPR).
 
-### Instances and player anim (`PA`)
+### Instances
 
 An **instance** is one placed copy of a catalog type. The catalog says what a slime looks like. An instance is the slime sitting at world (80, 40) facing left. Studio placements export as spawn rows in PRG. While the game runs, each live copy also has a RAM record (position, velocity, current state and frame). Pixel patterns and frame lists stay in the catalog. The instance only names a type and a pose.
 
-**`PA`** (player anim) is a Play helper blob, magic `'P' 'A'`. It is a flat dump of the **marked player** type's drawable frames (origin, hitbox, sprite parts) so play can animate and collide without walking the full `EntityDef` pack every frame. One blob per cart. Other entities do not get a `PA`.
+The marked **player** is the same catalog encoding. Play caches that type's states and frames at boot and walks them for draw, hitbox, and frame delay. World header bit **0** is unused.
 
-Byte packs: spawn / live / `PA` sections below. Addresses: `memory.md`.
+Byte packs: spawn / live sections below. Addresses: `memory.md`.
 
 ### Packed definition format (locked)
 
@@ -126,39 +126,9 @@ LiveInstance (12 B)
 
 **64** slots = **768 B**. Fits in system RAM. Not cart flash.
 
-Packed spawn instances (not the marked player) copy into a 16-slot RAM table at boot. Author `game_logic.c` uses `r01_entity_count`, `r01_entity_type`, `r01_entity_get_pos`, `r01_entity_set_pos`, `r01_entity_state`, and `r01_entity_set_state`. Catalog hitbox for type `t` is `r01_ent_hx/hy/hw/hh[t]` (origin-relative). `r01_world_aabb_ok(x, y, w, h)` tests that box against BG1 solids. Draw uses catalog state 0 frame 0. A non-zero live state uses that sprite's tile plus one.
+Packed spawn instances (not the marked player) copy into a 16-slot RAM table at boot. Author `game_logic.c` uses `r01_entity_count`, `r01_entity_type`, `r01_entity_get_pos`, `r01_entity_set_pos`, `r01_entity_state`, and `r01_entity_set_state`. Catalog hitbox for type `t` is `r01_ent_hx/hy/hw/hh[t]` (origin-relative). `r01_world_aabb_ok(x, y, w, h)` tests that box against BG1 solids. Draw uses catalog state 0 frame 0. A non-zero live state uses that sprite's tile plus one. Player draw walks the marked type's cached states and frames.
 
 Catalog type indexes are `R01_ENT_*` macros in `include/r01_entity_ids.h`. Warp entrance indexes are `R01_WARP_*` in `include/r01_warp_ids.h`. Export overwrites both headers. `game_logic.c` includes them and does not hardcode catalog indexes. A missing macro fails llvm-mos.
-
-### Player anim blob (`PA`, locked)
-
-Packed player frames. One blob **per cart** (after world-0 maps). World header flags bit **0** marks it present. Play reads it for the marked player.
-
-```text
-PA (variable length, max 1031 B at 4 states x 8 frames x 6 parts)
-+0   u8  'P'
-+1   u8  'A'
-+2   u8  state_count     (1..4)
-     ... State blocks in order ...
-
-State
-+0   u8  drawable_count  (drawable frames only)
-     ... Frame blocks ...
-
-Frame (8 B header + 4 B x part_count)
-+0   u8  origin_x        // authoring-space draw origin
-+1   u8  origin_y
-+2   u8  hitbox_x        // state AABB, compose space (same bytes on every frame)
-+3   u8  hitbox_y
-+4   u8  hitbox_w
-+5   u8  hitbox_h
-+6   u8  part_count      (1..6)
-+7   u8  delay           (min 1)
-+8   Part parts[part_count]
-     Part = { u8 tile, u8 attr, i8 dx, i8 dy }
-```
-
-Max fill: **3** + **4** x (**1** + **8** x (**8** + **24**)) = **1031 B**. Pose uses the current frame origin. Collision uses the current state's hitbox origin-relative to that state's **first drawable frame**, not the current anim frame.
 
 ### Camera helpers (locked intent)
 

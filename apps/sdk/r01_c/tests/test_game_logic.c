@@ -4,6 +4,7 @@
 #include <string.h>
 
 uint8_t r01_host_io[256];
+uint8_t r01_host_ram[0x8000];
 
 static int fails;
 

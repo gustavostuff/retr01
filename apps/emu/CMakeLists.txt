@@ -109,7 +109,6 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
         "${R01_REPO_ROOT}/apps/common/r01_play_physics.c"
         "${R01_REPO_ROOT}/apps/common/r01_play_collision.c"
         "${R01_REPO_ROOT}/apps/common/r01_play_anim.c"
-        "${R01_REPO_ROOT}/apps/common/r01_play_anim_cart.c"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/game_logic.c"
       COMMENT "llvm-mos Retr01 PRG"
       VERBATIM
@@ -121,7 +120,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 
   # Optional integration binaries (need a real .retr01 on argv). Registered when the sample cart exists.
   set(R01E_EXAMPLE_CART "${R01_REPO_ROOT}/example_01/example_01.retr01")
-  foreach(_t test_boot test_play)
+  foreach(_t test_boot test_play test_frame_time)
     add_executable(${_t} tests/${_t}.c)
     target_link_libraries(${_t} PRIVATE retr01_emu_core)
     if(EXISTS "${R01E_EXAMPLE_CART}")

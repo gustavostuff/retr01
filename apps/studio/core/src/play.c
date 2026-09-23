@@ -125,7 +125,7 @@ void r01_play_player_hit_rect(const R01Project *p, const R01GameCtx *ctx, int or
     if (p && pe >= 0 && p->entities[pe].state_count > 0) {
         const R01EntityState *st;
         const R01EntityFrame *fr;
-        if (state_idx < 0 || state_idx >= p->entities[pe].state_count) {
+        if (state_idx >= p->entities[pe].state_count) {
             state_idx = 0;
         }
         st = &p->entities[pe].states[state_idx];
@@ -161,13 +161,13 @@ typedef struct PlayMoveCtx {
     const R01GameCtx *ctx;
 } PlayMoveCtx;
 
-static int play_move_ok(void *user, int ox, int oy) {
+static int play_move_ok(void *user, uint16_t ox, uint16_t oy) {
     PlayMoveCtx *m = (PlayMoveCtx *)user;
     int hx, hy, hw, hh;
     if (!m || !m->w) {
         return 0;
     }
-    r01_play_player_hit_rect(m->p, m->ctx, ox, oy, &hx, &hy, &hw, &hh);
+    r01_play_player_hit_rect(m->p, m->ctx, (int)ox, (int)oy, &hx, &hy, &hw, &hh);
     if (m->ctx) {
         return r01_world_aabb_ok_list(m->w, hx, hy, hw, hh, m->ctx->solid_pat_bank, m->ctx->solid_pat_tile,
                                       (int)m->ctx->solid_pat_count);
@@ -194,15 +194,15 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy, int ju
     }
     {
         int pe = r01_world_player_entity(p);
-        int anim_dx = 0;
-        int anim_dy = 0;
+        int8_t anim_dx = 0;
+        int8_t anim_dy = 0;
         PlayMoveCtx move;
         R01PlayPhysics ph;
         r01_play_physics_init(&ph);
-        r01_play_physics_set_mode(&ph, ctx->game_mode);
-        r01_play_physics_set_gravity(&ph, ctx->plat_gravity);
-        r01_play_physics_set_jump(&ph, ctx->plat_jump);
-        r01_play_physics_set_meter(&ph, ctx->plat_meter);
+        r01_play_physics_set_mode(&ph, (uint8_t)ctx->game_mode);
+        r01_play_physics_set_gravity(&ph, (uint8_t)ctx->plat_gravity);
+        r01_play_physics_set_jump(&ph, (uint8_t)ctx->plat_jump);
+        r01_play_physics_set_meter(&ph, (uint8_t)ctx->plat_meter);
         {
             uint8_t face = (uint8_t)(ctx->pad & (R01_PAD_X | R01_PAD_Y | R01_PAD_COIN | R01_PAD_START));
             ctx->pad = face;
@@ -223,27 +223,31 @@ void r01_play_tick(R01PlayState *pl, const R01Project *p, int dx, int dy, int ju
             }
             r01_player_set_move_mul(ctx, 1);
             r01_player_anim_set_frame_delay(ctx, 0);
-            r01_play_physics_set_run_mul(&ph, r01_player_move_mul(ctx));
+            r01_play_physics_set_run_mul(&ph, (uint8_t)r01_player_move_mul(ctx));
         }
-        ph.vel_y = ctx->plat_vel_y;
-        ph.frac_x = ctx->plat_frac_x;
-        ph.frac_y = ctx->plat_frac_y;
-        ph.grounded = ctx->plat_grounded;
-        ph.jump_held = ctx->plat_jump_held;
+        ph.vel_y = (int16_t)ctx->plat_vel_y;
+        ph.frac_x = (int16_t)ctx->plat_frac_x;
+        ph.frac_y = (int16_t)ctx->plat_frac_y;
+        ph.grounded = (uint8_t)ctx->plat_grounded;
+        ph.jump_held = (uint8_t)ctx->plat_jump_held;
         move.p = p;
         move.w = w;
         move.ctx = ctx;
         {
             int crouch = 0;
             int phys_dx = dx;
+            uint16_t px = (uint16_t)ctx->player_x;
+            uint16_t py = (uint16_t)ctx->player_y;
             if (ctx->game_mode == R01_GAME_MODE_PLATFORMER && ctx->plat_grounded && dy > 0 &&
-                ctx->player_crouch_state >= 0) {
+                ctx->player_crouch_state != (uint8_t)R01_PLAY_ANIM_UNMAPPED) {
                 crouch = 1;
                 phys_dx = 0;
             }
-            r01_play_physics_tick(&ph, &ctx->player_x, &ctx->player_y, phys_dx, dy, jump_down, play_move_ok,
+            r01_play_physics_tick(&ph, &px, &py, (int8_t)phys_dx, (int8_t)dy, jump_down ? 1u : 0u, play_move_ok,
                                   &move, &anim_dx, &anim_dy);
-            ctx->player_crouching = crouch;
+            ctx->player_x = (int)px;
+            ctx->player_y = (int)py;
+            ctx->player_crouching = (uint8_t)crouch;
         }
         ctx->plat_vel_y = ph.vel_y;
         ctx->plat_frac_x = ph.frac_x;

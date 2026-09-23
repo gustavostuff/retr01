@@ -75,8 +75,8 @@ int main(int argc, char **argv) {
     int spawn_y;
     int expect_x;
     int expect_y;
-    int expect_cam_x;
-    int expect_cam_y;
+    uint16_t expect_cam_x;
+    uint16_t expect_cam_y;
     int f;
 
     if (r01e_machine_init(&m, path, err, sizeof(err)) != 0) {
@@ -106,35 +106,38 @@ int main(int argc, char **argv) {
     spawn_x = expect_x = m.play.player_x;
     spawn_y = expect_y = m.play.player_y;
     {
-        expect_cam_x = m.play.cam_x;
-        expect_cam_y = m.play.cam_y;
-        r01_play_camera_update(&expect_cam_x, &expect_cam_y, spawn_x, spawn_y, m.play.player_w, m.play.player_h,
-                               R01E_SCREEN_PX_W, R01E_SCREEN_PX_H, 32, 70, R01_PLAY_CAM_AXIS_BOTH);
-        if (m.play.cam_x != expect_cam_x || m.play.cam_y != expect_cam_y) {
+        expect_cam_x = (uint16_t)m.play.cam_x;
+        expect_cam_y = (uint16_t)m.play.cam_y;
+        r01_play_camera_update(&expect_cam_x, &expect_cam_y, (uint16_t)spawn_x, (uint16_t)spawn_y,
+                               (uint8_t)m.play.player_w, (uint8_t)m.play.player_h, (uint8_t)R01E_SCREEN_PX_W,
+                               (uint8_t)R01E_SCREEN_PX_H, 32, 70, R01_PLAY_CAM_AXIS_BOTH);
+        if (m.play.cam_x != (int)expect_cam_x || m.play.cam_y != (int)expect_cam_y) {
             fprintf(stderr, "FAIL camera at spawn: got %d,%d expected %d,%d\n", m.play.cam_x, m.play.cam_y,
-                    expect_cam_x, expect_cam_y);
+                    (int)expect_cam_x, (int)expect_cam_y);
             r01e_machine_shutdown(&m);
             return 1;
         }
     }
 
     {
-        int cam_x = 0;
-        int cam_y = 0;
+        uint16_t cam_x = 0;
+        uint16_t cam_y = 0;
         int px = R01E_SCREEN_PX_W / 2;
         int py = R01E_SCREEN_PX_H / 2;
         int prev;
         int i;
         int moved = 0;
-        r01_play_camera_snap(&cam_x, &cam_y, px, py, R01E_PLAY_PLAYER_W, R01E_PLAY_PLAYER_H, R01E_SCREEN_PX_W,
-                             R01E_SCREEN_PX_H, 32, 70, R01_PLAY_CAM_AXIS_BOTH);
-        prev = cam_x;
+        r01_play_camera_snap(&cam_x, &cam_y, (uint16_t)px, (uint16_t)py, (uint8_t)R01E_PLAY_PLAYER_W,
+                             (uint8_t)R01E_PLAY_PLAYER_H, (uint8_t)R01E_SCREEN_PX_W, (uint8_t)R01E_SCREEN_PX_H, 32,
+                             70, R01_PLAY_CAM_AXIS_BOTH);
+        prev = (int)cam_x;
         for (i = 0; i < 24; i++) {
             int d;
             px += 2;
-            r01_play_camera_update(&cam_x, &cam_y, px, py, R01E_PLAY_PLAYER_W, R01E_PLAY_PLAYER_H, R01E_SCREEN_PX_W,
-                                   R01E_SCREEN_PX_H, 32, 70, R01_PLAY_CAM_AXIS_BOTH);
-            d = cam_x - prev;
+            r01_play_camera_update(&cam_x, &cam_y, (uint16_t)px, (uint16_t)py, (uint8_t)R01E_PLAY_PLAYER_W,
+                                   (uint8_t)R01E_PLAY_PLAYER_H, (uint8_t)R01E_SCREEN_PX_W, (uint8_t)R01E_SCREEN_PX_H,
+                                   32, 70, R01_PLAY_CAM_AXIS_BOTH);
+            d = (int)cam_x - prev;
             if (d != 0 && d != 2) {
                 fprintf(stderr, "FAIL 2px deadzone engage hitch dcam=%d at step %d\n", d, i);
                 r01e_machine_shutdown(&m);
@@ -148,7 +151,7 @@ int main(int argc, char **argv) {
             if (d == 2) {
                 moved = 1;
             }
-            prev = cam_x;
+            prev = (int)cam_x;
         }
         if (!moved) {
             fprintf(stderr, "FAIL 2px run never left deadzone\n");

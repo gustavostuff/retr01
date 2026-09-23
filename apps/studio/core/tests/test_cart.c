@@ -266,12 +266,7 @@ TEST_MAIN() {
                     fr = st + rd_u16(st + 2);
                     EXPECT(fr[1] == 1, "def1 sprite count");
                     EXPECT(world_base + off_insts <= (uint32_t)flen, "off_insts in cart");
-                    EXPECT((hdr[R01_CART_WHDR_FLAGS] & R01_CART_WHDR_FLAG_PLAYER_ANIM) != 0, "PA flag");
-                    {
-                        const uint8_t *pa = img + world_base + off_insts;
-                        EXPECT(pa[0] == 'P' && pa[1] == 'A', "PA magic");
-                        EXPECT(pa[11] == 24, "PA frame0 delay");
-                    }
+                    EXPECT((hdr[R01_CART_WHDR_FLAGS] & R01_CART_WHDR_FLAG_PLAYER_ANIM) == 0, "no PA blob");
                 }
                 {
                     uint8_t prg_inst_n = img[off_prg + PRG_PLAY_INST_COUNT];

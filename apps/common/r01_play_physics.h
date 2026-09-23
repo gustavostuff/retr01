@@ -1,6 +1,8 @@
 #ifndef R01_PLAY_PHYSICS_H
 #define R01_PLAY_PHYSICS_H
 
+#include <stdint.h>
+
 /* Play movement. Top-down is axis-separated. Platformer adds gravity + jump.
  * Tune values are pixels at meter=16, except gravity which is 1/16 px per frame^2.
  * Walk is 1 px/frame at meter 16 (2 px/frame when run_mul is 2) and does not use gravity.
@@ -24,25 +26,25 @@
 #define R01_PHYS_ONE (1 << R01_PHYS_SHIFT)
 
 typedef struct R01PlayPhysics {
-    int mode;
-    int gravity; /* author units: 1/16 px per frame^2 at meter 16 */
-    int jump;
-    int fall_max;
-    int meter; /* px per meter, default 16 */
-    int vel_y; /* 8.8 px / frame (down +) */
-    int frac_x; /* 8.8 remainder, abs < 1 px */
-    int frac_y;
-    int grounded;
-    int jump_held;
-    int run_mul; /* 1 = walk, 2 = hold-X run */
+    uint8_t mode;
+    uint8_t gravity; /* author units: 1/16 px per frame^2 at meter 16 */
+    uint8_t jump;
+    uint8_t fall_max;
+    uint8_t meter; /* px per meter, default 16 */
+    int16_t vel_y; /* 8.8 px / frame (down +) */
+    int16_t frac_x; /* 8.8 remainder, abs < 1 px */
+    int16_t frac_y;
+    uint8_t grounded;
+    uint8_t jump_held;
+    uint8_t run_mul; /* 1 = walk, 2 = hold-X run */
 } R01PlayPhysics;
 
 void r01_play_physics_init(R01PlayPhysics *ph);
-void r01_play_physics_set_mode(R01PlayPhysics *ph, int mode);
-void r01_play_physics_set_gravity(R01PlayPhysics *ph, int units);
-void r01_play_physics_set_jump(R01PlayPhysics *ph, int impulse);
-void r01_play_physics_set_meter(R01PlayPhysics *ph, int px_per_meter);
-void r01_play_physics_set_run_mul(R01PlayPhysics *ph, int mul);
+void r01_play_physics_set_mode(R01PlayPhysics *ph, uint8_t mode);
+void r01_play_physics_set_gravity(R01PlayPhysics *ph, uint8_t units);
+void r01_play_physics_set_jump(R01PlayPhysics *ph, uint8_t impulse);
+void r01_play_physics_set_meter(R01PlayPhysics *ph, uint8_t px_per_meter);
+void r01_play_physics_set_run_mul(R01PlayPhysics *ph, uint8_t mul);
 void r01_play_physics_reset_air(R01PlayPhysics *ph);
 
 /*
@@ -51,8 +53,8 @@ void r01_play_physics_reset_air(R01PlayPhysics *ph);
  * Platformer uses jump edge while grounded (pad Y). Top-down uses in_dy as walk.
  * Release while rising uses 3x gravity (short hop). out_anim_* is pad delta.
  */
-void r01_play_physics_tick(R01PlayPhysics *ph, int *px, int *py, int in_dx, int in_dy, int jump_down,
-                           int (*move_ok)(void *ctx, int x, int y), void *ctx, int *out_anim_dx,
-                           int *out_anim_dy);
+void r01_play_physics_tick(R01PlayPhysics *ph, uint16_t *px, uint16_t *py, int8_t in_dx, int8_t in_dy,
+                           uint8_t jump_down, int (*move_ok)(void *ctx, uint16_t x, uint16_t y), void *ctx,
+                           int8_t *out_anim_dx, int8_t *out_anim_dy);
 
 #endif

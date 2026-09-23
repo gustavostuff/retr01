@@ -12,22 +12,22 @@ typedef struct {
     int count;
 } R01WorldAabbCtx;
 
-static int world_aabb_has_screen(void *v, int col, int row) {
+static int world_aabb_has_screen(void *v, uint8_t col, uint8_t row) {
     const R01WorldAabbCtx *c = (const R01WorldAabbCtx *)v;
     int idx;
-    if (!c || !c->w || col < 0 || col >= R01_GRID_MAX || row < 0 || row >= R01_GRID_MAX) {
+    if (!c || !c->w || col >= R01_GRID_MAX || row >= R01_GRID_MAX) {
         return 0;
     }
-    idx = r01_world_find_screen(c->w, col, row);
+    idx = r01_world_find_screen(c->w, (int)col, (int)row);
     if (idx < 0 || idx >= c->w->screen_count) {
         return 0;
     }
     return c->w->screens[idx].present;
 }
 
-static int world_aabb_solid_at(void *v, int wx, int wy) {
+static int world_aabb_solid_at(void *v, uint16_t wx, uint16_t wy) {
     const R01WorldAabbCtx *c = (const R01WorldAabbCtx *)v;
-    return r01_world_solid_at_list(c->w, wx, wy, c->banks, c->tiles, c->count);
+    return r01_world_solid_at_list(c->w, (int)wx, (int)wy, c->banks, c->tiles, c->count);
 }
 
 static int world_screen_at_pixel(const R01World *w, int wx, int wy, const R01Screen **out_screen, int *out_lx,
@@ -208,8 +208,11 @@ int r01_world_aabb_ok_list(const R01World *w, int px, int py, int bw, int bh, co
     ctx.banks = banks;
     ctx.tiles = tiles;
     ctx.count = count;
-    return r01_play_aabb_ok(px, py, bw, bh, R01_SCREEN_PX_W, R01_SCREEN_PX_H, world_aabb_has_screen,
-                            world_aabb_solid_at, &ctx);
+    if (px < 0 || py < 0 || bw < 1 || bh < 1) {
+        return 0;
+    }
+    return r01_play_aabb_ok((uint16_t)px, (uint16_t)py, (uint8_t)bw, (uint8_t)bh, (uint8_t)R01_SCREEN_PX_W,
+                            (uint8_t)R01_SCREEN_PX_H, world_aabb_has_screen, world_aabb_solid_at, &ctx);
 }
 
 int r01_world_aabb_ok(const R01Project *p, const R01World *w, int px, int py, int bw, int bh) {

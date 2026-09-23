@@ -16,7 +16,7 @@ Studio **Play** uses this same emu core after export (shared library + standalon
 | **Video** | Main FB = **VRAM + scroll** + **OAM** + **BG0** show-through under BG1 color 0 (SCALE 2x) |
 | **Host** | SDL. Keyboard or SDL Game Controller (community DB + SDL built-in mappings). First two pads are P1 / P2. Guide / Home opens Reset, Quit, 1x/2x present scale, and Mute On/Off. Pad map: P1 WASD+G/H, P2 arrows+,/. Platformer jump is face **Y** (P1 **H**, gamepad south). `r01_game_on_tick` may raise walk speed and anim frame delay from live pad bits (`R01_PAD_X` is P1 **G**). C NMI tracker fills `$7F40` from the cart BGM region (`r01_bgm_play` boot track). PC speaker mixes that window. Not MCU-S2 PWM |
 
-**Sync contract:** The packed C PRG is gameplay. llvm-mos links play tables (`$8100`), solids (`$8700`), and `R01P`. Packer patches the 16 B boot MAP at `$80E0`. Soft-boot (`R01E_SOFTBOOT=1`) uses host memcpy of VRAM and pals at boot (triage). Default boot runs cart PRG stream catchup until the start MAP write reaches **480** bytes (`vram_addr`). Collision samples the packed solid-pattern tables. Render samples that VRAM window.
+**Sync contract:** The packed C PRG is gameplay. llvm-mos links play tables (`$8100`), solids (`$8700`), and `R01P`. Packer patches the 16 B boot MAP at `$80E0`. Soft-boot (`R01E_SOFTBOOT=1`) uses host memcpy of VRAM and pals at boot (triage). Default boot runs cart PRG stream catchup until the start MAP write reaches **480** bytes (`vram_addr`). Collision samples live MAP nametables plus the `$8700` pattern list. Render samples that VRAM window.
 
 **Studio integration:** Studio **Play** / **Space** always exports, then embeds this render path. Export wait uses a Studio-local spinning boot message. Standalone `./scripts/emu.sh` stays for triage.
 
@@ -49,7 +49,7 @@ cmake --build build
 
 **Env:** `R01E_SOFTBOOT=1` forces host memcpy VRAM/pals at boot (debug). Default runs cart PRG MAP/pal stream catchup to a full start-screen payload. `R01E_SCALE=1` presents 128x120. `R01E_SCALE=2` presents 256x240 (hardware 2x, console default). `R01E_FULLSCREEN=1` uses desktop-fullscreen at that dest size, centered, and skips the debug window. **Ctrl+F** uses the largest integer multiple of that dest that fits, centered. `R01E_NO_DEBUG=1` skips the debug window only. `R01E_AUDIO_SAMPLES` (256..4096) and `R01E_AUDIO_RATE` (22050..48000) size the PC speaker mix. Home / Guide mutes the speaker while the overlay is open. Mute On keeps the speaker off after the overlay closes.
 
-**Debug (standalone `./scripts/emu.sh`):** separate OS window (~atlas width, shorter than the 2x play window): top row **BG1** VRAM 2x2 + **BG0** 2x2 (red/green viewports), second row **opacity mask** + world map + **BG**/**SPR** pals, bottom **CPU busy** chart (last **20** frames). Cyan = active display, orange = leftover VBlank work. Red line = one CRT frame (~**133k** cycles at 8 MHz). Wait on `$7F01` is idle and not counted.
+**Debug (standalone `./scripts/emu.sh`):** separate OS window (~atlas width, shorter than the 2x play window): top row **BG1** VRAM 2x2 + **BG0** 2x2 (red/green viewports), second row **opacity mask** + world map + **BG**/**SPR** pals, bottom **CPU busy** chart (last **20** frames). Cyan = active display, orange = leftover VBlank work. Red line = one CRT frame (~**133k** cycles at 8 MHz). Wait on `$7F01` is idle and not counted. `tests/test_frame_time.c` fails `example_01` when busy work exceeds that CRT budget.
 
 ## Layout
 
@@ -63,4 +63,4 @@ cmake --build build
 | `include/retr01_emu/play.h` | Follow packed PRG sys block `$02E0` |
 | `include/retr01_emu/machine.h` | Bus + frame loop |
 | `src/main.c` | Standalone SDL host |
-| `tests/` | Cart + boot + play smoke tests |
+| `tests/` | Cart + boot + play + frame-time tests |

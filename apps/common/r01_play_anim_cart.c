@@ -209,16 +209,16 @@ void r01_cart_part_pose(int origin_x, int origin_y, int part_dx, int part_dy, ui
 }
 
 void r01_play_anim_tick_cart(R01PlayAnimCtx *ctx, const R01CartPlayerAnim *anim) {
-    int delay;
+    uint8_t delay;
     int frame_count;
     if (!ctx || !anim) {
         return;
     }
-    if (ctx->player_idle_state < 0 && ctx->player_anim_state == 0) {
+    if (ctx->player_idle_state == (uint8_t)R01_PLAY_ANIM_UNMAPPED && ctx->player_anim_state == 0u) {
         ctx->player_anim_frame = 0;
         return;
     }
-    if (ctx->player_anim_state < 0 || ctx->player_anim_state >= anim->state_count) {
+    if (ctx->player_anim_state >= (uint8_t)anim->state_count) {
         return;
     }
     frame_count = (int)anim->frame_count[ctx->player_anim_state];
@@ -230,11 +230,12 @@ void r01_play_anim_tick_cart(R01PlayAnimCtx *ctx, const R01CartPlayerAnim *anim)
         return;
     }
     {
-        const uint8_t *fh = r01_cart_player_anim_frame_hdr(anim, ctx->player_anim_state, ctx->player_anim_frame);
+        const uint8_t *fh = r01_cart_player_anim_frame_hdr(anim, (int)ctx->player_anim_state,
+                                                           (int)ctx->player_anim_frame);
         delay = 0;
         if (fh && fh[7] > 0u) {
-            delay = (int)fh[7];
-        } else if (ctx->player_anim_state >= 0 && ctx->player_anim_state < R01_PLAY_ANIM_STATES_MAX) {
+            delay = fh[7];
+        } else if (ctx->player_anim_state < (uint8_t)R01_PLAY_ANIM_STATES_MAX) {
             delay = ctx->player_state_delay[ctx->player_anim_state];
         }
     }

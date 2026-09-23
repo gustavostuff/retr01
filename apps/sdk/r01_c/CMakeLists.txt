@@ -23,6 +23,7 @@ add_executable(test_game_logic
   ${R01_COMMON}/r01_play_camera.c
   ${R01_COMMON}/r01_play_physics.c
   ${R01_COMMON}/r01_play_collision.c
+  ${R01_COMMON}/r01_play_anim.c
 )
 target_include_directories(test_game_logic PRIVATE ${R01_SDK_C}/include ${R01_COMMON} ${R01_COMMON}/fw)
 target_compile_definitions(test_game_logic PRIVATE R01_HOST_TEST)
