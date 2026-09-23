@@ -59,6 +59,8 @@ typedef struct R01aUi {
     uint8_t chip_sel[R01A_BOARD_MAX_CHIPS];
     int sel_start_x[R01A_BOARD_MAX_CHIPS];
     int sel_start_y[R01A_BOARD_MAX_CHIPS];
+    uint8_t chip_follow[R01A_BOARD_MAX_CHIPS];
+    int chip_follow_from[R01A_BOARD_MAX_CHIPS];
     int chip_count;
     int selected;
     int pan_x;
@@ -115,6 +117,8 @@ static NsBreadboard *hit_breadboard(const R01aUi *ui, int mx, int my, NsPbHole *
 static NsBreadboard *ui_breadboard(const R01aUi *ui);
 static int jumper_world_ends(const R01aUi *ui, const R01aJumper *j, int *x0, int *y0, int *x1, int *y1);
 static int manhattan_h_first(int ax, int ay, int bx, int by);
+static void mark_bb_followers(R01aUi *ui);
+static void apply_bb_followers(R01aUi *ui);
 
 static void fill_rect(SDL_Renderer *r, int x, int y, int w, int h, Uint8 R, Uint8 G, Uint8 B) {
     SDL_Rect rc = {x, y, w, h};
@@ -409,7 +413,10 @@ static void begin_sel_drag(R01aUi *ui, int board_mx, int board_my) {
     for (i = 0; i < ui->chip_count; i++) {
         ui->sel_start_x[i] = ui->chips[i] ? ui->chips[i]->board_x : 0;
         ui->sel_start_y[i] = ui->chips[i] ? ui->chips[i]->board_y : 0;
+        ui->chip_follow[i] = 0;
+        ui->chip_follow_from[i] = -1;
     }
+    mark_bb_followers(ui);
 }
 
 static void move_chip_drag(R01aUi *ui, int chip_i, int board_mx, int board_my) {
@@ -423,6 +430,7 @@ static void move_chip_drag(R01aUi *ui, int chip_i, int board_mx, int board_my) {
     }
     move_entity(e, board_mx - ui->drag_grab_bx, board_my - ui->drag_grab_by);
     clamp_chip(e);
+    apply_bb_followers(ui);
 }
 
 static void move_selection_drag(R01aUi *ui, int board_mx, int board_my) {
@@ -436,6 +444,7 @@ static void move_selection_drag(R01aUi *ui, int board_mx, int board_my) {
         move_entity(ui->chips[i], ui->sel_start_x[i] + dx, ui->sel_start_y[i] + dy);
         clamp_chip(ui->chips[i]);
     }
+    apply_bb_followers(ui);
 }
 
 static int entity_tip_board(const NsEntity *e, int pin_num, int *tx, int *ty) {
@@ -469,6 +478,91 @@ static int entity_pin_hi(const NsEntity *e) {
         }
     }
     return hi;
+}
+
+static int entity_has_pin_on_bb(const NsEntity *e, const NsBreadboard *bb) {
+    int n;
+    int pin_hi;
+
+    if (!e || !bb || e->visual == NS_ENTITY_VIS_BREADBOARD) {
+        return 0;
+    }
+    pin_hi = entity_pin_hi(e);
+    for (n = 1; n <= pin_hi; n++) {
+        int tx;
+        int ty;
+        NsPbHole h;
+        int hx;
+        int hy;
+        if (!entity_tip_board(e, n, &tx, &ty)) {
+            continue;
+        }
+        if (!ns_breadboard_hit_hole(bb, tx, ty, &h)) {
+            continue;
+        }
+        ns_breadboard_hole_world(bb, h, &hx, &hy);
+        if (hx == tx && hy == ty) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int chip_is_dragged_bb(const R01aUi *ui, int i) {
+    const NsEntity *e;
+    if (i < 0 || i >= ui->chip_count) {
+        return 0;
+    }
+    e = ui->chips[i];
+    if (!e || e->visual != NS_ENTITY_VIS_BREADBOARD) {
+        return 0;
+    }
+    return ui->chip_sel[i] || i == ui->drag_chip;
+}
+
+static void mark_bb_followers(R01aUi *ui) {
+    int i;
+    int j;
+    if (!ui) {
+        return;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        if (!chip_is_dragged_bb(ui, i)) {
+            continue;
+        }
+        for (j = 0; j < ui->chip_count; j++) {
+            if (j == i || ui->chip_follow[j] || !ui->chips[j]) {
+                continue;
+            }
+            if (entity_has_pin_on_bb(ui->chips[j], (const NsBreadboard *)ui->chips[i])) {
+                ui->chip_follow[j] = 1;
+                ui->chip_follow_from[j] = i;
+            }
+        }
+    }
+}
+
+static void apply_bb_followers(R01aUi *ui) {
+    int j;
+    if (!ui) {
+        return;
+    }
+    for (j = 0; j < ui->chip_count; j++) {
+        int bi;
+        int dx;
+        int dy;
+        if (!ui->chip_follow[j] || ui->chip_sel[j] || !ui->chips[j]) {
+            continue;
+        }
+        bi = ui->chip_follow_from[j];
+        if (bi < 0 || bi >= ui->chip_count || !ui->chips[bi]) {
+            continue;
+        }
+        dx = ui->chips[bi]->board_x - ui->sel_start_x[bi];
+        dy = ui->chips[bi]->board_y - ui->sel_start_y[bi];
+        move_entity(ui->chips[j], ui->sel_start_x[j] + dx, ui->sel_start_y[j] + dy);
+        clamp_chip(ui->chips[j]);
+    }
 }
 
 static NsBreadboard *ui_breadboard(const R01aUi *ui) {
