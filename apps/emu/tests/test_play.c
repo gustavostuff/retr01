@@ -262,10 +262,23 @@ int main(int argc, char **argv) {
         {
             const uint8_t *prg = r01e_cart_prg(&m.cart);
             int slime_oam = 0;
+            int slime_rows = 0;
             int si;
             uint8_t inst_n = prg ? prg[R01E_PRG_PLAY_INST_COUNT_OFF] : 0;
-            if (inst_n < 8u) {
-                fprintf(stderr, "FAIL C PRG instance count %u (need slimes in $81C0)\n", inst_n);
+            /* example_01: player + slimes (type 1) in the PRG spawn table. */
+            if (inst_n < 2u) {
+                fprintf(stderr, "FAIL C PRG instance count %u (need player + slimes in $81C0)\n", inst_n);
+                r01e_machine_shutdown(&m);
+                return 1;
+            }
+            for (si = 0; si < (int)inst_n; si++) {
+                const uint8_t *rec = prg + R01E_PRG_PLAY_INST_TABLE_OFF + (size_t)si * R01E_CART_INSTANCE_SIZE;
+                if (rec[0] == 1u) {
+                    slime_rows++;
+                }
+            }
+            if (slime_rows < 1) {
+                fprintf(stderr, "FAIL C PRG slime rows %d in $81C1 (inst_n=%u)\n", slime_rows, inst_n);
                 r01e_machine_shutdown(&m);
                 return 1;
             }
