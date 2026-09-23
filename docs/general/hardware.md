@@ -257,7 +257,7 @@ EDAC **395-036-*** style. Looking into the console socket (or at the cart edge f
 
 **Groups:** A0-A13 from the CPU. A14-A18 from the Compositor MAP port. D0-D7 data. OE# / WE# for flash. SDA/SCL for the 24C64.
 
-**CHR fetch:** CHR is **16 BG + 16 SPR** banks on the same flash (**128 KB**). During a CHR window the cell or sprite attr bank field (4 bits) is part of the flash address: bits **0-1** on **A12-A13** (inside a 16 KB page), bits **2-3** on **A14-A15**, plane base on MAP **A16-A18**. MCU-S1 can form that address in firmware. If BG1 CHR is built in the Compositor, folding bits 2-3 onto A14/A15 is a 22V10 product-term question. See `video-graphics.md` and `open-questions.md`.
+**CHR fetch:** CHR is **16** banks on the same flash (**64 KB**). During a CHR window the cell or sprite attr bank field (4 bits) is part of the flash address: bits **0-1** on **A12-A13** (inside a 16 KB page), bits **2-3** on **A14-A15**, CHR region base on MAP **A16-A18**. MCU-S1 can form that address in firmware. If BG1 CHR is built in the Compositor, folding bits 2-3 onto A14/A15 is a 22V10 product-term question. See `video-graphics.md` and `open-questions.md`.
 
 ### Console as programmer (locked): Adafruit's UPDI Friend
 

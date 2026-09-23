@@ -30,13 +30,15 @@ One flat **32 KB PRG** window on the cart. No PRG banking. That is the same PRG 
 
 **Retr01 pushes video off PRG.** Work the NES piled onto the 6502 is handled here by PLDs, glue, and the helper AVRs: hardware scroll, cart MAP/nametable streaming, and sprites filled in **VBlank** by MCU-S1. On top of that, Retr01 adds dual BG planes with BG0 show-through and **HBlank** BG0 line prep, which the NES never had. Authors spend the same 32 KB mostly on play and behavior, not on fighting the display.
 
-## Sixteen plus sixteen CHR banks, no mapper
+## Sixteen global CHR banks, no mapper
 
 NES-style CHR banking latches **one** bank for the picture. The mapper decides which patterns may appear. Mixing a second tileset means a bank switch (often mid-frame), extra silicon on the cart, and a window the whole screen has to live in.
 
-Retr01 puts **16 BG banks and 16 SPR banks** on the cartridge at once (**128 KB**, cart-wide) with a **passive cart** (flash + save EEPROM, no mapper IC). There is no bank switching. BG and SPR pools are independent. Title screens, playfields, and the player share that pool.
+Retr01 puts **16 banks** on the cartridge at once (**64 KB**, cart-wide) with a **passive cart** (flash + save EEPROM, no mapper IC). There is no bank switching. Backgrounds, sprites, and the player share that one pool. Nametable attrs and OAM attrs use the same pack, including the same 4-bit bank field.
 
-Authority sits on the **tile or sprite**, not on a latched "current bank." Each nametable cell and each OAM entry carries a **4-bit bank index** (attr bits 0-3) and may call **any** of the 16 banks in its plane. A brick from bank 0 and a HUD glyph from bank 11 can sit on the same screen without a mapper write. See `video-graphics.md` and `memory.md`.
+A typical split is **8** banks for backgrounds and **8** for sprites and entities. That split is not a cap. How many banks go to playfields versus entities follows how much unique art each needs.
+
+Authority sits on the **tile or sprite**, not on a latched "current bank." Each nametable cell and each OAM entry carries a **4-bit bank index** (attr bits 0-3) and may call **any** of the 16 banks. A brick from bank 0 and a HUD glyph from bank 11 can sit on the same screen without a mapper write. See `video-graphics.md` and `memory.md`.
 
 ## Entity system with clear budgets
 
@@ -47,14 +49,6 @@ Studio-friendly hard cap: **32** entity **types** **cart-wide** (one global cata
 ## Console programs its own carts
 
 One DIY tool: **Adafruit's UPDI Friend**, clipped onto one shared set of motherboard male pins (no USB on console/cart/pads). A **4-pos DIP** picks MCU-M / S1 / S2 / cart. Default **all OFF** so nothing is armed. Scope is **AVRs + cart only**. PLDs, color PROM, and pad MCUs: buy **pre-programmed**, or DIY with a separate tool (Arduino Nano/Uno GAL programmers, TL866-class, Arduino-as-ISP). See `hardware.md`.
-
-## Through-hole DIY friendly layout
-
-Test points for bring-up, full-size THT status LEDs, initial **2-layer** PCBs (mobo / cart / pads), and the usual decoupling / short-clock / keep-off-the-edge rules. A **4-layer** mobo stays an option later only if bring-up or a commercial SMD spin needs it. See `hardware.md`.
-
-## Three helper AVRs
-
-MCU-M (soft I/O, saves, SPI), MCU-S1 (sprites + BG0 HBlank), MCU-S2 (pads + 8-channel software APU to PWM). Clear ownership, room to grow firmware without starving PRG.
 
 ## Light-gun ready hit detect (later)
 

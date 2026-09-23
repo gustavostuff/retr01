@@ -48,9 +48,9 @@ Magic **`retr01`**. Byte 6 is `format_ver` **6**. Pointer table names the region
 |  entity behavior, spawn tables, collision solids                     |
 |  BGM stream is in the cart BGM region. Boot track is author C        |
 +----------------------------------------------------------------------+
-| GLOBAL CHR  128 KB                                                   |
-|  16 BG banks  |  16 SPR banks                                        |
-|  256 tiles x 16 B each bank. Title, playfield, and player share this |
+| GLOBAL CHR  64 KB                                                    |
+|  16 banks. Title, playfield, sprites, and player share this          |
+|  256 tiles x 16 B each bank                                          |
 +----------------------------------------------------------------------+
 | ENTITY CATALOG  (up to 32 defs, pack in software-api.md)             |
 +----------------------------------------------------------------------+
@@ -79,7 +79,7 @@ Magic **`retr01`**. Byte 6 is `format_ver` **6**. Pointer table names the region
 | PRG | **32 KB** |
 | Global BG palette plane | **128 B** |
 | Global sprite palette plane | **128 B** |
-| Global CHR | **128 KB** (16 BG then 16 SPR banks) |
+| Global CHR | **64 KB** (16 banks) |
 | Entity catalog | Up to **32** defs (see `software-api.md`) |
 | Other-screens blob | Max **16** screens |
 | World table | **7 x 8 B** |
@@ -119,11 +119,11 @@ Compressed tracker bytecode. Not in the 32 KB PRG window. Author `r01_bgm_play(c
 | +36 | ins[8][5] wavetable ids when byte 3 is 1 |
 | +76 | FD/FE/FA payloads |
 
-**Caps:** **7** worlds, **64** present BG1 screens/world, **0..16** BG0 screens/world, **16** BG + **16** SPR banks cart-wide, **32** entity types cart-wide.
+**Caps:** **7** worlds, **64** present BG1 screens/world, **0..16** BG0 screens/world, **16** CHR banks cart-wide, **32** entity types cart-wide.
 
 ### Flash budget at max fill
 
-Worst case: all 7 worlds present, every world at 64 BG1 + 16 BG0, all 16+16 CHR packed, 32 maxed entity defs, 16 other screens at raw **480 B**, one maxed `PA` blob, full type directory. RLE and unused slots free more. Spawn locations cost **PRG**, not cart flash. Compressed BGM/SFX bytecode uses the leftover flash (outside PRG).
+Worst case: all 7 worlds present, every world at 64 BG1 + 16 BG0, all 16 CHR banks packed, 32 maxed entity defs, 16 other screens at raw **480 B**, one maxed `PA` blob, full type directory. RLE and unused slots free more. Spawn locations cost **PRG**, not cart flash. Compressed BGM/SFX bytecode uses the leftover flash (outside PRG).
 
 One maxed world blob (maps only) is **39392 B** (~38.5 KB):
 **1 x 32** (header) + **64 x 12** (BG1 dir) + **64 x 480** (BG1 payloads) + **16 x 12** (BG0 dir) + **16 x 480** (BG0 payloads).
@@ -134,7 +134,7 @@ One maxed world blob (maps only) is **39392 B** (~38.5 KB):
 | PRG (1 x 32768 B) | **32768** | **32.0** |
 | World table (7 worlds x 8 B) | **56** | ~0.1 |
 | World headers (7 worlds x 32 B) | **224** | ~0.2 |
-| Global CHR (16 BG + 16 SPR banks) | **131072** | **128.0** |
+| Global CHR (16 banks) | **65536** | **64.0** |
 | BG1 directories (7 worlds x 64 screens x 12 B) | **5376** | **~5.3** |
 | BG1 payloads (7 worlds x 64 screens x 480 B) | **215040** | **210.0** |
 | BG0 directories (7 worlds x 16 screens x 12 B) | **1344** | **~1.3** |
@@ -143,10 +143,10 @@ One maxed world blob (maps only) is **39392 B** (~38.5 KB):
 | Entity type directory (32 x u16) | **64** | **~0.1** |
 | Player anim `PA` (one cart-wide, 4x8x6 maxed) | **1031** | **~1.0** |
 | Other screens (16 screens x 480 B raw) | **7680** | **~7.5** |
-| **Used (sum of rows above)** | **482143** | **~470.8** |
-| Free (524288 flash - 482143 used) | **42145** | **~41.2** |
+| **Used (sum of rows above)** | **416607** | **~406.8** |
+| Free (524288 flash - 416607 used) | **107681** | **~105.2** |
 
-Absolute max fill **fits** with ~**41.2 KB** free. That leftover is cart room for compressed BGM (and SFX bytecode). Rough play time at typical tracker tempo: about **15 minutes** of busy 5-channel BGM, about **25 minutes** at a sparser 3-channel density, closer to **8 minutes** if every sixteenth is a unique row. Sparse loops and unused world or CHR slots go further. AKWF wavetables and DPCM samples stay in MCU-S2 flash. Real carts stay further under because entity defs are variable-length (only live sprites), screens/CHR are rarely all filled, and RLE can shrink other screens.
+Absolute max fill **fits** with ~**105.2 KB** free. That leftover is cart room for compressed BGM (and SFX bytecode). Rough play time at typical tracker tempo: about **38 minutes** of busy 5-channel BGM, about **64 minutes** at a sparser 3-channel density, closer to **20 minutes** if every sixteenth is a unique row. Sparse loops and unused world or CHR slots go further. AKWF wavetables and DPCM samples stay in MCU-S2 flash. Real carts stay further under because entity defs are variable-length (only live sprites), screens/CHR are rarely all filled, and RLE can shrink other screens.
 
 ### Global CHR
 
@@ -154,29 +154,29 @@ One cart-wide pattern pool. Playfields, other screens, and the marked player use
 
 | Topic | Value |
 | --- | --- |
-| Banks | **16** BG + **16** SPR, independent pools |
-| Size | **128 KB** (32 x 4096 B) |
+| Banks | **16**, one pool |
+| Size | **64 KB** (16 x 4096 B) |
 | Consumers | Playfield nametables, other screens, marked player, inventory icons |
 | Addressing | Each cell or sprite names bank **0-15** in its attr byte. See `video-graphics.md` |
 
-The tile or sprite has authority: its attr bank field may call any bank in that plane.
+The tile or sprite has authority: its attr bank field may call any of the 16 banks. A typical split is **8** banks for backgrounds and **8** for sprites and entities. That split is not a cap. Allocation follows how much unique art the playfields need versus the entities.
 
 ### Player patterns
 
-The marked **player** entity is a normal catalog type. Pixel patterns live in the **global SPR** banks (any of the **16**), same as every other entity.
+The marked **player** entity is a normal catalog type. Pixel patterns live in the **global CHR** banks (any of the **16**), same as every other entity.
 
 | Topic | Value |
 | --- | --- |
-| Pattern home | Global SPR banks (16 x 256 tiles) |
+| Pattern home | Global CHR banks (16 x 256 tiles) |
 | Catalog | Global entity catalog (`player_entity` index) |
-| Bank bits | Part attr bits **0-3** select SPR bank **0-15** |
-| Inventory icons | Same global SPR tiles |
+| Bank bits | Part attr bits **0-3** select bank **0-15** |
+| Inventory icons | Same global CHR tiles |
 
 ### Entity catalog (global, cart flash)
 
 **Definition:** an entity is a game being/object built from up to 4 states x 8 frames x 6 sprites. Full wording and **byte pack format** in `software-api.md`.
 
-One catalog for the cart (up to **32** types). The same type may spawn in any world. Sprite attr bank bits index **global SPR**. A wrong bank index shows the wrong tiles.
+One catalog for the cart (up to **32** types). The same type may spawn in any world. Sprite attr bank bits index **global CHR**. A wrong bank index shows the wrong tiles.
 
 | Piece | Lives in |
 | --- | --- |
@@ -207,7 +207,7 @@ Roles are labels on indexes inside the pool (Studio / PRG convention). Example: 
 
 Payload **480 B** raw or **RLE** (`flags` bit 0). RLE: `C < 0x80` copy `C+1` literals, `C >= 0x80` repeat next byte `C-0x7F` times.
 
-**CHR:** other-screen nametable / attr bank bits index the **same global CHR** as playfields (16 BG + 16 SPR).
+**CHR:** other-screen nametable / attr bank bits index the **same global CHR** as playfields (16 banks).
 
 ### MAP port
 
@@ -325,7 +325,7 @@ Full entity defs use the locked pack in `software-api.md` (type directory + Enti
 - Flat contiguous 32 KB PRG at `$8000-$FFFF` (no I/O hole)
 - I/O page `$7F00-$7FFF`
 - World caps: **7** worlds / 64 BG1 / 0..16 BG0
-- CHR: **16** BG + **16** SPR banks, cart-global, **128 KB**
+- CHR: **16** banks, cart-global, **64 KB**
 - Other screens: max **16** (shared pool), same global CHR
 - Entity types: **32** global (4 states x 8 frames x 6 sprites)
-- Marked player: global SPR banks
+- Marked player: global CHR banks

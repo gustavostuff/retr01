@@ -107,11 +107,11 @@ No other MCU-S1 video jobs run in HBlank.
 
 ## Pattern banks (cart-wide)
 
-CHR is one global pool: **16 BG banks** and **16 SPR banks**, 256 tiles each, 8x8 2bpp. Playfields, other screens, and the marked player all use this pool. See `memory.md`.
+CHR is one global pool: **16 banks**, 256 tiles each, 8x8 2bpp. Playfields, other screens, sprites, and the marked player all use this pool. A typical split is **8** banks for backgrounds and **8** for sprites and entities. That split is not a cap. See `memory.md`.
 
 The **tile or sprite** has authority: each BG cell and each sprite names **bank 0-15** in its attr byte and may mix with any other bank on the same screen.
 
-During a CHR fetch, bank bits **0-1** sit on cart **A12-A13** (inside a 16 KB page). Bits **2-3** sit on **A14-A15**. The plane base lives in MAP **A16-A18**. Same cart edge as `hardware.md`.
+During a CHR fetch, bank bits **0-1** sit on cart **A12-A13** (inside a 16 KB page). Bits **2-3** sit on **A14-A15**. The CHR region base lives in MAP **A16-A18**. Same cart edge as `hardware.md`.
 
 ## Attribute bytes
 
@@ -121,11 +121,11 @@ Same pack for BG nametable attrs and sprite / OAM attrs. The whole byte is used.
 
 | Bits | Meaning |
 | --- | --- |
-| 0-3 | Bank index (**0-15**) into global BG or SPR CHR |
+| 0-3 | Bank index (**0-15**) into global CHR |
 | 4-5 | Palette index (**0-3**) |
 | 6 | H flip |
 | 7 | V flip |
 
 Collision marks BG1 patterns by bank index and tile index. Palette and H/V flip do not affect solidity. Studio Set Solid stores those patterns in the project JSON. The packed list lives in system RAM (`$0200`, copied from PRG `$8700` at boot). Play samples the live 2x2 nametable RAM (filled with the VRAM window from MAP) against that list. Off-window cells read MAP. `r01_solid_pattern_add` is optional RAM extras. A BG1 cell is solid when its bank and tile match a marked pattern. See `software-api.md`.
 
-The marked **player** uses the same SPR bank field as every other entity (**0-15**, global SPR). Other screens use the same BG/SPR pools. See `memory.md`.
+The marked **player** uses the same bank field as every other entity (**0-15**, global CHR). Other screens use the same 16 banks. See `memory.md`.

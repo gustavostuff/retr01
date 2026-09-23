@@ -82,7 +82,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 ### 15. Entity CHR catalog
 
-**Resolved:** One global entity catalog (**32** types). Player and other entities use global SPR banks. See item 18.
+**Resolved:** One global entity catalog (**32** types). Player and other entities use global CHR banks. See item 18.
 
 ### 16. Entity caps
 
@@ -94,7 +94,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 ### 18. Global CHR + catalogs (2026-09-20)
 
-**Resolved:** **7** worlds. **64** BG1 / **16** BG0 present screens per world. CHR is **16 BG + 16 SPR** banks cart-wide (**128 KB**). One global entity catalog, **32** types, **4 x 8 x 6**, maxed def **1044 B**. Attr bits 0-3 = bank 0-15, 4-5 = pal, 6-7 = H/V flip. Collision solids are a bank+tile list in RAM. Tile anim is PRG. Passive cart, no mapper. Compressed BGM lives in cart flash outside PRG. See `memory.md`, `video-graphics.md`, `software-api.md`, `sound.md`, `selling-points.md`.
+**Resolved:** **7** worlds. **64** BG1 / **16** BG0 present screens per world. CHR is **16** banks cart-wide (**64 KB**). One global entity catalog, **32** types, **4 x 8 x 6**, maxed def **1044 B**. Attr bits 0-3 = bank 0-15, 4-5 = pal, 6-7 = H/V flip. Collision solids are a bank+tile list in RAM. Tile anim is PRG. Passive cart, no mapper. Compressed BGM lives in cart flash outside PRG. See `memory.md`, `video-graphics.md`, `software-api.md`, `sound.md`, `selling-points.md`.
 
 ### 19. Collision solids packing
 
@@ -106,7 +106,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 ### 21. Cart BGM region
 
-**Resolved:** Compressed BGM (FD/FE/FA plus wavetable ids) lives in the cart image as its own MAP region. PRG `$80FE` is the boot track index only. AKWF cycles and DPCM samples stay in MCU-S2 flash. World cap is **7**. Max-fill leftover ~**41 KB** is about **15 minutes** of busy 5-channel BGM. See `memory.md`, `sound.md`.
+**Resolved:** Compressed BGM (FD/FE/FA plus wavetable ids) lives in the cart image as its own MAP region. PRG `$80FE` is the boot track index only. AKWF cycles and DPCM samples stay in MCU-S2 flash. World cap is **7**. Max-fill leftover ~**105 KB** is about **38 minutes** of busy 5-channel BGM. See `memory.md`, `sound.md`.
 
 ## Decision log
 
@@ -143,11 +143,11 @@ Open items and close criteria. A landed decision folds into the matching doc.
 | 2026-09-15 | Cart save IC | Prefer I2C FRAM when BOM allows (drops EEPROM page-program stalls). Transfer still chunked. See `ic-comms-risks.md` #13. |
 | 2026-09-15 | Entity cart bytes | Studio packs locked EntityDef + u16 type directory. |
 | 2026-09-15 | Emu soft fences | Scroll/pal pending until VBlank. Host Play OAM/scroll at early VB. Pads latch at VB. Short EE RDY handoff (250 us). |
-| 2026-09-16 | Player item bank | Player art uses global SPR banks. |
-| 2026-09-17 | Player patterns | Marked player uses global SPR banks. See `memory.md`. |
+| 2026-09-16 | Player item bank | Player art uses global CHR banks. |
+| 2026-09-17 | Player patterns | Marked player uses global CHR banks. See `memory.md`. |
 | 2026-09-17 | Host Play boot catchup | Phase 1 emu waits for a full start MAP stream (480 B) before Host Play takes the camera 2x2 from cart. See `apps/emu/README.md`. |
 | 2026-09-19 | APU | 8-ch S2 software mix. `$7F40` is 8x4 regs (S2 never parses bytecode). BGM 1-5 / SFX 6-8. DPCM in S2 flash. NMI tracker on 6502. See `sound.md`. |
-| 2026-09-20 | CHR / maps / entities | 16+16 global banks, 8 worlds, 64 BG1 / 16 BG0, 32 types (4x8x6). Attr 4-bit bank. No mapper. See `memory.md`. |
+| 2026-09-20 | CHR / maps / entities | 16 global banks, 7 worlds, 64 BG1 / 16 BG0, 32 types (4x8x6). Attr 4-bit bank. No mapper. See `memory.md`. |
 | 2026-09-21 | Collision solids | Bank+tile pattern list in RAM `$0200` (PRG `$8700`). Pal/flip ignored. Author `r01_solid_pattern_add` in `game_logic.c`. See `memory.md`. |
 | 2026-09-21 | Author tick SDK | `r01_pad_down` / `r01_player_moving_x` / `r01_player_set_move_mul` / `r01_player_anim_set_frame_delay` from `r01_game_on_tick` in `game_logic.c`. Play is the packed PRG. See `software-api.md`. |
 | 2026-09-20 | Instance + PA | PRG spawn 6 B. RAM live 12 B. One `PA` blob cart-wide (max 1031 B). See `software-api.md`. |

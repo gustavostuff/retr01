@@ -98,7 +98,7 @@ Sample IDs are **0..15** (low nibble of `7X`). Examples: `01` kick, `02` snare, 
 
 Cart flash holds compressed **hex** streams in the **BGM** region (outside the 32 KB PRG window). **One note byte = one pitch.** At play, PRG copies the selected track into system RAM (or reads it through MAP). The 6502 expands that stream into the 8x4 window. This layer never runs on S2. AKWF cycles and DPCM sample payloads stay in MCU-S2 flash.
 
-A max-fill cart leaves ~**41 KB** for this blob (`memory.md`). That is roughly **15 minutes** of busy 5-channel BGM, or about **25 minutes** at a sparser 3-channel density. Unique sixteenth-note rows land closer to **8 minutes**.
+A max-fill cart leaves ~**105 KB** for this blob (`memory.md`). That is roughly **38 minutes** of busy 5-channel BGM, or about **64 minutes** at a sparser 3-channel density. Unique sixteenth-note rows land closer to **20 minutes**.
 
 ### Note byte
 

@@ -19,12 +19,12 @@ Worlds may also have **BG0 screens** for depth: **0..16** present screens per wo
 
 CHR is cart-global:
 
-- 16 independent BG banks.
-- 16 independent Sprite banks.
+- **16** banks in one pool. Nametable attrs and sprite attrs use the same 4-bit bank field (**0-15**).
+- A typical split is **8** banks for backgrounds and **8** for sprites and entities. That split is not a cap.
 
-Each bank is 256 patterns of 8x8 at 2bpp. Nametable and sprite attrs name **bank 0-15** per cell / sprite. See `video-graphics.md`.
+Each bank is 256 patterns of 8x8 at 2bpp. See `video-graphics.md`.
 
-Hard cap: **32** entity **types** **cart-wide** (one global catalog). On-screen instance count is soft: limited by the **64** hardware sprites in OAM (and **16**/scanline), not by the type cap. Soft art pressure without tile reuse still tops out around **21** fully maxed unique-tile types (4096 / 192). See `memory.md` and `software-api.md`.
+Hard cap: **32** entity **types** **cart-wide** (one global catalog). On-screen instance count is soft: limited by the **64** hardware sprites in OAM (and **16**/scanline), not by the type cap. Soft art pressure without tile reuse tops out around **21** fully maxed unique-tile types if entities may use the whole pool (4096 / 192). A typical 8-bank entity share is about **10** (2048 / 192). See `memory.md` and `software-api.md`.
 
 ## Movement modes
 

@@ -34,14 +34,14 @@ That range covers very simple games (**1** state, **1** frame, **1** sprite) and
 | Entities **on screen** (live instances) | Soft: limited by **OAM sprite budget**, not by type count |
 | Hardware sprites (OAM) | **64** total, **16** per scanline |
 | Global shared entity catalog | **Yes** (one pool for the cart) |
-| Player / inventory patterns | Global **SPR** banks (16). See `memory.md` |
-| Other-screen patterns | Global CHR (**16** BG + **16** SPR). See `memory.md` |
+| Player / inventory patterns | Global CHR banks (16). See `memory.md` |
+| Other-screen patterns | Global CHR (**16** banks). See `memory.md` |
 
 **Types vs on-screen:** The **32** cap is how many *kinds* of entity the cart may define. It is **not** a limit on how many entities may be visible at once. Live instances may fill the view **as long as their current frames' sprites fit in the 64 OAM slots**. Example: sixty-four 1-sprite pickups, or ten 6-sprite characters, both fine. The next spawn that would exceed free OAM fails. Scanline overflow (more than **16** sprites on one line) still drops later entries for that line.
 
-Types are cart-global. The same look in another world is the same def. Sprite attr bank bits **0-3** index **global SPR** banks **0-15**. A wrong bank index shows the wrong tiles.
+Types are cart-global. The same look in another world is the same def. Sprite attr bank bits **0-3** index **global CHR** banks **0-15**. A wrong bank index shows the wrong tiles.
 
-The marked **player** entity is a normal catalog type. Its part bank bits **0-3** index the same global SPR banks as every other entity. Other screens use the same global CHR block (BG + SPR).
+The marked **player** entity is a normal catalog type. Its part bank bits **0-3** index the same global CHR banks as every other entity. Other screens use the same 16 banks.
 
 ### Instances
 
@@ -88,7 +88,7 @@ Frame (at State + frame_off[f])
 3. `state = base + soff`.
 4. `foff = u16(state + 2 + 2*F)`. If `foff == 0` or `F >= frame_count`, invalid.
 5. `frame = state + foff`. Read `delay`, `sprite_count`, state hitbox (packed vs first drawable-frame origin), then `sprites[0..sprite_count)`.
-6. For each sprite, resolve CHR from the **global** SPR bank (attr bits 0-3) + tile.
+6. For each sprite, resolve CHR from the **global** bank (attr bits 0-3) + tile.
 
 | Piece | Max bytes |
 | --- | ---: |
