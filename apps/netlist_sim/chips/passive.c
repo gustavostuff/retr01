@@ -3,6 +3,7 @@
 #include "netlist_sim/ui_passive_assets.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 typedef struct PassiveSprite {
@@ -12,22 +13,28 @@ typedef struct PassiveSprite {
     int piv_x;
     int piv_y;
     int span_px;
+    int span_y;
 } PassiveSprite;
 
 static const PassiveSprite k_sprites[NS_PASSIVE_KIND_COUNT] = {
     {NS_UI_PASSIVE_R_RGBA, NS_UI_PASSIVE_R_W, NS_UI_PASSIVE_R_H, NS_UI_PASSIVE_R_PIV_X,
-     NS_UI_PASSIVE_R_PIV_Y, NS_UI_PASSIVE_R_SPAN_PX},
+     NS_UI_PASSIVE_R_PIV_Y, NS_UI_PASSIVE_R_SPAN_PX, NS_UI_PASSIVE_R_SPAN_Y},
     {NS_UI_PASSIVE_CCAP_RGBA, NS_UI_PASSIVE_CCAP_W, NS_UI_PASSIVE_CCAP_H, NS_UI_PASSIVE_CCAP_PIV_X,
-     NS_UI_PASSIVE_CCAP_PIV_Y, NS_UI_PASSIVE_CCAP_SPAN_PX},
+     NS_UI_PASSIVE_CCAP_PIV_Y, NS_UI_PASSIVE_CCAP_SPAN_PX, NS_UI_PASSIVE_CCAP_SPAN_Y},
     {NS_UI_PASSIVE_ECAP_RGBA, NS_UI_PASSIVE_ECAP_W, NS_UI_PASSIVE_ECAP_H, NS_UI_PASSIVE_ECAP_PIV_X,
-     NS_UI_PASSIVE_ECAP_PIV_Y, NS_UI_PASSIVE_ECAP_SPAN_PX},
+     NS_UI_PASSIVE_ECAP_PIV_Y, NS_UI_PASSIVE_ECAP_SPAN_PX, NS_UI_PASSIVE_ECAP_SPAN_Y},
     {NS_UI_PASSIVE_OSC_RGBA, NS_UI_PASSIVE_OSC_W, NS_UI_PASSIVE_OSC_H, NS_UI_PASSIVE_OSC_PIV_X,
-     NS_UI_PASSIVE_OSC_PIV_Y, NS_UI_PASSIVE_OSC_SPAN_PX},
+     NS_UI_PASSIVE_OSC_PIV_Y, NS_UI_PASSIVE_OSC_SPAN_PX, NS_UI_PASSIVE_OSC_SPAN_Y},
+    {NS_UI_PASSIVE_OSC4LEGS_RGBA, NS_UI_PASSIVE_OSC4LEGS_W, NS_UI_PASSIVE_OSC4LEGS_H,
+     NS_UI_PASSIVE_OSC4LEGS_PIV_X, NS_UI_PASSIVE_OSC4LEGS_PIV_Y, NS_UI_PASSIVE_OSC4LEGS_SPAN_PX,
+     NS_UI_PASSIVE_OSC4LEGS_SPAN_Y},
     {NS_UI_PASSIVE_D_RGBA, NS_UI_PASSIVE_D_W, NS_UI_PASSIVE_D_H, NS_UI_PASSIVE_D_PIV_X,
-     NS_UI_PASSIVE_D_PIV_Y, NS_UI_PASSIVE_D_SPAN_PX},
+     NS_UI_PASSIVE_D_PIV_Y, NS_UI_PASSIVE_D_SPAN_PX, NS_UI_PASSIVE_D_SPAN_Y},
 };
 
 static const NsEntityVTable k_passive_vt = {NULL, NULL, NULL, NULL};
+
+static int osc4_delta(int pin_num, int *dx, int *dy);
 
 static void rot_cw_delta(int dx, int dy, int steps, int *ox, int *oy) {
     int x = dx;
@@ -41,6 +48,103 @@ static void rot_cw_delta(int dx, int dy, int steps, int *ox, int *oy) {
     }
     *ox = x;
     *oy = y;
+}
+
+#define R_BAND_GOLD 10
+#define R_BAND_SILVER 11
+
+static int r_parse_ohms(const char *s, double *out) {
+    char *end = NULL;
+    double v;
+    if (!s || !s[0] || !out) {
+        return 0;
+    }
+    v = strtod(s, &end);
+    if (end == s || v <= 0.0) {
+        return 0;
+    }
+    while (*end == ' ') {
+        end++;
+    }
+    if (*end == 'k' || *end == 'K') {
+        v *= 1000.0;
+        end++;
+    } else if (*end == 'M') {
+        v *= 1000000.0;
+        end++;
+    } else if (*end == 'R' || *end == 'r') {
+        end++;
+    }
+    *out = v;
+    return 1;
+}
+
+static int r_eia_bands(const char *value, int *b) {
+    double ohms;
+    double sig;
+    int mult = 0;
+    if (!b || !r_parse_ohms(value, &ohms)) {
+        return 0;
+    }
+    sig = ohms;
+    while (sig >= 99.999) {
+        sig /= 10.0;
+        mult++;
+    }
+    while (sig < 10.0 && mult > -2) {
+        sig *= 10.0;
+        mult--;
+    }
+    if (sig < 10.0) {
+        return 0;
+    }
+    b[0] = (int)(sig / 10.0 + 1e-6);
+    b[1] = ((int)(sig + 1e-6)) % 10;
+    if (b[0] < 0 || b[0] > 9 || b[1] < 0 || b[1] > 9) {
+        return 0;
+    }
+    if (mult >= 0 && mult <= 9) {
+        b[2] = mult;
+    } else if (mult == -1) {
+        b[2] = R_BAND_GOLD;
+    } else if (mult == -2) {
+        b[2] = R_BAND_SILVER;
+    } else {
+        return 0;
+    }
+    b[3] = R_BAND_GOLD;
+    return 1;
+}
+
+static void r_band_rgb(int code, uint8_t *r, uint8_t *g, uint8_t *b) {
+    static const uint8_t k[12][3] = {
+        {18, 18, 18},    {112, 64, 30},  {198, 38, 38},  {232, 120, 28},
+        {236, 204, 32},  {38, 150, 50},  {42, 74, 198},  {132, 50, 176},
+        {132, 132, 136}, {238, 238, 238}, {206, 158, 32}, {178, 178, 186},
+    };
+    if (code < 0 || code > 11) {
+        code = 0;
+    }
+    if (r) {
+        *r = k[code][0];
+    }
+    if (g) {
+        *g = k[code][1];
+    }
+    if (b) {
+        *b = k[code][2];
+    }
+}
+
+static int r_band_at_x(int sx) {
+    static const int xs[4] = {5, 7, 9, 14};
+    int i;
+    for (i = 0; i < 4; i++) {
+        if (sx == xs[i]) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 static const PassiveSprite *sprite_for(NsPassiveKind kind) {
@@ -60,6 +164,8 @@ const char *ns_passive_kind_name(NsPassiveKind kind) {
         return "ECAP";
     case NS_PASSIVE_OSC:
         return "OSC";
+    case NS_PASSIVE_OSC4LEGS:
+        return "OSC4LEGS";
     case NS_PASSIVE_D:
         return "D";
     default:
@@ -154,20 +260,34 @@ void ns_passive_set_orient(NsPassive *p, NsPkgOrient orient) {
 
 int ns_passive_tip_board(const NsPassive *p, int pin_num, int *wx, int *wy) {
     const PassiveSprite *sp;
-    int rx, ry;
-    if (!p || !wx || !wy || pin_num < 1 || pin_num > 2) {
+    int dx;
+    int dy;
+    int rx;
+    int ry;
+    if (!p || !wx || !wy || pin_num < 1) {
         return 0;
+    }
+    sp = sprite_for(p->kind);
+    if (sp->span_y != 0) {
+        if (!osc4_delta(pin_num, &dx, &dy)) {
+            return 0;
+        }
+        rot_cw_delta(dx, dy, (int)p->base.orient, &rx, &ry);
+        *wx = p->pivot_x + rx;
+        *wy = p->pivot_y + ry;
+        return 1;
     }
     if (pin_num == 1) {
         *wx = p->pivot_x;
         *wy = p->pivot_y;
         return 1;
     }
-    sp = sprite_for(p->kind);
-    if (sp->span_px == 0) {
+    if (pin_num != 2 || sp->span_px == 0) {
         return 0;
     }
-    rot_cw_delta(sp->span_px, 0, (int)p->base.orient, &rx, &ry);
+    dx = sp->span_px;
+    dy = 0;
+    rot_cw_delta(dx, dy, (int)p->base.orient, &rx, &ry);
     *wx = p->pivot_x + rx;
     *wy = p->pivot_y + ry;
     return 1;
@@ -190,40 +310,69 @@ NsPassive *ns_passive_bank_add(NsPassiveBank *bank, NsPassiveKind kind, const ch
     p->kind = kind;
     p->polarized = (kind == NS_PASSIVE_ECAP || kind == NS_PASSIVE_D) ? 1 : 0;
     p->base.orient = NS_ORIENT_0;
-    /* Two logical leads for snap (no electrical levels yet). */
-    ns_entity_add_pin(&p->base, 1, "1", NS_PIN_IO);
-    ns_entity_add_pin(&p->base, 2, "2", NS_PIN_IO);
+    if (kind == NS_PASSIVE_OSC4LEGS) {
+        ns_entity_add_pin(&p->base, 1, "OE#", NS_PIN_IN);
+        ns_entity_add_pin(&p->base, 7, "GND", NS_PIN_PWR);
+        ns_entity_add_pin(&p->base, 8, "OUT", NS_PIN_OUT);
+        ns_entity_add_pin(&p->base, 14, "VDD", NS_PIN_IN);
+    } else if (kind == NS_PASSIVE_ECAP) {
+        ns_entity_add_pin(&p->base, 1, "-", NS_PIN_IO);
+        ns_entity_add_pin(&p->base, 2, "+", NS_PIN_IO);
+    } else if (kind == NS_PASSIVE_D) {
+        ns_entity_add_pin(&p->base, 1, "A", NS_PIN_IO);
+        ns_entity_add_pin(&p->base, 2, "K", NS_PIN_IO);
+    } else {
+        ns_entity_add_pin(&p->base, 1, "1", NS_PIN_IO);
+        ns_entity_add_pin(&p->base, 2, "2", NS_PIN_IO);
+    }
     ns_passive_set_pivot(p, 0, 0);
     return p;
 }
 
-void ns_passive_draw(SDL_Renderer *r, const NsPassive *p, int screen_pivot_x, int screen_pivot_y,
-                       int selected) {
+static void ns_passive_draw_ex(SDL_Renderer *r, NsPassiveKind kind, NsPkgOrient orient, const char *value,
+                              int screen_pivot_x, int screen_pivot_y, int selected) {
     const PassiveSprite *sp;
     int sx, sy;
     int min_x, min_y, max_x, max_y;
-    if (!r || !p) {
+    int bands[4];
+    int have_bands = 0;
+    if (!r) {
         return;
     }
-    sp = sprite_for(p->kind);
+    sp = sprite_for(kind);
+    if (kind == NS_PASSIVE_R) {
+        have_bands = r_eia_bands(value, bands);
+    }
     SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
     for (sy = 0; sy < sp->h; sy++) {
         for (sx = 0; sx < sp->w; sx++) {
             const uint8_t *px = sp->rgba + ((size_t)sy * (size_t)sp->w + (size_t)sx) * 4u;
             int dx, dy, rx, ry;
+            uint8_t cr = px[0];
+            uint8_t cg = px[1];
+            uint8_t cb = px[2];
             if (px[3] == 0) {
                 continue;
             }
+            if (kind == NS_PASSIVE_R && cr > 200 && cg > 200 && cb > 200) {
+                int bi = r_band_at_x(sx);
+                cr = 214;
+                cg = 186;
+                cb = 132;
+                if (have_bands && bi >= 0) {
+                    r_band_rgb(bands[bi], &cr, &cg, &cb);
+                }
+            }
             dx = sx - sp->piv_x;
             dy = sy - sp->piv_y;
-            rot_cw_delta(dx, dy, (int)p->base.orient, &rx, &ry);
-            SDL_SetRenderDrawColor(r, px[0], px[1], px[2], px[3]);
+            rot_cw_delta(dx, dy, (int)orient, &rx, &ry);
+            SDL_SetRenderDrawColor(r, cr, cg, cb, px[3]);
             SDL_RenderDrawPoint(r, screen_pivot_x + rx, screen_pivot_y + ry);
         }
     }
     SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
     if (selected) {
-        passive_aabb_about_pivot(sp, p->base.orient, &min_x, &min_y, &max_x, &max_y);
+        passive_aabb_about_pivot(sp, orient, &min_x, &min_y, &max_x, &max_y);
         SDL_SetRenderDrawColor(r, 255, 220, 80, 255);
         {
             SDL_Rect rc = {screen_pivot_x + min_x - 1, screen_pivot_y + min_y - 1, max_x - min_x + 3,
@@ -231,6 +380,111 @@ void ns_passive_draw(SDL_Renderer *r, const NsPassive *p, int screen_pivot_x, in
             SDL_RenderDrawRect(r, &rc);
         }
     }
+}
+
+void ns_passive_draw_kind(SDL_Renderer *r, NsPassiveKind kind, NsPkgOrient orient, int screen_pivot_x,
+                         int screen_pivot_y, int selected) {
+    ns_passive_draw_ex(r, kind, orient, NULL, screen_pivot_x, screen_pivot_y, selected);
+}
+
+void ns_passive_draw(SDL_Renderer *r, const NsPassive *p, int screen_pivot_x, int screen_pivot_y,
+                       int selected) {
+    if (!p) {
+        return;
+    }
+    ns_passive_draw_ex(r, p->kind, p->base.orient, p->value, screen_pivot_x, screen_pivot_y, selected);
+}
+
+static int osc4_delta(int pin_num, int *dx, int *dy) {
+    const PassiveSprite *sp = sprite_for(NS_PASSIVE_OSC4LEGS);
+    if (!dx || !dy) {
+        return 0;
+    }
+    /* Filename pivot is pin 14 (top-left, VDD). Top-right 8, bottom-left 1, bottom-right 7. */
+    if (pin_num == 14) {
+        *dx = 0;
+        *dy = 0;
+        return 1;
+    }
+    if (pin_num == 8) {
+        *dx = sp->span_px;
+        *dy = 0;
+        return 1;
+    }
+    if (pin_num == 1) {
+        *dx = 0;
+        *dy = sp->span_y;
+        return 1;
+    }
+    if (pin_num == 7) {
+        *dx = sp->span_px;
+        *dy = sp->span_y;
+        return 1;
+    }
+    return 0;
+}
+
+static void osc4_aabb(NsPkgOrient orient, int *min_x, int *min_y, int *max_x, int *max_y) {
+    passive_aabb_about_pivot(sprite_for(NS_PASSIVE_OSC4LEGS), orient, min_x, min_y, max_x, max_y);
+}
+
+int ns_osc4legs_chip_tip(const NsEntity *e, int pin_num, int *wx, int *wy) {
+    int min_x;
+    int min_y;
+    int max_x;
+    int max_y;
+    int dx;
+    int dy;
+    int rx;
+    int ry;
+    if (!e || !wx || !wy || !osc4_delta(pin_num, &dx, &dy)) {
+        return 0;
+    }
+    osc4_aabb(e->orient, &min_x, &min_y, &max_x, &max_y);
+    rot_cw_delta(dx, dy, (int)e->orient, &rx, &ry);
+    *wx = e->board_x - min_x + rx;
+    *wy = e->board_y - min_y + ry;
+    return 1;
+}
+
+void ns_osc4legs_sync_aabb(NsEntity *e) {
+    int min_x;
+    int min_y;
+    int max_x;
+    int max_y;
+    if (!e) {
+        return;
+    }
+    osc4_aabb(e->orient, &min_x, &min_y, &max_x, &max_y);
+    e->body_w = max_x - min_x + 1;
+    e->body_h = max_y - min_y + 1;
+    if (e->body_w < 1) {
+        e->body_w = 1;
+    }
+    if (e->body_h < 1) {
+        e->body_h = 1;
+    }
+}
+
+void ns_osc4legs_set_orient(NsEntity *e, NsPkgOrient orient) {
+    int p1x;
+    int p1y;
+    int min_x;
+    int min_y;
+    int max_x;
+    int max_y;
+    if (!e) {
+        return;
+    }
+    if (!ns_osc4legs_chip_tip(e, 14, &p1x, &p1y)) {
+        p1x = e->board_x;
+        p1y = e->board_y;
+    }
+    e->orient = orient;
+    osc4_aabb(e->orient, &min_x, &min_y, &max_x, &max_y);
+    e->board_x = p1x + min_x;
+    e->board_y = p1y + min_y;
+    ns_osc4legs_sync_aabb(e);
 }
 
 static void add_n(NsPassiveBank *bank, NsPassiveKind kind, const char *prefix, int *seq,
@@ -256,9 +510,9 @@ int ns_passive_bank_spawn_bom(NsPassiveBank *bank) {
     ns_passive_bank_clear(bank);
 
     /* Ordered: OSC, CCAP, ECAP, R. No diodes on this BOM. */
-    add_n(bank, NS_PASSIVE_OSC, "Y", &y_seq, "8.000MHz", 1);
-    add_n(bank, NS_PASSIVE_OSC, "Y", &y_seq, "5.369318MHz", 1);
-    add_n(bank, NS_PASSIVE_OSC, "Y", &y_seq, "14.31818MHz", 1);
+    add_n(bank, NS_PASSIVE_OSC4LEGS, "Y", &y_seq, "8.000MHz", 1);
+    add_n(bank, NS_PASSIVE_OSC4LEGS, "Y", &y_seq, "5.369318MHz", 1);
+    add_n(bank, NS_PASSIVE_OSC4LEGS, "Y", &y_seq, "14.31818MHz", 1);
 
     add_n(bank, NS_PASSIVE_CCAP, "C", &c_seq, "100nF", 21);
     add_n(bank, NS_PASSIVE_CCAP, "C", &c_seq, "22pF", 6);

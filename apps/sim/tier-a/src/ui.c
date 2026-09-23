@@ -97,6 +97,10 @@ typedef struct R01aUi {
     int ctx_ly;
     int ctx_bx;
     int ctx_by;
+    int fps;
+    int fps_n;
+    Uint32 fps_t0;
+    int pin_gray;
 } R01aUi;
 
 static NsBreadboard *ui_bb_named(const R01aUi *ui, const char *ref);
@@ -450,7 +454,7 @@ static int entity_pin_hi(const NsEntity *e) {
     if (e->visual == NS_ENTITY_VIS_PASSIVE) {
         return e->pin_count;
     }
-    if (e->visual != NS_ENTITY_VIS_PWR && e->visual != NS_ENTITY_VIS_OSC) {
+    if (e->visual != NS_ENTITY_VIS_OSC) {
         return 0;
     }
     for (i = 0; i < e->pin_count; i++) {
@@ -624,6 +628,13 @@ static int rotate_selected(R01aUi *ui) {
             n++;
             continue;
         }
+        if (e->visual == NS_ENTITY_VIS_OSC) {
+            ns_osc4legs_set_orient(e, ns_orient_next_cw(e->orient));
+            clamp_chip(e);
+            snap_chip_to_breadboard(ui, i);
+            n++;
+            continue;
+        }
         if (e->visual == NS_ENTITY_VIS_PASSIVE) {
             ns_passive_set_orient((NsPassive *)e, ns_orient_next_cw(e->orient));
             clamp_chip(e);
@@ -788,48 +799,6 @@ static void draw_dip_pad_v(SDL_Renderer *r, int py, int body_edge_x, int outward
     }
 }
 
-static void blit_rgba(SDL_Renderer *r, int dx, int dy, const uint8_t *rgba, int w, int h) {
-    int x;
-    int y;
-    for (y = 0; y < h; y++) {
-        for (x = 0; x < w; x++) {
-            const uint8_t *p = rgba + ((size_t)y * (size_t)w + (size_t)x) * 4u;
-            if (p[3] == 0) {
-                continue;
-            }
-            SDL_SetRenderDrawColor(r, p[0], p[1], p[2], 255);
-            SDL_RenderDrawPoint(r, dx + x, dy + y);
-        }
-    }
-}
-
-static void draw_glyph_pins(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e) {
-    int i;
-    if (!e) {
-        return;
-    }
-    for (i = 0; i < e->pin_count; i++) {
-        int tbx;
-        int tby;
-        Uint8 tint[3];
-        int rot;
-        if (!entity_tip_board(e, e->pins[i].number, &tbx, &tby)) {
-            continue;
-        }
-        pin_level_rgb(e->pins[i].level, e->pins[i].dir, &tint[0], &tint[1], &tint[2]);
-        if (tby < e->board_y) {
-            rot = 0;
-        } else if (tby > e->board_y + e->body_h) {
-            rot = 2;
-        } else if (tbx < e->board_x) {
-            rot = 3;
-        } else {
-            rot = 1;
-        }
-        blit_pin_rot(r, board_sx(ui, tbx), board_sy(ui, tby), rot, tint);
-    }
-}
-
 static unsigned label_seed(const NsEntity *e) {
     unsigned seed = 0;
     const char *s = e->refdes ? e->refdes : (e->part ? e->part : "");
@@ -865,7 +834,13 @@ static void draw_ic(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e, int se
             continue;
         }
         dip_pin_pos(e, num, &along, &side_pin1);
-        pin_level_rgb(e->pins[i].level, e->pins[i].dir, &tint[0], &tint[1], &tint[2]);
+        if (ui->pin_gray) {
+            tint[0] = 120;
+            tint[1] = 125;
+            tint[2] = 110;
+        } else {
+            pin_level_rgb(e->pins[i].level, e->pins[i].dir, &tint[0], &tint[1], &tint[2]);
+        }
         switch (e->orient) {
         case NS_ORIENT_90:
             draw_dip_pad_v(r, y + along, side_pin1 ? x : (x + e->body_w), side_pin1, tint);
@@ -927,26 +902,14 @@ static void draw_ic(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e, int se
     }
 }
 
-static void draw_pwr(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e, int selected) {
-    int x = board_sx(ui, e->board_x);
-    int y = board_sy(ui, e->board_y);
-    int ix = x + (e->body_w - NS_UI_BATTERY_W) / 2;
-    int iy = y + 2;
-    draw_glyph_pins(r, ui, e);
-    fill_rect(r, x, y, e->body_w, e->body_h, 0, 0, 0);
-    blit_rgba(r, ix, iy, NS_UI_BATTERY_RGBA, NS_UI_BATTERY_W, NS_UI_BATTERY_H);
-    draw_selection(r, x, y, e->body_w, e->body_h, selected);
-}
-
 static void draw_osc(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e, int selected) {
-    int x = board_sx(ui, e->board_x);
-    int y = board_sy(ui, e->board_y);
-    int ix = x + (e->body_w - NS_UI_OSC_W) / 2;
-    int iy = y + (e->body_h - NS_UI_OSC_H) / 2;
-    draw_glyph_pins(r, ui, e);
-    fill_rect(r, x, y, e->body_w, e->body_h, 0, 0, 0);
-    blit_rgba(r, ix, iy, NS_UI_OSC_RGBA, NS_UI_OSC_W, NS_UI_OSC_H);
-    draw_selection(r, x, y, e->body_w, e->body_h, selected);
+    int p1x;
+    int p1y;
+    if (!ns_osc4legs_chip_tip(e, 14, &p1x, &p1y)) {
+        return;
+    }
+    ns_passive_draw_kind(r, NS_PASSIVE_OSC4LEGS, e->orient, board_sx(ui, p1x), board_sy(ui, p1y),
+                        selected);
 }
 
 static void draw_lcd(SDL_Renderer *r, R01aUi *ui, NsVideoSink *sink, int selected) {
@@ -1067,7 +1030,6 @@ static NsEntity *ui_ent(const R01aUi *ui, const char *ref) {
 }
 
 static void pin_net_build(R01aUi *ui) {
-    NsEntity *ps1 = ui_ent(ui, "PS1");
     NsEntity *y2 = ui_ent(ui, "Y2");
     NsEntity *y3 = ui_ent(ui, "Y3");
     NsEntity *bx = ui_ent(ui, "UPLDX");
@@ -1079,32 +1041,30 @@ static void pin_net_build(R01aUi *ui) {
     char aname[4];
 
     g_pin_slot_count = 0;
-    pin_net_link(ps1, "VDD", y2, "VDD");
-    pin_net_link(ps1, "VDD", y2, "OE#");
-    pin_net_link(ps1, "VDD", y3, "VDD");
-    pin_net_link(ps1, "VDD", y3, "OE#");
-    pin_net_link(ps1, "VDD", bx, "VCC");
-    pin_net_link(ps1, "VDD", by, "VCC");
-    pin_net_link(ps1, "VDD", u24, "VCC");
-    pin_net_link(ps1, "VDD", u24, "VPP");
-    pin_net_link(ps1, "VDD", enc, "APOS");
-    pin_net_link(ps1, "VDD", enc, "DPOS");
-    pin_net_link(ps1, "VDD", bx, "RES#");
-    pin_net_link(ps1, "VDD", by, "RES#");
-    pin_net_link(ps1, "VDD", u24, "PGM#");
-    pin_net_link(ps1, "VDD", enc, "ENCD");
-    pin_net_link(ps1, "VDD", enc, "STND");
-    pin_net_link(ps1, "VDD", enc, "VSYNC");
-    pin_net_link(ps1, "GND", y2, "GND");
-    pin_net_link(ps1, "GND", y3, "GND");
-    pin_net_link(ps1, "GND", bx, "GND");
-    pin_net_link(ps1, "GND", by, "GND");
-    pin_net_link(ps1, "GND", u24, "GND");
-    pin_net_link(ps1, "GND", enc, "AGND");
-    pin_net_link(ps1, "GND", enc, "DGND");
-    pin_net_link(ps1, "GND", enc, "SELECT");
-    pin_net_link(ps1, "GND", u24, "CE#");
-    pin_net_link(ps1, "GND", u24, "OE#");
+    pin_net_link(y2, "VDD", y2, "OE#");
+    pin_net_link(y2, "VDD", y3, "VDD");
+    pin_net_link(y2, "VDD", y3, "OE#");
+    pin_net_link(y2, "VDD", bx, "VCC");
+    pin_net_link(y2, "VDD", by, "VCC");
+    pin_net_link(y2, "VDD", u24, "VCC");
+    pin_net_link(y2, "VDD", u24, "VPP");
+    pin_net_link(y2, "VDD", enc, "APOS");
+    pin_net_link(y2, "VDD", enc, "DPOS");
+    pin_net_link(y2, "VDD", bx, "RES#");
+    pin_net_link(y2, "VDD", by, "RES#");
+    pin_net_link(y2, "VDD", u24, "PGM#");
+    pin_net_link(y2, "VDD", enc, "ENCD");
+    pin_net_link(y2, "VDD", enc, "STND");
+    pin_net_link(y2, "VDD", enc, "VSYNC");
+    pin_net_link(y2, "GND", y3, "GND");
+    pin_net_link(y2, "GND", bx, "GND");
+    pin_net_link(y2, "GND", by, "GND");
+    pin_net_link(y2, "GND", u24, "GND");
+    pin_net_link(y2, "GND", enc, "AGND");
+    pin_net_link(y2, "GND", enc, "DGND");
+    pin_net_link(y2, "GND", enc, "SELECT");
+    pin_net_link(y2, "GND", u24, "CE#");
+    pin_net_link(y2, "GND", u24, "OE#");
     pin_net_link(y2, "DOT", ui_ent(ui, "R12"), "1");
     pin_net_link(ui_ent(ui, "R12"), "2", bx, "CLK");
     pin_net_link(y3, "FSC", ui_ent(ui, "R13"), "1");
@@ -1118,7 +1078,7 @@ static void pin_net_build(R01aUi *ui) {
     }
     for (i = 6; i <= 13; i++) {
         snprintf(aname, sizeof(aname), "A%d", i);
-        pin_net_link(ps1, "GND", u24, aname);
+        pin_net_link(y2, "GND", u24, aname);
     }
     pin_net_link(u24, "O7", ui_ent(ui, "R1"), "1");
     pin_net_link(ui_ent(ui, "R1"), "2", enc, "RIN");
@@ -1137,11 +1097,11 @@ static void pin_net_build(R01aUi *ui) {
     pin_net_link(u24, "O0", ui_ent(ui, "R8"), "1");
     pin_net_link(ui_ent(ui, "R8"), "2", enc, "BIN");
     pin_net_link(enc, "RIN", ui_ent(ui, "R9"), "1");
-    pin_net_link(ui_ent(ui, "R9"), "2", ps1, "GND");
+    pin_net_link(ui_ent(ui, "R9"), "2", y2, "GND");
     pin_net_link(enc, "GIN", ui_ent(ui, "R10"), "1");
-    pin_net_link(ui_ent(ui, "R10"), "2", ps1, "GND");
+    pin_net_link(ui_ent(ui, "R10"), "2", y2, "GND");
     pin_net_link(enc, "BIN", ui_ent(ui, "R11"), "1");
-    pin_net_link(ui_ent(ui, "R11"), "2", ps1, "GND");
+    pin_net_link(ui_ent(ui, "R11"), "2", y2, "GND");
 }
 
 static int hit_pin_at(const R01aUi *ui, int board_mx, int board_my, int *chip_out, int *pin_out) {
@@ -1219,23 +1179,23 @@ static int pin_name_is_vdd(const char *name) {
                     strcmp(name, "DPOS") == 0);
 }
 
-static int pin_on_ps1_net(const R01aUi *ui, const NsEntity *e, int pin_index, const char *rail) {
-    NsEntity *ps1;
+static int pin_on_hub_net(const R01aUi *ui, const NsEntity *e, int pin_index, const char *rail) {
+    NsEntity *hub;
     const NsPin *rp;
     int rslot;
     int slot;
     if (!e || pin_index < 0 || pin_index >= e->pin_count || !rail) {
         return 0;
     }
-    ps1 = ui_ent(ui, "PS1");
-    if (!ps1) {
+    hub = ui_ent(ui, "Y2");
+    if (!hub) {
         return 0;
     }
-    rp = ns_entity_pin_named_const(ps1, rail);
+    rp = ns_entity_pin_named_const(hub, rail);
     if (!rp) {
         return 0;
     }
-    rslot = pin_net_find(ps1, (int)(rp - ps1->pins));
+    rslot = pin_net_find(hub, (int)(rp - hub->pins));
     slot = pin_net_find((NsEntity *)e, pin_index);
     if (rslot < 0 || slot < 0) {
         return 0;
@@ -1250,7 +1210,7 @@ static int pin_on_gnd_net(const R01aUi *ui, const NsEntity *e, int pin_index) {
     if (pin_name_is_gnd(e->pins[pin_index].name)) {
         return 1;
     }
-    return pin_on_ps1_net(ui, e, pin_index, "GND");
+    return pin_on_hub_net(ui, e, pin_index, "GND");
 }
 
 static int pin_on_vdd_net(const R01aUi *ui, const NsEntity *e, int pin_index) {
@@ -1260,18 +1220,37 @@ static int pin_on_vdd_net(const R01aUi *ui, const NsEntity *e, int pin_index) {
     if (pin_name_is_vdd(e->pins[pin_index].name)) {
         return 1;
     }
-    return pin_on_ps1_net(ui, e, pin_index, "VDD");
+    return pin_on_hub_net(ui, e, pin_index, "VDD");
 }
 
 static int hole_is_neg_rail(NsPbHole h) {
-    return h.lane == NS_PB_LANE_TOP_NEG || h.lane == NS_PB_LANE_BOT_NEG;
+    return h.lane == NS_PB_LANE_TOP_NEG;
 }
 
 static int hole_is_pos_rail(NsPbHole h) {
-    return h.lane == NS_PB_LANE_TOP_POS || h.lane == NS_PB_LANE_BOT_POS;
+    return h.lane == NS_PB_LANE_TOP_POS;
 }
 
-static int ui_hover_rail_xy(const R01aUi *ui, int pos, int *wx, int *wy) {
+static int bb_is_powered(const NsBreadboard *bb) {
+    return bb && bb->base.refdes && strcmp(bb->base.refdes, "BB1") == 0;
+}
+
+static const NsBreadboard *ui_powered_bb(const R01aUi *ui) {
+    int i;
+    for (i = 0; i < ui->chip_count; i++) {
+        NsEntity *e = ui->chips[i];
+        if (!e || e->visual != NS_ENTITY_VIS_BREADBOARD) {
+            continue;
+        }
+        if (bb_is_powered((const NsBreadboard *)e)) {
+            return (const NsBreadboard *)e;
+        }
+    }
+    return NULL;
+}
+
+static int ui_hover_rail(const R01aUi *ui, int pos, int *wx, int *wy, const NsBreadboard **bb_out,
+                         NsPbHole *h_out) {
     int i;
     for (i = 0; i < ui->chip_count; i++) {
         const NsBreadboard *bb;
@@ -1280,7 +1259,7 @@ static int ui_hover_rail_xy(const R01aUi *ui, int pos, int *wx, int *wy) {
             continue;
         }
         bb = (const NsBreadboard *)e;
-        if (!bb->hover_valid) {
+        if (!bb->hover_valid || !bb_is_powered(bb)) {
             continue;
         }
         if (pos) {
@@ -1293,9 +1272,19 @@ static int ui_hover_rail_xy(const R01aUi *ui, int pos, int *wx, int *wy) {
         if (wx && wy) {
             ns_breadboard_hole_world(bb, bb->hover, wx, wy);
         }
+        if (bb_out) {
+            *bb_out = bb;
+        }
+        if (h_out) {
+            *h_out = bb->hover;
+        }
         return 1;
     }
     return 0;
+}
+
+static int ui_hover_rail_xy(const R01aUi *ui, int pos, int *wx, int *wy) {
+    return ui_hover_rail(ui, pos, wx, wy, NULL, NULL);
 }
 
 static int rail_right_col(int lane) {
@@ -1310,84 +1299,41 @@ static int rail_right_col(int lane) {
 }
 
 static int ui_ground_rail_tip(const R01aUi *ui, int ax, int ay, int *gx, int *gy) {
-    int i;
+    const NsBreadboard *bb = ui_powered_bb(ui);
     int best_d = -1;
     int found = 0;
-    int lanes[2];
-    lanes[0] = NS_PB_LANE_TOP_NEG;
-    lanes[1] = NS_PB_LANE_BOT_NEG;
-    for (i = 0; i < ui->chip_count; i++) {
-        NsEntity *e = ui->chips[i];
-        const NsBreadboard *bb;
-        int li;
-        if (!e || e->visual != NS_ENTITY_VIS_BREADBOARD) {
+    int edge;
+    if (!bb) {
+        return 0;
+    }
+    for (edge = 0; edge < 2; edge++) {
+        NsPbHole h;
+        int hx;
+        int hy;
+        int dx;
+        int dy;
+        int d;
+        h.lane = NS_PB_LANE_TOP_NEG;
+        h.col = edge ? rail_right_col(h.lane) : 0;
+        if (!ns_breadboard_hole_exists(h)) {
             continue;
         }
-        bb = (const NsBreadboard *)e;
-        for (li = 0; li < 2; li++) {
-            int edge;
-            for (edge = 0; edge < 2; edge++) {
-                NsPbHole h;
-                int hx;
-                int hy;
-                int dx;
-                int dy;
-                int d;
-                h.lane = lanes[li];
-                h.col = edge ? rail_right_col(h.lane) : 0;
-                if (!ns_breadboard_hole_exists(h)) {
-                    continue;
-                }
-                ns_breadboard_hole_world(bb, h, &hx, &hy);
-                dx = hx - ax;
-                dy = hy - ay;
-                d = dx * dx + dy * dy;
-                if (!found || d < best_d) {
-                    best_d = d;
-                    found = 1;
-                    if (gx) {
-                        *gx = hx;
-                    }
-                    if (gy) {
-                        *gy = hy;
-                    }
-                }
+        ns_breadboard_hole_world(bb, h, &hx, &hy);
+        dx = hx - ax;
+        dy = hy - ay;
+        d = dx * dx + dy * dy;
+        if (!found || d < best_d) {
+            best_d = d;
+            found = 1;
+            if (gx) {
+                *gx = hx;
+            }
+            if (gy) {
+                *gy = hy;
             }
         }
     }
     return found;
-}
-
-static void pin_outward(const NsEntity *e, int pin_index, int *ox, int *oy) {
-    int tx;
-    int ty;
-    *ox = 0;
-    *oy = 1;
-    if (!e || pin_index < 0 || pin_index >= e->pin_count) {
-        return;
-    }
-    if (!entity_tip_board(e, e->pins[pin_index].number, &tx, &ty)) {
-        return;
-    }
-    if (ty < e->board_y) {
-        *ox = 0;
-        *oy = -1;
-        return;
-    }
-    if (ty > e->board_y + e->body_h) {
-        *ox = 0;
-        *oy = 1;
-        return;
-    }
-    if (tx < e->board_x) {
-        *ox = -1;
-        *oy = 0;
-        return;
-    }
-    if (tx > e->board_x + e->body_w) {
-        *ox = 1;
-        *oy = 0;
-    }
 }
 
 static void elbow_pts(int ax, int ay, int bx, int by, int h_first, int jog, int *x, int *y) {
@@ -1466,10 +1412,180 @@ static void draw_2elbow(SDL_Renderer *r, int ax, int ay, int bx, int by, int h_f
     }
 }
 
-static void draw_rail_net_from(SDL_Renderer *r, const R01aUi *ui, int ax, int ay, int h_first, int vdd) {
+static int phys_strip_find(int *parent, int s) {
+    if (!parent || s < 0 || s >= NS_PB_STRIPS) {
+        return s;
+    }
+    while (parent[s] != s) {
+        parent[s] = parent[parent[s]];
+        s = parent[s];
+    }
+    return s;
+}
+
+static void phys_strip_union(int *parent, int a, int b) {
+    int ra;
+    int rb;
+    if (!parent) {
+        return;
+    }
+    ra = phys_strip_find(parent, a);
+    rb = phys_strip_find(parent, b);
+    if (ra != rb && ra >= 0 && ra < NS_PB_STRIPS) {
+        parent[rb] = ra;
+    }
+}
+
+static int jumper_matches_bb(const R01aJumper *j, const NsBreadboard *bb) {
+    const char *ref;
+    if (!j || !bb || !bb->base.refdes) {
+        return 0;
+    }
+    ref = j->bb_ref[0] ? j->bb_ref : "BB1";
+    return strcmp(ref, bb->base.refdes) == 0;
+}
+
+static void phys_nets_on_bb(int *parent, const R01aBoard *board, const NsBreadboard *bb) {
+    int s;
+    int i;
+    for (s = 0; s < NS_PB_STRIPS; s++) {
+        parent[s] = s;
+    }
+    if (!board || !bb) {
+        return;
+    }
+    for (i = 0; i < board->jumper_count; i++) {
+        if (!jumper_matches_bb(&board->jumpers[i], bb)) {
+            continue;
+        }
+        phys_strip_union(parent, ns_breadboard_strip_id(board->jumpers[i].a),
+                         ns_breadboard_strip_id(board->jumpers[i].b));
+    }
+}
+
+static int pin_bb_strip(const R01aUi *ui, const NsEntity *e, int pin_index, const NsBreadboard **bb_out,
+                        int *strip_out) {
+    int tx;
+    int ty;
+    int i;
+    if (!ui || !e || pin_index < 0 || pin_index >= e->pin_count) {
+        return 0;
+    }
+    if (!entity_tip_board(e, e->pins[pin_index].number, &tx, &ty)) {
+        return 0;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        NsEntity *be = ui->chips[i];
+        int strip;
+        if (!be || be->visual != NS_ENTITY_VIS_BREADBOARD) {
+            continue;
+        }
+        if (!ns_breadboard_tip_strip((const NsBreadboard *)be, tx, ty, &strip)) {
+            continue;
+        }
+        if (bb_out) {
+            *bb_out = (const NsBreadboard *)be;
+        }
+        if (strip_out) {
+            *strip_out = strip;
+        }
+        return 1;
+    }
+    return 0;
+}
+
+static int pins_phys_connected(const R01aUi *ui, const R01aBoard *board, const NsEntity *a, int ap,
+                              const NsEntity *b, int bp) {
+    const NsBreadboard *bba;
+    const NsBreadboard *bbb;
+    int sa;
+    int sb;
+    int parent[NS_PB_STRIPS];
+    if (!pin_bb_strip(ui, a, ap, &bba, &sa) || !pin_bb_strip(ui, b, bp, &bbb, &sb)) {
+        return 0;
+    }
+    if (bba != bbb) {
+        return 0;
+    }
+    phys_nets_on_bb(parent, board, bba);
+    return phys_strip_find(parent, sa) == phys_strip_find(parent, sb);
+}
+
+static int pin_phys_on_hole_net(const R01aUi *ui, const R01aBoard *board, const NsEntity *e, int pin_index,
+                               const NsBreadboard *bb, NsPbHole h) {
+    const NsBreadboard *pbb;
+    int ps;
+    int parent[NS_PB_STRIPS];
+    if (!bb || !pin_bb_strip(ui, e, pin_index, &pbb, &ps) || pbb != bb) {
+        return 0;
+    }
+    phys_nets_on_bb(parent, board, bb);
+    return phys_strip_find(parent, ps) == phys_strip_find(parent, ns_breadboard_strip_id(h));
+}
+
+static int pin_phys_on_powered_rail(const R01aUi *ui, const R01aBoard *board, const NsEntity *e, int pin_index,
+                                   int pos) {
+    const NsBreadboard *pbb;
+    int ps;
+    int parent[NS_PB_STRIPS];
+    int k;
+    int ids[4];
+    int base = NS_PB_COLS * 2;
+    if (!pin_bb_strip(ui, e, pin_index, &pbb, &ps) || !bb_is_powered(pbb)) {
+        return 0;
+    }
+    phys_nets_on_bb(parent, board, pbb);
+    if (pos) {
+        ids[0] = base + 0;
+        ids[1] = base + 2;
+        ids[2] = base + 4;
+        ids[3] = base + 6;
+    } else {
+        ids[0] = base + 1;
+        ids[1] = base + 3;
+        ids[2] = base + 5;
+        ids[3] = base + 7;
+    }
+    ps = phys_strip_find(parent, ps);
+    for (k = 0; k < 4; k++) {
+        if (ps == phys_strip_find(parent, ids[k])) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int hover_skip_air(const R01aBoard *board) {
+    return board && r01a_board_wire_mode(board) == R01A_WIRE_MANUAL;
+}
+
+static int hover_skip_pin_pair(const R01aUi *ui, const R01aBoard *board, const NsEntity *a, int ap,
+                               const NsEntity *b, int bp) {
+    return hover_skip_air(board) && pins_phys_connected(ui, board, a, ap, b, bp);
+}
+
+static int hover_skip_rail_pin(const R01aUi *ui, const R01aBoard *board, const NsEntity *e, int pin_index,
+                              int pos, const NsBreadboard *hover_bb, NsPbHole hover_h) {
+    if (!hover_skip_air(board)) {
+        return 0;
+    }
+    if (pin_phys_on_hole_net(ui, board, e, pin_index, hover_bb, hover_h)) {
+        return 1;
+    }
+    return pin_phys_on_powered_rail(ui, board, e, pin_index, pos);
+}
+
+static void draw_air_line(SDL_Renderer *r, const R01aUi *ui, int ax, int ay, int bx, int by) {
+    if (ax == bx && ay == by) {
+        return;
+    }
+    SDL_RenderDrawLine(r, board_sx(ui, ax), board_sy(ui, ay), board_sx(ui, bx), board_sy(ui, by));
+}
+
+static void draw_rail_net_from(SDL_Renderer *r, const R01aUi *ui, const R01aBoard *board, int ax, int ay,
+                              int vdd, const NsBreadboard *hover_bb, NsPbHole hover_h) {
     int i;
     int pi;
-    int jog_i = 0;
     SDL_SetRenderDrawColor(r, 255, 230, 80, 255);
     for (i = 0; i < ui->chip_count; i++) {
         NsEntity *e = ui->chips[i];
@@ -1479,7 +1595,6 @@ static void draw_rail_net_from(SDL_Renderer *r, const R01aUi *ui, int ax, int ay
         for (pi = 0; pi < e->pin_count; pi++) {
             int bx;
             int by;
-            int jog;
             if (vdd) {
                 if (!pin_on_vdd_net(ui, e, pi)) {
                     continue;
@@ -1487,54 +1602,49 @@ static void draw_rail_net_from(SDL_Renderer *r, const R01aUi *ui, int ax, int ay
             } else if (!pin_on_gnd_net(ui, e, pi)) {
                 continue;
             }
+            if (hover_skip_rail_pin(ui, board, e, pi, vdd, hover_bb, hover_h)) {
+                continue;
+            }
             if (!entity_tip_board(e, e->pins[pi].number, &bx, &by)) {
                 continue;
             }
-            jog = R01A_HOVER_JOG + (jog_i % 3) * 2;
-            if ((jog_i / 3) & 1) {
-                jog = -jog;
-            }
-            draw_2elbow(r, board_sx(ui, ax), board_sy(ui, ay), board_sx(ui, bx), board_sy(ui, by), h_first,
-                        jog);
-            jog_i++;
+            draw_air_line(r, ui, ax, ay, bx, by);
         }
     }
 }
 
-static void draw_hover_ground(SDL_Renderer *r, const R01aUi *ui, int ax, int ay, int h_first) {
+static void draw_hover_ground(SDL_Renderer *r, const R01aUi *ui, const R01aBoard *board, const NsEntity *src_e,
+                             int src_pin, int ax, int ay) {
     int gx = 0;
     int gy = 0;
+    if (hover_skip_air(board) && pin_phys_on_powered_rail(ui, board, src_e, src_pin, 0)) {
+        return;
+    }
     if (!ui_ground_rail_tip(ui, ax, ay, &gx, &gy)) {
         return;
     }
-    if (gx == ax && gy == ay) {
-        return;
-    }
     SDL_SetRenderDrawColor(r, 255, 230, 80, 255);
-    draw_2elbow(r, board_sx(ui, ax), board_sy(ui, ay), board_sx(ui, gx), board_sy(ui, gy), h_first,
-                R01A_HOVER_JOG);
+    draw_air_line(r, ui, ax, ay, gx, gy);
 }
 
-static void draw_hover_wires(SDL_Renderer *r, const R01aUi *ui) {
+static void draw_hover_wires(SDL_Renderer *r, const R01aUi *ui, const R01aBoard *board) {
     const NsEntity *src_e;
     int ax;
     int ay;
-    int ox;
-    int oy;
-    int h_first;
     int i;
     int pi;
     int saw_gnd = 0;
     int src_gnd;
-    int jog_i = 0;
 
     if (ui->hover_chip < 0 || ui->hover_pin < 0) {
         int rax;
         int ray;
-        if (ui_hover_rail_xy(ui, 0, &rax, &ray)) {
-            draw_rail_net_from(r, ui, rax, ray, 0, 0);
-        } else if (ui_hover_rail_xy(ui, 1, &rax, &ray)) {
-            draw_rail_net_from(r, ui, rax, ray, 0, 1);
+        const NsBreadboard *hbb = NULL;
+        NsPbHole hh = {0, 0};
+        if (ui_hover_rail(ui, 0, &rax, &ray, &hbb, &hh)) {
+            draw_rail_net_from(r, ui, board, rax, ray, 0, hbb, hh);
+        } else if (ui_hover_rail(ui, 1, &rax, &ray, &hbb, &hh)) {
+            draw_rail_net_from(r, ui, board, rax, ray, 1, hbb, hh);
         }
         return;
     }
@@ -1545,12 +1655,10 @@ static void draw_hover_wires(SDL_Renderer *r, const R01aUi *ui) {
     if (!entity_tip_board(src_e, src_e->pins[ui->hover_pin].number, &ax, &ay)) {
         return;
     }
-    pin_outward(src_e, ui->hover_pin, &ox, &oy);
-    h_first = (ox != 0);
     src_gnd = pin_on_gnd_net(ui, src_e, ui->hover_pin);
     SDL_SetRenderDrawColor(r, 255, 230, 80, 255);
     if (src_gnd) {
-        draw_hover_ground(r, ui, ax, ay, h_first);
+        draw_hover_ground(r, ui, board, src_e, ui->hover_pin, ax, ay);
         return;
     }
     for (i = 0; i < ui->chip_count; i++) {
@@ -1561,7 +1669,6 @@ static void draw_hover_wires(SDL_Renderer *r, const R01aUi *ui) {
         for (pi = 0; pi < e->pin_count; pi++) {
             int bx;
             int by;
-            int jog;
             if (!pin_on_hover_net(ui, e, pi)) {
                 continue;
             }
@@ -1569,20 +1676,17 @@ static void draw_hover_wires(SDL_Renderer *r, const R01aUi *ui) {
                 saw_gnd = 1;
                 continue;
             }
+            if (hover_skip_pin_pair(ui, board, src_e, ui->hover_pin, e, pi)) {
+                continue;
+            }
             if (!entity_tip_board(e, e->pins[pi].number, &bx, &by)) {
                 continue;
             }
-            jog = R01A_HOVER_JOG + (jog_i % 3) * 2;
-            if ((jog_i / 3) & 1) {
-                jog = -jog;
-            }
-            draw_2elbow(r, board_sx(ui, ax), board_sy(ui, ay), board_sx(ui, bx), board_sy(ui, by), h_first,
-                        jog);
-            jog_i++;
+            draw_air_line(r, ui, ax, ay, bx, by);
         }
     }
     if (saw_gnd) {
-        draw_hover_ground(r, ui, ax, ay, h_first);
+        draw_hover_ground(r, ui, board, src_e, ui->hover_pin, ax, ay);
     }
 }
 
@@ -1594,9 +1698,6 @@ static void draw_entity(SDL_Renderer *r, R01aUi *ui, NsEntity *e, int selected) 
     case NS_ENTITY_VIS_BREADBOARD:
         ns_breadboard_draw(r, (const NsBreadboard *)e, board_sx(ui, e->board_x), board_sy(ui, e->board_y),
                            selected);
-        break;
-    case NS_ENTITY_VIS_PWR:
-        draw_pwr(r, ui, e, selected);
         break;
     case NS_ENTITY_VIS_OSC:
         draw_osc(r, ui, e, selected);
@@ -1861,7 +1962,7 @@ static void ctx_apply(R01aUi *ui, R01aBoard *board, int item) {
         } else if (item == R01A_CTX_ECAP) {
             kind = NS_PASSIVE_ECAP;
         } else if (item == R01A_CTX_OSC) {
-            kind = NS_PASSIVE_OSC;
+            kind = NS_PASSIVE_OSC4LEGS;
         } else if (item == R01A_CTX_D) {
             kind = NS_PASSIVE_D;
         }
@@ -2207,6 +2308,8 @@ static void draw_frame(R01aUi *ui, R01aBoard *board) {
     SDL_SetRenderDrawColor(ui->rend, NS_BOARD_BG_R, NS_BOARD_BG_G, NS_BOARD_BG_B, 255);
     SDL_RenderClear(ui->rend);
 
+    ui->pin_gray = r01a_board_wire_mode(board) == R01A_WIRE_MANUAL;
+
     for (rank = 0; rank < ui->chip_count; rank++) {
         int ci = ui->chip_z[rank];
         int selected;
@@ -2216,7 +2319,7 @@ static void draw_frame(R01aUi *ui, R01aBoard *board) {
         selected = ui->chip_sel[ci] || ci == ui->selected;
         draw_entity(ui->rend, ui, ui->chips[ci], selected);
     }
-    draw_hover_wires(ui->rend, ui);
+    draw_hover_wires(ui->rend, ui, board);
     draw_jumpers(ui->rend, ui, board);
 
     if (ui->box_sel) {
@@ -2270,6 +2373,24 @@ static void draw_frame(R01aUi *ui, R01aBoard *board) {
     r01a_font_draw_a(ui->rend, hud_x, 2, board->running ? "RUN" : "PAUSE", 180, 180, 120, 180);
     hud_x += r01a_font_text_width("PAUSE") + 10;
     r01a_font_draw_a(ui->rend, hud_x, 2, status, 200, 210, 200, 160);
+
+    {
+        char fps[16];
+        int tw;
+        Uint32 now = SDL_GetTicks();
+        ui->fps_n++;
+        if (ui->fps_t0 == 0) {
+            ui->fps_t0 = now;
+        }
+        if ((now - ui->fps_t0) >= 1000u) {
+            ui->fps = ui->fps_n;
+            ui->fps_n = 0;
+            ui->fps_t0 = now;
+        }
+        snprintf(fps, sizeof(fps), "%d", ui->fps);
+        tw = r01a_font_text_width(fps);
+        r01a_font_draw_a(ui->rend, NS_LOGIC_W - 4 - tw, 2, fps, 160, 170, 150, 180);
+    }
 
     if (ui->ctx_open) {
         draw_ctx_menu(ui->rend, ui);

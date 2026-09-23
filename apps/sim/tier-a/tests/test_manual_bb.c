@@ -51,37 +51,75 @@ static int place_manual_clock(R01aBoard *board, NsPbHole *dot_h, NsPbHole *clk_h
     int col;
     int lane;
     NsEntity *osc = r01a_osc_dot_entity(&board->osc_dot);
-    NsEntity *pwr = r01a_pwr5v_entity(&board->pwr);
     NsEntity *bx = r01a_atf22v10_entity(&board->beam_x);
 
+    r01a_board_jumper_clear(board);
     for (lane = NS_PB_LANE_A; lane <= NS_PB_LANE_J; lane++) {
         for (col = 0; col < NS_PB_COLS; col++) {
             NsPbHole vdd_h = {col, lane};
             NsPbHole vdd_found;
             NsPbHole dot_found;
-            NsPbHole pwr_h;
-            int dtx;
-            int dty;
+            NsPbHole oe_found;
+            NsPbHole gnd_found;
+            NsPbHole rail;
             int vtx;
             int vty;
+            int dtx;
+            int dty;
+            int oex;
+            int oey;
+            int gnx;
+            int gny;
+            int s_vdd;
+            int s_dot;
+            int s_oe;
+            int s_gnd;
+            int s_clk;
+            int s_rail;
             if (!ns_breadboard_hole_exists(vdd_h)) {
                 continue;
             }
-            place_pin_on_hole(osc, 8, &board->breadboard, vdd_h);
-            if (!ns_entity_pin_tip_board(osc, 8, &vtx, &vty) || !hole_on_tip(&board->breadboard, vtx, vty, &vdd_found)) {
+            place_pin_on_hole(osc, 14, &board->breadboard, vdd_h);
+            if (!ns_entity_pin_tip_board(osc, 14, &vtx, &vty) ||
+                !hole_on_tip(&board->breadboard, vtx, vty, &vdd_found)) {
                 continue;
             }
-            if (!ns_entity_pin_tip_board(osc, 5, &dtx, &dty) || !hole_on_tip(&board->breadboard, dtx, dty, &dot_found)) {
+            if (!ns_entity_pin_tip_board(osc, 8, &dtx, &dty) ||
+                !hole_on_tip(&board->breadboard, dtx, dty, &dot_found)) {
                 continue;
             }
-            pwr_h.col = vdd_found.col;
-            pwr_h.lane = (vdd_found.lane <= NS_PB_LANE_E) ? NS_PB_LANE_A : NS_PB_LANE_F;
-            if (!ns_breadboard_hole_exists(pwr_h)) {
-                pwr_h = vdd_found;
+            if (!ns_entity_pin_tip_board(osc, 1, &oex, &oey) ||
+                !hole_on_tip(&board->breadboard, oex, oey, &oe_found)) {
+                continue;
             }
-            place_pin_on_hole(pwr, 3, &board->breadboard, pwr_h);
+            if (!ns_entity_pin_tip_board(osc, 7, &gnx, &gny) ||
+                !hole_on_tip(&board->breadboard, gnx, gny, &gnd_found)) {
+                continue;
+            }
+            s_vdd = ns_breadboard_strip_id(vdd_found);
+            s_dot = ns_breadboard_strip_id(dot_found);
+            s_oe = ns_breadboard_strip_id(oe_found);
+            s_gnd = ns_breadboard_strip_id(gnd_found);
+            if (s_vdd == s_dot || s_vdd == s_oe || s_vdd == s_gnd || s_dot == s_oe || s_dot == s_gnd ||
+                s_oe == s_gnd) {
+                continue;
+            }
+            rail.col = vdd_found.col;
+            rail.lane = NS_PB_LANE_TOP_POS;
+            if (!ns_breadboard_hole_exists(rail)) {
+                continue;
+            }
+            s_rail = ns_breadboard_strip_id(rail);
+            if (s_rail == s_vdd || s_rail == s_dot || s_rail == s_oe || s_rail == s_gnd) {
+                continue;
+            }
+            r01a_board_jumper_clear(board);
+            if (!r01a_board_jumper_add(board, rail, vdd_found)) {
+                continue;
+            }
             place_pin_on_hole(bx, 1, &board->breadboard, *clk_h);
-            if (ns_breadboard_strip_id(dot_found) == ns_breadboard_strip_id(*clk_h)) {
+            s_clk = ns_breadboard_strip_id(*clk_h);
+            if (s_dot == s_clk || s_vdd == s_clk || s_gnd == s_clk) {
                 continue;
             }
             *dot_h = dot_found;
@@ -94,7 +132,7 @@ static int place_manual_clock(R01aBoard *board, NsPbHole *dot_h, NsPbHole *clk_h
 int main(void) {
     R01aBoard board;
     NsPbHole dot_h;
-    NsPbHole clk_h = {40, NS_PB_LANE_A};
+    NsPbHole clk_h = {40, NS_PB_LANE_F};
     int i;
     int toggles;
     NsLevel prev_dot;
@@ -114,7 +152,7 @@ int main(void) {
     expect_true(ns_entity_sense(r01a_osc_dot_entity(&board.osc_dot), "DOT") == NS_LVL_Z,
                 "Manual unwired: DOT hi-Z");
 
-    expect_true(place_manual_clock(&board, &dot_h, &clk_h), "place OSC VDD/DOT and Beam X CLK on holes");
+    expect_true(place_manual_clock(&board, &dot_h, &clk_h), "place OSC VDD/DOT on holes with north-rail jumper");
     expect_true(r01a_board_jumper_add(&board, dot_h, clk_h), "DOT-CLK jumper");
 
     prev_dot = ns_entity_sense(r01a_osc_dot_entity(&board.osc_dot), "DOT");

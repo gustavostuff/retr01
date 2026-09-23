@@ -4,8 +4,8 @@
 #include "netlist_sim/entity.h"
 
 /*
- * 3.579545 MHz NTSC FSC can into AD724 FIN.
- * Pins (DIP-8 half): 1 OE#  4 GND  5 FSC  8 VDD
+ * 3.579545 MHz NTSC FSC can into AD724 FIN (DIP-14 metal can, 4 legs used).
+ * Pins: 14 VDD (pivot)  8 FSC  1 OE#  7 GND
  */
 typedef struct R01aOscFsc {
     NsEntity base;

@@ -1,4 +1,5 @@
 #include "netlist_sim/entity.h"
+#include "netlist_sim/passive.h"
 
 #include <string.h>
 
@@ -401,7 +402,10 @@ int ns_entity_pin_tip_board(const NsEntity *e, int pin_num, int *tbx, int *tby) 
     if (!e || !tbx || !tby) {
         return 0;
     }
-    if (e->visual == NS_ENTITY_VIS_PWR || e->visual == NS_ENTITY_VIS_OSC) {
+    if (e->visual == NS_ENTITY_VIS_OSC) {
+        return ns_osc4legs_chip_tip(e, pin_num, tbx, tby);
+    }
+    if (e->visual == NS_ENTITY_VIS_PWR) {
         return glyph_pin_tip_board(e, pin_num, tbx, tby);
     }
     dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;

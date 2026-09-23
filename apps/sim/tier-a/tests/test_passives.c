@@ -7,21 +7,9 @@
 
 #include <string.h>
 
-static void place_pin_on_hole(NsEntity *e, int pin, const NsBreadboard *bb, NsPbHole h) {
-    int hx;
-    int hy;
-    int tx;
-    int ty;
-    ns_entity_place(e, 0, 0);
-    expect_true(ns_entity_pin_tip_board(e, pin, &tx, &ty), "pin tip");
-    ns_breadboard_hole_world(bb, h, &hx, &hy);
-    ns_entity_place(e, hx - tx, hy - ty);
-}
-
 int main(void) {
     R01aBoard board;
     NsPassive *r;
-    NsPbHole pwr_h = {2, NS_PB_LANE_A};
     NsPbHole r1_h = {2, NS_PB_LANE_E};
     int t2x;
     int t2y;
@@ -44,7 +32,11 @@ int main(void) {
     expect_true(r != NULL, "33 ohm series R");
 
     r01a_board_set_wire_mode(&board, R01A_WIRE_MANUAL);
-    place_pin_on_hole(r01a_pwr5v_entity(&board.pwr), 3, &board.breadboard, pwr_h);
+    {
+        NsPbHole rail = {2, NS_PB_LANE_TOP_POS};
+        NsPbHole term = {2, NS_PB_LANE_A};
+        expect_true(r01a_board_jumper_add(&board, rail, term), "north rail to column 2");
+    }
     ns_passive_set_orient(r, NS_ORIENT_0);
     {
         int hx;
@@ -58,7 +50,7 @@ int main(void) {
     }
     expect_true(ns_passive_tip_board(r, 2, &t2x, &t2y), "R pin2");
     ns_entity_place(r01a_osc_dot_entity(&board.osc_dot), 0, 0);
-    expect_true(ns_entity_pin_tip_board(r01a_osc_dot_entity(&board.osc_dot), 8, &osc_tx, &osc_ty),
+    expect_true(ns_entity_pin_tip_board(r01a_osc_dot_entity(&board.osc_dot), 14, &osc_tx, &osc_ty),
                 "OSC VDD tip");
     ns_entity_place(r01a_osc_dot_entity(&board.osc_dot), t2x - osc_tx, t2y - osc_ty);
 
@@ -102,7 +94,7 @@ int main(void) {
         }
         expect_true(ns_passive_tip_board(c, 2, &t2x, &t2y), "C pin2");
         ns_entity_place(osc, 0, 0);
-        expect_true(ns_entity_pin_tip_board(osc, 8, &ovx, &ovy), "OSC VDD tip 2");
+        expect_true(ns_entity_pin_tip_board(osc, 14, &ovx, &ovy), "OSC VDD tip 2");
         ns_entity_place(osc, t2x - ovx, t2y - ovy);
         r01a_board_step(&board);
         expect_true(ns_entity_sense(osc, "VDD") != NS_LVL_H, "cap does not pass DC");

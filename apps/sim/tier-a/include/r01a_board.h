@@ -6,7 +6,6 @@
 #include "atf22v10.h"
 #include "osc_dot.h"
 #include "osc_fsc.h"
-#include "pwr5v.h"
 
 #include "netlist_sim/breadboard.h"
 #include "netlist_sim/island_builder.h"
@@ -36,7 +35,6 @@ typedef struct R01aJumper {
 } R01aJumper;
 
 typedef struct R01aBoard {
-    R01aPwr5v pwr;
     R01aOscDot osc_dot;
     R01aOscFsc osc_fsc;
     R01aAtf22v10 beam_x;

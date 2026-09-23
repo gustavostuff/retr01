@@ -17,7 +17,6 @@ endif()
 set(R01_COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../common")
 
 add_library(retr01_sim_tier_a_core
-  chips/pwr5v.c
   chips/osc_dot.c
   chips/osc_fsc.c
   chips/atf22v10.c

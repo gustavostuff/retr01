@@ -4,8 +4,8 @@
 #include "netlist_sim/entity.h"
 
 /*
- * 5.369318 MHz DOT can oscillator.
- * Pins (DIP-8 half): 1 OE#  4 GND  5 DOT  8 VDD
+ * 5.369318 MHz DOT can oscillator (DIP-14 metal can, 4 legs used).
+ * Pins: 14 VDD (pivot)  8 DOT  1 OE#  7 GND
  */
 typedef struct R01aOscDot {
     NsEntity base;

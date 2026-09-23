@@ -1,6 +1,7 @@
 #include "osc_dot.h"
 
 #include "netlist_sim/bus.h"
+#include "netlist_sim/passive.h"
 
 #include <string.h>
 
@@ -44,10 +45,11 @@ void r01a_osc_dot_init(R01aOscDot *chip, const char *refdes) {
     ns_entity_init(&chip->base, &OSC_DOT_VT, "OSC_DOT", refdes ? refdes : "Y2");
     chip->base.impl = chip;
     ns_entity_add_pin(&chip->base, 1, "OE#", NS_PIN_IN);
-    ns_entity_add_pin(&chip->base, 4, "GND", NS_PIN_PWR);
-    ns_entity_add_pin(&chip->base, 5, "DOT", NS_PIN_OUT);
-    ns_entity_add_pin(&chip->base, 8, "VDD", NS_PIN_IN);
-    ns_entity_set_glyph(&chip->base, NS_ENTITY_VIS_OSC, 30, 30);
+    ns_entity_add_pin(&chip->base, 7, "GND", NS_PIN_PWR);
+    ns_entity_add_pin(&chip->base, 8, "DOT", NS_PIN_OUT);
+    ns_entity_add_pin(&chip->base, 14, "VDD", NS_PIN_IN);
+    ns_entity_set_glyph(&chip->base, NS_ENTITY_VIS_OSC, 1, 1);
+    ns_osc4legs_sync_aabb(&chip->base);
     ns_entity_reset(&chip->base);
 }
 

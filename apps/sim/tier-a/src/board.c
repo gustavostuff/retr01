@@ -1,5 +1,6 @@
 #include "r01a_board.h"
 
+#include "netlist_sim/breadboard.h"
 #include "netlist_sim/bus.h"
 #include "netlist_sim/entity.h"
 #include "netlist_sim/island.h"
@@ -7,11 +8,14 @@
 #include "r01_kit_palette.h"
 #include "r01a_raster.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #define R01A_SETTLE_PASSES 2
+#define R01A_ROUTE_BB_MAX (R01A_BB_EXTRA_MAX + 1)
+#define R01A_ROUTE_PIN_MAX 1024
 
 static void kit_palette(uint8_t master_index, uint8_t *r, uint8_t *g, uint8_t *b) {
     r01_kit_rgb((int)master_index, r, g, b);
@@ -27,12 +31,8 @@ static void drive_vdd(NsEntity *e, const char *name, NsLevel vdd) {
     }
 }
 
-static void board_pwr_module(R01aBoard *b) {
-    NsEntity *pwr = r01a_pwr5v_entity(&b->pwr);
-    ns_entity_drive(pwr, "VIN", NS_LVL_H);
-    ns_entity_drive(pwr, "EN", NS_LVL_H);
-    ns_entity_drive(pwr, "GND", NS_LVL_L);
-    ns_entity_eval(pwr);
+static int bb_is_powered(const NsBreadboard *bb) {
+    return bb && bb->base.refdes && strcmp(bb->base.refdes, "BB1") == 0;
 }
 
 static int strip_parent[NS_PB_STRIPS];
@@ -53,17 +53,77 @@ static void strip_union(int a, int b) {
     }
 }
 
+typedef struct R01aRoutePin {
+    NsEntity *e;
+    int pi;
+    int bb_i;
+    int root;
+} R01aRoutePin;
+
+static const R01aBoard *route_cache_board;
+static uint64_t route_cache_geom;
+static int route_cache_ok;
+static int route_bb_n;
+static R01aRoutePin route_pins[R01A_ROUTE_PIN_MAX];
+static int route_pin_n;
+static int route_pwr_bb_i;
+static int route_vdd_root[2];
+static int route_gnd_root[2];
+
+static uint64_t route_mix(uint64_t h, uint64_t v) {
+    return h ^ (v + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2));
+}
+
+static uint64_t route_geom_hash(const R01aBoard *b, const NsIsland *island) {
+    uint64_t h = 0xcbf29ce484222325ULL;
+    int i;
+    int pi;
+    if (!b || !island) {
+        return 0;
+    }
+    h = route_mix(h, (uint64_t)b->jumper_count);
+    h = route_mix(h, (uint64_t)b->extra_bb_count);
+    h = route_mix(h, (uint64_t)b->passives.count);
+    for (i = 0; i < b->jumper_count; i++) {
+        const char *s = b->jumpers[i].bb_ref;
+        h = route_mix(h, (uint64_t)b->jumpers[i].a.col);
+        h = route_mix(h, (uint64_t)b->jumpers[i].a.lane);
+        h = route_mix(h, (uint64_t)b->jumpers[i].b.col);
+        h = route_mix(h, (uint64_t)b->jumpers[i].b.lane);
+        for (; s && *s; s++) {
+            h = route_mix(h, (unsigned char)*s);
+        }
+    }
+    for (i = 0; i < island->entity_count; i++) {
+        const NsEntity *e = island->entities[i];
+        if (!e) {
+            continue;
+        }
+        h = route_mix(h, (uint64_t)(uintptr_t)e);
+        h = route_mix(h, (uint64_t)e->board_x);
+        h = route_mix(h, (uint64_t)e->board_y);
+        h = route_mix(h, (uint64_t)e->orient);
+        h = route_mix(h, (uint64_t)e->pin_count);
+        if (e->visual == NS_ENTITY_VIS_PASSIVE) {
+            const NsPassive *p = (const NsPassive *)e;
+            h = route_mix(h, (uint64_t)p->pivot_x);
+            h = route_mix(h, (uint64_t)p->pivot_y);
+            h = route_mix(h, (uint64_t)p->kind);
+        }
+        for (pi = 0; pi < e->pin_count; pi++) {
+            h = route_mix(h, (uint64_t)e->pins[pi].number);
+        }
+    }
+    return h;
+}
+
 static int pin_name_is_gnd(const char *n) {
     return n && (strcmp(n, "GND") == 0 || strcmp(n, "AGND") == 0 || strcmp(n, "DGND") == 0);
 }
 
 static int pin_skip_route(const NsEntity *e, const NsPin *p) {
-    if (!e || !p || !p->name) {
-        return 0;
-    }
-    if (e->visual == NS_ENTITY_VIS_PWR && (strcmp(p->name, "VIN") == 0 || strcmp(p->name, "EN") == 0)) {
-        return 1;
-    }
+    (void)e;
+    (void)p;
     return 0;
 }
 
@@ -107,105 +167,152 @@ static int jumper_on_bb(const R01aJumper *j, const NsBreadboard *bb) {
     return strcmp(ref, bb->base.refdes) == 0;
 }
 
-static void board_bb_route_one(R01aBoard *b, NsIsland *island, NsBreadboard *bb) {
+static void board_bb_rebuild(R01aBoard *b, NsIsland *island) {
     int i;
     int s;
-    NsLevel net_lvl[NS_PB_STRIPS];
-    uint8_t net_used[NS_PB_STRIPS];
-
-    for (s = 0; s < NS_PB_STRIPS; s++) {
-        strip_parent[s] = s;
-        net_lvl[s] = NS_LVL_Z;
-        net_used[s] = 0;
-    }
-    for (i = 0; i < b->jumper_count; i++) {
-        if (!jumper_on_bb(&b->jumpers[i], bb)) {
-            continue;
-        }
-        strip_union(ns_breadboard_strip_id(b->jumpers[i].a), ns_breadboard_strip_id(b->jumpers[i].b));
-    }
-    for (i = 0; i < b->passives.count; i++) {
-        NsPassive *p = &b->passives.parts[i];
-        int t1x;
-        int t1y;
-        int t2x;
-        int t2y;
-        int s1;
-        int s2;
-        if (p->kind != NS_PASSIVE_R) {
-            continue;
-        }
-        if (!ns_passive_tip_board(p, 1, &t1x, &t1y) || !ns_passive_tip_board(p, 2, &t2x, &t2y)) {
-            continue;
-        }
-        if (!ns_breadboard_tip_strip(bb, t1x, t1y, &s1) || !ns_breadboard_tip_strip(bb, t2x, t2y, &s2)) {
-            continue;
-        }
-        strip_union(s1, s2);
-    }
-
-    for (i = 0; i < island->entity_count; i++) {
-        NsEntity *e = island->entities[i];
-        int pi;
-        if (entity_is_route_skip(e)) {
-            continue;
-        }
-        for (pi = 0; pi < e->pin_count; pi++) {
-            int tx;
-            int ty;
-            int strip;
-            int root;
-            if (pin_skip_route(e, &e->pins[pi])) {
-                continue;
-            }
-            if (!entity_tip_board(e, e->pins[pi].number, &tx, &ty)) {
-                continue;
-            }
-            if (!ns_breadboard_tip_strip(bb, tx, ty, &strip)) {
-                continue;
-            }
-            root = strip_find(strip);
-            if (root < 0 || root >= NS_PB_STRIPS) {
-                continue;
-            }
-            net_used[root] = 1;
-            if (e->visual != NS_ENTITY_VIS_PASSIVE && pin_is_driver(&e->pins[pi])) {
-                net_lvl[root] = ns_level_merge(net_lvl[root], pin_drive_level(&e->pins[pi]));
-            }
-        }
+    int bb_i;
+    route_pin_n = 0;
+    route_bb_n = 0;
+    route_pwr_bb_i = -1;
+    if (!b || !island) {
+        return;
     }
     for (i = 0; i < island->entity_count; i++) {
-        NsEntity *e = island->entities[i];
-        int pi;
-        if (entity_is_route_skip(e)) {
+        NsEntity *be = island->entities[i];
+        NsBreadboard *bb;
+        if (!be || be->visual != NS_ENTITY_VIS_BREADBOARD) {
             continue;
         }
-        for (pi = 0; pi < e->pin_count; pi++) {
-            int tx;
-            int ty;
-            int strip;
-            int root;
-            if (pin_skip_route(e, &e->pins[pi])) {
-                continue;
-            }
-            if (!entity_tip_board(e, e->pins[pi].number, &tx, &ty)) {
-                continue;
-            }
-            if (!ns_breadboard_tip_strip(bb, tx, ty, &strip)) {
-                continue;
-            }
-            root = strip_find(strip);
-            if (root < 0 || root >= NS_PB_STRIPS || !net_used[root]) {
-                continue;
-            }
-            e->pins[pi].level = net_lvl[root];
+        if (route_bb_n >= R01A_ROUTE_BB_MAX) {
+            break;
         }
+        bb = (NsBreadboard *)be;
+        bb_i = route_bb_n;
+        route_bb_n++;
+        for (s = 0; s < NS_PB_STRIPS; s++) {
+            strip_parent[s] = s;
+        }
+        for (s = 0; s < b->jumper_count; s++) {
+            if (!jumper_on_bb(&b->jumpers[s], bb)) {
+                continue;
+            }
+            strip_union(ns_breadboard_strip_id(b->jumpers[s].a), ns_breadboard_strip_id(b->jumpers[s].b));
+        }
+        {
+            int ri;
+            for (ri = 0; ri < b->passives.count; ri++) {
+                NsPassive *p = &b->passives.parts[ri];
+                int t1x;
+                int t1y;
+                int t2x;
+                int t2y;
+                int s1;
+                int s2;
+                if (p->kind != NS_PASSIVE_R) {
+                    continue;
+                }
+                if (!ns_passive_tip_board(p, 1, &t1x, &t1y) || !ns_passive_tip_board(p, 2, &t2x, &t2y)) {
+                    continue;
+                }
+                if (!ns_breadboard_tip_strip(bb, t1x, t1y, &s1) || !ns_breadboard_tip_strip(bb, t2x, t2y, &s2)) {
+                    continue;
+                }
+                strip_union(s1, s2);
+            }
+        }
+        if (bb_is_powered(bb)) {
+            int half;
+            route_pwr_bb_i = bb_i;
+            for (half = 0; half < 2; half++) {
+                NsPbHole hp = {half ? NS_PB_RAIL_GAP_END : 0, NS_PB_LANE_TOP_POS};
+                NsPbHole hn = {half ? NS_PB_RAIL_GAP_END : 0, NS_PB_LANE_TOP_NEG};
+                route_vdd_root[half] = strip_find(ns_breadboard_strip_id(hp));
+                route_gnd_root[half] = strip_find(ns_breadboard_strip_id(hn));
+            }
+        }
+        for (s = 0; s < island->entity_count; s++) {
+            NsEntity *e = island->entities[s];
+            int pi;
+            if (entity_is_route_skip(e)) {
+                continue;
+            }
+            for (pi = 0; pi < e->pin_count; pi++) {
+                int tx;
+                int ty;
+                int strip;
+                int root;
+                if (pin_skip_route(e, &e->pins[pi])) {
+                    continue;
+                }
+                if (!entity_tip_board(e, e->pins[pi].number, &tx, &ty)) {
+                    continue;
+                }
+                if (!ns_breadboard_tip_strip(bb, tx, ty, &strip)) {
+                    continue;
+                }
+                root = strip_find(strip);
+                if (root < 0 || root >= NS_PB_STRIPS || route_pin_n >= R01A_ROUTE_PIN_MAX) {
+                    continue;
+                }
+                route_pins[route_pin_n].e = e;
+                route_pins[route_pin_n].pi = pi;
+                route_pins[route_pin_n].bb_i = bb_i;
+                route_pins[route_pin_n].root = root;
+                route_pin_n++;
+            }
+        }
+    }
+}
+
+static void board_bb_propagate(void) {
+    NsLevel net_lvl[R01A_ROUTE_BB_MAX][NS_PB_STRIPS];
+    uint8_t net_used[R01A_ROUTE_BB_MAX][NS_PB_STRIPS];
+    int i;
+    memset(net_lvl, 0, sizeof(net_lvl));
+    memset(net_used, 0, sizeof(net_used));
+    for (i = 0; i < route_pin_n; i++) {
+        R01aRoutePin *rp = &route_pins[i];
+        const NsPin *p = &rp->e->pins[rp->pi];
+        int bi = rp->bb_i;
+        int root = rp->root;
+        if (bi < 0 || bi >= route_bb_n || root < 0 || root >= NS_PB_STRIPS) {
+            continue;
+        }
+        net_used[bi][root] = 1;
+        if (rp->e->visual != NS_ENTITY_VIS_PASSIVE && pin_is_driver(p)) {
+            net_lvl[bi][root] = ns_level_merge(net_lvl[bi][root], pin_drive_level(p));
+        }
+    }
+    if (route_pwr_bb_i >= 0 && route_pwr_bb_i < route_bb_n) {
+        int bi = route_pwr_bb_i;
+        int k;
+        for (k = 0; k < 2; k++) {
+            int r = route_vdd_root[k];
+            if (r >= 0 && r < NS_PB_STRIPS) {
+                net_used[bi][r] = 1;
+                net_lvl[bi][r] = ns_level_merge(net_lvl[bi][r], NS_LVL_H);
+            }
+            r = route_gnd_root[k];
+            if (r >= 0 && r < NS_PB_STRIPS) {
+                net_used[bi][r] = 1;
+                net_lvl[bi][r] = ns_level_merge(net_lvl[bi][r], NS_LVL_L);
+            }
+        }
+    }
+    for (i = 0; i < route_pin_n; i++) {
+        R01aRoutePin *rp = &route_pins[i];
+        int bi = rp->bb_i;
+        int root = rp->root;
+        if (bi < 0 || bi >= route_bb_n || root < 0 || root >= NS_PB_STRIPS || !net_used[bi][root]) {
+            continue;
+        }
+        rp->e->pins[rp->pi].level = net_lvl[bi][root];
     }
 }
 
 static void board_bb_route(R01aBoard *b) {
     NsIsland *island;
-    int i;
+    uint64_t geom;
     int prev_fatal;
 
     if (!b) {
@@ -215,14 +322,16 @@ static void board_bb_route(R01aBoard *b) {
     if (!island) {
         return;
     }
+    geom = route_geom_hash(b, island);
+    if (!route_cache_ok || route_cache_board != b || route_cache_geom != geom) {
+        board_bb_rebuild(b, island);
+        route_cache_board = b;
+        route_cache_geom = geom;
+        route_cache_ok = 1;
+    }
     prev_fatal = ns_bus_fatal_conflicts();
     ns_bus_set_fatal_conflicts(0);
-    for (i = 0; i < island->entity_count; i++) {
-        NsEntity *e = island->entities[i];
-        if (e && e->visual == NS_ENTITY_VIS_BREADBOARD) {
-            board_bb_route_one(b, island, (NsBreadboard *)e);
-        }
-    }
+    board_bb_propagate();
     ns_bus_set_fatal_conflicts(prev_fatal);
 }
 
@@ -255,7 +364,6 @@ static void board_float_external(R01aBoard *b) {
 }
 
 static void board_eval_chips(R01aBoard *b) {
-    ns_entity_eval(r01a_pwr5v_entity(&b->pwr));
     ns_entity_eval(r01a_osc_dot_entity(&b->osc_dot));
     ns_entity_eval(r01a_osc_fsc_entity(&b->osc_fsc));
     ns_entity_eval(r01a_atf22v10_entity(&b->beam_x));
@@ -265,12 +373,7 @@ static void board_eval_chips(R01aBoard *b) {
 }
 
 static void board_bind_rails(R01aBoard *b) {
-    NsEntity *pwr = r01a_pwr5v_entity(&b->pwr);
-    NsLevel vdd;
-    ns_entity_drive(pwr, "VIN", NS_LVL_H);
-    ns_entity_drive(pwr, "EN", NS_LVL_H);
-    ns_entity_eval(pwr);
-    vdd = ns_entity_sense(pwr, "VDD");
+    NsLevel vdd = NS_LVL_H;
 
     drive_vdd(r01a_osc_dot_entity(&b->osc_dot), "VDD", vdd);
     drive_vdd(r01a_osc_dot_entity(&b->osc_dot), "OE#", NS_LVL_H);
@@ -346,7 +449,6 @@ static void board_plot(R01aBoard *b) {
 static void board_settle(R01aBoard *b) {
     int p;
     if (b->wire_mode == R01A_WIRE_MANUAL) {
-        board_pwr_module(b);
         board_float_external(b);
         for (p = 0; p < R01A_SETTLE_PASSES; p++) {
             board_bb_route(b);
@@ -369,7 +471,6 @@ void r01a_board_step(R01aBoard *board) {
         return;
     }
     if (board->wire_mode == R01A_WIRE_MANUAL) {
-        board_pwr_module(board);
         board_float_external(board);
         board_bb_route(board);
         ns_entity_tick(r01a_osc_dot_entity(&board->osc_dot));
@@ -406,7 +507,6 @@ static void spawn_tier_a_passives(R01aBoard *b);
 static void island_video_init(NsIsland *island) {
     R01aBoard *b = (R01aBoard *)island->impl;
     int i;
-    r01a_pwr5v_init(&b->pwr, "PS1");
     r01a_osc_dot_init(&b->osc_dot, "Y2");
     r01a_osc_fsc_init(&b->osc_fsc, "Y3");
     r01a_atf22v10_init(&b->beam_x, "UPLDX", R01A_PLD_BEAM_X);
@@ -417,7 +517,6 @@ static void island_video_init(NsIsland *island) {
     ns_video_sink_init(&b->sink, "SCR1");
     ns_video_sink_set_palette(&b->sink, kit_palette);
     ns_island_add_entity(island, ns_breadboard_entity(&b->breadboard));
-    ns_island_add_entity(island, r01a_pwr5v_entity(&b->pwr));
     ns_island_add_entity(island, r01a_osc_dot_entity(&b->osc_dot));
     ns_island_add_entity(island, r01a_osc_fsc_entity(&b->osc_fsc));
     ns_island_add_entity(island, r01a_atf22v10_entity(&b->beam_x));
@@ -435,7 +534,6 @@ static const NsIslandVTable ISLAND_VIDEO_VT = {island_video_init, NULL, NULL, NU
 
 static void group_reset(NsIslandGroup *group) {
     R01aBoard *b = (R01aBoard *)group->impl;
-    ns_entity_reset(r01a_pwr5v_entity(&b->pwr));
     ns_entity_reset(r01a_osc_dot_entity(&b->osc_dot));
     ns_entity_reset(r01a_osc_fsc_entity(&b->osc_fsc));
     ns_entity_reset(r01a_atf22v10_entity(&b->beam_x));
@@ -522,10 +620,6 @@ static void board_place_free(R01aBoard *board) {
 
     x = origin_x;
     y = origin_y;
-    bottom = place_along(r01a_pwr5v_entity(&board->pwr), &x, y, gap);
-    if (bottom - y > row0_h) {
-        row0_h = bottom - y;
-    }
     bottom = place_along(r01a_osc_dot_entity(&board->osc_dot), &x, y, gap);
     if (bottom - y > row0_h) {
         row0_h = bottom - y;
@@ -566,7 +660,6 @@ void r01a_board_init(R01aBoard *board) {
         return;
     }
     ns_island_builder_mount(b, ns_breadboard_entity(&board->breadboard), R01A_ISLAND_VIDEO, 0, 0);
-    ns_island_builder_mount(b, r01a_pwr5v_entity(&board->pwr), R01A_ISLAND_VIDEO, 0, 0);
     ns_island_builder_mount(b, r01a_osc_dot_entity(&board->osc_dot), R01A_ISLAND_VIDEO, 0, 0);
     ns_island_builder_mount(b, r01a_osc_fsc_entity(&board->osc_fsc), R01A_ISLAND_VIDEO, 0, 0);
     ns_island_builder_mount(b, r01a_atf22v10_entity(&board->beam_x), R01A_ISLAND_VIDEO, 0, 0);
@@ -727,6 +820,7 @@ static const char *passive_ref_prefix(NsPassiveKind kind) {
     case NS_PASSIVE_ECAP:
         return "E";
     case NS_PASSIVE_OSC:
+    case NS_PASSIVE_OSC4LEGS:
         return "Y";
     case NS_PASSIVE_D:
         return "D";

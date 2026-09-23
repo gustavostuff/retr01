@@ -141,6 +141,9 @@ static NsPassiveKind kind_parse(const char *s) {
     if (strcmp(s, "OSC") == 0) {
         return NS_PASSIVE_OSC;
     }
+    if (strcmp(s, "OSC4LEGS") == 0) {
+        return NS_PASSIVE_OSC4LEGS;
+    }
     if (strcmp(s, "D") == 0) {
         return NS_PASSIVE_D;
     }

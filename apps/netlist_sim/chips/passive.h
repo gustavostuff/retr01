@@ -6,9 +6,10 @@
 #include <SDL.h>
 
 /*
- * Passives (R / CCAP / ECAP / OSC / D). UI sprites only.
- * No netlist wiring yet. Pivot = pin 1 tip from KIND_x_y.png filename.
- * Polarized parts (ECAP, later D) carry a flag for a future polarity check.
+ * Passives (R / CCAP / ECAP / OSC / OSC4LEGS / D). UI sprites only.
+ * Filename KIND_x_y.png is the canvas pivot. 2-pin parts: pin 1 = pivot, pin 2 at +span.
+ * OSC4LEGS (DIP-14 metal can): pivot = pin 14 VDD. Pin 8 OUT, pin 1 OE#, pin 7 GND.
+ * Polarized: ECAP pin 1 is - (pivot), pin 2 is +. Diode pin 1 is A (pivot), pin 2 is K.
  */
 
 typedef enum NsPassiveKind {
@@ -16,6 +17,7 @@ typedef enum NsPassiveKind {
     NS_PASSIVE_CCAP,
     NS_PASSIVE_ECAP,
     NS_PASSIVE_OSC,
+    NS_PASSIVE_OSC4LEGS,
     NS_PASSIVE_D,
     NS_PASSIVE_KIND_COUNT
 } NsPassiveKind;
@@ -27,8 +29,8 @@ typedef enum NsPassiveKind {
 typedef struct NsPassive {
     NsEntity base;
     NsPassiveKind kind;
-    int polarized; /* 1 = ECAP (and future diode). Polarity rules later. */
-    int pivot_x;   /* pin-1 tip in board canvas coords */
+    int polarized; /* 1 = ECAP or diode */
+    int pivot_x;   /* filename pivot tip in board canvas coords */
     int pivot_y;
     char value[NS_PASSIVE_VALUE_LEN];
     char refdes_buf[NS_PASSIVE_REF_LEN];
@@ -49,12 +51,19 @@ void ns_passive_sync_aabb(NsPassive *p);
 void ns_passive_set_pivot(NsPassive *p, int pivot_x, int pivot_y);
 void ns_passive_set_orient(NsPassive *p, NsPkgOrient orient);
 
-/* Pin 1 = pivot. Pin 2 = pivot + rotated span. */
+/* Tip of pin_num in board canvas coords. OSC4LEGS uses DIP-14 can numbers. */
 int ns_passive_tip_board(const NsPassive *p, int pin_num, int *wx, int *wy);
 
-/* screen_pivot_* = pan-adjusted board coords of pin-1 tip. */
+/* screen_pivot_* = pan-adjusted board coords of the filename pivot. */
 void ns_passive_draw(SDL_Renderer *r, const NsPassive *p, int screen_pivot_x, int screen_pivot_y,
                        int selected);
+void ns_passive_draw_kind(SDL_Renderer *r, NsPassiveKind kind, NsPkgOrient orient, int screen_pivot_x,
+                         int screen_pivot_y, int selected);
+
+/* DOT/FSC cans use the OSC4LEGS sprite. board_x/y is AABB top-left. */
+int ns_osc4legs_chip_tip(const NsEntity *e, int pin_num, int *wx, int *wy);
+void ns_osc4legs_sync_aabb(NsEntity *e);
+void ns_osc4legs_set_orient(NsEntity *e, NsPkgOrient orient);
 
 /* Spawn full console passive BOM . Ordered by kind then value. */
 int ns_passive_bank_spawn_bom(NsPassiveBank *bank);
