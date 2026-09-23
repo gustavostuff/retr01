@@ -167,7 +167,7 @@ From that state:
     +---------+---------+---------+
 ```
 
-Rule of thumb: stay inside the four-screen buffer without cart traffic, then stream the missing row, column, or corner screens when the camera crosses into a new 2x2.
+Rule of thumb: stay inside the four-screen buffer without cart traffic, then stream the missing row, column, or corner screens when the camera crosses into a new 2x2. Play collision uses a RAM copy of those four BG1 nametables. Window fill streams MAP once per new slot. Off-window AABB reads MAP tile + attr only.
 
 ### Empty or missing screens (locked)
 

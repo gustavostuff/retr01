@@ -26,20 +26,24 @@ static uint16_t s_bg0_cy = 0xFFFFu;
 static uint8_t s_bg0_wx = 0xFFu;
 static uint8_t s_bg0_wy = 0xFFu;
 static uint16_t s_play = 0x8100u;
-static uint8_t s_map_cache[R01_SCREEN_PAYLOAD];
-static uint8_t s_map_col = 0xFFu;
-static uint8_t s_map_row = 0xFFu;
-static uint8_t s_map_ok;
+static uint8_t s_slot_nt[4][R01_SCREEN_PAYLOAD];
 
 static void vram_seek(uint16_t addr) {
     *R01_VRAM_ADDR_LO = (uint8_t)(addr & 0xFFu);
     *R01_VRAM_ADDR_HI = (uint8_t)(addr >> 8);
 }
 
-static void copy_payload(uint32_t off, uint16_t vram_addr) {
+static void copy_payload(uint32_t off, uint16_t vram_addr, uint8_t slot) {
+    uint16_t i;
+    r01_map_lock();
     r01_map_seek(off);
     vram_seek(vram_addr);
-    r01_vram_copy_map();
+    for (i = 0; i < (uint16_t)R01_SCREEN_PAYLOAD; i++) {
+        uint8_t b = *R01_MAP_DATA;
+        s_slot_nt[slot][i] = b;
+        *R01_VRAM_DATA = b;
+    }
+    r01_map_unlock();
 }
 
 static void fill_zero(uint16_t vram_addr) {
@@ -136,9 +140,6 @@ void r01_world_enter(uint8_t id) {
     s_origin_col = 0xFFu;
     s_origin_row = 0xFFu;
     s_loaded = 0;
-    s_map_ok = 0;
-    s_map_col = 0xFFu;
-    s_map_row = 0xFFu;
     for (i = 0; i < 4u; i++) {
         s_slot_has[i] = 0;
         s_slot_col[i] = 0xFFu;
@@ -207,30 +208,38 @@ uint16_t r01_play_base(void) {
 
 int r01_map_tile_at(uint8_t col, uint8_t row, uint8_t cell, uint8_t *tile, uint8_t *attr) {
     uint32_t pay;
-    uint16_t i;
+    uint8_t i;
+    uint8_t t;
+    uint8_t a;
     if (col > 15u || row > 15u || cell >= (uint8_t)R01_TILES_PER_SCREEN) {
         return -1;
+    }
+    for (i = 0; i < 4u; i++) {
+        if (s_slot_has[i] && s_slot_col[i] == col && s_slot_row[i] == row) {
+            if (tile) {
+                *tile = s_slot_nt[i][cell];
+            }
+            if (attr) {
+                *attr = s_slot_nt[i][(uint16_t)R01_TILES_PER_SCREEN + (uint16_t)cell];
+            }
+            return 0;
+        }
     }
     pay = s_pay[(uint16_t)row * 16u + (uint16_t)col];
     if (pay == 0u) {
         return -1;
     }
-    if (!s_map_ok || s_map_col != col || s_map_row != row) {
-        r01_map_lock();
-        r01_map_seek(pay);
-        for (i = 0; i < (uint16_t)R01_SCREEN_PAYLOAD; i++) {
-            s_map_cache[i] = r01_map_read();
-        }
-        r01_map_unlock();
-        s_map_col = col;
-        s_map_row = row;
-        s_map_ok = 1;
-    }
+    r01_map_lock();
+    r01_map_seek(pay + (uint32_t)cell);
+    t = r01_map_read();
+    r01_map_seek(pay + (uint32_t)R01_TILES_PER_SCREEN + (uint32_t)cell);
+    a = r01_map_read();
+    r01_map_unlock();
     if (tile) {
-        *tile = s_map_cache[cell];
+        *tile = t;
     }
     if (attr) {
-        *attr = s_map_cache[(uint16_t)R01_TILES_PER_SCREEN + (uint16_t)cell];
+        *attr = a;
     }
     return 0;
 }
@@ -257,7 +266,7 @@ void r01_map_load_window(uint16_t cam_x, uint16_t cam_y) {
             }
             if (pay) {
                 if (!s_slot_has[slot] || s_slot_col[slot] != col || s_slot_row[slot] != row) {
-                    copy_payload(pay, addr);
+                    copy_payload(pay, addr, slot);
                 }
                 s_slot_has[slot] = 1;
                 s_slot_col[slot] = col;
