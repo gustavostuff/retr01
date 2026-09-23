@@ -99,6 +99,8 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
         "${R01_REPO_ROOT}/apps/sdk/r01_c/src/map_win.c"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/src/oam_pa.c"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/src/main.c"
+        "${R01_REPO_ROOT}/apps/sdk/r01_c/include/r01_entity_ids.h"
+        "${R01_REPO_ROOT}/apps/sdk/r01_c/include/r01_warp_ids.h"
         "${R01_REPO_ROOT}/apps/common/r01_play_camera.c"
         "${R01_REPO_ROOT}/apps/common/r01_play_physics.c"
         "${R01_REPO_ROOT}/apps/common/r01_play_collision.c"

@@ -12,6 +12,11 @@ SIZEBIN="$MOS/bin/llvm-size"
 LOGIC="${1:-$SDK/game_logic.c}"
 OUT="${2:-$SDK/build/retr01.prg}"
 OUTDIR="$(dirname "$OUT")"
+LOGIC_DIR="$(dirname "$LOGIC")"
+INC_LOGIC="$SDK/include"
+if [ -d "$LOGIC_DIR/include" ]; then
+  INC_LOGIC="$LOGIC_DIR/include"
+fi
 
 if [ ! -x "$CC" ]; then
   echo "error: llvm-mos missing ($CC). Run ./scripts/fetch-llvm-mos.sh" >&2
@@ -25,6 +30,7 @@ mkdir -p "$OUTDIR"
 # W65C02S only. NMOS 6502 (-mcpu=mos6502) is not a PRG target.
 "$CC" -Oz -g -mcpu=mosw65c02 -mlto-zp=218 \
   -ffunction-sections -fdata-sections \
+  -I "$INC_LOGIC" \
   -I "$SDK/include" \
   -I "$COMMON" \
   -I "$COMMON/fw" \

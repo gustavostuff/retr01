@@ -245,6 +245,8 @@ void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const 
     r01_prg_overlay_tables(prg, p, layout);
 }
 
+static void split_dir(const char *path, char *out, size_t cap);
+
 int r01_prg_needs_rebuild(const char *prg_path, const char *logic_c) {
     struct stat st;
     time_t mt;
@@ -265,6 +267,8 @@ int r01_prg_needs_rebuild(const char *prg_path, const char *logic_c) {
         "/apps/sdk/r01_c/include/r01_hw.h",
         "/apps/sdk/r01_c/include/r01_engine.h",
         "/apps/sdk/r01_c/include/r01_entity.h",
+        "/apps/sdk/r01_c/include/r01_entity_ids.h",
+        "/apps/sdk/r01_c/include/r01_warp_ids.h",
         "/apps/common/r01_play_camera.c",
         "/apps/common/r01_play_physics.c",
         "/apps/common/r01_play_collision.c",
@@ -281,6 +285,19 @@ int r01_prg_needs_rebuild(const char *prg_path, const char *logic_c) {
     mt = st.st_mtime;
     if (logic_c && stat(logic_c, &st) == 0 && st.st_mtime > mt) {
         return 1;
+    }
+    if (logic_c) {
+        char dir[1024];
+        char hdr[1100];
+        split_dir(logic_c, dir, sizeof(dir));
+        if (snprintf(hdr, sizeof(hdr), "%s/include/r01_entity_ids.h", dir) < (int)sizeof(hdr) &&
+            stat(hdr, &st) == 0 && st.st_mtime > mt) {
+            return 1;
+        }
+        if (snprintf(hdr, sizeof(hdr), "%s/include/r01_warp_ids.h", dir) < (int)sizeof(hdr) &&
+            stat(hdr, &st) == 0 && st.st_mtime > mt) {
+            return 1;
+        }
     }
     for (i = 0; deps[i]; i++) {
         char path[1024];

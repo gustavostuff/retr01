@@ -55,10 +55,12 @@ Logical canvas **640x360** or **1280x720** (**Ctrl+Shift+R**). Window scale **Ct
 
 Play/Stop sits 8px above the centered screen preview. Play uses ACTIVE green. Stop uses DANGER red. Chrome colors are in [`retr01_ui/metrics.h`](ui/include/retr01_ui/metrics.h). Space on the Graphics tab starts Play (packs the ROM, then emu). While Play is active, Studio chrome is locked. Only that button stays clickable. Space then is a pad button. Cart boots world 0. Spawn is the first instance of the marked player type, else the default screen center. Gameplay is the packed PRG in the shared emu. Keyboard and SDL Game Controllers share the same pad bits (community `gamecontrollerdb.txt` plus SDL built-in mappings). First two pads are P1 / P2. Guide / Home opens Reset, Quit (Stop), **1x**/**2x**, and Mute On/Off. Default is top-down. `r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER)` in `game_logic.c` enables gravity, face-Y jump (hold for full height), and Down crouch when a crouch state is mapped. `r01_platformer_set_meter` sets pixels per meter (default 16). `r01_game_on_tick` may raise walk speed with `r01_player_set_move_mul` and override anim frame delay with `r01_player_anim_set_frame_delay`. Player states (idle, walk, crouch, jump) are mapped in `game_logic.c`. With no mapping, Play draws state 0 frame 0 and only X-flips for facing.
 
-`game_logic.c` is created on first export and never overwritten. Headers come from the SDK include path at compile time.
+`game_logic.c` is created on first export and never overwritten. llvm-mos uses the SDK include path plus the project `include/` directory. Export overwrites `include/r01_entity_ids.h` and `include/r01_warp_ids.h`.
 
 ```c
 #include <r01_engine.h>
+#include "r01_entity_ids.h"
+#include "r01_warp_ids.h"
 
 void r01_game_on_init(R01GameCtx *ctx) {
     r01_camera_set_deadzone(ctx, R01_CAM_DEADZONE_X_DEFAULT, R01_CAM_DEADZONE_Y_DEFAULT);
@@ -77,13 +79,15 @@ void r01_game_on_vblank(R01GameCtx *ctx) {
 
 **Ctrl+S** / **Ctrl+O** the current path. First save (or unsaved) opens the Save project modal. Default parent is `apps/studio/projects/`. Quit does not auto-save. JSON version **18**. Save writes world 0. Worlds 2-7 are session-only until multi-world JSON. Load applies that world data to world 0.
 
-**Ctrl+E** packs `<stem>.retr01` and writes `data/` plus `game_logic.c` (created once) beside the project (or under `output/` if unsaved). llvm-mos compiles that file with the SDK into 32 KB PRG (`retr01.prg` and `listing.txt`). Audio-tab tracks go into the cart BGM region. `r01_bgm_play(ctx, N)` in `game_logic.c` selects the boot track at `$80FE`. Studio Set Solid stores `solid_patterns` in JSON; export packs that list at `$8700`.
+**Ctrl+E** packs `<stem>.retr01` and writes `data/` plus generated `include/` id headers beside the project (or under `output/` if unsaved). `game_logic.c` is created once. llvm-mos compiles that file with the SDK into 32 KB PRG (`retr01.prg` and `listing.txt`). Audio-tab tracks go into the cart BGM region. `r01_bgm_play(ctx, N)` in `game_logic.c` selects the boot track at `$80FE`. Studio Set Solid stores `solid_patterns` in JSON. Export packs that list at `$8700`.
 
 | Path | Role |
 |------|------|
 | `<stem>.r01proj` | Authoring JSON |
 | `<stem>.retr01` | Packed cart (world 0) |
 | `game_logic.c` | Author file, kept |
+| `include/r01_entity_ids.h` | Catalog type macros. Overwrite OK |
+| `include/r01_warp_ids.h` | Warp entrance macros. Overwrite OK |
 | `retr01.prg` / `listing.txt` | llvm-mos PRG and mixed C/ASM listing |
 | `data/spawns.bin` | Instance table bytes packed at `$81C0` |
 | `data/` | Studio binaries (CHR, maps, pals) |

@@ -2,7 +2,7 @@
 
 C (and later ASM) facing tools for authors. The first ship set stays small.
 
-:warning: **Ctrl+E** writes `data/` blobs, compiles `game_logic.c` with llvm-mos into the 32 KB PRG, and packs `.retr01`. Studio Play and `./scripts/emu.sh` boot that image. `game_logic.c` is created once and is the author source file.
+:warning: **Ctrl+E** writes `data/` blobs, overwrites `include/r01_entity_ids.h` and `include/r01_warp_ids.h`, compiles `game_logic.c` with llvm-mos into the 32 KB PRG, and packs `.retr01`. Studio Play and `./scripts/emu.sh` boot that image. `game_logic.c` is created once and is the author source file.
 
 ## What is an entity?
 
@@ -126,7 +126,9 @@ LiveInstance (12 B)
 
 **64** slots = **768 B**. Fits in system RAM. Not cart flash.
 
-Packed spawn instances (not the marked player) copy into a 16-slot RAM table at boot. Author `game_logic.c` uses `r01_entity_count`, `r01_entity_type`, `r01_entity_get_pos`, `r01_entity_set_pos`, `r01_entity_state`, and `r01_entity_set_state`. Catalog hitbox for type `t` is `r01_ent_hx/hy/hw/hh[t]` (origin-relative). `r01_world_aabb_ok(x, y, w, h)` tests that box against BG1 solids. Draw uses catalog state 0 frame 0; a non-zero live state uses that sprite's tile plus one.
+Packed spawn instances (not the marked player) copy into a 16-slot RAM table at boot. Author `game_logic.c` uses `r01_entity_count`, `r01_entity_type`, `r01_entity_get_pos`, `r01_entity_set_pos`, `r01_entity_state`, and `r01_entity_set_state`. Catalog hitbox for type `t` is `r01_ent_hx/hy/hw/hh[t]` (origin-relative). `r01_world_aabb_ok(x, y, w, h)` tests that box against BG1 solids. Draw uses catalog state 0 frame 0. A non-zero live state uses that sprite's tile plus one.
+
+Catalog type indexes are `R01_ENT_*` macros in `include/r01_entity_ids.h`. Warp entrance indexes are `R01_WARP_*` in `include/r01_warp_ids.h`. Export overwrites both headers. `game_logic.c` includes them and does not hardcode catalog indexes. A missing macro fails llvm-mos.
 
 ### Player anim blob (`PA`, locked)
 
@@ -167,7 +169,7 @@ Default dead zone **32x30** pixels inside the 128x120 view. `r01_camera_set_dead
 Types are illustrative C. `EntityId` is a small handle into the live instance table. Returns `0` on success, non-zero on error (OAM full, bad id, and so on).
 
 ```c
-/* type_id: 0..31 index into the global entity catalog */
+/* type_id: R01_ENT_* from include/r01_entity_ids.h (0..31 catalog index) */
 int  spawn_entity(u8 type_id, u8 screen_cell, i16 x, i16 y, EntityId *out_id);
 
 int  despawn_entity(EntityId id);

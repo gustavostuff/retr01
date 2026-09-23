@@ -18,10 +18,12 @@ Each save creates a folder under `apps/studio/projects/` (or another chosen pare
 MyGame/
   MyGame.r01proj
   MyGame.retr01   (after export)
-  ...
+  game_logic.c
+  include/        (generated ids, after export)
+  data/
 ```
 
-**Ctrl+E** packs the cart, `data/` bins, and llvm-mos PRG beside the project file (or under `output/` if unsaved).
+**Ctrl+E** packs the cart, `data/` bins, generated `include/` id headers, and llvm-mos PRG beside the project file (or under `output/` if unsaved).
 
 | Shortcut | Action |
 | --- | --- |

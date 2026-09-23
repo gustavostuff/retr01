@@ -1,7 +1,8 @@
 /* Author game logic. Created once. Never overwritten. */
 #include <r01_engine.h>
+#include "r01_entity_ids.h"
+#include "r01_warp_ids.h"
 
-#define SLIME_TYPE 1
 #define SLIME_JUMP_MIN 30
 #define SLIME_JUMP_MAX 60
 #define SLIME_JUMP_PX 16
@@ -83,7 +84,7 @@ static void slime_ai_tick(R01GameCtx *ctx) {
         uint16_t x;
         uint16_t y;
         uint8_t grounded;
-        if (r01_entity_type(i) != (uint8_t)SLIME_TYPE) {
+        if (r01_entity_type(i) != (uint8_t)R01_ENT_SLIME) {
             continue;
         }
         r01_entity_get_pos(i, &x, &y);
