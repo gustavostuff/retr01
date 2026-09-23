@@ -366,6 +366,24 @@ int r01e_machine_apu_tracker_start_cart(R01eMachine *m) {
     }
     boot = prg[R01_PRG_BGM_BOOT_OFF];
     if (boot < 1u || boot > R01_PRG_BGM_TRACKS) {
+        int t;
+        int tc = (int)blob[2];
+        boot = 0;
+        if (tc < 0) {
+            tc = 0;
+        }
+        if (tc > (int)R01_PRG_BGM_TRACKS) {
+            tc = (int)R01_PRG_BGM_TRACKS;
+        }
+        for (t = 0; t < tc; t++) {
+            uint16_t tlen = rd_u16_le(blob + 20u + (unsigned)t * 2u);
+            if (tlen > 0u) {
+                boot = (uint8_t)(t + 1);
+                break;
+            }
+        }
+    }
+    if (boot < 1u || boot > R01_PRG_BGM_TRACKS) {
         return 0;
     }
     if (blob[3] == R01_PRG_BGM_INS_VER) {

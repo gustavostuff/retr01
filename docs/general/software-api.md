@@ -162,7 +162,7 @@ Max fill: **3** + **4** x (**1** + **8** x (**8** + **24**)) = **1031 B**. Pose 
 
 ### Camera helpers (locked intent)
 
-Default dead zone **32x30** pixels inside the 128x120 view. `r01_camera_set_deadzone` in `game_logic.c` sets the live box on the 6502. Play follow snaps live box edges to the same parity as the viewport center so a 2 px hold-X run from a centered snap does not take a 1 px camera hitch. Live size may be 1 px smaller than packed and not pixel-centered. Follow uses the player and dead zone only. Empty BG1 slots and the present-screen bounding box do not stop the camera. Details and the 31x69 exact-match example are in `world-scrolling.md`. **0,0** (or `r01_camera_disable_deadzone`) turns the dead zone off for 1:1 camera track. Axis lock may be **both**, **H only**, or **V only**.
+Default dead zone **32x30** pixels inside the 128x120 view. `r01_camera_set_deadzone` in `game_logic.c` sets the live box on the 6502. Play follow snaps live box edges to the same parity as the viewport center so a 2 px hold-X run from a centered snap does not take a 1 px camera hitch. Follow uses the player and dead zone only. Empty BG1 slots and the present-screen bounding box do not stop the camera. Details and the 31x69 exact-match example are in `world-scrolling.md`. **0,0** (or `r01_camera_disable_deadzone`) turns the dead zone off for 1:1 camera track. Axis lock may be **both**, **H only**, or **V only**.
 
 ### Starter API (locked signatures)
 
@@ -223,8 +223,8 @@ There is **no** separate "max entities on screen" hard cap. On-screen count is w
 
 - **Player movement** and **camera movement** are separate. See `world-scrolling.md` (dead zone, axis lock, follow vs auto).
 - Camera: instant screen switch and/or smooth scrolling. Both allowed in one game or world.
-- **BG0 layout wrap**: `r01_bg0_set_wrap(ctx, wrap_x, wrap_y)` in author `game_logic.c`. Studio packs non-zero axes into world header flags byte **7** bits **1**/**2**. Play modulo-tiles samples on those axes and uses period rate `bg0_n / bg1_n` (not end-aligned `(n-1)/(n-1)`). See `world-scrolling.md`.
-- **BG0 clip to BG1**: `r01_bg0_set_clip_to_bg1(ctx, enable)` packs into flags byte **7** bit **3**. When enabled, BG0 is hidden outside present BG1 camera slots (backdrop there). Default off: BG0 fills the full viewport under missing/out-of-window BG1. Independent of wrap. See `world-scrolling.md`.
+- **BG0 layout wrap**: `r01_bg0_set_wrap(ctx, wrap_x, wrap_y)` in author `game_logic.c` sets the 6502 scroll-rate wrap. World header flags byte **7** bits **1**/**2** are the video-plane wrap at boot. Play modulo-tiles samples on those axes and uses period rate `bg0_n / bg1_n` (not end-aligned `(n-1)/(n-1)`). See `world-scrolling.md`.
+- **BG0 clip to BG1**: `r01_bg0_set_clip_to_bg1(ctx, enable)` is the 6502 flag. World header bit **3** is the video-plane clip at boot. When enabled, BG0 is hidden outside present BG1 camera slots (backdrop there). Default off: BG0 fills the full viewport under missing/out-of-window BG1. Independent of wrap. See `world-scrolling.md`.
 - **BG1** (and manual strip) autoscroll / wrap helpers remain TBD. See `world-scrolling.md`.
 - Modes: **platformer** and **top-down**.
 
@@ -233,7 +233,7 @@ There is **no** separate "max entities on screen" hard cap. On-screen count is w
 | Feature | v1 |
 | --- | --- |
 | Movement | Axis-separated (resolve X then Y, or the reverse, consistently) |
-| Solids | BG1 cells whose bank index and tile index match a marked pattern. Palette and H/V flip are ignored. A grid slot with no present BG1 screen has no tiles and blocks motion (ledge / world edge). BG0 show-through is decoration. Author code marks patterns with `r01_solid_pattern_add(ctx, bank, tile)` in `game_logic.c`. Studio Set Solid stores the same list as `solid_patterns` in the project JSON. Export packs that JSON list at PRG `$8700`. Boot copies the list into system RAM (`$0200`). See `memory.md` |
+| Solids | BG1 cells whose bank index and tile index match a marked pattern. Palette and H/V flip are ignored. A grid slot with no present BG1 screen has no tiles and blocks motion (ledge / world edge). BG0 show-through is decoration. Studio Set Solid stores `solid_patterns` in the project JSON. Export packs that list at PRG `$8700`. Boot copies the list into system RAM (`$0200`). `r01_solid_pattern_add` in `game_logic.c` is optional RAM extras after boot. See `memory.md` |
 | Colliders | Entity AABB hitboxes (per state). Vs BG solids: every overlapping 8x8 tile is tested (not corners only) |
 | Gravity / jump | Simple constant gravity + jump impulse (PRG tunes numbers). Gravity units are **1/16** px per frame^2. Release while rising uses 3x gravity (short hop) |
 | Meter | Pixels per meter (default **16**). Gravity, jump, walk, and fall cap scale as `n * meter / 16` |
@@ -252,7 +252,6 @@ r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER);
 r01_platformer_set_gravity(ctx, R01_PLAT_GRAVITY_DEFAULT); /* 4 = 4/16 px/frame^2 at meter 16, clamp 1..255 */
 r01_platformer_set_jump(ctx, R01_PLAT_JUMP_DEFAULT);       /* 4 px impulse at meter 16, clamp 1..32 */
 r01_platformer_set_meter(ctx, R01_PLAT_METER_DEFAULT);     /* 16 px per meter, clamp 1..64 */
-r01_solid_pattern_add(ctx, 0, 1);                          /* bank 0 tile 1 is solid, pal/flip ignored */
 ```
 
 Pad bits in `R01_PAD_*` match `$7F60`. `r01_pad_down(ctx, mask)` is true while any of those bits are held. `r01_player_moving_x(ctx)` is Left or Right. Each tick the PRG resets move mul to **1** and live anim delay to **0**, then `r01_game_on_tick` may override. `r01_player_set_move_mul` is **1..8** (walk px per frame at meter 16). `r01_player_anim_set_frame_delay` is **0** (authored delay) or **1..255** live ticks.
@@ -287,18 +286,20 @@ r01_player_anim_set_crouch_state(ctx, 2);
 r01_player_anim_set_jump_state(ctx, 3);
 ```
 
-Packing: world header flags byte **7** bit **4** = platformer. Gravity, jump, and meter are u8 at PRG `$80F7` / `$80F8` / `$80F9`. **0** (and `R01_PLAT_*_DEFAULT` in `game_logic.c`) means Play uses `apps/common/r01_play_physics.h`. Crouch / idle / walk / jump state indices are `$80FA` / `$80FB` / `$80FC` / `$80FD` (**$FF** = unmapped). A numeric argument is packed as-is. See `memory.md`.
+Live gravity, jump, meter, and player anim maps are author `game_logic.c` in RAM. PRG `$80F7-$80FD` is reserved. World header bit **4** is unused.
 
-`r01_solid_pattern_add(ctx, bank, tile)` in author `game_logic.c` is the author API for solid patterns. Studio Set Solid stores `solid_patterns` in the project JSON. Export packs that list at PRG `$8700`. Palette and H/V flip are ignored. The PRG probes BG1 nametable bank+tile against the packed tables.
+Studio Set Solid stores `solid_patterns` in the project JSON. Export packs that list at PRG `$8700`. Palette and H/V flip are ignored. The PRG probes BG1 nametable bank+tile against the packed tables. `r01_solid_pattern_add` is optional RAM extras after that boot copy.
 
-BGM tracks live in the Studio Audio tab and pack into the cart **BGM** region (bytecode plus Guitar / EGuitar / Piano / Flute ids per channel). `r01_bgm_play(ctx, N)` in author `game_logic.c` selects that 1-based track. Pack sets `$80FE`. **0** means no autoplay. Play and `./scripts/emu.sh` start that packed stream, including the wavetable ids. See `sound.md`.
+BGM tracks live in the Studio Audio tab and pack into the cart **BGM** region (bytecode plus Guitar / EGuitar / Piano / Flute ids per channel). `r01_bgm_play(ctx, N)` in author `game_logic.c` selects that 1-based track at boot. **0** means no autoplay. Play and `./scripts/emu.sh` run the 6502 tracker into `$7F40`. See `sound.md`.
 
 ## Ownership
 
 | Piece | Owner |
 | --- | --- |
 | Entity **definitions** | Cart pack, global catalog (MAP-readable) |
-| Entity **behavior** | PRG on the 6502 (C/ASM) |
+| Entity **behavior**, camera, mode, anim maps, BGM start | PRG on the 6502 (author C) |
+| Solid pattern list `$8700` | Studio Set Solid |
+| BGM stream bytes | Studio Audio tab |
 | Live instance state | System RAM |
 | Drawing | OAM `$7F20`/`$7F21` on MCU-M, SPI to MCU-S1 (**early VBlank** / `S1_RDY`, then S1 field fill) |
 

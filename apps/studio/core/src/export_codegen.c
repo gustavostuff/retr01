@@ -394,7 +394,6 @@ static int write_game_logic_once(const char *out_dir, char *err_buf, size_t err_
             "    r01_player_anim_set_walk_all(ctx, 1);\n"
             "    r01_player_anim_set_crouch_state(ctx, 3);\n"
             "    r01_player_anim_set_jump_state(ctx, 2);\n"
-            "    r01_solid_pattern_add(ctx, 0, 1);\n"
             "    r01_bgm_play(ctx, 1);\n"
             "}\n\n"
             "void r01_game_on_tick(R01GameCtx *ctx) {\n"

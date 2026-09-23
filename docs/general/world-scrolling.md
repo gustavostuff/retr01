@@ -201,12 +201,12 @@ Example: a space fly-through with a few star/planet screens that loop once the s
 World header byte **7** (flags):
 
 - bit **0**: player anim blob present
-- bit **1** (`0x02`): **BG0 wrap X** - tile the present BG0 screen layout horizontally
-- bit **2** (`0x04`): **BG0 wrap Y** - tile the present BG0 screen layout vertically
+- bit **1** (`0x02`): **BG0 wrap X** - video-plane tile wrap of the present BG0 layout horizontally
+- bit **2** (`0x04`): **BG0 wrap Y** - video-plane tile wrap of the present BG0 layout vertically
 - bit **3** (`0x08`): **BG0 clip to BG1** - hide BG0 outside present BG1 camera slots
-- bit **4** (`0x10`): **platformer** - gravity + face Y jump
+- bit **4** (`0x10`): unused. Platformer mode is `r01_game_set_mode` in author C
 
-Author code sets wrap with `r01_bg0_set_wrap(ctx, wrap_x, wrap_y)` and clip with `r01_bg0_set_clip_to_bg1(ctx, enable)` in `game_logic.c`. World header flags also store wrap/clip for the video plane. `r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER)` selects platformer on the 6502. Studio Set Solid packs the solid-pattern list at PRG `$8700`.
+Author code sets 6502 scroll-rate wrap with `r01_bg0_set_wrap(ctx, wrap_x, wrap_y)` and clip with `r01_bg0_set_clip_to_bg1(ctx, enable)` in `game_logic.c`. World header wrap/clip flags are the video plane at boot. `r01_game_set_mode(ctx, R01_GAME_MODE_PLATFORMER)` selects platformer on the 6502. Studio Set Solid packs the solid-pattern list at PRG `$8700`.
 
 Scroll rate without wrap is end-aligned `(bg0_n - 1) / (bg1_n - 1)` on each axis (see Parallax scroll rate below). With wrap on an axis, the rate is the period ratio `bg0_n / bg1_n` so a repeating strip stays even (8 BG0 screens under 16 BG1 screens is exact 1/2: 1 logic px every 2 frames at walk, 1 px per frame at 2x run). Wrap sampling still modulo-tiles the present BG0 box.
 

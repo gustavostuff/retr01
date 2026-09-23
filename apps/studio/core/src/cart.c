@@ -9,7 +9,6 @@
 #include "retr01_studio/export_codegen.h"
 #include "retr01_studio/project.h"
 #include "retr01_studio/sprites.h"
-#include "r01_play_camera.h"
 #include "r01_apu_cart.h"
 
 #include <stdio.h>
@@ -575,17 +574,8 @@ static int append_pal_plane(Buf *b, R01PalRow plane[R01_PAL_ROWS][R01_PALS_PER_R
 }
 
 static uint8_t cart_pack_world_flags(void) {
+    /* Video-plane wrap at boot. Live camera / mode / clip stay author C. */
     return (uint8_t)(R01_CART_WHDR_FLAG_BG0_WRAP_X | R01_CART_WHDR_FLAG_BG0_WRAP_Y);
-}
-
-static int cart_pack_cam_deadzone(uint8_t *out_x, uint8_t *out_y) {
-    if (out_x) {
-        *out_x = (uint8_t)R01_PLAY_CAM_DEADZONE_X_DEFAULT;
-    }
-    if (out_y) {
-        *out_y = (uint8_t)R01_PLAY_CAM_DEADZONE_Y_DEFAULT;
-    }
-    return 0;
 }
 
 static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w) {
@@ -717,11 +707,8 @@ static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w) {
         }
     }
     {
-        uint8_t dz_x;
-        uint8_t dz_y;
-        cart_pack_cam_deadzone(&dz_x, &dz_y);
-        put_u8(hdr + R01_CART_WHDR_CAM_DEADZONE_X, dz_x);
-        put_u8(hdr + R01_CART_WHDR_CAM_DEADZONE_Y, dz_y);
+        put_u8(hdr + R01_CART_WHDR_CAM_DEADZONE_X, 0);
+        put_u8(hdr + R01_CART_WHDR_CAM_DEADZONE_Y, 0);
     }
     put_u8(hdr + R01_CART_WHDR_FLAGS, cart_pack_world_flags());
 

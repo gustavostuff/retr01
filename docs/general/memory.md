@@ -46,7 +46,7 @@ Magic **`retr01`**. Byte 6 is `format_ver` **6**. Pointer table names the region
 | PRG  32 KB                                                           |
 |  flat code + vectors at top ($8000-$FFFF window)                     |
 |  entity behavior, spawn tables, collision solids                     |
-|  BGM boot track index at $80FE (stream itself is not in PRG)         |
+|  BGM stream is in the cart BGM region. Boot track is author C        |
 +----------------------------------------------------------------------+
 | GLOBAL CHR  128 KB                                                   |
 |  16 BG banks  |  16 SPR banks                                        |
@@ -101,13 +101,13 @@ Entity **spawn locations** live in **PRG** (tables or code calling `spawn_entity
 
 **Grid cell byte:** virtual map is **16x16** (col/row **0-15**). Pack both coords in **1 byte** as nibbles: `col | (row << 4)`. Same packing for BG1/BG0 directory entries and world-header spawn cell.
 
-**World header notes (BG0):** byte **3** packs present BG0 extent (`cols | rows<<4`). Byte **6** is BG0 present count. Bytes **14-16** are BG0 directory offset (u24), or **0** if none. Byte **7** flags: bit0 player-anim blob, bit1 BG0 wrap X, bit2 BG0 wrap Y, bit3 BG0 clip to BG1 (see `world-scrolling.md`), bit4 platformer mode (see `software-api.md`).
+**World header notes (BG0):** byte **3** packs present BG0 extent (`cols | rows<<4`). Byte **6** is BG0 present count. Bytes **14-16** are BG0 directory offset (u24), or **0** if none. Byte **7** flags: bit0 player-anim blob, bit1 BG0 wrap X, bit2 BG0 wrap Y, bit3 BG0 clip to BG1 (video plane, see `world-scrolling.md`). Bit4 platformer and cam dead-zone bytes are unused. Live mode and dead zone are author C.
 
 **Screen payload:** **480 B** = 240 tile bytes + 240 attr bytes (**16x15**, **128x120**). Same shape for BG1 and BG0. Attr pack in `video-graphics.md`. Bank bits **0-3** index global CHR.
 
 ### BGM blob (cart flash)
 
-Compressed tracker bytecode. Not in the 32 KB PRG window. `$80FE` is the 1-based boot track (0 = none). At play, PRG copies that track into system RAM (emu follows the same cart pointer). AKWF cycles and DPCM samples stay in MCU-S2 flash. Opcode details: `sound.md`. Rough play time vs leftover flash is in the budget section below.
+Compressed tracker bytecode. Not in the 32 KB PRG window. Author `r01_bgm_play(ctx, N)` selects the 1-based boot track (0 = none). Studio packs the stream bytes in this blob. At play, PRG copies that track into system RAM. AKWF cycles and DPCM samples stay in MCU-S2 flash. Opcode details: `sound.md`. Rough play time vs leftover flash is in the budget section below.
 
 | Off | Field |
 | --- | --- |
@@ -285,14 +285,26 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 | `+$01C0` | `$81C0` | Instance count (u8, max **64**) |
 | `+$01C1` | `$81C1` | Instance table (`count` x **6 B**, pack below) |
 | `+$00F0` | `$80F0` | `R01P` marker + version byte |
-| `+$00F7` | `$80F7` | Platformer gravity (u8, 1/16 px per frame^2, **0** = `R01_PLAT_GRAVITY_DEFAULT`) |
-| `+$00F8` | `$80F8` | Platformer jump impulse (u8, **0** = `R01_PLAT_JUMP_DEFAULT`) |
-| `+$00F9` | `$80F9` | Platformer meter px (u8, **0** = `R01_PLAT_METER_DEFAULT`) |
-| `+$00FA` | `$80FA` | Crouch state index (u8, **$FF** = unmapped) |
-| `+$00FB` | `$80FB` | Idle state index (u8, **$FF** = unmapped, freeze state 0 frame 0) |
-| `+$00FC` | `$80FC` | Walk state index (u8, **$FF** = unmapped) |
-| `+$00FD` | `$80FD` | Jump state index (u8, **$FF** = unmapped) |
-| `+$00FE` | `$80FE` | BGM boot track (u8, **0** = none, **1..8** = track). Stream bytes live in the cart BGM region, not in PRG |
+| `+$00F7` | `$80F7` | Reserved. Live gravity is `r01_platformer_set_gravity` in RAM |
+| `+$00F8` | `$80F8` | Reserved. Live jump is `r01_platformer_set_jump` in RAM |
+| `+$00F9` | `$80F9` | Reserved. Live meter is `r01_platformer_set_meter` in RAM |
+| `+$00FA` | `$80FA` | Reserved. Live crouch map is `r01_player_anim_set_crouch_state` |
+| `+$00FB` | `$80FB` | Reserved. Live idle map is `r01_player_anim_set_idle_state` |
+| `+$00FC` | `$80FC` | Reserved. Live walk map is `r01_player_anim_set_walk_all` |
+| `+$00FD` | `$80FD` | Reserved. Live jump map is `r01_player_anim_set_jump_state` |
+| `+$00FE` | `$80FE` | Reserved. Boot track is `r01_bgm_play`. Stream bytes live in the cart BGM region |
+
+**One writer per field**
+
+| Field | Writer |
+| --- | --- |
+| CHR, pals, maps, entity defs, BGM streams | Studio pack |
+| Present mask, spawns, solid list `$8700`, probe tables | Studio overlay (Set Solid for `$8700`) |
+| Camera dead zone, game mode, gravity, jump, meter, anim maps, BGM start | Author `game_logic.c` in RAM |
+| BG0 wrap / clip video sample | World header flags (bits 1-3) |
+| Platformer bit in world header | Unused. Mode is `r01_game_set_mode` |
+| World header cam dead zone bytes | Unused (0). Live box is C |
+| `r01_solid_pattern_add` | Optional RAM extras after boot. Packed probes stay Set Solid |
 
 **Spawn instance (6 B, little-endian):** a placed copy of a catalog type (who, facing, world XY). Live pose and the player-anim (`PA`) blob: `software-api.md`.
 
@@ -307,7 +319,7 @@ Table grows toward the collision grid at `$8500`. **64** records need **384 B** 
 
 Probe tables are **240 B** per present screen (max **64**). With a full solid-pattern list they end by `$C381`. llvm-mos C occupies `$C400`–`$FFF9`.
 
-Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs). Collision solids are a bank+tile list in system RAM (copied from PRG `$8700` at boot). Studio Set Solid stores `solid_patterns` in the project JSON. `r01_solid_pattern_add` in `game_logic.c` is the author API.
+Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs). Collision solids are a bank+tile list in system RAM (copied from PRG `$8700` at boot). Studio Set Solid stores `solid_patterns` in the project JSON. `r01_solid_pattern_add` is optional RAM extras.
 
 ## Notes
 

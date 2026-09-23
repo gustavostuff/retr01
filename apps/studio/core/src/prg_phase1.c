@@ -226,13 +226,7 @@ void r01_prg_overlay_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *p, con
     prg[R01P_OFF + 3] = 'P';
     prg[R01P_OFF + 4] = R01_PRG_R01P_VER;
     put_u16_le(prg + R01P_OFF + 5, (uint16_t)(CODE_BASE + R01_PLAY_SOLID_DATA_OFF));
-    prg[R01_PRG_PLAT_GRAVITY_OFF] = 0;
-    prg[R01_PRG_PLAT_JUMP_OFF] = 0;
-    prg[R01_PRG_PLAT_METER_OFF] = 0;
-    prg[R01_PRG_PLAT_CROUCH_OFF] = 0xFFu;
-    prg[R01_PRG_PLAYER_ANIM_IDLE_OFF] = 0xFFu;
-    prg[R01_PRG_PLAYER_ANIM_WALK_OFF] = 0xFFu;
-    prg[R01_PRG_PLAYER_ANIM_JUMP_OFF] = 0xFFu;
+    /* $80F7-$80FE stay linker zeros. Live gravity / anim / BGM start are author C. */
 
     patch_boot_map(prg, layout);
 }

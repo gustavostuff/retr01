@@ -109,8 +109,7 @@ int main(int argc, char **argv) {
         expect_cam_x = m.play.cam_x;
         expect_cam_y = m.play.cam_y;
         r01_play_camera_update(&expect_cam_x, &expect_cam_y, spawn_x, spawn_y, m.play.player_w, m.play.player_h,
-                               R01E_SCREEN_PX_W, R01E_SCREEN_PX_H, m.play.cam_deadzone_x, m.play.cam_deadzone_y,
-                               R01_PLAY_CAM_AXIS_BOTH);
+                               R01E_SCREEN_PX_W, R01E_SCREEN_PX_H, 32, 70, R01_PLAY_CAM_AXIS_BOTH);
         if (m.play.cam_x != expect_cam_x || m.play.cam_y != expect_cam_y) {
             fprintf(stderr, "FAIL camera at spawn: got %d,%d expected %d,%d\n", m.play.cam_x, m.play.cam_y,
                     expect_cam_x, expect_cam_y);

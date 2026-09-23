@@ -239,6 +239,7 @@ void r01_tracker_boot(void) {
     uint16_t len;
     uint16_t i;
     uint16_t hdr = R01_BGM_HDR;
+    extern R01GameCtx g_ctx;
 
     s_active = 0;
     s_len = 0;
@@ -260,7 +261,7 @@ void r01_tracker_boot(void) {
     if (ver == R01_BGM_INS_VER) {
         hdr = (uint16_t)R01_BGM_HDR_V1;
     }
-    boot = *(volatile uint8_t *)(uint16_t)0x80FEu;
+    boot = g_ctx.bgm_track;
     if (boot < 1u || boot > R01_BGM_TRACKS) {
         return;
     }

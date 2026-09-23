@@ -52,8 +52,7 @@ int main(void) {
     expect(ctx.player_walk_state[0] == 1 && ctx.player_walk_state[7] == 1, "walk all 1");
     expect(ctx.player_crouch_state == 3, "crouch 3");
     expect(ctx.player_jump_state == 2, "jump 2");
-    expect(ctx.solid_pat_count == 1, "one solid");
-    expect(ctx.solid_pat_bank[0] == 0 && ctx.solid_pat_tile[0] == 1, "solid 0,1");
+    expect(ctx.solid_pat_count == 0, "solids from Set Solid not C");
     expect(ctx.bgm_track == 1, "bgm track 1");
 
     ctx.player_move_mul = 1;

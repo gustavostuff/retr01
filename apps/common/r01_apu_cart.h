@@ -5,7 +5,7 @@
 
 /*
  * Compressed BGM lives in the cart image (MAP), not in the 32 KB PRG window.
- * Blob layout: memory.md. Boot track index is a PRG byte at $80FE.
+ * Blob layout: memory.md. Boot track is author r01_bgm_play (RAM). $80FE unused.
  *
  * Blob:
  *   +0  'B' 'G'

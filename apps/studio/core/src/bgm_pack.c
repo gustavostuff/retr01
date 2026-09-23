@@ -134,27 +134,11 @@ int r01_bgm_pack_blob(uint8_t *blob, unsigned cap, const R01BgmData *bgm) {
 }
 
 void r01_bgm_pack_boot(uint8_t prg[R01_PRG_BYTES], const uint8_t *blob, int blob_len) {
-    int tc;
-    int t;
+    (void)blob;
+    (void)blob_len;
     if (!prg) {
         return;
     }
+    /* Boot track is r01_bgm_play in author C. Stream bytes live in the BGM blob. */
     prg[R01_PRG_BGM_BOOT_OFF] = 0;
-    if (!blob || blob_len < (int)R01_PRG_BGM_HDR_V1) {
-        return;
-    }
-    tc = (int)blob[2];
-    if (tc < 0) {
-        tc = 0;
-    }
-    if (tc > (int)R01_PRG_BGM_TRACKS) {
-        tc = (int)R01_PRG_BGM_TRACKS;
-    }
-    for (t = 0; t < tc; t++) {
-        uint16_t tlen = (uint16_t)blob[20 + t * 2] | ((uint16_t)blob[21 + t * 2] << 8);
-        if (tlen > 0u) {
-            prg[R01_PRG_BGM_BOOT_OFF] = (uint8_t)(t + 1);
-            return;
-        }
-    }
 }

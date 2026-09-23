@@ -22,14 +22,20 @@ static void play_copy_cam_deadzone(R01eMachine *m) {
     int dx;
     int dy;
 
+    if (!m) {
+        return;
+    }
     m->play.cam_deadzone_x = R01_PLAY_CAM_DEADZONE_X_DEFAULT;
     m->play.cam_deadzone_y = R01_PLAY_CAM_DEADZONE_Y_DEFAULT;
+    if (r01e_cart_is_c_prg(&m->cart)) {
+        return;
+    }
     if (r01e_cart_world(&m->cart, (int)m->io.world, &wv) != 0) {
         return;
     }
     dx = (int)wv.cam_deadzone_x;
     dy = (int)wv.cam_deadzone_y;
-    if (dx <= R01E_SCREEN_PX_W && dy <= R01E_SCREEN_PX_H) {
+    if (dx <= R01E_SCREEN_PX_W && dy <= R01E_SCREEN_PX_H && (dx > 0 || dy > 0)) {
         m->play.cam_deadzone_x = dx;
         m->play.cam_deadzone_y = dy;
     }

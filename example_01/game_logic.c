@@ -31,10 +31,6 @@ static void init_player_anim(R01GameCtx *ctx) {
     r01_player_anim_set_jump_state(ctx, 2);
 }
 
-static void init_collision(R01GameCtx *ctx) {
-    r01_solid_pattern_add(ctx, 0, 1);
-}
-
 static uint16_t rnd16(void) {
     s_rng = (uint16_t)(s_rng * 2053u + 13849u);
     return s_rng;
@@ -127,7 +123,6 @@ void r01_game_on_init(R01GameCtx *ctx) {
     init_camera_and_bg0(ctx);
     init_platformer(ctx);
     init_player_anim(ctx);
-    init_collision(ctx);
     r01_bgm_play(ctx, 1);
 }
 

@@ -47,7 +47,7 @@ Logical canvas **640x360** or **1280x720** (**Ctrl+Shift+R**). Window scale **Ct
 
 **Worlds.** Seven slots. A pager steps the active world (**N/7**). A **BG1** / **BG0** control picks the map plane. World 1 starts as a 3x3 on a 16x16 map. Cart export packs **world 0** only (Studio World 1). BG1 is the playfield, BG0 is the parallax plane. Double-click an empty cell to create a screen. Right-click a BG1 cell for default screen / default world. PNG drop imports an atlas into the active world, BG bank 0.
 
-**Paint.** Right-column **Work on** / **Hide** radios (BG, Sprite, Both). **Ctrl+click** stamps tiles. Set Solid marks a BG pattern (bank + tile) as collidable. `r01_solid_pattern_add` in `game_logic.c` is the author API for the same list. Palette and H/V flip do not matter. The JSON list packs to PRG and copies into system RAM at boot. Drag an Entities row onto the preview to place an instance (switches to Sprite layer). CHR is **16 BG + 16 SPR** cart-wide. A pager steps the bank (**N/16**). A **BG** / **Sprites** control picks the plane. Caps: [`memory.md`](../../docs/general/memory.md).
+**Paint.** Right-column **Work on** / **Hide** radios (BG, Sprite, Both). **Ctrl+click** stamps tiles. Set Solid marks a BG pattern (bank + tile) as collidable. That JSON list packs to PRG `$8700` and copies into system RAM at boot. `r01_solid_pattern_add` in `game_logic.c` is optional RAM extras. Palette and H/V flip do not matter. Drag an Entities row onto the preview to place an instance (switches to Sprite layer). CHR is **16 BG + 16 SPR** cart-wide. A pager steps the bank (**N/16**). A **BG** / **Sprites** control picks the plane. Caps: [`memory.md`](../../docs/general/memory.md).
 
 **Entities.** Up to **4** states x **8** frames x **6** sprites. **Add** opens compose. **Import** reads `aseprite_entities/` next to the saved `.r01proj` (manual, never on open). Right-click **Mark as player**. The playable player belongs on world 0. Hitbox is per state. Draw origin is per frame. Caps and pack: [`software-api.md`](../../docs/general/software-api.md). Kit palettes: [`docs/general/palette/`](../../docs/general/palette/README.md).
 
@@ -79,7 +79,7 @@ void r01_game_on_vblank(R01GameCtx *ctx) {
 
 **Ctrl+S** / **Ctrl+O** the current path. First save (or unsaved) opens the Save project modal. Default parent is `apps/studio/projects/`. Quit does not auto-save. JSON version **18**. Save writes world 0. Worlds 2-7 are session-only until multi-world JSON. Load applies that world data to world 0.
 
-**Ctrl+E** packs `<stem>.retr01` and writes `data/` plus generated `include/` id headers beside the project (or under `output/` if unsaved). `game_logic.c` is created once. llvm-mos compiles that file with the SDK into 32 KB PRG (`retr01.prg` and `listing.txt`). Audio-tab tracks go into the cart BGM region. `r01_bgm_play(ctx, N)` in `game_logic.c` selects the boot track at `$80FE`. Studio Set Solid stores `solid_patterns` in JSON. Export packs that list at `$8700`.
+**Ctrl+E** packs `<stem>.retr01` and writes `data/` plus generated `include/` id headers beside the project (or under `output/` if unsaved). `game_logic.c` is created once. llvm-mos compiles that file with the SDK into 32 KB PRG (`retr01.prg` and `listing.txt`). Audio-tab tracks go into the cart BGM region. `r01_bgm_play(ctx, N)` in `game_logic.c` selects the boot track. Studio Set Solid stores `solid_patterns` in JSON. Export packs that list at `$8700`.
 
 | Path | Role |
 |------|------|

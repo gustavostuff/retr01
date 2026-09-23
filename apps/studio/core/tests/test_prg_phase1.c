@@ -75,7 +75,7 @@ TEST_MAIN() {
         nblob = r01_bgm_pack_blob(blob, (unsigned)sizeof(blob), &bgm);
         EXPECT(nblob >= (int)R01_PRG_BGM_HDR_V1, "blob length");
         r01_bgm_pack_boot(prg, blob, nblob);
-        EXPECT(prg[R01_PRG_BGM_BOOT_OFF] == 1, "boot track 1 from packed blob");
+        EXPECT(prg[R01_PRG_BGM_BOOT_OFF] == 0, "boot track is author C");
         EXPECT(blob[0] == R01_PRG_BGM_MAGIC0 && blob[1] == R01_PRG_BGM_MAGIC1, "BG magic");
         EXPECT(blob[2] == 1, "packed track count");
         EXPECT(blob[3] == R01_PRG_BGM_INS_VER, "ins table present");
@@ -106,6 +106,14 @@ TEST_MAIN() {
             EXPECT(prg[0] == 0x78, "overlay keeps boot");
             EXPECT(prg[0x7FFC] == 0x00 && prg[0x7FFD] == 0x80, "overlay keeps RESET");
             EXPECT(prg[R01_PRG_BOOTMAP_OFF] == 0x34, "overlay bootmap pal");
+            {
+                uint8_t mark = 0xABu;
+                prg[R01_PRG_PLAT_GRAVITY_OFF] = mark;
+                prg[R01_PRG_BGM_BOOT_OFF] = 2;
+                r01_prg_overlay_tables(prg, p, &layout);
+                EXPECT(prg[R01_PRG_PLAT_GRAVITY_OFF] == mark, "overlay leaves $80F7");
+                EXPECT(prg[R01_PRG_BGM_BOOT_OFF] == 2, "overlay leaves $80FE");
+            }
         }
     }
 
