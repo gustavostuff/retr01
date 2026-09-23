@@ -23,7 +23,7 @@
 #define R01_CART_SCREEN_PAYLOAD ((uint32_t)R01_SCREEN_PAYLOAD)
 
 #define R01_MAX_WORLDS 7
-#define R01_PHASE1_WORLDS 1 /* emu Play: world 0 only */
+#define R01_PHASE1_WORLDS R01_MAX_WORLDS
 #define R01_GRID_MAX 16
 #define R01_MAX_PRESENT_SCREENS 64
 #define R01_CELL_PACK(col, row) ((uint8_t)(((unsigned)(col)&0x0fu) | (((unsigned)(row)&0x0fu) << 4)))

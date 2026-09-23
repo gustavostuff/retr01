@@ -20,11 +20,11 @@ Studio **Play** uses this same emu core after export (shared library + standalon
 
 **Studio integration:** Studio **Play** / **Space** always exports, then embeds this render path. Export wait uses a Studio-local spinning boot message. Standalone `./scripts/emu.sh` stays for triage.
 
-**Collision:** The C PRG tests each BG1 cell against packed per-screen probe tables (from Studio Set Solid / project `solid_patterns`) plus the pattern list at PRG `$8700`. Palette and H/V flip do not matter. Boot copies that list into system RAM `$0200`. Default motion is top-down (axis-separated). `r01_game_set_mode` in `game_logic.c` selects platformer (gravity + face **Y** jump, short hop on release, Down crouch). `r01_game_on_tick` may set walk mul and live anim frame delay from the pad.
+**Collision:** The C PRG tests each BG1 cell against the live MAP nametable plus the pattern list at PRG `$8700`. Palette and H/V flip do not matter. Boot copies that list into system RAM `$0200`. Default motion is top-down (axis-separated). `r01_game_set_mode` in `game_logic.c` selects platformer (gravity + face **Y** jump, short hop on release, Down crouch). `r01_game_on_tick` may set walk mul and live anim frame delay from the pad.
 
 **Camera:** Dead zone W x H from `r01_camera_set_deadzone` in `game_logic.c` (runs on the 6502). Shared `../common/r01_play_camera.c`.
 
-**Runtime:** World **0** only (`R01E_PHASE1_WORLDS=1`).
+**Runtime:** Packed worlds 1-6 play from the same MAP + `$8700` rules as world 0 (`r01_world_enter`).
 
 ## Build / run
 

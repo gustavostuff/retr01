@@ -48,6 +48,7 @@ void r01_game_spawn(R01GameCtx *ctx);
 void r01_game_camera_snap(R01GameCtx *ctx);
 void r01_scroll_publish(const R01GameCtx *ctx);
 void r01_sys_publish(const R01GameCtx *ctx);
+void r01_world_enter(uint8_t world_id);
 void r01_game_draw_player(const R01GameCtx *ctx);
 void r01_game_anim_tick(const R01GameCtx *ctx, int airborne, int crouching, int adx, int ady);
 void r01_game_draw_sprites(const R01GameCtx *ctx, int airborne, int crouching, int adx, int ady);

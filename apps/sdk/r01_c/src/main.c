@@ -11,11 +11,11 @@ void r01_nmi(void) {
 int main(void) {
     r01_boot_copy_solids();
     r01_game_ctx_init(&g_ctx);
+    r01_world_enter(*R01_WORLD_PORT);
     r01_game_spawn(&g_ctx);
     r01_game_on_init(&g_ctx);
     r01_game_camera_snap(&g_ctx);
     r01_boot_map_stream();
-    r01_world_cache_boot();
     r01_map_load_window(g_ctx.cam_x, g_ctx.cam_y);
     r01_bg0_publish(&g_ctx);
     r01_tracker_boot();

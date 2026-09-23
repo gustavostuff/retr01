@@ -71,7 +71,7 @@ TEST_MAIN() {
     EXPECT(path_exists("codegen_out/data/pal_bg.bin"), "pal_bg.bin");
     EXPECT(path_exists("codegen_out/data/spawns.bin"), "spawns.bin");
     EXPECT(path_exists("codegen_out/data/play8100.bin"), "play8100.bin");
-    EXPECT(path_exists("codegen_out/data/collgrid.bin"), "collgrid.bin");
+    EXPECT(path_exists("codegen_out/data/worlddir.bin"), "worlddir.bin");
     EXPECT(path_exists("codegen_out/data/solids.bin"), "solids.bin");
     EXPECT(path_exists("codegen_out/data/r01p.bin"), "r01p.bin");
     EXPECT(!path_exists("codegen_out/C/base_game.c"), "no base_game.c");

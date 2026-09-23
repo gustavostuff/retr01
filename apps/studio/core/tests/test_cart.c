@@ -122,6 +122,10 @@ TEST_MAIN() {
         EXPECT(r01_world_place_entity(w, type_id, 10, 10) >= 0, "second inst");
     }
 
+    EXPECT(r01_project_set_active_world(p, 1) == 0, "world 1");
+    EXPECT(r01_world_create_screen(&p->worlds[1], 0, 0) >= 0, "world 1 screen");
+    EXPECT(r01_world_place_entity(&p->worlds[1], 0, 16, 24) >= 0, "world 1 inst");
+
     EXPECT(r01_cart_write(p, "test_cart.retr01", err, sizeof(err)) == 0, "cart write");
     {
         FILE *f = fopen("test_cart.retr01", "rb");
@@ -202,6 +206,20 @@ TEST_MAIN() {
                 }
                 memcpy(slot, img + off_wtable, 8);
                 EXPECT(slot[0] != 0, "world0 present");
+                world_base = rd_u24(slot + 2);
+                memcpy(slot, img + off_wtable + WORLD_SLOT_SIZE, 8);
+                EXPECT(slot[0] != 0, "world1 present");
+                EXPECT(img[7] == 2, "cart world count 2");
+                {
+                    uint16_t w0play = rd_u16(img + (size_t)prg_off + 0x0500u);
+                    uint16_t w1play = rd_u16(img + (size_t)prg_off + 0x0502u);
+                    uint8_t w1n;
+                    EXPECT(w0play == 0x8100u, "world 0 play ptr");
+                    EXPECT(w1play == 0x8800u, "world 1 play ptr");
+                    w1n = img[(size_t)prg_off + (size_t)(w1play - 0x8000u) + 0xC0u];
+                    EXPECT(w1n >= 1, "world 1 instances in PRG");
+                }
+                memcpy(slot, img + off_wtable, 8);
                 world_base = rd_u24(slot + 2);
                 memcpy(hdr, img + world_base, WORLD_HDR_SIZE);
                 type_n = hdr[R01_CART_WHDR_TYPE_COUNT];

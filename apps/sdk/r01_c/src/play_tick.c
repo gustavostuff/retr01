@@ -9,10 +9,10 @@
 #define R01_SYS_CAM_X 0x02E4u
 #define R01_SYS_CAM_Y 0x02E6u
 #define R01_SYS_READY 0x02E8u
-#define R01_PLAY_SPAWN_CELL 0x8120u
-#define R01_PLAY_INST_COUNT 0x81C0u
-#define R01_PLAY_INST_TABLE 0x81C1u
-#define R01_COLL_GRID 0x8500u
+#define R01_PLAY_SPAWN_CELL 0x20u
+#define R01_PLAY_INST_COUNT 0xC0u
+#define R01_PLAY_INST_TABLE 0xC1u
+#define R01_SOLID_RAM 0x0200u
 
 static R01PlayPhysics s_phys;
 static uint8_t s_phys_ready;
@@ -25,18 +25,11 @@ static int s_hit_dx;
 static int s_hit_dy;
 static uint8_t s_hit_w = 8;
 static uint8_t s_hit_h = 8;
-static uint16_t s_sol_tab;
-static uint8_t s_sol_col = 0xFFu;
-static uint8_t s_sol_row = 0xFFu;
+static const R01GameCtx *s_coll_ctx;
 #endif
 
 void r01_game_play_reset(void) {
     s_phys_ready = 0;
-#ifndef R01_HOST_TEST
-    s_sol_col = 0xFFu;
-    s_sol_row = 0xFFu;
-    s_sol_tab = 0;
-#endif
 }
 
 #ifdef R01_HOST_TEST
@@ -56,24 +49,36 @@ static void put_u16_ram(uint16_t addr, uint16_t v) {
     R01_CPU8(addr + 1u) = (uint8_t)(v >> 8);
 }
 
+static int pattern_solid(uint8_t bank, uint8_t tile) {
+    uint8_t n = R01_CPU8(R01_SOLID_RAM);
+    uint8_t i;
+    for (i = 0; i < n; i++) {
+        if (R01_CPU8(R01_SOLID_RAM + 1u + (uint16_t)i * 2u) == bank &&
+            R01_CPU8(R01_SOLID_RAM + 2u + (uint16_t)i * 2u) == tile) {
+            return 1;
+        }
+    }
+    if (s_coll_ctx) {
+        n = s_coll_ctx->solid_pat_count;
+        for (i = 0; i < n; i++) {
+            if (s_coll_ctx->solid_pat_bank[i] == bank && s_coll_ctx->solid_pat_tile[i] == tile) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
 static int play_solid_cell(uint8_t col, uint8_t row, uint8_t cell) {
-    uint16_t tab;
+    uint8_t tile;
+    uint8_t attr;
     if (col > 15u || row > 15u) {
         return 1;
     }
-    if (col != s_sol_col || row != s_sol_row) {
-        uint16_t slot = (uint16_t)(R01_COLL_GRID + ((uint16_t)row * 16u + (uint16_t)col) * 2u);
-        tab = (uint16_t)R01_CPU8(slot) | ((uint16_t)R01_CPU8(slot + 1u) << 8);
-        s_sol_col = col;
-        s_sol_row = row;
-        s_sol_tab = tab;
-    } else {
-        tab = s_sol_tab;
-    }
-    if (tab == 0u) {
+    if (r01_map_tile_at(col, row, cell, &tile, &attr) != 0) {
         return 1;
     }
-    return R01_CPU8(tab + (uint16_t)cell) != 0u;
+    return pattern_solid((uint8_t)(attr & 0x0Fu), tile);
 }
 
 static int cart_aabb_ok(int px, int py, int bw, int bh) {
@@ -182,14 +187,13 @@ void r01_game_spawn(R01GameCtx *ctx) {
     ctx->player_x = 40;
     ctx->player_y = 40;
 #else
-    n = R01_CPU8(R01_PLAY_INST_COUNT);
+    n = R01_CPU8((uint16_t)(r01_play_base() + R01_PLAY_INST_COUNT));
     if (n > 0u) {
-        ctx->player_x = (uint16_t)R01_CPU8(R01_PLAY_INST_TABLE + 2u) |
-                        ((uint16_t)R01_CPU8(R01_PLAY_INST_TABLE + 3u) << 8);
-        ctx->player_y = (uint16_t)R01_CPU8(R01_PLAY_INST_TABLE + 4u) |
-                        ((uint16_t)R01_CPU8(R01_PLAY_INST_TABLE + 5u) << 8);
+        uint16_t rec = (uint16_t)(r01_play_base() + R01_PLAY_INST_TABLE);
+        ctx->player_x = (uint16_t)R01_CPU8(rec + 2u) | ((uint16_t)R01_CPU8(rec + 3u) << 8);
+        ctx->player_y = (uint16_t)R01_CPU8(rec + 4u) | ((uint16_t)R01_CPU8(rec + 5u) << 8);
     } else {
-        uint8_t cell = R01_CPU8(R01_PLAY_SPAWN_CELL);
+        uint8_t cell = R01_CPU8((uint16_t)(r01_play_base() + R01_PLAY_SPAWN_CELL));
         int col = (int)(cell & 0x0Fu);
         int row = (int)((cell >> 4) & 0x0Fu);
         ctx->player_x = (uint16_t)(col * R01_SCREEN_PX_W + (R01_SCREEN_PX_W - R01_PLAY_PLAYER_W) / 2);
@@ -299,6 +303,7 @@ void r01_game_play_tick(R01GameCtx *ctx) {
 #ifdef R01_HOST_TEST
     ok = move_ok_open;
 #else
+    s_coll_ctx = ctx;
     ok = move_ok_cart;
 #endif
     r01_play_physics_tick(&s_phys, &px, &py, dx, dy, jump, ok, ctx, &adx, &ady);

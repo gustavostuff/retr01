@@ -46,9 +46,10 @@ TEST_MAIN() {
 
     /* Play table lives at PRG+$0100 (CPU $8100). */
     EXPECT(prg[0x0120] == R01_CELL_PACK(R01_START_COL, R01_START_ROW) || prg[0x0100] != 0, "play table written");
+    EXPECT(prg[0x0700] == 0, "solid list count empty");
     {
-        uint16_t g00 = (uint16_t)prg[R01_PRG_COLL_GRID_OFF] | ((uint16_t)prg[R01_PRG_COLL_GRID_OFF + 1u] << 8);
-        EXPECT(g00 == 0x8701u, "coll grid (0,0) probe");
+        uint16_t w0 = (uint16_t)prg[R01_PRG_WORLDDIR_OFF] | ((uint16_t)prg[R01_PRG_WORLDDIR_OFF + 1u] << 8);
+        EXPECT(w0 == 0x8100u, "world 0 play ptr");
     }
 
     EXPECT(prg[R01_PRG_BOOTMAP_OFF] == 0x34, "boot MAP pal_bg lo");
@@ -98,10 +99,12 @@ TEST_MAIN() {
             struct stat st;
             EXPECT(stat("table_bins/play8100.bin", &st) == 0 && (size_t)st.st_size == R01_PRG_PLAY_TAB_BYTES,
                    "play8100.bin size");
-            EXPECT(stat("table_bins/collgrid.bin", &st) == 0 && (size_t)st.st_size == R01_PRG_COLLGRID_BYTES,
-                   "collgrid.bin size");
+            EXPECT(stat("table_bins/worlddir.bin", &st) == 0 && (size_t)st.st_size == R01_PRG_WORLDDIR_BYTES,
+                   "worlddir.bin size");
             EXPECT(stat("table_bins/r01p.bin", &st) == 0 && (size_t)st.st_size == R01_PRG_R01P_BYTES, "r01p.bin size");
-            EXPECT(stat("table_bins/solids.bin", &st) == 0 && st.st_size > 0, "solids.bin present");
+            EXPECT(stat("table_bins/solids.bin", &st) == 0 && st.st_size > 0 &&
+                       (size_t)st.st_size <= R01_PRG_SOLIDS_MAX,
+                   "solids.bin is pattern list");
         }
     }
 
@@ -123,6 +126,7 @@ TEST_MAIN() {
             EXPECT(prg[0x00F0] == 'R' && prg[0x00F1] == '0' && prg[0x00F2] == '1' && prg[0x00F3] == 'P',
                    "linked R01P");
             EXPECT(prg[0x00F4] == R01_PRG_R01P_VER, "linked R01P ver");
+            EXPECT(prg[0x0500] == 0x00 && prg[0x0501] == 0x81, "linked world dir");
             r01_prg_patch_boot_map(prg, &layout);
             EXPECT(prg[R01_PRG_C_OFF] == keep, "bootmap patch keeps C at $C400");
             EXPECT(prg[0] == 0x78, "bootmap patch keeps boot");

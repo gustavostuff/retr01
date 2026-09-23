@@ -84,15 +84,16 @@ void r01_game_on_vblank(R01GameCtx *ctx) {
 | Path | Role |
 |------|------|
 | `<stem>.r01proj` | Authoring JSON |
-| `<stem>.retr01` | Packed cart (world 0) |
+| `<stem>.retr01` | Packed cart |
 | `game_logic.c` | Author file, kept |
 | `include/r01_entity_ids.h` | Catalog type macros. Overwrite OK |
 | `include/r01_warp_ids.h` | Warp entrance macros. Overwrite OK |
 | `retr01.prg` / `listing.txt` | llvm-mos PRG and mixed C/ASM listing |
 | `data/spawns.bin` | Instance table bytes at `$81C0` (author copy) |
-| `data/play8100.bin` | Present, spawn, coll dir, instances (`$8100-$84FF`) |
-| `data/collgrid.bin` | Probe address grid (`$8500`) |
-| `data/solids.bin` | Solid list plus probes (`$8700`) |
+| `data/play8100.bin` | Present, spawn, instances (`$8100-$84FF`) |
+| `data/worlddir.bin` | 7 x u16 play bases (`$8500`) |
+| `data/solids.bin` | Solid pattern list (`$8700`) |
+| `data/wplay.bin` | Extra world play blocks (`$8800`) when worlds 1-6 are present |
 | `data/r01p.bin` | `R01P` marker (`$80F0`) |
 | `data/` | Studio binaries (CHR, maps, pals, PRG tables) |
 

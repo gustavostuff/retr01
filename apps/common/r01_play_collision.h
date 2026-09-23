@@ -3,7 +3,7 @@
 
 #include "r01_cart_caps.h"
 
-/* Shared AABB vs world-grid bounds + solid-tile probe.
+/* Shared AABB vs world-grid bounds + solid tiles from MAP + $8700 pattern list.
  * has_screen is a present BG1 slot (col/row 0..15). A missing BG1 screen blocks
  * motion (ledge / world edge). solid_at is world-space (Studio project or packed cart). */
 

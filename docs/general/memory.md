@@ -271,17 +271,13 @@ See `hardware.md` and `ic-comms-risks.md`.
 
 ## Phase 1 PRG play tables (Studio / Emu)
 
-Authoring spawns live in the project JSON. Packed carts put **placements in PRG**, not the world blob (see entity catalog above). Studio writes `data/play8100.bin`, `collgrid.bin`, `solids.bin`, and `r01p.bin`. llvm-mos KEEP-places them at the addresses below. Packer patches only the 16 B boot MAP at `$80E0` after cart layout. Phase 1 PRG layout (CPU `$8000` = PRG+$0000):
+Authoring spawns live in the project JSON. Packed carts put **placements in PRG**, not the world blob (see entity catalog above). Studio writes `data/play8100.bin`, `worlddir.bin`, `solids.bin`, `r01p.bin`, and `wplay.bin` when worlds 1-6 are present. llvm-mos KEEP-places them at the addresses below. Collision samples MAP nametables against the `$8700` pattern list. Packer patches only the 16 B boot MAP at `$80E0` after cart layout. Phase 1 PRG layout (CPU `$8000` = PRG+$0000):
 
 | PRG off | CPU | Role |
 | --- | --- | --- |
 | `+$00E0` | `$80E0` | Boot MAP (16 B): pal_bg u24, pal_spr u24, start screen u24, BGM u24, world0 u24, reserved |
 | `+$0100` | `$8100` | Present-screen bitmasks (32 B, 16x16 grid) |
 | `+$0120` | `$8120` | Spawn cell (`col | row<<4`) |
-| `+$0121` | `$8121` | Collision dir count (legacy linear dir, first present screens) |
-| `+$0122` | `$8122` | Collision dir entries (stops before `$81C0`) |
-| `+$0500` | `$8500` | Collision grid: 16×16 little-endian u16 probe-table addresses (0 = no screen). Play uses this, not the linear dir |
-| `+$0700` | `$8700` | Solid pattern list: u8 count, then `count` x (bank, tile). Packed from project JSON `solid_patterns` (Studio Set Solid). Boot copies to RAM `$0200`. Probe tables follow |
 | `+$01C0` | `$81C0` | Instance count (u8, max **64**) |
 | `+$01C1` | `$81C1` | Instance table (`count` x **6 B**, pack below) |
 | `+$00F0` | `$80F0` | `R01P` marker + version byte |
@@ -293,18 +289,21 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 | `+$00FC` | `$80FC` | Reserved. Live walk map is `r01_player_anim_set_walk_all` |
 | `+$00FD` | `$80FD` | Reserved. Live jump map is `r01_player_anim_set_jump_state` |
 | `+$00FE` | `$80FE` | Reserved. Boot track is `r01_bgm_play`. Stream bytes live in the cart BGM region |
+| `+$0500` | `$8500` | World play directory: 7 x u16 CPU addresses (0 = unused). `[0]` is `$8100` |
+| `+$0700` | `$8700` | Solid pattern list: u8 count, then `count` x (bank, tile). Packed from project JSON `solid_patterns` (Studio Set Solid). Boot copies to RAM `$0200` |
+| `+$0800` | `$8800` | Extra world play blocks (1024 B each) for present worlds 1-6 |
 
 **One writer per field**
 
 | Field | Writer |
 | --- | --- |
 | CHR, pals, maps, entity defs, BGM streams | Studio pack |
-| Present mask, spawns, solid list `$8700`, probe tables | Studio `data/` bins, llvm-mos KEEP at locked addresses |
+| Present mask, spawns, world dir, solid list `$8700` | Studio `data/` bins, llvm-mos KEEP at locked addresses |
 | Camera dead zone, game mode, gravity, jump, meter, anim maps, BGM start | Author `game_logic.c` in RAM |
 | BG0 wrap / clip video sample | World header flags (bits 1-3) |
 | Platformer bit in world header | Unused. Mode is `r01_game_set_mode` |
 | World header cam dead zone bytes | Unused (0). Live box is C |
-| `r01_solid_pattern_add` | Optional RAM extras after boot. Packed probes stay Set Solid |
+| `r01_solid_pattern_add` | Optional RAM extras after boot. Packed `$8700` list stays Set Solid |
 
 **Spawn instance (6 B, little-endian):** a placed copy of a catalog type (who, facing, world XY). Live pose and the player-anim (`PA`) blob: `software-api.md`.
 
@@ -315,11 +314,11 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 | 2 | 2 | `world_x` |
 | 4 | 2 | `world_y` |
 
-Table grows toward the collision grid at `$8500`. **64** records need **384 B** and fit. The grid is **512 B** (`$8500`–`$86FF`); probe tables start at `$8700`.
+Table grows toward `$8500` inside the 1024 B world-0 play block. **64** records need **384 B** and fit.
 
-Probe tables are **240 B** per present screen (max **64**). With a full solid-pattern list they end by `$C381`. llvm-mos C occupies `$C400`–`$FFF9`. Table growth into `$C400` fails the link.
+The `$8700` list is the Set Solid pattern pairs only. Collision samples MAP nametable bank+tile against that list (plus optional `r01_solid_pattern_add` extras in RAM). llvm-mos C occupies `$C400`–`$FFF9`. Table growth into `$C400` fails the link.
 
-Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs). Collision solids are a bank+tile list in system RAM (copied from PRG `$8700` at boot). Studio Set Solid stores `solid_patterns` in the project JSON. `r01_solid_pattern_add` is optional RAM extras.
+Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs). Collision solids are a bank+tile list in system RAM (copied from PRG `$8700` at boot). Studio Set Solid stores `solid_patterns` in the project JSON. `r01_solid_pattern_add` is optional RAM extras. `r01_world_enter(id)` selects a packed world (MAP + that world's play pointer).
 
 ## Notes
 

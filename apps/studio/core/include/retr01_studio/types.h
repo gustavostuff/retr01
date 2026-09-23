@@ -233,7 +233,7 @@ typedef struct R01World {
 
 typedef struct R01Project {
     char name[R01_NAME_MAX];
-    int default_world; /* Play entry world (begin_play); cart export always uses worlds[0] */
+    int default_world; /* Play entry world. Cart export packs every present world. */
     int active_world;  /* 0..R01_MAX_WORLDS-1 */
     int active_screen; /* index into worlds[active_world].screens */
     /* 8 rows x 4 pals each (docs/general/graphics). Index [row][pal]. */

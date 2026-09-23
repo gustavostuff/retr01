@@ -39,7 +39,7 @@ if [ ! -x "$CC" ]; then
   exit 1
 fi
 
-for f in r01p.bin play8100.bin collgrid.bin solids.bin; do
+for f in r01p.bin play8100.bin worlddir.bin solids.bin; do
   if [ ! -f "$DATA/$f" ]; then
     echo "error: missing $DATA/$f" >&2
     exit 1
@@ -47,9 +47,9 @@ for f in r01p.bin play8100.bin collgrid.bin solids.bin; do
 done
 
 SOL=$(wc -c < "$DATA/solids.bin")
-MAX=$((0xC400 - 0x8700))
+MAX=$((0x8800 - 0x8700))
 if [ "$SOL" -gt "$MAX" ]; then
-  echo "error: solids.bin $SOL B hits \$C400 (max $MAX)" >&2
+  echo "error: solids.bin $SOL B hits \$8800 (max $MAX)" >&2
   exit 1
 fi
 
@@ -63,10 +63,17 @@ TAB_S="$OUTDIR/r01_tables.s"
   printf '.incbin "%s"\n' "$DATA/r01p.bin"
   printf '.section .r01_play,"a",@progbits\n'
   printf '.incbin "%s"\n' "$DATA/play8100.bin"
-  printf '.section .r01_collgrid,"a",@progbits\n'
-  printf '.incbin "%s"\n' "$DATA/collgrid.bin"
+  printf '.section .r01_worlddir,"a",@progbits\n'
+  printf '.incbin "%s"\n' "$DATA/worlddir.bin"
   printf '.section .r01_solids,"a",@progbits\n'
   printf '.incbin "%s"\n' "$DATA/solids.bin"
+  if [ -f "$DATA/wplay.bin" ]; then
+    WPLAY=$(wc -c < "$DATA/wplay.bin")
+    if [ "$WPLAY" -gt 0 ]; then
+      printf '.section .r01_wplay,"a",@progbits\n'
+      printf '.incbin "%s"\n' "$DATA/wplay.bin"
+    fi
+  fi
 } > "$TAB_S"
 
 # W65C02S only. NMOS 6502 (-mcpu=mos6502) is not a PRG target.
@@ -103,7 +110,7 @@ SZ=$(wc -c < "$OUT")
 USED=0
 if [ -x "$SIZEBIN" ] && [ -f "$OUT.elf" ]; then
   USED=$("$SIZEBIN" -A "$OUT.elf" | awk '
-    /^\.(text|data|rodata|boot|text\.nmi|r01_bootmap|r01_r01p|r01_play|r01_collgrid|r01_solids)/ { s += $2 }
+    /^\.(text|data|rodata|boot|text\.nmi|r01_bootmap|r01_r01p|r01_play|r01_worlddir|r01_solids|r01_wplay)/ { s += $2 }
     END { print s+0 }
   ')
 fi

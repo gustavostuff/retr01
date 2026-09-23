@@ -25,6 +25,11 @@ static uint16_t s_bg0_cx = 0xFFFFu;
 static uint16_t s_bg0_cy = 0xFFFFu;
 static uint8_t s_bg0_wx = 0xFFu;
 static uint8_t s_bg0_wy = 0xFFu;
+static uint16_t s_play = 0x8100u;
+static uint8_t s_map_cache[R01_SCREEN_PAYLOAD];
+static uint8_t s_map_col = 0xFFu;
+static uint8_t s_map_row = 0xFFu;
+static uint8_t s_map_ok;
 
 static void vram_seek(uint16_t addr) {
     *R01_VRAM_ADDR_LO = (uint8_t)(addr & 0xFFu);
@@ -66,8 +71,8 @@ static void cache_l1_extents(void) {
     uint8_t r;
     uint8_t c;
     for (r = 0; r < 16u; r++) {
-        uint16_t bits = *(volatile uint8_t *)(uint16_t)(0x8100u + (uint16_t)r * 2u);
-        bits |= (uint16_t)(*(volatile uint8_t *)(uint16_t)(0x8100u + (uint16_t)r * 2u + 1u)) << 8;
+        uint16_t bits = *(volatile uint8_t *)(uint16_t)(s_play + (uint16_t)r * 2u);
+        bits |= (uint16_t)(*(volatile uint8_t *)(uint16_t)(s_play + (uint16_t)r * 2u + 1u)) << 8;
         if (bits == 0u) {
             continue;
         }
@@ -103,13 +108,27 @@ static void cache_l1_extents(void) {
     s_n1y = (uint8_t)(maxr - minr + 1u);
 }
 
-void r01_world_cache_boot(void) {
+void r01_world_enter(uint8_t id) {
+    uint32_t world0;
+    uint32_t wtable;
     uint32_t world;
     uint8_t n;
     uint8_t i;
     uint8_t hdr3;
+    uint8_t present;
     uint32_t dir;
     uint16_t cell;
+    uint16_t ptr;
+
+    if (id >= 7u) {
+        id = 0;
+    }
+    ptr = (uint16_t)(*(volatile uint8_t *)(uint16_t)(0x8500u + (uint16_t)id * 2u));
+    ptr |= (uint16_t)(*(volatile uint8_t *)(uint16_t)(0x8500u + (uint16_t)id * 2u + 1u)) << 8;
+    if (ptr == 0u) {
+        ptr = 0x8100u;
+    }
+    s_play = ptr;
 
     for (cell = 0; cell < R01_GRID_CELLS; cell++) {
         s_pay[cell] = 0;
@@ -117,6 +136,9 @@ void r01_world_cache_boot(void) {
     s_origin_col = 0xFFu;
     s_origin_row = 0xFFu;
     s_loaded = 0;
+    s_map_ok = 0;
+    s_map_col = 0xFFu;
+    s_map_row = 0xFFu;
     for (i = 0; i < 4u; i++) {
         s_slot_has[i] = 0;
         s_slot_col[i] = 0xFFu;
@@ -130,7 +152,21 @@ void r01_world_cache_boot(void) {
     s_bg0_wy = 0xFFu;
     cache_l1_extents();
 
-    world = r01_boot_u24(12);
+    world0 = r01_boot_u24(12);
+    if (world0 == 0u) {
+        return;
+    }
+    wtable = world0 - (uint32_t)(7u * 8u);
+    r01_map_seek(wtable + (uint32_t)id * 8u);
+    present = r01_map_read();
+    if (present == 0u) {
+        if (id != 0u) {
+            r01_world_enter(0);
+        }
+        return;
+    }
+    (void)r01_map_read();
+    world = r01_map_read_u24();
     if (world == 0u) {
         return;
     }
@@ -159,6 +195,44 @@ void r01_world_cache_boot(void) {
         }
         s_pay[(uint16_t)row * 16u + (uint16_t)col] = world + poff;
     }
+}
+
+void r01_world_cache_boot(void) {
+    r01_world_enter(*R01_WORLD_PORT);
+}
+
+uint16_t r01_play_base(void) {
+    return s_play;
+}
+
+int r01_map_tile_at(uint8_t col, uint8_t row, uint8_t cell, uint8_t *tile, uint8_t *attr) {
+    uint32_t pay;
+    uint16_t i;
+    if (col > 15u || row > 15u || cell >= (uint8_t)R01_TILES_PER_SCREEN) {
+        return -1;
+    }
+    pay = s_pay[(uint16_t)row * 16u + (uint16_t)col];
+    if (pay == 0u) {
+        return -1;
+    }
+    if (!s_map_ok || s_map_col != col || s_map_row != row) {
+        r01_map_lock();
+        r01_map_seek(pay);
+        for (i = 0; i < (uint16_t)R01_SCREEN_PAYLOAD; i++) {
+            s_map_cache[i] = r01_map_read();
+        }
+        r01_map_unlock();
+        s_map_col = col;
+        s_map_row = row;
+        s_map_ok = 1;
+    }
+    if (tile) {
+        *tile = s_map_cache[cell];
+    }
+    if (attr) {
+        *attr = s_map_cache[(uint16_t)R01_TILES_PER_SCREEN + (uint16_t)cell];
+    }
+    return 0;
 }
 
 void r01_map_load_window(uint16_t cam_x, uint16_t cam_y) {
@@ -249,6 +323,27 @@ void r01_bg0_publish(const R01GameCtx *ctx) {
 
 #else
 void r01_world_cache_boot(void) {
+}
+
+void r01_world_enter(uint8_t world_id) {
+    (void)world_id;
+}
+
+uint16_t r01_play_base(void) {
+    return 0x8100u;
+}
+
+int r01_map_tile_at(uint8_t col, uint8_t row, uint8_t cell, uint8_t *tile, uint8_t *attr) {
+    (void)col;
+    (void)row;
+    (void)cell;
+    if (tile) {
+        *tile = 0;
+    }
+    if (attr) {
+        *attr = 0;
+    }
+    return -1;
 }
 
 void r01_map_load_window(uint16_t cam_x, uint16_t cam_y) {

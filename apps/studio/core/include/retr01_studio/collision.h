@@ -43,7 +43,7 @@ int r01_world_solid_at_list(const R01World *w, int wx, int wy, const uint8_t *ba
                             int count);
 
 /* AABB vs world grid (0..15) and BG1 solid tiles (all overlapping 8x8 cells).
- * Missing BG1 screens are empty, not solid. */
+ * Missing BG1 screens block motion (ledge / world edge). */
 int r01_world_aabb_ok(const R01Project *p, const R01World *w, int px, int py, int bw, int bh);
 int r01_world_aabb_ok_list(const R01World *w, int px, int py, int bw, int bh, const uint8_t *banks,
                            const uint8_t *tiles, int count);

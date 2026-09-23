@@ -89,7 +89,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
         "${R01_REPO_ROOT}/apps/sdk/r01_c/build-prg.sh"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/ld/retr01.ld"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/data/play8100.bin"
-        "${R01_REPO_ROOT}/apps/sdk/r01_c/data/collgrid.bin"
+        "${R01_REPO_ROOT}/apps/sdk/r01_c/data/worlddir.bin"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/data/solids.bin"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/data/r01p.bin"
         "${R01_REPO_ROOT}/apps/sdk/r01_c/asm/boot.s"

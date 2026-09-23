@@ -578,7 +578,7 @@ static uint8_t cart_pack_world_flags(void) {
     return (uint8_t)(R01_CART_WHDR_FLAG_BG0_WRAP_X | R01_CART_WHDR_FLAG_BG0_WRAP_Y);
 }
 
-static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w) {
+static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w, int pack_pa) {
     uint8_t hdr[WORLD_HDR_SIZE];
     uint8_t dir[R01_MAX_PRESENT_SCREENS * SCREEN_DIR_ENT];
     uint8_t bg0_dir[R01_BG0_SCREENS_MAX * SCREEN_DIR_ENT];
@@ -798,8 +798,8 @@ static int build_world_blob(Buf *blob, const R01Project *p, const R01World *w) {
             }
         }
     }
-    /* One PA blob per cart, after this world's maps. See software-api.md. */
-    {
+    /* One PA blob per cart, after world 0 maps. See software-api.md. */
+    if (pack_pa) {
         int pe = r01_world_player_entity(p);
         if (pe >= 0 && pe < type_n && append_player_anim_blob(blob, p, pe, remap_b0_tile1) == 0) {
             blob->data[R01_CART_WHDR_FLAGS] |= R01_CART_WHDR_FLAG_PLAYER_ANIM;
@@ -866,6 +866,9 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
     Buf other_blob = {0};
     Buf entity_blob = {0};
     uint8_t global_chr[R01_CART_GLOBAL_CHR_BYTES];
+    uint32_t world_len[R01_MAX_WORLDS];
+    uint8_t world_on[R01_MAX_WORLDS];
+    uint8_t world_n = 0;
     int bi;
 
     if (!p || !out || !out_len) {
@@ -880,14 +883,30 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
         return -1;
     }
     memcpy(work, p, sizeof(*work));
+    memset(world_len, 0, sizeof(world_len));
+    memset(world_on, 0, sizeof(world_on));
     {
-        if (build_world_blob(&world_blob, work, &work->worlds[0]) != 0) {
-        free(work);
-        free(world_blob.data);
-        if (err_buf && err_cap > 0) {
-            snprintf(err_buf, err_cap, "world blob failed (>%d present screens?)", R01_MAX_PRESENT_SCREENS);
+        int wi;
+        for (wi = 0; wi < R01_MAX_WORLDS; wi++) {
+            size_t before;
+            if (wi != 0 && !work->worlds[wi].present) {
+                continue;
+            }
+            before = world_blob.len;
+            if (build_world_blob(&world_blob, work, &work->worlds[wi], wi == 0) != 0) {
+                free(work);
+                free(world_blob.data);
+                if (err_buf && err_cap > 0) {
+                    snprintf(err_buf, err_cap, "world blob failed (>%d present screens?)", R01_MAX_PRESENT_SCREENS);
+                }
+                return -1;
+            }
+            world_on[wi] = 1;
+            world_len[wi] = (uint32_t)(world_blob.len - before);
+            world_n++;
         }
-        return -1;
+        if (world_n < 1u) {
+            world_n = 1;
         }
     }
     if (build_other_blob(&other_blob, work) != 0) {
@@ -931,7 +950,7 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
     memset(hdr, 0, sizeof(hdr));
     memcpy(hdr, "retr01", 6);
     hdr[6] = R01_CART_FORMAT_VER;
-    hdr[7] = 1;
+    hdr[7] = world_n;
 
     off_pal_bg = HDR_SIZE + (uint32_t)ptr_bytes;
     off_pal_spr = off_pal_bg + R01_PAL_PLANE_BYTES;
@@ -1029,9 +1048,19 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
         }
 
         memset(wtable, 0, sizeof(wtable));
-        put_u8(wtable + 0, 1);
-        put_u24(wtable + 2, off_wtable + WORLD_TABLE_SIZE);
-        put_u24(wtable + 5, (uint32_t)world_blob.len);
+        {
+            uint32_t cur = off_wtable + WORLD_TABLE_SIZE;
+            int wi;
+            for (wi = 0; wi < R01_MAX_WORLDS; wi++) {
+                if (!world_on[wi]) {
+                    continue;
+                }
+                put_u8(wtable + (size_t)wi * WORLD_SLOT_SIZE, 1);
+                put_u24(wtable + (size_t)wi * WORLD_SLOT_SIZE + 2, cur);
+                put_u24(wtable + (size_t)wi * WORLD_SLOT_SIZE + 5, world_len[wi]);
+                cur += world_len[wi];
+            }
+        }
 
         if (buf_append(&cart, wtable, WORLD_TABLE_SIZE) != 0 ||
             buf_append(&cart, world_blob.data, world_blob.len) != 0) {

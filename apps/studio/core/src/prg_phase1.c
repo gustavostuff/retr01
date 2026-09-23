@@ -1,4 +1,3 @@
-#include "retr01_studio/collision.h"
 #include "retr01_studio/play.h"
 #include "retr01_studio/prg_phase1.h"
 
@@ -19,14 +18,11 @@
 #define PLAY_PRESENT 0
 #define PLAY_PRESENT_BYTES 32
 #define PLAY_SPAWN_CELL 32
-#define PLAY_COLL_COUNT 33
-#define PLAY_COLL_DIR 34
 #define PLAY_INST_COUNT 0xC0u
 #define PLAY_INST_TABLE 0xC1u
 
 #define R01P_OFF 0x00F0u
 #define R01_PLAY_SOLID_DATA_OFF 0x0700u
-#define R01_PLAY_INST_LIMIT 0x0500u /* before CPU $8500 */
 
 static size_t s_solids_end;
 
@@ -114,13 +110,19 @@ static void patch_boot_map(uint8_t prg[R01_PRG_BYTES], const R01PrgCartLayout *l
     prg[R01_PRG_BOOTMAP_OFF + 15u] = 0;
 }
 
-static void fill_instance_table(uint8_t prg[R01_PRG_BYTES], const R01World *w) {
+static void fill_play_block(uint8_t prg[R01_PRG_BYTES], size_t play_off, const R01World *w) {
+    uint8_t mask[PLAY_PRESENT_BYTES];
+    int spawn_c = R01_START_COL, spawn_r = R01_START_ROW;
     int n = 0;
     int i;
-    size_t base = PLAY_OFF + PLAY_INST_TABLE;
-    size_t limit = R01_PLAY_INST_LIMIT;
+    size_t base = play_off + PLAY_INST_TABLE;
+    size_t limit = play_off + R01_PRG_PLAY_TAB_BYTES;
 
-    prg[PLAY_OFF + PLAY_INST_COUNT] = 0;
+    fill_present_mask(mask, w);
+    memcpy(prg + play_off + PLAY_PRESENT, mask, PLAY_PRESENT_BYTES);
+    pick_spawn(w, &spawn_c, &spawn_r);
+    prg[play_off + PLAY_SPAWN_CELL] = R01_CELL_PACK(spawn_c, spawn_r);
+    prg[play_off + PLAY_INST_COUNT] = 0;
     if (!w) {
         return;
     }
@@ -142,18 +144,14 @@ static void fill_instance_table(uint8_t prg[R01_PRG_BYTES], const R01World *w) {
         put_u16_le(rec + 2, (uint16_t)inst->world_x);
         put_u16_le(rec + 4, (uint16_t)inst->world_y);
     }
-    prg[PLAY_OFF + PLAY_INST_COUNT] = (uint8_t)n;
+    prg[play_off + PLAY_INST_COUNT] = (uint8_t)n;
 }
 
-static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const R01World *w) {
+static void fill_solid_list(uint8_t prg[R01_PRG_BYTES], const R01Project *p) {
     size_t data_off = R01_PLAY_SOLID_DATA_OFF;
-    size_t grid_off = R01_PRG_COLL_GRID_OFF;
-    int di = 0;
-    int si;
     int n;
     int i;
 
-    memset(prg + grid_off, 0, 16u * 16u * 2u);
     n = p ? p->solid_pat_count : 0;
     if (n < 0) {
         n = 0;
@@ -161,8 +159,7 @@ static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *
     if (n > R01_SOLID_PAT_MAX) {
         n = R01_SOLID_PAT_MAX;
     }
-    if (data_off + 1u + (size_t)n * 2u >= R01_PRG_C_OFF) {
-        prg[PLAY_OFF + PLAY_COLL_COUNT] = 0;
+    if (data_off + 1u + (size_t)n * 2u > R01_PLAY_SOLID_DATA_OFF + R01_PRG_SOLIDS_MAX) {
         prg[data_off] = 0;
         s_solids_end = data_off + 1u;
         return;
@@ -172,59 +169,19 @@ static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *
         prg[data_off++] = p->solid_pat_bank[i];
         prg[data_off++] = p->solid_pat_tile[i];
     }
-
-    if (!w) {
-        prg[PLAY_OFF + PLAY_COLL_COUNT] = 0;
-        s_solids_end = data_off;
-        return;
-    }
-    for (si = 0; si < w->screen_count; si++) {
-        const R01Screen *s = &w->screens[si];
-        int cell;
-        uint16_t tab_addr;
-        size_t slot;
-        if (!s->present || s->col < 0 || s->col >= R01_GRID_MAX || s->row < 0 || s->row >= R01_GRID_MAX) {
-            continue;
-        }
-        if (data_off + R01_TILES_PER_SCREEN > R01_PRG_C_OFF) {
-            break;
-        }
-        tab_addr = (uint16_t)(CODE_BASE + data_off);
-        for (cell = 0; cell < R01_TILES_PER_SCREEN; cell++) {
-            int bank = r01_attr_solid_bank(s->attrs[cell]);
-            int tile = (int)s->tiles[cell];
-            prg[data_off++] = r01_project_pattern_solid(p, bank, tile) ? 1u : 0u;
-        }
-        slot = grid_off + ((size_t)s->row * 16u + (size_t)s->col) * 2u;
-        prg[slot] = (uint8_t)(tab_addr & 0xFFu);
-        prg[slot + 1u] = (uint8_t)(tab_addr >> 8);
-        if (PLAY_OFF + PLAY_COLL_DIR + (size_t)(di + 1) * 4u <= PLAY_OFF + PLAY_INST_COUNT) {
-            uint8_t *ent = prg + PLAY_OFF + PLAY_COLL_DIR + (size_t)di * 4u;
-            ent[0] = (uint8_t)s->col;
-            ent[1] = (uint8_t)s->row;
-            ent[2] = (uint8_t)(tab_addr & 0xFFu);
-            ent[3] = (uint8_t)(tab_addr >> 8);
-            di++;
-        }
-    }
-    prg[PLAY_OFF + PLAY_COLL_COUNT] = (uint8_t)di;
     s_solids_end = data_off;
 }
 
 void r01_prg_fill_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *p) {
-    uint8_t mask[PLAY_PRESENT_BYTES];
-    int spawn_c = R01_START_COL, spawn_r = R01_START_ROW;
-    const R01World *w = p ? &p->worlds[0] : NULL;
+    const R01World *w0 = p ? &p->worlds[0] : NULL;
+    unsigned wi;
+    unsigned extra = 0;
 
     if (!prg) {
         return;
     }
-    pick_spawn(w, &spawn_c, &spawn_r);
-    fill_present_mask(mask, w);
-    memcpy(prg + PLAY_OFF + PLAY_PRESENT, mask, PLAY_PRESENT_BYTES);
-    prg[PLAY_OFF + PLAY_SPAWN_CELL] = R01_CELL_PACK(spawn_c, spawn_r);
-    fill_collision_tables(prg, p, w);
-    fill_instance_table(prg, w);
+    fill_play_block(prg, PLAY_OFF, w0);
+    fill_solid_list(prg, p);
 
     prg[R01P_OFF] = 'R';
     prg[R01P_OFF + 1] = '0';
@@ -232,7 +189,22 @@ void r01_prg_fill_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *p) {
     prg[R01P_OFF + 3] = 'P';
     prg[R01P_OFF + 4] = R01_PRG_R01P_VER;
     put_u16_le(prg + R01P_OFF + 5, (uint16_t)(CODE_BASE + R01_PLAY_SOLID_DATA_OFF));
-    /* $80F7-$80FE stay zeros. Live gravity / anim / BGM start are author C. */
+
+    memset(prg + R01_PRG_WORLDDIR_OFF, 0, R01_PRG_WORLDDIR_BYTES);
+    put_u16_le(prg + R01_PRG_WORLDDIR_OFF, (uint16_t)(CODE_BASE + PLAY_OFF));
+    for (wi = 1; wi < (unsigned)R01_MAX_WORLDS; wi++) {
+        const R01World *w = p ? &p->worlds[wi] : NULL;
+        if (!w || !w->present) {
+            continue;
+        }
+        {
+            size_t play_off = R01_PRG_WPLAY_OFF + (size_t)extra * R01_PRG_PLAY_TAB_BYTES;
+            uint16_t cpu = (uint16_t)(R01_PRG_WPLAY_CPU + extra * R01_PRG_PLAY_TAB_BYTES);
+            fill_play_block(prg, play_off, w);
+            put_u16_le(prg + R01_PRG_WORLDDIR_OFF + (size_t)wi * 2u, cpu);
+            extra++;
+        }
+    }
 }
 
 void r01_prg_patch_boot_map(uint8_t prg[R01_PRG_BYTES], const R01PrgCartLayout *layout) {
@@ -317,7 +289,7 @@ int r01_prg_write_table_bins(const R01Project *p, const char *data_dir, char *er
     solids_len = s_solids_end > R01_PLAY_SOLID_DATA_OFF ? s_solids_end - R01_PLAY_SOLID_DATA_OFF : 1u;
     if (solids_len > R01_PRG_SOLIDS_MAX) {
         if (err_buf && err_cap) {
-            snprintf(err_buf, err_cap, "PRG tables hit $C400");
+            snprintf(err_buf, err_cap, "solid list hits $8800");
         }
         free(prg);
         return -1;
@@ -326,8 +298,8 @@ int r01_prg_write_table_bins(const R01Project *p, const char *data_dir, char *er
         write_bin_if_changed(path, prg + PLAY_OFF, R01_PRG_PLAY_TAB_BYTES, err_buf, err_cap) != 0) {
         goto done;
     }
-    if (snprintf(path, sizeof(path), "%s/collgrid.bin", data_dir) >= (int)sizeof(path) ||
-        write_bin_if_changed(path, prg + R01_PRG_COLL_GRID_OFF, R01_PRG_COLLGRID_BYTES, err_buf, err_cap) != 0) {
+    if (snprintf(path, sizeof(path), "%s/worlddir.bin", data_dir) >= (int)sizeof(path) ||
+        write_bin_if_changed(path, prg + R01_PRG_WORLDDIR_OFF, R01_PRG_WORLDDIR_BYTES, err_buf, err_cap) != 0) {
         goto done;
     }
     if (snprintf(path, sizeof(path), "%s/solids.bin", data_dir) >= (int)sizeof(path) ||
@@ -337,6 +309,29 @@ int r01_prg_write_table_bins(const R01Project *p, const char *data_dir, char *er
     if (snprintf(path, sizeof(path), "%s/r01p.bin", data_dir) >= (int)sizeof(path) ||
         write_bin_if_changed(path, prg + R01P_OFF, R01_PRG_R01P_BYTES, err_buf, err_cap) != 0) {
         goto done;
+    }
+    {
+        unsigned extra = 0;
+        unsigned wi;
+        for (wi = 1; p && wi < (unsigned)R01_MAX_WORLDS; wi++) {
+            if (p->worlds[wi].present) {
+                extra++;
+            }
+        }
+        if (snprintf(path, sizeof(path), "%s/wplay.bin", data_dir) >= (int)sizeof(path)) {
+            goto done;
+        }
+        if (extra > 0) {
+            if (write_bin_if_changed(path, prg + R01_PRG_WPLAY_OFF, (size_t)extra * R01_PRG_PLAY_TAB_BYTES, err_buf,
+                                     err_cap) != 0) {
+                goto done;
+            }
+        } else {
+            uint8_t z = 0;
+            if (write_bin_if_changed(path, &z, 0, err_buf, err_cap) != 0) {
+                goto done;
+            }
+        }
     }
     rc = 0;
 done:
@@ -354,7 +349,7 @@ void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const 
 }
 
 static int data_bins_newer(const char *data_dir, time_t mt) {
-    static const char *const names[] = {"play8100.bin", "collgrid.bin", "solids.bin", "r01p.bin", NULL};
+    static const char *const names[] = {"play8100.bin", "worlddir.bin", "solids.bin", "r01p.bin", "wplay.bin", NULL};
     struct stat st;
     unsigned i;
     if (!data_dir || !data_dir[0]) {
@@ -403,7 +398,7 @@ int r01_prg_needs_rebuild(const char *prg_path, const char *logic_c) {
         "/apps/common/r01_play_anim_cart.c",
         "/apps/common/r01_play_anim_cart.h",
         "/apps/sdk/r01_c/data/play8100.bin",
-        "/apps/sdk/r01_c/data/collgrid.bin",
+        "/apps/sdk/r01_c/data/worlddir.bin",
         "/apps/sdk/r01_c/data/solids.bin",
         "/apps/sdk/r01_c/data/r01p.bin",
         NULL
