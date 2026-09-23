@@ -18,10 +18,12 @@ apps/sdk/r01_c/host-build/
 /test_cart.retr01
 /test_cart_pb.retr01
 /test_prom.bin
+/listing.txt
+/sdk_overlay.prg
+/sdk_overlay.prg.elf
+/test_roundtrip.r01proj
+.cursor/*.log
 /build-all
 /studio
 /emu
-/sim-tier-a
 /unit-tests
-/fetch-llvm-mos
-/export-entity-ase
