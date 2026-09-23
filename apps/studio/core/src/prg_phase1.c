@@ -28,6 +28,8 @@
 #define R01_PLAY_SOLID_DATA_OFF 0x0700u
 #define R01_PLAY_INST_LIMIT 0x0500u /* before CPU $8500 */
 
+static size_t s_solids_end;
+
 #ifndef R01_REPO_ROOT
 #define R01_REPO_ROOT "."
 #endif
@@ -161,6 +163,8 @@ static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *
     }
     if (data_off + 1u + (size_t)n * 2u >= R01_PRG_C_OFF) {
         prg[PLAY_OFF + PLAY_COLL_COUNT] = 0;
+        prg[data_off] = 0;
+        s_solids_end = data_off + 1u;
         return;
     }
     prg[data_off++] = (uint8_t)n;
@@ -171,6 +175,7 @@ static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *
 
     if (!w) {
         prg[PLAY_OFF + PLAY_COLL_COUNT] = 0;
+        s_solids_end = data_off;
         return;
     }
     for (si = 0; si < w->screen_count; si++) {
@@ -203,9 +208,10 @@ static void fill_collision_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *
         }
     }
     prg[PLAY_OFF + PLAY_COLL_COUNT] = (uint8_t)di;
+    s_solids_end = data_off;
 }
 
-void r01_prg_overlay_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const R01PrgCartLayout *layout) {
+void r01_prg_fill_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *p) {
     uint8_t mask[PLAY_PRESENT_BYTES];
     int spawn_c = R01_START_COL, spawn_r = R01_START_ROW;
     const R01World *w = p ? &p->worlds[0] : NULL;
@@ -226,9 +232,116 @@ void r01_prg_overlay_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *p, con
     prg[R01P_OFF + 3] = 'P';
     prg[R01P_OFF + 4] = R01_PRG_R01P_VER;
     put_u16_le(prg + R01P_OFF + 5, (uint16_t)(CODE_BASE + R01_PLAY_SOLID_DATA_OFF));
-    /* $80F7-$80FE stay linker zeros. Live gravity / anim / BGM start are author C. */
+    /* $80F7-$80FE stay zeros. Live gravity / anim / BGM start are author C. */
+}
 
+void r01_prg_patch_boot_map(uint8_t prg[R01_PRG_BYTES], const R01PrgCartLayout *layout) {
     patch_boot_map(prg, layout);
+}
+
+void r01_prg_overlay_tables(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const R01PrgCartLayout *layout) {
+    r01_prg_fill_tables(prg, p);
+    patch_boot_map(prg, layout);
+}
+
+static int write_bin_if_changed(const char *path, const uint8_t *data, size_t len, char *err_buf, size_t err_cap) {
+    FILE *f;
+    struct stat st;
+    if (!path || !data) {
+        if (err_buf && err_cap) {
+            snprintf(err_buf, err_cap, "bad args");
+        }
+        return -1;
+    }
+    if (r01_path_ensure_parent(path, err_buf, err_cap) != 0) {
+        return -1;
+    }
+    if (stat(path, &st) == 0 && S_ISREG(st.st_mode) && (size_t)st.st_size == len) {
+        uint8_t *old = (uint8_t *)malloc(len ? len : 1u);
+        if (old) {
+            size_t n = 0;
+            f = fopen(path, "rb");
+            if (f) {
+                n = fread(old, 1, len, f);
+                fclose(f);
+            }
+            if (n == len && memcmp(old, data, len) == 0) {
+                free(old);
+                return 0;
+            }
+            free(old);
+        }
+    }
+    f = fopen(path, "wb");
+    if (!f) {
+        if (err_buf && err_cap) {
+            snprintf(err_buf, err_cap, "cannot write %s", path);
+        }
+        return -1;
+    }
+    if (len > 0 && fwrite(data, 1, len, f) != len) {
+        fclose(f);
+        if (err_buf && err_cap) {
+            snprintf(err_buf, err_cap, "write failed");
+        }
+        return -1;
+    }
+    fclose(f);
+    return 0;
+}
+
+int r01_prg_write_table_bins(const R01Project *p, const char *data_dir, char *err_buf, size_t err_cap) {
+    uint8_t *prg;
+    char path[R01_PATH_MAX];
+    size_t solids_len;
+    int rc = -1;
+
+    if (!data_dir || !data_dir[0]) {
+        if (err_buf && err_cap) {
+            snprintf(err_buf, err_cap, "bad args");
+        }
+        return -1;
+    }
+    if (r01_path_mkdir_p(data_dir, err_buf, err_cap) != 0) {
+        return -1;
+    }
+    prg = (uint8_t *)malloc(R01_PRG_BYTES);
+    if (!prg) {
+        if (err_buf && err_cap) {
+            snprintf(err_buf, err_cap, "oom");
+        }
+        return -1;
+    }
+    memset(prg, 0, R01_PRG_BYTES);
+    r01_prg_fill_tables(prg, p);
+    solids_len = s_solids_end > R01_PLAY_SOLID_DATA_OFF ? s_solids_end - R01_PLAY_SOLID_DATA_OFF : 1u;
+    if (solids_len > R01_PRG_SOLIDS_MAX) {
+        if (err_buf && err_cap) {
+            snprintf(err_buf, err_cap, "PRG tables hit $C400");
+        }
+        free(prg);
+        return -1;
+    }
+    if (snprintf(path, sizeof(path), "%s/play8100.bin", data_dir) >= (int)sizeof(path) ||
+        write_bin_if_changed(path, prg + PLAY_OFF, R01_PRG_PLAY_TAB_BYTES, err_buf, err_cap) != 0) {
+        goto done;
+    }
+    if (snprintf(path, sizeof(path), "%s/collgrid.bin", data_dir) >= (int)sizeof(path) ||
+        write_bin_if_changed(path, prg + R01_PRG_COLL_GRID_OFF, R01_PRG_COLLGRID_BYTES, err_buf, err_cap) != 0) {
+        goto done;
+    }
+    if (snprintf(path, sizeof(path), "%s/solids.bin", data_dir) >= (int)sizeof(path) ||
+        write_bin_if_changed(path, prg + R01_PLAY_SOLID_DATA_OFF, solids_len, err_buf, err_cap) != 0) {
+        goto done;
+    }
+    if (snprintf(path, sizeof(path), "%s/r01p.bin", data_dir) >= (int)sizeof(path) ||
+        write_bin_if_changed(path, prg + R01P_OFF, R01_PRG_R01P_BYTES, err_buf, err_cap) != 0) {
+        goto done;
+    }
+    rc = 0;
+done:
+    free(prg);
+    return rc;
 }
 
 void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const R01PrgCartLayout *layout) {
@@ -236,7 +349,27 @@ void r01_prg_fill_phase1(uint8_t prg[R01_PRG_BYTES], const R01Project *p, const 
         return;
     }
     memset(prg, 0, R01_PRG_BYTES);
-    r01_prg_overlay_tables(prg, p, layout);
+    r01_prg_fill_tables(prg, p);
+    patch_boot_map(prg, layout);
+}
+
+static int data_bins_newer(const char *data_dir, time_t mt) {
+    static const char *const names[] = {"play8100.bin", "collgrid.bin", "solids.bin", "r01p.bin", NULL};
+    struct stat st;
+    unsigned i;
+    if (!data_dir || !data_dir[0]) {
+        return 0;
+    }
+    for (i = 0; names[i]; i++) {
+        char path[R01_PATH_MAX];
+        if (snprintf(path, sizeof(path), "%s/%s", data_dir, names[i]) >= (int)sizeof(path)) {
+            return 1;
+        }
+        if (stat(path, &st) == 0 && st.st_mtime > mt) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 static void split_dir(const char *path, char *out, size_t cap);
@@ -269,6 +402,10 @@ int r01_prg_needs_rebuild(const char *prg_path, const char *logic_c) {
         "/apps/common/r01_play_anim.c",
         "/apps/common/r01_play_anim_cart.c",
         "/apps/common/r01_play_anim_cart.h",
+        "/apps/sdk/r01_c/data/play8100.bin",
+        "/apps/sdk/r01_c/data/collgrid.bin",
+        "/apps/sdk/r01_c/data/solids.bin",
+        "/apps/sdk/r01_c/data/r01p.bin",
         NULL
     };
     unsigned i;
@@ -290,6 +427,17 @@ int r01_prg_needs_rebuild(const char *prg_path, const char *logic_c) {
         }
         if (snprintf(hdr, sizeof(hdr), "%s/include/r01_warp_ids.h", dir) < (int)sizeof(hdr) &&
             stat(hdr, &st) == 0 && st.st_mtime > mt) {
+            return 1;
+        }
+        if (snprintf(hdr, sizeof(hdr), "%s/data", dir) < (int)sizeof(hdr) && data_bins_newer(hdr, mt)) {
+            return 1;
+        }
+    }
+    {
+        char dir[1024];
+        char data[1100];
+        split_dir(prg_path, dir, sizeof(dir));
+        if (snprintf(data, sizeof(data), "%s/data", dir) < (int)sizeof(data) && data_bins_newer(data, mt)) {
             return 1;
         }
     }
@@ -366,9 +514,13 @@ int r01_prg_compile_sdk(const char *logic_c, uint8_t prg[R01_PRG_BYTES], const c
                         size_t err_cap) {
     char cmd[2048];
     char tmp[1024];
+    char data[R01_PATH_MAX];
+    char dir[1024];
+    char cand[R01_PATH_MAX];
     const char *outp = out_prg_path;
     int st;
     size_t sz = 0;
+    struct stat stb;
 
     if (!prg) {
         if (err_buf && err_cap) {
@@ -386,8 +538,19 @@ int r01_prg_compile_sdk(const char *logic_c, uint8_t prg[R01_PRG_BYTES], const c
     if (r01_path_ensure_parent(outp, err_buf, err_cap) != 0) {
         return -1;
     }
-    if (snprintf(cmd, sizeof(cmd), "\"%s/apps/sdk/r01_c/build-prg.sh\" \"%s\" \"%s\"", R01_REPO_ROOT, logic_c,
-                 outp) >= (int)sizeof(cmd)) {
+    split_dir(outp, dir, sizeof(dir));
+    if (snprintf(cand, sizeof(cand), "%s/data/play8100.bin", dir) < (int)sizeof(cand) && stat(cand, &stb) == 0) {
+        snprintf(data, sizeof(data), "%s/data", dir);
+    } else {
+        split_dir(logic_c, dir, sizeof(dir));
+        if (snprintf(cand, sizeof(cand), "%s/data/play8100.bin", dir) < (int)sizeof(cand) && stat(cand, &stb) == 0) {
+            snprintf(data, sizeof(data), "%s/data", dir);
+        } else {
+            snprintf(data, sizeof(data), "%s/apps/sdk/r01_c/data", R01_REPO_ROOT);
+        }
+    }
+    if (snprintf(cmd, sizeof(cmd), "\"%s/apps/sdk/r01_c/build-prg.sh\" \"%s\" \"%s\" \"%s\"", R01_REPO_ROOT, logic_c,
+                 outp, data) >= (int)sizeof(cmd)) {
         if (err_buf && err_cap) {
             snprintf(err_buf, err_cap, "compile command too long");
         }

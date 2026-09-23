@@ -508,7 +508,7 @@ static int write_data_bins(const char *data_dir, const R01Project *p, char *err_
             return -1;
         }
     }
-    return 0;
+    return r01_prg_write_table_bins(p, data_dir, err_buf, err_cap);
 }
 
 int r01_export_compile_prg(const char *path_stem, char *err_buf, size_t err_cap) {

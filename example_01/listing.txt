@@ -1,5 +1,5 @@
 
-example_01/retr01.prg.elf:	file format elf32-mos
+/home/g/Repos/retr01/example_01/retr01.prg.elf:	file format elf32-mos
 
 Disassembly of section .boot:
 
@@ -85,7 +85,7 @@ Disassembly of section .text:
     c43b: 20 99 d8     	jsr	$d899 <main>
 
 0000c43e <__after_main>:
-    c43e: 4c ee fd     	jmp	$fdee <exit>
+    c43e: 4c da fd     	jmp	$fdda <exit>
 
 0000c441 <_fini>:
     c441: 60           	rts
@@ -182,7 +182,7 @@ Disassembly of section .text:
     c49c: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
     c49e: a9 00        	lda	#$0
     c4a0: 84 e4        	sty	$e4                     ; 0xe4 <__rc4>
-    c4a2: 4c 64 ff     	jmp	$ff64 <__memset>
+    c4a2: 4c 50 ff     	jmp	$ff50 <__memset>
 
 0000c4a5 <__zero_zp_bss>:
     c4a5: a2 a6        	ldx	#$a6
@@ -193,7 +193,7 @@ Disassembly of section .text:
     c4af: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
     c4b1: a9 00        	lda	#$0
     c4b3: 84 e4        	sty	$e4                     ; 0xe4 <__rc4>
-    c4b5: 4c 64 ff     	jmp	$ff64 <__memset>
+    c4b5: 4c 50 ff     	jmp	$ff50 <__memset>
 
 0000c4b8 <r01_ppu_wait_vblank>:
 ;     while ((*R01_PPUSTATUS & R01_PPUSTATUS_VBLANK) == 0u) {
@@ -465,7 +465,7 @@ Disassembly of section .text:
     c680: 98           	tya
     c681: e4 ed        	cpx	$ed                     ; 0xed <__rc13>
     c683: f0 03        	beq	$c688 <cart_aabb_ok+0x187>
-    c685: 2c b6 ff     	bit	$ffb6                   ; 0xffb6 <__set_v>
+    c685: 2c a2 ff     	bit	$ffa2                   ; 0xffa2 <__set_v>
     c688: 06 e7        	asl	$e7                     ; 0xe7 <__rc7>
     c68a: 2a           	rol
     c68b: 06 e7        	asl	$e7                     ; 0xe7 <__rc7>
@@ -519,7 +519,7 @@ Disassembly of section .text:
     c6de: a4 d6        	ldy	$d6                     ; 0xd6 <__zp_bss_size+0x30>
     c6e0: c4 eb        	cpy	$eb                     ; 0xeb <__rc11>
     c6e2: f0 03        	beq	$c6e7 <cart_aabb_ok+0x1e6>
-    c6e4: 2c b6 ff     	bit	$ffb6                   ; 0xffb6 <__set_v>
+    c6e4: 2c a2 ff     	bit	$ffa2                   ; 0xffa2 <__set_v>
     c6e7: a4 d7        	ldy	$d7                     ; 0xd7 <__zp_bss_size+0x31>
     c6e9: 84 eb        	sty	$eb                     ; 0xeb <__rc11>
     c6eb: 50 48        	bvc	$c735 <cart_aabb_ok+0x234>
@@ -671,7 +671,7 @@ Disassembly of section .text:
     c7de: 64 e3        	stz	$e3                     ; 0xe3 <__rc3>
     c7e0: 84 e2        	sty	$e2                     ; 0xe2 <__rc2>
     c7e2: 85 b8        	sta	$b8                     ; 0xb8 <__zp_bss_size+0x12>
-    c7e4: 20 bf fe     	jsr	$febf <__umodhi3>
+    c7e4: 20 ab fe     	jsr	$feab <__umodhi3>
     c7e7: 38           	sec
     c7e8: e5 b8        	sbc	$b8                     ; 0xb8 <__zp_bss_size+0x12>
     c7ea: 18           	clc
@@ -1039,12 +1039,12 @@ Disassembly of section .text:
     ca2b: 85 f5        	sta	$f5                     ; 0xf5 <__rc21>
 ;             if (col < 16u && row < 16u) {
     ca2d: c9 10        	cmp	#$10
-    ca2f: 2c b6 ff     	bit	$ffb6                   ; 0xffb6 <__set_v>
+    ca2f: 2c a2 ff     	bit	$ffa2                   ; 0xffa2 <__set_v>
     ca32: 84 fc        	sty	$fc                     ; 0xfc <__rc28>
     ca34: b0 0c        	bcs	$ca42 <r01_map_load_window+0x1a1>
     ca36: a4 f4        	ldy	$f4                     ; 0xf4 <__rc20>
     ca38: c0 10        	cpy	#$10
-    ca3a: 2c b6 ff     	bit	$ffb6                   ; 0xffb6 <__set_v>
+    ca3a: 2c a2 ff     	bit	$ffa2                   ; 0xffa2 <__set_v>
     ca3d: b0 01        	bcs	$ca40 <r01_map_load_window+0x19f>
     ca3f: b8           	clv
     ca40: a4 fc        	ldy	$fc                     ; 0xfc <__rc28>
@@ -1361,7 +1361,7 @@ Disassembly of section .text:
     cc58: 64 e3        	stz	$e3                     ; 0xe3 <__rc3>
     cc5a: a6 e6        	ldx	$e6                     ; 0xe6 <__rc6>
     cc5c: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
-    cc5e: 20 84 ff     	jsr	$ff84 <__mulhi3>
+    cc5e: 20 70 ff     	jsr	$ff70 <__mulhi3>
     cc61: a4 b9        	ldy	$b9                     ; 0xb9 <__zp_bss_size+0x13>
     cc63: 84 e2        	sty	$e2                     ; 0xe2 <__rc2>
 ;         return (uint8_t)((num / (uint16_t)n1) & 127u);
@@ -1383,7 +1383,7 @@ Disassembly of section .text:
     cc7d: a6 e6        	ldx	$e6                     ; 0xe6 <__rc6>
     cc7f: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
     cc81: a6 e4        	ldx	$e4                     ; 0xe4 <__rc4>
-    cc83: 20 84 ff     	jsr	$ff84 <__mulhi3>
+    cc83: 20 70 ff     	jsr	$ff70 <__mulhi3>
     cc86: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
     cc88: a6 b9        	ldx	$b9                     ; 0xb9 <__zp_bss_size+0x13>
     cc8a: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
@@ -1399,7 +1399,7 @@ Disassembly of section .text:
     cc9a: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
     cc9c: aa           	tax
     cc9d: 98           	tya
-    cc9e: 20 06 fe     	jsr	$fe06 <__udivhi3>
+    cc9e: 20 f2 fd     	jsr	$fdf2 <__udivhi3>
     cca1: 29 7f        	and	#$7f
 ; }
     cca3: 60           	rts
@@ -1419,7 +1419,7 @@ Disassembly of section .text:
     ccb6: 64 e4        	stz	$e4                     ; 0xe4 <__rc4>
     ccb8: 64 c7        	stz	$c7                     ; 0xc7 <__zp_bss_size+0x21>
     ccba: a9 00        	lda	#$0
-    ccbc: 20 64 ff     	jsr	$ff64 <__memset>
+    ccbc: 20 50 ff     	jsr	$ff50 <__memset>
 ;     ctx->player_crouching = 0;
     ccbf: 64 65        	stz	$65                     ; 0x65 <s_anim+0x2a>
     ccc1: 64 66        	stz	$66                     ; 0x66 <s_anim+0x2b>
@@ -2520,7 +2520,7 @@ Disassembly of section .text:
     d403: c4 e3        	cpy	$e3                     ; 0xe3 <__rc3>
     d405: a6 e6        	ldx	$e6                     ; 0xe6 <__rc6>
 ;     if (op == R01_APU_CTRL_FE) {
-    d407: 7c b7 ff     	jmp	($ffb7,x)               ; 0xffb7 <__set_v+0x1>
+    d407: 7c a3 ff     	jmp	($ffa3,x)               ; 0xffa3 <__set_v+0x1>
     d40a: a2 01        	ldx	#$1
 ;         s_loop = 1;
     d40c: 8e 12 03     	stx	$312                    ; 0x312 <s_loop>
@@ -2718,7 +2718,7 @@ Disassembly of section .text:
     d569: a9 01        	lda	#$1
     d56b: a4 e4        	ldy	$e4                     ; 0xe4 <__rc4>
     d56d: 84 bb        	sty	$bb                     ; 0xbb <__zp_bss_size+0x15>
-    d56f: 20 f3 fd     	jsr	$fdf3 <__ashlhi3>
+    d56f: 20 df fd     	jsr	$fddf <__ashlhi3>
     d572: a6 bb        	ldx	$bb                     ; 0xbb <__zp_bss_size+0x15>
     d574: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
 ;             if (mask & (uint8_t)(1u << ch)) {
@@ -2942,7 +2942,7 @@ Disassembly of section .text:
     d6ff: 0a           	asl
     d700: 0a           	asl
     d701: 0a           	asl
-    d702: 2c b6 ff     	bit	$ffb6                   ; 0xffb6 <__set_v>
+    d702: 2c a2 ff     	bit	$ffa2                   ; 0xffa2 <__set_v>
     d705: aa           	tax
     d706: 30 01        	bmi	$d709 <r01_nmi+0x37a>
     d708: b8           	clv
@@ -2977,7 +2977,7 @@ Disassembly of section .text:
     d73c: 85 ec        	sta	$ec                     ; 0xec <__rc12>
     d73e: a6 e5        	ldx	$e5                     ; 0xe5 <__rc5>
 ;     st = (int)semitone[letter] - flat;
-    d740: bd e1 ff     	lda	$ffe1,x                 ; 0xffe1 <note_period.semitone>
+    d740: bd cd ff     	lda	$ffcd,x                 ; 0xffcd <note_period.semitone>
     d743: aa           	tax
     d744: 86 e6        	stx	$e6                     ; 0xe6 <__rc6>
     d746: 10 39        	bpl	$d781 <r01_nmi+0x3f2>
@@ -2995,7 +2995,7 @@ Disassembly of section .text:
     d75a: 4c 5d d6     	jmp	$d65d <r01_nmi+0x2ce>
     d75d: a6 b8        	ldx	$b8                     ; 0xb8 <__zp_bss_size+0x12>
 ;         wave = k_def_wave[ch];
-    d75f: bc c1 ff     	ldy	$ffc1,x                 ; 0xffc1 <k_def_wave>
+    d75f: bc ad ff     	ldy	$ffad,x                 ; 0xffad <k_def_wave>
     d762: 84 f2        	sty	$f2                     ; 0xf2 <__rc18>
     d764: 4c 5d d6     	jmp	$d65d <r01_nmi+0x2ce>
     d767: aa           	tax
@@ -3101,7 +3101,7 @@ Disassembly of section .text:
     d81a: 0a           	asl
     d81b: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
     d81d: 26 e7        	rol	$e7                     ; 0xe7 <__rc7>
-    d81f: a9 c9        	lda	#$c9
+    d81f: a9 b5        	lda	#$b5
     d821: 18           	clc
     d822: 65 e6        	adc	$e6                     ; 0xe6 <__rc6>
     d824: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
@@ -3150,7 +3150,7 @@ Disassembly of section .text:
     d878: a0 0c        	ldy	#$c
     d87a: 84 eb        	sty	$eb                     ; 0xeb <__rc11>
 ;         wave = k_def_wave[ch];
-    d87c: bc c1 ff     	ldy	$ffc1,x                 ; 0xffc1 <k_def_wave>
+    d87c: bc ad ff     	ldy	$ffad,x                 ; 0xffad <k_def_wave>
     d87f: 84 f2        	sty	$f2                     ; 0xf2 <__rc18>
     d881: 8a           	txa
     d882: f0 0a        	beq	$d88e <r01_nmi+0x4ff>
@@ -3175,7 +3175,7 @@ Disassembly of section .text:
     d8a2: 69 ff        	adc	#$ff
     d8a4: 85 e1        	sta	$e1                     ; 0xe1 <__rc1>
 ;     uint8_t n = R01_CPU8(0x8700u);
-    d8a6: ad 00 87     	lda	$8700                   ; 0x8700 <r01_boot_map+0x620>
+    d8a6: ad 00 87     	lda	$8700                   ; 0x8700 <__stack+0x800>
 ;     R01_CPU8(0x0200u) = n;
     d8a9: 8d 00 02     	sta	$200                    ; 0x200 <__rc31+0x101>
     d8ac: a2 02        	ldx	#$2
@@ -3249,23 +3249,23 @@ Disassembly of section .text:
     d915: e0 1f        	cpx	#$1f
     d917: d0 f8        	bne	$d911 <main+0x78>
 ;     n = R01_CPU8(R01_PLAY_INST_COUNT);
-    d919: ae c0 81     	ldx	$81c0                   ; 0x81c0 <r01_boot_map+0xe0>
+    d919: ae c0 81     	ldx	$81c0                   ; 0x81c0 <__stack+0x2c0>
     d91c: f0 17        	beq	$d935 <main+0x9c>
 ;         ctx->player_x = (uint16_t)R01_CPU8(R01_PLAY_INST_TABLE + 2u) |
-    d91e: ae c3 81     	ldx	$81c3                   ; 0x81c3 <r01_boot_map+0xe3>
+    d91e: ae c3 81     	ldx	$81c3                   ; 0x81c3 <__stack+0x2c3>
 ;                         ((uint16_t)R01_CPU8(R01_PLAY_INST_TABLE + 3u) << 8);
-    d921: ac c4 81     	ldy	$81c4                   ; 0x81c4 <r01_boot_map+0xe4>
+    d921: ac c4 81     	ldy	$81c4                   ; 0x81c4 <__stack+0x2c4>
 ;         ctx->player_x = (uint16_t)R01_CPU8(R01_PLAY_INST_TABLE + 2u) |
     d924: 8e b9 1f     	stx	$1fb9                   ; 0x1fb9 <g_ctx>
     d927: 8c ba 1f     	sty	$1fba                   ; 0x1fba <g_ctx+0x1>
 ;         ctx->player_y = (uint16_t)R01_CPU8(R01_PLAY_INST_TABLE + 4u) |
-    d92a: ae c5 81     	ldx	$81c5                   ; 0x81c5 <r01_boot_map+0xe5>
+    d92a: ae c5 81     	ldx	$81c5                   ; 0x81c5 <__stack+0x2c5>
     d92d: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
 ;                         ((uint16_t)R01_CPU8(R01_PLAY_INST_TABLE + 5u) << 8);
-    d92f: ad c6 81     	lda	$81c6                   ; 0x81c6 <r01_boot_map+0xe6>
+    d92f: ad c6 81     	lda	$81c6                   ; 0x81c6 <__stack+0x2c6>
     d932: 4c 9a d9     	jmp	$d99a <main+0x101>
 ;         uint8_t cell = R01_CPU8(R01_PLAY_SPAWN_CELL);
-    d935: ad 20 81     	lda	$8120                   ; 0x8120 <r01_boot_map+0x40>
+    d935: ad 20 81     	lda	$8120                   ; 0x8120 <__stack+0x220>
     d938: 64 e2        	stz	$e2                     ; 0xe2 <__rc2>
 ;         int row = (int)((cell >> 4) & 0x0Fu);
     d93a: 4a           	lsr
@@ -3694,7 +3694,7 @@ Disassembly of section .text:
     dc04: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
     dc06: a2 00        	ldx	#$0
     dc08: a5 fd        	lda	$fd                     ; 0xfd <__rc29>
-    dc0a: 20 f3 fd     	jsr	$fdf3 <__ashlhi3>
+    dc0a: 20 df fd     	jsr	$fddf <__ashlhi3>
     dc0d: 25 f8        	and	$f8                     ; 0xf8 <__rc24>
     dc0f: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
     dc11: 8a           	txa
@@ -4030,8 +4030,8 @@ Disassembly of section .text:
     de4f: d0 04        	bne	$de55 <main+0x5bc>
     de51: a2 4c        	ldx	#$4c
     de53: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
-;     boot = *(volatile uint8_t *)(uint16_t)0x80FEu;
-    de55: ad fe 80     	lda	$80fe                   ; 0x80fe <r01_boot_map+0x1e>
+;     boot = g_ctx.bgm_track;
+    de55: ad db 1f     	lda	$1fdb                   ; 0x1fdb <g_ctx+0x22>
     de58: d0 03        	bne	$de5d <main+0x5c4>
     de5a: 4c 71 df     	jmp	$df71 <main+0x6d8>
 ;     if (boot < 1u || boot > R01_BGM_TRACKS) {
@@ -4643,7 +4643,7 @@ Disassembly of section .text:
 ;     r01_live_n = 0;
     e263: 64 85        	stz	$85                     ; 0x85 <r01_live_n>
 ;     n = R01_CPU8(R01_PLAY_INST_COUNT);
-    e265: ae c0 81     	ldx	$81c0                   ; 0x81c0 <r01_boot_map+0xe0>
+    e265: ae c0 81     	ldx	$81c0                   ; 0x81c0 <__stack+0x2c0>
 ;     if (n > 16u) {
     e268: e0 11        	cpx	#$11
     e26a: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
@@ -4658,7 +4658,7 @@ Disassembly of section .text:
     e27c: a2 00        	ldx	#$0
     e27e: 64 ec        	stz	$ec                     ; 0xec <__rc12>
     e280: 4c 6a e3     	jmp	$e36a <main+0xad1>
-    e283: 2c b6 ff     	bit	$ffb6                   ; 0xffb6 <__set_v>
+    e283: 2c a2 ff     	bit	$ffa2                   ; 0xffa2 <__set_v>
     e286: a5 ec        	lda	$ec                     ; 0xec <__rc12>
     e288: c5 e2        	cmp	$e2                     ; 0xe2 <__rc2>
     e28a: 90 01        	bcc	$e28d <main+0x9f4>
@@ -4993,7 +4993,7 @@ Disassembly of section .text:
 ;         g_ctx.player_anim_delay_override = 0;
     e4b7: 9c ce 1f     	stz	$1fce                   ; 0x1fce <g_ctx+0x15>
 ;         r01_game_on_tick(&g_ctx);
-    e4ba: 20 77 fa     	jsr	$fa77 <r01_game_on_tick>
+    e4ba: 20 63 fa     	jsr	$fa63 <r01_game_on_tick>
 ;     if (!s_phys_ready) {
     e4bd: a5 11        	lda	$11                     ; 0x11 <s_phys_ready>
     e4bf: 29 01        	and	#$1
@@ -5022,7 +5022,7 @@ Disassembly of section .text:
     e4e4: 64 f4        	stz	$f4                     ; 0xf4 <__rc20>
     e4e6: a2 0a        	ldx	#$a
     e4e8: a9 00        	lda	#$0
-    e4ea: 20 64 ff     	jsr	$ff64 <__memset>
+    e4ea: 20 50 ff     	jsr	$ff50 <__memset>
     e4ed: a2 01        	ldx	#$1
 ;     ph->run_mul = 1;
     e4ef: 86 28        	stx	$28                     ; 0x28 <s_phys+0x14>
@@ -5230,7 +5230,7 @@ Disassembly of section .text:
     e63e: a5 27        	lda	$27                     ; 0x27 <s_phys+0x13>
     e640: d0 09        	bne	$e64b <main+0xdb2>
     e642: a5 26        	lda	$26                     ; 0x26 <s_phys+0x12>
-    e644: 2c b6 ff     	bit	$ffb6                   ; 0xffb6 <__set_v>
+    e644: 2c a2 ff     	bit	$ffa2                   ; 0xffa2 <__set_v>
     e647: aa           	tax
     e648: f0 01        	beq	$e64b <main+0xdb2>
     e64a: b8           	clv
@@ -5271,7 +5271,7 @@ Disassembly of section .text:
     e680: a4 e4        	ldy	$e4                     ; 0xe4 <__rc4>
     e682: 84 fa        	sty	$fa                     ; 0xfa <__rc26>
     e684: a5 e4        	lda	$e4                     ; 0xe4 <__rc4>
-    e686: 20 84 ff     	jsr	$ff84 <__mulhi3>
+    e686: 20 70 ff     	jsr	$ff70 <__mulhi3>
     e689: 85 ff        	sta	$ff                     ; 0xff <__rc31>
     e68b: 86 f9        	stx	$f9                     ; 0xf9 <__rc25>
 ;     if (ph->mode != R01_GAME_MODE_PLATFORMER) {
@@ -5300,7 +5300,7 @@ Disassembly of section .text:
     e6b7: a4 fa        	ldy	$fa                     ; 0xfa <__rc26>
     e6b9: 84 fb        	sty	$fb                     ; 0xfb <__rc27>
     e6bb: a5 fa        	lda	$fa                     ; 0xfa <__rc26>
-    e6bd: 20 84 ff     	jsr	$ff84 <__mulhi3>
+    e6bd: 20 70 ff     	jsr	$ff70 <__mulhi3>
     e6c0: 85 fa        	sta	$fa                     ; 0xfa <__rc26>
     e6c2: 8a           	txa
     e6c3: a0 04        	ldy	#$4
@@ -5325,7 +5325,7 @@ Disassembly of section .text:
     e6e2: 84 e3        	sty	$e3                     ; 0xe3 <__rc3>
     e6e4: aa           	tax
     e6e5: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
-    e6e7: 20 84 ff     	jsr	$ff84 <__mulhi3>
+    e6e7: 20 70 ff     	jsr	$ff70 <__mulhi3>
     e6ea: 85 fb        	sta	$fb                     ; 0xfb <__rc27>
     e6ec: 8a           	txa
     e6ed: a0 00        	ldy	#$0
@@ -5350,7 +5350,7 @@ Disassembly of section .text:
     e70b: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
     e70d: aa           	tax
     e70e: 98           	tya
-    e70f: 20 84 ff     	jsr	$ff84 <__mulhi3>
+    e70f: 20 70 ff     	jsr	$ff70 <__mulhi3>
     e712: a8           	tay
     e713: 86 e6        	stx	$e6                     ; 0xe6 <__rc6>
     e715: a5 fc        	lda	$fc                     ; 0xfc <__rc28>
@@ -5388,7 +5388,7 @@ Disassembly of section .text:
 ;         (void)integrate_axis(&x, &ph->frac_x, walk_fp * in_dx, y, 1, move_ok, ctx);
     e74e: a6 f9        	ldx	$f9                     ; 0xf9 <__rc25>
     e750: a5 ff        	lda	$ff                     ; 0xff <__rc31>
-    e752: 20 84 ff     	jsr	$ff84 <__mulhi3>
+    e752: 20 70 ff     	jsr	$ff70 <__mulhi3>
     e755: a4 f6        	ldy	$f6                     ; 0xf6 <__rc22>
     e757: 84 e2        	sty	$e2                     ; 0xe2 <__rc2>
     e759: a4 f7        	ldy	$f7                     ; 0xf7 <__rc23>
@@ -5435,7 +5435,7 @@ Disassembly of section .text:
 ;         (void)integrate_axis(&y, &ph->frac_y, walk_fp * in_dy, x, 0, move_ok, ctx);
     e7a6: a6 f9        	ldx	$f9                     ; 0xf9 <__rc25>
     e7a8: a5 ff        	lda	$ff                     ; 0xff <__rc31>
-    e7aa: 20 84 ff     	jsr	$ff84 <__mulhi3>
+    e7aa: 20 70 ff     	jsr	$ff70 <__mulhi3>
     e7ad: 85 ee        	sta	$ee                     ; 0xee <__rc14>
     e7af: b2 f6        	lda	($f6)                   ; 0xf6 <__rc22>
     e7b1: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
@@ -5563,7 +5563,7 @@ Disassembly of section .text:
     e889: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
     e88b: a6 f9        	ldx	$f9                     ; 0xf9 <__rc25>
     e88d: a5 ff        	lda	$ff                     ; 0xff <__rc31>
-    e88f: 20 84 ff     	jsr	$ff84 <__mulhi3>
+    e88f: 20 70 ff     	jsr	$ff70 <__mulhi3>
     e892: a4 f6        	ldy	$f6                     ; 0xf6 <__rc22>
     e894: 84 e2        	sty	$e2                     ; 0xe2 <__rc2>
     e896: a4 f7        	ldy	$f7                     ; 0xf7 <__rc23>
@@ -8145,781 +8145,768 @@ Disassembly of section .text:
 ;         ctx->player_jump_state = entity_state_idx;
     fa5a: ca           	dex
     fa5b: 8e d9 1f     	stx	$1fd9                   ; 0x1fd9 <g_ctx+0x20>
-;     n = ctx->solid_pat_count;
-    fa5e: ae dc 1f     	ldx	$1fdc                   ; 0x1fdc <g_ctx+0x23>
-;     if (n >= 64u) {
-    fa61: e0 40        	cpx	#$40
-    fa63: b0 0c        	bcs	$fa71 <r01_game_on_init+0x4d>
-;     ctx->solid_pat_bank[n] = bank;
-    fa65: 9e dd 1f     	stz	$1fdd,x                 ; 0x1fdd <g_ctx+0x24>
-    fa68: a9 01        	lda	#$1
-;     ctx->solid_pat_tile[n] = tile;
-    fa6a: 9d 1d 20     	sta	$201d,x                 ; 0x201d <g_ctx+0x64>
-;     ctx->solid_pat_count = (uint8_t)(n + 1u);
-    fa6d: e8           	inx
-    fa6e: 8e dc 1f     	stx	$1fdc                   ; 0x1fdc <g_ctx+0x23>
 ;         ctx->bgm_track = track;
-    fa71: a2 01        	ldx	#$1
-    fa73: 8e db 1f     	stx	$1fdb                   ; 0x1fdb <g_ctx+0x22>
+    fa5e: ca           	dex
+    fa5f: 8e db 1f     	stx	$1fdb                   ; 0x1fdb <g_ctx+0x22>
 ; }
-    fa76: 60           	rts
+    fa62: 60           	rts
 
-0000fa77 <r01_game_on_tick>:
+0000fa63 <r01_game_on_tick>:
 ;     if (r01_pad_down(ctx, R01_PAD_X) && r01_player_moving_x(ctx)) {
-    fa77: a9 10        	lda	#$10
-    fa79: 2d c1 1f     	and	$1fc1                   ; 0x1fc1 <g_ctx+0x8>
-    fa7c: f0 11        	beq	$fa8f <r01_game_on_tick+0x18>
-    fa7e: ad c1 1f     	lda	$1fc1                   ; 0x1fc1 <g_ctx+0x8>
+    fa63: a9 10        	lda	#$10
+    fa65: 2d c1 1f     	and	$1fc1                   ; 0x1fc1 <g_ctx+0x8>
+    fa68: f0 11        	beq	$fa7b <r01_game_on_tick+0x18>
+    fa6a: ad c1 1f     	lda	$1fc1                   ; 0x1fc1 <g_ctx+0x8>
 ;     return (uint8_t)((ctx->pad & (R01_PAD_LEFT | R01_PAD_RIGHT)) != 0u);
-    fa81: 29 03        	and	#$3
-    fa83: f0 0a        	beq	$fa8f <r01_game_on_tick+0x18>
+    fa6d: 29 03        	and	#$3
+    fa6f: f0 0a        	beq	$fa7b <r01_game_on_tick+0x18>
 ;     ctx->player_move_mul = mul ? mul : 1u;
-    fa85: a2 02        	ldx	#$2
-    fa87: 8e cd 1f     	stx	$1fcd                   ; 0x1fcd <g_ctx+0x14>
+    fa71: a2 02        	ldx	#$2
+    fa73: 8e cd 1f     	stx	$1fcd                   ; 0x1fcd <g_ctx+0x14>
 ;         ctx->player_anim_delay_override = ticks;
-    fa8a: a2 05        	ldx	#$5
-    fa8c: 8e ce 1f     	stx	$1fce                   ; 0x1fce <g_ctx+0x15>
+    fa76: a2 05        	ldx	#$5
+    fa78: 8e ce 1f     	stx	$1fce                   ; 0x1fce <g_ctx+0x15>
 ;     n = r01_entity_count();
-    fa8f: a6 85        	ldx	$85                     ; 0x85 <r01_live_n>
-    fa91: 86 c7        	stx	$c7                     ; 0xc7 <__zp_bss_size+0x21>
+    fa7b: a6 85        	ldx	$85                     ; 0x85 <r01_live_n>
+    fa7d: 86 c7        	stx	$c7                     ; 0xc7 <__zp_bss_size+0x21>
 ;     if (!s_ready) {
-    fa93: a5 86        	lda	$86                     ; 0x86 <s_ready>
-    fa95: 29 01        	and	#$1
-    fa97: f0 03        	beq	$fa9c <r01_game_on_tick+0x25>
-    fa99: 4c 0f fb     	jmp	$fb0f <r01_game_on_tick+0x98>
+    fa7f: a5 86        	lda	$86                     ; 0x86 <s_ready>
+    fa81: 29 01        	and	#$1
+    fa83: f0 03        	beq	$fa88 <r01_game_on_tick+0x25>
+    fa85: 4c fb fa     	jmp	$fafb <r01_game_on_tick+0x98>
 ;         s_rng ^= (uint16_t)ctx->player_x;
-    fa9c: a5 0f        	lda	$f                      ; 0xf <s_rng>
-    fa9e: a6 10        	ldx	$10                     ; 0x10 <s_rng+0x1>
-    faa0: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
-    faa2: 4d b9 1f     	eor	$1fb9                   ; 0x1fb9 <g_ctx>
-    faa5: aa           	tax
-    faa6: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
-    faa8: 4d ba 1f     	eor	$1fba                   ; 0x1fba <g_ctx+0x1>
-    faab: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    fa88: a5 0f        	lda	$f                      ; 0xf <s_rng>
+    fa8a: a6 10        	ldx	$10                     ; 0x10 <s_rng+0x1>
+    fa8c: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    fa8e: 4d b9 1f     	eor	$1fb9                   ; 0x1fb9 <g_ctx>
+    fa91: aa           	tax
+    fa92: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    fa94: 4d ba 1f     	eor	$1fba                   ; 0x1fba <g_ctx+0x1>
+    fa97: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
 ;         s_rng ^= (uint16_t)(ctx->player_y << 1);
-    faad: ad bb 1f     	lda	$1fbb                   ; 0x1fbb <g_ctx+0x2>
-    fab0: ac bc 1f     	ldy	$1fbc                   ; 0x1fbc <g_ctx+0x3>
-    fab3: 0a           	asl
-    fab4: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
-    fab6: 84 e3        	sty	$e3                     ; 0xe3 <__rc3>
-    fab8: 26 e3        	rol	$e3                     ; 0xe3 <__rc3>
-    faba: 8a           	txa
-    fabb: 45 e2        	eor	$e2                     ; 0xe2 <__rc2>
-    fabd: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
-    fabf: a4 e5        	ldy	$e5                     ; 0xe5 <__rc5>
-    fac1: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
-    fac3: 45 e3        	eor	$e3                     ; 0xe3 <__rc3>
-    fac5: c4 e3        	cpy	$e3                     ; 0xe3 <__rc3>
-    fac7: d0 0a        	bne	$fad3 <r01_game_on_tick+0x5c>
-    fac9: e4 e2        	cpx	$e2                     ; 0xe2 <__rc2>
-    facb: d0 06        	bne	$fad3 <r01_game_on_tick+0x5c>
-    facd: a9 ac        	lda	#$ac
-    facf: a2 e1        	ldx	#$e1
-    fad1: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
-    fad3: a6 e4        	ldx	$e4                     ; 0xe4 <__rc4>
-    fad5: 86 0f        	stx	$f                      ; 0xf <s_rng>
-    fad7: 85 10        	sta	$10                     ; 0x10 <s_rng+0x1>
-    fad9: a2 5d        	ldx	#$5d
-    fadb: 86 b7        	stx	$b7                     ; 0xb7 <__zp_bss_size+0x11>
-    fadd: a2 20        	ldx	#$20
-    fadf: 86 b8        	stx	$b8                     ; 0xb8 <__zp_bss_size+0x12>
-    fae1: a2 00        	ldx	#$0
-    fae3: 80 1c        	bra	$fb01 <r01_game_on_tick+0x8a>
+    fa99: ad bb 1f     	lda	$1fbb                   ; 0x1fbb <g_ctx+0x2>
+    fa9c: ac bc 1f     	ldy	$1fbc                   ; 0x1fbc <g_ctx+0x3>
+    fa9f: 0a           	asl
+    faa0: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    faa2: 84 e3        	sty	$e3                     ; 0xe3 <__rc3>
+    faa4: 26 e3        	rol	$e3                     ; 0xe3 <__rc3>
+    faa6: 8a           	txa
+    faa7: 45 e2        	eor	$e2                     ; 0xe2 <__rc2>
+    faa9: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    faab: a4 e5        	ldy	$e5                     ; 0xe5 <__rc5>
+    faad: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
+    faaf: 45 e3        	eor	$e3                     ; 0xe3 <__rc3>
+    fab1: c4 e3        	cpy	$e3                     ; 0xe3 <__rc3>
+    fab3: d0 0a        	bne	$fabf <r01_game_on_tick+0x5c>
+    fab5: e4 e2        	cpx	$e2                     ; 0xe2 <__rc2>
+    fab7: d0 06        	bne	$fabf <r01_game_on_tick+0x5c>
+    fab9: a9 ac        	lda	#$ac
+    fabb: a2 e1        	ldx	#$e1
+    fabd: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    fabf: a6 e4        	ldx	$e4                     ; 0xe4 <__rc4>
+    fac1: 86 0f        	stx	$f                      ; 0xf <s_rng>
+    fac3: 85 10        	sta	$10                     ; 0x10 <s_rng+0x1>
+    fac5: a2 5d        	ldx	#$5d
+    fac7: 86 b7        	stx	$b7                     ; 0xb7 <__zp_bss_size+0x11>
+    fac9: a2 20        	ldx	#$20
+    facb: 86 b8        	stx	$b8                     ; 0xb8 <__zp_bss_size+0x12>
+    facd: a2 00        	ldx	#$0
+    facf: 80 1c        	bra	$faed <r01_game_on_tick+0x8a>
 ;             s_wait[i] = slime_jump_gap();
-    fae5: 20 ad fd     	jsr	$fdad <slime_jump_gap>
-    fae8: 92 b7        	sta	($b7)                   ; 0xb7 <__zp_bss_size+0x11>
-    faea: a0 01        	ldy	#$1
-    faec: 8a           	txa
-    faed: 91 b7        	sta	($b7),y                 ; 0xb7 <__zp_bss_size+0x11>
-    faef: a6 b9        	ldx	$b9                     ; 0xb9 <__zp_bss_size+0x13>
+    fad1: 20 99 fd     	jsr	$fd99 <slime_jump_gap>
+    fad4: 92 b7        	sta	($b7)                   ; 0xb7 <__zp_bss_size+0x11>
+    fad6: a0 01        	ldy	#$1
+    fad8: 8a           	txa
+    fad9: 91 b7        	sta	($b7),y                 ; 0xb7 <__zp_bss_size+0x11>
+    fadb: a6 b9        	ldx	$b9                     ; 0xb9 <__zp_bss_size+0x13>
 ;             s_up[i] = 0;
-    faf1: 74 87        	stz	$87,x                   ; 0x87 <s_up>
+    fadd: 74 87        	stz	$87,x                   ; 0x87 <s_up>
 ;         for (i = 0; i < n; i++) {
-    faf3: e8           	inx
-    faf4: a5 b7        	lda	$b7                     ; 0xb7 <__zp_bss_size+0x11>
-    faf6: 18           	clc
-    faf7: 69 02        	adc	#$2
-    faf9: 85 b7        	sta	$b7                     ; 0xb7 <__zp_bss_size+0x11>
-    fafb: a5 b8        	lda	$b8                     ; 0xb8 <__zp_bss_size+0x12>
-    fafd: 69 00        	adc	#$0
-    faff: 85 b8        	sta	$b8                     ; 0xb8 <__zp_bss_size+0x12>
-    fb01: 86 b9        	stx	$b9                     ; 0xb9 <__zp_bss_size+0x13>
+    fadf: e8           	inx
+    fae0: a5 b7        	lda	$b7                     ; 0xb7 <__zp_bss_size+0x11>
+    fae2: 18           	clc
+    fae3: 69 02        	adc	#$2
+    fae5: 85 b7        	sta	$b7                     ; 0xb7 <__zp_bss_size+0x11>
+    fae7: a5 b8        	lda	$b8                     ; 0xb8 <__zp_bss_size+0x12>
+    fae9: 69 00        	adc	#$0
+    faeb: 85 b8        	sta	$b8                     ; 0xb8 <__zp_bss_size+0x12>
+    faed: 86 b9        	stx	$b9                     ; 0xb9 <__zp_bss_size+0x13>
 ;         for (i = 0; i < n; i++) {
-    fb03: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
-    fb05: a6 c7        	ldx	$c7                     ; 0xc7 <__zp_bss_size+0x21>
-    fb07: e4 e2        	cpx	$e2                     ; 0xe2 <__rc2>
-    fb09: d0 da        	bne	$fae5 <r01_game_on_tick+0x6e>
-    fb0b: a2 01        	ldx	#$1
+    faef: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    faf1: a6 c7        	ldx	$c7                     ; 0xc7 <__zp_bss_size+0x21>
+    faf3: e4 e2        	cpx	$e2                     ; 0xe2 <__rc2>
+    faf5: d0 da        	bne	$fad1 <r01_game_on_tick+0x6e>
+    faf7: a2 01        	ldx	#$1
 ;         s_ready = 1;
-    fb0d: 86 86        	stx	$86                     ; 0x86 <s_ready>
-    fb0f: a2 1d        	ldx	#$1d
-    fb11: 86 e6        	stx	$e6                     ; 0xe6 <__rc6>
-    fb13: a2 21        	ldx	#$21
-    fb15: 86 e7        	stx	$e7                     ; 0xe7 <__rc7>
-    fb17: a2 fd        	ldx	#$fd
-    fb19: 86 b9        	stx	$b9                     ; 0xb9 <__zp_bss_size+0x13>
-    fb1b: a2 20        	ldx	#$20
-    fb1d: 86 ba        	stx	$ba                     ; 0xba <__zp_bss_size+0x14>
-    fb1f: a2 5d        	ldx	#$5d
-    fb21: 86 bb        	stx	$bb                     ; 0xbb <__zp_bss_size+0x15>
-    fb23: a2 20        	ldx	#$20
-    fb25: 86 bc        	stx	$bc                     ; 0xbc <__zp_bss_size+0x16>
-    fb27: 64 e5        	stz	$e5                     ; 0xe5 <__rc5>
-    fb29: a6 c7        	ldx	$c7                     ; 0xc7 <__zp_bss_size+0x21>
-    fb2b: e4 e5        	cpx	$e5                     ; 0xe5 <__rc5>
-    fb2d: d0 03        	bne	$fb32 <r01_game_on_tick+0xbb>
-    fb2f: 4c ac fd     	jmp	$fdac <r01_game_on_tick+0x335>
-    fb32: a6 e5        	ldx	$e5                     ; 0xe5 <__rc5>
+    faf9: 86 86        	stx	$86                     ; 0x86 <s_ready>
+    fafb: a2 1d        	ldx	#$1d
+    fafd: 86 e6        	stx	$e6                     ; 0xe6 <__rc6>
+    faff: a2 21        	ldx	#$21
+    fb01: 86 e7        	stx	$e7                     ; 0xe7 <__rc7>
+    fb03: a2 fd        	ldx	#$fd
+    fb05: 86 b9        	stx	$b9                     ; 0xb9 <__zp_bss_size+0x13>
+    fb07: a2 20        	ldx	#$20
+    fb09: 86 ba        	stx	$ba                     ; 0xba <__zp_bss_size+0x14>
+    fb0b: a2 5d        	ldx	#$5d
+    fb0d: 86 bb        	stx	$bb                     ; 0xbb <__zp_bss_size+0x15>
+    fb0f: a2 20        	ldx	#$20
+    fb11: 86 bc        	stx	$bc                     ; 0xbc <__zp_bss_size+0x16>
+    fb13: 64 e5        	stz	$e5                     ; 0xe5 <__rc5>
+    fb15: a6 c7        	ldx	$c7                     ; 0xc7 <__zp_bss_size+0x21>
+    fb17: e4 e5        	cpx	$e5                     ; 0xe5 <__rc5>
+    fb19: d0 03        	bne	$fb1e <r01_game_on_tick+0xbb>
+    fb1b: 4c 98 fd     	jmp	$fd98 <r01_game_on_tick+0x335>
+    fb1e: a6 e5        	ldx	$e5                     ; 0xe5 <__rc5>
 ;         if (r01_entity_type(i) != (uint8_t)R01_ENT_SLIME) {
-    fb34: b5 97        	lda	$97,x                   ; 0x97 <r01_live_type>
-    fb36: aa           	tax
-    fb37: e0 01        	cpx	#$1
-    fb39: f0 03        	beq	$fb3e <r01_game_on_tick+0xc7>
-    fb3b: 4c 4e fd     	jmp	$fd4e <r01_game_on_tick+0x2d7>
-    fb3e: a4 e5        	ldy	$e5                     ; 0xe5 <__rc5>
-    fb40: 84 c8        	sty	$c8                     ; 0xc8 <__zp_bss_size+0x22>
+    fb20: b5 97        	lda	$97,x                   ; 0x97 <r01_live_type>
+    fb22: aa           	tax
+    fb23: e0 01        	cpx	#$1
+    fb25: f0 03        	beq	$fb2a <r01_game_on_tick+0xc7>
+    fb27: 4c 3a fd     	jmp	$fd3a <r01_game_on_tick+0x2d7>
+    fb2a: a4 e5        	ldy	$e5                     ; 0xe5 <__rc5>
+    fb2c: 84 c8        	sty	$c8                     ; 0xc8 <__zp_bss_size+0x22>
 ;             int hx = (int)r01_ent_hx[t];
-    fb42: ae 7e 20     	ldx	$207e                   ; 0x207e <r01_ent_hx+0x1>
-    fb45: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
-    fb47: a2 ff        	ldx	#$ff
-    fb49: 86 e5        	stx	$e5                     ; 0xe5 <__rc5>
-    fb4b: a5 e4        	lda	$e4                     ; 0xe4 <__rc4>
-    fb4d: 30 02        	bmi	$fb51 <r01_game_on_tick+0xda>
-    fb4f: 64 e5        	stz	$e5                     ; 0xe5 <__rc5>
+    fb2e: ae 7e 20     	ldx	$207e                   ; 0x207e <r01_ent_hx+0x1>
+    fb31: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    fb33: a2 ff        	ldx	#$ff
+    fb35: 86 e5        	stx	$e5                     ; 0xe5 <__rc5>
+    fb37: a5 e4        	lda	$e4                     ; 0xe4 <__rc4>
+    fb39: 30 02        	bmi	$fb3d <r01_game_on_tick+0xda>
+    fb3b: 64 e5        	stz	$e5                     ; 0xe5 <__rc5>
 ;             int hy = (int)r01_ent_hy[t];
-    fb51: ac 9e 20     	ldy	$209e                   ; 0x209e <r01_ent_hy+0x1>
-    fb54: 84 c2        	sty	$c2                     ; 0xc2 <__zp_bss_size+0x1c>
-    fb56: 86 c1        	stx	$c1                     ; 0xc1 <__zp_bss_size+0x1b>
-    fb58: 30 02        	bmi	$fb5c <r01_game_on_tick+0xe5>
-    fb5a: 64 c1        	stz	$c1                     ; 0xc1 <__zp_bss_size+0x1b>
-    fb5c: b2 b9        	lda	($b9)                   ; 0xb9 <__zp_bss_size+0x13>
-    fb5e: 85 b7        	sta	$b7                     ; 0xb7 <__zp_bss_size+0x11>
-    fb60: a0 01        	ldy	#$1
-    fb62: b1 b9        	lda	($b9),y                 ; 0xb9 <__zp_bss_size+0x13>
-    fb64: 85 b8        	sta	$b8                     ; 0xb8 <__zp_bss_size+0x12>
-    fb66: b2 e6        	lda	($e6)                   ; 0xe6 <__rc6>
-    fb68: 85 c3        	sta	$c3                     ; 0xc3 <__zp_bss_size+0x1d>
-    fb6a: a6 e6        	ldx	$e6                     ; 0xe6 <__rc6>
-    fb6c: 86 e8        	stx	$e8                     ; 0xe8 <__rc8>
-    fb6e: a6 e7        	ldx	$e7                     ; 0xe7 <__rc7>
-    fb70: 86 e9        	stx	$e9                     ; 0xe9 <__rc9>
-    fb72: a6 e8        	ldx	$e8                     ; 0xe8 <__rc8>
-    fb74: 86 c5        	stx	$c5                     ; 0xc5 <__zp_bss_size+0x1f>
-    fb76: a6 e9        	ldx	$e9                     ; 0xe9 <__rc9>
-    fb78: 86 c6        	stx	$c6                     ; 0xc6 <__zp_bss_size+0x20>
-    fb7a: b1 e6        	lda	($e6),y                 ; 0xe6 <__rc6>
-    fb7c: 85 c4        	sta	$c4                     ; 0xc4 <__zp_bss_size+0x1e>
+    fb3d: ac 9e 20     	ldy	$209e                   ; 0x209e <r01_ent_hy+0x1>
+    fb40: 84 c2        	sty	$c2                     ; 0xc2 <__zp_bss_size+0x1c>
+    fb42: 86 c1        	stx	$c1                     ; 0xc1 <__zp_bss_size+0x1b>
+    fb44: 30 02        	bmi	$fb48 <r01_game_on_tick+0xe5>
+    fb46: 64 c1        	stz	$c1                     ; 0xc1 <__zp_bss_size+0x1b>
+    fb48: b2 b9        	lda	($b9)                   ; 0xb9 <__zp_bss_size+0x13>
+    fb4a: 85 b7        	sta	$b7                     ; 0xb7 <__zp_bss_size+0x11>
+    fb4c: a0 01        	ldy	#$1
+    fb4e: b1 b9        	lda	($b9),y                 ; 0xb9 <__zp_bss_size+0x13>
+    fb50: 85 b8        	sta	$b8                     ; 0xb8 <__zp_bss_size+0x12>
+    fb52: b2 e6        	lda	($e6)                   ; 0xe6 <__rc6>
+    fb54: 85 c3        	sta	$c3                     ; 0xc3 <__zp_bss_size+0x1d>
+    fb56: a6 e6        	ldx	$e6                     ; 0xe6 <__rc6>
+    fb58: 86 e8        	stx	$e8                     ; 0xe8 <__rc8>
+    fb5a: a6 e7        	ldx	$e7                     ; 0xe7 <__rc7>
+    fb5c: 86 e9        	stx	$e9                     ; 0xe9 <__rc9>
+    fb5e: a6 e8        	ldx	$e8                     ; 0xe8 <__rc8>
+    fb60: 86 c5        	stx	$c5                     ; 0xc5 <__zp_bss_size+0x1f>
+    fb62: a6 e9        	ldx	$e9                     ; 0xe9 <__rc9>
+    fb64: 86 c6        	stx	$c6                     ; 0xc6 <__zp_bss_size+0x20>
+    fb66: b1 e6        	lda	($e6),y                 ; 0xe6 <__rc6>
+    fb68: 85 c4        	sta	$c4                     ; 0xc4 <__zp_bss_size+0x1e>
 ;             uint8_t hw = r01_ent_hw[t];
-    fb7e: ae be 20     	ldx	$20be                   ; 0x20be <r01_ent_hw+0x1>
-    fb81: 86 c9        	stx	$c9                     ; 0xc9 <__zp_bss_size+0x23>
+    fb6a: ae be 20     	ldx	$20be                   ; 0x20be <r01_ent_hw+0x1>
+    fb6d: 86 c9        	stx	$c9                     ; 0xc9 <__zp_bss_size+0x23>
 ;             uint8_t hh = r01_ent_hh[t];
-    fb83: ae de 20     	ldx	$20de                   ; 0x20de <r01_ent_hh+0x1>
-    fb86: 86 ca        	stx	$ca                     ; 0xca <__zp_bss_size+0x24>
+    fb6f: ae de 20     	ldx	$20de                   ; 0x20de <r01_ent_hh+0x1>
+    fb72: 86 ca        	stx	$ca                     ; 0xca <__zp_bss_size+0x24>
 ;             if (s_wait[i] > 0u) {
-    fb88: b2 bb        	lda	($bb)                   ; 0xbb <__zp_bss_size+0x15>
-    fb8a: aa           	tax
-    fb8b: b1 bb        	lda	($bb),y                 ; 0xbb <__zp_bss_size+0x15>
-    fb8d: d0 04        	bne	$fb93 <r01_game_on_tick+0x11c>
-    fb8f: e0 00        	cpx	#$0
-    fb91: f0 10        	beq	$fba3 <r01_game_on_tick+0x12c>
-    fb93: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
-    fb95: 8a           	txa
+    fb74: b2 bb        	lda	($bb)                   ; 0xbb <__zp_bss_size+0x15>
+    fb76: aa           	tax
+    fb77: b1 bb        	lda	($bb),y                 ; 0xbb <__zp_bss_size+0x15>
+    fb79: d0 04        	bne	$fb7f <r01_game_on_tick+0x11c>
+    fb7b: e0 00        	cpx	#$0
+    fb7d: f0 10        	beq	$fb8f <r01_game_on_tick+0x12c>
+    fb7f: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    fb81: 8a           	txa
 ;                 s_wait[i]--;
-    fb96: 3a           	dec
-    fb97: c9 ff        	cmp	#$ff
-    fb99: d0 02        	bne	$fb9d <r01_game_on_tick+0x126>
-    fb9b: c6 e6        	dec	$e6                     ; 0xe6 <__rc6>
-    fb9d: 92 bb        	sta	($bb)                   ; 0xbb <__zp_bss_size+0x15>
-    fb9f: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
-    fba1: 91 bb        	sta	($bb),y                 ; 0xbb <__zp_bss_size+0x15>
+    fb82: 3a           	dec
+    fb83: c9 ff        	cmp	#$ff
+    fb85: d0 02        	bne	$fb89 <r01_game_on_tick+0x126>
+    fb87: c6 e6        	dec	$e6                     ; 0xe6 <__rc6>
+    fb89: 92 bb        	sta	($bb)                   ; 0xbb <__zp_bss_size+0x15>
+    fb8b: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    fb8d: 91 bb        	sta	($bb),y                 ; 0xbb <__zp_bss_size+0x15>
 ;             if (slime_fits((int)x + 1, (int)y, hx, hy, hw, hh)) {
-    fba3: a5 b7        	lda	$b7                     ; 0xb7 <__zp_bss_size+0x11>
-    fba5: a4 b8        	ldy	$b8                     ; 0xb8 <__zp_bss_size+0x12>
-    fba7: 1a           	inc
-    fba8: d0 01        	bne	$fbab <r01_game_on_tick+0x134>
-    fbaa: c8           	iny
-    fbab: 85 cb        	sta	$cb                     ; 0xcb <__zp_bss_size+0x25>
-    fbad: a2 00        	ldx	#$0
-    fbaf: 18           	clc
+    fb8f: a5 b7        	lda	$b7                     ; 0xb7 <__zp_bss_size+0x11>
+    fb91: a4 b8        	ldy	$b8                     ; 0xb8 <__zp_bss_size+0x12>
+    fb93: 1a           	inc
+    fb94: d0 01        	bne	$fb97 <r01_game_on_tick+0x134>
+    fb96: c8           	iny
+    fb97: 85 cb        	sta	$cb                     ; 0xcb <__zp_bss_size+0x25>
+    fb99: a2 00        	ldx	#$0
+    fb9b: 18           	clc
 ;     return r01_world_aabb_ok(x + hx, y + hy, hw, hh);
-    fbb0: 65 e4        	adc	$e4                     ; 0xe4 <__rc4>
-    fbb2: 86 e8        	stx	$e8                     ; 0xe8 <__rc8>
-    fbb4: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
-    fbb6: 84 cc        	sty	$cc                     ; 0xcc <__zp_bss_size+0x26>
-    fbb8: 98           	tya
-    fbb9: 65 e5        	adc	$e5                     ; 0xe5 <__rc5>
-    fbbb: 85 e7        	sta	$e7                     ; 0xe7 <__rc7>
-    fbbd: a6 c3        	ldx	$c3                     ; 0xc3 <__zp_bss_size+0x1d>
-    fbbf: 86 bf        	stx	$bf                     ; 0xbf <__zp_bss_size+0x19>
-    fbc1: 8a           	txa
-    fbc2: a6 e8        	ldx	$e8                     ; 0xe8 <__rc8>
-    fbc4: e0 01        	cpx	#$1
-    fbc6: 65 c2        	adc	$c2                     ; 0xc2 <__zp_bss_size+0x1c>
-    fbc8: a8           	tay
-    fbc9: a6 c4        	ldx	$c4                     ; 0xc4 <__zp_bss_size+0x1e>
-    fbcb: 86 c0        	stx	$c0                     ; 0xc0 <__zp_bss_size+0x1a>
-    fbcd: 8a           	txa
-    fbce: 65 c1        	adc	$c1                     ; 0xc1 <__zp_bss_size+0x1b>
-    fbd0: 84 e2        	sty	$e2                     ; 0xe2 <__rc2>
-    fbd2: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
-    fbd4: a6 c9        	ldx	$c9                     ; 0xc9 <__zp_bss_size+0x23>
-    fbd6: 86 be        	stx	$be                     ; 0xbe <__zp_bss_size+0x18>
-    fbd8: a6 e4        	ldx	$e4                     ; 0xe4 <__rc4>
-    fbda: 86 d0        	stx	$d0                     ; 0xd0 <__zp_bss_size+0x2a>
+    fb9c: 65 e4        	adc	$e4                     ; 0xe4 <__rc4>
+    fb9e: 86 e8        	stx	$e8                     ; 0xe8 <__rc8>
+    fba0: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    fba2: 84 cc        	sty	$cc                     ; 0xcc <__zp_bss_size+0x26>
+    fba4: 98           	tya
+    fba5: 65 e5        	adc	$e5                     ; 0xe5 <__rc5>
+    fba7: 85 e7        	sta	$e7                     ; 0xe7 <__rc7>
+    fba9: a6 c3        	ldx	$c3                     ; 0xc3 <__zp_bss_size+0x1d>
+    fbab: 86 bf        	stx	$bf                     ; 0xbf <__zp_bss_size+0x19>
+    fbad: 8a           	txa
+    fbae: a6 e8        	ldx	$e8                     ; 0xe8 <__rc8>
+    fbb0: e0 01        	cpx	#$1
+    fbb2: 65 c2        	adc	$c2                     ; 0xc2 <__zp_bss_size+0x1c>
+    fbb4: a8           	tay
+    fbb5: a6 c4        	ldx	$c4                     ; 0xc4 <__zp_bss_size+0x1e>
+    fbb7: 86 c0        	stx	$c0                     ; 0xc0 <__zp_bss_size+0x1a>
+    fbb9: 8a           	txa
+    fbba: 65 c1        	adc	$c1                     ; 0xc1 <__zp_bss_size+0x1b>
+    fbbc: 84 e2        	sty	$e2                     ; 0xe2 <__rc2>
+    fbbe: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    fbc0: a6 c9        	ldx	$c9                     ; 0xc9 <__zp_bss_size+0x23>
+    fbc2: 86 be        	stx	$be                     ; 0xbe <__zp_bss_size+0x18>
+    fbc4: a6 e4        	ldx	$e4                     ; 0xe4 <__rc4>
+    fbc6: 86 d0        	stx	$d0                     ; 0xd0 <__zp_bss_size+0x2a>
 ;     return r01_world_aabb_ok(x + hx, y + hy, hw, hh);
-    fbdc: a6 be        	ldx	$be                     ; 0xbe <__zp_bss_size+0x18>
-    fbde: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
-    fbe0: a6 ca        	ldx	$ca                     ; 0xca <__zp_bss_size+0x24>
-    fbe2: 86 bd        	stx	$bd                     ; 0xbd <__zp_bss_size+0x17>
-    fbe4: a6 e5        	ldx	$e5                     ; 0xe5 <__rc5>
-    fbe6: 86 cf        	stx	$cf                     ; 0xcf <__zp_bss_size+0x29>
+    fbc8: a6 be        	ldx	$be                     ; 0xbe <__zp_bss_size+0x18>
+    fbca: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    fbcc: a6 ca        	ldx	$ca                     ; 0xca <__zp_bss_size+0x24>
+    fbce: 86 bd        	stx	$bd                     ; 0xbd <__zp_bss_size+0x17>
+    fbd0: a6 e5        	ldx	$e5                     ; 0xe5 <__rc5>
+    fbd2: 86 cf        	stx	$cf                     ; 0xcf <__zp_bss_size+0x29>
 ;     return r01_world_aabb_ok(x + hx, y + hy, hw, hh);
-    fbe8: a6 bd        	ldx	$bd                     ; 0xbd <__zp_bss_size+0x17>
-    fbea: 86 e5        	stx	$e5                     ; 0xe5 <__rc5>
-    fbec: a6 e7        	ldx	$e7                     ; 0xe7 <__rc7>
-    fbee: 86 ce        	stx	$ce                     ; 0xce <__zp_bss_size+0x28>
-    fbf0: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
-    fbf2: a4 e6        	ldy	$e6                     ; 0xe6 <__rc6>
-    fbf4: 84 cd        	sty	$cd                     ; 0xcd <__zp_bss_size+0x27>
-    fbf6: 20 cc c4     	jsr	$c4cc <r01_world_aabb_ok>
-    fbf9: e0 00        	cpx	#$0
-    fbfb: d0 20        	bne	$fc1d <r01_game_on_tick+0x1a6>
-    fbfd: aa           	tax
-    fbfe: d0 1d        	bne	$fc1d <r01_game_on_tick+0x1a6>
+    fbd4: a6 bd        	ldx	$bd                     ; 0xbd <__zp_bss_size+0x17>
+    fbd6: 86 e5        	stx	$e5                     ; 0xe5 <__rc5>
+    fbd8: a6 e7        	ldx	$e7                     ; 0xe7 <__rc7>
+    fbda: 86 ce        	stx	$ce                     ; 0xce <__zp_bss_size+0x28>
+    fbdc: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    fbde: a4 e6        	ldy	$e6                     ; 0xe6 <__rc6>
+    fbe0: 84 cd        	sty	$cd                     ; 0xcd <__zp_bss_size+0x27>
+    fbe2: 20 cc c4     	jsr	$c4cc <r01_world_aabb_ok>
+    fbe5: e0 00        	cpx	#$0
+    fbe7: d0 20        	bne	$fc09 <r01_game_on_tick+0x1a6>
+    fbe9: aa           	tax
+    fbea: d0 1d        	bne	$fc09 <r01_game_on_tick+0x1a6>
 ;     return r01_world_aabb_ok(x + hx, y + hy, hw, hh);
-    fc00: a5 b7        	lda	$b7                     ; 0xb7 <__zp_bss_size+0x11>
-    fc02: 18           	clc
-    fc03: a6 d0        	ldx	$d0                     ; 0xd0 <__zp_bss_size+0x2a>
-    fc05: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
-    fc07: 65 e2        	adc	$e2                     ; 0xe2 <__rc2>
-    fc09: 85 cd        	sta	$cd                     ; 0xcd <__zp_bss_size+0x27>
-    fc0b: a5 b8        	lda	$b8                     ; 0xb8 <__zp_bss_size+0x12>
-    fc0d: a6 cf        	ldx	$cf                     ; 0xcf <__zp_bss_size+0x29>
-    fc0f: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
-    fc11: 65 e2        	adc	$e2                     ; 0xe2 <__rc2>
-    fc13: 85 ce        	sta	$ce                     ; 0xce <__zp_bss_size+0x28>
-    fc15: a6 b7        	ldx	$b7                     ; 0xb7 <__zp_bss_size+0x11>
-    fc17: 86 cb        	stx	$cb                     ; 0xcb <__zp_bss_size+0x25>
-    fc19: a6 b8        	ldx	$b8                     ; 0xb8 <__zp_bss_size+0x12>
-    fc1b: 86 cc        	stx	$cc                     ; 0xcc <__zp_bss_size+0x26>
+    fbec: a5 b7        	lda	$b7                     ; 0xb7 <__zp_bss_size+0x11>
+    fbee: 18           	clc
+    fbef: a6 d0        	ldx	$d0                     ; 0xd0 <__zp_bss_size+0x2a>
+    fbf1: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    fbf3: 65 e2        	adc	$e2                     ; 0xe2 <__rc2>
+    fbf5: 85 cd        	sta	$cd                     ; 0xcd <__zp_bss_size+0x27>
+    fbf7: a5 b8        	lda	$b8                     ; 0xb8 <__zp_bss_size+0x12>
+    fbf9: a6 cf        	ldx	$cf                     ; 0xcf <__zp_bss_size+0x29>
+    fbfb: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    fbfd: 65 e2        	adc	$e2                     ; 0xe2 <__rc2>
+    fbff: 85 ce        	sta	$ce                     ; 0xce <__zp_bss_size+0x28>
+    fc01: a6 b7        	ldx	$b7                     ; 0xb7 <__zp_bss_size+0x11>
+    fc03: 86 cb        	stx	$cb                     ; 0xcb <__zp_bss_size+0x25>
+    fc05: a6 b8        	ldx	$b8                     ; 0xb8 <__zp_bss_size+0x12>
+    fc07: 86 cc        	stx	$cc                     ; 0xcc <__zp_bss_size+0x26>
 ;             grounded = (uint8_t)!slime_fits((int)x, (int)y + 1, hx, hy, hw, hh);
-    fc1d: e6 bf        	inc	$bf                     ; 0xbf <__zp_bss_size+0x19>
-    fc1f: d0 02        	bne	$fc23 <r01_game_on_tick+0x1ac>
-    fc21: e6 c0        	inc	$c0                     ; 0xc0 <__zp_bss_size+0x1a>
-    fc23: 18           	clc
+    fc09: e6 bf        	inc	$bf                     ; 0xbf <__zp_bss_size+0x19>
+    fc0b: d0 02        	bne	$fc0f <r01_game_on_tick+0x1ac>
+    fc0d: e6 c0        	inc	$c0                     ; 0xc0 <__zp_bss_size+0x1a>
+    fc0f: 18           	clc
 ;     return r01_world_aabb_ok(x + hx, y + hy, hw, hh);
-    fc24: a5 bf        	lda	$bf                     ; 0xbf <__zp_bss_size+0x19>
-    fc26: a6 c2        	ldx	$c2                     ; 0xc2 <__zp_bss_size+0x1c>
-    fc28: 86 cf        	stx	$cf                     ; 0xcf <__zp_bss_size+0x29>
-    fc2a: a2 00        	ldx	#$0
-    fc2c: 86 b7        	stx	$b7                     ; 0xb7 <__zp_bss_size+0x11>
-    fc2e: 65 c2        	adc	$c2                     ; 0xc2 <__zp_bss_size+0x1c>
-    fc30: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
-    fc32: a5 c0        	lda	$c0                     ; 0xc0 <__zp_bss_size+0x1a>
-    fc34: a6 c1        	ldx	$c1                     ; 0xc1 <__zp_bss_size+0x1b>
-    fc36: 86 c2        	stx	$c2                     ; 0xc2 <__zp_bss_size+0x1c>
-    fc38: 65 c1        	adc	$c1                     ; 0xc1 <__zp_bss_size+0x1b>
-    fc3a: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
-    fc3c: a6 be        	ldx	$be                     ; 0xbe <__zp_bss_size+0x18>
-    fc3e: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
-    fc40: a6 bd        	ldx	$bd                     ; 0xbd <__zp_bss_size+0x17>
-    fc42: 86 e5        	stx	$e5                     ; 0xe5 <__rc5>
-    fc44: a6 ce        	ldx	$ce                     ; 0xce <__zp_bss_size+0x28>
-    fc46: 86 c1        	stx	$c1                     ; 0xc1 <__zp_bss_size+0x1b>
-    fc48: a5 cd        	lda	$cd                     ; 0xcd <__zp_bss_size+0x27>
-    fc4a: 85 be        	sta	$be                     ; 0xbe <__zp_bss_size+0x18>
-    fc4c: 20 cc c4     	jsr	$c4cc <r01_world_aabb_ok>
-    fc4f: e0 00        	cpx	#$0
-    fc51: d0 0c        	bne	$fc5f <r01_game_on_tick+0x1e8>
-    fc53: a2 01        	ldx	#$1
-    fc55: a0 01        	ldy	#$1
-    fc57: c9 00        	cmp	#$0
-    fc59: f0 08        	beq	$fc63 <r01_game_on_tick+0x1ec>
-    fc5b: a2 00        	ldx	#$0
-    fc5d: 80 04        	bra	$fc63 <r01_game_on_tick+0x1ec>
-    fc5f: a2 00        	ldx	#$0
-    fc61: a0 01        	ldy	#$1
-    fc63: 8a           	txa
-    fc64: d0 04        	bne	$fc6a <r01_game_on_tick+0x1f3>
-    fc66: a9 01        	lda	#$1
-    fc68: 85 b7        	sta	$b7                     ; 0xb7 <__zp_bss_size+0x11>
+    fc10: a5 bf        	lda	$bf                     ; 0xbf <__zp_bss_size+0x19>
+    fc12: a6 c2        	ldx	$c2                     ; 0xc2 <__zp_bss_size+0x1c>
+    fc14: 86 cf        	stx	$cf                     ; 0xcf <__zp_bss_size+0x29>
+    fc16: a2 00        	ldx	#$0
+    fc18: 86 b7        	stx	$b7                     ; 0xb7 <__zp_bss_size+0x11>
+    fc1a: 65 c2        	adc	$c2                     ; 0xc2 <__zp_bss_size+0x1c>
+    fc1c: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    fc1e: a5 c0        	lda	$c0                     ; 0xc0 <__zp_bss_size+0x1a>
+    fc20: a6 c1        	ldx	$c1                     ; 0xc1 <__zp_bss_size+0x1b>
+    fc22: 86 c2        	stx	$c2                     ; 0xc2 <__zp_bss_size+0x1c>
+    fc24: 65 c1        	adc	$c1                     ; 0xc1 <__zp_bss_size+0x1b>
+    fc26: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    fc28: a6 be        	ldx	$be                     ; 0xbe <__zp_bss_size+0x18>
+    fc2a: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    fc2c: a6 bd        	ldx	$bd                     ; 0xbd <__zp_bss_size+0x17>
+    fc2e: 86 e5        	stx	$e5                     ; 0xe5 <__rc5>
+    fc30: a6 ce        	ldx	$ce                     ; 0xce <__zp_bss_size+0x28>
+    fc32: 86 c1        	stx	$c1                     ; 0xc1 <__zp_bss_size+0x1b>
+    fc34: a5 cd        	lda	$cd                     ; 0xcd <__zp_bss_size+0x27>
+    fc36: 85 be        	sta	$be                     ; 0xbe <__zp_bss_size+0x18>
+    fc38: 20 cc c4     	jsr	$c4cc <r01_world_aabb_ok>
+    fc3b: e0 00        	cpx	#$0
+    fc3d: d0 0c        	bne	$fc4b <r01_game_on_tick+0x1e8>
+    fc3f: a2 01        	ldx	#$1
+    fc41: a0 01        	ldy	#$1
+    fc43: c9 00        	cmp	#$0
+    fc45: f0 08        	beq	$fc4f <r01_game_on_tick+0x1ec>
+    fc47: a2 00        	ldx	#$0
+    fc49: 80 04        	bra	$fc4f <r01_game_on_tick+0x1ec>
+    fc4b: a2 00        	ldx	#$0
+    fc4d: a0 01        	ldy	#$1
+    fc4f: 8a           	txa
+    fc50: d0 04        	bne	$fc56 <r01_game_on_tick+0x1f3>
+    fc52: a9 01        	lda	#$1
+    fc54: 85 b7        	sta	$b7                     ; 0xb7 <__zp_bss_size+0x11>
 ;             if (s_wait[i] == 0u && grounded) {
-    fc6a: b2 bb        	lda	($bb)                   ; 0xbb <__zp_bss_size+0x15>
-    fc6c: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
-    fc6e: b1 bb        	lda	($bb),y                 ; 0xbb <__zp_bss_size+0x15>
-    fc70: a0 01        	ldy	#$1
-    fc72: c9 00        	cmp	#$0
-    fc74: d0 06        	bne	$fc7c <r01_game_on_tick+0x205>
-    fc76: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
-    fc78: d0 02        	bne	$fc7c <r01_game_on_tick+0x205>
-    fc7a: a4 b7        	ldy	$b7                     ; 0xb7 <__zp_bss_size+0x11>
-    fc7c: 98           	tya
-    fc7d: f0 25        	beq	$fca4 <r01_game_on_tick+0x22d>
-    fc7f: a4 c8        	ldy	$c8                     ; 0xc8 <__zp_bss_size+0x22>
+    fc56: b2 bb        	lda	($bb)                   ; 0xbb <__zp_bss_size+0x15>
+    fc58: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    fc5a: b1 bb        	lda	($bb),y                 ; 0xbb <__zp_bss_size+0x15>
+    fc5c: a0 01        	ldy	#$1
+    fc5e: c9 00        	cmp	#$0
+    fc60: d0 06        	bne	$fc68 <r01_game_on_tick+0x205>
+    fc62: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    fc64: d0 02        	bne	$fc68 <r01_game_on_tick+0x205>
+    fc66: a4 b7        	ldy	$b7                     ; 0xb7 <__zp_bss_size+0x11>
+    fc68: 98           	tya
+    fc69: f0 25        	beq	$fc90 <r01_game_on_tick+0x22d>
+    fc6b: a4 c8        	ldy	$c8                     ; 0xc8 <__zp_bss_size+0x22>
 ;             if (s_up[i] > 0u) {
-    fc81: b9 87 00     	lda	$87,y                   ; 0x87 <s_up>
-    fc84: a8           	tay
-    fc85: a5 c3        	lda	$c3                     ; 0xc3 <__zp_bss_size+0x1d>
-    fc87: 5a           	phy
-    fc88: a4 c2        	ldy	$c2                     ; 0xc2 <__zp_bss_size+0x1c>
-    fc8a: 84 bd        	sty	$bd                     ; 0xbd <__zp_bss_size+0x17>
-    fc8c: 7a           	ply
-    fc8d: d0 2c        	bne	$fcbb <r01_game_on_tick+0x244>
-    fc8f: 8a           	txa
-    fc90: f0 03        	beq	$fc95 <r01_game_on_tick+0x21e>
-    fc92: 4c 95 fd     	jmp	$fd95 <r01_game_on_tick+0x31e>
-    fc95: a2 01        	ldx	#$1
-    fc97: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
-    fc99: a6 bf        	ldx	$bf                     ; 0xbf <__zp_bss_size+0x19>
-    fc9b: 86 c3        	stx	$c3                     ; 0xc3 <__zp_bss_size+0x1d>
-    fc9d: a6 c0        	ldx	$c0                     ; 0xc0 <__zp_bss_size+0x1a>
-    fc9f: 86 c4        	stx	$c4                     ; 0xc4 <__zp_bss_size+0x1e>
-    fca1: 4c 97 fd     	jmp	$fd97 <r01_game_on_tick+0x320>
-    fca4: a9 10        	lda	#$10
-    fca6: a6 c8        	ldx	$c8                     ; 0xc8 <__zp_bss_size+0x22>
+    fc6d: b9 87 00     	lda	$87,y                   ; 0x87 <s_up>
+    fc70: a8           	tay
+    fc71: a5 c3        	lda	$c3                     ; 0xc3 <__zp_bss_size+0x1d>
+    fc73: 5a           	phy
+    fc74: a4 c2        	ldy	$c2                     ; 0xc2 <__zp_bss_size+0x1c>
+    fc76: 84 bd        	sty	$bd                     ; 0xbd <__zp_bss_size+0x17>
+    fc78: 7a           	ply
+    fc79: d0 2c        	bne	$fca7 <r01_game_on_tick+0x244>
+    fc7b: 8a           	txa
+    fc7c: f0 03        	beq	$fc81 <r01_game_on_tick+0x21e>
+    fc7e: 4c 81 fd     	jmp	$fd81 <r01_game_on_tick+0x31e>
+    fc81: a2 01        	ldx	#$1
+    fc83: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    fc85: a6 bf        	ldx	$bf                     ; 0xbf <__zp_bss_size+0x19>
+    fc87: 86 c3        	stx	$c3                     ; 0xc3 <__zp_bss_size+0x1d>
+    fc89: a6 c0        	ldx	$c0                     ; 0xc0 <__zp_bss_size+0x1a>
+    fc8b: 86 c4        	stx	$c4                     ; 0xc4 <__zp_bss_size+0x1e>
+    fc8d: 4c 83 fd     	jmp	$fd83 <r01_game_on_tick+0x320>
+    fc90: a9 10        	lda	#$10
+    fc92: a6 c8        	ldx	$c8                     ; 0xc8 <__zp_bss_size+0x22>
 ;                 s_up[i] = (uint8_t)SLIME_JUMP_PX;
-    fca8: 9d 87 00     	sta	$87,x                   ; 0x87 <s_up>
+    fc94: 9d 87 00     	sta	$87,x                   ; 0x87 <s_up>
 ;                 s_wait[i] = slime_jump_gap();
-    fcab: 20 ad fd     	jsr	$fdad <slime_jump_gap>
-    fcae: 92 bb        	sta	($bb)                   ; 0xbb <__zp_bss_size+0x15>
-    fcb0: a0 01        	ldy	#$1
-    fcb2: 8a           	txa
-    fcb3: 91 bb        	sta	($bb),y                 ; 0xbb <__zp_bss_size+0x15>
-    fcb5: a5 c3        	lda	$c3                     ; 0xc3 <__zp_bss_size+0x1d>
-    fcb7: a6 c2        	ldx	$c2                     ; 0xc2 <__zp_bss_size+0x1c>
-    fcb9: 86 bd        	stx	$bd                     ; 0xbd <__zp_bss_size+0x17>
-    fcbb: 64 b7        	stz	$b7                     ; 0xb7 <__zp_bss_size+0x11>
-    fcbd: a6 c4        	ldx	$c4                     ; 0xc4 <__zp_bss_size+0x1e>
-    fcbf: 86 c0        	stx	$c0                     ; 0xc0 <__zp_bss_size+0x1a>
-    fcc1: a6 c0        	ldx	$c0                     ; 0xc0 <__zp_bss_size+0x1a>
-    fcc3: d0 06        	bne	$fccb <r01_game_on_tick+0x254>
-    fcc5: aa           	tax
-    fcc6: d0 03        	bne	$fccb <r01_game_on_tick+0x254>
-    fcc8: 4c 7a fd     	jmp	$fd7a <r01_game_on_tick+0x303>
+    fc97: 20 99 fd     	jsr	$fd99 <slime_jump_gap>
+    fc9a: 92 bb        	sta	($bb)                   ; 0xbb <__zp_bss_size+0x15>
+    fc9c: a0 01        	ldy	#$1
+    fc9e: 8a           	txa
+    fc9f: 91 bb        	sta	($bb),y                 ; 0xbb <__zp_bss_size+0x15>
+    fca1: a5 c3        	lda	$c3                     ; 0xc3 <__zp_bss_size+0x1d>
+    fca3: a6 c2        	ldx	$c2                     ; 0xc2 <__zp_bss_size+0x1c>
+    fca5: 86 bd        	stx	$bd                     ; 0xbd <__zp_bss_size+0x17>
+    fca7: 64 b7        	stz	$b7                     ; 0xb7 <__zp_bss_size+0x11>
+    fca9: a6 c4        	ldx	$c4                     ; 0xc4 <__zp_bss_size+0x1e>
+    fcab: 86 c0        	stx	$c0                     ; 0xc0 <__zp_bss_size+0x1a>
+    fcad: a6 c0        	ldx	$c0                     ; 0xc0 <__zp_bss_size+0x1a>
+    fcaf: d0 06        	bne	$fcb7 <r01_game_on_tick+0x254>
+    fcb1: aa           	tax
+    fcb2: d0 03        	bne	$fcb7 <r01_game_on_tick+0x254>
+    fcb4: 4c 66 fd     	jmp	$fd66 <r01_game_on_tick+0x303>
 ;                 if (y > 0u && slime_fits((int)x, (int)y - 1, hx, hy, hw, hh)) {
-    fccb: 85 bf        	sta	$bf                     ; 0xbf <__zp_bss_size+0x19>
-    fccd: a2 ff        	ldx	#$ff
-    fccf: c6 bf        	dec	$bf                     ; 0xbf <__zp_bss_size+0x19>
-    fcd1: e4 bf        	cpx	$bf                     ; 0xbf <__zp_bss_size+0x19>
-    fcd3: d0 02        	bne	$fcd7 <r01_game_on_tick+0x260>
-    fcd5: c6 c0        	dec	$c0                     ; 0xc0 <__zp_bss_size+0x1a>
+    fcb7: 85 bf        	sta	$bf                     ; 0xbf <__zp_bss_size+0x19>
+    fcb9: a2 ff        	ldx	#$ff
+    fcbb: c6 bf        	dec	$bf                     ; 0xbf <__zp_bss_size+0x19>
+    fcbd: e4 bf        	cpx	$bf                     ; 0xbf <__zp_bss_size+0x19>
+    fcbf: d0 02        	bne	$fcc3 <r01_game_on_tick+0x260>
+    fcc1: c6 c0        	dec	$c0                     ; 0xc0 <__zp_bss_size+0x1a>
 ;     return r01_world_aabb_ok(x + hx, y + hy, hw, hh);
-    fcd7: a5 bf        	lda	$bf                     ; 0xbf <__zp_bss_size+0x19>
-    fcd9: 18           	clc
-    fcda: a6 cf        	ldx	$cf                     ; 0xcf <__zp_bss_size+0x29>
-    fcdc: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
-    fcde: 65 e2        	adc	$e2                     ; 0xe2 <__rc2>
-    fce0: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
-    fce2: a5 c0        	lda	$c0                     ; 0xc0 <__zp_bss_size+0x1a>
-    fce4: 65 bd        	adc	$bd                     ; 0xbd <__zp_bss_size+0x17>
-    fce6: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
-    fce8: a6 c9        	ldx	$c9                     ; 0xc9 <__zp_bss_size+0x23>
-    fcea: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
-    fcec: a6 ca        	ldx	$ca                     ; 0xca <__zp_bss_size+0x24>
-    fcee: 86 e5        	stx	$e5                     ; 0xe5 <__rc5>
+    fcc3: a5 bf        	lda	$bf                     ; 0xbf <__zp_bss_size+0x19>
+    fcc5: 18           	clc
+    fcc6: a6 cf        	ldx	$cf                     ; 0xcf <__zp_bss_size+0x29>
+    fcc8: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    fcca: 65 e2        	adc	$e2                     ; 0xe2 <__rc2>
+    fccc: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    fcce: a5 c0        	lda	$c0                     ; 0xc0 <__zp_bss_size+0x1a>
+    fcd0: 65 bd        	adc	$bd                     ; 0xbd <__zp_bss_size+0x17>
+    fcd2: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    fcd4: a6 c9        	ldx	$c9                     ; 0xc9 <__zp_bss_size+0x23>
+    fcd6: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    fcd8: a6 ca        	ldx	$ca                     ; 0xca <__zp_bss_size+0x24>
+    fcda: 86 e5        	stx	$e5                     ; 0xe5 <__rc5>
 ;     return r01_world_aabb_ok(x + hx, y + hy, hw, hh);
-    fcf0: a6 c1        	ldx	$c1                     ; 0xc1 <__zp_bss_size+0x1b>
-    fcf2: a5 be        	lda	$be                     ; 0xbe <__zp_bss_size+0x18>
-    fcf4: 20 cc c4     	jsr	$c4cc <r01_world_aabb_ok>
-    fcf7: a4 c8        	ldy	$c8                     ; 0xc8 <__zp_bss_size+0x22>
-    fcf9: 84 e4        	sty	$e4                     ; 0xe4 <__rc4>
-    fcfb: a4 c5        	ldy	$c5                     ; 0xc5 <__zp_bss_size+0x1f>
-    fcfd: 84 e2        	sty	$e2                     ; 0xe2 <__rc2>
-    fcff: a4 c6        	ldy	$c6                     ; 0xc6 <__zp_bss_size+0x20>
-    fd01: 84 e3        	sty	$e3                     ; 0xe3 <__rc3>
-    fd03: 48           	pha
-    fd04: a5 e4        	lda	$e4                     ; 0xe4 <__rc4>
-    fd06: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
-    fd08: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
-    fd0a: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
-    fd0c: 68           	pla
-    fd0d: 84 e7        	sty	$e7                     ; 0xe7 <__rc7>
-    fd0f: e0 00        	cpx	#$0
-    fd11: d0 03        	bne	$fd16 <r01_game_on_tick+0x29f>
-    fd13: aa           	tax
-    fd14: f0 10        	beq	$fd26 <r01_game_on_tick+0x2af>
-    fd16: a6 e4        	ldx	$e4                     ; 0xe4 <__rc4>
+    fcdc: a6 c1        	ldx	$c1                     ; 0xc1 <__zp_bss_size+0x1b>
+    fcde: a5 be        	lda	$be                     ; 0xbe <__zp_bss_size+0x18>
+    fce0: 20 cc c4     	jsr	$c4cc <r01_world_aabb_ok>
+    fce3: a4 c8        	ldy	$c8                     ; 0xc8 <__zp_bss_size+0x22>
+    fce5: 84 e4        	sty	$e4                     ; 0xe4 <__rc4>
+    fce7: a4 c5        	ldy	$c5                     ; 0xc5 <__zp_bss_size+0x1f>
+    fce9: 84 e2        	sty	$e2                     ; 0xe2 <__rc2>
+    fceb: a4 c6        	ldy	$c6                     ; 0xc6 <__zp_bss_size+0x20>
+    fced: 84 e3        	sty	$e3                     ; 0xe3 <__rc3>
+    fcef: 48           	pha
+    fcf0: a5 e4        	lda	$e4                     ; 0xe4 <__rc4>
+    fcf2: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    fcf4: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    fcf6: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    fcf8: 68           	pla
+    fcf9: 84 e7        	sty	$e7                     ; 0xe7 <__rc7>
+    fcfb: e0 00        	cpx	#$0
+    fcfd: d0 03        	bne	$fd02 <r01_game_on_tick+0x29f>
+    fcff: aa           	tax
+    fd00: f0 10        	beq	$fd12 <r01_game_on_tick+0x2af>
+    fd02: a6 e4        	ldx	$e4                     ; 0xe4 <__rc4>
 ;                     s_up[i]--;
-    fd18: b5 87        	lda	$87,x                   ; 0x87 <s_up>
-    fd1a: aa           	tax
-    fd1b: ca           	dex
-    fd1c: 86 b7        	stx	$b7                     ; 0xb7 <__zp_bss_size+0x11>
-    fd1e: a6 bf        	ldx	$bf                     ; 0xbf <__zp_bss_size+0x19>
-    fd20: 86 c3        	stx	$c3                     ; 0xc3 <__zp_bss_size+0x1d>
-    fd22: a6 c0        	ldx	$c0                     ; 0xc0 <__zp_bss_size+0x1a>
-    fd24: 86 c4        	stx	$c4                     ; 0xc4 <__zp_bss_size+0x1e>
-    fd26: a5 b7        	lda	$b7                     ; 0xb7 <__zp_bss_size+0x11>
-    fd28: a6 e5        	ldx	$e5                     ; 0xe5 <__rc5>
-    fd2a: 9d 87 00     	sta	$87,x                   ; 0x87 <s_up>
-    fd2d: a2 01        	ldx	#$1
-    fd2f: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
-    fd31: a5 cb        	lda	$cb                     ; 0xcb <__zp_bss_size+0x25>
+    fd04: b5 87        	lda	$87,x                   ; 0x87 <s_up>
+    fd06: aa           	tax
+    fd07: ca           	dex
+    fd08: 86 b7        	stx	$b7                     ; 0xb7 <__zp_bss_size+0x11>
+    fd0a: a6 bf        	ldx	$bf                     ; 0xbf <__zp_bss_size+0x19>
+    fd0c: 86 c3        	stx	$c3                     ; 0xc3 <__zp_bss_size+0x1d>
+    fd0e: a6 c0        	ldx	$c0                     ; 0xc0 <__zp_bss_size+0x1a>
+    fd10: 86 c4        	stx	$c4                     ; 0xc4 <__zp_bss_size+0x1e>
+    fd12: a5 b7        	lda	$b7                     ; 0xb7 <__zp_bss_size+0x11>
+    fd14: a6 e5        	ldx	$e5                     ; 0xe5 <__rc5>
+    fd16: 9d 87 00     	sta	$87,x                   ; 0x87 <s_up>
+    fd19: a2 01        	ldx	#$1
+    fd1b: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    fd1d: a5 cb        	lda	$cb                     ; 0xcb <__zp_bss_size+0x25>
 ;     r01_live_x[id] = x;
-    fd33: 92 b9        	sta	($b9)                   ; 0xb9 <__zp_bss_size+0x13>
-    fd35: a2 01        	ldx	#$1
-    fd37: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
-    fd39: a5 cc        	lda	$cc                     ; 0xcc <__zp_bss_size+0x26>
-    fd3b: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
-    fd3d: 91 b9        	sta	($b9),y                 ; 0xb9 <__zp_bss_size+0x13>
-    fd3f: a5 c3        	lda	$c3                     ; 0xc3 <__zp_bss_size+0x1d>
+    fd1f: 92 b9        	sta	($b9)                   ; 0xb9 <__zp_bss_size+0x13>
+    fd21: a2 01        	ldx	#$1
+    fd23: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    fd25: a5 cc        	lda	$cc                     ; 0xcc <__zp_bss_size+0x26>
+    fd27: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
+    fd29: 91 b9        	sta	($b9),y                 ; 0xb9 <__zp_bss_size+0x13>
+    fd2b: a5 c3        	lda	$c3                     ; 0xc3 <__zp_bss_size+0x1d>
 ;     r01_live_y[id] = y;
-    fd41: 92 e6        	sta	($e6)                   ; 0xe6 <__rc6>
-    fd43: a5 c4        	lda	$c4                     ; 0xc4 <__zp_bss_size+0x1e>
-    fd45: 91 e6        	sta	($e6),y                 ; 0xe6 <__rc6>
-    fd47: a5 e4        	lda	$e4                     ; 0xe4 <__rc4>
-    fd49: a6 e5        	ldx	$e5                     ; 0xe5 <__rc5>
+    fd2d: 92 e6        	sta	($e6)                   ; 0xe6 <__rc6>
+    fd2f: a5 c4        	lda	$c4                     ; 0xc4 <__zp_bss_size+0x1e>
+    fd31: 91 e6        	sta	($e6),y                 ; 0xe6 <__rc6>
+    fd33: a5 e4        	lda	$e4                     ; 0xe4 <__rc4>
+    fd35: a6 e5        	ldx	$e5                     ; 0xe5 <__rc5>
 ;         r01_entity_set_state(i, grounded ? 0u : 1u);
-    fd4b: 9d a7 00     	sta	$a7,x                   ; 0xa7 <r01_live_state>
+    fd37: 9d a7 00     	sta	$a7,x                   ; 0xa7 <r01_live_state>
 ;     for (i = 0; i < n; i++) {
-    fd4e: e6 e5        	inc	$e5                     ; 0xe5 <__rc5>
-    fd50: a5 bb        	lda	$bb                     ; 0xbb <__zp_bss_size+0x15>
-    fd52: 18           	clc
-    fd53: 69 02        	adc	#$2
-    fd55: 85 bb        	sta	$bb                     ; 0xbb <__zp_bss_size+0x15>
-    fd57: a5 bc        	lda	$bc                     ; 0xbc <__zp_bss_size+0x16>
-    fd59: 69 00        	adc	#$0
-    fd5b: 85 bc        	sta	$bc                     ; 0xbc <__zp_bss_size+0x16>
-    fd5d: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
-    fd5f: 18           	clc
-    fd60: 69 02        	adc	#$2
-    fd62: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
-    fd64: a5 e7        	lda	$e7                     ; 0xe7 <__rc7>
-    fd66: 69 00        	adc	#$0
-    fd68: 85 e7        	sta	$e7                     ; 0xe7 <__rc7>
-    fd6a: a5 b9        	lda	$b9                     ; 0xb9 <__zp_bss_size+0x13>
-    fd6c: 18           	clc
-    fd6d: 69 02        	adc	#$2
-    fd6f: 85 b9        	sta	$b9                     ; 0xb9 <__zp_bss_size+0x13>
-    fd71: a5 ba        	lda	$ba                     ; 0xba <__zp_bss_size+0x14>
-    fd73: 69 00        	adc	#$0
-    fd75: 85 ba        	sta	$ba                     ; 0xba <__zp_bss_size+0x14>
-    fd77: 4c 29 fb     	jmp	$fb29 <r01_game_on_tick+0xb2>
-    fd7a: a2 00        	ldx	#$0
-    fd7c: 86 c3        	stx	$c3                     ; 0xc3 <__zp_bss_size+0x1d>
-    fd7e: 86 c4        	stx	$c4                     ; 0xc4 <__zp_bss_size+0x1e>
-    fd80: a4 c8        	ldy	$c8                     ; 0xc8 <__zp_bss_size+0x22>
-    fd82: 84 e5        	sty	$e5                     ; 0xe5 <__rc5>
-    fd84: a6 c5        	ldx	$c5                     ; 0xc5 <__zp_bss_size+0x1f>
-    fd86: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
-    fd88: a6 c6        	ldx	$c6                     ; 0xc6 <__zp_bss_size+0x20>
-    fd8a: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
-    fd8c: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
-    fd8e: 84 e6        	sty	$e6                     ; 0xe6 <__rc6>
-    fd90: 86 e7        	stx	$e7                     ; 0xe7 <__rc7>
-    fd92: 4c 26 fd     	jmp	$fd26 <r01_game_on_tick+0x2af>
-    fd95: 64 e4        	stz	$e4                     ; 0xe4 <__rc4>
-    fd97: a4 c8        	ldy	$c8                     ; 0xc8 <__zp_bss_size+0x22>
-    fd99: 84 e5        	sty	$e5                     ; 0xe5 <__rc5>
-    fd9b: a6 c5        	ldx	$c5                     ; 0xc5 <__zp_bss_size+0x1f>
-    fd9d: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
-    fd9f: a6 c6        	ldx	$c6                     ; 0xc6 <__zp_bss_size+0x20>
-    fda1: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
-    fda3: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
-    fda5: 84 e6        	sty	$e6                     ; 0xe6 <__rc6>
-    fda7: 86 e7        	stx	$e7                     ; 0xe7 <__rc7>
-    fda9: 4c 31 fd     	jmp	$fd31 <r01_game_on_tick+0x2ba>
+    fd3a: e6 e5        	inc	$e5                     ; 0xe5 <__rc5>
+    fd3c: a5 bb        	lda	$bb                     ; 0xbb <__zp_bss_size+0x15>
+    fd3e: 18           	clc
+    fd3f: 69 02        	adc	#$2
+    fd41: 85 bb        	sta	$bb                     ; 0xbb <__zp_bss_size+0x15>
+    fd43: a5 bc        	lda	$bc                     ; 0xbc <__zp_bss_size+0x16>
+    fd45: 69 00        	adc	#$0
+    fd47: 85 bc        	sta	$bc                     ; 0xbc <__zp_bss_size+0x16>
+    fd49: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    fd4b: 18           	clc
+    fd4c: 69 02        	adc	#$2
+    fd4e: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    fd50: a5 e7        	lda	$e7                     ; 0xe7 <__rc7>
+    fd52: 69 00        	adc	#$0
+    fd54: 85 e7        	sta	$e7                     ; 0xe7 <__rc7>
+    fd56: a5 b9        	lda	$b9                     ; 0xb9 <__zp_bss_size+0x13>
+    fd58: 18           	clc
+    fd59: 69 02        	adc	#$2
+    fd5b: 85 b9        	sta	$b9                     ; 0xb9 <__zp_bss_size+0x13>
+    fd5d: a5 ba        	lda	$ba                     ; 0xba <__zp_bss_size+0x14>
+    fd5f: 69 00        	adc	#$0
+    fd61: 85 ba        	sta	$ba                     ; 0xba <__zp_bss_size+0x14>
+    fd63: 4c 15 fb     	jmp	$fb15 <r01_game_on_tick+0xb2>
+    fd66: a2 00        	ldx	#$0
+    fd68: 86 c3        	stx	$c3                     ; 0xc3 <__zp_bss_size+0x1d>
+    fd6a: 86 c4        	stx	$c4                     ; 0xc4 <__zp_bss_size+0x1e>
+    fd6c: a4 c8        	ldy	$c8                     ; 0xc8 <__zp_bss_size+0x22>
+    fd6e: 84 e5        	sty	$e5                     ; 0xe5 <__rc5>
+    fd70: a6 c5        	ldx	$c5                     ; 0xc5 <__zp_bss_size+0x1f>
+    fd72: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    fd74: a6 c6        	ldx	$c6                     ; 0xc6 <__zp_bss_size+0x20>
+    fd76: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    fd78: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
+    fd7a: 84 e6        	sty	$e6                     ; 0xe6 <__rc6>
+    fd7c: 86 e7        	stx	$e7                     ; 0xe7 <__rc7>
+    fd7e: 4c 12 fd     	jmp	$fd12 <r01_game_on_tick+0x2af>
+    fd81: 64 e4        	stz	$e4                     ; 0xe4 <__rc4>
+    fd83: a4 c8        	ldy	$c8                     ; 0xc8 <__zp_bss_size+0x22>
+    fd85: 84 e5        	sty	$e5                     ; 0xe5 <__rc5>
+    fd87: a6 c5        	ldx	$c5                     ; 0xc5 <__zp_bss_size+0x1f>
+    fd89: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    fd8b: a6 c6        	ldx	$c6                     ; 0xc6 <__zp_bss_size+0x20>
+    fd8d: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    fd8f: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
+    fd91: 84 e6        	sty	$e6                     ; 0xe6 <__rc6>
+    fd93: 86 e7        	stx	$e7                     ; 0xe7 <__rc7>
+    fd95: 4c 1d fd     	jmp	$fd1d <r01_game_on_tick+0x2ba>
 ; }
-    fdac: 60           	rts
+    fd98: 60           	rts
 
-0000fdad <slime_jump_gap>:
+0000fd99 <slime_jump_gap>:
 ; static uint16_t slime_jump_gap(void) {
-    fdad: a6 0f        	ldx	$f                      ; 0xf <s_rng>
-    fdaf: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
-    fdb1: a4 10        	ldy	$10                     ; 0x10 <s_rng+0x1>
-    fdb3: a2 05        	ldx	#$5
-    fdb5: 86 d1        	stx	$d1                     ; 0xd1 <__zp_bss_size+0x2b>
-    fdb7: a2 08        	ldx	#$8
-    fdb9: 86 d2        	stx	$d2                     ; 0xd2 <__zp_bss_size+0x2c>
-    fdbb: a6 d1        	ldx	$d1                     ; 0xd1 <__zp_bss_size+0x2b>
-    fdbd: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
-    fdbf: a6 d2        	ldx	$d2                     ; 0xd2 <__zp_bss_size+0x2c>
-    fdc1: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    fd99: a6 0f        	ldx	$f                      ; 0xf <s_rng>
+    fd9b: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    fd9d: a4 10        	ldy	$10                     ; 0x10 <s_rng+0x1>
+    fd9f: a2 05        	ldx	#$5
+    fda1: 86 d1        	stx	$d1                     ; 0xd1 <__zp_bss_size+0x2b>
+    fda3: a2 08        	ldx	#$8
+    fda5: 86 d2        	stx	$d2                     ; 0xd2 <__zp_bss_size+0x2c>
+    fda7: a6 d1        	ldx	$d1                     ; 0xd1 <__zp_bss_size+0x2b>
+    fda9: 86 e2        	stx	$e2                     ; 0xe2 <__rc2>
+    fdab: a6 d2        	ldx	$d2                     ; 0xd2 <__zp_bss_size+0x2c>
+    fdad: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
 ;     s_rng = (uint16_t)(s_rng * 2053u + 13849u);
-    fdc3: 5a           	phy
-    fdc4: fa           	plx
-    fdc5: a5 e4        	lda	$e4                     ; 0xe4 <__rc4>
-    fdc7: 20 84 ff     	jsr	$ff84 <__mulhi3>
-    fdca: 18           	clc
-    fdcb: 69 19        	adc	#$19
-    fdcd: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
-    fdcf: 8a           	txa
-    fdd0: 69 36        	adc	#$36
-    fdd2: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
-    fdd4: a8           	tay
-    fdd5: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
+    fdaf: 5a           	phy
+    fdb0: fa           	plx
+    fdb1: a5 e4        	lda	$e4                     ; 0xe4 <__rc4>
+    fdb3: 20 70 ff     	jsr	$ff70 <__mulhi3>
+    fdb6: 18           	clc
+    fdb7: 69 19        	adc	#$19
+    fdb9: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    fdbb: 8a           	txa
+    fdbc: 69 36        	adc	#$36
+    fdbe: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+    fdc0: a8           	tay
+    fdc1: 86 e4        	stx	$e4                     ; 0xe4 <__rc4>
 ;         r = rnd16() & mask;
-    fdd7: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
-    fdd9: 29 1f        	and	#$1f
-    fddb: c9 1f        	cmp	#$1f
-    fddd: f0 dc        	beq	$fdbb <slime_jump_gap+0xe>
+    fdc3: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    fdc5: 29 1f        	and	#$1f
+    fdc7: c9 1f        	cmp	#$1f
+    fdc9: f0 dc        	beq	$fda7 <slime_jump_gap+0xe>
 ;     s_rng = (uint16_t)(s_rng * 2053u + 13849u);
-    fddf: 86 0f        	stx	$f                      ; 0xf <s_rng>
-    fde1: 84 10        	sty	$10                     ; 0x10 <s_rng+0x1>
-    fde3: 18           	clc
+    fdcb: 86 0f        	stx	$f                      ; 0xf <s_rng>
+    fdcd: 84 10        	sty	$10                     ; 0x10 <s_rng+0x1>
+    fdcf: 18           	clc
 ;     return (uint16_t)(SLIME_JUMP_MIN + r);
-    fde4: 69 1e        	adc	#$1e
-    fde6: a8           	tay
-    fde7: a9 00        	lda	#$0
-    fde9: 69 00        	adc	#$0
-    fdeb: aa           	tax
-    fdec: 98           	tya
-    fded: 60           	rts
+    fdd0: 69 1e        	adc	#$1e
+    fdd2: a8           	tay
+    fdd3: a9 00        	lda	#$0
+    fdd5: 69 00        	adc	#$0
+    fdd7: aa           	tax
+    fdd8: 98           	tya
+    fdd9: 60           	rts
 
-0000fdee <exit>:
-    fdee: 20 41 c4     	jsr	$c441 <_fini>
-    fdf1: 80 fe        	bra	$fdf1 <exit+0x3>
+0000fdda <exit>:
+    fdda: 20 41 c4     	jsr	$c441 <_fini>
+    fddd: 80 fe        	bra	$fddd <exit+0x3>
 
-0000fdf3 <__ashlhi3>:
-    fdf3: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
-    fdf5: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
-    fdf7: f0 0a        	beq	$fe03 <__ashlhi3+0x10>
-    fdf9: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
-    fdfb: ca           	dex
-    fdfc: 0a           	asl
-    fdfd: 26 e3        	rol	$e3                     ; 0xe3 <__rc3>
-    fdff: e0 00        	cpx	#$0
-    fe01: d0 f8        	bne	$fdfb <__ashlhi3+0x8>
-    fe03: a6 e3        	ldx	$e3                     ; 0xe3 <__rc3>
-    fe05: 60           	rts
+0000fddf <__ashlhi3>:
+    fddf: 86 e3        	stx	$e3                     ; 0xe3 <__rc3>
+    fde1: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+    fde3: f0 0a        	beq	$fdef <__ashlhi3+0x10>
+    fde5: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+    fde7: ca           	dex
+    fde8: 0a           	asl
+    fde9: 26 e3        	rol	$e3                     ; 0xe3 <__rc3>
+    fdeb: e0 00        	cpx	#$0
+    fded: d0 f8        	bne	$fde7 <__ashlhi3+0x8>
+    fdef: a6 e3        	ldx	$e3                     ; 0xe3 <__rc3>
+    fdf1: 60           	rts
 
-0000fe06 <__udivhi3>:
-    fe06: 64 e4        	stz	$e4                     ; 0xe4 <__rc4>
-    fe08: a4 e3        	ldy	$e3                     ; 0xe3 <__rc3>
-    fe0a: d0 04        	bne	$fe10 <__udivhi3+0xa>
-    fe0c: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
-    fe0e: f0 0c        	beq	$fe1c <__udivhi3+0x16>
-    fe10: 85 e7        	sta	$e7                     ; 0xe7 <__rc7>
-    fe12: da           	phx
-    fe13: 7a           	ply
-    fe14: e4 e3        	cpx	$e3                     ; 0xe3 <__rc3>
-    fe16: d0 09        	bne	$fe21 <__udivhi3+0x1b>
-    fe18: c5 e2        	cmp	$e2                     ; 0xe2 <__rc2>
-    fe1a: b0 09        	bcs	$fe25 <__udivhi3+0x1f>
-    fe1c: 64 e9        	stz	$e9                     ; 0xe9 <__rc9>
-    fe1e: 4c ba fe     	jmp	$feba <__udivhi3+0xb4>
-    fe21: c4 e3        	cpy	$e3                     ; 0xe3 <__rc3>
-    fe23: 90 f7        	bcc	$fe1c <__udivhi3+0x16>
-    fe25: a9 01        	lda	#$1
-    fe27: 85 e9        	sta	$e9                     ; 0xe9 <__rc9>
-    fe29: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
-    fe2b: 10 03        	bpl	$fe30 <__udivhi3+0x2a>
-    fe2d: 4c ba fe     	jmp	$feba <__udivhi3+0xb4>
-    fe30: a2 00        	ldx	#$0
-    fe32: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
-    fe34: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
-    fe36: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
-    fe38: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
-    fe3a: 06 e5        	asl	$e5                     ; 0xe5 <__rc5>
-    fe3c: 26 e6        	rol	$e6                     ; 0xe6 <__rc6>
-    fe3e: c4 e6        	cpy	$e6                     ; 0xe6 <__rc6>
-    fe40: d0 0c        	bne	$fe4e <__udivhi3+0x48>
-    fe42: 84 e8        	sty	$e8                     ; 0xe8 <__rc8>
-    fe44: a4 e7        	ldy	$e7                     ; 0xe7 <__rc7>
-    fe46: c4 e5        	cpy	$e5                     ; 0xe5 <__rc5>
-    fe48: a4 e8        	ldy	$e8                     ; 0xe8 <__rc8>
-    fe4a: 90 13        	bcc	$fe5f <__udivhi3+0x59>
-    fe4c: 80 04        	bra	$fe52 <__udivhi3+0x4c>
-    fe4e: c4 e6        	cpy	$e6                     ; 0xe6 <__rc6>
-    fe50: 90 0d        	bcc	$fe5f <__udivhi3+0x59>
-    fe52: e8           	inx
-    fe53: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
-    fe55: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
-    fe57: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
-    fe59: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
-    fe5b: 10 dd        	bpl	$fe3a <__udivhi3+0x34>
-    fe5d: 80 08        	bra	$fe67 <__udivhi3+0x61>
-    fe5f: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
-    fe61: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
-    fe63: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
-    fe65: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
-    fe67: 8a           	txa
-    fe68: f0 50        	beq	$feba <__udivhi3+0xb4>
-    fe6a: 38           	sec
-    fe6b: a5 e7        	lda	$e7                     ; 0xe7 <__rc7>
-    fe6d: e5 e5        	sbc	$e5                     ; 0xe5 <__rc5>
-    fe6f: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
-    fe71: 98           	tya
-    fe72: e5 e6        	sbc	$e6                     ; 0xe6 <__rc6>
-    fe74: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
-    fe76: a9 01        	lda	#$1
-    fe78: 85 e9        	sta	$e9                     ; 0xe9 <__rc9>
-    fe7a: 64 e4        	stz	$e4                     ; 0xe4 <__rc4>
-    fe7c: 46 e6        	lsr	$e6                     ; 0xe6 <__rc6>
-    fe7e: 66 e5        	ror	$e5                     ; 0xe5 <__rc5>
-    fe80: 06 e9        	asl	$e9                     ; 0xe9 <__rc9>
-    fe82: a0 01        	ldy	#$1
-    fe84: b0 02        	bcs	$fe88 <__udivhi3+0x82>
-    fe86: a0 00        	ldy	#$0
-    fe88: 84 e7        	sty	$e7                     ; 0xe7 <__rc7>
-    fe8a: a4 e3        	ldy	$e3                     ; 0xe3 <__rc3>
-    fe8c: c4 e6        	cpy	$e6                     ; 0xe6 <__rc6>
-    fe8e: d0 24        	bne	$feb4 <__udivhi3+0xae>
-    fe90: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
-    fe92: c4 e5        	cpy	$e5                     ; 0xe5 <__rc5>
-    fe94: 90 13        	bcc	$fea9 <__udivhi3+0xa3>
-    fe96: a5 e9        	lda	$e9                     ; 0xe9 <__rc9>
-    fe98: 09 01        	ora	#$1
-    fe9a: 85 e9        	sta	$e9                     ; 0xe9 <__rc9>
-    fe9c: 38           	sec
-    fe9d: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
-    fe9f: e5 e5        	sbc	$e5                     ; 0xe5 <__rc5>
-    fea1: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
-    fea3: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
-    fea5: e5 e6        	sbc	$e6                     ; 0xe6 <__rc6>
-    fea7: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
-    fea9: a4 e7        	ldy	$e7                     ; 0xe7 <__rc7>
-    feab: c0 01        	cpy	#$1
-    fead: 26 e4        	rol	$e4                     ; 0xe4 <__rc4>
-    feaf: ca           	dex
-    feb0: d0 ca        	bne	$fe7c <__udivhi3+0x76>
-    feb2: 80 06        	bra	$feba <__udivhi3+0xb4>
-    feb4: c4 e6        	cpy	$e6                     ; 0xe6 <__rc6>
-    feb6: b0 de        	bcs	$fe96 <__udivhi3+0x90>
-    feb8: 80 ef        	bra	$fea9 <__udivhi3+0xa3>
-    feba: a6 e4        	ldx	$e4                     ; 0xe4 <__rc4>
-    febc: a5 e9        	lda	$e9                     ; 0xe9 <__rc9>
-    febe: 60           	rts
+0000fdf2 <__udivhi3>:
+    fdf2: 64 e4        	stz	$e4                     ; 0xe4 <__rc4>
+    fdf4: a4 e3        	ldy	$e3                     ; 0xe3 <__rc3>
+    fdf6: d0 04        	bne	$fdfc <__udivhi3+0xa>
+    fdf8: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
+    fdfa: f0 0c        	beq	$fe08 <__udivhi3+0x16>
+    fdfc: 85 e7        	sta	$e7                     ; 0xe7 <__rc7>
+    fdfe: da           	phx
+    fdff: 7a           	ply
+    fe00: e4 e3        	cpx	$e3                     ; 0xe3 <__rc3>
+    fe02: d0 09        	bne	$fe0d <__udivhi3+0x1b>
+    fe04: c5 e2        	cmp	$e2                     ; 0xe2 <__rc2>
+    fe06: b0 09        	bcs	$fe11 <__udivhi3+0x1f>
+    fe08: 64 e9        	stz	$e9                     ; 0xe9 <__rc9>
+    fe0a: 4c a6 fe     	jmp	$fea6 <__udivhi3+0xb4>
+    fe0d: c4 e3        	cpy	$e3                     ; 0xe3 <__rc3>
+    fe0f: 90 f7        	bcc	$fe08 <__udivhi3+0x16>
+    fe11: a9 01        	lda	#$1
+    fe13: 85 e9        	sta	$e9                     ; 0xe9 <__rc9>
+    fe15: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    fe17: 10 03        	bpl	$fe1c <__udivhi3+0x2a>
+    fe19: 4c a6 fe     	jmp	$fea6 <__udivhi3+0xb4>
+    fe1c: a2 00        	ldx	#$0
+    fe1e: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    fe20: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    fe22: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    fe24: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    fe26: 06 e5        	asl	$e5                     ; 0xe5 <__rc5>
+    fe28: 26 e6        	rol	$e6                     ; 0xe6 <__rc6>
+    fe2a: c4 e6        	cpy	$e6                     ; 0xe6 <__rc6>
+    fe2c: d0 0c        	bne	$fe3a <__udivhi3+0x48>
+    fe2e: 84 e8        	sty	$e8                     ; 0xe8 <__rc8>
+    fe30: a4 e7        	ldy	$e7                     ; 0xe7 <__rc7>
+    fe32: c4 e5        	cpy	$e5                     ; 0xe5 <__rc5>
+    fe34: a4 e8        	ldy	$e8                     ; 0xe8 <__rc8>
+    fe36: 90 13        	bcc	$fe4b <__udivhi3+0x59>
+    fe38: 80 04        	bra	$fe3e <__udivhi3+0x4c>
+    fe3a: c4 e6        	cpy	$e6                     ; 0xe6 <__rc6>
+    fe3c: 90 0d        	bcc	$fe4b <__udivhi3+0x59>
+    fe3e: e8           	inx
+    fe3f: a5 e5        	lda	$e5                     ; 0xe5 <__rc5>
+    fe41: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    fe43: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    fe45: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    fe47: 10 dd        	bpl	$fe26 <__udivhi3+0x34>
+    fe49: 80 08        	bra	$fe53 <__udivhi3+0x61>
+    fe4b: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    fe4d: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    fe4f: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    fe51: 85 e6        	sta	$e6                     ; 0xe6 <__rc6>
+    fe53: 8a           	txa
+    fe54: f0 50        	beq	$fea6 <__udivhi3+0xb4>
+    fe56: 38           	sec
+    fe57: a5 e7        	lda	$e7                     ; 0xe7 <__rc7>
+    fe59: e5 e5        	sbc	$e5                     ; 0xe5 <__rc5>
+    fe5b: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    fe5d: 98           	tya
+    fe5e: e5 e6        	sbc	$e6                     ; 0xe6 <__rc6>
+    fe60: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    fe62: a9 01        	lda	#$1
+    fe64: 85 e9        	sta	$e9                     ; 0xe9 <__rc9>
+    fe66: 64 e4        	stz	$e4                     ; 0xe4 <__rc4>
+    fe68: 46 e6        	lsr	$e6                     ; 0xe6 <__rc6>
+    fe6a: 66 e5        	ror	$e5                     ; 0xe5 <__rc5>
+    fe6c: 06 e9        	asl	$e9                     ; 0xe9 <__rc9>
+    fe6e: a0 01        	ldy	#$1
+    fe70: b0 02        	bcs	$fe74 <__udivhi3+0x82>
+    fe72: a0 00        	ldy	#$0
+    fe74: 84 e7        	sty	$e7                     ; 0xe7 <__rc7>
+    fe76: a4 e3        	ldy	$e3                     ; 0xe3 <__rc3>
+    fe78: c4 e6        	cpy	$e6                     ; 0xe6 <__rc6>
+    fe7a: d0 24        	bne	$fea0 <__udivhi3+0xae>
+    fe7c: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
+    fe7e: c4 e5        	cpy	$e5                     ; 0xe5 <__rc5>
+    fe80: 90 13        	bcc	$fe95 <__udivhi3+0xa3>
+    fe82: a5 e9        	lda	$e9                     ; 0xe9 <__rc9>
+    fe84: 09 01        	ora	#$1
+    fe86: 85 e9        	sta	$e9                     ; 0xe9 <__rc9>
+    fe88: 38           	sec
+    fe89: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    fe8b: e5 e5        	sbc	$e5                     ; 0xe5 <__rc5>
+    fe8d: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    fe8f: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    fe91: e5 e6        	sbc	$e6                     ; 0xe6 <__rc6>
+    fe93: 85 e3        	sta	$e3                     ; 0xe3 <__rc3>
+    fe95: a4 e7        	ldy	$e7                     ; 0xe7 <__rc7>
+    fe97: c0 01        	cpy	#$1
+    fe99: 26 e4        	rol	$e4                     ; 0xe4 <__rc4>
+    fe9b: ca           	dex
+    fe9c: d0 ca        	bne	$fe68 <__udivhi3+0x76>
+    fe9e: 80 06        	bra	$fea6 <__udivhi3+0xb4>
+    fea0: c4 e6        	cpy	$e6                     ; 0xe6 <__rc6>
+    fea2: b0 de        	bcs	$fe82 <__udivhi3+0x90>
+    fea4: 80 ef        	bra	$fe95 <__udivhi3+0xa3>
+    fea6: a6 e4        	ldx	$e4                     ; 0xe4 <__rc4>
+    fea8: a5 e9        	lda	$e9                     ; 0xe9 <__rc9>
+    feaa: 60           	rts
 
-0000febf <__umodhi3>:
-    febf: a8           	tay
-    fec0: 8a           	txa
-    fec1: e6 e3        	inc	$e3                     ; 0xe3 <__rc3>
-    fec3: c6 e3        	dec	$e3                     ; 0xe3 <__rc3>
-    fec5: d0 09        	bne	$fed0 <__umodhi3+0x11>
-    fec7: e6 e2        	inc	$e2                     ; 0xe2 <__rc2>
-    fec9: c6 e2        	dec	$e2                     ; 0xe2 <__rc2>
-    fecb: d0 03        	bne	$fed0 <__umodhi3+0x11>
-    fecd: 4c 61 ff     	jmp	$ff61 <__umodhi3+0xa2>
-    fed0: c5 e3        	cmp	$e3                     ; 0xe3 <__rc3>
-    fed2: d0 07        	bne	$fedb <__umodhi3+0x1c>
-    fed4: c4 e2        	cpy	$e2                     ; 0xe2 <__rc2>
-    fed6: b0 0a        	bcs	$fee2 <__umodhi3+0x23>
-    fed8: 4c 61 ff     	jmp	$ff61 <__umodhi3+0xa2>
-    fedb: c5 e3        	cmp	$e3                     ; 0xe3 <__rc3>
-    fedd: b0 03        	bcs	$fee2 <__umodhi3+0x23>
-    fedf: 4c 61 ff     	jmp	$ff61 <__umodhi3+0xa2>
-    fee2: 86 e6        	stx	$e6                     ; 0xe6 <__rc6>
-    fee4: e6 e3        	inc	$e3                     ; 0xe3 <__rc3>
-    fee6: c6 e3        	dec	$e3                     ; 0xe3 <__rc3>
-    fee8: 10 03        	bpl	$feed <__umodhi3+0x2e>
-    feea: 4c 59 ff     	jmp	$ff59 <__umodhi3+0x9a>
-    feed: a2 00        	ldx	#$0
-    feef: 5a           	phy
-    fef0: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
-    fef2: 84 e4        	sty	$e4                     ; 0xe4 <__rc4>
-    fef4: a4 e3        	ldy	$e3                     ; 0xe3 <__rc3>
-    fef6: 84 e5        	sty	$e5                     ; 0xe5 <__rc5>
-    fef8: 7a           	ply
-    fef9: 06 e4        	asl	$e4                     ; 0xe4 <__rc4>
-    fefb: 26 e5        	rol	$e5                     ; 0xe5 <__rc5>
-    fefd: c5 e5        	cmp	$e5                     ; 0xe5 <__rc5>
-    feff: d0 08        	bne	$ff09 <__umodhi3+0x4a>
-    ff01: c4 e4        	cpy	$e4                     ; 0xe4 <__rc4>
-    ff03: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
-    ff05: 90 19        	bcc	$ff20 <__umodhi3+0x61>
-    ff07: 80 04        	bra	$ff0d <__umodhi3+0x4e>
-    ff09: c5 e5        	cmp	$e5                     ; 0xe5 <__rc5>
-    ff0b: 90 13        	bcc	$ff20 <__umodhi3+0x61>
-    ff0d: e8           	inx
-    ff0e: 5a           	phy
-    ff0f: a4 e4        	ldy	$e4                     ; 0xe4 <__rc4>
-    ff11: 84 e2        	sty	$e2                     ; 0xe2 <__rc2>
-    ff13: a4 e5        	ldy	$e5                     ; 0xe5 <__rc5>
-    ff15: 84 e3        	sty	$e3                     ; 0xe3 <__rc3>
-    ff17: 7a           	ply
-    ff18: e6 e5        	inc	$e5                     ; 0xe5 <__rc5>
-    ff1a: c6 e5        	dec	$e5                     ; 0xe5 <__rc5>
-    ff1c: 10 db        	bpl	$fef9 <__umodhi3+0x3a>
-    ff1e: 80 08        	bra	$ff28 <__umodhi3+0x69>
-    ff20: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
-    ff22: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
-    ff24: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
-    ff26: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
-    ff28: 38           	sec
-    ff29: 98           	tya
-    ff2a: e5 e4        	sbc	$e4                     ; 0xe4 <__rc4>
-    ff2c: a8           	tay
-    ff2d: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
-    ff2f: e5 e5        	sbc	$e5                     ; 0xe5 <__rc5>
-    ff31: e0 00        	cpx	#$0
-    ff33: d0 08        	bne	$ff3d <__umodhi3+0x7e>
-    ff35: 80 2a        	bra	$ff61 <__umodhi3+0xa2>
-    ff37: c5 e5        	cmp	$e5                     ; 0xe5 <__rc5>
-    ff39: b0 0e        	bcs	$ff49 <__umodhi3+0x8a>
-    ff3b: 80 17        	bra	$ff54 <__umodhi3+0x95>
-    ff3d: 46 e5        	lsr	$e5                     ; 0xe5 <__rc5>
-    ff3f: 66 e4        	ror	$e4                     ; 0xe4 <__rc4>
-    ff41: c5 e5        	cmp	$e5                     ; 0xe5 <__rc5>
-    ff43: d0 f2        	bne	$ff37 <__umodhi3+0x78>
-    ff45: c4 e4        	cpy	$e4                     ; 0xe4 <__rc4>
-    ff47: 90 0b        	bcc	$ff54 <__umodhi3+0x95>
-    ff49: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
-    ff4b: 38           	sec
-    ff4c: 98           	tya
-    ff4d: e5 e4        	sbc	$e4                     ; 0xe4 <__rc4>
-    ff4f: a8           	tay
-    ff50: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
-    ff52: e5 e5        	sbc	$e5                     ; 0xe5 <__rc5>
-    ff54: ca           	dex
-    ff55: d0 e6        	bne	$ff3d <__umodhi3+0x7e>
-    ff57: 80 08        	bra	$ff61 <__umodhi3+0xa2>
-    ff59: 38           	sec
-    ff5a: 98           	tya
-    ff5b: e5 e2        	sbc	$e2                     ; 0xe2 <__rc2>
-    ff5d: a8           	tay
-    ff5e: 8a           	txa
-    ff5f: e5 e3        	sbc	$e3                     ; 0xe3 <__rc3>
-    ff61: aa           	tax
-    ff62: 98           	tya
-    ff63: 60           	rts
+0000feab <__umodhi3>:
+    feab: a8           	tay
+    feac: 8a           	txa
+    fead: e6 e3        	inc	$e3                     ; 0xe3 <__rc3>
+    feaf: c6 e3        	dec	$e3                     ; 0xe3 <__rc3>
+    feb1: d0 09        	bne	$febc <__umodhi3+0x11>
+    feb3: e6 e2        	inc	$e2                     ; 0xe2 <__rc2>
+    feb5: c6 e2        	dec	$e2                     ; 0xe2 <__rc2>
+    feb7: d0 03        	bne	$febc <__umodhi3+0x11>
+    feb9: 4c 4d ff     	jmp	$ff4d <__umodhi3+0xa2>
+    febc: c5 e3        	cmp	$e3                     ; 0xe3 <__rc3>
+    febe: d0 07        	bne	$fec7 <__umodhi3+0x1c>
+    fec0: c4 e2        	cpy	$e2                     ; 0xe2 <__rc2>
+    fec2: b0 0a        	bcs	$fece <__umodhi3+0x23>
+    fec4: 4c 4d ff     	jmp	$ff4d <__umodhi3+0xa2>
+    fec7: c5 e3        	cmp	$e3                     ; 0xe3 <__rc3>
+    fec9: b0 03        	bcs	$fece <__umodhi3+0x23>
+    fecb: 4c 4d ff     	jmp	$ff4d <__umodhi3+0xa2>
+    fece: 86 e6        	stx	$e6                     ; 0xe6 <__rc6>
+    fed0: e6 e3        	inc	$e3                     ; 0xe3 <__rc3>
+    fed2: c6 e3        	dec	$e3                     ; 0xe3 <__rc3>
+    fed4: 10 03        	bpl	$fed9 <__umodhi3+0x2e>
+    fed6: 4c 45 ff     	jmp	$ff45 <__umodhi3+0x9a>
+    fed9: a2 00        	ldx	#$0
+    fedb: 5a           	phy
+    fedc: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
+    fede: 84 e4        	sty	$e4                     ; 0xe4 <__rc4>
+    fee0: a4 e3        	ldy	$e3                     ; 0xe3 <__rc3>
+    fee2: 84 e5        	sty	$e5                     ; 0xe5 <__rc5>
+    fee4: 7a           	ply
+    fee5: 06 e4        	asl	$e4                     ; 0xe4 <__rc4>
+    fee7: 26 e5        	rol	$e5                     ; 0xe5 <__rc5>
+    fee9: c5 e5        	cmp	$e5                     ; 0xe5 <__rc5>
+    feeb: d0 08        	bne	$fef5 <__umodhi3+0x4a>
+    feed: c4 e4        	cpy	$e4                     ; 0xe4 <__rc4>
+    feef: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    fef1: 90 19        	bcc	$ff0c <__umodhi3+0x61>
+    fef3: 80 04        	bra	$fef9 <__umodhi3+0x4e>
+    fef5: c5 e5        	cmp	$e5                     ; 0xe5 <__rc5>
+    fef7: 90 13        	bcc	$ff0c <__umodhi3+0x61>
+    fef9: e8           	inx
+    fefa: 5a           	phy
+    fefb: a4 e4        	ldy	$e4                     ; 0xe4 <__rc4>
+    fefd: 84 e2        	sty	$e2                     ; 0xe2 <__rc2>
+    feff: a4 e5        	ldy	$e5                     ; 0xe5 <__rc5>
+    ff01: 84 e3        	sty	$e3                     ; 0xe3 <__rc3>
+    ff03: 7a           	ply
+    ff04: e6 e5        	inc	$e5                     ; 0xe5 <__rc5>
+    ff06: c6 e5        	dec	$e5                     ; 0xe5 <__rc5>
+    ff08: 10 db        	bpl	$fee5 <__umodhi3+0x3a>
+    ff0a: 80 08        	bra	$ff14 <__umodhi3+0x69>
+    ff0c: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    ff0e: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    ff10: a5 e3        	lda	$e3                     ; 0xe3 <__rc3>
+    ff12: 85 e5        	sta	$e5                     ; 0xe5 <__rc5>
+    ff14: 38           	sec
+    ff15: 98           	tya
+    ff16: e5 e4        	sbc	$e4                     ; 0xe4 <__rc4>
+    ff18: a8           	tay
+    ff19: a5 e6        	lda	$e6                     ; 0xe6 <__rc6>
+    ff1b: e5 e5        	sbc	$e5                     ; 0xe5 <__rc5>
+    ff1d: e0 00        	cpx	#$0
+    ff1f: d0 08        	bne	$ff29 <__umodhi3+0x7e>
+    ff21: 80 2a        	bra	$ff4d <__umodhi3+0xa2>
+    ff23: c5 e5        	cmp	$e5                     ; 0xe5 <__rc5>
+    ff25: b0 0e        	bcs	$ff35 <__umodhi3+0x8a>
+    ff27: 80 17        	bra	$ff40 <__umodhi3+0x95>
+    ff29: 46 e5        	lsr	$e5                     ; 0xe5 <__rc5>
+    ff2b: 66 e4        	ror	$e4                     ; 0xe4 <__rc4>
+    ff2d: c5 e5        	cmp	$e5                     ; 0xe5 <__rc5>
+    ff2f: d0 f2        	bne	$ff23 <__umodhi3+0x78>
+    ff31: c4 e4        	cpy	$e4                     ; 0xe4 <__rc4>
+    ff33: 90 0b        	bcc	$ff40 <__umodhi3+0x95>
+    ff35: 85 e2        	sta	$e2                     ; 0xe2 <__rc2>
+    ff37: 38           	sec
+    ff38: 98           	tya
+    ff39: e5 e4        	sbc	$e4                     ; 0xe4 <__rc4>
+    ff3b: a8           	tay
+    ff3c: a5 e2        	lda	$e2                     ; 0xe2 <__rc2>
+    ff3e: e5 e5        	sbc	$e5                     ; 0xe5 <__rc5>
+    ff40: ca           	dex
+    ff41: d0 e6        	bne	$ff29 <__umodhi3+0x7e>
+    ff43: 80 08        	bra	$ff4d <__umodhi3+0xa2>
+    ff45: 38           	sec
+    ff46: 98           	tya
+    ff47: e5 e2        	sbc	$e2                     ; 0xe2 <__rc2>
+    ff49: a8           	tay
+    ff4a: 8a           	txa
+    ff4b: e5 e3        	sbc	$e3                     ; 0xe3 <__rc3>
+    ff4d: aa           	tax
+    ff4e: 98           	tya
+    ff4f: 60           	rts
 
-0000ff64 <__memset>:
-    ff64: a4 e4        	ldy	$e4                     ; 0xe4 <__rc4>
-    ff66: d0 04        	bne	$ff6c <__memset+0x8>
-    ff68: e0 00        	cpx	#$0
-    ff6a: f0 17        	beq	$ff83 <__memset+0x1f>
-    ff6c: 92 e2        	sta	($e2)                   ; 0xe2 <__rc2>
-    ff6e: e6 e2        	inc	$e2                     ; 0xe2 <__rc2>
-    ff70: d0 02        	bne	$ff74 <__memset+0x10>
-    ff72: e6 e3        	inc	$e3                     ; 0xe3 <__rc3>
-    ff74: ca           	dex
-    ff75: e0 ff        	cpx	#$ff
-    ff77: d0 02        	bne	$ff7b <__memset+0x17>
-    ff79: c6 e4        	dec	$e4                     ; 0xe4 <__rc4>
-    ff7b: a4 e4        	ldy	$e4                     ; 0xe4 <__rc4>
-    ff7d: d0 ed        	bne	$ff6c <__memset+0x8>
-    ff7f: e0 00        	cpx	#$0
-    ff81: d0 e9        	bne	$ff6c <__memset+0x8>
-    ff83: 60           	rts
+0000ff50 <__memset>:
+    ff50: a4 e4        	ldy	$e4                     ; 0xe4 <__rc4>
+    ff52: d0 04        	bne	$ff58 <__memset+0x8>
+    ff54: e0 00        	cpx	#$0
+    ff56: f0 17        	beq	$ff6f <__memset+0x1f>
+    ff58: 92 e2        	sta	($e2)                   ; 0xe2 <__rc2>
+    ff5a: e6 e2        	inc	$e2                     ; 0xe2 <__rc2>
+    ff5c: d0 02        	bne	$ff60 <__memset+0x10>
+    ff5e: e6 e3        	inc	$e3                     ; 0xe3 <__rc3>
+    ff60: ca           	dex
+    ff61: e0 ff        	cpx	#$ff
+    ff63: d0 02        	bne	$ff67 <__memset+0x17>
+    ff65: c6 e4        	dec	$e4                     ; 0xe4 <__rc4>
+    ff67: a4 e4        	ldy	$e4                     ; 0xe4 <__rc4>
+    ff69: d0 ed        	bne	$ff58 <__memset+0x8>
+    ff6b: e0 00        	cpx	#$0
+    ff6d: d0 e9        	bne	$ff58 <__memset+0x8>
+    ff6f: 60           	rts
 
-0000ff84 <__mulhi3>:
-    ff84: a4 e3        	ldy	$e3                     ; 0xe3 <__rc3>
-    ff86: d0 04        	bne	$ff8c <__mulhi3+0x8>
-    ff88: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
-    ff8a: f0 25        	beq	$ffb1 <__mulhi3+0x2d>
-    ff8c: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
-    ff8e: 86 e5        	stx	$e5                     ; 0xe5 <__rc5>
-    ff90: a0 00        	ldy	#$0
-    ff92: 98           	tya
-    ff93: 46 e3        	lsr	$e3                     ; 0xe3 <__rc3>
-    ff95: 66 e2        	ror	$e2                     ; 0xe2 <__rc2>
-    ff97: 90 09        	bcc	$ffa2 <__mulhi3+0x1e>
-    ff99: aa           	tax
-    ff9a: 98           	tya
-    ff9b: 18           	clc
-    ff9c: 65 e4        	adc	$e4                     ; 0xe4 <__rc4>
-    ff9e: a8           	tay
-    ff9f: 8a           	txa
-    ffa0: 65 e5        	adc	$e5                     ; 0xe5 <__rc5>
-    ffa2: 06 e4        	asl	$e4                     ; 0xe4 <__rc4>
-    ffa4: 26 e5        	rol	$e5                     ; 0xe5 <__rc5>
-    ffa6: a6 e3        	ldx	$e3                     ; 0xe3 <__rc3>
-    ffa8: d0 e9        	bne	$ff93 <__mulhi3+0xf>
-    ffaa: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
-    ffac: d0 e5        	bne	$ff93 <__mulhi3+0xf>
-    ffae: aa           	tax
-    ffaf: 98           	tya
-    ffb0: 60           	rts
-    ffb1: a0 00        	ldy	#$0
-    ffb3: 98           	tya
-    ffb4: 80 f8        	bra	$ffae <__mulhi3+0x2a>
+0000ff70 <__mulhi3>:
+    ff70: a4 e3        	ldy	$e3                     ; 0xe3 <__rc3>
+    ff72: d0 04        	bne	$ff78 <__mulhi3+0x8>
+    ff74: a4 e2        	ldy	$e2                     ; 0xe2 <__rc2>
+    ff76: f0 25        	beq	$ff9d <__mulhi3+0x2d>
+    ff78: 85 e4        	sta	$e4                     ; 0xe4 <__rc4>
+    ff7a: 86 e5        	stx	$e5                     ; 0xe5 <__rc5>
+    ff7c: a0 00        	ldy	#$0
+    ff7e: 98           	tya
+    ff7f: 46 e3        	lsr	$e3                     ; 0xe3 <__rc3>
+    ff81: 66 e2        	ror	$e2                     ; 0xe2 <__rc2>
+    ff83: 90 09        	bcc	$ff8e <__mulhi3+0x1e>
+    ff85: aa           	tax
+    ff86: 98           	tya
+    ff87: 18           	clc
+    ff88: 65 e4        	adc	$e4                     ; 0xe4 <__rc4>
+    ff8a: a8           	tay
+    ff8b: 8a           	txa
+    ff8c: 65 e5        	adc	$e5                     ; 0xe5 <__rc5>
+    ff8e: 06 e4        	asl	$e4                     ; 0xe4 <__rc4>
+    ff90: 26 e5        	rol	$e5                     ; 0xe5 <__rc5>
+    ff92: a6 e3        	ldx	$e3                     ; 0xe3 <__rc3>
+    ff94: d0 e9        	bne	$ff7f <__mulhi3+0xf>
+    ff96: a6 e2        	ldx	$e2                     ; 0xe2 <__rc2>
+    ff98: d0 e5        	bne	$ff7f <__mulhi3+0xf>
+    ff9a: aa           	tax
+    ff9b: 98           	tya
+    ff9c: 60           	rts
+    ff9d: a0 00        	ldy	#$0
+    ff9f: 98           	tya
+    ffa0: 80 f8        	bra	$ff9a <__mulhi3+0x2a>

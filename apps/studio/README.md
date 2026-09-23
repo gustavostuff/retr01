@@ -79,7 +79,7 @@ void r01_game_on_vblank(R01GameCtx *ctx) {
 
 **Ctrl+S** / **Ctrl+O** the current path. First save (or unsaved) opens the Save project modal. Default parent is `apps/studio/projects/`. Quit does not auto-save. JSON version **18**. Save writes world 0. Worlds 2-7 are session-only until multi-world JSON. Load applies that world data to world 0.
 
-**Ctrl+E** packs `<stem>.retr01` and writes `data/` plus generated `include/` id headers beside the project (or under `output/` if unsaved). `game_logic.c` is created once. llvm-mos compiles that file with the SDK into 32 KB PRG (`retr01.prg` and `listing.txt`). Audio-tab tracks go into the cart BGM region. `r01_bgm_play(ctx, N)` in `game_logic.c` selects the boot track. Studio Set Solid stores `solid_patterns` in JSON. Export packs that list at `$8700`.
+**Ctrl+E** packs `<stem>.retr01` and writes `data/` plus generated `include/` id headers beside the project (or under `output/` if unsaved). `game_logic.c` is created once. llvm-mos compiles that file with the SDK into 32 KB PRG (`retr01.prg` and `listing.txt`), KEEP-placing Studio table bins at the locked addresses. Packer patches the 16 B boot MAP after cart layout. Audio-tab tracks go into the cart BGM region. `r01_bgm_play(ctx, N)` in `game_logic.c` selects the boot track. Studio Set Solid stores `solid_patterns` in JSON. Export writes `data/solids.bin`.
 
 | Path | Role |
 |------|------|
@@ -89,8 +89,12 @@ void r01_game_on_vblank(R01GameCtx *ctx) {
 | `include/r01_entity_ids.h` | Catalog type macros. Overwrite OK |
 | `include/r01_warp_ids.h` | Warp entrance macros. Overwrite OK |
 | `retr01.prg` / `listing.txt` | llvm-mos PRG and mixed C/ASM listing |
-| `data/spawns.bin` | Instance table bytes packed at `$81C0` |
-| `data/` | Studio binaries (CHR, maps, pals) |
+| `data/spawns.bin` | Instance table bytes at `$81C0` (author copy) |
+| `data/play8100.bin` | Present, spawn, coll dir, instances (`$8100-$84FF`) |
+| `data/collgrid.bin` | Probe address grid (`$8500`) |
+| `data/solids.bin` | Solid list plus probes (`$8700`) |
+| `data/r01p.bin` | `R01P` marker (`$80F0`) |
+| `data/` | Studio binaries (CHR, maps, pals, PRG tables) |
 
 PROM and 512 KB flash images sit beside the cart. Layout: [`memory.md`](../../docs/general/memory.md).
 

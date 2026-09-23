@@ -1,6 +1,6 @@
 #include "r01_engine.h"
 
-/* Packer patches cart MAP offsets here (CPU $80E0). 16 B: pals, screen0, BGM, world0. */
+/* Packer patches cart MAP offsets here (CPU $80E0) after link. 16 B: pals, screen0, BGM, world0. */
 uint8_t r01_boot_map[16] __attribute__((section(".r01_bootmap"), used));
 
 uint32_t r01_boot_u24(unsigned off) {

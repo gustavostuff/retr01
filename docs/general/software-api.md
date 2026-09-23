@@ -233,7 +233,7 @@ There is **no** separate "max entities on screen" hard cap. On-screen count is w
 | Feature | v1 |
 | --- | --- |
 | Movement | Axis-separated (resolve X then Y, or the reverse, consistently) |
-| Solids | BG1 cells whose bank index and tile index match a marked pattern. Palette and H/V flip are ignored. A grid slot with no present BG1 screen has no tiles and blocks motion (ledge / world edge). BG0 show-through is decoration. Studio Set Solid stores `solid_patterns` in the project JSON. Export packs that list at PRG `$8700`. Boot copies the list into system RAM (`$0200`). `r01_solid_pattern_add` in `game_logic.c` is optional RAM extras after boot. See `memory.md` |
+| Solids | BG1 cells whose bank index and tile index match a marked pattern. Palette and H/V flip are ignored. A grid slot with no present BG1 screen has no tiles and blocks motion (ledge / world edge). BG0 show-through is decoration. Studio Set Solid stores `solid_patterns` in the project JSON. Export writes `data/solids.bin`. llvm-mos KEEP-places it at PRG `$8700`. Boot copies the list into system RAM (`$0200`). `r01_solid_pattern_add` in `game_logic.c` is optional RAM extras after boot. See `memory.md` |
 | Colliders | Entity AABB hitboxes (per state). Vs BG solids: every overlapping 8x8 tile is tested (not corners only) |
 | Gravity / jump | Simple constant gravity + jump impulse (PRG tunes numbers). Gravity units are **1/16** px per frame^2. Release while rising uses 3x gravity (short hop) |
 | Meter | Pixels per meter (default **16**). Gravity, jump, walk, and fall cap scale as `n * meter / 16` |
@@ -288,7 +288,7 @@ r01_player_anim_set_jump_state(ctx, 3);
 
 Live gravity, jump, meter, and player anim maps are author `game_logic.c` in RAM. PRG `$80F7-$80FD` is reserved. World header bit **4** is unused.
 
-Studio Set Solid stores `solid_patterns` in the project JSON. Export packs that list at PRG `$8700`. Palette and H/V flip are ignored. The PRG probes BG1 nametable bank+tile against the packed tables. `r01_solid_pattern_add` is optional RAM extras after that boot copy.
+Studio Set Solid stores `solid_patterns` in the project JSON. Export writes `data/solids.bin`. llvm-mos KEEP-places it at PRG `$8700`. Palette and H/V flip are ignored. The PRG probes BG1 nametable bank+tile against the packed tables. `r01_solid_pattern_add` is optional RAM extras after that boot copy.
 
 BGM tracks live in the Studio Audio tab and pack into the cart **BGM** region (bytecode plus Guitar / EGuitar / Piano / Flute ids per channel). `r01_bgm_play(ctx, N)` in author `game_logic.c` selects that 1-based track at boot. **0** means no autoplay. Play and `./scripts/emu.sh` run the 6502 tracker into `$7F40`. See `sound.md`.
 
@@ -298,7 +298,7 @@ BGM tracks live in the Studio Audio tab and pack into the cart **BGM** region (b
 | --- | --- |
 | Entity **definitions** | Cart pack, global catalog (MAP-readable) |
 | Entity **behavior**, camera, mode, anim maps, BGM start | PRG on the 6502 (author C) |
-| Solid pattern list `$8700` | Studio Set Solid |
+| Solid pattern list `$8700`, present, spawns | Studio bins, llvm-mos KEEP |
 | BGM stream bytes | Studio Audio tab |
 | Live instance state | System RAM |
 | Drawing | OAM `$7F20`/`$7F21` on MCU-M, SPI to MCU-S1 (**early VBlank** / `S1_RDY`, then S1 field fill) |

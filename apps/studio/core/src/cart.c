@@ -951,6 +951,38 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
     prg_layout.off_map_screen0 = cart_off_map_screen0(&work->worlds[0], world_base);
     prg_layout.off_world0 = world_base;
     prg_layout.off_bgm = world_base + (uint32_t)world_blob.len;
+    {
+        char cart_dir[R01_PATH_MAX];
+        char data_dir[R01_PATH_MAX];
+        const char *slash = cart_path ? strrchr(cart_path, '/') : NULL;
+        if (!slash) {
+            snprintf(cart_dir, sizeof(cart_dir), ".");
+        } else if (slash == cart_path) {
+            snprintf(cart_dir, sizeof(cart_dir), "/");
+        } else {
+            size_t n = (size_t)(slash - cart_path);
+            if (n >= sizeof(cart_dir)) {
+                n = sizeof(cart_dir) - 1u;
+            }
+            memcpy(cart_dir, cart_path, n);
+            cart_dir[n] = '\0';
+        }
+        if (snprintf(data_dir, sizeof(data_dir), "%s/data", cart_dir) >= (int)sizeof(data_dir)) {
+            free(work);
+            free(world_blob.data);
+            free(other_blob.data);
+            free(entity_blob.data);
+            set_err(err_buf, err_cap, "path too long");
+            return -1;
+        }
+        if (r01_prg_write_table_bins(work, data_dir, err_buf, err_cap) != 0) {
+            free(work);
+            free(world_blob.data);
+            free(other_blob.data);
+            free(entity_blob.data);
+            return -1;
+        }
+    }
     if (r01_prg_load_or_compile(cart_path, prg, err_buf, err_cap) != 0) {
         free(work);
         free(world_blob.data);
@@ -958,7 +990,7 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
         free(entity_blob.data);
         return -1;
     }
-    r01_prg_overlay_tables(prg, work, &prg_layout);
+    r01_prg_patch_boot_map(prg, &prg_layout);
     {
         uint8_t bgm_buf[R01_CART_BGM_BLOB_MAX];
         int bgm_n;

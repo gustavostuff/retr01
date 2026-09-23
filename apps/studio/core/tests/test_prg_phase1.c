@@ -92,27 +92,51 @@ TEST_MAIN() {
     EXPECT(prg[R01_PRG_PLAY_INST_COUNT_OFF] == 0, "empty instance count");
 
     {
+        char err[256];
+        EXPECT(r01_prg_write_table_bins(p, "table_bins", err, sizeof(err)) == 0, "write table bins");
+        {
+            struct stat st;
+            EXPECT(stat("table_bins/play8100.bin", &st) == 0 && (size_t)st.st_size == R01_PRG_PLAY_TAB_BYTES,
+                   "play8100.bin size");
+            EXPECT(stat("table_bins/collgrid.bin", &st) == 0 && (size_t)st.st_size == R01_PRG_COLLGRID_BYTES,
+                   "collgrid.bin size");
+            EXPECT(stat("table_bins/r01p.bin", &st) == 0 && (size_t)st.st_size == R01_PRG_R01P_BYTES, "r01p.bin size");
+            EXPECT(stat("table_bins/solids.bin", &st) == 0 && st.st_size > 0, "solids.bin present");
+        }
+    }
+
+    {
         const char *cc = R01_REPO_ROOT "/tools/llvm-mos/bin/mos-common-clang";
         struct stat stcc;
         if (stat(cc, &stcc) == 0) {
             char err[256];
             uint8_t keep;
-            EXPECT(r01_prg_compile_sdk(NULL, prg, "sdk_overlay.prg", err, sizeof(err)) == 0, "compile sdk prg");
+            uint8_t keep_inst;
+            uint8_t keep_solid;
+            EXPECT(r01_prg_compile_sdk(NULL, prg, "sdk_link_out/retr01.prg", err, sizeof(err)) == 0,
+                   "compile sdk prg");
             keep = prg[R01_PRG_C_OFF];
+            keep_inst = prg[R01_PRG_PLAY_INST_COUNT_OFF];
+            keep_solid = prg[0x0700];
             EXPECT(prg[0] == 0x78, "compiled SEI");
             EXPECT(prg[0x7FFC] == 0x00 && prg[0x7FFD] == 0x80, "compiled RESET");
-            r01_prg_overlay_tables(prg, p, &layout);
-            EXPECT(prg[R01_PRG_C_OFF] == keep, "overlay keeps C at $C400");
-            EXPECT(prg[0] == 0x78, "overlay keeps boot");
-            EXPECT(prg[0x7FFC] == 0x00 && prg[0x7FFD] == 0x80, "overlay keeps RESET");
-            EXPECT(prg[R01_PRG_BOOTMAP_OFF] == 0x34, "overlay bootmap pal");
+            EXPECT(prg[0x00F0] == 'R' && prg[0x00F1] == '0' && prg[0x00F2] == '1' && prg[0x00F3] == 'P',
+                   "linked R01P");
+            EXPECT(prg[0x00F4] == R01_PRG_R01P_VER, "linked R01P ver");
+            r01_prg_patch_boot_map(prg, &layout);
+            EXPECT(prg[R01_PRG_C_OFF] == keep, "bootmap patch keeps C at $C400");
+            EXPECT(prg[0] == 0x78, "bootmap patch keeps boot");
+            EXPECT(prg[0x7FFC] == 0x00 && prg[0x7FFD] == 0x80, "bootmap patch keeps RESET");
+            EXPECT(prg[R01_PRG_BOOTMAP_OFF] == 0x34, "bootmap pal");
+            EXPECT(prg[R01_PRG_PLAY_INST_COUNT_OFF] == keep_inst, "packer does not stamp $81C0");
+            EXPECT(prg[0x0700] == keep_solid, "packer does not stamp $8700");
             {
                 uint8_t mark = 0xABu;
                 prg[R01_PRG_PLAT_GRAVITY_OFF] = mark;
                 prg[R01_PRG_BGM_BOOT_OFF] = 2;
-                r01_prg_overlay_tables(prg, p, &layout);
-                EXPECT(prg[R01_PRG_PLAT_GRAVITY_OFF] == mark, "overlay leaves $80F7");
-                EXPECT(prg[R01_PRG_BGM_BOOT_OFF] == 2, "overlay leaves $80FE");
+                r01_prg_patch_boot_map(prg, &layout);
+                EXPECT(prg[R01_PRG_PLAT_GRAVITY_OFF] == mark, "bootmap patch leaves $80F7");
+                EXPECT(prg[R01_PRG_BGM_BOOT_OFF] == 2, "bootmap patch leaves $80FE");
             }
         }
     }

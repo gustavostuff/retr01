@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Compile SDK C + game_logic.c to a 32 KB PRG (llvm-mos).
-# Usage: ./apps/sdk/r01_c/build-prg.sh [game_logic.c] [out.prg]
+# Usage: ./apps/sdk/r01_c/build-prg.sh [game_logic.c] [out.prg] [data_dir]
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
@@ -18,14 +18,56 @@ if [ -d "$LOGIC_DIR/include" ]; then
   INC_LOGIC="$LOGIC_DIR/include"
 fi
 
+DATA="${3:-}"
+if [ -z "$DATA" ]; then
+  if [ -f "$OUTDIR/data/play8100.bin" ]; then
+    DATA="$OUTDIR/data"
+  elif [ -f "$LOGIC_DIR/data/play8100.bin" ]; then
+    DATA="$LOGIC_DIR/data"
+  else
+    DATA="$SDK/data"
+  fi
+fi
+if [ ! -d "$DATA" ]; then
+  echo "error: PRG data dir missing ($DATA)" >&2
+  exit 1
+fi
+DATA="$(cd "$DATA" && pwd)"
+
 if [ ! -x "$CC" ]; then
   echo "error: llvm-mos missing ($CC). Run ./scripts/fetch-llvm-mos.sh" >&2
+  exit 1
+fi
+
+for f in r01p.bin play8100.bin collgrid.bin solids.bin; do
+  if [ ! -f "$DATA/$f" ]; then
+    echo "error: missing $DATA/$f" >&2
+    exit 1
+  fi
+done
+
+SOL=$(wc -c < "$DATA/solids.bin")
+MAX=$((0xC400 - 0x8700))
+if [ "$SOL" -gt "$MAX" ]; then
+  echo "error: solids.bin $SOL B hits \$C400 (max $MAX)" >&2
   exit 1
 fi
 
 COMMON="$ROOT/apps/common"
 
 mkdir -p "$OUTDIR"
+
+TAB_S="$OUTDIR/r01_tables.s"
+{
+  printf '.section .r01_r01p,"a",@progbits\n'
+  printf '.incbin "%s"\n' "$DATA/r01p.bin"
+  printf '.section .r01_play,"a",@progbits\n'
+  printf '.incbin "%s"\n' "$DATA/play8100.bin"
+  printf '.section .r01_collgrid,"a",@progbits\n'
+  printf '.incbin "%s"\n' "$DATA/collgrid.bin"
+  printf '.section .r01_solids,"a",@progbits\n'
+  printf '.incbin "%s"\n' "$DATA/solids.bin"
+} > "$TAB_S"
 
 # W65C02S only. NMOS 6502 (-mcpu=mos6502) is not a PRG target.
 "$CC" -Oz -g -mcpu=mosw65c02 -mlto-zp=218 \
@@ -54,13 +96,14 @@ mkdir -p "$OUTDIR"
   "$COMMON/r01_play_collision.c" \
   "$COMMON/r01_play_anim.c" \
   "$COMMON/r01_play_anim_cart.c" \
+  "$TAB_S" \
   "$LOGIC"
 
 SZ=$(wc -c < "$OUT")
 USED=0
 if [ -x "$SIZEBIN" ] && [ -f "$OUT.elf" ]; then
   USED=$("$SIZEBIN" -A "$OUT.elf" | awk '
-    /^\.(text|data|rodata|boot|text\.nmi|r01_bootmap)/ { s += $2 }
+    /^\.(text|data|rodata|boot|text\.nmi|r01_bootmap|r01_r01p|r01_play|r01_collgrid|r01_solids)/ { s += $2 }
     END { print s+0 }
   ')
 fi

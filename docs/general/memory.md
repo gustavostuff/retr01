@@ -271,7 +271,7 @@ See `hardware.md` and `ic-comms-risks.md`.
 
 ## Phase 1 PRG play tables (Studio / Emu)
 
-Authoring spawns live in the project JSON. Packed carts put **placements in PRG**, not the world blob (see entity catalog above). Phase 1 PRG layout (CPU `$8000` = PRG+$0000):
+Authoring spawns live in the project JSON. Packed carts put **placements in PRG**, not the world blob (see entity catalog above). Studio writes `data/play8100.bin`, `collgrid.bin`, `solids.bin`, and `r01p.bin`. llvm-mos KEEP-places them at the addresses below. Packer patches only the 16 B boot MAP at `$80E0` after cart layout. Phase 1 PRG layout (CPU `$8000` = PRG+$0000):
 
 | PRG off | CPU | Role |
 | --- | --- | --- |
@@ -299,7 +299,7 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 | Field | Writer |
 | --- | --- |
 | CHR, pals, maps, entity defs, BGM streams | Studio pack |
-| Present mask, spawns, solid list `$8700`, probe tables | Studio overlay (Set Solid for `$8700`) |
+| Present mask, spawns, solid list `$8700`, probe tables | Studio `data/` bins, llvm-mos KEEP at locked addresses |
 | Camera dead zone, game mode, gravity, jump, meter, anim maps, BGM start | Author `game_logic.c` in RAM |
 | BG0 wrap / clip video sample | World header flags (bits 1-3) |
 | Platformer bit in world header | Unused. Mode is `r01_game_set_mode` |
@@ -317,7 +317,7 @@ Authoring spawns live in the project JSON. Packed carts put **placements in PRG*
 
 Table grows toward the collision grid at `$8500`. **64** records need **384 B** and fit. The grid is **512 B** (`$8500`–`$86FF`); probe tables start at `$8700`.
 
-Probe tables are **240 B** per present screen (max **64**). With a full solid-pattern list they end by `$C381`. llvm-mos C occupies `$C400`–`$FFF9`.
+Probe tables are **240 B** per present screen (max **64**). With a full solid-pattern list they end by `$C381`. llvm-mos C occupies `$C400`–`$FFF9`. Table growth into `$C400` fails the link.
 
 Full entity defs use the locked pack in `software-api.md` (type directory + EntityDefs). Collision solids are a bank+tile list in system RAM (copied from PRG `$8700` at boot). Studio Set Solid stores `solid_patterns` in the project JSON. `r01_solid_pattern_add` is optional RAM extras.
 

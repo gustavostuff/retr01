@@ -16,7 +16,7 @@ Studio **Play** uses this same emu core after export (shared library + standalon
 | **Video** | Main FB = **VRAM + scroll** + **OAM** + **BG0** show-through under BG1 color 0 (SCALE 2x) |
 | **Host** | SDL. Keyboard or SDL Game Controller (community DB + SDL built-in mappings). First two pads are P1 / P2. Guide / Home opens Reset, Quit, 1x/2x present scale, and Mute On/Off. Pad map: P1 WASD+G/H, P2 arrows+,/. Platformer jump is face **Y** (P1 **H**, gamepad south). `r01_game_on_tick` may raise walk speed and anim frame delay from live pad bits (`R01_PAD_X` is P1 **G**). C NMI tracker fills `$7F40` from the cart BGM region (`r01_bgm_play` boot track). PC speaker mixes that window. Not MCU-S2 PWM |
 
-**Sync contract:** The packed C PRG is gameplay. Export packs present screens + play table (`$8100`) + `R01P` over llvm-mos code at `$C400`. Soft-boot (`R01E_SOFTBOOT=1`) uses host memcpy of VRAM and pals at boot (triage). Default boot runs cart PRG stream catchup until the start MAP write reaches **480** bytes (`vram_addr`). Collision samples the packed solid-pattern tables. Render samples that VRAM window.
+**Sync contract:** The packed C PRG is gameplay. llvm-mos links play tables (`$8100`), solids (`$8700`), and `R01P`. Packer patches the 16 B boot MAP at `$80E0`. Soft-boot (`R01E_SOFTBOOT=1`) uses host memcpy of VRAM and pals at boot (triage). Default boot runs cart PRG stream catchup until the start MAP write reaches **480** bytes (`vram_addr`). Collision samples the packed solid-pattern tables. Render samples that VRAM window.
 
 **Studio integration:** Studio **Play** / **Space** always exports, then embeds this render path. Export wait uses a Studio-local spinning boot message. Standalone `./scripts/emu.sh` stays for triage.
 

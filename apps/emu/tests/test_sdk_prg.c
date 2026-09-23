@@ -43,6 +43,9 @@ int main(int argc, char **argv) {
     if (prg[0] != 0x78) {
         return fail("PRG reset is not SEI");
     }
+    if (prg[0x00F0] != 'R' || prg[0x00F1] != '0' || prg[0x00F2] != '1' || prg[0x00F3] != 'P') {
+        return fail("linked R01P missing");
+    }
     if (prg[0x7FFC] != 0x00 || prg[0x7FFD] != 0x80) {
         fprintf(stderr, "FAIL RESET vector $%02x%02x\n", prg[0x7FFD], prg[0x7FFC]);
         return 1;

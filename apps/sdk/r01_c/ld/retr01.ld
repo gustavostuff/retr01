@@ -1,5 +1,6 @@
 /* Retr01 32 KB PRG. Boot $8000. Tables $80E0-$C3FF. C $C400-$FFF9. Vectors $FFFA. */
-/* Probe tables at $8700 (64 x 240 B + 64 solid patterns) end by $C381. */
+/* Studio bins KEEP-placed: R01P $80F0, play $8100, coll grid $8500, solids $8700. */
+/* Probe tables at $8700 (64 x 240 B + 64 solid patterns) end by $C381. Link fails if tables hit $C400. */
 
 /* Imaginary regs $E0-$FF. nmi.s stacks this block around C NMI. */
 __rc0 = 0xe0;
@@ -23,6 +24,14 @@ REGION_ALIAS("c_writeable", ram)
 SECTIONS {
   .boot 0x8000 : { KEEP(*(.boot)) } > rom_boot
   .r01_bootmap 0x80E0 : { KEEP(*(.r01_bootmap)) } > rom_tab
+  .r01_r01p 0x80F0 : { KEEP(*(.r01_r01p)) } > rom_tab
+  .r01_play 0x8100 : { KEEP(*(.r01_play)) } > rom_tab
+  .r01_collgrid 0x8500 : { KEEP(*(.r01_collgrid)) } > rom_tab
+  .r01_solids 0x8700 : { KEEP(*(.r01_solids)) } > rom_tab
+  ASSERT(. <= 0xC400, "PRG tables hit $C400")
+  ASSERT(SIZEOF(.r01_r01p) == 16, "R01P must be 16 B")
+  ASSERT(SIZEOF(.r01_play) == 0x400, "play table must be 1024 B")
+  ASSERT(SIZEOF(.r01_collgrid) == 0x200, "coll grid must be 512 B")
   .text.nmi : { KEEP(*(.text.nmi)) } > rom
   INCLUDE c.ld
 }
