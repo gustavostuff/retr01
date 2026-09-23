@@ -36,13 +36,11 @@ Retr01 Emu runs .retr01 ROM images.
 
 <img src="img/readme/emu.png" alt="Retr01 Emu play window" />
 
-This is the emulator _Debug_ view:
-
-<img src="img/readme/emu-debug.png" alt="Retr01 Emu debug window" />
-
 Retr01 Studio is the authoring tool for worlds, screens, and entities. It includes the emulator for quick playtesting.
 
 <img src="img/readme/studio.png" alt="Retr01 Studio" />
+
+BGM tracker:
 
 <img src="img/readme/studio-audio.png" alt="Retr01 Studio Audio" />
 
