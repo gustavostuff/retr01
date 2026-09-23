@@ -15,7 +15,7 @@
 
 #define R01_NAME_MAX 64
 #define R01_PATH_MAX 512
-#define R01_JSON_VER 18
+#define R01_JSON_VER 19
 #define R01_SOLID_PAT_MAX 64 /* cart-wide solid BG patterns (bank + tile) */
 
 #define R01_ASEPRITE_ENTITIES_DIR "aseprite_entities"
@@ -27,7 +27,7 @@
 #define R01_DEFAULT_PROJECT ""
 #define R01_DEFAULT_CART_STEM ""
 
-/* Per-world sprite catalog (CHR patterns in spr_banks + authoring metadata). */
+/* Sprite catalog (CHR patterns in chr_banks + authoring metadata). */
 #define R01_MAX_SPRITES 256
 /* Authoring leftovers in project JSON (not cart / C API). See docs/general/video-graphics.md. */
 #define R01_MAX_METASPRITES 64
@@ -116,16 +116,16 @@ typedef struct R01ChrBank {
 typedef R01ChrBank R01BgBank;
 typedef R01ChrBank R01SprBank;
 
-/* Catalog entry: one 8x8 pattern in a SPR bank + default palette. */
+/* Catalog entry: one 8x8 pattern in a CHR bank + default palette. */
 typedef struct R01SpriteDef {
-    int bank;    /* 0..R01_SPR_BANKS-1 */
-    int tile_id; /* index in project spr_banks[bank] */
+    int bank;    /* 0..R01_CHR_BANKS-1 */
+    int tile_id; /* index in project chr_banks[bank] */
     int pal;     /* 0..3 within the active sprite palette row */
 } R01SpriteDef;
 
 /* One OAM-like part in an entity frame (dx/dy in compose-grid pixels). */
 typedef struct R01EntityPart {
-    int bank; /* 0..R01_SPR_BANKS-1 */
+    int bank; /* 0..R01_CHR_BANKS-1 */
     int tile_id;
     int pal;
     int flip_h;
@@ -239,8 +239,7 @@ typedef struct R01Project {
     /* 8 rows x 4 pals each (docs/general/graphics). Index [row][pal]. */
     R01PalRow global_pal_bg[R01_PAL_ROWS][R01_PALS_PER_ROW];
     R01PalRow global_pal_spr[R01_PAL_ROWS][R01_PALS_PER_ROW];
-    R01BgBank bg_banks[R01_BG_BANKS];
-    R01SprBank spr_banks[R01_SPR_BANKS];
+    R01ChrBank chr_banks[R01_CHR_BANKS];
     R01SpriteDef sprites[R01_MAX_SPRITES];
     int sprite_count;
     R01MetaspriteDef metasprites[R01_MAX_METASPRITES];

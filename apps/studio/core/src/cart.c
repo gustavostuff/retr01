@@ -822,19 +822,12 @@ static int r01_cart_build(const R01Project *p, const char *cart_path, uint8_t **
     other_len = other_blob.len;
 
     memset(global_chr, 0, sizeof(global_chr));
-    for (bi = 0; bi < R01_BG_BANKS; bi++) {
-        size_t n = (size_t)work->bg_banks[bi].tile_count * R01_TILE_BYTES;
+    for (bi = 0; bi < R01_CHR_BANKS; bi++) {
+        size_t n = (size_t)work->chr_banks[bi].tile_count * R01_TILE_BYTES;
         if (n > R01_CHR_BANK_BYTES) {
             n = R01_CHR_BANK_BYTES;
         }
-        memcpy(global_chr + (size_t)bi * R01_CHR_BANK_BYTES, work->bg_banks[bi].chr, n);
-    }
-    for (bi = 0; bi < R01_SPR_BANKS; bi++) {
-        size_t n = (size_t)work->spr_banks[bi].tile_count * R01_TILE_BYTES;
-        if (n > R01_CHR_BANK_BYTES) {
-            n = R01_CHR_BANK_BYTES;
-        }
-        memcpy(global_chr + ((size_t)R01_BG_BANKS + (size_t)bi) * R01_CHR_BANK_BYTES, work->spr_banks[bi].chr, n);
+        memcpy(global_chr + (size_t)bi * R01_CHR_BANK_BYTES, work->chr_banks[bi].chr, n);
     }
     {
         int type_n = work->entity_count;

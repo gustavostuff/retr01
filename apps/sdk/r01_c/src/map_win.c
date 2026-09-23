@@ -124,7 +124,7 @@ void r01_world_enter(uint8_t id) {
     uint16_t cell;
     uint16_t ptr;
 
-    if (id >= 7u) {
+    if (id >= (uint8_t)R01_MAX_WORLDS) {
         id = 0;
     }
     ptr = (uint16_t)(*(volatile uint8_t *)(uint16_t)(0x8500u + (uint16_t)id * 2u));
@@ -157,7 +157,7 @@ void r01_world_enter(uint8_t id) {
     if (world0 == 0u) {
         return;
     }
-    wtable = world0 - (uint32_t)(7u * 8u);
+    wtable = world0 - (uint32_t)R01_MAX_WORLDS * 8u;
     r01_map_seek(wtable + (uint32_t)id * 8u);
     present = r01_map_read();
     if (present == 0u) {

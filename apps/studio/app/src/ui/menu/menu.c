@@ -260,21 +260,21 @@ static int bank_cell_is_empty(const R01Project *p, int bank, int tile_id, int pl
     if (plane == UI_BANKS_PLANE_SPR) {
         return r01_chr_spr_tile(p, bank, tile_id) == NULL;
     }
-    return tile_id >= p->bg_banks[bank].tile_count;
+    return tile_id >= p->chr_banks[bank].tile_count;
 }
 
 static int global_spr_cell_is_empty(const R01Project *p, int bank, int tile_id) {
     if (!p || bank < 0 || bank >= R01_SPR_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         return 1;
     }
-    return tile_id >= p->spr_banks[bank].tile_count;
+    return tile_id >= p->chr_banks[bank].tile_count;
 }
 
 static int global_bg_cell_is_empty(const R01Project *p, int bank, int tile_id) {
     if (!p || bank < 0 || bank >= R01_BG_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         return 1;
     }
-    return tile_id >= p->bg_banks[bank].tile_count;
+    return tile_id >= p->chr_banks[bank].tile_count;
 }
 
 static int bank_cell_catalog_idx(const R01Project *p, int bank, int tile_id) {

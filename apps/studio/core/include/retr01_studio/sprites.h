@@ -9,25 +9,25 @@ int r01_chr_find_spr_bank_space(const R01Project *p);
 /* Prefer first free / next slot. Bank sheets stay contiguous 0..n-1 (no holes). */
 int r01_chr_alloc_spr_tile(R01Project *p, int bank);
 
-/* Write 16-byte pattern into spr_banks[bank][tile_id] (grows tile_count). */
+/* Write 16-byte pattern into chr_banks[bank][tile_id] (grows tile_count). */
 int r01_chr_write_spr_tile(R01Project *p, int bank, int tile_id, const uint8_t tile[R01_TILE_BYTES]);
 
-/* Read pointer to SPR tile bytes, or NULL if out of range. */
+/* Read pointer to CHR tile bytes, or NULL if out of range. */
 const uint8_t *r01_chr_spr_tile(const R01Project *p, int bank, int tile_id);
 
-/* Resolve SPR tile from the global pool. w is unused. */
+/* Resolve sprite tile from the global CHR pool. w is unused. */
 const uint8_t *r01_chr_resolve_spr(const R01Project *p, const R01World *w, int bank, int tile_id);
 int r01_chr_write_resolved_spr(R01Project *p, R01World *w, int bank, int tile_id,
                                const uint8_t tile[R01_TILE_BYTES]);
 
-/* Pack non-blank SPR tiles to 0..n-1 and remap entity / metasprite / catalog refs. */
+/* Pack non-blank tiles to 0..n-1 and remap entity / metasprite / catalog refs. */
 void r01_chr_densify_spr_bank(R01Project *p, int bank);
-/* Same as densify SPR (global pool). */
+/* Same as densify (global pool). */
 void r01_project_densify_other_spr_bank(R01Project *p, int bank);
-/* Pack BG bank (tile 0 locked). Remap screens + metatiles. */
+/* Pack bank (tile 0 locked). Remap screens, metatiles, and sprite refs. */
 void r01_project_densify_other_bg_bank(R01Project *p, int bank);
 void r01_chr_densify_bg_bank(R01Project *p, int bank);
-/* Densify every BG/SPR bank. */
+/* Densify every CHR bank. */
 void r01_project_densify_all_banks(R01Project *p);
 
 /* Append catalog entry. Returns index or -1. */

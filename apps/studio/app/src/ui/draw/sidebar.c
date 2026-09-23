@@ -205,11 +205,9 @@ static void draw_banks_body(UiState *ui, SDL_Renderer *r, const AccordionLayout 
     int ly = ui->mouse_y;
     UiTabPager pg;
     int bank = ui->banks_idx;
-    int spr = (ui->banks_plane == UI_BANKS_PLANE_SPR);
     int grid_y = lo->sprites_body_y + UI_WORLDS_TAB_STACK_H;
     int tx, ty;
     int row = w ? w->default_pal_row : 0;
-    static const char *const plane_labs[2] = {"BG", "Sprites"};
 
     fill_rect(r, 0, lo->sprites_body_y, UI_SIDEBAR_W, UI_BANKS_BODY_H, UI_COL_PANEL_R, UI_COL_PANEL_G,
               UI_COL_PANEL_B);
@@ -222,7 +220,6 @@ static void draw_banks_body(UiState *ui, SDL_Renderer *r, const AccordionLayout 
     }
     banks_pager_prepare(ui, &pg);
     ui_tab_pager_draw(r, &pg, lx, ly);
-    ui_multi_state_draw(r, pg.plane_x, pg.y, pg.plane_w, plane_labs, 2, ui->banks_plane, lx, ly);
 
     fill_rect(r, UI_WORLDS_X, grid_y, UI_BANKS_GRID, UI_BANKS_GRID, UI_COL_WELL_R, UI_COL_WELL_G, UI_COL_WELL_B);
     if (!w) {
@@ -236,10 +233,8 @@ static void draw_banks_body(UiState *ui, SDL_Renderer *r, const AccordionLayout 
             int sx, sy;
             int blank = 1;
             const uint8_t *tile = NULL;
-            if (spr) {
-                tile = r01_chr_spr_tile(p, bank, tile_id);
-            } else if (tile_id < p->bg_banks[bank].tile_count) {
-                tile = p->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+            if (tile_id < p->chr_banks[bank].tile_count) {
+                tile = p->chr_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
             }
             if (!tile) {
                 continue;
@@ -252,15 +247,11 @@ static void draw_banks_body(UiState *ui, SDL_Renderer *r, const AccordionLayout 
                         continue;
                     }
                     blank = 0;
-                    if (spr) {
-                        r01_kit_rgb(ui->project->global_pal_spr[row][0].idx[col & 3u], &cr, &cg, &cb);
-                    } else {
-                        r01_kit_rgb(ui->project->global_pal_bg[row][0].idx[col & 3u], &cr, &cg, &cb);
-                    }
+                    r01_kit_rgb(ui->project->global_pal_bg[row][0].idx[col & 3u], &cr, &cg, &cb);
                     fill_rect(r, dx + sx, dy + sy, 1, 1, cr, cg, cb);
                 }
             }
-            /* Allocated blank (BG tile 0 fallback): chess so it is not well-colored empty. */
+            /* Allocated blank (tile 0 fallback): chess so it is not well-colored empty. */
             if (blank) {
                 draw_chess_grid(r, dx, dy, 4, 4, 2);
             }
@@ -279,16 +270,14 @@ static void draw_banks_body(UiState *ui, SDL_Renderer *r, const AccordionLayout 
 
 static void draw_global_banks_body(UiState *ui, SDL_Renderer *r, const AccordionLayout *lo) {
     const R01World *w = r01_project_active_world_const(ui->project);
-    const R01Project *p = ui->project;
     int lx = ui->mouse_x;
     int ly = ui->mouse_y;
     UiTabsLayout tabs;
     int bank = ui->global_banks_idx;
-    int spr = (ui->global_banks_plane == UI_BANKS_PLANE_GLOBAL_SPR);
     int grid_y = lo->global_banks_body_y + UI_WORLDS_TAB_STACK_H;
     int tx, ty;
     int row = w ? w->default_pal_row : 0;
-    int sel_plane = spr ? UI_BANKS_PLANE_GLOBAL_SPR : UI_BANKS_PLANE_GLOBAL_BG;
+    int sel_plane = UI_BANKS_PLANE_GLOBAL_BG;
 
     fill_rect(r, 0, lo->global_banks_body_y, UI_SIDEBAR_W, UI_GLOBAL_BANKS_BODY_H, UI_COL_PANEL_R, UI_COL_PANEL_G,
               UI_COL_PANEL_B);
@@ -314,11 +303,7 @@ static void draw_global_banks_body(UiState *ui, SDL_Renderer *r, const Accordion
             int sx, sy;
             int blank = 1;
             const uint8_t *tile = NULL;
-            if (spr) {
-                tile = r01_other_spr_tile(ui->project, bank, tile_id);
-            } else {
-                tile = r01_other_bg_tile(ui->project, bank, tile_id);
-            }
+            tile = r01_other_bg_tile(ui->project, bank, tile_id);
             if (!tile) {
                 continue;
             }
@@ -330,11 +315,7 @@ static void draw_global_banks_body(UiState *ui, SDL_Renderer *r, const Accordion
                         continue;
                     }
                     blank = 0;
-                    if (spr) {
-                        r01_kit_rgb(ui->project->global_pal_spr[row][0].idx[col & 3u], &cr, &cg, &cb);
-                    } else {
-                        r01_kit_rgb(ui->project->global_pal_bg[row][0].idx[col & 3u], &cr, &cg, &cb);
-                    }
+                    r01_kit_rgb(ui->project->global_pal_bg[row][0].idx[col & 3u], &cr, &cg, &cb);
                     fill_rect(r, dx + sx, dy + sy, 1, 1, cr, cg, cb);
                 }
             }

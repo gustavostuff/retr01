@@ -988,7 +988,7 @@ static int find_existing_spr_pattern(const R01Project *p, const R01World *w, con
         return 0;
     }
     for (b = 0; b < R01_SPR_BANKS; b++) {
-        for (id = 0; id < p->spr_banks[b].tile_count; id++) {
+        for (id = 0; id < p->chr_banks[b].tile_count; id++) {
             const uint8_t *have = r01_chr_spr_tile(p, b, id);
             if (have && memcmp(have, tile, R01_TILE_BYTES) == 0) {
                 *bank = b;

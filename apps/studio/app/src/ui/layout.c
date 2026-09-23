@@ -544,23 +544,19 @@ void banks_pager_prepare(const UiState *ui, UiTabPager *out) {
     }
     accordion_layout(ui, &lo);
     sel = ui ? ui->banks_idx : 0;
-    ui_tab_pager_layout(UI_WORLDS_X, lo.sprites_body_y, UI_SIDEBAR_W, UI_BANKS_N, sel, UI_TAB_PAGER_PLANE_W, out);
+    ui_tab_pager_layout(UI_WORLDS_X, lo.sprites_body_y, UI_SIDEBAR_W, UI_BANKS_N, sel, 0, out);
 }
 
 void global_banks_tabs_prepare(const UiState *ui, UiTabsLayout *out) {
     AccordionLayout lo;
     static const char *const bank_labs[UI_BANKS_N] = {
         "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""};
-    int view;
     if (!out) {
         return;
     }
     accordion_layout(ui, &lo);
     ui_tabs_layout(bank_labs, UI_BANKS_N, UI_WORLDS_X, lo.global_banks_body_y, UI_WORLD_BTN, out);
     ui_tabs_set_dot(out, 1);
-    view = (ui && ui->global_banks_plane == UI_BANKS_PLANE_GLOBAL_SPR) ? 1 : 0;
-    ui_tabs_set_dual(out, 1, view, g_bg_bank_btn_rgba, g_bg_bank_btn_w, g_bg_bank_btn_h, g_spr_bank_btn_rgba,
-                     g_spr_bank_btn_w, g_spr_bank_btn_h);
 }
 
 int banks_tab_hit(const UiState *ui, int lx, int ly, int *out_idx) {
@@ -608,32 +604,17 @@ int global_banks_tab_hit(const UiState *ui, int lx, int ly, int *out_idx) {
 }
 
 int banks_sub_hit(const UiState *ui, int lx, int ly) {
-    UiTabPager pg;
-    if (!ui) {
-        return 0;
-    }
-    banks_pager_prepare(ui, &pg);
-    if (pg.plane_w < 1) {
-        return 0;
-    }
-    return ui_multi_state_hit(lx, ly, pg.plane_x, pg.y, pg.plane_w, 2, ui->banks_plane, NULL);
+    (void)ui;
+    (void)lx;
+    (void)ly;
+    return 0;
 }
 
 int global_banks_sub_hit(const UiState *ui, int lx, int ly) {
-    UiTabsLayout tabs;
-    int sel;
-    if (!ui) {
-        return 0;
-    }
-    global_banks_tabs_prepare(ui, &tabs);
-    sel = ui->global_banks_idx;
-    if (sel < 0) {
-        sel = 0;
-    }
-    if (sel >= UI_BANKS_N) {
-        sel = UI_BANKS_N - 1;
-    }
-    return ui_tabs_sub_hit(&tabs, sel, lx, ly);
+    (void)ui;
+    (void)lx;
+    (void)ly;
+    return 0;
 }
 
 int banks_cell_hit(const UiState *ui, int lx, int ly, int *out_tile_id) {
@@ -717,19 +698,19 @@ static int bank_sel_tile_count(const UiState *ui, int plane, int bank) {
     w = r01_project_active_world_const(ui->project);
     const R01Project *p = ui->project;
     if (plane == UI_BANKS_PLANE_GLOBAL_SPR) {
-        return ui->project->spr_banks[bank].tile_count;
+        return ui->project->chr_banks[bank].tile_count;
     }
     if (plane == UI_BANKS_PLANE_GLOBAL_BG) {
-        return ui->project->bg_banks[bank].tile_count;
+        return ui->project->chr_banks[bank].tile_count;
     }
     if (!w) {
         return 0;
     }
     if (plane == UI_BANKS_PLANE_SPR) {
-        return p->spr_banks[bank].tile_count;
+        return p->chr_banks[bank].tile_count;
     }
     if (plane == UI_BANKS_PLANE_BG) {
-        return p->bg_banks[bank].tile_count;
+        return p->chr_banks[bank].tile_count;
     }
     return 0;
 }

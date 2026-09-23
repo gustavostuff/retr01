@@ -54,8 +54,8 @@ TEST_MAIN() {
     EXPECT(p2->sprites[0].tile_id == 0, "catalog tile");
     EXPECT(p2->sprites[0].pal == 3, "catalog pal");
     /* Load densifies blank holes: only the painted tile remains. */
-    EXPECT(p2->spr_banks[0].tile_count == 1, "spr bank0 densified");
-    EXPECT(memcmp(p2->spr_banks[0].chr, tile, R01_TILE_BYTES) == 0, "spr chr bytes");
+    EXPECT(p2->chr_banks[0].tile_count == 1, "spr bank0 densified");
+    EXPECT(memcmp(p2->chr_banks[0].chr, tile, R01_TILE_BYTES) == 0, "spr chr bytes");
 
     EXPECT(r01_world_sprite_remove(p2, 0) == 0, "remove");
     EXPECT(p2->sprite_count == 0, "empty after remove");

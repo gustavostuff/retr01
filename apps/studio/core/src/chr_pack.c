@@ -125,10 +125,10 @@ void r01_screen_fill_pixels_from_bank(const R01Project *p, R01Screen *s) {
             int bank = r01_attr_bank(attr);
             const uint8_t *tile;
             int sy, sx;
-            if (bank < 0 || bank >= R01_BG_BANKS || tile_id >= (uint8_t)p->bg_banks[bank].tile_count) {
+            if (bank < 0 || bank >= R01_BG_BANKS || tile_id >= (uint8_t)p->chr_banks[bank].tile_count) {
                 continue;
             }
-            tile = p->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+            tile = p->chr_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
             for (sy = 0; sy < 8; sy++) {
                 for (sx = 0; sx < 8; sx++) {
                     int px = tx * 8 + sx;
@@ -302,7 +302,7 @@ int r01_chr_alloc_tile(R01Project *p, int bank) {
     if (!p || bank < 0 || bank >= R01_BG_BANKS) {
         return -1;
     }
-    b = &p->bg_banks[bank];
+    b = &p->chr_banks[bank];
     if (b->tile_count >= R01_TILES_PER_BANK) {
         return -1;
     }
@@ -316,7 +316,7 @@ int r01_chr_write_tile(R01Project *p, int bank, int tile_id, const uint8_t tile[
     if (!p || !tile || bank < 0 || bank >= R01_BG_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         return -1;
     }
-    b = &p->bg_banks[bank];
+    b = &p->chr_banks[bank];
     if (tile_id >= b->tile_count) {
         b->tile_count = tile_id + 1;
     }
@@ -326,10 +326,10 @@ int r01_chr_write_tile(R01Project *p, int bank, int tile_id, const uint8_t tile[
 
 const uint8_t *r01_other_spr_tile(const R01Project *p, int bank, int tile_id) {
     if (!p || bank < 0 || bank >= R01_SPR_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK ||
-        tile_id >= p->spr_banks[bank].tile_count) {
+        tile_id >= p->chr_banks[bank].tile_count) {
         return NULL;
     }
-    return p->spr_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+    return p->chr_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
 }
 
 int r01_other_spr_write_tile(R01Project *p, int bank, int tile_id, const uint8_t tile[R01_TILE_BYTES]) {
@@ -337,7 +337,7 @@ int r01_other_spr_write_tile(R01Project *p, int bank, int tile_id, const uint8_t
     if (!p || !tile || bank < 0 || bank >= R01_SPR_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         return -1;
     }
-    b = &p->spr_banks[bank];
+    b = &p->chr_banks[bank];
     if (tile_id >= b->tile_count) {
         b->tile_count = tile_id + 1;
     }
@@ -352,10 +352,10 @@ int r01_other_spr_alloc_tile(R01Project *p, int bank) {
         return -1;
     }
     memset(blank, 0, sizeof(blank));
-    if (p->spr_banks[bank].tile_count >= R01_TILES_PER_BANK) {
+    if (p->chr_banks[bank].tile_count >= R01_TILES_PER_BANK) {
         return -1;
     }
-    id = p->spr_banks[bank].tile_count;
+    id = p->chr_banks[bank].tile_count;
     if (r01_other_spr_write_tile(p, bank, id, blank) != 0) {
         return -1;
     }
@@ -364,10 +364,10 @@ int r01_other_spr_alloc_tile(R01Project *p, int bank) {
 
 const uint8_t *r01_other_bg_tile(const R01Project *p, int bank, int tile_id) {
     if (!p || bank < 0 || bank >= R01_BG_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK ||
-        tile_id >= p->bg_banks[bank].tile_count) {
+        tile_id >= p->chr_banks[bank].tile_count) {
         return NULL;
     }
-    return p->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+    return p->chr_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
 }
 
 int r01_other_bg_write_tile(R01Project *p, int bank, int tile_id, const uint8_t tile[R01_TILE_BYTES]) {
@@ -375,7 +375,7 @@ int r01_other_bg_write_tile(R01Project *p, int bank, int tile_id, const uint8_t 
     if (!p || !tile || bank < 0 || bank >= R01_BG_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         return -1;
     }
-    b = &p->bg_banks[bank];
+    b = &p->chr_banks[bank];
     if (tile_id >= b->tile_count) {
         b->tile_count = tile_id + 1;
     }
@@ -390,10 +390,10 @@ int r01_other_bg_alloc_tile(R01Project *p, int bank) {
         return -1;
     }
     memset(blank, 0, sizeof(blank));
-    if (p->bg_banks[bank].tile_count >= R01_TILES_PER_BANK) {
+    if (p->chr_banks[bank].tile_count >= R01_TILES_PER_BANK) {
         return -1;
     }
-    id = p->bg_banks[bank].tile_count;
+    id = p->chr_banks[bank].tile_count;
     if (r01_other_bg_write_tile(p, bank, id, blank) != 0) {
         return -1;
     }
@@ -428,10 +428,10 @@ void r01_screen_paint_tile(R01Project *p, R01Screen *s, int tile_x, int tile_y, 
     s->solids[cell] =
         r01_project_pattern_solid(p, r01_attr_solid_bank(s->attrs[cell]), (int)tile_id) ? 1u : 0u;
     bank = r01_attr_bank(attr);
-    if (bank < 0 || bank >= R01_BG_BANKS || tile_id >= (uint8_t)p->bg_banks[bank].tile_count) {
+    if (bank < 0 || bank >= R01_BG_BANKS || tile_id >= (uint8_t)p->chr_banks[bank].tile_count) {
         return;
     }
-    tile = p->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+    tile = p->chr_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
     for (sy = 0; sy < 8; sy++) {
         for (sx = 0; sx < 8; sx++) {
             int px = tile_x * 8 + sx;
@@ -456,8 +456,8 @@ R01ChrPackStatus r01_chr_pack_world_bank0(R01Project *p, R01World *w) {
     if (!p || !w) {
         return R01_CHR_BAD_ARGS;
     }
-    memset(p->bg_banks[0].chr, 0, R01_BANK_CHR_BYTES);
-    p->bg_banks[0].tile_count = 0;
+    memset(p->chr_banks[0].chr, 0, R01_BANK_CHR_BYTES);
+    p->chr_banks[0].tile_count = 0;
     for (si = 0; si < w->screen_count; si++) {
         R01Screen *s = &w->screens[si];
         R01ChrPackStatus st;
@@ -469,7 +469,7 @@ R01ChrPackStatus r01_chr_pack_world_bank0(R01Project *p, R01World *w) {
             return st;
         }
     }
-    memcpy(p->bg_banks[0].chr, unique, (size_t)unique_count * R01_TILE_BYTES);
-    p->bg_banks[0].tile_count = unique_count;
+    memcpy(p->chr_banks[0].chr, unique, (size_t)unique_count * R01_TILE_BYTES);
+    p->chr_banks[0].tile_count = unique_count;
     return R01_CHR_OK;
 }

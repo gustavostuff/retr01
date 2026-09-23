@@ -196,7 +196,7 @@ TEST_MAIN() {
     }
 
     /* Mark entity 0 as player: Play uses state0/frame0 at player pos; skips its instances.
-     * Flag only: tiles stay on project spr_banks. */
+     * Flag only: tiles stay on project chr_banks. */
     {
         R01OamEntry oam2[R01_OAM_MAX];
         int n2, found_player = 0, found_inst = 0, oi;
@@ -208,7 +208,7 @@ TEST_MAIN() {
         EXPECT(r01_world_player_entity(p) == 0, "player marked");
         EXPECT(p->entities[0].states[0].frames[0].parts[0].bank == old_bank, "mark keeps bank");
         EXPECT(p->entities[0].states[0].frames[0].parts[0].tile_id == old_tile, "mark keeps tile");
-        EXPECT(p->spr_banks[old_bank].tile_count >= 1, "spr covers tile");
+        EXPECT(p->chr_banks[old_bank].tile_count >= 1, "spr covers tile");
         EXPECT(r01_chr_resolve_spr(p, w, old_bank, old_tile) != NULL, "resolve player tile");
         n2 = r01_play_build_oam(p, &pl, oam2, R01_OAM_MAX);
         EXPECT(n2 >= 1, "player entity oam");
@@ -226,7 +226,7 @@ TEST_MAIN() {
         EXPECT(r01_project_set_player_entity(p, w, -1) == 0, "unmark");
         EXPECT(r01_world_player_entity(p) < 0, "player unmarked");
         EXPECT(p->entities[0].states[0].frames[0].parts[0].bank == old_bank, "unmark keeps bank");
-        EXPECT(p->spr_banks[old_bank].tile_count >= 1, "spr keeps player tiles after unmark");
+        EXPECT(p->chr_banks[old_bank].tile_count >= 1, "spr keeps player tiles after unmark");
         EXPECT(r01_project_set_player_entity(p, w, 0) == 0, "re-mark");
         EXPECT(r01_world_player_entity(p) == 0, "player re-marked");
         EXPECT(p->entities[0].states[0].frames[0].parts[0].bank == old_bank, "re-mark keeps bank");
@@ -251,7 +251,7 @@ TEST_MAIN() {
     EXPECT(p2->entities[0].states[0].hitbox_w == 10, "state hitbox w");
     EXPECT(p2->entities[0].states[0].frames[0].parts[0].dx == 4, "part dx");
     EXPECT(p2->entities[0].states[0].frames[0].parts[0].bank == 0, "spr bank rt");
-    EXPECT(p2->spr_banks[0].tile_count >= 1, "spr tiles rt");
+    EXPECT(p2->chr_banks[0].tile_count >= 1, "spr tiles rt");
 
     {
         char id[R01_ID_MAX];

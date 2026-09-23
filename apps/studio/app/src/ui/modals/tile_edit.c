@@ -143,9 +143,9 @@ void tile_edit_open(UiState *ui, int tx, int ty) {
         ui->tile_edit.bank = r01_attr_bank(attr);
         ui->tile_edit.flip_h = r01_attr_flip_h(attr);
         ui->tile_edit.flip_v = r01_attr_flip_v(attr);
-        if (ui->tile_edit.tile_id < p->bg_banks[ui->tile_edit.bank].tile_count) {
+        if (ui->tile_edit.tile_id < p->chr_banks[ui->tile_edit.bank].tile_count) {
             const uint8_t *raw =
-                p->bg_banks[ui->tile_edit.bank].chr + (size_t)ui->tile_edit.tile_id * R01_TILE_BYTES;
+                p->chr_banks[ui->tile_edit.bank].chr + (size_t)ui->tile_edit.tile_id * R01_TILE_BYTES;
             r01_tile_orient(raw, ui->tile_edit.flip_h, ui->tile_edit.flip_v, ui->tile_edit.chr);
             ui->tile_edit.is_new = 0;
         } else {
@@ -193,8 +193,8 @@ void tile_edit_open_bank(UiState *ui, int bank, int tile_id, int is_new) {
     ui->tile_edit.color = 1;
     ui->tile_edit.edit_all = 0;
     ui->tile_edit.is_new = is_new ? 1 : 0;
-    if (w && bank >= 0 && bank < R01_BG_BANKS && tile_id >= 0 && tile_id < p->bg_banks[bank].tile_count) {
-        const uint8_t *raw = p->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+    if (w && bank >= 0 && bank < R01_BG_BANKS && tile_id >= 0 && tile_id < p->chr_banks[bank].tile_count) {
+        const uint8_t *raw = p->chr_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
         memcpy(ui->tile_edit.chr, raw, R01_TILE_BYTES);
         ui->tile_edit.is_new = 0;
     } else {
@@ -368,7 +368,7 @@ static void tile_edit_save(UiState *ui) {
     was_new = ui->tile_edit.is_new || ui->tile_edit.tile_id < 0;
     memset(old_chr, 0, sizeof(old_chr));
     if (was_new) {
-        old_tile_count = p->bg_banks[ui->tile_edit.bank].tile_count;
+        old_tile_count = p->chr_banks[ui->tile_edit.bank].tile_count;
         id = r01_chr_alloc_tile(p, ui->tile_edit.bank);
         if (id < 0) {
             ui_toast(ui, "CHR bank full", 1);
@@ -378,8 +378,8 @@ static void tile_edit_save(UiState *ui) {
         ui->tile_edit.is_new = 0;
     } else {
         id = ui->tile_edit.tile_id;
-        if (id >= 0 && id < p->bg_banks[ui->tile_edit.bank].tile_count) {
-            memcpy(old_chr, p->bg_banks[ui->tile_edit.bank].chr + (size_t)id * R01_TILE_BYTES, R01_TILE_BYTES);
+        if (id >= 0 && id < p->chr_banks[ui->tile_edit.bank].tile_count) {
+            memcpy(old_chr, p->chr_banks[ui->tile_edit.bank].chr + (size_t)id * R01_TILE_BYTES, R01_TILE_BYTES);
         }
     }
     r01_tile_orient(ui->tile_edit.chr, ui->tile_edit.flip_h, ui->tile_edit.flip_v, canonical);

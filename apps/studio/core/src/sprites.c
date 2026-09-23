@@ -25,7 +25,7 @@ int r01_chr_find_spr_bank_space(const R01Project *p) {
         return -1;
     }
     for (bank = 0; bank < R01_SPR_BANKS; bank++) {
-        if (p->spr_banks[bank].tile_count < R01_TILES_PER_BANK) {
+        if (p->chr_banks[bank].tile_count < R01_TILES_PER_BANK) {
             return bank;
         }
     }
@@ -37,7 +37,7 @@ int r01_chr_alloc_spr_tile(R01Project *p, int bank) {
     if (!p || bank < 0 || bank >= R01_SPR_BANKS) {
         return -1;
     }
-    b = &p->spr_banks[bank];
+    b = &p->chr_banks[bank];
     if (b->tile_count >= R01_TILES_PER_BANK) {
         return -1;
     }
@@ -51,7 +51,7 @@ int r01_chr_write_spr_tile(R01Project *p, int bank, int tile_id, const uint8_t t
     if (!p || !tile || bank < 0 || bank >= R01_SPR_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         return -1;
     }
-    b = &p->spr_banks[bank];
+    b = &p->chr_banks[bank];
     if (tile_id >= b->tile_count) {
         b->tile_count = tile_id + 1;
     }
@@ -63,10 +63,10 @@ const uint8_t *r01_chr_spr_tile(const R01Project *p, int bank, int tile_id) {
     if (!p || bank < 0 || bank >= R01_SPR_BANKS || tile_id < 0) {
         return NULL;
     }
-    if (tile_id >= p->spr_banks[bank].tile_count) {
+    if (tile_id >= p->chr_banks[bank].tile_count) {
         return NULL;
     }
-    return p->spr_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+    return p->chr_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
 }
 
 const uint8_t *r01_chr_resolve_spr(const R01Project *p, const R01World *w, int bank, int tile_id) {
@@ -130,7 +130,7 @@ void r01_chr_densify_spr_bank(R01Project *p, int bank) {
     if (!p || bank < 0 || bank >= R01_SPR_BANKS) {
         return;
     }
-    b = &p->spr_banks[bank];
+    b = &p->chr_banks[bank];
     old_n = b->tile_count;
     if (old_n < 1) {
         return;
@@ -194,7 +194,7 @@ void r01_project_densify_other_spr_bank(R01Project *p, int bank) {
         return;
     }
     auth_bank = R01_GLOBAL_SPR_BANK_BASE + bank;
-    b = &p->spr_banks[bank];
+    b = &p->chr_banks[bank];
     old_n = b->tile_count;
     if (old_n < 1) {
         return;
@@ -273,7 +273,7 @@ void r01_chr_densify_bg_bank(R01Project *p, int bank) {
     if (!p || bank < 0 || bank >= R01_BG_BANKS) {
         return;
     }
-    b = &p->bg_banks[bank];
+    b = &p->chr_banks[bank];
     old_n = b->tile_count;
     if (old_n < 2) {
         return;
@@ -315,6 +315,7 @@ void r01_chr_densify_bg_bank(R01Project *p, int bank) {
         memset(b->chr + (size_t)write * R01_TILE_BYTES, 0, (size_t)(old_n - write) * R01_TILE_BYTES);
     }
     b->tile_count = write;
+    remap_world_spr_refs(p, bank, id_map, R01_TILES_PER_BANK);
     for (wi = 0; wi < R01_MAX_WORLDS; wi++) {
         R01World *w = &p->worlds[wi];
         for (si = 0; si < w->screen_count; si++) {
@@ -385,10 +386,7 @@ void r01_project_densify_all_banks(R01Project *p) {
     if (!p) {
         return;
     }
-    for (bi = 0; bi < R01_SPR_BANKS; bi++) {
-        r01_chr_densify_spr_bank(p, bi);
-    }
-    for (bi = 0; bi < R01_BG_BANKS; bi++) {
+    for (bi = 0; bi < R01_CHR_BANKS; bi++) {
         r01_chr_densify_bg_bank(p, bi);
     }
 }
@@ -398,11 +396,7 @@ int r01_world_sprite_add(R01Project *p, int bank, int tile_id, int pal) {
     if (!p || p->sprite_count >= R01_MAX_SPRITES) {
         return -1;
     }
-    if (r01_is_global_spr_bank(bank)) {
-        if (tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
-            return -1;
-        }
-    } else if (bank < 0 || bank >= R01_SPR_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
+    if (bank < 0 || bank >= R01_CHR_BANKS || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         return -1;
     }
     if (pal < 0) {

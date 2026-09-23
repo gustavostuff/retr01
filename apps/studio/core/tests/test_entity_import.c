@@ -85,7 +85,7 @@ TEST_MAIN() {
     {
         int bank0 = p->entities[0].states[0].frames[0].parts[0].bank;
         int tile0 = p->entities[0].states[0].frames[0].parts[0].tile_id;
-        int spr_n = p->spr_banks[0].tile_count;
+        int spr_n = p->chr_banks[0].tile_count;
         int clone;
 
         snprintf(in.name, sizeof(in.name), "clone");
@@ -93,7 +93,7 @@ TEST_MAIN() {
         EXPECT(clone == 1, "clone entity");
         EXPECT(p->entities[1].states[0].frames[0].parts[0].bank == bank0, "clone bank");
         EXPECT(p->entities[1].states[0].frames[0].parts[0].tile_id == tile0, "clone tile");
-        EXPECT(p->spr_banks[0].tile_count == spr_n, "clone reuses chr");
+        EXPECT(p->chr_banks[0].tile_count == spr_n, "clone reuses chr");
         EXPECT(r01_world_entity_remove(p, 1) == 0, "drop clone");
 
         snprintf(in.name, sizeof(in.name), "hero");
@@ -120,7 +120,7 @@ TEST_MAIN() {
         EXPECT(p->entities[0].states[0].hitbox_h == 12, "replace keeps hitbox h");
         EXPECT(p->entities[0].states[0].frames[0].parts[0].bank == bank0, "replace bank");
         EXPECT(p->entities[0].states[0].frames[0].parts[0].tile_id == tile0, "replace tile");
-        EXPECT(p->spr_banks[0].tile_count == spr_n, "replace reuses chr");
+        EXPECT(p->chr_banks[0].tile_count == spr_n, "replace reuses chr");
 
         r01_world_set_player_entity(p, 0);
         idx = r01_world_import_entity_frames_replace(p, &p->worlds[0], 0, &in, err, sizeof(err));
@@ -131,13 +131,13 @@ TEST_MAIN() {
         EXPECT(r01_project_set_player_entity(p, &p->worlds[0], 0) == 0, "sync player flag");
         bank0 = p->entities[0].states[0].frames[0].parts[0].bank;
         tile0 = p->entities[0].states[0].frames[0].parts[0].tile_id;
-        spr_n = p->spr_banks[bank0].tile_count;
+        spr_n = p->chr_banks[bank0].tile_count;
         {
             idx = r01_world_import_entity_frames_replace(p, &p->worlds[0], 0, &in, err, sizeof(err));
             EXPECT(idx == 0, "replace after player mark");
             EXPECT(p->entities[0].states[0].frames[0].parts[0].bank == bank0, "reuse spr bank");
             EXPECT(p->entities[0].states[0].frames[0].parts[0].tile_id == tile0, "reuse spr tile");
-            EXPECT(p->spr_banks[bank0].tile_count == spr_n, "no spr added");
+            EXPECT(p->chr_banks[bank0].tile_count == spr_n, "no spr added");
             EXPECT(p->entities[0].states[0].frames[0].origin_x == 4, "guides after reuse");
             EXPECT(p->entities[0].states[0].frames[0].parts[0].dx == 2, "part dx after reuse");
             EXPECT(p->entities[0].states[0].frames[0].parts[0].dy == 5, "part dy after reuse");
@@ -151,12 +151,12 @@ TEST_MAIN() {
             kit_px(changed, 8, 1, 0, 48, 255);
             kit_px(changed, 8, 7, 7, 16, 255);
             in.states[0].frames[0].rgba = changed;
-            spr_keep = p->spr_banks[bank0].tile_count;
+            spr_keep = p->chr_banks[bank0].tile_count;
             idx = r01_world_import_entity_frames_replace(p, &p->worlds[0], 0, &in, err, sizeof(err));
             EXPECT(idx == 0, "replace changed pixels");
             gbank = p->entities[0].states[0].frames[0].parts[0].bank;
             EXPECT(gbank >= 0 && gbank < R01_SPR_BANKS, "changed pixels stay on spr");
-            EXPECT(p->spr_banks[gbank].tile_count >= spr_keep, "player chr in spr");
+            EXPECT(p->chr_banks[gbank].tile_count >= spr_keep, "player chr in spr");
             EXPECT(p->entities[0].states[0].frames[0].parts[0].dx == 2, "part dx after pixel change");
             in.states[0].frames[0].rgba = rgba;
         }

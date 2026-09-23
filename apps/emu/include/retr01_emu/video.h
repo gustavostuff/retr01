@@ -17,7 +17,7 @@ typedef struct R01eBg0Screen {
 
 typedef struct R01eVideo {
     uint8_t vram[R01E_VRAM_BYTES];
-    uint8_t chr[R01E_CART_GLOBAL_CHR_BANKS][R01E_CHR_BANK_BYTES]; /* 16 BG + 16 SPR */
+    uint8_t chr[R01E_CART_GLOBAL_CHR_BANKS][R01E_CHR_BANK_BYTES]; /* 16 global banks */
     int chr_loaded;
     /* 1 if VRAM camera slot 0-3 holds a present screen (else backdrop). */
     uint8_t slot_present[4];

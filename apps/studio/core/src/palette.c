@@ -137,8 +137,8 @@ uint8_t r01_screen_pixel_color(const R01Project *p, const R01Screen *s, int px, 
     if (r01_attr_flip_v(attr)) {
         sy = 7 - sy;
     }
-    if (p && bank >= 0 && bank < R01_BG_BANKS && tile_id < (uint8_t)p->bg_banks[bank].tile_count) {
-        tile = p->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+    if (p && bank >= 0 && bank < R01_BG_BANKS && tile_id < (uint8_t)p->chr_banks[bank].tile_count) {
+        tile = p->chr_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
         return r01_tile_pixel_color(tile, sx, sy) & 3u;
     }
     return s->pixels[(ty * 8 + sy) * R01_SCREEN_PX_W + (tx * 8 + sx)] & 3u;

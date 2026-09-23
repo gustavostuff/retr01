@@ -997,7 +997,7 @@ static void blit_spr_tile(R01eMachine *m, int sx, int sy, uint8_t tile, uint8_t 
                           uint8_t line_count[R01E_SCREEN_PX_H]) {
     uint8_t bank = (uint8_t)(attr & R01E_ATTR_BANK_MASK);
     uint8_t pal = (uint8_t)((attr & R01E_ATTR_PAL_MASK) >> R01E_ATTR_PAL_SHIFT);
-    const uint8_t *chr = m->video.chr[R01E_BG_BANKS + (bank & 15u)];
+    const uint8_t *chr = m->video.chr[bank & 15u];
     uint8_t tile16[16];
     int px, py;
 
@@ -1035,7 +1035,7 @@ static void blit_spr_tile_atlas(R01eMachine *m, int ax, int ay, uint8_t tile, ui
                                 uint8_t line_count[R01E_VRAM_ATLAS_H]) {
     uint8_t bank = (uint8_t)(attr & R01E_ATTR_BANK_MASK);
     uint8_t pal = (uint8_t)((attr & R01E_ATTR_PAL_MASK) >> R01E_ATTR_PAL_SHIFT);
-    const uint8_t *chr = m->video.chr[R01E_BG_BANKS + (bank & 15u)];
+    const uint8_t *chr = m->video.chr[bank & 15u];
     uint8_t tile16[16];
     int px, py;
 

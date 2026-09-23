@@ -274,11 +274,11 @@ int ui_init(UiState *ui) {
     ui->hide_spr_layer = 0;
     ui->banks_idx = 0;
     ui->global_banks_idx = 0;
-    ui->global_banks_plane = UI_BANKS_PLANE_GLOBAL_SPR;
-    ui->banks_plane = UI_BANKS_PLANE_SPR;
+    ui->global_banks_plane = UI_BANKS_PLANE_GLOBAL_BG;
+    ui->banks_plane = UI_BANKS_PLANE_BG;
     ui->bank_sel_tile = -1;
     ui->bank_sel_bank = 0;
-    ui->bank_sel_plane = UI_BANKS_PLANE_SPR;
+    ui->bank_sel_plane = UI_BANKS_PLANE_BG;
     memset(ui->bank_sel_mask, 0, sizeof(ui->bank_sel_mask));
     memset(ui->bank_sel_mask_before, 0, sizeof(ui->bank_sel_mask_before));
     ui->bank_sel_drag = 0;

@@ -143,7 +143,7 @@ TEST_MAIN() {
             {
                 uint8_t fmt = 0;
                 EXPECT(fread(&fmt, 1, 1, f) == 1, "read format_ver");
-                EXPECT(fmt == R01_CART_FORMAT_VER, "cart format_ver 6");
+                EXPECT(fmt == R01_CART_FORMAT_VER, "cart format_ver");
             }
             EXPECT(fseek(f, prg_off + (long)PRG_PLAY_SPAWN_CELL, SEEK_SET) == 0, "seek prg spawn");
             EXPECT(fread(prg_spawn, 1, 1, f) == 1, "read prg spawn");
@@ -355,7 +355,7 @@ TEST_MAIN() {
                     {
                         uint32_t off_chr_blob = rd_u24(hdr + 8);
                         uint32_t off_chr = rd_u24(ptrs + 18);
-                        uint32_t spr0 = off_chr + (uint32_t)R01_BG_BANKS * R01_CHR_BANK_BYTES;
+                        uint32_t spr0 = off_chr;
                         EXPECT(off_chr_blob == 0, "world CHR omitted");
                         EXPECT(fseek(f, (long)(spr0 + 1u * R01_TILE_BYTES), SEEK_SET) == 0, "seek spr tile1");
                         EXPECT(fread(got, 1, sizeof(got), f) == sizeof(got), "read spr tile1");

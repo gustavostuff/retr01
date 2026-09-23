@@ -18,10 +18,10 @@ typedef struct R01PrgCartLayout {
 #define R01_PRG_BOOTMAP_OFF 0x00E0u
 #define R01_PRG_BOOTMAP_BYTES 16u
 #define R01_PRG_C_OFF 0x4400u /* CPU $C400 */
-#define R01_PRG_WORLDDIR_OFF 0x0500u /* CPU $8500, 7 x u16 play bases */
+#define R01_PRG_WORLDDIR_OFF 0x0500u /* CPU $8500, 8 x u16 play bases */
 #define R01_PRG_WORLDDIR_BYTES 16u
 #define R01_PRG_PLAY_TAB_BYTES 0x0400u /* CPU $8100-$84FF world 0 */
-#define R01_PRG_WPLAY_OFF 0x0800u /* CPU $8800, worlds 1-6 play blocks */
+#define R01_PRG_WPLAY_OFF 0x0800u /* CPU $8800, worlds 1-7 play blocks */
 #define R01_PRG_WPLAY_CPU 0x8800u
 #define R01_PRG_R01P_BYTES 16u
 #define R01_PRG_SOLIDS_MAX 0x0100u /* $8700 to $8800 */

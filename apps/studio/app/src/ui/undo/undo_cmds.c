@@ -1061,7 +1061,7 @@ static void tile_create_undo(UiState *ui, void *data) {
     }
     if (d->bank >= 0 && d->bank < R01_BG_BANKS && d->old_tile_count >= 0 &&
         d->old_tile_count <= R01_TILES_PER_BANK) {
-        p->bg_banks[d->bank].tile_count = d->old_tile_count;
+        p->chr_banks[d->bank].tile_count = d->old_tile_count;
     }
             undo_refresh_world_screens(p, w);
 }
@@ -1120,8 +1120,8 @@ void ui_undo_push_tile_create(UiState *ui, int bank, int tile_id, int old_tile_c
         d->plane = plane;
         d->screen_idx = si;
     }
-    if (bank >= 0 && bank < R01_BG_BANKS && tile_id >= 0 && tile_id < p->bg_banks[bank].tile_count) {
-        memcpy(d->chr, p->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES, R01_TILE_BYTES);
+    if (bank >= 0 && bank < R01_BG_BANKS && tile_id >= 0 && tile_id < p->chr_banks[bank].tile_count) {
+        memcpy(d->chr, p->chr_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES, R01_TILE_BYTES);
     }
     (void)ui_undo_push(&ui->undo, &tile_create_vt, d, "add tile");
 }
@@ -1432,7 +1432,7 @@ static void bank_tile_trim_count(UiState *ui, UiUndoBankTileRemove *d) {
     w = &ui->project->worlds[d->world_idx];
     R01Project *p = ui->project;
     if (d->bank_plane == UI_BANKS_PLANE_GLOBAL_SPR && d->bank >= 0 && d->bank < R01_SPR_BANKS) {
-        R01ChrBank *b = &ui->project->spr_banks[d->bank];
+        R01ChrBank *b = &ui->project->chr_banks[d->bank];
         while (b->tile_count > 0) {
             int id = b->tile_count - 1;
             const uint8_t *t = b->chr + (size_t)id * R01_TILE_BYTES;
@@ -1442,7 +1442,7 @@ static void bank_tile_trim_count(UiState *ui, UiUndoBankTileRemove *d) {
             b->tile_count--;
         }
     } else if (d->bank_plane == UI_BANKS_PLANE_GLOBAL_BG && d->bank >= 0 && d->bank < R01_BG_BANKS) {
-        R01ChrBank *b = &ui->project->bg_banks[d->bank];
+        R01ChrBank *b = &ui->project->chr_banks[d->bank];
         while (b->tile_count > 0) {
             int id = b->tile_count - 1;
             const uint8_t *t = b->chr + (size_t)id * R01_TILE_BYTES;
@@ -1452,7 +1452,7 @@ static void bank_tile_trim_count(UiState *ui, UiUndoBankTileRemove *d) {
             b->tile_count--;
         }
     } else if (d->bank_plane == UI_BANKS_PLANE_SPR && d->bank >= 0 && d->bank < R01_SPR_BANKS) {
-        R01ChrBank *b = &p->spr_banks[d->bank];
+        R01ChrBank *b = &p->chr_banks[d->bank];
         while (b->tile_count > 0) {
             int id = b->tile_count - 1;
             const uint8_t *t = b->chr + (size_t)id * R01_TILE_BYTES;
@@ -1462,7 +1462,7 @@ static void bank_tile_trim_count(UiState *ui, UiUndoBankTileRemove *d) {
             b->tile_count--;
         }
     } else if (d->bank_plane == UI_BANKS_PLANE_BG && d->bank >= 0 && d->bank < R01_BG_BANKS) {
-        R01ChrBank *b = &p->bg_banks[d->bank];
+        R01ChrBank *b = &p->chr_banks[d->bank];
         while (b->tile_count > 0) {
             int id = b->tile_count - 1;
             const uint8_t *t = b->chr + (size_t)id * R01_TILE_BYTES;
@@ -1486,20 +1486,20 @@ static void bank_tile_remove_apply(UiState *ui, UiUndoBankTileRemove *d, int use
     (void)bank_tile_remove_write_chr(ui, d, use_new ? blank : d->old_chr);
     if (!use_new) {
         if (d->bank_plane == UI_BANKS_PLANE_GLOBAL_SPR && d->bank >= 0 && d->bank < R01_SPR_BANKS) {
-            if (d->old_tile_count > ui->project->spr_banks[d->bank].tile_count) {
-                ui->project->spr_banks[d->bank].tile_count = d->old_tile_count;
+            if (d->old_tile_count > ui->project->chr_banks[d->bank].tile_count) {
+                ui->project->chr_banks[d->bank].tile_count = d->old_tile_count;
             }
         } else if (d->bank_plane == UI_BANKS_PLANE_GLOBAL_BG && d->bank >= 0 && d->bank < R01_BG_BANKS) {
-            if (d->old_tile_count > ui->project->bg_banks[d->bank].tile_count) {
-                ui->project->bg_banks[d->bank].tile_count = d->old_tile_count;
+            if (d->old_tile_count > ui->project->chr_banks[d->bank].tile_count) {
+                ui->project->chr_banks[d->bank].tile_count = d->old_tile_count;
             }
         } else if (d->bank_plane == UI_BANKS_PLANE_SPR && d->bank >= 0 && d->bank < R01_SPR_BANKS) {
-            if (d->old_tile_count > p->spr_banks[d->bank].tile_count) {
-                p->spr_banks[d->bank].tile_count = d->old_tile_count;
+            if (d->old_tile_count > p->chr_banks[d->bank].tile_count) {
+                p->chr_banks[d->bank].tile_count = d->old_tile_count;
             }
         } else if (d->bank_plane == UI_BANKS_PLANE_BG && d->bank >= 0 && d->bank < R01_BG_BANKS) {
-            if (d->old_tile_count > p->bg_banks[d->bank].tile_count) {
-                p->bg_banks[d->bank].tile_count = d->old_tile_count;
+            if (d->old_tile_count > p->chr_banks[d->bank].tile_count) {
+                p->chr_banks[d->bank].tile_count = d->old_tile_count;
             }
         }
     }
@@ -1617,10 +1617,10 @@ void ui_undo_push_bank_tile_remove(UiState *ui, int bank_plane, int bank, int ti
     } else if (bank_plane == UI_BANKS_PLANE_SPR) {
         src = r01_chr_spr_tile(p, bank, tile_id);
     } else {
-        if (bank < 0 || bank >= R01_BG_BANKS || tile_id >= p->bg_banks[bank].tile_count) {
+        if (bank < 0 || bank >= R01_BG_BANKS || tile_id >= p->chr_banks[bank].tile_count) {
             return;
         }
-        src = p->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+        src = p->chr_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
     }
     if (!src) {
         return;
@@ -1636,13 +1636,13 @@ void ui_undo_push_bank_tile_remove(UiState *ui, int bank_plane, int bank, int ti
     d->tile_id = tile_id;
     memcpy(d->old_chr, src, R01_TILE_BYTES);
     if (bank_plane == UI_BANKS_PLANE_GLOBAL_SPR) {
-        d->old_tile_count = ui->project->spr_banks[bank].tile_count;
+        d->old_tile_count = ui->project->chr_banks[bank].tile_count;
     } else if (bank_plane == UI_BANKS_PLANE_GLOBAL_BG) {
-        d->old_tile_count = ui->project->bg_banks[bank].tile_count;
+        d->old_tile_count = ui->project->chr_banks[bank].tile_count;
     } else if (bank_plane == UI_BANKS_PLANE_SPR) {
-        d->old_tile_count = p->spr_banks[bank].tile_count;
+        d->old_tile_count = p->chr_banks[bank].tile_count;
     } else {
-        d->old_tile_count = p->bg_banks[bank].tile_count;
+        d->old_tile_count = p->chr_banks[bank].tile_count;
     }
 
     if (bank_plane == UI_BANKS_PLANE_BG) {

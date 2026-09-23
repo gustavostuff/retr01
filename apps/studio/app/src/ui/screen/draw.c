@@ -308,10 +308,10 @@ static void draw_bg_tile_ghost(UiState *ui, SDL_Renderer *r, const R01World *w, 
     if (row < 0 || row >= R01_PAL_ROWS) {
         row = 0;
     }
-    if (bank < 0 || bank >= R01_BG_BANKS || tile_id >= (uint8_t)p->bg_banks[bank].tile_count) {
+    if (bank < 0 || bank >= R01_BG_BANKS || tile_id >= (uint8_t)p->chr_banks[bank].tile_count) {
         return;
     }
-    raw = p->bg_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
+    raw = p->chr_banks[bank].chr + (size_t)tile_id * R01_TILE_BYTES;
     r01_tile_orient(raw, r01_attr_flip_h(attr), r01_attr_flip_v(attr), oriented);
     SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
     for (sy = 0; sy < 8; sy++) {

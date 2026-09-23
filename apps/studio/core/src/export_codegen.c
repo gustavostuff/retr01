@@ -453,13 +453,7 @@ static int write_data_bins(const char *data_dir, const R01Project *p, char *err_
     if (join_path_err(path, sizeof(path), data_dir, "chr_bg0.bin", err_buf, err_cap) != 0) {
         return -1;
     }
-    if (write_bytes(path, p->bg_banks[0].chr, R01_BANK_CHR_BYTES, err_buf, err_cap) != 0) {
-        return -1;
-    }
-    if (join_path_err(path, sizeof(path), data_dir, "chr_spr0.bin", err_buf, err_cap) != 0) {
-        return -1;
-    }
-    if (write_bytes(path, p->spr_banks[0].chr, R01_BANK_CHR_BYTES, err_buf, err_cap) != 0) {
+    if (write_bytes(path, p->chr_banks[0].chr, R01_BANK_CHR_BYTES, err_buf, err_cap) != 0) {
         return -1;
     }
 

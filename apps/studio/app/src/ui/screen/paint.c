@@ -42,10 +42,11 @@ void ui_paint_stamp_from_cell(UiState *ui, int tx, int ty) {
 }
 
 void ui_paint_stamp_from_bank(UiState *ui, int plane, int bank, int tile_id) {
+    (void)plane;
     if (!ui || tile_id < 0 || tile_id >= R01_TILES_PER_BANK) {
         return;
     }
-    if (plane != UI_BANKS_PLANE_BG || bank < 0 || bank >= R01_BG_BANKS) {
+    if (bank < 0 || bank >= R01_CHR_BANKS) {
         ui->paint_stamp_valid = 0;
         return;
     }
@@ -218,7 +219,7 @@ void ui_paint_tile(UiState *ui, int tx, int ty) {
         return;
     }
     if (!ui_paint_stamp_ready(ui)) {
-        if (bank_sel_valid(ui) && ui->bank_sel_plane == UI_BANKS_PLANE_BG) {
+        if (bank_sel_valid(ui)) {
             ui_paint_stamp_from_bank(ui, ui->bank_sel_plane, ui->bank_sel_bank, ui->bank_sel_tile);
         } else if (screen_sel_valid(ui)) {
             ui_paint_stamp_from_selection(ui);
@@ -280,7 +281,7 @@ void ui_flood_fill(UiState *ui, int tx, int ty) {
         return;
     }
     if (!ui_paint_stamp_ready(ui)) {
-        if (bank_sel_valid(ui) && ui->bank_sel_plane == UI_BANKS_PLANE_BG) {
+        if (bank_sel_valid(ui)) {
             ui_paint_stamp_from_bank(ui, ui->bank_sel_plane, ui->bank_sel_bank, ui->bank_sel_tile);
         } else if (screen_sel_valid(ui)) {
             ui_paint_stamp_from_selection(ui);
