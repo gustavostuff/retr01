@@ -32,8 +32,6 @@ As for the cartridge, it's a simple and small PCB (close to Game Boy size) with 
 
 Game pads are planned to use 3 wires (3.5mm TRS connections, as mentioned above, so any audio aux cable can be used), and a serial protocol for communication (using an ATtiny). Everything officially supported as both THT and SMT! (with one exception: the chip to generate composite video).
 
-A W65C02S runs the game logic, while a few helper chips and small glue logic handle video, inputs, saves, and audio mixing. Output is dual sync RGB (RGBS and RGBHV) and composite. The cartridge is a simple, serviceable part of the system rather than a black box.
-
 ## Software pieces
 
 Retr01 Emu runs .retr01 ROM images.
