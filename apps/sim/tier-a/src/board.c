@@ -53,6 +53,13 @@ static void strip_union(int a, int b) {
     }
 }
 
+static int strip_on_gnd_rail(int s) {
+    NsPbHole tn = {0, NS_PB_LANE_TOP_NEG};
+    NsPbHole bn = {0, NS_PB_LANE_BOT_NEG};
+    int r = strip_find(s);
+    return r == strip_find(ns_breadboard_strip_id(tn)) || r == strip_find(ns_breadboard_strip_id(bn));
+}
+
 typedef struct R01aRoutePin {
     NsEntity *e;
     int pi;
@@ -296,17 +303,21 @@ static void board_bb_rebuild(R01aBoard *b, NsIsland *island) {
                 if (!ns_breadboard_tip_strip(bb, t1x, t1y, &s1) || !ns_breadboard_tip_strip(bb, t2x, t2y, &s2)) {
                     continue;
                 }
+                /* Load to a GND rail is not a DC short (75 ohm DAC). Series R still unions. */
+                if (strip_on_gnd_rail(s1) || strip_on_gnd_rail(s2)) {
+                    continue;
+                }
                 strip_union(s1, s2);
             }
         }
         if (bb_is_powered(bb)) {
-            int half;
+            int k;
             route_pwr_bb_i = bb_i;
-            for (half = 0; half < 2; half++) {
-                NsPbHole hp = {half ? NS_PB_RAIL_GAP_END : 0, NS_PB_LANE_TOP_POS};
-                NsPbHole hn = {half ? NS_PB_RAIL_GAP_END : 0, NS_PB_LANE_TOP_NEG};
-                route_vdd_root[half] = strip_find(ns_breadboard_strip_id(hp));
-                route_gnd_root[half] = strip_find(ns_breadboard_strip_id(hn));
+            for (k = 0; k < 2; k++) {
+                NsPbHole hp = {0, k ? NS_PB_LANE_BOT_POS : NS_PB_LANE_TOP_POS};
+                NsPbHole hn = {0, k ? NS_PB_LANE_BOT_NEG : NS_PB_LANE_TOP_NEG};
+                route_vdd_root[k] = strip_find(ns_breadboard_strip_id(hp));
+                route_gnd_root[k] = strip_find(ns_breadboard_strip_id(hn));
             }
         }
         for (s = 0; s < island->entity_count; s++) {

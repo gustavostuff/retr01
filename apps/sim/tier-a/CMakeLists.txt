@@ -24,6 +24,7 @@ add_library(retr01_sim_tier_a_core
   chips/ad724.c
   src/board.c
   src/layout.c
+  src/netlist.c
   ${R01_COMMON_DIR}/r01_kit_palette.c
 )
 target_include_directories(retr01_sim_tier_a_core PUBLIC
@@ -77,3 +78,4 @@ r01a_unit_test(test_tier_a_bars)
 r01a_unit_test(test_manual_bb)
 r01a_unit_test(test_layout)
 r01a_unit_test(test_passives)
+r01a_unit_test(test_netlist)

@@ -125,26 +125,24 @@ int ns_breadboard_hole_exists(NsPbHole h) {
 }
 
 int ns_breadboard_strip_id(NsPbHole h) {
-    int rail_half;
     if (h.lane >= NS_PB_LANE_A && h.lane <= NS_PB_LANE_E) {
         return h.col;
     }
     if (h.lane >= NS_PB_LANE_F && h.lane <= NS_PB_LANE_J) {
         return NS_PB_COLS + h.col;
     }
-    /* Power rails: mid-break splits each lane into two independent buses. */
-    rail_half = (h.col >= NS_PB_RAIL_GAP_END) ? 1 : 0;
+    /* Painted rail gap is visual. Each + or - lane is one bus. */
     if (h.lane == NS_PB_LANE_TOP_POS) {
-        return NS_PB_COLS * 2 + 0 + rail_half * 4;
+        return NS_PB_COLS * 2 + 0;
     }
     if (h.lane == NS_PB_LANE_TOP_NEG) {
-        return NS_PB_COLS * 2 + 1 + rail_half * 4;
+        return NS_PB_COLS * 2 + 1;
     }
     if (h.lane == NS_PB_LANE_BOT_POS) {
-        return NS_PB_COLS * 2 + 2 + rail_half * 4;
+        return NS_PB_COLS * 2 + 2;
     }
     if (h.lane == NS_PB_LANE_BOT_NEG) {
-        return NS_PB_COLS * 2 + 3 + rail_half * 4;
+        return NS_PB_COLS * 2 + 3;
     }
     return 0;
 }

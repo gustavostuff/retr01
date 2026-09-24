@@ -1,5 +1,5 @@
 
-example_01/retr01.prg.elf:	file format elf32-mos
+/home/g/Repos/retr01/example_01/retr01.prg.elf:	file format elf32-mos
 
 Disassembly of section .boot:
 

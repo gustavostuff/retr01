@@ -21,7 +21,7 @@ enum {
 
 #define R01A_WIRE_AUTO 0
 #define R01A_WIRE_MANUAL 1
-#define R01A_JUMPER_MAX 64
+#define R01A_JUMPER_MAX 256
 #define R01A_BB_EXTRA_MAX 7
 #define R01A_BB_REF_LEN 12
 

@@ -17,11 +17,11 @@ No CPU, cart, AVRs, VRAM, or Compositor.
 | Mode | Wiring |
 | --- | --- |
 | Auto | Soft netlist (virtual wires). Color bars without placing jumpers. |
-| Manual | No virtual wires. A pin conducts only when its tip sits on a breadboard strip, including strips joined by jumpers or by resistors, also across protoboards. Caps occupy holes and do not pass DC. DIP pads draw gray. A 1 px pulse on each tip: black/green if that pin is on a hole, orange if the part is only partly seated, black/red (faster) if two pins of the same part share a strip or jumper. The lab runs once the Auto netlist is on the protoboard. |
+| Manual | No virtual wires. A pin conducts only when its tip sits on a breadboard strip, including strips joined by jumpers or by resistors, also across protoboards. Caps occupy holes and do not pass DC. DIP pads draw gray. A 1 px pulse on each tip: black/green if that pin is on a hole, orange if the part is only partly seated, black/red (faster) if two pins of the same part share a strip or jumper. The lab runs once the Auto netlist is on the protoboard. Manual mode lists netlist faults at the top-left: open Auto links, unseated pins, and hard shorts (5 V to GND, data or clock to a rail, two data nets tied). Jumpers and strips are hard ties. Resistors are not. |
 
-BB1 north rails supply 5 V (top positive) and GND (top negative). Extra protoboards have none. Auto binds VDD/GND on chip pins without breadboard work. In Manual, VDD, GND, clocks, and the rest need breadboard connections, including those north rails. OSC OE# may float (not low). PROM CE#/OE# must be tied low. The LCD is blank until that protoboard netlist encodes.
+BB1 + and - rails supply 5 V (positive lanes) and GND (negative lanes), top and bottom. The painted gap on a rail is visual. Each + or - lane is one bus. Extra protoboards have none until a jumper reaches a BB1 rail of that polarity. Auto binds VDD/GND on chip pins without breadboard work. In Manual, VDD, GND, clocks, and the rest need breadboard connections, including those BB1 rails. OSC OE# may float (not low). PROM CE#/OE# must be tied low. The LCD is blank until that protoboard netlist encodes.
 
-Pin hover draws a line from that pin to Auto-net partners on other parts. Space toggles those lines between hover only and always on. The line pulses from fully transparent to a net color: red power, green data, cyan clock, black ground. Pins on the ground net (GND/AGND/DGND, PROM CE#/OE# and unused A[13:6], AD724 SELECT, 75 ohm DAC loads) route to a nearby north negative-rail hole on BB1 (left or right edge). Hovering a north GND rail hole on BB1 draws the same lines out to those pins. Hovering a north positive rail hole on BB1 draws lines to the 5 V net (VDD/VCC/APOS/DPOS, oscillator OE#, PLD RES#, PROM VPP/PGM#, AD724 ENCD/STND/VSYNC). Extra protoboard rails are isolated and do not show those lines. A line is omitted once that link already exists on a breadboard strip or jumper.
+Pin hover draws a line from that pin to Auto-net partners on other parts. Space toggles those lines between hover only and always on. The line pulses from fully transparent to a net color: red power, green data, cyan clock, black ground. Pins on the ground net (GND/AGND/DGND, PROM CE#/OE# and unused A[13:6], AD724 SELECT, 75 ohm DAC loads) route to a nearby BB1 negative-rail hole. Hovering a GND rail hole on BB1 draws the same lines out to those pins. Hovering a positive rail hole on BB1 draws lines to the 5 V net (VDD/VCC/APOS/DPOS, oscillator OE#, PLD RES#, PROM VPP/PGM#, AD724 ENCD/STND/VSYNC). Extra protoboard rails are isolated and do not show those lines. A line is omitted once that link already exists on a breadboard strip or jumper.
 
 Part positions, breadboard jumpers, pan, zoom, air-wire visibility, and Auto/Manual are written to `ui_layout.json` on quit and restored on the next launch.
 
@@ -48,8 +48,8 @@ While running, each UI frame advances a short DOT burst under a wall-clock budge
 | Click a breadboard | Select. Delete/Backspace removes selected protoboards and their jumpers. |
 | X | Clear jumpers |
 | Hover a pin | Line to Auto-net partners, or to BB1 GND rail. Pulses transparent to red (power), green (data), cyan (clock), or black (ground). Omits links already on a strip or jumper |
-| Hover a GND rail hole | On BB1 north negative rail: pulsing black lines to ground-net IC and passive pins still missing a strip or jumper |
-| Hover a VDD rail hole | On BB1 north positive rail: pulsing red lines to 5 V-net IC and passive pins still missing a strip or jumper |
+| Hover a GND rail hole | On a BB1 negative rail: pulsing black lines to ground-net IC and passive pins still missing a strip or jumper |
+| Hover a VDD rail hole | On a BB1 positive rail: pulsing red lines to 5 V-net IC and passive pins still missing a strip or jumper |
 | Right-click empty board | Add resistor, cap, oscillator, diode, or breadboard |
 | Left-drag | Move a part (Shift-click adds to the selection). ICs and passives snap to holes. |
 | Ctrl+drag resistor tip | Stretch that lead along the body axis. The seating pulse sits at the new end. Snaps to holes. |
@@ -60,7 +60,7 @@ While running, each UI frame advances a short DOT burst under a wall-clock budge
 | R | Rotate selected DIP or breadboard 90 deg CW |
 | Double-click screen | Toggle LCD 1x (centered playfield, black overscan) / 2x (fill) |
 | Space | Toggle air wires always on vs hover only |
-| Enter / Return | Pause / resume. Same in Manual and Auto |
+| Enter / Return | Pause / resume. Same in Manual and Auto. Manual LCD stays blank until the protoboard matches the Auto netlist and encode can lock. |
 | . | Single DOT half-step while paused |
 | Ctrl+R | Reset |
 | Ctrl+Z / Ctrl+Y | Undo / redo board or part moves, resistor lead stretch, jumper create, and deletes |

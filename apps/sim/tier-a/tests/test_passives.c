@@ -160,6 +160,42 @@ int main(void) {
     }
 
     {
+        R01aBoard loadb;
+        NsPassive *r75 = NULL;
+        NsEntity *osc;
+        NsPbHole gnd = {0, NS_PB_LANE_TOP_NEG};
+        NsPbHole loadh = {10, NS_PB_LANE_A};
+        int hx;
+        int hy;
+        int tx;
+        int ty;
+        r01a_board_init(&loadb);
+        r01a_board_set_wire_mode(&loadb, R01A_WIRE_MANUAL);
+        osc = r01a_osc_dot_entity(&loadb.osc_dot);
+        for (i = 0; i < loadb.passives.count; i++) {
+            if (loadb.passives.parts[i].kind == NS_PASSIVE_R &&
+                strcmp(loadb.passives.parts[i].value, "75.0") == 0) {
+                r75 = &loadb.passives.parts[i];
+                break;
+            }
+        }
+        expect_true(r75 != NULL, "75 ohm load R");
+        expect_true(r01a_board_jumper_add(&loadb, gnd, loadh), "GND to load column");
+        ns_passive_set_orient(r75, NS_ORIENT_0);
+        ns_passive_set_pivot(r75, 0, 0);
+        expect_true(ns_passive_tip_board(r75, 2, &tx, &ty), "75 pin2");
+        ns_breadboard_hole_world(&loadb.breadboard, loadh, &hx, &hy);
+        ns_passive_set_pivot(r75, hx - tx, hy - ty);
+        ns_entity_place(osc, 0, 0);
+        expect_true(ns_entity_pin_tip_board(osc, 7, &tx, &ty), "OSC GND for load");
+        ns_breadboard_hole_world(&loadb.breadboard, gnd, &hx, &hy);
+        ns_entity_place(osc, hx - tx, hy - ty);
+        r01a_board_step(&loadb);
+        expect_true(ns_entity_sense(osc, "GND") == NS_LVL_L, "75 ohm to GND does not bus-fight GND");
+        r01a_board_shutdown(&loadb);
+    }
+
+    {
         NsPassive a;
         NsPassive b;
         memset(&a, 0, sizeof(a));
