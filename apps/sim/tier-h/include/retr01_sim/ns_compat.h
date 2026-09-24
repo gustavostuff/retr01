@@ -300,6 +300,7 @@ int r01s_island_builder_count_bom_ic(const R01sIslandBuilder *builder);
 #define r01s_pin_netlist_name_net ns_pin_netlist_name_net
 #define r01s_pin_netlist_net_count ns_pin_netlist_net_count
 #define r01s_pin_netlist_same_net ns_pin_netlist_same_net
+#define r01s_pin_netlist_write_json ns_pin_netlist_write_json
 
 #define r01s_video_sink_init ns_video_sink_init
 #define r01s_video_sink_entity ns_video_sink_entity

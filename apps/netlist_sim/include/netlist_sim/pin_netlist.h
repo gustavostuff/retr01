@@ -3,6 +3,8 @@
 
 #include "netlist_sim/entity.h"
 
+#include <stdio.h>
+
 /*
  * Pin-level connectivity (union-find). Used for schematic overlay, breadboard
  * routing, and future KiCad/Skidl export. Does not drive ns_bus settle by itself.
@@ -46,5 +48,11 @@ int ns_pin_netlist_net_count(NsPinNetlist *nl);
 
 /* True when both named pins share the same union-find net (after linking). */
 int ns_pin_netlist_same_net(NsPinNetlist *nl, NsEntity *ea, const char *an, NsEntity *eb, const char *bn);
+
+/*
+ * Write Tier-H / sim pin graph as JSON for Skidl or other ECAD tools.
+ * Output is illustrative only (see docs/bringup/tier-h-skidl-export.md).
+ */
+int ns_pin_netlist_write_json(const NsPinNetlist *nl, FILE *out);
 
 #endif

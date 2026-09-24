@@ -70,3 +70,5 @@ Weighted **R1–R8** from **U24** `O7`…`O0` to **SCR1** `RIN`/`GIN`/`BIN` (tie
 - Extra PLD helpers (`UPLDA`, `UPLDB`, `UPLDI`, …) share the real BOM refdes where applicable but are not all in the locked-16 bypass table.
 
 When AD724 and optional HC14 land in sim, extend `board_schematic.c` rather than duplicating links in UI code.
+
+**Skidl / KiCad (preliminary only):** [`tier-h-skidl-export.md`](tier-h-skidl-export.md) — not fabrication-ready.

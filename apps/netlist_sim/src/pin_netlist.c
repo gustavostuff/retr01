@@ -187,3 +187,146 @@ int ns_pin_netlist_net_count(NsPinNetlist *nl) {
     }
     return nroots;
 }
+
+static void json_escape_str(FILE *out, const char *s) {
+    if (!out) {
+        return;
+    }
+    fputc('"', out);
+    if (s) {
+        while (*s) {
+            unsigned char c = (unsigned char)*s++;
+            if (c == '"' || c == '\\') {
+                fputc('\\', out);
+                fputc((int)c, out);
+            } else if (c < 32) {
+                fprintf(out, "\\u%04x", c);
+            } else {
+                fputc((int)c, out);
+            }
+        }
+    }
+    fputc('"', out);
+}
+
+static int collect_roots(const NsPinNetlist *nl, int *roots, int max_roots) {
+    int nroots = 0;
+    int i;
+    if (!nl || !roots || max_roots <= 0) {
+        return 0;
+    }
+    for (i = 0; i < nl->slot_count; i++) {
+        int r = ns_pin_netlist_root(nl, i);
+        int k;
+        int seen = 0;
+        if (r < 0) {
+            continue;
+        }
+        for (k = 0; k < nroots; k++) {
+            if (roots[k] == r) {
+                seen = 1;
+                break;
+            }
+        }
+        if (!seen && nroots < max_roots) {
+            roots[nroots++] = r;
+        }
+    }
+    return nroots;
+}
+
+static void sort_roots(int *roots, int n) {
+    int i;
+    int j;
+    for (i = 1; i < n; i++) {
+        int key = roots[i];
+        for (j = i; j > 0 && roots[j - 1] > key; j--) {
+            roots[j] = roots[j - 1];
+        }
+        roots[j] = key;
+    }
+}
+
+int ns_pin_netlist_write_json(const NsPinNetlist *nl, FILE *out) {
+    int roots[NS_PIN_NETLIST_MAX];
+    int nroots;
+    int ni;
+    int first_net = 1;
+
+    if (!out) {
+        return -1;
+    }
+    if (!nl) {
+        fprintf(out, "{\"error\":\"null netlist\"}\n");
+        return -1;
+    }
+
+    nroots = collect_roots(nl, roots, NS_PIN_NETLIST_MAX);
+    sort_roots(roots, nroots);
+
+    fputs("{\n", out);
+    fputs("  \"meta\": {\n", out);
+    fputs("    \"source\": \"retr01-tier-h-pin-netlist\",\n", out);
+    fputs("    \"purpose\": \"preliminary_pcb_illustrative_only\",\n", out);
+    fputs("    \"fabrication_ready\": false,\n", out);
+    fputs("    \"note\": \"Not for production PCB. Sim connectivity + BOM passives; AD724/HC14/cart edge gaps remain.\"\n", out);
+    fputs("  },\n", out);
+    fprintf(out, "  \"net_count\": %d,\n", nroots);
+    fputs("  \"nets\": [\n", out);
+
+    for (ni = 0; ni < nroots; ni++) {
+        int root = roots[ni];
+        const char *nname = nl->net_name[root];
+        char auto_name[32];
+        int i;
+        int first_node = 1;
+
+        if (!first_net) {
+            fputs(",\n", out);
+        }
+        first_net = 0;
+
+        fputs("    {\n", out);
+        fputs("      \"name\": ", out);
+        if (nname && nname[0]) {
+            json_escape_str(out, nname);
+        } else {
+            snprintf(auto_name, sizeof(auto_name), "NET_%d", root);
+            json_escape_str(out, auto_name);
+        }
+        fputs(",\n", out);
+        fputs("      \"nodes\": [\n", out);
+
+        for (i = 0; i < nl->slot_count; i++) {
+            NsEntity *e;
+            const NsPin *pin;
+            if (ns_pin_netlist_root(nl, i) != root) {
+                continue;
+            }
+            e = nl->slots[i].entity;
+            if (!e || nl->slots[i].pin_index < 0 || nl->slots[i].pin_index >= e->pin_count) {
+                continue;
+            }
+            pin = &e->pins[nl->slots[i].pin_index];
+            if (!first_node) {
+                fputs(",\n", out);
+            }
+            first_node = 0;
+            fputs("        {\"ref\": ", out);
+            json_escape_str(out, e->refdes ? e->refdes : "?");
+            fputs(", \"pin\": ", out);
+            json_escape_str(out, pin->name ? pin->name : "?");
+            fprintf(out, ", \"num\": %d", pin->number);
+            if (e->part && e->part[0]) {
+                fputs(", \"part\": ", out);
+                json_escape_str(out, e->part);
+            }
+            fputs("}", out);
+        }
+
+        fputs("\n      ]\n    }", out);
+    }
+
+    fputs("\n  ]\n}\n", out);
+    return 0;
+}

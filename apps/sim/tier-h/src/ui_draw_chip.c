@@ -547,6 +547,9 @@ int ui_chip_pin_tip_board(const R01sEntity *e, int pin_num, int *tbx, int *tby) 
     if (!e || !tbx || !tby) {
         return 0;
     }
+    if (e->visual == R01S_ENTITY_VIS_PASSIVE) {
+        return r01s_passive_tip_board((const R01sPassive *)(const void *)e, pin_num, tbx, tby);
+    }
     dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
     if (pin_num < 1 || pin_num > dip) {
         return 0;

@@ -66,6 +66,11 @@ static int pin_skip_wire(const R01sPin *p) {
     return !p || p->dir == R01S_PIN_NC || p->dir == R01S_PIN_PWR;
 }
 
+/* Schematic air wires: show bypass / power / crystal nets (include PWR pins). */
+static int pin_skip_wire_overlay(const R01sPin *p) {
+    return !p || p->dir == R01S_PIN_NC;
+}
+
 static int pin_name_eq_dq(const char *d, const char *dq) {
     if (d[0] != 'D' || dq[0] != 'D' || dq[1] != 'Q') {
         return 0;
@@ -216,6 +221,17 @@ static int ui_pin_dip_package(const R01sEntity *e, int pin_index) {
     return num >= 1 && num <= dip;
 }
 
+/* DIP IC/OSC, or any passive pin (CCAP/R/OSC4 legs use non-contiguous pin numbers). */
+static int ui_pin_wire_endpoint(const R01sEntity *e, int pin_index) {
+    if (!e || pin_index < 0 || pin_index >= e->pin_count) {
+        return 0;
+    }
+    if (e->visual == R01S_ENTITY_VIS_PASSIVE) {
+        return 1;
+    }
+    return ui_pin_dip_package(e, pin_index);
+}
+
 int ui_hit_chip_pin(const R01sUi *ui, int lx, int ly, int *chip_out, int *pin_out) {
     int best_chip = -1;
     int best_pin = -1;
@@ -291,7 +307,7 @@ static int ui_pin_net_pick_peer(const R01sUi *ui, const R01sEntity *src, int pin
         return 0;
     }
     peer_e = ui->chips[peer_chip];
-    if (!peer_e || !ui_pin_dip_package(peer_e, peer_pin)) {
+    if (!peer_e || !ui_pin_wire_endpoint(peer_e, peer_pin)) {
         return 0;
     }
     if (peer_e == src && peer_pin == pin_i) {
@@ -456,7 +472,7 @@ int ui_pin_net_peer(const R01sUi *ui, int chip_i, int pin_i, int *peer_chip_out,
         return 0;
     }
     src_pin = &src->pins[pin_i];
-    if (pin_skip_wire(src_pin)) {
+    if (pin_skip_wire_overlay(src_pin)) {
         return 0;
     }
     if (!ui_chip_pin_screen_center(ui, src, pin_i, &sx, &sy)) {
@@ -611,7 +627,7 @@ static void ui_draw_pin_peers_all(SDL_Renderer *r, const R01sUi *ui, int chip_i,
         return;
     }
     src_pin = &src->pins[pin_i];
-    if (pin_skip_wire(src_pin) || !ui_pin_dip_package(src, pin_i)) {
+    if (pin_skip_wire_overlay(src_pin) || !ui_pin_dip_package(src, pin_i)) {
         return;
     }
     if (!ui_chip_pin_screen_center(ui, src, pin_i, &sx, &sy)) {
@@ -645,7 +661,7 @@ static void ui_draw_pin_peers_all(SDL_Renderer *r, const R01sUi *ui, int chip_i,
             }
             peer_e = nl->slots[i].entity;
             peer_pin = nl->slots[i].pin_index;
-            if (!peer_e || peer_e == src || !ui_pin_dip_package(peer_e, peer_pin)) {
+            if (!peer_e || peer_e == src || !ui_pin_wire_endpoint(peer_e, peer_pin)) {
                 continue;
             }
             peer_chip = ui_chip_index(ui, peer_e);

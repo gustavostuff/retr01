@@ -45,6 +45,8 @@ Full console passive BOM ([`docs/passive_bom.md`](../../docs/passive_bom.md)): *
 
 Sprites: `app/assets/png/passives/` (nano `scaled_down`). Pivot from filename `KIND_x_y.png`. Drag / snap / rotate about that pivot. **Passives are in `R01sBoard.pin_netlist`** (every BOM pin registered; bypass/DAC/series/pull-ups wired in `src/board_schematic.c` per [`docs/bringup/schematic-netlist-tier-h.md`](../../docs/bringup/schematic-netlist-tier-h.md)). Breadboard strip merge and bus settle through passives are still TODO.
 
+**Preliminary Skidl export (not fab-ready):** build `export_tier_h_netlist`, then [`scripts/skidl_from_tier_h.py`](../../scripts/skidl_from_tier_h.py) — see [`docs/bringup/tier-h-skidl-export.md`](../../docs/bringup/tier-h-skidl-export.md). Illustrative PCB exploration only; motherboard PCB is not ready for production.
+
 ### Canvas islands
 
 | Island | Components (canvas) |
