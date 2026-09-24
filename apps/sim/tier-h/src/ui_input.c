@@ -72,34 +72,8 @@ static int island_hit_stack(const R01sUi *ui, int *out_idx, int max_out) {
     return k;
 }
 
-/* Topmost chip of this island under (lx,ly), or -1. */
-/* Topmost SCR1 / SCREEN_SINK under (lx, ly), or -1. */
-static int hit_screen_sink(const R01sUi *ui, int lx, int ly) {
-    int rank;
-    int n_chips;
-
-    if (!ui || !ui_logic_in_view(lx, ly)) {
-        return -1;
-    }
-    n_chips = ui->chip_z_count > 0 ? ui->chip_z_count : ui->chip_count;
-    for (rank = n_chips - 1; rank >= 0; rank--) {
-        int ci = (rank < ui->chip_z_count) ? (int)ui->chip_z_order[rank] : rank;
-        R01sEntity *e;
-        if (ci < 0 || ci >= ui->chip_count) {
-            continue;
-        }
-        e = ui->chips[ci];
-        if (!e || ui_chip_hidden(ui, e)) {
-            continue;
-        }
-        if (e->visual != R01S_ENTITY_VIS_DISPLAY || !e->part || strcmp(e->part, "SCREEN_SINK") != 0) {
-            continue;
-        }
-        if (hit_chip(ui, e, lx, ly)) {
-            return ci;
-        }
-    }
-    return -1;
+static int entity_is_screen_sink(const R01sEntity *e) {
+    return e && e->visual == R01S_ENTITY_VIS_DISPLAY && e->part && strcmp(e->part, "SCREEN_SINK") == 0;
 }
 
 static int hit_chip_in_island(const R01sUi *ui, int island_index, int lx, int ly) {
@@ -208,6 +182,12 @@ int hit_board_top(const R01sUi *ui, int lx, int ly, int *chip_out, int *island_o
 int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_y) {
     int board_mx = 0;
     int board_my = 0;
+    static struct {
+        int chip_i;
+        Uint32 t_ms;
+        int bx;
+        int by;
+    } scr1_dclick;
     if (!ui || !e) {
         return 0;
     }
@@ -486,6 +466,35 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             }
             return 1;
         }
+        if (ui->drag_chip >= 0 && ui->drag_chip < ui->chip_count &&
+            entity_is_screen_sink(ui->chips[ui->drag_chip])) {
+            R01sEntity *ent = ui->chips[ui->drag_chip];
+            int moved =
+                ent->board_x != ui->drag_chip_start_bx || ent->board_y != ui->drag_chip_start_by;
+            if (!moved) {
+                Uint32 now = SDL_GetTicks();
+                int dx = board_mx - scr1_dclick.bx;
+                int dy = board_my - scr1_dclick.by;
+                if (dx < 0) {
+                    dx = -dx;
+                }
+                if (dy < 0) {
+                    dy = -dy;
+                }
+                if (scr1_dclick.chip_i == ui->drag_chip && scr1_dclick.t_ms != 0 &&
+                    now - scr1_dclick.t_ms <= 400u && dx <= 6 && dy <= 6) {
+                    ui_toggle_lcd_scale(ui);
+                    scr1_dclick.t_ms = 0;
+                } else {
+                    scr1_dclick.chip_i = ui->drag_chip;
+                    scr1_dclick.t_ms = now;
+                    scr1_dclick.bx = board_mx;
+                    scr1_dclick.by = board_my;
+                }
+            } else {
+                scr1_dclick.t_ms = 0;
+            }
+        }
         if (was_layout_drag) {
             if (ui_sel_count(ui) > 0) {
                 ui_sel_snap_to_breadboard(ui);
@@ -500,37 +509,6 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         return ui->selected >= 0 || ui_sel_count(ui) > 0;
     }
     if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT) {
-        /* Double-click the virtual screen toggles 1x/2x. A drag on the first
-         * click cancels SDL's click count, so time the pair here and do not drag. */
-        if (ui_logic_in_view(logic_x, logic_y) && r01s_board_from_group(ui->group)) {
-            int chip_i = hit_screen_sink(ui, logic_x, logic_y);
-            static Uint32 scr_ms;
-            static int scr_x;
-            static int scr_y;
-            if (chip_i >= 0) {
-                Uint32 now = SDL_GetTicks();
-                int dx = logic_x - scr_x;
-                int dy = logic_y - scr_y;
-                if (dx < 0) {
-                    dx = -dx;
-                }
-                if (dy < 0) {
-                    dy = -dy;
-                }
-                if ((e->button.clicks >= 2 || (scr_ms != 0 && now - scr_ms <= 400u && dx <= 6 && dy <= 6))) {
-                    scr_ms = 0;
-                    ui_toggle_lcd_scale(ui);
-                    return 1;
-                }
-                scr_ms = now;
-                scr_x = logic_x;
-                scr_y = logic_y;
-                ui_sel_set_one(ui, chip_i);
-                ui->drag_chip = -1;
-                return 1;
-            }
-        }
-
         /* Context menu: rotate package 90 deg CW. */
         if (ui->ctx_chip >= 0 && ui->ctx_chip < ui->chip_count) {
             const char *item = "ROTATE 90 CW";
@@ -607,6 +585,8 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                     ui->drag_chip = chip_i;
                     ui->drag_grab_bx = board_mx - ui->chips[chip_i]->board_x;
                     ui->drag_grab_by = board_my - ui->chips[chip_i]->board_y;
+                    ui->drag_chip_start_bx = ui->chips[chip_i]->board_x;
+                    ui->drag_chip_start_by = ui->chips[chip_i]->board_y;
                     ui_begin_sel_drag(ui, board_mx, board_my);
                     snprintf(ui->status, sizeof(ui->status), "drag %d chips", ui_sel_count(ui));
                     return 1;
@@ -620,6 +600,8 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 ui->drag_chip = chip_i;
                 ui->drag_grab_bx = board_mx - ui->chips[chip_i]->board_x;
                 ui->drag_grab_by = board_my - ui->chips[chip_i]->board_y;
+                ui->drag_chip_start_bx = ui->chips[chip_i]->board_x;
+                ui->drag_chip_start_by = ui->chips[chip_i]->board_y;
                 ui_begin_sel_drag(ui, board_mx, board_my);
                 snprintf(ui->status, sizeof(ui->status), "drag %s (%s)  pins=%d",
                          ui->chips[chip_i]->refdes ? ui->chips[chip_i]->refdes : "?",

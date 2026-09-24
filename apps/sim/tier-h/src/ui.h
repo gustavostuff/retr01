@@ -83,6 +83,8 @@ typedef struct R01sUi {
     int chip_z_count;
     int drag_grab_bx;
     int drag_grab_by;
+    int drag_chip_start_bx; /* entity board_x/y at drag begin (click vs drag) */
+    int drag_chip_start_by;
     int drag_last_x;
     int drag_last_y;
     char status[192];

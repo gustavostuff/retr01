@@ -187,6 +187,7 @@ void ui_set_lcd_scale(R01sUi *ui, int scale_2x) {
     }
     sink = &board->video_sink;
     r01s_video_sink_set_scale_2x(sink, scale_2x ? 1 : 0);
+    r01s_bg_fetch_set_scale_2x(&board->bg_fetch, scale_2x ? 1 : 0);
     memset(touched, 0, sizeof(touched));
     {
         int i;

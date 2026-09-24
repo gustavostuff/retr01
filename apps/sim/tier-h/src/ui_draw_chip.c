@@ -491,7 +491,11 @@ static void draw_display_glyph(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e,
         draw_panel_glyph(r, ui, e, selected);
         return;
     }
-    sink = (const R01sVideoSink *)e;
+    sink = (const R01sVideoSink *)(e->impl ? e->impl : (void *)e);
+    if (!sink) {
+        draw_panel_glyph(r, ui, e, selected);
+        return;
+    }
     r01s_video_sink_lcd_size(sink, &lcd_w, &lcd_h);
     draw_glyph_pins(r, ui, e, e->board_x, e->board_y);
     draw_video_pixels(r, ui, (R01sVideoSink *)(void *)sink, x, y, lcd_w, lcd_h);
