@@ -10,6 +10,7 @@
 #include "retr01_sim/cart_slot.h"
 #include "retr01_sim/frame_log.h"
 #include "retr01_sim/spi_mailbox.h"
+#include "r01_cart_caps.h"
 
 #include "avr128db28_m.h"
 #include "r01_soft_sel_demux.h"
@@ -1569,17 +1570,37 @@ static uint8_t board_l0_master_at(R01sBoard *ctx, int lx, int ly) {
     }
     wx = ctx->l0_cam_x + lx;
     wy = ctx->l0_cam_y + ly;
-    if (wx < 0 || wy < 0) {
-        return (uint8_t)(ctx->active_pal[0] & 63u);
+    if ((ctx->cart_world_flags & R01_CART_WHDR_FLAG_BG0_WRAP_X) != 0 && ctx->bg0_cols > 0) {
+        int period = ctx->bg0_cols * R01S_BG_SCREEN_PX_W;
+        int local = wx % period;
+        if (local < 0) {
+            local += period;
+        }
+        gc = ctx->bg0_origin_col + local / R01S_BG_SCREEN_PX_W;
+    } else {
+        if (wx < 0) {
+            return (uint8_t)(ctx->active_pal[0] & 63u);
+        }
+        gc = wx / R01S_BG_SCREEN_PX_W;
+        if (gc < ctx->bg0_origin_col || (ctx->bg0_cols > 0 && gc >= ctx->bg0_origin_col + ctx->bg0_cols)) {
+            return (uint8_t)(ctx->active_pal[0] & 63u);
+        }
     }
-    gc = wx / R01S_BG_SCREEN_PX_W;
-    gr = wy / R01S_BG_SCREEN_PX_H;
-    /* Clip to present BG0 bbox (not the virtual 16x16 chess). */
-    if (ctx->bg0_cols > 0 && gc >= ctx->bg0_cols) {
-        return (uint8_t)(ctx->active_pal[0] & 63u);
-    }
-    if (ctx->bg0_rows > 0 && gr >= ctx->bg0_rows) {
-        return (uint8_t)(ctx->active_pal[0] & 63u);
+    if ((ctx->cart_world_flags & R01_CART_WHDR_FLAG_BG0_WRAP_Y) != 0 && ctx->bg0_rows > 0) {
+        int period = ctx->bg0_rows * R01S_BG_SCREEN_PX_H;
+        int local = wy % period;
+        if (local < 0) {
+            local += period;
+        }
+        gr = ctx->bg0_origin_row + local / R01S_BG_SCREEN_PX_H;
+    } else {
+        if (wy < 0) {
+            return (uint8_t)(ctx->active_pal[0] & 63u);
+        }
+        gr = wy / R01S_BG_SCREEN_PX_H;
+        if (gr < ctx->bg0_origin_row || (ctx->bg0_rows > 0 && gr >= ctx->bg0_origin_row + ctx->bg0_rows)) {
+            return (uint8_t)(ctx->active_pal[0] & 63u);
+        }
     }
     for (i = 0; i < ctx->bg0_count; i++) {
         if (ctx->bg0[i].present && (int)ctx->bg0[i].col == gc && (int)ctx->bg0[i].row == gr) {
@@ -1590,8 +1611,14 @@ static uint8_t board_l0_master_at(R01sBoard *ctx, int lx, int ly) {
     if (!map || ctx->cart_off_chr == 0) {
         return (uint8_t)(ctx->active_pal[0] & 63u);
     }
-    local_x = wx - gc * R01S_BG_SCREEN_PX_W;
-    local_y = wy - gr * R01S_BG_SCREEN_PX_H;
+    local_x = wx % R01S_BG_SCREEN_PX_W;
+    local_y = wy % R01S_BG_SCREEN_PX_H;
+    if (local_x < 0) {
+        local_x += R01S_BG_SCREEN_PX_W;
+    }
+    if (local_y < 0) {
+        local_y += R01S_BG_SCREEN_PX_H;
+    }
     tx = local_x / 8;
     ty = local_y / 8;
     if (tx < 0) {
@@ -1638,8 +1665,13 @@ static uint8_t board_bg_master_at(R01sBoard *ctx, int lx, int ly) {
     slot_y = (sy / R01S_BG_SCREEN_PX_H) & 1;
     slot = slot_y * 2 + slot_x;
     /* Match emu: missing BG1 slot -> backdrop (world bbox); color 0 -> BG0 line. */
+    /* Absent BG1 slot: BG0 shows through unless the cart clips BG0 to BG1. */
     if (!ctx->vram_slot_present[slot & 3]) {
-        master = (uint8_t)(ctx->active_pal[0] & 63u);
+        if ((ctx->cart_world_flags & R01_CART_WHDR_FLAG_BG0_CLIP_BG1) != 0) {
+            master = (uint8_t)(ctx->active_pal[0] & 63u);
+        } else {
+            master = r01s_as6c62256_peek(ctx->mcu_lb_impl.sram, l0_line_addr(ctx->l0_show_half, lx));
+        }
         ctx->chr_last_master = master;
         return master;
     }
@@ -2431,13 +2463,14 @@ static void board_resolve_cart_meta(R01sBoard *board) {
             } else {
                 board->cart_prg_spawn_n = 0;
             }
-            if (board->cart_len_prg > 0x8700u) {
-                int solid_n = (int)prg[0x8700];
+            /* CPU $8700 is PRG window $8000 + $0700. */
+            if (board->cart_len_prg > 0x700u) {
+                int solid_n = (int)prg[0x700];
                 if (solid_n > 32) {
                     solid_n = 32;
                 }
-                if (solid_n > 0 && (uint32_t)(0x8701 + solid_n * 2) <= board->cart_len_prg) {
-                    memcpy(board->cart_solid, prg + 0x8701, (size_t)solid_n * 2u);
+                if (solid_n > 0 && (uint32_t)(0x701 + solid_n * 2) <= board->cart_len_prg) {
+                    memcpy(board->cart_solid, prg + 0x701, (size_t)solid_n * 2u);
                     board->cart_solid_n = (uint8_t)solid_n;
                 } else {
                     board->cart_solid_n = 0;
@@ -2804,9 +2837,20 @@ int r01s_board_aabb_ok(const R01sBoard *board, int px, int py, int bw, int bh) {
             }
         }
     }
-    if (r01s_board_solid_at(board, px, py) || r01s_board_solid_at(board, x1, py) ||
-        r01s_board_solid_at(board, px, y1) || r01s_board_solid_at(board, x1, y1)) {
-        return 0;
+    {
+        int tx0 = px >> 3;
+        int ty0 = py >> 3;
+        int tx1 = x1 >> 3;
+        int ty1 = y1 >> 3;
+        int tx;
+        int ty;
+        for (ty = ty0; ty <= ty1; ty++) {
+            for (tx = tx0; tx <= tx1; tx++) {
+                if (r01s_board_solid_at(board, tx * 8, ty * 8)) {
+                    return 0;
+                }
+            }
+        }
     }
     return 1;
 }
@@ -2919,6 +2963,8 @@ void r01s_board_load_bg0(R01sBoard *board) {
     board->bg0_count = 0;
     board->bg0_cols = 0;
     board->bg0_rows = 0;
+    board->bg0_origin_col = 0;
+    board->bg0_origin_row = 0;
     board->l0_cam_x = 0;
     board->l0_cam_y = 0;
     board->l1_cols = 1;
@@ -3020,6 +3066,8 @@ void r01s_board_load_bg0(R01sBoard *board) {
         board->bg0_count++;
     }
     if (board->bg0_count > 0) {
+        board->bg0_origin_col = min_c;
+        board->bg0_origin_row = min_r;
         board->bg0_cols = max_c - min_c + 1;
         board->bg0_rows = max_r - min_r + 1;
         if (board->bg0_cols < 1) {

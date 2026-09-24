@@ -245,6 +245,8 @@ typedef struct R01sBoard {
     int bg0_count;
     int bg0_cols; /* present BG0 bbox */
     int bg0_rows;
+    int bg0_origin_col;
+    int bg0_origin_row;
     int l1_cols; /* present BG1 bbox */
     int l1_rows;
     int l1_origin_x;

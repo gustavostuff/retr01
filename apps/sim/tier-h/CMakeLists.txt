@@ -63,6 +63,7 @@ add_library(r01_play_common
   ${R01_COMMON_DIR}/r01_play_anim.c
   ${R01_COMMON_DIR}/r01_play_anim_cart.c
   ${R01_COMMON_DIR}/r01_play_camera.c
+  ${R01_COMMON_DIR}/r01_play_physics.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/r01_custom_logic_scan.c
   ${R01_COMMON_DIR}/r01_nes_synth.c
   ${R01_COMMON_DIR}/r01_apu_fd.c

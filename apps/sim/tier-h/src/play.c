@@ -10,6 +10,7 @@
 #include "video_sink.h"
 #include "r01_play_anim_cart.h"
 #include "r01_play_camera.h"
+#include "r01_play_physics.h"
 #include "r01_custom_logic_scan.h"
 #include "r01_apu_cart.h"
 
@@ -19,6 +20,13 @@
 #include <sys/stat.h>
 
 /* Studio/emu move+camera math; sim applies 1 logical px per sim VBlank (game frame). */
+static R01PlayPhysics s_phys;
+static int s_phys_ready;
+static int s_platformer;
+static int s_anim_idle = -1;
+static int s_anim_walk = -1;
+static int s_anim_crouch = -1;
+static int s_anim_jump = -1;
 
 static void player_hit_rect(R01sBoard *b, int origin_x, int origin_y, int state_idx, int *hx, int *hy, int *hw,
                             int *hh) {
@@ -73,10 +81,14 @@ static void player_hit_rect(R01sBoard *b, int origin_x, int origin_y, int state_
     }
 }
 
+static int catalog_player_box(R01sBoard *b, int ox, int oy, int state, int *hx, int *hy, int *hw, int *hh);
+
 static int player_move_ok(R01sBoard *b, int ox, int oy) {
     int hx, hy, hw, hh;
     int state_idx = r01_play_anim_entity_state(&b->play.anim);
-    player_hit_rect(b, ox, oy, state_idx, &hx, &hy, &hw, &hh);
+    if (!catalog_player_box(b, ox, oy, state_idx, &hx, &hy, &hw, &hh)) {
+        player_hit_rect(b, ox, oy, state_idx, &hx, &hy, &hw, &hh);
+    }
     return r01s_board_aabb_ok(b, hx, hy, hw, hh);
 }
 
@@ -140,6 +152,55 @@ static void play_load_cart_camera(R01sBoard *b) {
             }
         }
     }
+}
+
+/* Author game_logic.c is not running (boot overlay replaced PRG). Copy its mode and camera. */
+static void cart_output_dir(const char *cart_path, char *out, size_t out_cap);
+
+static void play_load_author_rules(R01sBoard *b) {
+    char dir[512];
+    char path[576];
+    FILE *f;
+    char line[256];
+    int dx = 0;
+    int dy = 0;
+
+    if (!b) {
+        return;
+    }
+    cart_output_dir(b->cart_path[0] ? b->cart_path : NULL, dir, sizeof(dir));
+    if (snprintf(path, sizeof(path), "%s/game_logic.c", dir) >= (int)sizeof(path)) {
+        return;
+    }
+    f = fopen(path, "r");
+    if (!f) {
+        return;
+    }
+    while (fgets(line, sizeof(line), f)) {
+        if (strstr(line, "R01_GAME_MODE_PLATFORMER")) {
+            s_platformer = 1;
+        }
+        if (sscanf(line, " r01_camera_set_deadzone ( ctx , %d , %d )", &dx, &dy) == 2 ||
+            sscanf(line, " r01_camera_set_deadzone(ctx, %d, %d)", &dx, &dy) == 2) {
+            if (dx > 0 && dy > 0 && dx <= R01S_BG_SCREEN_PX_W && dy <= R01S_BG_SCREEN_PX_H) {
+                b->play.cam_deadzone_x = dx;
+                b->play.cam_deadzone_y = dy;
+            }
+        }
+        if (sscanf(line, " r01_player_anim_set_idle_state(ctx, %d)", &dx) == 1) {
+            s_anim_idle = dx;
+        }
+        if (sscanf(line, " r01_player_anim_set_walk_all(ctx, %d)", &dx) == 1) {
+            s_anim_walk = dx;
+        }
+        if (sscanf(line, " r01_player_anim_set_crouch_state(ctx, %d)", &dx) == 1) {
+            s_anim_crouch = dx;
+        }
+        if (sscanf(line, " r01_player_anim_set_jump_state(ctx, %d)", &dx) == 1) {
+            s_anim_jump = dx;
+        }
+    }
+    fclose(f);
 }
 
 static void place_player_on_screen(R01sBoard *b, int col, int row) {
@@ -309,6 +370,137 @@ static const uint8_t *frame_sprites(const uint8_t *def, size_t room, int state, 
     return fr + 6;
 }
 
+static int catalog_player_box(R01sBoard *b, int ox, int oy, int state, int *hx, int *hy, int *hw, int *hh) {
+    const uint8_t *def;
+    const uint8_t *parts;
+    size_t room = 0;
+    int n = 0;
+    int dx;
+    int dy;
+    int dw;
+    int dh;
+    if (!b || b->cart_player_entity == 0xFF) {
+        return 0;
+    }
+    def = catalog_def(b, (int)b->cart_player_entity, &room);
+    parts = frame_sprites(def, room, state, 0, &n);
+    if (!parts) {
+        parts = frame_sprites(def, room, 0, 0, &n);
+    }
+    if (!parts) {
+        return 0;
+    }
+    dx = (int)(int8_t)parts[-4];
+    dy = (int)(int8_t)parts[-3];
+    dw = (int)parts[-2];
+    dh = (int)parts[-1];
+    if (dw < 1) {
+        dw = 8;
+    }
+    if (dh < 1) {
+        dh = 8;
+    }
+    if (hx) {
+        *hx = ox + dx;
+    }
+    if (hy) {
+        *hy = oy + dy;
+    }
+    if (hw) {
+        *hw = dw;
+    }
+    if (hh) {
+        *hh = dh;
+    }
+    return 1;
+}
+
+static void catalog_anim_tick(R01sBoard *b) {
+    R01PlayAnimCtx *ctx;
+    const uint8_t *def;
+    const uint8_t *st;
+    const uint8_t *fr;
+    size_t room = 0;
+    uint8_t sc;
+    uint8_t fc;
+    uint8_t frame;
+    uint8_t delay;
+    uint16_t soff;
+    uint16_t foff;
+
+    if (!b) {
+        return;
+    }
+    ctx = &b->play.anim;
+    if (ctx->player_idle_state == (uint8_t)R01_PLAY_ANIM_UNMAPPED && ctx->player_anim_state == 0u) {
+        ctx->player_anim_frame = 0;
+        return;
+    }
+    def = catalog_def(b, (int)b->cart_player_entity, &room);
+    if (!def || room < 12u) {
+        return;
+    }
+    sc = def[1];
+    if (sc > 4u) {
+        sc = 4u;
+    }
+    if (ctx->player_anim_state >= sc) {
+        return;
+    }
+    soff = (uint16_t)def[4 + ctx->player_anim_state * 2] | ((uint16_t)def[5 + ctx->player_anim_state * 2] << 8);
+    if (soff == 0 || (size_t)soff + 4u > room) {
+        return;
+    }
+    st = def + soff;
+    fc = st[0];
+    if (fc > 8u) {
+        fc = 8u;
+    }
+    if (fc <= 1u) {
+        ctx->player_anim_frame = 0;
+        return;
+    }
+    frame = ctx->player_anim_frame;
+    if (frame >= fc) {
+        frame = 0;
+        ctx->player_anim_frame = 0;
+    }
+    foff = (uint16_t)st[2 + frame * 2] | ((uint16_t)st[3 + frame * 2] << 8);
+    if (foff == 0 || (size_t)soff + (size_t)foff + 1u > room) {
+        return;
+    }
+    fr = st + foff;
+    delay = r01_play_anim_frame_delay(ctx, fr[0]);
+    ctx->player_anim_ctr++;
+    if (ctx->player_anim_ctr < delay) {
+        return;
+    }
+    ctx->player_anim_ctr = 0;
+    ctx->player_anim_frame++;
+    if (ctx->player_anim_frame >= fc) {
+        ctx->player_anim_frame = 0;
+    }
+}
+
+static void anim_boot(R01sBoard *b) {
+    if (!b) {
+        return;
+    }
+    r01_play_anim_init(&b->play.anim);
+    if (s_anim_idle >= 0) {
+        r01_play_anim_set_idle_state(&b->play.anim, s_anim_idle);
+    }
+    if (s_anim_walk >= 0) {
+        r01_play_anim_set_walk_all(&b->play.anim, s_anim_walk);
+    }
+    if (s_anim_crouch >= 0) {
+        r01_play_anim_set_crouch_state(&b->play.anim, s_anim_crouch);
+    }
+    if (s_anim_jump >= 0) {
+        r01_play_anim_set_jump_state(&b->play.anim, s_anim_jump);
+    }
+}
+
 static int oam_emit(R01sBoard *b, int slot, int ox, int oy, const uint8_t *parts, int n, int flip_h, int flip_v,
                     int tile_add) {
     int pi;
@@ -396,6 +588,8 @@ static uint16_t s_npc_rng = 0xACE1u;
 static void npc_reset(void) {
     s_npc_n = 0;
     s_npc_ready = 0;
+    s_phys_ready = 0;
+    s_platformer = 0;
 }
 
 static int npc_gap(void) {
@@ -602,16 +796,34 @@ static void apply_video_latch(R01sBoard *b) {
     write_oam(b);
 }
 
+static int move_ok_phys(void *ctx, uint16_t x, uint16_t y) {
+    return player_move_ok((R01sBoard *)ctx, (int)x, (int)y);
+}
+
 static void step_move_from_pad(R01sBoard *b) {
     R01sPlay *pl;
     uint8_t pad;
-    int dx = 0;
-    int dy = 0;
+    int8_t dx = 0;
+    int8_t dy = 0;
+    int8_t adx = 0;
+    int8_t ady = 0;
+    uint16_t px;
+    uint16_t py;
+    uint8_t jump;
 
     if (!b || !b->play.enabled) {
         return;
     }
     pl = &b->play;
+    if (!s_phys_ready) {
+        r01_play_physics_init(&s_phys);
+        r01_play_physics_set_mode(&s_phys, s_platformer ? (uint8_t)R01_GAME_MODE_PLATFORMER
+                                                       : (uint8_t)R01_GAME_MODE_TOPDOWN);
+        r01_play_physics_set_gravity(&s_phys, (uint8_t)R01_PLAT_GRAVITY_DEFAULT);
+        r01_play_physics_set_jump(&s_phys, (uint8_t)R01_PLAT_JUMP_DEFAULT);
+        r01_play_physics_set_meter(&s_phys, (uint8_t)R01_PLAT_METER_DEFAULT);
+        s_phys_ready = 1;
+    }
     pad = pl->pad_held;
     if (pad & R01S_PAD_LEFT) {
         dx = -1;
@@ -623,23 +835,17 @@ static void step_move_from_pad(R01sBoard *b) {
     } else if (pad & R01S_PAD_DOWN) {
         dy = 1;
     }
-    if (dx == 0 && dy == 0) {
-        r01_play_anim_update(&pl->anim, 0, 0);
-        return;
-    }
-    r01_play_anim_update(&pl->anim, dx, dy);
-    if (dx != 0) {
-        int nx = pl->player_x + dx;
-        if (player_move_ok(b, nx, pl->player_y)) {
-            pl->player_x = nx;
-        }
-    }
-    if (dy != 0) {
-        int ny = pl->player_y + dy;
-        if (player_move_ok(b, pl->player_x, ny)) {
-            pl->player_y = ny;
-        }
-    }
+    jump = (uint8_t)((pad & R01S_PAD_Y) != 0);
+    r01_play_physics_set_run_mul(&s_phys, (dx != 0 && (pad & R01S_PAD_X)) ? 2u : 1u);
+    px = (uint16_t)pl->player_x;
+    py = (uint16_t)pl->player_y;
+    r01_play_physics_tick(&s_phys, &px, &py, dx, dy, jump, move_ok_phys, b, &adx, &ady);
+    pl->player_x = (int)px;
+    pl->player_y = (int)py;
+    r01_play_anim_set_airborne(&pl->anim, s_platformer && !s_phys.grounded);
+    r01_play_anim_set_crouching(&pl->anim, s_platformer && s_phys.grounded && (pad & R01S_PAD_DOWN) != 0);
+    r01_play_anim_update(&pl->anim, (int)adx, (int)ady);
+    catalog_anim_tick(b);
     update_camera(b);
     if (b->cart_off_player_anim != 0) {
         const uint8_t *blob = b->cart_module.flash.mem + b->cart_off_player_anim;
@@ -656,6 +862,9 @@ void r01s_play_on_vblank(R01sBoard *b) {
     if (!b || !b->play.enabled) {
         return;
     }
+    /* One game tick per painted field. UI frames run much faster than the beam. */
+    step_move_from_pad(b);
+    npc_tick(b);
     apply_video_latch(b);
     write_oam(b);
     r01s_frame_log_note(R01S_FLOG_PLAY, "VBlank Host Play: pad step + OAM");
@@ -851,24 +1060,25 @@ int r01s_play_start(R01sBoard *board) {
     r01s_play_reset(&board->play);
     npc_reset();
     play_load_cart_camera(board);
+    play_load_author_rules(board);
     for (sx = 0; sx < (int)board->cart_prg_spawn_n; sx++) {
         const uint8_t *irec = board->cart_prg_spawn + (size_t)sx * 6u;
         if (irec[0] == board->cart_player_entity) {
             sy = (int)((uint16_t)irec[2] | ((uint16_t)irec[3] << 8));
             col = (int)((uint16_t)irec[4] | ((uint16_t)irec[5] << 8));
             r01s_board_mark_map_ready(board);
-            r01_play_anim_init(&board->play.anim);
+            anim_boot(board);
             place_player_xy(board, sy, col);
             goto play_latched;
         }
     }
     if (player_instance_spawn(board, &sx, &sy)) {
         r01s_board_mark_map_ready(board);
-        r01_play_anim_init(&board->play.anim);
+        anim_boot(board);
         place_player_xy(board, sx, sy);
     } else if (spawn_screen(board, &col, &row)) {
         r01s_board_mark_map_ready(board);
-        r01_play_anim_init(&board->play.anim);
+        anim_boot(board);
         place_player_on_screen(board, col, row);
     } else {
         return 0;
@@ -910,12 +1120,7 @@ void r01s_play_tick(R01sBoard *board, uint8_t pad) {
     pl = &board->play;
     edge = (uint8_t)(pad & (uint8_t)~pl->pad_prev);
     pl->pad_prev = pad;
-    pl->pad_held = (uint8_t)(pad & (R01S_PAD_UP | R01S_PAD_DOWN | R01S_PAD_LEFT | R01S_PAD_RIGHT));
-    /* One pixel per UI frame. The beam is too slow to use as the 60 Hz game tick. */
-    step_move_from_pad(board);
-    npc_tick(board);
-    apply_video_latch(board);
-    write_oam(board);
+    pl->pad_held = pad;
 
     if (edge & R01S_PAD_X) {
         (void)warp_to(board, 0, 0);

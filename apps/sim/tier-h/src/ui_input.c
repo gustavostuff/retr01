@@ -471,15 +471,36 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         return ui->selected >= 0 || ui_sel_count(ui) > 0;
     }
     if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT) {
-
-        /* Double-click SCR1 toggles LCD 1X/2X scale. */
-        if (e->button.clicks == 2 && ui_logic_in_view(logic_x, logic_y) && r01s_board_from_group(ui->group)) {
+        /* Double-click the virtual screen toggles 1x/2x. A drag on the first
+         * click cancels SDL's click count, so time the pair here and do not drag. */
+        if (ui_logic_in_view(logic_x, logic_y) && r01s_board_from_group(ui->group)) {
             int chip_i = -1;
+            static Uint32 scr_ms;
+            static int scr_x;
+            static int scr_y;
             if (hit_board_top(ui, logic_x, logic_y, &chip_i, NULL, NULL) == 1 && chip_i >= 0 &&
                 chip_i < ui->chip_count && ui->chips[chip_i] &&
                 ui->chips[chip_i]->visual == R01S_ENTITY_VIS_DISPLAY && ui->chips[chip_i]->part &&
                 strcmp(ui->chips[chip_i]->part, "SCREEN_SINK") == 0) {
-                ui_toggle_lcd_scale(ui);
+                Uint32 now = SDL_GetTicks();
+                int dx = logic_x - scr_x;
+                int dy = logic_y - scr_y;
+                if (dx < 0) {
+                    dx = -dx;
+                }
+                if (dy < 0) {
+                    dy = -dy;
+                }
+                if ((e->button.clicks >= 2 || (scr_ms != 0 && now - scr_ms <= 400u && dx <= 6 && dy <= 6))) {
+                    scr_ms = 0;
+                    ui_toggle_lcd_scale(ui);
+                    return 1;
+                }
+                scr_ms = now;
+                scr_x = logic_x;
+                scr_y = logic_y;
+                ui_sel_set_one(ui, chip_i);
+                ui->drag_chip = -1;
                 return 1;
             }
         }
