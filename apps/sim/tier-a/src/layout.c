@@ -174,7 +174,7 @@ static void ensure_part(R01aBoard *board, const char *id, const char *kind, cons
 }
 
 static void apply_part(R01aBoard *board, const char *id, int x, int y, NsPkgOrient orient, int px, int py,
-                      int have_pivot) {
+                      int have_pivot, int l1, int l2) {
     NsEntity *e = r01a_board_entity_by_refdes(board, id);
     if (!e) {
         return;
@@ -187,6 +187,8 @@ static void apply_part(R01aBoard *board, const char *id, int x, int y, NsPkgOrie
         } else {
             ns_passive_set_pivot(p, p->pivot_x + (x - e->board_x), p->pivot_y + (y - e->board_y));
         }
+        ns_passive_set_leg_ext(p, 1, l1);
+        ns_passive_set_leg_ext(p, 2, l2);
         return;
     }
     ns_entity_set_orient(e, orient);
@@ -241,17 +243,22 @@ int r01a_layout_save(const char *path, const R01aBoard *board, int pan_x, int pa
                 py = p->pivot_y;
                 kind = ns_passive_kind_name(p->kind);
                 value = p->value;
-            } else if (e->visual == NS_ENTITY_VIS_BREADBOARD) {
-                kind = "BB";
-            }
-            if (!first) {
-                fprintf(f, ",\n");
+                fprintf(f,
+                        "%s    {\"id\": \"%s\", \"kind\": \"%s\", \"value\": \"%s\", \"x\": %d, \"y\": %d, "
+                        "\"orient\": \"%s\", \"px\": %d, \"py\": %d, \"l1\": %d, \"l2\": %d}",
+                        first ? "" : ",\n", e->refdes, kind, value, e->board_x, e->board_y,
+                        orient_str(e->orient), px, py, p->leg_ext[0], p->leg_ext[1]);
+            } else {
+                if (e->visual == NS_ENTITY_VIS_BREADBOARD) {
+                    kind = "BB";
+                }
+                fprintf(f,
+                        "%s    {\"id\": \"%s\", \"kind\": \"%s\", \"value\": \"%s\", \"x\": %d, \"y\": %d, "
+                        "\"orient\": \"%s\", \"px\": %d, \"py\": %d}",
+                        first ? "" : ",\n", e->refdes, kind, value, e->board_x, e->board_y,
+                        orient_str(e->orient), px, py);
             }
             first = 0;
-            fprintf(f,
-                    "    {\"id\": \"%s\", \"kind\": \"%s\", \"value\": \"%s\", \"x\": %d, \"y\": %d, "
-                    "\"orient\": \"%s\", \"px\": %d, \"py\": %d}",
-                    e->refdes, kind, value, e->board_x, e->board_y, orient_str(e->orient), px, py);
         }
     }
     fprintf(f, "\n  ],\n");
@@ -328,6 +335,8 @@ int r01a_layout_load(const char *path, R01aBoard *board, int *pan_x, int *pan_y,
         int y = 0;
         int px = 0;
         int py = 0;
+        int l1 = 0;
+        int l2 = 0;
         int have_px;
         int have_py;
         size_t nobj;
@@ -363,8 +372,14 @@ int r01a_layout_load(const char *path, R01aBoard *board, int *pan_x, int *pan_y,
         json_str(objbuf, "value", value, sizeof(value));
         have_px = json_int(objbuf, "px", &px);
         have_py = json_int(objbuf, "py", &py);
+        if (!json_int(objbuf, "l1", &l1)) {
+            l1 = 0;
+        }
+        if (!json_int(objbuf, "l2", &l2)) {
+            l2 = 0;
+        }
         ensure_part(board, id, kind, value, x, y);
-        apply_part(board, id, x, y, orient_parse(os), px, py, have_px && have_py);
+        apply_part(board, id, x, y, orient_parse(os), px, py, have_px && have_py, l1, l2);
         p = end + 1;
     }
     r01a_board_jumper_clear(board);

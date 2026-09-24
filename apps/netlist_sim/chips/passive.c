@@ -75,11 +75,82 @@ static int sprite_hit_at(const PassiveSprite *sp, NsPkgOrient orient, int piv_x,
     return px[3] != 0;
 }
 
+static int chebyshev_to_seg(int px, int py, int ax, int ay, int bx, int by, int half) {
+    int x0 = ax < bx ? ax : bx;
+    int x1 = ax > bx ? ax : bx;
+    int y0 = ay < by ? ay : by;
+    int y1 = ay > by ? ay : by;
+    int dx;
+    int dy;
+    if (px < x0) {
+        dx = x0 - px;
+    } else if (px > x1) {
+        dx = px - x1;
+    } else {
+        dx = 0;
+    }
+    if (py < y0) {
+        dy = y0 - py;
+    } else if (py > y1) {
+        dy = py - y1;
+    } else {
+        dy = 0;
+    }
+    return (dx > dy ? dx : dy) <= half;
+}
+
+static void r_axis(NsPkgOrient orient, int *ux, int *uy) {
+    rot_cw_delta(1, 0, (int)orient, ux, uy);
+}
+
+static void r_default_tip(const NsPassive *p, int pin_num, int *wx, int *wy) {
+    const PassiveSprite *sp = sprite_for(NS_PASSIVE_R);
+    int rx;
+    int ry;
+    if (pin_num == 1) {
+        *wx = p->pivot_x;
+        *wy = p->pivot_y;
+        return;
+    }
+    rot_cw_delta(sp->span_px, 0, (int)p->base.orient, &rx, &ry);
+    *wx = p->pivot_x + rx;
+    *wy = p->pivot_y + ry;
+}
+
 int ns_passive_hit(const NsPassive *p, int bx, int by) {
+    int ux;
+    int uy;
+    int x0;
+    int y0;
+    int x1;
+    int y1;
     if (!p) {
         return 0;
     }
-    return sprite_hit_at(sprite_for(p->kind), p->base.orient, p->pivot_x, p->pivot_y, bx, by);
+    if (sprite_hit_at(sprite_for(p->kind), p->base.orient, p->pivot_x, p->pivot_y, bx, by)) {
+        return 1;
+    }
+    if (p->kind != NS_PASSIVE_R || (p->leg_ext[0] <= 0 && p->leg_ext[1] <= 0)) {
+        return 0;
+    }
+    r_axis(p->base.orient, &ux, &uy);
+    if (p->leg_ext[0] > 0) {
+        r_default_tip(p, 1, &x0, &y0);
+        x1 = x0 - ux * p->leg_ext[0];
+        y1 = y0 - uy * p->leg_ext[0];
+        if (chebyshev_to_seg(bx, by, x0, y0, x1, y1, 1)) {
+            return 1;
+        }
+    }
+    if (p->leg_ext[1] > 0) {
+        r_default_tip(p, 2, &x0, &y0);
+        x1 = x0 + ux * p->leg_ext[1];
+        y1 = y0 + uy * p->leg_ext[1];
+        if (chebyshev_to_seg(bx, by, x0, y0, x1, y1, 1)) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 #define R_BAND_GOLD 10
@@ -261,6 +332,41 @@ void ns_passive_sync_aabb(NsPassive *p) {
     }
     sp = sprite_for(p->kind);
     passive_aabb_about_pivot(sp, p->base.orient, &min_x, &min_y, &max_x, &max_y);
+    if (p->kind == NS_PASSIVE_R) {
+        int ux;
+        int uy;
+        int tx;
+        int ty;
+        r_axis(p->base.orient, &ux, &uy);
+        tx = -ux * p->leg_ext[0];
+        ty = -uy * p->leg_ext[0];
+        if (tx < min_x) {
+            min_x = tx;
+        }
+        if (ty < min_y) {
+            min_y = ty;
+        }
+        if (tx > max_x) {
+            max_x = tx;
+        }
+        if (ty > max_y) {
+            max_y = ty;
+        }
+        tx = ux * (sp->span_px + p->leg_ext[1]);
+        ty = uy * (sp->span_px + p->leg_ext[1]);
+        if (tx < min_x) {
+            min_x = tx;
+        }
+        if (ty < min_y) {
+            min_y = ty;
+        }
+        if (tx > max_x) {
+            max_x = tx;
+        }
+        if (ty > max_y) {
+            max_y = ty;
+        }
+    }
     p->base.board_x = p->pivot_x + min_x;
     p->base.board_y = p->pivot_y + min_y;
     p->base.body_w = max_x - min_x + 1;
@@ -310,19 +416,63 @@ int ns_passive_tip_board(const NsPassive *p, int pin_num, int *wx, int *wy) {
         return 1;
     }
     if (pin_num == 1) {
-        *wx = p->pivot_x;
-        *wy = p->pivot_y;
+        rot_cw_delta(-p->leg_ext[0], 0, (int)p->base.orient, &rx, &ry);
+        *wx = p->pivot_x + rx;
+        *wy = p->pivot_y + ry;
         return 1;
     }
     if (pin_num != 2 || sp->span_px == 0) {
         return 0;
     }
-    dx = sp->span_px;
+    dx = sp->span_px + (p->kind == NS_PASSIVE_R ? p->leg_ext[1] : 0);
     dy = 0;
     rot_cw_delta(dx, dy, (int)p->base.orient, &rx, &ry);
     *wx = p->pivot_x + rx;
     *wy = p->pivot_y + ry;
     return 1;
+}
+
+void ns_passive_set_leg_ext(NsPassive *p, int pin_num, int extra) {
+    if (!p || p->kind != NS_PASSIVE_R) {
+        return;
+    }
+    if (extra < 0) {
+        extra = 0;
+    }
+    if (extra > 400) {
+        extra = 400;
+    }
+    if (pin_num == 1) {
+        p->leg_ext[0] = extra;
+    } else if (pin_num == 2) {
+        p->leg_ext[1] = extra;
+    } else {
+        return;
+    }
+    ns_passive_sync_aabb(p);
+}
+
+void ns_passive_set_leg_to(NsPassive *p, int pin_num, int wx, int wy) {
+    int ux;
+    int uy;
+    int dx;
+    int dy;
+    int extra;
+    int defx;
+    int defy;
+    if (!p || p->kind != NS_PASSIVE_R || (pin_num != 1 && pin_num != 2)) {
+        return;
+    }
+    r_axis(p->base.orient, &ux, &uy);
+    r_default_tip(p, pin_num, &defx, &defy);
+    dx = wx - defx;
+    dy = wy - defy;
+    if (pin_num == 1) {
+        extra = -dx * ux - dy * uy;
+    } else {
+        extra = dx * ux + dy * uy;
+    }
+    ns_passive_set_leg_ext(p, pin_num, extra);
 }
 
 NsPassive *ns_passive_bank_add(NsPassiveBank *bank, NsPassiveKind kind, const char *refdes,
@@ -421,10 +571,34 @@ void ns_passive_draw_kind(SDL_Renderer *r, NsPassiveKind kind, NsPkgOrient orien
 
 void ns_passive_draw(SDL_Renderer *r, const NsPassive *p, int screen_pivot_x, int screen_pivot_y,
                        int selected) {
+    const PassiveSprite *sp;
+    int ux;
+    int uy;
     if (!p) {
         return;
     }
-    ns_passive_draw_ex(r, p->kind, p->base.orient, p->value, screen_pivot_x, screen_pivot_y, selected);
+    ns_passive_draw_ex(r, p->kind, p->base.orient, p->value, screen_pivot_x, screen_pivot_y, 0);
+    if (p->kind == NS_PASSIVE_R && (p->leg_ext[0] > 0 || p->leg_ext[1] > 0)) {
+        sp = sprite_for(NS_PASSIVE_R);
+        r_axis(p->base.orient, &ux, &uy);
+        SDL_SetRenderDrawColor(r, 0, 0, 0, 255);
+        if (p->leg_ext[0] > 0) {
+            SDL_RenderDrawLine(r, screen_pivot_x, screen_pivot_y, screen_pivot_x - ux * p->leg_ext[0],
+                               screen_pivot_y - uy * p->leg_ext[0]);
+        }
+        if (p->leg_ext[1] > 0) {
+            int x0 = screen_pivot_x + ux * sp->span_px;
+            int y0 = screen_pivot_y + uy * sp->span_px;
+            SDL_RenderDrawLine(r, x0, y0, x0 + ux * p->leg_ext[1], y0 + uy * p->leg_ext[1]);
+        }
+    }
+    if (selected) {
+        int sx = screen_pivot_x + (p->base.board_x - p->pivot_x);
+        int sy = screen_pivot_y + (p->base.board_y - p->pivot_y);
+        SDL_Rect rc = {sx - 1, sy - 1, p->base.body_w + 2, p->base.body_h + 2};
+        SDL_SetRenderDrawColor(r, 255, 220, 80, 255);
+        SDL_RenderDrawRect(r, &rc);
+    }
 }
 
 static int osc4_delta(int pin_num, int *dx, int *dy) {

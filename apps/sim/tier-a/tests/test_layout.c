@@ -25,6 +25,16 @@ int main(void) {
     ns_entity_place(osc, 120, 80);
     ns_entity_set_orient(osc, NS_ORIENT_0);
     ns_passive_set_pivot(&board.passives.parts[0], 200, 90);
+    {
+        int ri;
+        for (ri = 0; ri < board.passives.count; ri++) {
+            if (board.passives.parts[ri].kind == NS_PASSIVE_R) {
+                ns_passive_set_leg_ext(&board.passives.parts[ri], 1, 15);
+                ns_passive_set_leg_ext(&board.passives.parts[ri], 2, 10);
+                break;
+            }
+        }
+    }
     r01a_board_set_wire_mode(&board, R01A_WIRE_MANUAL);
     expect_true(r01a_board_jumper_add(&board, a, b), "save jumper");
     expect_true(r01a_board_jumper_set_route(&board, 0, 1, 96), "custom elbows");
@@ -51,6 +61,18 @@ int main(void) {
     expect_true(r01a_osc_dot_entity(&loaded.osc_dot)->board_y == 80, "OSC y restored");
     expect_true(loaded.passives.parts[0].pivot_x == 200, "passive pivot x");
     expect_true(loaded.passives.parts[0].pivot_y == 90, "passive pivot y");
+    {
+        int ri;
+        int found = 0;
+        for (ri = 0; ri < loaded.passives.count; ri++) {
+            if (loaded.passives.parts[ri].kind == NS_PASSIVE_R && loaded.passives.parts[ri].leg_ext[0] == 15 &&
+                loaded.passives.parts[ri].leg_ext[1] == 10) {
+                found = 1;
+                break;
+            }
+        }
+        expect_true(found, "resistor leg stretch restored");
+    }
     expect_true(loaded.jumper_count == 2, "jumper count");
     expect_true(loaded.jumpers[0].a.col == 4 && loaded.jumpers[0].b.col == 12, "jumper holes");
     expect_true(loaded.jumpers[0].route == 1 && loaded.jumpers[0].h_first == 1 && loaded.jumpers[0].mid == 96,

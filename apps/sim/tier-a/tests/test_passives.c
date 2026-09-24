@@ -178,6 +178,23 @@ int main(void) {
         ns_passive_set_pivot(&a, 40, 40);
         expect_true(ns_passive_hit(&a, 40, 40), "R rotated pivot hit");
         expect_true(!ns_passive_hit(&a, 40 - 5, 40), "R rotated misses neighbor pitch");
+        ns_passive_set_orient(&a, NS_ORIENT_0);
+        ns_passive_set_pivot(&a, 0, 0);
+        ns_passive_set_leg_ext(&a, 2, 10);
+        {
+            int tx = 0;
+            int ty = 0;
+            expect_true(ns_passive_tip_board(&a, 2, &tx, &ty), "R stretch pin2 tip");
+            expect_true(tx == 30 && ty == 0, "R stretch pin2 at span+extra");
+            expect_true(ns_passive_hit(&a, 30, 0), "R stretch lead hit");
+        }
+        ns_passive_set_leg_ext(&a, 1, 5);
+        {
+            int tx = 0;
+            int ty = 0;
+            expect_true(ns_passive_tip_board(&a, 1, &tx, &ty), "R stretch pin1 tip");
+            expect_true(tx == -5 && ty == 0, "R stretch pin1 opposite axis");
+        }
     }
 
     r01a_board_shutdown(&board);

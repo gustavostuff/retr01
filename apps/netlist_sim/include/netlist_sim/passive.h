@@ -32,6 +32,7 @@ typedef struct NsPassive {
     int polarized; /* 1 = ECAP or diode */
     int pivot_x;   /* filename pivot tip in board canvas coords */
     int pivot_y;
+    int leg_ext[2]; /* extra px beyond default tips (pin 1, pin 2). Resistors only. */
     char value[NS_PASSIVE_VALUE_LEN];
     char refdes_buf[NS_PASSIVE_REF_LEN];
 } NsPassive;
@@ -50,6 +51,8 @@ NsPassive *ns_passive_bank_add(NsPassiveBank *bank, NsPassiveKind kind, const ch
 void ns_passive_sync_aabb(NsPassive *p);
 void ns_passive_set_pivot(NsPassive *p, int pivot_x, int pivot_y);
 void ns_passive_set_orient(NsPassive *p, NsPkgOrient orient);
+void ns_passive_set_leg_ext(NsPassive *p, int pin_num, int extra);
+void ns_passive_set_leg_to(NsPassive *p, int pin_num, int wx, int wy);
 
 /* Opaque PNG pixel at board (bx,by), after rotation about the filename pivot. */
 int ns_passive_hit(const NsPassive *p, int bx, int by);
