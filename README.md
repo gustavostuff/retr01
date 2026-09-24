@@ -14,13 +14,13 @@ Hardware is still in development, and the software is being built around that de
 
 The playfield is 128x120 with chunky pixels, NES-style color limits, and two real background layers. The result is a sharp image with a simple hardware pipeline.
 
-Architecturally speaking, the graphics are based on worlds and screens: up to 8 worlds, 64 screens each (512 _TV screens_ of real state). Together with dual background layers, that can make for visual storytelling that feels much larger than the resolution suggests.
+Architecturally speaking, the graphics are based on worlds and screens: up to 8 worlds, 64 screens each (512 _TV screens_ of real state). All within a 512KB cartridge.
 
 Characters and objects are entities made from states, frames, and sprites (a _state_ being something like idle, running, or crouching). Hardware draws the background layers and sprites so PRG can focus on game logic instead of pushing every pixel.
 
 ## Audio
 
-Retr01 uses 8 channels shared between music and effects. Five are reserved for the soundtrack and three for effects so a jump or shot does not mute the song. This was designed to work differently from many small systems where sound effects compete directly with the music.
+Retr01 uses 8 channels shared between BGM and SFX. Channels are fully independent, so a jump or shot does not temporarily mute a BGM channel.
 
 The game program writes notes and a helper chip (an AVR128DB28) mixes them to analog output. See [sound.md](docs/general/sound.md).
 
