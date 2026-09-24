@@ -6,29 +6,33 @@ Hardware is still in development, and the software is being built around that de
 
 ## Inspirations
 
-1. NES: A 64-color global palette with up to 25 colors visible on screen at once.
-2. SNES: True parallax with two background planes and pixel-level transparency.
-3. [GameTank](https://gametank.zone/): A similar screen resolution and compact feel.
+Retr01 takes cues from classic consoles and from the kind of focused, hardware-first design that makes older systems so distinctive. The goal is not to recreate any one machine, but to combine a few of their strongest ideas into a compact platform with its own character:
+
+1. **NES — readable limits and bold color.** Retr01 uses a 64-color global palette, with up to 25 colors visible on screen at once. Like the NES, those constraints are intentional: they keep graphics cohesive, make pixel art approachable, and give every color choice more weight.
+2. **SNES — depth without unnecessary complexity.** Two true background planes and pixel-level transparency enable real parallax, layered scenery, and richer scene composition while keeping the graphics pipeline understandable and close to the hardware.
+3. **[GameTank](https://gametank.zone/) — compact ambition.** GameTank is an inspiration for its similar screen resolution, small-scale feel, and willingness to build a complete game platform around a tightly defined set of capabilities.
+
+Together, these influences point toward a system that is limited enough to be inviting, but expressive enough for layered worlds, responsive entities, music, and arcade-style games. Retr01 is meant to feel like a real machine—not just a modern game engine wearing an 8-bit aesthetic.
 
 ## Graphics
 
 The playfield is 128x120 with chunky pixels, NES-style color limits, and two real background layers. The result is a sharp image with a simple hardware pipeline.
 
-Architecturally speaking, the graphics are based on worlds and screens: up to 8 worlds, 64 screens each (512 _TV screens_ of real state). Together with dual background layers, that can make for visually rich, immersive experiences. All within a 512KB cartridge.
+Architecturally speaking, the graphics are based on worlds and screens: up to 8 worlds, 64 screens each (512 _TV screens_ of real state). Together with dual background layers, that can make for visual storytelling that feels much larger than the resolution suggests.
 
-Characters and objects are entities made from states, frames, and sprites (a _state_ being something like idle, running, or crouching). Hardware draws the background layers and sprites so PRG can focus mostly on game logic. More details in [video-graphics.md](docs/general/video-graphics.md).
+Characters and objects are entities made from states, frames, and sprites (a _state_ being something like idle, running, or crouching). Hardware draws the background layers and sprites so PRG can focus on game logic instead of pushing every pixel.
 
 ## Audio
 
-Retr01 uses 8 channels shared between music and effects. Five are reserved for the soundtrack and three for effects so a jump or shot does not mute the song. This was designed to work differently from the NES.
+Retr01 uses 8 channels shared between music and effects. Five are reserved for the soundtrack and three for effects so a jump or shot does not mute the song. This was designed to work differently from many small systems where sound effects compete directly with the music.
 
 The game program writes notes and a helper chip (an AVR128DB28) mixes them to analog output. See [sound.md](docs/general/sound.md).
 
 ## Hardware
 
-The design uses one compact through-hole board for both home-console and arcade cabinet builds. The same PCB can be populated as a console (using 3.5mm connectors for gamepads) or as an arcade board (using male pin headers for microswitch-based sticks and buttons).
+The design uses one compact through-hole board for both home-console and arcade cabinet builds. The same PCB can be populated as a console (using 3.5mm connectors for gamepads) or as an arcade board (with cabinet-oriented I/O).
 
-A W65C02S runs the game logic, while a few helper chips and small glue logic handle video, inputs, saves, and audio mixing. Output is dual sync RGB (RGBS and RGBHV) and composite. The cartridge is a simple memory pack containing program data, tiles, and save data.
+A W65C02S runs the game logic, while a few helper chips and small glue logic handle video, inputs, saves, and audio mixing. Output is dual sync RGB (RGBS and RGBHV) and composite. The cartridge is a simple, serviceable part of the system rather than a black box.
 
 ## Software pieces
 
