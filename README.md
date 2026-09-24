@@ -6,11 +6,9 @@ Hardware is still in development, and the software is being built around that de
 
 ## Inspirations
 
-Retr01 takes cues from classic consoles and from the kind of focused, hardware-first design that makes older systems so distinctive. The goal is not to recreate any one machine, but to combine a few of their strongest ideas into a compact platform with its own character:
-
-1. **NES — readable limits and bold color.** Retr01 uses a 64-color global palette, with up to 25 colors visible on screen at once. Like the NES, those constraints are intentional: they keep graphics cohesive, make pixel art approachable, and give every color choice more weight.
-2. **SNES — depth without unnecessary complexity.** Two true background planes and pixel-level transparency enable real parallax, layered scenery, and richer scene composition while keeping the graphics pipeline understandable and close to the hardware.
-3. **[GameTank](https://gametank.zone/) — compact ambition.** GameTank is an inspiration for its similar screen resolution, small-scale feel, and willingness to build a complete game platform around a tightly defined set of capabilities.
+1. **NES: readable limits and bold color.** Retr01 uses a 64-color global palette, with up to 25 colors visible on screen at once. Like the NES, those constraints are intentional: they keep graphics cohesive, make pixel art approachable, and give every color choice more weight.
+2. **SNES: depth without unnecessary complexity.** Two true background planes and pixel-level transparency enable real parallax, layered scenery, and richer scene composition while keeping the graphics pipeline understandable and close to the hardware.
+3. **[GameTank console](https://gametank.zone/): The main inspiration for the project. Retr01 uses a similar resolution, also scaled to 2x (by default), small cartridges and a hackable, understandable design.
 
 Together, these influences point toward a system that is limited enough to be inviting, but expressive enough for layered worlds, responsive entities, music, and arcade-style games. Retr01 is meant to feel like a real machine—not just a modern game engine wearing an 8-bit aesthetic.
 
