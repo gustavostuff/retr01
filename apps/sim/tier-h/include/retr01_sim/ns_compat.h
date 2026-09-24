@@ -1,0 +1,339 @@
+#ifndef RETR01_SIM_NS_COMPAT_H
+#define RETR01_SIM_NS_COMPAT_H
+
+/*
+ * Temporary Retr01 shims mapping legacy R01s* names onto netlist_sim.
+ * Lives only under app/sim/. Never ship inside netlist_sim/.
+ */
+
+#include "netlist_sim/board_layout.h"
+#include "netlist_sim/breadboard.h"
+#include "netlist_sim/bus.h"
+#include "netlist_sim/entity.h"
+#include "netlist_sim/health.h"
+#include "netlist_sim/island.h"
+#include "netlist_sim/island_builder.h"
+#include "netlist_sim/island_group.h"
+#include "netlist_sim/outline.h"
+#include "netlist_sim/passive.h"
+#include "netlist_sim/pin.h"
+#include "netlist_sim/timing.h"
+#include "netlist_sim/types.h"
+#include "netlist_sim/video_sink.h"
+
+typedef NsLevel R01sLevel;
+typedef NsPinDir R01sPinDir;
+typedef NsPin R01sPin;
+typedef NsEntity R01sEntity;
+typedef NsEntityVTable R01sEntityVTable;
+typedef NsEntityVisual R01sEntityVisual;
+typedef NsPkgOrient R01sPkgOrient;
+typedef NsHealth R01sHealth;
+typedef NsIslandHealth R01sIslandHealth;
+typedef NsSystemHealth R01sSystemHealth;
+typedef NsIsland R01sIsland;
+typedef NsIslandVTable R01sIslandVTable;
+typedef NsIslandGroup R01sIslandGroup;
+typedef NsIslandGroupVTable R01sIslandGroupVTable;
+typedef NsIslandBuilder R01sIslandBuilder;
+typedef NsBreadboard R01sBreadboard;
+typedef NsPbHole R01sPbHole;
+typedef NsPassive R01sPassive;
+typedef NsPassiveBank R01sPassiveBank;
+typedef NsPassiveKind R01sPassiveKind;
+typedef NsVideoSink R01sVideoSink;
+typedef NsVideoRenderMode R01sVideoRenderMode;
+typedef NsOutlineRgb R01sOutlineRgb;
+
+#define R01S_LVL_Z NS_LVL_Z
+#define R01S_LVL_L NS_LVL_L
+#define R01S_LVL_H NS_LVL_H
+#define R01S_LVL_X NS_LVL_X
+
+#define R01S_PIN_IN NS_PIN_IN
+#define R01S_PIN_OUT NS_PIN_OUT
+#define R01S_PIN_IO NS_PIN_IO
+#define R01S_PIN_PWR NS_PIN_PWR
+#define R01S_PIN_NC NS_PIN_NC
+
+#define R01S_MAX_PINS NS_MAX_PINS
+#define R01S_LOGIC_W NS_LOGIC_W
+#define R01S_LOGIC_H NS_LOGIC_H
+#define R01S_BOARD_W NS_BOARD_W
+#define R01S_BOARD_H NS_BOARD_H
+#define R01S_PX_PER_MM NS_PX_PER_MM
+#define R01S_DIP_PIN_PITCH_PX NS_DIP_PIN_PITCH_PX
+#define R01S_DIP_PIN_MARGIN_PX NS_DIP_PIN_MARGIN_PX
+#define R01S_PIN_HASH_SIZE NS_PIN_HASH_SIZE
+
+#define R01S_ENTITY_VIS_IC NS_ENTITY_VIS_IC
+#define R01S_ENTITY_VIS_PWR NS_ENTITY_VIS_PWR
+#define R01S_ENTITY_VIS_OSC NS_ENTITY_VIS_OSC
+#define R01S_ENTITY_VIS_DISPLAY NS_ENTITY_VIS_DISPLAY
+#define R01S_ENTITY_VIS_BUTTON NS_ENTITY_VIS_BUTTON
+#define R01S_ENTITY_VIS_PANEL NS_ENTITY_VIS_PANEL
+#define R01S_ENTITY_VIS_BREADBOARD NS_ENTITY_VIS_BREADBOARD
+#define R01S_ENTITY_VIS_PASSIVE NS_ENTITY_VIS_PASSIVE
+#define R01S_ENTITY_VIS_NONE NS_ENTITY_VIS_NONE
+
+#define R01S_ORIENT_0 NS_ORIENT_0
+#define R01S_ORIENT_90 NS_ORIENT_90
+#define R01S_ORIENT_180 NS_ORIENT_180
+#define R01S_ORIENT_270 NS_ORIENT_270
+#define R01S_ORIENT_H NS_ORIENT_H
+#define R01S_ORIENT_V NS_ORIENT_V
+
+#define R01S_HEALTH_BOOT NS_HEALTH_BOOT
+#define R01S_HEALTH_OK NS_HEALTH_OK
+#define R01S_HEALTH_WARN NS_HEALTH_WARN
+#define R01S_HEALTH_FAIL NS_HEALTH_FAIL
+#define R01S_HEALTH_MAX_ISLANDS NS_HEALTH_MAX_ISLANDS
+#define R01S_HEALTH_ACTIVITY_LEN NS_HEALTH_ACTIVITY_LEN
+#define R01S_HEALTH_DEBUG_LEN NS_HEALTH_DEBUG_LEN
+#define R01S_HEALTH_SYSTEM_DEBUG_LEN NS_HEALTH_SYSTEM_DEBUG_LEN
+
+#define R01S_ISLAND_MAX_ENTITIES NS_ISLAND_MAX_ENTITIES
+#define R01S_MAX_ISLANDS NS_MAX_ISLANDS
+#define R01S_BUILDER_MAX_MOUNT NS_BUILDER_MAX_MOUNT
+
+#define R01S_GRID NS_GRID
+#define R01S_ISLAND_PAD_X NS_ISLAND_PAD_X
+#define R01S_ISLAND_HEADER_H NS_ISLAND_HEADER_H
+#define R01S_ISLAND_PAD_TOP NS_ISLAND_PAD_TOP
+#define R01S_ISLAND_PAD_BOTTOM NS_ISLAND_PAD_BOTTOM
+#define R01S_CHIP_PIN_OUT NS_CHIP_PIN_OUT
+#define R01S_CHIP_PIN_THICK NS_CHIP_PIN_THICK
+#define R01S_BOARD_BG_R NS_BOARD_BG_R
+#define R01S_BOARD_BG_G NS_BOARD_BG_G
+#define R01S_BOARD_BG_B NS_BOARD_BG_B
+#define R01S_ISLAND_OK_R NS_ISLAND_OK_R
+#define R01S_ISLAND_OK_G NS_ISLAND_OK_G
+#define R01S_ISLAND_OK_B NS_ISLAND_OK_B
+#define R01S_CHIP_GAP NS_CHIP_GAP
+#define R01S_ISLAND_GAP NS_ISLAND_GAP
+#define R01S_COMPACT_GAP NS_COMPACT_GAP
+#define R01S_COMPACT_ORIGIN_X NS_COMPACT_ORIGIN_X
+#define R01S_COMPACT_ORIGIN_Y NS_COMPACT_ORIGIN_Y
+#define R01S_ISLAND_ROW_MAX_W NS_ISLAND_ROW_MAX_W
+#define R01S_ISLAND_RESIZE_HANDLE NS_ISLAND_RESIZE_HANDLE
+#define R01S_ISLAND_CORNER_BR NS_ISLAND_CORNER_BR
+#define R01S_ISLAND_CORNER_BL NS_ISLAND_CORNER_BL
+#define R01S_ISLAND_CORNER_TR NS_ISLAND_CORNER_TR
+#define R01S_ISLAND_CORNER_TL NS_ISLAND_CORNER_TL
+#define R01S_ISLAND_MIN_W NS_ISLAND_MIN_W
+#define R01S_ISLAND_MIN_H NS_ISLAND_MIN_H
+
+#define R01S_PHI2_NS NS_PHI2_NS
+#define R01S_PHI2_HALF_NS NS_PHI2_HALF_NS
+#define R01S_DOT_NS NS_DOT_NS
+
+#define R01S_VIDEO_W NS_VIDEO_W
+#define R01S_VIDEO_H NS_VIDEO_H
+#define R01S_LOGICAL_W NS_LOGICAL_W
+#define R01S_LOGICAL_H NS_LOGICAL_H
+#define R01S_SCALE_1X_OX NS_SCALE_1X_OX
+#define R01S_SCALE_1X_OY NS_SCALE_1X_OY
+#define R01S_VIDEO_RENDER_NORMAL NS_VIDEO_RENDER_NORMAL
+#define R01S_VIDEO_RENDER_PERSIST NS_VIDEO_RENDER_PERSIST
+#define R01S_VIDEO_RENDER_PHOSPHOR NS_VIDEO_RENDER_PHOSPHOR
+#define R01S_VIDEO_RENDER_DEFAULT NS_VIDEO_RENDER_DEFAULT
+
+#define R01S_PASSIVE_R NS_PASSIVE_R
+#define R01S_PASSIVE_CCAP NS_PASSIVE_CCAP
+#define R01S_PASSIVE_ECAP NS_PASSIVE_ECAP
+#define R01S_PASSIVE_OSC NS_PASSIVE_OSC
+#define R01S_PASSIVE_D NS_PASSIVE_D
+#define R01S_PASSIVE_KIND_COUNT NS_PASSIVE_KIND_COUNT
+#define R01S_PASSIVE_MAX NS_PASSIVE_MAX
+
+#define R01S_PB_COLS NS_PB_COLS
+#define R01S_PB_HOLE NS_PB_HOLE
+#define R01S_PB_GAP NS_PB_GAP
+#define R01S_PB_PITCH NS_PB_PITCH
+#define R01S_PB_MARGIN NS_PB_MARGIN
+#define R01S_PB_GAP_RAIL NS_PB_GAP_RAIL
+#define R01S_PB_GAP_TRENCH NS_PB_GAP_TRENCH
+#define R01S_PB_RAIL_SEG NS_PB_RAIL_SEG
+#define R01S_PB_RAIL_GAP_END NS_PB_RAIL_GAP_END
+#define R01S_PB_RAIL_GROUP NS_PB_RAIL_GROUP
+#define R01S_PB_LANE_TOP_POS NS_PB_LANE_TOP_POS
+#define R01S_PB_LANE_TOP_NEG NS_PB_LANE_TOP_NEG
+#define R01S_PB_LANE_A NS_PB_LANE_A
+#define R01S_PB_LANE_E NS_PB_LANE_E
+#define R01S_PB_LANE_F NS_PB_LANE_F
+#define R01S_PB_LANE_J NS_PB_LANE_J
+#define R01S_PB_LANE_BOT_POS NS_PB_LANE_BOT_POS
+#define R01S_PB_LANE_BOT_NEG NS_PB_LANE_BOT_NEG
+#define R01S_PB_LANE_COUNT NS_PB_LANE_COUNT
+
+#define r01s_orient_is_horiz ns_orient_is_horiz
+#define r01s_orient_next_cw ns_orient_next_cw
+#define r01s_dip_pkg_mm ns_dip_pkg_mm
+#define r01s_dip_body_along_px ns_dip_body_along_px
+#define r01s_dip_body_across_px ns_dip_body_across_px
+#define r01s_dip_snap_across_px ns_dip_snap_across_px
+#define r01s_entity_init ns_entity_init
+#define r01s_entity_add_pin ns_entity_add_pin
+#define r01s_entity_set_dip ns_entity_set_dip
+#define r01s_entity_set_dip_mm ns_entity_set_dip_mm
+#define r01s_entity_set_orient ns_entity_set_orient
+#define r01s_entity_refresh_body ns_entity_refresh_body
+#define r01s_entity_set_glyph ns_entity_set_glyph
+#define r01s_entity_place ns_entity_place
+#define r01s_entity_reset ns_entity_reset
+#define r01s_entity_eval ns_entity_eval
+#define r01s_entity_tick ns_entity_tick
+#define r01s_entity_destroy ns_entity_destroy
+#define r01s_entity_pin ns_entity_pin
+#define r01s_entity_pin_const ns_entity_pin_const
+#define r01s_entity_pin_hash_build ns_entity_pin_hash_build
+#define r01s_entity_pin_named ns_entity_pin_named
+#define r01s_entity_pin_named_const ns_entity_pin_named_const
+#define r01s_entity_drive ns_entity_drive
+#define r01s_entity_sense ns_entity_sense
+
+#define r01s_pin_init ns_pin_init
+#define r01s_pin_set ns_pin_set
+#define r01s_pin_get ns_pin_get
+
+#define r01s_level_is_low ns_level_is_low
+#define r01s_level_is_high ns_level_is_high
+#define r01s_level_name ns_level_name
+#define r01s_level_merge ns_level_merge
+#define r01s_level_merge_at ns_level_merge_at
+#define r01s_level_pulled ns_level_pulled
+#define r01s_bus_set_fatal_conflicts ns_bus_set_fatal_conflicts
+#define r01s_bus_fatal_conflicts ns_bus_fatal_conflicts
+#define r01s_bus_conflict_count ns_bus_conflict_count
+#define r01s_bus_clear_conflicts ns_bus_clear_conflicts
+#define r01s_bus_write ns_bus_write
+#define r01s_bus_read ns_bus_read
+#define r01s_bus_hiz ns_bus_hiz
+#define r01s_bus_resolve ns_bus_resolve
+
+#define r01s_health_tag ns_health_tag
+#define r01s_health_worst ns_health_worst
+#define r01s_outline_rgb ns_outline_rgb
+
+#define r01s_island_setup ns_island_setup
+#define r01s_island_add_entity ns_island_add_entity
+#define r01s_island_init ns_island_init
+#define r01s_island_shutdown ns_island_shutdown
+#define r01s_island_reset ns_island_reset
+#define r01s_island_eval ns_island_eval
+#define r01s_island_tick ns_island_tick
+
+#define r01s_island_group_init ns_island_group_init
+#define r01s_island_group_add ns_island_group_add
+#define r01s_island_group_bind ns_island_group_bind
+#define r01s_island_group_shutdown ns_island_group_shutdown
+#define r01s_island_group_reset ns_island_group_reset
+#define r01s_island_group_step ns_island_group_step
+#define r01s_island_group_frame ns_island_group_frame
+#define r01s_island_group_eval_idle ns_island_group_eval_idle
+#define r01s_island_group_fill_status ns_island_group_fill_status
+#define r01s_island_group_update_probes ns_island_group_update_probes
+#define r01s_island_group_fill_health ns_island_group_fill_health
+#define r01s_island_group_at ns_island_group_at
+#define r01s_island_group_at_mut ns_island_group_at_mut
+#define r01s_island_group_count ns_island_group_count
+
+#define r01s_island_builder_init ns_island_builder_init
+#define r01s_island_builder_bind ns_island_builder_bind
+#define r01s_island_builder_add ns_island_builder_add
+#define r01s_island_builder_mount ns_island_builder_mount
+#define r01s_island_builder_mount_rel ns_island_builder_mount_rel
+#define r01s_island_builder_fit_island ns_island_builder_fit_island
+#define r01s_island_builder_fit_all ns_island_builder_fit_all
+#define r01s_island_builder_arrange ns_island_builder_arrange
+#define r01s_island_builder_arrange_rows ns_island_builder_arrange_rows
+#define r01s_island_builder_finish ns_island_builder_finish
+#define r01s_island_builder_shutdown ns_island_builder_shutdown
+#define r01s_island_builder_group ns_island_builder_group
+#define r01s_island_builder_count_visual ns_island_builder_count_visual
+/* Retr01 motherboard BOM: VIS_IC mounts excluding support ATtiny pad MCUs. */
+int r01s_island_builder_count_bom_ic(const R01sIslandBuilder *builder);
+
+#define r01s_snap5 ns_snap5
+#define r01s_snap5_up ns_snap5_up
+#define r01s_grid_snap ns_grid_snap
+#define r01s_grid_snap_up ns_grid_snap_up
+
+#define r01s_breadboard_init ns_breadboard_init
+#define r01s_breadboard_entity ns_breadboard_entity
+#define r01s_breadboard_sync_body ns_breadboard_sync_body
+#define r01s_breadboard_body_size ns_breadboard_body_size
+#define r01s_breadboard_hole_exists ns_breadboard_hole_exists
+#define r01s_breadboard_strip_id ns_breadboard_strip_id
+#define r01s_breadboard_hole_world ns_breadboard_hole_world
+#define r01s_breadboard_hit_hole ns_breadboard_hit_hole
+#define r01s_breadboard_set_hover ns_breadboard_set_hover
+#define r01s_breadboard_clear_hover ns_breadboard_clear_hover
+#define r01s_breadboard_tip_strip ns_breadboard_tip_strip
+#define r01s_breadboard_draw ns_breadboard_draw
+
+#define r01s_passive_bank_clear ns_passive_bank_clear
+#define r01s_passive_bank_add ns_passive_bank_add
+#define r01s_passive_sync_aabb ns_passive_sync_aabb
+#define r01s_passive_set_pivot ns_passive_set_pivot
+#define r01s_passive_set_orient ns_passive_set_orient
+#define r01s_passive_tip_board ns_passive_tip_board
+#define r01s_passive_draw ns_passive_draw
+#define r01s_passive_bank_spawn_bom ns_passive_bank_spawn_bom
+#define r01s_passive_bank_layout_grid ns_passive_bank_layout_grid
+#define r01s_passive_kind_name ns_passive_kind_name
+
+#define r01s_video_sink_init ns_video_sink_init
+#define r01s_video_sink_entity ns_video_sink_entity
+#define r01s_rgbs_beam_to_logical ns_rgbs_beam_to_logical
+#define r01s_video_sink_set_scale_2x ns_video_sink_set_scale_2x
+#define r01s_video_sink_scale_2x ns_video_sink_scale_2x
+#define r01s_video_sink_set_render_mode ns_video_sink_set_render_mode
+#define r01s_video_sink_render_mode ns_video_sink_render_mode
+#define r01s_video_sink_set_field_active ns_video_sink_set_field_active
+#define r01s_video_sink_set_palette ns_video_sink_set_palette
+#define r01s_video_sink_plot ns_video_sink_plot
+#define r01s_video_sink_clear ns_video_sink_clear
+#define r01s_video_sink_on_vblank ns_video_sink_on_vblank
+#define r01s_video_sink_display_tick ns_video_sink_display_tick
+#define r01s_video_sink_rgb ns_video_sink_rgb
+#define r01s_video_sink_lit_pixels ns_video_sink_lit_pixels
+#define r01s_video_sink_pixel_packed ns_video_sink_pixel_packed
+#define r01s_video_sink_lcd_size ns_video_sink_lcd_size
+#define r01s_video_sink_refresh_glyph ns_video_sink_refresh_glyph
+
+
+typedef NsTpdCorner R01sTpdCorner;
+typedef NsTpdPart R01sTpdPart;
+typedef NsDelayU8 R01sDelayU8;
+
+#define R01S_TPD_TYP NS_TPD_TYP
+#define R01S_TPD_MAX NS_TPD_MAX
+#define R01S_TPD_PART_HC245 NS_TPD_PART_HC245
+#define R01S_TPD_PART_HC157 NS_TPD_PART_HC157
+#define R01S_TPD_PART_ATF22 NS_TPD_PART_ATF22
+#define R01S_TPD_PART_SRAM_TAA NS_TPD_PART_SRAM_TAA
+#define R01S_TPD_HC245_TYP_NS NS_TPD_HC245_TYP_NS
+#define R01S_TPD_HC245_MAX_NS NS_TPD_HC245_MAX_NS
+#define R01S_TPD_HC157_TYP_NS NS_TPD_HC157_TYP_NS
+#define R01S_TPD_HC157_MAX_NS NS_TPD_HC157_MAX_NS
+#define R01S_TPD_ATF22_TYP_NS NS_TPD_ATF22_TYP_NS
+#define R01S_TPD_ATF22_MAX_NS NS_TPD_ATF22_MAX_NS
+#define R01S_TAA_SRAM_TYP_NS NS_TAA_SRAM_TYP_NS
+#define R01S_TAA_SRAM_MAX_NS NS_TAA_SRAM_MAX_NS
+
+#define r01s_timing_reset ns_timing_reset
+#define r01s_timing_now_ns ns_timing_now_ns
+#define r01s_timing_set_now_ns ns_timing_set_now_ns
+#define r01s_timing_advance_ns ns_timing_advance_ns
+#define r01s_timing_prop_enabled ns_timing_prop_enabled
+#define r01s_timing_corner ns_timing_corner
+#define r01s_timing_tpd_ns ns_timing_tpd_ns
+#define r01s_timing_pin_tpd_ns ns_timing_pin_tpd_ns
+#define r01s_timing_set_prop_override ns_timing_set_prop_override
+#define r01s_delay_u8_reset ns_delay_u8_reset
+#define r01s_delay_u8_update ns_delay_u8_update
+#define r01s_timing_path_decode_bus_reg_ns ns_timing_path_decode_bus_reg_ns
+#define r01s_timing_print_budget ns_timing_print_budget
+
+#endif

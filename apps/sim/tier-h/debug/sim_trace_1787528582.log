@@ -1,0 +1,356 @@
+retr01_sim board debug trace
+started: Sun Aug 23 16:43:02 2026
+note: bring-up PRG overlay replaces Studio PRG; no host soft-boot of MAP/CHR.
+expected LCD with current bring-up: black + smoke tiles, not Studio sky.
+
+==== snap t=0ms (+0ms) why=begin ====
+cpu: PC=0000 A=00 cycles=0 reset_hold=12
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=0000 latch=0 vram_w=0 vram_r=0 pad=0 beam=0 bg=0 video=0 map=0 apu=0 oam=0 linebuf=0 spr=0 nmi=0 nmi_pulses=0
+beam: x=0 y=0 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=0/240 nonzero_attrs_slot0=0/240 vram_addr=$0000
+  tiles @0000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=0 samples=0 rgb(0,0)=#000000 pk=00 rgb(32,16)=#000000 pk=00 rgb(64,60)=#000000 pk=00
+event: health 0410 -> 0411 at t=363ms PC=8009
+
+==== snap t=363ms (+60ms) why=health_edge ====
+cpu: PC=8009 A=00 cycles=20 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=0411 latch=1 vram_w=0 vram_r=0 pad=0 beam=1 bg=0 video=0 map=0 apu=0 oam=0 linebuf=1 spr=0 nmi=0 nmi_pulses=0
+beam: x=237 y=7 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=0/240 nonzero_attrs_slot0=0/240 vram_addr=$0000
+  tiles @0000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=0 samples=7002 rgb(0,0)=#000000 pk=00 rgb(32,16)=#000000 pk=00 rgb(64,60)=#000000 pk=00
+event: health 0411 -> 0417 at t=408ms PC=8016
+
+==== snap t=408ms (+105ms) why=health_edge ====
+cpu: PC=8016 A=00 cycles=36 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=0417 latch=1 vram_w=1 vram_r=1 pad=0 beam=1 bg=0 video=0 map=0 apu=0 oam=0 linebuf=1 spr=0 nmi=0 nmi_pulses=0
+beam: x=239 y=13 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=0/240 vram_addr=$0001
+  tiles @0000: AA 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=64 samples=10078 rgb(0,0)=#000000 pk=00 rgb(32,16)=#000000 pk=00 rgb(64,60)=#000000 pk=00
+event: health 0417 -> 0457 at t=454ms PC=8022
+
+==== snap t=454ms (+151ms) why=health_edge ====
+cpu: PC=8022 A=00 cycles=52 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=0457 latch=1 vram_w=1 vram_r=1 pad=0 beam=1 bg=0 video=1 map=0 apu=0 oam=0 linebuf=1 spr=0 nmi=0 nmi_pulses=0
+beam: x=241 y=19 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=0/240 vram_addr=$0001
+  tiles @0000: AA 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=128 samples=13154 rgb(0,0)=#000000 pk=00 rgb(32,16)=#000000 pk=00 rgb(64,60)=#000000 pk=00
+event: health 0457 -> 04D7 at t=635ms PC=8056
+
+==== snap t=635ms (+332ms) why=health_edge ====
+cpu: PC=8056 A=00 cycles=116 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=04D7 latch=1 vram_w=1 vram_r=1 pad=0 beam=1 bg=0 video=1 map=1 apu=0 oam=0 linebuf=1 spr=0 nmi=0 nmi_pulses=0
+beam: x=249 y=43 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=128 samples=25458 rgb(0,0)=#000000 pk=00 rgb(32,16)=#000000 pk=00 rgb(64,60)=#000000 pk=00
+event: health 04D7 -> 05D7 at t=680ms PC=8063
+
+==== snap t=680ms (+377ms) why=health_edge ====
+cpu: PC=8063 A=00 cycles=132 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=05D7 latch=1 vram_w=1 vram_r=1 pad=0 beam=1 bg=0 video=1 map=1 apu=1 oam=0 linebuf=1 spr=0 nmi=0 nmi_pulses=0
+beam: x=251 y=49 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=128 samples=28534 rgb(0,0)=#000000 pk=00 rgb(32,16)=#000000 pk=00 rgb(64,60)=#000000 pk=00
+event: health 05D7 -> 07D7 at t=725ms PC=8071
+
+==== snap t=725ms (+422ms) why=health_edge ====
+cpu: PC=8071 A=00 cycles=148 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=07D7 latch=1 vram_w=1 vram_r=1 pad=0 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=0 nmi=0 nmi_pulses=0
+beam: x=253 y=55 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=128 samples=31610 rgb(0,0)=#000000 pk=00 rgb(32,16)=#000000 pk=00 rgb(64,60)=#000000 pk=00
+event: health 07D7 -> 07DF at t=816ms PC=807F
+
+==== snap t=816ms (+513ms) why=health_edge ====
+cpu: PC=807F A=00 cycles=180 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=07DF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=0 nmi=0 nmi_pulses=0
+beam: x=257 y=67 hblank=1 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=128 samples=37758 rgb(0,0)=#000000 pk=00 rgb(32,16)=#000000 pk=00 rgb(64,60)=#000000 pk=00
+
+==== snap t=1854ms (+1551ms) why=periodic ====
+cpu: PC=8082 A=00 cycles=548 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=07DF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=0 nmi=0 nmi_pulses=0
+beam: x=303 y=205 hblank=1 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=128 samples=108414 rgb(0,0)=#000000 pk=00 rgb(32,16)=#000000 pk=00 rgb(64,60)=#000000 pk=00
+event: health 07DF -> 17DF at t=2120ms PC=8081
+
+==== snap t=2120ms (+1817ms) why=health_edge ====
+cpu: PC=8081 A=00 cycles=644 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=17DF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=0 nmi=1 nmi_pulses=1
+beam: x=315 y=241 hblank=1 vblank=1
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=128 samples=125822 rgb(0,0)=#000000 pk=00 rgb(32,16)=#000000 pk=00 rgb(64,60)=#000000 pk=00
+event: nmi_pulses 0 -> 1 at t=2120ms beam_y=241
+event: health 17DF -> 1FDF at t=2492ms PC=8084
+
+==== snap t=2492ms (+2189ms) why=health_edge ====
+cpu: PC=8084 A=00 cycles=788 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FDF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=1
+beam: x=333 y=33 hblank=1 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=704 samples=143230 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+
+==== snap t=3525ms (+3222ms) why=periodic_pc_stable ====
+cpu: PC=8082 A=00 cycles=1156 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FDF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=1
+beam: x=38 y=172 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=1152 samples=213964 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+event: nmi_pulses 1 -> 2 at t=4058ms beam_y=244
+
+==== snap t=4531ms (+4228ms) why=periodic ====
+cpu: PC=807F A=00 cycles=1524 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FDF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=2
+beam: x=84 y=48 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=2176 samples=273448 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+
+==== snap t=5567ms (+5264ms) why=periodic ====
+cpu: PC=8082 A=00 cycles=1892 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FDF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=2
+beam: x=130 y=186 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=2176 samples=344196 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+event: nmi_pulses 2 -> 3 at t=5972ms beam_y=240
+
+==== snap t=6611ms (+6308ms) why=periodic_pc_stable ====
+cpu: PC=8082 A=00 cycles=2276 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FDF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=3
+beam: x=178 y=68 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=3200 samples=406756 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+
+==== snap t=7650ms (+7347ms) why=periodic ====
+cpu: PC=807F A=00 cycles=2644 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FDF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=3
+beam: x=224 y=206 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=3200 samples=477504 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+event: nmi_pulses 3 -> 4 at t=7917ms beam_y=242
+
+==== snap t=8690ms (+8387ms) why=periodic ====
+cpu: PC=8084 A=00 cycles=3028 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FDF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=4
+beam: x=272 y=88 hblank=1 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=4224 samples=540030 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+
+==== snap t=9724ms (+9421ms) why=periodic ====
+cpu: PC=8082 A=00 cycles=3396 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FDF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=4
+beam: x=318 y=226 hblank=1 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=4224 samples=610686 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+event: nmi_pulses 4 -> 5 at t=9851ms beam_y=244
+
+==== snap t=10764ms (+10461ms) why=periodic ====
+cpu: PC=8081 A=00 cycles=3780 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FDF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=5
+beam: x=25 y=109 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=5248 samples=673202 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+event: nmi_pulses 5 -> 6 at t=11745ms beam_y=241
+
+==== snap t=11780ms (+11477ms) why=periodic ====
+cpu: PC=8084 A=00 cycles=4148 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FDF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=6
+beam: x=71 y=247 hblank=0 vblank=1
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=5248 samples=740222 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+
+==== snap t=12789ms (+12486ms) why=periodic ====
+cpu: PC=8082 A=00 cycles=4516 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FDF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=6
+beam: x=117 y=123 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=6272 samples=803434 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+event: nmi_pulses 6 -> 7 at t=13679ms beam_y=243
+
+==== snap t=13828ms (+13525ms) why=periodic ====
+cpu: PC=8081 A=00 cycles=4900 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FDF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=7
+beam: x=165 y=5 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=6464 samples=865994 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+
+==== snap t=14862ms (+14559ms) why=periodic ====
+cpu: PC=8084 A=00 cycles=5268 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FDF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=7
+beam: x=211 y=143 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=7296 samples=936742 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+event: nmi_pulses 7 -> 8 at t=15615ms beam_y=245
+
+==== snap t=15905ms (+15602ms) why=periodic ====
+cpu: PC=8083 A=00 cycles=5652 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FDF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=8
+beam: x=259 y=25 hblank=1 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=7808 samples=999294 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+
+==== snap t=16941ms (+16638ms) why=periodic ====
+cpu: PC=8081 A=00 cycles=6020 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FDF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=0 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=8
+beam: x=305 y=163 hblank=1 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=8320 samples=1069950 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+event: nmi_pulses 8 -> 9 at t=17522ms beam_y=241
+event: health 1FDF -> 1FFF at t=17714ms PC=8082
+
+==== snap t=17714ms (+17411ms) why=health_edge ====
+cpu: PC=8082 A=00 cycles=6308 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FFF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=1 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=9
+beam: x=0 y=10 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=8642 samples=1113984 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+
+==== snap t=18746ms (+18443ms) why=periodic ====
+cpu: PC=807F A=00 cycles=6676 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FFF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=1 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=9
+beam: x=46 y=148 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=9344 samples=1184732 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+event: nmi_pulses 9 -> 10 at t=19461ms beam_y=244
+
+==== snap t=19746ms (+19443ms) why=periodic ====
+cpu: PC=8082 A=00 cycles=7044 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FFF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=1 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=10
+beam: x=92 y=24 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=9856 samples=1244216 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+
+==== snap t=20783ms (+20480ms) why=periodic ====
+cpu: PC=8080 A=00 cycles=7412 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FFF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=1 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=10
+beam: x=138 y=162 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=10368 samples=1314964 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+
+==== snap t=21796ms (+21493ms) why=periodic ====
+cpu: PC=8082 A=00 cycles=7540 reset_hold=0
+cart: loaded=1 label=project.retr01 off_prg=$000048 len_prg=$8000 magic=524554523031 prg0=A9558D02 (expect A9..=LDA if bring-up overlay)
+health bits=1FFF latch=1 vram_w=1 vram_r=1 pad=1 beam=1 bg=1 video=1 map=1 apu=1 oam=1 linebuf=1 spr=1 nmi=1 nmi_pulses=10
+beam: x=154 y=210 hblank=0 vblank=0
+vram: nonzero_tiles_slot0=1/240 nonzero_attrs_slot0=1/240 vram_addr=$00F1
+  tiles @0000: 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  attrs @00F0: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  oam: 10 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00
+video: lit=10368 samples=1339572 rgb(0,0)=#240000 pk=20 rgb(32,16)=#240000 pk=20 rgb(64,60)=#000000 pk=00
+
+==== end ====

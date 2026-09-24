@@ -1,0 +1,443 @@
+#include "ui.h"
+#include "ui_internal.h"
+
+#include "retr01_sim/board.h"
+#include "retr01_sim/board_layout.h"
+#include "retr01_sim/bus.h"
+#include "breadboard.h"
+#include "passive.h"
+#include "ui_assets.h"
+#include "video_sink.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int r01s_ui_init(R01sUi *ui) {
+    if (!ui) {
+        return -1;
+    }
+    memset(ui, 0, sizeof(*ui));
+    ui->selected = -1;
+    ui->drag_chip = -1;
+    ui->drag_island = -1;
+    ui->resize_island = -1;
+    ui->ctx_chip = -1;
+    ui->box_sel = 0;
+    ui->input_mode = R01S_INPUT_ARCADE;
+    ui->wire_mode = R01S_WIRE_LIVE;
+    ui->layout_compact = 1;
+    memset(ui->chip_sel, 0, sizeof(ui->chip_sel));
+    ui->tip_show_at = SDL_GetTicks() + R01S_UI_TOOLTIP_DELAY_MS;
+    ui->islands_strip_x = R01S_UI_ISLANDS_STRIP_DEFAULT_X;
+    ui->islands_strip_y = R01S_UI_ISLANDS_STRIP_DEFAULT_Y;
+    ui->legend_strip_x = R01S_UI_LEGEND_STRIP_DEFAULT_X;
+    ui->legend_strip_y = R01S_UI_LEGEND_STRIP_DEFAULT_Y;
+    (void)font_ensure();
+    ui->wave_monitor_x = R01S_UI_WAVE_MONITOR_DEFAULT_X;
+    ui->wave_monitor_y = ui_wave_monitor_default_y();
+    snprintf(ui->status, sizeof(ui->status),
+             "SPACE pause. S save. R rotate. DBL-CLK SCR1 scale. WASD/ARROWS pads.");
+    return 0;
+}
+
+void r01s_ui_shutdown(R01sUi *ui) {
+    if (ui) {
+        if (ui->lcd_tex) {
+            SDL_DestroyTexture(ui->lcd_tex);
+            ui->lcd_tex = NULL;
+        }
+        memset(ui, 0, sizeof(*ui));
+    }
+    font_shutdown();
+}
+
+int r01s_ui_rotate_selected(R01sUi *ui) {
+    int i;
+    int n = 0;
+    const char *last_ref = NULL;
+    R01sPkgOrient last_orient = R01S_ORIENT_0;
+
+    if (!ui) {
+        return 0;
+    }
+
+    /* Compact multi-select: rotate every selected IC / breadboard about pin 1 tip. */
+    if (ui->layout_compact) {
+        for (i = 0; i < ui->chip_count; i++) {
+            R01sEntity *te;
+            int tip_x = 0;
+            int tip_y = 0;
+            int rel_x = 0;
+            int rel_y = 0;
+            int have_pivot = 0;
+            if (!ui->chip_sel[i]) {
+                continue;
+            }
+            te = ui->chips[i];
+            if (!te) {
+                continue;
+            }
+            if (te->visual == R01S_ENTITY_VIS_IC) {
+                have_pivot = ui_chip_pin_tip_board(te, 1, &tip_x, &tip_y);
+                r01s_entity_set_orient(te, r01s_orient_next_cw(te->orient));
+                if (have_pivot) {
+                    int saved_x = te->board_x;
+                    int saved_y = te->board_y;
+                    r01s_entity_place(te, 0, 0);
+                    if (ui_chip_pin_tip_board(te, 1, &rel_x, &rel_y)) {
+                        r01s_entity_place(te, tip_x - rel_x, tip_y - rel_y);
+                    } else {
+                        r01s_entity_place(te, saved_x, saved_y);
+                    }
+                }
+                ui_chip_snap_to_breadboard(ui, i);
+            } else if (te->visual == R01S_ENTITY_VIS_PASSIVE) {
+                r01s_passive_set_orient((R01sPassive *)(void *)te, r01s_orient_next_cw(te->orient));
+                ui_chip_snap_to_breadboard(ui, i);
+            } else if (te->visual == R01S_ENTITY_VIS_BREADBOARD) {
+                te->orient = r01s_orient_next_cw(te->orient);
+                r01s_breadboard_sync_body((R01sBreadboard *)(void *)te);
+            } else {
+                continue;
+            }
+            clamp_chip(ui, te, ui->chip_island[i]);
+            last_ref = te->refdes;
+            last_orient = te->orient;
+            n++;
+        }
+        if (n > 0) {
+            ui->layout_dirty = 1;
+            if (n == 1) {
+                snprintf(ui->status, sizeof(ui->status), "%s -> %d deg", last_ref ? last_ref : "?",
+                         (int)last_orient * 90);
+            } else {
+                snprintf(ui->status, sizeof(ui->status), "rotated %d chips", n);
+            }
+            return 1;
+        }
+    }
+
+    {
+        R01sEntity *te;
+        int tip_x = 0;
+        int tip_y = 0;
+        int rel_x = 0;
+        int rel_y = 0;
+        int have_pivot = 0;
+        int idx = ui->selected;
+        if (idx < 0 || idx >= ui->chip_count) {
+            idx = ui->ctx_chip;
+        }
+        if (idx < 0 || idx >= ui->chip_count) {
+            return 0;
+        }
+        te = ui->chips[idx];
+        if (!te) {
+            return 0;
+        }
+        if (te->visual == R01S_ENTITY_VIS_IC) {
+            have_pivot = ui_chip_pin_tip_board(te, 1, &tip_x, &tip_y);
+            r01s_entity_set_orient(te, r01s_orient_next_cw(te->orient));
+            if (have_pivot) {
+                int saved_x = te->board_x;
+                int saved_y = te->board_y;
+                r01s_entity_place(te, 0, 0);
+                if (ui_chip_pin_tip_board(te, 1, &rel_x, &rel_y)) {
+                    r01s_entity_place(te, tip_x - rel_x, tip_y - rel_y);
+                } else {
+                    r01s_entity_place(te, saved_x, saved_y);
+                }
+            }
+            ui_chip_snap_to_breadboard(ui, idx);
+        } else if (te->visual == R01S_ENTITY_VIS_PASSIVE) {
+            r01s_passive_set_orient((R01sPassive *)(void *)te, r01s_orient_next_cw(te->orient));
+            ui_chip_snap_to_breadboard(ui, idx);
+        } else if (te->visual == R01S_ENTITY_VIS_BREADBOARD) {
+            te->orient = r01s_orient_next_cw(te->orient);
+            r01s_breadboard_sync_body((R01sBreadboard *)(void *)te);
+        } else {
+            return 0;
+        }
+        clamp_chip(ui, te, ui->chip_island[idx]);
+        ui->layout_dirty = 1;
+        snprintf(ui->status, sizeof(ui->status), "%s -> %d deg", te->refdes ? te->refdes : "?",
+                 (int)te->orient * 90);
+        return 1;
+    }
+}
+
+void r01s_ui_bind_group(R01sUi *ui, R01sIslandGroup *group) {
+    if (ui) {
+        ui->group = group;
+        r01s_ui_island_z_init(ui);
+    }
+}
+
+void r01s_ui_island_z_init(R01sUi *ui) {
+    int n;
+    int i;
+    if (!ui) {
+        return;
+    }
+    n = ui->group ? r01s_island_group_count(ui->group) : 0;
+    if (n > R01S_MAX_ISLANDS) {
+        n = R01S_MAX_ISLANDS;
+    }
+    ui->island_z_count = n;
+    for (i = 0; i < n; i++) {
+        ui->island_z_order[i] = (uint8_t)i;
+    }
+}
+
+void r01s_ui_island_z_apply(R01sUi *ui, const int *z_by_index, int n) {
+    int rank;
+    int i;
+    int seen[R01S_MAX_ISLANDS];
+
+    if (!ui || n <= 0 || n > R01S_MAX_ISLANDS) {
+        r01s_ui_island_z_init(ui);
+        return;
+    }
+    memset(seen, 0, sizeof(seen));
+    ui->island_z_count = n;
+    for (rank = 0; rank < n; rank++) {
+        int found = -1;
+        for (i = 0; i < n; i++) {
+            if (!z_by_index || z_by_index[i] != rank) {
+                continue;
+            }
+            if (seen[i]) {
+                r01s_ui_island_z_init(ui);
+                return;
+            }
+            seen[i] = 1;
+            found = i;
+            break;
+        }
+        if (found < 0) {
+            r01s_ui_island_z_init(ui);
+            return;
+        }
+        ui->island_z_order[rank] = (uint8_t)found;
+    }
+}
+
+int r01s_ui_island_z_rank(const R01sUi *ui, int island_index) {
+    int p;
+    if (!ui || island_index < 0) {
+        return 0;
+    }
+    for (p = 0; p < ui->island_z_count; p++) {
+        if (ui->island_z_order[p] == (uint8_t)island_index) {
+            return p;
+        }
+    }
+    return island_index;
+}
+
+void r01s_ui_island_z_raise(R01sUi *ui, int island_index) {
+    int n;
+    int p;
+    int i;
+
+    if (!ui || island_index < 0) {
+        return;
+    }
+    n = ui->island_z_count;
+    if (n <= 1 || island_index >= n) {
+        return;
+    }
+    for (p = 0; p < n; p++) {
+        if (ui->island_z_order[p] == (uint8_t)island_index) {
+            break;
+        }
+    }
+    if (p < 0 || p >= n - 1) {
+        return;
+    }
+    for (i = p; i < n - 1; i++) {
+        ui->island_z_order[i] = ui->island_z_order[i + 1];
+    }
+    ui->island_z_order[n - 1] = (uint8_t)island_index;
+}
+
+static int chip_visual_draw_layer(const R01sEntity *e) {
+    if (!e) {
+        return 0;
+    }
+    switch (e->visual) {
+    case R01S_ENTITY_VIS_IC:
+        return 0;
+    case R01S_ENTITY_VIS_PWR:
+    case R01S_ENTITY_VIS_OSC:
+        return 1;
+    case R01S_ENTITY_VIS_DISPLAY:
+        return 2;
+    case R01S_ENTITY_VIS_BUTTON:
+    case R01S_ENTITY_VIS_PANEL:
+        return 2;
+    case R01S_ENTITY_VIS_BREADBOARD:
+        return -1; /* behind ICs */
+    case R01S_ENTITY_VIS_PASSIVE:
+        return 0; /* with ICs, above breadboard */
+    default:
+        return 0;
+    }
+}
+
+void r01s_ui_chip_z_init(R01sUi *ui) {
+    int n;
+    int i;
+    int j;
+
+    if (!ui) {
+        return;
+    }
+    n = ui->chip_count;
+    if (n > R01S_BOARD_MAX_CHIPS) {
+        n = R01S_BOARD_MAX_CHIPS;
+    }
+    ui->chip_z_count = n;
+    for (i = 0; i < n; i++) {
+        ui->chip_z_order[i] = (uint8_t)i;
+    }
+    /* ICs back, display/LCD front (stable by chip index). */
+    for (i = 1; i < n; i++) {
+        uint8_t key = ui->chip_z_order[i];
+        int key_layer = chip_visual_draw_layer(ui->chips[key]);
+        j = i - 1;
+        while (j >= 0 && chip_visual_draw_layer(ui->chips[ui->chip_z_order[j]]) > key_layer) {
+            ui->chip_z_order[j + 1] = ui->chip_z_order[j];
+            j--;
+        }
+        ui->chip_z_order[j + 1] = key;
+    }
+}
+
+void r01s_ui_chip_z_apply(R01sUi *ui, const int *z_by_index, int n) {
+    int rank;
+    int i;
+    int seen[R01S_BOARD_MAX_CHIPS];
+
+    if (!ui || n <= 0 || n > R01S_BOARD_MAX_CHIPS) {
+        r01s_ui_chip_z_init(ui);
+        return;
+    }
+    memset(seen, 0, sizeof(seen));
+    ui->chip_z_count = n;
+    for (rank = 0; rank < n; rank++) {
+        int found = -1;
+        for (i = 0; i < n; i++) {
+            if (!z_by_index || z_by_index[i] != rank) {
+                continue;
+            }
+            if (seen[i]) {
+                r01s_ui_chip_z_init(ui);
+                return;
+            }
+            seen[i] = 1;
+            found = i;
+            break;
+        }
+        if (found < 0) {
+            r01s_ui_chip_z_init(ui);
+            return;
+        }
+        ui->chip_z_order[rank] = (uint8_t)found;
+    }
+}
+
+int r01s_ui_chip_z_rank(const R01sUi *ui, int chip_index) {
+    int p;
+    if (!ui || chip_index < 0) {
+        return 0;
+    }
+    for (p = 0; p < ui->chip_z_count; p++) {
+        if (ui->chip_z_order[p] == (uint8_t)chip_index) {
+            return p;
+        }
+    }
+    return chip_index;
+}
+
+void r01s_ui_chip_z_raise(R01sUi *ui, int chip_index) {
+    int n;
+    int p;
+    int i;
+    int insert_at;
+    int layer;
+
+    if (!ui || chip_index < 0) {
+        return;
+    }
+    n = ui->chip_z_count;
+    if (n <= 1 || chip_index >= n) {
+        return;
+    }
+    for (p = 0; p < n; p++) {
+        if (ui->chip_z_order[p] == (uint8_t)chip_index) {
+            break;
+        }
+    }
+    if (p < 0 || p >= n) {
+        return;
+    }
+    layer = chip_visual_draw_layer(ui->chips[chip_index]);
+    /* Remove, then reinsert at the top of this visual layer (breadboard stays behind ICs). */
+    for (i = p; i < n - 1; i++) {
+        ui->chip_z_order[i] = ui->chip_z_order[i + 1];
+    }
+    insert_at = n - 1;
+    for (i = 0; i < n - 1; i++) {
+        if (chip_visual_draw_layer(ui->chips[ui->chip_z_order[i]]) > layer) {
+            insert_at = i;
+            break;
+        }
+        insert_at = i + 1;
+    }
+    for (i = n - 1; i > insert_at; i--) {
+        ui->chip_z_order[i] = ui->chip_z_order[i - 1];
+    }
+    ui->chip_z_order[insert_at] = (uint8_t)chip_index;
+}
+
+int r01s_ui_add_chip(R01sUi *ui, R01sEntity *chip, int island_index) {
+    if (!ui || !chip || ui->chip_count >= R01S_BOARD_MAX_CHIPS) {
+        return -1;
+    }
+    if (!ui->group || island_index < 0 || island_index >= r01s_island_group_count(ui->group)) {
+        return -1;
+    }
+    ui->chips[ui->chip_count] = chip;
+    ui->chip_island[ui->chip_count] = (uint8_t)island_index;
+    clamp_chip(ui, chip, island_index);
+    ui->chip_count++;
+    return 0;
+}
+
+void r01s_ui_clamp_pan(R01sUi *ui) {
+    int over = R01S_UI_PAN_OVERSCROLL;
+    int min_x = -over;
+    int min_y = -over;
+    int max_x = R01S_BOARD_W - R01S_UI_VIEW_W + over;
+    int max_y = R01S_BOARD_H - R01S_UI_VIEW_H + over;
+    if (max_x < min_x) {
+        max_x = min_x;
+    }
+    if (max_y < min_y) {
+        max_y = min_y;
+    }
+    if (ui->pan_x < min_x) {
+        ui->pan_x = min_x;
+    }
+    if (ui->pan_y < min_y) {
+        ui->pan_y = min_y;
+    }
+    if (ui->pan_x > max_x) {
+        ui->pan_x = max_x;
+    }
+    if (ui->pan_y > max_y) {
+        ui->pan_y = max_y;
+    }
+}

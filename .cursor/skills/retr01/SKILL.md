@@ -44,6 +44,7 @@ Do this at the start of a task. Do not rely on a memorized file list.
 | Emu | `apps/emu` | Runs `.retr01` images |
 | Tier A sim | `apps/sim/tier-a` | Beam + color lab. Own board recipe and netlist |
 | Tier B sim | `apps/sim/tier-b` | Compositor lab. Own board recipe and netlist |
+| Tier H sim | `apps/sim/tier-h` | Imported full-board sim. Soft I/O is `$7Fxx`. AD724 is not modeled yet |
 | Sim common | `apps/sim/common` | Shared chips, layout loader, font, PNG chrome, shared tests |
 | Netlist engine | `apps/netlist_sim` | Discrete-IC sim linked by the tier sims |
 | Shared | `apps/common` | Linked by Studio, Emu, and Sim. Firmware headers in `apps/common/fw/` |
@@ -61,7 +62,7 @@ Host apps (C11, `-Wall -Wextra -Wpedantic`):
 ./scripts/unit-tests.sh
 ```
 
-One app: `cmake -S <path> -B <path>/build && cmake --build <path>/build -j` with `<path>` one of `apps/studio`, `apps/emu`, `apps/sim/tier-a`, `apps/sim/tier-b`.
+One app: `cmake -S <path> -B <path>/build && cmake --build <path>/build -j` with `<path>` one of `apps/studio`, `apps/emu`, `apps/sim/tier-a`, `apps/sim/tier-b`, `apps/sim/tier-h`. Launch Tier H with `./scripts/sim-tier-h.sh` after `./scripts/build-all.sh`.
 
 6502 PRG uses llvm-mos (`scripts/fetch-llvm-mos.sh`, toolchain in `tools/llvm-mos` or `$LLVM_MOS`):
 

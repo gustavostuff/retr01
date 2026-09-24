@@ -1,0 +1,30 @@
+#ifndef retr01_SIM_AVR128DB28_S2_H
+#define retr01_SIM_AVR128DB28_S2_H
+
+/* MCU-S2: pads + APU PWM. Reuses the behavioral APU core under a DB28 name. */
+#include "atmega328p.h"
+
+typedef R01sAtmega328p R01sAvr128db28S2;
+
+void r01s_avr128db28_s2_init(R01sAvr128db28S2 *chip, const char *refdes);
+R01sEntity *r01s_avr128db28_s2_entity(R01sAvr128db28S2 *chip);
+
+#define r01s_avr128db28_s2_peek r01s_atmega328p_peek
+#define r01s_avr128db28_s2_poke r01s_atmega328p_poke
+#define r01s_avr128db28_s2_enabled r01s_atmega328p_enabled
+#define r01s_avr128db28_s2_period r01s_atmega328p_period
+#define r01s_avr128db28_s2_pwm_edges r01s_atmega328p_pwm_edges
+#define r01s_avr128db28_s2_pwm_hi_samples r01s_atmega328p_pwm_hi_samples
+#define r01s_avr128db28_s2_voice r01s_atmega328p_voice
+#define r01s_avr128db28_s2_mix r01s_atmega328p_mix
+#define r01s_avr128db28_s2_scope_copy r01s_atmega328p_scope_copy
+#define r01s_avr128db28_s2_voice_set r01s_atmega328p_voice_set
+#define r01s_avr128db28_s2_viz_start r01s_atmega328p_viz_start
+#define r01s_avr128db28_s2_viz_stop r01s_atmega328p_viz_stop
+#define r01s_avr128db28_s2_viz_frame r01s_atmega328p_viz_frame
+#define r01s_avr128db28_s2_viz_active r01s_atmega328p_viz_active
+#define r01s_avr128db28_s2_viz_step r01s_atmega328p_viz_step
+#define r01s_avr128db28_s2_viz_fe4x_dirty r01s_atmega328p_viz_fe4x_dirty
+#define r01s_avr128db28_s2_viz_clear_fe4x_dirty r01s_atmega328p_viz_clear_fe4x_dirty
+
+#endif
