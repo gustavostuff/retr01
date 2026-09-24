@@ -10,8 +10,6 @@ Hardware is still in development, and the software is being built around that de
 2. **SNES: depth without unnecessary complexity.** Two true background planes and pixel-level transparency enable real parallax, layered scenery, and richer scene composition while keeping the graphics pipeline understandable and close to the hardware.
 3. **[GameTank console](https://gametank.zone/): The main inspiration for the project. Retr01 uses a similar resolution, also scaled to 2x (by default), small cartridges and a hackable, understandable design.
 
-Together, these influences point toward a system that is limited enough to be inviting, but expressive enough for layered worlds, responsive entities, music, and arcade-style games. Retr01 is meant to feel like a real machine—not just a modern game engine wearing an 8-bit aesthetic.
-
 ## Graphics
 
 The playfield is 128x120 with chunky pixels, NES-style color limits, and two real background layers. The result is a sharp image with a simple hardware pipeline.
