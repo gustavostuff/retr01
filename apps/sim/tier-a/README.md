@@ -12,6 +12,73 @@ Passives from the Tier A lab: 100 nF decoupling, 220 uF bulk, R3G3B2 DAC resisto
 
 No CPU, cart, AVRs, VRAM, or Compositor.
 
+## Bench shopping list
+
+Buy this to build the lab in [docs/bringup/tier-a-video-lab.md](../../../docs/bringup/tier-a-video-lab.md) on a desk. Programmer notes follow [docs/general/hardware.md](../../../docs/general/hardware.md) and [docs/ic_behavior/ATF22V10.md](../../../docs/ic_behavior/ATF22V10.md). Adafruit's UPDI Friend is not used here. It programs the AVRs and the cart later, not these PLDs or the color PROM.
+
+### Tier A, required
+
+Each price is one piece, rough USD, about September 2026. Shipping and tax are extra.
+
+| Qty | Buy | Each | Notes |
+| --- | --- | --- | --- |
+| 2 | ATF22V10C, PDIP-24, 5 V. Example: **ATF22V10CQZ-20PU** | ~$3 | Beam X and Beam Y. Reprogrammable. Socket them. |
+| 2 | 24-pin DIP sockets, 0.3 inch | ~$0.50 | So a bad JEDEC can come out |
+| 1 | **AT27C256R-45**, PDIP-28, 600 mil | ~$3 | Color PROM. **OTP.** A wrong image means a new chip. A spare is another ~$3. |
+| 1 | 28-pin DIP socket, 0.6 inch | ~$1 | For the PROM |
+| 1 | **AD724**, SOIC-16 | ~$12 | RGB to composite. This one moves around more than the others. |
+| 1 | SOIC-16 to DIP-16 adapter | ~$2 | The lab breadboard takes the DIP side |
+| 1 | 5 V canned CMOS oscillator, **5.369318 MHz** | ~$4 | DOT. Not a bare crystal. Less common than the colorburst can. |
+| 1 | 5 V canned CMOS oscillator, **3.579545 MHz** | ~$2 | FSC, NTSC. PAL lab uses **4.433618 MHz** instead, and AD724 `STND` low |
+| 3 | Solderless breadboards | ~$6 | The wired Tier A sim uses three. The bring-up doc does not lock a count |
+| 1 | Jumper-wire set | ~$8 | Solid core, long enough to cross boards |
+| 1 | Regulated **5 V** supply, a few hundred mA | ~$8 | Plus a way to land 5 V and GND on one breadboard's rails |
+| 1 | RCA jack | ~$1 | AD724 `COMP` to the TV |
+| 7 | **100 nF** ceramic | ~$0.10 | One at each IC and oscillator VCC, plus one at the 5 V entry |
+| 1 | **220 µF** electrolytic, rated above 5 V | ~$0.50 | Bulk cap at the 5 V entry. Mark the minus lead |
+| 2 | **4.00 kΩ** 1% metal film | ~$0.10 | DAC, R and G MSB |
+| 3 | **2.00 kΩ** 1% metal film | ~$0.10 | DAC, R and G mid, B MSB |
+| 3 | **1.00 kΩ** 1% metal film | ~$0.10 | DAC, R and G LSB, B LSB |
+| 3 | **75.0 Ω** 1% metal film | ~$0.10 | One load to GND per gun |
+| 2 | **33 Ω** | ~$0.10 | Series on DOT and on FSC |
+
+### Program them from the computer
+
+There is no high-voltage programming path on the Retr01 board. Program both PLDs and the PROM before they go into the lab.
+
+| Chip | On the computer | Hardware | Each |
+| --- | --- | --- | --- |
+| ATF22V10 | **CUPL** or **WinCUPL** (free) writes the JEDEC fuse file. Then the programmer's host tool loads that file. | Arduino **Uno** or **Nano** (~$10) running a GAL programmer such as **Afterburner**, or a **TL866-class** programmer (~$60) whose device list includes ATF22V10 | software $0 |
+| AT27C256R | The PROM programmer's host program (free with the programmer). Image is the 64-color kit, packed R3G3B2, 64 bytes. | A **TL866-class** programmer (~$60) that supports **27C256** and its VPP. Afterburner does not do this part. One programmer covers both chips. | ~$60 |
+
+Buy the PLDs and the PROM already programmed if you do not want those tools. Blank distributor stock will not make a picture.
+
+### Tier B, after Tier A locks
+
+| Qty | Buy | Each | Notes |
+| --- | --- | --- | --- |
+| 1 | Same ATF22V10C, PDIP-24 | ~$3 | Compositor. Third JEDEC. Socket it |
+| 1 | 24-pin DIP socket | ~$0.50 | |
+| 1 | **100 nF** ceramic | ~$0.10 | On the Compositor VCC pin |
+
+Beam X and Beam Y keep the Tier A JEDEC images only if those images already speak count bits and sync. The Tier B lab moves the color index off Beam X and into the Compositor. Same PROM, DAC, AD724, clocks, and three breadboards.
+
+### Rough cost (USD, not a quote)
+
+Single-piece distributor prices, about September 2026. Shipping and tax are extra. CUPL, WinCUPL, and the programmer host software are free downloads.
+
+| | About |
+| --- | --- |
+| Tier A parts: two PLDs, two PROMs (one spare), AD724 plus adapter, both oscillators, three breadboards, jumpers, 5 V supply, RCA jack, passives, sockets | **$80-110** |
+| TL866-class programmer, only if you do not already have one. This is what burns the PROM. It can also burn the PLDs | **$50-70** |
+| Tier B later: one more PLD, socket, and 100 nF | **about $5** |
+
+A first bench that can program its own chips lands around **$140-180**. Skip the programmer line if the PLDs and PROM arrive already programmed. The AD724 and a hard-to-find 5.369318 MHz can move the parts line more than the resistors do.
+
+### Do not buy for Tier A or B
+
+W65C02S, AVR128DB28, AS6C62256, 74HC157 / 573 / 574, SST39SF040, 24C64, ATtiny85, an 8 MHz PHI2 oscillator, Adafruit's UPDI Friend. A **74HC14** only if the canned-oscillator edges are soft. A scope is the useful extra for first light.
+
 ## Wire modes
 
 | Mode | Wiring |
