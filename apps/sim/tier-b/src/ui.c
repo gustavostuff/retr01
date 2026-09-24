@@ -3503,7 +3503,6 @@ static void draw_manual_pin_pulses(SDL_Renderer *r, const R01aUi *ui, const R01a
     int open;
     Uint32 now;
     int ok_on;
-    int short_on;
     int i;
     (void)board;
     if (!ui || !ui->pin_gray || !e || e->pin_count <= 0) {
@@ -3528,7 +3527,6 @@ static void draw_manual_pin_pulses(SDL_Renderer *r, const R01aUi *ui, const R01a
     open = seated < e->pin_count;
     now = SDL_GetTicks();
     ok_on = ((now / R01A_PULSE_OK_MS) & 1u) == 0;
-    short_on = ((now / R01A_PULSE_SHORT_MS) & 1u) == 0;
     for (i = 0; i < e->pin_count; i++) {
         int tx;
         int ty;
@@ -3537,11 +3535,49 @@ static void draw_manual_pin_pulses(SDL_Renderer *r, const R01aUi *ui, const R01a
         }
         if (on_hole[i] &&
             (e->pins[i].level == NS_LVL_X || r01a_netlist_pin_shorted(e, i))) {
-            pulse_pixel(r, board_sx(ui, tx), board_sy(ui, ty), 220, 40, 40, short_on);
+            /* Drawn in a later pass so jumper lines cannot cover the blink. */
+            continue;
         } else if (on_hole[i]) {
             pulse_pixel(r, board_sx(ui, tx), board_sy(ui, ty), 50, 210, 80, ok_on);
         } else if (open) {
             pulse_pixel(r, board_sx(ui, tx), board_sy(ui, ty), 240, 140, 30, ok_on);
+        }
+    }
+}
+
+static void draw_short_pin_pulses(SDL_Renderer *r, const R01aUi *ui) {
+    Uint32 now;
+    int short_on;
+    int ci;
+    if (!ui || !ui->pin_gray) {
+        return;
+    }
+    now = SDL_GetTicks();
+    short_on = ((now / R01A_PULSE_SHORT_MS) & 1u) == 0;
+    for (ci = 0; ci < ui->chip_count; ci++) {
+        const NsEntity *e = ui->chips[ci];
+        int i;
+        if (!e || e->pin_count <= 0) {
+            continue;
+        }
+        if (e->visual == NS_ENTITY_VIS_BREADBOARD || e->visual == NS_ENTITY_VIS_DISPLAY) {
+            continue;
+        }
+        for (i = 0; i < e->pin_count; i++) {
+            const NsBreadboard *pbb = NULL;
+            int strip = -1;
+            int tx;
+            int ty;
+            if (!pin_bb_strip(ui, e, i, &pbb, &strip)) {
+                continue;
+            }
+            if (e->pins[i].level != NS_LVL_X && !r01a_netlist_pin_shorted(e, i)) {
+                continue;
+            }
+            if (!entity_tip_board(e, e->pins[i].number, &tx, &ty)) {
+                continue;
+            }
+            pulse_pixel(r, board_sx(ui, tx), board_sy(ui, ty), 220, 40, 40, short_on);
         }
     }
 }
@@ -4384,6 +4420,7 @@ static void draw_frame(R01aUi *ui, R01aBoard *board) {
         fill_rect_a(ui->rend, x0, y0, bw, bh, 80, 180, 120, 40);
         draw_rect(ui->rend, x0, y0, bw, bh, 80, 180, 120);
     }
+    draw_short_pin_pulses(ui->rend, ui);
     SDL_RenderSetScale(ui->rend, 1.0f, 1.0f);
 
     wire_mode_btn_rect(r01a_board_wire_mode(board), &btn);
