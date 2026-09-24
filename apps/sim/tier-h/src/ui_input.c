@@ -73,6 +73,35 @@ static int island_hit_stack(const R01sUi *ui, int *out_idx, int max_out) {
 }
 
 /* Topmost chip of this island under (lx,ly), or -1. */
+/* Topmost SCR1 / SCREEN_SINK under (lx, ly), or -1. */
+static int hit_screen_sink(const R01sUi *ui, int lx, int ly) {
+    int rank;
+    int n_chips;
+
+    if (!ui || !ui_logic_in_view(lx, ly)) {
+        return -1;
+    }
+    n_chips = ui->chip_z_count > 0 ? ui->chip_z_count : ui->chip_count;
+    for (rank = n_chips - 1; rank >= 0; rank--) {
+        int ci = (rank < ui->chip_z_count) ? (int)ui->chip_z_order[rank] : rank;
+        R01sEntity *e;
+        if (ci < 0 || ci >= ui->chip_count) {
+            continue;
+        }
+        e = ui->chips[ci];
+        if (!e || ui_chip_hidden(ui, e)) {
+            continue;
+        }
+        if (e->visual != R01S_ENTITY_VIS_DISPLAY || !e->part || strcmp(e->part, "SCREEN_SINK") != 0) {
+            continue;
+        }
+        if (hit_chip(ui, e, lx, ly)) {
+            return ci;
+        }
+    }
+    return -1;
+}
+
 static int hit_chip_in_island(const R01sUi *ui, int island_index, int lx, int ly) {
     int i;
     for (i = ui->chip_count - 1; i >= 0; i--) {
@@ -474,14 +503,11 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         /* Double-click the virtual screen toggles 1x/2x. A drag on the first
          * click cancels SDL's click count, so time the pair here and do not drag. */
         if (ui_logic_in_view(logic_x, logic_y) && r01s_board_from_group(ui->group)) {
-            int chip_i = -1;
+            int chip_i = hit_screen_sink(ui, logic_x, logic_y);
             static Uint32 scr_ms;
             static int scr_x;
             static int scr_y;
-            if (hit_board_top(ui, logic_x, logic_y, &chip_i, NULL, NULL) == 1 && chip_i >= 0 &&
-                chip_i < ui->chip_count && ui->chips[chip_i] &&
-                ui->chips[chip_i]->visual == R01S_ENTITY_VIS_DISPLAY && ui->chips[chip_i]->part &&
-                strcmp(ui->chips[chip_i]->part, "SCREEN_SINK") == 0) {
+            if (chip_i >= 0) {
                 Uint32 now = SDL_GetTicks();
                 int dx = logic_x - scr_x;
                 int dy = logic_y - scr_y;

@@ -962,12 +962,8 @@ void draw_video_pixels(SDL_Renderer *r, R01sUi *ui, R01sVideoSink *sink, int px,
     dst.y = py;
     dst.w = dw;
     dst.h = dh;
-    if (r01s_video_sink_scale_2x(sink)) {
-        SDL_RenderCopy(r, ui->lcd_tex, NULL, &dst);
-    } else {
-        SDL_Rect src = {R01S_SCALE_1X_OX, R01S_SCALE_1X_OY, R01S_LOGICAL_W, R01S_LOGICAL_H};
-        SDL_RenderCopy(r, ui->lcd_tex, &src, &dst);
-    }
+    /* Full 256x240 field: 1x mode keeps playfield centered with black overscan in the buffer. */
+    SDL_RenderCopy(r, ui->lcd_tex, NULL, &dst);
 }
 
 static void quit_modal_layout(SDL_Rect *panel, SDL_Rect *save, SDL_Rect *discard, SDL_Rect *cancel) {
