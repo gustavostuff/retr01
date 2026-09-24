@@ -30,7 +30,7 @@ The design uses one compact through-hole main board with ~17 ICs (CPU + MCUs + S
 
 As for the cartridge, it's a simple and small PCB (close to Game Boy size) with a 32-pin 512KB flash unit + a small 8-pin EEPROM IC for saves.
 
-Game pads are planned to use 3 wires (3.5mm TRS connections as mentioned above, so any audio aux cable can be used), and a serial protocol for communication (using an ATtiny). Everything officially supported as both THT and SMT! (with one exception: the chip to generate composite video).
+Game pads are planned to use 3 wires (3.5mm TRS connections, as mentioned above, so any audio aux cable can be used), and a serial protocol for communication (using an ATtiny). Everything officially supported as both THT and SMT! (with one exception: the chip to generate composite video).
 
 A W65C02S runs the game logic, while a few helper chips and small glue logic handle video, inputs, saves, and audio mixing. Output is dual sync RGB (RGBS and RGBHV) and composite. The cartridge is a simple, serviceable part of the system rather than a black box.
 
