@@ -3,7 +3,6 @@
 
 #include "retr01_sim/island_builder.h"
 #include "breadboard.h"
-#include "passive.h"
 #include "ui.h"
 
 #include <SDL.h>
@@ -22,7 +21,6 @@ typedef struct R01sApp {
     R01sUi ui;
     R01sIslandBuilder builder;
     R01sBreadboard breadboard;
-    R01sPassiveBank passives;
     /* IC MAP catchup worker (board steps only; SDL stays on main). */
     SDL_Thread *catchup_th;
     SDL_mutex *board_mu;

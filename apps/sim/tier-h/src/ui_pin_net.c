@@ -2,200 +2,20 @@
 #include "ui_internal.h"
 
 #include "retr01_sim/board.h"
-#include "retr01_sim/bom32.h"
+#include "retr01_sim/board_netlist.h"
 #include "retr01_sim/bus.h"
 #include "breadboard.h"
 
 #include <stdio.h>
 #include <string.h>
 
-#define R01S_UI_PIN_NET_SLOTS 1024
-
-typedef struct R01sUiPinNetSlot {
-    R01sEntity *entity;
-    int pin_index;
-} R01sUiPinNetSlot;
-
-typedef struct R01sUiPinNet {
-    R01sUiPinNetSlot slots[R01S_UI_PIN_NET_SLOTS];
-    int parent[R01S_UI_PIN_NET_SLOTS];
-    int slot_count;
-} R01sUiPinNet;
-
-static R01sUiPinNet g_pin_net;
-
-static int pin_net_find_slot(R01sUiPinNet *g, R01sEntity *e, int pin_index) {
-    int i;
-    if (!g || !e || pin_index < 0) {
-        return -1;
+static R01sPinNetlist *ui_board_pin_net(const R01sUi *ui) {
+    R01sBoard *board;
+    if (!ui || !ui->group) {
+        return NULL;
     }
-    for (i = 0; i < g->slot_count; i++) {
-        if (g->slots[i].entity == e && g->slots[i].pin_index == pin_index) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-static int pin_net_add_slot(R01sUiPinNet *g, R01sEntity *e, int pin_index) {
-    int i;
-    if (!g || !e || pin_index < 0) {
-        return -1;
-    }
-    i = pin_net_find_slot(g, e, pin_index);
-    if (i >= 0) {
-        return i;
-    }
-    if (g->slot_count >= R01S_UI_PIN_NET_SLOTS) {
-        return -1;
-    }
-    i = g->slot_count++;
-    g->slots[i].entity = e;
-    g->slots[i].pin_index = pin_index;
-    g->parent[i] = i;
-    return i;
-}
-
-static int pin_net_slot_for_name(R01sUiPinNet *g, R01sEntity *e, const char *name) {
-    const R01sPin *pin;
-    int pin_index;
-    if (!g || !e || !name) {
-        return -1;
-    }
-    pin = r01s_entity_pin_named_const(e, name);
-    if (!pin) {
-        return -1;
-    }
-    pin_index = (int)(pin - e->pins);
-    if (pin_index < 0 || pin_index >= e->pin_count) {
-        return -1;
-    }
-    return pin_net_add_slot(g, e, pin_index);
-}
-
-static int pin_net_root(R01sUiPinNet *g, int slot) {
-    int p;
-    if (!g || slot < 0 || slot >= g->slot_count) {
-        return -1;
-    }
-    p = g->parent[slot];
-    while (p != g->parent[p]) {
-        p = g->parent[p];
-    }
-    while (g->parent[slot] != p) {
-        int next = g->parent[slot];
-        g->parent[slot] = p;
-        slot = next;
-    }
-    return p;
-}
-
-static void pin_net_union(R01sUiPinNet *g, int a, int b) {
-    int ra;
-    int rb;
-    if (!g || a < 0 || b < 0) {
-        return;
-    }
-    ra = pin_net_root(g, a);
-    rb = pin_net_root(g, b);
-    if (ra < 0 || rb < 0 || ra == rb) {
-        return;
-    }
-    g->parent[rb] = ra;
-}
-
-static void pin_net_link(R01sUiPinNet *g, R01sEntity *ea, const char *an, R01sEntity *eb, const char *bn) {
-    int sa;
-    int sb;
-    if (!g || !ea || !eb) {
-        return;
-    }
-    sa = pin_net_slot_for_name(g, ea, an);
-    sb = pin_net_slot_for_name(g, eb, bn);
-    if (sa >= 0 && sb >= 0) {
-        pin_net_union(g, sa, sb);
-    }
-}
-
-static void pin_net_link_bus(R01sUiPinNet *g, R01sEntity *ea, const char *ap, R01sEntity *eb, const char *bp,
-                             int width) {
-    int i;
-    char an[16];
-    char bn[16];
-    for (i = 0; i < width; i++) {
-        snprintf(an, sizeof(an), "%s%d", ap, i);
-        snprintf(bn, sizeof(bn), "%s%d", bp, i);
-        pin_net_link(g, ea, an, eb, bn);
-    }
-}
-
-static void pin_net_link_cpu_d_latch(R01sUiPinNet *g, R01sEntity *cpu, R01sEntity *latch) {
-    int i;
-    char ln[8];
-    char cn[8];
-    /* Soft $7Fxx: no discrete latch entities on board. */
-    (void)g;
-    (void)cpu;
-    (void)latch;
-    (void)i;
-    (void)ln;
-    (void)cn;
-}
-
-static void pin_net_link_beam_y_raster(R01sUiPinNet *g, R01sEntity *beam_y, R01sEntity *raster) {
-    (void)g;
-    (void)beam_y;
-    (void)raster;
-}
-
-static void pin_net_link_beam_y_beam(R01sUiPinNet *g, R01sEntity *beam_y, R01sEntity *beam) {
-    int i;
-    char pn[8];
-    char yn[8];
-    for (i = 0; i < 8; i++) {
-        snprintf(pn, sizeof(pn), "P%d", i);
-        snprintf(yn, sizeof(yn), "Y%d", i);
-        pin_net_link(g, beam_y, pn, beam, yn);
-    }
-}
-
-static void pin_net_link_245_internal(R01sUiPinNet *g, R01sEntity *buf) {
-    int i;
-    char an[8];
-    char bn[8];
-    for (i = 1; i <= 8; i++) {
-        snprintf(an, sizeof(an), "A%d", i);
-        snprintf(bn, sizeof(bn), "B%d", i);
-        pin_net_link(g, buf, an, buf, bn);
-    }
-}
-
-static void pin_net_link_245_cpu_side(R01sUiPinNet *g, R01sEntity *cpu, R01sEntity *buf) {
-    int i;
-    char an[8];
-    char bn[8];
-    char cn[8];
-    for (i = 0; i < 8; i++) {
-        snprintf(cn, sizeof(cn), "D%d", i);
-        snprintf(an, sizeof(an), "A%d", i + 1);
-        snprintf(bn, sizeof(bn), "B%d", i + 1);
-        pin_net_link(g, cpu, cn, buf, an);
-        pin_net_link(g, cpu, cn, buf, bn);
-    }
-}
-
-static void pin_net_link_latch_q_vram(R01sUiPinNet *g, R01sEntity *latch, R01sEntity *vram, int addr_base) {
-    (void)g;
-    (void)latch;
-    (void)vram;
-    (void)addr_base;
-}
-
-static void pin_net_link_latch_le_pld(R01sUiPinNet *g, R01sEntity *pld, R01sEntity *latch, const char *sel) {
-    (void)g;
-    (void)pld;
-    (void)latch;
-    (void)sel;
+    board = r01s_board_from_group(ui->group);
+    return board ? &board->pin_netlist : NULL;
 }
 
 /* Manual mode: schematic peer only "lives" when both tips sit on the same BB strip. */
@@ -369,128 +189,7 @@ static int pin_signals_match(const R01sPin *pa, const R01sPin *pb) {
 }
 
 void r01s_ui_pin_net_build(R01sBoard *board) {
-    R01sUiPinNet *g = &g_pin_net;
-    R01sEntity *cpu;
-    R01sEntity *ram;
-    R01sEntity *prg;
-    R01sEntity *flash;
-    R01sEntity *vram;
-    R01sEntity *mcu;
-    R01sEntity *s1;
-    R01sEntity *apu;
-    R01sEntity *pads;
-    R01sEntity *beam;
-    R01sEntity *beam_y;
-    R01sEntity *dot_osc;
-    R01sEntity *osc;
-    R01sEntity *hc;
-    R01sEntity *pld;
-    R01sEntity *mux_vram;
-    R01sEntity *field_ale;
-    R01sEntity *sram_lb;
-    R01sEntity *buf_cpu;
-    R01sEntity *buf_cart;
-    int i;
-
-    memset(g, 0, sizeof(*g));
-    if (!board) {
-        return;
-    }
-
-    cpu = r01s_w65c02s_entity(&board->cpu);
-    ram = r01s_as6c62256_entity(&board->ram);
-    prg = r01s_prg_rom_entity(&board->prg);
-    flash = r01s_sst39sf040_entity(&board->cart_module.flash);
-    vram = r01s_as6c62256_entity(&board->vram);
-    mcu = r01s_avr128db28_m_entity(&board->mcu_m);
-    s1 = r01s_avr128db28_s1_entity(&board->mcu_s1);
-    apu = r01s_avr128db28_s2_entity(&board->mcu_s2);
-    pads = r01s_pads_entity(&board->pads);
-    beam = r01s_beam_xy_entity(&board->pld_beam_x);
-    beam_y = r01s_atf22v10_entity(&board->pld_beam_y);
-    dot_osc = r01s_osc_dot_entity(&board->osc_dot);
-    osc = r01s_osc8m_entity(&board->osc);
-    hc = NULL;
-    pld = r01s_atf22v10_entity(&board->pld_decode);
-    mux_vram = r01s_sn74hc157_entity(board->vram_impl.mux157[R01S_MUX157_VRAM0]);
-    field_ale = r01s_sn74hc573_entity(board->mcu_lb_impl.field_ale);
-    sram_lb = r01s_as6c62256_entity(&board->linebuf);
-    buf_cpu = NULL;
-    buf_cart = NULL;
-
-    pin_net_link_bus(g, cpu, "A", ram, "A", 16);
-    pin_net_link_bus(g, cpu, "D", ram, "DQ", 8);
-    pin_net_link_bus(g, cpu, "A", prg, "A", 16);
-    pin_net_link_bus(g, cpu, "D", prg, "DQ", 8);
-    pin_net_link_bus(g, cpu, "A", vram, "A", 16);
-    pin_net_link_bus(g, cpu, "D", flash, "DQ", 8);
-    pin_net_link_bus(g, cpu, "D", vram, "DQ", 8);
-    pin_net_link_bus(g, cpu, "D", mcu, "CPU_D", 8);
-    /* APU/OAM are mailbox-owned; show SPI fabric for UI. */
-    pin_net_link(g, mcu, "SPI_MOSI", apu, "SPI_MOSI");
-    pin_net_link(g, mcu, "SPI_MISO", apu, "SPI_MISO");
-    pin_net_link(g, mcu, "SPI_SCK", apu, "SPI_SCK");
-    pin_net_link(g, mcu, "/SS_S2", apu, "/SS_S2");
-    pin_net_link(g, mcu, "SPI_MOSI", s1, "SPI_MOSI");
-    pin_net_link(g, mcu, "SPI_MISO", s1, "SPI_MISO");
-    pin_net_link(g, mcu, "SPI_SCK", s1, "SPI_SCK");
-    pin_net_link(g, mcu, "/SS_S1", s1, "/SS_S1");
-    pin_net_link(g, s1, "S1_RDY", mcu, "S1_RDY");
-    pin_net_link_bus(g, cpu, "D", pads, "DQ", 8);
-
-    for (i = 0; i < 16; i++) {
-        char an[8];
-        snprintf(an, sizeof(an), "A%d", i);
-        pin_net_link(g, cpu, an, flash, an);
-    }
-
-    pin_net_link_bus(g, cpu, "A", pld, "A", 8);
-    pin_net_link(g, cpu, "BE", pld, "BE");
-    pin_net_link(g, cpu, "RWB", pld, "RWB");
-
-    /* Soft $7Fxx: no discrete latch pin links. */
-    (void)pin_net_link_cpu_d_latch;
-    (void)pin_net_link_beam_y_raster;
-    (void)pin_net_link_latch_q_vram;
-    (void)pin_net_link_latch_le_pld;
-
-    if (buf_cpu) {
-        pin_net_link_245_internal(g, buf_cpu);
-        pin_net_link_245_cpu_side(g, cpu, buf_cpu);
-    }
-    if (buf_cart) {
-        pin_net_link_245_internal(g, buf_cart);
-        pin_net_link_245_cpu_side(g, cpu, buf_cart);
-    }
-    for (i = 0; i < 8; i++) {
-        char dq[8];
-        char an[8];
-        snprintf(dq, sizeof(dq), "DQ%d", i);
-        snprintf(an, sizeof(an), "A%d", i + 1);
-        pin_net_link(g, flash, dq, buf_cart, an);
-    }
-
-    pin_net_link(g, beam, "DOT", dot_osc, "DOT");
-    pin_net_link_beam_y_beam(g, beam_y, beam);
-    pin_net_link(g, cpu, "IRQB", beam_y, "EQ#");
-
-    pin_net_link(g, vram, "A0", mux_vram, "1Y");
-    pin_net_link(g, vram, "A1", mux_vram, "2Y");
-    pin_net_link(g, vram, "A2", mux_vram, "3Y");
-    pin_net_link(g, vram, "A3", mux_vram, "4Y");
-
-    pin_net_link(g, sram_lb, "A0", field_ale, "Q0");
-    pin_net_link(g, sram_lb, "A1", field_ale, "Q1");
-    pin_net_link(g, sram_lb, "A2", field_ale, "Q2");
-    pin_net_link(g, sram_lb, "A3", field_ale, "Q3");
-    pin_net_link(g, sram_lb, "A4", field_ale, "Q4");
-    pin_net_link(g, sram_lb, "A5", field_ale, "Q5");
-    pin_net_link(g, sram_lb, "A6", field_ale, "Q6");
-    pin_net_link(g, sram_lb, "A7", field_ale, "Q7");
-
-    pin_net_link(g, cpu, "PHI2", osc, "PHI2");
-    pin_net_link(g, cpu, "PHI2", osc, "PHI2");
-    (void)hc;
+    r01s_board_netlist_rebuild(board);
 }
 
 static int ui_chip_index(const R01sUi *ui, const R01sEntity *e) {
@@ -617,7 +316,7 @@ static int ui_pin_net_pick_peer(const R01sUi *ui, const R01sEntity *src, int pin
     return 0;
 }
 
-static int ui_pin_net_peer_union(R01sUiPinNet *g, const R01sUi *ui, const R01sEntity *src, int pin_i,
+static int ui_pin_net_peer_union(R01sPinNetlist *nl, const R01sUi *ui, const R01sEntity *src, int pin_i,
                                  int src_slot, int sx, int sy, int *peer_chip_out, int *peer_pin_out) {
     int root;
     int best_chip = -1;
@@ -626,7 +325,10 @@ static int ui_pin_net_peer_union(R01sUiPinNet *g, const R01sUi *ui, const R01sEn
     int pass;
     int i;
 
-    root = pin_net_root(g, src_slot);
+    if (!nl) {
+        return 0;
+    }
+    root = r01s_pin_netlist_root(nl, src_slot);
     if (root < 0) {
         return 0;
     }
@@ -637,18 +339,18 @@ static int ui_pin_net_peer_union(R01sUiPinNet *g, const R01sUi *ui, const R01sEn
         best_chip = -1;
         best_pin = -1;
         best_dist = 999999;
-        for (i = 0; i < g->slot_count; i++) {
+        for (i = 0; i < nl->slot_count; i++) {
             const R01sEntity *peer_e;
             int peer_chip;
             int peer_pin;
-            if (pin_net_root(g, i) != root) {
+            if (r01s_pin_netlist_root(nl, i) != root) {
                 continue;
             }
             if (i == src_slot) {
                 continue;
             }
-            peer_e = g->slots[i].entity;
-            peer_pin = g->slots[i].pin_index;
+            peer_e = nl->slots[i].entity;
+            peer_pin = nl->slots[i].pin_index;
             if (!peer_e) {
                 continue;
             }
@@ -733,7 +435,7 @@ static int ui_pin_net_peer_by_name(const R01sUi *ui, const R01sEntity *src, int 
 }
 
 int ui_pin_net_peer(const R01sUi *ui, int chip_i, int pin_i, int *peer_chip_out, int *peer_pin_out) {
-    R01sUiPinNet *g = &g_pin_net;
+    R01sPinNetlist *nl = ui_board_pin_net(ui);
     const R01sEntity *src;
     const R01sPin *src_pin;
     int src_slot;
@@ -746,7 +448,7 @@ int ui_pin_net_peer(const R01sUi *ui, int chip_i, int pin_i, int *peer_chip_out,
     if (peer_pin_out) {
         *peer_pin_out = -1;
     }
-    if (!ui || chip_i < 0 || chip_i >= ui->chip_count || pin_i < 0) {
+    if (!ui || !nl || chip_i < 0 || chip_i >= ui->chip_count || pin_i < 0) {
         return 0;
     }
     src = ui->chips[chip_i];
@@ -761,9 +463,9 @@ int ui_pin_net_peer(const R01sUi *ui, int chip_i, int pin_i, int *peer_chip_out,
         return 0;
     }
 
-    src_slot = pin_net_find_slot(g, (R01sEntity *)(void *)src, pin_i);
+    src_slot = r01s_pin_netlist_find_slot(nl, src, pin_i);
     if (src_slot >= 0 &&
-        ui_pin_net_peer_union(g, ui, src, pin_i, src_slot, sx, sy, peer_chip_out, peer_pin_out)) {
+        ui_pin_net_peer_union(nl, ui, src, pin_i, src_slot, sx, sy, peer_chip_out, peer_pin_out)) {
         if (ui->wire_mode == R01S_WIRE_MANUAL && peer_chip_out && peer_pin_out &&
             !ui_bb_pins_connected(ui, chip_i, pin_i, *peer_chip_out, *peer_pin_out)) {
             if (peer_chip_out) {
@@ -888,7 +590,7 @@ static void ui_draw_pin_wire_pair(SDL_Renderer *r, const R01sUi *ui, int chip_i,
  */
 static void ui_draw_pin_peers_all(SDL_Renderer *r, const R01sUi *ui, int chip_i, int pin_i,
                                   uint8_t *connected) {
-    R01sUiPinNet *g = &g_pin_net;
+    R01sPinNetlist *nl = ui_board_pin_net(ui);
     const R01sEntity *src;
     const R01sPin *src_pin;
     int src_slot;
@@ -901,7 +603,7 @@ static void ui_draw_pin_peers_all(SDL_Renderer *r, const R01sUi *ui, int chip_i,
     int i;
     int ci;
 
-    if (!ui || !connected || chip_i < 0 || chip_i >= ui->chip_count || pin_i < 0) {
+    if (!ui || !nl || !connected || chip_i < 0 || chip_i >= ui->chip_count || pin_i < 0) {
         return;
     }
     src = ui->chips[chip_i];
@@ -922,13 +624,13 @@ static void ui_draw_pin_peers_all(SDL_Renderer *r, const R01sUi *ui, int chip_i,
         peer_best_dist[i] = 999999;
     }
 
-    src_slot = pin_net_find_slot(g, (R01sEntity *)(void *)src, pin_i);
+    src_slot = r01s_pin_netlist_find_slot(nl, src, pin_i);
     if (src_slot >= 0) {
-        root = pin_net_root(g, src_slot);
+        root = r01s_pin_netlist_root(nl, src_slot);
     }
 
     if (root >= 0) {
-        for (i = 0; i < g->slot_count; i++) {
+        for (i = 0; i < nl->slot_count; i++) {
             const R01sEntity *peer_e;
             int peer_chip;
             int peer_pin;
@@ -938,11 +640,11 @@ static void ui_draw_pin_peers_all(SDL_Renderer *r, const R01sUi *ui, int chip_i,
             int dy;
             int dist;
 
-            if (pin_net_root(g, i) != root || i == src_slot) {
+            if (r01s_pin_netlist_root(nl, i) != root || i == src_slot) {
                 continue;
             }
-            peer_e = g->slots[i].entity;
-            peer_pin = g->slots[i].pin_index;
+            peer_e = nl->slots[i].entity;
+            peer_pin = nl->slots[i].pin_index;
             if (!peer_e || peer_e == src || !ui_pin_dip_package(peer_e, peer_pin)) {
                 continue;
             }

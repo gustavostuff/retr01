@@ -1,5 +1,6 @@
 #include "retr01_sim/board.h"
 
+#include "retr01_sim/board_netlist.h"
 #include "retr01_sim/board_layout.h"
 #include "retr01_sim/bus.h"
 #include "retr01_sim/entity.h"
@@ -3631,5 +3632,6 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
      * Main sim overwrites this with the argv .retr01 via r01s_board_load_cart.
      */
     board_install_synthetic_cart(board);
+    r01s_board_netlist_rebuild(board);
     return 0;
 }

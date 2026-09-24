@@ -16,6 +16,7 @@ add_library(netlist_sim
   src/island_group.c
   src/island_builder.c
   src/timing.c
+  src/pin_netlist.c
   src/chip.c
   src/ns_island.c
   chips/breadboard.c

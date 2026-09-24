@@ -21,6 +21,7 @@
 #include "retr01_sim/bom32.h"
 #include "retr01_sim/island_builder.h"
 #include "retr01_sim/play.h"
+#include "retr01_sim/ns_compat.h"
 #include "retr01_sim/types.h"
 #include "sn74hc157.h"
 #include "sn74hc573.h"
@@ -128,6 +129,9 @@ typedef struct R01sBoard {
     R01sAttiny85 pad_mcu[2];
     R01sSpriteFetch sprite_fetch;
     R01sIntegration integration;
+    /* Full console passive BOM (layout + pin netlist; not bus-settled yet). */
+    R01sPassiveBank passives;
+    R01sPinNetlist pin_netlist;
     /* Motherboard silicon plus cart flash and save. */
     R01sW65C02S cpu;
     R01sAs6c62256 ram;

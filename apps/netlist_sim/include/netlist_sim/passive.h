@@ -6,7 +6,8 @@
 #include <SDL.h>
 
 /*
- * Passives (R / CCAP / ECAP / OSC / OSC4LEGS / D). UI sprites only.
+ * Passives (R / CCAP / ECAP / OSC / OSC4LEGS / D). Canvas sprites + pin netlist nodes.
+ * Bus settle / analog behavior is not modeled yet (null entity vtable).
  * Filename KIND_x_y.png is the canvas pivot. 2-pin parts: pin 1 = pivot, pin 2 at +span.
  * OSC4LEGS (DIP-14 metal can): pivot = pin 14 VDD. Pin 8 OUT, pin 1 OE#, pin 7 GND.
  * Polarized: ECAP pin 1 is - (pivot), pin 2 is +. Diode pin 1 is A (pivot), pin 2 is K.

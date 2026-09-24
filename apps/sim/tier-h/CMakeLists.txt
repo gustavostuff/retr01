@@ -20,6 +20,7 @@ add_library(retr01_sim_core
   src/gamepad.c
   src/bom_count.c
   src/board.c
+  src/board_netlist.c
   src/spi_mailbox.c
   src/board_debug.c
   src/frame_log.c
@@ -162,6 +163,7 @@ add_test(NAME test_host_play_smoke COMMAND test_host_play_smoke ${R01_TEST_CART}
 r01s_unit_test(test_pads)
 r01s_unit_test(test_attiny85)
 r01s_unit_test(test_pad_uart)
+r01s_unit_test(test_board_netlist)
 r01s_unit_test(test_cart)
 r01s_unit_test(test_compositor)
 r01s_unit_test(test_sprite_fetch)

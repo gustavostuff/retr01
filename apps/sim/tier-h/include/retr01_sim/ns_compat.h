@@ -16,6 +16,7 @@
 #include "netlist_sim/island_group.h"
 #include "netlist_sim/outline.h"
 #include "netlist_sim/passive.h"
+#include "netlist_sim/pin_netlist.h"
 #include "netlist_sim/pin.h"
 #include "netlist_sim/timing.h"
 #include "netlist_sim/types.h"
@@ -41,6 +42,8 @@ typedef NsPbHole R01sPbHole;
 typedef NsPassive R01sPassive;
 typedef NsPassiveBank R01sPassiveBank;
 typedef NsPassiveKind R01sPassiveKind;
+typedef NsPinNetlist R01sPinNetlist;
+typedef NsPinNetSlot R01sPinNetSlot;
 typedef NsVideoSink R01sVideoSink;
 typedef NsVideoRenderMode R01sVideoRenderMode;
 typedef NsOutlineRgb R01sOutlineRgb;
@@ -282,6 +285,20 @@ int r01s_island_builder_count_bom_ic(const R01sIslandBuilder *builder);
 #define r01s_passive_bank_spawn_bom ns_passive_bank_spawn_bom
 #define r01s_passive_bank_layout_grid ns_passive_bank_layout_grid
 #define r01s_passive_kind_name ns_passive_kind_name
+
+#define R01S_PIN_NETLIST_MAX NS_PIN_NETLIST_MAX
+#define R01S_NET_NAME_LEN NS_NET_NAME_LEN
+#define r01s_pin_netlist_clear ns_pin_netlist_clear
+#define r01s_pin_netlist_find_slot ns_pin_netlist_find_slot
+#define r01s_pin_netlist_add_slot ns_pin_netlist_add_slot
+#define r01s_pin_netlist_slot_for_name ns_pin_netlist_slot_for_name
+#define r01s_pin_netlist_root ns_pin_netlist_root
+#define r01s_pin_netlist_union ns_pin_netlist_union
+#define r01s_pin_netlist_link ns_pin_netlist_link
+#define r01s_pin_netlist_link_bus ns_pin_netlist_link_bus
+#define r01s_pin_netlist_register_entity ns_pin_netlist_register_entity
+#define r01s_pin_netlist_name_net ns_pin_netlist_name_net
+#define r01s_pin_netlist_net_count ns_pin_netlist_net_count
 
 #define r01s_video_sink_init ns_video_sink_init
 #define r01s_video_sink_entity ns_video_sink_entity

@@ -3,6 +3,7 @@
 #include "beam_xy.h"
 #include "breadboard.h"
 #include "retr01_sim/board.h"
+#include "retr01_sim/board_netlist.h"
 #include "retr01_sim/bom32.h"
 #include "retr01_sim/island_builder.h"
 #include "retr01_sim/play.h"
@@ -307,14 +308,21 @@ void r01s_app_mount_builder(R01sApp *app) {
             fprintf(stderr, "ui: expected %d BOM IC visuals, mounted %d ui chips\n", R01S_BOM_IC_N, bom_ic);
         }
     }
-    /* Passives must exist before layout load so saved x/y apply. */
-    r01s_passive_bank_spawn_bom(&app->passives);
-    for (i = 0; i < app->passives.count; i++) {
-        R01sEntity *pe = &app->passives.parts[i].base;
-        if (r01s_ui_add_chip(&app->ui, pe, 0) != 0) {
-            fprintf(stderr, "ui: dropped passive %s (R01S_BOARD_MAX_CHIPS=%d)\n",
-                    pe->refdes ? pe->refdes : "?", R01S_BOARD_MAX_CHIPS);
-            break;
+    {
+        R01sBoard *board = r01s_board_from_group(&b->group);
+        int pi;
+        if (board && board->passives.count <= 0) {
+            r01s_board_netlist_rebuild(board);
+        }
+        if (board) {
+            for (pi = 0; pi < board->passives.count; pi++) {
+                R01sEntity *pe = &board->passives.parts[pi].base;
+                if (r01s_ui_add_chip(&app->ui, pe, 0) != 0) {
+                    fprintf(stderr, "ui: dropped passive %s (R01S_BOARD_MAX_CHIPS=%d)\n",
+                            pe->refdes ? pe->refdes : "?", R01S_BOARD_MAX_CHIPS);
+                    break;
+                }
+            }
         }
     }
     if (r01s_ui_layout_load(&app->ui) != 0) {
@@ -342,7 +350,12 @@ void r01s_app_mount_builder(R01sApp *app) {
             if (bbe) {
                 r01s_entity_place(bbe, 40, max_y + 24);
             }
-            r01s_passive_bank_layout_grid(&app->passives, 40, max_y + 56, 6, 6);
+            {
+                R01sBoard *board = r01s_board_from_group(&b->group);
+                if (board) {
+                    r01s_passive_bank_layout_grid(&board->passives, 40, max_y + 56, 6, 6);
+                }
+            }
         }
         r01s_ui_chip_z_init(&app->ui);
     }
