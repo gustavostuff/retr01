@@ -1219,6 +1219,10 @@ void r01s_ui_ensure_cart_module_chips(R01sUi *ui) {
     if (on_n == 0) {
         return;
     }
+    /* Compact positions are absolute. Packing here threw away saved U40/U50. */
+    if (ui->layout_compact) {
+        return;
+    }
     if (moved || !island_saved_chip_layout_sane(ui, R01S_ISLAND_CART_MOD) ||
         island_chips_overlap(ui, R01S_ISLAND_CART_MOD)) {
         ui_pack_island_chips(ui, R01S_ISLAND_CART_MOD);

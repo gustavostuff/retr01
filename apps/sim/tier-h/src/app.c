@@ -307,6 +307,16 @@ void r01s_app_mount_builder(R01sApp *app) {
             fprintf(stderr, "ui: expected %d BOM IC visuals, mounted %d ui chips\n", R01S_BOM_IC_N, bom_ic);
         }
     }
+    /* Passives must exist before layout load so saved x/y apply. */
+    r01s_passive_bank_spawn_bom(&app->passives);
+    for (i = 0; i < app->passives.count; i++) {
+        R01sEntity *pe = &app->passives.parts[i].base;
+        if (r01s_ui_add_chip(&app->ui, pe, 0) != 0) {
+            fprintf(stderr, "ui: dropped passive %s (R01S_BOARD_MAX_CHIPS=%d)\n",
+                    pe->refdes ? pe->refdes : "?", R01S_BOARD_MAX_CHIPS);
+            break;
+        }
+    }
     if (r01s_ui_layout_load(&app->ui) != 0) {
         /* No saved layout -- pack builder defaults into compact UI. */
         app->ui.layout_compact = 1;
@@ -332,38 +342,10 @@ void r01s_app_mount_builder(R01sApp *app) {
             if (bbe) {
                 r01s_entity_place(bbe, 40, max_y + 24);
             }
+            r01s_passive_bank_layout_grid(&app->passives, 40, max_y + 56, 6, 6);
         }
+        r01s_ui_chip_z_init(&app->ui);
     }
-    /* Passive BOM tray below ICs + breadboard (ordered, no overlap). */
-    {
-        int max_y = 40;
-        int j;
-        int n;
-        r01s_passive_bank_spawn_bom(&app->passives);
-        for (j = 0; j < app->passives.count; j++) {
-            R01sEntity *pe = &app->passives.parts[j].base;
-            if (r01s_ui_add_chip(&app->ui, pe, 0) != 0) {
-                fprintf(stderr, "ui: dropped passive %s (R01S_BOARD_MAX_CHIPS=%d)\n",
-                        pe->refdes ? pe->refdes : "?", R01S_BOARD_MAX_CHIPS);
-                break;
-            }
-        }
-        for (j = 0; j < app->ui.chip_count; j++) {
-            const R01sEntity *e = app->ui.chips[j];
-            int bottom;
-            if (!e || e->visual == R01S_ENTITY_VIS_PASSIVE) {
-                continue;
-            }
-            bottom = e->board_y + e->body_h;
-            if (bottom > max_y) {
-                max_y = bottom;
-            }
-        }
-        r01s_passive_bank_layout_grid(&app->passives, 40, max_y + 32, 6, 6);
-        n = app->passives.count;
-        fprintf(stderr, "ui: mounted %d passive BOM parts below tray y=%d\n", n, max_y + 32);
-    }
-    r01s_ui_chip_z_init(&app->ui);
 }
 
 int r01s_app_init(R01sApp *app, int headless) {
@@ -606,16 +588,15 @@ void r01s_app_frame(R01sApp *app) {
     SDL_RenderPresent(app->ren);
 }
 
-/* 1 = proceed with quit, 0 = stay open (modal pending). */
+/* Save the current layout and leave. No confirm dialog. */
 static int app_request_quit(R01sApp *app) {
     if (!app) {
         return 1;
     }
-    if (!app->ui.layout_dirty) {
-        return 1;
+    if (r01s_ui_layout_save(&app->ui) != 0) {
+        fprintf(stderr, "layout: save failed on quit\n");
     }
-    r01s_ui_modal_open_quit(&app->ui);
-    return 0;
+    return 1;
 }
 
 static void app_apply_modal_result(R01sApp *app) {

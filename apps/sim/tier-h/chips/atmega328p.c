@@ -570,9 +570,54 @@ static int viz_load_bin(R01sApuViz *vz, const char *path) {
     return 0;
 }
 
-void r01s_atmega328p_viz_start(R01sAtmega328p *chip, uint32_t now_ms, const char *bgm_bin_path) {
+static void viz_arm(R01sAtmega328p *chip, uint32_t now_ms) {
     R01sApuViz *vz;
     int ch;
+    if (!chip) {
+        return;
+    }
+    vz = &chip->viz;
+    r01_apu_tracker_init(&vz->tracker);
+    r01_apu_tracker_set_bgm(&vz->tracker, vz->bytecode, vz->bytecode_len);
+    vz->frames_per_step = r01_bgm_fd_frames_per_step();
+    if (vz->frames_per_step < 1) {
+        vz->frames_per_step = 1;
+    }
+    vz->ms_per_nmi = 1000 / (R01_BGM_FD_NMI_HZ * R01S_APU_VIZ_TEMPO_SCALE);
+    if (vz->ms_per_nmi < 1) {
+        vz->ms_per_nmi = 1;
+    }
+    vz->last_ms = now_ms;
+    vz->step = 0;
+    vz->nmi_i = 0;
+    vz->ms_accum = 0;
+    vz->active = 1;
+    for (ch = 0; ch < R01S_APU_CH_N; ch++) {
+        viz_voice_off(chip, ch);
+    }
+    viz_tracker_tick(chip);
+}
+
+void r01s_atmega328p_viz_start_bytecode(R01sAtmega328p *chip, uint32_t now_ms, const uint8_t *bc, int len) {
+    R01sApuViz *vz;
+    if (!chip) {
+        return;
+    }
+    vz = &chip->viz;
+    memset(vz, 0, sizeof(*vz));
+    if (!bc || len < 1) {
+        return;
+    }
+    if (len > (int)sizeof(vz->bytecode)) {
+        len = (int)sizeof(vz->bytecode);
+    }
+    memcpy(vz->bytecode, bc, (size_t)len);
+    vz->bytecode_len = (uint16_t)len;
+    viz_arm(chip, now_ms);
+}
+
+void r01s_atmega328p_viz_start(R01sAtmega328p *chip, uint32_t now_ms, const char *bgm_bin_path) {
+    R01sApuViz *vz;
     int n;
     if (!chip) {
         return;
@@ -591,26 +636,7 @@ void r01s_atmega328p_viz_start(R01sAtmega328p *chip, uint32_t now_ms, const char
     } else {
         vz->bytecode_len = (uint16_t)n;
     }
-    r01_apu_tracker_init(&vz->tracker);
-    r01_apu_tracker_set_bgm(&vz->tracker, vz->bytecode, vz->bytecode_len);
-    vz->frames_per_step = r01_bgm_fd_frames_per_step();
-    if (vz->frames_per_step < 1) {
-        vz->frames_per_step = 1;
-    }
-    /* Wall-clock NMI period; TEMPO_SCALE > 1 speeds the sequencer preview. */
-    vz->ms_per_nmi = 1000 / (R01_BGM_FD_NMI_HZ * R01S_APU_VIZ_TEMPO_SCALE);
-    if (vz->ms_per_nmi < 1) {
-        vz->ms_per_nmi = 1;
-    }
-    vz->last_ms = now_ms;
-    vz->step = 0;
-    vz->nmi_i = 0;
-    vz->ms_accum = 0;
-    vz->active = 1;
-    for (ch = 0; ch < R01S_APU_CH_N; ch++) {
-        viz_voice_off(chip, ch);
-    }
-    viz_tracker_tick(chip);
+    viz_arm(chip, now_ms);
 }
 
 void r01s_atmega328p_viz_stop(R01sAtmega328p *chip) {

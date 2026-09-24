@@ -211,6 +211,12 @@ typedef struct R01sBoard {
     uint8_t cart_cam_deadzone_x;
     uint8_t cart_cam_deadzone_y;
     uint32_t cart_off_player_anim; /* absolute flash offset; 0 if none */
+    /* PRG spawn table copied before the boot overlay NOPs $8000. */
+    uint8_t cart_prg_spawn_n;
+    uint8_t cart_prg_spawn[64 * 6];
+    /* PRG $8700 solid patterns: bank, tile pairs. Copied before the boot overlay. */
+    uint8_t cart_solid_n;
+    uint8_t cart_solid[32 * 2];
     uint8_t cart_format_ver;
     uint32_t cart_off_other;
     uint32_t cart_len_other;

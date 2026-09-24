@@ -1458,12 +1458,13 @@ static void linebuf_drive_addr(R01sBoard *ctx, uint16_t addr, int mcu_sel) {
 
 #define R01S_CHR_TILE_BYTES 16u
 #define R01S_CHR_BANK_BYTES 0x1000u
-#define R01S_ATTR_BANK 0x03u
-#define R01S_ATTR_PAL 0x0Cu
-#define R01S_ATTR_PAL_SHIFT 2
-#define R01S_ATTR_FLIP_H 0x10u
-#define R01S_ATTR_FLIP_V 0x20u
-#define R01S_ATTR_SOLID 0x40u
+/* Attr pack: docs/general/video-graphics.md (bits 0-3 bank, 4-5 palette, 6 H, 7 V). */
+#define R01S_ATTR_BANK R01_ATTR_BANK_MASK
+#define R01S_ATTR_PAL R01_ATTR_PAL_MASK
+#define R01S_ATTR_PAL_SHIFT R01_ATTR_PAL_SHIFT
+#define R01S_ATTR_FLIP_H R01_ATTR_FLIP_H
+#define R01S_ATTR_FLIP_V R01_ATTR_FLIP_V
+#define R01S_ATTR_SOLID 0u
 
 /* CHR plane byte via flash /CE. Returns 0 on CE deny (caller should hold). */
 static int board_chr_flash_byte(R01sBoard *ctx, uint32_t abs, uint8_t *out) {
@@ -1693,7 +1694,7 @@ static void linebuf_oam_paint_y(R01sBoard *ctx, int logical_y, const uint8_t *ba
         uint8_t ox_u = r01s_avr128db28_s1_oam_peek(mcu, (uint16_t)(si * 4u + 3u));
         int oy = r01s_oam_coord_from_u8(oy_u);
         int ox = r01s_oam_coord_from_u8(ox_u);
-        int h = (attr & 0x80u) ? 16 : 8;
+        int h = 8; /* 8x8 only; bit 7 is V flip, not height */
         int px;
 
         /* ~12 cycles: load entry + Y reject (budget model for MCU-S1 @ 24 MHz). */
@@ -1710,7 +1711,7 @@ static void linebuf_oam_paint_y(R01sBoard *ctx, int logical_y, const uint8_t *ba
         {
             int row = logical_y - oy;
             uint8_t pal = (uint8_t)((attr & R01S_ATTR_PAL) >> R01S_ATTR_PAL_SHIFT);
-            uint32_t spr_chr = ctx->cart_off_chr ? (ctx->cart_off_chr + 4u * R01S_CHR_BANK_BYTES) : 0;
+            uint32_t spr_chr = ctx->cart_off_chr;
             for (px = 0; px < 8; px++) {
                 int x = ox + px;
                 uint8_t master;
@@ -1779,7 +1780,6 @@ static void linebuf_oam_fill_field(R01sBoard *ctx) {
     for (si = 0; si < R01S_OAM_ENTRIES; si++) {
         uint8_t tile = r01s_avr128db28_s1_oam_peek(mcu, (uint16_t)(si * 4u + 1u));
         uint8_t oy_u = r01s_avr128db28_s1_oam_peek(mcu, (uint16_t)(si * 4u + 0u));
-        uint8_t attr = r01s_avr128db28_s1_oam_peek(mcu, (uint16_t)(si * 4u + 2u));
         int oy;
         int h;
         int b0;
@@ -1790,7 +1790,7 @@ static void linebuf_oam_fill_field(R01sBoard *ctx) {
             continue;
         }
         oy = r01s_oam_coord_from_u8(oy_u);
-        h = (attr & 0x80u) ? 16 : 8;
+        h = 8;
         if (oy + h <= 0 || oy >= R01S_LOGICAL_H) {
             continue;
         }
@@ -2403,8 +2403,10 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     {
         uint32_t off_types = get_u24(hdr + 19);
         uint32_t off_insts = get_u24(hdr + 22);
-        board->cart_off_entity_types = world_base + off_types;
-        board->cart_off_entity_insts = world_base + off_insts;
+        uint32_t off_ent_global = get_u24(ptrs + 24);
+        /* World offset 0 means the global catalog (pointer table), not the header. */
+        board->cart_off_entity_types = off_types != 0 ? (world_base + off_types) : off_ent_global;
+        board->cart_off_entity_insts = off_insts != 0 ? (world_base + off_insts) : 0;
     }
     board->cart_player_entity = hdr[25];
     board->cart_player_hit_x = hdr[26];
@@ -2415,6 +2417,34 @@ static void board_resolve_cart_meta(R01sBoard *board) {
     board->cart_cam_deadzone_x = hdr[30];
     board->cart_cam_deadzone_y = hdr[31];
     board->cart_off_player_anim = 0;
+    if (board->cart_off_prg != 0 && board->cart_len_prg > 0x1C1u) {
+        const uint8_t *prg = img + board->cart_off_prg;
+        int sn;
+        if (prg[0xF0] == 'R' && prg[0xF1] == '0' && prg[0xF2] == '1' && prg[0xF3] == 'P') {
+            sn = (int)prg[0x1C0];
+            if (sn > 64) {
+                sn = 64;
+            }
+            if (sn > 0 && (uint32_t)(0x1C1 + sn * 6) <= board->cart_len_prg) {
+                memcpy(board->cart_prg_spawn, prg + 0x1C1, (size_t)sn * 6u);
+                board->cart_prg_spawn_n = (uint8_t)sn;
+            } else {
+                board->cart_prg_spawn_n = 0;
+            }
+            if (board->cart_len_prg > 0x8700u) {
+                int solid_n = (int)prg[0x8700];
+                if (solid_n > 32) {
+                    solid_n = 32;
+                }
+                if (solid_n > 0 && (uint32_t)(0x8701 + solid_n * 2) <= board->cart_len_prg) {
+                    memcpy(board->cart_solid, prg + 0x8701, (size_t)solid_n * 2u);
+                    board->cart_solid_n = (uint8_t)solid_n;
+                } else {
+                    board->cart_solid_n = 0;
+                }
+            }
+        }
+    }
     if ((board->cart_world_flags & 0x01u) != 0 && board->cart_player_entity != 0xFF &&
         board->cart_off_entity_insts != 0) {
         board->cart_off_player_anim =
@@ -2478,6 +2508,19 @@ static void board_install_bringup_prg(R01sBoard *board) {
     n += sizeof(R01S_BRINGUP_HANG);
 
     base = board->cart_off_prg;
+    /* Keep spawn rows (PRG+$1C0) before the overlay wipes the 32 KB window. */
+    board->cart_prg_spawn_n = 0;
+    if (base != 0 && board->cart_len_prg > 0x1C1u) {
+        const uint8_t *prg = board->cart_module.flash.mem + base;
+        int sn = (int)prg[0x1C0];
+        if (sn > 64) {
+            sn = 64;
+        }
+        if (sn > 0 && (uint32_t)(0x1C1 + sn * 6) <= board->cart_len_prg) {
+            memcpy(board->cart_prg_spawn, prg + 0x1C1, (size_t)sn * 6u);
+            board->cart_prg_spawn_n = (uint8_t)sn;
+        }
+    }
     for (i = 0; i < R01S_CART_PRG_BYTES; i++) {
         r01s_sst39sf040_poke(&board->cart_module.flash, base + i, 0xEA);
     }
@@ -2708,11 +2751,38 @@ int r01s_board_attr_at(const R01sBoard *board, int wx, int wy, uint8_t *out_attr
 }
 
 int r01s_board_solid_at(const R01sBoard *board, int wx, int wy) {
+    int col, row, lx, ly, tx, ty, cell;
+    uint32_t pay;
+    uint8_t tile;
     uint8_t attr;
-    if (r01s_board_attr_at(board, wx, wy, &attr) != 0) {
+    uint8_t bank;
+    int i;
+    if (!board || wx < 0 || wy < 0) {
         return 0;
     }
-    return (attr & R01S_ATTR_SOLID) != 0;
+    col = wx / R01S_BG_SCREEN_PX_W;
+    row = wy / R01S_BG_SCREEN_PX_H;
+    pay = board_map_off_for_screen(board, col, row);
+    if (pay == 0) {
+        return 0;
+    }
+    lx = wx % R01S_BG_SCREEN_PX_W;
+    ly = wy % R01S_BG_SCREEN_PX_H;
+    tx = lx / 8;
+    ty = ly / 8;
+    cell = ty * 16 + tx;
+    if (pay + 240u + (uint32_t)cell >= sizeof(board->cart_module.flash.mem)) {
+        return 0;
+    }
+    tile = r01s_sst39sf040_peek(&board->cart_module.flash, pay + (uint32_t)cell);
+    attr = r01s_sst39sf040_peek(&board->cart_module.flash, pay + 240u + (uint32_t)cell);
+    bank = (uint8_t)(attr & R01S_ATTR_BANK);
+    for (i = 0; i < (int)board->cart_solid_n; i++) {
+        if (board->cart_solid[i * 2] == bank && board->cart_solid[i * 2 + 1] == tile) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 int r01s_board_aabb_ok(const R01sBoard *board, int px, int py, int bw, int bh) {

@@ -3,6 +3,7 @@
 
 #include "retr01_sim/board.h"
 #include "retr01_sim/board_layout.h"
+#include "retr01_sim/ns_compat.h"
 #include "breadboard.h"
 
 #include <stdio.h>
@@ -659,6 +660,12 @@ int r01s_ui_layout_load(R01sUi *ui) {
                 e->orient = (R01sPkgOrient)ui->compact_chip_orient[i];
                 r01s_breadboard_sync_body((R01sBreadboard *)(void *)e);
             } else if (e->visual == R01S_ENTITY_VIS_PASSIVE) {
+                R01sPassive *p = (R01sPassive *)(void *)e;
+                int sx = ui->compact_chip_x[i];
+                int sy = ui->compact_chip_y[i];
+                /* Draw uses the pivot. Saved x/y are the body corner. */
+                r01s_passive_set_orient(p, (R01sPkgOrient)ui->compact_chip_orient[i]);
+                r01s_passive_set_pivot(p, p->pivot_x + (sx - e->board_x), p->pivot_y + (sy - e->board_y));
                 continue;
             }
             r01s_entity_place(e, ui->compact_chip_x[i], ui->compact_chip_y[i]);

@@ -122,6 +122,8 @@ int r01s_apu_voice_wave_y(const R01sApuVoice *v, int x, int width);
  * Prefer Studio export: output/data/bgm_trackN.bin for the track requested by
  * custom_logic r01_bgm_play (same rule as emu Host Play). */
 void r01s_atmega328p_viz_start(R01sAtmega328p *chip, uint32_t now_ms, const char *bgm_bin_path);
+/* Cart FD/FE/FA bytecode (same bytes Emu's tracker plays). */
+void r01s_atmega328p_viz_start_bytecode(R01sAtmega328p *chip, uint32_t now_ms, const uint8_t *bc, int len);
 void r01s_atmega328p_viz_stop(R01sAtmega328p *chip);
 /* Advance viz timeline from wall clock; runs a burst of synth ticks for scope. */
 void r01s_atmega328p_viz_frame(R01sAtmega328p *chip, uint32_t now_ms);

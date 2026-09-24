@@ -11,6 +11,7 @@
 #include "r01_play_anim_cart.h"
 #include "r01_play_camera.h"
 #include "r01_custom_logic_scan.h"
+#include "r01_apu_cart.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -224,198 +225,306 @@ static int spawn_screen(R01sBoard *b, int *out_col, int *out_row) {
     return r01s_board_first_screen(b, out_col, out_row);
 }
 
+static const uint8_t *catalog_def(const R01sBoard *b, int type_id, size_t *room_out) {
+    const uint8_t *img;
+    const uint8_t *dir;
+    const uint8_t *def;
+    size_t cap;
+    uint16_t off;
+    if (room_out) {
+        *room_out = 0;
+    }
+    if (!b || type_id < 0 || type_id >= (int)b->cart_entity_type_count || b->cart_off_entity_types == 0) {
+        return NULL;
+    }
+    img = b->cart_module.flash.mem;
+    cap = sizeof(b->cart_module.flash.mem);
+    if ((size_t)b->cart_off_entity_types + (size_t)b->cart_entity_type_count * 2u > cap) {
+        return NULL;
+    }
+    dir = img + b->cart_off_entity_types;
+    off = (uint16_t)dir[(size_t)type_id * 2u] | ((uint16_t)dir[(size_t)type_id * 2u + 1u] << 8);
+    if (off == 0 || (size_t)b->cart_off_entity_types + (size_t)off + 12u > cap) {
+        return NULL;
+    }
+    def = dir + off;
+    if (room_out) {
+        *room_out = cap - (size_t)(def - img);
+    }
+    return def;
+}
+
+/* EntityDef frame sprites: tile, rel_x, rel_y, attr. See software-api.md. */
+static const uint8_t *frame_sprites(const uint8_t *def, size_t room, int state, int frame, int *out_n) {
+    uint8_t sc;
+    uint8_t fc;
+    uint16_t soff;
+    uint16_t foff;
+    const uint8_t *st;
+    const uint8_t *fr;
+    int n;
+    if (out_n) {
+        *out_n = 0;
+    }
+    if (!def || room < 12u) {
+        return NULL;
+    }
+    sc = def[1];
+    if (sc > 4u) {
+        sc = 4u;
+    }
+    if (state < 0 || state >= (int)sc) {
+        return NULL;
+    }
+    soff = (uint16_t)def[4 + state * 2] | ((uint16_t)def[5 + state * 2] << 8);
+    if (soff == 0 || (size_t)soff + 18u > room) {
+        return NULL;
+    }
+    st = def + soff;
+    fc = st[0];
+    if (fc > 8u) {
+        fc = 8u;
+    }
+    if (frame < 0 || frame >= (int)fc) {
+        return NULL;
+    }
+    foff = (uint16_t)st[2 + frame * 2] | ((uint16_t)st[3 + frame * 2] << 8);
+    if (foff == 0 || (size_t)soff + (size_t)foff + 6u > room) {
+        return NULL;
+    }
+    fr = st + foff;
+    n = (int)fr[1];
+    if (n < 1) {
+        return NULL;
+    }
+    if (n > 6) {
+        n = 6;
+    }
+    if ((size_t)soff + (size_t)foff + 6u + (size_t)n * 4u > room) {
+        return NULL;
+    }
+    if (out_n) {
+        *out_n = n;
+    }
+    return fr + 6;
+}
+
+static int oam_emit(R01sBoard *b, int slot, int ox, int oy, const uint8_t *parts, int n, int flip_h, int flip_v,
+                    int tile_add) {
+    int pi;
+    for (pi = 0; pi < n && slot < R01_OAM_MAX; pi++) {
+        const uint8_t *sp = parts + (size_t)pi * 4u;
+        int rx = (int)(int8_t)sp[1];
+        int ry = (int)(int8_t)sp[2];
+        uint8_t attr = sp[3];
+        int sx;
+        int sy;
+        if (flip_h) {
+            rx = -rx - 8;
+            attr = (uint8_t)(attr ^ R01_ATTR_FLIP_H);
+        }
+        if (flip_v) {
+            ry = -ry - 8;
+            attr = (uint8_t)(attr ^ R01_ATTR_FLIP_V);
+        }
+        sx = ox + rx - b->play.cam_x;
+        sy = oy + ry - b->play.cam_y;
+        if (r01s_oam_tile_off_screen(sx, sy)) {
+            continue;
+        }
+        r01s_avr128db28_s1_oam_poke(&b->mcu_s1, (uint16_t)(slot * 4 + 0), r01s_oam_coord_to_u8(sy));
+        r01s_avr128db28_s1_oam_poke(&b->mcu_s1, (uint16_t)(slot * 4 + 1),
+                                   (uint8_t)(sp[0] + (uint8_t)tile_add));
+        r01s_avr128db28_s1_oam_poke(&b->mcu_s1, (uint16_t)(slot * 4 + 2), attr);
+        r01s_avr128db28_s1_oam_poke(&b->mcu_s1, (uint16_t)(slot * 4 + 3), r01s_oam_coord_to_u8(sx));
+        slot++;
+        b->health_saw_oam = 1;
+    }
+    return slot;
+}
+
 static int write_player_oam(R01sBoard *b, int *slot) {
-    R01sPlay *pl = &b->play;
-    const uint8_t *img = b->cart_module.flash.mem;
-    const uint8_t *types;
-    int player_type;
+    const uint8_t *def;
+    const uint8_t *parts;
+    size_t room = 0;
+    int n = 0;
+    int state_idx;
+    int frame_slot;
+    int before;
 
-    if (!b || !slot || *slot >= 64 || !b->cart_loaded || b->cart_entity_type_count < 1 ||
-        b->cart_off_entity_types == 0) {
+    if (!b || !slot || *slot >= R01_OAM_MAX || b->cart_player_entity == 0xFF) {
         return 0;
     }
-    if (b->cart_player_entity == 0xFF || b->cart_player_entity >= b->cart_entity_type_count) {
+    def = catalog_def(b, (int)b->cart_player_entity, &room);
+    if (!def) {
         return 0;
     }
-    player_type = (int)b->cart_player_entity;
-    types = img + b->cart_off_entity_types;
-
-    if (b->cart_off_player_anim != 0) {
-        const uint8_t *blob = img + b->cart_off_player_anim;
-        size_t blob_len = sizeof(b->cart_module.flash.mem) - (size_t)b->cart_off_player_anim;
-        R01CartPlayerAnim anim;
-        int state_idx = r01_play_anim_entity_state(&pl->anim);
-        int frame_slot = r01_play_anim_frame(&pl->anim);
-        int flip_h = r01_play_anim_flip_h(&pl->anim);
-        const uint8_t *st = NULL;
-        const uint8_t *parts;
-        int part_count;
-        int pi;
-        if (r01_cart_player_anim_parse(blob, blob_len, &anim) != 0) {
-            return 0;
-        }
-        if (state_idx < 0 || state_idx >= anim.state_count) {
-            state_idx = 0;
-        }
-        if (r01_cart_player_anim_state_hdr(&anim, state_idx, &st) != 0 || !st) {
-            return 0;
-        }
-        parts = r01_cart_player_anim_frame_parts(&anim, state_idx, frame_slot, &part_count);
-        if (!parts || part_count < 1) {
-            return 0;
-        }
-        if (part_count > 4) {
-            part_count = 4;
-        }
-        for (pi = 0; pi < part_count && *slot < 128; pi++) {
-            const uint8_t *part = parts + (size_t)pi * 4u;
-            int origin_x = (int)st[0];
-            int origin_y = (int)st[1];
-            int dx, dy;
-            uint8_t attr;
-            int sx, sy;
-            r01_cart_part_pose(origin_x, origin_y, (int)(int8_t)part[2], (int)(int8_t)part[3], part[1], flip_h, 0, &dx,
-                               &dy, &attr);
-            sx = pl->player_x + dx - origin_x - pl->cam_x;
-            sy = pl->player_y + dy - origin_y - pl->cam_y;
-            if (r01s_oam_tile_off_screen(sx, sy)) {
-                continue;
-            }
-            r01s_avr128db28_s1_oam_poke(&b->mcu_s1, (uint16_t)(*slot * 4 + 0), r01s_oam_coord_to_u8(sy));
-            r01s_avr128db28_s1_oam_poke(&b->mcu_s1, (uint16_t)(*slot * 4 + 1), part[0]);
-            r01s_avr128db28_s1_oam_poke(&b->mcu_s1, (uint16_t)(*slot * 4 + 2), attr);
-            r01s_avr128db28_s1_oam_poke(&b->mcu_s1, (uint16_t)(*slot * 4 + 3), r01s_oam_coord_to_u8(sx));
-            (*slot)++;
-            b->health_saw_oam = 1;
-        }
-        return 1;
+    state_idx = r01_play_anim_entity_state(&b->play.anim);
+    frame_slot = r01_play_anim_frame(&b->play.anim);
+    parts = frame_sprites(def, room, state_idx, frame_slot, &n);
+    if (!parts) {
+        parts = frame_sprites(def, room, 0, 0, &n);
     }
+    if (!parts) {
+        return 0;
+    }
+    before = *slot;
+    *slot = oam_emit(b, *slot, b->play.player_x, b->play.player_y, parts, n,
+                     r01_play_anim_flip_h(&b->play.anim), 0, 0);
+    return *slot > before;
+}
 
-    {
-        const uint8_t *trec = types + (size_t)player_type * 20u;
-        int origin_x = (int)trec[0];
-        int origin_y = (int)trec[1];
-        int part_count = (int)trec[2];
-        int pi;
-        if (part_count > 4) {
-            part_count = 4;
+
+/* Host stand-in for example_01 slime_ai_tick. The boot overlay replaces PRG, so the 6502 never runs it. */
+enum { NPC_N = 16, SLIME_JUMP_MIN = 30, SLIME_JUMP_MAX = 60, SLIME_JUMP_PX = 16 };
+
+typedef struct NpcLive {
+    uint8_t type;
+    uint8_t flags;
+    uint8_t state;
+    uint8_t up;
+    uint16_t wait;
+    int x;
+    int y;
+} NpcLive;
+
+static NpcLive s_npc[NPC_N];
+static int s_npc_n;
+static int s_npc_ready;
+static uint16_t s_npc_rng = 0xACE1u;
+
+static void npc_reset(void) {
+    s_npc_n = 0;
+    s_npc_ready = 0;
+}
+
+static int npc_gap(void) {
+    uint16_t span = (uint16_t)(SLIME_JUMP_MAX - SLIME_JUMP_MIN);
+    uint16_t mask = 1u;
+    uint16_t r;
+    s_npc_rng = (uint16_t)(s_npc_rng * 2053u + 13849u);
+    while (mask < span) {
+        mask = (uint16_t)((mask << 1) | 1u);
+    }
+    do {
+        s_npc_rng = (uint16_t)(s_npc_rng * 2053u + 13849u);
+        r = (uint16_t)(s_npc_rng & mask);
+    } while (r > span);
+    return (int)(SLIME_JUMP_MIN + r);
+}
+
+static int npc_fits(R01sBoard *b, int type, int x, int y) {
+    const uint8_t *def;
+    const uint8_t *parts;
+    size_t room = 0;
+    int n = 0;
+    int hx, hy, hw, hh;
+    def = catalog_def(b, type, &room);
+    parts = frame_sprites(def, room, 0, 0, &n);
+    if (!parts) {
+        return r01s_board_aabb_ok(b, x, y, 8, 8);
+    }
+    hx = (int)(int8_t)parts[-4];
+    hy = (int)(int8_t)parts[-3];
+    hw = (int)parts[-2];
+    hh = (int)parts[-1];
+    if (hw < 1) {
+        hw = 8;
+    }
+    if (hh < 1) {
+        hh = 8;
+    }
+    return r01s_board_aabb_ok(b, x + hx, y + hy, hw, hh);
+}
+
+static void npc_boot(R01sBoard *b) {
+    int i;
+    s_npc_n = 0;
+    for (i = 0; i < (int)b->cart_prg_spawn_n && s_npc_n < NPC_N; i++) {
+        const uint8_t *irec = b->cart_prg_spawn + (size_t)i * 6u;
+        NpcLive *n;
+        if (b->cart_player_entity != 0xFF && irec[0] == b->cart_player_entity) {
+            continue;
         }
-        for (pi = 0; pi < part_count && *slot < 128; pi++) {
-            const uint8_t *part = trec + 4 + pi * 4;
-            int dx = (int)(int8_t)part[2];
-            int dy = (int)(int8_t)part[3];
-            int sx = pl->player_x + dx - origin_x - pl->cam_x;
-            int sy = pl->player_y + dy - origin_y - pl->cam_y;
-            if (r01s_oam_tile_off_screen(sx, sy)) {
-                continue;
+        n = &s_npc[s_npc_n];
+        n->type = irec[0];
+        n->flags = irec[1];
+        n->state = 0;
+        n->up = 0;
+        n->wait = (uint16_t)npc_gap();
+        n->x = (int)((uint16_t)irec[2] | ((uint16_t)irec[3] << 8));
+        n->y = (int)((uint16_t)irec[4] | ((uint16_t)irec[5] << 8));
+        s_npc_n++;
+    }
+    s_npc_ready = 1;
+}
+
+static void npc_tick(R01sBoard *b) {
+    int i;
+    if (!b || !b->play.enabled) {
+        return;
+    }
+    if (!s_npc_ready) {
+        s_npc_rng ^= (uint16_t)b->play.player_x;
+        s_npc_rng ^= (uint16_t)(b->play.player_y << 1);
+        npc_boot(b);
+    }
+    for (i = 0; i < s_npc_n; i++) {
+        NpcLive *n = &s_npc[i];
+        int grounded;
+        if (n->wait > 0) {
+            n->wait--;
+        }
+        if (npc_fits(b, (int)n->type, n->x + 1, n->y)) {
+            n->x++;
+        }
+        grounded = !npc_fits(b, (int)n->type, n->x, n->y + 1);
+        if (n->wait == 0 && grounded) {
+            n->up = (uint8_t)SLIME_JUMP_PX;
+            n->wait = (uint16_t)npc_gap();
+            grounded = 0;
+        }
+        if (n->up > 0) {
+            if (n->y > 0 && npc_fits(b, (int)n->type, n->x, n->y - 1)) {
+                n->y--;
+                n->up--;
+            } else {
+                n->up = 0;
             }
-            r01s_avr128db28_s1_oam_poke(&b->mcu_s1, (uint16_t)(*slot * 4 + 0), r01s_oam_coord_to_u8(sy));
-            r01s_avr128db28_s1_oam_poke(&b->mcu_s1, (uint16_t)(*slot * 4 + 1), part[0]);
-            r01s_avr128db28_s1_oam_poke(&b->mcu_s1, (uint16_t)(*slot * 4 + 2), part[1]);
-            r01s_avr128db28_s1_oam_poke(&b->mcu_s1, (uint16_t)(*slot * 4 + 3), r01s_oam_coord_to_u8(sx));
-            (*slot)++;
-            b->health_saw_oam = 1;
+            grounded = 0;
+        } else if (!grounded) {
+            n->y++;
         }
-        return *slot > 0;
+        n->state = grounded ? 0u : 1u;
     }
 }
 
 static void write_oam(R01sBoard *b) {
-    R01sPlay *pl;
     int slot = 0;
     int ii;
-    const uint8_t *img;
-    const uint8_t *types = NULL;
-    const uint8_t *insts;
-    int player_type = -1;
 
     if (!b || !b->play.enabled) {
         return;
     }
-    pl = &b->play;
-    /* Clear all slots unused (tile == 0xFF); match emu / docs. */
     memset(b->mcu_s1.oam, 0xFF, sizeof(b->mcu_s1.oam));
+    (void)write_player_oam(b, &slot);
 
-    img = b->cart_module.flash.mem;
-    if (b->cart_loaded && b->cart_entity_type_count > 0 && b->cart_off_entity_types != 0 &&
-        (size_t)b->cart_off_entity_types + (size_t)b->cart_entity_type_count * 20u <=
-            sizeof(b->cart_module.flash.mem)) {
-        types = img + b->cart_off_entity_types;
-        if (b->cart_player_entity != 0xFF && b->cart_player_entity < b->cart_entity_type_count) {
-            player_type = (int)b->cart_player_entity;
-        }
+    if (!s_npc_ready) {
+        npc_boot(b);
     }
-
-    if (player_type >= 0 && types) {
-        (void)write_player_oam(b, &slot);
-    }
-    if (slot < 1) {
-        int vx = pl->player_x - pl->cam_x;
-        int vy = pl->player_y - pl->cam_y;
-        if (!r01s_oam_tile_off_screen(vx, vy)) {
-            r01s_avr128db28_s1_oam_poke(&b->mcu_s1, 0, r01s_oam_coord_to_u8(vy));
-            r01s_avr128db28_s1_oam_poke(&b->mcu_s1, 1, 1);
-            r01s_avr128db28_s1_oam_poke(&b->mcu_s1, 2, 0);
-            r01s_avr128db28_s1_oam_poke(&b->mcu_s1, 3, r01s_oam_coord_to_u8(vx));
-            slot = 1;
-            b->health_saw_oam = 1;
-        }
-    }
-
-    if (!types || !b->cart_loaded || b->cart_entity_inst_count < 1 || b->cart_off_entity_insts == 0) {
-        return;
-    }
-    if ((size_t)b->cart_off_entity_insts + (size_t)b->cart_entity_inst_count * 6u >
-        sizeof(b->cart_module.flash.mem)) {
-        return;
-    }
-    insts = img + b->cart_off_entity_insts;
-    for (ii = 0; ii < (int)b->cart_entity_inst_count && slot < 128; ii++) {
-        const uint8_t *irec = insts + (size_t)ii * 6u;
-        uint8_t type_id = irec[0];
-        int world_x = (int)((uint16_t)irec[2] | ((uint16_t)irec[3] << 8));
-        int world_y = (int)((uint16_t)irec[4] | ((uint16_t)irec[5] << 8));
-        const uint8_t *trec;
-        int origin_x, origin_y, part_count, pi;
-        if (type_id >= b->cart_entity_type_count) {
+    for (ii = 0; ii < s_npc_n && slot < R01_OAM_MAX; ii++) {
+        const NpcLive *n = &s_npc[ii];
+        const uint8_t *def;
+        const uint8_t *parts;
+        size_t room = 0;
+        int part_n = 0;
+        def = catalog_def(b, (int)n->type, &room);
+        parts = frame_sprites(def, room, 0, 0, &part_n);
+        if (!parts) {
             continue;
         }
-        if (player_type >= 0 && (int)type_id == player_type) {
-            continue;
-        }
-        trec = types + (size_t)type_id * 20u;
-        origin_x = (int)trec[0];
-        origin_y = (int)trec[1];
-        part_count = (int)trec[2];
-        if (part_count > 4) {
-            part_count = 4;
-        }
-        for (pi = 0; pi < part_count && slot < 128; pi++) {
-            const uint8_t *part = trec + 4 + pi * 4;
-            int dx = (int)(int8_t)part[2];
-            int dy = (int)(int8_t)part[3];
-            uint8_t attr = part[1];
-            int sx, sy;
-            if (irec[1] & 1u) {
-                dx = 2 * origin_x - dx - 8;
-                attr = (uint8_t)(attr ^ 0x10u); /* FLIP_H */
-            }
-            if (irec[1] & 2u) {
-                dy = 2 * origin_y - dy - 8;
-                attr = (uint8_t)(attr ^ 0x20u); /* FLIP_V */
-            }
-            sx = world_x + dx - origin_x - pl->cam_x;
-            sy = world_y + dy - origin_y - pl->cam_y;
-            if (r01s_oam_tile_off_screen(sx, sy)) {
-                continue;
-            }
-            r01s_avr128db28_s1_oam_poke(&b->mcu_s1, (uint16_t)(slot * 4 + 0), r01s_oam_coord_to_u8(sy));
-            r01s_avr128db28_s1_oam_poke(&b->mcu_s1, (uint16_t)(slot * 4 + 1), part[0]);
-            r01s_avr128db28_s1_oam_poke(&b->mcu_s1, (uint16_t)(slot * 4 + 2), attr);
-            r01s_avr128db28_s1_oam_poke(&b->mcu_s1, (uint16_t)(slot * 4 + 3), r01s_oam_coord_to_u8(sx));
-            slot++;
-            b->health_saw_oam = 1;
-        }
+        slot = oam_emit(b, slot, n->x, n->y, parts, part_n, (n->flags & 1u) != 0, (n->flags & 2u) != 0,
+                        n->state != 0);
     }
 }
 
@@ -547,7 +656,6 @@ void r01s_play_on_vblank(R01sBoard *b) {
     if (!b || !b->play.enabled) {
         return;
     }
-    step_move_from_pad(b);
     apply_video_latch(b);
     write_oam(b);
     r01s_frame_log_note(R01S_FLOG_PLAY, "VBlank Host Play: pad step + OAM");
@@ -670,6 +778,38 @@ static void play_start_bgm_viz(R01sBoard *board) {
     }
     fprintf(stderr, "play: BGM track %d from %s\n", track, logic);
 
+    {
+        const uint8_t *img = board->cart_module.flash.mem;
+        const uint8_t *ptrs;
+        const uint8_t *blob;
+        uint32_t boff;
+        uint32_t blen;
+        uint16_t payload_min = R01_BGM_HDR;
+        uint16_t toff;
+        uint16_t tlen;
+        if (track >= 1 && track <= (int)R01_BGM_TRACKS && memcmp(img, "retr01", 6) == 0) {
+            ptrs = img + R01S_CART_HDR_BYTES;
+            boff = (uint32_t)ptrs[42] | ((uint32_t)ptrs[43] << 8) | ((uint32_t)ptrs[44] << 16);
+            blen = (uint32_t)ptrs[45] | ((uint32_t)ptrs[46] << 8) | ((uint32_t)ptrs[47] << 16);
+            if (blen >= R01_BGM_HDR && (size_t)boff + (size_t)blen <= sizeof(board->cart_module.flash.mem)) {
+                blob = img + boff;
+                if (blob[0] == R01_BGM_MAGIC0 && blob[1] == R01_BGM_MAGIC1) {
+                    if (blob[3] == R01_BGM_INS_VER) {
+                        payload_min = (uint16_t)R01_BGM_HDR_V1;
+                    }
+                    toff = (uint16_t)blob[4 + (track - 1) * 2] | ((uint16_t)blob[5 + (track - 1) * 2] << 8);
+                    tlen = (uint16_t)blob[20 + (track - 1) * 2] | ((uint16_t)blob[21 + (track - 1) * 2] << 8);
+                    if (toff >= payload_min && tlen >= 1u && (uint32_t)toff + (uint32_t)tlen <= blen) {
+                        fprintf(stderr, "play: BGM bytecode %u bytes from cart\n", (unsigned)tlen);
+                        r01s_avr128db28_s2_viz_start_bytecode(board->apu_impl.apu, 0, blob + toff, (int)tlen);
+                        r01s_frame_log_note(R01S_FLOG_PLAY, "Host Play BGM from cart");
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
     if (r01_bgm_track_bin_path(out_dir, track, bin, sizeof(bin)) == 0 && path_is_file(bin)) {
         bgm_path = bin;
     } else {
@@ -709,7 +849,19 @@ int r01s_play_start(R01sBoard *board) {
         return 0;
     }
     r01s_play_reset(&board->play);
+    npc_reset();
     play_load_cart_camera(board);
+    for (sx = 0; sx < (int)board->cart_prg_spawn_n; sx++) {
+        const uint8_t *irec = board->cart_prg_spawn + (size_t)sx * 6u;
+        if (irec[0] == board->cart_player_entity) {
+            sy = (int)((uint16_t)irec[2] | ((uint16_t)irec[3] << 8));
+            col = (int)((uint16_t)irec[4] | ((uint16_t)irec[5] << 8));
+            r01s_board_mark_map_ready(board);
+            r01_play_anim_init(&board->play.anim);
+            place_player_xy(board, sy, col);
+            goto play_latched;
+        }
+    }
     if (player_instance_spawn(board, &sx, &sy)) {
         r01s_board_mark_map_ready(board);
         r01_play_anim_init(&board->play.anim);
@@ -721,6 +873,7 @@ int r01s_play_start(R01sBoard *board) {
     } else {
         return 0;
     }
+play_latched:
     /* Latch scroll + 2x2 before play.enabled so no field renders at scroll=$00. */
     board->play.force_camera_reload = 1;
     queue_video(board);
@@ -758,6 +911,11 @@ void r01s_play_tick(R01sBoard *board, uint8_t pad) {
     edge = (uint8_t)(pad & (uint8_t)~pl->pad_prev);
     pl->pad_prev = pad;
     pl->pad_held = (uint8_t)(pad & (R01S_PAD_UP | R01S_PAD_DOWN | R01S_PAD_LEFT | R01S_PAD_RIGHT));
+    /* One pixel per UI frame. The beam is too slow to use as the 60 Hz game tick. */
+    step_move_from_pad(board);
+    npc_tick(board);
+    apply_video_latch(board);
+    write_oam(board);
 
     if (edge & R01S_PAD_X) {
         (void)warp_to(board, 0, 0);
