@@ -42,8 +42,9 @@ Do this at the start of a task. Do not rely on a memorized file list.
 | --- | --- | --- |
 | Studio | `apps/studio` | Authoring. `app/` is the shell, `core/` is project/export, `ui/` is shared SDL widgets |
 | Emu | `apps/emu` | Runs `.retr01` images |
-| Tier A sim | `apps/sim/tier-a` | Beam + color lab. Tiers do not share netlist wiring |
-| Tier B sim | `apps/sim/tier-b` | Compositor lab. Own board recipe, copied from Tier A |
+| Tier A sim | `apps/sim/tier-a` | Beam + color lab. Own board recipe and netlist |
+| Tier B sim | `apps/sim/tier-b` | Compositor lab. Own board recipe and netlist |
+| Sim common | `apps/sim/common` | Shared chips, layout loader, font, PNG chrome, shared tests |
 | Netlist engine | `apps/netlist_sim` | Discrete-IC sim linked by the tier sims |
 | Shared | `apps/common` | Linked by Studio, Emu, and Sim. Firmware headers in `apps/common/fw/` |
 | C SDK | `apps/sdk/r01_c` | Game runtime for the 6502. Host tests compile with `R01_HOST_TEST` |

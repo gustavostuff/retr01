@@ -33,7 +33,7 @@ static int font_try_open(const char *path) {
 int r01a_font_init(void) {
     static const char *const paths[] = {
         R01A_ASSETS_OTHER "/proggy-tiny.ttf",
-        "apps/sim/tier-a/assets/other/proggy-tiny.ttf",
+        "apps/sim/common/assets/other/proggy-tiny.ttf",
         "assets/other/proggy-tiny.ttf",
         NULL,
     };
