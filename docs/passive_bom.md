@@ -23,7 +23,7 @@ The Sim tray shows **many identical CCAP / R sprites**. That is one part per loc
 | Qty | What | Why |
 |----:|------|-----|
 | 21 | **100 nF** bypass | One per VCC site: 16 mobo ICs + **74HC14** + **AD724** + cart flash + cart EEPROM + pad ATtiny |
-| 6 | Crystal load (~22 pF class) | **2 per crystal** × Y1 / Y2 / Y3. Same CCAP body as bypass, different value |
+| 6 | Crystal load (~22 pF class) | **2 per crystal** on Y1 / Y2 / Y3. Same CCAP body as bypass, different value |
 
 So most CCAPs are **decoupling**. The extras are **crystal loads**, not more bypass.
 
@@ -31,7 +31,7 @@ So most CCAPs are **decoupling**. The extras are **crystal loads**, not more byp
 
 | Qty | What | Why |
 |----:|------|-----|
-| 1 | **220 µF** | Single 5 V entry bulk cap (ECAP sprite) |
+| 1 | **220 uF** | Single 5 V entry bulk cap (ECAP sprite) |
 
 **Resistors (30 = 11 + 14 + 5)**
 
@@ -39,8 +39,8 @@ Only **11** are the analog video DAC network. The rest are digital:
 
 | Qty | What | Why |
 |----:|------|-----|
-| 11 | Color DAC (4k / 2k / 1k / 75 Ω) | Weighted R/G/B + 75 Ω terminations to ~0.7 Vpp ([`hardware.md`](general/hardware.md) Video out) |
-| 14 | **33 Ω** series | **2** clocks (PHI2, DOT) + **12** cart edge (**D[7:0]**, OE#, WE#, SDA, SCL) |
+| 11 | Color DAC (4k / 2k / 1k / 75 ohm) | Weighted R/G/B + 75 ohm terminations to ~0.7 Vpp ([`hardware.md`](general/hardware.md) Video out) |
+| 14 | **33 ohm** series | **2** clocks (PHI2, DOT) + **12** cart edge (**D[7:0]**, OE#, WE#, SDA, SCL) |
 | 5 | Pull-ups | Pad **DATA**, I2C **SDA/SCL**, CPU **RDY**, **RESB** |
 
 Video alone does **not** need 30 resistors. Cart damping + pull-ups do.
@@ -51,10 +51,10 @@ Video alone does **not** need 30 resistors. Cart damping + pull-ups do.
 
 | Domain | ICs with VCC | Notes |
 |--------|-------------:|-------|
-| Main PCB (locked 16) | 16 | CPU, 3× DB28, 3× SRAM, 3× PLD, 3× HC157, HC573, HC574, color PROM |
+| Main PCB (locked 16) | 16 | CPU, 3x DB28, 3x SRAM, 3x PLD, 3x HC157, HC573, HC574, color PROM |
 | Outside 18 on PCB | 2 | **74HC14** (optional), **AD724** |
 | Cart module | 2 | SST39SF040 + 24C64 |
-| Pad (×1) | 1 | ATtiny85 |
+| Pad (x1) | 1 | ATtiny85 |
 | **Total bypass sites** | **21** | one **100 nF** per VCC pin cluster |
 
 ---
@@ -67,7 +67,7 @@ Video alone does **not** need 30 resistors. Cart damping + pull-ups do.
 | 1 | Y2 / DOT | Abracon ACH **5.369318 MHz** | Beam / PPU clock |
 | 1 | Y3 / AD724 FSC | Abracon ACH **14.31818 MHz** | NTSC encoder subcarrier |
 
-**Load capacitors:** **2 per crystal** (**6** total). Exact pF from the Abracon CL rating (often ~18–22 pF each).
+**Load capacitors:** **2 per crystal** (**6** total). Exact pF from the Abracon CL rating (often ~18-22 pF each).
 
 DB28 parts run on **internal HFOSC @ 24 MHz**. No extra MCU crystals on the locked BOM.
 
@@ -78,7 +78,7 @@ DB28 parts run on **internal HFOSC @ 24 MHz**. No extra MCU crystals on the lock
 | Qty | Value | Role |
 |----:|-------|------|
 | 21 | **100 nF** ceramic | Bypass: 18 PCB (16+HC14+AD724) + 2 cart + 1 pad |
-| 1 | **220 µF** electrolytic (or polymer) | Entry bulk at 5 V input |
+| 1 | **220 uF** electrolytic (or polymer) | Entry bulk at 5 V input |
 | 6 | Crystal load (see above) | Y1/Y2/Y3 |
 
 AD724 may want extra datasheet filter / coupling caps beyond the single VCC bypass. Treat those as app-note add-ons, not locked here.
@@ -89,34 +89,34 @@ AD724 may want extra datasheet filter / coupling caps beyond the single VCC bypa
 
 ### Color DAC (AT27C256R, 1% metal film)
 
-Packing `(R<<5)|(G<<2)|B`. LSB → MSB.
+Packing `(R<<5)|(G<<2)|B`. LSB to MSB.
 
 | Qty | Value | Gun |
 |----:|-------|-----|
-| 2 | **4.00 kΩ** | R LSB, G LSB |
-| 3 | **2.00 kΩ** | R mid, G mid, B LSB |
-| 3 | **1.00 kΩ** | R MSB, G MSB, B MSB |
-| 3 | **75.0 Ω** | R/G/B to GND (~0.7 Vpp) |
+| 2 | **4.00k** | R LSB, G LSB |
+| 3 | **2.00k** | R mid, G mid, B LSB |
+| 3 | **1.00k** | R MSB, G MSB, B MSB |
+| 3 | **75.0 ohm** | R/G/B to GND (~0.7 Vpp) |
 
 **Subtotal DAC: 11**
 
-### Series damping (**33 Ω**)
+### Series damping (**33 ohm**)
 
 | Qty | Nets |
 |----:|------|
 | 2 | PHI2, DOT |
 | 12 | Cart **D[7:0]**, **OE#**, **WE#**, **SDA**, **SCL** |
 
-**Subtotal series 33 Ω: 14**
+**Subtotal series 33 ohm: 14**
 
 ### Pull-ups
 
 | Qty | Value | Net |
 |----:|-------|-----|
-| 1 | **4.7 kΩ** | Pad UART **DATA** (MCU-S2). Host side. OD half-duplex |
-| 2 | **4.7 kΩ** | Cart I2C **SDA** / **SCL** (MCU-M OD) |
-| 1 | **4.7 kΩ** (or **10 kΩ**) | CPU **RDY** idle high unless MCU stalls |
-| 1 | **10 kΩ** | **RESB** / reset rail idle high (after HC14 conditioning) |
+| 1 | **4.7k** | Pad UART **DATA** (MCU-S2). Host side. OD half-duplex |
+| 2 | **4.7k** | Cart I2C **SDA** / **SCL** (MCU-M OD) |
+| 1 | **4.7k** (or **10k**) | CPU **RDY** idle high unless MCU stalls |
+| 1 | **10k** | **RESB** / reset rail idle high (after HC14 conditioning) |
 
 **Subtotal pull-ups: 5**
 
@@ -129,9 +129,9 @@ Packing `(R<<5)|(G<<2)|B`. LSB → MSB.
 | Crystals | 3 |
 | Crystal load caps | 6 |
 | 100 nF bypass | 21 |
-| 220 µF bulk | 1 |
+| 220 uF bulk | 1 |
 | DAC resistors | 11 |
-| 33 Ω series | 14 |
+| 33 ohm series | 14 |
 | Pull-ups | 5 |
 | **Passive line items (sum of qtys)** | **61** |
 
@@ -139,7 +139,7 @@ Packing `(R<<5)|(G<<2)|B`. LSB → MSB.
 
 ## Tier H sim netlist
 
-Pin-level links for bypass, bulk, crystals, DAC, series **33 Ω**, and pull-ups live in `apps/sim/tier-h/src/board_schematic.c`. See [`docs/bringup/schematic-netlist-tier-h.md`](bringup/schematic-netlist-tier-h.md) for refdes mapping and known gaps (**AD724**, **74HC14** not seated in sim yet).
+Pin-level links for bypass, bulk, crystals, DAC, series **33 ohm**, and pull-ups live in `apps/sim/tier-h/src/board_schematic.c`. See [`docs/bringup/schematic-netlist-tier-h.md`](bringup/schematic-netlist-tier-h.md) for refdes mapping and known gaps (**AD724**, **74HC14** not seated in sim).
 
 ---
 

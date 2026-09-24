@@ -1,6 +1,6 @@
 /*
  * Dump Tier H board pin connectivity as JSON (stdout).
- * See docs/bringup/tier-h-skidl-export.md — illustrative / not fab-ready.
+ * See docs/bringup/tier-h-skidl-export.md (illustrative, not fab-ready).
  */
 #include "retr01_sim/board.h"
 #include "retr01_sim/board_netlist.h"

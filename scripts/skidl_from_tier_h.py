@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Build a preliminary KiCad netlist from Tier H JSON (Skidl).
+Preliminary KiCad netlist from Tier H JSON (Skidl).
 
-IMPORTANT: Output is for illustration and early PCB exploration only.
-The Retr01 motherboard PCB is NOT ready for fabrication from this flow.
+Output is for illustration and early PCB exploration only.
+The Retr01 motherboard PCB is not ready for fabrication from this flow.
 See docs/bringup/tier-h-skidl-export.md.
 
-Usage:
+Typical invocation:
   ./apps/sim/tier-h/build/export_tier_h_netlist > /tmp/retr01.json
   ./scripts/skidl_from_tier_h.py /tmp/retr01.json -o retr01_prelim.net
 
@@ -108,7 +108,7 @@ def build_skidl(data: dict) -> str:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Skidl netlist from Tier H JSON (illustrative only)")
+    ap = argparse.ArgumentParser(description="Skidl netlist from Tier H JSON (preliminary, not fab-ready)")
     ap.add_argument("json_file", type=Path, help="export_tier_h_netlist JSON")
     ap.add_argument("-o", "--output", type=Path, default=Path("retr01_prelim.net"), help="KiCad netlist path")
     args = ap.parse_args()

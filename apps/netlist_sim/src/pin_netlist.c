@@ -269,7 +269,7 @@ int ns_pin_netlist_write_json(const NsPinNetlist *nl, FILE *out) {
     fputs("    \"source\": \"retr01-tier-h-pin-netlist\",\n", out);
     fputs("    \"purpose\": \"preliminary_pcb_illustrative_only\",\n", out);
     fputs("    \"fabrication_ready\": false,\n", out);
-    fputs("    \"note\": \"Not for production PCB. Sim connectivity + BOM passives; AD724/HC14/cart edge gaps remain.\"\n", out);
+    fputs("    \"note\": \"Not for production PCB. Sim connectivity and BOM passives. AD724, HC14, and cart edge gaps remain.\"\n", out);
     fputs("  },\n", out);
     fprintf(out, "  \"net_count\": %d,\n", nroots);
     fputs("  \"nets\": [\n", out);

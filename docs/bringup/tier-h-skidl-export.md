@@ -1,8 +1,8 @@
-# Tier H → Skidl / KiCad netlist (preliminary only)
+# Tier H Skidl / KiCad netlist (preliminary only)
 
-**Status:** illustrative export pipeline only. **Do not use generated netlists for fabrication, ordering, or design sign-off.** The Retr01 motherboard PCB design is **not ready yet**; Tier H sim connectivity is bring-up accurate in places but intentionally incomplete versus [`docs/general/hardware.md`](../general/hardware.md).
+**Status:** illustrative export pipeline only. Generated netlists must not be used for fabrication, ordering, or design sign-off. The Retr01 motherboard PCB design is not ready. Tier H sim connectivity matches bring-up in places but stays intentionally incomplete versus [`docs/general/hardware.md`](../general/hardware.md).
 
-Use this flow to explore rough connectivity, talk through floorplans, or prototype KiCad imports—not to tape out.
+The export flow supports rough connectivity review, floorplan discussion, and experimental KiCad import. It is not intended for tape-out.
 
 ---
 
@@ -26,9 +26,9 @@ The JSON embeds `"fabrication_ready": false` and `"purpose": "preliminary_pcb_il
 
 ---
 
-## Step 1 — Export JSON (C)
+## Step 1: Export JSON (C)
 
-From a Tier H build:
+Typical Tier H build:
 
 ```bash
 cmake -S apps/sim/tier-h -B apps/sim/tier-h/build
@@ -42,40 +42,40 @@ Unit test: `test_export_netlist`.
 
 ---
 
-## Step 2 — Skidl netlist (Python)
+## Step 2: Skidl netlist (Python)
 
 ```bash
 pip install skidl   # optional; only for step 2
 ./scripts/skidl_from_tier_h.py retr01_tier_h.json -o retr01_prelim.net
 ```
 
-The script:
+Script behavior:
 
 - Refuses export if JSON claims `fabrication_ready: true`
 - Maps passives to generic `Device` R/C/CP/Crystal symbols
 - Maps ICs to **generic connector placeholders** (connectivity only, not correct footprints/symbols)
 - Skips **SCR1** (sim LCD sink)
 
-Import `retr01_prelim.net` into KiCad only as a **visual experiment**, then replace symbols and reconcile against the real schematic SoT.
+KiCad import of `retr01_prelim.net` is limited to visual experiment. Symbols and footprints require replacement and reconciliation against the schematic source of truth.
 
 ---
 
-## When this becomes “real”
+## Fabrication-ready criteria
 
 Before any fab-ready netlist:
 
 1. AD724 + optional HC14 in sim/schematic links  
 2. Resolve refdes / crystal vs osc naming  
-3. Curated **refdes → KiCad symbol + footprint** table (locked-19 BOM)  
+3. Curated **refdes to KiCad symbol + footprint** table (locked-19 BOM)  
 4. Cart edge and pad harness as designed nets, not stubs  
-5. Human schematic review—not just sim union-find  
+5. Human schematic review, not sim union-find alone  
 
-Until then, treat Tier H + Skidl output as **draft illustration only**.
+Until those criteria are met, Tier H Skidl output remains draft illustration only.
 
 ---
 
 ## Related
 
-- [`schematic-netlist-tier-h.md`](schematic-netlist-tier-h.md) — link tables in sim  
-- [`passive_bom.md`](../passive_bom.md) — passive counts  
-- [`apps/sim/tier-h/README.md`](../../apps/sim/tier-h/README.md) — sim overview  
+- [`schematic-netlist-tier-h.md`](schematic-netlist-tier-h.md): link tables in sim  
+- [`passive_bom.md`](../passive_bom.md): passive counts  
+- [`apps/sim/tier-h/README.md`](../../apps/sim/tier-h/README.md): sim overview  
