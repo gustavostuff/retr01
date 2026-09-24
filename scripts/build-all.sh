@@ -9,6 +9,7 @@ BIN="$ROOT/bin"
 STUDIO="$ROOT/apps/studio"
 EMU="$ROOT/apps/emu"
 SIM_A="$ROOT/apps/sim/tier-a"
+SIM_B="$ROOT/apps/sim/tier-b"
 CLEAN=0
 
 usage() {
@@ -44,7 +45,7 @@ build_one() {
 
 if [ "$CLEAN" -eq 1 ]; then
   echo "cleaning build trees and bin/"
-  rm -rf "$STUDIO/build" "$EMU/build" "$SIM_A/build" "$BIN"
+  rm -rf "$STUDIO/build" "$EMU/build" "$SIM_A/build" "$SIM_B/build" "$BIN"
 fi
 
 mkdir -p "$BIN"
@@ -58,5 +59,8 @@ build_one "$EMU" retr01_emu emu
 echo "== sim tier-a =="
 build_one "$SIM_A" retr01_sim_tier_a sim-tier-a
 
+echo "== sim tier-b =="
+build_one "$SIM_B" retr01_sim_tier_b sim-tier-b
+
 echo "binaries:"
-ls -lh "$BIN"/studio "$BIN"/emu "$BIN"/sim-tier-a
+ls -lh "$BIN"/studio "$BIN"/emu "$BIN"/sim-tier-a "$BIN"/sim-tier-b

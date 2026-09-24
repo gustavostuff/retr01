@@ -2,6 +2,7 @@ doc-style-rules.txt
 apps/studio/build/
 apps/emu/build/
 apps/sim/tier-a/build/
+apps/sim/tier-b/build/
 apps/netlist_sim/build/
 bin/
 output/
@@ -13,6 +14,7 @@ tools/llvm-mos-linux.tar.xz
 **/r01_custom.so
 temp/
 apps/sim/tier-a/ui_layout.json
+apps/sim/tier-b/ui_layout.json
 apps/sdk/r01_c/build/
 apps/sdk/r01_c/host-build/
 /test_cart.retr01

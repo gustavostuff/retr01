@@ -1,7 +1,7 @@
 ---
 name: retr01
 description: >-
-  Orient work in the retr01 repo: hardware design, Studio, Emu, Tier A sim,
+  Orient work in the retr01 repo: hardware design, Studio, Emu, Tier A/B sim,
   netlist sim, the C SDK, and the .retr01 cart format. Use when editing,
   building, debugging, reviewing, or explaining this repository, its apps,
   docs, or example_01.
@@ -43,6 +43,7 @@ Do this at the start of a task. Do not rely on a memorized file list.
 | Studio | `apps/studio` | Authoring. `app/` is the shell, `core/` is project/export, `ui/` is shared SDL widgets |
 | Emu | `apps/emu` | Runs `.retr01` images |
 | Tier A sim | `apps/sim/tier-a` | Beam + color lab. Tiers do not share netlist wiring |
+| Tier B sim | `apps/sim/tier-b` | Compositor lab. Own board recipe, copied from Tier A |
 | Netlist engine | `apps/netlist_sim` | Discrete-IC sim linked by the tier sims |
 | Shared | `apps/common` | Linked by Studio, Emu, and Sim. Firmware headers in `apps/common/fw/` |
 | C SDK | `apps/sdk/r01_c` | Game runtime for the 6502. Host tests compile with `R01_HOST_TEST` |
@@ -59,7 +60,7 @@ Host apps (C11, `-Wall -Wextra -Wpedantic`):
 ./scripts/unit-tests.sh
 ```
 
-One app: `cmake -S <path> -B <path>/build && cmake --build <path>/build -j` with `<path>` one of `apps/studio`, `apps/emu`, `apps/sim/tier-a`.
+One app: `cmake -S <path> -B <path>/build && cmake --build <path>/build -j` with `<path>` one of `apps/studio`, `apps/emu`, `apps/sim/tier-a`, `apps/sim/tier-b`.
 
 6502 PRG uses llvm-mos (`scripts/fetch-llvm-mos.sh`, toolchain in `tools/llvm-mos` or `$LLVM_MOS`):
 
