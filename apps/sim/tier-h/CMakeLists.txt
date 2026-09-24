@@ -21,6 +21,7 @@ add_library(retr01_sim_core
   src/bom_count.c
   src/board.c
   src/board_netlist.c
+  src/board_schematic.c
   src/spi_mailbox.c
   src/board_debug.c
   src/frame_log.c

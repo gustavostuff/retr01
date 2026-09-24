@@ -5,6 +5,8 @@
 
 #include <stdio.h>
 
+void r01s_board_schematic_apply(R01sBoard *board, R01sPinNetlist *nl);
+
 static void netlist_register(R01sPinNetlist *nl, R01sEntity *e) {
     r01s_pin_netlist_register_entity(nl, e);
 }
@@ -70,8 +72,6 @@ static void netlist_link_motherboard(R01sBoard *board, R01sPinNetlist *nl) {
     R01sEntity *pads = r01s_pads_entity(&board->pads);
     R01sEntity *beam = r01s_beam_xy_entity(&board->pld_beam_x);
     R01sEntity *beam_y = r01s_atf22v10_entity(&board->pld_beam_y);
-    R01sEntity *dot_osc = r01s_osc_dot_entity(&board->osc_dot);
-    R01sEntity *osc = r01s_osc8m_entity(&board->osc);
     R01sEntity *pld = r01s_atf22v10_entity(&board->pld_decode);
     R01sEntity *mux_vram = r01s_sn74hc157_entity(board->vram_impl.mux157[R01S_MUX157_VRAM0]);
     R01sEntity *field_ale = r01s_sn74hc573_entity(board->mcu_lb_impl.field_ale);
@@ -83,7 +83,6 @@ static void netlist_link_motherboard(R01sBoard *board, R01sPinNetlist *nl) {
     r01s_pin_netlist_link_bus(nl, cpu, "A", prg, "A", 16);
     r01s_pin_netlist_link_bus(nl, cpu, "D", prg, "DQ", 8);
     r01s_pin_netlist_link_bus(nl, cpu, "A", vram, "A", 16);
-    r01s_pin_netlist_link_bus(nl, cpu, "D", flash, "DQ", 8);
     r01s_pin_netlist_link_bus(nl, cpu, "D", vram, "DQ", 8);
     r01s_pin_netlist_link_bus(nl, cpu, "D", mcu, "CPU_D", 8);
 
@@ -108,7 +107,6 @@ static void netlist_link_motherboard(R01sBoard *board, R01sPinNetlist *nl) {
     r01s_pin_netlist_link(nl, cpu, "BE", pld, "BE");
     r01s_pin_netlist_link(nl, cpu, "RWB", pld, "RWB");
 
-    r01s_pin_netlist_link(nl, beam, "DOT", dot_osc, "DOT");
     netlist_link_beam_y_beam(nl, beam_y, beam);
     r01s_pin_netlist_link(nl, cpu, "IRQB", beam_y, "EQ#");
 
@@ -126,8 +124,6 @@ static void netlist_link_motherboard(R01sBoard *board, R01sPinNetlist *nl) {
     r01s_pin_netlist_link(nl, sram_lb, "A6", field_ale, "Q6");
     r01s_pin_netlist_link(nl, sram_lb, "A7", field_ale, "Q7");
 
-    r01s_pin_netlist_link(nl, cpu, "PHI2", osc, "PHI2");
-
     r01s_pin_netlist_name_net(nl, r01s_pwr5v_entity(&board->pwr), "VDD", "+5V");
     r01s_pin_netlist_name_net(nl, r01s_pwr5v_entity(&board->pwr), "GND", "GND");
 }
@@ -142,4 +138,5 @@ void r01s_board_netlist_rebuild(R01sBoard *board) {
     r01s_pin_netlist_clear(&board->pin_netlist);
     netlist_register_silicon(board, &board->pin_netlist);
     netlist_link_motherboard(board, &board->pin_netlist);
+    r01s_board_schematic_apply(board, &board->pin_netlist);
 }

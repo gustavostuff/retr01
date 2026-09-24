@@ -162,6 +162,11 @@ void ns_video_sink_init(NsVideoSink *chip, const char *refdes) {
     ns_entity_add_pin(&chip->base, 2, "HSYNC", NS_PIN_IN);
     ns_entity_add_pin(&chip->base, 3, "VSYNC", NS_PIN_IN);
     ns_entity_add_pin(&chip->base, 4, "VCC", NS_PIN_PWR);
+    /* Schematic RGB DAC inputs (AD724 stand-in until encoder chip is modeled). */
+    ns_entity_add_pin(&chip->base, 5, "RIN", NS_PIN_IN);
+    ns_entity_add_pin(&chip->base, 6, "GIN", NS_PIN_IN);
+    ns_entity_add_pin(&chip->base, 7, "BIN", NS_PIN_IN);
+    ns_entity_add_pin(&chip->base, 8, "AGND", NS_PIN_PWR);
     ns_entity_set_glyph(&chip->base, NS_ENTITY_VIS_DISPLAY, 0, 0);
     ns_video_sink_refresh_glyph(chip);
     ns_entity_reset(&chip->base);

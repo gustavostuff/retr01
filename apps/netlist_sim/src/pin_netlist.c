@@ -147,6 +147,20 @@ void ns_pin_netlist_name_net(NsPinNetlist *nl, NsEntity *e, const char *pin_name
     }
 }
 
+int ns_pin_netlist_same_net(NsPinNetlist *nl, NsEntity *ea, const char *an, NsEntity *eb, const char *bn) {
+    int sa;
+    int sb;
+    if (!nl || !ea || !eb) {
+        return 0;
+    }
+    sa = ns_pin_netlist_slot_for_name(nl, ea, an);
+    sb = ns_pin_netlist_slot_for_name(nl, eb, bn);
+    if (sa < 0 || sb < 0) {
+        return 0;
+    }
+    return ns_pin_netlist_root(nl, sa) == ns_pin_netlist_root(nl, sb);
+}
+
 int ns_pin_netlist_net_count(NsPinNetlist *nl) {
     int roots[NS_PIN_NETLIST_MAX];
     int nroots = 0;

@@ -44,4 +44,7 @@ void ns_pin_netlist_name_net(NsPinNetlist *nl, NsEntity *e, const char *pin_name
 
 int ns_pin_netlist_net_count(NsPinNetlist *nl);
 
+/* True when both named pins share the same union-find net (after linking). */
+int ns_pin_netlist_same_net(NsPinNetlist *nl, NsEntity *ea, const char *an, NsEntity *eb, const char *bn);
+
 #endif

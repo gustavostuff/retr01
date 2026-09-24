@@ -43,7 +43,7 @@ Full console passive BOM ([`docs/passive_bom.md`](../../docs/passive_bom.md)): *
 | **R** | DAC + 33 ohm series + pull-ups | 30 total. Only 11 are video DAC |
 | **D** | Art present | Not spawned (not on this BOM) |
 
-Sprites: `app/assets/png/passives/` (nano `scaled_down`). Pivot from filename `KIND_x_y.png`. Drag / snap / rotate about that pivot. **Passives are in `R01sBoard.pin_netlist`** (every BOM pin registered; motherboard links match the IC schematic overlay). Passive-to-IC wiring and breadboard strip merge are still TODO; bus settle ignores passives.
+Sprites: `app/assets/png/passives/` (nano `scaled_down`). Pivot from filename `KIND_x_y.png`. Drag / snap / rotate about that pivot. **Passives are in `R01sBoard.pin_netlist`** (every BOM pin registered; bypass/DAC/series/pull-ups wired in `src/board_schematic.c` per [`docs/bringup/schematic-netlist-tier-h.md`](../../docs/bringup/schematic-netlist-tier-h.md)). Breadboard strip merge and bus settle through passives are still TODO.
 
 ### Canvas islands
 
