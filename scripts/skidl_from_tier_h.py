@@ -80,49 +80,25 @@ def index_refs(data: dict) -> dict[str, dict]:
     return info
 
 
-def connector_count(max_num: int) -> int:
-    return max(1, max_num)
+def _retr01_kicad():
+    if str(TIER_H_SKIDL_DIR) not in sys.path:
+        sys.path.insert(0, str(TIER_H_SKIDL_DIR))
+    from retr01_kicad import add_library_paths, make_skidl_part, resolve
+
+    return add_library_paths, make_skidl_part, resolve
 
 
 def part_for_refdes(ref: str, rec: dict):
-    from skidl import Part
-
-    max_num = rec["max_num"]
-    parts = rec["parts"]
-
-    if ref == "PS1":
-        return Part("Connector_Generic", f"Conn_01x{connector_count(max(max_num, 4)):02d}", ref=ref, footprint=":")
-
-    if ref.startswith("R"):
-        return Part("Device", "R", ref=ref, value="?", footprint=":")
-
-    if ref.startswith("C"):
-        return Part("Device", "C", ref=ref, value="?", footprint=":")
-
-    if ref.startswith("E"):
-        return Part("Device", "C", ref=ref, value="?", footprint=":")
-
-    # Y* are oscillator modules in Tier H (OSC8M / OSC4LEGS), not 2-pin crystals.
-    if ref.startswith("Y") or parts & {"OSC8M", "OSC4LEGS"}:
-        n = connector_count(max(max_num, 14))
-        return Part("Connector_Generic", f"Conn_01x{n:02d}", ref=ref, footprint=":")
-
-    n = connector_count(max_num)
-    if ref == "U40":
-        n = max(n, 32)
-    elif ref == "U50":
-        n = max(n, 8)
-    elif any("128" in p for p in parts):
-        n = max(n, 28)
-
-    sym = f"Conn_01x{n:02d}"
-    try:
-        return Part("Connector_Generic", sym, ref=ref, footprint=":")
-    except Exception:
-        return Part("Connector", "Conn_01x40", ref=ref, footprint=":")
+    add_library_paths, make_skidl_part, resolve = _retr01_kicad()
+    add_library_paths()
+    spec = resolve(ref, rec.get("parts") or ())
+    if spec is None:
+        _die(f"no KiCad part mapping for refdes {ref!r} (sim parts: {sorted(rec.get('parts') or ())})")
+    mpn, footprint = spec
+    return make_skidl_part(mpn, ref, footprint)
 
 
-def find_pin(part, pin_name: str | None, pin_num: int):
+def find_pin(part, pin_name: str | None, pin_num: int | str):
     sn = str(pin_num)
     for pin in part.pins:
         if str(pin.num) == sn:
@@ -131,10 +107,13 @@ def find_pin(part, pin_name: str | None, pin_num: int):
         for pin in part.pins:
             if pin.name == pin_name:
                 return pin
+            for alias in getattr(pin, "aliases", []) or []:
+                if alias == pin_name:
+                    return pin
     return None
 
 
-def pin_connect(part, pin_name: str, pin_num: int, net) -> None:
+def pin_connect(part, pin_name: str, pin_num: int | str, net) -> None:
     pin = find_pin(part, pin_name or None, pin_num)
     if pin is None:
         return
@@ -158,45 +137,48 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
     import skidl
     from skidl import Net, generate_netlist
 
+    if str(TIER_H_SKIDL_DIR) not in sys.path:
+        sys.path.insert(0, str(TIER_H_SKIDL_DIR))
+    from retr01_kicad.connectors import ensure_connector_parts, wire_connectors
+    from retr01_kicad.mobo_scope import normalize_export_node
+    from retr01_kicad.stub_pins import stub_unconnected_pins
+
     configure_skidl_logging(quiet)
     skidl.reset()
-
-    save_fp = skidl.empty_footprint_handler
-
-    def _noop_fp(part) -> None:
-        if not getattr(part, "footprint", ""):
-            part.footprint = ":"
-
-    skidl.empty_footprint_handler = _noop_fp
 
     ref_index = index_refs(data)
     parts: dict[str, object] = {}
     nets_map: dict[str, Net] = {}
 
-    try:
-        for net_entry in data.get("nets") or []:
-            name = net_entry.get("name") or "NET"
-            if name not in nets_map:
-                nets_map[name] = Net(name)
-            sk_net = nets_map[name]
-            for node in net_entry.get("nodes") or []:
-                ref = node.get("ref") or "?"
-                if ref == "?" or ref == "SCR1":
-                    continue
-                if ref not in parts:
-                    parts[ref] = part_for_refdes(ref, ref_index[ref])
-                pin_connect(
-                    parts[ref],
-                    str(node.get("pin") or ""),
-                    int(node.get("num") or 1),
-                    sk_net,
-                )
+    def ensure_part(ref: str) -> None:
+        if ref not in parts:
+            rec = ref_index.get(ref) or {"max_num": 0, "parts": set()}
+            parts[ref] = part_for_refdes(ref, rec)
 
-        buf = StringIO()
-        generate_netlist(file_=buf)
-        return buf.getvalue()
-    finally:
-        skidl.empty_footprint_handler = save_fp
+    for net_entry in data.get("nets") or []:
+        name = net_entry.get("name") or "NET"
+        if name not in nets_map:
+            nets_map[name] = Net(name)
+        sk_net = nets_map[name]
+        for node in net_entry.get("nodes") or []:
+            ref = node.get("ref") or "?"
+            pin_name = str(node.get("pin") or "")
+            pin_num = int(node.get("num") or 1)
+            mapped = normalize_export_node(ref, pin_name, pin_num)
+            if mapped is None:
+                continue
+            ref, pin_name, pin_num = mapped
+            ensure_part(ref)
+            pin_connect(parts[ref], pin_name, pin_num, sk_net)
+
+    ensure_connector_parts(parts, lambda r: part_for_refdes(r, ref_index.get(r) or {"max_num": 0, "parts": set()}))
+    ensure_part("U725")
+    wire_connectors(parts, nets_map, pin_connect)
+    stub_unconnected_pins(parts, nets_map, pin_connect)
+
+    buf = StringIO()
+    generate_netlist(file_=buf)
+    return buf.getvalue()
 
 
 def main() -> None:

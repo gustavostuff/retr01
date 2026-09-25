@@ -1,4 +1,25 @@
 doc-style-rules.txt
+
+# Python (bytecode, venvs, tool caches)
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+.Python
+.venv/
+.venv-*/
+venv/
+ENV/
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
 apps/studio/build/
 apps/emu/build/
 apps/sim/tier-a/build/
@@ -27,6 +48,8 @@ apps/sdk/r01_c/host-build/
 /skidl.erc
 /skidl.log
 /skidl_REPL.*
+/retr01_apply_footprint_3d.erc
+/retr01_apply_footprint_3d.log
 
 # Sim layout JSON belongs under apps/sim/*/ (or cwd when testing), not repo root
 /ui_layout.json
@@ -40,6 +63,30 @@ apps/sdk/r01_c/host-build/
 /sdk_overlay.prg.elf
 /test_roundtrip.r01proj
 .cursor/*.log
+.venv-wrl/
+
+# Tier H Skidl export outputs (regenerate: apps/sim/tier-h/skidl/export_netlist.sh)
+apps/sim/tier-h/skidl/retr01_prelim.net
+apps/sim/tier-h/skidl/retr01_tier_h.json
+apps/sim/tier-h/skidl/skidl_from_tier_h_sklib.py
+apps/sim/tier-h/skidl/skidl.erc
+apps/sim/tier-h/skidl/skidl.log
+apps/sim/tier-h/skidl/skidl_REPL.*
+
+# Tier H KiCad project copies (from skidl/library via export_netlist.sh)
+apps/sim/tier-h/kicad/main-pcb/v_01/library/
+apps/sim/tier-h/kicad/main-pcb/v_01/3dmodels/
+
+# Legacy duplicate of Retr01_Lib.3dshapes (export_netlist.sh optional copy)
+apps/sim/tier-h/skidl/library/3dmodels/
+
+# KiCad (local editor / cache; not project source)
+**/.history/
+**/*~
+**/*.lck
+**/*-backups/
+**/fp-info-cache
+**/_autosave-*
 /build-all
 /studio
 /emu

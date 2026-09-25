@@ -2,3 +2,12 @@
 *
 !.gitignore
 !export_netlist.sh
+!retr01_kicad/
+!retr01_kicad/**
+!library/
+!library/**
+
+# Never commit bytecode under whitelisted trees
+__pycache__/
+*.py[cod]
+*$py.class
