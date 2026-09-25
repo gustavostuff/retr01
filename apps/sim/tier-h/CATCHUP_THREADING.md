@@ -1,6 +1,6 @@
 # Startup catchup threading
 
-Why IC bring-up runs on a worker thread, why a synchronous boot freezes the window, and how we might show a live board UI during catchup later.
+Why IC bring-up runs on a worker thread, why a synchronous boot freezes the window, and options for a live board UI during catchup later.
 
 ## What "boot catchup" is
 
@@ -28,7 +28,7 @@ Even if catchup is moved *into* the frame loop but still done as one blocking st
 
 So "hang" here means **UI thread starvation**, not necessarily a deadlock.
 
-## What we do today
+## Current design
 
 ```
 main thread                          worker thread
@@ -82,8 +82,8 @@ Further ideas: skip idle islands, or pin-mode catchup that omits beam until MAP 
 
 Prefer **(2)** or **(3)** for a productized live boot view:
 
-- **(3)** if we accept slightly longer catchup and want one thread.
-- **(2)** if we keep the worker for max step throughput and want smooth 60 FPS chrome.
+- **(3)** when slightly longer catchup is acceptable and a single thread is preferred.
+- **(2)** when the worker stays for max step throughput and smooth 60 FPS chrome matters.
 
 Avoid holding `board_mu` across a full `r01s_ui_draw` while the worker is stepping - that is what produced the ~4 FPS boot UI.
 

@@ -59,7 +59,7 @@ Defaults: JSON `apps/sim/tier-h/skidl/retr01_tier_h.json`, netlist `apps/sim/tie
 
 Add `-q` to hide Skidl footprint/tag warnings (expected for this draft flow).
 
-If Skidl cannot find symbol libraries, set `KICAD10_SYMBOL_DIR` to your KiCad symbols path (on many Linux installs: `/usr/share/kicad/symbols`). The script sets that path before importing Skidl when no KiCad env vars are present.
+If Skidl cannot find symbol libraries, set `KICAD10_SYMBOL_DIR` to the host KiCad symbols path (on many Linux installs: `/usr/share/kicad/symbols`). The script sets that path before importing Skidl when no KiCad env vars are present.
 
 Script behavior:
 
@@ -88,7 +88,7 @@ Stock KiCad DIP footprints draw **Reference on F.SilkS** and a second **${REFERE
 
 For this flow, `scripts/retr01_trim_silk_footprints.py` (run from `export_netlist.sh`) copies THT footprints into **`Retr01_Lib.pretty`**: removes the fab **${REFERENCE}** copy and moves **Value** to **F.SilkS**. Netlist import then shows **refdes + BOM value** (e.g. **U3** / **AS6C62256**, **R1** / **100nF**), not the KiCad footprint filename.
 
-**Fab houses (PCBWay, etc.):** assembly uses the **BOM + centroid** you upload, not silkscreen part numbers. Silk **refdes** helps hand assembly; silk **values** are optional (many production boards omit passive values). Nothing extra is required on silk for PCBWay beyond what you put in the BOM CSV.
+**Fab houses (PCBWay, etc.):** assembly uses the **BOM + centroid** from the fab upload bundle, not silkscreen part numbers. Silk **refdes** helps hand assembly; silk **values** are optional (many production boards omit passive values). Silk does not need to duplicate BOM fields for PCBWay-style flows.
 
 ---
 

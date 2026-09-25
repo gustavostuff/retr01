@@ -51,7 +51,7 @@ There is no high-voltage programming path on the Retr01 board. Program both PLDs
 | ATF22V10 | **CUPL** or **WinCUPL** (free) writes the JEDEC fuse file. Then the programmer's host tool loads that file. | Arduino **Uno** or **Nano** (`~$10`) running a GAL programmer such as **Afterburner**, or a **TL866-class** programmer (`~$60`) whose device list includes ATF22V10 | software `~$0` |
 | AT27C256R | The PROM programmer's host program (free with the programmer). Image is the 64-color kit, packed R3G3B2, 64 bytes. | A **TL866-class** programmer (`~$60`) that supports **27C256** and its VPP. Afterburner does not do this part. One programmer covers both chips. | `~$60` |
 
-Buy the PLDs and the PROM already programmed if you do not want those tools. Blank distributor stock will not make a picture.
+Pre-programmed PLDs and PROM avoid CUPL and programmer hardware. Blank distributor stock will not produce a picture on the bench.
 
 ### Tier B, after Tier A locks
 
@@ -67,10 +67,10 @@ Beam X and Beam Y keep the Tier A JEDEC images only if those images already spea
 
 Single-piece distributor prices, about September 2026. Shipping and tax are extra. CUPL, WinCUPL, and the programmer host software are free downloads.
 
-| | About |
+| Line | About |
 | --- | --- |
 | Tier A parts: two PLDs, two PROMs (one spare), AD724 plus adapter, both oscillators, three breadboards, jumpers, 5 V supply, RCA jack, passives, sockets | **USD 80-110** |
-| TL866-class programmer, only if you do not already have one. This is what burns the PROM. It can also burn the PLDs | **USD 50-70** |
+| TL866-class programmer (PROM burn; also programs PLDs). Omit when PLDs and PROM arrive pre-programmed | **USD 50-70** |
 | Tier B later: one more PLD, socket, and 100 nF | **about USD 5** |
 
 A first bench that can program its own chips lands around **USD 140-180**. Skip the programmer line if the PLDs and PROM arrive already programmed. The AD724 and a hard-to-find 5.369318 MHz can move the parts line more than the resistors do.

@@ -7,7 +7,7 @@
 /*
  * Half-duplex pad UART host stand-in (1284 USART firmware).
  * Polls P1 (0x55) then P2 (0xAA); writes replies into pads.port[].
- * Missed reply keeps the previous port value (docs/hardware.md).
+ * Missed reply keeps the previous port value (docs/general/hardware.md).
  */
 void r01s_pad_uart_service(R01sPads *pads, R01sAttiny85 *p1, R01sAttiny85 *p2);
 

@@ -8,7 +8,7 @@
 /*
  * Retr01-C pad MCU (behavioral). Speaks half-duplex open-drain UART on DATA:
  * host poll 0x55 (P1) / 0xAA (P2) -> 1-byte button bitfield reply.
- * See docs/hardware.md.
+ * See docs/general/hardware.md.
  */
 typedef struct R01sAttiny85 {
     R01sEntity base;

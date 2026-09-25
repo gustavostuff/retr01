@@ -2,11 +2,11 @@
 
 Imported from the discarded `retr01-bkp-01` board sim. It links this repo's `apps/netlist_sim`, `apps/common`, and `apps/sim/common/assets`.
 
-Adjusted so far to the current docs: soft I/O is `$7Fxx`, the color PROM is the AT27C256R, and the 74HC14 is not seated (canned PHI2). Cart `WE#` stays high unless a program cycle drives it, `/SS_S1` and `/SS_S2` idle high, field ALE idles low, and `CPU_RDY` is open-drain with a pull-up. The AD724 is not in this tree yet, so the mounted IC count is still 16 motherboard parts plus the two cart memories.
+Matches [`docs/general/hardware.md`](../../../docs/general/hardware.md) idle-safe rules: soft I/O is `$7Fxx`, the color PROM is the AT27C256R, and the 74HC14 is not seated (canned PHI2). Cart `WE#` stays high unless a program cycle drives it, `/SS_S1` and `/SS_S2` idle high, field ALE idles low, and `CPU_RDY` is open-drain with a pull-up. The AD724 is not in this tree yet, so the mounted IC count is still 16 motherboard parts plus the two cart memories.
 
 # Retr01 Board Simulator
 
-IC-first board simulator for the Retr01 motherboard (arcade + console share one netlist). Separate from Retr01 Studio (authoring). Pin/behavior: [`hw/md/`](../../hw/md/). BOM and islands: [`docs/hardware.md`](../../docs/hardware.md).
+IC-first board simulator for the Retr01 motherboard (arcade + console share one netlist). Separate from Retr01 Studio (authoring). Pin/behavior: [`hw/md/`](../../hw/md/). BOM and islands: [`docs/general/hardware.md`](../../../docs/general/hardware.md).
 
 **Engine:** discrete IC / island / bus core lives in drop-in [`netlist_sim/`](../../netlist_sim/) (`Ns` / `ns_` API). This tree is the Retr01 board recipe, chips, Host Play, and SDL host. Temporary `R01s*` shims: [`include/retr01_sim/ns_compat.h`](include/retr01_sim/ns_compat.h).
 
@@ -65,7 +65,7 @@ Sprites: `app/assets/png/passives/` (nano `scaled_down`). Pivot from filename `K
 
 Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8000+`.
 
-**Letter note:** Silicon bring-up docs use **N** for the sprite path ([`docs/hardware.md`](../../docs/hardware.md)). On the sim canvas, **N** is the detachable **cart module** island. Sprite milestones still show as **N** in the health strip detail line.
+**Letter note:** Silicon bring-up docs use **N** for the sprite path ([`docs/general/hardware.md`](../../../docs/general/hardware.md)). On the sim canvas, **N** is the detachable **cart module** island. Sprite milestones still show as **N** in the health strip detail line.
 
 **BOM:** mounted visuals are 16 motherboard ICs plus cart flash and the 24C64. The locked motherboard is 17 once the AD724 is modeled. Helper tick domain is 24 MHz.
 
@@ -91,7 +91,7 @@ Why the worker exists: [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md).
   Layer 1: Unit (one IC)
        |
        v
-  Layer 2: Island (few ICs + wires). See docs/hardware.md + test_island_abcdeghiojklmnp.c
+  Layer 2: Island (few ICs + wires). See docs/general/hardware.md + test_island_abcdeghiojklmnp.c
        |
        v
   Layer 3: System (full board + cart + input + screen)

@@ -29,7 +29,7 @@ Sprite box is X cells 3-4 and Y cells 2-3 (32-dot cells). That is X 96-159, Y 64
 
 Unchanged from Tier A: DOT and FSC, Beam X/Y raster and sync, PROM kit image, resistor DAC, AD724, LCD, Auto/Manual routing, jumper editing. Sync still does not go through the Compositor.
 
-## What you still wire
+## Additional wiring
 
 Power, clocks, sync, the DAC, and the PROM control jumpers stay as in Tier A. The bring-up delta (`docs/bringup/tier-b-video-lab.md` section 7) is the new work:
 

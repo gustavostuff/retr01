@@ -49,9 +49,6 @@ apps/sdk/r01_c/host-build/
 /skidl.log
 /skidl_REPL.*
 /bad_fmt1.retr01
-/retr01_apply_footprint_3d.erc
-/retr01_apply_footprint_3d.log
-
 # Sim layout JSON belongs under apps/sim/*/ (or cwd when testing), not repo root
 /ui_layout.json
 /test_layout.json

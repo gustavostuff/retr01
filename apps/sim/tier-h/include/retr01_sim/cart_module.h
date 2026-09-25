@@ -7,7 +7,7 @@
 #include "sst39sf040.h"
 
 /*
- * Detachable cartridge PCB: SST39SF040 + 24C64 (docs/hardware.md).
+ * Detachable cartridge PCB: SST39SF040 + 24C64 (docs/general/hardware.md).
  * Lives on its own island and inserts into the console socket.
  */
 typedef struct R01sCartModule {
