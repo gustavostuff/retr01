@@ -309,6 +309,8 @@ static void apply_gnd_ties(R01sBoard *board, R01sPinNetlist *nl) {
     tie_gnd(nl, pwr, r01s_at27c256r_entity(&board->color_prom), "GND");
     tie_gnd(nl, pwr, r01s_sst39sf040_entity(&board->cart_module.flash), "VSS");
     tie_gnd(nl, pwr, r01s_i2c_eeprom_entity(&board->cart_module.save), "GND");
+    tie_gnd(nl, pwr, r01s_atf22v10_entity(&board->pld_beam_y), "GND");
+    tie_gnd(nl, pwr, r01s_compositor_entity(&board->compositor), "GND");
 }
 
 void r01s_board_schematic_apply(R01sBoard *board, R01sPinNetlist *nl) {

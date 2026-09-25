@@ -181,8 +181,8 @@ void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role) {
         r01s_entity_add_pin(&chip->base, 20, "SEL_7F91", R01S_PIN_OUT);
         r01s_entity_add_pin(&chip->base, 21, "SEL_7F92", R01S_PIN_OUT);
         r01s_entity_add_pin(&chip->base, 22, "SEL_7F93", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 23, "VCC", R01S_PIN_PWR);
-        r01s_entity_add_pin(&chip->base, 24, "GND", R01S_PIN_PWR);
+        r01s_entity_add_pin(&chip->base, 12, "GND", R01S_PIN_PWR);
+        r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
         r01s_entity_set_dip_mm(&chip->base, 24, 32, 8);
         r01s_entity_reset(&chip->base);
         return;
@@ -193,14 +193,18 @@ void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role) {
         r01s_entity_add_pin(&chip->base, i + 9, PLD_Y_NAMES[i], R01S_PIN_OUT);
     }
     if (role == R01S_PLD_BEAM_Y) {
-        for (i = 0; i < 8; i++) {
+        for (i = 0; i < 7; i++) {
             r01s_entity_add_pin(&chip->base, 17 + i, PLD_P_NAMES[i], R01S_PIN_IN);
+        }
+        /* Pin 24 is package VCC (ATF22V10). P7 stays logical-only like Q0-Q7. */
+        r01s_entity_add_pin(&chip->base, 36, PLD_P_NAMES[7], R01S_PIN_IN);
+        for (i = 0; i < 8; i++) {
             r01s_entity_add_pin(&chip->base, 25 + i, PLD_Q_NAMES[i], R01S_PIN_IN);
         }
         r01s_entity_add_pin(&chip->base, 33, "OE#", R01S_PIN_IN);
         r01s_entity_add_pin(&chip->base, 34, "EQ#", R01S_PIN_OUT);
-        /* Package outline is 24-pin; P0-P7 occupy 17-24. Extra compare pins are logical-only. */
-        r01s_entity_add_pin(&chip->base, 35, "VCC", R01S_PIN_PWR);
+        r01s_entity_add_pin(&chip->base, 12, "GND", R01S_PIN_PWR);
+        r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
         r01s_entity_set_dip_mm(&chip->base, 24, 32, 8);
     } else {
         /* VRAM glue (UPLDB): fill PDIP-24 so both rows are even (was 12 vs 5). */
@@ -210,7 +214,8 @@ void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role) {
         r01s_entity_add_pin(&chip->base, 20, "NC20", R01S_PIN_NC);
         r01s_entity_add_pin(&chip->base, 21, "NC21", R01S_PIN_NC);
         r01s_entity_add_pin(&chip->base, 22, "NC22", R01S_PIN_NC);
-        r01s_entity_add_pin(&chip->base, 23, "GND", R01S_PIN_PWR);
+        r01s_entity_add_pin(&chip->base, 23, "NC23", R01S_PIN_NC);
+        r01s_entity_add_pin(&chip->base, 12, "GND", R01S_PIN_PWR);
         r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
         r01s_entity_set_dip_mm(&chip->base, 24, 32, 8);
     }
