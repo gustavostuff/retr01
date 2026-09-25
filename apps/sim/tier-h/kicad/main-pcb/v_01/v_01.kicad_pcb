@@ -90,7 +90,7 @@
 	(footprint "Retr01_Lib:PinHeader_1x10_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "04ddbc19-75e6-4b26-8307-e356a45948ba")
-		(at -55.54 31.87 90)
+		(at -51.43 16 90)
 		(descr "Through hole straight pin header, 1x10, 2.54mm pitch, single row")
 		(tags "Through hole pin header THT 1x10 2.54mm single row")
 		(property "Reference" "J6"
@@ -2777,40 +2777,50 @@
 		)
 		(pad "1" thru_hole oval
 			(at 0 0 90)
-			(size 1.4 2.3)
-			(drill oval 0.9 2)
+			(size 1.987356 3.010436)
+			(drill oval 0.9 2
+				(offset 0.006322 0.023523)
+			)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(uuid "ce1f2134-34f7-4cc7-a169-663ec7403f64")
 		)
 		(pad "2" thru_hole oval
 			(at 2.45 -2.15 90)
-			(size 1.4 2.3)
-			(drill oval 0.9 2)
+			(size 1.901996 3.072447)
+			(drill oval 0.9 2
+				(offset 0.013772 -0.008146)
+			)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(uuid "47e49947-cddc-4f24-b7e2-781fda237c0f")
 		)
 		(pad "3" thru_hole oval
 			(at 6.15 0 90)
-			(size 1.4 2.3)
-			(drill oval 0.9 2)
+			(size 1.755678 3.048059)
+			(drill oval 0.9 2
+				(offset -0.004148 -0.000107)
+			)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(uuid "2c2b4ec9-0e0c-47ac-a933-89d0a2ca4580")
 		)
 		(pad "4" thru_hole oval
 			(at 8.05 -2.15 90)
-			(size 1.4 2.3)
-			(drill oval 0.9 2)
+			(size 1.633768 2.828606)
+			(drill oval 0.9 2
+				(offset -0.014348 0.016236)
+			)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(uuid "da36af9d-7e3c-4318-a018-e469171aebbb")
 		)
 		(pad "5" thru_hole oval
 			(at 11.8 0 90)
-			(size 1.4 2.3)
-			(drill oval 0.9 2)
+			(size 1.853229 2.755456)
+			(drill oval 0.9 2
+				(offset 0.027458 -0.000114)
+			)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(uuid "3c32ce7d-a0e3-4649-bf02-3b06435851e3")
@@ -14070,40 +14080,50 @@
 		)
 		(pad "1" thru_hole oval
 			(at 0 0 90)
-			(size 1.4 2.3)
-			(drill oval 0.9 2)
+			(size 1.987356 3.010436)
+			(drill oval 0.9 2
+				(offset 0.006322 0.023523)
+			)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(uuid "b9cf1c07-218d-4339-b95c-f971e47894cb")
 		)
 		(pad "2" thru_hole oval
 			(at 2.45 -2.15 90)
-			(size 1.4 2.3)
-			(drill oval 0.9 2)
+			(size 1.901996 3.072447)
+			(drill oval 0.9 2
+				(offset 0.013772 -0.008146)
+			)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(uuid "45588334-3f12-447b-9298-90e9fe3968ad")
 		)
 		(pad "3" thru_hole oval
 			(at 6.15 0 90)
-			(size 1.4 2.3)
-			(drill oval 0.9 2)
+			(size 1.755678 3.048059)
+			(drill oval 0.9 2
+				(offset -0.004148 -0.000107)
+			)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(uuid "db7f81f2-6682-4f62-b9e4-eda61213bfd1")
 		)
 		(pad "4" thru_hole oval
 			(at 8.05 -2.15 90)
-			(size 1.4 2.3)
-			(drill oval 0.9 2)
+			(size 1.633768 2.828606)
+			(drill oval 0.9 2
+				(offset -0.014348 0.016236)
+			)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(uuid "26f066a4-2580-47f0-9489-a9c36abaa422")
 		)
 		(pad "5" thru_hole oval
 			(at 11.8 0 90)
-			(size 1.4 2.3)
-			(drill oval 0.9 2)
+			(size 1.853229 2.755456)
+			(drill oval 0.9 2
+				(offset 0.027458 -0.000114)
+			)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(uuid "4997522c-79a9-48d9-915b-1576cb6c492f")
@@ -24835,7 +24855,7 @@
 	(footprint "Retr01_Lib:PinHeader_1x10_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "f0a308a0-8faf-4462-b505-54ac29426dd2")
-		(at -55.54 36.46 90)
+		(at -26.43 26 90)
 		(descr "Through hole straight pin header, 1x10, 2.54mm pitch, single row")
 		(tags "Through hole pin header THT 1x10 2.54mm single row")
 		(property "Reference" "J5"
