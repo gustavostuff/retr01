@@ -1,0 +1,4 @@
+# Generated Skidl / export artifacts (see tier-h-skidl-export.md)
+*
+!.gitignore
+!export_netlist.sh

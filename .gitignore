@@ -19,6 +19,19 @@ apps/sim/tier-b/ui_layout.json
 apps/sim/tier-h/ui_layout.json
 apps/sdk/r01_c/build/
 apps/sdk/r01_c/host-build/
+# Stray Tier H Skidl exports (canonical dir: apps/sim/tier-h/skidl/)
+/retr01_tier_h.json
+/retr01_prelim.net
+/skidl_from_tier_h.*
+/skidl_from_tier_h_sklib.py
+/skidl.erc
+/skidl.log
+/skidl_REPL.*
+
+# Sim layout JSON belongs under apps/sim/*/ (or cwd when testing), not repo root
+/ui_layout.json
+/test_layout.json
+
 /test_cart.retr01
 /test_cart_pb.retr01
 /test_prom.bin

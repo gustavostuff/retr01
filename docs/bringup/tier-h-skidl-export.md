@@ -33,7 +33,13 @@ Typical Tier H build:
 ```bash
 cmake -S apps/sim/tier-h -B apps/sim/tier-h/build
 cmake --build apps/sim/tier-h/build --target export_tier_h_netlist
-./apps/sim/tier-h/build/export_tier_h_netlist > retr01_tier_h.json
+./apps/sim/tier-h/build/export_tier_h_netlist > apps/sim/tier-h/skidl/retr01_tier_h.json
+```
+
+One-shot (JSON + netlist into `apps/sim/tier-h/skidl/`):
+
+```bash
+apps/sim/tier-h/skidl/export_netlist.sh -q
 ```
 
 API: `ns_pin_netlist_write_json()` in `apps/netlist_sim` (Tier H alias `r01s_pin_netlist_write_json`).
@@ -45,18 +51,26 @@ Unit test: `test_export_netlist`.
 ## Step 2: Skidl netlist (Python)
 
 ```bash
-pip install skidl   # optional; only for step 2
-./scripts/skidl_from_tier_h.py retr01_tier_h.json -o retr01_prelim.net
+pip install skidl
+./scripts/skidl_from_tier_h.py -q
 ```
+
+Defaults: JSON `apps/sim/tier-h/skidl/retr01_tier_h.json`, netlist `apps/sim/tier-h/skidl/retr01_prelim.net`. Skidl backup files (`*_sklib.py`, `.erc`, `.log`) land in that same directory.
+
+Add `-q` to hide Skidl footprint/tag warnings (expected for this draft flow).
+
+If Skidl cannot find symbol libraries, set `KICAD10_SYMBOL_DIR` to your KiCad symbols path (on many Linux installs: `/usr/share/kicad/symbols`). The script sets that path before importing Skidl when no KiCad env vars are present.
 
 Script behavior:
 
 - Refuses export if JSON claims `fabrication_ready: true`
-- Maps passives to generic `Device` R/C/CP/Crystal symbols
-- Maps ICs to **generic connector placeholders** (connectivity only, not correct footprints/symbols)
+- Maps passives to generic `Device` R/C symbols (electrolytics use `C`, not polarized CP)
+- Maps **Y*** refdes to multi-pin connector placeholders (sim oscillators, not 2-pin crystals)
+- Maps other ICs/PLDs to **generic connectors** sized from JSON pin numbers; nets attach by **pin number**, not signal names
 - Skips **SCR1** (sim LCD sink)
+- Placeholder footprints are `:` (illustrative only)
 
-KiCad import of `retr01_prelim.net` is limited to visual experiment. Symbols and footprints require replacement and reconciliation against the schematic source of truth.
+KiCad import of `apps/sim/tier-h/skidl/retr01_prelim.net` is limited to visual experiment. Symbols and footprints require replacement and reconciliation against the schematic source of truth.
 
 ---
 

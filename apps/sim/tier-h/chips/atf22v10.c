@@ -147,6 +147,11 @@ static void pld_destroy(R01sEntity *e) {
 
 static const R01sEntityVTable ATF22_VT = {pld_reset, pld_eval, pld_tick, pld_destroy};
 
+static const char *const PLD_I_NAMES[8] = {"I0", "I1", "I2", "I3", "I4", "I5", "I6", "I7"};
+static const char *const PLD_Y_NAMES[8] = {"Y0", "Y1", "Y2", "Y3", "Y4", "Y5", "Y6", "Y7"};
+static const char *const PLD_P_NAMES[8] = {"P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7"};
+static const char *const PLD_Q_NAMES[8] = {"Q0", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7"};
+
 void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role) {
     int i;
     if (!chip) {
@@ -184,19 +189,13 @@ void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role) {
     }
 
     for (i = 0; i < 8; i++) {
-        char in[8], out[8];
-        snprintf(in, sizeof(in), "I%d", i);
-        snprintf(out, sizeof(out), "Y%d", i);
-        r01s_entity_add_pin(&chip->base, i + 1, in, R01S_PIN_IN);
-        r01s_entity_add_pin(&chip->base, i + 9, out, R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, i + 1, PLD_I_NAMES[i], R01S_PIN_IN);
+        r01s_entity_add_pin(&chip->base, i + 9, PLD_Y_NAMES[i], R01S_PIN_OUT);
     }
     if (role == R01S_PLD_BEAM_Y) {
         for (i = 0; i < 8; i++) {
-            char pn[8], qn[8];
-            snprintf(pn, sizeof(pn), "P%d", i);
-            snprintf(qn, sizeof(qn), "Q%d", i);
-            r01s_entity_add_pin(&chip->base, 17 + i, pn, R01S_PIN_IN);
-            r01s_entity_add_pin(&chip->base, 25 + i, qn, R01S_PIN_IN);
+            r01s_entity_add_pin(&chip->base, 17 + i, PLD_P_NAMES[i], R01S_PIN_IN);
+            r01s_entity_add_pin(&chip->base, 25 + i, PLD_Q_NAMES[i], R01S_PIN_IN);
         }
         r01s_entity_add_pin(&chip->base, 33, "OE#", R01S_PIN_IN);
         r01s_entity_add_pin(&chip->base, 34, "EQ#", R01S_PIN_OUT);

@@ -199,7 +199,7 @@ static void json_escape_str(FILE *out, const char *s) {
             if (c == '"' || c == '\\') {
                 fputc('\\', out);
                 fputc((int)c, out);
-            } else if (c < 32) {
+            } else if (c < 32 || c >= 127) {
                 fprintf(out, "\\u%04x", c);
             } else {
                 fputc((int)c, out);
