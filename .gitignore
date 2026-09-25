@@ -48,6 +48,7 @@ apps/sdk/r01_c/host-build/
 /skidl.erc
 /skidl.log
 /skidl_REPL.*
+/bad_fmt1.retr01
 /retr01_apply_footprint_3d.erc
 /retr01_apply_footprint_3d.log
 

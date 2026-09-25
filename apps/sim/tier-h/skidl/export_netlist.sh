@@ -29,7 +29,6 @@ mkdir -p "$DIR"
 "$BUILD" >"$JSON"
 python3 "$REPO/scripts/retr01_trim_silk_footprints.py"
 python3 "$REPO/scripts/skidl_from_tier_h.py" "${QUIET[@]}"
-python3 "$REPO/scripts/retr01_apply_footprint_3d.py"
 
 # KiCad resolves Retr01_Lib from the board project fp-lib-table (real copy, not a symlink).
 KICAD_V01="$REPO/apps/sim/tier-h/kicad/main-pcb/v_01"
@@ -42,24 +41,10 @@ fi
 mkdir -p "$KICAD_V01/library"
 rm -rf "$DST_LIB"
 cp -a "$SRC_LIB" "$DST_LIB"
-python3 "$REPO/scripts/retr01_verify_trs_footprint.py" \
-    "$DST_LIB/Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical.kicad_mod"
 SRC_3D="$DIR/library/Retr01_Lib.3dshapes"
 DST_3D="$KICAD_V01/library/Retr01_Lib.3dshapes"
 if [[ -d "$SRC_3D" ]]; then
     rm -rf "$DST_3D"
     mkdir -p "$DST_3D"
     cp -a "$SRC_3D/." "$DST_3D/"
-fi
-# Legacy duplicate for hand Dropped STEPs (optional).
-if [[ -d "$DIR/library/3dmodels" ]]; then
-    mkdir -p "$KICAD_V01/3dmodels"
-    cp -a "$DIR/library/3dmodels/." "$KICAD_V01/3dmodels/"
-fi
-PCB="$KICAD_V01/v_01.kicad_pcb"
-if [[ -f "$PCB" ]]; then
-    python3 "$REPO/scripts/retr01_sync_pcb_footprint_pads.py" "$PCB" --library "$DST_LIB" --full || true
-    python3 "$REPO/scripts/retr01_sync_pcb_3d_models.py" "$PCB" --force || true
-else
-    echo "note: no $PCB — import netlist in KiCad, then re-run export or retr01_sync_pcb_3d_models.py" >&2
 fi
